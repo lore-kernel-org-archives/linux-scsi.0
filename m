@@ -1,93 +1,125 @@
-From: Subhash Jadavani <subhashj@codeaurora.org>
-Subject: Re: [RFC PATCH V2] scsi: ufs: Add specific callback for setting DMA
- mask
-Date: Wed, 16 May 2018 14:31:06 -0700
-Message-ID: <1f7df8bfbc161243956233eac80f2cee@codeaurora.org>
-References: <CGME20180308111416epcas1p4f9f1dbb36e8567121c6236ac0e9b4e03@epcas1p4.samsung.com>
- <1520507013-2410-1-git-send-email-alim.akhtar@samsung.com>
- <CAGOxZ52yZ8Xqype7AVsH43DWOA2byh2kW3SGsfHyHtzqSH6QPw@mail.gmail.com>
+From: "liwei (CM)" <liwei213@huawei.com>
+Subject: =?utf-8?B?562U5aSNOiDnrZTlpI06IFtQQVRDSCB2OSAyLzVdIGR0LWJpbmRpbmdzOiBz?=
+ =?utf-8?Q?csi:_ufs:_add_document_for_hisi-ufs?=
+Date: Thu, 17 May 2018 00:50:23 +0000
+Message-ID: <1699CE87DE933F49876AD744B5DC140FA63AC2@DGGEMM506-MBX.china.huawei.com>
+References: <20180417140814.38098-1-liwei213@huawei.com>
+ <20180417140814.38098-3-liwei213@huawei.com>
+ <20180424125827.k2dgeu6uon75wzni@rob-hp-laptop>
+ <1699CE87DE933F49876AD744B5DC140FA5AC86@DGGEMM506-MBS.china.huawei.com>
+ <CAL_JsqLf_r=NHHP2ZNEJOoLORXztF1KnU+tq-+COt4CPMLAsiA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAGOxZ52yZ8Xqype7AVsH43DWOA2byh2kW3SGsfHyHtzqSH6QPw@mail.gmail.com>
+In-Reply-To: <CAL_JsqLf_r=NHHP2ZNEJOoLORXztF1KnU+tq-+COt4CPMLAsiA@mail.gmail.com>
+Content-Language: zh-CN
 Sender: linux-kernel-owner@vger.kernel.org
-To: Alim Akhtar <alim.akhtar@gmail.com>
-Cc: Alim Akhtar <alim.akhtar@samsung.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, vinayak holikatti <vinholikatti@gmail.com>, devicetree@vger.kernel.org, Shaik Ameer Basha <shaik.ameer@samsung.com>
+To: Rob Herring <robh@kernel.org>
+Cc: "mark.rutland@arm.com" <mark.rutland@arm.com>, "catalin.marinas@arm.com" <catalin.marinas@arm.com>, "will.deacon@arm.com" <will.deacon@arm.com>, "vinholikatti@gmail.com" <vinholikatti@gmail.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "khilman@baylibre.com" <khilman@baylibre.com>, "arnd@arndb.de" <arnd@arndb.de>, "gregory.clement@free-electrons.com" <gregory.clement@free-electrons.com>, "thomas.petazzoni@free-electrons.com" <thomas.petazzoni@free-electrons.com>, "yamada.masahiro@socionext.com" <yamada.masahiro@socionext.com>, "riku.voipio@linaro.org" <riku.voipio@linaro.org>, "treding@nvidia.com" <treding@nvidia.com>, "krzk@kernel.org" <krzk@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 2018-05-15 21:31, Alim Akhtar wrote:
-> Ping !!!
-> 
-> On Thu, Mar 8, 2018 at 4:33 PM, Alim Akhtar <alim.akhtar@samsung.com> 
-> wrote:
->> Currently DMA mask for UFS HCI is set by reading CAP register's
->> [64AS] bit. Some HCI controller like Exynos support 36-bit bus 
->> address.
->> This works perfectly fine with DMA mask set as 64 in case there is no
->> IOMMU attached to HCI.
->> In case if HCI is behind an IOMMU, setting DMA mask as 64 bit won't
->> work as HCI has only 36bit addressing and SMMU has created mapping of
->> 64 bit and as the device truncates the address, its mapping will not
->> be found by iommu.
->> To resolve such issues, let the variant driver sets its own DMA mask.
->> 
->> Signed-off-by: Alim Akhtar <alim.akhtar@samsung.com>
->> ---
->>  drivers/scsi/ufs/ufshcd.c | 3 +++
->>  drivers/scsi/ufs/ufshcd.h | 2 ++
->>  2 files changed, 5 insertions(+)
->> 
->> I am not sure if there are other ways available to handle such cases.
->> The IOMMU I am talking about is arm-smmu and it DT binding does not
->> give much idea about handling such cases.
->> Have tested this patch with HCI controller with IOMMU attached.
->> 
->> Changes Since V1:
->>         - Fixed build issue as reported by Kbuild test robot.
->> 
->> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
->> index a355d98..9a1374e 100644
->> --- a/drivers/scsi/ufs/ufshcd.c
->> +++ b/drivers/scsi/ufs/ufshcd.c
->> @@ -7781,6 +7781,9 @@ EXPORT_SYMBOL_GPL(ufshcd_dealloc_host);
->>   */
->>  static int ufshcd_set_dma_mask(struct ufs_hba *hba)
->>  {
->> +       if (hba->vops && hba->vops->set_dma_mask)
->> +               return hba->vops->set_dma_mask(hba);
->> +
->>         if (hba->capabilities & MASK_64_ADDRESSING_SUPPORT) {
->>                 if (!dma_set_mask_and_coherent(hba->dev, 
->> DMA_BIT_MASK(64)))
->>                         return 0;
->> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
->> index 1332e54..89c6dae 100644
->> --- a/drivers/scsi/ufs/ufshcd.h
->> +++ b/drivers/scsi/ufs/ufshcd.h
->> @@ -297,6 +297,7 @@ struct ufs_pwr_mode_info {
->>   * @resume: called during host controller PM callback
->>   * @dbg_register_dump: used to dump controller debug information
->>   * @phy_initialization: used to initialize phys
->> + * @set_dma_mask: used to set variant specific DMA mask
->>   */
->>  struct ufs_hba_variant_ops {
->>         const char *name;
->> @@ -325,6 +326,7 @@ struct ufs_hba_variant_ops {
->>         int     (*resume)(struct ufs_hba *, enum ufs_pm_op);
->>         void    (*dbg_register_dump)(struct ufs_hba *hba);
->>         int     (*phy_initialization)(struct ufs_hba *);
->> +       int     (*set_dma_mask)(struct ufs_hba *hba);
->>  };
->> 
->>  /* clock gating state  */
->> --
->> 2.7.4
->> 
-
-Looks reasonable to me, you may try posting non-RFC version.
-
--- 
-The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
-a Linux Foundation Collaborative Project
+SGksIFJvYg0KDQotLS0tLemCruS7tuWOn+S7ti0tLS0tDQrlj5Hku7bkuro6IFJvYiBIZXJyaW5n
+IFttYWlsdG86cm9iaEBrZXJuZWwub3JnXSANCuWPkemAgeaXtumXtDogMjAxOOW5tDXmnIgxNuaX
+pSAyMToxNg0K5pS25Lu25Lq6OiBsaXdlaSAoQ00pDQrmioTpgIE6IG1hcmsucnV0bGFuZEBhcm0u
+Y29tOyBjYXRhbGluLm1hcmluYXNAYXJtLmNvbTsgd2lsbC5kZWFjb25AYXJtLmNvbTsgdmluaG9s
+aWthdHRpQGdtYWlsLmNvbTsgamVqYkBsaW51eC52bmV0LmlibS5jb207IG1hcnRpbi5wZXRlcnNl
+bkBvcmFjbGUuY29tOyBraGlsbWFuQGJheWxpYnJlLmNvbTsgYXJuZEBhcm5kYi5kZTsgZ3JlZ29y
+eS5jbGVtZW50QGZyZWUtZWxlY3Ryb25zLmNvbTsgdGhvbWFzLnBldGF6em9uaUBmcmVlLWVsZWN0
+cm9ucy5jb207IHlhbWFkYS5tYXNhaGlyb0Bzb2Npb25leHQuY29tOyByaWt1LnZvaXBpb0BsaW5h
+cm8ub3JnOyB0cmVkaW5nQG52aWRpYS5jb207IGtyemtAa2VybmVsLm9yZzsgZGV2aWNldHJlZUB2
+Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWFybS1r
+ZXJuZWxAbGlzdHMuaW5mcmFkZWFkLm9yZzsgbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmc7IHph
+bmdsZWlnYW5nOyBHZW5namlhbmZlbmc7IGd1b2RvbmcueHVAbGluYXJvLm9yZw0K5Li76aKYOiBS
+ZTog562U5aSNOiBbUEFUQ0ggdjkgMi81XSBkdC1iaW5kaW5nczogc2NzaTogdWZzOiBhZGQgZG9j
+dW1lbnQgZm9yIGhpc2ktdWZzDQoNCk9uIFR1ZSwgQXByIDI0LCAyMDE4IGF0IDg6NTQgQU0sIGxp
+d2VpIChDTSkgPGxpd2VpMjEzQGh1YXdlaS5jb20+IHdyb3RlOg0KPiBIaSwgUm9iDQo+DQo+IFRo
+YW5rcyBmb3IgeW91ciBwYXRpZW5jZS4NCj4NCj4gSGksIEFybmQNCj4NCj4gRnJvbSBSb2IncyBz
+dWdnZXN0aW9uLCB3ZSBoYXZlIHRvIGxpc3QgdGhlIHByb3BlcnRpZXMgbm9kZSBpbiB1ZnMtaGlz
+aS50eHQgYmluZ2luZ3MgZXZlbiBpZiBkb2N1bWVudGVkIGluIHRoZSBjb21tb24gYmluZGluZy4N
+Cj4NCj4gLS0tLS3pgq7ku7bljp/ku7YtLS0tLQ0KPiDlj5Hku7bkuro6IFJvYiBIZXJyaW5nIFtt
+YWlsdG86cm9iaEBrZXJuZWwub3JnXQ0KPiDlj5HpgIHml7bpl7Q6IDIwMTjlubQ05pyIMjTml6Ug
+MjA6NTgNCj4g5pS25Lu25Lq6OiBsaXdlaSAoQ00pDQo+IOaKhOmAgTogbWFyay5ydXRsYW5kQGFy
+bS5jb207IGNhdGFsaW4ubWFyaW5hc0Bhcm0uY29tOyB3aWxsLmRlYWNvbkBhcm0uY29tOyB2aW5o
+b2xpa2F0dGlAZ21haWwuY29tOyBqZWpiQGxpbnV4LnZuZXQuaWJtLmNvbTsgbWFydGluLnBldGVy
+c2VuQG9yYWNsZS5jb207IGtoaWxtYW5AYmF5bGlicmUuY29tOyBhcm5kQGFybmRiLmRlOyBncmVn
+b3J5LmNsZW1lbnRAZnJlZS1lbGVjdHJvbnMuY29tOyB0aG9tYXMucGV0YXp6b25pQGZyZWUtZWxl
+Y3Ryb25zLmNvbTsgeWFtYWRhLm1hc2FoaXJvQHNvY2lvbmV4dC5jb207IHJpa3Uudm9pcGlvQGxp
+bmFyby5vcmc7IHRyZWRpbmdAbnZpZGlhLmNvbTsga3J6a0BrZXJuZWwub3JnOyBkZXZpY2V0cmVl
+QHZnZXIua2VybmVsLm9yZzsgbGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZzsgbGludXgtYXJt
+LWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnOyBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZzsg
+emFuZ2xlaWdhbmc7IEdlbmdqaWFuZmVuZzsgZ3VvZG9uZy54dUBsaW5hcm8ub3JnDQo+IOS4u+mi
+mDogUmU6IFtQQVRDSCB2OSAyLzVdIGR0LWJpbmRpbmdzOiBzY3NpOiB1ZnM6IGFkZCBkb2N1bWVu
+dCBmb3IgaGlzaS11ZnMNCj4NCj4gT24gVHVlLCBBcHIgMTcsIDIwMTggYXQgMTA6MDg6MTFQTSAr
+MDgwMCwgTGkgV2VpIHdyb3RlOg0KPj4gYWRkIHVmcyBub2RlIGRvY3VtZW50IGZvciBIaXNpbGlj
+b24uDQo+Pg0KPj4gU2lnbmVkLW9mZi1ieTogTGkgV2VpIDxsaXdlaTIxM0BodWF3ZWkuY29tPg0K
+Pj4gLS0tDQo+PiAgRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3Vmcy91ZnMtaGlz
+aS50eHQgfCAyOSArKysrKysrKysrKysrKysrKysrKysrDQo+PiAgLi4uL2RldmljZXRyZWUvYmlu
+ZGluZ3MvdWZzL3Vmc2hjZC1wbHRmcm0udHh0ICAgICAgfCAxMCArKysrKy0tLQ0KPj4gIDIgZmls
+ZXMgY2hhbmdlZCwgMzYgaW5zZXJ0aW9ucygrKSwgMyBkZWxldGlvbnMoLSkNCj4+ICBjcmVhdGUg
+bW9kZSAxMDA2NDQgRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3Vmcy91ZnMtaGlz
+aS50eHQNCj4+DQo+PiBkaWZmIC0tZ2l0IGEvRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRp
+bmdzL3Vmcy91ZnMtaGlzaS50eHQgYi9Eb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3Mv
+dWZzL3Vmcy1oaXNpLnR4dA0KPj4gbmV3IGZpbGUgbW9kZSAxMDA2NDQNCj4+IGluZGV4IDAwMDAw
+MDAwMDAwMC4uZDQ5YWI3ZDhmMzFkDQo+PiAtLS0gL2Rldi9udWxsDQo+PiArKysgYi9Eb2N1bWVu
+dGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvdWZzL3Vmcy1oaXNpLnR4dA0KPj4gQEAgLTAsMCAr
+MSwyOSBAQA0KPj4gKyogSGlzaWxpY29uIFVuaXZlcnNhbCBGbGFzaCBTdG9yYWdlIChVRlMpIEhv
+c3QgQ29udHJvbGxlcg0KPj4gKw0KPj4gK1VGUyBub2RlcyBhcmUgZGVmaW5lZCB0byBkZXNjcmli
+ZSBvbi1jaGlwIFVGUyBoYXJkd2FyZSBtYWNyby4NCj4+ICtFYWNoIFVGUyBIb3N0IENvbnRyb2xs
+ZXIgc2hvdWxkIGhhdmUgaXRzIG93biBub2RlLg0KPj4gKw0KPj4gK1JlcXVpcmVkIHByb3BlcnRp
+ZXM6DQo+PiArLSBjb21wYXRpYmxlICAgICAgICA6IGNvbXBhdGlibGUgbGlzdCwgY29udGFpbnMg
+b25lIG9mIHRoZSBmb2xsb3dpbmcgLQ0KPj4gKyAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAiaGlzaWxpY29uLGhpMzY2MC11ZnMiLCAiamVkZWMsdWZzLTEuMSIgZm9yIGhpc2kg
+dWZzDQo+PiArICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGhvc3QgY29udHJv
+bGxlciBwcmVzZW50IG9uIEhpMzZ4eCBjaGlwc2V0Lg0KPj4gKy0gcmVnICAgICAgICAgICAgICAg
+OiBzaG91bGQgY29udGFpbiBVRlMgcmVnaXN0ZXIgYWRkcmVzcyBzcGFjZSAmIFVGUyBTWVMgQ1RS
+TCByZWdpc3RlciBhZGRyZXNzLA0KPj4gKy0gaW50ZXJydXB0LXBhcmVudCAgOiBpbnRlcnJ1cHQg
+ZGV2aWNlDQo+PiArLSBpbnRlcnJ1cHRzICAgICAgICA6IGludGVycnVwdCBudW1iZXINCj4+ICst
+IHJlc2V0cyAgICAgICAgICAgIDogcmVzZXQgbm9kZSByZWdpc3RlciwgdGhlICJhcnN0IiBjb3Jy
+ZXNwb25kcyB0byByZXNldCB0aGUgQVBCL0FYSSBidXMuDQo+DQo+IGFyc3QgYmVsb25ncyBpbiBy
+ZXNldC1uYW1lcy4NCj4NCj4gT0ssIEkgd2lsbCBmaXggaXQgaW4gbmV4dCBwYXRjaDsNCj4NCj4+
+ICstIHJlc2V0LW5hbWVzICAgICAgIDogZGVzY3JpYmUgcmVzZXQgbm9kZSByZWdpc3Rlcg0KPg0K
+PiBXaGF0IGhhcHBlbmVkIHRvIGNsb2Nrcz8gWW91IHN0aWxsIGhhdmUgdG8gbGlzdCB3aGljaCBv
+bmVzIGFwcGx5IGV2ZW4gaWYNCj4gZG9jdW1lbnRlZCBpbiB0aGUgY29tbW9uIGJpbmRpbmcuDQo+
+DQo+IE9LLCBJIHdpbGwgZml4IGl0IGluIG5leHQgcGF0Y2g7DQo+DQo+PiArDQo+PiArRXhhbXBs
+ZToNCj4+ICsNCj4+ICsgICAgIHVmczogdWZzQGZmM2IwMDAwIHsNCj4+ICsgICAgICAgICAgICAg
+Y29tcGF0aWJsZSA9ICJoaXNpbGljb24saGkzNjYwLXVmcyIsICJqZWRlYyx1ZnMtMS4xIjsNCj4+
+ICsgICAgICAgICAgICAgLyogMDogSENJIHN0YW5kYXJkICovDQo+PiArICAgICAgICAgICAgIC8q
+IDE6IFVGUyBTWVMgQ1RSTCAqLw0KPj4gKyAgICAgICAgICAgICByZWcgPSA8MHgwIDB4ZmYzYjAw
+MDAgMHgwIDB4MTAwMD4sDQo+PiArICAgICAgICAgICAgICAgICAgICAgPDB4MCAweGZmM2IxMDAw
+IDB4MCAweDEwMDA+Ow0KPj4gKyAgICAgICAgICAgICBpbnRlcnJ1cHQtcGFyZW50ID0gPCZnaWM+
+Ow0KPj4gKyAgICAgICAgICAgICBpbnRlcnJ1cHRzID0gPEdJQ19TUEkgMjc4IElSUV9UWVBFX0xF
+VkVMX0hJR0g+Ow0KPj4gKyAgICAgICAgICAgICAvKiBvZmZzZXQ6IDB4ODQ7IGJpdDogNyAgKi8N
+Cj4+ICsgICAgICAgICAgICAgcmVzZXRzID0gPCZjcmdfcnN0IDB4ODQgNz47DQo+PiArICAgICAg
+ICAgICAgIHJlc2V0LW5hbWVzID0gImFyc3QiOw0KPj4gKyAgICAgfTsNCj4+IGRpZmYgLS1naXQg
+YS9Eb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvdWZzL3Vmc2hjZC1wbHRmcm0udHh0
+IGIvRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3Vmcy91ZnNoY2QtcGx0ZnJtLnR4
+dA0KPj4gaW5kZXggYzM5ZGZlZjc2YTE4Li5hZGNmYjc5ZjYzZjUgMTAwNjQ0DQo+PiAtLS0gYS9E
+b2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvdWZzL3Vmc2hjZC1wbHRmcm0udHh0DQo+
+PiArKysgYi9Eb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvdWZzL3Vmc2hjZC1wbHRm
+cm0udHh0DQo+PiBAQCAtNDEsNiArNDEsOCBAQCBPcHRpb25hbCBwcm9wZXJ0aWVzOg0KPj4gIC1s
+YW5lcy1wZXItZGlyZWN0aW9uIDogbnVtYmVyIG9mIGxhbmVzIGF2YWlsYWJsZSBwZXIgZGlyZWN0
+aW9uIC0gZWl0aGVyIDEgb3IgMi4NCj4+ICAgICAgICAgICAgICAgICAgICAgICAgIE5vdGUgdGhh
+dCBpdCBpcyBhc3N1bWUgc2FtZSBudW1iZXIgb2YgbGFuZXMgaXMgdXNlZCBib3RoDQo+PiAgICAg
+ICAgICAgICAgICAgICAgICAgICBkaXJlY3Rpb25zIGF0IG9uY2UuIElmIG5vdCBzcGVjaWZpZWQs
+IGRlZmF1bHQgaXMgMiBsYW5lcyBwZXIgZGlyZWN0aW9uLg0KPj4gKy0gcmVzZXRzICAgICAgICAg
+ICAgOiByZXNldCBub2RlIHJlZ2lzdGVyLCB0aGUgInJzdCIgY29ycmVzcG9uZHMgdG8gcmVzZXQg
+dGhlIHdob2xlIFVGUyBJUC4NCj4+ICstIHJlc2V0LW5hbWVzICAgICAgIDogZGVzY3JpYmUgcmVz
+ZXQgbm9kZSByZWdpc3Rlcg0KPg0KPiBEb2VzIHlvdXIgY29udHJvbGxlciBoYXZlIDEgb3IgMiBy
+ZXNldHM/IFRoZXJlJ3Mgbm8gcG9pbnQgaW4gYWRkaW5nIHRoaXMNCj4gaGVyZSBpZiBpdCBkb2Vz
+bid0IGFwcGx5IHRvIHlvdXIgY29udHJvbGxlci4NCj4NCj4gVGhlcmUgYXJlIDIgcmVzZXQgaW4g
+b3VyIHNvYyBpbml0LCB0aGUgInJzdCIgY29ycmVzcG9uZHMgdG8gcmVzZXQgdGhlIHdob2xlIFVG
+UyBJUCwgYW5kICIgYXJzdCAiIG9ubHkgcmVzZXQgdGhlIEFQQi9BWEkgYnVzLg0KPiBEaXNjdXNz
+ZWQgd2l0aCBvdXIgc29jIGNvbGxlYWd1ZXMgdGhhdCAiYXJzdCIgaXMgYXNzZXJ0IGJ5IGRlZmF1
+bHQgYW5kIG5lZWRzIHRvIGRlYXNzZXJ0LGJ1dCBpdCBkb25lIGluIGJvb3Rsb2FkZXIsc28gd2ls
+bCByZW1vdmUgJ2Fyc3QnIGluIG5leHQgcGF0Y2guDQo+DQo+IEFib3V0IHRoZSAncmVzZXQnIHBy
+b3BlcnR577yMaXQgc2VlbXMgdGhhdCBBcm5kIEJlcmdtYW5uIGhhcyBkaWZmZXJlbnQgc3VnZ2Vz
+dGlvbu+8jGhlIHN1Z2dlc3RlZCB0aGF0IGFkZCAncnN0JyB0byB1ZnNoY2QtcGx0ZnJtIGJlY2F1
+c2UgaXQgc2VlbXMgY29tbW9uLg0KPiBCdXQgaXQgbG9va3MgbGlrZSBvbmx5IG91ciBzb2MgaW5p
+dCBuZWVkcyBpdC4gV2hhdCdzIHlvdXIgb3Bpbmlvbj8gRG9lcyBpdCBzdGlsbCBuZWVkcyBhZGQg
+dG8gY29tbW9uIGJpbmRpbmdzPw0KDQpGb3IgYSBzaW5nbGUgcmVzZXQsIHRoZW4gSSdtIGZpbmUg
+d2l0aCBpdCBiZWluZyBpbiB0aGUgY29tbW9uDQpiaW5kaW5ncy4gSWYgdGhlcmUgYXJlIG11bHRp
+cGxlIHRoZW4gaXQgc2hvdWxkIGJlIGluIHRoZSBzcGVjaWZpYw0KYmluZGluZ3MgYXMgdGhlIHJl
+c2V0IG5hbWVzIGFyZSBsaWtlbHkgZGlmZmVyZW50Lg0KDQpPSywgSSB3aWxsIHJlbW92ZSB0aGUg
+J2Fyc3QnIGFuZCBrZWVwIG9ubHkgJ3JzdCcgaW4gdG5lIGNvbW1vbiBiaW5naW5ncy4NCg0KUm9i
+DQo=
