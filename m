@@ -1,120 +1,37 @@
-From: Steffen Maier <maier@linux.ibm.com>
-Subject: [PATCH 03/25] zfcp: fix misleading REC trigger trace where erp_action setup failed
-Date: Thu, 17 May 2018 19:14:45 +0200
-Message-ID: <20180517171507.18237-4-maier@linux.ibm.com>
-References: <20180517171507.18237-1-maier@linux.ibm.com>
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20180517171507.18237-1-maier@linux.ibm.com>
-Sender: stable-owner@vger.kernel.org
-To: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Benjamin Block <bblock@linux.ibm.com>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, Steffen Maier <maier@linux.ibm.com>, stable@vger.kernel.org
+From: ebiederm@xmission.com (Eric W. Biederman)
+Subject: Re: [PATCH 11/40] ipv6/flowlabel: simplify pid namespace lookup
+Date: Thu, 17 May 2018 14:14:57 -0500
+Message-ID: <87efiahz66.fsf@xmission.com>
+References: <20180425154827.32251-1-hch@lst.de>
+        <20180425154827.32251-12-hch@lst.de> <878t8y46sy.fsf@xmission.com>
+        <20180515145643.GA661@lst.de> <871seakg0u.fsf@xmission.com>
+        <20180517064220.GA24300@lst.de>
+Mime-Version: 1.0
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20180517064220.GA24300@lst.de> (Christoph Hellwig's message of
+        "Thu, 17 May 2018 08:42:20 +0200")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.org.uk>, Alexey Dobriyan <adobriyan@gmail.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jslaby@suse.com>, Alessandro Zummo <a.zummo@towertech.it>, Alexandre Belloni <alexandre.belloni@bootlin.com>, linux-acpi@vger.kernel.org, drbd-dev@lists.linbit.com, linux-ide@vger.kernel.org, netdev@vger.kernel.org, linux-rtc@vger.kernel.org, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, devel@driverdev.osuosl.org, linux-afs@lists.infradead.org, linux-ext4@vger.kernel.org, jfs-discussion@lists.sourceforge.net, netfilter-devel@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-If a SCSI device is deleted during scsi_eh host reset, we cannot get a
-reference to the SCSI device anymore since scsi_device_get returns !=0
-by design. Assuming the recovery of adapter and port(s) was successful,
-zfcp_erp_strategy_followup_success() attempts to trigger a LUN reset for
-the half-gone SCSI device. Unfortunately, it causes the following confusing
-trace record which states that zfcp will do a LUN recovery as "ERP need" is
-ZFCP_ERP_ACTION_REOPEN_LUN == 1 and equals "ERP want".
+Christoph Hellwig <hch@lst.de> writes:
 
-Old example trace record formatted with zfcpdbf from s390-tools:
+> On Thu, May 17, 2018 at 12:28:01AM -0500, Eric W. Biederman wrote:
+>> > struct pid_namespace *proc_pid_namespace(struct inode *inode)
+>> > {
+>> > 	// maybe warn on for s_magic not on procfs??
+>> > 	return inode->i_sb->s_fs_info;
+>> > }
+>> 
+>> That should work.  Ideally out of line for the proc_fs.h version.
+>> Basically it should be a cousin of PDE_DATA.
+>
+> The version in Al's tree is inline and without the warning as
+> I didn't want to drag in the magic.h include.  Please look at it for
+> additional comments, I can send incremental fixups if needed.
 
-Tag:           : ersfs_3 ERP, trigger, unit reopen, port reopen succeeded
-LUN            : 0x<FCP_LUN>
-WWPN           : 0x<WWPN>
-D_ID           : 0x<N_Port-ID>
-Adapter status : 0x5400050b
-Port status    : 0x54000001
-LUN status     : 0x40000000     ZFCP_STATUS_COMMON_RUNNING
-                                but not ZFCP_STATUS_COMMON_UNBLOCKED as it
-                                was closed on close part of adapter reopen
-ERP want       : 0x01
-ERP need       : 0x01           misleading
+Sounds good.
 
-However, zfcp_erp_setup_act() returns NULL as it cannot get the reference.
-Hence, zfcp_erp_action_enqueue() takes an early goto out and _NO_ recovery
-actually happens.
-
-We always do want the recovery trigger trace record even if no erp_action
-could be enqueued as in this case. For other cases where we did not enqueue
-an erp_action, 'need' has always been zero to indicate this. In order to
-indicate above goto out, introduce an eyecatcher "flag" to mark the
-"ERP need" as 'not needed' but still keep the information which erp_action
-type, that zfcp_erp_required_act() had decided upon, is needed.
-0xc_ is chosen to be visibly different from 0x0_ in "ERP want".
-
-New example trace record formatted with zfcpdbf from s390-tools:
-
-Tag:           : ersfs_3 ERP, trigger, unit reopen, port reopen succeeded
-LUN            : 0x<FCP_LUN>
-WWPN           : 0x<WWPN>
-D_ID           : 0x<N_Port-ID>
-Adapter status : 0x5400050b
-Port status    : 0x54000001
-LUN status     : 0x40000000
-ERP want       : 0x01
-ERP need       : 0xc1           would need LUN ERP, but no action set up
-                   ^
-
-Before v2.6.38 commit ae0904f60fab ("[SCSI] zfcp: Redesign of the debug
-tracing for recovery actions.") we could detect this case because the
-"erp_action" field in the trace was NULL. The rework removed erp_action
-as argument and field from the trace.
-
-This patch here is for tracing. A fix to allow LUN recovery in the case at
-hand is a topic for a separate patch.
-
-See also commit fdbd1c5e27da ("[SCSI] zfcp: Allow running unit/LUN shutdown
-without acquiring reference") for a similar case and background info.
-
-Signed-off-by: Steffen Maier <maier@linux.ibm.com>
-Fixes: ae0904f60fab ("[SCSI] zfcp: Redesign of the debug tracing for recovery actions.")
-Cc: <stable@vger.kernel.org> #2.6.38+
-Reviewed-by: Benjamin Block <bblock@linux.ibm.com>
----
- drivers/s390/scsi/zfcp_erp.c | 16 +++++++++++++++-
- 1 file changed, 15 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/s390/scsi/zfcp_erp.c b/drivers/s390/scsi/zfcp_erp.c
-index 1d91a32db08e..d9cd25b56cfa 100644
---- a/drivers/s390/scsi/zfcp_erp.c
-+++ b/drivers/s390/scsi/zfcp_erp.c
-@@ -35,11 +35,23 @@ enum zfcp_erp_steps {
- 	ZFCP_ERP_STEP_LUN_OPENING	= 0x2000,
- };
- 
-+/**
-+ * enum zfcp_erp_act_type - Type of ERP action object.
-+ * @ZFCP_ERP_ACTION_REOPEN_LUN: LUN recovery.
-+ * @ZFCP_ERP_ACTION_REOPEN_PORT: Port recovery.
-+ * @ZFCP_ERP_ACTION_REOPEN_PORT_FORCED: Forced port recovery.
-+ * @ZFCP_ERP_ACTION_REOPEN_ADAPTER: Adapter recovery.
-+ * @ZFCP_ERP_ACTION_NONE: Eyecatcher pseudo flag to bitwise or-combine with
-+ *			  either of the other enum values.
-+ *			  Used to indicate that an ERP action could not be
-+ *			  set up despite a detected need for some recovery.
-+ */
- enum zfcp_erp_act_type {
- 	ZFCP_ERP_ACTION_REOPEN_LUN         = 1,
- 	ZFCP_ERP_ACTION_REOPEN_PORT	   = 2,
- 	ZFCP_ERP_ACTION_REOPEN_PORT_FORCED = 3,
- 	ZFCP_ERP_ACTION_REOPEN_ADAPTER     = 4,
-+	ZFCP_ERP_ACTION_NONE		   = 0xc0,
- };
- 
- enum zfcp_erp_act_state {
-@@ -257,8 +269,10 @@ static int zfcp_erp_action_enqueue(int want, struct zfcp_adapter *adapter,
- 		goto out;
- 
- 	act = zfcp_erp_setup_act(need, act_status, adapter, port, sdev);
--	if (!act)
-+	if (!act) {
-+		need |= ZFCP_ERP_ACTION_NONE; /* marker for trace */
- 		goto out;
-+	}
- 	atomic_or(ZFCP_STATUS_ADAPTER_ERP_PENDING, &adapter->status);
- 	++adapter->erp_total_count;
- 	list_add_tail(&act->list, &adapter->erp_ready_head);
--- 
-2.16.3
+Eric
