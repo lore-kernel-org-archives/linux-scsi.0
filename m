@@ -1,7 +1,7 @@
 From: Steffen Maier <maier@linux.ibm.com>
-Subject: [PATCH 02/25] zfcp: fix missing SCSI trace for retry of abort / scsi_eh TMF
-Date: Thu, 17 May 2018 19:14:44 +0200
-Message-ID: <20180517171507.18237-3-maier@linux.ibm.com>
+Subject: [PATCH 05/25] zfcp: fix missing REC trigger trace on terminate_rport_io for ERP_FAILED
+Date: Thu, 17 May 2018 19:14:47 +0200
+Message-ID: <20180517171507.18237-6-maier@linux.ibm.com>
 References: <20180517171507.18237-1-maier@linux.ibm.com>
 Return-path: <stable-owner@vger.kernel.org>
 In-Reply-To: <20180517171507.18237-1-maier@linux.ibm.com>
@@ -10,96 +10,121 @@ To: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <
 Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Benjamin Block <bblock@linux.ibm.com>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, Steffen Maier <maier@linux.ibm.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-We already have a SCSI trace for the end of abort and scsi_eh TMF. Due to
-zfcp_erp_wait() and fc_block_scsi_eh() time can pass between the
-start of our eh callback and an actual send/recv of an abort / TMF request.
-In order to see the temporal sequence including any abort / TMF send
-retries, add a trace before the above two blocking functions.
-This supports problem determination with scsi_eh and parallel zfcp ERP.
+For problem determination we always want to see when we were invoked
+on the terminate_rport_io callback whether we perform something or not.
 
-No need to explicitly trace the beginning of our eh callback, since we
-typically can send an abort / TMF and see its HBA response (in the worst
-case, it's a pseudo response on dismiss all of adapter recovery, e.g. due
-to an FSF request timeout [fsrth_1] of the abort / TMF). If we cannot send,
-we now get a trace record for the first "abrt_wt" or "[lt]r_wait" which
-denotes almost the beginning of the callback.
+Temporal event sequence of interest with a long fast_io_fail_tmo of 27 sec:
 
-No need to explicitly trace the wakeup after the above two blocking
-functions because the next retry loop causes another trace in any case
-and that is sufficient.
+loose remote port
 
-Example trace records formatted with zfcpdbf from s390-tools:
+t   workqueue
+[s] zfcp_q_<dev>       IRQ                 zfcperp<dev>
+=== ================== =================== ============================
+
+  0                    recv RSCN
+                       q p.test_link_work
+    block rport
+     start fast_io_fail_tmo
+    send ADISC ELS
+  4                    recv ADISC fail
+                       block zfcp_port
+                                           port forced reopen
+                                           send open port
+ 12                    recv open port fail
+                                           q p.gid_pn_work
+                                           zfcp_erp_wakeup
+                                           (zfcp_erp_wait would return)
+    GID_PN fail
+
+Before this point, we got a SCSI trace with tag "sctrpi1" on fast_io_fail,
+e.g. with the typical 5 sec setting.
+
+    port.status |= ERP_FAILED
+
+If fast_io_fail_tmo triggers after this point, we missed a SCSI trace.
+
+    workqueue
+    fc_dl_<host>
+    ==================
+ 27 fc_timeout_fail_rport_io
+    fc_terminate_rport_io
+    zfcp_scsi_terminate_rport_io
+    zfcp_erp_port_forced_reopen
+    _zfcp_erp_port_forced_reopen
+     if (port.status & ERP_FAILED)
+      return;
+
+Therefore, write a trace before above early return.
+
+Example trace record formatted with zfcpdbf from s390-tools:
 
 Timestamp      : ...
-Area           : SCSI
+Area           : REC
 Subarea        : 00
 Level          : 1
 Exception      : -
 CPU ID         : ..
 Caller         : 0x...
-Record ID      : 1
-Tag            : abrt_wt        abort, before zfcp_erp_wait()
-Request ID     : 0x0000000000000000                     none (invalid)
-SCSI ID        : 0x<scsi_id>
-SCSI LUN       : 0x<scsi_lun>
-SCSI LUN high  : 0x<scsi_lun_high>
-SCSI result    : 0x<scsi_result_of_cmd_to_be_aborted>
-SCSI retries   : 0x<retries_of_cmd_to_be_aborted>
-SCSI allowed   : 0x<allowed_retries_of_cmd_to_be_aborted>
-SCSI scribble  : 0x<req_id_of_cmd_to_be_aborted>
-SCSI opcode    : <CDB_of_cmd_to_be_aborted>
-FCP rsp inf cod: 0x..                                   none (invalid)
-FCP rsp IU     : ...                                    none (invalid)
-
-Timestamp      : ...
-Area           : SCSI
-Subarea        : 00
-Level          : 1
-Exception      : -
-CPU ID         : ..
-Caller         : 0x...
-Record ID      : 1
-Tag            : lr_wait        LUN reset, before zfcp_erp_wait()
-Request ID     : 0x0000000000000000                     none (invalid)
-SCSI ID        : 0x<scsi_id>
-SCSI LUN       : 0x<scsi_lun>
-SCSI LUN high  : 0x<scsi_lun_high>
-SCSI result    : 0x...                                  unrelated
-SCSI retries   : 0x..                                   unrelated
-SCSI allowed   : 0x..                                   unrelated
-SCSI scribble  : 0x...                                  unrelated
-SCSI opcode    : ...                                    unrelated
-FCP rsp inf cod: 0x..                                   none (invalid)
-FCP rsp IU     : ...                                    none (invalid)
+Record ID      : 1                      ZFCP_DBF_REC_TRIG
+Tag            : sctrpi1                SCSI terminate rport I/O
+LUN            : 0xffffffffffffffff                     none (invalid)
+WWPN           : 0x<wwpn>
+D_ID           : 0x<n_port_id>
+Adapter status : 0x...
+Port status    : 0x...
+LUN status     : 0x00000000                             none (invalid)
+Ready count    : 0x...
+Running count  : 0x...
+ERP want       : 0x03                   ZFCP_ERP_ACTION_REOPEN_PORT_FORCED
+ERP need       : 0xe0                   ZFCP_ERP_ACTION_FAILED
 
 Signed-off-by: Steffen Maier <maier@linux.ibm.com>
-Fixes: 63caf367e1c9 ("[SCSI] zfcp: Improve reliability of SCSI eh handlers in zfcp")
-Fixes: af4de36d911a ("[SCSI] zfcp: Block scsi_eh thread for rport state BLOCKED")
 Cc: <stable@vger.kernel.org> #2.6.38+
 Reviewed-by: Benjamin Block <bblock@linux.ibm.com>
 ---
- drivers/s390/scsi/zfcp_scsi.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/s390/scsi/zfcp_erp.c | 13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/s390/scsi/zfcp_scsi.c b/drivers/s390/scsi/zfcp_scsi.c
-index a62357f5e8b4..4fdb1665b0e6 100644
---- a/drivers/s390/scsi/zfcp_scsi.c
-+++ b/drivers/s390/scsi/zfcp_scsi.c
-@@ -181,6 +181,7 @@ static int zfcp_scsi_eh_abort_handler(struct scsi_cmnd *scpnt)
- 		if (abrt_req)
- 			break;
+diff --git a/drivers/s390/scsi/zfcp_erp.c b/drivers/s390/scsi/zfcp_erp.c
+index 3489b1bc9121..5c368cdfc455 100644
+--- a/drivers/s390/scsi/zfcp_erp.c
++++ b/drivers/s390/scsi/zfcp_erp.c
+@@ -42,9 +42,13 @@ enum zfcp_erp_steps {
+  * @ZFCP_ERP_ACTION_REOPEN_PORT_FORCED: Forced port recovery.
+  * @ZFCP_ERP_ACTION_REOPEN_ADAPTER: Adapter recovery.
+  * @ZFCP_ERP_ACTION_NONE: Eyecatcher pseudo flag to bitwise or-combine with
+- *			  either of the other enum values.
++ *			  either of the first four enum values.
+  *			  Used to indicate that an ERP action could not be
+  *			  set up despite a detected need for some recovery.
++ * @ZFCP_ERP_ACTION_FAILED: Eyecatcher pseudo flag to bitwise or-combine with
++ *			    either of the first four enum values.
++ *			    Used to indicate that ERP not needed because
++ *			    the object has ZFCP_STATUS_COMMON_ERP_FAILED.
+  */
+ enum zfcp_erp_act_type {
+ 	ZFCP_ERP_ACTION_REOPEN_LUN         = 1,
+@@ -52,6 +56,7 @@ enum zfcp_erp_act_type {
+ 	ZFCP_ERP_ACTION_REOPEN_PORT_FORCED = 3,
+ 	ZFCP_ERP_ACTION_REOPEN_ADAPTER     = 4,
+ 	ZFCP_ERP_ACTION_NONE		   = 0xc0,
++	ZFCP_ERP_ACTION_FAILED		   = 0xe0,
+ };
  
-+		zfcp_dbf_scsi_abort("abrt_wt", scpnt, NULL);
- 		zfcp_erp_wait(adapter);
- 		ret = fc_block_scsi_eh(scpnt);
- 		if (ret) {
-@@ -277,6 +278,7 @@ static int zfcp_task_mgmt_function(struct scsi_cmnd *scpnt, u8 tm_flags)
- 		if (fsf_req)
- 			break;
+ enum zfcp_erp_act_state {
+@@ -379,8 +384,12 @@ static void _zfcp_erp_port_forced_reopen(struct zfcp_port *port, int clear,
+ 	zfcp_erp_port_block(port, clear);
+ 	zfcp_scsi_schedule_rport_block(port);
  
-+		zfcp_dbf_scsi_devreset("wait", scpnt, tm_flags, NULL);
- 		zfcp_erp_wait(adapter);
- 		ret = fc_block_scsi_eh(scpnt);
- 		if (ret) {
+-	if (atomic_read(&port->status) & ZFCP_STATUS_COMMON_ERP_FAILED)
++	if (atomic_read(&port->status) & ZFCP_STATUS_COMMON_ERP_FAILED) {
++		zfcp_dbf_rec_trig(id, port->adapter, port, NULL,
++				  ZFCP_ERP_ACTION_REOPEN_PORT_FORCED,
++				  ZFCP_ERP_ACTION_FAILED);
+ 		return;
++	}
+ 
+ 	zfcp_erp_action_enqueue(ZFCP_ERP_ACTION_REOPEN_PORT_FORCED,
+ 				port->adapter, port, NULL, id, 0);
 -- 
 2.16.3
