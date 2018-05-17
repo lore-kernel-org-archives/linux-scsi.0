@@ -1,94 +1,67 @@
-From: "Asutosh Das (asd)" <asutoshd@codeaurora.org>
-Subject: Re: [PATCH 1/4] scsi: ufs: add quirk to fix mishandling
- utrlclr/utmrlclr
-Date: Thu, 17 May 2018 09:36:42 +0530
-Message-ID: <f84870f6-234e-9854-fe6d-968a876dca6f@codeaurora.org>
-References: <1525601658-31989-1-git-send-email-alim.akhtar@samsung.com>
- <CGME20180506102638epcas1p17bea76e1a5dbac535d5d6a10181f7e29@epcas1p1.samsung.com>
- <1525601658-31989-2-git-send-email-alim.akhtar@samsung.com>
+From: ebiederm@xmission.com (Eric W. Biederman)
+Subject: Re: [PATCH 11/40] ipv6/flowlabel: simplify pid namespace lookup
+Date: Thu, 17 May 2018 00:28:01 -0500
+Message-ID: <871seakg0u.fsf@xmission.com>
+References: <20180425154827.32251-1-hch@lst.de>
+ <20180425154827.32251-12-hch@lst.de> <878t8y46sy.fsf@xmission.com>
+ <20180515145643.GA661@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1525601658-31989-2-git-send-email-alim.akhtar@samsung.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alim Akhtar <alim.akhtar@samsung.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, vivek.gautam@codeaurora.org, subhashj@codeaurora.org, vinholikatti@gmail.com, olof@lixom.net
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <20180515145643.GA661@lst.de> (Christoph Hellwig's message of
+ "Tue, 15 May 2018 16:56:43 +0200")
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-rtc@vger.kernel.org, Alessandro Zummo <a.zummo@towertech.it>, Alexandre Belloni <alexandre.belloni@bootlin.com>, devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, jfs-discussion@lists.sourceforge.net, linux-afs@lists.infradead.org, linux-acpi@vger.kernel.org, netdev@vger.kernel.org, netfilter-devel@vger.kernel.org, Alexander Viro <viro@zeniv.linux.org.uk>, Jiri Slaby <jslaby@suse.com>, Andrew Morton <akpm@linux-foundation.org>, linux-ext4@vger.kernel.org, Alexey Dobriyan <adobriyan@gmail.com>, megaraidlinux.pdl@broadcom.com, drbd-dev@lists.linbit.com
 List-Id: linux-scsi@vger.kernel.org
 
-On 5/6/2018 3:44 PM, Alim Akhtar wrote:
-> In the right behavior, setting the bit to '0' indicates clear and
-> '1' indicates no change. If host controller handles this the other way,
-> UFSHCI_QUIRK_BROKEN_REQ_LIST_CLR can be used.
-> 
-> Signed-off-by: Seungwon Jeon <essuuj@gmail.com>
-> Signed-off-by: Alim Akhtar <alim.akhtar@samsung.com>
-> ---
->   drivers/scsi/ufs/ufshcd.c | 21 +++++++++++++++++++--
->   drivers/scsi/ufs/ufshcd.h |  5 +++++
->   2 files changed, 24 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 00e7905..9898ce5 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -675,7 +675,24 @@ static inline void ufshcd_put_tm_slot(struct ufs_hba *hba, int slot)
->    */
->   static inline void ufshcd_utrl_clear(struct ufs_hba *hba, u32 pos)
->   {
-> -	ufshcd_writel(hba, ~(1 << pos), REG_UTP_TRANSFER_REQ_LIST_CLEAR);
-> +	if (hba->quirks & UFSHCI_QUIRK_BROKEN_REQ_LIST_CLR)
-> +		ufshcd_writel(hba, (1 << pos), REG_UTP_TRANSFER_REQ_LIST_CLEAR);
-> +	else
-> +		ufshcd_writel(hba, ~(1 << pos),
-> +				REG_UTP_TRANSFER_REQ_LIST_CLEAR);
-> +}
-> +
-> +/**
-> + * ufshcd_utmrl_clear - Clear a bit in UTRMLCLR register
-> + * @hba: per adapter instance
-> + * @pos: position of the bit to be cleared
-> + */
-> +static inline void ufshcd_utmrl_clear(struct ufs_hba *hba, u32 pos)
-> +{
-> +	if (hba->quirks & UFSHCI_QUIRK_BROKEN_REQ_LIST_CLR)
-> +		ufshcd_writel(hba, (1 << pos), REG_UTP_TASK_REQ_LIST_CLEAR);
-> +	else
-> +		ufshcd_writel(hba, ~(1 << pos), REG_UTP_TASK_REQ_LIST_CLEAR);
->   }
->   
->   /**
-> @@ -5398,7 +5415,7 @@ static int ufshcd_clear_tm_cmd(struct ufs_hba *hba, int tag)
->   		goto out;
->   
->   	spin_lock_irqsave(hba->host->host_lock, flags);
-> -	ufshcd_writel(hba, ~(1 << tag), REG_UTP_TASK_REQ_LIST_CLEAR);
-> +	ufshcd_utmrl_clear(hba, tag);
->   	spin_unlock_irqrestore(hba->host->host_lock, flags);
->   
->   	/* poll for max. 1 sec to clear door bell register by h/w */
-> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> index 8110dcd..43035f8 100644
-> --- a/drivers/scsi/ufs/ufshcd.h
-> +++ b/drivers/scsi/ufs/ufshcd.h
-> @@ -595,6 +595,11 @@ struct ufs_hba {
->   	 */
->   	#define UFSHCD_QUIRK_PRDT_BYTE_GRAN			0x80
->   
-> +	/*
-> +	 * Cleaer handling for transfer/task request list is just opposite.
-> +	 */
-Spell check - should be 'Clear'
-> +	#define UFSHCI_QUIRK_BROKEN_REQ_LIST_CLR		0x100
-> +
->   	unsigned int quirks;	/* Deviations from standard UFSHCI spec. */
->   
->   	/* Device deviations from standard UFS device spec. */
-> 
+Christoph Hellwig <hch@lst.de> writes:
 
-Looks good to me, except the spell-check.
+> On Sat, May 05, 2018 at 07:37:33AM -0500, Eric W. Biederman wrote:
+>> Christoph Hellwig <hch@lst.de> writes:
+>> 
+>> > The shole seq_file sequence already operates under a single RCU lock pair,
+>> > so move the pid namespace lookup into it, and stop grabbing a reference
+>> > and remove all kinds of boilerplate code.
+>> 
+>> This is wrong.
+>> 
+>> Move task_active_pid_ns(current) from open to seq_start actually means
+>> that the results if you pass this proc file between callers the results
+>> will change.  So this breaks file descriptor passing.
+>> 
+>> Open is a bad place to access current.  In the middle of read/write is
+>> broken.
+>> 
+>> 
+>> In this particular instance looking up the pid namespace with
+>> task_active_pid_ns was a personal brain fart.  What the code should be
+>> doing (with an appropriate helper) is:
+>> 
+>> struct pid_namespace *pid_ns = inode->i_sb->s_fs_info;
+>> 
+>> Because each mount of proc is bound to a pid namespace.  Looking up the
+>> pid namespace from the super_block is a much better way to go.
+>
+> What do you have in mind for the helper?  For now I've thrown it in
+> opencoded into my working tree, but I'd be glad to add a helper.
+>
+> struct pid_namespace *proc_pid_namespace(struct inode *inode)
+> {
+> 	// maybe warn on for s_magic not on procfs??
+> 	return inode->i_sb->s_fs_info;
+> }
 
--- 
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a 
-Linux Foundation Collaborative Project
+That should work.  Ideally out of line for the proc_fs.h version.
+Basically it should be a cousin of PDE_DATA.
+
+Eric
