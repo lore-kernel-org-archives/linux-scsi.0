@@ -1,7 +1,7 @@
 From: Steffen Maier <maier@linux.ibm.com>
-Subject: [PATCH 04/25] zfcp: fix missing REC trigger trace on terminate_rport_io early return
-Date: Thu, 17 May 2018 19:14:46 +0200
-Message-ID: <20180517171507.18237-5-maier@linux.ibm.com>
+Subject: [PATCH 03/25] zfcp: fix misleading REC trigger trace where erp_action setup failed
+Date: Thu, 17 May 2018 19:14:45 +0200
+Message-ID: <20180517171507.18237-4-maier@linux.ibm.com>
 References: <20180517171507.18237-1-maier@linux.ibm.com>
 Return-path: <stable-owner@vger.kernel.org>
 In-Reply-To: <20180517171507.18237-1-maier@linux.ibm.com>
@@ -10,110 +10,111 @@ To: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <
 Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Benjamin Block <bblock@linux.ibm.com>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, Steffen Maier <maier@linux.ibm.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-get_device() and its internally used kobject_get() only return NULL
-if they get passed NULL as argument. zfcp_get_port_by_wwpn() loops over
-adapter->port_list so the iteration variable port is always non-NULL.
-Struct device is embedded in struct zfcp_port so &port->dev is always
-non-NULL. This is the argument to get_device().
-However, if we get an fc_rport in terminate_rport_io() for which we cannot
-find a match within zfcp_get_port_by_wwpn(), the latter can return NULL.
-v2.6.30 commit 70932935b61e ("[SCSI] zfcp: Fix oops when port disappears")
-introduced an early return without adding a trace record for this case.
-Even if we don't need recovery in this case, for debugging we should still
-see that our callback was invoked originally by scsi_transport_fc.
+If a SCSI device is deleted during scsi_eh host reset, we cannot get a
+reference to the SCSI device anymore since scsi_device_get returns !=0
+by design. Assuming the recovery of adapter and port(s) was successful,
+zfcp_erp_strategy_followup_success() attempts to trigger a LUN reset for
+the half-gone SCSI device. Unfortunately, it causes the following confusing
+trace record which states that zfcp will do a LUN recovery as "ERP need" is
+ZFCP_ERP_ACTION_REOPEN_LUN == 1 and equals "ERP want".
 
-Example trace record formatted with zfcpdbf from s390-tools:
+Old example trace record formatted with zfcpdbf from s390-tools:
 
-Timestamp      : ...
-Area           : REC
-Subarea        : 00
-Level          : 1
-Exception      : -
-CPU ID         : ..
-Caller         : 0x...
-Record ID      : 1
-Tag            : sctrpin        SCSI terminate rport I/O, no zfcp port
-LUN            : 0xffffffffffffffff                     none (invalid)
-WWPN           : 0x<wwpn>               WWPN
-D_ID           : 0x<n_port_id>          N_Port-ID
-Adapter status : 0x...
-Port status    : 0xffffffff             unknown (-1)
-LUN status     : 0x00000000                             none (invalid)
-Ready count    : 0x...
-Running count  : 0x...
-ERP want       : 0x03                   ZFCP_ERP_ACTION_REOPEN_PORT_FORCED
-ERP need       : 0xc0                   ZFCP_ERP_ACTION_NONE
+Tag:           : ersfs_3 ERP, trigger, unit reopen, port reopen succeeded
+LUN            : 0x<FCP_LUN>
+WWPN           : 0x<WWPN>
+D_ID           : 0x<N_Port-ID>
+Adapter status : 0x5400050b
+Port status    : 0x54000001
+LUN status     : 0x40000000     ZFCP_STATUS_COMMON_RUNNING
+                                but not ZFCP_STATUS_COMMON_UNBLOCKED as it
+                                was closed on close part of adapter reopen
+ERP want       : 0x01
+ERP need       : 0x01           misleading
+
+However, zfcp_erp_setup_act() returns NULL as it cannot get the reference.
+Hence, zfcp_erp_action_enqueue() takes an early goto out and _NO_ recovery
+actually happens.
+
+We always do want the recovery trigger trace record even if no erp_action
+could be enqueued as in this case. For other cases where we did not enqueue
+an erp_action, 'need' has always been zero to indicate this. In order to
+indicate above goto out, introduce an eyecatcher "flag" to mark the
+"ERP need" as 'not needed' but still keep the information which erp_action
+type, that zfcp_erp_required_act() had decided upon, is needed.
+0xc_ is chosen to be visibly different from 0x0_ in "ERP want".
+
+New example trace record formatted with zfcpdbf from s390-tools:
+
+Tag:           : ersfs_3 ERP, trigger, unit reopen, port reopen succeeded
+LUN            : 0x<FCP_LUN>
+WWPN           : 0x<WWPN>
+D_ID           : 0x<N_Port-ID>
+Adapter status : 0x5400050b
+Port status    : 0x54000001
+LUN status     : 0x40000000
+ERP want       : 0x01
+ERP need       : 0xc1           would need LUN ERP, but no action set up
+                   ^
+
+Before v2.6.38 commit ae0904f60fab ("[SCSI] zfcp: Redesign of the debug
+tracing for recovery actions.") we could detect this case because the
+"erp_action" field in the trace was NULL. The rework removed erp_action
+as argument and field from the trace.
+
+This patch here is for tracing. A fix to allow LUN recovery in the case at
+hand is a topic for a separate patch.
+
+See also commit fdbd1c5e27da ("[SCSI] zfcp: Allow running unit/LUN shutdown
+without acquiring reference") for a similar case and background info.
 
 Signed-off-by: Steffen Maier <maier@linux.ibm.com>
-Fixes: 70932935b61e ("[SCSI] zfcp: Fix oops when port disappears")
+Fixes: ae0904f60fab ("[SCSI] zfcp: Redesign of the debug tracing for recovery actions.")
 Cc: <stable@vger.kernel.org> #2.6.38+
 Reviewed-by: Benjamin Block <bblock@linux.ibm.com>
 ---
- drivers/s390/scsi/zfcp_erp.c  | 20 ++++++++++++++++++++
- drivers/s390/scsi/zfcp_ext.h  |  3 +++
- drivers/s390/scsi/zfcp_scsi.c |  5 +++++
- 3 files changed, 28 insertions(+)
+ drivers/s390/scsi/zfcp_erp.c | 16 +++++++++++++++-
+ 1 file changed, 15 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/s390/scsi/zfcp_erp.c b/drivers/s390/scsi/zfcp_erp.c
-index d9cd25b56cfa..3489b1bc9121 100644
+index 1d91a32db08e..d9cd25b56cfa 100644
 --- a/drivers/s390/scsi/zfcp_erp.c
 +++ b/drivers/s390/scsi/zfcp_erp.c
-@@ -283,6 +283,26 @@ static int zfcp_erp_action_enqueue(int want, struct zfcp_adapter *adapter,
- 	return retval;
- }
+@@ -35,11 +35,23 @@ enum zfcp_erp_steps {
+ 	ZFCP_ERP_STEP_LUN_OPENING	= 0x2000,
+ };
  
-+void zfcp_erp_port_forced_no_port_dbf(char *id, struct zfcp_adapter *adapter,
-+				      u64 port_name, u32 port_id)
-+{
-+	unsigned long flags;
-+	static /* don't waste stack */ struct zfcp_port tmpport;
-+
-+	write_lock_irqsave(&adapter->erp_lock, flags);
-+	/* Stand-in zfcp port with fields just good enough for
-+	 * zfcp_dbf_rec_trig() and zfcp_dbf_set_common().
-+	 * Under lock because tmpport is static.
-+	 */
-+	atomic_set(&tmpport.status, -1); /* unknown */
-+	tmpport.wwpn = port_name;
-+	tmpport.d_id = port_id;
-+	zfcp_dbf_rec_trig(id, adapter, &tmpport, NULL,
-+			  ZFCP_ERP_ACTION_REOPEN_PORT_FORCED,
-+			  ZFCP_ERP_ACTION_NONE);
-+	write_unlock_irqrestore(&adapter->erp_lock, flags);
-+}
-+
- static int _zfcp_erp_adapter_reopen(struct zfcp_adapter *adapter,
- 				    int clear_mask, char *id)
- {
-diff --git a/drivers/s390/scsi/zfcp_ext.h b/drivers/s390/scsi/zfcp_ext.h
-index e55f42ce1168..3299bd345076 100644
---- a/drivers/s390/scsi/zfcp_ext.h
-+++ b/drivers/s390/scsi/zfcp_ext.h
-@@ -55,6 +55,9 @@ extern void zfcp_dbf_scsi_eh(char *tag, struct zfcp_adapter *adapter,
- /* zfcp_erp.c */
- extern void zfcp_erp_set_adapter_status(struct zfcp_adapter *, u32);
- extern void zfcp_erp_clear_adapter_status(struct zfcp_adapter *, u32);
-+extern void zfcp_erp_port_forced_no_port_dbf(char *id,
-+					     struct zfcp_adapter *adapter,
-+					     u64 port_name, u32 port_id);
- extern void zfcp_erp_adapter_reopen(struct zfcp_adapter *, int, char *);
- extern void zfcp_erp_adapter_shutdown(struct zfcp_adapter *, int, char *);
- extern void zfcp_erp_set_port_status(struct zfcp_port *, u32);
-diff --git a/drivers/s390/scsi/zfcp_scsi.c b/drivers/s390/scsi/zfcp_scsi.c
-index 4fdb1665b0e6..478e7ef9ea2f 100644
---- a/drivers/s390/scsi/zfcp_scsi.c
-+++ b/drivers/s390/scsi/zfcp_scsi.c
-@@ -605,6 +605,11 @@ static void zfcp_scsi_terminate_rport_io(struct fc_rport *rport)
- 	if (port) {
- 		zfcp_erp_port_forced_reopen(port, 0, "sctrpi1");
- 		put_device(&port->dev);
-+	} else {
-+		zfcp_erp_port_forced_no_port_dbf(
-+			"sctrpin", adapter,
-+			rport->port_name /* zfcp_scsi_rport_register */,
-+			rport->port_id /* zfcp_scsi_rport_register */);
- 	}
- }
++/**
++ * enum zfcp_erp_act_type - Type of ERP action object.
++ * @ZFCP_ERP_ACTION_REOPEN_LUN: LUN recovery.
++ * @ZFCP_ERP_ACTION_REOPEN_PORT: Port recovery.
++ * @ZFCP_ERP_ACTION_REOPEN_PORT_FORCED: Forced port recovery.
++ * @ZFCP_ERP_ACTION_REOPEN_ADAPTER: Adapter recovery.
++ * @ZFCP_ERP_ACTION_NONE: Eyecatcher pseudo flag to bitwise or-combine with
++ *			  either of the other enum values.
++ *			  Used to indicate that an ERP action could not be
++ *			  set up despite a detected need for some recovery.
++ */
+ enum zfcp_erp_act_type {
+ 	ZFCP_ERP_ACTION_REOPEN_LUN         = 1,
+ 	ZFCP_ERP_ACTION_REOPEN_PORT	   = 2,
+ 	ZFCP_ERP_ACTION_REOPEN_PORT_FORCED = 3,
+ 	ZFCP_ERP_ACTION_REOPEN_ADAPTER     = 4,
++	ZFCP_ERP_ACTION_NONE		   = 0xc0,
+ };
  
+ enum zfcp_erp_act_state {
+@@ -257,8 +269,10 @@ static int zfcp_erp_action_enqueue(int want, struct zfcp_adapter *adapter,
+ 		goto out;
+ 
+ 	act = zfcp_erp_setup_act(need, act_status, adapter, port, sdev);
+-	if (!act)
++	if (!act) {
++		need |= ZFCP_ERP_ACTION_NONE; /* marker for trace */
+ 		goto out;
++	}
+ 	atomic_or(ZFCP_STATUS_ADAPTER_ERP_PENDING, &adapter->status);
+ 	++adapter->erp_total_count;
+ 	list_add_tail(&act->list, &adapter->erp_ready_head);
 -- 
 2.16.3
