@@ -1,22 +1,26 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] scsi: sg: allocate with __GFP_ZERO in sg_build_indirect()
-Date: Fri, 18 May 2018 09:15:52 -0700
-Message-ID: <20180518161552.GA23907@infradead.org>
-References: <20180518142318.200260-1-glider@google.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] scsi: qlogicpti: Fix an error handling path in 'qpti_sbus_probe()'
+Date: Fri, 18 May 2018 12:25:46 -0400
+Message-ID: <yq1h8n5exrp.fsf@oracle.com>
+References: <20180510114558.20769-1-christophe.jaillet@wanadoo.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <stable-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20180518142318.200260-1-glider@google.com>
-Sender: stable-owner@vger.kernel.org
-To: Alexander Potapenko <glider@google.com>
-Cc: jthumshirn@suse.de, jejb@linux.vnet.ibm.com, dgilbert@interlog.com, linux-kernel@vger.kernel.org, stable@vger.kernel.org, linux-scsi@vger.kernel.org, dvyukov@google.com, hare@suse.com, torvalds@linux-foundation.org
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20180510114558.20769-1-christophe.jaillet@wanadoo.fr>
+        (Christophe JAILLET's message of "Thu, 10 May 2018 13:45:58 +0200")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, May 18, 2018 at 04:23:18PM +0200, Alexander Potapenko wrote:
-> This shall help avoid copying uninitialized memory to the userspace
-> when calling ioctl(fd, SG_IO) with an empty command.
 
-Looks good,
+Christophe,
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+> The 'free_irq()' call is not at the right place in the error handling
+> path.  The changed order has been introduced in commit 3d4253d9afab
+> ("[SCSI] qlogicpti: Convert to new SBUS device framework.")
+
+Applied to 4.18/scsi-queue. Thanks!
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
