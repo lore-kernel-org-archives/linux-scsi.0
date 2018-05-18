@@ -1,37 +1,34 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 1/1] scsi: storvsc: Avoid allocating memory for temp
- cpumasks
-Date: Fri, 18 May 2018 11:24:41 -0400
-Message-ID: <yq17eo1gf5y.fsf@oracle.com>
-References: <1526591260-27162-1-git-send-email-mikelley@microsoft.com>
+Subject: Re: [PATCH 0/7] Miscellaneous patches and bug fixes
+Date: Fri, 18 May 2018 11:23:30 -0400
+Message-ID: <yq1fu2pgf7x.fsf@oracle.com>
+References: <1526065440-38806-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <1526591260-27162-1-git-send-email-mikelley@microsoft.com>
- (Michael Kelley's message of "Thu, 17 May 2018 14:07:40 -0700")
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Michael Kelley <mhkelley58@gmail.com>
-Cc: jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, martin.petersen@oracle.com, linux-kernel@vger.kernel.org, mikelley@microsoft.com, devel@linuxdriverproject.org, sthemmin@microsoft.com
+Content-Type: text/plain
+Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+In-Reply-To: <1526065440-38806-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+ (Uma Krishnan's message of "Fri, 11 May 2018 14:04:00 -0500")
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+Sender: "Linuxppc-dev"
+ <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+To: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
+Cc: James Bottomley <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, linuxppc-dev@lists.ozlabs.org, Christophe Lombard <clombard@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
 
-Michael,
+Uma,
 
-> Current code allocates 240 Kbytes (in typical configs) for each
-> synthetic SCSI controller to use as temp cpumask variables.  Recode to
-> avoid needing the temp cpumask variables and remove the memory
-> allocation.
+> This patch series adds few improvements to the cxlflash driver and it
+> also contains couple of bug fixes.
 
-Applied to 4.18/scsi-queue. Thanks!
+Applied to 4.18/scsi-queue, thank you!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
