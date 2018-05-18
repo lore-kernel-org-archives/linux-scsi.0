@@ -1,34 +1,27 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 0/7] Miscellaneous patches and bug fixes
-Date: Fri, 18 May 2018 11:23:30 -0400
-Message-ID: <yq1fu2pgf7x.fsf@oracle.com>
-References: <1526065440-38806-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Subject: Re: [PATCH v3 0/3] Fix UFS and devfreq interaction
+Date: Fri, 18 May 2018 11:25:12 -0400
+Message-ID: <yq136ypgf53.fsf@oracle.com>
+References: <20180518062638.31777-1-bjorn.andersson@linaro.org>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-In-Reply-To: <1526065440-38806-1-git-send-email-ukrishn@linux.vnet.ibm.com>
- (Uma Krishnan's message of "Fri, 11 May 2018 14:04:00 -0500")
-List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
-List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
-Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
-Sender: "Linuxppc-dev"
- <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-To: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Cc: James Bottomley <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, linuxppc-dev@lists.ozlabs.org, Christophe Lombard <clombard@linux.vnet.ibm.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20180518062638.31777-1-bjorn.andersson@linaro.org> (Bjorn
+        Andersson's message of "Thu, 17 May 2018 23:26:35 -0700")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bjorn Andersson <bjorn.andersson@linaro.org>
+Cc: Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Andy Gross <andy.gross@linaro.org>, MyungJoo Ham <myungjoo.ham@samsung.com>, Kyungmin Park <kyungmin.park@samsung.com>, Chanwoo Choi <cw00.choi@samsung.com>, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, linux-soc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, Vivek Gautam <vivek.gautam@codeaurora.org>
 List-Id: linux-scsi@vger.kernel.org
 
 
-Uma,
+Bjorn,
 
-> This patch series adds few improvements to the cxlflash driver and it
-> also contains couple of bug fixes.
+> With the introduction of f1d981eaecf8 ("PM / devfreq: Use the
+> available min/max frequency") the UFS host controller driver (UFSHCD)
+> stopped probing for platforms that supports frequency scaling,
+> e.g. all modern Qualcomm platforms.
 
-Applied to 4.18/scsi-queue, thank you!
+Applied to 4.18/scsi-queue. Thank you!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
