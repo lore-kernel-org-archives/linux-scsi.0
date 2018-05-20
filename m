@@ -1,74 +1,48 @@
-From: Alim Akhtar <alim.akhtar@samsung.com>
-Subject: [PATCH V3] scsi: ufs: Add specific callback for setting DMA mask
-Date: Sun, 20 May 2018 07:54:17 +0530
-Message-ID: <1526783057-16620-1-git-send-email-alim.akhtar@samsung.com>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH V3] scsi: ufs: Add specific callback for setting DMA mask
+Date: Sun, 20 May 2018 14:21:51 +0000
+Message-ID: <c9b0e89069769a093e07ac911f3a9019d1da32c1.camel@wdc.com>
 References: <CGME20180520023633epcas2p333689dfc3c9f94c15018e33f69c751cb@epcas2p3.samsung.com>
+         <1526783057-16620-1-git-send-email-alim.akhtar@samsung.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1526783057-16620-1-git-send-email-alim.akhtar@samsung.com>
+Content-Language: en-US
+Content-ID: <EE05F6E1EBFCF64B980C28E8C3CCB81E@namprd04.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, subhashj@codeaurora.org, vinholikatti@gmail.com, shaik.ameer@samsung.com, alim.akhtar@samsung.com
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "subhashj@codeaurora.org" <subhashj@codeaurora.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "vinholikatti@gmail.com" <vinholikatti@gmail.com>, "shaik.ameer@samsung.com" <shaik.ameer@samsung.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Currently DMA mask for UFS HCI is set by reading CAP register's
-[64AS] bit. Some HCI controller like Exynos support 36-bit bus address.
-This works perfectly fine with DMA mask set as 64 in case there is no
-IOMMU attached to HCI.
-In case if HCI is behind an IOMMU, setting DMA mask as 64 bit won't
-work as HCI has only 36bit addressing and SMMU has created mapping of
-64 bit and as the device truncates the address, its mapping will not
-be found by iommu.
-To resolve such issues, let the variant driver sets its own DMA mask.
-
-Signed-off-by: Alim Akhtar <alim.akhtar@samsung.com>
----
- drivers/scsi/ufs/ufshcd.c | 3 +++
- drivers/scsi/ufs/ufshcd.h | 2 ++
- 2 files changed, 5 insertions(+)
-
-I am not sure if there are other ways available to handle such cases.
-The IOMMU I am talking about is arm-smmu and it DT binding does not
-give much idea about handling such cases.
-Have tested this patch with HCI controller with IOMMU attached.
-
-Changes Since V1: 
-	- Fixed build issue as reported by Kbuild test robot.
-
-Changes Since V2: 
-	- Remove RFC tag as suggested by Subhash.
-
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index a355d98..9a1374e 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -7781,6 +7781,9 @@ EXPORT_SYMBOL_GPL(ufshcd_dealloc_host);
-  */
- static int ufshcd_set_dma_mask(struct ufs_hba *hba)
- {
-+	if (hba->vops && hba->vops->set_dma_mask)
-+		return hba->vops->set_dma_mask(hba);
-+
- 	if (hba->capabilities & MASK_64_ADDRESSING_SUPPORT) {
- 		if (!dma_set_mask_and_coherent(hba->dev, DMA_BIT_MASK(64)))
- 			return 0;
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 1332e54..89c6dae 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -297,6 +297,7 @@ struct ufs_pwr_mode_info {
-  * @resume: called during host controller PM callback
-  * @dbg_register_dump: used to dump controller debug information
-  * @phy_initialization: used to initialize phys
-+ * @set_dma_mask: used to set variant specific DMA mask
-  */
- struct ufs_hba_variant_ops {
- 	const char *name;
-@@ -325,6 +326,7 @@ struct ufs_hba_variant_ops {
- 	int     (*resume)(struct ufs_hba *, enum ufs_pm_op);
- 	void	(*dbg_register_dump)(struct ufs_hba *hba);
- 	int	(*phy_initialization)(struct ufs_hba *);
-+	int	(*set_dma_mask)(struct ufs_hba *hba);
- };
- 
- /* clock gating state  */
--- 
-2.7.4
+T24gU3VuLCAyMDE4LTA1LTIwIGF0IDA3OjU0ICswNTMwLCBBbGltIEFraHRhciB3cm90ZToNCj4g
+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS91ZnMvdWZzaGNkLmMgYi9kcml2ZXJzL3Njc2kvdWZz
+L3Vmc2hjZC5jDQo+IGluZGV4IGEzNTVkOTguLjlhMTM3NGUgMTAwNjQ0DQo+IC0tLSBhL2RyaXZl
+cnMvc2NzaS91ZnMvdWZzaGNkLmMNCj4gKysrIGIvZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuYw0K
+PiBAQCAtNzc4MSw2ICs3NzgxLDkgQEAgRVhQT1JUX1NZTUJPTF9HUEwodWZzaGNkX2RlYWxsb2Nf
+aG9zdCk7DQo+ICAgKi8NCj4gIHN0YXRpYyBpbnQgdWZzaGNkX3NldF9kbWFfbWFzayhzdHJ1Y3Qg
+dWZzX2hiYSAqaGJhKQ0KPiAgew0KPiArCWlmIChoYmEtPnZvcHMgJiYgaGJhLT52b3BzLT5zZXRf
+ZG1hX21hc2spDQo+ICsJCXJldHVybiBoYmEtPnZvcHMtPnNldF9kbWFfbWFzayhoYmEpOw0KPiAr
+DQo+ICAJaWYgKGhiYS0+Y2FwYWJpbGl0aWVzICYgTUFTS182NF9BRERSRVNTSU5HX1NVUFBPUlQp
+IHsNCj4gIAkJaWYgKCFkbWFfc2V0X21hc2tfYW5kX2NvaGVyZW50KGhiYS0+ZGV2LCBETUFfQklU
+X01BU0soNjQpKSkNCj4gIAkJCXJldHVybiAwOw0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3Np
+L3Vmcy91ZnNoY2QuaCBiL2RyaXZlcnMvc2NzaS91ZnMvdWZzaGNkLmgNCj4gaW5kZXggMTMzMmU1
+NC4uODljNmRhZSAxMDA2NDQNCj4gLS0tIGEvZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuaA0KPiAr
+KysgYi9kcml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5oDQo+IEBAIC0yOTcsNiArMjk3LDcgQEAgc3Ry
+dWN0IHVmc19wd3JfbW9kZV9pbmZvIHsNCj4gICAqIEByZXN1bWU6IGNhbGxlZCBkdXJpbmcgaG9z
+dCBjb250cm9sbGVyIFBNIGNhbGxiYWNrDQo+ICAgKiBAZGJnX3JlZ2lzdGVyX2R1bXA6IHVzZWQg
+dG8gZHVtcCBjb250cm9sbGVyIGRlYnVnIGluZm9ybWF0aW9uDQo+ICAgKiBAcGh5X2luaXRpYWxp
+emF0aW9uOiB1c2VkIHRvIGluaXRpYWxpemUgcGh5cw0KPiArICogQHNldF9kbWFfbWFzazogdXNl
+ZCB0byBzZXQgdmFyaWFudCBzcGVjaWZpYyBETUEgbWFzaw0KPiAgICovDQo+ICBzdHJ1Y3QgdWZz
+X2hiYV92YXJpYW50X29wcyB7DQo+ICAJY29uc3QgY2hhciAqbmFtZTsNCj4gQEAgLTMyNSw2ICsz
+MjYsNyBAQCBzdHJ1Y3QgdWZzX2hiYV92YXJpYW50X29wcyB7DQo+ICAJaW50ICAgICAoKnJlc3Vt
+ZSkoc3RydWN0IHVmc19oYmEgKiwgZW51bSB1ZnNfcG1fb3ApOw0KPiAgCXZvaWQJKCpkYmdfcmVn
+aXN0ZXJfZHVtcCkoc3RydWN0IHVmc19oYmEgKmhiYSk7DQo+ICAJaW50CSgqcGh5X2luaXRpYWxp
+emF0aW9uKShzdHJ1Y3QgdWZzX2hiYSAqKTsNCj4gKwlpbnQJKCpzZXRfZG1hX21hc2spKHN0cnVj
+dCB1ZnNfaGJhICpoYmEpOw0KPiAgfTsNCg0KSSB3YW50IHRvIHNlZSB0aGUgY29kZSB0aGF0IHNl
+dHMgdGhlIC5zZXRfZG1hX21hc2sgY2FsbGJhY2sgZnVuY3Rpb24uIFdoZXJlDQppcyBpdD8gSWYg
+aXQgaXMgb3V0c2lkZSB0aGUgdXBzdHJlYW0ga2VybmVsLCBwbGVhc2UgY29uc2lkZXIgdG8gc2Vu
+ZCBpdA0KdXBzdHJlYW0gYmVmb3JlIG1ha2luZyBjaGFuZ2VzIGxpa2UgdGhpcy4gQWRkaW5nIHN1
+cHBvcnQgZm9yIG91dC1vZi10cmVlDQprZXJuZWwgY29kZSBpcyBmcm93bmVkIHVwb24gYmlnIHRp
+bWUgaW4gdGhlIGtlcm5lbCBjb21tdW5pdHkuDQoNCkJhcnQuDQoNCg0KDQo=
