@@ -1,15 +1,13 @@
-From: Bharat Uppal <bharat.uppal@samsung.com>
+From: Alim Akhtar <alim.akhtar@samsung.com>
 Subject: [PATCH V3] scsi: ufs: Add specific callback for setting DMA mask
-Date: Sun, 20 May 2018 07:41:02 +0530
-Message-ID: <1526782262-9808-1-git-send-email-bharat.uppal@samsung.com>
-References: <CGME20180520022321epcas1p4b0084a15aca3e5aea02700e272149ef3@epcas1p4.samsung.com>
+Date: Sun, 20 May 2018 07:54:17 +0530
+Message-ID: <1526783057-16620-1-git-send-email-alim.akhtar@samsung.com>
+References: <CGME20180520023633epcas2p333689dfc3c9f94c15018e33f69c751cb@epcas2p3.samsung.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, subhashj@codeaurora.org, vinholikatti@gmail.com, shaik.ameer@samsung.com, alim.akhtar@samsung.com
 List-Id: linux-scsi@vger.kernel.org
-
-From: Alim Akhtar <alim.akhtar@samsung.com>
 
 Currently DMA mask for UFS HCI is set by reading CAP register's
 [64AS] bit. Some HCI controller like Exynos support 36-bit bus address.
