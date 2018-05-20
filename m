@@ -1,84 +1,98 @@
-From: Wenwen Wang <wang6495@umn.edu>
-Subject: Re: [PATCH] scsi: sg: fix a missing-check bug
-Date: Fri, 18 May 2018 16:48:46 -0500
-Message-ID: <CAAa=b7efo0jVRq56wQDVq-UQ4ynh+oxRNuKO+HDmuJkzWCYf_A@mail.gmail.com>
-References: <1525576895-15708-1-git-send-email-wang6495@umn.edu> <be344261-9110-ed6f-6916-04e5a2e5fc7e@interlog.com>
+From: Alim Akhtar <alim.akhtar@samsung.com>
+Subject: Re: [RFC PATCH V2] scsi: ufs: Add specific callback for setting DMA
+ mask
+Date: Sun, 20 May 2018 07:05:45 +0530
+Message-ID: <1e53194e-7255-a353-54ed-5c6c815205dc@samsung.com>
+References: <CGME20180308111416epcas1p4f9f1dbb36e8567121c6236ac0e9b4e03@epcas1p4.samsung.com>
+        <1520507013-2410-1-git-send-email-alim.akhtar@samsung.com>
+        <CAGOxZ52yZ8Xqype7AVsH43DWOA2byh2kW3SGsfHyHtzqSH6QPw@mail.gmail.com>
+        <1f7df8bfbc161243956233eac80f2cee@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <be344261-9110-ed6f-6916-04e5a2e5fc7e@interlog.com>
+In-Reply-To: <1f7df8bfbc161243956233eac80f2cee@codeaurora.org>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: dgilbert@interlog.com
-Cc: Kangjie Lu <kjlu@umn.edu>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "open list:SCSI SG DRIVER" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>, Wenwen Wang <wang6495@umn.edu>
+To: Subhash Jadavani <subhashj@codeaurora.org>, alim.akhtar@samsung.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, vinayak holikatti <vinholikatti@gmail.com>, devicetree@vger.kernel.org, Shaik Ameer Basha <shaik.ameer@samsung.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, May 7, 2018 at 12:13 AM, Douglas Gilbert <dgilbert@interlog.com> wrote:
-> On 2018-05-05 11:21 PM, Wenwen Wang wrote:
->>
->> In sg_write(), the opcode of the command is firstly copied from the
->> userspace pointer 'buf' and saved to the kernel variable 'opcode', using
->> the __get_user() function. The size of the command, i.e., 'cmd_size' is
->> then calculated based on the 'opcode'. After that, the whole command,
->> including the opcode, is copied again from 'buf' using the
->> __copy_from_user() function and saved to 'cmnd'. Finally, the function
->>   sg_common_write() is invoked to process 'cmnd'. Given that the 'buf'
->> pointer resides in userspace, a malicious userspace process can race to
->> change the opcode of the command between the two copies. That means, the
->> opcode indicated by the variable 'opcode' could be different from the
->> opcode in 'cmnd'. This can cause inconsistent data in 'cmnd' and
->> potential logical errors in the function sg_common_write(), as it needs to
->> work on 'cmnd'.
->>
->> This patch reuses the opcode obtained in the first copy and only copies
->> the
->> remaining part of the command from userspace.
->>
->> Signed-off-by: Wenwen Wang <wang6495@umn.edu>
->> ---
->>   drivers/scsi/sg.c | 3 ++-
->>   1 file changed, 2 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
->> index c198b963..0ad8106 100644
->> --- a/drivers/scsi/sg.c
->> +++ b/drivers/scsi/sg.c
->> @@ -657,7 +657,8 @@ sg_write(struct file *filp, const char __user *buf,
->> size_t count, loff_t * ppos)
->>         hp->flags = input_size; /* structure abuse ... */
->>         hp->pack_id = old_hdr.pack_id;
->>         hp->usr_ptr = NULL;
->> -       if (__copy_from_user(cmnd, buf, cmd_size))
->> +       cmnd[0] = opcode;
->> +       if (__copy_from_user(cmnd + 1, buf + 1, cmd_size - 1))
->>                 return -EFAULT;
->>         /*
->>          * SG_DXFER_TO_FROM_DEV is functionally equivalent to
->> SG_DXFER_FROM_DEV,
->>
->
-> That is in the deprecated "v2" part of the sg driver (for around 15 years).
-> There are lots more interesting races with that interface than that one
-> described above. My guess is that all system calls would be susceptible
-> to playing around with a buffer being passed to or from the OS by a thread
-> other than the one doing the system call, during that call. Surely no Unix
-> like OS gives any security guarantees to a thread being attacked by a
-> malevolent thread in the same process!
->
-> My question is did this actually cause to program to fail; or is it
-> something
-> that a sanity checker flagged?
+Hi Subhash
 
-This is detected by a static analysis tool. But, based on our manual
-investigation, it can cause program failure. So it is better to fix
-it.
+On 05/17/2018 03:01 AM, Subhash Jadavani wrote:
+> On 2018-05-15 21:31, Alim Akhtar wrote:
+>> Ping !!!
+>>
+>> On Thu, Mar 8, 2018 at 4:33 PM, Alim Akhtar <alim.akhtar@samsung.com> 
+>> wrote:
+>>> Currently DMA mask for UFS HCI is set by reading CAP register's
+>>> [64AS] bit. Some HCI controller like Exynos support 36-bit bus address.
+>>> This works perfectly fine with DMA mask set as 64 in case there is no
+>>> IOMMU attached to HCI.
+>>> In case if HCI is behind an IOMMU, setting DMA mask as 64 bit won't
+>>> work as HCI has only 36bit addressing and SMMU has created mapping of
+>>> 64 bit and as the device truncates the address, its mapping will not
+>>> be found by iommu.
+>>> To resolve such issues, let the variant driver sets its own DMA mask.
+>>>
+>>> Signed-off-by: Alim Akhtar <alim.akhtar@samsung.com>
+>>> ---
+>>>  drivers/scsi/ufs/ufshcd.c | 3 +++
+>>>  drivers/scsi/ufs/ufshcd.h | 2 ++
+>>>  2 files changed, 5 insertions(+)
+>>>
+>>> I am not sure if there are other ways available to handle such cases.
+>>> The IOMMU I am talking about is arm-smmu and it DT binding does not
+>>> give much idea about handling such cases.
+>>> Have tested this patch with HCI controller with IOMMU attached.
+>>>
+>>> Changes Since V1:
+>>>         - Fixed build issue as reported by Kbuild test robot.
+>>>
+>>> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+>>> index a355d98..9a1374e 100644
+>>> --- a/drivers/scsi/ufs/ufshcd.c
+>>> +++ b/drivers/scsi/ufs/ufshcd.c
+>>> @@ -7781,6 +7781,9 @@ EXPORT_SYMBOL_GPL(ufshcd_dealloc_host);
+>>>   */
+>>>  static int ufshcd_set_dma_mask(struct ufs_hba *hba)
+>>>  {
+>>> +       if (hba->vops && hba->vops->set_dma_mask)
+>>> +               return hba->vops->set_dma_mask(hba);
+>>> +
+>>>         if (hba->capabilities & MASK_64_ADDRESSING_SUPPORT) {
+>>>                 if (!dma_set_mask_and_coherent(hba->dev, 
+>>> DMA_BIT_MASK(64)))
+>>>                         return 0;
+>>> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+>>> index 1332e54..89c6dae 100644
+>>> --- a/drivers/scsi/ufs/ufshcd.h
+>>> +++ b/drivers/scsi/ufs/ufshcd.h
+>>> @@ -297,6 +297,7 @@ struct ufs_pwr_mode_info {
+>>>   * @resume: called during host controller PM callback
+>>>   * @dbg_register_dump: used to dump controller debug information
+>>>   * @phy_initialization: used to initialize phys
+>>> + * @set_dma_mask: used to set variant specific DMA mask
+>>>   */
+>>>  struct ufs_hba_variant_ops {
+>>>         const char *name;
+>>> @@ -325,6 +326,7 @@ struct ufs_hba_variant_ops {
+>>>         int     (*resume)(struct ufs_hba *, enum ufs_pm_op);
+>>>         void    (*dbg_register_dump)(struct ufs_hba *hba);
+>>>         int     (*phy_initialization)(struct ufs_hba *);
+>>> +       int     (*set_dma_mask)(struct ufs_hba *hba);
+>>>  };
+>>>
+>>>  /* clock gating state  */
+>>> -- 
+>>> 2.7.4
+>>>
+> 
+> Looks reasonable to me, you may try posting non-RFC version.
+> 
+Thanks for review.
+Will send a non-RFC version.
 
->
-> Also wouldn't it be better just to return an error such as EINVAL if
-> opcode != command[0]  ?
-
-I can revise this patch to return EINVAL if the opcode is not as
-expected, and resubmit it.
-
-Thanks!
-
-Wenwen
+Regards,
+Alim
