@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 07/13] scsi: hisi_sas: Init disks after controller reset
-Date: Mon, 21 May 2018 18:09:19 +0800
-Message-ID: <1526897365-228549-8-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 03/13] scsi: hisi_sas: Change common allocation mode of device id
+Date: Mon, 21 May 2018 18:09:15 +0800
+Message-ID: <1526897365-228549-4-git-send-email-john.garry@huawei.com>
 References: <1526897365-228549-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -9,82 +9,61 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1526897365-228549-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linuxarm@huawei.com, linux-kernel@vger.kernel.org, Xiaofei Tan <tanxiaofei@huawei.com>, John Garry <john.garry@huawei.com>
+Cc: linux-scsi@vger.kernel.org, linuxarm@huawei.com, linux-kernel@vger.kernel.org, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Xiaofei Tan <tanxiaofei@huawei.com>
+From: Xiang Chen <chenxiang66@hisilicon.com>
 
-After the controller is reset, it is possible that the
-disks attached still have outstanding IO to complete.
+To reduce possibility of hitting unknown SoC bugs and aid
+debugging and test, change allocation mode of device id from
+last used device id instead of lowest available index.
 
-Thus, when the PHYs come back up after controller reset, it
-is possible that these IOs complete at some unknown point
-later.
-
-We want to ensure that all IOs are complete after the
-controller reset so that all associated IPTT and other
-resources can be recycled safely.
-
-To achieve this, re-init the disks by TMF or softreset
-(in case of ATA devices).
-
-If the init fails - maybe because the device was removed
-or link has not come up - then do not release the device
-resources, but rather rely on SCSI EH to handle the timeout
-for these resources later on.
-
-This patch also does some cleanup to hisi_sas_init_disk(), including
-removing superfluous cases in the switch statement.
-
-Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
+Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_main.c | 19 ++++++++++++++++++-
- 1 file changed, 18 insertions(+), 1 deletion(-)
+ drivers/scsi/hisi_sas/hisi_sas.h      | 1 +
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 6 +++++-
+ 2 files changed, 6 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
+index 3c88400..b4717bd 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas.h
++++ b/drivers/scsi/hisi_sas/hisi_sas.h
+@@ -275,6 +275,7 @@ struct hisi_hba {
+ 
+ 	int slot_index_count;
+ 	int last_slot_index;
++	int last_dev_id;
+ 	unsigned long *slot_index_tags;
+ 	unsigned long reject_stp_links_msk;
+ 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 7b8623b..0dfefdf 100644
+index 1d300a2..04a3eb4 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -1259,6 +1259,23 @@ static void hisi_sas_rescan_topology(struct hisi_hba *hisi_hba, u32 old_state,
+@@ -596,10 +596,12 @@ static struct hisi_sas_device *hisi_sas_alloc_dev(struct domain_device *device)
+ 	struct hisi_hba *hisi_hba = dev_to_hisi_hba(device);
+ 	struct hisi_sas_device *sas_dev = NULL;
+ 	unsigned long flags;
++	int last = hisi_hba->last_dev_id;
++	int first = (hisi_hba->last_dev_id + 1) % HISI_SAS_MAX_DEVICES;
+ 	int i;
+ 
+ 	spin_lock_irqsave(&hisi_hba->lock, flags);
+-	for (i = 0; i < HISI_SAS_MAX_DEVICES; i++) {
++	for (i = first; i != last; i %= HISI_SAS_MAX_DEVICES) {
+ 		if (hisi_hba->devices[i].dev_type == SAS_PHY_UNUSED) {
+ 			int queue = i % hisi_hba->queue_count;
+ 			struct hisi_sas_dq *dq = &hisi_hba->dq[queue];
+@@ -614,7 +616,9 @@ static struct hisi_sas_device *hisi_sas_alloc_dev(struct domain_device *device)
+ 			INIT_LIST_HEAD(&hisi_hba->devices[i].list);
+ 			break;
+ 		}
++		i++;
  	}
- }
++	hisi_hba->last_dev_id = i;
+ 	spin_unlock_irqrestore(&hisi_hba->lock, flags);
  
-+static void hisi_sas_reset_init_all_devices(struct hisi_hba *hisi_hba)
-+{
-+	struct hisi_sas_device *sas_dev;
-+	struct domain_device *device;
-+	int i;
-+
-+	for (i = 0; i < HISI_SAS_MAX_DEVICES; i++) {
-+		sas_dev = &hisi_hba->devices[i];
-+		device = sas_dev->sas_device;
-+
-+		if ((sas_dev->dev_type == SAS_PHY_UNUSED) || !device)
-+			continue;
-+
-+		hisi_sas_init_device(device);
-+	}
-+}
-+
- static int hisi_sas_controller_reset(struct hisi_hba *hisi_hba)
- {
- 	struct device *dev = hisi_hba->dev;
-@@ -1287,7 +1304,6 @@ static int hisi_sas_controller_reset(struct hisi_hba *hisi_hba)
- 		scsi_unblock_requests(shost);
- 		goto out;
- 	}
--	hisi_sas_release_tasks(hisi_hba);
- 
- 	clear_bit(HISI_SAS_REJECT_CMD_BIT, &hisi_hba->flags);
- 
-@@ -1295,6 +1311,7 @@ static int hisi_sas_controller_reset(struct hisi_hba *hisi_hba)
- 	hisi_hba->hw->phys_init(hisi_hba);
- 	msleep(1000);
- 	hisi_sas_refresh_port_id(hisi_hba);
-+	hisi_sas_reset_init_all_devices(hisi_hba);
- 	scsi_unblock_requests(shost);
- 
- 	state = hisi_hba->hw->get_phys_state(hisi_hba);
+ 	return sas_dev;
 -- 
 1.9.1
