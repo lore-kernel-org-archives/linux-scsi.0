@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 04/13] scsi: hisi_sas: Add LED feature for v3 hw
-Date: Mon, 21 May 2018 18:09:16 +0800
-Message-ID: <1526897365-228549-5-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 08/13] scsi: hisi_sas: Try wait commands before before controller reset
+Date: Mon, 21 May 2018 18:09:20 +0800
+Message-ID: <1526897365-228549-9-git-send-email-john.garry@huawei.com>
 References: <1526897365-228549-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -14,89 +14,142 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Xiaofei Tan <tanxiaofei@huawei.com>
 
-This patch implements LED feature of directly attached disk
-for v3 hw.
+We may reset the controller in many scenarios, such as SCSI EH
+and HW errors. There should be no IO which returns from target
+when SCSI EH is active. But for other scenarios, there may be.
+It is not necessary to make such IOs failure.
 
-In fact, this hw has created an SGPIO component for LED
-feature, and we can control LEDs just by internal registers.
+This patch adds an function of trying to wait for any commands,
+or IO, to complete before host reset. If no more CQ returned from
+host controller in 100ms, we assume no more IO can return, and
+then stop waiting. We wait 5s at most.
+
+The HW has a register CQE_SEND_CNT to indicate the total number
+of CQs that has been reported to driver. We can use this register
+and it is reliable to resd this register in such scenarios that
+require host reset.
 
 Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 42 ++++++++++++++++++++++++++++++++++
- 1 file changed, 42 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas.h       |  2 ++
+ drivers/scsi/hisi_sas/hisi_sas_main.c  |  2 ++
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 19 +++++++++++++++++++
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 20 ++++++++++++++++++++
+ 4 files changed, 43 insertions(+)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 0a80a39..a043d9c 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -107,6 +107,10 @@
- #define AWQOS_AWCACHE_CFG	0xc84
- #define ARQOS_ARCACHE_CFG	0xc88
- #define HILINK_ERR_DFX		0xe04
-+#define SAS_GPIO_CFG_0		0x1000
-+#define SAS_GPIO_CFG_1		0x1004
-+#define SAS_GPIO_TX_0_1	0x1040
-+#define SAS_CFG_DRIVE_VLD	0x1070
+diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
+index 37c9a62..8ce6abb 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas.h
++++ b/drivers/scsi/hisi_sas/hisi_sas.h
+@@ -246,6 +246,8 @@ struct hisi_sas_hw {
+ 	u32 (*get_phys_state)(struct hisi_hba *hisi_hba);
+ 	int (*write_gpio)(struct hisi_hba *hisi_hba, u8 reg_type,
+ 				u8 reg_index, u8 reg_count, u8 *write_data);
++	void (*wait_cmds_complete_timeout)(struct hisi_hba *hisi_hba,
++					   int delay_ms, int timeout_ms);
+ 	int max_command_entries;
+ 	int complete_hdr_size;
+ 	struct scsi_host_template *sht;
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index 0dfefdf..a6fcfb3 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -1293,6 +1293,8 @@ static int hisi_sas_controller_reset(struct hisi_hba *hisi_hba)
+ 	old_state = hisi_hba->hw->get_phys_state(hisi_hba);
  
- /* phy registers requiring init */
- #define PORT_BASE			(0x2000)
-@@ -549,6 +553,14 @@ static void init_reg_v3_hw(struct hisi_hba *hisi_hba)
- 	hisi_sas_write32(hisi_hba, SAS_RAS_INTR1_MASK, 0x0);
- 	hisi_sas_write32(hisi_hba, SAS_RAS_INTR2_MASK, 0x0);
- 	hisi_sas_write32(hisi_hba, CFG_SAS_RAS_INTR_MASK, 0x0);
+ 	scsi_block_requests(shost);
++	hisi_hba->hw->wait_cmds_complete_timeout(hisi_hba, 100, 5000);
 +
-+	/* LED registers init */
-+	hisi_sas_write32(hisi_hba, SAS_CFG_DRIVE_VLD, 0x80000ff);
-+	hisi_sas_write32(hisi_hba, SAS_GPIO_TX_0_1, 0x80808080);
-+	hisi_sas_write32(hisi_hba, SAS_GPIO_TX_0_1 + 0x4, 0x80808080);
-+	/* Configure blink generator rate A to 1Hz and B to 4Hz */
-+	hisi_sas_write32(hisi_hba, SAS_GPIO_CFG_1, 0x121700);
-+	hisi_sas_write32(hisi_hba, SAS_GPIO_CFG_0, 0x800000);
+ 	if (timer_pending(&hisi_hba->timer))
+ 		del_timer_sync(&hisi_hba->timer);
+ 
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+index 8def327..18dbaff 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+@@ -144,6 +144,7 @@
+ #define SAS_ECC_INTR_NCQ_MEM3_ECC_1B_OFF	19
+ #define SAS_ECC_INTR_MSK		0x1ec
+ #define HGC_ERR_STAT_EN			0x238
++#define CQE_SEND_CNT			0x248
+ #define DLVRY_Q_0_BASE_ADDR_LO		0x260
+ #define DLVRY_Q_0_BASE_ADDR_HI		0x264
+ #define DLVRY_Q_0_DEPTH			0x268
+@@ -3501,6 +3502,23 @@ static int write_gpio_v2_hw(struct hisi_hba *hisi_hba, u8 reg_type,
+ 	return 0;
  }
  
- static void config_phy_opt_mode_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
-@@ -1974,6 +1986,35 @@ static int soft_reset_v3_hw(struct hisi_hba *hisi_hba)
- 	return hw_init_v3_hw(hisi_hba);
- }
- 
-+static int write_gpio_v3_hw(struct hisi_hba *hisi_hba, u8 reg_type,
-+			u8 reg_index, u8 reg_count, u8 *write_data)
++static void wait_cmds_complete_timeout_v2_hw(struct hisi_hba *hisi_hba,
++					     int delay_ms, int timeout_ms)
 +{
 +	struct device *dev = hisi_hba->dev;
-+	u32 *data = (u32 *)write_data;
-+	int i;
++	int entries, entries_old = 0, time;
 +
-+	switch (reg_type) {
-+	case SAS_GPIO_REG_TX:
-+		if ((reg_index + reg_count) > ((hisi_hba->n_phy + 3) / 4)) {
-+			dev_err(dev, "write gpio: invalid reg range[%d, %d]\n",
-+				reg_index, reg_index + reg_count - 1);
-+			return -EINVAL;
-+		}
++	for (time = 0; time < timeout_ms; time += delay_ms) {
++		entries = hisi_sas_read32(hisi_hba, CQE_SEND_CNT);
++		if (entries == entries_old)
++			break;
 +
-+		for (i = 0; i < reg_count; i++)
-+			hisi_sas_write32(hisi_hba,
-+					 SAS_GPIO_TX_0_1 + (reg_index + i) * 4,
-+					 data[i]);
-+		break;
-+	default:
-+		dev_err(dev, "write gpio: unsupported or bad reg type %d\n",
-+				reg_type);
-+		return -EINVAL;
++		entries_old = entries;
++		msleep(delay_ms);
 +	}
 +
-+	return 0;
++	dev_dbg(dev, "wait commands complete %dms\n", time);
++}
+ 
+ static struct scsi_host_template sht_v2_hw = {
+ 	.name			= DRV_NAME,
+@@ -3552,6 +3570,7 @@ static int write_gpio_v2_hw(struct hisi_hba *hisi_hba, u8 reg_type,
+ 	.soft_reset = soft_reset_v2_hw,
+ 	.get_phys_state = get_phys_state_v2_hw,
+ 	.write_gpio = write_gpio_v2_hw,
++	.wait_cmds_complete_timeout = wait_cmds_complete_timeout_v2_hw,
+ 	.sht = &sht_v2_hw,
+ };
+ 
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index 13d2134..dd5f542 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -92,6 +92,7 @@
+ #define SAS_ECC_INTR			0x1e8
+ #define SAS_ECC_INTR_MSK		0x1ec
+ #define HGC_ERR_STAT_EN			0x238
++#define CQE_SEND_CNT			0x248
+ #define DLVRY_Q_0_BASE_ADDR_LO		0x260
+ #define DLVRY_Q_0_BASE_ADDR_HI		0x264
+ #define DLVRY_Q_0_DEPTH			0x268
+@@ -2015,6 +2016,24 @@ static int write_gpio_v3_hw(struct hisi_hba *hisi_hba, u8 reg_type,
+ 	return 0;
+ }
+ 
++static void wait_cmds_complete_timeout_v3_hw(struct hisi_hba *hisi_hba,
++					     int delay_ms, int timeout_ms)
++{
++	struct device *dev = hisi_hba->dev;
++	int entries, entries_old = 0, time;
++
++	for (time = 0; time < timeout_ms; time += delay_ms) {
++		entries = hisi_sas_read32(hisi_hba, CQE_SEND_CNT);
++		if (entries == entries_old)
++			break;
++
++		entries_old = entries;
++		msleep(delay_ms);
++	}
++
++	dev_dbg(dev, "wait commands complete %dms\n", time);
 +}
 +
- static const struct hisi_sas_hw hisi_sas_v3_hw = {
- 	.hw_init = hisi_sas_v3_init,
- 	.setup_itct = setup_itct_v3_hw,
-@@ -1999,6 +2040,7 @@ static int soft_reset_v3_hw(struct hisi_hba *hisi_hba)
- 	.soft_reset = soft_reset_v3_hw,
+ static struct scsi_host_template sht_v3_hw = {
+ 	.name			= DRV_NAME,
+ 	.module			= THIS_MODULE,
+@@ -2063,6 +2082,7 @@ static int write_gpio_v3_hw(struct hisi_hba *hisi_hba, u8 reg_type,
  	.get_phys_state = get_phys_state_v3_hw,
  	.get_events = phy_get_events_v3_hw,
-+	.write_gpio = write_gpio_v3_hw,
+ 	.write_gpio = write_gpio_v3_hw,
++	.wait_cmds_complete_timeout = wait_cmds_complete_timeout_v3_hw,
  };
  
  static struct Scsi_Host *
