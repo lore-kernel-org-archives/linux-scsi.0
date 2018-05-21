@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 11/13] scsi: hisi_sas: Terminate STP reject quickly for v2 hw
-Date: Mon, 21 May 2018 18:09:23 +0800
-Message-ID: <1526897365-228549-12-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 05/13] scsi: hisi_sas: Reset disks when discovered
+Date: Mon, 21 May 2018 18:09:17 +0800
+Message-ID: <1526897365-228549-6-git-send-email-john.garry@huawei.com>
 References: <1526897365-228549-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -9,127 +9,112 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1526897365-228549-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linuxarm@huawei.com, linux-kernel@vger.kernel.org, Xiaofei Tan <tanxiaofei@huawei.com>, John Garry <john.garry@huawei.com>
+Cc: linux-scsi@vger.kernel.org, linuxarm@huawei.com, linux-kernel@vger.kernel.org, Xiang Chen <chenxiang66@hisilicon.com>, Xiaofei Tan <tanxiaofei@huawei.com>, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Xiaofei Tan <tanxiaofei@huawei.com>
+From: Xiang Chen <chenxiang66@hisilicon.com>
 
-For v2 hw, STP link from target is rejected after host reset
-because of a SoC bug. The STP reject will be terminated after
-we have sent IO from each PHY of a port.
+When a disk is discovered, it may be in an error state,
+or there may be residual commands remaining in the disk.
 
-This is not an problem before, as we don't need to setup STP
-link from target immediately after host reset. But now, it is.
-Because we want to send soft-reset immediately after host reset.
+To ensure any disk is in good state after discovery,
+reset via TMF (for SAS disk) or softreset (for a SATA
+disk).
 
-In order to terminate STP reject quickly, this patch send ATA
-reset command through each PHY of a port. Notes: ATA reset
-command don't need target's response.
-
-Besides, we do abort dev for each device before terminating STP
-reject. This is a quirk of v2 hw.
-
+Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_main.c | 78 +++++++++++++++++++++++++++++++++++
- 1 file changed, 78 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 50 ++++++++++++++++++++++++++++++++++-
+ 1 file changed, 49 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index d613b68..2e02539 100644
+index 04a3eb4..0596553 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -1275,6 +1275,81 @@ static void hisi_sas_reset_init_all_devices(struct hisi_hba *hisi_hba)
- 	}
+@@ -24,6 +24,9 @@ static int hisi_sas_debug_issue_ssp_tmf(struct domain_device *device,
+ static int hisi_sas_softreset_ata_disk(struct domain_device *device);
+ static int hisi_sas_control_phy(struct asd_sas_phy *sas_phy, enum phy_func func,
+ 				void *funcdata);
++static void hisi_sas_release_task(struct hisi_hba *hisi_hba,
++				  struct domain_device *device);
++static void hisi_sas_dev_gone(struct domain_device *device);
+ 
+ u8 hisi_sas_get_ata_protocol(struct host_to_dev_fis *fis, int direction)
+ {
+@@ -624,12 +627,49 @@ static struct hisi_sas_device *hisi_sas_alloc_dev(struct domain_device *device)
+ 	return sas_dev;
  }
  
-+static void hisi_sas_send_ata_reset_each_phy(struct hisi_hba *hisi_hba,
-+					     struct asd_sas_port *sas_port,
-+					     struct domain_device *device)
++#define HISI_SAS_SRST_ATA_DISK_CNT 3
++static int hisi_sas_init_device(struct domain_device *device)
 +{
-+	struct hisi_sas_tmf_task tmf_task = { .force_phy = 1 };
-+	struct ata_port *ap = device->sata_dev.ap;
-+	struct device *dev = hisi_hba->dev;
-+	int s = sizeof(struct host_to_dev_fis);
-+	int rc = TMF_RESP_FUNC_FAILED;
-+	struct asd_sas_phy *sas_phy;
-+	struct ata_link *link;
-+	u8 fis[20] = {0};
-+	u32 state;
++	int rc = TMF_RESP_FUNC_COMPLETE;
++	struct scsi_lun lun;
++	struct hisi_sas_tmf_task tmf_task;
++	int retry = HISI_SAS_SRST_ATA_DISK_CNT;
++	struct hisi_hba *hisi_hba = dev_to_hisi_hba(device);
 +
-+	state = hisi_hba->hw->get_phys_state(hisi_hba);
-+	list_for_each_entry(sas_phy, &sas_port->phy_list, port_phy_el) {
-+		if (!(state & BIT(sas_phy->id)))
-+			continue;
++	switch (device->dev_type) {
++	case SAS_END_DEVICE:
++		int_to_scsilun(0, &lun);
 +
-+		ata_for_each_link(link, ap, EDGE) {
-+			int pmp = sata_srst_pmp(link);
-+
-+			tmf_task.phy_id = sas_phy->id;
-+			hisi_sas_fill_ata_reset_cmd(link->device, 1, pmp, fis);
-+			rc = hisi_sas_exec_internal_tmf_task(device, fis, s,
-+							     &tmf_task);
-+			if (rc != TMF_RESP_FUNC_COMPLETE) {
-+				dev_err(dev, "phy%d ata reset failed rc=%d\n",
-+					sas_phy->id, rc);
++		tmf_task.tmf = TMF_CLEAR_TASK_SET;
++		rc = hisi_sas_debug_issue_ssp_tmf(device, lun.scsi_lun,
++						  &tmf_task);
++		if (rc == TMF_RESP_FUNC_COMPLETE)
++			hisi_sas_release_task(hisi_hba, device);
++		break;
++	case SAS_SATA_DEV:
++	case SAS_SATA_PM:
++	case SAS_SATA_PM_PORT:
++	case SAS_SATA_PENDING:
++		while (retry-- > 0) {
++			rc = hisi_sas_softreset_ata_disk(device);
++			if (!rc)
 +				break;
-+			}
 +		}
++		break;
++	default:
++		break;
 +	}
++
++	return rc;
 +}
 +
-+static void hisi_sas_terminate_stp_reject(struct hisi_hba *hisi_hba)
-+{
-+	struct device *dev = hisi_hba->dev;
-+	int port_no, rc, i;
-+
-+	for (i = 0; i < HISI_SAS_MAX_DEVICES; i++) {
-+		struct hisi_sas_device *sas_dev = &hisi_hba->devices[i];
-+		struct domain_device *device = sas_dev->sas_device;
-+
-+		if ((sas_dev->dev_type == SAS_PHY_UNUSED) || !device)
-+			continue;
-+
-+		rc = hisi_sas_internal_task_abort(hisi_hba, device,
-+						  HISI_SAS_INT_ABT_DEV, 0);
-+		if (rc < 0)
-+			dev_err(dev, "STP reject: abort dev failed %d\n", rc);
-+	}
-+
-+	for (port_no = 0; port_no < hisi_hba->n_phy; port_no++) {
-+		struct hisi_sas_port *port = &hisi_hba->port[port_no];
-+		struct asd_sas_port *sas_port = &port->sas_port;
-+		struct domain_device *port_dev = sas_port->port_dev;
-+		struct domain_device *device;
-+
-+		if (!port_dev || !DEV_IS_EXPANDER(port_dev->dev_type))
-+			continue;
-+
-+		/* Try to find a SATA device */
-+		list_for_each_entry(device, &sas_port->dev_list,
-+				    dev_list_node) {
-+			if (dev_is_sata(device)) {
-+				hisi_sas_send_ata_reset_each_phy(hisi_hba,
-+								 sas_port,
-+								 device);
-+				break;
-+			}
-+		}
-+	}
-+}
-+
- static int hisi_sas_controller_reset(struct hisi_hba *hisi_hba)
+ static int hisi_sas_dev_found(struct domain_device *device)
  {
+ 	struct hisi_hba *hisi_hba = dev_to_hisi_hba(device);
+ 	struct domain_device *parent_dev = device->parent;
+ 	struct hisi_sas_device *sas_dev;
  	struct device *dev = hisi_hba->dev;
-@@ -1312,6 +1387,9 @@ static int hisi_sas_controller_reset(struct hisi_hba *hisi_hba)
- 	hisi_hba->hw->phys_init(hisi_hba);
- 	msleep(1000);
- 	hisi_sas_refresh_port_id(hisi_hba);
-+
-+	if (hisi_hba->reject_stp_links_msk)
-+		hisi_sas_terminate_stp_reject(hisi_hba);
- 	hisi_sas_reset_init_all_devices(hisi_hba);
- 	scsi_unblock_requests(shost);
++	int rc;
  
+ 	if (hisi_hba->hw->alloc_dev)
+ 		sas_dev = hisi_hba->hw->alloc_dev(device);
+@@ -661,14 +701,22 @@ static int hisi_sas_dev_found(struct domain_device *device)
+ 				 "dev:%016llx at ex:%016llx\n",
+ 				 SAS_ADDR(device->sas_addr),
+ 				 SAS_ADDR(parent_dev->sas_addr));
+-			return -EINVAL;
++			rc = -EINVAL;
++			goto err_out;
+ 		}
+ 	}
+ 
+ 	dev_info(dev, "dev[%d:%x] found\n",
+ 		sas_dev->device_id, sas_dev->dev_type);
+ 
++	rc = hisi_sas_init_device(device);
++	if (rc)
++		goto err_out;
+ 	return 0;
++
++err_out:
++	hisi_sas_dev_gone(device);
++	return rc;
+ }
+ 
+ static int hisi_sas_slave_configure(struct scsi_device *sdev)
 -- 
 1.9.1
