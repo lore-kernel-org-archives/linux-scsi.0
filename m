@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 05/13] scsi: hisi_sas: Reset disks when discovered
-Date: Mon, 21 May 2018 18:09:17 +0800
-Message-ID: <1526897365-228549-6-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 04/13] scsi: hisi_sas: Add LED feature for v3 hw
+Date: Mon, 21 May 2018 18:09:16 +0800
+Message-ID: <1526897365-228549-5-git-send-email-john.garry@huawei.com>
 References: <1526897365-228549-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -9,112 +9,96 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1526897365-228549-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linuxarm@huawei.com, linux-kernel@vger.kernel.org, Xiang Chen <chenxiang66@hisilicon.com>, Xiaofei Tan <tanxiaofei@huawei.com>, John Garry <john.garry@huawei.com>
+Cc: linux-scsi@vger.kernel.org, linuxarm@huawei.com, linux-kernel@vger.kernel.org, Xiaofei Tan <tanxiaofei@huawei.com>, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Xiang Chen <chenxiang66@hisilicon.com>
+From: Xiaofei Tan <tanxiaofei@huawei.com>
 
-When a disk is discovered, it may be in an error state,
-or there may be residual commands remaining in the disk.
+This patch implements LED feature of directly attached disk
+for v3 hw.
 
-To ensure any disk is in good state after discovery,
-reset via TMF (for SAS disk) or softreset (for a SATA
-disk).
+In fact, this hw has created an SGPIO component for LED
+feature, and we can control LEDs just by internal registers.
 
-Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_main.c | 50 ++++++++++++++++++++++++++++++++++-
- 1 file changed, 49 insertions(+), 1 deletion(-)
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 42 ++++++++++++++++++++++++++++++++++
+ 1 file changed, 42 insertions(+)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 04a3eb4..0596553 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -24,6 +24,9 @@ static int hisi_sas_debug_issue_ssp_tmf(struct domain_device *device,
- static int hisi_sas_softreset_ata_disk(struct domain_device *device);
- static int hisi_sas_control_phy(struct asd_sas_phy *sas_phy, enum phy_func func,
- 				void *funcdata);
-+static void hisi_sas_release_task(struct hisi_hba *hisi_hba,
-+				  struct domain_device *device);
-+static void hisi_sas_dev_gone(struct domain_device *device);
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index 0a80a39..a043d9c 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -107,6 +107,10 @@
+ #define AWQOS_AWCACHE_CFG	0xc84
+ #define ARQOS_ARCACHE_CFG	0xc88
+ #define HILINK_ERR_DFX		0xe04
++#define SAS_GPIO_CFG_0		0x1000
++#define SAS_GPIO_CFG_1		0x1004
++#define SAS_GPIO_TX_0_1	0x1040
++#define SAS_CFG_DRIVE_VLD	0x1070
  
- u8 hisi_sas_get_ata_protocol(struct host_to_dev_fis *fis, int direction)
- {
-@@ -624,12 +627,49 @@ static struct hisi_sas_device *hisi_sas_alloc_dev(struct domain_device *device)
- 	return sas_dev;
+ /* phy registers requiring init */
+ #define PORT_BASE			(0x2000)
+@@ -549,6 +553,14 @@ static void init_reg_v3_hw(struct hisi_hba *hisi_hba)
+ 	hisi_sas_write32(hisi_hba, SAS_RAS_INTR1_MASK, 0x0);
+ 	hisi_sas_write32(hisi_hba, SAS_RAS_INTR2_MASK, 0x0);
+ 	hisi_sas_write32(hisi_hba, CFG_SAS_RAS_INTR_MASK, 0x0);
++
++	/* LED registers init */
++	hisi_sas_write32(hisi_hba, SAS_CFG_DRIVE_VLD, 0x80000ff);
++	hisi_sas_write32(hisi_hba, SAS_GPIO_TX_0_1, 0x80808080);
++	hisi_sas_write32(hisi_hba, SAS_GPIO_TX_0_1 + 0x4, 0x80808080);
++	/* Configure blink generator rate A to 1Hz and B to 4Hz */
++	hisi_sas_write32(hisi_hba, SAS_GPIO_CFG_1, 0x121700);
++	hisi_sas_write32(hisi_hba, SAS_GPIO_CFG_0, 0x800000);
  }
  
-+#define HISI_SAS_SRST_ATA_DISK_CNT 3
-+static int hisi_sas_init_device(struct domain_device *device)
+ static void config_phy_opt_mode_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
+@@ -1974,6 +1986,35 @@ static int soft_reset_v3_hw(struct hisi_hba *hisi_hba)
+ 	return hw_init_v3_hw(hisi_hba);
+ }
+ 
++static int write_gpio_v3_hw(struct hisi_hba *hisi_hba, u8 reg_type,
++			u8 reg_index, u8 reg_count, u8 *write_data)
 +{
-+	int rc = TMF_RESP_FUNC_COMPLETE;
-+	struct scsi_lun lun;
-+	struct hisi_sas_tmf_task tmf_task;
-+	int retry = HISI_SAS_SRST_ATA_DISK_CNT;
-+	struct hisi_hba *hisi_hba = dev_to_hisi_hba(device);
++	struct device *dev = hisi_hba->dev;
++	u32 *data = (u32 *)write_data;
++	int i;
 +
-+	switch (device->dev_type) {
-+	case SAS_END_DEVICE:
-+		int_to_scsilun(0, &lun);
-+
-+		tmf_task.tmf = TMF_CLEAR_TASK_SET;
-+		rc = hisi_sas_debug_issue_ssp_tmf(device, lun.scsi_lun,
-+						  &tmf_task);
-+		if (rc == TMF_RESP_FUNC_COMPLETE)
-+			hisi_sas_release_task(hisi_hba, device);
-+		break;
-+	case SAS_SATA_DEV:
-+	case SAS_SATA_PM:
-+	case SAS_SATA_PM_PORT:
-+	case SAS_SATA_PENDING:
-+		while (retry-- > 0) {
-+			rc = hisi_sas_softreset_ata_disk(device);
-+			if (!rc)
-+				break;
++	switch (reg_type) {
++	case SAS_GPIO_REG_TX:
++		if ((reg_index + reg_count) > ((hisi_hba->n_phy + 3) / 4)) {
++			dev_err(dev, "write gpio: invalid reg range[%d, %d]\n",
++				reg_index, reg_index + reg_count - 1);
++			return -EINVAL;
 +		}
++
++		for (i = 0; i < reg_count; i++)
++			hisi_sas_write32(hisi_hba,
++					 SAS_GPIO_TX_0_1 + (reg_index + i) * 4,
++					 data[i]);
 +		break;
 +	default:
-+		break;
++		dev_err(dev, "write gpio: unsupported or bad reg type %d\n",
++				reg_type);
++		return -EINVAL;
 +	}
 +
-+	return rc;
++	return 0;
 +}
 +
- static int hisi_sas_dev_found(struct domain_device *device)
- {
- 	struct hisi_hba *hisi_hba = dev_to_hisi_hba(device);
- 	struct domain_device *parent_dev = device->parent;
- 	struct hisi_sas_device *sas_dev;
- 	struct device *dev = hisi_hba->dev;
-+	int rc;
+ static const struct hisi_sas_hw hisi_sas_v3_hw = {
+ 	.hw_init = hisi_sas_v3_init,
+ 	.setup_itct = setup_itct_v3_hw,
+@@ -1999,6 +2040,7 @@ static int soft_reset_v3_hw(struct hisi_hba *hisi_hba)
+ 	.soft_reset = soft_reset_v3_hw,
+ 	.get_phys_state = get_phys_state_v3_hw,
+ 	.get_events = phy_get_events_v3_hw,
++	.write_gpio = write_gpio_v3_hw,
+ };
  
- 	if (hisi_hba->hw->alloc_dev)
- 		sas_dev = hisi_hba->hw->alloc_dev(device);
-@@ -661,14 +701,22 @@ static int hisi_sas_dev_found(struct domain_device *device)
- 				 "dev:%016llx at ex:%016llx\n",
- 				 SAS_ADDR(device->sas_addr),
- 				 SAS_ADDR(parent_dev->sas_addr));
--			return -EINVAL;
-+			rc = -EINVAL;
-+			goto err_out;
- 		}
- 	}
- 
- 	dev_info(dev, "dev[%d:%x] found\n",
- 		sas_dev->device_id, sas_dev->dev_type);
- 
-+	rc = hisi_sas_init_device(device);
-+	if (rc)
-+		goto err_out;
- 	return 0;
-+
-+err_out:
-+	hisi_sas_dev_gone(device);
-+	return rc;
- }
- 
- static int hisi_sas_slave_configure(struct scsi_device *sdev)
+ static struct Scsi_Host *
 -- 
 1.9.1
