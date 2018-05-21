@@ -1,48 +1,296 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH V3] scsi: ufs: Add specific callback for setting DMA mask
-Date: Sun, 20 May 2018 14:21:51 +0000
-Message-ID: <c9b0e89069769a093e07ac911f3a9019d1da32c1.camel@wdc.com>
-References: <CGME20180520023633epcas2p333689dfc3c9f94c15018e33f69c751cb@epcas2p3.samsung.com>
-         <1526783057-16620-1-git-send-email-alim.akhtar@samsung.com>
+From: John Garry <john.garry@huawei.com>
+Subject: [PATCH 06/13] scsi: hisi_sas: Create a scsi_host_template per HW module
+Date: Mon, 21 May 2018 18:09:18 +0800
+Message-ID: <1526897365-228549-7-git-send-email-john.garry@huawei.com>
+References: <1526897365-228549-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1526783057-16620-1-git-send-email-alim.akhtar@samsung.com>
-Content-Language: en-US
-Content-ID: <EE05F6E1EBFCF64B980C28E8C3CCB81E@namprd04.prod.outlook.com>
+In-Reply-To: <1526897365-228549-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "subhashj@codeaurora.org" <subhashj@codeaurora.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "vinholikatti@gmail.com" <vinholikatti@gmail.com>, "shaik.ameer@samsung.com" <shaik.ameer@samsung.com>
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, linuxarm@huawei.com, linux-kernel@vger.kernel.org, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gU3VuLCAyMDE4LTA1LTIwIGF0IDA3OjU0ICswNTMwLCBBbGltIEFraHRhciB3cm90ZToNCj4g
-ZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS91ZnMvdWZzaGNkLmMgYi9kcml2ZXJzL3Njc2kvdWZz
-L3Vmc2hjZC5jDQo+IGluZGV4IGEzNTVkOTguLjlhMTM3NGUgMTAwNjQ0DQo+IC0tLSBhL2RyaXZl
-cnMvc2NzaS91ZnMvdWZzaGNkLmMNCj4gKysrIGIvZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuYw0K
-PiBAQCAtNzc4MSw2ICs3NzgxLDkgQEAgRVhQT1JUX1NZTUJPTF9HUEwodWZzaGNkX2RlYWxsb2Nf
-aG9zdCk7DQo+ICAgKi8NCj4gIHN0YXRpYyBpbnQgdWZzaGNkX3NldF9kbWFfbWFzayhzdHJ1Y3Qg
-dWZzX2hiYSAqaGJhKQ0KPiAgew0KPiArCWlmIChoYmEtPnZvcHMgJiYgaGJhLT52b3BzLT5zZXRf
-ZG1hX21hc2spDQo+ICsJCXJldHVybiBoYmEtPnZvcHMtPnNldF9kbWFfbWFzayhoYmEpOw0KPiAr
-DQo+ICAJaWYgKGhiYS0+Y2FwYWJpbGl0aWVzICYgTUFTS182NF9BRERSRVNTSU5HX1NVUFBPUlQp
-IHsNCj4gIAkJaWYgKCFkbWFfc2V0X21hc2tfYW5kX2NvaGVyZW50KGhiYS0+ZGV2LCBETUFfQklU
-X01BU0soNjQpKSkNCj4gIAkJCXJldHVybiAwOw0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3Np
-L3Vmcy91ZnNoY2QuaCBiL2RyaXZlcnMvc2NzaS91ZnMvdWZzaGNkLmgNCj4gaW5kZXggMTMzMmU1
-NC4uODljNmRhZSAxMDA2NDQNCj4gLS0tIGEvZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuaA0KPiAr
-KysgYi9kcml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5oDQo+IEBAIC0yOTcsNiArMjk3LDcgQEAgc3Ry
-dWN0IHVmc19wd3JfbW9kZV9pbmZvIHsNCj4gICAqIEByZXN1bWU6IGNhbGxlZCBkdXJpbmcgaG9z
-dCBjb250cm9sbGVyIFBNIGNhbGxiYWNrDQo+ICAgKiBAZGJnX3JlZ2lzdGVyX2R1bXA6IHVzZWQg
-dG8gZHVtcCBjb250cm9sbGVyIGRlYnVnIGluZm9ybWF0aW9uDQo+ICAgKiBAcGh5X2luaXRpYWxp
-emF0aW9uOiB1c2VkIHRvIGluaXRpYWxpemUgcGh5cw0KPiArICogQHNldF9kbWFfbWFzazogdXNl
-ZCB0byBzZXQgdmFyaWFudCBzcGVjaWZpYyBETUEgbWFzaw0KPiAgICovDQo+ICBzdHJ1Y3QgdWZz
-X2hiYV92YXJpYW50X29wcyB7DQo+ICAJY29uc3QgY2hhciAqbmFtZTsNCj4gQEAgLTMyNSw2ICsz
-MjYsNyBAQCBzdHJ1Y3QgdWZzX2hiYV92YXJpYW50X29wcyB7DQo+ICAJaW50ICAgICAoKnJlc3Vt
-ZSkoc3RydWN0IHVmc19oYmEgKiwgZW51bSB1ZnNfcG1fb3ApOw0KPiAgCXZvaWQJKCpkYmdfcmVn
-aXN0ZXJfZHVtcCkoc3RydWN0IHVmc19oYmEgKmhiYSk7DQo+ICAJaW50CSgqcGh5X2luaXRpYWxp
-emF0aW9uKShzdHJ1Y3QgdWZzX2hiYSAqKTsNCj4gKwlpbnQJKCpzZXRfZG1hX21hc2spKHN0cnVj
-dCB1ZnNfaGJhICpoYmEpOw0KPiAgfTsNCg0KSSB3YW50IHRvIHNlZSB0aGUgY29kZSB0aGF0IHNl
-dHMgdGhlIC5zZXRfZG1hX21hc2sgY2FsbGJhY2sgZnVuY3Rpb24uIFdoZXJlDQppcyBpdD8gSWYg
-aXQgaXMgb3V0c2lkZSB0aGUgdXBzdHJlYW0ga2VybmVsLCBwbGVhc2UgY29uc2lkZXIgdG8gc2Vu
-ZCBpdA0KdXBzdHJlYW0gYmVmb3JlIG1ha2luZyBjaGFuZ2VzIGxpa2UgdGhpcy4gQWRkaW5nIHN1
-cHBvcnQgZm9yIG91dC1vZi10cmVlDQprZXJuZWwgY29kZSBpcyBmcm93bmVkIHVwb24gYmlnIHRp
-bWUgaW4gdGhlIGtlcm5lbCBjb21tdW5pdHkuDQoNCkJhcnQuDQoNCg0KDQo=
+From: Xiang Chen <chenxiang66@hisilicon.com>
+
+When a SCSI host is registered, the SCSI mid-layer takes
+a reference to a module in Scsi_host.hostt.module. In doing
+this, we are prevented from removing the driver module for
+the host in dangerous scenario, like when a disk is mounted.
+
+Currently there is only one scsi_host_template (sht) for
+all HW versions, and this is the main.c module. So this means
+that we can possibly remove the HW module in this dangerous
+scenario, as SCSI mid-layer is only referencing the main.c
+module.
+
+To fix this, create a sht per module, referencing that same
+module to create the Scsi host.
+
+Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
+---
+ drivers/scsi/hisi_sas/hisi_sas.h       |  8 +++++--
+ drivers/scsi/hisi_sas/hisi_sas_main.c  | 40 +++++++++-------------------------
+ drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 23 +++++++++++++++++++
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 24 ++++++++++++++++++++
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 24 +++++++++++++++++++-
+ 5 files changed, 86 insertions(+), 33 deletions(-)
+
+diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
+index b4717bd..37c9a62 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas.h
++++ b/drivers/scsi/hisi_sas/hisi_sas.h
+@@ -248,6 +248,7 @@ struct hisi_sas_hw {
+ 				u8 reg_index, u8 reg_count, u8 *write_data);
+ 	int max_command_entries;
+ 	int complete_hdr_size;
++	struct scsi_host_template *sht;
+ };
+ 
+ struct hisi_hba {
+@@ -440,8 +441,6 @@ struct hisi_sas_slot_buf_table {
+ };
+ 
+ extern struct scsi_transport_template *hisi_sas_stt;
+-extern struct scsi_host_template *hisi_sas_sht;
+-
+ extern void hisi_sas_stop_phys(struct hisi_hba *hisi_hba);
+ extern int hisi_sas_alloc(struct hisi_hba *hisi_hba, struct Scsi_Host *shost);
+ extern void hisi_sas_free(struct hisi_hba *hisi_hba);
+@@ -456,6 +455,11 @@ extern int hisi_sas_probe(struct platform_device *pdev,
+ 			  const struct hisi_sas_hw *ops);
+ extern int hisi_sas_remove(struct platform_device *pdev);
+ 
++extern int hisi_sas_slave_configure(struct scsi_device *sdev);
++extern int hisi_sas_scan_finished(struct Scsi_Host *shost, unsigned long time);
++extern void hisi_sas_scan_start(struct Scsi_Host *shost);
++extern struct device_attribute *host_attrs[];
++extern int hisi_sas_host_reset(struct Scsi_Host *shost, int reset_type);
+ extern void hisi_sas_phy_down(struct hisi_hba *hisi_hba, int phy_no, int rdy);
+ extern void hisi_sas_slot_task_free(struct hisi_hba *hisi_hba,
+ 				    struct sas_task *task,
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index 0596553..7b8623b 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -719,7 +719,7 @@ static int hisi_sas_dev_found(struct domain_device *device)
+ 	return rc;
+ }
+ 
+-static int hisi_sas_slave_configure(struct scsi_device *sdev)
++int hisi_sas_slave_configure(struct scsi_device *sdev)
+ {
+ 	struct domain_device *dev = sdev_to_domain_dev(sdev);
+ 	int ret = sas_slave_configure(sdev);
+@@ -731,15 +731,17 @@ static int hisi_sas_slave_configure(struct scsi_device *sdev)
+ 
+ 	return 0;
+ }
++EXPORT_SYMBOL_GPL(hisi_sas_slave_configure);
+ 
+-static void hisi_sas_scan_start(struct Scsi_Host *shost)
++void hisi_sas_scan_start(struct Scsi_Host *shost)
+ {
+ 	struct hisi_hba *hisi_hba = shost_priv(shost);
+ 
+ 	hisi_hba->hw->phys_init(hisi_hba);
+ }
++EXPORT_SYMBOL_GPL(hisi_sas_scan_start);
+ 
+-static int hisi_sas_scan_finished(struct Scsi_Host *shost, unsigned long time)
++int hisi_sas_scan_finished(struct Scsi_Host *shost, unsigned long time)
+ {
+ 	struct hisi_hba *hisi_hba = shost_priv(shost);
+ 	struct sas_ha_struct *sha = &hisi_hba->sha;
+@@ -751,6 +753,7 @@ static int hisi_sas_scan_finished(struct Scsi_Host *shost, unsigned long time)
+ 	sas_drain_work(sha);
+ 	return 1;
+ }
++EXPORT_SYMBOL_GPL(hisi_sas_scan_finished);
+ 
+ static void hisi_sas_phyup_work(struct work_struct *work)
+ {
+@@ -1824,34 +1827,11 @@ void hisi_sas_kill_tasklets(struct hisi_hba *hisi_hba)
+ struct scsi_transport_template *hisi_sas_stt;
+ EXPORT_SYMBOL_GPL(hisi_sas_stt);
+ 
+-static struct device_attribute *host_attrs[] = {
++struct device_attribute *host_attrs[] = {
+ 	&dev_attr_phy_event_threshold,
+ 	NULL,
+ };
+-
+-static struct scsi_host_template _hisi_sas_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.queuecommand		= sas_queuecommand,
+-	.target_alloc		= sas_target_alloc,
+-	.slave_configure	= hisi_sas_slave_configure,
+-	.scan_finished		= hisi_sas_scan_finished,
+-	.scan_start		= hisi_sas_scan_start,
+-	.change_queue_depth	= sas_change_queue_depth,
+-	.bios_param		= sas_bios_param,
+-	.can_queue		= 1,
+-	.this_id		= -1,
+-	.sg_tablesize		= SG_ALL,
+-	.max_sectors		= SCSI_DEFAULT_MAX_SECTORS,
+-	.use_clustering		= ENABLE_CLUSTERING,
+-	.eh_device_reset_handler = sas_eh_device_reset_handler,
+-	.eh_target_reset_handler = sas_eh_target_reset_handler,
+-	.target_destroy		= sas_target_destroy,
+-	.ioctl			= sas_ioctl,
+-	.shost_attrs		= host_attrs,
+-};
+-struct scsi_host_template *hisi_sas_sht = &_hisi_sas_sht;
+-EXPORT_SYMBOL_GPL(hisi_sas_sht);
++EXPORT_SYMBOL_GPL(host_attrs);
+ 
+ static struct sas_domain_function_template hisi_sas_transport_ops = {
+ 	.lldd_dev_found		= hisi_sas_dev_found,
+@@ -2161,7 +2141,7 @@ static struct Scsi_Host *hisi_sas_shost_alloc(struct platform_device *pdev,
+ 	struct hisi_hba *hisi_hba;
+ 	struct device *dev = &pdev->dev;
+ 
+-	shost = scsi_host_alloc(hisi_sas_sht, sizeof(*hisi_hba));
++	shost = scsi_host_alloc(hw->sht, sizeof(*hisi_hba));
+ 	if (!shost) {
+ 		dev_err(dev, "scsi host alloc failed\n");
+ 		return NULL;
+@@ -2211,7 +2191,7 @@ static struct Scsi_Host *hisi_sas_shost_alloc(struct platform_device *pdev,
+ }
+ 
+ int hisi_sas_probe(struct platform_device *pdev,
+-			 const struct hisi_sas_hw *hw)
++		   const struct hisi_sas_hw *hw)
+ {
+ 	struct Scsi_Host *shost;
+ 	struct hisi_hba *hisi_hba;
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+index 8fa79d0..8d5d857 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+@@ -1788,6 +1788,28 @@ static int hisi_sas_v1_init(struct hisi_hba *hisi_hba)
+ 	return 0;
+ }
+ 
++static struct scsi_host_template sht_v1_hw = {
++	.name			= DRV_NAME,
++	.module			= THIS_MODULE,
++	.queuecommand		= sas_queuecommand,
++	.target_alloc		= sas_target_alloc,
++	.slave_configure	= hisi_sas_slave_configure,
++	.scan_finished		= hisi_sas_scan_finished,
++	.scan_start		= hisi_sas_scan_start,
++	.change_queue_depth	= sas_change_queue_depth,
++	.bios_param		= sas_bios_param,
++	.can_queue		= 1,
++	.this_id		= -1,
++	.sg_tablesize		= SG_ALL,
++	.max_sectors		= SCSI_DEFAULT_MAX_SECTORS,
++	.use_clustering		= ENABLE_CLUSTERING,
++	.eh_device_reset_handler = sas_eh_device_reset_handler,
++	.eh_target_reset_handler = sas_eh_target_reset_handler,
++	.target_destroy		= sas_target_destroy,
++	.ioctl			= sas_ioctl,
++	.shost_attrs		= host_attrs,
++};
++
+ static const struct hisi_sas_hw hisi_sas_v1_hw = {
+ 	.hw_init = hisi_sas_v1_init,
+ 	.setup_itct = setup_itct_v1_hw,
+@@ -1807,6 +1829,7 @@ static int hisi_sas_v1_init(struct hisi_hba *hisi_hba)
+ 	.get_wideport_bitmap = get_wideport_bitmap_v1_hw,
+ 	.max_command_entries = HISI_SAS_COMMAND_ENTRIES_V1_HW,
+ 	.complete_hdr_size = sizeof(struct hisi_sas_complete_v1_hdr),
++	.sht = &sht_v1_hw,
+ };
+ 
+ static int hisi_sas_v1_probe(struct platform_device *pdev)
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+index fb0e966..8def327 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+@@ -3501,6 +3501,29 @@ static int write_gpio_v2_hw(struct hisi_hba *hisi_hba, u8 reg_type,
+ 	return 0;
+ }
+ 
++
++static struct scsi_host_template sht_v2_hw = {
++	.name			= DRV_NAME,
++	.module			= THIS_MODULE,
++	.queuecommand		= sas_queuecommand,
++	.target_alloc		= sas_target_alloc,
++	.slave_configure	= hisi_sas_slave_configure,
++	.scan_finished		= hisi_sas_scan_finished,
++	.scan_start		= hisi_sas_scan_start,
++	.change_queue_depth	= sas_change_queue_depth,
++	.bios_param		= sas_bios_param,
++	.can_queue		= 1,
++	.this_id		= -1,
++	.sg_tablesize		= SG_ALL,
++	.max_sectors		= SCSI_DEFAULT_MAX_SECTORS,
++	.use_clustering		= ENABLE_CLUSTERING,
++	.eh_device_reset_handler = sas_eh_device_reset_handler,
++	.eh_target_reset_handler = sas_eh_target_reset_handler,
++	.target_destroy		= sas_target_destroy,
++	.ioctl			= sas_ioctl,
++	.shost_attrs		= host_attrs,
++};
++
+ static const struct hisi_sas_hw hisi_sas_v2_hw = {
+ 	.hw_init = hisi_sas_v2_init,
+ 	.setup_itct = setup_itct_v2_hw,
+@@ -3529,6 +3552,7 @@ static int write_gpio_v2_hw(struct hisi_hba *hisi_hba, u8 reg_type,
+ 	.soft_reset = soft_reset_v2_hw,
+ 	.get_phys_state = get_phys_state_v2_hw,
+ 	.write_gpio = write_gpio_v2_hw,
++	.sht = &sht_v2_hw,
+ };
+ 
+ static int hisi_sas_v2_probe(struct platform_device *pdev)
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index a043d9c..13d2134 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -2015,6 +2015,28 @@ static int write_gpio_v3_hw(struct hisi_hba *hisi_hba, u8 reg_type,
+ 	return 0;
+ }
+ 
++static struct scsi_host_template sht_v3_hw = {
++	.name			= DRV_NAME,
++	.module			= THIS_MODULE,
++	.queuecommand		= sas_queuecommand,
++	.target_alloc		= sas_target_alloc,
++	.slave_configure	= hisi_sas_slave_configure,
++	.scan_finished		= hisi_sas_scan_finished,
++	.scan_start		= hisi_sas_scan_start,
++	.change_queue_depth	= sas_change_queue_depth,
++	.bios_param		= sas_bios_param,
++	.can_queue		= 1,
++	.this_id		= -1,
++	.sg_tablesize		= SG_ALL,
++	.max_sectors		= SCSI_DEFAULT_MAX_SECTORS,
++	.use_clustering		= ENABLE_CLUSTERING,
++	.eh_device_reset_handler = sas_eh_device_reset_handler,
++	.eh_target_reset_handler = sas_eh_target_reset_handler,
++	.target_destroy		= sas_target_destroy,
++	.ioctl			= sas_ioctl,
++	.shost_attrs		= host_attrs,
++};
++
+ static const struct hisi_sas_hw hisi_sas_v3_hw = {
+ 	.hw_init = hisi_sas_v3_init,
+ 	.setup_itct = setup_itct_v3_hw,
+@@ -2050,7 +2072,7 @@ static int write_gpio_v3_hw(struct hisi_hba *hisi_hba, u8 reg_type,
+ 	struct hisi_hba *hisi_hba;
+ 	struct device *dev = &pdev->dev;
+ 
+-	shost = scsi_host_alloc(hisi_sas_sht, sizeof(*hisi_hba));
++	shost = scsi_host_alloc(&sht_v3_hw, sizeof(*hisi_hba));
+ 	if (!shost) {
+ 		dev_err(dev, "shost alloc failed\n");
+ 		return NULL;
+-- 
+1.9.1
