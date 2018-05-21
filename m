@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 08/13] scsi: hisi_sas: Try wait commands before before controller reset
-Date: Mon, 21 May 2018 18:09:20 +0800
-Message-ID: <1526897365-228549-9-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 07/13] scsi: hisi_sas: Init disks after controller reset
+Date: Mon, 21 May 2018 18:09:19 +0800
+Message-ID: <1526897365-228549-8-git-send-email-john.garry@huawei.com>
 References: <1526897365-228549-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -14,144 +14,77 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Xiaofei Tan <tanxiaofei@huawei.com>
 
-We may reset the controller in many scenarios, such as SCSI EH
-and HW errors. There should be no IO which returns from target
-when SCSI EH is active. But for other scenarios, there may be.
-It is not necessary to make such IOs failure.
+After the controller is reset, it is possible that the
+disks attached still have outstanding IO to complete.
 
-This patch adds an function of trying to wait for any commands,
-or IO, to complete before host reset. If no more CQ returned from
-host controller in 100ms, we assume no more IO can return, and
-then stop waiting. We wait 5s at most.
+Thus, when the PHYs come back up after controller reset, it
+is possible that these IOs complete at some unknown point
+later.
 
-The HW has a register CQE_SEND_CNT to indicate the total number
-of CQs that has been reported to driver. We can use this register
-and it is reliable to resd this register in such scenarios that
-require host reset.
+We want to ensure that all IOs are complete after the
+controller reset so that all associated IPTT and other
+resources can be recycled safely.
+
+To achieve this, re-init the disks by TMF or softreset
+(in case of ATA devices).
+
+If the init fails - maybe because the device was removed
+or link has not come up - then do not release the device
+resources, but rather rely on SCSI EH to handle the timeout
+for these resources later on.
+
+This patch also does some cleanup to hisi_sas_init_disk(), including
+removing superfluous cases in the switch statement.
 
 Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas.h       |  2 ++
- drivers/scsi/hisi_sas/hisi_sas_main.c  |  2 ++
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 19 +++++++++++++++++++
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 20 ++++++++++++++++++++
- 4 files changed, 43 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 19 ++++++++++++++++++-
+ 1 file changed, 18 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index 37c9a62..8ce6abb 100644
---- a/drivers/scsi/hisi_sas/hisi_sas.h
-+++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -246,6 +246,8 @@ struct hisi_sas_hw {
- 	u32 (*get_phys_state)(struct hisi_hba *hisi_hba);
- 	int (*write_gpio)(struct hisi_hba *hisi_hba, u8 reg_type,
- 				u8 reg_index, u8 reg_count, u8 *write_data);
-+	void (*wait_cmds_complete_timeout)(struct hisi_hba *hisi_hba,
-+					   int delay_ms, int timeout_ms);
- 	int max_command_entries;
- 	int complete_hdr_size;
- 	struct scsi_host_template *sht;
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 0dfefdf..a6fcfb3 100644
+index 7b8623b..0dfefdf 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -1293,6 +1293,8 @@ static int hisi_sas_controller_reset(struct hisi_hba *hisi_hba)
- 	old_state = hisi_hba->hw->get_phys_state(hisi_hba);
- 
- 	scsi_block_requests(shost);
-+	hisi_hba->hw->wait_cmds_complete_timeout(hisi_hba, 100, 5000);
-+
- 	if (timer_pending(&hisi_hba->timer))
- 		del_timer_sync(&hisi_hba->timer);
- 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index 8def327..18dbaff 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -144,6 +144,7 @@
- #define SAS_ECC_INTR_NCQ_MEM3_ECC_1B_OFF	19
- #define SAS_ECC_INTR_MSK		0x1ec
- #define HGC_ERR_STAT_EN			0x238
-+#define CQE_SEND_CNT			0x248
- #define DLVRY_Q_0_BASE_ADDR_LO		0x260
- #define DLVRY_Q_0_BASE_ADDR_HI		0x264
- #define DLVRY_Q_0_DEPTH			0x268
-@@ -3501,6 +3502,23 @@ static int write_gpio_v2_hw(struct hisi_hba *hisi_hba, u8 reg_type,
- 	return 0;
+@@ -1259,6 +1259,23 @@ static void hisi_sas_rescan_topology(struct hisi_hba *hisi_hba, u32 old_state,
+ 	}
  }
  
-+static void wait_cmds_complete_timeout_v2_hw(struct hisi_hba *hisi_hba,
-+					     int delay_ms, int timeout_ms)
++static void hisi_sas_reset_init_all_devices(struct hisi_hba *hisi_hba)
 +{
-+	struct device *dev = hisi_hba->dev;
-+	int entries, entries_old = 0, time;
++	struct hisi_sas_device *sas_dev;
++	struct domain_device *device;
++	int i;
 +
-+	for (time = 0; time < timeout_ms; time += delay_ms) {
-+		entries = hisi_sas_read32(hisi_hba, CQE_SEND_CNT);
-+		if (entries == entries_old)
-+			break;
++	for (i = 0; i < HISI_SAS_MAX_DEVICES; i++) {
++		sas_dev = &hisi_hba->devices[i];
++		device = sas_dev->sas_device;
 +
-+		entries_old = entries;
-+		msleep(delay_ms);
++		if ((sas_dev->dev_type == SAS_PHY_UNUSED) || !device)
++			continue;
++
++		hisi_sas_init_device(device);
 +	}
-+
-+	dev_dbg(dev, "wait commands complete %dms\n", time);
-+}
- 
- static struct scsi_host_template sht_v2_hw = {
- 	.name			= DRV_NAME,
-@@ -3552,6 +3570,7 @@ static int write_gpio_v2_hw(struct hisi_hba *hisi_hba, u8 reg_type,
- 	.soft_reset = soft_reset_v2_hw,
- 	.get_phys_state = get_phys_state_v2_hw,
- 	.write_gpio = write_gpio_v2_hw,
-+	.wait_cmds_complete_timeout = wait_cmds_complete_timeout_v2_hw,
- 	.sht = &sht_v2_hw,
- };
- 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 13d2134..dd5f542 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -92,6 +92,7 @@
- #define SAS_ECC_INTR			0x1e8
- #define SAS_ECC_INTR_MSK		0x1ec
- #define HGC_ERR_STAT_EN			0x238
-+#define CQE_SEND_CNT			0x248
- #define DLVRY_Q_0_BASE_ADDR_LO		0x260
- #define DLVRY_Q_0_BASE_ADDR_HI		0x264
- #define DLVRY_Q_0_DEPTH			0x268
-@@ -2015,6 +2016,24 @@ static int write_gpio_v3_hw(struct hisi_hba *hisi_hba, u8 reg_type,
- 	return 0;
- }
- 
-+static void wait_cmds_complete_timeout_v3_hw(struct hisi_hba *hisi_hba,
-+					     int delay_ms, int timeout_ms)
-+{
-+	struct device *dev = hisi_hba->dev;
-+	int entries, entries_old = 0, time;
-+
-+	for (time = 0; time < timeout_ms; time += delay_ms) {
-+		entries = hisi_sas_read32(hisi_hba, CQE_SEND_CNT);
-+		if (entries == entries_old)
-+			break;
-+
-+		entries_old = entries;
-+		msleep(delay_ms);
-+	}
-+
-+	dev_dbg(dev, "wait commands complete %dms\n", time);
 +}
 +
- static struct scsi_host_template sht_v3_hw = {
- 	.name			= DRV_NAME,
- 	.module			= THIS_MODULE,
-@@ -2063,6 +2082,7 @@ static int write_gpio_v3_hw(struct hisi_hba *hisi_hba, u8 reg_type,
- 	.get_phys_state = get_phys_state_v3_hw,
- 	.get_events = phy_get_events_v3_hw,
- 	.write_gpio = write_gpio_v3_hw,
-+	.wait_cmds_complete_timeout = wait_cmds_complete_timeout_v3_hw,
- };
+ static int hisi_sas_controller_reset(struct hisi_hba *hisi_hba)
+ {
+ 	struct device *dev = hisi_hba->dev;
+@@ -1287,7 +1304,6 @@ static int hisi_sas_controller_reset(struct hisi_hba *hisi_hba)
+ 		scsi_unblock_requests(shost);
+ 		goto out;
+ 	}
+-	hisi_sas_release_tasks(hisi_hba);
  
- static struct Scsi_Host *
+ 	clear_bit(HISI_SAS_REJECT_CMD_BIT, &hisi_hba->flags);
+ 
+@@ -1295,6 +1311,7 @@ static int hisi_sas_controller_reset(struct hisi_hba *hisi_hba)
+ 	hisi_hba->hw->phys_init(hisi_hba);
+ 	msleep(1000);
+ 	hisi_sas_refresh_port_id(hisi_hba);
++	hisi_sas_reset_init_all_devices(hisi_hba);
+ 	scsi_unblock_requests(shost);
+ 
+ 	state = hisi_hba->hw->get_phys_state(hisi_hba);
 -- 
 1.9.1
