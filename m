@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 13/13] scsi: hisi_sas: Mark PHY as in reset for nexus reset
-Date: Mon, 21 May 2018 18:09:25 +0800
-Message-ID: <1526897365-228549-14-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 10/13] scsi: hisi_sas: Add v2 hw force PHY function for internal ATA command
+Date: Mon, 21 May 2018 18:09:22 +0800
+Message-ID: <1526897365-228549-11-git-send-email-john.garry@huawei.com>
 References: <1526897365-228549-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -9,214 +9,75 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1526897365-228549-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linuxarm@huawei.com, linux-kernel@vger.kernel.org, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
+Cc: linux-scsi@vger.kernel.org, linuxarm@huawei.com, linux-kernel@vger.kernel.org, Xiaofei Tan <tanxiaofei@huawei.com>, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Xiang Chen <chenxiang66@hisilicon.com>
+From: Xiaofei Tan <tanxiaofei@huawei.com>
 
-When issunig a  nexus reset for directly attached device,
-we want to ignore the PHY down events so libsas will not
-deform and reform the port.
+This patch adds an force PHY function for internal ATA command for
+v2 hw.
 
-In the case that the attached SAS changes for the reset,
-libsas will deform and form a port.
+Because there is an SoC bug of v2 hw, and need send an IO through
+each PHY of a port to workaround a bug which occurs after a
+controller reset.
 
-For scenario that the PHY does not come up after a timeout
-period, then report the PHY down to libsas.
+This force PHY function will be used in the later patch.
 
-Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas.h       |  5 ++++-
- drivers/scsi/hisi_sas/hisi_sas_main.c  | 40 ++++++++++++++++++++++++++++++----
- drivers/scsi/hisi_sas/hisi_sas_v1_hw.c |  8 +++++++
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 14 ++++++++++++
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c |  7 ++++++
- 5 files changed, 69 insertions(+), 5 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas.h       |  2 ++
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 11 +++++++++++
+ 2 files changed, 13 insertions(+)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index 9400824..7052a5d 100644
+index 60bd652..9400824 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas.h
 +++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -136,11 +136,14 @@ struct hisi_sas_phy {
- 	struct hisi_sas_port	*port;
- 	struct asd_sas_phy	sas_phy;
- 	struct sas_identify	identify;
-+	struct completion *reset_completion;
-+	spinlock_t lock;
- 	u64		port_id; /* from hw */
- 	u64		frame_rcvd_size;
- 	u8		frame_rcvd[32];
- 	u8		phy_attached;
--	u8		reserved[3];
-+	u8		in_reset;
-+	u8		reserved[2];
- 	u32		phy_type;
- 	enum sas_linkrate	minimum_linkrate;
- 	enum sas_linkrate	maximum_linkrate;
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index f6c4eb6..9adf18c 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -1529,12 +1529,39 @@ static int hisi_sas_clear_aca(struct domain_device *device, u8 *lun)
+@@ -180,6 +180,8 @@ struct hisi_sas_device {
+ };
  
- static int hisi_sas_debug_I_T_nexus_reset(struct domain_device *device)
- {
--	struct sas_phy *phy = sas_get_local_phy(device);
-+	struct sas_phy *local_phy = sas_get_local_phy(device);
- 	int rc, reset_type = (device->dev_type == SAS_SATA_DEV ||
- 			(device->tproto & SAS_PROTOCOL_STP)) ? 0 : 1;
--	rc = sas_phy_reset(phy, reset_type);
--	sas_put_local_phy(phy);
--	msleep(2000);
-+	struct hisi_hba *hisi_hba = dev_to_hisi_hba(device);
-+	struct sas_ha_struct *sas_ha = &hisi_hba->sha;
-+	struct asd_sas_phy *sas_phy = sas_ha->sas_phy[local_phy->number];
-+	struct hisi_sas_phy *phy = container_of(sas_phy,
-+			struct hisi_sas_phy, sas_phy);
-+	DECLARE_COMPLETION_ONSTACK(phyreset);
-+
-+	if (scsi_is_sas_phy_local(local_phy)) {
-+		phy->in_reset = 1;
-+		phy->reset_completion = &phyreset;
-+	}
-+
-+	rc = sas_phy_reset(local_phy, reset_type);
-+	sas_put_local_phy(local_phy);
-+
-+	if (scsi_is_sas_phy_local(local_phy)) {
-+		int ret = wait_for_completion_timeout(&phyreset, 2 * HZ);
-+		unsigned long flags;
-+
-+		spin_lock_irqsave(&phy->lock, flags);
-+		phy->reset_completion = NULL;
-+		phy->in_reset = 0;
-+		spin_unlock_irqrestore(&phy->lock, flags);
-+
-+		/* report PHY down if timed out */
-+		if (!ret)
-+			hisi_sas_phy_down(hisi_hba, sas_phy->id, 0);
-+	} else
-+		msleep(2000);
-+
- 	return rc;
- }
- 
-@@ -1883,6 +1910,7 @@ void hisi_sas_phy_down(struct hisi_hba *hisi_hba, int phy_no, int rdy)
- 	struct hisi_sas_phy *phy = &hisi_hba->phy[phy_no];
- 	struct asd_sas_phy *sas_phy = &phy->sas_phy;
- 	struct sas_ha_struct *sas_ha = &hisi_hba->sha;
-+	struct device *dev = hisi_hba->dev;
- 
- 	if (rdy) {
- 		/* Phy down but ready */
-@@ -1891,6 +1919,10 @@ void hisi_sas_phy_down(struct hisi_hba *hisi_hba, int phy_no, int rdy)
- 	} else {
- 		struct hisi_sas_port *port  = phy->port;
- 
-+		if (phy->in_reset) {
-+			dev_info(dev, "ignore flutter phy%d down\n", phy_no);
-+			return;
-+		}
- 		/* Phy down and not ready */
- 		sas_ha->notify_phy_event(sas_phy, PHYE_LOSS_OF_SIGNAL);
- 		sas_phy_disconnected(sas_phy);
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-index 05609ac..89ab18c 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-@@ -1373,6 +1373,7 @@ static irqreturn_t int_phyup_v1_hw(int irq_no, void *p)
- 	u32 *frame_rcvd = (u32 *)sas_phy->frame_rcvd;
- 	struct sas_identify_frame *id = (struct sas_identify_frame *)frame_rcvd;
- 	irqreturn_t res = IRQ_HANDLED;
-+	unsigned long flags;
- 
- 	irq_value = hisi_sas_phy_read32(hisi_hba, phy_no, CHL_INT2);
- 	if (!(irq_value & CHL_INT2_SL_PHY_ENA_MSK)) {
-@@ -1426,6 +1427,13 @@ static irqreturn_t int_phyup_v1_hw(int irq_no, void *p)
- 			SAS_PROTOCOL_SMP;
- 	hisi_sas_notify_phy_event(phy, HISI_PHYE_PHY_UP);
- 
-+	spin_lock_irqsave(&phy->lock, flags);
-+	if (phy->reset_completion) {
-+		phy->in_reset = 0;
-+		complete(phy->reset_completion);
-+	}
-+	spin_unlock_irqrestore(&phy->lock, flags);
-+
- end:
- 	hisi_sas_phy_write32(hisi_hba, phy_no, CHL_INT2,
- 			     CHL_INT2_SL_PHY_ENA_MSK);
+ struct hisi_sas_tmf_task {
++	int force_phy;
++	int phy_id;
+ 	u8 tmf;
+ 	u16 tag_of_task_to_be_managed;
+ };
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index 369ef7e..213c530 100644
+index fafb3f1..369ef7e 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -2661,6 +2661,7 @@ static int phy_up_v2_hw(int phy_no, struct hisi_hba *hisi_hba)
- 	struct device *dev = hisi_hba->dev;
- 	u32 *frame_rcvd = (u32 *)sas_phy->frame_rcvd;
- 	struct sas_identify_frame *id = (struct sas_identify_frame *)frame_rcvd;
-+	unsigned long flags;
+@@ -296,6 +296,10 @@
+ #define CMD_HDR_RESP_REPORT_MSK		(0x1 << CMD_HDR_RESP_REPORT_OFF)
+ #define CMD_HDR_TLR_CTRL_OFF		6
+ #define CMD_HDR_TLR_CTRL_MSK		(0x3 << CMD_HDR_TLR_CTRL_OFF)
++#define CMD_HDR_PHY_ID_OFF		8
++#define CMD_HDR_PHY_ID_MSK		(0x1ff << CMD_HDR_PHY_ID_OFF)
++#define CMD_HDR_FORCE_PHY_OFF		17
++#define CMD_HDR_FORCE_PHY_MSK		(0x1 << CMD_HDR_FORCE_PHY_OFF)
+ #define CMD_HDR_PORT_OFF		18
+ #define CMD_HDR_PORT_MSK		(0xf << CMD_HDR_PORT_OFF)
+ #define CMD_HDR_PRIORITY_OFF		27
+@@ -2512,6 +2516,7 @@ static void prep_ata_v2_hw(struct hisi_hba *hisi_hba,
+ 	struct hisi_sas_cmd_hdr *hdr = slot->cmd_hdr;
+ 	struct asd_sas_port *sas_port = device->port;
+ 	struct hisi_sas_port *port = to_hisi_sas_port(sas_port);
++	struct hisi_sas_tmf_task *tmf = slot->tmf;
+ 	u8 *buf_cmd;
+ 	int has_data = 0, hdr_tag = 0;
+ 	u32 dw1 = 0, dw2 = 0;
+@@ -2524,6 +2529,12 @@ static void prep_ata_v2_hw(struct hisi_hba *hisi_hba,
+ 	else
+ 		hdr->dw0 |= cpu_to_le32(4 << CMD_HDR_CMD_OFF);
  
- 	hisi_sas_phy_write32(hisi_hba, phy_no, PHYCTRL_PHY_ENA_MSK, 1);
- 
-@@ -2713,6 +2714,12 @@ static int phy_up_v2_hw(int phy_no, struct hisi_hba *hisi_hba)
- 			set_link_timer_quirk(hisi_hba);
- 	}
- 	hisi_sas_notify_phy_event(phy, HISI_PHYE_PHY_UP);
-+	spin_lock_irqsave(&phy->lock, flags);
-+	if (phy->reset_completion) {
-+		phy->in_reset = 0;
-+		complete(phy->reset_completion);
++	if (tmf && tmf->force_phy) {
++		hdr->dw0 |= CMD_HDR_FORCE_PHY_MSK;
++		hdr->dw0 |= cpu_to_le32((1 << tmf->phy_id)
++				<< CMD_HDR_PHY_ID_OFF);
 +	}
-+	spin_unlock_irqrestore(&phy->lock, flags);
- 
- end:
- 	hisi_sas_phy_write32(hisi_hba, phy_no, CHL_INT0,
-@@ -3201,6 +3208,7 @@ static irqreturn_t sata_int_v2_hw(int irq_no, void *p)
- 	u32 ent_tmp, ent_msk, ent_int, port_id, link_rate, hard_phy_linkrate;
- 	irqreturn_t res = IRQ_HANDLED;
- 	u8 attached_sas_addr[SAS_ADDR_SIZE] = {0};
-+	unsigned long flags;
- 	int phy_no, offset;
- 
- 	phy_no = sas_phy->id;
-@@ -3275,6 +3283,12 @@ static irqreturn_t sata_int_v2_hw(int irq_no, void *p)
- 	phy->identify.target_port_protocols = SAS_PROTOCOL_SATA;
- 	hisi_sas_notify_phy_event(phy, HISI_PHYE_PHY_UP);
- 
-+	spin_lock_irqsave(&phy->lock, flags);
-+	if (phy->reset_completion) {
-+		phy->in_reset = 0;
-+		complete(phy->reset_completion);
-+	}
-+	spin_unlock_irqrestore(&phy->lock, flags);
- end:
- 	hisi_sas_write32(hisi_hba, ENT_INT_SRC1 + offset, ent_tmp);
- 	hisi_sas_write32(hisi_hba, ENT_INT_SRC_MSK1 + offset, ent_msk);
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 8c996aa..9f1e2d0 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -1143,6 +1143,7 @@ static irqreturn_t phy_up_v3_hw(int phy_no, struct hisi_hba *hisi_hba)
- 	struct hisi_sas_phy *phy = &hisi_hba->phy[phy_no];
- 	struct asd_sas_phy *sas_phy = &phy->sas_phy;
- 	struct device *dev = hisi_hba->dev;
-+	unsigned long flags;
- 
- 	hisi_sas_phy_write32(hisi_hba, phy_no, PHYCTRL_PHY_ENA_MSK, 1);
- 
-@@ -1211,6 +1212,12 @@ static irqreturn_t phy_up_v3_hw(int phy_no, struct hisi_hba *hisi_hba)
- 	phy->phy_attached = 1;
- 	hisi_sas_notify_phy_event(phy, HISI_PHYE_PHY_UP);
- 	res = IRQ_HANDLED;
-+	spin_lock_irqsave(&phy->lock, flags);
-+	if (phy->reset_completion) {
-+		phy->in_reset = 0;
-+		complete(phy->reset_completion);
-+	}
-+	spin_unlock_irqrestore(&phy->lock, flags);
- end:
- 	hisi_sas_phy_write32(hisi_hba, phy_no, CHL_INT0,
- 			     CHL_INT0_SL_PHY_ENABLE_MSK);
++
+ 	/* dw1 */
+ 	switch (task->data_dir) {
+ 	case DMA_TO_DEVICE:
 -- 
 1.9.1
