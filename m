@@ -1,102 +1,192 @@
-From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH v2] scsi_transport_srp: Fix shost to rport translation
-Date: Mon, 21 May 2018 11:17:29 -0700
-Message-ID: <20180521181729.12821-1-bart.vanassche@wdc.com>
-Return-path: <stable-owner@vger.kernel.org>
-Sender: stable-owner@vger.kernel.org
-To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, Jason Gunthorpe <jgg@mellanox.com>, Doug Ledford <dledford@redhat.com>, Laurence Oberman <loberman@redhat.com>, stable@vger.kernel.org
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 4.17-rc6
+Date: Mon, 21 May 2018 14:57:00 -0700
+Message-ID: <1526939820.3215.32.camel@HansenPartnership.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Since an SRP remote port is attached as a child to shost->shost_gendev
-and as the only child, the translation from the shost pointer into an
-rport pointer must happen by looking up the shost child that is an
-rport. This patch fixes the following KASAN complaint:
+Two driver fixes (zfcp and target core), one information leak in sg and
+one build clean up.
 
-BUG: KASAN: slab-out-of-bounds in srp_timed_out+0x57/0x110 [scsi_transport_srp]
-Read of size 4 at addr ffff880035d3fcc0 by task kworker/1:0H/19
+The patch is available here:
 
-CPU: 1 PID: 19 Comm: kworker/1:0H Not tainted 4.16.0-rc3-dbg+ #1
-Workqueue: kblockd blk_mq_timeout_work
-Call Trace:
-dump_stack+0x85/0xc7
-print_address_description+0x65/0x270
-kasan_report+0x231/0x350
-srp_timed_out+0x57/0x110 [scsi_transport_srp]
-scsi_times_out+0xc7/0x3f0 [scsi_mod]
-blk_mq_terminate_expired+0xc2/0x140
-bt_iter+0xbc/0xd0
-blk_mq_queue_tag_busy_iter+0x1c7/0x350
-blk_mq_timeout_work+0x325/0x3f0
-process_one_work+0x441/0xa50
-worker_thread+0x76/0x6c0
-kthread+0x1b2/0x1d0
-ret_from_fork+0x24/0x30
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-Fixes: e68ca75200fe ("scsi_transport_srp: Reduce failover time")
-Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: Hannes Reinecke <hare@suse.com>
-Cc: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: Jason Gunthorpe <jgg@mellanox.com>
-Cc: Doug Ledford <dledford@redhat.com>
-Cc: Laurence Oberman <loberman@redhat.com>
-Cc: stable@vger.kernel.org
+The short changelog is:
+
+Alexander Potapenko (1):
+      scsi: sg: allocate with __GFP_ZERO in sg_build_indirect()
+
+Jens Remus (1):
+      scsi: zfcp: fix infinite iteration on ERP ready list
+
+Prasanna Kumar Kalever (1):
+      scsi: target: tcmu: fix error resetting qfull_time_out to default
+
+Randy Dunlap (1):
+      scsi: core: clean up generated file scsi_devinfo_tbl.c
+
+And the diffstat:
+
+ drivers/s390/scsi/zfcp_dbf.c      | 23 ++++++++++++++++++++++-
+ drivers/s390/scsi/zfcp_ext.h      |  5 ++++-
+ drivers/s390/scsi/zfcp_scsi.c     | 14 +++++++-------
+ drivers/scsi/Makefile             |  2 +-
+ drivers/scsi/sg.c                 |  2 +-
+ drivers/target/target_core_user.c |  2 ++
+ 6 files changed, 37 insertions(+), 11 deletions(-)
+
+With full diff below.
+
+James
+
 ---
 
-Changes compared to v1: added a check in srp_timed_out() that checks whether
-  or not rport != NULL.
-
- drivers/scsi/scsi_transport_srp.c | 22 ++++++++++++++++++++--
- 1 file changed, 20 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/scsi_transport_srp.c b/drivers/scsi/scsi_transport_srp.c
-index 36f6190931bc..456ce9f19569 100644
---- a/drivers/scsi/scsi_transport_srp.c
-+++ b/drivers/scsi/scsi_transport_srp.c
-@@ -51,6 +51,8 @@ struct srp_internal {
- 	struct transport_container rport_attr_cont;
- };
+diff --git a/drivers/s390/scsi/zfcp_dbf.c b/drivers/s390/scsi/zfcp_dbf.c
+index a8b831000b2d..18c4f933e8b9 100644
+--- a/drivers/s390/scsi/zfcp_dbf.c
++++ b/drivers/s390/scsi/zfcp_dbf.c
+@@ -4,7 +4,7 @@
+  *
+  * Debug traces for zfcp.
+  *
+- * Copyright IBM Corp. 2002, 2017
++ * Copyright IBM Corp. 2002, 2018
+  */
  
-+static int scsi_is_srp_rport(const struct device *dev);
-+
- #define to_srp_internal(tmpl) container_of(tmpl, struct srp_internal, t)
- 
- #define	dev_to_rport(d)	container_of(d, struct srp_rport, dev)
-@@ -60,9 +62,24 @@ static inline struct Scsi_Host *rport_to_shost(struct srp_rport *r)
- 	return dev_to_shost(r->dev.parent);
+ #define KMSG_COMPONENT "zfcp"
+@@ -308,6 +308,27 @@ void zfcp_dbf_rec_trig(char *tag, struct zfcp_adapter *adapter,
+ 	spin_unlock_irqrestore(&dbf->rec_lock, flags);
  }
  
-+static int find_child_rport(struct device *dev, void *data)
++/**
++ * zfcp_dbf_rec_trig_lock - trace event related to triggered recovery with lock
++ * @tag: identifier for event
++ * @adapter: adapter on which the erp_action should run
++ * @port: remote port involved in the erp_action
++ * @sdev: scsi device involved in the erp_action
++ * @want: wanted erp_action
++ * @need: required erp_action
++ *
++ * The adapter->erp_lock must not be held.
++ */
++void zfcp_dbf_rec_trig_lock(char *tag, struct zfcp_adapter *adapter,
++			    struct zfcp_port *port, struct scsi_device *sdev,
++			    u8 want, u8 need)
 +{
-+	struct device **child = data;
++	unsigned long flags;
 +
-+	if (scsi_is_srp_rport(dev)) {
-+		WARN_ON_ONCE(*child);
-+		*child = dev;
-+	}
-+	return 0;
++	read_lock_irqsave(&adapter->erp_lock, flags);
++	zfcp_dbf_rec_trig(tag, adapter, port, sdev, want, need);
++	read_unlock_irqrestore(&adapter->erp_lock, flags);
 +}
-+
- static inline struct srp_rport *shost_to_rport(struct Scsi_Host *shost)
- {
--	return transport_class_to_srp_rport(&shost->shost_gendev);
-+	struct device *child = NULL;
-+
-+	WARN_ON_ONCE(device_for_each_child(&shost->shost_gendev, &child,
-+					   find_child_rport) < 0);
-+	return child ? dev_to_rport(child) : NULL;
- }
  
  /**
-@@ -600,7 +617,8 @@ enum blk_eh_timer_return srp_timed_out(struct scsi_cmnd *scmd)
- 	struct srp_rport *rport = shost_to_rport(shost);
+  * zfcp_dbf_rec_run_lvl - trace event related to running recovery
+diff --git a/drivers/s390/scsi/zfcp_ext.h b/drivers/s390/scsi/zfcp_ext.h
+index bf8ea4df2bb8..e5eed8aac0ce 100644
+--- a/drivers/s390/scsi/zfcp_ext.h
++++ b/drivers/s390/scsi/zfcp_ext.h
+@@ -4,7 +4,7 @@
+  *
+  * External function declarations.
+  *
+- * Copyright IBM Corp. 2002, 2016
++ * Copyright IBM Corp. 2002, 2018
+  */
  
- 	pr_debug("timeout for sdev %s\n", dev_name(&sdev->sdev_gendev));
--	return rport->fast_io_fail_tmo < 0 && rport->dev_loss_tmo < 0 &&
-+	return rport && rport->fast_io_fail_tmo < 0 &&
-+		rport->dev_loss_tmo < 0 &&
- 		i->f->reset_timer_if_blocked && scsi_device_blocked(sdev) ?
- 		BLK_EH_RESET_TIMER : BLK_EH_NOT_HANDLED;
- }
--- 
-2.16.3
+ #ifndef ZFCP_EXT_H
+@@ -35,6 +35,9 @@ extern int zfcp_dbf_adapter_register(struct zfcp_adapter *);
+ extern void zfcp_dbf_adapter_unregister(struct zfcp_adapter *);
+ extern void zfcp_dbf_rec_trig(char *, struct zfcp_adapter *,
+ 			      struct zfcp_port *, struct scsi_device *, u8, u8);
++extern void zfcp_dbf_rec_trig_lock(char *tag, struct zfcp_adapter *adapter,
++				   struct zfcp_port *port,
++				   struct scsi_device *sdev, u8 want, u8 need);
+ extern void zfcp_dbf_rec_run(char *, struct zfcp_erp_action *);
+ extern void zfcp_dbf_rec_run_lvl(int level, char *tag,
+ 				 struct zfcp_erp_action *erp);
+diff --git a/drivers/s390/scsi/zfcp_scsi.c b/drivers/s390/scsi/zfcp_scsi.c
+index 4d2ba5682493..22f9562f415c 100644
+--- a/drivers/s390/scsi/zfcp_scsi.c
++++ b/drivers/s390/scsi/zfcp_scsi.c
+@@ -4,7 +4,7 @@
+  *
+  * Interface to Linux SCSI midlayer.
+  *
+- * Copyright IBM Corp. 2002, 2017
++ * Copyright IBM Corp. 2002, 2018
+  */
+ 
+ #define KMSG_COMPONENT "zfcp"
+@@ -618,9 +618,9 @@ static void zfcp_scsi_rport_register(struct zfcp_port *port)
+ 	ids.port_id = port->d_id;
+ 	ids.roles = FC_RPORT_ROLE_FCP_TARGET;
+ 
+-	zfcp_dbf_rec_trig("scpaddy", port->adapter, port, NULL,
+-			  ZFCP_PSEUDO_ERP_ACTION_RPORT_ADD,
+-			  ZFCP_PSEUDO_ERP_ACTION_RPORT_ADD);
++	zfcp_dbf_rec_trig_lock("scpaddy", port->adapter, port, NULL,
++			       ZFCP_PSEUDO_ERP_ACTION_RPORT_ADD,
++			       ZFCP_PSEUDO_ERP_ACTION_RPORT_ADD);
+ 	rport = fc_remote_port_add(port->adapter->scsi_host, 0, &ids);
+ 	if (!rport) {
+ 		dev_err(&port->adapter->ccw_device->dev,
+@@ -642,9 +642,9 @@ static void zfcp_scsi_rport_block(struct zfcp_port *port)
+ 	struct fc_rport *rport = port->rport;
+ 
+ 	if (rport) {
+-		zfcp_dbf_rec_trig("scpdely", port->adapter, port, NULL,
+-				  ZFCP_PSEUDO_ERP_ACTION_RPORT_DEL,
+-				  ZFCP_PSEUDO_ERP_ACTION_RPORT_DEL);
++		zfcp_dbf_rec_trig_lock("scpdely", port->adapter, port, NULL,
++				       ZFCP_PSEUDO_ERP_ACTION_RPORT_DEL,
++				       ZFCP_PSEUDO_ERP_ACTION_RPORT_DEL);
+ 		fc_remote_port_delete(rport);
+ 		port->rport = NULL;
+ 	}
+diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
+index e29f9b8fd66d..56c940394729 100644
+--- a/drivers/scsi/Makefile
++++ b/drivers/scsi/Makefile
+@@ -182,7 +182,7 @@ zalon7xx-objs	:= zalon.o ncr53c8xx.o
+ NCR_Q720_mod-objs	:= NCR_Q720.o ncr53c8xx.o
+ 
+ # Files generated that shall be removed upon make clean
+-clean-files :=	53c700_d.h 53c700_u.h
++clean-files :=	53c700_d.h 53c700_u.h scsi_devinfo_tbl.c
+ 
+ $(obj)/53c700.o $(MODVERDIR)/$(obj)/53c700.ver: $(obj)/53c700_d.h
+ 
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index c198b96368dd..5c40d809830f 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -1894,7 +1894,7 @@ sg_build_indirect(Sg_scatter_hold * schp, Sg_fd * sfp, int buff_size)
+ 		num = (rem_sz > scatter_elem_sz_prev) ?
+ 			scatter_elem_sz_prev : rem_sz;
+ 
+-		schp->pages[k] = alloc_pages(gfp_mask, order);
++		schp->pages[k] = alloc_pages(gfp_mask | __GFP_ZERO, order);
+ 		if (!schp->pages[k])
+ 			goto out;
+ 
+diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+index 4ad89ea71a70..4f26bdc3d1dc 100644
+--- a/drivers/target/target_core_user.c
++++ b/drivers/target/target_core_user.c
+@@ -2121,6 +2121,8 @@ static ssize_t tcmu_qfull_time_out_store(struct config_item *item,
+ 
+ 	if (val >= 0) {
+ 		udev->qfull_time_out = val * MSEC_PER_SEC;
++	} else if (val == -1) {
++		udev->qfull_time_out = val;
+ 	} else {
+ 		printk(KERN_ERR "Invalid qfull timeout value %d\n", val);
+ 		return -EINVAL;
