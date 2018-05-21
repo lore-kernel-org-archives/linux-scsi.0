@@ -1,7 +1,7 @@
 From: Rahul Verma <rahul.verma@cavium.com>
-Subject: [PATCH 1/1] qed: Add firmware 8.37.2.0
-Date: Mon, 21 May 2018 06:01:29 -0700
-Message-ID: <20180521130129.9707-1-rahul.verma@cavium.com>
+Subject: [PATCH v2 1/1] qed: Add firmware 8.37.2.0
+Date: Mon, 21 May 2018 06:51:41 -0700
+Message-ID: <20180521135141.11091-1-rahul.verma@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <netdev-owner@vger.kernel.org>
@@ -19,7 +19,11 @@ support for new features.
 -Support additional RoCE statistics for error cases.
 -Support RoCE T10DIF.
 
+v1->v2:
+Added signoff for Ariel Elior.
+
 Signed-off-by: Rahul Verma <rahul.verma@cavium.com>
+Signed-off-by: Ariel Elior <ariel.elior@cavium.com>
 ---
  WHENCE                                  |   1 +
  qed/qed_init_values_zipped-8.37.2.0.bin | Bin 0 -> 867472 bytes
