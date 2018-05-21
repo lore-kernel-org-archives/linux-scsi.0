@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 03/13] scsi: hisi_sas: Change common allocation mode of device id
-Date: Mon, 21 May 2018 18:09:15 +0800
-Message-ID: <1526897365-228549-4-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 01/13] scsi: hisi_sas: Introduce hisi_sas_phy_set_linkrate()
+Date: Mon, 21 May 2018 18:09:13 +0800
+Message-ID: <1526897365-228549-2-git-send-email-john.garry@huawei.com>
 References: <1526897365-228549-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -9,61 +9,189 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1526897365-228549-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linuxarm@huawei.com, linux-kernel@vger.kernel.org, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
+Cc: linux-scsi@vger.kernel.org, linuxarm@huawei.com, linux-kernel@vger.kernel.org, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Xiang Chen <chenxiang66@hisilicon.com>
+There is much common code and functionality between the
+HW versions to set the PHY linkrate.
 
-To reduce possibility of hitting unknown SoC bugs and aid
-debugging and test, change allocation mode of device id from
-last used device id instead of lowest available index.
+As such, this patch factors out the common code into
+a generic function hisi_sas_phy_set_linkrate().
 
-Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas.h      | 1 +
- drivers/scsi/hisi_sas/hisi_sas_main.c | 6 +++++-
- 2 files changed, 6 insertions(+), 1 deletion(-)
+ drivers/scsi/hisi_sas/hisi_sas_main.c  | 29 +++++++++++++++++++++++++++-
+ drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 35 ++++------------------------------
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 21 ++------------------
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 21 ++------------------
+ 4 files changed, 36 insertions(+), 70 deletions(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index 3c88400..b4717bd 100644
---- a/drivers/scsi/hisi_sas/hisi_sas.h
-+++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -275,6 +275,7 @@ struct hisi_hba {
- 
- 	int slot_index_count;
- 	int last_slot_index;
-+	int last_dev_id;
- 	unsigned long *slot_index_tags;
- 	unsigned long reject_stp_links_msk;
- 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 1d300a2..04a3eb4 100644
+index 39f694e..f822d6f 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -596,10 +596,12 @@ static struct hisi_sas_device *hisi_sas_alloc_dev(struct domain_device *device)
- 	struct hisi_hba *hisi_hba = dev_to_hisi_hba(device);
- 	struct hisi_sas_device *sas_dev = NULL;
- 	unsigned long flags;
-+	int last = hisi_hba->last_dev_id;
-+	int first = (hisi_hba->last_dev_id + 1) % HISI_SAS_MAX_DEVICES;
- 	int i;
+@@ -866,6 +866,33 @@ static int hisi_sas_queue_command(struct sas_task *task, gfp_t gfp_flags)
+ 	return hisi_sas_task_exec(task, gfp_flags, 0, NULL);
+ }
  
- 	spin_lock_irqsave(&hisi_hba->lock, flags);
--	for (i = 0; i < HISI_SAS_MAX_DEVICES; i++) {
-+	for (i = first; i != last; i %= HISI_SAS_MAX_DEVICES) {
- 		if (hisi_hba->devices[i].dev_type == SAS_PHY_UNUSED) {
- 			int queue = i % hisi_hba->queue_count;
- 			struct hisi_sas_dq *dq = &hisi_hba->dq[queue];
-@@ -614,7 +616,9 @@ static struct hisi_sas_device *hisi_sas_alloc_dev(struct domain_device *device)
- 			INIT_LIST_HEAD(&hisi_hba->devices[i].list);
- 			break;
- 		}
-+		i++;
- 	}
-+	hisi_hba->last_dev_id = i;
- 	spin_unlock_irqrestore(&hisi_hba->lock, flags);
++static void hisi_sas_phy_set_linkrate(struct hisi_hba *hisi_hba, int phy_no,
++			struct sas_phy_linkrates *r)
++{
++	struct sas_phy_linkrates _r;
++
++	struct hisi_sas_phy *phy = &hisi_hba->phy[phy_no];
++	struct asd_sas_phy *sas_phy = &phy->sas_phy;
++	enum sas_linkrate min, max;
++
++	if (r->maximum_linkrate == SAS_LINK_RATE_UNKNOWN) {
++		max = sas_phy->phy->maximum_linkrate;
++		min = r->minimum_linkrate;
++	} else if (r->minimum_linkrate == SAS_LINK_RATE_UNKNOWN) {
++		max = r->maximum_linkrate;
++		min = sas_phy->phy->minimum_linkrate;
++	} else
++		return;
++
++	_r.maximum_linkrate = max;
++	_r.minimum_linkrate = min;
++
++	hisi_hba->hw->phy_disable(hisi_hba, phy_no);
++	msleep(100);
++	hisi_hba->hw->phy_set_linkrate(hisi_hba, phy_no, &_r);
++	hisi_hba->hw->phy_start(hisi_hba, phy_no);
++}
++
+ static int hisi_sas_control_phy(struct asd_sas_phy *sas_phy, enum phy_func func,
+ 				void *funcdata)
+ {
+@@ -889,7 +916,7 @@ static int hisi_sas_control_phy(struct asd_sas_phy *sas_phy, enum phy_func func,
+ 		break;
  
- 	return sas_dev;
+ 	case PHY_FUNC_SET_LINK_RATE:
+-		hisi_hba->hw->phy_set_linkrate(hisi_hba, phy_no, funcdata);
++		hisi_sas_phy_set_linkrate(hisi_hba, phy_no, funcdata);
+ 		break;
+ 	case PHY_FUNC_GET_EVENTS:
+ 		if (hisi_hba->hw->get_events) {
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+index abe175f..8fa79d0 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+@@ -855,39 +855,12 @@ static enum sas_linkrate phy_get_max_linkrate_v1_hw(void)
+ static void phy_set_linkrate_v1_hw(struct hisi_hba *hisi_hba, int phy_no,
+ 		struct sas_phy_linkrates *r)
+ {
+-	u32 prog_phy_link_rate =
+-		hisi_sas_phy_read32(hisi_hba, phy_no, PROG_PHY_LINK_RATE);
+-	struct hisi_sas_phy *phy = &hisi_hba->phy[phy_no];
+-	struct asd_sas_phy *sas_phy = &phy->sas_phy;
+-	int i;
+-	enum sas_linkrate min, max;
+-	u32 rate_mask = 0;
+-
+-	if (r->maximum_linkrate == SAS_LINK_RATE_UNKNOWN) {
+-		max = sas_phy->phy->maximum_linkrate;
+-		min = r->minimum_linkrate;
+-	} else if (r->minimum_linkrate == SAS_LINK_RATE_UNKNOWN) {
+-		max = r->maximum_linkrate;
+-		min = sas_phy->phy->minimum_linkrate;
+-	} else
+-		return;
+-
+-	sas_phy->phy->maximum_linkrate = max;
+-	sas_phy->phy->minimum_linkrate = min;
+-
+-	max -= SAS_LINK_RATE_1_5_GBPS;
++	enum sas_linkrate max = r->maximum_linkrate;
++	u32 prog_phy_link_rate = 0x800;
+ 
+-	for (i = 0; i <= max; i++)
+-		rate_mask |= 1 << (i * 2);
+-
+-	prog_phy_link_rate &= ~0xff;
+-	prog_phy_link_rate |= rate_mask;
+-
+-	disable_phy_v1_hw(hisi_hba, phy_no);
+-	msleep(100);
++	prog_phy_link_rate |= hisi_sas_get_prog_phy_linkrate_mask(max);
+ 	hisi_sas_phy_write32(hisi_hba, phy_no, PROG_PHY_LINK_RATE,
+-			prog_phy_link_rate);
+-	start_phy_v1_hw(hisi_hba, phy_no);
++			     prog_phy_link_rate);
+ }
+ 
+ static int get_wideport_bitmap_v1_hw(struct hisi_hba *hisi_hba, int port_id)
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+index 911bb76..fb0e966 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+@@ -1600,29 +1600,12 @@ static enum sas_linkrate phy_get_max_linkrate_v2_hw(void)
+ static void phy_set_linkrate_v2_hw(struct hisi_hba *hisi_hba, int phy_no,
+ 		struct sas_phy_linkrates *r)
+ {
+-	struct hisi_sas_phy *phy = &hisi_hba->phy[phy_no];
+-	struct asd_sas_phy *sas_phy = &phy->sas_phy;
+-	enum sas_linkrate min, max;
++	enum sas_linkrate max = r->maximum_linkrate;
+ 	u32 prog_phy_link_rate = 0x800;
+ 
+-	if (r->maximum_linkrate == SAS_LINK_RATE_UNKNOWN) {
+-		max = sas_phy->phy->maximum_linkrate;
+-		min = r->minimum_linkrate;
+-	} else if (r->minimum_linkrate == SAS_LINK_RATE_UNKNOWN) {
+-		max = r->maximum_linkrate;
+-		min = sas_phy->phy->minimum_linkrate;
+-	} else
+-		return;
+-
+-	sas_phy->phy->maximum_linkrate = max;
+-	sas_phy->phy->minimum_linkrate = min;
+ 	prog_phy_link_rate |= hisi_sas_get_prog_phy_linkrate_mask(max);
+-
+-	disable_phy_v2_hw(hisi_hba, phy_no);
+-	msleep(100);
+ 	hisi_sas_phy_write32(hisi_hba, phy_no, PROG_PHY_LINK_RATE,
+-			prog_phy_link_rate);
+-	start_phy_v2_hw(hisi_hba, phy_no);
++			     prog_phy_link_rate);
+ }
+ 
+ static int get_wideport_bitmap_v2_hw(struct hisi_hba *hisi_hba, int port_id)
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index c013673..0a80a39 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -1879,29 +1879,12 @@ static int hisi_sas_v3_init(struct hisi_hba *hisi_hba)
+ static void phy_set_linkrate_v3_hw(struct hisi_hba *hisi_hba, int phy_no,
+ 		struct sas_phy_linkrates *r)
+ {
+-	struct hisi_sas_phy *phy = &hisi_hba->phy[phy_no];
+-	struct asd_sas_phy *sas_phy = &phy->sas_phy;
+-	enum sas_linkrate min, max;
++	enum sas_linkrate max = r->maximum_linkrate;
+ 	u32 prog_phy_link_rate = 0x800;
+ 
+-	if (r->maximum_linkrate == SAS_LINK_RATE_UNKNOWN) {
+-		max = sas_phy->phy->maximum_linkrate;
+-		min = r->minimum_linkrate;
+-	} else if (r->minimum_linkrate == SAS_LINK_RATE_UNKNOWN) {
+-		max = r->maximum_linkrate;
+-		min = sas_phy->phy->minimum_linkrate;
+-	} else
+-		return;
+-
+-	sas_phy->phy->maximum_linkrate = max;
+-	sas_phy->phy->minimum_linkrate = min;
+ 	prog_phy_link_rate |= hisi_sas_get_prog_phy_linkrate_mask(max);
+-
+-	disable_phy_v3_hw(hisi_hba, phy_no);
+-	msleep(100);
+ 	hisi_sas_phy_write32(hisi_hba, phy_no, PROG_PHY_LINK_RATE,
+-			prog_phy_link_rate);
+-	start_phy_v3_hw(hisi_hba, phy_no);
++			     prog_phy_link_rate);
+ }
+ 
+ static void interrupt_disable_v3_hw(struct hisi_hba *hisi_hba)
 -- 
 1.9.1
