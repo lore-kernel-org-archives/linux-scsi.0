@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 06/13] scsi: hisi_sas: Create a scsi_host_template per HW module
-Date: Mon, 21 May 2018 18:09:18 +0800
-Message-ID: <1526897365-228549-7-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 13/13] scsi: hisi_sas: Mark PHY as in reset for nexus reset
+Date: Mon, 21 May 2018 18:09:25 +0800
+Message-ID: <1526897365-228549-14-git-send-email-john.garry@huawei.com>
 References: <1526897365-228549-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -14,283 +14,209 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Xiang Chen <chenxiang66@hisilicon.com>
 
-When a SCSI host is registered, the SCSI mid-layer takes
-a reference to a module in Scsi_host.hostt.module. In doing
-this, we are prevented from removing the driver module for
-the host in dangerous scenario, like when a disk is mounted.
+When issunig a  nexus reset for directly attached device,
+we want to ignore the PHY down events so libsas will not
+deform and reform the port.
 
-Currently there is only one scsi_host_template (sht) for
-all HW versions, and this is the main.c module. So this means
-that we can possibly remove the HW module in this dangerous
-scenario, as SCSI mid-layer is only referencing the main.c
-module.
+In the case that the attached SAS changes for the reset,
+libsas will deform and form a port.
 
-To fix this, create a sht per module, referencing that same
-module to create the Scsi host.
+For scenario that the PHY does not come up after a timeout
+period, then report the PHY down to libsas.
 
 Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas.h       |  8 +++++--
- drivers/scsi/hisi_sas/hisi_sas_main.c  | 40 +++++++++-------------------------
- drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 23 +++++++++++++++++++
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 24 ++++++++++++++++++++
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 24 +++++++++++++++++++-
- 5 files changed, 86 insertions(+), 33 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas.h       |  5 ++++-
+ drivers/scsi/hisi_sas/hisi_sas_main.c  | 40 ++++++++++++++++++++++++++++++----
+ drivers/scsi/hisi_sas/hisi_sas_v1_hw.c |  8 +++++++
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 14 ++++++++++++
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c |  7 ++++++
+ 5 files changed, 69 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index b4717bd..37c9a62 100644
+index 9400824..7052a5d 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas.h
 +++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -248,6 +248,7 @@ struct hisi_sas_hw {
- 				u8 reg_index, u8 reg_count, u8 *write_data);
- 	int max_command_entries;
- 	int complete_hdr_size;
-+	struct scsi_host_template *sht;
- };
- 
- struct hisi_hba {
-@@ -440,8 +441,6 @@ struct hisi_sas_slot_buf_table {
- };
- 
- extern struct scsi_transport_template *hisi_sas_stt;
--extern struct scsi_host_template *hisi_sas_sht;
--
- extern void hisi_sas_stop_phys(struct hisi_hba *hisi_hba);
- extern int hisi_sas_alloc(struct hisi_hba *hisi_hba, struct Scsi_Host *shost);
- extern void hisi_sas_free(struct hisi_hba *hisi_hba);
-@@ -456,6 +455,11 @@ extern int hisi_sas_probe(struct platform_device *pdev,
- 			  const struct hisi_sas_hw *ops);
- extern int hisi_sas_remove(struct platform_device *pdev);
- 
-+extern int hisi_sas_slave_configure(struct scsi_device *sdev);
-+extern int hisi_sas_scan_finished(struct Scsi_Host *shost, unsigned long time);
-+extern void hisi_sas_scan_start(struct Scsi_Host *shost);
-+extern struct device_attribute *host_attrs[];
-+extern int hisi_sas_host_reset(struct Scsi_Host *shost, int reset_type);
- extern void hisi_sas_phy_down(struct hisi_hba *hisi_hba, int phy_no, int rdy);
- extern void hisi_sas_slot_task_free(struct hisi_hba *hisi_hba,
- 				    struct sas_task *task,
+@@ -136,11 +136,14 @@ struct hisi_sas_phy {
+ 	struct hisi_sas_port	*port;
+ 	struct asd_sas_phy	sas_phy;
+ 	struct sas_identify	identify;
++	struct completion *reset_completion;
++	spinlock_t lock;
+ 	u64		port_id; /* from hw */
+ 	u64		frame_rcvd_size;
+ 	u8		frame_rcvd[32];
+ 	u8		phy_attached;
+-	u8		reserved[3];
++	u8		in_reset;
++	u8		reserved[2];
+ 	u32		phy_type;
+ 	enum sas_linkrate	minimum_linkrate;
+ 	enum sas_linkrate	maximum_linkrate;
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 0596553..7b8623b 100644
+index f6c4eb6..9adf18c 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -719,7 +719,7 @@ static int hisi_sas_dev_found(struct domain_device *device)
+@@ -1529,12 +1529,39 @@ static int hisi_sas_clear_aca(struct domain_device *device, u8 *lun)
+ 
+ static int hisi_sas_debug_I_T_nexus_reset(struct domain_device *device)
+ {
+-	struct sas_phy *phy = sas_get_local_phy(device);
++	struct sas_phy *local_phy = sas_get_local_phy(device);
+ 	int rc, reset_type = (device->dev_type == SAS_SATA_DEV ||
+ 			(device->tproto & SAS_PROTOCOL_STP)) ? 0 : 1;
+-	rc = sas_phy_reset(phy, reset_type);
+-	sas_put_local_phy(phy);
+-	msleep(2000);
++	struct hisi_hba *hisi_hba = dev_to_hisi_hba(device);
++	struct sas_ha_struct *sas_ha = &hisi_hba->sha;
++	struct asd_sas_phy *sas_phy = sas_ha->sas_phy[local_phy->number];
++	struct hisi_sas_phy *phy = container_of(sas_phy,
++			struct hisi_sas_phy, sas_phy);
++	DECLARE_COMPLETION_ONSTACK(phyreset);
++
++	if (scsi_is_sas_phy_local(local_phy)) {
++		phy->in_reset = 1;
++		phy->reset_completion = &phyreset;
++	}
++
++	rc = sas_phy_reset(local_phy, reset_type);
++	sas_put_local_phy(local_phy);
++
++	if (scsi_is_sas_phy_local(local_phy)) {
++		int ret = wait_for_completion_timeout(&phyreset, 2 * HZ);
++		unsigned long flags;
++
++		spin_lock_irqsave(&phy->lock, flags);
++		phy->reset_completion = NULL;
++		phy->in_reset = 0;
++		spin_unlock_irqrestore(&phy->lock, flags);
++
++		/* report PHY down if timed out */
++		if (!ret)
++			hisi_sas_phy_down(hisi_hba, sas_phy->id, 0);
++	} else
++		msleep(2000);
++
  	return rc;
  }
  
--static int hisi_sas_slave_configure(struct scsi_device *sdev)
-+int hisi_sas_slave_configure(struct scsi_device *sdev)
- {
- 	struct domain_device *dev = sdev_to_domain_dev(sdev);
- 	int ret = sas_slave_configure(sdev);
-@@ -731,15 +731,17 @@ static int hisi_sas_slave_configure(struct scsi_device *sdev)
+@@ -1883,6 +1910,7 @@ void hisi_sas_phy_down(struct hisi_hba *hisi_hba, int phy_no, int rdy)
+ 	struct hisi_sas_phy *phy = &hisi_hba->phy[phy_no];
+ 	struct asd_sas_phy *sas_phy = &phy->sas_phy;
+ 	struct sas_ha_struct *sas_ha = &hisi_hba->sha;
++	struct device *dev = hisi_hba->dev;
  
- 	return 0;
- }
-+EXPORT_SYMBOL_GPL(hisi_sas_slave_configure);
+ 	if (rdy) {
+ 		/* Phy down but ready */
+@@ -1891,6 +1919,10 @@ void hisi_sas_phy_down(struct hisi_hba *hisi_hba, int phy_no, int rdy)
+ 	} else {
+ 		struct hisi_sas_port *port  = phy->port;
  
--static void hisi_sas_scan_start(struct Scsi_Host *shost)
-+void hisi_sas_scan_start(struct Scsi_Host *shost)
- {
- 	struct hisi_hba *hisi_hba = shost_priv(shost);
- 
- 	hisi_hba->hw->phys_init(hisi_hba);
- }
-+EXPORT_SYMBOL_GPL(hisi_sas_scan_start);
- 
--static int hisi_sas_scan_finished(struct Scsi_Host *shost, unsigned long time)
-+int hisi_sas_scan_finished(struct Scsi_Host *shost, unsigned long time)
- {
- 	struct hisi_hba *hisi_hba = shost_priv(shost);
- 	struct sas_ha_struct *sha = &hisi_hba->sha;
-@@ -751,6 +753,7 @@ static int hisi_sas_scan_finished(struct Scsi_Host *shost, unsigned long time)
- 	sas_drain_work(sha);
- 	return 1;
- }
-+EXPORT_SYMBOL_GPL(hisi_sas_scan_finished);
- 
- static void hisi_sas_phyup_work(struct work_struct *work)
- {
-@@ -1824,34 +1827,11 @@ void hisi_sas_kill_tasklets(struct hisi_hba *hisi_hba)
- struct scsi_transport_template *hisi_sas_stt;
- EXPORT_SYMBOL_GPL(hisi_sas_stt);
- 
--static struct device_attribute *host_attrs[] = {
-+struct device_attribute *host_attrs[] = {
- 	&dev_attr_phy_event_threshold,
- 	NULL,
- };
--
--static struct scsi_host_template _hisi_sas_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.queuecommand		= sas_queuecommand,
--	.target_alloc		= sas_target_alloc,
--	.slave_configure	= hisi_sas_slave_configure,
--	.scan_finished		= hisi_sas_scan_finished,
--	.scan_start		= hisi_sas_scan_start,
--	.change_queue_depth	= sas_change_queue_depth,
--	.bios_param		= sas_bios_param,
--	.can_queue		= 1,
--	.this_id		= -1,
--	.sg_tablesize		= SG_ALL,
--	.max_sectors		= SCSI_DEFAULT_MAX_SECTORS,
--	.use_clustering		= ENABLE_CLUSTERING,
--	.eh_device_reset_handler = sas_eh_device_reset_handler,
--	.eh_target_reset_handler = sas_eh_target_reset_handler,
--	.target_destroy		= sas_target_destroy,
--	.ioctl			= sas_ioctl,
--	.shost_attrs		= host_attrs,
--};
--struct scsi_host_template *hisi_sas_sht = &_hisi_sas_sht;
--EXPORT_SYMBOL_GPL(hisi_sas_sht);
-+EXPORT_SYMBOL_GPL(host_attrs);
- 
- static struct sas_domain_function_template hisi_sas_transport_ops = {
- 	.lldd_dev_found		= hisi_sas_dev_found,
-@@ -2161,7 +2141,7 @@ static struct Scsi_Host *hisi_sas_shost_alloc(struct platform_device *pdev,
- 	struct hisi_hba *hisi_hba;
- 	struct device *dev = &pdev->dev;
- 
--	shost = scsi_host_alloc(hisi_sas_sht, sizeof(*hisi_hba));
-+	shost = scsi_host_alloc(hw->sht, sizeof(*hisi_hba));
- 	if (!shost) {
- 		dev_err(dev, "scsi host alloc failed\n");
- 		return NULL;
-@@ -2211,7 +2191,7 @@ static struct Scsi_Host *hisi_sas_shost_alloc(struct platform_device *pdev,
- }
- 
- int hisi_sas_probe(struct platform_device *pdev,
--			 const struct hisi_sas_hw *hw)
-+		   const struct hisi_sas_hw *hw)
- {
- 	struct Scsi_Host *shost;
- 	struct hisi_hba *hisi_hba;
++		if (phy->in_reset) {
++			dev_info(dev, "ignore flutter phy%d down\n", phy_no);
++			return;
++		}
+ 		/* Phy down and not ready */
+ 		sas_ha->notify_phy_event(sas_phy, PHYE_LOSS_OF_SIGNAL);
+ 		sas_phy_disconnected(sas_phy);
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-index 8fa79d0..8d5d857 100644
+index 05609ac..89ab18c 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-@@ -1788,6 +1788,28 @@ static int hisi_sas_v1_init(struct hisi_hba *hisi_hba)
- 	return 0;
- }
+@@ -1373,6 +1373,7 @@ static irqreturn_t int_phyup_v1_hw(int irq_no, void *p)
+ 	u32 *frame_rcvd = (u32 *)sas_phy->frame_rcvd;
+ 	struct sas_identify_frame *id = (struct sas_identify_frame *)frame_rcvd;
+ 	irqreturn_t res = IRQ_HANDLED;
++	unsigned long flags;
  
-+static struct scsi_host_template sht_v1_hw = {
-+	.name			= DRV_NAME,
-+	.module			= THIS_MODULE,
-+	.queuecommand		= sas_queuecommand,
-+	.target_alloc		= sas_target_alloc,
-+	.slave_configure	= hisi_sas_slave_configure,
-+	.scan_finished		= hisi_sas_scan_finished,
-+	.scan_start		= hisi_sas_scan_start,
-+	.change_queue_depth	= sas_change_queue_depth,
-+	.bios_param		= sas_bios_param,
-+	.can_queue		= 1,
-+	.this_id		= -1,
-+	.sg_tablesize		= SG_ALL,
-+	.max_sectors		= SCSI_DEFAULT_MAX_SECTORS,
-+	.use_clustering		= ENABLE_CLUSTERING,
-+	.eh_device_reset_handler = sas_eh_device_reset_handler,
-+	.eh_target_reset_handler = sas_eh_target_reset_handler,
-+	.target_destroy		= sas_target_destroy,
-+	.ioctl			= sas_ioctl,
-+	.shost_attrs		= host_attrs,
-+};
+ 	irq_value = hisi_sas_phy_read32(hisi_hba, phy_no, CHL_INT2);
+ 	if (!(irq_value & CHL_INT2_SL_PHY_ENA_MSK)) {
+@@ -1426,6 +1427,13 @@ static irqreturn_t int_phyup_v1_hw(int irq_no, void *p)
+ 			SAS_PROTOCOL_SMP;
+ 	hisi_sas_notify_phy_event(phy, HISI_PHYE_PHY_UP);
+ 
++	spin_lock_irqsave(&phy->lock, flags);
++	if (phy->reset_completion) {
++		phy->in_reset = 0;
++		complete(phy->reset_completion);
++	}
++	spin_unlock_irqrestore(&phy->lock, flags);
 +
- static const struct hisi_sas_hw hisi_sas_v1_hw = {
- 	.hw_init = hisi_sas_v1_init,
- 	.setup_itct = setup_itct_v1_hw,
-@@ -1807,6 +1829,7 @@ static int hisi_sas_v1_init(struct hisi_hba *hisi_hba)
- 	.get_wideport_bitmap = get_wideport_bitmap_v1_hw,
- 	.max_command_entries = HISI_SAS_COMMAND_ENTRIES_V1_HW,
- 	.complete_hdr_size = sizeof(struct hisi_sas_complete_v1_hdr),
-+	.sht = &sht_v1_hw,
- };
- 
- static int hisi_sas_v1_probe(struct platform_device *pdev)
+ end:
+ 	hisi_sas_phy_write32(hisi_hba, phy_no, CHL_INT2,
+ 			     CHL_INT2_SL_PHY_ENA_MSK);
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index fb0e966..8def327 100644
+index 369ef7e..213c530 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -3501,6 +3501,29 @@ static int write_gpio_v2_hw(struct hisi_hba *hisi_hba, u8 reg_type,
- 	return 0;
- }
+@@ -2661,6 +2661,7 @@ static int phy_up_v2_hw(int phy_no, struct hisi_hba *hisi_hba)
+ 	struct device *dev = hisi_hba->dev;
+ 	u32 *frame_rcvd = (u32 *)sas_phy->frame_rcvd;
+ 	struct sas_identify_frame *id = (struct sas_identify_frame *)frame_rcvd;
++	unsigned long flags;
  
-+
-+static struct scsi_host_template sht_v2_hw = {
-+	.name			= DRV_NAME,
-+	.module			= THIS_MODULE,
-+	.queuecommand		= sas_queuecommand,
-+	.target_alloc		= sas_target_alloc,
-+	.slave_configure	= hisi_sas_slave_configure,
-+	.scan_finished		= hisi_sas_scan_finished,
-+	.scan_start		= hisi_sas_scan_start,
-+	.change_queue_depth	= sas_change_queue_depth,
-+	.bios_param		= sas_bios_param,
-+	.can_queue		= 1,
-+	.this_id		= -1,
-+	.sg_tablesize		= SG_ALL,
-+	.max_sectors		= SCSI_DEFAULT_MAX_SECTORS,
-+	.use_clustering		= ENABLE_CLUSTERING,
-+	.eh_device_reset_handler = sas_eh_device_reset_handler,
-+	.eh_target_reset_handler = sas_eh_target_reset_handler,
-+	.target_destroy		= sas_target_destroy,
-+	.ioctl			= sas_ioctl,
-+	.shost_attrs		= host_attrs,
-+};
-+
- static const struct hisi_sas_hw hisi_sas_v2_hw = {
- 	.hw_init = hisi_sas_v2_init,
- 	.setup_itct = setup_itct_v2_hw,
-@@ -3529,6 +3552,7 @@ static int write_gpio_v2_hw(struct hisi_hba *hisi_hba, u8 reg_type,
- 	.soft_reset = soft_reset_v2_hw,
- 	.get_phys_state = get_phys_state_v2_hw,
- 	.write_gpio = write_gpio_v2_hw,
-+	.sht = &sht_v2_hw,
- };
+ 	hisi_sas_phy_write32(hisi_hba, phy_no, PHYCTRL_PHY_ENA_MSK, 1);
  
- static int hisi_sas_v2_probe(struct platform_device *pdev)
+@@ -2713,6 +2714,12 @@ static int phy_up_v2_hw(int phy_no, struct hisi_hba *hisi_hba)
+ 			set_link_timer_quirk(hisi_hba);
+ 	}
+ 	hisi_sas_notify_phy_event(phy, HISI_PHYE_PHY_UP);
++	spin_lock_irqsave(&phy->lock, flags);
++	if (phy->reset_completion) {
++		phy->in_reset = 0;
++		complete(phy->reset_completion);
++	}
++	spin_unlock_irqrestore(&phy->lock, flags);
+ 
+ end:
+ 	hisi_sas_phy_write32(hisi_hba, phy_no, CHL_INT0,
+@@ -3201,6 +3208,7 @@ static irqreturn_t sata_int_v2_hw(int irq_no, void *p)
+ 	u32 ent_tmp, ent_msk, ent_int, port_id, link_rate, hard_phy_linkrate;
+ 	irqreturn_t res = IRQ_HANDLED;
+ 	u8 attached_sas_addr[SAS_ADDR_SIZE] = {0};
++	unsigned long flags;
+ 	int phy_no, offset;
+ 
+ 	phy_no = sas_phy->id;
+@@ -3275,6 +3283,12 @@ static irqreturn_t sata_int_v2_hw(int irq_no, void *p)
+ 	phy->identify.target_port_protocols = SAS_PROTOCOL_SATA;
+ 	hisi_sas_notify_phy_event(phy, HISI_PHYE_PHY_UP);
+ 
++	spin_lock_irqsave(&phy->lock, flags);
++	if (phy->reset_completion) {
++		phy->in_reset = 0;
++		complete(phy->reset_completion);
++	}
++	spin_unlock_irqrestore(&phy->lock, flags);
+ end:
+ 	hisi_sas_write32(hisi_hba, ENT_INT_SRC1 + offset, ent_tmp);
+ 	hisi_sas_write32(hisi_hba, ENT_INT_SRC_MSK1 + offset, ent_msk);
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index a043d9c..13d2134 100644
+index 8c996aa..9f1e2d0 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -2015,6 +2015,28 @@ static int write_gpio_v3_hw(struct hisi_hba *hisi_hba, u8 reg_type,
- 	return 0;
- }
+@@ -1143,6 +1143,7 @@ static irqreturn_t phy_up_v3_hw(int phy_no, struct hisi_hba *hisi_hba)
+ 	struct hisi_sas_phy *phy = &hisi_hba->phy[phy_no];
+ 	struct asd_sas_phy *sas_phy = &phy->sas_phy;
+ 	struct device *dev = hisi_hba->dev;
++	unsigned long flags;
  
-+static struct scsi_host_template sht_v3_hw = {
-+	.name			= DRV_NAME,
-+	.module			= THIS_MODULE,
-+	.queuecommand		= sas_queuecommand,
-+	.target_alloc		= sas_target_alloc,
-+	.slave_configure	= hisi_sas_slave_configure,
-+	.scan_finished		= hisi_sas_scan_finished,
-+	.scan_start		= hisi_sas_scan_start,
-+	.change_queue_depth	= sas_change_queue_depth,
-+	.bios_param		= sas_bios_param,
-+	.can_queue		= 1,
-+	.this_id		= -1,
-+	.sg_tablesize		= SG_ALL,
-+	.max_sectors		= SCSI_DEFAULT_MAX_SECTORS,
-+	.use_clustering		= ENABLE_CLUSTERING,
-+	.eh_device_reset_handler = sas_eh_device_reset_handler,
-+	.eh_target_reset_handler = sas_eh_target_reset_handler,
-+	.target_destroy		= sas_target_destroy,
-+	.ioctl			= sas_ioctl,
-+	.shost_attrs		= host_attrs,
-+};
-+
- static const struct hisi_sas_hw hisi_sas_v3_hw = {
- 	.hw_init = hisi_sas_v3_init,
- 	.setup_itct = setup_itct_v3_hw,
-@@ -2050,7 +2072,7 @@ static int write_gpio_v3_hw(struct hisi_hba *hisi_hba, u8 reg_type,
- 	struct hisi_hba *hisi_hba;
- 	struct device *dev = &pdev->dev;
+ 	hisi_sas_phy_write32(hisi_hba, phy_no, PHYCTRL_PHY_ENA_MSK, 1);
  
--	shost = scsi_host_alloc(hisi_sas_sht, sizeof(*hisi_hba));
-+	shost = scsi_host_alloc(&sht_v3_hw, sizeof(*hisi_hba));
- 	if (!shost) {
- 		dev_err(dev, "shost alloc failed\n");
- 		return NULL;
+@@ -1211,6 +1212,12 @@ static irqreturn_t phy_up_v3_hw(int phy_no, struct hisi_hba *hisi_hba)
+ 	phy->phy_attached = 1;
+ 	hisi_sas_notify_phy_event(phy, HISI_PHYE_PHY_UP);
+ 	res = IRQ_HANDLED;
++	spin_lock_irqsave(&phy->lock, flags);
++	if (phy->reset_completion) {
++		phy->in_reset = 0;
++		complete(phy->reset_completion);
++	}
++	spin_unlock_irqrestore(&phy->lock, flags);
+ end:
+ 	hisi_sas_phy_write32(hisi_hba, phy_no, CHL_INT0,
+ 			     CHL_INT0_SL_PHY_ENABLE_MSK);
 -- 
 1.9.1
