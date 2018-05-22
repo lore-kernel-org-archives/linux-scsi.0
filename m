@@ -1,7 +1,7 @@
 From: Kees Cook <keescook@chromium.org>
-Subject: [PATCH 2/6] scsi: cxlflash: Drop unused sense buffers
-Date: Tue, 22 May 2018 11:15:08 -0700
-Message-ID: <20180522181512.39316-3-keescook@chromium.org>
+Subject: [PATCH 5/6] libata-scsi: Move sense buffers onto stack
+Date: Tue, 22 May 2018 11:15:11 -0700
+Message-ID: <20180522181512.39316-6-keescook@chromium.org>
 References: <20180522181512.39316-1-keescook@chromium.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20180522181512.39316-1-keescook@chromium.org>
@@ -10,99 +10,80 @@ To: Jens Axboe <axboe@kernel.dk>
 Cc: Kees Cook <keescook@chromium.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Tejun Heo <tj@kernel.org>, Borislav Petkov <bp@alien8.de>, "David S. Miller" <davem@davemloft.net>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, linux-block@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-This removes the unused sense buffer in read_cap16() and write_same16().
+Instead of dynamically allocating the sense buffers, put them on the
+stack so that future compile-time sizeof() checks will be able to see
+their buffer length.
 
 Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- drivers/scsi/cxlflash/superpipe.c | 8 ++------
- drivers/scsi/cxlflash/vlun.c      | 7 ++-----
- 2 files changed, 4 insertions(+), 11 deletions(-)
+ drivers/ata/libata-scsi.c | 18 ++++++------------
+ 1 file changed, 6 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/scsi/cxlflash/superpipe.c b/drivers/scsi/cxlflash/superpipe.c
-index 2fe79df5c73c..59b9f2023748 100644
---- a/drivers/scsi/cxlflash/superpipe.c
-+++ b/drivers/scsi/cxlflash/superpipe.c
-@@ -324,7 +324,6 @@ static int read_cap16(struct scsi_device *sdev, struct llun_info *lli)
- 	struct scsi_sense_hdr sshdr;
- 	u8 *cmd_buf = NULL;
- 	u8 *scsi_cmd = NULL;
--	u8 *sense_buf = NULL;
- 	int rc = 0;
- 	int result = 0;
- 	int retry_cnt = 0;
-@@ -333,8 +332,7 @@ static int read_cap16(struct scsi_device *sdev, struct llun_info *lli)
- retry:
- 	cmd_buf = kzalloc(CMD_BUFSIZE, GFP_KERNEL);
- 	scsi_cmd = kzalloc(MAX_COMMAND_SIZE, GFP_KERNEL);
--	sense_buf = kzalloc(SCSI_SENSE_BUFFERSIZE, GFP_KERNEL);
--	if (unlikely(!cmd_buf || !scsi_cmd || !sense_buf)) {
-+	if (unlikely(!cmd_buf || !scsi_cmd)) {
- 		rc = -ENOMEM;
- 		goto out;
- 	}
-@@ -349,7 +347,7 @@ static int read_cap16(struct scsi_device *sdev, struct llun_info *lli)
- 	/* Drop the ioctl read semahpore across lengthy call */
- 	up_read(&cfg->ioctl_rwsem);
- 	result = scsi_execute(sdev, scsi_cmd, DMA_FROM_DEVICE, cmd_buf,
--			      CMD_BUFSIZE, sense_buf, &sshdr, to, CMD_RETRIES,
-+			      CMD_BUFSIZE, NULL, &sshdr, to, CMD_RETRIES,
- 			      0, 0, NULL);
- 	down_read(&cfg->ioctl_rwsem);
- 	rc = check_state(cfg);
-@@ -380,7 +378,6 @@ static int read_cap16(struct scsi_device *sdev, struct llun_info *lli)
- 					if (retry_cnt++ < 1) {
- 						kfree(cmd_buf);
- 						kfree(scsi_cmd);
--						kfree(sense_buf);
- 						goto retry;
- 					}
- 				}
-@@ -411,7 +408,6 @@ static int read_cap16(struct scsi_device *sdev, struct llun_info *lli)
- out:
- 	kfree(cmd_buf);
- 	kfree(scsi_cmd);
--	kfree(sense_buf);
- 
- 	dev_dbg(dev, "%s: maxlba=%lld blklen=%d rc=%d\n",
- 		__func__, gli->max_lba, gli->blk_len, rc);
-diff --git a/drivers/scsi/cxlflash/vlun.c b/drivers/scsi/cxlflash/vlun.c
-index 5deef57a7834..e7e9b2f2ad21 100644
---- a/drivers/scsi/cxlflash/vlun.c
-+++ b/drivers/scsi/cxlflash/vlun.c
-@@ -425,7 +425,6 @@ static int write_same16(struct scsi_device *sdev,
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 89a9d4a2efc8..3a43d3a1ce2d 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -597,8 +597,9 @@ static int ata_get_identity(struct ata_port *ap, struct scsi_device *sdev,
+ int ata_cmd_ioctl(struct scsi_device *scsidev, void __user *arg)
  {
- 	u8 *cmd_buf = NULL;
- 	u8 *scsi_cmd = NULL;
--	u8 *sense_buf = NULL;
  	int rc = 0;
- 	int result = 0;
- 	u64 offset = lba;
-@@ -439,8 +438,7 @@ static int write_same16(struct scsi_device *sdev,
++	u8 sensebuf[SCSI_SENSE_BUFFERSIZE];
+ 	u8 scsi_cmd[MAX_COMMAND_SIZE];
+-	u8 args[4], *argbuf = NULL, *sensebuf = NULL;
++	u8 args[4], *argbuf = NULL;
+ 	int argsize = 0;
+ 	enum dma_data_direction data_dir;
+ 	struct scsi_sense_hdr sshdr;
+@@ -610,10 +611,7 @@ int ata_cmd_ioctl(struct scsi_device *scsidev, void __user *arg)
+ 	if (copy_from_user(args, arg, sizeof(args)))
+ 		return -EFAULT;
  
- 	cmd_buf = kzalloc(CMD_BUFSIZE, GFP_KERNEL);
- 	scsi_cmd = kzalloc(MAX_COMMAND_SIZE, GFP_KERNEL);
--	sense_buf = kzalloc(SCSI_SENSE_BUFFERSIZE, GFP_KERNEL);
--	if (unlikely(!cmd_buf || !scsi_cmd || !sense_buf)) {
-+	if (unlikely(!cmd_buf || !scsi_cmd)) {
- 		rc = -ENOMEM;
- 		goto out;
- 	}
-@@ -456,7 +454,7 @@ static int write_same16(struct scsi_device *sdev,
- 		/* Drop the ioctl read semahpore across lengthy call */
- 		up_read(&cfg->ioctl_rwsem);
- 		result = scsi_execute(sdev, scsi_cmd, DMA_TO_DEVICE, cmd_buf,
--				      CMD_BUFSIZE, sense_buf, NULL, to,
-+				      CMD_BUFSIZE, NULL, NULL, to,
- 				      CMD_RETRIES, 0, 0, NULL);
- 		down_read(&cfg->ioctl_rwsem);
- 		rc = check_state(cfg);
-@@ -481,7 +479,6 @@ static int write_same16(struct scsi_device *sdev,
- out:
- 	kfree(cmd_buf);
- 	kfree(scsi_cmd);
--	kfree(sense_buf);
- 	dev_dbg(dev, "%s: returning rc=%d\n", __func__, rc);
+-	sensebuf = kzalloc(SCSI_SENSE_BUFFERSIZE, GFP_NOIO);
+-	if (!sensebuf)
+-		return -ENOMEM;
+-
++	memset(sensebuf, 0, sizeof(sensebuf));
+ 	memset(scsi_cmd, 0, sizeof(scsi_cmd));
+ 
+ 	if (args[3]) {
+@@ -685,7 +683,6 @@ int ata_cmd_ioctl(struct scsi_device *scsidev, void __user *arg)
+ 	 && copy_to_user(arg + sizeof(args), argbuf, argsize))
+ 		rc = -EFAULT;
+ error:
+-	kfree(sensebuf);
+ 	kfree(argbuf);
  	return rc;
  }
+@@ -704,8 +701,9 @@ int ata_cmd_ioctl(struct scsi_device *scsidev, void __user *arg)
+ int ata_task_ioctl(struct scsi_device *scsidev, void __user *arg)
+ {
+ 	int rc = 0;
++	u8 sensebuf[SCSI_SENSE_BUFFERSIZE];
+ 	u8 scsi_cmd[MAX_COMMAND_SIZE];
+-	u8 args[7], *sensebuf = NULL;
++	u8 args[7];
+ 	struct scsi_sense_hdr sshdr;
+ 	int cmd_result;
+ 
+@@ -715,10 +713,7 @@ int ata_task_ioctl(struct scsi_device *scsidev, void __user *arg)
+ 	if (copy_from_user(args, arg, sizeof(args)))
+ 		return -EFAULT;
+ 
+-	sensebuf = kzalloc(SCSI_SENSE_BUFFERSIZE, GFP_NOIO);
+-	if (!sensebuf)
+-		return -ENOMEM;
+-
++	memset(sensebuf, 0, sizeof(sensebuf));
+ 	memset(scsi_cmd, 0, sizeof(scsi_cmd));
+ 	scsi_cmd[0]  = ATA_16;
+ 	scsi_cmd[1]  = (3 << 1); /* Non-data */
+@@ -769,7 +764,6 @@ int ata_task_ioctl(struct scsi_device *scsidev, void __user *arg)
+ 	}
+ 
+  error:
+-	kfree(sensebuf);
+ 	return rc;
+ }
+ 
 -- 
 2.17.0
