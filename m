@@ -1,192 +1,209 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 4.17-rc6
-Date: Mon, 21 May 2018 14:57:00 -0700
-Message-ID: <1526939820.3215.32.camel@HansenPartnership.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: Sayali Lokhande <sayalil@codeaurora.org>
+Subject: [PATCH RFC 1/3] scsi: ufs: set the device reference clock setting
+Date: Tue, 22 May 2018 09:51:38 +0530
+Message-ID: <1526962900-20683-2-git-send-email-sayalil@codeaurora.org>
+References: <1526962900-20683-1-git-send-email-sayalil@codeaurora.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1526962900-20683-1-git-send-email-sayalil@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: subhashj@codeaurora.org, cang@codeaurora.org, vivek.gautam@codeaurora.org, rnayak@codeaurora.org, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, asutoshd@codeaurora.org
+Cc: linux-scsi@vger.kernel.org, Sayali Lokhande <sayalil@codeaurora.org>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Mathieu Malaterre <malat@debian.org>, "open list:OPEN FIRMWARE AND FLATTENED
+        DEVICE TREE BINDINGS" <devicetree@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Two driver fixes (zfcp and target core), one information leak in sg and
-one build clean up.
+From: Subhash Jadavani <subhashj@codeaurora.org>
 
-The patch is available here:
+UFS host supplies the reference clock to UFS device and UFS device
+specification allows host to provide one of the 4 frequencies (19.2 MHz,
+26 MHz, 38.4 MHz, 52 MHz) for reference clock. Host should set the
+device reference clock frequency setting in the device based on what
+frequency it is supplying to UFS device.
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-
-The short changelog is:
-
-Alexander Potapenko (1):
-      scsi: sg: allocate with __GFP_ZERO in sg_build_indirect()
-
-Jens Remus (1):
-      scsi: zfcp: fix infinite iteration on ERP ready list
-
-Prasanna Kumar Kalever (1):
-      scsi: target: tcmu: fix error resetting qfull_time_out to default
-
-Randy Dunlap (1):
-      scsi: core: clean up generated file scsi_devinfo_tbl.c
-
-And the diffstat:
-
- drivers/s390/scsi/zfcp_dbf.c      | 23 ++++++++++++++++++++++-
- drivers/s390/scsi/zfcp_ext.h      |  5 ++++-
- drivers/s390/scsi/zfcp_scsi.c     | 14 +++++++-------
- drivers/scsi/Makefile             |  2 +-
- drivers/scsi/sg.c                 |  2 +-
- drivers/target/target_core_user.c |  2 ++
- 6 files changed, 37 insertions(+), 11 deletions(-)
-
-With full diff below.
-
-James
-
+Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+[cang@codeaurora.org: Resolved trivial merge conflicts]
+Signed-off-by: Can Guo <cang@codeaurora.org>
+Signed-off-by: Sayali Lokhande <sayalil@codeaurora.org>
 ---
+ .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      |  8 +++
+ drivers/scsi/ufs/ufs.h                             |  9 ++++
+ drivers/scsi/ufs/ufshcd-pltfrm.c                   | 20 ++++++++
+ drivers/scsi/ufs/ufshcd.c                          | 60 ++++++++++++++++++++++
+ drivers/scsi/ufs/ufshcd.h                          |  2 +
+ 5 files changed, 99 insertions(+)
 
-diff --git a/drivers/s390/scsi/zfcp_dbf.c b/drivers/s390/scsi/zfcp_dbf.c
-index a8b831000b2d..18c4f933e8b9 100644
---- a/drivers/s390/scsi/zfcp_dbf.c
-+++ b/drivers/s390/scsi/zfcp_dbf.c
-@@ -4,7 +4,7 @@
-  *
-  * Debug traces for zfcp.
-  *
-- * Copyright IBM Corp. 2002, 2017
-+ * Copyright IBM Corp. 2002, 2018
-  */
+diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+index c39dfef..ac94220 100644
+--- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
++++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+@@ -41,6 +41,12 @@ Optional properties:
+ -lanes-per-direction	: number of lanes available per direction - either 1 or 2.
+ 			  Note that it is assume same number of lanes is used both
+ 			  directions at once. If not specified, default is 2 lanes per direction.
++- dev-ref-clk-freq	: Specify the device reference clock frequency, must be one of the following:
++			  0: 19.2 MHz
++			  1: 26 MHz
++			  2: 38.4 MHz
++			  3: 52 MHz
++			  Defaults to 26 MHz if not specified.
  
- #define KMSG_COMPONENT "zfcp"
-@@ -308,6 +308,27 @@ void zfcp_dbf_rec_trig(char *tag, struct zfcp_adapter *adapter,
- 	spin_unlock_irqrestore(&dbf->rec_lock, flags);
+ Note: If above properties are not defined it can be assumed that the supply
+ regulators or clocks are always on.
+@@ -66,4 +72,6 @@ Example:
+ 		freq-table-hz = <100000000 200000000>, <0 0>, <0 0>;
+ 		phys = <&ufsphy1>;
+ 		phy-names = "ufsphy";
++		dev-ref-clk-freq = <0>; /* reference clock freq: 19.2 MHz */
+ 	};
++
+diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+index 14e5bf7..e15deb0 100644
+--- a/drivers/scsi/ufs/ufs.h
++++ b/drivers/scsi/ufs/ufs.h
+@@ -378,6 +378,15 @@ enum query_opcode {
+ 	UPIU_QUERY_OPCODE_TOGGLE_FLAG	= 0x8,
+ };
+ 
++/* bRefClkFreq attribute values */
++enum ref_clk_freq {
++	REF_CLK_FREQ_19_2_MHZ	= 0x0,
++	REF_CLK_FREQ_26_MHZ	= 0x1,
++	REF_CLK_FREQ_38_4_MHZ	= 0x2,
++	REF_CLK_FREQ_52_MHZ	= 0x3,
++	REF_CLK_FREQ_MAX	= REF_CLK_FREQ_52_MHZ,
++};
++
+ /* Query response result code */
+ enum {
+ 	QUERY_RESULT_SUCCESS                    = 0x00,
+diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
+index e82bde0..b70838b 100644
+--- a/drivers/scsi/ufs/ufshcd-pltfrm.c
++++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
+@@ -221,6 +221,24 @@ static int ufshcd_parse_regulator_info(struct ufs_hba *hba)
+ 	return err;
  }
  
-+/**
-+ * zfcp_dbf_rec_trig_lock - trace event related to triggered recovery with lock
-+ * @tag: identifier for event
-+ * @adapter: adapter on which the erp_action should run
-+ * @port: remote port involved in the erp_action
-+ * @sdev: scsi device involved in the erp_action
-+ * @want: wanted erp_action
-+ * @need: required erp_action
-+ *
-+ * The adapter->erp_lock must not be held.
-+ */
-+void zfcp_dbf_rec_trig_lock(char *tag, struct zfcp_adapter *adapter,
-+			    struct zfcp_port *port, struct scsi_device *sdev,
-+			    u8 want, u8 need)
++static void ufshcd_parse_dev_ref_clk_freq(struct ufs_hba *hba)
 +{
-+	unsigned long flags;
++	struct device *dev = hba->dev;
++	struct device_node *np = dev->of_node;
++	int ret;
 +
-+	read_lock_irqsave(&adapter->erp_lock, flags);
-+	zfcp_dbf_rec_trig(tag, adapter, port, sdev, want, need);
-+	read_unlock_irqrestore(&adapter->erp_lock, flags);
++	if (!np)
++		return;
++
++	ret = of_property_read_u32(np, "dev-ref-clk-freq",
++				   &hba->dev_ref_clk_freq);
++	if (ret ||
++	    (hba->dev_ref_clk_freq < 0) ||
++	    (hba->dev_ref_clk_freq > REF_CLK_FREQ_52_MHZ))
++		/* default setting */
++		hba->dev_ref_clk_freq = REF_CLK_FREQ_26_MHZ;
 +}
++
+ #ifdef CONFIG_PM
+ /**
+  * ufshcd_pltfrm_suspend - suspend power management function
+@@ -343,6 +361,8 @@ int ufshcd_pltfrm_init(struct platform_device *pdev,
+ 	pm_runtime_set_active(&pdev->dev);
+ 	pm_runtime_enable(&pdev->dev);
+ 
++	ufshcd_parse_dev_ref_clk_freq(hba);
++
+ 	ufshcd_init_lanes_per_dir(hba);
+ 
+ 	err = ufshcd_init(hba, mmio_base, irq);
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index c5b1bf1..1ab882f 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -6297,6 +6297,61 @@ static void ufshcd_def_desc_sizes(struct ufs_hba *hba)
+ }
  
  /**
-  * zfcp_dbf_rec_run_lvl - trace event related to running recovery
-diff --git a/drivers/s390/scsi/zfcp_ext.h b/drivers/s390/scsi/zfcp_ext.h
-index bf8ea4df2bb8..e5eed8aac0ce 100644
---- a/drivers/s390/scsi/zfcp_ext.h
-+++ b/drivers/s390/scsi/zfcp_ext.h
-@@ -4,7 +4,7 @@
++ * ufshcd_set_dev_ref_clk - set the device bRefClkFreq
++ * @hba: per-adapter instance
++ *
++ * Read the current value of the bRefClkFreq attribute from device and update it
++ * if host is supplying different reference clock frequency than one mentioned
++ * in bRefClkFreq attribute.
++ *
++ * Returns zero on success, non-zero error value on failure.
++ */
++static int ufshcd_set_dev_ref_clk(struct ufs_hba *hba)
++{
++	int err = 0;
++	int ref_clk = -1;
++	static const char * const ref_clk_freqs[] = {"19.2 MHz", "26 MHz",
++						     "38.4 MHz", "52 MHz"};
++
++	err = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_READ_ATTR,
++			QUERY_ATTR_IDN_REF_CLK_FREQ, 0, 0, &ref_clk);
++
++	if (err) {
++		dev_err(hba->dev, "%s: failed reading bRefClkFreq. err = %d\n",
++			 __func__, err);
++		goto out;
++	}
++
++	if ((ref_clk < 0) || (ref_clk > REF_CLK_FREQ_52_MHZ)) {
++		dev_err(hba->dev, "%s: invalid ref_clk setting = %d\n",
++			 __func__, ref_clk);
++		err = -EINVAL;
++		goto out;
++	}
++
++	if (ref_clk == hba->dev_ref_clk_freq)
++		goto out; /* nothing to update */
++
++	err = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
++			QUERY_ATTR_IDN_REF_CLK_FREQ, 0, 0,
++			&hba->dev_ref_clk_freq);
++
++	if (err)
++		dev_err(hba->dev, "%s: bRefClkFreq setting to %s failed\n",
++			__func__, ref_clk_freqs[hba->dev_ref_clk_freq]);
++	else
++		/*
++		 * It is good to print this out here to debug any later failures
++		 * related to gear switch.
++		 */
++		dev_info(hba->dev, "%s: bRefClkFreq setting to %s succeeded\n",
++			__func__, ref_clk_freqs[hba->dev_ref_clk_freq]);
++
++out:
++	return err;
++}
++
++/**
+  * ufshcd_probe_hba - probe hba to detect device and initialize
+  * @hba: per-adapter instance
   *
-  * External function declarations.
-  *
-- * Copyright IBM Corp. 2002, 2016
-+ * Copyright IBM Corp. 2002, 2018
-  */
- 
- #ifndef ZFCP_EXT_H
-@@ -35,6 +35,9 @@ extern int zfcp_dbf_adapter_register(struct zfcp_adapter *);
- extern void zfcp_dbf_adapter_unregister(struct zfcp_adapter *);
- extern void zfcp_dbf_rec_trig(char *, struct zfcp_adapter *,
- 			      struct zfcp_port *, struct scsi_device *, u8, u8);
-+extern void zfcp_dbf_rec_trig_lock(char *tag, struct zfcp_adapter *adapter,
-+				   struct zfcp_port *port,
-+				   struct scsi_device *sdev, u8 want, u8 need);
- extern void zfcp_dbf_rec_run(char *, struct zfcp_erp_action *);
- extern void zfcp_dbf_rec_run_lvl(int level, char *tag,
- 				 struct zfcp_erp_action *erp);
-diff --git a/drivers/s390/scsi/zfcp_scsi.c b/drivers/s390/scsi/zfcp_scsi.c
-index 4d2ba5682493..22f9562f415c 100644
---- a/drivers/s390/scsi/zfcp_scsi.c
-+++ b/drivers/s390/scsi/zfcp_scsi.c
-@@ -4,7 +4,7 @@
-  *
-  * Interface to Linux SCSI midlayer.
-  *
-- * Copyright IBM Corp. 2002, 2017
-+ * Copyright IBM Corp. 2002, 2018
-  */
- 
- #define KMSG_COMPONENT "zfcp"
-@@ -618,9 +618,9 @@ static void zfcp_scsi_rport_register(struct zfcp_port *port)
- 	ids.port_id = port->d_id;
- 	ids.roles = FC_RPORT_ROLE_FCP_TARGET;
- 
--	zfcp_dbf_rec_trig("scpaddy", port->adapter, port, NULL,
--			  ZFCP_PSEUDO_ERP_ACTION_RPORT_ADD,
--			  ZFCP_PSEUDO_ERP_ACTION_RPORT_ADD);
-+	zfcp_dbf_rec_trig_lock("scpaddy", port->adapter, port, NULL,
-+			       ZFCP_PSEUDO_ERP_ACTION_RPORT_ADD,
-+			       ZFCP_PSEUDO_ERP_ACTION_RPORT_ADD);
- 	rport = fc_remote_port_add(port->adapter->scsi_host, 0, &ids);
- 	if (!rport) {
- 		dev_err(&port->adapter->ccw_device->dev,
-@@ -642,9 +642,9 @@ static void zfcp_scsi_rport_block(struct zfcp_port *port)
- 	struct fc_rport *rport = port->rport;
- 
- 	if (rport) {
--		zfcp_dbf_rec_trig("scpdely", port->adapter, port, NULL,
--				  ZFCP_PSEUDO_ERP_ACTION_RPORT_DEL,
--				  ZFCP_PSEUDO_ERP_ACTION_RPORT_DEL);
-+		zfcp_dbf_rec_trig_lock("scpdely", port->adapter, port, NULL,
-+				       ZFCP_PSEUDO_ERP_ACTION_RPORT_DEL,
-+				       ZFCP_PSEUDO_ERP_ACTION_RPORT_DEL);
- 		fc_remote_port_delete(rport);
- 		port->rport = NULL;
- 	}
-diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
-index e29f9b8fd66d..56c940394729 100644
---- a/drivers/scsi/Makefile
-+++ b/drivers/scsi/Makefile
-@@ -182,7 +182,7 @@ zalon7xx-objs	:= zalon.o ncr53c8xx.o
- NCR_Q720_mod-objs	:= NCR_Q720.o ncr53c8xx.o
- 
- # Files generated that shall be removed upon make clean
--clean-files :=	53c700_d.h 53c700_u.h
-+clean-files :=	53c700_d.h 53c700_u.h scsi_devinfo_tbl.c
- 
- $(obj)/53c700.o $(MODVERDIR)/$(obj)/53c700.ver: $(obj)/53c700_d.h
- 
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index c198b96368dd..5c40d809830f 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -1894,7 +1894,7 @@ sg_build_indirect(Sg_scatter_hold * schp, Sg_fd * sfp, int buff_size)
- 		num = (rem_sz > scatter_elem_sz_prev) ?
- 			scatter_elem_sz_prev : rem_sz;
- 
--		schp->pages[k] = alloc_pages(gfp_mask, order);
-+		schp->pages[k] = alloc_pages(gfp_mask | __GFP_ZERO, order);
- 		if (!schp->pages[k])
- 			goto out;
- 
-diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-index 4ad89ea71a70..4f26bdc3d1dc 100644
---- a/drivers/target/target_core_user.c
-+++ b/drivers/target/target_core_user.c
-@@ -2121,6 +2121,8 @@ static ssize_t tcmu_qfull_time_out_store(struct config_item *item,
- 
- 	if (val >= 0) {
- 		udev->qfull_time_out = val * MSEC_PER_SEC;
-+	} else if (val == -1) {
-+		udev->qfull_time_out = val;
+@@ -6361,6 +6416,11 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
+ 			"%s: Failed getting max supported power mode\n",
+ 			__func__);
  	} else {
- 		printk(KERN_ERR "Invalid qfull timeout value %d\n", val);
- 		return -EINVAL;
++		/*
++		 * Set the right value to bRefClkFreq before attempting to
++		 * switch to HS gears.
++		 */
++		ufshcd_set_dev_ref_clk(hba);
+ 		ret = ufshcd_config_pwr_mode(hba, &hba->max_pwr_info.info);
+ 		if (ret) {
+ 			dev_err(hba->dev, "%s: Failed setting power mode, err = %d\n",
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 8110dcd..0dcf113 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -549,6 +549,8 @@ struct ufs_hba {
+ 	unsigned int irq;
+ 	bool is_irq_enabled;
+ 
++	u32 dev_ref_clk_freq;
++
+ 	/* Interrupt aggregation support is broken */
+ 	#define UFSHCD_QUIRK_BROKEN_INTR_AGGR			0x1
+ 
+-- 
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
