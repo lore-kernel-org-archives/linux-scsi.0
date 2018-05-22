@@ -1,7 +1,7 @@
 From: Kees Cook <keescook@chromium.org>
-Subject: [PATCH 3/6] block: Create scsi_sense.h for SCSI and ATAPI
-Date: Tue, 22 May 2018 11:15:09 -0700
-Message-ID: <20180522181512.39316-4-keescook@chromium.org>
+Subject: [PATCH 1/6] ide-cd: Drop unused sense buffers
+Date: Tue, 22 May 2018 11:15:07 -0700
+Message-ID: <20180522181512.39316-2-keescook@chromium.org>
 References: <20180522181512.39316-1-keescook@chromium.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20180522181512.39316-1-keescook@chromium.org>
@@ -10,282 +10,318 @@ To: Jens Axboe <axboe@kernel.dk>
 Cc: Kees Cook <keescook@chromium.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Tejun Heo <tj@kernel.org>, Borislav Petkov <bp@alien8.de>, "David S. Miller" <davem@davemloft.net>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, linux-block@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Both SCSI and ATAPI share the sense header. In preparation for using the
-struct scsi_sense_hdr more widely, move this into a separate header and
-move the helper function to scsi_ioctl.c which is linked with CONFIG_IDE
-by way of CONFIG_BLK_SCSI_REQUEST.
+This drops unused sense buffers from:
+
+	cdrom_eject()
+	cdrom_read_capacity()
+	cdrom_read_tocentry()
+	ide_cd_lockdoor()
+	ide_cd_read_toc()
 
 Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- block/scsi_ioctl.c         | 64 ++++++++++++++++++++++++++++++++++++++
- drivers/scsi/scsi_common.c | 64 --------------------------------------
- include/scsi/scsi_cmnd.h   |  1 -
- include/scsi/scsi_common.h | 32 +------------------
- include/scsi/scsi_sense.h  | 44 ++++++++++++++++++++++++++
- 5 files changed, 109 insertions(+), 96 deletions(-)
- create mode 100644 include/scsi/scsi_sense.h
+ drivers/ide/ide-cd.c       | 36 +++++++++++++++---------------------
+ drivers/ide/ide-cd.h       |  2 +-
+ drivers/ide/ide-cd_ioctl.c | 34 ++++++++++++----------------------
+ 3 files changed, 28 insertions(+), 44 deletions(-)
 
-diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
-index 60b471f8621b..87ff3cc7a364 100644
---- a/block/scsi_ioctl.c
-+++ b/block/scsi_ioctl.c
-@@ -728,6 +728,70 @@ void scsi_req_init(struct scsi_request *req)
+diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+index 5a8e8e3c22cd..1d5b35312e33 100644
+--- a/drivers/ide/ide-cd.c
++++ b/drivers/ide/ide-cd.c
+@@ -890,8 +890,7 @@ int cdrom_check_status(ide_drive_t *drive, struct request_sense *sense)
  }
- EXPORT_SYMBOL(scsi_req_init);
  
-+/**
-+ * scsi_normalize_sense - normalize main elements from either fixed or
-+ *			descriptor sense data format into a common format.
-+ *
-+ * @sense_buffer:	byte array containing sense data returned by device
-+ * @sb_len:		number of valid bytes in sense_buffer
-+ * @sshdr:		pointer to instance of structure that common
-+ *			elements are written to.
-+ *
-+ * Notes:
-+ *	The "main elements" from sense data are: response_code, sense_key,
-+ *	asc, ascq and additional_length (only for descriptor format).
-+ *
-+ *	Typically this function can be called after a device has
-+ *	responded to a SCSI command with the CHECK_CONDITION status.
-+ *
-+ * Return value:
-+ *	true if valid sense data information found, else false;
-+ */
-+bool scsi_normalize_sense(const u8 *sense_buffer, int sb_len,
-+			  struct scsi_sense_hdr *sshdr)
-+{
-+	memset(sshdr, 0, sizeof(struct scsi_sense_hdr));
-+
-+	if (!sense_buffer || !sb_len)
-+		return false;
-+
-+	sshdr->response_code = (sense_buffer[0] & 0x7f);
-+
-+	if (!scsi_sense_valid(sshdr))
-+		return false;
-+
-+	if (sshdr->response_code >= 0x72) {
-+		/*
-+		 * descriptor format
-+		 */
-+		if (sb_len > 1)
-+			sshdr->sense_key = (sense_buffer[1] & 0xf);
-+		if (sb_len > 2)
-+			sshdr->asc = sense_buffer[2];
-+		if (sb_len > 3)
-+			sshdr->ascq = sense_buffer[3];
-+		if (sb_len > 7)
-+			sshdr->additional_length = sense_buffer[7];
-+	} else {
-+		/*
-+		 * fixed format
-+		 */
-+		if (sb_len > 2)
-+			sshdr->sense_key = (sense_buffer[2] & 0xf);
-+		if (sb_len > 7) {
-+			sb_len = (sb_len < (sense_buffer[7] + 8)) ?
-+					 sb_len : (sense_buffer[7] + 8);
-+			if (sb_len > 12)
-+				sshdr->asc = sense_buffer[12];
-+			if (sb_len > 13)
-+				sshdr->ascq = sense_buffer[13];
-+		}
-+	}
-+
-+	return true;
-+}
-+EXPORT_SYMBOL(scsi_normalize_sense);
-+
- static int __init blk_scsi_ioctl_init(void)
+ static int cdrom_read_capacity(ide_drive_t *drive, unsigned long *capacity,
+-			       unsigned long *sectors_per_frame,
+-			       struct request_sense *sense)
++			       unsigned long *sectors_per_frame)
  {
- 	blk_set_cmd_filter_defaults(&blk_default_cmd_filter);
-diff --git a/drivers/scsi/scsi_common.c b/drivers/scsi/scsi_common.c
-index 90349498f686..8621a07cb967 100644
---- a/drivers/scsi/scsi_common.c
-+++ b/drivers/scsi/scsi_common.c
-@@ -116,70 +116,6 @@ void int_to_scsilun(u64 lun, struct scsi_lun *scsilun)
+ 	struct {
+ 		__be32 lba;
+@@ -908,7 +907,7 @@ static int cdrom_read_capacity(ide_drive_t *drive, unsigned long *capacity,
+ 	memset(cmd, 0, BLK_MAX_CDB);
+ 	cmd[0] = GPCMD_READ_CDVD_CAPACITY;
+ 
+-	stat = ide_cd_queue_pc(drive, cmd, 0, &capbuf, &len, sense, 0,
++	stat = ide_cd_queue_pc(drive, cmd, 0, &capbuf, &len, NULL, 0,
+ 			       RQF_QUIET);
+ 	if (stat)
+ 		return stat;
+@@ -944,8 +943,7 @@ static int cdrom_read_capacity(ide_drive_t *drive, unsigned long *capacity,
  }
- EXPORT_SYMBOL(int_to_scsilun);
  
--/**
-- * scsi_normalize_sense - normalize main elements from either fixed or
-- *			descriptor sense data format into a common format.
-- *
-- * @sense_buffer:	byte array containing sense data returned by device
-- * @sb_len:		number of valid bytes in sense_buffer
-- * @sshdr:		pointer to instance of structure that common
-- *			elements are written to.
-- *
-- * Notes:
-- *	The "main elements" from sense data are: response_code, sense_key,
-- *	asc, ascq and additional_length (only for descriptor format).
-- *
-- *	Typically this function can be called after a device has
-- *	responded to a SCSI command with the CHECK_CONDITION status.
-- *
-- * Return value:
-- *	true if valid sense data information found, else false;
-- */
--bool scsi_normalize_sense(const u8 *sense_buffer, int sb_len,
--			  struct scsi_sense_hdr *sshdr)
--{
--	memset(sshdr, 0, sizeof(struct scsi_sense_hdr));
--
--	if (!sense_buffer || !sb_len)
--		return false;
--
--	sshdr->response_code = (sense_buffer[0] & 0x7f);
--
--	if (!scsi_sense_valid(sshdr))
--		return false;
--
--	if (sshdr->response_code >= 0x72) {
--		/*
--		 * descriptor format
--		 */
--		if (sb_len > 1)
--			sshdr->sense_key = (sense_buffer[1] & 0xf);
--		if (sb_len > 2)
--			sshdr->asc = sense_buffer[2];
--		if (sb_len > 3)
--			sshdr->ascq = sense_buffer[3];
--		if (sb_len > 7)
--			sshdr->additional_length = sense_buffer[7];
--	} else {
--		/*
--		 * fixed format
--		 */
--		if (sb_len > 2)
--			sshdr->sense_key = (sense_buffer[2] & 0xf);
--		if (sb_len > 7) {
--			sb_len = (sb_len < (sense_buffer[7] + 8)) ?
--					 sb_len : (sense_buffer[7] + 8);
--			if (sb_len > 12)
--				sshdr->asc = sense_buffer[12];
--			if (sb_len > 13)
--				sshdr->ascq = sense_buffer[13];
--		}
--	}
--
--	return true;
--}
--EXPORT_SYMBOL(scsi_normalize_sense);
--
- /**
-  * scsi_sense_desc_find - search for a given descriptor type in	descriptor sense data format.
-  * @sense_buffer:	byte array of descriptor format sense data
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-index aaf1e971c6a3..3b9f42f6615c 100644
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -120,7 +120,6 @@ struct scsi_cmnd {
- 	struct request *request;	/* The command we are
- 				   	   working on */
+ static int cdrom_read_tocentry(ide_drive_t *drive, int trackno, int msf_flag,
+-				int format, char *buf, int buflen,
+-				struct request_sense *sense)
++				int format, char *buf, int buflen)
+ {
+ 	unsigned char cmd[BLK_MAX_CDB];
  
--#define SCSI_SENSE_BUFFERSIZE 	96
- 	unsigned char *sense_buffer;
- 				/* obtained by REQUEST SENSE when
- 				 * CHECK CONDITION is received on original
-diff --git a/include/scsi/scsi_common.h b/include/scsi/scsi_common.h
-index 731ac09ed231..82d6209f2e10 100644
---- a/include/scsi/scsi_common.h
-+++ b/include/scsi/scsi_common.h
-@@ -8,6 +8,7 @@
+@@ -962,11 +960,11 @@ static int cdrom_read_tocentry(ide_drive_t *drive, int trackno, int msf_flag,
+ 	if (msf_flag)
+ 		cmd[1] = 2;
  
- #include <linux/types.h>
- #include <scsi/scsi_proto.h>
-+#include <scsi/scsi_sense.h>
+-	return ide_cd_queue_pc(drive, cmd, 0, buf, &buflen, sense, 0, RQF_QUIET);
++	return ide_cd_queue_pc(drive, cmd, 0, buf, &buflen, NULL, 0, RQF_QUIET);
+ }
  
- static inline unsigned
- scsi_varlen_cdb_length(const void *hdr)
-@@ -31,37 +32,6 @@ extern const char *scsi_device_type(unsigned type);
- extern void int_to_scsilun(u64, struct scsi_lun *);
- extern u64 scsilun_to_int(struct scsi_lun *);
+ /* Try to read the entire TOC for the disk into our internal buffer. */
+-int ide_cd_read_toc(ide_drive_t *drive, struct request_sense *sense)
++int ide_cd_read_toc(ide_drive_t *drive)
+ {
+ 	int stat, ntracks, i;
+ 	struct cdrom_info *info = drive->driver_data;
+@@ -996,14 +994,13 @@ int ide_cd_read_toc(ide_drive_t *drive, struct request_sense *sense)
+ 	 * Check to see if the existing data is still valid. If it is,
+ 	 * just return.
+ 	 */
+-	(void) cdrom_check_status(drive, sense);
++	(void) cdrom_check_status(drive, NULL);
  
--/*
-- * This is a slightly modified SCSI sense "descriptor" format header.
-- * The addition is to allow the 0x70 and 0x71 response codes. The idea
-- * is to place the salient data from either "fixed" or "descriptor" sense
-- * format into one structure to ease application processing.
-- *
-- * The original sense buffer should be kept around for those cases
-- * in which more information is required (e.g. the LBA of a MEDIUM ERROR).
-- */
--struct scsi_sense_hdr {		/* See SPC-3 section 4.5 */
--	u8 response_code;	/* permit: 0x0, 0x70, 0x71, 0x72, 0x73 */
--	u8 sense_key;
--	u8 asc;
--	u8 ascq;
--	u8 byte4;
--	u8 byte5;
--	u8 byte6;
--	u8 additional_length;	/* always 0 for fixed sense format */
--};
+ 	if (drive->atapi_flags & IDE_AFLAG_TOC_VALID)
+ 		return 0;
+ 
+ 	/* try to get the total cdrom capacity and sector size */
+-	stat = cdrom_read_capacity(drive, &toc->capacity, &sectors_per_frame,
+-				   sense);
++	stat = cdrom_read_capacity(drive, &toc->capacity, &sectors_per_frame);
+ 	if (stat)
+ 		toc->capacity = 0x1fffff;
+ 
+@@ -1016,7 +1013,7 @@ int ide_cd_read_toc(ide_drive_t *drive, struct request_sense *sense)
+ 
+ 	/* first read just the header, so we know how long the TOC is */
+ 	stat = cdrom_read_tocentry(drive, 0, 1, 0, (char *) &toc->hdr,
+-				    sizeof(struct atapi_toc_header), sense);
++				    sizeof(struct atapi_toc_header));
+ 	if (stat)
+ 		return stat;
+ 
+@@ -1036,7 +1033,7 @@ int ide_cd_read_toc(ide_drive_t *drive, struct request_sense *sense)
+ 				  (char *)&toc->hdr,
+ 				   sizeof(struct atapi_toc_header) +
+ 				   (ntracks + 1) *
+-				   sizeof(struct atapi_toc_entry), sense);
++				   sizeof(struct atapi_toc_entry));
+ 
+ 	if (stat && toc->hdr.first_track > 1) {
+ 		/*
+@@ -1056,8 +1053,7 @@ int ide_cd_read_toc(ide_drive_t *drive, struct request_sense *sense)
+ 					   (char *)&toc->hdr,
+ 					   sizeof(struct atapi_toc_header) +
+ 					   (ntracks + 1) *
+-					   sizeof(struct atapi_toc_entry),
+-					   sense);
++					   sizeof(struct atapi_toc_entry));
+ 		if (stat)
+ 			return stat;
+ 
+@@ -1094,7 +1090,7 @@ int ide_cd_read_toc(ide_drive_t *drive, struct request_sense *sense)
+ 	if (toc->hdr.first_track != CDROM_LEADOUT) {
+ 		/* read the multisession information */
+ 		stat = cdrom_read_tocentry(drive, 0, 0, 1, (char *)&ms_tmp,
+-					   sizeof(ms_tmp), sense);
++					   sizeof(ms_tmp));
+ 		if (stat)
+ 			return stat;
+ 
+@@ -1108,7 +1104,7 @@ int ide_cd_read_toc(ide_drive_t *drive, struct request_sense *sense)
+ 	if (drive->atapi_flags & IDE_AFLAG_TOCADDR_AS_BCD) {
+ 		/* re-read multisession information using MSF format */
+ 		stat = cdrom_read_tocentry(drive, 0, 1, 1, (char *)&ms_tmp,
+-					   sizeof(ms_tmp), sense);
++					   sizeof(ms_tmp));
+ 		if (stat)
+ 			return stat;
+ 
+@@ -1412,7 +1408,7 @@ static sector_t ide_cdrom_capacity(ide_drive_t *drive)
+ {
+ 	unsigned long capacity, sectors_per_frame;
+ 
+-	if (cdrom_read_capacity(drive, &capacity, &sectors_per_frame, NULL))
++	if (cdrom_read_capacity(drive, &capacity, &sectors_per_frame))
+ 		return 0;
+ 
+ 	return capacity * sectors_per_frame;
+@@ -1723,9 +1719,8 @@ static unsigned int idecd_check_events(struct gendisk *disk,
+ static int idecd_revalidate_disk(struct gendisk *disk)
+ {
+ 	struct cdrom_info *info = ide_drv_g(disk, cdrom_info);
+-	struct request_sense sense;
+ 
+-	ide_cd_read_toc(info->drive, &sense);
++	ide_cd_read_toc(info->drive);
+ 
+ 	return  0;
+ }
+@@ -1749,7 +1744,6 @@ static int ide_cd_probe(ide_drive_t *drive)
+ {
+ 	struct cdrom_info *info;
+ 	struct gendisk *g;
+-	struct request_sense sense;
+ 
+ 	ide_debug_log(IDE_DBG_PROBE, "driver_req: %s, media: 0x%x",
+ 				     drive->driver_req, drive->media);
+@@ -1798,7 +1792,7 @@ static int ide_cd_probe(ide_drive_t *drive)
+ 		goto failed;
+ 	}
+ 
+-	ide_cd_read_toc(drive, &sense);
++	ide_cd_read_toc(drive);
+ 	g->fops = &idecd_ops;
+ 	g->flags |= GENHD_FL_REMOVABLE | GENHD_FL_BLOCK_EVENTS_ON_EXCL_WRITE;
+ 	device_add_disk(&drive->gendev, g);
+diff --git a/drivers/ide/ide-cd.h b/drivers/ide/ide-cd.h
+index 04f0f310a856..fc162fbb6629 100644
+--- a/drivers/ide/ide-cd.h
++++ b/drivers/ide/ide-cd.h
+@@ -99,7 +99,7 @@ void ide_cd_log_error(const char *, struct request *, struct request_sense *);
+ /* ide-cd.c functions used by ide-cd_ioctl.c */
+ int ide_cd_queue_pc(ide_drive_t *, const unsigned char *, int, void *,
+ 		    unsigned *, struct request_sense *, int, req_flags_t);
+-int ide_cd_read_toc(ide_drive_t *, struct request_sense *);
++int ide_cd_read_toc(ide_drive_t *);
+ int ide_cdrom_get_capabilities(ide_drive_t *, u8 *);
+ void ide_cdrom_update_speed(ide_drive_t *, u8 *);
+ int cdrom_check_status(ide_drive_t *, struct request_sense *);
+diff --git a/drivers/ide/ide-cd_ioctl.c b/drivers/ide/ide-cd_ioctl.c
+index 2acca12b9c94..c709f4eed0e9 100644
+--- a/drivers/ide/ide-cd_ioctl.c
++++ b/drivers/ide/ide-cd_ioctl.c
+@@ -105,8 +105,7 @@ unsigned int ide_cdrom_check_events_real(struct cdrom_device_info *cdi,
+ /* Eject the disk if EJECTFLAG is 0.
+    If EJECTFLAG is 1, try to reload the disk. */
+ static
+-int cdrom_eject(ide_drive_t *drive, int ejectflag,
+-		struct request_sense *sense)
++int cdrom_eject(ide_drive_t *drive, int ejectflag)
+ {
+ 	struct cdrom_info *cd = drive->driver_data;
+ 	struct cdrom_device_info *cdi = &cd->devinfo;
+@@ -129,20 +128,16 @@ int cdrom_eject(ide_drive_t *drive, int ejectflag,
+ 	cmd[0] = GPCMD_START_STOP_UNIT;
+ 	cmd[4] = loej | (ejectflag != 0);
+ 
+-	return ide_cd_queue_pc(drive, cmd, 0, NULL, NULL, sense, 0, 0);
++	return ide_cd_queue_pc(drive, cmd, 0, NULL, NULL, NULL, 0, 0);
+ }
+ 
+ /* Lock the door if LOCKFLAG is nonzero; unlock it otherwise. */
+ static
+-int ide_cd_lockdoor(ide_drive_t *drive, int lockflag,
+-		    struct request_sense *sense)
++int ide_cd_lockdoor(ide_drive_t *drive, int lockflag)
+ {
+-	struct request_sense my_sense;
++	struct request_sense my_sense, *sense = &my_sense;
+ 	int stat;
+ 
+-	if (sense == NULL)
+-		sense = &my_sense;
 -
--static inline bool scsi_sense_valid(const struct scsi_sense_hdr *sshdr)
--{
--	if (!sshdr)
--		return false;
--
--	return (sshdr->response_code & 0x70) == 0x70;
--}
--
--extern bool scsi_normalize_sense(const u8 *sense_buffer, int sb_len,
--				 struct scsi_sense_hdr *sshdr);
--
- extern void scsi_build_sense_buffer(int desc, u8 *buf, u8 key, u8 asc, u8 ascq);
- int scsi_set_sense_information(u8 *buf, int buf_len, u64 info);
- int scsi_set_sense_field_pointer(u8 *buf, int buf_len, u16 fp, u8 bp, bool cd);
-diff --git a/include/scsi/scsi_sense.h b/include/scsi/scsi_sense.h
-new file mode 100644
-index 000000000000..be923c67b93e
---- /dev/null
-+++ b/include/scsi/scsi_sense.h
-@@ -0,0 +1,44 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+/*
-+ * Structures and functions used by both SCSI and ATAPI sense code.
-+ */
-+
-+#ifndef _SCSI_SENSE_H_
-+#define _SCSI_SENSE_H_
-+
-+#include <linux/types.h>
-+
-+/*
-+ * This is a slightly modified SCSI sense "descriptor" format header.
-+ * The addition is to allow the 0x70 and 0x71 response codes. The idea
-+ * is to place the salient data from either "fixed" or "descriptor" sense
-+ * format into one structure to ease application processing.
-+ *
-+ * The original sense buffer should be kept around for those cases
-+ * in which more information is required (e.g. the LBA of a MEDIUM ERROR).
-+ */
-+struct scsi_sense_hdr {		/* See SPC-3 section 4.5 */
-+	u8 response_code;	/* permit: 0x0, 0x70, 0x71, 0x72, 0x73 */
-+	u8 sense_key;
-+	u8 asc;
-+	u8 ascq;
-+	u8 byte4;
-+	u8 byte5;
-+	u8 byte6;
-+	u8 additional_length;	/* always 0 for fixed sense format */
-+};
-+
-+static inline bool scsi_sense_valid(const struct scsi_sense_hdr *sshdr)
-+{
-+	if (!sshdr)
-+		return false;
-+
-+	return (sshdr->response_code & 0x70) == 0x70;
-+}
-+
-+#define SCSI_SENSE_BUFFERSIZE 	96
-+
-+extern bool scsi_normalize_sense(const u8 *sense_buffer, int sb_len,
-+				 struct scsi_sense_hdr *sshdr);
-+
-+#endif /* _SCSI_SENSE_H_ */
+ 	/* If the drive cannot lock the door, just pretend. */
+ 	if ((drive->dev_flags & IDE_DFLAG_DOORLOCKING) == 0) {
+ 		stat = 0;
+@@ -186,23 +181,22 @@ int ide_cd_lockdoor(ide_drive_t *drive, int lockflag,
+ int ide_cdrom_tray_move(struct cdrom_device_info *cdi, int position)
+ {
+ 	ide_drive_t *drive = cdi->handle;
+-	struct request_sense sense;
+ 
+ 	if (position) {
+-		int stat = ide_cd_lockdoor(drive, 0, &sense);
++		int stat = ide_cd_lockdoor(drive, 0);
+ 
+ 		if (stat)
+ 			return stat;
+ 	}
+ 
+-	return cdrom_eject(drive, !position, &sense);
++	return cdrom_eject(drive, !position);
+ }
+ 
+ int ide_cdrom_lock_door(struct cdrom_device_info *cdi, int lock)
+ {
+ 	ide_drive_t *drive = cdi->handle;
+ 
+-	return ide_cd_lockdoor(drive, lock, NULL);
++	return ide_cd_lockdoor(drive, lock);
+ }
+ 
+ /*
+@@ -213,7 +207,6 @@ int ide_cdrom_select_speed(struct cdrom_device_info *cdi, int speed)
+ {
+ 	ide_drive_t *drive = cdi->handle;
+ 	struct cdrom_info *cd = drive->driver_data;
+-	struct request_sense sense;
+ 	u8 buf[ATAPI_CAPABILITIES_PAGE_SIZE];
+ 	int stat;
+ 	unsigned char cmd[BLK_MAX_CDB];
+@@ -236,7 +229,7 @@ int ide_cdrom_select_speed(struct cdrom_device_info *cdi, int speed)
+ 		cmd[5] = speed & 0xff;
+ 	}
+ 
+-	stat = ide_cd_queue_pc(drive, cmd, 0, NULL, NULL, &sense, 0, 0);
++	stat = ide_cd_queue_pc(drive, cmd, 0, NULL, NULL, NULL, 0, 0);
+ 
+ 	if (!ide_cdrom_get_capabilities(drive, buf)) {
+ 		ide_cdrom_update_speed(drive, buf);
+@@ -252,11 +245,10 @@ int ide_cdrom_get_last_session(struct cdrom_device_info *cdi,
+ 	struct atapi_toc *toc;
+ 	ide_drive_t *drive = cdi->handle;
+ 	struct cdrom_info *info = drive->driver_data;
+-	struct request_sense sense;
+ 	int ret;
+ 
+ 	if ((drive->atapi_flags & IDE_AFLAG_TOC_VALID) == 0 || !info->toc) {
+-		ret = ide_cd_read_toc(drive, &sense);
++		ret = ide_cd_read_toc(drive);
+ 		if (ret)
+ 			return ret;
+ 	}
+@@ -300,7 +292,6 @@ int ide_cdrom_reset(struct cdrom_device_info *cdi)
+ {
+ 	ide_drive_t *drive = cdi->handle;
+ 	struct cdrom_info *cd = drive->driver_data;
+-	struct request_sense sense;
+ 	struct request *rq;
+ 	int ret;
+ 
+@@ -315,7 +306,7 @@ int ide_cdrom_reset(struct cdrom_device_info *cdi)
+ 	 * lock it again.
+ 	 */
+ 	if (drive->atapi_flags & IDE_AFLAG_DOOR_LOCKED)
+-		(void)ide_cd_lockdoor(drive, 1, &sense);
++		(void)ide_cd_lockdoor(drive, 1);
+ 
+ 	return ret;
+ }
+@@ -355,7 +346,6 @@ static int ide_cd_fake_play_trkind(ide_drive_t *drive, void *arg)
+ 	struct atapi_toc_entry *first_toc, *last_toc;
+ 	unsigned long lba_start, lba_end;
+ 	int stat;
+-	struct request_sense sense;
+ 	unsigned char cmd[BLK_MAX_CDB];
+ 
+ 	stat = ide_cd_get_toc_entry(drive, ti->cdti_trk0, &first_toc);
+@@ -380,7 +370,7 @@ static int ide_cd_fake_play_trkind(ide_drive_t *drive, void *arg)
+ 	lba_to_msf(lba_start,   &cmd[3], &cmd[4], &cmd[5]);
+ 	lba_to_msf(lba_end - 1, &cmd[6], &cmd[7], &cmd[8]);
+ 
+-	return ide_cd_queue_pc(drive, cmd, 0, NULL, NULL, &sense, 0, 0);
++	return ide_cd_queue_pc(drive, cmd, 0, NULL, NULL, NULL, 0, 0);
+ }
+ 
+ static int ide_cd_read_tochdr(ide_drive_t *drive, void *arg)
+@@ -391,7 +381,7 @@ static int ide_cd_read_tochdr(ide_drive_t *drive, void *arg)
+ 	int stat;
+ 
+ 	/* Make sure our saved TOC is valid. */
+-	stat = ide_cd_read_toc(drive, NULL);
++	stat = ide_cd_read_toc(drive);
+ 	if (stat)
+ 		return stat;
+ 
 -- 
 2.17.0
