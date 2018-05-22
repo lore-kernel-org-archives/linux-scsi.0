@@ -1,7 +1,7 @@
 From: Sayali Lokhande <sayalil@codeaurora.org>
-Subject: [PATCH RFC 2/3] scsi: ufs: Add ufs provisioning support
-Date: Tue, 22 May 2018 09:51:39 +0530
-Message-ID: <1526962900-20683-3-git-send-email-sayalil@codeaurora.org>
+Subject: [PATCH RFC 3/3] scsi: ufs: Add sysfs support for ufs provision
+Date: Tue, 22 May 2018 09:51:40 +0530
+Message-ID: <1526962900-20683-4-git-send-email-sayalil@codeaurora.org>
 References: <1526962900-20683-1-git-send-email-sayalil@codeaurora.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1526962900-20683-1-git-send-email-sayalil@codeaurora.org>
@@ -10,303 +10,242 @@ To: subhashj@codeaurora.org, cang@codeaurora.org, vivek.gautam@codeaurora.org, r
 Cc: linux-scsi@vger.kernel.org, Sayali Lokhande <sayalil@codeaurora.org>, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-A new api ufshcd_do_config_device() is added in driver
-to suppoet UFS provisioning at runtime. Sysfs support
-is added to trigger provisioning.
-Device configuration descriptors or parameters are
-parsed from vendor specific provisioning data and
-passed via sysfs at runtime to provision ufs device.
+Add sysfs support to trigger ufs provisioning at runtime.
+Usage :
+echo <desc_buf> > /sys/bus/platform/devices/1d84000.ufshcd/ufs_provision
+To check provisioning status:
+cat /sys/bus/platform/devices/1d84000.ufshc/ufs_provision
+1 -> Success (Reboot device to check updated provisioning)
 
 Signed-off-by: Sayali Lokhande <sayalil@codeaurora.org>
 ---
- drivers/scsi/ufs/ufs.h    |  28 +++++++
- drivers/scsi/ufs/ufshcd.c | 200 ++++++++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/ufs/ufshcd.h |   1 +
- 3 files changed, 229 insertions(+)
+ drivers/scsi/ufs/ufs.h    |   2 +
+ drivers/scsi/ufs/ufshcd.c | 125 +++++++++++++++++++++++++++++++++++++++++++++-
+ drivers/scsi/ufs/ufshcd.h |   6 +++
+ 3 files changed, 132 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
-index e15deb0..1f99904 100644
+index 1f99904..0b497fc 100644
 --- a/drivers/scsi/ufs/ufs.h
 +++ b/drivers/scsi/ufs/ufs.h
-@@ -333,6 +333,7 @@ enum {
- 	UFSHCD_AMP		= 3,
+@@ -427,6 +427,7 @@ enum {
  };
  
-+#define UFS_BLOCK_SIZE	4096
- #define POWER_DESC_MAX_SIZE			0x62
- #define POWER_DESC_MAX_ACTV_ICC_LVLS		16
- 
-@@ -425,6 +426,33 @@ enum {
- 	MASK_TM_SERVICE_RESP		= 0xFF,
+ struct ufs_unit_desc {
++	u8	   LUNum;
+ 	u8     bLUEnable;              /* 1 for enabled LU */
+ 	u8     bBootLunID;             /* 0 for using this LU for boot */
+ 	u8     bLUWriteProtect;        /* 1 = power on WP, 2 = permanent WP */
+@@ -451,6 +452,7 @@ struct ufs_config_descr {
+ 	u32    qVendorConfigCode;      /* Vendor specific configuration code */
+ 	struct ufs_unit_desc unit[8];
+ 	u8	lun_to_grow;
++	u8 num_luns;
  };
  
-+struct ufs_unit_desc {
-+	u8     bLUEnable;              /* 1 for enabled LU */
-+	u8     bBootLunID;             /* 0 for using this LU for boot */
-+	u8     bLUWriteProtect;        /* 1 = power on WP, 2 = permanent WP */
-+	u8     bMemoryType;            /* 0 for enhanced memory type */
-+	u32    dNumAllocUnits;         /* Number of alloc unit for this LU */
-+	u8     bDataReliability;       /* 0 for reliable write support */
-+	u8     bLogicalBlockSize;      /* See section 13.2.3 of UFS standard */
-+	u8     bProvisioningType;      /* 0 for thin provisioning */
-+	u16    wContextCapabilities;   /* refer Unit Descriptor Description */
-+};
-+
-+struct ufs_config_descr {
-+	u8     bNumberLU;              /* Total number of active LUs */
-+	u8     bBootEnable;            /* enabling device for partial init */
-+	u8     bDescrAccessEn;         /* desc access during partial init */
-+	u8     bInitPowerMode;         /* Initial device power mode */
-+	u8     bHighPriorityLUN;       /* LUN of the high priority LU */
-+	u8     bSecureRemovalType;     /* Erase config for data removal */
-+	u8     bInitActiveICCLevel;    /* ICC level after reset */
-+	u16    wPeriodicRTCUpdate;     /* 0 to set a priodic RTC update rate */
-+	u32     bConfigDescrLock;      /* 1 to lock Configation Descriptor */
-+	u32    qVendorConfigCode;      /* Vendor specific configuration code */
-+	struct ufs_unit_desc unit[8];
-+	u8	lun_to_grow;
-+};
-+
  /* Task management service response */
- enum {
- 	UPIU_TASK_MANAGEMENT_FUNC_COMPL		= 0x00,
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 1ab882f..9ae64e2 100644
+index 9ae64e2..0c94885 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -237,6 +237,7 @@ static int ufshcd_config_pwr_mode(struct ufs_hba *hba,
- 		struct ufs_pa_layer_attr *desired_pwr_mode);
- static int ufshcd_change_power_mode(struct ufs_hba *hba,
- 			     struct ufs_pa_layer_attr *pwr_mode);
-+static int ufshcd_do_config_device(struct ufs_hba *hba);
- static inline bool ufshcd_valid_tag(struct ufs_hba *hba, int tag)
- {
- 	return tag >= 0 && tag < hba->nutrs;
-@@ -3063,6 +3064,14 @@ static inline int ufshcd_read_power_desc(struct ufs_hba *hba,
- 	return ufshcd_read_desc(hba, QUERY_DESC_IDN_POWER, 0, buf, size);
+@@ -1580,6 +1580,106 @@ void ufshcd_release(struct ufs_hba *hba)
  }
+ EXPORT_SYMBOL_GPL(ufshcd_release);
  
-+static inline int ufshcd_read_geometry_desc(struct ufs_hba *hba,
-+					 u8 *buf,
-+					 u32 size)
++static ssize_t ufshcd_desc_config_show(struct device *dev,
++		struct device_attribute *attr, char *buf)
 +{
-+	return ufshcd_read_desc(hba, QUERY_DESC_IDN_GEOMETRY, 0, buf, size);
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++
++	return snprintf(buf, PAGE_SIZE, "%d\n", hba->ufs_provision.is_enabled);
 +}
 +
-+
- static int ufshcd_read_device_desc(struct ufs_hba *hba, u8 *buf, u32 size)
- {
- 	return ufshcd_read_desc(hba, QUERY_DESC_IDN_DEVICE, 0, buf, size);
-@@ -6352,6 +6361,197 @@ static int ufshcd_set_dev_ref_clk(struct ufs_hba *hba)
- }
- 
- /**
-+ * ufshcd_do_config_device - API function for UFS provisioning
-+ * hba: per-adapter instance
-+ * Returns 0 for success, non-zero in case of failure.
-+ */
-+static int ufshcd_do_config_device(struct ufs_hba *hba)
++static ssize_t ufshcd_desc_config_store(struct device *dev,
++		struct device_attribute *attr, const char *buf, size_t count)
 +{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
 +	struct ufs_config_descr *cfg = &hba->cfgs;
-+	int buff_len = QUERY_DESC_CONFIGURATION_DEF_SIZE;
-+	u8 desc_buf[QUERY_DESC_CONFIGURATION_DEF_SIZE] = {0};
-+	int i, ret = 0;
-+	int lun_to_grow = -1;
-+	u64 qTotalRawDeviceCapacity;
-+	u16 wEnhanced1CapAdjFac, wEnhanced2CapAdjFac;
-+	u32 dEnhanced1MaxNAllocU, dEnhanced2MaxNAllocU;
-+	size_t alloc_units, units_to_create = 0;
-+	size_t capacity_to_alloc_factor;
-+	size_t enhanced1_units = 0, enhanced2_units = 0;
-+	size_t conversion_ratio = 1;
-+	u8 *pt;
-+	u32 blocks_per_alloc_unit = 1024;
-+	int geo_len = hba->desc_size.geom_desc;
-+	u8 geo_buf[hba->desc_size.geom_desc];
-+	unsigned int max_partitions = 9;
++	char *strbuf;
++	char *strbuf_copy;
++	int desc_buf[count];
++	int *pt;
++	char *token;
++	int i, ret;
++	int value, commit = 0;
++	int num_luns = 0;
++	int KB_per_block = 4;
 +
-+	WARN_ON(!hba || !cfg);
-+	ufshcd_set_dev_ref_clk(hba);
++	/* reserve one byte for null termination */
++	strbuf = kmalloc(count + 1, GFP_KERNEL);
++	if (!strbuf)
++		return -ENOMEM;
 +
-+	ret = ufshcd_read_geometry_desc(hba, geo_buf, geo_len);
-+	if (ret) {
-+		dev_err(hba->dev, "%s: Failed getting geometry_desc %d\n",
-+			__func__, ret);
-+		return ret;
++	strbuf_copy = strbuf;
++	strlcpy(strbuf, buf, count + 1);
++
++	for (i = 0; i < count; i++) {
++		token = strsep(&strbuf, " ");
++		if (!token) {
++			num_luns = desc_buf[i-1];
++			dev_dbg(hba->dev, "%s: token %s, num_luns %d\n",
++				__func__, token, num_luns);
++			break;
++		}
++
++		ret = kstrtoint(token, 0, &value);
++		if (ret) {
++			dev_err(hba->dev, "%s: kstrtoint failed %d %s\n",
++				__func__, ret, token);
++			break;
++		}
++		desc_buf[i] = value;
++		dev_dbg(hba->dev, " desc_buf[%d] 0x%x", i, desc_buf[i]);
 +	}
 +
-+	/*
-+	 * Get Geomtric parameters like total configurable memory
-+	 * quantity (Offset 0x04 to 0x0b), Capacity Adjustment
-+	 * Factors (Offset 0x30, 0x31, 0x36, 0x37), Max allocation
-+	 * units (Offset 0x2c to 0x2f, 0x32 to 0x35) used to configure
-+	 * the device logical units.
-+	 */
-+	qTotalRawDeviceCapacity =
-+		(uint64_t)geo_buf[0x0b] | ((uint64_t)geo_buf[0x0a] << 8) |
-+		((uint64_t)geo_buf[0x09] << 16) |
-+		((uint64_t)geo_buf[0x08] << 24) |
-+		((uint64_t)geo_buf[0x07] << 32) |
-+		((uint64_t)geo_buf[0x06] << 40) |
-+		((uint64_t)geo_buf[0x05] << 48) |
-+		((uint64_t)geo_buf[0x04] << 56);
-+	wEnhanced1CapAdjFac =
-+		(uint16_t)geo_buf[0x31] | ((uint16_t)geo_buf[0x30] << 8);
-+	wEnhanced2CapAdjFac =
-+		(uint16_t)geo_buf[0x37] | ((uint16_t)geo_buf[0x36] << 8);
-+	dEnhanced1MaxNAllocU =
-+		(uint32_t)geo_buf[0x2f] | ((uint32_t)geo_buf[0x2e] << 8) |
-+		((uint32_t)geo_buf[0x2d] << 16) |
-+		((uint32_t)geo_buf[0x2c] << 24);
-+	dEnhanced2MaxNAllocU =
-+		(uint32_t)geo_buf[0x35] | ((uint32_t)geo_buf[0x34] << 8) |
-+		((uint32_t)geo_buf[0x33] << 16) |
-+		((uint32_t)geo_buf[0x32] << 24);
++	/* Fill in the descriptors with parsed configuration data */
++	pt = desc_buf;
++	cfg->bNumberLU = *pt++;
++	cfg->bBootEnable = *pt++;
++	cfg->bDescrAccessEn = *pt++;
++	cfg->bInitPowerMode = *pt++;
++	cfg->bHighPriorityLUN = *pt++;
++	cfg->bSecureRemovalType = *pt++;
++	cfg->bInitActiveICCLevel = *pt++;
++	cfg->wPeriodicRTCUpdate = *pt++;
++	cfg->bConfigDescrLock = *pt++;
++	dev_dbg(hba->dev, "%s: %u %u %u %u %u %u %u %u %u\n", __func__,
++	cfg->bNumberLU, cfg->bBootEnable, cfg->bDescrAccessEn,
++	cfg->bInitPowerMode, cfg->bHighPriorityLUN, cfg->bSecureRemovalType,
++	cfg->bInitActiveICCLevel, cfg->wPeriodicRTCUpdate,
++	cfg->bConfigDescrLock);
 +
-+	capacity_to_alloc_factor =
-+		(blocks_per_alloc_unit * UFS_BLOCK_SIZE) / 512;
-+
-+	if (qTotalRawDeviceCapacity % capacity_to_alloc_factor != 0) {
-+		dev_err(hba->dev,
-+			"%s: Raw capacity(%llu) not multiple of alloc factor(%zu)\n",
-+			__func__, qTotalRawDeviceCapacity,
-+			capacity_to_alloc_factor);
-+		return -EINVAL;
++	for (i = 0; i < num_luns; i++) {
++		cfg->unit[i].LUNum = *pt++;
++		cfg->unit[i].bLUEnable = *pt++;
++		cfg->unit[i].bBootLunID = *pt++;
++		/* dNumAllocUnits = size_in_kb/KB_per_block */
++		cfg->unit[i].dNumAllocUnits = (u32)(*pt++ / KB_per_block);
++		cfg->unit[i].bDataReliability = *pt++;
++		cfg->unit[i].bLUWriteProtect = *pt++;
++		cfg->unit[i].bMemoryType = *pt++;
++		cfg->unit[i].bLogicalBlockSize = *pt++;
++		cfg->unit[i].bProvisioningType = *pt++;
++		cfg->unit[i].wContextCapabilities = *pt++;
 +	}
-+	alloc_units = (qTotalRawDeviceCapacity / capacity_to_alloc_factor);
-+	units_to_create = 0;
-+	enhanced1_units = enhanced2_units = 0;
 +
-+	/*
-+	 * Calculate number of allocation units to be assigned to a logical unit
-+	 * considering the capacity adjustment factor of respective memory type.
-+	 */
-+	for (i = 0; i < (max_partitions - 1) &&
-+		units_to_create <= alloc_units; i++) {
-+		if ((cfg->unit[i].dNumAllocUnits % blocks_per_alloc_unit) == 0)
-+			cfg->unit[i].dNumAllocUnits /= blocks_per_alloc_unit;
-+		else
-+			cfg->unit[i].dNumAllocUnits =
-+			cfg->unit[i].dNumAllocUnits / blocks_per_alloc_unit + 1;
-+
-+		if (cfg->unit[i].bMemoryType == 0)
-+			units_to_create += cfg->unit[i].dNumAllocUnits;
-+		else if (cfg->unit[i].bMemoryType == 3) {
-+			enhanced1_units += cfg->unit[i].dNumAllocUnits;
-+			cfg->unit[i].dNumAllocUnits *=
-+				(wEnhanced1CapAdjFac / 0x100);
-+			units_to_create += cfg->unit[i].dNumAllocUnits;
-+		} else if (cfg->unit[i].bMemoryType == 4) {
-+			enhanced2_units += cfg->unit[i].dNumAllocUnits;
-+			cfg->unit[i].dNumAllocUnits *=
-+				(wEnhanced1CapAdjFac / 0x100);
-+			units_to_create += cfg->unit[i].dNumAllocUnits;
-+		} else {
-+			dev_err(hba->dev, "%s: Unsupported memory type %d\n",
-+				__func__, cfg->unit[i].bMemoryType);
-+			return -EINVAL;
++	cfg->lun_to_grow = *pt++;
++	commit = *pt++;
++	cfg->num_luns = *pt;
++	dev_dbg(hba->dev, "%s: lun_to_grow %u, commit %u num_luns %u\n",
++		__func__, cfg->lun_to_grow, commit, cfg->num_luns);
++	if (commit == 1) {
++		ret = ufshcd_do_config_device(hba);
++		if (!ret) {
++			hba->ufs_provision.is_enabled = 1;
++			dev_err(hba->dev,
++			"%s: UFS Provisioning completed,num_luns %u, reboot now !\n",
++			__func__, cfg->num_luns);
 +		}
 +	}
-+	if (enhanced1_units > dEnhanced1MaxNAllocU) {
-+		dev_err(hba->dev, "%s: size %zu exceeds max enhanced1 area size %u\n",
-+			__func__, enhanced1_units, dEnhanced1MaxNAllocU);
-+		return -ERANGE;
-+	}
-+	if (enhanced2_units > dEnhanced2MaxNAllocU) {
-+		dev_err(hba->dev, "%s: size %zu exceeds max enhanced2 area size %u\n",
-+			__func__, enhanced2_units, dEnhanced2MaxNAllocU);
-+		return -ERANGE;
-+	}
-+	if (units_to_create > alloc_units) {
-+		dev_err(hba->dev, "%s: Specified size %zu exceeds device size %zu\n",
-+			__func__, units_to_create, alloc_units);
-+		return -ERANGE;
-+	}
-+	lun_to_grow = cfg->lun_to_grow;
-+	if (lun_to_grow != -1) {
-+		if (cfg->unit[i].bMemoryType == 0)
-+			conversion_ratio = 1;
-+		else if (cfg->unit[i].bMemoryType == 3)
-+			conversion_ratio = (wEnhanced1CapAdjFac / 0x100);
-+		else if (cfg->unit[i].bMemoryType == 4)
-+			conversion_ratio = (wEnhanced2CapAdjFac / 0x100);
 +
-+		cfg->unit[lun_to_grow].dNumAllocUnits +=
-+		((alloc_units - units_to_create) / conversion_ratio);
-+		dev_dbg(hba->dev, "%s: conversion_ratio %zu for lun %d\n",
-+			__func__, conversion_ratio, i);
-+	}
-+
-+	/* Fill in the buffer with configuration data */
-+	pt = desc_buf;
-+	*pt++ = 0x90;        // bLength
-+	*pt++ = 0x01;        // bDescriptorType
-+	*pt++ = 0;           // Reserved in UFS2.0 and onward
-+	*pt++ = cfg->bBootEnable;
-+	*pt++ = cfg->bDescrAccessEn;
-+	*pt++ = cfg->bInitPowerMode;
-+	*pt++ = cfg->bHighPriorityLUN;
-+	*pt++ = cfg->bSecureRemovalType;
-+	*pt++ = cfg->bInitActiveICCLevel;
-+	*pt++ = (cfg->wPeriodicRTCUpdate >> 8) & 0xff;
-+	*pt++ = cfg->wPeriodicRTCUpdate & 0xff;
-+	pt = pt + 5; // Reserved fields set to 0
-+
-+	/* Fill in the buffer with per logical unit data */
-+	for (i = 0; i < UFS_UPIU_MAX_GENERAL_LUN; i++) {
-+		*pt++ = cfg->unit[i].bLUEnable;
-+		*pt++ = cfg->unit[i].bBootLunID;
-+		*pt++ = cfg->unit[i].bLUWriteProtect;
-+		*pt++ = cfg->unit[i].bMemoryType;
-+		*pt++ = (cfg->unit[i].dNumAllocUnits >> 24) & 0xff;
-+		*pt++ = (cfg->unit[i].dNumAllocUnits >> 16) & 0xff;
-+		*pt++ = (cfg->unit[i].dNumAllocUnits >> 8) & 0xff;
-+		*pt++ = (cfg->unit[i].dNumAllocUnits) & 0xff;
-+		*pt++ = cfg->unit[i].bDataReliability;
-+		*pt++ = cfg->unit[i].bLogicalBlockSize;
-+		*pt++ = cfg->unit[i].bProvisioningType;
-+		*pt++ = (cfg->unit[i].wContextCapabilities >> 8) & 0xff;
-+		*pt++ = cfg->unit[i].wContextCapabilities;
-+		pt = pt + 3; // Reserved fields set to 0
-+	}
-+
-+	ret = ufshcd_query_descriptor_retry(hba, UPIU_QUERY_OPCODE_WRITE_DESC,
-+		QUERY_DESC_IDN_CONFIGURATION, 0, 0, desc_buf, &buff_len);
-+
-+	if (ret) {
-+		dev_err(hba->dev, "%s: Failed writing descriptor. desc_idn %d, opcode %x ret %d\n",
-+		__func__, QUERY_DESC_IDN_CONFIGURATION,
-+		UPIU_QUERY_OPCODE_WRITE_DESC, ret);
-+		return ret;
-+	}
-+
-+	if (cfg->bConfigDescrLock) {
-+		ret = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
-+		QUERY_ATTR_IDN_CONF_DESC_LOCK, 0, 0, &cfg->bConfigDescrLock);
-+		if (ret)
-+			dev_err(hba->dev, "%s: Failed writing bConfigDescrLock %d\n",
-+				__func__, ret);
-+	}
-+
-+	return ret;
++	kfree(strbuf_copy);
++	return count;
 +}
 +
-+/**
-  * ufshcd_probe_hba - probe hba to detect device and initialize
-  * @hba: per-adapter instance
-  *
+ static ssize_t ufshcd_clkgate_delay_show(struct device *dev,
+ 		struct device_attribute *attr, char *buf)
+ {
+@@ -1638,6 +1738,23 @@ static ssize_t ufshcd_clkgate_enable_store(struct device *dev,
+ 	return count;
+ }
+ 
++static void ufshcd_init_ufs_provision(struct ufs_hba *hba)
++{
++	hba->ufs_provision.enable_attr.show = ufshcd_desc_config_show;
++	hba->ufs_provision.enable_attr.store = ufshcd_desc_config_store;
++	sysfs_attr_init(&hba->ufs_provision.enable_attr.attr);
++	hba->ufs_provision.enable_attr.attr.name = "ufs_provision";
++	hba->ufs_provision.enable_attr.attr.mode = 0644;
++	if (device_create_file(hba->dev, &hba->ufs_provision.enable_attr))
++		dev_err(hba->dev, "%s: Failed to create sysfs for ufs_provision\n",
++			__func__);
++}
++
++static void ufshcd_exit_ufs_provision(struct ufs_hba *hba)
++{
++	device_remove_file(hba->dev, &hba->ufs_provision.enable_attr);
++}
++
+ static void ufshcd_init_clk_gating(struct ufs_hba *hba)
+ {
+ 	if (!ufshcd_is_clkgating_allowed(hba))
+@@ -6383,7 +6500,7 @@ static int ufshcd_do_config_device(struct ufs_hba *hba)
+ 	u32 blocks_per_alloc_unit = 1024;
+ 	int geo_len = hba->desc_size.geom_desc;
+ 	u8 geo_buf[hba->desc_size.geom_desc];
+-	unsigned int max_partitions = 9;
++	unsigned int max_partitions = 8;
+ 
+ 	WARN_ON(!hba || !cfg);
+ 	ufshcd_set_dev_ref_clk(hba);
+@@ -6530,6 +6647,9 @@ static int ufshcd_do_config_device(struct ufs_hba *hba)
+ 		pt = pt + 3; // Reserved fields set to 0
+ 	}
+ 
++	for (i = 0; i < buff_len; i++)
++		dev_dbg(hba->dev, " desc_buf[%d] 0x%x", i, desc_buf[i]);
++
+ 	ret = ufshcd_query_descriptor_retry(hba, UPIU_QUERY_OPCODE_WRITE_DESC,
+ 		QUERY_DESC_IDN_CONFIGURATION, 0, 0, desc_buf, &buff_len);
+ 
+@@ -7888,6 +8008,7 @@ void ufshcd_remove(struct ufs_hba *hba)
+ 	ufshcd_hba_stop(hba, true);
+ 
+ 	ufshcd_exit_clk_gating(hba);
++	ufshcd_exit_ufs_provision(hba);
+ 	if (ufshcd_is_clkscaling_supported(hba))
+ 		device_remove_file(hba->dev, &hba->clk_scaling.enable_attr);
+ 	ufshcd_hba_exit(hba);
+@@ -8050,6 +8171,7 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+ 	init_waitqueue_head(&hba->dev_cmd.tag_wq);
+ 
+ 	ufshcd_init_clk_gating(hba);
++	ufshcd_init_ufs_provision(hba);
+ 
+ 	/*
+ 	 * In order to avoid any spurious interrupt immediately after
+@@ -8142,6 +8264,7 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+ 	scsi_remove_host(hba->host);
+ exit_gating:
+ 	ufshcd_exit_clk_gating(hba);
++	ufshcd_exit_ufs_provision(hba);
+ out_disable:
+ 	hba->is_irq_enabled = false;
+ 	ufshcd_hba_exit(hba);
 diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 0dcf113..0c4b683 100644
+index 0c4b683..3580631 100644
 --- a/drivers/scsi/ufs/ufshcd.h
 +++ b/drivers/scsi/ufs/ufshcd.h
-@@ -550,6 +550,7 @@ struct ufs_hba {
- 	bool is_irq_enabled;
+@@ -364,6 +364,11 @@ struct ufs_clk_gating {
+ 	int active_reqs;
+ };
  
- 	u32 dev_ref_clk_freq;
-+	struct ufs_config_descr cfgs;
++struct ufs_provisioning {
++	struct device_attribute enable_attr;
++	bool is_enabled;
++};
++
+ struct ufs_saved_pwr_info {
+ 	struct ufs_pa_layer_attr info;
+ 	bool is_valid;
+@@ -652,6 +657,7 @@ struct ufs_hba {
+ 	struct ufs_pwr_mode_info max_pwr_info;
  
- 	/* Interrupt aggregation support is broken */
- 	#define UFSHCD_QUIRK_BROKEN_INTR_AGGR			0x1
+ 	struct ufs_clk_gating clk_gating;
++	struct ufs_provisioning ufs_provision;
+ 	/* Control to enable/disable host capabilities */
+ 	u32 caps;
+ 	/* Allow dynamic clk gating */
 -- 
 The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
 a Linux Foundation Collaborative Project
