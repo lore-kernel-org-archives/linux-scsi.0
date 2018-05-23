@@ -1,58 +1,72 @@
-From: "jianchao.wang" <jianchao.w.wang@oracle.com>
-Subject: BUG: scsi/qla2xxx: BUG_ON(blk_queued_rq(req) is triggered in
- blk_finish_request
-Date: Wed, 23 May 2018 11:55:29 +0800
-Message-ID: <5eb1eeaa-b148-7b90-eee4-e365ead49a5b@oracle.com>
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Subject: Re: [PATCH 6/6] scsi: Check sense buffer size at build time
+Date: Wed, 23 May 2018 11:25:45 +0300
+Message-ID: <7de525d4-52f4-80f2-1f55-a3a5c37d7bf9@cogentembedded.com>
+References: <20180522181512.39316-1-keescook@chromium.org>
+ <20180522181512.39316-7-keescook@chromium.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20180522181512.39316-7-keescook@chromium.org>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: qla2xxx-upstream@qlogic.com, himanshu.madhani@cavium.com, jthumshirn@suse.de
-Cc: linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Junxiao Bi <junxiao.bi@oracle.com>
+To: Kees Cook <keescook@chromium.org>, Jens Axboe <axboe@kernel.dk>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Tejun Heo <tj@kernel.org>, Borislav Petkov <bp@alien8.de>, "David S. Miller" <davem@davemloft.net>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, linux-block@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+Hello!
 
+On 5/22/2018 9:15 PM, Kees Cook wrote:
 
-Hi all
+> To avoid introducing problems like those fixed in commit f7068114d45e
+> ("sr: pass down correctly sized SCSI sense buffer"), this creates a macro
+> wrapper for scsi_execute() that verifies the size of the sense buffer
+> similar to what was done for command string sizes in commit 3756f6401c30
+> ("exec: avoid gcc-8 warning for get_task_comm").
+> 
+> Another solution could be to add another argument to scsi_execute(),
+> but this function already takes a lot of arguments and Jens was not fond
+> of that approach. As there was only a pair of dynamically allocated sense
+> buffers, this also moves those 96 bytes onto the stack to avoid triggering
+> the sizeof() check.
+> 
+> Signed-off-by: Kees Cook <keescook@chromium.org>
+> ---
+>   drivers/scsi/scsi_lib.c    |  6 +++---
+>   include/scsi/scsi_device.h | 12 +++++++++++-
+>   2 files changed, 14 insertions(+), 4 deletions(-)
+> 
+[...]
+> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+> index 7ae177c8e399..1bb87b6c0ad2 100644
+> --- a/include/scsi/scsi_device.h
+> +++ b/include/scsi/scsi_device.h
+> @@ -426,11 +426,21 @@ extern const char *scsi_device_state_name(enum scsi_device_state);
+>   extern int scsi_is_sdev_device(const struct device *);
+>   extern int scsi_is_target_device(const struct device *);
+>   extern void scsi_sanitize_inquiry_string(unsigned char *s, int len);
+> -extern int scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
+> +extern int __scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
+>   			int data_direction, void *buffer, unsigned bufflen,
+>   			unsigned char *sense, struct scsi_sense_hdr *sshdr,
+>   			int timeout, int retries, u64 flags,
+>   			req_flags_t rq_flags, int *resid);
+> +/* Make sure any sense buffer is the correct size. */
+> +#define scsi_execute(sdev, cmd, data_direction, buffer, bufflen, sense,	\
+> +		     sshdr, timeout, retries, flags, rq_flags, resid)	\
+> +({									\
+> +	BUILD_BUG_ON((sense) != NULL &&					\
+> +		     sizeof(sense) != SCSI_SENSE_BUFFERSIZE);		\
 
-Our customer met a panic triggered by BUG_ON in blk_finish_request.
->From the dmesg log, the BUG_ON was triggered after command abort occurred many times.
-There is a race condition in the following scenario.
+    This would only check the size of the 'sense' pointer, no?
 
-cpu A                                   cpu B
-kworker                                 interrupt
-                                                 
-scmd_eh_abort_handler()                               
-  -> scsi_try_to_abort_cmd()
-    -> qla2xxx_eh_abort()                        
-      -> qla2x00_eh_wait_on_command()   qla2x00_status_entry()   
-                                          -> qla2x00_sp_compl()
-                                            -> qla2x00_sp_free_dma()
-  -> scsi_queue_insert()                          
-    -> __scsi_queue_insert()                         
-      -> blk_requeue_request()
-        -> blk_clear_rq_complete()
-                                            -> scsi_done
-                                              -> blk_complete_request
-                                                -> blk_mark_rq_complete       
-          -> elv_requeue_request()              -> __blk_complete_request()
-            -> __elv_add_request()
-            // req will be queued here                                                         
-                                                    BLK_SOFTIRQ
-                                                    scsi_softirq_done()
-                                                      -> scsi_finish_command()
-                                                        -> scsi_io_completion()
-                                                          -> scsi_end_request()
-                                                            -> blk_finish_request()  // BUG_ON(blk_queued_rq(req)) !!!
+> +	__scsi_execute(sdev, cmd, data_direction, buffer, bufflen,	\
+> +		       sense, sshdr, timeout, retries, flags, rq_flags,	\
+> +		       resid);						\
+> +})
+>   static inline int scsi_execute_req(struct scsi_device *sdev,
+>   	const unsigned char *cmd, int data_direction, void *buffer,
+>   	unsigned bufflen, struct scsi_sense_hdr *sshdr, int timeout,
 
-The issue will not be triggered most of time, because the request is marked as complete by timeout path.
-So the scsi_done from qla2x00_sp_compl does nothing.
-But as the scenario above, if the complete state has been cleaned by blk_requeue_request, we will get
-the request both requeued and completed, and then BUG_ON(blk_queued_rq(req)) in blk_finish_request comes up.
-
-Is there any solution for this in qla2xxx driver side ?
-
-Thanks
-Jianchao
+MBR, Sergei
