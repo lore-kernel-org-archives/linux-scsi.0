@@ -1,54 +1,106 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH 3/6] block: Create scsi_sense.h for SCSI and ATAPI
-Date: Wed, 23 May 2018 08:31:19 -0600
-Message-ID: <24d36869-e037-042d-cb16-20a81b34eb76@kernel.dk>
-References: <20180522183613.GA3784@infradead.org> <yq1efi3bk3g.fsf@oracle.com>
- <CAGXu5jJ0Sice+fdpWgzBhQR=NGz-DT9qmYVdV1GeH73_q9pbmw@mail.gmail.com>
- <732f4249-5681-4a54-ec21-4ecc3d3a74e5@kernel.dk>
- <20180522191309.GA23615@infradead.org>
- <8d4af5c4-96fa-54ee-d5c1-b887b1de5a3c@kernel.dk>
- <CAGXu5j+mgGZkTDS6EDRspJKKbU=vMT4ehv9T-SekPba=ESoGDg@mail.gmail.com>
- <9A0BC289-4203-4C77-A012-AAB07F42061F@kernel.dk>
- <CAGXu5jJsGWDsZNDJvUUqncSaAcvond_B_J7=BbvVW0X3r6Sxww@mail.gmail.com>
- <aa150272-ffeb-fb8f-7303-0d9502cf9a71@kernel.dk>
- <20180523142545.GA16248@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180523142545.GA16248@infradead.org>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Kees Cook <keescook@chromium.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Tejun Heo <tj@kernel.org>, Borislav Petkov <bp@alien8.de>, "David S. Miller" <davem@davemloft.net>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, linux-block <linux-block@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+From: Ganesh Goudar <ganeshgr@chelsio.com>
+Subject: [PATCH net-next 1/2] cxgb4: change the port capability bits definition
+Date: Wed, 23 May 2018 20:02:58 +0530
+Message-ID: <1527085978-9859-1-git-send-email-ganeshgr@chelsio.com>
+Return-path: <netdev-owner@vger.kernel.org>
+Sender: netdev-owner@vger.kernel.org
+To: netdev@vger.kernel.org, davem@davemloft.net
+Cc: nirranjan@chelsio.com, indranil@chelsio.com, venkatesh@chelsio.com, linux-scsi@vger.kernel.org, varun@chelsio.com, Ganesh Goudar <ganeshgr@chelsio.com>, Casey Leedom <leedom@chelsio.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 5/23/18 8:25 AM, Christoph Hellwig wrote:
-> On Wed, May 23, 2018 at 08:13:56AM -0600, Jens Axboe wrote:
->>> Should I move to code to a new drivers/scsi/scsi_sense.c and add it to
->>> drivers/scsi/Makefile as:
->>>
->>> obj-$(CONFIG_BLK_SCSI_REQUEST)    += scsi_sense.o
->>>
->>> Every place I want to use the code is already covered by
->>> CONFIG_BLK_SCSI_REQUEST, so it seems like I just need to know where to
->>> put the .c file. :P
->>
->> I think this is so much saner than a SCSI select or dependency, so I'll
->> have to disagree with Martin and Christoph. Just put it in drivers/scsi,
->> if it's the location they care about.
-> 
-> I actually plan to remove CONFIG_BLK_SCSI_REQUEST in a merge window
-> or two.  The only users are scsi and the ide layer, (virtio_blk
-> support has already been accidentally disabled for a while), and getting
-> rid of it allows to to shrink and simply the scsi data structures.
-> 
-> But if you want this for now lets keep scsi_sense.c in drivers/scsi
-> but depend on CONFIG_BLK_SCSI_REQUEST, that is easy enough to fix up.
+MDI Port Capabilities bit definitions were inconsistent with
+regard to the MDI enum values. 2 bits used to define MDI in
+the port capabilities are not really separable, it's a 2-bit
+field with 4 different values. Change the port capability bit
+definitions to be "AUTO" and "STRAIGHT" in order to get them
+to line up with the enum's.
 
-It could be a stand-alone dependency, doesn't have to be BLK_SCSI_REQUEST.
-BLA_SCSI_SENSE or something would do. I don't care too much about that,
-mostly getting rid of the entire stack dependency.
+Signed-off-by: Casey Leedom <leedom@chelsio.com>
+Signed-off-by: Ganesh Goudar <ganeshgr@chelsio.com>
+---
+ drivers/net/ethernet/chelsio/cxgb4/t4_hw.c     | 4 ++--
+ drivers/net/ethernet/chelsio/cxgb4/t4fw_api.h  | 8 ++++----
+ drivers/net/ethernet/chelsio/cxgb4vf/t4vf_hw.c | 2 +-
+ drivers/scsi/csiostor/csio_hw.c                | 2 +-
+ 4 files changed, 8 insertions(+), 8 deletions(-)
 
+diff --git a/drivers/net/ethernet/chelsio/cxgb4/t4_hw.c b/drivers/net/ethernet/chelsio/cxgb4/t4_hw.c
+index df5e7c7..537ed07 100644
+--- a/drivers/net/ethernet/chelsio/cxgb4/t4_hw.c
++++ b/drivers/net/ethernet/chelsio/cxgb4/t4_hw.c
+@@ -3941,8 +3941,8 @@ static fw_port_cap32_t fwcaps16_to_caps32(fw_port_cap16_t caps16)
+ 	CAP16_TO_CAP32(FC_RX);
+ 	CAP16_TO_CAP32(FC_TX);
+ 	CAP16_TO_CAP32(ANEG);
+-	CAP16_TO_CAP32(MDIX);
+ 	CAP16_TO_CAP32(MDIAUTO);
++	CAP16_TO_CAP32(MDISTRAIGHT);
+ 	CAP16_TO_CAP32(FEC_RS);
+ 	CAP16_TO_CAP32(FEC_BASER_RS);
+ 	CAP16_TO_CAP32(802_3_PAUSE);
+@@ -3982,8 +3982,8 @@ static fw_port_cap16_t fwcaps32_to_caps16(fw_port_cap32_t caps32)
+ 	CAP32_TO_CAP16(802_3_PAUSE);
+ 	CAP32_TO_CAP16(802_3_ASM_DIR);
+ 	CAP32_TO_CAP16(ANEG);
+-	CAP32_TO_CAP16(MDIX);
+ 	CAP32_TO_CAP16(MDIAUTO);
++	CAP32_TO_CAP16(MDISTRAIGHT);
+ 	CAP32_TO_CAP16(FEC_RS);
+ 	CAP32_TO_CAP16(FEC_BASER_RS);
+ 
+diff --git a/drivers/net/ethernet/chelsio/cxgb4/t4fw_api.h b/drivers/net/ethernet/chelsio/cxgb4/t4fw_api.h
+index e6b2e95..2d91480 100644
+--- a/drivers/net/ethernet/chelsio/cxgb4/t4fw_api.h
++++ b/drivers/net/ethernet/chelsio/cxgb4/t4fw_api.h
+@@ -2471,8 +2471,8 @@ enum fw_port_cap {
+ 	FW_PORT_CAP_FC_RX		= 0x0040,
+ 	FW_PORT_CAP_FC_TX		= 0x0080,
+ 	FW_PORT_CAP_ANEG		= 0x0100,
+-	FW_PORT_CAP_MDIX		= 0x0200,
+-	FW_PORT_CAP_MDIAUTO		= 0x0400,
++	FW_PORT_CAP_MDIAUTO		= 0x0200,
++	FW_PORT_CAP_MDISTRAIGHT		= 0x0400,
+ 	FW_PORT_CAP_FEC_RS		= 0x0800,
+ 	FW_PORT_CAP_FEC_BASER_RS	= 0x1000,
+ 	FW_PORT_CAP_FEC_RESERVED	= 0x2000,
+@@ -2515,8 +2515,8 @@ enum fw_port_mdi {
+ #define	FW_PORT_CAP32_802_3_PAUSE	0x00040000UL
+ #define	FW_PORT_CAP32_802_3_ASM_DIR	0x00080000UL
+ #define	FW_PORT_CAP32_ANEG		0x00100000UL
+-#define	FW_PORT_CAP32_MDIX		0x00200000UL
+-#define	FW_PORT_CAP32_MDIAUTO		0x00400000UL
++#define	FW_PORT_CAP32_MDIAUTO		0x00200000UL
++#define	FW_PORT_CAP32_MDISTRAIGHT	0x00400000UL
+ #define	FW_PORT_CAP32_FEC_RS		0x00800000UL
+ #define	FW_PORT_CAP32_FEC_BASER_RS	0x01000000UL
+ #define	FW_PORT_CAP32_FEC_RESERVED1	0x02000000UL
+diff --git a/drivers/net/ethernet/chelsio/cxgb4vf/t4vf_hw.c b/drivers/net/ethernet/chelsio/cxgb4vf/t4vf_hw.c
+index 798695b..3017f78 100644
+--- a/drivers/net/ethernet/chelsio/cxgb4vf/t4vf_hw.c
++++ b/drivers/net/ethernet/chelsio/cxgb4vf/t4vf_hw.c
+@@ -341,8 +341,8 @@ static fw_port_cap32_t fwcaps16_to_caps32(fw_port_cap16_t caps16)
+ 	CAP16_TO_CAP32(FC_RX);
+ 	CAP16_TO_CAP32(FC_TX);
+ 	CAP16_TO_CAP32(ANEG);
+-	CAP16_TO_CAP32(MDIX);
+ 	CAP16_TO_CAP32(MDIAUTO);
++	CAP16_TO_CAP32(MDISTRAIGHT);
+ 	CAP16_TO_CAP32(FEC_RS);
+ 	CAP16_TO_CAP32(FEC_BASER_RS);
+ 	CAP16_TO_CAP32(802_3_PAUSE);
+diff --git a/drivers/scsi/csiostor/csio_hw.c b/drivers/scsi/csiostor/csio_hw.c
+index 96bbb82..a10cf25 100644
+--- a/drivers/scsi/csiostor/csio_hw.c
++++ b/drivers/scsi/csiostor/csio_hw.c
+@@ -1500,8 +1500,8 @@ fw_port_cap32_t fwcaps16_to_caps32(fw_port_cap16_t caps16)
+ 	CAP16_TO_CAP32(FC_RX);
+ 	CAP16_TO_CAP32(FC_TX);
+ 	CAP16_TO_CAP32(ANEG);
+-	CAP16_TO_CAP32(MDIX);
+ 	CAP16_TO_CAP32(MDIAUTO);
++	CAP16_TO_CAP32(MDISTRAIGHT);
+ 	CAP16_TO_CAP32(FEC_RS);
+ 	CAP16_TO_CAP32(FEC_BASER_RS);
+ 	CAP16_TO_CAP32(802_3_PAUSE);
 -- 
-Jens Axboe
+2.1.0
