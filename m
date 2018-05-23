@@ -1,72 +1,71 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH 6/6] scsi: Check sense buffer size at build time
-Date: Wed, 23 May 2018 11:25:45 +0300
-Message-ID: <7de525d4-52f4-80f2-1f55-a3a5c37d7bf9@cogentembedded.com>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH 3/6] block: Create scsi_sense.h for SCSI and ATAPI
+Date: Wed, 23 May 2018 08:13:56 -0600
+Message-ID: <aa150272-ffeb-fb8f-7303-0d9502cf9a71@kernel.dk>
 References: <20180522181512.39316-1-keescook@chromium.org>
- <20180522181512.39316-7-keescook@chromium.org>
+ <20180522181512.39316-4-keescook@chromium.org>
+ <20180522183613.GA3784@infradead.org> <yq1efi3bk3g.fsf@oracle.com>
+ <CAGXu5jJ0Sice+fdpWgzBhQR=NGz-DT9qmYVdV1GeH73_q9pbmw@mail.gmail.com>
+ <732f4249-5681-4a54-ec21-4ecc3d3a74e5@kernel.dk>
+ <20180522191309.GA23615@infradead.org>
+ <8d4af5c4-96fa-54ee-d5c1-b887b1de5a3c@kernel.dk>
+ <CAGXu5j+mgGZkTDS6EDRspJKKbU=vMT4ehv9T-SekPba=ESoGDg@mail.gmail.com>
+ <9A0BC289-4203-4C77-A012-AAB07F42061F@kernel.dk>
+ <CAGXu5jJsGWDsZNDJvUUqncSaAcvond_B_J7=BbvVW0X3r6Sxww@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180522181512.39316-7-keescook@chromium.org>
+In-Reply-To: <CAGXu5jJsGWDsZNDJvUUqncSaAcvond_B_J7=BbvVW0X3r6Sxww@mail.gmail.com>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Kees Cook <keescook@chromium.org>, Jens Axboe <axboe@kernel.dk>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Tejun Heo <tj@kernel.org>, Borislav Petkov <bp@alien8.de>, "David S. Miller" <davem@davemloft.net>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, linux-block@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Kees Cook <keescook@chromium.org>
+Cc: Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Tejun Heo <tj@kernel.org>, Borislav Petkov <bp@alien8.de>, "David S. Miller" <davem@davemloft.net>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, linux-block <linux-block@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hello!
-
-On 5/22/2018 9:15 PM, Kees Cook wrote:
-
-> To avoid introducing problems like those fixed in commit f7068114d45e
-> ("sr: pass down correctly sized SCSI sense buffer"), this creates a macro
-> wrapper for scsi_execute() that verifies the size of the sense buffer
-> similar to what was done for command string sizes in commit 3756f6401c30
-> ("exec: avoid gcc-8 warning for get_task_comm").
+On 5/22/18 5:49 PM, Kees Cook wrote:
+> On Tue, May 22, 2018 at 4:42 PM, Jens Axboe <axboe@kernel.dk> wrote:
+>> On May 22, 2018, at 5:31 PM, Kees Cook <keescook@chromium.org> wrote:
+>>>
+>>>> On Tue, May 22, 2018 at 12:16 PM, Jens Axboe <axboe@kernel.dk> wrote:
+>>>>> On 5/22/18 1:13 PM, Christoph Hellwig wrote:
+>>>>>> On Tue, May 22, 2018 at 01:09:41PM -0600, Jens Axboe wrote:
+>>>>>> I think Martin and Christoph are objecting to moving the code to
+>>>>>> block/scsi_ioctl.h. I don't care too much about where the code is, but
+>>>>>> think it would be nice to have the definitions in a separate header. But
+>>>>>> if they prefer just pulling in all of SCSI for it, well then I guess
+>>>>>> it's pointless to move the header bits. Seems very heavy handed to me,
+>>>>>> though.
+>>>>>
+>>>>> It might be heavy handed for the 3 remaining users of drivers/ide,
+>>>>
+>>>> Brutal :-)
+>>>
+>>> Heh. I noticed a similar sense buffer use in drivers/cdrom/cdrom.c
+>>> too. Is this okay under the same considerations?
+>>
+>> This is going from somewhat crazy to pretty nuts, imho. I guess in practical terms it doesn’t matter that much, since most folks would be using sr. I still think a split would be vastly superior. Just keep the scsi code in drivers/scsi/ and make it independently selectable.
 > 
-> Another solution could be to add another argument to scsi_execute(),
-> but this function already takes a lot of arguments and Jens was not fond
-> of that approach. As there was only a pair of dynamically allocated sense
-> buffers, this also moves those 96 bytes onto the stack to avoid triggering
-> the sizeof() check.
+> I had originally tied it to BLK_SCSI_REQUEST. Logically speaking,
+> sense buffers are part of the request, and the CONFIG work is already
+> done. This is roughly what I tried to do before, since scsi_ioctl.c is
+> the only code pulled in for CONFIG_BLK_SCSI_REQUEST:
 > 
-> Signed-off-by: Kees Cook <keescook@chromium.org>
-> ---
->   drivers/scsi/scsi_lib.c    |  6 +++---
->   include/scsi/scsi_device.h | 12 +++++++++++-
->   2 files changed, 14 insertions(+), 4 deletions(-)
+> $ git grep BLK_SCSI_REQUEST | grep Makefile
+> block/Makefile:obj-$(CONFIG_BLK_SCSI_REQUEST)   += scsi_ioctl.o
 > 
-[...]
-> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-> index 7ae177c8e399..1bb87b6c0ad2 100644
-> --- a/include/scsi/scsi_device.h
-> +++ b/include/scsi/scsi_device.h
-> @@ -426,11 +426,21 @@ extern const char *scsi_device_state_name(enum scsi_device_state);
->   extern int scsi_is_sdev_device(const struct device *);
->   extern int scsi_is_target_device(const struct device *);
->   extern void scsi_sanitize_inquiry_string(unsigned char *s, int len);
-> -extern int scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
-> +extern int __scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
->   			int data_direction, void *buffer, unsigned bufflen,
->   			unsigned char *sense, struct scsi_sense_hdr *sshdr,
->   			int timeout, int retries, u64 flags,
->   			req_flags_t rq_flags, int *resid);
-> +/* Make sure any sense buffer is the correct size. */
-> +#define scsi_execute(sdev, cmd, data_direction, buffer, bufflen, sense,	\
-> +		     sshdr, timeout, retries, flags, rq_flags, resid)	\
-> +({									\
-> +	BUILD_BUG_ON((sense) != NULL &&					\
-> +		     sizeof(sense) != SCSI_SENSE_BUFFERSIZE);		\
+> Should I move to code to a new drivers/scsi/scsi_sense.c and add it to
+> drivers/scsi/Makefile as:
+> 
+> obj-$(CONFIG_BLK_SCSI_REQUEST)    += scsi_sense.o
+> 
+> Every place I want to use the code is already covered by
+> CONFIG_BLK_SCSI_REQUEST, so it seems like I just need to know where to
+> put the .c file. :P
 
-    This would only check the size of the 'sense' pointer, no?
+I think this is so much saner than a SCSI select or dependency, so I'll
+have to disagree with Martin and Christoph. Just put it in drivers/scsi,
+if it's the location they care about.
 
-> +	__scsi_execute(sdev, cmd, data_direction, buffer, bufflen,	\
-> +		       sense, sshdr, timeout, retries, flags, rq_flags,	\
-> +		       resid);						\
-> +})
->   static inline int scsi_execute_req(struct scsi_device *sdev,
->   	const unsigned char *cmd, int data_direction, void *buffer,
->   	unsigned bufflen, struct scsi_sense_hdr *sshdr, int timeout,
-
-MBR, Sergei
+-- 
+Jens Axboe
