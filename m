@@ -1,27 +1,62 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH net-next 2/2] cxgb4: do L1 config when module is
- inserted
-Date: Wed, 23 May 2018 16:01:13 -0400 (EDT)
-Message-ID: <20180523.160113.1204214799750713864.davem@davemloft.net>
-References: <1527086013-9904-1-git-send-email-ganeshgr@chelsio.com>
+From: Kees Cook <keescook@chromium.org>
+Subject: Re: [PATCH 3/6] block: Create scsi_sense.h for SCSI and ATAPI
+Date: Wed, 23 May 2018 13:52:02 -0700
+Message-ID: <CAGXu5jJn=1Rz=D8VUwv_VoaGoLtaD=+tcPZxQxntweZoZwFa5Q@mail.gmail.com>
+References: <20180522183613.GA3784@infradead.org> <yq1efi3bk3g.fsf@oracle.com>
+ <CAGXu5jJ0Sice+fdpWgzBhQR=NGz-DT9qmYVdV1GeH73_q9pbmw@mail.gmail.com>
+ <732f4249-5681-4a54-ec21-4ecc3d3a74e5@kernel.dk> <20180522191309.GA23615@infradead.org>
+ <8d4af5c4-96fa-54ee-d5c1-b887b1de5a3c@kernel.dk> <CAGXu5j+mgGZkTDS6EDRspJKKbU=vMT4ehv9T-SekPba=ESoGDg@mail.gmail.com>
+ <9A0BC289-4203-4C77-A012-AAB07F42061F@kernel.dk> <CAGXu5jJsGWDsZNDJvUUqncSaAcvond_B_J7=BbvVW0X3r6Sxww@mail.gmail.com>
+ <aa150272-ffeb-fb8f-7303-0d9502cf9a71@kernel.dk> <20180523142545.GA16248@infradead.org>
+ <24d36869-e037-042d-cb16-20a81b34eb76@kernel.dk>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <1527086013-9904-1-git-send-email-ganeshgr@chelsio.com>
-Sender: netdev-owner@vger.kernel.org
-To: ganeshgr@chelsio.com
-Cc: netdev@vger.kernel.org, nirranjan@chelsio.com, indranil@chelsio.com, venkatesh@chelsio.com, linux-scsi@vger.kernel.org, varun@chelsio.com, leedom@chelsio.com
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <24d36869-e037-042d-cb16-20a81b34eb76@kernel.dk>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Tejun Heo <tj@kernel.org>, Borislav Petkov <bp@alien8.de>, "David S. Miller" <davem@davemloft.net>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, linux-block <linux-block@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Ganesh Goudar <ganeshgr@chelsio.com>
-Date: Wed, 23 May 2018 20:03:33 +0530
+On Wed, May 23, 2018 at 7:31 AM, Jens Axboe <axboe@kernel.dk> wrote:
+> On 5/23/18 8:25 AM, Christoph Hellwig wrote:
+>> On Wed, May 23, 2018 at 08:13:56AM -0600, Jens Axboe wrote:
+>>>> Should I move to code to a new drivers/scsi/scsi_sense.c and add it to
+>>>> drivers/scsi/Makefile as:
+>>>>
+>>>> obj-$(CONFIG_BLK_SCSI_REQUEST)    += scsi_sense.o
+>>>>
+>>>> Every place I want to use the code is already covered by
+>>>> CONFIG_BLK_SCSI_REQUEST, so it seems like I just need to know where to
+>>>> put the .c file. :P
+>>>
+>>> I think this is so much saner than a SCSI select or dependency, so I'll
+>>> have to disagree with Martin and Christoph. Just put it in drivers/scsi,
+>>> if it's the location they care about.
+>>
+>> I actually plan to remove CONFIG_BLK_SCSI_REQUEST in a merge window
+>> or two.  The only users are scsi and the ide layer, (virtio_blk
+>> support has already been accidentally disabled for a while), and getting
+>> rid of it allows to to shrink and simply the scsi data structures.
+>>
+>> But if you want this for now lets keep scsi_sense.c in drivers/scsi
+>> but depend on CONFIG_BLK_SCSI_REQUEST, that is easy enough to fix up.
+>
+> It could be a stand-alone dependency, doesn't have to be BLK_SCSI_REQUEST.
+> BLA_SCSI_SENSE or something would do. I don't care too much about that,
+> mostly getting rid of the entire stack dependency.
 
-> trigger an L1 configure operation when a transceiver module
-> is inserted in order to cause current "sticky" options like
-> Requested Forward Error Correction to be reapplied.
-> 
-> Signed-off-by: Casey Leedom <leedom@chelsio.com>
-> Signed-off-by: Ganesh Goudar <ganeshgr@chelsio.com>
+Aaand, I can't do this and leave it in drivers/scsi because of drivers/Makefile:
 
-Applied.
+obj-$(CONFIG_SCSI)              += scsi/
+
+So: this needs to live in block/ just like CONFIG_BLK_SCSI_REQUEST's
+scsi_ioctl.c. I will split it into CONFIG_BLK_SCSI_SENSE, but I'll
+still need to move the code from drivers/scsi/ to block/. Is this
+okay?
+
+-Kees
+
+-- 
+Kees Cook
+Pixel Security
