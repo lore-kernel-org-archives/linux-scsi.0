@@ -1,127 +1,68 @@
-From: Sinan Kaya <okaya@codeaurora.org>
-Subject: Re: [PATCH V2] PCI/portdrv: do not disable device on reboot/shutdown
-Date: Wed, 23 May 2018 18:57:18 -0400
-Message-ID: <61f70fd6-52fd-da07-ce73-303f95132131@codeaurora.org>
-References: <1527043490-17268-1-git-send-email-okaya@codeaurora.org>
- <20180523213249.GD150632@bhelgaas-glaptop.roam.corp.google.com>
+From: "jianchao.wang" <jianchao.w.wang@oracle.com>
+Subject: Re: BUG: scsi/qla2xxx: BUG_ON(blk_queued_rq(req) is triggered in
+ blk_finish_request
+Date: Thu, 24 May 2018 09:50:35 +0800
+Message-ID: <8c7b011e-1379-c151-a187-94d8e0697fd9@oracle.com>
+References: <5eb1eeaa-b148-7b90-eee4-e365ead49a5b@oracle.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20180523213249.GD150632@bhelgaas-glaptop.roam.corp.google.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <5eb1eeaa-b148-7b90-eee4-e365ead49a5b@oracle.com>
 Content-Language: en-US
-Sender: stable-owner@vger.kernel.org
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org, ryan@finnie.org, linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, stable@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Thomas Gleixner <tglx@linutronix.de>, Kate Stewart <kstewart@linuxfoundation.org>, Frederick Lawler <fred@fredlawl.com>, Dongdong Liu <liudongdong3@huawei.com>, Mika Westerberg <mika.westerberg@linux.intel.com>, open list <linux-kernel@vger.kernel.org>, Don Brace <don.brace@microsemi.com>, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: qla2xxx-upstream@qlogic.com, himanshu.madhani@cavium.com, jthumshirn@suse.de
+Cc: linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Junxiao Bi <junxiao.bi@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 5/23/2018 5:32 PM, Bjorn Helgaas wrote:
-> 
-> The crash seems to indicate that the hpsa device attempted a DMA after
-> we cleared the Root Port's PCI_COMMAND_MASTER, which means
-> hpsa_shutdown() didn't stop DMA from the device (it looks like *most*
-> shutdown methods don't disable device DMA, so it's in good company).
+Would anyone please take a look at this ?
 
-All drivers are expected to shutdown DMA and interrupts in their shutdown()
-routines. They can skip removing threads, data structures etc. but DMA and
-interrupt disabling are required. This is the difference between shutdown()
-and remove() callbacks.
+Thanks in advance
+Jianchao
 
-If you see that this is not being done in HPSA, then that is where the
-bugfix should be.
-
-Counter argument is that if shutdown() is not implemented, at least remove()
-should be called. Expecting all drivers to implement shutdown() callbacks
-is just bad by design in my opinion. 
-
-Code should have fallen back to remove() if shutdown() doesn't exist.
-I can propose a patch for this but this is yet another story to chase.
-
+On 05/23/2018 11:55 AM, jianchao.wang wrote:
 > 
->> This has been found to cause crashes on HP DL360 Gen9 machines during
->> reboot. Besides, kexec is already clearing the bus master bit in
->> pci_device_shutdown() after all PCI drivers are removed.
 > 
-> The original path was:
+> Hi all
 > 
->   pci_device_shutdown(hpsa)
->     drv->shutdown
->       hpsa_shutdown                     # hpsa_pci_driver.shutdown
->   ...
->   pci_device_shutdown(RP)               # root port
->     drv->shutdown
->       pcie_portdrv_remove               # pcie_portdriver.shutdown
->         pcie_port_device_remove
->           pci_disable_device
->             do_pci_disable_device
->               # clear RP PCI_COMMAND_MASTER
->     if (kexec)
->       pci_clear_master(RP)
->         # clear RP PCI_COMMAND_MASTER
+> Our customer met a panic triggered by BUG_ON in blk_finish_request.
+>>From the dmesg log, the BUG_ON was triggered after command abort occurred many times.
+> There is a race condition in the following scenario.
 > 
-> If I understand correctly, the new path after this patch is:
+> cpu A                                   cpu B
+> kworker                                 interrupt
+>                                                  
+> scmd_eh_abort_handler()                               
+>   -> scsi_try_to_abort_cmd()
+>     -> qla2xxx_eh_abort()                        
+>       -> qla2x00_eh_wait_on_command()   qla2x00_status_entry()   
+>                                           -> qla2x00_sp_compl()
+>                                             -> qla2x00_sp_free_dma()
+>   -> scsi_queue_insert()                          
+>     -> __scsi_queue_insert()                         
+>       -> blk_requeue_request()
+>         -> blk_clear_rq_complete()
+>                                             -> scsi_done
+>                                               -> blk_complete_request
+>                                                 -> blk_mark_rq_complete       
+>           -> elv_requeue_request()              -> __blk_complete_request()
+>             -> __elv_add_request()
+>             // req will be queued here                                                         
+>                                                     BLK_SOFTIRQ
+>                                                     scsi_softirq_done()
+>                                                       -> scsi_finish_command()
+>                                                         -> scsi_io_completion()
+>                                                           -> scsi_end_request()
+>                                                             -> blk_finish_request()  // BUG_ON(blk_queued_rq(req)) !!!
 > 
->   pci_device_shutdown(hpsa)
->     drv->shutdown
->       hpsa_shutdown                     # hpsa_pci_driver.shutdown
->   ...
->   pci_device_shutdown(RP)               # root port
->     drv->shutdown
->       pcie_portdrv_shutdown             # pcie_portdriver.shutdown
->         __pcie_portdrv_remove(RP, false)
->           pcie_port_device_remove(RP, false)
->             # do NOT clear RP PCI_COMMAND_MASTER
-
-yup
-
->     if (kexec)
->       pci_clear_master(RP)
->         # clear RP PCI_COMMAND_MASTER
+> The issue will not be triggered most of time, because the request is marked as complete by timeout path.
+> So the scsi_done from qla2x00_sp_compl does nothing.
+> But as the scenario above, if the complete state has been cleaned by blk_requeue_request, we will get
+> the request both requeued and completed, and then BUG_ON(blk_queued_rq(req)) in blk_finish_request comes up.
 > 
-> I guess this patch avoids the panic during reboot because we're not in
-> the kexec path, so we never clear PCI_COMMAND_MASTER for the Root
-> Port, so the hpsa device can DMA happily until the lights go out.
+> Is there any solution for this in qla2xxx driver side ?
 > 
-> But DMA continuing for some random amount of time before the reboot or
-> shutdown happens makes me a little queasy.  That doesn't sound safe.
-> The more I think about this, the more confused I get.  What am I
-> missing?  
-
-see above.
-
+> Thanks
+> Jianchao
 > 
->> Just remove the extra clear in shutdown path by seperating the remove and
->> shutdown APIs in the PORTDRV.
->>
->>  static pci_ers_result_t pcie_portdrv_error_detected(struct pci_dev *dev,
->> @@ -218,7 +228,7 @@ static struct pci_driver pcie_portdriver = {
->>  
->>  	.probe		= pcie_portdrv_probe,
->>  	.remove		= pcie_portdrv_remove,
->> -	.shutdown	= pcie_portdrv_remove,
->> +	.shutdown	= pcie_portdrv_shutdown,
 > 
-> What are the circumstances when we call .remove() vs .shutdown()?
-> 
-> I guess the main (maybe only) way to call .remove() is to hot-remove
-> the port?  And .shutdown() is basically used in the reboot and kexec
-> paths?
-
-Correct. shutdown() is only called during reboot/shutdown calls. If you echo
-1 into the remove file, remove() gets called. Handy for hotplug use cases.
-It needs to be the exact opposite of the probe. It needs to clean up resources
-etc. and have the HW in a state where it can be reinitialized via probe again.
-
-> 
->>  	.err_handler	= &pcie_portdrv_err_handler,
->>  
->> -- 
->> 2.7.4
->>
-> 
-
-
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
