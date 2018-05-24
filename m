@@ -1,34 +1,103 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/6] block: Create scsi_sense.h for SCSI and ATAPI
-Date: Thu, 24 May 2018 01:00:15 -0700
-Message-ID: <20180524080015.GA2866@infradead.org>
-References: <20180522191309.GA23615@infradead.org>
- <8d4af5c4-96fa-54ee-d5c1-b887b1de5a3c@kernel.dk>
- <CAGXu5j+mgGZkTDS6EDRspJKKbU=vMT4ehv9T-SekPba=ESoGDg@mail.gmail.com>
- <9A0BC289-4203-4C77-A012-AAB07F42061F@kernel.dk>
- <CAGXu5jJsGWDsZNDJvUUqncSaAcvond_B_J7=BbvVW0X3r6Sxww@mail.gmail.com>
- <aa150272-ffeb-fb8f-7303-0d9502cf9a71@kernel.dk>
- <20180523142545.GA16248@infradead.org>
- <24d36869-e037-042d-cb16-20a81b34eb76@kernel.dk>
- <CAGXu5jJn=1Rz=D8VUwv_VoaGoLtaD=+tcPZxQxntweZoZwFa5Q@mail.gmail.com>
- <f4eb4cd5-8976-3990-69b0-26cca054aa45@kernel.dk>
+From: "jianchao.wang" <jianchao.w.wang@oracle.com>
+Subject: Re: BUG: scsi/qla2xxx: BUG_ON(blk_queued_rq(req) is triggered in
+ blk_finish_request
+Date: Thu, 24 May 2018 17:09:16 +0800
+Message-ID: <675528c5-89d6-a4f5-e91a-6d75fdbef9af@oracle.com>
+References: <5eb1eeaa-b148-7b90-eee4-e365ead49a5b@oracle.com>
+ <8c7b011e-1379-c151-a187-94d8e0697fd9@oracle.com>
+ <SN4PR0701MB363286637D0317358D61ECBFF56A0@SN4PR0701MB3632.namprd07.prod.outlook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <f4eb4cd5-8976-3990-69b0-26cca054aa45@kernel.dk>
+In-Reply-To: <SN4PR0701MB363286637D0317358D61ECBFF56A0@SN4PR0701MB3632.namprd07.prod.outlook.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Kees Cook <keescook@chromium.org>, Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Tejun Heo <tj@kernel.org>, Borislav Petkov <bp@alien8.de>, "David S. Miller" <davem@davemloft.net>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, linux-block <linux-block@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>, Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@cavium.com>, "jthumshirn@suse.de" <jthumshirn@suse.de>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Junxiao Bi <junxiao.bi@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, May 23, 2018 at 03:14:19PM -0600, Jens Axboe wrote:
-> Ugh, so that would necessitate a change there too. As I said before,
-> I don't really care where it lives. I know the SCSI folks seem bothered
-> by moving it, but in reality, it's not like this stuff will likely ever
-> really change. Of the two choices (select entire SCSI stack, or just move
-> this little bit), I know what I would consider the saner option...
+Hi Himanshu
 
-Oh well.  How about something like this respin of Kees' series?
+Thanks god get response from your side finally :)
+I get qla2xxx-upstream@qlogic.com from the maintainer information of driver/scsi/qla2xxx
+Looks like it should be modified.
 
-http://git.infradead.org/users/hch/block.git/shortlog/refs/heads/sense-cleanup
+Thanks
+Jianchao
+
+On 05/24/2018 12:21 PM, Madhani, Himanshu wrote:
+> Hi, 
+> 
+> Yes. We'll look at this issue. 
+> 
+> Thanks,
+> Himanshu  
+> 
+>> -----Original Message-----
+>> From: jianchao.wang [mailto:jianchao.w.wang@oracle.com]
+>> Sent: Wednesday, May 23, 2018 6:51 PM
+>> To: Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@cavium.com>; Madhani,
+>> Himanshu <Himanshu.Madhani@cavium.com>; jthumshirn@suse.de
+>> Cc: linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org;
+>> jejb@linux.vnet.ibm.com; Martin K. Petersen <martin.petersen@oracle.com>;
+>> Junxiao Bi <junxiao.bi@oracle.com>
+>> Subject: Re: BUG: scsi/qla2xxx: BUG_ON(blk_queued_rq(req) is triggered in
+>> blk_finish_request
+>>
+>> Would anyone please take a look at this ?
+>>
+>> Thanks in advance
+>> Jianchao
+>>
+>> On 05/23/2018 11:55 AM, jianchao.wang wrote:
+>>>
+>>>
+>>> Hi all
+>>>
+>>> Our customer met a panic triggered by BUG_ON in blk_finish_request.
+>>> >From the dmesg log, the BUG_ON was triggered after command abort
+>> occurred many times.
+>>> There is a race condition in the following scenario.
+>>>
+>>> cpu A                                   cpu B
+>>> kworker                                 interrupt
+>>>
+>>> scmd_eh_abort_handler()
+>>>   -> scsi_try_to_abort_cmd()
+>>>     -> qla2xxx_eh_abort()
+>>>       -> qla2x00_eh_wait_on_command()   qla2x00_status_entry()
+>>>                                           -> qla2x00_sp_compl()
+>>>                                             -> qla2x00_sp_free_dma()
+>>>   -> scsi_queue_insert()
+>>>     -> __scsi_queue_insert()
+>>>       -> blk_requeue_request()
+>>>         -> blk_clear_rq_complete()
+>>>                                             -> scsi_done
+>>>                                               -> blk_complete_request
+>>>                                                 -> blk_mark_rq_complete
+>>>           -> elv_requeue_request()              -> __blk_complete_request()
+>>>             -> __elv_add_request()
+>>>             // req will be queued here
+>>>                                                     BLK_SOFTIRQ
+>>>                                                     scsi_softirq_done()
+>>>                                                       -> scsi_finish_command()
+>>>                                                         -> scsi_io_completion()
+>>>                                                           -> scsi_end_request()
+>>>                                                             -> blk_finish_request()  //
+>> BUG_ON(blk_queued_rq(req)) !!!
+>>>
+>>> The issue will not be triggered most of time, because the request is marked as
+>> complete by timeout path.
+>>> So the scsi_done from qla2x00_sp_compl does nothing.
+>>> But as the scenario above, if the complete state has been cleaned by
+>> blk_requeue_request, we will get
+>>> the request both requeued and completed, and then
+>> BUG_ON(blk_queued_rq(req)) in blk_finish_request comes up.
+>>>
+>>> Is there any solution for this in qla2xxx driver side ?
+>>>
+>>> Thanks
+>>> Jianchao
+>>>
+>>>
