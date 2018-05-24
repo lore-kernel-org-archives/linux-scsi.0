@@ -1,31 +1,43 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 6/6] scsi: Check sense buffer size at build time
-Date: Thu, 24 May 2018 07:11:44 -0700
-Message-ID: <20180524141144.GA19629@infradead.org>
-References: <20180522181512.39316-1-keescook@chromium.org>
- <20180522181512.39316-7-keescook@chromium.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Ivan Bornyakov <brnkv.i1@gmail.com>
+Subject: [PATCH] scsi: isci: fix memcmp casting
+Date: Thu, 24 May 2018 20:06:28 +0300
+Message-ID: <20180524170628.24204-1-brnkv.i1@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20180522181512.39316-7-keescook@chromium.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Kees Cook <keescook@chromium.org>
-Cc: Jens Axboe <axboe@kernel.dk>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Tejun Heo <tj@kernel.org>, Borislav Petkov <bp@alien8.de>, "David S. Miller" <davem@davemloft.net>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, linux-block@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: intel-linux-scu@intel.com
+Cc: artur.paszkiewicz@intel.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Ivan Bornyakov <brnkv.i1@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-> +/* Make sure any sense buffer is the correct size. */
-> +#define scsi_execute(sdev, cmd, data_direction, buffer, bufflen, sense,	\
-> +		     sshdr, timeout, retries, flags, rq_flags, resid)	\
-> +({									\
-> +	BUILD_BUG_ON((sense) != NULL &&					\
-> +		     sizeof(sense) != SCSI_SENSE_BUFFERSIZE);		\
-> +	__scsi_execute(sdev, cmd, data_direction, buffer, bufflen,	\
-> +		       sense, sshdr, timeout, retries, flags, rq_flags,	\
-> +		       resid);						\
-> +})
+memcmp() returns int, but variable of type u8 is used to store it. When
+casting int to u8, one can lose significant bits and get 0 from non-0
+value returned by the memcmp().
 
-This macro gets evaluated in the scsi_execute_req inline function just
-below.  So either we need to include scsi_sense.h/scsi_common.h in
-scsi_device.h, or just move scsi_execute_req out of line.  The latter
-sounds better to me a it's not really used in a fast path.
+Signed-off-by: Ivan Bornyakov <brnkv.i1@gmail.com>
+---
+ drivers/scsi/isci/host.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/isci/host.c b/drivers/scsi/isci/host.c
+index 1ee3868ade07..dd5f41e86639 100644
+--- a/drivers/scsi/isci/host.c
++++ b/drivers/scsi/isci/host.c
+@@ -1786,7 +1786,7 @@ static void power_control_timeout(struct timer_list *t)
+ 				 * them out of await_sas_power state.
+ 				 */
+ 				if (requester != NULL && requester != iphy) {
+-					u8 other = memcmp(requester->frame_rcvd.iaf.sas_addr,
++					int other = memcmp(requester->frame_rcvd.iaf.sas_addr,
+ 							  iphy->frame_rcvd.iaf.sas_addr,
+ 							  sizeof(requester->frame_rcvd.iaf.sas_addr));
+ 
+@@ -1840,7 +1840,7 @@ void sci_controller_power_control_queue_insert(struct isci_host *ihost,
+ 		struct isci_phy *current_phy;
+ 
+ 		for (i = 0; i < SCI_MAX_PHYS; i++) {
+-			u8 other;
++			int other;
+ 			current_phy = &ihost->phys[i];
+ 
+ 			other = memcmp(current_phy->frame_rcvd.iaf.sas_addr,
+-- 
+2.16.1
