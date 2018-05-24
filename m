@@ -1,68 +1,55 @@
-From: "jianchao.wang" <jianchao.w.wang@oracle.com>
-Subject: Re: BUG: scsi/qla2xxx: BUG_ON(blk_queued_rq(req) is triggered in
- blk_finish_request
-Date: Thu, 24 May 2018 09:50:35 +0800
-Message-ID: <8c7b011e-1379-c151-a187-94d8e0697fd9@oracle.com>
-References: <5eb1eeaa-b148-7b90-eee4-e365ead49a5b@oracle.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 3/6] block: Create scsi_sense.h for SCSI and ATAPI
+Date: Thu, 24 May 2018 00:36:54 -0700
+Message-ID: <20180524073654.GA32083@infradead.org>
+References: <8d4af5c4-96fa-54ee-d5c1-b887b1de5a3c@kernel.dk>
+ <CAGXu5j+mgGZkTDS6EDRspJKKbU=vMT4ehv9T-SekPba=ESoGDg@mail.gmail.com>
+ <9A0BC289-4203-4C77-A012-AAB07F42061F@kernel.dk>
+ <CAGXu5jJsGWDsZNDJvUUqncSaAcvond_B_J7=BbvVW0X3r6Sxww@mail.gmail.com>
+ <aa150272-ffeb-fb8f-7303-0d9502cf9a71@kernel.dk>
+ <20180523142545.GA16248@infradead.org>
+ <24d36869-e037-042d-cb16-20a81b34eb76@kernel.dk>
+ <CAGXu5jJn=1Rz=D8VUwv_VoaGoLtaD=+tcPZxQxntweZoZwFa5Q@mail.gmail.com>
+ <yq1o9h684lh.fsf@oracle.com>
+ <CAGXu5jLzNNejH1MEH3ct0hSyOtG1zk8=gE4Qpd2yDvQTSahL+w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <5eb1eeaa-b148-7b90-eee4-e365ead49a5b@oracle.com>
-Content-Language: en-US
+Content-Disposition: inline
+In-Reply-To: <CAGXu5jLzNNejH1MEH3ct0hSyOtG1zk8=gE4Qpd2yDvQTSahL+w@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: qla2xxx-upstream@qlogic.com, himanshu.madhani@cavium.com, jthumshirn@suse.de
-Cc: linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Junxiao Bi <junxiao.bi@oracle.com>
+To: Kees Cook <keescook@chromium.org>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Tejun Heo <tj@kernel.org>, Borislav Petkov <bp@alien8.de>, "David S. Miller" <davem@davemloft.net>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, linux-block <linux-block@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Would anyone please take a look at this ?
+On Wed, May 23, 2018 at 02:17:14PM -0700, Kees Cook wrote:
+> 
+> True, though I'm finding other robustness issues in the CDROM code.
+> They're probably all insane corner cases, but it seems like it'd be
+> nice to just fix them:
+> 
+> diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
+> index 3522d2cae1b6..7726c8618c30 100644
+> --- a/drivers/cdrom/cdrom.c
+> +++ b/drivers/cdrom/cdrom.c
+> @@ -2222,9 +2223,12 @@ static int cdrom_read_cdda_bpc(struct
+> cdrom_device_info *cdi, __u8 __user *ubuf,
+> 
+>                 blk_execute_rq(q, cdi->disk, rq, 0);
+>                 if (scsi_req(rq)->result) {
+> -                       struct request_sense *s = req->sense;
+> +                       struct scsi_sense_hdr sshdr;
+> +
+>                         ret = -EIO;
+> -                       cdi->last_sense = s->sense_key;
+> +                       scsi_normalize_sense(req->sense, req->sense_len,
+> +                                            &sshdr);
+> +                       cdi->last_sense = sshdr.sense_key;
+>                 }
+> 
+>                 if (blk_rq_unmap_user(bio))
 
-Thanks in advance
-Jianchao
-
-On 05/23/2018 11:55 AM, jianchao.wang wrote:
-> 
-> 
-> Hi all
-> 
-> Our customer met a panic triggered by BUG_ON in blk_finish_request.
->>From the dmesg log, the BUG_ON was triggered after command abort occurred many times.
-> There is a race condition in the following scenario.
-> 
-> cpu A                                   cpu B
-> kworker                                 interrupt
->                                                  
-> scmd_eh_abort_handler()                               
->   -> scsi_try_to_abort_cmd()
->     -> qla2xxx_eh_abort()                        
->       -> qla2x00_eh_wait_on_command()   qla2x00_status_entry()   
->                                           -> qla2x00_sp_compl()
->                                             -> qla2x00_sp_free_dma()
->   -> scsi_queue_insert()                          
->     -> __scsi_queue_insert()                         
->       -> blk_requeue_request()
->         -> blk_clear_rq_complete()
->                                             -> scsi_done
->                                               -> blk_complete_request
->                                                 -> blk_mark_rq_complete       
->           -> elv_requeue_request()              -> __blk_complete_request()
->             -> __elv_add_request()
->             // req will be queued here                                                         
->                                                     BLK_SOFTIRQ
->                                                     scsi_softirq_done()
->                                                       -> scsi_finish_command()
->                                                         -> scsi_io_completion()
->                                                           -> scsi_end_request()
->                                                             -> blk_finish_request()  // BUG_ON(blk_queued_rq(req)) !!!
-> 
-> The issue will not be triggered most of time, because the request is marked as complete by timeout path.
-> So the scsi_done from qla2x00_sp_compl does nothing.
-> But as the scenario above, if the complete state has been cleaned by blk_requeue_request, we will get
-> the request both requeued and completed, and then BUG_ON(blk_queued_rq(req)) in blk_finish_request comes up.
-> 
-> Is there any solution for this in qla2xxx driver side ?
-> 
-> Thanks
-> Jianchao
-> 
-> 
+The proper fix here is to rewrite this function to use the the
+->generic_packet cdrom_device_ops method.  Is is the only caller
+going straight to the scsi passthrough requests, which is a layering
+violation.
