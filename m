@@ -1,56 +1,67 @@
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 4.16 108/161] scsi: devinfo: add HP DISK-SUBSYSTEM device, for HP XP arrays
-Date: Thu, 24 May 2018 11:38:53 +0200
-Message-ID: <20180524093031.355250272@linuxfoundation.org>
-References: <20180524093018.331893860@linuxfoundation.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+Subject: Re: [PATCH V2] PCI/portdrv: do not disable device on reboot/shutdown
+Date: Thu, 24 May 2018 07:43:05 -0400
+Message-ID: <82656e20-e821-1944-3399-1667ceb27719@codeaurora.org>
+References: <1527043490-17268-1-git-send-email-okaya@codeaurora.org>
+ <20180523213249.GD150632@bhelgaas-glaptop.roam.corp.google.com>
+ <61f70fd6-52fd-da07-ce73-303f95132131@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20180524093018.331893860@linuxfoundation.org>
+In-Reply-To: <61f70fd6-52fd-da07-ce73-303f95132131@codeaurora.org>
+Content-Language: en-US
 Sender: stable-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, stable@vger.kernel.org, Anthony Cheung <anthony.cheung@hpe.com>, Takahiro Yasui <takahiro.yasui@hitachivantara.com>, Matthias Rudolph <Matthias.Rudolph@hitachivantara.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, SCSI ML <linux-scsi@vger.kernel.org>, Xose Vazquez Perez <xose.vazquez@gmail.com>, Sasha Levin <alexander.levin@microsoft.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, timur@codeaurora.org, ryan@finnie.org, linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, stable@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Thomas Gleixner <tglx@linutronix.de>, Kate Stewart <kstewart@linuxfoundation.org>, Frederick Lawler <fred@fredlawl.com>, Dongdong Liu <liudongdong3@huawei.com>, Mika Westerberg <mika.westerberg@linux.intel.com>, open list <linux-kernel@vger.kernel.org>, Don Brace <don.brace@microsemi.com>, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-4.16-stable review patch.  If anyone has any objections, please let me know.
+On 5/23/2018 6:57 PM, Sinan Kaya wrote:
+>> The crash seems to indicate that the hpsa device attempted a DMA after
+>> we cleared the Root Port's PCI_COMMAND_MASTER, which means
+>> hpsa_shutdown() didn't stop DMA from the device (it looks like *most*
+>> shutdown methods don't disable device DMA, so it's in good company).
+> All drivers are expected to shutdown DMA and interrupts in their shutdown()
+> routines. They can skip removing threads, data structures etc. but DMA and
+> interrupt disabling are required. This is the difference between shutdown()
+> and remove() callbacks.
 
-------------------
+I found this note yesterday to see why we are not disabling the devices in the
+PCI core itself. 
 
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+pci_device_remove()
 
-[ Upstream commit 5f96f42b76e00e2871033745ff029056cc725c76 ]
+	/*
+	 * We would love to complain here if pci_dev->is_enabled is set, that
+	 * the driver should have called pci_disable_device(), but the
+	 * unfortunate fact is there are too many odd BIOS and bridge setups
+	 * that don't like drivers doing that all of the time.
+	 * Oh well, we can dream of sane hardware when we sleep, no matter how
+	 * horrible the crap we have to deal with is when we are awake...
+	 */ 
 
-"The DISK-SUBSYSTEM is a special model name returned when LUs
-are not installed. For example, when LU#0 is not installed in "OPEN-"
-models, LU#0 is detected as the DISK-SUBSYSTEM model":
-https://marc.info/?l=linux-scsi&m=125424006417825
+Ryan, can you discard the previous patch and test this one instead? remove() path
+in hpsa driver seems to call pci_disable_device() via 
 
-It's missing for HP XP rebranded arrays, "HP"/"OPEN-".
-Only the HITACHI one is present:
-13f7e5acc8b329080672c13f05f252ace5b79825
-627511e3e67553b04f6917c03e39b797df210e04
+hpsa_remove_one()
+	hpsa_free_pci_init()
 
-Cc: Anthony Cheung <anthony.cheung@hpe.com>
-Cc: Takahiro Yasui <takahiro.yasui@hitachivantara.com>
-Cc: Matthias Rudolph <Matthias.Rudolph@hitachivantara.com>
-Cc: Martin K. Petersen <martin.petersen@oracle.com>
-Cc: James E.J. Bottomley <jejb@linux.vnet.ibm.com>
-Cc: SCSI ML <linux-scsi@vger.kernel.org>
-Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <alexander.levin@microsoft.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
----
- drivers/scsi/scsi_devinfo.c |    1 +
- 1 file changed, 1 insertion(+)
+but nothing on the shutdown path.
 
---- a/drivers/scsi/scsi_devinfo.c
-+++ b/drivers/scsi/scsi_devinfo.c
-@@ -189,6 +189,7 @@ static struct {
- 	{"HP", "C5713A", NULL, BLIST_NOREPORTLUN},
- 	{"HP", "DF400", "*", BLIST_REPORTLUN2},
- 	{"HP", "DF500", "*", BLIST_REPORTLUN2},
-+	{"HP", "DISK-SUBSYSTEM", "*", BLIST_REPORTLUN2},
- 	{"HP", "OP-C-", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
- 	{"HP", "3380-", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
- 	{"HP", "3390-", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 4ed3d26..3823f04 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -8651,6 +8651,7 @@ static void hpsa_shutdown(struct pci_dev *pdev)
+        h->access.set_intr_mask(h, HPSA_INTR_OFF);
+        hpsa_free_irqs(h);                      /* init_one 4 */
+        hpsa_disable_interrupt_mode(h);         /* pci_init 2 */
++       pci_disable_device(h->pdev);
+ }
+
+
+
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
