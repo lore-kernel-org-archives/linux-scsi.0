@@ -1,46 +1,31 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/6] block: Create scsi_sense.h for SCSI and ATAPI
-Date: Fri, 25 May 2018 07:48:05 -0700
-Message-ID: <20180525144805.GA7929@infradead.org>
-References: <CAGXu5j+mgGZkTDS6EDRspJKKbU=vMT4ehv9T-SekPba=ESoGDg@mail.gmail.com>
- <9A0BC289-4203-4C77-A012-AAB07F42061F@kernel.dk>
- <CAGXu5jJsGWDsZNDJvUUqncSaAcvond_B_J7=BbvVW0X3r6Sxww@mail.gmail.com>
- <aa150272-ffeb-fb8f-7303-0d9502cf9a71@kernel.dk>
- <20180523142545.GA16248@infradead.org>
- <24d36869-e037-042d-cb16-20a81b34eb76@kernel.dk>
- <CAGXu5jJn=1Rz=D8VUwv_VoaGoLtaD=+tcPZxQxntweZoZwFa5Q@mail.gmail.com>
- <f4eb4cd5-8976-3990-69b0-26cca054aa45@kernel.dk>
- <20180524080015.GA2866@infradead.org>
- <CAGXu5j+pRUWgny+h5ToVQXBP8nANjreVhnXjk5TVgy84ufNsRg@mail.gmail.com>
+From: Bjorn Helgaas <helgaas@kernel.org>
+Subject: Re: [PATCH V2] PCI/portdrv: do not disable device on reboot/shutdown
+Date: Fri, 25 May 2018 17:10:24 -0500
+Message-ID: <20180525221024.GC92995@bhelgaas-glaptop.roam.corp.google.com>
+References: <1527043490-17268-1-git-send-email-okaya@codeaurora.org>
+ <20180523213249.GD150632@bhelgaas-glaptop.roam.corp.google.com>
+ <61f70fd6-52fd-da07-ce73-303f95132131@codeaurora.org>
+ <20180524183502.GB85822@bhelgaas-glaptop.roam.corp.google.com>
+ <984b9734-244d-04e9-946f-7524f148ff7c@codeaurora.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <stable-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <CAGXu5j+pRUWgny+h5ToVQXBP8nANjreVhnXjk5TVgy84ufNsRg@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Kees Cook <keescook@chromium.org>
-Cc: Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@kernel.dk>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Tejun Heo <tj@kernel.org>, Borislav Petkov <bp@alien8.de>, "David S. Miller" <davem@davemloft.net>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, linux-block <linux-block@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+In-Reply-To: <984b9734-244d-04e9-946f-7524f148ff7c@codeaurora.org>
+Sender: stable-owner@vger.kernel.org
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: linux-pci@vger.kernel.org, timur@codeaurora.org, ryan@finnie.org, linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, stable@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Thomas Gleixner <tglx@linutronix.de>, Kate Stewart <kstewart@linuxfoundation.org>, Frederick Lawler <fred@fredlawl.com>, Dongdong Liu <liudongdong3@huawei.com>, Mika Westerberg <mika.westerberg@linux.intel.com>, open list <linux-kernel@vger.kernel.org>, Don Brace <don.brace@microsemi.com>, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, May 24, 2018 at 10:06:59AM -0700, Kees Cook wrote:
-> On Thu, May 24, 2018 at 1:00 AM, Christoph Hellwig <hch@infradead.org> wrote:
-> > On Wed, May 23, 2018 at 03:14:19PM -0600, Jens Axboe wrote:
-> >> Ugh, so that would necessitate a change there too. As I said before,
-> >> I don't really care where it lives. I know the SCSI folks seem bothered
-> >> by moving it, but in reality, it's not like this stuff will likely ever
-> >> really change. Of the two choices (select entire SCSI stack, or just move
-> >> this little bit), I know what I would consider the saner option...
-> >
-> > Oh well.  How about something like this respin of Kees' series?
-> >
-> > http://git.infradead.org/users/hch/block.git/shortlog/refs/heads/sense-cleanup
+On Fri, May 25, 2018 at 09:30:59AM -0400, Sinan Kaya wrote:
+> On 5/24/2018 2:35 PM, Bjorn Helgaas wrote:
+> > That sounds like a reasonable idea, and it is definitely another can
+> > of worms.  I looked briefly at some of the .shutdown() cases:
 > 
-> Does the CONFIG_PCMCIA in drivers/scsi/Makefile now get exposed in
-> weird config cases?
+> should we throw it into 4.18 and see what happens?
 
-That just includes drivers/scsi/pcmcia/Makefile, which only
-has three conditional modules in it, so it should be fine.
+It wouldn't solve this particular problem because hpsa *does* have a
+.shutdown() method.  The problem is that it doesn't work -- it's
+supposed to stop DMA and interrupts but it apparently doesn't.
 
-> Otherwise, yeah, looks good to me. Thanks!
-
-Can you pick up my tweaks and ressend?
+I think we need to fix hpsa first.
