@@ -1,54 +1,40 @@
-From: "bigeasy@linutronix.de" <bigeasy@linutronix.de>
-Subject: Re: [PATCH 1/2] target: drop spin_lock_assert() + irqs_disabled()
- combo checks
-Date: Mon, 28 May 2018 16:35:18 +0200
-Message-ID: <20180528143518.f46hyhi5r5jd3oxe@linutronix.de>
-References: <20180322093745.GC4229@kernel.org>
- <20180323155513.dwbgvblenlji33as@linutronix.de>
- <1521822325.2535.5.camel@wdc.com>
- <CA+55aFxVkuntSektVmwXktzvfEezdDTAM_zj4DJdp3qJxWf8aA@mail.gmail.com>
- <20180323171736.bcyi2oiolge4l6hl@linutronix.de>
- <20180326111359.180f1604@gandalf.local.home>
- <20180328101553.uduqsdbxwnxrhl7a@linutronix.de>
- <c9f5df1e54bb2bd8f3f0aef86a55deb11888a6a4.camel@wdc.com>
- <20180328151433.elhw6kgxdxq6fn6b@linutronix.de>
- <86c1243e-8733-c94d-d8ff-5c299b8266a6@wdc.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+From: "Rodrigo R. Galvao" <rosattig@linux.vnet.ibm.com>
+Subject: [PATCH] scsi: qla2xxx: Fix crash on qla2x00_mailbox_command
+Date: Mon, 28 May 2018 14:58:44 -0300
+Message-ID: <1527530324-32359-1-git-send-email-rosattig@linux.vnet.ibm.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <86c1243e-8733-c94d-d8ff-5c299b8266a6@wdc.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: "rostedt@goodmis.org" <rostedt@goodmis.org>, "daniel@bristot.me" <daniel@bristot.me>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "peterz@infradead.org" <peterz@infradead.org>, "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>, "tglx@linutronix.de" <tglx@linutronix.de>, "acme@kernel.org" <acme@kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>, "williams@redhat.com" <williams@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "lclaudio@redhat.com" <lclaudio@redhat.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "linux-rt-users@vger.kernel.org" <linux-rt-users@vger.kernel.org>
+Cc: rosattig@linux.vnet.ibm.com, maurosr@linux.vnet.ibm.com, kernel@gpiccoli.net, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 2018-03-28 08:31:38 [-0700], Bart Van Assche wrote:
-> On 03/28/18 08:14, bigeasy@linutronix.de wrote:
-> > On 2018-03-28 15:05:41 [+0000], Bart Van Assche wrote:
-> > > The names of the two functions touched by patch 1/2 start with a double
-> > > underscore. That by itself is already a hint that these should be called with
-> > > a lock held (I know that this is not a universal convention in the Linux
-> > > kernel). I'm fine either way - either with patch 1/2 as posted or patch 1/2
-> > > with the above comment added.
-> > 
-> > Okay. In that case let me update 1/2.
-> > But 2/2 with the comment as Steven suggested is still a no no for you?
-> 
-> Although I'm not enthusiast about patch 2/2, if others agree with that patch
-> I'm fine with that patch being sent upstream.
+This patch fixes a crash on qla2x00_mailbox_command caused when the
+driver is on UNLOADING state and tries to call qla2x00_poll, which
+triggers a NULL pointer dereference.
 
-I've been waiting for something to happen but nobody replied.
-Bart, you were fine with 1/2 as posted but not too happy about 2/2.
-Assuming we keep 1/2 as is and I remove just the
-"WARN_ON_ONCE(!irqs_disabled());" from 2/2 (keeping the
-assert_spin_locked()), would that improve your mood? Lockdep would still
-perform full validation, yell if __transport_check_aborted_status() was
-invoked without locking and also yell abut missing IRQ-save at locking
-time of ->t_state_lock).
+Signed-off-by: Rodrigo R. Galvao <rosattig@linux.vnet.ibm.com>
+Signed-off-by: Mauro S. M. Rodrigues <maurosr@linux.vnet.ibm.com>
+---
+ drivers/scsi/qla2xxx/qla_mbx.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-> Thanks,
-> 
-> Bart.
-
-Sebastian
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index d8a36c1..7e875f5 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -292,6 +292,14 @@ qla2x00_mailbox_command(scsi_qla_host_t *vha, mbx_cmd_t *mcp)
+ 			if (time_after(jiffies, wait_time))
+ 				break;
+ 
++			/*
++			 * Check if it's UNLOADING, cause we cannot poll in
++			 * this case, or else a NULL pointer dereference
++			 * is triggered.
++			 */
++			if (unlikely(test_bit(UNLOADING, &base_vha->dpc_flags)))
++				return QLA_FUNCTION_TIMEOUT;
++
+ 			/* Check for pending interrupts. */
+ 			qla2x00_poll(ha->rsp_q_map[0]);
+ 
+-- 
+2.7.4
