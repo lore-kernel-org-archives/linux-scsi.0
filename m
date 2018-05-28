@@ -1,53 +1,39 @@
 From: Sinan Kaya <okaya@codeaurora.org>
-Subject: [PATCH V3 2/2] scsi: hpsa: drop shutdown callback
-Date: Mon, 28 May 2018 17:21:11 -0400
-Message-ID: <1527542471-10316-2-git-send-email-okaya@codeaurora.org>
-References: <1527542471-10316-1-git-send-email-okaya@codeaurora.org>
+Subject: Re: [PATCH V2] PCI/portdrv: do not disable device on reboot/shutdown
+Date: Mon, 28 May 2018 14:25:33 -0700
+Message-ID: <667a240c-9f83-181d-9aa3-f9ee3aa66272@codeaurora.org>
+References: <1527043490-17268-1-git-send-email-okaya@codeaurora.org>
+ <20180523213249.GD150632@bhelgaas-glaptop.roam.corp.google.com>
+ <61f70fd6-52fd-da07-ce73-303f95132131@codeaurora.org>
+ <82656e20-e821-1944-3399-1667ceb27719@codeaurora.org>
+ <20180524130727.GA85822@bhelgaas-glaptop.roam.corp.google.com>
+ <36b790d3fb4c43349cfa560283c03ab5@microsemi.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <1527542471-10316-1-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <36b790d3fb4c43349cfa560283c03ab5@microsemi.com>
+Content-Language: en-US
 Sender: stable-owner@vger.kernel.org
-To: linux-pci@vger.kernel.org, ryan@finnie.org, timur@codeaurora.org
-Cc: linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Sinan Kaya <okaya@codeaurora.org>, stable@vger.kernel.org, Don Brace <don.brace@microsemi.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "open list:HEWLETT-PACKARD SMART ARRAY
-        RAID DRIVER hpsa" <esc.storagedev@microsemi.com>, "open list:HEWLETT-PACKARD SMART ARRAY RAID
-        DRIVER hpsa" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+To: Don Brace <don.brace@microsemi.com>, Bjorn Helgaas <helgaas@kernel.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "timur@codeaurora.org" <timur@codeaurora.org>, "ryan@finnie.org" <ryan@finnie.org>, "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Thomas Gleixner <tglx@linutronix.de>, Kate Stewart <kstewart@linuxfoundation.org>, Frederick Lawler <fred@fredlawl.com>, Dongdong Liu <liudongdong3@huawei.com>, Mika Westerberg <mika.westerberg@linux.intel.com>, open list <linux-kernel@vger.kernel.org>, "esc.storagedev" <esc.storagedev@microsem>
 List-Id: linux-scsi@vger.kernel.org
 
-'Commit cc27b735ad3a ("PCI/portdrv: Turn off PCIe services during
-shutdown")' has been added to kernel to shutdown pending PCIe port
-service interrupts during reboot so that a newly started kexec kernel
-wouldn't observe pending interrupts.
+On 5/24/2018 6:37 AM, Don Brace wrote:
+>> But we really need guidance from an hpsa expert.  I don't know the
+>> filesystem/SCSI/hpsa details.
+>>
+>> Bjorn
+> It's most likely OCSD traffic that will stop when bus mastering is turned off.
+> So, I'll run some tests on my end before ACKing your patch.
 
-pcie_port_device_remove() is disabling the root port and switches by
-calling pci_disable_device() after all PCIe service drivers are shutdown.
+Can you test V3 instead of this?
 
-This has been found to cause crashes on HP DL360 Gen9 machines during
-reboot due to hpsa driver not clearing the bus master bit during the
-shutdown procedure by calling pci_disable_device().
+I don't think adding pci_disable_device() to shutdown() is enough to put
+the HW into safe state. I moved clean  up responsibility to remove() instead
+of shutdown().
 
-Drop the shutdown API and do an orderly clean up by using the remove.
-
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=199779
-Fixes: cc27b735ad3a ("PCI/portdrv: Turn off PCIe services during shutdown")
-Cc: stable@vger.kernel.org
-Reported-by: Ryan Finnie <ryan@finnie.org>
----
- drivers/scsi/hpsa.c | 1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 3a9eca1..3dbef28 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -8970,7 +8970,6 @@ static struct pci_driver hpsa_pci_driver = {
- 	.probe = hpsa_init_one,
- 	.remove = hpsa_remove_one,
- 	.id_table = hpsa_pci_device_id,	/* id_table */
--	.shutdown = hpsa_shutdown,
- 	.suspend = hpsa_suspend,
- 	.resume = hpsa_resume,
- };
 -- 
-2.7.4
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
