@@ -1,7 +1,7 @@
 From: Evan Green <evgreen@chromium.org>
-Subject: [PATCH 7/7] scsi: ufs: Update config descriptor documentation
-Date: Tue, 29 May 2018 11:17:40 -0700
-Message-ID: <20180529181740.195362-8-evgreen@chromium.org>
+Subject: [PATCH 6/7] scsi: ufs: Enable writing config descriptor
+Date: Tue, 29 May 2018 11:17:39 -0700
+Message-ID: <20180529181740.195362-7-evgreen@chromium.org>
 References: <20180529181740.195362-1-evgreen@chromium.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20180529181740.195362-1-evgreen@chromium.org>
@@ -10,153 +10,103 @@ To: Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@lin
 Cc: Gwendal Grignou <gwendal@chromium.org>, Evan Green <evgreen@chromium.org>
 List-Id: linux-scsi@vger.kernel.org
 
-This change updates the sysfs documentation for the UFS config
-descriptor, now that config descriptor fields are writable.
+This change enables writing to fields of the config descriptor
+via sysfs. It can be used to provision an unprovisioned UFS
+device, or reprovision an unlocked device.
 
 Signed-off-by: Evan Green <evgreen@chromium.org>
 ---
- Documentation/ABI/testing/sysfs-driver-ufs | 17 -----------------
- 1 file changed, 17 deletions(-)
+ drivers/scsi/ufs/ufs-sysfs.c | 64 +++++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 61 insertions(+), 3 deletions(-)
 
-diff --git a/Documentation/ABI/testing/sysfs-driver-ufs b/Documentation/ABI/testing/sysfs-driver-ufs
-index da154a0d4b4f..d11b0a91f4b2 100644
---- a/Documentation/ABI/testing/sysfs-driver-ufs
-+++ b/Documentation/ABI/testing/sysfs-driver-ufs
-@@ -244,7 +244,6 @@ Description:	This file shows whether or not the UFS boot feature is enabled.
- 		This is one of the UFS configuration descriptor parameters.
- 		More information about the descriptor can be found in the UFS
- 		2.1 specification.
--		The file is read only.
+diff --git a/drivers/scsi/ufs/ufs-sysfs.c b/drivers/scsi/ufs/ufs-sysfs.c
+index 623c56074572..54e9f3bca9db 100644
+--- a/drivers/scsi/ufs/ufs-sysfs.c
++++ b/drivers/scsi/ufs/ufs-sysfs.c
+@@ -252,6 +252,31 @@ static ssize_t ufs_sysfs_read_desc_param(struct ufs_hba *hba,
+ 	return ret;
+ }
  
- What:		/sys/bus/platform/drivers/ufshcd/*/config_descriptor/cfg_descriptor_access_enable
- Date:		May 2018
-@@ -254,7 +253,6 @@ Description:	This file shows whether or not access will be permitted to the
- 		boot sequence. This is one of the UFS configuration descriptor
- 		parameters. More information about the descriptor can be found
- 		in the UFS 2.1 specification.
--		The file is read only.
++static ssize_t ufs_sysfs_write_desc_param(struct ufs_hba *hba,
++				  enum desc_idn desc_id,
++				  u8 desc_index,
++				  u8 param_offset,
++				  const char *buf,
++				  ssize_t buf_size,
++				  u8 width)
++{
++	int ret;
++	unsigned long long value;
++
++	if (kstrtoull(buf, 0, &value))
++		return -EINVAL;
++
++	/* Convert to big endian, and send only the appropriate width. */
++	value = cpu_to_be64(value);
++	ret = ufshcd_rw_desc_param(hba, UPIU_QUERY_OPCODE_WRITE_DESC, desc_id,
++				desc_index, param_offset,
++				(u8 *)&value + 8 - width, width);
++	if (ret)
++		return -EINVAL;
++
++	return buf_size;
++}
++
+ #define UFS_DESC_PARAM(_name, _puname, _duname, _size)			\
+ static ssize_t _name##_show(struct device *dev,				\
+ 	struct device_attribute *attr, char *buf)			\
+@@ -357,8 +382,25 @@ static ssize_t cfg_unit_store(struct device *dev,
+ 	return count;
+ }
  
- What:		/sys/bus/platform/drivers/ufshcd/*/config_descriptor/cfg_high_priority_lun
- Date:		May 2018
-@@ -263,7 +261,6 @@ Description:	This file shows the identifier of the high priority logical
- 		unit. This is one of the UFS configuration descriptor
- 		parameters. More information about the descriptor can be found
- 		in the UFS 2.1 specification.
--		The file is read only.
+-#define UFS_CONFIG_DESC_PARAM(_name, _uname, _size)			\
+-	UFS_DESC_PARAM(cfg_##_name, _uname, CONFIGURATION, _size)
++#define UFS_CONFIG_DESC_PARAM(_name, _puname, _size)			\
++static ssize_t cfg_##_name##_show(struct device *dev,			\
++	struct device_attribute *attr, char *buf)			\
++{									\
++	struct ufs_hba *hba = dev_get_drvdata(dev);			\
++	return ufs_sysfs_read_desc_param(hba,				\
++		QUERY_DESC_IDN_CONFIGURATION, 0,			\
++		CONFIGURATION_DESC_PARAM##_puname, buf, _size);		\
++}									\
++static ssize_t cfg_##_name##_store(struct device *dev,			\
++		struct device_attribute *attr, const char *buf,		\
++		size_t count)						\
++{									\
++	struct ufs_hba *hba = dev_get_drvdata(dev);			\
++	return ufs_sysfs_write_desc_param(hba,				\
++		QUERY_DESC_IDN_CONFIGURATION, 0,			\
++		CONFIGURATION_DESC_PARAM##_puname, buf, count, _size);	\
++}									\
++static DEVICE_ATTR_RW(cfg_##_name)
  
- What:		/sys/bus/platform/drivers/ufshcd/*/config_descriptor/cfg_init_active_icc_level
- Date:		May 2018
-@@ -272,7 +269,6 @@ Description:	This file shows the ICC level in active mode after device
- 		initialization or hardware reset. This is one of the UFS
- 		configuration descriptor parameters. More information about the
- 		descriptor can be found in the UFS 2.1 specification.
--		The file is read only.
+ #define UFS_CONFIG_UNIT_DESC_PARAM(_name, _uname, _size)		\
+ static ssize_t unit_##_name##_show(struct device *dev,			\
+@@ -375,7 +417,23 @@ static ssize_t unit_##_name##_show(struct device *dev,			\
+ 	return ufs_sysfs_read_desc_param(hba,				\
+ 		QUERY_DESC_IDN_CONFIGURATION, 0, offset, buf, _size);	\
+ }									\
+-static DEVICE_ATTR_RO(unit_##_name)
++static ssize_t unit_##_name##_store(struct device *dev,			\
++		struct device_attribute *attr, const char *buf,		\
++		size_t count)						\
++{									\
++	struct ufs_hba *hba = dev_get_drvdata(dev);			\
++	size_t offset = CONFIGURATION_DESC_PARAM_UNIT0 +		\
++		(hba->sysfs_config_unit *				\
++		 CONFIGURATION_UNIT_DESC_SIZE) +			\
++		 CONFIGURATION_UNIT_DESC_PARAM_##_uname;		\
++	if (offset + _size > hba->desc_size.conf_desc) {		\
++		return -EINVAL;						\
++	}								\
++	return ufs_sysfs_write_desc_param(hba,				\
++		QUERY_DESC_IDN_CONFIGURATION, 0, offset, buf, count,	\
++		_size);							\
++}									\
++static DEVICE_ATTR_RW(unit_##_name)
  
- What:		/sys/bus/platform/drivers/ufshcd/*/config_descriptor/cfg_initial_power_mode
- Date:		May 2018
-@@ -281,7 +277,6 @@ Description:	This file shows the power mode after device initialization or
- 		hardware reset. This is one of the UFS configuration descriptor
- 		parameters. More information about the descriptor can be found
- 		in the UFS 2.1 specification.
--		The file is read only.
- 
- What:		/sys/bus/platform/drivers/ufshcd/*/config_descriptor/cfg_number_of_luns
- Date:		May 2018
-@@ -290,7 +285,6 @@ Description:	This file shows the number of logical units that the device will
- 		support. This is one of the UFS configuration descriptor
- 		parameters. More information about the descriptor can be found
- 		in the UFS 2.1 specification.
--		The file is read only.
- 
- What:		/sys/bus/platform/drivers/ufshcd/*/config_descriptor/cfg_periodic_rtc_update
- Date:		May 2018
-@@ -299,7 +293,6 @@ Description:	This file shows the frequency and method of real time clock
- 		updates. This is one of the UFS configuration descriptor
- 		parameters. More information about the descriptor can be found
- 		in the UFS 2.1 specification.
--		The file is read only.
- 
- What:		/sys/bus/platform/drivers/ufshcd/*/config_descriptor/cfg_secure_removal_type
- Date:		May 2018
-@@ -308,7 +301,6 @@ Description:	This file shows the secure removal type of the UFS device. This
- 		is one of the UFS configuration descriptor parameters. More
- 		information about the descriptor can be found in the UFS 2.1
- 		specification.
--		The file is read only.
- 
- What:		/sys/bus/platform/drivers/ufshcd/*/config_descriptor/cfg_unit
- Date:		May 2018
-@@ -327,7 +319,6 @@ Description:	This file shows the number of allocation units assigned to the
- 		being displayed. This is one of the UFS configuration unit
- 		descriptor parameters. More information about the descriptor
- 		can be found in the UFS 2.1 specification.
--		The file is read only.
- 
- What:		/sys/bus/platform/drivers/ufshcd/*/config_descriptor/unit_boot_lun_id
- Date:		May 2018
-@@ -338,7 +329,6 @@ Description:	This file shows the boot LUN ID for this logical unit,
- 		This is one of the UFS configuration unit descriptor parameters.
- 		More information about the descriptor can be found in the UFS
- 		2.1 specification.
--		The file is read only.
- 
- What:		/sys/bus/platform/drivers/ufshcd/*/config_descriptor/unit_context_capabilities
- Date:		May 2018
-@@ -348,7 +338,6 @@ Description:	This file shows the context capabilities for the logical unit.
- 		being displayed. This is one of the UFS configuration unit
- 		descriptor parameters. More information about the descriptor
- 		can be found in the UFS 2.1 specification.
--		The file is read only.
- 
- What:		/sys/bus/platform/drivers/ufshcd/*/config_descriptor/unit_data_reliability
- Date:		May 2018
-@@ -358,7 +347,6 @@ Description:	This file shows the data reliability for the logical unit.
- 		being displayed. This is one of the UFS configuration unit
- 		descriptor parameters. More information about the descriptor
- 		can be found in the UFS 2.1 specification.
--		The file is read only.
- 
- What:		/sys/bus/platform/drivers/ufshcd/*/config_descriptor/unit_logical_block_size
- Date:		May 2018
-@@ -368,7 +356,6 @@ Description:	This file shows the logical block size for the logical unit as
- 		being displayed. This is one of the UFS configuration unit
- 		descriptor parameters. More information about the descriptor
- 		can be found in the UFS 2.1 specification.
--		The file is read only.
- 
- What:		/sys/bus/platform/drivers/ufshcd/*/config_descriptor/unit_lu_enable
- Date:		May 2018
-@@ -378,7 +365,6 @@ Description:	This file shows whether or not the logical unit is enabled.
- 		being displayed. This is one of the UFS configuration unit
- 		descriptor parameters. More information about the descriptor
- 		can be found in the UFS 2.1 specification.
--		The file is read only.
- 
- What:		/sys/bus/platform/drivers/ufshcd/*/config_descriptor/unit_lu_write_protect
- Date:		May 2018
-@@ -388,7 +374,6 @@ Description:	This file shows the write protect status for the logical unit.
- 		being displayed. This is one of the UFS configuration unit
- 		descriptor parameters. More information about the descriptor
- 		can be found in the UFS 2.1 specification.
--		The file is read only.
- 
- What:		/sys/bus/platform/drivers/ufshcd/*/config_descriptor/unit_memory_type
- Date:		May 2018
-@@ -398,7 +383,6 @@ Description:	This file shows the memory type for the logical unit.
- 		being displayed. This is one of the UFS configuration unit
- 		descriptor parameters. More information about the descriptor
- 		can be found in the UFS 2.1 specification.
--		The file is read only.
- 
- What:		/sys/bus/platform/drivers/ufshcd/*/config_descriptor/unit_provisioning_type
- Date:		May 2018
-@@ -408,7 +392,6 @@ Description:	This file shows the provisioning type information for the
- 		being displayed. This is one of the UFS configuration unit
- 		descriptor parameters. More information about the descriptor
- 		can be found in the UFS 2.1 specification.
--		The file is read only.
- 
- 
- What:		/sys/bus/platform/drivers/ufshcd/*/interconnect_descriptor/unipro_version
+ UFS_CONFIG_DESC_PARAM(number_of_luns, _NUM_LU, 1);
+ UFS_CONFIG_DESC_PARAM(boot_enable, _BOOT_ENBL, 1);
 -- 
 2.13.5
