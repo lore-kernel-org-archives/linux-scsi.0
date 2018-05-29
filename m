@@ -1,27 +1,33 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 4/8] scsi: libsas: trigger a new revalidation to discover
- the device
-Date: Tue, 29 May 2018 09:43:00 +0200
-Message-ID: <20180529074300.x7g7utdtncxh6pfq@linux-x5ow.site>
-References: <20180529022309.21071-1-yanaijie@huawei.com>
- <20180529022309.21071-5-yanaijie@huawei.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
+From: Evan Green <evgreen@chromium.org>
+Subject: [PATCH 0/7] Enable UFS provisioning via Linux
+Date: Tue, 29 May 2018 11:17:33 -0700
+Message-ID: <20180529181740.195362-1-evgreen@chromium.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20180529022309.21071-5-yanaijie@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jason Yan <yanaijie@huawei.com>
-Cc: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, john.garry@huawei.com, zhaohongjiang@huawei.com, hare@suse.com, dan.j.williams@intel.com, hch@lst.de, huangdaode@hisilicon.com, chenxiang66@hisilicon.com, xiexiuqi@huawei.com, tj@kernel.org, miaoxie@huawei.com, Ewan Milne <emilne@redhat.com>, Tomas Henzl <thenzl@redhat.com>
+To: Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Stanislav Nijnikov <stanislav.nijnikov@wdc.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: Gwendal Grignou <gwendal@chromium.org>, Evan Green <evgreen@chromium.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Looks good,
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+This series enables provisioning UFS devices using the existing sysfs
+interface. This functionality is primarily useful along the assembly
+line, but might also be useful for end users that receive devices that
+aren't locked down.
+
+Evan Green (7):
+  scsi: ufs: Add Configuration Descriptor to sysfs
+  scsi: ufs: Add config descriptor documentation
+  scsi: ufs: Make sysfs attributes writable
+  scsi: ufs: sysfs: Document attribute writability
+  scsi: ufs: Refactor descriptor read for write
+  scsi: ufs: Enable writing config descriptor
+  scsi: ufs: Update config descriptor documentation
+
+ Documentation/ABI/testing/sysfs-driver-ufs | 174 ++++++++++++++++++++---
+ drivers/scsi/ufs/ufs-sysfs.c               | 217 ++++++++++++++++++++++++++---
+ drivers/scsi/ufs/ufs.h                     |  29 ++++
+ drivers/scsi/ufs/ufshcd.c                  |  89 ++++++++----
+ drivers/scsi/ufs/ufshcd.h                  |  16 ++-
+ 5 files changed, 458 insertions(+), 67 deletions(-)
+
 -- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+2.13.5
