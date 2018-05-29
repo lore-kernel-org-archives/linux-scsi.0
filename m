@@ -1,15 +1,16 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 2/8] scsi: libsas: check the lldd callback correctly
-Date: Tue, 29 May 2018 09:34:01 +0200
-Message-ID: <20180529073401.6acgz7oiog76wcjf@linux-x5ow.site>
+Subject: Re: [PATCH 3/8] scsi: libsas: always unregister the old device if
+ going to discover new
+Date: Tue, 29 May 2018 09:37:55 +0200
+Message-ID: <20180529073755.dml26snrgmohxzk5@linux-x5ow.site>
 References: <20180529022309.21071-1-yanaijie@huawei.com>
- <20180529022309.21071-3-yanaijie@huawei.com>
+ <20180529022309.21071-4-yanaijie@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20180529022309.21071-3-yanaijie@huawei.com>
+In-Reply-To: <20180529022309.21071-4-yanaijie@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Jason Yan <yanaijie@huawei.com>
 Cc: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, john.garry@huawei.com, zhaohongjiang@huawei.com, hare@suse.com, dan.j.williams@intel.com, hch@lst.de, huangdaode@hisilicon.com, chenxiang66@hisilicon.com, xiexiuqi@huawei.com, tj@kernel.org, miaoxie@huawei.com, Ewan Milne <emilne@redhat.com>, Tomas Henzl <thenzl@redhat.com>
