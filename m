@@ -1,34 +1,27 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 00/13] hisi_sas: Misc improvements, bugfixes, etc.
-Date: Mon, 28 May 2018 22:47:50 -0400
-Message-ID: <yq1wovn2n55.fsf@oracle.com>
-References: <1526897365-228549-1-git-send-email-john.garry@huawei.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH 1/8] scsi: libsas: delete dead code in
+ scsi_transport_sas.c
+Date: Tue, 29 May 2018 09:33:43 +0200
+Message-ID: <20180529073343.kljzi5k74xwgchjl@linux-x5ow.site>
+References: <20180529022309.21071-1-yanaijie@huawei.com>
+ <20180529022309.21071-2-yanaijie@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1526897365-228549-1-git-send-email-john.garry@huawei.com> (John
-        Garry's message of "Mon, 21 May 2018 18:09:12 +0800")
+Content-Disposition: inline
+In-Reply-To: <20180529022309.21071-2-yanaijie@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: John Garry <john.garry@huawei.com>
-Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linuxarm@huawei.com, linux-kernel@vger.kernel.org
+To: Jason Yan <yanaijie@huawei.com>
+Cc: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, john.garry@huawei.com, zhaohongjiang@huawei.com, hare@suse.com, dan.j.williams@intel.com, hch@lst.de, huangdaode@hisilicon.com, chenxiang66@hisilicon.com, xiexiuqi@huawei.com, tj@kernel.org, miaoxie@huawei.com, Ewan Milne <emilne@redhat.com>, Tomas Henzl <thenzl@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-
-John,
-
-> This patchset introduces some misc improvements, bugfixes,
-> and SoC workarounds for the driver, including:
-
-> - workaround for v2 hw reset with SATA disks attached
-> - LED SGPIO support for v3 hw
-> - Fix for error path in task_prep function
-> - change slot and disk allocation method to avoid
->   unknown SoC bugs
-> - fix potential problem of removing the driver when
->   a disk is mounted
-> - other more minor stuff
-
-Applied to 4.18/scsi-queue. Thanks!
-
+Looks good,
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
