@@ -1,41 +1,47 @@
-From: Ryan Finnie <ryan@finnie.org>
-Subject: Re: [PATCH V3 2/2] scsi: hpsa: drop shutdown callback
-Date: Tue, 29 May 2018 18:50:11 -0700
-Message-ID: <51bb7b82-c4a1-435c-7668-639db96d76e1@finnie.org>
-References: <1527542471-10316-1-git-send-email-okaya@codeaurora.org>
- <1527542471-10316-2-git-send-email-okaya@codeaurora.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+Subject: Re: [PATCH V2] PCI/portdrv: do not disable device on reboot/shutdown
+Date: Tue, 29 May 2018 19:41:43 -0700
+Message-ID: <8eacc568-af8c-a990-ee96-d13e669e8643@codeaurora.org>
+References: <1527043490-17268-1-git-send-email-okaya@codeaurora.org>
+ <20180523213249.GD150632@bhelgaas-glaptop.roam.corp.google.com>
+ <61f70fd6-52fd-da07-ce73-303f95132131@codeaurora.org>
+ <20180524183502.GB85822@bhelgaas-glaptop.roam.corp.google.com>
+ <984b9734-244d-04e9-946f-7524f148ff7c@codeaurora.org>
+ <20180525221024.GC92995@bhelgaas-glaptop.roam.corp.google.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1527542471-10316-2-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <20180525221024.GC92995@bhelgaas-glaptop.roam.corp.google.com>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Sinan Kaya <okaya@codeaurora.org>, linux-pci@vger.kernel.org, timur@codeaurora.org
-Cc: linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, stable@vger.kernel.org, Don Brace <don.brace@microsemi.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "open list:HEWLETT-PACKARD SMART ARRAY RAID DRIVER (hpsa)" <esc.storagedev@microsemi.com>, "open list:HEWLETT-PACKARD SMART ARRAY RAID DRIVER (hpsa)" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, timur@codeaurora.org, ryan@finnie.org, linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, stable@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Thomas Gleixner <tglx@linutronix.de>, Kate Stewart <kstewart@linuxfoundation.org>, Frederick Lawler <fred@fredlawl.com>, Dongdong Liu <liudongdong3@huawei.com>, Mika Westerberg <mika.westerberg@linux.intel.com>, open list <linux-kernel@vger.kernel.org>, Don Brace <don.brace@microsemi.com>, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 05/28/2018 02:21 PM, Sinan Kaya wrote:
-> 'Commit cc27b735ad3a ("PCI/portdrv: Turn off PCIe services during
-> shutdown")' has been added to kernel to shutdown pending PCIe port
-> service interrupts during reboot so that a newly started kexec kernel
-> wouldn't observe pending interrupts.
-> 
-> pcie_port_device_remove() is disabling the root port and switches by
-> calling pci_disable_device() after all PCIe service drivers are shutdown.
-> 
-> This has been found to cause crashes on HP DL360 Gen9 machines during
-> reboot due to hpsa driver not clearing the bus master bit during the
-> shutdown procedure by calling pci_disable_device().
-> 
-> Drop the shutdown API and do an orderly clean up by using the remove.
-> 
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-> Link: https://bugzilla.kernel.org/show_bug.cgi?id=199779
-> Fixes: cc27b735ad3a ("PCI/portdrv: Turn off PCIe services during shutdown")
-> Cc: stable@vger.kernel.org
-> Reported-by: Ryan Finnie <ryan@finnie.org>
+Bjorn,
 
-Tested successfully on DL360 Gen9 and DL380 Gen9.
+On 5/25/2018 3:10 PM, Bjorn Helgaas wrote:
+> On Fri, May 25, 2018 at 09:30:59AM -0400, Sinan Kaya wrote:
+>> On 5/24/2018 2:35 PM, Bjorn Helgaas wrote:
+>>> That sounds like a reasonable idea, and it is definitely another can
+>>> of worms.  I looked briefly at some of the .shutdown() cases:
+>>
+>> should we throw it into 4.18 and see what happens?
+> 
+> It wouldn't solve this particular problem because hpsa *does* have a
+> .shutdown() method.  The problem is that it doesn't work -- it's
+> supposed to stop DMA and interrupts but it apparently doesn't.
+> 
+> I think we need to fix hpsa first.
+> 
 
-Tested-by: Ryan Finnie <ryan@finnie.org>
+I don't know if you followed my latest V3 patch but I found a way to put
+these two together to reach to an, IMO, more acceptable solution.
+
+Sinan
+
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
