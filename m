@@ -1,106 +1,55 @@
-From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: [PATCH 1/2] scsi: sd_zbc: Fix potential memory leak
-Date: Thu, 31 May 2018 19:31:23 +0900
-Message-ID: <20180531103124.21532-2-damien.lemoal@wdc.com>
-References: <20180531103124.21532-1-damien.lemoal@wdc.com>
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20180531103124.21532-1-damien.lemoal@wdc.com>
-Sender: stable-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: stable@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Bart Van Assche <Bart.VanAssche@wdc.com>, Hannes Reinecke <hare@suse.de>
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] scsi: aic7xxx: aic79xx: fix potential null pointer dereference on ahd
+Date: Thu, 31 May 2018 13:31:17 +0100
+Message-ID: <20180531123117.32118-1-colin.king@canonical.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-[Backport of upstream commit 0aa3fdb8b3a6df3c2e3b61dbfe079db9d30e03cd]
+From: Colin Ian King <colin.king@canonical.com>
 
-Rework sd_zbc_check_zone_size() to avoid a memory leak due to an early
-return if sd_zbc_report_zones() fails.
+If AHD_DEBUG is enabled and ahd_platform_alloc fails then ahd is set
+to null and the debug printk dereferences ahd when passing it to
+ahd_name.  Fix this by moving the debug printk to before the call
+to ahd_platform_alloc where ahd is not null at that point.
 
-Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
-Cc: stable@vger.kernel.org # 4.14
+Detected by CoverityScan, CID#100296 ("Explicit null dereference")
+
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
 ---
- drivers/scsi/sd_zbc.c | 34 +++++++++++++++-------------------
- 1 file changed, 15 insertions(+), 19 deletions(-)
+ drivers/scsi/aic7xxx/aic79xx_core.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
-index 2eb61d54bbb4..bc3cb81a9c7d 100644
---- a/drivers/scsi/sd_zbc.c
-+++ b/drivers/scsi/sd_zbc.c
-@@ -425,7 +425,7 @@ static int sd_zbc_check_capacity(struct scsi_disk *sdkp,
+diff --git a/drivers/scsi/aic7xxx/aic79xx_core.c b/drivers/scsi/aic7xxx/aic79xx_core.c
+index 034f4eebb160..3efd4cdc40a0 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_core.c
++++ b/drivers/scsi/aic7xxx/aic79xx_core.c
+@@ -6112,10 +6112,6 @@ ahd_alloc(void *platform_arg, char *name)
+ 	ahd->int_coalescing_stop_threshold =
+ 	    AHD_INT_COALESCING_STOP_THRESHOLD_DEFAULT;
  
- static int sd_zbc_check_zone_size(struct scsi_disk *sdkp)
- {
--	u64 zone_blocks;
-+	u64 zone_blocks = 0;
- 	sector_t block = 0;
- 	unsigned char *buf;
- 	unsigned char *rec;
-@@ -443,10 +443,8 @@ static int sd_zbc_check_zone_size(struct scsi_disk *sdkp)
- 
- 	/* Do a report zone to get the same field */
- 	ret = sd_zbc_report_zones(sdkp, buf, SD_ZBC_BUF_SIZE, 0);
--	if (ret) {
--		zone_blocks = 0;
--		goto out;
+-	if (ahd_platform_alloc(ahd, platform_arg) != 0) {
+-		ahd_free(ahd);
+-		ahd = NULL;
 -	}
-+	if (ret)
-+		goto out_free;
- 
- 	same = buf[4] & 0x0f;
- 	if (same > 0) {
-@@ -489,7 +487,7 @@ static int sd_zbc_check_zone_size(struct scsi_disk *sdkp)
- 			ret = sd_zbc_report_zones(sdkp, buf,
- 						  SD_ZBC_BUF_SIZE, block);
- 			if (ret)
--				return ret;
-+				goto out_free;
- 		}
- 
- 	} while (block < sdkp->capacity);
-@@ -497,34 +495,32 @@ static int sd_zbc_check_zone_size(struct scsi_disk *sdkp)
- 	zone_blocks = sdkp->zone_blocks;
- 
- out:
--	kfree(buf);
--
- 	if (!zone_blocks) {
- 		if (sdkp->first_scan)
- 			sd_printk(KERN_NOTICE, sdkp,
- 				  "Devices with non constant zone "
- 				  "size are not supported\n");
--		return -ENODEV;
--	}
--
--	if (!is_power_of_2(zone_blocks)) {
-+		ret = -ENODEV;
-+	} else if (!is_power_of_2(zone_blocks)) {
- 		if (sdkp->first_scan)
- 			sd_printk(KERN_NOTICE, sdkp,
- 				  "Devices with non power of 2 zone "
- 				  "size are not supported\n");
--		return -ENODEV;
--	}
--
--	if (logical_to_sectors(sdkp->device, zone_blocks) > UINT_MAX) {
-+		ret = -ENODEV;
-+	} else if (logical_to_sectors(sdkp->device, zone_blocks) > UINT_MAX) {
- 		if (sdkp->first_scan)
- 			sd_printk(KERN_NOTICE, sdkp,
- 				  "Zone size too large\n");
--		return -ENODEV;
-+		ret = -ENODEV;
-+	} else {
-+		sdkp->zone_blocks = zone_blocks;
-+		sdkp->zone_shift = ilog2(zone_blocks);
+ #ifdef AHD_DEBUG
+ 	if ((ahd_debug & AHD_SHOW_MEMORY) != 0) {
+ 		printk("%s: scb size = 0x%x, hscb size = 0x%x\n",
+@@ -6123,6 +6119,10 @@ ahd_alloc(void *platform_arg, char *name)
+ 		       (u_int)sizeof(struct hardware_scb));
  	}
- 
--	sdkp->zone_blocks = zone_blocks;
-+out_free:
-+	kfree(buf);
- 
--	return 0;
-+	return ret;
+ #endif
++	if (ahd_platform_alloc(ahd, platform_arg) != 0) {
++		ahd_free(ahd);
++		ahd = NULL;
++	}
+ 	return (ahd);
  }
  
- static int sd_zbc_setup(struct scsi_disk *sdkp)
 -- 
 2.17.0
