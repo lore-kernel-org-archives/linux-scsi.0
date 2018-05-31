@@ -1,41 +1,44 @@
-From: Peter Melnichenko <melnichenko@ispras.ru>
-Subject: [PATCH] aic94xx: set error code on an error path in aic94xx_init
-Date: Thu, 31 May 2018 21:28:14 +0300
-Message-ID: <1527791294-21600-1-git-send-email-melnichenko@ispras.ru>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Subject: Re: [PATCH] aic94xx: set error code on an error path in aic94xx_init
+Date: Thu, 31 May 2018 22:15:45 +0300
+Message-ID: <CAHp75VdAWzAB1K3bGEAgM28ZZFYa-92JqERy=jKd1Fc_738eBg@mail.gmail.com>
+References: <1527791294-21600-1-git-send-email-melnichenko@ispras.ru>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1527791294-21600-1-git-send-email-melnichenko@ispras.ru>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: Peter Melnichenko <melnichenko@ispras.ru>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
+To: Peter Melnichenko <melnichenko@ispras.ru>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, ldv-project@linuxtesting.org
 List-Id: linux-scsi@vger.kernel.org
 
-When sas_domain_attach_transport returns NULL, aic94xx_init
-frees acquired resources but returns err equal to 0, as
-assigned by a previous statement.
+On Thu, May 31, 2018 at 9:28 PM, Peter Melnichenko
+<melnichenko@ispras.ru> wrote:
+> When sas_domain_attach_transport returns NULL, aic94xx_init
+> frees acquired resources but returns err equal to 0, as
+> assigned by a previous statement.
+>
+> The patch sets err to -ENOMEM before jumping to the error label.
 
-The patch sets err to -ENOMEM before jumping to the error label.
+Wouldn't be better to fix a callee to return proper error code and...
 
-Found by Linux Driver Verification project (linuxtesting.org).
+>         aic94xx_transport_template =
+>                 sas_domain_attach_transport(&aic94xx_transport_functions);
+> -       if (!aic94xx_transport_template)
+> +       if (!aic94xx_transport_template) {
+> +               err = -ENOMEM;
+>                 goto out_destroy_caches;
+> +       }
 
-Signed-off-by: Peter Melnichenko <melnichenko@ispras.ru>
----
- drivers/scsi/aic94xx/aic94xx_init.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+this becomes
 
-diff --git a/drivers/scsi/aic94xx/aic94xx_init.c b/drivers/scsi/aic94xx/aic94xx_init.c
-index 6c83886..4a4746c 100644
---- a/drivers/scsi/aic94xx/aic94xx_init.c
-+++ b/drivers/scsi/aic94xx/aic94xx_init.c
-@@ -1030,8 +1030,10 @@ static int __init aic94xx_init(void)
- 
- 	aic94xx_transport_template =
- 		sas_domain_attach_transport(&aic94xx_transport_functions);
--	if (!aic94xx_transport_template)
-+	if (!aic94xx_transport_template) {
-+		err = -ENOMEM;
- 		goto out_destroy_caches;
-+	}
- 
- 	err = pci_register_driver(&aic94xx_pci_driver);
- 	if (err)
+err = _attach_();
+if (err < 0)
+ goto ;
+_template = err;
+
+?
+
 -- 
-2.7.4
+With Best Regards,
+Andy Shevchenko
