@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 3/9] scsi: hisi_sas: Fix the conflict between dev gone and host reset
-Date: Thu, 31 May 2018 20:50:44 +0800
-Message-ID: <1527771050-200916-4-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 1/9] scsi: hisi_sas: Use dmam_alloc_coherent()
+Date: Thu, 31 May 2018 20:50:42 +0800
+Message-ID: <1527771050-200916-2-git-send-email-john.garry@huawei.com>
 References: <1527771050-200916-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -9,89 +9,155 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1527771050-200916-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linuxarm@huawei.com, linux-kernel@vger.kernel.org, Xiaofei Tan <tanxiaofei@huawei.com>, John Garry <john.garry@huawei.com>
+Cc: linux-scsi@vger.kernel.org, linuxarm@huawei.com, linux-kernel@vger.kernel.org, Xiang Chen <chenxiang66@hisilicon.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Xiaofei Tan <tanxiaofei@huawei.com>
+From: Xiang Chen <chenxiang66@hisilicon.com>
 
-There is a possible conflict when a device is removed and host reset
-occurs concurrently.
+This patch replaces the usage of dma_alloc_coherent() with the managed
+version, dmam_alloc_coherent(), hereby reducing replicated code.
 
-The reason is that then the device is notified as gone, we try to clear
-the ITCT, which is notified via an interrupt. The dev gone function pends
-on this event with a completion, which is completed when the ITCT
-interrupt occurs.
-
-But host reset will disable all interrupts, the wait_for_completion() may
-wait indefinitely.
-
-This patch adds an semaphore to synchronise this two processes. The
-semaphore is taken by the host reset as the basis of synchronising.
-
-Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
-Signed-off-by: John Garry <john.garry@huawei.com>
+Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+Signed-off-by; John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas.h      | 1 +
- drivers/scsi/hisi_sas/hisi_sas_main.c | 6 ++++++
- 2 files changed, 7 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 80 +++++++++--------------------------
+ 1 file changed, 20 insertions(+), 60 deletions(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index 7052a5d..78e5a92 100644
---- a/drivers/scsi/hisi_sas/hisi_sas.h
-+++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -277,6 +277,7 @@ struct hisi_hba {
- 
- 	int n_phy;
- 	spinlock_t lock;
-+	struct semaphore sem;
- 
- 	struct timer_list timer;
- 	struct workqueue_struct *wq;
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 1c424bb..823386f 100644
+index 6f56297..1c424bb 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -914,7 +914,9 @@ static void hisi_sas_dev_gone(struct domain_device *device)
+@@ -2045,15 +2045,17 @@ int hisi_sas_alloc(struct hisi_hba *hisi_hba, struct Scsi_Host *shost)
  
- 		hisi_sas_dereg_device(hisi_hba, device);
+ 		/* Delivery queue */
+ 		s = sizeof(struct hisi_sas_cmd_hdr) * HISI_SAS_QUEUE_SLOTS;
+-		hisi_hba->cmd_hdr[i] = dma_alloc_coherent(dev, s,
+-					&hisi_hba->cmd_hdr_dma[i], GFP_KERNEL);
++		hisi_hba->cmd_hdr[i] = dmam_alloc_coherent(dev, s,
++						&hisi_hba->cmd_hdr_dma[i],
++						GFP_KERNEL);
+ 		if (!hisi_hba->cmd_hdr[i])
+ 			goto err_out;
  
-+		down(&hisi_hba->sem);
- 		hisi_hba->hw->clear_itct(hisi_hba, sas_dev);
-+		up(&hisi_hba->sem);
- 		device->lldd_dev = NULL;
+ 		/* Completion queue */
+ 		s = hisi_hba->hw->complete_hdr_size * HISI_SAS_QUEUE_SLOTS;
+-		hisi_hba->complete_hdr[i] = dma_alloc_coherent(dev, s,
+-				&hisi_hba->complete_hdr_dma[i], GFP_KERNEL);
++		hisi_hba->complete_hdr[i] = dmam_alloc_coherent(dev, s,
++						&hisi_hba->complete_hdr_dma[i],
++						GFP_KERNEL);
+ 		if (!hisi_hba->complete_hdr[i])
+ 			goto err_out;
  	}
+@@ -2064,10 +2066,11 @@ int hisi_sas_alloc(struct hisi_hba *hisi_hba, struct Scsi_Host *shost)
+ 		goto err_out;
  
-@@ -1364,6 +1366,7 @@ static int hisi_sas_controller_reset(struct hisi_hba *hisi_hba)
- 	if (test_and_set_bit(HISI_SAS_RESET_BIT, &hisi_hba->flags))
- 		return -1;
+ 	s = HISI_SAS_MAX_ITCT_ENTRIES * sizeof(struct hisi_sas_itct);
+-	hisi_hba->itct = dma_zalloc_coherent(dev, s, &hisi_hba->itct_dma,
+-					    GFP_KERNEL);
++	hisi_hba->itct = dmam_alloc_coherent(dev, s, &hisi_hba->itct_dma,
++					     GFP_KERNEL);
+ 	if (!hisi_hba->itct)
+ 		goto err_out;
++	memset(hisi_hba->itct, 0, s);
  
-+	down(&hisi_hba->sem);
- 	dev_info(dev, "controller resetting...\n");
- 	old_state = hisi_hba->hw->get_phys_state(hisi_hba);
+ 	hisi_hba->slot_info = devm_kcalloc(dev, max_command_entries,
+ 					   sizeof(struct hisi_sas_slot),
+@@ -2076,14 +2079,15 @@ int hisi_sas_alloc(struct hisi_hba *hisi_hba, struct Scsi_Host *shost)
+ 		goto err_out;
  
-@@ -1378,6 +1381,7 @@ static int hisi_sas_controller_reset(struct hisi_hba *hisi_hba)
- 	if (rc) {
- 		dev_warn(dev, "controller reset failed (%d)\n", rc);
- 		clear_bit(HISI_SAS_REJECT_CMD_BIT, &hisi_hba->flags);
-+		up(&hisi_hba->sem);
- 		scsi_unblock_requests(shost);
- 		goto out;
- 	}
-@@ -1388,6 +1392,7 @@ static int hisi_sas_controller_reset(struct hisi_hba *hisi_hba)
- 	hisi_hba->hw->phys_init(hisi_hba);
- 	msleep(1000);
- 	hisi_sas_refresh_port_id(hisi_hba);
-+	up(&hisi_hba->sem);
+ 	s = max_command_entries * sizeof(struct hisi_sas_iost);
+-	hisi_hba->iost = dma_alloc_coherent(dev, s, &hisi_hba->iost_dma,
+-					    GFP_KERNEL);
++	hisi_hba->iost = dmam_alloc_coherent(dev, s, &hisi_hba->iost_dma,
++					     GFP_KERNEL);
+ 	if (!hisi_hba->iost)
+ 		goto err_out;
  
- 	if (hisi_hba->reject_stp_links_msk)
- 		hisi_sas_terminate_stp_reject(hisi_hba);
-@@ -2016,6 +2021,7 @@ int hisi_sas_alloc(struct hisi_hba *hisi_hba, struct Scsi_Host *shost)
- 	struct device *dev = hisi_hba->dev;
- 	int i, s, max_command_entries = hisi_hba->hw->max_command_entries;
+ 	s = max_command_entries * sizeof(struct hisi_sas_breakpoint);
+-	hisi_hba->breakpoint = dma_alloc_coherent(dev, s,
+-				&hisi_hba->breakpoint_dma, GFP_KERNEL);
++	hisi_hba->breakpoint = dmam_alloc_coherent(dev, s,
++						   &hisi_hba->breakpoint_dma,
++						   GFP_KERNEL);
+ 	if (!hisi_hba->breakpoint)
+ 		goto err_out;
  
-+	sema_init(&hisi_hba->sem, 1);
- 	spin_lock_init(&hisi_hba->lock);
- 	for (i = 0; i < hisi_hba->n_phy; i++) {
- 		hisi_sas_phy_init(hisi_hba, i);
+@@ -2094,14 +2098,16 @@ int hisi_sas_alloc(struct hisi_hba *hisi_hba, struct Scsi_Host *shost)
+ 		goto err_out;
+ 
+ 	s = sizeof(struct hisi_sas_initial_fis) * HISI_SAS_MAX_PHYS;
+-	hisi_hba->initial_fis = dma_alloc_coherent(dev, s,
+-				&hisi_hba->initial_fis_dma, GFP_KERNEL);
++	hisi_hba->initial_fis = dmam_alloc_coherent(dev, s,
++						    &hisi_hba->initial_fis_dma,
++						    GFP_KERNEL);
+ 	if (!hisi_hba->initial_fis)
+ 		goto err_out;
+ 
+ 	s = HISI_SAS_MAX_ITCT_ENTRIES * sizeof(struct hisi_sas_sata_breakpoint);
+-	hisi_hba->sata_breakpoint = dma_alloc_coherent(dev, s,
+-				&hisi_hba->sata_breakpoint_dma, GFP_KERNEL);
++	hisi_hba->sata_breakpoint = dmam_alloc_coherent(dev, s,
++					&hisi_hba->sata_breakpoint_dma,
++					GFP_KERNEL);
+ 	if (!hisi_hba->sata_breakpoint)
+ 		goto err_out;
+ 	hisi_sas_init_mem(hisi_hba);
+@@ -2122,54 +2128,8 @@ int hisi_sas_alloc(struct hisi_hba *hisi_hba, struct Scsi_Host *shost)
+ 
+ void hisi_sas_free(struct hisi_hba *hisi_hba)
+ {
+-	struct device *dev = hisi_hba->dev;
+-	int i, s, max_command_entries = hisi_hba->hw->max_command_entries;
+-
+-	for (i = 0; i < hisi_hba->queue_count; i++) {
+-		s = sizeof(struct hisi_sas_cmd_hdr) * HISI_SAS_QUEUE_SLOTS;
+-		if (hisi_hba->cmd_hdr[i])
+-			dma_free_coherent(dev, s,
+-					  hisi_hba->cmd_hdr[i],
+-					  hisi_hba->cmd_hdr_dma[i]);
+-
+-		s = hisi_hba->hw->complete_hdr_size * HISI_SAS_QUEUE_SLOTS;
+-		if (hisi_hba->complete_hdr[i])
+-			dma_free_coherent(dev, s,
+-					  hisi_hba->complete_hdr[i],
+-					  hisi_hba->complete_hdr_dma[i]);
+-	}
+-
+ 	dma_pool_destroy(hisi_hba->buffer_pool);
+ 
+-	s = HISI_SAS_MAX_ITCT_ENTRIES * sizeof(struct hisi_sas_itct);
+-	if (hisi_hba->itct)
+-		dma_free_coherent(dev, s,
+-				  hisi_hba->itct, hisi_hba->itct_dma);
+-
+-	s = max_command_entries * sizeof(struct hisi_sas_iost);
+-	if (hisi_hba->iost)
+-		dma_free_coherent(dev, s,
+-				  hisi_hba->iost, hisi_hba->iost_dma);
+-
+-	s = max_command_entries * sizeof(struct hisi_sas_breakpoint);
+-	if (hisi_hba->breakpoint)
+-		dma_free_coherent(dev, s,
+-				  hisi_hba->breakpoint,
+-				  hisi_hba->breakpoint_dma);
+-
+-
+-	s = sizeof(struct hisi_sas_initial_fis) * HISI_SAS_MAX_PHYS;
+-	if (hisi_hba->initial_fis)
+-		dma_free_coherent(dev, s,
+-				  hisi_hba->initial_fis,
+-				  hisi_hba->initial_fis_dma);
+-
+-	s = HISI_SAS_MAX_ITCT_ENTRIES * sizeof(struct hisi_sas_sata_breakpoint);
+-	if (hisi_hba->sata_breakpoint)
+-		dma_free_coherent(dev, s,
+-				  hisi_hba->sata_breakpoint,
+-				  hisi_hba->sata_breakpoint_dma);
+-
+ 	if (hisi_hba->wq)
+ 		destroy_workqueue(hisi_hba->wq);
+ }
 -- 
 1.9.1
