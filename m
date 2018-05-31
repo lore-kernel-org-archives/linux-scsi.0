@@ -1,55 +1,41 @@
-From: Colin King <colin.king@canonical.com>
-Subject: [PATCH] scsi: aic7xxx: aic79xx: fix potential null pointer dereference on ahd
-Date: Thu, 31 May 2018 13:31:17 +0100
-Message-ID: <20180531123117.32118-1-colin.king@canonical.com>
+From: John Garry <john.garry@huawei.com>
+Subject: [PATCH 0/9] hisi_sas: some misc changes
+Date: Thu, 31 May 2018 20:50:41 +0800
+Message-ID: <1527771050-200916-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, linuxarm@huawei.com, linux-kernel@vger.kernel.org, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Colin Ian King <colin.king@canonical.com>
+This patchset introduces some more minor misc changes to the driver.
+Patches of note include:
+- Pre-allocate slot DMA buffers
+- some fixes for host reset handling
 
-If AHD_DEBUG is enabled and ahd_platform_alloc fails then ahd is set
-to null and the debug printk dereferences ahd when passing it to
-ahd_name.  Fix this by moving the debug printk to before the call
-to ahd_platform_alloc where ahd is not null at that point.
+John Garry (2):
+  scsi: hisi_sas: Add missing PHY spinlock init
+  scsi: hisi_sas: Update a couple of register settings for v3 hw
 
-Detected by CoverityScan, CID#100296 ("Explicit null dereference")
+Xiang Chen (2):
+  scsi: hisi_sas: Use dmam_alloc_coherent()
+  scsi: hisi_sas: Pre-allocate slot DMA buffers
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/scsi/aic7xxx/aic79xx_core.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+Xiaofei Tan (5):
+  scsi: hisi_sas: Only process broadcast change in phy_bcast_v3_hw()
+  scsi: hisi_sas: Fix the conflict between dev gone and host reset
+  scsi: hisi_sas: Adjust task reject period during host reset
+  scsi: hisi_sas: Add a flag to filter PHY events during reset
+  scsi: hisi_sas: Release all remaining resources in clear nexus ha
 
-diff --git a/drivers/scsi/aic7xxx/aic79xx_core.c b/drivers/scsi/aic7xxx/aic79xx_core.c
-index 034f4eebb160..3efd4cdc40a0 100644
---- a/drivers/scsi/aic7xxx/aic79xx_core.c
-+++ b/drivers/scsi/aic7xxx/aic79xx_core.c
-@@ -6112,10 +6112,6 @@ ahd_alloc(void *platform_arg, char *name)
- 	ahd->int_coalescing_stop_threshold =
- 	    AHD_INT_COALESCING_STOP_THRESHOLD_DEFAULT;
- 
--	if (ahd_platform_alloc(ahd, platform_arg) != 0) {
--		ahd_free(ahd);
--		ahd = NULL;
--	}
- #ifdef AHD_DEBUG
- 	if ((ahd_debug & AHD_SHOW_MEMORY) != 0) {
- 		printk("%s: scb size = 0x%x, hscb size = 0x%x\n",
-@@ -6123,6 +6119,10 @@ ahd_alloc(void *platform_arg, char *name)
- 		       (u_int)sizeof(struct hardware_scb));
- 	}
- #endif
-+	if (ahd_platform_alloc(ahd, platform_arg) != 0) {
-+		ahd_free(ahd);
-+		ahd = NULL;
-+	}
- 	return (ahd);
- }
- 
+ drivers/scsi/hisi_sas/hisi_sas.h       |  10 +-
+ drivers/scsi/hisi_sas/hisi_sas_main.c  | 214 +++++++++++++++------------------
+ drivers/scsi/hisi_sas/hisi_sas_v1_hw.c |   3 +-
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c |   3 +-
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c |  16 ++-
+ 5 files changed, 122 insertions(+), 124 deletions(-)
+
 -- 
-2.17.0
+1.9.1
