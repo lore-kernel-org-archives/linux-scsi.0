@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 1/9] scsi: hisi_sas: Use dmam_alloc_coherent()
-Date: Thu, 31 May 2018 20:50:42 +0800
-Message-ID: <1527771050-200916-2-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 6/9] scsi: hisi_sas: Release all remaining resources in clear nexus ha
+Date: Thu, 31 May 2018 20:50:47 +0800
+Message-ID: <1527771050-200916-7-git-send-email-john.garry@huawei.com>
 References: <1527771050-200916-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -9,155 +9,68 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1527771050-200916-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linuxarm@huawei.com, linux-kernel@vger.kernel.org, Xiang Chen <chenxiang66@hisilicon.com>
+Cc: linux-scsi@vger.kernel.org, linuxarm@huawei.com, linux-kernel@vger.kernel.org, Xiaofei Tan <tanxiaofei@huawei.com>, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Xiang Chen <chenxiang66@hisilicon.com>
+From: Xiaofei Tan <tanxiaofei@huawei.com>
 
-This patch replaces the usage of dma_alloc_coherent() with the managed
-version, dmam_alloc_coherent(), hereby reducing replicated code.
+In host reset, we use TMF or soft-reset to re-init device, and if success,
+we will release all LLDD resources of this device. If the init fails -
+maybe because the device was removed or link has not come up - then do not
+release the LLDD resources, but rather rely on SCSI EH to handle the
+timeout for these resources later on.
 
-Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
-Signed-off-by; John Garry <john.garry@huawei.com>
+But if clear nexus ha calls host reset, which is the last effort of SCSI
+EH, we should release all LLDD remain resources. Because SCSI EH will
+release all tasks after clear nexus ha.
+
+Before release, we do I_T nexus reset to try to clear target remain IOs.
+
+Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_main.c | 80 +++++++++--------------------------
- 1 file changed, 20 insertions(+), 60 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 24 +++++++++++++++++++++---
+ 1 file changed, 21 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 6f56297..1c424bb 100644
+index 006e776..da1d5fe 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -2045,15 +2045,17 @@ int hisi_sas_alloc(struct hisi_hba *hisi_hba, struct Scsi_Host *shost)
- 
- 		/* Delivery queue */
- 		s = sizeof(struct hisi_sas_cmd_hdr) * HISI_SAS_QUEUE_SLOTS;
--		hisi_hba->cmd_hdr[i] = dma_alloc_coherent(dev, s,
--					&hisi_hba->cmd_hdr_dma[i], GFP_KERNEL);
-+		hisi_hba->cmd_hdr[i] = dmam_alloc_coherent(dev, s,
-+						&hisi_hba->cmd_hdr_dma[i],
-+						GFP_KERNEL);
- 		if (!hisi_hba->cmd_hdr[i])
- 			goto err_out;
- 
- 		/* Completion queue */
- 		s = hisi_hba->hw->complete_hdr_size * HISI_SAS_QUEUE_SLOTS;
--		hisi_hba->complete_hdr[i] = dma_alloc_coherent(dev, s,
--				&hisi_hba->complete_hdr_dma[i], GFP_KERNEL);
-+		hisi_hba->complete_hdr[i] = dmam_alloc_coherent(dev, s,
-+						&hisi_hba->complete_hdr_dma[i],
-+						GFP_KERNEL);
- 		if (!hisi_hba->complete_hdr[i])
- 			goto err_out;
- 	}
-@@ -2064,10 +2066,11 @@ int hisi_sas_alloc(struct hisi_hba *hisi_hba, struct Scsi_Host *shost)
- 		goto err_out;
- 
- 	s = HISI_SAS_MAX_ITCT_ENTRIES * sizeof(struct hisi_sas_itct);
--	hisi_hba->itct = dma_zalloc_coherent(dev, s, &hisi_hba->itct_dma,
--					    GFP_KERNEL);
-+	hisi_hba->itct = dmam_alloc_coherent(dev, s, &hisi_hba->itct_dma,
-+					     GFP_KERNEL);
- 	if (!hisi_hba->itct)
- 		goto err_out;
-+	memset(hisi_hba->itct, 0, s);
- 
- 	hisi_hba->slot_info = devm_kcalloc(dev, max_command_entries,
- 					   sizeof(struct hisi_sas_slot),
-@@ -2076,14 +2079,15 @@ int hisi_sas_alloc(struct hisi_hba *hisi_hba, struct Scsi_Host *shost)
- 		goto err_out;
- 
- 	s = max_command_entries * sizeof(struct hisi_sas_iost);
--	hisi_hba->iost = dma_alloc_coherent(dev, s, &hisi_hba->iost_dma,
--					    GFP_KERNEL);
-+	hisi_hba->iost = dmam_alloc_coherent(dev, s, &hisi_hba->iost_dma,
-+					     GFP_KERNEL);
- 	if (!hisi_hba->iost)
- 		goto err_out;
- 
- 	s = max_command_entries * sizeof(struct hisi_sas_breakpoint);
--	hisi_hba->breakpoint = dma_alloc_coherent(dev, s,
--				&hisi_hba->breakpoint_dma, GFP_KERNEL);
-+	hisi_hba->breakpoint = dmam_alloc_coherent(dev, s,
-+						   &hisi_hba->breakpoint_dma,
-+						   GFP_KERNEL);
- 	if (!hisi_hba->breakpoint)
- 		goto err_out;
- 
-@@ -2094,14 +2098,16 @@ int hisi_sas_alloc(struct hisi_hba *hisi_hba, struct Scsi_Host *shost)
- 		goto err_out;
- 
- 	s = sizeof(struct hisi_sas_initial_fis) * HISI_SAS_MAX_PHYS;
--	hisi_hba->initial_fis = dma_alloc_coherent(dev, s,
--				&hisi_hba->initial_fis_dma, GFP_KERNEL);
-+	hisi_hba->initial_fis = dmam_alloc_coherent(dev, s,
-+						    &hisi_hba->initial_fis_dma,
-+						    GFP_KERNEL);
- 	if (!hisi_hba->initial_fis)
- 		goto err_out;
- 
- 	s = HISI_SAS_MAX_ITCT_ENTRIES * sizeof(struct hisi_sas_sata_breakpoint);
--	hisi_hba->sata_breakpoint = dma_alloc_coherent(dev, s,
--				&hisi_hba->sata_breakpoint_dma, GFP_KERNEL);
-+	hisi_hba->sata_breakpoint = dmam_alloc_coherent(dev, s,
-+					&hisi_hba->sata_breakpoint_dma,
-+					GFP_KERNEL);
- 	if (!hisi_hba->sata_breakpoint)
- 		goto err_out;
- 	hisi_sas_init_mem(hisi_hba);
-@@ -2122,54 +2128,8 @@ int hisi_sas_alloc(struct hisi_hba *hisi_hba, struct Scsi_Host *shost)
- 
- void hisi_sas_free(struct hisi_hba *hisi_hba)
+@@ -1652,14 +1652,32 @@ static int hisi_sas_lu_reset(struct domain_device *device, u8 *lun)
+ static int hisi_sas_clear_nexus_ha(struct sas_ha_struct *sas_ha)
  {
--	struct device *dev = hisi_hba->dev;
--	int i, s, max_command_entries = hisi_hba->hw->max_command_entries;
--
--	for (i = 0; i < hisi_hba->queue_count; i++) {
--		s = sizeof(struct hisi_sas_cmd_hdr) * HISI_SAS_QUEUE_SLOTS;
--		if (hisi_hba->cmd_hdr[i])
--			dma_free_coherent(dev, s,
--					  hisi_hba->cmd_hdr[i],
--					  hisi_hba->cmd_hdr_dma[i]);
--
--		s = hisi_hba->hw->complete_hdr_size * HISI_SAS_QUEUE_SLOTS;
--		if (hisi_hba->complete_hdr[i])
--			dma_free_coherent(dev, s,
--					  hisi_hba->complete_hdr[i],
--					  hisi_hba->complete_hdr_dma[i]);
--	}
--
- 	dma_pool_destroy(hisi_hba->buffer_pool);
+ 	struct hisi_hba *hisi_hba = sas_ha->lldd_ha;
++	struct device *dev = hisi_hba->dev;
+ 	HISI_SAS_DECLARE_RST_WORK_ON_STACK(r);
++	int rc, i;
  
--	s = HISI_SAS_MAX_ITCT_ENTRIES * sizeof(struct hisi_sas_itct);
--	if (hisi_hba->itct)
--		dma_free_coherent(dev, s,
--				  hisi_hba->itct, hisi_hba->itct_dma);
--
--	s = max_command_entries * sizeof(struct hisi_sas_iost);
--	if (hisi_hba->iost)
--		dma_free_coherent(dev, s,
--				  hisi_hba->iost, hisi_hba->iost_dma);
--
--	s = max_command_entries * sizeof(struct hisi_sas_breakpoint);
--	if (hisi_hba->breakpoint)
--		dma_free_coherent(dev, s,
--				  hisi_hba->breakpoint,
--				  hisi_hba->breakpoint_dma);
--
--
--	s = sizeof(struct hisi_sas_initial_fis) * HISI_SAS_MAX_PHYS;
--	if (hisi_hba->initial_fis)
--		dma_free_coherent(dev, s,
--				  hisi_hba->initial_fis,
--				  hisi_hba->initial_fis_dma);
--
--	s = HISI_SAS_MAX_ITCT_ENTRIES * sizeof(struct hisi_sas_sata_breakpoint);
--	if (hisi_hba->sata_breakpoint)
--		dma_free_coherent(dev, s,
--				  hisi_hba->sata_breakpoint,
--				  hisi_hba->sata_breakpoint_dma);
--
- 	if (hisi_hba->wq)
- 		destroy_workqueue(hisi_hba->wq);
+ 	queue_work(hisi_hba->wq, &r.work);
+ 	wait_for_completion(r.completion);
+-	if (r.done)
+-		return TMF_RESP_FUNC_COMPLETE;
++	if (!r.done)
++		return TMF_RESP_FUNC_FAILED;
++
++	for (i = 0; i < HISI_SAS_MAX_DEVICES; i++) {
++		struct hisi_sas_device *sas_dev = &hisi_hba->devices[i];
++		struct domain_device *device = sas_dev->sas_device;
++
++		if ((sas_dev->dev_type == SAS_PHY_UNUSED) || !device ||
++		    DEV_IS_EXPANDER(device->dev_type))
++			continue;
++
++		rc = hisi_sas_debug_I_T_nexus_reset(device);
++		if (rc != TMF_RESP_FUNC_COMPLETE)
++			dev_info(dev, "clear nexus ha: for device[%d] rc=%d\n",
++				 sas_dev->device_id, rc);
++	}
++
++	hisi_sas_release_tasks(hisi_hba);
+ 
+-	return TMF_RESP_FUNC_FAILED;
++	return TMF_RESP_FUNC_COMPLETE;
  }
+ 
+ static int hisi_sas_query_task(struct sas_task *task)
 -- 
 1.9.1
