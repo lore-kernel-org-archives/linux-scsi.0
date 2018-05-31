@@ -1,58 +1,41 @@
-From: John Garry <john.garry@huawei.com>
-Subject: Re: [PATCH 8/8] scsi: libsas: support SATA phy link rate unmatch the
- pathway
-Date: Thu, 31 May 2018 17:05:25 +0100
-Message-ID: <ed533ab2-018d-0bda-568f-0034dac1e332@huawei.com>
-References: <20180529022309.21071-1-yanaijie@huawei.com>
- <20180529022309.21071-9-yanaijie@huawei.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Peter Melnichenko <melnichenko@ispras.ru>
+Subject: [PATCH] aic94xx: set error code on an error path in aic94xx_init
+Date: Thu, 31 May 2018 21:28:14 +0300
+Message-ID: <1527791294-21600-1-git-send-email-melnichenko@ispras.ru>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180529022309.21071-9-yanaijie@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jason Yan <yanaijie@huawei.com>, martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, zhaohongjiang@huawei.com, hare@suse.com, dan.j.williams@intel.com, jthumshirn@suse.de, hch@lst.de, huangdaode@hisilicon.com, chenxiang66@hisilicon.com, xiexiuqi@huawei.com, tj@kernel.org, miaoxie@huawei.com, chenqilin <chenqilin2@huawei.com>, Ewan Milne <emilne@redhat.com>, Tomas Henzl <thenzl@redhat.com>
+To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: Peter Melnichenko <melnichenko@ispras.ru>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 29/05/2018 03:23, Jason Yan wrote:
-> If a SATA disk attached to a expander phy and it's linkrate is greater
-> than the expander host phy's linkrate, the disk will failed to discover.
-> The topology is like below:
->
->    +----------+           +----------+
->    |          |           |          |
->    |          |-- 3.0 G --|          |-- 6.0 G -- SAS  disk
->    |          |           |          |
->    |          |-- 3.0 G --|          |-- 6.0 G -- SAS  disk
->    |initiator |           |          |
->    | device   |-- 3.0 G --| Expander |-- 6.0 G -- SAS  disk
->    |          |           |          |
->    |          |-- 3.0 G --|          |-- 6.0 G -- SATA disk  -->failed to connect
->    |          |           |          |
->    |          |           |          |-- 6.0 G -- SATA disk  -->failed to connect
->    |          |           |          |
->    +----------+           +----------+
->
-> And when we check the sas protocal spec, this scenario is described as
-> this:
->
-> 7.13 Rate matching
-> ......
-> If an expander phy attached to a SATA phy is using a physical link rate
-> greater than the maximum connection rate supported by the pathway from
-> an STP initiator port, a management application client should use the
-> SMP PHY CONTROL function (see 10.4.3.10) to set the PROGRAMMED MAXIMUM
-> PHYSICAL LINK RATE field of the expander phy to the maximum connection
-> rate supported by the pathway from that STP initiator port.
->
-> In order to support this scenario, checking the SATA disk's linkrate
-> to see if it is greater than any phy's linkrate it may pass through.
-> Remember the minimum linkrate of the pathway and set the SATA phy
-> linkrate to it using the SMP PHY CONTROL function.
+When sas_domain_attach_transport returns NULL, aic94xx_init
+frees acquired resources but returns err equal to 0, as
+assigned by a previous statement.
 
-As we (re)discover the tree, can we keep track of the min pathway to the 
-root PHY dynamically (per expander), and then take action for any SATA 
-devices attached which have a negotiated linkrate greater (than the 
-expanders min pathway)? This would be an alternate to your approach of 
-finishing discovery and then checking the min pathway as a whole new step.
+The patch sets err to -ENOMEM before jumping to the error label.
+
+Found by Linux Driver Verification project (linuxtesting.org).
+
+Signed-off-by: Peter Melnichenko <melnichenko@ispras.ru>
+---
+ drivers/scsi/aic94xx/aic94xx_init.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/aic94xx/aic94xx_init.c b/drivers/scsi/aic94xx/aic94xx_init.c
+index 6c83886..4a4746c 100644
+--- a/drivers/scsi/aic94xx/aic94xx_init.c
++++ b/drivers/scsi/aic94xx/aic94xx_init.c
+@@ -1030,8 +1030,10 @@ static int __init aic94xx_init(void)
+ 
+ 	aic94xx_transport_template =
+ 		sas_domain_attach_transport(&aic94xx_transport_functions);
+-	if (!aic94xx_transport_template)
++	if (!aic94xx_transport_template) {
++		err = -ENOMEM;
+ 		goto out_destroy_caches;
++	}
+ 
+ 	err = pci_register_driver(&aic94xx_pci_driver);
+ 	if (err)
+-- 
+2.7.4
