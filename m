@@ -1,86 +1,48 @@
-From: Sinan Kaya <okaya@codeaurora.org>
-Subject: Re: [PATCH V4] scsi: hpsa: drop shutdown callback
-Date: Fri, 1 Jun 2018 09:47:17 -0400
-Message-ID: <9516f507-9c3e-cce0-5557-c5c17388f404@codeaurora.org>
-References: <1527860768-11367-1-git-send-email-okaya@codeaurora.org>
+From: Evan Green <evgreen@chromium.org>
+Subject: Re: [PATCH 0/7] Enable UFS provisioning via Linux
+Date: Fri, 1 Jun 2018 07:44:08 -0700
+Message-ID: <CAE=gft4LoNiRtxgTA_ZPghZGEVOzu_GAwMgqhs-8NCYVgj_AVw@mail.gmail.com>
+References: <20180529181740.195362-1-evgreen@chromium.org> <MWHPR04MB11372C75BFC9416BAF5E81A19A630@MWHPR04MB1137.namprd04.prod.outlook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1527860768-11367-1-git-send-email-okaya@codeaurora.org>
-Content-Language: en-US
+In-Reply-To: <MWHPR04MB11372C75BFC9416BAF5E81A19A630@MWHPR04MB1137.namprd04.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-pci@vger.kernel.org, ryan@finnie.org, timur@codeaurora.org
-Cc: linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, stable@vger.kernel.org, Don Brace <don.brace@microsemi.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "open list:HEWLETT-PACKARD SMART ARRAY RAID DRIVER (hpsa)" <esc.storagedev@microsemi.com>, "open list:HEWLETT-PACKARD SMART ARRAY RAID DRIVER (hpsa)" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+To: Stanislav.Nijnikov@wdc.com
+Cc: Vinayak Holikatti <vinholikatti@gmail.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Gwendal Grignou <gwendal@chromium.org>, Alex.Lemberg@wdc.com, Avri.Altman@wdc.com
 List-Id: linux-scsi@vger.kernel.org
 
-On 6/1/2018 9:46 AM, Sinan Kaya wrote:
-> 'Commit cc27b735ad3a ("PCI/portdrv: Turn off PCIe services during
-> shutdown")' has been added to kernel to shutdown pending PCIe port
-> service interrupts during reboot so that a newly started kexec kernel
-> wouldn't observe pending interrupts.
-> 
-> pcie_port_device_remove() is disabling the root port and switches by
-> calling pci_disable_device() after all PCIe service drivers are shutdown.
-> 
-> This has been found to cause crashes on HP DL360 Gen9 machines during
-> reboot due to hpsa driver not clearing the bus master bit during the
-> shutdown procedure by calling pci_disable_device().
-> 
-> Disable device as part of the shutdown sequence.
+Hi Stanislav. Thanks for taking a look. Responses below.
 
-Forgot to change the commit title. Apologies for that. The rest of the
-patch should work. Waiting for tested-bys.
+On Thu, May 31, 2018 at 3:04 AM Stanislav Nijnikov
+<Stanislav.Nijnikov@wdc.com> wrote:
+>
+> Hi Evan,
+> I have some generic notes:
+> - Why to create new sysfs entries for the configuration descriptor fields if they are just duplication of fields in the device and unit descriptors? And the sysfs representation of the device and unit descriptors is existing already.
 
-> 
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-> Link: https://bugzilla.kernel.org/show_bug.cgi?id=199779
-> Fixes: cc27b735ad3a ("PCI/portdrv: Turn off PCIe services during shutdown")
-> Cc: stable@vger.kernel.org
-> Reported-by: Ryan Finnie <ryan@finnie.org>
-> ---
->  drivers/scsi/hpsa.c | 10 ++++++++--
->  1 file changed, 8 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> index 3a9eca1..b92f86a 100644
-> --- a/drivers/scsi/hpsa.c
-> +++ b/drivers/scsi/hpsa.c
-> @@ -8869,7 +8869,7 @@ static void hpsa_disable_rld_caching(struct ctlr_info *h)
->  	kfree(options);
->  }
->  
-> -static void hpsa_shutdown(struct pci_dev *pdev)
-> +static void __hpsa_shutdown(struct pci_dev *pdev)
->  {
->  	struct ctlr_info *h;
->  
-> @@ -8884,6 +8884,12 @@ static void hpsa_shutdown(struct pci_dev *pdev)
->  	hpsa_disable_interrupt_mode(h);		/* pci_init 2 */
->  }
->  
-> +static void hpsa_shutdown(struct pci_dev *pdev)
-> +{
-> +	__hpsa_shutdown(pdev);
-> +	pci_disable_device(pdev);
-> +}
-> +
->  static void hpsa_free_device_info(struct ctlr_info *h)
->  {
->  	int i;
-> @@ -8927,7 +8933,7 @@ static void hpsa_remove_one(struct pci_dev *pdev)
->  		scsi_remove_host(h->scsi_host);		/* init_one 8 */
->  	/* includes hpsa_free_irqs - init_one 4 */
->  	/* includes hpsa_disable_interrupt_mode - pci_init 2 */
-> -	hpsa_shutdown(pdev);
-> +	__hpsa_shutdown(pdev);
->  
->  	hpsa_free_device_info(h);		/* scan */
->  
-> 
+Well, UFS describes them as different descriptors. I worry that if I
+add a bunch of clever logic to hide the config descriptor behind other
+descriptors, there might be trouble later if 1) there is a quirky
+device that doesn't reflect the values between descriptors quite the
+same way or at the same time, or 2) if a later UFS spec adds more
+configuration descriptor fields that don't exactly reflect into other
+non-config descriptors, the cleverness will look awkward.
 
+> - It would be nice to have some "packet" mode allowing to gather configuration changes and apply them at once, not one by one.
 
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+That's definitely doable. Do you think it's needed? I suppose if there
+were a device that truly allowed you to do only a single write to the
+config descriptor, then the commit style would be needed. The two
+devices I've tested (Toshiba and Samsung) allow multiple writes to the
+config descriptor, which makes me lean towards not needing the
+batch-and-commit style, since if you get interrupted you can simply
+try again. I'm happy to do either, though.
+
+> - Why to put documentation update in the separate patches?
+Well, in case some piece of this turned out to be controversial, I
+wanted to allow for the option of taking these changes independently,
+without the concern of missing the documentation. I'm happy to squash
+all the documentation changes into one if that's preferred.
+
+-Evan
