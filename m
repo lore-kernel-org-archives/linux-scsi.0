@@ -1,44 +1,66 @@
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Subject: Re: [PATCH] aic94xx: set error code on an error path in aic94xx_init
-Date: Thu, 31 May 2018 22:15:45 +0300
-Message-ID: <CAHp75VdAWzAB1K3bGEAgM28ZZFYa-92JqERy=jKd1Fc_738eBg@mail.gmail.com>
-References: <1527791294-21600-1-git-send-email-melnichenko@ispras.ru>
+From: Jason Yan <yanaijie@huawei.com>
+Subject: Re: [PATCH 2/8] scsi: libsas: check the lldd callback correctly
+Date: Fri, 1 Jun 2018 08:15:42 +0800
+Message-ID: <5B10902E.5080503@huawei.com>
+References: <20180529022309.21071-1-yanaijie@huawei.com>
+ <20180529022309.21071-3-yanaijie@huawei.com>
+ <a8427e3b-baaf-3044-6fb3-c9c9a4253417@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1527791294-21600-1-git-send-email-melnichenko@ispras.ru>
+In-Reply-To: <a8427e3b-baaf-3044-6fb3-c9c9a4253417@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Peter Melnichenko <melnichenko@ispras.ru>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, ldv-project@linuxtesting.org
+To: John Garry <john.garry@huawei.com>, martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, zhaohongjiang@huawei.com, hare@suse.com, dan.j.williams@intel.com, jthumshirn@suse.de, hch@lst.de, huangdaode@hisilicon.com, chenxiang66@hisilicon.com, xiexiuqi@huawei.com, tj@kernel.org, miaoxie@huawei.com, Ewan Milne <emilne@redhat.com>, Tomas Henzl <thenzl@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, May 31, 2018 at 9:28 PM, Peter Melnichenko
-<melnichenko@ispras.ru> wrote:
-> When sas_domain_attach_transport returns NULL, aic94xx_init
-> frees acquired resources but returns err equal to 0, as
-> assigned by a previous statement.
+
+
+On 2018/5/31 22:09, John Garry wrote:
+> On 29/05/2018 03:23, Jason Yan wrote:
+>> We are using lldd_port_deformed so we'd better check if
+>> lldd_port_deformed
+>> is NULL.
+>>
+>> Signed-off-by: Jason Yan <yanaijie@huawei.com>
+>> CC: John Garry <john.garry@huawei.com>
+>> CC: Johannes Thumshirn <jthumshirn@suse.de>
+>> CC: Ewan Milne <emilne@redhat.com>
+>> CC: Christoph Hellwig <hch@lst.de>
+>> CC: Tomas Henzl <thenzl@redhat.com>
+>> CC: Dan Williams <dan.j.williams@intel.com>
+>> CC: Hannes Reinecke <hare@suse.com>
+>> ---
+>>  drivers/scsi/libsas/sas_discover.c | 2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/scsi/libsas/sas_discover.c
+>> b/drivers/scsi/libsas/sas_discover.c
+>> index a0fa7ef3a071..354f6db5bb66 100644
+>> --- a/drivers/scsi/libsas/sas_discover.c
+>> +++ b/drivers/scsi/libsas/sas_discover.c
+>> @@ -260,7 +260,7 @@ static void sas_suspend_devices(struct work_struct
+>> *work)
+>>       * phy_list is not being mutated
+>>       */
+>>      list_for_each_entry(phy, &port->phy_list, port_phy_el) {
+>> -        if (si->dft->lldd_port_formed)
+>> +        if (si->dft->lldd_port_deformed)
 >
-> The patch sets err to -ENOMEM before jumping to the error label.
+> If you do make this change, then you can remove
+> hisi_sas_port_deformed(), as it is just a stub to avoid a jump to NULL
+> from above.
+>
 
-Wouldn't be better to fix a callee to return proper error code and...
+OK, I will remove it.
 
->         aic94xx_transport_template =
->                 sas_domain_attach_transport(&aic94xx_transport_functions);
-> -       if (!aic94xx_transport_template)
-> +       if (!aic94xx_transport_template) {
-> +               err = -ENOMEM;
->                 goto out_destroy_caches;
-> +       }
-
-this becomes
-
-err = _attach_();
-if (err < 0)
- goto ;
-_template = err;
-
-?
-
--- 
-With Best Regards,
-Andy Shevchenko
+>>              si->dft->lldd_port_deformed(phy);
+>>          phy->suspended = 1;
+>>          port->suspended = 1;
+>>
+>
+>
+>
+> .
+>
