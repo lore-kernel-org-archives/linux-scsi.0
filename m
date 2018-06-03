@@ -1,71 +1,49 @@
-From: Stanislav Nijnikov <Stanislav.Nijnikov@wdc.com>
-Subject: RE: [PATCH 0/7] Enable UFS provisioning via Linux
-Date: Sun, 3 Jun 2018 10:21:17 +0000
-Message-ID: <MWHPR04MB11370AED823FB608218CB9AD9A600@MWHPR04MB1137.namprd04.prod.outlook.com>
-References: <20180529181740.195362-1-evgreen@chromium.org>
- <MWHPR04MB11372C75BFC9416BAF5E81A19A630@MWHPR04MB1137.namprd04.prod.outlook.com>
- <CAE=gft4LoNiRtxgTA_ZPghZGEVOzu_GAwMgqhs-8NCYVgj_AVw@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+From: Varsha Rao <rvarsha016@gmail.com>
+Subject: [PATCH] message: fusion: Remove extra parentheses
+Date: Sun,  3 Jun 2018 16:33:07 +0530
+Message-ID: <20180603110307.4080-1-rvarsha016@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAE=gft4LoNiRtxgTA_ZPghZGEVOzu_GAwMgqhs-8NCYVgj_AVw@mail.gmail.com>
-Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Evan Green <evgreen@chromium.org>
-Cc: Vinayak Holikatti <vinholikatti@gmail.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Gwendal Grignou <gwendal@chromium.org>, Alex Lemberg <Alex.Lemberg@wdc.com>, Avri Altman <Avri.Altman@wdc.com>
+To: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Nicholas Mc Guire <der.herr@hofr.at>, Lukas Bulwahn <lukas.bulwahn@gmail.com>
+Cc: Varsha Rao <rvarsha016@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGludXgtc2NzaS1vd25l
-ckB2Z2VyLmtlcm5lbC5vcmcgPGxpbnV4LXNjc2ktb3duZXJAdmdlci5rZXJuZWwub3JnPiBPbiBC
-ZWhhbGYgT2YgRXZhbiBHcmVlbg0KPiBTZW50OiBGcmlkYXksIEp1bmUgMSwgMjAxOCA1OjQ0IFBN
-DQo+IFRvOiBTdGFuaXNsYXYgTmlqbmlrb3YgPFN0YW5pc2xhdi5OaWpuaWtvdkB3ZGMuY29tPg0K
-PiBDYzogVmluYXlhayBIb2xpa2F0dGkgPHZpbmhvbGlrYXR0aUBnbWFpbC5jb20+OyBqZWpiQGxp
-bnV4LnZuZXQuaWJtLmNvbTsgbWFydGluLnBldGVyc2VuQG9yYWNsZS5jb207IGxpbnV4LQ0KPiBr
-ZXJuZWxAdmdlci5rZXJuZWwub3JnOyBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZzsgR3dlbmRh
-bCBHcmlnbm91IDxnd2VuZGFsQGNocm9taXVtLm9yZz47IEFsZXggTGVtYmVyZw0KPiA8QWxleC5M
-ZW1iZXJnQHdkYy5jb20+OyBBdnJpIEFsdG1hbiA8QXZyaS5BbHRtYW5Ad2RjLmNvbT4NCj4gU3Vi
-amVjdDogUmU6IFtQQVRDSCAwLzddIEVuYWJsZSBVRlMgcHJvdmlzaW9uaW5nIHZpYSBMaW51eA0K
-PiANCj4gSGkgU3RhbmlzbGF2LiBUaGFua3MgZm9yIHRha2luZyBhIGxvb2suIFJlc3BvbnNlcyBi
-ZWxvdy4NCj4gDQo+IE9uIFRodSwgTWF5IDMxLCAyMDE4IGF0IDM6MDQgQU0gU3RhbmlzbGF2IE5p
-am5pa292DQo+IDxTdGFuaXNsYXYuTmlqbmlrb3ZAd2RjLmNvbT4gd3JvdGU6DQo+ID4NCj4gPiBI
-aSBFdmFuLA0KPiA+IEkgaGF2ZSBzb21lIGdlbmVyaWMgbm90ZXM6DQo+ID4gLSBXaHkgdG8gY3Jl
-YXRlIG5ldyBzeXNmcyBlbnRyaWVzIGZvciB0aGUgY29uZmlndXJhdGlvbiBkZXNjcmlwdG9yIGZp
-ZWxkcyBpZiB0aGV5IGFyZSBqdXN0IGR1cGxpY2F0aW9uIG9mIGZpZWxkcyBpbiB0aGUgZGV2aWNl
-IGFuZCB1bml0DQo+IGRlc2NyaXB0b3JzPyBBbmQgdGhlIHN5c2ZzIHJlcHJlc2VudGF0aW9uIG9m
-IHRoZSBkZXZpY2UgYW5kIHVuaXQgZGVzY3JpcHRvcnMgaXMgZXhpc3RpbmcgYWxyZWFkeS4NCj4g
-DQo+IFdlbGwsIFVGUyBkZXNjcmliZXMgdGhlbSBhcyBkaWZmZXJlbnQgZGVzY3JpcHRvcnMuIEkg
-d29ycnkgdGhhdCBpZiBJDQo+IGFkZCBhIGJ1bmNoIG9mIGNsZXZlciBsb2dpYyB0byBoaWRlIHRo
-ZSBjb25maWcgZGVzY3JpcHRvciBiZWhpbmQgb3RoZXINCj4gZGVzY3JpcHRvcnMsIHRoZXJlIG1p
-Z2h0IGJlIHRyb3VibGUgbGF0ZXIgaWYgMSkgdGhlcmUgaXMgYSBxdWlya3kNCj4gZGV2aWNlIHRo
-YXQgZG9lc24ndCByZWZsZWN0IHRoZSB2YWx1ZXMgYmV0d2VlbiBkZXNjcmlwdG9ycyBxdWl0ZSB0
-aGUNCj4gc2FtZSB3YXkgb3IgYXQgdGhlIHNhbWUgdGltZSwgb3IgMikgaWYgYSBsYXRlciBVRlMg
-c3BlYyBhZGRzIG1vcmUNCj4gY29uZmlndXJhdGlvbiBkZXNjcmlwdG9yIGZpZWxkcyB0aGF0IGRv
-bid0IGV4YWN0bHkgcmVmbGVjdCBpbnRvIG90aGVyDQo+IG5vbi1jb25maWcgZGVzY3JpcHRvcnMs
-IHRoZSBjbGV2ZXJuZXNzIHdpbGwgbG9vayBhd2t3YXJkLg0KIA0KTm8gYWRkaXRpb25hbCBsb2dp
-YyB3aWxsIGJlIHJlcXVpcmVkIHRvIGF0dGFjaCB3cml0ZSBmdW5jdGlvbmFsaXR5IHRvIHRoZQ0K
-ZXhpc3RpbmcgZW50cmllcyBpbnN0ZWFkIG9mIG5ldyBkZWZpbmVkIG9uZXMuIEl0IHdpbGwgcmVk
-dWNlIHRoZSBwYXRjaCANCnNpemUgc2lnbmlmaWNhbnRseS4gQW5kIHRoZXJlIHdpbGwgYmUgbm8g
-bmVlZCBmb3IgdGhlIHVuaXQgc2VsZWN0b3IgDQptZWNoYW5pc20gd2hpY2ggSSdtIG5vdCBzdXJl
-IHdpbGwgYmUgYWNjZXB0ZWQgYnkgdGhlIFNDU0kgY29tbXVuaXR5Lg0KDQo+IA0KPiA+IC0gSXQg
-d291bGQgYmUgbmljZSB0byBoYXZlIHNvbWUgInBhY2tldCIgbW9kZSBhbGxvd2luZyB0byBnYXRo
-ZXIgY29uZmlndXJhdGlvbiBjaGFuZ2VzIGFuZCBhcHBseSB0aGVtIGF0IG9uY2UsIG5vdCBvbmUg
-Ynkgb25lLg0KPiANCj4gVGhhdCdzIGRlZmluaXRlbHkgZG9hYmxlLiBEbyB5b3UgdGhpbmsgaXQn
-cyBuZWVkZWQ/IEkgc3VwcG9zZSBpZiB0aGVyZQ0KPiB3ZXJlIGEgZGV2aWNlIHRoYXQgdHJ1bHkg
-YWxsb3dlZCB5b3UgdG8gZG8gb25seSBhIHNpbmdsZSB3cml0ZSB0byB0aGUNCj4gY29uZmlnIGRl
-c2NyaXB0b3IsIHRoZW4gdGhlIGNvbW1pdCBzdHlsZSB3b3VsZCBiZSBuZWVkZWQuIFRoZSB0d28N
-Cj4gZGV2aWNlcyBJJ3ZlIHRlc3RlZCAoVG9zaGliYSBhbmQgU2Ftc3VuZykgYWxsb3cgbXVsdGlw
-bGUgd3JpdGVzIHRvIHRoZQ0KPiBjb25maWcgZGVzY3JpcHRvciwgd2hpY2ggbWFrZXMgbWUgbGVh
-biB0b3dhcmRzIG5vdCBuZWVkaW5nIHRoZQ0KPiBiYXRjaC1hbmQtY29tbWl0IHN0eWxlLCBzaW5j
-ZSBpZiB5b3UgZ2V0IGludGVycnVwdGVkIHlvdSBjYW4gc2ltcGx5DQo+IHRyeSBhZ2Fpbi4gSSdt
-IGhhcHB5IHRvIGRvIGVpdGhlciwgdGhvdWdoLg0KDQpBZ3JlZS4gSXQgZG9lc24ndCBoYXZlIHRv
-IGJlIHBhcnQgb2YgdGhpcyBwYXRjaCBzZXQuIEl0J3MganVzdCB0aG91Z2h0cyAgDQphYm91dCAi
-cXVpcmt5IGRldmljZXMgYW5kIGZ1dHVyZSBjaGFuZ2VzIiA6KSB0aGF0IG1pZ2h0IHJlcXVpcmUg
-dG8gDQpjaGFuZ2Ugc2V2ZXJhbCBwYXJhbWV0ZXJzIHNpbXVsdGFuZW91c2x5Lg0KDQo+IA0KPiA+
-IC0gV2h5IHRvIHB1dCBkb2N1bWVudGF0aW9uIHVwZGF0ZSBpbiB0aGUgc2VwYXJhdGUgcGF0Y2hl
-cz8NCj4gV2VsbCwgaW4gY2FzZSBzb21lIHBpZWNlIG9mIHRoaXMgdHVybmVkIG91dCB0byBiZSBj
-b250cm92ZXJzaWFsLCBJDQo+IHdhbnRlZCB0byBhbGxvdyBmb3IgdGhlIG9wdGlvbiBvZiB0YWtp
-bmcgdGhlc2UgY2hhbmdlcyBpbmRlcGVuZGVudGx5LA0KPiB3aXRob3V0IHRoZSBjb25jZXJuIG9m
-IG1pc3NpbmcgdGhlIGRvY3VtZW50YXRpb24uIEknbSBoYXBweSB0byBzcXVhc2gNCj4gYWxsIHRo
-ZSBkb2N1bWVudGF0aW9uIGNoYW5nZXMgaW50byBvbmUgaWYgdGhhdCdzIHByZWZlcnJlZC4NCj4g
-DQo+IC1FdmFuDQoNClJlZ2FyZHMNClN0YW5pc2xhdg0K
+To fix clang warning of extraneous parentheses and check patch issue,
+remove extra parentheses and replace x == NULL with !x. Following
+coccinelle script is used to fix it.
+
+@disable is_null,paren@
+expression e;
+statement s;
+@@
+if (
+- (e==NULL)
++!e
+ )
+s
+
+Signed-off-by: Varsha Rao <rvarsha016@gmail.com>
+---
+ drivers/message/fusion/mptbase.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+index 51eb1b027963..3fe53b65c5fa 100644
+--- a/drivers/message/fusion/mptbase.c
++++ b/drivers/message/fusion/mptbase.c
+@@ -335,11 +335,11 @@ static int mpt_remove_dead_ioc_func(void *arg)
+ 	MPT_ADAPTER *ioc = (MPT_ADAPTER *)arg;
+ 	struct pci_dev *pdev;
+ 
+-	if ((ioc == NULL))
++	if (!ioc)
+ 		return -1;
+ 
+ 	pdev = ioc->pcidev;
+-	if ((pdev == NULL))
++	if (!pdev)
+ 		return -1;
+ 
+ 	pci_stop_and_remove_bus_device_locked(pdev);
+-- 
+2.17.0
