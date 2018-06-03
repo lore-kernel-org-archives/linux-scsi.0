@@ -1,88 +1,71 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 4.17-rc7
-Date: Sat, 02 Jun 2018 14:17:51 -0700
-Message-ID: <1527974271.3158.10.camel@HansenPartnership.com>
+From: Stanislav Nijnikov <Stanislav.Nijnikov@wdc.com>
+Subject: RE: [PATCH 0/7] Enable UFS provisioning via Linux
+Date: Sun, 3 Jun 2018 10:21:17 +0000
+Message-ID: <MWHPR04MB11370AED823FB608218CB9AD9A600@MWHPR04MB1137.namprd04.prod.outlook.com>
+References: <20180529181740.195362-1-evgreen@chromium.org>
+ <MWHPR04MB11372C75BFC9416BAF5E81A19A630@MWHPR04MB1137.namprd04.prod.outlook.com>
+ <CAE=gft4LoNiRtxgTA_ZPghZGEVOzu_GAwMgqhs-8NCYVgj_AVw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAE=gft4LoNiRtxgTA_ZPghZGEVOzu_GAwMgqhs-8NCYVgj_AVw@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: Evan Green <evgreen@chromium.org>
+Cc: Vinayak Holikatti <vinholikatti@gmail.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Gwendal Grignou <gwendal@chromium.org>, Alex Lemberg <Alex.Lemberg@wdc.com>, Avri Altman <Avri.Altman@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Eve of merge window fix: The original code was so bogus as to be
-casting the wrong generic device to an rport and proceeding to take
-actions based on the bogus values it found.  Fortunately it seems the
-location that is dereferenced always exists, so the code hasn't oopsed
-yet, but it certainly annoys the memory checkers.
-
-The patch is available here:
-
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-
-The short changelog is:
-
-Bart Van Assche (1):
-      scsi: scsi_transport_srp: Fix shost to rport translation
-
-And the diffstat:
-
- drivers/scsi/scsi_transport_srp.c | 22 ++++++++++++++++++++--
- 1 file changed, 20 insertions(+), 2 deletions(-)
-
-With full diff below.
-
-James
-
----
-
-diff --git a/drivers/scsi/scsi_transport_srp.c b/drivers/scsi/scsi_transport_srp.c
-index 36f6190931bc..456ce9f19569 100644
---- a/drivers/scsi/scsi_transport_srp.c
-+++ b/drivers/scsi/scsi_transport_srp.c
-@@ -51,6 +51,8 @@ struct srp_internal {
- 	struct transport_container rport_attr_cont;
- };
- 
-+static int scsi_is_srp_rport(const struct device *dev);
-+
- #define to_srp_internal(tmpl) container_of(tmpl, struct srp_internal, t)
- 
- #define	dev_to_rport(d)	container_of(d, struct srp_rport, dev)
-@@ -60,9 +62,24 @@ static inline struct Scsi_Host *rport_to_shost(struct srp_rport *r)
- 	return dev_to_shost(r->dev.parent);
- }
- 
-+static int find_child_rport(struct device *dev, void *data)
-+{
-+	struct device **child = data;
-+
-+	if (scsi_is_srp_rport(dev)) {
-+		WARN_ON_ONCE(*child);
-+		*child = dev;
-+	}
-+	return 0;
-+}
-+
- static inline struct srp_rport *shost_to_rport(struct Scsi_Host *shost)
- {
--	return transport_class_to_srp_rport(&shost->shost_gendev);
-+	struct device *child = NULL;
-+
-+	WARN_ON_ONCE(device_for_each_child(&shost->shost_gendev, &child,
-+					   find_child_rport) < 0);
-+	return child ? dev_to_rport(child) : NULL;
- }
- 
- /**
-@@ -600,7 +617,8 @@ enum blk_eh_timer_return srp_timed_out(struct scsi_cmnd *scmd)
- 	struct srp_rport *rport = shost_to_rport(shost);
- 
- 	pr_debug("timeout for sdev %s\n", dev_name(&sdev->sdev_gendev));
--	return rport->fast_io_fail_tmo < 0 && rport->dev_loss_tmo < 0 &&
-+	return rport && rport->fast_io_fail_tmo < 0 &&
-+		rport->dev_loss_tmo < 0 &&
- 		i->f->reset_timer_if_blocked && scsi_device_blocked(sdev) ?
- 		BLK_EH_RESET_TIMER : BLK_EH_NOT_HANDLED;
- }
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGludXgtc2NzaS1vd25l
+ckB2Z2VyLmtlcm5lbC5vcmcgPGxpbnV4LXNjc2ktb3duZXJAdmdlci5rZXJuZWwub3JnPiBPbiBC
+ZWhhbGYgT2YgRXZhbiBHcmVlbg0KPiBTZW50OiBGcmlkYXksIEp1bmUgMSwgMjAxOCA1OjQ0IFBN
+DQo+IFRvOiBTdGFuaXNsYXYgTmlqbmlrb3YgPFN0YW5pc2xhdi5OaWpuaWtvdkB3ZGMuY29tPg0K
+PiBDYzogVmluYXlhayBIb2xpa2F0dGkgPHZpbmhvbGlrYXR0aUBnbWFpbC5jb20+OyBqZWpiQGxp
+bnV4LnZuZXQuaWJtLmNvbTsgbWFydGluLnBldGVyc2VuQG9yYWNsZS5jb207IGxpbnV4LQ0KPiBr
+ZXJuZWxAdmdlci5rZXJuZWwub3JnOyBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZzsgR3dlbmRh
+bCBHcmlnbm91IDxnd2VuZGFsQGNocm9taXVtLm9yZz47IEFsZXggTGVtYmVyZw0KPiA8QWxleC5M
+ZW1iZXJnQHdkYy5jb20+OyBBdnJpIEFsdG1hbiA8QXZyaS5BbHRtYW5Ad2RjLmNvbT4NCj4gU3Vi
+amVjdDogUmU6IFtQQVRDSCAwLzddIEVuYWJsZSBVRlMgcHJvdmlzaW9uaW5nIHZpYSBMaW51eA0K
+PiANCj4gSGkgU3RhbmlzbGF2LiBUaGFua3MgZm9yIHRha2luZyBhIGxvb2suIFJlc3BvbnNlcyBi
+ZWxvdy4NCj4gDQo+IE9uIFRodSwgTWF5IDMxLCAyMDE4IGF0IDM6MDQgQU0gU3RhbmlzbGF2IE5p
+am5pa292DQo+IDxTdGFuaXNsYXYuTmlqbmlrb3ZAd2RjLmNvbT4gd3JvdGU6DQo+ID4NCj4gPiBI
+aSBFdmFuLA0KPiA+IEkgaGF2ZSBzb21lIGdlbmVyaWMgbm90ZXM6DQo+ID4gLSBXaHkgdG8gY3Jl
+YXRlIG5ldyBzeXNmcyBlbnRyaWVzIGZvciB0aGUgY29uZmlndXJhdGlvbiBkZXNjcmlwdG9yIGZp
+ZWxkcyBpZiB0aGV5IGFyZSBqdXN0IGR1cGxpY2F0aW9uIG9mIGZpZWxkcyBpbiB0aGUgZGV2aWNl
+IGFuZCB1bml0DQo+IGRlc2NyaXB0b3JzPyBBbmQgdGhlIHN5c2ZzIHJlcHJlc2VudGF0aW9uIG9m
+IHRoZSBkZXZpY2UgYW5kIHVuaXQgZGVzY3JpcHRvcnMgaXMgZXhpc3RpbmcgYWxyZWFkeS4NCj4g
+DQo+IFdlbGwsIFVGUyBkZXNjcmliZXMgdGhlbSBhcyBkaWZmZXJlbnQgZGVzY3JpcHRvcnMuIEkg
+d29ycnkgdGhhdCBpZiBJDQo+IGFkZCBhIGJ1bmNoIG9mIGNsZXZlciBsb2dpYyB0byBoaWRlIHRo
+ZSBjb25maWcgZGVzY3JpcHRvciBiZWhpbmQgb3RoZXINCj4gZGVzY3JpcHRvcnMsIHRoZXJlIG1p
+Z2h0IGJlIHRyb3VibGUgbGF0ZXIgaWYgMSkgdGhlcmUgaXMgYSBxdWlya3kNCj4gZGV2aWNlIHRo
+YXQgZG9lc24ndCByZWZsZWN0IHRoZSB2YWx1ZXMgYmV0d2VlbiBkZXNjcmlwdG9ycyBxdWl0ZSB0
+aGUNCj4gc2FtZSB3YXkgb3IgYXQgdGhlIHNhbWUgdGltZSwgb3IgMikgaWYgYSBsYXRlciBVRlMg
+c3BlYyBhZGRzIG1vcmUNCj4gY29uZmlndXJhdGlvbiBkZXNjcmlwdG9yIGZpZWxkcyB0aGF0IGRv
+bid0IGV4YWN0bHkgcmVmbGVjdCBpbnRvIG90aGVyDQo+IG5vbi1jb25maWcgZGVzY3JpcHRvcnMs
+IHRoZSBjbGV2ZXJuZXNzIHdpbGwgbG9vayBhd2t3YXJkLg0KIA0KTm8gYWRkaXRpb25hbCBsb2dp
+YyB3aWxsIGJlIHJlcXVpcmVkIHRvIGF0dGFjaCB3cml0ZSBmdW5jdGlvbmFsaXR5IHRvIHRoZQ0K
+ZXhpc3RpbmcgZW50cmllcyBpbnN0ZWFkIG9mIG5ldyBkZWZpbmVkIG9uZXMuIEl0IHdpbGwgcmVk
+dWNlIHRoZSBwYXRjaCANCnNpemUgc2lnbmlmaWNhbnRseS4gQW5kIHRoZXJlIHdpbGwgYmUgbm8g
+bmVlZCBmb3IgdGhlIHVuaXQgc2VsZWN0b3IgDQptZWNoYW5pc20gd2hpY2ggSSdtIG5vdCBzdXJl
+IHdpbGwgYmUgYWNjZXB0ZWQgYnkgdGhlIFNDU0kgY29tbXVuaXR5Lg0KDQo+IA0KPiA+IC0gSXQg
+d291bGQgYmUgbmljZSB0byBoYXZlIHNvbWUgInBhY2tldCIgbW9kZSBhbGxvd2luZyB0byBnYXRo
+ZXIgY29uZmlndXJhdGlvbiBjaGFuZ2VzIGFuZCBhcHBseSB0aGVtIGF0IG9uY2UsIG5vdCBvbmUg
+Ynkgb25lLg0KPiANCj4gVGhhdCdzIGRlZmluaXRlbHkgZG9hYmxlLiBEbyB5b3UgdGhpbmsgaXQn
+cyBuZWVkZWQ/IEkgc3VwcG9zZSBpZiB0aGVyZQ0KPiB3ZXJlIGEgZGV2aWNlIHRoYXQgdHJ1bHkg
+YWxsb3dlZCB5b3UgdG8gZG8gb25seSBhIHNpbmdsZSB3cml0ZSB0byB0aGUNCj4gY29uZmlnIGRl
+c2NyaXB0b3IsIHRoZW4gdGhlIGNvbW1pdCBzdHlsZSB3b3VsZCBiZSBuZWVkZWQuIFRoZSB0d28N
+Cj4gZGV2aWNlcyBJJ3ZlIHRlc3RlZCAoVG9zaGliYSBhbmQgU2Ftc3VuZykgYWxsb3cgbXVsdGlw
+bGUgd3JpdGVzIHRvIHRoZQ0KPiBjb25maWcgZGVzY3JpcHRvciwgd2hpY2ggbWFrZXMgbWUgbGVh
+biB0b3dhcmRzIG5vdCBuZWVkaW5nIHRoZQ0KPiBiYXRjaC1hbmQtY29tbWl0IHN0eWxlLCBzaW5j
+ZSBpZiB5b3UgZ2V0IGludGVycnVwdGVkIHlvdSBjYW4gc2ltcGx5DQo+IHRyeSBhZ2Fpbi4gSSdt
+IGhhcHB5IHRvIGRvIGVpdGhlciwgdGhvdWdoLg0KDQpBZ3JlZS4gSXQgZG9lc24ndCBoYXZlIHRv
+IGJlIHBhcnQgb2YgdGhpcyBwYXRjaCBzZXQuIEl0J3MganVzdCB0aG91Z2h0cyAgDQphYm91dCAi
+cXVpcmt5IGRldmljZXMgYW5kIGZ1dHVyZSBjaGFuZ2VzIiA6KSB0aGF0IG1pZ2h0IHJlcXVpcmUg
+dG8gDQpjaGFuZ2Ugc2V2ZXJhbCBwYXJhbWV0ZXJzIHNpbXVsdGFuZW91c2x5Lg0KDQo+IA0KPiA+
+IC0gV2h5IHRvIHB1dCBkb2N1bWVudGF0aW9uIHVwZGF0ZSBpbiB0aGUgc2VwYXJhdGUgcGF0Y2hl
+cz8NCj4gV2VsbCwgaW4gY2FzZSBzb21lIHBpZWNlIG9mIHRoaXMgdHVybmVkIG91dCB0byBiZSBj
+b250cm92ZXJzaWFsLCBJDQo+IHdhbnRlZCB0byBhbGxvdyBmb3IgdGhlIG9wdGlvbiBvZiB0YWtp
+bmcgdGhlc2UgY2hhbmdlcyBpbmRlcGVuZGVudGx5LA0KPiB3aXRob3V0IHRoZSBjb25jZXJuIG9m
+IG1pc3NpbmcgdGhlIGRvY3VtZW50YXRpb24uIEknbSBoYXBweSB0byBzcXVhc2gNCj4gYWxsIHRo
+ZSBkb2N1bWVudGF0aW9uIGNoYW5nZXMgaW50byBvbmUgaWYgdGhhdCdzIHByZWZlcnJlZC4NCj4g
+DQo+IC1FdmFuDQoNClJlZ2FyZHMNClN0YW5pc2xhdg0K
