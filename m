@@ -1,39 +1,49 @@
 From: Evan Green <evgreen@chromium.org>
-Subject: Re: [PATCH 0/7] Enable UFS provisioning via Linux
-Date: Mon, 4 Jun 2018 08:03:07 -0700
-Message-ID: <CAE=gft65BVSFUm-tPEw+pGKS2Y_jbLMwUX=f8PR4aw=QF_sOMg@mail.gmail.com>
-References: <20180529181740.195362-1-evgreen@chromium.org> <CAP2JTQJaYKoYANe6C68HnkVzT6eYUq9wJQxuy71LqQ72dacv_w@mail.gmail.com>
+Subject: Re: [PATCH 1/7] scsi: ufs: Add Configuration Descriptor to sysfs
+Date: Mon, 4 Jun 2018 08:39:08 -0700
+Message-ID: <CAE=gft5tx6my6f=PVfFwPvVy_3kcuH6y6+4oRrS9x3rydxJ9vA@mail.gmail.com>
+References: <20180529181740.195362-1-evgreen@chromium.org> <20180529181740.195362-2-evgreen@chromium.org>
+ <cfb43e6138a62889fd5ba9683c93e10ee32635df.camel@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAP2JTQJaYKoYANe6C68HnkVzT6eYUq9wJQxuy71LqQ72dacv_w@mail.gmail.com>
+In-Reply-To: <cfb43e6138a62889fd5ba9683c93e10ee32635df.camel@wdc.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: chlrbgh0@gmail.com
-Cc: Vinayak Holikatti <vinholikatti@gmail.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, stanislav.nijnikov@wdc.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Gwendal Grignou <gwendal@chromium.org>
+To: Bart.VanAssche@wdc.com
+Cc: jejb@linux.vnet.ibm.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, martin.petersen@oracle.com, Vinayak Holikatti <vinholikatti@gmail.com>, Stanislav.Nijnikov@wdc.com, Gwendal Grignou <gwendal@chromium.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Kyuho,
+On Mon, Jun 4, 2018 at 1:31 AM Bart Van Assche <Bart.VanAssche@wdc.com> wrote:
+>
+> On Tue, 2018-05-29 at 11:17 -0700, Evan Green wrote:
+> > This change adds the configuration descriptor to the UFS
+> > sysfs interface. This is done in preparation for making the
+> > interface writable, which will enable provisioning UFS devices
+> > via Linux.
+> >
+> > The configuration descriptor is laid out as a header, then a set of
+> > (usually 8) copies of the same descriptor for each unit. Rather than
+> > creating 8 sets of the same attribute, this interface adds a cfg_unit
+> > file, which can be set as an index that defines which of the 8
+> > configuration unit descriptors are being shown through sysfs.
+>
+> I don't know any other example of a sysfs attribute that controls the
+> contents of another sysfs attribute so I don't know whether this kind
+> of behavior is acceptable for sysfs attributes. Additionally, how can
+> these two sysfs attributes be used together from concurrently running
+> processes without triggering a race condition?
+>
+> Bart.
 
-On Mon, Jun 4, 2018 at 4:11 AM Kyuho Choi <chlrbgh0@gmail.com> wrote:
->
-> Hi Evan,
->
-> I've some question about end user's provisioning.
->
-> On 5/30/18, Evan Green <evgreen@chromium.org> wrote:
-> > This series enables provisioning UFS devices using the existing sysfs
-> > interface. This functionality is primarily useful along the assembly
-> > line, but might also be useful for end users that receive devices that
-> > aren't locked down.
->
-> As we knew, ufs are mainly adopted to boot device like mobile phone.
-> Usally after  provisioning operation, every data in ufs (eg. Android :
-> system, userdata, boot info and etc) would be removed. How end user
-> download and flash all data to ufs?. dd or another download tools?.
->
+Hi Bart,
+I was following the example of rpm_lvl and spm_lvl in this driver,
+whose values control what is shown in rpm_target_dev_state and
+rpm_target_link_state (and spm equivalents). My original thinking was
+that provisioning the high level storage configuration of a UFS disk
+is by definition a single threaded one-time-only activity. However
+Stanislav and others have also expressed concerns about this
+mechanism, so it sounds like I should revise it. I'm hoping Stanislav
+will comment on one of two possible approaches I suggested in the
+cover letter.
 
-You're right, the user would need to be booted into a RAM disk, or off
-of removable media like micro SD, and use dd or custom tools to set up
-data inside the new provisioning scheme. So yes, on a mobile phone, it
-would be a fairly advanced end user.
 -Evan
