@@ -1,73 +1,36 @@
 From: Evan Green <evgreen@chromium.org>
-Subject: Re: [PATCH 5/7] scsi: ufs: Refactor descriptor read for write
-Date: Mon, 4 Jun 2018 08:40:56 -0700
-Message-ID: <CAE=gft5ZDX-T5qHYy7AJqDkfNr4-yVpTFzZq_FPS86LfFQnvfA@mail.gmail.com>
-References: <20180529181740.195362-1-evgreen@chromium.org> <20180529181740.195362-6-evgreen@chromium.org>
- <21ce321eb2d81d59d6e4578669b8287b9ac4d29f.camel@wdc.com>
+Subject: Re: [PATCH V1 3/3] scsi: ufs: Add sysfs support for ufs provision
+Date: Mon, 4 Jun 2018 08:41:27 -0700
+Message-ID: <CAE=gft5Lf+ydpVF6gxC0Umhs40VESJxKB4j8fNTybyzgwmTonA@mail.gmail.com>
+References: <1527849774-7623-1-git-send-email-sayalil@codeaurora.org>
+ <1527849774-7623-4-git-send-email-sayalil@codeaurora.org> <000f01d3f996$2c16d1e0$844475a0$@codeaurora.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <21ce321eb2d81d59d6e4578669b8287b9ac4d29f.camel@wdc.com>
+In-Reply-To: <000f01d3f996$2c16d1e0$844475a0$@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Bart.VanAssche@wdc.com
-Cc: jejb@linux.vnet.ibm.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, martin.petersen@oracle.com, Vinayak Holikatti <vinholikatti@gmail.com>, Stanislav.Nijnikov@wdc.com, Gwendal Grignou <gwendal@chromium.org>
+To: sayalil@codeaurora.org
+Cc: linux-scsi@vger.kernel.org, stanislav.nijnikov@wdc.com, gregkh@linuxfoundation.org, adrian.hunter@intel.com, linux-kernel@vger.kernel.org, subhashj@codeaurora.org, cang@codeaurora.org, vivek.gautam@codeaurora.org, Rajendra Nayak <rnayak@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, asutoshd@codeaurora.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Jun 4, 2018 at 1:41 AM Bart Van Assche <Bart.VanAssche@wdc.com> wrote:
+On Fri, Jun 1, 2018 at 3:49 AM sayali <sayalil@codeaurora.org> wrote:
 >
-> On Tue, 2018-05-29 at 11:17 -0700, Evan Green wrote:
-> >       /* Check whether we need temp memory */
-> >       if (param_offset != 0 || param_size < buff_len) {
-> > -             desc_buf = kmalloc(buff_len, GFP_KERNEL);
-> > +             desc_buf = kzalloc(buff_len, GFP_KERNEL);
-> >               if (!desc_buf)
-> >                       return -ENOMEM;
-> > +
-> > +             /* If it's a write, first read the complete descriptor, then
-> > +              * copy in the parts being changed.
-> > +              */
+> Hi Evan,
 >
-> Have you verified this patch with checkpatch? The above comment does not follow
-> the Linux kernel coding style.
+> I am working on upstreaming runtime UFS provisioning patches and have posted
+> my latest (V1) patches for review.
+> I have noticed that you are also working on the same and would appreciate if
+> you could also review my patches.
+> I believe it will save us all some time and duplicate effort. Let me know if
+> you have any concern or comments on this.
+>
+> Thanks,
+> Sayali
+>
 
-Yes, but I probably forgot to add that switch that turns on even more
-checks. Will fix.
-
->
-> > +             if (opcode == UPIU_QUERY_OPCODE_WRITE_DESC) {
-> > +                     if ((int)param_offset + (int)param_size > buff_len) {
-> > +                             ret = -EINVAL;
-> > +                             goto out;
-> > +                     }
-> > +
-> > +                     ret = ufshcd_query_descriptor_retry(hba,
-> > +                                             UPIU_QUERY_OPCODE_READ_DESC,
-> > +                                             desc_id, desc_index, 0,
-> > +                                             desc_buf, &buff_len);
-> > +
-> > +                     if (ret) {
-> > +                             dev_err(hba->dev,
-> > +                                     "%s: Failed reading descriptor. desc_id %d, desc_index %d, param_offset %d, ret %d",
-> > +                                     __func__, desc_id, desc_index,
-> > +                                     param_offset, ret);
-> > +
-> > +                             goto out;
-> > +                     }
-> > +
-> > +                     memcpy(desc_buf + param_offset, param_buf, param_size);
-> > +             }
->
-> The above code is indented deeply. I think that means that this code would become
-> easier to read if a helper function would be introduced.
-
-Ok.
->
-> Additionally, I think locking is missing from the above code. How else can race
-> conditions between concurrent writers be prevented?
-
-Hm, yeah I think this followed along with my thinking that there
-wouldn't be multiple processes provisioning at once. This function
-will always write a consistent version of one caller's view, but
-multiple callers might clobber each other's writes. I can explore
-adding locking.
+Hi Sayali,
+I am currently travelling for work, but will make an effort to review
+your patches soon. It looks like we did a bit of duplicate work. Maybe
+the maintainers or community at large could let us know which approach
+they prefer, or if they want both.
 -Evan
