@@ -1,63 +1,39 @@
 From: Evan Green <evgreen@chromium.org>
 Subject: Re: [PATCH 0/7] Enable UFS provisioning via Linux
-Date: Mon, 4 Jun 2018 07:59:14 -0700
-Message-ID: <CAE=gft5Vk3neDkyvmVf4CkBQQPVK=wXp=5jJ8n0uaosEwWUOAg@mail.gmail.com>
-References: <20180529181740.195362-1-evgreen@chromium.org> <MWHPR04MB11372C75BFC9416BAF5E81A19A630@MWHPR04MB1137.namprd04.prod.outlook.com>
- <CAE=gft4LoNiRtxgTA_ZPghZGEVOzu_GAwMgqhs-8NCYVgj_AVw@mail.gmail.com> <MWHPR04MB11370AED823FB608218CB9AD9A600@MWHPR04MB1137.namprd04.prod.outlook.com>
+Date: Mon, 4 Jun 2018 08:03:07 -0700
+Message-ID: <CAE=gft65BVSFUm-tPEw+pGKS2Y_jbLMwUX=f8PR4aw=QF_sOMg@mail.gmail.com>
+References: <20180529181740.195362-1-evgreen@chromium.org> <CAP2JTQJaYKoYANe6C68HnkVzT6eYUq9wJQxuy71LqQ72dacv_w@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <MWHPR04MB11370AED823FB608218CB9AD9A600@MWHPR04MB1137.namprd04.prod.outlook.com>
+In-Reply-To: <CAP2JTQJaYKoYANe6C68HnkVzT6eYUq9wJQxuy71LqQ72dacv_w@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Stanislav.Nijnikov@wdc.com
-Cc: Vinayak Holikatti <vinholikatti@gmail.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Gwendal Grignou <gwendal@chromium.org>, Alex.Lemberg@wdc.com, Avri.Altman@wdc.com
+To: chlrbgh0@gmail.com
+Cc: Vinayak Holikatti <vinholikatti@gmail.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, stanislav.nijnikov@wdc.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Gwendal Grignou <gwendal@chromium.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sun, Jun 3, 2018 at 3:21 AM Stanislav Nijnikov
-<Stanislav.Nijnikov@wdc.com> wrote:
+Hi Kyuho,
+
+On Mon, Jun 4, 2018 at 4:11 AM Kyuho Choi <chlrbgh0@gmail.com> wrote:
 >
+> Hi Evan,
 >
+> I've some question about end user's provisioning.
 >
-> > -----Original Message-----
-> > From: linux-scsi-owner@vger.kernel.org <linux-scsi-owner@vger.kernel.org> On Behalf Of Evan Green
-> > Sent: Friday, June 1, 2018 5:44 PM
-> > To: Stanislav Nijnikov <Stanislav.Nijnikov@wdc.com>
-> > Cc: Vinayak Holikatti <vinholikatti@gmail.com>; jejb@linux.vnet.ibm.com; martin.petersen@oracle.com; linux-
-> > kernel@vger.kernel.org; linux-scsi@vger.kernel.org; Gwendal Grignou <gwendal@chromium.org>; Alex Lemberg
-> > <Alex.Lemberg@wdc.com>; Avri Altman <Avri.Altman@wdc.com>
-> > Subject: Re: [PATCH 0/7] Enable UFS provisioning via Linux
-> >
-> > Hi Stanislav. Thanks for taking a look. Responses below.
-> >
-> > On Thu, May 31, 2018 at 3:04 AM Stanislav Nijnikov
-> > <Stanislav.Nijnikov@wdc.com> wrote:
-> > >
-> > > Hi Evan,
-> > > I have some generic notes:
-> > > - Why to create new sysfs entries for the configuration descriptor fields if they are just duplication of fields in the device and unit
-> > descriptors? And the sysfs representation of the device and unit descriptors is existing already.
-> >
-> > Well, UFS describes them as different descriptors. I worry that if I
-> > add a bunch of clever logic to hide the config descriptor behind other
-> > descriptors, there might be trouble later if 1) there is a quirky
-> > device that doesn't reflect the values between descriptors quite the
-> > same way or at the same time, or 2) if a later UFS spec adds more
-> > configuration descriptor fields that don't exactly reflect into other
-> > non-config descriptors, the cleverness will look awkward.
+> On 5/30/18, Evan Green <evgreen@chromium.org> wrote:
+> > This series enables provisioning UFS devices using the existing sysfs
+> > interface. This functionality is primarily useful along the assembly
+> > line, but might also be useful for end users that receive devices that
+> > aren't locked down.
 >
-> No additional logic will be required to attach write functionality to the
-> existing entries instead of new defined ones. It will reduce the patch
-> size significantly. And there will be no need for the unit selector
-> mechanism which I'm not sure will be accepted by the SCSI community.
+> As we knew, ufs are mainly adopted to boot device like mobile phone.
+> Usally after  provisioning operation, every data in ufs (eg. Android :
+> system, userdata, boot info and etc) would be removed. How end user
+> download and flash all data to ufs?. dd or another download tools?.
 >
 
-So this would be modifying the existing sysfs entries so that reads
-still come from the device and unit descriptors, but writes go to
-equivalent fields in the config descriptor? I can explore that
-approach. Alternatively, if the unit selector mechanism is not
-desired, I could dynamically create sysfs directories for each unit in
-the config descriptor, but still bring out the config descriptor
-values as separate entries. (I still worry a bit about smashing the
-descriptors together as the UFS spec called them out as different).
-
+You're right, the user would need to be booted into a RAM disk, or off
+of removable media like micro SD, and use dd or custom tools to set up
+data inside the new provisioning scheme. So yes, on a mobile phone, it
+would be a fairly advanced end user.
 -Evan
