@@ -1,106 +1,225 @@
 From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: [PATCH v2 1/2] scsi: sd_zbc: Fix potential memory leak
-Date: Mon,  4 Jun 2018 17:04:12 +0900
-Message-ID: <20180604080413.30747-2-damien.lemoal@wdc.com>
+Subject: [PATCH v2 2/2] scsi: sd_zbc: Avoid that resetting a zone fails sporadically
+Date: Mon,  4 Jun 2018 17:04:13 +0900
+Message-ID: <20180604080413.30747-3-damien.lemoal@wdc.com>
 References: <20180604080413.30747-1-damien.lemoal@wdc.com>
 Return-path: <stable-owner@vger.kernel.org>
 In-Reply-To: <20180604080413.30747-1-damien.lemoal@wdc.com>
 Sender: stable-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: stable@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Bart Van Assche <Bart.VanAssche@wdc.com>, Hannes Reinecke <hare@suse.de>
+Cc: stable@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Bart Van Assche <Bart.VanAssche@wdc.com>, Hannes Reinecke <hare@suse.de>, Bart Van Assche <bart.vanassche@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-[Backport of upstream commit 4b433924b2755a94f99258c178684a0e05c344de]
+From: Bart Van Assche <bart.vanassche@wdc.com>
 
-Rework sd_zbc_check_zone_size() to avoid a memory leak due to an early
-return if sd_zbc_report_zones() fails.
+[Backport of upstream commit ccce20fc7968d546fb1e8e147bf5cdc8afc4278a]
 
+Since SCSI scanning occurs asynchronously, since sd_revalidate_disk() is
+called from sd_probe_async() and since sd_revalidate_disk() calls
+sd_zbc_read_zones() it can happen that sd_zbc_read_zones() is called
+concurrently with blkdev_report_zones() and/or blkdev_reset_zones().
+That can cause these functions to fail with -EIO because
+sd_zbc_read_zones() sets sdkp->nr_zones to zero before restoring it to
+the actual value, even if no drive characteristics have changed.
+Avoid that this can happen by modifying making the following changes:
+
+- Protect the code that updates zone information with blk_mq_freeze()
+  and blk_mq_unfreeze().
+- Modify sd_zbc_setup() such that these functions do not modify
+  struct scsi_disk before all zone information has been obtained.
+- Reallocate the zone write lock bitmap if the number of zones changed.
+
+Note: since commit 055f6e18e08f ("block: Make q_usage_counter also track
+legacy requests"; kernel v4.15) the request queue freezing mechanism also
+affects legacy request queues.
+
+Fixes: 89d947561077 ("sd: Implement support for ZBC devices")
+Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
+[Damien]
+* Backport for 4.14-stable
+* Updated this commit message
 Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
 Cc: stable@vger.kernel.org # 4.14
 ---
- drivers/scsi/sd_zbc.c | 34 +++++++++++++++-------------------
- 1 file changed, 15 insertions(+), 19 deletions(-)
+ drivers/scsi/sd_zbc.c | 98 +++++++++++++++++++++++++++----------------
+ 1 file changed, 63 insertions(+), 35 deletions(-)
 
 diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
-index 2eb61d54bbb4..bc3cb81a9c7d 100644
+index bc3cb81a9c7d..ea9e1e0ed5b8 100644
 --- a/drivers/scsi/sd_zbc.c
 +++ b/drivers/scsi/sd_zbc.c
-@@ -425,7 +425,7 @@ static int sd_zbc_check_capacity(struct scsi_disk *sdkp,
+@@ -423,7 +423,16 @@ static int sd_zbc_check_capacity(struct scsi_disk *sdkp,
  
- static int sd_zbc_check_zone_size(struct scsi_disk *sdkp)
+ #define SD_ZBC_BUF_SIZE 131072
+ 
+-static int sd_zbc_check_zone_size(struct scsi_disk *sdkp)
++/**
++ * sd_zbc_check_zone_size - Check the device zone sizes
++ * @sdkp: Target disk
++ *
++ * Check that all zones of the device are equal. The last zone can however
++ * be smaller. The zone size must also be a power of two number of LBAs.
++ *
++ * Returns the zone size in bytes upon success or an error code upon failure.
++ */
++static s64 sd_zbc_check_zone_size(struct scsi_disk *sdkp)
  {
--	u64 zone_blocks;
-+	u64 zone_blocks = 0;
+ 	u64 zone_blocks = 0;
  	sector_t block = 0;
- 	unsigned char *buf;
- 	unsigned char *rec;
-@@ -443,10 +443,8 @@ static int sd_zbc_check_zone_size(struct scsi_disk *sdkp)
+@@ -434,8 +443,6 @@ static int sd_zbc_check_zone_size(struct scsi_disk *sdkp)
+ 	int ret;
+ 	u8 same;
  
- 	/* Do a report zone to get the same field */
- 	ret = sd_zbc_report_zones(sdkp, buf, SD_ZBC_BUF_SIZE, 0);
--	if (ret) {
--		zone_blocks = 0;
--		goto out;
--	}
-+	if (ret)
-+		goto out_free;
+-	sdkp->zone_blocks = 0;
+-
+ 	/* Get a buffer */
+ 	buf = kmalloc(SD_ZBC_BUF_SIZE, GFP_KERNEL);
+ 	if (!buf)
+@@ -470,16 +477,17 @@ static int sd_zbc_check_zone_size(struct scsi_disk *sdkp)
  
- 	same = buf[4] & 0x0f;
- 	if (same > 0) {
-@@ -489,7 +487,7 @@ static int sd_zbc_check_zone_size(struct scsi_disk *sdkp)
- 			ret = sd_zbc_report_zones(sdkp, buf,
- 						  SD_ZBC_BUF_SIZE, block);
- 			if (ret)
--				return ret;
-+				goto out_free;
+ 		/* Parse zone descriptors */
+ 		while (rec < buf + buf_len) {
+-			zone_blocks = get_unaligned_be64(&rec[8]);
+-			if (sdkp->zone_blocks == 0) {
+-				sdkp->zone_blocks = zone_blocks;
+-			} else if (zone_blocks != sdkp->zone_blocks &&
+-				   (block + zone_blocks < sdkp->capacity
+-				    || zone_blocks > sdkp->zone_blocks)) {
++			u64 this_zone_blocks = get_unaligned_be64(&rec[8]);
++
++			if (zone_blocks == 0) {
++				zone_blocks = this_zone_blocks;
++			} else if (this_zone_blocks != zone_blocks &&
++				   (block + this_zone_blocks < sdkp->capacity
++				    || this_zone_blocks > zone_blocks)) {
+ 				zone_blocks = 0;
+ 				goto out;
+ 			}
+-			block += zone_blocks;
++			block += this_zone_blocks;
+ 			rec += 64;
  		}
  
- 	} while (block < sdkp->capacity);
-@@ -497,34 +495,32 @@ static int sd_zbc_check_zone_size(struct scsi_disk *sdkp)
- 	zone_blocks = sdkp->zone_blocks;
+@@ -492,8 +500,6 @@ static int sd_zbc_check_zone_size(struct scsi_disk *sdkp)
  
- out:
--	kfree(buf);
+ 	} while (block < sdkp->capacity);
+ 
+-	zone_blocks = sdkp->zone_blocks;
 -
+ out:
  	if (!zone_blocks) {
  		if (sdkp->first_scan)
- 			sd_printk(KERN_NOTICE, sdkp,
- 				  "Devices with non constant zone "
- 				  "size are not supported\n");
--		return -ENODEV;
--	}
--
--	if (!is_power_of_2(zone_blocks)) {
-+		ret = -ENODEV;
-+	} else if (!is_power_of_2(zone_blocks)) {
- 		if (sdkp->first_scan)
- 			sd_printk(KERN_NOTICE, sdkp,
- 				  "Devices with non power of 2 zone "
- 				  "size are not supported\n");
--		return -ENODEV;
--	}
--
--	if (logical_to_sectors(sdkp->device, zone_blocks) > UINT_MAX) {
-+		ret = -ENODEV;
-+	} else if (logical_to_sectors(sdkp->device, zone_blocks) > UINT_MAX) {
- 		if (sdkp->first_scan)
- 			sd_printk(KERN_NOTICE, sdkp,
+@@ -513,8 +519,7 @@ static int sd_zbc_check_zone_size(struct scsi_disk *sdkp)
  				  "Zone size too large\n");
--		return -ENODEV;
-+		ret = -ENODEV;
-+	} else {
-+		sdkp->zone_blocks = zone_blocks;
-+		sdkp->zone_shift = ilog2(zone_blocks);
+ 		ret = -ENODEV;
+ 	} else {
+-		sdkp->zone_blocks = zone_blocks;
+-		sdkp->zone_shift = ilog2(zone_blocks);
++		ret = zone_blocks;
  	}
  
--	sdkp->zone_blocks = zone_blocks;
-+out_free:
-+	kfree(buf);
- 
--	return 0;
-+	return ret;
+ out_free:
+@@ -523,23 +528,44 @@ static int sd_zbc_check_zone_size(struct scsi_disk *sdkp)
+ 	return ret;
  }
  
- static int sd_zbc_setup(struct scsi_disk *sdkp)
+-static int sd_zbc_setup(struct scsi_disk *sdkp)
++static int sd_zbc_setup(struct scsi_disk *sdkp, u32 zone_blocks)
+ {
++	struct request_queue *q = sdkp->disk->queue;
++	u32 zone_shift = ilog2(zone_blocks);
++	u32 nr_zones;
+ 
+ 	/* chunk_sectors indicates the zone size */
+-	blk_queue_chunk_sectors(sdkp->disk->queue,
+-			logical_to_sectors(sdkp->device, sdkp->zone_blocks));
+-	sdkp->zone_shift = ilog2(sdkp->zone_blocks);
+-	sdkp->nr_zones = sdkp->capacity >> sdkp->zone_shift;
+-	if (sdkp->capacity & (sdkp->zone_blocks - 1))
+-		sdkp->nr_zones++;
+-
+-	if (!sdkp->zones_wlock) {
+-		sdkp->zones_wlock = kcalloc(BITS_TO_LONGS(sdkp->nr_zones),
+-					    sizeof(unsigned long),
+-					    GFP_KERNEL);
+-		if (!sdkp->zones_wlock)
+-			return -ENOMEM;
++	blk_queue_chunk_sectors(q,
++			logical_to_sectors(sdkp->device, zone_blocks));
++	nr_zones = round_up(sdkp->capacity, zone_blocks) >> zone_shift;
++
++	/*
++	 * Initialize the disk zone write lock bitmap if the number
++	 * of zones changed.
++	 */
++	if (nr_zones != sdkp->nr_zones) {
++		unsigned long *zones_wlock = NULL;
++
++		if (nr_zones) {
++			zones_wlock = kcalloc(BITS_TO_LONGS(nr_zones),
++					      sizeof(unsigned long),
++					      GFP_KERNEL);
++			if (!zones_wlock)
++				return -ENOMEM;
++		}
++
++		blk_mq_freeze_queue(q);
++		sdkp->zone_blocks = zone_blocks;
++		sdkp->zone_shift = zone_shift;
++		sdkp->nr_zones = nr_zones;
++		swap(sdkp->zones_wlock, zones_wlock);
++		blk_mq_unfreeze_queue(q);
++
++		kfree(zones_wlock);
++
++		/* READ16/WRITE16 is mandatory for ZBC disks */
++		sdkp->device->use_16_for_rw = 1;
++		sdkp->device->use_10_for_rw = 0;
+ 	}
+ 
+ 	return 0;
+@@ -548,6 +574,7 @@ static int sd_zbc_setup(struct scsi_disk *sdkp)
+ int sd_zbc_read_zones(struct scsi_disk *sdkp,
+ 		      unsigned char *buf)
+ {
++	int64_t zone_blocks;
+ 	int ret;
+ 
+ 	if (!sd_is_zoned(sdkp))
+@@ -585,19 +612,19 @@ int sd_zbc_read_zones(struct scsi_disk *sdkp,
+ 	 * Check zone size: only devices with a constant zone size (except
+ 	 * an eventual last runt zone) that is a power of 2 are supported.
+ 	 */
+-	ret = sd_zbc_check_zone_size(sdkp);
+-	if (ret)
++	zone_blocks = sd_zbc_check_zone_size(sdkp);
++	ret = -EFBIG;
++	if (zone_blocks != (u32)zone_blocks)
++		goto err;
++	ret = zone_blocks;
++	if (ret < 0)
+ 		goto err;
+ 
+ 	/* The drive satisfies the kernel restrictions: set it up */
+-	ret = sd_zbc_setup(sdkp);
++	ret = sd_zbc_setup(sdkp, zone_blocks);
+ 	if (ret)
+ 		goto err;
+ 
+-	/* READ16/WRITE16 is mandatory for ZBC disks */
+-	sdkp->device->use_16_for_rw = 1;
+-	sdkp->device->use_10_for_rw = 0;
+-
+ 	return 0;
+ 
+ err:
+@@ -610,6 +637,7 @@ void sd_zbc_remove(struct scsi_disk *sdkp)
+ {
+ 	kfree(sdkp->zones_wlock);
+ 	sdkp->zones_wlock = NULL;
++	sdkp->nr_zones = 0;
+ }
+ 
+ void sd_zbc_print_zones(struct scsi_disk *sdkp)
 -- 
 2.17.0
