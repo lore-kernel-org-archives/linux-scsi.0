@@ -1,46 +1,56 @@
-From: Joe Perches <joe@perches.com>
-Subject: Re: [PATCH 3/3] message: fusion: Fix line over 80 characters
-Date: Sun, 03 Jun 2018 13:03:03 -0700
-Message-ID: <1800e18130f7f768128feea2755f2c6ea0af7241.camel@perches.com>
-References: <cover.1528031458.git.rvarsha016@gmail.com>
-         <ae9327e821e82a9c9e6a41c1fa12ec02496189f2.1528031458.git.rvarsha016@gmail.com>
+From: Jason Yan <yanaijie@huawei.com>
+Subject: Re: [PATCH 4/8] scsi: libsas: trigger a new revalidation to discover
+ the device
+Date: Mon, 4 Jun 2018 09:01:38 +0800
+Message-ID: <5B148F72.3000000@huawei.com>
+References: <20180529022309.21071-1-yanaijie@huawei.com>
+ <20180529022309.21071-5-yanaijie@huawei.com>
+ <013c5c91-9792-7951-95ed-22daae2e2dbe@huawei.com>
+ <5B109A79.6060907@huawei.com>
+ <6b030b96-9733-f6b5-e8af-d1d488c52fb4@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <ae9327e821e82a9c9e6a41c1fa12ec02496189f2.1528031458.git.rvarsha016@gmail.com>
+In-Reply-To: <6b030b96-9733-f6b5-e8af-d1d488c52fb4@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Varsha Rao <rvarsha016@gmail.com>
-Cc: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Nicholas Mc Guire <der.herr@hofr.at>, Lukas Bulwahn <lukas.bulwahn@gmail.com>
+To: John Garry <john.garry@huawei.com>, martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, zhaohongjiang@huawei.com, hare@suse.com, dan.j.williams@intel.com, jthumshirn@suse.de, hch@lst.de, huangdaode@hisilicon.com, chenxiang66@hisilicon.com, xiexiuqi@huawei.com, tj@kernel.org, miaoxie@huawei.com, Ewan Milne <emilne@redhat.com>, Tomas Henzl <thenzl@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sun, 2018-06-03 at 18:52 +0530, Varsha Rao wrote:
-> Line over 80 characters is split to fix the following checkpatch issue:
-> 
-> WARNING: line over 80 characters
-[]
-> diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-[]
-> @@ -5690,7 +5690,8 @@ mpt_inactive_raid_volumes(MPT_ADAPTER *ioc, u8 channel, u8 id)
->  		    buffer->PhysDisk[i].PhysDiskNum, &phys_disk) != 0)
->  			continue;
->  
-> -		if (!(component_info = kmalloc(sizeof(*component_info), GFP_KERNEL)))
-> +		if (!(component_info = kmalloc(sizeof(*component_info),
-> +		      GFP_KERNEL)))
->  			continue;
 
-It's much more common to split this into multiple statements like
 
-		component_info = kmalloc(sizeof(*component_info), GFP_KERNEL);
-		if (!component_info)
-			continue;
+On 2018/6/1 18:02, John Garry wrote:
+> I mean that since libsas does disocovery/revalidation for all expander
+> PHYS for a single event, than all discovery/revalidation should be
+> synchronised with that same event. I don't mean that for a given
+> expander PHY which originated a broadcast event, the
+> revalidation/discovery for that PHY should be synchronised with that
+> same event. Like you said, I don't think it's possible.
+>
+> On another point, one of the reasons to synchronise event processing was
+> so events are not lost and are processed in order. In principle, by
+> chaining these bcast events we lose that, since other PHY events may be
+> queued before we queue the new artificial bcast events.
+>
 
-but the continue in a loop with a known alloc failure
-seems silly as the next alloc is also extremely likely
-to fail as well.
+I got what you mean. I will try to keep the principle of synchronised 
+event processing.
 
-btw: Are you actually using this code?
-
-If not, perhaps it's better to send cleanup only patches
-for files in drivers/staging as practice instead.
+>>
+>> But if you mean we shall do this device removing and rediscovering in
+>> one revalidation if it is not a "flutter", I think we can wrap a new
+>> function for sas_revalidate_domain(), such as:
+>>
+>>
+>> while (need_to_revalidate_again)
+>>     need_to_revalidate_again = sas_revalidate_domain()
+>>
+>> In this way the sas_port adding/removing is packed in one loop, we won't
+>> have the annoyance of "duplicate filename" warning. What do you
+>> think?
+>
+> Something like that, where all the discovery/revalidation and related
+> device + port processing is done before we complete the revalidation
+> event processing. A single revalidation event may defer do device+port
+> processing multiple times.
