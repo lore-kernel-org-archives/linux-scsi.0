@@ -1,24 +1,44 @@
 From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH 4/7] scsi: ufs: sysfs: Document attribute writability
-Date: Mon, 4 Jun 2018 08:35:51 +0000
-Message-ID: <c16dbf5a23c32a090cc84544f7a83f7dd0283d73.camel@wdc.com>
+Subject: Re: [PATCH 5/7] scsi: ufs: Refactor descriptor read for write
+Date: Mon, 4 Jun 2018 08:40:44 +0000
+Message-ID: <21ce321eb2d81d59d6e4578669b8287b9ac4d29f.camel@wdc.com>
 References: <20180529181740.195362-1-evgreen@chromium.org>
-         <20180529181740.195362-5-evgreen@chromium.org>
+         <20180529181740.195362-6-evgreen@chromium.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180529181740.195362-5-evgreen@chromium.org>
+In-Reply-To: <20180529181740.195362-6-evgreen@chromium.org>
 Content-Language: en-US
-Content-ID: <DD24CB2BE71CE34A92307EA2A6C389A5@namprd04.prod.outlook.com>
+Content-ID: <5DE722D568C8E3488AD4385EC7C4D432@namprd04.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "evgreen@chromium.org" <evgreen@chromium.org>, "vinholikatti@gmail.com" <vinholikatti@gmail.com>, Stanislav Nijnikov <Stanislav.Nijnikov@wdc.com>
 Cc: "gwendal@chromium.org" <gwendal@chromium.org>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gVHVlLCAyMDE4LTA1LTI5IGF0IDExOjE3IC0wNzAwLCBFdmFuIEdyZWVuIHdyb3RlOg0KPiBU
-aGlzIGNoYW5nZSByZW1vdmVzIHRoZSByZWFkLW9ubHkgY2xhdXNlcyBmcm9tIHRoZSBkb2N1bWVu
-dGF0aW9uDQo+IGZvciBVRlMgYXR0cmlidXRlcywgd2hpY2ggYXJlIG5vdyB3cml0YWJsZS4NCg0K
-QWxzbyBmb3IgdGhpcyBwYXRjaCwgd2h5IGlzIHRoaXMgYSBzZXBhcmF0ZSBwYXRjaCBpbnN0ZWFk
-IG9mIGhhdmluZyBtZXJnZWQNCnRoZXNlIGNoYW5nZXMgaW50byB0aGUgcGF0Y2ggdGhhdCBtYWtl
-cyB0aGUgYXR0cmlidXRlcyB3cml0YWJsZT8NCg0KQmFydC4NCg0KDQoNCg0K
+T24gVHVlLCAyMDE4LTA1LTI5IGF0IDExOjE3IC0wNzAwLCBFdmFuIEdyZWVuIHdyb3RlOg0KPiAg
+CS8qIENoZWNrIHdoZXRoZXIgd2UgbmVlZCB0ZW1wIG1lbW9yeSAqLw0KPiAgCWlmIChwYXJhbV9v
+ZmZzZXQgIT0gMCB8fCBwYXJhbV9zaXplIDwgYnVmZl9sZW4pIHsNCj4gLQkJZGVzY19idWYgPSBr
+bWFsbG9jKGJ1ZmZfbGVuLCBHRlBfS0VSTkVMKTsNCj4gKwkJZGVzY19idWYgPSBremFsbG9jKGJ1
+ZmZfbGVuLCBHRlBfS0VSTkVMKTsNCj4gIAkJaWYgKCFkZXNjX2J1ZikNCj4gIAkJCXJldHVybiAt
+RU5PTUVNOw0KPiArDQo+ICsJCS8qIElmIGl0J3MgYSB3cml0ZSwgZmlyc3QgcmVhZCB0aGUgY29t
+cGxldGUgZGVzY3JpcHRvciwgdGhlbg0KPiArCQkgKiBjb3B5IGluIHRoZSBwYXJ0cyBiZWluZyBj
+aGFuZ2VkLg0KPiArCQkgKi8NCg0KSGF2ZSB5b3UgdmVyaWZpZWQgdGhpcyBwYXRjaCB3aXRoIGNo
+ZWNrcGF0Y2g/IFRoZSBhYm92ZSBjb21tZW50IGRvZXMgbm90IGZvbGxvdw0KdGhlIExpbnV4IGtl
+cm5lbCBjb2Rpbmcgc3R5bGUuDQoNCj4gKwkJaWYgKG9wY29kZSA9PSBVUElVX1FVRVJZX09QQ09E
+RV9XUklURV9ERVNDKSB7DQo+ICsJCQlpZiAoKGludClwYXJhbV9vZmZzZXQgKyAoaW50KXBhcmFt
+X3NpemUgPiBidWZmX2xlbikgew0KPiArCQkJCXJldCA9IC1FSU5WQUw7DQo+ICsJCQkJZ290byBv
+dXQ7DQo+ICsJCQl9DQo+ICsNCj4gKwkJCXJldCA9IHVmc2hjZF9xdWVyeV9kZXNjcmlwdG9yX3Jl
+dHJ5KGhiYSwNCj4gKwkJCQkJCVVQSVVfUVVFUllfT1BDT0RFX1JFQURfREVTQywNCj4gKwkJCQkJ
+CWRlc2NfaWQsIGRlc2NfaW5kZXgsIDAsDQo+ICsJCQkJCQlkZXNjX2J1ZiwgJmJ1ZmZfbGVuKTsN
+Cj4gKw0KPiArCQkJaWYgKHJldCkgew0KPiArCQkJCWRldl9lcnIoaGJhLT5kZXYsDQo+ICsJCQkJ
+CSIlczogRmFpbGVkIHJlYWRpbmcgZGVzY3JpcHRvci4gZGVzY19pZCAlZCwgZGVzY19pbmRleCAl
+ZCwgcGFyYW1fb2Zmc2V0ICVkLCByZXQgJWQiLA0KPiArCQkJCQlfX2Z1bmNfXywgZGVzY19pZCwg
+ZGVzY19pbmRleCwNCj4gKwkJCQkJcGFyYW1fb2Zmc2V0LCByZXQpOw0KPiArDQo+ICsJCQkJZ290
+byBvdXQ7DQo+ICsJCQl9DQo+ICsNCj4gKwkJCW1lbWNweShkZXNjX2J1ZiArIHBhcmFtX29mZnNl
+dCwgcGFyYW1fYnVmLCBwYXJhbV9zaXplKTsNCj4gKwkJfQ0KDQpUaGUgYWJvdmUgY29kZSBpcyBp
+bmRlbnRlZCBkZWVwbHkuIEkgdGhpbmsgdGhhdCBtZWFucyB0aGF0IHRoaXMgY29kZSB3b3VsZCBi
+ZWNvbWUNCmVhc2llciB0byByZWFkIGlmIGEgaGVscGVyIGZ1bmN0aW9uIHdvdWxkIGJlIGludHJv
+ZHVjZWQuDQoNCkFkZGl0aW9uYWxseSwgSSB0aGluayBsb2NraW5nIGlzIG1pc3NpbmcgZnJvbSB0
+aGUgYWJvdmUgY29kZS4gSG93IGVsc2UgY2FuIHJhY2UNCmNvbmRpdGlvbnMgYmV0d2VlbiBjb25j
+dXJyZW50IHdyaXRlcnMgYmUgcHJldmVudGVkPw0KDQpCYXJ0Lg0KDQoNCg0K
