@@ -1,49 +1,34 @@
 From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH 6/7] scsi: ufs: Enable writing config descriptor
-Date: Mon, 4 Jun 2018 08:46:03 +0000
-Message-ID: <6089990e71830e699a9106eaff91e344e1d24c39.camel@wdc.com>
-References: <20180529181740.195362-1-evgreen@chromium.org>
-         <20180529181740.195362-7-evgreen@chromium.org>
+Subject: Re: [PATCH V1 2/3] scsi: ufs: Add ufs provisioning support
+Date: Mon, 4 Jun 2018 09:17:37 +0000
+Message-ID: <39ab956b95a645c6e63eb9713ea9547fdc265a22.camel@wdc.com>
+References: <1527849774-7623-1-git-send-email-sayalil@codeaurora.org>
+         <1527849774-7623-3-git-send-email-sayalil@codeaurora.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180529181740.195362-7-evgreen@chromium.org>
+In-Reply-To: <1527849774-7623-3-git-send-email-sayalil@codeaurora.org>
 Content-Language: en-US
-Content-ID: <7822986D20A9A84DBAD47E21E5815180@namprd04.prod.outlook.com>
+Content-ID: <5937082202E2A044B788E888E214C35D@namprd04.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "evgreen@chromium.org" <evgreen@chromium.org>, "vinholikatti@gmail.com" <vinholikatti@gmail.com>, Stanislav Nijnikov <Stanislav.Nijnikov@wdc.com>
-Cc: "gwendal@chromium.org" <gwendal@chromium.org>
+To: "vinholikatti@gmail.com" <vinholikatti@gmail.com>, "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>, "sayalil@codeaurora.org" <sayalil@codeaurora.org>, "evgreen@chromium.org" <evgreen@chromium.org>, "cang@codeaurora.org" <cang@codeaurora.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "subhashj@codeaurora.org" <subhashj@codeaurora.org>, "vivek.gautam@codeaurora.org" <vivek.gautam@codeaurora.org>, "rnayak@codeaurora.org" <rnayak@codeaurora.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gVHVlLCAyMDE4LTA1LTI5IGF0IDExOjE3IC0wNzAwLCBFdmFuIEdyZWVuIHdyb3RlOg0KPiBU
-aGlzIGNoYW5nZSBlbmFibGVzIHdyaXRpbmcgdG8gZmllbGRzIG9mIHRoZSBjb25maWcgZGVzY3Jp
-cHRvcg0KPiB2aWEgc3lzZnMuIEl0IGNhbiBiZSB1c2VkIHRvIHByb3Zpc2lvbiBhbiB1bnByb3Zp
-c2lvbmVkIFVGUw0KPiBkZXZpY2UsIG9yIHJlcHJvdmlzaW9uIGFuIHVubG9ja2VkIGRldmljZS4N
-Cj4gDQo+IFNpZ25lZC1vZmYtYnk6IEV2YW4gR3JlZW4gPGV2Z3JlZW5AY2hyb21pdW0ub3JnPg0K
-PiAtLS0NCj4gIGRyaXZlcnMvc2NzaS91ZnMvdWZzLXN5c2ZzLmMgfCA2NCArKysrKysrKysrKysr
-KysrKysrKysrKysrKysrKysrKysrKysrKysrKy0tLQ0KPiAgMSBmaWxlIGNoYW5nZWQsIDYxIGlu
-c2VydGlvbnMoKyksIDMgZGVsZXRpb25zKC0pDQo+IA0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9z
-Y3NpL3Vmcy91ZnMtc3lzZnMuYyBiL2RyaXZlcnMvc2NzaS91ZnMvdWZzLXN5c2ZzLmMNCj4gaW5k
-ZXggNjIzYzU2MDc0NTcyLi41NGU5ZjNiY2E5ZGIgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvc2Nz
-aS91ZnMvdWZzLXN5c2ZzLmMNCj4gKysrIGIvZHJpdmVycy9zY3NpL3Vmcy91ZnMtc3lzZnMuYw0K
-PiBAQCAtMjUyLDYgKzI1MiwzMSBAQCBzdGF0aWMgc3NpemVfdCB1ZnNfc3lzZnNfcmVhZF9kZXNj
-X3BhcmFtKHN0cnVjdCB1ZnNfaGJhICpoYmEsDQo+ICAJcmV0dXJuIHJldDsNCj4gIH0NCj4gIA0K
-PiArc3RhdGljIHNzaXplX3QgdWZzX3N5c2ZzX3dyaXRlX2Rlc2NfcGFyYW0oc3RydWN0IHVmc19o
-YmEgKmhiYSwNCj4gKwkJCQkgIGVudW0gZGVzY19pZG4gZGVzY19pZCwNCj4gKwkJCQkgIHU4IGRl
-c2NfaW5kZXgsDQo+ICsJCQkJICB1OCBwYXJhbV9vZmZzZXQsDQo+ICsJCQkJICBjb25zdCBjaGFy
-ICpidWYsDQo+ICsJCQkJICBzc2l6ZV90IGJ1Zl9zaXplLA0KPiArCQkJCSAgdTggd2lkdGgpDQo+
-ICt7DQo+ICsJaW50IHJldDsNCj4gKwl1bnNpZ25lZCBsb25nIGxvbmcgdmFsdWU7DQo+ICsNCj4g
-KwlpZiAoa3N0cnRvdWxsKGJ1ZiwgMCwgJnZhbHVlKSkNCj4gKwkJcmV0dXJuIC1FSU5WQUw7DQo+
-ICsNCj4gKwkvKiBDb252ZXJ0IHRvIGJpZyBlbmRpYW4sIGFuZCBzZW5kIG9ubHkgdGhlIGFwcHJv
-cHJpYXRlIHdpZHRoLiAqLw0KPiArCXZhbHVlID0gY3B1X3RvX2JlNjQodmFsdWUpOw0KPiArCXJl
-dCA9IHVmc2hjZF9yd19kZXNjX3BhcmFtKGhiYSwgVVBJVV9RVUVSWV9PUENPREVfV1JJVEVfREVT
-QywgZGVzY19pZCwNCj4gKwkJCQlkZXNjX2luZGV4LCBwYXJhbV9vZmZzZXQsDQo+ICsJCQkJKHU4
-ICopJnZhbHVlICsgOCAtIHdpZHRoLCB3aWR0aCk7DQoNCkluc3RlYWQgb2YgdXNpbmcgdGhlIGFi
-b3ZlIGNvbnN0cnVjdCwgcGxlYXNlIHByb3ZpZGUgc2VwYXJhdGUgdmVyc2lvbnMgb2YNCnVmc19z
-eXNmc193cml0ZV9kZXNjX3BhcmFtKCkgYW5kIHVmc2hjZF9yd19kZXNjX3BhcmFtKCkgZm9yIGVh
-Y2ggc3VwcG9ydGVkDQp2YWx1ZSBvZiAid2lkdGgiICg4LCAxNiwgMzIgYW5kL29yIDY0KSBhbmQg
-YWxzbyB1c2UgdGhlIF9fYmU4IC8gX19iZTE2IC8NCl9fYmUzMiAvIF9fYmU2NCBhbm5vdGF0aW9u
-cyBmb3IgYmlnIGVuZGlhbiBudW1iZXJzIHN1Y2ggdGhhdCBpdCBiZWNvbWVzDQpwb3NzaWJsZSB0
-byB2ZXJpZnkgZW5kaWFubmVzcyBjb3JyZWN0bmVzcyB3aXRoIHNwYXJzZS4NCg0KVGhhbmtzLA0K
-DQpCYXJ0Lg0KDQo=
+T24gRnJpLCAyMDE4LTA2LTAxIGF0IDE2OjEyICswNTMwLCBTYXlhbGkgTG9raGFuZGUgd3JvdGU6
+DQo+ICsJcVRvdGFsUmF3RGV2aWNlQ2FwYWNpdHkgPQ0KPiArCQkodWludDY0X3QpZ2VvX2J1Zlsw
+eDBiXSB8ICgodWludDY0X3QpZ2VvX2J1ZlsweDBhXSA8PCA4KSB8DQo+ICsJCSgodWludDY0X3Qp
+Z2VvX2J1ZlsweDA5XSA8PCAxNikgfA0KPiArCQkoKHVpbnQ2NF90KWdlb19idWZbMHgwOF0gPDwg
+MjQpIHwNCj4gKwkJKCh1aW50NjRfdClnZW9fYnVmWzB4MDddIDw8IDMyKSB8DQo+ICsJCSgodWlu
+dDY0X3QpZ2VvX2J1ZlsweDA2XSA8PCA0MCkgfA0KPiArCQkoKHVpbnQ2NF90KWdlb19idWZbMHgw
+NV0gPDwgNDgpIHwNCj4gKwkJKCh1aW50NjRfdClnZW9fYnVmWzB4MDRdIDw8IDU2KTsNCj4gKwl3
+RW5oYW5jZWQxQ2FwQWRqRmFjID0NCj4gKwkJKHVpbnQxNl90KWdlb19idWZbMHgzMV0gfCAoKHVp
+bnQxNl90KWdlb19idWZbMHgzMF0gPDwgOCk7DQoNClBsZWFzZSB1c2UgZ2V0X3VuYWxpZ25lZF9i
+ZSooKSBpbnN0ZWFkIG9mIG9wZW4tY29kaW5nIHRoZXNlIGZ1bmN0aW9ucy4NCg0KPiArCQkqcHQr
+KyA9IChjZmctPnVuaXRbaV0uZE51bUFsbG9jVW5pdHMgPj4gMjQpICYgMHhmZjsNCj4gKwkJKnB0
+KysgPSAoY2ZnLT51bml0W2ldLmROdW1BbGxvY1VuaXRzID4+IDE2KSAmIDB4ZmY7DQo+ICsJCSpw
+dCsrID0gKGNmZy0+dW5pdFtpXS5kTnVtQWxsb2NVbml0cyA+PiA4KSAmIDB4ZmY7DQo+ICsJCSpw
+dCsrID0gKGNmZy0+dW5pdFtpXS5kTnVtQWxsb2NVbml0cykgJiAweGZmOw0KDQpQbGVhc2UgdXNl
+IHB1dF91bmFsaWduZWRfYmUoKSBpbnN0ZWFkIG9mIG9wZW4tY29kaW5nIHRoaXMgZnVuY3Rpb24u
+DQoNClRoYW5rcywNCg0KQmFydC4NCg0KDQoNCg==
