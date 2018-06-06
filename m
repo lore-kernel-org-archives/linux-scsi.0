@@ -1,43 +1,25 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH V5] scsi: hpsa: disable device during shutdown
-Date: Tue, 05 Jun 2018 21:19:57 -0400
-Message-ID: <yq1d0x4g18i.fsf@oracle.com>
-References: <1527913733-16492-1-git-send-email-okaya@codeaurora.org>
+Subject: Re: [PATCH] scsi: aic7xxx: aic79xx: fix potential null pointer dereference on ahd
+Date: Tue, 05 Jun 2018 21:38:37 -0400
+Message-ID: <yq1vaawelsy.fsf@oracle.com>
+References: <20180531123117.32118-1-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <1527913733-16492-1-git-send-email-okaya@codeaurora.org> (Sinan
- Kaya's message of "Sat, 2 Jun 2018 00:28:53 -0400")
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: ryan@finnie.org, Don Brace <don.brace@microsemi.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "open list:HEWLETT-PACKARD SMART ARRAY RAID DRIVER hpsa" <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-pci@vger.kernel.org, timur@codeaurora.org, "open list:HEWLETT-PACKARD SMART ARRAY RAID DRIVER hpsa" <esc.storagedev@microsemi.com>, open list <linux-kernel@vger.kernel.org>, stable@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20180531123117.32118-1-colin.king@canonical.com> (Colin King's
+        message of "Thu, 31 May 2018 13:31:17 +0100")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Colin King <colin.king@canonical.com>
+Cc: Hannes Reinecke <hare@suse.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Sinan,
+Colin,
 
-> 'Commit cc27b735ad3a ("PCI/portdrv: Turn off PCIe services during
-> shutdown")' has been added to kernel to shutdown pending PCIe port
-> service interrupts during reboot so that a newly started kexec kernel
-> wouldn't observe pending interrupts.
->
-> pcie_port_device_remove() is disabling the root port and switches by
-> calling pci_disable_device() after all PCIe service drivers are shutdown.
->
-> This has been found to cause crashes on HP DL360 Gen9 machines during
-> reboot due to hpsa driver not clearing the bus master bit during the
-> shutdown procedure by calling pci_disable_device().
->
-> Disable device as part of the shutdown sequence.
+> If AHD_DEBUG is enabled and ahd_platform_alloc fails then ahd is set
+> to null and the debug printk dereferences ahd when passing it to
+> ahd_name.  Fix this by moving the debug printk to before the call to
+> ahd_platform_alloc where ahd is not null at that point.
 
 Applied to 4.18/scsi-fixes. Thanks!
 
