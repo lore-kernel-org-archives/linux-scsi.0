@@ -1,66 +1,45 @@
-From: Valentin Schneider <valentin.schneider@arm.com>
-Subject: Re: [PATCH v10 0/5] scsi: ufs: add ufs driver code for Hisilicon
- Hi3660 SoC
-Date: Tue, 5 Jun 2018 15:59:28 +0100
-Message-ID: <f9cde7df-2d4d-3d7e-5269-ef879211b2ee@arm.com>
-References: <20180525091712.37227-1-liwei213@huawei.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH V5] scsi: hpsa: disable device during shutdown
+Date: Tue, 05 Jun 2018 21:19:57 -0400
+Message-ID: <yq1d0x4g18i.fsf@oracle.com>
+References: <1527913733-16492-1-git-send-email-okaya@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180525091712.37227-1-liwei213@huawei.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Li Wei <liwei213@huawei.com>, robh+dt@kernel.org, mark.rutland@arm.com, catalin.marinas@arm.com, will.deacon@arm.com, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, khilman@baylibre.com, arnd@arndb.de, gregory.clement@free-electrons.com, thomas.petazzoni@free-electrons.com, yamada.masahiro@socionext.com, riku.voipio@linaro.org, treding@nvidia.com, krzk@kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-scsi@vger.kernel.org
-Cc: zangleigang@hisilicon.com, gengjianfeng@hisilicon.com, guodong.xu@linaro.org, puck.chen@hisilicon.com, john.stultz@linaro.org, fengbaopeng@hisilicon.com
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <1527913733-16492-1-git-send-email-okaya@codeaurora.org> (Sinan
+ Kaya's message of "Sat, 2 Jun 2018 00:28:53 -0400")
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: ryan@finnie.org, Don Brace <don.brace@microsemi.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "open list:HEWLETT-PACKARD SMART ARRAY RAID DRIVER hpsa" <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-pci@vger.kernel.org, timur@codeaurora.org, "open list:HEWLETT-PACKARD SMART ARRAY RAID DRIVER hpsa" <esc.storagedev@microsemi.com>, open list <linux-kernel@vger.kernel.org>, stable@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi,
 
-On 25/05/18 10:17, Li Wei wrote:
-> This patchset adds driver support for UFS for Hi3660 SoC. It is verified on HiKey960 board.
-> 
-> Li Wei (5):
->   scsi: ufs: add Hisilicon ufs driver code
->   dt-bindings: scsi: ufs: add document for hisi-ufs
->   arm64: dts: add ufs dts node
->   arm64: defconfig: enable configs for Hisilicon ufs
->   arm64: defconfig: enable f2fs and squashfs
-> 
->  Documentation/devicetree/bindings/ufs/ufs-hisi.txt |  41 ++
->  .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      |  10 +-
->  arch/arm64/boot/dts/hisilicon/hi3660.dtsi          |  18 +
->  arch/arm64/configs/defconfig                       |  11 +
->  drivers/scsi/ufs/Kconfig                           |   9 +
->  drivers/scsi/ufs/Makefile                          |   1 +
->  drivers/scsi/ufs/ufs-hisi.c                        | 619 +++++++++++++++++++++
->  drivers/scsi/ufs/ufs-hisi.h                        | 115 ++++
->  8 files changed, 821 insertions(+), 3 deletions(-)
->  create mode 100644 Documentation/devicetree/bindings/ufs/ufs-hisi.txt
->  create mode 100644 drivers/scsi/ufs/ufs-hisi.c
->  create mode 100644 drivers/scsi/ufs/ufs-hisi.h
-> 
-> Major changes in v10:
->  - solve review comments from Rob Herring.
->    *Modify the "reset-names" describe in ufs-hisi.txt binding file.
->    *List clocks in ufs-hisi.txt binding file.
->    *remove the "arst" and keep only "rst" in the binging files.
->    *remove the "arst" member from both dts and c code. 
-> Major changes in v9:
->  - solve review comments from Rob Herring.
->    *remove freq-table-hz in ufs-hisi.txt binding file.
->    *Move the rst to the ufshcd_pltfm.txt common binding file.
->    *Modify the member "assert" of UFS host structure to "arst".
-> Major changes in v8:
->  - solve review comments from zhangfei.
->    *Add Version history.
->  - solve review comments from Rob Herring.
->    *remove freq-table-hz.
->  -  solve review comments from Riku Voipio.
->    *Add MODULE_DEVICE_TABLE for ufs driver.
-> 
+Sinan,
 
-Tested on top of linux-next (4.17.0-next-20180605), I can reliably load
-my debian userspace flashed on the 'system' fastboot partition.
+> 'Commit cc27b735ad3a ("PCI/portdrv: Turn off PCIe services during
+> shutdown")' has been added to kernel to shutdown pending PCIe port
+> service interrupts during reboot so that a newly started kexec kernel
+> wouldn't observe pending interrupts.
+>
+> pcie_port_device_remove() is disabling the root port and switches by
+> calling pci_disable_device() after all PCIe service drivers are shutdown.
+>
+> This has been found to cause crashes on HP DL360 Gen9 machines during
+> reboot due to hpsa driver not clearing the bus master bit during the
+> shutdown procedure by calling pci_disable_device().
+>
+> Disable device as part of the shutdown sequence.
 
-Tested-by: Valentin Schneider <valentin.schneider@arm.com>
+Applied to 4.18/scsi-fixes. Thanks!
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
