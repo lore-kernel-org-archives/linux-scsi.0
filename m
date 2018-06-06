@@ -1,128 +1,207 @@
-From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
+From: Laurence Oberman <loberman@redhat.com>
 Subject: Re: qla2xxx cause BUG on kernel-4.17-rc6
-Date: Wed, 6 Jun 2018 18:31:39 +0000
-Message-ID: <B3C74965-4B74-404A-9BA3-395F49F64179@cavium.com>
+Date: Wed, 06 Jun 2018 15:27:15 -0400
+Message-ID: <1528313235.17774.5.camel@redhat.com>
 References: <CAEemH2dj3SVsNZOsZSjGZ0nF=a3YZp=i9z11vYTHByRQzpFkfQ@mail.gmail.com>
- <yq1a7s7ewmw.fsf@oracle.com>
- <7988FB77-4AE4-4935-B7B7-F7584674981B@cavium.com>
- <1528308343.17774.3.camel@redhat.com>
+         <yq1a7s7ewmw.fsf@oracle.com>
+         <7988FB77-4AE4-4935-B7B7-F7584674981B@cavium.com>
+         <1528308343.17774.3.camel@redhat.com>
+         <B3C74965-4B74-404A-9BA3-395F49F64179@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1528308343.17774.3.camel@redhat.com>
-Content-Language: en-US
-Content-ID: <9807786EC3C8104A80DFFBB101D48A7F@namprd07.prod.outlook.com>
+In-Reply-To: <B3C74965-4B74-404A-9BA3-395F49F64179@cavium.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Li Wang <liwang@redhat.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "Tran, Quinn" <Quinn.Tran@cavium.com>, "William.Kuzeja@stratus.com" <William.Kuzeja@stratus.com>, linux-kernel <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Laurence Oberman <loberman@redhat.com>
+To: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>, Li Wang <liwang@redhat.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "Tran, Quinn" <Quinn.Tran@cavium.com>, "William.Kuzeja@stratus.com" <William.Kuzeja@stratus.com>, linux-kernel <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-SGkgTGksIA0KDQo+IE9uIEp1biA2LCAyMDE4LCBhdCAxMTowNSBBTSwgTGF1cmVuY2UgT2Jlcm1h
-biA8bG9iZXJtYW5AcmVkaGF0LmNvbT4gd3JvdGU6DQo+IA0KPiBPbiBXZWQsIDIwMTgtMDYtMDYg
-YXQgMTY6MDEgKzAwMDAsIE1hZGhhbmksIEhpbWFuc2h1IHdyb3RlOg0KPj4+IE9uIEp1biA2LCAy
-MDE4LCBhdCA4OjU2IEFNLCBNYXJ0aW4gSy4gUGV0ZXJzZW4gPG1hcnRpbi5wZXRlcnNlbkBvcmEN
-Cj4+PiBjbGUuY29tPiB3cm90ZToNCj4+PiANCj4+PiANCj4+PiBIaW1hbnNodSwNCj4+PiANCj4+
-PiBQaW5nPw0KPj4+IA0KPj4gDQo+PiBXaWxsIGxvb2sgYXQgdGhpcyBvbmUuIFNvcnJ5LCBzb21l
-aG93IGZlbGwgdGhydSBjcmFja3MuIA0KPj4gDQo+PiANCj4+Pj4gSGkgc2NzaSBleHBlcnRzLA0K
-Pj4+PiANCj4+Pj4gTm90IHN1cmUgd2hvIGlzIHRoZSByaWdodCBwZXJzb24gdG8gYXNrLCBJIGp1
-c3QgaGl0IHRoaXMgYnVnIG9uDQo+Pj4+IG15IEhQDQo+Pj4+IERMMzg1IHBsYXRmb3JtLCBjYW4g
-YW55IG9uZSBvZiB5b3UgdGFrZSBhIGxvb2s/DQo+Pj4+IA0KPj4+PiBzeXN0ZW0gY29uZmlnOg0K
-Pj4+PiAtLS0tLS0tLS0tLS0tLS0tLQ0KPj4+PiBIUCBQcm9MaWFudCBETDM4NSBHNw0KPj4+PiBB
-TUQgT3B0ZXJvbihUTSkgUHJvY2Vzc29yIDYyMzQNCj4+Pj4gMTYzODQgTUIgbWVtb3J5LCAzNjkg
-R0IgZGlzayBzcGFjZQ0KPj4+PiANCj4+Pj4gDQo+Pj4+IFsgICAyNC41MzkyNzRdIHFsYTJ4eHgg
-WzAwMDA6MGM6MDAuN10tNTAwYTo1OiBMT09QIFVQIGRldGVjdGVkDQo+Pj4+ICgxMCBHYnBzKS4N
-Cj4+Pj4gWyAgIDI0LjU3NzI1OV0gQlVHOiB1bmFibGUgdG8gaGFuZGxlIGtlcm5lbCBOVUxMIHBv
-aW50ZXINCj4+Pj4gZGVyZWZlcmVuY2UNCj4+Pj4gYXQgMDAwMDAwMDAwMDAwMDEwMg0KPj4+PiBb
-ICAgMjQuNjIzMTMzXSBQR0QgMCBQNEQgMA0KPj4+PiBbICAgMjQuNjM2NzYwXSBPb3BzOiAwMDAw
-IFsjMV0gU01QIE5PUFRJDQo+Pj4+IFsgICAyNC42NTY5NDJdIE1vZHVsZXMgbGlua2VkIGluOiBp
-MmNfYWxnb19iaXQgZHJtX2ttc19oZWxwZXINCj4+Pj4gc3JfbW9kKCspIHN5c2NvcHlhcmVhIHN5
-c2ZpbGxyZWN0IHN5c2ltZ2JsdCBjZHJvbSBmYl9zeXNfZm9wcw0KPj4+PiBhdGFfZ2VuZXJpYyB0
-dG0gcGF0YV9hY3BpIHNkX21vZCBhaGNpIHBhdGFfYXRpaXhwIHNmYygrKQ0KPj4+PiBxbGEyeHh4
-KCspDQo+Pj4+IGxpYmFoY2kgZHJtIHFsYTR4eHgoKykgbnZtZV9mYyBocHNhIG1kaW8gbGliaXNj
-c2kgcWxjbmljKCspDQo+Pj4+IG52bWVfZmFicmljcyBzY3NpX3RyYW5zcG9ydF9zYXMgc2VyaW9f
-cmF3IG10ZCBjcmMzMmNfaW50ZWwgbGliYXRhDQo+Pj4+IG52bWVfY29yZSBpMmNfY29yZSBzY3Np
-X3RyYW5zcG9ydF9pc2NzaSB0ZzMgc2NzaV90cmFuc3BvcnRfZmMNCj4+Pj4gYm54Mg0KPj4+PiBp
-c2NzaV9ib290X3N5c2ZzIGRtX211bHRpcGF0aCBkbV9taXJyb3IgZG1fcmVnaW9uX2hhc2ggZG1f
-bG9nDQo+Pj4+IGRtX21vZA0KPj4+PiBbICAgMjQuODg3NDQ5XSBDUFU6IDAgUElEOiAxNzcgQ29t
-bToga3dvcmtlci8wOjMgTm90IHRhaW50ZWQNCj4+Pj4gNC4xNy4wLXJjNiAjMQ0KPj4+PiBbICAg
-MjQuOTI1MTE5XSBIYXJkd2FyZSBuYW1lOiBIUCBQcm9MaWFudCBETDM4NSBHNywgQklPUyBBMTgN
-Cj4+Pj4gMDgvMTUvMjAxMg0KPj4+PiBbICAgMjQuOTYyMTA2XSBXb3JrcXVldWU6IGV2ZW50cyB3
-b3JrX2Zvcl9jcHVfZm4NCj4+Pj4gWyAgIDI0Ljk4NzA5OF0gUklQOiAwMDEwOl9fcXVldWVfd29y
-aysweDFmLzB4M2EwDQo+Pj4+IFsgICAyNS4wMTE2NzJdIFJTUDogMDAxODpmZmZmOTkyNjQyY2Vi
-YTEwIEVGTEFHUzogMDAwMTAwODINCj4+Pj4gWyAgIDI1LjA0MjExNl0gUkFYOiAwMDAwMDAwMDAw
-MDAwMDgyIFJCWDogMDAwMDAwMDAwMDAwMDA4MiBSQ1g6DQo+Pj4+IDAwMDAwMDAwMDAwMDAwMDAN
-Cj4+Pj4gWyAgIDI1LjA4MzI5M10gUkRYOiBmZmZmOGNmOWFiYzZkN2QwIFJTSTogMDAwMDAwMDAw
-MDAwMDAwMCBSREk6DQo+Pj4+IDAwMDAwMDAwMDAwMDIwMDANCj4+Pj4gWyAgIDI1LjEyMzA5NF0g
-UkJQOiAwMDAwMDAwMDAwMDAwMDAwIFIwODogMDAwMDAwMDAwMDAyNWE0MCBSMDk6DQo+Pj4+IGZm
-ZmY4Y2Y5YWFkZTI4ODANCj4+Pj4gWyAgIDI1LjE2NDA4N10gUjEwOiAwMDAwMDAwMDAwMDAwMDAw
-IFIxMTogZmZmZjk5MjY0MmNlYjZmMCBSMTI6DQo+Pj4+IGZmZmY4Y2Y5YWJjNmQ3ZDANCj4+Pj4g
-WyAgIDI1LjIwMjI4MF0gUjEzOiAwMDAwMDAwMDAwMDAyMDAwIFIxNDogZmZmZjhjZjlhYmM2ZDdi
-OCBSMTU6DQo+Pj4+IDAwMDAwMDAwMDAwMDIwMDANCj4+Pj4gWyAgIDI1LjI0MjA1MF0gRlM6ICAw
-MDAwMDAwMDAwMDAwMDAwKDAwMDApIGY5YjVjMDAwMDAoMDAwMCkNCj4+Pj4ga25sR1M6MDAwMDAw
-MDAwMDAwMDAwMA0KPj4+PiBbICAgMjUuOTc3NTY1XSBDUzogIDAwMTAgRFM6IDAwMDAgRVM6IDAw
-MDAgQ1IwOiAwMDAwMDAwMDgwMDUwMDMzDQo+Pj4+IFsgICAyNi4wMTA0NTddIENSMjogMDAwMDAw
-MDAwMDAwMDEwMiBDUjM6IDAwMDAwMDAzMDc2MGEwMDAgQ1I0Og0KPj4+PiAwMDAwMDAwMDAwMDQw
-NmYwDQo+Pj4+IFsgICAyNi4wNTEwNDhdIENhbGwgVHJhY2U6DQo+Pj4+IFsgICAyNi4wNjM1NzJd
-ICA/IF9fc3dpdGNoX3RvX2FzbSsweDM0LzB4NzANCj4+Pj4gWyAgIDI2LjA4NjA3OV0gIHF1ZXVl
-X3dvcmtfb24rMHgyNC8weDQwDQo+Pj4+IFsgICAyNi4xMDcwOTBdICBxbGEyeDAwX3Bvc3Rfd29y
-aysweDgxLzB4YjAgW3FsYTJ4eHhdDQo+Pj4+IFsgICAyNi4xMzMzNTZdICBxbGEyeDAwX2FzeW5j
-X2V2ZW50KzB4MWFkLzB4MWEyMCBbcWxhMnh4eF0NCj4+Pj4gWyAgIDI2LjE2NDA3NV0gID8gbG9j
-a190aW1lcl9iYXNlKzB4NjcvMHg4MA0KPj4+PiBbICAgMjYuMTg2NDIwXSAgPyB0cnlfdG9fZGVs
-X3RpbWVyX3N5bmMrMHg0ZC8weDgwDQo+Pj4+IFsgICAyNi4yMTIyODRdICA/IGRlbF90aW1lcl9z
-eW5jKzB4MzUvMHg0MA0KPj4+PiBbICAgMjYuMjM0MDgwXSAgPyBzY2hlZHVsZV90aW1lb3V0KzB4
-MTY1LzB4MmYwDQo+Pj4+IFsgICAyNi4yNTk1NzVdICBxbGE4Mnh4X3BvbGwrMHgxM2UvMHgxODAg
-W3FsYTJ4eHhdDQo+Pj4+IFsgICAyNi4yODU3NDBdICBxbGEyeDAwX21haWxib3hfY29tbWFuZCsw
-eDc0Yi8weGY1MCBbcWxhMnh4eF0NCj4+Pj4gWyAgIDI2LjMxOTA0MF0gIHFsYTgyeHhfc2V0X2Ry
-aXZlcl92ZXJzaW9uKzB4MTNiLzB4MWMwIFtxbGEyeHh4XQ0KPj4+PiBbICAgMjYuMzUyMTA4XSAg
-PyBxbGEyeDAwX2luaXRfcmluZ3MrMHgyMDYvMHgzZjAgW3FsYTJ4eHhdDQo+Pj4+IFsgICAyNi4z
-ODE3MzNdICBxbGEyeDAwX2luaXRpYWxpemVfYWRhcHRlcisweDM1Yy8weDdmMCBbcWxhMnh4eF0N
-Cj4+Pj4gWyAgIDI2LjQxMzI0MF0gIHFsYTJ4MDBfcHJvYmVfb25lKzB4MTQ3OS8weDIzOTAgW3Fs
-YTJ4eHhdDQo+Pj4+IFsgICAyNi40NDIwNTVdICBsb2NhbF9wY2lfcHJvYmUrMHgzZi8weGEwDQo+
-Pj4+IFsgICAyNi40NjMxMDhdICB3b3JrX2Zvcl9jcHVfZm4rMHgxMC8weDIwDQo+Pj4+IFsgICAy
-Ni40ODMyOTVdICBwcm9jZXNzX29uZV93b3JrKzB4MTUyLzB4MzUwDQo+Pj4+IFsgICAyNi41MDU3
-MzBdICB3b3JrZXJfdGhyZWFkKzB4MWNmLzB4M2UwDQo+Pj4+IFsgICAyNi41MjcwOTBdICBrdGhy
-ZWFkKzB4ZjUvMHgxMzANCj4+Pj4gWyAgIDI2LjU0NTA4NV0gID8gbWF4X2FjdGl2ZV9zdG9yZSsw
-eDgwLzB4ODANCj4+Pj4gWyAgIDI2LjU2ODA4NV0gID8ga3RocmVhZF9iaW5kKzB4MTAvMHgxMA0K
-Pj4+PiBbICAgMjYuNTg5NTMzXSAgcmV0X2Zyb21fZm9yaysweDIyLzB4NDANCj4+Pj4gWyAgIDI2
-LjYxMDE5Ml0gQ29kZTogMDAgMDAgNjYgMmUgMGYgMWYgODQgMDAgMDAgMDAgMDAgMDAgMGYgMWYg
-NDQNCj4+Pj4gMDANCj4+Pj4gMDAgNDEgNTcgNDEgODkgZmYgNDEgNTYgNDEgNTUgNDEgODkgZmQg
-NDEgNTQgNDkgODkgZDQgNTUgNDggODkgZjUNCj4+Pj4gNTMNCj4+Pj4gNDggODMgZWMgMCA4NiAw
-MiAwMSAwMCAwMCAwMSAwZiA4NSA4MCAwMiAwMCAwMCA0OSBjNyBjNiBjMCBlYyAwMQ0KPj4+PiAw
-MCA0MQ0KPj4+PiBbICAgMjcuMzA4NTQwXSBSSVA6IF9fcXVldWVfd29yaysweDFmLzB4M2EwIFJT
-UDogZmZmZjk5MjY0MmNlYmExMA0KPj4+PiBbICAgMjcuMzQxNTkxXSBDUjI6IDAwMDAwMDAwMDAw
-MDAxMDINCj4+Pj4gWyAgIDI3LjM2MDIwOF0gLS0tWyBlbmQgdHJhY2UgMDFiN2I3YWUyYzAwNWNm
-MyBdLS0tDQo+Pj4gDQo+Pj4gLS0gDQo+Pj4gTWFydGluIEsuIFBldGVyc2VuCU9yYWNsZSBMaW51
-eCBFbmdpbmVlcmluZw0KPj4gDQo+PiBUaGFua3MsDQo+PiAtIEhpbWFuc2h1DQo+PiANCj4gDQo+
-IEkgY2FuJ3QgZmluZCB0aGUgb3JpZ2luYWwgbWVzc2FnZSBmb3IgdGhpcyB0aGF0IE1hcnRpbiBy
-ZW1pbmRlZCB1cyBvZi4NCj4gDQo+IFRvIHRoZSBwZXJzb24gd2hvIGxvZ2dlZCB0aGlzOg0KPiBI
-b3cgbWFueSB0aW1lcyBoYXMgdGhpcyBoYXBwZW5lZCBhbmQgd2FzIGl0IGFmdGVyIGEga2VybmVs
-IHVwZGF0ZS4NCj4gV2hhdCBpcyB0aGUgaGlzdG9yeSwgd2hhdCBpcyB0aGUgZXhhY3QgUWxvZ2lj
-IGNhcmQsIGV0Yy4NCj4gRG8geW91IGhhdmUgdGhlIHJlc3Qgb2YgdGhlIGxvZyBsb2cgbGVhZGlu
-ZyB0byB0aGUgaW52YWxpZCBwb2ludGVyDQo+IGZhdWx0DQo+IA0KPiBUaGFua3MNCj4gTGF1cmVu
-Y2UNCg0KRnJvbSB0aGUgU25pcHBldCBvZiBMb2cgcHJvdmlkZWQgbG9va3MgbGlrZSB0aGUgY3Jh
-c2ggaXMgd2l0aCAxMEcgRkNvRSBhZGFwdGVyLiANCg0KQ2FuIHlvdSB0cnkgdGhpcyB1bnRlc3Rl
-ZCBkaWZmIHRvIHNlZSBpZiBpdCByZXNvbHZlcyBpc3N1ZS4gDQoNCkJhc2ljYWxseSB3ZSBhcmUg
-aW5pdGlhbGl6aW5nIGFkYXB0ZXIgc28gZHJpdmVyIHdpbGwgc3RhcnQgcmVjZWl2aW5nIEFFTiBu
-b3RpZmljYXRpb24NCmJ1dCB3ZSBoYXZlIG5vdCB5ZXQgYWxsb2NhdGVkIHdvcmsgcXVldWUgZm9y
-IGl0LiANCg0KDQrigJTigJTigJTigJTigJQgPHNuaXA+IOKAlOKAlOKAlOKAlA0KDQpkaWZmIC0t
-Z2l0IGEvZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX29zLmMgYi9kcml2ZXJzL3Njc2kvcWxhMnh4
-eC9xbGFfb3MuYw0KaW5kZXggMzBiZjRiOS4uNDYyZDgyNSAxMDA2NDQNCi0tLSBhL2RyaXZlcnMv
-c2NzaS9xbGEyeHh4L3FsYV9vcy5jDQorKysgYi9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfb3Mu
-Yw0KQEAgLTMyMjksNiArMzIyOSw4IEBAIHFsYTJ4MDBfcHJvYmVfb25lKHN0cnVjdCBwY2lfZGV2
-ICpwZGV2LCBjb25zdCBzdHJ1Y3QgcGNpX2RldmljZV9pZCAqaWQpDQogICAgICAgICAgICAicmVx
-LT5yZXFfcV9pbj0lcCByZXEtPnJlcV9xX291dD0lcCByc3AtPnJzcF9xX2luPSVwIHJzcC0+cnNw
-X3Ffb3V0PSVwLlxuIiwNCiAgICAgICAgICAgIHJlcS0+cmVxX3FfaW4sIHJlcS0+cmVxX3Ffb3V0
-LCByc3AtPnJzcF9xX2luLCByc3AtPnJzcF9xX291dCk7DQorICAgICAgIGhhLT53cSA9IGFsbG9j
-X3dvcmtxdWV1ZSgicWxhMnh4eF93cSIsIDAsIDApOw0KKw0KICAgICAgICBpZiAoaGEtPmlzcF9v
-cHMtPmluaXRpYWxpemVfYWRhcHRlcihiYXNlX3ZoYSkpIHsNCiAgICAgICAgICAgICAgICBxbF9s
-b2cocWxfbG9nX2ZhdGFsLCBiYXNlX3ZoYSwgMHgwMGQ2LA0KICAgICAgICAgICAgICAgICAgICAi
-RmFpbGVkIHRvIGluaXRpYWxpemUgYWRhcHRlciAtIEFkYXB0ZXIgZmxhZ3MgJXguXG4iLA0KQEAg
-LTMyNzAsNyArMzI3Miw3IEBAIHFsYTJ4MDBfcHJvYmVfb25lKHN0cnVjdCBwY2lfZGV2ICpwZGV2
-LCBjb25zdCBzdHJ1Y3QgcGNpX2RldmljZV9pZCAqaWQpDQogICAgICAgICAgICBob3N0LT5jYW5f
-cXVldWUsIGJhc2VfdmhhLT5yZXEsDQogICAgICAgICAgICBiYXNlX3ZoYS0+bWdtdF9zdnJfbG9v
-cF9pZCwgaG9zdC0+c2dfdGFibGVzaXplKTsNCiAgICAgICAgSU5JVF9XT1JLKCZiYXNlX3ZoYS0+
-aW9jYl93b3JrLCBxbGEyeDAwX2lvY2Jfd29ya19mbik7DQotICAgICAgIGhhLT53cSA9IGFsbG9j
-X3dvcmtxdWV1ZSgicWxhMnh4eF93cSIsIDAsIDApOw0KKw0KICAgICAgICBpZiAoaGEtPm1xZW5h
-YmxlKSB7DQogICAgICAgICAgICAgICAgYm9vbCBtcSA9IGZhbHNlOw0KDQrigJTigJTigJTigJTi
-gJQgPC9zbmlwPiDigJTigJTigJTigJQNCg0KVGhhbmtzLA0KLSBIaW1hbnNodQ0KDQo=
+On Wed, 2018-06-06 at 18:31 +0000, Madhani, Himanshu wrote:
+> Hi Li, 
+> 
+> > On Jun 6, 2018, at 11:05 AM, Laurence Oberman <loberman@redhat.com>
+> > wrote:
+> > 
+> > On Wed, 2018-06-06 at 16:01 +0000, Madhani, Himanshu wrote:
+> > > > On Jun 6, 2018, at 8:56 AM, Martin K. Petersen <martin.petersen
+> > > > @ora
+> > > > cle.com> wrote:
+> > > > 
+> > > > 
+> > > > Himanshu,
+> > > > 
+> > > > Ping?
+> > > > 
+> > > 
+> > > Will look at this one. Sorry, somehow fell thru cracks. 
+> > > 
+> > > 
+> > > > > Hi scsi experts,
+> > > > > 
+> > > > > Not sure who is the right person to ask, I just hit this bug
+> > > > > on
+> > > > > my HP
+> > > > > DL385 platform, can any one of you take a look?
+> > > > > 
+> > > > > system config:
+> > > > > -----------------
+> > > > > HP ProLiant DL385 G7
+> > > > > AMD Opteron(TM) Processor 6234
+> > > > > 16384 MB memory, 369 GB disk space
+> > > > > 
+> > > > > 
+> > > > > [   24.539274] qla2xxx [0000:0c:00.7]-500a:5: LOOP UP
+> > > > > detected
+> > > > > (10 Gbps).
+> > > > > [   24.577259] BUG: unable to handle kernel NULL pointer
+> > > > > dereference
+> > > > > at 0000000000000102
+> > > > > [   24.623133] PGD 0 P4D 0
+> > > > > [   24.636760] Oops: 0000 [#1] SMP NOPTI
+> > > > > [   24.656942] Modules linked in: i2c_algo_bit drm_kms_helper
+> > > > > sr_mod(+) syscopyarea sysfillrect sysimgblt cdrom fb_sys_fops
+> > > > > ata_generic ttm pata_acpi sd_mod ahci pata_atiixp sfc(+)
+> > > > > qla2xxx(+)
+> > > > > libahci drm qla4xxx(+) nvme_fc hpsa mdio libiscsi qlcnic(+)
+> > > > > nvme_fabrics scsi_transport_sas serio_raw mtd crc32c_intel
+> > > > > libata
+> > > > > nvme_core i2c_core scsi_transport_iscsi tg3 scsi_transport_fc
+> > > > > bnx2
+> > > > > iscsi_boot_sysfs dm_multipath dm_mirror dm_region_hash dm_log
+> > > > > dm_mod
+> > > > > [   24.887449] CPU: 0 PID: 177 Comm: kworker/0:3 Not tainted
+> > > > > 4.17.0-rc6 #1
+> > > > > [   24.925119] Hardware name: HP ProLiant DL385 G7, BIOS A18
+> > > > > 08/15/2012
+> > > > > [   24.962106] Workqueue: events work_for_cpu_fn
+> > > > > [   24.987098] RIP: 0010:__queue_work+0x1f/0x3a0
+> > > > > [   25.011672] RSP: 0018:ffff992642ceba10 EFLAGS: 00010082
+> > > > > [   25.042116] RAX: 0000000000000082 RBX: 0000000000000082
+> > > > > RCX:
+> > > > > 0000000000000000
+> > > > > [   25.083293] RDX: ffff8cf9abc6d7d0 RSI: 0000000000000000
+> > > > > RDI:
+> > > > > 0000000000002000
+> > > > > [   25.123094] RBP: 0000000000000000 R08: 0000000000025a40
+> > > > > R09:
+> > > > > ffff8cf9aade2880
+> > > > > [   25.164087] R10: 0000000000000000 R11: ffff992642ceb6f0
+> > > > > R12:
+> > > > > ffff8cf9abc6d7d0
+> > > > > [   25.202280] R13: 0000000000002000 R14: ffff8cf9abc6d7b8
+> > > > > R15:
+> > > > > 0000000000002000
+> > > > > [   25.242050] FS:  0000000000000000(0000) f9b5c00000(0000)
+> > > > > knlGS:0000000000000000
+> > > > > [   25.977565] CS:  0010 DS: 0000 ES: 0000 CR0:
+> > > > > 0000000080050033
+> > > > > [   26.010457] CR2: 0000000000000102 CR3: 000000030760a000
+> > > > > CR4:
+> > > > > 00000000000406f0
+> > > > > [   26.051048] Call Trace:
+> > > > > [   26.063572]  ? __switch_to_asm+0x34/0x70
+> > > > > [   26.086079]  queue_work_on+0x24/0x40
+> > > > > [   26.107090]  qla2x00_post_work+0x81/0xb0 [qla2xxx]
+> > > > > [   26.133356]  qla2x00_async_event+0x1ad/0x1a20 [qla2xxx]
+> > > > > [   26.164075]  ? lock_timer_base+0x67/0x80
+> > > > > [   26.186420]  ? try_to_del_timer_sync+0x4d/0x80
+> > > > > [   26.212284]  ? del_timer_sync+0x35/0x40
+> > > > > [   26.234080]  ? schedule_timeout+0x165/0x2f0
+> > > > > [   26.259575]  qla82xx_poll+0x13e/0x180 [qla2xxx]
+> > > > > [   26.285740]  qla2x00_mailbox_command+0x74b/0xf50 [qla2xxx]
+> > > > > [   26.319040]  qla82xx_set_driver_version+0x13b/0x1c0
+> > > > > [qla2xxx]
+> > > > > [   26.352108]  ? qla2x00_init_rings+0x206/0x3f0 [qla2xxx]
+> > > > > [   26.381733]  qla2x00_initialize_adapter+0x35c/0x7f0
+> > > > > [qla2xxx]
+> > > > > [   26.413240]  qla2x00_probe_one+0x1479/0x2390 [qla2xxx]
+> > > > > [   26.442055]  local_pci_probe+0x3f/0xa0
+> > > > > [   26.463108]  work_for_cpu_fn+0x10/0x20
+> > > > > [   26.483295]  process_one_work+0x152/0x350
+> > > > > [   26.505730]  worker_thread+0x1cf/0x3e0
+> > > > > [   26.527090]  kthread+0xf5/0x130
+> > > > > [   26.545085]  ? max_active_store+0x80/0x80
+> > > > > [   26.568085]  ? kthread_bind+0x10/0x10
+> > > > > [   26.589533]  ret_from_fork+0x22/0x40
+> > > > > [   26.610192] Code: 00 00 66 2e 0f 1f 84 00 00 00 00 00 0f
+> > > > > 1f 44
+> > > > > 00
+> > > > > 00 41 57 41 89 ff 41 56 41 55 41 89 fd 41 54 49 89 d4 55 48
+> > > > > 89 f5
+> > > > > 53
+> > > > > 48 83 ec 0 86 02 01 00 00 01 0f 85 80 02 00 00 49 c7 c6 c0 ec
+> > > > > 01
+> > > > > 00 41
+> > > > > [   27.308540] RIP: __queue_work+0x1f/0x3a0 RSP:
+> > > > > ffff992642ceba10
+> > > > > [   27.341591] CR2: 0000000000000102
+> > > > > [   27.360208] ---[ end trace 01b7b7ae2c005cf3 ]---
+> > > > 
+> > > > -- 
+> > > > Martin K. Petersen	Oracle Linux Engineering
+> > > 
+> > > Thanks,
+> > > - Himanshu
+> > > 
+> > 
+> > I can't find the original message for this that Martin reminded us
+> > of.
+> > 
+> > To the person who logged this:
+> > How many times has this happened and was it after a kernel update.
+> > What is the history, what is the exact Qlogic card, etc.
+> > Do you have the rest of the log log leading to the invalid pointer
+> > fault
+> > 
+> > Thanks
+> > Laurence
+> 
+> From the Snippet of Log provided looks like the crash is with 10G
+> FCoE adapter. 
+> 
+> Can you try this untested diff to see if it resolves issue. 
+> 
+> Basically we are initializing adapter so driver will start receiving
+> AEN notification
+> but we have not yet allocated work queue for it. 
+> 
+> 
+> ————— <snip> ————
+> 
+> diff --git a/drivers/scsi/qla2xxx/qla_os.c
+> b/drivers/scsi/qla2xxx/qla_os.c
+> index 30bf4b9..462d825 100644
+> --- a/drivers/scsi/qla2xxx/qla_os.c
+> +++ b/drivers/scsi/qla2xxx/qla_os.c
+> @@ -3229,6 +3229,8 @@ qla2x00_probe_one(struct pci_dev *pdev, const
+> struct pci_device_id *id)
+>             "req->req_q_in=%p req->req_q_out=%p rsp->rsp_q_in=%p rsp-
+> >rsp_q_out=%p.\n",
+>             req->req_q_in, req->req_q_out, rsp->rsp_q_in, rsp-
+> >rsp_q_out);
+> +       ha->wq = alloc_workqueue("qla2xxx_wq", 0, 0);
+> +
+>         if (ha->isp_ops->initialize_adapter(base_vha)) {
+>                 ql_log(ql_log_fatal, base_vha, 0x00d6,
+>                     "Failed to initialize adapter - Adapter flags
+> %x.\n",
+> @@ -3270,7 +3272,7 @@ qla2x00_probe_one(struct pci_dev *pdev, const
+> struct pci_device_id *id)
+>             host->can_queue, base_vha->req,
+>             base_vha->mgmt_svr_loop_id, host->sg_tablesize);
+>         INIT_WORK(&base_vha->iocb_work, qla2x00_iocb_work_fn);
+> -       ha->wq = alloc_workqueue("qla2xxx_wq", 0, 0);
+> +
+>         if (ha->mqenable) {
+>                 bool mq = false;
+> 
+> ————— </snip> ————
+> 
+> Thanks,
+> - Himanshu
+> 
+
+Makes sense, but how did they escape this happening before ?
+I cannot find the one that we looked at together about this but mine
+was not @10G 
