@@ -1,74 +1,22 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH] scsi: sd: Optimal I/O size should be a multiple of physical block size
-Date: Wed,  6 Jun 2018 21:51:23 -0400
-Message-ID: <20180607015123.17862-1-martin.petersen@oracle.com>
-References: <207561f82d5638c8f513f9aaf970a07098bfbb0f.camel@scientia.net>
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <207561f82d5638c8f513f9aaf970a07098bfbb0f.camel@scientia.net>
-Sender: stable-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, Christoph Anton Mitterer <calestyo@scientia.net>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, stable@vger.kernel.org
+From: Varsha Rao <rvarsha016@gmail.com>
+Subject: [PATCH v2 0/2] message: fusion: Fix clang and checkpatch warnings
+Date: Thu,  7 Jun 2018 09:17:07 +0530
+Message-ID: <cover.1528342739.git.rvarsha016@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Nicholas Mc Guire <der.herr@hofr.at>, Lukas Bulwahn <lukas.bulwahn@gmail.com>
+Cc: Varsha Rao <rvarsha016@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-It was reported that some devices report an OPTIMAL TRANSFER LENGTH of
-0xFFFF blocks. That looks bogus, especially for a device with a
-4096-byte physical block size.
+This patchset fixes extraneous parentheses clang warning and few
+checkpatch issues.
 
-Ignore OPTIMAL TRANSFER LENGTH if it is not a multiple of the device's
-reported physical block size.
+Varsha Rao (2):
+  message: fusion: Remove extra parentheses
+  message: fusion: Replace NULL comparison
 
-Cc: <stable@vger.kernel.org>
-Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=199759
-Reported-by: Christoph Anton Mitterer <calestyo@scientia.net>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+ drivers/message/fusion/mptbase.c | 50 ++++++++++++++++----------------
+ 1 file changed, 25 insertions(+), 25 deletions(-)
 
----
-
-Before:
-
-NAME ALIGNMENT MIN-IO   OPT-IO PHY-SEC LOG-SEC ROTA SCHED      RQ-SIZE  RA WSAME
-sda          0   4096 33553920    4096     512    0 mq-deadline    256 128   32M
-
-After:
-
-NAME ALIGNMENT MIN-IO OPT-IO PHY-SEC LOG-SEC ROTA SCHED       RQ-SIZE   RA WSAME
-sda          0   4096      0    4096     512    0 mq-deadline     256 4096   32M
----
- drivers/scsi/sd.c | 11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 9421d9877730..2d19eed3dfbc 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -3067,7 +3067,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
- 	struct request_queue *q = sdkp->disk->queue;
- 	sector_t old_capacity = sdkp->capacity;
- 	unsigned char *buffer;
--	unsigned int dev_max, rw_max;
-+	unsigned int dev_max, rw_max, opt_xfer_bytes;
- 
- 	SCSI_LOG_HLQUEUE(3, sd_printk(KERN_INFO, sdkp,
- 				      "sd_revalidate_disk\n"));
-@@ -3126,13 +3126,16 @@ static int sd_revalidate_disk(struct gendisk *disk)
- 
- 	/*
- 	 * Determine the device's preferred I/O size for reads and writes
--	 * unless the reported value is unreasonably small, large, or
--	 * garbage.
-+	 * unless the reported value is unreasonably small, large, not a
-+	 * multiple of the physical block size, or simply garbage.
- 	 */
-+	opt_xfer_bytes = logical_to_bytes(sdp, sdkp->opt_xfer_blocks);
-+
- 	if (sdkp->opt_xfer_blocks &&
- 	    sdkp->opt_xfer_blocks <= dev_max &&
- 	    sdkp->opt_xfer_blocks <= SD_DEF_XFER_BLOCKS &&
--	    logical_to_bytes(sdp, sdkp->opt_xfer_blocks) >= PAGE_SIZE) {
-+	    opt_xfer_bytes >= PAGE_SIZE &&
-+	    (opt_xfer_bytes & (sdkp->physical_block_size - 1)) != 0) {
- 		q->limits.io_opt = logical_to_bytes(sdp, sdkp->opt_xfer_blocks);
- 		rw_max = logical_to_sectors(sdp, sdkp->opt_xfer_blocks);
- 	} else
 -- 
-2.17.1
+2.17.0
