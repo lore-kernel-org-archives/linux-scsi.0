@@ -1,85 +1,69 @@
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: Re: linux-next: manual merge of the scsi tree with the net-next
- tree
-Date: Fri, 8 Jun 2018 13:11:38 +1000
-Message-ID: <20180608131138.50810e67@canb.auug.org.au>
-References: <20180525013810.GG4828@sirena.org.uk>
+From: "sayali" <sayalil@codeaurora.org>
+Subject: RE: [PATCH V1 3/3] scsi: ufs: Add sysfs support for ufs provision
+Date: Fri, 8 Jun 2018 16:25:45 +0530
+Message-ID: <000401d3ff17$4496a390$cdc3eab0$@codeaurora.org>
+References: <1527849774-7623-1-git-send-email-sayalil@codeaurora.org> <1527849774-7623-4-git-send-email-sayalil@codeaurora.org> <MWHPR04MB113794E2654BEDA8E927F0FC9A660@MWHPR04MB1137.namprd04.prod.outlook.com> <20180605084200.GB8665@kroah.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- boundary="Sig_/oFBvz+qP9J72/FvUYHtLEkd"; protocol="application/pgp-signature"
+Content-Type: text/plain;
+        charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180525013810.GG4828@sirena.org.uk>
+In-Reply-To: <20180605084200.GB8665@kroah.com>
+Content-Language: en-us
 Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Cc: Mark Brown <broonie@kernel.org>, Chad Dupuis <chad.dupuis@cavium.com>, "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org, Linux-Next Mailing List <linux-next@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: 'Greg Kroah-Hartman' <gregkh@linuxfoundation.org>, 'Stanislav Nijnikov' <Stanislav.Nijnikov@wdc.com>
+Cc: subhashj@codeaurora.org, cang@codeaurora.org, vivek.gautam@codeaurora.org, rnayak@codeaurora.org, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, asutoshd@codeaurora.org, evgreen@chromium.org, 'Bart Van Assche' <Bart.VanAssche@wdc.com>, linux-scsi@vger.kernel.org, 'Adrian Hunter' <adrian.hunter@intel.com>, 'open list' <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
---Sig_/oFBvz+qP9J72/FvUYHtLEkd
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Hi Greg / Stanislav,
 
-Hi all,
+Thank you for your comments. 
+Updated my comments inline. Please check.
 
-On Fri, 25 May 2018 02:38:10 +0100 Mark Brown <broonie@kernel.org> wrote:
->
-> Today's linux-next merge of the scsi tree got a conflict in:
->=20
->   drivers/scsi/qedf/qedf.h
->=20
-> between commit:
->=20
->   8673daf4f55bf3b91 ("qedf: Add get_generic_tlv_data handler.")
->=20
-> from the net-next tree and commit:
->=20
->   4b9b7fabb39b3e9d7 ("scsi: qedf: Improve firmware debug dump handling")
->=20
-> from the scsi tree.
->=20
-> I fixed it up (see below) and can carry the fix as necessary. This
-> is now fixed as far as linux-next is concerned, but any non trivial
-> conflicts should be mentioned to your upstream maintainer when your tree
-> is submitted for merging.  You may also want to consider cooperating
-> with the maintainer of the conflicting tree to minimise any particularly
-> complex conflicts.
->=20
-> diff --cc drivers/scsi/qedf/qedf.h
-> index cabb6af60fb8,2372a40326f8..000000000000
-> --- a/drivers/scsi/qedf/qedf.h
-> +++ b/drivers/scsi/qedf/qedf.h
-> @@@ -501,9 -499,8 +504,10 @@@ extern int qedf_post_io_req(struct qedf
->   extern void qedf_process_seq_cleanup_compl(struct qedf_ctx *qedf,
->   	struct fcoe_cqe *cqe, struct qedf_ioreq *io_req);
->   extern int qedf_send_flogi(struct qedf_ctx *qedf);
->  +extern void qedf_get_protocol_tlv_data(void *dev, void *data);
->   extern void qedf_fp_io_handler(struct work_struct *work);
->  +extern void qedf_get_generic_tlv_data(void *dev, struct qed_generic_tlv=
-s *data);
-> + extern void qedf_wq_grcdump(struct work_struct *work);
->  =20
->   #define FCOE_WORD_TO_BYTE  4
->   #define QEDF_MAX_TASK_NUM	0xFFFF
+Thanks,
+Sayali
+-----Original Message-----
+From: Greg Kroah-Hartman [mailto:gregkh@linuxfoundation.org] 
+Sent: Tuesday, June 05, 2018 2:12 PM
+To: Stanislav Nijnikov <Stanislav.Nijnikov@wdc.com>
+Cc: Sayali Lokhande <sayalil@codeaurora.org>; subhashj@codeaurora.org;
+cang@codeaurora.org; vivek.gautam@codeaurora.org; rnayak@codeaurora.org;
+vinholikatti@gmail.com; jejb@linux.vnet.ibm.com; martin.petersen@oracle.com;
+asutoshd@codeaurora.org; evgreen@chromium.org; Bart Van Assche
+<Bart.VanAssche@wdc.com>; linux-scsi@vger.kernel.org; Adrian Hunter
+<adrian.hunter@intel.com>; open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH V1 3/3] scsi: ufs: Add sysfs support for ufs provision
 
-This is now a conflict between the scsi tree and Linus' tree.
+On Tue, Jun 05, 2018 at 08:16:50AM +0000, Stanislav Nijnikov wrote:
+> Hi Sayali,
+> 
+> I think that passing an array of values in a string is not proper way 
+> to work with a sysfs entry. There are binary attributes to do such 
+> things.
 
---=20
-Cheers,
-Stephen Rothwell
+No, don't do that, sysfs is for "one value per file", and binary attributes
+are for "hardware value pass-through" type stuff.  Unless this is "raw" data
+straight from the hardware, binary does not work, and neither does a normal
+sysfs file either.
 
---Sig_/oFBvz+qP9J72/FvUYHtLEkd
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
+So this needs to be reworked please.
 
------BEGIN PGP SIGNATURE-----
+[Sayali] As per Documentation/filesystems/sysfs.txt :
+	"Attributes should be ASCII text files, preferably with only one
+value per file. It is noted that it may not be efficient to contain only one
+value per file, 	so it is socially acceptable to express an array of
+values of the same type."
+	So it seems sysfs can be used to pass more than one value given that
+they are of same type (which is ensured as I am passing char string).
+	Also I have noticed , in scsi_sysfs.c (store_scan() or scsi_scan()),
+we do pass char buffer (more than one value) via sysfs .
+	As sysfs is already being used to read descriptors, I thought of
+using sysfs as write interface for configuration descriptor.
+	Appreciate, if you could suggest me some other interfaces that can
+be used here (allow passing more than one value) or
+	do you think I need to pass each configurable parameter one by one
+for provisioning ?
 
-iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAlsZ8+oACgkQAVBC80lX
-0Gw+Awf+MwQdnxX0K13gISjEo5GCZeLHu6iCdP6EWClTY7sfUrnsHpBwiHRC3AIH
-pN78mqFO/4HXdYDE1wsHFqx0JIlL3f8R7IJHXX/keqFMUd7er9kA+XgMoMzjNb/c
-scs2RzXnpMnr89gJ8TeRetuuMzCbQBI/YC/fA0O5luamxjcE4pb/L7FCgIE8dVfu
-HTQ1Ql4EqhHRSgAaEyNDPyPNBTSmnPUN/xwUqSXFF1CwGVcz/AwVumrXxzYlr8QR
-YbwCxYdXKeJnTQv+G2lrArVe7fyFnu7KjV4F6stTAqrZ/cKixOAZ5PAft1XnD1YX
-fH/ttnWRBbfCa0rg+4Tujj33vVQ7jQ==
-=9q2W
------END PGP SIGNATURE-----
+thanks,
 
---Sig_/oFBvz+qP9J72/FvUYHtLEkd--
+greg k-h
