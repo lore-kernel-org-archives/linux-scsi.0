@@ -1,39 +1,63 @@
-From: Sinan Kaya <okaya@codeaurora.org>
-Subject: Re: [PATCH] scsi: ipr: fix build on 32-bit architectures
-Date: Fri, 8 Jun 2018 15:39:23 -0400
-Message-ID: <53f391e7-24b6-3c14-1e68-975078ae683b@codeaurora.org>
-References: <20180608144617.2900894-1-arnd@arndb.de>
- <04758f3a-0f03-4fe9-6eb8-10ebb2430a98@codeaurora.org>
- <CAK8P3a2=uMFOcw=gZGuwsH+V=1DMXGgxf_hZHw3tMJD1nDdG2Q@mail.gmail.com>
- <830c2468-293c-385c-0b91-c96bedae4d4a@codeaurora.org>
- <07a50fe0-0378-769a-f4eb-d39ac543dc95@linux.vnet.ibm.com>
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH V2 3/3] scsi: ufs: Add sysfs support for ufs provision
+Date: Sat, 9 Jun 2018 09:24:54 +0200
+Message-ID: <20180609072454.GH24148@kroah.com>
+References: <1528455990-24572-1-git-send-email-sayalil@codeaurora.org>
+ <1528455990-24572-4-git-send-email-sayalil@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <07a50fe0-0378-769a-f4eb-d39ac543dc95@linux.vnet.ibm.com>
-Content-Language: en-US
+Content-Disposition: inline
+In-Reply-To: <1528455990-24572-4-git-send-email-sayalil@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Brian King <brking@linux.vnet.ibm.com>, Arnd Bergmann <arnd@arndb.de>
-Cc: Brian King <brking@us.ibm.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Kees Cook <keescook@chromium.org>, Hannes Reinecke <hare@suse.com>, Souptick Joarder <jrdr.linux@gmail.com>, Wen Xiong <wenxiong@linux.vnet.ibm.com>, Bart Van Assche <bart.vanassche@wdc.com>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Will Deacon <will.deacon@arm.com>
+To: Sayali Lokhande <sayalil@codeaurora.org>
+Cc: subhashj@codeaurora.org, cang@codeaurora.org, vivek.gautam@codeaurora.org, rnayak@codeaurora.org, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, asutoshd@codeaurora.org, evgreen@chromium.org, linux-scsi@vger.kernel.org, Stanislav Nijnikov <stanislav.nijnikov@wdc.com>, Adrian Hunter <adrian.hunter@intel.com>, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 6/8/2018 3:20 PM, Brian King wrote:
->> I don't think there is a consensus about using these includes in the community.
->> I bumped into this issue before and came up with an include you pointed.
->> I didn't get too much enthusiasm from the maintainer.
->>
->> Why are we pushing the responsibility into the drivers? I'd think that architecture
->> should take care of this. Is there a portability issue that I'm missing from some
->> architecture I never heart of? (I work on Little-Endian machines most of the time)
-> The attributes of the adapter hardware can have an impact here. The ipr hardware, for
-> example, depends on the upper 4 bytes to be written first, then the lower 4 bytes
-> to be written second, and its the act of writing the lower 4 bytes that triggers
-> the adapter hardware to read the value and take action on it.
+On Fri, Jun 08, 2018 at 04:36:30PM +0530, Sayali Lokhande wrote:
+> Add sysfs support to trigger ufs provisioning at runtime.
+> Usage : echo <desc_buf> > /sys/bus/platform/drivers/*/
+> 	config_descriptor/ufs_provision
+> To check provisioning status:
+> cat /sys/bus/platform/drivers/*/config_descriptor/ufs_provision
+> 1- > Success (Reboot device to check updated provisioning)
+> 
+> Signed-off-by: Sayali Lokhande <sayalil@codeaurora.org>
+> ---
+>  Documentation/ABI/testing/sysfs-driver-ufs |  16 ++++
+>  drivers/scsi/ufs/ufs-sysfs.c               |  25 ++++++
+>  drivers/scsi/ufs/ufs.h                     |   2 +
+>  drivers/scsi/ufs/ufshcd.c                  | 128 +++++++++++++++++++++++++++++
+>  drivers/scsi/ufs/ufshcd.h                  |   5 ++
+>  5 files changed, 176 insertions(+)
+> 
+> diff --git a/Documentation/ABI/testing/sysfs-driver-ufs b/Documentation/ABI/testing/sysfs-driver-ufs
+> index 016724e..43419b5 100644
+> --- a/Documentation/ABI/testing/sysfs-driver-ufs
+> +++ b/Documentation/ABI/testing/sysfs-driver-ufs
+> @@ -883,3 +883,19 @@ Contact:	Subhash Jadavani <subhashj@codeaurora.org>
+>  Description:	This entry shows the target state of an UFS UIC link
+>  		for the chosen system power management level.
+>  		The file is read only.
+> +
+> +What:		/sys/bus/platform/drivers/ufshcd/*/config_descriptor/ufs_provision
+> +Date:		February 2018
+> +Contact:	Sayali Lokhande <sayalil@codeaurora.org>
+> +Description:	This file shows the status of runtime ufs provisioning.
+> +		This can be used to provision ufs device if bConfigDescrLock is 0.
+> +		Configuration buffer needs to be written in space separated format
+> +		specificied as:
+> +		echo <bNumberLU> <bBootEnable> <bDescrAccessEn> <bInitPowerMode>
+> +		<bHighPriorityLUN> <bSecureRemovalType> <bInitActiveICCLevel>
+> +		<wPeriodicRTCUpdate> <bConfigDescrLock> <LUNum> <bLUEnable>
+> +		<bBootLunID> <size_in_kb> <bDataReliability> <bLUWriteProtect>
+> +		<bMemoryType> <bLogicalBlockSize> <bProvisioningType>
+> +		<wContextCapabilities> > ufs_provision
 
-Thanks, I never thought about this.
+That's crazy big, please use configfs for this if you really want to
+"provision" hardware with a new api.  That is what configfs was created
+for, do not abuse sysfs like this, it is not a "single" value.
 
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+thanks,
+
+greg k-h
