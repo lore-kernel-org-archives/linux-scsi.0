@@ -1,159 +1,93 @@
-From: Christoph Anton Mitterer <calestyo@scientia.net>
-Subject: Re: sd 6:0:0:0: [sdb] Unaligned partial completion (resid=12,
- sector_sz=512)
-Date: Sun, 10 Jun 2018 02:24:51 +0200
-Message-ID: <f5b20fde635fdb46140851b1bd1ce096d6ee8a12.camel@scientia.net>
-References: <c35dacb574365736229ff04d587abc0390ef7b78.camel@scientia.net>
-         <f96c1329-929b-44a1-4c3a-74dbcedbbafe@infradead.org>
-         <2cbab96cfb722ef8ad8f9fe6f5060226108cf033.camel@scientia.net>
-         <071361b8-96c0-17cd-d1d7-61ea6357eb83@interlog.com>
+From: Stanislav Nijnikov <Stanislav.Nijnikov@wdc.com>
+Subject: RE: [PATCH 0/7] Enable UFS provisioning via Linux
+Date: Sun, 10 Jun 2018 09:31:45 +0000
+Message-ID: <MWHPR04MB1137E9FA44BAC5EBE097589C9A790@MWHPR04MB1137.namprd04.prod.outlook.com>
+References: <20180529181740.195362-1-evgreen@chromium.org>
+ <MWHPR04MB11372C75BFC9416BAF5E81A19A630@MWHPR04MB1137.namprd04.prod.outlook.com>
+ <CAE=gft4LoNiRtxgTA_ZPghZGEVOzu_GAwMgqhs-8NCYVgj_AVw@mail.gmail.com>
+ <MWHPR04MB11370AED823FB608218CB9AD9A600@MWHPR04MB1137.namprd04.prod.outlook.com>
+ <CAE=gft5Vk3neDkyvmVf4CkBQQPVK=wXp=5jJ8n0uaosEwWUOAg@mail.gmail.com>
+ <b844b80f-9f6f-10f7-6dfd-f92d905738e3@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <071361b8-96c0-17cd-d1d7-61ea6357eb83@interlog.com>
+In-Reply-To: <b844b80f-9f6f-10f7-6dfd-f92d905738e3@intel.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: dgilbert@interlog.com, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+To: Adrian Hunter <adrian.hunter@intel.com>, Evan Green <evgreen@chromium.org>
+Cc: Vinayak Holikatti <vinholikatti@gmail.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Gwendal Grignou <gwendal@chromium.org>, Alex Lemberg <Alex.Lemberg@wdc.com>, Avri Altman <Avri.Altman@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, 2018-06-09 at 20:10 -0400, Douglas Gilbert wrote:
-> Hmmm, probably yes. But before you throw it away, try running
-> 'smartctl -a'
-
-Knew I forgot to add something. SMART looks fine (see below), though I
-haven't run a new long check (and will only do so once I've done
-copying the data from the device (I should have still 2 further backups
-of it, though also on Seagate ST8000AS0002).
-
-I think all values are pretty normal (all Seagates seem to show these
-high numbers for Raw_Read_Error_Rate, Seek_Error_Rate and
-Hardware_ECC_Recovered. Never had a Seagate disk which didn't. Guess
-it's normal for them).
-
-The only thing which is a bit strange are the:
-Command_Timeout 6
-High_Fly_Writes 5
-though I have low values of these on most of my
-ST8000AS0002.
-So I'd blindly guess it's mostly normal, too.
-
-Does anyone know something different?
-
-
-
-Thanks,
-Chris.
-
-
-Below, the smartctl data:
-
-smartctl 6.6 2016-05-31 r4324 [x86_64-linux-4.16.0-2-amd64] (local build)
-Copyright (C) 2002-16, Bruce Allen, Christian Franke, www.smartmontools.org
-
-=== START OF INFORMATION SECTION ===
-Model Family:     Seagate Archive HDD
-Device Model:     ST8000AS0002-1NA17Z
-Serial Number:    
-LU WWN Device Id: 5 000c50 08742d013
-Firmware Version: AR15
-User Capacity:    8,001,563,222,016 bytes [8,00 TB]
-Sector Sizes:     512 bytes logical, 4096 bytes physical
-Rotation Rate:    5980 rpm
-Device is:        In smartctl database [for details use: -P show]
-ATA Version is:   ACS-2, ACS-3 T13/2161-D revision 3b
-SATA Version is:  SATA 3.1, 6.0 Gb/s (current: 6.0 Gb/s)
-Local Time is:    Sat Jun  9 20:39:43 2018 CEST
-SMART support is: Available - device has SMART capability.
-SMART support is: Enabled
-
-=== START OF READ SMART DATA SECTION ===
-SMART overall-health self-assessment test result: PASSED
-
-General SMART Values:
-Offline data collection status:  (0x82)	Offline data collection activity
-					was completed without error.
-					Auto Offline Data Collection: Enabled.
-Self-test execution status:      (   0)	The previous self-test routine completed
-					without error or no self-test has ever 
-					been run.
-Total time to complete Offline 
-data collection: 		(    0) seconds.
-Offline data collection
-capabilities: 			 (0x7b) SMART execute Offline immediate.
-					Auto Offline data collection on/off support.
-					Suspend Offline collection upon new
-					command.
-					Offline surface scan supported.
-					Self-test supported.
-					Conveyance Self-test supported.
-					Selective Self-test supported.
-SMART capabilities:            (0x0003)	Saves SMART data before entering
-					power-saving mode.
-					Supports SMART auto save timer.
-Error logging capability:        (0x01)	Error logging supported.
-					General Purpose Logging supported.
-Short self-test routine 
-recommended polling time: 	 (   1) minutes.
-Extended self-test routine
-recommended polling time: 	 ( 930) minutes.
-Conveyance self-test routine
-recommended polling time: 	 (   2) minutes.
-SCT capabilities: 	       (0x30a5)	SCT Status supported.
-					SCT Data Table supported.
-
-SMART Attributes Data Structure revision number: 10
-Vendor Specific SMART Attributes with Thresholds:
-ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE      UPDATED  WHEN_FAILED RAW_VALUE
-  1 Raw_Read_Error_Rate     0x000f   117   099   006    Pre-fail  Always       -       121016704
-  3 Spin_Up_Time            0x0003   090   090   000    Pre-fail  Always       -       0
-  4 Start_Stop_Count        0x0032   100   100   020    Old_age   Always       -       334
-  5 Reallocated_Sector_Ct   0x0033   100   100   010    Pre-fail  Always       -       0
-  7 Seek_Error_Rate         0x000f   081   060   030    Pre-fail  Always       -       152829073
-  9 Power_On_Hours          0x0032   099   099   000    Old_age   Always       -       953
- 10 Spin_Retry_Count        0x0013   100   100   097    Pre-fail  Always       -       0
- 12 Power_Cycle_Count       0x0032   100   100   020    Old_age   Always       -       262
-183 Runtime_Bad_Block       0x0032   100   100   000    Old_age   Always       -       0
-184 End-to-End_Error        0x0032   100   100   099    Old_age   Always       -       0
-187 Reported_Uncorrect      0x0032   100   100   000    Old_age   Always       -       0
-188 Command_Timeout         0x0032   100   099   000    Old_age   Always       -       6
-189 High_Fly_Writes         0x003a   095   095   000    Old_age   Always       -       5
-190 Airflow_Temperature_Cel 0x0022   074   054   045    Old_age   Always       -       26 (Min/Max 26/26)
-191 G-Sense_Error_Rate      0x0032   100   100   000    Old_age   Always       -       0
-192 Power-Off_Retract_Count 0x0032   100   100   000    Old_age   Always       -       317
-193 Load_Cycle_Count        0x0032   100   100   000    Old_age   Always       -       415
-194 Temperature_Celsius     0x0022   026   046   000    Old_age   Always       -       26 (0 18 0 0 0)
-195 Hardware_ECC_Recovered  0x001a   117   099   000    Old_age   Always       -       121016704
-197 Current_Pending_Sector  0x0012   100   100   000    Old_age   Always       -       0
-198 Offline_Uncorrectable   0x0010   100   100   000    Old_age   Offline      -       0
-199 UDMA_CRC_Error_Count    0x003e   200   200   000    Old_age   Always       -       0
-240 Head_Flying_Hours       0x0000   100   253   000    Old_age   Offline      -       901 (11 170 0)
-241 Total_LBAs_Written      0x0000   100   253   000    Old_age   Offline      -       28367482688
-242 Total_LBAs_Read         0x0000   100   253   000    Old_age   Offline      -       468926342278
-
-SMART Error Log Version: 1
-No Errors Logged
-
-SMART Self-test log structure revision number 1
-Num  Test_Description    Status                  Remaining  LifeTime(hours)  LBA_of_first_error
-# 1  Extended offline    Completed without error       00%       900         -
-# 2  Extended offline    Completed without error       00%       702         -
-# 3  Extended offline    Aborted by host               90%       638         -
-# 4  Extended offline    Aborted by host               90%       637         -
-# 5  Extended offline    Aborted by host               90%       631         -
-# 6  Extended offline    Interrupted (host reset)      00%       629         -
-# 7  Extended offline    Aborted by host               90%       374         -
-# 8  Extended offline    Aborted by host               90%       371         -
-# 9  Extended offline    Interrupted (host reset)      00%       370         -
-#10  Extended offline    Completed without error       00%        85         -
-#11  Short offline       Completed without error       00%         0         -
-
-SMART Selective self-test log data structure revision number 1
- SPAN  MIN_LBA  MAX_LBA  CURRENT_TEST_STATUS
-    1        0        0  Not_testing
-    2        0        0  Not_testing
-    3        0        0  Not_testing
-    4        0        0  Not_testing
-    5        0        0  Not_testing
-Selective self-test flags (0x0):
-  After scanning selected spans, do NOT read-scan remainder of disk.
-If Selective self-test is pending on power-up, resume after 0 minute delay.
+SGkgQWRyaWFuLA0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEFkcmlh
+biBIdW50ZXIgPGFkcmlhbi5odW50ZXJAaW50ZWwuY29tPg0KPiBTZW50OiBGcmlkYXksIEp1bmUg
+OCwgMjAxOCAzOjMxIFBNDQo+IFRvOiBFdmFuIEdyZWVuIDxldmdyZWVuQGNocm9taXVtLm9yZz47
+IFN0YW5pc2xhdiBOaWpuaWtvdiA8U3RhbmlzbGF2Lk5pam5pa292QHdkYy5jb20+DQo+IENjOiBW
+aW5heWFrIEhvbGlrYXR0aSA8dmluaG9saWthdHRpQGdtYWlsLmNvbT47IGplamJAbGludXgudm5l
+dC5pYm0uY29tOyBtYXJ0aW4ucGV0ZXJzZW5Ab3JhY2xlLmNvbTsgbGludXgtDQo+IGtlcm5lbEB2
+Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnOyBHd2VuZGFsIEdyaWdu
+b3UgPGd3ZW5kYWxAY2hyb21pdW0ub3JnPjsgQWxleCBMZW1iZXJnDQo+IDxBbGV4LkxlbWJlcmdA
+d2RjLmNvbT47IEF2cmkgQWx0bWFuIDxBdnJpLkFsdG1hbkB3ZGMuY29tPg0KPiBTdWJqZWN0OiBS
+ZTogW1BBVENIIDAvN10gRW5hYmxlIFVGUyBwcm92aXNpb25pbmcgdmlhIExpbnV4DQo+IA0KPiBP
+biAwNC8wNi8xOCAxNzo1OSwgRXZhbiBHcmVlbiB3cm90ZToNCj4gPiBPbiBTdW4sIEp1biAzLCAy
+MDE4IGF0IDM6MjEgQU0gU3RhbmlzbGF2IE5pam5pa292DQo+ID4gPFN0YW5pc2xhdi5OaWpuaWtv
+dkB3ZGMuY29tPiB3cm90ZToNCj4gPj4NCj4gPj4NCj4gPj4NCj4gPj4+IC0tLS0tT3JpZ2luYWwg
+TWVzc2FnZS0tLS0tDQo+ID4+PiBGcm9tOiBsaW51eC1zY3NpLW93bmVyQHZnZXIua2VybmVsLm9y
+ZyA8bGludXgtc2NzaS1vd25lckB2Z2VyLmtlcm5lbC5vcmc+IE9uIEJlaGFsZiBPZiBFdmFuIEdy
+ZWVuDQo+ID4+PiBTZW50OiBGcmlkYXksIEp1bmUgMSwgMjAxOCA1OjQ0IFBNDQo+ID4+PiBUbzog
+U3RhbmlzbGF2IE5pam5pa292IDxTdGFuaXNsYXYuTmlqbmlrb3ZAd2RjLmNvbT4NCj4gPj4+IENj
+OiBWaW5heWFrIEhvbGlrYXR0aSA8dmluaG9saWthdHRpQGdtYWlsLmNvbT47IGplamJAbGludXgu
+dm5ldC5pYm0uY29tOyBtYXJ0aW4ucGV0ZXJzZW5Ab3JhY2xlLmNvbTsgbGludXgtDQo+ID4+PiBr
+ZXJuZWxAdmdlci5rZXJuZWwub3JnOyBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZzsgR3dlbmRh
+bCBHcmlnbm91IDxnd2VuZGFsQGNocm9taXVtLm9yZz47IEFsZXggTGVtYmVyZw0KPiA+Pj4gPEFs
+ZXguTGVtYmVyZ0B3ZGMuY29tPjsgQXZyaSBBbHRtYW4gPEF2cmkuQWx0bWFuQHdkYy5jb20+DQo+
+ID4+PiBTdWJqZWN0OiBSZTogW1BBVENIIDAvN10gRW5hYmxlIFVGUyBwcm92aXNpb25pbmcgdmlh
+IExpbnV4DQo+ID4+Pg0KPiA+Pj4gSGkgU3RhbmlzbGF2LiBUaGFua3MgZm9yIHRha2luZyBhIGxv
+b2suIFJlc3BvbnNlcyBiZWxvdy4NCj4gPj4+DQo+ID4+PiBPbiBUaHUsIE1heSAzMSwgMjAxOCBh
+dCAzOjA0IEFNIFN0YW5pc2xhdiBOaWpuaWtvdg0KPiA+Pj4gPFN0YW5pc2xhdi5OaWpuaWtvdkB3
+ZGMuY29tPiB3cm90ZToNCj4gPj4+Pg0KPiA+Pj4+IEhpIEV2YW4sDQo+ID4+Pj4gSSBoYXZlIHNv
+bWUgZ2VuZXJpYyBub3RlczoNCj4gPj4+PiAtIFdoeSB0byBjcmVhdGUgbmV3IHN5c2ZzIGVudHJp
+ZXMgZm9yIHRoZSBjb25maWd1cmF0aW9uIGRlc2NyaXB0b3IgZmllbGRzIGlmIHRoZXkgYXJlIGp1
+c3QgZHVwbGljYXRpb24gb2YgZmllbGRzIGluIHRoZSBkZXZpY2UgYW5kIHVuaXQNCj4gPj4+IGRl
+c2NyaXB0b3JzPyBBbmQgdGhlIHN5c2ZzIHJlcHJlc2VudGF0aW9uIG9mIHRoZSBkZXZpY2UgYW5k
+IHVuaXQgZGVzY3JpcHRvcnMgaXMgZXhpc3RpbmcgYWxyZWFkeS4NCj4gPj4+DQo+ID4+PiBXZWxs
+LCBVRlMgZGVzY3JpYmVzIHRoZW0gYXMgZGlmZmVyZW50IGRlc2NyaXB0b3JzLiBJIHdvcnJ5IHRo
+YXQgaWYgSQ0KPiA+Pj4gYWRkIGEgYnVuY2ggb2YgY2xldmVyIGxvZ2ljIHRvIGhpZGUgdGhlIGNv
+bmZpZyBkZXNjcmlwdG9yIGJlaGluZCBvdGhlcg0KPiA+Pj4gZGVzY3JpcHRvcnMsIHRoZXJlIG1p
+Z2h0IGJlIHRyb3VibGUgbGF0ZXIgaWYgMSkgdGhlcmUgaXMgYSBxdWlya3kNCj4gPj4+IGRldmlj
+ZSB0aGF0IGRvZXNuJ3QgcmVmbGVjdCB0aGUgdmFsdWVzIGJldHdlZW4gZGVzY3JpcHRvcnMgcXVp
+dGUgdGhlDQo+ID4+PiBzYW1lIHdheSBvciBhdCB0aGUgc2FtZSB0aW1lLCBvciAyKSBpZiBhIGxh
+dGVyIFVGUyBzcGVjIGFkZHMgbW9yZQ0KPiA+Pj4gY29uZmlndXJhdGlvbiBkZXNjcmlwdG9yIGZp
+ZWxkcyB0aGF0IGRvbid0IGV4YWN0bHkgcmVmbGVjdCBpbnRvIG90aGVyDQo+ID4+PiBub24tY29u
+ZmlnIGRlc2NyaXB0b3JzLCB0aGUgY2xldmVybmVzcyB3aWxsIGxvb2sgYXdrd2FyZC4NCj4gPj4N
+Cj4gPj4gTm8gYWRkaXRpb25hbCBsb2dpYyB3aWxsIGJlIHJlcXVpcmVkIHRvIGF0dGFjaCB3cml0
+ZSBmdW5jdGlvbmFsaXR5IHRvIHRoZQ0KPiA+PiBleGlzdGluZyBlbnRyaWVzIGluc3RlYWQgb2Yg
+bmV3IGRlZmluZWQgb25lcy4gSXQgd2lsbCByZWR1Y2UgdGhlIHBhdGNoDQo+ID4+IHNpemUgc2ln
+bmlmaWNhbnRseS4gQW5kIHRoZXJlIHdpbGwgYmUgbm8gbmVlZCBmb3IgdGhlIHVuaXQgc2VsZWN0
+b3INCj4gPj4gbWVjaGFuaXNtIHdoaWNoIEknbSBub3Qgc3VyZSB3aWxsIGJlIGFjY2VwdGVkIGJ5
+IHRoZSBTQ1NJIGNvbW11bml0eS4NCj4gPj4NCj4gPg0KPiA+IFNvIHRoaXMgd291bGQgYmUgbW9k
+aWZ5aW5nIHRoZSBleGlzdGluZyBzeXNmcyBlbnRyaWVzIHNvIHRoYXQgcmVhZHMNCj4gPiBzdGls
+bCBjb21lIGZyb20gdGhlIGRldmljZSBhbmQgdW5pdCBkZXNjcmlwdG9ycywgYnV0IHdyaXRlcyBn
+byB0bw0KPiA+IGVxdWl2YWxlbnQgZmllbGRzIGluIHRoZSBjb25maWcgZGVzY3JpcHRvcj8gSSBj
+YW4gZXhwbG9yZSB0aGF0DQo+ID4gYXBwcm9hY2guIEFsdGVybmF0aXZlbHksIGlmIHRoZSB1bml0
+IHNlbGVjdG9yIG1lY2hhbmlzbSBpcyBub3QNCj4gPiBkZXNpcmVkLCBJIGNvdWxkIGR5bmFtaWNh
+bGx5IGNyZWF0ZSBzeXNmcyBkaXJlY3RvcmllcyBmb3IgZWFjaCB1bml0IGluDQo+ID4gdGhlIGNv
+bmZpZyBkZXNjcmlwdG9yLCBidXQgc3RpbGwgYnJpbmcgb3V0IHRoZSBjb25maWcgZGVzY3JpcHRv
+cg0KPiA+IHZhbHVlcyBhcyBzZXBhcmF0ZSBlbnRyaWVzLiAoSSBzdGlsbCB3b3JyeSBhIGJpdCBh
+Ym91dCBzbWFzaGluZyB0aGUNCj4gPiBkZXNjcmlwdG9ycyB0b2dldGhlciBhcyB0aGUgVUZTIHNw
+ZWMgY2FsbGVkIHRoZW0gb3V0IGFzIGRpZmZlcmVudCkuDQo+IA0KPiBJZiB5b3UgdXNlIHRoZSB1
+bml0IGF0dHJpYnV0ZXMsIGhvdyBkbyB5b3UgY29uZmlndXJlIHVuaXRzIHRoYXQgZG8gbm90IHll
+dA0KPiBleGlzdD8NCg0KRm9yIGV4YW1wbGUgYnkgYWRkaW5nIHRoZSBlbmFibGVfbHVuIHdyaXRl
+YWJsZSBzeXNmcyBlbnRyeS4gSSB0aGluayBib3RoIHdheXMgYXJlDQp2aWFibGUgYW5kIHRoZXJl
+IGFyZSBzZXZlcmFsIHBpdGZhbGxzIGluIGVhY2ggb2YgdGhlbS4gTm93IGl0J3MgdXAgdG8gRXZh
+biB0byBkZWNpZGUNCmhvdyB0byBpbXBsZW1lbnQgdGhpcy4NCg0KPiANCj4gUGVyaGFwcyBpdCBp
+cyBiZXR0ZXIgdG8gcmVwcmVzZW50IHRoZSBjb25maWd1cmF0aW9uIGRlc2NyaXB0b3JzIGV4YWN0
+bHkgYXMNCj4gdGhleSBhcmUgZGVmaW5lZCBpbiB0aGUgc3BlY2lmaWNhdGlvbi4gIFByb2JhYmx5
+IG5vdCB3b3J0aCBleHBvc2luZyB0aGVtIGF0DQo+IGFsbCBpZiB0aGUgY29uZmlndXJhdGlvbiBp
+cyBsb2NrZWQgKGF0dHJpYnV0ZSBiQ29uZmlnRGVzY3JMb2NrID09IDEpLg0KPiANCj4gTm90ZSBh
+bHNvIHRoYXQgdGhlIDIuMSBzcGVjLiBkZWZpbmVzICBiQ29uZkRlc2NDb250aW51ZSB3aGljaCBh
+bGxvd3MgdXBkYXRlcw0KPiB0byBiZSBncm91cGVkIGFuZCBjb21taXR0ZWQgdG9nZXRoZXIuDQoN
+ClRoZSBvbmx5IHF1ZXN0aW9uIGlzIGhvdyBtYW55IGRldmljZXMgYXJlIHJlYWR5IHRvIGdldCBk
+b3plbnMgb2YgY29uZmlndXJhdGlvbg0KZGVzY3JpcHRvcnMgcmVsYXRlZCB0byBmaXJzdCBlaWdo
+dCBMVU5zIGluc3RlYWQganVzdCBvbmUgd2hlbiB0aGlzIGxvY2sgaXMgZW5hYmxlZC4NCg0KUmVn
+YXJkcw0KU3RhbmlzbGF2DQo=
