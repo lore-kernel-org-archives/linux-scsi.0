@@ -1,173 +1,159 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
+From: Christoph Anton Mitterer <calestyo@scientia.net>
 Subject: Re: sd 6:0:0:0: [sdb] Unaligned partial completion (resid=12,
  sector_sz=512)
-Date: Sat, 9 Jun 2018 20:10:25 -0400
-Message-ID: <071361b8-96c0-17cd-d1d7-61ea6357eb83@interlog.com>
+Date: Sun, 10 Jun 2018 02:24:51 +0200
+Message-ID: <f5b20fde635fdb46140851b1bd1ce096d6ee8a12.camel@scientia.net>
 References: <c35dacb574365736229ff04d587abc0390ef7b78.camel@scientia.net>
- <f96c1329-929b-44a1-4c3a-74dbcedbbafe@infradead.org>
- <2cbab96cfb722ef8ad8f9fe6f5060226108cf033.camel@scientia.net>
-Reply-To: dgilbert@interlog.com
+         <f96c1329-929b-44a1-4c3a-74dbcedbbafe@infradead.org>
+         <2cbab96cfb722ef8ad8f9fe6f5060226108cf033.camel@scientia.net>
+         <071361b8-96c0-17cd-d1d7-61ea6357eb83@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <2cbab96cfb722ef8ad8f9fe6f5060226108cf033.camel@scientia.net>
-Content-Language: en-CA
+In-Reply-To: <071361b8-96c0-17cd-d1d7-61ea6357eb83@interlog.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Anton Mitterer <calestyo@scientia.net>, Randy Dunlap <rdunlap@infradead.org>, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+To: dgilbert@interlog.com, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 2018-06-09 07:50 PM, Christoph Anton Mitterer wrote:
-> Thanks for CCing me to the right list.
-> 
-> Some further info:
-> 
-> I had two disks attached via the following USB/SATA bridge (twice the
-> same, which in turn is connected via a USB3.0 hub):
-> Jun 09 23:16:11 heisenberg kernel: usb 2-2.2: new SuperSpeed USB device number 23 using xhci_hcd
-> Jun 09 23:16:11 heisenberg kernel: usb 2-2.2: New USB device found, idVendor=174c, idProduct=55aa
-> Jun 09 23:16:11 heisenberg kernel: usb 2-2.2: New USB device strings: Mfr=2, Product=3, SerialNumber=1
-> Jun 09 23:16:11 heisenberg kernel: usb 2-2.2: Product: ASMT1053
-> Jun 09 23:16:11 heisenberg kernel: usb 2-2.2: Manufacturer: asmedia
-> Jun 09 23:16:11 heisenberg kernel: usb 2-2.2: SerialNumber: 123456789012
-> Jun 09 23:16:11 heisenberg kernel: usb 2-2.2: Device is not authorized for usage
-> Jun 09 23:16:15 heisenberg kernel: usb-storage 2-2.2:1.0: USB Mass Storage device detected
-> Jun 09 23:16:15 heisenberg kernel: usb-storage 2-2.2:1.0: Quirks match for vid 174c pid 55aa: 400000
-> Jun 09 23:16:15 heisenberg kernel: scsi host7: usb-storage 2-2.2:1.0
-> Jun 09 23:16:15 heisenberg kernel: usb 2-2.2: authorized to connect
-> Jun 09 23:16:16 heisenberg kernel: scsi 7:0:0:0: Direct-Access     ASMT     2105             0    PQ: 0 ANSI: 6
-> Jun 09 23:16:16 heisenberg kernel: sd 7:0:0:0: Attached scsi generic sg2 type 0
-> Jun 09 23:16:16 heisenberg kernel: sd 7:0:0:0: [sdc] Spinning up disk...
-> Jun 09 23:16:25 heisenberg kernel: ........ready
-> Jun 09 23:16:25 heisenberg kernel: sd 7:0:0:0: [sdc] 15628053168 512-byte logical blocks: (8.00 TB/7.28 TiB)
-> Jun 09 23:16:25 heisenberg kernel: sd 7:0:0:0: [sdc] 4096-byte physical blocks
-> Jun 09 23:16:25 heisenberg kernel: sd 7:0:0:0: [sdc] Write Protect is off
-> Jun 09 23:16:25 heisenberg kernel: sd 7:0:0:0: [sdc] Mode Sense: 43 00 00 00
-> Jun 09 23:16:25 heisenberg kernel: sd 7:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-> Jun 09 23:16:25 heisenberg kernel:  sdc: sdc1 sdc2
-> Jun 09 23:16:25 heisenberg kernel: sd 7:0:0:0: [sdc] Attached SCSI disk
-> 
-> 
-> The errors only occurred on one of the two disks... but few times when
-> I swapped the USB/SATA bridges between the two disks, because I wanted
-> to see whether it's the bridge which is faulty.
-> Since it happened with USB/SATA bridges swapped, I thought it couldn't
-> be that, but rather the HDD.
-> I tried again with the USB3.0 hub removed (and the bridges directly
-> connected to USB3.0 ports of the notebook)... and the errors still
-> appeared (on the same disk).
-> 
-> 
-> Then, they suddenly went away, and despite quite some swapping around
-> of bridges, cables, etc. ... it hasn't appeared again (though I stopped
-> copying for today some 2 hours ago).
-> 
-> Another interesting fact: While I was copying in the first place, where
-> the error occurred quite frequently,... the data must have been read
-> correctly.
-> The fs is btrfs (so there is checksumming) and in addition I have my
-> own SHA512 sums, attached as XATTRs to the files, and for those that
-> were already copied, they verified correctly.
-> 
-> 
-> So my naive assumption would be that either I have some pretty new but
-> somehow weirdly failing HDD, which sometimes shows these errors and
-> sometimes not (yet, so far, giving the correct data)... or...
-> there were some (also strange) connectivity issues (maybe something
-> with the cables?) and when I swapped things around these got finally
-> "resolved".
-> 
-> 
-> So in addition to the basic question: What would the "Unaligned partial
-> completion" mean, I wonder: Would any errors on the USB level (or
-> below) show up as the block device level errors that I've seen?
-> And what could explain that I still got the right data out? Retries
-> that succeed? ECC?
-> 
-> Or should I rather backup ASAP and throw the device with the error
-> messages away, too?
+On Sat, 2018-06-09 at 20:10 -0400, Douglas Gilbert wrote:
+> Hmmm, probably yes. But before you throw it away, try running
+> 'smartctl -a'
 
-Hmmm, probably yes. But before you throw it away, try running 'smartctl -a'
-(or 'smartctl -x') on it and record the output. Also try 'smartctl -t short'
-(a short self-test) on it and then re-run '-a' to see what the self-test log
-says. The disk should keep logs of the number of unrecovered read errors
-(and recovered ones as well).
+Knew I forgot to add something. SMART looks fine (see below), though I
+haven't run a new long check (and will only do so once I've done
+copying the data from the device (I should have still 2 further backups
+of it, though also on Seagate ST8000AS0002).
 
-If the disk is only one year old, perhaps it might be covered by a warranty
-from the manufacturer.
+I think all values are pretty normal (all Seagates seem to show these
+high numbers for Raw_Read_Error_Rate, Seek_Error_Rate and
+Hardware_ECC_Recovered. Never had a Seagate disk which didn't. Guess
+it's normal for them).
 
-Doug Gilbert
+The only thing which is a bit strange are the:
+Command_Timeout 6
+High_Fly_Writes 5
+though I have low values of these on most of my
+ST8000AS0002.
+So I'd blindly guess it's mostly normal, too.
+
+Does anyone know something different?
 
 
-> On Sat, 2018-06-09 at 15:21 -0700, Randy Dunlap wrote:
->> [adding linux-scsi mailing list]
->>
->>
->> On 06/09/2018 12:23 PM, Christoph Anton Mitterer wrote:
->>> Hey.
->>>
->>> I'm seeing these errors:
->>> Jun 09 21:13:22 heisenberg kernel: sd 6:0:0:0: [sdb] Unaligned
->>> partial completion (resid=16, sector_sz=512)
->>> Jun 09 21:13:22 heisenberg kernel: sd 6:0:0:0: [sdb] tag#0 FAILED
->>> Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
->>> Jun 09 21:13:22 heisenberg kernel: sd 6:0:0:0: [sdb] tag#0 Sense
->>> Key : Medium Error [current]
->>> Jun 09 21:13:22 heisenberg kernel: sd 6:0:0:0: [sdb] tag#0 Add.
->>> Sense: Unrecovered read error
->>> Jun 09 21:13:22 heisenberg kernel: sd 6:0:0:0: [sdb] tag#0 CDB:
->>> Read(16) 88 00 00 00 00 01 cd e6 de 40 00 00 00 e0 00 00
->>> Jun 09 21:13:22 heisenberg kernel: print_req_error: critical medium
->>> error, dev sdb, sector 7749426752
->>> Jun 09 21:13:31 heisenberg kernel: sd 6:0:0:0: [sdb] Unaligned
->>> partial completion (resid=12, sector_sz=512)
->>> Jun 09 21:13:31 heisenberg kernel: sd 6:0:0:0: [sdb] tag#0 FAILED
->>> Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
->>> Jun 09 21:13:31 heisenberg kernel: sd 6:0:0:0: [sdb] tag#0 Sense
->>> Key : Medium Error [current]
->>> Jun 09 21:13:31 heisenberg kernel: sd 6:0:0:0: [sdb] tag#0 Add.
->>> Sense: Unrecovered read error
->>> Jun 09 21:13:31 heisenberg kernel: sd 6:0:0:0: [sdb] tag#0 CDB:
->>> Read(16) 88 00 00 00 00 00 00 14 59 60 00 00 01 00 00 00
->>> Jun 09 21:13:31 heisenberg kernel: print_req_error: critical medium
->>> error, dev sdb, sector 1333600
->>> Jun 09 21:13:53 heisenberg kernel: sd 6:0:0:0: [sdb] Unaligned
->>> partial completion (resid=12, sector_sz=512)
->>> Jun 09 21:13:53 heisenberg kernel: sd 6:0:0:0: [sdb] tag#0 FAILED
->>> Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
->>> Jun 09 21:13:53 heisenberg kernel: sd 6:0:0:0: [sdb] tag#0 Sense
->>> Key : Medium Error [current]
->>> Jun 09 21:13:53 heisenberg kernel: sd 6:0:0:0: [sdb] tag#0 Add.
->>> Sense: Unrecovered read error
->>> Jun 09 21:13:53 heisenberg kernel: sd 6:0:0:0: [sdb] tag#0 CDB:
->>> Read(16) 88 00 00 00 00 00 c3 a2 56 80 00 00 01 00 00 00
->>> Jun 09 21:13:53 heisenberg kernel: print_req_error: critical medium
->>> error, dev sdb, sector 3282196096
->>>
->>> (many of them) on a Seagate 8TB Archive HDD.
->>> The disk is only a year old and barely used (since it's just one of
->>> the
->>> backups of my main data disks - and the primary disk another
->>> Seagate
->>> 8TB HDD broke just few days ago).
->>>
->>> I have connected them via USB/SATA bridge... and when I now started
->>> copying from the backup (which is sdb) to a fresh HDD I started
->>> seeing
->>> vast numbers of these errors.
->>>
->>> However, fsck, cp seem to do fine, and the data (as far as it has
->>> been
->>> copied) seems good (I have sha512 sums of all of it).
->>>
->>>
->>> Any ideas what "Unaligned partial completion" and these errors
->>> mean?
->>>
->>>
->>> Thanks,
->>> Chris.
->>>
->>
->>
-> 
+
+Thanks,
+Chris.
+
+
+Below, the smartctl data:
+
+smartctl 6.6 2016-05-31 r4324 [x86_64-linux-4.16.0-2-amd64] (local build)
+Copyright (C) 2002-16, Bruce Allen, Christian Franke, www.smartmontools.org
+
+=== START OF INFORMATION SECTION ===
+Model Family:     Seagate Archive HDD
+Device Model:     ST8000AS0002-1NA17Z
+Serial Number:    
+LU WWN Device Id: 5 000c50 08742d013
+Firmware Version: AR15
+User Capacity:    8,001,563,222,016 bytes [8,00 TB]
+Sector Sizes:     512 bytes logical, 4096 bytes physical
+Rotation Rate:    5980 rpm
+Device is:        In smartctl database [for details use: -P show]
+ATA Version is:   ACS-2, ACS-3 T13/2161-D revision 3b
+SATA Version is:  SATA 3.1, 6.0 Gb/s (current: 6.0 Gb/s)
+Local Time is:    Sat Jun  9 20:39:43 2018 CEST
+SMART support is: Available - device has SMART capability.
+SMART support is: Enabled
+
+=== START OF READ SMART DATA SECTION ===
+SMART overall-health self-assessment test result: PASSED
+
+General SMART Values:
+Offline data collection status:  (0x82)	Offline data collection activity
+					was completed without error.
+					Auto Offline Data Collection: Enabled.
+Self-test execution status:      (   0)	The previous self-test routine completed
+					without error or no self-test has ever 
+					been run.
+Total time to complete Offline 
+data collection: 		(    0) seconds.
+Offline data collection
+capabilities: 			 (0x7b) SMART execute Offline immediate.
+					Auto Offline data collection on/off support.
+					Suspend Offline collection upon new
+					command.
+					Offline surface scan supported.
+					Self-test supported.
+					Conveyance Self-test supported.
+					Selective Self-test supported.
+SMART capabilities:            (0x0003)	Saves SMART data before entering
+					power-saving mode.
+					Supports SMART auto save timer.
+Error logging capability:        (0x01)	Error logging supported.
+					General Purpose Logging supported.
+Short self-test routine 
+recommended polling time: 	 (   1) minutes.
+Extended self-test routine
+recommended polling time: 	 ( 930) minutes.
+Conveyance self-test routine
+recommended polling time: 	 (   2) minutes.
+SCT capabilities: 	       (0x30a5)	SCT Status supported.
+					SCT Data Table supported.
+
+SMART Attributes Data Structure revision number: 10
+Vendor Specific SMART Attributes with Thresholds:
+ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE      UPDATED  WHEN_FAILED RAW_VALUE
+  1 Raw_Read_Error_Rate     0x000f   117   099   006    Pre-fail  Always       -       121016704
+  3 Spin_Up_Time            0x0003   090   090   000    Pre-fail  Always       -       0
+  4 Start_Stop_Count        0x0032   100   100   020    Old_age   Always       -       334
+  5 Reallocated_Sector_Ct   0x0033   100   100   010    Pre-fail  Always       -       0
+  7 Seek_Error_Rate         0x000f   081   060   030    Pre-fail  Always       -       152829073
+  9 Power_On_Hours          0x0032   099   099   000    Old_age   Always       -       953
+ 10 Spin_Retry_Count        0x0013   100   100   097    Pre-fail  Always       -       0
+ 12 Power_Cycle_Count       0x0032   100   100   020    Old_age   Always       -       262
+183 Runtime_Bad_Block       0x0032   100   100   000    Old_age   Always       -       0
+184 End-to-End_Error        0x0032   100   100   099    Old_age   Always       -       0
+187 Reported_Uncorrect      0x0032   100   100   000    Old_age   Always       -       0
+188 Command_Timeout         0x0032   100   099   000    Old_age   Always       -       6
+189 High_Fly_Writes         0x003a   095   095   000    Old_age   Always       -       5
+190 Airflow_Temperature_Cel 0x0022   074   054   045    Old_age   Always       -       26 (Min/Max 26/26)
+191 G-Sense_Error_Rate      0x0032   100   100   000    Old_age   Always       -       0
+192 Power-Off_Retract_Count 0x0032   100   100   000    Old_age   Always       -       317
+193 Load_Cycle_Count        0x0032   100   100   000    Old_age   Always       -       415
+194 Temperature_Celsius     0x0022   026   046   000    Old_age   Always       -       26 (0 18 0 0 0)
+195 Hardware_ECC_Recovered  0x001a   117   099   000    Old_age   Always       -       121016704
+197 Current_Pending_Sector  0x0012   100   100   000    Old_age   Always       -       0
+198 Offline_Uncorrectable   0x0010   100   100   000    Old_age   Offline      -       0
+199 UDMA_CRC_Error_Count    0x003e   200   200   000    Old_age   Always       -       0
+240 Head_Flying_Hours       0x0000   100   253   000    Old_age   Offline      -       901 (11 170 0)
+241 Total_LBAs_Written      0x0000   100   253   000    Old_age   Offline      -       28367482688
+242 Total_LBAs_Read         0x0000   100   253   000    Old_age   Offline      -       468926342278
+
+SMART Error Log Version: 1
+No Errors Logged
+
+SMART Self-test log structure revision number 1
+Num  Test_Description    Status                  Remaining  LifeTime(hours)  LBA_of_first_error
+# 1  Extended offline    Completed without error       00%       900         -
+# 2  Extended offline    Completed without error       00%       702         -
+# 3  Extended offline    Aborted by host               90%       638         -
+# 4  Extended offline    Aborted by host               90%       637         -
+# 5  Extended offline    Aborted by host               90%       631         -
+# 6  Extended offline    Interrupted (host reset)      00%       629         -
+# 7  Extended offline    Aborted by host               90%       374         -
+# 8  Extended offline    Aborted by host               90%       371         -
+# 9  Extended offline    Interrupted (host reset)      00%       370         -
+#10  Extended offline    Completed without error       00%        85         -
+#11  Short offline       Completed without error       00%         0         -
+
+SMART Selective self-test log data structure revision number 1
+ SPAN  MIN_LBA  MAX_LBA  CURRENT_TEST_STATUS
+    1        0        0  Not_testing
+    2        0        0  Not_testing
+    3        0        0  Not_testing
+    4        0        0  Not_testing
+    5        0        0  Not_testing
+Selective self-test flags (0x0):
+  After scanning selected spans, do NOT read-scan remainder of disk.
+If Selective self-test is pending on power-up, resume after 0 minute delay.
