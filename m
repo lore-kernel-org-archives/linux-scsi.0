@@ -1,37 +1,37 @@
 From: Zhouyang Jia <jiazhouyang09@gmail.com>
-Subject: [PATCH] scsi: bfa: add error handling for pci_iomap
-Date: Mon, 11 Jun 2018 16:26:21 +0800
-Message-ID: <1528705581-34646-1-git-send-email-jiazhouyang09@gmail.com>
+Subject: [PATCH] scsi: gdth: add error handling for register_chrdev
+Date: Mon, 11 Jun 2018 16:35:48 +0800
+Message-ID: <1528706148-35044-1-git-send-email-jiazhouyang09@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-Cc: Zhouyang Jia <jiazhouyang09@gmail.com>, Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Zhouyang Jia <jiazhouyang09@gmail.com>, Achim Leubner <achim_leubner@adaptec.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-When pci_iomap fails, the lack of error-handling code may
+When register_chrdev fails, the lack of error-handling code may
 cause unexpected results.
 
-This patch adds error-handling code after calling pci_iomap.
+This patch adds error-handling code after calling register_chrdev.
 
 Signed-off-by: Zhouyang Jia <jiazhouyang09@gmail.com>
 ---
- drivers/scsi/bfa/bfad.c | 5 +++++
+ drivers/scsi/gdth.c | 5 +++++
  1 file changed, 5 insertions(+)
 
-diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
-index bd7e6a6f..74e39d7 100644
---- a/drivers/scsi/bfa/bfad.c
-+++ b/drivers/scsi/bfa/bfad.c
-@@ -760,6 +760,11 @@ bfad_pci_init(struct pci_dev *pdev, struct bfad_s *bfad)
- 		goto out_release_region;
- 	}
+diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
+index 8560479..d5a2af8 100644
+--- a/drivers/scsi/gdth.c
++++ b/drivers/scsi/gdth.c
+@@ -5198,6 +5198,11 @@ static int __init gdth_init(void)
+ 	TRACE2(("gdth_detect() %d controller detected\n", gdth_ctr_count));
  
-+	if (bfad->pci_bar2_kva == NULL) {
-+		printk(KERN_ERR "Fail to map bar2\n");
-+		goto out_release_region;
+ 	major = register_chrdev(0,"gdth", &gdth_fops);
++	if (major < 0) {
++		printk("GDT-HA: Unable to register char device gdth.\n");
++		return major;
 +	}
 +
- 	bfad->hal_pcidev.pci_slot = PCI_SLOT(pdev->devfn);
- 	bfad->hal_pcidev.pci_func = PCI_FUNC(pdev->devfn);
- 	bfad->hal_pcidev.pci_bar_kva = bfad->pci_bar0_kva;
+ 	register_reboot_notifier(&gdth_notifier);
+ 	gdth_polling = FALSE;
+ 	return 0;
 -- 
 2.7.4
