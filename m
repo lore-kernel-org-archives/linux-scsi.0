@@ -1,68 +1,37 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH] pcmcia: add error handling for pcmcia_enable_device
-Date: Mon, 11 Jun 2018 09:21:16 +0200
-Message-ID: <20180611072116.vaz4xff4pd6qxtj7@linux-x5ow.site>
-References: <1528694152-31724-1-git-send-email-jiazhouyang09@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
+From: Zhouyang Jia <jiazhouyang09@gmail.com>
+Subject: [PATCH] scsi: bfa: add error handling for pci_iomap
+Date: Mon, 11 Jun 2018 16:26:21 +0800
+Message-ID: <1528705581-34646-1-git-send-email-jiazhouyang09@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1528694152-31724-1-git-send-email-jiazhouyang09@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Zhouyang Jia <jiazhouyang09@gmail.com>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Zhouyang Jia <jiazhouyang09@gmail.com>, Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Jun 11, 2018 at 01:15:50PM +0800, Zhouyang Jia wrote:
-> When pcmcia_enable_device fails, the lack of error-handling code may
-> cause unexpected results.
-> 
-> This patch adds error-handling code after calling pcmcia_enable_device.
-> 
-> Signed-off-by: Zhouyang Jia <jiazhouyang09@gmail.com>
-> ---
->  drivers/scsi/pcmcia/qlogic_stub.c | 8 +++++++-
->  1 file changed, 7 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/pcmcia/qlogic_stub.c b/drivers/scsi/pcmcia/qlogic_stub.c
-> index 0556054..9287d52 100644
-> --- a/drivers/scsi/pcmcia/qlogic_stub.c
-> +++ b/drivers/scsi/pcmcia/qlogic_stub.c
-> @@ -254,8 +254,14 @@ static void qlogic_release(struct pcmcia_device *link)
->  static int qlogic_resume(struct pcmcia_device *link)
->  {
->  	scsi_info_t *info = link->priv;
-> +	int ret;
-> +
-> +	ret = pcmcia_enable_device(link);
-> +	if (ret) {
-> +		pcmcia_disable_device(link);
-> +		return -ENODEV;
-> +	}
+When pci_iomap fails, the lack of error-handling code may
+cause unexpected results.
 
-pcmcia_enable_device() can fail for three reasons:
-1) the socket is not present
-2) the configuration is locked
-3) setting the socket's power control fails
+This patch adds error-handling code after calling pci_iomap.
 
-In all three cases I think it's actually an error to call
-pcmcia_disable_device().
+Signed-off-by: Zhouyang Jia <jiazhouyang09@gmail.com>
+---
+ drivers/scsi/bfa/bfad.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-Imagine the following scenario:
-pcmcia_enable_device() failed because the device configuration is
-locked by another driver, then you call pcmcia_disable_device() which
-calls pcmcia_release_configuration(). pcmcia_release_configuration()
-checks if the device is locked, decrements the lock counter, clears
-the CONFIG_LOCKED bit in the PCMCIA config and sets the voltage to 0
-without the first driver every noticing it.
-
-Byte,
-	Johannes
+diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
+index bd7e6a6f..74e39d7 100644
+--- a/drivers/scsi/bfa/bfad.c
++++ b/drivers/scsi/bfa/bfad.c
+@@ -760,6 +760,11 @@ bfad_pci_init(struct pci_dev *pdev, struct bfad_s *bfad)
+ 		goto out_release_region;
+ 	}
+ 
++	if (bfad->pci_bar2_kva == NULL) {
++		printk(KERN_ERR "Fail to map bar2\n");
++		goto out_release_region;
++	}
++
+ 	bfad->hal_pcidev.pci_slot = PCI_SLOT(pdev->devfn);
+ 	bfad->hal_pcidev.pci_func = PCI_FUNC(pdev->devfn);
+ 	bfad->hal_pcidev.pci_bar_kva = bfad->pci_bar0_kva;
 -- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+2.7.4
