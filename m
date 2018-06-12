@@ -1,73 +1,40 @@
-From: "Rangankar, Manish" <Manish.Rangankar@cavium.com>
-Subject: RE: [PATCH] scsi: qla4xxx: add error handling for try_module_get
-Date: Tue, 12 Jun 2018 07:52:26 +0000
-Message-ID: <MW2PR07MB4042EC187A6945E4F39D97FAE37F0@MW2PR07MB4042.namprd07.prod.outlook.com>
-References: <1528778910-42113-1-git-send-email-jiazhouyang09@gmail.com>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH] target: add error handling for match_int
+Date: Tue, 12 Jun 2018 13:25:07 +0000
+Message-ID: <4f248c27409b49193193ca187cdd1a30f85ce547.camel@wdc.com>
+References: <1528779148-42485-1-git-send-email-jiazhouyang09@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1528778910-42113-1-git-send-email-jiazhouyang09@gmail.com>
+In-Reply-To: <1528779148-42485-1-git-send-email-jiazhouyang09@gmail.com>
 Content-Language: en-US
+Content-ID: <98F12B659DD0244B9654A4FB4722AE9F@namprd04.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Zhouyang Jia <jiazhouyang09@gmail.com>
-Cc: Dept-Eng QLogic Storage Upstream <QLogic-Storage-Upstream@cavium.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: "jiazhouyang09@gmail.com" <jiazhouyang09@gmail.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
 
-
-> -----Original Message-----
-> From: Zhouyang Jia <jiazhouyang09@gmail.com>
-> Sent: Tuesday, June 12, 2018 10:18 AM
-> Cc: Zhouyang Jia <jiazhouyang09@gmail.com>; Dept-Eng QLogic Storage
-> Upstream <QLogic-Storage-Upstream@cavium.com>; James E.J. Bottomley
-> <jejb@linux.vnet.ibm.com>; Martin K. Petersen <martin.petersen@oracle.com=
->;
-> linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org
-> Subject: [PATCH] scsi: qla4xxx: add error handling for try_module_get
->=20
-> When try_module_get fails, the lack of error-handling code may cause
-> unexpected results.
->=20
-> This patch adds error-handling code after calling try_module_get.
->=20
-> Signed-off-by: Zhouyang Jia <jiazhouyang09@gmail.com>
-> ---
->  drivers/scsi/qla4xxx/ql4_os.c | 9 +++++++--
->  1 file changed, 7 insertions(+), 2 deletions(-)
->=20
-> diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.=
-c index
-> 0e13349..6b677ab 100644
-> --- a/drivers/scsi/qla4xxx/ql4_os.c
-> +++ b/drivers/scsi/qla4xxx/ql4_os.c
-> @@ -7687,7 +7687,10 @@ static int qla4xxx_sysfs_ddb_logout_sid(struct
-> iscsi_cls_session *cls_sess)
->  	 * to be seamless without actually destroying the
->  	 * session
->  	 **/
-> -	try_module_get(qla4xxx_iscsi_transport.owner);
-> +	if (!try_module_get(qla4xxx_iscsi_transport.owner))
-> +		ql4_printk(KERN_WARNING, ha,
-> +			"%s: cannot get module.\n", __func__);
-> +
->  	iscsi_destroy_endpoint(ddb_entry->conn->ep);
->=20
->  	spin_lock_irqsave(&ha->hardware_lock, flags); @@ -8970,7 +8973,9
-> @@ static void qla4xxx_destroy_fw_ddb_session(struct scsi_qla_host *ha)
->  			 * to be seamless without actually destroying the
->  			 * session
->  			 **/
-> -			try_module_get(qla4xxx_iscsi_transport.owner);
-> +			if (!try_module_get(qla4xxx_iscsi_transport.owner))
-> +				ql4_printk(KERN_WARNING, ha,
-> +					"%s: cannot get module.\n",
-> __func__);
->  			iscsi_destroy_endpoint(ddb_entry->conn->ep);
->  			qla4xxx_free_ddb(ha, ddb_entry);
->  			iscsi_session_teardown(ddb_entry->sess);
-> --
-> 2.7.4
-
-Thanks,
-
-Acked-by: Manish Rangankar <Manish.Rangankar@cavium.com>
+T24gVHVlLCAyMDE4LTA2LTEyIGF0IDEyOjUyICswODAwLCBaaG91eWFuZyBKaWEgd3JvdGU6DQo+
+IFdoZW4gbWF0Y2hfaW50IGZhaWxzLCB0aGUgbGFjayBvZiBlcnJvci1oYW5kbGluZyBjb2RlIG1h
+eQ0KPiBjYXVzZSB1bmV4cGVjdGVkIHJlc3VsdHMuDQo+IA0KPiBUaGlzIHBhdGNoIGFkZHMgZXJy
+b3ItaGFuZGxpbmcgY29kZSBhZnRlciBjYWxsaW5nIG1hdGNoX2ludC4NCj4gDQo+IFNpZ25lZC1v
+ZmYtYnk6IFpob3V5YW5nIEppYSA8amlhemhvdXlhbmcwOUBnbWFpbC5jb20+DQo+IC0tLQ0KPiAg
+ZHJpdmVycy90YXJnZXQvdGFyZ2V0X2NvcmVfcmQuYyB8IDYgKysrKy0tDQo+ICAxIGZpbGUgY2hh
+bmdlZCwgNCBpbnNlcnRpb25zKCspLCAyIGRlbGV0aW9ucygtKQ0KPiANCj4gZGlmZiAtLWdpdCBh
+L2RyaXZlcnMvdGFyZ2V0L3RhcmdldF9jb3JlX3JkLmMgYi9kcml2ZXJzL3RhcmdldC90YXJnZXRf
+Y29yZV9yZC5jDQo+IGluZGV4IGE2ZTgxMDYuLjdiYzg5ZmYgMTAwNjQ0DQo+IC0tLSBhL2RyaXZl
+cnMvdGFyZ2V0L3RhcmdldF9jb3JlX3JkLmMNCj4gKysrIGIvZHJpdmVycy90YXJnZXQvdGFyZ2V0
+X2NvcmVfcmQuYw0KPiBAQCAtNTczLDE0ICs1NzMsMTYgQEAgc3RhdGljIHNzaXplX3QgcmRfc2V0
+X2NvbmZpZ2ZzX2Rldl9wYXJhbXMoc3RydWN0IHNlX2RldmljZSAqZGV2LA0KPiAgCQl0b2tlbiA9
+IG1hdGNoX3Rva2VuKHB0ciwgdG9rZW5zLCBhcmdzKTsNCj4gIAkJc3dpdGNoICh0b2tlbikgew0K
+PiAgCQljYXNlIE9wdF9yZF9wYWdlczoNCj4gLQkJCW1hdGNoX2ludChhcmdzLCAmYXJnKTsNCj4g
+KwkJCWlmIChtYXRjaF9pbnQoYXJncywgJmFyZykpDQo+ICsJCQkJcmV0dXJuIC1FSU5WQUw7DQo+
+ICAJCQlyZF9kZXYtPnJkX3BhZ2VfY291bnQgPSBhcmc7DQo+ICAJCQlwcl9kZWJ1ZygiUkFNRElT
+SzogUmVmZXJlbmNpbmcgUGFnZSINCj4gIAkJCQkiIENvdW50OiAldVxuIiwgcmRfZGV2LT5yZF9w
+YWdlX2NvdW50KTsNCj4gIAkJCXJkX2Rldi0+cmRfZmxhZ3MgfD0gUkRGX0hBU19QQUdFX0NPVU5U
+Ow0KPiAgCQkJYnJlYWs7DQo+ICAJCWNhc2UgT3B0X3JkX251bGxpbzoNCj4gLQkJCW1hdGNoX2lu
+dChhcmdzLCAmYXJnKTsNCj4gKwkJCWlmIChtYXRjaF9pbnQoYXJncywgJmFyZykpDQo+ICsJCQkJ
+cmV0dXJuIC1FSU5WQUw7DQo+ICAJCQlpZiAoYXJnICE9IDEpDQo+ICAJCQkJYnJlYWs7DQo+IA0K
+DQpQbGVhc2UgcmV0dXJuIHRoZSBlcnJvciBjb2RlIHJldHVybmVkIGJ5IG1hdGNoX2ludCgpIGlu
+c3RlYWQgb2YgLUVJTlZBTC4NCg0KVGhhbmtzLA0KDQpCYXJ0Lg0KDQoNCg0K
