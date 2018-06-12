@@ -1,35 +1,48 @@
 From: Zhouyang Jia <jiazhouyang09@gmail.com>
-Subject: [PATCH] scsi: esas2r: add error handling for pci_enable_device
-Date: Tue, 12 Jun 2018 12:14:09 +0800
-Message-ID: <1528776850-39672-1-git-send-email-jiazhouyang09@gmail.com>
+Subject: [PATCH] scsi: qla4xxx: add error handling for try_module_get
+Date: Tue, 12 Jun 2018 12:48:29 +0800
+Message-ID: <1528778910-42113-1-git-send-email-jiazhouyang09@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-Cc: Zhouyang Jia <jiazhouyang09@gmail.com>, Bradley Grove <linuxdrivers@attotech.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Zhouyang Jia <jiazhouyang09@gmail.com>, QLogic-Storage-Upstream@qlogic.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-When pci_enable_device fails, the lack of error-handling code may
+When try_module_get fails, the lack of error-handling code may
 cause unexpected results.
 
-This patch adds error-handling code after calling pci_enable_device.
+This patch adds error-handling code after calling try_module_get.
 
 Signed-off-by: Zhouyang Jia <jiazhouyang09@gmail.com>
 ---
- drivers/scsi/esas2r/esas2r_init.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/scsi/qla4xxx/ql4_os.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/esas2r/esas2r_init.c b/drivers/scsi/esas2r/esas2r_init.c
-index 9dffcb2..364538c 100644
---- a/drivers/scsi/esas2r/esas2r_init.c
-+++ b/drivers/scsi/esas2r/esas2r_init.c
-@@ -707,6 +707,9 @@ int esas2r_resume(struct pci_dev *pdev)
- 	esas2r_log_dev(ESAS2R_LOG_INFO, &(pdev->dev),
- 		       "pci_enable_device() called");
- 	rez = pci_enable_device(pdev);
-+	if (rez)
-+		goto error_exit;
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index 0e13349..6b677ab 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -7687,7 +7687,10 @@ static int qla4xxx_sysfs_ddb_logout_sid(struct iscsi_cls_session *cls_sess)
+ 	 * to be seamless without actually destroying the
+ 	 * session
+ 	 **/
+-	try_module_get(qla4xxx_iscsi_transport.owner);
++	if (!try_module_get(qla4xxx_iscsi_transport.owner))
++		ql4_printk(KERN_WARNING, ha,
++			"%s: cannot get module.\n", __func__);
 +
- 	pci_set_master(pdev);
+ 	iscsi_destroy_endpoint(ddb_entry->conn->ep);
  
- 	if (!a) {
+ 	spin_lock_irqsave(&ha->hardware_lock, flags);
+@@ -8970,7 +8973,9 @@ static void qla4xxx_destroy_fw_ddb_session(struct scsi_qla_host *ha)
+ 			 * to be seamless without actually destroying the
+ 			 * session
+ 			 **/
+-			try_module_get(qla4xxx_iscsi_transport.owner);
++			if (!try_module_get(qla4xxx_iscsi_transport.owner))
++				ql4_printk(KERN_WARNING, ha,
++					"%s: cannot get module.\n", __func__);
+ 			iscsi_destroy_endpoint(ddb_entry->conn->ep);
+ 			qla4xxx_free_ddb(ha, ddb_entry);
+ 			iscsi_session_teardown(ddb_entry->sess);
 -- 
 2.7.4
