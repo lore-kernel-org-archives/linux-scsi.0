@@ -1,40 +1,48 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH 0/3] Use sbitmap instead of percpu_ida
-Date: Tue, 12 Jun 2018 14:40:43 -0600
-Message-ID: <f7a9f7ad-843f-58fc-68f0-79dfd4019c18@kernel.dk>
-References: <20180612190545.10781-1-willy@infradead.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] target: add error handling for match_int
+Date: Tue, 12 Jun 2018 14:21:25 -0700
+Message-ID: <1528838485.24454.2.camel@HansenPartnership.com>
+References: <1528779148-42485-1-git-send-email-jiazhouyang09@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-In-Reply-To: <20180612190545.10781-1-willy@infradead.org>
-Content-Language: en-US
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: Matthew Wilcox <willy@infradead.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux1394-devel@lists.sourceforge.net, linux-usb@vger.kernel.org, kvm@vger.kernel.org, virtualization@lists.linux-foundation.org, netdev@vger.kernel.org, Juergen Gross <jgross@suse.com>, qla2xxx-upstream@qlogic.com, Kent Overstreet <kent.overstreet@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1528779148-42485-1-git-send-email-jiazhouyang09@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Zhouyang Jia <jiazhouyang09@gmail.com>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 6/12/18 1:05 PM, Matthew Wilcox wrote:
-> Removing the percpu_ida code nets over 400 lines of removal.  It's not
-> as spectacular as deleting an entire architecture, but it's still a
-> worthy reduction in lines of code.
+On Tue, 2018-06-12 at 12:52 +0800, Zhouyang Jia wrote:
+> When match_int fails, the lack of error-handling code may
+> cause unexpected results.
 > 
-> Untested due to lack of hardware and not understanding how to set up a
-> target platform.
+> This patch adds error-handling code after calling match_int.
 > 
-> Changes from v1:
->  - Fixed bugs pointed out by Jens in iscsit_wait_for_tag()
->  - Abstracted out tag freeing as requested by Bart
->  - Made iscsit_wait_for_tag static as pointed out by 0day
+> Signed-off-by: Zhouyang Jia <jiazhouyang09@gmail.com>
+> ---
+>  drivers/target/target_core_rd.c | 6 ++++--
+>  1 file changed, 4 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/target/target_core_rd.c
+> b/drivers/target/target_core_rd.c
+> index a6e8106..7bc89ff 100644
+> --- a/drivers/target/target_core_rd.c
+> +++ b/drivers/target/target_core_rd.c
+> @@ -573,14 +573,16 @@ static ssize_t
+> rd_set_configfs_dev_params(struct se_device *dev,
+>  		token = match_token(ptr, tokens, args);
+>  		switch (token) {
+>  		case Opt_rd_pages:
+> -			match_int(args, &arg);
+> +			if (match_int(args, &arg))
+> +				return -EINVAL;
 
-Reviewed-by: Jens Axboe <axboe@kernel.dk>
+The first observation is that this would leak the kmalloc'd orig
+variable, but the second is that I don't think terminating parsing is
+the right thing to do even if match_int() returns an error: just
+ignoring this option and proceed to the next seems to be the best
+course because that's what we do with unrecognised options (the
+default: case).
 
--- 
-Jens Axboe
+James
