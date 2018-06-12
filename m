@@ -1,40 +1,82 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH] target: add error handling for match_int
-Date: Tue, 12 Jun 2018 13:25:07 +0000
-Message-ID: <4f248c27409b49193193ca187cdd1a30f85ce547.camel@wdc.com>
-References: <1528779148-42485-1-git-send-email-jiazhouyang09@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: [PATCH 3/3] scsi: don't add scsi command result bytes
+Date: Tue, 12 Jun 2018 15:53:11 +0200
+Message-ID: <20180612135311.13216-4-jthumshirn@suse.de>
+References: <20180612135311.13216-1-jthumshirn@suse.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1528779148-42485-1-git-send-email-jiazhouyang09@gmail.com>
-Content-Language: en-US
-Content-ID: <98F12B659DD0244B9654A4FB4722AE9F@namprd04.prod.outlook.com>
+In-Reply-To: <20180612135311.13216-1-jthumshirn@suse.de>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "jiazhouyang09@gmail.com" <jiazhouyang09@gmail.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Johannes Thumshirn <jthumshirn@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gVHVlLCAyMDE4LTA2LTEyIGF0IDEyOjUyICswODAwLCBaaG91eWFuZyBKaWEgd3JvdGU6DQo+
-IFdoZW4gbWF0Y2hfaW50IGZhaWxzLCB0aGUgbGFjayBvZiBlcnJvci1oYW5kbGluZyBjb2RlIG1h
-eQ0KPiBjYXVzZSB1bmV4cGVjdGVkIHJlc3VsdHMuDQo+IA0KPiBUaGlzIHBhdGNoIGFkZHMgZXJy
-b3ItaGFuZGxpbmcgY29kZSBhZnRlciBjYWxsaW5nIG1hdGNoX2ludC4NCj4gDQo+IFNpZ25lZC1v
-ZmYtYnk6IFpob3V5YW5nIEppYSA8amlhemhvdXlhbmcwOUBnbWFpbC5jb20+DQo+IC0tLQ0KPiAg
-ZHJpdmVycy90YXJnZXQvdGFyZ2V0X2NvcmVfcmQuYyB8IDYgKysrKy0tDQo+ICAxIGZpbGUgY2hh
-bmdlZCwgNCBpbnNlcnRpb25zKCspLCAyIGRlbGV0aW9ucygtKQ0KPiANCj4gZGlmZiAtLWdpdCBh
-L2RyaXZlcnMvdGFyZ2V0L3RhcmdldF9jb3JlX3JkLmMgYi9kcml2ZXJzL3RhcmdldC90YXJnZXRf
-Y29yZV9yZC5jDQo+IGluZGV4IGE2ZTgxMDYuLjdiYzg5ZmYgMTAwNjQ0DQo+IC0tLSBhL2RyaXZl
-cnMvdGFyZ2V0L3RhcmdldF9jb3JlX3JkLmMNCj4gKysrIGIvZHJpdmVycy90YXJnZXQvdGFyZ2V0
-X2NvcmVfcmQuYw0KPiBAQCAtNTczLDE0ICs1NzMsMTYgQEAgc3RhdGljIHNzaXplX3QgcmRfc2V0
-X2NvbmZpZ2ZzX2Rldl9wYXJhbXMoc3RydWN0IHNlX2RldmljZSAqZGV2LA0KPiAgCQl0b2tlbiA9
-IG1hdGNoX3Rva2VuKHB0ciwgdG9rZW5zLCBhcmdzKTsNCj4gIAkJc3dpdGNoICh0b2tlbikgew0K
-PiAgCQljYXNlIE9wdF9yZF9wYWdlczoNCj4gLQkJCW1hdGNoX2ludChhcmdzLCAmYXJnKTsNCj4g
-KwkJCWlmIChtYXRjaF9pbnQoYXJncywgJmFyZykpDQo+ICsJCQkJcmV0dXJuIC1FSU5WQUw7DQo+
-ICAJCQlyZF9kZXYtPnJkX3BhZ2VfY291bnQgPSBhcmc7DQo+ICAJCQlwcl9kZWJ1ZygiUkFNRElT
-SzogUmVmZXJlbmNpbmcgUGFnZSINCj4gIAkJCQkiIENvdW50OiAldVxuIiwgcmRfZGV2LT5yZF9w
-YWdlX2NvdW50KTsNCj4gIAkJCXJkX2Rldi0+cmRfZmxhZ3MgfD0gUkRGX0hBU19QQUdFX0NPVU5U
-Ow0KPiAgCQkJYnJlYWs7DQo+ICAJCWNhc2UgT3B0X3JkX251bGxpbzoNCj4gLQkJCW1hdGNoX2lu
-dChhcmdzLCAmYXJnKTsNCj4gKwkJCWlmIChtYXRjaF9pbnQoYXJncywgJmFyZykpDQo+ICsJCQkJ
-cmV0dXJuIC1FSU5WQUw7DQo+ICAJCQlpZiAoYXJnICE9IDEpDQo+ICAJCQkJYnJlYWs7DQo+IA0K
-DQpQbGVhc2UgcmV0dXJuIHRoZSBlcnJvciBjb2RlIHJldHVybmVkIGJ5IG1hdGNoX2ludCgpIGlu
-c3RlYWQgb2YgLUVJTlZBTC4NCg0KVGhhbmtzLA0KDQpCYXJ0Lg0KDQoNCg0K
+Some drivers are ADDing the scsi command's result bytes instead of
+ORing them.
+
+While this can produce correct results it has unexpected side effects.
+
+Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+---
+ drivers/scsi/imm.c                  | 2 +-
+ drivers/scsi/mesh.c                 | 4 ++--
+ drivers/scsi/sym53c8xx_2/sym_glue.c | 2 +-
+ drivers/scsi/sym53c8xx_2/sym_glue.h | 2 +-
+ 4 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/scsi/imm.c b/drivers/scsi/imm.c
+index 87c94191033b..e67033c8011f 100644
+--- a/drivers/scsi/imm.c
++++ b/drivers/scsi/imm.c
+@@ -892,7 +892,7 @@ static int imm_engine(imm_struct *dev, struct scsi_cmnd *cmd)
+ 			/* Check for optional message byte */
+ 			if (imm_wait(dev) == (unsigned char) 0xb8)
+ 				imm_in(dev, &h, 1);
+-			cmd->result = (DID_OK << 16) + (l & STATUS_MASK);
++			cmd->result = DID_OK << 16 | l & STATUS_MASK;
+ 		}
+ 		if ((dev->mode == IMM_NIBBLE) || (dev->mode == IMM_PS2)) {
+ 			w_ctr(ppb, 0x4);
+diff --git a/drivers/scsi/mesh.c b/drivers/scsi/mesh.c
+index 1753e42826dd..3473a860e690 100644
+--- a/drivers/scsi/mesh.c
++++ b/drivers/scsi/mesh.c
+@@ -594,9 +594,9 @@ static void mesh_done(struct mesh_state *ms, int start_next)
+ 	ms->current_req = NULL;
+ 	tp->current_req = NULL;
+ 	if (cmd) {
+-		cmd->result = (ms->stat << 16) + cmd->SCp.Status;
++		cmd->result = ms->stat << 16 | cmd->SCp.Status;
+ 		if (ms->stat == DID_OK)
+-			cmd->result += (cmd->SCp.Message << 8);
++			cmd->result |= cmd->SCp.Message << 8;
+ 		if (DEBUG_TARGET(cmd)) {
+ 			printk(KERN_DEBUG "mesh_done: result = %x, data_ptr=%d, buflen=%d\n",
+ 			       cmd->result, ms->data_ptr, scsi_bufflen(cmd));
+diff --git a/drivers/scsi/sym53c8xx_2/sym_glue.c b/drivers/scsi/sym53c8xx_2/sym_glue.c
+index 7320d5fe4cbc..afdbd5a66083 100644
+--- a/drivers/scsi/sym53c8xx_2/sym_glue.c
++++ b/drivers/scsi/sym53c8xx_2/sym_glue.c
+@@ -252,7 +252,7 @@ void sym_set_cam_result_error(struct sym_hcb *np, struct sym_ccb *cp, int resid)
+ 		cam_status = sym_xerr_cam_status(DID_ERROR, cp->xerr_status);
+ 	}
+ 	scsi_set_resid(cmd, resid);
+-	cmd->result = (drv_status << 24) + (cam_status << 16) + scsi_status;
++	cmd->result = drv_status << 24 | cam_status << 16 | scsi_status;
+ }
+ 
+ static int sym_scatter(struct sym_hcb *np, struct sym_ccb *cp, struct scsi_cmnd *cmd)
+diff --git a/drivers/scsi/sym53c8xx_2/sym_glue.h b/drivers/scsi/sym53c8xx_2/sym_glue.h
+index 805369521df8..25c7478d8810 100644
+--- a/drivers/scsi/sym53c8xx_2/sym_glue.h
++++ b/drivers/scsi/sym53c8xx_2/sym_glue.h
+@@ -256,7 +256,7 @@ sym_get_cam_status(struct scsi_cmnd *cmd)
+ static inline void sym_set_cam_result_ok(struct sym_ccb *cp, struct scsi_cmnd *cmd, int resid)
+ {
+ 	scsi_set_resid(cmd, resid);
+-	cmd->result = (((DID_OK) << 16) + ((cp->ssss_status) & 0x7f));
++	cmd->result = DID_OK << 16 | cp->ssss_status & 0x7f;
+ }
+ void sym_set_cam_result_error(struct sym_hcb *np, struct sym_ccb *cp, int resid);
+ 
+-- 
+2.16.4
