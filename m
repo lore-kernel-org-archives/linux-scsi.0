@@ -1,78 +1,148 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: Re: [PATCH] scsi: xen-scsifront: add error handling for
- xenbus_printf
-Date: Wed, 13 Jun 2018 20:09:51 +1000 (AEST)
-Message-ID: <alpine.LNX.2.21.1806132002180.45@nippy.intranet>
-References: <1528774962-39173-1-git-send-email-jiazhouyang09@gmail.com>
+From: Stanislav Nijnikov <Stanislav.Nijnikov@wdc.com>
+Subject: RE: [PATCH 0/7] Enable UFS provisioning via Linux
+Date: Wed, 13 Jun 2018 10:12:12 +0000
+Message-ID: <MWHPR04MB1137E1BB83293DE6B44ACCE39A7E0@MWHPR04MB1137.namprd04.prod.outlook.com>
+References: <20180529181740.195362-1-evgreen@chromium.org>
+ <MWHPR04MB11372C75BFC9416BAF5E81A19A630@MWHPR04MB1137.namprd04.prod.outlook.com>
+ <CAE=gft4LoNiRtxgTA_ZPghZGEVOzu_GAwMgqhs-8NCYVgj_AVw@mail.gmail.com>
+ <MWHPR04MB11370AED823FB608218CB9AD9A600@MWHPR04MB1137.namprd04.prod.outlook.com>
+ <CAE=gft5Vk3neDkyvmVf4CkBQQPVK=wXp=5jJ8n0uaosEwWUOAg@mail.gmail.com>
+ <b844b80f-9f6f-10f7-6dfd-f92d905738e3@intel.com>
+ <MWHPR04MB1137E9FA44BAC5EBE097589C9A790@MWHPR04MB1137.namprd04.prod.outlook.com>
+ <CAE=gft4LRtYJH1DStr6F6iK7q+TMA3RDPhft=A_AFyKpFmyS5w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1528774962-39173-1-git-send-email-jiazhouyang09@gmail.com>
+In-Reply-To: <CAE=gft4LRtYJH1DStr6F6iK7q+TMA3RDPhft=A_AFyKpFmyS5w@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Zhouyang Jia <jiazhouyang09@gmail.com>
-Cc: Juergen Gross <jgross@suse.com>, Boris Ostrovsky <boris.ostrovsky@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, xen-devel@lists.xenproject.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Evan Green <evgreen@chromium.org>
+Cc: "adrian.hunter@intel.com" <adrian.hunter@intel.com>, Vinayak Holikatti <vinholikatti@gmail.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Gwendal Grignou <gwendal@chromium.org>, Alex Lemberg <Alex.Lemberg@wdc.com>, Avri Altman <Avri.Altman@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 12 Jun 2018, Zhouyang Jia wrote:
-
-> When xenbus_printf fails, the lack of error-handling code may
-> cause unexpected results.
-> 
-> This patch adds error-handling code after calling xenbus_printf.
-> 
-> Signed-off-by: Zhouyang Jia <jiazhouyang09@gmail.com>
-> ---
->  drivers/scsi/xen-scsifront.c | 31 ++++++++++++++++++++++++-------
->  1 file changed, 24 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/scsi/xen-scsifront.c b/drivers/scsi/xen-scsifront.c
-> index 36f59a1..3d858ac 100644
-> --- a/drivers/scsi/xen-scsifront.c
-> +++ b/drivers/scsi/xen-scsifront.c
-> @@ -654,10 +654,17 @@ static int scsifront_dev_reset_handler(struct scsi_cmnd *sc)
->  static int scsifront_sdev_configure(struct scsi_device *sdev)
->  {
->  	struct vscsifrnt_info *info = shost_priv(sdev->host);
-> +	struct xenbus_device *dev = info->dev;
-> +	int err;
->  
-> -	if (info && current == info->curr)
-> -		xenbus_printf(XBT_NIL, info->dev->nodename,
-> +	if (info && current == info->curr) {
-> +		err = xenbus_printf(XBT_NIL, info->dev->nodename,
->  			      info->dev_state_path, "%d", XenbusStateConnected);
-
-The existing code checks whether 'info' is NULL before dereferencing it. 
-But your patch checks for NULL after dereferencing.
-
-> +		if (err) {
-> +			dev_err(&dev->dev, "writing dev_state_path\n");
-> +			return err;
-> +		}
-> +	}
->  
->  	return 0;
->  }
-> @@ -665,10 +672,15 @@ static int scsifront_sdev_configure(struct scsi_device *sdev)
->  static void scsifront_sdev_destroy(struct scsi_device *sdev)
->  {
->  	struct vscsifrnt_info *info = shost_priv(sdev->host);
-> +	struct xenbus_device *dev = info->dev;
-> +	int err;
->  
-> -	if (info && current == info->curr)
-> -		xenbus_printf(XBT_NIL, info->dev->nodename,
-> +	if (info && current == info->curr) {
-> +		err = xenbus_printf(XBT_NIL, info->dev->nodename,
->  			      info->dev_state_path, "%d", XenbusStateClosed);
-
-Same here.
-
-> +		if (err)
-> +			dev_err(&dev->dev, "writing dev_state_path\n");
-> +	}
->  }
->  
->  static struct scsi_host_template scsifront_sht = {
-
--- 
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGludXgtc2NzaS1vd25l
+ckB2Z2VyLmtlcm5lbC5vcmcgPGxpbnV4LXNjc2ktb3duZXJAdmdlci5rZXJuZWwub3JnPiBPbiBC
+ZWhhbGYgT2YgRXZhbiBHcmVlbg0KPiBTZW50OiBUdWVzZGF5LCBKdW5lIDEyLCAyMDE4IDEwOjQz
+IFBNDQo+IFRvOiBTdGFuaXNsYXYgTmlqbmlrb3YgPFN0YW5pc2xhdi5OaWpuaWtvdkB3ZGMuY29t
+Pg0KPiBDYzogYWRyaWFuLmh1bnRlckBpbnRlbC5jb207IFZpbmF5YWsgSG9saWthdHRpIDx2aW5o
+b2xpa2F0dGlAZ21haWwuY29tPjsgamVqYkBsaW51eC52bmV0LmlibS5jb207IG1hcnRpbi5wZXRl
+cnNlbkBvcmFjbGUuY29tOw0KPiBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnOyBsaW51eC1z
+Y3NpQHZnZXIua2VybmVsLm9yZzsgR3dlbmRhbCBHcmlnbm91IDxnd2VuZGFsQGNocm9taXVtLm9y
+Zz47IEFsZXggTGVtYmVyZw0KPiA8QWxleC5MZW1iZXJnQHdkYy5jb20+OyBBdnJpIEFsdG1hbiA8
+QXZyaS5BbHRtYW5Ad2RjLmNvbT4NCj4gU3ViamVjdDogUmU6IFtQQVRDSCAwLzddIEVuYWJsZSBV
+RlMgcHJvdmlzaW9uaW5nIHZpYSBMaW51eA0KPiANCj4gT24gU3VuLCBKdW4gMTAsIDIwMTggYXQg
+MjozMSBBTSBTdGFuaXNsYXYgTmlqbmlrb3YNCj4gPFN0YW5pc2xhdi5OaWpuaWtvdkB3ZGMuY29t
+PiB3cm90ZToNCj4gPg0KPiA+IEhpIEFkcmlhbiwNCj4gPg0KPiA+ID4gLS0tLS1PcmlnaW5hbCBN
+ZXNzYWdlLS0tLS0NCj4gPiA+IEZyb206IEFkcmlhbiBIdW50ZXIgPGFkcmlhbi5odW50ZXJAaW50
+ZWwuY29tPg0KPiA+ID4gU2VudDogRnJpZGF5LCBKdW5lIDgsIDIwMTggMzozMSBQTQ0KPiA+ID4g
+VG86IEV2YW4gR3JlZW4gPGV2Z3JlZW5AY2hyb21pdW0ub3JnPjsgU3RhbmlzbGF2IE5pam5pa292
+IDxTdGFuaXNsYXYuTmlqbmlrb3ZAd2RjLmNvbT4NCj4gPiA+IENjOiBWaW5heWFrIEhvbGlrYXR0
+aSA8dmluaG9saWthdHRpQGdtYWlsLmNvbT47IGplamJAbGludXgudm5ldC5pYm0uY29tOyBtYXJ0
+aW4ucGV0ZXJzZW5Ab3JhY2xlLmNvbTsgbGludXgtDQo+ID4gPiBrZXJuZWxAdmdlci5rZXJuZWwu
+b3JnOyBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZzsgR3dlbmRhbCBHcmlnbm91IDxnd2VuZGFs
+QGNocm9taXVtLm9yZz47IEFsZXggTGVtYmVyZw0KPiA+ID4gPEFsZXguTGVtYmVyZ0B3ZGMuY29t
+PjsgQXZyaSBBbHRtYW4gPEF2cmkuQWx0bWFuQHdkYy5jb20+DQo+ID4gPiBTdWJqZWN0OiBSZTog
+W1BBVENIIDAvN10gRW5hYmxlIFVGUyBwcm92aXNpb25pbmcgdmlhIExpbnV4DQo+ID4gPg0KPiA+
+ID4gT24gMDQvMDYvMTggMTc6NTksIEV2YW4gR3JlZW4gd3JvdGU6DQo+ID4gPiA+IE9uIFN1biwg
+SnVuIDMsIDIwMTggYXQgMzoyMSBBTSBTdGFuaXNsYXYgTmlqbmlrb3YNCj4gPiA+ID4gPFN0YW5p
+c2xhdi5OaWpuaWtvdkB3ZGMuY29tPiB3cm90ZToNCj4gPiA+ID4+DQo+ID4gPiA+Pg0KPiA+ID4g
+Pj4NCj4gPiA+ID4+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiA+ID4gPj4+IEZyb206
+IGxpbnV4LXNjc2ktb3duZXJAdmdlci5rZXJuZWwub3JnIDxsaW51eC1zY3NpLW93bmVyQHZnZXIu
+a2VybmVsLm9yZz4gT24gQmVoYWxmIE9mIEV2YW4gR3JlZW4NCj4gPiA+ID4+PiBTZW50OiBGcmlk
+YXksIEp1bmUgMSwgMjAxOCA1OjQ0IFBNDQo+ID4gPiA+Pj4gVG86IFN0YW5pc2xhdiBOaWpuaWtv
+diA8U3RhbmlzbGF2Lk5pam5pa292QHdkYy5jb20+DQo+ID4gPiA+Pj4gQ2M6IFZpbmF5YWsgSG9s
+aWthdHRpIDx2aW5ob2xpa2F0dGlAZ21haWwuY29tPjsgamVqYkBsaW51eC52bmV0LmlibS5jb207
+IG1hcnRpbi5wZXRlcnNlbkBvcmFjbGUuY29tOyBsaW51eC0NCj4gPiA+ID4+PiBrZXJuZWxAdmdl
+ci5rZXJuZWwub3JnOyBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZzsgR3dlbmRhbCBHcmlnbm91
+IDxnd2VuZGFsQGNocm9taXVtLm9yZz47IEFsZXggTGVtYmVyZw0KPiA+ID4gPj4+IDxBbGV4Lkxl
+bWJlcmdAd2RjLmNvbT47IEF2cmkgQWx0bWFuIDxBdnJpLkFsdG1hbkB3ZGMuY29tPg0KPiA+ID4g
+Pj4+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggMC83XSBFbmFibGUgVUZTIHByb3Zpc2lvbmluZyB2aWEg
+TGludXgNCj4gPiA+ID4+Pg0KPiA+ID4gPj4+IEhpIFN0YW5pc2xhdi4gVGhhbmtzIGZvciB0YWtp
+bmcgYSBsb29rLiBSZXNwb25zZXMgYmVsb3cuDQo+ID4gPiA+Pj4NCj4gPiA+ID4+PiBPbiBUaHUs
+IE1heSAzMSwgMjAxOCBhdCAzOjA0IEFNIFN0YW5pc2xhdiBOaWpuaWtvdg0KPiA+ID4gPj4+IDxT
+dGFuaXNsYXYuTmlqbmlrb3ZAd2RjLmNvbT4gd3JvdGU6DQo+ID4gPiA+Pj4+DQo+ID4gPiA+Pj4+
+IEhpIEV2YW4sDQo+ID4gPiA+Pj4+IEkgaGF2ZSBzb21lIGdlbmVyaWMgbm90ZXM6DQo+ID4gPiA+
+Pj4+IC0gV2h5IHRvIGNyZWF0ZSBuZXcgc3lzZnMgZW50cmllcyBmb3IgdGhlIGNvbmZpZ3VyYXRp
+b24gZGVzY3JpcHRvciBmaWVsZHMgaWYgdGhleSBhcmUganVzdCBkdXBsaWNhdGlvbiBvZiBmaWVs
+ZHMgaW4gdGhlIGRldmljZSBhbmQNCj4gdW5pdA0KPiA+ID4gPj4+IGRlc2NyaXB0b3JzPyBBbmQg
+dGhlIHN5c2ZzIHJlcHJlc2VudGF0aW9uIG9mIHRoZSBkZXZpY2UgYW5kIHVuaXQgZGVzY3JpcHRv
+cnMgaXMgZXhpc3RpbmcgYWxyZWFkeS4NCj4gPiA+ID4+Pg0KPiA+ID4gPj4+IFdlbGwsIFVGUyBk
+ZXNjcmliZXMgdGhlbSBhcyBkaWZmZXJlbnQgZGVzY3JpcHRvcnMuIEkgd29ycnkgdGhhdCBpZiBJ
+DQo+ID4gPiA+Pj4gYWRkIGEgYnVuY2ggb2YgY2xldmVyIGxvZ2ljIHRvIGhpZGUgdGhlIGNvbmZp
+ZyBkZXNjcmlwdG9yIGJlaGluZCBvdGhlcg0KPiA+ID4gPj4+IGRlc2NyaXB0b3JzLCB0aGVyZSBt
+aWdodCBiZSB0cm91YmxlIGxhdGVyIGlmIDEpIHRoZXJlIGlzIGEgcXVpcmt5DQo+ID4gPiA+Pj4g
+ZGV2aWNlIHRoYXQgZG9lc24ndCByZWZsZWN0IHRoZSB2YWx1ZXMgYmV0d2VlbiBkZXNjcmlwdG9y
+cyBxdWl0ZSB0aGUNCj4gPiA+ID4+PiBzYW1lIHdheSBvciBhdCB0aGUgc2FtZSB0aW1lLCBvciAy
+KSBpZiBhIGxhdGVyIFVGUyBzcGVjIGFkZHMgbW9yZQ0KPiA+ID4gPj4+IGNvbmZpZ3VyYXRpb24g
+ZGVzY3JpcHRvciBmaWVsZHMgdGhhdCBkb24ndCBleGFjdGx5IHJlZmxlY3QgaW50byBvdGhlcg0K
+PiA+ID4gPj4+IG5vbi1jb25maWcgZGVzY3JpcHRvcnMsIHRoZSBjbGV2ZXJuZXNzIHdpbGwgbG9v
+ayBhd2t3YXJkLg0KPiA+ID4gPj4NCj4gPiA+ID4+IE5vIGFkZGl0aW9uYWwgbG9naWMgd2lsbCBi
+ZSByZXF1aXJlZCB0byBhdHRhY2ggd3JpdGUgZnVuY3Rpb25hbGl0eSB0byB0aGUNCj4gPiA+ID4+
+IGV4aXN0aW5nIGVudHJpZXMgaW5zdGVhZCBvZiBuZXcgZGVmaW5lZCBvbmVzLiBJdCB3aWxsIHJl
+ZHVjZSB0aGUgcGF0Y2gNCj4gPiA+ID4+IHNpemUgc2lnbmlmaWNhbnRseS4gQW5kIHRoZXJlIHdp
+bGwgYmUgbm8gbmVlZCBmb3IgdGhlIHVuaXQgc2VsZWN0b3INCj4gPiA+ID4+IG1lY2hhbmlzbSB3
+aGljaCBJJ20gbm90IHN1cmUgd2lsbCBiZSBhY2NlcHRlZCBieSB0aGUgU0NTSSBjb21tdW5pdHku
+DQo+ID4gPiA+Pg0KPiA+ID4gPg0KPiA+ID4gPiBTbyB0aGlzIHdvdWxkIGJlIG1vZGlmeWluZyB0
+aGUgZXhpc3Rpbmcgc3lzZnMgZW50cmllcyBzbyB0aGF0IHJlYWRzDQo+ID4gPiA+IHN0aWxsIGNv
+bWUgZnJvbSB0aGUgZGV2aWNlIGFuZCB1bml0IGRlc2NyaXB0b3JzLCBidXQgd3JpdGVzIGdvIHRv
+DQo+ID4gPiA+IGVxdWl2YWxlbnQgZmllbGRzIGluIHRoZSBjb25maWcgZGVzY3JpcHRvcj8gSSBj
+YW4gZXhwbG9yZSB0aGF0DQo+ID4gPiA+IGFwcHJvYWNoLiBBbHRlcm5hdGl2ZWx5LCBpZiB0aGUg
+dW5pdCBzZWxlY3RvciBtZWNoYW5pc20gaXMgbm90DQo+ID4gPiA+IGRlc2lyZWQsIEkgY291bGQg
+ZHluYW1pY2FsbHkgY3JlYXRlIHN5c2ZzIGRpcmVjdG9yaWVzIGZvciBlYWNoIHVuaXQgaW4NCj4g
+PiA+ID4gdGhlIGNvbmZpZyBkZXNjcmlwdG9yLCBidXQgc3RpbGwgYnJpbmcgb3V0IHRoZSBjb25m
+aWcgZGVzY3JpcHRvcg0KPiA+ID4gPiB2YWx1ZXMgYXMgc2VwYXJhdGUgZW50cmllcy4gKEkgc3Rp
+bGwgd29ycnkgYSBiaXQgYWJvdXQgc21hc2hpbmcgdGhlDQo+ID4gPiA+IGRlc2NyaXB0b3JzIHRv
+Z2V0aGVyIGFzIHRoZSBVRlMgc3BlYyBjYWxsZWQgdGhlbSBvdXQgYXMgZGlmZmVyZW50KS4NCj4g
+PiA+DQo+ID4gPiBJZiB5b3UgdXNlIHRoZSB1bml0IGF0dHJpYnV0ZXMsIGhvdyBkbyB5b3UgY29u
+ZmlndXJlIHVuaXRzIHRoYXQgZG8gbm90IHlldA0KPiA+ID4gZXhpc3Q/DQo+ID4NCj4gPiBGb3Ig
+ZXhhbXBsZSBieSBhZGRpbmcgdGhlIGVuYWJsZV9sdW4gd3JpdGVhYmxlIHN5c2ZzIGVudHJ5LiBJ
+IHRoaW5rIGJvdGggd2F5cyBhcmUNCj4gPiB2aWFibGUgYW5kIHRoZXJlIGFyZSBzZXZlcmFsIHBp
+dGZhbGxzIGluIGVhY2ggb2YgdGhlbS4gTm93IGl0J3MgdXAgdG8gRXZhbiB0byBkZWNpZGUNCj4g
+PiBob3cgdG8gaW1wbGVtZW50IHRoaXMuDQo+ID4NCj4gPiA+DQo+ID4gPiBQZXJoYXBzIGl0IGlz
+IGJldHRlciB0byByZXByZXNlbnQgdGhlIGNvbmZpZ3VyYXRpb24gZGVzY3JpcHRvcnMgZXhhY3Rs
+eSBhcw0KPiA+ID4gdGhleSBhcmUgZGVmaW5lZCBpbiB0aGUgc3BlY2lmaWNhdGlvbi4gIFByb2Jh
+Ymx5IG5vdCB3b3J0aCBleHBvc2luZyB0aGVtIGF0DQo+ID4gPiBhbGwgaWYgdGhlIGNvbmZpZ3Vy
+YXRpb24gaXMgbG9ja2VkIChhdHRyaWJ1dGUgYkNvbmZpZ0Rlc2NyTG9jayA9PSAxKS4NCj4gPiA+
+DQo+ID4gPiBOb3RlIGFsc28gdGhhdCB0aGUgMi4xIHNwZWMuIGRlZmluZXMgIGJDb25mRGVzY0Nv
+bnRpbnVlIHdoaWNoIGFsbG93cyB1cGRhdGVzDQo+ID4gPiB0byBiZSBncm91cGVkIGFuZCBjb21t
+aXR0ZWQgdG9nZXRoZXIuDQo+ID4NCj4gPiBUaGUgb25seSBxdWVzdGlvbiBpcyBob3cgbWFueSBk
+ZXZpY2VzIGFyZSByZWFkeSB0byBnZXQgZG96ZW5zIG9mIGNvbmZpZ3VyYXRpb24NCj4gPiBkZXNj
+cmlwdG9ycyByZWxhdGVkIHRvIGZpcnN0IGVpZ2h0IExVTnMgaW5zdGVhZCBqdXN0IG9uZSB3aGVu
+IHRoaXMgbG9jayBpcyBlbmFibGVkLg0KPiA+DQo+ID4gUmVnYXJkcw0KPiA+IFN0YW5pc2xhdg0K
+PiANCj4gQWN0dWFsbHkgSSBjb3VsZCB1c2Ugc29tZSBhZHZpY2Ugb24gdGhpcy4gSXQgc2VlbXMg
+bGlrZSBmb2xrcyBhcmUNCj4gb3Bwb3NlZCB0byB0aGUgaWRlYSBvZiBoYXZpbmcgYSBjZmdfdW5p
+dCBmaWxlLCB3aG9zZSB2YWx1ZSBkZXRlcm1pbmVzDQo+IHdoaWNoIGluZGV4IHRvIHRhbGsgdG8g
+aW4gdGhlIHVuaXRfKiBmaWxlcy4gKEkgcGVyc29uYWxseSBsaWtlZCB0aGF0DQo+IGFwcHJvYWNo
+LCBhcyBpdCB3YXMgc2ltcGxlLCBoYXMgcHJlY2VkZW5jZSwgYW5kIGZpdCB0aGUgcmVxdWlyZW1l
+bnRzLA0KPiBidXQgb2ggd2VsbCkuIE15IGluc3RpbmN0IGZhdm9ycyBBZHJpYW4ncyBhcHByb2Fj
+aCBvZiBrZWVwaW5nIHRoZQ0KPiBjb25maWd1cmF0aW9uIGRlc2NyaXB0b3Igc2VwYXJhdGUsIHJh
+dGhlciB0aGFuIGhpZGluZyBpdCBiZWhpbmQgdGhlDQo+IGRldmljZSBhbmQgdW5pdCBkZXNjcmlw
+dG9ycywgYXMgSSB0aGluayBpdCdzIG1vcmUgdHJ1ZSB0byB0aGUgVUZTIHNwZWMNCj4gYW5kIGxl
+c3MgbGlrZWx5IHRvIGNhdXNlIHByb2JsZW1zIGluIHRoZSBmdXR1cmUuIEhvd2V2ZXIgSSdtIHRy
+eWluZyB0bw0KPiBmaWd1cmUgb3V0IHRoZSBiZXN0IHdheSB0byBkbyB0aGF0Lg0KPiANCj4gV2hh
+dCBJIF93YW50XyB0byBkbyBpcyBiYXNpY2FsbHkgY3JlYXRlIE4gc3lzZnMgZ3JvdXBzLCB3aGVy
+ZSBlYWNoDQo+IGdyb3VwIHBvaW50cyB0byB0aGUgc2FtZSBhcnJheSBvZiBhdHRyaWJ1dGVzLiBU
+aGVuIGluIHRoZSBzaG93L3N0b3JlDQo+IG1ldGhvZHMsIGxvb2sgdXAgd2hpY2ggZ3JvdXAgSSdt
+IGluIGFuZCB1c2UgdGhhdCBhcyBhbiBpbmRleC4gQnV0IHRoZQ0KPiBzaG93L3N0b3JlIGZ1bmN0
+aW9ucyBvbmx5IHBhc3MgdGhlIGF0dHJpYnV0ZXMgdGhlbXNlbHZlcywgYW5kIHRoZXJlDQo+IHNl
+ZW1zIHRvIGJlIG5vIHdheSBmb3IgbWUgdG8gZ2V0IHRoZSBwYXJlbnQgbm9kZS4gU28gbXkgbmV4
+dCBwbGFuIGlzDQo+IHRvIGNyZWF0ZSBhIHdyYXBwZXIgYXJvdW5kIHN0cnVjdCBkZXZpY2VfYXR0
+cmlidXRlIHdoZXJlIEkgY2FuIHN0b3JlDQo+IG15IGluZGV4LCBjcmVhdGUgYSB0ZW1wbGF0ZSBv
+ZiBhdHRyaWJ1dGVzLCBhbmQgdGhlbiBjcmVhdGUgTiBjb3BpZXMgb2YNCj4gdGhpcyB0ZW1wbGF0
+ZS4gVGhlIHNob3cvc3RvcmUgbWV0aG9kIGlzIHRoZW4gYSBzaW5nbGUgbWV0aG9kLCB3aGljaA0K
+PiB1c2VzIGNvbnRhaW5lcl9vZiBvbiB0aGUgYXR0cmlidXRlIHRvIGdldCB0aGUgaW5kZXgsIG9m
+ZnNldCwgYW5kIHNpemUNCj4gb2YgdGhlIGRlc2NyaXB0b3IgdG8gY2hhbmdlLiBUaGlzIHNlZW1z
+IGxlc3MgdGhhbiBpZGVhbCB0byBtZSwgYXMgaXQncw0KPiBuZXZlciBmdW4gdG8gZmVlbCBsaWtl
+IHlvdSdyZSB3YXN0aW5nIG1lbW9yeSwgZXZlbiB0aG91Z2ggaXQncw0KPiBwcm9iYWJseSBvbiB0
+aGUgb3JkZXIgb2YgYSBraWxvYnl0ZSBvciB0d28uDQo+IA0KPiBTdGFuaXNsYXYsIHlvdSd2ZSBn
+b3QgdGhlIHVuaXQgZGVzY3JpcHRvcnMgb2ZmIGluIHRoZSBzY3NpX2RldmljZSwNCj4gd2hpY2gg
+d291bGQgbWFrZSBhIGxvdCBvZiBzZW5zZSBmb3IgbWUgdG9vLCBleGNlcHQgdGhhdCBJIG5lZWQg
+dG8NCj4gY29uZmlndXJlIGx1bnMgdGhhdCBtYXkgbm90IGV4aXN0IHlldC4gQ2FuIHlvdSBleHBh
+bmQgb24geW91cg0KPiBlbmFibGVfbHVuIGlkZWE/DQo+IC1FdmFuDQoNCkl0J3MgYSB3cml0ZWFi
+bGUgc3lzZnMgZW50cnkgdGhhdCByZWNlaXZlIGFuIGludGVnZXIgdmFsdWUgKGFzIGFuIGluZGV4
+IA0Kb2YgYSBsdW4gdGhhdCBzaG91bGQgYmUgZW5hYmxlKS4gVGhlIHN0b3JlIGZ1bmN0aW9uIGRv
+ZXMgc29tZSBzYW5pdHkNCmNoZWNrcywgcmVhZHMgdGhlIGNvbmZpZ3VyYXRpb24gZGVzY3JpcHRv
+ciwgdXBkYXRlIHRoZSBzcGVjaWZpZWQNCmx1biBlbmFibGUgcGFyYW1ldGVyIGFuZCBzZW5kcyBp
+dC4gQWZ0ZXIgcmVzdGFydCB0aGUgbHVuIHdpbGwgYmUgYXZhaWxhYmxlDQphbmQgcmVhZHkgZm9y
+IGZ1cnRoZXIgY29uZmlndXJhdGlvbi4NCg0KU3RhbmlzbGF2DQogDQoNCg==
