@@ -1,221 +1,148 @@
-From: Zhouyang Jia <jiazhouyang09@gmail.com>
-Subject: Re: [PATCH] scsi: xen-scsifront: add error handling for
- xenbus_printf
-Date: Thu, 14 Jun 2018 16:13:21 +0800
-Message-ID: <CABb2TxJCd9Q0KUeeqZ_CZ-HwmkAVoktDLxq0TrThM2rFe4jePQ@mail.gmail.com>
-References: <1528774962-39173-1-git-send-email-jiazhouyang09@gmail.com>
- <alpine.LNX.2.21.1806132002180.45@nippy.intranet>
-Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="===============0657474434808553686=="
-Return-path: <xen-devel-bounces@lists.xenproject.org>
-In-Reply-To: <alpine.LNX.2.21.1806132002180.45@nippy.intranet>
-List-Unsubscribe: <https://lists.xenproject.org/mailman/options/xen-devel>,
- <mailto:xen-devel-request@lists.xenproject.org?subject=unsubscribe>
-List-Post: <mailto:xen-devel@lists.xenproject.org>
-List-Help: <mailto:xen-devel-request@lists.xenproject.org?subject=help>
-List-Subscribe: <https://lists.xenproject.org/mailman/listinfo/xen-devel>,
- <mailto:xen-devel-request@lists.xenproject.org?subject=subscribe>
-Errors-To: xen-devel-bounces@lists.xenproject.org
-Sender: "Xen-devel" <xen-devel-bounces@lists.xenproject.org>
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: Juergen Gross <jgross@suse.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xen-devel@lists.xenproject.org, Boris Ostrovsky <boris.ostrovsky@oracle.com>
+From: Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH resend] scsi: ufs: ufshcd_dump_regs to use memcpy_fromio
+Date: Thu, 14 Jun 2018 11:14:09 +0300
+Message-ID: <20180614081409.29780-1-tomas.winkler@intel.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Adrian Hunter <adrian.hunter@intel.com>
+Cc: Christoph Hellwig <hch@lst.de>, Vivek Gautam <vivek.gautam@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, Alex Lemberg <Alex.Lemberg@wdc.com>, Avri Altman <Avri.Altman@wdc.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Tomas Winkler <tomas.winkler@intel.com>
 List-Id: linux-scsi@vger.kernel.org
 
---===============0657474434808553686==
-Content-Type: multipart/alternative; boundary="0000000000002de995056e95ac24"
+ufshcd_dump_regs should use memcpy_fromio to read host registers
+instead of directly accessing using memcpy.
+The same function is utilized in ufs-qcom.
 
---0000000000002de995056e95ac24
-Content-Type: text/plain; charset="UTF-8"
+Elminite compilation warning
+drivers/scsi/ufs/ufshcd.c:356:9: warning: incorrect type in argument 6 (different address spaces)
+drivers/scsi/ufs/ufshcd.c:356:9:    expected void const *buf
+drivers/scsi/ufs/ufshcd.c:356:9:    got void [noderef] <asn:2>*mmio_base
 
-Hi,
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ drivers/scsi/ufs/ufs-qcom.c | 21 ++++++---------------
+ drivers/scsi/ufs/ufshcd.c   | 35 ++++++++++++++++++++++++-----------
+ drivers/scsi/ufs/ufshcd.h   |  3 +++
+ 3 files changed, 33 insertions(+), 26 deletions(-)
 
-Sorry for the mistakes, I'll fix this in v2.
-
-Best,
-Zhouyang
-
-2018-06-13 18:09 GMT+08:00 Finn Thain <fthain@telegraphics.com.au>:
-
-> On Tue, 12 Jun 2018, Zhouyang Jia wrote:
->
-> > When xenbus_printf fails, the lack of error-handling code may
-> > cause unexpected results.
-> >
-> > This patch adds error-handling code after calling xenbus_printf.
-> >
-> > Signed-off-by: Zhouyang Jia <jiazhouyang09@gmail.com>
-> > ---
-> >  drivers/scsi/xen-scsifront.c | 31 ++++++++++++++++++++++++-------
-> >  1 file changed, 24 insertions(+), 7 deletions(-)
-> >
-> > diff --git a/drivers/scsi/xen-scsifront.c b/drivers/scsi/xen-scsifront.c
-> > index 36f59a1..3d858ac 100644
-> > --- a/drivers/scsi/xen-scsifront.c
-> > +++ b/drivers/scsi/xen-scsifront.c
-> > @@ -654,10 +654,17 @@ static int scsifront_dev_reset_handler(struct
-> scsi_cmnd *sc)
-> >  static int scsifront_sdev_configure(struct scsi_device *sdev)
-> >  {
-> >       struct vscsifrnt_info *info = shost_priv(sdev->host);
-> > +     struct xenbus_device *dev = info->dev;
-> > +     int err;
-> >
-> > -     if (info && current == info->curr)
-> > -             xenbus_printf(XBT_NIL, info->dev->nodename,
-> > +     if (info && current == info->curr) {
-> > +             err = xenbus_printf(XBT_NIL, info->dev->nodename,
-> >                             info->dev_state_path, "%d",
-> XenbusStateConnected);
->
-> The existing code checks whether 'info' is NULL before dereferencing it.
-> But your patch checks for NULL after dereferencing.
->
-> > +             if (err) {
-> > +                     dev_err(&dev->dev, "writing dev_state_path\n");
-> > +                     return err;
-> > +             }
-> > +     }
-> >
-> >       return 0;
-> >  }
-> > @@ -665,10 +672,15 @@ static int scsifront_sdev_configure(struct
-> scsi_device *sdev)
-> >  static void scsifront_sdev_destroy(struct scsi_device *sdev)
-> >  {
-> >       struct vscsifrnt_info *info = shost_priv(sdev->host);
-> > +     struct xenbus_device *dev = info->dev;
-> > +     int err;
-> >
-> > -     if (info && current == info->curr)
-> > -             xenbus_printf(XBT_NIL, info->dev->nodename,
-> > +     if (info && current == info->curr) {
-> > +             err = xenbus_printf(XBT_NIL, info->dev->nodename,
-> >                             info->dev_state_path, "%d",
-> XenbusStateClosed);
->
-> Same here.
->
-> > +             if (err)
-> > +                     dev_err(&dev->dev, "writing dev_state_path\n");
-> > +     }
-> >  }
-> >
-> >  static struct scsi_host_template scsifront_sht = {
->
-> --
->
-
---0000000000002de995056e95ac24
-Content-Type: text/html; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-<div dir=3D"ltr">Hi,<div><br></div><div>Sorry for the mistakes, I&#39;ll fi=
-x this in v2.</div><div><br></div><div>Best,</div><div>Zhouyang</div></div>=
-<div class=3D"gmail_extra"><br><div class=3D"gmail_quote">2018-06-13 18:09 =
-GMT+08:00 Finn Thain <span dir=3D"ltr">&lt;<a href=3D"mailto:fthain@telegra=
-phics.com.au" target=3D"_blank">fthain@telegraphics.com.au</a>&gt;</span>:<=
-br><blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left=
-:1px #ccc solid;padding-left:1ex"><span class=3D"">On Tue, 12 Jun 2018, Zho=
-uyang Jia wrote:<br>
-<br>
-&gt; When xenbus_printf fails, the lack of error-handling code may<br>
-&gt; cause unexpected results.<br>
-&gt; <br>
-&gt; This patch adds error-handling code after calling xenbus_printf.<br>
-&gt; <br>
-&gt; Signed-off-by: Zhouyang Jia &lt;<a href=3D"mailto:jiazhouyang09@gmail.=
-com">jiazhouyang09@gmail.com</a>&gt;<br>
-&gt; ---<br>
-&gt;=C2=A0 drivers/scsi/xen-scsifront.c | 31 ++++++++++++++++++++++++------=
-<wbr>-<br>
-&gt;=C2=A0 1 file changed, 24 insertions(+), 7 deletions(-)<br>
-&gt; <br>
-&gt; diff --git a/drivers/scsi/xen-scsifront.c b/drivers/scsi/xen-scsifront=
-.c<br>
-&gt; index 36f59a1..3d858ac 100644<br>
-&gt; --- a/drivers/scsi/xen-scsifront.c<br>
-&gt; +++ b/drivers/scsi/xen-scsifront.c<br>
-&gt; @@ -654,10 +654,17 @@ static int scsifront_dev_reset_handler(<wbr>stru=
-ct scsi_cmnd *sc)<br>
-&gt;=C2=A0 static int scsifront_sdev_configure(<wbr>struct scsi_device *sde=
-v)<br>
-&gt;=C2=A0 {<br>
-&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0struct vscsifrnt_info *info =3D shost_priv(s=
-dev-&gt;host);<br>
-&gt; +=C2=A0 =C2=A0 =C2=A0struct xenbus_device *dev =3D info-&gt;dev;<br>
-&gt; +=C2=A0 =C2=A0 =C2=A0int err;<br>
-&gt;=C2=A0 <br>
-&gt; -=C2=A0 =C2=A0 =C2=A0if (info &amp;&amp; current =3D=3D info-&gt;curr)=
-<br>
-&gt; -=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0xenbus_printf(XBT_NIL=
-, info-&gt;dev-&gt;nodename,<br>
-&gt; +=C2=A0 =C2=A0 =C2=A0if (info &amp;&amp; current =3D=3D info-&gt;curr)=
- {<br>
-&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0err =3D xenbus_printf=
-(XBT_NIL, info-&gt;dev-&gt;nodename,<br>
-&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0info-&gt;dev_state_path, &quot;%d&quot;, =
-XenbusStateConnected);<br>
-<br>
-</span>The existing code checks whether &#39;info&#39; is NULL before deref=
-erencing it. <br>
-But your patch checks for NULL after dereferencing.<br>
-<span class=3D""><br>
-&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0if (err) {<br>
-&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0dev_err(&amp;dev-&gt;dev, &quot;writing dev_state_path\n&quot;);<br>
-&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0return err;<br>
-&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0}<br>
-&gt; +=C2=A0 =C2=A0 =C2=A0}<br>
-&gt;=C2=A0 <br>
-&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0return 0;<br>
-&gt;=C2=A0 }<br>
-&gt; @@ -665,10 +672,15 @@ static int scsifront_sdev_configure(<wbr>struct =
-scsi_device *sdev)<br>
-&gt;=C2=A0 static void scsifront_sdev_destroy(struct scsi_device *sdev)<br>
-&gt;=C2=A0 {<br>
-&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0struct vscsifrnt_info *info =3D shost_priv(s=
-dev-&gt;host);<br>
-&gt; +=C2=A0 =C2=A0 =C2=A0struct xenbus_device *dev =3D info-&gt;dev;<br>
-&gt; +=C2=A0 =C2=A0 =C2=A0int err;<br>
-&gt;=C2=A0 <br>
-&gt; -=C2=A0 =C2=A0 =C2=A0if (info &amp;&amp; current =3D=3D info-&gt;curr)=
-<br>
-&gt; -=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0xenbus_printf(XBT_NIL=
-, info-&gt;dev-&gt;nodename,<br>
-&gt; +=C2=A0 =C2=A0 =C2=A0if (info &amp;&amp; current =3D=3D info-&gt;curr)=
- {<br>
-&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0err =3D xenbus_printf=
-(XBT_NIL, info-&gt;dev-&gt;nodename,<br>
-&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0info-&gt;dev_state_path, &quot;%d&quot;, =
-XenbusStateClosed);<br>
-<br>
-</span>Same here.<br>
-<span class=3D""><br>
-&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0if (err)<br>
-&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0dev_err(&amp;dev-&gt;dev, &quot;writing dev_state_path\n&quot;);<br>
-&gt; +=C2=A0 =C2=A0 =C2=A0}<br>
-&gt;=C2=A0 }<br>
-&gt;=C2=A0 <br>
-&gt;=C2=A0 static struct scsi_host_template scsifront_sht =3D {<br>
-<br>
-</span>-- <br>
-</blockquote></div><br></div>
-
---0000000000002de995056e95ac24--
-
-
---===============0657474434808553686==
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Content-Transfer-Encoding: base64
-Content-Disposition: inline
-
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KWGVuLWRldmVs
-IG1haWxpbmcgbGlzdApYZW4tZGV2ZWxAbGlzdHMueGVucHJvamVjdC5vcmcKaHR0cHM6Ly9saXN0
-cy54ZW5wcm9qZWN0Lm9yZy9tYWlsbWFuL2xpc3RpbmZvL3hlbi1kZXZlbA==
-
---===============0657474434808553686==--
+diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+index 2b38db2eeafa..77ac98ea80d4 100644
+--- a/drivers/scsi/ufs/ufs-qcom.c
++++ b/drivers/scsi/ufs/ufs-qcom.c
+@@ -50,19 +50,10 @@ static void ufs_qcom_get_default_testbus_cfg(struct ufs_qcom_host *host);
+ static int ufs_qcom_set_dme_vs_core_clk_ctrl_clear_div(struct ufs_hba *hba,
+ 						       u32 clk_cycles);
+ 
+-static void ufs_qcom_dump_regs(struct ufs_hba *hba, int offset, int len,
+-		char *prefix)
+-{
+-	print_hex_dump(KERN_ERR, prefix,
+-			len > 4 ? DUMP_PREFIX_OFFSET : DUMP_PREFIX_NONE,
+-			16, 4, (void __force *)hba->mmio_base + offset,
+-			len * 4, false);
+-}
+-
+ static void ufs_qcom_dump_regs_wrapper(struct ufs_hba *hba, int offset, int len,
+-		char *prefix, void *priv)
++				       const char *prefix, void *priv)
+ {
+-	ufs_qcom_dump_regs(hba, offset, len, prefix);
++	ufshcd_dump_regs(hba, offset, len * 4, prefix);
+ }
+ 
+ static int ufs_qcom_get_connected_tx_lanes(struct ufs_hba *hba, u32 *tx_lanes)
+@@ -1431,7 +1422,7 @@ static int ufs_qcom_clk_scale_notify(struct ufs_hba *hba,
+ 
+ static void ufs_qcom_print_hw_debug_reg_all(struct ufs_hba *hba,
+ 		void *priv, void (*print_fn)(struct ufs_hba *hba,
+-		int offset, int num_regs, char *str, void *priv))
++		int offset, int num_regs, const char *str, void *priv))
+ {
+ 	u32 reg;
+ 	struct ufs_qcom_host *host;
+@@ -1613,7 +1604,7 @@ int ufs_qcom_testbus_config(struct ufs_qcom_host *host)
+ 
+ static void ufs_qcom_testbus_read(struct ufs_hba *hba)
+ {
+-	ufs_qcom_dump_regs(hba, UFS_TEST_BUS, 1, "UFS_TEST_BUS ");
++	ufshcd_dump_regs(hba, UFS_TEST_BUS, 4, "UFS_TEST_BUS ");
+ }
+ 
+ static void ufs_qcom_print_unipro_testbus(struct ufs_hba *hba)
+@@ -1639,8 +1630,8 @@ static void ufs_qcom_print_unipro_testbus(struct ufs_hba *hba)
+ 
+ static void ufs_qcom_dump_dbg_regs(struct ufs_hba *hba)
+ {
+-	ufs_qcom_dump_regs(hba, REG_UFS_SYS1CLK_1US, 16,
+-			"HCI Vendor Specific Registers ");
++	ufshcd_dump_regs(hba, REG_UFS_SYS1CLK_1US, 16 * 4,
++			 "HCI Vendor Specific Registers ");
+ 
+ 	/* sleep a bit intermittently as we are dumping too much data */
+ 	ufs_qcom_print_hw_debug_reg_all(hba, NULL, ufs_qcom_dump_regs_wrapper);
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index d0a1674915a1..972fa85e2b24 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -99,8 +99,29 @@
+ 		_ret;                                                   \
+ 	})
+ 
+-#define ufshcd_hex_dump(prefix_str, buf, len) \
+-print_hex_dump(KERN_ERR, prefix_str, DUMP_PREFIX_OFFSET, 16, 4, buf, len, false)
++#define ufshcd_hex_dump(prefix_str, buf, len) do {                       \
++	size_t __len = (len);                                            \
++	print_hex_dump(KERN_ERR, prefix_str,                             \
++		       __len > 4 ? DUMP_PREFIX_OFFSET : DUMP_PREFIX_NONE,\
++		       16, 4, buf, __len, false);                        \
++} while (0)
++
++int ufshcd_dump_regs(struct ufs_hba *hba, size_t offset, size_t len,
++		     const char *prefix)
++{
++	u8 *regs;
++
++	regs = kzalloc(len, GFP_KERNEL);
++	if (!regs)
++		return -ENOMEM;
++
++	memcpy_fromio(regs, hba->mmio_base + offset, len);
++	ufshcd_hex_dump(prefix, regs, len);
++	kfree(regs);
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(ufshcd_dump_regs);
+ 
+ enum {
+ 	UFSHCD_MAX_CHANNEL	= 0,
+@@ -376,15 +397,7 @@ static void ufshcd_print_uic_err_hist(struct ufs_hba *hba,
+ 
+ static void ufshcd_print_host_regs(struct ufs_hba *hba)
+ {
+-	/*
+-	 * hex_dump reads its data without the readl macro. This might
+-	 * cause inconsistency issues on some platform, as the printed
+-	 * values may be from cache and not the most recent value.
+-	 * To know whether you are looking at an un-cached version verify
+-	 * that IORESOURCE_MEM flag is on when xxx_get_resource() is invoked
+-	 * during platform/pci probe function.
+-	 */
+-	ufshcd_hex_dump("host regs: ", hba->mmio_base, UFSHCI_REG_SPACE_SIZE);
++	ufshcd_dump_regs(hba, 0, UFSHCI_REG_SPACE_SIZE, "host_regs: ");
+ 	dev_err(hba->dev, "hba->ufs_version = 0x%x, hba->capabilities = 0x%x\n",
+ 		hba->ufs_version, hba->capabilities);
+ 	dev_err(hba->dev,
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 8110dcd04d22..aad959ba3d9b 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -1022,4 +1022,7 @@ static inline u8 ufshcd_scsi_to_upiu_lun(unsigned int scsi_lun)
+ 		return scsi_lun & UFS_UPIU_MAX_UNIT_NUM_ID;
+ }
+ 
++int ufshcd_dump_regs(struct ufs_hba *hba, size_t offset, size_t len,
++		     const char *prefix);
++
+ #endif /* End of Header */
+-- 
+2.14.4
