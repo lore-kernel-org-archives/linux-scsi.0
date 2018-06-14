@@ -1,63 +1,44 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] block: fix bsg_unregister and bsg_open race
-Date: Thu, 14 Jun 2018 10:38:06 +0200
-Message-ID: <20180614083806.GA18966@lst.de>
-References: <20180613221417.GA22778@xldev-tmpl.dev.purestorage.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Zhouyang Jia <jiazhouyang09@gmail.com>
+Subject: [PATCH v2] pcmcia: add error handling for pcmcia_enable_device
+Date: Thu, 14 Jun 2018 17:23:25 +0800
+Message-ID: <1528968207-48671-1-git-send-email-jiazhouyang09@gmail.com>
+References: <1528694152-31724-1-git-send-email-jiazhouyang09@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20180613221417.GA22778@xldev-tmpl.dev.purestorage.com>
+In-Reply-To: <1528694152-31724-1-git-send-email-jiazhouyang09@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Anatoliy Glagolev <glagolig@gmail.com>
-Cc: linux-block@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, linux-kernel@vger.kernel.org
+Cc: Zhouyang Jia <jiazhouyang09@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Johannes Thumshirn <jthumshirn@suse.de>, Hannes Reinecke <hare@suse.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Jun 13, 2018 at 04:14:18PM -0600, Anatoliy Glagolev wrote:
-> The existing implementation allows races between bsg_unregister and
-> bsg_open paths. bsg_ungegister and request_queue cleanup and
-> deletion may start and complete right after bsg_get_device (in bsg_open path)
-> retrieves bsg_class_device and releases the mutex. Then bsg_open path
-> touches freed memory of bsg_class_device and request_queue.
-> 
-> One possible fix is to hold the mutex all the way through bsg_get_device
-> instead of releasing it after bsg_class_device retrieval.
+When pcmcia_enable_device fails, the lack of error-handling code may
+cause unexpected results.
 
-This looks generally fine to me.  Nitpicks below:
+This patch adds error-handling code after calling pcmcia_enable_device.
 
-> @@ -746,16 +745,18 @@ static struct bsg_device *bsg_get_device(struct inode *inode, struct file *file)
->  	 */
->  	mutex_lock(&bsg_mutex);
->  	bcd = idr_find(&bsg_minor_idr, iminor(inode));
-> -	mutex_unlock(&bsg_mutex);
->  
->  	if (!bcd)
->  		return ERR_PTR(-ENODEV);
+Signed-off-by: Zhouyang Jia <jiazhouyang09@gmail.com>
+---
+v1->v2:
+- Remove pcmcia_disable_device.
+---
+ drivers/scsi/pcmcia/qlogic_stub.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-This needs to unlock the mutex. E.g.
-
-	if (!bcd) {
-		bd = ERR_PTR(-ENODEV);
-		goto out_unlock;
-	}
-
-
->  	bd = __bsg_get_device(iminor(inode), bcd->queue);
-> +	if (bd) {
-> +		mutex_unlock(&bsg_mutex);
->  		return bd;
-> +	}
->  
->  	bd = bsg_add_device(inode, bcd->queue, file);
-> +	mutex_unlock(&bsg_mutex);
->  
->  	return bd;
-
-I'd simply do:
-
-	bd = __bsg_get_device(iminor(inode), bcd->queue);
-	if (!bd)
-		bd = bsg_add_device(inode, bcd->queue, file);
-out_unlock:
-	mutex_unlock(&bsg_mutex);
-	return bd;
+diff --git a/drivers/scsi/pcmcia/qlogic_stub.c b/drivers/scsi/pcmcia/qlogic_stub.c
+index 0556054..eb2c8bf 100644
+--- a/drivers/scsi/pcmcia/qlogic_stub.c
++++ b/drivers/scsi/pcmcia/qlogic_stub.c
+@@ -254,8 +254,12 @@ static void qlogic_release(struct pcmcia_device *link)
+ static int qlogic_resume(struct pcmcia_device *link)
+ {
+ 	scsi_info_t *info = link->priv;
++	int ret;
++
++	ret = pcmcia_enable_device(link);
++	if (ret)
++		return -ENODEV;
+ 
+-	pcmcia_enable_device(link);
+ 	if ((info->manf_id == MANFID_MACNICA) ||
+ 	    (info->manf_id == MANFID_PIONEER) ||
+ 	    (info->manf_id == 0x0098)) {
+-- 
+2.7.4
