@@ -1,148 +1,25 @@
-From: Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH resend] scsi: ufs: ufshcd_dump_regs to use memcpy_fromio
-Date: Thu, 14 Jun 2018 11:14:09 +0300
-Message-ID: <20180614081409.29780-1-tomas.winkler@intel.com>
+From: "hch@lst.de" <hch@lst.de>
+Subject: Re: kernel BUG at drivers/scsi/scsi_error.c:197! - git
+        4.17.0-x64-08428-g7d3bf613e99a
+Date: Thu, 14 Jun 2018 10:32:52 +0200
+Message-ID: <20180614083252.GA18536@lst.de>
+References: <201806091606.51078.randrianasulu@gmail.com> <025bf705-15b0-65e5-4b16-6c91d41c1730@infradead.org> <40617b19667b3c1302f8a903c19f2fa2f409b12a.camel@wdc.com> <5ca74fb7-af70-31c3-0e3f-bace058e5a57@oracle.com> <20180613140411.GA32701@lst.de> <09e8bd7605febd091679172d68ca1e9ca3990c91.camel@wdc.com> <20180613143558.GA1163@lst.de> <77932f7b-08ba-7ece-3778-d7da82772057@oracle.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <77932f7b-08ba-7ece-3778-d7da82772057@oracle.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Adrian Hunter <adrian.hunter@intel.com>
-Cc: Christoph Hellwig <hch@lst.de>, Vivek Gautam <vivek.gautam@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, Alex Lemberg <Alex.Lemberg@wdc.com>, Avri Altman <Avri.Altman@wdc.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Tomas Winkler <tomas.winkler@intel.com>
+To: "jianchao.wang" <jianchao.w.wang@oracle.com>
+Cc: "hch@lst.de" <hch@lst.de>, Bart Van Assche <Bart.VanAssche@wdc.com>, "randrianasulu@gmail.com" <randrianasulu@gmail.com>, "rdunlap@infradead.org" <rdunlap@infradead.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-ufshcd_dump_regs should use memcpy_fromio to read host registers
-instead of directly accessing using memcpy.
-The same function is utilized in ufs-qcom.
+On Thu, Jun 14, 2018 at 03:49:28PM +0800, jianchao.wang wrote:
+> Yes, it will work for this issue.
+> But we should also clear the RQF_TIMED_OUT in __blk_mq_requeue_request and blk_mq_rq_ctx_init.
 
-Elminite compilation warning
-drivers/scsi/ufs/ufshcd.c:356:9: warning: incorrect type in argument 6 (different address spaces)
-drivers/scsi/ufs/ufshcd.c:356:9:    expected void const *buf
-drivers/scsi/ufs/ufshcd.c:356:9:    got void [noderef] <asn:2>*mmio_base
+blk_mq_rq_ctx_init always clears rq_flags, so we don't need to explcitly
+clear it.
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- drivers/scsi/ufs/ufs-qcom.c | 21 ++++++---------------
- drivers/scsi/ufs/ufshcd.c   | 35 ++++++++++++++++++++++++-----------
- drivers/scsi/ufs/ufshcd.h   |  3 +++
- 3 files changed, 33 insertions(+), 26 deletions(-)
-
-diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-index 2b38db2eeafa..77ac98ea80d4 100644
---- a/drivers/scsi/ufs/ufs-qcom.c
-+++ b/drivers/scsi/ufs/ufs-qcom.c
-@@ -50,19 +50,10 @@ static void ufs_qcom_get_default_testbus_cfg(struct ufs_qcom_host *host);
- static int ufs_qcom_set_dme_vs_core_clk_ctrl_clear_div(struct ufs_hba *hba,
- 						       u32 clk_cycles);
- 
--static void ufs_qcom_dump_regs(struct ufs_hba *hba, int offset, int len,
--		char *prefix)
--{
--	print_hex_dump(KERN_ERR, prefix,
--			len > 4 ? DUMP_PREFIX_OFFSET : DUMP_PREFIX_NONE,
--			16, 4, (void __force *)hba->mmio_base + offset,
--			len * 4, false);
--}
--
- static void ufs_qcom_dump_regs_wrapper(struct ufs_hba *hba, int offset, int len,
--		char *prefix, void *priv)
-+				       const char *prefix, void *priv)
- {
--	ufs_qcom_dump_regs(hba, offset, len, prefix);
-+	ufshcd_dump_regs(hba, offset, len * 4, prefix);
- }
- 
- static int ufs_qcom_get_connected_tx_lanes(struct ufs_hba *hba, u32 *tx_lanes)
-@@ -1431,7 +1422,7 @@ static int ufs_qcom_clk_scale_notify(struct ufs_hba *hba,
- 
- static void ufs_qcom_print_hw_debug_reg_all(struct ufs_hba *hba,
- 		void *priv, void (*print_fn)(struct ufs_hba *hba,
--		int offset, int num_regs, char *str, void *priv))
-+		int offset, int num_regs, const char *str, void *priv))
- {
- 	u32 reg;
- 	struct ufs_qcom_host *host;
-@@ -1613,7 +1604,7 @@ int ufs_qcom_testbus_config(struct ufs_qcom_host *host)
- 
- static void ufs_qcom_testbus_read(struct ufs_hba *hba)
- {
--	ufs_qcom_dump_regs(hba, UFS_TEST_BUS, 1, "UFS_TEST_BUS ");
-+	ufshcd_dump_regs(hba, UFS_TEST_BUS, 4, "UFS_TEST_BUS ");
- }
- 
- static void ufs_qcom_print_unipro_testbus(struct ufs_hba *hba)
-@@ -1639,8 +1630,8 @@ static void ufs_qcom_print_unipro_testbus(struct ufs_hba *hba)
- 
- static void ufs_qcom_dump_dbg_regs(struct ufs_hba *hba)
- {
--	ufs_qcom_dump_regs(hba, REG_UFS_SYS1CLK_1US, 16,
--			"HCI Vendor Specific Registers ");
-+	ufshcd_dump_regs(hba, REG_UFS_SYS1CLK_1US, 16 * 4,
-+			 "HCI Vendor Specific Registers ");
- 
- 	/* sleep a bit intermittently as we are dumping too much data */
- 	ufs_qcom_print_hw_debug_reg_all(hba, NULL, ufs_qcom_dump_regs_wrapper);
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index d0a1674915a1..972fa85e2b24 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -99,8 +99,29 @@
- 		_ret;                                                   \
- 	})
- 
--#define ufshcd_hex_dump(prefix_str, buf, len) \
--print_hex_dump(KERN_ERR, prefix_str, DUMP_PREFIX_OFFSET, 16, 4, buf, len, false)
-+#define ufshcd_hex_dump(prefix_str, buf, len) do {                       \
-+	size_t __len = (len);                                            \
-+	print_hex_dump(KERN_ERR, prefix_str,                             \
-+		       __len > 4 ? DUMP_PREFIX_OFFSET : DUMP_PREFIX_NONE,\
-+		       16, 4, buf, __len, false);                        \
-+} while (0)
-+
-+int ufshcd_dump_regs(struct ufs_hba *hba, size_t offset, size_t len,
-+		     const char *prefix)
-+{
-+	u8 *regs;
-+
-+	regs = kzalloc(len, GFP_KERNEL);
-+	if (!regs)
-+		return -ENOMEM;
-+
-+	memcpy_fromio(regs, hba->mmio_base + offset, len);
-+	ufshcd_hex_dump(prefix, regs, len);
-+	kfree(regs);
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(ufshcd_dump_regs);
- 
- enum {
- 	UFSHCD_MAX_CHANNEL	= 0,
-@@ -376,15 +397,7 @@ static void ufshcd_print_uic_err_hist(struct ufs_hba *hba,
- 
- static void ufshcd_print_host_regs(struct ufs_hba *hba)
- {
--	/*
--	 * hex_dump reads its data without the readl macro. This might
--	 * cause inconsistency issues on some platform, as the printed
--	 * values may be from cache and not the most recent value.
--	 * To know whether you are looking at an un-cached version verify
--	 * that IORESOURCE_MEM flag is on when xxx_get_resource() is invoked
--	 * during platform/pci probe function.
--	 */
--	ufshcd_hex_dump("host regs: ", hba->mmio_base, UFSHCI_REG_SPACE_SIZE);
-+	ufshcd_dump_regs(hba, 0, UFSHCI_REG_SPACE_SIZE, "host_regs: ");
- 	dev_err(hba->dev, "hba->ufs_version = 0x%x, hba->capabilities = 0x%x\n",
- 		hba->ufs_version, hba->capabilities);
- 	dev_err(hba->dev,
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 8110dcd04d22..aad959ba3d9b 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -1022,4 +1022,7 @@ static inline u8 ufshcd_scsi_to_upiu_lun(unsigned int scsi_lun)
- 		return scsi_lun & UFS_UPIU_MAX_UNIT_NUM_ID;
- }
- 
-+int ufshcd_dump_regs(struct ufs_hba *hba, size_t offset, size_t len,
-+		     const char *prefix);
-+
- #endif /* End of Header */
--- 
-2.14.4
+__blk_mq_requeue_request probablys needs it so that we handle the
+case of requeuing from the error handling indeed.
