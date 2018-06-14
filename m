@@ -1,86 +1,51 @@
-From: "sayali" <sayalil@codeaurora.org>
-Subject: RE: [PATCH V2 3/3] scsi: ufs: Add sysfs support for ufs provision
-Date: Thu, 14 Jun 2018 17:22:01 +0530
-Message-ID: <000301d403d6$1ed2e790$5c78b6b0$@codeaurora.org>
-References: <1528455990-24572-1-git-send-email-sayalil@codeaurora.org> <1528455990-24572-4-git-send-email-sayalil@codeaurora.org> <20180609072454.GH24148@kroah.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+From: Zhouyang Jia <jiazhouyang09@gmail.com>
+Subject: [PATCH v2] scsi: bfa: add error handling for pci_iomap
+Date: Thu, 14 Jun 2018 19:57:39 +0800
+Message-ID: <1528977459-52285-1-git-send-email-jiazhouyang09@gmail.com>
+References: <1528705581-34646-1-git-send-email-jiazhouyang09@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180609072454.GH24148@kroah.com>
-Content-Language: en-us
+In-Reply-To: <1528705581-34646-1-git-send-email-jiazhouyang09@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: 'Greg Kroah-Hartman' <gregkh@linuxfoundation.org>
-Cc: subhashj@codeaurora.org, cang@codeaurora.org, vivek.gautam@codeaurora.org, rnayak@codeaurora.org, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, asutoshd@codeaurora.org, evgreen@chromium.org, linux-scsi@vger.kernel.org, 'Stanislav Nijnikov' <stanislav.nijnikov@wdc.com>, 'Adrian Hunter' <adrian.hunter@intel.com>, 'open list' <linux-kernel@vger.kernel.org>
+Cc: Zhouyang Jia <jiazhouyang09@gmail.com>, Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
------Original Message-----
-From: Greg Kroah-Hartman [mailto:gregkh@linuxfoundation.org] 
-Sent: Saturday, June 09, 2018 12:55 PM
-To: Sayali Lokhande <sayalil@codeaurora.org>
-Cc: subhashj@codeaurora.org; cang@codeaurora.org;
-vivek.gautam@codeaurora.org; rnayak@codeaurora.org; vinholikatti@gmail.com;
-jejb@linux.vnet.ibm.com; martin.petersen@oracle.com;
-asutoshd@codeaurora.org; evgreen@chromium.org; linux-scsi@vger.kernel.org;
-Stanislav Nijnikov <stanislav.nijnikov@wdc.com>; Adrian Hunter
-<adrian.hunter@intel.com>; open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH V2 3/3] scsi: ufs: Add sysfs support for ufs provision
+When pci_iomap fails, the lack of error-handling code may
+cause unexpected results.
 
-On Fri, Jun 08, 2018 at 04:36:30PM +0530, Sayali Lokhande wrote:
-> Add sysfs support to trigger ufs provisioning at runtime.
-> Usage : echo <desc_buf> > /sys/bus/platform/drivers/*/
-> 	config_descriptor/ufs_provision
-> To check provisioning status:
-> cat /sys/bus/platform/drivers/*/config_descriptor/ufs_provision
-> 1- > Success (Reboot device to check updated provisioning)
-> 
-> Signed-off-by: Sayali Lokhande <sayalil@codeaurora.org>
-> ---
->  Documentation/ABI/testing/sysfs-driver-ufs |  16 ++++
->  drivers/scsi/ufs/ufs-sysfs.c               |  25 ++++++
->  drivers/scsi/ufs/ufs.h                     |   2 +
->  drivers/scsi/ufs/ufshcd.c                  | 128
-+++++++++++++++++++++++++++++
->  drivers/scsi/ufs/ufshcd.h                  |   5 ++
->  5 files changed, 176 insertions(+)
-> 
-> diff --git a/Documentation/ABI/testing/sysfs-driver-ufs 
-> b/Documentation/ABI/testing/sysfs-driver-ufs
-> index 016724e..43419b5 100644
-> --- a/Documentation/ABI/testing/sysfs-driver-ufs
-> +++ b/Documentation/ABI/testing/sysfs-driver-ufs
-> @@ -883,3 +883,19 @@ Contact:	Subhash Jadavani <subhashj@codeaurora.org>
->  Description:	This entry shows the target state of an UFS UIC link
->  		for the chosen system power management level.
->  		The file is read only.
-> +
-> +What:
-/sys/bus/platform/drivers/ufshcd/*/config_descriptor/ufs_provision
-> +Date:		February 2018
-> +Contact:	Sayali Lokhande <sayalil@codeaurora.org>
-> +Description:	This file shows the status of runtime ufs provisioning.
-> +		This can be used to provision ufs device if bConfigDescrLock
-is 0.
-> +		Configuration buffer needs to be written in space separated
-format
-> +		specificied as:
-> +		echo <bNumberLU> <bBootEnable> <bDescrAccessEn>
-<bInitPowerMode>
-> +		<bHighPriorityLUN> <bSecureRemovalType>
-<bInitActiveICCLevel>
-> +		<wPeriodicRTCUpdate> <bConfigDescrLock> <LUNum> <bLUEnable>
-> +		<bBootLunID> <size_in_kb> <bDataReliability>
-<bLUWriteProtect>
-> +		<bMemoryType> <bLogicalBlockSize> <bProvisioningType>
-> +		<wContextCapabilities> > ufs_provision
+This patch adds error-handling code after calling pci_iomap.
 
-That's crazy big, please use configfs for this if you really want to
-"provision" hardware with a new api.  That is what configfs was created for,
-do not abuse sysfs like this, it is not a "single" value.
-[Sayali] Sure. I will check and update my next patchset accordingly to use
-configfs for provisioning at runtime.
+Signed-off-by: Zhouyang Jia <jiazhouyang09@gmail.com>
+---
+v1->v2:
+- Unmap bfad->pci_bar0_kva.
+---
+ drivers/scsi/bfa/bfad.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-thanks,
-
-greg k-h
+diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
+index bd7e6a6f..693e180 100644
+--- a/drivers/scsi/bfa/bfad.c
++++ b/drivers/scsi/bfa/bfad.c
+@@ -760,6 +760,11 @@ bfad_pci_init(struct pci_dev *pdev, struct bfad_s *bfad)
+ 		goto out_release_region;
+ 	}
+ 
++	if (bfad->pci_bar2_kva == NULL) {
++		printk(KERN_ERR "Fail to map bar2\n");
++		goto out_unmap_bar0;
++	}
++
+ 	bfad->hal_pcidev.pci_slot = PCI_SLOT(pdev->devfn);
+ 	bfad->hal_pcidev.pci_func = PCI_FUNC(pdev->devfn);
+ 	bfad->hal_pcidev.pci_bar_kva = bfad->pci_bar0_kva;
+@@ -797,6 +802,8 @@ bfad_pci_init(struct pci_dev *pdev, struct bfad_s *bfad)
+ 
+ 	return 0;
+ 
++out_unmap_bar0:
++	pci_iounmap(pdev, bfad->pci_bar0_kva);
+ out_release_region:
+ 	pci_release_regions(pdev);
+ out_disable_device:
+-- 
+2.7.4
