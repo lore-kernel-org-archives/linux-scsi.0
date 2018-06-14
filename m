@@ -1,105 +1,221 @@
-From: "jianchao.wang" <jianchao.w.wang@oracle.com>
-Subject: Re: kernel BUG at drivers/scsi/scsi_error.c:197! - git
- 4.17.0-x64-08428-g7d3bf613e99a
-Date: Thu, 14 Jun 2018 15:49:28 +0800
-Message-ID: <77932f7b-08ba-7ece-3778-d7da82772057@oracle.com>
-References: <201806091606.51078.randrianasulu@gmail.com>
- <025bf705-15b0-65e5-4b16-6c91d41c1730@infradead.org>
- <40617b19667b3c1302f8a903c19f2fa2f409b12a.camel@wdc.com>
- <5ca74fb7-af70-31c3-0e3f-bace058e5a57@oracle.com>
- <20180613140411.GA32701@lst.de>
- <09e8bd7605febd091679172d68ca1e9ca3990c91.camel@wdc.com>
- <20180613143558.GA1163@lst.de>
+From: Zhouyang Jia <jiazhouyang09@gmail.com>
+Subject: Re: [PATCH] scsi: xen-scsifront: add error handling for
+ xenbus_printf
+Date: Thu, 14 Jun 2018 16:13:21 +0800
+Message-ID: <CABb2TxJCd9Q0KUeeqZ_CZ-HwmkAVoktDLxq0TrThM2rFe4jePQ@mail.gmail.com>
+References: <1528774962-39173-1-git-send-email-jiazhouyang09@gmail.com>
+ <alpine.LNX.2.21.1806132002180.45@nippy.intranet>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180613143558.GA1163@lst.de>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: "hch@lst.de" <hch@lst.de>, Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: "randrianasulu@gmail.com" <randrianasulu@gmail.com>, "rdunlap@infradead.org" <rdunlap@infradead.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
+Content-Type: multipart/mixed; boundary="===============0657474434808553686=="
+Return-path: <xen-devel-bounces@lists.xenproject.org>
+In-Reply-To: <alpine.LNX.2.21.1806132002180.45@nippy.intranet>
+List-Unsubscribe: <https://lists.xenproject.org/mailman/options/xen-devel>,
+ <mailto:xen-devel-request@lists.xenproject.org?subject=unsubscribe>
+List-Post: <mailto:xen-devel@lists.xenproject.org>
+List-Help: <mailto:xen-devel-request@lists.xenproject.org?subject=help>
+List-Subscribe: <https://lists.xenproject.org/mailman/listinfo/xen-devel>,
+ <mailto:xen-devel-request@lists.xenproject.org?subject=subscribe>
+Errors-To: xen-devel-bounces@lists.xenproject.org
+Sender: "Xen-devel" <xen-devel-bounces@lists.xenproject.org>
+To: Finn Thain <fthain@telegraphics.com.au>
+Cc: Juergen Gross <jgross@suse.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xen-devel@lists.xenproject.org, Boris Ostrovsky <boris.ostrovsky@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Christoph
+--===============0657474434808553686==
+Content-Type: multipart/alternative; boundary="0000000000002de995056e95ac24"
 
-On 06/13/2018 10:35 PM, hch@lst.de wrote:
-> On Wed, Jun 13, 2018 at 02:08:12PM +0000, Bart Van Assche wrote:
->> __blk_mq_complete_request() is already called today by blk_mq_complete_request().
->> However, it's not clear to me why that function is exported by Jianchao's patch.
-> 
-> True.  I had missed that the patch also started calling the new
-> mark_rq_complete function from the error handler.
-> 
->> The SCSI error handler already waits until all pending requests have finished
->> before it starts handling timed out commands. This e-mail thread started with a
->> report of a crash in the SCSI error handler, which is a regression introduced in
->> the v4.18 merge window.
-> 
-> ut-requests-again-that-are-in-the.patch
-> Yeah.  I've read back a bit.  If your theory of a double invocation of
-> the timeout handler is correct something like the patch below should sort
-> it out, right?
+--0000000000002de995056e95ac24
+Content-Type: text/plain; charset="UTF-8"
 
-Yes, it will work for this issue.
-But we should also clear the RQF_TIMED_OUT in __blk_mq_requeue_request and blk_mq_rq_ctx_init.
+Hi,
 
-Thanks
-Jianchao
+Sorry for the mistakes, I'll fix this in v2.
 
-> 
-> ---
->>From d408928360f087c0ad24e31d1d25533c698b8b35 Mon Sep 17 00:00:00 2001
-> From: Christoph Hellwig <hch@lst.de>
-> Date: Wed, 13 Jun 2018 16:25:40 +0200
-> Subject: blk-mq: don't time out requests again that are in the timeout handler
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  block/blk-mq.c         | 4 ++++
->  include/linux/blkdev.h | 2 ++
->  2 files changed, 6 insertions(+)
-> 
-> diff --git a/block/blk-mq.c b/block/blk-mq.c
-> index e9da5e6a8526..8a2895fed078 100644
-> --- a/block/blk-mq.c
-> +++ b/block/blk-mq.c
-> @@ -770,6 +770,7 @@ EXPORT_SYMBOL(blk_mq_tag_to_rq);
->  
->  static void blk_mq_rq_timed_out(struct request *req, bool reserved)
->  {
-> +	req->rq_flags |= RQF_TIMED_OUT;
->  	if (req->q->mq_ops->timeout) {
->  		enum blk_eh_timer_return ret;
->  
-> @@ -779,6 +780,7 @@ static void blk_mq_rq_timed_out(struct request *req, bool reserved)
->  		WARN_ON_ONCE(ret != BLK_EH_RESET_TIMER);
->  	}
->  
-> +	req->rq_flags &= ~RQF_TIMED_OUT;
->  	blk_add_timer(req);
->  }
->  
-> @@ -788,6 +790,8 @@ static bool blk_mq_req_expired(struct request *rq, unsigned long *next)
->  
->  	if (blk_mq_rq_state(rq) != MQ_RQ_IN_FLIGHT)
->  		return false;
-> +	if (rq->rq_flags & RQF_TIMED_OUT)
-> +		return false;
->  
->  	deadline = blk_rq_deadline(rq);
->  	if (time_after_eq(jiffies, deadline))
-> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-> index bca3a92eb55f..fa6f11751430 100644
-> --- a/include/linux/blkdev.h
-> +++ b/include/linux/blkdev.h
-> @@ -127,6 +127,8 @@ typedef __u32 __bitwise req_flags_t;
->  #define RQF_ZONE_WRITE_LOCKED	((__force req_flags_t)(1 << 19))
->  /* already slept for hybrid poll */
->  #define RQF_MQ_POLL_SLEPT	((__force req_flags_t)(1 << 20))
-> +/* ->timeout has been called, don't expire again */
-> +#define RQF_TIMED_OUT		((__force req_flags_t)(1 << 21))
->  
->  /* flags that prevent us from merging requests: */
->  #define RQF_NOMERGE_FLAGS \
-> 
+Best,
+Zhouyang
+
+2018-06-13 18:09 GMT+08:00 Finn Thain <fthain@telegraphics.com.au>:
+
+> On Tue, 12 Jun 2018, Zhouyang Jia wrote:
+>
+> > When xenbus_printf fails, the lack of error-handling code may
+> > cause unexpected results.
+> >
+> > This patch adds error-handling code after calling xenbus_printf.
+> >
+> > Signed-off-by: Zhouyang Jia <jiazhouyang09@gmail.com>
+> > ---
+> >  drivers/scsi/xen-scsifront.c | 31 ++++++++++++++++++++++++-------
+> >  1 file changed, 24 insertions(+), 7 deletions(-)
+> >
+> > diff --git a/drivers/scsi/xen-scsifront.c b/drivers/scsi/xen-scsifront.c
+> > index 36f59a1..3d858ac 100644
+> > --- a/drivers/scsi/xen-scsifront.c
+> > +++ b/drivers/scsi/xen-scsifront.c
+> > @@ -654,10 +654,17 @@ static int scsifront_dev_reset_handler(struct
+> scsi_cmnd *sc)
+> >  static int scsifront_sdev_configure(struct scsi_device *sdev)
+> >  {
+> >       struct vscsifrnt_info *info = shost_priv(sdev->host);
+> > +     struct xenbus_device *dev = info->dev;
+> > +     int err;
+> >
+> > -     if (info && current == info->curr)
+> > -             xenbus_printf(XBT_NIL, info->dev->nodename,
+> > +     if (info && current == info->curr) {
+> > +             err = xenbus_printf(XBT_NIL, info->dev->nodename,
+> >                             info->dev_state_path, "%d",
+> XenbusStateConnected);
+>
+> The existing code checks whether 'info' is NULL before dereferencing it.
+> But your patch checks for NULL after dereferencing.
+>
+> > +             if (err) {
+> > +                     dev_err(&dev->dev, "writing dev_state_path\n");
+> > +                     return err;
+> > +             }
+> > +     }
+> >
+> >       return 0;
+> >  }
+> > @@ -665,10 +672,15 @@ static int scsifront_sdev_configure(struct
+> scsi_device *sdev)
+> >  static void scsifront_sdev_destroy(struct scsi_device *sdev)
+> >  {
+> >       struct vscsifrnt_info *info = shost_priv(sdev->host);
+> > +     struct xenbus_device *dev = info->dev;
+> > +     int err;
+> >
+> > -     if (info && current == info->curr)
+> > -             xenbus_printf(XBT_NIL, info->dev->nodename,
+> > +     if (info && current == info->curr) {
+> > +             err = xenbus_printf(XBT_NIL, info->dev->nodename,
+> >                             info->dev_state_path, "%d",
+> XenbusStateClosed);
+>
+> Same here.
+>
+> > +             if (err)
+> > +                     dev_err(&dev->dev, "writing dev_state_path\n");
+> > +     }
+> >  }
+> >
+> >  static struct scsi_host_template scsifront_sht = {
+>
+> --
+>
+
+--0000000000002de995056e95ac24
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr">Hi,<div><br></div><div>Sorry for the mistakes, I&#39;ll fi=
+x this in v2.</div><div><br></div><div>Best,</div><div>Zhouyang</div></div>=
+<div class=3D"gmail_extra"><br><div class=3D"gmail_quote">2018-06-13 18:09 =
+GMT+08:00 Finn Thain <span dir=3D"ltr">&lt;<a href=3D"mailto:fthain@telegra=
+phics.com.au" target=3D"_blank">fthain@telegraphics.com.au</a>&gt;</span>:<=
+br><blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left=
+:1px #ccc solid;padding-left:1ex"><span class=3D"">On Tue, 12 Jun 2018, Zho=
+uyang Jia wrote:<br>
+<br>
+&gt; When xenbus_printf fails, the lack of error-handling code may<br>
+&gt; cause unexpected results.<br>
+&gt; <br>
+&gt; This patch adds error-handling code after calling xenbus_printf.<br>
+&gt; <br>
+&gt; Signed-off-by: Zhouyang Jia &lt;<a href=3D"mailto:jiazhouyang09@gmail.=
+com">jiazhouyang09@gmail.com</a>&gt;<br>
+&gt; ---<br>
+&gt;=C2=A0 drivers/scsi/xen-scsifront.c | 31 ++++++++++++++++++++++++------=
+<wbr>-<br>
+&gt;=C2=A0 1 file changed, 24 insertions(+), 7 deletions(-)<br>
+&gt; <br>
+&gt; diff --git a/drivers/scsi/xen-scsifront.c b/drivers/scsi/xen-scsifront=
+.c<br>
+&gt; index 36f59a1..3d858ac 100644<br>
+&gt; --- a/drivers/scsi/xen-scsifront.c<br>
+&gt; +++ b/drivers/scsi/xen-scsifront.c<br>
+&gt; @@ -654,10 +654,17 @@ static int scsifront_dev_reset_handler(<wbr>stru=
+ct scsi_cmnd *sc)<br>
+&gt;=C2=A0 static int scsifront_sdev_configure(<wbr>struct scsi_device *sde=
+v)<br>
+&gt;=C2=A0 {<br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0struct vscsifrnt_info *info =3D shost_priv(s=
+dev-&gt;host);<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0struct xenbus_device *dev =3D info-&gt;dev;<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0int err;<br>
+&gt;=C2=A0 <br>
+&gt; -=C2=A0 =C2=A0 =C2=A0if (info &amp;&amp; current =3D=3D info-&gt;curr)=
+<br>
+&gt; -=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0xenbus_printf(XBT_NIL=
+, info-&gt;dev-&gt;nodename,<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0if (info &amp;&amp; current =3D=3D info-&gt;curr)=
+ {<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0err =3D xenbus_printf=
+(XBT_NIL, info-&gt;dev-&gt;nodename,<br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0info-&gt;dev_state_path, &quot;%d&quot;, =
+XenbusStateConnected);<br>
+<br>
+</span>The existing code checks whether &#39;info&#39; is NULL before deref=
+erencing it. <br>
+But your patch checks for NULL after dereferencing.<br>
+<span class=3D""><br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0if (err) {<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0dev_err(&amp;dev-&gt;dev, &quot;writing dev_state_path\n&quot;);<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0return err;<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0}<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0}<br>
+&gt;=C2=A0 <br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0return 0;<br>
+&gt;=C2=A0 }<br>
+&gt; @@ -665,10 +672,15 @@ static int scsifront_sdev_configure(<wbr>struct =
+scsi_device *sdev)<br>
+&gt;=C2=A0 static void scsifront_sdev_destroy(struct scsi_device *sdev)<br>
+&gt;=C2=A0 {<br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0struct vscsifrnt_info *info =3D shost_priv(s=
+dev-&gt;host);<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0struct xenbus_device *dev =3D info-&gt;dev;<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0int err;<br>
+&gt;=C2=A0 <br>
+&gt; -=C2=A0 =C2=A0 =C2=A0if (info &amp;&amp; current =3D=3D info-&gt;curr)=
+<br>
+&gt; -=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0xenbus_printf(XBT_NIL=
+, info-&gt;dev-&gt;nodename,<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0if (info &amp;&amp; current =3D=3D info-&gt;curr)=
+ {<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0err =3D xenbus_printf=
+(XBT_NIL, info-&gt;dev-&gt;nodename,<br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0info-&gt;dev_state_path, &quot;%d&quot;, =
+XenbusStateClosed);<br>
+<br>
+</span>Same here.<br>
+<span class=3D""><br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0if (err)<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0dev_err(&amp;dev-&gt;dev, &quot;writing dev_state_path\n&quot;);<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0}<br>
+&gt;=C2=A0 }<br>
+&gt;=C2=A0 <br>
+&gt;=C2=A0 static struct scsi_host_template scsifront_sht =3D {<br>
+<br>
+</span>-- <br>
+</blockquote></div><br></div>
+
+--0000000000002de995056e95ac24--
+
+
+--===============0657474434808553686==
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: base64
+Content-Disposition: inline
+
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KWGVuLWRldmVs
+IG1haWxpbmcgbGlzdApYZW4tZGV2ZWxAbGlzdHMueGVucHJvamVjdC5vcmcKaHR0cHM6Ly9saXN0
+cy54ZW5wcm9qZWN0Lm9yZy9tYWlsbWFuL2xpc3RpbmZvL3hlbi1kZXZlbA==
+
+--===============0657474434808553686==--
