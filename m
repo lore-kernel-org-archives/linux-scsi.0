@@ -1,44 +1,34 @@
-From: Zhouyang Jia <jiazhouyang09@gmail.com>
-Subject: [PATCH v2] pcmcia: add error handling for pcmcia_enable_device
-Date: Thu, 14 Jun 2018 17:23:25 +0800
-Message-ID: <1528968207-48671-1-git-send-email-jiazhouyang09@gmail.com>
-References: <1528694152-31724-1-git-send-email-jiazhouyang09@gmail.com>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Subject: Re: [PATCH v2] pcmcia: add error handling for pcmcia_enable_device
+Date: Thu, 14 Jun 2018 12:39:37 +0300
+Message-ID: <CAHp75Vf7tbfR5eN4JN2Dph_2qzA=eU2r3S5BfRLH6=vN1+U6ng@mail.gmail.com>
+References: <1528694152-31724-1-git-send-email-jiazhouyang09@gmail.com> <1528968207-48671-1-git-send-email-jiazhouyang09@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1528694152-31724-1-git-send-email-jiazhouyang09@gmail.com>
+In-Reply-To: <1528968207-48671-1-git-send-email-jiazhouyang09@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-Cc: Zhouyang Jia <jiazhouyang09@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Johannes Thumshirn <jthumshirn@suse.de>, Hannes Reinecke <hare@suse.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Zhouyang Jia <jiazhouyang09@gmail.com>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Johannes Thumshirn <jthumshirn@suse.de>, Hannes Reinecke <hare@suse.com>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-When pcmcia_enable_device fails, the lack of error-handling code may
-cause unexpected results.
+On Thu, Jun 14, 2018 at 12:23 PM, Zhouyang Jia <jiazhouyang09@gmail.com> wrote:
+> When pcmcia_enable_device fails, the lack of error-handling code may
+> cause unexpected results.
 
-This patch adds error-handling code after calling pcmcia_enable_device.
+What results?
+You need to elaborate this.,
 
-Signed-off-by: Zhouyang Jia <jiazhouyang09@gmail.com>
----
-v1->v2:
-- Remove pcmcia_disable_device.
----
- drivers/scsi/pcmcia/qlogic_stub.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+> This patch adds error-handling code after calling pcmcia_enable_device.
 
-diff --git a/drivers/scsi/pcmcia/qlogic_stub.c b/drivers/scsi/pcmcia/qlogic_stub.c
-index 0556054..eb2c8bf 100644
---- a/drivers/scsi/pcmcia/qlogic_stub.c
-+++ b/drivers/scsi/pcmcia/qlogic_stub.c
-@@ -254,8 +254,12 @@ static void qlogic_release(struct pcmcia_device *link)
- static int qlogic_resume(struct pcmcia_device *link)
- {
- 	scsi_info_t *info = link->priv;
-+	int ret;
-+
-+	ret = pcmcia_enable_device(link);
-+	if (ret)
-+		return -ENODEV;
- 
--	pcmcia_enable_device(link);
- 	if ((info->manf_id == MANFID_MACNICA) ||
- 	    (info->manf_id == MANFID_PIONEER) ||
- 	    (info->manf_id == 0x0098)) {
+> +       int ret;
+> +
+> +       ret = pcmcia_enable_device(link);
+> +       if (ret)
+> +               return -ENODEV;
+
+And why not to return ret?
+
 -- 
-2.7.4
+With Best Regards,
+Andy Shevchenko
