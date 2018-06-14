@@ -1,92 +1,184 @@
-From: Rob Herring <robh@kernel.org>
-Subject: Re: [PATCH V2 1/3] scsi: ufs: set the device reference clock setting
-Date: Thu, 14 Jun 2018 08:29:20 -0600
-Message-ID: <CAL_JsqLsdEGEjPo8yh5dGoGWTes41QxUiJ4NN0Q9qsgLBaTpjw@mail.gmail.com>
-References: <1528455990-24572-1-git-send-email-sayalil@codeaurora.org>
- <1528455990-24572-2-git-send-email-sayalil@codeaurora.org>
- <20180612192636.GA31725@rob-hp-laptop> <000101d403d3$87210d20$95632760$@codeaurora.org>
+From: Avri Altman <Avri.Altman@wdc.com>
+Subject: RE: [PATCH resend] scsi: ufs: ufshcd_dump_regs to use memcpy_fromio
+Date: Thu, 14 Jun 2018 14:48:31 +0000
+Message-ID: <DM5PR04MB10851A8650A68E5FD1229227FC7D0@DM5PR04MB1085.namprd04.prod.outlook.com>
+References: <20180614081409.29780-1-tomas.winkler@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <000101d403d3$87210d20$95632760$@codeaurora.org>
+In-Reply-To: <20180614081409.29780-1-tomas.winkler@intel.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: sayali <sayalil@codeaurora.org>
-Cc: Subhash Jadavani <subhashj@codeaurora.org>, Can Guo <cang@codeaurora.org>, Vivek Gautam <vivek.gautam@codeaurora.org>, Rajendra Nayak <rnayak@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, asutoshd@codeaurora.org, Evan Green <evgreen@chromium.org>, linux-scsi@vger.kernel.org, Mark Rutland <mark.rutland@arm.com>, Mathieu Malaterre <malat@debian.org>, "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" <devicetree@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+To: Tomas Winkler <tomas.winkler@intel.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Adrian Hunter <adrian.hunter@intel.com>
+Cc: Christoph Hellwig <hch@lst.de>, Vivek Gautam <vivek.gautam@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, Alex Lemberg <Alex.Lemberg@wdc.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Jun 14, 2018 at 5:33 AM, sayali <sayalil@codeaurora.org> wrote:
-> Comment inline.
->
-> Thanks,
-> Sayali
+
+
 > -----Original Message-----
-> From: Rob Herring [mailto:robh@kernel.org]
-> Sent: Wednesday, June 13, 2018 12:57 AM
-> To: Sayali Lokhande <sayalil@codeaurora.org>
-> Cc: subhashj@codeaurora.org; cang@codeaurora.org;
-> vivek.gautam@codeaurora.org; rnayak@codeaurora.org; vinholikatti@gmail.com;
-> jejb@linux.vnet.ibm.com; martin.petersen@oracle.com;
-> asutoshd@codeaurora.org; evgreen@chromium.org; linux-scsi@vger.kernel.org;
-> Mark Rutland <mark.rutland@arm.com>; Mathieu Malaterre <malat@debian.org>;
-> open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS
-> <devicetree@vger.kernel.org>; open list <linux-kernel@vger.kernel.org>
-> Subject: Re: [PATCH V2 1/3] scsi: ufs: set the device reference clock
-> setting
->
-> On Fri, Jun 08, 2018 at 04:36:28PM +0530, Sayali Lokhande wrote:
->> From: Subhash Jadavani <subhashj@codeaurora.org>
->>
->> UFS host supplies the reference clock to UFS device and UFS device
->> specification allows host to provide one of the 4 frequencies (19.2
->> MHz,
->> 26 MHz, 38.4 MHz, 52 MHz) for reference clock. Host should set the
->> device reference clock frequency setting in the device based on what
->> frequency it is supplying to UFS device.
->>
->> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
->> Signed-off-by: Can Guo <cang@codeaurora.org>
->> Signed-off-by: Sayali Lokhande <sayalil@codeaurora.org>
->> ---
->>  .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      |  7 +++
->>  drivers/scsi/ufs/ufs.h                             |  9 ++++
->>  drivers/scsi/ufs/ufshcd-pltfrm.c                   | 24 ++++++++++
->>  drivers/scsi/ufs/ufshcd.c                          | 52
-> ++++++++++++++++++++++
->>  drivers/scsi/ufs/ufshcd.h                          |  1 +
->>  5 files changed, 93 insertions(+)
->>
->> diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
->> b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
->> index c39dfef..4522434 100644
->> --- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
->> +++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
->> @@ -41,6 +41,12 @@ Optional properties:
->>  -lanes-per-direction : number of lanes available per direction - either 1
-> or 2.
->>                         Note that it is assume same number of lanes is
-> used both
->>                         directions at once. If not specified, default is 2
-> lanes per direction.
->> +- dev-ref-clk-freq   : Specify the device reference clock frequency, must
-> be one of the following:
->> +                       0: 19.2 MHz
->> +                       1: 26 MHz
->> +                       2: 38.4 MHz
->> +                       3: 52 MHz
->> +                       Defaults to 26 MHz if not specified.
->
-> I must have misunderstood your last response. I thought you could handle
-> things without DT. If not, my question remains.
-> [Sayali]: Ref clk frequency setting could vary from
-> platfrom-to-platform(vendor specific). Hence we need to pass it via DT.
->         Currently in DT we do not set/mention any ref clk frequency
-> parameter. Hence I have added one new DT entry to configure
->         required ref clk freq.
+> From: Tomas Winkler <tomas.winkler@intel.com>
+> Sent: Thursday, June 14, 2018 11:14 AM
+> To: James E . J . Bottomley <jejb@linux.vnet.ibm.com>; Martin K . Peterse=
+n
+> <martin.petersen@oracle.com>; Vinayak Holikatti
+> <vinholikatti@gmail.com>; Adrian Hunter <adrian.hunter@intel.com>
+> Cc: Christoph Hellwig <hch@lst.de>; Vivek Gautam
+> <vivek.gautam@codeaurora.org>; Subhash Jadavani
+> <subhashj@codeaurora.org>; Alex Lemberg <Alex.Lemberg@wdc.com>; Avri
+> Altman <Avri.Altman@wdc.com>; linux-scsi@vger.kernel.org; linux-
+> kernel@vger.kernel.org; Tomas Winkler <tomas.winkler@intel.com>
+> Subject: [PATCH resend] scsi: ufs: ufshcd_dump_regs to use memcpy_fromio
+>=20
+> ufshcd_dump_regs should use memcpy_fromio to read host registers instead
+> of directly accessing using memcpy.
+> The same function is utilized in ufs-qcom.
+>=20
+> Elminite compilation warning
+> drivers/scsi/ufs/ufshcd.c:356:9: warning: incorrect type in argument 6
+> (different address spaces)
+> drivers/scsi/ufs/ufshcd.c:356:9:    expected void const *buf
+> drivers/scsi/ufs/ufshcd.c:356:9:    got void [noderef] <asn:2>*mmio_base
+>=20
+> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Reviewed-by: Avri Altman <avri.altman@wdc.com>
 
-The clocks property contains "ref_clk". Is that not the same clock?
-Why can't you read what that frequency is? Or you need to be able to
-change it to a specific frequency? These all look like typical
-oscillator frequencies, so I wouldn't expect you could change them
-(other than divide by 2 maybe).
-
-Rob
+> ---
+>  drivers/scsi/ufs/ufs-qcom.c | 21 ++++++---------------
+>  drivers/scsi/ufs/ufshcd.c   | 35 ++++++++++++++++++++++++-----------
+>  drivers/scsi/ufs/ufshcd.h   |  3 +++
+>  3 files changed, 33 insertions(+), 26 deletions(-)
+>=20
+> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c in=
+dex
+> 2b38db2eeafa..77ac98ea80d4 100644
+> --- a/drivers/scsi/ufs/ufs-qcom.c
+> +++ b/drivers/scsi/ufs/ufs-qcom.c
+> @@ -50,19 +50,10 @@ static void ufs_qcom_get_default_testbus_cfg(struct
+> ufs_qcom_host *host);  static int
+> ufs_qcom_set_dme_vs_core_clk_ctrl_clear_div(struct ufs_hba *hba,
+>  						       u32 clk_cycles);
+>=20
+> -static void ufs_qcom_dump_regs(struct ufs_hba *hba, int offset, int len,
+> -		char *prefix)
+> -{
+> -	print_hex_dump(KERN_ERR, prefix,
+> -			len > 4 ? DUMP_PREFIX_OFFSET :
+> DUMP_PREFIX_NONE,
+> -			16, 4, (void __force *)hba->mmio_base + offset,
+> -			len * 4, false);
+> -}
+> -
+>  static void ufs_qcom_dump_regs_wrapper(struct ufs_hba *hba, int offset,
+> int len,
+> -		char *prefix, void *priv)
+> +				       const char *prefix, void *priv)
+>  {
+> -	ufs_qcom_dump_regs(hba, offset, len, prefix);
+> +	ufshcd_dump_regs(hba, offset, len * 4, prefix);
+>  }
+>=20
+>  static int ufs_qcom_get_connected_tx_lanes(struct ufs_hba *hba, u32
+> *tx_lanes) @@ -1431,7 +1422,7 @@ static int
+> ufs_qcom_clk_scale_notify(struct ufs_hba *hba,
+>=20
+>  static void ufs_qcom_print_hw_debug_reg_all(struct ufs_hba *hba,
+>  		void *priv, void (*print_fn)(struct ufs_hba *hba,
+> -		int offset, int num_regs, char *str, void *priv))
+> +		int offset, int num_regs, const char *str, void *priv))
+>  {
+>  	u32 reg;
+>  	struct ufs_qcom_host *host;
+> @@ -1613,7 +1604,7 @@ int ufs_qcom_testbus_config(struct
+> ufs_qcom_host *host)
+>=20
+>  static void ufs_qcom_testbus_read(struct ufs_hba *hba)  {
+> -	ufs_qcom_dump_regs(hba, UFS_TEST_BUS, 1, "UFS_TEST_BUS ");
+> +	ufshcd_dump_regs(hba, UFS_TEST_BUS, 4, "UFS_TEST_BUS ");
+>  }
+>=20
+>  static void ufs_qcom_print_unipro_testbus(struct ufs_hba *hba) @@ -
+> 1639,8 +1630,8 @@ static void ufs_qcom_print_unipro_testbus(struct
+> ufs_hba *hba)
+>=20
+>  static void ufs_qcom_dump_dbg_regs(struct ufs_hba *hba)  {
+> -	ufs_qcom_dump_regs(hba, REG_UFS_SYS1CLK_1US, 16,
+> -			"HCI Vendor Specific Registers ");
+> +	ufshcd_dump_regs(hba, REG_UFS_SYS1CLK_1US, 16 * 4,
+> +			 "HCI Vendor Specific Registers ");
+>=20
+>  	/* sleep a bit intermittently as we are dumping too much data */
+>  	ufs_qcom_print_hw_debug_reg_all(hba, NULL,
+> ufs_qcom_dump_regs_wrapper); diff --git a/drivers/scsi/ufs/ufshcd.c
+> b/drivers/scsi/ufs/ufshcd.c index d0a1674915a1..972fa85e2b24 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -99,8 +99,29 @@
+>  		_ret;                                                   \
+>  	})
+>=20
+> -#define ufshcd_hex_dump(prefix_str, buf, len) \ -
+> print_hex_dump(KERN_ERR, prefix_str, DUMP_PREFIX_OFFSET, 16, 4, buf,
+> len, false)
+> +#define ufshcd_hex_dump(prefix_str, buf, len) do {                      =
+ \
+> +	size_t __len =3D (len);                                            \
+> +	print_hex_dump(KERN_ERR, prefix_str,                             \
+> +		       __len > 4 ? DUMP_PREFIX_OFFSET :
+> DUMP_PREFIX_NONE,\
+> +		       16, 4, buf, __len, false);                        \
+> +} while (0)
+> +
+> +int ufshcd_dump_regs(struct ufs_hba *hba, size_t offset, size_t len,
+> +		     const char *prefix)
+> +{
+> +	u8 *regs;
+> +
+> +	regs =3D kzalloc(len, GFP_KERNEL);
+> +	if (!regs)
+> +		return -ENOMEM;
+> +
+> +	memcpy_fromio(regs, hba->mmio_base + offset, len);
+> +	ufshcd_hex_dump(prefix, regs, len);
+> +	kfree(regs);
+> +
+> +	return 0;
+> +}
+> +EXPORT_SYMBOL_GPL(ufshcd_dump_regs);
+>=20
+>  enum {
+>  	UFSHCD_MAX_CHANNEL	=3D 0,
+> @@ -376,15 +397,7 @@ static void ufshcd_print_uic_err_hist(struct ufs_hba
+> *hba,
+>=20
+>  static void ufshcd_print_host_regs(struct ufs_hba *hba)  {
+> -	/*
+> -	 * hex_dump reads its data without the readl macro. This might
+> -	 * cause inconsistency issues on some platform, as the printed
+> -	 * values may be from cache and not the most recent value.
+> -	 * To know whether you are looking at an un-cached version verify
+> -	 * that IORESOURCE_MEM flag is on when xxx_get_resource() is
+> invoked
+> -	 * during platform/pci probe function.
+> -	 */
+> -	ufshcd_hex_dump("host regs: ", hba->mmio_base,
+> UFSHCI_REG_SPACE_SIZE);
+> +	ufshcd_dump_regs(hba, 0, UFSHCI_REG_SPACE_SIZE, "host_regs: ");
+>  	dev_err(hba->dev, "hba->ufs_version =3D 0x%x, hba->capabilities =3D
+> 0x%x\n",
+>  		hba->ufs_version, hba->capabilities);
+>  	dev_err(hba->dev,
+> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h index
+> 8110dcd04d22..aad959ba3d9b 100644
+> --- a/drivers/scsi/ufs/ufshcd.h
+> +++ b/drivers/scsi/ufs/ufshcd.h
+> @@ -1022,4 +1022,7 @@ static inline u8 ufshcd_scsi_to_upiu_lun(unsigned
+> int scsi_lun)
+>  		return scsi_lun & UFS_UPIU_MAX_UNIT_NUM_ID;  }
+>=20
+> +int ufshcd_dump_regs(struct ufs_hba *hba, size_t offset, size_t len,
+> +		     const char *prefix);
+> +
+>  #endif /* End of Header */
+> --
+> 2.14.4
