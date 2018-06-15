@@ -1,34 +1,48 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH V2 1/3] scsi: ufs: set the device reference clock setting
-Date: Fri, 15 Jun 2018 20:58:49 +0000
-Message-ID: <a097db0b6a48533ceb6d45f1857e7068c905369c.camel@wdc.com>
-References: <1528455990-24572-1-git-send-email-sayalil@codeaurora.org>
-         <1528455990-24572-2-git-send-email-sayalil@codeaurora.org>
-         <20180612192636.GA31725@rob-hp-laptop>
-         <000101d403d3$87210d20$95632760$@codeaurora.org>
-         <33eec86a35248e5b20f15bb568641b9affcc0a9b.camel@wdc.com>
-         <95985.1529095054@turing-police.cc.vt.edu>
-         <347237a7f32b79aa516aa285700396052a69ccf8.camel@wdc.com>
-         <204056.1529096002@turing-police.cc.vt.edu>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+From: Evan Green <evgreen@chromium.org>
+Subject: [PATCH v2 0/4] Enable UFS provisioning via Linux
+Date: Fri, 15 Jun 2018 14:00:45 -0700
+Message-ID: <20180615210049.126123-1-evgreen@chromium.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <204056.1529096002@turing-police.cc.vt.edu>
-Content-Language: en-US
-Content-ID: <DD7FF7FFAD4D2C4BB71EF952B7EB00D6@namprd04.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "valdis.kletnieks@vt.edu" <valdis.kletnieks@vt.edu>
-Cc: "vinholikatti@gmail.com" <vinholikatti@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>, "sayalil@codeaurora.org" <sayalil@codeaurora.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "evgreen@chromium.org" <evgreen@chromium.org>, "cang@codeaurora.org" <cang@codeaurora.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "subhashj@codeaurora.org" <subhashj@codeaurora.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "mark.rutland@arm.com" <mark.rutland@arm.com>, "robh@kernel.org" <robh@kernel.org>, "vivek.gautam@codeaurora.org" <vivek.gautam@codeaurora.org>, "rnayak@codeaurora.org" <rnayak@codeaurora.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>
+To: Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Stanislav Nijnikov <stanislav.nijnikov@wdc.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Bart Van Assche <Bart.VanAssche@wdc.com>, Adrian Hunter <adrian.hunter@intel.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: Evan Green <evgreen@chromium.org>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gRnJpLCAyMDE4LTA2LTE1IGF0IDE2OjUzIC0wNDAwLCB2YWxkaXMua2xldG5pZWtzQHZ0LmVk
-dSB3cm90ZToNCj4gT24gRnJpLCAxNSBKdW4gMjAxOCAyMDo0Mjo0MSAtMDAwMCwgQmFydCBWYW4g
-QXNzY2hlIHNhaWQ6DQo+ID4gSW4gY2FzZSBJIHdhc24ndCBjbGVhciBlbm91Z2g6IEkgd2FzIHJl
-ZmVycmluZyB0byByZXBseWluZyBpbmxpbmUNCj4gPiAqd2l0aG91dCogcXVvdGluZyB0aGUgb3Jp
-Z2luYWwgbWVzc2FnZS4gVGhhdCBtYWtlcyBhIGNvbnZlcnNhdGlvbg0KPiA+ICpyZWFsbHkqIGhh
-cmQgdG8gZm9sbG93Lg0KPiANCj4gU28gaWYgdGhlcmUncyBubyBxdW90ZWQgbWVzc2FnZSwgd2hh
-dCBpcyB0aGUgaW5saW5lIHJlcGx5IGlubGluZWQgaW50bz8gOikNCg0KSSB3YXMgcmVmZXJyaW5n
-IHRvIHF1b3Rpbmcgd2l0aG91dCBpbmRlbnRpbmcgdGhlIHF1b3RlIHdpdGggIj4gIi4gVGhhdA0K
-c2hvdWxkIGFscmVhZHkgaGF2ZSBiZWVuIGNsZWFyIGlmIHlvdSBoYWQgYSBsb29rIGF0IHRoZSBt
-ZXNzYWdlIEkgY29tcGxhaW5lZA0KYWJvdXQuDQoNCkJhcnQuDQoNCg0KDQo=
+This series enables provisioning UFS devices using the existing sysfs
+interface. This functionality is primarily useful along the assembly
+line, but might also be useful for end users that receive devices that
+aren't locked down.
+
+Changes since v1:
+	- Reworked the interface to show each unit of the config
+descriptor as a separate directory, rather than the previous method I
+had of a file for selecting the unit, and then a common set of files
+that interacted with whichever unit was selected. I did some kobject
+magic to accomplish this. I noticed from Greg KH's reply to Sayali's
+patches [1] that configfs might be the preferred method. Let me know
+if I should abandon this series in favor of Sayali's, with the
+possible exception of "Make sysfs attributes writable".
+	- Squashed documentation changes into their respective code
+changes.
+	- I decided to keep the config descriptor attributes as their
+own files, rather than hiding writes behind device descriptor and unit
+descriptor, as I think that's more future proof and true to the UFS spec.
+
+[1] https://lkml.org/lkml/2018/6/8/210
+
+Evan Green (4):
+  scsi: ufs: Add Configuration Descriptor to sysfs
+  scsi: ufs: Make sysfs attributes writable
+  scsi: ufs: Refactor descriptor read for write
+  scsi: ufs: Enable writing config descriptor
+
+ Documentation/ABI/testing/sysfs-driver-ufs | 156 ++++++++++--
+ drivers/scsi/ufs/ufs-sysfs.c               | 367 +++++++++++++++++++++++++++--
+ drivers/scsi/ufs/ufs-sysfs.h               |   1 +
+ drivers/scsi/ufs/ufs.h                     |  29 +++
+ drivers/scsi/ufs/ufshcd.c                  | 110 ++++++---
+ drivers/scsi/ufs/ufshcd.h                  |  30 ++-
+ 6 files changed, 620 insertions(+), 73 deletions(-)
+
+-- 
+2.13.5
