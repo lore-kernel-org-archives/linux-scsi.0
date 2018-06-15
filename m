@@ -1,85 +1,114 @@
-From: "jianchao.wang" <jianchao.w.wang@oracle.com>
-Subject: Re: [PATCH 1/2] block: export __blk_complete_request
-Date: Fri, 15 Jun 2018 13:10:00 +0800
-Message-ID: <adf25c83-550a-3095-5d8a-c241329a2e3b@oracle.com>
-References: <1529027847-29085-1-git-send-email-jianchao.w.wang@oracle.com>
- <CACVXFVMe4zSvfXfuSn0NFayeQqbmDwBBy1kcso=5iznT6EfpSA@mail.gmail.com>
- <3dd3f82a-5b68-f039-3a8a-7c5fe4e24c3e@oracle.com>
- <e5344293-b0b7-d2e0-f2e7-c0700efdfbe4@oracle.com>
- <CACVXFVMRCM6AvNJjAESbwOeJ_P5AZ+1C-7RfhE9L4u0T=_5h4Q@mail.gmail.com>
- <3970fdc7-52d9-d05b-4118-059d48bf4f2d@oracle.com>
- <CACVXFVMPAdFbX3x-KUjHCQhb_rT6p9ROYHg63aUtEqdbitEaKQ@mail.gmail.com>
- <7a77829a-ba5f-8975-edb0-ffdf25dc71d6@oracle.com>
- <CACVXFVO+GsQHCgoc6GuP1osnWprfeGrsikBgxj49+KiJoOsvBA@mail.gmail.com>
+From: kbuild test robot <lkp@intel.com>
+Subject: Re: [PATCH v3] scsi: xen-scsifront: add error handling for
+ xenbus_printf
+Date: Fri, 15 Jun 2018 13:44:40 +0800
+Message-ID: <201806151305.MldLqVQQ%fengguang.wu@intel.com>
+References: <1529017154-54719-1-git-send-email-jiazhouyang09@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CACVXFVO+GsQHCgoc6GuP1osnWprfeGrsikBgxj49+KiJoOsvBA@mail.gmail.com>
-Content-Language: en-US
+Content-Disposition: inline
+In-Reply-To: <1529017154-54719-1-git-send-email-jiazhouyang09@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Ming Lei <tom.leiming@gmail.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-block <linux-block@vger.kernel.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: linux-scsi-owner@vger.kernel.org
+Cc: kbuild-all@01.org, Zhouyang Jia <jiazhouyang09@gmail.com>, Juergen Gross <jgross@suse.com>, Boris Ostrovsky <boris.ostrovsky@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, xen-devel@lists.xenproject.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Ming
+Hi,
 
-Thanks for your kindly response
+Thank you for the patch! Perhaps something to improve:
 
-On 06/15/2018 12:03 PM, Ming Lei wrote:
-> On Fri, Jun 15, 2018 at 11:26 AM, jianchao.wang
-> <jianchao.w.wang@oracle.com> wrote:
->> Hi Ming
->>
->> On 06/15/2018 11:20 AM, Ming Lei wrote:
->>> On Fri, Jun 15, 2018 at 11:04 AM, jianchao.wang
->>> <jianchao.w.wang@oracle.com> wrote:
->>>> Hi Ming
->>>>
->>>> Thanks for your kindly response.
->>>>
->>>> On 06/15/2018 10:56 AM, Ming Lei wrote:
->>>>>>> IMO, ref-counter is just to fix the blk-mq req life recycle issue.
->>>>>>> It cannot replace the blk_mark_rq_complete which could avoid the race between
->>>>>>> timeout and io completion path.
->>>>>> The .timeout return BLK_EH_DONE doesn't always mean the request has been completed.
->>>>>> Such as scsi-mid layer, its .timeout callback return BLK_EH_DONE but the timed out
->>>>>> request is still in abort or eh process. What if a completion irq come during that ?
->>>>> For blk-mq, it is avoided by the atomic state change in
->>>>> __blk_mq_complete_request(),
->>>>> that is why I mentioned the question in my last reply.
->>>>>
->>>>
->>>> but blk_mq_check_expired doesn't do that.
->>>> do I miss anything ?
->>>
->>> Right, that is the difference between blk-mq and legacy now,
->>
->> Sorry, I cannot follow your point.
->> blk_mq_check_expired doesn't do a atmoc state change from IN-FLIGHT to COMPLETE.
->> __blk_mq_complete_request could still proceed to complete a timed out request
->> which is in scsi abort or eh process. Is it really OK ?
-> > That is the idea of Christoph's patchset of 'complete requests from ->timeout',
+[auto build test WARNING on xen-tip/linux-next]
+[also build test WARNING on v4.17 next-20180614]
+[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
 
-Yes, I used to read that mail thread.
+url:    https://github.com/0day-ci/linux/commits/linux-scsi-owner-vger-kernel-org/scsi-xen-scsifront-add-error-handling-for-xenbus_printf/20180615-070404
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/xen/tip.git linux-next
+reproduce:
+        # apt-get install sparse
+        make ARCH=x86_64 allmodconfig
+        make C=1 CF=-D__CHECK_ENDIAN__
 
-> then drivers need to cover race between timeout and normal completeion.
-> 
-> But at least the request won't be completed twice because of the atomic
-> state change in __blk_mq_complete_request().
 
-Yes
+sparse warnings: (new ones prefixed by >>)
 
-> 
-> So what is your real concern about blk-mq's timeout?
-I concern whether the current drivers have bee ready for taking this task currently.
-At least, for scsi, if I try to trigger timeout and completion path concurrently, system would crash.
-4.17.rc7 or 4.18 with a patch that change state in blk_mq_check_expired will survive.
+   drivers/scsi/xen-scsifront.c:267:21: sparse: expression using sizeof(void)
+   drivers/scsi/xen-scsifront.c:440:33: sparse: expression using sizeof(void)
+   drivers/scsi/xen-scsifront.c:440:33: sparse: expression using sizeof(void)
+   drivers/scsi/xen-scsifront.c:473:33: sparse: expression using sizeof(void)
+   drivers/scsi/xen-scsifront.c:473:33: sparse: expression using sizeof(void)
+   drivers/scsi/xen-scsifront.c:474:33: sparse: expression using sizeof(void)
+   drivers/scsi/xen-scsifront.c:474:33: sparse: expression using sizeof(void)
+>> drivers/scsi/xen-scsifront.c:663:47: sparse: incorrect type in argument 1 (different base types) @@    expected struct xenbus_device *dev @@    got xenbus_device *dev @@
+   drivers/scsi/xen-scsifront.c:663:47:    expected struct xenbus_device *dev
+   drivers/scsi/xen-scsifront.c:663:47:    got struct device *<noident>
+   drivers/scsi/xen-scsifront.c:681:47: sparse: incorrect type in argument 1 (different base types) @@    expected struct xenbus_device *dev @@    got xenbus_device *dev @@
+   drivers/scsi/xen-scsifront.c:681:47:    expected struct xenbus_device *dev
+   drivers/scsi/xen-scsifront.c:681:47:    got struct device *<noident>
+   drivers/scsi/xen-scsifront.c:1022:59: sparse: incorrect type in argument 1 (different base types) @@    expected struct xenbus_device *dev @@    got xenbus_device *dev @@
+   drivers/scsi/xen-scsifront.c:1022:59:    expected struct xenbus_device *dev
+   drivers/scsi/xen-scsifront.c:1022:59:    got struct device *<noident>
+   drivers/scsi/xen-scsifront.c:1042:59: sparse: incorrect type in argument 1 (different base types) @@    expected struct xenbus_device *dev @@    got xenbus_device *dev @@
+   drivers/scsi/xen-scsifront.c:1042:59:    expected struct xenbus_device *dev
+   drivers/scsi/xen-scsifront.c:1042:59:    got struct device *<noident>
+   drivers/scsi/xen-scsifront.c:1063:19: sparse: expression using sizeof(void)
+   drivers/scsi/xen-scsifront.c:1064:19: sparse: expression using sizeof(void)
+   drivers/scsi/xen-scsifront.c:1065:19: sparse: expression using sizeof(void)
+   drivers/scsi/xen-scsifront.c: In function 'scsifront_sdev_configure':
+   drivers/scsi/xen-scsifront.c:663:21: error: passing argument 1 of 'xenbus_dev_error' from incompatible pointer type [-Werror=incompatible-pointer-types]
+       xenbus_dev_error(&info->dev->dev, err,
+                        ^
+   In file included from drivers/scsi/xen-scsifront.c:50:0:
+   include/xen/xenbus.h:224:6: note: expected 'struct xenbus_device *' but argument is of type 'struct device *'
+    void xenbus_dev_error(struct xenbus_device *dev, int err, const char *fmt, ...);
+         ^~~~~~~~~~~~~~~~
+   drivers/scsi/xen-scsifront.c: In function 'scsifront_sdev_destroy':
+   drivers/scsi/xen-scsifront.c:681:21: error: passing argument 1 of 'xenbus_dev_error' from incompatible pointer type [-Werror=incompatible-pointer-types]
+       xenbus_dev_error(&info->dev->dev, err,
+                        ^
+   In file included from drivers/scsi/xen-scsifront.c:50:0:
+   include/xen/xenbus.h:224:6: note: expected 'struct xenbus_device *' but argument is of type 'struct device *'
+    void xenbus_dev_error(struct xenbus_device *dev, int err, const char *fmt, ...);
+         ^~~~~~~~~~~~~~~~
+   drivers/scsi/xen-scsifront.c: In function 'scsifront_do_lun_hotplug':
+   drivers/scsi/xen-scsifront.c:1022:23: error: passing argument 1 of 'xenbus_dev_error' from incompatible pointer type [-Werror=incompatible-pointer-types]
+         xenbus_dev_error(&dev->dev, err,
+                          ^
+   In file included from drivers/scsi/xen-scsifront.c:50:0:
+   include/xen/xenbus.h:224:6: note: expected 'struct xenbus_device *' but argument is of type 'struct device *'
+    void xenbus_dev_error(struct xenbus_device *dev, int err, const char *fmt, ...);
+         ^~~~~~~~~~~~~~~~
+   drivers/scsi/xen-scsifront.c:1042:23: error: passing argument 1 of 'xenbus_dev_error' from incompatible pointer type [-Werror=incompatible-pointer-types]
+         xenbus_dev_error(&dev->dev, err,
+                          ^
+   In file included from drivers/scsi/xen-scsifront.c:50:0:
+   include/xen/xenbus.h:224:6: note: expected 'struct xenbus_device *' but argument is of type 'struct device *'
+    void xenbus_dev_error(struct xenbus_device *dev, int err, const char *fmt, ...);
+         ^~~~~~~~~~~~~~~~
+   cc1: some warnings being treated as errors
 
-Thanks
-jianchao 
+vim +663 drivers/scsi/xen-scsifront.c
 
-> 
-> Thanks,
-> Ming
-> 
+   653	
+   654	static int scsifront_sdev_configure(struct scsi_device *sdev)
+   655	{
+   656		struct vscsifrnt_info *info = shost_priv(sdev->host);
+   657		int err;
+   658	
+   659		if (info && current == info->curr) {
+   660			err = xenbus_printf(XBT_NIL, info->dev->nodename,
+   661				      info->dev_state_path, "%d", XenbusStateConnected);
+   662			if (err) {
+ > 663				xenbus_dev_error(&info->dev->dev, err,
+   664					"%s: writing dev_state_path", __func__);
+   665				return err;
+   666			}
+   667		}
+   668	
+   669		return 0;
+   670	}
+   671	
+
+---
+0-DAY kernel test infrastructure                Open Source Technology Center
+https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
