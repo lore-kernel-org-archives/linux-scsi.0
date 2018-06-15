@@ -1,7 +1,7 @@
 From: Evan Green <evgreen@chromium.org>
-Subject: [PATCH v2 3/4] scsi: ufs: Refactor descriptor read for write
-Date: Fri, 15 Jun 2018 14:00:48 -0700
-Message-ID: <20180615210049.126123-4-evgreen@chromium.org>
+Subject: [PATCH v2 4/4] scsi: ufs: Enable writing config descriptor
+Date: Fri, 15 Jun 2018 14:00:49 -0700
+Message-ID: <20180615210049.126123-5-evgreen@chromium.org>
 References: <20180615210049.126123-1-evgreen@chromium.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20180615210049.126123-1-evgreen@chromium.org>
@@ -10,265 +10,279 @@ To: Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@lin
 Cc: Evan Green <evgreen@chromium.org>
 List-Id: linux-scsi@vger.kernel.org
 
-This change refactors the ufshcd_read_desc_param function into
-one that can both read and write descriptors. Most of the low-level
-plumbing for writing to descriptors was already there, this change
-simply enables that code path, and manages the incoming data buffer
-appropriately.
+This change enables writing to fields of the config descriptor
+via sysfs. It can be used to provision an unprovisioned UFS
+device, or reprovision an unlocked device.
 
 Signed-off-by: Evan Green <evgreen@chromium.org>
 ---
-Changes since v1:
-	- Fail if requesting a region fully outside the descriptor.
-	- Clear the remaining buffer if requesting a region partially
-outside the descriptor.
-	- Add a mutex around the read-modify-write operation as
-suggested by Bart.
-	- Fixed comment style in this function as suggested by Bart.
-	- Refactored error prints to the end of the function, which I
-think addresses the appearance that the function is nested too deeply
-(as it only actually has 3 levels of nesting).
+Changes since v2:
+        - New common _store function, since I'm using kobj_type now.
+        - Tried to make the endianness more explicit as suggested by Bart.
+I opted not to go as far as creating rw_desc_param{16,32} and friends,
+as those would simply turn around and call the generic function, which
+didn't seem all that useful.
 
- drivers/scsi/ufs/ufs-sysfs.c |   4 +-
- drivers/scsi/ufs/ufshcd.c    | 109 +++++++++++++++++++++++++++++++------------
- drivers/scsi/ufs/ufshcd.h    |  15 +++---
- 3 files changed, 90 insertions(+), 38 deletions(-)
+ Documentation/ABI/testing/sysfs-driver-ufs | 17 ------
+ drivers/scsi/ufs/ufs-sysfs.c               | 83 +++++++++++++++++++++++++++++-
+ 2 files changed, 81 insertions(+), 19 deletions(-)
 
+diff --git a/Documentation/ABI/testing/sysfs-driver-ufs b/Documentation/ABI/testing/sysfs-driver-ufs
+index d7477fffe0d1..fef594d912de 100644
+--- a/Documentation/ABI/testing/sysfs-driver-ufs
++++ b/Documentation/ABI/testing/sysfs-driver-ufs
+@@ -244,7 +244,6 @@ Description:	This file shows whether or not the UFS boot feature is enabled.
+ 		This is one of the UFS configuration descriptor parameters.
+ 		More information about the descriptor can be found in the UFS
+ 		2.1 specification.
+-		The file is read only.
+ 
+ What:		/sys/bus/platform/drivers/ufshcd/*/config_descriptor/descriptor_access_enable
+ Date:		May 2018
+@@ -254,7 +253,6 @@ Description:	This file shows whether or not access will be permitted to the
+ 		boot sequence. This is one of the UFS configuration descriptor
+ 		parameters. More information about the descriptor can be found
+ 		in the UFS 2.1 specification.
+-		The file is read only.
+ 
+ What:		/sys/bus/platform/drivers/ufshcd/*/config_descriptor/high_priority_lun
+ Date:		May 2018
+@@ -263,7 +261,6 @@ Description:	This file shows the identifier of the high priority logical
+ 		unit. This is one of the UFS configuration descriptor
+ 		parameters. More information about the descriptor can be found
+ 		in the UFS 2.1 specification.
+-		The file is read only.
+ 
+ What:		/sys/bus/platform/drivers/ufshcd/*/config_descriptor/init_active_icc_level
+ Date:		May 2018
+@@ -272,7 +269,6 @@ Description:	This file shows the ICC level in active mode after device
+ 		initialization or hardware reset. This is one of the UFS
+ 		configuration descriptor parameters. More information about the
+ 		descriptor can be found in the UFS 2.1 specification.
+-		The file is read only.
+ 
+ What:		/sys/bus/platform/drivers/ufshcd/*/config_descriptor/initial_power_mode
+ Date:		May 2018
+@@ -281,7 +277,6 @@ Description:	This file shows the power mode after device initialization or
+ 		hardware reset. This is one of the UFS configuration descriptor
+ 		parameters. More information about the descriptor can be found
+ 		in the UFS 2.1 specification.
+-		The file is read only.
+ 
+ What:		/sys/bus/platform/drivers/ufshcd/*/config_descriptor/number_of_luns
+ Date:		May 2018
+@@ -290,7 +285,6 @@ Description:	This file shows the number of logical units that the device will
+ 		support. This is one of the UFS configuration descriptor
+ 		parameters. More information about the descriptor can be found
+ 		in the UFS 2.1 specification.
+-		The file is read only.
+ 
+ What:		/sys/bus/platform/drivers/ufshcd/*/config_descriptor/periodic_rtc_update
+ Date:		May 2018
+@@ -299,7 +293,6 @@ Description:	This file shows the frequency and method of real time clock
+ 		updates. This is one of the UFS configuration descriptor
+ 		parameters. More information about the descriptor can be found
+ 		in the UFS 2.1 specification.
+-		The file is read only.
+ 
+ What:		/sys/bus/platform/drivers/ufshcd/*/config_descriptor/secure_removal_type
+ Date:		May 2018
+@@ -308,7 +301,6 @@ Description:	This file shows the secure removal type of the UFS device. This
+ 		is one of the UFS configuration descriptor parameters. More
+ 		information about the descriptor can be found in the UFS 2.1
+ 		specification.
+-		The file is read only.
+ 
+ What:		/sys/bus/platform/drivers/ufshcd/*/config_descriptor/unit*/allocation_units
+ Date:		May 2018
+@@ -317,7 +309,6 @@ Description:	This file shows the number of allocation units assigned to the
+ 		particular logical unit. This is one of the UFS configuration
+ 		unit descriptor parameters. More information about the
+ 		descriptor can be found in the UFS 2.1 specification.
+-		The file is read only.
+ 
+ What:		/sys/bus/platform/drivers/ufshcd/*/config_descriptor/unit*/boot_lun_id
+ Date:		May 2018
+@@ -327,7 +318,6 @@ Description:	This file shows the boot LUN ID for this particular logical
+ 		This is one of the UFS configuration unit descriptor parameters.
+ 		More information about the descriptor can be found in the UFS
+ 		2.1 specification.
+-		The file is read only.
+ 
+ What:		/sys/bus/platform/drivers/ufshcd/*/config_descriptor/unit*/context_capabilities
+ Date:		May 2018
+@@ -336,7 +326,6 @@ Description:	This file shows the context capabilities for the particular
+ 		logical unit. This is one of the UFS configuration unit
+ 		descriptor parameters. More information about the descriptor
+ 		can be found in the UFS 2.1 specification.
+-		The file is read only.
+ 
+ What:		/sys/bus/platform/drivers/ufshcd/*/config_descriptor/unit*/data_reliability
+ Date:		May 2018
+@@ -345,7 +334,6 @@ Description:	This file shows the data reliability for the particular logical
+ 		unit. This is one of the UFS configuration unit descriptor
+ 		parameters. More information about the descriptor can be found
+ 		in the UFS 2.1 specification.
+-		The file is read only.
+ 
+ What:		/sys/bus/platform/drivers/ufshcd/*/config_descriptor/unit*/logical_block_size
+ Date:		May 2018
+@@ -354,7 +342,6 @@ Description:	This file shows the logical block size for the particular
+ 		logical unit as a power of two. This is one of the UFS
+ 		configuration unit descriptor parameters. More information
+ 		about the descriptor can be found in the UFS 2.1 specification.
+-		The file is read only.
+ 
+ What:		/sys/bus/platform/drivers/ufshcd/*/config_descriptor/unit*/lu_enable
+ Date:		May 2018
+@@ -363,7 +350,6 @@ Description:	This file shows whether or not the particular logical unit is
+ 		enabled. This is one of the UFS configuration unit descriptor
+ 		parameters. More information about the descriptor can be found
+ 		in the UFS 2.1 specification.
+-		The file is read only.
+ 
+ What:		/sys/bus/platform/drivers/ufshcd/*/config_descriptor/unit*/lu_write_protect
+ Date:		May 2018
+@@ -372,7 +358,6 @@ Description:	This file shows the write protect status for the particular
+ 		logical unit. This is one of the UFS configuration unit
+ 		descriptor parameters. More information about the descriptor
+ 		can be found in the UFS 2.1 specification.
+-		The file is read only.
+ 
+ What:		/sys/bus/platform/drivers/ufshcd/*/config_descriptor/unit*/memory_type
+ Date:		May 2018
+@@ -381,7 +366,6 @@ Description:	This file shows the memory type for the particular logical unit.
+ 		This is one of the UFS configuration unit descriptor parameters.
+ 		More information about the descriptor can be found in the UFS
+ 		2.1 specification.
+-		The file is read only.
+ 
+ What:		/sys/bus/platform/drivers/ufshcd/*/config_descriptor/unit*/provisioning_type
+ Date:		May 2018
+@@ -390,7 +374,6 @@ Description:	This file shows the provisioning type information for the
+ 		particular logical unit. This is one of the UFS configuration
+ 		uint descriptor parameters. More information about the
+ 		descriptor can be found in the UFS 2.1 specification.
+-		The file is read only.
+ 
+ 
+ What:		/sys/bus/platform/drivers/ufshcd/*/interconnect_descriptor/unipro_version
 diff --git a/drivers/scsi/ufs/ufs-sysfs.c b/drivers/scsi/ufs/ufs-sysfs.c
-index 4726c05bb085..d0365e8bf839 100644
+index d0365e8bf839..9e6e592280bb 100644
 --- a/drivers/scsi/ufs/ufs-sysfs.c
 +++ b/drivers/scsi/ufs/ufs-sysfs.c
-@@ -227,8 +227,8 @@ static ssize_t ufs_sysfs_read_desc_param(struct ufs_hba *hba,
- 	if (param_size > 8)
- 		return -EINVAL;
+@@ -252,6 +252,56 @@ static ssize_t ufs_sysfs_read_desc_param(struct ufs_hba *hba,
+ 	return ret;
+ }
  
--	ret = ufshcd_read_desc_param(hba, desc_id, desc_index,
--				param_offset, desc_buf, param_size);
-+	ret = ufshcd_rw_desc_param(hba, UPIU_QUERY_OPCODE_READ_DESC, desc_id,
-+				desc_index, param_offset, desc_buf, param_size);
- 	if (ret)
- 		return -EINVAL;
- 	switch (param_size) {
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 0baba3fdb112..110157877823 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -3092,22 +3092,24 @@ int ufshcd_map_desc_id_to_length(struct ufs_hba *hba,
- EXPORT_SYMBOL(ufshcd_map_desc_id_to_length);
- 
- /**
-- * ufshcd_read_desc_param - read the specified descriptor parameter
-+ * ufshcd_rw_desc_param - read or write the specified descriptor parameter
-  * @hba: Pointer to adapter instance
-+ * @opcode: indicates whether to read or write
-  * @desc_id: descriptor idn value
-  * @desc_index: descriptor index
-- * @param_offset: offset of the parameter to read
-- * @param_read_buf: pointer to buffer where parameter would be read
-- * @param_size: sizeof(param_read_buf)
-+ * @param_offset: offset of the parameter to read or write
-+ * @param_buf: pointer to buffer to be read or written
-+ * @param_size: sizeof(param_buf)
-  *
-  * Return 0 in case of success, non-zero otherwise
-  */
--int ufshcd_read_desc_param(struct ufs_hba *hba,
--			   enum desc_idn desc_id,
--			   int desc_index,
--			   u8 param_offset,
--			   u8 *param_read_buf,
--			   u8 param_size)
-+int ufshcd_rw_desc_param(struct ufs_hba *hba,
-+			 enum query_opcode opcode,
-+			 enum desc_idn desc_id,
-+			 int desc_index,
-+			 u8 param_offset,
-+			 u8 *param_buf,
-+			 u8 param_size)
- {
- 	int ret;
- 	u8 *desc_buf;
-@@ -3118,7 +3120,8 @@ int ufshcd_read_desc_param(struct ufs_hba *hba,
- 	if (desc_id >= QUERY_DESC_IDN_MAX || !param_size)
- 		return -EINVAL;
- 
--	/* Get the max length of descriptor from structure filled up at probe
-+	/*
-+	 * Get the max length of descriptor from structure filled up at probe
- 	 * time.
- 	 */
- 	ret = ufshcd_map_desc_id_to_length(hba, desc_id, &buff_len);
-@@ -3130,26 +3133,53 @@ int ufshcd_read_desc_param(struct ufs_hba *hba,
- 		return ret;
- 	}
- 
-+	if (param_offset > buff_len)
++static ssize_t ufs_sysfs_write_desc_param(struct ufs_hba *hba,
++				  enum desc_idn desc_id,
++				  u8 desc_index,
++				  u8 param_offset,
++				  const char *buf,
++				  ssize_t buf_size,
++				  u8 width)
++{
++	int ret;
++	unsigned long long value;
++	u8 value8;
++	__be16 value16;
++	__be32 value32;
++	__be64 value64;
++	u8 *valueptr;
++
++	if (kstrtoull(buf, 0, &value))
 +		return -EINVAL;
 +
-+	/* Lock the descriptor mutex to prevent simultaneous changes. */
-+	mutex_lock(&hba->desc_mutex);
++	switch (width) {
++	case 1:
++		value8 = (u8)value;
++		valueptr = &value8;
++		break;
 +
- 	/* Check whether we need temp memory */
- 	if (param_offset != 0 || param_size < buff_len) {
--		desc_buf = kmalloc(buff_len, GFP_KERNEL);
--		if (!desc_buf)
--			return -ENOMEM;
-+		desc_buf = kzalloc(buff_len, GFP_KERNEL);
-+		if (!desc_buf) {
-+			ret = -ENOMEM;
-+			goto out;
-+		}
++	case 2:
++		value16 = cpu_to_be16(value);
++		valueptr = (u8 *)&value16;
++		break;
 +
-+		/*
-+		 * If it's a write, first read the complete descriptor, then
-+		 * copy in the parts being changed.
-+		 */
-+		if (opcode == UPIU_QUERY_OPCODE_WRITE_DESC) {
-+			if (param_offset + param_size > buff_len) {
-+				ret = -EINVAL;
-+				goto out;
-+			}
++	case 4:
++		value32 = cpu_to_be32(value);
++		valueptr = (u8 *)&value32;
++		break;
 +
-+			ret = ufshcd_query_descriptor_retry(hba,
-+						UPIU_QUERY_OPCODE_READ_DESC,
-+						desc_id, desc_index, 0,
-+						desc_buf, &buff_len);
-+
-+			if (ret)
-+				goto out;
-+
-+			memcpy(desc_buf + param_offset, param_buf, param_size);
-+		}
-+
- 	} else {
--		desc_buf = param_read_buf;
-+		desc_buf = param_buf;
- 		is_kmalloc = false;
- 	}
- 
--	/* Request for full descriptor */
--	ret = ufshcd_query_descriptor_retry(hba, UPIU_QUERY_OPCODE_READ_DESC,
-+	/* Read or write the entire descriptor. */
-+	ret = ufshcd_query_descriptor_retry(hba, opcode,
- 					desc_id, desc_index, 0,
- 					desc_buf, &buff_len);
- 
--	if (ret) {
--		dev_err(hba->dev, "%s: Failed reading descriptor. desc_id %d, desc_index %d, param_offset %d, ret %d",
--			__func__, desc_id, desc_index, param_offset, ret);
-+	if (ret)
- 		goto out;
--	}
- 
- 	/* Sanity check */
- 	if (desc_buf[QUERY_DESC_DESC_TYPE_OFFSET] != desc_id) {
-@@ -3159,13 +3189,29 @@ int ufshcd_read_desc_param(struct ufs_hba *hba,
- 		goto out;
- 	}
- 
--	/* Check wherher we will not copy more data, than available */
--	if (is_kmalloc && param_size > buff_len)
--		param_size = buff_len;
-+	/*
-+	 * Copy data to the output. The offset is already validated to be
-+	 * within the buffer.
-+	 */
-+	if (is_kmalloc && (opcode == UPIU_QUERY_OPCODE_READ_DESC)) {
-+		if (param_offset + param_size > buff_len) {
-+			memset(param_buf + buff_len - param_offset, 0,
-+			       param_offset + param_size - buff_len);
-+
-+			param_size = buff_len - param_offset;
-+		}
-+
-+		memcpy(param_buf, &desc_buf[param_offset], param_size);
++	case 8:
++		value64 = cpu_to_be64(value);
++		valueptr = (u8 *)&value64;
++		break;
 +	}
- 
--	if (is_kmalloc)
--		memcpy(param_read_buf, &desc_buf[param_offset], param_size);
- out:
-+	mutex_unlock(&hba->desc_mutex);
-+	if (ret)
-+		dev_err(hba->dev, "Failed %s descriptor. desc_id %d, desc_index %d, param_offset %d, ret %d",
-+			opcode == UPIU_QUERY_OPCODE_READ_DESC ?
-+			"reading" : "writing",
-+			desc_id, desc_index, param_offset, ret);
 +
- 	if (is_kmalloc)
- 		kfree(desc_buf);
- 	return ret;
-@@ -3177,7 +3223,8 @@ static inline int ufshcd_read_desc(struct ufs_hba *hba,
- 				   u8 *buf,
- 				   u32 size)
- {
--	return ufshcd_read_desc_param(hba, desc_id, desc_index, 0, buf, size);
-+	return ufshcd_rw_desc_param(hba, UPIU_QUERY_OPCODE_READ_DESC, desc_id,
-+					desc_index, 0, buf, size);
++	ret = ufshcd_rw_desc_param(hba, UPIU_QUERY_OPCODE_WRITE_DESC, desc_id,
++				desc_index, param_offset,
++				valueptr, width);
++	if (ret)
++		return -EINVAL;
++
++	return buf_size;
++}
++
+ #define UFS_DESC_PARAM(_name, _puname, _duname, _size)			\
+ static ssize_t _name##_show(struct device *dev,				\
+ 	struct device_attribute *attr, char *buf)			\
+@@ -346,7 +396,7 @@ struct ufs_config_desc_attr {
+ #define UFS_CONFIG_DESC_PARAM(_name, _uname, _size)			\
+ static struct ufs_config_desc_attr ufs_cfg_attr_##_name = {		\
+ 	.attr = {.name = __stringify(_name),				\
+-		 .mode = VERIFY_OCTAL_PERMISSIONS(0444) }, \
++		 .mode = VERIFY_OCTAL_PERMISSIONS(0644) }, 		\
+ 	.offset = CONFIGURATION_DESC_PARAM##_uname,			\
+ 	.size = _size							\
+ }
+@@ -375,7 +425,7 @@ static struct attribute *ufs_sysfs_config_descriptor[] = {
+ #define UFS_CONFIG_UNIT_DESC_PARAM(_name, _uname, _size)		\
+ static struct ufs_config_desc_attr ufs_cfg_unit_attr_##_name = {	\
+ 	.attr = {.name = __stringify(_name),				\
+-		 .mode = VERIFY_OCTAL_PERMISSIONS(0444) },		\
++		 .mode = VERIFY_OCTAL_PERMISSIONS(0644) },		\
+ 	.offset = CONFIGURATION_UNIT_DESC_PARAM##_uname,		\
+ 	.size = _size							\
+ }
+@@ -430,8 +480,37 @@ static ssize_t ufs_cfg_attr_show(struct kobject *kobj, struct attribute *attr,
+ 					 offset, buf, cfg_attr->size);
  }
  
- static inline int ufshcd_read_power_desc(struct ufs_hba *hba,
-@@ -3283,8 +3330,9 @@ static inline int ufshcd_read_unit_desc_param(struct ufs_hba *hba,
- 	if (!ufs_is_valid_unit_desc_lun(lun))
- 		return -EOPNOTSUPP;
- 
--	return ufshcd_read_desc_param(hba, QUERY_DESC_IDN_UNIT, lun,
--				      param_offset, param_read_buf, param_size);
-+	return ufshcd_rw_desc_param(hba, UPIU_QUERY_OPCODE_READ_DESC,
-+				    QUERY_DESC_IDN_UNIT, lun, param_offset,
-+				    param_read_buf, param_size);
- }
- 
- /**
-@@ -8019,8 +8067,9 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
- 	INIT_WORK(&hba->eh_work, ufshcd_err_handler);
- 	INIT_WORK(&hba->eeh_work, ufshcd_exception_event_handler);
- 
--	/* Initialize UIC command mutex */
-+	/* Initialize UIC command and descriptor mutexes */
- 	mutex_init(&hba->uic_cmd_mutex);
-+	mutex_init(&hba->desc_mutex);
- 
- 	/* Initialize mutex for device management commands */
- 	mutex_init(&hba->dev_cmd.lock);
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index bb540a3fd8de..c6305a458100 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -513,6 +513,7 @@ struct ufs_cfg_object {
-  * @scsi_block_reqs_cnt: reference counting for scsi block requests
-  * @cfg_objects: Stores the array of kobjects created for the config descriptor.
-  * @cfg_object_count: Stores the number of elements in cfg_objects.
-+ * @desc_mutex: Mutex to serialize modifications to UFS descriptors.
-  */
- struct ufs_hba {
- 	void __iomem *mmio_base;
-@@ -717,6 +718,7 @@ struct ufs_hba {
- 
- 	struct ufs_cfg_object **cfg_objects;
- 	size_t cfg_object_count;
-+	struct mutex desc_mutex;
++static ssize_t ufs_cfg_attr_store(struct kobject *kobj, struct attribute *attr,
++			      const char *buf, size_t count)
++{
++	struct ufs_config_desc_attr *cfg_attr = to_ufs_cfg_desc_attr(attr);
++	struct ufs_cfg_object *cfg_obj = to_ufs_cfg_obj(kobj);
++	u8 offset = cfg_attr->offset;
++	struct device *dev;
++	struct ufs_hba *hba;
++
++	/*
++	 * For unit config descriptors, add the unit's offset and get the
++	 * device parent two up.
++	 */
++	if (cfg_obj->index >= 0) {
++		offset += CONFIGURATION_DESC_PARAM_UNIT0 +
++			(CONFIGURATION_UNIT_DESC_SIZE * cfg_obj->index);
++
++		dev = kobj_to_dev(cfg_obj->kobj.parent->parent);
++
++	} else {
++		dev = kobj_to_dev(cfg_obj->kobj.parent);
++	}
++
++	hba = dev_get_drvdata(dev);
++	return ufs_sysfs_write_desc_param(hba, QUERY_DESC_IDN_CONFIGURATION, 0,
++					 offset, buf, count, cfg_attr->size);
++}
++
+ static const struct sysfs_ops ufs_sysfs_config_descriptor_ops = {
+ 	.show	= ufs_cfg_attr_show,
++	.store	= ufs_cfg_attr_store,
  };
  
- /* Returns true if clocks can be gated. Otherwise false */
-@@ -886,12 +888,13 @@ int ufshcd_query_descriptor_retry(struct ufs_hba *hba,
- 				  enum desc_idn idn, u8 index,
- 				  u8 selector,
- 				  u8 *desc_buf, int *buf_len);
--int ufshcd_read_desc_param(struct ufs_hba *hba,
--			   enum desc_idn desc_id,
--			   int desc_index,
--			   u8 param_offset,
--			   u8 *param_read_buf,
--			   u8 param_size);
-+int ufshcd_rw_desc_param(struct ufs_hba *hba,
-+			 enum query_opcode opcode,
-+			 enum desc_idn desc_id,
-+			 int desc_index,
-+			 u8 param_offset,
-+			 u8 *param_buf,
-+			 u8 param_size);
- int ufshcd_query_attr(struct ufs_hba *hba, enum query_opcode opcode,
- 		      enum attr_idn idn, u8 index, u8 selector, u32 *attr_val);
- int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
+ static void ufs_cfg_kobject_release(struct kobject *kobj)
 -- 
 2.13.5
