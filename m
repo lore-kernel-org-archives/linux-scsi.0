@@ -1,26 +1,22 @@
-From: "jianchao.wang" <jianchao.w.wang@oracle.com>
+From: Ming Lei <tom.leiming@gmail.com>
 Subject: Re: [PATCH 1/2] block: export __blk_complete_request
-Date: Fri, 15 Jun 2018 10:44:38 +0800
-Message-ID: <e5344293-b0b7-d2e0-f2e7-c0700efdfbe4@oracle.com>
+Date: Fri, 15 Jun 2018 10:49:29 +0800
+Message-ID: <CACVXFVPcuqzXiKUnaFxhw4CuqGpFdkmvfw=7yJAydXTYLKXDCw@mail.gmail.com>
 References: <1529027847-29085-1-git-send-email-jianchao.w.wang@oracle.com>
- <CACVXFVMe4zSvfXfuSn0NFayeQqbmDwBBy1kcso=5iznT6EfpSA@mail.gmail.com>
- <3dd3f82a-5b68-f039-3a8a-7c5fe4e24c3e@oracle.com>
+ <CACVXFVMe4zSvfXfuSn0NFayeQqbmDwBBy1kcso=5iznT6EfpSA@mail.gmail.com> <3dd3f82a-5b68-f039-3a8a-7c5fe4e24c3e@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <3dd3f82a-5b68-f039-3a8a-7c5fe4e24c3e@oracle.com>
-Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Ming Lei <tom.leiming@gmail.com>
+To: "jianchao.wang" <jianchao.w.wang@oracle.com>
 Cc: Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-block <linux-block@vger.kernel.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-
-
-On 06/15/2018 10:22 AM, jianchao.wang wrote:
+On Fri, Jun 15, 2018 at 10:22 AM, jianchao.wang
+<jianchao.w.wang@oracle.com> wrote:
 > Hi Ming
-> 
+>
 > On 06/15/2018 10:17 AM, Ming Lei wrote:
 >> On Fri, Jun 15, 2018 at 9:57 AM, Jianchao Wang
 >> <jianchao.w.wang@oracle.com> wrote:
@@ -53,18 +49,21 @@ On 06/15/2018 10:22 AM, jianchao.wang wrote:
 >>
 >> Looks non-blk-mq timeout code need to convert to ref-counter
 >> based approach too?
-> 
+>
 > IMO, ref-counter is just to fix the blk-mq req life recycle issue.
+
+Just thought of that, it is one blk-mq specific issue.
+
 > It cannot replace the blk_mark_rq_complete which could avoid the race between
 > timeout and io completion path.
-
-The .timeout return BLK_EH_DONE doesn't always mean the request has been completed.
-Such as scsi-mid layer, its .timeout callback return BLK_EH_DONE but the timed out
-request is still in abort or eh process. What if a completion irq come during that ? 
-
 > Or maybe my understanding is wrong ...
-> 
-> Thanks
-> Jianchao
->>
-> 
+
+I didn't mean that this patch is unnecessary.
+
+But the question is that given driver has to deal with race between timeout
+and normal completion, why don't you follow blk-mq's way to move
+the atomic state change into __blk_complete_request()?
+
+
+Thanks,
+Ming Lei
