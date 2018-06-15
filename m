@@ -1,75 +1,322 @@
-From: Ming Lei <tom.leiming@gmail.com>
-Subject: Re: [PATCH 1/2] block: export __blk_complete_request
-Date: Fri, 15 Jun 2018 10:56:03 +0800
-Message-ID: <CACVXFVMRCM6AvNJjAESbwOeJ_P5AZ+1C-7RfhE9L4u0T=_5h4Q@mail.gmail.com>
-References: <1529027847-29085-1-git-send-email-jianchao.w.wang@oracle.com>
- <CACVXFVMe4zSvfXfuSn0NFayeQqbmDwBBy1kcso=5iznT6EfpSA@mail.gmail.com>
- <3dd3f82a-5b68-f039-3a8a-7c5fe4e24c3e@oracle.com> <e5344293-b0b7-d2e0-f2e7-c0700efdfbe4@oracle.com>
+From: Kyuho Choi <chlrbgh0@gmail.com>
+Subject: Re: [PATCH V3 2/3] scsi: ufs: Add ufs provisioning support
+Date: Fri, 15 Jun 2018 11:58:01 +0900
+Message-ID: <CAP2JTQKHsJrX4BewyfRPL0LpxTYFhW2RMpOkJCRgS1Uns2Qw+A@mail.gmail.com>
+References: <1528981432-23065-1-git-send-email-sayalil@codeaurora.org> <1528981432-23065-3-git-send-email-sayalil@codeaurora.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <e5344293-b0b7-d2e0-f2e7-c0700efdfbe4@oracle.com>
+In-Reply-To: <1528981432-23065-3-git-send-email-sayalil@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "jianchao.wang" <jianchao.w.wang@oracle.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-block <linux-block@vger.kernel.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Sayali Lokhande <sayalil@codeaurora.org>
+Cc: subhashj@codeaurora.org, cang@codeaurora.org, vivek.gautam@codeaurora.org, rnayak@codeaurora.org, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, asutoshd@codeaurora.org, evgreen@chromium.org, riteshh@codeaurora.org, linux-scsi@vger.kernel.org, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Jun 15, 2018 at 10:44 AM, jianchao.wang
-<jianchao.w.wang@oracle.com> wrote:
+Hi,
+
+On 6/14/18, Sayali Lokhande <sayalil@codeaurora.org> wrote:
+> A new api ufshcd_do_config_device() is added in driver
+> to support UFS provisioning at runtime. Configfs support
+> is added to trigger provisioning.
+> Device and Unit configurable parameters are parsed from
+> vendor specific provisioning data or file and
+> passed via configfs node at runtime to provision ufs device.
+>
+> Signed-off-by: Sayali Lokhande <sayalil@codeaurora.org>
+> ---
+>  drivers/scsi/ufs/ufs.h    |  28 ++++++++
+>  drivers/scsi/ufs/ufshcd.c | 180
+> ++++++++++++++++++++++++++++++++++++++++++++++
+>  drivers/scsi/ufs/ufshcd.h |   2 +
+>  3 files changed, 210 insertions(+)
+>
+> diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+> index e15deb0..1f99904 100644
+> --- a/drivers/scsi/ufs/ufs.h
+> +++ b/drivers/scsi/ufs/ufs.h
+> @@ -333,6 +333,7 @@ enum {
+>  	UFSHCD_AMP		= 3,
+>  };
+>
+> +#define UFS_BLOCK_SIZE	4096
+>  #define POWER_DESC_MAX_SIZE			0x62
+>  #define POWER_DESC_MAX_ACTV_ICC_LVLS		16
+>
+> @@ -425,6 +426,33 @@ enum {
+>  	MASK_TM_SERVICE_RESP		= 0xFF,
+>  };
+>
+> +struct ufs_unit_desc {
+> +	u8     bLUEnable;              /* 1 for enabled LU */
+> +	u8     bBootLunID;             /* 0 for using this LU for boot */
+> +	u8     bLUWriteProtect;        /* 1 = power on WP, 2 = permanent WP */
+> +	u8     bMemoryType;            /* 0 for enhanced memory type */
+> +	u32    dNumAllocUnits;         /* Number of alloc unit for this LU */
+> +	u8     bDataReliability;       /* 0 for reliable write support */
+> +	u8     bLogicalBlockSize;      /* See section 13.2.3 of UFS standard */
+> +	u8     bProvisioningType;      /* 0 for thin provisioning */
+> +	u16    wContextCapabilities;   /* refer Unit Descriptor Description */
+> +};
+> +
+> +struct ufs_config_descr {
+> +	u8     bNumberLU;              /* Total number of active LUs */
+> +	u8     bBootEnable;            /* enabling device for partial init */
+> +	u8     bDescrAccessEn;         /* desc access during partial init */
+> +	u8     bInitPowerMode;         /* Initial device power mode */
+> +	u8     bHighPriorityLUN;       /* LUN of the high priority LU */
+> +	u8     bSecureRemovalType;     /* Erase config for data removal */
+> +	u8     bInitActiveICCLevel;    /* ICC level after reset */
+> +	u16    wPeriodicRTCUpdate;     /* 0 to set a priodic RTC update rate */
+> +	u32     bConfigDescrLock;      /* 1 to lock Configation Descriptor */
+> +	u32    qVendorConfigCode;      /* Vendor specific configuration code */
+> +	struct ufs_unit_desc unit[8];
+> +	u8	lun_to_grow;
+> +};
+> +
+>  /* Task management service response */
+>  enum {
+>  	UPIU_TASK_MANAGEMENT_FUNC_COMPL		= 0x00,
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index 4abc7ae..c0235a4 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -42,6 +42,7 @@
+>  #include <linux/nls.h>
+>  #include <linux/of.h>
+>  #include <linux/bitfield.h>
+> +#include <asm/unaligned.h>
+>  #include "ufshcd.h"
+>  #include "ufs_quirks.h"
+>  #include "unipro.h"
+> @@ -3063,6 +3064,14 @@ static inline int ufshcd_read_power_desc(struct
+> ufs_hba *hba,
+>  	return ufshcd_read_desc(hba, QUERY_DESC_IDN_POWER, 0, buf, size);
+>  }
+>
+> +static inline int ufshcd_read_geometry_desc(struct ufs_hba *hba,
+> +					 u8 *buf,
+> +					 u32 size)
+> +{
+> +	return ufshcd_read_desc(hba, QUERY_DESC_IDN_GEOMETRY, 0, buf, size);
+> +}
+> +
+> +
+>  static int ufshcd_read_device_desc(struct ufs_hba *hba, u8 *buf, u32 size)
+>  {
+>  	return ufshcd_read_desc(hba, QUERY_DESC_IDN_DEVICE, 0, buf, size);
+> @@ -6344,6 +6353,177 @@ static int ufshcd_set_dev_ref_clk(struct ufs_hba
+> *hba)
+>  }
+>
+>  /**
+> + * ufshcd_do_config_device - API function for UFS provisioning
+> + * hba: per-adapter instance
+> + * Returns 0 for success, non-zero in case of failure.
+> + */
+> +int ufshcd_do_config_device(struct ufs_hba *hba)
+> +{
+> +	struct ufs_config_descr *cfg = &hba->cfgs;
+> +	int buff_len = QUERY_DESC_CONFIGURATION_DEF_SIZE;
+> +	u8 desc_buf[QUERY_DESC_CONFIGURATION_DEF_SIZE] = {0};
+> +	int i, ret = 0;
+> +	int lun_to_grow = -1;
+> +	u64 qTotalRawDeviceCapacity;
+> +	u16 wEnhanced1CapAdjFac, wEnhanced2CapAdjFac;
+> +	u32 dEnhanced1MaxNAllocU, dEnhanced2MaxNAllocU;
+> +	size_t alloc_units, units_to_create = 0;
+> +	size_t capacity_to_alloc_factor;
+> +	size_t enhanced1_units = 0, enhanced2_units = 0;
+> +	size_t conversion_ratio = 1;
+> +	u8 *pt;
+> +	u32 blocks_per_alloc_unit = 1024;
+> +	int geo_len = hba->desc_size.geom_desc;
+> +	u8 geo_buf[hba->desc_size.geom_desc];
+> +	unsigned int max_partitions = 8;
+> +
+> +	WARN_ON(!hba || !cfg);
+> +
+> +	ret = ufshcd_read_geometry_desc(hba, geo_buf, geo_len);
+> +	if (ret) {
+> +		dev_err(hba->dev, "%s: Failed getting geometry_desc %d\n",
+> +			__func__, ret);
+> +		return ret;
+> +	}
+> +
+> +	/*
+> +	 * Get Geomtric parameters like total configurable memory
+> +	 * quantity (Offset 0x04 to 0x0b), Capacity Adjustment
+> +	 * Factors (Offset 0x30, 0x31, 0x36, 0x37), Max allocation
+> +	 * units (Offset 0x2c to 0x2f, 0x32 to 0x35) used to configure
+> +	 * the device logical units.
+> +	 */
+> +	qTotalRawDeviceCapacity = get_unaligned_be64(&geo_buf[0x04]);
+> +	wEnhanced1CapAdjFac = get_unaligned_be16(&geo_buf[0x30]);
+> +	wEnhanced2CapAdjFac = get_unaligned_be16(&geo_buf[0x36]);
+> +	dEnhanced1MaxNAllocU = get_unaligned_be32(&geo_buf[0x2c]);
+> +	dEnhanced2MaxNAllocU = get_unaligned_be32(&geo_buf[0x32]);
+> +
+> +	capacity_to_alloc_factor =
+> +		(blocks_per_alloc_unit * UFS_BLOCK_SIZE) / 512;
+> +
+> +	if (qTotalRawDeviceCapacity % capacity_to_alloc_factor != 0) {
+> +		dev_err(hba->dev,
+> +			"%s: Raw capacity(%llu) not multiple of alloc factor(%zu)\n",
+> +			__func__, qTotalRawDeviceCapacity,
+> +			capacity_to_alloc_factor);
+> +		return -EINVAL;
+> +	}
+> +	alloc_units = (qTotalRawDeviceCapacity / capacity_to_alloc_factor);
+> +	units_to_create = 0;
+> +	enhanced1_units = enhanced2_units = 0;
+> +
+> +	/*
+> +	 * Calculate number of allocation units to be assigned to a logical unit
+> +	 * considering the capacity adjustment factor of respective memory type.
+> +	 */
+> +	for (i = 0; i < (max_partitions - 1) &&
+> +		units_to_create <= alloc_units; i++) {
+> +		if ((cfg->unit[i].dNumAllocUnits % blocks_per_alloc_unit) == 0)
+> +			cfg->unit[i].dNumAllocUnits /= blocks_per_alloc_unit;
+> +		else
+> +			cfg->unit[i].dNumAllocUnits =
+> +			cfg->unit[i].dNumAllocUnits / blocks_per_alloc_unit + 1;
+> +
+> +		if (cfg->unit[i].bMemoryType == 0)
+> +			units_to_create += cfg->unit[i].dNumAllocUnits;
+> +		else if (cfg->unit[i].bMemoryType == 3) {
+> +			enhanced1_units += cfg->unit[i].dNumAllocUnits;
+> +			cfg->unit[i].dNumAllocUnits *=
+> +				(wEnhanced1CapAdjFac / 0x100);
+> +			units_to_create += cfg->unit[i].dNumAllocUnits;
+> +		} else if (cfg->unit[i].bMemoryType == 4) {
+> +			enhanced2_units += cfg->unit[i].dNumAllocUnits;
+> +			cfg->unit[i].dNumAllocUnits *=
+> +				(wEnhanced1CapAdjFac / 0x100);
+> +			units_to_create += cfg->unit[i].dNumAllocUnits;
+> +		} else {
+> +			dev_err(hba->dev, "%s: Unsupported memory type %d\n",
+> +				__func__, cfg->unit[i].bMemoryType);
+> +			return -EINVAL;
+> +		}
+> +	}
+> +	if (enhanced1_units > dEnhanced1MaxNAllocU) {
+> +		dev_err(hba->dev, "%s: size %zu exceeds max enhanced1 area size %u\n",
+> +			__func__, enhanced1_units, dEnhanced1MaxNAllocU);
+> +		return -ERANGE;
+> +	}
+> +	if (enhanced2_units > dEnhanced2MaxNAllocU) {
+> +		dev_err(hba->dev, "%s: size %zu exceeds max enhanced2 area size %u\n",
+> +			__func__, enhanced2_units, dEnhanced2MaxNAllocU);
+> +		return -ERANGE;
+> +	}
+> +	if (units_to_create > alloc_units) {
+> +		dev_err(hba->dev, "%s: Specified size %zu exceeds device size %zu\n",
+> +			__func__, units_to_create, alloc_units);
+> +		return -ERANGE;
+> +	}
+> +	lun_to_grow = cfg->lun_to_grow;
+> +	if (lun_to_grow != -1) {
+> +		if (cfg->unit[i].bMemoryType == 0)
+> +			conversion_ratio = 1;
+> +		else if (cfg->unit[i].bMemoryType == 3)
+> +			conversion_ratio = (wEnhanced1CapAdjFac / 0x100);
+> +		else if (cfg->unit[i].bMemoryType == 4)
+> +			conversion_ratio = (wEnhanced2CapAdjFac / 0x100);
+> +
+> +		cfg->unit[lun_to_grow].dNumAllocUnits +=
+> +		((alloc_units - units_to_create) / conversion_ratio);
+> +		dev_dbg(hba->dev, "%s: conversion_ratio %zu for lun %d\n",
+> +			__func__, conversion_ratio, i);
+> +	}
+> +
+> +	/* Fill in the buffer with configuration data */
+> +	pt = desc_buf;
+> +	*pt++ = 0x90;        // bLength
+> +	*pt++ = 0x01;        // bDescriptorType
+> +	*pt++ = 0;           // Reserved in UFS2.0 and onward
+> +	*pt++ = cfg->bBootEnable;
+> +	*pt++ = cfg->bDescrAccessEn;
+> +	*pt++ = cfg->bInitPowerMode;
+> +	*pt++ = cfg->bHighPriorityLUN;
+> +	*pt++ = cfg->bSecureRemovalType;
+> +	*pt++ = cfg->bInitActiveICCLevel;
+> +	put_unaligned_be16(cfg->wPeriodicRTCUpdate, pt);
+> +	pt = pt + 7; // Reserved fields set to 0
+> +
+> +	/* Fill in the buffer with per logical unit data */
+> +	for (i = 0; i < UFS_UPIU_MAX_GENERAL_LUN; i++) {
+> +		*pt++ = cfg->unit[i].bLUEnable;
+> +		*pt++ = cfg->unit[i].bBootLunID;
+> +		*pt++ = cfg->unit[i].bLUWriteProtect;
+> +		*pt++ = cfg->unit[i].bMemoryType;
+> +		put_unaligned_be32(cfg->unit[i].dNumAllocUnits, pt);
+> +		pt = pt + 4;
+> +		*pt++ = cfg->unit[i].bDataReliability;
+> +		*pt++ = cfg->unit[i].bLogicalBlockSize;
+> +		*pt++ = cfg->unit[i].bProvisioningType;
+> +		put_unaligned_be16(cfg->unit[i].wContextCapabilities, pt);
+> +		pt = pt + 5; // Reserved fields set to 0
+> +	}
+> +
+> +	ret = ufshcd_query_descriptor_retry(hba, UPIU_QUERY_OPCODE_WRITE_DESC,
+> +		QUERY_DESC_IDN_CONFIGURATION, 0, 0, desc_buf, &buff_len);
+> +
+> +	if (ret) {
+> +		dev_err(hba->dev, "%s: Failed writing descriptor. desc_idn %d, opcode %x
+> ret %d\n",
+> +		__func__, QUERY_DESC_IDN_CONFIGURATION,
+> +		UPIU_QUERY_OPCODE_WRITE_DESC, ret);
+> +		return ret;
+> +	}
+
+To support stable operation and prevent race condition, how about
+adding some functions during in runtime provisioning?.
+pm_runtime_get/put_sync and scsi_block/unblock_requests.
+How you thought?.
+
+> +
+> +	if (cfg->bConfigDescrLock == 1) {
+> +		ret = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
+> +		QUERY_ATTR_IDN_CONF_DESC_LOCK, 0, 0, &cfg->bConfigDescrLock);
+> +		if (ret)
+> +			dev_err(hba->dev, "%s: Failed writing bConfigDescrLock %d\n",
+> +				__func__, ret);
+> +	}
+> +
+> +	return ret;
+> +}
+> +
+> +/**
+>   * ufshcd_probe_hba - probe hba to detect device and initialize
+>   * @hba: per-adapter instance
+>   *
+> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+> index b026ad8..816b674 100644
+> --- a/drivers/scsi/ufs/ufshcd.h
+> +++ b/drivers/scsi/ufs/ufshcd.h
+> @@ -549,6 +549,7 @@ struct ufs_hba {
+>  	unsigned int irq;
+>  	bool is_irq_enabled;
+>  	u32 dev_ref_clk_freq;
+> +	struct ufs_config_descr cfgs;
+>
+>  	/* Interrupt aggregation support is broken */
+>  	#define UFSHCD_QUIRK_BROKEN_INTR_AGGR			0x1
+> @@ -866,6 +867,7 @@ int ufshcd_read_string_desc(struct ufs_hba *hba, int
+> desc_index,
+>
+>  int ufshcd_hold(struct ufs_hba *hba, bool async);
+>  void ufshcd_release(struct ufs_hba *hba);
+> +int ufshcd_do_config_device(struct ufs_hba *hba);
+>
+>  int ufshcd_map_desc_id_to_length(struct ufs_hba *hba, enum desc_idn
+> desc_id,
+>  	int *desc_length);
+> --
+> The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+> a Linux Foundation Collaborative Project
 >
 >
-> On 06/15/2018 10:22 AM, jianchao.wang wrote:
->> Hi Ming
->>
->> On 06/15/2018 10:17 AM, Ming Lei wrote:
->>> On Fri, Jun 15, 2018 at 9:57 AM, Jianchao Wang
->>> <jianchao.w.wang@oracle.com> wrote:
->>>> After f6e7d48 (block: remove BLK_EH_HANDLED), LLDD is responsible
->>>> to complete the timed out request, however, for blk-legacy, the
->>>> 'complete' is still marked, blk_complete_request will do nothing,
->>>> we export __blk_complete_request for LLDD to complete the request
->>>> in timeout path.
->>>>
->>>> Signed-off-by: Jianchao Wang <jianchao.w.wang@oracle.com>
->>>> ---
->>>>  block/blk-softirq.c | 1 +
->>>>  1 file changed, 1 insertion(+)
->>>>
->>>> diff --git a/block/blk-softirq.c b/block/blk-softirq.c
->>>> index 01e2b35..15c1f5e 100644
->>>> --- a/block/blk-softirq.c
->>>> +++ b/block/blk-softirq.c
->>>> @@ -144,6 +144,7 @@ void __blk_complete_request(struct request *req)
->>>>
->>>>         local_irq_restore(flags);
->>>>  }
->>>> +EXPORT_SYMBOL(__blk_complete_request);
->>>>
->>>>  /**
->>>>   * blk_complete_request - end I/O on a request
->>>> --
->>>> 2.7.4
->>>>
->>>
->>> Looks non-blk-mq timeout code need to convert to ref-counter
->>> based approach too?
->>
->> IMO, ref-counter is just to fix the blk-mq req life recycle issue.
->> It cannot replace the blk_mark_rq_complete which could avoid the race between
->> timeout and io completion path.
->
-> The .timeout return BLK_EH_DONE doesn't always mean the request has been completed.
-> Such as scsi-mid layer, its .timeout callback return BLK_EH_DONE but the timed out
-> request is still in abort or eh process. What if a completion irq come during that ?
 
-For blk-mq, it is avoided by the atomic state change in
-__blk_mq_complete_request(),
-that is why I mentioned the question in my last reply.
-
-But what if the timed-out request has been freed by EH? Then seems
-req's ref_counter
-is still needed for non-mq?
-
-
-Thanks,
-Ming Lei
+BR,
+Kyuho Choi
