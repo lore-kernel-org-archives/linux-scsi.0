@@ -1,69 +1,56 @@
-From: Zhouyang Jia <jiazhouyang09@gmail.com>
-Subject: [PATCH v2] xen/scsiback: add error handling for xenbus_printf
-Date: Sat, 16 Jun 2018 01:06:12 +0800
-Message-ID: <1529082372-59097-1-git-send-email-jiazhouyang09@gmail.com>
-References: <1528775185-39467-1-git-send-email-jiazhouyang09@gmail.com>
+From: Al Viro <viro@ZenIV.linux.org.uk>
+Subject: Re: [PATCH] sg, bsg: mitigate read/write abuse, block uaccess in
+ release
+Date: Fri, 15 Jun 2018 18:10:33 +0100
+Message-ID: <20180615171033.GG30522@ZenIV.linux.org.uk>
+References: <20180615152335.208202-1-jannh@google.com>
+ <20180615164009.GD30522@ZenIV.linux.org.uk>
+ <CAG48ez2Fku77S+FM2w5n8J_utOhO0EW_RFbMib=t5Nmwc9pwfQ@mail.gmail.com>
+ <20180615165310.GF30522@ZenIV.linux.org.uk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1528775185-39467-1-git-send-email-jiazhouyang09@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20180615165310.GF30522@ZenIV.linux.org.uk>
 Sender: linux-kernel-owner@vger.kernel.org
-Cc: Zhouyang Jia <jiazhouyang09@gmail.com>, Juergen Gross <jgross@suse.com>, Boris Ostrovsky <boris.ostrovsky@oracle.com>, xen-devel@lists.xenproject.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jann Horn <jannh@google.com>
+Cc: axboe@kernel.dk, fujita.tomonori@lab.ntt.co.jp, dgilbert@interlog.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, kernel list <linux-kernel@vger.kernel.org>, Kernel Hardening <kernel-hardening@lists.openwall.com>, security@kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-When xenbus_printf fails, the lack of error-handling code may
-cause unexpected results.
+On Fri, Jun 15, 2018 at 05:53:10PM +0100, Al Viro wrote:
+> On Fri, Jun 15, 2018 at 06:44:51PM +0200, Jann Horn wrote:
+> > On Fri, Jun 15, 2018 at 6:40 PM Al Viro <viro@zeniv.linux.org.uk> wrote:
+> > >
+> > > On Fri, Jun 15, 2018 at 05:23:35PM +0200, Jann Horn wrote:
+> > >
+> > > > I've mostly copypasted ib_safe_file_access() over as
+> > > > scsi_safe_file_access() because I couldn't find a good common header -
+> > > > please tell me if you know a better way.
+> > > > The duplicate pr_err_once() calls are so that each of them fires once;
+> > > > otherwise, this would probably have to be a macro.
+> > > >
+> > > > Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+> > > > Cc: <stable@vger.kernel.org>
+> > > > Signed-off-by: Jann Horn <jannh@google.com>
+> > > > ---
+> > >
+> > > WTF do you mean, in ->release()?  That makes no sense whatsoever -
+> > > what kind of copy_{to,from}_user() would be possible in there?
+> > 
+> > bsg_release -> bsg_put_device -> bsg_complete_all_commands ->
+> > blk_complete_sgv4_hdr_rq -> bsg_scsi_complete_rq -> copy_to_user.
+> > I don't think that was intentional.
+> > 
+> > Basically, the sense buffer is copied to a userspace address supplied
+> > in the previous ->write() when you ->read() the reply. But when you
+> > ->release() the file without reading the reply, they have to clean it
+> > up, and for that, they reuse the same code they use for ->read() - so
+> > the sense buffer is written to userspace on ->release().
+> 
+> Pardon me, that has only one fix - git rm.  This is too broken for words -
+> if your reading is correct, the interface is unsalvagable.  I hope you
+> *are* misreading it, but if not... how did that insanity get through
+> review at merge time?
 
-This patch adds error-handling code after calling xenbus_printf.
-
-Signed-off-by: Zhouyang Jia <jiazhouyang09@gmail.com>
----
-v1->v2:
-- Use xenbus_dev_error to report errors.
----
- drivers/xen/xen-scsiback.c | 18 ++++++++++++------
- 1 file changed, 12 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/xen/xen-scsiback.c b/drivers/xen/xen-scsiback.c
-index 7bc88fd..cec2133 100644
---- a/drivers/xen/xen-scsiback.c
-+++ b/drivers/xen/xen-scsiback.c
-@@ -1027,8 +1027,10 @@ static void scsiback_do_add_lun(struct vscsibk_info *info, const char *state,
- 			scsiback_del_translation_entry(info, vir);
- 		}
- 	} else if (!try) {
--		xenbus_printf(XBT_NIL, info->dev->nodename, state,
--			      "%d", XenbusStateClosed);
-+		if (xenbus_printf(XBT_NIL, info->dev->nodename, state,
-+			      "%d", XenbusStateClosed))
-+			xenbus_dev_error(info->dev, err,
-+				"%s: writing %s", __func__, state);
- 	}
- }
- 
-@@ -1067,8 +1069,10 @@ static void scsiback_do_1lun_hotplug(struct vscsibk_info *info, int op,
- 	snprintf(str, sizeof(str), "vscsi-devs/%s/p-dev", ent);
- 	val = xenbus_read(XBT_NIL, dev->nodename, str, NULL);
- 	if (IS_ERR(val)) {
--		xenbus_printf(XBT_NIL, dev->nodename, state,
--			      "%d", XenbusStateClosed);
-+		if (xenbus_printf(XBT_NIL, dev->nodename, state,
-+			      "%d", XenbusStateClosed))
-+			xenbus_dev_error(info->dev, err,
-+				"%s: writing %s", __func__, state);
- 		return;
- 	}
- 	strlcpy(phy, val, VSCSI_NAMELEN);
-@@ -1079,8 +1083,10 @@ static void scsiback_do_1lun_hotplug(struct vscsibk_info *info, int op,
- 	err = xenbus_scanf(XBT_NIL, dev->nodename, str, "%u:%u:%u:%u",
- 			   &vir.hst, &vir.chn, &vir.tgt, &vir.lun);
- 	if (XENBUS_EXIST_ERR(err)) {
--		xenbus_printf(XBT_NIL, dev->nodename, state,
--			      "%d", XenbusStateClosed);
-+		if (xenbus_printf(XBT_NIL, dev->nodename, state,
-+			      "%d", XenbusStateClosed))
-+			xenbus_dev_error(info->dev, err,
-+				"%s: writing %s", __func__, state);
- 		return;
- 	}
- 
--- 
-2.7.4
+AFAICS, it went in as part of commit 3d6392cfbd7d "bsg: support for full
+generic block layer SG v3", so your 2.6.12-rc2 is too old...
