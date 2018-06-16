@@ -1,79 +1,49 @@
-From: Zhouyang Jia <jiazhouyang09@gmail.com>
-Subject: [PATCH v3] xen/scsiback: add error handling for xenbus_printf
-Date: Sat, 16 Jun 2018 08:14:37 +0800
-Message-ID: <1529108077-60035-1-git-send-email-jiazhouyang09@gmail.com>
-References: <1528775185-39467-1-git-send-email-jiazhouyang09@gmail.com>
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH v2 1/4] scsi: ufs: Add Configuration Descriptor to sysfs
+Date: Sat, 16 Jun 2018 09:16:32 +0200
+Message-ID: <20180616071632.GD30558@kroah.com>
+References: <20180615210049.126123-1-evgreen@chromium.org>
+ <20180615210049.126123-2-evgreen@chromium.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1528775185-39467-1-git-send-email-jiazhouyang09@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20180615210049.126123-2-evgreen@chromium.org>
 Sender: linux-kernel-owner@vger.kernel.org
-Cc: Zhouyang Jia <jiazhouyang09@gmail.com>, Juergen Gross <jgross@suse.com>, Boris Ostrovsky <boris.ostrovsky@oracle.com>, xen-devel@lists.xenproject.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Evan Green <evgreen@chromium.org>
+Cc: Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Stanislav Nijnikov <stanislav.nijnikov@wdc.com>, Bart Van Assche <Bart.VanAssche@wdc.com>, Adrian Hunter <adrian.hunter@intel.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-When xenbus_printf fails, the lack of error-handling code may
-cause unexpected results.
+On Fri, Jun 15, 2018 at 02:00:46PM -0700, Evan Green wrote:
+> This change adds the configuration descriptor to the UFS
+> sysfs interface. This is done in preparation for making the
+> interface writable, which will enable provisioning UFS devices
+> via Linux.
+> 
+> The configuration descriptor is laid out as a header, then a set of
+> (usually 8) copies of the same descriptor for each unit.
+> 
+> Signed-off-by: Evan Green <evgreen@chromium.org>
+> ---
+> Changes since v1:
+> 	- Squashed documentation changes into this change.
+> 	- Reworked sysfs layout so that instead of a sysfs file for a
+> unit selector and then a common set of unit attributes, each unit in
+> the config descriptor has its own directory. This required a little
+> bit of kobject magic. Alternatively I could use standard device
+> attributes and simply allocate N*M of them from a template. I have
+> that coded up, and can go with that if preferred, but I thought
+> this was a little nicer since it wasted less memory.
 
-This patch adds error-handling code after calling xenbus_printf.
+Ick, don't use "raw" kobjects please, as userspace will not see them
+correctly in the libraries that track devices and attributes, like
+libudev.
 
-Signed-off-by: Zhouyang Jia <jiazhouyang09@gmail.com>
----
-v1->v2:
-- Use xenbus_dev_error to report errors.
-v2->v3:
-- Fix compilation errors.
----
- drivers/xen/xen-scsiback.c | 16 +++++++++++++---
- 1 file changed, 13 insertions(+), 3 deletions(-)
+And what is wrong with using configfs?  I thought that was the better
+way to go for something like this.  You are configuring the device,
+which is exactly what configfs was created for, to keep people from
+having to do this type of mess in sysfs.
 
-diff --git a/drivers/xen/xen-scsiback.c b/drivers/xen/xen-scsiback.c
-index 7bc88fd..e2f3e8b 100644
---- a/drivers/xen/xen-scsiback.c
-+++ b/drivers/xen/xen-scsiback.c
-@@ -1012,6 +1012,7 @@ static void scsiback_do_add_lun(struct vscsibk_info *info, const char *state,
- {
- 	struct v2p_entry *entry;
- 	unsigned long flags;
-+	int err;
- 
- 	if (try) {
- 		spin_lock_irqsave(&info->v2p_lock, flags);
-@@ -1027,8 +1028,11 @@ static void scsiback_do_add_lun(struct vscsibk_info *info, const char *state,
- 			scsiback_del_translation_entry(info, vir);
- 		}
- 	} else if (!try) {
--		xenbus_printf(XBT_NIL, info->dev->nodename, state,
-+		err = xenbus_printf(XBT_NIL, info->dev->nodename, state,
- 			      "%d", XenbusStateClosed);
-+		if (err)
-+			xenbus_dev_error(info->dev, err,
-+				"%s: writing %s", __func__, state);
- 	}
- }
- 
-@@ -1067,8 +1071,11 @@ static void scsiback_do_1lun_hotplug(struct vscsibk_info *info, int op,
- 	snprintf(str, sizeof(str), "vscsi-devs/%s/p-dev", ent);
- 	val = xenbus_read(XBT_NIL, dev->nodename, str, NULL);
- 	if (IS_ERR(val)) {
--		xenbus_printf(XBT_NIL, dev->nodename, state,
-+		err = xenbus_printf(XBT_NIL, dev->nodename, state,
- 			      "%d", XenbusStateClosed);
-+		if (err)
-+			xenbus_dev_error(info->dev, err,
-+				"%s: writing %s", __func__, state);
- 		return;
- 	}
- 	strlcpy(phy, val, VSCSI_NAMELEN);
-@@ -1079,8 +1086,11 @@ static void scsiback_do_1lun_hotplug(struct vscsibk_info *info, int op,
- 	err = xenbus_scanf(XBT_NIL, dev->nodename, str, "%u:%u:%u:%u",
- 			   &vir.hst, &vir.chn, &vir.tgt, &vir.lun);
- 	if (XENBUS_EXIST_ERR(err)) {
--		xenbus_printf(XBT_NIL, dev->nodename, state,
-+		err = xenbus_printf(XBT_NIL, dev->nodename, state,
- 			      "%d", XenbusStateClosed);
-+		if (err)
-+			xenbus_dev_error(info->dev, err,
-+				"%s: writing %s", __func__, state);
- 		return;
- 	}
- 
--- 
-2.7.4
+thanks,
+
+greg k-h
