@@ -1,49 +1,62 @@
 From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH v2 1/4] scsi: ufs: Add Configuration Descriptor to sysfs
-Date: Sat, 16 Jun 2018 09:16:32 +0200
-Message-ID: <20180616071632.GD30558@kroah.com>
-References: <20180615210049.126123-1-evgreen@chromium.org>
- <20180615210049.126123-2-evgreen@chromium.org>
+Subject: [PATCH 4.16 053/279] scsi: target: fix crash with iscsi target and dvd
+Date: Mon, 18 Jun 2018 10:10:38 +0200
+Message-ID: <20180618080611.038102648@linuxfoundation.org>
+References: <20180618080608.851973560@linuxfoundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20180615210049.126123-2-evgreen@chromium.org>
+In-Reply-To: <20180618080608.851973560@linuxfoundation.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Evan Green <evgreen@chromium.org>
-Cc: Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Stanislav Nijnikov <stanislav.nijnikov@wdc.com>, Bart Van Assche <Bart.VanAssche@wdc.com>, Adrian Hunter <adrian.hunter@intel.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, stable@vger.kernel.org, Wakko Warner <wakko@animx.eu.org>, Bart Van Assche <Bart.VanAssche@wdc.com>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sasha Levin <alexander.levin@microsoft.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Jun 15, 2018 at 02:00:46PM -0700, Evan Green wrote:
-> This change adds the configuration descriptor to the UFS
-> sysfs interface. This is done in preparation for making the
-> interface writable, which will enable provisioning UFS devices
-> via Linux.
-> 
-> The configuration descriptor is laid out as a header, then a set of
-> (usually 8) copies of the same descriptor for each unit.
-> 
-> Signed-off-by: Evan Green <evgreen@chromium.org>
-> ---
-> Changes since v1:
-> 	- Squashed documentation changes into this change.
-> 	- Reworked sysfs layout so that instead of a sysfs file for a
-> unit selector and then a common set of unit attributes, each unit in
-> the config descriptor has its own directory. This required a little
-> bit of kobject magic. Alternatively I could use standard device
-> attributes and simply allocate N*M of them from a template. I have
-> that coded up, and can go with that if preferred, but I thought
-> this was a little nicer since it wasted less memory.
+4.16-stable review patch.  If anyone has any objections, please let me know.
 
-Ick, don't use "raw" kobjects please, as userspace will not see them
-correctly in the libraries that track devices and attributes, like
-libudev.
+------------------
 
-And what is wrong with using configfs?  I thought that was the better
-way to go for something like this.  You are configuring the device,
-which is exactly what configfs was created for, to keep people from
-having to do this type of mess in sysfs.
+From: Ming Lei <ming.lei@redhat.com>
 
-thanks,
+[ Upstream commit 8e1ceafe50ec4d1bcfae154dd70e7cb6946a6177 ]
 
-greg k-h
+When the current page can't be added to bio, one new bio should be
+created for adding this page again, instead of ignoring this page.
+
+This patch fixes kernel crash with iscsi target and dvd, as reported by
+Wakko.
+
+Cc: Wakko Warner <wakko@animx.eu.org>
+Cc: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: target-devel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Christoph Hellwig <hch@lst.de>
+Fixes: 84c8590646d5b35804 ("target: avoid accessing .bi_vcnt directly")
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <alexander.levin@microsoft.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ drivers/target/target_core_pscsi.c |    2 ++
+ 1 file changed, 2 insertions(+)
+
+--- a/drivers/target/target_core_pscsi.c
++++ b/drivers/target/target_core_pscsi.c
+@@ -890,6 +890,7 @@ pscsi_map_sg(struct se_cmd *cmd, struct
+ 			bytes = min(bytes, data_len);
+ 
+ 			if (!bio) {
++new_bio:
+ 				nr_vecs = min_t(int, BIO_MAX_PAGES, nr_pages);
+ 				nr_pages -= nr_vecs;
+ 				/*
+@@ -931,6 +932,7 @@ pscsi_map_sg(struct se_cmd *cmd, struct
+ 				 * be allocated with pscsi_get_bio() above.
+ 				 */
+ 				bio = NULL;
++				goto new_bio;
+ 			}
+ 
+ 			data_len -= bytes;
