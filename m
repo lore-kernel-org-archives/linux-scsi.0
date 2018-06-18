@@ -1,41 +1,54 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH] sg, bsg: mitigate read/write abuse, block uaccess in
- release
-Date: Mon, 18 Jun 2018 10:23:45 -0600
-Message-ID: <229a6637-3f9e-e8ed-d94a-cafbbd47f140@kernel.dk>
-References: <20180615152335.208202-1-jannh@google.com>
- <20180615164009.GD30522@ZenIV.linux.org.uk>
- <90063ef3-68fa-e983-9b47-838e6076b0f4@interlog.com>
- <813e817b-bb2f-4a47-6225-9e39f19be278@kernel.dk>
- <20180618161657.GP30522@ZenIV.linux.org.uk>
+From: Evan Green <evgreen@chromium.org>
+Subject: Re: [PATCH v2 1/4] scsi: ufs: Add Configuration Descriptor to sysfs
+Date: Mon, 18 Jun 2018 09:54:13 -0700
+Message-ID: <CAE=gft7Btvacg7iYQkWfMC1Md+5Lgiz1up6QnZnypXd8VVM3-Q@mail.gmail.com>
+References: <20180615210049.126123-1-evgreen@chromium.org> <20180615210049.126123-2-evgreen@chromium.org>
+ <20180616071632.GD30558@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180618161657.GP30522@ZenIV.linux.org.uk>
-Content-Language: en-US
+In-Reply-To: <20180616071632.GD30558@kroah.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Al Viro <viro@ZenIV.linux.org.uk>
-Cc: dgilbert@interlog.com, Jann Horn <jannh@google.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-hardening@lists.openwall.com, security@kernel.org
+To: gregkh@linuxfoundation.org
+Cc: Vinayak Holikatti <vinholikatti@gmail.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, stanislav.nijnikov@wdc.com, Bart.VanAssche@wdc.com, adrian.hunter@intel.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 6/18/18 10:16 AM, Al Viro wrote:
-> On Mon, Jun 18, 2018 at 09:37:01AM -0600, Jens Axboe wrote:
-> 
->>> The folks responsible are no longer active in kernel development ***
->>> but as far as I know the async write(command), read(response) were
->>> added to bsg over 10 years ago as proof-of-concept and never properly
->>> worked in this async mode. The biggest design problem with it that I'm
->>
->> It was born with that mode, but I don't think anyone ever really used it.
->> So it might feasible to simply yank it. That said, just doing a prune
->> mode at ->release() time doesn't seem like such a hard task.
-> 
-> "prune mode" being...?
+On Sat, Jun 16, 2018 at 12:16 AM Greg Kroah-Hartman
+<gregkh@linuxfoundation.org> wrote:
+>
+> On Fri, Jun 15, 2018 at 02:00:46PM -0700, Evan Green wrote:
+> > This change adds the configuration descriptor to the UFS
+> > sysfs interface. This is done in preparation for making the
+> > interface writable, which will enable provisioning UFS devices
+> > via Linux.
+> >
+> > The configuration descriptor is laid out as a header, then a set of
+> > (usually 8) copies of the same descriptor for each unit.
+> >
+> > Signed-off-by: Evan Green <evgreen@chromium.org>
+> > ---
+> > Changes since v1:
+> >       - Squashed documentation changes into this change.
+> >       - Reworked sysfs layout so that instead of a sysfs file for a
+> > unit selector and then a common set of unit attributes, each unit in
+> > the config descriptor has its own directory. This required a little
+> > bit of kobject magic. Alternatively I could use standard device
+> > attributes and simply allocate N*M of them from a template. I have
+> > that coded up, and can go with that if preferred, but I thought
+> > this was a little nicer since it wasted less memory.
+>
+> Ick, don't use "raw" kobjects please, as userspace will not see them
+> correctly in the libraries that track devices and attributes, like
+> libudev.
+>
+> And what is wrong with using configfs?  I thought that was the better
+> way to go for something like this.  You are configuring the device,
+> which is exactly what configfs was created for, to keep people from
+> having to do this type of mess in sysfs.
+>
+> thanks,
+>
+> greg k-h
 
-Basically what Jann posted, not doing any copy-back of data. Need to
-verify if the bio unmapping is handled correctly, as some of those
-will also copy when the end_io handling is invoked.
-
--- 
-Jens Axboe
+Ok. Sayali's got patches for doing this via configfs, so let's go with his.
+-Evan
