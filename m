@@ -1,48 +1,98 @@
 From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH] scsi_transport_fc: use 64-bit timestamps consistently
-Date: Mon, 18 Jun 2018 17:29:51 +0200
-Message-ID: <20180618153004.1808419-1-arnd@arndb.de>
+Subject: [PATCH] scsi: lpfc: use monotonic timestamps for statistics
+Date: Mon, 18 Jun 2018 17:28:23 +0200
+Message-ID: <20180618152903.1756535-1-arnd@arndb.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: y2038@lists.linaro.org, Arnd Bergmann <arnd@arndb.de>, Hannes Reinecke <hare@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>, James Smart <jsmart2021@gmail.com>, Jens Axboe <axboe@kernel.dk>, Tyrel Datwyler <tyreld@linux.vnet.ibm.com>, Steffen Maier <maier@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: y2038@lists.linaro.org, Arnd Bergmann <arnd@arndb.de>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-The get_seconds() helper returns an 'unsigned long' value, which can
-overflow on 32-bit architectures. Since the interface we pass it into
-already uses a 64-bit type, we can just use ktime_get_real_seconds()
-instead.
+The get_seconds() function suffers from a possible overflow in 2038
+or 2106, as well as jitter due to settimeofday or leap second updates,
+and is deprecated.
 
-While we generally prefer local timestamps in CLOCK_MONOTONIC format
-(ktime_get_seconds), this keeps using the CLOCK_REALTIME version
-in order to maintain compatibility with existing code.
+As we are interested in elapsed time only, using ktime_get_seconds()
+to read the CLOCK_MONOTONIC timebase is ideal here. This also lets us
+remove the hack that tries to deal with get_seconds() going slightly
+backwards, which cannot happen with montonic timestamps.
 
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/scsi/scsi_transport_fc.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/lpfc/lpfc_attr.c | 10 ++--------
+ drivers/scsi/lpfc/lpfc_sli.c  |  4 ++--
+ drivers/scsi/lpfc/lpfc_sli.h  |  2 +-
+ 3 files changed, 5 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-index 1da3d71e9f61..bb6de88aa724 100644
---- a/drivers/scsi/scsi_transport_fc.c
-+++ b/drivers/scsi/scsi_transport_fc.c
-@@ -567,7 +567,7 @@ fc_host_post_event(struct Scsi_Host *shost, u32 event_number,
+diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+index 729d343861f4..15c07481fe23 100644
+--- a/drivers/scsi/lpfc/lpfc_attr.c
++++ b/drivers/scsi/lpfc/lpfc_attr.c
+@@ -5891,7 +5891,6 @@ lpfc_get_stats(struct Scsi_Host *shost)
+ 	struct lpfc_lnk_stat * lso = &psli->lnk_stat_offsets;
+ 	LPFC_MBOXQ_t *pmboxq;
+ 	MAILBOX_t *pmb;
+-	unsigned long seconds;
+ 	int rc = 0;
  
- 	INIT_SCSI_NL_HDR(&event->snlh, SCSI_NL_TRANSPORT_FC,
- 				FC_NL_ASYNC_EVENT, len);
--	event->seconds = get_seconds();
-+	event->seconds = ktime_get_real_seconds();
- 	event->vendor_id = 0;
- 	event->host_no = shost->host_no;
- 	event->event_datalen = sizeof(u32);	/* bytes */
-@@ -635,7 +635,7 @@ fc_host_post_vendor_event(struct Scsi_Host *shost, u32 event_number,
+ 	/*
+@@ -5992,12 +5991,7 @@ lpfc_get_stats(struct Scsi_Host *shost)
  
- 	INIT_SCSI_NL_HDR(&event->snlh, SCSI_NL_TRANSPORT_FC,
- 				FC_NL_ASYNC_EVENT, len);
--	event->seconds = get_seconds();
-+	event->seconds = ktime_get_real_seconds();
- 	event->vendor_id = vendor_id;
- 	event->host_no = shost->host_no;
- 	event->event_datalen = data_len;	/* bytes */
+ 	hs->dumped_frames = -1;
+ 
+-	seconds = get_seconds();
+-	if (seconds < psli->stats_start)
+-		hs->seconds_since_last_reset = seconds +
+-				((unsigned long)-1 - psli->stats_start);
+-	else
+-		hs->seconds_since_last_reset = seconds - psli->stats_start;
++	hs->seconds_since_last_reset = ktime_get_seconds() - psli->stats_start;
+ 
+ 	mempool_free(pmboxq, phba->mbox_mem_pool);
+ 
+@@ -6076,7 +6070,7 @@ lpfc_reset_stats(struct Scsi_Host *shost)
+ 	else
+ 		lso->link_events = (phba->fc_eventTag >> 1);
+ 
+-	psli->stats_start = get_seconds();
++	psli->stats_start = ktime_get_seconds();
+ 
+ 	mempool_free(pmboxq, phba->mbox_mem_pool);
+ 
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 6f3c00a233ec..e6786a5db502 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -4591,7 +4591,7 @@ lpfc_sli_brdrestart_s3(struct lpfc_hba *phba)
+ 	spin_unlock_irq(&phba->hbalock);
+ 
+ 	memset(&psli->lnk_stat_offsets, 0, sizeof(psli->lnk_stat_offsets));
+-	psli->stats_start = get_seconds();
++	psli->stats_start = ktime_get_seconds();
+ 
+ 	/* Give the INITFF and Post time to settle. */
+ 	mdelay(100);
+@@ -4638,7 +4638,7 @@ lpfc_sli_brdrestart_s4(struct lpfc_hba *phba)
+ 	spin_unlock_irq(&phba->hbalock);
+ 
+ 	memset(&psli->lnk_stat_offsets, 0, sizeof(psli->lnk_stat_offsets));
+-	psli->stats_start = get_seconds();
++	psli->stats_start = ktime_get_seconds();
+ 
+ 	/* Reset HBA AER if it was enabled, note hba_flag was reset above */
+ 	if (hba_aer_enabled)
+diff --git a/drivers/scsi/lpfc/lpfc_sli.h b/drivers/scsi/lpfc/lpfc_sli.h
+index 431754195505..80b191d73190 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.h
++++ b/drivers/scsi/lpfc/lpfc_sli.h
+@@ -339,7 +339,7 @@ struct lpfc_sli {
+ 	struct lpfc_iocbq ** iocbq_lookup; /* array to lookup IOCB by IOTAG */
+ 	size_t iocbq_lookup_len;           /* current lengs of the array */
+ 	uint16_t  last_iotag;              /* last allocated IOTAG */
+-	unsigned long  stats_start;        /* in seconds */
++	time64_t  stats_start;		   /* in seconds */
+ 	struct lpfc_lnk_stat lnk_stat_offsets;
+ };
+ 
 -- 
 2.9.0
