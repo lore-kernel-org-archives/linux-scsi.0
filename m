@@ -1,54 +1,75 @@
-From: Evan Green <evgreen@chromium.org>
-Subject: Re: [PATCH v2 1/4] scsi: ufs: Add Configuration Descriptor to sysfs
-Date: Mon, 18 Jun 2018 09:54:13 -0700
-Message-ID: <CAE=gft7Btvacg7iYQkWfMC1Md+5Lgiz1up6QnZnypXd8VVM3-Q@mail.gmail.com>
-References: <20180615210049.126123-1-evgreen@chromium.org> <20180615210049.126123-2-evgreen@chromium.org>
- <20180616071632.GD30558@kroah.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH] scsi: scsi_debug: Fix memory leak on module unload
+Date: Mon, 18 Jun 2018 13:09:33 -0400
+Message-ID: <ce35ef87-917e-cb2d-12a0-12a0588b867f@interlog.com>
+References: <20180618160803.11674-1-lhenriques@suse.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180616071632.GD30558@kroah.com>
+In-Reply-To: <20180618160803.11674-1-lhenriques@suse.com>
+Content-Language: en-CA
 Sender: linux-kernel-owner@vger.kernel.org
-To: gregkh@linuxfoundation.org
-Cc: Vinayak Holikatti <vinholikatti@gmail.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, stanislav.nijnikov@wdc.com, Bart.VanAssche@wdc.com, adrian.hunter@intel.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Luis Henriques <lhenriques@suse.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, Jun 16, 2018 at 12:16 AM Greg Kroah-Hartman
-<gregkh@linuxfoundation.org> wrote:
->
-> On Fri, Jun 15, 2018 at 02:00:46PM -0700, Evan Green wrote:
-> > This change adds the configuration descriptor to the UFS
-> > sysfs interface. This is done in preparation for making the
-> > interface writable, which will enable provisioning UFS devices
-> > via Linux.
-> >
-> > The configuration descriptor is laid out as a header, then a set of
-> > (usually 8) copies of the same descriptor for each unit.
-> >
-> > Signed-off-by: Evan Green <evgreen@chromium.org>
-> > ---
-> > Changes since v1:
-> >       - Squashed documentation changes into this change.
-> >       - Reworked sysfs layout so that instead of a sysfs file for a
-> > unit selector and then a common set of unit attributes, each unit in
-> > the config descriptor has its own directory. This required a little
-> > bit of kobject magic. Alternatively I could use standard device
-> > attributes and simply allocate N*M of them from a template. I have
-> > that coded up, and can go with that if preferred, but I thought
-> > this was a little nicer since it wasted less memory.
->
-> Ick, don't use "raw" kobjects please, as userspace will not see them
-> correctly in the libraries that track devices and attributes, like
-> libudev.
->
-> And what is wrong with using configfs?  I thought that was the better
-> way to go for something like this.  You are configuring the device,
-> which is exactly what configfs was created for, to keep people from
-> having to do this type of mess in sysfs.
->
-> thanks,
->
-> greg k-h
+On 2018-06-18 12:08 PM, Luis Henriques wrote:
+> Since commit 80c49563e250 ("scsi: scsi_debug: implement IMMED bit") there are
+> long delays in F_SYNC_DELAY and F_SSU_DELAY.  This can cause a memory leak in
+> schedule_resp(), which can be invoked while unloading the scsi_debug module:
+> free_all_queued() had already freed all sd_dp and schedule_resp will alloc a new
+> one, which will never get freed.  Here's the kmemleak report while running
+> xfstests generic/350:
+> 
+> unreferenced object 0xffff88007d752b00 (size 128):
+>    comm "rmmod", pid 26940, jiffies 4295816945 (age 7.588s)
+>    hex dump (first 32 bytes):
+>      00 2b 75 7d 00 88 ff ff 00 00 00 00 00 00 00 00  .+u}............
+>      00 00 00 00 00 00 00 00 8e 31 a2 34 5f 03 00 00  .........1.4_...
+>    backtrace:
+>      [<000000002abd83d0>] 0xffffffffa000705e
+>      [<000000004c063fda>] scsi_dispatch_cmd+0xc7/0x1a0
+>      [<000000000c119a00>] scsi_request_fn+0x251/0x550
+>      [<000000009de0c736>] __blk_run_queue+0x3f/0x60
+>      [<000000001c4453c8>] blk_execute_rq_nowait+0x98/0xd0
+>      [<00000000d17ec79f>] blk_execute_rq+0x3a/0x50
+>      [<00000000a7654b6e>] scsi_execute+0x113/0x250
+>      [<00000000fd78f7cd>] sd_sync_cache+0x95/0x160
+>      [<0000000024dacb14>] sd_shutdown+0x9b/0xd0
+>      [<00000000e9101710>] sd_remove+0x5f/0xb0
+>      [<00000000c43f0d63>] device_release_driver_internal+0x13c/0x1f0
+>      [<00000000e8ad57b6>] bus_remove_device+0xe9/0x160
+>      [<00000000713a7b8a>] device_del+0x120/0x320
+>      [<00000000e5db670c>] __scsi_remove_device+0x115/0x150
+>      [<00000000eccbef30>] scsi_forget_host+0x20/0x60
+>      [<00000000cd5a0738>] scsi_remove_host+0x6d/0x120
+> 
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Luis Henriques <lhenriques@suse.com>
 
-Ok. Sayali's got patches for doing this via configfs, so let's go with his.
--Evan
+Acked-by: Douglas Gilbert <dgilbert@interlog.com>
+
+Thanks.
+
+> ---
+>   drivers/scsi/scsi_debug.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+> index 24d7496cd9e2..364e71861bfd 100644
+> --- a/drivers/scsi/scsi_debug.c
+> +++ b/drivers/scsi/scsi_debug.c
+> @@ -5507,9 +5507,9 @@ static void __exit scsi_debug_exit(void)
+>   	int k = sdebug_add_host;
+>   
+>   	stop_all_queued();
+> -	free_all_queued();
+>   	for (; k; k--)
+>   		sdebug_remove_adapter();
+> +	free_all_queued();
+>   	driver_unregister(&sdebug_driverfs_driver);
+>   	bus_unregister(&pseudo_lld_bus);
+>   	root_device_unregister(pseudo_primary);
+> 
