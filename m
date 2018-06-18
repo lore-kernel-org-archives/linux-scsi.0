@@ -1,18 +1,18 @@
 From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 4.16 053/279] scsi: target: fix crash with iscsi target and dvd
-Date: Mon, 18 Jun 2018 10:10:38 +0200
-Message-ID: <20180618080611.038102648@linuxfoundation.org>
-References: <20180618080608.851973560@linuxfoundation.org>
+Subject: [PATCH 4.14 032/189] scsi: target: fix crash with iscsi target and dvd
+Date: Mon, 18 Jun 2018 10:12:08 +0200
+Message-ID: <20180618081210.570362465@linuxfoundation.org>
+References: <20180618081209.254234434@linuxfoundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180618080608.851973560@linuxfoundation.org>
+In-Reply-To: <20180618081209.254234434@linuxfoundation.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
 Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, stable@vger.kernel.org, Wakko Warner <wakko@animx.eu.org>, Bart Van Assche <Bart.VanAssche@wdc.com>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sasha Levin <alexander.levin@microsoft.com>
 List-Id: linux-scsi@vger.kernel.org
 
-4.16-stable review patch.  If anyone has any objections, please let me know.
+4.14-stable review patch.  If anyone has any objections, please let me know.
 
 ------------------
 
