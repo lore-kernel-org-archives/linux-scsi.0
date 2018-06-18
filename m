@@ -1,61 +1,31 @@
-From: Luis Henriques <lhenriques@suse.com>
-Subject: [PATCH] scsi: scsi_debug: Fix memory leak on module unload
-Date: Mon, 18 Jun 2018 17:08:03 +0100
-Message-ID: <20180618160803.11674-1-lhenriques@suse.com>
+From: Al Viro <viro@ZenIV.linux.org.uk>
+Subject: Re: [PATCH] sg, bsg: mitigate read/write abuse, block uaccess in
+ release
+Date: Mon, 18 Jun 2018 17:16:58 +0100
+Message-ID: <20180618161657.GP30522@ZenIV.linux.org.uk>
+References: <20180615152335.208202-1-jannh@google.com>
+ <20180615164009.GD30522@ZenIV.linux.org.uk>
+ <90063ef3-68fa-e983-9b47-838e6076b0f4@interlog.com>
+ <813e817b-bb2f-4a47-6225-9e39f19be278@kernel.dk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <813e817b-bb2f-4a47-6225-9e39f19be278@kernel.dk>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Douglas Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Luis Henriques <lhenriques@suse.com>, stable@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: dgilbert@interlog.com, Jann Horn <jannh@google.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-hardening@lists.openwall.com, security@kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Since commit 80c49563e250 ("scsi: scsi_debug: implement IMMED bit") there are
-long delays in F_SYNC_DELAY and F_SSU_DELAY.  This can cause a memory leak in
-schedule_resp(), which can be invoked while unloading the scsi_debug module:
-free_all_queued() had already freed all sd_dp and schedule_resp will alloc a new
-one, which will never get freed.  Here's the kmemleak report while running
-xfstests generic/350:
+On Mon, Jun 18, 2018 at 09:37:01AM -0600, Jens Axboe wrote:
 
-unreferenced object 0xffff88007d752b00 (size 128):
-  comm "rmmod", pid 26940, jiffies 4295816945 (age 7.588s)
-  hex dump (first 32 bytes):
-    00 2b 75 7d 00 88 ff ff 00 00 00 00 00 00 00 00  .+u}............
-    00 00 00 00 00 00 00 00 8e 31 a2 34 5f 03 00 00  .........1.4_...
-  backtrace:
-    [<000000002abd83d0>] 0xffffffffa000705e
-    [<000000004c063fda>] scsi_dispatch_cmd+0xc7/0x1a0
-    [<000000000c119a00>] scsi_request_fn+0x251/0x550
-    [<000000009de0c736>] __blk_run_queue+0x3f/0x60
-    [<000000001c4453c8>] blk_execute_rq_nowait+0x98/0xd0
-    [<00000000d17ec79f>] blk_execute_rq+0x3a/0x50
-    [<00000000a7654b6e>] scsi_execute+0x113/0x250
-    [<00000000fd78f7cd>] sd_sync_cache+0x95/0x160
-    [<0000000024dacb14>] sd_shutdown+0x9b/0xd0
-    [<00000000e9101710>] sd_remove+0x5f/0xb0
-    [<00000000c43f0d63>] device_release_driver_internal+0x13c/0x1f0
-    [<00000000e8ad57b6>] bus_remove_device+0xe9/0x160
-    [<00000000713a7b8a>] device_del+0x120/0x320
-    [<00000000e5db670c>] __scsi_remove_device+0x115/0x150
-    [<00000000eccbef30>] scsi_forget_host+0x20/0x60
-    [<00000000cd5a0738>] scsi_remove_host+0x6d/0x120
+> > The folks responsible are no longer active in kernel development ***
+> > but as far as I know the async write(command), read(response) were
+> > added to bsg over 10 years ago as proof-of-concept and never properly
+> > worked in this async mode. The biggest design problem with it that I'm
+> 
+> It was born with that mode, but I don't think anyone ever really used it.
+> So it might feasible to simply yank it. That said, just doing a prune
+> mode at ->release() time doesn't seem like such a hard task.
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Luis Henriques <lhenriques@suse.com>
----
- drivers/scsi/scsi_debug.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 24d7496cd9e2..364e71861bfd 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -5507,9 +5507,9 @@ static void __exit scsi_debug_exit(void)
- 	int k = sdebug_add_host;
- 
- 	stop_all_queued();
--	free_all_queued();
- 	for (; k; k--)
- 		sdebug_remove_adapter();
-+	free_all_queued();
- 	driver_unregister(&sdebug_driverfs_driver);
- 	bus_unregister(&pseudo_lld_bus);
- 	root_device_unregister(pseudo_primary);
+"prune mode" being...?
