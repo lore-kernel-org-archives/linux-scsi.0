@@ -1,98 +1,75 @@
-From: Benjamin Block <bblock@linux.vnet.ibm.com>
-Subject: Re: [PATCH] sg, bsg: mitigate read/write abuse, block uaccess in
- release
-Date: Mon, 18 Jun 2018 17:26:45 +0200
-Message-ID: <20180618152645.GA15656@bblock-ThinkPad-W530>
-References: <20180615152335.208202-1-jannh@google.com>
- <20180615164009.GD30522@ZenIV.linux.org.uk>
- <90063ef3-68fa-e983-9b47-838e6076b0f4@interlog.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] aacraid: stop using deprated get_seconds()
+Date: Mon, 18 Jun 2018 17:26:47 +0200
+Message-ID: <20180618152734.1705907-1-arnd@arndb.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <90063ef3-68fa-e983-9b47-838e6076b0f4@interlog.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Douglas Gilbert <dgilbert@interlog.com>
-Cc: Al Viro <viro@ZenIV.linux.org.uk>, Jann Horn <jannh@google.com>, Jens Axboe <axboe@kernel.dk>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-hardening@lists.openwall.com, security@kernel.org
+To: Adaptec OEM Raid Solutions <aacraid@microsemi.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: y2038@lists.linaro.org, Arnd Bergmann <arnd@arndb.de>, "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>, Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>, Dave Carroll <david.carroll@microsemi.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Jun 15, 2018 at 04:47:47PM -0400, Douglas Gilbert wrote:
-> On 2018-06-15 12:40 PM, Al Viro wrote:
-> > On Fri, Jun 15, 2018 at 05:23:35PM +0200, Jann Horn wrote:
-> > 
-> >> I've mostly copypasted ib_safe_file_access() over as
-> >> scsi_safe_file_access() because I couldn't find a good common header -
-> >> please tell me if you know a better way.
-> >> The duplicate pr_err_once() calls are so that each of them fires once;
-> >> otherwise, this would probably have to be a macro.
-> >>
-> >> Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
-> >> Cc: <stable@vger.kernel.org>
-> >> Signed-off-by: Jann Horn <jannh@google.com>
-> >> ---
-> > 
-> > WTF do you mean, in ->release()?  That makes no sense whatsoever -
-> > what kind of copy_{to,from}_user() would be possible in there?
-> 
-> The folks responsible are no longer active in kernel development ***
-> but as far as I know the async write(command), read(response) were
-> added to bsg over 10 years ago as proof-of-concept and never properly
-> worked in this async mode. The biggest design problem with it that I'm
-> aware of is that two tasks which issue write(commands) at about the
-> same time to the same device can receive one another's read(response).
-> The tracking of which response belongs to which task is in part the
-> reason why the sg driver's data structures are more complex than the
-> bsg driver's are. Hence the code work to fix that problem in the bsg
-> driver is not trivial and probably a reason why no-one has attempted it.
-> 
-> Once real world users (needing an async SCSI (or general storage)
-> pass-through) find out about that bsg "feature", they don't use it.
-> They use the sg driver or something else. So the fact that bsg has
-> other glaring errors in it in async mode is no surprise to me.
-> 
-> When I took over the maintenance of the sg driver in 1998, it only
-> had an async (i.e. write(command), read(response)) interface.
-> The SG_IO ioctl was added at the suggestion of Jørg Schilling (of
-> cdrecord "fame"). The sg driver implementation was essentially to
-> put a write(command) and read(response) back-to-back. The bsg driver
-> came along later and started with the synchronous SG_IO ioctl
-> interface only. The async write(command)/read(response) functionality
-> was added later to bsg. Perhaps that part of the bsg driver should be
-> deprecated/withdrawn if a maintainer/rewriter cannot be found.
-> [BTW the bsg sync SG_IO ioctl implementation can probably get the
-> wrong response, it's just that the window is a lot narrower.]
-> 
-> That said, the bsg driver has lots of other users. For example it is
-> the only generic pass-through in Linux for the SAS Management Protocol
-> (SMP) used to control SAS based storage enclosures. I have a user space
-> package based on it (in Linux) called smp_utils which works well IMO.
-> However disk enclosures won't typically have contention between users
-> trying to control them and I'm not aware of any disk enclosures that
-> support Persistent Reservations. So the bsg driver's "async" problems
-> are not a practical issue in this case. Also I believe some high end
-> storage hardware uses bsg to communicate with their hardware from their
-> user space tools.
-> 
+get_seconds() can overflow on 32-bit architectures and is deprecated
+because of that. The use in the aacraid driver has the same problem due
+to a limited firmware interface, it also overflows in the year 2106.
 
-We definitely use the BSG IOCTL part for FC-Command passthrough (and
-other SCSI transports need it for theirs too, SAS, iSCSI, ...). And I am
-not aware of any other way to do that right now. So this can not go away
-without someone giving us a different way to do that.
+This changes all calls to get_seconds() to the non-deprecated
+ktime_get_real_seconds(), which unfortunately doesn't solve that problem
+but gets rid of one user of the deprecated interface.
 
-That said.. the read()/write() interface is just pointless atm, I don't
-see any sane way of using that in userspace.
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/scsi/aacraid/rx.c  | 2 +-
+ drivers/scsi/aacraid/sa.c  | 2 +-
+ drivers/scsi/aacraid/src.c | 4 ++--
+ 3 files changed, 4 insertions(+), 4 deletions(-)
 
-FWIW, I actually thought about rewriting that part so it becomes
-somewhat sane (tracking which thread sends what command and so on), but
-haven't had time to really doing it. With the whole discussion now, I am
-not sure anyone really needs that anyway.
-
-
-- Benjamin
-
---
-With Best Regards, Benjamin Block      /      Linux on IBM Z Kernel Development
-IBM Systems & Technology Group   /  IBM Deutschland Research & Development GmbH
-Vorsitz. AufsR.: Martina Koederitz       /      Geschäftsführung: Dirk Wittkopp
-Sitz der Gesellschaft: Böblingen / Registergericht: AmtsG Stuttgart, HRB 243294
+diff --git a/drivers/scsi/aacraid/rx.c b/drivers/scsi/aacraid/rx.c
+index 620166694171..576cdf9cc120 100644
+--- a/drivers/scsi/aacraid/rx.c
++++ b/drivers/scsi/aacraid/rx.c
+@@ -319,7 +319,7 @@ static void aac_rx_start_adapter(struct aac_dev *dev)
+ 	union aac_init *init;
+ 
+ 	init = dev->init;
+-	init->r7.host_elapsed_seconds = cpu_to_le32(get_seconds());
++	init->r7.host_elapsed_seconds = cpu_to_le32(ktime_get_real_seconds());
+ 	// We can only use a 32 bit address here
+ 	rx_sync_cmd(dev, INIT_STRUCT_BASE_ADDRESS, (u32)(ulong)dev->init_pa,
+ 	  0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL);
+diff --git a/drivers/scsi/aacraid/sa.c b/drivers/scsi/aacraid/sa.c
+index 882f40353b96..efa96c1c6aa3 100644
+--- a/drivers/scsi/aacraid/sa.c
++++ b/drivers/scsi/aacraid/sa.c
+@@ -251,7 +251,7 @@ static void aac_sa_start_adapter(struct aac_dev *dev)
+ 	 * Fill in the remaining pieces of the init.
+ 	 */
+ 	init = dev->init;
+-	init->r7.host_elapsed_seconds = cpu_to_le32(get_seconds());
++	init->r7.host_elapsed_seconds = cpu_to_le32(ktime_get_real_seconds());
+ 	/* We can only use a 32 bit address here */
+ 	sa_sync_cmd(dev, INIT_STRUCT_BASE_ADDRESS, 
+ 			(u32)(ulong)dev->init_pa, 0, 0, 0, 0, 0,
+diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c
+index 4ebb35a29caa..5a299975a289 100644
+--- a/drivers/scsi/aacraid/src.c
++++ b/drivers/scsi/aacraid/src.c
+@@ -409,7 +409,7 @@ static void aac_src_start_adapter(struct aac_dev *dev)
+ 
+ 	init = dev->init;
+ 	if (dev->comm_interface == AAC_COMM_MESSAGE_TYPE3) {
+-		init->r8.host_elapsed_seconds = cpu_to_le32(get_seconds());
++		init->r8.host_elapsed_seconds = cpu_to_le32(ktime_get_real_seconds());
+ 		src_sync_cmd(dev, INIT_STRUCT_BASE_ADDRESS,
+ 			lower_32_bits(dev->init_pa),
+ 			upper_32_bits(dev->init_pa),
+@@ -417,7 +417,7 @@ static void aac_src_start_adapter(struct aac_dev *dev)
+ 			(AAC_MAX_HRRQ - 1) * sizeof(struct _rrq),
+ 			0, 0, 0, NULL, NULL, NULL, NULL, NULL);
+ 	} else {
+-		init->r7.host_elapsed_seconds = cpu_to_le32(get_seconds());
++		init->r7.host_elapsed_seconds = cpu_to_le32(ktime_get_real_seconds());
+ 		// We can only use a 32 bit address here
+ 		src_sync_cmd(dev, INIT_STRUCT_BASE_ADDRESS,
+ 			(u32)(ulong)dev->init_pa, 0, 0, 0, 0, 0,
+-- 
+2.9.0
