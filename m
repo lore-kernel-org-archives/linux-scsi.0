@@ -1,62 +1,74 @@
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 4.14 032/189] scsi: target: fix crash with iscsi target and dvd
-Date: Mon, 18 Jun 2018 10:12:08 +0200
-Message-ID: <20180618081210.570362465@linuxfoundation.org>
-References: <20180618081209.254234434@linuxfoundation.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] snic: fix printing time intervals
+Date: Mon, 18 Jun 2018 17:18:41 +0200
+Message-ID: <20180618151907.1453733-1-arnd@arndb.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180618081209.254234434@linuxfoundation.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, stable@vger.kernel.org, Wakko Warner <wakko@animx.eu.org>, Bart Van Assche <Bart.VanAssche@wdc.com>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sasha Levin <alexander.levin@microsoft.com>
+To: Karan Tilak Kumar <kartilak@cisco.com>, Sesidhar Baddela <sebaddel@cisco.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: y2038@lists.linaro.org, Arnd Bergmann <arnd@arndb.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-4.14-stable review patch.  If anyone has any objections, please let me know.
+We don't want to use 'struct timespec' because of the y2038 overflow
+problem. The overflow is not actually an issue here, but it's easy to
+replace with 'timespec64' for consistency. However, it's worth pointing
+out that nanosecond values have nine digits, not eight or ten, so I'm
+fixing the format strings accordingly as well.
 
-------------------
-
-From: Ming Lei <ming.lei@redhat.com>
-
-[ Upstream commit 8e1ceafe50ec4d1bcfae154dd70e7cb6946a6177 ]
-
-When the current page can't be added to bio, one new bio should be
-created for adding this page again, instead of ignoring this page.
-
-This patch fixes kernel crash with iscsi target and dvd, as reported by
-Wakko.
-
-Cc: Wakko Warner <wakko@animx.eu.org>
-Cc: Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: target-devel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Christoph Hellwig <hch@lst.de>
-Fixes: 84c8590646d5b35804 ("target: avoid accessing .bi_vcnt directly")
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <alexander.levin@microsoft.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/target/target_core_pscsi.c |    2 ++
- 1 file changed, 2 insertions(+)
+ drivers/scsi/snic/snic_debugfs.c | 10 +++++-----
+ drivers/scsi/snic/snic_trc.c     |  6 +++---
+ 2 files changed, 8 insertions(+), 8 deletions(-)
 
---- a/drivers/target/target_core_pscsi.c
-+++ b/drivers/target/target_core_pscsi.c
-@@ -890,6 +890,7 @@ pscsi_map_sg(struct se_cmd *cmd, struct
- 			bytes = min(bytes, data_len);
+diff --git a/drivers/scsi/snic/snic_debugfs.c b/drivers/scsi/snic/snic_debugfs.c
+index 269ddf791a73..0abe17c1a73b 100644
+--- a/drivers/scsi/snic/snic_debugfs.c
++++ b/drivers/scsi/snic/snic_debugfs.c
+@@ -200,7 +200,7 @@ snic_stats_show(struct seq_file *sfp, void *data)
+ {
+ 	struct snic *snic = (struct snic *) sfp->private;
+ 	struct snic_stats *stats = &snic->s_stats;
+-	struct timespec last_isr_tms, last_ack_tms;
++	struct timespec64 last_isr_tms, last_ack_tms;
+ 	u64 maxio_tm;
+ 	int i;
  
- 			if (!bio) {
-+new_bio:
- 				nr_vecs = min_t(int, BIO_MAX_PAGES, nr_pages);
- 				nr_pages -= nr_vecs;
- 				/*
-@@ -931,6 +932,7 @@ pscsi_map_sg(struct se_cmd *cmd, struct
- 				 * be allocated with pscsi_get_bio() above.
- 				 */
- 				bio = NULL;
-+				goto new_bio;
- 			}
+@@ -312,12 +312,12 @@ snic_stats_show(struct seq_file *sfp, void *data)
+ 		   "\t\t Other Statistics\n"
+ 		   "\n---------------------------------------------\n");
  
- 			data_len -= bytes;
+-	jiffies_to_timespec(stats->misc.last_isr_time, &last_isr_tms);
+-	jiffies_to_timespec(stats->misc.last_ack_time, &last_ack_tms);
++	jiffies_to_timespec64(stats->misc.last_isr_time, &last_isr_tms);
++	jiffies_to_timespec64(stats->misc.last_ack_time, &last_ack_tms);
+ 
+ 	seq_printf(sfp,
+-		   "Last ISR Time               : %llu (%8lu.%8lu)\n"
+-		   "Last Ack Time               : %llu (%8lu.%8lu)\n"
++		   "Last ISR Time               : %llu (%8llu.%09lu)\n"
++		   "Last Ack Time               : %llu (%8llu.%09lu)\n"
+ 		   "Ack ISRs                    : %llu\n"
+ 		   "IO Cmpl ISRs                : %llu\n"
+ 		   "Err Notify ISRs             : %llu\n"
+diff --git a/drivers/scsi/snic/snic_trc.c b/drivers/scsi/snic/snic_trc.c
+index f00ebf4717e0..fc60c933d6c0 100644
+--- a/drivers/scsi/snic/snic_trc.c
++++ b/drivers/scsi/snic/snic_trc.c
+@@ -65,12 +65,12 @@ static int
+ snic_fmt_trc_data(struct snic_trc_data *td, char *buf, int buf_sz)
+ {
+ 	int len = 0;
+-	struct timespec tmspec;
++	struct timespec64 tmspec;
+ 
+-	jiffies_to_timespec(td->ts, &tmspec);
++	jiffies_to_timespec64(td->ts, &tmspec);
+ 
+ 	len += snprintf(buf, buf_sz,
+-			"%lu.%10lu %-25s %3d %4x %16llx %16llx %16llx %16llx %16llx\n",
++			"%llu.%09lu %-25s %3d %4x %16llx %16llx %16llx %16llx %16llx\n",
+ 			tmspec.tv_sec,
+ 			tmspec.tv_nsec,
+ 			td->fn,
+-- 
+2.9.0
