@@ -1,90 +1,71 @@
-From: "jianchao.wang" <jianchao.w.wang@oracle.com>
-Subject: Re: [PATCH 1/2] block: export __blk_complete_request
-Date: Tue, 19 Jun 2018 22:52:33 +0800
-Message-ID: <5a952345-c245-57ee-29c7-4022e1664a46@oracle.com>
-References: <1529027847-29085-1-git-send-email-jianchao.w.wang@oracle.com>
- <20180619140942.GA13089@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180619140942.GA13089@lst.de>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: axboe@kernel.dk, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: David Disseldorp <ddiss@suse.de>
+Subject: [PATCH v3] target: fix truncated PR-in ReadKeys response
+Date: Tue, 19 Jun 2018 17:58:24 +0200
+Message-ID: <20180619155824.15388-1-ddiss@suse.de>
+References: <20180619140216.23077c60@suse.de>
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20180619140216.23077c60@suse.de>
+Sender: stable-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: target-devel@vger.kernel.org, stable@vger.kernel.org, David Disseldorp <ddiss@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Christoph
+SPC5r17 states that the contents of the ADDITIONAL LENGTH field are not
+altered based on the allocation length, so always calculate and pack the
+full key list length even if the list itself is truncated.
 
-Thanks for your kindly response.
-The patch I posted ('scsi_transport_fc: use __blk_complete_request in fc_bsg_job_timeout')
-is just based on code review. I don't have actual issue on it. :)
+According to Maged:
+  Yes it fixes the "Storage Spaces Persistent Reservation" test in the
+  Windows 2016 Server Failover Cluster validation suites when having
+  many connections that result in more than 8 registrations. I tested
+  your patch on 4.17 with iblock.
 
-Thanks
-Jianchao
+This behaviour can be tested using the libiscsi PrinReadKeys.Truncate
+test.
 
-On 06/19/2018 10:09 PM, Christoph Hellwig wrote:
-> Does the patch below fix your FC issue?
-> 
-> ---
->>From 5e5b4fc51c84a0f5c27f2f770be7a4eaed0f6e8c Mon Sep 17 00:00:00 2001
-> From: Christoph Hellwig <hch@lst.de>
-> Date: Tue, 19 Jun 2018 13:59:52 +0200
-> Subject: block: fix timeout changes for legacy request drivers
-> 
-> blk_mq_complete_request can only be called for blk-mq drivers, but when
-> removing the BLK_EH_HANDLED return value, two legacy request timeout
-> methods incorrectly got switched to call blk_mq_complete_request.
-> Call __blk_complete_request instead to reinstance the previous behavior.
-> For that __blk_complete_request needs to be exported.
-> 
-> Fixes: 1fc2b62e ("scsi_transport_fc: complete requests from ->timeout")
-> Fixes: 0df0bb08 ("null_blk: complete requests from ->timeout")
-> Reported-by: Jianchao Wang <jianchao.w.wang@oracle.com>
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  block/blk-softirq.c              | 1 +
->  drivers/block/null_blk.c         | 2 +-
->  drivers/scsi/scsi_transport_fc.c | 2 +-
->  3 files changed, 3 insertions(+), 2 deletions(-)
-> 
-> diff --git a/block/blk-softirq.c b/block/blk-softirq.c
-> index 01e2b353a2b9..15c1f5e12eb8 100644
-> --- a/block/blk-softirq.c
-> +++ b/block/blk-softirq.c
-> @@ -144,6 +144,7 @@ void __blk_complete_request(struct request *req)
->  
->  	local_irq_restore(flags);
->  }
-> +EXPORT_SYMBOL(__blk_complete_request);
->  
->  /**
->   * blk_complete_request - end I/O on a request
-> diff --git a/drivers/block/null_blk.c b/drivers/block/null_blk.c
-> index 7948049f6c43..042c778e5a4e 100644
-> --- a/drivers/block/null_blk.c
-> +++ b/drivers/block/null_blk.c
-> @@ -1365,7 +1365,7 @@ static blk_qc_t null_queue_bio(struct request_queue *q, struct bio *bio)
->  static enum blk_eh_timer_return null_rq_timed_out_fn(struct request *rq)
->  {
->  	pr_info("null: rq %p timed out\n", rq);
-> -	blk_mq_complete_request(rq);
-> +	__blk_complete_request(rq);
->  	return BLK_EH_DONE;
->  }
->  
-> diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-> index 1da3d71e9f61..13948102ca29 100644
-> --- a/drivers/scsi/scsi_transport_fc.c
-> +++ b/drivers/scsi/scsi_transport_fc.c
-> @@ -3592,7 +3592,7 @@ fc_bsg_job_timeout(struct request *req)
->  
->  	/* the blk_end_sync_io() doesn't check the error */
->  	if (inflight)
-> -		blk_mq_complete_request(req);
-> +		__blk_complete_request(req);
->  	return BLK_EH_DONE;
->  }
->  
-> 
+Cc: stable@vger.kernel.org
+Signed-off-by: David Disseldorp <ddiss@suse.de>
+Reviewed-by: Mike Christie <mchristi@redhat.com>
+Tested-by: Maged Mokhtar <mmokhtar@petasan.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+Changes since v2:
+* drop unnecessary braces
+* add Christoph's Reviewed-by
+
+Changes since v1:
+* CC stable
+* mention Maged's Windows PR test fix comment in commit message
+* add Reviewed-by and Tested-by tags
+
+ drivers/target/target_core_pr.c | 15 ++++++++++-----
+ 1 file changed, 10 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
+index 01ac306131c1..10db5656fd5d 100644
+--- a/drivers/target/target_core_pr.c
++++ b/drivers/target/target_core_pr.c
+@@ -3727,11 +3727,16 @@ core_scsi3_pri_read_keys(struct se_cmd *cmd)
+ 		 * Check for overflow of 8byte PRI READ_KEYS payload and
+ 		 * next reservation key list descriptor.
+ 		 */
+-		if ((add_len + 8) > (cmd->data_length - 8))
+-			break;
+-
+-		put_unaligned_be64(pr_reg->pr_res_key, &buf[off]);
+-		off += 8;
++		if (off + 8 <= cmd->data_length) {
++			put_unaligned_be64(pr_reg->pr_res_key, &buf[off]);
++			off += 8;
++		}
++		/*
++		 * SPC5r17: 6.16.2 READ KEYS service action
++		 * The ADDITIONAL LENGTH field indicates the number of bytes in
++		 * the Reservation key list. The contents of the ADDITIONAL
++		 * LENGTH field are not altered based on the allocation length
++		 */
+ 		add_len += 8;
+ 	}
+ 	spin_unlock(&dev->t10_pr.registration_lock);
+-- 
+2.13.7
