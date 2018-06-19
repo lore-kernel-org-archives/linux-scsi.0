@@ -1,71 +1,58 @@
-From: David Disseldorp <ddiss@suse.de>
-Subject: [PATCH v3] target: fix truncated PR-in ReadKeys response
-Date: Tue, 19 Jun 2018 17:58:24 +0200
-Message-ID: <20180619155824.15388-1-ddiss@suse.de>
-References: <20180619140216.23077c60@suse.de>
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20180619140216.23077c60@suse.de>
-Sender: stable-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: target-devel@vger.kernel.org, stable@vger.kernel.org, David Disseldorp <ddiss@suse.de>
+From: Souptick Joarder <jrdr.linux@gmail.com>
+Subject: Re: [PATCH] scsi: cxlflash: Change return type for fault handler
+Date: Tue, 19 Jun 2018 23:11:35 +0530
+Message-ID: <CAFqt6zbgaqVxAVcX+ryzP5-qDDZs+Z1rNrY4mHhwr=THO++5Vg@mail.gmail.com>
+References: <20180611194204.GA18687@jordon-HP-15-Notebook-PC>
+ <20180613232347.GA3851@p8tul1-build.aus.stglabs.ibm.com> <CAFqt6zb-fDRdH1_k7QwW_YEErKYPYFNpJFrK7N82P0PLiKnRtA@mail.gmail.com>
+ <1E0C8AFA-5168-4916-932E-8E1C3F0EADE6@linux.vnet.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1E0C8AFA-5168-4916-932E-8E1C3F0EADE6@linux.vnet.ibm.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
+Cc: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Matthew Wilcox <willy@infradead.org>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel@vger.kernel.org, Sabyasachi Gupta <sabyasachi.linux@gmail.com>, brajeswar.linux@gmail.com
 List-Id: linux-scsi@vger.kernel.org
 
-SPC5r17 states that the contents of the ADDITIONAL LENGTH field are not
-altered based on the allocation length, so always calculate and pack the
-full key list length even if the list itself is truncated.
+On Tue, Jun 19, 2018 at 7:41 PM, Uma Krishnan
+<ukrishn@linux.vnet.ibm.com> wrote:
+>
+>
+>> On Jun 19, 2018, at 12:10 AM, Souptick Joarder <jrdr.linux@gmail.com> wrote:
+>>
+>> On Thu, Jun 14, 2018 at 4:53 AM, Matthew R. Ochs
+>> <mrochs@linux.vnet.ibm.com> wrote:
+>>> On Tue, Jun 12, 2018 at 01:12:04AM +0530, Souptick Joarder wrote:
+>>>> Use new return type vm_fault_t for fault handler. For
+>>>> now, this is just documenting that the function returns
+>>>> a VM_FAULT value rather than an errno. Once all instances
+>>>> are converted, vm_fault_t will become a distinct type.
+>>>>
+>>>> Ref-> commit 1c8f422059ae ("mm: change return type to vm_fault_t")
+>>>>
+>>>> Signed-off-by: Souptick Joarder <jrdr.linux@gmail.com>
+>>>
+>>> This looks fine to me.
+>>>
+>>> FYI that there is another handler for this driver in a series
+>>> destined for 4.18 and currently in next/master.
+>>>
+>>> Acked-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
+>>>
+>>
+>> Matthew, is this patch queued for 4.19 ?
+>>
+> Below is the commit that added fault handler in ocxl. It is in 4.18 rc1 (upstream/master tree)
+>
+> commit 93b8f8df552c5a30bfddb75a632f1b2a436c2cae
+>     scsi: cxlflash: Support adapter context mmap and release
 
-According to Maged:
-  Yes it fixes the "Storage Spaces Persistent Reservation" test in the
-  Windows 2016 Server Failover Cluster validation suites when having
-  many connections that result in more than 8 registrations. I tested
-  your patch on 4.17 with iblock.
 
-This behaviour can be tested using the libiscsi PrinReadKeys.Truncate
-test.
+No, that's a different patch with commit
+93b8f8df552c5a30bfddb75a632f1b2a436c2cae.
+Not the patch under discussion in this mail thread :)
 
-Cc: stable@vger.kernel.org
-Signed-off-by: David Disseldorp <ddiss@suse.de>
-Reviewed-by: Mike Christie <mchristi@redhat.com>
-Tested-by: Maged Mokhtar <mmokhtar@petasan.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
-Changes since v2:
-* drop unnecessary braces
-* add Christoph's Reviewed-by
+Anyway the other patch with commit 93b8f8df552c5a30b also has to be modified
+to use new return type vm_fault_t for fault handler ocxlflash_mmap_fault().
 
-Changes since v1:
-* CC stable
-* mention Maged's Windows PR test fix comment in commit message
-* add Reviewed-by and Tested-by tags
-
- drivers/target/target_core_pr.c | 15 ++++++++++-----
- 1 file changed, 10 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
-index 01ac306131c1..10db5656fd5d 100644
---- a/drivers/target/target_core_pr.c
-+++ b/drivers/target/target_core_pr.c
-@@ -3727,11 +3727,16 @@ core_scsi3_pri_read_keys(struct se_cmd *cmd)
- 		 * Check for overflow of 8byte PRI READ_KEYS payload and
- 		 * next reservation key list descriptor.
- 		 */
--		if ((add_len + 8) > (cmd->data_length - 8))
--			break;
--
--		put_unaligned_be64(pr_reg->pr_res_key, &buf[off]);
--		off += 8;
-+		if (off + 8 <= cmd->data_length) {
-+			put_unaligned_be64(pr_reg->pr_res_key, &buf[off]);
-+			off += 8;
-+		}
-+		/*
-+		 * SPC5r17: 6.16.2 READ KEYS service action
-+		 * The ADDITIONAL LENGTH field indicates the number of bytes in
-+		 * the Reservation key list. The contents of the ADDITIONAL
-+		 * LENGTH field are not altered based on the allocation length
-+		 */
- 		add_len += 8;
- 	}
- 	spin_unlock(&dev->t10_pr.registration_lock);
--- 
-2.13.7
+Shall I modify and submit the same ?
