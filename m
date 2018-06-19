@@ -1,48 +1,90 @@
-From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Subject: Re: [PATCH] scsi: cxlflash: Change return type for fault handler
-Date: Tue, 19 Jun 2018 09:11:38 -0500
-Message-ID: <1E0C8AFA-5168-4916-932E-8E1C3F0EADE6@linux.vnet.ibm.com>
-References: <20180611194204.GA18687@jordon-HP-15-Notebook-PC>
- <20180613232347.GA3851@p8tul1-build.aus.stglabs.ibm.com>
- <CAFqt6zb-fDRdH1_k7QwW_YEErKYPYFNpJFrK7N82P0PLiKnRtA@mail.gmail.com>
-Mime-Version: 1.0 (Mac OS X Mail 11.4 \(3445.8.2\))
-Content-Type: text/plain;
-        charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+From: "jianchao.wang" <jianchao.w.wang@oracle.com>
+Subject: Re: [PATCH 1/2] block: export __blk_complete_request
+Date: Tue, 19 Jun 2018 22:52:33 +0800
+Message-ID: <5a952345-c245-57ee-29c7-4022e1664a46@oracle.com>
+References: <1529027847-29085-1-git-send-email-jianchao.w.wang@oracle.com>
+ <20180619140942.GA13089@lst.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAFqt6zb-fDRdH1_k7QwW_YEErKYPYFNpJFrK7N82P0PLiKnRtA@mail.gmail.com>
+In-Reply-To: <20180619140942.GA13089@lst.de>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Souptick Joarder <jrdr.linux@gmail.com>
-Cc: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Matthew Wilcox <willy@infradead.org>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel@vger.kernel.org, Sabyasachi Gupta <sabyasachi.linux@gmail.com>, brajeswar.linux@gmail.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: axboe@kernel.dk, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+Hi Christoph
 
+Thanks for your kindly response.
+The patch I posted ('scsi_transport_fc: use __blk_complete_request in fc_bsg_job_timeout')
+is just based on code review. I don't have actual issue on it. :)
 
-> On Jun 19, 2018, at 12:10 AM, Souptick Joarder <jrdr.linux@gmail.com> wrote:
-> 
-> On Thu, Jun 14, 2018 at 4:53 AM, Matthew R. Ochs
-> <mrochs@linux.vnet.ibm.com> wrote:
->> On Tue, Jun 12, 2018 at 01:12:04AM +0530, Souptick Joarder wrote:
->>> Use new return type vm_fault_t for fault handler. For
->>> now, this is just documenting that the function returns
->>> a VM_FAULT value rather than an errno. Once all instances
->>> are converted, vm_fault_t will become a distinct type.
->>> 
->>> Ref-> commit 1c8f422059ae ("mm: change return type to vm_fault_t")
->>> 
->>> Signed-off-by: Souptick Joarder <jrdr.linux@gmail.com>
->> 
->> This looks fine to me.
->> 
->> FYI that there is another handler for this driver in a series
->> destined for 4.18 and currently in next/master.
->> 
->> Acked-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
->> 
-> 
-> Matthew, is this patch queued for 4.19 ?
-> 
-Below is the commit that added fault handler in ocxl. It is in 4.18 rc1 (upstream/master tree)
+Thanks
+Jianchao
 
-commit 93b8f8df552c5a30bfddb75a632f1b2a436c2cae
-    scsi: cxlflash: Support adapter context mmap and release
+On 06/19/2018 10:09 PM, Christoph Hellwig wrote:
+> Does the patch below fix your FC issue?
+> 
+> ---
+>>From 5e5b4fc51c84a0f5c27f2f770be7a4eaed0f6e8c Mon Sep 17 00:00:00 2001
+> From: Christoph Hellwig <hch@lst.de>
+> Date: Tue, 19 Jun 2018 13:59:52 +0200
+> Subject: block: fix timeout changes for legacy request drivers
+> 
+> blk_mq_complete_request can only be called for blk-mq drivers, but when
+> removing the BLK_EH_HANDLED return value, two legacy request timeout
+> methods incorrectly got switched to call blk_mq_complete_request.
+> Call __blk_complete_request instead to reinstance the previous behavior.
+> For that __blk_complete_request needs to be exported.
+> 
+> Fixes: 1fc2b62e ("scsi_transport_fc: complete requests from ->timeout")
+> Fixes: 0df0bb08 ("null_blk: complete requests from ->timeout")
+> Reported-by: Jianchao Wang <jianchao.w.wang@oracle.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  block/blk-softirq.c              | 1 +
+>  drivers/block/null_blk.c         | 2 +-
+>  drivers/scsi/scsi_transport_fc.c | 2 +-
+>  3 files changed, 3 insertions(+), 2 deletions(-)
+> 
+> diff --git a/block/blk-softirq.c b/block/blk-softirq.c
+> index 01e2b353a2b9..15c1f5e12eb8 100644
+> --- a/block/blk-softirq.c
+> +++ b/block/blk-softirq.c
+> @@ -144,6 +144,7 @@ void __blk_complete_request(struct request *req)
+>  
+>  	local_irq_restore(flags);
+>  }
+> +EXPORT_SYMBOL(__blk_complete_request);
+>  
+>  /**
+>   * blk_complete_request - end I/O on a request
+> diff --git a/drivers/block/null_blk.c b/drivers/block/null_blk.c
+> index 7948049f6c43..042c778e5a4e 100644
+> --- a/drivers/block/null_blk.c
+> +++ b/drivers/block/null_blk.c
+> @@ -1365,7 +1365,7 @@ static blk_qc_t null_queue_bio(struct request_queue *q, struct bio *bio)
+>  static enum blk_eh_timer_return null_rq_timed_out_fn(struct request *rq)
+>  {
+>  	pr_info("null: rq %p timed out\n", rq);
+> -	blk_mq_complete_request(rq);
+> +	__blk_complete_request(rq);
+>  	return BLK_EH_DONE;
+>  }
+>  
+> diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+> index 1da3d71e9f61..13948102ca29 100644
+> --- a/drivers/scsi/scsi_transport_fc.c
+> +++ b/drivers/scsi/scsi_transport_fc.c
+> @@ -3592,7 +3592,7 @@ fc_bsg_job_timeout(struct request *req)
+>  
+>  	/* the blk_end_sync_io() doesn't check the error */
+>  	if (inflight)
+> -		blk_mq_complete_request(req);
+> +		__blk_complete_request(req);
+>  	return BLK_EH_DONE;
+>  }
+>  
+> 
