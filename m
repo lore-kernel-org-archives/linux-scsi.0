@@ -1,35 +1,29 @@
-From: Souptick Joarder <jrdr.linux@gmail.com>
-Subject: Re: [PATCH] scsi: cxlflash: Change return type for fault handler
-Date: Tue, 19 Jun 2018 10:40:46 +0530
-Message-ID: <CAFqt6zb-fDRdH1_k7QwW_YEErKYPYFNpJFrK7N82P0PLiKnRtA@mail.gmail.com>
-References: <20180611194204.GA18687@jordon-HP-15-Notebook-PC> <20180613232347.GA3851@p8tul1-build.aus.stglabs.ibm.com>
+From: Juergen Gross <jgross@suse.com>
+Subject: Re: [PATCH v3] xen/scsiback: add error handling for xenbus_printf
+Date: Tue, 19 Jun 2018 14:52:57 +0200
+Message-ID: <f16b5ad8-1748-5b80-22a9-380bca79852b@suse.com>
+References: <1528775185-39467-1-git-send-email-jiazhouyang09@gmail.com>
+ <1529108077-60035-1-git-send-email-jiazhouyang09@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180613232347.GA3851@p8tul1-build.aus.stglabs.ibm.com>
+In-Reply-To: <1529108077-60035-1-git-send-email-jiazhouyang09@gmail.com>
+Content-Language: de-DE
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
-Cc: Matthew Wilcox <willy@infradead.org>, manoj@linux.vnet.ibm.com, ukrishn@linux.vnet.ibm.com, jejb@linux.vnet.ibm.com, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel@vger.kernel.org, Sabyasachi Gupta <sabyasachi.linux@gmail.com>, brajeswar.linux@gmail.com
+To: Zhouyang Jia <jiazhouyang09@gmail.com>
+Cc: Boris Ostrovsky <boris.ostrovsky@oracle.com>, xen-devel@lists.xenproject.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Jun 14, 2018 at 4:53 AM, Matthew R. Ochs
-<mrochs@linux.vnet.ibm.com> wrote:
-> On Tue, Jun 12, 2018 at 01:12:04AM +0530, Souptick Joarder wrote:
->> Use new return type vm_fault_t for fault handler. For
->> now, this is just documenting that the function returns
->> a VM_FAULT value rather than an errno. Once all instances
->> are converted, vm_fault_t will become a distinct type.
->>
->> Ref-> commit 1c8f422059ae ("mm: change return type to vm_fault_t")
->>
->> Signed-off-by: Souptick Joarder <jrdr.linux@gmail.com>
->
-> This looks fine to me.
->
-> FYI that there is another handler for this driver in a series
-> destined for 4.18 and currently in next/master.
->
-> Acked-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
->
+On 16/06/18 02:14, Zhouyang Jia wrote:
+> When xenbus_printf fails, the lack of error-handling code may
+> cause unexpected results.
+> 
+> This patch adds error-handling code after calling xenbus_printf.
+> 
+> Signed-off-by: Zhouyang Jia <jiazhouyang09@gmail.com>
 
-Matthew, is this patch queued for 4.19 ?
+Reviewed-by: Juergen Gross <jgross@suse.com>
+
+
+Juergen
