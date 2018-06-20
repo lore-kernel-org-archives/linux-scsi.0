@@ -1,30 +1,31 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: sd: Optimal I/O size should be a multiple of physical block size
-Date: Tue, 19 Jun 2018 21:29:41 -0400
-Message-ID: <yq1lgbafdoa.fsf@oracle.com>
-References: <207561f82d5638c8f513f9aaf970a07098bfbb0f.camel@scientia.net>
-        <20180607015123.17862-1-martin.petersen@oracle.com>
+Subject: Re: [PATCH] scsi: cxlflash: Change return type for fault handler
+Date: Tue, 19 Jun 2018 21:35:19 -0400
+Message-ID: <yq1h8lyfdew.fsf@oracle.com>
+References: <20180611194204.GA18687@jordon-HP-15-Notebook-PC>
+        <20180613232347.GA3851@p8tul1-build.aus.stglabs.ibm.com>
+        <CAFqt6zb-fDRdH1_k7QwW_YEErKYPYFNpJFrK7N82P0PLiKnRtA@mail.gmail.com>
+        <1E0C8AFA-5168-4916-932E-8E1C3F0EADE6@linux.vnet.ibm.com>
+        <CAFqt6zbgaqVxAVcX+ryzP5-qDDZs+Z1rNrY4mHhwr=THO++5Vg@mail.gmail.com>
+        <20180619232930.GB10658@p8tul1-build.aus.stglabs.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20180607015123.17862-1-martin.petersen@oracle.com> (Martin
-        K. Petersen's message of "Wed, 6 Jun 2018 21:51:23 -0400")
-Sender: stable-owner@vger.kernel.org
-To: Christoph Anton Mitterer <calestyo@scientia.net>
-Cc: linux-scsi@vger.kernel.org, stable@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20180619232930.GB10658@p8tul1-build.aus.stglabs.ibm.com>
+        (Matthew R. Ochs's message of "Tue, 19 Jun 2018 18:29:30 -0500")
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
+Cc: Souptick Joarder <jrdr.linux@gmail.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, Matthew Wilcox <willy@infradead.org>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel@vger.kernel.org, Sabyasachi Gupta <sabyasachi.linux@gmail.com>, brajeswar.linux@gmail.com
 List-Id: linux-scsi@vger.kernel.org
 
 
-Christoph,
+Matthew,
 
-> It was reported that some devices report an OPTIMAL TRANSFER LENGTH of
-> 0xFFFF blocks. That looks bogus, especially for a device with a
-> 4096-byte physical block size.
->
-> Ignore OPTIMAL TRANSFER LENGTH if it is not a multiple of the device's
-> reported physical block size.
+> Since this has not yet been queued for 4.19, please submit a v2 with
+> the modifications to also update the return type for
+> ocxlflash_mmap_fault().
 
-Did you get a chance to test the updated patch?
+Yes, please. I have been waiting for an amended patch.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
