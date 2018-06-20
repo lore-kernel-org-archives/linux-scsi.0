@@ -1,7 +1,7 @@
 From: Jianchao Wang <jianchao.w.wang@oracle.com>
-Subject: [PATCH 3/5] null_blk: use __blk_mq_complete_request in timeout path
-Date: Wed, 20 Jun 2018 21:22:42 +0800
-Message-ID: <1529500964-28429-4-git-send-email-jianchao.w.wang@oracle.com>
+Subject: [PATCH 2/5] nbd: use __blk_mq_complete_request in timeout path
+Date: Wed, 20 Jun 2018 21:22:41 +0800
+Message-ID: <1529500964-28429-3-git-send-email-jianchao.w.wang@oracle.com>
 References: <1529500964-28429-1-git-send-email-jianchao.w.wang@oracle.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1529500964-28429-1-git-send-email-jianchao.w.wang@oracle.com>
@@ -17,19 +17,19 @@ in timeout path to complete a timeout request.
 
 Signed-off-by: Jianchao Wang <jianchao.w.wang@oracle.com>
 ---
- drivers/block/null_blk.c | 2 +-
+ drivers/block/nbd.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/block/null_blk.c b/drivers/block/null_blk.c
-index 7948049..d756539 100644
---- a/drivers/block/null_blk.c
-+++ b/drivers/block/null_blk.c
-@@ -1428,7 +1428,7 @@ static void null_request_fn(struct request_queue *q)
- static enum blk_eh_timer_return null_timeout_rq(struct request *rq, bool res)
- {
- 	pr_info("null: rq %p timed out\n", rq);
--	blk_mq_complete_request(rq);
-+	__blk_mq_complete_request(rq);
+diff --git a/drivers/block/nbd.c b/drivers/block/nbd.c
+index 3b7083b..d7e533a 100644
+--- a/drivers/block/nbd.c
++++ b/drivers/block/nbd.c
+@@ -354,7 +354,7 @@ static enum blk_eh_timer_return nbd_xmit_timeout(struct request *req,
+ 	sock_shutdown(nbd);
+ 	nbd_config_put(nbd);
+ done:
+-	blk_mq_complete_request(req);
++	__blk_mq_complete_request(req);
  	return BLK_EH_DONE;
  }
  
