@@ -1,42 +1,46 @@
-From: "jianchao.wang" <jianchao.w.wang@oracle.com>
-Subject: Re: [PATCH 0/5]stop normal completion path entering a timeout req
-Date: Thu, 21 Jun 2018 21:13:30 +0800
-Message-ID: <df1633e8-7df4-976b-a7d5-77679c92843a@oracle.com>
-References: <1529500964-28429-1-git-send-email-jianchao.w.wang@oracle.com>
- <20180620181601.GA24145@localhost.localdomain>
- <e87f5946-bb21-942e-2dcc-b24cee1ad23c@oracle.com>
- <20180621081900.GA5183@lst.de>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH] sg, bsg: mitigate read/write abuse, block uaccess in
+ release
+Date: Thu, 21 Jun 2018 08:07:23 -0600
+Message-ID: <36a641db-fb1d-6c4c-7f1b-172f2b1cde32@kernel.dk>
+References: <20180615152335.208202-1-jannh@google.com>
+ <20180615164009.GD30522@ZenIV.linux.org.uk>
+ <90063ef3-68fa-e983-9b47-838e6076b0f4@interlog.com>
+ <813e817b-bb2f-4a47-6225-9e39f19be278@kernel.dk>
+ <20180621123431.GA558@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180621081900.GA5183@lst.de>
+In-Reply-To: <20180621123431.GA558@infradead.org>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Keith Busch <keith.busch@intel.com>, axboe@kernel.dk, martin.petersen@oracle.com, josef@toxicpanda.com, ulf.hansson@linaro.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: dgilbert@interlog.com, Al Viro <viro@ZenIV.linux.org.uk>, Jann Horn <jannh@google.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-hardening@lists.openwall.com, security@kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Christoph
-
-On 06/21/2018 04:19 PM, Christoph Hellwig wrote:
-> On Thu, Jun 21, 2018 at 09:43:26AM +0800, jianchao.wang wrote:
->> So we have to preserve the ability of block layer that it could prevent
->> IO completion path from entering a timeout request.
->>
->> With scsi-debug module, I tried to simulate a scenario where timeout and IO
->> completion path could occur concurrently, the system ran into crash easily.
+On 6/21/18 6:34 AM, Christoph Hellwig wrote:
+> On Mon, Jun 18, 2018 at 09:37:01AM -0600, Jens Axboe wrote:
+>> It was born with that mode, but I don't think anyone ever really used it.
+>> So it might feasible to simply yank it. That said, just doing a prune
+>> mode at ->release() time doesn't seem like such a hard task.
 > 
-> Trace, please.  With the latest kernel.  I'm not saying that there
-> is nothing to fix, but the mode of never completing once timeout
-> requests as currently done is SCSI is clearly broken.
-> 
+> Let's try to kill it.  It is a significant amount of code, which does
+> fishy things and is probably entirely unused:
 
-Sorry, I don't quite get your point.
-Do you mean we should do the modification in the scsi layer ?
-Actually, I used to look at the code to try to stop io completion on timeout request
-in scsi-mid layer, but it looks like difficult, especially, scsi eh would try
-to borrow the command to issue admin command such as get sense, test unit,etc.
+I'd be fine with that, if we knew that nobody uses it. But that's
+really hard to figure out. I did see Jann's source code scan, which
+even if non-exhaustive, still shows at least one user of it.
 
-Thanks
-Jianchao
+How about we just make the write interface sync? Then any copy can
+happen while the we block the task, and the read side is just
+copying the header info back, or dumping it if the task didn't
+read it before it went away.
+
+That will still be functional, just not queueable. But that's not
+a huge concern, it won't break any applications. And with pure
+sync issue, most of the code goes away anyway and becomes similar
+to the sync ioctl.
+
+-- 
+Jens Axboe
