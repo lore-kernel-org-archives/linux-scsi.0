@@ -1,37 +1,42 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] sg, bsg: mitigate read/write abuse, block uaccess in
- release
-Date: Thu, 21 Jun 2018 06:03:27 -0700
-Message-ID: <20180621130327.GB24925@infradead.org>
-References: <20180615152335.208202-1-jannh@google.com>
- <20180615164009.GD30522@ZenIV.linux.org.uk>
- <90063ef3-68fa-e983-9b47-838e6076b0f4@interlog.com>
- <813e817b-bb2f-4a47-6225-9e39f19be278@kernel.dk>
- <20180621123431.GA558@infradead.org>
- <CAG48ez3BWeZkW5XG814K4o7p0KWXVm9Gpzh2rTthNei=4fhH-A@mail.gmail.com>
+From: "jianchao.wang" <jianchao.w.wang@oracle.com>
+Subject: Re: [PATCH 0/5]stop normal completion path entering a timeout req
+Date: Thu, 21 Jun 2018 21:13:30 +0800
+Message-ID: <df1633e8-7df4-976b-a7d5-77679c92843a@oracle.com>
+References: <1529500964-28429-1-git-send-email-jianchao.w.wang@oracle.com>
+ <20180620181601.GA24145@localhost.localdomain>
+ <e87f5946-bb21-942e-2dcc-b24cee1ad23c@oracle.com>
+ <20180621081900.GA5183@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAG48ez3BWeZkW5XG814K4o7p0KWXVm9Gpzh2rTthNei=4fhH-A@mail.gmail.com>
+In-Reply-To: <20180621081900.GA5183@lst.de>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jann Horn <jannh@google.com>
-Cc: Christoph Hellwig <hch@infradead.org>, axboe@kernel.dk, dgilbert@interlog.com, Al Viro <viro@zeniv.linux.org.uk>, fujita.tomonori@lab.ntt.co.jp, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, kernel list <linux-kernel@vger.kernel.org>, Kernel Hardening <kernel-hardening@lists.openwall.com>, security@kernel.org, Alexander Nezhinsky <alexandern@mellanox.com>, Nicholas Bellinger <nab@linux-iscsi.org>, stgt@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Keith Busch <keith.busch@intel.com>, axboe@kernel.dk, martin.petersen@oracle.com, josef@toxicpanda.com, ulf.hansson@linaro.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Jun 21, 2018 at 02:51:16PM +0200, Jann Horn wrote:
-> In the package https://packages.debian.org/stretch/tgt:
->   https://sources.debian.org/src/tgt/1:1.0.73-1/usr/bs_sg.c/?hl=131#L131
->   https://sources.debian.org/src/tgt/1:1.0.73-1/usr/bs_sg.c/?hl=236#L236
+Hi Christoph
 
-This is for real, although it is an optional case in an optional plug
-in, so I'm not sure if any one actually uses bsg read/write with it
-for real.
+On 06/21/2018 04:19 PM, Christoph Hellwig wrote:
+> On Thu, Jun 21, 2018 at 09:43:26AM +0800, jianchao.wang wrote:
+>> So we have to preserve the ability of block layer that it could prevent
+>> IO completion path from entering a timeout request.
+>>
+>> With scsi-debug module, I tried to simulate a scenario where timeout and IO
+>> completion path could occur concurrently, the system ran into crash easily.
+> 
+> Trace, please.  With the latest kernel.  I'm not saying that there
+> is nothing to fix, but the mode of never completing once timeout
+> requests as currently done is SCSI is clearly broken.
+> 
 
-The usual aspects added. (the question is if bsg read/write support
-is actually used in real life or can be removed)
+Sorry, I don't quite get your point.
+Do you mean we should do the modification in the scsi layer ?
+Actually, I used to look at the code to try to stop io completion on timeout request
+in scsi-mid layer, but it looks like difficult, especially, scsi eh would try
+to borrow the command to issue admin command such as get sense, test unit,etc.
 
-> In the package https://packages.debian.org/stretch/sg3-utils:
->   https://sources.debian.org/src/sg3-utils/1.42-2/examples/bsg_queue_tst.c/?hl=60#L60
-
-This is just example code.
+Thanks
+Jianchao
