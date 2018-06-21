@@ -1,247 +1,617 @@
-From: Adrian Hunter <adrian.hunter@intel.com>
-Subject: Re: [PATCH V3 1/3] scsi: ufs: set the device reference clock setting
-Date: Thu, 21 Jun 2018 12:19:37 +0300
-Message-ID: <f0ef9356-25ba-04dc-2580-fdaba3e04ca1@intel.com>
-References: <1528981432-23065-1-git-send-email-sayalil@codeaurora.org>
- <1528981432-23065-2-git-send-email-sayalil@codeaurora.org>
- <bf87ec58-69c0-fe59-cfa1-8dc7dc80ca46@intel.com>
- <002a01d4093f$d6f33640$84d9a2c0$@codeaurora.org>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] sg, bsg: mitigate read/write abuse, block uaccess in
+ release
+Date: Thu, 21 Jun 2018 05:34:31 -0700
+Message-ID: <20180621123431.GA558@infradead.org>
+References: <20180615152335.208202-1-jannh@google.com>
+ <20180615164009.GD30522@ZenIV.linux.org.uk>
+ <90063ef3-68fa-e983-9b47-838e6076b0f4@interlog.com>
+ <813e817b-bb2f-4a47-6225-9e39f19be278@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <002a01d4093f$d6f33640$84d9a2c0$@codeaurora.org>
-Content-Language: en-US
+Content-Disposition: inline
+In-Reply-To: <813e817b-bb2f-4a47-6225-9e39f19be278@kernel.dk>
 Sender: linux-kernel-owner@vger.kernel.org
-To: sayali <sayalil@codeaurora.org>, subhashj@codeaurora.org, cang@codeaurora.org, vivek.gautam@codeaurora.org, rnayak@codeaurora.org, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, asutoshd@codeaurora.org, evgreen@chromium.org, riteshh@codeaurora.org
-Cc: linux-scsi@vger.kernel.org, 'Rob Herring' <robh+dt@kernel.org>, 'Mark Rutland' <mark.rutland@arm.com>, 'Mathieu Malaterre' <malat@debian.org>, "'open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS'" <devicetree@vger.kernel.org>, 'open list' <linux-kernel@vger.kernel.org>
+To: Jens Axboe <axboe@kernel.dk>
+Cc: dgilbert@interlog.com, Al Viro <viro@ZenIV.linux.org.uk>, Jann Horn <jannh@google.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-hardening@lists.openwall.com, security@kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 21/06/18 12:11, sayali wrote:
-> Hi Adrian,
-> 
-> Please check my comment inline.
-> 
-> Thanks,
-> Sayali
-> -----Original Message-----
-> From: Adrian Hunter [mailto:adrian.hunter@intel.com] 
-> Sent: Wednesday, June 20, 2018 12:56 PM
-> To: Sayali Lokhande <sayalil@codeaurora.org>; subhashj@codeaurora.org; cang@codeaurora.org; vivek.gautam@codeaurora.org; rnayak@codeaurora.org; vinholikatti@gmail.com; jejb@linux.vnet.ibm.com; martin.petersen@oracle.com; asutoshd@codeaurora.org; evgreen@chromium.org; riteshh@codeaurora.org
-> Cc: linux-scsi@vger.kernel.org; Rob Herring <robh+dt@kernel.org>; Mark Rutland <mark.rutland@arm.com>; Mathieu Malaterre <malat@debian.org>; open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS <devicetree@vger.kernel.org>; open list <linux-kernel@vger.kernel.org>
-> Subject: Re: [PATCH V3 1/3] scsi: ufs: set the device reference clock setting
-> 
-> On 14/06/18 16:03, Sayali Lokhande wrote:
->> From: Subhash Jadavani <subhashj@codeaurora.org>
->>
->> UFS host supplies the reference clock to UFS device and UFS device 
->> specification allows host to provide one of the 4 frequencies (19.2 
->> MHz,
->> 26 MHz, 38.4 MHz, 52 MHz) for reference clock. Host should set the 
->> device reference clock frequency setting in the device based on what 
->> frequency it is supplying to UFS device.
->>
->> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
->> Signed-off-by: Can Guo <cang@codeaurora.org>
->> Signed-off-by: Sayali Lokhande <sayalil@codeaurora.org>
-> 
-> I have repeated my V2 comments below.  Please address these when you post V4.  Also please provide a change log for each patch version.
-> 
->> ---
->>  .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      |  7 +++
->>  drivers/scsi/ufs/ufs.h                             |  9 ++++
->>  drivers/scsi/ufs/ufshcd-pltfrm.c                   | 24 ++++++++++
->>  drivers/scsi/ufs/ufshcd.c                          | 52 ++++++++++++++++++++++
->>  drivers/scsi/ufs/ufshcd.h                          |  1 +
->>  5 files changed, 93 insertions(+)
->>
->> diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt 
->> b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
->> index c39dfef..4522434 100644
->> --- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
->> +++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
->> @@ -41,6 +41,12 @@ Optional properties:
->>  -lanes-per-direction	: number of lanes available per direction - either 1 or 2.
->>  			  Note that it is assume same number of lanes is used both
->>  			  directions at once. If not specified, default is 2 lanes per direction.
->> +- dev-ref-clk-freq	: Specify the device reference clock frequency, must be one of the following:
->> +			  0: 19.2 MHz
->> +			  1: 26 MHz
->> +			  2: 38.4 MHz
->> +			  3: 52 MHz
->> +			  Defaults to 26 MHz if not specified.
->>  
->>  Note: If above properties are not defined it can be assumed that the 
->> supply  regulators or clocks are always on.
->> @@ -66,4 +72,5 @@ Example:
->>  		freq-table-hz = <100000000 200000000>, <0 0>, <0 0>;
->>  		phys = <&ufsphy1>;
->>  		phy-names = "ufsphy";
->> +		dev-ref-clk-freq = <0>; /* reference clock freq: 19.2 MHz */
->>  	};
->> diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h index 
->> 14e5bf7..e15deb0 100644
->> --- a/drivers/scsi/ufs/ufs.h
->> +++ b/drivers/scsi/ufs/ufs.h
->> @@ -378,6 +378,15 @@ enum query_opcode {
->>  	UPIU_QUERY_OPCODE_TOGGLE_FLAG	= 0x8,
->>  };
->>  
->> +/* bRefClkFreq attribute values */
->> +enum ref_clk_freq {
->> +	REF_CLK_FREQ_19_2_MHZ	= 0x0,
->> +	REF_CLK_FREQ_26_MHZ	= 0x1,
->> +	REF_CLK_FREQ_38_4_MHZ	= 0x2,
->> +	REF_CLK_FREQ_52_MHZ	= 0x3,
->> +	REF_CLK_FREQ_MAX	= REF_CLK_FREQ_52_MHZ,
->> +};
->> +
->>  /* Query response result code */
->>  enum {
->>  	QUERY_RESULT_SUCCESS                    = 0x00,
->> diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c 
->> b/drivers/scsi/ufs/ufshcd-pltfrm.c
->> index e82bde0..6c877f3 100644
->> --- a/drivers/scsi/ufs/ufshcd-pltfrm.c
->> +++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
->> @@ -221,6 +221,28 @@ static int ufshcd_parse_regulator_info(struct ufs_hba *hba)
->>  	return err;
->>  }
->>  
->> +static void ufshcd_parse_dev_ref_clk_freq(struct ufs_hba *hba) {
->> +	struct device *dev = hba->dev;
->> +	struct device_node *np = dev->of_node;
->> +	int ret;
->> +
->> +	if (!np)
->> +		return;
->> +
->> +	ret = of_property_read_u32(np, "dev-ref-clk-freq",
->> +				   &hba->dev_ref_clk_freq);
-> 
-> This setting is useful for any UFSHC driver.  Please move it to ufshcd.c and use device_property_read_u32().
-> [Sayali]: Ok. Will update this in next patch set.
-> 
->> +	if (ret ||
->> +	    (hba->dev_ref_clk_freq < 0) ||
-> 
-> u32 cannot be < 0
-> [Sayali]: Will remove this check.
-> 
->> +	    (hba->dev_ref_clk_freq > REF_CLK_FREQ_52_MHZ)) {
->> +		dev_err(hba->dev,
->> +		"%s: invalid ref_clk setting = %d, set to default\n",
->> +		__func__, hba->dev_ref_clk_freq);
->> +		/* default setting */
->> +		hba->dev_ref_clk_freq = REF_CLK_FREQ_26_MHZ;
-> 
-> No, the default must be to leave the value unchanged.
-> [Sayali]: As per UFS device specification , bRefClkFreq attribute's default value corresponds to 26 MHz (Manufacturer Default Value). Thus we should set it to default (26MHz) if it's not already set.
+On Mon, Jun 18, 2018 at 09:37:01AM -0600, Jens Axboe wrote:
+> It was born with that mode, but I don't think anyone ever really used it.
+> So it might feasible to simply yank it. That said, just doing a prune
+> mode at ->release() time doesn't seem like such a hard task.
 
-No, bRefClkFreq is not volatile and a different value may have already been
-programmed to the device.  You must not overwrite it if there is no
-property.  Also writing 26MHz when the property value is invalid makes no sense.
+Let's try to kill it.  It is a significant amount of code, which does
+fishy things and is probably entirely unused:
 
-> 
->> +	}
->> +}
->> +
->>  #ifdef CONFIG_PM
->>  /**
->>   * ufshcd_pltfrm_suspend - suspend power management function @@ 
->> -343,6 +365,8 @@ int ufshcd_pltfrm_init(struct platform_device *pdev,
->>  	pm_runtime_set_active(&pdev->dev);
->>  	pm_runtime_enable(&pdev->dev);
->>  
->> +	ufshcd_parse_dev_ref_clk_freq(hba);
->> +
->>  	ufshcd_init_lanes_per_dir(hba);
->>  
->>  	err = ufshcd_init(hba, mmio_base, irq); diff --git 
->> a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c index 
->> c5b1bf1..4abc7ae 100644
->> --- a/drivers/scsi/ufs/ufshcd.c
->> +++ b/drivers/scsi/ufs/ufshcd.c
->> @@ -6297,6 +6297,53 @@ static void ufshcd_def_desc_sizes(struct 
->> ufs_hba *hba)  }
->>  
->>  /**
->> + * ufshcd_set_dev_ref_clk - set the device bRefClkFreq
->> + * @hba: per-adapter instance
->> + *
->> + * Read the current value of the bRefClkFreq attribute from device 
->> +and update it
->> + * if host is supplying different reference clock frequency than one 
->> +mentioned
->> + * in bRefClkFreq attribute.
->> + *
->> + * Returns zero on success, non-zero error value on failure.
->> + */
->> +static int ufshcd_set_dev_ref_clk(struct ufs_hba *hba) {
->> +	int err = 0;
->> +	int ref_clk = -1;
->> +	static const char * const ref_clk_freqs[] = {"19.2 MHz", "26 MHz",
->> +						     "38.4 MHz", "52 MHz"};
->> +
->> +	err = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_READ_ATTR,
->> +			QUERY_ATTR_IDN_REF_CLK_FREQ, 0, 0, &ref_clk);
->> +
->> +	if (err) {
->> +		dev_err(hba->dev, "%s: failed reading bRefClkFreq. err = %d\n",
->> +			 __func__, err);
->> +		goto out;
->> +	}
->> +
->> +	if (ref_clk == hba->dev_ref_clk_freq)
->> +		goto out; /* nothing to update */
->> +
->> +	err = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
->> +			QUERY_ATTR_IDN_REF_CLK_FREQ, 0, 0,
->> +			&hba->dev_ref_clk_freq);
->> +
->> +	if (err)
->> +		dev_err(hba->dev, "%s: bRefClkFreq setting to %s failed\n",
->> +			__func__, ref_clk_freqs[hba->dev_ref_clk_freq]);
->> +	/*
->> +	 * It is good to print this out here to debug any later failures
->> +	 * related to gear switch.
->> +	 */
->> +	dev_dbg(hba->dev, "%s: bRefClkFreq setting to %s succeeded\n",
->> +			__func__, ref_clk_freqs[hba->dev_ref_clk_freq]);
->> +
->> +out:
->> +	return err;
->> +}
->> +
->> +/**
->>   * ufshcd_probe_hba - probe hba to detect device and initialize
->>   * @hba: per-adapter instance
->>   *
->> @@ -6361,6 +6408,11 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
->>  			"%s: Failed getting max supported power mode\n",
->>  			__func__);
->>  	} else {
->> +		/*
->> +		 * Set the right value to bRefClkFreq before attempting to
->> +		 * switch to HS gears.
->> +		 */
->> +		ufshcd_set_dev_ref_clk(hba);
->>  		ret = ufshcd_config_pwr_mode(hba, &hba->max_pwr_info.info);
->>  		if (ret) {
->>  			dev_err(hba->dev, "%s: Failed setting power mode, err = %d\n", 
->> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h 
->> index 8110dcd..b026ad8 100644
->> --- a/drivers/scsi/ufs/ufshcd.h
->> +++ b/drivers/scsi/ufs/ufshcd.h
->> @@ -548,6 +548,7 @@ struct ufs_hba {
->>  	void *priv;
->>  	unsigned int irq;
->>  	bool is_irq_enabled;
->> +	u32 dev_ref_clk_freq;
->>  
->>  	/* Interrupt aggregation support is broken */
->>  	#define UFSHCD_QUIRK_BROKEN_INTR_AGGR			0x1
->>
-> 
-> 
-> 
+---
+>From baec733be1b400d73d0fa2bfc07684598c4172e7 Mon Sep 17 00:00:00 2001
+From: Christoph Hellwig <hch@lst.de>
+Date: Thu, 21 Jun 2018 14:31:32 +0200
+Subject: bsg: remove read/write support
+
+The code poses a security risk due to user memory access in ->release
+and had an API that can't be used reliably.  As far as we know it was
+never used for real, but if that turns out wrong we'll have to revert
+this commit and come up with a band aid.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ block/bsg.c | 460 +---------------------------------------------------
+ 1 file changed, 6 insertions(+), 454 deletions(-)
+
+diff --git a/block/bsg.c b/block/bsg.c
+index 66602c489956..0d2e9bf6208b 100644
+--- a/block/bsg.c
++++ b/block/bsg.c
+@@ -13,11 +13,9 @@
+ #include <linux/init.h>
+ #include <linux/file.h>
+ #include <linux/blkdev.h>
+-#include <linux/poll.h>
+ #include <linux/cdev.h>
+ #include <linux/jiffies.h>
+ #include <linux/percpu.h>
+-#include <linux/uio.h>
+ #include <linux/idr.h>
+ #include <linux/bsg.h>
+ #include <linux/slab.h>
+@@ -38,21 +36,10 @@
+ struct bsg_device {
+ 	struct request_queue *queue;
+ 	spinlock_t lock;
+-	struct list_head busy_list;
+-	struct list_head done_list;
+ 	struct hlist_node dev_list;
+ 	atomic_t ref_count;
+-	int queued_cmds;
+-	int done_cmds;
+-	wait_queue_head_t wq_done;
+-	wait_queue_head_t wq_free;
+ 	char name[20];
+ 	int max_queue;
+-	unsigned long flags;
+-};
+-
+-enum {
+-	BSG_F_BLOCK		= 1,
+ };
+ 
+ #define BSG_DEFAULT_CMDS	64
+@@ -67,64 +54,6 @@ static struct hlist_head bsg_device_list[BSG_LIST_ARRAY_SIZE];
+ static struct class *bsg_class;
+ static int bsg_major;
+ 
+-static struct kmem_cache *bsg_cmd_cachep;
+-
+-/*
+- * our internal command type
+- */
+-struct bsg_command {
+-	struct bsg_device *bd;
+-	struct list_head list;
+-	struct request *rq;
+-	struct bio *bio;
+-	struct bio *bidi_bio;
+-	int err;
+-	struct sg_io_v4 hdr;
+-};
+-
+-static void bsg_free_command(struct bsg_command *bc)
+-{
+-	struct bsg_device *bd = bc->bd;
+-	unsigned long flags;
+-
+-	kmem_cache_free(bsg_cmd_cachep, bc);
+-
+-	spin_lock_irqsave(&bd->lock, flags);
+-	bd->queued_cmds--;
+-	spin_unlock_irqrestore(&bd->lock, flags);
+-
+-	wake_up(&bd->wq_free);
+-}
+-
+-static struct bsg_command *bsg_alloc_command(struct bsg_device *bd)
+-{
+-	struct bsg_command *bc = ERR_PTR(-EINVAL);
+-
+-	spin_lock_irq(&bd->lock);
+-
+-	if (bd->queued_cmds >= bd->max_queue)
+-		goto out;
+-
+-	bd->queued_cmds++;
+-	spin_unlock_irq(&bd->lock);
+-
+-	bc = kmem_cache_zalloc(bsg_cmd_cachep, GFP_KERNEL);
+-	if (unlikely(!bc)) {
+-		spin_lock_irq(&bd->lock);
+-		bd->queued_cmds--;
+-		bc = ERR_PTR(-ENOMEM);
+-		goto out;
+-	}
+-
+-	bc->bd = bd;
+-	INIT_LIST_HEAD(&bc->list);
+-	bsg_dbg(bd, "returning free cmd %p\n", bc);
+-	return bc;
+-out:
+-	spin_unlock_irq(&bd->lock);
+-	return bc;
+-}
+-
+ static inline struct hlist_head *bsg_dev_idx_hash(int index)
+ {
+ 	return &bsg_device_list[index & (BSG_LIST_ARRAY_SIZE - 1)];
+@@ -287,101 +216,6 @@ bsg_map_hdr(struct request_queue *q, struct sg_io_v4 *hdr, fmode_t mode)
+ 	return ERR_PTR(ret);
+ }
+ 
+-/*
+- * async completion call-back from the block layer, when scsi/ide/whatever
+- * calls end_that_request_last() on a request
+- */
+-static void bsg_rq_end_io(struct request *rq, blk_status_t status)
+-{
+-	struct bsg_command *bc = rq->end_io_data;
+-	struct bsg_device *bd = bc->bd;
+-	unsigned long flags;
+-
+-	bsg_dbg(bd, "finished rq %p bc %p, bio %p\n",
+-		rq, bc, bc->bio);
+-
+-	bc->hdr.duration = jiffies_to_msecs(jiffies - bc->hdr.duration);
+-
+-	spin_lock_irqsave(&bd->lock, flags);
+-	list_move_tail(&bc->list, &bd->done_list);
+-	bd->done_cmds++;
+-	spin_unlock_irqrestore(&bd->lock, flags);
+-
+-	wake_up(&bd->wq_done);
+-}
+-
+-/*
+- * do final setup of a 'bc' and submit the matching 'rq' to the block
+- * layer for io
+- */
+-static void bsg_add_command(struct bsg_device *bd, struct request_queue *q,
+-			    struct bsg_command *bc, struct request *rq)
+-{
+-	int at_head = (0 == (bc->hdr.flags & BSG_FLAG_Q_AT_TAIL));
+-
+-	/*
+-	 * add bc command to busy queue and submit rq for io
+-	 */
+-	bc->rq = rq;
+-	bc->bio = rq->bio;
+-	if (rq->next_rq)
+-		bc->bidi_bio = rq->next_rq->bio;
+-	bc->hdr.duration = jiffies;
+-	spin_lock_irq(&bd->lock);
+-	list_add_tail(&bc->list, &bd->busy_list);
+-	spin_unlock_irq(&bd->lock);
+-
+-	bsg_dbg(bd, "queueing rq %p, bc %p\n", rq, bc);
+-
+-	rq->end_io_data = bc;
+-	blk_execute_rq_nowait(q, NULL, rq, at_head, bsg_rq_end_io);
+-}
+-
+-static struct bsg_command *bsg_next_done_cmd(struct bsg_device *bd)
+-{
+-	struct bsg_command *bc = NULL;
+-
+-	spin_lock_irq(&bd->lock);
+-	if (bd->done_cmds) {
+-		bc = list_first_entry(&bd->done_list, struct bsg_command, list);
+-		list_del(&bc->list);
+-		bd->done_cmds--;
+-	}
+-	spin_unlock_irq(&bd->lock);
+-
+-	return bc;
+-}
+-
+-/*
+- * Get a finished command from the done list
+- */
+-static struct bsg_command *bsg_get_done_cmd(struct bsg_device *bd)
+-{
+-	struct bsg_command *bc;
+-	int ret;
+-
+-	do {
+-		bc = bsg_next_done_cmd(bd);
+-		if (bc)
+-			break;
+-
+-		if (!test_bit(BSG_F_BLOCK, &bd->flags)) {
+-			bc = ERR_PTR(-EAGAIN);
+-			break;
+-		}
+-
+-		ret = wait_event_interruptible(bd->wq_done, bd->done_cmds);
+-		if (ret) {
+-			bc = ERR_PTR(-ERESTARTSYS);
+-			break;
+-		}
+-	} while (1);
+-
+-	bsg_dbg(bd, "returning done %p\n", bc);
+-
+-	return bc;
+-}
+-
+ static int blk_complete_sgv4_hdr_rq(struct request *rq, struct sg_io_v4 *hdr,
+ 				    struct bio *bio, struct bio *bidi_bio)
+ {
+@@ -400,234 +234,6 @@ static int blk_complete_sgv4_hdr_rq(struct request *rq, struct sg_io_v4 *hdr,
+ 	return ret;
+ }
+ 
+-static bool bsg_complete(struct bsg_device *bd)
+-{
+-	bool ret = false;
+-	bool spin;
+-
+-	do {
+-		spin_lock_irq(&bd->lock);
+-
+-		BUG_ON(bd->done_cmds > bd->queued_cmds);
+-
+-		/*
+-		 * All commands consumed.
+-		 */
+-		if (bd->done_cmds == bd->queued_cmds)
+-			ret = true;
+-
+-		spin = !test_bit(BSG_F_BLOCK, &bd->flags);
+-
+-		spin_unlock_irq(&bd->lock);
+-	} while (!ret && spin);
+-
+-	return ret;
+-}
+-
+-static int bsg_complete_all_commands(struct bsg_device *bd)
+-{
+-	struct bsg_command *bc;
+-	int ret, tret;
+-
+-	bsg_dbg(bd, "entered\n");
+-
+-	/*
+-	 * wait for all commands to complete
+-	 */
+-	io_wait_event(bd->wq_done, bsg_complete(bd));
+-
+-	/*
+-	 * discard done commands
+-	 */
+-	ret = 0;
+-	do {
+-		spin_lock_irq(&bd->lock);
+-		if (!bd->queued_cmds) {
+-			spin_unlock_irq(&bd->lock);
+-			break;
+-		}
+-		spin_unlock_irq(&bd->lock);
+-
+-		bc = bsg_get_done_cmd(bd);
+-		if (IS_ERR(bc))
+-			break;
+-
+-		tret = blk_complete_sgv4_hdr_rq(bc->rq, &bc->hdr, bc->bio,
+-						bc->bidi_bio);
+-		if (!ret)
+-			ret = tret;
+-
+-		bsg_free_command(bc);
+-	} while (1);
+-
+-	return ret;
+-}
+-
+-static int
+-__bsg_read(char __user *buf, size_t count, struct bsg_device *bd,
+-	   const struct iovec *iov, ssize_t *bytes_read)
+-{
+-	struct bsg_command *bc;
+-	int nr_commands, ret;
+-
+-	if (count % sizeof(struct sg_io_v4))
+-		return -EINVAL;
+-
+-	ret = 0;
+-	nr_commands = count / sizeof(struct sg_io_v4);
+-	while (nr_commands) {
+-		bc = bsg_get_done_cmd(bd);
+-		if (IS_ERR(bc)) {
+-			ret = PTR_ERR(bc);
+-			break;
+-		}
+-
+-		/*
+-		 * this is the only case where we need to copy data back
+-		 * after completing the request. so do that here,
+-		 * bsg_complete_work() cannot do that for us
+-		 */
+-		ret = blk_complete_sgv4_hdr_rq(bc->rq, &bc->hdr, bc->bio,
+-					       bc->bidi_bio);
+-
+-		if (copy_to_user(buf, &bc->hdr, sizeof(bc->hdr)))
+-			ret = -EFAULT;
+-
+-		bsg_free_command(bc);
+-
+-		if (ret)
+-			break;
+-
+-		buf += sizeof(struct sg_io_v4);
+-		*bytes_read += sizeof(struct sg_io_v4);
+-		nr_commands--;
+-	}
+-
+-	return ret;
+-}
+-
+-static inline void bsg_set_block(struct bsg_device *bd, struct file *file)
+-{
+-	if (file->f_flags & O_NONBLOCK)
+-		clear_bit(BSG_F_BLOCK, &bd->flags);
+-	else
+-		set_bit(BSG_F_BLOCK, &bd->flags);
+-}
+-
+-/*
+- * Check if the error is a "real" error that we should return.
+- */
+-static inline int err_block_err(int ret)
+-{
+-	if (ret && ret != -ENOSPC && ret != -ENODATA && ret != -EAGAIN)
+-		return 1;
+-
+-	return 0;
+-}
+-
+-static ssize_t
+-bsg_read(struct file *file, char __user *buf, size_t count, loff_t *ppos)
+-{
+-	struct bsg_device *bd = file->private_data;
+-	int ret;
+-	ssize_t bytes_read;
+-
+-	bsg_dbg(bd, "read %zd bytes\n", count);
+-
+-	bsg_set_block(bd, file);
+-
+-	bytes_read = 0;
+-	ret = __bsg_read(buf, count, bd, NULL, &bytes_read);
+-	*ppos = bytes_read;
+-
+-	if (!bytes_read || err_block_err(ret))
+-		bytes_read = ret;
+-
+-	return bytes_read;
+-}
+-
+-static int __bsg_write(struct bsg_device *bd, const char __user *buf,
+-		       size_t count, ssize_t *bytes_written, fmode_t mode)
+-{
+-	struct bsg_command *bc;
+-	struct request *rq;
+-	int ret, nr_commands;
+-
+-	if (count % sizeof(struct sg_io_v4))
+-		return -EINVAL;
+-
+-	nr_commands = count / sizeof(struct sg_io_v4);
+-	rq = NULL;
+-	bc = NULL;
+-	ret = 0;
+-	while (nr_commands) {
+-		struct request_queue *q = bd->queue;
+-
+-		bc = bsg_alloc_command(bd);
+-		if (IS_ERR(bc)) {
+-			ret = PTR_ERR(bc);
+-			bc = NULL;
+-			break;
+-		}
+-
+-		if (copy_from_user(&bc->hdr, buf, sizeof(bc->hdr))) {
+-			ret = -EFAULT;
+-			break;
+-		}
+-
+-		/*
+-		 * get a request, fill in the blanks, and add to request queue
+-		 */
+-		rq = bsg_map_hdr(bd->queue, &bc->hdr, mode);
+-		if (IS_ERR(rq)) {
+-			ret = PTR_ERR(rq);
+-			rq = NULL;
+-			break;
+-		}
+-
+-		bsg_add_command(bd, q, bc, rq);
+-		bc = NULL;
+-		rq = NULL;
+-		nr_commands--;
+-		buf += sizeof(struct sg_io_v4);
+-		*bytes_written += sizeof(struct sg_io_v4);
+-	}
+-
+-	if (bc)
+-		bsg_free_command(bc);
+-
+-	return ret;
+-}
+-
+-static ssize_t
+-bsg_write(struct file *file, const char __user *buf, size_t count, loff_t *ppos)
+-{
+-	struct bsg_device *bd = file->private_data;
+-	ssize_t bytes_written;
+-	int ret;
+-
+-	bsg_dbg(bd, "write %zd bytes\n", count);
+-
+-	if (unlikely(uaccess_kernel()))
+-		return -EINVAL;
+-
+-	bsg_set_block(bd, file);
+-
+-	bytes_written = 0;
+-	ret = __bsg_write(bd, buf, count, &bytes_written, file->f_mode);
+-
+-	*ppos = bytes_written;
+-
+-	/*
+-	 * return bytes written on non-fatal errors
+-	 */
+-	if (!bytes_written || err_block_err(ret))
+-		bytes_written = ret;
+-
+-	bsg_dbg(bd, "returning %zd\n", bytes_written);
+-	return bytes_written;
+-}
+-
+ static struct bsg_device *bsg_alloc_device(void)
+ {
+ 	struct bsg_device *bd;
+@@ -637,29 +243,20 @@ static struct bsg_device *bsg_alloc_device(void)
+ 		return NULL;
+ 
+ 	spin_lock_init(&bd->lock);
+-
+ 	bd->max_queue = BSG_DEFAULT_CMDS;
+-
+-	INIT_LIST_HEAD(&bd->busy_list);
+-	INIT_LIST_HEAD(&bd->done_list);
+ 	INIT_HLIST_NODE(&bd->dev_list);
+-
+-	init_waitqueue_head(&bd->wq_free);
+-	init_waitqueue_head(&bd->wq_done);
+ 	return bd;
+ }
+ 
+ static int bsg_put_device(struct bsg_device *bd)
+ {
+-	int ret = 0, do_free;
+ 	struct request_queue *q = bd->queue;
+ 
+ 	mutex_lock(&bsg_mutex);
+ 
+-	do_free = atomic_dec_and_test(&bd->ref_count);
+-	if (!do_free) {
++	if (!atomic_dec_and_test(&bd->ref_count)) {
+ 		mutex_unlock(&bsg_mutex);
+-		goto out;
++		return 0;
+ 	}
+ 
+ 	hlist_del(&bd->dev_list);
+@@ -670,20 +267,9 @@ static int bsg_put_device(struct bsg_device *bd)
+ 	/*
+ 	 * close can always block
+ 	 */
+-	set_bit(BSG_F_BLOCK, &bd->flags);
+-
+-	/*
+-	 * correct error detection baddies here again. it's the responsibility
+-	 * of the app to properly reap commands before close() if it wants
+-	 * fool-proof error detection
+-	 */
+-	ret = bsg_complete_all_commands(bd);
+-
+ 	kfree(bd);
+-out:
+-	if (do_free)
+-		blk_put_queue(q);
+-	return ret;
++	blk_put_queue(q);
++	return 0;
+ }
+ 
+ static struct bsg_device *bsg_add_device(struct inode *inode,
+@@ -706,8 +292,6 @@ static struct bsg_device *bsg_add_device(struct inode *inode,
+ 
+ 	bd->queue = rq;
+ 
+-	bsg_set_block(bd, file);
+-
+ 	atomic_set(&bd->ref_count, 1);
+ 	hlist_add_head(&bd->dev_list, bsg_dev_idx_hash(iminor(inode)));
+ 
+@@ -781,24 +365,6 @@ static int bsg_release(struct inode *inode, struct file *file)
+ 	return bsg_put_device(bd);
+ }
+ 
+-static __poll_t bsg_poll(struct file *file, poll_table *wait)
+-{
+-	struct bsg_device *bd = file->private_data;
+-	__poll_t mask = 0;
+-
+-	poll_wait(file, &bd->wq_done, wait);
+-	poll_wait(file, &bd->wq_free, wait);
+-
+-	spin_lock_irq(&bd->lock);
+-	if (!list_empty(&bd->done_list))
+-		mask |= EPOLLIN | EPOLLRDNORM;
+-	if (bd->queued_cmds < bd->max_queue)
+-		mask |= EPOLLOUT;
+-	spin_unlock_irq(&bd->lock);
+-
+-	return mask;
+-}
+-
+ static long bsg_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+ {
+ 	struct bsg_device *bd = file->private_data;
+@@ -872,9 +438,6 @@ static long bsg_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+ }
+ 
+ static const struct file_operations bsg_fops = {
+-	.read		=	bsg_read,
+-	.write		=	bsg_write,
+-	.poll		=	bsg_poll,
+ 	.open		=	bsg_open,
+ 	.release	=	bsg_release,
+ 	.unlocked_ioctl	=	bsg_ioctl,
+@@ -979,21 +542,12 @@ static int __init bsg_init(void)
+ 	int ret, i;
+ 	dev_t devid;
+ 
+-	bsg_cmd_cachep = kmem_cache_create("bsg_cmd",
+-				sizeof(struct bsg_command), 0, 0, NULL);
+-	if (!bsg_cmd_cachep) {
+-		printk(KERN_ERR "bsg: failed creating slab cache\n");
+-		return -ENOMEM;
+-	}
+-
+ 	for (i = 0; i < BSG_LIST_ARRAY_SIZE; i++)
+ 		INIT_HLIST_HEAD(&bsg_device_list[i]);
+ 
+ 	bsg_class = class_create(THIS_MODULE, "bsg");
+-	if (IS_ERR(bsg_class)) {
+-		ret = PTR_ERR(bsg_class);
+-		goto destroy_kmemcache;
+-	}
++	if (IS_ERR(bsg_class))
++		return PTR_ERR(bsg_class);
+ 	bsg_class->devnode = bsg_devnode;
+ 
+ 	ret = alloc_chrdev_region(&devid, 0, BSG_MAX_DEVS, "bsg");
+@@ -1014,8 +568,6 @@ static int __init bsg_init(void)
+ 	unregister_chrdev_region(MKDEV(bsg_major, 0), BSG_MAX_DEVS);
+ destroy_bsg_class:
+ 	class_destroy(bsg_class);
+-destroy_kmemcache:
+-	kmem_cache_destroy(bsg_cmd_cachep);
+ 	return ret;
+ }
+ 
+-- 
+2.17.1
