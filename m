@@ -1,74 +1,126 @@
-From: "jianchao.wang" <jianchao.w.wang@oracle.com>
-Subject: Re: [PATCH 0/5]stop normal completion path entering a timeout req
-Date: Thu, 21 Jun 2018 16:22:22 +0800
-Message-ID: <a68ad043-26a1-d3d8-2009-504ba4230e0f@oracle.com>
-References: <1529500964-28429-1-git-send-email-jianchao.w.wang@oracle.com>
- <20180620181601.GA24145@localhost.localdomain>
- <e87f5946-bb21-942e-2dcc-b24cee1ad23c@oracle.com>
- <20180621081900.GA5183@lst.de>
+From: "sayali" <sayalil@codeaurora.org>
+Subject: RE: [PATCH V2 1/3] scsi: ufs: set the device reference clock setting
+Date: Thu, 21 Jun 2018 14:22:04 +0530
+Message-ID: <002401d4093d$256fdc90$704f95b0$@codeaurora.org>
+References: <1528455990-24572-1-git-send-email-sayalil@codeaurora.org> <1528455990-24572-2-git-send-email-sayalil@codeaurora.org> <20180612192636.GA31725@rob-hp-laptop> <000101d403d3$87210d20$95632760$@codeaurora.org> <CAL_JsqLsdEGEjPo8yh5dGoGWTes41QxUiJ4NN0Q9qsgLBaTpjw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+        charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180621081900.GA5183@lst.de>
-Content-Language: en-US
+In-Reply-To: <CAL_JsqLsdEGEjPo8yh5dGoGWTes41QxUiJ4NN0Q9qsgLBaTpjw@mail.gmail.com>
+Content-Language: en-us
 Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Keith Busch <keith.busch@intel.com>, axboe@kernel.dk, martin.petersen@oracle.com, josef@toxicpanda.com, ulf.hansson@linaro.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: 'Rob Herring' <robh@kernel.org>
+Cc: 'Subhash Jadavani' <subhashj@codeaurora.org>, 'Can Guo' <cang@codeaurora.org>, 'Vivek Gautam' <vivek.gautam@codeaurora.org>, 'Rajendra Nayak' <rnayak@codeaurora.org>, 'Vinayak Holikatti' <vinholikatti@gmail.com>, "'James E.J. Bottomley'" <jejb@linux.vnet.ibm.com>, "'Martin K. Petersen'" <martin.petersen@oracle.com>, asutoshd@codeaurora.org, 'Evan Green' <evgreen@chromium.org>, linux-scsi@vger.kernel.org, 'Mark Rutland' <mark.rutland@arm.com>, 'Mathieu Malaterre' <malat@debian.org>, "'open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS'" <devicetree@vger.kernel.org>, 'open list' <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Christoph
+Hi Rob,
 
-Thanks for your kindly response.
+Please check my comment inline.
 
-On 06/21/2018 04:19 PM, Christoph Hellwig wrote:
-> On Thu, Jun 21, 2018 at 09:43:26AM +0800, jianchao.wang wrote:
->> So we have to preserve the ability of block layer that it could prevent
->> IO completion path from entering a timeout request.
+Thanks,
+Sayali
+-----Original Message-----
+From: Rob Herring [mailto:robh@kernel.org]=20
+Sent: Thursday, June 14, 2018 7:59 PM
+To: sayali <sayalil@codeaurora.org>
+Cc: Subhash Jadavani <subhashj@codeaurora.org>; Can Guo =
+<cang@codeaurora.org>; Vivek Gautam <vivek.gautam@codeaurora.org>; =
+Rajendra Nayak <rnayak@codeaurora.org>; Vinayak Holikatti =
+<vinholikatti@gmail.com>; James E.J. Bottomley =
+<jejb@linux.vnet.ibm.com>; Martin K. Petersen =
+<martin.petersen@oracle.com>; asutoshd@codeaurora.org; Evan Green =
+<evgreen@chromium.org>; linux-scsi@vger.kernel.org; Mark Rutland =
+<mark.rutland@arm.com>; Mathieu Malaterre <malat@debian.org>; open =
+list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS =
+<devicetree@vger.kernel.org>; open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH V2 1/3] scsi: ufs: set the device reference clock =
+setting
+
+On Thu, Jun 14, 2018 at 5:33 AM, sayali <sayalil@codeaurora.org> wrote:
+> Comment inline.
+>
+> Thanks,
+> Sayali
+> -----Original Message-----
+> From: Rob Herring [mailto:robh@kernel.org]
+> Sent: Wednesday, June 13, 2018 12:57 AM
+> To: Sayali Lokhande <sayalil@codeaurora.org>
+> Cc: subhashj@codeaurora.org; cang@codeaurora.org;=20
+> vivek.gautam@codeaurora.org; rnayak@codeaurora.org;=20
+> vinholikatti@gmail.com; jejb@linux.vnet.ibm.com;=20
+> martin.petersen@oracle.com; asutoshd@codeaurora.org;=20
+> evgreen@chromium.org; linux-scsi@vger.kernel.org; Mark Rutland=20
+> <mark.rutland@arm.com>; Mathieu Malaterre <malat@debian.org>; open=20
+> list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS=20
+> <devicetree@vger.kernel.org>; open list <linux-kernel@vger.kernel.org>
+> Subject: Re: [PATCH V2 1/3] scsi: ufs: set the device reference clock=20
+> setting
+>
+> On Fri, Jun 08, 2018 at 04:36:28PM +0530, Sayali Lokhande wrote:
+>> From: Subhash Jadavani <subhashj@codeaurora.org>
 >>
->> With scsi-debug module, I tried to simulate a scenario where timeout and IO
->> completion path could occur concurrently, the system ran into crash easily.
-> 
-> Trace, please.  With the latest kernel.  I'm not saying that there
-> is nothing to fix, but the mode of never completing once timeout
-> requests as currently done is SCSI is clearly broken.
-> 
+>> UFS host supplies the reference clock to UFS device and UFS device=20
+>> specification allows host to provide one of the 4 frequencies (19.2=20
+>> MHz,
+>> 26 MHz, 38.4 MHz, 52 MHz) for reference clock. Host should set the=20
+>> device reference clock frequency setting in the device based on what=20
+>> frequency it is supplying to UFS device.
+>>
+>> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+>> Signed-off-by: Can Guo <cang@codeaurora.org>
+>> Signed-off-by: Sayali Lokhande <sayalil@codeaurora.org>
+>> ---
+>>  .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      |  7 +++
+>>  drivers/scsi/ufs/ufs.h                             |  9 ++++
+>>  drivers/scsi/ufs/ufshcd-pltfrm.c                   | 24 ++++++++++
+>>  drivers/scsi/ufs/ufshcd.c                          | 52
+> ++++++++++++++++++++++
+>>  drivers/scsi/ufs/ufshcd.h                          |  1 +
+>>  5 files changed, 93 insertions(+)
+>>
+>> diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+>> b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+>> index c39dfef..4522434 100644
+>> --- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+>> +++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+>> @@ -41,6 +41,12 @@ Optional properties:
+>>  -lanes-per-direction : number of lanes available per direction -=20
+>> either 1
+> or 2.
+>>                         Note that it is assume same number of lanes=20
+>> is
+> used both
+>>                         directions at once. If not specified, default =
 
-I didn't find the existing method to simulate this.
-So I modified the scsi-debug as following patch as install it as following:
-modprobe scsi-debug delay=-1 ndelay=-1
-Both 4.17-rc1 and 4.18-rc1 with this patch set could survive from the test.
+>> is 2
+> lanes per direction.
+>> +- dev-ref-clk-freq   : Specify the device reference clock frequency, =
+must
+> be one of the following:
+>> +                       0: 19.2 MHz
+>> +                       1: 26 MHz
+>> +                       2: 38.4 MHz
+>> +                       3: 52 MHz
+>> +                       Defaults to 26 MHz if not specified.
+>
+> I must have misunderstood your last response. I thought you could=20
+> handle things without DT. If not, my question remains.
+> [Sayali]: Ref clk frequency setting could vary from=20
+> platfrom-to-platform(vendor specific). Hence we need to pass it via =
+DT.
+>         Currently in DT we do not set/mention any ref clk frequency=20
+> parameter. Hence I have added one new DT entry to configure
+>         required ref clk freq.
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 24d7496..f278e6c 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -4323,6 +4323,8 @@ static void setup_inject(struct sdebug_queue *sqp,
-        sqcp->inj_host_busy = !!(SDEBUG_OPT_HOST_BUSY & sdebug_opts);
- }
- 
-+static atomic_t g_abort_counter;
-+
- /* Complete the processing of the thread that queued a SCSI command to this
-  * driver. It either completes the command by calling cmnd_done() or
-  * schedules a hr timer or work queue then returns 0. Returns
-@@ -4459,6 +4461,11 @@ static int schedule_resp(struct scsi_cmnd *cmnd, struct sdebug_dev_info *devip,
-                        sd_dp->issuing_cpu = raw_smp_processor_id();
-                sd_dp->defer_t = SDEB_DEFER_WQ;
-                schedule_work(&sd_dp->ew.work);
-+               atomic_inc(&g_abort_counter);
-+               if (atomic_read(&g_abort_counter)%2000 == 0) {
-+                       blk_abort_request(cmnd->request);
-+                       trace_printk("abort request tag %d\n", cmnd->request->tag);
-+               }
-        }
-        if (unlikely((SDEBUG_OPT_Q_NOISE & sdebug_opts) &&
-                     (scsi_result == device_qfull_result)))
-@@ -5844,6 +5851,7 @@ static int sdebug_driver_probe(struct device *dev)
-        struct Scsi_Host *hpnt;
-        int hprot;
- 
-+       atomic_set(&g_abort_counter, 0);
-        sdbg_host = to_sdebug_host(dev);
- 
-        sdebug_driver_template.can_queue = sdebug_max_queue;
+The clocks property contains "ref_clk". Is that not the same clock?
+Why can't you read what that frequency is? Or you need to be able to =
+change it to a specific frequency? These all look like typical =
+oscillator frequencies, so I wouldn't expect you could change them =
+(other than divide by 2 maybe).
+[Sayali] : It is the same "ref_clk", but we need to be able to change it =
+to a specific frequency as per requirement. Thus, we need new DT entry =
+to specify/override reference clock frequency as per need.
+
+Rob
