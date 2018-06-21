@@ -1,26 +1,74 @@
-From: Keith Busch <keith.busch@intel.com>
-Subject: Re: [PATCH 0/5]stop normal completion path entering a timeout req
-Date: Thu, 21 Jun 2018 15:15:29 -0600
-Message-ID: <20180621211529.GA27589@localhost.localdomain>
-References: <1529500964-28429-1-git-send-email-jianchao.w.wang@oracle.com>
- <20180620181601.GA24145@localhost.localdomain>
- <e87f5946-bb21-942e-2dcc-b24cee1ad23c@oracle.com>
- <20180621081900.GA5183@lst.de>
- <84a5b54c318b130f47775747d37dc139c27ebda7.camel@wdc.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Matthew Wilcox <willy@infradead.org>
+Subject: [PATCH 08/26] sd: Convert to new IDA interface
+Date: Thu, 21 Jun 2018 14:28:17 -0700
+Message-ID: <20180621212835.5636-9-willy@infradead.org>
+References: <20180621212835.5636-1-willy@infradead.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <84a5b54c318b130f47775747d37dc139c27ebda7.camel@wdc.com>
+In-Reply-To: <20180621212835.5636-1-willy@infradead.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: "hch@lst.de" <hch@lst.de>, "jianchao.w.wang@oracle.com" <jianchao.w.wang@oracle.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "josef@toxicpanda.com" <josef@toxicpanda.com>, "ulf.hansson@linaro.org" <ulf.hansson@linaro.org>
+To: linux-kernel@vger.kernel.org
+Cc: Matthew Wilcox <willy@infradead.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Jun 21, 2018 at 06:21:09PM +0000, Bart Van Assche wrote:
-> That's not how the SCSI core works.
+Allows us to remove an explicit spinlock.
 
-How does it work? Jianchao is advocating for holes in software
-to ignore reacting to hardware events and force unnecessary error
-escalation. Putting holes in kernel software can't possibly be our
-only recourse.
+Signed-off-by: Matthew Wilcox <willy@infradead.org>
+---
+ drivers/scsi/sd.c | 21 ++++-----------------
+ 1 file changed, 4 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 9421d9877730..8a493e64856c 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -123,7 +123,6 @@ static void scsi_disk_release(struct device *cdev);
+ static void sd_print_sense_hdr(struct scsi_disk *, struct scsi_sense_hdr *);
+ static void sd_print_result(const struct scsi_disk *, const char *, int);
+ 
+-static DEFINE_SPINLOCK(sd_index_lock);
+ static DEFINE_IDA(sd_index_ida);
+ 
+ /* This semaphore is used to mediate the 0->1 reference get in the
+@@ -3339,16 +3338,8 @@ static int sd_probe(struct device *dev)
+ 	if (!gd)
+ 		goto out_free;
+ 
+-	do {
+-		if (!ida_pre_get(&sd_index_ida, GFP_KERNEL))
+-			goto out_put;
+-
+-		spin_lock(&sd_index_lock);
+-		error = ida_get_new(&sd_index_ida, &index);
+-		spin_unlock(&sd_index_lock);
+-	} while (error == -EAGAIN);
+-
+-	if (error) {
++	index = ida_alloc(&sd_index_ida, GFP_KERNEL);
++	if (index < 0) {
+ 		sdev_printk(KERN_WARNING, sdp, "sd_probe: memory exhausted.\n");
+ 		goto out_put;
+ 	}
+@@ -3392,9 +3383,7 @@ static int sd_probe(struct device *dev)
+ 	return 0;
+ 
+  out_free_index:
+-	spin_lock(&sd_index_lock);
+-	ida_remove(&sd_index_ida, index);
+-	spin_unlock(&sd_index_lock);
++	ida_free(&sd_index_ida, index);
+  out_put:
+ 	put_disk(gd);
+  out_free:
+@@ -3459,9 +3448,7 @@ static void scsi_disk_release(struct device *dev)
+ 	struct scsi_disk *sdkp = to_scsi_disk(dev);
+ 	struct gendisk *disk = sdkp->disk;
+ 	
+-	spin_lock(&sd_index_lock);
+-	ida_remove(&sd_index_ida, sdkp->index);
+-	spin_unlock(&sd_index_lock);
++	ida_free(&sd_index_ida, sdkp->index);
+ 
+ 	disk->private_data = NULL;
+ 	put_disk(disk);
+-- 
+2.17.1
