@@ -1,26 +1,123 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 6/8] mpt3sas: Fix _transport_smp_handler() error path
-Date: Mon, 25 Jun 2018 13:38:14 +0200
-Message-ID: <20180625113814.5pambqfsupod7xhu@linux-x5ow.site>
-References: <20180614164911.20134-1-bart.vanassche@wdc.com>
- <20180614164911.20134-7-bart.vanassche@wdc.com>
+From: Jann Horn <jannh@google.com>
+Subject: [PATCH v3] sg: mitigate read/write abuse
+Date: Mon, 25 Jun 2018 16:25:44 +0200
+Message-ID: <20180625142544.182673-1-jannh@google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20180614164911.20134-7-bart.vanassche@wdc.com>
-Sender: stable-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, stable@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Doug Gilbert <dgilbert@interlog.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Al Viro <viro@zeniv.linux.org.uk>, jannh@google.com
+Cc: Andy Lutomirski <luto@kernel.org>, linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, kernel-hardening@lists.openwall.com, security@kernel.org, Benjamin Block <bblock@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Looks good,
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+As Al Viro noted in commit 128394eff343 ("sg_write()/bsg_write() is not fit
+to be called under KERNEL_DS"), sg improperly accesses userspace memory
+outside the provided buffer, permitting kernel memory corruption via
+splice().
+But it doesn't just do it on ->write(), also on ->read().
+
+As a band-aid, make sure that the ->read() and ->write() handlers can not
+be called in weird contexts (kernel context or credentials different from
+file opener), like for ib_safe_file_access().
+
+If someone needs to use these interfaces from different security contexts,
+a new interface should be written that goes through the ->ioctl() handler.
+
+I've mostly copypasted ib_safe_file_access() over as sg_safe_file_access()
+because I couldn't find a good common header - please tell me if you know a
+better way.
+
+changed in v2:
+ - remove the bsg parts per Christoph Hellwig's request
+
+changed in v3:
+ - move error messages into helper function
+ - use two different error messages and return values (Douglas Gilbert)
+ - add comment on stranded responses (Douglas Gilbert)
+ - use current_real_cred() instead of current_cred() (so that
+   override_creds() can't bypass this check)
+
+Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+Cc: <stable@vger.kernel.org>
+Signed-off-by: Jann Horn <jannh@google.com>
+---
+ drivers/scsi/sg.c | 42 ++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 40 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index 53ae52dbff84..4f4e88ca8213 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -51,6 +51,7 @@ static int sg_version_num = 30536;	/* 2 digits for each component */
+ #include <linux/atomic.h>
+ #include <linux/ratelimit.h>
+ #include <linux/uio.h>
++#include <linux/cred.h> /* for sg_safe_file_access() */
+ 
+ #include "scsi.h"
+ #include <scsi/scsi_dbg.h>
+@@ -209,6 +210,33 @@ static void sg_device_destroy(struct kref *kref);
+ 	sdev_prefix_printk(prefix, (sdp)->device,		\
+ 			   (sdp)->disk->disk_name, fmt, ##a)
+ 
++/*
++ * The SCSI interfaces that use read() and write() as an asynchronous variant of
++ * ioctl(..., SG_IO, ...) are fundamentally unsafe, since there are lots of ways
++ * to trigger read() and write() calls from various contexts with elevated
++ * privileges. This can lead to kernel memory corruption (e.g. if these
++ * interfaces are called through splice()) and privilege escalation inside
++ * userspace (e.g. if a process with access to such a device passes a file
++ * descriptor to a SUID binary as stdin/stdout/stderr).
++ *
++ * This function provides protection for the legacy API by restricting the
++ * calling context.
++ */
++static int sg_check_file_access(struct file *filp, const char *caller)
++{
++	if (filp->f_cred != current_real_cred()) {
++		pr_err_once("%s: process %d (%s) changed security contexts after opening file descriptor, this is not allowed.\n",
++			caller, task_tgid_vnr(current), current->comm);
++		return -EPERM;
++	}
++	if (uaccess_kernel()) {
++		pr_err_once("%s: process %d (%s) called from kernel context, this is not allowed.\n",
++			caller, task_tgid_vnr(current), current->comm);
++		return -EACCES;
++	}
++	return 0;
++}
++
+ static int sg_allow_access(struct file *filp, unsigned char *cmd)
+ {
+ 	struct sg_fd *sfp = filp->private_data;
+@@ -393,6 +421,14 @@ sg_read(struct file *filp, char __user *buf, size_t count, loff_t * ppos)
+ 	struct sg_header *old_hdr = NULL;
+ 	int retval = 0;
+ 
++	/*
++	 * This could cause a response to be stranded. Close the associated
++	 * file descriptor to free up any resources being held.
++	 */
++	retval = sg_check_file_access(filp, __func__);
++	if (retval)
++		return retval;
++
+ 	if ((!(sfp = (Sg_fd *) filp->private_data)) || (!(sdp = sfp->parentdp)))
+ 		return -ENXIO;
+ 	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sdp,
+@@ -580,9 +616,11 @@ sg_write(struct file *filp, const char __user *buf, size_t count, loff_t * ppos)
+ 	struct sg_header old_hdr;
+ 	sg_io_hdr_t *hp;
+ 	unsigned char cmnd[SG_MAX_CDB_SIZE];
++	int retval;
+ 
+-	if (unlikely(uaccess_kernel()))
+-		return -EINVAL;
++	retval = sg_check_file_access(filp, __func__);
++	if (retval)
++		return retval;
+ 
+ 	if ((!(sfp = (Sg_fd *) filp->private_data)) || (!(sdp = sfp->parentdp)))
+ 		return -ENXIO;
 -- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+2.18.0.rc2.346.g013aa6912e-goog
