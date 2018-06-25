@@ -1,123 +1,33 @@
-From: Jann Horn <jannh@google.com>
-Subject: [PATCH v3] sg: mitigate read/write abuse
-Date: Mon, 25 Jun 2018 16:25:44 +0200
-Message-ID: <20180625142544.182673-1-jannh@google.com>
+From: Sagi Grimberg <sagi@grimberg.me>
+Subject: Re: [PATCH 5/5] nvme: use __blk_mq_complete_request in timeout path
+Date: Mon, 25 Jun 2018 21:51:07 +0300
+Message-ID: <80d1be8f-859e-5feb-a53e-c8be9c3e0213@grimberg.me>
+References: <1529500964-28429-1-git-send-email-jianchao.w.wang@oracle.com>
+ <1529500964-28429-6-git-send-email-jianchao.w.wang@oracle.com>
+ <20180620143956.GA20950@lst.de>
+ <42583ee2-fe9d-39da-b82a-38a27b03fdb3@oracle.com>
+ <1817441e-6810-ed40-a8fd-403742818aae@grimberg.me>
+ <cc93effe-8e97-d4a8-851e-33208cf837a7@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <cc93effe-8e97-d4a8-851e-33208cf837a7@oracle.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Doug Gilbert <dgilbert@interlog.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Al Viro <viro@zeniv.linux.org.uk>, jannh@google.com
-Cc: Andy Lutomirski <luto@kernel.org>, linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, kernel-hardening@lists.openwall.com, security@kernel.org, Benjamin Block <bblock@linux.vnet.ibm.com>
+To: "jianchao.wang" <jianchao.w.wang@oracle.com>, Christoph Hellwig <hch@lst.de>
+Cc: axboe@kernel.dk, martin.petersen@oracle.com, keith.busch@intel.com, josef@toxicpanda.com, ulf.hansson@linaro.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-As Al Viro noted in commit 128394eff343 ("sg_write()/bsg_write() is not fit
-to be called under KERNEL_DS"), sg improperly accesses userspace memory
-outside the provided buffer, permitting kernel memory corruption via
-splice().
-But it doesn't just do it on ->write(), also on ->read().
 
-As a band-aid, make sure that the ->read() and ->write() handlers can not
-be called in weird contexts (kernel context or credentials different from
-file opener), like for ib_safe_file_access().
+>> Given the amount of fixes (and fixes of fixes) we had in the timeout handler, maybe it'd be a good idea to step back and take a another look?
+>>
+>> Won't it be better to avoid disabling the device and return
+>> BLK_EH_RESET_TIMER if we are not aborting in the timeout handler?
+>>
+> 
+> Yes, that would be an ideal status for nvme-pci.
+> But we have to depend on the timeout handler to handle the timed out request from nvme_reset_work.
 
-If someone needs to use these interfaces from different security contexts,
-a new interface should be written that goes through the ->ioctl() handler.
-
-I've mostly copypasted ib_safe_file_access() over as sg_safe_file_access()
-because I couldn't find a good common header - please tell me if you know a
-better way.
-
-changed in v2:
- - remove the bsg parts per Christoph Hellwig's request
-
-changed in v3:
- - move error messages into helper function
- - use two different error messages and return values (Douglas Gilbert)
- - add comment on stranded responses (Douglas Gilbert)
- - use current_real_cred() instead of current_cred() (so that
-   override_creds() can't bypass this check)
-
-Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
-Cc: <stable@vger.kernel.org>
-Signed-off-by: Jann Horn <jannh@google.com>
----
- drivers/scsi/sg.c | 42 ++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 40 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 53ae52dbff84..4f4e88ca8213 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -51,6 +51,7 @@ static int sg_version_num = 30536;	/* 2 digits for each component */
- #include <linux/atomic.h>
- #include <linux/ratelimit.h>
- #include <linux/uio.h>
-+#include <linux/cred.h> /* for sg_safe_file_access() */
- 
- #include "scsi.h"
- #include <scsi/scsi_dbg.h>
-@@ -209,6 +210,33 @@ static void sg_device_destroy(struct kref *kref);
- 	sdev_prefix_printk(prefix, (sdp)->device,		\
- 			   (sdp)->disk->disk_name, fmt, ##a)
- 
-+/*
-+ * The SCSI interfaces that use read() and write() as an asynchronous variant of
-+ * ioctl(..., SG_IO, ...) are fundamentally unsafe, since there are lots of ways
-+ * to trigger read() and write() calls from various contexts with elevated
-+ * privileges. This can lead to kernel memory corruption (e.g. if these
-+ * interfaces are called through splice()) and privilege escalation inside
-+ * userspace (e.g. if a process with access to such a device passes a file
-+ * descriptor to a SUID binary as stdin/stdout/stderr).
-+ *
-+ * This function provides protection for the legacy API by restricting the
-+ * calling context.
-+ */
-+static int sg_check_file_access(struct file *filp, const char *caller)
-+{
-+	if (filp->f_cred != current_real_cred()) {
-+		pr_err_once("%s: process %d (%s) changed security contexts after opening file descriptor, this is not allowed.\n",
-+			caller, task_tgid_vnr(current), current->comm);
-+		return -EPERM;
-+	}
-+	if (uaccess_kernel()) {
-+		pr_err_once("%s: process %d (%s) called from kernel context, this is not allowed.\n",
-+			caller, task_tgid_vnr(current), current->comm);
-+		return -EACCES;
-+	}
-+	return 0;
-+}
-+
- static int sg_allow_access(struct file *filp, unsigned char *cmd)
- {
- 	struct sg_fd *sfp = filp->private_data;
-@@ -393,6 +421,14 @@ sg_read(struct file *filp, char __user *buf, size_t count, loff_t * ppos)
- 	struct sg_header *old_hdr = NULL;
- 	int retval = 0;
- 
-+	/*
-+	 * This could cause a response to be stranded. Close the associated
-+	 * file descriptor to free up any resources being held.
-+	 */
-+	retval = sg_check_file_access(filp, __func__);
-+	if (retval)
-+		return retval;
-+
- 	if ((!(sfp = (Sg_fd *) filp->private_data)) || (!(sdp = sfp->parentdp)))
- 		return -ENXIO;
- 	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sdp,
-@@ -580,9 +616,11 @@ sg_write(struct file *filp, const char __user *buf, size_t count, loff_t * ppos)
- 	struct sg_header old_hdr;
- 	sg_io_hdr_t *hp;
- 	unsigned char cmnd[SG_MAX_CDB_SIZE];
-+	int retval;
- 
--	if (unlikely(uaccess_kernel()))
--		return -EINVAL;
-+	retval = sg_check_file_access(filp, __func__);
-+	if (retval)
-+		return retval;
- 
- 	if ((!(sfp = (Sg_fd *) filp->private_data)) || (!(sdp = sfp->parentdp)))
- 		return -ENXIO;
--- 
-2.18.0.rc2.346.g013aa6912e-goog
+Yes, so if the timeout handler is invoked from the reset, it should
+simply set a proper failed status and return BLK_EH_DONE.
