@@ -1,33 +1,38 @@
-From: Sagi Grimberg <sagi@grimberg.me>
-Subject: Re: [PATCH 5/5] nvme: use __blk_mq_complete_request in timeout path
-Date: Mon, 25 Jun 2018 21:51:07 +0300
-Message-ID: <80d1be8f-859e-5feb-a53e-c8be9c3e0213@grimberg.me>
-References: <1529500964-28429-1-git-send-email-jianchao.w.wang@oracle.com>
- <1529500964-28429-6-git-send-email-jianchao.w.wang@oracle.com>
- <20180620143956.GA20950@lst.de>
- <42583ee2-fe9d-39da-b82a-38a27b03fdb3@oracle.com>
- <1817441e-6810-ed40-a8fd-403742818aae@grimberg.me>
- <cc93effe-8e97-d4a8-851e-33208cf837a7@oracle.com>
+From: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+Subject: Re: [PATCH] scsi_transport_fc: use 64-bit timestamps
+	consistently
+Date: Mon, 25 Jun 2018 12:30:13 -0700
+Message-ID: <3161ed3e-1237-6e80-2f3a-79cb8179a417@linux.vnet.ibm.com>
+References: <20180618153004.1808419-1-arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <cc93effe-8e97-d4a8-851e-33208cf837a7@oracle.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <y2038-bounces@lists.linaro.org>
+In-Reply-To: <20180618153004.1808419-1-arnd@arndb.de>
 Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: "jianchao.wang" <jianchao.w.wang@oracle.com>, Christoph Hellwig <hch@lst.de>
-Cc: axboe@kernel.dk, martin.petersen@oracle.com, keith.busch@intel.com, josef@toxicpanda.com, ulf.hansson@linaro.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+List-Unsubscribe: <https://lists.linaro.org/mailman/options/y2038>,
+ <mailto:y2038-request@lists.linaro.org?subject=unsubscribe>
+List-Archive: <http://lists.linaro.org/pipermail/y2038/>
+List-Post: <mailto:y2038@lists.linaro.org>
+List-Help: <mailto:y2038-request@lists.linaro.org?subject=help>
+List-Subscribe: <https://lists.linaro.org/mailman/listinfo/y2038>,
+ <mailto:y2038-request@lists.linaro.org?subject=subscribe>
+Errors-To: y2038-bounces@lists.linaro.org
+Sender: "Y2038" <y2038-bounces@lists.linaro.org>
+To: Arnd Bergmann <arnd@arndb.de>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Jens Axboe <axboe@kernel.dk>, James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org, y2038@lists.linaro.org, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>, Steffen Maier <maier@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-
->> Given the amount of fixes (and fixes of fixes) we had in the timeout handler, maybe it'd be a good idea to step back and take a another look?
->>
->> Won't it be better to avoid disabling the device and return
->> BLK_EH_RESET_TIMER if we are not aborting in the timeout handler?
->>
-> 
-> Yes, that would be an ideal status for nvme-pci.
-> But we have to depend on the timeout handler to handle the timed out request from nvme_reset_work.
-
-Yes, so if the timeout handler is invoked from the reset, it should
-simply set a proper failed status and return BLK_EH_DONE.
+T24gMDYvMTgvMjAxOCAwODoyOSBBTSwgQXJuZCBCZXJnbWFubiB3cm90ZToKPiBUaGUgZ2V0X3Nl
+Y29uZHMoKSBoZWxwZXIgcmV0dXJucyBhbiAndW5zaWduZWQgbG9uZycgdmFsdWUsIHdoaWNoIGNh
+bgo+IG92ZXJmbG93IG9uIDMyLWJpdCBhcmNoaXRlY3R1cmVzLiBTaW5jZSB0aGUgaW50ZXJmYWNl
+IHdlIHBhc3MgaXQgaW50bwo+IGFscmVhZHkgdXNlcyBhIDY0LWJpdCB0eXBlLCB3ZSBjYW4ganVz
+dCB1c2Uga3RpbWVfZ2V0X3JlYWxfc2Vjb25kcygpCj4gaW5zdGVhZC4KPiAKPiBXaGlsZSB3ZSBn
+ZW5lcmFsbHkgcHJlZmVyIGxvY2FsIHRpbWVzdGFtcHMgaW4gQ0xPQ0tfTU9OT1RPTklDIGZvcm1h
+dAo+IChrdGltZV9nZXRfc2Vjb25kcyksIHRoaXMga2VlcHMgdXNpbmcgdGhlIENMT0NLX1JFQUxU
+SU1FIHZlcnNpb24KPiBpbiBvcmRlciB0byBtYWludGFpbiBjb21wYXRpYmlsaXR5IHdpdGggZXhp
+c3RpbmcgY29kZS4KPiAKPiBTaWduZWQtb2ZmLWJ5OiBBcm5kIEJlcmdtYW5uIDxhcm5kQGFybmRi
+LmRlPgo+IC0tLQoKUmV2aWV3ZWQtYnk6IFR5cmVsIERhdHd5bGVyIDx0eXJlbGRAbGludXgudm5l
+dC5pYm0uY29tPgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X18KWTIwMzggbWFpbGluZyBsaXN0ClkyMDM4QGxpc3RzLmxpbmFyby5vcmcKaHR0cHM6Ly9saXN0
+cy5saW5hcm8ub3JnL21haWxtYW4vbGlzdGluZm8veTIwMzgK
