@@ -1,330 +1,447 @@
-From: "Asutosh Das (asd)" <asutoshd@codeaurora.org>
-Subject: Re: [PATCH V4 2/3] scsi: ufs: Add ufs provisioning support
-Date: Wed, 27 Jun 2018 12:05:18 +0530
-Message-ID: <ba0b41d7-0f17-1d0a-e414-90bdbf04d5fe@codeaurora.org>
-References: <1529985829-18689-1-git-send-email-sayalil@codeaurora.org>
- <1529985829-18689-3-git-send-email-sayalil@codeaurora.org>
+From: Evan Green <evgreen@chromium.org>
+Subject: Re: [PATCH V4 3/3] scsi: ufs: Add configfs support for ufs provisioning
+Date: Wed, 27 Jun 2018 11:39:56 -0700
+Message-ID: <CAE=gft662O3oiFJnac-LV+Ne8v7hCdFe0N6cU1rdYkhXpDyWvA@mail.gmail.com>
+References: <1529985829-18689-1-git-send-email-sayalil@codeaurora.org> <1529985829-18689-4-git-send-email-sayalil@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1529985829-18689-3-git-send-email-sayalil@codeaurora.org>
-Content-Language: en-US
+In-Reply-To: <1529985829-18689-4-git-send-email-sayalil@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Sayali Lokhande <sayalil@codeaurora.org>, subhashj@codeaurora.org, cang@codeaurora.org, vivek.gautam@codeaurora.org, rnayak@codeaurora.org, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, evgreen@chromium.org, riteshh@codeaurora.org
-Cc: linux-scsi@vger.kernel.org, open list <linux-kernel@vger.kernel.org>
+To: sayalil@codeaurora.org
+Cc: subhashj@codeaurora.org, cang@codeaurora.org, vivek.gautam@codeaurora.org, Rajendra Nayak <rnayak@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, asutoshd@codeaurora.org, riteshh@codeaurora.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, mka@chromium.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 6/26/2018 9:33 AM, Sayali Lokhande wrote:
-> A new api ufshcd_do_config_device() is added in driver
-> to support UFS provisioning at runtime. Configfs support
-> is added to trigger provisioning.
-> Device and Unit descriptor configurable parameters are
-> parsed from vendor specific provisioning data or file and
-> passed via configfs node at runtime to provision ufs device.
-> 
+Hi Sayali,
+
+On Mon, Jun 25, 2018 at 9:04 PM Sayali Lokhande <sayalil@codeaurora.org> wrote:
+>
+> Add configfs support to provision ufs device at runtime.
+> Usage:
+> echo <desc_buf> > /config/ufshcd/ufs_provision
+> To check provisioning status:
+> cat /config/ufshcd/ufs_provision
+> 1 -> Success (Reboot device to check updated provisioning)
+
+This commit message could contain a bit more detail, including
+motivation and what goes into desc_buf. Also, the description of
+reading ufs_provision isn't really correct, is it? 1 doesn't indicate
+success, 1 just indicates bConfigDescrLock's value.
+
+>
 > Signed-off-by: Sayali Lokhande <sayalil@codeaurora.org>
 > ---
->   drivers/scsi/ufs/ufs.h    |  28 +++++++
->   drivers/scsi/ufs/ufshcd.c | 198 ++++++++++++++++++++++++++++++++++++++++++++++
->   drivers/scsi/ufs/ufshcd.h |   2 +
->   3 files changed, 228 insertions(+)
-> 
+>  Documentation/ABI/testing/configfs-driver-ufs |  15 ++
+>  drivers/scsi/ufs/Makefile                     |   1 +
+>  drivers/scsi/ufs/ufs-configfs.c               | 198 ++++++++++++++++++++++++++
+>  drivers/scsi/ufs/ufs.h                        |   2 +
+>  drivers/scsi/ufs/ufshcd.c                     |   2 +
+>  drivers/scsi/ufs/ufshcd.h                     |  18 +++
+>  6 files changed, 236 insertions(+)
+>  create mode 100644 Documentation/ABI/testing/configfs-driver-ufs
+>  create mode 100644 drivers/scsi/ufs/ufs-configfs.c
+>
+> diff --git a/Documentation/ABI/testing/configfs-driver-ufs b/Documentation/ABI/testing/configfs-driver-ufs
+> new file mode 100644
+> index 0000000..f6ef38e
+> --- /dev/null
+> +++ b/Documentation/ABI/testing/configfs-driver-ufs
+> @@ -0,0 +1,15 @@
+> +What:          /config/ufshcd/ufs_provision
+> +Date:          Jun 2018
+> +KernelVersion: 4.14
+> +Description:
+> +               This file shows the status of runtime ufs provisioning.
+> +               This can be used to provision ufs device if bConfigDescrLock is 0.
+> +               Configuration buffer needs to be written in space separated format
+> +               specificied as below:
+> +               echo <bNumberLU> <bBootEnable> <bDescrAccessEn> <bInitPowerMode>
+> +               <bHighPriorityLUN> <bSecureRemovalType> <bInitActiveICCLevel>
+> +               <wPeriodicRTCUpdate> <bConfigDescrLock> <LUNum> <bLUEnable>
+> +               <bBootLunID> <size_in_kb> <bDataReliability> <bLUWriteProtect>
+> +               <bMemoryType> <bLogicalBlockSize> <bProvisioningType>
+> +               <wContextCapabilities> <LUNtoGrow> <commit> <NumofLUNs>
+> +               > /config/ufshcd/ufs_provision
+> diff --git a/drivers/scsi/ufs/Makefile b/drivers/scsi/ufs/Makefile
+> index 918f579..d438e74 100644
+> --- a/drivers/scsi/ufs/Makefile
+> +++ b/drivers/scsi/ufs/Makefile
+> @@ -5,5 +5,6 @@ obj-$(CONFIG_SCSI_UFS_DWC_TC_PLATFORM) += tc-dwc-g210-pltfrm.o ufshcd-dwc.o tc-d
+>  obj-$(CONFIG_SCSI_UFS_QCOM) += ufs-qcom.o
+>  obj-$(CONFIG_SCSI_UFSHCD) += ufshcd-core.o
+>  ufshcd-core-objs := ufshcd.o ufs-sysfs.o
+> +obj-$(CONFIG_CONFIGFS_FS) += ufs-configfs.o
+>  obj-$(CONFIG_SCSI_UFSHCD_PCI) += ufshcd-pci.o
+>  obj-$(CONFIG_SCSI_UFSHCD_PLATFORM) += ufshcd-pltfrm.o
+> diff --git a/drivers/scsi/ufs/ufs-configfs.c b/drivers/scsi/ufs/ufs-configfs.c
+> new file mode 100644
+> index 0000000..614b017
+> --- /dev/null
+> +++ b/drivers/scsi/ufs/ufs-configfs.c
+> @@ -0,0 +1,198 @@
+> +/*
+> + * Copyright (c) 2018, Linux Foundation. All rights reserved.
+> + *
+> + * This program is free software; you can redistribute it and/or modify
+> + * it under the terms of the GNU General Public License version 2 and
+> + * only version 2 as published by the Free Software Foundation.
+> + *
+> + * This program is distributed in the hope that it will be useful,
+> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> + * GNU General Public License for more details.
+> + *
+> + */
+
+I believe there's a new SPDX license identification that they prefer
+you to use, at least according to:
+https://lwn.net/Articles/739183/
+
+> +
+> +#include <linux/err.h>
+> +#include <linux/string.h>
+> +#include <asm/unaligned.h>
+> +#include <linux/configfs.h>
+
+These should be alphabetized.
+
+> +
+> +#include "ufs.h"
+> +#include "ufshcd.h"
+> +
+> +struct ufs_hba *hba;
+
+How does this work if there is more than one UFS controller in the
+system? Given that there are both UFS cards and embedded UFS chips, I
+think multiple controllers needs to be supported.
+
+> +
+> +static ssize_t ufs_provision_show(struct config_item *item, char *buf)
+> +{
+> +       return snprintf(buf, PAGE_SIZE, "provision_enabled = %x\n",
+> +               hba->provision_enabled);
+
+Why can't this show the current configuration, barring some of the
+weirder parameters like lun_to_grow, which I have comments about
+below. I'm not sure provision_enabled is very useful, given that we
+can already get at this attribute via sysfs.
+
+> +}
+> +
+> +ssize_t ufshcd_desc_configfs_store(const char *buf, size_t count)
+> +{
+> +       struct ufs_config_descr *cfg = &hba->cfgs;
+> +       char *strbuf;
+> +       char *strbuf_copy;
+> +       int desc_buf[count];
+
+I believe with configfs, "count" can be up to PAGE_SIZE, which would
+mean usermode could size this array at 16K. That's too big, especially
+since you already know the maximum number of ints you're willing to
+take in, and it's not anywhere near that.
+
+> +       int *pt;
+> +       char *token;
+> +       int i, ret;
+> +       int value, commit = 0;
+> +       int num_luns = 0;
+> +       int KB_per_block = 4;
+
+What is this? Is this really fixed across all UFS devices?
+
+> +
+> +       /* reserve one byte for null termination */
+> +       strbuf = kmalloc(count + 1, GFP_KERNEL);
+> +       if (!strbuf)
+> +               return -ENOMEM;
+> +
+> +       strbuf_copy = strbuf;
+> +       strlcpy(strbuf, buf, count + 1);
+> +       memset(desc_buf, 0, count);
+
+This is zeroing count, which represents the number of characters
+coming in, but desc_buf is an array of ints.
+
+> +
+> +       /* Just return if bConfigDescrLock is already set */
+> +       ret = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_READ_ATTR,
+> +               QUERY_ATTR_IDN_CONF_DESC_LOCK, 0, 0, &cfg->bConfigDescrLock);
+> +       if (ret) {
+> +               dev_err(hba->dev, "%s: Failed reading bConfigDescrLock %d, cannot re-provision device!\n",
+> +                       __func__, ret);
+> +               hba->provision_enabled = 0;
+> +               goto out;
+> +       }
+> +       if (cfg->bConfigDescrLock == 1) {
+
+This might just be my paranoia, but I generally prefer checks against
+zero, rather than checks specifically for one.
+
+> +               dev_err(hba->dev, "%s: bConfigDescrLock already set to %u, cannot re-provision device!\n",
+> +               __func__, cfg->bConfigDescrLock);
+> +               hba->provision_enabled = 0;
+> +               goto out;
+> +       }
+> +
+> +       for (i = 0; i < count; i++) {
+> +               token = strsep(&strbuf, " ");
+> +               if (!token && i) {
+> +                       num_luns = desc_buf[i-1];
+> +                       dev_dbg(hba->dev, "%s: token %s, num_luns %d\n",
+> +                               __func__, token, num_luns);
+> +                       if (num_luns > 8) {
+
+This is a magic number. Please make a define for this number. Then use
+that define to come up with a maximum size for desc_buf, rather than
+"count". Then you can iterate "i" up to the appropriate number based
+on the number of luns, rather than up to the number of characters in
+the string.
+
+> +                               dev_err(hba->dev, "%s: Invalid num_luns %d\n",
+> +                               __func__, num_luns);
+> +                               hba->provision_enabled = 0;
+> +                               goto out;
+> +                       }
+
+I don't love that there's a num_luns parameter being fed in here at
+all. It would be better in my opinion if you could just faithfully
+pass along the members of the configuration descriptor directly,
+rather than having additional "features" like num_luns, commit, and
+lun_to_grow.
+
+> +                       break;
+> +               }
+> +
+> +               ret = kstrtoint(token, 0, &value);
+> +               if (ret) {
+> +                       dev_err(hba->dev, "%s: kstrtoint failed %d %s\n",
+> +                               __func__, ret, token);
+> +                       break;
+> +               }
+> +               desc_buf[i] = value;
+> +               dev_dbg(hba->dev, " desc_buf[%d] 0x%x", i, desc_buf[i]);
+> +       }
+> +
+> +       /* Fill in the descriptors with parsed configuration data */
+> +       pt = desc_buf;
+> +       cfg->bNumberLU = *pt++;
+> +       cfg->bBootEnable = *pt++;
+> +       cfg->bDescrAccessEn = *pt++;
+> +       cfg->bInitPowerMode = *pt++;
+> +       cfg->bHighPriorityLUN = *pt++;
+> +       cfg->bSecureRemovalType = *pt++;
+> +       cfg->bInitActiveICCLevel = *pt++;
+> +       cfg->wPeriodicRTCUpdate = *pt++;
+> +       cfg->bConfigDescrLock = *pt++;
+> +       dev_dbg(hba->dev, "%s: %u %u %u %u %u %u %u %u %u\n", __func__,
+> +       cfg->bNumberLU, cfg->bBootEnable, cfg->bDescrAccessEn,
+> +       cfg->bInitPowerMode, cfg->bHighPriorityLUN, cfg->bSecureRemovalType,
+> +       cfg->bInitActiveICCLevel, cfg->wPeriodicRTCUpdate,
+> +       cfg->bConfigDescrLock);
+> +
+> +       for (i = 0; i < num_luns; i++) {
+> +               cfg->unit[i].LUNum = *pt++;
+> +               cfg->unit[i].bLUEnable = *pt++;
+> +               cfg->unit[i].bBootLunID = *pt++;
+> +               /* dNumAllocUnits = size_in_kb/KB_per_block */
+> +               cfg->unit[i].dNumAllocUnits = (u32)(*pt++ / KB_per_block);
+
+It's awkward that pt is an int, since you then divide by 4. That means
+you lose two bits at the top. What if you want a size that includes
+those two bits? Also as per my comment above, if KB_per_block might be
+values other than 4, then you might lose even more bits. Perhaps this
+should just be set to *pt++ directly, rather than the mystery divide.
+It will be up to user mode to read the geometry descriptor to figure
+out how bytes correspond to allocation units.
+
+> +               cfg->unit[i].bDataReliability = *pt++;
+> +               cfg->unit[i].bLUWriteProtect = *pt++;
+> +               cfg->unit[i].bMemoryType = *pt++;
+> +               cfg->unit[i].bLogicalBlockSize = *pt++;
+> +               cfg->unit[i].bProvisioningType = *pt++;
+> +               cfg->unit[i].wContextCapabilities = *pt++;
+> +       }
+
+Do you validate that the number of ints you received corresponds to
+the number of LUNs, or does this just put uninitialized kernel stack
+in here? Oh, right, above you attempted to zero out desc_buf. What
+about cfg->unit[i] for i > num_luns?
+
+> +
+> +       cfg->lun_to_grow = *pt++;
+> +       commit = *pt++;
+> +       cfg->num_luns = *pt;
+> +       dev_dbg(hba->dev, "%s: lun_to_grow %u, commit %u num_luns %u\n",
+> +               __func__, cfg->lun_to_grow, commit, cfg->num_luns);
+> +       if (commit == 1) {
+
+Is this a common thing in configfs? Why do we need this dry run
+feature, seeing as there's no real validation going on in this
+function anyway.
+
+> +               ret = ufshcd_do_config_device(hba);
+> +               if (!ret) {
+> +                       hba->provision_enabled = 1;
+> +                       dev_err(hba->dev,
+> +                       "%s: UFS Provisioning completed,num_luns %u, reboot now !\n",
+> +                       __func__, cfg->num_luns);
+> +               }
+> +       } else
+> +               dev_err(hba->dev, "%s: Invalid commit %u\n", __func__, commit);
+> +out:
+> +       kfree(strbuf_copy);
+> +       return count;
+> +}
+> +
+> +static ssize_t ufs_provision_store(struct config_item *item,
+> +               const char *buf, size_t count)
+> +{
+> +       return ufshcd_desc_configfs_store(buf, count);
+> +}
+> +
+> +static struct configfs_attribute ufshcd_attr_provision = {
+> +       .ca_name        = "ufs_provision",
+> +       .ca_mode        = S_IRUGO | S_IWUGO,
+> +       .ca_owner       = THIS_MODULE,
+> +       .show           = ufs_provision_show,
+> +       .store          = ufs_provision_store,
+> +};
+> +
+> +static struct configfs_attribute *ufshcd_attrs[] = {
+> +       &ufshcd_attr_provision,
+> +       NULL,
+> +};
+> +
+> +static struct config_item_type ufscfg_type = {
+> +       .ct_attrs       = ufshcd_attrs,
+> +       .ct_owner       = THIS_MODULE,
+> +};
+> +
+> +static struct configfs_subsystem ufscfg_subsys = {
+> +       .su_group = {
+> +               .cg_item = {
+> +                       .ci_namebuf = "ufshcd",
+> +                       .ci_type = &ufscfg_type,
+> +               },
+> +       },
+> +};
+> +
+> +int ufshcd_configfs_init(struct ufs_hba *hba_ufs)
+> +{
+> +       int ret;
+> +       struct configfs_subsystem *subsys = &ufscfg_subsys;
+> +
+> +       hba = hba_ufs;
+> +       config_group_init(&subsys->su_group);
+> +       mutex_init(&subsys->su_mutex);
+> +       ret = configfs_register_subsystem(subsys);
+> +       if (ret) {
+> +               pr_err("Error %d while registering subsystem %s\n",
+> +                      ret,
+> +                      subsys->su_group.cg_item.ci_namebuf);
+> +       }
+> +       return ret;
+> +}
+> +
+> +void ufshcd_configfs_exit(void)
+> +{
+> +       configfs_unregister_subsystem(&ufscfg_subsys);
+> +}
 > diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
-> index e15deb0..1f99904 100644
+> index 1f99904..0b497fc 100644
 > --- a/drivers/scsi/ufs/ufs.h
 > +++ b/drivers/scsi/ufs/ufs.h
-> @@ -333,6 +333,7 @@ enum {
->   	UFSHCD_AMP		= 3,
->   };
->   
-> +#define UFS_BLOCK_SIZE	4096
->   #define POWER_DESC_MAX_SIZE			0x62
->   #define POWER_DESC_MAX_ACTV_ICC_LVLS		16
->   
-> @@ -425,6 +426,33 @@ enum {
->   	MASK_TM_SERVICE_RESP		= 0xFF,
->   };
->   
-> +struct ufs_unit_desc {
-> +	u8     bLUEnable;              /* 1 for enabled LU */
-> +	u8     bBootLunID;             /* 0 for using this LU for boot */
-> +	u8     bLUWriteProtect;        /* 1 = power on WP, 2 = permanent WP */
-> +	u8     bMemoryType;            /* 0 for enhanced memory type */
-> +	u32    dNumAllocUnits;         /* Number of alloc unit for this LU */
-> +	u8     bDataReliability;       /* 0 for reliable write support */
-> +	u8     bLogicalBlockSize;      /* See section 13.2.3 of UFS standard */
-> +	u8     bProvisioningType;      /* 0 for thin provisioning */
-> +	u16    wContextCapabilities;   /* refer Unit Descriptor Description */
-> +};
-> +
-> +struct ufs_config_descr {
-> +	u8     bNumberLU;              /* Total number of active LUs */
-> +	u8     bBootEnable;            /* enabling device for partial init */
-> +	u8     bDescrAccessEn;         /* desc access during partial init */
-> +	u8     bInitPowerMode;         /* Initial device power mode */
-> +	u8     bHighPriorityLUN;       /* LUN of the high priority LU */
-> +	u8     bSecureRemovalType;     /* Erase config for data removal */
-> +	u8     bInitActiveICCLevel;    /* ICC level after reset */
-> +	u16    wPeriodicRTCUpdate;     /* 0 to set a priodic RTC update rate */
-> +	u32     bConfigDescrLock;      /* 1 to lock Configation Descriptor */
-> +	u32    qVendorConfigCode;      /* Vendor specific configuration code */
-> +	struct ufs_unit_desc unit[8];
-> +	u8	lun_to_grow;
-> +};
-> +
->   /* Task management service response */
->   enum {
->   	UPIU_TASK_MANAGEMENT_FUNC_COMPL		= 0x00,
+> @@ -427,6 +427,7 @@ enum {
+>  };
+>
+>  struct ufs_unit_desc {
+> +       u8         LUNum;
+>         u8     bLUEnable;              /* 1 for enabled LU */
+>         u8     bBootLunID;             /* 0 for using this LU for boot */
+>         u8     bLUWriteProtect;        /* 1 = power on WP, 2 = permanent WP */
+> @@ -451,6 +452,7 @@ struct ufs_config_descr {
+>         u32    qVendorConfigCode;      /* Vendor specific configuration code */
+>         struct ufs_unit_desc unit[8];
+>         u8      lun_to_grow;
+> +       u8 num_luns;
+>  };
+
+I don't like that these structs seem to be a blend of hardware and
+software definitions. For the most part they match the hardware spec,
+but then there are these random software accounting members sprinkled
+in that break that. It would be better if the hardware structures
+could be their own thing, and then additional structures can be
+created if software needs its own accounting. But I'm also not a fan
+of any of the software members here (num_luns, lun_to_grow, and
+LUNum), and I'm hoping we can get rid of them altogether by instead
+providing a more direct configfs interface to the config desciptor.
+
+>
+>  /* Task management service response */
 > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 351f874..370a7c6 100644
+> index 370a7c6..e980d5a 100644
 > --- a/drivers/scsi/ufs/ufshcd.c
 > +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -42,6 +42,7 @@
->   #include <linux/nls.h>
->   #include <linux/of.h>
->   #include <linux/bitfield.h>
-> +#include <asm/unaligned.h>
->   #include "ufshcd.h"
->   #include "ufs_quirks.h"
->   #include "unipro.h"
-> @@ -3063,6 +3064,14 @@ static inline int ufshcd_read_power_desc(struct ufs_hba *hba,
->   	return ufshcd_read_desc(hba, QUERY_DESC_IDN_POWER, 0, buf, size);
->   }
->   
-> +static inline int ufshcd_read_geometry_desc(struct ufs_hba *hba,
-> +					 u8 *buf,
-> +					 u32 size)
-> +{
-> +	return ufshcd_read_desc(hba, QUERY_DESC_IDN_GEOMETRY, 0, buf, size);
-> +}
-> +
-> +
->   static int ufshcd_read_device_desc(struct ufs_hba *hba, u8 *buf, u32 size)
->   {
->   	return ufshcd_read_desc(hba, QUERY_DESC_IDN_DEVICE, 0, buf, size);
-> @@ -6363,6 +6372,195 @@ static int ufshcd_set_dev_ref_clk(struct ufs_hba *hba)
->   }
->   
->   /**
-> + * ufshcd_do_config_device - API function for UFS provisioning
-> + * hba: per-adapter instance
-> + * Returns 0 for success, non-zero in case of failure.
-> + */
-> +int ufshcd_do_config_device(struct ufs_hba *hba)
-> +{
-> +	struct ufs_config_descr *cfg = &hba->cfgs;
-> +	int buff_len = QUERY_DESC_CONFIGURATION_DEF_SIZE;
-> +	u8 desc_buf[QUERY_DESC_CONFIGURATION_DEF_SIZE] = {0};
-> +	int i, ret = 0;
-> +	int lun_to_grow = -1;
-> +	u64 qTotalRawDeviceCapacity;
-> +	u16 wEnhanced1CapAdjFac, wEnhanced2CapAdjFac;
-> +	u32 dEnhanced1MaxNAllocU, dEnhanced2MaxNAllocU;
-> +	size_t alloc_units, units_to_create = 0;
-> +	size_t capacity_to_alloc_factor;
-> +	size_t enhanced1_units = 0, enhanced2_units = 0;
-> +	size_t conversion_ratio = 1;
-> +	u8 *pt;
-> +	u32 blocks_per_alloc_unit = 1024;
-> +	int geo_len = hba->desc_size.geom_desc;
-> +	u8 geo_buf[hba->desc_size.geom_desc];
-> +	unsigned int max_partitions = 8;
-> +
-> +	WARN_ON(!hba || !cfg);
-There's no point of null checks here. It's being dereferenced at the 
-declaration above.
-Also, I think it should return -EINVAL if these're null.
-> +
-> +	pm_runtime_get_sync(hba->dev);
-> +	scsi_block_requests(hba->host);
-> +	if (ufshcd_wait_for_doorbell_clr(hba, U64_MAX)) {
-> +		dev_err(hba->dev, "%s: Timed out waitig for DB to clear\n",
-> +			__func__);
-> +		ret = -EBUSY;
-> +		goto out;
-> +	}
-> +
-> +	ret = ufshcd_read_geometry_desc(hba, geo_buf, geo_len);
-> +	if (ret) {
-> +		dev_err(hba->dev, "%s: Failed getting geometry_desc %d\n",
-> +			__func__, ret);
-> +		goto out;
-> +	}
-> +
-> +	/*
-> +	 * Get Geomtric parameters like total configurable memory
-> +	 * quantity (Offset 0x04 to 0x0b), Capacity Adjustment
-> +	 * Factors (Offset 0x30, 0x31, 0x36, 0x37), Max allocation
-> +	 * units (Offset 0x2c to 0x2f, 0x32 to 0x35) used to configure
-> +	 * the device logical units.
-> +	 */
-> +	qTotalRawDeviceCapacity = get_unaligned_be64(&geo_buf[0x04]);
-> +	wEnhanced1CapAdjFac = get_unaligned_be16(&geo_buf[0x30]);
-> +	wEnhanced2CapAdjFac = get_unaligned_be16(&geo_buf[0x36]);
-> +	dEnhanced1MaxNAllocU = get_unaligned_be32(&geo_buf[0x2c]);
-> +	dEnhanced2MaxNAllocU = get_unaligned_be32(&geo_buf[0x32]);
-> +
-> +	capacity_to_alloc_factor =
-> +		(blocks_per_alloc_unit * UFS_BLOCK_SIZE) / 512;
-> +
-> +	if (qTotalRawDeviceCapacity % capacity_to_alloc_factor != 0) {
-> +		dev_err(hba->dev,
-> +			"%s: Raw capacity(%llu) not multiple of alloc factor(%zu)\n",
-> +			__func__, qTotalRawDeviceCapacity,
-> +			capacity_to_alloc_factor);
-> +		ret = -EINVAL;
-> +		goto out;
-> +	}
-> +	alloc_units = (qTotalRawDeviceCapacity / capacity_to_alloc_factor);
-> +	units_to_create = 0;
-> +	enhanced1_units = enhanced2_units = 0;
-> +
-> +	/*
-> +	 * Calculate number of allocation units to be assigned to a logical unit
-> +	 * considering the capacity adjustment factor of respective memory type.
-> +	 */
-> +	for (i = 0; i < (max_partitions - 1) &&
-> +		units_to_create <= alloc_units; i++) {
-> +		if ((cfg->unit[i].dNumAllocUnits % blocks_per_alloc_unit) == 0)
-> +			cfg->unit[i].dNumAllocUnits /= blocks_per_alloc_unit;
-> +		else
-> +			cfg->unit[i].dNumAllocUnits =
-> +			cfg->unit[i].dNumAllocUnits / blocks_per_alloc_unit + 1;
-> +
-> +		if (cfg->unit[i].bMemoryType == 0)
-> +			units_to_create += cfg->unit[i].dNumAllocUnits;
-> +		else if (cfg->unit[i].bMemoryType == 3) {
-> +			enhanced1_units += cfg->unit[i].dNumAllocUnits;
-> +			cfg->unit[i].dNumAllocUnits *=
-> +				(wEnhanced1CapAdjFac / 0x100);
-> +			units_to_create += cfg->unit[i].dNumAllocUnits;
-> +		} else if (cfg->unit[i].bMemoryType == 4) {
-> +			enhanced2_units += cfg->unit[i].dNumAllocUnits;
-> +			cfg->unit[i].dNumAllocUnits *=
-> +				(wEnhanced1CapAdjFac / 0x100);
-> +			units_to_create += cfg->unit[i].dNumAllocUnits;
-> +		} else {
-> +			dev_err(hba->dev, "%s: Unsupported memory type %d\n",
-> +				__func__, cfg->unit[i].bMemoryType);
-> +			ret = -EINVAL;
-> +			goto out;
-> +		}
-> +	}
-> +	if (enhanced1_units > dEnhanced1MaxNAllocU) {
-> +		dev_err(hba->dev, "%s: size %zu exceeds max enhanced1 area size %u\n",
-> +			__func__, enhanced1_units, dEnhanced1MaxNAllocU);
-> +		ret = -ERANGE;
-> +		goto out;
-> +	}
-> +	if (enhanced2_units > dEnhanced2MaxNAllocU) {
-> +		dev_err(hba->dev, "%s: size %zu exceeds max enhanced2 area size %u\n",
-> +			__func__, enhanced2_units, dEnhanced2MaxNAllocU);
-> +		ret = -ERANGE;
-> +		goto out;
-> +	}
-> +	if (units_to_create > alloc_units) {
-> +		dev_err(hba->dev, "%s: Specified size %zu exceeds device size %zu\n",
-> +			__func__, units_to_create, alloc_units);
-> +		ret = -ERANGE;
-> +		goto out;
-> +	}
-> +	lun_to_grow = cfg->lun_to_grow;
-> +	if (lun_to_grow != -1) {
-> +		if (cfg->unit[i].bMemoryType == 0)
-> +			conversion_ratio = 1;
-> +		else if (cfg->unit[i].bMemoryType == 3)
-> +			conversion_ratio = (wEnhanced1CapAdjFac / 0x100);
-> +		else if (cfg->unit[i].bMemoryType == 4)
-> +			conversion_ratio = (wEnhanced2CapAdjFac / 0x100);
-> +
-> +		cfg->unit[lun_to_grow].dNumAllocUnits +=
-> +		((alloc_units - units_to_create) / conversion_ratio);
-> +		dev_dbg(hba->dev, "%s: conversion_ratio %zu for lun %d\n",
-> +			__func__, conversion_ratio, i);
-> +	}
-> +
-> +	/* Fill in the buffer with configuration data */
-> +	pt = desc_buf;
-> +	*pt++ = 0x90;        // bLength
-> +	*pt++ = 0x01;        // bDescriptorType
-> +	*pt++ = 0;           // Reserved in UFS2.0 and onward
-> +	*pt++ = cfg->bBootEnable;
-> +	*pt++ = cfg->bDescrAccessEn;
-> +	*pt++ = cfg->bInitPowerMode;
-> +	*pt++ = cfg->bHighPriorityLUN;
-> +	*pt++ = cfg->bSecureRemovalType;
-> +	*pt++ = cfg->bInitActiveICCLevel;
-> +	put_unaligned_be16(cfg->wPeriodicRTCUpdate, pt);
-> +	pt = pt + 7; // Reserved fields set to 0
-> +
-> +	/* Fill in the buffer with per logical unit data */
-> +	for (i = 0; i < UFS_UPIU_MAX_GENERAL_LUN; i++) {
-> +		*pt++ = cfg->unit[i].bLUEnable;
-> +		*pt++ = cfg->unit[i].bBootLunID;
-> +		*pt++ = cfg->unit[i].bLUWriteProtect;
-> +		*pt++ = cfg->unit[i].bMemoryType;
-> +		put_unaligned_be32(cfg->unit[i].dNumAllocUnits, pt);
-> +		pt = pt + 4;
-> +		*pt++ = cfg->unit[i].bDataReliability;
-> +		*pt++ = cfg->unit[i].bLogicalBlockSize;
-> +		*pt++ = cfg->unit[i].bProvisioningType;
-> +		put_unaligned_be16(cfg->unit[i].wContextCapabilities, pt);
-> +		pt = pt + 5; // Reserved fields set to 0
-> +	}
-> +
-> +	ret = ufshcd_query_descriptor_retry(hba, UPIU_QUERY_OPCODE_WRITE_DESC,
-> +		QUERY_DESC_IDN_CONFIGURATION, 0, 0, desc_buf, &buff_len);
-> +
-> +	if (ret) {
-> +		dev_err(hba->dev, "%s: Failed writing descriptor. desc_idn %d, opcode %x ret %d\n",
-> +		__func__, QUERY_DESC_IDN_CONFIGURATION,
-> +		UPIU_QUERY_OPCODE_WRITE_DESC, ret);
-> +		goto out;
-> +	}
-> +
-> +	if (cfg->bConfigDescrLock == 1) {
-> +		ret = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
-> +		QUERY_ATTR_IDN_CONF_DESC_LOCK, 0, 0, &cfg->bConfigDescrLock);
-> +		if (ret)
-> +			dev_err(hba->dev, "%s: Failed writing bConfigDescrLock %d\n",
-> +				__func__, ret);
-> +	}
-> +
-> +out:
-> +	scsi_unblock_requests(hba->host);
-> +	pm_runtime_put_sync(hba->dev);
-> +
-> +	return ret;
-> +}
-> +
-> +/**
->    * ufshcd_probe_hba - probe hba to detect device and initialize
->    * @hba: per-adapter instance
->    *
+> @@ -7892,6 +7892,7 @@ int ufshcd_shutdown(struct ufs_hba *hba)
+>  void ufshcd_remove(struct ufs_hba *hba)
+>  {
+>         ufs_sysfs_remove_nodes(hba->dev);
+> +       ufshcd_configfs_exit();
+>         scsi_remove_host(hba->host);
+>         /* disable interrupts */
+>         ufshcd_disable_intr(hba, hba->intr_mask);
+> @@ -8145,6 +8146,7 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+>
+>         async_schedule(ufshcd_async_scan, hba);
+>         ufs_sysfs_add_nodes(hba->dev);
+> +       ufshcd_configfs_init(hba);
+>
+>         return 0;
+>
 > diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> index 101a75c..0e6bf30 100644
+> index 0e6bf30..7d2fa89 100644
 > --- a/drivers/scsi/ufs/ufshcd.h
 > +++ b/drivers/scsi/ufs/ufshcd.h
-> @@ -549,6 +549,7 @@ struct ufs_hba {
->   	unsigned int irq;
->   	bool is_irq_enabled;
->   	u32 dev_ref_clk_freq;
-> +	struct ufs_config_descr cfgs;
->   
->   	/* Interrupt aggregation support is broken */
->   	#define UFSHCD_QUIRK_BROKEN_INTR_AGGR			0x1
-> @@ -867,6 +868,7 @@ int ufshcd_read_string_desc(struct ufs_hba *hba, int desc_index,
->   
->   int ufshcd_hold(struct ufs_hba *hba, bool async);
->   void ufshcd_release(struct ufs_hba *hba);
-> +int ufshcd_do_config_device(struct ufs_hba *hba);
->   
->   int ufshcd_map_desc_id_to_length(struct ufs_hba *hba, enum desc_idn desc_id,
->   	int *desc_length);
-> 
-
-
--- 
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a 
-Linux Foundation Collaborative Project
+> @@ -41,6 +41,7 @@
+>  #include <linux/kernel.h>
+>  #include <linux/init.h>
+>  #include <linux/interrupt.h>
+> +#include <linux/configfs.h>
+>  #include <linux/io.h>
+>  #include <linux/delay.h>
+>  #include <linux/slab.h>
+> @@ -550,6 +551,7 @@ struct ufs_hba {
+>         bool is_irq_enabled;
+>         u32 dev_ref_clk_freq;
+>         struct ufs_config_descr cfgs;
+> +       bool provision_enabled;
+>
+>         /* Interrupt aggregation support is broken */
+>         #define UFSHCD_QUIRK_BROKEN_INTR_AGGR                   0x1
+> @@ -869,6 +871,22 @@ int ufshcd_read_string_desc(struct ufs_hba *hba, int desc_index,
+>  int ufshcd_hold(struct ufs_hba *hba, bool async);
+>  void ufshcd_release(struct ufs_hba *hba);
+>  int ufshcd_do_config_device(struct ufs_hba *hba);
+> +/* Expose UFS configfs API's */
+> +ssize_t ufshcd_desc_configfs_store(const char *buf, size_t count);
+> +
+> +#ifdef CONFIG_CONFIGFS_FS
+> +int ufshcd_configfs_init(struct ufs_hba *hba_ufs);
+> +void ufshcd_configfs_exit(void);
+> +#else /* CONFIG_CONFIGFS_FS */
+> +int ufshcd_configfs_init(struct ufs_hba *hba_ufs)
+> +{
+> +       return 0;
+> +}
+> +
+> +void ufshcd_configfs_exit(void)
+> +{
+> +}
+> +#endif /* CONFIG_CONFIGFS_FS */
+>
+>  int ufshcd_map_desc_id_to_length(struct ufs_hba *hba, enum desc_idn desc_id,
+>         int *desc_length);
+> --
+> The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+> a Linux Foundation Collaborative Project
+>
