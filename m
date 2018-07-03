@@ -1,138 +1,66 @@
-From: Rob Herring <robh@kernel.org>
-Subject: Re: [PATCH V2 1/3] scsi: ufs: set the device reference clock setting
-Date: Tue, 3 Jul 2018 12:04:15 -0600
-Message-ID: <CAL_JsqJUBQ2d1mV8ep_h3iZ-ka73ZGEJ3kZ8VkJmb8gDd_R7Sw@mail.gmail.com>
-References: <1528455990-24572-1-git-send-email-sayalil@codeaurora.org>
- <1528455990-24572-2-git-send-email-sayalil@codeaurora.org>
- <20180612192636.GA31725@rob-hp-laptop> <000101d403d3$87210d20$95632760$@codeaurora.org>
- <CAL_JsqLsdEGEjPo8yh5dGoGWTes41QxUiJ4NN0Q9qsgLBaTpjw@mail.gmail.com> <002401d4093d$256fdc90$704f95b0$@codeaurora.org>
+From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Subject: [PATCH] scsi: mptfusion: mark expected switch fall-throughs
+Date: Tue, 3 Jul 2018 17:20:03 -0500
+Message-ID: <20180703222003.GA4593@embeddedor.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <002401d4093d$256fdc90$704f95b0$@codeaurora.org>
+Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
-To: Sayali Lokhande <sayalil@codeaurora.org>
-Cc: Subhash Jadavani <subhashj@codeaurora.org>, Can Guo <cang@codeaurora.org>, Vivek Gautam <vivek.gautam@codeaurora.org>, Rajendra Nayak <rnayak@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, asutoshd@codeaurora.org, Evan Green <evgreen@chromium.org>, linux-scsi@vger.kernel.org, Mark Rutland <mark.rutland@arm.com>, Mathieu Malaterre <malat@debian.org>, devicetree@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
+Cc: MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Gustavo A. R. Silva" <gustavo@embeddedor.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Jun 21, 2018 at 2:52 AM sayali <sayalil@codeaurora.org> wrote:
->
-> Hi Rob,
->
-> Please check my comment inline.
+In preparation to enabling -Wimplicit-fallthrough, mark switch cases
+where we are expecting to fall through.
 
-As mentioned in the back and forth comments previously in this thread,
-please fix your email client (hint: you can't use Outlook) and
-properly quote your replies (i.e. the leading ">")
+Warning level 2 was used: -Wimplicit-fallthrough=2
 
-> Thanks,
-> Sayali
-> -----Original Message-----
-> From: Rob Herring [mailto:robh@kernel.org]
-> Sent: Thursday, June 14, 2018 7:59 PM
-> To: sayali <sayalil@codeaurora.org>
-> Cc: Subhash Jadavani <subhashj@codeaurora.org>; Can Guo <cang@codeaurora.=
-org>; Vivek Gautam <vivek.gautam@codeaurora.org>; Rajendra Nayak <rnayak@co=
-deaurora.org>; Vinayak Holikatti <vinholikatti@gmail.com>; James E.J. Botto=
-mley <jejb@linux.vnet.ibm.com>; Martin K. Petersen <martin.petersen@oracle.=
-com>; asutoshd@codeaurora.org; Evan Green <evgreen@chromium.org>; linux-scs=
-i@vger.kernel.org; Mark Rutland <mark.rutland@arm.com>; Mathieu Malaterre <=
-malat@debian.org>; open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDIN=
-GS <devicetree@vger.kernel.org>; open list <linux-kernel@vger.kernel.org>
-> Subject: Re: [PATCH V2 1/3] scsi: ufs: set the device reference clock set=
-ting
->
-> On Thu, Jun 14, 2018 at 5:33 AM, sayali <sayalil@codeaurora.org> wrote:
-> > Comment inline.
-> >
-> > Thanks,
-> > Sayali
-> > -----Original Message-----
-> > From: Rob Herring [mailto:robh@kernel.org]
-> > Sent: Wednesday, June 13, 2018 12:57 AM
-> > To: Sayali Lokhande <sayalil@codeaurora.org>
-> > Cc: subhashj@codeaurora.org; cang@codeaurora.org;
-> > vivek.gautam@codeaurora.org; rnayak@codeaurora.org;
-> > vinholikatti@gmail.com; jejb@linux.vnet.ibm.com;
-> > martin.petersen@oracle.com; asutoshd@codeaurora.org;
-> > evgreen@chromium.org; linux-scsi@vger.kernel.org; Mark Rutland
-> > <mark.rutland@arm.com>; Mathieu Malaterre <malat@debian.org>; open
-> > list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS
-> > <devicetree@vger.kernel.org>; open list <linux-kernel@vger.kernel.org>
-> > Subject: Re: [PATCH V2 1/3] scsi: ufs: set the device reference clock
-> > setting
-> >
-> > On Fri, Jun 08, 2018 at 04:36:28PM +0530, Sayali Lokhande wrote:
-> >> From: Subhash Jadavani <subhashj@codeaurora.org>
-> >>
-> >> UFS host supplies the reference clock to UFS device and UFS device
-> >> specification allows host to provide one of the 4 frequencies (19.2
-> >> MHz,
-> >> 26 MHz, 38.4 MHz, 52 MHz) for reference clock. Host should set the
-> >> device reference clock frequency setting in the device based on what
-> >> frequency it is supplying to UFS device.
-> >>
-> >> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
-> >> Signed-off-by: Can Guo <cang@codeaurora.org>
-> >> Signed-off-by: Sayali Lokhande <sayalil@codeaurora.org>
-> >> ---
-> >>  .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      |  7 +++
-> >>  drivers/scsi/ufs/ufs.h                             |  9 ++++
-> >>  drivers/scsi/ufs/ufshcd-pltfrm.c                   | 24 ++++++++++
-> >>  drivers/scsi/ufs/ufshcd.c                          | 52
-> > ++++++++++++++++++++++
-> >>  drivers/scsi/ufs/ufshcd.h                          |  1 +
-> >>  5 files changed, 93 insertions(+)
-> >>
-> >> diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-> >> b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-> >> index c39dfef..4522434 100644
-> >> --- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-> >> +++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-> >> @@ -41,6 +41,12 @@ Optional properties:
-> >>  -lanes-per-direction : number of lanes available per direction -
-> >> either 1
-> > or 2.
-> >>                         Note that it is assume same number of lanes
-> >> is
-> > used both
-> >>                         directions at once. If not specified, default
-> >> is 2
-> > lanes per direction.
-> >> +- dev-ref-clk-freq   : Specify the device reference clock frequency, =
-must
-> > be one of the following:
-> >> +                       0: 19.2 MHz
-> >> +                       1: 26 MHz
-> >> +                       2: 38.4 MHz
-> >> +                       3: 52 MHz
-> >> +                       Defaults to 26 MHz if not specified.
-> >
-> > I must have misunderstood your last response. I thought you could
-> > handle things without DT. If not, my question remains.
-> > [Sayali]: Ref clk frequency setting could vary from
-> > platfrom-to-platform(vendor specific). Hence we need to pass it via DT.
-> >         Currently in DT we do not set/mention any ref clk frequency
-> > parameter. Hence I have added one new DT entry to configure
-> >         required ref clk freq.
->
-> The clocks property contains "ref_clk". Is that not the same clock?
-> Why can't you read what that frequency is? Or you need to be able to chan=
-ge it to a specific frequency? These all look like typical oscillator frequ=
-encies, so I wouldn't expect you could change them (other than divide by 2 =
-maybe).
-> [Sayali] : It is the same "ref_clk", but we need to be able to change it =
-to a specific frequency as per requirement. Thus, we need new DT entry to s=
-pecify/override reference clock frequency as per need.
+Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+---
+ drivers/message/fusion/mptbase.c | 3 +++
+ drivers/message/fusion/mptsas.c  | 1 +
+ 2 files changed, 4 insertions(+)
 
-That is not what your patch does. It just tells the device what the
-frequency is. If you need to get the rate, use "clk_get_rate" on
-"ref_clk". If you need to actually set it to a specific frequency,
-then we have properties for that already (assigned-clock-rates).
-
-Seems to me that by the time you get to Linux, the bootloader would
-have already set this. Otherwise, how do you boot? Seems like you
-would want to read the attr and ensure "ref_clk" freq matches.
-
-Rob
+diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+index a625ac4..c8c8186 100644
+--- a/drivers/message/fusion/mptbase.c
++++ b/drivers/message/fusion/mptbase.c
+@@ -642,6 +642,7 @@ mptbase_reply(MPT_ADAPTER *ioc, MPT_FRAME_HDR *req, MPT_FRAME_HDR *reply)
+ 			freereq = 0;
+ 		if (event != MPI_EVENT_EVENT_CHANGE)
+ 			break;
++		/* else: fall through */
+ 	case MPI_FUNCTION_CONFIG:
+ 	case MPI_FUNCTION_SAS_IO_UNIT_CONTROL:
+ 		ioc->mptbase_cmds.status |= MPT_MGMT_STATUS_COMMAND_GOOD;
+@@ -1886,6 +1887,7 @@ mpt_attach(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	case MPI_MANUFACTPAGE_DEVICEID_FC939X:
+ 	case MPI_MANUFACTPAGE_DEVICEID_FC949X:
+ 		ioc->errata_flag_1064 = 1;
++		/* fall through */
+ 	case MPI_MANUFACTPAGE_DEVICEID_FC909:
+ 	case MPI_MANUFACTPAGE_DEVICEID_FC929:
+ 	case MPI_MANUFACTPAGE_DEVICEID_FC919:
+@@ -1930,6 +1932,7 @@ mpt_attach(struct pci_dev *pdev, const struct pci_device_id *id)
+ 			pcixcmd &= 0x8F;
+ 			pci_write_config_byte(pdev, 0x6a, pcixcmd);
+ 		}
++		/* fall through */
+ 
+ 	case MPI_MANUFACTPAGE_DEVID_1030_53C1035:
+ 		ioc->bus_type = SPI;
+diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
+index 76a66da..b8cf265 100644
+--- a/drivers/message/fusion/mptsas.c
++++ b/drivers/message/fusion/mptsas.c
+@@ -4327,6 +4327,7 @@ mptsas_hotplug_work(MPT_ADAPTER *ioc, struct fw_event_work *fw_event,
+ 			}
+ 		}
+ 		mpt_findImVolumes(ioc);
++		/* fall through */
+ 
+ 	case MPTSAS_ADD_DEVICE:
+ 		memset(&sas_device, 0, sizeof(struct mptsas_devinfo));
+-- 
+2.7.4
