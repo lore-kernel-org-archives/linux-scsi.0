@@ -1,26 +1,29 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH 1/4] scsi: aacraid: remove AAC_STAT_GOOD define
-Date: Thu, 5 Jul 2018 17:24:23 +0000
-Message-ID: <babfea1746aaca57109f84bff674dda635a76e29.camel@wdc.com>
+From: Dave Carroll <david.carroll@microsemi.com>
+Subject: RE: [PATCH 1/4] scsi: aacraid: remove AAC_STAT_GOOD define
+Date: Thu, 5 Jul 2018 17:42:02 +0000
+Message-ID: <4cd9a8cb64dc4d8aa1e10c3b008c3ba0@microsemi.com>
 References: <20180705110140.19545-1-jthumshirn@suse.de>
-         <20180705110140.19545-2-jthumshirn@suse.de>
+ <20180705110140.19545-2-jthumshirn@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20180705110140.19545-2-jthumshirn@suse.de>
 Content-Language: en-US
-Content-ID: <CDF67FE8D276144489A6B17C365ED9BC@namprd04.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "jthumshirn@suse.de" <jthumshirn@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "RaghavaAditya.Renukunta@microsemi.com" <RaghavaAditya.Renukunta@microsemi.com>, "david.carroll@microsemi.com" <david.carroll@microsemi.com>
+To: Johannes Thumshirn <jthumshirn@suse.de>, "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gVGh1LCAyMDE4LTA3LTA1IGF0IDEzOjAxICswMjAwLCBKb2hhbm5lcyBUaHVtc2hpcm4gd3Jv
-dGU6DQo+ICAJCWlmICgoKGFhY19jYWNoZSAmIDYpID09IDYpICYmIGRldi0+Y2FjaGVfcHJvdGVj
-dGVkKSB7DQo+IC0JCQlzY3NpY21kLT5yZXN1bHQgPSBBQUNfU1RBVF9HT09EOw0KPiArCQkJc2Nz
-aWNtZC0+cmVzdWx0ID0gRElEX09LIDw8IDE2IHwgQ09NTUFORF9DT01QTEVURSA8PCA4IHwNCj4g
-KwkJCQkJICBTQU1fU1RBVF9HT09EOw0KDQpEb2VzIEFBQ19TVEFUX0dPT0QgcmVhbGx5IGhhdmUg
-dG8gYmUgZXhwYW5kZWQgaW4gZnVsbCBtdWx0aXBsZSB0aW1lcz8NCkhhdmUgeW91IGNvbnNpZGVy
-ZWQgdG8gcmVwbGFjZSBBQUNfU1RBVF9HT09EIGJ5IHRoZSBudW1lcmljYWwgY29uc3RhbnQNCjAg
-aW5zdGVhZD8NCg0KVGhhbmtzLA0KDQpCYXJ0Lg0KDQoNCg0KDQo=
+
+>=20
+>=20
+> Remove the AAC_STAT_GOOD definition and open code it in the places it was
+> used.
+>=20
+> This will make subsequent refactoring in this area easier.
+>=20
+Please don't ... the definition itself was added to make refactoring easier=
+.
+
+-Dave
