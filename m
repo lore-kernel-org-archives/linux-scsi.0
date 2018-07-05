@@ -1,72 +1,38 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: [PATCH 4/4] scsi: ncr53c8xx: remove ScsiResult macro
-Date: Thu,  5 Jul 2018 13:01:40 +0200
-Message-ID: <20180705110140.19545-5-jthumshirn@suse.de>
-References: <20180705110140.19545-1-jthumshirn@suse.de>
+Subject: [PATCH 0/4] SCSI results rework preparation part 2
+Date: Thu,  5 Jul 2018 13:01:36 +0200
+Message-ID: <20180705110140.19545-1-jthumshirn@suse.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180705110140.19545-1-jthumshirn@suse.de>
 Sender: linux-kernel-owner@vger.kernel.org
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Johannes Thumshirn <jthumshirn@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 
-Remove the ScsiResult macro and open code it on all call sites.
+As the first part of the preparation work for my scsi results handling
+rework is done, here's the second batch.
 
-This will make subsequent refactoring in this area easier.
+The first patch changes the AAC_STAT_GOOD define into an open-coded
+version in aacraid. The other three patches convert the three
+ScsiResult() macros in bfa, lpfc and ncr53c8xx to their open-coded
+equivalen.
 
-Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
----
- drivers/scsi/ncr53c8xx.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+This is helpful for subsequent refactoring, as it's easier to identify
+which code parts need more work and Coccinelle Spatches are easier to
+apply.
 
-diff --git a/drivers/scsi/ncr53c8xx.c b/drivers/scsi/ncr53c8xx.c
-index dc4e801b2cef..6cd3e289ef99 100644
---- a/drivers/scsi/ncr53c8xx.c
-+++ b/drivers/scsi/ncr53c8xx.c
-@@ -4611,7 +4611,7 @@ static int ncr_reset_bus (struct ncb *np, struct scsi_cmnd *cmd, int sync_reset)
-  * in order to keep it alive.
-  */
- 	if (!found && sync_reset && !retrieve_from_waiting_list(0, np, cmd)) {
--		cmd->result = ScsiResult(DID_RESET, 0);
-+		cmd->result = DID_RESET << 16;
- 		ncr_queue_done_cmd(np, cmd);
- 	}
- 
-@@ -4957,7 +4957,7 @@ void ncr_complete (struct ncb *np, struct ccb *cp)
- 		/*
- 		**   Check condition code
- 		*/
--		cmd->result = ScsiResult(DID_OK, S_CHECK_COND);
-+		cmd->result = DID_OK << 16 | S_CHECK_COND;
- 
- 		/*
- 		**	Copy back sense data to caller's buffer.
-@@ -4978,7 +4978,7 @@ void ncr_complete (struct ncb *np, struct ccb *cp)
- 		/*
- 		**   Reservation Conflict condition code
- 		*/
--		cmd->result = ScsiResult(DID_OK, S_CONFLICT);
-+		cmd->result = DID_OK << 16 | S_CONFLICT;
- 	
- 	} else if ((cp->host_status == HS_COMPLETE)
- 		&& (cp->scsi_status == S_BUSY ||
-@@ -8043,7 +8043,7 @@ printk("ncr53c8xx_queue_command\n");
-      spin_lock_irqsave(&np->smp_lock, flags);
- 
-      if ((sts = ncr_queue_command(np, cmd)) != DID_OK) {
--	  cmd->result = ScsiResult(sts, 0);
-+	  cmd->result = sts << 16;
- #ifdef DEBUG_NCR53C8XX
- printk("ncr53c8xx : command not queued - result=%d\n", sts);
- #endif
-@@ -8234,7 +8234,7 @@ static void process_waiting_list(struct ncb *np, int sts)
- #ifdef DEBUG_WAITING_LIST
- 	printk("%s: cmd %lx done forced sts=%d\n", ncr_name(np), (u_long) wcmd, sts);
- #endif
--			wcmd->result = ScsiResult(sts, 0);
-+			wcmd->result = sts << 16;
- 			ncr_queue_done_cmd(np, wcmd);
- 		}
- 	}
+Johannes Thumshirn (4):
+  scsi: aacraid: remove AAC_STAT_GOOD define
+  scsi: bfa: remove ScsiResult macro
+  scsi: lpfc: remove ScsiResult macro
+  scsi: ncr53c8xx: remove ScsiResult macro
+
+ drivers/scsi/aacraid/aachba.c | 41 ++++++++++++++++++++++++++--------------
+ drivers/scsi/bfa/bfad_im.c    | 19 ++++++++-----------
+ drivers/scsi/bfa/bfad_im.h    |  1 -
+ drivers/scsi/lpfc/lpfc_crtn.h |  1 -
+ drivers/scsi/lpfc/lpfc_scsi.c | 44 +++++++++++++++++++++----------------------
+ drivers/scsi/ncr53c8xx.c      | 10 +++++-----
+ 6 files changed, 62 insertions(+), 54 deletions(-)
+
 -- 
 2.16.4
