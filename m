@@ -1,38 +1,101 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: [PATCH 0/4] SCSI results rework preparation part 2
-Date: Thu,  5 Jul 2018 13:01:36 +0200
-Message-ID: <20180705110140.19545-1-jthumshirn@suse.de>
+Subject: [PATCH 2/4] scsi: bfa: remove ScsiResult macro
+Date: Thu,  5 Jul 2018 13:01:38 +0200
+Message-ID: <20180705110140.19545-3-jthumshirn@suse.de>
+References: <20180705110140.19545-1-jthumshirn@suse.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20180705110140.19545-1-jthumshirn@suse.de>
 Sender: linux-kernel-owner@vger.kernel.org
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Johannes Thumshirn <jthumshirn@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 
-As the first part of the preparation work for my scsi results handling
-rework is done, here's the second batch.
+Remove the ScsiResult macro and open code it on all call sites.
 
-The first patch changes the AAC_STAT_GOOD define into an open-coded
-version in aacraid. The other three patches convert the three
-ScsiResult() macros in bfa, lpfc and ncr53c8xx to their open-coded
-equivalen.
+This will make subsequent refactoring in this area easier.
 
-This is helpful for subsequent refactoring, as it's easier to identify
-which code parts need more work and Coccinelle Spatches are easier to
-apply.
+Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+---
+ drivers/scsi/bfa/bfad_im.c | 19 ++++++++-----------
+ drivers/scsi/bfa/bfad_im.h |  1 -
+ 2 files changed, 8 insertions(+), 12 deletions(-)
 
-Johannes Thumshirn (4):
-  scsi: aacraid: remove AAC_STAT_GOOD define
-  scsi: bfa: remove ScsiResult macro
-  scsi: lpfc: remove ScsiResult macro
-  scsi: ncr53c8xx: remove ScsiResult macro
-
- drivers/scsi/aacraid/aachba.c | 41 ++++++++++++++++++++++++++--------------
- drivers/scsi/bfa/bfad_im.c    | 19 ++++++++-----------
- drivers/scsi/bfa/bfad_im.h    |  1 -
- drivers/scsi/lpfc/lpfc_crtn.h |  1 -
- drivers/scsi/lpfc/lpfc_scsi.c | 44 +++++++++++++++++++++----------------------
- drivers/scsi/ncr53c8xx.c      | 10 +++++-----
- 6 files changed, 62 insertions(+), 54 deletions(-)
-
+diff --git a/drivers/scsi/bfa/bfad_im.c b/drivers/scsi/bfa/bfad_im.c
+index c05d6e91e4bd..c4a33317d344 100644
+--- a/drivers/scsi/bfa/bfad_im.c
++++ b/drivers/scsi/bfa/bfad_im.c
+@@ -70,21 +70,18 @@ bfa_cb_ioim_done(void *drv, struct bfad_ioim_s *dio,
+ 				host_status = DID_ERROR;
+ 			}
+ 		}
+-		cmnd->result = ScsiResult(host_status, scsi_status);
++		cmnd->result = host_status << 16 | scsi_status;
+ 
+ 		break;
+ 
+ 	case BFI_IOIM_STS_TIMEDOUT:
+-		host_status = DID_TIME_OUT;
+-		cmnd->result = ScsiResult(host_status, 0);
++		cmnd->result = DID_TIME_OUT << 16;
+ 		break;
+ 	case BFI_IOIM_STS_PATHTOV:
+-		host_status = DID_TRANSPORT_DISRUPTED;
+-		cmnd->result = ScsiResult(host_status, 0);
++		cmnd->result = DID_TRANSPORT_DISRUPTED << 16;
+ 		break;
+ 	default:
+-		host_status = DID_ERROR;
+-		cmnd->result = ScsiResult(host_status, 0);
++		cmnd->result = DID_ERROR << 16;
+ 	}
+ 
+ 	/* Unmap DMA, if host is NULL, it means a scsi passthru cmd */
+@@ -117,7 +114,7 @@ bfa_cb_ioim_good_comp(void *drv, struct bfad_ioim_s *dio)
+ 	struct bfad_itnim_data_s *itnim_data;
+ 	struct bfad_itnim_s *itnim;
+ 
+-	cmnd->result = ScsiResult(DID_OK, SCSI_STATUS_GOOD);
++	cmnd->result = DID_OK << 16 | SCSI_STATUS_GOOD;
+ 
+ 	/* Unmap DMA, if host is NULL, it means a scsi passthru cmd */
+ 	if (cmnd->device->host != NULL)
+@@ -144,7 +141,7 @@ bfa_cb_ioim_abort(void *drv, struct bfad_ioim_s *dio)
+ 	struct scsi_cmnd *cmnd = (struct scsi_cmnd *)dio;
+ 	struct bfad_s         *bfad = drv;
+ 
+-	cmnd->result = ScsiResult(DID_ERROR, 0);
++	cmnd->result = DID_ERROR << 16;
+ 
+ 	/* Unmap DMA, if host is NULL, it means a scsi passthru cmd */
+ 	if (cmnd->device->host != NULL)
+@@ -1253,14 +1250,14 @@ bfad_im_queuecommand_lck(struct scsi_cmnd *cmnd, void (*done) (struct scsi_cmnd
+ 		printk(KERN_WARNING
+ 			"bfad%d, queuecommand %p %x failed, BFA stopped\n",
+ 		       bfad->inst_no, cmnd, cmnd->cmnd[0]);
+-		cmnd->result = ScsiResult(DID_NO_CONNECT, 0);
++		cmnd->result = DID_NO_CONNECT << 16;
+ 		goto out_fail_cmd;
+ 	}
+ 
+ 
+ 	itnim = itnim_data->itnim;
+ 	if (!itnim) {
+-		cmnd->result = ScsiResult(DID_IMM_RETRY, 0);
++		cmnd->result = DID_IMM_RETRY << 16;
+ 		goto out_fail_cmd;
+ 	}
+ 
+diff --git a/drivers/scsi/bfa/bfad_im.h b/drivers/scsi/bfa/bfad_im.h
+index af66275570c3..e61ed8dad0b4 100644
+--- a/drivers/scsi/bfa/bfad_im.h
++++ b/drivers/scsi/bfa/bfad_im.h
+@@ -44,7 +44,6 @@ u32 bfad_im_supported_speeds(struct bfa_s *bfa);
+ #define MAX_FCP_LUN 16384
+ #define BFAD_TARGET_RESET_TMO 60
+ #define BFAD_LUN_RESET_TMO 60
+-#define ScsiResult(host_code, scsi_code) (((host_code) << 16) | scsi_code)
+ #define BFA_QUEUE_FULL_RAMP_UP_TIME 120
+ 
+ /*
 -- 
 2.16.4
