@@ -1,45 +1,33 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH] sbitmap, scsi/target: add seq_file forward declaration
-Date: Fri,  6 Jul 2018 15:23:43 +0200
-Message-ID: <20180706132407.4069001-1-arnd@arndb.de>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: [PATCH 0/2] Remove remainig MCR SCSI drivers
+Date: Fri,  6 Jul 2018 15:33:47 +0200
+Message-ID: <20180706133349.28508-1-jthumshirn@suse.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Felipe Balbi <felipe.balbi@linux.intel.com>, Matthew Wilcox <willy@infradead.org>, linux-scsi@vger.kernel.org, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, Arnd Bergmann <arnd@arndb.de>, Omar Sandoval <osandov@fb.com>, Ming Lei <ming.lei@redhat.com>, Paolo Valente <paolo.valente@linaro.org>, linux-kernel@vger.kernel.org
+Cc: Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Johannes Thumshirn <jthumshirn@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 
-The target core runs into a warning in the linux/sbitmap.h
-file in some configurations:
+MCR Support was ripped out of the kernel in 2012. I think 6 years
+later we can kill the remaining drivers which couldn't have been
+compiled since then.
 
-In file included from include/target/target_core_base.h:7,
-                 from drivers/target/target_core_fabric_lib.c:41:
-include/linux/sbitmap.h:331:46: error: 'struct seq_file' declared inside parameter list will not be visible outside of this definition or declaration [-Werror]
- void sbitmap_show(struct sbitmap *sb, struct seq_file *m);
-                                              ^~~~~~~~
+Johannes Thumshirn (2):
+  scsi: remove NCR_D700 driver
+  scsi: remove NCR_Q720 driver
 
-In general, headers should not depend on others being included first,
-so this fixes it with a forward declaration for that struct name, but
-we probably want to merge the patch through the scsi tree to help
-bisection.
+ MAINTAINERS             |   6 -
+ drivers/scsi/Kconfig    |  32 +---
+ drivers/scsi/Makefile   |   3 -
+ drivers/scsi/NCR_D700.c | 405 ------------------------------------------------
+ drivers/scsi/NCR_D700.h |  30 ----
+ drivers/scsi/NCR_Q720.c | 376 --------------------------------------------
+ drivers/scsi/NCR_Q720.h |  29 ----
+ 7 files changed, 4 insertions(+), 877 deletions(-)
+ delete mode 100644 drivers/scsi/NCR_D700.c
+ delete mode 100644 drivers/scsi/NCR_D700.h
+ delete mode 100644 drivers/scsi/NCR_Q720.c
+ delete mode 100644 drivers/scsi/NCR_Q720.h
 
-Fixes: 10e9cbb6b531 ("scsi: target: Convert target drivers to use sbitmap")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- include/linux/sbitmap.h | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/include/linux/sbitmap.h b/include/linux/sbitmap.h
-index e6539536dea9..cc54b9f7ff8b 100644
---- a/include/linux/sbitmap.h
-+++ b/include/linux/sbitmap.h
-@@ -321,6 +321,8 @@ static inline int sbitmap_test_bit(struct sbitmap *sb, unsigned int bitnr)
- 
- unsigned int sbitmap_weight(const struct sbitmap *sb);
- 
-+struct seq_file;
-+
- /**
-  * sbitmap_show() - Dump &struct sbitmap information to a &struct seq_file.
-  * @sb: Bitmap to show.
 -- 
-2.9.0
+2.16.4
