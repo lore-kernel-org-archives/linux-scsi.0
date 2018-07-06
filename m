@@ -1,36 +1,42 @@
 From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH 1/4] scsi: aacraid: remove AAC_STAT_GOOD define
-Date: Fri, 6 Jul 2018 17:01:00 +0000
-Message-ID: <b4f3bbb10b9e21b439e52c0f941809ca6f567bca.camel@wdc.com>
+Subject: Re: [PATCH 4/4] scsi: ncr53c8xx: remove ScsiResult macro
+Date: Fri, 6 Jul 2018 17:05:19 +0000
+Message-ID: <ea39e5c6ff2b6081acd64cf14a0912e1510378a9.camel@wdc.com>
 References: <20180705110140.19545-1-jthumshirn@suse.de>
-         <20180705110140.19545-2-jthumshirn@suse.de>
-         <babfea1746aaca57109f84bff674dda635a76e29.camel@wdc.com>
-         <20180706080447.2u3iptpnvmso6ncc@linux-x5ow.site>
+         <20180705110140.19545-5-jthumshirn@suse.de>
+         <a4a799f62ffa873fc3a7e23a5a46dafc8805b984.camel@wdc.com>
+         <20180706080939.iotmgb24f6iaawkp@linux-x5ow.site>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180706080447.2u3iptpnvmso6ncc@linux-x5ow.site>
+In-Reply-To: <20180706080939.iotmgb24f6iaawkp@linux-x5ow.site>
 Content-Language: en-US
-Content-ID: <05E4E04AC233AD46BECFAB652D81F229@namprd04.prod.outlook.com>
+Content-ID: <7B620DB3646C404698762592F263B712@namprd04.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: "jthumshirn@suse.de" <jthumshirn@suse.de>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "RaghavaAditya.Renukunta@microsemi.com" <RaghavaAditya.Renukunta@microsemi.com>, "david.carroll@microsemi.com" <david.carroll@microsemi.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gRnJpLCAyMDE4LTA3LTA2IGF0IDEwOjA0ICswMjAwLCBKb2hhbm5lcyBUaHVtc2hpcm4gd3Jv
-dGU6DQo+IE9uIFRodSwgSnVsIDA1LCAyMDE4IGF0IDA1OjI0OjIzUE0gKzAwMDAsIEJhcnQgVmFu
+T24gRnJpLCAyMDE4LTA3LTA2IGF0IDEwOjA5ICswMjAwLCBKb2hhbm5lcyBUaHVtc2hpcm4gd3Jv
+dGU6DQo+IE9uIFRodSwgSnVsIDA1LCAyMDE4IGF0IDA1OjA0OjA1UE0gKzAwMDAsIEJhcnQgVmFu
 IEFzc2NoZSB3cm90ZToNCj4gPiBPbiBUaHUsIDIwMTgtMDctMDUgYXQgMTM6MDEgKzAyMDAsIEpv
-aGFubmVzIFRodW1zaGlybiB3cm90ZToNCj4gPiA+ICAJCWlmICgoKGFhY19jYWNoZSAmIDYpID09
-IDYpICYmIGRldi0+Y2FjaGVfcHJvdGVjdGVkKSB7DQo+ID4gPiAtCQkJc2NzaWNtZC0+cmVzdWx0
-ID0gQUFDX1NUQVRfR09PRDsNCj4gPiA+ICsJCQlzY3NpY21kLT5yZXN1bHQgPSBESURfT0sgPDwg
-MTYgfCBDT01NQU5EX0NPTVBMRVRFIDw8IDggfA0KPiA+ID4gKwkJCQkJICBTQU1fU1RBVF9HT09E
-Ow0KPiA+IA0KPiA+IERvZXMgQUFDX1NUQVRfR09PRCByZWFsbHkgaGF2ZSB0byBiZSBleHBhbmRl
-ZCBpbiBmdWxsIG11bHRpcGxlIHRpbWVzPw0KPiA+IEhhdmUgeW91IGNvbnNpZGVyZWQgdG8gcmVw
-bGFjZSBBQUNfU1RBVF9HT09EIGJ5IHRoZSBudW1lcmljYWwgY29uc3RhbnQNCj4gPiAwIGluc3Rl
-YWQ/DQo+IA0KPiBUaGlzIHdvbid0IHdvcmsgYW55bW9yZSBvbmNlIHdlIHN0YXJ0IHNwbGl0dGlu
-ZyAtPnJlc3VsdCBpbnRvIDQNCj4gdW5yZWxhdGVkIGVudW1zLiBUaGF0J3Mgd2h5IEkgcHJlZmVy
-IHRoaXMgd2F5Lg0KDQpUaGF0IGV4cGxhbmF0aW9uIGRvZXMgbm90IG1ha2Ugc2Vuc2UgdG8gbWUu
-IFRoZXJlIGlzIHBsZW50eSBvZiBjb2RlIGluDQp0aGUgdXBzdHJlYW0ga2VybmVsIHRoYXQgYXNz
-aWducyB6ZXJvIHRvIC5yZXN1bHQsIHNvIHlvdSB3aWxsIGhhdmUgdG8NCmRlYWwgd2l0aCB0aGF0
-IHBhdHRlcm4gYW55d2F5Lg0KDQpCYXJ0Lg==
+aGFubmVzIFRodW1zaGlybiB3cm90ZToNCj4gPiA+IC0JCWNtZC0+cmVzdWx0ID0gU2NzaVJlc3Vs
+dChESURfT0ssIFNfQ0hFQ0tfQ09ORCk7DQo+ID4gPiArCQljbWQtPnJlc3VsdCA9IERJRF9PSyA8
+PCAxNiB8IFNfQ0hFQ0tfQ09ORDsNCj4gPiANCj4gPiBTaW5jZSBESURfT0sgPT0gMCwgZG8gd2Ug
+cmVhbGx5IG5lZWQgIkRJRF9PSyA8PCAxNiB8IiBoZXJlPw0KPiANCj4gUGxlYXNlIHNlZSBteSBh
+bnN3ZXJzIHRvIHRoZSBvdGhlciBwYXRjaGVzIG9uIHRoaXMuDQoNCk5vIG1hdHRlciB3aGF0IHRo
+ZSBuZXh0IHN0ZXAgaXMsIHlvdSB3aWxsIGhhdmUgdG8gZGVhbCB3aXRoIGNvZGUgdGhhdCBsb29r
+cw0KdmVyeSBzaW1pbGFyIHRvIHdoYXQgSSBwcm9wb3NlZC4gQW4gZXhhbXBsZSBmcm9tIGxpYmF0
+YToNCg0KCWVsc2UgaWYgKHFjLT5mbGFncyAmIEFUQV9RQ0ZMQUdfU0VOU0VfVkFMSUQpDQoJCWNt
+ZC0+cmVzdWx0ID0gU0FNX1NUQVRfQ0hFQ0tfQ09ORElUSU9OOw0KDQpCVFcsIGluIGRyaXZlcnMv
+c2NzaS9zeW01M2M4eHhfMi9zeW1fZGVmcy5oIHRoZXJlIGFyZSBkZWZpbml0aW9ucyBmb3Igc3lu
+b255bXMNCm9mIHN0YW5kYXJkIFNDU0kgY29uc3RhbnRzLiBJIHdvdWxkbid0IG1pbmQgaWYgdGhl
+c2Ugc3lub255bXMgd291bGQgYmUgcmVtb3ZlZDoNCg0KI2RlZmluZQlTX0dPT0QJCVNBTV9TVEFU
+X0dPT0QNCiNkZWZpbmUJU19DSEVDS19DT05ECVNBTV9TVEFUX0NIRUNLX0NPTkRJVElPTg0KI2Rl
+ZmluZQlTX0NPTkRfTUVUCVNBTV9TVEFUX0NPTkRJVElPTl9NRVQNCiNkZWZpbmUJU19CVVNZCQlT
+QU1fU1RBVF9CVVNZDQojZGVmaW5lCVNfSU5UCQlTQU1fU1RBVF9JTlRFUk1FRElBVEUNCiNkZWZp
+bmUJU19JTlRfQ09ORF9NRVQJU0FNX1NUQVRfSU5URVJNRURJQVRFX0NPTkRJVElPTl9NRVQNCiNk
+ZWZpbmUJU19DT05GTElDVAlTQU1fU1RBVF9SRVNFUlZBVElPTl9DT05GTElDVA0KI2RlZmluZQlT
+X1RFUk1JTkFURUQJU0FNX1NUQVRfQ09NTUFORF9URVJNSU5BVEVEDQojZGVmaW5lCVNfUVVFVUVf
+RlVMTAlTQU1fU1RBVF9UQVNLX1NFVF9GVUxMDQoNClRoYW5rcywNCg0KQmFydC4NCg0KDQo=
