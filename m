@@ -1,169 +1,188 @@
-From: Rob Herring <robh@kernel.org>
-Subject: Re: [PATCH V5 1/2] scsi: ufs: set the device reference clock setting
-Date: Fri, 6 Jul 2018 15:07:29 -0600
-Message-ID: <20180706210729.GA22391@rob-hp-laptop>
-References: <1530858040-13971-1-git-send-email-sayalil@codeaurora.org>
- <1530858040-13971-2-git-send-email-sayalil@codeaurora.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 4.18-rc3
+Date: Fri, 06 Jul 2018 14:38:54 -0700
+Message-ID: <1530913134.3135.2.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1530858040-13971-2-git-send-email-sayalil@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Sayali Lokhande <sayalil@codeaurora.org>
-Cc: subhashj@codeaurora.org, cang@codeaurora.org, vivek.gautam@codeaurora.org, rnayak@codeaurora.org, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, asutoshd@codeaurora.org, evgreen@chromium.org, riteshh@codeaurora.org, linux-scsi@vger.kernel.org, Mark Rutland <mark.rutland@arm.com>, Mathieu Malaterre <malat@debian.org>, "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" <devicetree@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Jul 06, 2018 at 11:50:39AM +0530, Sayali Lokhande wrote:
-> From: Subhash Jadavani <subhashj@codeaurora.org>
-> 
-> UFS host supplies the reference clock to UFS device and UFS device
-> specification allows host to provide one of the 4 frequencies (19.2 MHz,
-> 26 MHz, 38.4 MHz, 52 MHz) for reference clock. Host should set the
-> device reference clock frequency setting in the device based on what
-> frequency it is supplying to UFS device.
-> 
-> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
-> Signed-off-by: Can Guo <cang@codeaurora.org>
-> Signed-off-by: Sayali Lokhande <sayalil@codeaurora.org>
-> ---
->  .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      |  7 +++
->  drivers/scsi/ufs/ufs.h                             |  9 ++++
->  drivers/scsi/ufs/ufshcd-pltfrm.c                   |  2 +
->  drivers/scsi/ufs/ufshcd.c                          | 62 ++++++++++++++++++++++
->  drivers/scsi/ufs/ufshcd.h                          |  2 +
->  5 files changed, 82 insertions(+)
-> 
-> diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-> index c39dfef..bc20f59 100644
-> --- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-> +++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-> @@ -41,6 +41,12 @@ Optional properties:
->  -lanes-per-direction	: number of lanes available per direction - either 1 or 2.
->  			  Note that it is assume same number of lanes is used both
->  			  directions at once. If not specified, default is 2 lanes per direction.
-> +- assigned-clock-rates 	: Specify the device reference clock frequency, must be one of the following:
-> +			  0: 19.2 MHz
-> +			  1: 26 MHz
-> +			  2: 38.4 MHz
-> +			  3: 52 MHz
-> +			  Defaults to 26 MHz if not specified.
+This is two minor bug fixes (aacraid, target) and a fix for a potential
+exploit in the way sg handles teardown.
 
-Sigh. You obviously did not read the definition of assigned-clock-rates 
-and understand how it works. I don't think you want the frequency to be 
-0-3 Hz.
+The patch is available here:
 
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
->  Note: If above properties are not defined it can be assumed that the supply
->  regulators or clocks are always on.
-> @@ -66,4 +72,5 @@ Example:
->  		freq-table-hz = <100000000 200000000>, <0 0>, <0 0>;
->  		phys = <&ufsphy1>;
->  		phy-names = "ufsphy";
-> +		assigned-clock-rates = <0>; /* reference clock freq: 19.2 MHz */
->  	};
-> diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
-> index 14e5bf7..e15deb0 100644
-> --- a/drivers/scsi/ufs/ufs.h
-> +++ b/drivers/scsi/ufs/ufs.h
-> @@ -378,6 +378,15 @@ enum query_opcode {
->  	UPIU_QUERY_OPCODE_TOGGLE_FLAG	= 0x8,
->  };
->  
-> +/* bRefClkFreq attribute values */
-> +enum ref_clk_freq {
-> +	REF_CLK_FREQ_19_2_MHZ	= 0x0,
-> +	REF_CLK_FREQ_26_MHZ	= 0x1,
-> +	REF_CLK_FREQ_38_4_MHZ	= 0x2,
-> +	REF_CLK_FREQ_52_MHZ	= 0x3,
-> +	REF_CLK_FREQ_MAX	= REF_CLK_FREQ_52_MHZ,
-> +};
-> +
->  /* Query response result code */
->  enum {
->  	QUERY_RESULT_SUCCESS                    = 0x00,
-> diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
-> index e82bde0..0953563 100644
-> --- a/drivers/scsi/ufs/ufshcd-pltfrm.c
-> +++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
-> @@ -343,6 +343,8 @@ int ufshcd_pltfrm_init(struct platform_device *pdev,
->  	pm_runtime_set_active(&pdev->dev);
->  	pm_runtime_enable(&pdev->dev);
->  
-> +	ufshcd_parse_dev_ref_clk_freq(hba);
-> +
->  	ufshcd_init_lanes_per_dir(hba);
->  
->  	err = ufshcd_init(hba, mmio_base, irq);
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index c5b1bf1..455a6ad 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -6296,6 +6296,62 @@ static void ufshcd_def_desc_sizes(struct ufs_hba *hba)
->  	hba->desc_size.hlth_desc = QUERY_DESC_HEALTH_DEF_SIZE;
->  }
->  
-> +void ufshcd_parse_dev_ref_clk_freq(struct ufs_hba *hba)
-> +{
-> +	struct device *dev = hba->dev;
-> +	int ret;
-> +
-> +	if (!dev)
-> +		return;
-> +
-> +	ret = device_property_read_u32(dev, "assigned-clock-rates",
-> +				   &hba->dev_ref_clk_freq);
-> +	if (ret ||
-> +	    (hba->dev_ref_clk_freq > REF_CLK_FREQ_52_MHZ)) {
-> +		dev_err(hba->dev,
-> +		"%s: invalid ref_clk setting = %d\n",
-> +		__func__, hba->dev_ref_clk_freq);
-> +		hba->dev_ref_clk_freq = REF_CLK_FREQ_MAX + 1;
-> +	}
-> +}
-> +
-> +static int ufshcd_set_dev_ref_clk(struct ufs_hba *hba)
-> +{
-> +	int err = 0;
-> +	int ref_clk = -1;
-> +	static const char * const ref_clk_freqs[] = {"19.2 MHz", "26 MHz",
-> +						     "38.4 MHz", "52 MHz"};
-> +
-> +	err = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_READ_ATTR,
-> +			QUERY_ATTR_IDN_REF_CLK_FREQ, 0, 0, &ref_clk);
-> +
-> +	if (err) {
-> +		dev_err(hba->dev, "%s: failed reading bRefClkFreq. err = %d\n",
-> +			 __func__, err);
-> +		goto out;
-> +	}
-> +
-> +	if (ref_clk == hba->dev_ref_clk_freq)
-> +		goto out; /* nothing to update */
-> +
-> +	err = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
-> +			QUERY_ATTR_IDN_REF_CLK_FREQ, 0, 0,
-> +			&hba->dev_ref_clk_freq);
-> +
-> +	if (err)
-> +		dev_err(hba->dev, "%s: bRefClkFreq setting to %s failed\n",
-> +			__func__, ref_clk_freqs[hba->dev_ref_clk_freq]);
-> +	/*
-> +	 * It is good to print this out here to debug any later failures
-> +	 * related to gear switch.
-> +	 */
-> +	dev_dbg(hba->dev, "%s: bRefClkFreq setting to %s succeeded\n",
-> +			__func__, ref_clk_freqs[hba->dev_ref_clk_freq]);
-> +
+The short changelog is:
 
-I still don't understand how you think this is supposed to work. All 
-this does is copy whatever freq setting you put into DT to this 
-device attr. That does nothing to actually set the frequency of the 
-ref_clk. It's frequency could be anything before and after this 
-function.
+David Disseldorp (1):
+      scsi: target: Fix truncated PR-in ReadKeys response
 
-Also, according to the spec, isn't QUERY_ATTR_IDN_REF_CLK_FREQ 
-write-once? So if you can read the value, wouldn't that mean you can't 
-set it.
+Jann Horn (1):
+      scsi: sg: mitigate read/write abuse
 
-Rob
+Raghava Aditya Renukunta (1):
+      scsi: aacraid: Fix PD performance regression over incorrect qd being set
+
+And the diffstat:
+
+ drivers/scsi/aacraid/aachba.c   | 15 +++++++--------
+ drivers/scsi/sg.c               | 42 +++++++++++++++++++++++++++++++++++++++--
+ drivers/target/target_core_pr.c | 15 ++++++++++-----
+ 3 files changed, 57 insertions(+), 15 deletions(-)
+
+With full diff below.
+
+James
+
+---
+
+diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
+index a9831bd37a73..a57f3a7d4748 100644
+--- a/drivers/scsi/aacraid/aachba.c
++++ b/drivers/scsi/aacraid/aachba.c
+@@ -1974,7 +1974,6 @@ static void aac_set_safw_attr_all_targets(struct aac_dev *dev)
+ 	u32 lun_count, nexus;
+ 	u32 i, bus, target;
+ 	u8 expose_flag, attribs;
+-	u8 devtype;
+ 
+ 	lun_count = aac_get_safw_phys_lun_count(dev);
+ 
+@@ -1992,23 +1991,23 @@ static void aac_set_safw_attr_all_targets(struct aac_dev *dev)
+ 			continue;
+ 
+ 		if (expose_flag != 0) {
+-			devtype = AAC_DEVTYPE_RAID_MEMBER;
+-			goto update_devtype;
++			dev->hba_map[bus][target].devtype =
++				AAC_DEVTYPE_RAID_MEMBER;
++			continue;
+ 		}
+ 
+ 		if (nexus != 0 && (attribs & 8)) {
+-			devtype = AAC_DEVTYPE_NATIVE_RAW;
++			dev->hba_map[bus][target].devtype =
++				AAC_DEVTYPE_NATIVE_RAW;
+ 			dev->hba_map[bus][target].rmw_nexus =
+ 					nexus;
+ 		} else
+-			devtype = AAC_DEVTYPE_ARC_RAW;
++			dev->hba_map[bus][target].devtype =
++				AAC_DEVTYPE_ARC_RAW;
+ 
+ 		dev->hba_map[bus][target].scan_counter = dev->scan_counter;
+ 
+ 		aac_set_safw_target_qd(dev, bus, target);
+-
+-update_devtype:
+-		dev->hba_map[bus][target].devtype = devtype;
+ 	}
+ }
+ 
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index 53ae52dbff84..cd2fdac000c9 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -51,6 +51,7 @@ static int sg_version_num = 30536;	/* 2 digits for each component */
+ #include <linux/atomic.h>
+ #include <linux/ratelimit.h>
+ #include <linux/uio.h>
++#include <linux/cred.h> /* for sg_check_file_access() */
+ 
+ #include "scsi.h"
+ #include <scsi/scsi_dbg.h>
+@@ -209,6 +210,33 @@ static void sg_device_destroy(struct kref *kref);
+ 	sdev_prefix_printk(prefix, (sdp)->device,		\
+ 			   (sdp)->disk->disk_name, fmt, ##a)
+ 
++/*
++ * The SCSI interfaces that use read() and write() as an asynchronous variant of
++ * ioctl(..., SG_IO, ...) are fundamentally unsafe, since there are lots of ways
++ * to trigger read() and write() calls from various contexts with elevated
++ * privileges. This can lead to kernel memory corruption (e.g. if these
++ * interfaces are called through splice()) and privilege escalation inside
++ * userspace (e.g. if a process with access to such a device passes a file
++ * descriptor to a SUID binary as stdin/stdout/stderr).
++ *
++ * This function provides protection for the legacy API by restricting the
++ * calling context.
++ */
++static int sg_check_file_access(struct file *filp, const char *caller)
++{
++	if (filp->f_cred != current_real_cred()) {
++		pr_err_once("%s: process %d (%s) changed security contexts after opening file descriptor, this is not allowed.\n",
++			caller, task_tgid_vnr(current), current->comm);
++		return -EPERM;
++	}
++	if (uaccess_kernel()) {
++		pr_err_once("%s: process %d (%s) called from kernel context, this is not allowed.\n",
++			caller, task_tgid_vnr(current), current->comm);
++		return -EACCES;
++	}
++	return 0;
++}
++
+ static int sg_allow_access(struct file *filp, unsigned char *cmd)
+ {
+ 	struct sg_fd *sfp = filp->private_data;
+@@ -393,6 +421,14 @@ sg_read(struct file *filp, char __user *buf, size_t count, loff_t * ppos)
+ 	struct sg_header *old_hdr = NULL;
+ 	int retval = 0;
+ 
++	/*
++	 * This could cause a response to be stranded. Close the associated
++	 * file descriptor to free up any resources being held.
++	 */
++	retval = sg_check_file_access(filp, __func__);
++	if (retval)
++		return retval;
++
+ 	if ((!(sfp = (Sg_fd *) filp->private_data)) || (!(sdp = sfp->parentdp)))
+ 		return -ENXIO;
+ 	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sdp,
+@@ -580,9 +616,11 @@ sg_write(struct file *filp, const char __user *buf, size_t count, loff_t * ppos)
+ 	struct sg_header old_hdr;
+ 	sg_io_hdr_t *hp;
+ 	unsigned char cmnd[SG_MAX_CDB_SIZE];
++	int retval;
+ 
+-	if (unlikely(uaccess_kernel()))
+-		return -EINVAL;
++	retval = sg_check_file_access(filp, __func__);
++	if (retval)
++		return retval;
+ 
+ 	if ((!(sfp = (Sg_fd *) filp->private_data)) || (!(sdp = sfp->parentdp)))
+ 		return -ENXIO;
+diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
+index 01ac306131c1..10db5656fd5d 100644
+--- a/drivers/target/target_core_pr.c
++++ b/drivers/target/target_core_pr.c
+@@ -3727,11 +3727,16 @@ core_scsi3_pri_read_keys(struct se_cmd *cmd)
+ 		 * Check for overflow of 8byte PRI READ_KEYS payload and
+ 		 * next reservation key list descriptor.
+ 		 */
+-		if ((add_len + 8) > (cmd->data_length - 8))
+-			break;
+-
+-		put_unaligned_be64(pr_reg->pr_res_key, &buf[off]);
+-		off += 8;
++		if (off + 8 <= cmd->data_length) {
++			put_unaligned_be64(pr_reg->pr_res_key, &buf[off]);
++			off += 8;
++		}
++		/*
++		 * SPC5r17: 6.16.2 READ KEYS service action
++		 * The ADDITIONAL LENGTH field indicates the number of bytes in
++		 * the Reservation key list. The contents of the ADDITIONAL
++		 * LENGTH field are not altered based on the allocation length
++		 */
+ 		add_len += 8;
+ 	}
+ 	spin_unlock(&dev->t10_pr.registration_lock);
