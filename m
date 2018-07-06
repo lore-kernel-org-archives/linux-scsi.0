@@ -1,46 +1,30 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 2/2] scsi: remove NCR_Q720 driver
-Date: Fri, 6 Jul 2018 15:40:57 +0200
-Message-ID: <761f3dbb-9a1a-f810-17b9-24953eb87682@suse.de>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH 0/2] Remove remainig MCR SCSI drivers
+Date: Fri, 6 Jul 2018 15:43:10 +0200
+Message-ID: <20180706134310.7rj24ubyd3zep2ol@linux-x5ow.site>
 References: <20180706133349.28508-1-jthumshirn@suse.de>
- <20180706133349.28508-3-jthumshirn@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180706133349.28508-3-jthumshirn@suse.de>
-Content-Language: en-US
+Content-Disposition: inline
+In-Reply-To: <20180706133349.28508-1-jthumshirn@suse.de>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>, "Martin K . Petersen" <martin.petersen@oracle.com>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 07/06/2018 03:33 PM, Johannes Thumshirn wrote:
-> The NCR QUAD 720 SCSI driver depends on microchannel support, but
-> microchannel support was removed from the kernel with commit
-> bb8187d35f82 ("MCA: delete all remaining traces of microchannel bus
-> support.") over 6 years ago.
-> 
-> So zap the Q720 SCSI driver as well.
-> 
-> Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-> ---
->  drivers/scsi/Kconfig    |  20 +--
->  drivers/scsi/Makefile   |   2 -
->  drivers/scsi/NCR_Q720.c | 376 ------------------------------------------------
->  drivers/scsi/NCR_Q720.h |  29 ----
->  4 files changed, 4 insertions(+), 423 deletions(-)
->  delete mode 100644 drivers/scsi/NCR_Q720.c
->  delete mode 100644 drivers/scsi/NCR_Q720.h
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+On Fri, Jul 06, 2018 at 03:33:47PM +0200, Johannes Thumshirn wrote:
+> MCR Support was ripped out of the kernel in 2012. I think 6 years
+> later we can kill the remaining drivers which couldn't have been
+> compiled since then.
 
-Cheers,
+s/MCR/MCA/g but who cares nowadays anyway.
 
-Hannes
 -- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 NÃ¼rnberg
-GF: F. ImendÃ¶rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG NÃ¼rnberg)
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
