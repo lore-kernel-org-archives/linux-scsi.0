@@ -1,43 +1,36 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
 Subject: Re: [PATCH 1/4] scsi: aacraid: remove AAC_STAT_GOOD define
-Date: Fri, 6 Jul 2018 10:03:01 +0200
-Message-ID: <20180706080301.gvjxdd4w5eun2x2h@linux-x5ow.site>
+Date: Fri, 6 Jul 2018 10:04:47 +0200
+Message-ID: <20180706080447.2u3iptpnvmso6ncc@linux-x5ow.site>
 References: <20180705110140.19545-1-jthumshirn@suse.de>
  <20180705110140.19545-2-jthumshirn@suse.de>
- <4cd9a8cb64dc4d8aa1e10c3b008c3ba0@microsemi.com>
+ <babfea1746aaca57109f84bff674dda635a76e29.camel@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <4cd9a8cb64dc4d8aa1e10c3b008c3ba0@microsemi.com>
+In-Reply-To: <babfea1746aaca57109f84bff674dda635a76e29.camel@wdc.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Dave Carroll <david.carroll@microsemi.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "RaghavaAditya.Renukunta@microsemi.com" <RaghavaAditya.Renukunta@microsemi.com>, "david.carroll@microsemi.com" <david.carroll@microsemi.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Jul 05, 2018 at 05:42:02PM +0000, Dave Carroll wrote:
-> > Remove the AAC_STAT_GOOD definition and open code it in the places it was
-> > used.
-> > 
-> > This will make subsequent refactoring in this area easier.
-> > 
-> Please don't ... the definition itself was added to make refactoring easier.
+On Thu, Jul 05, 2018 at 05:24:23PM +0000, Bart Van Assche wrote:
+> On Thu, 2018-07-05 at 13:01 +0200, Johannes Thumshirn wrote:
+> >  		if (((aac_cache & 6) == 6) && dev->cache_protected) {
+> > -			scsicmd->result = AAC_STAT_GOOD;
+> > +			scsicmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8 |
+> > +					  SAM_STAT_GOOD;
+> 
+> Does AAC_STAT_GOOD really have to be expanded in full multiple times?
+> Have you considered to replace AAC_STAT_GOOD by the numerical constant
+> 0 instead?
 
-Well in the end scsi_cmnd::result as we know it currently will go
-away, so splitting up the define is rather crucial for this. I could
-do it when changing the ->result from one integer into 4 u8s but doing
-it in a separate preparation step would be preferable to me and it
-doesn't hurt accraid at all.
+This won't work anymore once we start splitting ->result into 4
+unrelated enums. That's why I prefer this way.
 
-For more information please see [1] and [2]. A first preparation
-series [3] has already landed upstream.
-
-[1] https://marc.info/?l=linux-scsi&m=152300071418035&w=2
-[2] https://marc.info/?l=linux-scsi&m=152406381222604&w=2
-[3] https://marc.info/?l=linux-scsi&m=152887646121085&w=2
-
-Thanks,
+Byte,
 	Johannes
 -- 
 Johannes Thumshirn                                          Storage
