@@ -1,89 +1,63 @@
-From: "=?utf-8?B?6ZmI5Y2O5omN?=" <chenhc@lemote.com>
-Subject: Re: [PATCH] scsi: lpfc: Switch memcpy_fromio() to __read32_copy()
-Date: Mon, 9 Jul 2018 09:36:21 +0800
-Message-ID: <tencent_19145F241B27B7D10391553C@qq.com>
-References: <1516971186-20372-1-git-send-email-chenhc@lemote.com>
-        <tencent_3B2D19AE6395B45001767B9B@qq.com>
-        <tencent_75DC38C65689608F38146CF0@qq.com>
-        <b8699e17-bab9-f977-8034-05897c2812f4@broadcom.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH 4/4] scsi: ncr53c8xx: remove ScsiResult macro
+Date: Mon, 9 Jul 2018 09:15:16 +0200
+Message-ID: <20180709071516.oigjx5wetjqlvqpb@linux-x5ow.site>
+References: <20180705110140.19545-1-jthumshirn@suse.de>
+ <20180705110140.19545-5-jthumshirn@suse.de>
+ <a4a799f62ffa873fc3a7e23a5a46dafc8805b984.camel@wdc.com>
+ <20180706080939.iotmgb24f6iaawkp@linux-x5ow.site>
+ <ea39e5c6ff2b6081acd64cf14a0912e1510378a9.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <b8699e17-bab9-f977-8034-05897c2812f4@broadcom.com>
-Sender: stable-owner@vger.kernel.org
-To: =?utf-8?B?SmFtZXMgU21hcnQ=?= <james.smart@broadcom.com>, =?utf-8?B?RGljayBLZW5uZWR5?= <dick.kennedy@broadcom.com>
-Cc: =?utf-8?B?SmFtZXMgRSAuIEogLiBCb3R0b21sZXk=?= <jejb@linux.vnet.ibm.com>, =?utf-8?B?TWFydGluIEsgLiBQZXRlcnNlbg==?= <martin.petersen@oracle.com>, =?utf-8?B?RnV4aW4gWmhhbmc=?= <zhangfx@lemote.com>, =?utf-8?B?bGludXgtc2NzaQ==?= <linux-scsi@vger.kernel.org>, =?utf-8?B?c3RhYmxl?= <stable@vger.kernel.org>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <ea39e5c6ff2b6081acd64cf14a0912e1510378a9.camel@wdc.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-SGksIEphbWVzLA0KDQpJIHRoaW5rIEkgZm91bmQgdGhlIHJvb3QgY2F1c2U6IGxwZmMncyBk
-ZXZpY2UgbWVtb3J5IGRvZXNuJ3Qgc3VwcG9ydCAxMjhiaXQgbG9hZC9zdG9yZS4gQnV0IExv
-b25nc29uLTMncyBvcHRpbWlzZWQgbWVtY3B5KCkgd2lsbCB1c2UgMTI4Yml0IGxvYWQvc3Rv
-cmUgaW5zdHJ1Y3Rpb25zIChnc2xxL2dzc3EpLiBTbyBpcyB0aGlzIHBhdGNoIG5lY2Nlc29y
-eSB0byBhdm9pZCAxMjhiaXQgbWVtb3J5IGFjY2VzcyAobWF5YmUgdGhlcmUgYXJlIG90aGVy
-IHBsYXRmb3JtcyBoYXZlIHRoZSBzYW1lIHByb2JsZW0pPw0KIA0KSHVhY2FpDQogDQotLS0t
-LS0tLS0tLS0tLS0tLS0gT3JpZ2luYWwgLS0tLS0tLS0tLS0tLS0tLS0tDQpGcm9tOiAgIkph
-bWVzIFNtYXJ0IjxqYW1lcy5zbWFydEBicm9hZGNvbS5jb20+Ow0KRGF0ZTogIE1vbiwgTWFy
-IDUsIDIwMTggMTE6MzcgUE0NClRvOiAgIumZiOWNjuaJjSI8Y2hlbmhjQGxlbW90ZS5jb20+
-OyAiRGljayBLZW5uZWR5IjxkaWNrLmtlbm5lZHlAYnJvYWRjb20uY29tPjsNCkNjOiAgIkph
-bWVzIEUgLiBKIC4gQm90dG9tbGV5IjxqZWpiQGxpbnV4LnZuZXQuaWJtLmNvbT47ICJNYXJ0
-aW4gSyAuIFBldGVyc2VuIjxtYXJ0aW4ucGV0ZXJzZW5Ab3JhY2xlLmNvbT47ICJGdXhpbiBa
-aGFuZyI8emhhbmdmeEBsZW1vdGUuY29tPjsgImxpbnV4LXNjc2kiPGxpbnV4LXNjc2lAdmdl
-ci5rZXJuZWwub3JnPjsgInN0YWJsZSI8c3RhYmxlQHZnZXIua2VybmVsLm9yZz47DQpTdWJq
-ZWN0OiAgUmU6IFtQQVRDSF0gc2NzaTogbHBmYzogU3dpdGNoIG1lbWNweV9mcm9taW8oKSB0
-byBfX3JlYWQzMl9jb3B5KCkNCiANCg0KT24gMy80LzIwMTggMTA6NTYgUE0sIOmZiOWNjuaJ
-jSB3cm90ZToNCj4gTm8gb25lIGhhcyB0aGUgc2FtZSBwcm9ibGVtPyBPciB0aGlzIHBhdGNo
-IG5lZWQgaW1wcm92ZT8NCj4NCj4gSHVhY2FpDQo+ICAgDQo+IC0tLS0tLS0tLS0tLS0tLS0t
-LSBPcmlnaW5hbCAtLS0tLS0tLS0tLS0tLS0tLS0NCj4gRnJvbTogICLpmYjljY7miY0iPGNo
-ZW5oY0BsZW1vdGUuY29tPjsNCj4gRGF0ZTogIFRodSwgTWFyIDEsIDIwMTggMDE6NTkgUE0N
-Cj4gVG86ICAiSmFtZXMgU21hcnQiPGphbWVzLnNtYXJ0QGJyb2FkY29tLmNvbT47ICJEaWNr
-IEtlbm5lZHkiPGRpY2sua2VubmVkeUBicm9hZGNvbS5jb20+Ow0KPiBDYzogICJKYW1lcyBF
-IC4gSiAuIEJvdHRvbWxleSI8amVqYkBsaW51eC52bmV0LmlibS5jb20+OyAiTWFydGluIEsg
-LiBQZXRlcnNlbiI8bWFydGluLnBldGVyc2VuQG9yYWNsZS5jb20+OyAiRnV4aW4gWmhhbmci
-PHpoYW5nZnhAbGVtb3RlLmNvbT47ICJsaW51eC1zY3NpIjxsaW51eC1zY3NpQHZnZXIua2Vy
-bmVsLm9yZz47ICJzdGFibGUiPHN0YWJsZUB2Z2VyLmtlcm5lbC5vcmc+Ow0KPiBTdWJqZWN0
-OiAgUmU6W1BBVENIXSBzY3NpOiBscGZjOiBTd2l0Y2ggbWVtY3B5X2Zyb21pbygpIHRvIF9f
-cmVhZDMyX2NvcHkoKQ0KPiAgIA0KPiBQaW5nPw0KPiAgIA0KPiAtLS0tLS0tLS0tLS0tLS0t
-LS0gT3JpZ2luYWwgLS0tLS0tLS0tLS0tLS0tLS0tDQo+IEZyb206ICAiSHVhY2FpIENoZW4i
-PGNoZW5oY0BsZW1vdGUuY29tPjsNCj4gRGF0ZTogIEZyaSwgSmFuIDI2LCAyMDE4IDA4OjUz
-IFBNDQo+IFRvOiAgIkphbWVzIFNtYXJ0IjxqYW1lcy5zbWFydEBicm9hZGNvbS5jb20+OyAi
-RGljayBLZW5uZWR5IjxkaWNrLmtlbm5lZHlAYnJvYWRjb20uY29tPjsNCj4gQ2M6ICAiSmFt
-ZXMgRSAuIEogLiBCb3R0b21sZXkiPGplamJAbGludXgudm5ldC5pYm0uY29tPjsgIk1hcnRp
-biBLIC4gUGV0ZXJzZW4iPG1hcnRpbi5wZXRlcnNlbkBvcmFjbGUuY29tPjsgIkZ1eGluIFpo
-YW5nIjx6aGFuZ2Z4QGxlbW90ZS5jb20+OyAibGludXgtc2NzaSI8bGludXgtc2NzaUB2Z2Vy
-Lmtlcm5lbC5vcmc+OyAiSHVhY2FpIENoZW4iPGNoZW5oY0BsZW1vdGUuY29tPjsgInN0YWJs
-ZSI8c3RhYmxlQHZnZXIua2VybmVsLm9yZz47DQo+IFN1YmplY3Q6ICBbUEFUQ0hdIHNjc2k6
-IGxwZmM6IFN3aXRjaCBtZW1jcHlfZnJvbWlvKCkgdG8gX19yZWFkMzJfY29weSgpDQo+ICAg
-DQo+IEluIGNvbW1pdCBiYzczOTA1YWJmNzcwMTkyICgiW1NDU0ldIGxwZmMgOC4zLjE2OiBT
-TEkgQWRkaXRpb25zLCB1cGRhdGVzLA0KPiBhbmQgY29kZSBjbGVhbnVwIiksIGxwZmNfbWVt
-Y3B5X3RvX3NsaW0oKSBoYXZlIHN3aXRjaGVkIG1lbWNweV90b2lvKCkgdG8NCj4gX193cml0
-ZTMyX2NvcHkoKSBpbiBvcmRlciB0byBwcmV2ZW50IHVuYWxpZ25lZCA2NCBiaXQgY29weS4g
-UmVjZW50bHksIHdlDQo+IGZvdW5kIHRoYXQgbHBmY19tZW1jcHlfZnJvbV9zbGltKCkgaGF2
-ZSBzaW1pbGFyIGlzc3Vlcywgc28gbGV0IGl0IHN3aXRjaA0KPiBtZW1jcHlfZnJvbWlvKCkg
-dG8gX19yZWFkMzJfY29weSgpLg0KPg0KPiBDYzogc3RhYmxlQHZnZXIua2VybmVsLm9yZw0K
-PiBTaWduZWQtb2ZmLWJ5OiBIdWFjYWkgQ2hlbiA8Y2hlbmhjQGxlbW90ZS5jb20+DQo+IC0t
-LQ0KPiAgIGRyaXZlcnMvc2NzaS9scGZjL2xwZmNfY29tcGF0LmggfCA0ICsrLS0NCj4gICAx
-IGZpbGUgY2hhbmdlZCwgMiBpbnNlcnRpb25zKCspLCAyIGRlbGV0aW9ucygtKQ0KPg0KPiBk
-aWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL2xwZmMvbHBmY19jb21wYXQuaCBiL2RyaXZlcnMv
-c2NzaS9scGZjL2xwZmNfY29tcGF0LmgNCj4gaW5kZXggNmIzMmIwYS4uNDdkNGZhZCAxMDA2
-NDQNCj4gLS0tIGEvZHJpdmVycy9zY3NpL2xwZmMvbHBmY19jb21wYXQuaA0KPiArKysgYi9k
-cml2ZXJzL3Njc2kvbHBmYy9scGZjX2NvbXBhdC5oDQo+IEBAIC05MSw4ICs5MSw4IEBAIGxw
-ZmNfbWVtY3B5X3RvX3NsaW0oIHZvaWQgX19pb21lbSAqZGVzdCwgdm9pZCAqc3JjLCB1bnNp
-Z25lZCBpbnQgYnl0ZXMpDQo+ICAgc3RhdGljIGlubGluZSB2b2lkDQo+ICAgbHBmY19tZW1j
-cHlfZnJvbV9zbGltKCB2b2lkICpkZXN0LCB2b2lkIF9faW9tZW0gKnNyYywgdW5zaWduZWQg
-aW50IGJ5dGVzKQ0KPiAgIHsNCj4gLQkvKiBhY3R1YWxseSByZXR1cm5zIDEgYnl0ZSBwYXN0
-IGRlc3QgKi8NCj4gLQltZW1jcHlfZnJvbWlvKCBkZXN0LCBzcmMsIGJ5dGVzKTsNCj4gKwkv
-KiBjb252ZXJ0IGJ5dGVzIGluIGFyZ3VtZW50IGxpc3QgdG8gd29yZCBjb3VudCBmb3IgY29w
-eSBmdW5jdGlvbiAqLw0KPiArCV9faW9yZWFkMzJfY29weShkZXN0LCBzcmMsIGJ5dGVzIC8g
-c2l6ZW9mKHVpbnQzMl90KSk7DQo+ICAgfQ0KPiAgIA0KPiAgICNlbmRpZgkvKiBfX0JJR19F
-TkRJQU4gKi8NCg0KSHVhY2FpLA0KDQpOb3RlOiB0aGUgb3JpZ2luYWwgY2hhbmdlIHdhcyA3
-IHlycyBhZ28gYW5kIHdlJ3ZlIGhhZCBubyByZXBvcnRzIG9mIA0KaXNzdWVzLiBidXQuLi4u
-DQoNClRoaXMgY2hhbmdlIGRpZG4ndCBsb29rIG5lY2Vzc2FyeSBhcyB0aGUgbWVtY3B5X1hY
-WGlvKCkgc2hvdWxkIGFsbG93IA0KYnl0ZSBhbGlnbm1lbnRzIGFuZCBieXRlLWJhc2VkIGxl
-bmd0aHMuIFdoaWNoIG1lYW5zIHRoZSBvcmlnaW5hbCBwYXRjaCANCmFsc28gd2Fzbid0IG5l
-Y2Vzc2FyeSwgd2hpY2ggaW1wbGllcyB0aGF0IHRoZSBwbGF0Zm9ybSB0aGF0IGhhZCB0aGUg
-DQppc3N1ZXMgaGFzIGFuIGFwaSByZXN0cmljdGlvbiBub3Qgbm9ybWFsbHkgZm91bmQgb24g
-dGhlIG90aGVyIHBsYXRmb3Jtcy4NCg0KSSBoYXZlIG5vIHByb2JsZW0gd2l0aCB0aGUgY2hh
-bmdlIHRob3VnaC4NCg0KLS0gamFtZXMNCg0KU2lnbmVkLW9mZi1ieTogSmFtZXMgU21hcnQg
-IDxqYW1lcy5zbWFydEBicm9hZGNvbS5jb20+
+On Fri, Jul 06, 2018 at 05:05:19PM +0000, Bart Van Assche wrote:
+> On Fri, 2018-07-06 at 10:09 +0200, Johannes Thumshirn wrote:
+> > On Thu, Jul 05, 2018 at 05:04:05PM +0000, Bart Van Assche wrote:
+> > > On Thu, 2018-07-05 at 13:01 +0200, Johannes Thumshirn wrote:
+> > > > -		cmd->result = ScsiResult(DID_OK, S_CHECK_COND);
+> > > > +		cmd->result = DID_OK << 16 | S_CHECK_COND;
+> > > 
+> > > Since DID_OK == 0, do we really need "DID_OK << 16 |" here?
+> > 
+> > Please see my answers to the other patches on this.
+> 
+> No matter what the next step is, you will have to deal with code that looks
+> very similar to what I proposed. An example from libata:
+> 
+> 	else if (qc->flags & ATA_QCFLAG_SENSE_VALID)
+> 		cmd->result = SAM_STAT_CHECK_CONDITION;
+
+OK, I'll take remove the "| 0" parts.
+
+> 
+> BTW, in drivers/scsi/sym53c8xx_2/sym_defs.h there are definitions for synonyms
+> of standard SCSI constants. I wouldn't mind if these synonyms would be removed:
+> 
+> #define	S_GOOD		SAM_STAT_GOOD
+> #define	S_CHECK_COND	SAM_STAT_CHECK_CONDITION
+> #define	S_COND_MET	SAM_STAT_CONDITION_MET
+> #define	S_BUSY		SAM_STAT_BUSY
+> #define	S_INT		SAM_STAT_INTERMEDIATE
+> #define	S_INT_COND_MET	SAM_STAT_INTERMEDIATE_CONDITION_MET
+> #define	S_CONFLICT	SAM_STAT_RESERVATION_CONFLICT
+> #define	S_TERMINATED	SAM_STAT_COMMAND_TERMINATED
+> #define	S_QUEUE_FULL	SAM_STAT_TASK_SET_FULL
+
+Yup, saw those as well and already removed them in the next
+version. Ditto for the bfa ones.
+
+-- 
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
