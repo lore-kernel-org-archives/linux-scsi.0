@@ -1,7 +1,8 @@
 From: Ching Huang <ching2048@areca.com.tw>
-Subject: [PATCH 0/2] scsi: arcmsr: fix error of resuming from hibernation
-Date: Mon, 09 Jul 2018 18:19:28 +0800
-Message-ID: <1531131568.5779.8.camel@Centos6.3-64>
+Subject: [PATCH 1/2] scsi: arcmsr: Fix error of resuming from hibernation
+ for adapter type E
+Date: Mon, 09 Jul 2018 18:24:53 +0800
+Message-ID: <1531131893.5779.13.camel@Centos6.3-64>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
@@ -11,9 +12,28 @@ To: martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com, linux-scs
 Cc: dan.carpenter@oracle.com, hch@infradead.org, colin.king@canonical.com
 List-Id: linux-scsi@vger.kernel.org
 
-This patch series are against to mkp's 4.19/scsi-queue.
+>From Ching Huang <ching2048@areca.com.tw>
 
-1. Fix error of resuming from hibernation for adapter type E.
-2. Update driver version to v1.40.00.09-20180709
+Fix error of resuming from hibernation for adapter type E.
 
+Signed-off-by: Ching Huang <ching2048@areca.com.tw>
 ---
+
+diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
+index 732b5d9..12316ef 100755
+--- a/drivers/scsi/arcmsr/arcmsr_hba.c
++++ b/drivers/scsi/arcmsr/arcmsr_hba.c
+@@ -1061,6 +1061,13 @@ static int arcmsr_resume(struct pci_dev *pdev)
+ 	pci_set_master(pdev);
+ 	if (arcmsr_request_irq(pdev, acb) == FAILED)
+ 		goto controller_stop;
++	if (acb->adapter_type == ACB_ADAPTER_TYPE_E) {
++		writel(0, &acb->pmuE->host_int_status);
++		writel(ARCMSR_HBEMU_DOORBELL_SYNC, &acb->pmuE->iobound_doorbell);
++		acb->in_doorbell = 0;
++		acb->out_doorbell = 0;
++		acb->doneq_index = 0;
++	}
+ 	arcmsr_iop_init(acb);
+ 	arcmsr_init_get_devmap_timer(acb);
+ 	if (set_date_time)
