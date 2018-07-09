@@ -1,44 +1,89 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/6] block: Create scsi_sense.h for SCSI and ATAPI
-Date: Sun, 8 Jul 2018 13:23:15 -0700
-Message-ID: <20180708202315.GA2239@infradead.org>
-References: <CAGXu5j+mgGZkTDS6EDRspJKKbU=vMT4ehv9T-SekPba=ESoGDg@mail.gmail.com>
- <9A0BC289-4203-4C77-A012-AAB07F42061F@kernel.dk>
- <CAGXu5jJsGWDsZNDJvUUqncSaAcvond_B_J7=BbvVW0X3r6Sxww@mail.gmail.com>
- <aa150272-ffeb-fb8f-7303-0d9502cf9a71@kernel.dk>
- <20180523142545.GA16248@infradead.org>
- <24d36869-e037-042d-cb16-20a81b34eb76@kernel.dk>
- <CAGXu5jJn=1Rz=D8VUwv_VoaGoLtaD=+tcPZxQxntweZoZwFa5Q@mail.gmail.com>
- <f4eb4cd5-8976-3990-69b0-26cca054aa45@kernel.dk>
- <20180524080015.GA2866@infradead.org>
- <CAGXu5j+pRUWgny+h5ToVQXBP8nANjreVhnXjk5TVgy84ufNsRg@mail.gmail.com>
+From: "=?utf-8?B?6ZmI5Y2O5omN?=" <chenhc@lemote.com>
+Subject: Re: [PATCH] scsi: lpfc: Switch memcpy_fromio() to __read32_copy()
+Date: Mon, 9 Jul 2018 09:36:21 +0800
+Message-ID: <tencent_19145F241B27B7D10391553C@qq.com>
+References: <1516971186-20372-1-git-send-email-chenhc@lemote.com>
+        <tencent_3B2D19AE6395B45001767B9B@qq.com>
+        <tencent_75DC38C65689608F38146CF0@qq.com>
+        <b8699e17-bab9-f977-8034-05897c2812f4@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAGXu5j+pRUWgny+h5ToVQXBP8nANjreVhnXjk5TVgy84ufNsRg@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Kees Cook <keescook@chromium.org>
-Cc: Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@kernel.dk>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Tejun Heo <tj@kernel.org>, Borislav Petkov <bp@alien8.de>, "David S. Miller" <davem@davemloft.net>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, linux-block <linux-block@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain;
+        charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <b8699e17-bab9-f977-8034-05897c2812f4@broadcom.com>
+Sender: stable-owner@vger.kernel.org
+To: =?utf-8?B?SmFtZXMgU21hcnQ=?= <james.smart@broadcom.com>, =?utf-8?B?RGljayBLZW5uZWR5?= <dick.kennedy@broadcom.com>
+Cc: =?utf-8?B?SmFtZXMgRSAuIEogLiBCb3R0b21sZXk=?= <jejb@linux.vnet.ibm.com>, =?utf-8?B?TWFydGluIEsgLiBQZXRlcnNlbg==?= <martin.petersen@oracle.com>, =?utf-8?B?RnV4aW4gWmhhbmc=?= <zhangfx@lemote.com>, =?utf-8?B?bGludXgtc2NzaQ==?= <linux-scsi@vger.kernel.org>, =?utf-8?B?c3RhYmxl?= <stable@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, May 24, 2018 at 10:06:59AM -0700, Kees Cook wrote:
-> On Thu, May 24, 2018 at 1:00 AM, Christoph Hellwig <hch@infradead.org> wrote:
-> > On Wed, May 23, 2018 at 03:14:19PM -0600, Jens Axboe wrote:
-> >> Ugh, so that would necessitate a change there too. As I said before,
-> >> I don't really care where it lives. I know the SCSI folks seem bothered
-> >> by moving it, but in reality, it's not like this stuff will likely ever
-> >> really change. Of the two choices (select entire SCSI stack, or just move
-> >> this little bit), I know what I would consider the saner option...
-> >
-> > Oh well.  How about something like this respin of Kees' series?
-> >
-> > http://git.infradead.org/users/hch/block.git/shortlog/refs/heads/sense-cleanup
-> 
-> Does the CONFIG_PCMCIA in drivers/scsi/Makefile now get exposed in
-> weird config cases?
-> 
-> Otherwise, yeah, looks good to me. Thanks!
-
-Btw, did you plan to resend the series with this and your changes
-applied?
+SGksIEphbWVzLA0KDQpJIHRoaW5rIEkgZm91bmQgdGhlIHJvb3QgY2F1c2U6IGxwZmMncyBk
+ZXZpY2UgbWVtb3J5IGRvZXNuJ3Qgc3VwcG9ydCAxMjhiaXQgbG9hZC9zdG9yZS4gQnV0IExv
+b25nc29uLTMncyBvcHRpbWlzZWQgbWVtY3B5KCkgd2lsbCB1c2UgMTI4Yml0IGxvYWQvc3Rv
+cmUgaW5zdHJ1Y3Rpb25zIChnc2xxL2dzc3EpLiBTbyBpcyB0aGlzIHBhdGNoIG5lY2Nlc29y
+eSB0byBhdm9pZCAxMjhiaXQgbWVtb3J5IGFjY2VzcyAobWF5YmUgdGhlcmUgYXJlIG90aGVy
+IHBsYXRmb3JtcyBoYXZlIHRoZSBzYW1lIHByb2JsZW0pPw0KIA0KSHVhY2FpDQogDQotLS0t
+LS0tLS0tLS0tLS0tLS0gT3JpZ2luYWwgLS0tLS0tLS0tLS0tLS0tLS0tDQpGcm9tOiAgIkph
+bWVzIFNtYXJ0IjxqYW1lcy5zbWFydEBicm9hZGNvbS5jb20+Ow0KRGF0ZTogIE1vbiwgTWFy
+IDUsIDIwMTggMTE6MzcgUE0NClRvOiAgIumZiOWNjuaJjSI8Y2hlbmhjQGxlbW90ZS5jb20+
+OyAiRGljayBLZW5uZWR5IjxkaWNrLmtlbm5lZHlAYnJvYWRjb20uY29tPjsNCkNjOiAgIkph
+bWVzIEUgLiBKIC4gQm90dG9tbGV5IjxqZWpiQGxpbnV4LnZuZXQuaWJtLmNvbT47ICJNYXJ0
+aW4gSyAuIFBldGVyc2VuIjxtYXJ0aW4ucGV0ZXJzZW5Ab3JhY2xlLmNvbT47ICJGdXhpbiBa
+aGFuZyI8emhhbmdmeEBsZW1vdGUuY29tPjsgImxpbnV4LXNjc2kiPGxpbnV4LXNjc2lAdmdl
+ci5rZXJuZWwub3JnPjsgInN0YWJsZSI8c3RhYmxlQHZnZXIua2VybmVsLm9yZz47DQpTdWJq
+ZWN0OiAgUmU6IFtQQVRDSF0gc2NzaTogbHBmYzogU3dpdGNoIG1lbWNweV9mcm9taW8oKSB0
+byBfX3JlYWQzMl9jb3B5KCkNCiANCg0KT24gMy80LzIwMTggMTA6NTYgUE0sIOmZiOWNjuaJ
+jSB3cm90ZToNCj4gTm8gb25lIGhhcyB0aGUgc2FtZSBwcm9ibGVtPyBPciB0aGlzIHBhdGNo
+IG5lZWQgaW1wcm92ZT8NCj4NCj4gSHVhY2FpDQo+ICAgDQo+IC0tLS0tLS0tLS0tLS0tLS0t
+LSBPcmlnaW5hbCAtLS0tLS0tLS0tLS0tLS0tLS0NCj4gRnJvbTogICLpmYjljY7miY0iPGNo
+ZW5oY0BsZW1vdGUuY29tPjsNCj4gRGF0ZTogIFRodSwgTWFyIDEsIDIwMTggMDE6NTkgUE0N
+Cj4gVG86ICAiSmFtZXMgU21hcnQiPGphbWVzLnNtYXJ0QGJyb2FkY29tLmNvbT47ICJEaWNr
+IEtlbm5lZHkiPGRpY2sua2VubmVkeUBicm9hZGNvbS5jb20+Ow0KPiBDYzogICJKYW1lcyBF
+IC4gSiAuIEJvdHRvbWxleSI8amVqYkBsaW51eC52bmV0LmlibS5jb20+OyAiTWFydGluIEsg
+LiBQZXRlcnNlbiI8bWFydGluLnBldGVyc2VuQG9yYWNsZS5jb20+OyAiRnV4aW4gWmhhbmci
+PHpoYW5nZnhAbGVtb3RlLmNvbT47ICJsaW51eC1zY3NpIjxsaW51eC1zY3NpQHZnZXIua2Vy
+bmVsLm9yZz47ICJzdGFibGUiPHN0YWJsZUB2Z2VyLmtlcm5lbC5vcmc+Ow0KPiBTdWJqZWN0
+OiAgUmU6W1BBVENIXSBzY3NpOiBscGZjOiBTd2l0Y2ggbWVtY3B5X2Zyb21pbygpIHRvIF9f
+cmVhZDMyX2NvcHkoKQ0KPiAgIA0KPiBQaW5nPw0KPiAgIA0KPiAtLS0tLS0tLS0tLS0tLS0t
+LS0gT3JpZ2luYWwgLS0tLS0tLS0tLS0tLS0tLS0tDQo+IEZyb206ICAiSHVhY2FpIENoZW4i
+PGNoZW5oY0BsZW1vdGUuY29tPjsNCj4gRGF0ZTogIEZyaSwgSmFuIDI2LCAyMDE4IDA4OjUz
+IFBNDQo+IFRvOiAgIkphbWVzIFNtYXJ0IjxqYW1lcy5zbWFydEBicm9hZGNvbS5jb20+OyAi
+RGljayBLZW5uZWR5IjxkaWNrLmtlbm5lZHlAYnJvYWRjb20uY29tPjsNCj4gQ2M6ICAiSmFt
+ZXMgRSAuIEogLiBCb3R0b21sZXkiPGplamJAbGludXgudm5ldC5pYm0uY29tPjsgIk1hcnRp
+biBLIC4gUGV0ZXJzZW4iPG1hcnRpbi5wZXRlcnNlbkBvcmFjbGUuY29tPjsgIkZ1eGluIFpo
+YW5nIjx6aGFuZ2Z4QGxlbW90ZS5jb20+OyAibGludXgtc2NzaSI8bGludXgtc2NzaUB2Z2Vy
+Lmtlcm5lbC5vcmc+OyAiSHVhY2FpIENoZW4iPGNoZW5oY0BsZW1vdGUuY29tPjsgInN0YWJs
+ZSI8c3RhYmxlQHZnZXIua2VybmVsLm9yZz47DQo+IFN1YmplY3Q6ICBbUEFUQ0hdIHNjc2k6
+IGxwZmM6IFN3aXRjaCBtZW1jcHlfZnJvbWlvKCkgdG8gX19yZWFkMzJfY29weSgpDQo+ICAg
+DQo+IEluIGNvbW1pdCBiYzczOTA1YWJmNzcwMTkyICgiW1NDU0ldIGxwZmMgOC4zLjE2OiBT
+TEkgQWRkaXRpb25zLCB1cGRhdGVzLA0KPiBhbmQgY29kZSBjbGVhbnVwIiksIGxwZmNfbWVt
+Y3B5X3RvX3NsaW0oKSBoYXZlIHN3aXRjaGVkIG1lbWNweV90b2lvKCkgdG8NCj4gX193cml0
+ZTMyX2NvcHkoKSBpbiBvcmRlciB0byBwcmV2ZW50IHVuYWxpZ25lZCA2NCBiaXQgY29weS4g
+UmVjZW50bHksIHdlDQo+IGZvdW5kIHRoYXQgbHBmY19tZW1jcHlfZnJvbV9zbGltKCkgaGF2
+ZSBzaW1pbGFyIGlzc3Vlcywgc28gbGV0IGl0IHN3aXRjaA0KPiBtZW1jcHlfZnJvbWlvKCkg
+dG8gX19yZWFkMzJfY29weSgpLg0KPg0KPiBDYzogc3RhYmxlQHZnZXIua2VybmVsLm9yZw0K
+PiBTaWduZWQtb2ZmLWJ5OiBIdWFjYWkgQ2hlbiA8Y2hlbmhjQGxlbW90ZS5jb20+DQo+IC0t
+LQ0KPiAgIGRyaXZlcnMvc2NzaS9scGZjL2xwZmNfY29tcGF0LmggfCA0ICsrLS0NCj4gICAx
+IGZpbGUgY2hhbmdlZCwgMiBpbnNlcnRpb25zKCspLCAyIGRlbGV0aW9ucygtKQ0KPg0KPiBk
+aWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL2xwZmMvbHBmY19jb21wYXQuaCBiL2RyaXZlcnMv
+c2NzaS9scGZjL2xwZmNfY29tcGF0LmgNCj4gaW5kZXggNmIzMmIwYS4uNDdkNGZhZCAxMDA2
+NDQNCj4gLS0tIGEvZHJpdmVycy9zY3NpL2xwZmMvbHBmY19jb21wYXQuaA0KPiArKysgYi9k
+cml2ZXJzL3Njc2kvbHBmYy9scGZjX2NvbXBhdC5oDQo+IEBAIC05MSw4ICs5MSw4IEBAIGxw
+ZmNfbWVtY3B5X3RvX3NsaW0oIHZvaWQgX19pb21lbSAqZGVzdCwgdm9pZCAqc3JjLCB1bnNp
+Z25lZCBpbnQgYnl0ZXMpDQo+ICAgc3RhdGljIGlubGluZSB2b2lkDQo+ICAgbHBmY19tZW1j
+cHlfZnJvbV9zbGltKCB2b2lkICpkZXN0LCB2b2lkIF9faW9tZW0gKnNyYywgdW5zaWduZWQg
+aW50IGJ5dGVzKQ0KPiAgIHsNCj4gLQkvKiBhY3R1YWxseSByZXR1cm5zIDEgYnl0ZSBwYXN0
+IGRlc3QgKi8NCj4gLQltZW1jcHlfZnJvbWlvKCBkZXN0LCBzcmMsIGJ5dGVzKTsNCj4gKwkv
+KiBjb252ZXJ0IGJ5dGVzIGluIGFyZ3VtZW50IGxpc3QgdG8gd29yZCBjb3VudCBmb3IgY29w
+eSBmdW5jdGlvbiAqLw0KPiArCV9faW9yZWFkMzJfY29weShkZXN0LCBzcmMsIGJ5dGVzIC8g
+c2l6ZW9mKHVpbnQzMl90KSk7DQo+ICAgfQ0KPiAgIA0KPiAgICNlbmRpZgkvKiBfX0JJR19F
+TkRJQU4gKi8NCg0KSHVhY2FpLA0KDQpOb3RlOiB0aGUgb3JpZ2luYWwgY2hhbmdlIHdhcyA3
+IHlycyBhZ28gYW5kIHdlJ3ZlIGhhZCBubyByZXBvcnRzIG9mIA0KaXNzdWVzLiBidXQuLi4u
+DQoNClRoaXMgY2hhbmdlIGRpZG4ndCBsb29rIG5lY2Vzc2FyeSBhcyB0aGUgbWVtY3B5X1hY
+WGlvKCkgc2hvdWxkIGFsbG93IA0KYnl0ZSBhbGlnbm1lbnRzIGFuZCBieXRlLWJhc2VkIGxl
+bmd0aHMuIFdoaWNoIG1lYW5zIHRoZSBvcmlnaW5hbCBwYXRjaCANCmFsc28gd2Fzbid0IG5l
+Y2Vzc2FyeSwgd2hpY2ggaW1wbGllcyB0aGF0IHRoZSBwbGF0Zm9ybSB0aGF0IGhhZCB0aGUg
+DQppc3N1ZXMgaGFzIGFuIGFwaSByZXN0cmljdGlvbiBub3Qgbm9ybWFsbHkgZm91bmQgb24g
+dGhlIG90aGVyIHBsYXRmb3Jtcy4NCg0KSSBoYXZlIG5vIHByb2JsZW0gd2l0aCB0aGUgY2hh
+bmdlIHRob3VnaC4NCg0KLS0gamFtZXMNCg0KU2lnbmVkLW9mZi1ieTogSmFtZXMgU21hcnQg
+IDxqYW1lcy5zbWFydEBicm9hZGNvbS5jb20+
