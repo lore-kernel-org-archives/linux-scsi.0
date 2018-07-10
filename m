@@ -1,80 +1,38 @@
 From: Linus Torvalds <torvalds@linux-foundation.org>
 Subject: Re: [GIT PULL] SCSI fixes for 4.18-rc3
-Date: Mon, 9 Jul 2018 17:41:34 -0700
-Message-ID: <CA+55aFwg-2GP4ASTdd1pusmZkF7c8AN9febVDCaioDxzYJSLfw@mail.gmail.com>
+Date: Tue, 10 Jul 2018 10:49:42 -0700
+Message-ID: <CA+55aFx9iTm2rZqL1jo_mhAp7EQ8tHhU6MFCSG7XdqAxY_vUGw@mail.gmail.com>
 References: <1530913134.3135.2.camel@HansenPartnership.com>
  <CA+55aFy-o3fRtkQnJU=0zv7CPUtgfKiwhfQi_05K25Y_-mx+_w@mail.gmail.com>
  <CA+55aFxQ8QzGTWsVdVQVok9cLbgZDFjG2g3JZtWJd+G9jHkYoQ@mail.gmail.com>
- <CA+55aFxAy__3hE1OoUFPKZfptLT1cXuoujsnSGXBMzJPQ+Qjzg@mail.gmail.com> <1530940958.3135.4.camel@HansenPartnership.com>
+ <CA+55aFxAy__3hE1OoUFPKZfptLT1cXuoujsnSGXBMzJPQ+Qjzg@mail.gmail.com>
+ <1530940958.3135.4.camel@HansenPartnership.com> <CA+55aFwg-2GP4ASTdd1pusmZkF7c8AN9febVDCaioDxzYJSLfw@mail.gmail.com>
+ <CAG48ez0Ccpp3yv+FVX9Sp3WHqPh6US=quDjELmv5RYVgqfBtVg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="0000000000000a608f05709a656b"
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1530940958.3135.4.camel@HansenPartnership.com>
+In-Reply-To: <CAG48ez0Ccpp3yv+FVX9Sp3WHqPh6US=quDjELmv5RYVgqfBtVg@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Jann Horn <jannh@google.com>, Andrew Morton <akpm@linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Jann Horn <jannh@google.com>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Andrew Morton <akpm@linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
---0000000000000a608f05709a656b
-Content-Type: text/plain; charset="UTF-8"
-
-On Fri, Jul 6, 2018 at 10:22 PM James Bottomley
-<James.Bottomley@hansenpartnership.com> wrote:
+On Tue, Jul 10, 2018 at 10:36 AM Jann Horn <jannh@google.com> wrote:
 >
-> We did discuss removing the r/w interface, but, as you say, it's been
-> around for ages so it's not clear what regressions would surface if we
-> did.
+> AFAICS it does mean that if two processes use /dev/sg* - the first one
+> in a way that passes sg_check_file_access(), the second one in a way
+> that gets blocked for whatever reason -, the pr_err_once() will fire
+> for the process that's working and not fire for the one that got
+> blocked. But if nobody should be using that interface anyway, I guess
+> that's not a practical concern.
 
-So since nobody else followed up on this, the attached patch is what I
-was thinking of just committing.
+Right. I don't expect it to trigger at all, and the "working" program
+should be fixed too, because I want for us to be able to just remove
+that idiotic direct access thing.
 
-It removes the warnings from the access check, and just puts them
-(unconditionally) at the top of the read/write function instead.
+> Also, the device is called /dev/sg%d with %d being sdp->index.
 
-Hmm?
+I guess I could make it at least say that, although it's not like "one
+of them would be ok, but /dev/sd3 is right out".
 
-                 Linus
-
---0000000000000a608f05709a656b
-Content-Type: text/x-patch; charset="US-ASCII"; name="patch.diff"
-Content-Disposition: attachment; filename="patch.diff"
-Content-Transfer-Encoding: base64
-Content-ID: <f_jjeyztoj0>
-X-Attachment-Id: f_jjeyztoj0
-
-IGRyaXZlcnMvc2NzaS9zZy5jIHwgMjIgKysrKysrKysrKystLS0tLS0tLS0tLQogMSBmaWxlIGNo
-YW5nZWQsIDExIGluc2VydGlvbnMoKyksIDExIGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL2Ry
-aXZlcnMvc2NzaS9zZy5jIGIvZHJpdmVycy9zY3NpL3NnLmMKaW5kZXggY2QyZmRhYzAwMGM5Li4w
-OTMyNWI4ZmJjOWYgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvc2NzaS9zZy5jCisrKyBiL2RyaXZlcnMv
-c2NzaS9zZy5jCkBAIC0yMjIsMTggKzIyMiwxMiBAQCBzdGF0aWMgdm9pZCBzZ19kZXZpY2VfZGVz
-dHJveShzdHJ1Y3Qga3JlZiAqa3JlZik7CiAgKiBUaGlzIGZ1bmN0aW9uIHByb3ZpZGVzIHByb3Rl
-Y3Rpb24gZm9yIHRoZSBsZWdhY3kgQVBJIGJ5IHJlc3RyaWN0aW5nIHRoZQogICogY2FsbGluZyBj
-b250ZXh0LgogICovCi1zdGF0aWMgaW50IHNnX2NoZWNrX2ZpbGVfYWNjZXNzKHN0cnVjdCBmaWxl
-ICpmaWxwLCBjb25zdCBjaGFyICpjYWxsZXIpCitzdGF0aWMgaW50IHNnX2NoZWNrX2ZpbGVfYWNj
-ZXNzKHN0cnVjdCBmaWxlICpmaWxwKQogewotCWlmIChmaWxwLT5mX2NyZWQgIT0gY3VycmVudF9y
-ZWFsX2NyZWQoKSkgewotCQlwcl9lcnJfb25jZSgiJXM6IHByb2Nlc3MgJWQgKCVzKSBjaGFuZ2Vk
-IHNlY3VyaXR5IGNvbnRleHRzIGFmdGVyIG9wZW5pbmcgZmlsZSBkZXNjcmlwdG9yLCB0aGlzIGlz
-IG5vdCBhbGxvd2VkLlxuIiwKLQkJCWNhbGxlciwgdGFza190Z2lkX3ZucihjdXJyZW50KSwgY3Vy
-cmVudC0+Y29tbSk7CisJaWYgKGZpbHAtPmZfY3JlZCAhPSBjdXJyZW50X3JlYWxfY3JlZCgpKQog
-CQlyZXR1cm4gLUVQRVJNOwotCX0KLQlpZiAodWFjY2Vzc19rZXJuZWwoKSkgewotCQlwcl9lcnJf
-b25jZSgiJXM6IHByb2Nlc3MgJWQgKCVzKSBjYWxsZWQgZnJvbSBrZXJuZWwgY29udGV4dCwgdGhp
-cyBpcyBub3QgYWxsb3dlZC5cbiIsCi0JCQljYWxsZXIsIHRhc2tfdGdpZF92bnIoY3VycmVudCks
-IGN1cnJlbnQtPmNvbW0pOworCWlmICh1YWNjZXNzX2tlcm5lbCgpKQogCQlyZXR1cm4gLUVBQ0NF
-UzsKLQl9CiAJcmV0dXJuIDA7CiB9CiAKQEAgLTQyMSwxMSArNDE1LDE0IEBAIHNnX3JlYWQoc3Ry
-dWN0IGZpbGUgKmZpbHAsIGNoYXIgX191c2VyICpidWYsIHNpemVfdCBjb3VudCwgbG9mZl90ICog
-cHBvcykKIAlzdHJ1Y3Qgc2dfaGVhZGVyICpvbGRfaGRyID0gTlVMTDsKIAlpbnQgcmV0dmFsID0g
-MDsKIAorCXByX2Vycl9vbmNlKCJwcm9jZXNzICVkICglcykgZG9lcyBkaXJlY3QgcmVhZCBvbiAv
-ZGV2L3NnIiwKKwkJdGFza190Z2lkX3ZucihjdXJyZW50KSwgY3VycmVudC0+Y29tbSk7CisKIAkv
-KgogCSAqIFRoaXMgY291bGQgY2F1c2UgYSByZXNwb25zZSB0byBiZSBzdHJhbmRlZC4gQ2xvc2Ug
-dGhlIGFzc29jaWF0ZWQKIAkgKiBmaWxlIGRlc2NyaXB0b3IgdG8gZnJlZSB1cCBhbnkgcmVzb3Vy
-Y2VzIGJlaW5nIGhlbGQuCiAJICovCi0JcmV0dmFsID0gc2dfY2hlY2tfZmlsZV9hY2Nlc3MoZmls
-cCwgX19mdW5jX18pOworCXJldHZhbCA9IHNnX2NoZWNrX2ZpbGVfYWNjZXNzKGZpbHApOwogCWlm
-IChyZXR2YWwpCiAJCXJldHVybiByZXR2YWw7CiAKQEAgLTYxOCw3ICs2MTUsMTAgQEAgc2dfd3Jp
-dGUoc3RydWN0IGZpbGUgKmZpbHAsIGNvbnN0IGNoYXIgX191c2VyICpidWYsIHNpemVfdCBjb3Vu
-dCwgbG9mZl90ICogcHBvcykKIAl1bnNpZ25lZCBjaGFyIGNtbmRbU0dfTUFYX0NEQl9TSVpFXTsK
-IAlpbnQgcmV0dmFsOwogCi0JcmV0dmFsID0gc2dfY2hlY2tfZmlsZV9hY2Nlc3MoZmlscCwgX19m
-dW5jX18pOworCXByX2Vycl9vbmNlKCJwcm9jZXNzICVkICglcykgZG9lcyBkaXJlY3Qgd3JpdGUg
-b24gL2Rldi9zZyIsCisJCXRhc2tfdGdpZF92bnIoY3VycmVudCksIGN1cnJlbnQtPmNvbW0pOwor
-CisJcmV0dmFsID0gc2dfY2hlY2tfZmlsZV9hY2Nlc3MoZmlscCk7CiAJaWYgKHJldHZhbCkKIAkJ
-cmV0dXJuIHJldHZhbDsKIAo=
---0000000000000a608f05709a656b--
+             Linus
