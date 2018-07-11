@@ -1,37 +1,36 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [GIT PULL] SCSI fixes for 4.18-rc3
-Date: Tue, 10 Jul 2018 23:45:42 -0700
-Message-ID: <20180711064542.GA7377@infradead.org>
-References: <1530913134.3135.2.camel@HansenPartnership.com>
- <CA+55aFy-o3fRtkQnJU=0zv7CPUtgfKiwhfQi_05K25Y_-mx+_w@mail.gmail.com>
- <CA+55aFxQ8QzGTWsVdVQVok9cLbgZDFjG2g3JZtWJd+G9jHkYoQ@mail.gmail.com>
- <CA+55aFxAy__3hE1OoUFPKZfptLT1cXuoujsnSGXBMzJPQ+Qjzg@mail.gmail.com>
- <1530940958.3135.4.camel@HansenPartnership.com>
- <CA+55aFwg-2GP4ASTdd1pusmZkF7c8AN9febVDCaioDxzYJSLfw@mail.gmail.com>
- <70d566f0-2dda-60c2-7c7a-e09e371f8607@cybernetics.com>
+From: Adrian Hunter <adrian.hunter@intel.com>
+Subject: Re: [PATCH] scsi: switch to scsi-mq by default
+Date: Wed, 11 Jul 2018 11:31:37 +0300
+Message-ID: <6cf082e4-6fff-21dd-4df5-a6e9e4f2847c@intel.com>
+References: <20180704085356.10888-1-jthumshirn@suse.de>
+ <yq1d0vupjq2.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <70d566f0-2dda-60c2-7c7a-e09e371f8607@cybernetics.com>
+In-Reply-To: <yq1d0vupjq2.fsf@oracle.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Tony Battersby <tonyb@cybernetics.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jann Horn <jannh@google.com>, Andrew Morton <akpm@linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, Johannes Thumshirn <jthumshirn@suse.de>
+Cc: Hannes Reinecke <hare@suse.de>, Bart Van Assche <Bart.VanAssche@sandisk.com>, Ming Lei <tom.leiming@gmail.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Jul 10, 2018 at 05:53:18PM -0400, Tony Battersby wrote:
-> At my job (https://www.cybernetics.com/), I use the write()/read()
-> interface to the SCSI generic driver for access to tape drives and tape
-> medium changers.  For example, the write()/read() interface is useful
-> for implementing RAID-like functionality for tape drives since a single
-> thread can send commands to multiple tape drives at once and poll() for
-> command completion.  We have a lot of code invested in this interface,
-> so it would be a huge pain for us if it were removed.  But in our case,
-> everything runs as root (as the firmware of an embedded storage
-> appliance), so extra permission checks should be OK.
+On 11/07/18 05:52, Martin K. Petersen wrote:
+> 
+> Johannes,
+> 
+>> It has been more than one year since we tried to change the default
+>> from legacy to multi queue in SCSI with commit c279bd9e406 ("scsi:
+>> default to scsi-mq"). But due to issues with suspend/resume and
+>> performance problems it had been reverted again with commit
+>> cbe7dfa26eee ("Revert "scsi: default to scsi-mq"").
+>>
+>> In the meantime there have been a substantial amount of performance
+>> improvements and suspend/resume got fixed as well, thus we can
+>> re-enable scsi-mq without a significant performance penalty.
+> 
+> Applied to 4.19/scsi-queue, thanks!
+> 
 
-Do you just use read/write on /dev/sg or also on /dev/bsg?  Because
-I started a discussion to kill the read/write support for the latter
-even before Linus brought it up here..  (and we have the same fix
-pending for /dev/bsg)
+But there is no runtime pm support, is there?  I tried enabling runtime PM
+for UFS SCSI devices with scsi-mq and it didn't work, which is a regression.
