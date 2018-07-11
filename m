@@ -1,43 +1,48 @@
-From: Ming Lei <tom.leiming@gmail.com>
-Subject: Re: [PATCH] scsi: switch to scsi-mq by default
-Date: Thu, 12 Jul 2018 00:35:17 +0800
-Message-ID: <CACVXFVOSssuveZDN185FUYpjX1i0ma59Cn30XBSJ1dAHDKLnLQ@mail.gmail.com>
-References: <20180704085356.10888-1-jthumshirn@suse.de> <yq1d0vupjq2.fsf@oracle.com>
- <6cf082e4-6fff-21dd-4df5-a6e9e4f2847c@intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] scsi: libfc: drop an incorrect assertion
+Date: Wed, 11 Jul 2018 22:15:24 +0200
+Message-ID: <20180711201617.898598-1-arnd@arndb.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <6cf082e4-6fff-21dd-4df5-a6e9e4f2847c@intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Adrian Hunter <adrian.hunter@intel.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Johannes Thumshirn <jthumshirn@suse.de>, Hannes Reinecke <hare@suse.de>, Bart Van Assche <Bart.VanAssche@sandisk.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>
+To: Johannes Thumshirn <jth@kernel.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Hannes Reinecke <hare@suse.de>, Satish Kharat <satishkh@cisco.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Jul 11, 2018 at 4:31 PM, Adrian Hunter <adrian.hunter@intel.com> wrote:
-> On 11/07/18 05:52, Martin K. Petersen wrote:
->>
->> Johannes,
->>
->>> It has been more than one year since we tried to change the default
->>> from legacy to multi queue in SCSI with commit c279bd9e406 ("scsi:
->>> default to scsi-mq"). But due to issues with suspend/resume and
->>> performance problems it had been reverted again with commit
->>> cbe7dfa26eee ("Revert "scsi: default to scsi-mq"").
->>>
->>> In the meantime there have been a substantial amount of performance
->>> improvements and suspend/resume got fixed as well, thus we can
->>> re-enable scsi-mq without a significant performance penalty.
->>
->> Applied to 4.19/scsi-queue, thanks!
->>
->
-> But there is no runtime pm support, is there?  I tried enabling runtime PM
-> for UFS SCSI devices with scsi-mq and it didn't work, which is a regression.
+gcc points out one case in which the added lockdep_assert_held()
+is wrong:
 
-I just posted one RFC patchset for supporting runtime PM on scsi_mq, and
-looks it works in my test on usb-storage.
+In file included from include/linux/spinlock_types.h:18,
+                 from include/linux/spinlock.h:82,
+                 from drivers/scsi/libfc/fc_rport.c:61:
+drivers/scsi/libfc/fc_rport.c: In function 'fc_rport_recv_plogi_req':
+include/linux/lockdep.h:347:45: error: 'rdata' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+ #define lockdep_is_held(lock)  lock_is_held(&(lock)->dep_map)
+                                             ^
+drivers/scsi/libfc/fc_rport.c:1832:24: note: 'rdata' was declared here
+  struct fc_rport_priv *rdata;
 
-https://marc.info/?l=linux-block&m=153132657922233&w=2
+The pointer to the lock is not initialized here, so besides the
+compile-time warning, this will likely lead to an immediate
+crash when dereferencing that pointer.
 
-thanks,
-Ming Lei
+Fixes: ee35624e1e4e ("scsi: libfc: Add lockdep annotations")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/scsi/libfc/fc_rport.c | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
+index 6aff9303251a..be640ad2b7b6 100644
+--- a/drivers/scsi/libfc/fc_rport.c
++++ b/drivers/scsi/libfc/fc_rport.c
+@@ -1835,8 +1835,6 @@ static void fc_rport_recv_plogi_req(struct fc_lport *lport,
+ 	struct fc_seq_els_data rjt_data;
+ 	u32 sid;
+ 
+-	lockdep_assert_held(&rdata->rp_mutex);
+-
+ 	sid = fc_frame_sid(fp);
+ 
+ 	FC_RPORT_ID_DBG(lport, sid, "Received PLOGI request\n");
+-- 
+2.9.0
