@@ -1,84 +1,59 @@
-From: Tony Battersby <tonyb@cybernetics.com>
-Subject: Re: [GIT PULL] SCSI fixes for 4.18-rc3
-Date: Wed, 11 Jul 2018 09:56:21 -0400
-Message-ID: <16922cb7-757e-dc25-bc5a-ee6e48538b13@cybernetics.com>
-References: <1530913134.3135.2.camel@HansenPartnership.com>
- <CA+55aFy-o3fRtkQnJU=0zv7CPUtgfKiwhfQi_05K25Y_-mx+_w@mail.gmail.com>
- <CA+55aFxQ8QzGTWsVdVQVok9cLbgZDFjG2g3JZtWJd+G9jHkYoQ@mail.gmail.com>
- <CA+55aFxAy__3hE1OoUFPKZfptLT1cXuoujsnSGXBMzJPQ+Qjzg@mail.gmail.com>
- <1530940958.3135.4.camel@HansenPartnership.com>
- <CA+55aFwg-2GP4ASTdd1pusmZkF7c8AN9febVDCaioDxzYJSLfw@mail.gmail.com>
- <70d566f0-2dda-60c2-7c7a-e09e371f8607@cybernetics.com>
- <20180711064542.GA7377@infradead.org>
+From: James Bottomley <jejb@linux.vnet.ibm.com>
+Subject: Re: [PATCH][scsi-next] scsi: lpfc: fix null pointer dereference on
+ nvmebuf
+Date: Wed, 11 Jul 2018 07:35:30 -0700
+Message-ID: <1531319730.3260.1.camel@linux.vnet.ibm.com>
+References: <20180711134436.21963-1-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180711064542.GA7377@infradead.org>
-Content-Language: en-US
+In-Reply-To: <20180711134436.21963-1-colin.king@canonical.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jann Horn <jannh@google.com>, Andrew Morton <akpm@linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Colin King <colin.king@canonical.com>, James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 07/11/2018 02:45 AM, Christoph Hellwig wrote:
-> On Tue, Jul 10, 2018 at 05:53:18PM -0400, Tony Battersby wrote:
->> At my job (https://www.cybernetics.com/), I use the write()/read()
->> interface to the SCSI generic driver for access to tape drives and tape
->> medium changers.  For example, the write()/read() interface is useful
->> for implementing RAID-like functionality for tape drives since a single
->> thread can send commands to multiple tape drives at once and poll() for
->> command completion.  We have a lot of code invested in this interface,
->> so it would be a huge pain for us if it were removed.  But in our case,
->> everything runs as root (as the firmware of an embedded storage
->> appliance), so extra permission checks should be OK.
-> Do you just use read/write on /dev/sg or also on /dev/bsg?  Because
-> I started a discussion to kill the read/write support for the latter
-> even before Linus brought it up here..  (and we have the same fix
-> pending for /dev/bsg)
->
-The read/write interface on /dev/bsg is impossible to use safely because
-the list of completed commands is per-device (bd->done_list) rather than
-per-fd like it is with /dev/sg.  So if program A and program B are both
-using the write/read interface on the same bsg device, then their
-command responses will get mixed up, and program A will read() some
-command results from program B and vice versa.  So no, I don't use
-read/write on /dev/bsg.  From a security standpoint, it should
-definitely be fixed or removed.
+On Wed, 2018-07-11 at 14:44 +0100, Colin King wrote:
+> From: Colin Ian King <colin.king@canonical.com>
+> 
+> The check of nvmebuf suggests that it can be null, however a recent
+> change dereferences it to determine oxid before it is null checked,
+> hence there is a potential null deference on the pointer.  Fix this
+> by performing the null check first.  Also remove the oxid from the
+> debug log message as this is no longer valid.  I considered an early
+> fetch of oxid if nvmebuf was valid, however, what oxid should be set
+> to if nvembuf is null could lead to an ambiguous logging of an
+> invalid
+> oxid, so I thought just removing it from the logging was the least
+> confusion solution.
+> 
+> Detected by CoverityScan, CID#1471753 ("Dereference before null
+> check")
+> 
+> Fixes: 68c9b55deea5 ("scsi: lpfc: Fix abort error path for NVMET")
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> ---
+>  drivers/scsi/lpfc/lpfc_nvmet.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c
+> b/drivers/scsi/lpfc/lpfc_nvmet.c
+> index 22f8a204b69f..01652d9ac619 100644
+> --- a/drivers/scsi/lpfc/lpfc_nvmet.c
+> +++ b/drivers/scsi/lpfc/lpfc_nvmet.c
+> @@ -1742,12 +1742,9 @@ lpfc_nvmet_unsol_ls_buffer(struct lpfc_hba
+> *phba, struct lpfc_sli_ring *pring,
+>  	uint32_t *payload;
+>  	uint32_t size, oxid, sid, rc;
+>  
+> -	fc_hdr = (struct fc_frame_header *)(nvmebuf->hbuf.virt);
+> -	oxid = be16_to_cpu(fc_hdr->fh_ox_id);
+> -
+>  	if (!nvmebuf || !phba->targetport) {
 
-Another issue with the read/write interface of /dev/bsg was this:
+The !nvmebuf is a bogus check, isn't it? since nvmebuf is always
+obtained from a container_of, it can never be NULL.  This would mean
+the rest of the contortions are unnecessary.
 
-[PATCH] [SCSI] bsg: fix unkillable I/O wait deadlock with scsi-mq
-https://marc.info/?l=linux-scsi&m=142367231311098&w=2
-
-My similar patch to sg.c was accepted as commit 7568615c1054 ("sg: fix
-unkillable I/O wait deadlock with scsi-mq"), but my bsg patch was never
-applied.  I do not know if the problem still exists in the current
-kernel or if some other change to scsi-mq has fixed it.  I do have a
-forward-port of the patch to 4.16, but it no longer applies to 4.17.
-
----
-
-A while ago there was a commit that broke the read/write interface of
-/dev/sg (but not SG_IO), and some other people complained in the
-following bugzilla entry, indicating that there are other users also:
-
-https://bugzilla.kernel.org/show_bug.cgi?id=198081
-
-The commit that broke it was:
-109bade9c625 ("scsi: sg: use standard lists for sg_requests")
-
-The commit that fixed it was:
-48ae8484e9fc ("scsi: sg: don't return bogus Sg_requests")
-(sg_get_rq_mark() is called only from sg_read(), so if the patch fixed
-the problem that people were complaining about in bugzilla, then that
-indicates that they are using the read/write interface also)
-
-See my explanation here:
-https://marc.info/?l=linux-scsi&m=152227354106242
-(basically, the commit that broke it got backported to -stable, but the
-fix didn't, so various -stable kernels were broken for a while, and
-people complained)
-
-Tony Battersby
-Cybernetics
+James
