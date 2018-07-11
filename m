@@ -1,169 +1,79 @@
-From: Adrian Hunter <adrian.hunter@intel.com>
-Subject: Re: [PATCH v1 4/9] scsi: ufs: add option to change default UFS power
- management level
-Date: Wed, 11 Jul 2018 13:50:51 +0300
-Message-ID: <0673f807-bc3c-e401-ae12-07bfafb55bf7@intel.com>
-References: <cover.1530880006.git.asutoshd@codeaurora.org>
- <ff2b648007a400c60ba804a0c5cab0166bd268e7.1530880006.git.asutoshd@codeaurora.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] [RESEND] snic: fix printing time intervals
+Date: Wed, 11 Jul 2018 14:37:37 +0200
+Message-ID: <20180711123752.773163-1-arnd@arndb.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <ff2b648007a400c60ba804a0c5cab0166bd268e7.1530880006.git.asutoshd@codeaurora.org>
-Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Asutosh Das <asutoshd@codeaurora.org>, subhashj@codeaurora.org, cang@codeaurora.org, vivek.gautam@codeaurora.org, rnayak@codeaurora.org, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
-Cc: linux-arm-msm@vger.kernel.org, Venkat Gopalakrishnan <venkatg@codeaurora.org>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Mathieu Malaterre <malat@debian.org>, "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" <devicetree@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+To: Karan Tilak Kumar <kartilak@cisco.com>, Sesidhar Baddela <sebaddel@cisco.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 06/07/18 15:30, Asutosh Das wrote:
-> From: Subhash Jadavani <subhashj@codeaurora.org>
-> 
-> UFS device and link can be put in multiple different low power modes hence
-> UFS driver supports multiple different low power modes. By default UFS
-> driver selects the default (optimal) low power mode (which gives moderate
-> power savings and have relatively less enter and exit latencies) but
-> we might have to tune this default power mode for different chipset
-> platforms to meet the low power requirements/goals. Hence this patch
-> adds option to change default UFS low power mode (level).
-> 
-> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
-> Signed-off-by: Venkat Gopalakrishnan <venkatg@codeaurora.org>
-> Signed-off-by: Can Guo <cang@codeaurora.org>
-> Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
-> ---
->  .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      | 11 ++++++++
->  drivers/scsi/ufs/ufshcd-pltfrm.c                   | 14 +++++++++++
->  drivers/scsi/ufs/ufshcd.c                          | 29 +++++++++++++++-------
->  drivers/scsi/ufs/ufshcd.h                          |  4 +--
->  4 files changed, 47 insertions(+), 11 deletions(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-> index c39dfef..f564d9a 100644
-> --- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-> +++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-> @@ -38,6 +38,15 @@ Optional properties:
->  			  defined or a value in the array is "0" then it is assumed
->  			  that the frequency is set by the parent clock or a
->  			  fixed rate clock source.
-> +- rpm-level		: UFS Runtime power management level. Following PM levels are supported:
-> +			  0 - Both UFS device and Link in active state (Highest power consumption)
-> +			  1 - UFS device in active state but Link in Hibern8 state
-> +			  2 - UFS device in Sleep state but Link in active state
-> +			  3 - UFS device in Sleep state and Link in hibern8 state (default PM level)
-> +			  4 - UFS device in Power-down state and Link in Hibern8 state
-> +			  5 - UFS device in Power-down state and Link in OFF state (Lowest power consumption)
-> +- spm-level		: UFS System power management level. Allowed PM levels are same as rpm-level.
-> +
->  -lanes-per-direction	: number of lanes available per direction - either 1 or 2.
->  			  Note that it is assume same number of lanes is used both
->  			  directions at once. If not specified, default is 2 lanes per direction.
-> @@ -66,4 +75,6 @@ Example:
->  		freq-table-hz = <100000000 200000000>, <0 0>, <0 0>;
->  		phys = <&ufsphy1>;
->  		phy-names = "ufsphy";
-> +		rpm-level = <3>;
-> +		spm-level = <5>;
->  	};
-> diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
-> index e82bde0..7dba799 100644
-> --- a/drivers/scsi/ufs/ufshcd-pltfrm.c
-> +++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
-> @@ -221,6 +221,19 @@ static int ufshcd_parse_regulator_info(struct ufs_hba *hba)
->  	return err;
->  }
->  
-> +static void ufshcd_parse_pm_levels(struct ufs_hba *hba)
-> +{
-> +	struct device *dev = hba->dev;
-> +	struct device_node *np = dev->of_node;
-> +
-> +	if (np) {
-> +		if (of_property_read_u32(np, "rpm-level", &hba->rpm_lvl))
-> +			hba->rpm_lvl = -1;
-> +		if (of_property_read_u32(np, "spm-level", &hba->spm_lvl))
-> +			hba->spm_lvl = -1;
+We don't want to use 'struct timespec' because of the y2038 overflow
+problem. The overflow is not actually an issue here, but it's easy to
+replace with 'timespec64' for consistency. However, it's worth pointing
+out that nanosecond values have nine digits, not eight or ten, so I'm
+fixing the format strings accordingly as well.
 
-These are generically useful to all UFSHC drivers, so they should be
-device_property_read_u32() and they should be read for all drivers not just
-pltfrm i.e. move this code into ufshcd.c
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+Originall sent on June 18, but got no reply, so resending now
+without changes.
 
-> +	}
-> +}
-> +
->  #ifdef CONFIG_PM
->  /**
->   * ufshcd_pltfrm_suspend - suspend power management function
-> @@ -340,6 +353,7 @@ int ufshcd_pltfrm_init(struct platform_device *pdev,
->  		goto dealloc_host;
->  	}
->  
-> +	ufshcd_parse_pm_levels(hba);
->  	pm_runtime_set_active(&pdev->dev);
->  	pm_runtime_enable(&pdev->dev);
->  
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index b03f3ea..e950204 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -192,6 +192,14 @@ struct ufs_pm_lvl_states ufs_pm_lvl_states[] = {
->  	return UFS_PM_LVL_0;
->  }
->  
-> +static inline bool ufshcd_is_valid_pm_lvl(int lvl)
-> +{
-> +	if (lvl >= 0 && lvl < ARRAY_SIZE(ufs_pm_lvl_states))
-> +		return true;
-> +	else
-> +		return false;
-> +}
-> +
->  static struct ufs_dev_fix ufs_fixups[] = {
->  	/* UFS cards deviations table */
->  	UFS_FIX(UFS_VENDOR_SAMSUNG, UFS_ANY_MODEL,
-> @@ -8051,16 +8059,19 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
->  	}
->  
->  	/*
-> -	 * Set the default power management level for runtime and system PM.
-> -	 * Default power saving mode is to keep UFS link in Hibern8 state
-> -	 * and UFS device in sleep state.
-> +	 * If rpm_lvl and and spm_lvl are not already set to valid levels,
-> +	 * set the default power management level for UFS runtime and system
-> +	 * suspend. Default power saving mode selected is keeping UFS link in
-> +	 * Hibern8 state and UFS device in sleep state.
->  	 */
-> -	hba->rpm_lvl = ufs_get_desired_pm_lvl_for_dev_link_state(
-> -						UFS_SLEEP_PWR_MODE,
-> -						UIC_LINK_HIBERN8_STATE);
-> -	hba->spm_lvl = ufs_get_desired_pm_lvl_for_dev_link_state(
-> -						UFS_SLEEP_PWR_MODE,
-> -						UIC_LINK_HIBERN8_STATE);
-> +	if (!ufshcd_is_valid_pm_lvl(hba->rpm_lvl))
-> +		hba->rpm_lvl = ufs_get_desired_pm_lvl_for_dev_link_state(
-> +							UFS_SLEEP_PWR_MODE,
-> +							UIC_LINK_HIBERN8_STATE);
-> +	if (!ufshcd_is_valid_pm_lvl(hba->spm_lvl))
-> +		hba->spm_lvl = ufs_get_desired_pm_lvl_for_dev_link_state(
-> +							UFS_SLEEP_PWR_MODE,
-> +							UIC_LINK_HIBERN8_STATE);
->  
->  	/* Set the default auto-hiberate idle timer value to 150 ms */
->  	if (hba->capabilities & MASK_AUTO_HIBERN8_SUPPORT) {
-> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> index e996a08..a2e1d5c 100644
-> --- a/drivers/scsi/ufs/ufshcd.h
-> +++ b/drivers/scsi/ufs/ufshcd.h
-> @@ -526,9 +526,9 @@ struct ufs_hba {
->  	enum ufs_dev_pwr_mode curr_dev_pwr_mode;
->  	enum uic_link_state uic_link_state;
->  	/* Desired UFS power management level during runtime PM */
-> -	enum ufs_pm_level rpm_lvl;
-> +	int rpm_lvl;
->  	/* Desired UFS power management level during system PM */
-> -	enum ufs_pm_level spm_lvl;
-> +	int spm_lvl;
->  	struct device_attribute rpm_lvl_attr;
->  	struct device_attribute spm_lvl_attr;
->  	int pm_op_in_progress;
-> 
+Please review and apply
+---
+ drivers/scsi/snic/snic_debugfs.c | 10 +++++-----
+ drivers/scsi/snic/snic_trc.c     |  6 +++---
+ 2 files changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/scsi/snic/snic_debugfs.c b/drivers/scsi/snic/snic_debugfs.c
+index 269ddf791a73..0abe17c1a73b 100644
+--- a/drivers/scsi/snic/snic_debugfs.c
++++ b/drivers/scsi/snic/snic_debugfs.c
+@@ -200,7 +200,7 @@ snic_stats_show(struct seq_file *sfp, void *data)
+ {
+ 	struct snic *snic = (struct snic *) sfp->private;
+ 	struct snic_stats *stats = &snic->s_stats;
+-	struct timespec last_isr_tms, last_ack_tms;
++	struct timespec64 last_isr_tms, last_ack_tms;
+ 	u64 maxio_tm;
+ 	int i;
+ 
+@@ -312,12 +312,12 @@ snic_stats_show(struct seq_file *sfp, void *data)
+ 		   "\t\t Other Statistics\n"
+ 		   "\n---------------------------------------------\n");
+ 
+-	jiffies_to_timespec(stats->misc.last_isr_time, &last_isr_tms);
+-	jiffies_to_timespec(stats->misc.last_ack_time, &last_ack_tms);
++	jiffies_to_timespec64(stats->misc.last_isr_time, &last_isr_tms);
++	jiffies_to_timespec64(stats->misc.last_ack_time, &last_ack_tms);
+ 
+ 	seq_printf(sfp,
+-		   "Last ISR Time               : %llu (%8lu.%8lu)\n"
+-		   "Last Ack Time               : %llu (%8lu.%8lu)\n"
++		   "Last ISR Time               : %llu (%8llu.%09lu)\n"
++		   "Last Ack Time               : %llu (%8llu.%09lu)\n"
+ 		   "Ack ISRs                    : %llu\n"
+ 		   "IO Cmpl ISRs                : %llu\n"
+ 		   "Err Notify ISRs             : %llu\n"
+diff --git a/drivers/scsi/snic/snic_trc.c b/drivers/scsi/snic/snic_trc.c
+index f00ebf4717e0..fc60c933d6c0 100644
+--- a/drivers/scsi/snic/snic_trc.c
++++ b/drivers/scsi/snic/snic_trc.c
+@@ -65,12 +65,12 @@ static int
+ snic_fmt_trc_data(struct snic_trc_data *td, char *buf, int buf_sz)
+ {
+ 	int len = 0;
+-	struct timespec tmspec;
++	struct timespec64 tmspec;
+ 
+-	jiffies_to_timespec(td->ts, &tmspec);
++	jiffies_to_timespec64(td->ts, &tmspec);
+ 
+ 	len += snprintf(buf, buf_sz,
+-			"%lu.%10lu %-25s %3d %4x %16llx %16llx %16llx %16llx %16llx\n",
++			"%llu.%09lu %-25s %3d %4x %16llx %16llx %16llx %16llx %16llx\n",
+ 			tmspec.tv_sec,
+ 			tmspec.tv_nsec,
+ 			td->fn,
+-- 
+2.9.0
