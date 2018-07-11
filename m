@@ -1,79 +1,63 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH] [RESEND] snic: fix printing time intervals
-Date: Wed, 11 Jul 2018 14:37:37 +0200
-Message-ID: <20180711123752.773163-1-arnd@arndb.de>
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH][scsi-next] scsi: lpfc: fix null pointer dereference on nvmebuf
+Date: Wed, 11 Jul 2018 14:44:36 +0100
+Message-ID: <20180711134436.21963-1-colin.king@canonical.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Karan Tilak Kumar <kartilak@cisco.com>, Sesidhar Baddela <sebaddel@cisco.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-We don't want to use 'struct timespec' because of the y2038 overflow
-problem. The overflow is not actually an issue here, but it's easy to
-replace with 'timespec64' for consistency. However, it's worth pointing
-out that nanosecond values have nine digits, not eight or ten, so I'm
-fixing the format strings accordingly as well.
+From: Colin Ian King <colin.king@canonical.com>
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+The check of nvmebuf suggests that it can be null, however a recent
+change dereferences it to determine oxid before it is null checked,
+hence there is a potential null deference on the pointer.  Fix this
+by performing the null check first.  Also remove the oxid from the
+debug log message as this is no longer valid.  I considered an early
+fetch of oxid if nvmebuf was valid, however, what oxid should be set
+to if nvembuf is null could lead to an ambiguous logging of an invalid
+oxid, so I thought just removing it from the logging was the least
+confusion solution.
+
+Detected by CoverityScan, CID#1471753 ("Dereference before null check")
+
+Fixes: 68c9b55deea5 ("scsi: lpfc: Fix abort error path for NVMET")
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
 ---
-Originall sent on June 18, but got no reply, so resending now
-without changes.
+ drivers/scsi/lpfc/lpfc_nvmet.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-Please review and apply
----
- drivers/scsi/snic/snic_debugfs.c | 10 +++++-----
- drivers/scsi/snic/snic_trc.c     |  6 +++---
- 2 files changed, 8 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/scsi/snic/snic_debugfs.c b/drivers/scsi/snic/snic_debugfs.c
-index 269ddf791a73..0abe17c1a73b 100644
---- a/drivers/scsi/snic/snic_debugfs.c
-+++ b/drivers/scsi/snic/snic_debugfs.c
-@@ -200,7 +200,7 @@ snic_stats_show(struct seq_file *sfp, void *data)
- {
- 	struct snic *snic = (struct snic *) sfp->private;
- 	struct snic_stats *stats = &snic->s_stats;
--	struct timespec last_isr_tms, last_ack_tms;
-+	struct timespec64 last_isr_tms, last_ack_tms;
- 	u64 maxio_tm;
- 	int i;
+diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
+index 22f8a204b69f..01652d9ac619 100644
+--- a/drivers/scsi/lpfc/lpfc_nvmet.c
++++ b/drivers/scsi/lpfc/lpfc_nvmet.c
+@@ -1742,12 +1742,9 @@ lpfc_nvmet_unsol_ls_buffer(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+ 	uint32_t *payload;
+ 	uint32_t size, oxid, sid, rc;
  
-@@ -312,12 +312,12 @@ snic_stats_show(struct seq_file *sfp, void *data)
- 		   "\t\t Other Statistics\n"
- 		   "\n---------------------------------------------\n");
+-	fc_hdr = (struct fc_frame_header *)(nvmebuf->hbuf.virt);
+-	oxid = be16_to_cpu(fc_hdr->fh_ox_id);
+-
+ 	if (!nvmebuf || !phba->targetport) {
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_NVME_IOERR,
+-				"6154 LS Drop IO x%x\n", oxid);
++				"6154 LS Drop IO\n");
+ 		oxid = 0;
+ 		size = 0;
+ 		sid = 0;
+@@ -1755,6 +1752,9 @@ lpfc_nvmet_unsol_ls_buffer(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+ 		goto dropit;
+ 	}
  
--	jiffies_to_timespec(stats->misc.last_isr_time, &last_isr_tms);
--	jiffies_to_timespec(stats->misc.last_ack_time, &last_ack_tms);
-+	jiffies_to_timespec64(stats->misc.last_isr_time, &last_isr_tms);
-+	jiffies_to_timespec64(stats->misc.last_ack_time, &last_ack_tms);
- 
- 	seq_printf(sfp,
--		   "Last ISR Time               : %llu (%8lu.%8lu)\n"
--		   "Last Ack Time               : %llu (%8lu.%8lu)\n"
-+		   "Last ISR Time               : %llu (%8llu.%09lu)\n"
-+		   "Last Ack Time               : %llu (%8llu.%09lu)\n"
- 		   "Ack ISRs                    : %llu\n"
- 		   "IO Cmpl ISRs                : %llu\n"
- 		   "Err Notify ISRs             : %llu\n"
-diff --git a/drivers/scsi/snic/snic_trc.c b/drivers/scsi/snic/snic_trc.c
-index f00ebf4717e0..fc60c933d6c0 100644
---- a/drivers/scsi/snic/snic_trc.c
-+++ b/drivers/scsi/snic/snic_trc.c
-@@ -65,12 +65,12 @@ static int
- snic_fmt_trc_data(struct snic_trc_data *td, char *buf, int buf_sz)
- {
- 	int len = 0;
--	struct timespec tmspec;
-+	struct timespec64 tmspec;
- 
--	jiffies_to_timespec(td->ts, &tmspec);
-+	jiffies_to_timespec64(td->ts, &tmspec);
- 
- 	len += snprintf(buf, buf_sz,
--			"%lu.%10lu %-25s %3d %4x %16llx %16llx %16llx %16llx %16llx\n",
-+			"%llu.%09lu %-25s %3d %4x %16llx %16llx %16llx %16llx %16llx\n",
- 			tmspec.tv_sec,
- 			tmspec.tv_nsec,
- 			td->fn,
++	fc_hdr = (struct fc_frame_header *)(nvmebuf->hbuf.virt);
++	oxid = be16_to_cpu(fc_hdr->fh_ox_id);
++
+ 	tgtp = (struct lpfc_nvmet_tgtport *)phba->targetport->private;
+ 	payload = (uint32_t *)(nvmebuf->dbuf.virt);
+ 	size = bf_get(lpfc_rcqe_length,  &nvmebuf->cq_event.cqe.rcqe_cmpl);
 -- 
-2.9.0
+2.17.1
