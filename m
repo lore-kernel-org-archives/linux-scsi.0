@@ -1,83 +1,46 @@
-From: Rob Herring <robh@kernel.org>
-Subject: Re: [PATCH v1 4/9] scsi: ufs: add option to change default UFS power
- management level
-Date: Wed, 11 Jul 2018 14:33:17 -0600
-Message-ID: <20180711203317.GA14983@rob-hp-laptop>
-References: <cover.1530880006.git.asutoshd@codeaurora.org>
- <ff2b648007a400c60ba804a0c5cab0166bd268e7.1530880006.git.asutoshd@codeaurora.org>
+From: Adrian Hunter <adrian.hunter@intel.com>
+Subject: Re: [PATCH] scsi: switch to scsi-mq by default
+Date: Thu, 12 Jul 2018 09:17:33 +0300
+Message-ID: <0f4af58b-5684-eba8-961a-b912a60befff@intel.com>
+References: <20180704085356.10888-1-jthumshirn@suse.de>
+ <yq1d0vupjq2.fsf@oracle.com> <6cf082e4-6fff-21dd-4df5-a6e9e4f2847c@intel.com>
+ <CACVXFVOSssuveZDN185FUYpjX1i0ma59Cn30XBSJ1dAHDKLnLQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <ff2b648007a400c60ba804a0c5cab0166bd268e7.1530880006.git.asutoshd@codeaurora.org>
+In-Reply-To: <CACVXFVOSssuveZDN185FUYpjX1i0ma59Cn30XBSJ1dAHDKLnLQ@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Asutosh Das <asutoshd@codeaurora.org>
-Cc: subhashj@codeaurora.org, cang@codeaurora.org, vivek.gautam@codeaurora.org, rnayak@codeaurora.org, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, Venkat Gopalakrishnan <venkatg@codeaurora.org>, Mark Rutland <mark.rutland@arm.com>, Mathieu Malaterre <malat@debian.org>, "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" <devicetree@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+To: Ming Lei <tom.leiming@gmail.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Johannes Thumshirn <jthumshirn@suse.de>, Hannes Reinecke <hare@suse.de>, Bart Van Assche <Bart.VanAssche@sandisk.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Jul 06, 2018 at 06:00:31PM +0530, Asutosh Das wrote:
-> From: Subhash Jadavani <subhashj@codeaurora.org>
+On 11/07/18 19:35, Ming Lei wrote:
+> On Wed, Jul 11, 2018 at 4:31 PM, Adrian Hunter <adrian.hunter@intel.com> wrote:
+>> On 11/07/18 05:52, Martin K. Petersen wrote:
+>>>
+>>> Johannes,
+>>>
+>>>> It has been more than one year since we tried to change the default
+>>>> from legacy to multi queue in SCSI with commit c279bd9e406 ("scsi:
+>>>> default to scsi-mq"). But due to issues with suspend/resume and
+>>>> performance problems it had been reverted again with commit
+>>>> cbe7dfa26eee ("Revert "scsi: default to scsi-mq"").
+>>>>
+>>>> In the meantime there have been a substantial amount of performance
+>>>> improvements and suspend/resume got fixed as well, thus we can
+>>>> re-enable scsi-mq without a significant performance penalty.
+>>>
+>>> Applied to 4.19/scsi-queue, thanks!
+>>>
+>>
+>> But there is no runtime pm support, is there?  I tried enabling runtime PM
+>> for UFS SCSI devices with scsi-mq and it didn't work, which is a regression.
 > 
-> UFS device and link can be put in multiple different low power modes hence
-> UFS driver supports multiple different low power modes. By default UFS
-> driver selects the default (optimal) low power mode (which gives moderate
-> power savings and have relatively less enter and exit latencies) but
-> we might have to tune this default power mode for different chipset
-> platforms to meet the low power requirements/goals. Hence this patch
-> adds option to change default UFS low power mode (level).
+> I just posted one RFC patchset for supporting runtime PM on scsi_mq, and
+> looks it works in my test on usb-storage.
 > 
-> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
-> Signed-off-by: Venkat Gopalakrishnan <venkatg@codeaurora.org>
-> Signed-off-by: Can Guo <cang@codeaurora.org>
-> Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
-> ---
->  .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      | 11 ++++++++
->  drivers/scsi/ufs/ufshcd-pltfrm.c                   | 14 +++++++++++
->  drivers/scsi/ufs/ufshcd.c                          | 29 +++++++++++++++-------
->  drivers/scsi/ufs/ufshcd.h                          |  4 +--
->  4 files changed, 47 insertions(+), 11 deletions(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-> index c39dfef..f564d9a 100644
-> --- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-> +++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-> @@ -38,6 +38,15 @@ Optional properties:
->  			  defined or a value in the array is "0" then it is assumed
->  			  that the frequency is set by the parent clock or a
->  			  fixed rate clock source.
-> +- rpm-level		: UFS Runtime power management level. Following PM levels are supported:
-> +			  0 - Both UFS device and Link in active state (Highest power consumption)
-> +			  1 - UFS device in active state but Link in Hibern8 state
-> +			  2 - UFS device in Sleep state but Link in active state
-> +			  3 - UFS device in Sleep state and Link in hibern8 state (default PM level)
-> +			  4 - UFS device in Power-down state and Link in Hibern8 state
-> +			  5 - UFS device in Power-down state and Link in OFF state (Lowest power consumption)
-> +- spm-level		: UFS System power management level. Allowed PM levels are same as rpm-level.
+> https://marc.info/?l=linux-block&m=153132657922233&w=2
 
-What's the default?
-
-I assume these are minimums? The OS can pick higher power states. This 
-seems to be a bit Linux specific (as 'runtime PM' could be considered 
-Linux specific). For every other device, we don't put this type of 
-information in DT, but is user controlled. So really, wouldn't 1 
-property be sufficient for cases where a mode doesn't work due to 
-some h/w limitation. Otherwise, it is an OS or user decision.
-
-> +
->  -lanes-per-direction	: number of lanes available per direction - either 1 or 2.
->  			  Note that it is assume same number of lanes is used both
->  			  directions at once. If not specified, default is 2 lanes per direction.
-> @@ -66,4 +75,6 @@ Example:
->  		freq-table-hz = <100000000 200000000>, <0 0>, <0 0>;
->  		phys = <&ufsphy1>;
->  		phy-names = "ufsphy";
-> +		rpm-level = <3>;
-
-Why specified if 3 is the default?
-
-> +		spm-level = <5>;
-
-These seem like sane defaults. When and why would you use some 
-different?
-
-Rob
+Cool, please cc me on the next revision of your patch set.
