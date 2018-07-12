@@ -1,218 +1,44 @@
-From: Janek Kotas <jank@cadence.com>
-Subject: [PATCH v2 2/2] scsi: ufs: Add UFS platform driver for Cadence UFS
-Date: Thu, 12 Jul 2018 11:58:47 +0000
-Message-ID: <4744959B-7757-4FA7-AECD-AE1C1946863B@cadence.com>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH] bsg: remove read/write support
+Date: Thu, 12 Jul 2018 08:04:29 -0600
+Message-ID: <7882dce2-4dca-3af6-7aea-7acd9997f3e9@kernel.dk>
+References: <20180712080959.21180-1-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20180712080959.21180-1-hch@lst.de>
 Content-Language: en-US
-Content-ID: <C1536E339B75C348AE811F23A2C5C847@namprd07.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "robh+dt@kernel.org" <robh+dt@kernel.org>, "mark.rutland@arm.com" <mark.rutland@arm.com>, "vinholikatti@gmail.com" <vinholikatti@gmail.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: torvalds@linux-foundation.org, tonyb@cybernetics.com, jannh@google.com, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-This patch adds a device tree platform
-driver for Cadence UFS Controller.
+On 7/12/18 2:09 AM, Christoph Hellwig wrote:
+> The code poses a security risk due to user memory access in ->release
+> and had an API that can't be used reliably.  As far as we know it was
+> never used for real, but if that turns out wrong we'll have to revert
+> this commit and come up with a band aid.
+> 
+> Jann Horn did look software archives for users of this interface,
+> and the only users found were example code in sg3_utils, and optional
+> support in an optional module of the tgt user space iscsi target,
+> which looks like a proof of concept extension of the /dev/sg
+> read/write support.
+> 
+> Tony Battersby chimes in that the code is basically unsafe to use in
+> general:
+> 
+>   The read/write interface on /dev/bsg is impossible to use safely
+>   because the list of completed commands is per-device (bd->done_list)
+>   rather than per-fd like it is with /dev/sg.  So if program A and
+>   program B are both using the write/read interface on the same bsg
+>   device, then their command responses will get mixed up, and program
+>   A will read() some command results from program B and vice versa.
+>   So no, I don't use read/write on /dev/bsg.  From a security standpoint,
+>   it should definitely be fixed or removed.
 
-Signed-off-by: Jan Kotas <jank@cadence.com>
----
- drivers/scsi/ufs/Kconfig       |   8 +++
- drivers/scsi/ufs/Makefile      |   1 +
- drivers/scsi/ufs/cdns-pltfrm.c | 149 +++++++++++++++++++++++++++++++++++++=
-++++
- 3 files changed, 158 insertions(+)
- create mode 100644 drivers/scsi/ufs/cdns-pltfrm.c
+Applied for 4.19.
 
-diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
-index e27b4d4..552f85a 100644
---- a/drivers/scsi/ufs/Kconfig
-+++ b/drivers/scsi/ufs/Kconfig
-@@ -80,6 +80,14 @@ config SCSI_UFSHCD_PLATFORM
-=20
- 	  If unsure, say N.
-=20
-+config SCSI_UFS_CDNS_PLATFORM
-+	tristate "Cadence UFS Controller platform driver"
-+	depends on SCSI_UFSHCD_PLATFORM
-+	---help---
-+	This selects the Cadence specific additions to UFSHCD platform driver.
-+
-+	  If unsure, say N.
-+
- config SCSI_UFS_DWC_TC_PLATFORM
- 	tristate "DesignWare platform support using a G210 Test Chip"
- 	depends on SCSI_UFSHCD_PLATFORM
-diff --git a/drivers/scsi/ufs/Makefile b/drivers/scsi/ufs/Makefile
-index 918f579..dcddc7a 100644
---- a/drivers/scsi/ufs/Makefile
-+++ b/drivers/scsi/ufs/Makefile
-@@ -2,6 +2,7 @@
- # UFSHCD makefile
- obj-$(CONFIG_SCSI_UFS_DWC_TC_PCI) +=3D tc-dwc-g210-pci.o ufshcd-dwc.o tc-d=
-wc-g210.o
- obj-$(CONFIG_SCSI_UFS_DWC_TC_PLATFORM) +=3D tc-dwc-g210-pltfrm.o ufshcd-dw=
-c.o tc-dwc-g210.o
-+obj-$(CONFIG_SCSI_UFS_CDNS_PLATFORM) +=3D cdns-pltfrm.o
- obj-$(CONFIG_SCSI_UFS_QCOM) +=3D ufs-qcom.o
- obj-$(CONFIG_SCSI_UFSHCD) +=3D ufshcd-core.o
- ufshcd-core-objs :=3D ufshcd.o ufs-sysfs.o
-diff --git a/drivers/scsi/ufs/cdns-pltfrm.c b/drivers/scsi/ufs/cdns-pltfrm.=
-c
-new file mode 100644
-index 0000000..943e26b
---- /dev/null
-+++ b/drivers/scsi/ufs/cdns-pltfrm.c
-@@ -0,0 +1,149 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Platform UFS Host driver for Cadence controller
-+ *
-+ * Copyright (C) 2018 Cadence Design Systems, Inc.
-+ *
-+ * Authors:
-+ *	Jan Kotas <jank@cadence.com>
-+ *
-+ */
-+
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/platform_device.h>
-+#include <linux/of.h>
-+#include <linux/time.h>
-+
-+#include "ufshcd-pltfrm.h"
-+
-+#define CDNS_UFS_REG_HCLKDIV 0xFC
-+
-+/**
-+ * Sets HCLKDIV register value based on the core_clk
-+ * @hba: host controller instance
-+ *
-+ * Return zero for success and non-zero for failure
-+ */
-+static int cdns_ufs_set_hclkdiv(struct ufs_hba *hba)
-+{
-+	struct ufs_clk_info *clki;
-+	struct list_head *head =3D &hba->clk_list_head;
-+	unsigned long core_clk_rate =3D 0;
-+	u32 core_clk_div =3D 0;
-+
-+	if (list_empty(head))
-+		return 0;
-+
-+	list_for_each_entry(clki, head, list) {
-+		if (IS_ERR_OR_NULL(clki->clk))
-+			continue;
-+		if (!strcmp(clki->name, "core_clk"))
-+			core_clk_rate =3D clk_get_rate(clki->clk);
-+	}
-+
-+	if (!core_clk_rate) {
-+		dev_err(hba->dev, "%s: unable to find core_clk rate\n",
-+			__func__);
-+		return -EINVAL;
-+	}
-+
-+	core_clk_div =3D core_clk_rate / USEC_PER_SEC;
-+
-+	ufshcd_writel(hba, core_clk_div, CDNS_UFS_REG_HCLKDIV);
-+	/* Make sure the register was updated */
-+	mb();
-+
-+	return 0;
-+}
-+
-+/**
-+ * Sets clocks used by the controller
-+ * @hba: host controller instance
-+ * @on: if true, enable clocks, otherwise disable
-+ * @status: notify stage (pre, post change)
-+ *
-+ * Return zero for success and non-zero for failure
-+ */
-+static int cdns_ufs_setup_clocks(struct ufs_hba *hba, bool on,
-+				 enum ufs_notify_change_status status)
-+{
-+	if ((!on) || (status =3D=3D PRE_CHANGE))
-+		return 0;
-+
-+	return cdns_ufs_set_hclkdiv(hba);
-+}
-+
-+
-+static struct ufs_hba_variant_ops cdns_pltfm_hba_vops =3D {
-+	.name =3D "cdns-ufs-pltfm",
-+	.setup_clocks =3D cdns_ufs_setup_clocks,
-+};
-+
-+/**
-+ * cdns_ufs_pltfrm_probe - probe routine of the driver
-+ * @pdev: pointer to platform device handle
-+ *
-+ * Return zero for success and non-zero for failure
-+ */
-+static int cdns_ufs_pltfrm_probe(struct platform_device *pdev)
-+{
-+	int err;
-+	struct device *dev =3D &pdev->dev;
-+
-+	/* Perform generic probe */
-+	err =3D ufshcd_pltfrm_init(pdev, &cdns_pltfm_hba_vops);
-+	if (err)
-+		dev_err(dev, "ufshcd_pltfrm_init() failed %d\n", err);
-+
-+	return err;
-+}
-+
-+/**
-+ * cdns_ufs_pltfrm_remove - set driver_data of the device to NULL
-+ * @pdev: pointer to platform device handle
-+ *
-+ * Always returns 0
-+ */
-+static int cdns_ufs_pltfrm_remove(struct platform_device *pdev)
-+{
-+	struct ufs_hba *hba =3D  platform_get_drvdata(pdev);
-+
-+	pm_runtime_get_sync(&(pdev)->dev);
-+	ufshcd_remove(hba);
-+	return 0;
-+}
-+
-+
-+static const struct of_device_id cdns_ufs_of_match[] =3D {
-+	{ .compatible =3D "cdns,ufshc" },
-+	{},
-+};
-+
-+MODULE_DEVICE_TABLE(of, cdns_ufs_of_match);
-+
-+static const struct dev_pm_ops cdns_ufs_dev_pm_ops =3D {
-+	.suspend         =3D ufshcd_pltfrm_suspend,
-+	.resume          =3D ufshcd_pltfrm_resume,
-+	.runtime_suspend =3D ufshcd_pltfrm_runtime_suspend,
-+	.runtime_resume  =3D ufshcd_pltfrm_runtime_resume,
-+	.runtime_idle    =3D ufshcd_pltfrm_runtime_idle,
-+};
-+
-+static struct platform_driver cdns_ufs_pltfrm_driver =3D {
-+	.probe	=3D cdns_ufs_pltfrm_probe,
-+	.remove	=3D cdns_ufs_pltfrm_remove,
-+	.driver	=3D {
-+		.name   =3D "cdns-ufshcd",
-+		.owner  =3D THIS_MODULE,
-+		.pm     =3D &cdns_ufs_dev_pm_ops,
-+		.of_match_table =3D cdns_ufs_of_match,
-+	},
-+};
-+
-+module_platform_driver(cdns_ufs_pltfrm_driver);
-+
-+MODULE_AUTHOR("Jan Kotas <jank@cadence.com>");
-+MODULE_DESCRIPTION("Cadence UFS host controller platform driver");
-+MODULE_LICENSE("GPL");
-+MODULE_VERSION(UFSHCD_DRIVER_VERSION);
---=20
-1.9.0
+-- 
+Jens Axboe
