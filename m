@@ -1,27 +1,28 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 0/2] scsi: arcmsr: fix error of resuming from hibernation
-Date: Thu, 12 Jul 2018 22:35:34 -0400
-Message-ID: <yq1lgafj215.fsf@oracle.com>
-References: <1531131568.5779.8.camel@Centos6.3-64>
+Subject: Re: [PATCH] [RESEND] snic: fix printing time intervals
+Date: Thu, 12 Jul 2018 23:02:23 -0400
+Message-ID: <yq1a7qvj0sg.fsf@oracle.com>
+References: <20180711123752.773163-1-arnd@arndb.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1531131568.5779.8.camel@Centos6.3-64> (Ching Huang's message of
-        "Mon, 09 Jul 2018 18:19:28 +0800")
+In-Reply-To: <20180711123752.773163-1-arnd@arndb.de> (Arnd Bergmann's message
+        of "Wed, 11 Jul 2018 14:37:37 +0200")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Ching Huang <ching2048@areca.com.tw>
-Cc: martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, dan.carpenter@oracle.com, hch@infradead.org, colin.king@canonical.com
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Karan Tilak Kumar <kartilak@cisco.com>, Sesidhar Baddela <sebaddel@cisco.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Ching,
+Arnd,
 
-> This patch series are against to mkp's 4.19/scsi-queue.
->
-> 1. Fix error of resuming from hibernation for adapter type E.
-> 2. Update driver version to v1.40.00.09-20180709
+> We don't want to use 'struct timespec' because of the y2038 overflow
+> problem. The overflow is not actually an issue here, but it's easy to
+> replace with 'timespec64' for consistency. However, it's worth pointing
+> out that nanosecond values have nine digits, not eight or ten, so I'm
+> fixing the format strings accordingly as well.
 
-Applied to 4.19/scsi-queue, thank you!
+Applied to 4.19/scsi-queue, thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
