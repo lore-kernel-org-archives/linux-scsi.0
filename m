@@ -1,28 +1,65 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] [RESEND] snic: fix printing time intervals
-Date: Thu, 12 Jul 2018 23:02:23 -0400
-Message-ID: <yq1a7qvj0sg.fsf@oracle.com>
-References: <20180711123752.773163-1-arnd@arndb.de>
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH][V2] scsi: lpfc: remove null check on nvmebuf
+Date: Fri, 13 Jul 2018 09:39:54 +0100
+Message-ID: <20180713083954.26877-1-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180711123752.773163-1-arnd@arndb.de> (Arnd Bergmann's message
-        of "Wed, 11 Jul 2018 14:37:37 +0200")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Karan Tilak Kumar <kartilak@cisco.com>, Sesidhar Baddela <sebaddel@cisco.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+From: Colin Ian King <colin.king@canonical.com>
 
-Arnd,
+The null checks on nvmebuf are redundant as nvmebuf is always obtained
+from a container_of() and hence can never be null. Remove all the
+redundant null checks. This also cleans up a static analysis warning.
 
-> We don't want to use 'struct timespec' because of the y2038 overflow
-> problem. The overflow is not actually an issue here, but it's easy to
-> replace with 'timespec64' for consistency. However, it's worth pointing
-> out that nanosecond values have nine digits, not eight or ten, so I'm
-> fixing the format strings accordingly as well.
+Detected by CoverityScan, CID#1471753 ("Dereference before null check")
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
 
-Applied to 4.19/scsi-queue, thanks!
+V2: Remove null pointer checks thanks to James Bottomley for spotting
+that the caller obtains nvmebuf from container_of().
 
+---
+ drivers/scsi/lpfc/lpfc_nvmet.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
+index 22f8a204b69f..b766afe10d3d 100644
+--- a/drivers/scsi/lpfc/lpfc_nvmet.c
++++ b/drivers/scsi/lpfc/lpfc_nvmet.c
+@@ -1745,7 +1745,7 @@ lpfc_nvmet_unsol_ls_buffer(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+ 	fc_hdr = (struct fc_frame_header *)(nvmebuf->hbuf.virt);
+ 	oxid = be16_to_cpu(fc_hdr->fh_ox_id);
+ 
+-	if (!nvmebuf || !phba->targetport) {
++	if (!phba->targetport) {
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_NVME_IOERR,
+ 				"6154 LS Drop IO x%x\n", oxid);
+ 		oxid = 0;
+@@ -1770,8 +1770,7 @@ lpfc_nvmet_unsol_ls_buffer(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+ 		lpfc_nvmeio_data(phba, "NVMET LS  DROP: "
+ 				 "xri x%x sz %d from %06x\n",
+ 				 oxid, size, sid);
+-		if (nvmebuf)
+-			lpfc_in_buf_free(phba, &nvmebuf->dbuf);
++		lpfc_in_buf_free(phba, &nvmebuf->dbuf);
+ 		return;
+ 	}
+ 	ctxp->phba = phba;
+@@ -1814,8 +1813,7 @@ lpfc_nvmet_unsol_ls_buffer(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+ 			ctxp->oxid, rc);
+ 
+ 	/* We assume a rcv'ed cmd ALWAYs fits into 1 buffer */
+-	if (nvmebuf)
+-		lpfc_in_buf_free(phba, &nvmebuf->dbuf);
++	lpfc_in_buf_free(phba, &nvmebuf->dbuf);
+ 
+ 	atomic_inc(&tgtp->xmt_ls_abort);
+ 	lpfc_nvmet_unsol_ls_issue_abort(phba, ctxp, sid, oxid);
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+2.17.1
