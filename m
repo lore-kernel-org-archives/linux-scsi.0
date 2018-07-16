@@ -1,293 +1,184 @@
 From: Sayali Lokhande <sayalil@codeaurora.org>
-Subject: Re: [PATCH V5 2/2] scsi: ufs: Add configfs support for ufs
- provisioning
-Date: Mon, 16 Jul 2018 13:40:21 +0530
-Message-ID: <0dce9e9c-4f93-9857-72ee-f65ff195c41a@codeaurora.org>
+Subject: Re: [PATCH V5 1/2] scsi: ufs: set the device reference clock setting
+Date: Mon, 16 Jul 2018 13:58:53 +0530
+Message-ID: <11dc4af4-3424-8f85-1678-98f59faabc53@codeaurora.org>
 References: <1530858040-13971-1-git-send-email-sayalil@codeaurora.org>
- <1530858040-13971-3-git-send-email-sayalil@codeaurora.org>
- <CAE=gft5U1-Jo-GvTF7sNAV3Q565AmuUrHpmBdxUL+UwkKxesqA@mail.gmail.com>
+ <1530858040-13971-2-git-send-email-sayalil@codeaurora.org>
+ <20180706210729.GA22391@rob-hp-laptop>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAE=gft5U1-Jo-GvTF7sNAV3Q565AmuUrHpmBdxUL+UwkKxesqA@mail.gmail.com>
+In-Reply-To: <20180706210729.GA22391@rob-hp-laptop>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Evan Green <evgreen@chromium.org>
-Cc: subhashj@codeaurora.org, cang@codeaurora.org, vivek.gautam@codeaurora.org, Rajendra Nayak <rnayak@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, asutoshd@codeaurora.org, riteshh@codeaurora.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Rob Herring <robh@kernel.org>
+Cc: subhashj@codeaurora.org, cang@codeaurora.org, vivek.gautam@codeaurora.org, rnayak@codeaurora.org, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, asutoshd@codeaurora.org, evgreen@chromium.org, riteshh@codeaurora.org, linux-scsi@vger.kernel.org, Mark Rutland <mark.rutland@arm.com>, Mathieu Malaterre <malat@debian.org>, "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" <devicetree@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Evan,
+Hi Rob,
 
 
-On 7/9/2018 11:18 PM, Evan Green wrote:
-> Hi Sayali,
-> Thanks for the prompt spin.
->
-> On Thu, Jul 5, 2018 at 11:21 PM Sayali Lokhande <sayalil@codeaurora.org> wrote:
->> This patch adds configfs support to provision ufs device at
-> s/ufs/UFS/
-Will update.
->> runtime. This feature can be primarily useful in factory or
->> assembly line as some devices may be required to be configured
->> multiple times during initial system development phase.
->> Configuration Descriptors can be written multiple times until
->> bConfigDescrLock attribute is zero.
+On 7/7/2018 2:37 AM, Rob Herring wrote:
+> On Fri, Jul 06, 2018 at 11:50:39AM +0530, Sayali Lokhande wrote:
+>> From: Subhash Jadavani <subhashj@codeaurora.org>
 >>
->> Configuration descriptor buffer consists of Device and Unit
->> descriptor configurable parameters which are parsed from vendor
->> specific provisioning file and then passed via configfs node at
->> runtime to provision ufs device.
->> CONFIG_CONFIGFS_FS needs to be enabled for using this feature.
+>> UFS host supplies the reference clock to UFS device and UFS device
+>> specification allows host to provide one of the 4 frequencies (19.2 MHz,
+>> 26 MHz, 38.4 MHz, 52 MHz) for reference clock. Host should set the
+>> device reference clock frequency setting in the device based on what
+>> frequency it is supplying to UFS device.
 >>
->> Usage:
->> 1) To read current configuration descriptor :
->>     cat /config/ufshcd/ufs_provision
->> 2) To provision ufs device:
->>     echo <config_desc_buf> > /config/ufshcd/ufs_provision
->>
+>> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+>> Signed-off-by: Can Guo <cang@codeaurora.org>
 >> Signed-off-by: Sayali Lokhande <sayalil@codeaurora.org>
 >> ---
->>   Documentation/ABI/testing/configfs-driver-ufs |  18 +++
->>   drivers/scsi/ufs/Makefile                     |   1 +
->>   drivers/scsi/ufs/ufs-configfs.c               | 172 ++++++++++++++++++++++++++
->>   drivers/scsi/ufs/ufshcd.c                     |   2 +
->>   drivers/scsi/ufs/ufshcd.h                     |  19 +++
->>   5 files changed, 212 insertions(+)
->>   create mode 100644 Documentation/ABI/testing/configfs-driver-ufs
->>   create mode 100644 drivers/scsi/ufs/ufs-configfs.c
+>>   .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      |  7 +++
+>>   drivers/scsi/ufs/ufs.h                             |  9 ++++
+>>   drivers/scsi/ufs/ufshcd-pltfrm.c                   |  2 +
+>>   drivers/scsi/ufs/ufshcd.c                          | 62 ++++++++++++++++++++++
+>>   drivers/scsi/ufs/ufshcd.h                          |  2 +
+>>   5 files changed, 82 insertions(+)
 >>
->> diff --git a/Documentation/ABI/testing/configfs-driver-ufs b/Documentation/ABI/testing/configfs-driver-ufs
->> new file mode 100644
->> index 0000000..dd16842
->> --- /dev/null
->> +++ b/Documentation/ABI/testing/configfs-driver-ufs
->> @@ -0,0 +1,18 @@
->> +What:          /config/ufshcd/ufs_provision
->> +Date:          Jun 2018
->> +KernelVersion: 4.14
->> +Description:
->> +               This file shows the current ufs configuration descriptor set in device.
->> +               This can be used to provision ufs device if bConfigDescrLock is 0.
->> +               For more details, refer 14.1.6.3 Configuration Descriptor and
->> +               Table 14-12 — Unit Descriptor configurable parameters from specs for
-> Can this be a regular dash, rather than some sort of exotic 0xE2 byte.
+>> diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+>> index c39dfef..bc20f59 100644
+>> --- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+>> +++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+>> @@ -41,6 +41,12 @@ Optional properties:
+>>   -lanes-per-direction	: number of lanes available per direction - either 1 or 2.
+>>   			  Note that it is assume same number of lanes is used both
+>>   			  directions at once. If not specified, default is 2 lanes per direction.
+>> +- assigned-clock-rates 	: Specify the device reference clock frequency, must be one of the following:
+>> +			  0: 19.2 MHz
+>> +			  1: 26 MHz
+>> +			  2: 38.4 MHz
+>> +			  3: 52 MHz
+>> +			  Defaults to 26 MHz if not specified.
+> Sigh. You obviously did not read the definition of assigned-clock-rates
+> and understand how it works. I don't think you want the frequency to be
+> 0-3 Hz.
 >
->> +               description of each configuration descriptor parameter.
->> +               Configuration descriptor buffer needs to be passed in space separated
->> +               format specificied as below:
->> +               echo <bLength> <bDescriptorIDN> <bConfDescContinue> <bBootEnable>
->> +               <bDescrAccessEn> <bInitPowerMode> <bHighPriorityLUN>
->> +               <bSecureRemovalType> <bInitActiveICCLevel> <wPeriodicRTCUpdate>
->> +               <0Bh:0Fh_ReservedAs_0> <bLUEnable> <bBootLunID> <bLUWriteProtect>
->> +               <bMemoryType> <dNumAllocUnits> <bDataReliability> <bLogicalBlockSize>
->> +               <bProvisioningType> <wContextCapabilities> <0Dh:0Fh_ReservedAs_0>
-> I wonder if at this point we should be using a binary attribute rather
-> than a text one. Since now you're basically just converting text to
-> bytes, it's not very human anymore.
-Use of binary attr was ruled out before. Pasting previous comments from 
-Greg :
-"binary attributes are meant for hardware value pass-through" type stuff.
-Unless this is "raw" data straight from the hardware, binary does not work.
->> +               > /config/ufshcd/ufs_provision
->> diff --git a/drivers/scsi/ufs/Makefile b/drivers/scsi/ufs/Makefile
->> index 918f579..d438e74 100644
->> --- a/drivers/scsi/ufs/Makefile
->> +++ b/drivers/scsi/ufs/Makefile
->> @@ -5,5 +5,6 @@ obj-$(CONFIG_SCSI_UFS_DWC_TC_PLATFORM) += tc-dwc-g210-pltfrm.o ufshcd-dwc.o tc-d
->>   obj-$(CONFIG_SCSI_UFS_QCOM) += ufs-qcom.o
->>   obj-$(CONFIG_SCSI_UFSHCD) += ufshcd-core.o
->>   ufshcd-core-objs := ufshcd.o ufs-sysfs.o
->> +obj-$(CONFIG_CONFIGFS_FS) += ufs-configfs.o
->>   obj-$(CONFIG_SCSI_UFSHCD_PCI) += ufshcd-pci.o
->>   obj-$(CONFIG_SCSI_UFSHCD_PLATFORM) += ufshcd-pltfrm.o
->> diff --git a/drivers/scsi/ufs/ufs-configfs.c b/drivers/scsi/ufs/ufs-configfs.c
->> new file mode 100644
->> index 0000000..7d207fc
->> --- /dev/null
->> +++ b/drivers/scsi/ufs/ufs-configfs.c
->> @@ -0,0 +1,172 @@
->> +// SPDX-License-Identifier: GPL-2.0+
->> +// Copyright (c) 2018, Linux Foundation.
->> +
->> +#include <linux/configfs.h>
->> +#include <linux/err.h>
->> +#include <linux/string.h>
->> +
->> +#include "ufs.h"
->> +#include "ufshcd.h"
->> +
->> +static inline struct ufs_hba *config_item_to_hba(struct config_item *item)
->> +{
->> +       struct config_group *group = to_config_group(item);
->> +       struct configfs_subsystem *subsys = to_configfs_subsystem(group);
->> +       struct ufs_hba *hba = container_of(subsys, struct ufs_hba, subsys);
->> +
->> +       return hba ? hba : NULL;
->> +}
->> +
->> +static ssize_t ufs_provision_show(struct config_item *item, char *buf)
->> +{
->> +       u8 desc_buf[QUERY_DESC_CONFIGURATION_DEF_SIZE] = {0};
->> +       int buff_len = QUERY_DESC_CONFIGURATION_DEF_SIZE;
->> +       int i, ret, curr_len = 0;
->> +       struct ufs_hba *hba = config_item_to_hba(item);
->> +
->> +       if (!hba)
->> +               return snprintf(buf, PAGE_SIZE, "ufs hba is NULL!\n");
->> +
->> +       ret = ufshcd_query_descriptor_retry(hba, UPIU_QUERY_OPCODE_READ_DESC,
->> +               QUERY_DESC_IDN_CONFIGURATION, 0, 0, desc_buf, &buff_len);
->> +
->> +       if (ret)
->> +               return snprintf(buf, PAGE_SIZE,
->> +               "Failed reading descriptor. desc_idn %d, opcode %x ret %d\n",
->> +               QUERY_DESC_IDN_CONFIGURATION,
->> +               UPIU_QUERY_OPCODE_READ_DESC, ret);
->> +
->> +       for (i = 0; i < buff_len; i++)
->> +               curr_len += snprintf((buf + curr_len), (PAGE_SIZE - curr_len),
->> +                               "0x%x ", desc_buf[i]);
->> +
->> +       return curr_len;
->> +}
->> +
->> +ssize_t ufshcd_desc_configfs_store(struct ufs_hba *hba,
->> +               const char *buf, size_t count)
->> +{
->> +       char *strbuf;
->> +       char *strbuf_copy;
->> +       u8 desc_buf[QUERY_DESC_CONFIGURATION_DEF_SIZE] = {0};
->> +       int buff_len = QUERY_DESC_CONFIGURATION_DEF_SIZE;
->> +       char *token;
->> +       int i, ret, value;
->> +       u32 bConfigDescrLock = 0;
->> +
->> +       /* reserve one byte for null termination */
->> +       strbuf = kmalloc(count + 1, GFP_KERNEL);
->> +       if (!strbuf)
->> +               return -ENOMEM;
->> +
->> +       strbuf_copy = strbuf;
->> +       strlcpy(strbuf, buf, count + 1);
->> +
->> +       if (!hba)
->> +               goto out;
->> +
->> +       /* Just return if bConfigDescrLock is already set */
->> +       ret = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_READ_ATTR,
->> +               QUERY_ATTR_IDN_CONF_DESC_LOCK, 0, 0, &bConfigDescrLock);
->> +       if (ret) {
->> +               dev_err(hba->dev, "%s: Failed reading bConfigDescrLock %d, cannot re-provision device!\n",
->> +                       __func__, ret);
-> I think ufshcd_query_attr has its own prints on failure, we probably
-> don't need this one.
-Will check and update.
->> +               goto out;
->> +       }
->> +       if (bConfigDescrLock) {
->> +               dev_err(hba->dev, "%s: bConfigDescrLock already set to %u, cannot re-provision device!\n",
->> +               __func__, bConfigDescrLock);
->> +               goto out;
->> +       }
->> +
->> +       for (i = 0; i < QUERY_DESC_CONFIGURATION_DEF_SIZE; i++) {
->> +               token = strsep(&strbuf, " ");
->> +               if (!token && i) {
->> +                       dev_dbg(hba->dev, "%s: token %s, i %d\n",
->> +                               __func__, token, i);
-> You're printing token, which you know to be null. Is this print really useful?
-Will check and update/remove this print.
->> +                       break;
->> +               }
->> +
->> +               ret = kstrtoint(token, 0, &value);
->> +               if (ret) {
->> +                       dev_err(hba->dev, "%s: kstrtoint failed %d %s\n",
->> +                               __func__, ret, token);
->> +                       break;
->> +               }
->> +               desc_buf[i] = (u8)value;
->> +               dev_dbg(hba->dev, " desc_buf[%d] 0x%x", i, desc_buf[i]);
-> This print is probably a bit noisy. If you really want to dump the
-> contents in the debug spew there's a print_hex_dump you can do after
-> you break out of the loop. Then you could also remove the print for
-> "token %s, i %d".
-Will check and update.
->> +       }
->> +
->> +       /* Write configuration descriptor to provision ufs */
->> +       ret = ufshcd_query_descriptor_retry(hba, UPIU_QUERY_OPCODE_WRITE_DESC,
->> +               QUERY_DESC_IDN_CONFIGURATION, 0, 0, desc_buf, &buff_len);
->> +
->> +       if (ret)
->> +               dev_err(hba->dev, "%s: Failed writing descriptor. desc_idn %d, opcode %x ret %d\n",
->> +               __func__, QUERY_DESC_IDN_CONFIGURATION,
->> +               UPIU_QUERY_OPCODE_WRITE_DESC, ret);
-> This is basically already covered by prints inside
-> ufshcd_query_descriptor_retry.
-Will update.
->> +       else
->> +               dev_err(hba->dev, "%s: UFS Provisioning done, reboot now!\n",
->> +               __func__);
->> +
->> +out:
->> +       kfree(strbuf_copy);
->> +       return count;
->> +}
->> +
->> +static ssize_t ufs_provision_store(struct config_item *item,
->> +               const char *buf, size_t count)
->> +{
->> +       struct ufs_hba *hba = config_item_to_hba(item);
->> +
->> +       return ufshcd_desc_configfs_store(hba, buf, count);
->> +}
->> +
->> +static struct configfs_attribute ufshcd_attr_provision = {
->> +       .ca_name        = "ufs_provision",
->> +       .ca_mode        = 0666,
-> This seems too permissive. You don't want just anybody to be able to
-> re-provision the disk. Maybe 0644?
-Agreed. will update.
->> +       .ca_owner       = THIS_MODULE,
->> +       .show           = ufs_provision_show,
->> +       .store          = ufs_provision_store,
+Let me revisit this patch set w.r.t to use of assigned-clock-rates.
+I will be separating this patch from provisioning patches and will 
+upload its next version separately.
+>>   Note: If above properties are not defined it can be assumed that the supply
+>>   regulators or clocks are always on.
+>> @@ -66,4 +72,5 @@ Example:
+>>   		freq-table-hz = <100000000 200000000>, <0 0>, <0 0>;
+>>   		phys = <&ufsphy1>;
+>>   		phy-names = "ufsphy";
+>> +		assigned-clock-rates = <0>; /* reference clock freq: 19.2 MHz */
+>>   	};
+>> diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+>> index 14e5bf7..e15deb0 100644
+>> --- a/drivers/scsi/ufs/ufs.h
+>> +++ b/drivers/scsi/ufs/ufs.h
+>> @@ -378,6 +378,15 @@ enum query_opcode {
+>>   	UPIU_QUERY_OPCODE_TOGGLE_FLAG	= 0x8,
+>>   };
+>>   
+>> +/* bRefClkFreq attribute values */
+>> +enum ref_clk_freq {
+>> +	REF_CLK_FREQ_19_2_MHZ	= 0x0,
+>> +	REF_CLK_FREQ_26_MHZ	= 0x1,
+>> +	REF_CLK_FREQ_38_4_MHZ	= 0x2,
+>> +	REF_CLK_FREQ_52_MHZ	= 0x3,
+>> +	REF_CLK_FREQ_MAX	= REF_CLK_FREQ_52_MHZ,
 >> +};
 >> +
->> +static struct configfs_attribute *ufshcd_attrs[] = {
->> +       &ufshcd_attr_provision,
->> +       NULL,
->> +};
+>>   /* Query response result code */
+>>   enum {
+>>   	QUERY_RESULT_SUCCESS                    = 0x00,
+>> diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
+>> index e82bde0..0953563 100644
+>> --- a/drivers/scsi/ufs/ufshcd-pltfrm.c
+>> +++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
+>> @@ -343,6 +343,8 @@ int ufshcd_pltfrm_init(struct platform_device *pdev,
+>>   	pm_runtime_set_active(&pdev->dev);
+>>   	pm_runtime_enable(&pdev->dev);
+>>   
+>> +	ufshcd_parse_dev_ref_clk_freq(hba);
 >> +
->> +static struct config_item_type ufscfg_type = {
->> +       .ct_attrs       = ufshcd_attrs,
->> +       .ct_owner       = THIS_MODULE,
->> +};
->> +
->> +static struct configfs_subsystem ufscfg_subsys = {
->> +       .su_group = {
->> +               .cg_item = {
->> +                       .ci_namebuf = "ufshcd",
->> +                       .ci_type = &ufscfg_type,
->> +               },
->> +       },
->> +};
->> +
->> +int ufshcd_configfs_init(struct ufs_hba *hba)
+>>   	ufshcd_init_lanes_per_dir(hba);
+>>   
+>>   	err = ufshcd_init(hba, mmio_base, irq);
+>> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+>> index c5b1bf1..455a6ad 100644
+>> --- a/drivers/scsi/ufs/ufshcd.c
+>> +++ b/drivers/scsi/ufs/ufshcd.c
+>> @@ -6296,6 +6296,62 @@ static void ufshcd_def_desc_sizes(struct ufs_hba *hba)
+>>   	hba->desc_size.hlth_desc = QUERY_DESC_HEALTH_DEF_SIZE;
+>>   }
+>>   
+>> +void ufshcd_parse_dev_ref_clk_freq(struct ufs_hba *hba)
 >> +{
->> +       int ret;
->> +       struct configfs_subsystem *subsys = &hba->subsys;
+>> +	struct device *dev = hba->dev;
+>> +	int ret;
 >> +
->> +       subsys->su_group = ufscfg_subsys.su_group;
->> +       config_group_init(&subsys->su_group);
->> +       mutex_init(&subsys->su_mutex);
->> +       ret = configfs_register_subsystem(subsys);
-> Wait so for every host controller, you register a subsystem called
-> "ufshcd"? Won't that result in a naming conflict when the second
-> controller comes along? I was expecting to see subsystem registration
-> happen once, probably in a driver init function, and then some sort of
-> device specific registration happen here. You'd need a unique name for
-> each controller, maybe the device name itself?
-Agreed. Will check and pass device name itself during init.
-> -Evan
+>> +	if (!dev)
+>> +		return;
+>> +
+>> +	ret = device_property_read_u32(dev, "assigned-clock-rates",
+>> +				   &hba->dev_ref_clk_freq);
+>> +	if (ret ||
+>> +	    (hba->dev_ref_clk_freq > REF_CLK_FREQ_52_MHZ)) {
+>> +		dev_err(hba->dev,
+>> +		"%s: invalid ref_clk setting = %d\n",
+>> +		__func__, hba->dev_ref_clk_freq);
+>> +		hba->dev_ref_clk_freq = REF_CLK_FREQ_MAX + 1;
+>> +	}
+>> +}
+>> +
+>> +static int ufshcd_set_dev_ref_clk(struct ufs_hba *hba)
+>> +{
+>> +	int err = 0;
+>> +	int ref_clk = -1;
+>> +	static const char * const ref_clk_freqs[] = {"19.2 MHz", "26 MHz",
+>> +						     "38.4 MHz", "52 MHz"};
+>> +
+>> +	err = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_READ_ATTR,
+>> +			QUERY_ATTR_IDN_REF_CLK_FREQ, 0, 0, &ref_clk);
+>> +
+>> +	if (err) {
+>> +		dev_err(hba->dev, "%s: failed reading bRefClkFreq. err = %d\n",
+>> +			 __func__, err);
+>> +		goto out;
+>> +	}
+>> +
+>> +	if (ref_clk == hba->dev_ref_clk_freq)
+>> +		goto out; /* nothing to update */
+>> +
+>> +	err = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
+>> +			QUERY_ATTR_IDN_REF_CLK_FREQ, 0, 0,
+>> +			&hba->dev_ref_clk_freq);
+>> +
+>> +	if (err)
+>> +		dev_err(hba->dev, "%s: bRefClkFreq setting to %s failed\n",
+>> +			__func__, ref_clk_freqs[hba->dev_ref_clk_freq]);
+>> +	/*
+>> +	 * It is good to print this out here to debug any later failures
+>> +	 * related to gear switch.
+>> +	 */
+>> +	dev_dbg(hba->dev, "%s: bRefClkFreq setting to %s succeeded\n",
+>> +			__func__, ref_clk_freqs[hba->dev_ref_clk_freq]);
+>> +
+> I still don't understand how you think this is supposed to work. All
+> this does is copy whatever freq setting you put into DT to this
+> device attr. That does nothing to actually set the frequency of the
+> ref_clk. It's frequency could be anything before and after this
+> function.
+Here, we are trying to check and then set parsed ref clock freq setting 
+from DT.
+Function ufshcd_query_attr_retry() is being used to first read the 
+current freq and then write ref clk freq attr (if DT setting is 
+different than what is already set in device).
+> Also, according to the spec, isn't QUERY_ATTR_IDN_REF_CLK_FREQ
+> write-once? So if you can read the value, wouldn't that mean you can't
+> set it.
+As per specs, bRefClkFreq field had “Write once” Access Property up to 
+UFS 2.0.
+ From 2.1 onwards,  bRefClkFreq access property changed from “Write 
+once” to “Persistent”(can be written multiple times, the value is kept 
+after power cycle or any type reset event).
+
+> Rob
