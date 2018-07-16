@@ -1,37 +1,51 @@
 From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [4.18.0-rc4][bisected a063057d][mpt3sas] WARNING: CPU: 87 PID:
- 18868 at block/blk-core.c:781 blk_cleanup_queue+0x20c/0x220
-Date: Mon, 16 Jul 2018 14:00:27 +0000
-Message-ID: <453e3f042dfbb4c848cb434db888f9051c58686a.camel@wdc.com>
-References: <1531731189.15016.15.camel@abdul.in.ibm.com>
+Subject: Re: [PATCH V6] scsi: ufs: Add configfs support for UFS provisioning
+Date: Mon, 16 Jul 2018 14:02:52 +0000
+Message-ID: <2c6a82d0fe7819c5fef3946a50a132ed1a11e71d.camel@wdc.com>
+References: <1531734237-27421-1-git-send-email-sayalil@codeaurora.org>
+         <1531734237-27421-2-git-send-email-sayalil@codeaurora.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-7"
 Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1531731189.15016.15.camel@abdul.in.ibm.com>
+In-Reply-To: <1531734237-27421-2-git-send-email-sayalil@codeaurora.org>
 Content-Language: en-US
-Content-ID: <3063EAC5A5FA7149A3E23C37E83455EE@namprd04.prod.outlook.com>
+Content-ID: <CD4FE2C05E3F91408CC0E10EC8BAB3DF@namprd04.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>, "abdhalee@linux.vnet.ibm.com" <abdhalee@linux.vnet.ibm.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "dougmill@linux.vnet.ibm.com" <dougmill@linux.vnet.ibm.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "sachinp@linux.vnet.ibm.com" <sachinp@linux.vnet.ibm.com>, "jack@suse.com" <jack@suse.com>, "mpe@ellerman.id.au" <mpe@ellerman.id.au>, "MPT-FusionLinux.pdl@broadcom.com" <MPT-FusionLinux.pdl@broadcom.com>
+To: "vinholikatti@gmail.com" <vinholikatti@gmail.com>, "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>, "sayalil@codeaurora.org" <sayalil@codeaurora.org>, "riteshh@codeaurora.org" <riteshh@codeaurora.org>, "evgreen@chromium.org" <evgreen@chromium.org>, "cang@codeaurora.org" <cang@codeaurora.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "subhashj@codeaurora.org" <subhashj@codeaurora.org>, "vivek.gautam@codeaurora.org" <vivek.gautam@codeaurora.org>, "rnayak@codeaurora.org" <rnayak@codeaurora.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 2018-07-16 at 14:23 +-0530, Abdul Haleem wrote:
-+AD4- mpt3sas module unload triggered a warning at block/blk-core.c:781 on =
-a
-+AD4- powerpc bare-metal running mainline kernel
-+AD4-=20
-+AD4- WARN+AF8-ON+AF8-ONCE() was introduced with commit a063057 : block: Fi=
-x a race
-+AD4- between request queue removal and the block cgroup controller
+On Mon, 2018-07-16 at 15:13 +-0530, Sayali Lokhande wrote:
++AD4- +-		This file shows the current ufs configuration descriptor set in d=
+evice.
++AD4- +-		This can be used to provision ufs device if bConfigDescrLock is 0=
+.
++AD4- +-		For more details, refer 14.1.6.3 Configuration Descriptor and
++AD4- +-		Table 14-12 - Unit Descriptor configurable parameters from specs =
+for
++AD4- +-		description of each configuration descriptor parameter.
++AD4- +-		Configuration descriptor buffer needs to be passed in space separ=
+ated
++AD4- +-		format specificied as below:
++AD4- +-		echo +ADw-bLength+AD4- +ADw-bDescriptorIDN+AD4- +ADw-bConfDescCon=
+tinue+AD4- +ADw-bBootEnable+AD4-
++AD4- +-		+ADw-bDescrAccessEn+AD4- +ADw-bInitPowerMode+AD4- +ADw-bHighPrior=
+ityLUN+AD4-
++AD4- +-		+ADw-bSecureRemovalType+AD4- +ADw-bInitActiveICCLevel+AD4- +ADw-w=
+PeriodicRTCUpdate+AD4-
++AD4- +-		+ADw-0Bh:0Fh+AF8-ReservedAs+AF8-0+AD4- +ADw-bLUEnable+AD4- +ADw-b=
+BootLunID+AD4- +ADw-bLUWriteProtect+AD4-
++AD4- +-		+ADw-bMemoryType+AD4- +ADw-dNumAllocUnits+AD4- +ADw-bDataReliabil=
+ity+AD4- +ADw-bLogicalBlockSize+AD4-
++AD4- +-		+ADw-bProvisioningType+AD4- +ADw-wContextCapabilities+AD4- +ADw-0=
+Dh:0Fh+AF8-ReservedAs+AF8-0+AD4-
++AD4- +-		+AD4- /config/XXXX.ufshc/ufs+AF8-provision
 
-Please check whether the following patch series fixes this regression: +AFs=
--PATCH
-v3 0/2+AF0- Ensure that a request queue is dissociated from the cgroup cont=
-roller
-(https://www.mail-archive.com/linux-block+AEA-vger.kernel.org/msg21897.html=
-).
-
-Thanks,
+I think the person who suggested to use configfs expected you to create one=
+ configfs
+attribute per value instead of writing a long list of values into a single =
+configfs
+attribute.
 
 Bart.
