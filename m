@@ -1,102 +1,331 @@
-From: Abdul Haleem <abdhalee@linux.vnet.ibm.com>
-Subject: [4.18.0-rc4][bisected a063057d][mpt3sas] WARNING: CPU: 87 PID:
- 18868 at block/blk-core.c:781 blk_cleanup_queue+0x20c/0x220
-Date: Mon, 16 Jul 2018 14:23:09 +0530
-Message-ID: <1531731189.15016.15.camel@abdul.in.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: Sayali Lokhande <sayalil@codeaurora.org>
+Subject: [PATCH V6] scsi: ufs: Add configfs support for UFS provisioning
+Date: Mon, 16 Jul 2018 15:13:57 +0530
+Message-ID: <1531734237-27421-2-git-send-email-sayalil@codeaurora.org>
+References: <1531734237-27421-1-git-send-email-sayalil@codeaurora.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1531734237-27421-1-git-send-email-sayalil@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
-Cc: "bart.vanassche" <bart.vanassche@wdc.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Jan Kara <jack@suse.com>, Jens Axboe <axboe@kernel.dk>, mpe <mpe@ellerman.id.au>, dougmill@linux.vnet.ibm.com, MPT-FusionLinux.pdl@broadcom.com, sachinp <sachinp@linux.vnet.ibm.com>
+To: subhashj@codeaurora.org, cang@codeaurora.org, vivek.gautam@codeaurora.org, rnayak@codeaurora.org, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, asutoshd@codeaurora.org, evgreen@chromium.org, riteshh@codeaurora.org
+Cc: linux-scsi@vger.kernel.org, Sayali Lokhande <sayalil@codeaurora.org>, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Greeting's
+This patch adds configfs support to provision UFS device at
+runtime. This feature can be primarily useful in factory or
+assembly line as some devices may be required to be configured
+multiple times during initial system development phase.
+Configuration Descriptors can be written multiple times until
+bConfigDescrLock attribute is zero.
 
-mpt3sas module unload triggered a warning at block/blk-core.c:781 on a
-powerpc bare-metal running mainline kernel
+Configuration descriptor buffer consists of Device and Unit
+descriptor configurable parameters which are parsed from vendor
+specific provisioning file and then passed via configfs node at
+runtime to provision ufs device.
+CONFIG_CONFIGFS_FS needs to be enabled for using this feature.
 
-WARN_ON_ONCE() was introduced with commit a063057 : block: Fix a race
-between request queue removal and the block cgroup controller
+Usage:
+1) To read current configuration descriptor :
+   cat /config/XXXX.ufshc/ufs_provision
+2) To provision ufs device:
+   echo <config_desc_buf> > /config/XXXX.ufshc/ufs_provision
 
-Machine: Power8 Bare-metal
-kernel : 4.18.0-rc4
-test: module load/unload mpt3sas in a loop
+Signed-off-by: Sayali Lokhande <sayalil@codeaurora.org>
+---
+ Documentation/ABI/testing/configfs-driver-ufs |  18 +++
+ drivers/scsi/ufs/Kconfig                      |  10 ++
+ drivers/scsi/ufs/Makefile                     |   1 +
+ drivers/scsi/ufs/ufs-configfs.c               | 162 ++++++++++++++++++++++++++
+ drivers/scsi/ufs/ufshcd.c                     |   2 +
+ drivers/scsi/ufs/ufshcd.h                     |  19 +++
+ 6 files changed, 212 insertions(+)
+ create mode 100644 Documentation/ABI/testing/configfs-driver-ufs
+ create mode 100644 drivers/scsi/ufs/ufs-configfs.c
 
-trace logs:
------------
-sd 16:0:4:0: [sde] Attached SCSI disk
-mpt3sas version 25.100.00.00 unloading
-mpt3sas_cm0: IR shutdown (sending)
-mpt3sas_cm0: IR shutdown (complete): ioc_status(0x0000), loginfo(0x00000000)
-sd 16:1:0:0: RAID REMOVE
-sd 16:1:0:0: RAID REMOVE DONE
-mpt3sas_cm0: removing handle(0x0143), wwid(0x05b15ecf7afeb371)
-mpt3sas_cm0: removing handle(0x000a), sas_addr(0x500304801f080d00)
-mpt3sas_cm0: enclosure logical id(0x500304801f080d3f), slot(0)
-mpt3sas_cm0: enclosure level(0x0000), connector name(     )
-mpt3sas_cm0: removing handle(0x000b), sas_addr(0x500304801f080d01)
-mpt3sas_cm0: enclosure logical id(0x500304801f080d3f), slot(1)
-mpt3sas_cm0: enclosure level(0x0000), connector name(     )
-mpt3sas_cm0: removing handle(0x000c), sas_addr(0x500304801f080d02)
-mpt3sas_cm0: enclosure logical id(0x500304801f080d3f), slot(2)
-mpt3sas_cm0: enclosure level(0x0000), connector name(     )
-WARNING: CPU: 87 PID: 18868 at block/blk-core.c:781 blk_cleanup_queue+0x20c/0x220
-Modules linked in: mpt3sas(-) ixgbe i40e ipt_MASQUERADE tun bridge stp
-llc xt_tcpudp ipt_REJECT nf_reject_ipv4 xt_conntrack nfnetlink
-iptable_nat nf_conntrack_ipv4 nf_defrag_ipv4 nf_nat_ipv4 nf_nat
-nf_conntrack iptable_mangle iptable_filter btrfs xor zstd_decompress
-zstd_compress xxhash lzo_compress vmx_crypto raid6_pq powernv_rng
-rng_core kvm_hv kvm nfsd ip_tables x_tables autofs4 xfs libcrc32c
-qla2xxx nvme_fc nvme_fabrics raid_class mdio nvme_core
-scsi_transport_sas [last unloaded: mpt3sas]
-CPU: 87 PID: 18868 Comm: rmmod Not tainted 4.18.0-rc4-autotest-autotest #1
-NIP:  c0000000004fff0c LR: c0000000004ffe10 CTR: 0000000000000000
-REGS: c0000078cdcc3480 TRAP: 0700   Not tainted  (4.18.0-rc4-autotest-autotest)
-MSR:  900000010282b033 <SF,HV,VEC,VSX,EE,FP,ME,IR,DR,RI,LE,TM[E]>  CR: 42008882  XER: 20000000
-CFAR: c0000000004ffe18 IRQMASK: 0
-GPR00: c0000000004ffe10 c0000078cdcc3700 c00000000109aa00 0000000000000000
-GPR04: 000000007fffffff c0000078cdcc3690 0000000000000000 0000000000000000
-GPR08: 0000000000000001 0000000300000004 0000000000000001 c000007fff76b484
-GPR12: 0000000000008800 c000007fff76b480 0000000000000000 0000000000000000
-GPR16: 0000000000000000 0000000000000000 000001002ee601e0 0000000010020098
-GPR20: 0000000010020050 0000000010020038 0000000000000000 c000003b6ed86178
-GPR24: c000003fd15b4000 0000000000000004 0000000000000003 c000003fd15b4000
-GPR28: 0000000000000000 c000003fa4eef658 c000003fa4eef150 c000003fa4eeefa0
-NIP [c0000000004fff0c] blk_cleanup_queue+0x20c/0x220
-LR [c0000000004ffe10] blk_cleanup_queue+0x110/0x220
-Call Trace:
-[c0000078cdcc3700] [c0000000004ffe10] blk_cleanup_queue+0x110/0x220 (unreliable)
-[c0000078cdcc3740] [c000000000684070] __scsi_remove_device+0x110/0x1d0
-[c0000078cdcc3780] [c00000000068416c] scsi_remove_device+0x3c/0x60
-[c0000078cdcc37b0] [c000000000684410] scsi_remove_target+0x220/0x280
-[c0000078cdcc3820] [d00000000fd82554] sas_rphy_remove+0x94/0xa0 [scsi_transport_sas]
-[c0000078cdcc3850] [d00000000fd8451c] sas_port_delete+0x4c/0x238 [scsi_transport_sas]
-[c0000078cdcc38b0] [d00000001a533e30] mpt3sas_transport_port_remove+0x2d0/0x310 [mpt3sas]
-[c0000078cdcc3950] [d00000001a522a10] _scsih_remove_device+0x100/0x2a0 [mpt3sas]
-[c0000078cdcc3a10] [d00000001a527824] mpt3sas_device_remove_by_sas_address.part.44+0xb4/0x160 [mpt3sas]
-[c0000078cdcc3a70] [d00000001a527964] _scsih_expander_node_remove+0x94/0x170 [mpt3sas]
-[c0000078cdcc3af0] [d00000001a52a2f8] _scsih_flush_running_cmds+0x5f8/0x1040 [mpt3sas]
-[c0000078cdcc3b90] [c00000000057c0c4] pci_device_remove+0x64/0x110
-[c0000078cdcc3bd0] [c000000000624294] device_release_driver_internal+0x204/0x2e0
-[c0000078cdcc3c20] [c00000000062440c] driver_detach+0x7c/0x100
-[c0000078cdcc3c60] [c000000000622c18] bus_remove_driver+0x78/0x100
-[c0000078cdcc3c90] [c0000000006250a0] driver_unregister+0x40/0x90
-[c0000078cdcc3d00] [c00000000057a478] pci_unregister_driver+0x38/0x100
-[c0000078cdcc3d50] [d00000001a53bc34] cleanup_module+0x50/0x391c [mpt3sas]
-[c0000078cdcc3db0] [c0000000001aa61c] sys_delete_module+0x1bc/0x270
-[c0000078cdcc3e30] [c00000000000b9e4] system_call+0x5c/0x70
-Instruction dump:
-ebc1fff0 ebe1fff8 7c0803a6 4e800020 7c0004ac 39400000 994d098c 4bfffe7c
-7c0004ac 39400000 994d098c 4bffffa0 <0fe00000> 4bffff0c 7c0004ac 9b8d098c
----[ end trace 0e9e02a66337b6a8 ]---
-mpt3sas_cm0: removing handle(0x000d), sas_addr(0x500304801f080d03)
-mpt3sas_cm0: enclosure logical id(0x500304801f080d3f), slot(3)
-mpt3sas_cm0: enclosure level(0x0000), connector name(     )
-sd 16:0:4:0: [sde] Synchronizing SCSI cache
+diff --git a/Documentation/ABI/testing/configfs-driver-ufs b/Documentation/ABI/testing/configfs-driver-ufs
+new file mode 100644
+index 0000000..eeee499c
+--- /dev/null
++++ b/Documentation/ABI/testing/configfs-driver-ufs
+@@ -0,0 +1,18 @@
++What:		/config/ufshcd/ufs_provision
++Date:		Jun 2018
++KernelVersion:	4.14
++Description:
++		This file shows the current ufs configuration descriptor set in device.
++		This can be used to provision ufs device if bConfigDescrLock is 0.
++		For more details, refer 14.1.6.3 Configuration Descriptor and
++		Table 14-12 - Unit Descriptor configurable parameters from specs for
++		description of each configuration descriptor parameter.
++		Configuration descriptor buffer needs to be passed in space separated
++		format specificied as below:
++		echo <bLength> <bDescriptorIDN> <bConfDescContinue> <bBootEnable>
++		<bDescrAccessEn> <bInitPowerMode> <bHighPriorityLUN>
++		<bSecureRemovalType> <bInitActiveICCLevel> <wPeriodicRTCUpdate>
++		<0Bh:0Fh_ReservedAs_0> <bLUEnable> <bBootLunID> <bLUWriteProtect>
++		<bMemoryType> <dNumAllocUnits> <bDataReliability> <bLogicalBlockSize>
++		<bProvisioningType> <wContextCapabilities> <0Dh:0Fh_ReservedAs_0>
++		> /config/XXXX.ufshc/ufs_provision
+diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
+index e27b4d4..34d89c2 100644
+--- a/drivers/scsi/ufs/Kconfig
++++ b/drivers/scsi/ufs/Kconfig
+@@ -100,3 +100,13 @@ config SCSI_UFS_QCOM
+ 
+ 	  Select this if you have UFS controller on QCOM chipset.
+ 	  If unsure, say N.
++
++config UFS_PROVISION
++	tristate "Runtime UFS Provisioning support"
++	depends on SCSI_UFSHCD_PLATFORM && CONFIGFS_FS
++	help
++	  This enables runtime UFS provisioning support. This can be used
++	  primarily during assembly line as some devices may be required to
++	  be configured multiple times during initial development phase.
++
++	  If unsure, say N.
+diff --git a/drivers/scsi/ufs/Makefile b/drivers/scsi/ufs/Makefile
+index 918f579..00110ea 100644
+--- a/drivers/scsi/ufs/Makefile
++++ b/drivers/scsi/ufs/Makefile
+@@ -5,5 +5,6 @@ obj-$(CONFIG_SCSI_UFS_DWC_TC_PLATFORM) += tc-dwc-g210-pltfrm.o ufshcd-dwc.o tc-d
+ obj-$(CONFIG_SCSI_UFS_QCOM) += ufs-qcom.o
+ obj-$(CONFIG_SCSI_UFSHCD) += ufshcd-core.o
+ ufshcd-core-objs := ufshcd.o ufs-sysfs.o
++obj-$(CONFIG_UFS_PROVISION) += ufs-configfs.o
+ obj-$(CONFIG_SCSI_UFSHCD_PCI) += ufshcd-pci.o
+ obj-$(CONFIG_SCSI_UFSHCD_PLATFORM) += ufshcd-pltfrm.o
+diff --git a/drivers/scsi/ufs/ufs-configfs.c b/drivers/scsi/ufs/ufs-configfs.c
+new file mode 100644
+index 0000000..3e9837a
+--- /dev/null
++++ b/drivers/scsi/ufs/ufs-configfs.c
+@@ -0,0 +1,162 @@
++// SPDX-License-Identifier: GPL-2.0+
++// Copyright (c) 2018, Linux Foundation.
++
++#include <linux/configfs.h>
++#include <linux/err.h>
++#include <linux/string.h>
++
++#include "ufs.h"
++#include "ufshcd.h"
++
++static inline struct ufs_hba *config_item_to_hba(struct config_item *item)
++{
++	struct config_group *group = to_config_group(item);
++	struct configfs_subsystem *subsys = to_configfs_subsystem(group);
++	struct ufs_hba *hba = container_of(subsys, struct ufs_hba, subsys);
++
++	return hba ? hba : NULL;
++}
++
++static ssize_t ufs_provision_show(struct config_item *item, char *buf)
++{
++	u8 desc_buf[QUERY_DESC_CONFIGURATION_DEF_SIZE] = {0};
++	int buff_len = QUERY_DESC_CONFIGURATION_DEF_SIZE;
++	int i, ret, curr_len = 0;
++	struct ufs_hba *hba = config_item_to_hba(item);
++
++	if (!hba)
++		return snprintf(buf, PAGE_SIZE, "ufs hba is NULL!\n");
++
++	ret = ufshcd_query_descriptor_retry(hba, UPIU_QUERY_OPCODE_READ_DESC,
++		QUERY_DESC_IDN_CONFIGURATION, 0, 0, desc_buf, &buff_len);
++
++	if (ret)
++		return snprintf(buf, PAGE_SIZE,
++		"Failed reading descriptor. desc_idn %d, opcode %x ret %d\n",
++		QUERY_DESC_IDN_CONFIGURATION,
++		UPIU_QUERY_OPCODE_READ_DESC, ret);
++
++	for (i = 0; i < buff_len; i++)
++		curr_len += snprintf((buf + curr_len), (PAGE_SIZE - curr_len),
++				"0x%x ", desc_buf[i]);
++
++	return curr_len;
++}
++
++ssize_t ufshcd_desc_configfs_store(struct ufs_hba *hba,
++		const char *buf, size_t count)
++{
++	char *strbuf;
++	char *strbuf_copy;
++	u8 desc_buf[QUERY_DESC_CONFIGURATION_DEF_SIZE] = {0};
++	int buff_len = QUERY_DESC_CONFIGURATION_DEF_SIZE;
++	char *token;
++	int i, ret, value;
++	u32 bConfigDescrLock = 0;
++
++	/* reserve one byte for null termination */
++	strbuf = kmalloc(count + 1, GFP_KERNEL);
++	if (!strbuf)
++		return -ENOMEM;
++
++	strbuf_copy = strbuf;
++	strlcpy(strbuf, buf, count + 1);
++
++	if (!hba)
++		goto out;
++
++	/* Just return if bConfigDescrLock is already set */
++	ret = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_READ_ATTR,
++		QUERY_ATTR_IDN_CONF_DESC_LOCK, 0, 0, &bConfigDescrLock);
++	if (ret)
++		goto out;
++
++	if (bConfigDescrLock) {
++		dev_err(hba->dev, "%s: bConfigDescrLock already set to %u, cannot re-provision device!\n",
++		__func__, bConfigDescrLock);
++		goto out;
++	}
++
++	for (i = 0; i < QUERY_DESC_CONFIGURATION_DEF_SIZE; i++) {
++		token = strsep(&strbuf, " ");
++		if (!token && i)
++			break;
++
++		ret = kstrtoint(token, 0, &value);
++		if (ret) {
++			dev_err(hba->dev, "%s: kstrtoint failed %d %s\n",
++				__func__, ret, token);
++			break;
++		}
++		desc_buf[i] = (u8)value;
++	}
++
++	/* Write configuration descriptor to provision ufs */
++	ret = ufshcd_query_descriptor_retry(hba, UPIU_QUERY_OPCODE_WRITE_DESC,
++		QUERY_DESC_IDN_CONFIGURATION, 0, 0, desc_buf, &buff_len);
++
++	if (!ret)
++		dev_err(hba->dev, "%s: UFS Provisioning done, reboot now!\n",
++		__func__);
++
++out:
++	kfree(strbuf_copy);
++	return count;
++}
++
++static ssize_t ufs_provision_store(struct config_item *item,
++		const char *buf, size_t count)
++{
++	struct ufs_hba *hba = config_item_to_hba(item);
++
++	return ufshcd_desc_configfs_store(hba, buf, count);
++}
++
++static struct configfs_attribute ufshcd_attr_provision = {
++	.ca_name	= "ufs_provision",
++	.ca_mode	= 0644,
++	.ca_owner	= THIS_MODULE,
++	.show		= ufs_provision_show,
++	.store		= ufs_provision_store,
++};
++
++static struct configfs_attribute *ufshcd_attrs[] = {
++	&ufshcd_attr_provision,
++	NULL,
++};
++
++static struct config_item_type ufscfg_type = {
++	.ct_attrs	= ufshcd_attrs,
++	.ct_owner	= THIS_MODULE,
++};
++
++static struct configfs_subsystem ufscfg_subsys = {
++	.su_group = {
++		.cg_item = {
++			.ci_type = &ufscfg_type,
++		},
++	},
++};
++
++int ufshcd_configfs_init(struct ufs_hba *hba, const char *name)
++{
++	int ret;
++	struct configfs_subsystem *subsys = &hba->subsys;
++
++	strncpy(ufscfg_subsys.su_group.cg_item.ci_namebuf, name, strlen(name));
++	subsys->su_group = ufscfg_subsys.su_group;
++	config_group_init(&subsys->su_group);
++	mutex_init(&subsys->su_mutex);
++	ret = configfs_register_subsystem(subsys);
++	if (ret)
++		pr_err("Error %d while registering subsystem %s\n",
++		       ret,
++		       subsys->su_group.cg_item.ci_namebuf);
++
++	return ret;
++}
++
++void ufshcd_configfs_exit(void)
++{
++	configfs_unregister_subsystem(&ufscfg_subsys);
++}
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index c5b1bf1..bfdd502 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -7622,6 +7622,7 @@ int ufshcd_shutdown(struct ufs_hba *hba)
+ void ufshcd_remove(struct ufs_hba *hba)
+ {
+ 	ufs_sysfs_remove_nodes(hba->dev);
++	ufshcd_configfs_exit();
+ 	scsi_remove_host(hba->host);
+ 	/* disable interrupts */
+ 	ufshcd_disable_intr(hba, hba->intr_mask);
+@@ -7875,6 +7876,7 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+ 
+ 	async_schedule(ufshcd_async_scan, hba);
+ 	ufs_sysfs_add_nodes(hba->dev);
++	ufshcd_configfs_init(hba, dev_name(hba->dev));
+ 
+ 	return 0;
+ 
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 8110dcd..2ece88d 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -37,6 +37,7 @@
+ #ifndef _UFSHCD_H
+ #define _UFSHCD_H
+ 
++#include <linux/configfs.h>
+ #include <linux/module.h>
+ #include <linux/kernel.h>
+ #include <linux/init.h>
+@@ -515,6 +516,9 @@ struct ufs_hba {
+ 
+ 	struct Scsi_Host *host;
+ 	struct device *dev;
++#ifdef CONFIG_UFS_PROVISION
++	struct configfs_subsystem subsys;
++#endif
+ 	/*
+ 	 * This field is to keep a reference to "scsi_device" corresponding to
+ 	 * "UFS device" W-LU.
+@@ -866,6 +870,21 @@ int ufshcd_read_string_desc(struct ufs_hba *hba, int desc_index,
+ int ufshcd_hold(struct ufs_hba *hba, bool async);
+ void ufshcd_release(struct ufs_hba *hba);
+ 
++/* Expose UFS configfs API's */
++#ifdef CONFIG_UFS_PROVISION
++int ufshcd_configfs_init(struct ufs_hba *hba, const char *name);
++void ufshcd_configfs_exit(void);
++#else
++int ufshcd_configfs_init(struct ufs_hba *hba, const char *name)
++{
++	return 0;
++}
++
++void ufshcd_configfs_exit(void)
++{
++}
++#endif
++
+ int ufshcd_map_desc_id_to_length(struct ufs_hba *hba, enum desc_idn desc_id,
+ 	int *desc_length);
+ 
 -- 
-Regard's
-
-Abdul Haleem
-IBM Linux Technology Centre
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
