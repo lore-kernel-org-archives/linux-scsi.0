@@ -1,331 +1,83 @@
-From: Sayali Lokhande <sayalil@codeaurora.org>
-Subject: [PATCH V6] scsi: ufs: Add configfs support for UFS provisioning
-Date: Mon, 16 Jul 2018 15:13:57 +0530
-Message-ID: <1531734237-27421-2-git-send-email-sayalil@codeaurora.org>
-References: <1531734237-27421-1-git-send-email-sayalil@codeaurora.org>
+From: Martijn Coenen <maco@android.com>
+Subject: [PATCH 0/6] Symbol namespaces
+Date: Mon, 16 Jul 2018 14:21:19 +0200
+Message-ID: <20180716122125.175792-1-maco@android.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1531734237-27421-1-git-send-email-sayalil@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: subhashj@codeaurora.org, cang@codeaurora.org, vivek.gautam@codeaurora.org, rnayak@codeaurora.org, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, asutoshd@codeaurora.org, evgreen@chromium.org, riteshh@codeaurora.org
-Cc: linux-scsi@vger.kernel.org, Sayali Lokhande <sayalil@codeaurora.org>, open list <linux-kernel@vger.kernel.org>
+To: linux-kernel@vger.kernel.org
+Cc: Martijn Coenen <maco@android.com>, Masahiro Yamada <yamada.masahiro@socionext.com>, Michal Marek <michal.lkml@markovi.net>, Geert Uytterhoeven <geert@linux-m68k.org>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org, Alan Stern <stern@rowland.harvard.edu>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Oliver Neukum <oneukum@suse.com>, Arnd Bergmann <arnd@arndb.de>, Jessica Yu <jeyu@kernel.org>, Stephen Boyd <sboyd@codeaurora.org>, Philippe Ombredanne <pombredanne@nexb.com>, Kate Stewart <kstewart@linuxfoundation.org>, Sam Ravnborg <sam@ravnborg.org>, linux-kbuild@vger.kernel.org, linux-m68k@lists.linux-m68k.org, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net, linux-scsi
 List-Id: linux-scsi@vger.kernel.org
 
-This patch adds configfs support to provision UFS device at
-runtime. This feature can be primarily useful in factory or
-assembly line as some devices may be required to be configured
-multiple times during initial system development phase.
-Configuration Descriptors can be written multiple times until
-bConfigDescrLock attribute is zero.
+As of Linux 4.17, there are more than 30000 exported symbols
+in the kernel. There seems to be some consensus amongst
+kernel devs that the export surface is too large, and hard
+to reason about.
 
-Configuration descriptor buffer consists of Device and Unit
-descriptor configurable parameters which are parsed from vendor
-specific provisioning file and then passed via configfs node at
-runtime to provision ufs device.
-CONFIG_CONFIGFS_FS needs to be enabled for using this feature.
+Generally, these symbols fall in one of these categories:
+1) Symbols actually meant for drivers
+2) Symbols that are only exported because functionality is
+   split over multiple modules, yet they really shouldn't
+   be used by modules outside of their own subsystem
+3) Symbols really only meant for in-tree use
 
-Usage:
-1) To read current configuration descriptor :
-   cat /config/XXXX.ufshc/ufs_provision
-2) To provision ufs device:
-   echo <config_desc_buf> > /config/XXXX.ufshc/ufs_provision
+When module developers try to upstream their code, it
+regularly turns out that they are using exported symbols
+that they really shouldn't be using. This problem is even
+bigger for drivers that are currently out-of-tree, which
+may be using many symbols that they shouldn't be using,
+and that break when those symbols are removed or modified.
 
-Signed-off-by: Sayali Lokhande <sayalil@codeaurora.org>
----
- Documentation/ABI/testing/configfs-driver-ufs |  18 +++
- drivers/scsi/ufs/Kconfig                      |  10 ++
- drivers/scsi/ufs/Makefile                     |   1 +
- drivers/scsi/ufs/ufs-configfs.c               | 162 ++++++++++++++++++++++++++
- drivers/scsi/ufs/ufshcd.c                     |   2 +
- drivers/scsi/ufs/ufshcd.h                     |  19 +++
- 6 files changed, 212 insertions(+)
- create mode 100644 Documentation/ABI/testing/configfs-driver-ufs
- create mode 100644 drivers/scsi/ufs/ufs-configfs.c
+This patch allows subsystem maintainers to partition their
+exported symbols into separate namespaces, and module
+authors to import such namespaces only when needed.
 
-diff --git a/Documentation/ABI/testing/configfs-driver-ufs b/Documentation/ABI/testing/configfs-driver-ufs
-new file mode 100644
-index 0000000..eeee499c
---- /dev/null
-+++ b/Documentation/ABI/testing/configfs-driver-ufs
-@@ -0,0 +1,18 @@
-+What:		/config/ufshcd/ufs_provision
-+Date:		Jun 2018
-+KernelVersion:	4.14
-+Description:
-+		This file shows the current ufs configuration descriptor set in device.
-+		This can be used to provision ufs device if bConfigDescrLock is 0.
-+		For more details, refer 14.1.6.3 Configuration Descriptor and
-+		Table 14-12 - Unit Descriptor configurable parameters from specs for
-+		description of each configuration descriptor parameter.
-+		Configuration descriptor buffer needs to be passed in space separated
-+		format specificied as below:
-+		echo <bLength> <bDescriptorIDN> <bConfDescContinue> <bBootEnable>
-+		<bDescrAccessEn> <bInitPowerMode> <bHighPriorityLUN>
-+		<bSecureRemovalType> <bInitActiveICCLevel> <wPeriodicRTCUpdate>
-+		<0Bh:0Fh_ReservedAs_0> <bLUEnable> <bBootLunID> <bLUWriteProtect>
-+		<bMemoryType> <dNumAllocUnits> <bDataReliability> <bLogicalBlockSize>
-+		<bProvisioningType> <wContextCapabilities> <0Dh:0Fh_ReservedAs_0>
-+		> /config/XXXX.ufshc/ufs_provision
-diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
-index e27b4d4..34d89c2 100644
---- a/drivers/scsi/ufs/Kconfig
-+++ b/drivers/scsi/ufs/Kconfig
-@@ -100,3 +100,13 @@ config SCSI_UFS_QCOM
- 
- 	  Select this if you have UFS controller on QCOM chipset.
- 	  If unsure, say N.
-+
-+config UFS_PROVISION
-+	tristate "Runtime UFS Provisioning support"
-+	depends on SCSI_UFSHCD_PLATFORM && CONFIGFS_FS
-+	help
-+	  This enables runtime UFS provisioning support. This can be used
-+	  primarily during assembly line as some devices may be required to
-+	  be configured multiple times during initial development phase.
-+
-+	  If unsure, say N.
-diff --git a/drivers/scsi/ufs/Makefile b/drivers/scsi/ufs/Makefile
-index 918f579..00110ea 100644
---- a/drivers/scsi/ufs/Makefile
-+++ b/drivers/scsi/ufs/Makefile
-@@ -5,5 +5,6 @@ obj-$(CONFIG_SCSI_UFS_DWC_TC_PLATFORM) += tc-dwc-g210-pltfrm.o ufshcd-dwc.o tc-d
- obj-$(CONFIG_SCSI_UFS_QCOM) += ufs-qcom.o
- obj-$(CONFIG_SCSI_UFSHCD) += ufshcd-core.o
- ufshcd-core-objs := ufshcd.o ufs-sysfs.o
-+obj-$(CONFIG_UFS_PROVISION) += ufs-configfs.o
- obj-$(CONFIG_SCSI_UFSHCD_PCI) += ufshcd-pci.o
- obj-$(CONFIG_SCSI_UFSHCD_PLATFORM) += ufshcd-pltfrm.o
-diff --git a/drivers/scsi/ufs/ufs-configfs.c b/drivers/scsi/ufs/ufs-configfs.c
-new file mode 100644
-index 0000000..3e9837a
---- /dev/null
-+++ b/drivers/scsi/ufs/ufs-configfs.c
-@@ -0,0 +1,162 @@
-+// SPDX-License-Identifier: GPL-2.0+
-+// Copyright (c) 2018, Linux Foundation.
-+
-+#include <linux/configfs.h>
-+#include <linux/err.h>
-+#include <linux/string.h>
-+
-+#include "ufs.h"
-+#include "ufshcd.h"
-+
-+static inline struct ufs_hba *config_item_to_hba(struct config_item *item)
-+{
-+	struct config_group *group = to_config_group(item);
-+	struct configfs_subsystem *subsys = to_configfs_subsystem(group);
-+	struct ufs_hba *hba = container_of(subsys, struct ufs_hba, subsys);
-+
-+	return hba ? hba : NULL;
-+}
-+
-+static ssize_t ufs_provision_show(struct config_item *item, char *buf)
-+{
-+	u8 desc_buf[QUERY_DESC_CONFIGURATION_DEF_SIZE] = {0};
-+	int buff_len = QUERY_DESC_CONFIGURATION_DEF_SIZE;
-+	int i, ret, curr_len = 0;
-+	struct ufs_hba *hba = config_item_to_hba(item);
-+
-+	if (!hba)
-+		return snprintf(buf, PAGE_SIZE, "ufs hba is NULL!\n");
-+
-+	ret = ufshcd_query_descriptor_retry(hba, UPIU_QUERY_OPCODE_READ_DESC,
-+		QUERY_DESC_IDN_CONFIGURATION, 0, 0, desc_buf, &buff_len);
-+
-+	if (ret)
-+		return snprintf(buf, PAGE_SIZE,
-+		"Failed reading descriptor. desc_idn %d, opcode %x ret %d\n",
-+		QUERY_DESC_IDN_CONFIGURATION,
-+		UPIU_QUERY_OPCODE_READ_DESC, ret);
-+
-+	for (i = 0; i < buff_len; i++)
-+		curr_len += snprintf((buf + curr_len), (PAGE_SIZE - curr_len),
-+				"0x%x ", desc_buf[i]);
-+
-+	return curr_len;
-+}
-+
-+ssize_t ufshcd_desc_configfs_store(struct ufs_hba *hba,
-+		const char *buf, size_t count)
-+{
-+	char *strbuf;
-+	char *strbuf_copy;
-+	u8 desc_buf[QUERY_DESC_CONFIGURATION_DEF_SIZE] = {0};
-+	int buff_len = QUERY_DESC_CONFIGURATION_DEF_SIZE;
-+	char *token;
-+	int i, ret, value;
-+	u32 bConfigDescrLock = 0;
-+
-+	/* reserve one byte for null termination */
-+	strbuf = kmalloc(count + 1, GFP_KERNEL);
-+	if (!strbuf)
-+		return -ENOMEM;
-+
-+	strbuf_copy = strbuf;
-+	strlcpy(strbuf, buf, count + 1);
-+
-+	if (!hba)
-+		goto out;
-+
-+	/* Just return if bConfigDescrLock is already set */
-+	ret = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_READ_ATTR,
-+		QUERY_ATTR_IDN_CONF_DESC_LOCK, 0, 0, &bConfigDescrLock);
-+	if (ret)
-+		goto out;
-+
-+	if (bConfigDescrLock) {
-+		dev_err(hba->dev, "%s: bConfigDescrLock already set to %u, cannot re-provision device!\n",
-+		__func__, bConfigDescrLock);
-+		goto out;
-+	}
-+
-+	for (i = 0; i < QUERY_DESC_CONFIGURATION_DEF_SIZE; i++) {
-+		token = strsep(&strbuf, " ");
-+		if (!token && i)
-+			break;
-+
-+		ret = kstrtoint(token, 0, &value);
-+		if (ret) {
-+			dev_err(hba->dev, "%s: kstrtoint failed %d %s\n",
-+				__func__, ret, token);
-+			break;
-+		}
-+		desc_buf[i] = (u8)value;
-+	}
-+
-+	/* Write configuration descriptor to provision ufs */
-+	ret = ufshcd_query_descriptor_retry(hba, UPIU_QUERY_OPCODE_WRITE_DESC,
-+		QUERY_DESC_IDN_CONFIGURATION, 0, 0, desc_buf, &buff_len);
-+
-+	if (!ret)
-+		dev_err(hba->dev, "%s: UFS Provisioning done, reboot now!\n",
-+		__func__);
-+
-+out:
-+	kfree(strbuf_copy);
-+	return count;
-+}
-+
-+static ssize_t ufs_provision_store(struct config_item *item,
-+		const char *buf, size_t count)
-+{
-+	struct ufs_hba *hba = config_item_to_hba(item);
-+
-+	return ufshcd_desc_configfs_store(hba, buf, count);
-+}
-+
-+static struct configfs_attribute ufshcd_attr_provision = {
-+	.ca_name	= "ufs_provision",
-+	.ca_mode	= 0644,
-+	.ca_owner	= THIS_MODULE,
-+	.show		= ufs_provision_show,
-+	.store		= ufs_provision_store,
-+};
-+
-+static struct configfs_attribute *ufshcd_attrs[] = {
-+	&ufshcd_attr_provision,
-+	NULL,
-+};
-+
-+static struct config_item_type ufscfg_type = {
-+	.ct_attrs	= ufshcd_attrs,
-+	.ct_owner	= THIS_MODULE,
-+};
-+
-+static struct configfs_subsystem ufscfg_subsys = {
-+	.su_group = {
-+		.cg_item = {
-+			.ci_type = &ufscfg_type,
-+		},
-+	},
-+};
-+
-+int ufshcd_configfs_init(struct ufs_hba *hba, const char *name)
-+{
-+	int ret;
-+	struct configfs_subsystem *subsys = &hba->subsys;
-+
-+	strncpy(ufscfg_subsys.su_group.cg_item.ci_namebuf, name, strlen(name));
-+	subsys->su_group = ufscfg_subsys.su_group;
-+	config_group_init(&subsys->su_group);
-+	mutex_init(&subsys->su_mutex);
-+	ret = configfs_register_subsystem(subsys);
-+	if (ret)
-+		pr_err("Error %d while registering subsystem %s\n",
-+		       ret,
-+		       subsys->su_group.cg_item.ci_namebuf);
-+
-+	return ret;
-+}
-+
-+void ufshcd_configfs_exit(void)
-+{
-+	configfs_unregister_subsystem(&ufscfg_subsys);
-+}
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index c5b1bf1..bfdd502 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -7622,6 +7622,7 @@ int ufshcd_shutdown(struct ufs_hba *hba)
- void ufshcd_remove(struct ufs_hba *hba)
- {
- 	ufs_sysfs_remove_nodes(hba->dev);
-+	ufshcd_configfs_exit();
- 	scsi_remove_host(hba->host);
- 	/* disable interrupts */
- 	ufshcd_disable_intr(hba, hba->intr_mask);
-@@ -7875,6 +7876,7 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
- 
- 	async_schedule(ufshcd_async_scan, hba);
- 	ufs_sysfs_add_nodes(hba->dev);
-+	ufshcd_configfs_init(hba, dev_name(hba->dev));
- 
- 	return 0;
- 
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 8110dcd..2ece88d 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -37,6 +37,7 @@
- #ifndef _UFSHCD_H
- #define _UFSHCD_H
- 
-+#include <linux/configfs.h>
- #include <linux/module.h>
- #include <linux/kernel.h>
- #include <linux/init.h>
-@@ -515,6 +516,9 @@ struct ufs_hba {
- 
- 	struct Scsi_Host *host;
- 	struct device *dev;
-+#ifdef CONFIG_UFS_PROVISION
-+	struct configfs_subsystem subsys;
-+#endif
- 	/*
- 	 * This field is to keep a reference to "scsi_device" corresponding to
- 	 * "UFS device" W-LU.
-@@ -866,6 +870,21 @@ int ufshcd_read_string_desc(struct ufs_hba *hba, int desc_index,
- int ufshcd_hold(struct ufs_hba *hba, bool async);
- void ufshcd_release(struct ufs_hba *hba);
- 
-+/* Expose UFS configfs API's */
-+#ifdef CONFIG_UFS_PROVISION
-+int ufshcd_configfs_init(struct ufs_hba *hba, const char *name);
-+void ufshcd_configfs_exit(void);
-+#else
-+int ufshcd_configfs_init(struct ufs_hba *hba, const char *name)
-+{
-+	return 0;
-+}
-+
-+void ufshcd_configfs_exit(void)
-+{
-+}
-+#endif
-+
- int ufshcd_map_desc_id_to_length(struct ufs_hba *hba, enum desc_idn desc_id,
- 	int *desc_length);
- 
+This allows subsystem maintainers to more easily limit
+availability of these namespaced symbols to other parts of
+the kernel. It can also be used to partition the set of
+exported symbols for documentation purposes; for example,
+a set of symbols that is really only used for debugging
+could be in a "SUBSYSTEM_DEBUG" namespace.
+
+Martijn Coenen (6):
+  export: explicitly align struct kernel_symbol.
+  module: add support for symbol namespaces.
+  modpost: add support for checking symbol namespaces.
+  modpost: add support for generating namespace dependencies.
+  scripts: Coccinelle script for namespace dependencies.
+  RFC: USB: storage: move symbols into USB_STORAGE namespace.
+
+ Makefile                            |  11 +++
+ arch/m68k/include/asm/export.h      |   1 -
+ arch/x86/include/asm/Kbuild         |   1 +
+ arch/x86/include/asm/export.h       |   5 --
+ drivers/usb/storage/alauda.c        |   1 +
+ drivers/usb/storage/cypress_atacb.c |   1 +
+ drivers/usb/storage/datafab.c       |   1 +
+ drivers/usb/storage/ene_ub6250.c    |   1 +
+ drivers/usb/storage/freecom.c       |   1 +
+ drivers/usb/storage/isd200.c        |   1 +
+ drivers/usb/storage/jumpshot.c      |   1 +
+ drivers/usb/storage/karma.c         |   1 +
+ drivers/usb/storage/onetouch.c      |   1 +
+ drivers/usb/storage/realtek_cr.c    |   1 +
+ drivers/usb/storage/sddr09.c        |   1 +
+ drivers/usb/storage/sddr55.c        |   1 +
+ drivers/usb/storage/shuttle_usbat.c |   1 +
+ drivers/usb/storage/uas.c           |   1 +
+ drivers/usb/storage/usb.c           |  20 ++---
+ include/asm-generic/export.h        |   2 +-
+ include/linux/export.h              |  84 ++++++++++++++-----
+ include/linux/module.h              |  13 +++
+ kernel/module.c                     |  79 ++++++++++++++++++
+ scripts/Makefile.modpost            |   4 +-
+ scripts/add_namespace.cocci         |  19 +++++
+ scripts/mod/modpost.c               | 120 ++++++++++++++++++++++++++--
+ scripts/mod/modpost.h               |   9 +++
+ scripts/nsdeps                      |  41 ++++++++++
+ 28 files changed, 379 insertions(+), 44 deletions(-)
+ delete mode 100644 arch/x86/include/asm/export.h
+ create mode 100644 scripts/add_namespace.cocci
+ create mode 100644 scripts/nsdeps
+
 -- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
+2.18.0.203.gfac676dfb9-goog
