@@ -1,89 +1,80 @@
-From: Adrian Hunter <adrian.hunter@intel.com>
-Subject: Re: [PATCH V6] scsi: ufs: Add configfs support for UFS provisioning
-Date: Tue, 17 Jul 2018 16:06:08 +0300
-Message-ID: <fc305cad-a0db-9c4b-9d5f-14e8e48a23b3@intel.com>
-References: <1531734237-27421-1-git-send-email-sayalil@codeaurora.org>
- <1531734237-27421-2-git-send-email-sayalil@codeaurora.org>
+From: Anoob Soman <anoob.soman-Sxgqhf6Nn4DQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [RFC 1/1] libiscsi: Fix race between iscsi_xmit_task and
+ iscsi_complete_task
+Date: Tue, 17 Jul 2018 16:56:47 +0100
+Message-ID: <41949f23-794e-60c8-ce0f-fcb170b1db39@citrix.com>
+References: <1530543624-130587-1-git-send-email-anoob.soman@citrix.com>
+ <5cc14ea6-2586-ce2b-f8c4-c46222280df7@citrix.com>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1531734237-27421-2-git-send-email-sayalil@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: quoted-printable
+Return-path: <open-iscsi+bncBCLIFEWU6YHBBQ5DXDNAKGQETPLJGBY-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+In-Reply-To: <5cc14ea6-2586-ce2b-f8c4-c46222280df7-Sxgqhf6Nn4DQT0dZR+AlfA@public.gmane.org>
 Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Sayali Lokhande <sayalil@codeaurora.org>, subhashj@codeaurora.org, cang@codeaurora.org, vivek.gautam@codeaurora.org, rnayak@codeaurora.org, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, asutoshd@codeaurora.org, evgreen@chromium.org, riteshh@codeaurora.org
-Cc: linux-scsi@vger.kernel.org, open list <linux-kernel@vger.kernel.org>
+List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <https://groups.google.com/group/open-iscsi
+List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
+ <https://groups.google.com/group/open-iscsi/subscribe>
+To: lduncan-IBi9RG/b67k@public.gmane.org, cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 16/07/18 12:43, Sayali Lokhande wrote:
-> This patch adds configfs support to provision UFS device at
-> runtime. This feature can be primarily useful in factory or
-> assembly line as some devices may be required to be configured
-> multiple times during initial system development phase.
-> Configuration Descriptors can be written multiple times until
-> bConfigDescrLock attribute is zero.
-> 
-> Configuration descriptor buffer consists of Device and Unit
-> descriptor configurable parameters which are parsed from vendor
-> specific provisioning file and then passed via configfs node at
-> runtime to provision ufs device.
-> CONFIG_CONFIGFS_FS needs to be enabled for using this feature.
-> 
-> Usage:
-> 1) To read current configuration descriptor :
->    cat /config/XXXX.ufshc/ufs_provision
-> 2) To provision ufs device:
->    echo <config_desc_buf> > /config/XXXX.ufshc/ufs_provision
-> 
-> Signed-off-by: Sayali Lokhande <sayalil@codeaurora.org>
-> ---
->  Documentation/ABI/testing/configfs-driver-ufs |  18 +++
->  drivers/scsi/ufs/Kconfig                      |  10 ++
->  drivers/scsi/ufs/Makefile                     |   1 +
->  drivers/scsi/ufs/ufs-configfs.c               | 162 ++++++++++++++++++++++++++
->  drivers/scsi/ufs/ufshcd.c                     |   2 +
->  drivers/scsi/ufs/ufshcd.h                     |  19 +++
->  6 files changed, 212 insertions(+)
->  create mode 100644 Documentation/ABI/testing/configfs-driver-ufs
->  create mode 100644 drivers/scsi/ufs/ufs-configfs.c
-> 
-> diff --git a/Documentation/ABI/testing/configfs-driver-ufs b/Documentation/ABI/testing/configfs-driver-ufs
-> new file mode 100644
-> index 0000000..eeee499c
-> --- /dev/null
-> +++ b/Documentation/ABI/testing/configfs-driver-ufs
-> @@ -0,0 +1,18 @@
-> +What:		/config/ufshcd/ufs_provision
-> +Date:		Jun 2018
-> +KernelVersion:	4.14
-> +Description:
-> +		This file shows the current ufs configuration descriptor set in device.
-> +		This can be used to provision ufs device if bConfigDescrLock is 0.
-> +		For more details, refer 14.1.6.3 Configuration Descriptor and
-> +		Table 14-12 - Unit Descriptor configurable parameters from specs for
-> +		description of each configuration descriptor parameter.
-> +		Configuration descriptor buffer needs to be passed in space separated
-> +		format specificied as below:
-> +		echo <bLength> <bDescriptorIDN> <bConfDescContinue> <bBootEnable>
-> +		<bDescrAccessEn> <bInitPowerMode> <bHighPriorityLUN>
-> +		<bSecureRemovalType> <bInitActiveICCLevel> <wPeriodicRTCUpdate>
-> +		<0Bh:0Fh_ReservedAs_0> <bLUEnable> <bBootLunID> <bLUWriteProtect>
-> +		<bMemoryType> <dNumAllocUnits> <bDataReliability> <bLogicalBlockSize>
-> +		<bProvisioningType> <wContextCapabilities> <0Dh:0Fh_ReservedAs_0>
-> +		> /config/XXXX.ufshc/ufs_provision
-> diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
-> index e27b4d4..34d89c2 100644
-> --- a/drivers/scsi/ufs/Kconfig
-> +++ b/drivers/scsi/ufs/Kconfig
-> @@ -100,3 +100,13 @@ config SCSI_UFS_QCOM
->  
->  	  Select this if you have UFS controller on QCOM chipset.
->  	  If unsure, say N.
-> +
-> +config UFS_PROVISION
-> +	tristate "Runtime UFS Provisioning support"
-> +	depends on SCSI_UFSHCD_PLATFORM && CONFIGFS_FS
+On 09/07/18 11:43, Anoob Soman wrote:
+> On 02/07/18 16:00, Anoob Soman wrote:
+>> ---
+>> =C2=A0 drivers/scsi/libiscsi.c | 6 ++++++
+>> =C2=A0 1 file changed, 6 insertions(+)
+>>
+>> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+>> index d609383..aa3be6f 100644
+>> --- a/drivers/scsi/libiscsi.c
+>> +++ b/drivers/scsi/libiscsi.c
+>> @@ -1449,7 +1449,13 @@ static int iscsi_xmit_task(struct iscsi_conn=20
+>> *conn)
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (test_bit(ISCSI_SUSPEND_BIT, &conn->su=
+spend_tx))
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return -ENODATA;
+>> =C2=A0 +=C2=A0=C2=A0=C2=A0 spin_lock_bh(&conn->session->back_lock);
+>> +=C2=A0=C2=A0=C2=A0 if (conn->task =3D=3D NULL) {
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 spin_unlock_bh(&conn->sessio=
+n->back_lock);
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return -ENODATA;
+>> +=C2=A0=C2=A0=C2=A0 }
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 __iscsi_get_task(task);
+>> +=C2=A0=C2=A0=C2=A0 spin_unlock_bh(&conn->session->back_lock);
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 spin_unlock_bh(&conn->session->frwd_lock)=
+;
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 rc =3D conn->session->tt->xmit_task(task)=
+;
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 spin_lock_bh(&conn->session->frwd_lock);
+>
+>
+> Hi Chris, Lee.
+>
+> Could one of you look at this change and provide some comments ?
+>
+> Thanks,
+>
+> -Anoob.
+>
 
-Why SCSI_UFSHCD_PLATFORM instead of SCSI_UFSHCD?
+Hi,
 
-Also please cc me in future revisions.
+Can someone look at this change ?
+
+Thanks,
+
+Anoob.
+
+--=20
+You received this message because you are subscribed to the Google Groups "=
+open-iscsi" group.
+To unsubscribe from this group and stop receiving emails from it, send an e=
+mail to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+Visit this group at https://groups.google.com/group/open-iscsi.
+For more options, visit https://groups.google.com/d/optout.
