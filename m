@@ -1,80 +1,77 @@
-From: Anoob Soman <anoob.soman-Sxgqhf6Nn4DQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [RFC 1/1] libiscsi: Fix race between iscsi_xmit_task and
- iscsi_complete_task
-Date: Tue, 17 Jul 2018 16:56:47 +0100
-Message-ID: <41949f23-794e-60c8-ce0f-fcb170b1db39@citrix.com>
-References: <1530543624-130587-1-git-send-email-anoob.soman@citrix.com>
- <5cc14ea6-2586-ce2b-f8c4-c46222280df7@citrix.com>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: Evan Green <evgreen@chromium.org>
+Subject: Re: [PATCH V5 2/2] scsi: ufs: Add configfs support for ufs provisioning
+Date: Tue, 17 Jul 2018 13:23:35 -0700
+Message-ID: <CAE=gft6zm2mw3rnNuktDe0NWs-NM1CFQw1BUeGhaBi3eoEDXBg@mail.gmail.com>
+References: <1530858040-13971-1-git-send-email-sayalil@codeaurora.org>
+ <1530858040-13971-3-git-send-email-sayalil@codeaurora.org>
+ <CAE=gft5U1-Jo-GvTF7sNAV3Q565AmuUrHpmBdxUL+UwkKxesqA@mail.gmail.com>
+ <0dce9e9c-4f93-9857-72ee-f65ff195c41a@codeaurora.org> <CAE=gft6_=SQjgv7_kHXKJKa8_45NKKFwwE7UaXsijPpMd35LOg@mail.gmail.com>
+ <4cb931e199599314829f5ff750797c88fc123f1f.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: quoted-printable
-Return-path: <open-iscsi+bncBCLIFEWU6YHBBQ5DXDNAKGQETPLJGBY-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-In-Reply-To: <5cc14ea6-2586-ce2b-f8c4-c46222280df7-Sxgqhf6Nn4DQT0dZR+AlfA@public.gmane.org>
-Content-Language: en-US
-List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <https://groups.google.com/group/open-iscsi
-List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
- <https://groups.google.com/group/open-iscsi/subscribe>
-To: lduncan-IBi9RG/b67k@public.gmane.org, cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4cb931e199599314829f5ff750797c88fc123f1f.camel@wdc.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bart.VanAssche@wdc.com
+Cc: sayalil@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, linux-kernel@vger.kernel.org, asutoshd@codeaurora.org, riteshh@codeaurora.org, cang@codeaurora.org, martin.petersen@oracle.com, subhashj@codeaurora.org, linux-scsi@vger.kernel.org, vivek.gautam@codeaurora.org, Rajendra Nayak <rnayak@codeaurora.org>, jejb@linux.vnet.ibm.com
 List-Id: linux-scsi@vger.kernel.org
 
-On 09/07/18 11:43, Anoob Soman wrote:
-> On 02/07/18 16:00, Anoob Soman wrote:
->> ---
->> =C2=A0 drivers/scsi/libiscsi.c | 6 ++++++
->> =C2=A0 1 file changed, 6 insertions(+)
->>
->> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
->> index d609383..aa3be6f 100644
->> --- a/drivers/scsi/libiscsi.c
->> +++ b/drivers/scsi/libiscsi.c
->> @@ -1449,7 +1449,13 @@ static int iscsi_xmit_task(struct iscsi_conn=20
->> *conn)
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (test_bit(ISCSI_SUSPEND_BIT, &conn->su=
-spend_tx))
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return -ENODATA;
->> =C2=A0 +=C2=A0=C2=A0=C2=A0 spin_lock_bh(&conn->session->back_lock);
->> +=C2=A0=C2=A0=C2=A0 if (conn->task =3D=3D NULL) {
->> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 spin_unlock_bh(&conn->sessio=
-n->back_lock);
->> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return -ENODATA;
->> +=C2=A0=C2=A0=C2=A0 }
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 __iscsi_get_task(task);
->> +=C2=A0=C2=A0=C2=A0 spin_unlock_bh(&conn->session->back_lock);
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 spin_unlock_bh(&conn->session->frwd_lock)=
-;
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 rc =3D conn->session->tt->xmit_task(task)=
-;
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 spin_lock_bh(&conn->session->frwd_lock);
+On Mon, Jul 16, 2018 at 5:04 PM Bart Van Assche <Bart.VanAssche@wdc.com> wrote:
 >
+> On Mon, 2018-07-16 at 16:46 -0700, Evan Green wrote:
+> > I see Bart has chimed in on the next series with a suggestion to break
+> > out each field into individual files within configfs. Bart, what are
+> > your feelings about converting to a binary attribute? I remember when
+> > I did my sysfs equivalent of this patch, somebody chimed in indicating
+> > a "commit" file might be needed so that the new configuration could be
+> > written in one fell swoop. One advantage of the binary attribute is
+> > that it writes the configuration atomically.
 >
-> Hi Chris, Lee.
+> Hello Evan,
 >
-> Could one of you look at this change and provide some comments ?
->
-> Thanks,
->
-> -Anoob.
+> I may be missing some UFS background information. But since a configfs interface
+> is being added I think the same rule applies as to all Linux kernel user space
+> interfaces, namely that it should be backwards compatible. Additionally, if
+> anyone ever will want to use this interface from a shell script, I think that
+> it will be much easier to write multiple ASCII attributes than a single binary
+> attribute.
 >
 
-Hi,
+Hi Bart,
+I'm unsure about the compatibility aspect for binary attributes that
+essentially represent direct windows into hardware. I suppose this
+comes down to who this interface is most useful to. Hypothetically
+lets say a future revision of UFS adds fields to the configuration
+descriptor, but is otherwise backwards compatible. If this interface
+is primarily for OEMs initializing their devices in the factory, then
+I'd argue they'd want the most direct window to the configuration
+descriptor. These folks probably just have a configuration they want
+to plunk into the hardware, and would prefer being able to write all
+fields over having some sort of compatibility restriction. If, on the
+other hand, this is used by long-running scripts that stick around for
+years without modification, then yes, it seems like it would be more
+important to stay compatible, and have smarts in the kernel to make
+writes of old descriptors work in new devices.
 
-Can someone look at this change ?
+At least for myself, I fall into the category of someone who just
+needs to plunk a configuration descriptor in once, and would prefer
+not to have to submit kernel changes if the descriptor evolves
+slightly. It also seemed a little odd that this patch now spends a
+bunch of energy converting ASCII into bytes, just to write it without
+modification into the hardware, and convert back again to ASCII for
+reads.
 
-Thanks,
+We plan to use a script for provisioning, and could easily handle
+ASCII or rawbytes:
 
-Anoob.
+# Some bytes, ready to go with the interface today...
+some_bytes="00 01 02 03"
 
---=20
-You received this message because you are subscribed to the Google Groups "=
-open-iscsi" group.
-To unsubscribe from this group and stop receiving emails from it, send an e=
-mail to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-Visit this group at https://groups.google.com/group/open-iscsi.
-For more options, visit https://groups.google.com/d/optout.
+# Same bytes, now in binary format
+bytes_fmt=$(echo " $some_bytes" | sed 's/ /\\x/g')
+/usr/bin/printf "$bytes_fmt" > /configfs/ufs_provision
+
+I'm not dead set on binary, since as above I could do it either way,
+but it seemed worth at least talking through. Let me know what you
+think.
+-Evan
