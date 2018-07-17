@@ -1,48 +1,54 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH V5 2/2] scsi: ufs: Add configfs support for ufs
- provisioning
-Date: Tue, 17 Jul 2018 00:04:34 +0000
-Message-ID: <4cb931e199599314829f5ff750797c88fc123f1f.camel@wdc.com>
-References: <1530858040-13971-1-git-send-email-sayalil@codeaurora.org>
-         <1530858040-13971-3-git-send-email-sayalil@codeaurora.org>
-         <CAE=gft5U1-Jo-GvTF7sNAV3Q565AmuUrHpmBdxUL+UwkKxesqA@mail.gmail.com>
-         <0dce9e9c-4f93-9857-72ee-f65ff195c41a@codeaurora.org>
-         <CAE=gft6_=SQjgv7_kHXKJKa8_45NKKFwwE7UaXsijPpMd35LOg@mail.gmail.com>
+From: Li Wei <liwei213@huawei.com>
+Subject: [PATCH v11 3/4] [RESEND] arm64: dts: add ufs dts node
+Date: Tue, 17 Jul 2018 17:36:58 +0800
+Message-ID: <20180717093659.103263-4-liwei213@huawei.com>
+References: <20180717093659.103263-1-liwei213@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-7"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAE=gft6_=SQjgv7_kHXKJKa8_45NKKFwwE7UaXsijPpMd35LOg@mail.gmail.com>
-Content-Language: en-US
-Content-ID: <988A6E6B013922458A0E07071AF34D1D@namprd04.prod.outlook.com>
+In-Reply-To: <20180717093659.103263-1-liwei213@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "sayalil@codeaurora.org" <sayalil@codeaurora.org>, "evgreen@chromium.org" <evgreen@chromium.org>
-Cc: "vinholikatti@gmail.com" <vinholikatti@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>, "riteshh@codeaurora.org" <riteshh@codeaurora.org>, "cang@codeaurora.org" <cang@codeaurora.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "subhashj@codeaurora.org" <subhashj@codeaurora.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "vivek.gautam@codeaurora.org" <vivek.gautam@codeaurora.org>, "rnayak@codeaurora.org" <rnayak@codeaurora.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>
+To: robh+dt@kernel.org, mark.rutland@arm.com, catalin.marinas@arm.com, will.deacon@arm.com, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, khilman@baylibre.com, arnd@arndb.de, gregory.clement@free-electrons.com, thomas.petazzoni@free-electrons.com, yamada.masahiro@socionext.com, riku.voipio@linaro.org, treding@nvidia.com, krzk@kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-scsi@vger.kernel.org
+Cc: zangleigang@hisilicon.com, gengjianfeng@hisilicon.com, sunzhaosheng@hisilicon.com, ian.rickards@arm.com, guodong.xu@linaro.org, puck.chen@hisilicon.com, john.stultz@linaro.org, liwei213@huawei.com, fengbaopeng@hisilicon.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 2018-07-16 at 16:46 -0700, Evan Green wrote:
-+AD4- I see Bart has chimed in on the next series with a suggestion to brea=
-k
-+AD4- out each field into individual files within configfs. Bart, what are
-+AD4- your feelings about converting to a binary attribute? I remember when
-+AD4- I did my sysfs equivalent of this patch, somebody chimed in indicatin=
-g
-+AD4- a +ACI-commit+ACI- file might be needed so that the new configuration=
- could be
-+AD4- written in one fell swoop. One advantage of the binary attribute is
-+AD4- that it writes the configuration atomically.
+arm64: dts: add ufs node for Hisilicon.
 
-Hello Evan,
+Signed-off-by: Li Wei <liwei213@huawei.com>
+Reviewed-by: Rob Herring <robh@kernel.org>
+Tested-by: John Stultz <john.stultz@linaro.org>
+---
+ arch/arm64/boot/dts/hisilicon/hi3660.dtsi | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
 
-I may be missing some UFS background information. But since a configfs inte=
-rface
-is being added I think the same rule applies as to all Linux kernel user sp=
-ace
-interfaces, namely that it should be backwards compatible. Additionally, if
-anyone ever will want to use this interface from a shell script, I think th=
-at
-it will be much easier to write multiple ASCII attributes than a single bin=
-ary
-attribute.
-
-Bart.
+diff --git a/arch/arm64/boot/dts/hisilicon/hi3660.dtsi b/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
+index 8d477dcbfa58..851190a719ea 100644
+--- a/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
++++ b/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
+@@ -1000,6 +1000,24 @@
+ 			reset-gpios = <&gpio11 1 0 >;
+ 		};
+ 
++		/* UFS */
++		ufs: ufs@ff3b0000 {
++			compatible = "hisilicon,hi3660-ufs", "jedec,ufs-1.1";
++			/* 0: HCI standard */
++			/* 1: UFS SYS CTRL */
++			reg = <0x0 0xff3b0000 0x0 0x1000>,
++				<0x0 0xff3b1000 0x0 0x1000>;
++			interrupt-parent = <&gic>;
++			interrupts = <GIC_SPI 278 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&crg_ctrl HI3660_CLK_GATE_UFSIO_REF>,
++				<&crg_ctrl HI3660_CLK_GATE_UFSPHY_CFG>;
++			clock-names = "ref_clk", "phy_clk";
++			freq-table-hz = <0 0>, <0 0>;
++			/* offset: 0x84; bit: 12 */
++			resets = <&crg_rst 0x84 12>;
++			reset-names = "rst";
++		};
++
+ 		/* SD */
+ 		dwmmc1: dwmmc1@ff37f000 {
+ 			#address-cells = <1>;
+-- 
+2.15.0
