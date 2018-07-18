@@ -1,45 +1,207 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 0/9] hisi_sas: Some misc patches
-Date: Wed, 18 Jul 2018 22:14:24 +0800
-Message-ID: <1531923273-193768-1-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 2/9] scsi: hisi_sas: tidy channel interrupt handler for v3 hw
+Date: Wed, 18 Jul 2018 22:14:26 +0800
+Message-ID: <1531923273-193768-3-git-send-email-john.garry@huawei.com>
+References: <1531923273-193768-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1531923273-193768-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linuxarm@huawei.com, linux-kernel@vger.kernel.org, John Garry <john.garry@huawei.com>
+Cc: linux-scsi@vger.kernel.org, linuxarm@huawei.com, linux-kernel@vger.kernel.org, Xiaofei Tan <tanxiaofei@huawei.com>, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-This patchset introduces some misc patches, generally more minor in
-importance.
+From: Xiaofei Tan <tanxiaofei@huawei.com>
 
-However there is a patch to add a CPU barrier to the delivery path for
-each hw version. We only saw this issue on v3 hw in hip08 chipset, where
-the host CPU exhibits a looser memory model than in predecessors, and
-software must enforce SMP coherency.
+The ISR of channel interrupt of v3 hw is a little long and messy. This
+patch tidies it by relocating CHL_INT1 and CHL_INT2 handling to new
+function separately.
 
-John Garry (1):
-  scsi: hisi_sas: Drop hisi_sas_slot_abort()
+Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
+---
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 156 ++++++++++++++++-----------------
+ 1 file changed, 78 insertions(+), 78 deletions(-)
 
-Xiang Chen (2):
-  scsi: hisi_sas: Tidy hisi_sas_task_prep()
-  scsi: hisi_sas: Add SATA FIS check for v3 hw
-
-Xiaofei Tan (6):
-  scsi: hisi_sas: tidy channel interrupt handler for v3 hw
-  scsi: hisi_sas: Fix the failure of recovering PHY from STP link
-    timeout
-  scsi: hisi_sas: tidy host controller reset function a bit
-  scsi: hisi_sas: relocate some common code for v3 hw
-  scsi: hisi_sas: Implement handlers of PCIe FLR for v3 hw
-  scsi: hisi_sas: add memory barrier in task delivery function
-
- drivers/scsi/hisi_sas/hisi_sas.h       |   4 +-
- drivers/scsi/hisi_sas/hisi_sas_main.c  | 113 ++++++--------
- drivers/scsi/hisi_sas/hisi_sas_v1_hw.c |  20 +--
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c |  18 ++-
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 274 ++++++++++++++++++++-------------
- 5 files changed, 239 insertions(+), 190 deletions(-)
-
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index 4b7688a..d7c3774 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -1333,11 +1333,83 @@ static irqreturn_t int_phy_up_down_bcast_v3_hw(int irq_no, void *p)
+ 	},
+ };
+ 
+-static irqreturn_t int_chnl_int_v3_hw(int irq_no, void *p)
++static void handle_chl_int1_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
+ {
+-	struct hisi_hba *hisi_hba = p;
++	u32 irq_value = hisi_sas_phy_read32(hisi_hba, phy_no, CHL_INT1);
++	u32 irq_msk = hisi_sas_phy_read32(hisi_hba, phy_no, CHL_INT1_MSK);
+ 	struct device *dev = hisi_hba->dev;
++	int i;
++
++	irq_value &= ~irq_msk;
++	if (!irq_value)
++		return;
++
++	for (i = 0; i < ARRAY_SIZE(port_axi_error); i++) {
++		const struct hisi_sas_hw_error *error = &port_axi_error[i];
++
++		if (!(irq_value & error->irq_msk))
++			continue;
++
++		dev_err(dev, "%s error (phy%d 0x%x) found!\n",
++			error->msg, phy_no, irq_value);
++		queue_work(hisi_hba->wq, &hisi_hba->rst_work);
++	}
++
++	hisi_sas_phy_write32(hisi_hba, phy_no, CHL_INT1, irq_value);
++}
++
++static void handle_chl_int2_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
++{
++	u32 irq_msk = hisi_sas_phy_read32(hisi_hba, phy_no, CHL_INT2_MSK);
++	u32 irq_value = hisi_sas_phy_read32(hisi_hba, phy_no, CHL_INT2);
++	struct hisi_sas_phy *phy = &hisi_hba->phy[phy_no];
+ 	struct pci_dev *pci_dev = hisi_hba->pci_dev;
++	struct device *dev = hisi_hba->dev;
++
++	irq_value &= ~irq_msk;
++	if (!irq_value)
++		return;
++
++	if (irq_value & BIT(CHL_INT2_SL_IDAF_TOUT_CONF_OFF)) {
++		dev_warn(dev, "phy%d identify timeout\n", phy_no);
++		hisi_sas_notify_phy_event(phy, HISI_PHYE_LINK_RESET);
++	}
++
++	if (irq_value & BIT(CHL_INT2_STP_LINK_TIMEOUT_OFF)) {
++		u32 reg_value = hisi_sas_phy_read32(hisi_hba, phy_no,
++				STP_LINK_TIMEOUT_STATE);
++
++		dev_warn(dev, "phy%d stp link timeout (0x%x)\n",
++			 phy_no, reg_value);
++		if (reg_value & BIT(4))
++			hisi_sas_notify_phy_event(phy, HISI_PHYE_LINK_RESET);
++	}
++
++	hisi_sas_phy_write32(hisi_hba, phy_no, CHL_INT2, irq_value);
++
++	if ((irq_value & BIT(CHL_INT2_RX_INVLD_DW_OFF)) &&
++	    (pci_dev->revision == 0x20)) {
++		u32 reg_value;
++		int rc;
++
++		rc = hisi_sas_read32_poll_timeout_atomic(
++				HILINK_ERR_DFX, reg_value,
++				!((reg_value >> 8) & BIT(phy_no)),
++				1000, 10000);
++		if (rc) {
++			disable_phy_v3_hw(hisi_hba, phy_no);
++			hisi_sas_phy_write32(hisi_hba, phy_no, CHL_INT2,
++					     BIT(CHL_INT2_RX_INVLD_DW_OFF));
++			hisi_sas_phy_read32(hisi_hba, phy_no, ERR_CNT_INVLD_DW);
++			mdelay(1);
++			enable_phy_v3_hw(hisi_hba, phy_no);
++		}
++	}
++}
++
++static irqreturn_t int_chnl_int_v3_hw(int irq_no, void *p)
++{
++	struct hisi_hba *hisi_hba = p;
+ 	u32 irq_msk;
+ 	int phy_no = 0;
+ 
+@@ -1347,84 +1419,12 @@ static irqreturn_t int_chnl_int_v3_hw(int irq_no, void *p)
+ 	while (irq_msk) {
+ 		u32 irq_value0 = hisi_sas_phy_read32(hisi_hba, phy_no,
+ 						     CHL_INT0);
+-		u32 irq_value1 = hisi_sas_phy_read32(hisi_hba, phy_no,
+-						     CHL_INT1);
+-		u32 irq_value2 = hisi_sas_phy_read32(hisi_hba, phy_no,
+-						     CHL_INT2);
+-		u32 irq_msk1 = hisi_sas_phy_read32(hisi_hba, phy_no,
+-							CHL_INT1_MSK);
+-		u32 irq_msk2 = hisi_sas_phy_read32(hisi_hba, phy_no,
+-							CHL_INT2_MSK);
+-
+-		irq_value1 &= ~irq_msk1;
+-		irq_value2 &= ~irq_msk2;
+-
+-		if ((irq_msk & (4 << (phy_no * 4))) &&
+-						irq_value1) {
+-			int i;
+-
+-			for (i = 0; i < ARRAY_SIZE(port_axi_error); i++) {
+-				const struct hisi_sas_hw_error *error =
+-						&port_axi_error[i];
+-
+-				if (!(irq_value1 & error->irq_msk))
+-					continue;
+-
+-				dev_err(dev, "%s error (phy%d 0x%x) found!\n",
+-					error->msg, phy_no, irq_value1);
+-				queue_work(hisi_hba->wq, &hisi_hba->rst_work);
+-			}
+-
+-			hisi_sas_phy_write32(hisi_hba, phy_no,
+-					     CHL_INT1, irq_value1);
+-		}
+ 
+-		if (irq_msk & (8 << (phy_no * 4)) && irq_value2) {
+-			struct hisi_sas_phy *phy = &hisi_hba->phy[phy_no];
+-
+-			if (irq_value2 & BIT(CHL_INT2_SL_IDAF_TOUT_CONF_OFF)) {
+-				dev_warn(dev, "phy%d identify timeout\n",
+-							phy_no);
+-				hisi_sas_notify_phy_event(phy,
+-					HISI_PHYE_LINK_RESET);
+-
+-			}
++		if (irq_msk & (4 << (phy_no * 4)))
++			handle_chl_int1_v3_hw(hisi_hba, phy_no);
+ 
+-			if (irq_value2 & BIT(CHL_INT2_STP_LINK_TIMEOUT_OFF)) {
+-				u32 reg_value = hisi_sas_phy_read32(hisi_hba,
+-						phy_no, STP_LINK_TIMEOUT_STATE);
+-
+-				dev_warn(dev, "phy%d stp link timeout (0x%x)\n",
+-							phy_no, reg_value);
+-				if (reg_value & BIT(4))
+-					hisi_sas_notify_phy_event(phy,
+-						HISI_PHYE_LINK_RESET);
+-			}
+-
+-			hisi_sas_phy_write32(hisi_hba, phy_no,
+-					     CHL_INT2, irq_value2);
+-
+-			if ((irq_value2 & BIT(CHL_INT2_RX_INVLD_DW_OFF)) &&
+-			    (pci_dev->revision == 0x20)) {
+-				u32 reg_value;
+-				int rc;
+-
+-				rc = hisi_sas_read32_poll_timeout_atomic(
+-					HILINK_ERR_DFX, reg_value,
+-					!((reg_value >> 8) & BIT(phy_no)),
+-					1000, 10000);
+-				if (rc) {
+-					disable_phy_v3_hw(hisi_hba, phy_no);
+-					hisi_sas_phy_write32(hisi_hba, phy_no,
+-						CHL_INT2,
+-						BIT(CHL_INT2_RX_INVLD_DW_OFF));
+-					hisi_sas_phy_read32(hisi_hba, phy_no,
+-						ERR_CNT_INVLD_DW);
+-					mdelay(1);
+-					enable_phy_v3_hw(hisi_hba, phy_no);
+-				}
+-			}
+-		}
++		if (irq_msk & (8 << (phy_no * 4)))
++			handle_chl_int2_v3_hw(hisi_hba, phy_no);
+ 
+ 		if (irq_msk & (2 << (phy_no * 4)) && irq_value0) {
+ 			hisi_sas_phy_write32(hisi_hba, phy_no,
 -- 
 1.9.1
