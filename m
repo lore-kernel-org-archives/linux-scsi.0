@@ -1,129 +1,60 @@
-From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 5/9] scsi: hisi_sas: relocate some common code for v3 hw
-Date: Wed, 18 Jul 2018 22:14:29 +0800
-Message-ID: <1531923273-193768-6-git-send-email-john.garry@huawei.com>
-References: <1531923273-193768-1-git-send-email-john.garry@huawei.com>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH V5 2/2] scsi: ufs: Add configfs support for ufs
+ provisioning
+Date: Wed, 18 Jul 2018 17:30:07 +0000
+Message-ID: <16c8acaec092ef989ec20d0b006a434bc0de250c.camel@wdc.com>
+References: <1530858040-13971-1-git-send-email-sayalil@codeaurora.org>
+         <1530858040-13971-3-git-send-email-sayalil@codeaurora.org>
+         <CAE=gft5U1-Jo-GvTF7sNAV3Q565AmuUrHpmBdxUL+UwkKxesqA@mail.gmail.com>
+         <0dce9e9c-4f93-9857-72ee-f65ff195c41a@codeaurora.org>
+         <CAE=gft6_=SQjgv7_kHXKJKa8_45NKKFwwE7UaXsijPpMd35LOg@mail.gmail.com>
+         <4cb931e199599314829f5ff750797c88fc123f1f.camel@wdc.com>
+         <CAE=gft6zm2mw3rnNuktDe0NWs-NM1CFQw1BUeGhaBi3eoEDXBg@mail.gmail.com>
+         <aa697186c00937c18519fe5eb1355d3fc458cfb6.camel@wdc.com>
+         <20180718085651.GA23599@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-7"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1531923273-193768-1-git-send-email-john.garry@huawei.com>
+In-Reply-To: <20180718085651.GA23599@kroah.com>
+Content-Language: en-US
+Content-ID: <B6F2F304B1EC044498753A5EA62D7C74@namprd04.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linuxarm@huawei.com, linux-kernel@vger.kernel.org, Xiaofei Tan <tanxiaofei@huawei.com>, John Garry <john.garry@huawei.com>
+To: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
+Cc: "vinholikatti@gmail.com" <vinholikatti@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>, "sayalil@codeaurora.org" <sayalil@codeaurora.org>, "riteshh@codeaurora.org" <riteshh@codeaurora.org>, "evgreen@chromium.org" <evgreen@chromium.org>, "cang@codeaurora.org" <cang@codeaurora.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "subhashj@codeaurora.org" <subhashj@codeaurora.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "vivek.gautam@codeaurora.org" <vivek.gautam@codeaurora.org>, "rnayak@codeaurora.org" <rnayak@codeaurora.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Xiaofei Tan <tanxiaofei@huawei.com>
+On Wed, 2018-07-18 at 10:56 +-0200, gregkh+AEA-linuxfoundation.org wrote:
++AD4- On Tue, Jul 17, 2018 at 09:06:35PM +-0000, Bart Van Assche wrote:
++AD4- +AD4- On Tue, 2018-07-17 at 13:23 -0700, Evan Green wrote:
++AD4- +AD4- +AD4- I'm not dead set on binary, since as above I could do it =
+either way,
++AD4- +AD4- +AD4- but it seemed worth at least talking through. Let me know=
+ what you
++AD4- +AD4- +AD4- think.
++AD4- +AD4-=20
++AD4- +AD4- The configfs documentation (Documentation/filesystems/configfs/=
+configfs.txt)
++AD4- +AD4- is clear about this: +ACI-Preferably only one value per file sh=
+ould be used.+ACI- So
++AD4- +AD4- I would like to hear the opinion of someone who has more author=
+ity than I
++AD4- +AD4- with regard to configfs.
++AD4-=20
++AD4- Don't we have +ACI-binary+ACI- files for configfs?  We have them for =
+sysfs, they
++AD4- are for files that are not touched by the kernel and just +ACI-pass-t=
+hrough+ACI-
++AD4- to the hardware.  Would that work here as well?
 
-Much code of PM suspend function also exists in soft reset function. This
-is not concise. So, this patch relocates the common code of these two
-functions to a separate function.
+If a new version of the UFS spec would be introduced and that new version o=
+f the
+spec introduces a new layout for the binary descriptor, will it be possible=
+ for
+user space software to figure out which version of the binary descriptor fo=
+rmat
+that has to be used?
 
-Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
-Signed-off-by: John Garry <john.garry@huawei.com>
----
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 50 ++++++++++++++++++----------------
- 1 file changed, 27 insertions(+), 23 deletions(-)
+Thanks,
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 70a6aa2..3577843 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -210,6 +210,8 @@
- 
- #define AXI_MASTER_CFG_BASE		(0x5000)
- #define AM_CTRL_GLOBAL			(0x0)
-+#define AM_CTRL_SHUTDOWN_REQ_OFF	0
-+#define AM_CTRL_SHUTDOWN_REQ_MSK	(0x1 << AM_CTRL_SHUTDOWN_REQ_OFF)
- #define AM_CURR_TRANS_RETURN	(0x150)
- 
- #define AM_CFG_MAX_TRANS		(0x5010)
-@@ -1976,11 +1978,11 @@ static void phy_get_events_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
- 
- }
- 
--static int soft_reset_v3_hw(struct hisi_hba *hisi_hba)
-+static int disable_host_v3_hw(struct hisi_hba *hisi_hba)
- {
- 	struct device *dev = hisi_hba->dev;
-+	u32 status, reg_val;
- 	int rc;
--	u32 status;
- 
- 	interrupt_disable_v3_hw(hisi_hba);
- 	hisi_sas_write32(hisi_hba, DLVRY_QUEUE_ENABLE, 0x0);
-@@ -1990,14 +1992,32 @@ static int soft_reset_v3_hw(struct hisi_hba *hisi_hba)
- 
- 	mdelay(10);
- 
--	hisi_sas_write32(hisi_hba, AXI_MASTER_CFG_BASE + AM_CTRL_GLOBAL, 0x1);
-+	reg_val = hisi_sas_read32(hisi_hba, AXI_MASTER_CFG_BASE +
-+				  AM_CTRL_GLOBAL);
-+	reg_val |= AM_CTRL_SHUTDOWN_REQ_MSK;
-+	hisi_sas_write32(hisi_hba, AXI_MASTER_CFG_BASE +
-+			 AM_CTRL_GLOBAL, reg_val);
- 
- 	/* wait until bus idle */
- 	rc = hisi_sas_read32_poll_timeout(AXI_MASTER_CFG_BASE +
- 					  AM_CURR_TRANS_RETURN, status,
- 					  status == 0x3, 10, 100);
- 	if (rc) {
--		dev_err(dev, "axi bus is not idle, rc = %d\n", rc);
-+		dev_err(dev, "axi bus is not idle, rc=%d\n", rc);
-+		return rc;
-+	}
-+
-+	return 0;
-+}
-+
-+static int soft_reset_v3_hw(struct hisi_hba *hisi_hba)
-+{
-+	struct device *dev = hisi_hba->dev;
-+	int rc;
-+
-+	rc = disable_host_v3_hw(hisi_hba);
-+	if (rc) {
-+		dev_err(dev, "soft reset: disable host failed rc=%d\n", rc);
- 		return rc;
- 	}
- 
-@@ -2456,9 +2476,8 @@ static int hisi_sas_v3_suspend(struct pci_dev *pdev, pm_message_t state)
- 	struct hisi_hba *hisi_hba = sha->lldd_ha;
- 	struct device *dev = hisi_hba->dev;
- 	struct Scsi_Host *shost = hisi_hba->shost;
--	u32 device_state, status;
-+	u32 device_state;
- 	int rc;
--	u32 reg_val;
- 
- 	if (!pdev->pm_cap) {
- 		dev_err(dev, "PCI PM not supported\n");
-@@ -2471,25 +2490,10 @@ static int hisi_sas_v3_suspend(struct pci_dev *pdev, pm_message_t state)
- 	scsi_block_requests(shost);
- 	set_bit(HISI_SAS_REJECT_CMD_BIT, &hisi_hba->flags);
- 	flush_workqueue(hisi_hba->wq);
--	/* disable DQ/PHY/bus */
--	interrupt_disable_v3_hw(hisi_hba);
--	hisi_sas_write32(hisi_hba, DLVRY_QUEUE_ENABLE, 0x0);
--	hisi_sas_kill_tasklets(hisi_hba);
- 
--	hisi_sas_stop_phys(hisi_hba);
--
--	reg_val = hisi_sas_read32(hisi_hba, AXI_MASTER_CFG_BASE +
--		AM_CTRL_GLOBAL);
--	reg_val |= 0x1;
--	hisi_sas_write32(hisi_hba, AXI_MASTER_CFG_BASE +
--		AM_CTRL_GLOBAL, reg_val);
--
--	/* wait until bus idle */
--	rc = hisi_sas_read32_poll_timeout(AXI_MASTER_CFG_BASE +
--					  AM_CURR_TRANS_RETURN, status,
--					  status == 0x3, 10, 100);
-+	rc = disable_host_v3_hw(hisi_hba);
- 	if (rc) {
--		dev_err(dev, "axi bus is not idle, rc = %d\n", rc);
-+		dev_err(dev, "PM suspend: disable host failed rc=%d\n", rc);
- 		clear_bit(HISI_SAS_REJECT_CMD_BIT, &hisi_hba->flags);
- 		clear_bit(HISI_SAS_RESET_BIT, &hisi_hba->flags);
- 		scsi_unblock_requests(shost);
--- 
-1.9.1
+Bart.=
