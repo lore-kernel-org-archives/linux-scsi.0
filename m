@@ -1,96 +1,82 @@
-From: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH V5 2/2] scsi: ufs: Add configfs support for ufs
- provisioning
-Date: Wed, 18 Jul 2018 10:56:51 +0200
-Message-ID: <20180718085651.GA23599@kroah.com>
-References: <1530858040-13971-1-git-send-email-sayalil@codeaurora.org>
- <1530858040-13971-3-git-send-email-sayalil@codeaurora.org>
- <CAE=gft5U1-Jo-GvTF7sNAV3Q565AmuUrHpmBdxUL+UwkKxesqA@mail.gmail.com>
- <0dce9e9c-4f93-9857-72ee-f65ff195c41a@codeaurora.org>
- <CAE=gft6_=SQjgv7_kHXKJKa8_45NKKFwwE7UaXsijPpMd35LOg@mail.gmail.com>
- <4cb931e199599314829f5ff750797c88fc123f1f.camel@wdc.com>
- <CAE=gft6zm2mw3rnNuktDe0NWs-NM1CFQw1BUeGhaBi3eoEDXBg@mail.gmail.com>
- <aa697186c00937c18519fe5eb1355d3fc458cfb6.camel@wdc.com>
+From: John Garry <john.garry@huawei.com>
+Subject: [PATCH 7/9] scsi: hisi_sas: Tidy hisi_sas_task_prep()
+Date: Wed, 18 Jul 2018 22:14:31 +0800
+Message-ID: <1531923273-193768-8-git-send-email-john.garry@huawei.com>
+References: <1531923273-193768-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <aa697186c00937c18519fe5eb1355d3fc458cfb6.camel@wdc.com>
+In-Reply-To: <1531923273-193768-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: "evgreen@chromium.org" <evgreen@chromium.org>, "vinholikatti@gmail.com" <vinholikatti@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>, "sayalil@codeaurora.org" <sayalil@codeaurora.org>, "riteshh@codeaurora.org" <riteshh@codeaurora.org>, "cang@codeaurora.org" <cang@codeaurora.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "subhashj@codeaurora.org" <subhashj@codeaurora.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "vivek.gautam@codeaurora.org" <vivek.gautam@codeaurora.org>, "rnayak@codeaurora.org" <rnayak@codeaurora.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, linuxarm@huawei.com, linux-kernel@vger.kernel.org, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Jul 17, 2018 at 09:06:35PM +0000, Bart Van Assche wrote:
-> On Tue, 2018-07-17 at 13:23 -0700, Evan Green wrote:
-> > On Mon, Jul 16, 2018 at 5:04 PM Bart Van Assche <Bart.VanAssche@wdc.com> wrote:
-> > > 
-> > > On Mon, 2018-07-16 at 16:46 -0700, Evan Green wrote:
-> > > > I see Bart has chimed in on the next series with a suggestion to break
-> > > > out each field into individual files within configfs. Bart, what are
-> > > > your feelings about converting to a binary attribute? I remember when
-> > > > I did my sysfs equivalent of this patch, somebody chimed in indicating
-> > > > a "commit" file might be needed so that the new configuration could be
-> > > > written in one fell swoop. One advantage of the binary attribute is
-> > > > that it writes the configuration atomically.
-> > > 
-> > > Hello Evan,
-> > > 
-> > > I may be missing some UFS background information. But since a configfs interface
-> > > is being added I think the same rule applies as to all Linux kernel user space
-> > > interfaces, namely that it should be backwards compatible. Additionally, if
-> > > anyone ever will want to use this interface from a shell script, I think that
-> > > it will be much easier to write multiple ASCII attributes than a single binary
-> > > attribute.
-> > > 
-> > 
-> > Hi Bart,
-> > I'm unsure about the compatibility aspect for binary attributes that
-> > essentially represent direct windows into hardware. I suppose this
-> > comes down to who this interface is most useful to. Hypothetically
-> > lets say a future revision of UFS adds fields to the configuration
-> > descriptor, but is otherwise backwards compatible. If this interface
-> > is primarily for OEMs initializing their devices in the factory, then
-> > I'd argue they'd want the most direct window to the configuration
-> > descriptor. These folks probably just have a configuration they want
-> > to plunk into the hardware, and would prefer being able to write all
-> > fields over having some sort of compatibility restriction. If, on the
-> > other hand, this is used by long-running scripts that stick around for
-> > years without modification, then yes, it seems like it would be more
-> > important to stay compatible, and have smarts in the kernel to make
-> > writes of old descriptors work in new devices.
-> > 
-> > At least for myself, I fall into the category of someone who just
-> > needs to plunk a configuration descriptor in once, and would prefer
-> > not to have to submit kernel changes if the descriptor evolves
-> > slightly. It also seemed a little odd that this patch now spends a
-> > bunch of energy converting ASCII into bytes, just to write it without
-> > modification into the hardware, and convert back again to ASCII for
-> > reads.
-> > 
-> > We plan to use a script for provisioning, and could easily handle
-> > ASCII or rawbytes:
-> > 
-> > # Some bytes, ready to go with the interface today...
-> > some_bytes="00 01 02 03"
-> > 
-> > # Same bytes, now in binary format
-> > bytes_fmt=$(echo " $some_bytes" | sed 's/ /\\x/g')
-> > /usr/bin/printf "$bytes_fmt" > /configfs/ufs_provision
-> > 
-> > I'm not dead set on binary, since as above I could do it either way,
-> > but it seemed worth at least talking through. Let me know what you
-> > think.
-> 
-> The configfs documentation (Documentation/filesystems/configfs/configfs.txt)
-> is clear about this: "Preferably only one value per file should be used." So
-> I would like to hear the opinion of someone who has more authority than I
-> with regard to configfs.
+From: Xiang Chen <chenxiang66@hisilicon.com>
 
-Don't we have "binary" files for configfs?  We have them for sysfs, they
-are for files that are not touched by the kernel and just "pass-through"
-to the hardware.  Would that work here as well?
+To decrease the usage of spinlock during delivery IO, relocate some code
+in hisi_sas_task_prep().
 
-thanks,
+Also an invalid comment is removed.
 
-greg k-h
+Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
+---
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 13 +++++--------
+ 1 file changed, 5 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index b0bcd14..432a38a 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -296,8 +296,8 @@ static int hisi_sas_task_prep(struct sas_task *task,
+ 	struct device *dev = hisi_hba->dev;
+ 	int dlvry_queue_slot, dlvry_queue, rc, slot_idx;
+ 	int n_elem = 0, n_elem_req = 0, n_elem_resp = 0;
+-	unsigned long flags, flags_dq;
+ 	struct hisi_sas_dq *dq;
++	unsigned long flags;
+ 	int wr_q_index;
+ 
+ 	if (!sas_port) {
+@@ -393,16 +393,17 @@ static int hisi_sas_task_prep(struct sas_task *task,
+ 
+ 	slot = &hisi_hba->slot_info[slot_idx];
+ 
+-	spin_lock_irqsave(&dq->lock, flags_dq);
++	spin_lock_irqsave(&dq->lock, flags);
+ 	wr_q_index = hisi_hba->hw->get_free_slot(hisi_hba, dq);
+ 	if (wr_q_index < 0) {
+-		spin_unlock_irqrestore(&dq->lock, flags_dq);
++		spin_unlock_irqrestore(&dq->lock, flags);
+ 		rc = -EAGAIN;
+ 		goto err_out_tag;
+ 	}
+ 
+ 	list_add_tail(&slot->delivery, &dq->list);
+-	spin_unlock_irqrestore(&dq->lock, flags_dq);
++	list_add_tail(&slot->entry, &sas_dev->list);
++	spin_unlock_irqrestore(&dq->lock, flags);
+ 
+ 	dlvry_queue = dq->id;
+ 	dlvry_queue_slot = wr_q_index;
+@@ -440,9 +441,6 @@ static int hisi_sas_task_prep(struct sas_task *task,
+ 		break;
+ 	}
+ 
+-	spin_lock_irqsave(&dq->lock, flags);
+-	list_add_tail(&slot->entry, &sas_dev->list);
+-	spin_unlock_irqrestore(&dq->lock, flags);
+ 	spin_lock_irqsave(&task->task_state_lock, flags);
+ 	task->task_state_flags |= SAS_TASK_AT_INITIATOR;
+ 	spin_unlock_irqrestore(&task->task_state_lock, flags);
+@@ -818,7 +816,6 @@ static void hisi_sas_do_release_task(struct hisi_hba *hisi_hba, struct sas_task
+ 	hisi_sas_slot_task_free(hisi_hba, task, slot);
+ }
+ 
+-/* hisi_hba.lock should be locked */
+ static void hisi_sas_release_task(struct hisi_hba *hisi_hba,
+ 			struct domain_device *device)
+ {
+-- 
+1.9.1
