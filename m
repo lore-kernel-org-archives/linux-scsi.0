@@ -1,53 +1,32 @@
-From: John Stultz <john.stultz@linaro.org>
-Subject: Re: [PATCH v11 0/4] [RESEND] scsi: ufs: add ufs driver code for
- Hisilicon Hi3660 SoC
-Date: Wed, 18 Jul 2018 11:58:06 -0700
-Message-ID: <CALAqxLVgRCCPJhjdpqG9TejtdNzHbyasxBytObgrS5_LrQnTtw@mail.gmail.com>
-References: <20180717093659.103263-1-liwei213@huawei.com>
+From: x00249684 <xuwei5@huawei.com>
+Subject: Re: [PATCH v11 3/4] [RESEND] arm64: dts: add ufs dts node
+Date: Thu, 19 Jul 2018 17:40:41 +0800
+Message-ID: <1531993241-173790-1-git-send-email-xuwei5@huawei.com>
+References: <20180717093659.103263-4-liwei213@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180717093659.103263-1-liwei213@huawei.com>
+In-Reply-To: <20180717093659.103263-4-liwei213@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Li Wei <liwei213@huawei.com>, martin.petersen@oracle.com, Vinayak Holikatti <vinholikatti@gmail.com>
-Cc: Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>, jejb@linux.vnet.ibm.com, Kevin Hilman <khilman@baylibre.com>, Arnd Bergmann <arnd@arndb.de>, Gregory CLEMENT <gregory.clement@free-electrons.com>, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, yamada.masahiro@socionext.com, Riku Voipio <riku.voipio@linaro.org>, Thierry Reding <treding@nvidia.com>, Krzysztof Kozlowski <krzk@kernel.org>, "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" <devicetree@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, linux-scsi@vger.kernel.org, zangleigang@hisilicon.com, gengjianfeng@hisilicon.com
+To: liwei213@huawei.com
+Cc: robh+dt@kernel.org, mark.rutland@arm.com, catalin.marinas@arm.com, will.deacon@arm.com, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, khilman@baylibre.com, arnd@arndb.de, gregory.clement@free-electrons.com, thomas.petazzoni@free-electrons.com, yamada.masahiro@socionext.com, riku.voipio@linaro.org, treding@nvidia.com, krzk@kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-scsi@vger.kernel.org, zangleigang@hisilicon.com, gengjianfeng@hisilicon.com, sunzhaosheng@hisilicon.com, ian.rickards@arm.com, guodong.xu@linaro.org, puck.chen@hisilicon.com, john.stultz@linaro.org, fengbaopeng@hisilicon.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Jul 17, 2018 at 2:36 AM, Li Wei <liwei213@huawei.com> wrote:
-> This patchset adds driver support for UFS for Hi3660 SoC. It is verified on HiKey960 board.
+>From: Li Wei <liwei213@huawei.com>
 >
-> Li Wei (4):
->   scsi: ufs: add Hisilicon ufs driver code
->   dt-bindings: scsi: ufs: add document for hisi-ufs
->   arm64: dts: add ufs dts node
->   arm64: defconfig: enable configs for Hisilicon ufs
+>arm64: dts: add ufs node for Hisilicon.
 >
->  Documentation/devicetree/bindings/ufs/ufs-hisi.txt |  41 ++
->  .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      |  10 +-
->  arch/arm64/boot/dts/hisilicon/hi3660.dtsi          |  18 +
->  arch/arm64/configs/defconfig                       |   1 +
->  drivers/scsi/ufs/Kconfig                           |   9 +
->  drivers/scsi/ufs/Makefile                          |   1 +
->  drivers/scsi/ufs/ufs-hisi.c                        | 619 +++++++++++++++++++++
->  drivers/scsi/ufs/ufs-hisi.h                        | 115 ++++
->  8 files changed, 811 insertions(+), 3 deletions(-)
->  create mode 100644 Documentation/devicetree/bindings/ufs/ufs-hisi.txt
->  create mode 100644 drivers/scsi/ufs/ufs-hisi.c
->  create mode 100644 drivers/scsi/ufs/ufs-hisi.h
+>Signed-off-by: Li Wei <liwei213@huawei.com>
+>Reviewed-by: Rob Herring <robh@kernel.org>
+>Tested-by: John Stultz <john.stultz@linaro.org>
 
+Fine to me. Thanks!
+Acked-by: Wei Xu <xuwei5@hisilicon.com>
 
-Martin/Vinayak: Wanted to nudge either of you to see if you had any
-further feedback or objections on this patchset? Its been a long slow
-slog for this patch-set and getting it upstream will make the HiKey960
-board much more useful for testing mainline kernels.
+But it will not be so staightforward when applying the patch
+since in the recent pull request the hi3660.dtsi has been tidied up.
+If it makes inconvenient, I can apply it once the binding is merged.
+Thanks!
 
-If you don't have objections, would you consider merging the scsi
-driver and Acked dt-bindings via the scsi tree?   Including the dts
-changes too if Wei Xu (now cc'ed) acks it, would be helpful as well
-(but that can go separately later if necessary).
-
-The defconfig change isn't as important, so I suspect can be re-pushed
-through the ARM maintainers later.
-
-thanks
--john
+Best Regards,
+Wei
