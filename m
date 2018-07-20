@@ -1,35 +1,30 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v11 0/4] [RESEND] scsi: ufs: add ufs driver code for
- Hisilicon Hi3660 SoC
-Date: Thu, 19 Jul 2018 22:04:24 -0400
-Message-ID: <yq1r2jy8xxz.fsf@oracle.com>
-References: <20180717093659.103263-1-liwei213@huawei.com>
+Subject: Re: [PATCH 0/9] hisi_sas: Some misc patches
+Date: Thu, 19 Jul 2018 22:05:10 -0400
+Message-ID: <yq1in5a8xwp.fsf@oracle.com>
+References: <1531923273-193768-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <20180717093659.103263-1-liwei213@huawei.com> (Li Wei's message
- of "Tue, 17 Jul 2018 17:36:55 +0800")
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Li Wei <liwei213@huawei.com>
-Cc: mark.rutland@arm.com, catalin.marinas@arm.com, will.deacon@arm.com, yamada.masahiro@socionext.com, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, khilman@baylibre.com, ian.rickards@arm.com, zangleigang@hisilicon.com, krzk@kernel.org, treding@nvidia.com, devicetree@vger.kernel.org, arnd@arndb.de, puck.chen@hisilicon.com, fengbaopeng@hisilicon.com, robh+dt@kernel.org, john.stultz@linaro.org, gregory.clement@free-electrons.com, sunzhaosheng@hisilicon.com, linux-arm-kernel@lists.infradead.org, thomas.petazzoni@free-electrons.com, guodong.xu@linaro.org, martin.petersen@oracle.com, riku.voipio@linaro.org, linux-kernel@vger.kernel.org, gengjianfeng@hisilicon.com
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1531923273-193768-1-git-send-email-john.garry@huawei.com> (John
+        Garry's message of "Wed, 18 Jul 2018 22:14:24 +0800")
+Sender: linux-kernel-owner@vger.kernel.org
+To: John Garry <john.garry@huawei.com>
+Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linuxarm@huawei.com, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Li,
+John,
 
-> This patchset adds driver support for UFS for Hi3660 SoC. It is
-> verified on HiKey960 board.
+> This patchset introduces some misc patches, generally more minor in
+> importance.
+>
+> However there is a patch to add a CPU barrier to the delivery path for
+> each hw version. We only saw this issue on v3 hw in hip08 chipset,
+> where the host CPU exhibits a looser memory model than in
+> predecessors, and software must enforce SMP coherency.
 
-Applied to 4.19/scsi-queue. Thank you!
+Applied to 4.19/scsi-queue, thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
