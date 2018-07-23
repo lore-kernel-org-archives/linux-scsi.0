@@ -1,70 +1,111 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH 0/6] Symbol namespaces
-Date: Mon, 23 Jul 2018 16:28:41 +0200
-Message-ID: <CAK8P3a1F2j3PL2ng7xw9TbCQqwn_U+1D5ChH+v8qWVrxOfW3xw@mail.gmail.com>
-References: <20180716122125.175792-1-maco@android.com>
+From: Rob Herring <robh@kernel.org>
+Subject: Re: [PATCH v1 4/9] scsi: ufs: add option to change default UFS power
+ management level
+Date: Mon, 23 Jul 2018 08:36:48 -0600
+Message-ID: <CAL_JsqLXUvUj8n=1Xv-_ssqB6rayMvxOTnGzeN1vS9yx4-jqOQ@mail.gmail.com>
+References: <cover.1530880006.git.asutoshd@codeaurora.org> <ff2b648007a400c60ba804a0c5cab0166bd268e7.1530880006.git.asutoshd@codeaurora.org>
+ <20180711203317.GA14983@rob-hp-laptop> <4b85de8b-d03e-da93-704b-e70922a9fbea@codeaurora.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180716122125.175792-1-maco@android.com>
+In-Reply-To: <4b85de8b-d03e-da93-704b-e70922a9fbea@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Martijn Coenen <maco@android.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Masahiro Yamada <yamada.masahiro@socionext.com>, Michal Marek <michal.lkml@markovi.net>, Geert Uytterhoeven <geert@linux-m68k.org>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, "H. Peter Anvin" <hpa@zytor.com>, the arch/x86 maintainers <x86@kernel.org>, Alan Stern <stern@rowland.harvard.edu>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Oliver Neukum <oneukum@suse.com>, Jessica Yu <jeyu@kernel.org>, Stephen Boyd <sboyd@codeaurora.org>, Philippe Ombredanne <pombredanne@nexb.com>, Kate Stewart <kstewart@linuxfoundation.org>, Sam Ravnborg <sam@ravnborg.org>, Linux Kbuild mailing list <linux-kbuild@vger.kernel.org>, linux-m68k <linux-m68k@lists.linux-m68k.org>linux
+To: Asutosh Das <asutoshd@codeaurora.org>
+Cc: Subhash Jadavani <subhashj@codeaurora.org>, Can Guo <cang@codeaurora.org>, Vivek Gautam <vivek.gautam@codeaurora.org>, Rajendra Nayak <rnayak@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-arm-msm <linux-arm-msm@vger.kernel.org>, Venkat Gopalakrishnan <venkatg@codeaurora.org>, Mark Rutland <mark.rutland@arm.com>, Mathieu Malaterre <malat@debian.org>, devicetree@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Jul 16, 2018 at 2:21 PM, Martijn Coenen <maco@android.com> wrote:
-> As of Linux 4.17, there are more than 30000 exported symbols
-> in the kernel. There seems to be some consensus amongst
-> kernel devs that the export surface is too large, and hard
-> to reason about.
+On Sun, Jul 22, 2018 at 9:20 PM Asutosh Das (asd)
+<asutoshd@codeaurora.org> wrote:
 >
-> Generally, these symbols fall in one of these categories:
-> 1) Symbols actually meant for drivers
-> 2) Symbols that are only exported because functionality is
->    split over multiple modules, yet they really shouldn't
->    be used by modules outside of their own subsystem
-> 3) Symbols really only meant for in-tree use
+> On 7/12/2018 2:03 AM, Rob Herring wrote:
+> > On Fri, Jul 06, 2018 at 06:00:31PM +0530, Asutosh Das wrote:
+> >> From: Subhash Jadavani <subhashj@codeaurora.org>
+> >>
+> >> UFS device and link can be put in multiple different low power modes hence
+> >> UFS driver supports multiple different low power modes. By default UFS
+> >> driver selects the default (optimal) low power mode (which gives moderate
+> >> power savings and have relatively less enter and exit latencies) but
+> >> we might have to tune this default power mode for different chipset
+> >> platforms to meet the low power requirements/goals. Hence this patch
+> >> adds option to change default UFS low power mode (level).
+> >>
+> >> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+> >> Signed-off-by: Venkat Gopalakrishnan <venkatg@codeaurora.org>
+> >> Signed-off-by: Can Guo <cang@codeaurora.org>
+> >> Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
+> >> ---
+> >>   .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      | 11 ++++++++
+> >>   drivers/scsi/ufs/ufshcd-pltfrm.c                   | 14 +++++++++++
+> >>   drivers/scsi/ufs/ufshcd.c                          | 29 +++++++++++++++-------
+> >>   drivers/scsi/ufs/ufshcd.h                          |  4 +--
+> >>   4 files changed, 47 insertions(+), 11 deletions(-)
+> >>
+> >> diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+> >> index c39dfef..f564d9a 100644
+> >> --- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+> >> +++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+> >> @@ -38,6 +38,15 @@ Optional properties:
+> >>                        defined or a value in the array is "0" then it is assumed
+> >>                        that the frequency is set by the parent clock or a
+> >>                        fixed rate clock source.
+> >> +- rpm-level         : UFS Runtime power management level. Following PM levels are supported:
+> >> +                      0 - Both UFS device and Link in active state (Highest power consumption)
+> >> +                      1 - UFS device in active state but Link in Hibern8 state
+> >> +                      2 - UFS device in Sleep state but Link in active state
+> >> +                      3 - UFS device in Sleep state and Link in hibern8 state (default PM level)
+> >> +                      4 - UFS device in Power-down state and Link in Hibern8 state
+> >> +                      5 - UFS device in Power-down state and Link in OFF state (Lowest power consumption)
+> >> +- spm-level         : UFS System power management level. Allowed PM levels are same as rpm-level.
+> >
+> > What's the default?
+> >
+> > I assume these are minimums? The OS can pick higher power states. This
+> > seems to be a bit Linux specific (as 'runtime PM' could be considered
+> > Linux specific). For every other device, we don't put this type of
+> > information in DT, but is user controlled.
+> I didn't completely understand your comment.
+> Do you not want these properties to be in DT file?
+
+Right, not if it is a user decision.
+
+> When you say user-controlled, do you mean control it through sysfs entries?
+
+Yes.
+
+> > So really, wouldn't 1
+> > property be sufficient for cases where a mode doesn't work due to
+> > some h/w limitation. Otherwise, it is an OS or user decision.
+> I didn't completely understand this. Could you please elaborate on your
+> intent here?
+
+The case that makes sense for this to be in DT is if there are h/w
+limitations that prevent some low power modes. In such a case, that
+limit is not likely specific to runtime PM or system suspend.
+
+> >>   -lanes-per-direction       : number of lanes available per direction - either 1 or 2.
+> >>                        Note that it is assume same number of lanes is used both
+> >>                        directions at once. If not specified, default is 2 lanes per direction.
+> >> @@ -66,4 +75,6 @@ Example:
+> >>              freq-table-hz = <100000000 200000000>, <0 0>, <0 0>;
+> >>              phys = <&ufsphy1>;
+> >>              phy-names = "ufsphy";
+> >> +            rpm-level = <3>;
+> >
+> > Why specified if 3 is the default?
+> Ah yes - that should be removed.
+> I'll remove it in v2.
 >
-> When module developers try to upstream their code, it
-> regularly turns out that they are using exported symbols
-> that they really shouldn't be using. This problem is even
-> bigger for drivers that are currently out-of-tree, which
-> may be using many symbols that they shouldn't be using,
-> and that break when those symbols are removed or modified.
->
-> This patch allows subsystem maintainers to partition their
-> exported symbols into separate namespaces, and module
-> authors to import such namespaces only when needed.
->
-> This allows subsystem maintainers to more easily limit
-> availability of these namespaced symbols to other parts of
-> the kernel. It can also be used to partition the set of
-> exported symbols for documentation purposes; for example,
-> a set of symbols that is really only used for debugging
-> could be in a "SUBSYSTEM_DEBUG" namespace.
+> >
+> >> +            spm-level = <5>;
+> >
+> > These seem like sane defaults. When and why would you use some
+> > different?
+> I think each of the deeper sleep modes are associated with an increasing
+> wakeup latency. For e.g. '0' would have the highest power-consumption
+> and no resume latency at all as compared to '5'.
+> So depending on use-cases other modes may be chosen.
 
-This looks nice. I don't want to overload you with additional
-requests, but it might be good to think about how this can
-be taken further, if we want to actually convert large
-parts of the kernel to it. I have two ideas:
+The use-case can change in a running system. For example if you are
+plugged in, then you probably don't want to enter a lower power mode.
 
-- It would be nice to have a simple mechanism in Kconfig
-  to put all symbols in a module into a namespace that is
-  derived from KBUILD_MODNAME, to avoid having to
-  annotate every symbol separately. This could be similar
-  to how we ended up dealing with EXPORT_NO_SYMBOLS
-  in the linux-2.4 days, with the goal of eventually having
-  a namespace for each symbol. Similarly, we could pass
-  a number of default namespaces through the Makefile,
-  e.g. if we have a directory that has lots of drivers that all
-  import the symbols from a common subsystem module.
-
-- If this is possible to implement, it would be great to have
-  a way to limit the globally visible symbols in a module
-  to the ones that are explicitly exported  even when a that
-  module is built-in rather than loadable. Not sure how this
-  is best done though. A couple of things can be done with
-  objcopy, or possibly by reintroducing partial linking (which
-  was removed not too long ago).
-
-        Arnd
+Rob
