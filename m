@@ -1,111 +1,85 @@
-From: Rob Herring <robh@kernel.org>
-Subject: Re: [PATCH v1 4/9] scsi: ufs: add option to change default UFS power
- management level
-Date: Mon, 23 Jul 2018 08:36:48 -0600
-Message-ID: <CAL_JsqLXUvUj8n=1Xv-_ssqB6rayMvxOTnGzeN1vS9yx4-jqOQ@mail.gmail.com>
-References: <cover.1530880006.git.asutoshd@codeaurora.org> <ff2b648007a400c60ba804a0c5cab0166bd268e7.1530880006.git.asutoshd@codeaurora.org>
- <20180711203317.GA14983@rob-hp-laptop> <4b85de8b-d03e-da93-704b-e70922a9fbea@codeaurora.org>
+From: Jack Wang <jack.wang.usish@gmail.com>
+Subject: Re: [stable-4.14 00/23] block/scsi multiqueue performance enhancement and
+Date: Mon, 23 Jul 2018 17:00:08 +0200
+Message-ID: <CA+res+TE5-mgnQys67zQ8cqRyv+dgNPpTFLOEq81t2izpq1dsw@mail.gmail.com>
+References: <1532352285-13589-1-git-send-email-jinpuwang@gmail.com> <20180723133356.GA1333@kroah.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4b85de8b-d03e-da93-704b-e70922a9fbea@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Asutosh Das <asutoshd@codeaurora.org>
-Cc: Subhash Jadavani <subhashj@codeaurora.org>, Can Guo <cang@codeaurora.org>, Vivek Gautam <vivek.gautam@codeaurora.org>, Rajendra Nayak <rnayak@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-arm-msm <linux-arm-msm@vger.kernel.org>, Venkat Gopalakrishnan <venkatg@codeaurora.org>, Mark Rutland <mark.rutland@arm.com>, Mathieu Malaterre <malat@debian.org>, devicetree@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20180723133356.GA1333@kroah.com>
+Sender: stable-owner@vger.kernel.org
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
+Cc: Wang Jinpu <xjtuwjp@gmail.com>, stable@vger.kernel.org, Jinpu Wang <jinpu.wang@profitbricks.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sun, Jul 22, 2018 at 9:20 PM Asutosh Das (asd)
-<asutoshd@codeaurora.org> wrote:
+Hi Greg,
+
+Thanks for quick reply. Please see reply inline.
+
+
+
+Greg KH <gregkh@linuxfoundation.org> =E4=BA=8E2018=E5=B9=B47=E6=9C=8823=E6=
+=97=A5=E5=91=A8=E4=B8=80 =E4=B8=8B=E5=8D=883:34=E5=86=99=E9=81=93=EF=BC=9A
 >
-> On 7/12/2018 2:03 AM, Rob Herring wrote:
-> > On Fri, Jul 06, 2018 at 06:00:31PM +0530, Asutosh Das wrote:
-> >> From: Subhash Jadavani <subhashj@codeaurora.org>
-> >>
-> >> UFS device and link can be put in multiple different low power modes hence
-> >> UFS driver supports multiple different low power modes. By default UFS
-> >> driver selects the default (optimal) low power mode (which gives moderate
-> >> power savings and have relatively less enter and exit latencies) but
-> >> we might have to tune this default power mode for different chipset
-> >> platforms to meet the low power requirements/goals. Hence this patch
-> >> adds option to change default UFS low power mode (level).
-> >>
-> >> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
-> >> Signed-off-by: Venkat Gopalakrishnan <venkatg@codeaurora.org>
-> >> Signed-off-by: Can Guo <cang@codeaurora.org>
-> >> Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
-> >> ---
-> >>   .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      | 11 ++++++++
-> >>   drivers/scsi/ufs/ufshcd-pltfrm.c                   | 14 +++++++++++
-> >>   drivers/scsi/ufs/ufshcd.c                          | 29 +++++++++++++++-------
-> >>   drivers/scsi/ufs/ufshcd.h                          |  4 +--
-> >>   4 files changed, 47 insertions(+), 11 deletions(-)
-> >>
-> >> diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-> >> index c39dfef..f564d9a 100644
-> >> --- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-> >> +++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-> >> @@ -38,6 +38,15 @@ Optional properties:
-> >>                        defined or a value in the array is "0" then it is assumed
-> >>                        that the frequency is set by the parent clock or a
-> >>                        fixed rate clock source.
-> >> +- rpm-level         : UFS Runtime power management level. Following PM levels are supported:
-> >> +                      0 - Both UFS device and Link in active state (Highest power consumption)
-> >> +                      1 - UFS device in active state but Link in Hibern8 state
-> >> +                      2 - UFS device in Sleep state but Link in active state
-> >> +                      3 - UFS device in Sleep state and Link in hibern8 state (default PM level)
-> >> +                      4 - UFS device in Power-down state and Link in Hibern8 state
-> >> +                      5 - UFS device in Power-down state and Link in OFF state (Lowest power consumption)
-> >> +- spm-level         : UFS System power management level. Allowed PM levels are same as rpm-level.
+> On Mon, Jul 23, 2018 at 03:24:22PM +0200, Jack Wang wrote:
+> > Hi Greg,
 > >
-> > What's the default?
-> >
-> > I assume these are minimums? The OS can pick higher power states. This
-> > seems to be a bit Linux specific (as 'runtime PM' could be considered
-> > Linux specific). For every other device, we don't put this type of
-> > information in DT, but is user controlled.
-> I didn't completely understand your comment.
-> Do you not want these properties to be in DT file?
-
-Right, not if it is a user decision.
-
-> When you say user-controlled, do you mean control it through sysfs entries?
-
-Yes.
-
-> > So really, wouldn't 1
-> > property be sufficient for cases where a mode doesn't work due to
-> > some h/w limitation. Otherwise, it is an OS or user decision.
-> I didn't completely understand this. Could you please elaborate on your
-> intent here?
-
-The case that makes sense for this to be in DT is if there are h/w
-limitations that prevent some low power modes. In such a case, that
-limit is not likely specific to runtime PM or system suspend.
-
-> >>   -lanes-per-direction       : number of lanes available per direction - either 1 or 2.
-> >>                        Note that it is assume same number of lanes is used both
-> >>                        directions at once. If not specified, default is 2 lanes per direction.
-> >> @@ -66,4 +75,6 @@ Example:
-> >>              freq-table-hz = <100000000 200000000>, <0 0>, <0 0>;
-> >>              phys = <&ufsphy1>;
-> >>              phy-names = "ufsphy";
-> >> +            rpm-level = <3>;
-> >
-> > Why specified if 3 is the default?
-> Ah yes - that should be removed.
-> I'll remove it in v2.
+> > Please consider this patchset, which include block/scsi multiqueue perf=
+ormance
+> > enhancement and bugfix.
 >
-> >
-> >> +            spm-level = <5>;
-> >
-> > These seem like sane defaults. When and why would you use some
-> > different?
-> I think each of the deeper sleep modes are associated with an increasing
-> wakeup latency. For e.g. '0' would have the highest power-consumption
-> and no resume latency at all as compared to '5'.
-> So depending on use-cases other modes may be chosen.
+> What exactly is the performance enhancement?  How can you measure it?
+> How did you measure it?
+I'm testing on SRP/IBNBD using fio, I've seen +10% with mix IO load,
+and 50% improvement on small IO (bs=3D512.) with the patchset.
 
-The use-case can change in a running system. For example if you are
-plugged in, then you probably don't want to enter a lower power mode.
+>
+> Which one(s) are the bugfixes in this series?  Why not just submit those
+> separately as they should be "obvious fixes", right?
+We had queue stall problem on shared hctx restart, my colleague Roman
+reported to upstream:
+https://lkml.org/lkml/2017/10/18/263
+the patch wasn't taken by upstream, and a bigger patchset from Lei
+Ming was accepted instread with revert and further bugfix later on.
 
-Rob
+following patches meant for improving performance on scsi-mq, and also
+contains the attempt to fix the queue stall problem
+ 358a3a6bccb7 ("blk-mq: don't handle TAG_SHARED in restart")
+  blk-mq-sched: move actual dispatching into one helper
+  blk-mq: introduce .get_budget and .put_budget in blk_mq_ops
+  sbitmap: introduce __sbitmap_for_each_set()
+  blk-mq-sched: improve dispatching from sw queue
+  scsi: allow passing in null rq to scsi_prep_state_check()
+  scsi: implement .get_budget and .put_budget for blk-mq
+  SCSI: don't get target/host busy_count in scsi_mq_get_budget()
+  blk-mq: don't handle TAG_SHARED in restart
+  blk-mq: don't restart queue when .get_budget returns BLK_STS_RESOURCE
+  blk-mq: don't handle failure in .get_budget
+
+Following is independent fix:
+blk-mq: quiesce queue during switching io sched and updating nr_requests
+blk-mq: fix issue with shared tag queue re-running
+
+These are clearup for flush request handling:
+  blk-flush: don't run queue for requests bypassing flush
+  block: pass 'run_queue' to blk_mq_request_bypass_insert
+  blk-flush: use blk_mq_request_bypass_insert()
+  blk-mq-sched: decide how to handle flush rq via RQF_FLUSH_SEQ
+  blk-mq: move blk_mq_put_driver_tag*() into blk-mq.h
+  blk-mq: don't allocate driver tag upfront for flush rq
+
+The left are following up fixes.
+>
+> And why didn't you cc: the subsystem maintainer and mailing list here?
+> I need their ack before I could take these.
+Sorry, my mistake, now add Jens, linux-block, ilnux-scsi in reply.
+
+Sorry for confusion.
+>
+> thanks,
+>
+> greg k-h
+
+Regards,
+Jack Wang
