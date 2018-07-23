@@ -1,24 +1,24 @@
 From: "Asutosh Das (asd)" <asutoshd@codeaurora.org>
 Subject: Re: [PATCH v1 4/9] scsi: ufs: add option to change default UFS power
  management level
-Date: Mon, 23 Jul 2018 08:39:38 +0530
-Message-ID: <af081999-c803-0e31-12ee-2997ebb37e36@codeaurora.org>
+Date: Mon, 23 Jul 2018 08:50:40 +0530
+Message-ID: <4b85de8b-d03e-da93-704b-e70922a9fbea@codeaurora.org>
 References: <cover.1530880006.git.asutoshd@codeaurora.org>
  <ff2b648007a400c60ba804a0c5cab0166bd268e7.1530880006.git.asutoshd@codeaurora.org>
- <0673f807-bc3c-e401-ae12-07bfafb55bf7@intel.com>
+ <20180711203317.GA14983@rob-hp-laptop>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <0673f807-bc3c-e401-ae12-07bfafb55bf7@intel.com>
+In-Reply-To: <20180711203317.GA14983@rob-hp-laptop>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Adrian Hunter <adrian.hunter@intel.com>, subhashj@codeaurora.org, cang@codeaurora.org, vivek.gautam@codeaurora.org, rnayak@codeaurora.org, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
-Cc: linux-arm-msm@vger.kernel.org, Venkat Gopalakrishnan <venkatg@codeaurora.org>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Mathieu Malaterre <malat@debian.org>, "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" <devicetree@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+To: Rob Herring <robh@kernel.org>
+Cc: subhashj@codeaurora.org, cang@codeaurora.org, vivek.gautam@codeaurora.org, rnayak@codeaurora.org, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, Venkat Gopalakrishnan <venkatg@codeaurora.org>, Mark Rutland <mark.rutland@arm.com>, Mathieu Malaterre <malat@debian.org>, "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" <devicetree@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 7/11/2018 4:20 PM, Adrian Hunter wrote:
-> On 06/07/18 15:30, Asutosh Das wrote:
+On 7/12/2018 2:03 AM, Rob Herring wrote:
+> On Fri, Jul 06, 2018 at 06:00:31PM +0530, Asutosh Das wrote:
 >> From: Subhash Jadavani <subhashj@codeaurora.org>
 >>
 >> UFS device and link can be put in multiple different low power modes hence
@@ -56,6 +56,24 @@ On 7/11/2018 4:20 PM, Adrian Hunter wrote:
 >> +			  4 - UFS device in Power-down state and Link in Hibern8 state
 >> +			  5 - UFS device in Power-down state and Link in OFF state (Lowest power consumption)
 >> +- spm-level		: UFS System power management level. Allowed PM levels are same as rpm-level.
+> 
+> What's the default?
+> 
+> I assume these are minimums? The OS can pick higher power states. This
+> seems to be a bit Linux specific (as 'runtime PM' could be considered
+> Linux specific). For every other device, we don't put this type of
+> information in DT, but is user controlled.
+I didn't completely understand your comment.
+Do you not want these properties to be in DT file?
+When you say user-controlled, do you mean control it through sysfs entries?
+
+> So really, wouldn't 1
+> property be sufficient for cases where a mode doesn't work due to
+> some h/w limitation. Otherwise, it is an OS or user decision.
+I didn't completely understand this. Could you please elaborate on your 
+intent here?
+
+> 
 >> +
 >>   -lanes-per-direction	: number of lanes available per direction - either 1 or 2.
 >>   			  Note that it is assume same number of lanes is used both
@@ -65,113 +83,26 @@ On 7/11/2018 4:20 PM, Adrian Hunter wrote:
 >>   		phys = <&ufsphy1>;
 >>   		phy-names = "ufsphy";
 >> +		rpm-level = <3>;
+> 
+> Why specified if 3 is the default?
+Ah yes - that should be removed.
+I'll remove it in v2.
+
+> 
 >> +		spm-level = <5>;
->>   	};
->> diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
->> index e82bde0..7dba799 100644
->> --- a/drivers/scsi/ufs/ufshcd-pltfrm.c
->> +++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
->> @@ -221,6 +221,19 @@ static int ufshcd_parse_regulator_info(struct ufs_hba *hba)
->>   	return err;
->>   }
->>   
->> +static void ufshcd_parse_pm_levels(struct ufs_hba *hba)
->> +{
->> +	struct device *dev = hba->dev;
->> +	struct device_node *np = dev->of_node;
->> +
->> +	if (np) {
->> +		if (of_property_read_u32(np, "rpm-level", &hba->rpm_lvl))
->> +			hba->rpm_lvl = -1;
->> +		if (of_property_read_u32(np, "spm-level", &hba->spm_lvl))
->> +			hba->spm_lvl = -1;
 > 
-> These are generically useful to all UFSHC drivers, so they should be
-> device_property_read_u32() and they should be read for all drivers not just
-> pltfrm i.e. move this code into ufshcd.c
+> These seem like sane defaults. When and why would you use some
+> different?
+I think each of the deeper sleep modes are associated with an increasing 
+wakeup latency. For e.g. '0' would have the highest power-consumption 
+and no resume latency at all as compared to '5'.
+So depending on use-cases other modes may be chosen.
+
 > 
->> +	}
->> +}
->> +
->>   #ifdef CONFIG_PM
->>   /**
->>    * ufshcd_pltfrm_suspend - suspend power management function
->> @@ -340,6 +353,7 @@ int ufshcd_pltfrm_init(struct platform_device *pdev,
->>   		goto dealloc_host;
->>   	}
->>   
->> +	ufshcd_parse_pm_levels(hba);
->>   	pm_runtime_set_active(&pdev->dev);
->>   	pm_runtime_enable(&pdev->dev);
->>   
->> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
->> index b03f3ea..e950204 100644
->> --- a/drivers/scsi/ufs/ufshcd.c
->> +++ b/drivers/scsi/ufs/ufshcd.c
->> @@ -192,6 +192,14 @@ struct ufs_pm_lvl_states ufs_pm_lvl_states[] = {
->>   	return UFS_PM_LVL_0;
->>   }
->>   
->> +static inline bool ufshcd_is_valid_pm_lvl(int lvl)
->> +{
->> +	if (lvl >= 0 && lvl < ARRAY_SIZE(ufs_pm_lvl_states))
->> +		return true;
->> +	else
->> +		return false;
->> +}
->> +
->>   static struct ufs_dev_fix ufs_fixups[] = {
->>   	/* UFS cards deviations table */
->>   	UFS_FIX(UFS_VENDOR_SAMSUNG, UFS_ANY_MODEL,
->> @@ -8051,16 +8059,19 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
->>   	}
->>   
->>   	/*
->> -	 * Set the default power management level for runtime and system PM.
->> -	 * Default power saving mode is to keep UFS link in Hibern8 state
->> -	 * and UFS device in sleep state.
->> +	 * If rpm_lvl and and spm_lvl are not already set to valid levels,
->> +	 * set the default power management level for UFS runtime and system
->> +	 * suspend. Default power saving mode selected is keeping UFS link in
->> +	 * Hibern8 state and UFS device in sleep state.
->>   	 */
->> -	hba->rpm_lvl = ufs_get_desired_pm_lvl_for_dev_link_state(
->> -						UFS_SLEEP_PWR_MODE,
->> -						UIC_LINK_HIBERN8_STATE);
->> -	hba->spm_lvl = ufs_get_desired_pm_lvl_for_dev_link_state(
->> -						UFS_SLEEP_PWR_MODE,
->> -						UIC_LINK_HIBERN8_STATE);
->> +	if (!ufshcd_is_valid_pm_lvl(hba->rpm_lvl))
->> +		hba->rpm_lvl = ufs_get_desired_pm_lvl_for_dev_link_state(
->> +							UFS_SLEEP_PWR_MODE,
->> +							UIC_LINK_HIBERN8_STATE);
->> +	if (!ufshcd_is_valid_pm_lvl(hba->spm_lvl))
->> +		hba->spm_lvl = ufs_get_desired_pm_lvl_for_dev_link_state(
->> +							UFS_SLEEP_PWR_MODE,
->> +							UIC_LINK_HIBERN8_STATE);
->>   
->>   	/* Set the default auto-hiberate idle timer value to 150 ms */
->>   	if (hba->capabilities & MASK_AUTO_HIBERN8_SUPPORT) {
->> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
->> index e996a08..a2e1d5c 100644
->> --- a/drivers/scsi/ufs/ufshcd.h
->> +++ b/drivers/scsi/ufs/ufshcd.h
->> @@ -526,9 +526,9 @@ struct ufs_hba {
->>   	enum ufs_dev_pwr_mode curr_dev_pwr_mode;
->>   	enum uic_link_state uic_link_state;
->>   	/* Desired UFS power management level during runtime PM */
->> -	enum ufs_pm_level rpm_lvl;
->> +	int rpm_lvl;
->>   	/* Desired UFS power management level during system PM */
->> -	enum ufs_pm_level spm_lvl;
->> +	int spm_lvl;
->>   	struct device_attribute rpm_lvl_attr;
->>   	struct device_attribute spm_lvl_attr;
->>   	int pm_op_in_progress;
->>
+> Rob
 > 
 
-Thanks. I'll make the changes and push it in v2.
+-asd
 
 -- 
 Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a 
