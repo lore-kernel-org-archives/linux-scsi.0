@@ -1,112 +1,177 @@
 From: "Asutosh Das (asd)" <asutoshd@codeaurora.org>
-Subject: Re: [PATCH v1 7/9] scsi: ufs: add UFS power collapse support during
- hibern8
-Date: Mon, 23 Jul 2018 08:37:04 +0530
-Message-ID: <8607cabf-e6ae-0a53-2139-d2279d458a9c@codeaurora.org>
+Subject: Re: [PATCH v1 4/9] scsi: ufs: add option to change default UFS power
+ management level
+Date: Mon, 23 Jul 2018 08:39:38 +0530
+Message-ID: <af081999-c803-0e31-12ee-2997ebb37e36@codeaurora.org>
 References: <cover.1530880006.git.asutoshd@codeaurora.org>
- <13f4fbc290b5e3cfea95f49d65ddb2bf99a15cdb.1530880007.git.asutoshd@codeaurora.org>
- <e14fff20f9464677967fac6d9c5b905c@codeaurora.org>
+ <ff2b648007a400c60ba804a0c5cab0166bd268e7.1530880006.git.asutoshd@codeaurora.org>
+ <0673f807-bc3c-e401-ae12-07bfafb55bf7@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <e14fff20f9464677967fac6d9c5b905c@codeaurora.org>
+In-Reply-To: <0673f807-bc3c-e401-ae12-07bfafb55bf7@intel.com>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Subhash Jadavani <subhashj@codeaurora.org>
-Cc: cang@codeaurora.org, vivek.gautam@codeaurora.org, rnayak@codeaurora.org, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, Venkat Gopalakrishnan <venkatg@codeaurora.org>, linux-kernel@vger.kernel.org
+To: Adrian Hunter <adrian.hunter@intel.com>, subhashj@codeaurora.org, cang@codeaurora.org, vivek.gautam@codeaurora.org, rnayak@codeaurora.org, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+Cc: linux-arm-msm@vger.kernel.org, Venkat Gopalakrishnan <venkatg@codeaurora.org>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Mathieu Malaterre <malat@debian.org>, "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" <devicetree@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 7/21/2018 5:28 AM, Subhash Jadavani wrote:
-> On 2018-07-06 05:30, Asutosh Das wrote:
+On 7/11/2018 4:20 PM, Adrian Hunter wrote:
+> On 06/07/18 15:30, Asutosh Das wrote:
 >> From: Subhash Jadavani <subhashj@codeaurora.org>
 >>
->> UFS host controller hardware may allow the host controller
->> to be power collapsed when UFS link is hibern8 state, this
->> change allows the UFS host controller to be power collapsed
->> during hibern8.
+>> UFS device and link can be put in multiple different low power modes hence
+>> UFS driver supports multiple different low power modes. By default UFS
+>> driver selects the default (optimal) low power mode (which gives moderate
+>> power savings and have relatively less enter and exit latencies) but
+>> we might have to tune this default power mode for different chipset
+>> platforms to meet the low power requirements/goals. Hence this patch
+>> adds option to change default UFS low power mode (level).
 >>
 >> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
 >> Signed-off-by: Venkat Gopalakrishnan <venkatg@codeaurora.org>
 >> Signed-off-by: Can Guo <cang@codeaurora.org>
 >> Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
 >> ---
->>  drivers/scsi/ufs/ufshcd.c |  8 ++++++--
->>  drivers/scsi/ufs/ufshcd.h | 13 ++++++++++++-
->>  2 files changed, 18 insertions(+), 3 deletions(-)
+>>   .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      | 11 ++++++++
+>>   drivers/scsi/ufs/ufshcd-pltfrm.c                   | 14 +++++++++++
+>>   drivers/scsi/ufs/ufshcd.c                          | 29 +++++++++++++++-------
+>>   drivers/scsi/ufs/ufshcd.h                          |  4 +--
+>>   4 files changed, 47 insertions(+), 11 deletions(-)
 >>
->> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
->> index 40d9c35..50588cf 100644
->> --- a/drivers/scsi/ufs/ufshcd.c
->> +++ b/drivers/scsi/ufs/ufshcd.c
->> @@ -7673,13 +7673,17 @@ static int ufshcd_vreg_set_hpm(struct ufs_hba 
->> *hba)
->>
->>  static void ufshcd_hba_vreg_set_lpm(struct ufs_hba *hba)
->>  {
->> -    if (ufshcd_is_link_off(hba))
->> +    if (ufshcd_is_link_off(hba) ||
->> +        (ufshcd_is_link_hibern8(hba)
->> +         && ufshcd_is_power_collapse_during_hibern8_allowed(hba)))
->>          ufshcd_setup_hba_vreg(hba, false);
-> 
-> I guess we have to handle the UFS host controller power collapse via 
-> "power-domains" which would requires us to specify the "power-domains" 
-> attribute under UFS controller's DT node and then linux core power 
-> framework should automatically collapse the UFS controller post runtime 
-> suspend. This also means we can't power collapse UFS controller 
-> aggressively (as part of clock gating) but it should still be fine from 
-> power point of view.
-> 
->>  }
->>
->>  static void ufshcd_hba_vreg_set_hpm(struct ufs_hba *hba)
->>  {
->> -    if (ufshcd_is_link_off(hba))
->> +    if (ufshcd_is_link_off(hba) ||
->> +        (ufshcd_is_link_hibern8(hba)
->> +         && ufshcd_is_power_collapse_during_hibern8_allowed(hba)))
->>          ufshcd_setup_hba_vreg(hba, true);
->>  }
->>
->> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
->> index f79a639..8c5f987 100644
->> --- a/drivers/scsi/ufs/ufshcd.h
->> +++ b/drivers/scsi/ufs/ufshcd.h
->> @@ -728,7 +728,12 @@ struct ufs_hba {
->>       * to do background operation when it's active but it might degrade
->>       * the performance of ongoing read/write operations.
->>       */
->> -#define UFSHCD_CAP_KEEP_AUTO_BKOPS_ENABLED_EXCEPT_SUSPEND (1 << 5)
->> +#define UFSHCD_CAP_KEEP_AUTO_BKOPS_ENABLED_EXCEPT_SUSPEND (1 << 6)
->> +    /*
->> +     * If host controller hardware can be power collapsed when UFS 
->> link is
->> +     * in hibern8 then enable this cap.
->> +     */
->> +#define UFSHCD_CAP_POWER_COLLAPSE_DURING_HIBERN8 (1 << 7)
->>
->>      struct devfreq *devfreq;
->>      struct ufs_clk_scaling clk_scaling;
->> @@ -764,6 +769,12 @@ static inline bool
->> ufshcd_is_hibern8_on_idle_allowed(struct ufs_hba *hba)
->>      return hba->caps & UFSHCD_CAP_HIBERN8_ENTER_ON_IDLE;
->>  }
->>
->> +static inline bool ufshcd_is_power_collapse_during_hibern8_allowed(
->> +                        struct ufs_hba *hba)
+>> diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+>> index c39dfef..f564d9a 100644
+>> --- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+>> +++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+>> @@ -38,6 +38,15 @@ Optional properties:
+>>   			  defined or a value in the array is "0" then it is assumed
+>>   			  that the frequency is set by the parent clock or a
+>>   			  fixed rate clock source.
+>> +- rpm-level		: UFS Runtime power management level. Following PM levels are supported:
+>> +			  0 - Both UFS device and Link in active state (Highest power consumption)
+>> +			  1 - UFS device in active state but Link in Hibern8 state
+>> +			  2 - UFS device in Sleep state but Link in active state
+>> +			  3 - UFS device in Sleep state and Link in hibern8 state (default PM level)
+>> +			  4 - UFS device in Power-down state and Link in Hibern8 state
+>> +			  5 - UFS device in Power-down state and Link in OFF state (Lowest power consumption)
+>> +- spm-level		: UFS System power management level. Allowed PM levels are same as rpm-level.
+>> +
+>>   -lanes-per-direction	: number of lanes available per direction - either 1 or 2.
+>>   			  Note that it is assume same number of lanes is used both
+>>   			  directions at once. If not specified, default is 2 lanes per direction.
+>> @@ -66,4 +75,6 @@ Example:
+>>   		freq-table-hz = <100000000 200000000>, <0 0>, <0 0>;
+>>   		phys = <&ufsphy1>;
+>>   		phy-names = "ufsphy";
+>> +		rpm-level = <3>;
+>> +		spm-level = <5>;
+>>   	};
+>> diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
+>> index e82bde0..7dba799 100644
+>> --- a/drivers/scsi/ufs/ufshcd-pltfrm.c
+>> +++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
+>> @@ -221,6 +221,19 @@ static int ufshcd_parse_regulator_info(struct ufs_hba *hba)
+>>   	return err;
+>>   }
+>>   
+>> +static void ufshcd_parse_pm_levels(struct ufs_hba *hba)
 >> +{
->> +    return !!(hba->caps & UFSHCD_CAP_POWER_COLLAPSE_DURING_HIBERN8);
+>> +	struct device *dev = hba->dev;
+>> +	struct device_node *np = dev->of_node;
+>> +
+>> +	if (np) {
+>> +		if (of_property_read_u32(np, "rpm-level", &hba->rpm_lvl))
+>> +			hba->rpm_lvl = -1;
+>> +		if (of_property_read_u32(np, "spm-level", &hba->spm_lvl))
+>> +			hba->spm_lvl = -1;
+> 
+> These are generically useful to all UFSHC drivers, so they should be
+> device_property_read_u32() and they should be read for all drivers not just
+> pltfrm i.e. move this code into ufshcd.c
+> 
+>> +	}
 >> +}
 >> +
->>  static inline bool ufshcd_is_intr_aggr_allowed(struct ufs_hba *hba)
->>  {
->>  /* DWC UFS Core has the Interrupt aggregation feature but is not 
->> detectable*/
+>>   #ifdef CONFIG_PM
+>>   /**
+>>    * ufshcd_pltfrm_suspend - suspend power management function
+>> @@ -340,6 +353,7 @@ int ufshcd_pltfrm_init(struct platform_device *pdev,
+>>   		goto dealloc_host;
+>>   	}
+>>   
+>> +	ufshcd_parse_pm_levels(hba);
+>>   	pm_runtime_set_active(&pdev->dev);
+>>   	pm_runtime_enable(&pdev->dev);
+>>   
+>> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+>> index b03f3ea..e950204 100644
+>> --- a/drivers/scsi/ufs/ufshcd.c
+>> +++ b/drivers/scsi/ufs/ufshcd.c
+>> @@ -192,6 +192,14 @@ struct ufs_pm_lvl_states ufs_pm_lvl_states[] = {
+>>   	return UFS_PM_LVL_0;
+>>   }
+>>   
+>> +static inline bool ufshcd_is_valid_pm_lvl(int lvl)
+>> +{
+>> +	if (lvl >= 0 && lvl < ARRAY_SIZE(ufs_pm_lvl_states))
+>> +		return true;
+>> +	else
+>> +		return false;
+>> +}
+>> +
+>>   static struct ufs_dev_fix ufs_fixups[] = {
+>>   	/* UFS cards deviations table */
+>>   	UFS_FIX(UFS_VENDOR_SAMSUNG, UFS_ANY_MODEL,
+>> @@ -8051,16 +8059,19 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+>>   	}
+>>   
+>>   	/*
+>> -	 * Set the default power management level for runtime and system PM.
+>> -	 * Default power saving mode is to keep UFS link in Hibern8 state
+>> -	 * and UFS device in sleep state.
+>> +	 * If rpm_lvl and and spm_lvl are not already set to valid levels,
+>> +	 * set the default power management level for UFS runtime and system
+>> +	 * suspend. Default power saving mode selected is keeping UFS link in
+>> +	 * Hibern8 state and UFS device in sleep state.
+>>   	 */
+>> -	hba->rpm_lvl = ufs_get_desired_pm_lvl_for_dev_link_state(
+>> -						UFS_SLEEP_PWR_MODE,
+>> -						UIC_LINK_HIBERN8_STATE);
+>> -	hba->spm_lvl = ufs_get_desired_pm_lvl_for_dev_link_state(
+>> -						UFS_SLEEP_PWR_MODE,
+>> -						UIC_LINK_HIBERN8_STATE);
+>> +	if (!ufshcd_is_valid_pm_lvl(hba->rpm_lvl))
+>> +		hba->rpm_lvl = ufs_get_desired_pm_lvl_for_dev_link_state(
+>> +							UFS_SLEEP_PWR_MODE,
+>> +							UIC_LINK_HIBERN8_STATE);
+>> +	if (!ufshcd_is_valid_pm_lvl(hba->spm_lvl))
+>> +		hba->spm_lvl = ufs_get_desired_pm_lvl_for_dev_link_state(
+>> +							UFS_SLEEP_PWR_MODE,
+>> +							UIC_LINK_HIBERN8_STATE);
+>>   
+>>   	/* Set the default auto-hiberate idle timer value to 150 ms */
+>>   	if (hba->capabilities & MASK_AUTO_HIBERN8_SUPPORT) {
+>> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+>> index e996a08..a2e1d5c 100644
+>> --- a/drivers/scsi/ufs/ufshcd.h
+>> +++ b/drivers/scsi/ufs/ufshcd.h
+>> @@ -526,9 +526,9 @@ struct ufs_hba {
+>>   	enum ufs_dev_pwr_mode curr_dev_pwr_mode;
+>>   	enum uic_link_state uic_link_state;
+>>   	/* Desired UFS power management level during runtime PM */
+>> -	enum ufs_pm_level rpm_lvl;
+>> +	int rpm_lvl;
+>>   	/* Desired UFS power management level during system PM */
+>> -	enum ufs_pm_level spm_lvl;
+>> +	int spm_lvl;
+>>   	struct device_attribute rpm_lvl_attr;
+>>   	struct device_attribute spm_lvl_attr;
+>>   	int pm_op_in_progress;
+>>
 > 
 
-Thanks. I'll check the 'power-domains' part and get back with the changes.
-
+Thanks. I'll make the changes and push it in v2.
 
 -- 
 Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a 
