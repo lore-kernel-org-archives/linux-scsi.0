@@ -1,156 +1,39 @@
-From: Jessica Yu <jeyu@kernel.org>
-Subject: Re: [PATCH 4/6] modpost: add support for generating namespace
- dependencies.
-Date: Mon, 23 Jul 2018 08:49:21 +0200
-Message-ID: <20180723064921.wepzdsj7tb7ptjbz@linux-8ccs>
-References: <20180716122125.175792-1-maco@android.com>
- <20180716122125.175792-5-maco@android.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] scsi: prevent ISA driver from building on PPC32
+Date: Mon, 23 Jul 2018 01:19:38 -0700
+Message-ID: <20180723081938.GA28153@infradead.org>
+References: <5928f120-5a23-eff9-6c1d-41344d588b11@infradead.org>
+ <20180723081811.GA27025@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
 Content-Disposition: inline
-In-Reply-To: <20180716122125.175792-5-maco@android.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Martijn Coenen <maco@android.com>
-Cc: linux-kernel@vger.kernel.org, Masahiro Yamada <yamada.masahiro@socionext.com>, Michal Marek <michal.lkml@markovi.net>, Geert Uytterhoeven <geert@linux-m68k.org>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org, Alan Stern <stern@rowland.harvard.edu>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Oliver Neukum <oneukum@suse.com>, Arnd Bergmann <arnd@arndb.de>, Stephen Boyd <sboyd@codeaurora.org>, Philippe Ombredanne <pombredanne@nexb.com>, Kate Stewart <kstewart@linuxfoundation.org>, Sam Ravnborg <sam@ravnborg.org>, linux-kbuild@vger.kernel.org, linux-m68k@lists.linux-m68k.org, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net, linux-scsi@vger.kernel.org, linux-arc
+In-Reply-To: <20180723081811.GA27025@infradead.org>
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+Sender: "Linuxppc-dev"
+ <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+To: Randy Dunlap <rdunlap@infradead.org>
+Cc: PowerPC <linuxppc-dev@lists.ozlabs.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-+++ Martijn Coenen [16/07/18 14:21 +0200]:
->This patch adds an option to modpost to generate a .ns_deps file per
->module, containing the namespace depedencies for that module.
->
->This file can subsequently be used by other tools to automatically add
->newly introduced namespaces to the modules that require them, saving a
->lot of manual work.
->
->Signed-off-by: Martijn Coenen <maco@android.com>
+On Mon, Jul 23, 2018 at 01:18:11AM -0700, Christoph Hellwig wrote:
+> On Sat, Jul 21, 2018 at 12:58:21PM -0700, Randy Dunlap wrote:
+> > From: Randy Dunlap <rdunlap@infradead.org>
+> > 
+> > Prevent drivers from building on PPC32 if they use isa_bus_to_virt(),
+> > isa_virt_to_bus(), or isa_page_to_bus(), which are not available and
+> > thus cause build errors.
+> 
+> Please don't introduce weird arch dependencies, and add a
+> CONFIG_ISA_VIRT_TO_BUS instead.
 
-Regarding modpost, I think it may also be helpful to additionally
-output the namespace an exported symbol belongs to (if any) in the
-Module.symvers file.
-
->---
-> scripts/mod/modpost.c | 58 +++++++++++++++++++++++++++++++++++++++----
-> scripts/mod/modpost.h |  2 ++
-> 2 files changed, 55 insertions(+), 5 deletions(-)
->
->diff --git a/scripts/mod/modpost.c b/scripts/mod/modpost.c
->index a56a8461a96a..be33d60d5527 100644
->--- a/scripts/mod/modpost.c
->+++ b/scripts/mod/modpost.c
->@@ -39,6 +39,8 @@ static int sec_mismatch_verbose = 1;
-> static int sec_mismatch_fatal = 0;
-> /* ignore missing files */
-> static int ignore_missing_files;
->+/* Write namespace dependencies */
->+static int write_ns_deps;
->
-> enum export {
-> 	export_plain,      export_unused,     export_gpl,
->@@ -2151,10 +2153,15 @@ static void check_exports(struct module *mod)
-> 		else
-> 			basename = mod->name;
->
->-		if (exp->ns && !module_imports_namespace(mod, exp->ns)) {
->-			warn("module %s uses symbol %s from namespace %s, "
->-			     "but does not import it.\n",
->-			     basename, exp->name, exp->ns);
->+		if (exp->ns) {
->+			add_namespace(&mod->required_namespaces, exp->ns);
->+
->+			if (!write_ns_deps &&
->+			    !module_imports_namespace(mod, exp->ns)) {
->+				warn("module %s uses symbol %s from namespace "
->+				     "%s, but does not import it.\n",
->+				     basename, exp->name, exp->ns);
->+			}
-> 		}
->
-> 		if (!mod->gpl_compatible)
->@@ -2457,6 +2464,38 @@ static void write_dump(const char *fname)
-> 	free(buf.p);
-> }
->
->+static void write_ns_deps_files(void)
->+{
->+	struct module *mod;
->+	struct namespace_list *ns;
->+	struct buffer ns_deps_buf = { };
->+
->+	for (mod = modules; mod; mod = mod->next) {
->+		char fname[PATH_MAX];
->+		const char *basename;
->+
->+		if (mod->skip)
->+			continue;
->+
->+		ns_deps_buf.pos = 0;
->+
->+		for (ns = mod->required_namespaces; ns; ns = ns->next)
->+			buf_printf(&ns_deps_buf, "%s\n", ns->namespace);
->+
->+		if (ns_deps_buf.pos == 0)
->+			continue;
->+
->+		basename = strrchr(mod->name, '/');
->+		if (basename)
->+			basename++;
->+		else
->+			basename = mod->name;
->+
->+		sprintf(fname, ".tmp_versions/%s.ns_deps", basename);
->+		write_if_changed(&ns_deps_buf, fname);
->+	}
->+}
->+
-> struct ext_sym_list {
-> 	struct ext_sym_list *next;
-> 	const char *file;
->@@ -2473,7 +2512,7 @@ int main(int argc, char **argv)
-> 	struct ext_sym_list *extsym_iter;
-> 	struct ext_sym_list *extsym_start = NULL;
->
->-	while ((opt = getopt(argc, argv, "i:I:e:mnsST:o:awM:K:E")) != -1) {
->+	while ((opt = getopt(argc, argv, "i:I:e:mnsST:o:awM:K:Ed")) != -1) {
-> 		switch (opt) {
-> 		case 'i':
-> 			kernel_read = optarg;
->@@ -2517,6 +2556,9 @@ int main(int argc, char **argv)
-> 		case 'E':
-> 			sec_mismatch_fatal = 1;
-> 			break;
->+		case 'd':
->+			write_ns_deps = 1;
->+			break;
-> 		default:
-> 			exit(1);
-> 		}
->@@ -2545,6 +2587,12 @@ int main(int argc, char **argv)
-> 		check_exports(mod);
-> 	}
->
->+	if (write_ns_deps) {
->+		/* Just write namespace dependencies and exit */
->+		write_ns_deps_files();
->+		return 0;
->+	}
->+
-> 	err = 0;
->
-> 	for (mod = modules; mod; mod = mod->next) {
->diff --git a/scripts/mod/modpost.h b/scripts/mod/modpost.h
->index 9626bf3e7424..92a926d375d2 100644
->--- a/scripts/mod/modpost.h
->+++ b/scripts/mod/modpost.h
->@@ -126,6 +126,8 @@ struct module {
-> 	struct buffer dev_table_buf;
-> 	char	     srcversion[25];
-> 	int is_dot_o;
->+	// Required namespace dependencies
->+	struct namespace_list *required_namespaces;
-> 	// Actual imported namespaces
-> 	struct namespace_list *imported_namespaces;
-> };
->-- 
->2.18.0.203.gfac676dfb9-goog
->
+And in fact we have so few drivers that we should just kill off the
+API entirely instead.  I'll take care of aha1542 in the next week or
+so.
