@@ -1,95 +1,70 @@
-From: Jia-Ju Bai <baijiaju1990@gmail.com>
-Subject: Re: [PATCH] firewire: sbp2: Replace GFP_ATOMIC with GFP_KERNEL in
- sbp2_scsi_queuecommand()
-Date: Mon, 23 Jul 2018 20:53:02 +0800
-Message-ID: <78f1f5e5-1080-c801-eae5-72f5cbff0b63@gmail.com>
-References: <20180723085801.6711-1-baijiaju1990@gmail.com>
- <20180723142418.4aef4910@kant>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH 0/6] Symbol namespaces
+Date: Mon, 23 Jul 2018 16:28:41 +0200
+Message-ID: <CAK8P3a1F2j3PL2ng7xw9TbCQqwn_U+1D5ChH+v8qWVrxOfW3xw@mail.gmail.com>
+References: <20180716122125.175792-1-maco@android.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180723142418.4aef4910@kant>
-Content-Language: en-US
+In-Reply-To: <20180716122125.175792-1-maco@android.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: linux1394-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Martijn Coenen <maco@android.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Masahiro Yamada <yamada.masahiro@socionext.com>, Michal Marek <michal.lkml@markovi.net>, Geert Uytterhoeven <geert@linux-m68k.org>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, "H. Peter Anvin" <hpa@zytor.com>, the arch/x86 maintainers <x86@kernel.org>, Alan Stern <stern@rowland.harvard.edu>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Oliver Neukum <oneukum@suse.com>, Jessica Yu <jeyu@kernel.org>, Stephen Boyd <sboyd@codeaurora.org>, Philippe Ombredanne <pombredanne@nexb.com>, Kate Stewart <kstewart@linuxfoundation.org>, Sam Ravnborg <sam@ravnborg.org>, Linux Kbuild mailing list <linux-kbuild@vger.kernel.org>, linux-m68k <linux-m68k@lists.linux-m68k.org>linux
 List-Id: linux-scsi@vger.kernel.org
 
-Thanks for the reply :)
-
-
-On 2018/7/23 20:24, Stefan Richter wrote:
-> Adding Cc: LSML
+On Mon, Jul 16, 2018 at 2:21 PM, Martijn Coenen <maco@android.com> wrote:
+> As of Linux 4.17, there are more than 30000 exported symbols
+> in the kernel. There seems to be some consensus amongst
+> kernel devs that the export surface is too large, and hard
+> to reason about.
 >
-> On Jul 23 Jia-Ju Bai wrote:
->> sbp2_scsi_queuecommand() is only set to .queuecommand of
->> "struct scsi_host_template", and this function pointer is never called
->> in atomic context.
-> As far as I remember, scsi_host_template::queuecommand() can be invoked
-> from either process context or tasklet context, predominantly the latter.
+> Generally, these symbols fall in one of these categories:
+> 1) Symbols actually meant for drivers
+> 2) Symbols that are only exported because functionality is
+>    split over multiple modules, yet they really shouldn't
+>    be used by modules outside of their own subsystem
+> 3) Symbols really only meant for in-tree use
 >
-> I haven't followed recent developments of the block and scsi stack, hence
-> don't know if this has changed fundamentally.
+> When module developers try to upstream their code, it
+> regularly turns out that they are using exported symbols
+> that they really shouldn't be using. This problem is even
+> bigger for drivers that are currently out-of-tree, which
+> may be using many symbols that they shouldn't be using,
+> and that break when those symbols are removed or modified.
 >
-> But even if it is purely process context now and no spinlocks held, the
-> memory allocation must be done so that the kernel does not go into memory
-> reclaim. Otherwise this could deadlock.
-
-Okay.
-In fact, my tool does not find that queuecommand() can be called from 
-tasklet context.
-Maybe my tool is not very accurate when handling the function pointer call.
-
+> This patch allows subsystem maintainers to partition their
+> exported symbols into separate namespaces, and module
+> authors to import such namespaces only when needed.
 >
->> sbp2_scsi_queuecommand() calls kzalloc() with GFP_ATOMIC,
->> which is not necessary.
->> GFP_ATOMIC can be replaced with GFP_KERNEL.
->>
->> This is found by a static analysis tool named DCNS written by myself.
-> I doubt that static analysis, even if very sophisticated, can detect
-> deadlock scenarios such as I noted.
+> This allows subsystem maintainers to more easily limit
+> availability of these namespaced symbols to other parts of
+> the kernel. It can also be used to partition the set of
+> exported symbols for documentation purposes; for example,
+> a set of symbols that is really only used for debugging
+> could be in a "SUBSYSTEM_DEBUG" namespace.
 
-Sorry, I am not sure to understand the deadlock scenarios you mentioned.
-Could you please give an example?
-Maybe I can write a static tool to detect such deadlocks.
+This looks nice. I don't want to overload you with additional
+requests, but it might be good to think about how this can
+be taken further, if we want to actually convert large
+parts of the kernel to it. I have two ideas:
 
->
->> I also manually check the kernel code before reporting it.
-> What does it mean?  Did you run-time test it, for which actual SBP-2
-> hardware is required?  (Such a test could detect GFP-KERNEL use in atomic
-> context, but would not reliably detect memory reclaim related deadlocks.)
+- It would be nice to have a simple mechanism in Kconfig
+  to put all symbols in a module into a namespace that is
+  derived from KBUILD_MODNAME, to avoid having to
+  annotate every symbol separately. This could be similar
+  to how we ended up dealing with EXPORT_NO_SYMBOLS
+  in the linux-2.4 days, with the goal of eventually having
+  a namespace for each symbol. Similarly, we could pass
+  a number of default namespaces through the Makefile,
+  e.g. if we have a directory that has lots of drivers that all
+  import the symbols from a common subsystem module.
 
-Sorry, my description here may bring misunderstanding.
-It means that I manually review the code and validated my report, 
-instead of perform runtime testing, because I do not have the hardware.
-Maybe I neglected something in my code review, so I am not very 
-confident...
+- If this is possible to implement, it would be great to have
+  a way to limit the globally visible symbols in a module
+  to the ones that are explicitly exported  even when a that
+  module is built-in rather than loadable. Not sure how this
+  is best done though. A couple of things can be done with
+  objcopy, or possibly by reintroducing partial linking (which
+  was removed not too long ago).
 
->
->> Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
->> ---
->>   drivers/firewire/sbp2.c | 2 +-
->>   1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/firewire/sbp2.c b/drivers/firewire/sbp2.c
->> index 6bac03999fd4..a7cd9d87eb02 100644
->> --- a/drivers/firewire/sbp2.c
->> +++ b/drivers/firewire/sbp2.c
->> @@ -1463,7 +1463,7 @@ static int sbp2_scsi_queuecommand(struct Scsi_Host *shost,
->>   	struct sbp2_command_orb *orb;
->>   	int generation, retval = SCSI_MLQUEUE_HOST_BUSY;
->>   
->> -	orb = kzalloc(sizeof(*orb), GFP_ATOMIC);
->> +	orb = kzalloc(sizeof(*orb), GFP_KERNEL);
->>   	if (orb == NULL)
->>   		return SCSI_MLQUEUE_HOST_BUSY;
->>   
-> NACK for GFP_KERNEL, but I am curious whether a weaker GFP set than ATOMIC
-> is possible in scsi_host_template::queuecommand.
-
-like what? GFP_NOIO or GFP_NOFS?
-
-
-Best wishes,
-Jia-Ju Bai
+        Arnd
