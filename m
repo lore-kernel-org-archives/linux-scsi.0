@@ -1,130 +1,46 @@
-From: "Asutosh Das (asd)" <asutoshd@codeaurora.org>
-Subject: Re: [PATCH v1 4/9] scsi: ufs: add option to change default UFS power
- management level
-Date: Tue, 24 Jul 2018 09:04:34 +0530
-Message-ID: <f1d3af9d-3ff0-c15b-013d-013ba6dde287@codeaurora.org>
-References: <cover.1530880006.git.asutoshd@codeaurora.org>
- <ff2b648007a400c60ba804a0c5cab0166bd268e7.1530880006.git.asutoshd@codeaurora.org>
- <20180711203317.GA14983@rob-hp-laptop>
- <4b85de8b-d03e-da93-704b-e70922a9fbea@codeaurora.org>
- <CAL_JsqLXUvUj8n=1Xv-_ssqB6rayMvxOTnGzeN1vS9yx4-jqOQ@mail.gmail.com>
+From: Martijn Coenen <maco@android.com>
+Subject: Re: [PATCH 2/6] module: add support for symbol namespaces.
+Date: Tue, 24 Jul 2018 09:44:25 +0200
+Message-ID: <CAB0TPYHu2tDuefRCfdUd_A8XqRQ_ym811ua-Cu3C=xUPnyHTGw@mail.gmail.com>
+References: <20180716122125.175792-1-maco@android.com> <20180716122125.175792-3-maco@android.com>
+ <20180719163208.5xvrafugpcbhh7kj@linux-8ccs> <CAB0TPYFVSWtJ6RPRUZ1bpS-rBaV7YyPR-4B2Ogxs+FNAbiScNw@mail.gmail.com>
+ <20180720144916.fyqpmrtgt23sax6n@linux-8ccs> <CAB0TPYFQvkTsMvfJCTSFSJAoCbmOUJz7mCQGoORs6nRcC3Fhdg@mail.gmail.com>
+ <20180723111251.x2cam6bcuglr4hhz@linux-8ccs>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAL_JsqLXUvUj8n=1Xv-_ssqB6rayMvxOTnGzeN1vS9yx4-jqOQ@mail.gmail.com>
-Content-Language: en-US
+In-Reply-To: <20180723111251.x2cam6bcuglr4hhz@linux-8ccs>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Rob Herring <robh@kernel.org>
-Cc: Subhash Jadavani <subhashj@codeaurora.org>, Can Guo <cang@codeaurora.org>, Vivek Gautam <vivek.gautam@codeaurora.org>, Rajendra Nayak <rnayak@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-arm-msm <linux-arm-msm@vger.kernel.org>, Venkat Gopalakrishnan <venkatg@codeaurora.org>, Mark Rutland <mark.rutland@arm.com>, Mathieu Malaterre <malat@debian.org>, devicetree@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: Jessica Yu <jeyu@kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, Masahiro Yamada <yamada.masahiro@socionext.com>, Michal Marek <michal.lkml@markovi.net>, Geert Uytterhoeven <geert@linux-m68k.org>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, "H. Peter Anvin" <hpa@zytor.com>, the arch/x86 maintainers <x86@kernel.org>, Alan Stern <stern@rowland.harvard.edu>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Oliver Neukum <oneukum@suse.com>, Arnd Bergmann <arnd@arndb.de>, Stephen Boyd <sboyd@codeaurora.org>, Philippe Ombredanne <pombredanne@nexb.com>, Kate Stewart <kstewart@linuxfoundation.org>, Sam Ravnborg <sam@ravnborg.org>, linux-kbuild@vger.kernel.org, linux-m68k <linux-m68k@lists.linux-m68k.org>, USB list <linux-usb@vger.kernel.org>USB
 List-Id: linux-scsi@vger.kernel.org
 
-On 7/23/2018 8:06 PM, Rob Herring wrote:
-> On Sun, Jul 22, 2018 at 9:20 PM Asutosh Das (asd)
-> <asutoshd@codeaurora.org> wrote:
->>
->> On 7/12/2018 2:03 AM, Rob Herring wrote:
->>> On Fri, Jul 06, 2018 at 06:00:31PM +0530, Asutosh Das wrote:
->>>> From: Subhash Jadavani <subhashj@codeaurora.org>
->>>>
->>>> UFS device and link can be put in multiple different low power modes hence
->>>> UFS driver supports multiple different low power modes. By default UFS
->>>> driver selects the default (optimal) low power mode (which gives moderate
->>>> power savings and have relatively less enter and exit latencies) but
->>>> we might have to tune this default power mode for different chipset
->>>> platforms to meet the low power requirements/goals. Hence this patch
->>>> adds option to change default UFS low power mode (level).
->>>>
->>>> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
->>>> Signed-off-by: Venkat Gopalakrishnan <venkatg@codeaurora.org>
->>>> Signed-off-by: Can Guo <cang@codeaurora.org>
->>>> Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
->>>> ---
->>>>    .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      | 11 ++++++++
->>>>    drivers/scsi/ufs/ufshcd-pltfrm.c                   | 14 +++++++++++
->>>>    drivers/scsi/ufs/ufshcd.c                          | 29 +++++++++++++++-------
->>>>    drivers/scsi/ufs/ufshcd.h                          |  4 +--
->>>>    4 files changed, 47 insertions(+), 11 deletions(-)
->>>>
->>>> diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
->>>> index c39dfef..f564d9a 100644
->>>> --- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
->>>> +++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
->>>> @@ -38,6 +38,15 @@ Optional properties:
->>>>                         defined or a value in the array is "0" then it is assumed
->>>>                         that the frequency is set by the parent clock or a
->>>>                         fixed rate clock source.
->>>> +- rpm-level         : UFS Runtime power management level. Following PM levels are supported:
->>>> +                      0 - Both UFS device and Link in active state (Highest power consumption)
->>>> +                      1 - UFS device in active state but Link in Hibern8 state
->>>> +                      2 - UFS device in Sleep state but Link in active state
->>>> +                      3 - UFS device in Sleep state and Link in hibern8 state (default PM level)
->>>> +                      4 - UFS device in Power-down state and Link in Hibern8 state
->>>> +                      5 - UFS device in Power-down state and Link in OFF state (Lowest power consumption)
->>>> +- spm-level         : UFS System power management level. Allowed PM levels are same as rpm-level.
->>>
->>> What's the default?
->>>
->>> I assume these are minimums? The OS can pick higher power states. This
->>> seems to be a bit Linux specific (as 'runtime PM' could be considered
->>> Linux specific). For every other device, we don't put this type of
->>> information in DT, but is user controlled.
->> I didn't completely understand your comment.
->> Do you not want these properties to be in DT file?
-> 
-> Right, not if it is a user decision.
-> 
->> When you say user-controlled, do you mean control it through sysfs entries?
-> 
-> Yes.
-> 
->>> So really, wouldn't 1
->>> property be sufficient for cases where a mode doesn't work due to
->>> some h/w limitation. Otherwise, it is an OS or user decision.
->> I didn't completely understand this. Could you please elaborate on your
->> intent here?
-> 
-> The case that makes sense for this to be in DT is if there are h/w
-> limitations that prevent some low power modes. In such a case, that
-> limit is not likely specific to runtime PM or system suspend.
-> 
->>>>    -lanes-per-direction       : number of lanes available per direction - either 1 or 2.
->>>>                         Note that it is assume same number of lanes is used both
->>>>                         directions at once. If not specified, default is 2 lanes per direction.
->>>> @@ -66,4 +75,6 @@ Example:
->>>>               freq-table-hz = <100000000 200000000>, <0 0>, <0 0>;
->>>>               phys = <&ufsphy1>;
->>>>               phy-names = "ufsphy";
->>>> +            rpm-level = <3>;
->>>
->>> Why specified if 3 is the default?
->> Ah yes - that should be removed.
->> I'll remove it in v2.
->>
->>>
->>>> +            spm-level = <5>;
->>>
->>> These seem like sane defaults. When and why would you use some
->>> different?
->> I think each of the deeper sleep modes are associated with an increasing
->> wakeup latency. For e.g. '0' would have the highest power-consumption
->> and no resume latency at all as compared to '5'.
->> So depending on use-cases other modes may be chosen.
-> 
-> The use-case can change in a running system. For example if you are
-> plugged in, then you probably don't want to enter a lower power mode.
-> 
-> Rob
-> 
+On Mon, Jul 23, 2018 at 1:12 PM, Jessica Yu <jeyu@kernel.org> wrote:
+> IMO I don't think we should bend over backwards to accommodate
+> out-of-tree modules - modifying the module loader to recognize even
+> more special sections to accommodate these OOT modules would be where
+> we'd draw the line I think.
 
-Ok - Thanks.
-I'm gonna make the following changes in v2:
-1. Remove these entries from DT
-2. Add support for these entries in sysfs.
-3. Keep 3 as the default value for [rpm/spm]-levels
+I agree with you, I really don't like making the module loader more
+complex (which is why I didn't opt to create separate sections in the
+first place), and in the end this change will in some ways benefit
+out-of-tree drivers too, even though it will be a bit painful now.
 
--asd
+> I think going forward I would prefer to have export namespaces to be a
+> normal and regular part of kernel API (as in, we shouldn't require a
+> new option for it), and that the warnings for 1-2 cycles are courteous
+> enough - but anyone with stronger opinions about this should speak up.
 
--- 
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a 
-Linux Foundation Collaborative Project
+That aligns with how I think about this; if we want this to be a
+standard thing in the kernel, we should at some point enforce it,
+because it's pretty easy to ignore the warning. The good thing is that
+it's not a big on/off switch, but subsystem maintainers can just
+introduce namespaces when it makes sense.
+
+Thanks,
+Martijn
+
+>
+> Thanks,
+>
+> Jessica
