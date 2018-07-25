@@ -1,413 +1,213 @@
-From: Lucas De Marchi <lucas.de.marchi@gmail.com>
-Subject: Re: [PATCH 2/6] module: add support for symbol namespaces.
-Date: Wed, 25 Jul 2018 09:48:29 -0700
-Message-ID: <CAKi4VA+wvVxPxVSP6ruSR++TYvavKPNAQ5XhREF_9ZxeOKQirg@mail.gmail.com>
-References: <20180716122125.175792-1-maco@android.com> <20180716122125.175792-3-maco@android.com>
- <CAB0TPYEOVHcFGFLTjVvk7R0VSgSnXZRi1PjSYXONJSjqd4NewQ@mail.gmail.com> <20180725155507.umb5oatduquxwlmt@linux-8ccs>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180725155507.umb5oatduquxwlmt@linux-8ccs>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jessica Yu <jeyu@kernel.org>
-Cc: maco@android.com, lkml <linux-kernel@vger.kernel.org>, yamada.masahiro@socionext.com, michal.lkml@markovi.net, geert@linux-m68k.org, Thomas Gleixner <tglx@linutronix.de>, mingo@redhat.com, "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org, Alan Stern <stern@rowland.harvard.edu>, Greg KH <gregkh@linuxfoundation.org>, oneukum@suse.com, Arnd Bergmann <arnd@arndb.de>, sboyd@codeaurora.org, pombredanne@nexb.com, kstewart@linuxfoundation.org, sam@ravnborg.org, linux-kbuild@vger.kernel.org, linux-m68k@lists.linux-m68k.org, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net, linux-scsi@vger.kernel.org, linux-arch@vger.kernel.org, maco@google.com, sspatil@google.com, malchev@google.com, joelaf@google.com, linux-modules <linux-modules@vger.kernel.org>
+From: Bart Van Assche <bart.vanassche@wdc.com>
+Subject: [PATCH, RESEND] Avoid that SCSI device removal through sysfs triggers a deadlock
+Date: Wed, 25 Jul 2018 10:38:28 -0700
+Message-ID: <20180725173828.2227-1-bart.vanassche@wdc.com>
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>, "Eric W . Biederman" <ebiederm@xmission.com>, Tejun Heo <tj@kernel.org>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, Ingo Molnar <mingo@kernel.org>, Oleg Nesterov <oleg@redhat.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Jul 25, 2018 at 8:55 AM Jessica Yu <jeyu@kernel.org> wrote:
->
-> +++ Martijn Coenen [24/07/18 09:56 +0200]:
-> >I did find an issue with my approach:
-> >
-> >On Mon, Jul 16, 2018 at 2:21 PM, Martijn Coenen <maco@android.com> wrote:
-> >> The ELF symbols are renamed to include the namespace with an asm label;
-> >> for example, symbol 'usb_stor_suspend' in namespace USB_STORAGE becomes
-> >> 'usb_stor_suspend.USB_STORAGE'.  This allows modpost to do namespace
-> >> checking, without having to go through all the effort of parsing ELF and
-> >> reloction records just to get to the struct kernel_symbols.
-> >
-> >depmod doesn't like this: if namespaced symbols are built-in to the
-> >kernel, they will appear as 'symbol.NS' in the symbol table, whereas
-> >modules using those symbols just depend on 'symbol'. This will cause
-> >depmod to warn about unknown symbols. I didn't find this previously
-> >because all the exports/imports I tested were done from modules
-> >themselves.
-> >
-> >One way to deal with it is to change depmod, but it looks like it
-> >hasn't been changed in ages, and it would also introduce a dependency
+This patch avoids that self-removal triggers the following deadlock:
 
-this might be because you are looking to the wrong project
-(module-init-tools) rather than kmod that replaced it some years ago?
+======================================================
+WARNING: possible circular locking dependency detected
+4.18.0-rc2-dbg+ #5 Not tainted
+------------------------------------------------------
+modprobe/6539 is trying to acquire lock:
+000000008323c4cd (kn->count#202){++++}, at: kernfs_remove_by_name_ns+0x45/0x90
 
-> >on userspaces to update it to avoid these warnings. So, we'd have to
-> >encode the symbol namespace information in another way for modpost to
-> >use. I could just write a separate post-processing tool (much like
-> >genksyms), or perhaps encode the information in a discardable section.
-> >Any other suggestions welcome.
->
-> This seems to be because depmod uses System.map as a source for kernel
-> symbols and scans for only the ones prefixed with "__ksymtab" to find
-> the exported ones - and those happen to use the '.' to mark the
-> namespace it belongs to. It strips that prefix and uses the remainder
-> as the actual symbol name. To fix that it'd have to strip the
-> namespace suffix in the symbol name as well.
->
-> Just scanning the depmod source code, it seems really trivial to just
-> have depmod accommodate the new symbol name format. Adding Lucas (kmod
-> maintainer) to CC.
+but task is already holding lock:
+00000000a6ec2c69 (&shost->scan_mutex){+.+.}, at: scsi_remove_host+0x21/0x150 [scsi_mod]
 
-Yep, that would be easy and allow depmod to be backward compatible
-since we would do nothing if the symbol doesn't have the suffix.
-As for dependency on a new version, this seems trivial enough to be
-backported to previous releases used on distros so even if they are
-not rolling they would get a compatible depmod.
+which lock already depends on the new lock.
 
-CC'ing linux-modules@vger.kernel.org to keep track of this there
+the existing dependency chain (in reverse order) is:
 
+-> #1 (&shost->scan_mutex){+.+.}:
+       __mutex_lock+0xfe/0xc70
+       mutex_lock_nested+0x1b/0x20
+       scsi_remove_device+0x26/0x40 [scsi_mod]
+       sdev_store_delete+0x27/0x30 [scsi_mod]
+       dev_attr_store+0x3e/0x50
+       sysfs_kf_write+0x87/0xa0
+       kernfs_fop_write+0x190/0x230
+       __vfs_write+0xd2/0x3b0
+       vfs_write+0x101/0x270
+       ksys_write+0xab/0x120
+       __x64_sys_write+0x43/0x50
+       do_syscall_64+0x77/0x230
+       entry_SYSCALL_64_after_hwframe+0x49/0xbe
 
-thanks
-Lucas De Marchi
+-> #0 (kn->count#202){++++}:
+       lock_acquire+0xd2/0x260
+       __kernfs_remove+0x424/0x4a0
+       kernfs_remove_by_name_ns+0x45/0x90
+       remove_files.isra.1+0x3a/0x90
+       sysfs_remove_group+0x5c/0xc0
+       sysfs_remove_groups+0x39/0x60
+       device_remove_attrs+0x82/0xb0
+       device_del+0x251/0x580
+       __scsi_remove_device+0x19f/0x1d0 [scsi_mod]
+       scsi_forget_host+0x37/0xb0 [scsi_mod]
+       scsi_remove_host+0x9b/0x150 [scsi_mod]
+       sdebug_driver_remove+0x4b/0x150 [scsi_debug]
+       device_release_driver_internal+0x241/0x360
+       device_release_driver+0x12/0x20
+       bus_remove_device+0x1bc/0x290
+       device_del+0x259/0x580
+       device_unregister+0x1a/0x70
+       sdebug_remove_adapter+0x8b/0xf0 [scsi_debug]
+       scsi_debug_exit+0x76/0xe8 [scsi_debug]
+       __x64_sys_delete_module+0x1c1/0x280
+       do_syscall_64+0x77/0x230
+       entry_SYSCALL_64_after_hwframe+0x49/0xbe
 
->
-> Thanks,
->
-> Jessica
->
-> >
-> >>
-> >> On x86_64 I saw no difference in binary size (compression), but at
-> >> runtime this will require a word of memory per export to hold the
-> >> namespace. An alternative could be to store namespaced symbols in their
-> >> own section and use a separate 'struct namespaced_kernel_symbol' for
-> >> that section, at the cost of making the module loader more complex.
-> >>
-> >> Signed-off-by: Martijn Coenen <maco@android.com>
-> >> ---
-> >>  include/asm-generic/export.h |  2 +-
-> >>  include/linux/export.h       | 83 +++++++++++++++++++++++++++---------
-> >>  include/linux/module.h       | 13 ++++++
-> >>  kernel/module.c              | 79 ++++++++++++++++++++++++++++++++++
-> >>  4 files changed, 156 insertions(+), 21 deletions(-)
-> >>
-> >> diff --git a/include/asm-generic/export.h b/include/asm-generic/export.h
-> >> index 68efb950a918..4c3d1afb702f 100644
-> >> --- a/include/asm-generic/export.h
-> >> +++ b/include/asm-generic/export.h
-> >> @@ -29,7 +29,7 @@
-> >>         .section ___ksymtab\sec+\name,"a"
-> >>         .balign KSYM_ALIGN
-> >>  __ksymtab_\name:
-> >> -       __put \val, __kstrtab_\name
-> >> +       __put \val, __kstrtab_\name, 0
-> >>         .previous
-> >>         .section __ksymtab_strings,"a"
-> >>  __kstrtab_\name:
-> >> diff --git a/include/linux/export.h b/include/linux/export.h
-> >> index ad6b8e697b27..9f6e70eeb85f 100644
-> >> --- a/include/linux/export.h
-> >> +++ b/include/linux/export.h
-> >> @@ -22,6 +22,11 @@ struct kernel_symbol
-> >>  {
-> >>         unsigned long value;
-> >>         const char *name;
-> >> +       const char *namespace;
-> >> +};
-> >> +
-> >> +struct namespace_import {
-> >> +       const char *namespace;
-> >>  };
-> >>
-> >>  #ifdef MODULE
-> >> @@ -54,18 +59,28 @@ extern struct module __this_module;
-> >>  #define __CRC_SYMBOL(sym, sec)
-> >>  #endif
-> >>
-> >> +#define NS_SEPARATOR "."
-> >> +
-> >> +#define MODULE_IMPORT_NS(ns)                                           \
-> >> +       static const struct namespace_import __knsimport_##ns           \
-> >> +       asm("__knsimport_" #ns)                                         \
-> >> +       __attribute__((section("__knsimport"), used))                   \
-> >> +       = { #ns }
-> >> +
-> >>  /* For every exported symbol, place a struct in the __ksymtab section */
-> >> -#define ___EXPORT_SYMBOL(sym, sec)                                     \
-> >> +#define ___EXPORT_SYMBOL(sym, sec, ns, nspost, nspost2)                        \
-> >>         extern typeof(sym) sym;                                         \
-> >>         __CRC_SYMBOL(sym, sec)                                          \
-> >> -       static const char __kstrtab_##sym[]                             \
-> >> +       static const char __kstrtab_##sym##nspost[]                     \
-> >>         __attribute__((section("__ksymtab_strings"), aligned(1)))       \
-> >>         = #sym;                                                         \
-> >> -       static const struct kernel_symbol __ksymtab_##sym               \
-> >> +       static const struct kernel_symbol __ksymtab_##sym##nspost       \
-> >> +       asm("__ksymtab_" #sym nspost2)                                  \
-> >>         __used                                                          \
-> >> -       __attribute__((section("___ksymtab" sec "+" #sym), used))       \
-> >> +       __attribute__((section("___ksymtab" sec "+" #sym #nspost)))     \
-> >> +       __attribute__((used))                                           \
-> >>         __attribute__((aligned(sizeof(void *))))                        \
-> >> -       = { (unsigned long)&sym, __kstrtab_##sym }
-> >> +       = { (unsigned long)&sym, __kstrtab_##sym##nspost, ns }
-> >>
-> >>  #if defined(__KSYM_DEPS__)
-> >>
-> >> @@ -76,52 +91,80 @@ extern struct module __this_module;
-> >>   * system filters out from the preprocessor output (see ksym_dep_filter
-> >>   * in scripts/Kbuild.include).
-> >>   */
-> >> -#define __EXPORT_SYMBOL(sym, sec)      === __KSYM_##sym ===
-> >> +#define __EXPORT_SYMBOL(sym, sec, ns, nspost, nspost2) === __KSYM_##sym ===
-> >>
-> >>  #elif defined(CONFIG_TRIM_UNUSED_KSYMS)
-> >>
-> >>  #include <generated/autoksyms.h>
-> >>
-> >> -#define __EXPORT_SYMBOL(sym, sec)                              \
-> >> -       __cond_export_sym(sym, sec, __is_defined(__KSYM_##sym))
-> >> -#define __cond_export_sym(sym, sec, conf)                      \
-> >> -       ___cond_export_sym(sym, sec, conf)
-> >> -#define ___cond_export_sym(sym, sec, enabled)                  \
-> >> -       __cond_export_sym_##enabled(sym, sec)
-> >> -#define __cond_export_sym_1(sym, sec) ___EXPORT_SYMBOL(sym, sec)
-> >> -#define __cond_export_sym_0(sym, sec) /* nothing */
-> >> +#define __EXPORT_SYMBOL(sym, sec, ns, nspost, nspost2)                 \
-> >> +       __cond_export_sym(sym, sec, ns, nspost, nspost2,                \
-> >> +                         __is_defined(__KSYM_##sym))
-> >> +#define __cond_export_sym(sym, sec, ns, nspost, nspost2, conf)         \
-> >> +       ___cond_export_sym(sym, sec, ns, nspost, nspost2, conf)
-> >> +#define ___cond_export_sym(sym, sec, ns, nspost, nspost2, enabled)     \
-> >> +       __cond_export_sym_##enabled(sym, sec, ns, nspost, nspost2)
-> >> +#define __cond_export_sym_1(sym, sec, ns, nspost, nspost2)             \
-> >> +       ___EXPORT_SYMBOL(sym, sec, ns, nspost, nspost2)
-> >> +#define __cond_export_sym_0(sym, sec, ns, nspost, nspost2) /* nothing */
-> >>
-> >>  #else
-> >>  #define __EXPORT_SYMBOL ___EXPORT_SYMBOL
-> >>  #endif
-> >>
-> >>  #define EXPORT_SYMBOL(sym)                                     \
-> >> -       __EXPORT_SYMBOL(sym, "")
-> >> +       __EXPORT_SYMBOL(sym, "", NULL, ,)
-> >>
-> >>  #define EXPORT_SYMBOL_GPL(sym)                                 \
-> >> -       __EXPORT_SYMBOL(sym, "_gpl")
-> >> +       __EXPORT_SYMBOL(sym, "_gpl", NULL, ,)
-> >>
-> >>  #define EXPORT_SYMBOL_GPL_FUTURE(sym)                          \
-> >> -       __EXPORT_SYMBOL(sym, "_gpl_future")
-> >> +       __EXPORT_SYMBOL(sym, "_gpl_future", NULL, ,)
-> >> +
-> >> +#define EXPORT_SYMBOL_NS(sym, ns)                               \
-> >> +       __EXPORT_SYMBOL(sym, "", #ns, __##ns, NS_SEPARATOR #ns)
-> >> +
-> >> +#define EXPORT_SYMBOL_NS_GPL(sym, ns)                               \
-> >> +       __EXPORT_SYMBOL(sym, "_gpl", #ns, __##ns, NS_SEPARATOR #ns)
-> >>
-> >>  #ifdef CONFIG_UNUSED_SYMBOLS
-> >> -#define EXPORT_UNUSED_SYMBOL(sym) __EXPORT_SYMBOL(sym, "_unused")
-> >> -#define EXPORT_UNUSED_SYMBOL_GPL(sym) __EXPORT_SYMBOL(sym, "_unused_gpl")
-> >> +#define EXPORT_UNUSED_SYMBOL(sym) __EXPORT_SYMBOL(sym, "_unused", , ,)
-> >> +#define EXPORT_UNUSED_SYMBOL_GPL(sym) __EXPORT_SYMBOL(sym, "_unused_gpl", , ,)
-> >>  #else
-> >>  #define EXPORT_UNUSED_SYMBOL(sym)
-> >>  #define EXPORT_UNUSED_SYMBOL_GPL(sym)
-> >>  #endif
-> >>
-> >> -#endif /* __GENKSYMS__ */
-> >> +#endif /* __KERNEL__ && !__GENKSYMS__ */
-> >> +
-> >> +#if defined(__GENKSYMS__)
-> >> +/*
-> >> + * When we're running genksyms, ignore the namespace and make the _NS
-> >> + * variants look like the normal ones. There are two reasons for this:
-> >> + * 1) In the normal definition of EXPORT_SYMBOL_NS, the 'ns' macro
-> >> + *    argument is itself not expanded because it's always tokenized or
-> >> + *    concatenated; but when running genksyms, a blank definition of the
-> >> + *    macro does allow the argument to be expanded; if a namespace
-> >> + *    happens to collide with a #define, this can cause issues.
-> >> + * 2) There's no need to modify genksyms to deal with the _NS variants
-> >> + */
-> >> +#define EXPORT_SYMBOL_NS(sym, ns)                              \
-> >> +       EXPORT_SYMBOL(sym)
-> >> +#define EXPORT_SYMBOL_NS_GPL(sym, ns)                          \
-> >> +       EXPORT_SYMBOL_GPL(sym)
-> >> +#endif
-> >>
-> >>  #else /* !CONFIG_MODULES... */
-> >>
-> >>  #define EXPORT_SYMBOL(sym)
-> >> +#define EXPORT_SYMBOL_NS(sym, ns)
-> >> +#define EXPORT_SYMBOL_NS_GPL(sym, ns)
-> >>  #define EXPORT_SYMBOL_GPL(sym)
-> >>  #define EXPORT_SYMBOL_GPL_FUTURE(sym)
-> >>  #define EXPORT_UNUSED_SYMBOL(sym)
-> >>  #define EXPORT_UNUSED_SYMBOL_GPL(sym)
-> >>
-> >> +#define MODULE_IMPORT_NS(ns)
-> >>  #endif /* CONFIG_MODULES */
-> >>  #endif /* !__ASSEMBLY__ */
-> >>
-> >> diff --git a/include/linux/module.h b/include/linux/module.h
-> >> index d44df9b2c131..afab4e8fa188 100644
-> >> --- a/include/linux/module.h
-> >> +++ b/include/linux/module.h
-> >> @@ -268,6 +268,12 @@ void *__symbol_get(const char *symbol);
-> >>  void *__symbol_get_gpl(const char *symbol);
-> >>  #define symbol_get(x) ((typeof(&x))(__symbol_get(VMLINUX_SYMBOL_STR(x))))
-> >>
-> >> +/* namespace dependencies of the module */
-> >> +struct module_ns_dep {
-> >> +       struct list_head ns_dep;
-> >> +       const char *namespace;
-> >> +};
-> >> +
-> >>  /* modules using other modules: kdb wants to see this. */
-> >>  struct module_use {
-> >>         struct list_head source_list;
-> >> @@ -359,6 +365,13 @@ struct module {
-> >>         const struct kernel_symbol *gpl_syms;
-> >>         const s32 *gpl_crcs;
-> >>
-> >> +       /* Namespace imports */
-> >> +       unsigned int num_ns_imports;
-> >> +       const struct namespace_import *ns_imports;
-> >> +
-> >> +       /* Namespace dependencies */
-> >> +       struct list_head ns_dependencies;
-> >> +
-> >>  #ifdef CONFIG_UNUSED_SYMBOLS
-> >>         /* unused exported symbols. */
-> >>         const struct kernel_symbol *unused_syms;
-> >> diff --git a/kernel/module.c b/kernel/module.c
-> >> index f475f30eed8c..63de0fe849f9 100644
-> >> --- a/kernel/module.c
-> >> +++ b/kernel/module.c
-> >> @@ -1166,6 +1166,51 @@ static inline int module_unload_init(struct module *mod)
-> >>  }
-> >>  #endif /* CONFIG_MODULE_UNLOAD */
-> >>
-> >> +static bool module_has_ns_dependency(struct module *mod, const char *ns)
-> >> +{
-> >> +       struct module_ns_dep *ns_dep;
-> >> +
-> >> +       list_for_each_entry(ns_dep, &mod->ns_dependencies, ns_dep) {
-> >> +               if (strcmp(ns_dep->namespace, ns) == 0)
-> >> +                       return true;
-> >> +       }
-> >> +
-> >> +       return false;
-> >> +}
-> >> +
-> >> +static int add_module_ns_dependency(struct module *mod, const char *ns)
-> >> +{
-> >> +       struct module_ns_dep *ns_dep;
-> >> +
-> >> +       if (module_has_ns_dependency(mod, ns))
-> >> +               return 0;
-> >> +
-> >> +       ns_dep = kmalloc(sizeof(*ns_dep), GFP_ATOMIC);
-> >> +       if (!ns_dep)
-> >> +               return -ENOMEM;
-> >> +
-> >> +       ns_dep->namespace = ns;
-> >> +
-> >> +       list_add(&ns_dep->ns_dep, &mod->ns_dependencies);
-> >> +
-> >> +       return 0;
-> >> +}
-> >> +
-> >> +static bool module_imports_ns(struct module *mod, const char *ns)
-> >> +{
-> >> +       size_t i;
-> >> +
-> >> +       if (!ns)
-> >> +               return true;
-> >> +
-> >> +       for (i = 0; i < mod->num_ns_imports; ++i) {
-> >> +               if (!strcmp(mod->ns_imports[i].namespace, ns))
-> >> +                       return true;
-> >> +       }
-> >> +
-> >> +       return false;
-> >> +}
-> >> +
-> >>  static size_t module_flags_taint(struct module *mod, char *buf)
-> >>  {
-> >>         size_t l = 0;
-> >> @@ -1415,6 +1460,18 @@ static const struct kernel_symbol *resolve_symbol(struct module *mod,
-> >>                 goto getname;
-> >>         }
-> >>
-> >> +       /*
-> >> +        * We can't yet verify that the module actually imports this
-> >> +        * namespace, because the imports themselves are only available
-> >> +        * after processing the symbol table and doing relocation; so
-> >> +        * instead just record the dependency and check later.
-> >> +        */
-> >> +       if (sym->namespace) {
-> >> +               err = add_module_ns_dependency(mod, sym->namespace);
-> >> +               if (err)
-> >> +                       sym = ERR_PTR(err);
-> >> +       }
-> >> +
-> >>  getname:
-> >>         /* We must make copy under the lock if we failed to get ref. */
-> >>         strncpy(ownername, module_name(owner), MODULE_NAME_LEN);
-> >> @@ -3061,6 +3118,11 @@ static int find_module_sections(struct module *mod, struct load_info *info)
-> >>                                      sizeof(*mod->gpl_syms),
-> >>                                      &mod->num_gpl_syms);
-> >>         mod->gpl_crcs = section_addr(info, "__kcrctab_gpl");
-> >> +
-> >> +       mod->ns_imports = section_objs(info, "__knsimport",
-> >> +                                      sizeof(*mod->ns_imports),
-> >> +                                      &mod->num_ns_imports);
-> >> +
-> >>         mod->gpl_future_syms = section_objs(info,
-> >>                                             "__ksymtab_gpl_future",
-> >>                                             sizeof(*mod->gpl_future_syms),
-> >> @@ -3381,6 +3443,19 @@ static int post_relocation(struct module *mod, const struct load_info *info)
-> >>         return module_finalize(info->hdr, info->sechdrs, mod);
-> >>  }
-> >>
-> >> +static void verify_namespace_dependencies(struct module *mod)
-> >> +{
-> >> +       struct module_ns_dep *ns_dep;
-> >> +
-> >> +       list_for_each_entry(ns_dep, &mod->ns_dependencies, ns_dep) {
-> >> +               if (!module_imports_ns(mod, ns_dep->namespace)) {
-> >> +                       pr_warn("%s: module uses symbols from namespace %s,"
-> >> +                               " but does not import it.\n",
-> >> +                               mod->name, ns_dep->namespace);
-> >> +               }
-> >> +       }
-> >> +}
-> >> +
-> >>  /* Is this module of this name done loading?  No locks held. */
-> >>  static bool finished_loading(const char *name)
-> >>  {
-> >> @@ -3682,6 +3757,8 @@ static int load_module(struct load_info *info, const char __user *uargs,
-> >>         if (err)
-> >>                 goto free_module;
-> >>
-> >> +       INIT_LIST_HEAD(&mod->ns_dependencies);
-> >> +
-> >>  #ifdef CONFIG_MODULE_SIG
-> >>         mod->sig_ok = info->sig_ok;
-> >>         if (!mod->sig_ok) {
-> >> @@ -3730,6 +3807,8 @@ static int load_module(struct load_info *info, const char __user *uargs,
-> >>         if (err < 0)
-> >>                 goto free_modinfo;
-> >>
-> >> +       verify_namespace_dependencies(mod);
-> >> +
-> >>         flush_module_icache(mod);
-> >>
-> >>         /* Now copy in args */
-> >> --
-> >> 2.18.0.203.gfac676dfb9-goog
-> >>
+other info that might help us debug this:
 
+ Possible unsafe locking scenario:
 
+       CPU0                    CPU1
+       ----                    ----
+  lock(&shost->scan_mutex);
+                               lock(kn->count#202);
+                               lock(&shost->scan_mutex);
+  lock(kn->count#202);
 
+ *** DEADLOCK ***
+
+2 locks held by modprobe/6539:
+ #0: 00000000efaf9298 (&dev->mutex){....}, at: device_release_driver_internal+0x68/0x360
+ #1: 00000000a6ec2c69 (&shost->scan_mutex){+.+.}, at: scsi_remove_host+0x21/0x150 [scsi_mod]
+
+stack backtrace:
+CPU: 10 PID: 6539 Comm: modprobe Not tainted 4.18.0-rc2-dbg+ #5
+Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.0.0-prebuilt.qemu-project.org 04/01/2014
+Call Trace:
+ dump_stack+0xa4/0xf5
+ print_circular_bug.isra.34+0x213/0x221
+ __lock_acquire+0x1a7e/0x1b50
+ lock_acquire+0xd2/0x260
+ __kernfs_remove+0x424/0x4a0
+ kernfs_remove_by_name_ns+0x45/0x90
+ remove_files.isra.1+0x3a/0x90
+ sysfs_remove_group+0x5c/0xc0
+ sysfs_remove_groups+0x39/0x60
+ device_remove_attrs+0x82/0xb0
+ device_del+0x251/0x580
+ __scsi_remove_device+0x19f/0x1d0 [scsi_mod]
+ scsi_forget_host+0x37/0xb0 [scsi_mod]
+ scsi_remove_host+0x9b/0x150 [scsi_mod]
+ sdebug_driver_remove+0x4b/0x150 [scsi_debug]
+ device_release_driver_internal+0x241/0x360
+ device_release_driver+0x12/0x20
+ bus_remove_device+0x1bc/0x290
+ device_del+0x259/0x580
+ device_unregister+0x1a/0x70
+ sdebug_remove_adapter+0x8b/0xf0 [scsi_debug]
+ scsi_debug_exit+0x76/0xe8 [scsi_debug]
+ __x64_sys_delete_module+0x1c1/0x280
+ do_syscall_64+0x77/0x230
+ entry_SYSCALL_64_after_hwframe+0x49/0xbe
+
+See also https://www.mail-archive.com/linux-scsi@vger.kernel.org/msg54525.html.
+
+Suggested-by: Eric W. Biederman <ebiederm@xmission.com>
+Fixes: ac0ece9174ac ("scsi: use device_remove_file_self() instead of device_schedule_callback()")
+Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
+Cc: Eric W. Biederman <ebiederm@xmission.com>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Hannes Reinecke <hare@suse.com>
+Cc: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: Ingo Molnar <mingo@kernel.org>
+Cc: Oleg Nesterov <oleg@redhat.com>
+Cc: <stable@vger.kernel.org>
+---
+ drivers/scsi/scsi_sysfs.c | 48 +++++++++++++++++++++++++++++++++++----
+ kernel/task_work.c        |  1 +
+ 2 files changed, 45 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index de122354d09a..c43f645900d4 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -12,6 +12,7 @@
+ #include <linux/blkdev.h>
+ #include <linux/device.h>
+ #include <linux/pm_runtime.h>
++#include <linux/task_work.h>
+ 
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_device.h>
+@@ -718,14 +719,53 @@ store_rescan_field (struct device *dev, struct device_attribute *attr,
+ }
+ static DEVICE_ATTR(rescan, S_IWUSR, NULL, store_rescan_field);
+ 
++struct remove_dev_work {
++	struct callback_head	head;
++	struct scsi_device	*sdev;
++};
++
++static void delete_sdev(struct callback_head *head)
++{
++	struct remove_dev_work *work = container_of(head, typeof(*work), head);
++	struct scsi_device *sdev = work->sdev;
++
++	scsi_remove_device(sdev);
++	kfree(work);
++	scsi_device_put(sdev);
++}
++
+ static ssize_t
+ sdev_store_delete(struct device *dev, struct device_attribute *attr,
+ 		  const char *buf, size_t count)
+ {
+-	if (device_remove_file_self(dev, attr))
+-		scsi_remove_device(to_scsi_device(dev));
+-	return count;
+-};
++	struct scsi_device *sdev = to_scsi_device(dev);
++	struct remove_dev_work *work;
++	int ret;
++
++	ret = scsi_device_get(sdev);
++	if (ret < 0)
++		goto out;
++	ret = -ENOMEM;
++	work = kmalloc(sizeof(*work), GFP_KERNEL);
++	if (!work)
++		goto put;
++	work->head.func = delete_sdev;
++	work->sdev = sdev;
++	ret = task_work_add(current, &work->head, false);
++	if (ret < 0)
++		goto free;
++	ret = count;
++
++out:
++	return ret;
++
++free:
++	kfree(work);
++
++put:
++	scsi_device_put(sdev);
++	goto out;
++}
+ static DEVICE_ATTR(delete, S_IWUSR, NULL, sdev_store_delete);
+ 
+ static ssize_t
+diff --git a/kernel/task_work.c b/kernel/task_work.c
+index 0fef395662a6..75dc496b9997 100644
+--- a/kernel/task_work.c
++++ b/kernel/task_work.c
+@@ -40,6 +40,7 @@ task_work_add(struct task_struct *task, struct callback_head *work, bool notify)
+ 		set_notify_resume(task);
+ 	return 0;
+ }
++EXPORT_SYMBOL_GPL(task_work_add);
+ 
+ /**
+  * task_work_cancel - cancel a pending work added by task_work_add()
 -- 
-Lucas De Marchi
+2.18.0
