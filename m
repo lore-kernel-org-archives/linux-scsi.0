@@ -1,213 +1,258 @@
-From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH, RESEND] Avoid that SCSI device removal through sysfs triggers a deadlock
-Date: Wed, 25 Jul 2018 10:38:28 -0700
-Message-ID: <20180725173828.2227-1-bart.vanassche@wdc.com>
-Return-path: <stable-owner@vger.kernel.org>
-Sender: stable-owner@vger.kernel.org
-To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>, "Eric W . Biederman" <ebiederm@xmission.com>, Tejun Heo <tj@kernel.org>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, Ingo Molnar <mingo@kernel.org>, Oleg Nesterov <oleg@redhat.com>, stable@vger.kernel.org
+From: Evan Green <evgreen@chromium.org>
+Subject: [PATCH v3] scsi: ufs: Make sysfs attributes writable
+Date: Wed, 25 Jul 2018 13:14:52 -0700
+Message-ID: <20180725201452.81235-1-evgreen@chromium.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Stanislav Nijnikov <stanislav.nijnikov@wdc.com>, Adrian Hunter <adrian.hunter@intel.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: Evan Green <evgreen@chromium.org>
 List-Id: linux-scsi@vger.kernel.org
 
-This patch avoids that self-removal triggers the following deadlock:
+This change makes the UFS controller's sysfs attributes writable, which
+will enable users to modify attributes. This can be useful during factory
+provisioning for setting up critical attributes like the reference clock
+frequency.
 
-======================================================
-WARNING: possible circular locking dependency detected
-4.18.0-rc2-dbg+ #5 Not tainted
-------------------------------------------------------
-modprobe/6539 is trying to acquire lock:
-000000008323c4cd (kn->count#202){++++}, at: kernfs_remove_by_name_ns+0x45/0x90
-
-but task is already holding lock:
-00000000a6ec2c69 (&shost->scan_mutex){+.+.}, at: scsi_remove_host+0x21/0x150 [scsi_mod]
-
-which lock already depends on the new lock.
-
-the existing dependency chain (in reverse order) is:
-
--> #1 (&shost->scan_mutex){+.+.}:
-       __mutex_lock+0xfe/0xc70
-       mutex_lock_nested+0x1b/0x20
-       scsi_remove_device+0x26/0x40 [scsi_mod]
-       sdev_store_delete+0x27/0x30 [scsi_mod]
-       dev_attr_store+0x3e/0x50
-       sysfs_kf_write+0x87/0xa0
-       kernfs_fop_write+0x190/0x230
-       __vfs_write+0xd2/0x3b0
-       vfs_write+0x101/0x270
-       ksys_write+0xab/0x120
-       __x64_sys_write+0x43/0x50
-       do_syscall_64+0x77/0x230
-       entry_SYSCALL_64_after_hwframe+0x49/0xbe
-
--> #0 (kn->count#202){++++}:
-       lock_acquire+0xd2/0x260
-       __kernfs_remove+0x424/0x4a0
-       kernfs_remove_by_name_ns+0x45/0x90
-       remove_files.isra.1+0x3a/0x90
-       sysfs_remove_group+0x5c/0xc0
-       sysfs_remove_groups+0x39/0x60
-       device_remove_attrs+0x82/0xb0
-       device_del+0x251/0x580
-       __scsi_remove_device+0x19f/0x1d0 [scsi_mod]
-       scsi_forget_host+0x37/0xb0 [scsi_mod]
-       scsi_remove_host+0x9b/0x150 [scsi_mod]
-       sdebug_driver_remove+0x4b/0x150 [scsi_debug]
-       device_release_driver_internal+0x241/0x360
-       device_release_driver+0x12/0x20
-       bus_remove_device+0x1bc/0x290
-       device_del+0x259/0x580
-       device_unregister+0x1a/0x70
-       sdebug_remove_adapter+0x8b/0xf0 [scsi_debug]
-       scsi_debug_exit+0x76/0xe8 [scsi_debug]
-       __x64_sys_delete_module+0x1c1/0x280
-       do_syscall_64+0x77/0x230
-       entry_SYSCALL_64_after_hwframe+0x49/0xbe
-
-other info that might help us debug this:
-
- Possible unsafe locking scenario:
-
-       CPU0                    CPU1
-       ----                    ----
-  lock(&shost->scan_mutex);
-                               lock(kn->count#202);
-                               lock(&shost->scan_mutex);
-  lock(kn->count#202);
-
- *** DEADLOCK ***
-
-2 locks held by modprobe/6539:
- #0: 00000000efaf9298 (&dev->mutex){....}, at: device_release_driver_internal+0x68/0x360
- #1: 00000000a6ec2c69 (&shost->scan_mutex){+.+.}, at: scsi_remove_host+0x21/0x150 [scsi_mod]
-
-stack backtrace:
-CPU: 10 PID: 6539 Comm: modprobe Not tainted 4.18.0-rc2-dbg+ #5
-Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.0.0-prebuilt.qemu-project.org 04/01/2014
-Call Trace:
- dump_stack+0xa4/0xf5
- print_circular_bug.isra.34+0x213/0x221
- __lock_acquire+0x1a7e/0x1b50
- lock_acquire+0xd2/0x260
- __kernfs_remove+0x424/0x4a0
- kernfs_remove_by_name_ns+0x45/0x90
- remove_files.isra.1+0x3a/0x90
- sysfs_remove_group+0x5c/0xc0
- sysfs_remove_groups+0x39/0x60
- device_remove_attrs+0x82/0xb0
- device_del+0x251/0x580
- __scsi_remove_device+0x19f/0x1d0 [scsi_mod]
- scsi_forget_host+0x37/0xb0 [scsi_mod]
- scsi_remove_host+0x9b/0x150 [scsi_mod]
- sdebug_driver_remove+0x4b/0x150 [scsi_debug]
- device_release_driver_internal+0x241/0x360
- device_release_driver+0x12/0x20
- bus_remove_device+0x1bc/0x290
- device_del+0x259/0x580
- device_unregister+0x1a/0x70
- sdebug_remove_adapter+0x8b/0xf0 [scsi_debug]
- scsi_debug_exit+0x76/0xe8 [scsi_debug]
- __x64_sys_delete_module+0x1c1/0x280
- do_syscall_64+0x77/0x230
- entry_SYSCALL_64_after_hwframe+0x49/0xbe
-
-See also https://www.mail-archive.com/linux-scsi@vger.kernel.org/msg54525.html.
-
-Suggested-by: Eric W. Biederman <ebiederm@xmission.com>
-Fixes: ac0ece9174ac ("scsi: use device_remove_file_self() instead of device_schedule_callback()")
-Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: Eric W. Biederman <ebiederm@xmission.com>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: Hannes Reinecke <hare@suse.com>
-Cc: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: Ingo Molnar <mingo@kernel.org>
-Cc: Oleg Nesterov <oleg@redhat.com>
-Cc: <stable@vger.kernel.org>
+Signed-off-by: Evan Green <evgreen@chromium.org>
 ---
- drivers/scsi/scsi_sysfs.c | 48 +++++++++++++++++++++++++++++++++++----
- kernel/task_work.c        |  1 +
- 2 files changed, 45 insertions(+), 4 deletions(-)
+Configfs was determined to be the preferred mechanism for writing the
+config descriptor, but attributes also need to be written during setup,
+and are already present in sysfs. Making these attributes writable is
+also helpful for debugging and experimentation.
 
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index de122354d09a..c43f645900d4 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -12,6 +12,7 @@
- #include <linux/blkdev.h>
- #include <linux/device.h>
- #include <linux/pm_runtime.h>
-+#include <linux/task_work.h>
+Changes since v2:
+	- Removed the configuration descriptor changes from the series,
+since configfs was the preferred way to write to that, leaving only
+this change.
+
+Changes since v1:
+	- Reworked the interface to show each unit of the config
+descriptor as a separate directory, rather than the previous method I
+had of a file for selecting the unit, and then a common set of files
+that interacted with whichever unit was selected. I did some kobject
+magic to accomplish this. I noticed from Greg KH's reply to Sayali's
+patches [1] that configfs might be the preferred method. Let me know
+if I should abandon this series in favor of Sayali's, with the
+possible exception of "Make sysfs attributes writable".
+	- Squashed documentation changes into their respective code
+changes.
+	- I decided to keep the config descriptor attributes as their
+own files, rather than hiding writes behind device descriptor and unit
+descriptor, as I think that's more future proof and true to the UFS spec.
+
+[1] https://lkml.org/lkml/2018/6/8/210
+
+ Documentation/ABI/testing/sysfs-driver-ufs | 17 +--------
+ drivers/scsi/ufs/ufs-sysfs.c               | 58 ++++++++++++++++++++----------
+ 2 files changed, 40 insertions(+), 35 deletions(-)
+
+diff --git a/Documentation/ABI/testing/sysfs-driver-ufs b/Documentation/ABI/testing/sysfs-driver-ufs
+index 016724ec26d5..44f3b9691e59 100644
+--- a/Documentation/ABI/testing/sysfs-driver-ufs
++++ b/Documentation/ABI/testing/sysfs-driver-ufs
+@@ -685,7 +685,6 @@ Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+ Description:	This file provides the boot lun enabled UFS device attribute.
+ 		The full information about the attribute could be found at
+ 		UFS specifications 2.1.
+-		The file is read only.
  
- #include <scsi/scsi.h>
- #include <scsi/scsi_device.h>
-@@ -718,14 +719,53 @@ store_rescan_field (struct device *dev, struct device_attribute *attr,
- }
- static DEVICE_ATTR(rescan, S_IWUSR, NULL, store_rescan_field);
+ What:		/sys/bus/platform/drivers/ufshcd/*/attributes/current_power_mode
+ Date:		February 2018
+@@ -693,7 +692,6 @@ Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+ Description:	This file provides the current power mode UFS device attribute.
+ 		The full information about the attribute could be found at
+ 		UFS specifications 2.1.
+-		The file is read only.
  
-+struct remove_dev_work {
-+	struct callback_head	head;
-+	struct scsi_device	*sdev;
-+};
-+
-+static void delete_sdev(struct callback_head *head)
-+{
-+	struct remove_dev_work *work = container_of(head, typeof(*work), head);
-+	struct scsi_device *sdev = work->sdev;
-+
-+	scsi_remove_device(sdev);
-+	kfree(work);
-+	scsi_device_put(sdev);
+ What:		/sys/bus/platform/drivers/ufshcd/*/attributes/active_icc_level
+ Date:		February 2018
+@@ -701,7 +699,6 @@ Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+ Description:	This file provides the active icc level UFS device attribute.
+ 		The full information about the attribute could be found at
+ 		UFS specifications 2.1.
+-		The file is read only.
+ 
+ What:		/sys/bus/platform/drivers/ufshcd/*/attributes/ooo_data_enabled
+ Date:		February 2018
+@@ -709,7 +706,6 @@ Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+ Description:	This file provides the out of order data transfer enabled UFS
+ 		device attribute. The full information about the attribute
+ 		could be found at UFS specifications 2.1.
+-		The file is read only.
+ 
+ What:		/sys/bus/platform/drivers/ufshcd/*/attributes/bkops_status
+ Date:		February 2018
+@@ -717,7 +713,6 @@ Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+ Description:	This file provides the background operations status UFS device
+ 		attribute. The full information about the attribute could
+ 		be found at UFS specifications 2.1.
+-		The file is read only.
+ 
+ What:		/sys/bus/platform/drivers/ufshcd/*/attributes/purge_status
+ Date:		February 2018
+@@ -725,7 +720,6 @@ Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+ Description:	This file provides the purge operation status UFS device
+ 		attribute. The full information about the attribute could
+ 		be found at UFS specifications 2.1.
+-		The file is read only.
+ 
+ What:		/sys/bus/platform/drivers/ufshcd/*/attributes/max_data_in_size
+ Date:		February 2018
+@@ -733,7 +727,6 @@ Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+ Description:	This file shows the maximum data size in a DATA IN
+ 		UPIU. The full information about the attribute could
+ 		be found at UFS specifications 2.1.
+-		The file is read only.
+ 
+ What:		/sys/bus/platform/drivers/ufshcd/*/attributes/max_data_out_size
+ Date:		February 2018
+@@ -741,7 +734,6 @@ Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+ Description:	This file shows the maximum number of bytes that can be
+ 		requested with a READY TO TRANSFER UPIU. The full information
+ 		about the attribute could be found at UFS specifications 2.1.
+-		The file is read only.
+ 
+ What:		/sys/bus/platform/drivers/ufshcd/*/attributes/reference_clock_frequency
+ Date:		February 2018
+@@ -749,14 +741,13 @@ Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+ Description:	This file provides the reference clock frequency UFS device
+ 		attribute. The full information about the attribute could
+ 		be found at UFS specifications 2.1.
+-		The file is read only.
+ 
+ What:		/sys/bus/platform/drivers/ufshcd/*/attributes/configuration_descriptor_lock
+ Date:		February 2018
+ Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+ Description:	This file shows whether the configuration descriptor is locked.
+ 		The full information about the attribute could be found at
+-		UFS specifications 2.1. The file is read only.
++		UFS specifications 2.1.
+ 
+ What:		/sys/bus/platform/drivers/ufshcd/*/attributes/max_number_of_rtt
+ Date:		February 2018
+@@ -765,7 +756,6 @@ Description:	This file provides the maximum current number of
+ 		outstanding RTTs in device that is allowed. The full
+ 		information about the attribute could be found at
+ 		UFS specifications 2.1.
+-		The file is read only.
+ 
+ What:		/sys/bus/platform/drivers/ufshcd/*/attributes/exception_event_control
+ Date:		February 2018
+@@ -773,7 +763,6 @@ Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+ Description:	This file provides the exception event control UFS device
+ 		attribute. The full information about the attribute could
+ 		be found at UFS specifications 2.1.
+-		The file is read only.
+ 
+ What:		/sys/bus/platform/drivers/ufshcd/*/attributes/exception_event_status
+ Date:		February 2018
+@@ -781,7 +770,6 @@ Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+ Description:	This file provides the exception event status UFS device
+ 		attribute. The full information about the attribute could
+ 		be found at UFS specifications 2.1.
+-		The file is read only.
+ 
+ What:		/sys/bus/platform/drivers/ufshcd/*/attributes/ffu_status
+ Date:		February 2018
+@@ -789,14 +777,12 @@ Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+ Description:	This file provides the ffu status UFS device attribute.
+ 		The full information about the attribute could be found at
+ 		UFS specifications 2.1.
+-		The file is read only.
+ 
+ What:		/sys/bus/platform/drivers/ufshcd/*/attributes/psa_state
+ Date:		February 2018
+ Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+ Description:	This file show the PSA feature status. The full information
+ 		about the attribute could be found at UFS specifications 2.1.
+-		The file is read only.
+ 
+ What:		/sys/bus/platform/drivers/ufshcd/*/attributes/psa_data_size
+ Date:		February 2018
+@@ -805,7 +791,6 @@ Description:	This file shows the amount of data that the host plans to
+ 		load to all logical units in pre-soldering state.
+ 		The full information about the attribute could be found at
+ 		UFS specifications 2.1.
+-		The file is read only.
+ 
+ 
+ What:		/sys/class/scsi_device/*/device/dyn_cap_needed
+diff --git a/drivers/scsi/ufs/ufs-sysfs.c b/drivers/scsi/ufs/ufs-sysfs.c
+index 8d9332bb7d0c..5e286b9d1aea 100644
+--- a/drivers/scsi/ufs/ufs-sysfs.c
++++ b/drivers/scsi/ufs/ufs-sysfs.c
+@@ -655,7 +655,7 @@ static const struct attribute_group ufs_sysfs_flags_group = {
+ 	.attrs = ufs_sysfs_device_flags,
+ };
+ 
+-#define UFS_ATTRIBUTE(_name, _uname)					\
++#define UFS_ATTRIBUTE_SHOW(_name, _uname)				\
+ static ssize_t _name##_show(struct device *dev,				\
+ 	struct device_attribute *attr, char *buf)			\
+ {									\
+@@ -665,25 +665,45 @@ static ssize_t _name##_show(struct device *dev,				\
+ 		QUERY_ATTR_IDN##_uname, 0, 0, &value))			\
+ 		return -EINVAL;						\
+ 	return sprintf(buf, "0x%08X\n", value);				\
+-}									\
+-static DEVICE_ATTR_RO(_name)
 +}
-+
- static ssize_t
- sdev_store_delete(struct device *dev, struct device_attribute *attr,
- 		  const char *buf, size_t count)
- {
--	if (device_remove_file_self(dev, attr))
--		scsi_remove_device(to_scsi_device(dev));
--	return count;
--};
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	struct remove_dev_work *work;
-+	int ret;
-+
-+	ret = scsi_device_get(sdev);
-+	if (ret < 0)
-+		goto out;
-+	ret = -ENOMEM;
-+	work = kmalloc(sizeof(*work), GFP_KERNEL);
-+	if (!work)
-+		goto put;
-+	work->head.func = delete_sdev;
-+	work->sdev = sdev;
-+	ret = task_work_add(current, &work->head, false);
-+	if (ret < 0)
-+		goto free;
-+	ret = count;
-+
-+out:
-+	return ret;
-+
-+free:
-+	kfree(work);
-+
-+put:
-+	scsi_device_put(sdev);
-+	goto out;
-+}
- static DEVICE_ATTR(delete, S_IWUSR, NULL, sdev_store_delete);
  
- static ssize_t
-diff --git a/kernel/task_work.c b/kernel/task_work.c
-index 0fef395662a6..75dc496b9997 100644
---- a/kernel/task_work.c
-+++ b/kernel/task_work.c
-@@ -40,6 +40,7 @@ task_work_add(struct task_struct *task, struct callback_head *work, bool notify)
- 		set_notify_resume(task);
- 	return 0;
- }
-+EXPORT_SYMBOL_GPL(task_work_add);
+-UFS_ATTRIBUTE(boot_lun_enabled, _BOOT_LU_EN);
+-UFS_ATTRIBUTE(current_power_mode, _POWER_MODE);
+-UFS_ATTRIBUTE(active_icc_level, _ACTIVE_ICC_LVL);
+-UFS_ATTRIBUTE(ooo_data_enabled, _OOO_DATA_EN);
+-UFS_ATTRIBUTE(bkops_status, _BKOPS_STATUS);
+-UFS_ATTRIBUTE(purge_status, _PURGE_STATUS);
+-UFS_ATTRIBUTE(max_data_in_size, _MAX_DATA_IN);
+-UFS_ATTRIBUTE(max_data_out_size, _MAX_DATA_OUT);
+-UFS_ATTRIBUTE(reference_clock_frequency, _REF_CLK_FREQ);
+-UFS_ATTRIBUTE(configuration_descriptor_lock, _CONF_DESC_LOCK);
+-UFS_ATTRIBUTE(max_number_of_rtt, _MAX_NUM_OF_RTT);
+-UFS_ATTRIBUTE(exception_event_control, _EE_CONTROL);
+-UFS_ATTRIBUTE(exception_event_status, _EE_STATUS);
+-UFS_ATTRIBUTE(ffu_status, _FFU_STATUS);
+-UFS_ATTRIBUTE(psa_state, _PSA_STATE);
+-UFS_ATTRIBUTE(psa_data_size, _PSA_DATA_SIZE);
++#define UFS_ATTRIBUTE_RO(_name, _uname)					\
++UFS_ATTRIBUTE_SHOW(_name, _uname)					\
++DEVICE_ATTR_RO(_name)
++
++#define UFS_ATTRIBUTE_RW(_name, _uname)					\
++UFS_ATTRIBUTE_SHOW(_name, _uname)					\
++static ssize_t _name##_store(struct device *dev,			\
++		struct device_attribute *attr, const char *buf,		\
++		size_t count)						\
++{									\
++	struct ufs_hba *hba = dev_get_drvdata(dev);			\
++	u32 value;							\
++	if (kstrtou32(buf, 0, &value))					\
++		return -EINVAL;						\
++	if (ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,	\
++		QUERY_ATTR_IDN##_uname, 0, 0, &value))			\
++		return -EINVAL;						\
++	return count;							\
++}									\
++static DEVICE_ATTR_RW(_name)
++
++UFS_ATTRIBUTE_RW(boot_lun_enabled, _BOOT_LU_EN);
++UFS_ATTRIBUTE_RO(current_power_mode, _POWER_MODE);
++UFS_ATTRIBUTE_RW(active_icc_level, _ACTIVE_ICC_LVL);
++UFS_ATTRIBUTE_RW(ooo_data_enabled, _OOO_DATA_EN);
++UFS_ATTRIBUTE_RO(bkops_status, _BKOPS_STATUS);
++UFS_ATTRIBUTE_RO(purge_status, _PURGE_STATUS);
++UFS_ATTRIBUTE_RW(max_data_in_size, _MAX_DATA_IN);
++UFS_ATTRIBUTE_RW(max_data_out_size, _MAX_DATA_OUT);
++UFS_ATTRIBUTE_RW(reference_clock_frequency, _REF_CLK_FREQ);
++UFS_ATTRIBUTE_RW(configuration_descriptor_lock, _CONF_DESC_LOCK);
++UFS_ATTRIBUTE_RW(max_number_of_rtt, _MAX_NUM_OF_RTT);
++UFS_ATTRIBUTE_RW(exception_event_control, _EE_CONTROL);
++UFS_ATTRIBUTE_RW(exception_event_status, _EE_STATUS);
++UFS_ATTRIBUTE_RO(ffu_status, _FFU_STATUS);
++UFS_ATTRIBUTE_RO(psa_state, _PSA_STATE);
++UFS_ATTRIBUTE_RO(psa_data_size, _PSA_DATA_SIZE);
  
- /**
-  * task_work_cancel - cancel a pending work added by task_work_add()
+ static struct attribute *ufs_sysfs_attributes[] = {
+ 	&dev_attr_boot_lun_enabled.attr,
 -- 
-2.18.0
+2.16.4
