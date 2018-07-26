@@ -1,56 +1,53 @@
-From: "tj@kernel.org" <tj@kernel.org>
-Subject: Re: [PATCH, RESEND] Avoid that SCSI device removal through sysfs
- triggers a deadlock
-Date: Thu, 26 Jul 2018 07:14:35 -0700
-Message-ID: <20180726141435.GV1934745@devbig577.frc2.facebook.com>
-References: <20180725173828.2227-1-bart.vanassche@wdc.com>
- <20180726133527.GU1934745@devbig577.frc2.facebook.com>
- <4dbd740c0555eb1bfcb4181eeaca5e397b6ab63c.camel@wdc.com>
+From: Mike Christie <mchristi@redhat.com>
+Subject: Re: [PATCH 18/26] target/iscsi: Allocate session IDs from an IDA
+Date: Thu, 26 Jul 2018 11:48:22 -0500
+Message-ID: <5B59FB56.9090901@redhat.com>
+References: <20180621212835.5636-1-willy@infradead.org>
+ <20180621212835.5636-19-willy@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <stable-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4dbd740c0555eb1bfcb4181eeaca5e397b6ab63c.camel@wdc.com>
-Sender: stable-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: "mingo@kernel.org" <mingo@kernel.org>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "oleg@redhat.com" <oleg@redhat.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "ebiederm@xmission.com" <ebiederm@xmission.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.com" <hare@suse.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20180621212835.5636-19-willy@infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Matthew Wilcox <willy@infradead.org>, linux-kernel@vger.kernel.org
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Bart Van Assche <bart.vanassche@wdc.com>, Hannes Reinecke <hare@suse.com>, Kees Cook <keescook@chromium.org>, Varun Prakash <varun@chelsio.com>, Sagi Grimberg <sagi@grimberg.me>, Philippe Ombredanne <pombredanne@nexb.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Kate Stewart <kstewart@linuxfoundation.org>, Thomas Gleixner <tglx@linutronix.de>, "David S. Miller" <davem@davemloft.net>, Denys Vlasenko <dvlasenk@redhat.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hello,
+On 06/21/2018 04:28 PM, Matthew Wilcox wrote:
 
-On Thu, Jul 26, 2018 at 02:09:41PM +0000, Bart Van Assche wrote:
-> On Thu, 2018-07-26 at 06:35 -0700, Tejun Heo wrote:
-> > Making removal asynchronous this way sometimes causes issues because
-> > whether the user sees the device released or not is racy.
-> > kernfs/sysfs have mechanisms to deal with these cases - remove_self
-> > and kernfs_break_active_protection().  Have you looked at those?
-> 
-> Hello Tejun,
-> 
-> The call stack in the patch description shows that sdev_store_delete() is
-> involved in the deadlock. The implementation of that function is as follows:
-> 
-> static ssize_t
-> sdev_store_delete(struct device *dev, struct device_attribute *attr,
-> 		  const char *buf, size_t count)
-> {
-> 	if (device_remove_file_self(dev, attr))
-> 		scsi_remove_device(to_scsi_device(dev));
-> 	return count;
-> };
-> 
-> device_remove_file_self() calls sysfs_remove_file_self() and that last
-> function calls kernfs_remove_self(). In other words, kernfs_remove_self()
-> is already being used. Please let me know if I misunderstood your comment.
+> @@ -1163,11 +1157,9 @@ void iscsi_target_login_sess_out(struct iscsi_conn *conn,
+>  		goto old_sess_out;
+>  	if (conn->sess->se_sess)
+>  		transport_free_session(conn->sess->se_sess);
+> -	if (conn->sess->session_index != 0) {
+> -		spin_lock_bh(&sess_idr_lock);
+> -		idr_remove(&sess_idr, conn->sess->session_index);
+> -		spin_unlock_bh(&sess_idr_lock);
 
-So, here, because scsi_remove_device() is the one involved in the
-circular dependency, just breaking the dependency chain on the file
-itself (self removal) isn't enough.  You can wrap the whole operation
-with kernfs_break_active_protection() to also move
-scsi_remove_device() invocation outside the kernfs synchronization.
-This will need to be piped through sysfs but shouldn't be too complex.
+This code looks buggy. We will probably NULL pointer oops before we hit it.
 
-Thanks.
+It looks like the session_index check was supposed to detect when login
+fails in the middle of doing login, so that code probably wanted to do:
 
--- 
-tejun
+idr_alloc(&sess_idr, NULL, 1, 0, GFP_NOWAIT);
+
+The problem is that iscsi_login_zero_tsih_s1 sets conn->sess early in
+iscsi_login_set_conn_values. If the function fails later like when we
+alloc the idr it does kfree(sess) and leaves the conn->sess pointer set.
+iscsi_login_zero_tsih_s1 then returns -Exyz and we then call
+iscsi_target_login_sess_out and access the freed memory above.
+
+So I am not sure what we want to do here for your patch since it is not
+adding any new bugs. Just merge your patch now and I can send a fix for
+the above bug over it?
+
+
+> -	}
+> +	/* Um, 0 is a valid ID.  I suppose we never free it? */
+> +	if (conn->sess->session_index != 0)
+> +		ida_free(&sess_ida, conn->sess->session_index);
+>  	kfree(conn->sess->sess_ops);
+>  	kfree(conn->sess);
+>  	conn->sess = NULL;
+> 
