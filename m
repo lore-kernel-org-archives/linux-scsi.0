@@ -1,13 +1,15 @@
-From: Andy Shevchenko <andy.shevchenko-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH 2/3] dmapool: improve scalability of dma_pool_free
-Date: Thu, 26 Jul 2018 22:45:58 +0300
-Message-ID: <CAHp75VcpM5W7+xgVy6nZf2hOXD8ghy5bwoJpAFse_ccp7OopNA@mail.gmail.com>
-References: <1288e597-a67a-25b3-b7c6-db883ca67a25@cybernetics.com>
+From: Tony Battersby <tonyb-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org>
+Subject: Re: [PATCH 1/3] dmapool: improve scalability of dma_pool_alloc
+Date: Thu, 26 Jul 2018 15:56:12 -0400
+Message-ID: <2a04ee8b-478d-39f1-09a0-1b2f8c6ee8c6@cybernetics.com>
+References: <15ff502d-d840-1003-6c45-bc17f0d81262@cybernetics.com>
+	<CAHp75VcXVgAtUWY5yRBFg85C5NPN2BAFyAfAkPLkKq5+SsNHpg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <1288e597-a67a-25b3-b7c6-db883ca67a25-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org>
+In-Reply-To: <CAHp75VcXVgAtUWY5yRBFg85C5NPN2BAFyAfAkPLkKq5+SsNHpg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Content-Language: en-US
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
 	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
 List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
@@ -17,45 +19,53 @@ List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
 	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
 Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Tony Battersby <tonyb-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org>
+To: Andy Shevchenko <andy.shevchenko-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Cc: linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Chaitra P B <chaitra.basappa-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Suganath Prabu Subramani <suganath-prabu.subramani-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Sathya Prakash <sathya.prakash-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, linux-mm <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, MPT-FusionLinux.pdl-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Jul 26, 2018 at 9:54 PM, Tony Battersby <tonyb-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org> wrote:
-> dma_pool_free() scales poorly when the pool contains many pages because
-> pool_find_page() does a linear scan of all allocated pages.  Improve its
-> scalability by replacing the linear scan with a red-black tree lookup.
-> In big O notation, this improves the algorithm from O(n^2) to O(n * log n).
-
-Few style related comments.
-
-> I moved some code from dma_pool_destroy() into pool_free_page() to avoid code
-> repetition.
-
-I would rather split that part as a separate preparatory change which
-doesn't change the behaviour.
-
->  #include <linux/string.h>
->  #include <linux/types.h>
->  #include <linux/wait.h>
-
-> +#include <linux/rbtree.h>
-
-It looks misordered.
-
-> +               struct dma_page *this_page =
-> +                       container_of(*node, struct dma_page, page_node);
-
-#define to_dma_page() container_of() ?
-
-> +                       WARN(1,
-> +                            "%s: %s: DMA address overlap: old 0x%llx new 0x%llx len %zu\n",
-> +                            pool->dev ? dev_name(pool->dev) : "(nodev)",
-> +                            pool->name, (u64) this_page->dma, (u64) dma,
-
-Use proper %p extensions for the DMA addresses:
-https://elixir.bootlin.com/linux/latest/source/Documentation/core-api/printk-formats.rst#L150
-
--- 
-With Best Regards,
-Andy Shevchenko
+T24gMDcvMjYvMjAxOCAwMzozNyBQTSwgQW5keSBTaGV2Y2hlbmtvIHdyb3RlOgo+IE9uIFRodSwg
+SnVsIDI2LCAyMDE4IGF0IDk6NTQgUE0sIFRvbnkgQmF0dGVyc2J5IDx0b255YkBjeWJlcm5ldGlj
+cy5jb20+IHdyb3RlOgo+PiBkbWFfcG9vbF9hbGxvYygpIHNjYWxlcyBwb29ybHkgd2hlbiBhbGxv
+Y2F0aW5nIGEgbGFyZ2UgbnVtYmVyIG9mIHBhZ2VzCj4+IGJlY2F1c2UgaXQgZG9lcyBhIGxpbmVh
+ciBzY2FuIG9mIGFsbCBwcmV2aW91c2x5LWFsbG9jYXRlZCBwYWdlcyBiZWZvcmUKPj4gYWxsb2Nh
+dGluZyBhIG5ldyBvbmUuICBJbXByb3ZlIGl0cyBzY2FsYWJpbGl0eSBieSBtYWludGFpbmluZyBh
+IHNlcGFyYXRlCj4+IGxpc3Qgb2YgcGFnZXMgdGhhdCBoYXZlIGZyZWUgYmxvY2tzIHJlYWR5IHRv
+IChyZSlhbGxvY2F0ZS4gIEluIGJpZyBPCj4+IG5vdGF0aW9uLCB0aGlzIGltcHJvdmVzIHRoZSBh
+bGdvcml0aG0gZnJvbSBPKG5eMikgdG8gTyhuKS4KPgo+Cj4+ICAgICAgICAgc3Bpbl9sb2NrX2ly
+cXNhdmUoJnBvb2wtPmxvY2ssIGZsYWdzKTsKPj4gLSAgICAgICBsaXN0X2Zvcl9lYWNoX2VudHJ5
+KHBhZ2UsICZwb29sLT5wYWdlX2xpc3QsIHBhZ2VfbGlzdCkgewo+PiAtICAgICAgICAgICAgICAg
+aWYgKHBhZ2UtPm9mZnNldCA8IHBvb2wtPmFsbG9jYXRpb24pCj4+IC0gICAgICAgICAgICAgICAg
+ICAgICAgIGdvdG8gcmVhZHk7Cj4+ICsgICAgICAgaWYgKCFsaXN0X2VtcHR5KCZwb29sLT5hdmFp
+bF9wYWdlX2xpc3QpKSB7Cj4+ICsgICAgICAgICAgICAgICBwYWdlID0gbGlzdF9maXJzdF9lbnRy
+eSgmcG9vbC0+YXZhaWxfcGFnZV9saXN0LAo+PiArICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgc3RydWN0IGRtYV9wYWdlLAo+PiArICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgYXZhaWxfcGFnZV9saW5rKTsKPj4gKyAgICAgICAgICAgICAgIGdvdG8g
+cmVhZHk7Cj4+ICAgICAgICAgfQo+IEl0IGxvb2tzIGxpa2UKPgo+IHBhZ2UgPSBsaXN0X2ZpcnN0
+X2VudHJ5X29yX251bGwoKTsKPiBpZiAocGFnZSkKPiAgZ290byByZWFkeTsKPgo+IFRob3VnaCBJ
+IGRvbid0IGtub3cgd2hpY2ggb25lIHByb2R1Y2VzIGJldHRlciBjb2RlIGluIHRoZSByZXN1bHQu
+Cj4KPiA+RnJvbSByZWFkZXIgcHJvc3BlY3RpdmUgb2YgdmlldyBJIHdvdWxkIGdvIHdpdGggbXkg
+dmFyaWFudC4KClRoYW5rcywgSSBkaWRuJ3Qga25vdyBhYm91dCBsaXN0X2ZpcnN0X2VudHJ5X29y
+X251bGwoKS4KCj4KPj4gKyAgICAgICAvKiBUaGlzIHRlc3QgY2hlY2tzIGlmIHRoZSBwYWdlIGlz
+IGFscmVhZHkgaW4gYXZhaWxfcGFnZV9saXN0LiAqLwo+PiArICAgICAgIGlmIChsaXN0X2VtcHR5
+KCZwYWdlLT5hdmFpbF9wYWdlX2xpbmspKQo+PiArICAgICAgICAgICAgICAgbGlzdF9hZGQoJnBh
+Z2UtPmF2YWlsX3BhZ2VfbGluaywgJnBvb2wtPmF2YWlsX3BhZ2VfbGlzdCk7Cj4gSG93IGNhbiB5
+b3UgYmUgc3VyZSB0aGF0IHRoZSBwYWdlIHlvdSBhcmUgdGVzdGluZyBmb3IgaXMgdGhlIGZpcnN0
+IG9uZT8KPgo+IEl0IHNlZW1zIHlvdSBhcmUgcmVseWluZyBvbiB0aGUgZmFjdCB0aGF0IGluIHRo
+ZSBsaXN0IHNob3VsZCBiZSBlaXRoZXIKPiAwIG9yIDEgcGFnZS4gSW4gdGhhdCBjYXNlIHdoYXQn
+cyB0aGUgcG9pbnQgdG8gaGF2ZSBhIGxpc3Q/Cj4KVGhhdCB3b3VsZCBiZSB0cnVlIGlmIHRoZSB0
+ZXN0IHdlcmUgImlmIChsaXN0X2VtcHR5KCZwb29sLT5hdmFpbF9wYWdlX2xpc3QpKSIuwqAgQnV0
+IGl0IGlzIHRlc3RpbmcgdGhlIGxpc3QgcG9pbnRlcnMgaW4gdGhlIGl0ZW0gcmF0aGVyIHRoYW4g
+dGhlIGxpc3QgcG9pbnRlcnMgaW4gdGhlIHBvb2wuwqAgSXQgbWF5IGJlIGEgYml0IGNvbmZ1c2lu
+ZyBpZiB5b3UgaGF2ZSBuZXZlciBzZWVuIHRoYXQgdXNhZ2UgYmVmb3JlLCB3aGljaCBpcyB3aHkg
+SSBhZGRlZCBhIGNvbW1lbnQuwqAgQmFzaWNhbGx5LCBpZiB5b3UgdXNlIGxpc3RfZGVsX2luaXQo
+KSBpbnN0ZWFkIG9mIGxpc3RfZGVsKCksIHRoZW4geW91IGNhbiB1c2UgbGlzdF9lbXB0eSgpIG9u
+IHRoZSBpdGVtIGl0c2VsZiB0byB0ZXN0IGlmIHRoZSBpdGVtIGlzIHByZXNlbnQgaW4gYSBsaXN0
+IG9yIG5vdC7CoCBGb3IgZXhhbXBsZSwgdGhlIGNvbW1lbnRzIGluIGxpc3QuaCB3YXJuIG5vdCB0
+byB1c2UgbGlzdF9lbXB0eSgpIG9uIHRoZSBlbnRyeSBhZnRlciBqdXN0IGxpc3RfZGVsKCk6Cgov
+KioKICogbGlzdF9kZWwgLSBkZWxldGVzIGVudHJ5IGZyb20gbGlzdC4KICogQGVudHJ5OiB0aGUg
+ZWxlbWVudCB0byBkZWxldGUgZnJvbSB0aGUgbGlzdC4KICogTm90ZTogbGlzdF9lbXB0eSgpIG9u
+IGVudHJ5IGRvZXMgbm90IHJldHVybiB0cnVlIGFmdGVyIHRoaXMsIHRoZSBlbnRyeSBpcwogKiBp
+biBhbiB1bmRlZmluZWQgc3RhdGUuCiAqLwoKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fCmlvbW11IG1haWxpbmcgbGlzdAppb21tdUBsaXN0cy5saW51eC1m
+b3VuZGF0aW9uLm9yZwpodHRwczovL2xpc3RzLmxpbnV4Zm91bmRhdGlvbi5vcmcvbWFpbG1hbi9s
+aXN0aW5mby9pb21tdQ==
