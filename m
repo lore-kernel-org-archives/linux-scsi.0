@@ -1,7 +1,7 @@
 From: Tony Battersby <tonyb-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org>
-Subject: [PATCH 3/3] [SCSI] mpt3sas: replace chain_dma_pool
-Date: Thu, 26 Jul 2018 14:55:31 -0400
-Message-ID: <f63175ae-b835-a8a9-2d71-7cf5dfa95304@cybernetics.com>
+Subject: [PATCH 0/3] mpt3sas and dmapool scalability
+Date: Thu, 26 Jul 2018 14:53:46 -0400
+Message-ID: <73ec1f52-d758-05df-fb6a-41d269e910d0@cybernetics.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
@@ -19,245 +19,76 @@ Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gman
 To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Marek Szyprowski <m.szyprowski-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Sathya Prakash <sathya.prakash-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Chaitra P B <chaitra.basappa-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Suganath Prabu Subramani <suganath-prabu.subramani-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, MPT-FusionLinux.pdl-dY08KVG/lbpWk0Htik3J/w@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-Replace chain_dma_pool with direct calls to dma_alloc_coherent() and
-dma_free_coherent().  Since the chain lookup can involve hundreds of
-thousands of allocations, it is worthwile to avoid the overhead of the
-dma_pool API.
+drivers/scsi/mpt3sas is running into a scalability problem with the
+kernel's DMA pool implementation.  With a LSI/Broadcom SAS 9300-8i
+12Gb/s HBA and max_sgl_entries=256, during modprobe, mpt3sas does the
+equivalent of:
 
-Signed-off-by: Tony Battersby <tonyb-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org>
----
+chain_dma_pool = dma_pool_create(size = 128);
+for (i = 0; i < 373959; i++)
+    {
+    dma_addr[i] = dma_pool_alloc(chain_dma_pool);
+    }
 
-The original code called _base_release_memory_pools() before "goto out"
-if dma_pool_alloc() failed, but this was unnecessary because
-mpt3sas_base_attach() will call _base_release_memory_pools() after "goto
-out_free_resources".  It may have been that way because the out-of-tree
-vendor driver (from https://www.broadcom.com/support/download-search)
-has a slightly-more-complicated error handler there that adjusts
-max_request_credit, calls _base_release_memory_pools() and then does
-"goto retry_allocation" under some circumstances, but that is missing
-from the in-tree driver.
+And at rmmod, system shutdown, or system reboot, mpt3sas does the
+equivalent of:
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 569392d..2cb567a 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -4224,6 +4224,134 @@ void mpt3sas_base_clear_st(struct MPT3SAS_ADAPTER *ioc,
- }
- 
- /**
-+ * _base_release_chain_lookup - release chain_lookup memory pools
-+ * @ioc: per adapter object
-+ *
-+ * Free memory allocated from _base_allocate_chain_lookup.
-+ */
-+static void
-+_base_release_chain_lookup(struct MPT3SAS_ADAPTER *ioc)
-+{
-+	unsigned int chains_avail = 0;
-+	struct chain_tracker *ct;
-+	int i, j;
-+
-+	if (!ioc->chain_lookup)
-+		return;
-+
-+	/*
-+	 * NOTE
-+	 *
-+	 * To make this code easier to understand and maintain, the for loops
-+	 * and the management of the chains_avail value are designed to be
-+	 * similar to the _base_allocate_chain_lookup() function.  That way,
-+	 * the code for freeing the memory is similar to the code for
-+	 * allocating the memory.
-+	 */
-+	for (i = 0; i < ioc->scsiio_depth; i++) {
-+		if (!ioc->chain_lookup[i].chains_per_smid)
-+			break;
-+
-+		for (j = ioc->chains_per_prp_buffer;
-+				j < ioc->chains_needed_per_io; j++) {
-+			/*
-+			 * If chains_avail is 0, then the chain represents a
-+			 * real allocation, so free it.
-+			 *
-+			 * If chains_avail is nonzero, then the chain was
-+			 * initialized at an offset from a previous allocation,
-+			 * so don't free it.
-+			 */
-+			if (chains_avail == 0) {
-+				ct = &ioc->chain_lookup[i].chains_per_smid[j];
-+				if (ct->chain_buffer)
-+					dma_free_coherent(
-+						&ioc->pdev->dev,
-+						ioc->chain_allocation_sz,
-+						ct->chain_buffer,
-+						ct->chain_buffer_dma);
-+				chains_avail = ioc->chains_per_allocation;
-+			}
-+			chains_avail--;
-+		}
-+		kfree(ioc->chain_lookup[i].chains_per_smid);
-+	}
-+
-+	kfree(ioc->chain_lookup);
-+	ioc->chain_lookup = NULL;
-+}
-+
-+/**
-+ * _base_allocate_chain_lookup - allocate chain_lookup memory pools
-+ * @ioc: per adapter object
-+ * @total_sz: external value that tracks total amount of memory allocated
-+ *
-+ * Return: 0 success, anything else error
-+ */
-+static int
-+_base_allocate_chain_lookup(struct MPT3SAS_ADAPTER *ioc, u32 *total_sz)
-+{
-+	unsigned int aligned_chain_segment_sz;
-+	const unsigned int align = 16;
-+	unsigned int chains_avail = 0;
-+	struct chain_tracker *ct;
-+	dma_addr_t dma_addr = 0;
-+	void *vaddr = NULL;
-+	int i, j;
-+
-+	/* Round up the allocation size for alignment. */
-+	aligned_chain_segment_sz = ioc->chain_segment_sz;
-+	if (aligned_chain_segment_sz % align != 0)
-+		aligned_chain_segment_sz =
-+			ALIGN(aligned_chain_segment_sz, align);
-+
-+	/* Allocate a page of chain buffers at a time. */
-+	ioc->chain_allocation_sz =
-+		max_t(unsigned int, aligned_chain_segment_sz, PAGE_SIZE);
-+
-+	/* Calculate how many chain buffers we can get from one allocation. */
-+	ioc->chains_per_allocation =
-+		ioc->chain_allocation_sz / aligned_chain_segment_sz;
-+
-+	for (i = 0; i < ioc->scsiio_depth; i++) {
-+		for (j = ioc->chains_per_prp_buffer;
-+				j < ioc->chains_needed_per_io; j++) {
-+			/*
-+			 * Check if there are any chain buffers left in the
-+			 * previously-allocated block.
-+			 */
-+			if (chains_avail == 0) {
-+				/* Allocate a new block of chain buffers. */
-+				vaddr = dma_alloc_coherent(
-+					&ioc->pdev->dev,
-+					ioc->chain_allocation_sz,
-+					&dma_addr,
-+					GFP_KERNEL);
-+				if (!vaddr) {
-+					pr_err(MPT3SAS_FMT
-+						"chain_lookup: dma_alloc_coherent failed\n",
-+						ioc->name);
-+					return -1;
-+				}
-+				chains_avail = ioc->chains_per_allocation;
-+			}
-+
-+			ct = &ioc->chain_lookup[i].chains_per_smid[j];
-+			ct->chain_buffer     = vaddr;
-+			ct->chain_buffer_dma = dma_addr;
-+
-+			/* Go to the next chain buffer in the block. */
-+			vaddr     += aligned_chain_segment_sz;
-+			dma_addr  += aligned_chain_segment_sz;
-+			*total_sz += ioc->chain_segment_sz;
-+			chains_avail--;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
-+/**
-  * _base_release_memory_pools - release memory
-  * @ioc: per adapter object
-  *
-@@ -4235,8 +4363,6 @@ void mpt3sas_base_clear_st(struct MPT3SAS_ADAPTER *ioc,
- _base_release_memory_pools(struct MPT3SAS_ADAPTER *ioc)
- {
- 	int i = 0;
--	int j = 0;
--	struct chain_tracker *ct;
- 	struct reply_post_struct *rps;
- 
- 	dexitprintk(ioc, pr_info(MPT3SAS_FMT "%s\n", ioc->name,
-@@ -4326,22 +4452,7 @@ void mpt3sas_base_clear_st(struct MPT3SAS_ADAPTER *ioc,
- 
- 	kfree(ioc->hpr_lookup);
- 	kfree(ioc->internal_lookup);
--	if (ioc->chain_lookup) {
--		for (i = 0; i < ioc->scsiio_depth; i++) {
--			for (j = ioc->chains_per_prp_buffer;
--			    j < ioc->chains_needed_per_io; j++) {
--				ct = &ioc->chain_lookup[i].chains_per_smid[j];
--				if (ct && ct->chain_buffer)
--					dma_pool_free(ioc->chain_dma_pool,
--						ct->chain_buffer,
--						ct->chain_buffer_dma);
--			}
--			kfree(ioc->chain_lookup[i].chains_per_smid);
--		}
--		dma_pool_destroy(ioc->chain_dma_pool);
--		kfree(ioc->chain_lookup);
--		ioc->chain_lookup = NULL;
--	}
-+	_base_release_chain_lookup(ioc);
- }
- 
- /**
-@@ -4784,29 +4895,8 @@ void mpt3sas_base_clear_st(struct MPT3SAS_ADAPTER *ioc,
- 		total_sz += sz * ioc->scsiio_depth;
- 	}
- 
--	ioc->chain_dma_pool = dma_pool_create("chain pool", &ioc->pdev->dev,
--	    ioc->chain_segment_sz, 16, 0);
--	if (!ioc->chain_dma_pool) {
--		pr_err(MPT3SAS_FMT "chain_dma_pool: dma_pool_create failed\n",
--			ioc->name);
-+	if (_base_allocate_chain_lookup(ioc, &total_sz))
- 		goto out;
--	}
--	for (i = 0; i < ioc->scsiio_depth; i++) {
--		for (j = ioc->chains_per_prp_buffer;
--				j < ioc->chains_needed_per_io; j++) {
--			ct = &ioc->chain_lookup[i].chains_per_smid[j];
--			ct->chain_buffer = dma_pool_alloc(
--					ioc->chain_dma_pool, GFP_KERNEL,
--					&ct->chain_buffer_dma);
--			if (!ct->chain_buffer) {
--				pr_err(MPT3SAS_FMT "chain_lookup: "
--				" pci_pool_alloc failed\n", ioc->name);
--				_base_release_memory_pools(ioc);
--				goto out;
--			}
--		}
--		total_sz += ioc->chain_segment_sz;
--	}
- 
- 	dinitprintk(ioc, pr_info(MPT3SAS_FMT
- 		"chain pool depth(%d), frame_size(%d), pool_size(%d kB)\n",
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index f02974c..7ee81d5 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -1298,7 +1298,6 @@ struct MPT3SAS_ADAPTER {
- 	/* chain */
- 	struct chain_lookup *chain_lookup;
- 	struct list_head free_chain_list;
--	struct dma_pool *chain_dma_pool;
- 	ulong		chain_pages;
- 	u16		max_sges_in_main_message;
- 	u16		max_sges_in_chain_message;
-@@ -1306,6 +1305,8 @@ struct MPT3SAS_ADAPTER {
- 	u32		chain_depth;
- 	u16		chain_segment_sz;
- 	u16		chains_per_prp_buffer;
-+	u32		chain_allocation_sz;
-+	u32		chains_per_allocation;
- 
- 	/* hi-priority queue */
- 	u16		hi_priority_smid;
+for (i = 0; i < 373959; i++)
+    {
+    dma_pool_free(chain_dma_pool, dma_addr[i]);
+    }
+dma_pool_destroy(chain_dma_pool);
+
+With this usage, both dma_pool_alloc() and dma_pool_free() exhibit
+O(n^2) complexity, although dma_pool_free() is much worse due to
+implementation details.  On my system, the dma_pool_free() loop above
+takes about 9 seconds to run.  Note that the problem was even worse
+before commit 74522a92bbf0 ("scsi: mpt3sas: Optimize I/O memory
+consumption in driver."), where the dma_pool_free() loop could take ~30
+seconds because the iteration count was bigger.
+
+mpt3sas also has some other DMA pools, but chain_dma_pool is the only
+one with so many allocations:
+
+cat /sys/devices/pci0000:80/0000:80:07.0/0000:85:00.0/pools
+(manually cleaned up column alignment)
+poolinfo - 0.1
+reply_post_free_array pool  1      21     192     1
+reply_free pool             1      1      41728   1
+reply pool                  1      1      1335296 1
+sense pool                  1      1      970272  1
+chain pool                  373959 386048 128     12064
+reply_post_free pool        12     12     166528  12
+
+The first two patches in this series improve the scalability of the DMA
+pool implementation, which significantly reduces the running time of the
+DMA alloc/free loops.
+
+The third patch modifies mpt3sas to replace chain_dma_pool with direct
+calls to dma_alloc_coherent() and dma_free_coherent().  This eliminates
+the allocation of up to 12,064 "struct dma_page" per ioc (the exact
+number depends on the HBA's can_queue and sg_tablesize) and reduces
+overhead even further.
+
+The mpt3sas patch is independent of the dmapool patches; it can be used
+with or without them.  If either the dmapool patches or the mpt3sas
+patch is applied, then "modprobe mpt3sas", "rmmod mpt3sas", and system
+shutdown/reboot with mpt3sas loaded are significantly faster.  Here are
+some benchmarks (of DMA alloc/free only, not the entire modprobe/rmmod):
+
+dma_pool_create() + dma_pool_alloc() loop, size = 128, count = 373959
+  original:        350 ms ( 1x)
+  dmapool patches:  18 ms (19x)
+  mpt3sas patch:     7 ms (51x)
+
+dma_pool_free() loop + dma_pool_destroy(), size = 128, count = 373959
+  original:        8901 ms (   1x)
+  dmapool patches:   19 ms ( 477x)
+  mpt3sas patch:      2 ms (4245x)
+
+Considering that LSI/Broadcom offer an out-of-tree vendor driver that
+works across multiple kernel versions that won't get the dmapool
+patches, it may be worth it for them to patch mpt3sas to avoid the
+problem on older kernels.  The downside is that the code is a bit more
+complicated.  So I leave it to their judgement whether they think it is
+worth it to apply the mpt3sas patch.
