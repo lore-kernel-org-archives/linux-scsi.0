@@ -1,85 +1,30 @@
-From: Tony Battersby <tonyb-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org>
-Subject: Re: [PATCH 2/3] dmapool: improve scalability of dma_pool_free
-Date: Fri, 27 Jul 2018 15:38:32 -0400
-Message-ID: <acdc2e32-466c-61d3-145f-80bfba2c6739@cybernetics.com>
-References: <1288e597-a67a-25b3-b7c6-db883ca67a25@cybernetics.com>
-	<20180726194209.GB12992@bombadil.infradead.org>
-	<b3430dd4-a4d6-28f1-09a1-82e0bf4a3b83@cybernetics.com>
-	<20180727000708.GA785@bombadil.infradead.org>
-	<cae33099-3147-5014-ab4e-c22a4d66dc49@cybernetics.com>
-	<20180727152322.GB13348@bombadil.infradead.org>
+From: Mike Christie <mchristi@redhat.com>
+Subject: Re: [PATCH 18/26] target/iscsi: Allocate session IDs from an IDA
+Date: Fri, 27 Jul 2018 16:05:49 -0500
+Message-ID: <5B5B892D.1000305@redhat.com>
+References: <20180621212835.5636-1-willy@infradead.org>
+ <20180621212835.5636-19-willy@infradead.org> <5B59FB56.9090901@redhat.com>
+ <5B5A014D.9060901@redhat.com> <20180727193814.GB3825@bombadil.infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <20180727152322.GB13348-PfSpb0PWhxZc2C7mugBRk2EX/6BAtgUQ@public.gmane.org>
-Content-Language: en-US
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
-List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Chaitra P B <chaitra.basappa-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Suganath Prabu Subramani <suganath-prabu.subramani-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Sathya Prakash <sathya.prakash-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, MPT-FusionLinux.pdl-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20180727193814.GB3825@bombadil.infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Matthew Wilcox <willy@infradead.org>
+Cc: linux-kernel@vger.kernel.org, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Bart Van Assche <bart.vanassche@wdc.com>, Hannes Reinecke <hare@suse.com>, Kees Cook <keescook@chromium.org>, Varun Prakash <varun@chelsio.com>, Sagi Grimberg <sagi@grimberg.me>, Philippe Ombredanne <pombredanne@nexb.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Kate Stewart <kstewart@linuxfoundation.org>, Thomas Gleixner <tglx@linutronix.de>, "David S. Miller" <davem@davemloft.net>, Denys Vlasenko <dvlasenk@redhat.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gMDcvMjcvMjAxOCAxMToyMyBBTSwgTWF0dGhldyBXaWxjb3ggd3JvdGU6Cj4gT24gRnJpLCBK
-dWwgMjcsIDIwMTggYXQgMDk6MjM6MzBBTSAtMDQwMCwgVG9ueSBCYXR0ZXJzYnkgd3JvdGU6Cj4+
-IE9uIDA3LzI2LzIwMTggMDg6MDcgUE0sIE1hdHRoZXcgV2lsY294IHdyb3RlOgo+Pj4gSWYgeW91
-J3JlIHVwIGZvciBtb3JlIG1ham9yIHN1cmdlcnksIHRoZW4gSSB0aGluayB3ZSBjYW4gcHV0IGFs
-bCB0aGUKPj4+IGluZm9ybWF0aW9uIGN1cnJlbnRseSBzdG9yZWQgaW4gZG1hX3BhZ2UgaW50byBz
-dHJ1Y3QgcGFnZS4gIFNvbWV0aGluZwo+Pj4gbGlrZSB0aGlzOgo+Pj4KPj4+ICsrKyBiL2luY2x1
-ZGUvbGludXgvbW1fdHlwZXMuaAo+Pj4gQEAgLTE1Miw2ICsxNTIsMTIgQEAgc3RydWN0IHBhZ2Ug
-ewo+Pj4gICAgICAgICAgICAgICAgICAgICAgICAgdW5zaWduZWQgbG9uZyBobW1fZGF0YTsKPj4+
-ICAgICAgICAgICAgICAgICAgICAgICAgIHVuc2lnbmVkIGxvbmcgX3pkX3BhZF8xOyAgICAgICAg
-LyogdXNlcyBtYXBwaW5nICovCj4+PiAgICAgICAgICAgICAgICAgfTsKPj4+ICsgICAgICAgICAg
-ICAgICBzdHJ1Y3QgeyAgICAgICAgLyogZG1hX3Bvb2wgcGFnZXMgKi8KPj4+ICsgICAgICAgICAg
-ICAgICAgICAgICAgIHN0cnVjdCBsaXN0X2hlYWQgZG1hX2xpc3Q7Cj4+PiArICAgICAgICAgICAg
-ICAgICAgICAgICB1bnNpZ25lZCBzaG9ydCBpbl91c2U7Cj4+PiArICAgICAgICAgICAgICAgICAg
-ICAgICB1bnNpZ25lZCBzaG9ydCBvZmZzZXQ7Cj4+PiArICAgICAgICAgICAgICAgICAgICAgICBk
-bWFfYWRkcl90IGRtYTsKPj4+ICsgICAgICAgICAgICAgICB9Owo+Pj4gIAo+Pj4gICAgICAgICAg
-ICAgICAgIC8qKiBAcmN1X2hlYWQ6IFlvdSBjYW4gdXNlIHRoaXMgdG8gZnJlZSBhIHBhZ2UgYnkg
-UkNVLiAqLwo+Pj4gICAgICAgICAgICAgICAgIHN0cnVjdCByY3VfaGVhZCByY3VfaGVhZDsKPj4+
-Cj4+PiBwYWdlX2xpc3QgLT4gZG1hX2xpc3QKPj4+IHZhZGRyIGdvZXMgYXdheSAocGFnZV90b192
-aXJ0KCkgZXhpc3RzKQo+Pj4gZG1hIC0+IGRtYQo+Pj4gaW5fdXNlIGFuZCBvZmZzZXQgc2hyaW5r
-IGZyb20gNCBieXRlcyB0byAyLgo+Pj4KPj4+IFNvbWUgMzItYml0IHN5c3RlbXMgaGF2ZSBhIDY0
-LWJpdCBkbWFfYWRkcl90LCBhbmQgb24gdGhvc2Ugc3lzdGVtcywKPj4+IHRoaXMgd2lsbCBiZSA4
-ICsgMiArIDIgKyA4ID0gMjAgYnl0ZXMuICBPbiA2NC1iaXQgc3lzdGVtcywgaXQnbGwgYmUKPj4+
-IDE2ICsgMiArIDIgKyA0IGJ5dGVzIG9mIHBhZGRpbmcgKyA4ID0gMzIgYnl0ZXMgKHdlIGhhdmUg
-NDAgYXZhaWxhYmxlKS4KPj4+Cj4+Pgo+PiBvZmZzZXQgYXQgbGVhc3QgbmVlZHMgbW9yZSBiaXRz
-LCBzaW5jZSBhbGxvY2F0aW9ucyBjYW4gYmUgbXVsdGktcGFnZS7CoAo+IEFoLCByYXRzLiAgVGhh
-dCBtZWFucyB3ZSBoYXZlIHRvIHVzZSB0aGUgbWFwY291bnQgdW5pb24gdG9vOgo+CgpBY3R1YWxs
-eSwgb24gc2Vjb25kIHRob3VnaHQsIGlmIEkgdW5kZXJzdGFuZCBpdCBjb3JyZWN0bHksIGEgbXVs
-dGktcGFnZQphbGxvY2F0aW9uIHdpbGwgbmV2ZXIgYmUgc3BsaXQgdXAgYW5kIHJldHVybmVkIGFz
-IG11bHRpcGxlCnN1Yi1hbGxvY2F0aW9ucywgc28gdGhlIG9mZnNldCBzaG91bGRuJ3QgYmUgbmVl
-ZGVkIGZvciB0aGF0IGNhc2UuwqAgVGhlCm9mZnNldCBzaG91bGQgb25seSBiZSBuZWVkZWQgd2hl
-biBzcGxpdHRpbmcgYSBQQUdFX1NJWkUtYWxsb2NhdGlvbiBpbnRvCnNtYWxsZXIgc3ViLWFsbG9j
-YXRpb25zLsKgIFRoZSBjdXJyZW50IGNvZGUgdXNlcyB0aGUgb2Zmc2V0CnVuY29uZGl0aW9uYWxs
-eSB0aG91Z2gsIHNvIGl0IHdvdWxkIG5lZWQgbWFqb3IgY2hhbmdlcyB0byByZW1vdmUgdGhlCmRl
-cGVuZGVuY2UuwqAgU28gYSAxNi1iaXQgb2Zmc2V0IG1pZ2h0IHdvcmsuCgpBcyBmb3Igc2FuaXR5
-IGNoZWNraW5nLCBJIHN1cHBvc2UgaGF2aW5nIHRoZSBkbWEgYWRkcmVzcyBpbiB0aGUgcGFnZQpj
-b3VsZCBwcm92aWRlIHNvbWV0aGluZyBmb3IgZG1hX3Bvb2xfZnJlZSgpIHRvIGNoZWNrIGFnYWlu
-c3QgKGluIGZhY3QgaXQKaXMgYWxyZWFkeSB0aGVyZSB1bmRlciBETUFQT09MX0RFQlVHKS4KCkJ1
-dCB0aGUgYmlnZ2VyIHByb2JsZW0gaXMgdGhhdCBteSBmaXJzdCBwYXRjaCBhZGRzIGFub3RoZXIg
-bGlzdF9oZWFkIHRvCnRoZSBkbWFfcGFnZSBmb3IgdGhlIGF2YWlsX3BhZ2VfbGluayB0byBtYWtl
-IGFsbG9jYXRpb25zIGZhc3Rlci7CoCBJCnN1cHBvc2Ugd2UgY291bGQgbWFrZSB0aGUgbGlzdHMg
-c2luZ2x5LWxpbmtlZCBpbnN0ZWFkIG9mIGRvdWJseS1saW5rZWQKdG8gc2F2ZSBzcGFjZS4KCldv
-dWxkbid0IHVzaW5nIHRoZSBtYXBjb3VudCB1bmlvbiBtYWtlIGl0IHByb2JsZW1hdGljIGZvciB1
-c2Vyc3BhY2UgdG8KbW1hcCgpIHRoZSByZXR1cm5lZCBETUEgYnVmZmVycz/CoCBJIGFtIG5vdCBz
-dXJlIGlmIGFueSBkcml2ZXJzIGFsbG93CnRoYXQgdG8gYmUgZG9uZSBvciBub3QuwqAgSSBoYXZl
-IGhlYXJkIG9mIGRyaXZlcnMgaW4gdXNlcnNwYWNlLCBkcml2ZXJzCndpdGggRE1BIHJpbmcgYnVm
-ZmVycywgZXRjLsKgIEkgZG9uJ3Qgd2FudCB0byBhdWRpdCB0aGUgd2hvbGUga2VybmVsIHRyZWUK
-dG8ga25vdyBpZiBpdCB3b3VsZCBiZSBzYWZlLsKgIEFzIHlvdSBoYXZlIHNlZW4sIGF0IGxlYXN0
-IG1wdDNzYXMgaXMKZG9pbmcgdW5leHBlY3RlZCB0aGluZ3Mgd2l0aCBkbWEgcG9vbHMuCgpTbyBt
-YXliZSBpdCBjb3VsZCBiZSBkb25lLCBidXQgeW91IGFyZSByaWdodCwgaXQgd291bGQgaW52b2x2
-ZSBtYWpvcgpzdXJnZXJ5LsKgIE15IGN1cnJlbnQgaW4tZGV2ZWxvcG1lbnQgcGF0Y2ggdG8gaW1w
-bGVtZW50IHlvdXIgaW50aWFsCnN1Z2dlc3Rpb24gaXMgcHJldHR5IHNtYWxsIGFuZCBpdCB3b3Jr
-cy7CoCBTbyBJJ20gbm90IHN1cmUgaWYgSSB3YW50IHRvCnRha2UgaXQgZnVydGhlciBvciBub3Qu
-wqAgTG90cyBvZiBvdGhlciB0aGluZ3MgdG8gZG8uLi4KX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX18KaW9tbXUgbWFpbGluZyBsaXN0CmlvbW11QGxpc3RzLmxp
-bnV4LWZvdW5kYXRpb24ub3JnCmh0dHBzOi8vbGlzdHMubGludXhmb3VuZGF0aW9uLm9yZy9tYWls
-bWFuL2xpc3RpbmZvL2lvbW11
+On 07/27/2018 02:38 PM, Matthew Wilcox wrote:
+> On Thu, Jul 26, 2018 at 12:13:49PM -0500, Mike Christie wrote:
+>> If we want to fix the bug first, then I made the attached patch and I
+>> can submit it.
+> 
+> How about I take it through my tree to minimise the amount of rebasing
+> I'll need to do?  I'm already dependent on the nvdimm tree and I'd rather
+> not depend on the scsi tree as well.  I'll queue it up in front of my
+> IDA change to maximise its backportability.
+
+Ccing Martin, because he has been handling target patches.
+
+The above plan sounds ok to me.
