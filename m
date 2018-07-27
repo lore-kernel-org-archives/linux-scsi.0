@@ -1,7 +1,7 @@
-From: Andy Shevchenko <andy.shevchenko-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+From: Tony Battersby <tonyb-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org>
 Subject: Re: [PATCH 2/3] dmapool: improve scalability of dma_pool_free
-Date: Sat, 28 Jul 2018 00:35:55 +0300
-Message-ID: <CAHp75VcjMg2RABg4F3u=wpgQvGK8qr-4wxeRNmJtfMAE2VRRAw@mail.gmail.com>
+Date: Fri, 27 Jul 2018 18:07:00 -0400
+Message-ID: <dd582095-c8f8-3103-ccd8-37bea89e7e1a@cybernetics.com>
 References: <1288e597-a67a-25b3-b7c6-db883ca67a25@cybernetics.com>
 	<20180726194209.GB12992@bombadil.infradead.org>
 	<b3430dd4-a4d6-28f1-09a1-82e0bf4a3b83@cybernetics.com>
@@ -10,11 +10,13 @@ References: <1288e597-a67a-25b3-b7c6-db883ca67a25@cybernetics.com>
 	<20180727152322.GB13348@bombadil.infradead.org>
 	<acdc2e32-466c-61d3-145f-80bfba2c6739@cybernetics.com>
 	<88d362b7-1d53-b430-1741-b48cbc0a7887@cybernetics.com>
+	<CAHp75VcjMg2RABg4F3u=wpgQvGK8qr-4wxeRNmJtfMAE2VRRAw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <88d362b7-1d53-b430-1741-b48cbc0a7887-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org>
+In-Reply-To: <CAHp75VcjMg2RABg4F3u=wpgQvGK8qr-4wxeRNmJtfMAE2VRRAw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Content-Language: en-US
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
 	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
 List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
@@ -24,26 +26,38 @@ List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
 	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
 Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Tony Battersby <tonyb-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org>
+To: Andy Shevchenko <andy.shevchenko-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Cc: linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Chaitra P B <chaitra.basappa-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Suganath Prabu Subramani <suganath-prabu.subramani-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Sathya Prakash <sathya.prakash-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, linux-mm <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, MPT-FusionLinux.pdl-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, Jul 28, 2018 at 12:27 AM, Tony Battersby <tonyb-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org> wrote:
-> On 07/27/2018 03:38 PM, Tony Battersby wrote:
->> But the bigger problem is that my first patch adds another list_head to
->> the dma_page for the avail_page_link to make allocations faster.  I
->> suppose we could make the lists singly-linked instead of doubly-linked
->> to save space.
->>
->
-> I managed to redo my dma_pool_alloc() patch to make avail_page_list
-> singly-linked instead of doubly-linked.
-
-Are you relying on llist.h implementation?
-
-Btw, did you see quicklist.h?
-
-
--- 
-With Best Regards,
-Andy Shevchenko
+T24gMDcvMjcvMjAxOCAwNTozNSBQTSwgQW5keSBTaGV2Y2hlbmtvIHdyb3RlOgo+IE9uIFNhdCwg
+SnVsIDI4LCAyMDE4IGF0IDEyOjI3IEFNLCBUb255IEJhdHRlcnNieSA8dG9ueWJAY3liZXJuZXRp
+Y3MuY29tPiB3cm90ZToKPj4gT24gMDcvMjcvMjAxOCAwMzozOCBQTSwgVG9ueSBCYXR0ZXJzYnkg
+d3JvdGU6Cj4+PiBCdXQgdGhlIGJpZ2dlciBwcm9ibGVtIGlzIHRoYXQgbXkgZmlyc3QgcGF0Y2gg
+YWRkcyBhbm90aGVyIGxpc3RfaGVhZCB0bwo+Pj4gdGhlIGRtYV9wYWdlIGZvciB0aGUgYXZhaWxf
+cGFnZV9saW5rIHRvIG1ha2UgYWxsb2NhdGlvbnMgZmFzdGVyLiAgSQo+Pj4gc3VwcG9zZSB3ZSBj
+b3VsZCBtYWtlIHRoZSBsaXN0cyBzaW5nbHktbGlua2VkIGluc3RlYWQgb2YgZG91Ymx5LWxpbmtl
+ZAo+Pj4gdG8gc2F2ZSBzcGFjZS4KPj4+Cj4+IEkgbWFuYWdlZCB0byByZWRvIG15IGRtYV9wb29s
+X2FsbG9jKCkgcGF0Y2ggdG8gbWFrZSBhdmFpbF9wYWdlX2xpc3QKPj4gc2luZ2x5LWxpbmtlZCBp
+bnN0ZWFkIG9mIGRvdWJseS1saW5rZWQuCj4gQXJlIHlvdSByZWx5aW5nIG9uIGxsaXN0LmggaW1w
+bGVtZW50YXRpb24/Cj4KPiBCdHcsIGRpZCB5b3Ugc2VlIHF1aWNrbGlzdC5oPwo+Cj4KSSBsb29r
+ZWQgb3ZlciBpbmNsdWRlL2xpbnV4LypsaXN0KiB0byBzZWUgaWYgdGhlcmUgd2FzIGEgc3VpdGFi
+bGUKaW1wbGVtZW50YXRpb24gSSBjb3VsZCB1c2UuwqAgbGxpc3QuaCBtYWtlcyBhIGJpZyBkZWFs
+IGFib3V0IGhhdmluZyBhCmxvY2stbGVzcyBpbXBsZW1lbnRhdGlvbiB3aXRoIGF0b21pYyBpbnN0
+cnVjdGlvbnMsIHdoaWNoIHNlZW1lZCBsaWtlCm92ZXJraWxsLsKgIEkgZGlkbid0IHNlZSBhbnl0
+aGluZyBlbHNlIHN1aXRhYmxlLCBzbyBJIGp1c3Qgd2VudCB3aXRoIG15Cm93biBpbXBsZW1lbnRh
+dGlvbi7CoCBTaW5nbHktbGlua2VkIGxpc3RzIGFyZSBzaW1wbGUgZW5vdWdoLsKgIEFuZCBhIHF1
+aWNrCiJncmVwIC1pIHNpbmdseSBpbmNsdWRlL2xpbnV4LyoiIHNob3dzIHByZWNlZGVudCBpbiBi
+aV9uZXh0LCBmbF9uZXh0LApmYV9uZXh0LCBldGMuCgpUaGFua3MgZm9yIHBvaW50aW5nIG91dCBx
+dWlja2xpc3QuaC7CoCBBdCBmaXJzdCBJIHRob3VnaHQgeW91IHdlcmUKY29uZnVzZWQgc2luY2Ug
+eW91IHdlcmUgdGFsa2luZyBhYm91dCBsaW5rZWQgbGlzdCBpbXBsZW1lbnRhdGlvbnMgYW5kCnF1
+aWNrbGlzdC5oIHNvdW5kcyBsaWtlIGEgbGlua2VkIGxpc3QgaW1wbGVtZW50YXRpb24gYnV0IGlz
+bid0LsKgIEJ1dCBub3cKSSBzZWUgdGhhdCBpdCBpcyBkb2luZyBzaW1wbGUgbWVtb3J5IGFsbG9j
+YXRpb24vZnJlZSwgc28gdGhhdCBpcyB0aGUKcmVsZXZhbmNlIHRvIGRtYXBvb2wuwqAgSW5jaWRl
+bnRhbGx5IGl0IGxvb2tzIGxpa2UgaXQgaXMgYWxzbyB1c2luZyBhCnNpbmdseS1saW5rZWQgbGlz
+dCB0byBzdG9yZSB0aGUgbGlzdCBvZiBmcmVlIHBhZ2VzLCBidXQgaXQgaXMgbXVjaApzaW1wbGVy
+IGJlY2F1c2UgaXQgZG9lc24ndCB0cnkgdG8gc3ViLWRpdmlkZSB0aGUgcGFnZXMgaW50byBzbWFs
+bGVyCmFsbG9jYXRpb25zLgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fXwppb21tdSBtYWlsaW5nIGxpc3QKaW9tbXVAbGlzdHMubGludXgtZm91bmRhdGlvbi5v
+cmcKaHR0cHM6Ly9saXN0cy5saW51eGZvdW5kYXRpb24ub3JnL21haWxtYW4vbGlzdGluZm8vaW9t
+bXU=
