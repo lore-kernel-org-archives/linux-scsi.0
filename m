@@ -1,344 +1,73 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH, RESEND] Avoid that SCSI device removal through sysfs
- triggers a deadlock
-Date: Thu, 26 Jul 2018 21:57:40 +0000
-Message-ID: <c73204ebe4ebfbbaa652a4fda910d25c9d055ce4.camel@wdc.com>
-References: <20180725173828.2227-1-bart.vanassche@wdc.com>
-         <20180726133527.GU1934745@devbig577.frc2.facebook.com>
-         <4dbd740c0555eb1bfcb4181eeaca5e397b6ab63c.camel@wdc.com>
-         <20180726141435.GV1934745@devbig577.frc2.facebook.com>
+From: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Subject: Re: [PATCH 2/3] dmapool: improve scalability of dma_pool_free
+Date: Thu, 26 Jul 2018 17:07:08 -0700
+Message-ID: <20180727000708.GA785@bombadil.infradead.org>
+References: <1288e597-a67a-25b3-b7c6-db883ca67a25@cybernetics.com>
+	<20180726194209.GB12992@bombadil.infradead.org>
+	<b3430dd4-a4d6-28f1-09a1-82e0bf4a3b83@cybernetics.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-        boundary="_004_c73204ebe4ebfbbaa652a4fda910d25c9d055ce4camelwdccom_"
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20180726141435.GV1934745@devbig577.frc2.facebook.com>
-Content-Language: en-US
-Sender: stable-owner@vger.kernel.org
-To: "tj@kernel.org" <tj@kernel.org>
-Cc: "mingo@kernel.org" <mingo@kernel.org>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "oleg@redhat.com" <oleg@redhat.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "ebiederm@xmission.com" <ebiederm@xmission.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.com" <hare@suse.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <b3430dd4-a4d6-28f1-09a1-82e0bf4a3b83-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
+List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Tony Battersby <tonyb-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org>
+Cc: linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Chaitra P B <chaitra.basappa-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Suganath Prabu Subramani <suganath-prabu.subramani-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Sathya Prakash <sathya.prakash-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, MPT-FusionLinux.pdl-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
---_004_c73204ebe4ebfbbaa652a4fda910d25c9d055ce4camelwdccom_
-Content-Type: text/plain; charset="utf-7"
-Content-ID: <6CF3CA407E04CC4499640B2C1FB136CF@namprd04.prod.outlook.com>
-Content-Transfer-Encoding: quoted-printable
+On Thu, Jul 26, 2018 at 04:06:05PM -0400, Tony Battersby wrote:
+> On 07/26/2018 03:42 PM, Matthew Wilcox wrote:
+> > On Thu, Jul 26, 2018 at 02:54:56PM -0400, Tony Battersby wrote:
+> >> dma_pool_free() scales poorly when the pool contains many pages because
+> >> pool_find_page() does a linear scan of all allocated pages.  Improve i=
+ts
+> >> scalability by replacing the linear scan with a red-black tree lookup. =
 
-On Thu, 2018-07-26 at 07:14 -0700, tj+AEA-kernel.org wrote:
-+AD4- Hello,
-+AD4-=20
-+AD4- On Thu, Jul 26, 2018 at 02:09:41PM +-0000, Bart Van Assche wrote:
-+AD4- +AD4- On Thu, 2018-07-26 at 06:35 -0700, Tejun Heo wrote:
-+AD4- +AD4- +AD4- Making removal asynchronous this way sometimes causes iss=
-ues because
-+AD4- +AD4- +AD4- whether the user sees the device released or not is racy.
-+AD4- +AD4- +AD4- kernfs/sysfs have mechanisms to deal with these cases - r=
-emove+AF8-self
-+AD4- +AD4- +AD4- and kernfs+AF8-break+AF8-active+AF8-protection().  Have y=
-ou looked at those?
-+AD4- +AD4-=20
-+AD4- +AD4- Hello Tejun,
-+AD4- +AD4-=20
-+AD4- +AD4- The call stack in the patch description shows that sdev+AF8-sto=
-re+AF8-delete() is
-+AD4- +AD4- involved in the deadlock. The implementation of that function i=
-s as follows:
-+AD4- +AD4-=20
-+AD4- +AD4- static ssize+AF8-t
-+AD4- +AD4- sdev+AF8-store+AF8-delete(struct device +ACo-dev, struct device=
-+AF8-attribute +ACo-attr,
-+AD4- +AD4- 		  const char +ACo-buf, size+AF8-t count)
-+AD4- +AD4- +AHs-
-+AD4- +AD4- 	if (device+AF8-remove+AF8-file+AF8-self(dev, attr))
-+AD4- +AD4- 		scsi+AF8-remove+AF8-device(to+AF8-scsi+AF8-device(dev))+ADs-
-+AD4- +AD4- 	return count+ADs-
-+AD4- +AD4- +AH0AOw-
-+AD4- +AD4-=20
-+AD4- +AD4- device+AF8-remove+AF8-file+AF8-self() calls sysfs+AF8-remove+AF=
-8-file+AF8-self() and that last
-+AD4- +AD4- function calls kernfs+AF8-remove+AF8-self(). In other words, ke=
-rnfs+AF8-remove+AF8-self()
-+AD4- +AD4- is already being used. Please let me know if I misunderstood yo=
-ur comment.
-+AD4-=20
-+AD4- So, here, because scsi+AF8-remove+AF8-device() is the one involved in=
- the
-+AD4- circular dependency, just breaking the dependency chain on the file
-+AD4- itself (self removal) isn't enough.  You can wrap the whole operation
-+AD4- with kernfs+AF8-break+AF8-active+AF8-protection() to also move
-+AD4- scsi+AF8-remove+AF8-device() invocation outside the kernfs synchroniz=
-ation.
-+AD4- This will need to be piped through sysfs but shouldn't be too complex=
-.
+> >> In big O notation, this improves the algorithm from O(n^2) to O(n * lo=
+g n).
+> > This is a lot of code to get us to O(n * log(n)) when we can use less
+> > code to go to O(n).  dma_pool_free() is passed the virtual address.
+> > We can go from virtual address to struct page with virt_to_page().
+> > In struct page, we have 5 words available (20/40 bytes), and it's trivi=
+al
+> > to use one of them to point to the struct dma_page.
+> >
+> Thanks for the tip.=A0 I will give that a try.
 
-Hello Tejun,
+If you're up for more major surgery, then I think we can put all the
+information currently stored in dma_page into struct page.  Something
+like this:
 
-I have tried to implement the above but my implementation triggered a kerne=
-l
-warning. Can you have a look at the attached patches and see what I did wro=
-ng?
++++ b/include/linux/mm_types.h
+@@ -152,6 +152,12 @@ struct page {
+                        unsigned long hmm_data;
+                        unsigned long _zd_pad_1;        /* uses mapping */
+                };
++               struct {        /* dma_pool pages */
++                       struct list_head dma_list;
++                       unsigned short in_use;
++                       unsigned short offset;
++                       dma_addr_t dma;
++               };
+ =
 
-Thanks,
+                /** @rcu_head: You can use this to free a page by RCU. */
+                struct rcu_head rcu_head;
 
-Bart.
+page_list -> dma_list
+vaddr goes away (page_to_virt() exists)
+dma -> dma
+in_use and offset shrink from 4 bytes to 2.
 
-The kernel warning I ran into is as follows:
-
-kernfs+AF8-put: 6:0:0:0/delete: released with incorrect active+AF8-ref 2147=
-483647
-WARNING: CPU: 6 PID: 1014 at fs/kernfs/dir.c:527 kernfs+AF8-put+-0x136/0x18=
-0
-Hardware name: QEMU Standard PC (Q35 +- ICH9, 2009), BIOS 1.0.0-prebuilt.qe=
-mu-project.org 04/01/2014
-RIP: 0010:kernfs+AF8-put+-0x136/0x180
-Call Trace:
- evict+-0xc1/0x190
- +AF8AXw-dentry+AF8-kill+-0xc4/0x150
- shrink+AF8-dentry+AF8-list+-0x9e/0x1c0
- shrink+AF8-dcache+AF8-parent+-0x63/0x70
- d+AF8-invalidate+-0x42/0xb0
- lookup+AF8-fast+-0x278/0x2a0
- walk+AF8-component+-0x38/0x450
- link+AF8-path+AF8-walk+-0x2a8/0x4f0
- path+AF8-openat+-0x89/0x13a0
- do+AF8-filp+AF8-open+-0x8c/0xf0
- do+AF8-sys+AF8-open+-0x1a6/0x230
- do+AF8-syscall+AF8-64+-0x4f/0x110
- entry+AF8-SYSCALL+AF8-64+AF8-after+AF8-hwframe+-0x44/0xa9
-
---_004_c73204ebe4ebfbbaa652a4fda910d25c9d055ce4camelwdccom_
-Content-Type: text/x-patch;
-	name="0001-fs-sysfs-Introduce-sysfs_remove_file_self_w_cb.patch"
-Content-Description: 0001-fs-sysfs-Introduce-sysfs_remove_file_self_w_cb.patch
-Content-Disposition: attachment;
-	filename="0001-fs-sysfs-Introduce-sysfs_remove_file_self_w_cb.patch";
-	size=3025; creation-date="Thu, 26 Jul 2018 21:57:39 GMT";
-	modification-date="Thu, 26 Jul 2018 21:57:39 GMT"
-Content-ID: <475CCC860C9A6C4AB82256BFC5028D3E@namprd04.prod.outlook.com>
-Content-Transfer-Encoding: base64
-
-RnJvbSBmMjgwZTFjYjMxZWRhNjNjNDdkYjAyNTc0ZGZkZmFlZThhM2YxZGJjIE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBCYXJ0IFZhbiBBc3NjaGUgPGJhcnQudmFuYXNzY2hlQHdkYy5j
-b20+CkRhdGU6IFRodSwgMjYgSnVsIDIwMTggMDk6MjM6MDggLTA3MDAKU3ViamVjdDogW1BBVENI
-IDEvM10gZnMvc3lzZnM6IEludHJvZHVjZSBzeXNmc19yZW1vdmVfZmlsZV9zZWxmX3dfY2IoKQoK
-VGhpcyBwYXRjaCBtYWtlcyBpdCBwb3NzaWJsZSB0byBleGVjdXRlIG1vcmUgY29kZSB0aGFuIG9u
-bHkgdGhlCl9fa2VybmZzX3JlbW92ZSgpIGNhbGwgd2hpbGUgdGhlIGFjdGl2ZSBwcm90ZWN0aW9u
-IGlzIGRyb3BwZWQuCgpTaWduZWQtb2ZmLWJ5OiBCYXJ0IFZhbiBBc3NjaGUgPGJhcnQudmFuYXNz
-Y2hlQHdkYy5jb20+CkNjOiBHcmVnIEtyb2FoLUhhcnRtYW4gPGdyZWdraEBsaW51eGZvdW5kYXRp
-b24ub3JnPgpDYzogUmFmYWVsIEouIFd5c29ja2kgPHJhZmFlbEBrZXJuZWwub3JnPgotLS0KIGZz
-L3N5c2ZzL2ZpbGUuYyAgICAgICB8IDE3ICsrKysrKysrKysrKysrKystCiBpbmNsdWRlL2xpbnV4
-L3N5c2ZzLmggfCAxNiArKysrKysrKysrKysrKysrCiAyIGZpbGVzIGNoYW5nZWQsIDMyIGluc2Vy
-dGlvbnMoKyksIDEgZGVsZXRpb24oLSkKCmRpZmYgLS1naXQgYS9mcy9zeXNmcy9maWxlLmMgYi9m
-cy9zeXNmcy9maWxlLmMKaW5kZXggNWMxM2YyOWJmY2RiLi5kYjkzODYwNzA1NzEgMTAwNjQ0Ci0t
-LSBhL2ZzL3N5c2ZzL2ZpbGUuYworKysgYi9mcy9zeXNmcy9maWxlLmMKQEAgLTQyOSw3ICs0Mjks
-MTIgQEAgRVhQT1JUX1NZTUJPTF9HUEwoc3lzZnNfcmVtb3ZlX2ZpbGVfbnMpOwogICoKICAqIFNl
-ZSBrZXJuZnNfcmVtb3ZlX3NlbGYoKSBmb3IgZGV0YWlscy4KICAqLwotYm9vbCBzeXNmc19yZW1v
-dmVfZmlsZV9zZWxmKHN0cnVjdCBrb2JqZWN0ICprb2JqLCBjb25zdCBzdHJ1Y3QgYXR0cmlidXRl
-ICphdHRyKQorYm9vbCBzeXNmc19yZW1vdmVfZmlsZV9zZWxmX3dfY2Ioc3RydWN0IGtvYmplY3Qg
-KmtvYmosCisJCQkJIGNvbnN0IHN0cnVjdCBhdHRyaWJ1dGUgKmF0dHIsCisJCQkJIHZvaWQgKCpj
-Yikoc3RydWN0IGtvYmplY3QgKmtvYmosCisJCQkJCSAgICBjb25zdCBzdHJ1Y3QgYXR0cmlidXRl
-ICphdHRyLAorCQkJCQkgICAgdm9pZCAqZGF0YSksCisJCQkJIHZvaWQgKmRhdGEpCiB7CiAJc3Ry
-dWN0IGtlcm5mc19ub2RlICpwYXJlbnQgPSBrb2JqLT5zZDsKIAlzdHJ1Y3Qga2VybmZzX25vZGUg
-KmtuOwpAQCAtNDQwLDExICs0NDUsMjEgQEAgYm9vbCBzeXNmc19yZW1vdmVfZmlsZV9zZWxmKHN0
-cnVjdCBrb2JqZWN0ICprb2JqLCBjb25zdCBzdHJ1Y3QgYXR0cmlidXRlICphdHRyKQogCQlyZXR1
-cm4gZmFsc2U7CiAKIAlyZXQgPSBrZXJuZnNfcmVtb3ZlX3NlbGYoa24pOworCWlmIChyZXQgJiYg
-Y2IpIHsKKwkJa2VybmZzX2JyZWFrX2FjdGl2ZV9wcm90ZWN0aW9uKGtuKTsKKwkJY2Ioa29iaiwg
-YXR0ciwgZGF0YSk7CisJCWtlcm5mc19icmVha19hY3RpdmVfcHJvdGVjdGlvbihrbik7CisJfQog
-CiAJa2VybmZzX3B1dChrbik7CiAJcmV0dXJuIHJldDsKIH0KIAorYm9vbCBzeXNmc19yZW1vdmVf
-ZmlsZV9zZWxmKHN0cnVjdCBrb2JqZWN0ICprb2JqLCBjb25zdCBzdHJ1Y3QgYXR0cmlidXRlICph
-dHRyKQoreworCXJldHVybiBzeXNmc19yZW1vdmVfZmlsZV9zZWxmX3dfY2Ioa29iaiwgYXR0ciwg
-TlVMTCwgTlVMTCk7Cit9CisKIHZvaWQgc3lzZnNfcmVtb3ZlX2ZpbGVzKHN0cnVjdCBrb2JqZWN0
-ICprb2JqLCBjb25zdCBzdHJ1Y3QgYXR0cmlidXRlICoqcHRyKQogewogCWludCBpOwpkaWZmIC0t
-Z2l0IGEvaW5jbHVkZS9saW51eC9zeXNmcy5oIGIvaW5jbHVkZS9saW51eC9zeXNmcy5oCmluZGV4
-IGI4YmZkYzE3M2VjMC4uM2M5NTRkNjc3NzM2IDEwMDY0NAotLS0gYS9pbmNsdWRlL2xpbnV4L3N5
-c2ZzLmgKKysrIGIvaW5jbHVkZS9saW51eC9zeXNmcy5oCkBAIC0yMzksNiArMjM5LDEyIEBAIGlu
-dCBfX211c3RfY2hlY2sgc3lzZnNfY2htb2RfZmlsZShzdHJ1Y3Qga29iamVjdCAqa29iaiwKIAkJ
-CQkgIGNvbnN0IHN0cnVjdCBhdHRyaWJ1dGUgKmF0dHIsIHVtb2RlX3QgbW9kZSk7CiB2b2lkIHN5
-c2ZzX3JlbW92ZV9maWxlX25zKHN0cnVjdCBrb2JqZWN0ICprb2JqLCBjb25zdCBzdHJ1Y3QgYXR0
-cmlidXRlICphdHRyLAogCQkJICBjb25zdCB2b2lkICpucyk7Citib29sIHN5c2ZzX3JlbW92ZV9m
-aWxlX3NlbGZfd19jYihzdHJ1Y3Qga29iamVjdCAqa29iaiwKKwkJCQkgY29uc3Qgc3RydWN0IGF0
-dHJpYnV0ZSAqYXR0ciwKKwkJCQkgdm9pZCAoKmNiKShzdHJ1Y3Qga29iamVjdCAqa29iaiwKKwkJ
-CQkJICAgIGNvbnN0IHN0cnVjdCBhdHRyaWJ1dGUgKmF0dHIsCisJCQkJCSAgICB2b2lkICopLAor
-CQkJCSB2b2lkICpkYXRhKTsKIGJvb2wgc3lzZnNfcmVtb3ZlX2ZpbGVfc2VsZihzdHJ1Y3Qga29i
-amVjdCAqa29iaiwgY29uc3Qgc3RydWN0IGF0dHJpYnV0ZSAqYXR0cik7CiB2b2lkIHN5c2ZzX3Jl
-bW92ZV9maWxlcyhzdHJ1Y3Qga29iamVjdCAqa29iaiwgY29uc3Qgc3RydWN0IGF0dHJpYnV0ZSAq
-KmF0dHIpOwogCkBAIC0zNTYsNiArMzYyLDE2IEBAIHN0YXRpYyBpbmxpbmUgdm9pZCBzeXNmc19y
-ZW1vdmVfZmlsZV9ucyhzdHJ1Y3Qga29iamVjdCAqa29iaiwKIHsKIH0KIAorc3RhdGljIGlubGlu
-ZSBib29sIHN5c2ZzX3JlbW92ZV9maWxlX3NlbGZfd19jYihzdHJ1Y3Qga29iamVjdCAqa29iaiwK
-KwkJCQljb25zdCBzdHJ1Y3QgYXR0cmlidXRlICphdHRyLAorCQkJCXZvaWQgKCpjYikoc3RydWN0
-IGtvYmplY3QgKmtvYmosCisJCQkJCSAgIGNvbnN0IHN0cnVjdCBhdHRyaWJ1dGUgKmF0dHIsCisJ
-CQkJCSAgIHZvaWQgKiksCisJCQkJdm9pZCAqZGF0YSkKK3sKKwlyZXR1cm4gZmFsc2U7Cit9CisK
-IHN0YXRpYyBpbmxpbmUgYm9vbCBzeXNmc19yZW1vdmVfZmlsZV9zZWxmKHN0cnVjdCBrb2JqZWN0
-ICprb2JqLAogCQkJCQkgIGNvbnN0IHN0cnVjdCBhdHRyaWJ1dGUgKmF0dHIpCiB7Ci0tIAoyLjE4
-LjAKCg==
-
---_004_c73204ebe4ebfbbaa652a4fda910d25c9d055ce4camelwdccom_
-Content-Type: text/x-patch;
-	name="0002-drivers-base-Introduce-device_remove_file_self_w_cb.patch"
-Content-Description: 
- 0002-drivers-base-Introduce-device_remove_file_self_w_cb.patch
-Content-Disposition: attachment;
-	filename="0002-drivers-base-Introduce-device_remove_file_self_w_cb.patch";
-	size=3003; creation-date="Thu, 26 Jul 2018 21:57:39 GMT";
-	modification-date="Thu, 26 Jul 2018 21:57:39 GMT"
-Content-ID: <3753ADC0C11EA747AC129110A82881E7@namprd04.prod.outlook.com>
-Content-Transfer-Encoding: base64
-
-RnJvbSAwYTAxNWY5MTcxODllNjMzZDAyNzA1MWIwMDRmMTk0OTUwMTQxNzQ3IE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBCYXJ0IFZhbiBBc3NjaGUgPGJhcnQudmFuYXNzY2hlQHdkYy5j
-b20+CkRhdGU6IFRodSwgMjYgSnVsIDIwMTggMDk6MDk6MjkgLTA3MDAKU3ViamVjdDogW1BBVENI
-IDIvM10gZHJpdmVycy9iYXNlOiBJbnRyb2R1Y2UgZGV2aWNlX3JlbW92ZV9maWxlX3NlbGZfd19j
-YigpCgpUaGlzIHBhdGNoIG1ha2VzIGl0IHBvc3NpYmxlIHRvIGV4ZWN1dGUgbW9yZSBjb2RlIHRo
-YW4gb25seSB0aGUKX19rZXJuZnNfcmVtb3ZlKCkgY2FsbCB3aGlsZSB0aGUgYWN0aXZlIHByb3Rl
-Y3Rpb24gaXMgZHJvcHBlZC4KClNpZ25lZC1vZmYtYnk6IEJhcnQgVmFuIEFzc2NoZSA8YmFydC52
-YW5hc3NjaGVAd2RjLmNvbT4KQ2M6IEdyZWcgS3JvYWgtSGFydG1hbiA8Z3JlZ2toQGxpbnV4Zm91
-bmRhdGlvbi5vcmc+CkNjOiBSYWZhZWwgSi4gV3lzb2NraSA8cmFmYWVsQGtlcm5lbC5vcmc+Ci0t
-LQogZHJpdmVycy9iYXNlL2NvcmUuYyAgICB8IDQxICsrKysrKysrKysrKysrKysrKysrKysrKysr
-KysrKysrKysrKysrKysrCiBpbmNsdWRlL2xpbnV4L2RldmljZS5oIHwgIDYgKysrKysrCiAyIGZp
-bGVzIGNoYW5nZWQsIDQ3IGluc2VydGlvbnMoKykKCmRpZmYgLS1naXQgYS9kcml2ZXJzL2Jhc2Uv
-Y29yZS5jIGIvZHJpdmVycy9iYXNlL2NvcmUuYwppbmRleCAzNjYyMmI1MmU0MTkuLjU0NThlZmMy
-ZTA4NyAxMDA2NDQKLS0tIGEvZHJpdmVycy9iYXNlL2NvcmUuYworKysgYi9kcml2ZXJzL2Jhc2Uv
-Y29yZS5jCkBAIC0xMzQxLDYgKzEzNDEsNDcgQEAgdm9pZCBkZXZpY2VfcmVtb3ZlX2ZpbGUoc3Ry
-dWN0IGRldmljZSAqZGV2LAogfQogRVhQT1JUX1NZTUJPTF9HUEwoZGV2aWNlX3JlbW92ZV9maWxl
-KTsKIAorc3RydWN0IGRyZnNfZGF0YSB7CisJdm9pZCAoKmNiKShzdHJ1Y3QgZGV2aWNlICosIGNv
-bnN0IHN0cnVjdCBkZXZpY2VfYXR0cmlidXRlICosCisJCSAgIHZvaWQgKmRhdGEpOworCXZvaWQg
-KmRhdGE7Cit9OworCitzdGF0aWMgdm9pZCBkcmZzX2NiKHN0cnVjdCBrb2JqZWN0ICprb2JqLCBj
-b25zdCBzdHJ1Y3QgYXR0cmlidXRlICphdHRyLAorCQkgICB2b2lkICpkYXRhKQoreworCXN0cnVj
-dCBkcmZzX2RhdGEgKmRyZnNkID0gZGF0YTsKKwlzdHJ1Y3QgZGV2aWNlICpkZXYgPSBjb250YWlu
-ZXJfb2Yoa29iaiwgdHlwZW9mKCpkZXYpLCBrb2JqKTsKKwlzdHJ1Y3QgZGV2aWNlX2F0dHJpYnV0
-ZSAqZGV2X2F0dHIgPQorCQljb250YWluZXJfb2YoYXR0ciwgdHlwZW9mKCpkZXZfYXR0ciksIGF0
-dHIpOworCisJZHJmc2QtPmNiKGRldiwgZGV2X2F0dHIsIGRyZnNkLT5kYXRhKTsKK30KKworLyoq
-CisgKiBkZXZpY2VfcmVtb3ZlX2ZpbGVfc2VsZl93X2NiIC0gcmVtb3ZlIHN5c2ZzIGF0dHJpYnV0
-ZSBmaWxlIGZyb20gaXRzIG93biBtZXRob2QuCisgKiBAZGV2OiBkZXZpY2UuCisgKiBAYXR0cjog
-ZGV2aWNlIGF0dHJpYnV0ZSBkZXNjcmlwdG9yLgorICogQGNiOiBjYWxsYmFjayBmdW5jdGlvbiB0
-byBiZSBjYWxsZWQgZnJvbSB0aGUgY29udGV4dCB0aGF0IHJlbW92ZXMgdGhlCisgKiAgICAgIGF0
-dHJpYnV0ZSBmaWxlLgorICogQGRhdGE6IHRoaXJkIGFyZ3VtZW50IGZvciBAY2IuCisgKgorICog
-U2VlIGtlcm5mc19yZW1vdmVfc2VsZigpIGZvciBkZXRhaWxzLgorICovCit2b2lkIGRldmljZV9y
-ZW1vdmVfZmlsZV9zZWxmX3dfY2Ioc3RydWN0IGRldmljZSAqZGV2LAorCQkJCSAgY29uc3Qgc3Ry
-dWN0IGRldmljZV9hdHRyaWJ1dGUgKmF0dHIsCisJCQkJICB2b2lkICgqY2IpKHN0cnVjdCBkZXZp
-Y2UgKiwKKwkJCQkJICAgICBjb25zdCBzdHJ1Y3QgZGV2aWNlX2F0dHJpYnV0ZSAqLAorCQkJCQkg
-ICAgIHZvaWQgKmRhdGEpLAorCQkJCSAgdm9pZCAqZGF0YSkKK3sKKwlzdHJ1Y3QgZHJmc19kYXRh
-IGRyZnNfZGF0YSA9IHsgY2IsIGRhdGEgfTsKKworCXN5c2ZzX3JlbW92ZV9maWxlX3NlbGZfd19j
-YigmZGV2LT5rb2JqLCAmYXR0ci0+YXR0ciwgZHJmc19jYiwKKwkJCQkgICAgJmRyZnNfZGF0YSk7
-Cit9CitFWFBPUlRfU1lNQk9MX0dQTChkZXZpY2VfcmVtb3ZlX2ZpbGVfc2VsZl93X2NiKTsKKwog
-LyoqCiAgKiBkZXZpY2VfcmVtb3ZlX2ZpbGVfc2VsZiAtIHJlbW92ZSBzeXNmcyBhdHRyaWJ1dGUg
-ZmlsZSBmcm9tIGl0cyBvd24gbWV0aG9kLgogICogQGRldjogZGV2aWNlLgpkaWZmIC0tZ2l0IGEv
-aW5jbHVkZS9saW51eC9kZXZpY2UuaCBiL2luY2x1ZGUvbGludXgvZGV2aWNlLmgKaW5kZXggMDU1
-YTY5ZGJjZDE4Li4xODJiMWIwNWU4YWMgMTAwNjQ0Ci0tLSBhL2luY2x1ZGUvbGludXgvZGV2aWNl
-LmgKKysrIGIvaW5jbHVkZS9saW51eC9kZXZpY2UuaApAQCAtNjA4LDYgKzYwOCwxMiBAQCBleHRl
-cm4gaW50IGRldmljZV9jcmVhdGVfZmlsZShzdHJ1Y3QgZGV2aWNlICpkZXZpY2UsCiAJCQkgICAg
-ICBjb25zdCBzdHJ1Y3QgZGV2aWNlX2F0dHJpYnV0ZSAqZW50cnkpOwogZXh0ZXJuIHZvaWQgZGV2
-aWNlX3JlbW92ZV9maWxlKHN0cnVjdCBkZXZpY2UgKmRldiwKIAkJCSAgICAgICBjb25zdCBzdHJ1
-Y3QgZGV2aWNlX2F0dHJpYnV0ZSAqYXR0cik7CitleHRlcm4gdm9pZCBkZXZpY2VfcmVtb3ZlX2Zp
-bGVfc2VsZl93X2NiKHN0cnVjdCBkZXZpY2UgKmRldiwKKwkJCQljb25zdCBzdHJ1Y3QgZGV2aWNl
-X2F0dHJpYnV0ZSAqYXR0ciwKKwkJCQl2b2lkICgqY2IpKHN0cnVjdCBkZXZpY2UgKmRldiwKKwkJ
-CQkJICAgY29uc3Qgc3RydWN0IGRldmljZV9hdHRyaWJ1dGUgKmF0dHIsCisJCQkJCSAgIHZvaWQg
-KmRhdGEpLAorCQkJCXZvaWQgKmRhdGEpOwogZXh0ZXJuIGJvb2wgZGV2aWNlX3JlbW92ZV9maWxl
-X3NlbGYoc3RydWN0IGRldmljZSAqZGV2LAogCQkJCSAgICBjb25zdCBzdHJ1Y3QgZGV2aWNlX2F0
-dHJpYnV0ZSAqYXR0cik7CiBleHRlcm4gaW50IF9fbXVzdF9jaGVjayBkZXZpY2VfY3JlYXRlX2Jp
-bl9maWxlKHN0cnVjdCBkZXZpY2UgKmRldiwKLS0gCjIuMTguMAoK
-
---_004_c73204ebe4ebfbbaa652a4fda910d25c9d055ce4camelwdccom_
-Content-Type: text/x-patch;
-	name="0003-Avoid-that-SCSI-device-removal-through-sysfs-trigger.patch"
-Content-Description: 
- 0003-Avoid-that-SCSI-device-removal-through-sysfs-trigger.patch
-Content-Disposition: attachment;
-	filename="0003-Avoid-that-SCSI-device-removal-through-sysfs-trigger.patch";
-	size=5181; creation-date="Thu, 26 Jul 2018 21:57:39 GMT";
-	modification-date="Thu, 26 Jul 2018 21:57:39 GMT"
-Content-ID: <ECFC9DC529859A4BB381F4481831606B@namprd04.prod.outlook.com>
-Content-Transfer-Encoding: base64
-
-RnJvbSBhYjBlNDZiYmVlYmVmYTNhMWUxZjUxOTQ4NThhNmIwZTYwOTE4MDlkIE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBCYXJ0IFZhbiBBc3NjaGUgPGJhcnQudmFuYXNzY2hlQHdkYy5j
-b20+CkRhdGU6IFRodSwgMjYgSnVsIDIwMTggMDk6MzA6MTQgLTA3MDAKU3ViamVjdDogW1BBVENI
-IDMvM10gQXZvaWQgdGhhdCBTQ1NJIGRldmljZSByZW1vdmFsIHRocm91Z2ggc3lzZnMgdHJpZ2dl
-cnMgYQogZGVhZGxvY2sKClRoaXMgcGF0Y2ggYXZvaWRzIHRoYXQgc2VsZi1yZW1vdmFsIHRyaWdn
-ZXJzIHRoZSBmb2xsb3dpbmcgZGVhZGxvY2s6Cgo9PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT0KV0FSTklORzogcG9zc2libGUgY2lyY3VsYXIgbG9j
-a2luZyBkZXBlbmRlbmN5IGRldGVjdGVkCjQuMTguMC1yYzItZGJnKyAjNSBOb3QgdGFpbnRlZAot
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KbW9k
-cHJvYmUvNjUzOSBpcyB0cnlpbmcgdG8gYWNxdWlyZSBsb2NrOgowMDAwMDAwMDgzMjNjNGNkIChr
-bi0+Y291bnQjMjAyKXsrKysrfSwgYXQ6IGtlcm5mc19yZW1vdmVfYnlfbmFtZV9ucysweDQ1LzB4
-OTAKCmJ1dCB0YXNrIGlzIGFscmVhZHkgaG9sZGluZyBsb2NrOgowMDAwMDAwMGE2ZWMyYzY5ICgm
-c2hvc3QtPnNjYW5fbXV0ZXgpeysuKy59LCBhdDogc2NzaV9yZW1vdmVfaG9zdCsweDIxLzB4MTUw
-IFtzY3NpX21vZF0KCndoaWNoIGxvY2sgYWxyZWFkeSBkZXBlbmRzIG9uIHRoZSBuZXcgbG9jay4K
-CnRoZSBleGlzdGluZyBkZXBlbmRlbmN5IGNoYWluIChpbiByZXZlcnNlIG9yZGVyKSBpczoKCi0+
-ICMxICgmc2hvc3QtPnNjYW5fbXV0ZXgpeysuKy59OgogICAgICAgX19tdXRleF9sb2NrKzB4ZmUv
-MHhjNzAKICAgICAgIG11dGV4X2xvY2tfbmVzdGVkKzB4MWIvMHgyMAogICAgICAgc2NzaV9yZW1v
-dmVfZGV2aWNlKzB4MjYvMHg0MCBbc2NzaV9tb2RdCiAgICAgICBzZGV2X3N0b3JlX2RlbGV0ZSsw
-eDI3LzB4MzAgW3Njc2lfbW9kXQogICAgICAgZGV2X2F0dHJfc3RvcmUrMHgzZS8weDUwCiAgICAg
-ICBzeXNmc19rZl93cml0ZSsweDg3LzB4YTAKICAgICAgIGtlcm5mc19mb3Bfd3JpdGUrMHgxOTAv
-MHgyMzAKICAgICAgIF9fdmZzX3dyaXRlKzB4ZDIvMHgzYjAKICAgICAgIHZmc193cml0ZSsweDEw
-MS8weDI3MAogICAgICAga3N5c193cml0ZSsweGFiLzB4MTIwCiAgICAgICBfX3g2NF9zeXNfd3Jp
-dGUrMHg0My8weDUwCiAgICAgICBkb19zeXNjYWxsXzY0KzB4NzcvMHgyMzAKICAgICAgIGVudHJ5
-X1NZU0NBTExfNjRfYWZ0ZXJfaHdmcmFtZSsweDQ5LzB4YmUKCi0+ICMwIChrbi0+Y291bnQjMjAy
-KXsrKysrfToKICAgICAgIGxvY2tfYWNxdWlyZSsweGQyLzB4MjYwCiAgICAgICBfX2tlcm5mc19y
-ZW1vdmUrMHg0MjQvMHg0YTAKICAgICAgIGtlcm5mc19yZW1vdmVfYnlfbmFtZV9ucysweDQ1LzB4
-OTAKICAgICAgIHJlbW92ZV9maWxlcy5pc3JhLjErMHgzYS8weDkwCiAgICAgICBzeXNmc19yZW1v
-dmVfZ3JvdXArMHg1Yy8weGMwCiAgICAgICBzeXNmc19yZW1vdmVfZ3JvdXBzKzB4MzkvMHg2MAog
-ICAgICAgZGV2aWNlX3JlbW92ZV9hdHRycysweDgyLzB4YjAKICAgICAgIGRldmljZV9kZWwrMHgy
-NTEvMHg1ODAKICAgICAgIF9fc2NzaV9yZW1vdmVfZGV2aWNlKzB4MTlmLzB4MWQwIFtzY3NpX21v
-ZF0KICAgICAgIHNjc2lfZm9yZ2V0X2hvc3QrMHgzNy8weGIwIFtzY3NpX21vZF0KICAgICAgIHNj
-c2lfcmVtb3ZlX2hvc3QrMHg5Yi8weDE1MCBbc2NzaV9tb2RdCiAgICAgICBzZGVidWdfZHJpdmVy
-X3JlbW92ZSsweDRiLzB4MTUwIFtzY3NpX2RlYnVnXQogICAgICAgZGV2aWNlX3JlbGVhc2VfZHJp
-dmVyX2ludGVybmFsKzB4MjQxLzB4MzYwCiAgICAgICBkZXZpY2VfcmVsZWFzZV9kcml2ZXIrMHgx
-Mi8weDIwCiAgICAgICBidXNfcmVtb3ZlX2RldmljZSsweDFiYy8weDI5MAogICAgICAgZGV2aWNl
-X2RlbCsweDI1OS8weDU4MAogICAgICAgZGV2aWNlX3VucmVnaXN0ZXIrMHgxYS8weDcwCiAgICAg
-ICBzZGVidWdfcmVtb3ZlX2FkYXB0ZXIrMHg4Yi8weGYwIFtzY3NpX2RlYnVnXQogICAgICAgc2Nz
-aV9kZWJ1Z19leGl0KzB4NzYvMHhlOCBbc2NzaV9kZWJ1Z10KICAgICAgIF9feDY0X3N5c19kZWxl
-dGVfbW9kdWxlKzB4MWMxLzB4MjgwCiAgICAgICBkb19zeXNjYWxsXzY0KzB4NzcvMHgyMzAKICAg
-ICAgIGVudHJ5X1NZU0NBTExfNjRfYWZ0ZXJfaHdmcmFtZSsweDQ5LzB4YmUKCm90aGVyIGluZm8g
-dGhhdCBtaWdodCBoZWxwIHVzIGRlYnVnIHRoaXM6CgogUG9zc2libGUgdW5zYWZlIGxvY2tpbmcg
-c2NlbmFyaW86CgogICAgICAgQ1BVMCAgICAgICAgICAgICAgICAgICAgQ1BVMQogICAgICAgLS0t
-LSAgICAgICAgICAgICAgICAgICAgLS0tLQogIGxvY2soJnNob3N0LT5zY2FuX211dGV4KTsKICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgIGxvY2soa24tPmNvdW50IzIwMik7CiAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICBsb2NrKCZzaG9zdC0+c2Nhbl9tdXRleCk7CiAgbG9jayhr
-bi0+Y291bnQjMjAyKTsKCiAqKiogREVBRExPQ0sgKioqCgoyIGxvY2tzIGhlbGQgYnkgbW9kcHJv
-YmUvNjUzOToKICMwOiAwMDAwMDAwMGVmYWY5Mjk4ICgmZGV2LT5tdXRleCl7Li4uLn0sIGF0OiBk
-ZXZpY2VfcmVsZWFzZV9kcml2ZXJfaW50ZXJuYWwrMHg2OC8weDM2MAogIzE6IDAwMDAwMDAwYTZl
-YzJjNjkgKCZzaG9zdC0+c2Nhbl9tdXRleCl7Ky4rLn0sIGF0OiBzY3NpX3JlbW92ZV9ob3N0KzB4
-MjEvMHgxNTAgW3Njc2lfbW9kXQoKc3RhY2sgYmFja3RyYWNlOgpDUFU6IDEwIFBJRDogNjUzOSBD
-b21tOiBtb2Rwcm9iZSBOb3QgdGFpbnRlZCA0LjE4LjAtcmMyLWRiZysgIzUKSGFyZHdhcmUgbmFt
-ZTogUUVNVSBTdGFuZGFyZCBQQyAoUTM1ICsgSUNIOSwgMjAwOSksIEJJT1MgMS4wLjAtcHJlYnVp
-bHQucWVtdS1wcm9qZWN0Lm9yZyAwNC8wMS8yMDE0CkNhbGwgVHJhY2U6CiBkdW1wX3N0YWNrKzB4
-YTQvMHhmNQogcHJpbnRfY2lyY3VsYXJfYnVnLmlzcmEuMzQrMHgyMTMvMHgyMjEKIF9fbG9ja19h
-Y3F1aXJlKzB4MWE3ZS8weDFiNTAKIGxvY2tfYWNxdWlyZSsweGQyLzB4MjYwCiBfX2tlcm5mc19y
-ZW1vdmUrMHg0MjQvMHg0YTAKIGtlcm5mc19yZW1vdmVfYnlfbmFtZV9ucysweDQ1LzB4OTAKIHJl
-bW92ZV9maWxlcy5pc3JhLjErMHgzYS8weDkwCiBzeXNmc19yZW1vdmVfZ3JvdXArMHg1Yy8weGMw
-CiBzeXNmc19yZW1vdmVfZ3JvdXBzKzB4MzkvMHg2MAogZGV2aWNlX3JlbW92ZV9hdHRycysweDgy
-LzB4YjAKIGRldmljZV9kZWwrMHgyNTEvMHg1ODAKIF9fc2NzaV9yZW1vdmVfZGV2aWNlKzB4MTlm
-LzB4MWQwIFtzY3NpX21vZF0KIHNjc2lfZm9yZ2V0X2hvc3QrMHgzNy8weGIwIFtzY3NpX21vZF0K
-IHNjc2lfcmVtb3ZlX2hvc3QrMHg5Yi8weDE1MCBbc2NzaV9tb2RdCiBzZGVidWdfZHJpdmVyX3Jl
-bW92ZSsweDRiLzB4MTUwIFtzY3NpX2RlYnVnXQogZGV2aWNlX3JlbGVhc2VfZHJpdmVyX2ludGVy
-bmFsKzB4MjQxLzB4MzYwCiBkZXZpY2VfcmVsZWFzZV9kcml2ZXIrMHgxMi8weDIwCiBidXNfcmVt
-b3ZlX2RldmljZSsweDFiYy8weDI5MAogZGV2aWNlX2RlbCsweDI1OS8weDU4MAogZGV2aWNlX3Vu
-cmVnaXN0ZXIrMHgxYS8weDcwCiBzZGVidWdfcmVtb3ZlX2FkYXB0ZXIrMHg4Yi8weGYwIFtzY3Np
-X2RlYnVnXQogc2NzaV9kZWJ1Z19leGl0KzB4NzYvMHhlOCBbc2NzaV9kZWJ1Z10KIF9feDY0X3N5
-c19kZWxldGVfbW9kdWxlKzB4MWMxLzB4MjgwCiBkb19zeXNjYWxsXzY0KzB4NzcvMHgyMzAKIGVu
-dHJ5X1NZU0NBTExfNjRfYWZ0ZXJfaHdmcmFtZSsweDQ5LzB4YmUKClNlZSBhbHNvIGh0dHBzOi8v
-d3d3Lm1haWwtYXJjaGl2ZS5jb20vbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmcvbXNnNTQ1MjUu
-aHRtbC4KCkZpeGVzOiBhYzBlY2U5MTc0YWMgKCJzY3NpOiB1c2UgZGV2aWNlX3JlbW92ZV9maWxl
-X3NlbGYoKSBpbnN0ZWFkIG9mIGRldmljZV9zY2hlZHVsZV9jYWxsYmFjaygpIikKU2lnbmVkLW9m
-Zi1ieTogQmFydCBWYW4gQXNzY2hlIDxiYXJ0LnZhbmFzc2NoZUB3ZGMuY29tPgpDYzogVGVqdW4g
-SGVvIDx0akBrZXJuZWwub3JnPgpDYzogSGFubmVzIFJlaW5lY2tlIDxoYXJlQHN1c2UuY29tPgpD
-YzogSm9oYW5uZXMgVGh1bXNoaXJuIDxqdGh1bXNoaXJuQHN1c2UuZGU+Ci0tLQogZHJpdmVycy9z
-Y3NpL3Njc2lfc3lzZnMuYyB8IDEwICsrKysrKysrLS0KIDEgZmlsZSBjaGFuZ2VkLCA4IGluc2Vy
-dGlvbnMoKyksIDIgZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3Njc2lf
-c3lzZnMuYyBiL2RyaXZlcnMvc2NzaS9zY3NpX3N5c2ZzLmMKaW5kZXggZGUxMjIzNTRkMDlhLi45
-NDQ2MzU1ODY3NjkgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvc2NzaS9zY3NpX3N5c2ZzLmMKKysrIGIv
-ZHJpdmVycy9zY3NpL3Njc2lfc3lzZnMuYwpAQCAtNzE4LDEyICs3MTgsMTggQEAgc3RvcmVfcmVz
-Y2FuX2ZpZWxkIChzdHJ1Y3QgZGV2aWNlICpkZXYsIHN0cnVjdCBkZXZpY2VfYXR0cmlidXRlICph
-dHRyLAogfQogc3RhdGljIERFVklDRV9BVFRSKHJlc2NhbiwgU19JV1VTUiwgTlVMTCwgc3RvcmVf
-cmVzY2FuX2ZpZWxkKTsKIAorc3RhdGljIHZvaWQgc2NzaV9yZW1vdmVfZGV2aWNlX2NiKHN0cnVj
-dCBkZXZpY2UgKmRldiwKKwkJCQkgIGNvbnN0IHN0cnVjdCBkZXZpY2VfYXR0cmlidXRlICphdHRy
-LAorCQkJCSAgdm9pZCAqZGF0YSkKK3sKKwlzY3NpX3JlbW92ZV9kZXZpY2UodG9fc2NzaV9kZXZp
-Y2UoZGV2KSk7Cit9CisKIHN0YXRpYyBzc2l6ZV90CiBzZGV2X3N0b3JlX2RlbGV0ZShzdHJ1Y3Qg
-ZGV2aWNlICpkZXYsIHN0cnVjdCBkZXZpY2VfYXR0cmlidXRlICphdHRyLAogCQkgIGNvbnN0IGNo
-YXIgKmJ1Ziwgc2l6ZV90IGNvdW50KQogewotCWlmIChkZXZpY2VfcmVtb3ZlX2ZpbGVfc2VsZihk
-ZXYsIGF0dHIpKQotCQlzY3NpX3JlbW92ZV9kZXZpY2UodG9fc2NzaV9kZXZpY2UoZGV2KSk7CisJ
-ZGV2aWNlX3JlbW92ZV9maWxlX3NlbGZfd19jYihkZXYsIGF0dHIsIHNjc2lfcmVtb3ZlX2Rldmlj
-ZV9jYiwgTlVMTCk7CiAJcmV0dXJuIGNvdW50OwogfTsKIHN0YXRpYyBERVZJQ0VfQVRUUihkZWxl
-dGUsIFNfSVdVU1IsIE5VTEwsIHNkZXZfc3RvcmVfZGVsZXRlKTsKLS0gCjIuMTguMAoK
-
---_004_c73204ebe4ebfbbaa652a4fda910d25c9d055ce4camelwdccom_--
+Some 32-bit systems have a 64-bit dma_addr_t, and on those systems,
+this will be 8 + 2 + 2 + 8 =3D 20 bytes.  On 64-bit systems, it'll be
+16 + 2 + 2 + 4 bytes of padding + 8 =3D 32 bytes (we have 40 available).
