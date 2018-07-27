@@ -1,83 +1,58 @@
-From: Jia-Ju Bai <baijiaju1990@gmail.com>
-Subject: [PATCH] scsi: atp870u: Replace mdelay() with msleep()
-Date: Fri, 27 Jul 2018 17:13:17 +0800
-Message-ID: <20180727091317.6976-1-baijiaju1990@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jia-Ju Bai <baijiaju1990@gmail.com>
+From: "Javali, Nilesh" <Nilesh.Javali@cavium.com>
+Subject: Re: [PATCH] qedi: Fix a potential buffer overflow
+Date: Fri, 27 Jul 2018 09:34:53 +0000
+Message-ID: <D780E4AD.27101%njavali@caviumnetworks.com>
+References: <20180726211037.6257-1-bart.vanassche@wdc.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20180726211037.6257-1-bart.vanassche@wdc.com>
+Content-Language: en-US
+Content-ID: <F366FBA0CDCDBA4E99381584D60098F7@namprd07.prod.outlook.com>
+Sender: stable-owner@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@wdc.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Dept-Eng QLogic Storage Upstream <QLogic-Storage-Upstream@cavium.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-tscam(), atp870_init(), atp880_init() and atp885_init() are never 
-called in atomic context.
-They call mdelay() to busily wait, which is not necessary.
-mdelay() can be replaced with msleep().
 
-This is found by a static analysis tool named DCNS written by myself.
+On 7/27/18, 2:40 AM, "Bart Van Assche" <bart.vanassche@wdc.com> wrote:
 
-Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
----
- drivers/scsi/atp870u.c | 16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+>External Email
+>
+>Tell snprintf() to store at most 255 characters in the output buffer
+>instead of 256. This patch avoids that smatch reports the following
+>warning:
+>
+>drivers/scsi/qedi/qedi_main.c:891: qedi_get_boot_tgt_info() error:
+>snprintf() is printing too much 256 vs 255
+>
+>Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
+>Cc: <QLogic-Storage-Upstream@cavium.com>
+>Cc: <stable@vger.kernel.org>
+>---
+> drivers/scsi/qedi/qedi_main.c | 2 +-
+> 1 file changed, 1 insertion(+), 1 deletion(-)
+>
+>diff --git a/drivers/scsi/qedi/qedi_main.c b/drivers/scsi/qedi/qedi_main.c
+>index 682f3ce31014..ea62180d9ec8 100644
+>--- a/drivers/scsi/qedi/qedi_main.c
+>+++ b/drivers/scsi/qedi/qedi_main.c
+>@@ -888,7 +888,7 @@ static void qedi_get_boot_tgt_info(struct
+>nvm_iscsi_block *block,
+>        ipv6_en =3D !!(block->generic.ctrl_flags &
+>                     NVM_ISCSI_CFG_GEN_IPV6_ENABLED);
+>
+>-       snprintf(tgt->iscsi_name, NVM_ISCSI_CFG_ISCSI_NAME_MAX_LEN,
+>"%s\n",
+>+       snprintf(tgt->iscsi_name, sizeof(tgt->iscsi_name), "%s\n",
+>                 block->target[index].target_name.byte);
+>
+>        tgt->ipv6_en =3D ipv6_en;
+>--
+>2.18.0
+>
 
-diff --git a/drivers/scsi/atp870u.c b/drivers/scsi/atp870u.c
-index b46997cf77e2..8996d2329e11 100644
---- a/drivers/scsi/atp870u.c
-+++ b/drivers/scsi/atp870u.c
-@@ -1055,7 +1055,7 @@ static void tscam(struct Scsi_Host *host, bool wide_chip, u8 scam_on)
- 	udelay(2);		/* 2 deskew delay(45ns*2=90ns) */
- 	val &= 0x007f;		/* no bsy  */
- 	atp_writew_io(dev, 0, 0x1c, val);
--	mdelay(128);
-+	msleep(128);
- 	val &= 0x00fb;		/* after 1ms no msg */
- 	atp_writew_io(dev, 0, 0x1c, val);
- 	while ((atp_readb_io(dev, 0, 0x1c) & 0x04) != 0)
-@@ -1286,9 +1286,9 @@ static void atp870_init(struct Scsi_Host *shpnt)
- 	k = (atp_readb_base(atpdev, 0x3a) & 0xf3) | 0x10;
- 	atp_writeb_base(atpdev, 0x3a, k);
- 	atp_writeb_base(atpdev, 0x3a, k & 0xdf);
--	mdelay(32);
-+	msleep(32);
- 	atp_writeb_base(atpdev, 0x3a, k);
--	mdelay(32);
-+	msleep(32);
- 	atp_set_host_id(atpdev, 0, host_id);
- 
- 	tscam(shpnt, wide_chip, scam_on);
-@@ -1370,9 +1370,9 @@ static void atp880_init(struct Scsi_Host *shpnt)
- 	k = atp_readb_base(atpdev, 0x38) & 0x80;
- 	atp_writeb_base(atpdev, 0x38, k);
- 	atp_writeb_base(atpdev, 0x3b, 0x20);
--	mdelay(32);
-+	msleep(32);
- 	atp_writeb_base(atpdev, 0x3b, 0);
--	mdelay(32);
-+	msleep(32);
- 	atp_readb_io(atpdev, 0, 0x1b);
- 	atp_readb_io(atpdev, 0, 0x17);
- 
-@@ -1454,10 +1454,10 @@ static void atp885_init(struct Scsi_Host *shpnt)
- 	atp_writeb_base(atpdev, 0x28, k);
- 	atp_writeb_pci(atpdev, 0, 1, 0x80);
- 	atp_writeb_pci(atpdev, 1, 1, 0x80);
--	mdelay(100);
-+	msleep(100);
- 	atp_writeb_pci(atpdev, 0, 1, 0);
- 	atp_writeb_pci(atpdev, 1, 1, 0);
--	mdelay(1000);
-+	msleep(1000);
- 	atp_readb_io(atpdev, 0, 0x1b);
- 	atp_readb_io(atpdev, 0, 0x17);
- 	atp_readb_io(atpdev, 1, 0x1b);
-@@ -1473,7 +1473,7 @@ static void atp885_init(struct Scsi_Host *shpnt)
- 		k = (k & 0x07) | 0x40;
- 	atp_set_host_id(atpdev, 1, k);
- 
--	mdelay(600); /* this delay used to be called tscam_885() */
-+	msleep(600); /* this delay used to be called tscam_885() */
- 	dev_info(&pdev->dev, "Scanning Channel A SCSI Device ...\n");
- 	atp_is(atpdev, 0, true, atp_readb_io(atpdev, 0, 0x1b) >> 7);
- 	atp_writeb_io(atpdev, 0, 0x16, 0x80);
--- 
-2.17.0
+Thanks,
+
+Acked-by: Nilesh Javali <nilesh.javali@cavium.com>
