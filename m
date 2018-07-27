@@ -1,136 +1,118 @@
-From: adam radford <aradford@gmail.com>
-Subject: Re: [PATCH] scsi: 3ware: fix return 0 on the error path of probe
-Date: Fri, 27 Jul 2018 11:42:00 -0700
-Message-ID: <CAHtARFGRBk_1yG3sfZetCOKmoKegwEK5uH1Rco5-K4ussyMVxQ@mail.gmail.com>
-References: <20180727135157.13051-1-vasilyev@ispras.ru>
+From: Matthew Wilcox <willy@infradead.org>
+Subject: Re: [PATCH 18/26] target/iscsi: Allocate session IDs from an IDA
+Date: Fri, 27 Jul 2018 12:38:14 -0700
+Message-ID: <20180727193814.GB3825@bombadil.infradead.org>
+References: <20180621212835.5636-1-willy@infradead.org>
+ <20180621212835.5636-19-willy@infradead.org>
+ <5B59FB56.9090901@redhat.com>
+ <5B5A014D.9060901@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180727135157.13051-1-vasilyev@ispras.ru>
+Content-Disposition: inline
+In-Reply-To: <5B5A014D.9060901@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: vasilyev@ispras.ru
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, ldv-project@linuxtesting.org
+To: Mike Christie <mchristi@redhat.com>
+Cc: linux-kernel@vger.kernel.org, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Bart Van Assche <bart.vanassche@wdc.com>, Hannes Reinecke <hare@suse.com>, Kees Cook <keescook@chromium.org>, Varun Prakash <varun@chelsio.com>, Sagi Grimberg <sagi@grimberg.me>, Philippe Ombredanne <pombredanne@nexb.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Kate Stewart <kstewart@linuxfoundation.org>, Thomas Gleixner <tglx@linutronix.de>, "David S. Miller" <davem@davemloft.net>, Denys Vlasenko <dvlasenk@redhat.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Jul 27, 2018 at 6:52 AM Anton Vasilyev <vasilyev@ispras.ru> wrote:
->
-> tw_probe() returns 0 in case of fail of tw_initialize_device_extension(),
-> pci_resource_start() or tw_reset_sequence() and releases resources.
-> twl_probe() returns 0 in case of fail of twl_initialize_device_extension(),
-> pci_iomap() and twl_reset_sequence().
-> twa_probe() returns 0 in case of fail of tw_initialize_device_extension(),
-> ioremap() and twa_reset_sequence().
->
->
-> The patch adds retval initialization for these cases.
->
-> Found by Linux Driver Verification project (linuxtesting.org).
->
-> Signed-off-by: Anton Vasilyev <vasilyev@ispras.ru>
+On Thu, Jul 26, 2018 at 12:13:49PM -0500, Mike Christie wrote:
+> If we want to fix the bug first, then I made the attached patch and I
+> can submit it.
+
+How about I take it through my tree to minimise the amount of rebasing
+I'll need to do?  I'm already dependent on the nvdimm tree and I'd rather
+not depend on the scsi tree as well.  I'll queue it up in front of my
+IDA change to maximise its backportability.
+
+> >From 80c495c3d7f4487c1b6f52f70e8ddc74dcb70794 Mon Sep 17 00:00:00 2001
+> From: Mike Christie <mchristi@redhat.com>
+> Date: Thu, 26 Jul 2018 12:06:07 -0500
+> Subject: [PATCH] iscsi target: fix session creation failure handling
+> 
+> The problem is that iscsi_login_zero_tsih_s1 sets conn->sess early in
+> iscsi_login_set_conn_values. If the function fails later like when we
+> alloc the idr it does kfree(sess) and leaves the conn->sess pointer set.
+> iscsi_login_zero_tsih_s1 then returns -Exyz and we then call
+> iscsi_target_login_sess_out and access the freed memory.
+> 
+> This patch has iscsi_login_zero_tsih_s1 either completely setup the
+> session or completely tear it down, so later in
+> iscsi_target_login_sess_out we can just check for it being set to the
+> connection.
 > ---
->  drivers/scsi/3w-9xxx.c | 6 +++++-
->  drivers/scsi/3w-sas.c  | 3 +++
->  drivers/scsi/3w-xxxx.c | 2 ++
->  3 files changed, 10 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/scsi/3w-9xxx.c b/drivers/scsi/3w-9xxx.c
-> index 99ba4a770406..27521fc3ef5a 100644
-> --- a/drivers/scsi/3w-9xxx.c
-> +++ b/drivers/scsi/3w-9xxx.c
-> @@ -2038,6 +2038,7 @@ static int twa_probe(struct pci_dev *pdev, const struct pci_device_id *dev_id)
->
->         if (twa_initialize_device_extension(tw_dev)) {
->                 TW_PRINTK(tw_dev->host, TW_DRIVER, 0x25, "Failed to initialize device extension");
-> +               retval = -ENOMEM;
->                 goto out_free_device_extension;
->         }
->
-> @@ -2060,6 +2061,7 @@ static int twa_probe(struct pci_dev *pdev, const struct pci_device_id *dev_id)
->         tw_dev->base_addr = ioremap(mem_addr, mem_len);
->         if (!tw_dev->base_addr) {
->                 TW_PRINTK(tw_dev->host, TW_DRIVER, 0x35, "Failed to ioremap");
-> +               retval = -ENOMEM;
->                 goto out_release_mem_region;
->         }
->
-> @@ -2067,8 +2069,10 @@ static int twa_probe(struct pci_dev *pdev, const struct pci_device_id *dev_id)
->         TW_DISABLE_INTERRUPTS(tw_dev);
->
->         /* Initialize the card */
-> -       if (twa_reset_sequence(tw_dev, 0))
-> +       if (twa_reset_sequence(tw_dev, 0)) {
-> +               retval = -ENOMEM;
->                 goto out_iounmap;
-> +       }
->
->         /* Set host specific parameters */
->         if ((pdev->device == PCI_DEVICE_ID_3WARE_9650SE) ||
-> diff --git a/drivers/scsi/3w-sas.c b/drivers/scsi/3w-sas.c
-> index cf9f2a09b47d..40c1e6e64f58 100644
-> --- a/drivers/scsi/3w-sas.c
-> +++ b/drivers/scsi/3w-sas.c
-> @@ -1594,6 +1594,7 @@ static int twl_probe(struct pci_dev *pdev, const struct pci_device_id *dev_id)
->
->         if (twl_initialize_device_extension(tw_dev)) {
->                 TW_PRINTK(tw_dev->host, TW_DRIVER, 0x1a, "Failed to initialize device extension");
-> +               retval = -ENOMEM;
->                 goto out_free_device_extension;
->         }
->
-> @@ -1608,6 +1609,7 @@ static int twl_probe(struct pci_dev *pdev, const struct pci_device_id *dev_id)
->         tw_dev->base_addr = pci_iomap(pdev, 1, 0);
->         if (!tw_dev->base_addr) {
->                 TW_PRINTK(tw_dev->host, TW_DRIVER, 0x1c, "Failed to ioremap");
-> +               retval = -ENOMEM;
->                 goto out_release_mem_region;
->         }
->
-> @@ -1617,6 +1619,7 @@ static int twl_probe(struct pci_dev *pdev, const struct pci_device_id *dev_id)
->         /* Initialize the card */
->         if (twl_reset_sequence(tw_dev, 0)) {
->                 TW_PRINTK(tw_dev->host, TW_DRIVER, 0x1d, "Controller reset failed during probe");
-> +               retval = -ENOMEM;
->                 goto out_iounmap;
->         }
->
-> diff --git a/drivers/scsi/3w-xxxx.c b/drivers/scsi/3w-xxxx.c
-> index f6179e3d6953..961ea6f7def8 100644
-> --- a/drivers/scsi/3w-xxxx.c
-> +++ b/drivers/scsi/3w-xxxx.c
-> @@ -2280,6 +2280,7 @@ static int tw_probe(struct pci_dev *pdev, const struct pci_device_id *dev_id)
->
->         if (tw_initialize_device_extension(tw_dev)) {
->                 printk(KERN_WARNING "3w-xxxx: Failed to initialize device extension.");
-> +               retval = -ENOMEM;
->                 goto out_free_device_extension;
->         }
->
-> @@ -2294,6 +2295,7 @@ static int tw_probe(struct pci_dev *pdev, const struct pci_device_id *dev_id)
->         tw_dev->base_addr = pci_resource_start(pdev, 0);
->         if (!tw_dev->base_addr) {
->                 printk(KERN_WARNING "3w-xxxx: Failed to get io address.");
-> +               retval = -ENOMEM;
->                 goto out_release_mem_region;
->         }
->
-> --
-> 2.18.0
->
-
-Anton,
-
-3w-9xxx: twa_probe() initializes retval at the top of the function:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/scsi/3w-9xxx.c#n2007
-
-so does 3w-xxxx: tw_probe():
-
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/scsi/3w-xxxx.c#n2253
-
-so does 3w-sas: twl_probe():
-
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/scsi/3w-sas.c#n1562
-
-so I think your patch isn't needed...
-
--Adam
+>  drivers/target/iscsi/iscsi_target_login.c | 35 ++++++++++++++++++-------------
+>  1 file changed, 21 insertions(+), 14 deletions(-)
+> 
+> diff --git a/drivers/target/iscsi/iscsi_target_login.c b/drivers/target/iscsi/iscsi_target_login.c
+> index 9950178..e20d811 100644
+> --- a/drivers/target/iscsi/iscsi_target_login.c
+> +++ b/drivers/target/iscsi/iscsi_target_login.c
+> @@ -348,8 +348,7 @@ static int iscsi_login_zero_tsih_s1(
+>  		pr_err("idr_alloc() for sess_idr failed\n");
+>  		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_TARGET_ERR,
+>  				ISCSI_LOGIN_STATUS_NO_RESOURCES);
+> -		kfree(sess);
+> -		return -ENOMEM;
+> +		goto free_sess;
+>  	}
+>  
+>  	sess->creation_time = get_jiffies_64();
+> @@ -365,20 +364,28 @@ static int iscsi_login_zero_tsih_s1(
+>  				ISCSI_LOGIN_STATUS_NO_RESOURCES);
+>  		pr_err("Unable to allocate memory for"
+>  				" struct iscsi_sess_ops.\n");
+> -		kfree(sess);
+> -		return -ENOMEM;
+> +		goto remove_idr;
+>  	}
+>  
+>  	sess->se_sess = transport_init_session(TARGET_PROT_NORMAL);
+>  	if (IS_ERR(sess->se_sess)) {
+>  		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_TARGET_ERR,
+>  				ISCSI_LOGIN_STATUS_NO_RESOURCES);
+> -		kfree(sess->sess_ops);
+> -		kfree(sess);
+> -		return -ENOMEM;
+> +		goto free_ops;
+>  	}
+>  
+>  	return 0;
+> +
+> +free_ops:
+> +	kfree(sess->sess_ops);
+> +remove_idr:
+> +	spin_lock_bh(&sess_idr_lock);
+> +	idr_remove(&sess_idr, sess->session_index);
+> +	spin_unlock_bh(&sess_idr_lock);
+> +free_sess:
+> +	kfree(sess);
+> +	conn->sess = NULL;
+> +	return -ENOMEM;
+>  }
+>  
+>  static int iscsi_login_zero_tsih_s2(
+> @@ -1161,13 +1168,13 @@ void iscsi_target_login_sess_out(struct iscsi_conn *conn,
+>  				   ISCSI_LOGIN_STATUS_INIT_ERR);
+>  	if (!zero_tsih || !conn->sess)
+>  		goto old_sess_out;
+> -	if (conn->sess->se_sess)
+> -		transport_free_session(conn->sess->se_sess);
+> -	if (conn->sess->session_index != 0) {
+> -		spin_lock_bh(&sess_idr_lock);
+> -		idr_remove(&sess_idr, conn->sess->session_index);
+> -		spin_unlock_bh(&sess_idr_lock);
+> -	}
+> +
+> +	transport_free_session(conn->sess->se_sess);
+> +
+> +	spin_lock_bh(&sess_idr_lock);
+> +	idr_remove(&sess_idr, conn->sess->session_index);
+> +	spin_unlock_bh(&sess_idr_lock);
+> +
+>  	kfree(conn->sess->sess_ops);
+>  	kfree(conn->sess);
+>  	conn->sess = NULL;
+> -- 
+> 1.8.3.1
+> 
