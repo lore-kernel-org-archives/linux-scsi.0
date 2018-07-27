@@ -1,63 +1,111 @@
-From: Tony Battersby <tonyb-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org>
-Subject: Re: [PATCH 1/3] dmapool: improve scalability of dma_pool_alloc
-Date: Fri, 27 Jul 2018 09:50:34 -0400
-Message-ID: <2a7cf138-3c2e-6db8-de87-7f4689404adb@cybernetics.com>
-References: <15ff502d-d840-1003-6c45-bc17f0d81262@cybernetics.com>
-	<CAHp75VcXVgAtUWY5yRBFg85C5NPN2BAFyAfAkPLkKq5+SsNHpg@mail.gmail.com>
-	<2a04ee8b-478d-39f1-09a0-1b2f8c6ee8c6@cybernetics.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <2a04ee8b-478d-39f1-09a0-1b2f8c6ee8c6-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org>
-Content-Language: en-US
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
-List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Andy Shevchenko <andy.shevchenko-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Chaitra P B <chaitra.basappa-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Suganath Prabu Subramani <suganath-prabu.subramani-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Sathya Prakash <sathya.prakash-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, linux-mm <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, MPT-FusionLinux.pdl-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+From: Anton Vasilyev <vasilyev@ispras.ru>
+Subject: [PATCH] scsi: 3ware: fix return 0 on the error path of probe
+Date: Fri, 27 Jul 2018 16:51:57 +0300
+Message-ID: <20180727135157.13051-1-vasilyev@ispras.ru>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: Anton Vasilyev <vasilyev@ispras.ru>, Adam Radford <aradford@gmail.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
 List-Id: linux-scsi@vger.kernel.org
 
-Cj4gVGhhdCB3b3VsZCBiZSB0cnVlIGlmIHRoZSB0ZXN0IHdlcmUgImlmCj4gKGxpc3RfZW1wdHko
-JnBvb2wtPmF2YWlsX3BhZ2VfbGlzdCkpIi7CoCBCdXQgaXQgaXMgdGVzdGluZyB0aGUgbGlzdAo+
-IHBvaW50ZXJzIGluIHRoZSBpdGVtIHJhdGhlciB0aGFuIHRoZSBsaXN0IHBvaW50ZXJzIGluIHRo
-ZSBwb29sLsKgIEl0IG1heQo+IGJlIGEgYml0IGNvbmZ1c2luZyBpZiB5b3UgaGF2ZSBuZXZlciBz
-ZWVuIHRoYXQgdXNhZ2UgYmVmb3JlLCB3aGljaCBpcwo+IHdoeSBJIGFkZGVkIGEgY29tbWVudC7C
-oCBCYXNpY2FsbHksIGlmIHlvdSB1c2UgbGlzdF9kZWxfaW5pdCgpIGluc3RlYWQgb2YKPiBsaXN0
-X2RlbCgpLCB0aGVuIHlvdSBjYW4gdXNlIGxpc3RfZW1wdHkoKSBvbiB0aGUgaXRlbSBpdHNlbGYg
-dG8gdGVzdCBpZgo+IHRoZSBpdGVtIGlzIHByZXNlbnQgaW4gYSBsaXN0IG9yIG5vdC7CoCBGb3Ig
-ZXhhbXBsZSwgdGhlIGNvbW1lbnRzIGluCj4gbGlzdC5oIHdhcm4gbm90IHRvIHVzZSBsaXN0X2Vt
-cHR5KCkgb24gdGhlIGVudHJ5IGFmdGVyIGp1c3QgbGlzdF9kZWwoKToKPgo+IC8qKgo+ICAqIGxp
-c3RfZGVsIC0gZGVsZXRlcyBlbnRyeSBmcm9tIGxpc3QuCj4gICogQGVudHJ5OiB0aGUgZWxlbWVu
-dCB0byBkZWxldGUgZnJvbSB0aGUgbGlzdC4KPiAgKiBOb3RlOiBsaXN0X2VtcHR5KCkgb24gZW50
-cnkgZG9lcyBub3QgcmV0dXJuIHRydWUgYWZ0ZXIgdGhpcywgdGhlIGVudHJ5IGlzCj4gICogaW4g
-YW4gdW5kZWZpbmVkIHN0YXRlLgo+ICAqLwoKU29ycnkgZm9yIHRoZSBjcmFwcHkgbGluZSBsZW5n
-dGggKGZpeGVkIGFib3ZlKS7CoCBTaG91bGQgaGF2ZSBqdXN0IHVzZWQKUHJlZm9ybWF0IGluIFRo
-dW5kZXJiaXJkIGxpa2UgYWx3YXlzIHJhdGhlciB0aGFuIGZvbGxvd2luZwpEb2N1bWVudGF0aW9u
-L3Byb2Nlc3MvZW1haWwtY2xpZW50cy5yc3QgYW5kIGNoYW5naW5nIG1haWxuZXdzLndyYXBsZW5n
-dGgKZnJvbSA3MiB0byAwLgoKQW55d2F5LCBJIGhhdmUgYmVlbiB1c2luZyBsaXN0X2RlbF9pbml0
-KCkgZm9yIGEgbG9uZyB0aW1lIGluIHZhcmlvdXMKcGxhY2VzLCBidXQgbm93IEkgY2FuJ3QgZmlu
-ZCB3aGVyZSBhbnkgb2YgaXRzIHVzZWZ1bCBmZWF0dXJlcyBhcmUKZG9jdW1lbnRlZC7CoCBJIHdp
-bGwgaGF2ZSB0byBzdWJtaXQgYSBzZXBhcmF0ZSBwYXRjaCB0byBhZGQgbW9yZQpkb2N1bWVudGF0
-aW9uIGZvciBpdC7CoCBJIGZpbmQgaXQgdXNlZnVsIGZvciB0d28gdGhpbmdzLgoKMSkgSWYgeW91
-IHVzZSBsaXN0X2RlbF9pbml0KCksIHlvdSBjYW4gZGVsZXRlIGFuIGl0ZW0gZnJvbSBhIGxpc3QK
-bXVsdGlwbGUgdGltZXMgd2l0aG91dCBjaGVja2luZyBpZiBpdCBoYXMgYWxyZWFkeSBiZWVuIGRl
-bGV0ZWQuwqAgU28gdGhlCmZvbGxvd2luZyBpcyBzYWZlOgoKbGlzdF9hZGQoZW50cnksIGxpc3Qp
-OwpsaXN0X2RlbF9pbml0KGVudHJ5KTsKbGlzdF9kZWxfaW5pdChlbnRyeSk7CgpUaGF0IHdvdWxk
-IG5vdCBiZSBzYWZlIGlmIGp1c3QgdXNpbmcgbGlzdF9kZWwoKS4KCjIpIElmIHlvdSB1c2UgbGlz
-dF9kZWxfaW5pdCgpLCB5b3UgY2FuIHRlc3QgaWYgYW4gaXRlbSBpcyBwcmVzZW50IGluIGEKbGlz
-dCB1c2luZyBsaXN0X2VtcHR5KCkgb24gdGhlIGVudHJ5LsKgIFNvOgoKbGlzdF9hZGQoZW50cnks
-IGxpc3QpOwovKiBsaXN0X2VtcHR5KGVudHJ5KSBpcyBmYWxzZSAqLwpsaXN0X2RlbF9pbml0KGVu
-dHJ5KTsKLyogbGlzdF9lbXB0eShlbnRyeSkgaXMgdHJ1ZSAqLwoKVGhhdCB3b3VsZCBub3Qgd29y
-ayBpZiB1c2luZyBqdXN0IGxpc3RfZGVsKCkuCgpTaW5jZSB0aGUgbGlzdF9lbXB0eSgpIG5hbWUg
-aXMgdW5pbnR1aXRpdmUgZm9yIHRoaXMgcHVycG9zZSwgaXQgbWlnaHQgYmUKdXNlZnVsIHRvIGFk
-ZCBhIG5ldyBtYWNybyBmb3IgdGhpcyB1c2UgY2FzZS4KCl9fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fCmlvbW11IG1haWxpbmcgbGlzdAppb21tdUBsaXN0cy5s
-aW51eC1mb3VuZGF0aW9uLm9yZwpodHRwczovL2xpc3RzLmxpbnV4Zm91bmRhdGlvbi5vcmcvbWFp
-bG1hbi9saXN0aW5mby9pb21tdQ==
+tw_probe() returns 0 in case of fail of tw_initialize_device_extension(),
+pci_resource_start() or tw_reset_sequence() and releases resources.
+twl_probe() returns 0 in case of fail of twl_initialize_device_extension(),
+pci_iomap() and twl_reset_sequence().
+twa_probe() returns 0 in case of fail of tw_initialize_device_extension(),
+ioremap() and twa_reset_sequence().
+
+
+The patch adds retval initialization for these cases.
+
+Found by Linux Driver Verification project (linuxtesting.org).
+
+Signed-off-by: Anton Vasilyev <vasilyev@ispras.ru>
+---
+ drivers/scsi/3w-9xxx.c | 6 +++++-
+ drivers/scsi/3w-sas.c  | 3 +++
+ drivers/scsi/3w-xxxx.c | 2 ++
+ 3 files changed, 10 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/3w-9xxx.c b/drivers/scsi/3w-9xxx.c
+index 99ba4a770406..27521fc3ef5a 100644
+--- a/drivers/scsi/3w-9xxx.c
++++ b/drivers/scsi/3w-9xxx.c
+@@ -2038,6 +2038,7 @@ static int twa_probe(struct pci_dev *pdev, const struct pci_device_id *dev_id)
+ 
+ 	if (twa_initialize_device_extension(tw_dev)) {
+ 		TW_PRINTK(tw_dev->host, TW_DRIVER, 0x25, "Failed to initialize device extension");
++		retval = -ENOMEM;
+ 		goto out_free_device_extension;
+ 	}
+ 
+@@ -2060,6 +2061,7 @@ static int twa_probe(struct pci_dev *pdev, const struct pci_device_id *dev_id)
+ 	tw_dev->base_addr = ioremap(mem_addr, mem_len);
+ 	if (!tw_dev->base_addr) {
+ 		TW_PRINTK(tw_dev->host, TW_DRIVER, 0x35, "Failed to ioremap");
++		retval = -ENOMEM;
+ 		goto out_release_mem_region;
+ 	}
+ 
+@@ -2067,8 +2069,10 @@ static int twa_probe(struct pci_dev *pdev, const struct pci_device_id *dev_id)
+ 	TW_DISABLE_INTERRUPTS(tw_dev);
+ 
+ 	/* Initialize the card */
+-	if (twa_reset_sequence(tw_dev, 0))
++	if (twa_reset_sequence(tw_dev, 0)) {
++		retval = -ENOMEM;
+ 		goto out_iounmap;
++	}
+ 
+ 	/* Set host specific parameters */
+ 	if ((pdev->device == PCI_DEVICE_ID_3WARE_9650SE) ||
+diff --git a/drivers/scsi/3w-sas.c b/drivers/scsi/3w-sas.c
+index cf9f2a09b47d..40c1e6e64f58 100644
+--- a/drivers/scsi/3w-sas.c
++++ b/drivers/scsi/3w-sas.c
+@@ -1594,6 +1594,7 @@ static int twl_probe(struct pci_dev *pdev, const struct pci_device_id *dev_id)
+ 
+ 	if (twl_initialize_device_extension(tw_dev)) {
+ 		TW_PRINTK(tw_dev->host, TW_DRIVER, 0x1a, "Failed to initialize device extension");
++		retval = -ENOMEM;
+ 		goto out_free_device_extension;
+ 	}
+ 
+@@ -1608,6 +1609,7 @@ static int twl_probe(struct pci_dev *pdev, const struct pci_device_id *dev_id)
+ 	tw_dev->base_addr = pci_iomap(pdev, 1, 0);
+ 	if (!tw_dev->base_addr) {
+ 		TW_PRINTK(tw_dev->host, TW_DRIVER, 0x1c, "Failed to ioremap");
++		retval = -ENOMEM;
+ 		goto out_release_mem_region;
+ 	}
+ 
+@@ -1617,6 +1619,7 @@ static int twl_probe(struct pci_dev *pdev, const struct pci_device_id *dev_id)
+ 	/* Initialize the card */
+ 	if (twl_reset_sequence(tw_dev, 0)) {
+ 		TW_PRINTK(tw_dev->host, TW_DRIVER, 0x1d, "Controller reset failed during probe");
++		retval = -ENOMEM;
+ 		goto out_iounmap;
+ 	}
+ 
+diff --git a/drivers/scsi/3w-xxxx.c b/drivers/scsi/3w-xxxx.c
+index f6179e3d6953..961ea6f7def8 100644
+--- a/drivers/scsi/3w-xxxx.c
++++ b/drivers/scsi/3w-xxxx.c
+@@ -2280,6 +2280,7 @@ static int tw_probe(struct pci_dev *pdev, const struct pci_device_id *dev_id)
+ 
+ 	if (tw_initialize_device_extension(tw_dev)) {
+ 		printk(KERN_WARNING "3w-xxxx: Failed to initialize device extension.");
++		retval = -ENOMEM;
+ 		goto out_free_device_extension;
+ 	}
+ 
+@@ -2294,6 +2295,7 @@ static int tw_probe(struct pci_dev *pdev, const struct pci_device_id *dev_id)
+ 	tw_dev->base_addr = pci_resource_start(pdev, 0);
+ 	if (!tw_dev->base_addr) {
+ 		printk(KERN_WARNING "3w-xxxx: Failed to get io address.");
++		retval = -ENOMEM;
+ 		goto out_release_mem_region;
+ 	}
+ 
+-- 
+2.18.0
