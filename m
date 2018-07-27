@@ -1,108 +1,136 @@
-From: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: Re: [PATCH 2/3] dmapool: improve scalability of dma_pool_free
-Date: Fri, 27 Jul 2018 08:23:22 -0700
-Message-ID: <20180727152322.GB13348@bombadil.infradead.org>
-References: <1288e597-a67a-25b3-b7c6-db883ca67a25@cybernetics.com>
-	<20180726194209.GB12992@bombadil.infradead.org>
-	<b3430dd4-a4d6-28f1-09a1-82e0bf4a3b83@cybernetics.com>
-	<20180727000708.GA785@bombadil.infradead.org>
-	<cae33099-3147-5014-ab4e-c22a4d66dc49@cybernetics.com>
+From: adam radford <aradford@gmail.com>
+Subject: Re: [PATCH] scsi: 3ware: fix return 0 on the error path of probe
+Date: Fri, 27 Jul 2018 11:42:00 -0700
+Message-ID: <CAHtARFGRBk_1yG3sfZetCOKmoKegwEK5uH1Rco5-K4ussyMVxQ@mail.gmail.com>
+References: <20180727135157.13051-1-vasilyev@ispras.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <cae33099-3147-5014-ab4e-c22a4d66dc49-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
-List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Tony Battersby <tonyb-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org>
-Cc: linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Chaitra P B <chaitra.basappa-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Suganath Prabu Subramani <suganath-prabu.subramani-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Sathya Prakash <sathya.prakash-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, MPT-FusionLinux.pdl-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20180727135157.13051-1-vasilyev@ispras.ru>
+Sender: linux-kernel-owner@vger.kernel.org
+To: vasilyev@ispras.ru
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, ldv-project@linuxtesting.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Jul 27, 2018 at 09:23:30AM -0400, Tony Battersby wrote:
-> On 07/26/2018 08:07 PM, Matthew Wilcox wrote:
-> > If you're up for more major surgery, then I think we can put all the
-> > information currently stored in dma_page into struct page.  Something
-> > like this:
-> >
-> > +++ b/include/linux/mm_types.h
-> > @@ -152,6 +152,12 @@ struct page {
-> >                         unsigned long hmm_data;
-> >                         unsigned long _zd_pad_1;        /* uses mapping=
- */
-> >                 };
-> > +               struct {        /* dma_pool pages */
-> > +                       struct list_head dma_list;
-> > +                       unsigned short in_use;
-> > +                       unsigned short offset;
-> > +                       dma_addr_t dma;
-> > +               };
-> >  =
+On Fri, Jul 27, 2018 at 6:52 AM Anton Vasilyev <vasilyev@ispras.ru> wrote:
+>
+> tw_probe() returns 0 in case of fail of tw_initialize_device_extension(),
+> pci_resource_start() or tw_reset_sequence() and releases resources.
+> twl_probe() returns 0 in case of fail of twl_initialize_device_extension(),
+> pci_iomap() and twl_reset_sequence().
+> twa_probe() returns 0 in case of fail of tw_initialize_device_extension(),
+> ioremap() and twa_reset_sequence().
+>
+>
+> The patch adds retval initialization for these cases.
+>
+> Found by Linux Driver Verification project (linuxtesting.org).
+>
+> Signed-off-by: Anton Vasilyev <vasilyev@ispras.ru>
+> ---
+>  drivers/scsi/3w-9xxx.c | 6 +++++-
+>  drivers/scsi/3w-sas.c  | 3 +++
+>  drivers/scsi/3w-xxxx.c | 2 ++
+>  3 files changed, 10 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/scsi/3w-9xxx.c b/drivers/scsi/3w-9xxx.c
+> index 99ba4a770406..27521fc3ef5a 100644
+> --- a/drivers/scsi/3w-9xxx.c
+> +++ b/drivers/scsi/3w-9xxx.c
+> @@ -2038,6 +2038,7 @@ static int twa_probe(struct pci_dev *pdev, const struct pci_device_id *dev_id)
+>
+>         if (twa_initialize_device_extension(tw_dev)) {
+>                 TW_PRINTK(tw_dev->host, TW_DRIVER, 0x25, "Failed to initialize device extension");
+> +               retval = -ENOMEM;
+>                 goto out_free_device_extension;
+>         }
+>
+> @@ -2060,6 +2061,7 @@ static int twa_probe(struct pci_dev *pdev, const struct pci_device_id *dev_id)
+>         tw_dev->base_addr = ioremap(mem_addr, mem_len);
+>         if (!tw_dev->base_addr) {
+>                 TW_PRINTK(tw_dev->host, TW_DRIVER, 0x35, "Failed to ioremap");
+> +               retval = -ENOMEM;
+>                 goto out_release_mem_region;
+>         }
+>
+> @@ -2067,8 +2069,10 @@ static int twa_probe(struct pci_dev *pdev, const struct pci_device_id *dev_id)
+>         TW_DISABLE_INTERRUPTS(tw_dev);
+>
+>         /* Initialize the card */
+> -       if (twa_reset_sequence(tw_dev, 0))
+> +       if (twa_reset_sequence(tw_dev, 0)) {
+> +               retval = -ENOMEM;
+>                 goto out_iounmap;
+> +       }
+>
+>         /* Set host specific parameters */
+>         if ((pdev->device == PCI_DEVICE_ID_3WARE_9650SE) ||
+> diff --git a/drivers/scsi/3w-sas.c b/drivers/scsi/3w-sas.c
+> index cf9f2a09b47d..40c1e6e64f58 100644
+> --- a/drivers/scsi/3w-sas.c
+> +++ b/drivers/scsi/3w-sas.c
+> @@ -1594,6 +1594,7 @@ static int twl_probe(struct pci_dev *pdev, const struct pci_device_id *dev_id)
+>
+>         if (twl_initialize_device_extension(tw_dev)) {
+>                 TW_PRINTK(tw_dev->host, TW_DRIVER, 0x1a, "Failed to initialize device extension");
+> +               retval = -ENOMEM;
+>                 goto out_free_device_extension;
+>         }
+>
+> @@ -1608,6 +1609,7 @@ static int twl_probe(struct pci_dev *pdev, const struct pci_device_id *dev_id)
+>         tw_dev->base_addr = pci_iomap(pdev, 1, 0);
+>         if (!tw_dev->base_addr) {
+>                 TW_PRINTK(tw_dev->host, TW_DRIVER, 0x1c, "Failed to ioremap");
+> +               retval = -ENOMEM;
+>                 goto out_release_mem_region;
+>         }
+>
+> @@ -1617,6 +1619,7 @@ static int twl_probe(struct pci_dev *pdev, const struct pci_device_id *dev_id)
+>         /* Initialize the card */
+>         if (twl_reset_sequence(tw_dev, 0)) {
+>                 TW_PRINTK(tw_dev->host, TW_DRIVER, 0x1d, "Controller reset failed during probe");
+> +               retval = -ENOMEM;
+>                 goto out_iounmap;
+>         }
+>
+> diff --git a/drivers/scsi/3w-xxxx.c b/drivers/scsi/3w-xxxx.c
+> index f6179e3d6953..961ea6f7def8 100644
+> --- a/drivers/scsi/3w-xxxx.c
+> +++ b/drivers/scsi/3w-xxxx.c
+> @@ -2280,6 +2280,7 @@ static int tw_probe(struct pci_dev *pdev, const struct pci_device_id *dev_id)
+>
+>         if (tw_initialize_device_extension(tw_dev)) {
+>                 printk(KERN_WARNING "3w-xxxx: Failed to initialize device extension.");
+> +               retval = -ENOMEM;
+>                 goto out_free_device_extension;
+>         }
+>
+> @@ -2294,6 +2295,7 @@ static int tw_probe(struct pci_dev *pdev, const struct pci_device_id *dev_id)
+>         tw_dev->base_addr = pci_resource_start(pdev, 0);
+>         if (!tw_dev->base_addr) {
+>                 printk(KERN_WARNING "3w-xxxx: Failed to get io address.");
+> +               retval = -ENOMEM;
+>                 goto out_release_mem_region;
+>         }
+>
+> --
+> 2.18.0
+>
 
-> >                 /** @rcu_head: You can use this to free a page by RCU. =
-*/
-> >                 struct rcu_head rcu_head;
-> >
-> > page_list -> dma_list
-> > vaddr goes away (page_to_virt() exists)
-> > dma -> dma
-> > in_use and offset shrink from 4 bytes to 2.
-> >
-> > Some 32-bit systems have a 64-bit dma_addr_t, and on those systems,
-> > this will be 8 + 2 + 2 + 8 =3D 20 bytes.  On 64-bit systems, it'll be
-> > 16 + 2 + 2 + 4 bytes of padding + 8 =3D 32 bytes (we have 40 available).
-> >
-> >
-> offset at least needs more bits, since allocations can be multi-page.=A0
+Anton,
 
-Ah, rats.  That means we have to use the mapcount union too:
+3w-9xxx: twa_probe() initializes retval at the top of the function:
 
-+++ b/include/linux/mm_types.h
-@@ -152,6 +152,11 @@ struct page {
-                        unsigned long hmm_data;
-                        unsigned long _zd_pad_1;        /* uses mapping */
-                };
-+               struct {        /* dma_pool pages */
-+                       struct list_head dma_list;
-+                       unsigned int dma_in_use;
-+                       dma_addr_t dma;
-+               };
- =
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/scsi/3w-9xxx.c#n2007
 
-                /** @rcu_head: You can use this to free a page by RCU. */
-                struct rcu_head rcu_head;
-@@ -174,6 +179,7 @@ struct page {
- =
+so does 3w-xxxx: tw_probe():
 
-                unsigned int active;            /* SLAB */
-                int units;                      /* SLOB */
-+               unsigned int dma_offset;        /* dma_pool */
-        };
- =
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/scsi/3w-xxxx.c#n2253
 
-        /* Usage count. *DO NOT USE DIRECTLY*. See page_ref.h */
+so does 3w-sas: twl_probe():
 
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/scsi/3w-sas.c#n1562
 
-> See the following from mpt3sas:
-> =
+so I think your patch isn't needed...
 
-> cat /sys/devices/pci0000:80/0000:80:07.0/0000:85:00.0/pools
-> (manually cleaned up column alignment)
-> poolinfo - 0.1
-> reply_post_free_array pool  1      21     192     1
-> reply_free pool             1      1      41728   1
-> reply pool                  1      1      1335296 1
-> sense pool                  1      1      970272  1
-> chain pool                  373959 386048 128     12064
-> reply_post_free pool        12     12     166528  12
->                                           ^size^
-
-Wow, that's a pretty weird way to use the dmapool.  It'd be more efficient
-to just call dma_alloc_coherent() directly.
+-Adam
