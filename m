@@ -1,69 +1,48 @@
-From: Tony Battersby <tonyb-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org>
-Subject: Re: [PATCH 2/3] dmapool: improve scalability of dma_pool_free
-Date: Mon, 30 Jul 2018 10:05:04 -0400
-Message-ID: <2e6932dd-529a-9643-067d-2d42f6e90cdd@cybernetics.com>
-References: <1288e597-a67a-25b3-b7c6-db883ca67a25@cybernetics.com>
-	<20180726194209.GB12992@bombadil.infradead.org>
-	<b3430dd4-a4d6-28f1-09a1-82e0bf4a3b83@cybernetics.com>
-	<20180727000708.GA785@bombadil.infradead.org>
-	<cae33099-3147-5014-ab4e-c22a4d66dc49@cybernetics.com>
-	<20180727152322.GB13348@bombadil.infradead.org>
-	<acdc2e32-466c-61d3-145f-80bfba2c6739@cybernetics.com>
-	<88d362b7-1d53-b430-1741-b48cbc0a7887@cybernetics.com>
+From: "tj@kernel.org" <tj@kernel.org>
+Subject: Re: [PATCH, RESEND] Avoid that SCSI device removal through sysfs
+ triggers a deadlock
+Date: Mon, 30 Jul 2018 07:13:45 -0700
+Message-ID: <20180730141345.GC1206094@devbig004.ftw2.facebook.com>
+References: <20180725173828.2227-1-bart.vanassche@wdc.com>
+ <20180726133527.GU1934745@devbig577.frc2.facebook.com>
+ <4dbd740c0555eb1bfcb4181eeaca5e397b6ab63c.camel@wdc.com>
+ <20180726141435.GV1934745@devbig577.frc2.facebook.com>
+ <c73204ebe4ebfbbaa652a4fda910d25c9d055ce4.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <88d362b7-1d53-b430-1741-b48cbc0a7887-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org>
-Content-Language: en-US
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
-List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Chaitra P B <chaitra.basappa-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Suganath Prabu Subramani <suganath-prabu.subramani-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Sathya Prakash <sathya.prakash-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, MPT-FusionLinux.pdl-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <stable-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <c73204ebe4ebfbbaa652a4fda910d25c9d055ce4.camel@wdc.com>
+Sender: stable-owner@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "mingo@kernel.org" <mingo@kernel.org>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "oleg@redhat.com" <oleg@redhat.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "ebiederm@xmission.com" <ebiederm@xmission.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.com" <hare@suse.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gMDcvMjcvMjAxOCAwNToyNyBQTSwgVG9ueSBCYXR0ZXJzYnkgd3JvdGU6Cj4gT24gMDcvMjcv
-MjAxOCAwMzozOCBQTSwgVG9ueSBCYXR0ZXJzYnkgd3JvdGU6Cj4+IEJ1dCB0aGUgYmlnZ2VyIHBy
-b2JsZW0gaXMgdGhhdCBteSBmaXJzdCBwYXRjaCBhZGRzIGFub3RoZXIgbGlzdF9oZWFkIHRvCj4+
-IHRoZSBkbWFfcGFnZSBmb3IgdGhlIGF2YWlsX3BhZ2VfbGluayB0byBtYWtlIGFsbG9jYXRpb25z
-IGZhc3Rlci7CoCBJCj4+IHN1cHBvc2Ugd2UgY291bGQgbWFrZSB0aGUgbGlzdHMgc2luZ2x5LWxp
-bmtlZCBpbnN0ZWFkIG9mIGRvdWJseS1saW5rZWQKPj4gdG8gc2F2ZSBzcGFjZS4KPj4KPiBJIG1h
-bmFnZWQgdG8gcmVkbyBteSBkbWFfcG9vbF9hbGxvYygpIHBhdGNoIHRvIG1ha2UgYXZhaWxfcGFn
-ZV9saXN0Cj4gc2luZ2x5LWxpbmtlZCBpbnN0ZWFkIG9mIGRvdWJseS1saW5rZWQuwqAgQnV0IHRo
-ZSBwcm9ibGVtIHdpdGggbWFraW5nCj4gZWl0aGVyIGxpc3Qgc2luZ2x5LWxpbmtlZCBpcyB0aGF0
-IGl0IHdvdWxkIG5vIGxvbmdlciBiZSBwb3NzaWJsZSB0byBjYWxsCj4gcG9vbF9mcmVlX3BhZ2Uo
-KSBhbnkgdGltZSBvdGhlciB0aGFuIGRtYV9wb29sX2Rlc3Ryb3koKSB3aXRob3V0IHNjYW5uaW5n
-Cj4gdGhlIGxpc3RzIHRvIHJlbW92ZSB0aGUgcGFnZSBmcm9tIHRoZW0sIHdoaWNoIHdvdWxkIG1h
-a2UgcHJ1bmluZwo+IGFyYml0cmFyeSBmcmVlIHBhZ2VzIHNsb3dlciAoYWRkaW5nIGJhY2sgYSBP
-KG5eMikpLsKgIEJ1dCB0aGUgY3VycmVudAo+IGNvZGUgZG9lc24ndCBkbyB0aGF0IGFueXdheSwg
-YW5kIGluIGZhY3QgaXQgaGFzIGEgY29tbWVudCBpbgo+IGRtYV9wb29sX2ZyZWUoKSB0byAicmVz
-aXN0IHRoZSB0ZW1wdGF0aW9uIiB0byBwcnVuZSBmcmVlIHBhZ2VzLsKgIEFuZCB5ZXQKPiBpdCBz
-ZWVtcyBsaWtlIGl0IG1pZ2h0IGJlIHJlYXNvbmFibGUgZm9yIHNvbWVvbmUgdG8gYWRkIHN1Y2gg
-Y29kZSBpbiB0aGUKPiBmdXR1cmUgaWYgdGhlcmUgYXJlIGEgd2hvbGUgbG90IG9mIGZyZWUgcGFn
-ZXMsIHNvIEkgYW0gaGVzaXRhbnQgdG8gbWFrZQo+IGl0IG1vcmUgZGlmZmljdWx0Lgo+Cj4gU28g
-bXkgcXVlc3Rpb24gaXM6IHdoZW4gSSBwb3N0IHYyIG9mIHRoZSBwYXRjaHNldCwgc2hvdWxkIEkg
-c2VuZCB0aGUKPiBkb3VibHktbGlua2VkIHZlcnNpb24gb3IgdGhlIHNpbmdseS1saW5rZWQgdmVy
-c2lvbiwgaW4gYW50aWNpcGF0aW9uIHRoYXQKPiBzb21lb25lIGVsc2UgbWlnaHQgd2FudCB0byB0
-YWtlIGl0IGZ1cnRoZXIgYW5kIG1vdmUgZXZlcnl0aGluZyBpbnRvCj4gc3RydWN0IHBhZ2UgYXMg
-eW91IHN1Z2dlc3Q/Cj4KT3ZlciB0aGUgd2Vla2VuZCBJIGNhbWUgdXAgd2l0aCBhIGJldHRlciBz
-b2x1dGlvbi7CoCBJbnN0ZWFkIG9mIGhhdmluZwp0aGUgcGFnZSBsaXN0ZWQgaW4gdHdvIHNpbmds
-eS1saW5rZWQgbGlzdHMgYXQgdGhlIHNhbWUgdGltZSwgbW92ZSB0aGUKcGFnZSBiZXR3ZWVuIHR3
-byBkb3VibHktbGlua2VkIGxpc3RzLsKgIE9uZSBsaXN0IGlzIGRlZGljYXRlZCBmb3IgcGFnZXMK
-dGhhdCBoYXZlIGFsbCBibG9ja3MgYWxsb2NhdGVkLCBhbmQgb25lIGxpc3QgaXMgZm9yIHBhZ2Vz
-IHRoYXQgaGF2ZSBzb21lCmJsb2NrcyBmcmVlLsKgIFNpbmNlIHRoZSBwYWdlIGlzIG9ubHkgaW4g
-b25lIGxpc3QgYXQgYSB0aW1lLCBpdCBvbmx5Cm5lZWRzIG9uZSBzZXQgb2YgbGlzdCBwb2ludGVy
-cy4KCkkgYWxzbyBpbXBsZW1lbnRlZCB0aGUgY29kZSB0byBtYWtlIHRoZSBvZmZzZXQgMTYtYml0
-LCB3aGlsZSBpZ25vcmluZwp0aGUgb2Zmc2V0IGZvciBjYXNlcyB3aGVyZSBpdCBpcyBub3QgbmVl
-ZGVkICh3aGVyZSBpdCB3b3VsZCBvdmVyZmxvdwphbnl3YXkpLgoKU28gbm93IEkgaGF2ZSBhbiBp
-bXBsZW1lbnRhdGlvbiB0aGF0IGVsaW1pbmF0ZXMgc3RydWN0IGRtYV9wYWdlLsKgIEkgd2lsbApw
-b3N0IGl0IG9uY2UgaXQgaXMgcmVhZHkgZm9yIHJldmlldy4KCl9fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fCmlvbW11IG1haWxpbmcgbGlzdAppb21tdUBsaXN0
-cy5saW51eC1mb3VuZGF0aW9uLm9yZwpodHRwczovL2xpc3RzLmxpbnV4Zm91bmRhdGlvbi5vcmcv
-bWFpbG1hbi9saXN0aW5mby9pb21tdQ==
+Hello, Bart.
+
+On Thu, Jul 26, 2018 at 09:57:40PM +0000, Bart Van Assche wrote:
+...
+> @@ -440,11 +445,21 @@ bool sysfs_remove_file_self(struct kobject *kobj, const struct attribute *attr)
+>  		return false;
+>  
+>  	ret = kernfs_remove_self(kn);
+> +	if (ret && cb) {
+> +		kernfs_break_active_protection(kn);
+> +		cb(kobj, attr, data);
+> +		kernfs_break_active_protection(kn);
+
+unbreak?
+
+Also, wouldn't it be better to just expose sysfs_break/unbreak and
+then do sth like the following from scsi?
+
+        kobject_get();
+	sysfs_break_active_protection();
+	do normal sysfs removal;
+	sysfs_unbreak..();
+	kobject_put();
+
+Thanks.
+
+-- 
+tejun
