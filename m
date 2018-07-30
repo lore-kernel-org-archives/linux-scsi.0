@@ -1,90 +1,97 @@
 From: Sayali Lokhande <sayalil@codeaurora.org>
-Subject: Re: [PATCH V5 2/2] scsi: ufs: Add configfs support for ufs
- provisioning
-Date: Mon, 30 Jul 2018 13:16:00 +0530
-Message-ID: <8e6af8ed-1ec0-f10e-69b2-08281b638a4b@codeaurora.org>
-References: <1530858040-13971-1-git-send-email-sayalil@codeaurora.org>
- <1530858040-13971-3-git-send-email-sayalil@codeaurora.org>
- <CAE=gft5U1-Jo-GvTF7sNAV3Q565AmuUrHpmBdxUL+UwkKxesqA@mail.gmail.com>
- <0dce9e9c-4f93-9857-72ee-f65ff195c41a@codeaurora.org>
- <CAE=gft6_=SQjgv7_kHXKJKa8_45NKKFwwE7UaXsijPpMd35LOg@mail.gmail.com>
- <4cb931e199599314829f5ff750797c88fc123f1f.camel@wdc.com>
- <CAE=gft6zm2mw3rnNuktDe0NWs-NM1CFQw1BUeGhaBi3eoEDXBg@mail.gmail.com>
+Subject: Re: [PATCH V6] scsi: ufs: Add configfs support for UFS provisioning
+Date: Mon, 30 Jul 2018 13:30:17 +0530
+Message-ID: <ed53959d-8832-e2a0-4bf4-bf53ec8191ab@codeaurora.org>
+References: <1531734237-27421-1-git-send-email-sayalil@codeaurora.org>
+ <1531734237-27421-2-git-send-email-sayalil@codeaurora.org>
+ <fc305cad-a0db-9c4b-9d5f-14e8e48a23b3@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAE=gft6zm2mw3rnNuktDe0NWs-NM1CFQw1BUeGhaBi3eoEDXBg@mail.gmail.com>
+In-Reply-To: <fc305cad-a0db-9c4b-9d5f-14e8e48a23b3@intel.com>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Evan Green <evgreen@chromium.org>, Bart.VanAssche@wdc.com
-Cc: Vinayak Holikatti <vinholikatti@gmail.com>, linux-kernel@vger.kernel.org, asutoshd@codeaurora.org, riteshh@codeaurora.org, cang@codeaurora.org, martin.petersen@oracle.com, subhashj@codeaurora.org, linux-scsi@vger.kernel.org, vivek.gautam@codeaurora.org, Rajendra Nayak <rnayak@codeaurora.org>, jejb@linux.vnet.ibm.com
+To: Adrian Hunter <adrian.hunter@intel.com>, subhashj@codeaurora.org, cang@codeaurora.org, vivek.gautam@codeaurora.org, rnayak@codeaurora.org, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, asutoshd@codeaurora.org, evgreen@chromium.org, riteshh@codeaurora.org
+Cc: linux-scsi@vger.kernel.org, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Evan,
 
 
-On 7/18/2018 1:53 AM, Evan Green wrote:
-> On Mon, Jul 16, 2018 at 5:04 PM Bart Van Assche <Bart.VanAssche@wdc.com> wrote:
->> On Mon, 2018-07-16 at 16:46 -0700, Evan Green wrote:
->>> I see Bart has chimed in on the next series with a suggestion to break
->>> out each field into individual files within configfs. Bart, what are
->>> your feelings about converting to a binary attribute? I remember when
->>> I did my sysfs equivalent of this patch, somebody chimed in indicating
->>> a "commit" file might be needed so that the new configuration could be
->>> written in one fell swoop. One advantage of the binary attribute is
->>> that it writes the configuration atomically.
->> Hello Evan,
+On 7/17/2018 6:36 PM, Adrian Hunter wrote:
+> On 16/07/18 12:43, Sayali Lokhande wrote:
+>> This patch adds configfs support to provision UFS device at
+>> runtime. This feature can be primarily useful in factory or
+>> assembly line as some devices may be required to be configured
+>> multiple times during initial system development phase.
+>> Configuration Descriptors can be written multiple times until
+>> bConfigDescrLock attribute is zero.
 >>
->> I may be missing some UFS background information. But since a configfs interface
->> is being added I think the same rule applies as to all Linux kernel user space
->> interfaces, namely that it should be backwards compatible. Additionally, if
->> anyone ever will want to use this interface from a shell script, I think that
->> it will be much easier to write multiple ASCII attributes than a single binary
->> attribute.
+>> Configuration descriptor buffer consists of Device and Unit
+>> descriptor configurable parameters which are parsed from vendor
+>> specific provisioning file and then passed via configfs node at
+>> runtime to provision ufs device.
+>> CONFIG_CONFIGFS_FS needs to be enabled for using this feature.
 >>
-> Hi Bart,
-> I'm unsure about the compatibility aspect for binary attributes that
-> essentially represent direct windows into hardware. I suppose this
-> comes down to who this interface is most useful to. Hypothetically
-> lets say a future revision of UFS adds fields to the configuration
-> descriptor, but is otherwise backwards compatible. If this interface
-> is primarily for OEMs initializing their devices in the factory, then
-> I'd argue they'd want the most direct window to the configuration
-> descriptor. These folks probably just have a configuration they want
-> to plunk into the hardware, and would prefer being able to write all
-> fields over having some sort of compatibility restriction. If, on the
-> other hand, this is used by long-running scripts that stick around for
-> years without modification, then yes, it seems like it would be more
-> important to stay compatible, and have smarts in the kernel to make
-> writes of old descriptors work in new devices.
+>> Usage:
+>> 1) To read current configuration descriptor :
+>>     cat /config/XXXX.ufshc/ufs_provision
+>> 2) To provision ufs device:
+>>     echo <config_desc_buf> > /config/XXXX.ufshc/ufs_provision
+>>
+>> Signed-off-by: Sayali Lokhande <sayalil@codeaurora.org>
+>> ---
+>>   Documentation/ABI/testing/configfs-driver-ufs |  18 +++
+>>   drivers/scsi/ufs/Kconfig                      |  10 ++
+>>   drivers/scsi/ufs/Makefile                     |   1 +
+>>   drivers/scsi/ufs/ufs-configfs.c               | 162 ++++++++++++++++++++++++++
+>>   drivers/scsi/ufs/ufshcd.c                     |   2 +
+>>   drivers/scsi/ufs/ufshcd.h                     |  19 +++
+>>   6 files changed, 212 insertions(+)
+>>   create mode 100644 Documentation/ABI/testing/configfs-driver-ufs
+>>   create mode 100644 drivers/scsi/ufs/ufs-configfs.c
+>>
+>> diff --git a/Documentation/ABI/testing/configfs-driver-ufs b/Documentation/ABI/testing/configfs-driver-ufs
+>> new file mode 100644
+>> index 0000000..eeee499c
+>> --- /dev/null
+>> +++ b/Documentation/ABI/testing/configfs-driver-ufs
+>> @@ -0,0 +1,18 @@
+>> +What:		/config/ufshcd/ufs_provision
+>> +Date:		Jun 2018
+>> +KernelVersion:	4.14
+>> +Description:
+>> +		This file shows the current ufs configuration descriptor set in device.
+>> +		This can be used to provision ufs device if bConfigDescrLock is 0.
+>> +		For more details, refer 14.1.6.3 Configuration Descriptor and
+>> +		Table 14-12 - Unit Descriptor configurable parameters from specs for
+>> +		description of each configuration descriptor parameter.
+>> +		Configuration descriptor buffer needs to be passed in space separated
+>> +		format specificied as below:
+>> +		echo <bLength> <bDescriptorIDN> <bConfDescContinue> <bBootEnable>
+>> +		<bDescrAccessEn> <bInitPowerMode> <bHighPriorityLUN>
+>> +		<bSecureRemovalType> <bInitActiveICCLevel> <wPeriodicRTCUpdate>
+>> +		<0Bh:0Fh_ReservedAs_0> <bLUEnable> <bBootLunID> <bLUWriteProtect>
+>> +		<bMemoryType> <dNumAllocUnits> <bDataReliability> <bLogicalBlockSize>
+>> +		<bProvisioningType> <wContextCapabilities> <0Dh:0Fh_ReservedAs_0>
+>> +		> /config/XXXX.ufshc/ufs_provision
+>> diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
+>> index e27b4d4..34d89c2 100644
+>> --- a/drivers/scsi/ufs/Kconfig
+>> +++ b/drivers/scsi/ufs/Kconfig
+>> @@ -100,3 +100,13 @@ config SCSI_UFS_QCOM
+>>   
+>>   	  Select this if you have UFS controller on QCOM chipset.
+>>   	  If unsure, say N.
+>> +
+>> +config UFS_PROVISION
+>> +	tristate "Runtime UFS Provisioning support"
+>> +	depends on SCSI_UFSHCD_PLATFORM && CONFIGFS_FS
+> Why SCSI_UFSHCD_PLATFORM instead of SCSI_UFSHCD?
+SCSI_UFSHCD_PLATFORM in turn depends on SCSI_UFSHCD hence used it, no 
+specific reason as such.
+I will update it to SCSI_UFSHCD (as provisioning is meant for UFS device 
+and scsi_ufshcd config ensures support for ufs devices).
 >
-> At least for myself, I fall into the category of someone who just
-> needs to plunk a configuration descriptor in once, and would prefer
-> not to have to submit kernel changes if the descriptor evolves
-> slightly. It also seemed a little odd that this patch now spends a
-> bunch of energy converting ASCII into bytes, just to write it without
-> modification into the hardware, and convert back again to ASCII for
-> reads.
->
-> We plan to use a script for provisioning, and could easily handle
-> ASCII or rawbytes:
->
-> # Some bytes, ready to go with the interface today...
-> some_bytes="00 01 02 03"
->
-> # Same bytes, now in binary format
-> bytes_fmt=$(echo " $some_bytes" | sed 's/ /\\x/g')
-> /usr/bin/printf "$bytes_fmt" > /configfs/ufs_provision
->
-> I'm not dead set on binary, since as above I could do it either way,
-> but it seemed worth at least talking through. Let me know what you
-> think.
-> -Evan
-
-I am using ASCII format for reading/writing to config desc as it will be 
-more readable for users and easier/comfortable to compare any value to 
-default spec value(if required).
-So I don't really see any harm in using current ASCII format for 
-provisioning purpose.
--Sayali
+> Also please cc me in future revisions.
+will do.
