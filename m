@@ -1,33 +1,59 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/6] block: Create scsi_sense.h for SCSI and ATAPI
-Date: Tue, 31 Jul 2018 00:53:05 -0700
-Message-ID: <20180731075305.GA16318@infradead.org>
-References: <CAGXu5jJsGWDsZNDJvUUqncSaAcvond_B_J7=BbvVW0X3r6Sxww@mail.gmail.com>
- <aa150272-ffeb-fb8f-7303-0d9502cf9a71@kernel.dk>
- <20180523142545.GA16248@infradead.org>
- <24d36869-e037-042d-cb16-20a81b34eb76@kernel.dk>
- <CAGXu5jJn=1Rz=D8VUwv_VoaGoLtaD=+tcPZxQxntweZoZwFa5Q@mail.gmail.com>
- <f4eb4cd5-8976-3990-69b0-26cca054aa45@kernel.dk>
- <20180524080015.GA2866@infradead.org>
- <CAGXu5j+pRUWgny+h5ToVQXBP8nANjreVhnXjk5TVgy84ufNsRg@mail.gmail.com>
- <20180708202315.GA2239@infradead.org>
- <CAGXu5jKvUydp6nc3EUCyoGWbUUoiiASMFcBfVVOph1uc_oCNSg@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: [PATCH 2/3] scsi: fcoe: drop frames in ELS LOGO error path
+Date: Tue, 31 Jul 2018 15:46:02 +0200
+Message-ID: <20180731134603.20089-3-jthumshirn@suse.de>
+References: <20180731134603.20089-1-jthumshirn@suse.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAGXu5jKvUydp6nc3EUCyoGWbUUoiiASMFcBfVVOph1uc_oCNSg@mail.gmail.com>
+In-Reply-To: <20180731134603.20089-1-jthumshirn@suse.de>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Kees Cook <keescook@chromium.org>
-Cc: Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@kernel.dk>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Tejun Heo <tj@kernel.org>, Borislav Petkov <bp@alien8.de>, "David S. Miller" <davem@davemloft.net>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, linux-block <linux-block@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, ard <ard@kwaak.net>, Johannes Thumshirn <jthumshirn@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Jul 09, 2018 at 08:56:50AM -0700, Kees Cook wrote:
-> > Btw, did you plan to resend the series with this and your changes
-> > applied?
-> 
-> Yeah, I've gotten distracted. I'll try to get to it in the next few days.
-> 
-> Thanks for the reminder!
+Drop the frames in the ELS LOGO error path instead of just returning
+an error.
 
-Another little reminder.  I'd hate to miss it for 4.19.
+This fixes the following kmemleak report:
+unreferenced object 0xffff880064cb1000 (size 424):
+  comm "kworker/0:2", pid 24, jiffies 4294904293 (age 68.504s)
+  hex dump (first 32 bytes):
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+  backtrace:
+    [<(____ptrval____)>] _fc_frame_alloc+0x2c/0x180 [libfc]
+    [<(____ptrval____)>] fc_lport_enter_logo+0x106/0x360 [libfc]
+    [<(____ptrval____)>] fc_fabric_logoff+0x8c/0xc0 [libfc]
+    [<(____ptrval____)>] fcoe_if_destroy+0x79/0x3b0 [fcoe]
+    [<(____ptrval____)>] fcoe_destroy_work+0xd2/0x170 [fcoe]
+    [<(____ptrval____)>] process_one_work+0x7ff/0x1420
+    [<(____ptrval____)>] worker_thread+0x87/0xef0
+    [<(____ptrval____)>] kthread+0x2db/0x390
+    [<(____ptrval____)>] ret_from_fork+0x35/0x40
+    [<(____ptrval____)>] 0xffffffffffffffff
+
+which can be triggered by issuing
+echo eth0 > /sys/bus/fcoe/ctlr_destroy
+
+Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+---
+ drivers/scsi/fcoe/fcoe_ctlr.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
+index ceb35ebbeb8f..ffec695e0bfb 100644
+--- a/drivers/scsi/fcoe/fcoe_ctlr.c
++++ b/drivers/scsi/fcoe/fcoe_ctlr.c
+@@ -754,9 +754,9 @@ int fcoe_ctlr_els_send(struct fcoe_ctlr *fip, struct fc_lport *lport,
+ 	case ELS_LOGO:
+ 		if (fip->mode == FIP_MODE_VN2VN) {
+ 			if (fip->state != FIP_ST_VNMP_UP)
+-				return -EINVAL;
++				goto drop;
+ 			if (ntoh24(fh->fh_d_id) == FC_FID_FLOGI)
+-				return -EINVAL;
++				goto drop;
+ 		} else {
+ 			if (fip->state != FIP_ST_ENABLED)
+ 				return 0;
+-- 
+2.16.4
