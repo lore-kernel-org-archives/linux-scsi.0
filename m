@@ -1,64 +1,328 @@
-From: Mike Christie <mchristi@redhat.com>
-Subject: Re: [PATCH 18/26] target/iscsi: Allocate session IDs from an IDA
-Date: Tue, 31 Jul 2018 13:55:26 -0500
-Message-ID: <5B60B09E.3040402@redhat.com>
-References: <20180621212835.5636-1-willy@infradead.org>
- <20180621212835.5636-19-willy@infradead.org> <5B59FB56.9090901@redhat.com>
- <5B5A014D.9060901@redhat.com> <20180727193814.GB3825@bombadil.infradead.org>
- <5B5B892D.1000305@redhat.com> <yq1wotcw49i.fsf@oracle.com>
- <20180731181510.GA16794@bombadil.infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+From: Kees Cook <keescook@chromium.org>
+Subject: [PATCH v2 1/9] ide-cd: Drop unused sense buffers
+Date: Tue, 31 Jul 2018 12:51:46 -0700
+Message-ID: <20180731195155.46664-2-keescook@chromium.org>
+References: <20180731195155.46664-1-keescook@chromium.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180731181510.GA16794@bombadil.infradead.org>
+In-Reply-To: <20180731195155.46664-1-keescook@chromium.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Matthew Wilcox <willy@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-kernel@vger.kernel.org, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Bart Van Assche <bart.vanassche@wdc.com>, Hannes Reinecke <hare@suse.com>, Kees Cook <keescook@chromium.org>, Varun Prakash <varun@chelsio.com>, Sagi Grimberg <sagi@grimberg.me>, Philippe Ombredanne <pombredanne@nexb.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Kate Stewart <kstewart@linuxfoundation.org>, Thomas Gleixner <tglx@linutronix.de>, "David S. Miller" <davem@davemloft.net>, Denys Vlasenko <dvlasenk@redhat.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Kees Cook <keescook@chromium.org>, Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Tejun Heo <tj@kernel.org>, Borislav Petkov <bp@alien8.de>, "David S. Miller" <davem@davemloft.net>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Thomas Gleixner <tglx@linutronix.de>, Philippe Ombredanne <pombredanne@nexb.com>, Stephen Boyd <sboyd@codeaurora.org>, Cyrille Pitchen <cyrille.pitchen@free-electrons.com>, Juergen Gross <jgross@suse.com>, Viresh Kumar <viresh.kumar@linaro.org>, =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= <u.kleine-koenig@pen>
 List-Id: linux-scsi@vger.kernel.org
 
-On 07/31/2018 01:15 PM, Matthew Wilcox wrote:
-> On Mon, Jul 30, 2018 at 10:03:21PM -0400, Martin K. Petersen wrote:
->>
->> Mike,
->>
->>>> How about I take it through my tree to minimise the amount of rebasing
->>>> I'll need to do?  I'm already dependent on the nvdimm tree and I'd rather
->>>> not depend on the scsi tree as well.  I'll queue it up in front of my
->>>> IDA change to maximise its backportability.
->>>
->>> Ccing Martin, because he has been handling target patches.
->>
->> That's fine with me.
->>
->> Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
-> 
-> Thanks, Martin.  Mike, can I have your Signed-off-by: on the original patch?
+This drops unused sense buffers from:
 
-Yes,
+	cdrom_eject()
+	cdrom_read_capacity()
+	cdrom_read_tocentry()
+	ide_cd_lockdoor()
+	ide_cd_read_toc()
 
-Signed-off-by: Mike Christie <mchristi@redhat.com>
+Signed-off-by: Kees Cook <keescook@chromium.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/ide/ide-cd.c       | 36 +++++++++++++++---------------------
+ drivers/ide/ide-cd.h       |  2 +-
+ drivers/ide/ide-cd_ioctl.c | 34 ++++++++++++----------------------
+ 3 files changed, 28 insertions(+), 44 deletions(-)
 
-
-> What Fixes: line should this have?  As far as I can tell, the bug is present
-> all the way back to its introduction, so:
-> 
-> Fixes: e48354ce078c ("iscsi-target: Add iSCSI fabric support for target v4.1")
-> 
-> yes?
-
-The session_index bug was in that patch, but I think it correctly kfreed
-the session in __iscsi_target_login_thread.
-
-
-I think it was this one that added the early kfree bug:
-
-commit 0957627a99604f379d35831897a2aa15272528fc
-Author: Nicholas Bellinger <nab@linux-iscsi.org>
-Date:   Fri Nov 4 11:36:38 2011 -0700
-
-    iscsi-target: Fix sess allocation leak in iscsi_login_zero_tsih_s1
-
-Dan's tools probably just did not catch the iscsi_login_zero_tsih_s1 ->
-iscsi_login_set_conn_values call that sets conn->sess then later
-kfree(conn->sess) call in the error handling in __iscsi_target_login_thread.
+diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+index 5a8e8e3c22cd..1d5b35312e33 100644
+--- a/drivers/ide/ide-cd.c
++++ b/drivers/ide/ide-cd.c
+@@ -890,8 +890,7 @@ int cdrom_check_status(ide_drive_t *drive, struct request_sense *sense)
+ }
+ 
+ static int cdrom_read_capacity(ide_drive_t *drive, unsigned long *capacity,
+-			       unsigned long *sectors_per_frame,
+-			       struct request_sense *sense)
++			       unsigned long *sectors_per_frame)
+ {
+ 	struct {
+ 		__be32 lba;
+@@ -908,7 +907,7 @@ static int cdrom_read_capacity(ide_drive_t *drive, unsigned long *capacity,
+ 	memset(cmd, 0, BLK_MAX_CDB);
+ 	cmd[0] = GPCMD_READ_CDVD_CAPACITY;
+ 
+-	stat = ide_cd_queue_pc(drive, cmd, 0, &capbuf, &len, sense, 0,
++	stat = ide_cd_queue_pc(drive, cmd, 0, &capbuf, &len, NULL, 0,
+ 			       RQF_QUIET);
+ 	if (stat)
+ 		return stat;
+@@ -944,8 +943,7 @@ static int cdrom_read_capacity(ide_drive_t *drive, unsigned long *capacity,
+ }
+ 
+ static int cdrom_read_tocentry(ide_drive_t *drive, int trackno, int msf_flag,
+-				int format, char *buf, int buflen,
+-				struct request_sense *sense)
++				int format, char *buf, int buflen)
+ {
+ 	unsigned char cmd[BLK_MAX_CDB];
+ 
+@@ -962,11 +960,11 @@ static int cdrom_read_tocentry(ide_drive_t *drive, int trackno, int msf_flag,
+ 	if (msf_flag)
+ 		cmd[1] = 2;
+ 
+-	return ide_cd_queue_pc(drive, cmd, 0, buf, &buflen, sense, 0, RQF_QUIET);
++	return ide_cd_queue_pc(drive, cmd, 0, buf, &buflen, NULL, 0, RQF_QUIET);
+ }
+ 
+ /* Try to read the entire TOC for the disk into our internal buffer. */
+-int ide_cd_read_toc(ide_drive_t *drive, struct request_sense *sense)
++int ide_cd_read_toc(ide_drive_t *drive)
+ {
+ 	int stat, ntracks, i;
+ 	struct cdrom_info *info = drive->driver_data;
+@@ -996,14 +994,13 @@ int ide_cd_read_toc(ide_drive_t *drive, struct request_sense *sense)
+ 	 * Check to see if the existing data is still valid. If it is,
+ 	 * just return.
+ 	 */
+-	(void) cdrom_check_status(drive, sense);
++	(void) cdrom_check_status(drive, NULL);
+ 
+ 	if (drive->atapi_flags & IDE_AFLAG_TOC_VALID)
+ 		return 0;
+ 
+ 	/* try to get the total cdrom capacity and sector size */
+-	stat = cdrom_read_capacity(drive, &toc->capacity, &sectors_per_frame,
+-				   sense);
++	stat = cdrom_read_capacity(drive, &toc->capacity, &sectors_per_frame);
+ 	if (stat)
+ 		toc->capacity = 0x1fffff;
+ 
+@@ -1016,7 +1013,7 @@ int ide_cd_read_toc(ide_drive_t *drive, struct request_sense *sense)
+ 
+ 	/* first read just the header, so we know how long the TOC is */
+ 	stat = cdrom_read_tocentry(drive, 0, 1, 0, (char *) &toc->hdr,
+-				    sizeof(struct atapi_toc_header), sense);
++				    sizeof(struct atapi_toc_header));
+ 	if (stat)
+ 		return stat;
+ 
+@@ -1036,7 +1033,7 @@ int ide_cd_read_toc(ide_drive_t *drive, struct request_sense *sense)
+ 				  (char *)&toc->hdr,
+ 				   sizeof(struct atapi_toc_header) +
+ 				   (ntracks + 1) *
+-				   sizeof(struct atapi_toc_entry), sense);
++				   sizeof(struct atapi_toc_entry));
+ 
+ 	if (stat && toc->hdr.first_track > 1) {
+ 		/*
+@@ -1056,8 +1053,7 @@ int ide_cd_read_toc(ide_drive_t *drive, struct request_sense *sense)
+ 					   (char *)&toc->hdr,
+ 					   sizeof(struct atapi_toc_header) +
+ 					   (ntracks + 1) *
+-					   sizeof(struct atapi_toc_entry),
+-					   sense);
++					   sizeof(struct atapi_toc_entry));
+ 		if (stat)
+ 			return stat;
+ 
+@@ -1094,7 +1090,7 @@ int ide_cd_read_toc(ide_drive_t *drive, struct request_sense *sense)
+ 	if (toc->hdr.first_track != CDROM_LEADOUT) {
+ 		/* read the multisession information */
+ 		stat = cdrom_read_tocentry(drive, 0, 0, 1, (char *)&ms_tmp,
+-					   sizeof(ms_tmp), sense);
++					   sizeof(ms_tmp));
+ 		if (stat)
+ 			return stat;
+ 
+@@ -1108,7 +1104,7 @@ int ide_cd_read_toc(ide_drive_t *drive, struct request_sense *sense)
+ 	if (drive->atapi_flags & IDE_AFLAG_TOCADDR_AS_BCD) {
+ 		/* re-read multisession information using MSF format */
+ 		stat = cdrom_read_tocentry(drive, 0, 1, 1, (char *)&ms_tmp,
+-					   sizeof(ms_tmp), sense);
++					   sizeof(ms_tmp));
+ 		if (stat)
+ 			return stat;
+ 
+@@ -1412,7 +1408,7 @@ static sector_t ide_cdrom_capacity(ide_drive_t *drive)
+ {
+ 	unsigned long capacity, sectors_per_frame;
+ 
+-	if (cdrom_read_capacity(drive, &capacity, &sectors_per_frame, NULL))
++	if (cdrom_read_capacity(drive, &capacity, &sectors_per_frame))
+ 		return 0;
+ 
+ 	return capacity * sectors_per_frame;
+@@ -1723,9 +1719,8 @@ static unsigned int idecd_check_events(struct gendisk *disk,
+ static int idecd_revalidate_disk(struct gendisk *disk)
+ {
+ 	struct cdrom_info *info = ide_drv_g(disk, cdrom_info);
+-	struct request_sense sense;
+ 
+-	ide_cd_read_toc(info->drive, &sense);
++	ide_cd_read_toc(info->drive);
+ 
+ 	return  0;
+ }
+@@ -1749,7 +1744,6 @@ static int ide_cd_probe(ide_drive_t *drive)
+ {
+ 	struct cdrom_info *info;
+ 	struct gendisk *g;
+-	struct request_sense sense;
+ 
+ 	ide_debug_log(IDE_DBG_PROBE, "driver_req: %s, media: 0x%x",
+ 				     drive->driver_req, drive->media);
+@@ -1798,7 +1792,7 @@ static int ide_cd_probe(ide_drive_t *drive)
+ 		goto failed;
+ 	}
+ 
+-	ide_cd_read_toc(drive, &sense);
++	ide_cd_read_toc(drive);
+ 	g->fops = &idecd_ops;
+ 	g->flags |= GENHD_FL_REMOVABLE | GENHD_FL_BLOCK_EVENTS_ON_EXCL_WRITE;
+ 	device_add_disk(&drive->gendev, g);
+diff --git a/drivers/ide/ide-cd.h b/drivers/ide/ide-cd.h
+index 04f0f310a856..fc162fbb6629 100644
+--- a/drivers/ide/ide-cd.h
++++ b/drivers/ide/ide-cd.h
+@@ -99,7 +99,7 @@ void ide_cd_log_error(const char *, struct request *, struct request_sense *);
+ /* ide-cd.c functions used by ide-cd_ioctl.c */
+ int ide_cd_queue_pc(ide_drive_t *, const unsigned char *, int, void *,
+ 		    unsigned *, struct request_sense *, int, req_flags_t);
+-int ide_cd_read_toc(ide_drive_t *, struct request_sense *);
++int ide_cd_read_toc(ide_drive_t *);
+ int ide_cdrom_get_capabilities(ide_drive_t *, u8 *);
+ void ide_cdrom_update_speed(ide_drive_t *, u8 *);
+ int cdrom_check_status(ide_drive_t *, struct request_sense *);
+diff --git a/drivers/ide/ide-cd_ioctl.c b/drivers/ide/ide-cd_ioctl.c
+index 2acca12b9c94..c709f4eed0e9 100644
+--- a/drivers/ide/ide-cd_ioctl.c
++++ b/drivers/ide/ide-cd_ioctl.c
+@@ -105,8 +105,7 @@ unsigned int ide_cdrom_check_events_real(struct cdrom_device_info *cdi,
+ /* Eject the disk if EJECTFLAG is 0.
+    If EJECTFLAG is 1, try to reload the disk. */
+ static
+-int cdrom_eject(ide_drive_t *drive, int ejectflag,
+-		struct request_sense *sense)
++int cdrom_eject(ide_drive_t *drive, int ejectflag)
+ {
+ 	struct cdrom_info *cd = drive->driver_data;
+ 	struct cdrom_device_info *cdi = &cd->devinfo;
+@@ -129,20 +128,16 @@ int cdrom_eject(ide_drive_t *drive, int ejectflag,
+ 	cmd[0] = GPCMD_START_STOP_UNIT;
+ 	cmd[4] = loej | (ejectflag != 0);
+ 
+-	return ide_cd_queue_pc(drive, cmd, 0, NULL, NULL, sense, 0, 0);
++	return ide_cd_queue_pc(drive, cmd, 0, NULL, NULL, NULL, 0, 0);
+ }
+ 
+ /* Lock the door if LOCKFLAG is nonzero; unlock it otherwise. */
+ static
+-int ide_cd_lockdoor(ide_drive_t *drive, int lockflag,
+-		    struct request_sense *sense)
++int ide_cd_lockdoor(ide_drive_t *drive, int lockflag)
+ {
+-	struct request_sense my_sense;
++	struct request_sense my_sense, *sense = &my_sense;
+ 	int stat;
+ 
+-	if (sense == NULL)
+-		sense = &my_sense;
+-
+ 	/* If the drive cannot lock the door, just pretend. */
+ 	if ((drive->dev_flags & IDE_DFLAG_DOORLOCKING) == 0) {
+ 		stat = 0;
+@@ -186,23 +181,22 @@ int ide_cd_lockdoor(ide_drive_t *drive, int lockflag,
+ int ide_cdrom_tray_move(struct cdrom_device_info *cdi, int position)
+ {
+ 	ide_drive_t *drive = cdi->handle;
+-	struct request_sense sense;
+ 
+ 	if (position) {
+-		int stat = ide_cd_lockdoor(drive, 0, &sense);
++		int stat = ide_cd_lockdoor(drive, 0);
+ 
+ 		if (stat)
+ 			return stat;
+ 	}
+ 
+-	return cdrom_eject(drive, !position, &sense);
++	return cdrom_eject(drive, !position);
+ }
+ 
+ int ide_cdrom_lock_door(struct cdrom_device_info *cdi, int lock)
+ {
+ 	ide_drive_t *drive = cdi->handle;
+ 
+-	return ide_cd_lockdoor(drive, lock, NULL);
++	return ide_cd_lockdoor(drive, lock);
+ }
+ 
+ /*
+@@ -213,7 +207,6 @@ int ide_cdrom_select_speed(struct cdrom_device_info *cdi, int speed)
+ {
+ 	ide_drive_t *drive = cdi->handle;
+ 	struct cdrom_info *cd = drive->driver_data;
+-	struct request_sense sense;
+ 	u8 buf[ATAPI_CAPABILITIES_PAGE_SIZE];
+ 	int stat;
+ 	unsigned char cmd[BLK_MAX_CDB];
+@@ -236,7 +229,7 @@ int ide_cdrom_select_speed(struct cdrom_device_info *cdi, int speed)
+ 		cmd[5] = speed & 0xff;
+ 	}
+ 
+-	stat = ide_cd_queue_pc(drive, cmd, 0, NULL, NULL, &sense, 0, 0);
++	stat = ide_cd_queue_pc(drive, cmd, 0, NULL, NULL, NULL, 0, 0);
+ 
+ 	if (!ide_cdrom_get_capabilities(drive, buf)) {
+ 		ide_cdrom_update_speed(drive, buf);
+@@ -252,11 +245,10 @@ int ide_cdrom_get_last_session(struct cdrom_device_info *cdi,
+ 	struct atapi_toc *toc;
+ 	ide_drive_t *drive = cdi->handle;
+ 	struct cdrom_info *info = drive->driver_data;
+-	struct request_sense sense;
+ 	int ret;
+ 
+ 	if ((drive->atapi_flags & IDE_AFLAG_TOC_VALID) == 0 || !info->toc) {
+-		ret = ide_cd_read_toc(drive, &sense);
++		ret = ide_cd_read_toc(drive);
+ 		if (ret)
+ 			return ret;
+ 	}
+@@ -300,7 +292,6 @@ int ide_cdrom_reset(struct cdrom_device_info *cdi)
+ {
+ 	ide_drive_t *drive = cdi->handle;
+ 	struct cdrom_info *cd = drive->driver_data;
+-	struct request_sense sense;
+ 	struct request *rq;
+ 	int ret;
+ 
+@@ -315,7 +306,7 @@ int ide_cdrom_reset(struct cdrom_device_info *cdi)
+ 	 * lock it again.
+ 	 */
+ 	if (drive->atapi_flags & IDE_AFLAG_DOOR_LOCKED)
+-		(void)ide_cd_lockdoor(drive, 1, &sense);
++		(void)ide_cd_lockdoor(drive, 1);
+ 
+ 	return ret;
+ }
+@@ -355,7 +346,6 @@ static int ide_cd_fake_play_trkind(ide_drive_t *drive, void *arg)
+ 	struct atapi_toc_entry *first_toc, *last_toc;
+ 	unsigned long lba_start, lba_end;
+ 	int stat;
+-	struct request_sense sense;
+ 	unsigned char cmd[BLK_MAX_CDB];
+ 
+ 	stat = ide_cd_get_toc_entry(drive, ti->cdti_trk0, &first_toc);
+@@ -380,7 +370,7 @@ static int ide_cd_fake_play_trkind(ide_drive_t *drive, void *arg)
+ 	lba_to_msf(lba_start,   &cmd[3], &cmd[4], &cmd[5]);
+ 	lba_to_msf(lba_end - 1, &cmd[6], &cmd[7], &cmd[8]);
+ 
+-	return ide_cd_queue_pc(drive, cmd, 0, NULL, NULL, &sense, 0, 0);
++	return ide_cd_queue_pc(drive, cmd, 0, NULL, NULL, NULL, 0, 0);
+ }
+ 
+ static int ide_cd_read_tochdr(ide_drive_t *drive, void *arg)
+@@ -391,7 +381,7 @@ static int ide_cd_read_tochdr(ide_drive_t *drive, void *arg)
+ 	int stat;
+ 
+ 	/* Make sure our saved TOC is valid. */
+-	stat = ide_cd_read_toc(drive, NULL);
++	stat = ide_cd_read_toc(drive);
+ 	if (stat)
+ 		return stat;
+ 
+-- 
+2.17.1
