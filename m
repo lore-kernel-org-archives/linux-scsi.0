@@ -1,42 +1,27 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: [PATCH 1/3] fcoe: fix use-after-free in fcoe_ctlr_els_send
-Date: Tue, 31 Jul 2018 15:46:01 +0200
-Message-ID: <20180731134603.20089-2-jthumshirn@suse.de>
-References: <20180731134603.20089-1-jthumshirn@suse.de>
+Subject: [PATCH 0/3] scsi: fcoe: memleak fixes
+Date: Tue, 31 Jul 2018 15:46:00 +0200
+Message-ID: <20180731134603.20089-1-jthumshirn@suse.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180731134603.20089-1-jthumshirn@suse.de>
 Sender: linux-kernel-owner@vger.kernel.org
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, ard <ard@kwaak.net>, Johannes Thumshirn <jthumshirn@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 
-KASAN reports a use-after-free in fcoe_ctlr_els_send() when we're
-sending a LOGO and have FIP debugging enabled. This is because we're
-first freeing the skb and then printing the frame's DID. But the DID
-is a member of the FC frame header which in turn is the skb's payload.
+Ard reported a memory leak in FCoE at [1] and this patch set contains
+the fix for this leak, a second leak I discovered while hunting the
+first leak and a use-after-free in FCoE's debugging.
 
-Exchange the debug print and kfree_skb() calls so we're not touching
-the freed data.
+[1] https://marc.info/?l=linux-scsi&m=153261165228133&w=2
 
-Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
----
- drivers/scsi/fcoe/fcoe_ctlr.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Johannes Thumshirn (3):
+  fcoe: fix use-after-free in fcoe_ctlr_els_send
+  scsi: fcoe: drop frames in ELS LOGO error path
+  scsi: fcoe: clear FC_RP_STARTED flags when receiving a LOGO
 
-diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
-index ea23c8dffc25..ceb35ebbeb8f 100644
---- a/drivers/scsi/fcoe/fcoe_ctlr.c
-+++ b/drivers/scsi/fcoe/fcoe_ctlr.c
-@@ -799,9 +799,9 @@ int fcoe_ctlr_els_send(struct fcoe_ctlr *fip, struct fc_lport *lport,
- 	fip->send(fip, skb);
- 	return -EINPROGRESS;
- drop:
--	kfree_skb(skb);
- 	LIBFCOE_FIP_DBG(fip, "drop els_send op %u d_id %x\n",
- 			op, ntoh24(fh->fh_d_id));
-+	kfree_skb(skb);
- 	return -EINVAL;
- }
- EXPORT_SYMBOL(fcoe_ctlr_els_send);
+ drivers/scsi/fcoe/fcoe_ctlr.c | 6 +++---
+ drivers/scsi/libfc/fc_rport.c | 1 +
+ 2 files changed, 4 insertions(+), 3 deletions(-)
+
 -- 
 2.16.4
