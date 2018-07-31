@@ -1,38 +1,90 @@
 From: Kees Cook <keescook@chromium.org>
-Subject: Re: [PATCH 3/6] block: Create scsi_sense.h for SCSI and ATAPI
-Date: Tue, 31 Jul 2018 12:52:29 -0700
-Message-ID: <CAGXu5jKnGgAV9vC-mn=jQ+PZXaE_pqc5_6=O3XcSwDagm_3ZmA@mail.gmail.com>
-References: <CAGXu5jJsGWDsZNDJvUUqncSaAcvond_B_J7=BbvVW0X3r6Sxww@mail.gmail.com>
- <aa150272-ffeb-fb8f-7303-0d9502cf9a71@kernel.dk> <20180523142545.GA16248@infradead.org>
- <24d36869-e037-042d-cb16-20a81b34eb76@kernel.dk> <CAGXu5jJn=1Rz=D8VUwv_VoaGoLtaD=+tcPZxQxntweZoZwFa5Q@mail.gmail.com>
- <f4eb4cd5-8976-3990-69b0-26cca054aa45@kernel.dk> <20180524080015.GA2866@infradead.org>
- <CAGXu5j+pRUWgny+h5ToVQXBP8nANjreVhnXjk5TVgy84ufNsRg@mail.gmail.com>
- <20180708202315.GA2239@infradead.org> <CAGXu5jKvUydp6nc3EUCyoGWbUUoiiASMFcBfVVOph1uc_oCNSg@mail.gmail.com>
- <20180731075305.GA16318@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Subject: [PATCH v2 8/9] libata-scsi: Move sense buffers onto stack
+Date: Tue, 31 Jul 2018 12:51:53 -0700
+Message-ID: <20180731195155.46664-9-keescook@chromium.org>
+References: <20180731195155.46664-1-keescook@chromium.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180731075305.GA16318@infradead.org>
+In-Reply-To: <20180731195155.46664-1-keescook@chromium.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Jens Axboe <axboe@kernel.dk>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Tejun Heo <tj@kernel.org>, Borislav Petkov <bp@alien8.de>, "David S. Miller" <davem@davemloft.net>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, linux-block <linux-block@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Kees Cook <keescook@chromium.org>, Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Tejun Heo <tj@kernel.org>, Borislav Petkov <bp@alien8.de>, "David S. Miller" <davem@davemloft.net>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Thomas Gleixner <tglx@linutronix.de>, Philippe Ombredanne <pombredanne@nexb.com>, Stephen Boyd <sboyd@codeaurora.org>, Cyrille Pitchen <cyrille.pitchen@free-electrons.com>, Juergen Gross <jgross@suse.com>, Viresh Kumar <viresh.kumar@linaro.org>, =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= <u.kleine-koenig@pen>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Jul 31, 2018 at 12:53 AM, Christoph Hellwig <hch@infradead.org> wrote:
-> On Mon, Jul 09, 2018 at 08:56:50AM -0700, Kees Cook wrote:
->> > Btw, did you plan to resend the series with this and your changes
->> > applied?
->>
->> Yeah, I've gotten distracted. I'll try to get to it in the next few days.
->>
->> Thanks for the reminder!
->
-> Another little reminder.  I'd hate to miss it for 4.19.
+To support future compile-time sizeof() checks that will be able to
+validate the length of sense buffers, this removes the only dynamically
+allocated sense buffers in the tree by putting the 96 byte sense buffers
+on the stack.
 
-Okay, finally sent. Thanks for the reminders. :)
+Signed-off-by: Kees Cook <keescook@chromium.org>
+---
+ drivers/ata/libata-scsi.c | 18 ++++++------------
+ 1 file changed, 6 insertions(+), 12 deletions(-)
 
--Kees
-
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 89a9d4a2efc8..3a43d3a1ce2d 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -597,8 +597,9 @@ static int ata_get_identity(struct ata_port *ap, struct scsi_device *sdev,
+ int ata_cmd_ioctl(struct scsi_device *scsidev, void __user *arg)
+ {
+ 	int rc = 0;
++	u8 sensebuf[SCSI_SENSE_BUFFERSIZE];
+ 	u8 scsi_cmd[MAX_COMMAND_SIZE];
+-	u8 args[4], *argbuf = NULL, *sensebuf = NULL;
++	u8 args[4], *argbuf = NULL;
+ 	int argsize = 0;
+ 	enum dma_data_direction data_dir;
+ 	struct scsi_sense_hdr sshdr;
+@@ -610,10 +611,7 @@ int ata_cmd_ioctl(struct scsi_device *scsidev, void __user *arg)
+ 	if (copy_from_user(args, arg, sizeof(args)))
+ 		return -EFAULT;
+ 
+-	sensebuf = kzalloc(SCSI_SENSE_BUFFERSIZE, GFP_NOIO);
+-	if (!sensebuf)
+-		return -ENOMEM;
+-
++	memset(sensebuf, 0, sizeof(sensebuf));
+ 	memset(scsi_cmd, 0, sizeof(scsi_cmd));
+ 
+ 	if (args[3]) {
+@@ -685,7 +683,6 @@ int ata_cmd_ioctl(struct scsi_device *scsidev, void __user *arg)
+ 	 && copy_to_user(arg + sizeof(args), argbuf, argsize))
+ 		rc = -EFAULT;
+ error:
+-	kfree(sensebuf);
+ 	kfree(argbuf);
+ 	return rc;
+ }
+@@ -704,8 +701,9 @@ int ata_cmd_ioctl(struct scsi_device *scsidev, void __user *arg)
+ int ata_task_ioctl(struct scsi_device *scsidev, void __user *arg)
+ {
+ 	int rc = 0;
++	u8 sensebuf[SCSI_SENSE_BUFFERSIZE];
+ 	u8 scsi_cmd[MAX_COMMAND_SIZE];
+-	u8 args[7], *sensebuf = NULL;
++	u8 args[7];
+ 	struct scsi_sense_hdr sshdr;
+ 	int cmd_result;
+ 
+@@ -715,10 +713,7 @@ int ata_task_ioctl(struct scsi_device *scsidev, void __user *arg)
+ 	if (copy_from_user(args, arg, sizeof(args)))
+ 		return -EFAULT;
+ 
+-	sensebuf = kzalloc(SCSI_SENSE_BUFFERSIZE, GFP_NOIO);
+-	if (!sensebuf)
+-		return -ENOMEM;
+-
++	memset(sensebuf, 0, sizeof(sensebuf));
+ 	memset(scsi_cmd, 0, sizeof(scsi_cmd));
+ 	scsi_cmd[0]  = ATA_16;
+ 	scsi_cmd[1]  = (3 << 1); /* Non-data */
+@@ -769,7 +764,6 @@ int ata_task_ioctl(struct scsi_device *scsidev, void __user *arg)
+ 	}
+ 
+  error:
+-	kfree(sensebuf);
+ 	return rc;
+ }
+ 
 -- 
-Kees Cook
-Pixel Security
+2.17.1
