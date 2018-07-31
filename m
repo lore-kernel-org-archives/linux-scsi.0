@@ -1,35 +1,29 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 18/26] target/iscsi: Allocate session IDs from an IDA
-Date: Mon, 30 Jul 2018 22:03:21 -0400
-Message-ID: <yq1wotcw49i.fsf@oracle.com>
-References: <20180621212835.5636-1-willy@infradead.org>
-        <20180621212835.5636-19-willy@infradead.org>
-        <5B59FB56.9090901@redhat.com> <5B5A014D.9060901@redhat.com>
-        <20180727193814.GB3825@bombadil.infradead.org>
-        <5B5B892D.1000305@redhat.com>
+Subject: Re: [PATCH] scsi: 3ware: fix return 0 on the error path of probe
+Date: Mon, 30 Jul 2018 22:08:26 -0400
+Message-ID: <yq1o9eow411.fsf@oracle.com>
+References: <20180727135157.13051-1-vasilyev@ispras.ru>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <5B5B892D.1000305@redhat.com> (Mike Christie's message of "Fri,
-        27 Jul 2018 16:05:49 -0500")
+In-Reply-To: <20180727135157.13051-1-vasilyev@ispras.ru> (Anton Vasilyev's
+        message of "Fri, 27 Jul 2018 16:51:57 +0300")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Mike Christie <mchristi@redhat.com>
-Cc: Matthew Wilcox <willy@infradead.org>, linux-kernel@vger.kernel.org, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Bart Van Assche <bart.vanassche@wdc.com>, Hannes Reinecke <hare@suse.com>, Kees Cook <keescook@chromium.org>, Varun Prakash <varun@chelsio.com>, Sagi Grimberg <sagi@grimberg.me>, Philippe Ombredanne <pombredanne@nexb.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Kate Stewart <kstewart@linuxfoundation.org>, Thomas Gleixner <tglx@linutronix.de>, "David S. Miller" <davem@davemloft.net>, Denys Vlasenko <dvlasenk@redhat.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>
+To: Anton Vasilyev <vasilyev@ispras.ru>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Adam Radford <aradford@gmail.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Mike,
+Anton,
 
->> How about I take it through my tree to minimise the amount of rebasing
->> I'll need to do?  I'm already dependent on the nvdimm tree and I'd rather
->> not depend on the scsi tree as well.  I'll queue it up in front of my
->> IDA change to maximise its backportability.
->
-> Ccing Martin, because he has been handling target patches.
+> tw_probe() returns 0 in case of fail of tw_initialize_device_extension(),
+> pci_resource_start() or tw_reset_sequence() and releases resources.
+> twl_probe() returns 0 in case of fail of twl_initialize_device_extension(),
+> pci_iomap() and twl_reset_sequence().
+> twa_probe() returns 0 in case of fail of tw_initialize_device_extension(),
+> ioremap() and twa_reset_sequence().
 
-That's fine with me.
-
-Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
+Applied to 4.19/scsi-queue, thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
