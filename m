@@ -1,52 +1,33 @@
-From: Sayali Lokhande <sayalil@codeaurora.org>
-Subject: Re: [PATCH V5 2/2] scsi: ufs: Add configfs support for ufs
- provisioning
-Date: Tue, 31 Jul 2018 10:48:25 +0530
-Message-ID: <cd621e88-99c6-b2a0-8ab9-84761fb0a1f9@codeaurora.org>
-References: <1530858040-13971-1-git-send-email-sayalil@codeaurora.org>
- <1530858040-13971-3-git-send-email-sayalil@codeaurora.org>
- <CAE=gft5U1-Jo-GvTF7sNAV3Q565AmuUrHpmBdxUL+UwkKxesqA@mail.gmail.com>
- <0dce9e9c-4f93-9857-72ee-f65ff195c41a@codeaurora.org>
- <CAE=gft6_=SQjgv7_kHXKJKa8_45NKKFwwE7UaXsijPpMd35LOg@mail.gmail.com>
- <4cb931e199599314829f5ff750797c88fc123f1f.camel@wdc.com>
- <CAE=gft6zm2mw3rnNuktDe0NWs-NM1CFQw1BUeGhaBi3eoEDXBg@mail.gmail.com>
- <8e6af8ed-1ec0-f10e-69b2-08281b638a4b@codeaurora.org>
- <CAE=gft4S9_H-PgpUHVrmjq4uah8pGKH+4A9xph+L=yButpqEpA@mail.gmail.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 3/6] block: Create scsi_sense.h for SCSI and ATAPI
+Date: Tue, 31 Jul 2018 00:53:05 -0700
+Message-ID: <20180731075305.GA16318@infradead.org>
+References: <CAGXu5jJsGWDsZNDJvUUqncSaAcvond_B_J7=BbvVW0X3r6Sxww@mail.gmail.com>
+ <aa150272-ffeb-fb8f-7303-0d9502cf9a71@kernel.dk>
+ <20180523142545.GA16248@infradead.org>
+ <24d36869-e037-042d-cb16-20a81b34eb76@kernel.dk>
+ <CAGXu5jJn=1Rz=D8VUwv_VoaGoLtaD=+tcPZxQxntweZoZwFa5Q@mail.gmail.com>
+ <f4eb4cd5-8976-3990-69b0-26cca054aa45@kernel.dk>
+ <20180524080015.GA2866@infradead.org>
+ <CAGXu5j+pRUWgny+h5ToVQXBP8nANjreVhnXjk5TVgy84ufNsRg@mail.gmail.com>
+ <20180708202315.GA2239@infradead.org>
+ <CAGXu5jKvUydp6nc3EUCyoGWbUUoiiASMFcBfVVOph1uc_oCNSg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAE=gft4S9_H-PgpUHVrmjq4uah8pGKH+4A9xph+L=yButpqEpA@mail.gmail.com>
-Content-Language: en-US
+Content-Disposition: inline
+In-Reply-To: <CAGXu5jKvUydp6nc3EUCyoGWbUUoiiASMFcBfVVOph1uc_oCNSg@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Evan Green <evgreen@chromium.org>
-Cc: Bart.VanAssche@wdc.com, Vinayak Holikatti <vinholikatti@gmail.com>, linux-kernel@vger.kernel.org, asutoshd@codeaurora.org, riteshh@codeaurora.org, cang@codeaurora.org, martin.petersen@oracle.com, subhashj@codeaurora.org, linux-scsi@vger.kernel.org, vivek.gautam@codeaurora.org, Rajendra Nayak <rnayak@codeaurora.org>, jejb@linux.vnet.ibm.com, gregkh@linuxfoundation.org
+To: Kees Cook <keescook@chromium.org>
+Cc: Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@kernel.dk>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Tejun Heo <tj@kernel.org>, Borislav Petkov <bp@alien8.de>, "David S. Miller" <davem@davemloft.net>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, linux-block <linux-block@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
+On Mon, Jul 09, 2018 at 08:56:50AM -0700, Kees Cook wrote:
+> > Btw, did you plan to resend the series with this and your changes
+> > applied?
+> 
+> Yeah, I've gotten distracted. I'll try to get to it in the next few days.
+> 
+> Thanks for the reminder!
 
-
-On 7/31/2018 5:09 AM, Evan Green wrote:
-> On Mon, Jul 30, 2018 at 12:46 AM Sayali Lokhande <sayalil@codeaurora.org> wrote:
->> Hi Evan,
->>
->>
->> On 7/18/2018 1:53 AM, Evan Green wrote:
-> ...
->>> I'm not dead set on binary, since as above I could do it either way,
->>> but it seemed worth at least talking through. Let me know what you
->>> think.
->>> -Evan
->> I am using ASCII format for reading/writing to config desc as it will be
->> more readable for users and easier/comfortable to compare any value to
->> default spec value(if required).
->> So I don't really see any harm in using current ASCII format for
->> provisioning purpose.
-> I'm not convinced by those arguments, but ultimately it's between you
-> and the maintainers. If you're going with the ASCII route, then I have
-> another review comment. Currently in your patch, if kstrtoint fails,
-> you print, but then break out of the loop and try to write the
-> partially parsed descriptor anyway. That "break" should probably be
-> changed to a "goto out".
->
-> -Evan
-Agreed. I will replace that break with "goto out" .
+Another little reminder.  I'd hate to miss it for 4.19.
