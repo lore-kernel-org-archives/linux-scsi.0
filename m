@@ -1,69 +1,38 @@
 From: Kees Cook <keescook@chromium.org>
-Subject: [PATCH v2 7/9] cdrom: Use struct scsi_sense_hdr internally
-Date: Tue, 31 Jul 2018 12:51:52 -0700
-Message-ID: <20180731195155.46664-8-keescook@chromium.org>
-References: <20180731195155.46664-1-keescook@chromium.org>
+Subject: Re: [PATCH 3/6] block: Create scsi_sense.h for SCSI and ATAPI
+Date: Tue, 31 Jul 2018 12:52:29 -0700
+Message-ID: <CAGXu5jKnGgAV9vC-mn=jQ+PZXaE_pqc5_6=O3XcSwDagm_3ZmA@mail.gmail.com>
+References: <CAGXu5jJsGWDsZNDJvUUqncSaAcvond_B_J7=BbvVW0X3r6Sxww@mail.gmail.com>
+ <aa150272-ffeb-fb8f-7303-0d9502cf9a71@kernel.dk> <20180523142545.GA16248@infradead.org>
+ <24d36869-e037-042d-cb16-20a81b34eb76@kernel.dk> <CAGXu5jJn=1Rz=D8VUwv_VoaGoLtaD=+tcPZxQxntweZoZwFa5Q@mail.gmail.com>
+ <f4eb4cd5-8976-3990-69b0-26cca054aa45@kernel.dk> <20180524080015.GA2866@infradead.org>
+ <CAGXu5j+pRUWgny+h5ToVQXBP8nANjreVhnXjk5TVgy84ufNsRg@mail.gmail.com>
+ <20180708202315.GA2239@infradead.org> <CAGXu5jKvUydp6nc3EUCyoGWbUUoiiASMFcBfVVOph1uc_oCNSg@mail.gmail.com>
+ <20180731075305.GA16318@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180731195155.46664-1-keescook@chromium.org>
+In-Reply-To: <20180731075305.GA16318@infradead.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Kees Cook <keescook@chromium.org>, Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Tejun Heo <tj@kernel.org>, Borislav Petkov <bp@alien8.de>, "David S. Miller" <davem@davemloft.net>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Thomas Gleixner <tglx@linutronix.de>, Philippe Ombredanne <pombredanne@nexb.com>, Stephen Boyd <sboyd@codeaurora.org>, Cyrille Pitchen <cyrille.pitchen@free-electrons.com>, Juergen Gross <jgross@suse.com>, Viresh Kumar <viresh.kumar@linaro.org>, =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= <u.kleine-koenig@pen>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Jens Axboe <axboe@kernel.dk>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Tejun Heo <tj@kernel.org>, Borislav Petkov <bp@alien8.de>, "David S. Miller" <davem@davemloft.net>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, linux-block <linux-block@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-This removes more casts of struct request_sense and uses the standard
-struct scsi_sense_hdr instead. This also fixes any possible stale values
-since the prior code did not check the sense length.
+On Tue, Jul 31, 2018 at 12:53 AM, Christoph Hellwig <hch@infradead.org> wrote:
+> On Mon, Jul 09, 2018 at 08:56:50AM -0700, Kees Cook wrote:
+>> > Btw, did you plan to resend the series with this and your changes
+>> > applied?
+>>
+>> Yeah, I've gotten distracted. I'll try to get to it in the next few days.
+>>
+>> Thanks for the reminder!
+>
+> Another little reminder.  I'd hate to miss it for 4.19.
 
-Signed-off-by: Kees Cook <keescook@chromium.org>
----
- drivers/block/Kconfig | 2 +-
- drivers/cdrom/cdrom.c | 8 ++++++--
- 2 files changed, 7 insertions(+), 3 deletions(-)
+Okay, finally sent. Thanks for the reminders. :)
 
-diff --git a/drivers/block/Kconfig b/drivers/block/Kconfig
-index ad9b687a236a..d4913516823f 100644
---- a/drivers/block/Kconfig
-+++ b/drivers/block/Kconfig
-@@ -74,12 +74,12 @@ config AMIGA_Z2RAM
- 
- config CDROM
- 	tristate
-+	select BLK_SCSI_REQUEST
- 
- config GDROM
- 	tristate "SEGA Dreamcast GD-ROM drive"
- 	depends on SH_DREAMCAST
- 	select CDROM
--	select BLK_SCSI_REQUEST # only for the generic cdrom code
- 	help
- 	  A standard SEGA Dreamcast comes with a modified CD ROM drive called a
- 	  "GD-ROM" by SEGA to signify it is capable of reading special disks
-diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
-index 3522d2cae1b6..e547213239dc 100644
---- a/drivers/cdrom/cdrom.c
-+++ b/drivers/cdrom/cdrom.c
-@@ -282,6 +282,7 @@
- #include <linux/blkdev.h>
- #include <linux/times.h>
- #include <linux/uaccess.h>
-+#include <scsi/scsi_common.h>
- #include <scsi/scsi_request.h>
- 
- /* used to tell the module to turn on full debugging messages */
-@@ -2222,9 +2223,12 @@ static int cdrom_read_cdda_bpc(struct cdrom_device_info *cdi, __u8 __user *ubuf,
- 
- 		blk_execute_rq(q, cdi->disk, rq, 0);
- 		if (scsi_req(rq)->result) {
--			struct request_sense *s = req->sense;
-+			struct scsi_sense_hdr sshdr;
-+
- 			ret = -EIO;
--			cdi->last_sense = s->sense_key;
-+			scsi_normalize_sense(req->sense, req->sense_len,
-+					     &sshdr);
-+			cdi->last_sense = sshdr.sense_key;
- 		}
- 
- 		if (blk_rq_unmap_user(bio))
+-Kees
+
 -- 
-2.17.1
+Kees Cook
+Pixel Security
