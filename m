@@ -1,36 +1,57 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2 9/9] scsi: Check sense buffer size at build time
-Date: Wed, 1 Aug 2018 01:25:16 -0700
-Message-ID: <20180801082516.GE26378@infradead.org>
-References: <20180731195155.46664-1-keescook@chromium.org>
- <20180731195155.46664-10-keescook@chromium.org>
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH v2] driver/scsi/pmcraid: Use pci_zalloc_consistent instead
+ of pci_alloc_consistent+memset
+Date: Wed, 1 Aug 2018 16:27:49 +0800
+Message-ID: <eb0a5e82-a67d-4176-12e6-607fb17a4e5d@huawei.com>
+References: <1533107805-7545-1-git-send-email-zhongjiang@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="gbk"; format=flowed
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20180731195155.46664-10-keescook@chromium.org>
+In-Reply-To: <1533107805-7545-1-git-send-email-zhongjiang@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Kees Cook <keescook@chromium.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Tejun Heo <tj@kernel.org>, Borislav Petkov <bp@alien8.de>, "David S. Miller" <davem@davemloft.net>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Thomas Gleixner <tglx@linutronix.de>, Philippe Ombredanne <pombredanne@nexb.com>, Stephen Boyd <sboyd@codeaurora.org>, Cyrille Pitchen <cyrille.pitchen@free-electrons.com>, Juergen Gross <jgross@suse.com>, Viresh Kumar <viresh.kumar@linaro.org>, Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= <u.kleine-koenig@pengutro>
+To: zhong jiang <zhongjiang@huawei.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Jul 31, 2018 at 12:51:54PM -0700, Kees Cook wrote:
-> To avoid introducing problems like those fixed in commit f7068114d45e
-> ("sr: pass down correctly sized SCSI sense buffer"), this creates a macro
-> wrapper for scsi_execute() that verifies the size of the sense buffer
-> similar to what was done for command string sizes in commit 3756f6401c30
-> ("exec: avoid gcc-8 warning for get_task_comm").
-> 
-> Another solution could be to add a length argument to scsi_execute(),
-> but this function already takes a lot of arguments and Jens was not fond
-> of that approach.
-> 
-> Additionally, this moves the SCSI_SENSE_BUFFERSIZE definition into
-> scsi_device.h, and removes a redundant include for scsi_device.h from
-> scsi_cmnd.h.
-> 
-> Signed-off-by: Kees Cook <keescook@chromium.org>
+ÔÚ 2018/8/1 15:16, zhong jiang Ð´µÀ:
+> Pci_zalloc_consistent is better than pci_alloc_consistent+memset,
+> and it make the code concise
 
-Looks good,
+Aren't these APIs deprecated:
+https://lkml.org/lkml/2018/6/5/381
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+> 
+> Signed-off-by: zhong jiang <zhongjiang@huawei.com>
+> ---
+>   drivers/scsi/pmcraid.c | 9 +++------
+>   1 file changed, 3 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
+> index 4e86994..8a6facc 100644
+> --- a/drivers/scsi/pmcraid.c
+> +++ b/drivers/scsi/pmcraid.c
+> @@ -4736,11 +4736,9 @@ static int pmcraid_allocate_host_rrqs(struct pmcraid_instance *pinstance)
+>   	buffer_size = HRRQ_ENTRY_SIZE * PMCRAID_MAX_CMD;
+>   
+>   	for (i = 0; i < pinstance->num_hrrq; i++) {
+> -		pinstance->hrrq_start[i] =
+> -			pci_alloc_consistent(
+> -					pinstance->pdev,
+> -					buffer_size,
+> -					&(pinstance->hrrq_start_bus_addr[i]));
+> +		pinstance->hrrq_start[i] = pci_zalloc_consistent(pinstance->pdev,
+> +								buffer_size,
+> +								&(pinstance->hrrq_start_bus_addr[i]));
+>   
+>   		if (!pinstance->hrrq_start[i]) {
+>   			pmcraid_err("pci_alloc failed for hrrq vector : %d\n",
+> @@ -4749,7 +4747,6 @@ static int pmcraid_allocate_host_rrqs(struct pmcraid_instance *pinstance)
+>   			return -ENOMEM;
+>   		}
+>   
+> -		memset(pinstance->hrrq_start[i], 0, buffer_size);
+>   		pinstance->hrrq_curr[i] = pinstance->hrrq_start[i];
+>   		pinstance->hrrq_end[i] =
+>   			pinstance->hrrq_start[i] + PMCRAID_MAX_CMD - 1;
+> 
