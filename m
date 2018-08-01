@@ -1,26 +1,49 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH v2 6/9] ide-cd: Remove redundant sense buffer
-Date: Tue, 31 Jul 2018 14:30:15 -0700 (PDT)
-Message-ID: <20180731.143015.1326547191404152411.davem@davemloft.net>
-References: <20180731195155.46664-1-keescook@chromium.org>
-        <20180731195155.46664-7-keescook@chromium.org>
+From: Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>
+Subject: Re: libfc mutex under RCU read section error since
+ "libfc: Fixup disc_mutex handling"
+Date: Wed, 1 Aug 2018 08:29:00 +0200
+Message-ID: <e3bd6958-ca17-bc75-2a66-29d7d2a38ebf@suse.de>
+References: <20180731175607.GA1237244@straylight.hirudinean.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180731195155.46664-7-keescook@chromium.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: keescook@chromium.org
-Cc: axboe@kernel.dk, hch@infradead.org, martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, tj@kernel.org, bp@alien8.de, manoj@linux.vnet.ibm.com, mrochs@linux.vnet.ibm.com, ukrishn@linux.vnet.ibm.com, nab@linux-iscsi.org, tglx@linutronix.de, pombredanne@nexb.com, sboyd@codeaurora.org, cyrille.pitchen@free-electrons.com, jgross@suse.com, viresh.kumar@linaro.org, u.kleine-koenig@pengutronix.de, sdharia@codeaurora.org, rdunlap@infradead.org, vinod.koul@intel.com, david.kershner@unisys.com, linux-block@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+In-Reply-To: <20180731175607.GA1237244-r8IHplWLGbA5tHQWs+pTeqPFFGjUI2lm2LY78lusg7I@public.gmane.org>
+Content-Language: en-US
+List-Unsubscribe: <http://lists.open-fcoe.org/mailman/options/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.open-fcoe.org/pipermail/fcoe-devel/>
+List-Post: <mailto:fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+List-Help: <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.open-fcoe.org/mailman/listinfo/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
+Errors-To: fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+Sender: "fcoe-devel" <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+To: Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, Johannes Thumshirn <jth-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Kees Cook <keescook@chromium.org>
-Date: Tue, 31 Jul 2018 12:51:51 -0700
-
-> This is already able to process the sense buffer, so remove the redundant
-> parsing during the failure path. This also fixes any possible stale values
-> since the prior code did not check the sense length.
-> 
-> Signed-off-by: Kees Cook <keescook@chromium.org>
-
-Acked-by: David S. Miller <davem@davemloft.net>
+T24gMDcvMzEvMjAxOCAwNzo1NiBQTSwgQ2hyaXMgTGVlY2ggd3JvdGU6Cj4gVGhlIGxpYmZjIGFu
+ZCBsaWJmY29lIG1vZHVsZXMgbG9vayB0byBoYXZlIGlzc3VlcyB3aXRoIG11dGV4cyBiZWluZyB1
+c2VkCj4gdW5kZXIgcmN1X3JlYWRfbG9jaywgd2hpY2ggdHJpZ2dlcnMgIklsbGVnYWwgY29udGV4
+dCBzd2l0Y2ggaW4gUkNVIHJlYWQKPiBzaWRlIGNyaXRpY2FsIHNlY3Rpb24iIHdhcm5pbmdzIHVu
+ZGVyIGRlYnVnIGtlcm5lbHMuCj4gCj4gSSBzdGFydGVkIGxvb2tpbmcgYXQgZmNfZGlzYy5jIHdo
+ZXJlIHJwb3J0IGRpc2NvdmVyeSBjb2RlIGFwcGVhcnMgdG8KPiB0YWtlIGEgbXV0ZXggZm9yIGVh
+Y2ggcnBvcnQgaW4gZmNfcnBvcnRfbG9naW4vZmNfcnBvcnRfbG9nb2ZmIHdoaWxlCj4gYmVpbmcg
+Y2FsbGVkIHVuZGVyIHJjdV9yZWFkX2xvY2sgZnJvbSBmY19kaXNjX2RvbmUuCj4gCj4gV2l0aCB0
+aGUgcmRhdGEtPmtyZWYgaGVsZCwgSSBrbm93IHJjdV9yZWFkX3VubG9jayBjYW4gYmUgc2FmZWx5
+IGNhbGxlZAo+IGJlZm9yZSBsb2dpbiBmY19ycG9ydF9sb2dpbi9sb2dvZmYuICBCdXQgSSBkb24n
+dCBrbm93IGlmIGl0J3Mgc2FmZSB0bwo+IHRoZW4gcmVjYWxsIHJjdV9yZWFkX2xvY2sgYW5kIHNp
+bXBseSBjb250aW51ZSBvbiB3aXRoIHRoZQo+IGxpc3RfZm9yX2VhY2hfZW50cnlfcmN1IG9yIG5v
+dC4KPiAKPiBBbmQgYXMgSSBzdGFydCBsb29raW5nIGludG8gdGhpcyBvbmUgY2FzZSwgSSBhbHNv
+IGdldCB0aGUgc2FtZSBjbGFzcyBvZgo+IHByb2JsZW0gcG9wcGluZyB1cCBpbiBhdCBsZWFzdCBs
+aWJmY29lOmZjb2VfY3RybC5jIGZyb20KPiBmY29lX2N0cmxfdGltZXJfd29yayBhcyB3ZWxsIDoo
+Cj4gClRoaXMgc2hvdWxkJ3ZlIGJlZW4gZml4ZWQgYnkgbXkgcGF0Y2ggc2VyaWVzICJsaWJmYy9m
+Y29lOiBkaXNjX211dGV4IGZpeGVzIi4KCkNhbiB5b3UgY2hlY2sgaWYgdGhpcyBzZXJpZXMgaXMg
+YXBwbGllZCBpbiB5b3VyIHRyZWU/CgpDaGVlcnMsCgpIYW5uZXMKLS0gCkRyLiBIYW5uZXMgUmVp
+bmVja2UJCSAgIFRlYW1sZWFkIFN0b3JhZ2UgJiBOZXR3b3JraW5nCmhhcmVAc3VzZS5kZQkJCSAg
+ICAgICAgICAgICAgICs0OSA5MTEgNzQwNTMgNjg4ClNVU0UgTElOVVggR21iSCwgTWF4ZmVsZHN0
+ci4gNSwgOTA0MDkgTsO8cm5iZXJnCkdGOiBGLiBJbWVuZMO2cmZmZXIsIEouIFNtaXRoYXJkLCBK
+LiBHdWlsZCwgRC4gVXBtYW55dSwgRy4gTm9ydG9uCkhSQiAyMTI4NCAoQUcgTsO8cm5iZXJnKQpf
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpmY29lLWRldmVs
+IG1haWxpbmcgbGlzdApmY29lLWRldmVsQG9wZW4tZmNvZS5vcmcKaHR0cDovL2xpc3RzLm9wZW4t
+ZmNvZS5vcmcvbWFpbG1hbi9saXN0aW5mby9mY29lLWRldmVsCg==
