@@ -1,18 +1,18 @@
 From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 4.9 132/144] scsi: scsi_dh: replace too broad "TP9" string with the exact models
-Date: Wed,  1 Aug 2018 18:52:39 +0200
-Message-ID: <20180801164958.515048187@linuxfoundation.org>
-References: <20180801164949.023217860@linuxfoundation.org>
+Subject: [PATCH 4.14 204/246] scsi: scsi_dh: replace too broad "TP9" string with the exact models
+Date: Wed,  1 Aug 2018 18:51:54 +0200
+Message-ID: <20180801165021.487524990@linuxfoundation.org>
+References: <20180801165011.700991984@linuxfoundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20180801164949.023217860@linuxfoundation.org>
-Sender: stable-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20180801165011.700991984@linuxfoundation.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
 Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, stable@vger.kernel.org, NetApp RDAC team <ng-eseries-upstream-maintainers@netapp.com>, Hannes Reinecke <hare@suse.de>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, SCSI ML <linux-scsi@vger.kernel.org>, DM ML <dm-devel@redhat.com>, Xose Vazquez Perez <xose.vazquez@gmail.com>, Sasha Levin <alexander.levin@microsoft.com>
 List-Id: linux-scsi@vger.kernel.org
 
-4.9-stable review patch.  If anyone has any objections, please let me know.
+4.14-stable review patch.  If anyone has any objections, please let me know.
 
 ------------------
 
