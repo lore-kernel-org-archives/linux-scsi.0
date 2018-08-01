@@ -1,14 +1,15 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 2/3] scsi: fcoe: drop frames in ELS LOGO error path
-Date: Wed, 1 Aug 2018 08:30:33 +0200
-Message-ID: <bf4d9fbb-4801-044b-680e-b44894592b11@suse.de>
+Subject: Re: [PATCH 3/3] scsi: fcoe: clear FC_RP_STARTED flags when receiving
+ a LOGO
+Date: Wed, 1 Aug 2018 08:31:26 +0200
+Message-ID: <b3644f6b-d0ea-6577-dbbb-f6dd52d9e1e8@suse.de>
 References: <20180731134603.20089-1-jthumshirn@suse.de>
- <20180731134603.20089-3-jthumshirn@suse.de>
+ <20180731134603.20089-4-jthumshirn@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180731134603.20089-3-jthumshirn@suse.de>
+In-Reply-To: <20180731134603.20089-4-jthumshirn@suse.de>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 To: Johannes Thumshirn <jthumshirn@suse.de>, "Martin K . Petersen" <martin.petersen@oracle.com>
@@ -16,51 +17,47 @@ Cc: Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailingl
 List-Id: linux-scsi@vger.kernel.org
 
 On 07/31/2018 03:46 PM, Johannes Thumshirn wrote:
-> Drop the frames in the ELS LOGO error path instead of just returning
-> an error.
+> When receiving a LOGO request we forget to clear the FC_RP_STARTED
+> flag before starting the rport delete routine.
 > 
-> This fixes the following kmemleak report:
-> unreferenced object 0xffff880064cb1000 (size 424):
->   comm "kworker/0:2", pid 24, jiffies 4294904293 (age 68.504s)
+> As the started flag was not cleared, we're not deleting the rport but
+> waiting for a restart and thus are keeping the reference count of the
+> rdata object at 1.
+> 
+> This leads to the following kmemleak report:
+> unreferenced object 0xffff88006542aa00 (size 512):
+>   comm "kworker/0:2", pid 24, jiffies 4294899222 (age 226.880s)
 >   hex dump (first 32 bytes):
->     00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
->     00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+>     68 96 fe 65 00 88 ff ff 00 00 00 00 00 00 00 00  h..e............
+>     01 00 00 00 08 00 00 00 02 c5 45 24 ac b8 00 10  ..........E$....
 >   backtrace:
->     [<(____ptrval____)>] _fc_frame_alloc+0x2c/0x180 [libfc]
->     [<(____ptrval____)>] fc_lport_enter_logo+0x106/0x360 [libfc]
->     [<(____ptrval____)>] fc_fabric_logoff+0x8c/0xc0 [libfc]
->     [<(____ptrval____)>] fcoe_if_destroy+0x79/0x3b0 [fcoe]
->     [<(____ptrval____)>] fcoe_destroy_work+0xd2/0x170 [fcoe]
+>     [<(____ptrval____)>] fcoe_ctlr_vn_add.isra.5+0x7f/0x770 [libfcoe]
+>     [<(____ptrval____)>] fcoe_ctlr_vn_recv+0x12af/0x27f0 [libfcoe]
+>     [<(____ptrval____)>] fcoe_ctlr_recv_work+0xd01/0x32f0 [libfcoe]
 >     [<(____ptrval____)>] process_one_work+0x7ff/0x1420
 >     [<(____ptrval____)>] worker_thread+0x87/0xef0
 >     [<(____ptrval____)>] kthread+0x2db/0x390
 >     [<(____ptrval____)>] ret_from_fork+0x35/0x40
 >     [<(____ptrval____)>] 0xffffffffffffffff
 > 
-> which can be triggered by issuing
-> echo eth0 > /sys/bus/fcoe/ctlr_destroy
-> 
 > Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+> Reported-by: ard <ard@kwaak.net>
 > ---
->  drivers/scsi/fcoe/fcoe_ctlr.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+>  drivers/scsi/libfc/fc_rport.c | 1 +
+>  1 file changed, 1 insertion(+)
 > 
-> diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
-> index ceb35ebbeb8f..ffec695e0bfb 100644
-> --- a/drivers/scsi/fcoe/fcoe_ctlr.c
-> +++ b/drivers/scsi/fcoe/fcoe_ctlr.c
-> @@ -754,9 +754,9 @@ int fcoe_ctlr_els_send(struct fcoe_ctlr *fip, struct fc_lport *lport,
->  	case ELS_LOGO:
->  		if (fip->mode == FIP_MODE_VN2VN) {
->  			if (fip->state != FIP_ST_VNMP_UP)
-> -				return -EINVAL;
-> +				goto drop;
->  			if (ntoh24(fh->fh_d_id) == FC_FID_FLOGI)
-> -				return -EINVAL;
-> +				goto drop;
->  		} else {
->  			if (fip->state != FIP_ST_ENABLED)
->  				return 0;
+> diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
+> index 31d31aad3de1..89b1f1af2fd4 100644
+> --- a/drivers/scsi/libfc/fc_rport.c
+> +++ b/drivers/scsi/libfc/fc_rport.c
+> @@ -2164,6 +2164,7 @@ static void fc_rport_recv_logo_req(struct fc_lport *lport, struct fc_frame *fp)
+>  		FC_RPORT_DBG(rdata, "Received LOGO request while in state %s\n",
+>  			     fc_rport_state(rdata));
+>  
+> +		rdata->flags &= ~FC_RP_STARTED;
+>  		fc_rport_enter_delete(rdata, RPORT_EV_STOP);
+>  		mutex_unlock(&rdata->rp_mutex);
+>  		kref_put(&rdata->kref, fc_rport_destroy);
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
