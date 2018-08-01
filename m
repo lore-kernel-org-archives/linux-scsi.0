@@ -1,33 +1,52 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 2/2] Avoid that SCSI device removal through sysfs
- triggers a deadlock
-Date: Wed, 1 Aug 2018 08:54:45 -0700
-Message-ID: <20180801155445.GR1206094@devbig004.ftw2.facebook.com>
-References: <20180730184052.13442-1-bart.vanassche@wdc.com>
- <20180730184052.13442-3-bart.vanassche@wdc.com>
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] scsi: csiostor: avoid null pointer dereference on card_fw allocation failure
+Date: Wed,  1 Aug 2018 17:17:43 +0100
+Message-ID: <20180801161743.22301-1-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <stable-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20180730184052.13442-3-bart.vanassche@wdc.com>
-Sender: stable-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Johannes Thumshirn <jthumshirn@suse.de>, stable@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Varun Prakash <varun@chelsio.com>, linux-scsi@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Jul 30, 2018 at 11:40:52AM -0700, Bart Van Assche wrote:
-> A long time ago the unfortunate decision was taken to add a self-
-> deletion attribute to the sysfs SCSI device directory. That decision
-> was unfortunate because self-deletion is really tricky. We can't drop
-> that attribute because widely used user space software depends on it,
-> namely the rescan-scsi-bus.sh script. Hence this patch that avoids
-> that writing into that attribute triggers a deadlock. See also commit
-> 7973cbd9fbd9 ("[PATCH] add sysfs attributes to scan and delete
-> scsi_devices").
+From: Colin Ian King <colin.king@canonical.com>
 
-Acked-by: Tejun Heo <tj@kernel.org>
+Currently if card_fw fails to be allocated then a null pointer
+dereference occurs on card_fd when calling csio_hw_prep_fw. Fix this
+by checking for a failed allocation and returning -ENOMEM.
 
-Thanks.
+Detected by CoverityScan, CID#1271213 ("Dereference null return value")
 
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/scsi/csiostor/csio_hw.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/csiostor/csio_hw.c b/drivers/scsi/csiostor/csio_hw.c
+index a10cf25ee7f9..aa637e9ea9ba 100644
+--- a/drivers/scsi/csiostor/csio_hw.c
++++ b/drivers/scsi/csiostor/csio_hw.c
+@@ -2275,8 +2275,8 @@ static int csio_hw_prep_fw(struct csio_hw *hw, struct fw_info *fw_info,
+ }
+ 
+ /*
+- * Returns -EINVAL if attempts to flash the firmware failed
+- * else returns 0,
++ * Returns -EINVAL if attempts to flash the firmware failed,
++ * -ENOMEM if allocation failed, else returns 0,
+  * if flashing was not attempted because the card had the
+  * latest firmware ECANCELED is returned
+  */
+@@ -2321,6 +2321,8 @@ csio_hw_flash_fw(struct csio_hw *hw, int *reset)
+ 	 * card
+ 	 */
+ 	card_fw = kmalloc(sizeof(*card_fw), GFP_KERNEL);
++	if (!card_fw)
++		return -ENOMEM;
+ 
+ 	/* upgrade FW logic */
+ 	ret = csio_hw_prep_fw(hw, fw_info, fw_data, fw_size, card_fw,
 -- 
-tejun
+2.17.1
