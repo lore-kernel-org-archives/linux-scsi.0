@@ -1,80 +1,28 @@
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Subject: Re: [PATCH 4/4] drivers/scsi/mvsas/mv_init: Use dma_zalloc_coherent
- to replace dma_alloc_coherent+memset
-Date: Wed, 1 Aug 2018 18:34:26 +0300
-Message-ID: <CAHp75Vdir4W+nFHVwH=Vh++441C3TzbN8fxVXDf7_08Qs-4XwA@mail.gmail.com>
-References: <1533129976-51930-1-git-send-email-zhongjiang@huawei.com> <1533129976-51930-5-git-send-email-zhongjiang@huawei.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v2 8/9] libata-scsi: Move sense buffers onto stack
+Date: Wed, 1 Aug 2018 08:45:02 -0700
+Message-ID: <20180801154502.GO1206094@devbig004.ftw2.facebook.com>
+References: <20180731195155.46664-1-keescook@chromium.org>
+ <20180731195155.46664-9-keescook@chromium.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1533129976-51930-5-git-send-email-zhongjiang@huawei.com>
+Content-Disposition: inline
+In-Reply-To: <20180731195155.46664-9-keescook@chromium.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: zhong jiang <zhongjiang@huawei.com>
-Cc: John Garry <john.garry@huawei.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, aacraid@microsemi.com, linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Kees Cook <keescook@chromium.org>
+Cc: Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Borislav Petkov <bp@alien8.de>, "David S. Miller" <davem@davemloft.net>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Thomas Gleixner <tglx@linutronix.de>, Philippe Ombredanne <pombredanne@nexb.com>, Stephen Boyd <sboyd@codeaurora.org>, Cyrille Pitchen <cyrille.pitchen@free-electrons.com>, Juergen Gross <jgross@suse.com>, Viresh Kumar <viresh.kumar@linaro.org>, Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= <u.kleine-koenig@pengutronix.de>, Sagar
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Aug 1, 2018 at 4:26 PM, zhong jiang <zhongjiang@huawei.com> wrote:
-> The dma_zalloc_coherent is better than dma_alloc_coherent+memset,
-> so replace them.
->
+On Tue, Jul 31, 2018 at 12:51:53PM -0700, Kees Cook wrote:
+> To support future compile-time sizeof() checks that will be able to
+> validate the length of sense buffers, this removes the only dynamically
+> allocated sense buffers in the tree by putting the 96 byte sense buffers
+> on the stack.
 
-FWIW,
-Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
+Acked-by: Tejun Heo <tj@kernel.org>
 
-
-> Signed-off-by: zhong jiang <zhongjiang@huawei.com>
-> ---
->  drivers/scsi/mvsas/mv_init.c | 12 ++++--------
->  1 file changed, 4 insertions(+), 8 deletions(-)
->
-> diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
-> index 8c91637..da62e18 100644
-> --- a/drivers/scsi/mvsas/mv_init.c
-> +++ b/drivers/scsi/mvsas/mv_init.c
-> @@ -253,33 +253,29 @@ static int mvs_alloc(struct mvs_info *mvi, struct Scsi_Host *shost)
->         /*
->          * alloc and init our DMA areas
->          */
-> -       mvi->tx = dma_alloc_coherent(mvi->dev,
-> +       mvi->tx = dma_zalloc_coherent(mvi->dev,
->                                      sizeof(*mvi->tx) * MVS_CHIP_SLOT_SZ,
->                                      &mvi->tx_dma, GFP_KERNEL);
->         if (!mvi->tx)
->                 goto err_out;
-> -       memset(mvi->tx, 0, sizeof(*mvi->tx) * MVS_CHIP_SLOT_SZ);
-> -       mvi->rx_fis = dma_alloc_coherent(mvi->dev, MVS_RX_FISL_SZ,
-> +       mvi->rx_fis = dma_zalloc_coherent(mvi->dev, MVS_RX_FISL_SZ,
->                                          &mvi->rx_fis_dma, GFP_KERNEL);
->         if (!mvi->rx_fis)
->                 goto err_out;
-> -       memset(mvi->rx_fis, 0, MVS_RX_FISL_SZ);
->
-> -       mvi->rx = dma_alloc_coherent(mvi->dev,
-> +       mvi->rx = dma_zalloc_coherent(mvi->dev,
->                                      sizeof(*mvi->rx) * (MVS_RX_RING_SZ + 1),
->                                      &mvi->rx_dma, GFP_KERNEL);
->         if (!mvi->rx)
->                 goto err_out;
-> -       memset(mvi->rx, 0, sizeof(*mvi->rx) * (MVS_RX_RING_SZ + 1));
->         mvi->rx[0] = cpu_to_le32(0xfff);
->         mvi->rx_cons = 0xfff;
->
-> -       mvi->slot = dma_alloc_coherent(mvi->dev,
-> +       mvi->slot = dma_zalloc_coherent(mvi->dev,
->                                        sizeof(*mvi->slot) * slot_nr,
->                                        &mvi->slot_dma, GFP_KERNEL);
->         if (!mvi->slot)
->                 goto err_out;
-> -       memset(mvi->slot, 0, sizeof(*mvi->slot) * slot_nr);
->
->         mvi->bulk_buffer = dma_alloc_coherent(mvi->dev,
->                                        TRASH_BUCKET_SIZE,
-> --
-> 1.7.12.4
->
-
-
+Thanks.
 
 -- 
-With Best Regards,
-Andy Shevchenko
+tejun
