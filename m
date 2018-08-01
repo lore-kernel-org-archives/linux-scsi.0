@@ -1,7 +1,7 @@
 From: Sayali Lokhande <sayalil@codeaurora.org>
-Subject: [PATCH V7 1/2] scsi: ufs: set the device reference clock setting
-Date: Wed,  1 Aug 2018 14:18:57 +0530
-Message-ID: <1533113338-31750-2-git-send-email-sayalil@codeaurora.org>
+Subject: [PATCH V7 2/2] scsi: ufs: Add configfs support for UFS provisioning
+Date: Wed,  1 Aug 2018 14:18:58 +0530
+Message-ID: <1533113338-31750-3-git-send-email-sayalil@codeaurora.org>
 References: <1533113338-31750-1-git-send-email-sayalil@codeaurora.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1533113338-31750-1-git-send-email-sayalil@codeaurora.org>
@@ -10,178 +10,318 @@ To: subhashj@codeaurora.org, cang@codeaurora.org, vivek.gautam@codeaurora.org, r
 Cc: adrian.hunter@intel.com, linux-scsi@vger.kernel.org, Sayali Lokhande <sayalil@codeaurora.org>, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Subhash Jadavani <subhashj@codeaurora.org>
+This patch adds configfs support to provision UFS device at
+runtime. This feature can be primarily useful in factory or
+assembly line as some devices may be required to be configured
+multiple times during initial system development phase.
+Configuration Descriptors can be written multiple times until
+bConfigDescrLock attribute is zero.
 
-UFS host supplies the reference clock to UFS device and UFS device
-specification allows host to provide one of the 4 frequencies (19.2 MHz,
-26 MHz, 38.4 MHz, 52 MHz) for reference clock. Host should set the
-device reference clock frequency setting in the device based on what
-frequency it is supplying to UFS device.
+Configuration descriptor buffer consists of Device and Unit
+descriptor configurable parameters which are parsed from vendor
+specific provisioning file and then passed via configfs node at
+runtime to provision ufs device.
+CONFIG_CONFIGFS_FS needs to be enabled for using this feature.
 
-Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
-Signed-off-by: Can Guo <cang@codeaurora.org>
+Usage:
+1) To read current configuration descriptor :
+   cat /config/XXXX.ufshc/ufs_provision
+2) To provision ufs device:
+   echo <config_desc_buf> > /config/XXXX.ufshc/ufs_provision
+
 Signed-off-by: Sayali Lokhande <sayalil@codeaurora.org>
 ---
- drivers/scsi/ufs/ufs.h           |  8 ++++
- drivers/scsi/ufs/ufshcd-pltfrm.c |  2 +
- drivers/scsi/ufs/ufshcd.c        | 84 ++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/ufs/ufshcd.h        |  2 +
- 4 files changed, 96 insertions(+)
+ Documentation/ABI/testing/configfs-driver-ufs |  18 +++
+ drivers/scsi/ufs/Kconfig                      |  10 ++
+ drivers/scsi/ufs/Makefile                     |   1 +
+ drivers/scsi/ufs/ufs-configfs.c               | 162 ++++++++++++++++++++++++++
+ drivers/scsi/ufs/ufshcd.c                     |   7 +-
+ drivers/scsi/ufs/ufshcd.h                     |  10 ++
+ 6 files changed, 207 insertions(+), 1 deletion(-)
+ create mode 100644 Documentation/ABI/testing/configfs-driver-ufs
+ create mode 100644 drivers/scsi/ufs/ufs-configfs.c
 
-diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
-index 14e5bf7..89e0a33 100644
---- a/drivers/scsi/ufs/ufs.h
-+++ b/drivers/scsi/ufs/ufs.h
-@@ -378,6 +378,14 @@ enum query_opcode {
- 	UPIU_QUERY_OPCODE_TOGGLE_FLAG	= 0x8,
- };
+diff --git a/Documentation/ABI/testing/configfs-driver-ufs b/Documentation/ABI/testing/configfs-driver-ufs
+new file mode 100644
+index 0000000..eeee499c
+--- /dev/null
++++ b/Documentation/ABI/testing/configfs-driver-ufs
+@@ -0,0 +1,18 @@
++What:		/config/ufshcd/ufs_provision
++Date:		Jun 2018
++KernelVersion:	4.14
++Description:
++		This file shows the current ufs configuration descriptor set in device.
++		This can be used to provision ufs device if bConfigDescrLock is 0.
++		For more details, refer 14.1.6.3 Configuration Descriptor and
++		Table 14-12 - Unit Descriptor configurable parameters from specs for
++		description of each configuration descriptor parameter.
++		Configuration descriptor buffer needs to be passed in space separated
++		format specificied as below:
++		echo <bLength> <bDescriptorIDN> <bConfDescContinue> <bBootEnable>
++		<bDescrAccessEn> <bInitPowerMode> <bHighPriorityLUN>
++		<bSecureRemovalType> <bInitActiveICCLevel> <wPeriodicRTCUpdate>
++		<0Bh:0Fh_ReservedAs_0> <bLUEnable> <bBootLunID> <bLUWriteProtect>
++		<bMemoryType> <dNumAllocUnits> <bDataReliability> <bLogicalBlockSize>
++		<bProvisioningType> <wContextCapabilities> <0Dh:0Fh_ReservedAs_0>
++		> /config/XXXX.ufshc/ufs_provision
+diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
+index e27b4d4..a9a0a58 100644
+--- a/drivers/scsi/ufs/Kconfig
++++ b/drivers/scsi/ufs/Kconfig
+@@ -100,3 +100,13 @@ config SCSI_UFS_QCOM
  
-+/* bRefClkFreq attribute values */
-+enum ref_clk_freq {
-+	REF_CLK_FREQ_19_2_MHZ	= 19200000,
-+	REF_CLK_FREQ_26_MHZ	= 26000000,
-+	REF_CLK_FREQ_38_4_MHZ	= 38400000,
-+	REF_CLK_FREQ_52_MHZ	= 52000000,
-+};
+ 	  Select this if you have UFS controller on QCOM chipset.
+ 	  If unsure, say N.
 +
- /* Query response result code */
- enum {
- 	QUERY_RESULT_SUCCESS                    = 0x00,
-diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
-index e82bde0..0953563 100644
---- a/drivers/scsi/ufs/ufshcd-pltfrm.c
-+++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
-@@ -343,6 +343,8 @@ int ufshcd_pltfrm_init(struct platform_device *pdev,
- 	pm_runtime_set_active(&pdev->dev);
- 	pm_runtime_enable(&pdev->dev);
- 
-+	ufshcd_parse_dev_ref_clk_freq(hba);
++config UFS_PROVISION
++	tristate "Runtime UFS Provisioning support"
++	depends on SCSI_UFSHCD && CONFIGFS_FS
++	help
++	  This enables runtime UFS provisioning support. This can be used
++	  primarily during assembly line as some devices may be required to
++	  be configured multiple times during initial development phase.
 +
- 	ufshcd_init_lanes_per_dir(hba);
- 
- 	err = ufshcd_init(hba, mmio_base, irq);
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index c5b1bf1..619313b 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -6296,6 +6296,84 @@ static void ufshcd_def_desc_sizes(struct ufs_hba *hba)
- 	hba->desc_size.hlth_desc = QUERY_DESC_HEALTH_DEF_SIZE;
- }
- 
-+void ufshcd_parse_dev_ref_clk_freq(struct ufs_hba *hba)
++	  If unsure, say N.
+diff --git a/drivers/scsi/ufs/Makefile b/drivers/scsi/ufs/Makefile
+index 918f579..00110ea 100644
+--- a/drivers/scsi/ufs/Makefile
++++ b/drivers/scsi/ufs/Makefile
+@@ -5,5 +5,6 @@ obj-$(CONFIG_SCSI_UFS_DWC_TC_PLATFORM) += tc-dwc-g210-pltfrm.o ufshcd-dwc.o tc-d
+ obj-$(CONFIG_SCSI_UFS_QCOM) += ufs-qcom.o
+ obj-$(CONFIG_SCSI_UFSHCD) += ufshcd-core.o
+ ufshcd-core-objs := ufshcd.o ufs-sysfs.o
++obj-$(CONFIG_UFS_PROVISION) += ufs-configfs.o
+ obj-$(CONFIG_SCSI_UFSHCD_PCI) += ufshcd-pci.o
+ obj-$(CONFIG_SCSI_UFSHCD_PLATFORM) += ufshcd-pltfrm.o
+diff --git a/drivers/scsi/ufs/ufs-configfs.c b/drivers/scsi/ufs/ufs-configfs.c
+new file mode 100644
+index 0000000..f164967
+--- /dev/null
++++ b/drivers/scsi/ufs/ufs-configfs.c
+@@ -0,0 +1,162 @@
++// SPDX-License-Identifier: GPL-2.0+
++// Copyright (c) 2018, Linux Foundation.
++
++#include <linux/configfs.h>
++#include <linux/err.h>
++#include <linux/string.h>
++
++#include "ufs.h"
++#include "ufshcd.h"
++
++static inline struct ufs_hba *config_item_to_hba(struct config_item *item)
 +{
-+	struct device *dev = hba->dev;
-+	struct device_node *np = dev->of_node;
-+	struct clk *refclk = NULL;
++	struct config_group *group = to_config_group(item);
++	struct configfs_subsystem *subsys = to_configfs_subsystem(group);
++	struct ufs_hba *hba = container_of(subsys, struct ufs_hba, subsys);
 +
-+	if (!np)
-+		return;
-+
-+	refclk = of_clk_get_by_name(np, "ref_clk");
-+	if (refclk)
-+		hba->dev_ref_clk_freq  = clk_get_rate(refclk);
-+	else if (!refclk ||
-+		(hba->dev_ref_clk_freq > REF_CLK_FREQ_52_MHZ)) {
-+		dev_err(hba->dev,
-+		"%s: invalid ref_clk setting = %u\n",
-+		__func__, hba->dev_ref_clk_freq);
-+		hba->dev_ref_clk_freq = 0;
-+	}
++	return hba ? hba : NULL;
 +}
 +
-+static int ufshcd_set_dev_ref_clk(struct ufs_hba *hba)
++static ssize_t ufs_provision_show(struct config_item *item, char *buf)
 +{
-+	int err = 0;
-+	int ref_clk = -1;
-+	static const char * const ref_clk_freqs[] = {"19.2 MHz", "26 MHz",
-+						     "38.4 MHz", "52 MHz"};
++	u8 desc_buf[QUERY_DESC_CONFIGURATION_DEF_SIZE] = {0};
++	int buff_len = QUERY_DESC_CONFIGURATION_DEF_SIZE;
++	int i, ret, curr_len = 0;
++	struct ufs_hba *hba = config_item_to_hba(item);
 +
-+	err = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_READ_ATTR,
-+			QUERY_ATTR_IDN_REF_CLK_FREQ, 0, 0, &ref_clk);
++	if (!hba)
++		return snprintf(buf, PAGE_SIZE, "ufs hba is NULL!\n");
 +
-+	if (err) {
-+		dev_err(hba->dev, "%s: failed reading bRefClkFreq. err = %d\n",
-+			 __func__, err);
++	ret = ufshcd_query_descriptor_retry(hba, UPIU_QUERY_OPCODE_READ_DESC,
++		QUERY_DESC_IDN_CONFIGURATION, 0, 0, desc_buf, &buff_len);
++
++	if (ret)
++		return snprintf(buf, PAGE_SIZE,
++		"Failed reading descriptor. desc_idn %d, opcode %x ret %d\n",
++		QUERY_DESC_IDN_CONFIGURATION,
++		UPIU_QUERY_OPCODE_READ_DESC, ret);
++
++	for (i = 0; i < buff_len; i++)
++		curr_len += snprintf((buf + curr_len), (PAGE_SIZE - curr_len),
++				"0x%x ", desc_buf[i]);
++
++	return curr_len;
++}
++
++ssize_t ufshcd_desc_configfs_store(struct ufs_hba *hba,
++		const char *buf, size_t count)
++{
++	char *strbuf;
++	char *strbuf_copy;
++	u8 desc_buf[QUERY_DESC_CONFIGURATION_DEF_SIZE] = {0};
++	int buff_len = QUERY_DESC_CONFIGURATION_DEF_SIZE;
++	char *token;
++	int i, ret, value;
++	u32 bConfigDescrLock = 0;
++
++	/* reserve one byte for null termination */
++	strbuf = kmalloc(count + 1, GFP_KERNEL);
++	if (!strbuf)
++		return -ENOMEM;
++
++	strbuf_copy = strbuf;
++	strlcpy(strbuf, buf, count + 1);
++
++	if (!hba)
++		goto out;
++
++	/* Just return if bConfigDescrLock is already set */
++	ret = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_READ_ATTR,
++		QUERY_ATTR_IDN_CONF_DESC_LOCK, 0, 0, &bConfigDescrLock);
++	if (ret)
++		goto out;
++
++	if (bConfigDescrLock) {
++		dev_err(hba->dev, "%s: bConfigDescrLock already set to %u, cannot re-provision device!\n",
++		__func__, bConfigDescrLock);
 +		goto out;
 +	}
 +
-+	switch (hba->dev_ref_clk_freq) {
-+	case REF_CLK_FREQ_19_2_MHZ:
-+		hba->dev_ref_clk_freq = 0x0;
-+		break;
-+	case REF_CLK_FREQ_26_MHZ:
-+		hba->dev_ref_clk_freq = 0x1;
-+		break;
-+	case REF_CLK_FREQ_38_4_MHZ:
-+		hba->dev_ref_clk_freq = 0x2;
-+		break;
-+	case REF_CLK_FREQ_52_MHZ:
-+		hba->dev_ref_clk_freq = 0x3;
-+		break;
-+	default:
-+		dev_err(hba->dev,
-+		"%s: invalid ref_clk setting = %u\n",
-+		__func__, hba->dev_ref_clk_freq);
-+		goto out;
++	for (i = 0; i < QUERY_DESC_CONFIGURATION_DEF_SIZE; i++) {
++		token = strsep(&strbuf, " ");
++		if (!token && i)
++			break;
++
++		ret = kstrtoint(token, 0, &value);
++		if (ret) {
++			dev_err(hba->dev, "%s: kstrtoint failed %d %s\n",
++				__func__, ret, token);
++			goto out;
++		}
++		desc_buf[i] = (u8)value;
 +	}
 +
-+	if (ref_clk == hba->dev_ref_clk_freq)
-+		goto out; /* nothing to update */
++	/* Write configuration descriptor to provision ufs */
++	ret = ufshcd_query_descriptor_retry(hba, UPIU_QUERY_OPCODE_WRITE_DESC,
++		QUERY_DESC_IDN_CONFIGURATION, 0, 0, desc_buf, &buff_len);
 +
-+	err = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
-+			QUERY_ATTR_IDN_REF_CLK_FREQ, 0, 0,
-+			&hba->dev_ref_clk_freq);
-+
-+	if (err)
-+		dev_err(hba->dev, "%s: bRefClkFreq setting to %s failed\n",
-+			__func__, ref_clk_freqs[hba->dev_ref_clk_freq]);
-+	/*
-+	 * It is good to print this out here to debug any later failures
-+	 * related to gear switch.
-+	 */
-+	dev_dbg(hba->dev, "%s: bRefClkFreq setting to %s succeeded\n",
-+			__func__, ref_clk_freqs[hba->dev_ref_clk_freq]);
++	if (!ret)
++		dev_err(hba->dev, "%s: UFS Provisioning done, reboot now!\n",
++		__func__);
 +
 +out:
-+	return err;
++	kfree(strbuf_copy);
++	return count;
 +}
 +
- /**
-  * ufshcd_probe_hba - probe hba to detect device and initialize
-  * @hba: per-adapter instance
-@@ -6361,6 +6439,12 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
- 			"%s: Failed getting max supported power mode\n",
- 			__func__);
- 	} else {
-+		/*
-+		 * Set the right value to bRefClkFreq before attempting to
-+		 * switch to HS gears.
-+		 */
-+		if (hba->dev_ref_clk_freq)
-+			ufshcd_set_dev_ref_clk(hba);
- 		ret = ufshcd_config_pwr_mode(hba, &hba->max_pwr_info.info);
- 		if (ret) {
- 			dev_err(hba->dev, "%s: Failed setting power mode, err = %d\n",
++static ssize_t ufs_provision_store(struct config_item *item,
++		const char *buf, size_t count)
++{
++	struct ufs_hba *hba = config_item_to_hba(item);
++
++	return ufshcd_desc_configfs_store(hba, buf, count);
++}
++
++static struct configfs_attribute ufshcd_attr_provision = {
++	.ca_name	= "ufs_provision",
++	.ca_mode	= 0644,
++	.ca_owner	= THIS_MODULE,
++	.show		= ufs_provision_show,
++	.store		= ufs_provision_store,
++};
++
++static struct configfs_attribute *ufshcd_attrs[] = {
++	&ufshcd_attr_provision,
++	NULL,
++};
++
++static struct config_item_type ufscfg_type = {
++	.ct_attrs	= ufshcd_attrs,
++	.ct_owner	= THIS_MODULE,
++};
++
++static struct configfs_subsystem ufscfg_subsys = {
++	.su_group = {
++		.cg_item = {
++			.ci_type = &ufscfg_type,
++		},
++	},
++};
++
++int ufshcd_configfs_init(struct ufs_hba *hba, const char *name)
++{
++	int ret;
++	struct configfs_subsystem *subsys = &hba->subsys;
++
++	strncpy(ufscfg_subsys.su_group.cg_item.ci_namebuf, name, strlen(name));
++	subsys->su_group = ufscfg_subsys.su_group;
++	config_group_init(&subsys->su_group);
++	mutex_init(&subsys->su_mutex);
++	ret = configfs_register_subsystem(subsys);
++	if (ret)
++		pr_err("Error %d while registering subsystem %s\n",
++		       ret,
++		       subsys->su_group.cg_item.ci_namebuf);
++
++	return ret;
++}
++
++void ufshcd_configfs_exit(void)
++{
++	configfs_unregister_subsystem(&ufscfg_subsys);
++}
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 619313b..9101d71 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -7706,6 +7706,9 @@ int ufshcd_shutdown(struct ufs_hba *hba)
+ void ufshcd_remove(struct ufs_hba *hba)
+ {
+ 	ufs_sysfs_remove_nodes(hba->dev);
++#ifdef CONFIG_UFS_PROVISION
++	ufshcd_configfs_exit();
++#endif
+ 	scsi_remove_host(hba->host);
+ 	/* disable interrupts */
+ 	ufshcd_disable_intr(hba, hba->intr_mask);
+@@ -7959,7 +7962,9 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+ 
+ 	async_schedule(ufshcd_async_scan, hba);
+ 	ufs_sysfs_add_nodes(hba->dev);
+-
++#ifdef CONFIG_UFS_PROVISION
++	ufshcd_configfs_init(hba, dev_name(hba->dev));
++#endif
+ 	return 0;
+ 
+ out_remove_scsi_host:
 diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 8110dcd..101a75c 100644
+index 101a75c..7b6cc88 100644
 --- a/drivers/scsi/ufs/ufshcd.h
 +++ b/drivers/scsi/ufs/ufshcd.h
-@@ -548,6 +548,7 @@ struct ufs_hba {
- 	void *priv;
- 	unsigned int irq;
- 	bool is_irq_enabled;
-+	u32 dev_ref_clk_freq;
+@@ -37,6 +37,7 @@
+ #ifndef _UFSHCD_H
+ #define _UFSHCD_H
  
- 	/* Interrupt aggregation support is broken */
- 	#define UFSHCD_QUIRK_BROKEN_INTR_AGGR			0x1
-@@ -746,6 +747,7 @@ static inline void ufshcd_rmwl(struct ufs_hba *hba, u32 mask, u32 val, u32 reg)
- int ufshcd_wait_for_register(struct ufs_hba *hba, u32 reg, u32 mask,
- 				u32 val, unsigned long interval_us,
- 				unsigned long timeout_ms, bool can_sleep);
-+void ufshcd_parse_dev_ref_clk_freq(struct ufs_hba *hba);
++#include <linux/configfs.h>
+ #include <linux/module.h>
+ #include <linux/kernel.h>
+ #include <linux/init.h>
+@@ -515,6 +516,9 @@ struct ufs_hba {
  
- static inline void check_upiu_size(void)
- {
+ 	struct Scsi_Host *host;
+ 	struct device *dev;
++#ifdef CONFIG_UFS_PROVISION
++	struct configfs_subsystem subsys;
++#endif
+ 	/*
+ 	 * This field is to keep a reference to "scsi_device" corresponding to
+ 	 * "UFS device" W-LU.
+@@ -868,6 +872,12 @@ int ufshcd_read_string_desc(struct ufs_hba *hba, int desc_index,
+ int ufshcd_hold(struct ufs_hba *hba, bool async);
+ void ufshcd_release(struct ufs_hba *hba);
+ 
++/* Expose UFS configfs API's */
++#ifdef CONFIG_UFS_PROVISION
++extern int ufshcd_configfs_init(struct ufs_hba *hba, const char *name);
++extern void ufshcd_configfs_exit(void);
++#endif
++
+ int ufshcd_map_desc_id_to_length(struct ufs_hba *hba, enum desc_idn desc_id,
+ 	int *desc_length);
+ 
 -- 
 The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
 a Linux Foundation Collaborative Project
