@@ -1,28 +1,30 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2 8/9] libata-scsi: Move sense buffers onto stack
-Date: Wed, 1 Aug 2018 08:45:02 -0700
-Message-ID: <20180801154502.GO1206094@devbig004.ftw2.facebook.com>
-References: <20180731195155.46664-1-keescook@chromium.org>
- <20180731195155.46664-9-keescook@chromium.org>
+From: Joe Perches <joe@perches.com>
+Subject: Re: [PATCH 1/4] driver/scsi/fnic/fnic_trace: Use vzalloc to zero
+ instead of vmalloc+memset
+Date: Wed, 01 Aug 2018 08:47:24 -0700
+Message-ID: <77b011b9862cb5c89ddf9e0c8cb0743ba21d9cce.camel@perches.com>
+References: <1533129976-51930-1-git-send-email-zhongjiang@huawei.com>
+         <1533129976-51930-2-git-send-email-zhongjiang@huawei.com>
+         <CAHp75Vchu7QwNBeYQxa9fY8=PinGzPpUPaRbk_MyoZ+w07hA4A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20180731195155.46664-9-keescook@chromium.org>
+In-Reply-To: <CAHp75Vchu7QwNBeYQxa9fY8=PinGzPpUPaRbk_MyoZ+w07hA4A@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Kees Cook <keescook@chromium.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Borislav Petkov <bp@alien8.de>, "David S. Miller" <davem@davemloft.net>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Thomas Gleixner <tglx@linutronix.de>, Philippe Ombredanne <pombredanne@nexb.com>, Stephen Boyd <sboyd@codeaurora.org>, Cyrille Pitchen <cyrille.pitchen@free-electrons.com>, Juergen Gross <jgross@suse.com>, Viresh Kumar <viresh.kumar@linaro.org>, Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= <u.kleine-koenig@pengutronix.de>, Sagar
+To: Andy Shevchenko <andy.shevchenko@gmail.com>, zhong jiang <zhongjiang@huawei.com>
+Cc: John Garry <john.garry@huawei.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, aacraid@microsemi.com, linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Jul 31, 2018 at 12:51:53PM -0700, Kees Cook wrote:
-> To support future compile-time sizeof() checks that will be able to
-> validate the length of sense buffers, this removes the only dynamically
-> allocated sense buffers in the tree by putting the 96 byte sense buffers
-> on the stack.
+On Wed, 2018-08-01 at 18:30 +0300, Andy Shevchenko wrote:
+> On Wed, Aug 1, 2018 at 4:26 PM, zhong jiang <zhongjiang@huawei.com> wrote:
+> > The vzalloc is better than vmalloc+memset, so replace them to make
+> > the code concise.
+> > -       fnic_trace_buf_p = (unsigned long)vmalloc((trace_max_pages * PAGE_SIZE));
+> > +       fnic_trace_buf_p = (unsigned long)vzalloc((trace_max_pages * PAGE_SIZE));
+> 
+> At the same time you may get rid of unnecessary parens.
 
-Acked-by: Tejun Heo <tj@kernel.org>
-
-Thanks.
-
--- 
-tejun
+And at the same time, perhaps use kvcalloc and kvfree
+instead of always using vmalloc as the allocation size
+can be less than the allowable for a single kmalloc.
