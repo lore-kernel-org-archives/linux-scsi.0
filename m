@@ -1,52 +1,69 @@
-From: Colin King <colin.king@canonical.com>
-Subject: [PATCH] scsi: csiostor: avoid null pointer dereference on card_fw allocation failure
-Date: Wed,  1 Aug 2018 17:17:43 +0100
-Message-ID: <20180801161743.22301-1-colin.king@canonical.com>
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [PATCH 4.17 280/336] scsi: scsi_dh: replace too broad
+	"TP9" string with the exact models
+Date: Wed,  1 Aug 2018 18:50:15 +0200
+Message-ID: <20180801165039.741047962@linuxfoundation.org>
+References: <20180801165028.930831994@linuxfoundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Varun Prakash <varun@chelsio.com>, linux-scsi@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <20180801165028.930831994@linuxfoundation.org>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: linux-kernel@vger.kernel.org
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, SCSI ML <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, stable@vger.kernel.org, Sasha Levin <alexander.levin@microsoft.com>, NetApp RDAC team <ng-eseries-upstream-maintainers@netapp.com>, DM ML <dm-devel@redhat.com>, Xose Vazquez Perez <xose.vazquez@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Colin Ian King <colin.king@canonical.com>
+4.17-stable review patch.  If anyone has any objections, please let me know.
 
-Currently if card_fw fails to be allocated then a null pointer
-dereference occurs on card_fd when calling csio_hw_prep_fw. Fix this
-by checking for a failed allocation and returning -ENOMEM.
+------------------
 
-Detected by CoverityScan, CID#1271213 ("Dereference null return value")
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
+[ Upstream commit 37b37d2609cb0ac267280ef27350b962d16d272e ]
+
+SGI/TP9100 is not an RDAC array:
+    ^^^
+https://git.opensvc.com/gitweb.cgi?p=multipath-tools/.git;a=blob;f=libmultipath/hwtable.c;h=88b4700beb1d8940008020fbe4c3cd97d62f4a56;hb=HEAD#l235
+
+This partially reverts commit 35204772ea03 ("[SCSI] scsi_dh_rdac :
+Consolidate rdac strings together")
+
+[mkp: fixed up the new entries to align with rest of struct]
+
+Cc: NetApp RDAC team <ng-eseries-upstream-maintainers@netapp.com>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: James E.J. Bottomley <jejb@linux.vnet.ibm.com>
+Cc: Martin K. Petersen <martin.petersen@oracle.com>
+Cc: SCSI ML <linux-scsi@vger.kernel.org>
+Cc: DM ML <dm-devel@redhat.com>
+Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <alexander.levin@microsoft.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 ---
- drivers/scsi/csiostor/csio_hw.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/scsi/scsi_dh.c |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/csiostor/csio_hw.c b/drivers/scsi/csiostor/csio_hw.c
-index a10cf25ee7f9..aa637e9ea9ba 100644
---- a/drivers/scsi/csiostor/csio_hw.c
-+++ b/drivers/scsi/csiostor/csio_hw.c
-@@ -2275,8 +2275,8 @@ static int csio_hw_prep_fw(struct csio_hw *hw, struct fw_info *fw_info,
- }
- 
- /*
-- * Returns -EINVAL if attempts to flash the firmware failed
-- * else returns 0,
-+ * Returns -EINVAL if attempts to flash the firmware failed,
-+ * -ENOMEM if allocation failed, else returns 0,
-  * if flashing was not attempted because the card had the
-  * latest firmware ECANCELED is returned
-  */
-@@ -2321,6 +2321,8 @@ csio_hw_flash_fw(struct csio_hw *hw, int *reset)
- 	 * card
- 	 */
- 	card_fw = kmalloc(sizeof(*card_fw), GFP_KERNEL);
-+	if (!card_fw)
-+		return -ENOMEM;
- 
- 	/* upgrade FW logic */
- 	ret = csio_hw_prep_fw(hw, fw_info, fw_data, fw_size, card_fw,
--- 
-2.17.1
+--- a/drivers/scsi/scsi_dh.c
++++ b/drivers/scsi/scsi_dh.c
+@@ -58,7 +58,10 @@ static const struct scsi_dh_blist scsi_d
+ 	{"IBM", "3526",			"rdac", },
+ 	{"IBM", "3542",			"rdac", },
+ 	{"IBM", "3552",			"rdac", },
+-	{"SGI", "TP9",			"rdac", },
++	{"SGI", "TP9300",		"rdac", },
++	{"SGI", "TP9400",		"rdac", },
++	{"SGI", "TP9500",		"rdac", },
++	{"SGI", "TP9700",		"rdac", },
+ 	{"SGI", "IS",			"rdac", },
+ 	{"STK", "OPENstorage",		"rdac", },
+ 	{"STK", "FLEXLINE 380",		"rdac", },
