@@ -1,30 +1,31 @@
-From: Joe Perches <joe@perches.com>
-Subject: Re: [PATCH 1/4] driver/scsi/fnic/fnic_trace: Use vzalloc to zero
- instead of vmalloc+memset
-Date: Wed, 01 Aug 2018 08:47:24 -0700
-Message-ID: <77b011b9862cb5c89ddf9e0c8cb0743ba21d9cce.camel@perches.com>
-References: <1533129976-51930-1-git-send-email-zhongjiang@huawei.com>
-         <1533129976-51930-2-git-send-email-zhongjiang@huawei.com>
-         <CAHp75Vchu7QwNBeYQxa9fY8=PinGzPpUPaRbk_MyoZ+w07hA4A@mail.gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 1/2] sysfs: Introduce sysfs_{un,}break_active_protection()
+Date: Wed, 1 Aug 2018 08:53:54 -0700
+Message-ID: <20180801155354.GQ1206094@devbig004.ftw2.facebook.com>
+References: <20180730184052.13442-1-bart.vanassche@wdc.com>
+ <20180730184052.13442-2-bart.vanassche@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAHp75Vchu7QwNBeYQxa9fY8=PinGzPpUPaRbk_MyoZ+w07hA4A@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andy Shevchenko <andy.shevchenko@gmail.com>, zhong jiang <zhongjiang@huawei.com>
-Cc: John Garry <john.garry@huawei.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, aacraid@microsemi.com, linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <stable-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20180730184052.13442-2-bart.vanassche@wdc.com>
+Sender: stable-owner@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@wdc.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2018-08-01 at 18:30 +0300, Andy Shevchenko wrote:
-> On Wed, Aug 1, 2018 at 4:26 PM, zhong jiang <zhongjiang@huawei.com> wrote:
-> > The vzalloc is better than vmalloc+memset, so replace them to make
-> > the code concise.
-> > -       fnic_trace_buf_p = (unsigned long)vmalloc((trace_max_pages * PAGE_SIZE));
-> > +       fnic_trace_buf_p = (unsigned long)vzalloc((trace_max_pages * PAGE_SIZE));
+On Mon, Jul 30, 2018 at 11:40:51AM -0700, Bart Van Assche wrote:
+> Introduce these two functions and export them such that the next patch
+> can add calls to these functions from the SCSI core.
 > 
-> At the same time you may get rid of unnecessary parens.
+> Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
+> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> Cc: Tejun Heo <tj@kernel.org>
+> Cc: <stable@vger.kernel.org>
 
-And at the same time, perhaps use kvcalloc and kvfree
-instead of always using vmalloc as the allocation size
-can be less than the allowable for a single kmalloc.
+Acked-by: Tejun Heo <tj@kernel.org>
+
+Thanks.
+
+-- 
+tejun
