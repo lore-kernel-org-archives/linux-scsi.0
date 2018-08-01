@@ -1,49 +1,28 @@
-From: zhong jiang <zhongjiang@huawei.com>
-Subject: [PATCH v2] driver/scsi/pmcraid: Use pci_zalloc_consistent instead of pci_alloc_consistent+memset
-Date: Wed, 1 Aug 2018 15:16:45 +0800
-Message-ID: <1533107805-7545-1-git-send-email-zhongjiang@huawei.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v2 5/9] block: Switch struct packet_command to use struct
+ scsi_sense_hdr
+Date: Wed, 1 Aug 2018 01:22:20 -0700
+Message-ID: <20180801082220.GA26378@infradead.org>
+References: <20180731195155.46664-1-keescook@chromium.org>
+ <20180731195155.46664-6-keescook@chromium.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20180731195155.46664-6-keescook@chromium.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Kees Cook <keescook@chromium.org>
+Cc: Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Tejun Heo <tj@kernel.org>, Borislav Petkov <bp@alien8.de>, "David S. Miller" <davem@davemloft.net>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Thomas Gleixner <tglx@linutronix.de>, Philippe Ombredanne <pombredanne@nexb.com>, Stephen Boyd <sboyd@codeaurora.org>, Cyrille Pitchen <cyrille.pitchen@free-electrons.com>, Juergen Gross <jgross@suse.com>, Viresh Kumar <viresh.kumar@linaro.org>, Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= <u.kleine-koenig@pengutro>
 List-Id: linux-scsi@vger.kernel.org
 
-Pci_zalloc_consistent is better than pci_alloc_consistent+memset,
-and it make the code concise
+On Tue, Jul 31, 2018 at 12:51:50PM -0700, Kees Cook wrote:
+> There is a lot of needless struct request_sense usage in the CDROM
+> code. These can all be struct scsi_sense_hdr instead, to avoid any
+> confusion over their respective structure sizes. This patch is a lot
+> of noise changing "sense" to "sshdr", but the final code is more
+> readable to distinguish between "sense" meaning "struct request_sense"
+> and "sshdr" meaning "struct scsi_sense_hdr".
 
-Signed-off-by: zhong jiang <zhongjiang@huawei.com>
----
- drivers/scsi/pmcraid.c | 9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
+Looks good,
 
-diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
-index 4e86994..8a6facc 100644
---- a/drivers/scsi/pmcraid.c
-+++ b/drivers/scsi/pmcraid.c
-@@ -4736,11 +4736,9 @@ static int pmcraid_allocate_host_rrqs(struct pmcraid_instance *pinstance)
- 	buffer_size = HRRQ_ENTRY_SIZE * PMCRAID_MAX_CMD;
- 
- 	for (i = 0; i < pinstance->num_hrrq; i++) {
--		pinstance->hrrq_start[i] =
--			pci_alloc_consistent(
--					pinstance->pdev,
--					buffer_size,
--					&(pinstance->hrrq_start_bus_addr[i]));
-+		pinstance->hrrq_start[i] = pci_zalloc_consistent(pinstance->pdev,
-+								buffer_size,
-+								&(pinstance->hrrq_start_bus_addr[i]));
- 
- 		if (!pinstance->hrrq_start[i]) {
- 			pmcraid_err("pci_alloc failed for hrrq vector : %d\n",
-@@ -4749,7 +4747,6 @@ static int pmcraid_allocate_host_rrqs(struct pmcraid_instance *pinstance)
- 			return -ENOMEM;
- 		}
- 
--		memset(pinstance->hrrq_start[i], 0, buffer_size);
- 		pinstance->hrrq_curr[i] = pinstance->hrrq_start[i];
- 		pinstance->hrrq_end[i] =
- 			pinstance->hrrq_start[i] + PMCRAID_MAX_CMD - 1;
--- 
-1.7.12.4
+Reviewed-by: Christoph Hellwig <hch@lst.de>
