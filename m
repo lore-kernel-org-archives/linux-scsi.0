@@ -1,14 +1,14 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 1/3] fcoe: fix use-after-free in fcoe_ctlr_els_send
-Date: Wed, 1 Aug 2018 08:30:13 +0200
-Message-ID: <a3ad59a7-3ccb-46e7-60b6-6ce073417564@suse.de>
+Subject: Re: [PATCH 2/3] scsi: fcoe: drop frames in ELS LOGO error path
+Date: Wed, 1 Aug 2018 08:30:33 +0200
+Message-ID: <bf4d9fbb-4801-044b-680e-b44894592b11@suse.de>
 References: <20180731134603.20089-1-jthumshirn@suse.de>
- <20180731134603.20089-2-jthumshirn@suse.de>
+ <20180731134603.20089-3-jthumshirn@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180731134603.20089-2-jthumshirn@suse.de>
+In-Reply-To: <20180731134603.20089-3-jthumshirn@suse.de>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 To: Johannes Thumshirn <jthumshirn@suse.de>, "Martin K . Petersen" <martin.petersen@oracle.com>
@@ -16,34 +16,51 @@ Cc: Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailingl
 List-Id: linux-scsi@vger.kernel.org
 
 On 07/31/2018 03:46 PM, Johannes Thumshirn wrote:
-> KASAN reports a use-after-free in fcoe_ctlr_els_send() when we're
-> sending a LOGO and have FIP debugging enabled. This is because we're
-> first freeing the skb and then printing the frame's DID. But the DID
-> is a member of the FC frame header which in turn is the skb's payload.
+> Drop the frames in the ELS LOGO error path instead of just returning
+> an error.
 > 
-> Exchange the debug print and kfree_skb() calls so we're not touching
-> the freed data.
+> This fixes the following kmemleak report:
+> unreferenced object 0xffff880064cb1000 (size 424):
+>   comm "kworker/0:2", pid 24, jiffies 4294904293 (age 68.504s)
+>   hex dump (first 32 bytes):
+>     00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+>     00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+>   backtrace:
+>     [<(____ptrval____)>] _fc_frame_alloc+0x2c/0x180 [libfc]
+>     [<(____ptrval____)>] fc_lport_enter_logo+0x106/0x360 [libfc]
+>     [<(____ptrval____)>] fc_fabric_logoff+0x8c/0xc0 [libfc]
+>     [<(____ptrval____)>] fcoe_if_destroy+0x79/0x3b0 [fcoe]
+>     [<(____ptrval____)>] fcoe_destroy_work+0xd2/0x170 [fcoe]
+>     [<(____ptrval____)>] process_one_work+0x7ff/0x1420
+>     [<(____ptrval____)>] worker_thread+0x87/0xef0
+>     [<(____ptrval____)>] kthread+0x2db/0x390
+>     [<(____ptrval____)>] ret_from_fork+0x35/0x40
+>     [<(____ptrval____)>] 0xffffffffffffffff
+> 
+> which can be triggered by issuing
+> echo eth0 > /sys/bus/fcoe/ctlr_destroy
 > 
 > Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
 > ---
->  drivers/scsi/fcoe/fcoe_ctlr.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  drivers/scsi/fcoe/fcoe_ctlr.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 > 
 > diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
-> index ea23c8dffc25..ceb35ebbeb8f 100644
+> index ceb35ebbeb8f..ffec695e0bfb 100644
 > --- a/drivers/scsi/fcoe/fcoe_ctlr.c
 > +++ b/drivers/scsi/fcoe/fcoe_ctlr.c
-> @@ -799,9 +799,9 @@ int fcoe_ctlr_els_send(struct fcoe_ctlr *fip, struct fc_lport *lport,
->  	fip->send(fip, skb);
->  	return -EINPROGRESS;
->  drop:
-> -	kfree_skb(skb);
->  	LIBFCOE_FIP_DBG(fip, "drop els_send op %u d_id %x\n",
->  			op, ntoh24(fh->fh_d_id));
-> +	kfree_skb(skb);
->  	return -EINVAL;
->  }
->  EXPORT_SYMBOL(fcoe_ctlr_els_send);
+> @@ -754,9 +754,9 @@ int fcoe_ctlr_els_send(struct fcoe_ctlr *fip, struct fc_lport *lport,
+>  	case ELS_LOGO:
+>  		if (fip->mode == FIP_MODE_VN2VN) {
+>  			if (fip->state != FIP_ST_VNMP_UP)
+> -				return -EINVAL;
+> +				goto drop;
+>  			if (ntoh24(fh->fh_d_id) == FC_FID_FLOGI)
+> -				return -EINVAL;
+> +				goto drop;
+>  		} else {
+>  			if (fip->state != FIP_ST_ENABLED)
+>  				return 0;
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
