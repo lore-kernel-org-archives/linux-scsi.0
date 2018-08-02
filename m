@@ -1,50 +1,60 @@
-From: zhong jiang <zhongjiang@huawei.com>
-Subject: Re: [PATCH] scsi:NCR5380: remove same check condition in NCR5380_select
-Date: Thu, 2 Aug 2018 11:45:53 +0800
-Message-ID: <5B627E71.5020600@huawei.com>
-References: <1533179408-20631-1-git-send-email-zhongjiang@huawei.com> <c99a75a2905c1eef50f94ccc0871c36af431e21a.camel@wdc.com>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH 2/2] scsi:qlogicfas408: remove the same check in
+ qlogicfas408_detect
+Date: Thu, 2 Aug 2018 03:52:14 +0000
+Message-ID: <2ff30988089f3cbc0d2127dbfaa29955e0449997.camel@wdc.com>
+References: <1533177901-19514-1-git-send-email-zhongjiang@huawei.com>
+         <1533177901-19514-3-git-send-email-zhongjiang@huawei.com>
+         <dc1f8e81007466172d383cc63a4be246c568a2d4.camel@wdc.com>
+         <5B627AB2.8000101@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-7"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-7"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <c99a75a2905c1eef50f94ccc0871c36af431e21a.camel@wdc.com>
+In-Reply-To: <5B627AB2.8000101@huawei.com>
+Content-Language: en-US
+Content-ID: <73802270CCDF2E48B707FDE28290CB10@namprd04.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "fthain@telegraphics.com.au" <fthain@telegraphics.com.au>, "schmitzmic@gmail.com" <schmitzmic@gmail.com>, "andy.shevchenko@gmail.com" <andy.shevchenko@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "john.garry@huawei.com" <john.garry@huawei.com>
+To: "zhongjiang@huawei.com" <zhongjiang@huawei.com>
+Cc: "andy.shevchenko@gmail.com" <andy.shevchenko@gmail.com>, "aacraid@microsemi.com" <aacraid@microsemi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "john.garry@huawei.com" <john.garry@huawei.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 2018/8/2 11:26, Bart Van Assche wrote:
-> On Thu, 2018-08-02 at 11:10 +ACs-0800, zhong jiang wrote:
->> The same check condition is redundant, so remove one of them.
->>
->> Signed-off-by: zhong jiang <zhongjiang+AEA-huawei.com>
->> ---
->>  drivers/scsi/NCR5380.c +AHw- 3 +ACs---
->>  1 file changed, 1 insertion(+ACs-), 2 deletions(-)
->>
->> diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
->> index 90ea0f5..2ecaf3f 100644
->> --- a/drivers/scsi/NCR5380.c
->> +ACsAKwAr- b/drivers/scsi/NCR5380.c
->> +AEAAQA- -999,8 +ACs-999,7 +AEAAQA- static struct scsi+AF8-cmnd +ACo-NCR5380+AF8-select(struct Scsi+AF8-Host +ACo-instance,
->>  
->>  	/+ACo- Check for lost arbitration +ACo-/
->>  	if ((NCR5380+AF8-read(INITIATOR+AF8-COMMAND+AF8-REG) +ACY- ICR+AF8-ARBITRATION+AF8-LOST) +AHwAfA-
->> -	    (NCR5380+AF8-read(CURRENT+AF8-SCSI+AF8-DATA+AF8-REG) +ACY- hostdata->id+AF8-higher+AF8-mask) +AHwAfA-
->> -	    (NCR5380+AF8-read(INITIATOR+AF8-COMMAND+AF8-REG) +ACY- ICR+AF8-ARBITRATION+AF8-LOST)) +AHs-
->> +ACs-	    (NCR5380+AF8-read(CURRENT+AF8-SCSI+AF8-DATA+AF8-REG) +ACY- hostdata->id+AF8-higher+AF8-mask)) +AHs-
->>  		NCR5380+AF8-write(MODE+AF8-REG, MR+AF8-BASE);
->>  		dsprintk(NDEBUG+AF8-ARBITRATION, instance, "lost arbitration, deasserting MR+AF8-ARBITRATE+AFw-n");
->>  		spin+AF8-lock+AF8-irq(+ACY-hostdata->lock);
-> Has this patch been tested?
- I check the issue by doubletest.cocci. Just review the code by myself. Maybe I miss something else.
- please tell let me know if you any objection.
+On Thu, 2018-08-02 at 11:29 +-0800, zhong jiang wrote:
++AD4- On 2018/8/2 11:21, Bart Van Assche wrote:
++AD4- +AD4- On Thu, 2018-08-02 at 10:45 +-0800, zhong jiang wrote:
++AD4- +AD4- +AD4- we should not use same check in a expression. just remove=
+ one
++AD4- +AD4- +AD4- of them.
++AD4- +AD4- +AD4-=20
++AD4- +AD4- +AD4- Signed-off-by: zhong jiang +ADw-zhongjiang+AEA-huawei.com=
++AD4-
++AD4- +AD4- +AD4- ---
++AD4- +AD4- +AD4-  drivers/scsi/qlogicfas408.c +AHw- 3 +---
++AD4- +AD4- +AD4-  1 file changed, 1 insertion(+-), 2 deletions(-)
++AD4- +AD4- +AD4-=20
++AD4- +AD4- +AD4- diff --git a/drivers/scsi/qlogicfas408.c b/drivers/scsi/q=
+logicfas408.c
++AD4- +AD4- +AD4- index 8b471a9..1409ac1 100644
++AD4- +AD4- +AD4- --- a/drivers/scsi/qlogicfas408.c
++AD4- +AD4- +AD4- +-+-+- b/drivers/scsi/qlogicfas408.c
++AD4- +AD4- +AD4- +AEAAQA- -567,8 +-567,7 +AEAAQA- void qlogicfas408+AF8-se=
+tup(int qbase, int id, int int+AF8-type)
++AD4- +AD4- +AD4-  int qlogicfas408+AF8-detect(int qbase, int int+AF8-type)
++AD4- +AD4- +AD4-  +AHs-
++AD4- +AD4- +AD4-          REG1+ADs-
++AD4- +AD4- +AD4- -	return (((inb(qbase +- 0xe) +AF4- inb(qbase +- 0xe)) +A=
+D0APQ- 7) +ACYAJg-
++AD4- +AD4- +AD4- -	       ((inb(qbase +- 0xe) +AF4- inb(qbase +- 0xe)) +AD=
+0APQ- 7))+ADs-	=09
++AD4- +AD4- +AD4- +-	return (inb(qbase +- 0xe) +AF4- inb(qbase +- 0xe)) +AD=
+0APQ- 7+ADs-
++AD4- +AD4- +AD4-  +AH0-
++AD4- +AD4-=20
++AD4- +AD4- Does inb() have any side effects?
++AD4-=20
++AD4-  just redundant. is it necessary for this . Maybe I miss something.
 
- Thanks
- zhong jiang
-> Thanks,
->
-> Bart.
->
->
->
+If doubletest.cocci came up with this patch, I think that script is
+wrong and needs a thorough review.
+
+Bart.
