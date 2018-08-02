@@ -1,113 +1,67 @@
-From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH 1/2] sysfs: Introduce sysfs_{un,}break_active_protection()
-Date: Thu,  2 Aug 2018 10:51:40 -0700
-Message-ID: <20180802175141.8699-2-bart.vanassche@wdc.com>
-References: <20180802175141.8699-1-bart.vanassche@wdc.com>
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20180802175141.8699-1-bart.vanassche@wdc.com>
-Sender: stable-owner@vger.kernel.org
-To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Tejun Heo <tj@kernel.org>, Bart Van Assche <bart.vanassche@wdc.com>, stable@vger.kernel.org
+From: Guenter Roeck <linux@roeck-us.net>
+Subject: Re: [PATCH V2 2/2] blk-mq: fix blk_mq_tagset_busy_iter
+Date: Thu, 2 Aug 2018 11:37:20 -0700
+Message-ID: <20180802183720.GA19280@roeck-us.net>
+References: <20180802174937.15444-1-ming.lei@redhat.com>
+ <20180802174937.15444-3-ming.lei@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20180802174937.15444-3-ming.lei@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ming Lei <ming.lei@redhat.com>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, Josef Bacik <josef@toxicpanda.com>, Christoph Hellwig <hch@lst.de>, Mark Brown <broonie@kernel.org>, Matt Hart <matthew.hart@linaro.org>, Johannes Thumshirn <jthumshirn@suse.de>, John Garry <john.garry@huawei.com>, Hannes Reinecke <hare@suse.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Introduce these two functions and export them such that the next patch
-can add calls to these functions from the SCSI core.
+On Fri, Aug 03, 2018 at 01:49:37AM +0800, Ming Lei wrote:
+> Commit d250bf4e776ff09d5("blk-mq: only iterate over inflight requests
+> in blk_mq_tagset_busy_iter") uses 'blk_mq_rq_state(rq) == MQ_RQ_IN_FLIGHT'
+> to replace 'blk_mq_request_started(req)', this way is wrong, and causes
+> lots of test system hang during booting.
+> 
+> Fix the issue by using blk_mq_request_started(req) inside bt_tags_iter().
+> 
+> Fixes: d250bf4e776ff09d5 ("blk-mq: only iterate over inflight requests in blk_mq_tagset_busy_iter")
+> Cc: Josef Bacik <josef@toxicpanda.com>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Guenter Roeck <linux@roeck-us.net>
+> Cc: Mark Brown <broonie@kernel.org>
+> Cc: Matt Hart <matthew.hart@linaro.org>
+> Cc: Johannes Thumshirn <jthumshirn@suse.de>
+> Cc: John Garry <john.garry@huawei.com>
+> Cc: Hannes Reinecke <hare@suse.com>,
+> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
+> Cc: James Bottomley <James.Bottomley@hansenpartnership.com>
+> Cc: linux-scsi@vger.kernel.org
+> Cc: linux-kernel@vger.kernel.org
+> Reported-by: Mark Brown <broonie@kernel.org>
+> Reported-by: Guenter Roeck <linux@roeck-us.net>
+> Signed-off-by: Ming Lei <ming.lei@redhat.com>
 
-Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
-Acked-by: Tejun Heo <tj@kernel.org>
-Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: <stable@vger.kernel.org>
----
- fs/sysfs/file.c       | 44 +++++++++++++++++++++++++++++++++++++++++++
- include/linux/sysfs.h | 14 ++++++++++++++
- 2 files changed, 58 insertions(+)
+Tested-by: Guenter Roeck <linux@roeck-us.net>
 
-diff --git a/fs/sysfs/file.c b/fs/sysfs/file.c
-index 5c13f29bfcdb..118fa197a35f 100644
---- a/fs/sysfs/file.c
-+++ b/fs/sysfs/file.c
-@@ -405,6 +405,50 @@ int sysfs_chmod_file(struct kobject *kobj, const struct attribute *attr,
- }
- EXPORT_SYMBOL_GPL(sysfs_chmod_file);
- 
-+/**
-+ * sysfs_break_active_protection - break "active" protection
-+ * @kobj: The kernel object @attr is associated with.
-+ * @attr: The attribute to break the "active" protection for.
-+ *
-+ * With sysfs, just like kernfs, deletion of an attribute is postponed until
-+ * all active .show() and .store() callbacks have finished unless this function
-+ * is called. Hence this function is useful in methods that implement self
-+ * deletion.
-+ */
-+struct kernfs_node *sysfs_break_active_protection(struct kobject *kobj,
-+						  const struct attribute *attr)
-+{
-+	struct kernfs_node *kn;
-+
-+	kobject_get(kobj);
-+	kn = kernfs_find_and_get(kobj->sd, attr->name);
-+	if (kn)
-+		kernfs_break_active_protection(kn);
-+	return kn;
-+}
-+EXPORT_SYMBOL_GPL(sysfs_break_active_protection);
-+
-+/**
-+ * sysfs_unbreak_active_protection - restore "active" protection
-+ * @kn: Pointer returned by sysfs_break_active_protection().
-+ *
-+ * Undo the effects of sysfs_break_active_protection(). Since this function
-+ * calls kernfs_put() on the kernfs node that corresponds to the 'attr'
-+ * argument passed to sysfs_break_active_protection() that attribute may have
-+ * been removed between the sysfs_break_active_protection() and
-+ * sysfs_unbreak_active_protection() calls, it is not safe to access @kn after
-+ * this function has returned.
-+ */
-+void sysfs_unbreak_active_protection(struct kernfs_node *kn)
-+{
-+	struct kobject *kobj = kn->parent->priv;
-+
-+	kernfs_unbreak_active_protection(kn);
-+	kernfs_put(kn);
-+	kobject_put(kobj);
-+}
-+EXPORT_SYMBOL_GPL(sysfs_unbreak_active_protection);
-+
- /**
-  * sysfs_remove_file_ns - remove an object attribute with a custom ns tag
-  * @kobj: object we're acting for
-diff --git a/include/linux/sysfs.h b/include/linux/sysfs.h
-index b8bfdc173ec0..3c12198c0103 100644
---- a/include/linux/sysfs.h
-+++ b/include/linux/sysfs.h
-@@ -237,6 +237,9 @@ int __must_check sysfs_create_files(struct kobject *kobj,
- 				   const struct attribute **attr);
- int __must_check sysfs_chmod_file(struct kobject *kobj,
- 				  const struct attribute *attr, umode_t mode);
-+struct kernfs_node *sysfs_break_active_protection(struct kobject *kobj,
-+						  const struct attribute *attr);
-+void sysfs_unbreak_active_protection(struct kernfs_node *kn);
- void sysfs_remove_file_ns(struct kobject *kobj, const struct attribute *attr,
- 			  const void *ns);
- bool sysfs_remove_file_self(struct kobject *kobj, const struct attribute *attr);
-@@ -350,6 +353,17 @@ static inline int sysfs_chmod_file(struct kobject *kobj,
- 	return 0;
- }
- 
-+static inline struct kernfs_node *
-+sysfs_break_active_protection(struct kobject *kobj,
-+			      const struct attribute *attr)
-+{
-+	return NULL;
-+}
-+
-+static inline void sysfs_unbreak_active_protection(struct kernfs_node *kn)
-+{
-+}
-+
- static inline void sysfs_remove_file_ns(struct kobject *kobj,
- 					const struct attribute *attr,
- 					const void *ns)
--- 
-2.18.0
+Test builds (with both patches applied):
+
+Building mips:malta_defconfig:nosmp ... running ..... passed
+Building mips:malta_defconfig:smp ... running ..... passed
+Building x86_64:q35:Broadwell-noTSX:defconfig:smp:sata:rootfs ... running .....  passed
+Building x86_64:q35:IvyBridge:defconfig:smp:nvme:rootfs ... running ..... passed
+Building x86_64:q35:SandyBridge:defconfig:smp:usb:rootfs ... running ......  passed
+Building x86_64:q35:Haswell:defconfig:smp:usb-uas:rootfs ... running ......  passed
+Building x86_64:q35:Skylake-Client:defconfig:smp:mmc:rootfs ... running ......  passed
+Building x86_64:q35:Conroe:defconfig:smp:scsi[DC395]:rootfs ... running .......  passed
+Building x86_64:q35:Nehalem:defconfig:smp:scsi[AM53C974]:rootfs ... running ....... passed
+Building x86_64:q35:Westmere-IBRS:defconfig:smp:scsi[53C810]:rootfs ... running ...... passed
+Building x86_64:q35:Skylake-Server:defconfig:smp:scsi[53C895A]:rootfs ...  running ...... passed
+Building x86_64:pc:EPYC:defconfig:smp:scsi[MEGASAS]:rootfs ... running ......  passed
+Building x86_64:q35:EPYC-IBPB:defconfig:smp:scsi[MEGASAS2]:rootfs ... running ..... passed
+Building x86_64:q35:Opteron_G5:defconfig:smp:scsi[FUSION]:rootfs ... running ..... passed
+Building x86_64:pc:phenom:defconfig:smp:initrd ... running ..... passed
+Building x86_64:q35:Opteron_G1:defconfig:smp:initrd ... running ..... passed
+Building x86_64:pc:Opteron_G2:defconfig:smp:sata:rootfs ... running ..... passed
+Building x86_64:q35:core2duo:defconfig:smp:usb:rootfs ... running ...... passed
+Building x86_64:pc:Opteron_G3:defconfig:nosmp:usb:rootfs ... running .......  passed
+Building x86_64:q35:Opteron_G4:defconfig:nosmp:sata:rootfs ... running ......  passed
+
+Guenter
