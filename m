@@ -1,71 +1,51 @@
-From: Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: libfc mutex under RCU read section error since
- "libfc: Fixup disc_mutex handling"
-Date: Wed, 1 Aug 2018 18:09:00 -0700
-Message-ID: <20180802010900.GA2222132@straylight.hirudinean.org>
-References: <20180731175607.GA1237244@straylight.hirudinean.org>
- <e3bd6958-ca17-bc75-2a66-29d7d2a38ebf@suse.de>
+From: Guenter Roeck <linux@roeck-us.net>
+Subject: Re: linux-next: Tree for Aug 1
+Date: Wed, 1 Aug 2018 18:19:00 -0700
+Message-ID: <83936bed-e783-191f-c308-8f8470a0dbf3@roeck-us.net>
+References: <20180801175852.36549130@canb.auug.org.au>
+ <20180801224813.GA13074@roeck-us.net>
+ <1533163965.3158.1.camel@HansenPartnership.com>
+ <1533164454.3158.3.camel@HansenPartnership.com>
+ <20180802100505.56e663cb@canb.auug.org.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <e3bd6958-ca17-bc75-2a66-29d7d2a38ebf-l3A5Bk7waGM@public.gmane.org>
-List-Unsubscribe: <http://lists.open-fcoe.org/mailman/options/fcoe-devel>,
- <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.open-fcoe.org/pipermail/fcoe-devel/>
-List-Post: <mailto:fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-List-Help: <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.open-fcoe.org/mailman/listinfo/fcoe-devel>,
- <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
-Errors-To: fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
-Sender: "fcoe-devel" <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-To: Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>
-Cc: fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, Johannes Thumshirn <jth-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20180802100505.56e663cb@canb.auug.org.au>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Stephen Rothwell <sfr@canb.auug.org.au>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Linux-Next Mailing List <linux-next@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Aug 01, 2018 at 08:29:00AM +0200, Hannes Reinecke wrote:
-> On 07/31/2018 07:56 PM, Chris Leech wrote:
-> > The libfc and libfcoe modules look to have issues with mutexs being used
-> > under rcu_read_lock, which triggers "Illegal context switch in RCU read
-> > side critical section" warnings under debug kernels.
-> > 
-> > I started looking at fc_disc.c where rport discovery code appears to
-> > take a mutex for each rport in fc_rport_login/fc_rport_logoff while
-> > being called under rcu_read_lock from fc_disc_done.
-> > 
-> > With the rdata->kref held, I know rcu_read_unlock can be safely called
-> > before login fc_rport_login/logoff.  But I don't know if it's safe to
-> > then recall rcu_read_lock and simply continue on with the
-> > list_for_each_entry_rcu or not.
-> > 
-> > And as I start looking into this one case, I also get the same class of
-> > problem popping up in at least libfcoe:fcoe_ctrl.c from
-> > fcoe_ctrl_timer_work as well :(
-> > 
-> This should've been fixed by my patch series "libfc/fcoe: disc_mutex fixes".
+On 08/01/2018 05:05 PM, Stephen Rothwell wrote:
+> Hi all,
 > 
-> Can you check if this series is applied in your tree?
+> On Wed, 01 Aug 2018 16:00:54 -0700 James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+>>
+>> So what seems to be happening to cause this is that there's a patch
+>> somewhere between the merge base of my scsi-next series and the next
+>> tree and the patch just before scsi-next was actually merged that
+>> actually causes a boot failure with blk-mq enabled.  Could you try to
+>> find this patch?  I think the way to do it is to try to bisect this
+>> range of linux-next using the command line
+>>
+>> scsi_mod.use_blk_mq=1
+>>
+>> Which forces block mq to be the default and seeing where the first boot
+>> failure is (you don't need my scsi-next tree merged to do this because
+>> all the offending patch does is flip the default state of the above
+>> flag).
+> 
+> So this means using v4.8-rc1 as the first good commit and 453f1d821165
+> ("Merge remote-tracking branch 'cgroup/for-next'") as the first bad
+> (assuming that this latter fails to boot with "scsi_mod.use_blk_mq=1").
+> 
 
-Thanks, I missed those and they do fix things up!
+Puzzled. Same results. 453f1d821165 works with both scsi_mod.use_blk_mq=0
+and scsi_mod.use_blk_mq=1. next-20180801 works with scsi_mod.use_blk_mq=0
+and fails with scsi_mod.use_blk_mq=1. Bisect still points to the same commit
+(which just changes the default) as culprit. I know that doesn't make sense.
+I'll need to think about it.
 
-One question about "Add WARN_ON() when deleting rports"
-
->	--- a/drivers/scsi/libfc/fc_rport.c
->	+++ b/drivers/scsi/libfc/fc_rport.c
->	@@ -184,6 +184,7 @@ void fc_rport_destroy(struct kref *kref)
->		struct fc_rport_priv *rdata;
->	 
->		rdata = container_of(kref, struct fc_rport_priv, kref);
->	+	WARN_ON(!list_empty(&rdata->peers));
->		kfree_rcu(rdata, rcu);
->	 }
->	 EXPORT_SYMBOL(fc_rport_destroy);
-
-The list_head isn't reinitialized to make list_empty() return true after
-list_del_rcu(), as there may still be readers traversing the list.
-
-So doesn't this warning trigger on every deleted rport?
-
-Thanks!
-- Chris
+Guenter
