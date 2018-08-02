@@ -1,106 +1,71 @@
-From: Guenter Roeck <linux@roeck-us.net>
-Subject: Re: linux-next: Tree for Aug 1
-Date: Wed, 1 Aug 2018 17:20:18 -0700
-Message-ID: <c2f47956-c93d-d699-6046-c88990b6961f@roeck-us.net>
-References: <20180801175852.36549130@canb.auug.org.au>
- <20180801224813.GA13074@roeck-us.net>
- <1533163965.3158.1.camel@HansenPartnership.com>
- <20180801234727.GA3762@roeck-us.net>
- <CACVXFVMrzLRP5Q=cwZGnqeUeyODL3Pq9jMkT7czZouK9510fUA@mail.gmail.com>
- <1533168205.3158.12.camel@HansenPartnership.com>
+From: Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: libfc mutex under RCU read section error since
+ "libfc: Fixup disc_mutex handling"
+Date: Wed, 1 Aug 2018 18:09:00 -0700
+Message-ID: <20180802010900.GA2222132@straylight.hirudinean.org>
+References: <20180731175607.GA1237244@straylight.hirudinean.org>
+ <e3bd6958-ca17-bc75-2a66-29d7d2a38ebf@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1533168205.3158.12.camel@HansenPartnership.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, Ming Lei <tom.leiming@gmail.com>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>, Linux-Next Mailing List <linux-next@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <e3bd6958-ca17-bc75-2a66-29d7d2a38ebf-l3A5Bk7waGM@public.gmane.org>
+List-Unsubscribe: <http://lists.open-fcoe.org/mailman/options/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.open-fcoe.org/pipermail/fcoe-devel/>
+List-Post: <mailto:fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+List-Help: <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.open-fcoe.org/mailman/listinfo/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
+Errors-To: fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+Sender: "fcoe-devel" <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+To: Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>
+Cc: fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, Johannes Thumshirn <jth-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 08/01/2018 05:03 PM, James Bottomley wrote:
-> On Thu, 2018-08-02 at 07:57 +0800, Ming Lei wrote:
->> On Thu, Aug 2, 2018 at 7:47 AM, Guenter Roeck <linux@roeck-us.net>
->> wrote:
->>> On Wed, Aug 01, 2018 at 03:52:45PM -0700, James Bottomley wrote:
->>>> On Wed, 2018-08-01 at 15:48 -0700, Guenter Roeck wrote:
->>>>> On Wed, Aug 01, 2018 at 05:58:52PM +1000, Stephen Rothwell
->>>>> wrote:
->>>>>> Hi all,
->>>>>>
->>>>>> Changes since 20180731:
->>>>>>
->>>>>> The pci tree gained a conflict against the pci-current tree.
->>>>>>
->>>>>> The net-next tree gained a conflict against the bpf tree.
->>>>>>
->>>>>> The block tree lost its build failure.
->>>>>>
->>>>>> The staging tree still had its build failure due to an
->>>>>> interaction
->>>>>> with
->>>>>> the vfs tree for which I disabled CONFIG_EROFS_FS.
->>>>>>
->>>>>> The kspp tree lost its build failure.
->>>>>>
->>>>>> Non-merge commits (relative to Linus' tree): 10070
->>>>>>   9137 files changed, 417605 insertions(+), 179996 deletions(-
->>>>>> )
->>>>>>
->>>>>> -----------------------------------------------------------
->>>>>> ------
->>>>>> -----------
->>>>>>
->>>>>
->>>>> The widespread kernel hang issues are still seen. I managed
->>>>> to bisect it after working around the transient build failures.
->>>>> Bisect log is attached below. Unfortunately, it doesn't help
->>>>> much.
->>>>> The culprit is reported as:
->>>>>
->>>>> 2d542828c5e9 Merge remote-tracking branch 'scsi/for-next'
->>>>>
->>>>> The preceding merge,
->>>>>
->>>>> 453f1d821165 Merge remote-tracking branch 'cgroup/for-next'
->>>>>
->>>>> checks out fine, as does the tip of scsi-next (commit
->>>>> 103c7b7e0184,
->>>>> "Merge branch 'misc' into for-next"). No idea how to proceed.
->>>>
->>>> This sounds like you may have a problem with this patch:
->>>>
->>>>      commit d5038a13eca72fb216c07eb717169092e92284f1
->>>>       Author: Johannes Thumshirn <jthumshirn@suse.de>
->>>>       Date:   Wed Jul 4 10:53:56 2018 +0200
->>>>
->>>>           scsi: core: switch to scsi-mq by default
->>>>
->>>> To verify, boot with the additional kernel parameter
->>>>
->>>> scsi_mod.use_blk_mq=0
->>>>
->>>> Which will reverse the effect of the above patch.
->>>>
->>>
->>> Yes, that fixes the problem.
->>
->> That may not the root cause, given this issue is only started to
->> see from next-20180731, but d5038a13eca7 (scsi: core: switch to
->> scsi-mq by default)
->> has been in -next for quite a while.
->>
->> Seems something new causes this issue.
+On Wed, Aug 01, 2018 at 08:29:00AM +0200, Hannes Reinecke wrote:
+> On 07/31/2018 07:56 PM, Chris Leech wrote:
+> > The libfc and libfcoe modules look to have issues with mutexs being used
+> > under rcu_read_lock, which triggers "Illegal context switch in RCU read
+> > side critical section" warnings under debug kernels.
+> > 
+> > I started looking at fc_disc.c where rport discovery code appears to
+> > take a mutex for each rport in fc_rport_login/fc_rport_logoff while
+> > being called under rcu_read_lock from fc_disc_done.
+> > 
+> > With the rdata->kref held, I know rcu_read_unlock can be safely called
+> > before login fc_rport_login/logoff.  But I don't know if it's safe to
+> > then recall rcu_read_lock and simply continue on with the
+> > list_for_each_entry_rcu or not.
+> > 
+> > And as I start looking into this one case, I also get the same class of
+> > problem popping up in at least libfcoe:fcoe_ctrl.c from
+> > fcoe_ctrl_timer_work as well :(
+> > 
+> This should've been fixed by my patch series "libfc/fcoe: disc_mutex fixes".
 > 
-> Read my other email about how to find this.
-> 
-> https://marc.info/?l=linux-scsi&m=153316446223676
-> 
-> Now that we've confirmed the issue, Gunter, could you attempt to bisect
-> it as that email describes?
-> 
+> Can you check if this series is applied in your tree?
 
-Already working on it.
+Thanks, I missed those and they do fix things up!
 
-Guenter
+One question about "Add WARN_ON() when deleting rports"
+
+>	--- a/drivers/scsi/libfc/fc_rport.c
+>	+++ b/drivers/scsi/libfc/fc_rport.c
+>	@@ -184,6 +184,7 @@ void fc_rport_destroy(struct kref *kref)
+>		struct fc_rport_priv *rdata;
+>	 
+>		rdata = container_of(kref, struct fc_rport_priv, kref);
+>	+	WARN_ON(!list_empty(&rdata->peers));
+>		kfree_rcu(rdata, rcu);
+>	 }
+>	 EXPORT_SYMBOL(fc_rport_destroy);
+
+The list_head isn't reinitialized to make list_empty() return true after
+list_del_rcu(), as there may still be readers traversing the list.
+
+So doesn't this warning trigger on every deleted rport?
+
+Thanks!
+- Chris
