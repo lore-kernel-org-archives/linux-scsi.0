@@ -1,7 +1,7 @@
 From: zhong jiang <zhongjiang@huawei.com>
-Subject: [PATCH v2 1/4] driver/scsi/fnic/fnic_trace: Use kvcalloc instead of vmalloc+memset
-Date: Thu, 2 Aug 2018 19:28:31 +0800
-Message-ID: <1533209314-1074-2-git-send-email-zhongjiang@huawei.com>
+Subject: [PATCH v2 4/4] drivers/scsi/mvsas/mv_init: Use dma_zalloc_coherent to replace dma_alloc_coherent+memset
+Date: Thu, 2 Aug 2018 19:28:34 +0800
+Message-ID: <1533209314-1074-5-git-send-email-zhongjiang@huawei.com>
 References: <1533209314-1074-1-git-send-email-zhongjiang@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,51 +12,56 @@ To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, aacraid@microsemi.com
 Cc: andy.shevchenko@gmail.com, joe@perches.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-The kvcalloc is better than vmalloc() + memset(), So replace them to make
-the code concise.
+The dma_zalloc_coherent is better than dma_alloc_coherent+memset,
+so replace them.
 
 Signed-off-by: zhong jiang <zhongjiang@huawei.com>
+Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
 ---
- drivers/scsi/fnic/fnic_trace.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+ drivers/scsi/mvsas/mv_init.c | 12 ++++--------
+ 1 file changed, 4 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/fnic/fnic_trace.c b/drivers/scsi/fnic/fnic_trace.c
-index 8271785..57f67af 100644
---- a/drivers/scsi/fnic/fnic_trace.c
-+++ b/drivers/scsi/fnic/fnic_trace.c
-@@ -468,14 +468,13 @@ int fnic_trace_buf_init(void)
- 	fnic_max_trace_entries = (trace_max_pages * PAGE_SIZE)/
- 					  FNIC_ENTRY_SIZE_BYTES;
+diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
+index 8c91637..da62e18 100644
+--- a/drivers/scsi/mvsas/mv_init.c
++++ b/drivers/scsi/mvsas/mv_init.c
+@@ -253,33 +253,29 @@ static int mvs_alloc(struct mvs_info *mvi, struct Scsi_Host *shost)
+ 	/*
+ 	 * alloc and init our DMA areas
+ 	 */
+-	mvi->tx = dma_alloc_coherent(mvi->dev,
++	mvi->tx = dma_zalloc_coherent(mvi->dev,
+ 				     sizeof(*mvi->tx) * MVS_CHIP_SLOT_SZ,
+ 				     &mvi->tx_dma, GFP_KERNEL);
+ 	if (!mvi->tx)
+ 		goto err_out;
+-	memset(mvi->tx, 0, sizeof(*mvi->tx) * MVS_CHIP_SLOT_SZ);
+-	mvi->rx_fis = dma_alloc_coherent(mvi->dev, MVS_RX_FISL_SZ,
++	mvi->rx_fis = dma_zalloc_coherent(mvi->dev, MVS_RX_FISL_SZ,
+ 					 &mvi->rx_fis_dma, GFP_KERNEL);
+ 	if (!mvi->rx_fis)
+ 		goto err_out;
+-	memset(mvi->rx_fis, 0, MVS_RX_FISL_SZ);
  
--	fnic_trace_buf_p = (unsigned long)vmalloc((trace_max_pages * PAGE_SIZE));
-+	fnic_trace_buf_p = (unsigned long)kvcalloc(trace_max_pages, PAGE_SIZE, GFP_KERNEL);
- 	if (!fnic_trace_buf_p) {
- 		printk(KERN_ERR PFX "Failed to allocate memory "
- 				  "for fnic_trace_buf_p\n");
- 		err = -ENOMEM;
- 		goto err_fnic_trace_buf_init;
- 	}
--	memset((void *)fnic_trace_buf_p, 0, (trace_max_pages * PAGE_SIZE));
+-	mvi->rx = dma_alloc_coherent(mvi->dev,
++	mvi->rx = dma_zalloc_coherent(mvi->dev,
+ 				     sizeof(*mvi->rx) * (MVS_RX_RING_SZ + 1),
+ 				     &mvi->rx_dma, GFP_KERNEL);
+ 	if (!mvi->rx)
+ 		goto err_out;
+-	memset(mvi->rx, 0, sizeof(*mvi->rx) * (MVS_RX_RING_SZ + 1));
+ 	mvi->rx[0] = cpu_to_le32(0xfff);
+ 	mvi->rx_cons = 0xfff;
  
- 	fnic_trace_entries.page_offset =
- 		vmalloc(array_size(fnic_max_trace_entries,
-@@ -484,7 +483,7 @@ int fnic_trace_buf_init(void)
- 		printk(KERN_ERR PFX "Failed to allocate memory for"
- 				  " page_offset\n");
- 		if (fnic_trace_buf_p) {
--			vfree((void *)fnic_trace_buf_p);
-+			kvfree((void *)fnic_trace_buf_p);
- 			fnic_trace_buf_p = 0;
- 		}
- 		err = -ENOMEM;
-@@ -529,7 +528,7 @@ void fnic_trace_free(void)
- 		fnic_trace_entries.page_offset = NULL;
- 	}
- 	if (fnic_trace_buf_p) {
--		vfree((void *)fnic_trace_buf_p);
-+		kvfree((void *)fnic_trace_buf_p);
- 		fnic_trace_buf_p = 0;
- 	}
- 	printk(KERN_INFO PFX "Successfully Freed Trace Buffer\n");
+-	mvi->slot = dma_alloc_coherent(mvi->dev,
++	mvi->slot = dma_zalloc_coherent(mvi->dev,
+ 				       sizeof(*mvi->slot) * slot_nr,
+ 				       &mvi->slot_dma, GFP_KERNEL);
+ 	if (!mvi->slot)
+ 		goto err_out;
+-	memset(mvi->slot, 0, sizeof(*mvi->slot) * slot_nr);
+ 
+ 	mvi->bulk_buffer = dma_alloc_coherent(mvi->dev,
+ 				       TRASH_BUCKET_SIZE,
 -- 
 1.7.12.4
