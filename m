@@ -1,25 +1,34 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] [SCSI] sym53c8xx: remove some redundant variables
-Date: Thu, 02 Aug 2018 16:23:50 -0400
-Message-ID: <yq1zhy4y0tl.fsf@oracle.com>
-References: <20180801145841.5877-1-colin.king@canonical.com>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH V2 0/2] blk-mq: fix fix blk_mq_tagset_busy_iter
+Date: Thu, 2 Aug 2018 14:47:41 -0600
+Message-ID: <5d0d3e30-ac78-5a84-48b5-5e558c3e7eaa@kernel.dk>
+References: <20180802174937.15444-1-ming.lei@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180801145841.5877-1-colin.king@canonical.com> (Colin King's
-        message of "Wed, 1 Aug 2018 15:58:41 +0100")
+In-Reply-To: <20180802174937.15444-1-ming.lei@redhat.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Colin King <colin.king@canonical.com>
-Cc: Matthew Wilcox <willy@infradead.org>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Ming Lei <ming.lei@redhat.com>
+Cc: linux-block@vger.kernel.org, Josef Bacik <josef@toxicpanda.com>, Christoph Hellwig <hch@lst.de>, Guenter Roeck <linux@roeck-us.net>, Mark Brown <broonie@kernel.org>, Matt Hart <matthew.hart@linaro.org>, Johannes Thumshirn <jthumshirn@suse.de>, John Garry <john.garry@huawei.com>, Hannes Reinecke <hare@suse.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+On 8/2/18 11:49 AM, Ming Lei wrote:
+> Hi Jens,
+> 
+> The two patches fixes boot hang issue in lots of test vm system.
+> And the cause is in blk_mq_tagset_busy_iter().
+> 
+> V2:
+> 	- move blk_mq_request_started() into header file as suggested by
+> 	  James
 
-Colin,
+I'd be fine with moving that into a header, if the target of this
+was 4.19. But it's not, so there's absolutely no point to include
+that in this series.
 
-> Variables scriptb0 and dp_sgmin are being assigned but are never
-> used hence they are redundant and can be removed.
-
-Applied to 4.19/scsi-queue, thanks!
+I'm going to apply 2/2 for 4.18.
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+Jens Axboe
