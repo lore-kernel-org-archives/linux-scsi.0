@@ -1,7 +1,7 @@
 From: zhong jiang <zhongjiang@huawei.com>
-Subject: [PATCH 1/2] scsi:qla1280: remove unnessary same condition check
-Date: Thu, 2 Aug 2018 10:45:00 +0800
-Message-ID: <1533177901-19514-2-git-send-email-zhongjiang@huawei.com>
+Subject: [PATCH 2/2] scsi:qlogicfas408: remove the same check in qlogicfas408_detect
+Date: Thu, 2 Aug 2018 10:45:01 +0800
+Message-ID: <1533177901-19514-3-git-send-email-zhongjiang@huawei.com>
 References: <1533177901-19514-1-git-send-email-zhongjiang@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,25 +12,27 @@ To: andy.shevchenko@gmail.com, john.garry@huawei.com, jejb@linux.vnet.ibm.com, m
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-doulbe test in a expression is redundant. so just remove one of
-them.
+we should not use same check in a expression. just remove one
+of them.
 
 Signed-off-by: zhong jiang <zhongjiang@huawei.com>
 ---
- drivers/scsi/qla1280.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/scsi/qlogicfas408.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/qla1280.c b/drivers/scsi/qla1280.c
-index 390775d..8e6f156 100644
---- a/drivers/scsi/qla1280.c
-+++ b/drivers/scsi/qla1280.c
-@@ -1504,7 +1504,6 @@ static void qla1280_mailbox_timeout(struct timer_list *t)
- 	/* Issue SCSI reset, if we can't reset twice then bus is dead */
- 	for (bus = 0; bus < ha->ports; bus++) {
- 		if (!ha->bus_settings[bus].disable_scsi_reset &&
--		    qla1280_bus_reset(ha, bus) &&
- 		    qla1280_bus_reset(ha, bus))
- 			ha->bus_settings[bus].scsi_bus_dead = 1;
- 	}
+diff --git a/drivers/scsi/qlogicfas408.c b/drivers/scsi/qlogicfas408.c
+index 8b471a9..1409ac1 100644
+--- a/drivers/scsi/qlogicfas408.c
++++ b/drivers/scsi/qlogicfas408.c
+@@ -567,8 +567,7 @@ void qlogicfas408_setup(int qbase, int id, int int_type)
+ int qlogicfas408_detect(int qbase, int int_type)
+ {
+         REG1;
+-	return (((inb(qbase + 0xe) ^ inb(qbase + 0xe)) == 7) &&
+-	       ((inb(qbase + 0xe) ^ inb(qbase + 0xe)) == 7));		
++	return (inb(qbase + 0xe) ^ inb(qbase + 0xe)) == 7;
+ }
+ 
+ /*
 -- 
 1.7.12.4
