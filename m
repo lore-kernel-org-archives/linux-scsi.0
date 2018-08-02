@@ -1,50 +1,69 @@
-From: Kees Cook <keescook@chromium.org>
-Subject: Re: [PATCH v2 0/9] block: Consolidate scsi sense buffer usage
-Date: Thu, 2 Aug 2018 14:56:49 -0700
-Message-ID: <CAGXu5jLKk_9rw5etROW4ucwK+ZR7YfC_zq+6AwtxK4=S3Y7sOw@mail.gmail.com>
-References: <20180731195155.46664-1-keescook@chromium.org> <50e0f257-60d9-73c8-b4ac-a93c7bdccb57@kernel.dk>
+From: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Subject: Re: [PATCH v2 8/9] dmapool: reduce footprint in struct page
+Date: Thu, 2 Aug 2018 16:56:26 -0700
+Message-ID: <20180802235626.GA5773@bombadil.infradead.org>
+References: <0ccfd31b-0a3f-9ae8-85c8-e176cd5453a9@cybernetics.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <50e0f257-60d9-73c8-b4ac-a93c7bdccb57@kernel.dk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Tejun Heo <tj@kernel.org>, Borislav Petkov <bp@alien8.de>, "David S. Miller" <davem@davemloft.net>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Thomas Gleixner <tglx@linutronix.de>, Philippe Ombredanne <pombredanne@nexb.com>, Stephen Boyd <sboyd@codeaurora.org>, Cyrille Pitchen <cyrille.pitchen@free-electrons.com>, Juergen Gross <jgross@suse.com>, Viresh Kumar <viresh.kumar@linaro.org>, =?UTF-8?Q?Uwe_Kleine=2DK=C3=B6nig?= <u.kleine-koenig@pengutronix.de>, Sagar Dharia <sdharia>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <0ccfd31b-0a3f-9ae8-85c8-e176cd5453a9-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
+List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Tony Battersby <tonyb-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org>
+Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Chaitra P B <chaitra.basappa-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Suganath Prabu Subramani <suganath-prabu.subramani-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Sathya Prakash <sathya.prakash-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, MPT-FusionLinux.pdl-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Aug 2, 2018 at 2:24 PM, Jens Axboe <axboe@kernel.dk> wrote:
-> On 7/31/18 1:51 PM, Kees Cook wrote:
->> This is a follow-up to commit f7068114d45e ("sr: pass down correctly
->> sized SCSI sense buffer") which further cleans up and removes needless
->> sense character array buffers and "struct request_sense" usage in favor
->> of the common "struct scsi_sense_hdr".
->>
->> First, drop a bunch of unused sense buffers:
->>  [PATCH 1/9] ide-cd: Drop unused sense buffers
->>  [PATCH 2/9] scsi: cxlflash: Drop unused sense buffers
->>
->> Next, allow the sense buffer to be usable outside SCSI tree:
->>  [PATCH 3/9] scsi: build scsi_common.o for all scsi passthrough request users
->>  [PATCH 4/9] target: don't depend on SCSI
->>
->> Then move all request_sense usage to scsi_sense_hdr:
->>  [PATCH 5/9] block: Switch struct packet_command to use struct scsi_sense_hdr
->>
->> And do some further cleanups for scsi_sense_hdr now that we can:
->>  [PATCH 6/9] ide-cd: Remove redundant sense buffer
->>  [PATCH 7/9] cdrom: Use struct scsi_sense_hdr internally
->>
->> Finally add a build-time check to make sure we don't pass bad buffer sizes:
->>  [PATCH 8/9] libata-scsi: Move sense buffers onto stack
->>  [PATCH 9/9] scsi: Check sense buffer size at build time
->
-> Thanks Kees, applied for 4.19. Note that I hand applied patch #5 and #9,
-> since they did not apply directly to the block tree.
+On Thu, Aug 02, 2018 at 04:01:12PM -0400, Tony Battersby wrote:
+> This is my attempt to shrink 'dma_free_o' and 'dma_in_use' in 'struct
+> page' (originally 'offset' and 'in_use' in 'struct dma_page') to 16-bit
+> so that it is unnecessary to use the '_mapcount' field of 'struct
+> page'.  However, it adds complexity and makes allocating and freeing up
+> to 20% slower for little gain, so I am NOT recommending that it be
+> merged at this time.  I am posting it just for reference in case someone
+> finds it useful in the future.
 
-Thanks; I appreciate that. I think I was based on v4.18-rc2 or something.
+I spy some interesting pieces in here that I'd love you to submit as
+patches for merging.
 
--Kees
+> One of the nice things about this is that dma_pool_free() can do some
+> additional sanity checks:
+> *) Check that the offset of the passed-in address corresponds to a valid
+> block offset.
 
--- 
-Kees Cook
-Pixel Security
+Can't we do that already?  Subtract the base address of the page from
+the passed-in vaddr and check it's a multiple of pool->size?
+
+>  struct dma_pool {		/* the pool */
+>  #define POOL_FULL_IDX   0
+>  #define POOL_AVAIL_IDX  1
+>  #define POOL_N_LISTS    2
+>  	struct list_head page_list[POOL_N_LISTS];
+>  	spinlock_t lock;
+> -	size_t size;
+>  	struct device *dev;
+> -	size_t allocation;
+> -	size_t boundary;
+> +	unsigned int size;
+> +	unsigned int allocation;
+> +	unsigned int boundary_shift;
+> +	unsigned int blks_per_boundary;
+> +	unsigned int blks_per_alloc;
+
+s/size_t/unsigned int/ is a good saving on 64-bit systems.  We recently
+did something similar for slab/slub.
+
+> @@ -141,6 +150,7 @@ static DEVICE_ATTR(pools, 0444, show_pool
+>  struct dma_pool *dma_pool_create(const char *name, struct device *dev,
+>  				 size_t size, size_t align, size_t boundary)
+>  {
+
+We should change the API here too.
