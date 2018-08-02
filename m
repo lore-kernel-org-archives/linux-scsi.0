@@ -1,33 +1,108 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH V2 2/2] blk-mq: fix blk_mq_tagset_busy_iter
-Date: Thu, 2 Aug 2018 18:46:52 +0000
-Message-ID: <6f5d30bf747641778164335a64255bd7a027bc4c.camel@wdc.com>
-References: <20180802174937.15444-1-ming.lei@redhat.com>
-         <20180802174937.15444-3-ming.lei@redhat.com>
+From: Tony Battersby <tonyb-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org>
+Subject: [PATCH v2 0/9] mpt3sas and dmapool scalability
+Date: Thu, 2 Aug 2018 15:56:14 -0400
+Message-ID: <ec701153-fdc9-37f3-c267-f056159b4606@cybernetics.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-7"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180802174937.15444-3-ming.lei@redhat.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
 Content-Language: en-US
-Content-ID: <1FDE5ECA0F961745B8D4B6E4A69BFB6D@namprd04.prod.outlook.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "ming.lei@redhat.com" <ming.lei@redhat.com>, "axboe@kernel.dk" <axboe@kernel.dk>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "hch@lst.de" <hch@lst.de>, "linux@roeck-us.net" <linux@roeck-us.net>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "broonie@kernel.org" <broonie@kernel.org>, "matthew.hart@linaro.org" <matthew.hart@linaro.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "josef@toxicpanda.com" <josef@toxicpanda.com>, "john.garry@huawei.com" <john.garry@huawei.com>, "hare@suse.com" <hare@suse.com>, "James.Bottomley@hansenpartnership.com" <James.Bottomley@hansenpartnership.com>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
+List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Marek Szyprowski <m.szyprowski-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, Sathya Prakash <sathya.prakash-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Chaitra P B <chaitra.basappa-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Suganath Prabu Subramani <suganath-prabu.subramani-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-mm <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, MPT-FusionLinux.pdl-dY08KVG/lbpWk0Htik3J/w@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, 2018-08-03 at 01:49 +-0800, Ming Lei wrote:
-+AD4- Commit d250bf4e776ff09d5(+ACI-blk-mq: only iterate over inflight requ=
-ests
-+AD4- in blk+AF8-mq+AF8-tagset+AF8-busy+AF8-iter+ACI-) uses 'blk+AF8-mq+AF8=
--rq+AF8-state(rq) +AD0APQ- MQ+AF8-RQ+AF8-IN+AF8-FLIGHT'
-+AD4- to replace 'blk+AF8-mq+AF8-request+AF8-started(req)', this way is wro=
-ng, and causes
-+AD4- lots of test system hang during booting.
-+AD4-=20
-+AD4- Fix the issue by using blk+AF8-mq+AF8-request+AF8-started(req) inside=
- bt+AF8-tags+AF8-iter().
+Major changes since v1:
 
-That's a good catch. Hence:
+*) Replaced the red-black tree with virt_to_page(), which takes us to
+O(n) instead of O(n * log n).  The mpt3sas benchmarks only improved a
+little though (18 ms -> 17 ms on alloc and 19 ms -> 15 ms on free).
 
-Reviewed-by: Bart Van Assche +ADw-bart.vanassche+AEA-wdc.com+AD4-
+*) Eliminated struct dma_page.  dmapool private data are now stored
+directly in struct page.  So this patchset will now reduce memory
+usage in addition to increasing speed.
+
+patches #1 - #7 are for merging
+patch #8 is not for merging
+patch #9 is up to the maintainers of mpt3sas
+
+---
+
+drivers/scsi/mpt3sas is running into a scalability problem with the
+kernel's DMA pool implementation.  With a LSI/Broadcom SAS 9300-8i
+12Gb/s HBA and max_sgl_entries=256, during modprobe, mpt3sas does the
+equivalent of:
+
+chain_dma_pool = dma_pool_create(size = 128);
+for (i = 0; i < 373959; i++)
+    {
+    dma_addr[i] = dma_pool_alloc(chain_dma_pool);
+    }
+
+And at rmmod, system shutdown, or system reboot, mpt3sas does the
+equivalent of:
+
+for (i = 0; i < 373959; i++)
+    {
+    dma_pool_free(chain_dma_pool, dma_addr[i]);
+    }
+dma_pool_destroy(chain_dma_pool);
+
+With this usage, both dma_pool_alloc() and dma_pool_free() exhibit
+O(n^2) complexity, although dma_pool_free() is much worse due to
+implementation details.  On my system, the dma_pool_free() loop above
+takes about 9 seconds to run.  Note that the problem was even worse
+before commit 74522a92bbf0 ("scsi: mpt3sas: Optimize I/O memory
+consumption in driver."), where the dma_pool_free() loop could take ~30
+seconds.
+
+mpt3sas also has some other DMA pools, but chain_dma_pool is the only
+one with so many allocations:
+
+cat /sys/devices/pci0000:80/0000:80:07.0/0000:85:00.0/pools
+(manually cleaned up column alignment)
+poolinfo - 0.1
+reply_post_free_array pool  1      21     192     1
+reply_free pool             1      1      41728   1
+reply pool                  1      1      1335296 1
+sense pool                  1      1      970272  1
+chain pool                  373959 386048 128     12064
+reply_post_free pool        12     12     166528  12
+
+The first 8 patches in this series improve the scalability of the DMA
+pool implementation, which significantly reduces the running time of the
+DMA alloc/free loops.
+
+The last patch modifies mpt3sas to replace chain_dma_pool with direct
+calls to dma_alloc_coherent() and dma_free_coherent(), which reduces
+its overhead even further.
+
+The mpt3sas patch is independent of the dmapool patches; it can be used
+with or without them.  If either the dmapool patches or the mpt3sas
+patch is applied, then "modprobe mpt3sas", "rmmod mpt3sas", and system
+shutdown/reboot with mpt3sas loaded are significantly faster.  Here are
+some benchmarks (of DMA alloc/free only, not the entire modprobe/rmmod):
+
+dma_pool_create() + dma_pool_alloc() loop, size = 128, count = 373959
+  original:        350 ms ( 1x)
+  dmapool patches:  17 ms (21x)
+  mpt3sas patch:     7 ms (51x)
+
+dma_pool_free() loop + dma_pool_destroy(), size = 128, count = 373959
+  original:        8901 ms (   1x)
+  dmapool patches:   15 ms ( 618x)
+  mpt3sas patch:      2 ms (4245x)
+
+Considering that LSI/Broadcom offer an out-of-tree vendor driver that
+works across multiple kernel versions that won't get the dmapool
+patches, it may be worth it for them to patch mpt3sas to avoid the
+problem on older kernels.  The downside is that the code is a bit more
+complicated.  So I leave it to their judgement whether they think it is
+worth it to apply the mpt3sas patch.
