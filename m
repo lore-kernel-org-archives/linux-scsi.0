@@ -1,37 +1,96 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: linux-next: Tree for Aug 1
-Date: Thu, 2 Aug 2018 15:06:23 +0200
-Message-ID: <20180802130623.45m5yaqaotwx2pgw@linux-x5ow.site>
-References: <20180801224813.GA13074@roeck-us.net>
- <1533163965.3158.1.camel@HansenPartnership.com>
- <20180801234727.GA3762@roeck-us.net>
- <CACVXFVMrzLRP5Q=cwZGnqeUeyODL3Pq9jMkT7czZouK9510fUA@mail.gmail.com>
- <1533168205.3158.12.camel@HansenPartnership.com>
- <171b2cdc-2e74-2b3c-e5f5-c656a196601a@roeck-us.net>
- <e3e32fd801cb1270cddec6fc1ea3dabad4473b64.camel@wdc.com>
- <93cbb876-3a25-482a-a5b4-6e13d42ee535@roeck-us.net>
- <20180802125141.jyb2zz75jgrzibaq@linux-x5ow.site>
- <b1616769-b1d7-97c7-b197-9dc3d0f74a7b@roeck-us.net>
+From: Varun Prakash <varun@chelsio.com>
+Subject: Re: [PATCH] scsi: csiostor: avoid null pointer dereference on
+ card_fw allocation failure
+Date: Thu, 2 Aug 2018 20:23:41 +0530
+Message-ID: <20180802145339.GA1671@chelsio.com>
+References: <20180801161743.22301-1-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <b1616769-b1d7-97c7-b197-9dc3d0f74a7b@roeck-us.net>
+In-Reply-To: <20180801161743.22301-1-colin.king@canonical.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Guenter Roeck <linux@roeck-us.net>
-Cc: Bart Van Assche <Bart.VanAssche@wdc.com>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "tom.leiming@gmail.com" <tom.leiming@gmail.com>, "sfr@canb.auug.org.au" <sfr@canb.auug.org.au>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>
+To: Colin King <colin.king@canonical.com>
+Cc: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Aug 02, 2018 at 06:00:19AM -0700, Guenter Roeck wrote:
-> Per my logs, next-20180730 is the first bad, next-20180727 is the last good.
+On Wed, Aug 01, 2018 at 05:17:43PM +0100, Colin King wrote:
+> From: Colin Ian King <colin.king@canonical.com>
+> 
+> Currently if card_fw fails to be allocated then a null pointer
+> dereference occurs on card_fd when calling csio_hw_prep_fw. Fix this
+> by checking for a failed allocation and returning -ENOMEM.
+> 
+> Detected by CoverityScan, CID#1271213 ("Dereference null return value")
+> 
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> ---
+>  drivers/scsi/csiostor/csio_hw.c | 6 ++++--
+>  1 file changed, 4 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/csiostor/csio_hw.c b/drivers/scsi/csiostor/csio_hw.c
+> index a10cf25ee7f9..aa637e9ea9ba 100644
+> --- a/drivers/scsi/csiostor/csio_hw.c
+> +++ b/drivers/scsi/csiostor/csio_hw.c
+> @@ -2275,8 +2275,8 @@ static int csio_hw_prep_fw(struct csio_hw *hw, struct fw_info *fw_info,
+>  }
+>  
+>  /*
+> - * Returns -EINVAL if attempts to flash the firmware failed
+> - * else returns 0,
+> + * Returns -EINVAL if attempts to flash the firmware failed,
+> + * -ENOMEM if allocation failed, else returns 0,
+>   * if flashing was not attempted because the card had the
+>   * latest firmware ECANCELED is returned
+>   */
+> @@ -2321,6 +2321,8 @@ csio_hw_flash_fw(struct csio_hw *hw, int *reset)
+>  	 * card
+>  	 */
+>  	card_fw = kmalloc(sizeof(*card_fw), GFP_KERNEL);
+> +	if (!card_fw)
+> +		return -ENOMEM;
+>  
+>  	/* upgrade FW logic */
+>  	ret = csio_hw_prep_fw(hw, fw_info, fw_data, fw_size, card_fw,
 
-OK, so my bisecting is correct (a bit too much but still).
+There is a call to release_firmware() after csio_hw_prep_hw()
 
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+        /* upgrade FW logic */
+        ret = csio_hw_prep_fw(hw, fw_info, fw_data, fw_size, card_fw,
+                         hw->fw_state, reset);
+
+        /* Cleaning up */
+        if (fw != NULL)
+                release_firmware(fw);
+
+In case of memory allocation failure csio_hw_flash_fw() will return without
+calling release_firmware() with this patch.
+
+Following patch fixes this issue  
+
+csio_hw_flash_fw(struct csio_hw *hw, int *reset)
+                return -EINVAL;
+        }
+
++       /* allocate memory to read the header of the firmware on the
++        * card
++        */
++       card_fw = kmalloc(sizeof(*card_fw), GFP_KERNEL);
++       if (!card_fw)
++               return -ENOMEM;
++
+        if (csio_is_t5(pci_dev->device & CSIO_HW_CHIP_MASK))
+                fw_bin_file = FW_FNAME_T5;
+        else
+csio_hw_flash_fw(struct csio_hw *hw, int *reset)
+                fw_size = fw->size;
+        }
+
+-       /* allocate memory to read the header of the firmware on the
+-        * card
+-        */
+-       card_fw = kmalloc(sizeof(*card_fw), GFP_KERNEL);
+-
+        /* upgrade FW logic */
+        ret = csio_hw_prep_fw(hw, fw_info, fw_data, fw_size, card_fw,
+                         hw->fw_state, reset);
