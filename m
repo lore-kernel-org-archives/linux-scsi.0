@@ -1,67 +1,28 @@
-From: Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>
-Subject: Re: libfc mutex under RCU read section error since
- "libfc: Fixup disc_mutex handling"
-Date: Thu, 2 Aug 2018 07:37:08 +0200
-Message-ID: <32817ed7-5e15-ea00-938d-18786968a628@suse.de>
-References: <20180731175607.GA1237244@straylight.hirudinean.org>
- <e3bd6958-ca17-bc75-2a66-29d7d2a38ebf@suse.de>
- <20180802010900.GA2222132@straylight.hirudinean.org>
+From: zhong jiang <zhongjiang@huawei.com>
+Subject: Re: [PATCH 1/4] driver/scsi/fnic/fnic_trace: Use vzalloc to zero
+ instead of vmalloc+memset
+Date: Thu, 2 Aug 2018 14:16:47 +0800
+Message-ID: <5B62A1CF.7040904@huawei.com>
+References: <1533129976-51930-1-git-send-email-zhongjiang@huawei.com> <1533129976-51930-2-git-send-email-zhongjiang@huawei.com> <CAHp75Vchu7QwNBeYQxa9fY8=PinGzPpUPaRbk_MyoZ+w07hA4A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-In-Reply-To: <20180802010900.GA2222132-r8IHplWLGbA5tHQWs+pTeqPFFGjUI2lm2LY78lusg7I@public.gmane.org>
-Content-Language: en-US
-List-Unsubscribe: <http://lists.open-fcoe.org/mailman/options/fcoe-devel>,
- <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.open-fcoe.org/pipermail/fcoe-devel/>
-List-Post: <mailto:fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-List-Help: <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.open-fcoe.org/mailman/listinfo/fcoe-devel>,
- <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
-Errors-To: fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
-Sender: "fcoe-devel" <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-To: Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, Johannes Thumshirn <jth-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAHp75Vchu7QwNBeYQxa9fY8=PinGzPpUPaRbk_MyoZ+w07hA4A@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andy Shevchenko <andy.shevchenko@gmail.com>
+Cc: John Garry <john.garry@huawei.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, aacraid@microsemi.com, linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gMDgvMDIvMjAxOCAwMzowOSBBTSwgQ2hyaXMgTGVlY2ggd3JvdGU6Cj4gT24gV2VkLCBBdWcg
-MDEsIDIwMTggYXQgMDg6Mjk6MDBBTSArMDIwMCwgSGFubmVzIFJlaW5lY2tlIHdyb3RlOgo+PiBP
-biAwNy8zMS8yMDE4IDA3OjU2IFBNLCBDaHJpcyBMZWVjaCB3cm90ZToKPj4+IFRoZSBsaWJmYyBh
-bmQgbGliZmNvZSBtb2R1bGVzIGxvb2sgdG8gaGF2ZSBpc3N1ZXMgd2l0aCBtdXRleHMgYmVpbmcg
-dXNlZAo+Pj4gdW5kZXIgcmN1X3JlYWRfbG9jaywgd2hpY2ggdHJpZ2dlcnMgIklsbGVnYWwgY29u
-dGV4dCBzd2l0Y2ggaW4gUkNVIHJlYWQKPj4+IHNpZGUgY3JpdGljYWwgc2VjdGlvbiIgd2Fybmlu
-Z3MgdW5kZXIgZGVidWcga2VybmVscy4KPj4+Cj4+PiBJIHN0YXJ0ZWQgbG9va2luZyBhdCBmY19k
-aXNjLmMgd2hlcmUgcnBvcnQgZGlzY292ZXJ5IGNvZGUgYXBwZWFycyB0bwo+Pj4gdGFrZSBhIG11
-dGV4IGZvciBlYWNoIHJwb3J0IGluIGZjX3Jwb3J0X2xvZ2luL2ZjX3Jwb3J0X2xvZ29mZiB3aGls
-ZQo+Pj4gYmVpbmcgY2FsbGVkIHVuZGVyIHJjdV9yZWFkX2xvY2sgZnJvbSBmY19kaXNjX2RvbmUu
-Cj4+Pgo+Pj4gV2l0aCB0aGUgcmRhdGEtPmtyZWYgaGVsZCwgSSBrbm93IHJjdV9yZWFkX3VubG9j
-ayBjYW4gYmUgc2FmZWx5IGNhbGxlZAo+Pj4gYmVmb3JlIGxvZ2luIGZjX3Jwb3J0X2xvZ2luL2xv
-Z29mZi4gIEJ1dCBJIGRvbid0IGtub3cgaWYgaXQncyBzYWZlIHRvCj4+PiB0aGVuIHJlY2FsbCBy
-Y3VfcmVhZF9sb2NrIGFuZCBzaW1wbHkgY29udGludWUgb24gd2l0aCB0aGUKPj4+IGxpc3RfZm9y
-X2VhY2hfZW50cnlfcmN1IG9yIG5vdC4KPj4+Cj4+PiBBbmQgYXMgSSBzdGFydCBsb29raW5nIGlu
-dG8gdGhpcyBvbmUgY2FzZSwgSSBhbHNvIGdldCB0aGUgc2FtZSBjbGFzcyBvZgo+Pj4gcHJvYmxl
-bSBwb3BwaW5nIHVwIGluIGF0IGxlYXN0IGxpYmZjb2U6ZmNvZV9jdHJsLmMgZnJvbQo+Pj4gZmNv
-ZV9jdHJsX3RpbWVyX3dvcmsgYXMgd2VsbCA6KAo+Pj4KPj4gVGhpcyBzaG91bGQndmUgYmVlbiBm
-aXhlZCBieSBteSBwYXRjaCBzZXJpZXMgImxpYmZjL2Zjb2U6IGRpc2NfbXV0ZXggZml4ZXMiLgo+
-Pgo+PiBDYW4geW91IGNoZWNrIGlmIHRoaXMgc2VyaWVzIGlzIGFwcGxpZWQgaW4geW91ciB0cmVl
-Pwo+IAo+IFRoYW5rcywgSSBtaXNzZWQgdGhvc2UgYW5kIHRoZXkgZG8gZml4IHRoaW5ncyB1cCEK
-PiAKPiBPbmUgcXVlc3Rpb24gYWJvdXQgIkFkZCBXQVJOX09OKCkgd2hlbiBkZWxldGluZyBycG9y
-dHMiCj4gCj4+IAktLS0gYS9kcml2ZXJzL3Njc2kvbGliZmMvZmNfcnBvcnQuYwo+PiAJKysrIGIv
-ZHJpdmVycy9zY3NpL2xpYmZjL2ZjX3Jwb3J0LmMKPj4gCUBAIC0xODQsNiArMTg0LDcgQEAgdm9p
-ZCBmY19ycG9ydF9kZXN0cm95KHN0cnVjdCBrcmVmICprcmVmKQo+PiAJCXN0cnVjdCBmY19ycG9y
-dF9wcml2ICpyZGF0YTsKPj4gCSAKPj4gCQlyZGF0YSA9IGNvbnRhaW5lcl9vZihrcmVmLCBzdHJ1
-Y3QgZmNfcnBvcnRfcHJpdiwga3JlZik7Cj4+IAkrCVdBUk5fT04oIWxpc3RfZW1wdHkoJnJkYXRh
-LT5wZWVycykpOwo+PiAJCWtmcmVlX3JjdShyZGF0YSwgcmN1KTsKPj4gCSB9Cj4+IAkgRVhQT1JU
-X1NZTUJPTChmY19ycG9ydF9kZXN0cm95KTsKPiAKPiBUaGUgbGlzdF9oZWFkIGlzbid0IHJlaW5p
-dGlhbGl6ZWQgdG8gbWFrZSBsaXN0X2VtcHR5KCkgcmV0dXJuIHRydWUgYWZ0ZXIKPiBsaXN0X2Rl
-bF9yY3UoKSwgYXMgdGhlcmUgbWF5IHN0aWxsIGJlIHJlYWRlcnMgdHJhdmVyc2luZyB0aGUgbGlz
-dC4KPiAKPiBTbyBkb2Vzbid0IHRoaXMgd2FybmluZyB0cmlnZ2VyIG9uIGV2ZXJ5IGRlbGV0ZWQg
-cnBvcnQ/Cj4gCk5vdCB0aGF0IEkndmUgc2VlbiwgYnV0IEknbGwgY2hlY2suCgpDaGVlcnMsCgpI
-YW5uZXMKLS0gCkRyLiBIYW5uZXMgUmVpbmVja2UJCSAgIFRlYW1sZWFkIFN0b3JhZ2UgJiBOZXR3
-b3JraW5nCmhhcmVAc3VzZS5kZQkJCSAgICAgICAgICAgICAgICs0OSA5MTEgNzQwNTMgNjg4ClNV
-U0UgTElOVVggR21iSCwgTWF4ZmVsZHN0ci4gNSwgOTA0MDkgTsO8cm5iZXJnCkdGOiBGLiBJbWVu
-ZMO2cmZmZXIsIEouIFNtaXRoYXJkLCBKLiBHdWlsZCwgRC4gVXBtYW55dSwgRy4gTm9ydG9uCkhS
-QiAyMTI4NCAoQUcgTsO8cm5iZXJnKQpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fXwpmY29lLWRldmVsIG1haWxpbmcgbGlzdApmY29lLWRldmVsQG9wZW4tZmNv
-ZS5vcmcKaHR0cDovL2xpc3RzLm9wZW4tZmNvZS5vcmcvbWFpbG1hbi9saXN0aW5mby9mY29lLWRl
-dmVsCg==
+On 2018/8/1 23:30, Andy Shevchenko wrote:
+> On Wed, Aug 1, 2018 at 4:26 PM, zhong jiang <zhongjiang@huawei.com> wrote:
+>> The vzalloc is better than vmalloc+memset, so replace them to make
+>> the code concise.
+>> -       fnic_trace_buf_p = (unsigned long)vmalloc((trace_max_pages * PAGE_SIZE));
+>> +       fnic_trace_buf_p = (unsigned long)vzalloc((trace_max_pages * PAGE_SIZE));
+> At the same time you may get rid of unnecessary parens.
+>
+Thanks , I will repost with the change.
+
+Thanks
+zhong jiang
