@@ -1,118 +1,40 @@
-From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH] sr: Avoid that opening a CD-ROM hangs with runtime power management enabled
-Date: Thu,  2 Aug 2018 10:44:42 -0700
-Message-ID: <20180802174442.7310-1-bart.vanassche@wdc.com>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH 2/2] Avoid that SCSI device removal through sysfs triggers
+ a deadlock
+Date: Thu, 2 Aug 2018 17:47:46 +0000
+Message-ID: <ec0c4ccfdc5f3c35860f65b40e19dc764c22362d.camel@wdc.com>
+References: <20180730184052.13442-1-bart.vanassche@wdc.com>
+         <20180730184052.13442-3-bart.vanassche@wdc.com>
+         <d076a12d92469e94b584cf0f823697083f12d743.camel@wdc.com>
+         <2a48b26b1cc1704ec7335919e9f9780f9c04d7b4.camel@wdc.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-7"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <2a48b26b1cc1704ec7335919e9f9780f9c04d7b4.camel@wdc.com>
+Content-Language: en-US
+Content-ID: <F8C6E0C455AD8A498C4B2191DE0B422A@namprd04.prod.outlook.com>
 Sender: stable-owner@vger.kernel.org
-To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>, Maurizio Lombardi <mlombard@redhat.com>, Johannes Thumshirn <jthumshirn@suse.de>, Alan Stern <stern@rowland.harvard.edu>, stable@vger.kernel.org
+To: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "tj@kernel.org" <tj@kernel.org>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Surround scsi_execute() calls with scsi_autopm_get_device() and
-scsi_autopm_put_device(). Note: removing sr_mutex protection from
-the scsi_cd_get() and scsi_cd_put() calls is safe because the
-purpose of sr_mutex is to serialize cdrom_*() calls.
+On Wed, 2018-08-01 at 22:58 +-0000, Bart Van Assche wrote:
++AD4- On Wed, 2018-08-01 at 21:16 +-0000, Bart Van Assche wrote:
++AD4- +AD4- During my kernel tests of today I noticed that this patch makes=
+ booting
++AD4- +AD4- significantly slower: boot time for a VM increases from 6s to 1=
+57s. Martin,
++AD4- +AD4- please drop this patch series.
++AD4-=20
++AD4- Please ignore my previous message - these two patches are fine. The t=
+rouble
++AD4- was caused by a patch in another tree that I had merged in during my =
+tests.
++AD4- I will repost this series.
 
-This patch avoids that complaints similar to the following appear in
-the kernel log if runtime power management is enabled:
+The following patch fixes the boot time regression I had reported yesterday=
+:
+https://www.mail-archive.com/linux-scsi+AEA-vger.kernel.org/msg74940.html.
 
-INFO: task systemd-udevd:650 blocked for more than 120 seconds.
-     Not tainted 4.18.0-rc7-dbg+ #1
-"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-systemd-udevd   D28176   650    513 0x00000104
-Call Trace:
-__schedule+0x444/0xfe0
-schedule+0x4e/0xe0
-schedule_preempt_disabled+0x18/0x30
-__mutex_lock+0x41c/0xc70
-mutex_lock_nested+0x1b/0x20
-__blkdev_get+0x106/0x970
-blkdev_get+0x22c/0x5a0
-blkdev_open+0xe9/0x100
-do_dentry_open.isra.19+0x33e/0x570
-vfs_open+0x7c/0xd0
-path_openat+0x6e3/0x1120
-do_filp_open+0x11c/0x1c0
-do_sys_open+0x208/0x2d0
-__x64_sys_openat+0x59/0x70
-do_syscall_64+0x77/0x230
-entry_SYSCALL_64_after_hwframe+0x49/0xbe
-
-Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: Maurizio Lombardi <mlombard@redhat.com>
-Cc: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: Alan Stern <stern@rowland.harvard.edu>
-Cc: <stable@vger.kernel.org>
----
- drivers/scsi/sr.c | 29 +++++++++++++++++++++--------
- 1 file changed, 21 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index 3f3cb72e0c0c..d0389b20574d 100644
---- a/drivers/scsi/sr.c
-+++ b/drivers/scsi/sr.c
-@@ -523,18 +523,26 @@ static int sr_init_command(struct scsi_cmnd *SCpnt)
- static int sr_block_open(struct block_device *bdev, fmode_t mode)
- {
- 	struct scsi_cd *cd;
-+	struct scsi_device *sdev;
- 	int ret = -ENXIO;
- 
-+	cd = scsi_cd_get(bdev->bd_disk);
-+	if (!cd)
-+		goto out;
-+
-+	sdev = cd->device;
-+	scsi_autopm_get_device(sdev);
- 	check_disk_change(bdev);
- 
- 	mutex_lock(&sr_mutex);
--	cd = scsi_cd_get(bdev->bd_disk);
--	if (cd) {
--		ret = cdrom_open(&cd->cdi, bdev, mode);
--		if (ret)
--			scsi_cd_put(cd);
--	}
-+	ret = cdrom_open(&cd->cdi, bdev, mode);
- 	mutex_unlock(&sr_mutex);
-+
-+	scsi_autopm_put_device(sdev);
-+	if (ret)
-+		scsi_cd_put(cd);
-+
-+out:
- 	return ret;
- }
- 
-@@ -562,6 +570,8 @@ static int sr_block_ioctl(struct block_device *bdev, fmode_t mode, unsigned cmd,
- 	if (ret)
- 		goto out;
- 
-+	scsi_autopm_get_device(sdev);
-+
- 	/*
- 	 * Send SCSI addressing ioctls directly to mid level, send other
- 	 * ioctls to cdrom/block level.
-@@ -570,15 +580,18 @@ static int sr_block_ioctl(struct block_device *bdev, fmode_t mode, unsigned cmd,
- 	case SCSI_IOCTL_GET_IDLUN:
- 	case SCSI_IOCTL_GET_BUS_NUMBER:
- 		ret = scsi_ioctl(sdev, cmd, argp);
--		goto out;
-+		goto put;
- 	}
- 
- 	ret = cdrom_ioctl(&cd->cdi, bdev, mode, cmd, arg);
- 	if (ret != -ENOSYS)
--		goto out;
-+		goto put;
- 
- 	ret = scsi_ioctl(sdev, cmd, argp);
- 
-+put:
-+	scsi_autopm_put_device(sdev);
-+
- out:
- 	mutex_unlock(&sr_mutex);
- 	return ret;
--- 
-2.18.0
+Bart.
