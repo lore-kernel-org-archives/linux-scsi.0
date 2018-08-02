@@ -1,40 +1,44 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH 2/2] Avoid that SCSI device removal through sysfs triggers
- a deadlock
-Date: Thu, 2 Aug 2018 17:47:46 +0000
-Message-ID: <ec0c4ccfdc5f3c35860f65b40e19dc764c22362d.camel@wdc.com>
-References: <20180730184052.13442-1-bart.vanassche@wdc.com>
-         <20180730184052.13442-3-bart.vanassche@wdc.com>
-         <d076a12d92469e94b584cf0f823697083f12d743.camel@wdc.com>
-         <2a48b26b1cc1704ec7335919e9f9780f9c04d7b4.camel@wdc.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-7"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <2a48b26b1cc1704ec7335919e9f9780f9c04d7b4.camel@wdc.com>
-Content-Language: en-US
-Content-ID: <F8C6E0C455AD8A498C4B2191DE0B422A@namprd04.prod.outlook.com>
-Sender: stable-owner@vger.kernel.org
-To: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "tj@kernel.org" <tj@kernel.org>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>
+From: Ming Lei <ming.lei@redhat.com>
+Subject: [PATCH V2 0/2] blk-mq: fix fix blk_mq_tagset_busy_iter
+Date: Fri,  3 Aug 2018 01:49:35 +0800
+Message-ID: <20180802174937.15444-1-ming.lei@redhat.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, Ming Lei <ming.lei@redhat.com>, Josef Bacik <josef@toxicpanda.com>, Christoph Hellwig <hch@lst.de>, Guenter Roeck <linux@roeck-us.net>, Mark Brown <broonie@kernel.org>, Matt Hart <matthew.hart@linaro.org>, Johannes Thumshirn <jthumshirn@suse.de>, John Garry <john.garry@huawei.com>, Hannes Reinecke <hare@suse.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2018-08-01 at 22:58 +-0000, Bart Van Assche wrote:
-+AD4- On Wed, 2018-08-01 at 21:16 +-0000, Bart Van Assche wrote:
-+AD4- +AD4- During my kernel tests of today I noticed that this patch makes=
- booting
-+AD4- +AD4- significantly slower: boot time for a VM increases from 6s to 1=
-57s. Martin,
-+AD4- +AD4- please drop this patch series.
-+AD4-=20
-+AD4- Please ignore my previous message - these two patches are fine. The t=
-rouble
-+AD4- was caused by a patch in another tree that I had merged in during my =
-tests.
-+AD4- I will repost this series.
+Hi Jens,
 
-The following patch fixes the boot time regression I had reported yesterday=
-:
-https://www.mail-archive.com/linux-scsi+AEA-vger.kernel.org/msg74940.html.
+The two patches fixes boot hang issue in lots of test vm system.
+And the cause is in blk_mq_tagset_busy_iter().
 
-Bart.
+V2:
+	- move blk_mq_request_started() into header file as suggested by
+	  James
+
+Ming Lei (2):
+  blk-mq: move blk_mq_request_started() into header file
+  blk-mq: fix blk_mq_tagset_busy_iter
+
+ block/blk-mq-tag.c     |  2 +-
+ block/blk-mq.c         |  6 ------
+ block/blk-mq.h         |  9 ---------
+ include/linux/blk-mq.h | 15 ++++++++++++++-
+ 4 files changed, 15 insertions(+), 17 deletions(-)
+
+Cc: Josef Bacik <josef@toxicpanda.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Guenter Roeck <linux@roeck-us.net>
+Cc: Mark Brown <broonie@kernel.org>
+Cc: Matt Hart <matthew.hart@linaro.org>
+Cc: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: John Garry <john.garry@huawei.com>
+Cc: Hannes Reinecke <hare@suse.com>,
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+
+-- 
+2.9.5
