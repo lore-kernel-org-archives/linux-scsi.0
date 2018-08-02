@@ -1,168 +1,113 @@
 From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH 2/2] Avoid that SCSI device removal through sysfs triggers a deadlock
-Date: Thu,  2 Aug 2018 10:51:41 -0700
-Message-ID: <20180802175141.8699-3-bart.vanassche@wdc.com>
+Subject: [PATCH 1/2] sysfs: Introduce sysfs_{un,}break_active_protection()
+Date: Thu,  2 Aug 2018 10:51:40 -0700
+Message-ID: <20180802175141.8699-2-bart.vanassche@wdc.com>
 References: <20180802175141.8699-1-bart.vanassche@wdc.com>
 Return-path: <stable-owner@vger.kernel.org>
 In-Reply-To: <20180802175141.8699-1-bart.vanassche@wdc.com>
 Sender: stable-owner@vger.kernel.org
 To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Tejun Heo <tj@kernel.org>, Bart Van Assche <bart.vanassche@wdc.com>, Johannes Thumshirn <jthumshirn@suse.de>, stable@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Tejun Heo <tj@kernel.org>, Bart Van Assche <bart.vanassche@wdc.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-A long time ago the unfortunate decision was taken to add a self-
-deletion attribute to the sysfs SCSI device directory. That decision
-was unfortunate because self-deletion is really tricky. We can't drop
-that attribute because widely used user space software depends on it,
-namely the rescan-scsi-bus.sh script. Hence this patch that avoids
-that writing into that attribute triggers a deadlock. See also commit
-7973cbd9fbd9 ("[PATCH] add sysfs attributes to scan and delete
-scsi_devices").
+Introduce these two functions and export them such that the next patch
+can add calls to these functions from the SCSI core.
 
-This patch avoids that self-removal triggers the following deadlock:
-
-======================================================
-WARNING: possible circular locking dependency detected
-4.18.0-rc2-dbg+ #5 Not tainted
-------------------------------------------------------
-modprobe/6539 is trying to acquire lock:
-000000008323c4cd (kn->count#202){++++}, at: kernfs_remove_by_name_ns+0x45/0x90
-
-but task is already holding lock:
-00000000a6ec2c69 (&shost->scan_mutex){+.+.}, at: scsi_remove_host+0x21/0x150 [scsi_mod]
-
-which lock already depends on the new lock.
-
-the existing dependency chain (in reverse order) is:
-
--> #1 (&shost->scan_mutex){+.+.}:
-       __mutex_lock+0xfe/0xc70
-       mutex_lock_nested+0x1b/0x20
-       scsi_remove_device+0x26/0x40 [scsi_mod]
-       sdev_store_delete+0x27/0x30 [scsi_mod]
-       dev_attr_store+0x3e/0x50
-       sysfs_kf_write+0x87/0xa0
-       kernfs_fop_write+0x190/0x230
-       __vfs_write+0xd2/0x3b0
-       vfs_write+0x101/0x270
-       ksys_write+0xab/0x120
-       __x64_sys_write+0x43/0x50
-       do_syscall_64+0x77/0x230
-       entry_SYSCALL_64_after_hwframe+0x49/0xbe
-
--> #0 (kn->count#202){++++}:
-       lock_acquire+0xd2/0x260
-       __kernfs_remove+0x424/0x4a0
-       kernfs_remove_by_name_ns+0x45/0x90
-       remove_files.isra.1+0x3a/0x90
-       sysfs_remove_group+0x5c/0xc0
-       sysfs_remove_groups+0x39/0x60
-       device_remove_attrs+0x82/0xb0
-       device_del+0x251/0x580
-       __scsi_remove_device+0x19f/0x1d0 [scsi_mod]
-       scsi_forget_host+0x37/0xb0 [scsi_mod]
-       scsi_remove_host+0x9b/0x150 [scsi_mod]
-       sdebug_driver_remove+0x4b/0x150 [scsi_debug]
-       device_release_driver_internal+0x241/0x360
-       device_release_driver+0x12/0x20
-       bus_remove_device+0x1bc/0x290
-       device_del+0x259/0x580
-       device_unregister+0x1a/0x70
-       sdebug_remove_adapter+0x8b/0xf0 [scsi_debug]
-       scsi_debug_exit+0x76/0xe8 [scsi_debug]
-       __x64_sys_delete_module+0x1c1/0x280
-       do_syscall_64+0x77/0x230
-       entry_SYSCALL_64_after_hwframe+0x49/0xbe
-
-other info that might help us debug this:
-
- Possible unsafe locking scenario:
-
-       CPU0                    CPU1
-       ----                    ----
-  lock(&shost->scan_mutex);
-                               lock(kn->count#202);
-                               lock(&shost->scan_mutex);
-  lock(kn->count#202);
-
- *** DEADLOCK ***
-
-2 locks held by modprobe/6539:
- #0: 00000000efaf9298 (&dev->mutex){....}, at: device_release_driver_internal+0x68/0x360
- #1: 00000000a6ec2c69 (&shost->scan_mutex){+.+.}, at: scsi_remove_host+0x21/0x150 [scsi_mod]
-
-stack backtrace:
-CPU: 10 PID: 6539 Comm: modprobe Not tainted 4.18.0-rc2-dbg+ #5
-Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.0.0-prebuilt.qemu-project.org 04/01/2014
-Call Trace:
- dump_stack+0xa4/0xf5
- print_circular_bug.isra.34+0x213/0x221
- __lock_acquire+0x1a7e/0x1b50
- lock_acquire+0xd2/0x260
- __kernfs_remove+0x424/0x4a0
- kernfs_remove_by_name_ns+0x45/0x90
- remove_files.isra.1+0x3a/0x90
- sysfs_remove_group+0x5c/0xc0
- sysfs_remove_groups+0x39/0x60
- device_remove_attrs+0x82/0xb0
- device_del+0x251/0x580
- __scsi_remove_device+0x19f/0x1d0 [scsi_mod]
- scsi_forget_host+0x37/0xb0 [scsi_mod]
- scsi_remove_host+0x9b/0x150 [scsi_mod]
- sdebug_driver_remove+0x4b/0x150 [scsi_debug]
- device_release_driver_internal+0x241/0x360
- device_release_driver+0x12/0x20
- bus_remove_device+0x1bc/0x290
- device_del+0x259/0x580
- device_unregister+0x1a/0x70
- sdebug_remove_adapter+0x8b/0xf0 [scsi_debug]
- scsi_debug_exit+0x76/0xe8 [scsi_debug]
- __x64_sys_delete_module+0x1c1/0x280
- do_syscall_64+0x77/0x230
- entry_SYSCALL_64_after_hwframe+0x49/0xbe
-
-See also https://www.mail-archive.com/linux-scsi@vger.kernel.org/msg54525.html.
-
-Fixes: ac0ece9174ac ("scsi: use device_remove_file_self() instead of device_schedule_callback()")
 Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 Acked-by: Tejun Heo <tj@kernel.org>
-Cc: Johannes Thumshirn <jthumshirn@suse.de>
+Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 Cc: <stable@vger.kernel.org>
 ---
- drivers/scsi/scsi_sysfs.c | 20 ++++++++++++++++++--
- 1 file changed, 18 insertions(+), 2 deletions(-)
+ fs/sysfs/file.c       | 44 +++++++++++++++++++++++++++++++++++++++++++
+ include/linux/sysfs.h | 14 ++++++++++++++
+ 2 files changed, 58 insertions(+)
 
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index de122354d09a..3aee9464a7bf 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -722,8 +722,24 @@ static ssize_t
- sdev_store_delete(struct device *dev, struct device_attribute *attr,
- 		  const char *buf, size_t count)
- {
--	if (device_remove_file_self(dev, attr))
--		scsi_remove_device(to_scsi_device(dev));
+diff --git a/fs/sysfs/file.c b/fs/sysfs/file.c
+index 5c13f29bfcdb..118fa197a35f 100644
+--- a/fs/sysfs/file.c
++++ b/fs/sysfs/file.c
+@@ -405,6 +405,50 @@ int sysfs_chmod_file(struct kobject *kobj, const struct attribute *attr,
+ }
+ EXPORT_SYMBOL_GPL(sysfs_chmod_file);
+ 
++/**
++ * sysfs_break_active_protection - break "active" protection
++ * @kobj: The kernel object @attr is associated with.
++ * @attr: The attribute to break the "active" protection for.
++ *
++ * With sysfs, just like kernfs, deletion of an attribute is postponed until
++ * all active .show() and .store() callbacks have finished unless this function
++ * is called. Hence this function is useful in methods that implement self
++ * deletion.
++ */
++struct kernfs_node *sysfs_break_active_protection(struct kobject *kobj,
++						  const struct attribute *attr)
++{
 +	struct kernfs_node *kn;
 +
-+	kn = sysfs_break_active_protection(&dev->kobj, &attr->attr);
-+	WARN_ON_ONCE(!kn);
-+	/*
-+	 * Concurrent writes into the "delete" sysfs attribute may trigger
-+	 * concurrent calls to device_remove_file() and scsi_remove_device().
-+	 * device_remove_file() handles concurrent removal calls by
-+	 * serializing these and by ignoring the second and later removal
-+	 * attempts.  Concurrent calls of scsi_remove_device() are
-+	 * serialized. The second and later calls of scsi_remove_device() are
-+	 * ignored because the first call of that function changes the device
-+	 * state into SDEV_DEL.
-+	 */
-+	device_remove_file(dev, attr);
-+	scsi_remove_device(to_scsi_device(dev));
++	kobject_get(kobj);
++	kn = kernfs_find_and_get(kobj->sd, attr->name);
 +	if (kn)
-+		sysfs_unbreak_active_protection(kn);
- 	return count;
- };
- static DEVICE_ATTR(delete, S_IWUSR, NULL, sdev_store_delete);
++		kernfs_break_active_protection(kn);
++	return kn;
++}
++EXPORT_SYMBOL_GPL(sysfs_break_active_protection);
++
++/**
++ * sysfs_unbreak_active_protection - restore "active" protection
++ * @kn: Pointer returned by sysfs_break_active_protection().
++ *
++ * Undo the effects of sysfs_break_active_protection(). Since this function
++ * calls kernfs_put() on the kernfs node that corresponds to the 'attr'
++ * argument passed to sysfs_break_active_protection() that attribute may have
++ * been removed between the sysfs_break_active_protection() and
++ * sysfs_unbreak_active_protection() calls, it is not safe to access @kn after
++ * this function has returned.
++ */
++void sysfs_unbreak_active_protection(struct kernfs_node *kn)
++{
++	struct kobject *kobj = kn->parent->priv;
++
++	kernfs_unbreak_active_protection(kn);
++	kernfs_put(kn);
++	kobject_put(kobj);
++}
++EXPORT_SYMBOL_GPL(sysfs_unbreak_active_protection);
++
+ /**
+  * sysfs_remove_file_ns - remove an object attribute with a custom ns tag
+  * @kobj: object we're acting for
+diff --git a/include/linux/sysfs.h b/include/linux/sysfs.h
+index b8bfdc173ec0..3c12198c0103 100644
+--- a/include/linux/sysfs.h
++++ b/include/linux/sysfs.h
+@@ -237,6 +237,9 @@ int __must_check sysfs_create_files(struct kobject *kobj,
+ 				   const struct attribute **attr);
+ int __must_check sysfs_chmod_file(struct kobject *kobj,
+ 				  const struct attribute *attr, umode_t mode);
++struct kernfs_node *sysfs_break_active_protection(struct kobject *kobj,
++						  const struct attribute *attr);
++void sysfs_unbreak_active_protection(struct kernfs_node *kn);
+ void sysfs_remove_file_ns(struct kobject *kobj, const struct attribute *attr,
+ 			  const void *ns);
+ bool sysfs_remove_file_self(struct kobject *kobj, const struct attribute *attr);
+@@ -350,6 +353,17 @@ static inline int sysfs_chmod_file(struct kobject *kobj,
+ 	return 0;
+ }
+ 
++static inline struct kernfs_node *
++sysfs_break_active_protection(struct kobject *kobj,
++			      const struct attribute *attr)
++{
++	return NULL;
++}
++
++static inline void sysfs_unbreak_active_protection(struct kernfs_node *kn)
++{
++}
++
+ static inline void sysfs_remove_file_ns(struct kobject *kobj,
+ 					const struct attribute *attr,
+ 					const void *ns)
 -- 
 2.18.0
