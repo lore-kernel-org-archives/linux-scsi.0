@@ -1,67 +1,39 @@
 From: zhong jiang <zhongjiang@huawei.com>
-Subject: [PATCH v2 4/4] drivers/scsi/mvsas/mv_init: Use dma_zalloc_coherent to replace dma_alloc_coherent+memset
-Date: Thu, 2 Aug 2018 19:28:34 +0800
-Message-ID: <1533209314-1074-5-git-send-email-zhongjiang@huawei.com>
-References: <1533209314-1074-1-git-send-email-zhongjiang@huawei.com>
+Subject: [PATCH v2 0/4] Use dma_zalloc_coherent and kvcalloc to replace open code
+Date: Thu, 2 Aug 2018 19:28:30 +0800
+Message-ID: <1533209314-1074-1-git-send-email-zhongjiang@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1533209314-1074-1-git-send-email-zhongjiang@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, aacraid@microsemi.com
 Cc: andy.shevchenko@gmail.com, joe@perches.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-The dma_zalloc_coherent is better than dma_alloc_coherent+memset,
-so replace them.
+ 
+v1->v2: 
 
-Signed-off-by: zhong jiang <zhongjiang@huawei.com>
-Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
----
- drivers/scsi/mvsas/mv_init.c | 12 ++++--------
- 1 file changed, 4 insertions(+), 8 deletions(-)
+According to Andy and Joe suggestions. 
+[patch 1/4] get rid of unnessary parens and use kvcalloc and kvfree to
+replace the vmalloc and vfree.
+[patch 2/4] modify the changelog as Andy's suggestion.
+[patch 3/4] replace vmalloc and vfree by using kvcalloc adn kvfree.
+[patch 4/4] do nothing. just add Andy's review-by.
 
-diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
-index 8c91637..da62e18 100644
---- a/drivers/scsi/mvsas/mv_init.c
-+++ b/drivers/scsi/mvsas/mv_init.c
-@@ -253,33 +253,29 @@ static int mvs_alloc(struct mvs_info *mvi, struct Scsi_Host *shost)
- 	/*
- 	 * alloc and init our DMA areas
- 	 */
--	mvi->tx = dma_alloc_coherent(mvi->dev,
-+	mvi->tx = dma_zalloc_coherent(mvi->dev,
- 				     sizeof(*mvi->tx) * MVS_CHIP_SLOT_SZ,
- 				     &mvi->tx_dma, GFP_KERNEL);
- 	if (!mvi->tx)
- 		goto err_out;
--	memset(mvi->tx, 0, sizeof(*mvi->tx) * MVS_CHIP_SLOT_SZ);
--	mvi->rx_fis = dma_alloc_coherent(mvi->dev, MVS_RX_FISL_SZ,
-+	mvi->rx_fis = dma_zalloc_coherent(mvi->dev, MVS_RX_FISL_SZ,
- 					 &mvi->rx_fis_dma, GFP_KERNEL);
- 	if (!mvi->rx_fis)
- 		goto err_out;
--	memset(mvi->rx_fis, 0, MVS_RX_FISL_SZ);
- 
--	mvi->rx = dma_alloc_coherent(mvi->dev,
-+	mvi->rx = dma_zalloc_coherent(mvi->dev,
- 				     sizeof(*mvi->rx) * (MVS_RX_RING_SZ + 1),
- 				     &mvi->rx_dma, GFP_KERNEL);
- 	if (!mvi->rx)
- 		goto err_out;
--	memset(mvi->rx, 0, sizeof(*mvi->rx) * (MVS_RX_RING_SZ + 1));
- 	mvi->rx[0] = cpu_to_le32(0xfff);
- 	mvi->rx_cons = 0xfff;
- 
--	mvi->slot = dma_alloc_coherent(mvi->dev,
-+	mvi->slot = dma_zalloc_coherent(mvi->dev,
- 				       sizeof(*mvi->slot) * slot_nr,
- 				       &mvi->slot_dma, GFP_KERNEL);
- 	if (!mvi->slot)
- 		goto err_out;
--	memset(mvi->slot, 0, sizeof(*mvi->slot) * slot_nr);
- 
- 	mvi->bulk_buffer = dma_alloc_coherent(mvi->dev,
- 				       TRASH_BUCKET_SIZE,
+
+zhong jiang (4):
+  driver/scsi/fnic/fnic_trace: Use kvcalloc instead of vmalloc+memset
+  drivers/scsi/dpt_i2o: Use dma_zalloc_coherent to repalce
+    dma_alloc_coherent+memset
+  drivers/scsi/snic/snic_trc: Use kvcalloc instead of vmalloc+memset
+  drivers/scsi/mvsas/mv_init: Use dma_zalloc_coherent to replace
+    dma_alloc_coherent+memset
+
+ drivers/scsi/dpt_i2o.c         | 12 ++++--------
+ drivers/scsi/fnic/fnic_trace.c |  7 +++----
+ drivers/scsi/mvsas/mv_init.c   | 12 ++++--------
+ drivers/scsi/snic/snic_trc.c   |  7 +++----
+ 4 files changed, 14 insertions(+), 24 deletions(-)
+
 -- 
 1.7.12.4
