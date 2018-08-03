@@ -1,13 +1,13 @@
 From: Andy Shevchenko <andy.shevchenko-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH v2 2/9] dmapool: cleanup error messages
-Date: Fri, 3 Aug 2018 11:56:01 +0300
-Message-ID: <CAHp75Ve0su_S3ZWTtUEUohrs-iPiD1uzFOHhesLrWzJPOa2LNg@mail.gmail.com>
-References: <a9f7ca9a-38d5-12e2-7d15-ab026425e85a@cybernetics.com>
+Subject: Re: [PATCH v2 4/9] dmapool: improve scalability of dma_pool_alloc
+Date: Fri, 3 Aug 2018 12:02:44 +0300
+Message-ID: <CAHp75Vdj_jcv3j2pNf4EnzasN9zCJ1f+2aWwT2f5GKG=yFAm4Q@mail.gmail.com>
+References: <1dbe6204-17fc-efd9-2381-48186cae2b94@cybernetics.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <a9f7ca9a-38d5-12e2-7d15-ab026425e85a-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org>
+In-Reply-To: <1dbe6204-17fc-efd9-2381-48186cae2b94-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
 	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
 List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
@@ -21,29 +21,29 @@ To: Tony Battersby <tonyb-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org>
 Cc: linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Chaitra P B <chaitra.basappa-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Suganath Prabu Subramani <suganath-prabu.subramani-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Sathya Prakash <sathya.prakash-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, linux-mm <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, MPT-FusionLinux.pdl-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Aug 2, 2018 at 10:57 PM, Tony Battersby <tonyb-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org> wrote:
-> Remove code duplication in error messages.  It is now safe to pas a NULL
-> dev to dev_err(), so the checks to avoid doing so are no longer
-> necessary.
->
-> Example:
->
-> Error message with dev != NULL:
->   mpt3sas 0000:02:00.0: dma_pool_destroy chain pool, (____ptrval____) busy
->
-> Same error message with dev == NULL before patch:
->   dma_pool_destroy chain pool, (____ptrval____) busy
->
-> Same error message with dev == NULL after patch:
->   (NULL device *): dma_pool_destroy chain pool, (____ptrval____) busy
+On Thu, Aug 2, 2018 at 10:58 PM, Tony Battersby <tonyb-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org> wrote:
+> dma_pool_alloc() scales poorly when allocating a large number of pages
+> because it does a linear scan of all previously-allocated pages before
+> allocating a new one.  Improve its scalability by maintaining a separate
+> list of pages that have free blocks ready to (re)allocate.  In big O
+> notation, this improves the algorithm from O(n^2) to O(n).
 
-Have you checked a history of this?
+>  struct dma_pool {              /* the pool */
 
-I'm pretty sure this was created in an order to avoid bad looking (and
-in some cases frightening) "NULL device *" part.
+> +#define POOL_FULL_IDX   0
+> +#define POOL_AVAIL_IDX  1
+> +#define POOL_N_LISTS    2
+> +       struct list_head page_list[POOL_N_LISTS];
 
-If it it's the case, I would rather leave it as is, and even not the
-case, I'm slightly more bent to the current state.
+To be consistent with naming scheme and common practice I would rather
+name the last one as
+
+POOL_MAX_IDX 2
+
+> +       INIT_LIST_HEAD(&retval->page_list[0]);
+> +       INIT_LIST_HEAD(&retval->page_list[1]);
+
+You introduced defines and don't use them.
 
 -- 
 With Best Regards,
