@@ -1,43 +1,50 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH] sr: Avoid that opening a CD-ROM hangs with runtime power
- management enabled
-Date: Fri, 3 Aug 2018 10:48:16 +0200
-Message-ID: <20180803084816.4irdl2lduwgfsupf@linux-x5ow.site>
-References: <20180802174442.7310-1-bart.vanassche@wdc.com>
- <20180803082845.nntzwgny6fprg54r@linux-x5ow.site>
+From: Andy Shevchenko <andy.shevchenko-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH v2 2/9] dmapool: cleanup error messages
+Date: Fri, 3 Aug 2018 11:56:01 +0300
+Message-ID: <CAHp75Ve0su_S3ZWTtUEUohrs-iPiD1uzFOHhesLrWzJPOa2LNg@mail.gmail.com>
+References: <a9f7ca9a-38d5-12e2-7d15-ab026425e85a@cybernetics.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20180803082845.nntzwgny6fprg54r@linux-x5ow.site>
-Sender: stable-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Maurizio Lombardi <mlombard@redhat.com>, Alan Stern <stern@rowland.harvard.edu>, stable@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <a9f7ca9a-38d5-12e2-7d15-ab026425e85a-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
+List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Tony Battersby <tonyb-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org>
+Cc: linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Chaitra P B <chaitra.basappa-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Suganath Prabu Subramani <suganath-prabu.subramani-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Sathya Prakash <sathya.prakash-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, linux-mm <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, MPT-FusionLinux.pdl-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Aug 03, 2018 at 10:28:45AM +0200, Johannes Thumshirn wrote:
-> On Thu, Aug 02, 2018 at 10:44:42AM -0700, Bart Van Assche wrote:
-> > Surround scsi_execute() calls with scsi_autopm_get_device() and
-> > scsi_autopm_put_device(). Note: removing sr_mutex protection from
-> > the scsi_cd_get() and scsi_cd_put() calls is safe because the
-> > purpose of sr_mutex is to serialize cdrom_*() calls.
-> > 
-> [...]
-> 
-> Hi Bart,
-> 
-> With this patch I still have the hang on next-20180801:
+On Thu, Aug 2, 2018 at 10:57 PM, Tony Battersby <tonyb-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org> wrote:
+> Remove code duplication in error messages.  It is now safe to pas a NULL
+> dev to dev_err(), so the checks to avoid doing so are no longer
+> necessary.
+>
+> Example:
+>
+> Error message with dev != NULL:
+>   mpt3sas 0000:02:00.0: dma_pool_destroy chain pool, (____ptrval____) busy
+>
+> Same error message with dev == NULL before patch:
+>   dma_pool_destroy chain pool, (____ptrval____) busy
+>
+> Same error message with dev == NULL after patch:
+>   (NULL device *): dma_pool_destroy chain pool, (____ptrval____) busy
 
-Forget my last email, I didn't have Ming's 'blk-mq: fix
-blk_mq_tagset_busy_iter' applied.
+Have you checked a history of this?
 
-Tested-by: Johannes Thumshirn <jthumshirn@suse.de>
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+I'm pretty sure this was created in an order to avoid bad looking (and
+in some cases frightening) "NULL device *" part.
+
+If it it's the case, I would rather leave it as is, and even not the
+case, I'm slightly more bent to the current state.
+
 -- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+With Best Regards,
+Andy Shevchenko
