@@ -1,205 +1,80 @@
-From: gaowanlong <gaowanlong@huawei.com>
-Subject: RE: [bug report] memory corruption panic caused by SG_IO ioctl()
-Date: Fri, 3 Aug 2018 15:47:22 +0000
-Message-ID: <F0DE9BB0B24B3E4F8304582FAD6F7BFF01B7CB04@DGGEMA505-MBS.china.huawei.com>
-References: <a44201bc-d8d1-6d19-645e-07687ef4bc9e@huawei.com>,<93359d1a-930f-5279-3ca8-800d5930562d@interlog.com>
+From: Andy Shevchenko <andy.shevchenko-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH v2 2/9] dmapool: cleanup error messages
+Date: Fri, 3 Aug 2018 18:59:20 +0300
+Message-ID: <CAHp75VcoLVkp+BkFBLSqn95=3SaV-zr8cO1eSoQsrzZtJZESNQ@mail.gmail.com>
+References: <a9f7ca9a-38d5-12e2-7d15-ab026425e85a@cybernetics.com>
+	<CAHp75Ve0su_S3ZWTtUEUohrs-iPiD1uzFOHhesLrWzJPOa2LNg@mail.gmail.com>
+	<7a943124-c65e-f0ed-cc5c-20b23f021505@cybernetics.com>
+	<b8547f8d-ac88-3d7b-9c2d-60a2f779259e@cybernetics.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <93359d1a-930f-5279-3ca8-800d5930562d@interlog.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: "dgilbert@interlog.com" <dgilbert@interlog.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Cc: "Wencongyang (UVP)" <wencongyang2@huawei.com>, "Wanghui (John)" <john.wanghui@huawei.com>, guijianfeng <guijianfeng@huawei.com>, "lipengfei (Y)" <lipengfei58@huawei.com>, qiaonuohan <qiaonuohan@huawei.com>, gaowanlong <gaowanlong@huawei.com>
+Content-Transfer-Encoding: 7bit
+Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <b8547f8d-ac88-3d7b-9c2d-60a2f779259e-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
+List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Tony Battersby <tonyb-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org>
+Cc: linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Chaitra P B <chaitra.basappa-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Suganath Prabu Subramani <suganath-prabu.subramani-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Sathya Prakash <sathya.prakash-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, linux-mm <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, MPT-FusionLinux.pdl-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Doug, 
+On Fri, Aug 3, 2018 at 6:17 PM, Tony Battersby <tonyb-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org> wrote:
+> On 08/03/2018 09:41 AM, Tony Battersby wrote:
+>> On 08/03/2018 04:56 AM, Andy Shevchenko wrote:
+>>> On Thu, Aug 2, 2018 at 10:57 PM, Tony Battersby <tonyb-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org> wrote:
+>>>> Remove code duplication in error messages.  It is now safe to pas a NULL
+>>>> dev to dev_err(), so the checks to avoid doing so are no longer
+>>>> necessary.
+>>>>
+>>>> Example:
+>>>>
+>>>> Error message with dev != NULL:
+>>>>   mpt3sas 0000:02:00.0: dma_pool_destroy chain pool, (____ptrval____) busy
+>>>>
+>>>> Same error message with dev == NULL before patch:
+>>>>   dma_pool_destroy chain pool, (____ptrval____) busy
+>>>>
+>>>> Same error message with dev == NULL after patch:
+>>>>   (NULL device *): dma_pool_destroy chain pool, (____ptrval____) busy
+>>> Have you checked a history of this?
+>>>
+>>> I'm pretty sure this was created in an order to avoid bad looking (and
+>>> in some cases frightening) "NULL device *" part.
+>>>
+>>> If it it's the case, I would rather leave it as is, and even not the
+>>> case, I'm slightly more bent to the current state.
+>>>
+>> I did.  "drivers/base/dmapool.c", later moved to "mm/dmapool.c", was
+>> added in linux-2.6.3, for which dev_err() did not work will a NULL dev,
+>> so the check was necessary back then.  I agree that the (NULL device *):
+>> bit is ugly, but these messages should be printed only after a kernel
+>> bug, so it is not like they will be making a regular appearance in
+>> dmesg.  Considering that, I think that it is better to keep it simple.
+>>
+>
+> My original unsubmitted patch used the following:
+>
+> +#define pool_err(pool, fmt, args...) \
+> +       do { \
+> +               if ((pool)->dev) \
+> +                       dev_err((pool)->dev, fmt, args); \
+> +               else \
+> +                       pr_err(fmt, args); \
+> +       } while (0)
+>
+> But then I decided to simplify it to just use dev_err().  I still have
+> the old version.  When I submit v3 of the patchset, which would you prefer?
 
-On 2018-08-03 04:46 AM, Wanlong Gao wrote:
-> Hi Martinand all folks,
->
->
->> Recently we find a kernel panic with memory corruption caused by SG_IO ioctl(),
->> and it can be easily reproduced by running following reproducer about
->> minutes,any idea?
+JFYI: git log --no-merges --grep 'NULL device \*'
 
-> Which kernel?
+P.S. I already shared my opinion on this anyway.
 
-We've tested with 4.17.11 and 4.18.rc7 and both reproduced. 
-
-> And what are the underlying devices (e.g. does /dev/sg0 refer to a SATA disk,
-> a real SCSI disk (SAS for example), USB mass storage, etc)?
-
-We tested in a qemu-kvm guest and the sg0 refer to a virtual SATA disk.
-
-> Also can you get a copy of the kernel panic?
-
-Since the call traces are different every time it reproduced, that I didn't paste the 
-call trace or the vmcore, but this reproducer is very useful and I believe you can reproduce
-it easily using the following code.
-
-Thanks,
-Wanlong
-
-> Doug Gilbert
-
->
-> C reproducer:
->
-> // autogenerated by syzkaller (http://github.com/google/syzkaller)
->
-> #define _GNU_SOURCE
->
-> #include <endian.h>
->
-> #include <sys/syscall.h>
->
-> #include <unistd.h>
->
-> #include <fcntl.h>
->
-> #include <stdio.h>
->
-> #include <string.h>
->
-> #include <sys/stat.h>
->
-> #include <stdint.h>
->
-> #include <string.h>
->
-> static uintptr_t syz_open_dev(uintptr_t a0, uintptr_t a1, uintptr_t a2)
->
-> {
->
-> if (a0 == 0xc || a0 == 0xb) {
->
-> char buf[128];
->
-> sprintf(buf, "/dev/%s/%d:%d", a0 == 0xc ? "char" : "block", (uint8_t)a1,
-> (uint8_t)a2);
->
-> return open(buf, O_RDWR, 0);
->
-> } else {
->
-> char buf[1024];
->
-> char* hash;
->
-> strncpy(buf, (char*)a0, sizeof(buf) - 1);
->
-> buf[sizeof(buf) - 1] = 0;
->
-> while ((hash = strchr(buf, '#'))) {
->
-> *hash = '0' + (char)(a1 % 10);
->
-> a1 /= 10;
->
-> }
->
-> return open(buf, a2, 0);
->
-> }
->
-> }
->
-> static void execute_one();
->
-> extern unsigned long long procid;
->
-> void loop()
->
-> {
->
-> while (1) {
->
-> execute_one();
->
-> }
->
-> }
->
-> uint64_t r[1] = {0xffffffffffffffff};
->
-> void execute_one()
->
-> {
->
-> long res = 0;
->
-> memcpy((void*)0x20000040, "/dev/sg#", 9);
->
-> res = syz_open_dev(0x20000040, 0, 0);
->
-> if (res != -1)
->
-> r[0] = res;
->
-> *(uint32_t*)0x200002c0 = 0x53;
->
-> *(uint32_t*)0x200002c4 = 0;
->
-> *(uint8_t*)0x200002c8 = 0xd;
->
-> *(uint8_t*)0x200002c9 = 0;
->
-> *(uint16_t*)0x200002ca = 0;
->
-> *(uint32_t*)0x200002cc = 0x95;
->
-> *(uint64_t*)0x200002d0 = 0x20000080;
->
-> *(uint64_t*)0x200002d8 = 0x20000000;
->
-> memcpy((void*)0x20000000,
-> "\x08\xf0\xa8\x77\xd3\xbe\x87\x5d\xda\x65\x79\x3f\xc7", 13);
->
-> *(uint64_t*)0x200002e0 = 0x20000180;
->
-> *(uint32_t*)0x200002e8 = 0x8001;
->
-> *(uint32_t*)0x200002ec = 0x10024;
->
-> *(uint32_t*)0x200002f0 = -1;
->
-> *(uint64_t*)0x200002f4 = 0x20000280;
->
-> *(uint8_t*)0x200002fc = 0;
->
-> *(uint8_t*)0x200002fd = 0;
->
-> *(uint8_t*)0x200002fe = 0;
->
-> *(uint8_t*)0x200002ff = 0;
->
-> *(uint16_t*)0x20000300 = 0;
->
-> *(uint16_t*)0x20000302 = 0;
->
-> *(uint32_t*)0x20000304 = 0;
->
-> *(uint32_t*)0x20000308 = 0;
->
-> *(uint32_t*)0x2000030c = 0;
->
-> syscall(__NR_ioctl, r[0], 0x2285, 0x200002c0);
->
-> }
->
-> int main()
->
-> {
->
-> syscall(__NR_mmap, 0x20000000, 0x1000000, 3, 0x32, -1, 0);
->
-> for (;;) {
->
-> loop();
->
-> }
->
-> }
->
+-- 
+With Best Regards,
+Andy Shevchenko
