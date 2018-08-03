@@ -1,61 +1,193 @@
-From: Tony Battersby <tonyb-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org>
-Subject: Re: [PATCH v2 8/9] dmapool: reduce footprint in struct page
-Date: Fri, 3 Aug 2018 10:49:56 -0400
-Message-ID: <38967c65-4b3d-7a56-022f-bd291539e6cd@cybernetics.com>
-References: <0ccfd31b-0a3f-9ae8-85c8-e176cd5453a9@cybernetics.com>
-	<20180802235626.GA5773@bombadil.infradead.org>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [bug report] memory corruption panic caused by SG_IO ioctl()
+Date: Fri, 3 Aug 2018 11:06:15 -0400
+Message-ID: <93359d1a-930f-5279-3ca8-800d5930562d@interlog.com>
+References: <a44201bc-d8d1-6d19-645e-07687ef4bc9e@huawei.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <20180802235626.GA5773-PfSpb0PWhxZc2C7mugBRk2EX/6BAtgUQ@public.gmane.org>
-Content-Language: en-US
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
-List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Chaitra P B <chaitra.basappa-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Suganath Prabu Subramani <suganath-prabu.subramani-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Sathya Prakash <sathya.prakash-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, MPT-FusionLinux.pdl-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <a44201bc-d8d1-6d19-645e-07687ef4bc9e@huawei.com>
+Content-Language: en-CA
+Sender: linux-kernel-owner@vger.kernel.org
+To: Wanlong Gao <gaowanlong@huawei.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: "wencongyang (A)" <wencongyang2@huawei.com>, "Wanghui (John)" <john.wanghui@huawei.com>, guijianfeng <guijianfeng@huawei.com>, lipengfei58@huawei.com, qiaonuohan <qiaonuohan@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gMDgvMDIvMjAxOCAwNzo1NiBQTSwgTWF0dGhldyBXaWxjb3ggd3JvdGU6Cj4KPj4gIHN0cnVj
-dCBkbWFfcG9vbCB7CQkvKiB0aGUgcG9vbCAqLwo+PiAgI2RlZmluZSBQT09MX0ZVTExfSURYICAg
-MAo+PiAgI2RlZmluZSBQT09MX0FWQUlMX0lEWCAgMQo+PiAgI2RlZmluZSBQT09MX05fTElTVFMg
-ICAgMgo+PiAgCXN0cnVjdCBsaXN0X2hlYWQgcGFnZV9saXN0W1BPT0xfTl9MSVNUU107Cj4+ICAJ
-c3BpbmxvY2tfdCBsb2NrOwo+PiAtCXNpemVfdCBzaXplOwo+PiAgCXN0cnVjdCBkZXZpY2UgKmRl
-djsKPj4gLQlzaXplX3QgYWxsb2NhdGlvbjsKPj4gLQlzaXplX3QgYm91bmRhcnk7Cj4+ICsJdW5z
-aWduZWQgaW50IHNpemU7Cj4+ICsJdW5zaWduZWQgaW50IGFsbG9jYXRpb247Cj4+ICsJdW5zaWdu
-ZWQgaW50IGJvdW5kYXJ5X3NoaWZ0Owo+PiArCXVuc2lnbmVkIGludCBibGtzX3Blcl9ib3VuZGFy
-eTsKPj4gKwl1bnNpZ25lZCBpbnQgYmxrc19wZXJfYWxsb2M7Cj4gcy9zaXplX3QvdW5zaWduZWQg
-aW50LyBpcyBhIGdvb2Qgc2F2aW5nIG9uIDY0LWJpdCBzeXN0ZW1zLiAgV2UgcmVjZW50bHkKPiBk
-aWQgc29tZXRoaW5nIHNpbWlsYXIgZm9yIHNsYWIvc2x1Yi4KCkkgd2FzIHRyeWluZyB0byBhdm9p
-ZCA2NC1iaXQgbXVsdGlwbHkgYW5kIGRpdmlkZSBpbiB0aGUgZmFzdCBwYXRoLsKgIEFuZAp0aGUg
-cmVzdCBvZiB0aGUgY29kZSB1c2VzIHVuc2lnbmVkIGludCBpbiB2YXJpb3VzIHBsYWNlcywgc28g
-YmlnIHNpemVzCndvbid0IHdvcmsgYW55d2F5LsKgIEJ1dCB3aXRob3V0IHRoZSBjb252ZXJzaW9u
-IGZyb20gImJ5dGUgb2Zmc2V0IiB0bwoiYmxvY2sgaW5kZXgiIGV2ZXJ5d2hlcmUsIHRoZSBvdmVy
-aGVhZCBkb2Vzbid0IG1hdHRlciBhcyBtdWNoLsKgIEJ1dCBpdApjb3VsZCBzdGlsbCBiZSBkb25l
-LgoKT25lIHBsYWNlIHdoZXJlIHNpemVfdCBtaWdodCBiZSBhcHByb3ByaWF0ZSBpcyBpbiBzaG93
-X3Bvb2xzKCkgd2hlbgphZGRpbmcgdG9nZXRoZXIgdGhlIG1lbW9yeSB1c2FnZSBvZiB0aGUgZW50
-aXJlIHBvb2wgKGl0IGN1cnJlbnRseSB1c2VzCnVuc2lnbmVkIGludCkuwqAgTm93IHRoYXQgaXQg
-c2NhbGVzIHdlbGwuIDspCgo+Cj4+IEBAIC0xNDEsNiArMTUwLDcgQEAgc3RhdGljIERFVklDRV9B
-VFRSKHBvb2xzLCAwNDQ0LCBzaG93X3Bvb2wKPj4gIHN0cnVjdCBkbWFfcG9vbCAqZG1hX3Bvb2xf
-Y3JlYXRlKGNvbnN0IGNoYXIgKm5hbWUsIHN0cnVjdCBkZXZpY2UgKmRldiwKPj4gIAkJCQkgc2l6
-ZV90IHNpemUsIHNpemVfdCBhbGlnbiwgc2l6ZV90IGJvdW5kYXJ5KQo+PiAgewo+IFdlIHNob3Vs
-ZCBjaGFuZ2UgdGhlIEFQSSBoZXJlIHRvby4KPgo+ClRoZXJlIGFyZSBhIGxvdCBvZiBrZXJuZWwg
-QVBJIGZ1bmN0aW9ucyB0aGF0IHRha2UgYSBzaXplX3QsIGV2ZW4gdGhvdWdoCmEgY29udGlndW91
-cyBjaHVuayBvZiBtZW1vcnkgPj0gNCBHaUIgaXMgcHJldHR5IHJhcmUgaW4gdGhlIGtlcm5lbC7C
-oCBGb3IKZXhhbXBsZSwgZG1hX2FsbG9jX2NvaGVyZW50KCkgdGFrZXMgYSBzaXplX3QuwqAgSSBz
-dXBwb3NlIGlmIHlvdSB0YWtlIGEKc2l6ZV90IHlvdSBjYW4gcmV0dXJuIGFuIGVycm9yIGlmIHRo
-ZSB2YWx1ZSBpcyBiaWdnZXIgdGhhbiBzdXBwb3J0ZWQuwqAKT1RPSCwgaWYgeW91IHRha2UgYW4g
-dW5zaWduZWQgaW50LCBhIGh1Z2UgdmFsdWUgY291bGQgYmUgdHJ1bmNhdGVkCmJlZm9yZSB5b3Ug
-cGVyZm9ybSB5b3VyIHJhbmdlIGNoZWNrIG9uIGl0LsKgIHNpemVfdCBhbHNvIGhhcyB0aGUgYmVu
-ZWZpdApvZiBpbXBsaWNpdGx5ICJkb2N1bWVudGluZyIgdGhlIGludGVyZmFjZSBiZWNhdXNlIHBl
-b3BsZSBpbW1lZGlhdGVseQprbm93IHdoYXQgaXQgbWVhbnMuCgpfX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fXwppb21tdSBtYWlsaW5nIGxpc3QKaW9tbXVAbGlz
-dHMubGludXgtZm91bmRhdGlvbi5vcmcKaHR0cHM6Ly9saXN0cy5saW51eGZvdW5kYXRpb24ub3Jn
-L21haWxtYW4vbGlzdGluZm8vaW9tbXU=
+On 2018-08-03 04:46 AM, Wanlong Gao wrote:
+> Hi Martinand all folks,
+> 
+> 
+> Recently we find a kernel panic with memory corruption caused by SG_IO ioctl(), 
+> and it can be easily reproduced by running following reproducer about 
+> minutes,any idea?
+
+Which kernel?
+
+And what are the underlying devices (e.g. does /dev/sg0 refer to a SATA disk,
+a real SCSI disk (SAS for example), USB mass storage, etc)?
+
+Also can you get a copy of the kernel panic?
+
+Doug Gilbert
+
+> 
+> C reproducer:
+> 
+> // autogenerated by syzkaller (http://github.com/google/syzkaller)
+> 
+> #define _GNU_SOURCE
+> 
+> #include <endian.h>
+> 
+> #include <sys/syscall.h>
+> 
+> #include <unistd.h>
+> 
+> #include <fcntl.h>
+> 
+> #include <stdio.h>
+> 
+> #include <string.h>
+> 
+> #include <sys/stat.h>
+> 
+> #include <stdint.h>
+> 
+> #include <string.h>
+> 
+> static uintptr_t syz_open_dev(uintptr_t a0, uintptr_t a1, uintptr_t a2)
+> 
+> {
+> 
+> if (a0 == 0xc || a0 == 0xb) {
+> 
+> char buf[128];
+> 
+> sprintf(buf, "/dev/%s/%d:%d", a0 == 0xc ? "char" : "block", (uint8_t)a1, 
+> (uint8_t)a2);
+> 
+> return open(buf, O_RDWR, 0);
+> 
+> } else {
+> 
+> char buf[1024];
+> 
+> char* hash;
+> 
+> strncpy(buf, (char*)a0, sizeof(buf) - 1);
+> 
+> buf[sizeof(buf) - 1] = 0;
+> 
+> while ((hash = strchr(buf, '#'))) {
+> 
+> *hash = '0' + (char)(a1 % 10);
+> 
+> a1 /= 10;
+> 
+> }
+> 
+> return open(buf, a2, 0);
+> 
+> }
+> 
+> }
+> 
+> static void execute_one();
+> 
+> extern unsigned long long procid;
+> 
+> void loop()
+> 
+> {
+> 
+> while (1) {
+> 
+> execute_one();
+> 
+> }
+> 
+> }
+> 
+> uint64_t r[1] = {0xffffffffffffffff};
+> 
+> void execute_one()
+> 
+> {
+> 
+> long res = 0;
+> 
+> memcpy((void*)0x20000040, "/dev/sg#", 9);
+> 
+> res = syz_open_dev(0x20000040, 0, 0);
+> 
+> if (res != -1)
+> 
+> r[0] = res;
+> 
+> *(uint32_t*)0x200002c0 = 0x53;
+> 
+> *(uint32_t*)0x200002c4 = 0;
+> 
+> *(uint8_t*)0x200002c8 = 0xd;
+> 
+> *(uint8_t*)0x200002c9 = 0;
+> 
+> *(uint16_t*)0x200002ca = 0;
+> 
+> *(uint32_t*)0x200002cc = 0x95;
+> 
+> *(uint64_t*)0x200002d0 = 0x20000080;
+> 
+> *(uint64_t*)0x200002d8 = 0x20000000;
+> 
+> memcpy((void*)0x20000000, 
+> "\x08\xf0\xa8\x77\xd3\xbe\x87\x5d\xda\x65\x79\x3f\xc7", 13);
+> 
+> *(uint64_t*)0x200002e0 = 0x20000180;
+> 
+> *(uint32_t*)0x200002e8 = 0x8001;
+> 
+> *(uint32_t*)0x200002ec = 0x10024;
+> 
+> *(uint32_t*)0x200002f0 = -1;
+> 
+> *(uint64_t*)0x200002f4 = 0x20000280;
+> 
+> *(uint8_t*)0x200002fc = 0;
+> 
+> *(uint8_t*)0x200002fd = 0;
+> 
+> *(uint8_t*)0x200002fe = 0;
+> 
+> *(uint8_t*)0x200002ff = 0;
+> 
+> *(uint16_t*)0x20000300 = 0;
+> 
+> *(uint16_t*)0x20000302 = 0;
+> 
+> *(uint32_t*)0x20000304 = 0;
+> 
+> *(uint32_t*)0x20000308 = 0;
+> 
+> *(uint32_t*)0x2000030c = 0;
+> 
+> syscall(__NR_ioctl, r[0], 0x2285, 0x200002c0);
+> 
+> }
+> 
+> int main()
+> 
+> {
+> 
+> syscall(__NR_mmap, 0x20000000, 0x1000000, 3, 0x32, -1, 0);
+> 
+> for (;;) {
+> 
+> loop();
+> 
+> }
+> 
+> }
+> 
