@@ -1,61 +1,205 @@
-From: Tony Battersby <tonyb-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org>
-Subject: Re: [PATCH v2 2/9] dmapool: cleanup error messages
-Date: Fri, 3 Aug 2018 11:17:32 -0400
-Message-ID: <b8547f8d-ac88-3d7b-9c2d-60a2f779259e@cybernetics.com>
-References: <a9f7ca9a-38d5-12e2-7d15-ab026425e85a@cybernetics.com>
-	<CAHp75Ve0su_S3ZWTtUEUohrs-iPiD1uzFOHhesLrWzJPOa2LNg@mail.gmail.com>
-	<7a943124-c65e-f0ed-cc5c-20b23f021505@cybernetics.com>
+From: gaowanlong <gaowanlong@huawei.com>
+Subject: RE: [bug report] memory corruption panic caused by SG_IO ioctl()
+Date: Fri, 3 Aug 2018 15:47:22 +0000
+Message-ID: <F0DE9BB0B24B3E4F8304582FAD6F7BFF01B7CB04@DGGEMA505-MBS.china.huawei.com>
+References: <a44201bc-d8d1-6d19-645e-07687ef4bc9e@huawei.com>,<93359d1a-930f-5279-3ca8-800d5930562d@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <7a943124-c65e-f0ed-cc5c-20b23f021505-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <93359d1a-930f-5279-3ca8-800d5930562d@interlog.com>
 Content-Language: en-US
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
-List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Andy Shevchenko <andy.shevchenko-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Chaitra P B <chaitra.basappa-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Suganath Prabu Subramani <suganath-prabu.subramani-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Sathya Prakash <sathya.prakash-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, linux-mm <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, MPT-FusionLinux.pdl-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "dgilbert@interlog.com" <dgilbert@interlog.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Cc: "Wencongyang (UVP)" <wencongyang2@huawei.com>, "Wanghui (John)" <john.wanghui@huawei.com>, guijianfeng <guijianfeng@huawei.com>, "lipengfei (Y)" <lipengfei58@huawei.com>, qiaonuohan <qiaonuohan@huawei.com>, gaowanlong <gaowanlong@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gMDgvMDMvMjAxOCAwOTo0MSBBTSwgVG9ueSBCYXR0ZXJzYnkgd3JvdGU6Cj4gT24gMDgvMDMv
-MjAxOCAwNDo1NiBBTSwgQW5keSBTaGV2Y2hlbmtvIHdyb3RlOgo+PiBPbiBUaHUsIEF1ZyAyLCAy
-MDE4IGF0IDEwOjU3IFBNLCBUb255IEJhdHRlcnNieSA8dG9ueWJAY3liZXJuZXRpY3MuY29tPiB3
-cm90ZToKPj4+IFJlbW92ZSBjb2RlIGR1cGxpY2F0aW9uIGluIGVycm9yIG1lc3NhZ2VzLiAgSXQg
-aXMgbm93IHNhZmUgdG8gcGFzIGEgTlVMTAo+Pj4gZGV2IHRvIGRldl9lcnIoKSwgc28gdGhlIGNo
-ZWNrcyB0byBhdm9pZCBkb2luZyBzbyBhcmUgbm8gbG9uZ2VyCj4+PiBuZWNlc3NhcnkuCj4+Pgo+
-Pj4gRXhhbXBsZToKPj4+Cj4+PiBFcnJvciBtZXNzYWdlIHdpdGggZGV2ICE9IE5VTEw6Cj4+PiAg
-IG1wdDNzYXMgMDAwMDowMjowMC4wOiBkbWFfcG9vbF9kZXN0cm95IGNoYWluIHBvb2wsIChfX19f
-cHRydmFsX19fXykgYnVzeQo+Pj4KPj4+IFNhbWUgZXJyb3IgbWVzc2FnZSB3aXRoIGRldiA9PSBO
-VUxMIGJlZm9yZSBwYXRjaDoKPj4+ICAgZG1hX3Bvb2xfZGVzdHJveSBjaGFpbiBwb29sLCAoX19f
-X3B0cnZhbF9fX18pIGJ1c3kKPj4+Cj4+PiBTYW1lIGVycm9yIG1lc3NhZ2Ugd2l0aCBkZXYgPT0g
-TlVMTCBhZnRlciBwYXRjaDoKPj4+ICAgKE5VTEwgZGV2aWNlICopOiBkbWFfcG9vbF9kZXN0cm95
-IGNoYWluIHBvb2wsIChfX19fcHRydmFsX19fXykgYnVzeQo+PiBIYXZlIHlvdSBjaGVja2VkIGEg
-aGlzdG9yeSBvZiB0aGlzPwo+Pgo+PiBJJ20gcHJldHR5IHN1cmUgdGhpcyB3YXMgY3JlYXRlZCBp
-biBhbiBvcmRlciB0byBhdm9pZCBiYWQgbG9va2luZyAoYW5kCj4+IGluIHNvbWUgY2FzZXMgZnJp
-Z2h0ZW5pbmcpICJOVUxMIGRldmljZSAqIiBwYXJ0Lgo+Pgo+PiBJZiBpdCBpdCdzIHRoZSBjYXNl
-LCBJIHdvdWxkIHJhdGhlciBsZWF2ZSBpdCBhcyBpcywgYW5kIGV2ZW4gbm90IHRoZQo+PiBjYXNl
-LCBJJ20gc2xpZ2h0bHkgbW9yZSBiZW50IHRvIHRoZSBjdXJyZW50IHN0YXRlLgo+Pgo+IEkgZGlk
-LsKgICJkcml2ZXJzL2Jhc2UvZG1hcG9vbC5jIiwgbGF0ZXIgbW92ZWQgdG8gIm1tL2RtYXBvb2wu
-YyIsIHdhcwo+IGFkZGVkIGluIGxpbnV4LTIuNi4zLCBmb3Igd2hpY2ggZGV2X2VycigpIGRpZCBu
-b3Qgd29yayB3aWxsIGEgTlVMTCBkZXYsCj4gc28gdGhlIGNoZWNrIHdhcyBuZWNlc3NhcnkgYmFj
-ayB0aGVuLsKgIEkgYWdyZWUgdGhhdCB0aGUgKE5VTEwgZGV2aWNlICopOgo+IGJpdCBpcyB1Z2x5
-LCBidXQgdGhlc2UgbWVzc2FnZXMgc2hvdWxkIGJlIHByaW50ZWQgb25seSBhZnRlciBhIGtlcm5l
-bAo+IGJ1Zywgc28gaXQgaXMgbm90IGxpa2UgdGhleSB3aWxsIGJlIG1ha2luZyBhIHJlZ3VsYXIg
-YXBwZWFyYW5jZSBpbgo+IGRtZXNnLsKgIENvbnNpZGVyaW5nIHRoYXQsIEkgdGhpbmsgdGhhdCBp
-dCBpcyBiZXR0ZXIgdG8ga2VlcCBpdCBzaW1wbGUuCj4KCk15IG9yaWdpbmFsIHVuc3VibWl0dGVk
-IHBhdGNoIHVzZWQgdGhlIGZvbGxvd2luZzoKCisjZGVmaW5lIHBvb2xfZXJyKHBvb2wsIGZtdCwg
-YXJncy4uLikgXAorCWRvIHsgXAorCQlpZiAoKHBvb2wpLT5kZXYpIFwKKwkJCWRldl9lcnIoKHBv
-b2wpLT5kZXYsIGZtdCwgYXJncyk7IFwKKwkJZWxzZSBcCisJCQlwcl9lcnIoZm10LCBhcmdzKTsg
-XAorCX0gd2hpbGUgKDApCgpCdXQgdGhlbiBJIGRlY2lkZWQgdG8gc2ltcGxpZnkgaXQgdG8ganVz
-dCB1c2UgZGV2X2VycigpLsKgIEkgc3RpbGwgaGF2ZQp0aGUgb2xkIHZlcnNpb24uwqAgV2hlbiBJ
-IHN1Ym1pdCB2MyBvZiB0aGUgcGF0Y2hzZXQsIHdoaWNoIHdvdWxkIHlvdSBwcmVmZXI/Cl9fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmlvbW11IG1haWxpbmcg
-bGlzdAppb21tdUBsaXN0cy5saW51eC1mb3VuZGF0aW9uLm9yZwpodHRwczovL2xpc3RzLmxpbnV4
-Zm91bmRhdGlvbi5vcmcvbWFpbG1hbi9saXN0aW5mby9pb21tdQ==
+Doug, 
+
+On 2018-08-03 04:46 AM, Wanlong Gao wrote:
+> Hi Martinand all folks,
+>
+>
+>> Recently we find a kernel panic with memory corruption caused by SG_IO ioctl(),
+>> and it can be easily reproduced by running following reproducer about
+>> minutes,any idea?
+
+> Which kernel?
+
+We've tested with 4.17.11 and 4.18.rc7 and both reproduced. 
+
+> And what are the underlying devices (e.g. does /dev/sg0 refer to a SATA disk,
+> a real SCSI disk (SAS for example), USB mass storage, etc)?
+
+We tested in a qemu-kvm guest and the sg0 refer to a virtual SATA disk.
+
+> Also can you get a copy of the kernel panic?
+
+Since the call traces are different every time it reproduced, that I didn't paste the 
+call trace or the vmcore, but this reproducer is very useful and I believe you can reproduce
+it easily using the following code.
+
+Thanks,
+Wanlong
+
+> Doug Gilbert
+
+>
+> C reproducer:
+>
+> // autogenerated by syzkaller (http://github.com/google/syzkaller)
+>
+> #define _GNU_SOURCE
+>
+> #include <endian.h>
+>
+> #include <sys/syscall.h>
+>
+> #include <unistd.h>
+>
+> #include <fcntl.h>
+>
+> #include <stdio.h>
+>
+> #include <string.h>
+>
+> #include <sys/stat.h>
+>
+> #include <stdint.h>
+>
+> #include <string.h>
+>
+> static uintptr_t syz_open_dev(uintptr_t a0, uintptr_t a1, uintptr_t a2)
+>
+> {
+>
+> if (a0 == 0xc || a0 == 0xb) {
+>
+> char buf[128];
+>
+> sprintf(buf, "/dev/%s/%d:%d", a0 == 0xc ? "char" : "block", (uint8_t)a1,
+> (uint8_t)a2);
+>
+> return open(buf, O_RDWR, 0);
+>
+> } else {
+>
+> char buf[1024];
+>
+> char* hash;
+>
+> strncpy(buf, (char*)a0, sizeof(buf) - 1);
+>
+> buf[sizeof(buf) - 1] = 0;
+>
+> while ((hash = strchr(buf, '#'))) {
+>
+> *hash = '0' + (char)(a1 % 10);
+>
+> a1 /= 10;
+>
+> }
+>
+> return open(buf, a2, 0);
+>
+> }
+>
+> }
+>
+> static void execute_one();
+>
+> extern unsigned long long procid;
+>
+> void loop()
+>
+> {
+>
+> while (1) {
+>
+> execute_one();
+>
+> }
+>
+> }
+>
+> uint64_t r[1] = {0xffffffffffffffff};
+>
+> void execute_one()
+>
+> {
+>
+> long res = 0;
+>
+> memcpy((void*)0x20000040, "/dev/sg#", 9);
+>
+> res = syz_open_dev(0x20000040, 0, 0);
+>
+> if (res != -1)
+>
+> r[0] = res;
+>
+> *(uint32_t*)0x200002c0 = 0x53;
+>
+> *(uint32_t*)0x200002c4 = 0;
+>
+> *(uint8_t*)0x200002c8 = 0xd;
+>
+> *(uint8_t*)0x200002c9 = 0;
+>
+> *(uint16_t*)0x200002ca = 0;
+>
+> *(uint32_t*)0x200002cc = 0x95;
+>
+> *(uint64_t*)0x200002d0 = 0x20000080;
+>
+> *(uint64_t*)0x200002d8 = 0x20000000;
+>
+> memcpy((void*)0x20000000,
+> "\x08\xf0\xa8\x77\xd3\xbe\x87\x5d\xda\x65\x79\x3f\xc7", 13);
+>
+> *(uint64_t*)0x200002e0 = 0x20000180;
+>
+> *(uint32_t*)0x200002e8 = 0x8001;
+>
+> *(uint32_t*)0x200002ec = 0x10024;
+>
+> *(uint32_t*)0x200002f0 = -1;
+>
+> *(uint64_t*)0x200002f4 = 0x20000280;
+>
+> *(uint8_t*)0x200002fc = 0;
+>
+> *(uint8_t*)0x200002fd = 0;
+>
+> *(uint8_t*)0x200002fe = 0;
+>
+> *(uint8_t*)0x200002ff = 0;
+>
+> *(uint16_t*)0x20000300 = 0;
+>
+> *(uint16_t*)0x20000302 = 0;
+>
+> *(uint32_t*)0x20000304 = 0;
+>
+> *(uint32_t*)0x20000308 = 0;
+>
+> *(uint32_t*)0x2000030c = 0;
+>
+> syscall(__NR_ioctl, r[0], 0x2285, 0x200002c0);
+>
+> }
+>
+> int main()
+>
+> {
+>
+> syscall(__NR_mmap, 0x20000000, 0x1000000, 3, 0x32, -1, 0);
+>
+> for (;;) {
+>
+> loop();
+>
+> }
+>
+> }
+>
