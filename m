@@ -1,30 +1,52 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] sr: Avoid that opening a CD-ROM hangs with runtime power management enabled
-Date: Fri, 03 Aug 2018 13:54:54 -0400
-Message-ID: <yq1ftzvwd1t.fsf@oracle.com>
-References: <20180802174442.7310-1-bart.vanassche@wdc.com>
+From: Andy Shevchenko <andy.shevchenko-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH v2 2/9] dmapool: cleanup error messages
+Date: Fri, 3 Aug 2018 21:38:41 +0300
+Message-ID: <CAHp75VfZfhHS1Hgrm+3xJL=3gT9Bri16JJSFUJpDY0=Ev5X-PA@mail.gmail.com>
+References: <a9f7ca9a-38d5-12e2-7d15-ab026425e85a@cybernetics.com>
+	<CAHp75Ve0su_S3ZWTtUEUohrs-iPiD1uzFOHhesLrWzJPOa2LNg@mail.gmail.com>
+	<7a943124-c65e-f0ed-cc5c-20b23f021505@cybernetics.com>
+	<b8547f8d-ac88-3d7b-9c2d-60a2f779259e@cybernetics.com>
+	<CAHp75VcoLVkp+BkFBLSqn95=3SaV-zr8cO1eSoQsrzZtJZESNQ@mail.gmail.com>
+	<20180803162212.GA4718@bombadil.infradead.org>
+	<a2e9e4fd-2aab-bc7e-8dbb-db4ece8cd84f@cybernetics.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20180802174442.7310-1-bart.vanassche@wdc.com> (Bart Van Assche's
-        message of "Thu, 2 Aug 2018 10:44:42 -0700")
-Sender: stable-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Maurizio Lombardi <mlombard@redhat.com>, Johannes Thumshirn <jthumshirn@suse.de>, Alan Stern <stern@rowland.harvard.edu>, stable@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <a2e9e4fd-2aab-bc7e-8dbb-db4ece8cd84f-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
+List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Tony Battersby <tonyb-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org>
+Cc: linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Chaitra P B <chaitra.basappa-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Suganath Prabu Subramani <suganath-prabu.subramani-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Sathya Prakash <sathya.prakash-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, linux-mm <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, MPT-FusionLinux.pdl-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
+On Fri, Aug 3, 2018 at 8:03 PM, Tony Battersby <tonyb-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org> wrote:
+> On 08/03/2018 12:22 PM, Matthew Wilcox wrote:
+>> On Fri, Aug 03, 2018 at 06:59:20PM +0300, Andy Shevchenko wrote:
+>>>>>> I'm pretty sure this was created in an order to avoid bad looking (and
+>>>>>> in some cases frightening) "NULL device *" part.
+>>> JFYI: git log --no-merges --grep 'NULL device \*'
+>> I think those commits actually argue in favour of Tony's patch to remove
+>> the special casing.  Is it really useful to create dma pools with a NULL
+>> device?
 
-Bart,
+> dma_alloc_coherent() does appear to support a NULL dev, so it might make
+> sense in theory.  But I can't find any in-tree callers that actually
+> pass a NULL dev to dma_pool_create().  So for one of the dreaded (NULL
+> device *) messages to show up, it would take both a new caller that
+> passes a NULL dev to dma_pool_create() and a bug to cause the message to
+> be printed.  Is that worth the special casing?
 
-> Surround scsi_execute() calls with scsi_autopm_get_device() and
-> scsi_autopm_put_device(). Note: removing sr_mutex protection from
-> the scsi_cd_get() and scsi_cd_put() calls is safe because the
-> purpose of sr_mutex is to serialize cdrom_*() calls.
->
-> This patch avoids that complaints similar to the following appear in
-> the kernel log if runtime power management is enabled:
-
-Applied to 4.18/scsi-fixes, thanks!
+So, then you need to rephrase the commit message explaining this
+("NULL device is wrong to pass in the first place... bla bla bla").
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+With Best Regards,
+Andy Shevchenko
