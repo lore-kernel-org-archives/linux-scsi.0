@@ -1,46 +1,44 @@
-From: Julia Lawall <julia.lawall@lip6.fr>
-Subject: Re: [PATCH] scsi:NCR5380: remove same check condition in
- NCR5380_select
-Date: Fri, 3 Aug 2018 11:52:45 +0200 (CEST)
-Message-ID: <alpine.DEB.2.20.1808031146090.3871@hadrien>
-References: <1533179408-20631-1-git-send-email-zhongjiang@huawei.com> <alpine.LNX.2.21.1808031156350.16@nippy.intranet> <CAHp75Vc8tWKUpKS8yY52CdJ=mU-iqcrUCz32ZSSJixLA1bM0tQ@mail.gmail.com>
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] st: remove redundant pointer STbuffer
+Date: Fri,  3 Aug 2018 11:47:52 +0100
+Message-ID: <20180803104752.17081-1-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAHp75Vc8tWKUpKS8yY52CdJ=mU-iqcrUCz32ZSSJixLA1bM0tQ@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Andy Shevchenko <andy.shevchenko@gmail.com>
-Cc: Finn Thain <fthain@telegraphics.com.au>, zhong jiang <zhongjiang@huawei.com>, Michael Schmitz <schmitzmic@gmail.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, John Garry <john.garry@huawei.com>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: =?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+From: Colin Ian King <colin.king@canonical.com>
 
+Pointer STbuffer is being assigned but is never used hence it is
+redundant and can be removed.
 
-On Fri, 3 Aug 2018, Andy Shevchenko wrote:
+Cleans up clang warning:
+warning: variable 'STbuffer' set but not used [-Wunused-but-set-variable]
 
-> On Fri, Aug 3, 2018 at 5:24 AM, Finn Thain <fthain@telegraphics.com.au> wrote:
-> > On Thu, 2 Aug 2018, zhong jiang wrote:
-> >
-> >> The same check condition is redundant, so remove one of them.
-> >>
-> >
-> > If you are trying to find redundant code, your coccinelle script is
-> > dangerously flawed.
->
-> These days too many coccinelle helpers make people think they are
-> doing right "clean ups" when in the practice they bring the
-> regressions.
->
-> Julia, is possible by coccinelle to distinguish memory accesses versus
-> I/O? At least it would increase robustness in some cases.
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/scsi/st.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-With make coccicheck, the semantic patch should already emit the warning:
-
-//# A common source of false positives is when the argument performs a side
-//# effect.
-
-I can modify the rule so that it doesn't report on code that involves
-function calls.  It could lose some desirable warnings, where the function
-call is just a wrapper for eg extracting some field, but it is probably
-safer in practice.
-
-julia
+diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
+index 50c66ccc4b41..307df2fa39a3 100644
+--- a/drivers/scsi/st.c
++++ b/drivers/scsi/st.c
+@@ -828,11 +828,8 @@ static int st_flush_write_buffer(struct scsi_tape * STp)
+ static int flush_buffer(struct scsi_tape *STp, int seek_next)
+ {
+ 	int backspace, result;
+-	struct st_buffer *STbuffer;
+ 	struct st_partstat *STps;
+ 
+-	STbuffer = STp->buffer;
+-
+ 	/*
+ 	 * If there was a bus reset, block further access
+ 	 * to this device.
+-- 
+2.17.1
