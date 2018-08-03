@@ -1,69 +1,58 @@
-From: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: Re: [PATCH v2 8/9] dmapool: reduce footprint in struct page
-Date: Thu, 2 Aug 2018 16:56:26 -0700
-Message-ID: <20180802235626.GA5773@bombadil.infradead.org>
-References: <0ccfd31b-0a3f-9ae8-85c8-e176cd5453a9@cybernetics.com>
+From: Finn Thain <fthain@telegraphics.com.au>
+Subject: Re: [PATCH] scsi:NCR5380: remove same check condition in
+ NCR5380_select
+Date: Fri, 3 Aug 2018 12:24:07 +1000 (AEST)
+Message-ID: <alpine.LNX.2.21.1808031156350.16@nippy.intranet>
+References: <1533179408-20631-1-git-send-email-zhongjiang@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <0ccfd31b-0a3f-9ae8-85c8-e176cd5453a9-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
-List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Tony Battersby <tonyb-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org>
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Chaitra P B <chaitra.basappa-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Suganath Prabu Subramani <suganath-prabu.subramani-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Sathya Prakash <sathya.prakash-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, MPT-FusionLinux.pdl-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Content-Type: text/plain; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1533179408-20631-1-git-send-email-zhongjiang@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: zhong jiang <zhongjiang@huawei.com>
+Cc: schmitzmic@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, andy.shevchenko@gmail.com, john.garry@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Aug 02, 2018 at 04:01:12PM -0400, Tony Battersby wrote:
-> This is my attempt to shrink 'dma_free_o' and 'dma_in_use' in 'struct
-> page' (originally 'offset' and 'in_use' in 'struct dma_page') to 16-bit
-> so that it is unnecessary to use the '_mapcount' field of 'struct
-> page'.  However, it adds complexity and makes allocating and freeing up
-> to 20% slower for little gain, so I am NOT recommending that it be
-> merged at this time.  I am posting it just for reference in case someone
-> finds it useful in the future.
+On Thu, 2 Aug 2018, zhong jiang wrote:
 
-I spy some interesting pieces in here that I'd love you to submit as
-patches for merging.
+> The same check condition is redundant, so remove one of them.
+> 
 
-> One of the nice things about this is that dma_pool_free() can do some
-> additional sanity checks:
-> *) Check that the offset of the passed-in address corresponds to a valid
-> block offset.
+If you are trying to find redundant code, your coccinelle script is 
+dangerously flawed.
 
-Can't we do that already?  Subtract the base address of the page from
-the passed-in vaddr and check it's a multiple of pool->size?
+You need to realize that NCR5380_read(CURRENT_SCSI_DATA_REG) is not simply 
+a value in a CPU register or a device register, but it is the actual state 
+of the scsi bus data lines, which are subject to change any time, at the 
+whim of the firmwares in all of the SCSI bus devices participating in 
+arbitration at the time, or of a user who might kick a plug etc.
 
->  struct dma_pool {		/* the pool */
->  #define POOL_FULL_IDX   0
->  #define POOL_AVAIL_IDX  1
->  #define POOL_N_LISTS    2
->  	struct list_head page_list[POOL_N_LISTS];
->  	spinlock_t lock;
-> -	size_t size;
->  	struct device *dev;
-> -	size_t allocation;
-> -	size_t boundary;
-> +	unsigned int size;
-> +	unsigned int allocation;
-> +	unsigned int boundary_shift;
-> +	unsigned int blks_per_boundary;
-> +	unsigned int blks_per_alloc;
+>From the datasheet:
 
-s/size_t/unsigned int/ is a good saving on 64-bit systems.  We recently
-did something similar for slab/slub.
+    The SCSI data lines are not actually registered, but gated directly 
+    onto the CPU bus whenever Address 000 is read by the CPU...
 
-> @@ -141,6 +150,7 @@ static DEVICE_ATTR(pools, 0444, show_pool
->  struct dma_pool *dma_pool_create(const char *name, struct device *dev,
->  				 size_t size, size_t align, size_t boundary)
->  {
+Hence, NAK.
 
-We should change the API here too.
+-- 
+
+> Signed-off-by: zhong jiang <zhongjiang@huawei.com>
+> ---
+>  drivers/scsi/NCR5380.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
+> index 90ea0f5..2ecaf3f 100644
+> --- a/drivers/scsi/NCR5380.c
+> +++ b/drivers/scsi/NCR5380.c
+> @@ -999,8 +999,7 @@ static struct scsi_cmnd *NCR5380_select(struct Scsi_Host *instance,
+>  
+>  	/* Check for lost arbitration */
+>  	if ((NCR5380_read(INITIATOR_COMMAND_REG) & ICR_ARBITRATION_LOST) ||
+> -	    (NCR5380_read(CURRENT_SCSI_DATA_REG) & hostdata->id_higher_mask) ||
+> -	    (NCR5380_read(INITIATOR_COMMAND_REG) & ICR_ARBITRATION_LOST)) {
+> +	    (NCR5380_read(CURRENT_SCSI_DATA_REG) & hostdata->id_higher_mask)) {
+>  		NCR5380_write(MODE_REG, MR_BASE);
+>  		dsprintk(NDEBUG_ARBITRATION, instance, "lost arbitration, deasserting MR_ARBITRATE\n");
+>  		spin_lock_irq(&hostdata->lock);
+> 
