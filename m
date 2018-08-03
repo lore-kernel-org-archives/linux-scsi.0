@@ -1,7 +1,7 @@
 From: Tony Battersby <tonyb-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org>
 Subject: Re: [PATCH v2 2/9] dmapool: cleanup error messages
-Date: Fri, 3 Aug 2018 14:43:07 -0400
-Message-ID: <f0762902-8f28-82eb-b871-337c2da290cf@cybernetics.com>
+Date: Fri, 3 Aug 2018 14:44:54 -0400
+Message-ID: <73004881-f6ae-e55e-0a24-5b3dfbd5af88@cybernetics.com>
 References: <a9f7ca9a-38d5-12e2-7d15-ab026425e85a@cybernetics.com>
 	<CAHp75Ve0su_S3ZWTtUEUohrs-iPiD1uzFOHhesLrWzJPOa2LNg@mail.gmail.com>
 	<7a943124-c65e-f0ed-cc5c-20b23f021505@cybernetics.com>
@@ -9,11 +9,12 @@ References: <a9f7ca9a-38d5-12e2-7d15-ab026425e85a@cybernetics.com>
 	<CAHp75VcoLVkp+BkFBLSqn95=3SaV-zr8cO1eSoQsrzZtJZESNQ@mail.gmail.com>
 	<20180803162212.GA4718@bombadil.infradead.org>
 	<a2e9e4fd-2aab-bc7e-8dbb-db4ece8cd84f@cybernetics.com>
+	<CAHp75VfZfhHS1Hgrm+3xJL=3gT9Bri16JJSFUJpDY0=Ev5X-PA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <a2e9e4fd-2aab-bc7e-8dbb-db4ece8cd84f-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org>
+In-Reply-To: <CAHp75VfZfhHS1Hgrm+3xJL=3gT9Bri16JJSFUJpDY0=Ev5X-PA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Content-Language: en-US
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
 	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
@@ -24,36 +25,19 @@ List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
 	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
 Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Andy Shevchenko <andy.shevchenko-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Chaitra P B <chaitra.basappa-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Suganath Prabu Subramani <suganath-prabu.subramani-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Sathya Prakash <sathya.prakash-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, linux-mm <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, MPT-FusionLinux.pdl-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+To: Andy Shevchenko <andy.shevchenko-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Chaitra P B <chaitra.basappa-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Suganath Prabu Subramani <suganath-prabu.subramani-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Sathya Prakash <sathya.prakash-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, linux-mm <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, MPT-FusionLinux.pdl-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gMDgvMDMvMjAxOCAwMTowMyBQTSwgVG9ueSBCYXR0ZXJzYnkgd3JvdGU6Cj4gT24gMDgvMDMv
-MjAxOCAxMjoyMiBQTSwgTWF0dGhldyBXaWxjb3ggd3JvdGU6Cj4+IE9uIEZyaSwgQXVnIDAzLCAy
-MDE4IGF0IDA2OjU5OjIwUE0gKzAzMDAsIEFuZHkgU2hldmNoZW5rbyB3cm90ZToKPj4+Pj4+IEkn
-bSBwcmV0dHkgc3VyZSB0aGlzIHdhcyBjcmVhdGVkIGluIGFuIG9yZGVyIHRvIGF2b2lkIGJhZCBs
-b29raW5nIChhbmQKPj4+Pj4+IGluIHNvbWUgY2FzZXMgZnJpZ2h0ZW5pbmcpICJOVUxMIGRldmlj
-ZSAqIiBwYXJ0Lgo+Pj4gSkZZSTogZ2l0IGxvZyAtLW5vLW1lcmdlcyAtLWdyZXAgJ05VTEwgZGV2
-aWNlIFwqJwo+PiBJIHRoaW5rIHRob3NlIGNvbW1pdHMgYWN0dWFsbHkgYXJndWUgaW4gZmF2b3Vy
-IG9mIFRvbnkncyBwYXRjaCB0byByZW1vdmUKPj4gdGhlIHNwZWNpYWwgY2FzaW5nLiAgSXMgaXQg
-cmVhbGx5IHVzZWZ1bCB0byBjcmVhdGUgZG1hIHBvb2xzIHdpdGggYSBOVUxMCj4+IGRldmljZT8K
-Pj4KPj4KPiBkbWFfYWxsb2NfY29oZXJlbnQoKSBkb2VzIGFwcGVhciB0byBzdXBwb3J0IGEgTlVM
-TCBkZXYsIHNvIGl0IG1pZ2h0IG1ha2UKPiBzZW5zZSBpbiB0aGVvcnkuwqAgQnV0IEkgY2FuJ3Qg
-ZmluZCBhbnkgaW4tdHJlZSBjYWxsZXJzIHRoYXQgYWN0dWFsbHkKPiBwYXNzIGEgTlVMTCBkZXYg
-dG8gZG1hX3Bvb2xfY3JlYXRlKCkuwqAgU28gZm9yIG9uZSBvZiB0aGUgZHJlYWRlZCAoTlVMTAo+
-IGRldmljZSAqKSBtZXNzYWdlcyB0byBzaG93IHVwLCBpdCB3b3VsZCB0YWtlIGJvdGggYSBuZXcg
-Y2FsbGVyIHRoYXQKPiBwYXNzZXMgYSBOVUxMIGRldiB0byBkbWFfcG9vbF9jcmVhdGUoKSBhbmQg
-YSBidWcgdG8gY2F1c2UgdGhlIG1lc3NhZ2UgdG8KPiBiZSBwcmludGVkLsKgIElzIHRoYXQgd29y
-dGggdGhlIHNwZWNpYWwgY2FzaW5nPwo+CgpPdXQgb2YgY3VyaW9zaXR5LCBJIGp1c3QgdHJpZWQg
-dG8gY3JlYXRlIGEgZG1hcG9vbCB3aXRoIGEgTlVMTCBkZXYgYW5kCml0IGNyYXNoZWQgb24gdGhp
-czoKCnN0YXRpYyBpbmxpbmUgaW50IGRldl90b19ub2RlKHN0cnVjdCBkZXZpY2UgKmRldikKewoJ
-cmV0dXJuIGRldi0+bnVtYV9ub2RlOwp9CgpzdHJ1Y3QgZG1hX3Bvb2wgKmRtYV9wb29sX2NyZWF0
-ZShjb25zdCBjaGFyICpuYW1lLCBzdHJ1Y3QgZGV2aWNlICpkZXYsCgkJCQkgc2l6ZV90IHNpemUs
-IHNpemVfdCBhbGlnbiwgc2l6ZV90IGJvdW5kYXJ5KQp7CgkuLi4KCXJldHZhbCA9IGttYWxsb2Nf
-bm9kZShzaXplb2YoKnJldHZhbCksIEdGUF9LRVJORUwsIGRldl90b19ub2RlKGRldikpOwoJLi4u
-Cn0KClNvIGVpdGhlciBpdCBuZWVkcyBtb3JlIHNwZWNpYWwgY2FzZXMgZm9yIHN1cHBvcnRpbmcg
-YSBOVUxMIGRldiwgb3IgdGhlCnNwZWNpYWwgY2FzZXMgY2FuIGJlIHJlbW92ZWQgc2luY2Ugbm8g
-b25lIGRvZXMgdGhhdCBhbnl3YXkuCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fCmlvbW11IG1haWxpbmcgbGlzdAppb21tdUBsaXN0cy5saW51eC1mb3VuZGF0
-aW9uLm9yZwpodHRwczovL2xpc3RzLmxpbnV4Zm91bmRhdGlvbi5vcmcvbWFpbG1hbi9saXN0aW5m
-by9pb21tdQ==
+On 08/03/2018 02:38 PM, Andy Shevchenko wrote:
+>
+>> dma_alloc_coherent() does appear to support a NULL dev, so it might make
+>> sense in theory.  But I can't find any in-tree callers that actually
+>> pass a NULL dev to dma_pool_create().  So for one of the dreaded (NULL
+>> device *) messages to show up, it would take both a new caller that
+>> passes a NULL dev to dma_pool_create() and a bug to cause the message to
+>> be printed.  Is that worth the special casing?
+> So, then you need to rephrase the commit message explaining this
+> ("NULL device is wrong to pass in the first place... bla bla bla").
+>
+Will do.
