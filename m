@@ -1,49 +1,32 @@
-From: Andy Shevchenko <andy.shevchenko-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH v2 4/9] dmapool: improve scalability of dma_pool_alloc
-Date: Fri, 3 Aug 2018 12:02:44 +0300
-Message-ID: <CAHp75Vdj_jcv3j2pNf4EnzasN9zCJ1f+2aWwT2f5GKG=yFAm4Q@mail.gmail.com>
-References: <1dbe6204-17fc-efd9-2381-48186cae2b94@cybernetics.com>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Subject: Re: [PATCH] scsi:NCR5380: remove same check condition in NCR5380_select
+Date: Fri, 3 Aug 2018 12:10:31 +0300
+Message-ID: <CAHp75Vc8tWKUpKS8yY52CdJ=mU-iqcrUCz32ZSSJixLA1bM0tQ@mail.gmail.com>
+References: <1533179408-20631-1-git-send-email-zhongjiang@huawei.com> <alpine.LNX.2.21.1808031156350.16@nippy.intranet>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <1dbe6204-17fc-efd9-2381-48186cae2b94-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
-List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Tony Battersby <tonyb-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org>
-Cc: linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Chaitra P B <chaitra.basappa-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Suganath Prabu Subramani <suganath-prabu.subramani-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Sathya Prakash <sathya.prakash-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, linux-mm <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, MPT-FusionLinux.pdl-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <alpine.LNX.2.21.1808031156350.16@nippy.intranet>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Finn Thain <fthain@telegraphics.com.au>, Julia Lawall <julia.lawall@lip6.fr>
+Cc: zhong jiang <zhongjiang@huawei.com>, Michael Schmitz <schmitzmic@gmail.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, John Garry <john.garry@huawei.com>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Aug 2, 2018 at 10:58 PM, Tony Battersby <tonyb-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org> wrote:
-> dma_pool_alloc() scales poorly when allocating a large number of pages
-> because it does a linear scan of all previously-allocated pages before
-> allocating a new one.  Improve its scalability by maintaining a separate
-> list of pages that have free blocks ready to (re)allocate.  In big O
-> notation, this improves the algorithm from O(n^2) to O(n).
+On Fri, Aug 3, 2018 at 5:24 AM, Finn Thain <fthain@telegraphics.com.au> wrote:
+> On Thu, 2 Aug 2018, zhong jiang wrote:
+>
+>> The same check condition is redundant, so remove one of them.
+>>
+>
+> If you are trying to find redundant code, your coccinelle script is
+> dangerously flawed.
 
->  struct dma_pool {              /* the pool */
+These days too many coccinelle helpers make people think they are
+doing right "clean ups" when in the practice they bring the
+regressions.
 
-> +#define POOL_FULL_IDX   0
-> +#define POOL_AVAIL_IDX  1
-> +#define POOL_N_LISTS    2
-> +       struct list_head page_list[POOL_N_LISTS];
-
-To be consistent with naming scheme and common practice I would rather
-name the last one as
-
-POOL_MAX_IDX 2
-
-> +       INIT_LIST_HEAD(&retval->page_list[0]);
-> +       INIT_LIST_HEAD(&retval->page_list[1]);
-
-You introduced defines and don't use them.
+Julia, is possible by coccinelle to distinguish memory accesses versus
+I/O? At least it would increase robustness in some cases.
 
 -- 
 With Best Regards,
