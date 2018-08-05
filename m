@@ -1,61 +1,109 @@
-From: Ohad Sharabi <ohad.sharabi@wdc.com>
-Subject: [PATCH v2] scsi: ufs: remove unnecessary query(DM) UPIU trace
-Date: Sun,  5 Aug 2018 16:26:23 +0300
-Message-ID: <1533475583-16939-1-git-send-email-ohad.sharabi@wdc.com>
+From: zhong jiang <zhongjiang@huawei.com>
+Subject: [PATCH] drivers/scsi/fnic/fnic_trace: Use kvcalloc to replace vmalloc+memset
+Date: Sun, 5 Aug 2018 21:41:47 +0800
+Message-ID: <1533476507-16642-1-git-send-email-zhongjiang@huawei.com>
+Mime-Version: 1.0
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: stanislav.nijnikov@wdc.com, avri.altman@wdc.com, alex.lemberg@wdc.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, gregkh@linuxfoundation.org
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Ohad Sharabi <ohad.sharabi@wdc.com>
+To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
+Cc: kartilak@cisco.com, john.garry@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-This patch removes redundant trace that occurs when sending Device
-Management(DM) request (fix behavior in patch
-https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git/commit/?id=6667e6d91c88a788d5ab1b1e999d245473e84a9)
-Since the function send_command is called also for DM request, UPIU trace
-for DM request is called twice- one identified as query_* the other as
-send/complete.
+The open code vmalloc() + memset() should be replaced by kvcalloc.
+It make the code concise.
 
-Signed-off-by: Ohad Sharabi <ohad.sharabi@wdc.com>
-reviewed-by: Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-reviewed-by: Avri Altman <avri.altman@wdc.com>
+Signed-off-by: zhong jiang <zhongjiang@huawei.com>
 ---
-v1->v2:
-	- modify sender's domain (sandisk->wdc)
-	- add reviewers
+ drivers/scsi/fnic/fnic_trace.c | 27 ++++++++++-----------------
+ 1 file changed, 10 insertions(+), 17 deletions(-)
 
- drivers/scsi/ufs/ufshcd.c | 15 ++++++++-------
- 1 file changed, 8 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 397081d..33e6dd0 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -321,18 +321,19 @@ static void ufshcd_add_command_trace(struct ufs_hba *hba,
- 	sector_t lba = -1;
- 	u8 opcode = 0;
- 	u32 intr, doorbell;
--	struct ufshcd_lrb *lrbp;
-+	struct ufshcd_lrb *lrbp = &hba->lrb[tag];
- 	int transfer_len = -1;
+diff --git a/drivers/scsi/fnic/fnic_trace.c b/drivers/scsi/fnic/fnic_trace.c
+index 57f67af..e775774 100644
+--- a/drivers/scsi/fnic/fnic_trace.c
++++ b/drivers/scsi/fnic/fnic_trace.c
+@@ -477,8 +477,8 @@ int fnic_trace_buf_init(void)
+ 	}
  
--	/* trace UPIU also */
--	ufshcd_add_cmd_upiu_trace(hba, tag, str);
--
--	if (!trace_ufshcd_command_enabled())
-+	if (!trace_ufshcd_command_enabled()) {
-+		/* trace UPIU W/O tracing command */
-+		if (lrbp->cmd)
-+			ufshcd_add_cmd_upiu_trace(hba, tag, str);
- 		return;
--
--	lrbp = &hba->lrb[tag];
-+	}
+ 	fnic_trace_entries.page_offset =
+-		vmalloc(array_size(fnic_max_trace_entries,
+-				   sizeof(unsigned long)));
++			kvcalloc(fnic_max_trace_entries,
++				   sizeof(unsigned long), GFP_KERNEL);
+ 	if (!fnic_trace_entries.page_offset) {
+ 		printk(KERN_ERR PFX "Failed to allocate memory for"
+ 				  " page_offset\n");
+@@ -489,8 +489,6 @@ int fnic_trace_buf_init(void)
+ 		err = -ENOMEM;
+ 		goto err_fnic_trace_buf_init;
+ 	}
+-	memset((void *)fnic_trace_entries.page_offset, 0,
+-		  (fnic_max_trace_entries * sizeof(unsigned long)));
+ 	fnic_trace_entries.wr_idx = fnic_trace_entries.rd_idx = 0;
+ 	fnic_buf_head = fnic_trace_buf_p;
  
- 	if (lrbp->cmd) { /* data phase exists */
-+		/* trace UPIU also */
-+		ufshcd_add_cmd_upiu_trace(hba, tag, str);
- 		opcode = (u8)(*lrbp->cmd->cmnd);
- 		if ((opcode == READ_10) || (opcode == WRITE_10)) {
- 			/*
+@@ -524,7 +522,7 @@ void fnic_trace_free(void)
+ 	fnic_tracing_enabled = 0;
+ 	fnic_trace_debugfs_terminate();
+ 	if (fnic_trace_entries.page_offset) {
+-		vfree((void *)fnic_trace_entries.page_offset);
++		kvfree((void *)fnic_trace_entries.page_offset);
+ 		fnic_trace_entries.page_offset = NULL;
+ 	}
+ 	if (fnic_trace_buf_p) {
+@@ -556,8 +554,8 @@ int fnic_fc_trace_init(void)
+ 	fc_trace_max_entries = (fnic_fc_trace_max_pages * PAGE_SIZE)/
+ 				FC_TRC_SIZE_BYTES;
+ 	fnic_fc_ctlr_trace_buf_p =
+-		(unsigned long)vmalloc(array_size(PAGE_SIZE,
+-						  fnic_fc_trace_max_pages));
++		(unsigned long)kvcalloc(fnic_fc_trace_max_pages,
++					PAGE_SIZE, GFP_KERNEL);
+ 	if (!fnic_fc_ctlr_trace_buf_p) {
+ 		pr_err("fnic: Failed to allocate memory for "
+ 		       "FC Control Trace Buf\n");
+@@ -565,25 +563,20 @@ int fnic_fc_trace_init(void)
+ 		goto err_fnic_fc_ctlr_trace_buf_init;
+ 	}
+ 
+-	memset((void *)fnic_fc_ctlr_trace_buf_p, 0,
+-			fnic_fc_trace_max_pages * PAGE_SIZE);
+-
+ 	/* Allocate memory for page offset */
+ 	fc_trace_entries.page_offset =
+-		vmalloc(array_size(fc_trace_max_entries,
+-				   sizeof(unsigned long)));
++				kvcalloc(fc_trace_max_entries,
++					sizeof(unsigned long), GFP_KERNEL);
+ 	if (!fc_trace_entries.page_offset) {
+ 		pr_err("fnic:Failed to allocate memory for page_offset\n");
+ 		if (fnic_fc_ctlr_trace_buf_p) {
+ 			pr_err("fnic: Freeing FC Control Trace Buf\n");
+-			vfree((void *)fnic_fc_ctlr_trace_buf_p);
++			kvfree((void *)fnic_fc_ctlr_trace_buf_p);
+ 			fnic_fc_ctlr_trace_buf_p = 0;
+ 		}
+ 		err = -ENOMEM;
+ 		goto err_fnic_fc_ctlr_trace_buf_init;
+ 	}
+-	memset((void *)fc_trace_entries.page_offset, 0,
+-	       (fc_trace_max_entries * sizeof(unsigned long)));
+ 
+ 	fc_trace_entries.rd_idx = fc_trace_entries.wr_idx = 0;
+ 	fc_trace_buf_head = fnic_fc_ctlr_trace_buf_p;
+@@ -618,11 +611,11 @@ void fnic_fc_trace_free(void)
+ 	fnic_fc_tracing_enabled = 0;
+ 	fnic_fc_trace_debugfs_terminate();
+ 	if (fc_trace_entries.page_offset) {
+-		vfree((void *)fc_trace_entries.page_offset);
++		kvfree((void *)fc_trace_entries.page_offset);
+ 		fc_trace_entries.page_offset = NULL;
+ 	}
+ 	if (fnic_fc_ctlr_trace_buf_p) {
+-		vfree((void *)fnic_fc_ctlr_trace_buf_p);
++		kvfree((void *)fnic_fc_ctlr_trace_buf_p);
+ 		fnic_fc_ctlr_trace_buf_p = 0;
+ 	}
+ 	pr_info("fnic:Successfully FC_CTLR Freed Trace Buffer\n");
 -- 
-1.9.1
+1.7.12.4
