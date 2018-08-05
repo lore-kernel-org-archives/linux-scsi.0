@@ -1,11 +1,11 @@
-From: Ohad Sharabi <ohad.sharabi@sandisk.com>
-Subject: [PATCH] scsi: ufs: remove unnecessary query(DM) UPIU trace
-Date: Sun,  5 Aug 2018 15:46:54 +0300
-Message-ID: <1533473214-12698-1-git-send-email-ohad.sharabi@sandisk.com>
+From: Ohad Sharabi <ohad.sharabi@wdc.com>
+Subject: [PATCH v2] scsi: ufs: remove unnecessary query(DM) UPIU trace
+Date: Sun,  5 Aug 2018 16:26:23 +0300
+Message-ID: <1533475583-16939-1-git-send-email-ohad.sharabi@wdc.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: stanislav.nijnikov@wdc.com, avri.altman@wdc.com, alex.lemberg@wdc.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, gregkh@linuxfoundation.org
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Ohad Sharabi <ohad.sharabi@sandisk.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Ohad Sharabi <ohad.sharabi@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
 This patch removes redundant trace that occurs when sending Device
@@ -15,8 +15,14 @@ Since the function send_command is called also for DM request, UPIU trace
 for DM request is called twice- one identified as query_* the other as
 send/complete.
 
-Signed-off-by: Ohad Sharabi <ohad.sharabi@sandisk.com>
+Signed-off-by: Ohad Sharabi <ohad.sharabi@wdc.com>
+reviewed-by: Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+reviewed-by: Avri Altman <avri.altman@wdc.com>
 ---
+v1->v2:
+	- modify sender's domain (sandisk->wdc)
+	- add reviewers
+
  drivers/scsi/ufs/ufshcd.c | 15 ++++++++-------
  1 file changed, 8 insertions(+), 7 deletions(-)
 
