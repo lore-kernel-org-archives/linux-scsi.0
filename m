@@ -1,41 +1,37 @@
-From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: [PATCH] scsi: csiostor: Use true and false for boolean values
-Date: Sat, 4 Aug 2018 19:39:49 -0500
-Message-ID: <20180805003949.GA32476@embeddedor.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: =?utf-8?B?IkthaSBNw6RraXNhcmEgKEtvbHVtYnVzKSI=?=
+        <kai.makisara@kolumbus.fi>
+Subject: Re: [PATCH] st: remove redundant pointer STbuffer
+Date: Sun, 5 Aug 2018 12:14:32 +0300
+Message-ID: <5FB12D0E-73B3-4A5B-BAB8-7D3DF7979EF1@kolumbus.fi>
+References: <20180803104752.17081-1-colin.king@canonical.com>
+Mime-Version: 1.0 (Mac OS X Mail 11.5 \(3445.9.1\))
+Content-Type: text/plain;
+        charset=utf-8
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <20180803104752.17081-1-colin.king@canonical.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+To: Colin King <colin.king@canonical.com>
+Cc: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Return statements in functions returning bool should use true or false
-instead of an integer value.
 
-This code was detected with the help of Coccinelle.
 
-Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
----
- drivers/scsi/csiostor/csio_scsi.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+> On 3 Aug 2018, at 13.47, Colin King <colin.king@canonical.com> wrote:
+> 
+> From: Colin Ian King <colin.king@canonical.com>
+> 
+> Pointer STbuffer is being assigned but is never used hence it is
+> redundant and can be removed.
+> 
+> Cleans up clang warning:
+> warning: variable 'STbuffer' set but not used [-Wunused-but-set-variable]
+> 
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
 
-diff --git a/drivers/scsi/csiostor/csio_scsi.c b/drivers/scsi/csiostor/csio_scsi.c
-index dab0d3f..aae7abc 100644
---- a/drivers/scsi/csiostor/csio_scsi.c
-+++ b/drivers/scsi/csiostor/csio_scsi.c
-@@ -147,9 +147,9 @@ csio_scsi_itnexus_loss_error(uint16_t error)
- 	case FW_ERR_RDEV_LOST:
- 	case FW_ERR_RDEV_LOGO:
- 	case FW_ERR_RDEV_IMPL_LOGO:
--		return 1;
-+		return true;
- 	}
--	return 0;
-+	return false;
- }
- 
- /*
--- 
-2.7.4
+Acked-by: Kai Mäkisara <kai.makisara@kolumbus.fi>
+
+Has been unused at least since 2005 :-)
+
+Thanks,
+Kai
