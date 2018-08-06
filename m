@@ -1,52 +1,54 @@
-From: Evan Green <evgreen@chromium.org>
-Subject: Re: [PATCH V7 2/2] scsi: ufs: Add configfs support for UFS provisioning
-Date: Mon, 6 Aug 2018 09:40:18 -0700
-Message-ID: <CAE=gft46yHTxG5rpBLJ-x5AiETaGGdnsnEHjzSx2BsG4=sUKHA@mail.gmail.com>
-References: <1533113338-31750-1-git-send-email-sayalil@codeaurora.org> <1533113338-31750-3-git-send-email-sayalil@codeaurora.org>
+From: Randy Dunlap <rdunlap@infradead.org>
+Subject: [PATCH] target: fix tcm_loop build errors when SCSI=m
+Date: Mon, 6 Aug 2018 10:13:58 -0700
+Message-ID: <5b7b9c12-d202-ab0c-9598-267468bf10ad@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1533113338-31750-3-git-send-email-sayalil@codeaurora.org>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: sayalil@codeaurora.org
-Cc: subhashj@codeaurora.org, cang@codeaurora.org, vivek.gautam@codeaurora.org, Rajendra Nayak <rnayak@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, asutoshd@codeaurora.org, riteshh@codeaurora.org, adrian.hunter@intel.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, target-devel@vger.kernel.org
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Bart Van Assche <bart.vanassche@wdc.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Sayali,
+From: Randy Dunlap <rdunlap@infradead.org>
 
-On Wed, Aug 1, 2018 at 1:49 AM Sayali Lokhande <sayalil@codeaurora.org> wrote:
->
-> This patch adds configfs support to provision UFS device at
-> runtime. This feature can be primarily useful in factory or
-> assembly line as some devices may be required to be configured
-> multiple times during initial system development phase.
-> Configuration Descriptors can be written multiple times until
-> bConfigDescrLock attribute is zero.
->
-> Configuration descriptor buffer consists of Device and Unit
-> descriptor configurable parameters which are parsed from vendor
-> specific provisioning file and then passed via configfs node at
-> runtime to provision ufs device.
-> CONFIG_CONFIGFS_FS needs to be enabled for using this feature.
->
-> Usage:
-> 1) To read current configuration descriptor :
->    cat /config/XXXX.ufshc/ufs_provision
-> 2) To provision ufs device:
->    echo <config_desc_buf> > /config/XXXX.ufshc/ufs_provision
->
-> Signed-off-by: Sayali Lokhande <sayalil@codeaurora.org>
-> ---
->  Documentation/ABI/testing/configfs-driver-ufs |  18 +++
->  drivers/scsi/ufs/Kconfig                      |  10 ++
->  drivers/scsi/ufs/Makefile                     |   1 +
->  drivers/scsi/ufs/ufs-configfs.c               | 162 ++++++++++++++++++++++++++
->  drivers/scsi/ufs/ufshcd.c                     |   7 +-
->  drivers/scsi/ufs/ufshcd.h                     |  10 ++
->  6 files changed, 207 insertions(+), 1 deletion(-)
->  create mode 100644 Documentation/ABI/testing/configfs-driver-ufs
->  create mode 100644 drivers/scsi/ufs/ufs-configfs.c
->
+Fix build errors when CONFIG_SCSI=m and CONFIG_LOOPBACK_TARGET=y
+by making LOOPBACK_TARGET depend on SCSI.
 
-You didn't address any of my feedback from V6. All of that still applies.
--Evan
+drivers/target/loopback/tcm_loop.o: In function `tcm_loop_port_link':
+tcm_loop.c:(.text+0x445): undefined reference to `scsi_add_device'
+drivers/target/loopback/tcm_loop.o: In function `tcm_loop_driver_remove':
+tcm_loop.c:(.text+0x55c): undefined reference to `scsi_remove_host'
+tcm_loop.c:(.text+0x564): undefined reference to `scsi_host_put'
+drivers/target/loopback/tcm_loop.o: In function `tcm_loop_submission_work':
+tcm_loop.c:(.text+0x7c4): undefined reference to `scmd_printk'
+drivers/target/loopback/tcm_loop.o: In function `tcm_loop_driver_probe':
+tcm_loop.c:(.text+0x7fb): undefined reference to `scsi_host_alloc'
+tcm_loop.c:(.text+0x85b): undefined reference to `scsi_add_host_with_dma'
+tcm_loop.c:(.text+0x896): undefined reference to `scsi_host_put'
+drivers/target/loopback/tcm_loop.o: In function `tcm_loop_port_unlink':
+tcm_loop.c:(.text+0x962): undefined reference to `scsi_device_lookup'
+tcm_loop.c:(.text+0x972): undefined reference to `scsi_remove_device'
+tcm_loop.c:(.text+0x97a): undefined reference to `scsi_device_put'
+drivers/target/loopback/tcm_loop.o:(.data+0x210): undefined reference to `scsi_change_queue_depth'
+
+Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: linux-scsi@vger.kernel.org
+Cc: target-devel@vger.kernel.org
+Cc: Bart Van Assche <bart.vanassche@wdc.com>
+---
+ drivers/target/loopback/Kconfig |    1 +
+ 1 file changed, 1 insertion(+)
+
+--- linux-next-20180806.orig/drivers/target/loopback/Kconfig
++++ linux-next-20180806/drivers/target/loopback/Kconfig
+@@ -1,5 +1,6 @@
+ config LOOPBACK_TARGET
+ 	tristate "TCM Virtual SAS target and Linux/SCSI LDD fabric loopback module"
++	depends on SCSI
+ 	help
+ 	  Say Y here to enable the TCM Virtual SAS target and Linux/SCSI LLD
+ 	  fabric loopback module.
