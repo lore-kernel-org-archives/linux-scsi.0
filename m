@@ -1,62 +1,52 @@
-From: ard <ard@kwaak.net>
-Subject: Re: [PATCH 0/3] scsi: fcoe: memleak fixes
-Date: Mon, 6 Aug 2018 16:24:14 +0200
-Message-ID: <20180806142414.GB23827@kwaak.net>
-References: <20180731134603.20089-1-jthumshirn@suse.de>
- <20180806092503.6ed56kukj2i236qt@linux-x5ow.site>
- <20180806132234.GA23827@kwaak.net>
- <20180806132725.ihbi5rxvkuuppajr@linux-x5ow.site>
+From: Evan Green <evgreen@chromium.org>
+Subject: Re: [PATCH V7 2/2] scsi: ufs: Add configfs support for UFS provisioning
+Date: Mon, 6 Aug 2018 09:40:18 -0700
+Message-ID: <CAE=gft46yHTxG5rpBLJ-x5AiETaGGdnsnEHjzSx2BsG4=sUKHA@mail.gmail.com>
+References: <1533113338-31750-1-git-send-email-sayalil@codeaurora.org> <1533113338-31750-3-git-send-email-sayalil@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20180806132725.ihbi5rxvkuuppajr@linux-x5ow.site>
+In-Reply-To: <1533113338-31750-3-git-send-email-sayalil@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>
+To: sayalil@codeaurora.org
+Cc: subhashj@codeaurora.org, cang@codeaurora.org, vivek.gautam@codeaurora.org, Rajendra Nayak <rnayak@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, asutoshd@codeaurora.org, riteshh@codeaurora.org, adrian.hunter@intel.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Johannes,
+Hi Sayali,
 
-On Mon, Aug 06, 2018 at 03:27:25PM +0200, Johannes Thumshirn wrote:
-> On Mon, Aug 06, 2018 at 03:22:34PM +0200, ard wrote:
-> > Ahh, yeah, sorry.
-> > I did test them.
-> > I can't say I see a regression.
-> > I also can't say I see progress, although it feels like there is
-> > a tad less leaking.
-> > For that I need to do some statistics.
-> > 
-> > But for now I ack that it does not regress further.
-> 
-> From what I've seen in your kmemleak reports, it wasn't only
-> libfc/fcoe that was leaking memory.
-> 
-> So kmemleak reports are welcome (especially if they confirm libfc/fcoe
-> is clean now ;-)).
-I've updated the ticket:
-https://github.com/hardkernel/linux/issues/360#issuecomment-410721997
-dmesg (with full debugging):
-https://github.com/hardkernel/linux/files/2262858/dmesg-2018-08-06.txt
-and kmemleak:
-https://github.com/hardkernel/linux/files/2262861/kmemleak-2018-08-06.txt
+On Wed, Aug 1, 2018 at 1:49 AM Sayali Lokhande <sayalil@codeaurora.org> wrote:
+>
+> This patch adds configfs support to provision UFS device at
+> runtime. This feature can be primarily useful in factory or
+> assembly line as some devices may be required to be configured
+> multiple times during initial system development phase.
+> Configuration Descriptors can be written multiple times until
+> bConfigDescrLock attribute is zero.
+>
+> Configuration descriptor buffer consists of Device and Unit
+> descriptor configurable parameters which are parsed from vendor
+> specific provisioning file and then passed via configfs node at
+> runtime to provision ufs device.
+> CONFIG_CONFIGFS_FS needs to be enabled for using this feature.
+>
+> Usage:
+> 1) To read current configuration descriptor :
+>    cat /config/XXXX.ufshc/ufs_provision
+> 2) To provision ufs device:
+>    echo <config_desc_buf> > /config/XXXX.ufshc/ufs_provision
+>
+> Signed-off-by: Sayali Lokhande <sayalil@codeaurora.org>
+> ---
+>  Documentation/ABI/testing/configfs-driver-ufs |  18 +++
+>  drivers/scsi/ufs/Kconfig                      |  10 ++
+>  drivers/scsi/ufs/Makefile                     |   1 +
+>  drivers/scsi/ufs/ufs-configfs.c               | 162 ++++++++++++++++++++++++++
+>  drivers/scsi/ufs/ufshcd.c                     |   7 +-
+>  drivers/scsi/ufs/ufshcd.h                     |  10 ++
+>  6 files changed, 207 insertions(+), 1 deletion(-)
+>  create mode 100644 Documentation/ABI/testing/configfs-driver-ufs
+>  create mode 100644 drivers/scsi/ufs/ufs-configfs.c
+>
 
-I'll have to take a good look at the what and why.
-I'm gonna git clean -x -d and rebuild the kernel, because this is
-weird.
-
-This is the tree I build:
-https://github.com/ardje/linux/tree/gb-4.14-fcoe-patch
-So vanilla linux-4.14 with the patch set:
-https://github.com/ardje/linux/commit/747bf04057a99be5b01f768654cfd61bc9f4fc6c
-Meh, I should try to use git for patching.
-
-I will spam some printk's later on, just to check which flows are
-followed (if the git clean doesn't reveal some problem, although
-I can't imagine).
-
-Regards,
-Ard
-
--- 
-.signature not found
+You didn't address any of my feedback from V6. All of that still applies.
+-Evan
