@@ -1,28 +1,81 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH] target: fix tcm_loop build errors when SCSI=m
-Date: Mon, 6 Aug 2018 23:07:34 +0000
-Message-ID: <d3349291f6d04e4b8717ea478fcfd2eaf70b39f6.camel@wdc.com>
-References: <5b7b9c12-d202-ab0c-9598-267468bf10ad@infradead.org>
+From: Randy Dunlap <rdunlap@infradead.org>
+Subject: Re: [PATCH v2 4/9] target: don't depend on SCSI
+Date: Mon, 6 Aug 2018 16:38:52 -0700
+Message-ID: <111cb1b0-24ba-bcb2-53d5-9665d2b4c421@infradead.org>
+References: <20180731195155.46664-1-keescook@chromium.org>
+ <20180731195155.46664-5-keescook@chromium.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-7"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <5b7b9c12-d202-ab0c-9598-267468bf10ad@infradead.org>
+In-Reply-To: <20180731195155.46664-5-keescook@chromium.org>
 Content-Language: en-US
-Content-ID: <54E2F3FC2FA24C46ADB86ACE5025F979@namprd04.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "rdunlap@infradead.org" <rdunlap@infradead.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>
-Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
+To: Kees Cook <keescook@chromium.org>, Jens Axboe <axboe@kernel.dk>
+Cc: Christoph Hellwig <hch@lst.de>, Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Tejun Heo <tj@kernel.org>, Borislav Petkov <bp@alien8.de>, "David S. Miller" <davem@davemloft.net>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Thomas Gleixner <tglx@linutronix.de>, Philippe Ombredanne <pombredanne@nexb.com>, Stephen Boyd <sboyd@codeaurora.org>, Cyrille Pitchen <cyrille.pitchen@free-electrons.com>, Juergen Gross <jgross@suse.com>, Viresh Kumar <viresh.kumar@linaro.org>, =?UTF-8?Q?Uwe_Kleine-K=c3=b6nig?= <u.kleine-koenig@pengutronix.de>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 2018-08-06 at 10:13 -0700, Randy Dunlap wrote:
-+AD4- Fix build errors when CONFIG+AF8-SCSI+AD0-m and CONFIG+AF8-LOOPBACK+A=
-F8-TARGET+AD0-y
-+AD4- by making LOOPBACK+AF8-TARGET depend on SCSI.
+On 07/31/2018 12:51 PM, Kees Cook wrote:
+> From: Christoph Hellwig <hch@lst.de>
+> 
+> The core target code only needs code from scsi_common.c, which is now
+> separately selectable.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Kees Cook <keescook@chromium.org>
+> ---
+>  drivers/target/Kconfig | 5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/target/Kconfig b/drivers/target/Kconfig
+> index 4c44d7bed01a..cb6f32ce7de8 100644
+> --- a/drivers/target/Kconfig
+> +++ b/drivers/target/Kconfig
+> @@ -1,10 +1,10 @@
+>  
+>  menuconfig TARGET_CORE
+>  	tristate "Generic Target Core Mod (TCM) and ConfigFS Infrastructure"
+> -	depends on SCSI && BLOCK
+> +	depends on BLOCK
+>  	select CONFIGFS_FS
+>  	select CRC_T10DIF
+> -	select BLK_SCSI_REQUEST # only for scsi_command_size_tbl..
+> +	select BLK_SCSI_REQUEST
+>  	select SGL_ALLOC
+>  	default n
+>  	help
+> @@ -29,6 +29,7 @@ config TCM_FILEIO
+>  
+>  config TCM_PSCSI
+>  	tristate "TCM/pSCSI Subsystem Plugin for Linux/SCSI"
+> +	depends on SCSI
+>  	help
+>  	Say Y here to enable the TCM/pSCSI subsystem plugin for non-buffered
+>  	passthrough access to Linux/SCSI device
+> 
 
-Is this a longstanding or a new issue? In the latter case, should a Fixes:
-tag be added?
+Hi,
 
-Thanks,
+This patch causes build errors in linux-next-20180806 when SCSI=m and
+LOOPBACK_TARGET=y.
 
-Bart.
+drivers/target/loopback/tcm_loop.o: In function `tcm_loop_port_link':
+tcm_loop.c:(.text+0x445): undefined reference to `scsi_add_device'
+drivers/target/loopback/tcm_loop.o: In function `tcm_loop_driver_remove':
+tcm_loop.c:(.text+0x55c): undefined reference to `scsi_remove_host'
+tcm_loop.c:(.text+0x564): undefined reference to `scsi_host_put'
+drivers/target/loopback/tcm_loop.o: In function `tcm_loop_submission_work':
+tcm_loop.c:(.text+0x7c4): undefined reference to `scmd_printk'
+drivers/target/loopback/tcm_loop.o: In function `tcm_loop_driver_probe':
+tcm_loop.c:(.text+0x7fb): undefined reference to `scsi_host_alloc'
+tcm_loop.c:(.text+0x85b): undefined reference to `scsi_add_host_with_dma'
+tcm_loop.c:(.text+0x896): undefined reference to `scsi_host_put'
+drivers/target/loopback/tcm_loop.o: In function `tcm_loop_port_unlink':
+tcm_loop.c:(.text+0x962): undefined reference to `scsi_device_lookup'
+tcm_loop.c:(.text+0x972): undefined reference to `scsi_remove_device'
+tcm_loop.c:(.text+0x97a): undefined reference to `scsi_device_put'
+drivers/target/loopback/tcm_loop.o:(.data+0x210): undefined reference to `scsi_change_queue_depth'
+
+
+-- 
+~Randy
