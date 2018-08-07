@@ -1,44 +1,23 @@
-From: Dongliang Mu <mudongliangabcd@gmail.com>
-Subject: [PATCH] requesed -> requested
-Date: Tue,  7 Aug 2018 01:14:29 -0400
-Message-ID: <20180807051429.19077-1-mudongliangabcd@gmail.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v2 4/9] target: don't depend on SCSI
+Date: Tue, 7 Aug 2018 07:44:49 +0200
+Message-ID: <20180807054449.GA31556@lst.de>
+References: <20180731195155.46664-1-keescook@chromium.org> <20180731195155.46664-5-keescook@chromium.org> <111cb1b0-24ba-bcb2-53d5-9665d2b4c421@infradead.org> <CAGXu5jKNeep01VOwC-dWsT4iDXrkBOhHJX0+4BEBotYOx1D0Tg@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CAGXu5jKNeep01VOwC-dWsT4iDXrkBOhHJX0+4BEBotYOx1D0Tg@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: aacraid@microsemi.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, dzm77@ist.psu.edu, Dongliang Mu <mudongliangabcd@gmail.com>
+To: Kees Cook <keescook@chromium.org>
+Cc: Randy Dunlap <rdunlap@infradead.org>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Tejun Heo <tj@kernel.org>, Borislav Petkov <bp@alien8.de>, "David S. Miller" <davem@davemloft.net>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Thomas Gleixner <tglx@linutronix.de>, Philippe Ombredanne <pombredanne@nexb.com>, Stephen Boyd <sboyd@codeaurora.org>, Cyrille Pitchen <cyrille.pitchen@free-electrons.com>, Juergen Gross <jgross@suse.com>, Viresh Kumar <viresh.kumar@linaro.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Signed-off-by: Dongliang Mu <mudongliangabcd@gmail.com>
----
- drivers/scsi/aacraid/commsup.c | 2 +-
- drivers/scsi/aacraid/dpcsup.c  | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+On Mon, Aug 06, 2018 at 04:59:04PM -0700, Kees Cook wrote:
+> I wonder if LOOPBACK_TARGET is just missing a "depends on SCSI" as was
+> added for TCM_PSCSI?
 
-diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
-index d62ddd63f4fe..6e1b022a823d 100644
---- a/drivers/scsi/aacraid/commsup.c
-+++ b/drivers/scsi/aacraid/commsup.c
-@@ -514,7 +514,7 @@ int aac_fib_send(u16 command, struct fib *fibptr, unsigned long size,
- 	 *	The only invalid cases are if the caller requests to wait and
- 	 *	does not request a response and if the caller does not want a
- 	 *	response and the Fib is not allocated from pool. If a response
--	 *	is not requesed the Fib will just be deallocaed by the DPC
-+	 *	is not requested the Fib will just be deallocaed by the DPC
- 	 *	routine when the response comes back from the adapter. No
- 	 *	further processing will be done besides deleting the Fib. We
- 	 *	will have a debug mode where the adapter can notify the host
-diff --git a/drivers/scsi/aacraid/dpcsup.c b/drivers/scsi/aacraid/dpcsup.c
-index 417ba349e10e..ddc69738375f 100644
---- a/drivers/scsi/aacraid/dpcsup.c
-+++ b/drivers/scsi/aacraid/dpcsup.c
-@@ -65,7 +65,7 @@ unsigned int aac_response_normal(struct aac_queue * q)
- 	/*
- 	 *	Keep pulling response QEs off the response queue and waking
- 	 *	up the waiters until there are no more QEs. We then return
--	 *	back to the system. If no response was requesed we just
-+	 *	back to the system. If no response was requested we just
- 	 *	deallocate the Fib here and continue.
- 	 */
- 	while(aac_consumer_get(dev, q, &entry))
--- 
-2.18.0
+That is eactly the case.  LOOPBACK_TARGET is a scsi driver that
+feeds commands into the target layer, so it needs a depends on SCSI.
+
+Sorry for missing that earlier.
