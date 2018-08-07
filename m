@@ -1,23 +1,59 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v2 4/9] target: don't depend on SCSI
-Date: Tue, 7 Aug 2018 07:44:49 +0200
-Message-ID: <20180807054449.GA31556@lst.de>
-References: <20180731195155.46664-1-keescook@chromium.org> <20180731195155.46664-5-keescook@chromium.org> <111cb1b0-24ba-bcb2-53d5-9665d2b4c421@infradead.org> <CAGXu5jKNeep01VOwC-dWsT4iDXrkBOhHJX0+4BEBotYOx1D0Tg@mail.gmail.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH 0/3] scsi: fcoe: memleak fixes
+Date: Tue, 7 Aug 2018 08:54:00 +0200
+Message-ID: <20180807065400.nxpndw4kf6jdd55i@linux-x5ow.site>
+References: <20180731134603.20089-1-jthumshirn@suse.de>
+ <20180806092503.6ed56kukj2i236qt@linux-x5ow.site>
+ <20180806132234.GA23827@kwaak.net>
+ <20180806132725.ihbi5rxvkuuppajr@linux-x5ow.site>
+ <20180806142414.GB23827@kwaak.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <CAGXu5jKNeep01VOwC-dWsT4iDXrkBOhHJX0+4BEBotYOx1D0Tg@mail.gmail.com>
+In-Reply-To: <20180806142414.GB23827@kwaak.net>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Kees Cook <keescook@chromium.org>
-Cc: Randy Dunlap <rdunlap@infradead.org>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Tejun Heo <tj@kernel.org>, Borislav Petkov <bp@alien8.de>, "David S. Miller" <davem@davemloft.net>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Thomas Gleixner <tglx@linutronix.de>, Philippe Ombredanne <pombredanne@nexb.com>, Stephen Boyd <sboyd@codeaurora.org>, Cyrille Pitchen <cyrille.pitchen@free-electrons.com>, Juergen Gross <jgross@suse.com>, Viresh Kumar <viresh.kumar@linaro.org>
+To: ard <ard@kwaak.net>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Aug 06, 2018 at 04:59:04PM -0700, Kees Cook wrote:
-> I wonder if LOOPBACK_TARGET is just missing a "depends on SCSI" as was
-> added for TCM_PSCSI?
+On Mon, Aug 06, 2018 at 04:24:14PM +0200, ard wrote:
+> I've updated the ticket:
+> https://github.com/hardkernel/linux/issues/360#issuecomment-410721997
+> dmesg (with full debugging):
+> https://github.com/hardkernel/linux/files/2262858/dmesg-2018-08-06.txt
+> and kmemleak:
+> https://github.com/hardkernel/linux/files/2262861/kmemleak-2018-08-06.txt
+> 
+> I'll have to take a good look at the what and why.
+> I'm gonna git clean -x -d and rebuild the kernel, because this is
+> weird.
+> 
+> This is the tree I build:
+> https://github.com/ardje/linux/tree/gb-4.14-fcoe-patch
+> So vanilla linux-4.14 with the patch set:
+> https://github.com/ardje/linux/commit/747bf04057a99be5b01f768654cfd61bc9f4fc6c
+> Meh, I should try to use git for patching.
+> 
+> I will spam some printk's later on, just to check which flows are
+> followed (if the git clean doesn't reveal some problem, although
+> I can't imagine).
 
-That is eactly the case.  LOOPBACK_TARGET is a scsi driver that
-feeds commands into the target layer, so it needs a depends on SCSI.
+OK, now this is wired. Are you seeing this on the initiator or on the
+target side? Also on x86_64 or just the odroid? I could reproduce your
+reports in my Virtualized Environment [1][2] by issuing deletes from the
+initiator side..
 
-Sorry for missing that earlier.
+[1] https://github.com/rapido-linux/rapido
+[2] https://github.com/rapido-linux/rapido/blob/master/fcoe_local_autorun.sh
+
+Byte,
+	Johannes
+-- 
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
