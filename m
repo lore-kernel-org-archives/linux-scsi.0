@@ -1,34 +1,25 @@
-From: Jianchao Wang <jianchao.w.wang@oracle.com>
-Subject: [PATCH] scsi: use blk_mq_run_hw_queues in scsi_kick_queue
-Date: Wed,  8 Aug 2018 14:24:59 +0800
-Message-ID: <1533709499-1661-1-git-send-email-jianchao.w.wang@oracle.com>
+From: Stephen Boyd <sboyd@kernel.org>
+Subject: Re: [PATCH] scsi: ufs: Check workqueue exists before destroying it
+Date: Tue, 07 Aug 2018 23:24:50 -0700
+Message-ID: <153370949062.220756.17724147096194635522@swboyd.mtv.corp.google.com>
+References: <20180802001435.116963-1-mka@chromium.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20180802001435.116963-1-mka@chromium.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Subhash Jadavani <subhashj@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Evan Green <evgreen@chromium.org>, Douglas Anderson <dianders@chromium.org>, Matthias Kaehlcke <mka@chromium.org>
 List-Id: linux-scsi@vger.kernel.org
 
-We don't use blk-mq start/stop hw queue any more, so no reason to
-use blk_mq_start_hw_queues which does clear_bit, replace it with
-blk_mq_run_hw_queues.
+Quoting Matthias Kaehlcke (2018-08-01 17:14:35)
+> In ufshcd_hba_exit() the clock gating workqueue is always destroyed
+> when clock gating is supported. However the workqueue pointer is NULL
+> when ufshcd_init() fails before the workqueue is created. Only destroy
+> the workqueue if it exists.
+> =
 
-Signed-off-by: Jianchao Wang <jianchao.w.wang@oracle.com>
----
- drivers/scsi/scsi_lib.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> Signed-off-by: Matthias Kaehlcke <mka@chromium.org>
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 41e9ac9..7de0f26 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -371,7 +371,7 @@ void scsi_device_unbusy(struct scsi_device *sdev)
- static void scsi_kick_queue(struct request_queue *q)
- {
- 	if (q->mq_ops)
--		blk_mq_start_hw_queues(q);
-+		blk_mq_run_hw_queues(q, false);
- 	else
- 		blk_run_queue(q);
- }
--- 
-2.7.4
+Any sort of Fixes: tag?
