@@ -1,44 +1,37 @@
-From: Ming Lei <tom.leiming@gmail.com>
-Subject: Re: [PATCH] scsi: use blk_mq_run_hw_queues in scsi_kick_queue
-Date: Wed, 8 Aug 2018 17:25:31 +0800
-Message-ID: <CACVXFVMCgHRKwMvELQwx71ju2pNoVBDXS=nRHAS8uu_d7e4A1Q@mail.gmail.com>
-References: <1533709499-1661-1-git-send-email-jianchao.w.wang@oracle.com>
+From: Andy Shevchenko <andy.shevchenko-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH v3 07/10] dmapool: cleanup integer types
+Date: Wed, 8 Aug 2018 12:51:57 +0300
+Message-ID: <CAHp75VfQJPrBPG8_LLQ0Nvs9S8eaQzpwXhf67kA5Cknwy37aTA@mail.gmail.com>
+References: <5d0aec14-73e0-280d-62fb-2b0fe6c01418@cybernetics.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1533709499-1661-1-git-send-email-jianchao.w.wang@oracle.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jianchao Wang <jianchao.w.wang@oracle.com>
-Cc: James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Linux SCSI List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Ming Lei <ming.lei@redhat.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <5d0aec14-73e0-280d-62fb-2b0fe6c01418-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
+List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Tony Battersby <tonyb-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org>
+Cc: "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Chaitra P B <chaitra.basappa-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Suganath Prabu Subramani <suganath-prabu.subramani-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Sathya Prakash <sathya.prakash-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "MPT-FusionLinux.pdl-dY08KVG/lbpWk0Htik3J/w@public.gmane.org" <MPT-FusionLinux.pdl-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Aug 8, 2018 at 2:24 PM, Jianchao Wang
-<jianchao.w.wang@oracle.com> wrote:
-> We don't use blk-mq start/stop hw queue any more, so no reason to
-> use blk_mq_start_hw_queues which does clear_bit, replace it with
-> blk_mq_run_hw_queues.
->
-> Signed-off-by: Jianchao Wang <jianchao.w.wang@oracle.com>
-> ---
->  drivers/scsi/scsi_lib.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 41e9ac9..7de0f26 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -371,7 +371,7 @@ void scsi_device_unbusy(struct scsi_device *sdev)
->  static void scsi_kick_queue(struct request_queue *q)
->  {
->         if (q->mq_ops)
-> -               blk_mq_start_hw_queues(q);
-> +               blk_mq_run_hw_queues(q, false);
->         else
->                 blk_run_queue(q);
->  }
+On Tue, Aug 7, 2018 at 7:48 PM, Tony Battersby <tonyb-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org> wrote:
+> To represent the size of a single allocation, dmapool currently uses
+> 'unsigned int' in some places and 'size_t' in other places.  Standardize
+> on 'unsigned int' to reduce overhead, but use 'size_t' when counting all
+> the blocks in the entire pool.
 
-Reviewed-by: Ming Lei <ming.lei@redhat.com>
+>         else if ((boundary < size) || (boundary & (boundary - 1)))
+>                 return NULL;
 
+Just a side note: in above it's is_power_of_2() opencoded.
 
-Thanks,
-Ming Lei
+-- 
+With Best Regards,
+Andy Shevchenko
