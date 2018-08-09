@@ -1,24 +1,26 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: use blk_mq_run_hw_queues in scsi_kick_queue
-Date: Wed, 08 Aug 2018 22:02:44 -0400
-Message-ID: <yq17el0qou3.fsf@oracle.com>
-References: <1533709499-1661-1-git-send-email-jianchao.w.wang@oracle.com>
+Subject: Re: [PATCH] st: remove redundant pointer STbuffer
+Date: Wed, 08 Aug 2018 21:16:42 -0400
+Message-ID: <yq136vos5j9.fsf@oracle.com>
+References: <20180803104752.17081-1-colin.king@canonical.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1533709499-1661-1-git-send-email-jianchao.w.wang@oracle.com>
-        (Jianchao Wang's message of "Wed, 8 Aug 2018 14:24:59 +0800")
+In-Reply-To: <20180803104752.17081-1-colin.king@canonical.com> (Colin King's
+        message of "Fri, 3 Aug 2018 11:47:52 +0100")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jianchao Wang <jianchao.w.wang@oracle.com>
-Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Colin King <colin.king@canonical.com>
+Cc: Kai =?utf-8?Q?M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Jianchao,
+Colin,
 
-> We don't use blk-mq start/stop hw queue any more, so no reason to
-> use blk_mq_start_hw_queues which does clear_bit, replace it with
-> blk_mq_run_hw_queues.
+> Pointer STbuffer is being assigned but is never used hence it is
+> redundant and can be removed.
+>
+> Cleans up clang warning:
+> warning: variable 'STbuffer' set but not used [-Wunused-but-set-variable]
 
 Applied to 4.19/scsi-queue, thanks!
 
