@@ -1,66 +1,43 @@
-From: ard <ard@kwaak.net>
-Subject: Re: [PATCH 0/3] scsi: fcoe: memleak fixes
-Date: Thu, 9 Aug 2018 12:01:30 +0200
-Message-ID: <20180809100130.GF23827@kwaak.net>
-References: <20180731134603.20089-1-jthumshirn@suse.de>
- <20180806092503.6ed56kukj2i236qt@linux-x5ow.site>
- <20180806132234.GA23827@kwaak.net>
- <20180806132725.ihbi5rxvkuuppajr@linux-x5ow.site>
- <20180806142414.GB23827@kwaak.net>
- <20180807065400.nxpndw4kf6jdd55i@linux-x5ow.site>
- <20180807092619.GC23827@kwaak.net>
- <20180807160452.GE23827@kwaak.net>
+From: Janek Kotas <jank@cadence.com>
+Subject: [PATCH v3 0/2] scsi: ufs: Add UFS platform driver and bindings for
+ Cadence UFS
+Date: Thu, 9 Aug 2018 13:24:44 +0000
+Message-ID: <1EAD7741-4CEF-4E23-9A3F-918F07B52E35@global.cadence.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20180807160452.GE23827@kwaak.net>
+Content-Language: en-US
+Content-ID: <600FC4CD23F98B49A639ADE73BC4D8A0@namprd07.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>
+To: "robh+dt@kernel.org" <robh+dt@kernel.org>, "mark.rutland@arm.com" <mark.rutland@arm.com>, "vinholikatti@gmail.com" <vinholikatti@gmail.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Guys,
+This patchset adds a driver support for Cadence UFS controller.
+It was verified on Cadence Palladium emulation platform.
 
-On Tue, Aug 07, 2018 at 06:04:52PM +0200, ard wrote:
-> PC+steam machine with 4.14 (patched) and 4.16 (upstream,
-> nodebug): no kmemleaks
-> Every device sees every device.
+Changes since V2:
+	Updated dt bindings documentation.
 
-New day, new conflicting results.
-Yay \0/.
+Changes since V1:
+	Renamed the documentation file name to cdns,ufshc.txt.
+	Updated interrupt and register mapping.
+	Added license information.
+	Added a missing PHY clock.
 
-As I did not trust the results, I redid the tests, and the same
-tests gave some different results.
-Before giving the results I've changed my stance on the bug:
-The bug is not a regression in memory leak. As far as I can tell
-now, the memory leaks were already there.
-It's a regression in vn2vn enodes being able to PLOGI.
-Since I've seen the steam machine and the PC setup an rport,
-there must be some racy thing going on how the accept or reject
-the PLOGI.
-Now once it rejects, it will never succeed to accept, and the
-relogin happens ad infinitum.
-In this mode there are about 47 kmemleaks per 10 minutes.
-I also notice that the kmemleaks takes a while to be detected or
-to die out. So there are state timers involved that hold on to
-the memory and after time out do not free it.
-And another thing I noticed: When the pc and the steam machine
-had a working rport, after a while the steam machine (4.16
-unpatched) fc_timedout the rports to all nodes (so all nodes with
-kernel < 4.14 too), and all with different timeouts, except the
-one it has an fc_transport with.
-So it's sole remaining rport was the "designated" target.
-Currently I am compiling 4.9 with kmemleak to determine if that
-exhibits the same leaks when disconnecting and reconnecting the
-FCoE vlan.
-This to determine if we have a single regression in just the
-login handling or both.
-I will add the dmesg's of a working rport, and a failing rport
-later.
+Jan Kotas (2):
+  dt-bindings: ufs: Add bindings for Cadence UFS
+  scsi: ufs: Add UFS platform driver for Cadence UFS
 
-Regards,
-Ard
+ .../devicetree/bindings/ufs/cdns,ufshc.txt         |  31 +++++
+ drivers/scsi/ufs/Kconfig                           |   8 ++
+ drivers/scsi/ufs/Makefile                          |   1 +
+ drivers/scsi/ufs/cdns-pltfrm.c                     | 147 +++++++++++++++++=
+++++
+ 4 files changed, 187 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/ufs/cdns,ufshc.txt
+ create mode 100644 drivers/scsi/ufs/cdns-pltfrm.c
 
--- 
-.signature not found
+--=20
+2.15.0
