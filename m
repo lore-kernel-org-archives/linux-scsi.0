@@ -1,36 +1,36 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 0/3] scsi: fcoe: memleak fixes
-Date: Thu, 9 Aug 2018 10:05:43 +0200
-Message-ID: <20180809080543.xvjoya74j66sadvg@linux-x5ow.site>
-References: <20180731134603.20089-1-jthumshirn@suse.de>
- <20180806092503.6ed56kukj2i236qt@linux-x5ow.site>
+From: Stanislav Nijnikov <Stanislav.Nijnikov@wdc.com>
+Subject: RE: [PATCH v4] scsi: ufs: Make sysfs attributes writable
+Date: Thu, 9 Aug 2018 08:14:23 +0000
+Message-ID: <MWHPR04MB1137C131CC355C7303A0AB279A250@MWHPR04MB1137.namprd04.prod.outlook.com>
+References: <20180808224454.243790-1-evgreen@chromium.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20180806092503.6ed56kukj2i236qt@linux-x5ow.site>
+In-Reply-To: <20180808224454.243790-1-evgreen@chromium.org>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, ard <ard@kwaak.net>
+To: Evan Green <evgreen@chromium.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Adrian Hunter <adrian.hunter@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Bart Van Assche <Bart.VanAssche@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Aug 06, 2018 at 11:25:03AM +0200, Johannes Thumshirn wrote:
-Martin,
 
-though it looks like these patches aren't fixing all of the errors Ard
-has, they fix all I could reproduce up to now and Ard already stated
-they're not regressing.
 
-So can we please stage them for 4.19?
+> -----Original Message-----
+> From: Evan Green <evgreen@chromium.org>
+> Sent: Thursday, August 9, 2018 1:45 AM
+> To: Vinayak Holikatti <vinholikatti@gmail.com>; James E.J. Bottomley <jej=
+b@linux.vnet.ibm.com>; Martin K. Petersen
+> <martin.petersen@oracle.com>; Stanislav Nijnikov <Stanislav.Nijnikov@wdc.=
+com>; Adrian Hunter <adrian.hunter@intel.com>; linux-
+> scsi@vger.kernel.org; linux-kernel@vger.kernel.org; Bart Van Assche <Bart=
+.VanAssche@wdc.com>
+> Cc: Evan Green <evgreen@chromium.org>
+> Subject: [PATCH v4] scsi: ufs: Make sysfs attributes writable
+>=20
+> This change makes the UFS controller's sysfs attributes writable, which
+> will enable users to provision unprovisioned UFS devices, or
+> re-provision unlocked UFS devices.
+>=20
+> Signed-off-by: Evan Green <evgreen@chromium.org>
 
-Thanks,
-	Johannes
-
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+Reviewed-by: Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
