@@ -1,55 +1,50 @@
-From: Joe Perches <joe@perches.com>
-Subject: Re: [PATCH] Performance Improvement in CRC16 Calculations.
-Date: Sat, 11 Aug 2018 09:35:42 -0700
-Message-ID: <8af0245c1efbec6ae4ac3d2b14d6e819cb28b98e.camel@perches.com>
-References: <1533928331-21303-1-git-send-email-jeff.lien@wdc.com>
-         <yq1in4gq5jf.fsf@oracle.com>
+From: Oleksandr Natalenko <oleksandr-L/hGvWKi9zur34vxu0UX7A@public.gmane.org>
+Subject: Re: Slow boot in QEMU with virtio-scsi disks
+Date: Sat, 11 Aug 2018 19:39:56 +0200
+Message-ID: <98344e68266e447826f133ad14d0c83d@natalenko.name>
+References: <f40092b20856d07bd7f870abf5ea939e@natalenko.name>
+	<CACVXFVO1pN=CZvNY8Q4wBrAoA=3w8Ew38aGqpOSHJ1uYAM-sxw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <yq1in4gq5jf.fsf@oracle.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, Jeff Lien <jeff.lien@wdc.com>
-Cc: linux-kernel@vger.kernel.org, linux-crypto@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, herbert@gondor.apana.org.au, tim.c.chen@linux.intel.com, david.darrington@wdc.com, jeff.furlong@wdc.com
+Return-path: <qemu-discuss-bounces+gceqd-qemu-discuss=m.gmane.org-qX2TKyscuCcdnm+yROfE0A@public.gmane.org>
+In-Reply-To: <CACVXFVO1pN=CZvNY8Q4wBrAoA=3w8Ew38aGqpOSHJ1uYAM-sxw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+List-Unsubscribe: <https://lists.nongnu.org/mailman/options/qemu-discuss>,
+	<mailto:qemu-discuss-request-qX2TKyscuCcdnm+yROfE0A@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.nongnu.org/archive/html/qemu-discuss/>
+List-Post: <mailto:qemu-discuss-qX2TKyscuCcdnm+yROfE0A@public.gmane.org>
+List-Help: <mailto:qemu-discuss-request-qX2TKyscuCcdnm+yROfE0A@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.nongnu.org/mailman/listinfo/qemu-discuss>,
+	<mailto:qemu-discuss-request-qX2TKyscuCcdnm+yROfE0A@public.gmane.org?subject=subscribe>
+Errors-To: qemu-discuss-bounces+gceqd-qemu-discuss=m.gmane.org-qX2TKyscuCcdnm+yROfE0A@public.gmane.org
+Sender: "Qemu-discuss"
+	<qemu-discuss-bounces+gceqd-qemu-discuss=m.gmane.org-qX2TKyscuCcdnm+yROfE0A@public.gmane.org>
+To: Ming Lei <tom.leiming-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, qemu-devel <qemu-devel-qX2TKyscuCcdnm+yROfE0A@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Omar Sandoval <osandov-b10kYP2dOMg@public.gmane.org>, linux-block <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Greg Kurz <groug-Bxea+6Xhats@public.gmane.org>, Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>, Paolo Bonzini <pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Ming Lei <ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, qemu-discuss-qX2TKyscuCcdnm+yROfE0A@public.gmane.org, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, 2018-08-11 at 11:36 -0400, Martin K. Petersen wrote:
-> Jeff,
-> 
-> > This patch provides a performance improvement for the CRC16
-> > calculations done in read/write workloads using the T10 Type 1/2/3
-> > guard field.  For example, today with sequential write workloads (one
-> > thread/CPU of IO) we consume 100% of the CPU because of the CRC16
-> > computation bottleneck.  Today's block devices are considerably
-> > faster, but the CRC16 calculation prevents folks from utilizing the
-> > throughput of such devices.  To speed up this calculation and expose
-> > the block device throughput, we slice the old single byte for loop
-> > into a 16 byte for loop, with a larger CRC table to match.  The result
-> > has shown 5x performance improvements on various big endian and little
-> > endian systems running the 4.18.0 kernel version.
-> 
-> The reason I went with a simple slice-by-one approach was that the
-> larger tables had a negative impact on the CPU caches. So while
-> slice-by-N numbers looked better in synthetic benchmarks, actual
-> application performance started getting affected as the tables grew
-> larger.
-> 
-> These days we obviously use the hardware-accelerated CRC calculation so
-> the software table approach mostly serves as a reference
-> implementation. But given your big vs. little endian performance
-> metrics, I'm assuming you guys are focused on embedded processors
-> without support for CRC acceleration?
-> 
-> I have no problem providing a choice for bigger tables. My only concern
-> is that the selection heuristics need to be more than one-dimensional.
-> Latency and cache side effects are often more important than throughput.
-> At least on the initiator side.
-> 
-> Also, I'd like to keep the original slice-by-one implementation for
-> reference purposes.
+Hi.
 
-Did you see the suggested patch that allows
-either 1, 2, 4, 8 or 16 block table sizes?
+On 11.08.2018 14:23, Ming Lei wrote:
+> Please test for-4.19/block:
+> 
+> https://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git/log/?h=for-4.19/block
+> 
+> This slow boot issue should have been fixed by the following commits:
+> 
+> 1311326cf475 blk-mq: avoid to synchronize rcu inside 
+> blk_cleanup_queue()
+> 97889f9ac24f blk-mq: remove synchronize_rcu() from 
+> blk_mq_del_queue_tag_set()
+> 5815839b3ca1 blk-mq: introduce new lock for protecting 
+> hctx->dispatch_wait
+> 2278d69f030f blk-mq: don't pass **hctx to blk_mq_mark_tag_wait()
+> 8ab6bb9ee8d0 blk-mq: cleanup blk_mq_get_driver_tag()
 
-Perhaps you have a comment on that?
+Indeed, I can confirm that these commits fix the issue.
+
+Thanks a lot.
+
+-- 
+   Oleksandr Natalenko (post-factum)
