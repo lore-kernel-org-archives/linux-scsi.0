@@ -1,101 +1,159 @@
-From: Ming Lei <tom.leiming@gmail.com>
-Subject: Re: Slow boot in QEMU with virtio-scsi disks
-Date: Sat, 11 Aug 2018 20:23:20 +0800
-Message-ID: <CACVXFVO1pN=CZvNY8Q4wBrAoA=3w8Ew38aGqpOSHJ1uYAM-sxw@mail.gmail.com>
-References: <f40092b20856d07bd7f870abf5ea939e@natalenko.name>
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: aacraid: Regression in 4.14.56 with *genirq/affinity: assign
+ vectors to all possible CPUs*
+Date: Sat, 11 Aug 2018 15:50:21 +0200
+Message-ID: <20180811135021.GA2186@kroah.com>
+References: <06ee23fe-ec9e-d67b-b533-d5151be74a11@molgen.mpg.de>
+ <20180810133628.GA4131@kroah.com>
+ <29b5f3ce-2c23-bf5e-fe50-29bedd4833e1@molgen.mpg.de>
+ <20180810155511.GA17092@kroah.com>
+ <f5c57bf7-b8c1-a560-d13a-d74e0f27adbb@molgen.mpg.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <f40092b20856d07bd7f870abf5ea939e@natalenko.name>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Oleksandr Natalenko <oleksandr@natalenko.name>
-Cc: Ming Lei <ming.lei@redhat.com>, Omar Sandoval <osandov@fb.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Paolo Bonzini <pbonzini@redhat.com>, Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@kernel.dk>, Linux SCSI List <linux-scsi@vger.kernel.org>, linux-block <linux-block@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Greg Kurz <groug@kaod.org>, qemu-discuss@nongnu.org, qemu-devel <qemu-devel@nongnu.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <stable-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <f5c57bf7-b8c1-a560-d13a-d74e0f27adbb@molgen.mpg.de>
+Sender: stable-owner@vger.kernel.org
+To: Paul Menzel <pmenzel+linux-scsi@molgen.mpg.de>
+Cc: stable@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, it+linux-scsi@molgen.mpg.de, Adaptec OEM Raid Solutions <aacraid@microsemi.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, Aug 11, 2018 at 5:47 PM, Oleksandr Natalenko
-<oleksandr@natalenko.name> wrote:
-> Hi.
->
-> I'd like to resurrect previous discussion [1] regarding slow kernel boot
-> inside QEMU with virtio-scsi disks attached and blk_mq enabled.
->
-> Symptom:
->
-> [    2.830857] ata1: SATA max UDMA/133 abar m4096@0x98002000 port 0x98002100
-> irq 36
-> [    2.834559] ata2: SATA max UDMA/133 abar m4096@0x98002000 port 0x98002180
-> irq 36
-> [    2.837746] ata3: SATA max UDMA/133 abar m4096@0x98002000 port 0x98002200
-> irq 36
-> [    2.841861] ata4: SATA max UDMA/133 abar m4096@0x98002000 port 0x98002280
-> irq 36
-> [    2.847899] ata5: SATA max UDMA/133 abar m4096@0x98002000 port 0x98002300
-> irq 36
-> [    2.853229] ata6: SATA max UDMA/133 abar m4096@0x98002000 port 0x98002380
-> irq 36
-> [    3.172159] ata1: SATA link down (SStatus 0 SControl 300)
-> [    3.183552] ata5: SATA link down (SStatus 0 SControl 300)
-> [    3.189925] ata3: SATA link down (SStatus 0 SControl 300)
-> [    3.196156] ata6: SATA link down (SStatus 0 SControl 300)
-> [    3.201136] ata2: SATA link down (SStatus 0 SControl 300)
-> [    3.208559] ata4: SATA link down (SStatus 0 SControl 300)
-> [   16.480972] sd 0:0:1:0: Power-on or device reset occurred
-> [   16.481591] sd 0:0:0:0: [sda] 16777216 512-byte logical blocks: (8.59
-> GB/8.00 GiB)
-> [   16.481671] sd 0:0:0:0: [sda] Write Protect is off
-> [   16.481815] sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled,
-> doesn't support DPO or FUA
-> [   16.491325]  sda: sda1 sda2
-> [   16.517532] sd 0:0:1:0: [sdb] 16777216 512-byte logical blocks: (8.59
-> GB/8.00 GiB)
-> [   16.525131] sr 0:0:2:0: Power-on or device reset occurred
-> [   16.525974] sd 0:0:1:0: [sdb] Write Protect is off
-> [   16.530946] sr 0:0:2:0: [sr0] scsi3-mmc drive: 16x/50x cd/rw xa/form2
-> cdda tray
-> [   16.543592] cdrom: Uniform CD-ROM driver Revision: 3.20
-> [   16.549815] sd 0:0:1:0: [sdb] Write cache: disabled, read cache: enabled,
-> doesn't support DPO or FUA
-> [   16.549833] sd 0:0:0:0: [sda] Attached SCSI disk
-> [   16.572055]  sdb: sdb1 sdb2
-> [   16.580463] sd 0:0:1:0: [sdb] Attached SCSI disk
->
-> (note the hang that lasts for 13 seconds)
->
-> The disks are attached to the VM in the following manner:
->
-> -device virtio-scsi,id=scsi -device scsi-hd,drive=hd1 -drive
-> if=none,media=disk,id=hd1,file=sda.img,format=raw
->
-> What I've tested so far:
->
-> * 4.14.62  + virtio-scsi +    blk_mq == slow boot
-> * 4.14.62  + virtio-scsi + no blk_mq == fast boot
-> * 4.17.13  + virtio-scsi +    blk_mq == slow boot
-> * 4.18-rc8 + virtio-scsi +    blk_mq == slow boot
->
-> QEMU is of v2.12.1, runs with "-machine q35,accel=kvm -cpu host". Also, if
-> virtio-scsi disks are replaced with SATA disks, the hang does not occur
-> (although, QEMU has other issues with SATA, but that's another story [3]).
->
-> Apparently, the commit that was mentioned in [2],
-> b5b6e8c8d3b4cbeb447a0f10c7d5de3caa573299, forces blk_mq for virtio_scsi, so
-> it cannot be disabled for new kernels.
->
-> Any hint on how to avoid this hang while still having virtio-scsi disks and
-> blk_mq enabled please?
+On Sat, Aug 11, 2018 at 10:14:18AM +0200, Paul Menzel wrote:
+> Dear Greg,
+> 
+> 
+> Am 10.08.2018 um 17:55 schrieb Greg Kroah-Hartman:
+> > On Fri, Aug 10, 2018 at 04:11:23PM +0200, Paul Menzel wrote:
+> 
+> > > On 08/10/18 15:36, Greg Kroah-Hartman wrote:
+> > > > On Fri, Aug 10, 2018 at 03:21:52PM +0200, Paul Menzel wrote:
+> > > > > Dear Greg,
+> > > > > 
+> > > > > 
+> > > > > Commit ef86f3a7 (genirq/affinity: assign vectors to all possible CPUs) added
+> > > > > for Linux 4.14.56 causes the aacraid module to not detect the attached devices
+> > > > > anymore on a Dell PowerEdge R720 with two six core 24x E5-2630 @ 2.30GHz.
+> > > > > 
+> > > > > ```
+> > > > > $ dmesg | grep raid
+> > > > > [    0.269768] raid6: sse2x1   gen()  7179 MB/s
+> > > > > [    0.290069] raid6: sse2x1   xor()  5636 MB/s
+> > > > > [    0.311068] raid6: sse2x2   gen()  9160 MB/s
+> > > > > [    0.332076] raid6: sse2x2   xor()  6375 MB/s
+> > > > > [    0.353075] raid6: sse2x4   gen() 11164 MB/s
+> > > > > [    0.374064] raid6: sse2x4   xor()  7429 MB/s
+> > > > > [    0.379001] raid6: using algorithm sse2x4 gen() 11164 MB/s
+> > > > > [    0.386001] raid6: .... xor() 7429 MB/s, rmw enabled
+> > > > > [    0.391008] raid6: using ssse3x2 recovery algorithm
+> > > > > [    3.559682] megaraid cmm: 2.20.2.7 (Release Date: Sun Jul 16 00:01:03 EST 2006)
+> > > > > [    3.570061] megaraid: 2.20.5.1 (Release Date: Thu Nov 16 15:32:35 EST 2006)
+> > > > > [   10.725767] Adaptec aacraid driver 1.2.1[50834]-custom
+> > > > > [   10.731724] aacraid 0000:04:00.0: can't disable ASPM; OS doesn't have ASPM control
+> > > > > [   10.743295] aacraid: Comm Interface type3 enabled
+> > > > > $ lspci -nn | grep Adaptec
+> > > > > 04:00.0 Serial Attached SCSI controller [0107]: Adaptec Series 8 12G SAS/PCIe 3 [9005:028d] (rev 01)
+> > > > > 42:00.0 Serial Attached SCSI controller [0107]: Adaptec Smart Storage PQI 12G SAS/PCIe 3 [9005:028f] (rev 01)
+> > > > > ```
+> > > > > 
+> > > > > But, it still works with a Dell PowerEdge R715 with two eight core AMD
+> > > > > Opteron 6136, the card below.
+> > > > > 
+> > > > > ```
+> > > > > $ lspci -nn | grep Adaptec
+> > > > > 22:00.0 Serial Attached SCSI controller [0107]: Adaptec Series 8 12G SAS/PCIe 3 [9005:028d] (rev 01)
+> > > > > ```
+> > > > > 
+> > > > > Reverting the commit fixes the issue.
+> > > > > 
+> > > > > commit ef86f3a72adb8a7931f67335560740a7ad696d1d
+> > > > > Author: Christoph Hellwig <hch@lst.de>
+> > > > > Date:   Fri Jan 12 10:53:05 2018 +0800
+> > > > > 
+> > > > >      genirq/affinity: assign vectors to all possible CPUs
+> > > > >      commit 84676c1f21e8ff54befe985f4f14dc1edc10046b upstream.
+> > > > >      Currently we assign managed interrupt vectors to all present CPUs.  This
+> > > > >      works fine for systems were we only online/offline CPUs.  But in case of
+> > > > >      systems that support physical CPU hotplug (or the virtualized version of
+> > > > >      it) this means the additional CPUs covered for in the ACPI tables or on
+> > > > >      the command line are not catered for.  To fix this we'd either need to
+> > > > >      introduce new hotplug CPU states just for this case, or we can start
+> > > > >      assining vectors to possible but not present CPUs.
+> > > > >      Reported-by: Christian Borntraeger <borntraeger@de.ibm.com>
+> > > > >      Tested-by: Christian Borntraeger <borntraeger@de.ibm.com>
+> > > > >      Tested-by: Stefan Haberland <sth@linux.vnet.ibm.com>
+> > > > >      Fixes: 4b855ad37194 ("blk-mq: Create hctx for each present CPU")
+> > > > >      Cc: linux-kernel@vger.kernel.org
+> > > > >      Cc: Thomas Gleixner <tglx@linutronix.de>
+> > > > >      Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > > > >      Signed-off-by: Jens Axboe <axboe@kernel.dk>
+> > > > >      Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> > > > > 
+> > > > > The problem doesn’t happen with Linux 4.17.11, so there are commits in
+> > > > > Linux master fixing this. Unfortunately, my attempts to find out failed.
+> > > > > 
+> > > > > I was able to cherry-pick the three commits below on top of 4.14.62,
+> > > > > but the problem persists.
+> > > > > 
+> > > > > 6aba81b5a2f5 genirq/affinity: Don't return with empty affinity masks on error
+> > > > > 355d7ecdea35 scsi: hpsa: fix selection of reply queue
+> > > > > e944e9615741 scsi: virtio_scsi: fix IO hang caused by automatic irq vector affinity
+> > > > > 
+> > > > > Trying to cherry-pick the commits below, referencing the commit
+> > > > > in question, gave conflicts.
+> > > > > 
+> > > > > 1. adbe552349f2 scsi: megaraid_sas: fix selection of reply queue
+> > > > > 2. d3056812e7df genirq/affinity: Spread irq vectors among present CPUs as far as possible
+> > > > > 
+> > > > > To avoid further trial and error with the server with a slow firmware,
+> > > > > do you know what commits should fix the issue?
+> > > > 
+> > > > Look at the email on the stable mailing list:
+> > > > 	Subject: Re: Fix for 84676c1f (b5b6e8c8) missing in 4.14.y
+> > > > it should help you out here.
+> > > 
+> > > Ah, I didn’t see that [1] yet. Also I can’t find the original message, and a
+> > > way to reply to that thread. Therefore, here is my reply.
+> > > 
+> > > > Can you try the patches listed there?
+> > > 
+> > > I tried some of these already without success.
+> > > 
+> > > b5b6e8c8d3b4 scsi: virtio_scsi: fix IO hang caused by automatic irq vector affinity
+> > > 2f31115e940c scsi: core: introduce force_blk_mq
+> > > adbe552349f2 scsi: megaraid_sas: fix selection of reply queue
+> > > 
+> > > The commit above is already in v4.14.56.
+> > > 
+> > > 8b834bff1b73 scsi: hpsa: fix selection of reply queue
+> > > 
+> > > The problem persists.
+> > > 
+> > > The problem also persists with the state below.
+> > > 
+> > > 3528f73a4e5d scsi: core: introduce force_blk_mq
+> > > 16dc4d8215f3 scsi: hpsa: fix selection of reply queue
+> > > f0a7ab12232d scsi: virtio_scsi: fix IO hang caused by automatic irq vector affinity
+> > > 6aba81b5a2f5 genirq/affinity: Don't return with empty affinity masks on error
+> > > 1aa1166eface (tag: v4.14.62, stable/linux-4.14.y) Linux 4.14.62
+> > > 
+> > > So, some more commits are necessary.
+> > 
+> > Or I revert the original patch here, and the follow-on ones that were
+> > added to "fix" this issue.  I think that might be the better thing
+> > overall here, right?  Have you tried that?
+> 
+> Yes, reverting the commit fixed the issue for us. If Christoph or Ming do
+> not have another suggestion for a commit, that would be the way to go.
 
-Please test for-4.19/block:
+Christoph or Ming, any ideas here?
 
-https://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git/log/?h=for-4.19/block
+In looking at the aacraid code, I don't see anywhere that this is using
+a specific cpu number for queues or anything, but I could be wrong.
+Ideally this should also be failing in 4.17 or 4.18-rc right now as well
+as I don't see anything that would have "fixed" this recently.  Unless
+I'm missing something here?
 
-This slow boot issue should have been fixed by the following commits:
+thanks,
 
-1311326cf475 blk-mq: avoid to synchronize rcu inside blk_cleanup_queue()
-97889f9ac24f blk-mq: remove synchronize_rcu() from blk_mq_del_queue_tag_set()
-5815839b3ca1 blk-mq: introduce new lock for protecting hctx->dispatch_wait
-2278d69f030f blk-mq: don't pass **hctx to blk_mq_mark_tag_wait()
-8ab6bb9ee8d0 blk-mq: cleanup blk_mq_get_driver_tag()
-
-
-Thanks,
-Ming Lei
+greg k-h
