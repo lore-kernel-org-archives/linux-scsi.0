@@ -1,159 +1,41 @@
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: aacraid: Regression in 4.14.56 with *genirq/affinity: assign
- vectors to all possible CPUs*
-Date: Sat, 11 Aug 2018 15:50:21 +0200
-Message-ID: <20180811135021.GA2186@kroah.com>
-References: <06ee23fe-ec9e-d67b-b533-d5151be74a11@molgen.mpg.de>
- <20180810133628.GA4131@kroah.com>
- <29b5f3ce-2c23-bf5e-fe50-29bedd4833e1@molgen.mpg.de>
- <20180810155511.GA17092@kroah.com>
- <f5c57bf7-b8c1-a560-d13a-d74e0f27adbb@molgen.mpg.de>
+From: Joe Perches <joe@perches.com>
+Subject: Re: [PATCH] Performance Improvement in CRC16 Calculations.
+Date: Sat, 11 Aug 2018 08:06:10 -0700
+Message-ID: <2089960838bccf80f6fb9cc586b1a663f1f9e9da.camel@perches.com>
+References: <1533928331-21303-1-git-send-email-jeff.lien@wdc.com>
+         <9b5b906f42dfab78f382c90f66851717d258a15d.camel@perches.com>
+         <nycvar.YSQ.7.76.1808101601110.13885@knanqh.ubzr>
+         <b3c86ddd67a73c09e09f3e51d7fc70036f00fb7b.camel@perches.com>
+         <75d66dfa-688b-f941-04fd-5a39cf882b21@interlog.com>
+         <8e63583eb6898c3f481f1cb45b067234737a11b4.camel@perches.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <f5c57bf7-b8c1-a560-d13a-d74e0f27adbb@molgen.mpg.de>
-Sender: stable-owner@vger.kernel.org
-To: Paul Menzel <pmenzel+linux-scsi@molgen.mpg.de>
-Cc: stable@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, it+linux-scsi@molgen.mpg.de, Adaptec OEM Raid Solutions <aacraid@microsemi.com>, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <8e63583eb6898c3f481f1cb45b067234737a11b4.camel@perches.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: dgilbert@interlog.com, Nicolas Pitre <nicolas.pitre@linaro.org>
+Cc: Jeff Lien <jeff.lien@wdc.com>, linux-kernel@vger.kernel.org, linux-crypto@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, herbert@gondor.apana.org.au, tim.c.chen@linux.intel.com, martin.petersen@oracle.com, david.darrington@wdc.com, jeff.furlong@wdc.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, Aug 11, 2018 at 10:14:18AM +0200, Paul Menzel wrote:
-> Dear Greg,
+On Sat, 2018-08-11 at 02:04 -0700, Joe Perches wrote:
+> On Fri, 2018-08-10 at 22:39 -0400, Douglas Gilbert wrote:
+> > but below is a copy and paste of a table 27 from draft SBC-4
+> > revision 15 in chapter 4.22.4.4 on page 87.
 > 
-> 
-> Am 10.08.2018 um 17:55 schrieb Greg Kroah-Hartman:
-> > On Fri, Aug 10, 2018 at 04:11:23PM +0200, Paul Menzel wrote:
-> 
-> > > On 08/10/18 15:36, Greg Kroah-Hartman wrote:
-> > > > On Fri, Aug 10, 2018 at 03:21:52PM +0200, Paul Menzel wrote:
-> > > > > Dear Greg,
-> > > > > 
-> > > > > 
-> > > > > Commit ef86f3a7 (genirq/affinity: assign vectors to all possible CPUs) added
-> > > > > for Linux 4.14.56 causes the aacraid module to not detect the attached devices
-> > > > > anymore on a Dell PowerEdge R720 with two six core 24x E5-2630 @ 2.30GHz.
-> > > > > 
-> > > > > ```
-> > > > > $ dmesg | grep raid
-> > > > > [    0.269768] raid6: sse2x1   gen()  7179 MB/s
-> > > > > [    0.290069] raid6: sse2x1   xor()  5636 MB/s
-> > > > > [    0.311068] raid6: sse2x2   gen()  9160 MB/s
-> > > > > [    0.332076] raid6: sse2x2   xor()  6375 MB/s
-> > > > > [    0.353075] raid6: sse2x4   gen() 11164 MB/s
-> > > > > [    0.374064] raid6: sse2x4   xor()  7429 MB/s
-> > > > > [    0.379001] raid6: using algorithm sse2x4 gen() 11164 MB/s
-> > > > > [    0.386001] raid6: .... xor() 7429 MB/s, rmw enabled
-> > > > > [    0.391008] raid6: using ssse3x2 recovery algorithm
-> > > > > [    3.559682] megaraid cmm: 2.20.2.7 (Release Date: Sun Jul 16 00:01:03 EST 2006)
-> > > > > [    3.570061] megaraid: 2.20.5.1 (Release Date: Thu Nov 16 15:32:35 EST 2006)
-> > > > > [   10.725767] Adaptec aacraid driver 1.2.1[50834]-custom
-> > > > > [   10.731724] aacraid 0000:04:00.0: can't disable ASPM; OS doesn't have ASPM control
-> > > > > [   10.743295] aacraid: Comm Interface type3 enabled
-> > > > > $ lspci -nn | grep Adaptec
-> > > > > 04:00.0 Serial Attached SCSI controller [0107]: Adaptec Series 8 12G SAS/PCIe 3 [9005:028d] (rev 01)
-> > > > > 42:00.0 Serial Attached SCSI controller [0107]: Adaptec Smart Storage PQI 12G SAS/PCIe 3 [9005:028f] (rev 01)
-> > > > > ```
-> > > > > 
-> > > > > But, it still works with a Dell PowerEdge R715 with two eight core AMD
-> > > > > Opteron 6136, the card below.
-> > > > > 
-> > > > > ```
-> > > > > $ lspci -nn | grep Adaptec
-> > > > > 22:00.0 Serial Attached SCSI controller [0107]: Adaptec Series 8 12G SAS/PCIe 3 [9005:028d] (rev 01)
-> > > > > ```
-> > > > > 
-> > > > > Reverting the commit fixes the issue.
-> > > > > 
-> > > > > commit ef86f3a72adb8a7931f67335560740a7ad696d1d
-> > > > > Author: Christoph Hellwig <hch@lst.de>
-> > > > > Date:   Fri Jan 12 10:53:05 2018 +0800
-> > > > > 
-> > > > >      genirq/affinity: assign vectors to all possible CPUs
-> > > > >      commit 84676c1f21e8ff54befe985f4f14dc1edc10046b upstream.
-> > > > >      Currently we assign managed interrupt vectors to all present CPUs.  This
-> > > > >      works fine for systems were we only online/offline CPUs.  But in case of
-> > > > >      systems that support physical CPU hotplug (or the virtualized version of
-> > > > >      it) this means the additional CPUs covered for in the ACPI tables or on
-> > > > >      the command line are not catered for.  To fix this we'd either need to
-> > > > >      introduce new hotplug CPU states just for this case, or we can start
-> > > > >      assining vectors to possible but not present CPUs.
-> > > > >      Reported-by: Christian Borntraeger <borntraeger@de.ibm.com>
-> > > > >      Tested-by: Christian Borntraeger <borntraeger@de.ibm.com>
-> > > > >      Tested-by: Stefan Haberland <sth@linux.vnet.ibm.com>
-> > > > >      Fixes: 4b855ad37194 ("blk-mq: Create hctx for each present CPU")
-> > > > >      Cc: linux-kernel@vger.kernel.org
-> > > > >      Cc: Thomas Gleixner <tglx@linutronix.de>
-> > > > >      Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > > > >      Signed-off-by: Jens Axboe <axboe@kernel.dk>
-> > > > >      Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> > > > > 
-> > > > > The problem doesn’t happen with Linux 4.17.11, so there are commits in
-> > > > > Linux master fixing this. Unfortunately, my attempts to find out failed.
-> > > > > 
-> > > > > I was able to cherry-pick the three commits below on top of 4.14.62,
-> > > > > but the problem persists.
-> > > > > 
-> > > > > 6aba81b5a2f5 genirq/affinity: Don't return with empty affinity masks on error
-> > > > > 355d7ecdea35 scsi: hpsa: fix selection of reply queue
-> > > > > e944e9615741 scsi: virtio_scsi: fix IO hang caused by automatic irq vector affinity
-> > > > > 
-> > > > > Trying to cherry-pick the commits below, referencing the commit
-> > > > > in question, gave conflicts.
-> > > > > 
-> > > > > 1. adbe552349f2 scsi: megaraid_sas: fix selection of reply queue
-> > > > > 2. d3056812e7df genirq/affinity: Spread irq vectors among present CPUs as far as possible
-> > > > > 
-> > > > > To avoid further trial and error with the server with a slow firmware,
-> > > > > do you know what commits should fix the issue?
-> > > > 
-> > > > Look at the email on the stable mailing list:
-> > > > 	Subject: Re: Fix for 84676c1f (b5b6e8c8) missing in 4.14.y
-> > > > it should help you out here.
-> > > 
-> > > Ah, I didn’t see that [1] yet. Also I can’t find the original message, and a
-> > > way to reply to that thread. Therefore, here is my reply.
-> > > 
-> > > > Can you try the patches listed there?
-> > > 
-> > > I tried some of these already without success.
-> > > 
-> > > b5b6e8c8d3b4 scsi: virtio_scsi: fix IO hang caused by automatic irq vector affinity
-> > > 2f31115e940c scsi: core: introduce force_blk_mq
-> > > adbe552349f2 scsi: megaraid_sas: fix selection of reply queue
-> > > 
-> > > The commit above is already in v4.14.56.
-> > > 
-> > > 8b834bff1b73 scsi: hpsa: fix selection of reply queue
-> > > 
-> > > The problem persists.
-> > > 
-> > > The problem also persists with the state below.
-> > > 
-> > > 3528f73a4e5d scsi: core: introduce force_blk_mq
-> > > 16dc4d8215f3 scsi: hpsa: fix selection of reply queue
-> > > f0a7ab12232d scsi: virtio_scsi: fix IO hang caused by automatic irq vector affinity
-> > > 6aba81b5a2f5 genirq/affinity: Don't return with empty affinity masks on error
-> > > 1aa1166eface (tag: v4.14.62, stable/linux-4.14.y) Linux 4.14.62
-> > > 
-> > > So, some more commits are necessary.
-> > 
-> > Or I revert the original patch here, and the follow-on ones that were
-> > added to "fix" this issue.  I think that might be the better thing
-> > overall here, right?  Have you tried that?
-> 
-> Yes, reverting the commit fixed the issue for us. If Christoph or Ming do
-> not have another suggestion for a commit, that would be the way to go.
+> The posted code returns the proper crc for each
+> CONFIG_CRYPTO_CRCT10DIF_TABLE_SIZE value from
+> 1 to 5 for these arrays.
 
-Christoph or Ming, any ideas here?
+Jeff, could you please test the suggested patch
+with your comparison framework again with each
+CONFIG_CRYPTO_CRCT10DIF_TABLE_SIZE from 1 to 5?
 
-In looking at the aacraid code, I don't see anywhere that this is using
-a specific cpu number for queues or anything, but I could be wrong.
-Ideally this should also be failing in 4.17 or 4.18-rc right now as well
-as I don't see anything that would have "fixed" this recently.  Unless
-I'm missing something here?
+I get on a very limited test framework here:
+(runtime average of 10 runs)
 
-thanks,
-
-greg k-h
+1: 4.32
+2: 1.86
+3: 1.31
+4: 1.05
+5: 0.99
