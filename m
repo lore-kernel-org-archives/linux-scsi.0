@@ -1,78 +1,60 @@
-From: Rob Herring <robh@kernel.org>
-Subject: Re: [PATCH v3 1/2] dt-bindings: ufs: Add bindings for Cadence UFS
-Date: Mon, 13 Aug 2018 11:37:59 -0600
-Message-ID: <20180813173759.GA7302@rob-hp-laptop>
-References: <F39BF38C-FD85-4115-975C-8D923518A541@global.cadence.com>
+From: Jeffrey Lien <Jeff.Lien@wdc.com>
+Subject: RE: [PATCH] Performance Improvement in CRC16 Calculations.
+Date: Mon, 13 Aug 2018 18:41:27 +0000
+Message-ID: <SN1PR04MB18246863506680B4ACB30866EA390@SN1PR04MB1824.namprd04.prod.outlook.com>
+References: <1533928331-21303-1-git-send-email-jeff.lien@wdc.com>
+         <9b5b906f42dfab78f382c90f66851717d258a15d.camel@perches.com>
+         <nycvar.YSQ.7.76.1808101601110.13885@knanqh.ubzr>
+         <b3c86ddd67a73c09e09f3e51d7fc70036f00fb7b.camel@perches.com>
+         <75d66dfa-688b-f941-04fd-5a39cf882b21@interlog.com>
+         <8e63583eb6898c3f481f1cb45b067234737a11b4.camel@perches.com>
+ <2089960838bccf80f6fb9cc586b1a663f1f9e9da.camel@perches.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <F39BF38C-FD85-4115-975C-8D923518A541@global.cadence.com>
+In-Reply-To: <2089960838bccf80f6fb9cc586b1a663f1f9e9da.camel@perches.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Janek Kotas <jank@cadence.com>
-Cc: "mark.rutland@arm.com" <mark.rutland@arm.com>, "vinholikatti@gmail.com" <vinholikatti@gmail.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Joe Perches <joe@perches.com>, "dgilbert@interlog.com" <dgilbert@interlog.com>, Nicolas Pitre <nicolas.pitre@linaro.org>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "herbert@gondor.apana.org.au" <herbert@gondor.apana.org.au>, "tim.c.chen@linux.intel.com" <tim.c.chen@linux.intel.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, David Darrington <david.darrington@wdc.com>, Jeff Furlong <jeff.furlong@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Aug 09, 2018 at 01:25:15PM +0000, Janek Kotas wrote:
-> This patch adds a DT binding documentation for
-> Cadence UFS Host Controller.
-> 
-> Signed-off-by: Jan Kotas <jank@cadence.com>
-> ---
->  .../devicetree/bindings/ufs/cdns,ufshc.txt         | 31 ++++++++++++++++++++++
->  1 file changed, 31 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/ufs/cdns,ufshc.txt
-> 
-> diff --git a/Documentation/devicetree/bindings/ufs/cdns,ufshc.txt b/Documentation/devicetree/bindings/ufs/cdns,ufshc.txt
-> new file mode 100644
-> index 00000000..a04a4989
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/ufs/cdns,ufshc.txt
-> @@ -0,0 +1,31 @@
-> +* Cadence Universal Flash Storage (UFS) Controller
-> +
-> +UFS nodes are defined to describe on-chip UFS host controllers.
-> +Each UFS controller instance should have its own node.
-> +Please see the ufshcd-pltfrm.txt for a list of all available properties.
-> +
-> +Required properties:
-> +- compatible	: Compatible list, contains the following controller:
-> +			"cdns,ufshc"
-> +		  complemented with the JEDEC version:
-> +			"jedec,ufs-2.0"
-> +
-> +- reg		: Address and length of the UFS register set.
-> +- interrupts	: One interrupt mapping.
-> +- freq-table-hz	: Clock frequency table.
-> +		  See the ufshcd-pltfrm.txt for details.
-> +- clocks	: List of phandle and clock specifier pairs.
-> +- clock-names	: List of clock input name strings sorted in the same
-> +		  order as the clocks property. "core_clk" is mandatory.
-> +		  Depending on a type of a PHY,
-> +		  the "phy_clk" clock can also be added, if needed.
+Joe, Doug, Nicolas,
+The CONFIG patch change suggested by Joe and Doug makes sense to do.   I'll=
+ do some additional testing to verify the performance on my systems.  =20
 
-Unfortunately, you went the wrong direction. The '_clk' part is 
-redundant. Just 'core' and 'phy'.
 
-With that,
+Jeff Lien
 
-Reviewed-by: Rob Herring <robh@kernel.org>
+-----Original Message-----
+From: Joe Perches [mailto:joe@perches.com]=20
+Sent: Saturday, August 11, 2018 10:06 AM
+To: dgilbert@interlog.com; Nicolas Pitre <nicolas.pitre@linaro.org>
+Cc: Jeffrey Lien <Jeff.Lien@wdc.com>; linux-kernel@vger.kernel.org; linux-c=
+rypto@vger.kernel.org; linux-block@vger.kernel.org; linux-scsi@vger.kernel.=
+org; herbert@gondor.apana.org.au; tim.c.chen@linux.intel.com; martin.peters=
+en@oracle.com; David Darrington <david.darrington@wdc.com>; Jeff Furlong <j=
+eff.furlong@wdc.com>
+Subject: Re: [PATCH] Performance Improvement in CRC16 Calculations.
 
-> +
-> +Example:
-> +	ufs@fd030000 {
-> +		compatible = "cdns,ufshc", "jedec,ufs-2.0";
-> +		reg = <0xfd030000 0x10000>;
-> +		interrupts = <0 1 IRQ_TYPE_LEVEL_HIGH>;
-> +		freq-table-hz = <0 0>, <0 0>;
-> +		clocks = <&ufs_core_clk>, <&ufs_phy_clk>;
-> +		clock-names = "core_clk", "phy_clk";
-> +	};
-> -- 
-> 2.15.0
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe devicetree" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Sat, 2018-08-11 at 02:04 -0700, Joe Perches wrote:
+> On Fri, 2018-08-10 at 22:39 -0400, Douglas Gilbert wrote:
+> > but below is a copy and paste of a table 27 from draft SBC-4=20
+> > revision 15 in chapter 4.22.4.4 on page 87.
+>=20
+> The posted code returns the proper crc for each=20
+> CONFIG_CRYPTO_CRCT10DIF_TABLE_SIZE value from
+> 1 to 5 for these arrays.
+
+Jeff, could you please test the suggested patch with your comparison framew=
+ork again with each CONFIG_CRYPTO_CRCT10DIF_TABLE_SIZE from 1 to 5?
+
+I get on a very limited test framework here:
+(runtime average of 10 runs)
+
+1: 4.32
+2: 1.86
+3: 1.31
+4: 1.05
+5: 0.99
