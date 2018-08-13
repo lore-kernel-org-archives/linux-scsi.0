@@ -1,40 +1,117 @@
-From: zhong jiang <zhongjiang@huawei.com>
-Subject: [PATCH 1/2] scsi:ufs: Use PTR_ERR_OR_ZERO to replace the open code
-Date: Mon, 13 Aug 2018 19:10:39 +0800
-Message-ID: <1534158640-24353-2-git-send-email-zhongjiang@huawei.com>
-References: <1534158640-24353-1-git-send-email-zhongjiang@huawei.com>
+From: David Laight <David.Laight@ACULAB.COM>
+Subject: RE: [PATCH] Performance Improvement in CRC16 Calculations.
+Date: Mon, 13 Aug 2018 11:45:21 +0000
+Message-ID: <8508c92d70dc41ffb66557e13c988dca@AcuMS.aculab.com>
+References: <1533928331-21303-1-git-send-email-jeff.lien@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1534158640-24353-1-git-send-email-zhongjiang@huawei.com>
+In-Reply-To: <1533928331-21303-1-git-send-email-jeff.lien@wdc.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: john.garry@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: 'Jeff Lien' <jeff.lien@wdc.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "herbert@gondor.apana.org.au" <herbert@gondor.apana.org.au>, "tim.c.chen@linux.intel.com" <tim.c.chen@linux.intel.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "david.darrington@wdc.com" <david.darrington@wdc.com>, "jeff.furlong@wdc.com" <jeff.furlong@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-PTR_ERR_OR_ZERO has implemented the if(IS_ERR(...)) + PTR_ERR, So
-just replace them rather than duplicating its implement.
+From: Jeff Lien
+> Sent: 10 August 2018 20:12
+> 
+> This patch provides a performance improvement for the CRC16 calculations done in read/write
+> workloads using the T10 Type 1/2/3 guard field.  For example, today with sequential write
+> workloads (one thread/CPU of IO) we consume 100% of the CPU because of the CRC16 computation
+> bottleneck.  Today's block devices are considerably faster, but the CRC16 calculation prevents
+> folks from utilizing the throughput of such devices.  To speed up this calculation and expose
+> the block device throughput, we slice the old single byte for loop into a 16 byte for loop,
+> with a larger CRC table to match.  The result has shown 5x performance improvements on various
+> big endian and little endian systems running the 4.18.0 kernel version.
+> 
+> FIO Sequential Write, 64K Block Size, Queue Depth 64
+> BE Base Kernel:        bw=201.5 MiB/s
+> BE Modified CRC Calc:  bw=968.1 MiB/s
+> 4.80x performance improvement
+> 
+> LE Base Kernel:        bw=357 MiB/s
+> LE Modified CRC Calc:  bw=1964 MiB/s
+> 5.51x performance improvement
+> 
+> FIO Sequential Read, 64K Block Size, Queue Depth 64
+> BE Base Kernel:        bw=611.2 MiB/s
+> BE Modified CRC calc:  bw=684.9 MiB/s
+> 1.12x performance improvement
+> 
+> LE Base Kernel:        bw=797 MiB/s
+> LE Modified CRC Calc:  bw=2730 MiB/s
+> 3.42x performance improvement
+> 
+> Reviewed-by: Dave Darrington <david.darrington@wdc.com>
+> Reviewed-by: Jeff Furlong <jeff.furlong@wdc.com>
+> Signed-off-by: Jeff Lien <jeff.lien@wdc.com>
+> ---
+>  crypto/crct10dif_common.c | 605 +++++++++++++++++++++++++++++++++++++++++++---
+>  1 file changed, 569 insertions(+), 36 deletions(-)
+> 
+> diff --git a/crypto/crct10dif_common.c b/crypto/crct10dif_common.c
+> index b2fab36..40e1d6c 100644
+> --- a/crypto/crct10dif_common.c
+> +++ b/crypto/crct10dif_common.c
+> @@ -32,47 +32,580 @@
+>   * x^16 + x^15 + x^11 + x^9 + x^8 + x^7 + x^5 + x^4 + x^2 + x + 1
+>   * gt: 0x8bb7
+>   */
+> -static const __u16 t10_dif_crc_table[256] = {
+...
+> +	}
+>  };
+> 
+>  __u16 crc_t10dif_generic(__u16 crc, const unsigned char *buffer, size_t len)
+>  {
+> -	unsigned int i;
+> +	const __u8 *i = (const __u8 *)buffer;
+> +	const __u8 *i_end = i + len;
+> +	const __u8 *i_last16 = i + (len / 16 * 16);
+> 
+> -	for (i = 0 ; i < len ; i++)
+> -		crc = (crc << 8) ^ t10_dif_crc_table[((crc >> 8) ^ buffer[i]) & 0xff];
+> +	for (; i < i_last16; i += 16) {
+> +		crc = t10_dif_crc_table[15][i[0] ^ (__u8)(crc >>  8)] ^
+> +		t10_dif_crc_table[14][i[1] ^ (__u8)(crc >>  0)] ^
+> +		t10_dif_crc_table[13][i[2]] ^
+> +		t10_dif_crc_table[12][i[3]] ^
+> +		t10_dif_crc_table[11][i[4]] ^
+> +		t10_dif_crc_table[10][i[5]] ^
+> +		t10_dif_crc_table[9][i[6]] ^
+> +		t10_dif_crc_table[8][i[7]] ^
+> +		t10_dif_crc_table[7][i[8]] ^
+> +		t10_dif_crc_table[6][i[9]] ^
+> +		t10_dif_crc_table[5][i[10]] ^
+> +		t10_dif_crc_table[4][i[11]] ^
+> +		t10_dif_crc_table[3][i[12]] ^
+> +		t10_dif_crc_table[2][i[13]] ^
+> +		t10_dif_crc_table[1][i[14]] ^
+> +		t10_dif_crc_table[0][i[15]];
+...
 
-Signed-off-by: zhong jiang <zhongjiang@huawei.com>
----
- drivers/scsi/ufs/ufs-hisi.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+I suspect that all the gain comes from a slight relaxation of the
+register dependency chain and the loop unrolling.
 
-diff --git a/drivers/scsi/ufs/ufs-hisi.c b/drivers/scsi/ufs/ufs-hisi.c
-index 46df707..e794994 100644
---- a/drivers/scsi/ufs/ufs-hisi.c
-+++ b/drivers/scsi/ufs/ufs-hisi.c
-@@ -505,10 +505,8 @@ static int ufs_hisi_get_resource(struct ufs_hisi_host *host)
- 	/* get resource of ufs sys ctrl */
- 	mem_res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
- 	host->ufs_sys_ctrl = devm_ioremap_resource(dev, mem_res);
--	if (IS_ERR(host->ufs_sys_ctrl))
--		return PTR_ERR(host->ufs_sys_ctrl);
- 
--	return 0;
-+	return PTR_ERR_OR_ZERO(host->ufs_sys_ctrl);
- }
- 
- static void ufs_hisi_set_pm_lvl(struct ufs_hba *hba)
--- 
-1.7.12.4
+A more interesting version would be to generate the lookup table
+for a byte followed by 3 zero bytes.
+You could then run four separate register dependency chains using the
+same 256 entry lookup table.
+A little bit of work at the end of the buffer should sort it all out.
+
+There is also the lookup table free version:
+uint32_t
+crc_step(uint32_t crc, uint32_t byte_val)
+{
+    uint32_t t = crc ^ (byte_val & 0xff);
+    t = (t ^ t << 4) & 0xff;
+    return crc >> 8 ^ t << 8 ^ t << 3 ^ t >> 4;
+}
+
+	David
+
+-
+Registered Address Lakeside, Bramley Road, Mount Farm, Milton Keynes, MK1 1PT, UK
+Registration No: 1397386 (Wales)
