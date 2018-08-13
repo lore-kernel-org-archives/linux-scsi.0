@@ -1,60 +1,49 @@
-From: Jeffrey Lien <Jeff.Lien@wdc.com>
-Subject: RE: [PATCH] Performance Improvement in CRC16 Calculations.
-Date: Mon, 13 Aug 2018 18:41:27 +0000
-Message-ID: <SN1PR04MB18246863506680B4ACB30866EA390@SN1PR04MB1824.namprd04.prod.outlook.com>
-References: <1533928331-21303-1-git-send-email-jeff.lien@wdc.com>
-         <9b5b906f42dfab78f382c90f66851717d258a15d.camel@perches.com>
-         <nycvar.YSQ.7.76.1808101601110.13885@knanqh.ubzr>
-         <b3c86ddd67a73c09e09f3e51d7fc70036f00fb7b.camel@perches.com>
-         <75d66dfa-688b-f941-04fd-5a39cf882b21@interlog.com>
-         <8e63583eb6898c3f481f1cb45b067234737a11b4.camel@perches.com>
- <2089960838bccf80f6fb9cc586b1a663f1f9e9da.camel@perches.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] scsi: raid_attrs: fix unused variable warning
+Date: Tue, 14 Aug 2018 00:27:10 +0200
+Message-ID: <20180813222716.757523-1-arnd@arndb.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <2089960838bccf80f6fb9cc586b1a663f1f9e9da.camel@perches.com>
-Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Joe Perches <joe@perches.com>, "dgilbert@interlog.com" <dgilbert@interlog.com>, Nicolas Pitre <nicolas.pitre@linaro.org>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "herbert@gondor.apana.org.au" <herbert@gondor.apana.org.au>, "tim.c.chen@linux.intel.com" <tim.c.chen@linux.intel.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, David Darrington <david.darrington@wdc.com>, Jeff Furlong <jeff.furlong@wdc.com>
+To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Joe, Doug, Nicolas,
-The CONFIG patch change suggested by Joe and Doug makes sense to do.   I'll=
- do some additional testing to verify the performance on my systems.  =20
+I ran into a new warning on randconfig kernels:
 
+drivers/scsi/raid_class.c: In function 'raid_match':
+drivers/scsi/raid_class.c:64:24: error: unused variable 'i' [-Werror=unused-variable]
 
-Jeff Lien
+This looks like a very old problem that for some reason was very
+hard to run into, but it is very easy to fix, by replacing the
+incorrect #ifdef with a simpler IS_ENABLED() check.
 
------Original Message-----
-From: Joe Perches [mailto:joe@perches.com]=20
-Sent: Saturday, August 11, 2018 10:06 AM
-To: dgilbert@interlog.com; Nicolas Pitre <nicolas.pitre@linaro.org>
-Cc: Jeffrey Lien <Jeff.Lien@wdc.com>; linux-kernel@vger.kernel.org; linux-c=
-rypto@vger.kernel.org; linux-block@vger.kernel.org; linux-scsi@vger.kernel.=
-org; herbert@gondor.apana.org.au; tim.c.chen@linux.intel.com; martin.peters=
-en@oracle.com; David Darrington <david.darrington@wdc.com>; Jeff Furlong <j=
-eff.furlong@wdc.com>
-Subject: Re: [PATCH] Performance Improvement in CRC16 Calculations.
+Fixes: fac829fdcaf4 ("[SCSI] raid_attrs: fix dependency problems")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/scsi/raid_class.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-On Sat, 2018-08-11 at 02:04 -0700, Joe Perches wrote:
-> On Fri, 2018-08-10 at 22:39 -0400, Douglas Gilbert wrote:
-> > but below is a copy and paste of a table 27 from draft SBC-4=20
-> > revision 15 in chapter 4.22.4.4 on page 87.
->=20
-> The posted code returns the proper crc for each=20
-> CONFIG_CRYPTO_CRCT10DIF_TABLE_SIZE value from
-> 1 to 5 for these arrays.
-
-Jeff, could you please test the suggested patch with your comparison framew=
-ork again with each CONFIG_CRYPTO_CRCT10DIF_TABLE_SIZE from 1 to 5?
-
-I get on a very limited test framework here:
-(runtime average of 10 runs)
-
-1: 4.32
-2: 1.86
-3: 1.31
-4: 1.05
-5: 0.99
+diff --git a/drivers/scsi/raid_class.c b/drivers/scsi/raid_class.c
+index ea88906d2cc5..5c3d6e1e0145 100644
+--- a/drivers/scsi/raid_class.c
++++ b/drivers/scsi/raid_class.c
+@@ -63,8 +63,7 @@ static int raid_match(struct attribute_container *cont, struct device *dev)
+ 	 * emulated RAID devices, so start with SCSI */
+ 	struct raid_internal *i = ac_to_raid_internal(cont);
+ 
+-#if defined(CONFIG_SCSI) || defined(CONFIG_SCSI_MODULE)
+-	if (scsi_is_sdev_device(dev)) {
++	if (IS_ENABLED(CONFIG_SCSI) && scsi_is_sdev_device(dev)) {
+ 		struct scsi_device *sdev = to_scsi_device(dev);
+ 
+ 		if (i->f->cookie != sdev->host->hostt)
+@@ -72,7 +71,6 @@ static int raid_match(struct attribute_container *cont, struct device *dev)
+ 
+ 		return i->f->is_raid(dev);
+ 	}
+-#endif
+ 	/* FIXME: look at other subsystems too */
+ 	return 0;
+ }
+-- 
+2.18.0
