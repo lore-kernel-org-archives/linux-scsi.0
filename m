@@ -1,188 +1,172 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: aacraid: Regression in 4.14.56 with *genirq/affinity: assign
- vectors to all possible CPUs*
-Date: Mon, 13 Aug 2018 11:32:05 +0800
-Message-ID: <20180813033157.GA18254@ming.t460p>
-References: <06ee23fe-ec9e-d67b-b533-d5151be74a11@molgen.mpg.de>
- <20180810133628.GA4131@kroah.com>
- <29b5f3ce-2c23-bf5e-fe50-29bedd4833e1@molgen.mpg.de>
- <20180810155511.GA17092@kroah.com>
- <f5c57bf7-b8c1-a560-d13a-d74e0f27adbb@molgen.mpg.de>
- <20180811135021.GA2186@kroah.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH] Performance Improvement in CRC16 Calculations.
+Date: Sun, 12 Aug 2018 23:36:17 -0400
+Message-ID: <b36d5eb6-3ee8-1bcd-0060-a4d4083a0fe6@interlog.com>
+References: <1533928331-21303-1-git-send-email-jeff.lien@wdc.com>
+ <9b5b906f42dfab78f382c90f66851717d258a15d.camel@perches.com>
+ <nycvar.YSQ.7.76.1808101601110.13885@knanqh.ubzr>
+ <b3c86ddd67a73c09e09f3e51d7fc70036f00fb7b.camel@perches.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20180811135021.GA2186@kroah.com>
-Sender: stable-owner@vger.kernel.org
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Paul Menzel <pmenzel+linux-scsi@molgen.mpg.de>, stable@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, it+linux-scsi@molgen.mpg.de, Adaptec OEM Raid Solutions <aacraid@microsemi.com>, linux-scsi@vger.kernel.org
+Content-Type: multipart/mixed;
+ boundary="------------5694094D72B1F23D082D2112"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <b3c86ddd67a73c09e09f3e51d7fc70036f00fb7b.camel@perches.com>
+Content-Language: en-CA
+Sender: linux-kernel-owner@vger.kernel.org
+To: Joe Perches <joe@perches.com>, Nicolas Pitre <nicolas.pitre@linaro.org>
+Cc: Jeff Lien <jeff.lien@wdc.com>, linux-kernel@vger.kernel.org, linux-crypto@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, herbert@gondor.apana.org.au, tim.c.chen@linux.intel.com, martin.petersen@oracle.com, david.darrington@wdc.com, jeff.furlong@wdc.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, Aug 11, 2018 at 03:50:21PM +0200, Greg Kroah-Hartman wrote:
-> On Sat, Aug 11, 2018 at 10:14:18AM +0200, Paul Menzel wrote:
-> > Dear Greg,
-> > 
-> > 
-> > Am 10.08.2018 um 17:55 schrieb Greg Kroah-Hartman:
-> > > On Fri, Aug 10, 2018 at 04:11:23PM +0200, Paul Menzel wrote:
-> > 
-> > > > On 08/10/18 15:36, Greg Kroah-Hartman wrote:
-> > > > > On Fri, Aug 10, 2018 at 03:21:52PM +0200, Paul Menzel wrote:
-> > > > > > Dear Greg,
-> > > > > > 
-> > > > > > 
-> > > > > > Commit ef86f3a7 (genirq/affinity: assign vectors to all possible CPUs) added
-> > > > > > for Linux 4.14.56 causes the aacraid module to not detect the attached devices
-> > > > > > anymore on a Dell PowerEdge R720 with two six core 24x E5-2630 @ 2.30GHz.
-> > > > > > 
-> > > > > > ```
-> > > > > > $ dmesg | grep raid
-> > > > > > [    0.269768] raid6: sse2x1   gen()  7179 MB/s
-> > > > > > [    0.290069] raid6: sse2x1   xor()  5636 MB/s
-> > > > > > [    0.311068] raid6: sse2x2   gen()  9160 MB/s
-> > > > > > [    0.332076] raid6: sse2x2   xor()  6375 MB/s
-> > > > > > [    0.353075] raid6: sse2x4   gen() 11164 MB/s
-> > > > > > [    0.374064] raid6: sse2x4   xor()  7429 MB/s
-> > > > > > [    0.379001] raid6: using algorithm sse2x4 gen() 11164 MB/s
-> > > > > > [    0.386001] raid6: .... xor() 7429 MB/s, rmw enabled
-> > > > > > [    0.391008] raid6: using ssse3x2 recovery algorithm
-> > > > > > [    3.559682] megaraid cmm: 2.20.2.7 (Release Date: Sun Jul 16 00:01:03 EST 2006)
-> > > > > > [    3.570061] megaraid: 2.20.5.1 (Release Date: Thu Nov 16 15:32:35 EST 2006)
-> > > > > > [   10.725767] Adaptec aacraid driver 1.2.1[50834]-custom
-> > > > > > [   10.731724] aacraid 0000:04:00.0: can't disable ASPM; OS doesn't have ASPM control
-> > > > > > [   10.743295] aacraid: Comm Interface type3 enabled
-> > > > > > $ lspci -nn | grep Adaptec
-> > > > > > 04:00.0 Serial Attached SCSI controller [0107]: Adaptec Series 8 12G SAS/PCIe 3 [9005:028d] (rev 01)
-> > > > > > 42:00.0 Serial Attached SCSI controller [0107]: Adaptec Smart Storage PQI 12G SAS/PCIe 3 [9005:028f] (rev 01)
-> > > > > > ```
-> > > > > > 
-> > > > > > But, it still works with a Dell PowerEdge R715 with two eight core AMD
-> > > > > > Opteron 6136, the card below.
-> > > > > > 
-> > > > > > ```
-> > > > > > $ lspci -nn | grep Adaptec
-> > > > > > 22:00.0 Serial Attached SCSI controller [0107]: Adaptec Series 8 12G SAS/PCIe 3 [9005:028d] (rev 01)
-> > > > > > ```
-> > > > > > 
-> > > > > > Reverting the commit fixes the issue.
-> > > > > > 
-> > > > > > commit ef86f3a72adb8a7931f67335560740a7ad696d1d
-> > > > > > Author: Christoph Hellwig <hch@lst.de>
-> > > > > > Date:   Fri Jan 12 10:53:05 2018 +0800
-> > > > > > 
-> > > > > >      genirq/affinity: assign vectors to all possible CPUs
-> > > > > >      commit 84676c1f21e8ff54befe985f4f14dc1edc10046b upstream.
-> > > > > >      Currently we assign managed interrupt vectors to all present CPUs.  This
-> > > > > >      works fine for systems were we only online/offline CPUs.  But in case of
-> > > > > >      systems that support physical CPU hotplug (or the virtualized version of
-> > > > > >      it) this means the additional CPUs covered for in the ACPI tables or on
-> > > > > >      the command line are not catered for.  To fix this we'd either need to
-> > > > > >      introduce new hotplug CPU states just for this case, or we can start
-> > > > > >      assining vectors to possible but not present CPUs.
-> > > > > >      Reported-by: Christian Borntraeger <borntraeger@de.ibm.com>
-> > > > > >      Tested-by: Christian Borntraeger <borntraeger@de.ibm.com>
-> > > > > >      Tested-by: Stefan Haberland <sth@linux.vnet.ibm.com>
-> > > > > >      Fixes: 4b855ad37194 ("blk-mq: Create hctx for each present CPU")
-> > > > > >      Cc: linux-kernel@vger.kernel.org
-> > > > > >      Cc: Thomas Gleixner <tglx@linutronix.de>
-> > > > > >      Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > > > > >      Signed-off-by: Jens Axboe <axboe@kernel.dk>
-> > > > > >      Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> > > > > > 
-> > > > > > The problem doesn’t happen with Linux 4.17.11, so there are commits in
-> > > > > > Linux master fixing this. Unfortunately, my attempts to find out failed.
-> > > > > > 
-> > > > > > I was able to cherry-pick the three commits below on top of 4.14.62,
-> > > > > > but the problem persists.
-> > > > > > 
-> > > > > > 6aba81b5a2f5 genirq/affinity: Don't return with empty affinity masks on error
-> > > > > > 355d7ecdea35 scsi: hpsa: fix selection of reply queue
-> > > > > > e944e9615741 scsi: virtio_scsi: fix IO hang caused by automatic irq vector affinity
-> > > > > > 
-> > > > > > Trying to cherry-pick the commits below, referencing the commit
-> > > > > > in question, gave conflicts.
-> > > > > > 
-> > > > > > 1. adbe552349f2 scsi: megaraid_sas: fix selection of reply queue
-> > > > > > 2. d3056812e7df genirq/affinity: Spread irq vectors among present CPUs as far as possible
-> > > > > > 
-> > > > > > To avoid further trial and error with the server with a slow firmware,
-> > > > > > do you know what commits should fix the issue?
-> > > > > 
-> > > > > Look at the email on the stable mailing list:
-> > > > > 	Subject: Re: Fix for 84676c1f (b5b6e8c8) missing in 4.14.y
-> > > > > it should help you out here.
-> > > > 
-> > > > Ah, I didn’t see that [1] yet. Also I can’t find the original message, and a
-> > > > way to reply to that thread. Therefore, here is my reply.
-> > > > 
-> > > > > Can you try the patches listed there?
-> > > > 
-> > > > I tried some of these already without success.
-> > > > 
-> > > > b5b6e8c8d3b4 scsi: virtio_scsi: fix IO hang caused by automatic irq vector affinity
-> > > > 2f31115e940c scsi: core: introduce force_blk_mq
-> > > > adbe552349f2 scsi: megaraid_sas: fix selection of reply queue
-> > > > 
-> > > > The commit above is already in v4.14.56.
-> > > > 
-> > > > 8b834bff1b73 scsi: hpsa: fix selection of reply queue
-> > > > 
-> > > > The problem persists.
-> > > > 
-> > > > The problem also persists with the state below.
-> > > > 
-> > > > 3528f73a4e5d scsi: core: introduce force_blk_mq
-> > > > 16dc4d8215f3 scsi: hpsa: fix selection of reply queue
-> > > > f0a7ab12232d scsi: virtio_scsi: fix IO hang caused by automatic irq vector affinity
-> > > > 6aba81b5a2f5 genirq/affinity: Don't return with empty affinity masks on error
-> > > > 1aa1166eface (tag: v4.14.62, stable/linux-4.14.y) Linux 4.14.62
-> > > > 
-> > > > So, some more commits are necessary.
-> > > 
-> > > Or I revert the original patch here, and the follow-on ones that were
-> > > added to "fix" this issue.  I think that might be the better thing
-> > > overall here, right?  Have you tried that?
-> > 
-> > Yes, reverting the commit fixed the issue for us. If Christoph or Ming do
-> > not have another suggestion for a commit, that would be the way to go.
+This is a multi-part message in MIME format.
+--------------5694094D72B1F23D082D2112
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+
+On 2018-08-10 08:11 PM, Joe Perches wrote:
+> On Fri, 2018-08-10 at 16:02 -0400, Nicolas Pitre wrote:
+>> On Fri, 10 Aug 2018, Joe Perches wrote:
+>>
+>>> On Fri, 2018-08-10 at 14:12 -0500, Jeff Lien wrote:
+>>>> This patch provides a performance improvement for the CRC16 calculations done in read/write
+>>>> workloads using the T10 Type 1/2/3 guard field.  For example, today with sequential write
+>>>> workloads (one thread/CPU of IO) we consume 100% of the CPU because of the CRC16 computation
+>>>> bottleneck.  Today's block devices are considerably faster, but the CRC16 calculation prevents
+>>>> folks from utilizing the throughput of such devices.  To speed up this calculation and expose
+>>>> the block device throughput, we slice the old single byte for loop into a 16 byte for loop,
+>>>> with a larger CRC table to match.  The result has shown 5x performance improvements on various
+>>>> big endian and little endian systems running the 4.18.0 kernel version.
+>>>
+>>> Thanks.
+>>>
+>>> This seems a sensible tradeoff for the 4k text size increase.
+>>
+>> More like 7.5KB.  Would be best if this was configurable so the small
+>> version remained available.
 > 
-> Christoph or Ming, any ideas here?
+> Maybe something like: (compiled, untested)
+> ---
+>   crypto/Kconfig            |  10 +
+>   crypto/crct10dif_common.c | 543 +++++++++++++++++++++++++++++++++++++++++++++-
+>   2 files changed, 549 insertions(+), 4 deletions(-)
 > 
-> In looking at the aacraid code, I don't see anywhere that this is using
-> a specific cpu number for queues or anything, but I could be wrong.
-> Ideally this should also be failing in 4.17 or 4.18-rc right now as well
-> as I don't see anything that would have "fixed" this recently.  Unless
-> I'm missing something here?
+> diff --git a/crypto/Kconfig b/crypto/Kconfig
+> index f3e40ac56d93..88d9d17bb18a 100644
+> --- a/crypto/Kconfig
+> +++ b/crypto/Kconfig
+> @@ -618,6 +618,16 @@ config CRYPTO_CRCT10DIF
+>   	  a crypto transform.  This allows for faster crc t10 diff
+>   	  transforms to be used if they are available.
+>   
+> +config CRYPTO_CRCT10DIF_TABLE_SIZE
+> +	int "Size of CRCT10DIF crc tables (as a power of 2)"
+> +	depends on CRYPTO_CRCT10DIF
+> +	range 1 5
+> +	default 1 if EMBEDDED
+> +	default 5
+> +	help
+> +	  Set the table size used by the CRYPTO_CRCT10DIF crc calculation
+> +	  Larger values use more memory and are faster.
+> +
+>   config CRYPTO_CRCT10DIF_PCLMUL
+>   	tristate "CRCT10DIF PCLMULQDQ hardware acceleration"
+>   	depends on X86 && 64BIT && CRC_T10DIF
+> diff --git a/crypto/crct10dif_common.c b/crypto/crct10dif_common.c
+> index b2fab366f518..4eb1c50c3688 100644
+> --- a/crypto/crct10dif_common.c
+> +++ b/crypto/crct10dif_common.c
+> @@ -32,7 +32,8 @@
+>    * x^16 + x^15 + x^11 + x^9 + x^8 + x^7 + x^5 + x^4 + x^2 + x + 1
+>    * gt: 0x8bb7
+>    */
+> -static const __u16 t10_dif_crc_table[256] = {
+> +static const __u16 t10dif_crc_table[][256] = {
 
->From both aac_fib_vector_assign() and aac_src_deliver_message(), looks
-every msix vector is used inside driver, so causes this trouble.
+<snip table>
 
->From 84676c1f21e8ff54b (genirq/affinity: assign vectors to all possible CPUs),
-actually it should have been since 9a0ef98e18 (genirq/affinity: Assign vectors
-to all present CPUs), it isn't guaranteed that one vector can be mapped to
-at least one online CPU.
+>   };
+>   
+>   __u16 crc_t10dif_generic(__u16 crc, const unsigned char *buffer, size_t len)
+>   {
+> -	unsigned int i;
+> +	const u8 *ptr = (const __u8 *)buffer;
+> +	const u8 *ptr_end = ptr + len;
+> +#if CONFIG_CRYPTO_CRCT10DIF_TABLE_SIZE > 1
+> +	size_t tablesize = 1 << (CONFIG_CRYPTO_CRCT10DIF_TABLE_SIZE - 1);
+> +	const u8 *ptr_last = ptr + (len / tablesize * tablesize);
+>   
+> -	for (i = 0 ; i < len ; i++)
+> -		crc = (crc << 8) ^ t10_dif_crc_table[((crc >> 8) ^ buffer[i]) & 0xff];
+> +	while (ptr < ptr_last) {
+> +		size_t index = tablesize;
+> +		__u16 t;
+> +
+> +		t = t10dif_crc_table[--index][*ptr++ ^ (u8)(crc >> 8)];
+> +		t ^= t10dif_crc_table[--index][*ptr++ ^ (u8)crc];
+> +		crc = t;
+> +		while (index > 0)
+> +			crc ^= t10dif_crc_table[--index][*ptr++];
+> +	}
+> +#endif
+> +	while (ptr < ptr_end)
+> +		crc = t10dif_crc_table[0][*ptr++ ^ (u8)(crc >> 8)] ^ (crc << 8);
+>   
+>   	return crc;
+>   }
+> 
+> 
 
-So it should be fixed in driver by similar approach taken in the
-following patches:
-	scsi: hpsa: fix selection of reply queue
-	scsi: megaraid_sas: fix selection of reply queue
+The attached patch is on top of the one above. I tested it in the user space
+where it is around 20% faster (with a full size table). Also tried swab16 but
+there was no gain from that (perhaps around a 2% loss).
 
-And the reason this issue won't be observed is that the following
-patches(merged to v4.17) may avoid this issue, but in theory, the issue
-won't be avoided completely by these patches:
+Doug Gilbert
 
-d3056812e7df genirq/affinity: Spread irq vectors among present CPUs as far as possible
-1a2d0914e23a genirq/affinity: Allow irq spreading from a given starting point
-b3e6aaa8d94d genirq/affinity: Move actual irq vector spreading into a helper function
-47778f33dcba genirq/affinity: Rename *node_to_possible_cpumask as *node_to_cpumask
-0211e12dd0a5 genirq/affinity: Don't return with empty affinity masks on error
+--------------5694094D72B1F23D082D2112
+Content-Type: text/x-patch;
+ name="crc_t10dif_on_jp.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="crc_t10dif_on_jp.patch"
 
-In short, this issue should have been fixed in upstream aacraid, and the idea
-is simple, use the current CPU id to retrieve the msix vector offset, this
-way will make sure that the msix vector can be mapped from one online
-CPU.
+diff --git a/crypto/crct10dif_common.c b/crypto/crct10dif_common.c
+index 4eb1c50c3688..bf5fab98aebb 100644
+--- a/crypto/crct10dif_common.c
++++ b/crypto/crct10dif_common.c
+@@ -591,23 +591,30 @@ __u16 crc_t10dif_generic(__u16 crc, const unsigned char *buffer, size_t len)
+ {
+ 	const u8 *ptr = (const __u8 *)buffer;
+ 	const u8 *ptr_end = ptr + len;
++	const u16 *flat_tbl = (const u16 *)t10dif_crc_table;
+ #if CONFIG_CRYPTO_CRCT10DIF_TABLE_SIZE > 1
+ 	size_t tablesize = 1 << (CONFIG_CRYPTO_CRCT10DIF_TABLE_SIZE - 1);
+ 	const u8 *ptr_last = ptr + (len / tablesize * tablesize);
+ 
++	/*
++	 * t10dif_crc_table is two dimensional but access as vector via
++	 * flat_tbl for speed. t[k][j] is equivalent to tt[k*num_cols + j].
++	 * num_cols in this case is 256 allowing tt[k<<8 + j]. Perhaps
++	 * there should be a compile time assert that num_cols==256 .
++	 */
+ 	while (ptr < ptr_last) {
+ 		size_t index = tablesize;
+ 		__u16 t;
+ 
+-		t = t10dif_crc_table[--index][*ptr++ ^ (u8)(crc >> 8)];
+-		t ^= t10dif_crc_table[--index][*ptr++ ^ (u8)crc];
++		t = flat_tbl[(--index << 8) + (*ptr++ ^ (u8)(crc >> 8))];
++		t ^= flat_tbl[(--index << 8) + (*ptr++ ^ (u8)crc)];
+ 		crc = t;
+ 		while (index > 0)
+-			crc ^= t10dif_crc_table[--index][*ptr++];
++			crc ^= flat_tbl[(--index << 8) + *ptr++];
+ 	}
+ #endif
+ 	while (ptr < ptr_end)
+-		crc = t10dif_crc_table[0][*ptr++ ^ (u8)(crc >> 8)] ^ (crc << 8);
++		crc = flat_tbl[*ptr++ ^ (u8)(crc >> 8)] ^ (crc << 8);
+ 
+ 	return crc;
+ }
 
-Thanks,
-Ming
+--------------5694094D72B1F23D082D2112--
