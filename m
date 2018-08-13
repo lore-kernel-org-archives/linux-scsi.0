@@ -1,117 +1,215 @@
-From: David Laight <David.Laight@ACULAB.COM>
-Subject: RE: [PATCH] Performance Improvement in CRC16 Calculations.
-Date: Mon, 13 Aug 2018 11:45:21 +0000
-Message-ID: <8508c92d70dc41ffb66557e13c988dca@AcuMS.aculab.com>
-References: <1533928331-21303-1-git-send-email-jeff.lien@wdc.com>
+From: Adrian Hunter <adrian.hunter@intel.com>
+Subject: Re: [PATCH V8 1/2] scsi: ufs: set the device reference clock setting
+Date: Mon, 13 Aug 2018 15:36:25 +0300
+Message-ID: <4efbbb33-95ec-c631-57d4-ca9898e6d475@intel.com>
+References: <1533805799-5831-1-git-send-email-sayalil@codeaurora.org>
+ <1533805799-5831-2-git-send-email-sayalil@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1533928331-21303-1-git-send-email-jeff.lien@wdc.com>
+In-Reply-To: <1533805799-5831-2-git-send-email-sayalil@codeaurora.org>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: 'Jeff Lien' <jeff.lien@wdc.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "herbert@gondor.apana.org.au" <herbert@gondor.apana.org.au>, "tim.c.chen@linux.intel.com" <tim.c.chen@linux.intel.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "david.darrington@wdc.com" <david.darrington@wdc.com>, "jeff.furlong@wdc.com" <jeff.furlong@wdc.com>
+To: Sayali Lokhande <sayalil@codeaurora.org>, subhashj@codeaurora.org, cang@codeaurora.org, vivek.gautam@codeaurora.org, rnayak@codeaurora.org, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, asutoshd@codeaurora.org, evgreen@chromium.org, riteshh@codeaurora.org
+Cc: linux-scsi@vger.kernel.org, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Jeff Lien
-> Sent: 10 August 2018 20:12
+On 09/08/18 12:09, Sayali Lokhande wrote:
+> From: Subhash Jadavani <subhashj@codeaurora.org>
 > 
-> This patch provides a performance improvement for the CRC16 calculations done in read/write
-> workloads using the T10 Type 1/2/3 guard field.  For example, today with sequential write
-> workloads (one thread/CPU of IO) we consume 100% of the CPU because of the CRC16 computation
-> bottleneck.  Today's block devices are considerably faster, but the CRC16 calculation prevents
-> folks from utilizing the throughput of such devices.  To speed up this calculation and expose
-> the block device throughput, we slice the old single byte for loop into a 16 byte for loop,
-> with a larger CRC table to match.  The result has shown 5x performance improvements on various
-> big endian and little endian systems running the 4.18.0 kernel version.
+> UFS host supplies the reference clock to UFS device and UFS device
+> specification allows host to provide one of the 4 frequencies (19.2 MHz,
+> 26 MHz, 38.4 MHz, 52 MHz) for reference clock. Host should set the
+> device reference clock frequency setting in the device based on what
+> frequency it is supplying to UFS device.
 > 
-> FIO Sequential Write, 64K Block Size, Queue Depth 64
-> BE Base Kernel:        bw=201.5 MiB/s
-> BE Modified CRC Calc:  bw=968.1 MiB/s
-> 4.80x performance improvement
-> 
-> LE Base Kernel:        bw=357 MiB/s
-> LE Modified CRC Calc:  bw=1964 MiB/s
-> 5.51x performance improvement
-> 
-> FIO Sequential Read, 64K Block Size, Queue Depth 64
-> BE Base Kernel:        bw=611.2 MiB/s
-> BE Modified CRC calc:  bw=684.9 MiB/s
-> 1.12x performance improvement
-> 
-> LE Base Kernel:        bw=797 MiB/s
-> LE Modified CRC Calc:  bw=2730 MiB/s
-> 3.42x performance improvement
-> 
-> Reviewed-by: Dave Darrington <david.darrington@wdc.com>
-> Reviewed-by: Jeff Furlong <jeff.furlong@wdc.com>
-> Signed-off-by: Jeff Lien <jeff.lien@wdc.com>
+> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+> Signed-off-by: Can Guo <cang@codeaurora.org>
+> Signed-off-by: Sayali Lokhande <sayalil@codeaurora.org>
 > ---
->  crypto/crct10dif_common.c | 605 +++++++++++++++++++++++++++++++++++++++++++---
->  1 file changed, 569 insertions(+), 36 deletions(-)
+>  drivers/scsi/ufs/ufs.h           | 21 ++++++++++
+>  drivers/scsi/ufs/ufshcd-pltfrm.c |  2 +
+>  drivers/scsi/ufs/ufshcd.c        | 89 ++++++++++++++++++++++++++++++++++++++++
+>  drivers/scsi/ufs/ufshcd.h        |  2 +
+>  4 files changed, 114 insertions(+)
 > 
-> diff --git a/crypto/crct10dif_common.c b/crypto/crct10dif_common.c
-> index b2fab36..40e1d6c 100644
-> --- a/crypto/crct10dif_common.c
-> +++ b/crypto/crct10dif_common.c
-> @@ -32,47 +32,580 @@
->   * x^16 + x^15 + x^11 + x^9 + x^8 + x^7 + x^5 + x^4 + x^2 + x + 1
->   * gt: 0x8bb7
->   */
-> -static const __u16 t10_dif_crc_table[256] = {
-...
-> +	}
+> diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+> index 14e5bf7..c555ac0 100644
+> --- a/drivers/scsi/ufs/ufs.h
+> +++ b/drivers/scsi/ufs/ufs.h
+> @@ -378,6 +378,27 @@ enum query_opcode {
+>  	UPIU_QUERY_OPCODE_TOGGLE_FLAG	= 0x8,
 >  };
-> 
->  __u16 crc_t10dif_generic(__u16 crc, const unsigned char *buffer, size_t len)
+>  
+> +/* bRefClkFreq attribute values */
+> +enum ref_clk_freq_hz {
+> +	REF_CLK_FREQ_19_2_MHZ	= 19200000,
+> +	REF_CLK_FREQ_26_MHZ	= 26000000,
+> +	REF_CLK_FREQ_38_4_MHZ	= 38400000,
+> +	REF_CLK_FREQ_52_MHZ	= 52000000,
+> +};
+> +
+> +enum bref_clk_freq {
+> +	bREF_CLK_FREQ_0, /* 19.2 MHz */
+> +	bREF_CLK_FREQ_1, /* 26 MHz */
+> +	bREF_CLK_FREQ_2, /* 38.4 MHz */
+> +	bREF_CLK_FREQ_3, /* 52 MHz */
+> +	bREF_CLK_FREQ_INVAL,
+> +};
+> +
+> +struct ufs_ref_clk {
+> +	enum ref_clk_freq_hz freq_hz;
+> +	enum bref_clk_freq val;
+> +};
+> +
+>  /* Query response result code */
+>  enum {
+>  	QUERY_RESULT_SUCCESS                    = 0x00,
+> diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
+> index e82bde0..0953563 100644
+> --- a/drivers/scsi/ufs/ufshcd-pltfrm.c
+> +++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
+> @@ -343,6 +343,8 @@ int ufshcd_pltfrm_init(struct platform_device *pdev,
+>  	pm_runtime_set_active(&pdev->dev);
+>  	pm_runtime_enable(&pdev->dev);
+>  
+> +	ufshcd_parse_dev_ref_clk_freq(hba);
+> +
+>  	ufshcd_init_lanes_per_dir(hba);
+>  
+>  	err = ufshcd_init(hba, mmio_base, irq);
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index c5b1bf1..0cbdde7 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -6296,6 +6296,89 @@ static void ufshcd_def_desc_sizes(struct ufs_hba *hba)
+>  	hba->desc_size.hlth_desc = QUERY_DESC_HEALTH_DEF_SIZE;
+>  }
+>  
+> +static struct ufs_ref_clk ufs_ref_clk_freqs[] = {
+> +	{REF_CLK_FREQ_19_2_MHZ, bREF_CLK_FREQ_0},
+> +	{REF_CLK_FREQ_26_MHZ, bREF_CLK_FREQ_1},
+> +	{REF_CLK_FREQ_38_4_MHZ, bREF_CLK_FREQ_2},
+> +	{REF_CLK_FREQ_52_MHZ, bREF_CLK_FREQ_3},
+> +};
+> +
+> +static inline enum bref_clk_freq
+> +ufs_get_bref_clk_for_ref_clk_freq_hz(u32 freq)
+> +{
+> +	enum bref_clk_freq val;
+> +
+> +	for (val = bREF_CLK_FREQ_0; val <= bREF_CLK_FREQ_3; val++)
+> +		if (ufs_ref_clk_freqs[val].freq_hz == freq)
+> +			return val;
+> +
+> +	/* if no match found, return invalid*/
+> +	return bREF_CLK_FREQ_INVAL;
+> +}
+> +
+> +void ufshcd_parse_dev_ref_clk_freq(struct ufs_hba *hba)
+> +{
+> +	struct device *dev = hba->dev;
+> +	struct device_node *np = dev->of_node;
+> +	struct clk *refclk = NULL;
+> +	u32 freq = 0;
+> +
+> +	if (!np)
+> +		return;
+> +
+> +	hba->dev_ref_clk_freq = bREF_CLK_FREQ_INVAL;
+> +
+> +	refclk = of_clk_get_by_name(np, "ref_clk");
+
+What about users that don't use DT?
+
+> +	if (!refclk)
+> +		return;
+> +
+> +	freq = clk_get_rate(refclk);
+> +	if (freq > REF_CLK_FREQ_52_MHZ) {
+> +		dev_err(hba->dev,
+> +		"%s: invalid ref_clk setting = %d\n",
+> +		__func__, freq);
+> +		return;
+> +	}
+> +
+> +	hba->dev_ref_clk_freq =
+> +		ufs_get_bref_clk_for_ref_clk_freq_hz(freq);
+> +}
+> +
+> +static int ufshcd_set_dev_ref_clk(struct ufs_hba *hba)
+> +{
+> +	int err = 0;
+> +	int ref_clk = -1;
+> +
+> +	err = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_READ_ATTR,
+> +			QUERY_ATTR_IDN_REF_CLK_FREQ, 0, 0, &ref_clk);
+> +
+> +	if (err) {
+> +		dev_err(hba->dev, "%s: failed reading bRefClkFreq. err = %d\n",
+> +			 __func__, err);
+> +		goto out;
+> +	}
+> +
+> +	if (ref_clk == hba->dev_ref_clk_freq)
+> +		goto out; /* nothing to update */
+> +
+> +	err = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
+> +			QUERY_ATTR_IDN_REF_CLK_FREQ, 0, 0,
+> +			&hba->dev_ref_clk_freq);
+> +
+> +	if (err)
+> +		dev_err(hba->dev, "%s: bRefClkFreq setting to %d Hz failed\n",
+> +		__func__, ufs_ref_clk_freqs[hba->dev_ref_clk_freq].freq_hz);
+> +	/*
+> +	 * It is good to print this out here to debug any later failures
+> +	 * related to gear switch.
+> +	 */
+> +	dev_dbg(hba->dev, "%s: bRefClkFreq setting to %d Hz succeeded\n",
+> +		__func__, ufs_ref_clk_freqs[hba->dev_ref_clk_freq].freq_hz);
+> +
+> +out:
+> +	return err;
+> +}
+> +
+>  /**
+>   * ufshcd_probe_hba - probe hba to detect device and initialize
+>   * @hba: per-adapter instance
+> @@ -6361,6 +6444,12 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
+>  			"%s: Failed getting max supported power mode\n",
+>  			__func__);
+>  	} else {
+> +		/*
+> +		 * Set the right value to bRefClkFreq before attempting to
+> +		 * switch to HS gears.
+> +		 */
+> +		if (hba->dev_ref_clk_freq < bREF_CLK_FREQ_INVAL)
+
+hba->dev_ref_clk_freq does not always get initialized
+
+> +			ufshcd_set_dev_ref_clk(hba);
+>  		ret = ufshcd_config_pwr_mode(hba, &hba->max_pwr_info.info);
+>  		if (ret) {
+>  			dev_err(hba->dev, "%s: Failed setting power mode, err = %d\n",
+> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+> index 8110dcd..101a75c 100644
+> --- a/drivers/scsi/ufs/ufshcd.h
+> +++ b/drivers/scsi/ufs/ufshcd.h
+> @@ -548,6 +548,7 @@ struct ufs_hba {
+>  	void *priv;
+>  	unsigned int irq;
+>  	bool is_irq_enabled;
+> +	u32 dev_ref_clk_freq;
+>  
+>  	/* Interrupt aggregation support is broken */
+>  	#define UFSHCD_QUIRK_BROKEN_INTR_AGGR			0x1
+> @@ -746,6 +747,7 @@ static inline void ufshcd_rmwl(struct ufs_hba *hba, u32 mask, u32 val, u32 reg)
+>  int ufshcd_wait_for_register(struct ufs_hba *hba, u32 reg, u32 mask,
+>  				u32 val, unsigned long interval_us,
+>  				unsigned long timeout_ms, bool can_sleep);
+> +void ufshcd_parse_dev_ref_clk_freq(struct ufs_hba *hba);
+>  
+>  static inline void check_upiu_size(void)
 >  {
-> -	unsigned int i;
-> +	const __u8 *i = (const __u8 *)buffer;
-> +	const __u8 *i_end = i + len;
-> +	const __u8 *i_last16 = i + (len / 16 * 16);
 > 
-> -	for (i = 0 ; i < len ; i++)
-> -		crc = (crc << 8) ^ t10_dif_crc_table[((crc >> 8) ^ buffer[i]) & 0xff];
-> +	for (; i < i_last16; i += 16) {
-> +		crc = t10_dif_crc_table[15][i[0] ^ (__u8)(crc >>  8)] ^
-> +		t10_dif_crc_table[14][i[1] ^ (__u8)(crc >>  0)] ^
-> +		t10_dif_crc_table[13][i[2]] ^
-> +		t10_dif_crc_table[12][i[3]] ^
-> +		t10_dif_crc_table[11][i[4]] ^
-> +		t10_dif_crc_table[10][i[5]] ^
-> +		t10_dif_crc_table[9][i[6]] ^
-> +		t10_dif_crc_table[8][i[7]] ^
-> +		t10_dif_crc_table[7][i[8]] ^
-> +		t10_dif_crc_table[6][i[9]] ^
-> +		t10_dif_crc_table[5][i[10]] ^
-> +		t10_dif_crc_table[4][i[11]] ^
-> +		t10_dif_crc_table[3][i[12]] ^
-> +		t10_dif_crc_table[2][i[13]] ^
-> +		t10_dif_crc_table[1][i[14]] ^
-> +		t10_dif_crc_table[0][i[15]];
-...
-
-I suspect that all the gain comes from a slight relaxation of the
-register dependency chain and the loop unrolling.
-
-A more interesting version would be to generate the lookup table
-for a byte followed by 3 zero bytes.
-You could then run four separate register dependency chains using the
-same 256 entry lookup table.
-A little bit of work at the end of the buffer should sort it all out.
-
-There is also the lookup table free version:
-uint32_t
-crc_step(uint32_t crc, uint32_t byte_val)
-{
-    uint32_t t = crc ^ (byte_val & 0xff);
-    t = (t ^ t << 4) & 0xff;
-    return crc >> 8 ^ t << 8 ^ t << 3 ^ t >> 4;
-}
-
-	David
-
--
-Registered Address Lakeside, Bramley Road, Mount Farm, Milton Keynes, MK1 1PT, UK
-Registration No: 1397386 (Wales)
