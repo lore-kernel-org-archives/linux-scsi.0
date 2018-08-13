@@ -1,103 +1,41 @@
-From: Masahiro Yamada <yamada.masahiro@socionext.com>
-Subject: Re: [PATCH] Coccinelle: doubletest: reduce side effect false positives
-Date: Mon, 13 Aug 2018 16:29:42 +0900
-Message-ID: <CAK7LNATeY08JV9kEm9M9O5O1WkxoxKFWTd+BLXe0_pjBs92fcw@mail.gmail.com>
-References: <1533313931-3639-1-git-send-email-Julia.Lawall@lip6.fr>
+From: zhong jiang <zhongjiang@huawei.com>
+Subject: [PATCH 2/2] scsi:qla2xxx: Use PTR_ERR_OR_ZERO to replace the open code
+Date: Mon, 13 Aug 2018 19:10:40 +0800
+Message-ID: <1534158640-24353-3-git-send-email-zhongjiang@huawei.com>
+References: <1534158640-24353-1-git-send-email-zhongjiang@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1533313931-3639-1-git-send-email-Julia.Lawall@lip6.fr>
+In-Reply-To: <1534158640-24353-1-git-send-email-zhongjiang@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Julia Lawall <Julia.Lawall@lip6.fr>
-Cc: kernel-janitors@vger.kernel.org, Gilles Muller <Gilles.Muller@lip6.fr>, Nicolas Palix <nicolas.palix@imag.fr>, Michal Marek <michal.lkml@markovi.net>, cocci@systeme.lip6.fr, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andy Shevchenko <andy.shevchenko@gmail.com>, Finn Thain <fthain@telegraphics.com.au>, zhong jiang <zhongjiang@huawei.com>, Michael Schmitz <schmitzmic@gmail.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, John Garry <john.garry@huawei.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: john.garry@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-2018-08-04 1:32 GMT+09:00 Julia Lawall <Julia.Lawall@lip6.fr>:
-> Ensure that the cited expression is not a function call or an
-> assignment to reduce the chance of false positives.
->
-> Slightly modify the warning message to indicate another source
-> of false positves.
->
-> Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
->
+PTR_ERR_OR_ZERO has implemented the if(IS_ERR(...)) + PTR_ERR, So
+just replace them rather than duplicating its implement.
 
+Signed-off-by: zhong jiang <zhongjiang@huawei.com>
+---
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-Applied to linux-kbuild. Thanks!
-
-
-(Please send a reminder
-if there are more coccinelle patches I missed.)
-
-
-
-
-> ---
->  scripts/coccinelle/tests/doubletest.cocci |   34 ++++++++++++++++++++++--------
->  1 file changed, 26 insertions(+), 8 deletions(-)
->
-> diff --git a/scripts/coccinelle/tests/doubletest.cocci b/scripts/coccinelle/tests/doubletest.cocci
-> index 78d74c2..7af2ce7 100644
-> --- a/scripts/coccinelle/tests/doubletest.cocci
-> +++ b/scripts/coccinelle/tests/doubletest.cocci
-> @@ -1,6 +1,7 @@
->  /// Find &&/|| operations that include the same argument more than once
-> -//# A common source of false positives is when the argument performs a side
-> -//# effect.
-> +//# A common source of false positives is when the expression, or
-> +//# another expresssion in the same && or || operation, performs a
-> +//# side effect.
->  ///
->  // Confidence: Moderate
->  // Copyright: (C) 2010 Nicolas Palix, DIKU.  GPLv2.
-> @@ -20,20 +21,37 @@ position p;
->  @@
->
->  (
-> -* E@p
-> -  || ... || E
-> + E@p || ... || E
->  |
-> -* E@p
-> -  && ... && E
-> + E@p && ... && E
->  )
->
-> -@script:python depends on org@
-> +@bad@
-> +expression r.E,e1,e2,fn;
-> +position r.p;
-> +assignment operator op;
-> +@@
-> +
-> +(
-> +E@p
-> +&
-> + <+... \(fn(...)\|e1 op e2\|e1++\|e1--\|++e1\|--e1\) ...+>
-> +)
-> +
-> +@depends on context && !bad@
-> +expression r.E;
-> +position r.p;
-> +@@
-> +
-> +*E@p
-> +
-> +@script:python depends on org && !bad@
->  p << r.p;
->  @@
->
->  cocci.print_main("duplicated argument to && or ||",p)
->
-> -@script:python depends on report@
-> +@script:python depends on report && !bad@
->  p << r.p;
->  @@
->
->
-
-
-
+diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+index e03d12a..616f139 100644
+--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
++++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+@@ -1542,10 +1542,8 @@ static int tcm_qla2xxx_check_initiator_node_acl(
+ 				       sizeof(struct qla_tgt_cmd),
+ 				       TARGET_PROT_ALL, port_name,
+ 				       qlat_sess, tcm_qla2xxx_session_cb);
+-	if (IS_ERR(se_sess))
+-		return PTR_ERR(se_sess);
+-
+-	return 0;
++	
++	return PTR_ERR_OR_ZERO(se_sess);
+ }
+ 
+ static void tcm_qla2xxx_update_sess(struct fc_port *sess, port_id_t s_id,
 -- 
-Best Regards
-Masahiro Yamada
+1.7.12.4
