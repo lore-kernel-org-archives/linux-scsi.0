@@ -1,237 +1,94 @@
-From: Adrian Hunter <adrian.hunter@intel.com>
-Subject: Re: [PATCH V8 1/2] scsi: ufs: set the device reference clock setting
-Date: Thu, 16 Aug 2018 14:28:36 +0300
-Message-ID: <5b30fb6c-0cb2-f0be-3df6-918963db6369@intel.com>
-References: <1533805799-5831-1-git-send-email-sayalil@codeaurora.org>
- <1533805799-5831-2-git-send-email-sayalil@codeaurora.org>
- <4efbbb33-95ec-c631-57d4-ca9898e6d475@intel.com>
- <1756f41e-6280-8a14-bc83-e4dab8fa4d9c@codeaurora.org>
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] scsi: aacraid: remove unused variables dev and cpu
+Date: Thu, 16 Aug 2018 14:33:20 +0100
+Message-ID: <20180816133320.19682-1-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1756f41e-6280-8a14-bc83-e4dab8fa4d9c@codeaurora.org>
-Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Sayali Lokhande <sayalil@codeaurora.org>, subhashj@codeaurora.org, cang@codeaurora.org, vivek.gautam@codeaurora.org, rnayak@codeaurora.org, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, asutoshd@codeaurora.org, evgreen@chromium.org, riteshh@codeaurora.org
-Cc: linux-scsi@vger.kernel.org, open list <linux-kernel@vger.kernel.org>
+To: Adaptec OEM Raid Solutions <aacraid@microsemi.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 16/08/18 13:44, Sayali Lokhande wrote:
-> 
-> On 8/13/2018 6:06 PM, Adrian Hunter wrote:
->> On 09/08/18 12:09, Sayali Lokhande wrote:
->>> From: Subhash Jadavani <subhashj@codeaurora.org>
->>>
->>> UFS host supplies the reference clock to UFS device and UFS device
->>> specification allows host to provide one of the 4 frequencies (19.2 MHz,
->>> 26 MHz, 38.4 MHz, 52 MHz) for reference clock. Host should set the
->>> device reference clock frequency setting in the device based on what
->>> frequency it is supplying to UFS device.
->>>
->>> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
->>> Signed-off-by: Can Guo <cang@codeaurora.org>
->>> Signed-off-by: Sayali Lokhande <sayalil@codeaurora.org>
->>> ---
->>>   drivers/scsi/ufs/ufs.h           | 21 ++++++++++
->>>   drivers/scsi/ufs/ufshcd-pltfrm.c |  2 +
->>>   drivers/scsi/ufs/ufshcd.c        | 89
->>> ++++++++++++++++++++++++++++++++++++++++
->>>   drivers/scsi/ufs/ufshcd.h        |  2 +
->>>   4 files changed, 114 insertions(+)
->>>
->>> diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
->>> index 14e5bf7..c555ac0 100644
->>> --- a/drivers/scsi/ufs/ufs.h
->>> +++ b/drivers/scsi/ufs/ufs.h
->>> @@ -378,6 +378,27 @@ enum query_opcode {
->>>       UPIU_QUERY_OPCODE_TOGGLE_FLAG    = 0x8,
->>>   };
->>>   +/* bRefClkFreq attribute values */
->>> +enum ref_clk_freq_hz {
->>> +    REF_CLK_FREQ_19_2_MHZ    = 19200000,
->>> +    REF_CLK_FREQ_26_MHZ    = 26000000,
->>> +    REF_CLK_FREQ_38_4_MHZ    = 38400000,
->>> +    REF_CLK_FREQ_52_MHZ    = 52000000,
->>> +};
->>> +
->>> +enum bref_clk_freq {
->>> +    bREF_CLK_FREQ_0, /* 19.2 MHz */
->>> +    bREF_CLK_FREQ_1, /* 26 MHz */
->>> +    bREF_CLK_FREQ_2, /* 38.4 MHz */
->>> +    bREF_CLK_FREQ_3, /* 52 MHz */
->>> +    bREF_CLK_FREQ_INVAL,
->>> +};
->>> +
->>> +struct ufs_ref_clk {
->>> +    enum ref_clk_freq_hz freq_hz;
->>> +    enum bref_clk_freq val;
->>> +};
->>> +
->>>   /* Query response result code */
->>>   enum {
->>>       QUERY_RESULT_SUCCESS                    = 0x00,
->>> diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c
->>> b/drivers/scsi/ufs/ufshcd-pltfrm.c
->>> index e82bde0..0953563 100644
->>> --- a/drivers/scsi/ufs/ufshcd-pltfrm.c
->>> +++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
->>> @@ -343,6 +343,8 @@ int ufshcd_pltfrm_init(struct platform_device *pdev,
->>>       pm_runtime_set_active(&pdev->dev);
->>>       pm_runtime_enable(&pdev->dev);
->>>   +    ufshcd_parse_dev_ref_clk_freq(hba);
->>> +
->>>       ufshcd_init_lanes_per_dir(hba);
->>>         err = ufshcd_init(hba, mmio_base, irq);
->>> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
->>> index c5b1bf1..0cbdde7 100644
->>> --- a/drivers/scsi/ufs/ufshcd.c
->>> +++ b/drivers/scsi/ufs/ufshcd.c
->>> @@ -6296,6 +6296,89 @@ static void ufshcd_def_desc_sizes(struct ufs_hba
->>> *hba)
->>>       hba->desc_size.hlth_desc = QUERY_DESC_HEALTH_DEF_SIZE;
->>>   }
->>>   +static struct ufs_ref_clk ufs_ref_clk_freqs[] = {
->>> +    {REF_CLK_FREQ_19_2_MHZ, bREF_CLK_FREQ_0},
->>> +    {REF_CLK_FREQ_26_MHZ, bREF_CLK_FREQ_1},
->>> +    {REF_CLK_FREQ_38_4_MHZ, bREF_CLK_FREQ_2},
->>> +    {REF_CLK_FREQ_52_MHZ, bREF_CLK_FREQ_3},
->>> +};
->>> +
->>> +static inline enum bref_clk_freq
->>> +ufs_get_bref_clk_for_ref_clk_freq_hz(u32 freq)
->>> +{
->>> +    enum bref_clk_freq val;
->>> +
->>> +    for (val = bREF_CLK_FREQ_0; val <= bREF_CLK_FREQ_3; val++)
->>> +        if (ufs_ref_clk_freqs[val].freq_hz == freq)
->>> +            return val;
->>> +
->>> +    /* if no match found, return invalid*/
->>> +    return bREF_CLK_FREQ_INVAL;
->>> +}
->>> +
->>> +void ufshcd_parse_dev_ref_clk_freq(struct ufs_hba *hba)
->>> +{
->>> +    struct device *dev = hba->dev;
->>> +    struct device_node *np = dev->of_node;
->>> +    struct clk *refclk = NULL;
->>> +    u32 freq = 0;
->>> +
->>> +    if (!np)
->>> +        return;
->>> +
->>> +    hba->dev_ref_clk_freq = bREF_CLK_FREQ_INVAL;
->>> +
->>> +    refclk = of_clk_get_by_name(np, "ref_clk");
->> What about users that don't use DT?
-> If there is no DT entry present for ref_clk, we simply set to
-> bREF_CLK_FREQ_INVAL and thus ref clk will not be changed. It will maintain
-> the Manufacturer default value whatever is set by the ufs device vendor.
+From: Colin Ian King <colin.king@canonical.com>
 
-I meant there is no way for non-DT uses to specify the ref_clk.
+Variables dev and cpu are not being used and are redundant and hence can
+be removed.
 
->>
->>> +    if (!refclk)
->>> +        return;
->>> +
->>> +    freq = clk_get_rate(refclk);
->>> +    if (freq > REF_CLK_FREQ_52_MHZ) {
->>> +        dev_err(hba->dev,
->>> +        "%s: invalid ref_clk setting = %d\n",
->>> +        __func__, freq);
->>> +        return;
->>> +    }
->>> +
->>> +    hba->dev_ref_clk_freq =
->>> +        ufs_get_bref_clk_for_ref_clk_freq_hz(freq);
->>> +}
->>> +
->>> +static int ufshcd_set_dev_ref_clk(struct ufs_hba *hba)
->>> +{
->>> +    int err = 0;
->>> +    int ref_clk = -1;
->>> +
->>> +    err = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_READ_ATTR,
->>> +            QUERY_ATTR_IDN_REF_CLK_FREQ, 0, 0, &ref_clk);
->>> +
->>> +    if (err) {
->>> +        dev_err(hba->dev, "%s: failed reading bRefClkFreq. err = %d\n",
->>> +             __func__, err);
->>> +        goto out;
->>> +    }
->>> +
->>> +    if (ref_clk == hba->dev_ref_clk_freq)
->>> +        goto out; /* nothing to update */
->>> +
->>> +    err = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
->>> +            QUERY_ATTR_IDN_REF_CLK_FREQ, 0, 0,
->>> +            &hba->dev_ref_clk_freq);
->>> +
->>> +    if (err)
->>> +        dev_err(hba->dev, "%s: bRefClkFreq setting to %d Hz failed\n",
->>> +        __func__, ufs_ref_clk_freqs[hba->dev_ref_clk_freq].freq_hz);
->>> +    /*
->>> +     * It is good to print this out here to debug any later failures
->>> +     * related to gear switch.
->>> +     */
->>> +    dev_dbg(hba->dev, "%s: bRefClkFreq setting to %d Hz succeeded\n",
->>> +        __func__, ufs_ref_clk_freqs[hba->dev_ref_clk_freq].freq_hz);
->>> +
->>> +out:
->>> +    return err;
->>> +}
->>> +
->>>   /**
->>>    * ufshcd_probe_hba - probe hba to detect device and initialize
->>>    * @hba: per-adapter instance
->>> @@ -6361,6 +6444,12 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
->>>               "%s: Failed getting max supported power mode\n",
->>>               __func__);
->>>       } else {
->>> +        /*
->>> +         * Set the right value to bRefClkFreq before attempting to
->>> +         * switch to HS gears.
->>> +         */
->>> +        if (hba->dev_ref_clk_freq < bREF_CLK_FREQ_INVAL)
->> hba->dev_ref_clk_freq does not always get initialized
-> In ufshcd_parse_dev_ref_clk_freq() function we are initializing the
-> hba->dev_ref_clk_freqto inval as default.
+Cleans up clang warnings:
+warning: variable 'dev' set but not used [-Wunused-but-set-variable]
+warning: variable 'cpu' set but not used [-Wunused-but-set-variable]
 
-Not if there is no DT
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/scsi/aacraid/aachba.c  | 7 -------
+ drivers/scsi/aacraid/commsup.c | 2 --
+ 2 files changed, 9 deletions(-)
 
->                                           This parse function will be always
-> called in init
-
-Not if the driver isn't ufshcd-pltfrm
-
->                and thus dev_ref_clk_freq should always get initialized to
-> called in init and thus dev_ref_clk_freq should always get initialized to
-> defult inval or valid setting if found (in between 19.2 MHz to 52MHz).
->>
->>> +            ufshcd_set_dev_ref_clk(hba);
->>>           ret = ufshcd_config_pwr_mode(hba, &hba->max_pwr_info.info);
->>>           if (ret) {
->>>               dev_err(hba->dev, "%s: Failed setting power mode, err = %d\n",
->>> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
->>> index 8110dcd..101a75c 100644
->>> --- a/drivers/scsi/ufs/ufshcd.h
->>> +++ b/drivers/scsi/ufs/ufshcd.h
->>> @@ -548,6 +548,7 @@ struct ufs_hba {
->>>       void *priv;
->>>       unsigned int irq;
->>>       bool is_irq_enabled;
->>> +    u32 dev_ref_clk_freq;
->>>         /* Interrupt aggregation support is broken */
->>>       #define UFSHCD_QUIRK_BROKEN_INTR_AGGR            0x1
->>> @@ -746,6 +747,7 @@ static inline void ufshcd_rmwl(struct ufs_hba *hba,
->>> u32 mask, u32 val, u32 reg)
->>>   int ufshcd_wait_for_register(struct ufs_hba *hba, u32 reg, u32 mask,
->>>                   u32 val, unsigned long interval_us,
->>>                   unsigned long timeout_ms, bool can_sleep);
->>> +void ufshcd_parse_dev_ref_clk_freq(struct ufs_hba *hba);
->>>     static inline void check_upiu_size(void)
->>>   {
->>>
-> 
-> 
+diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
+index 6e356325d8d9..bd7f352c28f3 100644
+--- a/drivers/scsi/aacraid/aachba.c
++++ b/drivers/scsi/aacraid/aachba.c
+@@ -3480,7 +3480,6 @@ int aac_dev_ioctl(struct aac_dev *dev, int cmd, void __user *arg)
+ 
+ static void aac_srb_callback(void *context, struct fib * fibptr)
+ {
+-	struct aac_dev *dev;
+ 	struct aac_srb_reply *srbreply;
+ 	struct scsi_cmnd *scsicmd;
+ 
+@@ -3491,8 +3490,6 @@ static void aac_srb_callback(void *context, struct fib * fibptr)
+ 
+ 	BUG_ON(fibptr == NULL);
+ 
+-	dev = fibptr->dev;
+-
+ 	srbreply = (struct aac_srb_reply *) fib_data(fibptr);
+ 
+ 	scsicmd->sense_buffer[0] = '\0';  /* Initialize sense valid flag to false */
+@@ -3921,13 +3918,11 @@ static int aac_send_hba_fib(struct scsi_cmnd *scsicmd)
+ 
+ static long aac_build_sg(struct scsi_cmnd *scsicmd, struct sgmap *psg)
+ {
+-	struct aac_dev *dev;
+ 	unsigned long byte_count = 0;
+ 	int nseg;
+ 	struct scatterlist *sg;
+ 	int i;
+ 
+-	dev = (struct aac_dev *)scsicmd->device->host->hostdata;
+ 	// Get rid of old data
+ 	psg->count = 0;
+ 	psg->sg[0].addr = 0;
+@@ -3963,14 +3958,12 @@ static long aac_build_sg(struct scsi_cmnd *scsicmd, struct sgmap *psg)
+ 
+ static long aac_build_sg64(struct scsi_cmnd *scsicmd, struct sgmap64 *psg)
+ {
+-	struct aac_dev *dev;
+ 	unsigned long byte_count = 0;
+ 	u64 addr;
+ 	int nseg;
+ 	struct scatterlist *sg;
+ 	int i;
+ 
+-	dev = (struct aac_dev *)scsicmd->device->host->hostdata;
+ 	// Get rid of old data
+ 	psg->count = 0;
+ 	psg->sg[0].addr[0] = 0;
+diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
+index 6e1b022a823d..1e77d96a18f2 100644
+--- a/drivers/scsi/aacraid/commsup.c
++++ b/drivers/scsi/aacraid/commsup.c
+@@ -2586,9 +2586,7 @@ int aac_acquire_irq(struct aac_dev *dev)
+ void aac_free_irq(struct aac_dev *dev)
+ {
+ 	int i;
+-	int cpu;
+ 
+-	cpu = cpumask_first(cpu_online_mask);
+ 	if (aac_is_src(dev)) {
+ 		if (dev->max_msix > 1) {
+ 			for (i = 0; i < dev->max_msix; i++)
+-- 
+2.17.1
