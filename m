@@ -1,94 +1,118 @@
-From: Colin King <colin.king@canonical.com>
-Subject: [PATCH] scsi: aacraid: remove unused variables dev and cpu
-Date: Thu, 16 Aug 2018 14:33:20 +0100
-Message-ID: <20180816133320.19682-1-colin.king@canonical.com>
+From: Jeffrey Lien <Jeff.Lien@wdc.com>
+Subject: RE: [PATCH] Performance Improvement in CRC16 Calculations.
+Date: Thu, 16 Aug 2018 14:02:41 +0000
+Message-ID: <SN1PR04MB1824A5944E0428AC84B62886EA3E0@SN1PR04MB1824.namprd04.prod.outlook.com>
+References: <1533928331-21303-1-git-send-email-jeff.lien@wdc.com>
+ <20180810201601.GA80850@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20180810201601.GA80850@gmail.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Adaptec OEM Raid Solutions <aacraid@microsemi.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Eric Biggers <ebiggers@kernel.org>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "herbert@gondor.apana.org.au" <herbert@gondor.apana.org.au>, "tim.c.chen@linux.intel.com" <tim.c.chen@linux.intel.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, David Darrington <david.darrington@wdc.com>, Jeff Furlong <jeff.furlong@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Colin Ian King <colin.king@canonical.com>
+Eric,
+We did not test the slice by 4 or 8 tables.  I'm not sure of  the value of =
+doing that since the slice by 16 will provide the best performance gain.   =
+If I'm missing anything here, please let me know.  =20
 
-Variables dev and cpu are not being used and are redundant and hence can
-be removed.
+I'm working on a new version of the patch based on the feedback from others=
+ and will also change the pointer variables to start with p and fix the ind=
+enting you mentioned below in the new version of the patch. =20
 
-Cleans up clang warnings:
-warning: variable 'dev' set but not used [-Wunused-but-set-variable]
-warning: variable 'cpu' set but not used [-Wunused-but-set-variable]
+Thanks
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/scsi/aacraid/aachba.c  | 7 -------
- drivers/scsi/aacraid/commsup.c | 2 --
- 2 files changed, 9 deletions(-)
+Jeff Lien
 
-diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
-index 6e356325d8d9..bd7f352c28f3 100644
---- a/drivers/scsi/aacraid/aachba.c
-+++ b/drivers/scsi/aacraid/aachba.c
-@@ -3480,7 +3480,6 @@ int aac_dev_ioctl(struct aac_dev *dev, int cmd, void __user *arg)
- 
- static void aac_srb_callback(void *context, struct fib * fibptr)
- {
--	struct aac_dev *dev;
- 	struct aac_srb_reply *srbreply;
- 	struct scsi_cmnd *scsicmd;
- 
-@@ -3491,8 +3490,6 @@ static void aac_srb_callback(void *context, struct fib * fibptr)
- 
- 	BUG_ON(fibptr == NULL);
- 
--	dev = fibptr->dev;
--
- 	srbreply = (struct aac_srb_reply *) fib_data(fibptr);
- 
- 	scsicmd->sense_buffer[0] = '\0';  /* Initialize sense valid flag to false */
-@@ -3921,13 +3918,11 @@ static int aac_send_hba_fib(struct scsi_cmnd *scsicmd)
- 
- static long aac_build_sg(struct scsi_cmnd *scsicmd, struct sgmap *psg)
- {
--	struct aac_dev *dev;
- 	unsigned long byte_count = 0;
- 	int nseg;
- 	struct scatterlist *sg;
- 	int i;
- 
--	dev = (struct aac_dev *)scsicmd->device->host->hostdata;
- 	// Get rid of old data
- 	psg->count = 0;
- 	psg->sg[0].addr = 0;
-@@ -3963,14 +3958,12 @@ static long aac_build_sg(struct scsi_cmnd *scsicmd, struct sgmap *psg)
- 
- static long aac_build_sg64(struct scsi_cmnd *scsicmd, struct sgmap64 *psg)
- {
--	struct aac_dev *dev;
- 	unsigned long byte_count = 0;
- 	u64 addr;
- 	int nseg;
- 	struct scatterlist *sg;
- 	int i;
- 
--	dev = (struct aac_dev *)scsicmd->device->host->hostdata;
- 	// Get rid of old data
- 	psg->count = 0;
- 	psg->sg[0].addr[0] = 0;
-diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
-index 6e1b022a823d..1e77d96a18f2 100644
---- a/drivers/scsi/aacraid/commsup.c
-+++ b/drivers/scsi/aacraid/commsup.c
-@@ -2586,9 +2586,7 @@ int aac_acquire_irq(struct aac_dev *dev)
- void aac_free_irq(struct aac_dev *dev)
- {
- 	int i;
--	int cpu;
- 
--	cpu = cpumask_first(cpu_online_mask);
- 	if (aac_is_src(dev)) {
- 		if (dev->max_msix > 1) {
- 			for (i = 0; i < dev->max_msix; i++)
--- 
-2.17.1
+-----Original Message-----
+From: Eric Biggers [mailto:ebiggers@kernel.org]=20
+Sent: Friday, August 10, 2018 3:16 PM
+To: Jeffrey Lien <Jeff.Lien@wdc.com>
+Cc: linux-kernel@vger.kernel.org; linux-crypto@vger.kernel.org; linux-block=
+@vger.kernel.org; linux-scsi@vger.kernel.org; herbert@gondor.apana.org.au; =
+tim.c.chen@linux.intel.com; martin.petersen@oracle.com; David Darrington <d=
+avid.darrington@wdc.com>; Jeff Furlong <jeff.furlong@wdc.com>
+Subject: Re: [PATCH] Performance Improvement in CRC16 Calculations.
+
+On Fri, Aug 10, 2018 at 02:12:11PM -0500, Jeff Lien wrote:
+> This patch provides a performance improvement for the CRC16=20
+> calculations done in read/write workloads using the T10 Type 1/2/3=20
+> guard field.  For example, today with sequential write workloads (one=20
+> thread/CPU of IO) we consume 100% of the CPU because of the CRC16=20
+> computation bottleneck.  Today's block devices are considerably=20
+> faster, but the CRC16 calculation prevents folks from utilizing the=20
+> throughput of such devices.  To speed up this calculation and expose=20
+> the block device throughput, we slice the old single byte for loop into a=
+ 16 byte for loop, with a larger CRC table to match.  The result has shown =
+5x performance improvements on various big endian and little endian systems=
+ running the 4.18.0 kernel version.
+>=20
+> FIO Sequential Write, 64K Block Size, Queue Depth 64
+> BE Base Kernel:        bw=3D201.5 MiB/s
+> BE Modified CRC Calc:  bw=3D968.1 MiB/s
+> 4.80x performance improvement
+>=20
+> LE Base Kernel:        bw=3D357 MiB/s
+> LE Modified CRC Calc:  bw=3D1964 MiB/s
+> 5.51x performance improvement
+>=20
+> FIO Sequential Read, 64K Block Size, Queue Depth 64
+> BE Base Kernel:        bw=3D611.2 MiB/s
+> BE Modified CRC calc:  bw=3D684.9 MiB/s
+> 1.12x performance improvement
+>=20
+> LE Base Kernel:        bw=3D797 MiB/s
+> LE Modified CRC Calc:  bw=3D2730 MiB/s
+> 3.42x performance improvement
+
+Did you also test the slice-by-4 (requires 2048-byte table) and slice-by-8 =
+(requires 4096-byte table) methods?  Your proposal is slice-by-16 (requires=
+ 8192-byte table); the original was slice-by-1 (requires 512-byte table).
+
+>  __u16 crc_t10dif_generic(__u16 crc, const unsigned char *buffer,=20
+> size_t len)  {
+> -	unsigned int i;
+> +	const __u8 *i =3D (const __u8 *)buffer;
+> +	const __u8 *i_end =3D i + len;
+> +	const __u8 *i_last16 =3D i + (len / 16 * 16);
+
+'i' is normally a loop counter, not a pointer.
+Use 'p', 'p_end', and 'p_last16'.
+
+> =20
+> -	for (i =3D 0 ; i < len ; i++)
+> -		crc =3D (crc << 8) ^ t10_dif_crc_table[((crc >> 8) ^ buffer[i]) & 0xff=
+];
+> +	for (; i < i_last16; i +=3D 16) {
+> +		crc =3D t10_dif_crc_table[15][i[0] ^ (__u8)(crc >>  8)] ^
+> +		t10_dif_crc_table[14][i[1] ^ (__u8)(crc >>  0)] ^
+> +		t10_dif_crc_table[13][i[2]] ^
+> +		t10_dif_crc_table[12][i[3]] ^
+> +		t10_dif_crc_table[11][i[4]] ^
+> +		t10_dif_crc_table[10][i[5]] ^
+> +		t10_dif_crc_table[9][i[6]] ^
+> +		t10_dif_crc_table[8][i[7]] ^
+> +		t10_dif_crc_table[7][i[8]] ^
+> +		t10_dif_crc_table[6][i[9]] ^
+> +		t10_dif_crc_table[5][i[10]] ^
+> +		t10_dif_crc_table[4][i[11]] ^
+> +		t10_dif_crc_table[3][i[12]] ^
+> +		t10_dif_crc_table[2][i[13]] ^
+> +		t10_dif_crc_table[1][i[14]] ^
+> +		t10_dif_crc_table[0][i[15]];
+> +	}
+
+Please indent this properly.
+
+		crc =3D t10_dif_crc_table[15][i[0] ^ (__u8)(crc >>  8)] ^
+		      t10_dif_crc_table[14][i[1] ^ (__u8)(crc >>  0)] ^
+		      t10_dif_crc_table[13][i[2]] ^
+		      t10_dif_crc_table[12][i[3]] ^
+		      t10_dif_crc_table[11][i[4]] ^
+		      ...
+
+- Eric
