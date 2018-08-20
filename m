@@ -1,172 +1,53 @@
-From: Evan Green <evgreen@chromium.org>
-Subject: [PATCH] scsi: ufs: Make sysfs flags writable
-Date: Mon, 20 Aug 2018 14:34:55 -0700
-Message-ID: <20180820213455.15092-1-evgreen@chromium.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Stanislav Nijnikov <stanislav.nijnikov@wdc.com>, Adrian Hunter <adrian.hunter@intel.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: Evan Green <evgreen@chromium.org>
+From: "Ewan D. Milne" <emilne@redhat.com>
+Subject: Re: [PATCH] lpfc: Correct MDS diag and nvmet configuration
+Date: Mon, 20 Aug 2018 18:15:13 -0400
+Message-ID: <1534803313.4073.33.camel@localhost.localdomain>
+References: <20180816230405.14272-1-jsmart2021@gmail.com>
+Reply-To: emilne@redhat.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20180816230405.14272-1-jsmart2021@gmail.com>
+Sender: stable-owner@vger.kernel.org
+To: James Smart <jsmart2021@gmail.com>
+Cc: linux-scsi@vger.kernel.org, stable@vger.kernel.org, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 List-Id: linux-scsi@vger.kernel.org
 
-This change makes the UFS controller's sysfs flags writable. This
-will enable users to provision unprovisioned devices, and experiment
-with device features.
+On Thu, 2018-08-16 at 16:04 -0700, James Smart wrote:
+> A recent change added some MDS processing in the lpfc_drain_txq
+> routine that relies on the fcp_wq being allocated. For nvmet operation
+> the fcp_wq is not allocated because it can only be an nvme-target.
+> When the original MDS support was added LS_MDS_LOOPBACK was
+> defined wrong, (0x16) it should have been 0x10 (decimal value used for
+> hex setting). This incorrect value allowed MDS_LOOPBACK to be set
+> simultaneously with LS_NPIV_FAB_SUPPORTED, causing the driver to
+> crash when it accesses the non-existent fcp_wq.
+> 
+> Correct the bad value setting for LS_MDS_LOOPBACK.
+> 
+> Fixes: 	ae9e28f36a6c  ("lpfc: Add MDS Diagnostic support.")
+> Cc: <stable@vger.kernel.org> # 4.12
+> Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
+> Signed-off-by: James Smart <james.smart@broadcom.com>
+> ---
+>  drivers/scsi/lpfc/lpfc.h | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
+> index e0d0da5f43d6..43732e8d1347 100644
+> --- a/drivers/scsi/lpfc/lpfc.h
+> +++ b/drivers/scsi/lpfc/lpfc.h
+> @@ -672,7 +672,7 @@ struct lpfc_hba {
+>  #define LS_NPIV_FAB_SUPPORTED 0x2	/* Fabric supports NPIV */
+>  #define LS_IGNORE_ERATT       0x4	/* intr handler should ignore ERATT */
+>  #define LS_MDS_LINK_DOWN      0x8	/* MDS Diagnostics Link Down */
+> -#define LS_MDS_LOOPBACK      0x16	/* MDS Diagnostics Link Up (Loopback) */
+> +#define LS_MDS_LOOPBACK      0x10	/* MDS Diagnostics Link Up (Loopback) */
+>  
+>  	uint32_t hba_flag;	/* hba generic flags */
+>  #define HBA_ERATT_HANDLED	0x1 /* This flag is set when eratt handled */
 
-Signed-off-by: Evan Green <evgreen@chromium.org>
----
-This is a follow-on patch to another patch [1] that makes the UFS attributes
-writable.
+Fixes driver crash when lpfc_enable_nvmet used.
 
-[1] https://lore.kernel.org/patchwork/patch/972959/
-
- Documentation/ABI/testing/sysfs-driver-ufs | 18 +++++++---
- drivers/scsi/ufs/ufs-sysfs.c               | 54 +++++++++++++++++++++++++-----
- 2 files changed, 58 insertions(+), 14 deletions(-)
-
-diff --git a/Documentation/ABI/testing/sysfs-driver-ufs b/Documentation/ABI/testing/sysfs-driver-ufs
-index 016724ec26d5..6df8ccbc94f3 100644
---- a/Documentation/ABI/testing/sysfs-driver-ufs
-+++ b/Documentation/ABI/testing/sysfs-driver-ufs
-@@ -619,7 +619,6 @@ Date:		February 2018
- Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
- Description:	This file shows the device init status. The full information
- 		about the flag could be found at UFS specifications 2.1.
--		The file is read only.
- 
- What:		/sys/bus/platform/drivers/ufshcd/*/flags/permanent_wpe
- Date:		February 2018
-@@ -627,7 +626,8 @@ Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
- Description:	This file shows whether permanent write protection is enabled.
- 		The full information about the flag could be found at
- 		UFS specifications 2.1.
--		The file is read only.
-+		Warning: This flag can only be written one time within the
-+		lifetime of the device. Once set, it cannot be unset.
- 
- What:		/sys/bus/platform/drivers/ufshcd/*/flags/power_on_wpe
- Date:		February 2018
-@@ -636,7 +636,7 @@ Description:	This file shows whether write protection is enabled on all
- 		logical units configured as power on write protected. The
- 		full information about the flag could be found at
- 		UFS specifications 2.1.
--		The file is read only.
-+		Once set, this flag cannot be cleared without a device reset.
- 
- What:		/sys/bus/platform/drivers/ufshcd/*/flags/bkops_enable
- Date:		February 2018
-@@ -644,7 +644,6 @@ Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
- Description:	This file shows whether the device background operations are
- 		enabled. The full information about the flag could be
- 		found at UFS specifications 2.1.
--		The file is read only.
- 
- What:		/sys/bus/platform/drivers/ufshcd/*/flags/life_span_mode_enable
- Date:		February 2018
-@@ -654,13 +653,22 @@ Description:	This file shows whether the device life span mode is enabled.
- 		UFS specifications 2.1.
- 		The file is read only.
- 
-+What:		/sys/bus/platform/drivers/ufshcd/*/flags/purge_enable
-+Date:		August 2018
-+Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-+Description:	This file shall only be set when the command queue of all
-+		logical units are empty and purge status is idle. This flag is
-+		automatically cleared by the UFS device when the operation
-+		completes or an error occurs. This flag is write-only, it
-+		cannot be read. Complete information about the flag can be
-+		found in the UFS specification 2.20A.
-+
- What:		/sys/bus/platform/drivers/ufshcd/*/flags/phy_resource_removal
- Date:		February 2018
- Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
- Description:	This file shows whether physical resource removal is enable.
- 		The full information about the flag could be found at
- 		UFS specifications 2.1.
--		The file is read only.
- 
- What:		/sys/bus/platform/drivers/ufshcd/*/flags/busy_rtc
- Date:		February 2018
-diff --git a/drivers/scsi/ufs/ufs-sysfs.c b/drivers/scsi/ufs/ufs-sysfs.c
-index 8d9332bb7d0c..2da927f4b7ff 100644
---- a/drivers/scsi/ufs/ufs-sysfs.c
-+++ b/drivers/scsi/ufs/ufs-sysfs.c
-@@ -616,7 +616,7 @@ static const struct attribute_group ufs_sysfs_string_descriptors_group = {
- 	.attrs = ufs_sysfs_string_descriptors,
- };
- 
--#define UFS_FLAG(_name, _uname)						\
-+#define UFS_FLAG_SHOW(_name, _uname)					\
- static ssize_t _name##_show(struct device *dev,				\
- 	struct device_attribute *attr, char *buf)			\
- {									\
-@@ -626,17 +626,52 @@ static ssize_t _name##_show(struct device *dev,				\
- 		QUERY_FLAG_IDN##_uname, &flag))				\
- 		return -EINVAL;						\
- 	return sprintf(buf, "%s\n", flag ? "true" : "false");		\
-+}
-+
-+#define UFS_FLAG_STORE(_name, _uname)					\
-+static ssize_t _name##_store(struct device *dev,			\
-+	struct device_attribute *attr, const char *buf,			\
-+	size_t count)							\
-+{									\
-+	bool flag;							\
-+	struct ufs_hba *hba = dev_get_drvdata(dev);			\
-+	enum query_opcode op;						\
-+	if (kstrtobool(buf, &flag))					\
-+		return -EINVAL;						\
-+	op = flag ? UPIU_QUERY_OPCODE_SET_FLAG :			\
-+		UPIU_QUERY_OPCODE_CLEAR_FLAG;				\
-+	if (ufshcd_query_flag(hba, op, QUERY_FLAG_IDN##_uname, NULL))	\
-+		return -EINVAL;						\
-+	return count;							\
- }									\
-+
-+#define UFS_FLAG_RO(_name, _uname)	\
-+UFS_FLAG_SHOW(_name, _uname)		\
- static DEVICE_ATTR_RO(_name)
- 
--UFS_FLAG(device_init, _FDEVICEINIT);
--UFS_FLAG(permanent_wpe, _PERMANENT_WPE);
--UFS_FLAG(power_on_wpe, _PWR_ON_WPE);
--UFS_FLAG(bkops_enable, _BKOPS_EN);
--UFS_FLAG(life_span_mode_enable, _LIFE_SPAN_MODE_ENABLE);
--UFS_FLAG(phy_resource_removal, _FPHYRESOURCEREMOVAL);
--UFS_FLAG(busy_rtc, _BUSY_RTC);
--UFS_FLAG(disable_fw_update, _PERMANENTLY_DISABLE_FW_UPDATE);
-+#define UFS_FLAG_WO(_name, _uname)					\
-+UFS_FLAG_STORE(_name, _uname)						\
-+static ssize_t _name##_show(struct device *dev,				\
-+	struct device_attribute *attr, char *buf)			\
-+{									\
-+	return -EOPNOTSUPP;						\
-+}									\
-+static DEVICE_ATTR_RW(_name)
-+
-+#define UFS_FLAG_RW(_name, _uname)					\
-+UFS_FLAG_SHOW(_name, _uname)						\
-+UFS_FLAG_STORE(_name, _uname)						\
-+static DEVICE_ATTR_RW(_name)
-+
-+UFS_FLAG_RW(device_init, _FDEVICEINIT);
-+UFS_FLAG_RW(permanent_wpe, _PERMANENT_WPE);
-+UFS_FLAG_RW(power_on_wpe, _PWR_ON_WPE);
-+UFS_FLAG_RW(bkops_enable, _BKOPS_EN);
-+UFS_FLAG_RO(life_span_mode_enable, _LIFE_SPAN_MODE_ENABLE);
-+UFS_FLAG_WO(purge_enable, _PURGE_ENABLE);
-+UFS_FLAG_RW(phy_resource_removal, _FPHYRESOURCEREMOVAL);
-+UFS_FLAG_RO(busy_rtc, _BUSY_RTC);
-+UFS_FLAG_RO(disable_fw_update, _PERMANENTLY_DISABLE_FW_UPDATE);
- 
- static struct attribute *ufs_sysfs_device_flags[] = {
- 	&dev_attr_device_init.attr,
-@@ -644,6 +679,7 @@ static struct attribute *ufs_sysfs_device_flags[] = {
- 	&dev_attr_power_on_wpe.attr,
- 	&dev_attr_bkops_enable.attr,
- 	&dev_attr_life_span_mode_enable.attr,
-+	&dev_attr_purge_enable.attr,
- 	&dev_attr_phy_resource_removal.attr,
- 	&dev_attr_busy_rtc.attr,
- 	&dev_attr_disable_fw_update.attr,
--- 
-2.16.4
+Tested-by: Ewan D. Milne <emilne@redhat.com>
