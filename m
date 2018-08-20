@@ -1,351 +1,172 @@
 From: Evan Green <evgreen@chromium.org>
-Subject: Re: [PATCH V8 2/2] scsi: ufs: Add configfs support for UFS provisioning
-Date: Fri, 17 Aug 2018 11:17:12 -0700
-Message-ID: <CAE=gft6RFCe5cfOZkwMpaKD71yiL1m1oActbax3Hx8+jXDPvVQ@mail.gmail.com>
-References: <1533805799-5831-1-git-send-email-sayalil@codeaurora.org> <1533805799-5831-3-git-send-email-sayalil@codeaurora.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Subject: [PATCH] scsi: ufs: Make sysfs flags writable
+Date: Mon, 20 Aug 2018 14:34:55 -0700
+Message-ID: <20180820213455.15092-1-evgreen@chromium.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1533805799-5831-3-git-send-email-sayalil@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: sayalil@codeaurora.org
-Cc: subhashj@codeaurora.org, cang@codeaurora.org, vivek.gautam@codeaurora.org, Rajendra Nayak <rnayak@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, asutoshd@codeaurora.org, riteshh@codeaurora.org, adrian.hunter@intel.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Stanislav Nijnikov <stanislav.nijnikov@wdc.com>, Adrian Hunter <adrian.hunter@intel.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: Evan Green <evgreen@chromium.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Aug 9, 2018 at 2:10 AM Sayali Lokhande <sayalil@codeaurora.org> wrote:
->
-> This patch adds configfs support to provision UFS device at
-> runtime. This feature can be primarily useful in factory or
-> assembly line as some devices may be required to be configured
-> multiple times during initial system development phase.
-> Configuration Descriptors can be written multiple times until
-> bConfigDescrLock attribute is zero.
->
-> Configuration descriptor buffer consists of Device and Unit
-> descriptor configurable parameters which are parsed from vendor
-> specific provisioning file and then passed via configfs node at
-> runtime to provision ufs device.
-> CONFIG_CONFIGFS_FS needs to be enabled for using this feature.
->
-> Usage:
-> 1) To read current configuration descriptor :
->    cat /config/XXXX.ufshc/ufs_provision
-> 2) To provision ufs device:
->    echo <config_desc_buf> > /config/XXXX.ufshc/ufs_provision
->
-> Signed-off-by: Sayali Lokhande <sayalil@codeaurora.org>
-> ---
->  Documentation/ABI/testing/configfs-driver-ufs |  18 +++
->  drivers/scsi/ufs/Kconfig                      |  10 ++
->  drivers/scsi/ufs/Makefile                     |   1 +
->  drivers/scsi/ufs/ufs-configfs.c               | 159 ++++++++++++++++++++++++++
->  drivers/scsi/ufs/ufshcd.c                     |   7 +-
->  drivers/scsi/ufs/ufshcd.h                     |  10 ++
->  6 files changed, 204 insertions(+), 1 deletion(-)
->  create mode 100644 Documentation/ABI/testing/configfs-driver-ufs
->  create mode 100644 drivers/scsi/ufs/ufs-configfs.c
->
-> diff --git a/Documentation/ABI/testing/configfs-driver-ufs b/Documentation/ABI/testing/configfs-driver-ufs
-> new file mode 100644
-> index 0000000..eeee499c
-> --- /dev/null
-> +++ b/Documentation/ABI/testing/configfs-driver-ufs
-> @@ -0,0 +1,18 @@
-> +What:          /config/ufshcd/ufs_provision
-> +Date:          Jun 2018
-> +KernelVersion: 4.14
-> +Description:
-> +               This file shows the current ufs configuration descriptor set in device.
-> +               This can be used to provision ufs device if bConfigDescrLock is 0.
-> +               For more details, refer 14.1.6.3 Configuration Descriptor and
-> +               Table 14-12 - Unit Descriptor configurable parameters from specs for
-> +               description of each configuration descriptor parameter.
-> +               Configuration descriptor buffer needs to be passed in space separated
-> +               format specificied as below:
-> +               echo <bLength> <bDescriptorIDN> <bConfDescContinue> <bBootEnable>
-> +               <bDescrAccessEn> <bInitPowerMode> <bHighPriorityLUN>
-> +               <bSecureRemovalType> <bInitActiveICCLevel> <wPeriodicRTCUpdate>
-> +               <0Bh:0Fh_ReservedAs_0> <bLUEnable> <bBootLunID> <bLUWriteProtect>
-> +               <bMemoryType> <dNumAllocUnits> <bDataReliability> <bLogicalBlockSize>
-> +               <bProvisioningType> <wContextCapabilities> <0Dh:0Fh_ReservedAs_0>
-> +               > /config/XXXX.ufshc/ufs_provision
-> diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
-> index e27b4d4..a9a0a58 100644
-> --- a/drivers/scsi/ufs/Kconfig
-> +++ b/drivers/scsi/ufs/Kconfig
-> @@ -100,3 +100,13 @@ config SCSI_UFS_QCOM
->
->           Select this if you have UFS controller on QCOM chipset.
->           If unsure, say N.
-> +
-> +config UFS_PROVISION
-> +       tristate "Runtime UFS Provisioning support"
-> +       depends on SCSI_UFSHCD && CONFIGFS_FS
-> +       help
-> +         This enables runtime UFS provisioning support. This can be used
-> +         primarily during assembly line as some devices may be required to
-> +         be configured multiple times during initial development phase.
-> +
-> +         If unsure, say N.
-> diff --git a/drivers/scsi/ufs/Makefile b/drivers/scsi/ufs/Makefile
-> index 918f579..00110ea 100644
-> --- a/drivers/scsi/ufs/Makefile
-> +++ b/drivers/scsi/ufs/Makefile
-> @@ -5,5 +5,6 @@ obj-$(CONFIG_SCSI_UFS_DWC_TC_PLATFORM) += tc-dwc-g210-pltfrm.o ufshcd-dwc.o tc-d
->  obj-$(CONFIG_SCSI_UFS_QCOM) += ufs-qcom.o
->  obj-$(CONFIG_SCSI_UFSHCD) += ufshcd-core.o
->  ufshcd-core-objs := ufshcd.o ufs-sysfs.o
-> +obj-$(CONFIG_UFS_PROVISION) += ufs-configfs.o
->  obj-$(CONFIG_SCSI_UFSHCD_PCI) += ufshcd-pci.o
->  obj-$(CONFIG_SCSI_UFSHCD_PLATFORM) += ufshcd-pltfrm.o
-> diff --git a/drivers/scsi/ufs/ufs-configfs.c b/drivers/scsi/ufs/ufs-configfs.c
-> new file mode 100644
-> index 0000000..cd1a227
-> --- /dev/null
-> +++ b/drivers/scsi/ufs/ufs-configfs.c
-> @@ -0,0 +1,159 @@
-> +// SPDX-License-Identifier: GPL-2.0+
-> +// Copyright (c) 2018, Linux Foundation.
-> +
-> +#include <linux/configfs.h>
-> +#include <linux/err.h>
-> +#include <linux/string.h>
-> +
-> +#include "ufs.h"
-> +#include "ufshcd.h"
-> +
-> +static inline struct ufs_hba *config_item_to_hba(struct config_item *item)
-> +{
-> +       struct config_group *group = to_config_group(item);
-> +       struct configfs_subsystem *subsys = to_configfs_subsystem(group);
-> +       struct ufs_hba *hba = container_of(subsys, struct ufs_hba, subsys);
-> +
-> +       return subsys ? hba : NULL;
-> +}
-> +
-> +static ssize_t ufs_provision_show(struct config_item *item, char *buf)
-> +{
-> +       u8 desc_buf[QUERY_DESC_CONFIGURATION_DEF_SIZE] = {0};
-> +       int buff_len = QUERY_DESC_CONFIGURATION_DEF_SIZE;
-> +       int i, ret, curr_len = 0;
-> +       struct ufs_hba *hba = config_item_to_hba(item);
-> +
-> +       if (!hba)
-> +               return -EINVAL;
+This change makes the UFS controller's sysfs flags writable. This
+will enable users to provision unprovisioned devices, and experiment
+with device features.
 
-I don't think this is actually possible. Is a configfs show function
-ever called with a null item?
+Signed-off-by: Evan Green <evgreen@chromium.org>
+---
+This is a follow-on patch to another patch [1] that makes the UFS attributes
+writable.
 
-> +
-> +       ret = ufshcd_query_descriptor_retry(hba, UPIU_QUERY_OPCODE_READ_DESC,
-> +               QUERY_DESC_IDN_CONFIGURATION, 0, 0, desc_buf, &buff_len);
-> +
-> +       if (ret)
-> +               return ret;
-> +
-> +       for (i = 0; i < buff_len; i++)
-> +               curr_len += snprintf((buf + curr_len), (PAGE_SIZE - curr_len),
-> +                               "0x%x ", desc_buf[i]);
-> +
-> +       return curr_len;
-> +}
-> +
-> +ssize_t ufshcd_desc_configfs_store(struct ufs_hba *hba,
-> +               const char *buf, size_t count)
-> +{
-> +       char *strbuf;
-> +       char *strbuf_copy;
-> +       u8 desc_buf[QUERY_DESC_CONFIGURATION_DEF_SIZE] = {0};
-> +       int buff_len = QUERY_DESC_CONFIGURATION_DEF_SIZE;
-> +       char *token;
-> +       int i, ret, value;
-> +       u32 bConfigDescrLock = 0;
+[1] https://lore.kernel.org/patchwork/patch/972959/
 
-I haven't seen many examples of variables named this way. I know it
-follows what the UFS spec does, but I haven't noticed examples of
-people naming their locals outside of normal Linux conventions.
+ Documentation/ABI/testing/sysfs-driver-ufs | 18 +++++++---
+ drivers/scsi/ufs/ufs-sysfs.c               | 54 +++++++++++++++++++++++++-----
+ 2 files changed, 58 insertions(+), 14 deletions(-)
 
-> +
-> +       /* reserve one byte for null termination */
-> +       strbuf = kmalloc(count + 1, GFP_KERNEL);
-> +       if (!strbuf)
-> +               return -ENOMEM;
-> +
-> +       strbuf_copy = strbuf;
-> +       strlcpy(strbuf, buf, count + 1);
-> +
-> +       if (!hba)
-> +               goto out;
-
-Again, is this possible?
-
-> +
-> +       /* Just return if bConfigDescrLock is already set */
-> +       ret = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_READ_ATTR,
-> +               QUERY_ATTR_IDN_CONF_DESC_LOCK, 0, 0, &bConfigDescrLock);
-> +       if (ret)
-> +               goto out;
-> +
-> +       if (bConfigDescrLock) {
-> +               dev_err(hba->dev, "%s: bConfigDescrLock already set to %u, cannot re-provision device!\n",
-> +               __func__, bConfigDescrLock);
-> +               goto out;
-
-You're succeeding here, shouldn't you fail the write? In fact, you
-succeed the write in a whole bunch of failure cases. Please fail the
-write in error cases.
-
-> +       }
-> +
-> +       for (i = 0; i < QUERY_DESC_CONFIGURATION_DEF_SIZE; i++) {
-> +               token = strsep(&strbuf, " ");
-> +               if (!token && i)
-> +                       break;
-> +
-> +               ret = kstrtoint(token, 0, &value);
-> +               if (ret) {
-> +                       dev_err(hba->dev, "%s: kstrtoint failed %d %s\n",
-> +                               __func__, ret, token);
-> +                       goto out;
-> +               }
-> +               desc_buf[i] = (u8)value;
-> +       }
-> +
-> +       /* Write configuration descriptor to provision ufs */
-> +       ret = ufshcd_query_descriptor_retry(hba, UPIU_QUERY_OPCODE_WRITE_DESC,
-> +               QUERY_DESC_IDN_CONFIGURATION, 0, 0, desc_buf, &buff_len);
-> +
-> +       if (!ret)
-> +               dev_err(hba->dev, "%s: UFS Provisioning done, reboot now!\n",
-> +               __func__);
-> +
-> +out:
-> +       kfree(strbuf_copy);
-> +       return count;
-> +}
-> +
-> +static ssize_t ufs_provision_store(struct config_item *item,
-> +               const char *buf, size_t count)
-> +{
-> +       struct ufs_hba *hba = config_item_to_hba(item);
-> +
-> +       return ufshcd_desc_configfs_store(hba, buf, count);
-> +}
-> +
-> +static struct configfs_attribute ufshcd_attr_provision = {
-> +       .ca_name        = "ufs_provision",
-> +       .ca_mode        = 0644,
-> +       .ca_owner       = THIS_MODULE,
-> +       .show           = ufs_provision_show,
-> +       .store          = ufs_provision_store,
-> +};
-> +
-> +static struct configfs_attribute *ufshcd_attrs[] = {
-> +       &ufshcd_attr_provision,
-> +       NULL,
-> +};
-> +
-> +static struct config_item_type ufscfg_type = {
-> +       .ct_attrs       = ufshcd_attrs,
-> +       .ct_owner       = THIS_MODULE,
-> +};
-> +
-> +static struct configfs_subsystem ufscfg_subsys = {
-> +       .su_group = {
-> +               .cg_item = {
-> +                       .ci_type = &ufscfg_type,
-> +               },
-> +       },
-> +};
-> +
-> +int ufshcd_configfs_init(struct ufs_hba *hba, const char *name)
-> +{
-> +       int ret;
-> +       struct configfs_subsystem *subsys = &hba->subsys;
-> +
-> +       strncpy(ufscfg_subsys.su_group.cg_item.ci_namebuf, name, strlen(name));
-> +       subsys->su_group = ufscfg_subsys.su_group;
-> +       config_group_init(&subsys->su_group);
-> +       mutex_init(&subsys->su_mutex);
-> +       ret = configfs_register_subsystem(subsys);
-> +       if (ret)
-> +               pr_err("Error %d while registering subsystem %s\n",
-> +                      ret,
-> +                      subsys->su_group.cg_item.ci_namebuf);
-> +
-> +       return ret;
-> +}
-> +
-> +void ufshcd_configfs_exit(void)
-> +{
-> +       configfs_unregister_subsystem(&ufscfg_subsys);
-> +}
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 0cbdde7..bc7bffc 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -7711,6 +7711,9 @@ int ufshcd_shutdown(struct ufs_hba *hba)
->  void ufshcd_remove(struct ufs_hba *hba)
->  {
->         ufs_sysfs_remove_nodes(hba->dev);
-> +#ifdef CONFIG_UFS_PROVISION
-> +       ufshcd_configfs_exit();
-> +#endif
->         scsi_remove_host(hba->host);
->         /* disable interrupts */
->         ufshcd_disable_intr(hba, hba->intr_mask);
-> @@ -7964,7 +7967,9 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
->
->         async_schedule(ufshcd_async_scan, hba);
->         ufs_sysfs_add_nodes(hba->dev);
-> -
-> +#ifdef CONFIG_UFS_PROVISION
-> +       ufshcd_configfs_init(hba, dev_name(hba->dev));
-> +#endif
-
-Normally the way I see this done is to define stub functions up in the
-header when !CONFIG_UFS_PROVISION, rather than ifdefs in the code. Can
-you do it that way?
-
->         return 0;
->
->  out_remove_scsi_host:
-> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> index 101a75c..7b6cc88 100644
-> --- a/drivers/scsi/ufs/ufshcd.h
-> +++ b/drivers/scsi/ufs/ufshcd.h
-> @@ -37,6 +37,7 @@
->  #ifndef _UFSHCD_H
->  #define _UFSHCD_H
->
-> +#include <linux/configfs.h>
->  #include <linux/module.h>
->  #include <linux/kernel.h>
->  #include <linux/init.h>
-> @@ -515,6 +516,9 @@ struct ufs_hba {
->
->         struct Scsi_Host *host;
->         struct device *dev;
-> +#ifdef CONFIG_UFS_PROVISION
-> +       struct configfs_subsystem subsys;
-> +#endif
->         /*
->          * This field is to keep a reference to "scsi_device" corresponding to
->          * "UFS device" W-LU.
-> @@ -868,6 +872,12 @@ int ufshcd_read_string_desc(struct ufs_hba *hba, int desc_index,
->  int ufshcd_hold(struct ufs_hba *hba, bool async);
->  void ufshcd_release(struct ufs_hba *hba);
->
-> +/* Expose UFS configfs API's */
-> +#ifdef CONFIG_UFS_PROVISION
-> +extern int ufshcd_configfs_init(struct ufs_hba *hba, const char *name);
-> +extern void ufshcd_configfs_exit(void);
-> +#endif
-> +
->  int ufshcd_map_desc_id_to_length(struct ufs_hba *hba, enum desc_idn desc_id,
->         int *desc_length);
->
-> --
-> The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-> a Linux Foundation Collaborative Project
->
+diff --git a/Documentation/ABI/testing/sysfs-driver-ufs b/Documentation/ABI/testing/sysfs-driver-ufs
+index 016724ec26d5..6df8ccbc94f3 100644
+--- a/Documentation/ABI/testing/sysfs-driver-ufs
++++ b/Documentation/ABI/testing/sysfs-driver-ufs
+@@ -619,7 +619,6 @@ Date:		February 2018
+ Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+ Description:	This file shows the device init status. The full information
+ 		about the flag could be found at UFS specifications 2.1.
+-		The file is read only.
+ 
+ What:		/sys/bus/platform/drivers/ufshcd/*/flags/permanent_wpe
+ Date:		February 2018
+@@ -627,7 +626,8 @@ Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+ Description:	This file shows whether permanent write protection is enabled.
+ 		The full information about the flag could be found at
+ 		UFS specifications 2.1.
+-		The file is read only.
++		Warning: This flag can only be written one time within the
++		lifetime of the device. Once set, it cannot be unset.
+ 
+ What:		/sys/bus/platform/drivers/ufshcd/*/flags/power_on_wpe
+ Date:		February 2018
+@@ -636,7 +636,7 @@ Description:	This file shows whether write protection is enabled on all
+ 		logical units configured as power on write protected. The
+ 		full information about the flag could be found at
+ 		UFS specifications 2.1.
+-		The file is read only.
++		Once set, this flag cannot be cleared without a device reset.
+ 
+ What:		/sys/bus/platform/drivers/ufshcd/*/flags/bkops_enable
+ Date:		February 2018
+@@ -644,7 +644,6 @@ Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+ Description:	This file shows whether the device background operations are
+ 		enabled. The full information about the flag could be
+ 		found at UFS specifications 2.1.
+-		The file is read only.
+ 
+ What:		/sys/bus/platform/drivers/ufshcd/*/flags/life_span_mode_enable
+ Date:		February 2018
+@@ -654,13 +653,22 @@ Description:	This file shows whether the device life span mode is enabled.
+ 		UFS specifications 2.1.
+ 		The file is read only.
+ 
++What:		/sys/bus/platform/drivers/ufshcd/*/flags/purge_enable
++Date:		August 2018
++Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
++Description:	This file shall only be set when the command queue of all
++		logical units are empty and purge status is idle. This flag is
++		automatically cleared by the UFS device when the operation
++		completes or an error occurs. This flag is write-only, it
++		cannot be read. Complete information about the flag can be
++		found in the UFS specification 2.20A.
++
+ What:		/sys/bus/platform/drivers/ufshcd/*/flags/phy_resource_removal
+ Date:		February 2018
+ Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
+ Description:	This file shows whether physical resource removal is enable.
+ 		The full information about the flag could be found at
+ 		UFS specifications 2.1.
+-		The file is read only.
+ 
+ What:		/sys/bus/platform/drivers/ufshcd/*/flags/busy_rtc
+ Date:		February 2018
+diff --git a/drivers/scsi/ufs/ufs-sysfs.c b/drivers/scsi/ufs/ufs-sysfs.c
+index 8d9332bb7d0c..2da927f4b7ff 100644
+--- a/drivers/scsi/ufs/ufs-sysfs.c
++++ b/drivers/scsi/ufs/ufs-sysfs.c
+@@ -616,7 +616,7 @@ static const struct attribute_group ufs_sysfs_string_descriptors_group = {
+ 	.attrs = ufs_sysfs_string_descriptors,
+ };
+ 
+-#define UFS_FLAG(_name, _uname)						\
++#define UFS_FLAG_SHOW(_name, _uname)					\
+ static ssize_t _name##_show(struct device *dev,				\
+ 	struct device_attribute *attr, char *buf)			\
+ {									\
+@@ -626,17 +626,52 @@ static ssize_t _name##_show(struct device *dev,				\
+ 		QUERY_FLAG_IDN##_uname, &flag))				\
+ 		return -EINVAL;						\
+ 	return sprintf(buf, "%s\n", flag ? "true" : "false");		\
++}
++
++#define UFS_FLAG_STORE(_name, _uname)					\
++static ssize_t _name##_store(struct device *dev,			\
++	struct device_attribute *attr, const char *buf,			\
++	size_t count)							\
++{									\
++	bool flag;							\
++	struct ufs_hba *hba = dev_get_drvdata(dev);			\
++	enum query_opcode op;						\
++	if (kstrtobool(buf, &flag))					\
++		return -EINVAL;						\
++	op = flag ? UPIU_QUERY_OPCODE_SET_FLAG :			\
++		UPIU_QUERY_OPCODE_CLEAR_FLAG;				\
++	if (ufshcd_query_flag(hba, op, QUERY_FLAG_IDN##_uname, NULL))	\
++		return -EINVAL;						\
++	return count;							\
+ }									\
++
++#define UFS_FLAG_RO(_name, _uname)	\
++UFS_FLAG_SHOW(_name, _uname)		\
+ static DEVICE_ATTR_RO(_name)
+ 
+-UFS_FLAG(device_init, _FDEVICEINIT);
+-UFS_FLAG(permanent_wpe, _PERMANENT_WPE);
+-UFS_FLAG(power_on_wpe, _PWR_ON_WPE);
+-UFS_FLAG(bkops_enable, _BKOPS_EN);
+-UFS_FLAG(life_span_mode_enable, _LIFE_SPAN_MODE_ENABLE);
+-UFS_FLAG(phy_resource_removal, _FPHYRESOURCEREMOVAL);
+-UFS_FLAG(busy_rtc, _BUSY_RTC);
+-UFS_FLAG(disable_fw_update, _PERMANENTLY_DISABLE_FW_UPDATE);
++#define UFS_FLAG_WO(_name, _uname)					\
++UFS_FLAG_STORE(_name, _uname)						\
++static ssize_t _name##_show(struct device *dev,				\
++	struct device_attribute *attr, char *buf)			\
++{									\
++	return -EOPNOTSUPP;						\
++}									\
++static DEVICE_ATTR_RW(_name)
++
++#define UFS_FLAG_RW(_name, _uname)					\
++UFS_FLAG_SHOW(_name, _uname)						\
++UFS_FLAG_STORE(_name, _uname)						\
++static DEVICE_ATTR_RW(_name)
++
++UFS_FLAG_RW(device_init, _FDEVICEINIT);
++UFS_FLAG_RW(permanent_wpe, _PERMANENT_WPE);
++UFS_FLAG_RW(power_on_wpe, _PWR_ON_WPE);
++UFS_FLAG_RW(bkops_enable, _BKOPS_EN);
++UFS_FLAG_RO(life_span_mode_enable, _LIFE_SPAN_MODE_ENABLE);
++UFS_FLAG_WO(purge_enable, _PURGE_ENABLE);
++UFS_FLAG_RW(phy_resource_removal, _FPHYRESOURCEREMOVAL);
++UFS_FLAG_RO(busy_rtc, _BUSY_RTC);
++UFS_FLAG_RO(disable_fw_update, _PERMANENTLY_DISABLE_FW_UPDATE);
+ 
+ static struct attribute *ufs_sysfs_device_flags[] = {
+ 	&dev_attr_device_init.attr,
+@@ -644,6 +679,7 @@ static struct attribute *ufs_sysfs_device_flags[] = {
+ 	&dev_attr_power_on_wpe.attr,
+ 	&dev_attr_bkops_enable.attr,
+ 	&dev_attr_life_span_mode_enable.attr,
++	&dev_attr_purge_enable.attr,
+ 	&dev_attr_phy_resource_removal.attr,
+ 	&dev_attr_busy_rtc.attr,
+ 	&dev_attr_disable_fw_update.attr,
+-- 
+2.16.4
