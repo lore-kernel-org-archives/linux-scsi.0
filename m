@@ -1,125 +1,201 @@
-From: John Garry <john.garry@huawei.com>
-Subject: Re: [PATCH] scsi: hisi_sas: Switch from msleep to usleep_range per
- timers-howto.txt
-Date: Thu, 23 Aug 2018 18:01:10 +0100
-Message-ID: <a89bf6bd-9789-5e6e-40ba-7e82780422d2@huawei.com>
-References: <1535022539-10634-1-git-send-email-dingxiang@cmss.chinamobile.com>
+From: Evan Green <evgreen@chromium.org>
+Subject: Re: [PATCH V9 1/2] scsi: ufs: set the device reference clock setting
+Date: Thu, 23 Aug 2018 10:19:11 -0700
+Message-ID: <CAE=gft6tA=B008oS-TP2e-aJ80ZQT_tF3Ngf6Ly5f5r=QqpBng@mail.gmail.com>
+References: <1534846649-2456-1-git-send-email-sayalil@codeaurora.org> <1534846649-2456-2-git-send-email-sayalil@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1535022539-10634-1-git-send-email-dingxiang@cmss.chinamobile.com>
+In-Reply-To: <1534846649-2456-2-git-send-email-sayalil@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Ding Xiang <dingxiang@cmss.chinamobile.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Linuxarm <linuxarm@huawei.com>, chenxiang <chenxiang66@hisilicon.com>
+To: sayalil@codeaurora.org
+Cc: subhashj@codeaurora.org, cang@codeaurora.org, vivek.gautam@codeaurora.org, Rajendra Nayak <rnayak@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, asutoshd@codeaurora.org, riteshh@codeaurora.org, adrian.hunter@intel.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 23/08/2018 12:08, Ding Xiang wrote:
-> use usleep_range to sleep for 10us - 20ms
+On Tue, Aug 21, 2018 at 3:18 AM Sayali Lokhande <sayalil@codeaurora.org> wrote:
 >
-
-Hi,
-
-Thanks for the patch.
-
-According to the document, msleep(1) will be ~20ms. As such, some driver 
-behaviour may depend on this now.
-
-At this stage, the drivers have been extensively tested (v2+v3), so I 
-would rather not introduce possible instability. In addition, v1 is all 
-but dead, so I can't test. Finally, none of the sleeps are in the 
-fastpath, so the extra sleep does not cause much harm.
-
-John
-
-> Signed-off-by: Ding Xiang <dingxiang@cmss.chinamobile.com>
+> From: Subhash Jadavani <subhashj@codeaurora.org>
+>
+> UFS host supplies the reference clock to UFS device and UFS device
+> specification allows host to provide one of the 4 frequencies (19.2 MHz,
+> 26 MHz, 38.4 MHz, 52 MHz) for reference clock. Host should set the
+> device reference clock frequency setting in the device based on what
+> frequency it is supplying to UFS device.
+>
+> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+> Signed-off-by: Can Guo <cang@codeaurora.org>
+> Signed-off-by: Sayali Lokhande <sayalil@codeaurora.org>
 > ---
->  drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 8 ++++----
->  drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 6 +++---
->  drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 2 +-
->  3 files changed, 8 insertions(+), 8 deletions(-)
+>  drivers/scsi/ufs/ufs.h    | 14 ++++++++
+>  drivers/scsi/ufs/ufshcd.c | 92 +++++++++++++++++++++++++++++++++++++++++++++++
+>  drivers/scsi/ufs/ufshcd.h |  2 ++
+>  3 files changed, 108 insertions(+)
 >
-> diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-> index 8f60f0e..0584f711 100644
-> --- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-> +++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-> @@ -579,7 +579,7 @@ static int reset_hw_v1_hw(struct hisi_hba *hisi_hba)
->  		phy_ctrl |= PHY_CTRL_RESET_MSK;
->  		hisi_sas_phy_write32(hisi_hba, i, PHY_CTRL, phy_ctrl);
->  	}
-> -	msleep(1); /* It is safe to wait for 50us */
-> +	usleep_range(1000, 1100); /* It is safe to wait for 50us */
+> diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+> index 14e5bf7..a2e76b1 100644
+> --- a/drivers/scsi/ufs/ufs.h
+> +++ b/drivers/scsi/ufs/ufs.h
+> @@ -378,6 +378,20 @@ enum query_opcode {
+>         UPIU_QUERY_OPCODE_TOGGLE_FLAG   = 0x8,
+>  };
 >
->  	/* Ensure DMA tx & rx idle */
->  	for (i = 0; i < hisi_hba->n_phy; i++) {
-> @@ -632,7 +632,7 @@ static int reset_hw_v1_hw(struct hisi_hba *hisi_hba)
->  			     RESET_VALUE);
->  		regmap_write(hisi_hba->ctrl, hisi_hba->ctrl_clock_ena_reg + 4,
->  			     RESET_VALUE);
-> -		msleep(1);
-> +		usleep_range(1000, 1100);
->  		regmap_read(hisi_hba->ctrl, hisi_hba->ctrl_reset_sts_reg, &val);
->  		if (RESET_VALUE != (val & RESET_VALUE)) {
->  			dev_err(dev, "Reset failed\n");
-> @@ -645,7 +645,7 @@ static int reset_hw_v1_hw(struct hisi_hba *hisi_hba)
->  			     RESET_VALUE);
->  		regmap_write(hisi_hba->ctrl, hisi_hba->ctrl_clock_ena_reg,
->  			     RESET_VALUE);
-> -		msleep(1);
-> +		usleep_range(1000, 1100);
->  		regmap_read(hisi_hba->ctrl, hisi_hba->ctrl_reset_sts_reg, &val);
->  		if (val & RESET_VALUE) {
->  			dev_err(dev, "De-reset failed\n");
-> @@ -841,7 +841,7 @@ static void sl_notify_v1_hw(struct hisi_hba *hisi_hba, int phy_no)
->  	sl_control = hisi_sas_phy_read32(hisi_hba, phy_no, SL_CONTROL);
->  	sl_control |= SL_CONTROL_NOTIFY_EN_MSK;
->  	hisi_sas_phy_write32(hisi_hba, phy_no, SL_CONTROL, sl_control);
-> -	msleep(1);
-> +	usleep_range(1000, 1100);
->  	sl_control = hisi_sas_phy_read32(hisi_hba, phy_no, SL_CONTROL);
->  	sl_control &= ~SL_CONTROL_NOTIFY_EN_MSK;
->  	hisi_sas_phy_write32(hisi_hba, phy_no, SL_CONTROL, sl_control);
-> diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-> index 9c5c5a6..4ca5f77 100644
-> --- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-> +++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-> @@ -1081,7 +1081,7 @@ static int reset_hw_v2_hw(struct hisi_hba *hisi_hba)
->  				reset_val);
->  		regmap_write(hisi_hba->ctrl, hisi_hba->ctrl_clock_ena_reg + 4,
->  				reset_val);
-> -		msleep(1);
-> +		usleep_range(1000, 1100);
->  		regmap_read(hisi_hba->ctrl, hisi_hba->ctrl_reset_sts_reg, &val);
->  		if (reset_val != (val & reset_val)) {
->  			dev_err(dev, "SAS reset fail.\n");
-> @@ -1093,7 +1093,7 @@ static int reset_hw_v2_hw(struct hisi_hba *hisi_hba)
->  				reset_val);
->  		regmap_write(hisi_hba->ctrl, hisi_hba->ctrl_clock_ena_reg,
->  				reset_val);
-> -		msleep(1);
-> +		usleep_range(1000, 1100);
->  		regmap_read(hisi_hba->ctrl, hisi_hba->ctrl_reset_sts_reg,
->  				&val);
->  		if (val & reset_val) {
-> @@ -1591,7 +1591,7 @@ static void sl_notify_v2_hw(struct hisi_hba *hisi_hba, int phy_no)
->  	sl_control = hisi_sas_phy_read32(hisi_hba, phy_no, SL_CONTROL);
->  	sl_control |= SL_CONTROL_NOTIFY_EN_MSK;
->  	hisi_sas_phy_write32(hisi_hba, phy_no, SL_CONTROL, sl_control);
-> -	msleep(1);
-> +	usleep_range(1000, 1100);
->  	sl_control = hisi_sas_phy_read32(hisi_hba, phy_no, SL_CONTROL);
->  	sl_control &= ~SL_CONTROL_NOTIFY_EN_MSK;
->  	hisi_sas_phy_write32(hisi_hba, phy_no, SL_CONTROL, sl_control);
-> diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-> index 08b503e2..8f57737 100644
-> --- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-> +++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-> @@ -834,7 +834,7 @@ static void sl_notify_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
->  	sl_control = hisi_sas_phy_read32(hisi_hba, phy_no, SL_CONTROL);
->  	sl_control |= SL_CONTROL_NOTIFY_EN_MSK;
->  	hisi_sas_phy_write32(hisi_hba, phy_no, SL_CONTROL, sl_control);
-> -	msleep(1);
-> +	usleep_range(1000, 1100);
->  	sl_control = hisi_sas_phy_read32(hisi_hba, phy_no, SL_CONTROL);
->  	sl_control &= ~SL_CONTROL_NOTIFY_EN_MSK;
->  	hisi_sas_phy_write32(hisi_hba, phy_no, SL_CONTROL, sl_control);
+> +/* bRefClkFreq attribute values */
+> +enum ufs_ref_clk_freq {
+> +       REF_CLK_FREQ_19_2_MHZ   = 0,
+> +       REF_CLK_FREQ_26_MHZ     = 1,
+> +       REF_CLK_FREQ_38_4_MHZ   = 2,
+> +       REF_CLK_FREQ_52_MHZ     = 3,
+> +       REF_CLK_FREQ_INVAL      = -1,
+> +};
+> +
+> +struct ufs_ref_clk {
+> +       u32 freq_hz;
+> +       enum ufs_ref_clk_freq val;
+> +};
+> +
+>  /* Query response result code */
+>  enum {
+>         QUERY_RESULT_SUCCESS                    = 0x00,
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index c5b1bf1..e946844 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -6296,6 +6296,91 @@ static void ufshcd_def_desc_sizes(struct ufs_hba *hba)
+>         hba->desc_size.hlth_desc = QUERY_DESC_HEALTH_DEF_SIZE;
+>  }
 >
+> +static struct ufs_ref_clk ufs_ref_clk_freqs[] = {
+> +       {19200000, REF_CLK_FREQ_19_2_MHZ},
+> +       {26000000, REF_CLK_FREQ_26_MHZ},
+> +       {38400000, REF_CLK_FREQ_38_4_MHZ},
+> +       {52000000, REF_CLK_FREQ_52_MHZ},
+> +       {0, REF_CLK_FREQ_INVAL},
+> +};
+> +
+> +static inline enum ufs_ref_clk_freq
+> +ufs_get_bref_clk_for_ref_clk_freq_hz(u32 freq)
+
+This name is a little hairy. Maybe ufs_get_bref_clk_from_hz, or
+ufs_hz_to_bref_clk?
+
+> +{
+> +       int i = 0;
+> +
+> +       while (ufs_ref_clk_freqs[i].freq_hz != freq) {
+> +               if (!ufs_ref_clk_freqs[i].freq_hz)
+> +                       return REF_CLK_FREQ_INVAL;
+> +               i++;
+> +       }
+> +
+> +       return ufs_ref_clk_freqs[i].val;
+> +}
+> +
+> +void ufshcd_parse_dev_ref_clk_freq(struct ufs_hba *hba)
+> +{
+> +       struct device *dev = hba->dev;
+> +       struct device_node *np = dev->of_node;
+> +       struct clk *refclk = NULL;
+> +       u32 freq = 0;
+> +
+> +       if (!np)
+> +               return;
+> +
+> +       hba->dev_ref_clk_freq = REF_CLK_FREQ_INVAL;
+> +
+> +       refclk = of_clk_get_by_name(np, "ref_clk");
+> +       if (!refclk)
+> +               return;
+> +
+> +       freq = clk_get_rate(refclk);
+> +       if (freq > REF_CLK_FREQ_52_MHZ) {
+
+freq is in Hertz, but the enum value will be something like 3. I think
+you should just call your function below, and then check the return
+value of it for the error case you're trying to do here.
+
+> +               dev_err(hba->dev,
+> +               "%s: invalid ref_clk setting = %d\n",
+> +               __func__, freq);
+> +               return;
+> +       }
+> +
+> +       hba->dev_ref_clk_freq =
+> +               ufs_get_bref_clk_for_ref_clk_freq_hz(freq);
+> +}
+> +
+> +static int ufshcd_set_dev_ref_clk(struct ufs_hba *hba)
+> +{
+> +       int err = 0;
+
+You don't need to initialize this since you immediately assign it below.
+
+> +       int ref_clk = -1;
+> +       u32 freq = (u32)hba->dev_ref_clk_freq;
+
+Is the cast necessary?
+
+> +
+> +       err = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_READ_ATTR,
+> +                       QUERY_ATTR_IDN_REF_CLK_FREQ, 0, 0, &ref_clk);
+> +
+> +       if (err) {
+> +               dev_err(hba->dev, "%s: failed reading bRefClkFreq. err = %d\n",
+> +                        __func__, err);
+> +               goto out;
+> +       }
+> +
+> +       if (ref_clk == hba->dev_ref_clk_freq)
+> +               goto out; /* nothing to update */
+> +
+> +       err = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
+> +                       QUERY_ATTR_IDN_REF_CLK_FREQ, 0, 0, &freq);
+> +
+> +       if (err)
+> +               dev_err(hba->dev, "%s: bRefClkFreq setting to %u Hz failed\n",
+> +               __func__, ufs_ref_clk_freqs[freq].freq_hz);
+> +       /*
+> +        * It is good to print this out here to debug any later failures
+> +        * related to gear switch.
+> +        */
+> +       dev_dbg(hba->dev, "%s: bRefClkFreq setting to %u Hz succeeded\n",
+> +               __func__, ufs_ref_clk_freqs[freq].freq_hz);
+
+In the error case you print out both the failed message and the success message?
+
+> +
+> +out:
+> +       return err;
+> +}
+> +
+>  /**
+>   * ufshcd_probe_hba - probe hba to detect device and initialize
+>   * @hba: per-adapter instance
+> @@ -6361,6 +6446,12 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
+>                         "%s: Failed getting max supported power mode\n",
+>                         __func__);
+>         } else {
+> +               /*
+> +                * Set the right value to bRefClkFreq before attempting to
+> +                * switch to HS gears.
+> +                */
+> +               if (hba->dev_ref_clk_freq != REF_CLK_FREQ_INVAL)
+> +                       ufshcd_set_dev_ref_clk(hba);
+>                 ret = ufshcd_config_pwr_mode(hba, &hba->max_pwr_info.info);
+>                 if (ret) {
+>                         dev_err(hba->dev, "%s: Failed setting power mode, err = %d\n",
+> @@ -7693,6 +7784,7 @@ int ufshcd_alloc_host(struct device *dev, struct ufs_hba **hba_handle)
+>
+>         INIT_LIST_HEAD(&hba->clk_list_head);
+>
+> +       ufshcd_parse_dev_ref_clk_freq(hba);
+
+I get an uncomfortable feeling about calling this function from
+alloc_host, given that everybody else calls their parse functions from
+ufshcd_pltfrm_init. I wonder if you should just initialize the new
+member here in alloc_host to the invalid value, and then move the call
+to the parse function where you had it before in ufshcd_pltfrm_init.
+That way you don't have the problems in the previous series with
+leaving the value uninitialized, but you're also not calling of_
+functions from alloc_host, which seems like an abuse of alloc_host.
+
+-Evan
