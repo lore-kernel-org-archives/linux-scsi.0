@@ -1,7 +1,7 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
 Subject: Re: [PATCH] Performance Improvement in CRC16 Calculations.
-Date: Fri, 24 Aug 2018 17:46:15 -0400
-Message-ID: <yq1tvnj780o.fsf@oracle.com>
+Date: Fri, 24 Aug 2018 18:12:39 -0400
+Message-ID: <yq1pny776so.fsf@oracle.com>
 References: <1533928331-21303-1-git-send-email-jeff.lien@wdc.com>
         <yq1in4gq5jf.fsf@oracle.com> <yq1lg8zb2lp.fsf@oracle.com>
         <20180822062016.GA10356@infradead.org>
@@ -9,11 +9,13 @@ References: <1533928331-21303-1-git-send-email-jeff.lien@wdc.com>
         <CAKv+Gu-RwCrdgW69NVpyRLwGPGPCZx+ksTBM7NZk7v0-dzczGg@mail.gmail.com>
         <yq1a7pb9196.fsf@oracle.com>
         <CAKv+Gu8Y7YmyB5rmxaj-SGB7q03in7ijv2cOifwYnhP5CNastw@mail.gmail.com>
+        <yq1tvnj780o.fsf@oracle.com>
+        <CAKv+Gu8dMBUKmw+5rxWoiRKXngPeAsNyXzOY-nZwd3GPi1S5FA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAKv+Gu8Y7YmyB5rmxaj-SGB7q03in7ijv2cOifwYnhP5CNastw@mail.gmail.com>
-        (Ard Biesheuvel's message of "Fri, 24 Aug 2018 18:38:36 +0100")
+In-Reply-To: <CAKv+Gu8dMBUKmw+5rxWoiRKXngPeAsNyXzOY-nZwd3GPi1S5FA@mail.gmail.com>
+        (Ard Biesheuvel's message of "Fri, 24 Aug 2018 22:54:26 +0100")
 Sender: linux-kernel-owner@vger.kernel.org
 To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Jeffrey Lien <Jeff.Lien@wdc.com>, Christoph Hellwig <hch@infradead.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "herbert@gondor.apana.org.au" <herbert@gondor.apana.org.au>, "tim.c.chen@linux.intel.com" <tim.c.chen@linux.intel.com>, David Darrington <david.darrington@wdc.com>, Jeff Furlong <jeff.furlong@wdc.com>
@@ -22,88 +24,37 @@ List-Id: linux-scsi@vger.kernel.org
 
 Ard,
 
-> I'd prefer to handle this without help from userland.
->
-> It shouldn't be too difficult to register a module notifier that only
-> sets a flag (or the static key, even?), and to free and re-allocate
-> the crc_t10dif transform if the flag is set.
+> This looks like it should work, yes. It does rely on the module name
+> to start with 'crct10dif' but I guess that is reasonable, and matches
+> the current state on all architectures.
 
-Something like this proof of concept?
+Yep, I verified the module names on ARM and Power. There really wasn't
+much I could key off of other than the name string.
 
-diff --git a/lib/crc-t10dif.c b/lib/crc-t10dif.c
-index 1ad33e555805..87d0e8f0794a 100644
---- a/lib/crc-t10dif.c
-+++ b/lib/crc-t10dif.c
-@@ -15,10 +15,50 @@
- #include <linux/init.h>
- #include <crypto/hash.h>
- #include <linux/static_key.h>
-+#include <linux/notifier.h>
- 
- static struct crypto_shash *crct10dif_tfm;
- static struct static_key crct10dif_fallback __read_mostly;
- 
-+static void crc_t10dif_print(void)
-+{
-+	if (static_key_false(&crct10dif_fallback))
-+		pr_info("CRC T10 DIF calculated using library function\n");
-+	else
-+		pr_info("CRC T10 DIF calculated using crypto hash %s\n",
-+			crypto_tfm_alg_driver_name(crypto_shash_tfm(crct10dif_tfm)));
-+}
-+
-+static int crc_t10dif_rehash(struct notifier_block *self, unsigned long val, void *data)
-+{
-+#ifdef CONFIG_MODULES
-+	struct module *mod = data;
-+
-+	if (val != MODULE_STATE_LIVE ||
-+	    strncmp(mod->name, "crct10dif", strlen("crct10dif")))
-+		return 0;
-+
-+	/* Fall back to library function while we replace the tfm */
-+	static_key_slow_inc(&crct10dif_fallback);
-+
-+	crypto_free_shash(crct10dif_tfm);
-+	crct10dif_tfm = crypto_alloc_shash("crct10dif", 0, 0);
-+	if (IS_ERR(crct10dif_tfm)) {
-+		crct10dif_tfm = NULL;
-+		goto out;
-+	}
-+
-+	static_key_slow_dec(&crct10dif_fallback);
-+out:
-+	crc_t10dif_print();
-+	return 0;
-+#endif /* CONFIG_MODULES */
-+}
-+
-+static struct notifier_block crc_t10dif_nb = {
-+	.notifier_call = crc_t10dif_rehash,
-+};
-+
- __u16 crc_t10dif_update(__u16 crc, const unsigned char *buffer, size_t len)
- {
- 	struct {
-@@ -49,16 +90,21 @@ EXPORT_SYMBOL(crc_t10dif);
- 
- static int __init crc_t10dif_mod_init(void)
- {
-+	register_module_notifier(&crc_t10dif_nb);
-+
- 	crct10dif_tfm = crypto_alloc_shash("crct10dif", 0, 0);
- 	if (IS_ERR(crct10dif_tfm)) {
- 		static_key_slow_inc(&crct10dif_fallback);
- 		crct10dif_tfm = NULL;
- 	}
-+
-+	crc_t10dif_print();
- 	return 0;
- }
- 
- static void __exit crc_t10dif_mod_fini(void)
- {
-+	unregister_module_notifier(&crc_t10dif_nb);
- 	crypto_free_shash(crct10dif_tfm);
- }
- 
+> Anyone care to boot test this? Jeffrey?
+
+Did some quick tests on my end with both scsi_debug and FC hardware. I
+verified that performance went up as I loaded crct10dif-pclmul while the
+test was running:
+
+[   23.488059] CRC T10 DIF calculated using crypto hash crct10dif-generic
+[  156.922455] sd 0:0:0:0: [sda] Enabling DIX T10-DIF-TYPE1-CRC protection
+[  221.577731] CRC T10 DIF calculated using crypto hash crct10dif-pclmul
+
+R  63.60 MB/s, W  61.00 MB/s, IOPS  486 | Ops     4460, Rec  0, Err  0
+R  61.80 MB/s, W  62.00 MB/s, IOPS  493 | Ops     6926, Rec  0, Err  0
+R  62.60 MB/s, W  60.80 MB/s, IOPS  494 | Ops     9396, Rec  0, Err  0
+R  59.40 MB/s, W  58.80 MB/s, IOPS  482 | Ops    11804, Rec  0, Err  0
+R 151.40 MB/s, W 155.40 MB/s, IOPS 1216 | Ops    17883, Rec  0, Err  0
+R 165.00 MB/s, W 166.40 MB/s, IOPS 1327 | Ops    24520, Rec  0, Err  0
+R 175.00 MB/s, W 177.40 MB/s, IOPS 1417 | Ops    31604, Rec  0, Err  0
+R 185.80 MB/s, W 188.60 MB/s, IOPS 1507 | Ops    39137, Rec  0, Err  0
+R 200.60 MB/s, W 203.00 MB/s, IOPS 1629 | Ops    47284, Rec  0, Err  0
+
+Note that in this case the CRC is calculated twice per I/O (block layer
+and scsi_debug).
+
+I'll do some more testing over the weekend...
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
