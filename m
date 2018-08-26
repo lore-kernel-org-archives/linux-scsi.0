@@ -1,37 +1,120 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] Performance Improvement in CRC16 Calculations.
-Date: Sat, 25 Aug 2018 22:35:23 -0400
-Message-ID: <yq1lg8t7t3o.fsf@oracle.com>
-References: <1533928331-21303-1-git-send-email-jeff.lien@wdc.com>
-        <yq1in4gq5jf.fsf@oracle.com> <yq1lg8zb2lp.fsf@oracle.com>
-        <20180822062016.GA10356@infradead.org>
-        <SN1PR04MB18241CBDC8E4CA5275EE4424EA360@SN1PR04MB1824.namprd04.prod.outlook.com>
-        <CAKv+Gu-RwCrdgW69NVpyRLwGPGPCZx+ksTBM7NZk7v0-dzczGg@mail.gmail.com>
-        <yq1a7pb9196.fsf@oracle.com>
-        <CAKv+Gu8Y7YmyB5rmxaj-SGB7q03in7ijv2cOifwYnhP5CNastw@mail.gmail.com>
-        <yq1tvnj780o.fsf@oracle.com>
-        <20180825061205.ygrjjazkooqghrqy@gondor.apana.org.au>
-Mime-Version: 1.0
-Content-Type: text/plain
+Subject: [PATCH 1/4] crypto: Introduce notifier for new crypto algorithms
+Date: Sat, 25 Aug 2018 22:40:03 -0400
+Message-ID: <20180826024006.13800-1-martin.petersen@oracle.com>
+References: <20180825061205.ygrjjazkooqghrqy@gondor.apana.org.au>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180825061205.ygrjjazkooqghrqy@gondor.apana.org.au> (Herbert
-        Xu's message of "Sat, 25 Aug 2018 14:12:05 +0800")
+In-Reply-To: <20180825061205.ygrjjazkooqghrqy@gondor.apana.org.au>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Herbert Xu <herbert@gondor.apana.org.au>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Ard Biesheuvel <ard.biesheuvel@linaro.org>, Jeffrey Lien <Jeff.Lien@wdc.com>, Christoph Hellwig <hch@infradead.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "tim.c.chen@linux.intel.com" <tim.c.chen@linux.intel.com>, David Darrington <david.darrington@wdc.com>, Jeff Furlong <jeff.furlong@wdc.com>
+To: herbert@gondor.apana.org.au
+Cc: Jeff.Lien@wdc.com, ard.biesheuvel@linaro.org, david.darrington@wdc.com, hch@infradead.org, jeff.furlong@wdc.com, linux-block@vger.kernel.org, linux-crypto@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, martin.petersen@oracle.com, tim.c.chen@linux.intel.com
 List-Id: linux-scsi@vger.kernel.org
 
+Introduce a facility that can be used to receive a notification
+callback when a new algorithm becomes available. This can be used by
+existing crypto registrations to trigger a switch from a software-only
+algorithm to a hardware-accelerated version.
 
-Herbert,
+A new CRYPTO_MSG_ALG_LOADED state is introduced to the existing crypto
+notification chain, and the register/unregister functions are exported
+so they can be called by subsystems outside of crypto.
 
-> I don't think this is safe unless you do some kind of locking
-> which would slow down the data path.  The easiest fix would be
-> to keep the old tfm around forever, or use RCU if RCU read locking
-> is acceptable to your use-case.
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Suggested-by: Herbert Xu <herbert@gondor.apana.org.au>
+---
+ crypto/algapi.c         |  7 +++----
+ crypto/algboss.c        |  2 ++
+ crypto/internal.h       |  8 --------
+ include/crypto/algapi.h | 10 ++++++++++
+ 4 files changed, 15 insertions(+), 12 deletions(-)
 
-You're right. There's a small race there.
-
-Patch series coming...
-
+diff --git a/crypto/algapi.c b/crypto/algapi.c
+index c0755cf4f53f..87abad3cc322 100644
+--- a/crypto/algapi.c
++++ b/crypto/algapi.c
+@@ -361,15 +361,12 @@ static void crypto_wait_for_test(struct crypto_larval *larval)
+ 	err = crypto_probing_notify(CRYPTO_MSG_ALG_REGISTER, larval->adult);
+ 	if (err != NOTIFY_STOP) {
+ 		if (WARN_ON(err != NOTIFY_DONE))
+-			goto out;
++			return;
+ 		crypto_alg_tested(larval->alg.cra_driver_name, 0);
+ 	}
+ 
+ 	err = wait_for_completion_killable(&larval->completion);
+ 	WARN_ON(err);
+-
+-out:
+-	crypto_larval_kill(&larval->alg);
+ }
+ 
+ int crypto_register_alg(struct crypto_alg *alg)
+@@ -390,6 +387,8 @@ int crypto_register_alg(struct crypto_alg *alg)
+ 		return PTR_ERR(larval);
+ 
+ 	crypto_wait_for_test(larval);
++	crypto_probing_notify(CRYPTO_MSG_ALG_LOADED, larval);
++	crypto_larval_kill(&larval->alg);
+ 	return 0;
+ }
+ EXPORT_SYMBOL_GPL(crypto_register_alg);
+diff --git a/crypto/algboss.c b/crypto/algboss.c
+index 5e6df2a087fa..527b44d0af21 100644
+--- a/crypto/algboss.c
++++ b/crypto/algboss.c
+@@ -274,6 +274,8 @@ static int cryptomgr_notify(struct notifier_block *this, unsigned long msg,
+ 		return cryptomgr_schedule_probe(data);
+ 	case CRYPTO_MSG_ALG_REGISTER:
+ 		return cryptomgr_schedule_test(data);
++	case CRYPTO_MSG_ALG_LOADED:
++		break;
+ 	}
+ 
+ 	return NOTIFY_DONE;
+diff --git a/crypto/internal.h b/crypto/internal.h
+index 9a3f39939fba..ef769b5e8ad3 100644
+--- a/crypto/internal.h
++++ b/crypto/internal.h
+@@ -26,12 +26,6 @@
+ #include <linux/rwsem.h>
+ #include <linux/slab.h>
+ 
+-/* Crypto notification events. */
+-enum {
+-	CRYPTO_MSG_ALG_REQUEST,
+-	CRYPTO_MSG_ALG_REGISTER,
+-};
+-
+ struct crypto_instance;
+ struct crypto_template;
+ 
+@@ -90,8 +84,6 @@ struct crypto_alg *crypto_find_alg(const char *alg_name,
+ void *crypto_alloc_tfm(const char *alg_name,
+ 		       const struct crypto_type *frontend, u32 type, u32 mask);
+ 
+-int crypto_register_notifier(struct notifier_block *nb);
+-int crypto_unregister_notifier(struct notifier_block *nb);
+ int crypto_probing_notify(unsigned long val, void *v);
+ 
+ unsigned int crypto_alg_extsize(struct crypto_alg *alg);
+diff --git a/include/crypto/algapi.h b/include/crypto/algapi.h
+index bd5e8ccf1687..807501a4a754 100644
+--- a/include/crypto/algapi.h
++++ b/include/crypto/algapi.h
+@@ -425,4 +425,14 @@ static inline void crypto_yield(u32 flags)
+ #endif
+ }
+ 
++int crypto_register_notifier(struct notifier_block *nb);
++int crypto_unregister_notifier(struct notifier_block *nb);
++
++/* Crypto notification events. */
++enum {
++	CRYPTO_MSG_ALG_REQUEST,
++	CRYPTO_MSG_ALG_REGISTER,
++	CRYPTO_MSG_ALG_LOADED,
++};
++
+ #endif	/* _CRYPTO_ALGAPI_H */
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+2.17.1
