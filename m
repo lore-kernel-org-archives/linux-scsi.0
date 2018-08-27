@@ -1,33 +1,57 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 4/4] block: Integrity profile init function to trigger module loads
-Date: Sun, 26 Aug 2018 09:48:55 -0400
-Message-ID: <yq1d0u56xx4.fsf@oracle.com>
+From: Herbert Xu <herbert@gondor.apana.org.au>
+Subject: Re: [PATCH 1/4] crypto: Introduce notifier for new crypto algorithms
+Date: Mon, 27 Aug 2018 14:09:19 +0800
+Message-ID: <20180827060918.tfz7ljufqhlej4kq@gondor.apana.org.au>
 References: <20180825061205.ygrjjazkooqghrqy@gondor.apana.org.au>
-        <20180826024006.13800-1-martin.petersen@oracle.com>
-        <20180826024006.13800-4-martin.petersen@oracle.com>
-        <CAKv+Gu92yj5Cuz36bRS7wz3Lg2srp8OFJC6QVO0UWYSjm8eEeg@mail.gmail.com>
-        <yq1h8jh6yrk.fsf@oracle.com>
-        <CAKv+Gu88A8OmVGV3-9YGkgNKOtCRmN70Ys2WL+F7au=NB4vydQ@mail.gmail.com>
+ <20180826024006.13800-1-martin.petersen@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAKv+Gu88A8OmVGV3-9YGkgNKOtCRmN70Ys2WL+F7au=NB4vydQ@mail.gmail.com>
-        (Ard Biesheuvel's message of "Sun, 26 Aug 2018 15:44:31 +0200")
+Content-Disposition: inline
+In-Reply-To: <20180826024006.13800-1-martin.petersen@oracle.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Herbert Xu <herbert@gondor.apana.org.au>, Jeffrey Lien <Jeff.Lien@wdc.com>, David Darrington <david.darrington@wdc.com>, Christoph Hellwig <hch@infradead.org>, Jeff Furlong <jeff.furlong@wdc.com>, linux-block@vger.kernel.org, "open list:HARDWARE RANDOM NUMBER GENERATOR CORE" <linux-crypto@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Tim Chen <tim.c.chen@linux.intel.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Jeff.Lien@wdc.com, ard.biesheuvel@linaro.org, david.darrington@wdc.com, hch@infradead.org, jeff.furlong@wdc.com, linux-block@vger.kernel.org, linux-crypto@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, tim.c.chen@linux.intel.com
 List-Id: linux-scsi@vger.kernel.org
 
+On Sat, Aug 25, 2018 at 10:40:03PM -0400, Martin K. Petersen wrote:
+>
+> diff --git a/crypto/algapi.c b/crypto/algapi.c
+> index c0755cf4f53f..87abad3cc322 100644
+> --- a/crypto/algapi.c
+> +++ b/crypto/algapi.c
+> @@ -361,15 +361,12 @@ static void crypto_wait_for_test(struct crypto_larval *larval)
+>  	err = crypto_probing_notify(CRYPTO_MSG_ALG_REGISTER, larval->adult);
+>  	if (err != NOTIFY_STOP) {
+>  		if (WARN_ON(err != NOTIFY_DONE))
+> -			goto out;
+> +			return;
+>  		crypto_alg_tested(larval->alg.cra_driver_name, 0);
+>  	}
+>  
+>  	err = wait_for_completion_killable(&larval->completion);
+>  	WARN_ON(err);
+> -
+> -out:
+> -	crypto_larval_kill(&larval->alg);
+>  }
+>  
+>  int crypto_register_alg(struct crypto_alg *alg)
+> @@ -390,6 +387,8 @@ int crypto_register_alg(struct crypto_alg *alg)
+>  		return PTR_ERR(larval);
+>  
+>  	crypto_wait_for_test(larval);
+> +	crypto_probing_notify(CRYPTO_MSG_ALG_LOADED, larval);
+> +	crypto_larval_kill(&larval->alg);
 
-Ard,
+I see that you have moved the larval_kill call into the caller.
+This is a problem because there are two callers to wait_for_test.
 
-> That is odd. On my Ubuntu system, both crct10dif_pclmul and
-> crc32_pclmul get loaded automatically.
+So it's probably best to leave it in wait_for_test and add the
+notify there.
 
-Just checked my Fedora box and they are loaded there too. Peculiar. I'll
-keep digging...
-
-(crc32c-intel is brought in by dracut on RHEL/OL/Fedora, fwiw)
-
+Thanks,
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+Email: Herbert Xu <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
