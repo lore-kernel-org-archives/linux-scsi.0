@@ -1,8 +1,8 @@
 From: Adrian Hunter <adrian.hunter@intel.com>
 Subject: Re: [PATCH V10 2/2] scsi: ufs: Add configfs support for UFS
  provisioning
-Date: Tue, 28 Aug 2018 13:50:36 +0300
-Message-ID: <b0987f46-d794-e21c-0e36-cf7a3fd7da2d@intel.com>
+Date: Tue, 28 Aug 2018 14:26:15 +0300
+Message-ID: <a8405e52-ab28-f7ad-e150-4a633d0ad4bc@intel.com>
 References: <1535088810-20989-1-git-send-email-sayalil@codeaurora.org>
  <1535088810-20989-3-git-send-email-sayalil@codeaurora.org>
  <5d2a6dea-e524-fca7-3c4b-a45bc9e6516a@intel.com>
@@ -20,12 +20,6 @@ List-Id: linux-scsi@vger.kernel.org
 
 On 28/08/18 13:23, Sayali Lokhande wrote:
 > Hi Adrian,
-
-Hi Sayali
-
-I see you sent version V10.1.  Should I look at that or are you about to
-make a V11
-
 > 
 > On 8/24/2018 2:15 PM, Adrian Hunter wrote:
 >> On 24/08/18 08:33, Sayali Lokhande wrote:
@@ -90,6 +84,9 @@ make a V11
 > to write repective config_desc. In this way, we should first set the "index"
 > and then read/write to "ufs_provision".
 > Let me know if you have any concern with this approach ?
+
+One file for each config descriptor would seem more normal.
+
 > 
 >>> +        This can be used to provision ufs device if bConfigDescrLock is 0.
 >>> +        For more details, refer 14.1.6.3 Configuration Descriptor and
@@ -175,6 +172,9 @@ make a V11
 >> Is it really ok to hard-code the descriptor size?
 > I will use ufshcd_read_desc_length() api for each index as required. Will
 > remove this hard-code.
+
+Alternatively, I see there is already hba->desc_size.conf_desc
+
 >>> +    int desc_buf_len = QUERY_DESC_CONFIGURATION_DEF_SIZE;
 >>> +    int i, ret, curr_len = 0;
 >>> +    struct ufs_hba *hba = config_item_to_hba(item);
