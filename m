@@ -1,42 +1,36 @@
-From: Randy Dunlap <rdunlap@infradead.org>
-Subject: Re: Bug in /drivers/scsi/3w-9xxx.h
-Date: Tue, 28 Aug 2018 10:00:24 -0700
-Message-ID: <e79d43eb-38cb-8975-08c9-c3937a1276c2@infradead.org>
-References: <491de4ae-0ba3-0fce-a400-3ebb41e21ac4@mni.thm.de>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Subject: Re: [PATCH 1/2] codafs: Fix build using bare-metal toolchain
+Date: Tue, 28 Aug 2018 20:03:23 +0300
+Message-ID: <CAHp75VdiRH_J8QUALDNufdWh0eNnKsTmp5q+RGBassFdMcpEmw@mail.gmail.com>
+References: <20180828142421.15335-1-semen.protsenko@linaro.org> <20180828142421.15335-2-semen.protsenko@linaro.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <491de4ae-0ba3-0fce-a400-3ebb41e21ac4@mni.thm.de>
-Content-Language: en-US
+In-Reply-To: <20180828142421.15335-2-semen.protsenko@linaro.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Frank Kammer <frank.kammer@mni.thm.de>, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+To: Sam Protsenko <semen.protsenko@linaro.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, codalist@coda.cs.cmu.edu, coda@cs.cmu.edu, jaharkes@cs.cmu.edu, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Praneeth Bajjuri <praneeth@ti.com>, paul.sokolovsky@linaro.org, mszeredi@suse.cz, sumit.semwal@linaro.org, Ruslan Bilovol <ruslan.bilovol@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-[add linux-scsi list]
+On Tue, Aug 28, 2018 at 5:24 PM Sam Protsenko
+<semen.protsenko@linaro.org> wrote:
+>
+> The kernel is self-contained project and can be built with bare-metal
+> toolchain. But bare-metal toolchain doesn't define u_quad_t type.
+> Because of this codafs build fails when building with bare-metal
+> toolchain. This patch fixes it by defining u_quad_t type in case when
+> non-Linux toolchain is used.
 
-On 08/28/2018 05:23 AM, Frank Kammer wrote:
-> Hello,
-> 
-> I have a 3ware 9650SE RAID-Controller with 20 LUNs. Using an unpachted
-> kernel (no matter which version, e.g., 4.12.14) , only 17 LUNs are shown.
-> 
-> The problem is that the driver was once written for a 3ware 9550SE
-> RAID-Controlle that supports only 16 LUNs.
-> There are some changes in driver to allow 32 LUNs, but one change is
-> forgotten: 
-> 
-> In drivers/scsi/3w-9xxx.h, one must replace the following:
-> 
-> 467c467
-> < #define TW_MAX_LUNS(srl) (srl < TW_FW_SRL_LUNS_SUPPORTED ? 1 : 16)
-> ---
->> #define TW_MAX_LUNS(srl) (srl < TW_FW_SRL_LUNS_SUPPORTED ? 1 : 32)
-> 
-> Best regards,
-> Frank Kammer
-> 
+>  #endif /* !KERNEL */
 
+I'm wondering what the heck KERNEL is doing in UAPI header.
+Looks like this header is split wrongly in the first place.
 
--- 
-~Randy
+> +#if defined(__KERNEL__) && !defined(__linux__) && !defined(_UQUAD_T_) && \
+
+P.S. Actually it's the only header which uses KERNEL in UAPI.
+Definitely it should be fixed first.
+
+--
+With Best Regards,
+Andy Shevchenko
