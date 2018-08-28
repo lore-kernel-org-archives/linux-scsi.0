@@ -1,58 +1,47 @@
-From: adam radford <aradford@gmail.com>
-Subject: Re: Bug in /drivers/scsi/3w-9xxx.h
-Date: Tue, 28 Aug 2018 10:33:03 -0700
-Message-ID: <CAHtARFHovpNRx-hdZCAYD9zjUf0WWdRvQ8PkqPNjNpbUwPRqow@mail.gmail.com>
-References: <491de4ae-0ba3-0fce-a400-3ebb41e21ac4@mni.thm.de> <e79d43eb-38cb-8975-08c9-c3937a1276c2@infradead.org>
+From: Evan Green <evgreen@chromium.org>
+Subject: Re: [PATCH 1/1] scsi/ufshcd: Fix NULL pointer dereference for in ufshcd_init
+Date: Tue, 28 Aug 2018 12:41:38 -0700
+Message-ID: <CAE=gft5ONyVQ6qkP41G_vx-Djo0MqHhXZ6pjTOZjTDpPgwukZQ@mail.gmail.com>
+References: <20180807174739.23379-1-vivek.gautam@codeaurora.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <e79d43eb-38cb-8975-08c9-c3937a1276c2@infradead.org>
+In-Reply-To: <20180807174739.23379-1-vivek.gautam@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: rdunlap@infradead.org
-Cc: frank.kammer@mni.thm.de, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: vivek.gautam@codeaurora.org
+Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, Bjorn Andersson <bjorn.andersson@linaro.org>, subhashj@codeaurora.org, mka@chromium.org
 List-Id: linux-scsi@vger.kernel.org
 
-Frank,
-
-host->max_id (max scsi target ID's) is set to TW_MAX_UNITS_9650SE for
-your adapter, which is 32.
-
-The firmware srl (spec revision level) for your 9650 adapter doesn't
-support luns > (0 .. 16).
-
-You could run in this mode but it hasn't been tested, and I don't
-recall what the ramifications may be (if any).
-
--Adam
-
-
-
-On Tue, Aug 28, 2018 at 10:02 AM Randy Dunlap <rdunlap@infradead.org> wrote:
+On Tue, Aug 7, 2018 at 10:48 AM Vivek Gautam
+<vivek.gautam@codeaurora.org> wrote:
 >
-> [add linux-scsi list]
+> Error paths in ufshcd_init() ufshcd_hba_exit() killed clk_scaling
+> workqueue when the workqueue is actually created quite late in
+> ufshcd_init().
+> So, we end up getting NULL pointer dereference in such error paths.
+> Fix this by moving clk_scaling initialization and kill codes to
+> two separate methods, and call them at required places.
 >
-> On 08/28/2018 05:23 AM, Frank Kammer wrote:
-> > Hello,
-> >
-> > I have a 3ware 9650SE RAID-Controller with 20 LUNs. Using an unpachted
-> > kernel (no matter which version, e.g., 4.12.14) , only 17 LUNs are shown.
-> >
-> > The problem is that the driver was once written for a 3ware 9550SE
-> > RAID-Controlle that supports only 16 LUNs.
-> > There are some changes in driver to allow 32 LUNs, but one change is
-> > forgotten:
-> >
-> > In drivers/scsi/3w-9xxx.h, one must replace the following:
-> >
-> > 467c467
-> > < #define TW_MAX_LUNS(srl) (srl < TW_FW_SRL_LUNS_SUPPORTED ? 1 : 16)
-> > ---
-> >> #define TW_MAX_LUNS(srl) (srl < TW_FW_SRL_LUNS_SUPPORTED ? 1 : 32)
-> >
-> > Best regards,
-> > Frank Kammer
-> >
+> Fixes: 401f1e4490ee ("scsi: ufs: don't suspend clock scaling during clock
+> gating")
 >
+> Signed-off-by: Vivek Gautam <vivek.gautam@codeaurora.org>
+> Cc: Bjorn Andersson <bjorn.andersson@linaro.org>
+> Cc: Subhash Jadavani <subhashj@codeaurora.org>
+> Cc: Matthias Kaehlcke <mka@chromium.org>
+> Cc: Evan Green <evgreen@chromium.org>
+> Cc: Martin K. Petersen <martin.petersen@oracle.com>
+> ---
 >
-> --
-> ~Randy
+> Bjorn, Subhash,
+> I am not certain of some of these devfreq, and clk_scaling bits
+> that are moved as part of this patch. Please help in reviewing the
+> change in the light of these features, and related sequence should
+> be followed.
+> Thanks.
+>
+
+You're right, there is a lot of logic moving around here. I think this
+looks okay to me.
+
+Reviewed-by: Evan Green <evgreen@chromium.org>
