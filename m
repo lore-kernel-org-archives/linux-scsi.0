@@ -1,47 +1,35 @@
-From: Evan Green <evgreen@chromium.org>
-Subject: Re: [PATCH 1/1] scsi/ufshcd: Fix NULL pointer dereference for in ufshcd_init
-Date: Tue, 28 Aug 2018 12:41:38 -0700
-Message-ID: <CAE=gft5ONyVQ6qkP41G_vx-Djo0MqHhXZ6pjTOZjTDpPgwukZQ@mail.gmail.com>
-References: <20180807174739.23379-1-vivek.gautam@codeaurora.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+From: Ding Xiang <dingxiang@cmss.chinamobile.com>
+Subject: [PATCH] scsi: csiostor: Fix bool function return value
+Date: Wed, 29 Aug 2018 11:03:20 +0800
+Message-ID: <1535511800-25075-1-git-send-email-dingxiang@cmss.chinamobile.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180807174739.23379-1-vivek.gautam@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: vivek.gautam@codeaurora.org
-Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, Bjorn Andersson <bjorn.andersson@linaro.org>, subhashj@codeaurora.org, mka@chromium.org
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Aug 7, 2018 at 10:48 AM Vivek Gautam
-<vivek.gautam@codeaurora.org> wrote:
->
-> Error paths in ufshcd_init() ufshcd_hba_exit() killed clk_scaling
-> workqueue when the workqueue is actually created quite late in
-> ufshcd_init().
-> So, we end up getting NULL pointer dereference in such error paths.
-> Fix this by moving clk_scaling initialization and kill codes to
-> two separate methods, and call them at required places.
->
-> Fixes: 401f1e4490ee ("scsi: ufs: don't suspend clock scaling during clock
-> gating")
->
-> Signed-off-by: Vivek Gautam <vivek.gautam@codeaurora.org>
-> Cc: Bjorn Andersson <bjorn.andersson@linaro.org>
-> Cc: Subhash Jadavani <subhashj@codeaurora.org>
-> Cc: Matthias Kaehlcke <mka@chromium.org>
-> Cc: Evan Green <evgreen@chromium.org>
-> Cc: Martin K. Petersen <martin.petersen@oracle.com>
-> ---
->
-> Bjorn, Subhash,
-> I am not certain of some of these devfreq, and clk_scaling bits
-> that are moved as part of this patch. Please help in reviewing the
-> change in the light of these features, and related sequence should
-> be followed.
-> Thanks.
->
+csio_scsi_itnexus_loss_error is bool type, so the return value
+should be true or false.
 
-You're right, there is a lot of logic moving around here. I think this
-looks okay to me.
+Signed-off-by: Ding Xiang <dingxiang@cmss.chinamobile.com>
+---
+ drivers/scsi/csiostor/csio_scsi.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Reviewed-by: Evan Green <evgreen@chromium.org>
+diff --git a/drivers/scsi/csiostor/csio_scsi.c b/drivers/scsi/csiostor/csio_scsi.c
+index dab0d3f..aae7abc 100644
+--- a/drivers/scsi/csiostor/csio_scsi.c
++++ b/drivers/scsi/csiostor/csio_scsi.c
+@@ -147,9 +147,9 @@ static int csio_do_abrt_cls(struct csio_hw *,
+ 	case FW_ERR_RDEV_LOST:
+ 	case FW_ERR_RDEV_LOGO:
+ 	case FW_ERR_RDEV_IMPL_LOGO:
+-		return 1;
++		return true;
+ 	}
+-	return 0;
++	return false;
+ }
+ 
+ /*
+-- 
+1.9.1
