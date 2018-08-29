@@ -1,88 +1,44 @@
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Subject: Re: [PATCH] sym53c8xx: fix NULL pointer dereference panic in
- sym_int_sir() in sym_hipd.c
-Date: Wed, 29 Aug 2018 19:56:22 +0300
-Message-ID: <CAHp75Vc=Fg165nL+SFDXXDzBvtba+C7CLK24gyz3EaAb8QdjNQ@mail.gmail.com>
-References: <1535557096-1324-1-git-send-email-george.kennedy@oracle.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+From: Sam Protsenko <semen.protsenko@linaro.org>
+Subject: [PATCH v2 0/2] Fix allmodconfig build with bare-metal toolchain
+Date: Wed, 29 Aug 2018 20:00:13 +0300
+Message-ID: <20180829170015.7729-1-semen.protsenko@linaro.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1535557096-1324-1-git-send-email-george.kennedy@oracle.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: george.kennedy@oracle.com
-Cc: matthew@wil.cx, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, codalist@coda.cs.cmu.edu, coda@cs.cmu.edu
+Cc: Jan Harkes <jaharkes@cs.cmu.edu>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Praneeth Bajjuri <praneeth@ti.com>, Paul Sokolovsky <paul.sokolovsky@linaro.org>, Miklos Szeredi <mszeredi@suse.cz>, Sumit Semwal <sumit.semwal@linaro.org>, Ruslan Bilovol <ruslan.bilovol@gmail.com>, Andy Shevchenko <andy.shevchenko@gmail.com>, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Aug 29, 2018 at 6:42 PM George Kennedy
-<george.kennedy@oracle.com> wrote:
->
-> sym_int_sir() in sym_hipd.c does not check the command pointer for NULL
-> before using it in debug message prints.
->
-> Suggested-by: Matthew Wilcox <matthew.wilcox@oracle.com>
-> Signed-off-by: George Kennedy <george.kennedy@oracle.com>
-> Reviewed-by: Mark Kanda <mark.kanda@oracle.com>
+Attempt to build allmodconfig (for ARM platforms) using bare-metal
+toolchain fails with errors related to __linux__ definition. It's only
+defined on Linux toolchains, but not defined on bare-metal toolchains.
+This patch series fixes that.
 
-> +#define sym_printk(lvl, tp, cp, fmt, v...) do { \
+Some similar patches (for different files) were applied previously:
+  - commit 4c82456eeb4d ("fuse: fix type definitions in uapi header")
+  - commit b6330548383c ("drm.h: Fix DRM compilation with bare-metal
+toolchain.")
 
-Since all users are KERN_WARNING level, perhaps
+Sam Protsenko (2):
+  codafs: Fix build using bare-metal toolchain
+  scsi: aic7xxx: Fix build using bare-metal toolchain
 
-sym_pr_warn(tp, ...) ... \
-... \
-..._printk(KERN_WARNING ...
-
-?
-
-> +       if (cp)                                                 \
-> +               scmd_printk(lvl, cp->cmd, fmt, ##v);            \
-> +       else                                                    \
-> +               starget_printk(lvl, tp->starget, fmt, ##v);     \
-> +} while (0)
-> +
->  /*
->   *  chip exception handler for programmed interrupts.
->   */
-> @@ -4415,7 +4422,7 @@ static void sym_int_sir(struct sym_hcb *np)
->          *  been selected with ATN.  We do not want to handle that.
->          */
->         case SIR_SEL_ATN_NO_MSG_OUT:
-> -               scmd_printk(KERN_WARNING, cp->cmd,
-> +               sym_printk(KERN_WARNING, tp, cp,
->                                 "No MSG OUT phase after selection with ATN\n");
->                 goto out_stuck;
->         /*
-> @@ -4423,7 +4430,7 @@ static void sym_int_sir(struct sym_hcb *np)
->          *  having reselected the initiator.
->          */
->         case SIR_RESEL_NO_MSG_IN:
-> -               scmd_printk(KERN_WARNING, cp->cmd,
-> +               sym_printk(KERN_WARNING, tp, cp,
->                                 "No MSG IN phase after reselection\n");
->                 goto out_stuck;
->         /*
-> @@ -4431,7 +4438,7 @@ static void sym_int_sir(struct sym_hcb *np)
->          *  an IDENTIFY.
->          */
->         case SIR_RESEL_NO_IDENTIFY:
-> -               scmd_printk(KERN_WARNING, cp->cmd,
-> +               sym_printk(KERN_WARNING, tp, cp,
->                                 "No IDENTIFY after reselection\n");
->                 goto out_stuck;
->         /*
-> @@ -4460,7 +4467,7 @@ static void sym_int_sir(struct sym_hcb *np)
->         case SIR_RESEL_ABORTED:
->                 np->lastmsg = np->msgout[0];
->                 np->msgout[0] = M_NOOP;
-> -               scmd_printk(KERN_WARNING, cp->cmd,
-> +               sym_printk(KERN_WARNING, tp, cp,
->                         "message %x sent on bad reselection\n", np->lastmsg);
->                 goto out;
->         /*
-> --
-> 1.8.3.1
->
-
+ drivers/scsi/aic7xxx/aic7770.c                |  6 ---
+ drivers/scsi/aic7xxx/aic79xx.h                |  6 ---
+ drivers/scsi/aic7xxx/aic79xx_core.c           | 43 -------------------
+ drivers/scsi/aic7xxx/aic79xx_pci.c            |  6 ---
+ drivers/scsi/aic7xxx/aic7xxx.h                |  6 ---
+ drivers/scsi/aic7xxx/aic7xxx_93cx6.c          |  6 ---
+ drivers/scsi/aic7xxx/aic7xxx_core.c           | 40 +----------------
+ drivers/scsi/aic7xxx/aic7xxx_pci.c            |  7 ---
+ drivers/scsi/aic7xxx/aicasm/aicasm.h          |  4 --
+ drivers/scsi/aic7xxx/aicasm/aicasm_gram.y     |  4 --
+ .../scsi/aic7xxx/aicasm/aicasm_macro_gram.y   |  4 --
+ .../scsi/aic7xxx/aicasm/aicasm_macro_scan.l   |  4 --
+ drivers/scsi/aic7xxx/aicasm/aicasm_scan.l     |  4 --
+ drivers/scsi/aic7xxx/aicasm/aicasm_symbol.c   |  4 --
+ drivers/scsi/aic7xxx/aicasm/aicasm_symbol.h   |  4 --
+ include/linux/coda.h                          |  3 +-
+ 16 files changed, 2 insertions(+), 149 deletions(-)
 
 -- 
-With Best Regards,
-Andy Shevchenko
+2.18.0
