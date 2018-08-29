@@ -1,24 +1,75 @@
-From: Sam Protsenko <semen.protsenko@linaro.org>
-Subject: Re: [PATCH 1/2] codafs: Fix build using bare-metal toolchain
-Date: Wed, 29 Aug 2018 17:03:44 +0300
-Message-ID: <CAKaJLVvhGGoVnWxaDGN60ySiZ_y4xOUkamNQRnad3V7SNsNL-A@mail.gmail.com>
-References: <20180828142421.15335-1-semen.protsenko@linaro.org>
- <20180828142421.15335-2-semen.protsenko@linaro.org> <20180829063347.GB32392@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+From: George Kennedy <george.kennedy@oracle.com>
+Subject: [PATCH] sym53c8xx: fix NULL pointer dereference panic in sym_int_sir() in sym_hipd.c
+Date: Wed, 29 Aug 2018 11:38:16 -0400
+Message-ID: <1535557096-1324-1-git-send-email-george.kennedy@oracle.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180829063347.GB32392@infradead.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, codalist@coda.cs.cmu.edu, coda@cs.cmu.edu, Jan Harkes <jaharkes@cs.cmu.edu>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Praneeth Bajjuri <praneeth@ti.com>, Paul Sokolovsky <paul.sokolovsky@linaro.org>, Miklos Szeredi <mszeredi@suse.cz>, Sumit Semwal <sumit.semwal@linaro.org>, Ruslan Bilovol <ruslan.bilovol@gmail.com>, Andy Shevchenko <andy.shevchenko@gmail.com>
+To: matthew@wil.cx, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, george.kennedy@oracle.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Aug 29, 2018 at 9:33 AM, Christoph Hellwig <hch@infradead.org> wrote:
-> Please just drop the ifdef entirely.  The file is part of the kernel
-> tree and can't be used for anything non-Linux.
+sym_int_sir() in sym_hipd.c does not check the command pointer for NULL
+before using it in debug message prints.
 
-I have better idea :) We can modify include/linux/coda.h instead, by
-checking for __KERNEL__ (along with existing check for __linux__).
-This way we can leave user-space API header alone. Don't know how come
-I didn't notice that in the first place... Anyway, will send v2
-shortly. Thanks for the review.
+Suggested-by: Matthew Wilcox <matthew.wilcox@oracle.com>
+Signed-off-by: George Kennedy <george.kennedy@oracle.com>
+Reviewed-by: Mark Kanda <mark.kanda@oracle.com>
+---
+ drivers/scsi/sym53c8xx_2/sym_hipd.c | 15 +++++++++++----
+ 1 file changed, 11 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/scsi/sym53c8xx_2/sym_hipd.c b/drivers/scsi/sym53c8xx_2/sym_hipd.c
+index bd3f6e2..0a2a545 100644
+--- a/drivers/scsi/sym53c8xx_2/sym_hipd.c
++++ b/drivers/scsi/sym53c8xx_2/sym_hipd.c
+@@ -4370,6 +4370,13 @@ static void sym_nego_rejected(struct sym_hcb *np, struct sym_tcb *tp, struct sym
+ 	OUTB(np, HS_PRT, HS_BUSY);
+ }
+ 
++#define sym_printk(lvl, tp, cp, fmt, v...) do { \
++	if (cp)							\
++		scmd_printk(lvl, cp->cmd, fmt, ##v);		\
++	else							\
++		starget_printk(lvl, tp->starget, fmt, ##v);	\
++} while (0)
++
+ /*
+  *  chip exception handler for programmed interrupts.
+  */
+@@ -4415,7 +4422,7 @@ static void sym_int_sir(struct sym_hcb *np)
+ 	 *  been selected with ATN.  We do not want to handle that.
+ 	 */
+ 	case SIR_SEL_ATN_NO_MSG_OUT:
+-		scmd_printk(KERN_WARNING, cp->cmd,
++		sym_printk(KERN_WARNING, tp, cp,
+ 				"No MSG OUT phase after selection with ATN\n");
+ 		goto out_stuck;
+ 	/*
+@@ -4423,7 +4430,7 @@ static void sym_int_sir(struct sym_hcb *np)
+ 	 *  having reselected the initiator.
+ 	 */
+ 	case SIR_RESEL_NO_MSG_IN:
+-		scmd_printk(KERN_WARNING, cp->cmd,
++		sym_printk(KERN_WARNING, tp, cp,
+ 				"No MSG IN phase after reselection\n");
+ 		goto out_stuck;
+ 	/*
+@@ -4431,7 +4438,7 @@ static void sym_int_sir(struct sym_hcb *np)
+ 	 *  an IDENTIFY.
+ 	 */
+ 	case SIR_RESEL_NO_IDENTIFY:
+-		scmd_printk(KERN_WARNING, cp->cmd,
++		sym_printk(KERN_WARNING, tp, cp,
+ 				"No IDENTIFY after reselection\n");
+ 		goto out_stuck;
+ 	/*
+@@ -4460,7 +4467,7 @@ static void sym_int_sir(struct sym_hcb *np)
+ 	case SIR_RESEL_ABORTED:
+ 		np->lastmsg = np->msgout[0];
+ 		np->msgout[0] = M_NOOP;
+-		scmd_printk(KERN_WARNING, cp->cmd,
++		sym_printk(KERN_WARNING, tp, cp,
+ 			"message %x sent on bad reselection\n", np->lastmsg);
+ 		goto out;
+ 	/*
+-- 
+1.8.3.1
