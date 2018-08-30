@@ -1,103 +1,128 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH v2 1/3] crypto: Introduce notifier for new crypto algorithms
-Date: Thu, 30 Aug 2018 11:00:14 -0400
-Message-ID: <20180830150016.15661-1-martin.petersen@oracle.com>
+Subject: [PATCH v2 2/3] crc-t10dif: Pick better transform if one becomes available
+Date: Thu, 30 Aug 2018 11:00:15 -0400
+Message-ID: <20180830150016.15661-2-martin.petersen@oracle.com>
 References: <20180827060918.tfz7ljufqhlej4kq@gondor.apana.org.au>
+ <20180830150016.15661-1-martin.petersen@oracle.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180827060918.tfz7ljufqhlej4kq@gondor.apana.org.au>
+In-Reply-To: <20180830150016.15661-1-martin.petersen@oracle.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: herbert@gondor.apana.org.au
 Cc: Jeff.Lien@wdc.com, ard.biesheuvel@linaro.org, david.darrington@wdc.com, hch@infradead.org, jeff.furlong@wdc.com, linux-block@vger.kernel.org, linux-crypto@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, martin.petersen@oracle.com, tim.c.chen@linux.intel.com
 List-Id: linux-scsi@vger.kernel.org
 
-Introduce a facility that can be used to receive a notification
-callback when a new algorithm becomes available. This can be used by
-existing crypto registrations to trigger a switch from a software-only
-algorithm to a hardware-accelerated version.
+T10 CRC library is linked into the kernel thanks to block and SCSI. The
+crypto accelerators are typically loaded later as modules and are
+therefore not available when the T10 CRC library is initialized.
 
-A new CRYPTO_MSG_ALG_LOADED state is introduced to the existing crypto
-notification chain, and the register/unregister functions are exported
-so they can be called by subsystems outside of crypto.
+Use the crypto notifier facility to trigger a switch to a better algorithm
+if one becomes available after the initial hash has been registered. Use
+RCU to protect the original transform while the new one is being set up.
 
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Suggested-by: Ard Biesheuvel <ard.biesheuvel@linaro.org
 Suggested-by: Herbert Xu <herbert@gondor.apana.org.au>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 ---
- crypto/algapi.c         |  2 ++
- crypto/algboss.c        |  2 ++
- crypto/internal.h       |  8 --------
- include/crypto/algapi.h | 10 ++++++++++
- 4 files changed, 14 insertions(+), 8 deletions(-)
+ include/linux/crc-t10dif.h |  1 +
+ lib/crc-t10dif.c           | 46 ++++++++++++++++++++++++++++++++++++--
+ 2 files changed, 45 insertions(+), 2 deletions(-)
 
-diff --git a/crypto/algapi.c b/crypto/algapi.c
-index c0755cf4f53f..33522a147412 100644
---- a/crypto/algapi.c
-+++ b/crypto/algapi.c
-@@ -367,6 +367,8 @@ static void crypto_wait_for_test(struct crypto_larval *larval)
+diff --git a/include/linux/crc-t10dif.h b/include/linux/crc-t10dif.h
+index 1fe0cfcdea30..6bb0c0bf357b 100644
+--- a/include/linux/crc-t10dif.h
++++ b/include/linux/crc-t10dif.h
+@@ -6,6 +6,7 @@
  
- 	err = wait_for_completion_killable(&larval->completion);
- 	WARN_ON(err);
-+	if (!err)
-+		crypto_probing_notify(CRYPTO_MSG_ALG_LOADED, larval);
+ #define CRC_T10DIF_DIGEST_SIZE 2
+ #define CRC_T10DIF_BLOCK_SIZE 1
++#define CRC_T10DIF_STRING "crct10dif"
  
- out:
- 	crypto_larval_kill(&larval->alg);
-diff --git a/crypto/algboss.c b/crypto/algboss.c
-index 5e6df2a087fa..527b44d0af21 100644
---- a/crypto/algboss.c
-+++ b/crypto/algboss.c
-@@ -274,6 +274,8 @@ static int cryptomgr_notify(struct notifier_block *this, unsigned long msg,
- 		return cryptomgr_schedule_probe(data);
- 	case CRYPTO_MSG_ALG_REGISTER:
- 		return cryptomgr_schedule_test(data);
-+	case CRYPTO_MSG_ALG_LOADED:
-+		break;
- 	}
+ extern __u16 crc_t10dif_generic(__u16 crc, const unsigned char *buffer,
+ 				size_t len);
+diff --git a/lib/crc-t10dif.c b/lib/crc-t10dif.c
+index 1ad33e555805..52f577a3868d 100644
+--- a/lib/crc-t10dif.c
++++ b/lib/crc-t10dif.c
+@@ -14,10 +14,47 @@
+ #include <linux/err.h>
+ #include <linux/init.h>
+ #include <crypto/hash.h>
++#include <crypto/algapi.h>
+ #include <linux/static_key.h>
++#include <linux/notifier.h>
  
- 	return NOTIFY_DONE;
-diff --git a/crypto/internal.h b/crypto/internal.h
-index 9a3f39939fba..ef769b5e8ad3 100644
---- a/crypto/internal.h
-+++ b/crypto/internal.h
-@@ -26,12 +26,6 @@
- #include <linux/rwsem.h>
- #include <linux/slab.h>
+-static struct crypto_shash *crct10dif_tfm;
++static struct crypto_shash __rcu *crct10dif_tfm;
+ static struct static_key crct10dif_fallback __read_mostly;
++DEFINE_MUTEX(crc_t10dif_mutex);
++
++static int crc_t10dif_rehash(struct notifier_block *self, unsigned long val, void *data)
++{
++	struct crypto_alg *alg = data;
++	struct crypto_shash *new, *old;
++
++	if (val != CRYPTO_MSG_ALG_LOADED ||
++	    static_key_false(&crct10dif_fallback) ||
++	    strncmp(alg->cra_name, CRC_T10DIF_STRING, strlen(CRC_T10DIF_STRING)))
++		return 0;
++
++	mutex_lock(&crc_t10dif_mutex);
++	old = rcu_dereference_protected(crct10dif_tfm,
++					lockdep_is_held(&crc_t10dif_mutex));
++	if (!old) {
++		mutex_unlock(&crc_t10dif_mutex);
++		return 0;
++	}
++	new = crypto_alloc_shash("crct10dif", 0, 0);
++	if (IS_ERR(new)) {
++		mutex_unlock(&crc_t10dif_mutex);
++		return 0;
++	}
++	rcu_assign_pointer(crct10dif_tfm, new);
++	mutex_unlock(&crc_t10dif_mutex);
++
++	synchronize_rcu();
++	crypto_free_shash(old);
++	return 0;
++}
++
++static struct notifier_block crc_t10dif_nb = {
++	.notifier_call = crc_t10dif_rehash,
++};
  
--/* Crypto notification events. */
--enum {
--	CRYPTO_MSG_ALG_REQUEST,
--	CRYPTO_MSG_ALG_REGISTER,
--};
--
- struct crypto_instance;
- struct crypto_template;
+ __u16 crc_t10dif_update(__u16 crc, const unsigned char *buffer, size_t len)
+ {
+@@ -30,11 +67,14 @@ __u16 crc_t10dif_update(__u16 crc, const unsigned char *buffer, size_t len)
+ 	if (static_key_false(&crct10dif_fallback))
+ 		return crc_t10dif_generic(crc, buffer, len);
  
-@@ -90,8 +84,6 @@ struct crypto_alg *crypto_find_alg(const char *alg_name,
- void *crypto_alloc_tfm(const char *alg_name,
- 		       const struct crypto_type *frontend, u32 type, u32 mask);
+-	desc.shash.tfm = crct10dif_tfm;
++	rcu_read_lock();
++	desc.shash.tfm = rcu_dereference(crct10dif_tfm);
+ 	desc.shash.flags = 0;
+ 	*(__u16 *)desc.ctx = crc;
  
--int crypto_register_notifier(struct notifier_block *nb);
--int crypto_unregister_notifier(struct notifier_block *nb);
- int crypto_probing_notify(unsigned long val, void *v);
+ 	err = crypto_shash_update(&desc.shash, buffer, len);
++	rcu_read_unlock();
++
+ 	BUG_ON(err);
  
- unsigned int crypto_alg_extsize(struct crypto_alg *alg);
-diff --git a/include/crypto/algapi.h b/include/crypto/algapi.h
-index bd5e8ccf1687..807501a4a754 100644
---- a/include/crypto/algapi.h
-+++ b/include/crypto/algapi.h
-@@ -425,4 +425,14 @@ static inline void crypto_yield(u32 flags)
- #endif
+ 	return *(__u16 *)desc.ctx;
+@@ -49,6 +89,7 @@ EXPORT_SYMBOL(crc_t10dif);
+ 
+ static int __init crc_t10dif_mod_init(void)
+ {
++	crypto_register_notifier(&crc_t10dif_nb);
+ 	crct10dif_tfm = crypto_alloc_shash("crct10dif", 0, 0);
+ 	if (IS_ERR(crct10dif_tfm)) {
+ 		static_key_slow_inc(&crct10dif_fallback);
+@@ -59,6 +100,7 @@ static int __init crc_t10dif_mod_init(void)
+ 
+ static void __exit crc_t10dif_mod_fini(void)
+ {
++	crypto_unregister_notifier(&crc_t10dif_nb);
+ 	crypto_free_shash(crct10dif_tfm);
  }
  
-+int crypto_register_notifier(struct notifier_block *nb);
-+int crypto_unregister_notifier(struct notifier_block *nb);
-+
-+/* Crypto notification events. */
-+enum {
-+	CRYPTO_MSG_ALG_REQUEST,
-+	CRYPTO_MSG_ALG_REGISTER,
-+	CRYPTO_MSG_ALG_LOADED,
-+};
-+
- #endif	/* _CRYPTO_ALGAPI_H */
 -- 
 2.17.1
