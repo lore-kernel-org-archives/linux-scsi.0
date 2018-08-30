@@ -1,7 +1,7 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH v2 2/3] crc-t10dif: Pick better transform if one becomes available
-Date: Thu, 30 Aug 2018 11:00:15 -0400
-Message-ID: <20180830150016.15661-2-martin.petersen@oracle.com>
+Subject: [PATCH v2 3/3] crc-t10dif: Allow current transform to be inspected in sysfs
+Date: Thu, 30 Aug 2018 11:00:16 -0400
+Message-ID: <20180830150016.15661-3-martin.petersen@oracle.com>
 References: <20180827060918.tfz7ljufqhlej4kq@gondor.apana.org.au>
  <20180830150016.15661-1-martin.petersen@oracle.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
@@ -11,118 +11,36 @@ To: herbert@gondor.apana.org.au
 Cc: Jeff.Lien@wdc.com, ard.biesheuvel@linaro.org, david.darrington@wdc.com, hch@infradead.org, jeff.furlong@wdc.com, linux-block@vger.kernel.org, linux-crypto@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, martin.petersen@oracle.com, tim.c.chen@linux.intel.com
 List-Id: linux-scsi@vger.kernel.org
 
-T10 CRC library is linked into the kernel thanks to block and SCSI. The
-crypto accelerators are typically loaded later as modules and are
-therefore not available when the T10 CRC library is initialized.
+Add a way to print the currently active CRC algorithm in:
 
-Use the crypto notifier facility to trigger a switch to a better algorithm
-if one becomes available after the initial hash has been registered. Use
-RCU to protect the original transform while the new one is being set up.
+	/sys/module/crc_t10dif/parameters/transform
 
-Suggested-by: Ard Biesheuvel <ard.biesheuvel@linaro.org
-Suggested-by: Herbert Xu <herbert@gondor.apana.org.au>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 ---
- include/linux/crc-t10dif.h |  1 +
- lib/crc-t10dif.c           | 46 ++++++++++++++++++++++++++++++++++++--
- 2 files changed, 45 insertions(+), 2 deletions(-)
+ lib/crc-t10dif.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-diff --git a/include/linux/crc-t10dif.h b/include/linux/crc-t10dif.h
-index 1fe0cfcdea30..6bb0c0bf357b 100644
---- a/include/linux/crc-t10dif.h
-+++ b/include/linux/crc-t10dif.h
-@@ -6,6 +6,7 @@
- 
- #define CRC_T10DIF_DIGEST_SIZE 2
- #define CRC_T10DIF_BLOCK_SIZE 1
-+#define CRC_T10DIF_STRING "crct10dif"
- 
- extern __u16 crc_t10dif_generic(__u16 crc, const unsigned char *buffer,
- 				size_t len);
 diff --git a/lib/crc-t10dif.c b/lib/crc-t10dif.c
-index 1ad33e555805..52f577a3868d 100644
+index 52f577a3868d..6507fa101eff 100644
 --- a/lib/crc-t10dif.c
 +++ b/lib/crc-t10dif.c
-@@ -14,10 +14,47 @@
- #include <linux/err.h>
- #include <linux/init.h>
- #include <crypto/hash.h>
-+#include <crypto/algapi.h>
- #include <linux/static_key.h>
-+#include <linux/notifier.h>
+@@ -107,6 +107,17 @@ static void __exit crc_t10dif_mod_fini(void)
+ module_init(crc_t10dif_mod_init);
+ module_exit(crc_t10dif_mod_fini);
  
--static struct crypto_shash *crct10dif_tfm;
-+static struct crypto_shash __rcu *crct10dif_tfm;
- static struct static_key crct10dif_fallback __read_mostly;
-+DEFINE_MUTEX(crc_t10dif_mutex);
-+
-+static int crc_t10dif_rehash(struct notifier_block *self, unsigned long val, void *data)
++static int crc_t10dif_transform_show(char *buffer, const struct kernel_param *kp)
 +{
-+	struct crypto_alg *alg = data;
-+	struct crypto_shash *new, *old;
++	if (static_key_false(&crct10dif_fallback))
++		return sprintf(buffer, "fallback\n");
 +
-+	if (val != CRYPTO_MSG_ALG_LOADED ||
-+	    static_key_false(&crct10dif_fallback) ||
-+	    strncmp(alg->cra_name, CRC_T10DIF_STRING, strlen(CRC_T10DIF_STRING)))
-+		return 0;
-+
-+	mutex_lock(&crc_t10dif_mutex);
-+	old = rcu_dereference_protected(crct10dif_tfm,
-+					lockdep_is_held(&crc_t10dif_mutex));
-+	if (!old) {
-+		mutex_unlock(&crc_t10dif_mutex);
-+		return 0;
-+	}
-+	new = crypto_alloc_shash("crct10dif", 0, 0);
-+	if (IS_ERR(new)) {
-+		mutex_unlock(&crc_t10dif_mutex);
-+		return 0;
-+	}
-+	rcu_assign_pointer(crct10dif_tfm, new);
-+	mutex_unlock(&crc_t10dif_mutex);
-+
-+	synchronize_rcu();
-+	crypto_free_shash(old);
-+	return 0;
++	return sprintf(buffer, "%s\n",
++		crypto_tfm_alg_driver_name(crypto_shash_tfm(crct10dif_tfm)));
 +}
 +
-+static struct notifier_block crc_t10dif_nb = {
-+	.notifier_call = crc_t10dif_rehash,
-+};
- 
- __u16 crc_t10dif_update(__u16 crc, const unsigned char *buffer, size_t len)
- {
-@@ -30,11 +67,14 @@ __u16 crc_t10dif_update(__u16 crc, const unsigned char *buffer, size_t len)
- 	if (static_key_false(&crct10dif_fallback))
- 		return crc_t10dif_generic(crc, buffer, len);
- 
--	desc.shash.tfm = crct10dif_tfm;
-+	rcu_read_lock();
-+	desc.shash.tfm = rcu_dereference(crct10dif_tfm);
- 	desc.shash.flags = 0;
- 	*(__u16 *)desc.ctx = crc;
- 
- 	err = crypto_shash_update(&desc.shash, buffer, len);
-+	rcu_read_unlock();
++module_param_call(transform, NULL, crc_t10dif_transform_show, NULL, 0644);
 +
- 	BUG_ON(err);
- 
- 	return *(__u16 *)desc.ctx;
-@@ -49,6 +89,7 @@ EXPORT_SYMBOL(crc_t10dif);
- 
- static int __init crc_t10dif_mod_init(void)
- {
-+	crypto_register_notifier(&crc_t10dif_nb);
- 	crct10dif_tfm = crypto_alloc_shash("crct10dif", 0, 0);
- 	if (IS_ERR(crct10dif_tfm)) {
- 		static_key_slow_inc(&crct10dif_fallback);
-@@ -59,6 +100,7 @@ static int __init crc_t10dif_mod_init(void)
- 
- static void __exit crc_t10dif_mod_fini(void)
- {
-+	crypto_unregister_notifier(&crc_t10dif_nb);
- 	crypto_free_shash(crct10dif_tfm);
- }
- 
+ MODULE_DESCRIPTION("T10 DIF CRC calculation");
+ MODULE_LICENSE("GPL");
+ MODULE_SOFTDEP("pre: crct10dif");
 -- 
 2.17.1
