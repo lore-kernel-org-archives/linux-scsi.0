@@ -1,30 +1,27 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2 2/2] scsi: aic7xxx: Fix build using bare-metal toolchain
-Date: Thu, 30 Aug 2018 07:41:58 -0400
-Message-ID: <yq1efeg3wu1.fsf@oracle.com>
-References: <20180829170015.7729-1-semen.protsenko@linaro.org>
-        <20180829170015.7729-3-semen.protsenko@linaro.org>
+Subject: Re: [PATCH 1/4] crypto: Introduce notifier for new crypto algorithms
+Date: Thu, 30 Aug 2018 10:57:46 -0400
+Message-ID: <yq15zzr52c5.fsf@oracle.com>
+References: <20180825061205.ygrjjazkooqghrqy@gondor.apana.org.au>
+        <20180826024006.13800-1-martin.petersen@oracle.com>
+        <20180827060918.tfz7ljufqhlej4kq@gondor.apana.org.au>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180829170015.7729-3-semen.protsenko@linaro.org> (Sam
-        Protsenko's message of "Wed, 29 Aug 2018 20:00:15 +0300")
+In-Reply-To: <20180827060918.tfz7ljufqhlej4kq@gondor.apana.org.au> (Herbert
+        Xu's message of "Mon, 27 Aug 2018 14:09:19 +0800")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Sam Protsenko <semen.protsenko@linaro.org>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, codalist@telemann.coda.cs.cmu.edu, coda@cs.cmu.edu, Jan Harkes <jaharkes@cs.cmu.edu>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Praneeth Bajjuri <praneeth@ti.com>, Paul Sokolovsky <paul.sokolovsky@linaro.org>, Miklos Szeredi <mszeredi@suse.cz>, Sumit Semwal <sumit.semwal@linaro.org>, Ruslan Bilovol <ruslan.bilovol@gmail.com>, Andy Shevchenko <andy.shevchenko@gmail.com>, Christoph Hellwig <hch@infradead.org>
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Jeff.Lien@wdc.com, ard.biesheuvel@linaro.org, david.darrington@wdc.com, hch@infradead.org, jeff.furlong@wdc.com, linux-block@vger.kernel.org, linux-crypto@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, tim.c.chen@linux.intel.com
 List-Id: linux-scsi@vger.kernel.org
 
 
-Sam,
+Herbert,
 
-> Bare-metal toolchains don't define __linux__, so aic7xxx build with
-> bare-metal toolchain is broken. This driver codebase used to be
-> partially shared with FreeBSD, but these days there is no point in
-> keeping the compatibility around. So let's just drop FreeBSD related
-> code and get rid of __linux__ checking in order to fix the build using
-> bare-metal toolchains.
+Sorry about the delay. Been on the road with surprisingly spotty
+internet.
 
-Applied to 4.20/scsi-queue, thank you!
+I addressed your two comments in the patch series that will follow.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
