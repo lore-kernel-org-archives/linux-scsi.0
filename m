@@ -1,84 +1,62 @@
-From: Dror Levin <drorl@infinidat.com>
+From: Michal Hocko <mhocko@kernel.org>
 Subject: Re: Recent removal of bsg read/write support
-Date: Mon, 3 Sep 2018 11:34:48 +0300
-Message-ID: <CAOuWhkbNuesaVYar6ML-qFw7RAfkPsaOYUXT4Ypfiu5=Nt1kWw@mail.gmail.com>
+Date: Mon, 3 Sep 2018 14:28:04 +0200
+Message-ID: <20180903122804.GA15074@dhcp22.suse.cz>
 References: <CAOuWhkaGjX8Q_xghkFVTqzZkDrUv-sdH=VbS7hvnqFWrT+3eOQ@mail.gmail.com>
- <CAFLxGvxX8QW4wUJKommXVMpGBj7G_H3=SOwQGjGuyPZZrhCzKw@mail.gmail.com> <CA+55aFyLC8PhjZ+iV7MucSZ1aGKMT=S9=EkEAQ6T1=ZRqD-xLA@mail.gmail.com>
+ <CAFLxGvxX8QW4wUJKommXVMpGBj7G_H3=SOwQGjGuyPZZrhCzKw@mail.gmail.com>
+ <6b907fed-d83f-de75-bde4-11270a0b1b0b@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CA+55aFyLC8PhjZ+iV7MucSZ1aGKMT=S9=EkEAQ6T1=ZRqD-xLA@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <6b907fed-d83f-de75-bde4-11270a0b1b0b@interlog.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: torvalds@linux-foundation.org
-Cc: richard.weinberger@gmail.com, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, hch@infradead.org, axboe@kernel.dk
+To: Douglas Gilbert <dgilbert@interlog.com>
+Cc: Richard Weinberger <richard.weinberger@gmail.com>, drorl@infinidat.com, LKML <linux-kernel@vger.kernel.org>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>, Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@kernel.dk>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sun, Sep 2, 2018 at 8:55 PM Linus Torvalds
-<torvalds@linux-foundation.org> wrote:
->
-> On Sun, Sep 2, 2018 at 4:44 AM Richard Weinberger
-> <richard.weinberger@gmail.com> wrote:
-> >
+On Sun 02-09-18 21:16:10, Douglas Gilbert wrote:
+> On 2018-09-02 01:44 PM, Richard Weinberger wrote:
 > > CC'ing relevant people. Otherwise your mail might get lost.
->
-> Indeed.
-
-Sorry for that.
-
+> > 
 > > On Sun, Sep 2, 2018 at 1:37 PM Dror Levin <drorl@infinidat.com> wrote:
-> > >
+> > > 
+> > > Note: I am not subscribed to LKML so please CC replies to this email.
+> > > 
+> > > Hi,
+> > > 
 > > > We have an internal tool that uses the bsg read/write interface to
 > > > issue SCSI commands as part of a test suite for a storage device.
-> > >
+> > > 
 > > > After recently reading on LWN that this interface is to be removed we
 > > > tried porting our code to use sg instead. However, that raises new
 > > > issues - mainly getting ENOMEM over iSCSI for unknown reasons.
->
-> Is there any chance that you can make more data available?
-
-Sure, I can try.
-
-We use writev() to send up to SG_MAX_QUEUE tasks at a time. Occasionally not
-all tasks are written at which point we wait for tasks to return before
-sending more, but then writev() fails with ENOMEM and we see this in the syslog:
-
-Sep  1 20:58:14 gdc-qa-io-017 kernel: sd 441:0:0:5: [sg73]
-sg_common_write: start_req err=-12
-
-Failing tasks are reads of 128KiB.
-
-> I'd rather fix the sg interface (which while also broken garbage, we
-> can't get rid of) than re-surrect the bsg interface.
->
-> That said, the removed bsg code looks a hell of a lot prettier than
-> the nasty sg interface code does, although it also lacks ansolutely
-> _any_ kind of security checking.
-
-For us the bsg interface also has several advantages over sg:
-1. The device name is its HCTL which is nicer than an arbitrary integer.
-2. write() supports writing more than one sg_io_v4 struct so we don't have
-   to resort to writev().
-3. Queue size is the device's queue depth and not SG_MAX_QUEUE which is 16.
-
+> > > 
 > > > Because of this we would like to continue using the bsg interface,
 > > > even if some changes are required to meet security concerns.
->
-> I wonder if we could at least try to unify the bsg/sg code - possibly
-> by making sg use the prettier bsg code (but definitely have to add all
-> the security measures).
->
-> And dammit, the SCSI people need to get their heads out of their
-> arses. This whole "stream random commands over read/write" needs to go
-> the f*ck away.
->
-> Could we perhaps extend the SG_IO interace to have an async mode?
-> Instead of "read/write", have "SG_IOSUBMIT" and "SG_IORECEIVE" and
-> have the SG_IO ioctl just be a shorthand of "both".
+> > > 
+> > > Is there any chance for this removal to be reverted? I saw it was
+> > > already included in 4.19-rc1.
+> 
+> Hi,
+> Both bsg and sg are relatively thin shims over the same block layer
+> pass-through calls. And neither driver will themselves generate ENOMEM
+> unless the CPU is running low of memory.
+> 
+> In my experience, the main reason for unexpected ENOMEMs *** is from
+> blk_rq_map_user_iov() in block/blk_map.c called from both drivers.
+> That is a particular resource shortage rather than memory in general.
+> I do notice the blk_rq_map_user_iov() is/was called with GFP_KERNEL
+> in bsg and GFP_ATOMIC by sg. That suggests when you call write() on
+> a sg device and get ENOMEM, then wait a little (depends on your app)
+> and try again.
 
-Just my two cents - having an interface other than read/write won't allow
-users to treat this fd as a regular file with epoll() and read(). This is
-a major bonus for this interface - an sg/bsg device can be used just like
-a socket or pipe in any reactor (we use boost asio for example).
-
-Thanks,
-Dror
+Well, what is the reason to use GFP_ATOMIC in the first place? I am not
+familiar with the code so I might be easily wrong but sg_start_req which
+calls blk_rq_map_user_iov resp. blk_rq_map_user with GFP_ATOMIC uses
+mutex. It is a conditional usage so the sleeping context might depend
+on the caller. But I guess it would be better to double check. It looks
+suspicious to me.
+-- 
+Michal Hocko
+SUSE Labs
