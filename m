@@ -1,37 +1,38 @@
 From: Herbert Xu <herbert@gondor.apana.org.au>
-Subject: Re: [PATCH 0/2] crypto: arm64/crct10dif - refactor and implement
- non-Crypto Extension version
-Date: Tue, 4 Sep 2018 13:21:34 +0800
-Message-ID: <20180904052134.5ax5j374gubxpo4s@gondor.apana.org.au>
-References: <20180827153812.6763-1-ard.biesheuvel@linaro.org>
+Subject: Re: [PATCH v2 1/3] crypto: Introduce notifier for new crypto
+ algorithms
+Date: Tue, 4 Sep 2018 13:21:51 +0800
+Message-ID: <20180904052151.ys2mtoixeax6jj5w@gondor.apana.org.au>
+References: <20180827060918.tfz7ljufqhlej4kq@gondor.apana.org.au>
+ <20180830150016.15661-1-martin.petersen@oracle.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20180827153812.6763-1-ard.biesheuvel@linaro.org>
+In-Reply-To: <20180830150016.15661-1-martin.petersen@oracle.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Cc: linux-crypto@vger.kernel.org, linux-arm-kernel@lists.infradead.org, martin.petersen@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, jeff.lien@wdc.com
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Jeff.Lien@wdc.com, ard.biesheuvel@linaro.org, david.darrington@wdc.com, hch@infradead.org, jeff.furlong@wdc.com, linux-block@vger.kernel.org, linux-crypto@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, tim.c.chen@linux.intel.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Aug 27, 2018 at 05:38:10PM +0200, Ard Biesheuvel wrote:
-> The current arm64 CRC-T10DIF code only runs on cores that implement the
-> 64x64 bit PMULL instructions that are part of the optional Crypto
-> Extensions, and falls back to the highly inefficient C code otherwise.
+On Thu, Aug 30, 2018 at 11:00:14AM -0400, Martin K. Petersen wrote:
+> Introduce a facility that can be used to receive a notification
+> callback when a new algorithm becomes available. This can be used by
+> existing crypto registrations to trigger a switch from a software-only
+> algorithm to a hardware-accelerated version.
 > 
-> Let's provide a SIMD version that is twice as fast as the C code even on
-> a low end core like the Cortex-A53, and is time invariant and much easier
-> on the D-cache.
+> A new CRYPTO_MSG_ALG_LOADED state is introduced to the existing crypto
+> notification chain, and the register/unregister functions are exported
+> so they can be called by subsystems outside of crypto.
 > 
-> Some performance numbers at the bottom.
-> 
-> Ard Biesheuvel (2):
->   crypto: arm64/crct10dif - preparatory refactor for 8x8 PMULL version
->   crypto: arm64/crct10dif - implement non-Crypto Extensions alternative
-> 
->  arch/arm64/crypto/crct10dif-ce-core.S | 314 +++++++++++++++-----
->  arch/arm64/crypto/crct10dif-ce-glue.c |  14 +-
->  2 files changed, 251 insertions(+), 77 deletions(-)
+> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+> Suggested-by: Herbert Xu <herbert@gondor.apana.org.au>
+> ---
+>  crypto/algapi.c         |  2 ++
+>  crypto/algboss.c        |  2 ++
+>  crypto/internal.h       |  8 --------
+>  include/crypto/algapi.h | 10 ++++++++++
+>  4 files changed, 14 insertions(+), 8 deletions(-)
 
 All applied.  Thanks.
 -- 
