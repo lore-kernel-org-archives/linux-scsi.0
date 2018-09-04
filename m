@@ -1,28 +1,53 @@
-From: Torsten Duwe <duwe@lst.de>
-Subject: Re: [PATCH v2 1/3] crypto: Introduce notifier for new crypto
- algorithms
-Date: Tue, 4 Sep 2018 15:30:06 +0200
-Message-ID: <20180904133006.GA28715@lst.de>
-References: <20180827060918.tfz7ljufqhlej4kq@gondor.apana.org.au> <20180830150016.15661-1-martin.petersen@oracle.com>
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] scsi: aic7xxx: remove unused redundant variable num_chip_names
+Date: Tue,  4 Sep 2018 15:36:56 +0100
+Message-ID: <20180904143656.3504-1-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20180830150016.15661-1-martin.petersen@oracle.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: herbert@gondor.apana.org.au, Jeff.Lien@wdc.com, ard.biesheuvel@linaro.org, david.darrington@wdc.com, hch@infradead.org, jeff.furlong@wdc.com, linux-block@vger.kernel.org, linux-crypto@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, tim.c.chen@linux.intel.com
+To: Hannes Reinecke <hare@suse.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Aug 30, 2018 at 11:00:14AM -0400, Martin K. Petersen wrote:
-> Introduce a facility that can be used to receive a notification
-> callback when a new algorithm becomes available. This can be used by
-> existing crypto registrations to trigger a switch from a software-only
-> algorithm to a hardware-accelerated version.
+From: Colin Ian King <colin.king@canonical.com>
 
-While this is apparently fine with the patch set you sent, what about
-cases where the crypto context of old and new implementation is not
-100% compatible? The switch will still work for sure if there are no
-current active users of the algo, but otherwise...? Just a thought.
+Variable num_chip_names is defined but not used, hence it is
+redundant and can be removed.
 
-	Torsten
+Cleans up clang warning:
+'num_chip_names' defined but not used [-Wunused-const-variable=]
+
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/scsi/aic7xxx/aic79xx_core.c | 1 -
+ drivers/scsi/aic7xxx/aic7xxx_core.c | 1 -
+ 2 files changed, 2 deletions(-)
+
+diff --git a/drivers/scsi/aic7xxx/aic79xx_core.c b/drivers/scsi/aic7xxx/aic79xx_core.c
+index 8e57a1dacb6a..9ee75c9a9aa1 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_core.c
++++ b/drivers/scsi/aic7xxx/aic79xx_core.c
+@@ -52,7 +52,6 @@ static const char *const ahd_chip_names[] =
+ 	"aic7902",
+ 	"aic7901A"
+ };
+-static const u_int num_chip_names = ARRAY_SIZE(ahd_chip_names);
+ 
+ /*
+  * Hardware error codes.
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_core.c b/drivers/scsi/aic7xxx/aic7xxx_core.c
+index aa4eaa4fa23a..f3362f4ab16e 100644
+--- a/drivers/scsi/aic7xxx/aic7xxx_core.c
++++ b/drivers/scsi/aic7xxx/aic7xxx_core.c
+@@ -61,7 +61,6 @@ static const char *const ahc_chip_names[] = {
+ 	"aic7892",
+ 	"aic7899"
+ };
+-static const u_int num_chip_names = ARRAY_SIZE(ahc_chip_names);
+ 
+ /*
+  * Hardware error codes.
+-- 
+2.17.1
