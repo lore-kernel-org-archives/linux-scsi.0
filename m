@@ -1,53 +1,42 @@
-From: Colin King <colin.king@canonical.com>
-Subject: [PATCH] scsi: aic7xxx: remove unused redundant variable num_chip_names
-Date: Tue,  4 Sep 2018 15:36:56 +0100
-Message-ID: <20180904143656.3504-1-colin.king@canonical.com>
+From: Evan Green <evgreen@chromium.org>
+Subject: Re: [PATCH] scsi: ufs: Enable bInitPowerMode of sleep
+Date: Tue, 4 Sep 2018 10:01:05 -0700
+Message-ID: <CAE=gft7zk-wkKEqFAF+O-HQRGRhD_pgiS0d_HraGFyK8Ac78bQ@mail.gmail.com>
+References: <20180810235010.6004-1-evgreen@chromium.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20180810235010.6004-1-evgreen@chromium.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Vinayak Holikatti <vinholikatti@gmail.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, adrian.hunter@intel.com, Stanislav.Nijnikov@wdc.com
+Cc: Gwendal Grignou <gwendal@chromium.org>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Colin Ian King <colin.king@canonical.com>
+On Fri, Aug 10, 2018 at 4:50 PM Evan Green <evgreen@chromium.org> wrote:
+>
+> UFS devices can be provisioned to have an initial power mode of either
+> active or sleep. If the initial power mode is sleep, then the host
+> controller driver must send a START STOP UNIT to the device in order
+> to wake it up. Unfortunately, the device will refuse to complete other
+> common low level operations, such as reading descriptors and attributes.
+> The Linux driver currently fails to enumerate devices that start in
+> sleep mode, because it fails to read the device descriptor from the
+> unconscious device.
+>
+> The way the UFS controller driver is structured, this presents a bit of
+> a Catch-22. In order to perform low-level enumeration of the device, the
+> driver needs to send a SCSI command. But SCSI needs low-level enumeration
+> of the device to be complete before full enumeration can occur.
+>
+> This change adds a method for sending low-level SCSI commands, modeled
+> after (and reusing much of) the mechanism for sending device management
+> commands. With this primitive, ufshcd_probe_hba can execute REQUEST SENSE
+> to clear the Unit Attention, and then a START STOP UNIT in order to bring
+> the device out of sleep mode. Only after this is done can the rest of
+> enumeration, such as reading the device descriptor and geometry descriptor,
+> be done.
+>
+> Signed-off-by: Evan Green <evgreen@chromium.org>
 
-Variable num_chip_names is defined but not used, hence it is
-redundant and can be removed.
-
-Cleans up clang warning:
-'num_chip_names' defined but not used [-Wunused-const-variable=]
-
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/scsi/aic7xxx/aic79xx_core.c | 1 -
- drivers/scsi/aic7xxx/aic7xxx_core.c | 1 -
- 2 files changed, 2 deletions(-)
-
-diff --git a/drivers/scsi/aic7xxx/aic79xx_core.c b/drivers/scsi/aic7xxx/aic79xx_core.c
-index 8e57a1dacb6a..9ee75c9a9aa1 100644
---- a/drivers/scsi/aic7xxx/aic79xx_core.c
-+++ b/drivers/scsi/aic7xxx/aic79xx_core.c
-@@ -52,7 +52,6 @@ static const char *const ahd_chip_names[] =
- 	"aic7902",
- 	"aic7901A"
- };
--static const u_int num_chip_names = ARRAY_SIZE(ahd_chip_names);
- 
- /*
-  * Hardware error codes.
-diff --git a/drivers/scsi/aic7xxx/aic7xxx_core.c b/drivers/scsi/aic7xxx/aic7xxx_core.c
-index aa4eaa4fa23a..f3362f4ab16e 100644
---- a/drivers/scsi/aic7xxx/aic7xxx_core.c
-+++ b/drivers/scsi/aic7xxx/aic7xxx_core.c
-@@ -61,7 +61,6 @@ static const char *const ahc_chip_names[] = {
- 	"aic7892",
- 	"aic7899"
- };
--static const u_int num_chip_names = ARRAY_SIZE(ahc_chip_names);
- 
- /*
-  * Hardware error codes.
--- 
-2.17.1
+A very gentle bump, did anyone get a chance to take a look at this?
+Currently Linux can't enumerate UFS devices that start in Sleep mode.
