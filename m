@@ -1,7 +1,7 @@
 From: Randy Dunlap <rd.dunlab@gmail.com>
-Subject: [PATCH v4 1/5] FireWire: clean up firewire-cdev.h kernel-doc
-Date: Tue,  4 Sep 2018 17:02:21 -0700
-Message-ID: <20180905000225.10733-2-rd.dunlab@gmail.com>
+Subject: [PATCH v4 2/5] FireWire: clean up core-iso.c kernel-doc
+Date: Tue,  4 Sep 2018 17:02:22 -0700
+Message-ID: <20180905000225.10733-3-rd.dunlab@gmail.com>
 References: <20180905000225.10733-1-rd.dunlab@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -22,7 +22,7 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Randy Dunlap <rdunlap@infradead.org>
 
-Clean up kernel-doc warnings in <linux/firewire-cdev.h> so that
+Clean up kernel-doc warnings in <drivers/firewire/core-iso.c> so that
 it can be added to a Firewire/IEEE 1394 driver-api chapter
 without adding lots of noisy warnings to the documentation build.
 
@@ -37,78 +37,28 @@ Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Jonathan Corbet <corbet@lwn.net>
 ---
- include/uapi/linux/firewire-cdev.h |   22 ++++++++++++++--------
- 1 file changed, 14 insertions(+), 8 deletions(-)
+ drivers/firewire/core-iso.c |    7 +++++++
+ 1 file changed, 7 insertions(+)
 
---- linux-next-20180904.orig/include/uapi/linux/firewire-cdev.h
-+++ linux-next-20180904/include/uapi/linux/firewire-cdev.h
-@@ -47,11 +47,11 @@
- #define FW_CDEV_EVENT_ISO_INTERRUPT_MULTICHANNEL	0x09
+--- linux-next-20180904.orig/drivers/firewire/core-iso.c
++++ linux-next-20180904/drivers/firewire/core-iso.c
+@@ -337,9 +337,16 @@ static void deallocate_channel(struct fw
  
  /**
-- * struct fw_cdev_event_common - Common part of all fw_cdev_event_ types
-+ * struct fw_cdev_event_common - Common part of all fw_cdev_event_* types
-  * @closure:	For arbitrary use by userspace
-- * @type:	Discriminates the fw_cdev_event_ types
-+ * @type:	Discriminates the fw_cdev_event_* types
+  * fw_iso_resource_manage() - Allocate or deallocate a channel and/or bandwidth
++ * @card: card interface for this action
++ * @generation: bus generation
++ * @channels_mask: bitmask for channel allocation
++ * @channel: pointer for returning channel allocation result
++ * @bandwidth: pointer for returning bandwidth allocation result
++ * @allocate: whether to allocate (true) or deallocate (false)
   *
-- * This struct may be used to access generic members of all fw_cdev_event_
-+ * This struct may be used to access generic members of all fw_cdev_event_*
-  * types regardless of the specific type.
+  * In parameters: card, generation, channels_mask, bandwidth, allocate
+  * Out parameters: channel, bandwidth
++ *
+  * This function blocks (sleeps) during communication with the IRM.
   *
-  * Data passed in the @closure field for a request will be returned in the
-@@ -123,7 +123,13 @@ struct fw_cdev_event_response {
- 
- /**
-  * struct fw_cdev_event_request - Old version of &fw_cdev_event_request2
-+ * @closure:	See &fw_cdev_event_common; set by %FW_CDEV_IOC_ALLOCATE ioctl
-  * @type:	See &fw_cdev_event_common; always %FW_CDEV_EVENT_REQUEST
-+ * @tcode:	Transaction code of the incoming request
-+ * @offset:	The offset into the 48-bit per-node address space
-+ * @handle:	Reference to the kernel-side pending request
-+ * @length:	Data length, i.e. the request's payload size in bytes
-+ * @data:	Incoming data, if any
-  *
-  * This event is sent instead of &fw_cdev_event_request2 if the kernel or
-  * the client implements ABI version <= 3.  &fw_cdev_event_request lacks
-@@ -353,7 +359,7 @@ struct fw_cdev_event_phy_packet {
- };
- 
- /**
-- * union fw_cdev_event - Convenience union of fw_cdev_event_ types
-+ * union fw_cdev_event - Convenience union of fw_cdev_event_* types
-  * @common:		Valid for all types
-  * @bus_reset:		Valid if @common.type == %FW_CDEV_EVENT_BUS_RESET
-  * @response:		Valid if @common.type == %FW_CDEV_EVENT_RESPONSE
-@@ -735,7 +741,7 @@ struct fw_cdev_set_iso_channels {
-  * @header:	Header and payload in case of a transmit context.
-  *
-  * &struct fw_cdev_iso_packet is used to describe isochronous packet queues.
-- * Use the FW_CDEV_ISO_ macros to fill in @control.
-+ * Use the FW_CDEV_ISO_* macros to fill in @control.
-  * The @header array is empty in case of receive contexts.
-  *
-  * Context type %FW_CDEV_ISO_CONTEXT_TRANSMIT:
-@@ -842,7 +848,7 @@ struct fw_cdev_queue_iso {
-  *		the %FW_CDEV_ISO_SYNC bit set
-  * @tags:	Tag filter bit mask.  Only valid for isochronous reception.
-  *		Determines the tag values for which packets will be accepted.
-- *		Use FW_CDEV_ISO_CONTEXT_MATCH_ macros to set @tags.
-+ *		Use FW_CDEV_ISO_CONTEXT_MATCH_* macros to set @tags.
-  * @handle:	Isochronous context handle within which to transmit or receive
-  */
- struct fw_cdev_start_iso {
-@@ -1009,8 +1015,8 @@ struct fw_cdev_send_stream_packet {
-  * on the same card as this device.  After transmission, an
-  * %FW_CDEV_EVENT_PHY_PACKET_SENT event is generated.
-  *
-- * The payload @data[] shall be specified in host byte order.  Usually,
-- * @data[1] needs to be the bitwise inverse of @data[0].  VersaPHY packets
-+ * The payload @data\[\] shall be specified in host byte order.  Usually,
-+ * @data\[1\] needs to be the bitwise inverse of @data\[0\].  VersaPHY packets
-  * are an exception to this rule.
-  *
-  * The ioctl is only permitted on device files which represent a local node.
+  * Allocates or deallocates at most one channel out of channels_mask.
 
 ------------------------------------------------------------------------------
 Check out the vibrant tech community on one of the world's most
