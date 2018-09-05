@@ -1,42 +1,51 @@
-From: Evan Green <evgreen@chromium.org>
-Subject: Re: [PATCH] scsi: ufs: Enable bInitPowerMode of sleep
-Date: Tue, 4 Sep 2018 10:01:05 -0700
-Message-ID: <CAE=gft7zk-wkKEqFAF+O-HQRGRhD_pgiS0d_HraGFyK8Ac78bQ@mail.gmail.com>
-References: <20180810235010.6004-1-evgreen@chromium.org>
+From: Randy Dunlap <rd.dunlab@gmail.com>
+Subject: [PATCH v3 0/5] FireWire: clean up kernel-doc,
+ add Documentation chapter
+Date: Tue,  4 Sep 2018 17:02:20 -0700
+Message-ID: <20180905000225.10733-1-rd.dunlab@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180810235010.6004-1-evgreen@chromium.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Vinayak Holikatti <vinholikatti@gmail.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, adrian.hunter@intel.com, Stanislav.Nijnikov@wdc.com
-Cc: Gwendal Grignou <gwendal@chromium.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/options/linux1394-devel>,
+ <mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
+List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
+List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+ <mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
+Errors-To: linux1394-devel-bounces@lists.sourceforge.net
+To: linux1394-devel@lists.sourceforge.net
+Cc: Jonathan Corbet <corbet@lwn.net>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-doc@vger.kernel.org, Randy Dunlap <rdunlap@infradead.org>, Andrew Morton <akpm@linux-foundation.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Aug 10, 2018 at 4:50 PM Evan Green <evgreen@chromium.org> wrote:
->
-> UFS devices can be provisioned to have an initial power mode of either
-> active or sleep. If the initial power mode is sleep, then the host
-> controller driver must send a START STOP UNIT to the device in order
-> to wake it up. Unfortunately, the device will refuse to complete other
-> common low level operations, such as reading descriptors and attributes.
-> The Linux driver currently fails to enumerate devices that start in
-> sleep mode, because it fails to read the device descriptor from the
-> unconscious device.
->
-> The way the UFS controller driver is structured, this presents a bit of
-> a Catch-22. In order to perform low-level enumeration of the device, the
-> driver needs to send a SCSI command. But SCSI needs low-level enumeration
-> of the device to be complete before full enumeration can occur.
->
-> This change adds a method for sending low-level SCSI commands, modeled
-> after (and reusing much of) the mechanism for sending device management
-> commands. With this primitive, ufshcd_probe_hba can execute REQUEST SENSE
-> to clear the Unit Attention, and then a START STOP UNIT in order to bring
-> the device out of sleep mode. Only after this is done can the rest of
-> enumeration, such as reading the device descriptor and geometry descriptor,
-> be done.
->
-> Signed-off-by: Evan Green <evgreen@chromium.org>
+This patch series cleans up kernel-doc warnings in several
+FireWire source files and then adds a Documentation driver-api
+chapter for FireWire.
 
-A very gentle bump, did anyone get a chance to take a look at this?
-Currently Linux can't enumerate UFS devices that start in Sleep mode.
+[PATCH v4 1/5] FireWire: clean up firewire-cdev.h kernel-doc
+[PATCH v4 2/5] FireWire: clean up core-iso.c kernel-doc
+[PATCH v4 3/5] FireWire: clean up core-transaction.c kernel-doc
+[PATCH v4 4/5] FireWire: add a Documentation driver-api chapter
+[PATCH v4 5/5] FireWire: add driver-api Introduction section
+
+The only changes in v4 are (a) respin against current -next and
+(b) add more Cc:s so that someone will please merge the series.(*)
+
+I think that Jon is the best choice to merge this series, but
+someone please do so.  It has already missed 2 merge windows.
+
+(*): Stefan hasn't replied to patches in the linux1394-devel
+mailing list recently.  E.g., see:
+https://sourceforge.net/p/linux1394/mailman/message/36406886/
+
+ Documentation/driver-api/firewire.rst |   50 +++++++++++++++++++++++-
+ Documentation/driver-api/index.rst    |    1 
+ drivers/firewire/core-iso.c           |    7 +++
+ drivers/firewire/core-transaction.c   |   10 ++++
+ include/uapi/linux/firewire-cdev.h    |   22 ++++++----
+ 5 files changed, 81 insertions(+), 9 deletions(-)
+
+------------------------------------------------------------------------------
+Check out the vibrant tech community on one of the world's most
+engaging tech sites, Slashdot.org! http://sdm.link/slashdot
