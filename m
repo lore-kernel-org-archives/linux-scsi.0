@@ -1,7 +1,7 @@
 From: Randy Dunlap <rd.dunlab@gmail.com>
-Subject: [PATCH v4 3/5] FireWire: clean up core-transaction.c kernel-doc
-Date: Tue,  4 Sep 2018 17:02:23 -0700
-Message-ID: <20180905000225.10733-4-rd.dunlab@gmail.com>
+Subject: [PATCH v4 4/5] FireWire: add a Documentation driver-api chapter
+Date: Tue,  4 Sep 2018 17:02:24 -0700
+Message-ID: <20180905000225.10733-5-rd.dunlab@gmail.com>
 References: <20180905000225.10733-1-rd.dunlab@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -22,9 +22,8 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Randy Dunlap <rdunlap@infradead.org>
 
-Clean up kernel-doc warnings in <drivers/firewire/core-transaction.c>
-so that it can be added to a Firewire/IEEE 1394 driver-api chapter
-without adding lots of noisy warnings to the documentation build.
+Add a basic Firewire/IEEE 1394 driver API chapter to the Linux
+kernel documentation.
 
 Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
 Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>
@@ -37,42 +36,56 @@ Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Jonathan Corbet <corbet@lwn.net>
 ---
- drivers/firewire/core-transaction.c |   10 ++++++++++
- 1 file changed, 10 insertions(+)
+ Documentation/driver-api/firewire.rst |   33 ++++++++++++++++++++++++
+ Documentation/driver-api/index.rst    |    1 
+ 2 files changed, 34 insertions(+)
 
---- linux-next-20180904.orig/drivers/firewire/core-transaction.c
-+++ linux-next-20180904/drivers/firewire/core-transaction.c
-@@ -410,6 +410,14 @@ static void transaction_callback(struct
- 
- /**
-  * fw_run_transaction() - send request and sleep until transaction is completed
-+ * @card:		card interface for this request
-+ * @tcode:		transaction code
-+ * @destination_id:	destination node ID, consisting of bus_ID and phy_ID
-+ * @generation:		bus generation in which request and response are valid
-+ * @speed:		transmission speed
-+ * @offset:		48bit wide offset into destination's address space
-+ * @payload:		data payload for the request subaction
-+ * @length:		length of the payload, in bytes
-  *
-  * Returns the RCODE.  See fw_send_request() for parameter documentation.
-  * Unlike fw_send_request(), @data points to the payload of the request or/and
-@@ -604,6 +612,7 @@ EXPORT_SYMBOL(fw_core_add_address_handle
- 
- /**
-  * fw_core_remove_address_handler() - unregister an address handler
-+ * @handler: callback
-  *
-  * To be called in process context.
-  *
-@@ -828,6 +837,7 @@ EXPORT_SYMBOL(fw_send_response);
- 
- /**
-  * fw_get_request_speed() - returns speed at which the @request was received
-+ * @request: firewire request data
-  */
- int fw_get_request_speed(struct fw_request *request)
- {
+--- /dev/null
++++ linux-next-20180904/Documentation/driver-api/firewire.rst
+@@ -0,0 +1,33 @@
++===========================================
++Firewire (IEEE 1394) driver Interface Guide
++===========================================
++
++Introduction and Overview
++=========================
++
++TBD
++
++Firewire char device data structures
++====================================
++
++.. kernel-doc:: include/uapi/linux/firewire-cdev.h
++    :internal:
++
++Firewire device probing and sysfs interfaces
++============================================
++
++.. kernel-doc:: drivers/firewire/core-device.c
++    :export:
++
++Firewire core transaction interfaces
++====================================
++
++.. kernel-doc:: drivers/firewire/core-transaction.c
++    :export:
++
++Firewire Isochronous I/O interfaces
++===================================
++
++.. kernel-doc:: drivers/firewire/core-iso.c
++   :export:
++
+--- linux-next-20180904.orig/Documentation/driver-api/index.rst
++++ linux-next-20180904/Documentation/driver-api/index.rst
+@@ -29,6 +29,7 @@ available subsections can be seen below.
+    iio/index
+    input
+    usb/index
++   firewire
+    pci
+    spi
+    i2c
 
 ------------------------------------------------------------------------------
 Check out the vibrant tech community on one of the world's most
