@@ -1,7 +1,7 @@
 From: Randy Dunlap <rd.dunlab@gmail.com>
-Subject: [PATCH v4 4/5] FireWire: add a Documentation driver-api chapter
-Date: Tue,  4 Sep 2018 17:02:24 -0700
-Message-ID: <20180905000225.10733-5-rd.dunlab@gmail.com>
+Subject: [PATCH v4 5/5] FireWire: add driver-api Introduction section
+Date: Tue,  4 Sep 2018 17:02:25 -0700
+Message-ID: <20180905000225.10733-6-rd.dunlab@gmail.com>
 References: <20180905000225.10733-1-rd.dunlab@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -20,11 +20,13 @@ To: linux1394-devel@lists.sourceforge.net
 Cc: Jonathan Corbet <corbet@lwn.net>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-doc@vger.kernel.org, Randy Dunlap <rdunlap@infradead.org>, Andrew Morton <akpm@linux-foundation.org>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Randy Dunlap <rdunlap@infradead.org>
+From: Takashi Sakamoto <o-takashi@sakamocchi.jp>
 
-Add a basic Firewire/IEEE 1394 driver API chapter to the Linux
-kernel documentation.
+Replace the Introduction section's TBD with some useful overview text.
 
+Signed-off-by: Takashi Sakamoto <o-takashi@sakamocchi.jp>
+Acked-by: Randy Dunlap <rdunlap@infradead.org>
+Tested-by: Randy Dunlap <rdunlap@infradead.org>
 Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
 Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>
 Cc: Takashi Sakamoto <o-takashi@sakamocchi.jp>
@@ -36,56 +38,45 @@ Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Jonathan Corbet <corbet@lwn.net>
 ---
- Documentation/driver-api/firewire.rst |   33 ++++++++++++++++++++++++
- Documentation/driver-api/index.rst    |    1 
- 2 files changed, 34 insertions(+)
+ Documentation/driver-api/firewire.rst |   17 ++++++++++++++++-
+ 1 file changed, 16 insertions(+), 1 deletion(-)
 
---- /dev/null
+--- linux-next-20180904.orig/Documentation/driver-api/firewire.rst
 +++ linux-next-20180904/Documentation/driver-api/firewire.rst
-@@ -0,0 +1,33 @@
-+===========================================
-+Firewire (IEEE 1394) driver Interface Guide
-+===========================================
+@@ -5,17 +5,32 @@ Firewire (IEEE 1394) driver Interface Gu
+ Introduction and Overview
+ =========================
+ 
+-TBD
++The Linux FireWire subsystem adds some interfaces into the Linux system to
++ use/maintain+any resource on IEEE 1394 bus.
 +
-+Introduction and Overview
-+=========================
++The main purpose of these interfaces is to access address space on each node
++on IEEE 1394 bus by ISO/IEC 13213 (IEEE 1212) procedure, and to control
++isochronous resources on the bus by IEEE 1394 procedure.
 +
-+TBD
++Two types of interfaces are added, according to consumers of the interface. A
++set of userspace interfaces is available via `firewire character devices`. A set
++of kernel interfaces is available via exported symbols in `firewire-core` module.
+ 
+ Firewire char device data structures
+ ====================================
+ 
++.. include:: /ABI/stable/firewire-cdev
++    :literal:
 +
-+Firewire char device data structures
-+====================================
+ .. kernel-doc:: include/uapi/linux/firewire-cdev.h
+     :internal:
+ 
+ Firewire device probing and sysfs interfaces
+ ============================================
+ 
++.. include:: /ABI/stable/sysfs-bus-firewire
++    :literal:
 +
-+.. kernel-doc:: include/uapi/linux/firewire-cdev.h
-+    :internal:
-+
-+Firewire device probing and sysfs interfaces
-+============================================
-+
-+.. kernel-doc:: drivers/firewire/core-device.c
-+    :export:
-+
-+Firewire core transaction interfaces
-+====================================
-+
-+.. kernel-doc:: drivers/firewire/core-transaction.c
-+    :export:
-+
-+Firewire Isochronous I/O interfaces
-+===================================
-+
-+.. kernel-doc:: drivers/firewire/core-iso.c
-+   :export:
-+
---- linux-next-20180904.orig/Documentation/driver-api/index.rst
-+++ linux-next-20180904/Documentation/driver-api/index.rst
-@@ -29,6 +29,7 @@ available subsections can be seen below.
-    iio/index
-    input
-    usb/index
-+   firewire
-    pci
-    spi
-    i2c
+ .. kernel-doc:: drivers/firewire/core-device.c
+     :export:
+ 
 
 ------------------------------------------------------------------------------
 Check out the vibrant tech community on one of the world's most
