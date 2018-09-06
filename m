@@ -1,53 +1,58 @@
-From: Jonathan Corbet <corbet@lwn.net>
-Subject: Re: [PATCH v3 0/5] FireWire: clean up kernel-doc, add Documentation
- chapter
-Date: Thu, 6 Sep 2018 09:47:38 -0600
-Message-ID: <20180906094738.0248c67e@lwn.net>
-References: <20180905000225.10733-1-rd.dunlab@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <20180905000225.10733-1-rd.dunlab@gmail.com>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/options/linux1394-devel>,
- <mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
-List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
-List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
- <mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
-Errors-To: linux1394-devel-bounces@lists.sourceforge.net
-To: Randy Dunlap <rd.dunlab@gmail.com>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-doc@vger.kernel.org, Randy Dunlap <rdunlap@infradead.org>, Andrew Morton <akpm@linux-foundation.org>, linux1394-devel@lists.sourceforge.net
+From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Subject: [PATCH] MAINTAINERS: Update Email Address for Bryant G. Ly
+Date: Thu,  6 Sep 2018 12:17:59 -0500
+Message-ID: <1536254279-37408-1-git-send-email-bryantly@linux.vnet.ibm.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: davem@davemloft.net, gregkh@linuxfoundation.org
+Cc: mchehab+samsung@kernel.org, akpm@linux-foundation.org, arnd@arndb.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, "Bryant G. Ly" <bryantly@linux.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue,  4 Sep 2018 17:02:20 -0700
-Randy Dunlap <rd.dunlab@gmail.com> wrote:
+From: "Bryant G. Ly" <bryantly@linux.ibm.com>
 
-> This patch series cleans up kernel-doc warnings in several
-> FireWire source files and then adds a Documentation driver-api
-> chapter for FireWire.
-> 
-> [PATCH v4 1/5] FireWire: clean up firewire-cdev.h kernel-doc
-> [PATCH v4 2/5] FireWire: clean up core-iso.c kernel-doc
-> [PATCH v4 3/5] FireWire: clean up core-transaction.c kernel-doc
-> [PATCH v4 4/5] FireWire: add a Documentation driver-api chapter
-> [PATCH v4 5/5] FireWire: add driver-api Introduction section
-> 
-> The only changes in v4 are (a) respin against current -next and
-> (b) add more Cc:s so that someone will please merge the series.(*)
-> 
-> I think that Jon is the best choice to merge this series, but
-> someone please do so.  It has already missed 2 merge windows.
+I am leaving IBM to go to Catalogic Software, updating email
+address so I can continue to maintain the drivers.
 
-I think this is the first time I've received this...  Through the
-FireWire maintainer seems like the best path, but it seems that's not
-happening.  The patches look good to me, so I've just applied them.
+Signed-off-by: Bryant G. Ly <bryantly@linux.ibm.com>
+---
+ .mailmap    | 2 ++
+ MAINTAINERS | 4 ++--
+ 2 files changed, 4 insertions(+), 2 deletions(-)
 
-Thanks,
-
-jon
-
-------------------------------------------------------------------------------
-Check out the vibrant tech community on one of the world's most
-engaging tech sites, Slashdot.org! http://sdm.link/slashdot
+diff --git a/.mailmap b/.mailmap
+index 285e096..6354b1e 100644
+--- a/.mailmap
++++ b/.mailmap
+@@ -41,6 +41,8 @@ Boris Brezillon <boris.brezillon@bootlin.com> <b.brezillon.dev@gmail.com>
+ Boris Brezillon <boris.brezillon@bootlin.com> <b.brezillon@overkiz.com>
+ Brian Avery <b.avery@hp.com>
+ Brian King <brking@us.ibm.com>
++Bryant G. Ly <bryangly@gmail.com> <bgly@us.ibm.com> <bryantly@linux.vnet.ibm.com>
++Bryant G. Ly <bryantly@linux.ibm.com>
+ Christoph Hellwig <hch@lst.de>
+ Christophe Ricard <christophe.ricard@gmail.com>
+ Corey Minyard <minyard@acm.org>
+diff --git a/MAINTAINERS b/MAINTAINERS
+index a5b256b..8d529dc 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -6983,7 +6983,7 @@ S:	Supported
+ F:	drivers/scsi/ibmvscsi/ibmvfc*
+ 
+ IBM Power Virtual Management Channel Driver
+-M:	Bryant G. Ly <bryantly@linux.vnet.ibm.com>
++M:	Bryant G. Ly <bryangly@gmail.com>
+ M:	Steven Royer <seroyer@linux.vnet.ibm.com>
+ S:	Supported
+ F:	drivers/misc/ibmvmc.*
+@@ -6996,7 +6996,7 @@ F:	drivers/scsi/ibmvscsi/ibmvscsi*
+ F:	include/scsi/viosrp.h
+ 
+ IBM Power Virtual SCSI Device Target Driver
+-M:	Bryant G. Ly <bryantly@linux.vnet.ibm.com>
++M:	Bryant G. Ly <bryangly@gmail.com>
+ M:	Michael Cyr <mikecyr@linux.vnet.ibm.com>
+ L:	linux-scsi@vger.kernel.org
+ L:	target-devel@vger.kernel.org
+-- 
+2.7.2
