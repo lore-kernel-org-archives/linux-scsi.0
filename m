@@ -1,163 +1,53 @@
-From: Lukas Bulwahn <lukas.bulwahn@gmail.com>
-Subject: [PATCH] fcoe: make use of fip_mode enum complete
-Date: Thu,  6 Sep 2018 06:36:42 +0200
-Message-ID: <1536208602-25765-1-git-send-email-lukas.bulwahn@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Hannes Reinecke <hare@suse.de>, QLogic-Storage-Upstream@qlogic.com, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Johannes Thumshirn <jth@kernel.org>, QLogic-Storage-Upstream@cavium.com, linux-kernel@vger.kernel.org, Lukas Bulwahn <lukas.bulwahn@gmail.com>
+From: Jonathan Corbet <corbet@lwn.net>
+Subject: Re: [PATCH v3 0/5] FireWire: clean up kernel-doc, add Documentation
+ chapter
+Date: Thu, 6 Sep 2018 09:47:38 -0600
+Message-ID: <20180906094738.0248c67e@lwn.net>
+References: <20180905000225.10733-1-rd.dunlab@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
+In-Reply-To: <20180905000225.10733-1-rd.dunlab@gmail.com>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/options/linux1394-devel>,
+ <mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
+List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
+List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+ <mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
+Errors-To: linux1394-devel-bounces@lists.sourceforge.net
+To: Randy Dunlap <rd.dunlab@gmail.com>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-doc@vger.kernel.org, Randy Dunlap <rdunlap@infradead.org>, Andrew Morton <akpm@linux-foundation.org>, linux1394-devel@lists.sourceforge.net
 List-Id: linux-scsi@vger.kernel.org
 
-commit 1917d42d14b7 ("fcoe: use enum for fip_mode") introduces a separate
-enum for the fip_mode that shall be used during initialisation handling
-until it is passed to fcoe_ctrl_link_up to set the initial fip_state.
-That change was incomplete and gcc quietly converted in various places
-between the fip_mode and the fip_state enum values with implicit enum
-conversions, which fortunately cannot cause any issues in the actual
-code's execution.
+On Tue,  4 Sep 2018 17:02:20 -0700
+Randy Dunlap <rd.dunlab@gmail.com> wrote:
 
-clang however warns about these implicit enum conversions in the scsi
-drivers. This commit consolidates the use of the two enums, guided by
-clang's enum-conversion warnings.
+> This patch series cleans up kernel-doc warnings in several
+> FireWire source files and then adds a Documentation driver-api
+> chapter for FireWire.
+> 
+> [PATCH v4 1/5] FireWire: clean up firewire-cdev.h kernel-doc
+> [PATCH v4 2/5] FireWire: clean up core-iso.c kernel-doc
+> [PATCH v4 3/5] FireWire: clean up core-transaction.c kernel-doc
+> [PATCH v4 4/5] FireWire: add a Documentation driver-api chapter
+> [PATCH v4 5/5] FireWire: add driver-api Introduction section
+> 
+> The only changes in v4 are (a) respin against current -next and
+> (b) add more Cc:s so that someone will please merge the series.(*)
+> 
+> I think that Jon is the best choice to merge this series, but
+> someone please do so.  It has already missed 2 merge windows.
 
-This commit now completes the use of the fip_mode:
-It expects and uses fip_mode in {bnx2fc,fcoe}_interface_create and
-fcoe_ctlr_init, and it explicitly converts from fip_mode to fip_state
-only at the single point in fcoe_ctlr_link_up.
+I think this is the first time I've received this...  Through the
+FireWire maintainer seems like the best path, but it seems that's not
+happening.  The patches look good to me, so I've just applied them.
 
-To eliminate that adding or removing values from fip_mode or fip_state enum
-break the right mapping of values, all fip_mode values are assigned to
-their fip_state counterparts.
+Thanks,
 
-Fixes: 1917d42d14b7 ("fcoe: use enum for fip_mode")
-Signed-off-by: Lukas Bulwahn <lukas.bulwahn@gmail.com>
----
-checkpatch.pl complains about:
-WARNING: function definition argument 'struct fcoe_ctlr *' should also have an identifier name
-#133: FILE: include/scsi/libfcoe.h:253:
-+void fcoe_ctlr_init(struct fcoe_ctlr *, enum fip_mode);
+jon
 
-I can address that with:
--void fcoe_ctlr_init(struct fcoe_ctlr *, enum fip_mode);
-+void fcoe_ctlr_init(struct fcoe_ctlr *fip, enum fip_mode);
-
-However, all the other FIP API function signatures currently also have no
-identifier name; so I will keep that line as-is for local consistency.
-
-If I should address the checkpatch.pl issue, I can provide a separate
-patch to make all fcoe functions in the header follow the coding style
-suggested by checkpatch.pl. Just let me know what you want.
-
-compile tested allyesconfig on top of next-20180831 with gcc-8.2.0,
-clang-6.0.1 and clang-7
-
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c  | 2 +-
- drivers/scsi/fcoe/fcoe.c           | 2 +-
- drivers/scsi/fcoe/fcoe_ctlr.c      | 4 ++--
- drivers/scsi/fcoe/fcoe_transport.c | 2 +-
- drivers/scsi/qedf/qedf_main.c      | 2 +-
- include/scsi/libfcoe.h             | 8 ++++----
- 6 files changed, 10 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-index f000458..83aaab4 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-@@ -1445,7 +1445,7 @@ static struct bnx2fc_hba *bnx2fc_hba_create(struct cnic_dev *cnic)
- static struct bnx2fc_interface *
- bnx2fc_interface_create(struct bnx2fc_hba *hba,
- 			struct net_device *netdev,
--			enum fip_state fip_mode)
-+			enum fip_mode fip_mode)
- {
- 	struct fcoe_ctlr_device *ctlr_dev;
- 	struct bnx2fc_interface *interface;
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index f46b312..6768b2e 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -390,7 +390,7 @@ static int fcoe_interface_setup(struct fcoe_interface *fcoe,
-  * Returns: pointer to a struct fcoe_interface or NULL on error
-  */
- static struct fcoe_interface *fcoe_interface_create(struct net_device *netdev,
--						    enum fip_state fip_mode)
-+						    enum fip_mode fip_mode)
- {
- 	struct fcoe_ctlr_device *ctlr_dev;
- 	struct fcoe_ctlr *ctlr;
-diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
-index 54da316..a52d3ad 100644
---- a/drivers/scsi/fcoe/fcoe_ctlr.c
-+++ b/drivers/scsi/fcoe/fcoe_ctlr.c
-@@ -147,7 +147,7 @@ static void fcoe_ctlr_map_dest(struct fcoe_ctlr *fip)
-  * fcoe_ctlr_init() - Initialize the FCoE Controller instance
-  * @fip: The FCoE controller to initialize
-  */
--void fcoe_ctlr_init(struct fcoe_ctlr *fip, enum fip_state mode)
-+void fcoe_ctlr_init(struct fcoe_ctlr *fip, enum fip_mode mode)
- {
- 	fcoe_ctlr_set_state(fip, FIP_ST_LINK_WAIT);
- 	fip->mode = mode;
-@@ -454,7 +454,7 @@ void fcoe_ctlr_link_up(struct fcoe_ctlr *fip)
- 		mutex_unlock(&fip->ctlr_mutex);
- 		fc_linkup(fip->lp);
- 	} else if (fip->state == FIP_ST_LINK_WAIT) {
--		fcoe_ctlr_set_state(fip, fip->mode);
-+		fcoe_ctlr_set_state(fip, (enum fip_state) fip->mode);
- 		switch (fip->mode) {
- 		default:
- 			LIBFCOE_FIP_DBG(fip, "invalid mode %d\n", fip->mode);
-diff --git a/drivers/scsi/fcoe/fcoe_transport.c b/drivers/scsi/fcoe/fcoe_transport.c
-index f4909cd..b381ab0 100644
---- a/drivers/scsi/fcoe/fcoe_transport.c
-+++ b/drivers/scsi/fcoe/fcoe_transport.c
-@@ -873,7 +873,7 @@ static int fcoe_transport_create(const char *buffer,
- 	int rc = -ENODEV;
- 	struct net_device *netdev = NULL;
- 	struct fcoe_transport *ft = NULL;
--	enum fip_state fip_mode = (enum fip_state)(long)kp->arg;
-+	enum fip_mode fip_mode = (enum fip_mode)(long)kp->arg;
- 
- 	mutex_lock(&ft_mutex);
- 
-diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
-index 0a5dd55..cd61905 100644
---- a/drivers/scsi/qedf/qedf_main.c
-+++ b/drivers/scsi/qedf/qedf_main.c
-@@ -1418,7 +1418,7 @@ static struct libfc_function_template qedf_lport_template = {
- 
- static void qedf_fcoe_ctlr_setup(struct qedf_ctx *qedf)
- {
--	fcoe_ctlr_init(&qedf->ctlr, FIP_ST_AUTO);
-+	fcoe_ctlr_init(&qedf->ctlr, FIP_MODE_AUTO);
- 
- 	qedf->ctlr.send = qedf_fip_send;
- 	qedf->ctlr.get_src_addr = qedf_get_src_mac;
-diff --git a/include/scsi/libfcoe.h b/include/scsi/libfcoe.h
-index cb8a273..10d6d92 100644
---- a/include/scsi/libfcoe.h
-+++ b/include/scsi/libfcoe.h
-@@ -80,9 +80,9 @@ enum fip_state {
-  */
- enum fip_mode {
- 	FIP_MODE_AUTO = FIP_ST_AUTO,
--	FIP_MODE_NON_FIP,
--	FIP_MODE_FABRIC,
--	FIP_MODE_VN2VN,
-+	FIP_MODE_NON_FIP = FIP_ST_NON_FIP,
-+	FIP_MODE_FABRIC = FIP_ST_ENABLED,
-+	FIP_MODE_VN2VN = FIP_ST_VNMP_START,
- };
- 
- /**
-@@ -250,7 +250,7 @@ struct fcoe_rport {
- };
- 
- /* FIP API functions */
--void fcoe_ctlr_init(struct fcoe_ctlr *, enum fip_state);
-+void fcoe_ctlr_init(struct fcoe_ctlr *, enum fip_mode);
- void fcoe_ctlr_destroy(struct fcoe_ctlr *);
- void fcoe_ctlr_link_up(struct fcoe_ctlr *);
- int fcoe_ctlr_link_down(struct fcoe_ctlr *);
--- 
-2.7.4
+------------------------------------------------------------------------------
+Check out the vibrant tech community on one of the world's most
+engaging tech sites, Slashdot.org! http://sdm.link/slashdot
