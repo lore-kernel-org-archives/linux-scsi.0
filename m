@@ -1,58 +1,48 @@
-From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Subject: [PATCH] MAINTAINERS: Update Email Address for Bryant G. Ly
-Date: Thu,  6 Sep 2018 12:17:59 -0500
-Message-ID: <1536254279-37408-1-git-send-email-bryantly@linux.vnet.ibm.com>
+From: Xuewei Zhang <xueweiz@google.com>
+Subject: [PATCH] scsi: sd: Contribute to randomness when running rotational device
+Date: Thu,  6 Sep 2018 13:37:19 -0700
+Message-ID: <20180906203719.209399-1-xueweiz@google.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: davem@davemloft.net, gregkh@linuxfoundation.org
-Cc: mchehab+samsung@kernel.org, akpm@linux-foundation.org, arnd@arndb.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, "Bryant G. Ly" <bryantly@linux.ibm.com>
+To: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Ming Lei <ming.lei@redhat.com>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>
+Cc: Paolo Bonzini <pbonzini@redhat.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Aditya Kali <adityakali@google.com>, tytso@mit.edu, Guenter Roeck <groeck@chromium.org>, maze@google.com, Xuewei Zhang <xueweiz@google.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: "Bryant G. Ly" <bryantly@linux.ibm.com>
+Currently a scsi device won't contribute to kernel randomness when it
+uses blk-mq. Since we commonly use scsi on rotational device with
+blk-mq, it make sense to keep contributing to kernel randomness in these
+cases. This is especially important for virtual machines.
 
-I am leaving IBM to go to Catalogic Software, updating email
-address so I can continue to maintain the drivers.
+commit b5b6e8c8d3b4 ("scsi: virtio_scsi: fix IO hang caused by automatic
+irq vector affinity") made all virtio-scsi device to use blk-mq, which
+does not contribute to randomness today. So for a virtual machine only
+having virtio-scsi disk (which is common), it will simple stop getting
+randomness from its disks in today's implementation.
 
-Signed-off-by: Bryant G. Ly <bryantly@linux.ibm.com>
+With this patch, if the above VM has rotational virtio-scsi device, then
+it can still benefit from the entropy generated from the disk.
+
+Reported-by: Xuewei Zhang <xueweiz@google.com>
+Signed-off-by: Xuewei Zhang <xueweiz@google.com>
 ---
- .mailmap    | 2 ++
- MAINTAINERS | 4 ++--
- 2 files changed, 4 insertions(+), 2 deletions(-)
+ drivers/scsi/sd.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/.mailmap b/.mailmap
-index 285e096..6354b1e 100644
---- a/.mailmap
-+++ b/.mailmap
-@@ -41,6 +41,8 @@ Boris Brezillon <boris.brezillon@bootlin.com> <b.brezillon.dev@gmail.com>
- Boris Brezillon <boris.brezillon@bootlin.com> <b.brezillon@overkiz.com>
- Brian Avery <b.avery@hp.com>
- Brian King <brking@us.ibm.com>
-+Bryant G. Ly <bryangly@gmail.com> <bgly@us.ibm.com> <bryantly@linux.vnet.ibm.com>
-+Bryant G. Ly <bryantly@linux.ibm.com>
- Christoph Hellwig <hch@lst.de>
- Christophe Ricard <christophe.ricard@gmail.com>
- Corey Minyard <minyard@acm.org>
-diff --git a/MAINTAINERS b/MAINTAINERS
-index a5b256b..8d529dc 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -6983,7 +6983,7 @@ S:	Supported
- F:	drivers/scsi/ibmvscsi/ibmvfc*
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index b79b366a94f7..5e4f10d28065 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -2959,6 +2959,9 @@ static void sd_read_block_characteristics(struct scsi_disk *sdkp)
+ 	if (rot == 1) {
+ 		blk_queue_flag_set(QUEUE_FLAG_NONROT, q);
+ 		blk_queue_flag_clear(QUEUE_FLAG_ADD_RANDOM, q);
++	} else {
++		blk_queue_flag_clear(QUEUE_FLAG_NONROT, q);
++		blk_queue_flag_set(QUEUE_FLAG_ADD_RANDOM, q);
+ 	}
  
- IBM Power Virtual Management Channel Driver
--M:	Bryant G. Ly <bryantly@linux.vnet.ibm.com>
-+M:	Bryant G. Ly <bryangly@gmail.com>
- M:	Steven Royer <seroyer@linux.vnet.ibm.com>
- S:	Supported
- F:	drivers/misc/ibmvmc.*
-@@ -6996,7 +6996,7 @@ F:	drivers/scsi/ibmvscsi/ibmvscsi*
- F:	include/scsi/viosrp.h
- 
- IBM Power Virtual SCSI Device Target Driver
--M:	Bryant G. Ly <bryantly@linux.vnet.ibm.com>
-+M:	Bryant G. Ly <bryangly@gmail.com>
- M:	Michael Cyr <mikecyr@linux.vnet.ibm.com>
- L:	linux-scsi@vger.kernel.org
- L:	target-devel@vger.kernel.org
+ 	if (sdkp->device->type == TYPE_ZBC) {
 -- 
-2.7.2
+2.19.0.rc2.392.g5ba43deb5a-goog
