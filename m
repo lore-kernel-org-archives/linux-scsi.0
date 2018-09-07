@@ -1,49 +1,75 @@
-From: Xuewei Zhang <xueweiz@google.com>
-Subject: Re: [PATCH] scsi: sd: Contribute to randomness when running
- rotational device
-Date: Thu, 6 Sep 2018 16:03:21 -0700
-Message-ID: <CAPtwhKoFE-eZcRkvhpJgyutGK91ZouwSjTRb-cwHLQjBkriksw@mail.gmail.com>
-References: <20180906203719.209399-1-xueweiz@google.com> <1536272873.26747.11.camel@acm.org>
- <20180906224210.GK5098@thunk.org>
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] scsi: mpt3sas: make sysfs error messages ratelimited
+Date: Fri,  7 Sep 2018 11:39:24 +0100
+Message-ID: <20180907103924.17598-1-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180906224210.GK5098@thunk.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Theodore Ts'o <tytso@mit.edu>, bvanassche@acm.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, ming.lei@redhat.com, hare@suse.de, hch@lst.de, pbonzini@redhat.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Aditya Kali <adityakali@google.com>, groeck@chromium.org, =?UTF-8?Q?Maciej_=C5=BBenczykowski?= <maze@google.com>
+To: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Sep 6, 2018 at 3:42 PM Theodore Y. Ts'o <tytso@mit.edu> wrote:
->
-> On Thu, Sep 06, 2018 at 03:27:53PM -0700, Bart Van Assche wrote:
-> >
-> > Although this patch looks fine to me, seeing this patch makes me wonder
-> > whether the default should be changed (QUEUE_FLAG_MQ_DEFAULT) instead of
-> > modifying the sd driver. Can anyone remind me why QUEUE_FLAG_MQ_DEFAULT does
-> > not include QUEUE_FLAG_ADD_RANDOM?
+From: Colin Ian King <colin.king@canonical.com>
 
-Besides Ted's point of "SSD users have no entropy", I think there are two more
-reasons:
-1. setting QUEUE_FLAG_ADD_RANDOM has a more visible performance hit
-on SSD disks than rotational disks.
-2. SSD disks provide less entropy than rotational disks.
-I actually experimented on Container-Optimized OS, running on Google Compute
-Engine with QUEUE_FLAG_ADD_RANDOM set.
-Turns out the VM will have ~800 bit of entropy provided on boot on
-rotational disk;
-and will only have ~70 bit of entropy if running on SSD (and remember there are
-~50 bit contributed from other sources).
-(in the above experiment, both disks were virtualized disks)
+It is possible to heavily spam the kernel logs with messages by
+excessive reading of the mpt3sas sysfs files.  Make the error messages
+ratelimited to reduce the spamming effect.
 
->
-> There was a discussion about a number of *years* ago; blk-mq has been
-> baking for a very long time.  In the early days of block_mq, the
-> overwhelming percentage of the users of blk-mq where those who were
-> using PCIe attached flash.  So when, I raised this question, the
-> argument was that SSD users have no entropy.  Which I agree with; but
-> now that blk-mq is the default, and hard drives are using blk-mq, it's
-> time for a patch like Xuewei's.
->
-> Cheers,
->
->                                         - Ted
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+index 5e8c059ce2c9..656cec5adb17 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+@@ -2958,7 +2958,7 @@ _ctl_BRM_status_show(struct device *cdev, struct device_attribute *attr,
+ 	ssize_t rc = 0;
+ 
+ 	if (!ioc->is_warpdrive) {
+-		pr_err(MPT3SAS_FMT "%s: BRM attribute is only for"
++		pr_err_ratelimited(MPT3SAS_FMT "%s: BRM attribute is only for"
+ 		    " warpdrive\n", ioc->name, __func__);
+ 		goto out;
+ 	}
+@@ -3039,7 +3039,7 @@ _ctl_host_trace_buffer_size_show(struct device *cdev,
+ 	struct DIAG_BUFFER_START *request_data;
+ 
+ 	if (!ioc->diag_buffer[MPI2_DIAG_BUF_TYPE_TRACE]) {
+-		pr_err(MPT3SAS_FMT
++		pr_err_ratelimited(MPT3SAS_FMT
+ 			"%s: host_trace_buffer is not registered\n",
+ 			ioc->name, __func__);
+ 		return 0;
+@@ -3047,7 +3047,7 @@ _ctl_host_trace_buffer_size_show(struct device *cdev,
+ 
+ 	if ((ioc->diag_buffer_status[MPI2_DIAG_BUF_TYPE_TRACE] &
+ 	    MPT3_DIAG_BUFFER_IS_REGISTERED) == 0) {
+-		pr_err(MPT3SAS_FMT
++		pr_err_ratelimited(MPT3SAS_FMT
+ 			"%s: host_trace_buffer is not registered\n",
+ 			ioc->name, __func__);
+ 		return 0;
+@@ -3089,7 +3089,7 @@ _ctl_host_trace_buffer_show(struct device *cdev, struct device_attribute *attr,
+ 	u32 size;
+ 
+ 	if (!ioc->diag_buffer[MPI2_DIAG_BUF_TYPE_TRACE]) {
+-		pr_err(MPT3SAS_FMT
++		pr_err_ratelimited(MPT3SAS_FMT
+ 			"%s: host_trace_buffer is not registered\n",
+ 			ioc->name, __func__);
+ 		return 0;
+@@ -3097,7 +3097,7 @@ _ctl_host_trace_buffer_show(struct device *cdev, struct device_attribute *attr,
+ 
+ 	if ((ioc->diag_buffer_status[MPI2_DIAG_BUF_TYPE_TRACE] &
+ 	    MPT3_DIAG_BUFFER_IS_REGISTERED) == 0) {
+-		pr_err(MPT3SAS_FMT
++		pr_err_ratelimited(MPT3SAS_FMT
+ 			"%s: host_trace_buffer is not registered\n",
+ 			ioc->name, __func__);
+ 		return 0;
+-- 
+2.17.1
