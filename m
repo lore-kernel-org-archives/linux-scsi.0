@@ -1,56 +1,41 @@
-From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
-Subject: Re: [PATCH] scsi: qla2xxx: fix typo "CT-PASSTRHU" -> "CT-PASSTHRU"
-Date: Mon, 10 Sep 2018 17:49:14 +0000
-Message-ID: <1E6E5FDA-33ED-4CBB-8E96-D3086EEE6B88@cavium.com>
-References: <20180909222503.8298-1-colin.king@canonical.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+From: Laura Abbott <labbott@redhat.com>
+Subject: [PATCH] scsi: ibmvscsis: Fix a stringop-overflow warning
+Date: Mon, 10 Sep 2018 15:37:23 -0700
+Message-ID: <20180910223723.25357-1-labbott@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180909222503.8298-1-colin.king@canonical.com>
-Content-Language: en-US
-Content-ID: <B4D122E14D73874EA4963BC24ED530EB@namprd07.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Colin King <colin.king@canonical.com>
-Cc: Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@cavium.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, Michael Cyr <mikecyr@linux.vnet.ibm.com>
+Cc: Laura Abbott <labbott@redhat.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org, Kees Cook <keescook@chromium.org>, Prarit Bhargava <prarit@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
+There's currently a warning about string overflow with strncat:
 
-> On Sep 9, 2018, at 3:25 PM, Colin King <colin.king@canonical.com> wrote:
->=20
-> External Email
->=20
-> From: Colin Ian King <colin.king@canonical.com>
->=20
-> Trivial fix to typo in debug message text.
->=20
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> ---
-> drivers/scsi/qla2xxx/qla_gs.c | 2 +-
-> 1 file changed, 1 insertion(+), 1 deletion(-)
->=20
-> diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.=
-c
-> index a0038d879b9d..b48ff0095843 100644
-> --- a/drivers/scsi/qla2xxx/qla_gs.c
-> +++ b/drivers/scsi/qla2xxx/qla_gs.c
-> @@ -4289,7 +4289,7 @@ static int qla24xx_async_gnnft(scsi_qla_host_t *vha=
-, struct srb *sp,
->        }
->=20
->        ql_dbg(ql_dbg_disc, vha, 0xfffff,
-> -           "%s: FC4Type %x, CT-PASSTRHU %s command ctarg rsp size %d, ct=
-arg req size %d\n",
-> +           "%s: FC4Type %x, CT-PASSTHRU %s command ctarg rsp size %d, ct=
-arg req size %d\n",
->            __func__, fc4_type, sp->name, sp->u.iocb_cmd.u.ctarg.rsp_size,
->             sp->u.iocb_cmd.u.ctarg.req_size);
->=20
-> --
-> 2.17.1
->=20
+drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c: In function 'ibmvscsis_probe':
+drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c:3479:2: error: 'strncat' specified
+bound 64 equals destination size [-Werror=stringop-overflow=]
+  strncat(vscsi->eye, vdev->name, MAX_EYE);
+  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Acked-By: Himanshu Madhani <himanshu.madhani@cavium.com>
+Switch to using strlcat which correctly accounts for lengths that
+are equal to the destination buffer.
 
-Thanks,
-- Himanshu
+Signed-off-by: Laura Abbott <labbott@redhat.com>
+---
+ drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
+index fac377320158..53d344d8dc43 100644
+--- a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
++++ b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
+@@ -3475,7 +3475,7 @@ static int ibmvscsis_probe(struct vio_dev *vdev,
+ 		vscsi->dds.window[REMOTE].liobn);
+ 
+ 	strcpy(vscsi->eye, "VSCSI ");
+-	strncat(vscsi->eye, vdev->name, MAX_EYE);
++	strlcat(vscsi->eye, vdev->name, MAX_EYE);
+ 
+ 	vscsi->dds.unit_id = vdev->unit_address;
+ 	strncpy(vscsi->dds.partition_name, partition_name,
+-- 
+2.17.1
