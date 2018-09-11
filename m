@@ -1,45 +1,39 @@
 From: Laura Abbott <labbott@redhat.com>
-Subject: [PATCHv2] scsi: ibmvscsis: Fix a stringop-overflow warning
-Date: Tue, 11 Sep 2018 11:05:42 -0700
-Message-ID: <20180911180542.7778-1-labbott@redhat.com>
+Subject: [PATCH] scsi: ibmvscsis: Ensure partition name is properly NUL terminated
+Date: Tue, 11 Sep 2018 11:15:34 -0700
+Message-ID: <20180911181534.18553-1-labbott@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, Michael Cyr <mikecyr@linux.vnet.ibm.com>
-Cc: Laura Abbott <labbott@redhat.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org, Kees Cook <keescook@chromium.org>, Prarit Bhargava <prarit@redhat.com>
+To: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, Michael Cyr <mikecyr@linux.vnet.ibm.com>, Kees Cook <keescook@chromium.org>
+Cc: Laura Abbott <labbott@redhat.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+While reviewing another part of the code, Kees noticed that the
+strncpy of the partition name might not always be NUL terminated. Switch
+to using strlcpy which does this safely.
 
-There's currently a warning about string overflow with strncat:
-
-drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c: In function 'ibmvscsis_probe':
-drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c:3479:2: error: 'strncat' specified
-bound 64 equals destination size [-Werror=stringop-overflow=]
-  strncat(vscsi->eye, vdev->name, MAX_EYE);
-  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Switch to a single snprintf instead of a strcpy + strcat to handle this
-cleanly.
-
+Reported-by: Kees Cook <keescook@chromium.org>
 Signed-off-by: Laura Abbott <labbott@redhat.com>
 ---
-v2: Swtich to using snprintf per suggestion of Kees
+I realized looking at this that I probably should have made
+this and my previous patch a series given this has context depending on
+the other patch. I can resend if the scsi maintainers want.
 ---
- drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-index fac377320158..9305440a00a1 100644
+index 9305440a00a1..1217bf2a28db 100644
 --- a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
 +++ b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-@@ -3474,8 +3474,7 @@ static int ibmvscsis_probe(struct vio_dev *vdev,
- 		vscsi->dds.window[LOCAL].liobn,
- 		vscsi->dds.window[REMOTE].liobn);
- 
--	strcpy(vscsi->eye, "VSCSI ");
--	strncat(vscsi->eye, vdev->name, MAX_EYE);
-+	snprintf(vscsi->eye, sizeof(vscsi->eye), "VSCSI%s", vdev->name);
+@@ -3477,7 +3477,7 @@ static int ibmvscsis_probe(struct vio_dev *vdev,
+ 	snprintf(vscsi->eye, sizeof(vscsi->eye), "VSCSI%s", vdev->name);
  
  	vscsi->dds.unit_id = vdev->unit_address;
- 	strncpy(vscsi->dds.partition_name, partition_name,
+-	strncpy(vscsi->dds.partition_name, partition_name,
++	strlcpy(vscsi->dds.partition_name, partition_name,
+ 		sizeof(vscsi->dds.partition_name));
+ 	vscsi->dds.partition_num = partition_number;
+ 
 -- 
 2.17.1
