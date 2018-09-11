@@ -1,51 +1,70 @@
-From: Sam Protsenko <semen.protsenko@linaro.org>
-Subject: Re: [PATCH v2 1/2] codafs: Fix build using bare-metal toolchain
-Date: Tue, 11 Sep 2018 19:53:59 +0300
-Message-ID: <CAKaJLVvSHZq9eZd2uqojHb9bdLOnLhQn1X-i=YBWMXMeexrWYg@mail.gmail.com>
-References: <20180829170015.7729-1-semen.protsenko@linaro.org> <20180829170015.7729-2-semen.protsenko@linaro.org>
+From: Laura Abbott <labbott@redhat.com>
+Subject: Re: [PATCH] scsi: ibmvscsis: Fix a stringop-overflow warning
+Date: Tue, 11 Sep 2018 10:55:29 -0700
+Message-ID: <c62a8355-fa40-26dc-5353-68e6e65d8e3a@redhat.com>
+References: <20180910223723.25357-1-labbott@redhat.com>
+ <CAGXu5j+-RNeEr+FUc6maamvzYpY7W0VJ-yYGDHnFTuNPeOUMFw@mail.gmail.com>
+ <36c9adee-fbe8-f58d-e407-bbd57fdb1959@linux.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180829170015.7729-2-semen.protsenko@linaro.org>
+In-Reply-To: <36c9adee-fbe8-f58d-e407-bbd57fdb1959@linux.ibm.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, codalist@coda.cs.cmu.edu, coda@cs.cmu.edu, Jan Harkes <jaharkes@cs.cmu.edu>
-Cc: Praneeth Bajjuri <praneeth@ti.com>, Paul Sokolovsky <paul.sokolovsky@linaro.org>, Miklos Szeredi <mszeredi@suse.cz>, Sumit Semwal <sumit.semwal@linaro.org>, Ruslan Bilovol <ruslan.bilovol@gmail.com>, Andy Shevchenko <andy.shevchenko@gmail.com>, Christoph Hellwig <hch@infradead.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+To: "Bryant G. Ly" <bryantly@linux.ibm.com>, Kees Cook <keescook@chromium.org>
+Cc: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, Michael Cyr <mikecyr@linux.vnet.ibm.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, target-devel <target-devel@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Prarit Bhargava <prarit@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Aug 29, 2018 at 8:00 PM, Sam Protsenko
-<semen.protsenko@linaro.org> wrote:
-> The kernel is self-contained project and can be built with bare-metal
-> toolchain. But bare-metal toolchain doesn't define __linux__. Because of
-> this u_quad_t type is not defined when using bare-metal toolchain and
-> codafs build fails. This patch fixes it by defining u_quad_t type
-> unconditionally.
->
-> Signed-off-by: Sam Protsenko <semen.protsenko@linaro.org>
-> ---
->  include/linux/coda.h | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
->
-> diff --git a/include/linux/coda.h b/include/linux/coda.h
-> index d30209b9cef8..0ca0c83fdb1c 100644
-> --- a/include/linux/coda.h
-> +++ b/include/linux/coda.h
-> @@ -58,8 +58,7 @@ Mellon the rights to redistribute these changes without encumbrance.
->  #ifndef _CODA_HEADER_
->  #define _CODA_HEADER_
->
-> -#if defined(__linux__)
->  typedef unsigned long long u_quad_t;
-> -#endif
-> +
->  #include <uapi/linux/coda.h>
->  #endif
-> --
-> 2.18.0
->
+On 09/11/2018 07:34 AM, Bryant G. Ly wrote:
+> On 9/10/18 6:30 PM, Kees Cook wrote:
+> 
+>> On Mon, Sep 10, 2018 at 3:37 PM, Laura Abbott <labbott@redhat.com> wrote:
+>>> There's currently a warning about string overflow with strncat:
+>>>
+>>> drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c: In function 'ibmvscsis_probe':
+>>> drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c:3479:2: error: 'strncat' specified
+>>> bound 64 equals destination size [-Werror=stringop-overflow=]
+>>>    strncat(vscsi->eye, vdev->name, MAX_EYE);
+>>>    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+>>>
+>>> Switch to using strlcat which correctly accounts for lengths that
+>>> are equal to the destination buffer.
+>>>
+>>> Signed-off-by: Laura Abbott <labbott@redhat.com>
+>>> ---
+>>>   drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 2 +-
+>>>   1 file changed, 1 insertion(+), 1 deletion(-)
+>>>
+>>> diff --git a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
+>>> index fac377320158..53d344d8dc43 100644
+>>> --- a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
+>>> +++ b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
+>>> @@ -3475,7 +3475,7 @@ static int ibmvscsis_probe(struct vio_dev *vdev,
+>>>                  vscsi->dds.window[REMOTE].liobn);
+>>>
+>>>          strcpy(vscsi->eye, "VSCSI ");
+>>> -       strncat(vscsi->eye, vdev->name, MAX_EYE);
+>>> +       strlcat(vscsi->eye, vdev->name, MAX_EYE);
+>> Can this just get switched to snprintf() instead?
+>>
+>> snprintf(vscsi->eye, sizeof(vscsi->eye), "VSCSI%s", vdev->name);
+> 
+> Either works for me.
+> 
 
-Hi guys,
+I'll switch to the snprintf since that's cleaner.
 
-It's been a while since I sent this patch. Can we please merge it if
-there is no objections?
+>>
+>>>          vscsi->dds.unit_id = vdev->unit_address;
+>>>          strncpy(vscsi->dds.partition_name, partition_name,
+>> And does this strncpy need a NUL-termination and/or trailing padding?
+>>
+> Yes, good catch, it does need NUL-termination.
+> 
 
-Thanks.
+I can send that cleanup in a second patch.
+
+> -Bryant
+> 
+> 
