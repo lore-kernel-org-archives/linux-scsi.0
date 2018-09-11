@@ -1,37 +1,51 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH 11/11] compat_ioctl: move tape handling into drivers
-Date: Tue, 11 Sep 2018 17:36:46 +0200
-Message-ID: <CAK8P3a0evhaJGL_XdUjQhJDGyAh01UjLFkKx-Cq21htXmFsY2A@mail.gmail.com>
-References: <20180908142837.2819693-1-arnd@arndb.de> <20180908142837.2819693-11-arnd@arndb.de>
- <20180909043746.GF19965@ZenIV.linux.org.uk>
+From: Sam Protsenko <semen.protsenko@linaro.org>
+Subject: Re: [PATCH v2 1/2] codafs: Fix build using bare-metal toolchain
+Date: Tue, 11 Sep 2018 19:53:59 +0300
+Message-ID: <CAKaJLVvSHZq9eZd2uqojHb9bdLOnLhQn1X-i=YBWMXMeexrWYg@mail.gmail.com>
+References: <20180829170015.7729-1-semen.protsenko@linaro.org> <20180829170015.7729-2-semen.protsenko@linaro.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180909043746.GF19965@ZenIV.linux.org.uk>
+In-Reply-To: <20180829170015.7729-2-semen.protsenko@linaro.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Al Viro <viro@zeniv.linux.org.uk>
-Cc: David Miller <davem@davemloft.net>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, osst@riede.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Kai.Makisara@kolumbus.fi, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, IDE-ML <linux-ide@vger.kernel.org>, linux-s390 <linux-s390@vger.kernel.org>, osst-users@lists.sourceforge.net, linux-scsi <linux-scsi@vger.kernel.org>, Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, codalist@coda.cs.cmu.edu, coda@cs.cmu.edu, Jan Harkes <jaharkes@cs.cmu.edu>
+Cc: Praneeth Bajjuri <praneeth@ti.com>, Paul Sokolovsky <paul.sokolovsky@linaro.org>, Miklos Szeredi <mszeredi@suse.cz>, Sumit Semwal <sumit.semwal@linaro.org>, Ruslan Bilovol <ruslan.bilovol@gmail.com>, Andy Shevchenko <andy.shevchenko@gmail.com>, Christoph Hellwig <hch@infradead.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sun, Sep 9, 2018 at 6:38 AM Al Viro <viro@zeniv.linux.org.uk> wrote:
+On Wed, Aug 29, 2018 at 8:00 PM, Sam Protsenko
+<semen.protsenko@linaro.org> wrote:
+> The kernel is self-contained project and can be built with bare-metal
+> toolchain. But bare-metal toolchain doesn't define __linux__. Because of
+> this u_quad_t type is not defined when using bare-metal toolchain and
+> codafs build fails. This patch fixes it by defining u_quad_t type
+> unconditionally.
 >
-> On Sat, Sep 08, 2018 at 04:28:17PM +0200, Arnd Bergmann wrote:
-> > MTIOCPOS and MTIOCGET are incompatible between 32-bit and 64-bit user
-> > space, and traditionally have been translated in fs/compat_ioctl.c.
-> >
-> > To get rid of that translation handler, move a corresponding
-> > implementation into each of the four drivers implementing those commands.
-> >
-> > The interesting part of that is now in a new linux/mtio.h header that
-> > wraps the existing uapi/linux/mtio.h header and provides an abstraction
-> > to let drivers handle both cases easily.
+> Signed-off-by: Sam Protsenko <semen.protsenko@linaro.org>
+> ---
+>  include/linux/coda.h | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
 >
-> Ugh...  Frankly, this bool compat passed all way down looks wrong.
-> I can live with that; the question is whether block folks will be
-> OK with that thing...
+> diff --git a/include/linux/coda.h b/include/linux/coda.h
+> index d30209b9cef8..0ca0c83fdb1c 100644
+> --- a/include/linux/coda.h
+> +++ b/include/linux/coda.h
+> @@ -58,8 +58,7 @@ Mellon the rights to redistribute these changes without encumbrance.
+>  #ifndef _CODA_HEADER_
+>  #define _CODA_HEADER_
+>
+> -#if defined(__linux__)
+>  typedef unsigned long long u_quad_t;
+> -#endif
+> +
+>  #include <uapi/linux/coda.h>
+>  #endif
+> --
+> 2.18.0
+>
 
-I have tried to come up with an alternative, but couldn't really find anything
-that is less ugly. Since nobody else complained, I'll resend this version
-along with the other patches.
+Hi guys,
 
-       Arnd
+It's been a while since I sent this patch. Can we please merge it if
+there is no objections?
+
+Thanks.
