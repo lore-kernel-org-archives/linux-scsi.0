@@ -1,7 +1,7 @@
 From: Laura Abbott <labbott@redhat.com>
-Subject: [PATCHv3 1/2] scsi: ibmvscsis: Fix a stringop-overflow warning
-Date: Tue, 11 Sep 2018 12:22:25 -0700
-Message-ID: <20180911192226.3620-2-labbott@redhat.com>
+Subject: [PATCHv2 2/2] scsi: ibmvscsis: Ensure partition name is properly NUL terminated
+Date: Tue, 11 Sep 2018 12:22:26 -0700
+Message-ID: <20180911192226.3620-3-labbott@redhat.com>
 References: <20180911192226.3620-1-labbott@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20180911192226.3620-1-labbott@redhat.com>
@@ -11,37 +11,30 @@ Cc: Laura Abbott <labbott@redhat.com>, "James E.J. Bottomley" <jejb@linux.vnet.i
 List-Id: linux-scsi@vger.kernel.org
 
 
-There's currently a warning about string overflow with strncat:
+While reviewing another part of the code, Kees noticed that the
+strncpy of the partition name might not always be NUL terminated. Switch
+to using strscpy which does this safely.
 
-drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c: In function 'ibmvscsis_probe':
-drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c:3479:2: error: 'strncat' specified
-bound 64 equals destination size [-Werror=stringop-overflow=]
-  strncat(vscsi->eye, vdev->name, MAX_EYE);
-  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Switch to a single snprintf instead of a strcpy + strcat to handle this
-cleanly.
-
+Reported-by: Kees Cook <keescook@chromium.org>
 Signed-off-by: Laura Abbott <labbott@redhat.com>
 ---
-v3: Make sure there is an extra space in the partition name
+v2: Switch to strscpy instead of just strlcpy
 ---
- drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-index fac377320158..b3a029ad07cd 100644
+index b3a029ad07cd..f42a619198c4 100644
 --- a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
 +++ b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-@@ -3474,8 +3474,7 @@ static int ibmvscsis_probe(struct vio_dev *vdev,
- 		vscsi->dds.window[LOCAL].liobn,
- 		vscsi->dds.window[REMOTE].liobn);
- 
--	strcpy(vscsi->eye, "VSCSI ");
--	strncat(vscsi->eye, vdev->name, MAX_EYE);
-+	snprintf(vscsi->eye, sizeof(vscsi->eye), "VSCSI %s", vdev->name);
+@@ -3477,7 +3477,7 @@ static int ibmvscsis_probe(struct vio_dev *vdev,
+ 	snprintf(vscsi->eye, sizeof(vscsi->eye), "VSCSI %s", vdev->name);
  
  	vscsi->dds.unit_id = vdev->unit_address;
- 	strncpy(vscsi->dds.partition_name, partition_name,
+-	strncpy(vscsi->dds.partition_name, partition_name,
++	strscpy(vscsi->dds.partition_name, partition_name,
+ 		sizeof(vscsi->dds.partition_name));
+ 	vscsi->dds.partition_num = partition_number;
+ 
 -- 
 2.17.1
