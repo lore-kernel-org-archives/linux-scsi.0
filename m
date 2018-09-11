@@ -1,39 +1,36 @@
-From: Jianchao Wang <jianchao.w.wang@oracle.com>
-Subject: [PATCH] scsi: qla2xxx: reduce time granularity of qla2x00_eh_wait_on_command
-Date: Tue, 11 Sep 2018 13:23:21 +0800
-Message-ID: <1536643401-18015-1-git-send-email-jianchao.w.wang@oracle.com>
+From: Masanari Iida <standby24x7@gmail.com>
+Subject: [PATCH] scsi: qla2xxx: Fix comment in MODULE_PARM_DESC in qla2xxx
+Date: Tue, 11 Sep 2018 18:48:11 +0900
+Message-ID: <20180911094811.12681-1-standby24x7@gmail.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: qla2xxx-upstream@qlogic.com, Himanshu.Madhani@cavium.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: qla2xxx-upstream@qlogic.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-kernel@vger.kernel.org, himanshu.madhani@cavium.com, giridhar.malavali@cavium.com, linux-scsi@vger.kernel.org
+Cc: Masanari Iida <standby24x7@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-If the cmd has not be returned after aborted by qla2x00_eh_abort,
-we have to wait for it. However, the time is 1000ms at least currently.
-If there are a lot cmds need to be aborted, the delay could be long
-enough to lead to panic due to such as hung task, ocfs2 heartbeat,
-etc, just before scsi recovery works.
+Default value of ql2xasynctmfenable for qla2xxx driver was
+set to 1 in commit 043dc1d7e8501.
+But comment in MODULE_PARAM_DESC was not modified.
 
-Change the granularity to 1ms, even though more context switches
-would be introduced, but it should be ok as it is not hot path.
-
-Signed-off-by: Jianchao Wang <jianchao.w.wang@oracle.com>
+Signed-off-by: Masanari Iida <standby24x7@gmail.com>
 ---
  drivers/scsi/qla2xxx/qla_os.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 42b8f0d..570d93b 100644
+index 42b8f0d3e580..fe5404be73c5 100644
 --- a/drivers/scsi/qla2xxx/qla_os.c
 +++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -1065,7 +1065,7 @@ qla2xxx_mqueuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd,
- static int
- qla2x00_eh_wait_on_command(struct scsi_cmnd *cmd)
- {
--#define ABORT_POLLING_PERIOD	1000
-+#define ABORT_POLLING_PERIOD	1
- #define ABORT_WAIT_ITER		((2 * 1000) / (ABORT_POLLING_PERIOD))
- 	unsigned long wait_iter = ABORT_WAIT_ITER;
- 	scsi_qla_host_t *vha = shost_priv(cmd->device->host);
+@@ -204,7 +204,7 @@ int ql2xasynctmfenable = 1;
+ module_param(ql2xasynctmfenable, int, S_IRUGO);
+ MODULE_PARM_DESC(ql2xasynctmfenable,
+ 		"Enables issue of TM IOCBs asynchronously via IOCB mechanism"
+-		"Default is 0 - Issue TM IOCBs via mailbox mechanism.");
++		"Default is 1 - Issue TM IOCBs via mailbox mechanism.");
+ 
+ int ql2xdontresethba;
+ module_param(ql2xdontresethba, int, S_IRUGO|S_IWUSR);
 -- 
-2.7.4
+2.19.0
