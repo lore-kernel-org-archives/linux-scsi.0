@@ -1,60 +1,37 @@
-From: "Bryant G. Ly" <bryantly@linux.ibm.com>
-Subject: Re: [PATCH] scsi: ibmvscsis: Fix a stringop-overflow warning
-Date: Tue, 11 Sep 2018 09:34:57 -0500
-Message-ID: <36c9adee-fbe8-f58d-e407-bbd57fdb1959@linux.ibm.com>
-References: <20180910223723.25357-1-labbott@redhat.com>
- <CAGXu5j+-RNeEr+FUc6maamvzYpY7W0VJ-yYGDHnFTuNPeOUMFw@mail.gmail.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH 11/11] compat_ioctl: move tape handling into drivers
+Date: Tue, 11 Sep 2018 17:36:46 +0200
+Message-ID: <CAK8P3a0evhaJGL_XdUjQhJDGyAh01UjLFkKx-Cq21htXmFsY2A@mail.gmail.com>
+References: <20180908142837.2819693-1-arnd@arndb.de> <20180908142837.2819693-11-arnd@arndb.de>
+ <20180909043746.GF19965@ZenIV.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAGXu5j+-RNeEr+FUc6maamvzYpY7W0VJ-yYGDHnFTuNPeOUMFw@mail.gmail.com>
-Content-Language: en-US
+In-Reply-To: <20180909043746.GF19965@ZenIV.linux.org.uk>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Kees Cook <keescook@chromium.org>, Laura Abbott <labbott@redhat.com>
-Cc: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, Michael Cyr <mikecyr@linux.vnet.ibm.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, target-devel <target-devel@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Prarit Bhargava <prarit@redhat.com>
+To: Al Viro <viro@zeniv.linux.org.uk>
+Cc: David Miller <davem@davemloft.net>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, osst@riede.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Kai.Makisara@kolumbus.fi, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, IDE-ML <linux-ide@vger.kernel.org>, linux-s390 <linux-s390@vger.kernel.org>, osst-users@lists.sourceforge.net, linux-scsi <linux-scsi@vger.kernel.org>, Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 9/10/18 6:30 PM, Kees Cook wrote:
-
-> On Mon, Sep 10, 2018 at 3:37 PM, Laura Abbott <labbott@redhat.com> wrote:
->> There's currently a warning about string overflow with strncat:
->>
->> drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c: In function 'ibmvscsis_probe':
->> drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c:3479:2: error: 'strncat' specified
->> bound 64 equals destination size [-Werror=stringop-overflow=]
->>   strncat(vscsi->eye, vdev->name, MAX_EYE);
->>   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
->>
->> Switch to using strlcat which correctly accounts for lengths that
->> are equal to the destination buffer.
->>
->> Signed-off-by: Laura Abbott <labbott@redhat.com>
->> ---
->>  drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
->> index fac377320158..53d344d8dc43 100644
->> --- a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
->> +++ b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
->> @@ -3475,7 +3475,7 @@ static int ibmvscsis_probe(struct vio_dev *vdev,
->>                 vscsi->dds.window[REMOTE].liobn);
->>
->>         strcpy(vscsi->eye, "VSCSI ");
->> -       strncat(vscsi->eye, vdev->name, MAX_EYE);
->> +       strlcat(vscsi->eye, vdev->name, MAX_EYE);
-> Can this just get switched to snprintf() instead?
+On Sun, Sep 9, 2018 at 6:38 AM Al Viro <viro@zeniv.linux.org.uk> wrote:
 >
-> snprintf(vscsi->eye, sizeof(vscsi->eye), "VSCSI%s", vdev->name);
-
-Either works for me. 
-
+> On Sat, Sep 08, 2018 at 04:28:17PM +0200, Arnd Bergmann wrote:
+> > MTIOCPOS and MTIOCGET are incompatible between 32-bit and 64-bit user
+> > space, and traditionally have been translated in fs/compat_ioctl.c.
+> >
+> > To get rid of that translation handler, move a corresponding
+> > implementation into each of the four drivers implementing those commands.
+> >
+> > The interesting part of that is now in a new linux/mtio.h header that
+> > wraps the existing uapi/linux/mtio.h header and provides an abstraction
+> > to let drivers handle both cases easily.
 >
->>         vscsi->dds.unit_id = vdev->unit_address;
->>         strncpy(vscsi->dds.partition_name, partition_name,
-> And does this strncpy need a NUL-termination and/or trailing padding?
->
-Yes, good catch, it does need NUL-termination. 
+> Ugh...  Frankly, this bool compat passed all way down looks wrong.
+> I can live with that; the question is whether block folks will be
+> OK with that thing...
 
--Bryant
+I have tried to come up with an alternative, but couldn't really find anything
+that is less ugly. Since nobody else complained, I'll resend this version
+along with the other patches.
+
+       Arnd
