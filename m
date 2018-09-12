@@ -1,25 +1,25 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] sym53c8xx: fix NULL pointer dereference panic in sym_int_sir() in sym_hipd.c
-Date: Tue, 11 Sep 2018 20:55:34 -0400
-Message-ID: <yq1o9d3y1o9.fsf@oracle.com>
-References: <1535557096-1324-1-git-send-email-george.kennedy@oracle.com>
-        <CAHp75Vc=Fg165nL+SFDXXDzBvtba+C7CLK24gyz3EaAb8QdjNQ@mail.gmail.com>
-        <CAFhKne_MtbSKXTT2e+CXZGs_uVieqsfX2ODc8hc5ptdAn8_ETg@mail.gmail.com>
+Subject: Re: [PATCH trivial] scsi: arcmsr: Spelling s/rebulid/rebuild/
+Date: Tue, 11 Sep 2018 20:58:50 -0400
+Message-ID: <yq1k1nry1it.fsf@oracle.com>
+References: <20180903173529.7865-1-geert+renesas@glider.be>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAFhKne_MtbSKXTT2e+CXZGs_uVieqsfX2ODc8hc5ptdAn8_ETg@mail.gmail.com>
-        (Matthew Wilcox's message of "Thu, 30 Aug 2018 09:40:28 -0700")
+In-Reply-To: <20180903173529.7865-1-geert+renesas@glider.be> (Geert
+        Uytterhoeven's message of "Mon, 3 Sep 2018 19:35:29 +0200")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Matthew Wilcox <willy6545@gmail.com>
-Cc: Andy Shevchenko <andy.shevchenko@gmail.com>, george.kennedy@oracle.com, Matthew Wilcox <matthew@wil.cx>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Geert Uytterhoeven <geert+renesas@glider.be>
+Cc: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Jiri Kosina <trivial@kernel.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Matthew,
+Geert,
 
-> I don't think that's worth doing. Let's keep the patch simple like
-> this.
+> Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+> ---
+>  drivers/scsi/arcmsr/arcmsr_hba.c | 20 ++++++++++----------
+>  1 file changed, 10 insertions(+), 10 deletions(-)
 
 Applied to 4.20/scsi-queue, thanks!
 
