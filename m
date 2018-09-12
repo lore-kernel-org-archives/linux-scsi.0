@@ -1,404 +1,447 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 4.19-rc3
-Date: Wed, 12 Sep 2018 07:29:49 -0400
-Message-ID: <1536751789.3337.5.camel@HansenPartnership.com>
+From: Adrian Hunter <adrian.hunter@intel.com>
+Subject: Re: [PATCH V12 2/2] scsi: ufs: Add configfs support for UFS
+ provisioning
+Date: Wed, 12 Sep 2018 16:14:14 +0300
+Message-ID: <b1a8913e-5baf-0bf1-96a4-c502c5ba733f@intel.com>
+References: <1535626003-4966-1-git-send-email-sayalil@codeaurora.org>
+ <1535626003-4966-3-git-send-email-sayalil@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1535626003-4966-3-git-send-email-sayalil@codeaurora.org>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: Sayali Lokhande <sayalil@codeaurora.org>, subhashj@codeaurora.org, cang@codeaurora.org, vivek.gautam@codeaurora.org, rnayak@codeaurora.org, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, asutoshd@codeaurora.org, evgreen@chromium.org, riteshh@codeaurora.org
+Cc: stummala@codeaurora.org, jlbec@evilplan.org, linux-scsi@vger.kernel.org, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Three fixes, all in drivers (qedi and iscsi target) so no wider impact
-even if the code changes are a bit extensive.
+On 30/08/18 13:46, Sayali Lokhande wrote:
+> This patch adds configfs support to provision UFS device at
+> runtime. This feature can be primarily useful in factory or
+> assembly line as some devices may be required to be configured
+> multiple times during initial system development phase.
+> Configuration Descriptors can be written multiple times until
+> bConfigDescrLock attribute is zero.
+> 
+> Configuration descriptor buffer consists of Device and Unit
+> descriptor configurable parameters which are parsed from vendor
+> specific provisioning file and then passed via configfs node at
+> runtime to provision ufs device.
+> CONFIG_CONFIGFS_FS and CONFIG_UFS_PROVISION needs to be enabled
+> for using this feature.
+> 
+> Usage:
+> 1) To read current configuration descriptor with index X
+>    (where index X can be 0/1/2/3) :
+>    cat /config/XXXX.ufshc/ufs_config_desc_X
 
-The patch is available here:
+Device name could be nearly anything, not necessarily in the form
+XXXX.ufshc, so maybe make this :
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+    cat /config/<device name>/ufs_config_desc_X
 
-The short changelog is:
+> 
+> 2) To write configuration descriptor with index X :
+>    echo <config_desc_buf> > /config/XXXX.ufshc/ufs_config_desc_X
 
-Mike Christie (1):
-      scsi: iscsi: target: Fix conn_ops double free
+Ditto
 
-Nilesh Javali (1):
-      scsi: qedi: Add the CRC size within iSCSI NVM image
+> 
+> Signed-off-by: Sayali Lokhande <sayalil@codeaurora.org>
+> ---
+>  Documentation/ABI/testing/configfs-driver-ufs |  12 ++
+>  drivers/scsi/ufs/Kconfig                      |  10 ++
+>  drivers/scsi/ufs/Makefile                     |   1 +
+>  drivers/scsi/ufs/ufs-configfs.c               | 232 ++++++++++++++++++++++++++
+>  drivers/scsi/ufs/ufshcd.c                     |   3 +-
+>  drivers/scsi/ufs/ufshcd.h                     |  17 ++
+>  6 files changed, 274 insertions(+), 1 deletion(-)
+>  create mode 100644 Documentation/ABI/testing/configfs-driver-ufs
+>  create mode 100644 drivers/scsi/ufs/ufs-configfs.c
+> 
+> diff --git a/Documentation/ABI/testing/configfs-driver-ufs b/Documentation/ABI/testing/configfs-driver-ufs
+> new file mode 100644
+> index 0000000..4302d57
+> --- /dev/null
+> +++ b/Documentation/ABI/testing/configfs-driver-ufs
+> @@ -0,0 +1,12 @@
+> +What:		/config/*/ufs_config_desc_X
+> +Date:		Jun 2018
+> +KernelVersion:	4.19
 
-Vincent Pelletier (1):
-      scsi: iscsi: target: Set conn->sess to NULL when iscsi_login_set_conn_values fails
+4.20 now
 
-And the diffstat:
+> +Description:
+> +		This file shows bytes of the current ufs configuration descriptor
+> +		with index X (where X = 0/1/2/3) set in device. This can be used to
+> +		provision ufs device if bConfigDescrLock is 0.
+> +		For more details, refer 14.1.6.3 Configuration Descriptor and
+> +		table 14-12 - Unit Descriptor configurable parameters from specs for
+> +		description and format of each configuration descriptor parameter.
+> +		Parameters of Configuration descriptor buffer for respective index
+> +		needs to be passed as bytes in space separated format.
+> diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
+> index e27b4d4..a9a0a58 100644
+> --- a/drivers/scsi/ufs/Kconfig
+> +++ b/drivers/scsi/ufs/Kconfig
+> @@ -100,3 +100,13 @@ config SCSI_UFS_QCOM
+>  
+>  	  Select this if you have UFS controller on QCOM chipset.
+>  	  If unsure, say N.
+> +
+> +config UFS_PROVISION
 
- drivers/scsi/qedi/qedi.h                  |   7 +-
- drivers/scsi/qedi/qedi_main.c             |  28 +++---
- drivers/target/iscsi/iscsi_target.c       |   9 +-
- drivers/target/iscsi/iscsi_target_login.c | 149 ++++++++++++++++--------------
- drivers/target/iscsi/iscsi_target_login.h |   2 +-
- 5 files changed, 101 insertions(+), 94 deletions(-)
+Better if this is config SCSI_UFS_PROVISION to avoid mixups with UFS filesystem
 
-With full diff below.
+> +	tristate "Runtime UFS Provisioning support"
 
-James
+tristate won't work with what you have.  It will have to be bool
 
----
+> +	depends on SCSI_UFSHCD && CONFIGFS_FS
+> +	help
+> +	  This enables runtime UFS provisioning support. This can be used
+> +	  primarily during assembly line as some devices may be required to
+> +	  be configured multiple times during initial development phase.
+> +
+> +	  If unsure, say N.
+> diff --git a/drivers/scsi/ufs/Makefile b/drivers/scsi/ufs/Makefile
+> index 918f579..00110ea 100644
+> --- a/drivers/scsi/ufs/Makefile
+> +++ b/drivers/scsi/ufs/Makefile
+> @@ -5,5 +5,6 @@ obj-$(CONFIG_SCSI_UFS_DWC_TC_PLATFORM) += tc-dwc-g210-pltfrm.o ufshcd-dwc.o tc-d
+>  obj-$(CONFIG_SCSI_UFS_QCOM) += ufs-qcom.o
+>  obj-$(CONFIG_SCSI_UFSHCD) += ufshcd-core.o
+>  ufshcd-core-objs := ufshcd.o ufs-sysfs.o
+> +obj-$(CONFIG_UFS_PROVISION) += ufs-configfs.o
+>  obj-$(CONFIG_SCSI_UFSHCD_PCI) += ufshcd-pci.o
+>  obj-$(CONFIG_SCSI_UFSHCD_PLATFORM) += ufshcd-pltfrm.o
+> diff --git a/drivers/scsi/ufs/ufs-configfs.c b/drivers/scsi/ufs/ufs-configfs.c
+> new file mode 100644
+> index 0000000..a2c09c7
+> --- /dev/null
+> +++ b/drivers/scsi/ufs/ufs-configfs.c
+> @@ -0,0 +1,232 @@
+> +// SPDX-License-Identifier: GPL-2.0+
+> +// Copyright (c) 2018, Linux Foundation.
+> +
+> +#include <linux/configfs.h>
+> +#include <linux/err.h>
+> +#include <linux/string.h>
+> +
+> +#include "ufs.h"
+> +#include "ufshcd.h"
+> +
+> +static inline struct ufs_hba *config_item_to_hba(struct config_item *item)
+> +{
+> +	struct config_group *group = to_config_group(item);
+> +	struct configfs_subsystem *subsys = to_configfs_subsystem(group);
+> +	struct ufs_hba *hba = container_of(subsys, struct ufs_hba, subsys);
+> +
+> +	return hba;
+> +}
+> +
+> +static ssize_t ufs_config_desc_show(struct config_item *item, char *buf,
+> +		u8 index)
+> +{
+> +	struct ufs_hba *hba = config_item_to_hba(item);
+> +	u8 *desc_buf = NULL;
+> +	int desc_buf_len = hba->desc_size.conf_desc;
+> +	int i, ret, curr_len = 0;
+> +
+> +	desc_buf = kzalloc(desc_buf_len, GFP_KERNEL);
+> +	if (!desc_buf)
+> +		return -ENOMEM;
+> +
+> +	ret = ufshcd_query_descriptor_retry(hba, UPIU_QUERY_OPCODE_READ_DESC,
+> +		QUERY_DESC_IDN_CONFIGURATION, index, 0,
+> +		desc_buf, &desc_buf_len);
+> +	if (ret)
+> +		goto out;
+> +
+> +	for (i = 0; i < desc_buf_len; i++)
+> +		curr_len += snprintf((buf + curr_len), (PAGE_SIZE - curr_len),
+> +				"0x%x ", desc_buf[i]);
+> +
+> +out:
+> +	kfree(desc_buf);
+> +	if (ret)
+> +		return ret;
+> +	return curr_len;
 
-diff --git a/drivers/scsi/qedi/qedi.h b/drivers/scsi/qedi/qedi.h
-index fc3babc15fa3..a6f96b35e971 100644
---- a/drivers/scsi/qedi/qedi.h
-+++ b/drivers/scsi/qedi/qedi.h
-@@ -77,6 +77,11 @@ enum qedi_nvm_tgts {
- 	QEDI_NVM_TGT_SEC,
- };
- 
-+struct qedi_nvm_iscsi_image {
-+	struct nvm_iscsi_cfg iscsi_cfg;
-+	u32 crc;
-+};
-+
- struct qedi_uio_ctrl {
- 	/* meta data */
- 	u32 uio_hsi_version;
-@@ -294,7 +299,7 @@ struct qedi_ctx {
- 	void *bdq_pbl_list;
- 	dma_addr_t bdq_pbl_list_dma;
- 	u8 bdq_pbl_list_num_entries;
--	struct nvm_iscsi_cfg *iscsi_cfg;
-+	struct qedi_nvm_iscsi_image *iscsi_image;
- 	dma_addr_t nvm_buf_dma;
- 	void __iomem *bdq_primary_prod;
- 	void __iomem *bdq_secondary_prod;
-diff --git a/drivers/scsi/qedi/qedi_main.c b/drivers/scsi/qedi/qedi_main.c
-index aa96bccb5a96..cc8e64dc65ad 100644
---- a/drivers/scsi/qedi/qedi_main.c
-+++ b/drivers/scsi/qedi/qedi_main.c
-@@ -1346,23 +1346,26 @@ static int qedi_setup_int(struct qedi_ctx *qedi)
- 
- static void qedi_free_nvm_iscsi_cfg(struct qedi_ctx *qedi)
- {
--	if (qedi->iscsi_cfg)
-+	if (qedi->iscsi_image)
- 		dma_free_coherent(&qedi->pdev->dev,
--				  sizeof(struct nvm_iscsi_cfg),
--				  qedi->iscsi_cfg, qedi->nvm_buf_dma);
-+				  sizeof(struct qedi_nvm_iscsi_image),
-+				  qedi->iscsi_image, qedi->nvm_buf_dma);
- }
- 
- static int qedi_alloc_nvm_iscsi_cfg(struct qedi_ctx *qedi)
- {
--	qedi->iscsi_cfg = dma_zalloc_coherent(&qedi->pdev->dev,
--					     sizeof(struct nvm_iscsi_cfg),
--					     &qedi->nvm_buf_dma, GFP_KERNEL);
--	if (!qedi->iscsi_cfg) {
-+	struct qedi_nvm_iscsi_image nvm_image;
-+
-+	qedi->iscsi_image = dma_zalloc_coherent(&qedi->pdev->dev,
-+						sizeof(nvm_image),
-+						&qedi->nvm_buf_dma,
-+						GFP_KERNEL);
-+	if (!qedi->iscsi_image) {
- 		QEDI_ERR(&qedi->dbg_ctx, "Could not allocate NVM BUF.\n");
- 		return -ENOMEM;
- 	}
- 	QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_INFO,
--		  "NVM BUF addr=0x%p dma=0x%llx.\n", qedi->iscsi_cfg,
-+		  "NVM BUF addr=0x%p dma=0x%llx.\n", qedi->iscsi_image,
- 		  qedi->nvm_buf_dma);
- 
- 	return 0;
-@@ -1905,7 +1908,7 @@ qedi_get_nvram_block(struct qedi_ctx *qedi)
- 	struct nvm_iscsi_block *block;
- 
- 	pf = qedi->dev_info.common.abs_pf_id;
--	block = &qedi->iscsi_cfg->block[0];
-+	block = &qedi->iscsi_image->iscsi_cfg.block[0];
- 	for (i = 0; i < NUM_OF_ISCSI_PF_SUPPORTED; i++, block++) {
- 		flags = ((block->id) & NVM_ISCSI_CFG_BLK_CTRL_FLAG_MASK) >>
- 			NVM_ISCSI_CFG_BLK_CTRL_FLAG_OFFSET;
-@@ -2194,15 +2197,14 @@ static void qedi_boot_release(void *data)
- static int qedi_get_boot_info(struct qedi_ctx *qedi)
- {
- 	int ret = 1;
--	u16 len;
--
--	len = sizeof(struct nvm_iscsi_cfg);
-+	struct qedi_nvm_iscsi_image nvm_image;
- 
- 	QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_INFO,
- 		  "Get NVM iSCSI CFG image\n");
- 	ret = qedi_ops->common->nvm_get_image(qedi->cdev,
- 					      QED_NVM_IMAGE_ISCSI_CFG,
--					      (char *)qedi->iscsi_cfg, len);
-+					      (char *)qedi->iscsi_image,
-+					      sizeof(nvm_image));
- 	if (ret)
- 		QEDI_ERR(&qedi->dbg_ctx,
- 			 "Could not get NVM image. ret = %d\n", ret);
-diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
-index 94bad43c41ff..9cdfccbdd06f 100644
---- a/drivers/target/iscsi/iscsi_target.c
-+++ b/drivers/target/iscsi/iscsi_target.c
-@@ -4208,22 +4208,15 @@ int iscsit_close_connection(
- 		crypto_free_ahash(tfm);
- 	}
- 
--	free_cpumask_var(conn->conn_cpumask);
--
--	kfree(conn->conn_ops);
--	conn->conn_ops = NULL;
--
- 	if (conn->sock)
- 		sock_release(conn->sock);
- 
- 	if (conn->conn_transport->iscsit_free_conn)
- 		conn->conn_transport->iscsit_free_conn(conn);
- 
--	iscsit_put_transport(conn->conn_transport);
--
- 	pr_debug("Moving to TARG_CONN_STATE_FREE.\n");
- 	conn->conn_state = TARG_CONN_STATE_FREE;
--	kfree(conn);
-+	iscsit_free_conn(conn);
- 
- 	spin_lock_bh(&sess->conn_lock);
- 	atomic_dec(&sess->nconn);
-diff --git a/drivers/target/iscsi/iscsi_target_login.c b/drivers/target/iscsi/iscsi_target_login.c
-index 9e74f8bc2963..bb90c80ff388 100644
---- a/drivers/target/iscsi/iscsi_target_login.c
-+++ b/drivers/target/iscsi/iscsi_target_login.c
-@@ -67,45 +67,10 @@ static struct iscsi_login *iscsi_login_init_conn(struct iscsi_conn *conn)
- 		goto out_req_buf;
- 	}
- 
--	conn->conn_ops = kzalloc(sizeof(struct iscsi_conn_ops), GFP_KERNEL);
--	if (!conn->conn_ops) {
--		pr_err("Unable to allocate memory for"
--			" struct iscsi_conn_ops.\n");
--		goto out_rsp_buf;
--	}
--
--	init_waitqueue_head(&conn->queues_wq);
--	INIT_LIST_HEAD(&conn->conn_list);
--	INIT_LIST_HEAD(&conn->conn_cmd_list);
--	INIT_LIST_HEAD(&conn->immed_queue_list);
--	INIT_LIST_HEAD(&conn->response_queue_list);
--	init_completion(&conn->conn_post_wait_comp);
--	init_completion(&conn->conn_wait_comp);
--	init_completion(&conn->conn_wait_rcfr_comp);
--	init_completion(&conn->conn_waiting_on_uc_comp);
--	init_completion(&conn->conn_logout_comp);
--	init_completion(&conn->rx_half_close_comp);
--	init_completion(&conn->tx_half_close_comp);
--	init_completion(&conn->rx_login_comp);
--	spin_lock_init(&conn->cmd_lock);
--	spin_lock_init(&conn->conn_usage_lock);
--	spin_lock_init(&conn->immed_queue_lock);
--	spin_lock_init(&conn->nopin_timer_lock);
--	spin_lock_init(&conn->response_queue_lock);
--	spin_lock_init(&conn->state_lock);
--
--	if (!zalloc_cpumask_var(&conn->conn_cpumask, GFP_KERNEL)) {
--		pr_err("Unable to allocate conn->conn_cpumask\n");
--		goto out_conn_ops;
--	}
- 	conn->conn_login = login;
- 
- 	return login;
- 
--out_conn_ops:
--	kfree(conn->conn_ops);
--out_rsp_buf:
--	kfree(login->rsp_buf);
- out_req_buf:
- 	kfree(login->req_buf);
- out_login:
-@@ -310,11 +275,9 @@ static int iscsi_login_zero_tsih_s1(
- 		return -ENOMEM;
- 	}
- 
--	ret = iscsi_login_set_conn_values(sess, conn, pdu->cid);
--	if (unlikely(ret)) {
--		kfree(sess);
--		return ret;
--	}
-+	if (iscsi_login_set_conn_values(sess, conn, pdu->cid))
-+		goto free_sess;
-+
- 	sess->init_task_tag	= pdu->itt;
- 	memcpy(&sess->isid, pdu->isid, 6);
- 	sess->exp_cmd_sn	= be32_to_cpu(pdu->cmdsn);
-@@ -1149,6 +1112,75 @@ iscsit_conn_set_transport(struct iscsi_conn *conn, struct iscsit_transport *t)
- 	return 0;
- }
- 
-+static struct iscsi_conn *iscsit_alloc_conn(struct iscsi_np *np)
-+{
-+	struct iscsi_conn *conn;
-+
-+	conn = kzalloc(sizeof(struct iscsi_conn), GFP_KERNEL);
-+	if (!conn) {
-+		pr_err("Could not allocate memory for new connection\n");
-+		return NULL;
-+	}
-+	pr_debug("Moving to TARG_CONN_STATE_FREE.\n");
-+	conn->conn_state = TARG_CONN_STATE_FREE;
-+
-+	init_waitqueue_head(&conn->queues_wq);
-+	INIT_LIST_HEAD(&conn->conn_list);
-+	INIT_LIST_HEAD(&conn->conn_cmd_list);
-+	INIT_LIST_HEAD(&conn->immed_queue_list);
-+	INIT_LIST_HEAD(&conn->response_queue_list);
-+	init_completion(&conn->conn_post_wait_comp);
-+	init_completion(&conn->conn_wait_comp);
-+	init_completion(&conn->conn_wait_rcfr_comp);
-+	init_completion(&conn->conn_waiting_on_uc_comp);
-+	init_completion(&conn->conn_logout_comp);
-+	init_completion(&conn->rx_half_close_comp);
-+	init_completion(&conn->tx_half_close_comp);
-+	init_completion(&conn->rx_login_comp);
-+	spin_lock_init(&conn->cmd_lock);
-+	spin_lock_init(&conn->conn_usage_lock);
-+	spin_lock_init(&conn->immed_queue_lock);
-+	spin_lock_init(&conn->nopin_timer_lock);
-+	spin_lock_init(&conn->response_queue_lock);
-+	spin_lock_init(&conn->state_lock);
-+
-+	timer_setup(&conn->nopin_response_timer,
-+		    iscsit_handle_nopin_response_timeout, 0);
-+	timer_setup(&conn->nopin_timer, iscsit_handle_nopin_timeout, 0);
-+
-+	if (iscsit_conn_set_transport(conn, np->np_transport) < 0)
-+		goto free_conn;
-+
-+	conn->conn_ops = kzalloc(sizeof(struct iscsi_conn_ops), GFP_KERNEL);
-+	if (!conn->conn_ops) {
-+		pr_err("Unable to allocate memory for struct iscsi_conn_ops.\n");
-+		goto put_transport;
-+	}
-+
-+	if (!zalloc_cpumask_var(&conn->conn_cpumask, GFP_KERNEL)) {
-+		pr_err("Unable to allocate conn->conn_cpumask\n");
-+		goto free_mask;
-+	}
-+
-+	return conn;
-+
-+free_mask:
-+	free_cpumask_var(conn->conn_cpumask);
-+put_transport:
-+	iscsit_put_transport(conn->conn_transport);
-+free_conn:
-+	kfree(conn);
-+	return NULL;
-+}
-+
-+void iscsit_free_conn(struct iscsi_conn *conn)
-+{
-+	free_cpumask_var(conn->conn_cpumask);
-+	kfree(conn->conn_ops);
-+	iscsit_put_transport(conn->conn_transport);
-+	kfree(conn);
-+}
-+
- void iscsi_target_login_sess_out(struct iscsi_conn *conn,
- 		struct iscsi_np *np, bool zero_tsih, bool new_sess)
- {
-@@ -1198,10 +1230,6 @@ void iscsi_target_login_sess_out(struct iscsi_conn *conn,
- 		crypto_free_ahash(tfm);
- 	}
- 
--	free_cpumask_var(conn->conn_cpumask);
--
--	kfree(conn->conn_ops);
--
- 	if (conn->param_list) {
- 		iscsi_release_param_list(conn->param_list);
- 		conn->param_list = NULL;
-@@ -1219,8 +1247,7 @@ void iscsi_target_login_sess_out(struct iscsi_conn *conn,
- 	if (conn->conn_transport->iscsit_free_conn)
- 		conn->conn_transport->iscsit_free_conn(conn);
- 
--	iscsit_put_transport(conn->conn_transport);
--	kfree(conn);
-+	iscsit_free_conn(conn);
- }
- 
- static int __iscsi_target_login_thread(struct iscsi_np *np)
-@@ -1250,31 +1277,16 @@ static int __iscsi_target_login_thread(struct iscsi_np *np)
- 	}
- 	spin_unlock_bh(&np->np_thread_lock);
- 
--	conn = kzalloc(sizeof(struct iscsi_conn), GFP_KERNEL);
-+	conn = iscsit_alloc_conn(np);
- 	if (!conn) {
--		pr_err("Could not allocate memory for"
--			" new connection\n");
- 		/* Get another socket */
- 		return 1;
- 	}
--	pr_debug("Moving to TARG_CONN_STATE_FREE.\n");
--	conn->conn_state = TARG_CONN_STATE_FREE;
--
--	timer_setup(&conn->nopin_response_timer,
--		    iscsit_handle_nopin_response_timeout, 0);
--	timer_setup(&conn->nopin_timer, iscsit_handle_nopin_timeout, 0);
--
--	if (iscsit_conn_set_transport(conn, np->np_transport) < 0) {
--		kfree(conn);
--		return 1;
--	}
- 
- 	rc = np->np_transport->iscsit_accept_np(np, conn);
- 	if (rc == -ENOSYS) {
- 		complete(&np->np_restart_comp);
--		iscsit_put_transport(conn->conn_transport);
--		kfree(conn);
--		conn = NULL;
-+		iscsit_free_conn(conn);
- 		goto exit;
- 	} else if (rc < 0) {
- 		spin_lock_bh(&np->np_thread_lock);
-@@ -1282,17 +1294,13 @@ static int __iscsi_target_login_thread(struct iscsi_np *np)
- 			np->np_thread_state = ISCSI_NP_THREAD_ACTIVE;
- 			spin_unlock_bh(&np->np_thread_lock);
- 			complete(&np->np_restart_comp);
--			iscsit_put_transport(conn->conn_transport);
--			kfree(conn);
--			conn = NULL;
-+			iscsit_free_conn(conn);
- 			/* Get another socket */
- 			return 1;
- 		}
- 		spin_unlock_bh(&np->np_thread_lock);
--		iscsit_put_transport(conn->conn_transport);
--		kfree(conn);
--		conn = NULL;
--		goto out;
-+		iscsit_free_conn(conn);
-+		return 1;
- 	}
- 	/*
- 	 * Perform the remaining iSCSI connection initialization items..
-@@ -1442,7 +1450,6 @@ static int __iscsi_target_login_thread(struct iscsi_np *np)
- 		tpg_np = NULL;
- 	}
- 
--out:
- 	return 1;
- 
- exit:
-diff --git a/drivers/target/iscsi/iscsi_target_login.h b/drivers/target/iscsi/iscsi_target_login.h
-index 74ac3abc44a0..3b8e3639ff5d 100644
---- a/drivers/target/iscsi/iscsi_target_login.h
-+++ b/drivers/target/iscsi/iscsi_target_login.h
-@@ -19,7 +19,7 @@ extern int iscsi_target_setup_login_socket(struct iscsi_np *,
- extern int iscsit_accept_np(struct iscsi_np *, struct iscsi_conn *);
- extern int iscsit_get_login_rx(struct iscsi_conn *, struct iscsi_login *);
- extern int iscsit_put_login_tx(struct iscsi_conn *, struct iscsi_login *, u32);
--extern void iscsit_free_conn(struct iscsi_np *, struct iscsi_conn *);
-+extern void iscsit_free_conn(struct iscsi_conn *);
- extern int iscsit_start_kthreads(struct iscsi_conn *);
- extern void iscsi_post_login_handler(struct iscsi_np *, struct iscsi_conn *, u8);
- extern void iscsi_target_login_sess_out(struct iscsi_conn *, struct iscsi_np *,
+Could be:
+
+	return ret ?: curr_len;
+
+> +}
+> +
+> +ssize_t ufshcd_desc_configfs_store(struct config_item *item,
+> +		const char *buf, size_t count, u8 index)
+> +{
+> +	char *strbuf;
+> +	char *strbuf_copy;
+> +	struct ufs_hba *hba = config_item_to_hba(item);
+> +	u8 *desc_buf = NULL;
+> +	int desc_buf_len = hba->desc_size.conf_desc;
+> +	char *token;
+> +	int i, ret;
+> +	u8 value;
+> +	u32 config_desc_lock = 0;
+> +
+> +	desc_buf = kzalloc(desc_buf_len, GFP_KERNEL);
+> +	if (!desc_buf)
+> +		return -ENOMEM;
+> +
+> +	/* reserve one byte for null termination */
+> +	strbuf = kmalloc(count + 1, GFP_KERNEL);
+
+buf is null-terminated so just use kstrdup()
+
+> +	if (!strbuf) {
+> +		ret = -ENOMEM;
+> +		goto out;
+> +	}
+> +
+> +	strbuf_copy = strbuf;
+> +	strlcpy(strbuf, buf, count + 1);
+> +
+> +	/* Just return if bConfigDescrLock is already set */
+> +	ret = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_READ_ATTR,
+> +		QUERY_ATTR_IDN_CONF_DESC_LOCK, 0, 0, &config_desc_lock);
+> +	if (ret)
+> +		goto out;
+> +
+> +	if (config_desc_lock) {
+> +		dev_err(hba->dev, "%s: bConfigDescrLock already set to %u, cannot re-provision device!\n",
+> +		__func__, config_desc_lock);
+
+Indenting is not ideal.  Consider some of the suggestions of:
+scripts/checkpatch.pl --strict
+
+> +		ret = -EINVAL;
+> +		goto out;
+> +	}
+> +
+> +	for (i = 0; i < desc_buf_len; i++) {
+> +		token = strsep(&strbuf_copy, " ");
+> +		if (!token && i)
+
+What is 'i' doing here?
+
+If the user does not supply enough bytes, the remainder will be overwritten
+by 0 which doesn't seem ideal.  It would be better to read desc_buf first.
+
+> +			break;
+> +
+> +		ret = kstrtou8(token, 0, &value);
+> +		if (ret) {
+> +			dev_err(hba->dev, "%s: kstrtou8 failed %d %s\n",
+
+User may not understand 'kstrtou8'.  'Invalid value %s writing UFS
+configuration descriptor %u' would be better.
+
+> +				__func__, ret, token);
+> +			ret = -EINVAL;
+> +			goto out;
+> +		}
+> +		desc_buf[i] = value;
+> +	}
+> +
+> +	/* Write configuration descriptor to provision ufs */
+> +	ret = ufshcd_query_descriptor_retry(hba, UPIU_QUERY_OPCODE_WRITE_DESC,
+> +		QUERY_DESC_IDN_CONFIGURATION, index, 0,
+> +		desc_buf, &desc_buf_len);
+> +	if (!ret)
+> +		dev_info(hba->dev, "%s: UFS Configuration Descriptor %u written\n",
+> +		__func__, index);
+> +
+> +out:
+> +	kfree(strbuf);
+> +	kfree(desc_buf);
+> +	if (ret)
+> +		return ret;
+> +	return count;
+
+Could be:
+
+	return ret ?: count;
+
+> +}
+> +
+> +static ssize_t ufs_config_desc_0_show(struct config_item *item, char *buf)
+> +{
+> +	return ufs_config_desc_show(item, buf, 0);
+> +}
+> +
+> +static ssize_t ufs_config_desc_0_store(struct config_item *item,
+> +		const char *buf, size_t count)
+> +{
+> +	return ufshcd_desc_configfs_store(item, buf, count, 0);
+> +}
+> +
+> +static ssize_t ufs_config_desc_1_show(struct config_item *item, char *buf)
+> +{
+> +	return ufs_config_desc_show(item, buf, 1);
+> +}
+> +
+> +static ssize_t ufs_config_desc_1_store(struct config_item *item,
+> +		const char *buf, size_t count)
+> +{
+> +	return ufshcd_desc_configfs_store(item, buf, count, 1);
+> +}
+> +
+> +static ssize_t ufs_config_desc_2_show(struct config_item *item, char *buf)
+> +{
+> +	return ufs_config_desc_show(item, buf, 2);
+> +}
+> +
+> +static ssize_t ufs_config_desc_2_store(struct config_item *item,
+> +		const char *buf, size_t count)
+> +{
+> +	return ufshcd_desc_configfs_store(item, buf, count, 2);
+> +}
+> +
+> +static ssize_t ufs_config_desc_3_show(struct config_item *item, char *buf)
+> +{
+> +	return ufs_config_desc_show(item, buf, 3);
+> +}
+> +
+> +static ssize_t ufs_config_desc_3_store(struct config_item *item,
+> +		const char *buf, size_t count)
+> +{
+> +	return ufshcd_desc_configfs_store(item, buf, count, 3);
+> +}
+> +
+> +static struct configfs_attribute ufshcd_attr_provision_0 = {
+> +	.ca_name	= "ufs_config_desc_0",
+> +	.ca_mode	= 0644,
+> +	.ca_owner	= THIS_MODULE,
+> +	.show		= ufs_config_desc_0_show,
+> +	.store		= ufs_config_desc_0_store,
+> +};
+> +
+> +static struct configfs_attribute ufshcd_attr_provision_1 = {
+> +	.ca_name	= "ufs_config_desc_1",
+> +	.ca_mode	= 0644,
+> +	.ca_owner	= THIS_MODULE,
+> +	.show		= ufs_config_desc_1_show,
+> +	.store		= ufs_config_desc_1_store,
+> +};
+> +
+> +static struct configfs_attribute ufshcd_attr_provision_2 = {
+> +	.ca_name	= "ufs_config_desc_2",
+> +	.ca_mode	= 0644,
+> +	.ca_owner	= THIS_MODULE,
+> +	.show		= ufs_config_desc_2_show,
+> +	.store		= ufs_config_desc_2_store,
+> +};
+> +
+> +static struct configfs_attribute ufshcd_attr_provision_3 = {
+> +	.ca_name	= "ufs_config_desc_3",
+> +	.ca_mode	= 0644,
+> +	.ca_owner	= THIS_MODULE,
+> +	.show		= ufs_config_desc_3_show,
+> +	.store		= ufs_config_desc_3_store,
+> +};
+> +
+> +static struct configfs_attribute *ufshcd_attrs[] = {
+> +	&ufshcd_attr_provision_0,
+> +	&ufshcd_attr_provision_1,
+> +	&ufshcd_attr_provision_2,
+> +	&ufshcd_attr_provision_3,
+> +	NULL,
+> +};
+> +
+> +static struct config_item_type ufscfg_type = {
+> +	.ct_attrs	= ufshcd_attrs,
+> +	.ct_owner	= THIS_MODULE,
+> +};
+> +
+> +void ufshcd_configfs_init(struct ufs_hba *hba, const char *name)
+> +{
+> +	int ret;
+> +	struct config_item *cg_item;
+> +	struct configfs_subsystem *subsys;
+> +
+> +	cg_item = &hba->subsys.su_group.cg_item;
+> +	sprintf(cg_item->ci_namebuf, "%s", name);
+> +	cg_item->ci_type = &ufscfg_type;
+> +
+> +	subsys = &hba->subsys;
+> +	config_group_init(&subsys->su_group);
+> +	mutex_init(&subsys->su_mutex);
+> +	ret = configfs_register_subsystem(subsys);
+> +	if (ret)
+> +		pr_err("Error %d while registering subsystem %s\n",
+> +		       ret,
+> +		       subsys->su_group.cg_item.ci_namebuf);
+> +}
+> +
+> +void ufshcd_configfs_exit(struct ufs_hba *hba)
+> +{
+> +	configfs_unregister_subsystem(&hba->subsys);
+> +}
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index e01cdc0..608e23e 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -7711,6 +7711,7 @@ int ufshcd_shutdown(struct ufs_hba *hba)
+>  void ufshcd_remove(struct ufs_hba *hba)
+>  {
+>  	ufs_sysfs_remove_nodes(hba->dev);
+> +	ufshcd_configfs_exit(hba);
+>  	scsi_remove_host(hba->host);
+>  	/* disable interrupts */
+>  	ufshcd_disable_intr(hba, hba->intr_mask);
+> @@ -7965,7 +7966,7 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+>  
+>  	async_schedule(ufshcd_async_scan, hba);
+>  	ufs_sysfs_add_nodes(hba->dev);
+> -
+> +	ufshcd_configfs_init(hba, dev_name(hba->dev));
+>  	return 0;
+>  
+>  out_remove_scsi_host:
+> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+> index 45013b6..a340ca8 100644
+> --- a/drivers/scsi/ufs/ufshcd.h
+> +++ b/drivers/scsi/ufs/ufshcd.h
+> @@ -37,6 +37,7 @@
+>  #ifndef _UFSHCD_H
+>  #define _UFSHCD_H
+>  
+> +#include <linux/configfs.h>
+>  #include <linux/module.h>
+>  #include <linux/kernel.h>
+>  #include <linux/init.h>
+> @@ -515,6 +516,9 @@ struct ufs_hba {
+>  
+>  	struct Scsi_Host *host;
+>  	struct device *dev;
+> +#ifdef CONFIG_UFS_PROVISION
+> +	struct configfs_subsystem subsys;
+> +#endif
+>  	/*
+>  	 * This field is to keep a reference to "scsi_device" corresponding to
+>  	 * "UFS device" W-LU.
+> @@ -868,6 +872,19 @@ int ufshcd_read_string_desc(struct ufs_hba *hba, int desc_index,
+>  int ufshcd_hold(struct ufs_hba *hba, bool async);
+>  void ufshcd_release(struct ufs_hba *hba);
+>  
+> +/* Expose UFS configfs API's */
+> +#ifndef CONFIG_UFS_PROVISION
+> +static inline void ufshcd_configfs_init(struct ufs_hba *hba, const char *name)
+> +{
+> +}
+> +static inline void ufshcd_configfs_exit(struct ufs_hba *hba)
+> +{
+> +}
+> +#else
+> +void ufshcd_configfs_init(struct ufs_hba *hba, const char *name);
+> +void ufshcd_configfs_exit(struct ufs_hba *hba);
+> +#endif
+> +
+>  int ufshcd_map_desc_id_to_length(struct ufs_hba *hba, enum desc_idn desc_id,
+>  	int *desc_length);
+>  
+> 
