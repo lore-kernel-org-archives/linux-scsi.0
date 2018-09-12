@@ -1,25 +1,23 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH trivial] scsi: arcmsr: Spelling s/rebulid/rebuild/
-Date: Tue, 11 Sep 2018 20:58:50 -0400
-Message-ID: <yq1k1nry1it.fsf@oracle.com>
-References: <20180903173529.7865-1-geert+renesas@glider.be>
+Subject: Re: [PATCH] scsi: aic7xxx: remove unused redundant variable num_chip_names
+Date: Tue, 11 Sep 2018 21:03:45 -0400
+Message-ID: <yq1bm93y1am.fsf@oracle.com>
+References: <20180904143656.3504-1-colin.king@canonical.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180903173529.7865-1-geert+renesas@glider.be> (Geert
-        Uytterhoeven's message of "Mon, 3 Sep 2018 19:35:29 +0200")
+In-Reply-To: <20180904143656.3504-1-colin.king@canonical.com> (Colin King's
+        message of "Tue, 4 Sep 2018 15:36:56 +0100")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Geert Uytterhoeven <geert+renesas@glider.be>
-Cc: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Jiri Kosina <trivial@kernel.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Colin King <colin.king@canonical.com>
+Cc: Hannes Reinecke <hare@suse.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Geert,
+Colin,
 
-> Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
-> ---
->  drivers/scsi/arcmsr/arcmsr_hba.c | 20 ++++++++++----------
->  1 file changed, 10 insertions(+), 10 deletions(-)
+> Variable num_chip_names is defined but not used, hence it is
+> redundant and can be removed.
 
 Applied to 4.20/scsi-queue, thanks!
 
