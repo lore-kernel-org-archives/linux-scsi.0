@@ -1,51 +1,35 @@
 From: Jason Yan <yanaijie@huawei.com>
-Subject: [PATCH 1/5] scsi: libsas: delete dead code in scsi_transport_sas.c
-Date: Wed, 12 Sep 2018 16:29:42 +0800
-Message-ID: <20180912082946.34814-2-yanaijie@huawei.com>
-References: <20180912082946.34814-1-yanaijie@huawei.com>
+Subject: [PATCH 0/5] scsi: libsas: some code cleanups and bug fixes
+Date: Wed, 12 Sep 2018 16:29:41 +0800
+Message-ID: <20180912082946.34814-1-yanaijie@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180912082946.34814-1-yanaijie@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, john.garry@huawei.com, zhaohongjiang@huawei.com, hare@suse.com, dan.j.williams@intel.com, jthumshirn@suse.de, hch@lst.de, huangdaode@hisilicon.com, chenxiang66@hisilicon.com, miaoxie@huawei.com, Jason Yan <yanaijie@huawei.com>, Ewan Milne <emilne@redhat.com>, Tomas Henzl <thenzl@redhat.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, john.garry@huawei.com, zhaohongjiang@huawei.com, hare@suse.com, dan.j.williams@intel.com, jthumshirn@suse.de, hch@lst.de, huangdaode@hisilicon.com, chenxiang66@hisilicon.com, miaoxie@huawei.com, Jason Yan <yanaijie@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-This code is dead and no clue implies that it will be back again.
+I split some code cleanups and bug fixes patches from my earlier series:
+https://lkml.org/lkml/2018/5/28/2154
 
-Signed-off-by: Jason Yan <yanaijie@huawei.com>
-CC: John Garry <john.garry@huawei.com>
-CC: Johannes Thumshirn <jthumshirn@suse.de>
-CC: Ewan Milne <emilne@redhat.com>
-CC: Christoph Hellwig <hch@lst.de>
-CC: Tomas Henzl <thenzl@redhat.com>
-CC: Dan Williams <dan.j.williams@intel.com>
-CC: Hannes Reinecke <hare@suse.com>
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
----
- drivers/scsi/scsi_transport_sas.c | 2 --
- 1 file changed, 2 deletions(-)
+These patches are separate to the subject of the earlier series and are just
+small fixes. Hope it is much easier to review and test.
 
-diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
-index 0cd16e80b019..0a165b2b3e81 100644
---- a/drivers/scsi/scsi_transport_sas.c
-+++ b/drivers/scsi/scsi_transport_sas.c
-@@ -612,7 +612,6 @@ sas_phy_protocol_attr(identify.target_port_protocols,
- sas_phy_simple_attr(identify.sas_address, sas_address, "0x%016llx\n",
- 		unsigned long long);
- sas_phy_simple_attr(identify.phy_identifier, phy_identifier, "%d\n", u8);
--//sas_phy_simple_attr(port_identifier, port_identifier, "%d\n", int);
- sas_phy_linkspeed_attr(negotiated_linkrate);
- sas_phy_linkspeed_attr(minimum_linkrate_hw);
- sas_phy_linkspeed_rw_attr(minimum_linkrate);
-@@ -1802,7 +1801,6 @@ sas_attach_transport(struct sas_function_template *ft)
- 	SETUP_PHY_ATTRIBUTE(device_type);
- 	SETUP_PHY_ATTRIBUTE(sas_address);
- 	SETUP_PHY_ATTRIBUTE(phy_identifier);
--	//SETUP_PHY_ATTRIBUTE(port_identifier);
- 	SETUP_PHY_ATTRIBUTE(negotiated_linkrate);
- 	SETUP_PHY_ATTRIBUTE(minimum_linkrate_hw);
- 	SETUP_PHY_ATTRIBUTE_RW(minimum_linkrate);
+Jason Yan (5):
+  scsi: libsas: delete dead code in scsi_transport_sas.c
+  scsi: libsas: check the lldd callback correctly
+  scsi: libsas: always unregister the old device if going to discover
+    new
+  scsi: libsas: check the ata device status by ata_dev_enabled()
+  scsi: libsas: fix a race condition when smp task timeout
+
+ drivers/scsi/hisi_sas/hisi_sas_main.c |  9 ++-------
+ drivers/scsi/libsas/sas_ata.c         |  2 +-
+ drivers/scsi/libsas/sas_discover.c    |  2 +-
+ drivers/scsi/libsas/sas_expander.c    | 22 +++++++++-------------
+ drivers/scsi/scsi_transport_sas.c     |  2 --
+ 5 files changed, 13 insertions(+), 24 deletions(-)
+
 -- 
 2.14.4
