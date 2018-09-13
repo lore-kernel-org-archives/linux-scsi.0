@@ -1,35 +1,38 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: [Announce] sg3_utils-1.44 available
-Date: Wed, 12 Sep 2018 21:41:16 -0400
-Message-ID: <06575258-57b6-95f0-061b-0219e6481338@interlog.com>
-Reply-To: dgilbert@interlog.com
+From: Josh Abraham <j.abraham1776@gmail.com>
+Subject: [PATCH] scsi: ufs: use PTR_ERR_OR_ZERO in ufs_hisi_get_resource()
+Date: Wed, 12 Sep 2018 17:07:11 -1000
+Message-ID: <20180913030711.GA12975@josh-ThinkPad-T460s>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Language: en-CA
+Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
-To: SCSI development list <linux-scsi@vger.kernel.org>
-Cc: Martin Pitt <mpitt@debian.org>, David Sommerseth <davids@redhat.com>, Hannes Reinecke <hare@suse.de>, Ritesh Raj Sarraf <rrs@researchut.com>, "Robin H. Johnson" <robbat2@gentoo.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: vinholikatti@gmail.com
+Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org, j.abraham1776@gmail.com
 List-Id: linux-scsi@vger.kernel.org
 
-Lack of synchronization between my subversion repository and the official
-git mirror led to this release tag:
-    https://github.com/hreinecke/sg3_utils/releases/tag/v1.43
-dated 20160218 (my svn revision 665). That led some distributions to
-believe that sg3_utils-1.43 was released over 2.5 years ago, rather
-than yesterday.
+Use PTR_ERR_OR_ZERO instead of IF_ERR() return PTR_ERR().
 
-Clean up the discrepancy by rolling forward to sg3_utils-1.44 with
-minimal changes from the release yesterday (basically just changing
-1.43 to 1.44 in several places). All tarballs and packages have been
-regenerated.
+Signed-off-by: Joshua Abraham <j.abraham1776@gmail.com>
+---
+ drivers/scsi/ufs/ufs-hisi.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-Otherwise the release announcement for 1.43 from yesterday still applies:
-   https://www.spinics.net/lists/linux-scsi/msg123230.html
-
-
-Distributions: please use sg3_utils-1.44 to minimize further confusion.
-Future changes will go into 1.45 .
-
-Doug Gilbert
+diff --git a/drivers/scsi/ufs/ufs-hisi.c b/drivers/scsi/ufs/ufs-hisi.c
+index 46df707e6f2c..e79499469cb3 100644
+--- a/drivers/scsi/ufs/ufs-hisi.c
++++ b/drivers/scsi/ufs/ufs-hisi.c
+@@ -505,10 +505,8 @@ static int ufs_hisi_get_resource(struct ufs_hisi_host *host)
+ 	/* get resource of ufs sys ctrl */
+ 	mem_res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
+ 	host->ufs_sys_ctrl = devm_ioremap_resource(dev, mem_res);
+-	if (IS_ERR(host->ufs_sys_ctrl))
+-		return PTR_ERR(host->ufs_sys_ctrl);
+ 
+-	return 0;
++	return PTR_ERR_OR_ZERO(host->ufs_sys_ctrl);
+ }
+ 
+ static void ufs_hisi_set_pm_lvl(struct ufs_hba *hba)
+-- 
+2.17.1
