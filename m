@@ -1,51 +1,73 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH RFC] scsi: ufs: Disable blk-mq for now
-Date: Fri, 14 Sep 2018 09:52:38 +0800
-Message-ID: <20180914015237.GC11059@ming.t460p>
-References: <20180913112848.7807-1-adrian.hunter@intel.com>
- <20180913120459.GA4965@ming.t460p>
- <e4d0c716-006a-72cb-0240-4ae5749b21b8@intel.com>
+From: =?UTF-8?Q?Maciej_=C5=BBenczykowski?= <zenczykowski@gmail.com>
+Subject: Re: [PATCH] scsi: sd: Contribute to randomness when running
+ rotational device
+Date: Thu, 13 Sep 2018 22:05:42 -0700
+Message-ID: <CAHo-OozTguSTmLv=eCsKysSMdphRDKo=eiD69URJ6MV_mrm_GQ@mail.gmail.com>
+References: <20180906203719.209399-1-xueweiz@google.com> <20180909115205.GA17732@ming.t460p>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <e4d0c716-006a-72cb-0240-4ae5749b21b8@intel.com>
+In-Reply-To: <20180909115205.GA17732@ming.t460p>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Adrian Hunter <adrian.hunter@intel.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jthumshirn@suse.de>, Bart Van Assche <Bart.VanAssche@wdc.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Stanislav Nijnikov <stanislav.nijnikov@wdc.com>, Evan Green <evgreen@chromium.org>, Vinayak Holikatti <vinholikatti@gmail.com>, Janek Kotas <jank@cadence.com>, Vivek Gautam <vivek.gautam@codeaurora.org>, Asutosh Das <asutoshd@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, Sayali Lokhande <sayalil@codeaurora.org>, Li Wei <liwei213@huawei.com>, Bjorn Andersson <bjorn.andersson@linaro.org>, Jaegeuk Kim <jaegeuk@kernel.org>
+To: Ming Lei <ming.lei@redhat.com>
+Cc: Xuewei Zhang <xueweiz@google.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, Paolo Bonzini <pbonzini@redhat.com>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Aditya Kali <adityakali@google.com>, Theodore Ts'o <tytso@mit.edu>, Guenter Roeck <groeck@chromium.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Sep 13, 2018 at 03:15:39PM +0300, Adrian Hunter wrote:
-> On 13/09/18 15:05, Ming Lei wrote:
-> > On Thu, Sep 13, 2018 at 02:28:48PM +0300, Adrian Hunter wrote:
-> >> blk-mq does not support runtime pm, so disable blk-mq support for now.
-> > 
-> > So could you describe a bit what the issue you are trying to fix?
-> 
-> UFS is a low-power solution, so we must be able to runtime suspend.
-> 
-> > 
-> > This is host level runtime PM you are trying to address, and if blk-mq
-> > runtime isn't enabled, I guess the host won't be runtime suspended at all
-> > because some of its descendant are always active.
-> > 
-> > So seems we need to do nothing for preventing the host controller from
-> > entering runtime suspend.
-> 
-> We don't want to prevent the host controller from runtime suspending, quite
-> the opposite.
+On Sun, Sep 9, 2018 at 4:52 AM, Ming Lei <ming.lei@redhat.com> wrote:
+> On Thu, Sep 06, 2018 at 01:37:19PM -0700, Xuewei Zhang wrote:
+>> Currently a scsi device won't contribute to kernel randomness when it
+>> uses blk-mq. Since we commonly use scsi on rotational device with
+>> blk-mq, it make sense to keep contributing to kernel randomness in these
+>> cases. This is especially important for virtual machines.
+>>
+>> commit b5b6e8c8d3b4 ("scsi: virtio_scsi: fix IO hang caused by automatic
+>> irq vector affinity") made all virtio-scsi device to use blk-mq, which
+>> does not contribute to randomness today. So for a virtual machine only
+>> having virtio-scsi disk (which is common), it will simple stop getting
+>> randomness from its disks in today's implementation.
+>>
+>> With this patch, if the above VM has rotational virtio-scsi device, then
+>> it can still benefit from the entropy generated from the disk.
+>>
+>> Reported-by: Xuewei Zhang <xueweiz@google.com>
+>> Signed-off-by: Xuewei Zhang <xueweiz@google.com>
+>> ---
+>>  drivers/scsi/sd.c | 3 +++
+>>  1 file changed, 3 insertions(+)
+>>
+>> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+>> index b79b366a94f7..5e4f10d28065 100644
+>> --- a/drivers/scsi/sd.c
+>> +++ b/drivers/scsi/sd.c
+>> @@ -2959,6 +2959,9 @@ static void sd_read_block_characteristics(struct s=
+csi_disk *sdkp)
+>>       if (rot =3D=3D 1) {
+>>               blk_queue_flag_set(QUEUE_FLAG_NONROT, q);
+>>               blk_queue_flag_clear(QUEUE_FLAG_ADD_RANDOM, q);
+>> +     } else {
+>> +             blk_queue_flag_clear(QUEUE_FLAG_NONROT, q);
+>> +             blk_queue_flag_set(QUEUE_FLAG_ADD_RANDOM, q);
+>>       }
+>>
+>>       if (sdkp->device->type =3D=3D TYPE_ZBC) {
+>> --
+>> 2.19.0.rc2.392.g5ba43deb5a-goog
+>>
+>
+> Look reasonable, especially the disk randomness is added by SCSI itself.
+>
+> Reviewed-by: Ming Lei <ming.lei@redhat.com>
+>
+> Thanks,
+> Ming
 
-OK, got it.
+Also, see: https://bugzilla.redhat.com/show_bug.cgi?id=3D1572944
+where we're having randomness starvation problems on FC28
+running 4.18.5 due to lack of virtio-rng device in VM.
+(VM boot takes 9+ hours or 2 haswell VMs)
 
-However, in previous discussion, it is strongly objected to use
-per-driver/device .use_blk_mq switch, so not sure if this way can
-be accepted.
+I'd kindly request we get this not only into 4.19 but also stable trees.
+(along with Ted's other randomization fixes)
 
-BTW, I just posted the runtime PM enablement patches[1] for blk-mq,
-and I verified that it works fine and passed blktests & xfstest & my
-other sanity tests, could you try it on UFS?
-
-[1] https://marc.info/?l=linux-block&m=153684095523409&w=2
-
-Thanks,
-Ming
+Reviewed-by: Maciej =C5=BBenczykowski <maze@google.com>
