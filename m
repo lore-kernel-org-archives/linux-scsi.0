@@ -1,60 +1,73 @@
-From: Adrian Hunter <adrian.hunter@intel.com>
-Subject: Re: [PATCH RFC] scsi: ufs: Disable blk-mq for now
-Date: Fri, 14 Sep 2018 09:17:14 +0300
-Message-ID: <2fdfc038-5b86-243c-9b0a-f294d281e5c0@intel.com>
-References: <20180913112848.7807-1-adrian.hunter@intel.com>
- <20180913120459.GA4965@ming.t460p>
- <e4d0c716-006a-72cb-0240-4ae5749b21b8@intel.com>
- <20180914015237.GC11059@ming.t460p>
+From: Janek Kotas <jank@cadence.com>
+Subject: Re: [PATCH v3 2/2] scsi: ufs: Add UFS platform driver for Cadence UFS
+Date: Fri, 14 Sep 2018 07:46:34 +0000
+Message-ID: <5BC4E8E4-566E-415A-9B57-36D725D8AB38@global.cadence.com>
+References: <66C16650-56D0-46A3-8050-A5540E48C702@global.cadence.com>
+ <0b273e2e-6d60-ac10-a1d5-78ea2346c1d9@ti.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180914015237.GC11059@ming.t460p>
+In-Reply-To: <0b273e2e-6d60-ac10-a1d5-78ea2346c1d9@ti.com>
 Content-Language: en-US
+Content-ID: <3BF4028831657345B0488A31841B350F@namprd07.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Ming Lei <ming.lei@redhat.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jthumshirn@suse.de>, Bart Van Assche <Bart.VanAssche@wdc.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Stanislav Nijnikov <stanislav.nijnikov@wdc.com>, Evan Green <evgreen@chromium.org>, Vinayak Holikatti <vinholikatti@gmail.com>, Janek Kotas <jank@cadence.com>, Vivek Gautam <vivek.gautam@codeaurora.org>, Asutosh Das <asutoshd@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, Sayali Lokhande <sayalil@codeaurora.org>, Li Wei <liwei213@huawei.com>, Bjorn Andersson <bjorn.andersson@linaro.org>, Jaegeuk Kim <jaegeuk@kernel.org>
+To: Sekhar Nori <nsekhar@ti.com>
+Cc: Janek Kotas <jank@cadence.com>, "robh+dt@kernel.org" <robh+dt@kernel.org>, "mark.rutland@arm.com" <mark.rutland@arm.com>, "vinholikatti@gmail.com" <vinholikatti@gmail.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 14/09/18 04:52, Ming Lei wrote:
-> On Thu, Sep 13, 2018 at 03:15:39PM +0300, Adrian Hunter wrote:
->> On 13/09/18 15:05, Ming Lei wrote:
->>> On Thu, Sep 13, 2018 at 02:28:48PM +0300, Adrian Hunter wrote:
->>>> blk-mq does not support runtime pm, so disable blk-mq support for now.
->>>
->>> So could you describe a bit what the issue you are trying to fix?
->>
->> UFS is a low-power solution, so we must be able to runtime suspend.
->>
->>>
->>> This is host level runtime PM you are trying to address, and if blk-mq
->>> runtime isn't enabled, I guess the host won't be runtime suspended at all
->>> because some of its descendant are always active.
->>>
->>> So seems we need to do nothing for preventing the host controller from
->>> entering runtime suspend.
->>
->> We don't want to prevent the host controller from runtime suspending, quite
->> the opposite.
-> 
-> OK, got it.
-> 
-> However, in previous discussion, it is strongly objected to use
-> per-driver/device .use_blk_mq switch, so not sure if this way can
-> be accepted.
-
-It is only needed for 4.19 so far.  Otherwise just revert d5038a13eca7
-("scsi: core: switch to scsi-mq by default")
-
-> 
-> BTW, I just posted the runtime PM enablement patches[1] for blk-mq,
-> and I verified that it works fine and passed blktests & xfstest & my
-> other sanity tests, could you try it on UFS?
-> 
-> [1] https://marc.info/?l=linux-block&m=153684095523409&w=2
-
-I will give it a go.
-
-Obviously, if those patches go in, we wouldn't need to disable blk-mq
-anymore, but that isn't until 4.20 at least.
+DQo+IE9uIDI5IEF1ZyAyMDE4LCBhdCAxMjoyNywgU2VraGFyIE5vcmkgPG5zZWtoYXJAdGkuY29t
+PiB3cm90ZToNCj4gDQo+IE9uIFRodXJzZGF5IDA5IEF1Z3VzdCAyMDE4IDA2OjU1IFBNLCBKYW5l
+ayBLb3RhcyB3cm90ZToNCj4+IFRoaXMgcGF0Y2ggYWRkcyBhIGRldmljZSB0cmVlIHBsYXRmb3Jt
+IGRyaXZlciBmb3INCj4+IENhZGVuY2UgVUZTIEhvc3QgQ29udHJvbGxlci4NCj4+IEl0IGNhbiBi
+ZSBlbmFibGVkIHdpdGggU0NTSV9VRlNfQ0ROU19QTEFURk9STSBLY29uZmlnIG9wdGlvbi4NCj4+
+IA0KPj4gU2lnbmVkLW9mZi1ieTogSmFuIEtvdGFzIDxqYW5rQGNhZGVuY2UuY29tPg0KPiANCj4g
+Wy4uLl0NCj4gDQo+PiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3Vmcy9jZG5zLXBsdGZybS5j
+IGIvZHJpdmVycy9zY3NpL3Vmcy9jZG5zLXBsdGZybS5jDQo+PiBuZXcgZmlsZSBtb2RlIDEwMDY0
+NA0KPj4gaW5kZXggMDAwMDAwMDAuLjVkOWU0ODc1DQo+PiAtLS0gL2Rldi9udWxsDQo+PiArKysg
+Yi9kcml2ZXJzL3Njc2kvdWZzL2NkbnMtcGx0ZnJtLmMNCj4+IEBAIC0wLDAgKzEsMTQ3IEBADQo+
+PiArLy8gU1BEWC1MaWNlbnNlLUlkZW50aWZpZXI6IEdQTC0yLjANCj4+ICsvKg0KPj4gKyAqIFBs
+YXRmb3JtIFVGUyBIb3N0IGRyaXZlciBmb3IgQ2FkZW5jZSBjb250cm9sbGVyDQo+PiArICoNCj4+
+ICsgKiBDb3B5cmlnaHQgKEMpIDIwMTggQ2FkZW5jZSBEZXNpZ24gU3lzdGVtcywgSW5jLg0KPj4g
+KyAqDQo+PiArICogQXV0aG9yczoNCj4+ICsgKglKYW4gS290YXMgPGphbmtAY2FkZW5jZS5jb20+
+DQo+PiArICoNCj4+ICsgKi8NCj4+ICsNCj4+ICsjaW5jbHVkZSA8bGludXgva2VybmVsLmg+DQo+
+PiArI2luY2x1ZGUgPGxpbnV4L21vZHVsZS5oPg0KPj4gKyNpbmNsdWRlIDxsaW51eC9wbGF0Zm9y
+bV9kZXZpY2UuaD4NCj4+ICsjaW5jbHVkZSA8bGludXgvb2YuaD4NCj4+ICsjaW5jbHVkZSA8bGlu
+dXgvdGltZS5oPg0KPj4gKw0KPj4gKyNpbmNsdWRlICJ1ZnNoY2QtcGx0ZnJtLmgiDQo+PiArDQo+
+PiArI2RlZmluZSBDRE5TX1VGU19SRUdfSENMS0RJViAweEZDDQo+PiArDQo+PiArLyoqDQo+PiAr
+ICogU2V0cyBIQ0xLRElWIHJlZ2lzdGVyIHZhbHVlIGJhc2VkIG9uIHRoZSBjb3JlX2Nsaw0KPj4g
+KyAqIEBoYmE6IGhvc3QgY29udHJvbGxlciBpbnN0YW5jZQ0KPj4gKyAqDQo+PiArICogUmV0dXJu
+IHplcm8gZm9yIHN1Y2Nlc3MgYW5kIG5vbi16ZXJvIGZvciBmYWlsdXJlDQo+PiArICovDQo+PiAr
+c3RhdGljIGludCBjZG5zX3Vmc19zZXRfaGNsa2RpdihzdHJ1Y3QgdWZzX2hiYSAqaGJhKQ0KPj4g
+K3sNCj4+ICsJc3RydWN0IHVmc19jbGtfaW5mbyAqY2xraTsNCj4+ICsJc3RydWN0IGxpc3RfaGVh
+ZCAqaGVhZCA9ICZoYmEtPmNsa19saXN0X2hlYWQ7DQo+PiArCXVuc2lnbmVkIGxvbmcgY29yZV9j
+bGtfcmF0ZSA9IDA7DQo+PiArCXUzMiBjb3JlX2Nsa19kaXYgPSAwOw0KPj4gKw0KPj4gKwlpZiAo
+bGlzdF9lbXB0eShoZWFkKSkNCj4+ICsJCXJldHVybiAwOw0KPj4gKw0KPj4gKwlsaXN0X2Zvcl9l
+YWNoX2VudHJ5KGNsa2ksIGhlYWQsIGxpc3QpIHsNCj4+ICsJCWlmIChJU19FUlJfT1JfTlVMTChj
+bGtpLT5jbGspKQ0KPj4gKwkJCWNvbnRpbnVlOw0KPj4gKwkJaWYgKCFzdHJjbXAoY2xraS0+bmFt
+ZSwgImNvcmVfY2xrIikpDQo+PiArCQkJY29yZV9jbGtfcmF0ZSA9IGNsa19nZXRfcmF0ZShjbGtp
+LT5jbGspOw0KPj4gKwl9DQo+PiArDQo+PiArCWlmICghY29yZV9jbGtfcmF0ZSkgew0KPj4gKwkJ
+ZGV2X2VycihoYmEtPmRldiwgIiVzOiB1bmFibGUgdG8gZmluZCBjb3JlX2NsayByYXRlXG4iLA0K
+Pj4gKwkJCV9fZnVuY19fKTsNCj4+ICsJCXJldHVybiAtRUlOVkFMOw0KPj4gKwl9DQo+PiArDQo+
+PiArCWNvcmVfY2xrX2RpdiA9IGNvcmVfY2xrX3JhdGUgLyBVU0VDX1BFUl9TRUM7DQo+PiArDQo+
+PiArCXVmc2hjZF93cml0ZWwoaGJhLCBjb3JlX2Nsa19kaXYsIENETlNfVUZTX1JFR19IQ0xLRElW
+KTsNCj4+ICsJLyogTWFrZSBzdXJlIHRoZSByZWdpc3RlciB3YXMgdXBkYXRlZCAqLw0KPj4gKwlt
+YigpOw0KPiANCj4gV2h5IGlzIGl0IGNyaXRpY2FsIHRvIGVuc3VyZSB3cml0ZSBjb21wbGV0ZWQg
+aGVyZT8NCg0KVGhlIFVuaVBybyBjbG9jayByYXRlIG5lZWRzIHRvIGJlIHNldCBiZWZvcmUgaXTi
+gJlzIGVuYWJsZWQsIA0Kb3RoZXJ3aXNlIGl0IHdpbGwgY2F1c2UgYSBsb3Qgb2YgZXJyb3JzIGF0
+IHRoZSBsaW5rIGxheWVyLg0KDQo+IA0KPj4gKw0KPj4gKwlyZXR1cm4gMDsNCj4+ICt9DQo+PiAr
+DQo+IA0KPj4gKy8qKg0KPj4gKyAqIGNkbnNfdWZzX3BsdGZybV9yZW1vdmUgLSBzZXQgZHJpdmVy
+X2RhdGEgb2YgdGhlIGRldmljZSB0byBOVUxMDQo+IA0KPiBUaGlzIGFwcGVhciB0byBkbyBtb3Jl
+IHRoYW4gc2V0dGluZyBkcml2ZXJfZGF0YSB0byBOVUxMLg0KDQpJIHdpbGwgdXBkYXRlIHRoZSBk
+ZXNjcmlwdGlvbiwgdGhhbmsgeW91IGZvciBwb2ludGluZyB0aGF0Lg0KDQo+IA0KPj4gKyAqIEBw
+ZGV2OiBwb2ludGVyIHRvIHBsYXRmb3JtIGRldmljZSBoYW5kbGUNCj4+ICsgKg0KPj4gKyAqIEFs
+d2F5cyByZXR1cm5zIDANCj4+ICsgKi8NCj4+ICtzdGF0aWMgaW50IGNkbnNfdWZzX3BsdGZybV9y
+ZW1vdmUoc3RydWN0IHBsYXRmb3JtX2RldmljZSAqcGRldikNCj4+ICt7DQo+PiArCXN0cnVjdCB1
+ZnNfaGJhICpoYmEgPSAgcGxhdGZvcm1fZ2V0X2RydmRhdGEocGRldik7DQo+PiArDQo+PiArCXBt
+X3J1bnRpbWVfZ2V0X3N5bmMoJihwZGV2KS0+ZGV2KTsNCj4gDQo+IFRoaXMgbG9va3Mgc3VzcGVj
+dC4gV2h5IGRvIHlvdSBuZWVkIHRoaXMgZ2V0X3N5bmMoKSBvbiByZW1vdmUoKSBhbmQNCj4gd2hl
+cmUgaXMgdGhlIGNvcnJlc3BvbmRpbmcgcHV0X3N5bmMoKT8NCg0KSSBsb29rZWQgYXQgcWNvbSBk
+cml2ZXIgYXMgYSByZWZlcmVuY2UsIEkgd2lsbCByZXZpZXcgdGhpcywgdGhhbmsgeW91Lg0KDQo+
+PiArCXVmc2hjZF9yZW1vdmUoaGJhKTsNCj4+ICsJcmV0dXJuIDA7DQo+PiArfQ0KPiANCj4gVGhh
+bmtzLA0KPiBTZWtoYXINCg0KVGhhbmsgeW91IGZvciB5b3VyIHJlcGx5Lg0KSSB3aWxsIHVwZGF0
+ZSB0aGUgcGF0Y2guDQoNCkphbg0KDQo=
