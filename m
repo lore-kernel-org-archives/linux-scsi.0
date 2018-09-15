@@ -1,55 +1,70 @@
-From: Jia-Ju Bai <baijiaju1990@gmail.com>
-Subject: [PATCH] scsi: lpfc: Fix a possible sleep-in-atomic-context bug in lpfc_mbuf_alloc()
-Date: Sat, 15 Sep 2018 11:42:00 +0800
-Message-ID: <20180915034200.6706-1-baijiaju1990@gmail.com>
+From: Nathan Chancellor <natechancellor@gmail.com>
+Subject: [PATCH] scsi: mptfusion: Remove unnecessary parentheses and simplify null checks
+Date: Fri, 14 Sep 2018 23:36:45 -0700
+Message-ID: <20180915063645.31295-1-natechancellor@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: james.smart@broadcom.com, dick.kennedy@broadcom.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jia-Ju Bai <baijiaju1990@gmail.com>
+To: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
+Cc: MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Nick Desaulniers <ndesaulniers@google.com>, Nathan Chancellor <natechancellor@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-The driver may sleep with holding a spinlock.
-The function call path (from bottom to top) in Linux-4.17 is:
+Clang warns when multiple pairs of parentheses are used for a single
+conditional statement.
 
-[FUNC] dma_pool_alloc(GFP_KERNEL)
-drivers/scsi/lpfc/lpfc_mem.c, 400: 
-	dma_pool_alloc in lpfc_mbuf_alloc
-drivers/scsi/lpfc/lpfc_els.c, 228: 
-	lpfc_mbuf_alloc in lpfc_prep_els_iocb
-drivers/scsi/lpfc/lpfc_els.c, 2010: 
-	lpfc_prep_els_iocb in lpfc_issue_els_plogi
-drivers/scsi/lpfc/lpfc_els.c, 4914: 
-	lpfc_issue_els_plogi in lpfc_els_disc_plogi
-drivers/scsi/lpfc/lpfc_els.c, 1486: 
-	lpfc_els_disc_plogi in lpfc_more_plogi
-drivers/scsi/lpfc/lpfc_els.c, 3123: 
-	lpfc_more_plogi in lpfc_cancel_retry_delay_tmo
-drivers/scsi/lpfc/lpfc_nportdisc.c, 279: 
-	lpfc_cancel_retry_delay_tmo in lpfc_els_abort
-drivers/scsi/lpfc/lpfc_nportdisc.c, 236: 
-	spin_lock_irq in lpfc_els_abort
+drivers/message/fusion/mptbase.c:338:11: warning: equality comparison
+with extraneous parentheses [-Wparentheses-equality]
+        if ((ioc == NULL))
+             ~~~~^~~~~~~
+drivers/message/fusion/mptbase.c:338:11: note: remove extraneous
+parentheses around the comparison to silence this warning
+        if ((ioc == NULL))
+            ~    ^      ~
+drivers/message/fusion/mptbase.c:338:11: note: use '=' to turn this
+equality comparison into an assignment
+        if ((ioc == NULL))
+                 ^~
+                 =
+drivers/message/fusion/mptbase.c:342:12: warning: equality comparison
+with extraneous parentheses [-Wparentheses-equality]
+        if ((pdev == NULL))
+             ~~~~~^~~~~~~
+drivers/message/fusion/mptbase.c:342:12: note: remove extraneous
+parentheses around the comparison to silence this warning
+        if ((pdev == NULL))
+            ~     ^      ~
+drivers/message/fusion/mptbase.c:342:12: note: use '=' to turn this
+equality comparison into an assignment
+        if ((pdev == NULL))
+                  ^~
+                  =
+2 warnings generated.
 
-To fix this bug, GFP_KERNEL is replaced with GFP_ATOMIC.
+Remove them and while we're at it, simplify the NULL checks as '!var' is
+used more than 'var == NULL'.
 
-This bug is found by my static analysis tool DSAC.
-
-Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
+Reported-by: Nick Desaulniers <ndesaulniers@google.com>
+Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_mem.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/message/fusion/mptbase.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_mem.c b/drivers/scsi/lpfc/lpfc_mem.c
-index 9c22a2c93462..7eae5508bfa3 100644
---- a/drivers/scsi/lpfc/lpfc_mem.c
-+++ b/drivers/scsi/lpfc/lpfc_mem.c
-@@ -398,7 +398,7 @@ lpfc_mbuf_alloc(struct lpfc_hba *phba, int mem_flags, dma_addr_t *handle)
- 	unsigned long iflags;
- 	void *ret;
+diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+index dc1e43a02599..ba551d8dfba4 100644
+--- a/drivers/message/fusion/mptbase.c
++++ b/drivers/message/fusion/mptbase.c
+@@ -335,11 +335,11 @@ static int mpt_remove_dead_ioc_func(void *arg)
+ 	MPT_ADAPTER *ioc = (MPT_ADAPTER *)arg;
+ 	struct pci_dev *pdev;
  
--	ret = dma_pool_alloc(phba->lpfc_mbuf_pool, GFP_KERNEL, handle);
-+	ret = dma_pool_alloc(phba->lpfc_mbuf_pool, GFP_ATOMIC, handle);
+-	if ((ioc == NULL))
++	if (!ioc)
+ 		return -1;
  
- 	spin_lock_irqsave(&phba->hbalock, iflags);
- 	if (!ret && (mem_flags & MEM_PRI) && pool->current_count) {
+ 	pdev = ioc->pcidev;
+-	if ((pdev == NULL))
++	if (!pdev)
+ 		return -1;
+ 
+ 	pci_stop_and_remove_bus_device_locked(pdev);
 -- 
-2.17.0
+2.18.0
