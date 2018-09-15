@@ -1,70 +1,47 @@
-From: Nathan Chancellor <natechancellor@gmail.com>
-Subject: [PATCH] scsi: mptfusion: Remove unnecessary parentheses and simplify null checks
-Date: Fri, 14 Sep 2018 23:36:45 -0700
-Message-ID: <20180915063645.31295-1-natechancellor@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
-Cc: MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Nick Desaulniers <ndesaulniers@google.com>, Nathan Chancellor <natechancellor@gmail.com>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [PATCH v3 0/5] FireWire: clean up kernel-doc, add Documentation
+ chapter
+Date: Sat, 15 Sep 2018 16:59:58 +0200
+Message-ID: <20180915165958.3f88a6f8@kant>
+References: <20180905000225.10733-1-rd.dunlab@gmail.com>
+ <20180906094738.0248c67e@lwn.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
+In-Reply-To: <20180906094738.0248c67e@lwn.net>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/options/linux1394-devel>,
+ <mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
+List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
+List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+ <mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
+Errors-To: linux1394-devel-bounces@lists.sourceforge.net
+To: Jonathan Corbet <corbet@lwn.net>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-doc@vger.kernel.org, Randy Dunlap <rd.dunlab@gmail.com>, Randy Dunlap <rdunlap@infradead.org>, Andrew Morton <akpm@linux-foundation.org>, linux1394-devel@lists.sourceforge.net
 List-Id: linux-scsi@vger.kernel.org
 
-Clang warns when multiple pairs of parentheses are used for a single
-conditional statement.
+On Sep 06 Jonathan Corbet wrote:
+> On Tue,  4 Sep 2018 17:02:20 -0700
+> Randy Dunlap <rd.dunlab@gmail.com> wrote:
+> > [PATCH v4 1/5] FireWire: clean up firewire-cdev.h kernel-doc
+> > [PATCH v4 2/5] FireWire: clean up core-iso.c kernel-doc
+> > [PATCH v4 3/5] FireWire: clean up core-transaction.c kernel-doc
+> > [PATCH v4 4/5] FireWire: add a Documentation driver-api chapter
+> > [PATCH v4 5/5] FireWire: add driver-api Introduction section
+[...]
+> > I think that Jon is the best choice to merge this series, but
+> > someone please do so.  It has already missed 2 merge windows.  
+> 
+> I think this is the first time I've received this...  Through the
+> FireWire maintainer seems like the best path, but it seems that's not
+> happening.  The patches look good to me, so I've just applied them.
 
-drivers/message/fusion/mptbase.c:338:11: warning: equality comparison
-with extraneous parentheses [-Wparentheses-equality]
-        if ((ioc == NULL))
-             ~~~~^~~~~~~
-drivers/message/fusion/mptbase.c:338:11: note: remove extraneous
-parentheses around the comparison to silence this warning
-        if ((ioc == NULL))
-            ~    ^      ~
-drivers/message/fusion/mptbase.c:338:11: note: use '=' to turn this
-equality comparison into an assignment
-        if ((ioc == NULL))
-                 ^~
-                 =
-drivers/message/fusion/mptbase.c:342:12: warning: equality comparison
-with extraneous parentheses [-Wparentheses-equality]
-        if ((pdev == NULL))
-             ~~~~~^~~~~~~
-drivers/message/fusion/mptbase.c:342:12: note: remove extraneous
-parentheses around the comparison to silence this warning
-        if ((pdev == NULL))
-            ~     ^      ~
-drivers/message/fusion/mptbase.c:342:12: note: use '=' to turn this
-equality comparison into an assignment
-        if ((pdev == NULL))
-                  ^~
-                  =
-2 warnings generated.
-
-Remove them and while we're at it, simplify the NULL checks as '!var' is
-used more than 'var == NULL'.
-
-Reported-by: Nick Desaulniers <ndesaulniers@google.com>
-Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
----
- drivers/message/fusion/mptbase.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-index dc1e43a02599..ba551d8dfba4 100644
---- a/drivers/message/fusion/mptbase.c
-+++ b/drivers/message/fusion/mptbase.c
-@@ -335,11 +335,11 @@ static int mpt_remove_dead_ioc_func(void *arg)
- 	MPT_ADAPTER *ioc = (MPT_ADAPTER *)arg;
- 	struct pci_dev *pdev;
- 
--	if ((ioc == NULL))
-+	if (!ioc)
- 		return -1;
- 
- 	pdev = ioc->pcidev;
--	if ((pdev == NULL))
-+	if (!pdev)
- 		return -1;
- 
- 	pci_stop_and_remove_bus_device_locked(pdev);
+Thanks for taking care of this.  I only read superficially through the v1
+posting and Takashi Sakamoto's initial responses; sorry to all for not
+following up on this then.
 -- 
-2.18.0
+Stefan Richter
+-======---=- =--= -====
+http://arcgraph.de/sr/
