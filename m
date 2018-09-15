@@ -1,75 +1,76 @@
-From: Sasha Levin <Alexander.Levin@microsoft.com>
-Subject: [PATCH AUTOSEL 4.18 88/92] blk-mq: avoid to synchronize rcu inside
- blk_cleanup_queue()
-Date: Sat, 15 Sep 2018 01:30:55 +0000
-Message-ID: <20180915012944.179481-87-alexander.levin@microsoft.com>
-References: <20180915012944.179481-1-alexander.levin@microsoft.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+From: Jia-Ju Bai <baijiaju1990@gmail.com>
+Subject: [PATCH] scsi: lpfc: Fix three sleep-in-atomic-context bugs in lpfc_sli4_nvmet_alloc()
+Date: Sat, 15 Sep 2018 11:41:15 +0800
+Message-ID: <20180915034115.6543-1-baijiaju1990@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180915012944.179481-1-alexander.levin@microsoft.com>
-Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: "stable@vger.kernel.org" <stable@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Cc: Ming Lei <ming.lei@redhat.com>, Omar Sandoval <osandov@fb.com>, Bart Van Assche <bart.vanassche@wdc.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Sasha Levin <Alexander.Levin@microsoft.com>
+To: james.smart@broadcom.com, dick.kennedy@broadcom.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jia-Ju Bai <baijiaju1990@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Ming Lei <ming.lei@redhat.com>
+The driver may sleep with holding a spinlock.
+The function call paths (from bottom to top) in Linux-4.17 are:
 
-[ Upstream commit 1311326cf4755c7ffefd20f576144ecf46d9906b ]
+[FUNC] kzalloc(GFP_KERNEL)
+drivers/scsi/lpfc/lpfc_mem.c, 633: 
+	kzalloc in lpfc_sli4_nvmet_alloc
+drivers/scsi/lpfc/lpfc_sli.c, 6729: 
+	[FUNC_PTR]lpfc_sli4_nvmet_alloc in lpfc_post_rq_buffer
+drivers/scsi/lpfc/lpfc_sli.c, 6723: 
+	_raw_spin_lock_irqsave in lpfc_post_rq_buffer
 
-SCSI probing may synchronously create and destroy a lot of request_queues
-for non-existent devices. Any synchronize_rcu() in queue creation or
-destroy path may introduce long latency during booting, see detailed
-description in comment of blk_register_queue().
+[FUNC] dma_pool_alloc(GFP_KERNEL)
+drivers/scsi/lpfc/lpfc_mem.c, 637: 
+	dma_pool_alloc in lpfc_sli4_nvmet_alloc
+drivers/scsi/lpfc/lpfc_sli.c, 6729: 
+	[FUNC_PTR]lpfc_sli4_nvmet_alloc in lpfc_post_rq_buffer
+drivers/scsi/lpfc/lpfc_sli.c, 6723: 
+	_raw_spin_lock_irqsave in lpfc_post_rq_buffer
 
-This patch removes one synchronize_rcu() inside blk_cleanup_queue()
-for this case, commit c2856ae2f315d75(blk-mq: quiesce queue before freeing =
-queue)
-needs synchronize_rcu() for implementing blk_mq_quiesce_queue(), but
-when queue isn't initialized, it isn't necessary to do that since
-only pass-through requests are involved, no original issue in
-scsi_execute() at all.
+[FUNC] dma_pool_alloc(GFP_KERNEL)
+drivers/scsi/lpfc/lpfc_mem.c, 643: 
+	dma_pool_alloc in lpfc_sli4_nvmet_alloc
+drivers/scsi/lpfc/lpfc_sli.c, 6729: 
+	[FUNC_PTR]lpfc_sli4_nvmet_alloc in lpfc_post_rq_buffer
+drivers/scsi/lpfc/lpfc_sli.c, 6723: 
+	_raw_spin_lock_irqsave in lpfc_post_rq_buffer
 
-Without this patch and previous one, it may take more 20+ seconds for
-virtio-scsi to complete disk probe. With the two patches, the time becomes
-less than 100ms.
+Note that [FUNC_PTR] means a function pointer call is used.
 
-Fixes: c2856ae2f315d75 ("blk-mq: quiesce queue before freeing queue")
-Reported-by: Andrew Jones <drjones@redhat.com>
-Cc: Omar Sandoval <osandov@fb.com>
-Cc: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Tested-by: Andrew Jones <drjones@redhat.com>
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
-Signed-off-by: Jens Axboe <axboe@kernel.dk>
-Signed-off-by: Sasha Levin <alexander.levin@microsoft.com>
+To fix these bugs, GFP_KERNEL is replaced with GFP_ATOMIC.
+
+These bugs are found by my static analysis tool DSAC.
+
+Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
 ---
- block/blk-core.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+ drivers/scsi/lpfc/lpfc_mem.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 1646ea85dade..0f5b314fc810 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -791,9 +791,13 @@ void blk_cleanup_queue(struct request_queue *q)
- 	 * make sure all in-progress dispatch are completed because
- 	 * blk_freeze_queue() can only complete all requests, and
- 	 * dispatch may still be in-progress since we dispatch requests
--	 * from more than one contexts
-+	 * from more than one contexts.
-+	 *
-+	 * No need to quiesce queue if it isn't initialized yet since
-+	 * blk_freeze_queue() should be enough for cases of passthrough
-+	 * request.
- 	 */
--	if (q->mq_ops)
-+	if (q->mq_ops && blk_queue_init_done(q))
- 		blk_mq_quiesce_queue(q);
-=20
- 	/* for synchronous bio-based driver finish in-flight integrity i/o */
---=20
-2.17.1
+diff --git a/drivers/scsi/lpfc/lpfc_mem.c b/drivers/scsi/lpfc/lpfc_mem.c
+index 9c22a2c93462..20359e5d0016 100644
+--- a/drivers/scsi/lpfc/lpfc_mem.c
++++ b/drivers/scsi/lpfc/lpfc_mem.c
+@@ -631,18 +631,18 @@ lpfc_sli4_nvmet_alloc(struct lpfc_hba *phba)
+ {
+ 	struct rqb_dmabuf *dma_buf;
+ 
+-	dma_buf = kzalloc(sizeof(struct rqb_dmabuf), GFP_KERNEL);
++	dma_buf = kzalloc(sizeof(struct rqb_dmabuf), GFP_ATOMIC);
+ 	if (!dma_buf)
+ 		return NULL;
+ 
+-	dma_buf->hbuf.virt = dma_pool_alloc(phba->lpfc_hrb_pool, GFP_KERNEL,
++	dma_buf->hbuf.virt = dma_pool_alloc(phba->lpfc_hrb_pool, GFP_ATOMIC,
+ 					    &dma_buf->hbuf.phys);
+ 	if (!dma_buf->hbuf.virt) {
+ 		kfree(dma_buf);
+ 		return NULL;
+ 	}
+ 	dma_buf->dbuf.virt = dma_pool_alloc(phba->lpfc_nvmet_drb_pool,
+-					    GFP_KERNEL, &dma_buf->dbuf.phys);
++					    GFP_ATOMIC, &dma_buf->dbuf.phys);
+ 	if (!dma_buf->dbuf.virt) {
+ 		dma_pool_free(phba->lpfc_hrb_pool, dma_buf->hbuf.virt,
+ 			      dma_buf->hbuf.phys);
+-- 
+2.17.0
