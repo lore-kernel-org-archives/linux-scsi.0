@@ -1,14 +1,14 @@
 From: Sasha Levin <Alexander.Levin@microsoft.com>
-Subject: [PATCH AUTOSEL 4.14 53/57] blk-mq: avoid to synchronize rcu inside
+Subject: [PATCH AUTOSEL 4.18 88/92] blk-mq: avoid to synchronize rcu inside
  blk_cleanup_queue()
-Date: Sat, 15 Sep 2018 01:33:02 +0000
-Message-ID: <20180915013223.179909-53-alexander.levin@microsoft.com>
-References: <20180915013223.179909-1-alexander.levin@microsoft.com>
+Date: Sat, 15 Sep 2018 01:30:55 +0000
+Message-ID: <20180915012944.179481-87-alexander.levin@microsoft.com>
+References: <20180915012944.179481-1-alexander.levin@microsoft.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180915013223.179909-1-alexander.levin@microsoft.com>
+In-Reply-To: <20180915012944.179481-1-alexander.levin@microsoft.com>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 To: "stable@vger.kernel.org" <stable@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
@@ -52,10 +52,10 @@ Signed-off-by: Sasha Levin <alexander.levin@microsoft.com>
  1 file changed, 6 insertions(+), 2 deletions(-)
 
 diff --git a/block/blk-core.c b/block/blk-core.c
-index 1d27e2a152e0..6aa2bc4e9652 100644
+index 1646ea85dade..0f5b314fc810 100644
 --- a/block/blk-core.c
 +++ b/block/blk-core.c
-@@ -669,9 +669,13 @@ void blk_cleanup_queue(struct request_queue *q)
+@@ -791,9 +791,13 @@ void blk_cleanup_queue(struct request_queue *q)
  	 * make sure all in-progress dispatch are completed because
  	 * blk_freeze_queue() can only complete all requests, and
  	 * dispatch may still be in-progress since we dispatch requests
