@@ -1,119 +1,39 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: dm-mpath: Fix setup_scsi_dh()
-Date: Mon, 17 Sep 2018 07:51:50 -0700
-Message-ID: <31642b58-a1de-a162-e9db-46e5a589e2b9@acm.org>
-References: <20180917033354.30745-1-bvanassche@acm.org>
-	<20180917142046.GA52842@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20180917142046.GA52842@redhat.com>
-Content-Language: en-US
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: dm-devel@redhat.com, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>
+From: Joe Perches <joe@perches.com>
+Subject: [PATCH 0/7] Neaten logging uses
+Date: Mon, 17 Sep 2018 08:01:07 -0700
+Message-ID: <cover.1537183087.git.joe@perches.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
+Cc: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 9/17/18 7:20 AM, Mike Snitzer wrote:
->> - Avoid that m->hw_handler_name becomes a dangling pointer if the
->>    RETAIN_ATTACHED_HW_HANDLER flag is set and scsi_dh_attach() returns
->>    -EBUSY.
-> 
-> What is the concern about a dangling pointer?  How does that manifest?
-> Stale scsi_dh name stored in hw_handler_name?  Pretty sure it gets freed
-> and reassigned as needed (at the start of setup_scsi_dh).
+Several defects exist in the logging uses
 
-Hello Mike,
+o Missing KERN_<LEVEL>
+o Unnecessary KERN_<LEVEL> uses with panic
+o Mismatched MPT3SAS_FMT and %s: with name and __func__
 
-Thanks for having taken a look. Before commit e8f74a0f0011, if both 
-MPATHF_RETAIN_ATTACHED_HW_HANDLER and m->hw_handler_name are set before 
-setup_scsi_dh() is called and if scsi_dh_attach() returns -EBUSY, 
-scsi_dh_attached_handler_name() was called twice and allocated memory 
-twice for the handler name. Since commit e8f74a0f0011, in that scenario, 
-the following code related to the handler name is executed:
+Correct these defects and perhaps add some clarity to the logging.
 
-	kfree(m->hw_handler_name);
-	m->hw_handler_name = attached_handler_name;
-	[ scsi_dh_attach() returns -EBUSY ]
-	kfree(m->hw_handler_name);
-	m->hw_handler_name = attached_handler_name;
+Joe Perches (7):
+  mpt3sas: Add ioc_<level> logging macros
+  mpt3sas: Convert uses of pr_<level> with MPT3SAS_FMT to ioc_<level>
+  mpt3sas: Convert mlsleading uses of pr_<level> with MPT3SAS_FMT
+  mpt3sas: Convert logging uses with MPT3SAS_FMT and reply_q_name to %s:
+  mpt3sas: Remove KERN_WARNING from panic uses
+  mpt3sas: Convert logging uses with MPT3SAS_FMT without logging levels
+  mpt3sas: Remove unused macro MPT3SAS_FMT
 
-I think this sequence makes m->hw_handler_name a dangling pointer.
+ drivers/scsi/mpt3sas/mpt3sas_base.c         | 1116 +++++++++-----------
+ drivers/scsi/mpt3sas/mpt3sas_base.h         |    9 +-
+ drivers/scsi/mpt3sas/mpt3sas_config.c       |   89 +-
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c          |  493 ++++-----
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c        | 1487 ++++++++++++---------------
+ drivers/scsi/mpt3sas/mpt3sas_transport.c    |  337 +++---
+ drivers/scsi/mpt3sas/mpt3sas_trigger_diag.c |  101 +-
+ drivers/scsi/mpt3sas/mpt3sas_warpdrive.c    |   70 +-
+ 8 files changed, 1618 insertions(+), 2084 deletions(-)
 
-> diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
-> index d94ba6f72ff5..688ac9e719a7 100644
-> --- a/drivers/md/dm-mpath.c
-> +++ b/drivers/md/dm-mpath.c
-> @@ -806,14 +806,14 @@ static int parse_path_selector(struct dm_arg_set *as, struct priority_group *pg,
->   }
->   
->   static int setup_scsi_dh(struct block_device *bdev, struct multipath *m,
-> -			 const char *attached_handler_name, char **error)
-> +			 char **attached_handler_name, char **error)
->   {
->   	struct request_queue *q = bdev_get_queue(bdev);
->   	int r;
->   
->   	if (test_bit(MPATHF_RETAIN_ATTACHED_HW_HANDLER, &m->flags)) {
->   retain:
-> -		if (attached_handler_name) {
-> +		if (*attached_handler_name) {
->   			/*
->   			 * Clear any hw_handler_params associated with a
->   			 * handler that isn't already attached.
-> @@ -830,7 +830,8 @@ static int setup_scsi_dh(struct block_device *bdev, struct multipath *m,
->   			 * handler instead of the original table passed in.
->   			 */
->   			kfree(m->hw_handler_name);
-> -			m->hw_handler_name = attached_handler_name;
-> +			m->hw_handler_name = *attached_handler_name;
-> +			*attached_handler_name = NULL;
->   		}
->   	}
->   
-> @@ -867,7 +868,7 @@ static struct pgpath *parse_path(struct dm_arg_set *as, struct path_selector *ps
->   	struct pgpath *p;
->   	struct multipath *m = ti->private;
->   	struct request_queue *q;
-> -	const char *attached_handler_name;
-> +	char *attached_handler_name = NULL;
->   
->   	/* we need at least a path arg */
->   	if (as->argc < 1) {
-> @@ -890,7 +891,7 @@ static struct pgpath *parse_path(struct dm_arg_set *as, struct path_selector *ps
->   	attached_handler_name = scsi_dh_attached_handler_name(q, GFP_KERNEL);
->   	if (attached_handler_name || m->hw_handler_name) {
->   		INIT_DELAYED_WORK(&p->activate_path, activate_path_work);
-> -		r = setup_scsi_dh(p->path.dev->bdev, m, attached_handler_name, &ti->error);
-> +		r = setup_scsi_dh(p->path.dev->bdev, m, &attached_handler_name, &ti->error);
->   		if (r) {
->   			dm_put_device(ti, p->path.dev);
->   			goto bad;
-> @@ -905,6 +906,8 @@ static struct pgpath *parse_path(struct dm_arg_set *as, struct path_selector *ps
->   
->   	return p;
->    bad:
-> +	if (attached_handler_name)
-> +		kfree(attached_handler_name);
->   	free_pgpath(p);
->   	return ERR_PTR(r);
->   }
-
-Except that the if (attached_handler_name) should be removed from before 
-the kfree() call, the above looks good to me. But since we can avoid 
-changing the type of attached_handler_name from char * into char ** by 
-moving the kfree() call into setup_scsi_dh(), I prefer to avoid to make 
-that change.
-
-Thanks,
-
-Bart.
+-- 
+2.15.0
