@@ -1,7 +1,7 @@
 From: Joe Perches <joe@perches.com>
-Subject: [PATCH 4/7] mpt3sas: Convert logging uses with MPT3SAS_FMT and reply_q_name to %s:
-Date: Mon, 17 Sep 2018 08:01:11 -0700
-Message-ID: <80a0b24fd5be85fcd87b92958691ab19484a4295.1537183088.git.joe@perches.com>
+Subject: [PATCH 3/7] mpt3sas: Convert mlsleading uses of pr_<level> with MPT3SAS_FMT
+Date: Mon, 17 Sep 2018 08:01:10 -0700
+Message-ID: <71b9656aa46ec31a9991587d7ff204e0877a336e.1537183088.git.joe@perches.com>
 References: <cover.1537183087.git.joe@perches.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1537183087.git.joe@perches.com>
@@ -10,46 +10,184 @@ To: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@b
 Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Convert the existing 2 uses to make the format and arguments
-matching more obvious.
+These have misordered uses of __func__ and ioc->name that could
+mismatch MPT3SAS_FMT and "%s: ".
 
-Miscellanea:
-
-o Move the word "enabled" into the format to trivially reduce object size
-o Remove unnecessary parentheses
+Convert them to ioc_<level>.
 
 Signed-off-by: Joe Perches <joe@perches.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c     | 50 +++++++++++++++-----------------
+ drivers/scsi/mpt3sas/mpt3sas_transport.c | 18 ++++--------
+ 2 files changed, 29 insertions(+), 39 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 5c6634b7ca74..386af6739867 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -2705,7 +2705,7 @@ _base_request_irq(struct MPT3SAS_ADAPTER *ioc, u8 index)
- 	r = request_irq(pci_irq_vector(pdev, index), _base_interrupt,
- 			IRQF_SHARED, reply_q->name, reply_q);
- 	if (r) {
--		pr_err(MPT3SAS_FMT "unable to allocate interrupt %d!\n",
-+		pr_err("%s: unable to allocate interrupt %d!\n",
- 		       reply_q->name, pci_irq_vector(pdev, index));
- 		kfree(reply_q);
- 		return -EBUSY;
-@@ -3034,10 +3034,10 @@ mpt3sas_base_map_resources(struct MPT3SAS_ADAPTER *ioc)
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 3331eba4b78d..8089be381c72 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -2627,15 +2627,13 @@ mpt3sas_scsih_issue_tm(struct MPT3SAS_ADAPTER *ioc, u16 handle, u64 lun,
+ 	lockdep_assert_held(&ioc->tm_cmds.mutex);
+ 
+ 	if (ioc->tm_cmds.status != MPT3_CMD_NOT_USED) {
+-		pr_info(MPT3SAS_FMT "%s: tm_cmd busy!!!\n",
+-		    __func__, ioc->name);
++		ioc_info(ioc, "%s: tm_cmd busy!!!\n", __func__);
+ 		return FAILED;
  	}
  
- 	list_for_each_entry(reply_q, &ioc->reply_queue_list, list)
--		pr_info(MPT3SAS_FMT "%s: IRQ %d\n",
--		    reply_q->name,  ((ioc->msix_enable) ? "PCI-MSI-X enabled" :
--		    "IO-APIC enabled"),
--		    pci_irq_vector(ioc->pdev, reply_q->msix_index));
-+		pr_info("%s: %s enabled: IRQ %d\n",
-+			reply_q->name,
-+			ioc->msix_enable ? "PCI-MSI-X" : "IO-APIC",
-+			pci_irq_vector(ioc->pdev, reply_q->msix_index));
+ 	if (ioc->shost_recovery || ioc->remove_host ||
+ 	    ioc->pci_error_recovery) {
+-		pr_info(MPT3SAS_FMT "%s: host reset in progress!\n",
+-		    __func__, ioc->name);
++		ioc_info(ioc, "%s: host reset in progress!\n", __func__);
+ 		return FAILED;
+ 	}
  
- 	ioc_info(ioc, "iomem(%pap), mapped(0x%p), size(%d)\n",
- 		 &chip_phys, ioc->chip, memap_sz);
+@@ -3550,18 +3548,16 @@ _scsih_tm_tr_send(struct MPT3SAS_ADAPTER *ioc, u16 handle)
+ 	u8 tr_method = 0;
+ 
+ 	if (ioc->pci_error_recovery) {
+-		dewtprintk(ioc, pr_info(MPT3SAS_FMT
+-			"%s: host in pci error recovery: handle(0x%04x)\n",
+-			__func__, ioc->name,
+-		    handle));
++		dewtprintk(ioc,
++			   ioc_info(ioc, "%s: host in pci error recovery: handle(0x%04x)\n",
++				    __func__, handle));
+ 		return;
+ 	}
+ 	ioc_state = mpt3sas_base_get_iocstate(ioc, 1);
+ 	if (ioc_state != MPI2_IOC_STATE_OPERATIONAL) {
+-		dewtprintk(ioc, pr_info(MPT3SAS_FMT
+-			"%s: host is not operational: handle(0x%04x)\n",
+-			__func__, ioc->name,
+-		   handle));
++		dewtprintk(ioc,
++			   ioc_info(ioc, "%s: host is not operational: handle(0x%04x)\n",
++				    __func__, handle));
+ 		return;
+ 	}
+ 
+@@ -3811,9 +3807,9 @@ _scsih_tm_tr_volume_send(struct MPT3SAS_ADAPTER *ioc, u16 handle)
+ 	struct _tr_list *delayed_tr;
+ 
+ 	if (ioc->pci_error_recovery) {
+-		dewtprintk(ioc, pr_info(MPT3SAS_FMT
+-			"%s: host reset in progress!\n",
+-			__func__, ioc->name));
++		dewtprintk(ioc,
++			   ioc_info(ioc, "%s: host reset in progress!\n",
++				    __func__));
+ 		return;
+ 	}
+ 
+@@ -3863,9 +3859,9 @@ _scsih_tm_volume_tr_complete(struct MPT3SAS_ADAPTER *ioc, u16 smid,
+ 	    mpt3sas_base_get_reply_virt_addr(ioc, reply);
+ 
+ 	if (ioc->shost_recovery || ioc->pci_error_recovery) {
+-		dewtprintk(ioc, pr_info(MPT3SAS_FMT
+-			"%s: host reset in progress!\n",
+-			__func__, ioc->name));
++		dewtprintk(ioc,
++			   ioc_info(ioc, "%s: host reset in progress!\n",
++				    __func__));
+ 		return 1;
+ 	}
+ 	if (unlikely(!mpi_reply)) {
+@@ -3950,21 +3946,21 @@ _scsih_issue_delayed_sas_io_unit_ctrl(struct MPT3SAS_ADAPTER *ioc,
+ 	unsigned long flags;
+ 
+ 	if (ioc->remove_host) {
+-		dewtprintk(ioc, pr_info(MPT3SAS_FMT
+-			    "%s: host has been removed\n",
+-			     __func__, ioc->name));
++		dewtprintk(ioc,
++			   ioc_info(ioc, "%s: host has been removed\n",
++				    __func__));
+ 		return;
+ 	} else if (ioc->pci_error_recovery) {
+-		dewtprintk(ioc, pr_info(MPT3SAS_FMT
+-			    "%s: host in pci error recovery\n",
+-			    __func__, ioc->name));
++		dewtprintk(ioc,
++			   ioc_info(ioc, "%s: host in pci error recovery\n",
++				    __func__));
+ 		return;
+ 	}
+ 	ioc_state = mpt3sas_base_get_iocstate(ioc, 1);
+ 	if (ioc_state != MPI2_IOC_STATE_OPERATIONAL) {
+-		dewtprintk(ioc, pr_info(MPT3SAS_FMT
+-		    "%s: host is not operational\n",
+-		    __func__, ioc->name));
++		dewtprintk(ioc,
++			   ioc_info(ioc, "%s: host is not operational\n",
++				    __func__));
+ 		return;
+ 	}
+ 
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_transport.c b/drivers/scsi/mpt3sas/mpt3sas_transport.c
+index d4bf4d5e576e..09034a3fba2c 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_transport.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_transport.c
+@@ -146,8 +146,7 @@ _transport_set_identify(struct MPT3SAS_ADAPTER *ioc, u16 handle,
+ 	u32 ioc_status;
+ 
+ 	if (ioc->shost_recovery || ioc->pci_error_recovery) {
+-		pr_info(MPT3SAS_FMT "%s: host reset in progress!\n",
+-		    __func__, ioc->name);
++		ioc_info(ioc, "%s: host reset in progress!\n", __func__);
+ 		return -EFAULT;
+ 	}
+ 
+@@ -308,8 +307,7 @@ _transport_expander_report_manufacture(struct MPT3SAS_ADAPTER *ioc,
+ 	u16 wait_state_count;
+ 
+ 	if (ioc->shost_recovery || ioc->pci_error_recovery) {
+-		pr_info(MPT3SAS_FMT "%s: host reset in progress!\n",
+-		    __func__, ioc->name);
++		ioc_info(ioc, "%s: host reset in progress!\n", __func__);
+ 		return -EFAULT;
+ 	}
+ 
+@@ -1088,8 +1086,7 @@ _transport_get_expander_phy_error_log(struct MPT3SAS_ADAPTER *ioc,
+ 	u16 wait_state_count;
+ 
+ 	if (ioc->shost_recovery || ioc->pci_error_recovery) {
+-		pr_info(MPT3SAS_FMT "%s: host reset in progress!\n",
+-		    __func__, ioc->name);
++		ioc_info(ioc, "%s: host reset in progress!\n", __func__);
+ 		return -EFAULT;
+ 	}
+ 
+@@ -1393,8 +1390,7 @@ _transport_expander_phy_control(struct MPT3SAS_ADAPTER *ioc,
+ 	u16 wait_state_count;
+ 
+ 	if (ioc->shost_recovery || ioc->pci_error_recovery) {
+-		pr_info(MPT3SAS_FMT "%s: host reset in progress!\n",
+-		    __func__, ioc->name);
++		ioc_info(ioc, "%s: host reset in progress!\n", __func__);
+ 		return -EFAULT;
+ 	}
+ 
+@@ -1894,8 +1890,7 @@ _transport_smp_handler(struct bsg_job *job, struct Scsi_Host *shost,
+ 	unsigned int reslen = 0;
+ 
+ 	if (ioc->shost_recovery || ioc->pci_error_recovery) {
+-		pr_info(MPT3SAS_FMT "%s: host reset in progress!\n",
+-		    __func__, ioc->name);
++		ioc_info(ioc, "%s: host reset in progress!\n", __func__);
+ 		rc = -EFAULT;
+ 		goto job_done;
+ 	}
+@@ -1975,8 +1970,7 @@ _transport_smp_handler(struct bsg_job *job, struct Scsi_Host *shost,
+ 	wait_for_completion_timeout(&ioc->transport_cmds.done, 10*HZ);
+ 
+ 	if (!(ioc->transport_cmds.status & MPT3_CMD_COMPLETE)) {
+-		pr_err(MPT3SAS_FMT "%s : timeout\n",
+-		    __func__, ioc->name);
++		ioc_err(ioc, "%s: timeout\n", __func__);
+ 		_debug_dump_mf(mpi_request,
+ 		    sizeof(Mpi2SmpPassthroughRequest_t)/4);
+ 		if (!(ioc->transport_cmds.status & MPT3_CMD_RESET)) {
 -- 
 2.15.0
