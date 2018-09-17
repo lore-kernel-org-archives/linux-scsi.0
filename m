@@ -1,43 +1,89 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: dm-mpath: Fix setup_scsi_dh()
-Date: Mon, 17 Sep 2018 08:34:15 -0700
-Message-ID: <84a32554-f5c4-3b22-bd3a-9b3af052611d@acm.org>
-References: <20180917033354.30745-1-bvanassche@acm.org>
-	<20180917142046.GA52842@redhat.com>
-	<31642b58-a1de-a162-e9db-46e5a589e2b9@acm.org>
-	<20180917151113.GA30042@redhat.com>
+From: Nick Desaulniers <ndesaulniers@google.com>
+Subject: Re: [PATCH] scsi: mptfusion: Remove unnecessary parentheses and
+ simplify null checks
+Date: Mon, 17 Sep 2018 10:29:50 -0700
+Message-ID: <CAKwvOdmi3CxLNRGH7bWgNR5eK3p5eB_U4OsDwLPkuaDgA74JtA@mail.gmail.com>
+References: <20180915063645.31295-1-natechancellor@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20180917151113.GA30042@redhat.com>
-Content-Language: en-US
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: dm-devel@redhat.com, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20180915063645.31295-1-natechancellor@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Nathan Chancellor <natechancellor@gmail.com>
+Cc: sathya.prakash@broadcom.com, chaitra.basappa@broadcom.com, suganath-prabu.subramani@broadcom.com, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 9/17/18 8:11 AM, Mike Snitzer wrote:
-> Moving kfree() into setup_scsi_dh() would require use of a common goto
-> for cleanup (something parse_path() already has with 'goto bad;').
-> 
-> But having kfree() in parse_path() is cleaner/symmetric since call to
-> scsi_dh_attached_handler_name() -- and associated memory allocation --
-> occurs in parse_path().
-> 
-> If you're OK with this, I'll get a proper patch staged based on your
-> header and obviously add a Reported-by attributed to you.
+On Fri, Sep 14, 2018 at 11:36 PM Nathan Chancellor
+<natechancellor@gmail.com> wrote:
+>
+> Clang warns when multiple pairs of parentheses are used for a single
+> conditional statement.
+>
+> drivers/message/fusion/mptbase.c:338:11: warning: equality comparison
+> with extraneous parentheses [-Wparentheses-equality]
+>         if ((ioc == NULL))
+>              ~~~~^~~~~~~
+> drivers/message/fusion/mptbase.c:338:11: note: remove extraneous
+> parentheses around the comparison to silence this warning
+>         if ((ioc == NULL))
+>             ~    ^      ~
+> drivers/message/fusion/mptbase.c:338:11: note: use '=' to turn this
+> equality comparison into an assignment
+>         if ((ioc == NULL))
+>                  ^~
+>                  =
+> drivers/message/fusion/mptbase.c:342:12: warning: equality comparison
+> with extraneous parentheses [-Wparentheses-equality]
+>         if ((pdev == NULL))
+>              ~~~~~^~~~~~~
+> drivers/message/fusion/mptbase.c:342:12: note: remove extraneous
+> parentheses around the comparison to silence this warning
+>         if ((pdev == NULL))
+>             ~     ^      ~
+> drivers/message/fusion/mptbase.c:342:12: note: use '=' to turn this
+> equality comparison into an assignment
+>         if ((pdev == NULL))
+>                   ^~
+>                   =
+> 2 warnings generated.
+>
+> Remove them and while we're at it, simplify the NULL checks as '!var' is
+> used more than 'var == NULL'.
+>
+> Reported-by: Nick Desaulniers <ndesaulniers@google.com>
+> Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
 
-That sounds fine to me.
+Nathan,
+Thanks for this patch.
+Reviewed-by: Nick Desaulniers <ndesaulniers@google.com>
 
-Thanks!
+> ---
+>  drivers/message/fusion/mptbase.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+> index dc1e43a02599..ba551d8dfba4 100644
+> --- a/drivers/message/fusion/mptbase.c
+> +++ b/drivers/message/fusion/mptbase.c
+> @@ -335,11 +335,11 @@ static int mpt_remove_dead_ioc_func(void *arg)
+>         MPT_ADAPTER *ioc = (MPT_ADAPTER *)arg;
+>         struct pci_dev *pdev;
+>
+> -       if ((ioc == NULL))
+> +       if (!ioc)
+>                 return -1;
+>
+>         pdev = ioc->pcidev;
+> -       if ((pdev == NULL))
+> +       if (!pdev)
+>                 return -1;
+>
+>         pci_stop_and_remove_bus_device_locked(pdev);
+> --
+> 2.18.0
+>
 
-Bart.
+
+-- 
+Thanks,
+~Nick Desaulniers
