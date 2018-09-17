@@ -1,61 +1,95 @@
-From: Jonathan Cameron <jonathan.cameron-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v2 05/17] compat_ioctl: move more drivers to
- generic_compat_ioctl_ptrarg
-Date: Mon, 17 Sep 2018 10:33:48 +0100
-Message-ID: <20180917103348.00003f31@huawei.com>
-References: <20180912150142.157913-1-arnd@arndb.de>
- <20180912151134.436719-1-arnd@arndb.de>
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH 5/5] scsi: libsas: fix a race condition when smp task
+ timeout
+Date: Mon, 17 Sep 2018 10:47:16 +0100
+Message-ID: <357ad1d1-1675-4479-c0c3-c872b5f71892@huawei.com>
+References: <20180912082946.34814-1-yanaijie@huawei.com>
+ <20180912082946.34814-6-yanaijie@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-In-Reply-To: <20180912151134.436719-1-arnd-r2nGTMty4D4@public.gmane.org>
-List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
-List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
-Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
-Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-To: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
-Cc: linux-fbdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-iio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-remoteproc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, platform-driver-x86-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, sparclinux-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, qat-linux-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, linux-input-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linaro-mm-sig-cunTk1MwBs8s++Sfvej+rw@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, ceph-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-crypto-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linuxppc-dev-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, linux-btrfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20180912082946.34814-6-yanaijie@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jason Yan <yanaijie@huawei.com>, martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, zhaohongjiang@huawei.com, hare@suse.com, dan.j.williams@intel.com, jthumshirn@suse.de, hch@lst.de, huangdaode@hisilicon.com, chenxiang66@hisilicon.com, miaoxie@huawei.com, Ewan Milne <emilne@redhat.com>, Tomas Henzl <thenzl@redhat.com>, Linuxarm <linuxarm@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 12 Sep 2018 17:08:52 +0200
-Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org> wrote:
+On 12/09/2018 09:29, Jason Yan wrote:
+> When the lldd is processing the complete sas task in interrupt and set
+> the task stat as SAS_TASK_STATE_DONE, the smp timeout timer is able to
+> be triggered at the same time. And smp_task_timedout() will complete the
+> task wheter the SAS_TASK_STATE_DONE is set or not. Then the sas task may
+> freed before lldd end the interrupt process. Thus a use-after-free will
+> happen.
+>
+> Fix this by calling the complete() only when SAS_TASK_STATE_DONE is not
+> set. And remove the check of the return value of the del_timer().
+>
 
-> The .ioctl and .compat_ioctl file operations have the same prototype so
-> they can both point to the same function, which works great almost all
-> the time when all the commands are compatible.
-> 
-> One exception is the s390 architecture, where a compat pointer is only
-> 31 bit wide, and converting it into a 64-bit pointer requires calling
-> compat_ptr(). Most drivers here will ever run in s390, but since we now
-> have a generic helper for it, it's easy enough to use it consistently.
-> 
-> I double-checked all these drivers to ensure that all ioctl arguments
-> are used as pointers or are ignored, but are not interpreted as integer
-> values.
-> 
-> Signed-off-by: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
+Hi Jason,
+
+Please mention that once the LLDD sets DONE, it must call task->done(), 
+which will call smp_task_done()->complete()
+
+> Reported-by: chenxiang <chenxiang66@hisilicon.com>
+> Signed-off-by: Jason Yan <yanaijie@huawei.com>
+> CC: John Garry <john.garry@huawei.com>
+> CC: Johannes Thumshirn <jthumshirn@suse.de>
+> CC: Ewan Milne <emilne@redhat.com>
+> CC: Christoph Hellwig <hch@lst.de>
+> CC: Tomas Henzl <thenzl@redhat.com>
+> CC: Dan Williams <dan.j.williams@intel.com>
+> CC: Hannes Reinecke <hare@suse.com>
 > ---
+>  drivers/scsi/libsas/sas_expander.c | 9 ++++-----
+>  1 file changed, 4 insertions(+), 5 deletions(-)
+>
+> diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
+> index 52222940d398..0d1f72752ca2 100644
+> --- a/drivers/scsi/libsas/sas_expander.c
+> +++ b/drivers/scsi/libsas/sas_expander.c
+> @@ -48,17 +48,16 @@ static void smp_task_timedout(struct timer_list *t)
+>  	unsigned long flags;
+>
+>  	spin_lock_irqsave(&task->task_state_lock, flags);
+> -	if (!(task->task_state_flags & SAS_TASK_STATE_DONE))
+> +	if (!(task->task_state_flags & SAS_TASK_STATE_DONE)) {
+>  		task->task_state_flags |= SAS_TASK_STATE_ABORTED;
+> +		complete(&task->slow_task->completion);
 
-For IIO part.
+Nit: for consistency with any other time we use this lock, can we call 
+complete() outside the lock? Maybe just use a flag variable for this.
 
-Acked-by: Jonathan Cameron <Jonathan.Cameron-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> +	}
+>  	spin_unlock_irqrestore(&task->task_state_lock, flags);
+> -
+> -	complete(&task->slow_task->completion);
+>  }
+>
+>  static void smp_task_done(struct sas_task *task)
+>  {
+> -	if (!del_timer(&task->slow_task->timer))
+> -		return;
+> +	del_timer(&task->slow_task->timer);
+>  	complete(&task->slow_task->completion);
+>  }
+
+Do we also need this change or similar:
+static int smp_execute_task_sg(struct domain_device *dev,
+	if ((task->task_state_flags & SAS_TASK_STATE_ABORTED)) {
+		SAS_DPRINTK("smp task timed out or aborted\n");
+		i->dft->lldd_abort_task(task);
+-		if (!(task->task_state_flags & SAS_TASK_STATE_DONE)) {
+-			SAS_DPRINTK("SMP task aborted and not done\n");
+-			break;
+-		}
++		break;
+
+To me, the ABORTED and DONE states are mutually exclusive.
+
+>
+>
 
 Thanks,
-> diff --git a/drivers/iio/industrialio-core.c b/drivers/iio/industrialio-core.c
-> index a062cfddc5af..22844b94b0e9 100644
-> --- a/drivers/iio/industrialio-core.c
-> +++ b/drivers/iio/industrialio-core.c
-> @@ -1630,7 +1630,7 @@ static const struct file_operations iio_buffer_fileops = {
->  	.owner = THIS_MODULE,
->  	.llseek = noop_llseek,
->  	.unlocked_ioctl = iio_ioctl,
-> -	.compat_ioctl = iio_ioctl,
-> +	.compat_ioctl = generic_compat_ioctl_ptrarg,
->  };
->  
+John
