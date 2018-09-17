@@ -1,27 +1,35 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: sd: Contribute to randomness when running rotational device
-Date: Mon, 17 Sep 2018 02:58:16 -0400
-Message-ID: <yq1zhwgr4on.fsf@oracle.com>
-References: <20180906203719.209399-1-xueweiz@google.com>
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH 2/5] scsi: libsas: check the lldd callback correctly
+Date: Mon, 17 Sep 2018 09:11:49 +0100
+Message-ID: <ac858677-0606-665a-44fb-4042e81e83aa@huawei.com>
+References: <20180912082946.34814-1-yanaijie@huawei.com>
+ <20180912082946.34814-3-yanaijie@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180906203719.209399-1-xueweiz@google.com> (Xuewei Zhang's
-        message of "Thu, 6 Sep 2018 13:37:19 -0700")
+In-Reply-To: <20180912082946.34814-3-yanaijie@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Xuewei Zhang <xueweiz@google.com>
-Cc: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Ming Lei <ming.lei@redhat.com>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, Paolo Bonzini <pbonzini@redhat.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Aditya Kali <adityakali@google.com>, tytso@mit.edu, Guenter Roeck <groeck@chromium.org>, maze@google.com
+To: Jason Yan <yanaijie@huawei.com>, martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, zhaohongjiang@huawei.com, hare@suse.com, dan.j.williams@intel.com, jthumshirn@suse.de, hch@lst.de, huangdaode@hisilicon.com, chenxiang66@hisilicon.com, miaoxie@huawei.com, Ewan Milne <emilne@redhat.com>, Tomas Henzl <thenzl@redhat.com>, Linuxarm <linuxarm@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
+On 12/09/2018 09:29, Jason Yan wrote:
+> We are using lldd_port_deformed so we'd better check if lldd_port_deformed
+> is NULL.
+>
+> After this, we can remove hisi_sas_port_deformed() because it is just a
+> stub to avoid a NULL dereference caused by the wrong check.
+>
+> Signed-off-by: Jason Yan <yanaijie@huawei.com>
 
-Xuewei,
+Acked-by: John Garry <john.garry@huawei.com>
 
-> Currently a scsi device won't contribute to kernel randomness when it
-> uses blk-mq. Since we commonly use scsi on rotational device with
-> blk-mq, it make sense to keep contributing to kernel randomness in these
-> cases. This is especially important for virtual machines.
-
-Applied to 4.19/scsi-fixes, thank you!
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+> CC: John Garry <john.garry@huawei.com>
+> CC: Johannes Thumshirn <jthumshirn@suse.de>
+> CC: Ewan Milne <emilne@redhat.com>
+> CC: Christoph Hellwig <hch@lst.de>
+> CC: Tomas Henzl <thenzl@redhat.com>
+> CC: Dan Williams <dan.j.williams@intel.com>
+> CC: Hannes Reinecke <hare@suse.com>
+> ---
