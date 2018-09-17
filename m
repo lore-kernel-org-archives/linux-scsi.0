@@ -1,26 +1,25 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: mpt3sas: make sysfs error messages ratelimited
-Date: Mon, 17 Sep 2018 02:48:20 -0400
-Message-ID: <yq1fty8sjpn.fsf@oracle.com>
-References: <20180907103924.17598-1-colin.king@canonical.com>
+Subject: Re: [PATCHv3 0/2] String fixups in ibmvscsi
+Date: Mon, 17 Sep 2018 02:51:11 -0400
+Message-ID: <yq1bm8wsjkw.fsf@oracle.com>
+References: <20180911192226.3620-1-labbott@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180907103924.17598-1-colin.king@canonical.com> (Colin King's
-        message of "Fri, 7 Sep 2018 11:39:24 +0100")
+In-Reply-To: <20180911192226.3620-1-labbott@redhat.com> (Laura Abbott's
+        message of "Tue, 11 Sep 2018 12:22:24 -0700")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Colin King <colin.king@canonical.com>
-Cc: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Laura Abbott <labbott@redhat.com>
+Cc: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, Michael Cyr <mikecyr@linux.vnet.ibm.com>, Kees Cook <keescook@chromium.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Colin,
+Laura,
 
-> It is possible to heavily spam the kernel logs with messages by
-> excessive reading of the mpt3sas sysfs files.  Make the error messages
-> ratelimited to reduce the spamming effect.
+> This is (hopefully) the last version of the string fixups found in the
+> ibmvscsi driver.
 
-That's a bug. Please just nuke all of these.
+Applied to 4.19/scsi-fixes, thank you!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
