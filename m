@@ -1,74 +1,146 @@
-From: Hannes Reinecke <hare@suse.com>
-Subject: Re: [PATCH 5/5] scsi: libsas: fix a race condition when smp task
- timeout
-Date: Mon, 17 Sep 2018 15:57:57 +0200
-Message-ID: <58397edb-e05c-f782-1f2a-c9a1dae4b525@suse.com>
-References: <20180912082946.34814-1-yanaijie@huawei.com>
- <20180912082946.34814-6-yanaijie@huawei.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: dm-mpath: Fix setup_scsi_dh()
+Date: Mon, 17 Sep 2018 10:20:47 -0400
+Message-ID: <20180917142046.GA52842@redhat.com>
+References: <20180917033354.30745-1-bvanassche@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180912082946.34814-6-yanaijie@huawei.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jason Yan <yanaijie@huawei.com>, martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, john.garry@huawei.com, zhaohongjiang@huawei.com, dan.j.williams@intel.com, jthumshirn@suse.de, hch@lst.de, huangdaode@hisilicon.com, chenxiang66@hisilicon.com, miaoxie@huawei.com, Ewan Milne <emilne@redhat.com>, Tomas Henzl <thenzl@redhat.com>
+Return-path: <dm-devel-bounces@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <20180917033354.30745-1-bvanassche@acm.org>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: dm-devel@redhat.com, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 09/12/2018 10:29 AM, Jason Yan wrote:
-> When the lldd is processing the complete sas task in interrupt and set
-> the task stat as SAS_TASK_STATE_DONE, the smp timeout timer is able to
-> be triggered at the same time. And smp_task_timedout() will complete the
-> task wheter the SAS_TASK_STATE_DONE is set or not. Then the sas task may
-> freed before lldd end the interrupt process. Thus a use-after-free will
-> happen.
-> 
-> Fix this by calling the complete() only when SAS_TASK_STATE_DONE is not
-> set. And remove the check of the return value of the del_timer().
-> 
-> Reported-by: chenxiang <chenxiang66@hisilicon.com>
-> Signed-off-by: Jason Yan <yanaijie@huawei.com>
-> CC: John Garry <john.garry@huawei.com>
-> CC: Johannes Thumshirn <jthumshirn@suse.de>
-> CC: Ewan Milne <emilne@redhat.com>
-> CC: Christoph Hellwig <hch@lst.de>
-> CC: Tomas Henzl <thenzl@redhat.com>
-> CC: Dan Williams <dan.j.williams@intel.com>
-> CC: Hannes Reinecke <hare@suse.com>
+[dropping stable@ cc and cc'ing linux-scsi instead]
+
+On Sun, Sep 16 2018 at 11:33pm -0400,
+Bart Van Assche <bvanassche@acm.org> wrote:
+
+> This patch fixes two bugs that got introduced recently in setup_scsi_dh():
+> - Avoid that a memory leak occurs if attached_handler_name is not assigned
+>   to m->hw_handler_name.
+
+I do see potential for leak, but I'd prefer to fix it with something
+like the patch at the end of this mail.
+
+> - Avoid that m->hw_handler_name becomes a dangling pointer if the
+>   RETAIN_ATTACHED_HW_HANDLER flag is set and scsi_dh_attach() returns
+>   -EBUSY.
+
+What is the concern about a dangling pointer?  How does that manifest?
+Stale scsi_dh name stored in hw_handler_name?  Pretty sure it gets freed
+and reassigned as needed (at the start of setup_scsi_dh).
+
 > ---
->  drivers/scsi/libsas/sas_expander.c | 9 ++++-----
->  1 file changed, 4 insertions(+), 5 deletions(-)
+>  drivers/md/dm-mpath.c      | 14 +++++++++-----
+>  include/scsi/scsi_device.h |  9 +++++++++
+>  2 files changed, 18 insertions(+), 5 deletions(-)
 > 
-> diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-> index 52222940d398..0d1f72752ca2 100644
-> --- a/drivers/scsi/libsas/sas_expander.c
-> +++ b/drivers/scsi/libsas/sas_expander.c
-> @@ -48,17 +48,16 @@ static void smp_task_timedout(struct timer_list *t)
->  	unsigned long flags;
+> diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
+> index d94ba6f72ff5..0ba58a537182 100644
+> --- a/drivers/md/dm-mpath.c
+> +++ b/drivers/md/dm-mpath.c
+> @@ -867,7 +870,7 @@ static struct pgpath *parse_path(struct dm_arg_set *as, struct path_selector *ps
+>  	struct pgpath *p;
+>  	struct multipath *m = ti->private;
+>  	struct request_queue *q;
+> -	const char *attached_handler_name;
+> +	struct scsi_device *sdev;
 >  
->  	spin_lock_irqsave(&task->task_state_lock, flags);
-> -	if (!(task->task_state_flags & SAS_TASK_STATE_DONE))
-> +	if (!(task->task_state_flags & SAS_TASK_STATE_DONE)) {
->  		task->task_state_flags |= SAS_TASK_STATE_ABORTED;
-> +		complete(&task->slow_task->completion);
-> +	}
->  	spin_unlock_irqrestore(&task->task_state_lock, flags);
-> -
-> -	complete(&task->slow_task->completion);
->  }
+>  	/* we need at least a path arg */
+>  	if (as->argc < 1) {
+> @@ -887,10 +890,11 @@ static struct pgpath *parse_path(struct dm_arg_set *as, struct path_selector *ps
+>  	}
 >  
->  static void smp_task_done(struct sas_task *task)
->  {
-> -	if (!del_timer(&task->slow_task->timer))
-> -		return;
-> +	del_timer(&task->slow_task->timer);
->  	complete(&task->slow_task->completion);
->  }
->  
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+>  	q = bdev_get_queue(p->path.dev->bdev);
+> -	attached_handler_name = scsi_dh_attached_handler_name(q, GFP_KERNEL);
+> -	if (attached_handler_name || m->hw_handler_name) {
+> +	sdev = scsi_device_from_queue(q);
+> +	if (sdev) {
+> +		put_device(&sdev->sdev_gendev);
+>  		INIT_DELAYED_WORK(&p->activate_path, activate_path_work);
+> -		r = setup_scsi_dh(p->path.dev->bdev, m, attached_handler_name, &ti->error);
+> +		r = setup_scsi_dh(p->path.dev->bdev, m, &ti->error);
+>  		if (r) {
+>  			dm_put_device(ti, p->path.dev);
+>  			goto bad;
 
-Cheers,
+Just because it is a scsi device doesn't mean a scsi_dh needs to be
+established (though usually that _is_ the case).
 
-Hannes
+But bigger concern is I'd _really_ rather avoid dm-mpath instantiating
+'struct scsi_device'.
+
+scsi_dh_attached_handler_name() provides a more opaque interface.
+
+Uncompiled and untested patch to fix leak follows:
+
+diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
+index d94ba6f72ff5..688ac9e719a7 100644
+--- a/drivers/md/dm-mpath.c
++++ b/drivers/md/dm-mpath.c
+@@ -806,14 +806,14 @@ static int parse_path_selector(struct dm_arg_set *as, struct priority_group *pg,
+ }
+ 
+ static int setup_scsi_dh(struct block_device *bdev, struct multipath *m,
+-			 const char *attached_handler_name, char **error)
++			 char **attached_handler_name, char **error)
+ {
+ 	struct request_queue *q = bdev_get_queue(bdev);
+ 	int r;
+ 
+ 	if (test_bit(MPATHF_RETAIN_ATTACHED_HW_HANDLER, &m->flags)) {
+ retain:
+-		if (attached_handler_name) {
++		if (*attached_handler_name) {
+ 			/*
+ 			 * Clear any hw_handler_params associated with a
+ 			 * handler that isn't already attached.
+@@ -830,7 +830,8 @@ static int setup_scsi_dh(struct block_device *bdev, struct multipath *m,
+ 			 * handler instead of the original table passed in.
+ 			 */
+ 			kfree(m->hw_handler_name);
+-			m->hw_handler_name = attached_handler_name;
++			m->hw_handler_name = *attached_handler_name;
++			*attached_handler_name = NULL;
+ 		}
+ 	}
+ 
+@@ -867,7 +868,7 @@ static struct pgpath *parse_path(struct dm_arg_set *as, struct path_selector *ps
+ 	struct pgpath *p;
+ 	struct multipath *m = ti->private;
+ 	struct request_queue *q;
+-	const char *attached_handler_name;
++	char *attached_handler_name = NULL;
+ 
+ 	/* we need at least a path arg */
+ 	if (as->argc < 1) {
+@@ -890,7 +891,7 @@ static struct pgpath *parse_path(struct dm_arg_set *as, struct path_selector *ps
+ 	attached_handler_name = scsi_dh_attached_handler_name(q, GFP_KERNEL);
+ 	if (attached_handler_name || m->hw_handler_name) {
+ 		INIT_DELAYED_WORK(&p->activate_path, activate_path_work);
+-		r = setup_scsi_dh(p->path.dev->bdev, m, attached_handler_name, &ti->error);
++		r = setup_scsi_dh(p->path.dev->bdev, m, &attached_handler_name, &ti->error);
+ 		if (r) {
+ 			dm_put_device(ti, p->path.dev);
+ 			goto bad;
+@@ -905,6 +906,8 @@ static struct pgpath *parse_path(struct dm_arg_set *as, struct path_selector *ps
+ 
+ 	return p;
+  bad:
++	if (attached_handler_name)
++		kfree(attached_handler_name);
+ 	free_pgpath(p);
+ 	return ERR_PTR(r);
+ }
