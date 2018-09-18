@@ -1,89 +1,47 @@
-From: Nick Desaulniers <ndesaulniers@google.com>
-Subject: Re: [PATCH] scsi: mptfusion: Remove unnecessary parentheses and
- simplify null checks
-Date: Mon, 17 Sep 2018 10:29:50 -0700
-Message-ID: <CAKwvOdmi3CxLNRGH7bWgNR5eK3p5eB_U4OsDwLPkuaDgA74JtA@mail.gmail.com>
-References: <20180915063645.31295-1-natechancellor@gmail.com>
+From: "Ly, Bryant" <bly@catalogicsoftware.com>
+Subject: Re: [PATCHv3 1/2] scsi: ibmvscsis: Fix a stringop-overflow warning
+Date: Tue, 18 Sep 2018 00:37:11 +0000
+Message-ID: <B86907DE-444B-498D-A402-78190A5A402B@catalogicsoftware.com>
+References: <20180911192226.3620-1-labbott@redhat.com>
+ <20180911192226.3620-2-labbott@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=WINDOWS-1252
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180915063645.31295-1-natechancellor@gmail.com>
+In-Reply-To: <20180911192226.3620-2-labbott@redhat.com>
+Content-Language: en-US
+Content-ID: <D061C8A3AE55F84DBF2C3151C325DDD4@prod.exchangelabs.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Nathan Chancellor <natechancellor@gmail.com>
-Cc: sathya.prakash@broadcom.com, chaitra.basappa@broadcom.com, suganath-prabu.subramani@broadcom.com, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Laura Abbott <labbott@redhat.com>
+Cc: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, Michael Cyr <mikecyr@linux.vnet.ibm.com>, Kees Cook <keescook@chromium.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Sep 14, 2018 at 11:36 PM Nathan Chancellor
-<natechancellor@gmail.com> wrote:
->
-> Clang warns when multiple pairs of parentheses are used for a single
-> conditional statement.
->
-> drivers/message/fusion/mptbase.c:338:11: warning: equality comparison
-> with extraneous parentheses [-Wparentheses-equality]
->         if ((ioc == NULL))
->              ~~~~^~~~~~~
-> drivers/message/fusion/mptbase.c:338:11: note: remove extraneous
-> parentheses around the comparison to silence this warning
->         if ((ioc == NULL))
->             ~    ^      ~
-> drivers/message/fusion/mptbase.c:338:11: note: use '=' to turn this
-> equality comparison into an assignment
->         if ((ioc == NULL))
->                  ^~
->                  =
-> drivers/message/fusion/mptbase.c:342:12: warning: equality comparison
-> with extraneous parentheses [-Wparentheses-equality]
->         if ((pdev == NULL))
->              ~~~~~^~~~~~~
-> drivers/message/fusion/mptbase.c:342:12: note: remove extraneous
-> parentheses around the comparison to silence this warning
->         if ((pdev == NULL))
->             ~     ^      ~
-> drivers/message/fusion/mptbase.c:342:12: note: use '=' to turn this
-> equality comparison into an assignment
->         if ((pdev == NULL))
->                   ^~
->                   =
-> 2 warnings generated.
->
-> Remove them and while we're at it, simplify the NULL checks as '!var' is
-> used more than 'var == NULL'.
->
-> Reported-by: Nick Desaulniers <ndesaulniers@google.com>
-> Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
 
-Nathan,
-Thanks for this patch.
-Reviewed-by: Nick Desaulniers <ndesaulniers@google.com>
 
+> On Sep 11, 2018, at 2:22 PM, Laura Abbott <labbott@redhat.com> wrote:
+>=20
+> There's currently a warning about string overflow with strncat:
+>=20
+> drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c: In function 'ibmvscsis_probe':
+> drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c:3479:2: error: 'strncat' specifi=
+ed
+> bound 64 equals destination size [-Werror=3Dstringop-overflow=3D]
+>  strncat(vscsi->eye, vdev->name, MAX_EYE);
+>  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+>=20
+> Switch to a single snprintf instead of a strcpy + strcat to handle this
+> cleanly.
+>=20
+> Signed-off-by: Laura Abbott <labbott@redhat.com>
 > ---
->  drivers/message/fusion/mptbase.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-> index dc1e43a02599..ba551d8dfba4 100644
-> --- a/drivers/message/fusion/mptbase.c
-> +++ b/drivers/message/fusion/mptbase.c
-> @@ -335,11 +335,11 @@ static int mpt_remove_dead_ioc_func(void *arg)
->         MPT_ADAPTER *ioc = (MPT_ADAPTER *)arg;
->         struct pci_dev *pdev;
->
-> -       if ((ioc == NULL))
-> +       if (!ioc)
->                 return -1;
->
->         pdev = ioc->pcidev;
-> -       if ((pdev == NULL))
-> +       if (!pdev)
->                 return -1;
->
->         pci_stop_and_remove_bus_device_locked(pdev);
-> --
-> 2.18.0
->
+> v3: Make sure there is an extra space in the partition name
+> ---
+> drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 3 +--
+> 1 file changed, 1 insertion(+), 2 deletions(-)
+>=20
 
+Reviewed-by: Bryant G. Ly bly@catalogicsoftware.com
 
--- 
-Thanks,
-~Nick Desaulniers
+I sent a PR to update my email from bryantly@linux.vnet.ibm.com a week ago.
+
+-Bryant
