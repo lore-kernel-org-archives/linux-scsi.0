@@ -1,12 +1,12 @@
 From: Evan Green <evgreen@chromium.org>
-Subject: Re: [PATCH V13 2/2] scsi: ufs: Add configfs support for UFS provisioning
-Date: Tue, 18 Sep 2018 13:56:36 -0700
-Message-ID: <CAE=gft5Hfstqe38daPAGncjZjdnfL-+Fv7QGSvLtBWc7BFzwPg@mail.gmail.com>
-References: <1536918159-311-1-git-send-email-sayalil@codeaurora.org> <1536918159-311-3-git-send-email-sayalil@codeaurora.org>
+Subject: Re: [PATCH V13 1/2] scsi: ufs: set the device reference clock setting
+Date: Tue, 18 Sep 2018 13:57:09 -0700
+Message-ID: <CAE=gft7UFMSyJrZ36iNay-nt6jywzucd4MOeAcErEJg9vpRhwQ@mail.gmail.com>
+References: <1536918159-311-1-git-send-email-sayalil@codeaurora.org> <1536918159-311-2-git-send-email-sayalil@codeaurora.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1536918159-311-3-git-send-email-sayalil@codeaurora.org>
+In-Reply-To: <1536918159-311-2-git-send-email-sayalil@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: sayali <sayalil@codeaurora.org>
 Cc: subhashj@codeaurora.org, cang@codeaurora.org, vivek.gautam@codeaurora.org, Rajendra Nayak <rnayak@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, asutoshd@codeaurora.org, riteshh@codeaurora.org, stummala@codeaurora.org, adrian.hunter@intel.com, Joel Becker <jlbec@evilplan.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
@@ -14,158 +14,150 @@ List-Id: linux-scsi@vger.kernel.org
 
 On Fri, Sep 14, 2018 at 2:43 AM Sayali Lokhande <sayalil@codeaurora.org> wrote:
 >
-> This patch adds configfs support to provision UFS device at
-> runtime. This feature can be primarily useful in factory or
-> assembly line as some devices may be required to be configured
-> multiple times during initial system development phase.
-> Configuration Descriptors can be written multiple times until
-> bConfigDescrLock attribute is zero.
+> From: Subhash Jadavani <subhashj@codeaurora.org>
 >
-> Configuration descriptor buffer consists of Device and Unit
-> descriptor configurable parameters which are parsed from vendor
-> specific provisioning file and then passed via configfs node at
-> runtime to provision ufs device.
-> CONFIG_CONFIGFS_FS and CONFIG_UFS_PROVISION needs to be enabled
-> for using this feature.
+> UFS host supplies the reference clock to UFS device and UFS device
+> specification allows host to provide one of the 4 frequencies (19.2 MHz,
+> 26 MHz, 38.4 MHz, 52 MHz) for reference clock. Host should set the
+> device reference clock frequency setting in the device based on what
+> frequency it is supplying to UFS device.
 >
-> Usage:
-> 1) To read current configuration descriptor with index X
->    (where index X can be 0/1/2/3) :
->    cat /config/<device_name>/ufs_config_desc_X
->
-> 2) To write configuration descriptor with index X :
->    echo <config_desc_buf> > /config/<device_name>/ufs_config_desc_X
->
+> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+> Signed-off-by: Can Guo <cang@codeaurora.org>
 > Signed-off-by: Sayali Lokhande <sayalil@codeaurora.org>
 > ---
-...
-> diff --git a/drivers/scsi/ufs/ufs-configfs.c b/drivers/scsi/ufs/ufs-configfs.c
-> new file mode 100644
-> index 0000000..84ccb1a
-> --- /dev/null
-> +++ b/drivers/scsi/ufs/ufs-configfs.c
-> @@ -0,0 +1,237 @@
-...
-> +static ssize_t ufs_config_desc_0_show(struct config_item *item, char *buf)
+>  drivers/scsi/ufs/ufs.h           | 14 +++++++
+>  drivers/scsi/ufs/ufshcd-pltfrm.c |  2 +
+>  drivers/scsi/ufs/ufshcd.c        | 90 ++++++++++++++++++++++++++++++++++++++++
+>  drivers/scsi/ufs/ufshcd.h        |  2 +
+>  4 files changed, 108 insertions(+)
+>
+> diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+> index 14e5bf7..a2e76b1 100644
+> --- a/drivers/scsi/ufs/ufs.h
+> +++ b/drivers/scsi/ufs/ufs.h
+> @@ -378,6 +378,20 @@ enum query_opcode {
+>         UPIU_QUERY_OPCODE_TOGGLE_FLAG   = 0x8,
+>  };
+>
+> +/* bRefClkFreq attribute values */
+> +enum ufs_ref_clk_freq {
+> +       REF_CLK_FREQ_19_2_MHZ   = 0,
+> +       REF_CLK_FREQ_26_MHZ     = 1,
+> +       REF_CLK_FREQ_38_4_MHZ   = 2,
+> +       REF_CLK_FREQ_52_MHZ     = 3,
+> +       REF_CLK_FREQ_INVAL      = -1,
+> +};
+> +
+> +struct ufs_ref_clk {
+> +       u32 freq_hz;
+> +       enum ufs_ref_clk_freq val;
+> +};
+> +
+>  /* Query response result code */
+>  enum {
+>         QUERY_RESULT_SUCCESS                    = 0x00,
+> diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
+> index e82bde0..0953563 100644
+> --- a/drivers/scsi/ufs/ufshcd-pltfrm.c
+> +++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
+> @@ -343,6 +343,8 @@ int ufshcd_pltfrm_init(struct platform_device *pdev,
+>         pm_runtime_set_active(&pdev->dev);
+>         pm_runtime_enable(&pdev->dev);
+>
+> +       ufshcd_parse_dev_ref_clk_freq(hba);
+> +
+>         ufshcd_init_lanes_per_dir(hba);
+>
+>         err = ufshcd_init(hba, mmio_base, irq);
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index c5b1bf1..e01cdc0 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -6296,6 +6296,89 @@ static void ufshcd_def_desc_sizes(struct ufs_hba *hba)
+>         hba->desc_size.hlth_desc = QUERY_DESC_HEALTH_DEF_SIZE;
+>  }
+>
+> +static struct ufs_ref_clk ufs_ref_clk_freqs[] = {
+> +       {19200000, REF_CLK_FREQ_19_2_MHZ},
+> +       {26000000, REF_CLK_FREQ_26_MHZ},
+> +       {38400000, REF_CLK_FREQ_38_4_MHZ},
+> +       {52000000, REF_CLK_FREQ_52_MHZ},
+> +       {0, REF_CLK_FREQ_INVAL},
+> +};
+> +
+> +static inline enum ufs_ref_clk_freq
+> +ufs_get_bref_clk_from_hz(u32 freq)
 > +{
-> +       return ufs_config_desc_show(item, buf, 0);
+> +       int i = 0;
+> +
+> +       while (ufs_ref_clk_freqs[i].freq_hz != freq) {
+> +               if (!ufs_ref_clk_freqs[i].freq_hz)
+> +                       return REF_CLK_FREQ_INVAL;
+> +               i++;
+> +       }
+> +
+> +       return ufs_ref_clk_freqs[i].val;
 > +}
 > +
-> +static ssize_t ufs_config_desc_0_store(struct config_item *item,
-> +                                      const char *buf, size_t count)
+> +void ufshcd_parse_dev_ref_clk_freq(struct ufs_hba *hba)
 > +{
-> +       return ufshcd_desc_configfs_store(item, buf, count, 0);
+> +       struct device *dev = hba->dev;
+> +       struct device_node *np = dev->of_node;
+> +       struct clk *refclk = NULL;
+> +       u32 freq = 0;
+> +
+> +       if (!np)
+> +               return;
+> +
+> +       refclk = of_clk_get_by_name(np, "ref_clk");
+> +       if (!refclk)
+> +               return;
+> +
+> +       freq = clk_get_rate(refclk);
+> +
+> +       hba->dev_ref_clk_freq =
+> +               ufs_get_bref_clk_from_hz(freq);
+> +
+> +       if (hba->dev_ref_clk_freq == REF_CLK_FREQ_INVAL)
+> +               dev_err(hba->dev,
+> +               "%s: invalid ref_clk setting = %d\n",
+> +               __func__, freq);
 > +}
 > +
-> +static ssize_t ufs_config_desc_1_show(struct config_item *item, char *buf)
+> +static int ufshcd_set_dev_ref_clk(struct ufs_hba *hba)
 > +{
-> +       return ufs_config_desc_show(item, buf, 1);
-> +}
+> +       int err, ref_clk = -1;
+> +       u32 freq = hba->dev_ref_clk_freq;
 > +
-> +static ssize_t ufs_config_desc_1_store(struct config_item *item,
-> +                                      const char *buf, size_t count)
-> +{
-> +       return ufshcd_desc_configfs_store(item, buf, count, 1);
-> +}
+> +       err = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_READ_ATTR,
+> +                       QUERY_ATTR_IDN_REF_CLK_FREQ, 0, 0, &ref_clk);
 > +
-> +static ssize_t ufs_config_desc_2_show(struct config_item *item, char *buf)
-> +{
-> +       return ufs_config_desc_show(item, buf, 2);
-> +}
+> +       if (err) {
+> +               dev_err(hba->dev, "%s: failed reading bRefClkFreq. err = %d\n",
+> +                        __func__, err);
+> +               goto out;
+> +       }
 > +
-> +static ssize_t ufs_config_desc_2_store(struct config_item *item,
-> +                                      const char *buf, size_t count)
-> +{
-> +       return ufshcd_desc_configfs_store(item, buf, count, 2);
-> +}
+> +       if (ref_clk == hba->dev_ref_clk_freq)
+> +               goto out; /* nothing to update */
 > +
-> +static ssize_t ufs_config_desc_3_show(struct config_item *item, char *buf)
-> +{
-> +       return ufs_config_desc_show(item, buf, 3);
-> +}
+> +       err = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
+> +                       QUERY_ATTR_IDN_REF_CLK_FREQ, 0, 0, &freq);
 > +
-> +static ssize_t ufs_config_desc_3_store(struct config_item *item,
-> +                                      const char *buf, size_t count)
-> +{
-> +       return ufshcd_desc_configfs_store(item, buf, count, 3);
-> +}
+> +       if (err) {
+> +               dev_err(hba->dev, "%s: bRefClkFreq setting to %u Hz failed\n",
+> +               __func__, ufs_ref_clk_freqs[freq].freq_hz);
+> +               goto out;
+> +       }
+> +       /*
+> +        * It is good to print this out here to debug any later failures
+> +        * related to gear switch.
+> +        */
+> +       dev_dbg(hba->dev, "%s: bRefClkFreq setting to %u Hz succeeded\n",
+> +               __func__, ufs_ref_clk_freqs[freq].freq_hz);
 > +
 
-The copypasta above and below is not my favorite, but I suppose it's
-either this or wrap it all up in a macro that you stamp down 4 times.
-I'm not sure if that's really any cleaner, so I guess this is fine.
+The comment above doesn't add any value in my opinion. Other than that:
 
-> +static struct configfs_attribute ufshcd_attr_provision_0 = {
-> +       .ca_name        = "ufs_config_desc_0",
-> +       .ca_mode        = 0644,
-> +       .ca_owner       = THIS_MODULE,
-> +       .show           = ufs_config_desc_0_show,
-> +       .store          = ufs_config_desc_0_store,
-> +};
-> +
-> +static struct configfs_attribute ufshcd_attr_provision_1 = {
-> +       .ca_name        = "ufs_config_desc_1",
-> +       .ca_mode        = 0644,
-> +       .ca_owner       = THIS_MODULE,
-> +       .show           = ufs_config_desc_1_show,
-> +       .store          = ufs_config_desc_1_store,
-> +};
-> +
-> +static struct configfs_attribute ufshcd_attr_provision_2 = {
-> +       .ca_name        = "ufs_config_desc_2",
-> +       .ca_mode        = 0644,
-> +       .ca_owner       = THIS_MODULE,
-> +       .show           = ufs_config_desc_2_show,
-> +       .store          = ufs_config_desc_2_store,
-> +};
-> +
-> +static struct configfs_attribute ufshcd_attr_provision_3 = {
-> +       .ca_name        = "ufs_config_desc_3",
-> +       .ca_mode        = 0644,
-> +       .ca_owner       = THIS_MODULE,
-> +       .show           = ufs_config_desc_3_show,
-> +       .store          = ufs_config_desc_3_store,
-> +};
-> +
-> +static struct configfs_attribute *ufshcd_attrs[] = {
-> +       &ufshcd_attr_provision_0,
-> +       &ufshcd_attr_provision_1,
-> +       &ufshcd_attr_provision_2,
-> +       &ufshcd_attr_provision_3,
-> +       NULL,
-> +};
-> +
-> +static struct config_item_type ufscfg_type = {
-> +       .ct_attrs       = ufshcd_attrs,
-> +       .ct_owner       = THIS_MODULE,
-> +};
-> +
-> +void ufshcd_configfs_init(struct ufs_hba *hba, const char *name)
-> +{
-> +       int ret;
-> +       struct config_item *cg_item;
-> +       struct configfs_subsystem *subsys;
-> +
-> +       cg_item = &hba->subsys.su_group.cg_item;
-> +       sprintf(cg_item->ci_namebuf, "%s", name);
-
-CONFIGFS_ITEM_NAME_LEN is only 20. Is there anything preventing the
-device name passed in here from being longer than that? You'd have a
-nasty overrun on your hands if not. Maybe snprintf here?
-
-> +       cg_item->ci_type = &ufscfg_type;
-> +
-> +       subsys = &hba->subsys;
-> +       config_group_init(&subsys->su_group);
-> +       mutex_init(&subsys->su_mutex);
-> +       ret = configfs_register_subsystem(subsys);
-> +       if (ret)
-> +               pr_err("Error %d while registering subsystem %s\n",
-> +                      ret,
-> +                      subsys->su_group.cg_item.ci_namebuf);
-> +}
-> +
-> +void ufshcd_configfs_exit(struct ufs_hba *hba)
-> +{
-> +       configfs_unregister_subsystem(&hba->subsys);
-> +}
+Reviewed-by: Evan Green <evgreen@chromium.org>
