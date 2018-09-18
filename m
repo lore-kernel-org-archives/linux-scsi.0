@@ -1,27 +1,56 @@
 From: zhong jiang <zhongjiang@huawei.com>
-Subject: Re: [PATCH v2] scsi: Use vmemdup_user to replace the open code
-Date: Tue, 18 Sep 2018 23:13:36 +0800
-Message-ID: <5BA11620.5030900@huawei.com>
-References: <1534164200-28408-1-git-send-email-zhongjiang@huawei.com> <BYAPR11MB28555A88771594AA31AC7596E1390@BYAPR11MB2855.namprd11.prod.outlook.com> <5B7E9CCE.5010007@huawei.com> <5BA11315.4060908@huawei.com> <yq11s9qrgez.fsf@oracle.com>
+Subject: [RESEND PATCH v2] scsi: Use vmemdup_user to replace the open code
+Date: Tue, 18 Sep 2018 23:54:41 +0800
+Message-ID: <1537286081-63081-1-git-send-email-zhongjiang@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <yq11s9qrgez.fsf@oracle.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Greg KH <gregkh@linuxfoundation.org>, Don.Brace@microchip.com, don.brace@microsemi.com, jejb@linux.vnet.ibm.com, linux-kernel@vger.kernel.org, "\"linux-scsi@vger.kernel.org\" ar" <linux-scsi@vger.kernel.org>
+To: martin.petersen@oracle.com
+Cc: don.brace@microsemi.com, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 2018/9/18 23:09, Martin K. Petersen wrote:
-> Hi Zhong,
->
->> Can you pick up the patch?
-> Please submit SCSI patches to linux-scsi@vger.kernel.org so they get
-> tracked in patchwork.
-Ok,   Should I resend the patch ? 
+vmemdup_user is better than duplicating its implementation, So just
+replace the open code.
 
-Thanks,
-zhong jiang
-> Thank you!
->
+The issue is detected with the help of Coccinelle.
+
+Tested-by: Don Brace <don.brace@microsemi.com>
+Acked-by: Don Brace <don.brace@microsemi.com>
+Signed-off-by: zhong jiang <zhongjiang@huawei.com>
+---
+ drivers/scsi/hpsa.c | 12 ++++--------
+ 1 file changed, 4 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 58bb70b..666ba09e5 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -6381,13 +6381,9 @@ static int hpsa_big_passthru_ioctl(struct ctlr_info *h, void __user *argp)
+ 		return -EINVAL;
+ 	if (!capable(CAP_SYS_RAWIO))
+ 		return -EPERM;
+-	ioc = kmalloc(sizeof(*ioc), GFP_KERNEL);
+-	if (!ioc) {
+-		status = -ENOMEM;
+-		goto cleanup1;
+-	}
+-	if (copy_from_user(ioc, argp, sizeof(*ioc))) {
+-		status = -EFAULT;
++	ioc = vmemdup_user(argp, sizeof(*ioc));
++	if (IS_ERR(ioc)) {
++		status = PTR_ERR(ioc);
+ 		goto cleanup1;
+ 	}
+ 	if ((ioc->buf_size < 1) &&
+@@ -6505,7 +6501,7 @@ static int hpsa_big_passthru_ioctl(struct ctlr_info *h, void __user *argp)
+ 		kfree(buff);
+ 	}
+ 	kfree(buff_size);
+-	kfree(ioc);
++	kvfree(ioc);
+ 	return status;
+ }
+ 
+-- 
+1.7.12.4
