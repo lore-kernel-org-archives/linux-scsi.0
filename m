@@ -1,27 +1,26 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH v2 5/5] scsi: libsas: fix a race condition when smp task
- timeout
-Date: Wed, 19 Sep 2018 16:57:52 +0200
-Message-ID: <20180919145752.GE3635@linux-x5ow.site>
-References: <20180919033204.11102-1-yanaijie@huawei.com>
- <20180919033204.11102-6-yanaijie@huawei.com>
+From: Greg Kroah-Hartman <greg@kroah.com>
+Subject: Re: [GIT PULL] SCSI fixes for 4.19-rc3
+Date: Wed, 19 Sep 2018 22:59:02 +0200
+Message-ID: <20180919205902.GA7233@kroah.com>
+References: <1537355685.4640.5.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20180919033204.11102-6-yanaijie@huawei.com>
+In-Reply-To: <1537355685.4640.5.camel@HansenPartnership.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jason Yan <yanaijie@huawei.com>
-Cc: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, john.garry@huawei.com, zhaohongjiang@huawei.com, hare@suse.com, dan.j.williams@intel.com, hch@lst.de, huangdaode@hisilicon.com, chenxiang66@hisilicon.com, miaoxie@huawei.com, Ewan Milne <emilne@redhat.com>, Tomas Henzl <thenzl@redhat.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Looks good,
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+On Wed, Sep 19, 2018 at 07:14:45AM -0400, James Bottomley wrote:
+> A couple of small but important fixes, one affecting big endian and the
+> other fixing a BUG_ON in scatterlist processing.
+> 
+> The patch is available here:
+> 
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+
+Now pulled, thanks.
+
+greg k-h
