@@ -1,16 +1,15 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH v2 1/5] scsi: libsas: delete dead code in
- scsi_transport_sas.c
-Date: Wed, 19 Sep 2018 16:54:39 +0200
-Message-ID: <20180919145438.GB3635@linux-x5ow.site>
+Subject: Re: [PATCH v2 2/5] scsi: libsas: check the lldd callback correctly
+Date: Wed, 19 Sep 2018 16:56:46 +0200
+Message-ID: <20180919145646.GC3635@linux-x5ow.site>
 References: <20180919033204.11102-1-yanaijie@huawei.com>
- <20180919033204.11102-2-yanaijie@huawei.com>
+ <20180919033204.11102-3-yanaijie@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20180919033204.11102-2-yanaijie@huawei.com>
+In-Reply-To: <20180919033204.11102-3-yanaijie@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Jason Yan <yanaijie@huawei.com>
 Cc: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, john.garry@huawei.com, zhaohongjiang@huawei.com, hare@suse.com, dan.j.williams@intel.com, hch@lst.de, huangdaode@hisilicon.com, chenxiang66@hisilicon.com, miaoxie@huawei.com, Ewan Milne <emilne@redhat.com>, Tomas Henzl <thenzl@redhat.com>
