@@ -1,76 +1,138 @@
-From: John Garry <john.garry@huawei.com>
-Subject: Re: [PATCH v2 5/5] scsi: libsas: fix a race condition when smp task
- timeout
-Date: Wed, 19 Sep 2018 09:42:45 +0100
-Message-ID: <e4383f9f-7fd8-be48-3ea2-5e65dceae584@huawei.com>
-References: <20180919033204.11102-1-yanaijie@huawei.com>
- <20180919033204.11102-6-yanaijie@huawei.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 4.19-rc3
+Date: Wed, 19 Sep 2018 07:14:45 -0400
+Message-ID: <1537355685.4640.5.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180919033204.11102-6-yanaijie@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jason Yan <yanaijie@huawei.com>, martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, zhaohongjiang@huawei.com, hare@suse.com, dan.j.williams@intel.com, jthumshirn@suse.de, hch@lst.de, huangdaode@hisilicon.com, chenxiang66@hisilicon.com, miaoxie@huawei.com, Ewan Milne <emilne@redhat.com>, Tomas Henzl <thenzl@redhat.com>
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Greg Kroah-Hartman <greg@kroah.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 19/09/2018 04:32, Jason Yan wrote:
-> When the lldd is processing the complete sas task in interrupt and set
-> the task stat as SAS_TASK_STATE_DONE, the smp timeout timer is able to
-> be triggered at the same time. And smp_task_timedout() will complete the
-> task wheter the SAS_TASK_STATE_DONE is set or not. Then the sas task may
-> freed before lldd end the interrupt process. Thus a use-after-free will
-> happen.
->
-> Fix this by calling the complete() only when SAS_TASK_STATE_DONE is not
-> set. And remove the check of the return value of the del_timer(). Once
-> the LLDD sets DONE, it must call task->done(), which will call
-> smp_task_done()->complete() and the task will be completed and freed
-> correctly.
->
-> Reported-by: chenxiang <chenxiang66@hisilicon.com>
-> Signed-off-by: Jason Yan <yanaijie@huawei.com>
-> CC: John Garry <john.garry@huawei.com>
-> CC: Johannes Thumshirn <jthumshirn@suse.de>
-> CC: Ewan Milne <emilne@redhat.com>
-> CC: Christoph Hellwig <hch@lst.de>
-> CC: Tomas Henzl <thenzl@redhat.com>
-> CC: Dan Williams <dan.j.williams@intel.com>
-> CC: Hannes Reinecke <hare@suse.com>
+A couple of small but important fixes, one affecting big endian and the
+other fixing a BUG_ON in scatterlist processing.
 
-Uh, I should have added this for my last comment on v1:
-Reviewed-by: John Garry <john.garry@huawei.com>
+The patch is available here:
 
-> Reviewed-by: Hannes Reinecke <hare@suse.com>
-> ---
->  drivers/scsi/libsas/sas_expander.c | 9 ++++-----
->  1 file changed, 4 insertions(+), 5 deletions(-)
->
-> diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-> index 52222940d398..0d1f72752ca2 100644
-> --- a/drivers/scsi/libsas/sas_expander.c
-> +++ b/drivers/scsi/libsas/sas_expander.c
-> @@ -48,17 +48,16 @@ static void smp_task_timedout(struct timer_list *t)
->  	unsigned long flags;
->
->  	spin_lock_irqsave(&task->task_state_lock, flags);
-> -	if (!(task->task_state_flags & SAS_TASK_STATE_DONE))
-> +	if (!(task->task_state_flags & SAS_TASK_STATE_DONE)) {
->  		task->task_state_flags |= SAS_TASK_STATE_ABORTED;
-> +		complete(&task->slow_task->completion);
-> +	}
->  	spin_unlock_irqrestore(&task->task_state_lock, flags);
-> -
-> -	complete(&task->slow_task->completion);
->  }
->
->  static void smp_task_done(struct sas_task *task)
->  {
-> -	if (!del_timer(&task->slow_task->timer))
-> -		return;
-> +	del_timer(&task->slow_task->timer);
->  	complete(&task->slow_task->completion);
->  }
->
->
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+
+The short changelog is:
+
+Dan Carpenter (1):
+      scsi: qla2xxx: Fix an endian bug in fcpcmd_is_corrupted()
+
+Laura Abbott (1):
+      scsi: iscsi: target: Don't use stack buffer for scatterlist
+
+And the diffstat:
+
+ drivers/scsi/qla2xxx/qla_target.h   |  4 ++--
+ drivers/target/iscsi/iscsi_target.c | 22 ++++++++++++++--------
+ 2 files changed, 16 insertions(+), 10 deletions(-)
+
+With full diff below.
+
+James
+
+---
+
+diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
+index fecf96f0225c..199d3ba1916d 100644
+--- a/drivers/scsi/qla2xxx/qla_target.h
++++ b/drivers/scsi/qla2xxx/qla_target.h
+@@ -374,8 +374,8 @@ struct atio_from_isp {
+ static inline int fcpcmd_is_corrupted(struct atio *atio)
+ {
+ 	if (atio->entry_type == ATIO_TYPE7 &&
+-	    (le16_to_cpu(atio->attr_n_length & FCP_CMD_LENGTH_MASK) <
+-	    FCP_CMD_LENGTH_MIN))
++	    ((le16_to_cpu(atio->attr_n_length) & FCP_CMD_LENGTH_MASK) <
++	     FCP_CMD_LENGTH_MIN))
+ 		return 1;
+ 	else
+ 		return 0;
+diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+index 9cdfccbdd06f..cc756a123fd8 100644
+--- a/drivers/target/iscsi/iscsi_target.c
++++ b/drivers/target/iscsi/iscsi_target.c
+@@ -1416,7 +1416,8 @@ static void iscsit_do_crypto_hash_buf(struct ahash_request *hash,
+ 
+ 	sg_init_table(sg, ARRAY_SIZE(sg));
+ 	sg_set_buf(sg, buf, payload_length);
+-	sg_set_buf(sg + 1, pad_bytes, padding);
++	if (padding)
++		sg_set_buf(sg + 1, pad_bytes, padding);
+ 
+ 	ahash_request_set_crypt(hash, sg, data_crc, payload_length + padding);
+ 
+@@ -3910,10 +3911,14 @@ static bool iscsi_target_check_conn_state(struct iscsi_conn *conn)
+ static void iscsit_get_rx_pdu(struct iscsi_conn *conn)
+ {
+ 	int ret;
+-	u8 buffer[ISCSI_HDR_LEN], opcode;
++	u8 *buffer, opcode;
+ 	u32 checksum = 0, digest = 0;
+ 	struct kvec iov;
+ 
++	buffer = kcalloc(ISCSI_HDR_LEN, sizeof(*buffer), GFP_KERNEL);
++	if (!buffer)
++		return;
++
+ 	while (!kthread_should_stop()) {
+ 		/*
+ 		 * Ensure that both TX and RX per connection kthreads
+@@ -3921,7 +3926,6 @@ static void iscsit_get_rx_pdu(struct iscsi_conn *conn)
+ 		 */
+ 		iscsit_thread_check_cpumask(conn, current, 0);
+ 
+-		memset(buffer, 0, ISCSI_HDR_LEN);
+ 		memset(&iov, 0, sizeof(struct kvec));
+ 
+ 		iov.iov_base	= buffer;
+@@ -3930,7 +3934,7 @@ static void iscsit_get_rx_pdu(struct iscsi_conn *conn)
+ 		ret = rx_data(conn, &iov, 1, ISCSI_HDR_LEN);
+ 		if (ret != ISCSI_HDR_LEN) {
+ 			iscsit_rx_thread_wait_for_tcp(conn);
+-			return;
++			break;
+ 		}
+ 
+ 		if (conn->conn_ops->HeaderDigest) {
+@@ -3940,7 +3944,7 @@ static void iscsit_get_rx_pdu(struct iscsi_conn *conn)
+ 			ret = rx_data(conn, &iov, 1, ISCSI_CRC_LEN);
+ 			if (ret != ISCSI_CRC_LEN) {
+ 				iscsit_rx_thread_wait_for_tcp(conn);
+-				return;
++				break;
+ 			}
+ 
+ 			iscsit_do_crypto_hash_buf(conn->conn_rx_hash, buffer,
+@@ -3964,7 +3968,7 @@ static void iscsit_get_rx_pdu(struct iscsi_conn *conn)
+ 		}
+ 
+ 		if (conn->conn_state == TARG_CONN_STATE_IN_LOGOUT)
+-			return;
++			break;
+ 
+ 		opcode = buffer[0] & ISCSI_OPCODE_MASK;
+ 
+@@ -3975,13 +3979,15 @@ static void iscsit_get_rx_pdu(struct iscsi_conn *conn)
+ 			" while in Discovery Session, rejecting.\n", opcode);
+ 			iscsit_add_reject(conn, ISCSI_REASON_PROTOCOL_ERROR,
+ 					  buffer);
+-			return;
++			break;
+ 		}
+ 
+ 		ret = iscsi_target_rx_opcode(conn, buffer);
+ 		if (ret < 0)
+-			return;
++			break;
+ 	}
++
++	kfree(buffer);
+ }
+ 
+ int iscsi_target_rx_thread(void *arg)
