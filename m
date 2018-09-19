@@ -1,7 +1,7 @@
 From: Jason Yan <yanaijie@huawei.com>
-Subject: [PATCH v2 1/5] scsi: libsas: delete dead code in scsi_transport_sas.c
-Date: Wed, 19 Sep 2018 11:32:00 +0800
-Message-ID: <20180919033204.11102-2-yanaijie@huawei.com>
+Subject: [PATCH v2 4/5] scsi: libsas: check the ata device status by ata_dev_enabled()
+Date: Wed, 19 Sep 2018 11:32:03 +0800
+Message-ID: <20180919033204.11102-5-yanaijie@huawei.com>
 References: <20180919033204.11102-1-yanaijie@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,8 +12,24 @@ To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, john.garry@huawei.com, zhaohongjiang@huawei.com, hare@suse.com, dan.j.williams@intel.com, jthumshirn@suse.de, hch@lst.de, huangdaode@hisilicon.com, chenxiang66@hisilicon.com, miaoxie@huawei.com, Jason Yan <yanaijie@huawei.com>, Ewan Milne <emilne@redhat.com>, Tomas Henzl <thenzl@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-This code is dead and no clue implies that it will be back again.
+When ata device IDENTIFY failed, the ata device status is
+ATA_DEV_UNKNOWN. The libata reported like:
 
+[113518.620433] ata5.00: qc timeout (cmd 0xec)
+[113518.653646] ata5.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+
+But libsas verifies the device status by ata_dev_disabled(), which
+skipped ATA_DEV_UNKNOWN. This will make libsas think the ata device
+probing succeed the device cannot be actually brought up. And even the
+new bcast of this device will be considered as flutter and will not
+probe this device again.
+
+Change ata_dev_disabled() to !ata_dev_enabled() so that libsas can
+deal with this if the ata device probe failed. New bcasts can let us
+try to probe the device again and bring it up if it is fine to
+IDENTIFY.
+
+Tested-by: Zhou Yupeng <zhouyupeng1@huawei.com>
 Signed-off-by: Jason Yan <yanaijie@huawei.com>
 CC: John Garry <john.garry@huawei.com>
 CC: Johannes Thumshirn <jthumshirn@suse.de>
@@ -22,32 +38,24 @@ CC: Christoph Hellwig <hch@lst.de>
 CC: Tomas Henzl <thenzl@redhat.com>
 CC: Dan Williams <dan.j.williams@intel.com>
 CC: Hannes Reinecke <hare@suse.com>
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 Reviewed-by: John Garry <john.garry@huawei.com>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/scsi_transport_sas.c | 2 --
- 1 file changed, 2 deletions(-)
+ drivers/scsi/libsas/sas_ata.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
-index 0cd16e80b019..0a165b2b3e81 100644
---- a/drivers/scsi/scsi_transport_sas.c
-+++ b/drivers/scsi/scsi_transport_sas.c
-@@ -612,7 +612,6 @@ sas_phy_protocol_attr(identify.target_port_protocols,
- sas_phy_simple_attr(identify.sas_address, sas_address, "0x%016llx\n",
- 		unsigned long long);
- sas_phy_simple_attr(identify.phy_identifier, phy_identifier, "%d\n", u8);
--//sas_phy_simple_attr(port_identifier, port_identifier, "%d\n", int);
- sas_phy_linkspeed_attr(negotiated_linkrate);
- sas_phy_linkspeed_attr(minimum_linkrate_hw);
- sas_phy_linkspeed_rw_attr(minimum_linkrate);
-@@ -1802,7 +1801,6 @@ sas_attach_transport(struct sas_function_template *ft)
- 	SETUP_PHY_ATTRIBUTE(device_type);
- 	SETUP_PHY_ATTRIBUTE(sas_address);
- 	SETUP_PHY_ATTRIBUTE(phy_identifier);
--	//SETUP_PHY_ATTRIBUTE(port_identifier);
- 	SETUP_PHY_ATTRIBUTE(negotiated_linkrate);
- 	SETUP_PHY_ATTRIBUTE(minimum_linkrate_hw);
- 	SETUP_PHY_ATTRIBUTE_RW(minimum_linkrate);
+diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+index 64a958a99f6a..4f6cdf53e913 100644
+--- a/drivers/scsi/libsas/sas_ata.c
++++ b/drivers/scsi/libsas/sas_ata.c
+@@ -654,7 +654,7 @@ void sas_probe_sata(struct asd_sas_port *port)
+ 		/* if libata could not bring the link up, don't surface
+ 		 * the device
+ 		 */
+-		if (ata_dev_disabled(sas_to_ata_dev(dev)))
++		if (!ata_dev_enabled(sas_to_ata_dev(dev)))
+ 			sas_fail_probe(dev, __func__, -ENODEV);
+ 	}
+ 
 -- 
 2.14.4
