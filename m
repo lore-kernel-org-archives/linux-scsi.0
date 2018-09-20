@@ -1,11 +1,11 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
 Subject: [PATCH] scsi: sd: don't crash the host on invalid commands
-Date: Thu, 20 Sep 2018 09:15:50 +0200
-Message-ID: <20180920071550.9866-1-jthumshirn@suse.de>
+Date: Thu, 20 Sep 2018 09:19:07 +0200
+Message-ID: <20180920071907.10102-1-jthumshirn@suse.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Johannes Thumshirn <jthumshirn@suse.de>, Hannes Reinecke <hare@suse.de>, Bart Van Asche <bvanasche@acm.org>, Christoph Hellwig <hch@lst.de>
+Cc: Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Johannes Thumshirn <jthumshirn@suse.de>, Hannes Reinecke <hare@suse.de>, Bart Van Assche <bvanassche@acm.org>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
 When sd_init_command() get's a with a unknown req_op() it crashes the
@@ -20,9 +20,11 @@ gracefully and return an I/O error to the producer of the request.
 
 Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
 Cc: Hannes Reinecke <hare@suse.de>
-Cc: Bart Van Asche <bvanasche@acm.org>
+Cc: Bart Van Assche <bvanassche@acm.org>
 Cc: Christoph Hellwig <hch@lst.de>
 ---
+Fixed Typo in Bart's mail, sorry for this.
+
  drivers/scsi/sd.c | 3 ++-
  1 file changed, 2 insertions(+), 1 deletion(-)
 
