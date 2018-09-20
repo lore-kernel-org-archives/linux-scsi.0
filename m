@@ -1,85 +1,65 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: Re: [PATCH 4/6] qla2xxx_nvmet: Add FC-NVMe Target handling
-Date: Thu, 20 Sep 2018 12:57:14 +0300
-Message-ID: <20180920095713.o7wqmeb4nwricksp@mwanda>
-References: <20180914212811.11463-5-himanshu.madhani@cavium.com>
+From: Janek Kotas <jank@cadence.com>
+Subject: [PATCH v4 1/2] dt-bindings: ufs: Add bindings for Cadence UFS
+Date: Thu, 20 Sep 2018 13:08:22 +0000
+Message-ID: <9429A347-939A-44C6-BDBE-A892F5BCBD47@global.cadence.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <kbuild-bounces@lists.01.org>
-Content-Disposition: inline
-In-Reply-To: <20180914212811.11463-5-himanshu.madhani@cavium.com>
-List-Unsubscribe: <https://lists.01.org/mailman/options/kbuild>,
- <mailto:kbuild-request@lists.01.org?subject=unsubscribe>
-List-Archive: <http://lists.01.org/pipermail/kbuild/>
-List-Post: <mailto:kbuild@lists.01.org>
-List-Help: <mailto:kbuild-request@lists.01.org?subject=help>
-List-Subscribe: <https://lists.01.org/mailman/listinfo/kbuild>,
- <mailto:kbuild-request@lists.01.org?subject=subscribe>
-Errors-To: kbuild-bounces@lists.01.org
-Sender: "kbuild" <kbuild-bounces@lists.01.org>
-To: kbuild@01.org
-Cc: James.Bottomley@HansenPartnership.com, himanshu.madhani@cavium.com, kbuild-all@01.org, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Language: en-US
+Content-ID: <434C8ECFBAFC2746BBFC95BE3C9A8644@namprd07.prod.outlook.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "robh+dt@kernel.org" <robh+dt@kernel.org>, "mark.rutland@arm.com" <mark.rutland@arm.com>, "vinholikatti@gmail.com" <vinholikatti@gmail.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Anil,
+This patch adds a DT binding documentation for
+Cadence UFS Host Controller.
 
-I love your patch! Perhaps something to improve:
+Signed-off-by: Jan Kotas <jank@cadence.com>
+---
+ .../devicetree/bindings/ufs/cdns,ufshc.txt         | 31 ++++++++++++++++++=
+++++
+ 1 file changed, 31 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/ufs/cdns,ufshc.txt
 
-url:    https://github.com/0day-ci/linux/commits/Himanshu-Madhani/qla2xxx-Add-FC-NVMe-Target-support/20180916-090108
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
-
-smatch warnings:
-drivers/scsi/qla2xxx/qla_target.c:891 qlt_queue_purex() warn: taking sizeof binop
-drivers/scsi/qla2xxx/qla_target.c:902 qlt_queue_purex() error: memcpy() 'p->purex_pyld' too small (4 vs 44)
-
-# https://github.com/0day-ci/linux/commit/51867b7ad96cb9b1d5a96effc476a2e5a48293ae
-git remote add linux-review https://github.com/0day-ci/linux
-git remote update linux-review
-git checkout 51867b7ad96cb9b1d5a96effc476a2e5a48293ae
-vim +891 drivers/scsi/qla2xxx/qla_target.c
-
-51867b7a Anil Gurumurthy 2018-09-14  868  
-51867b7a Anil Gurumurthy 2018-09-14  869  static void qlt_queue_purex(scsi_qla_host_t *vha,
-51867b7a Anil Gurumurthy 2018-09-14  870  	struct atio_from_isp *atio)
-51867b7a Anil Gurumurthy 2018-09-14  871  {
-51867b7a Anil Gurumurthy 2018-09-14  872  	struct qla_tgt_purex_op *p;
-51867b7a Anil Gurumurthy 2018-09-14  873  	unsigned long flags;
-51867b7a Anil Gurumurthy 2018-09-14  874  	struct purex_entry_24xx *purex =
-51867b7a Anil Gurumurthy 2018-09-14  875  		(struct purex_entry_24xx *)&atio->u.raw;
-51867b7a Anil Gurumurthy 2018-09-14  876  	uint16_t len = purex->frame_size;
-51867b7a Anil Gurumurthy 2018-09-14  877  	uint8_t *purex_pyld_tmp;
-51867b7a Anil Gurumurthy 2018-09-14  878  
-51867b7a Anil Gurumurthy 2018-09-14  879  	p = kzalloc(sizeof(*p), GFP_ATOMIC);
-51867b7a Anil Gurumurthy 2018-09-14  880  	if (p == NULL)
-51867b7a Anil Gurumurthy 2018-09-14  881  		goto out;
-51867b7a Anil Gurumurthy 2018-09-14  882  
-51867b7a Anil Gurumurthy 2018-09-14  883  	p->vha = vha;
-51867b7a Anil Gurumurthy 2018-09-14  884  	memcpy(&p->atio, atio, sizeof(*atio));
-51867b7a Anil Gurumurthy 2018-09-14  885  
-51867b7a Anil Gurumurthy 2018-09-14  886  	ql_dbg(ql_dbg_disc + ql_dbg_buffer, vha, 0xff11,
-51867b7a Anil Gurumurthy 2018-09-14  887  	    "Dumping the Purex IOCB received\n");
-51867b7a Anil Gurumurthy 2018-09-14  888  	ql_dump_buffer(ql_dbg_disc + ql_dbg_buffer, vha, 0xe012,
-51867b7a Anil Gurumurthy 2018-09-14  889  		(uint8_t *)purex, 64);
-51867b7a Anil Gurumurthy 2018-09-14  890  
-51867b7a Anil Gurumurthy 2018-09-14 @891  	p->purex_pyld = kzalloc(sizeof(purex->entry_count * 64), GFP_ATOMIC);
-                                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-The parens are wrong so
-
-51867b7a Anil Gurumurthy 2018-09-14  892  	if (p->purex_pyld == NULL) {
-51867b7a Anil Gurumurthy 2018-09-14  893  		kfree(p);
-51867b7a Anil Gurumurthy 2018-09-14  894  		goto out;
-51867b7a Anil Gurumurthy 2018-09-14  895  	}
-51867b7a Anil Gurumurthy 2018-09-14  896  	purex_pyld_tmp = (uint8_t *)p->purex_pyld;
-51867b7a Anil Gurumurthy 2018-09-14  897  	p->purex_pyld_len = len;
-51867b7a Anil Gurumurthy 2018-09-14  898  
-51867b7a Anil Gurumurthy 2018-09-14  899  	if (len < PUREX_PYLD_SIZE)
-51867b7a Anil Gurumurthy 2018-09-14  900  		len = PUREX_PYLD_SIZE;
-51867b7a Anil Gurumurthy 2018-09-14  901  
-51867b7a Anil Gurumurthy 2018-09-14 @902  	memcpy(p->purex_pyld, &purex->d_id, PUREX_PYLD_SIZE);
-                                                       ^^^^^^^^^^^^^
-it leads to a memory corruption warning as well.
-
-51867b7a Anil Gurumurthy 2018-09-14  903  	purex_pyld_tmp += PUREX_PYLD_SIZE;
-51867b7a Anil Gurumurthy 2018-09-14  904  	len -= PUREX_PYLD_SIZE;
-51867b7a Anil Gurumurthy 2018-09-14  905  
+diff --git a/Documentation/devicetree/bindings/ufs/cdns,ufshc.txt b/Documen=
+tation/devicetree/bindings/ufs/cdns,ufshc.txt
+new file mode 100644
+index 0000000..a04a498
+--- /dev/null
++++ b/Documentation/devicetree/bindings/ufs/cdns,ufshc.txt
+@@ -0,0 +1,31 @@
++* Cadence Universal Flash Storage (UFS) Controller
++
++UFS nodes are defined to describe on-chip UFS host controllers.
++Each UFS controller instance should have its own node.
++Please see the ufshcd-pltfrm.txt for a list of all available properties.
++
++Required properties:
++- compatible	: Compatible list, contains the following controller:
++			"cdns,ufshc"
++		  complemented with the JEDEC version:
++			"jedec,ufs-2.0"
++
++- reg		: Address and length of the UFS register set.
++- interrupts	: One interrupt mapping.
++- freq-table-hz	: Clock frequency table.
++		  See the ufshcd-pltfrm.txt for details.
++- clocks	: List of phandle and clock specifier pairs.
++- clock-names	: List of clock input name strings sorted in the same
++		  order as the clocks property. "core_clk" is mandatory.
++		  Depending on a type of a PHY,
++		  the "phy_clk" clock can also be added, if needed.
++
++Example:
++	ufs@fd030000 {
++		compatible =3D "cdns,ufshc", "jedec,ufs-2.0";
++		reg =3D <0xfd030000 0x10000>;
++		interrupts =3D <0 1 IRQ_TYPE_LEVEL_HIGH>;
++		freq-table-hz =3D <0 0>, <0 0>;
++		clocks =3D <&ufs_core_clk>, <&ufs_phy_clk>;
++		clock-names =3D "core_clk", "phy_clk";
++	};
+--=20
+1.9.0
