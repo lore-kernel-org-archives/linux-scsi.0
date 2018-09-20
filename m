@@ -1,30 +1,44 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH RFC] scsi: ufs: Disable blk-mq for now
-Date: Thu, 20 Sep 2018 08:58:04 +0200
-Message-ID: <20180920065804.GC13761@lst.de>
-References: <20180913112848.7807-1-adrian.hunter@intel.com> <20180913120459.GA4965@ming.t460p> <e4d0c716-006a-72cb-0240-4ae5749b21b8@intel.com> <20180914015237.GC11059@ming.t460p>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: [PATCH] scsi: sd: don't crash the host on invalid commands
+Date: Thu, 20 Sep 2018 09:15:50 +0200
+Message-ID: <20180920071550.9866-1-jthumshirn@suse.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20180914015237.GC11059@ming.t460p>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Ming Lei <ming.lei@redhat.com>
-Cc: Adrian Hunter <adrian.hunter@intel.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jthumshirn@suse.de>, Bart Van Assche <Bart.VanAssche@wdc.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Stanislav Nijnikov <stanislav.nijnikov@wdc.com>, Evan Green <evgreen@chromium.org>, Vinayak Holikatti <vinholikatti@gmail.com>, Janek Kotas <jank@cadence.com>, Vivek Gautam <vivek.gautam@codeaurora.org>, Asutosh Das <asutoshd@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, Sayali Lokhande <sayalil@codeaurora.org>, Li Wei <liwei213@huawei.com>, Bjorn Andersson <bjorn.andersson@linaro.org>, Jaegeu
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Johannes Thumshirn <jthumshirn@suse.de>, Hannes Reinecke <hare@suse.de>, Bart Van Asche <bvanasche@acm.org>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Sep 14, 2018 at 09:52:38AM +0800, Ming Lei wrote:
-> However, in previous discussion, it is strongly objected to use
-> per-driver/device .use_blk_mq switch, so not sure if this way can
-> be accepted.
+When sd_init_command() get's a with a unknown req_op() it crashes the
+system via BUG().
 
-I don't like the per-driver switch as module_parameter at all and
-we should never do that.  We had some exceptions for drivers to force
-blk_mq (e.g. virtio), and given that I don't think we'll solve the
-blk-mq runtime-pm issue for 4.19 and also don't want to revert the
-default I think this patch is the best compromise for 4.19, with
-a revert in 4.20 once we have runtime-pm for blk-mq.
+This makes debugging the actual reason for the broken request
+cmd_flags pretty hard as the system is down before it's able to write
+out debugging data on the serial console or the trace buffer.
 
-So:
+Change the BUG() to a WARN_ON() and return BLKPREP_KILL to fail
+gracefully and return an I/O error to the producer of the request.
 
-Acked-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: Bart Van Asche <bvanasche@acm.org>
+Cc: Christoph Hellwig <hch@lst.de>
+---
+ drivers/scsi/sd.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index b79b366a94f7..19f28962d65b 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1276,7 +1276,8 @@ static int sd_init_command(struct scsi_cmnd *cmd)
+ 	case REQ_OP_ZONE_RESET:
+ 		return sd_zbc_setup_reset_cmnd(cmd);
+ 	default:
+-		BUG();
++		WARN_ON(1);
++		return BLKPREP_KILL;
+ 	}
+ }
+ 
+-- 
+2.16.4
