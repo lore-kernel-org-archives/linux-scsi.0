@@ -1,71 +1,89 @@
 From: Nathan Chancellor <natechancellor@gmail.com>
-Subject: [PATCH] scsi: mpt3sas: Remove unnecessary parentheses and simplify null checks
-Date: Thu, 20 Sep 2018 13:10:02 -0700
-Message-ID: <20180920201002.23979-1-natechancellor@gmail.com>
+Subject: [PATCH] scsi: arcmsr: Remove unnecessary parentheses
+Date: Thu, 20 Sep 2018 13:55:23 -0700
+Message-ID: <20180920205523.4705-1-natechancellor@gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Sathya Prakash <sathya.prakash@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Nathan Chancellor <natechancellor@gmail.com>
+To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Nathan Chancellor <natechancellor@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
 Clang warns when multiple pairs of parentheses are used for a single
 conditional statement.
 
-drivers/scsi/mpt3sas/mpt3sas_base.c:535:11: warning: equality comparison
+drivers/scsi/arcmsr/arcmsr_hba.c:4138:19: warning: equality comparison
 with extraneous parentheses [-Wparentheses-equality]
-        if ((ioc == NULL))
-             ~~~~^~~~~~~
-drivers/scsi/mpt3sas/mpt3sas_base.c:535:11: note: remove extraneous
+        if ((acb->dev_id == 0x1680)) {
+             ~~~~~~~~~~~~^~~~~~~~~
+drivers/scsi/arcmsr/arcmsr_hba.c:4138:19: note: remove extraneous
 parentheses around the comparison to silence this warning
-        if ((ioc == NULL))
-            ~    ^      ~
-drivers/scsi/mpt3sas/mpt3sas_base.c:535:11: note: use '=' to turn this
+        if ((acb->dev_id == 0x1680)) {
+            ~            ^        ~
+drivers/scsi/arcmsr/arcmsr_hba.c:4138:19: note: use '=' to turn this
 equality comparison into an assignment
-        if ((ioc == NULL))
-                 ^~
-                 =
-drivers/scsi/mpt3sas/mpt3sas_base.c:539:12: warning: equality comparison
+        if ((acb->dev_id == 0x1680)) {
+                         ^~
+                         =
+drivers/scsi/arcmsr/arcmsr_hba.c:4140:26: warning: equality comparison
 with extraneous parentheses [-Wparentheses-equality]
-        if ((pdev == NULL))
-             ~~~~~^~~~~~~
-drivers/scsi/mpt3sas/mpt3sas_base.c:539:12: note: remove extraneous
+        } else if ((acb->dev_id == 0x1880)) {
+                    ~~~~~~~~~~~~^~~~~~~~~
+drivers/scsi/arcmsr/arcmsr_hba.c:4140:26: note: remove extraneous
 parentheses around the comparison to silence this warning
-        if ((pdev == NULL))
-            ~     ^      ~
-drivers/scsi/mpt3sas/mpt3sas_base.c:539:12: note: use '=' to turn this
+        } else if ((acb->dev_id == 0x1880)) {
+                   ~            ^        ~
+drivers/scsi/arcmsr/arcmsr_hba.c:4140:26: note: use '=' to turn this
 equality comparison into an assignment
-        if ((pdev == NULL))
-                  ^~
-                  =
-2 warnings generated.
+        } else if ((acb->dev_id == 0x1880)) {
+                                ^~
+                                =
+drivers/scsi/arcmsr/arcmsr_hba.c:4164:26: warning: equality comparison
+with extraneous parentheses [-Wparentheses-equality]
+        } else if ((acb->dev_id == 0x1214)) {
+                    ~~~~~~~~~~~~^~~~~~~~~
+drivers/scsi/arcmsr/arcmsr_hba.c:4164:26: note: remove extraneous
+parentheses around the comparison to silence this warning
+        } else if ((acb->dev_id == 0x1214)) {
+                   ~            ^        ~
+drivers/scsi/arcmsr/arcmsr_hba.c:4164:26: note: use '=' to turn this
+equality comparison into an assignment
+        } else if ((acb->dev_id == 0x1214)) {
+                                ^~
+                                =
+3 warnings generated.
 
-Remove them and while we're at it, simplify the NULL checks as '!var' is
-used more than 'var == NULL'.
-
+Link: https://github.com/ClangBuiltLinux/linux/issues/146
 Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/arcmsr/arcmsr_hba.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 59d7844ee022..a49f16fed4c8 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -532,11 +532,11 @@ static int mpt3sas_remove_dead_ioc_func(void *arg)
- 	struct MPT3SAS_ADAPTER *ioc = (struct MPT3SAS_ADAPTER *)arg;
- 	struct pci_dev *pdev;
- 
--	if ((ioc == NULL))
-+	if (!ioc)
- 		return -1;
- 
- 	pdev = ioc->pdev;
--	if ((pdev == NULL))
-+	if (!pdev)
- 		return -1;
- 	pci_stop_and_remove_bus_device_locked(pdev);
- 	return 0;
+diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
+index cc0be4651128..22cf697adab0 100644
+--- a/drivers/scsi/arcmsr/arcmsr_hba.c
++++ b/drivers/scsi/arcmsr/arcmsr_hba.c
+@@ -4135,9 +4135,9 @@ static void arcmsr_hardware_reset(struct AdapterControlBlock *acb)
+ 		pci_read_config_byte(acb->pdev, i, &value[i]);
+ 	}
+ 	/* hardware reset signal */
+-	if ((acb->dev_id == 0x1680)) {
++	if (acb->dev_id == 0x1680) {
+ 		writel(ARCMSR_ARC1680_BUS_RESET, &pmuA->reserved1[0]);
+-	} else if ((acb->dev_id == 0x1880)) {
++	} else if (acb->dev_id == 0x1880) {
+ 		do {
+ 			count++;
+ 			writel(0xF, &pmuC->write_sequence);
+@@ -4161,7 +4161,7 @@ static void arcmsr_hardware_reset(struct AdapterControlBlock *acb)
+ 		} while (((readl(&pmuE->host_diagnostic_3xxx) &
+ 			ARCMSR_ARC1884_DiagWrite_ENABLE) == 0) && (count < 5));
+ 		writel(ARCMSR_ARC188X_RESET_ADAPTER, &pmuE->host_diagnostic_3xxx);
+-	} else if ((acb->dev_id == 0x1214)) {
++	} else if (acb->dev_id == 0x1214) {
+ 		writel(0x20, pmuD->reset_request);
+ 	} else {
+ 		pci_write_config_byte(acb->pdev, 0x84, 0x20);
 -- 
 2.19.0
