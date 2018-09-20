@@ -1,89 +1,51 @@
 From: Nathan Chancellor <natechancellor@gmail.com>
-Subject: [PATCH] scsi: arcmsr: Remove unnecessary parentheses
-Date: Thu, 20 Sep 2018 13:55:23 -0700
-Message-ID: <20180920205523.4705-1-natechancellor@gmail.com>
+Subject: [PATCH] scsi: advansys: Remove unnecessary parentheses
+Date: Thu, 20 Sep 2018 13:58:58 -0700
+Message-ID: <20180920205858.6035-1-natechancellor@gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+To: Matthew Wilcox <matthew@wil.cx>, Hannes Reinecke <hare@suse.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Nathan Chancellor <natechancellor@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
 Clang warns when multiple pairs of parentheses are used for a single
 conditional statement.
 
-drivers/scsi/arcmsr/arcmsr_hba.c:4138:19: warning: equality comparison
-with extraneous parentheses [-Wparentheses-equality]
-        if ((acb->dev_id == 0x1680)) {
-             ~~~~~~~~~~~~^~~~~~~~~
-drivers/scsi/arcmsr/arcmsr_hba.c:4138:19: note: remove extraneous
-parentheses around the comparison to silence this warning
-        if ((acb->dev_id == 0x1680)) {
-            ~            ^        ~
-drivers/scsi/arcmsr/arcmsr_hba.c:4138:19: note: use '=' to turn this
-equality comparison into an assignment
-        if ((acb->dev_id == 0x1680)) {
-                         ^~
-                         =
-drivers/scsi/arcmsr/arcmsr_hba.c:4140:26: warning: equality comparison
-with extraneous parentheses [-Wparentheses-equality]
-        } else if ((acb->dev_id == 0x1880)) {
-                    ~~~~~~~~~~~~^~~~~~~~~
-drivers/scsi/arcmsr/arcmsr_hba.c:4140:26: note: remove extraneous
-parentheses around the comparison to silence this warning
-        } else if ((acb->dev_id == 0x1880)) {
-                   ~            ^        ~
-drivers/scsi/arcmsr/arcmsr_hba.c:4140:26: note: use '=' to turn this
-equality comparison into an assignment
-        } else if ((acb->dev_id == 0x1880)) {
-                                ^~
-                                =
-drivers/scsi/arcmsr/arcmsr_hba.c:4164:26: warning: equality comparison
-with extraneous parentheses [-Wparentheses-equality]
-        } else if ((acb->dev_id == 0x1214)) {
-                    ~~~~~~~~~~~~^~~~~~~~~
-drivers/scsi/arcmsr/arcmsr_hba.c:4164:26: note: remove extraneous
-parentheses around the comparison to silence this warning
-        } else if ((acb->dev_id == 0x1214)) {
-                   ~            ^        ~
-drivers/scsi/arcmsr/arcmsr_hba.c:4164:26: note: use '=' to turn this
-equality comparison into an assignment
-        } else if ((acb->dev_id == 0x1214)) {
-                                ^~
-                                =
-3 warnings generated.
+drivers/scsi/advansys.c:6451:20: warning: equality comparison with
+extraneous parentheses [-Wparentheses-equality]
+                                if ((sdtr_data == 0xFF)) {
+                                     ~~~~~~~~~~^~~~~~~
+drivers/scsi/advansys.c:6451:20: note: remove extraneous parentheses
+around the comparison to silence this warning
+                                if ((sdtr_data == 0xFF)) {
+                                    ~          ^      ~
+drivers/scsi/advansys.c:6451:20: note: use '=' to turn this equality
+comparison into an assignment
+                                if ((sdtr_data == 0xFF)) {
+                                               ^~
+                                               =
+1 warning generated.
 
-Link: https://github.com/ClangBuiltLinux/linux/issues/146
+Link: https://github.com/ClangBuiltLinux/linux/issues/155
 Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
 ---
- drivers/scsi/arcmsr/arcmsr_hba.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/advansys.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
-index cc0be4651128..22cf697adab0 100644
---- a/drivers/scsi/arcmsr/arcmsr_hba.c
-+++ b/drivers/scsi/arcmsr/arcmsr_hba.c
-@@ -4135,9 +4135,9 @@ static void arcmsr_hardware_reset(struct AdapterControlBlock *acb)
- 		pci_read_config_byte(acb->pdev, i, &value[i]);
- 	}
- 	/* hardware reset signal */
--	if ((acb->dev_id == 0x1680)) {
-+	if (acb->dev_id == 0x1680) {
- 		writel(ARCMSR_ARC1680_BUS_RESET, &pmuA->reserved1[0]);
--	} else if ((acb->dev_id == 0x1880)) {
-+	} else if (acb->dev_id == 0x1880) {
- 		do {
- 			count++;
- 			writel(0xF, &pmuC->write_sequence);
-@@ -4161,7 +4161,7 @@ static void arcmsr_hardware_reset(struct AdapterControlBlock *acb)
- 		} while (((readl(&pmuE->host_diagnostic_3xxx) &
- 			ARCMSR_ARC1884_DiagWrite_ENABLE) == 0) && (count < 5));
- 		writel(ARCMSR_ARC188X_RESET_ADAPTER, &pmuE->host_diagnostic_3xxx);
--	} else if ((acb->dev_id == 0x1214)) {
-+	} else if (acb->dev_id == 0x1214) {
- 		writel(0x20, pmuD->reset_request);
- 	} else {
- 		pci_write_config_byte(acb->pdev, 0x84, 0x20);
+diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
+index 713f69033f20..44c96199e00a 100644
+--- a/drivers/scsi/advansys.c
++++ b/drivers/scsi/advansys.c
+@@ -6448,7 +6448,7 @@ static void AscIsrChipHalted(ASC_DVC_VAR *asc_dvc)
+ 				sdtr_data =
+ 				    AscCalSDTRData(asc_dvc, ext_msg.xfer_period,
+ 						   ext_msg.req_ack_offset);
+-				if ((sdtr_data == 0xFF)) {
++				if (sdtr_data == 0xFF) {
+ 
+ 					q_cntl |= QC_MSG_OUT;
+ 					asc_dvc->init_sdtr &= ~target_id;
 -- 
 2.19.0
