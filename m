@@ -1,27 +1,40 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH RFC] scsi: ufs: Disable blk-mq for now
-Date: Thu, 20 Sep 2018 21:59:49 -0400
-Message-ID: <yq1lg7vmwyy.fsf@oracle.com>
-References: <20180913112848.7807-1-adrian.hunter@intel.com>
+Subject: Re: [PATCH] scsi: advansys: Remove unnecessary parentheses
+Date: Thu, 20 Sep 2018 23:11:59 -0400
+Message-ID: <yq11s9nmtmo.fsf@oracle.com>
+References: <20180920205858.6035-1-natechancellor@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180913112848.7807-1-adrian.hunter@intel.com> (Adrian Hunter's
-        message of "Thu, 13 Sep 2018 14:28:48 +0300")
+In-Reply-To: <20180920205858.6035-1-natechancellor@gmail.com> (Nathan
+        Chancellor's message of "Thu, 20 Sep 2018 13:58:58 -0700")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Adrian Hunter <adrian.hunter@intel.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>, Johannes Thumshirn <jthumshirn@suse.de>, Bart Van Assche <Bart.VanAssche@wdc.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Stanislav Nijnikov <stanislav.nijnikov@wdc.com>, Evan Green <evgreen@chromium.org>, Vinayak Holikatti <vinholikatti@gmail.com>, Janek Kotas <jank@cadence.com>, Vivek Gautam <vivek.gautam@codeaurora.org>, Asutosh Das <asutoshd@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, Sayali Lokhande <sayalil@codeaurora.org>, Li Wei <liwei213@huawei.com>, Bjorn Andersson <bjorn.andersson@linaro.org>Jaegeuk Kim <ja>
+To: Nathan Chancellor <natechancellor@gmail.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, Hannes Reinecke <hare@suse.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Adrian,
+Nathan,
 
-> blk-mq does not support runtime pm, so disable blk-mq support for now.
+> Clang warns when multiple pairs of parentheses are used for a single
+> conditional statement.
+>
+> drivers/scsi/advansys.c:6451:20: warning: equality comparison with
+> extraneous parentheses [-Wparentheses-equality]
+>                                 if ((sdtr_data == 0xFF)) {
+>                                      ~~~~~~~~~~^~~~~~~
+> drivers/scsi/advansys.c:6451:20: note: remove extraneous parentheses
+> around the comparison to silence this warning
+>                                 if ((sdtr_data == 0xFF)) {
+>                                     ~          ^      ~
+> drivers/scsi/advansys.c:6451:20: note: use '=' to turn this equality
+> comparison into an assignment
+>                                 if ((sdtr_data == 0xFF)) {
+>                                                ^~
+>                                                =
+> 1 warning generated.
 
-Applied to 4.19/scsi-fixes. Looking forward to getting this fixed up
-properly in 4.20.
-
-Thanks!
+Applied to 4.20/scsi-queue, thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
