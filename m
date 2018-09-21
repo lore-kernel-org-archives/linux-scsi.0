@@ -1,66 +1,66 @@
-From: Can Guo <quic_cang@quicinc.com>
-Subject: [PATCH v9 5/7] scsi: ufs: Power on phy after it is initialized
-Date: Thu, 20 Sep 2018 21:27:58 -0700
-Message-ID: <1537504081-29976-6-git-send-email-quic_cang@quicinc.com>
-References: <1537504081-29976-1-git-send-email-quic_cang@quicinc.com>
+From: Hannes Reinecke <hare@suse.com>
+Subject: Re: [PATCH] scsi: advansys: Remove unnecessary parentheses
+Date: Fri, 21 Sep 2018 07:57:31 +0200
+Message-ID: <9432dde7-c63f-9c0c-fc9b-8728a0715ff3@suse.com>
+References: <20180920205858.6035-1-natechancellor@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1537504081-29976-1-git-send-email-quic_cang@quicinc.com>
+In-Reply-To: <20180920205858.6035-1-natechancellor@gmail.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: subhashj@codeaurora.org, asutoshd@codeaurora.org, vivek.gautam@codeaurora.org, evgreen@chromium.org, rnayak@codeaurora.org, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: Can Guo <cang@codeaurora.org>, "open list:UNIVERSAL FLASH STORAGE HOST
-        CONTROLLER DRIVER" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+To: Nathan Chancellor <natechancellor@gmail.com>, Matthew Wilcox <matthew@wil.cx>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Can Guo <cang@codeaurora.org>
+On 9/20/18 10:58 PM, Nathan Chancellor wrote:
+> Clang warns when multiple pairs of parentheses are used for a single
+> conditional statement.
+> 
+> drivers/scsi/advansys.c:6451:20: warning: equality comparison with
+> extraneous parentheses [-Wparentheses-equality]
+>                                  if ((sdtr_data == 0xFF)) {
+>                                       ~~~~~~~~~~^~~~~~~
+> drivers/scsi/advansys.c:6451:20: note: remove extraneous parentheses
+> around the comparison to silence this warning
+>                                  if ((sdtr_data == 0xFF)) {
+>                                      ~          ^      ~
+> drivers/scsi/advansys.c:6451:20: note: use '=' to turn this equality
+> comparison into an assignment
+>                                  if ((sdtr_data == 0xFF)) {
+>                                                 ^~
+>                                                 =
+> 1 warning generated.
+> 
+> Link: https://github.com/ClangBuiltLinux/linux/issues/155
+> Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
+> ---
+>   drivers/scsi/advansys.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
+> index 713f69033f20..44c96199e00a 100644
+> --- a/drivers/scsi/advansys.c
+> +++ b/drivers/scsi/advansys.c
+> @@ -6448,7 +6448,7 @@ static void AscIsrChipHalted(ASC_DVC_VAR *asc_dvc)
+>   				sdtr_data =
+>   				    AscCalSDTRData(asc_dvc, ext_msg.xfer_period,
+>   						   ext_msg.req_ack_offset);
+> -				if ((sdtr_data == 0xFF)) {
+> +				if (sdtr_data == 0xFF) {
+>   
+>   					q_cntl |= QC_MSG_OUT;
+>   					asc_dvc->init_sdtr &= ~target_id;
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-Before UFS PHY is initialized, powering on it has no effect but increases
-the PHY's power on count. Then when power on PHY to enable it after phy
-initialization where it is really needed, as PHY's power on count is not
-zero, again it would do nothing but directly return and leaves the PHY
-disabled. This change adds condition checks to phy power on calls which
-happen before phy initialization.
+Cheers,
 
-Signed-off-by: Can Guo <cang@codeaurora.org>
-Reviewed-by: Evan Green <evgreen@chromium.org>
----
- drivers/scsi/ufs/ufs-qcom.c | 4 +++-
- drivers/scsi/ufs/ufs-qcom.h | 1 +
- 2 files changed, 4 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-index 698b92d..fa20de4 100644
---- a/drivers/scsi/ufs/ufs-qcom.c
-+++ b/drivers/scsi/ufs/ufs-qcom.c
-@@ -288,6 +288,7 @@ static int ufs_qcom_power_up_sequence(struct ufs_hba *hba)
- 			__func__, ret);
- 		goto out;
- 	}
-+	host->is_phy_init = true;
- 
- 	/* De-assert PHY reset and start serdes */
- 	ufs_qcom_deassert_reset(hba);
-@@ -1176,7 +1177,8 @@ static int ufs_qcom_setup_clocks(struct ufs_hba *hba, bool on,
- 		return 0;
- 
- 	if (on && (status == POST_CHANGE)) {
--		phy_power_on(host->generic_phy);
-+		if (host->is_phy_init)
-+			phy_power_on(host->generic_phy);
- 
- 		/* enable the device ref clock for HS mode*/
- 		if (ufshcd_is_hs_mode(&hba->pwr_info))
-diff --git a/drivers/scsi/ufs/ufs-qcom.h b/drivers/scsi/ufs/ufs-qcom.h
-index 295f4be..5747aa3 100644
---- a/drivers/scsi/ufs/ufs-qcom.h
-+++ b/drivers/scsi/ufs/ufs-qcom.h
-@@ -242,6 +242,7 @@ struct ufs_qcom_host {
- 	/* Bitmask for enabling debug prints */
- 	u32 dbg_print_en;
- 	struct ufs_qcom_testbus testbus;
-+	bool is_phy_init;
- };
- 
- static inline u32
+Hannes
 -- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
+Dr. Hannes Reinecke		               zSeries & Storage
+hare@suse.com			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
