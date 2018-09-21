@@ -1,66 +1,34 @@
-From: Hannes Reinecke <hare@suse.com>
-Subject: Re: [PATCH] scsi: advansys: Remove unnecessary parentheses
-Date: Fri, 21 Sep 2018 07:57:31 +0200
-Message-ID: <9432dde7-c63f-9c0c-fc9b-8728a0715ff3@suse.com>
-References: <20180920205858.6035-1-natechancellor@gmail.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH] scsi: sd: don't crash the host on invalid commands
+Date: Fri, 21 Sep 2018 08:29:47 +0200
+Message-ID: <20180921062947.GA4913@linux-x5ow.site>
+References: <20180920071907.10102-1-jthumshirn@suse.de>
+ <1537467499.224533.21.camel@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180920205858.6035-1-natechancellor@gmail.com>
-Content-Language: en-US
+Content-Disposition: inline
+In-Reply-To: <1537467499.224533.21.camel@acm.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Nathan Chancellor <natechancellor@gmail.com>, Matthew Wilcox <matthew@wil.cx>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
-On 9/20/18 10:58 PM, Nathan Chancellor wrote:
-> Clang warns when multiple pairs of parentheses are used for a single
-> conditional statement.
+On Thu, Sep 20, 2018 at 11:18:19AM -0700, Bart Van Assche wrote:
+> On Thu, 2018-09-20 at 09:19 +0200, Johannes Thumshirn wrote:
 > 
-> drivers/scsi/advansys.c:6451:20: warning: equality comparison with
-> extraneous parentheses [-Wparentheses-equality]
->                                  if ((sdtr_data == 0xFF)) {
->                                       ~~~~~~~~~~^~~~~~~
-> drivers/scsi/advansys.c:6451:20: note: remove extraneous parentheses
-> around the comparison to silence this warning
->                                  if ((sdtr_data == 0xFF)) {
->                                      ~          ^      ~
-> drivers/scsi/advansys.c:6451:20: note: use '=' to turn this equality
-> comparison into an assignment
->                                  if ((sdtr_data == 0xFF)) {
->                                                 ^~
->                                                 =
-> 1 warning generated.
-> 
-> Link: https://github.com/ClangBuiltLinux/linux/issues/155
-> Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
-> ---
->   drivers/scsi/advansys.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-> index 713f69033f20..44c96199e00a 100644
-> --- a/drivers/scsi/advansys.c
-> +++ b/drivers/scsi/advansys.c
-> @@ -6448,7 +6448,7 @@ static void AscIsrChipHalted(ASC_DVC_VAR *asc_dvc)
->   				sdtr_data =
->   				    AscCalSDTRData(asc_dvc, ext_msg.xfer_period,
->   						   ext_msg.req_ack_offset);
-> -				if ((sdtr_data == 0xFF)) {
-> +				if (sdtr_data == 0xFF) {
->   
->   					q_cntl |= QC_MSG_OUT;
->   					asc_dvc->init_sdtr &= ~target_id;
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+> Have you considered to use WARN_ON_ONCE() instead of WARN_ON(1)? Otherwise
+> this patch looks good to me.
 
-Cheers,
+Indeed I did and then forgot to 'git commit --amend' it befroe sending it out.
+I'll do so now.
 
-Hannes
+	Johannes
 -- 
-Dr. Hannes Reinecke		               zSeries & Storage
-hare@suse.com			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 NÃ¼rnberg
-GF: F. ImendÃ¶rffer, J. Smithard, D. Upmanyu, G. Norton
-HRB 21284 (AG NÃ¼rnberg)
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
