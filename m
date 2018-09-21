@@ -1,66 +1,66 @@
-From: zhong jiang <zhongjiang@huawei.com>
-Subject: Re: [RESEND PATCH v2] scsi: Use vmemdup_user to replace the open
- code
-Date: Fri, 21 Sep 2018 22:16:42 +0800
-Message-ID: <5BA4FD4A.2030804@huawei.com>
-References: <1537286081-63081-1-git-send-email-zhongjiang@huawei.com>
+From: Khalid Aziz <khalid@gonehiking.org>
+Subject: Re: [PATCH] scsi: FlashPoint: Remove unnecessary parentheses
+Date: Fri, 21 Sep 2018 09:19:40 -0600
+Message-ID: <bb9c20c4-f13a-497a-0ad1-73978a9f4f3b@gonehiking.org>
+References: <20180920211032.21840-1-natechancellor@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1537286081-63081-1-git-send-email-zhongjiang@huawei.com>
+In-Reply-To: <20180920211032.21840-1-natechancellor@gmail.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: martin.petersen@oracle.com
-Cc: don.brace@microsemi.com, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Greg KH <gregkh@linuxfoundation.org>
+To: Nathan Chancellor <natechancellor@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi,  martin
-
-Can you pick up the patch?  Thanks,
-
-Sincerely,
-zhong jiang
-
-On 2018/9/18 23:54, zhong jiang wrote:
-> vmemdup_user is better than duplicating its implementation, So just
-> replace the open code.
->
-> The issue is detected with the help of Coccinelle.
->
-> Tested-by: Don Brace <don.brace@microsemi.com>
-> Acked-by: Don Brace <don.brace@microsemi.com>
-> Signed-off-by: zhong jiang <zhongjiang@huawei.com>
+On 09/20/2018 03:10 PM, Nathan Chancellor wrote:
+> Clang warns when multiple pairs of parentheses are used for a single
+> conditional statement.
+> 
+> In file included from drivers/scsi/BusLogic.c:57:
+> drivers/scsi/FlashPoint.c:2947:34: warning: equality comparison with extraneous parentheses [-Wparentheses-equality]
+>                                 if ((currSCCB->Sccb_scsistat == SELECT_SN_ST)) {
+>                                      ~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~
+> drivers/scsi/FlashPoint.c:2947:34: note: remove extraneous parentheses around the comparison to silence this warning
+>                                 if ((currSCCB->Sccb_scsistat == SELECT_SN_ST)) {
+>                                     ~                        ^              ~
+> drivers/scsi/FlashPoint.c:2947:34: note: use '=' to turn this equality comparison into an assignment
+>                                 if ((currSCCB->Sccb_scsistat == SELECT_SN_ST)) {
+>                                                              ^~
+>                                                              =
+> drivers/scsi/FlashPoint.c:2956:39: warning: equality comparison with extraneous parentheses [-Wparentheses-equality]
+>                                 else if ((currSCCB->Sccb_scsistat ==
+>                                           ~~~~~~~~~~~~~~~~~~~~~~~~^~
+> drivers/scsi/FlashPoint.c:2956:39: note: remove extraneous parentheses around the comparison to silence this warning
+>                                 else if ((currSCCB->Sccb_scsistat ==
+>                                          ~                        ^
+> drivers/scsi/FlashPoint.c:2956:39: note: use '=' to turn this equality comparison into an assignment
+>                                 else if ((currSCCB->Sccb_scsistat ==
+>                                                                   ^~
+>                                                                   =
+> 2 warnings generated.
+> 
+> Link: https://github.com/ClangBuiltLinux/linux/issues/156
+> Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
 > ---
->  drivers/scsi/hpsa.c | 12 ++++--------
->  1 file changed, 4 insertions(+), 8 deletions(-)
->
-> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> index 58bb70b..666ba09e5 100644
-> --- a/drivers/scsi/hpsa.c
-> +++ b/drivers/scsi/hpsa.c
-> @@ -6381,13 +6381,9 @@ static int hpsa_big_passthru_ioctl(struct ctlr_info *h, void __user *argp)
->  		return -EINVAL;
->  	if (!capable(CAP_SYS_RAWIO))
->  		return -EPERM;
-> -	ioc = kmalloc(sizeof(*ioc), GFP_KERNEL);
-> -	if (!ioc) {
-> -		status = -ENOMEM;
-> -		goto cleanup1;
-> -	}
-> -	if (copy_from_user(ioc, argp, sizeof(*ioc))) {
-> -		status = -EFAULT;
-> +	ioc = vmemdup_user(argp, sizeof(*ioc));
-> +	if (IS_ERR(ioc)) {
-> +		status = PTR_ERR(ioc);
->  		goto cleanup1;
->  	}
->  	if ((ioc->buf_size < 1) &&
-> @@ -6505,7 +6501,7 @@ static int hpsa_big_passthru_ioctl(struct ctlr_info *h, void __user *argp)
->  		kfree(buff);
->  	}
->  	kfree(buff_size);
-> -	kfree(ioc);
-> +	kvfree(ioc);
->  	return status;
->  }
->  
+>  drivers/scsi/FlashPoint.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+> 
+
+There are more places in this file with extraneous parentheses, for example:
+
+ 952         if ((RD_HARPOON(ioport + hp_vendor_id_1) != ORION_VEND_1))
+ 953                 return (int)FAILURE;
+ 954
+ 955         if ((RD_HARPOON(ioport + hp_device_id_0) != ORION_DEV_0))
+ 956                 return (int)FAILURE;
+ 957
+ 958         if ((RD_HARPOON(ioport + hp_device_id_1) != ORION_DEV_1))
+
+Wonder why the compiler does not complain about these, but this patch is
+good for now. I will clean up the rest in another patch.
+
+James, Martin, please pull this patch into the scsi tree.
+
+Acked-by: Khalid Aziz <khalid@gonehiking.org>
