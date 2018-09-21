@@ -1,71 +1,27 @@
-From: Nathan Chancellor <natechancellor@gmail.com>
-Subject: [PATCH] scsi: qla2xxx: Simplify conditional check
-Date: Thu, 20 Sep 2018 17:27:23 -0700
-Message-ID: <20180921002723.16600-1-natechancellor@gmail.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH RFC] scsi: ufs: Disable blk-mq for now
+Date: Thu, 20 Sep 2018 21:59:49 -0400
+Message-ID: <yq1lg7vmwyy.fsf@oracle.com>
+References: <20180913112848.7807-1-adrian.hunter@intel.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20180913112848.7807-1-adrian.hunter@intel.com> (Adrian Hunter's
+        message of "Thu, 13 Sep 2018 14:28:48 +0300")
 Sender: linux-kernel-owner@vger.kernel.org
-To: qla2xxx-upstream@qlogic.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Nathan Chancellor <natechancellor@gmail.com>
+To: Adrian Hunter <adrian.hunter@intel.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>, Johannes Thumshirn <jthumshirn@suse.de>, Bart Van Assche <Bart.VanAssche@wdc.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Stanislav Nijnikov <stanislav.nijnikov@wdc.com>, Evan Green <evgreen@chromium.org>, Vinayak Holikatti <vinholikatti@gmail.com>, Janek Kotas <jank@cadence.com>, Vivek Gautam <vivek.gautam@codeaurora.org>, Asutosh Das <asutoshd@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, Sayali Lokhande <sayalil@codeaurora.org>, Li Wei <liwei213@huawei.com>, Bjorn Andersson <bjorn.andersson@linaro.org>Jaegeuk Kim <ja>
 List-Id: linux-scsi@vger.kernel.org
 
-Clang generates a warning when it sees a logical not followed by a
-conditional operator like ==, >, or < because it thinks that the logical
-not should be applied to the whole statement:
 
-drivers/scsi/qla2xxx/qla_nx.c:3702:7: warning: logical not is only
-applied to the left hand side of this comparison
-[-Wlogical-not-parentheses]
-                if (!qla2x00_eh_wait_for_pending_commands(vha, 0, 0,
-                    ^
-drivers/scsi/qla2xxx/qla_nx.c:3702:7: note: add parentheses after the
-'!' to evaluate the comparison first
-                if (!qla2x00_eh_wait_for_pending_commands(vha, 0, 0,
-                    ^
-                     (
-drivers/scsi/qla2xxx/qla_nx.c:3702:7: note: add parentheses around left
-hand side expression to silence this warning
-                if (!qla2x00_eh_wait_for_pending_commands(vha, 0, 0,
-                    ^
-                    (
-1 warning generated.
+Adrian,
 
-It assumes the author might have made a mistake in their logic:
+> blk-mq does not support runtime pm, so disable blk-mq support for now.
 
-if (!a == b) -> if (!(a == b))
+Applied to 4.19/scsi-fixes. Looking forward to getting this fixed up
+properly in 4.20.
 
-Sometimes that is the case; other times, it's just a super convoluted
-way of saying 'if (a)' when b = 0:
+Thanks!
 
-if (!1 == 0) -> if (0 == 0) -> if (true)
-
-Alternatively:
-
-if (!1 == 0) -> if (!!1) -> if (1)
-
-Simplify this comparison so that Clang doesn't complain.
-
-Link: https://github.com/ClangBuiltLinux/linux/issues/80
-Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
----
- drivers/scsi/qla2xxx/qla_nx.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/qla2xxx/qla_nx.c b/drivers/scsi/qla2xxx/qla_nx.c
-index de2bc78449e7..121e18b3b9f8 100644
---- a/drivers/scsi/qla2xxx/qla_nx.c
-+++ b/drivers/scsi/qla2xxx/qla_nx.c
-@@ -3699,8 +3699,8 @@ qla82xx_chip_reset_cleanup(scsi_qla_host_t *vha)
- 		spin_unlock_irqrestore(&ha->hardware_lock, flags);
- 
- 		/* Wait for pending cmds (physical and virtual) to complete */
--		if (!qla2x00_eh_wait_for_pending_commands(vha, 0, 0,
--		    WAIT_HOST) == QLA_SUCCESS) {
-+		if (qla2x00_eh_wait_for_pending_commands(vha, 0, 0,
-+		    WAIT_HOST)) {
- 			ql_dbg(ql_dbg_init, vha, 0x00b3,
- 			    "Done wait for "
- 			    "pending commands.\n");
 -- 
-2.19.0
+Martin K. Petersen	Oracle Linux Engineering
