@@ -1,76 +1,60 @@
-From: Nathan Chancellor <natechancellor@gmail.com>
-Subject: Re: [PATCH] scsi: FlashPoint: Remove unnecessary parentheses
-Date: Fri, 21 Sep 2018 11:17:46 -0700
-Message-ID: <20180921181746.GA5415@flashbox>
-References: <20180920211032.21840-1-natechancellor@gmail.com>
- <bb9c20c4-f13a-497a-0ad1-73978a9f4f3b@gonehiking.org>
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] scsi: megaraid: fix spelling mistake "maibox" -> "mailbox"
+Date: Sun, 23 Sep 2018 23:25:48 +0100
+Message-ID: <20180923222548.7908-1-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <bb9c20c4-f13a-497a-0ad1-73978a9f4f3b@gonehiking.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Khalid Aziz <khalid@gonehiking.org>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Kashyap Desai <kashyap.desai@broadcom.com>, Sumit Saxena <sumit.saxena@broadcom.com>, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Sep 21, 2018 at 09:19:40AM -0600, Khalid Aziz wrote:
-> On 09/20/2018 03:10 PM, Nathan Chancellor wrote:
-> > Clang warns when multiple pairs of parentheses are used for a single
-> > conditional statement.
-> > 
-> > In file included from drivers/scsi/BusLogic.c:57:
-> > drivers/scsi/FlashPoint.c:2947:34: warning: equality comparison with extraneous parentheses [-Wparentheses-equality]
-> >                                 if ((currSCCB->Sccb_scsistat == SELECT_SN_ST)) {
-> >                                      ~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~
-> > drivers/scsi/FlashPoint.c:2947:34: note: remove extraneous parentheses around the comparison to silence this warning
-> >                                 if ((currSCCB->Sccb_scsistat == SELECT_SN_ST)) {
-> >                                     ~                        ^              ~
-> > drivers/scsi/FlashPoint.c:2947:34: note: use '=' to turn this equality comparison into an assignment
-> >                                 if ((currSCCB->Sccb_scsistat == SELECT_SN_ST)) {
-> >                                                              ^~
-> >                                                              =
-> > drivers/scsi/FlashPoint.c:2956:39: warning: equality comparison with extraneous parentheses [-Wparentheses-equality]
-> >                                 else if ((currSCCB->Sccb_scsistat ==
-> >                                           ~~~~~~~~~~~~~~~~~~~~~~~~^~
-> > drivers/scsi/FlashPoint.c:2956:39: note: remove extraneous parentheses around the comparison to silence this warning
-> >                                 else if ((currSCCB->Sccb_scsistat ==
-> >                                          ~                        ^
-> > drivers/scsi/FlashPoint.c:2956:39: note: use '=' to turn this equality comparison into an assignment
-> >                                 else if ((currSCCB->Sccb_scsistat ==
-> >                                                                   ^~
-> >                                                                   =
-> > 2 warnings generated.
-> > 
-> > Link: https://github.com/ClangBuiltLinux/linux/issues/156
-> > Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
-> > ---
-> >  drivers/scsi/FlashPoint.c | 6 +++---
-> >  1 file changed, 3 insertions(+), 3 deletions(-)
-> > 
-> 
-> There are more places in this file with extraneous parentheses, for example:
-> 
->  952         if ((RD_HARPOON(ioport + hp_vendor_id_1) != ORION_VEND_1))
->  953                 return (int)FAILURE;
->  954
->  955         if ((RD_HARPOON(ioport + hp_device_id_0) != ORION_DEV_0))
->  956                 return (int)FAILURE;
->  957
->  958         if ((RD_HARPOON(ioport + hp_device_id_1) != ORION_DEV_1))
-> 
-> Wonder why the compiler does not complain about these, but this patch is
-> good for now. I will clean up the rest in another patch.
-> 
-> James, Martin, please pull this patch into the scsi tree.
-> 
-> Acked-by: Khalid Aziz <khalid@gonehiking.org>
+From: Colin Ian King <colin.king@canonical.com>
 
-Hi Khalid,
+Trivial fix to spelling mistake in warning message and comments
 
-Clang only warns about this construct when the left hand is a variable
-because it thinks that an assignment may have been intended so macros
-and functions don't trigger it.
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/scsi/megaraid/megaraid_mbox.c | 4 ++--
+ drivers/scsi/megaraid/megaraid_mbox.h | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-Thank you for the review, I appreciate it,
-Nathan
+diff --git a/drivers/scsi/megaraid/megaraid_mbox.c b/drivers/scsi/megaraid/megaraid_mbox.c
+index 530358cdcb39..2013523605c5 100644
+--- a/drivers/scsi/megaraid/megaraid_mbox.c
++++ b/drivers/scsi/megaraid/megaraid_mbox.c
+@@ -484,7 +484,7 @@ megaraid_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	// Start the mailbox based controller
+ 	if (megaraid_init_mbox(adapter) != 0) {
+ 		con_log(CL_ANN, (KERN_WARNING
+-			"megaraid: maibox adapter did not initialize\n"));
++			"megaraid: mailbox adapter did not initialize\n"));
+ 
+ 		goto out_free_adapter;
+ 	}
+@@ -950,7 +950,7 @@ megaraid_fini_mbox(adapter_t *adapter)
+  * megaraid_alloc_cmd_packets - allocate shared mailbox
+  * @adapter		: soft state of the raid controller
+  *
+- * Allocate and align the shared mailbox. This maibox is used to issue
++ * Allocate and align the shared mailbox. This mailbox is used to issue
+  * all the commands. For IO based controllers, the mailbox is also registered
+  * with the FW. Allocate memory for all commands as well.
+  * This is our big allocator.
+diff --git a/drivers/scsi/megaraid/megaraid_mbox.h b/drivers/scsi/megaraid/megaraid_mbox.h
+index c1d86d961a92..e075aeb4012f 100644
+--- a/drivers/scsi/megaraid/megaraid_mbox.h
++++ b/drivers/scsi/megaraid/megaraid_mbox.h
+@@ -117,7 +117,7 @@
+  * @raw_mbox		: raw mailbox pointer
+  * @mbox		: mailbox
+  * @mbox64		: extended mailbox
+- * @mbox_dma_h		: maibox dma address
++ * @mbox_dma_h		: mailbox dma address
+  * @sgl64		: 64-bit scatter-gather list
+  * @sgl32		: 32-bit scatter-gather list
+  * @sgl_dma_h		: dma handle for the scatter-gather list
+-- 
+2.17.1
