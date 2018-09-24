@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 4/7] scsi: hisi_sas: Free slot later in slot_complete_vx_hw()
-Date: Mon, 24 Sep 2018 23:06:31 +0800
-Message-ID: <1537801594-207139-5-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 2/7] scsi: hisi_sas: Move evaluation of hisi_hba in hisi_sas_task_prep()
+Date: Mon, 24 Sep 2018 23:06:29 +0800
+Message-ID: <1537801594-207139-3-git-send-email-john.garry@huawei.com>
 References: <1537801594-207139-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -9,67 +9,49 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1537801594-207139-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
+Cc: linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Luo Jiaxing <luojiaxing@huawei.com>, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Xiang Chen <chenxiang66@hisilicon.com>
+From: Luo Jiaxing <luojiaxing@huawei.com>
 
-If an SSP/SMP IO times out, it may be actually in reality be
-simultaneously processing completion of the slot in slot_complete_vx_hw().
+In evaluating hisi_hba, the sas_port may be NULL, so for safety relocate
+the the check to value possible NULL deference.
 
-Then if the slot is freed in slot_complete_vx_hw() (this IPTT is freed and
-it may be re-used by other slot), and we may abort the wrong slot in
-hisi_sas_abort_task().
-
-So to solve the issue, free the slot after the check of
-SAS_TASK_STATE_ABORTED in slot_complete_vx_hw().
-
-Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+Signed-off-by: Luo Jiaxing <luojiaxing@huawei.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 2 +-
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index 9c5c5a6..67134b4 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -2483,7 +2483,6 @@ static void slot_err_v2_hw(struct hisi_hba *hisi_hba,
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index ba6fb535..3b95a7a 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -287,13 +287,13 @@ static int hisi_sas_task_prep(struct sas_task *task,
+ 			      int *pass)
+ {
+ 	struct domain_device *device = task->dev;
+-	struct hisi_hba *hisi_hba = dev_to_hisi_hba(device);
++	struct hisi_hba *hisi_hba;
+ 	struct hisi_sas_device *sas_dev = device->lldd_dev;
+ 	struct hisi_sas_port *port;
+ 	struct hisi_sas_slot *slot;
+ 	struct hisi_sas_cmd_hdr	*cmd_hdr_base;
+ 	struct asd_sas_port *sas_port = device->port;
+-	struct device *dev = hisi_hba->dev;
++	struct device *dev;
+ 	int dlvry_queue_slot, dlvry_queue, rc, slot_idx;
+ 	int n_elem = 0, n_elem_req = 0, n_elem_resp = 0;
+ 	struct hisi_sas_dq *dq;
+@@ -314,6 +314,9 @@ static int hisi_sas_task_prep(struct sas_task *task,
+ 		return -ECOMM;
  	}
  
- out:
--	hisi_sas_slot_task_free(hisi_hba, task, slot);
- 	sts = ts->stat;
- 	spin_lock_irqsave(&task->task_state_lock, flags);
- 	if (task->task_state_flags & SAS_TASK_STATE_ABORTED) {
-@@ -2493,6 +2492,7 @@ static void slot_err_v2_hw(struct hisi_hba *hisi_hba,
- 	}
- 	task->task_state_flags |= SAS_TASK_STATE_DONE;
- 	spin_unlock_irqrestore(&task->task_state_lock, flags);
-+	hisi_sas_slot_task_free(hisi_hba, task, slot);
- 
- 	if (!is_internal && (task->task_proto != SAS_PROTOCOL_SMP)) {
- 		spin_lock_irqsave(&device->done_lock, flags);
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 08b503e2..3995ff6 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -1751,7 +1751,6 @@ static irqreturn_t fatal_axi_int_v3_hw(int irq_no, void *p)
- 	}
- 
- out:
--	hisi_sas_slot_task_free(hisi_hba, task, slot);
- 	sts = ts->stat;
- 	spin_lock_irqsave(&task->task_state_lock, flags);
- 	if (task->task_state_flags & SAS_TASK_STATE_ABORTED) {
-@@ -1761,6 +1760,7 @@ static irqreturn_t fatal_axi_int_v3_hw(int irq_no, void *p)
- 	}
- 	task->task_state_flags |= SAS_TASK_STATE_DONE;
- 	spin_unlock_irqrestore(&task->task_state_lock, flags);
-+	hisi_sas_slot_task_free(hisi_hba, task, slot);
- 
- 	if (!is_internal && (task->task_proto != SAS_PROTOCOL_SMP)) {
- 		spin_lock_irqsave(&device->done_lock, flags);
++	hisi_hba = dev_to_hisi_hba(device);
++	dev = hisi_hba->dev;
++
+ 	if (DEV_IS_GONE(sas_dev)) {
+ 		if (sas_dev)
+ 			dev_info(dev, "task prep: device %d not ready\n",
 -- 
 1.9.1
