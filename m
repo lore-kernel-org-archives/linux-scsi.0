@@ -1,57 +1,126 @@
-From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 2/7] scsi: hisi_sas: Move evaluation of hisi_hba in hisi_sas_task_prep()
-Date: Mon, 24 Sep 2018 23:06:29 +0800
-Message-ID: <1537801594-207139-3-git-send-email-john.garry@huawei.com>
-References: <1537801594-207139-1-git-send-email-john.garry@huawei.com>
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+Subject: Re: [PATCH 1/3] phy: qcom-ufs: Remove stale methods that handle ref
+ clk
+Date: Mon, 24 Sep 2018 10:23:42 -0700
+Message-ID: <20180924172342.GK1367@tuxbook-pro>
+References: <20180904101719.18049-1-vivek.gautam@codeaurora.org>
+ <20180904101719.18049-2-vivek.gautam@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1537801594-207139-1-git-send-email-john.garry@huawei.com>
+Content-Disposition: inline
+In-Reply-To: <20180904101719.18049-2-vivek.gautam@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Luo Jiaxing <luojiaxing@huawei.com>, John Garry <john.garry@huawei.com>
+To: Vivek Gautam <vivek.gautam@codeaurora.org>
+Cc: kishon@ti.com, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, subhashj@codeaurora.org, evgreen@chromium.org, linux-arm-msm@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Luo Jiaxing <luojiaxing@huawei.com>
+On Tue 04 Sep 03:17 PDT 2018, Vivek Gautam wrote:
 
-In evaluating hisi_hba, the sas_port may be NULL, so for safety relocate
-the the check to value possible NULL deference.
+> Remove ufs_qcom_phy_enable/(disable)_dev_ref_clk() that
+> are not being used by any code.
+> 
+> Signed-off-by: Vivek Gautam <vivek.gautam@codeaurora.org>
 
-Signed-off-by: Luo Jiaxing <luojiaxing@huawei.com>
-Signed-off-by: John Garry <john.garry@huawei.com>
----
- drivers/scsi/hisi_sas/hisi_sas_main.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+Thanks for the ping Vivek, I didn't spot these when you posted them.
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index ba6fb535..3b95a7a 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -287,13 +287,13 @@ static int hisi_sas_task_prep(struct sas_task *task,
- 			      int *pass)
- {
- 	struct domain_device *device = task->dev;
--	struct hisi_hba *hisi_hba = dev_to_hisi_hba(device);
-+	struct hisi_hba *hisi_hba;
- 	struct hisi_sas_device *sas_dev = device->lldd_dev;
- 	struct hisi_sas_port *port;
- 	struct hisi_sas_slot *slot;
- 	struct hisi_sas_cmd_hdr	*cmd_hdr_base;
- 	struct asd_sas_port *sas_port = device->port;
--	struct device *dev = hisi_hba->dev;
-+	struct device *dev;
- 	int dlvry_queue_slot, dlvry_queue, rc, slot_idx;
- 	int n_elem = 0, n_elem_req = 0, n_elem_resp = 0;
- 	struct hisi_sas_dq *dq;
-@@ -314,6 +314,9 @@ static int hisi_sas_task_prep(struct sas_task *task,
- 		return -ECOMM;
- 	}
- 
-+	hisi_hba = dev_to_hisi_hba(device);
-+	dev = hisi_hba->dev;
-+
- 	if (DEV_IS_GONE(sas_dev)) {
- 		if (sas_dev)
- 			dev_info(dev, "task prep: device %d not ready\n",
--- 
-1.9.1
+Reviewed-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+
+Regards,
+Bjorn
+
+> ---
+>  drivers/phy/qualcomm/phy-qcom-ufs.c | 50 -------------------------------------
+>  include/linux/phy/phy-qcom-ufs.h    | 14 -----------
+>  2 files changed, 64 deletions(-)
+> 
+> diff --git a/drivers/phy/qualcomm/phy-qcom-ufs.c b/drivers/phy/qualcomm/phy-qcom-ufs.c
+> index c5493ea51282..f2979ccad00a 100644
+> --- a/drivers/phy/qualcomm/phy-qcom-ufs.c
+> +++ b/drivers/phy/qualcomm/phy-qcom-ufs.c
+> @@ -431,56 +431,6 @@ static void ufs_qcom_phy_disable_ref_clk(struct ufs_qcom_phy *phy)
+>  	}
+>  }
+>  
+> -#define UFS_REF_CLK_EN	(1 << 5)
+> -
+> -static void ufs_qcom_phy_dev_ref_clk_ctrl(struct phy *generic_phy, bool enable)
+> -{
+> -	struct ufs_qcom_phy *phy = get_ufs_qcom_phy(generic_phy);
+> -
+> -	if (phy->dev_ref_clk_ctrl_mmio &&
+> -	    (enable ^ phy->is_dev_ref_clk_enabled)) {
+> -		u32 temp = readl_relaxed(phy->dev_ref_clk_ctrl_mmio);
+> -
+> -		if (enable)
+> -			temp |= UFS_REF_CLK_EN;
+> -		else
+> -			temp &= ~UFS_REF_CLK_EN;
+> -
+> -		/*
+> -		 * If we are here to disable this clock immediately after
+> -		 * entering into hibern8, we need to make sure that device
+> -		 * ref_clk is active atleast 1us after the hibern8 enter.
+> -		 */
+> -		if (!enable)
+> -			udelay(1);
+> -
+> -		writel_relaxed(temp, phy->dev_ref_clk_ctrl_mmio);
+> -		/* ensure that ref_clk is enabled/disabled before we return */
+> -		wmb();
+> -		/*
+> -		 * If we call hibern8 exit after this, we need to make sure that
+> -		 * device ref_clk is stable for atleast 1us before the hibern8
+> -		 * exit command.
+> -		 */
+> -		if (enable)
+> -			udelay(1);
+> -
+> -		phy->is_dev_ref_clk_enabled = enable;
+> -	}
+> -}
+> -
+> -void ufs_qcom_phy_enable_dev_ref_clk(struct phy *generic_phy)
+> -{
+> -	ufs_qcom_phy_dev_ref_clk_ctrl(generic_phy, true);
+> -}
+> -EXPORT_SYMBOL_GPL(ufs_qcom_phy_enable_dev_ref_clk);
+> -
+> -void ufs_qcom_phy_disable_dev_ref_clk(struct phy *generic_phy)
+> -{
+> -	ufs_qcom_phy_dev_ref_clk_ctrl(generic_phy, false);
+> -}
+> -EXPORT_SYMBOL_GPL(ufs_qcom_phy_disable_dev_ref_clk);
+> -
+>  /* Turn ON M-PHY RMMI interface clocks */
+>  static int ufs_qcom_phy_enable_iface_clk(struct ufs_qcom_phy *phy)
+>  {
+> diff --git a/include/linux/phy/phy-qcom-ufs.h b/include/linux/phy/phy-qcom-ufs.h
+> index 0a2c18a9771d..9dd85071bcce 100644
+> --- a/include/linux/phy/phy-qcom-ufs.h
+> +++ b/include/linux/phy/phy-qcom-ufs.h
+> @@ -17,20 +17,6 @@
+>  
+>  #include "phy.h"
+>  
+> -/**
+> - * ufs_qcom_phy_enable_dev_ref_clk() - Enable the device
+> - * ref clock.
+> - * @phy: reference to a generic phy.
+> - */
+> -void ufs_qcom_phy_enable_dev_ref_clk(struct phy *phy);
+> -
+> -/**
+> - * ufs_qcom_phy_disable_dev_ref_clk() - Disable the device
+> - * ref clock.
+> - * @phy: reference to a generic phy.
+> - */
+> -void ufs_qcom_phy_disable_dev_ref_clk(struct phy *phy);
+> -
+>  int ufs_qcom_phy_set_tx_lane_enable(struct phy *phy, u32 tx_lanes);
+>  void ufs_qcom_phy_save_controller_version(struct phy *phy,
+>  			u8 major, u16 minor, u16 step);
+> -- 
+> QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member
+> of Code Aurora Forum, hosted by The Linux Foundation
+> 
