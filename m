@@ -1,19 +1,19 @@
 From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 4.14 155/173] blk-mq: avoid to synchronize rcu inside blk_cleanup_queue()
-Date: Mon, 24 Sep 2018 13:53:09 +0200
-Message-ID: <20180924113126.670088676@linuxfoundation.org>
-References: <20180924113114.334025954@linuxfoundation.org>
+Subject: [PATCH 4.18 229/235] blk-mq: avoid to synchronize rcu inside blk_cleanup_queue()
+Date: Mon, 24 Sep 2018 13:53:35 +0200
+Message-ID: <20180924113125.837160833@linuxfoundation.org>
+References: <20180924113103.999624566@linuxfoundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180924113114.334025954@linuxfoundation.org>
+In-Reply-To: <20180924113103.999624566@linuxfoundation.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
 Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, stable@vger.kernel.org, Andrew Jones <drjones@redhat.com>, Omar Sandoval <osandov@fb.com>, Bart Van Assche <bart.vanassche@wdc.com>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@kernel.dk>, Sasha Levin <alexander.levin@microsoft.com>
 List-Id: linux-scsi@vger.kernel.org
 
-4.14-stable review patch.  If anyone has any objections, please let me know.
+4.18-stable review patch.  If anyone has any objections, please let me know.
 
 ------------------
 
@@ -55,7 +55,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
 --- a/block/blk-core.c
 +++ b/block/blk-core.c
-@@ -669,9 +669,13 @@ void blk_cleanup_queue(struct request_qu
+@@ -791,9 +791,13 @@ void blk_cleanup_queue(struct request_qu
  	 * make sure all in-progress dispatch are completed because
  	 * blk_freeze_queue() can only complete all requests, and
  	 * dispatch may still be in-progress since we dispatch requests
