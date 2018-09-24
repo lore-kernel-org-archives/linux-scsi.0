@@ -1,47 +1,73 @@
-From: Avri Altman <Avri.Altman@wdc.com>
-Subject: Re: [PATCH V14 2/2] scsi: ufs: Add configfs support for UFS
- provisioning
-Date: Mon, 24 Sep 2018 10:03:29 +0000
-Message-ID: <SN6PR04MB4925D198F7AE8961254F43C9FC170@SN6PR04MB4925.namprd04.prod.outlook.com>
-References: <1537770516-28410-1-git-send-email-sayalil@codeaurora.org>,<1537770516-28410-3-git-send-email-sayalil@codeaurora.org>
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [PATCH 4.14 155/173] blk-mq: avoid to synchronize rcu inside blk_cleanup_queue()
+Date: Mon, 24 Sep 2018 13:53:09 +0200
+Message-ID: <20180924113126.670088676@linuxfoundation.org>
+References: <20180924113114.334025954@linuxfoundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1537770516-28410-3-git-send-email-sayalil@codeaurora.org>
-Content-Language: en-US
+In-Reply-To: <20180924113114.334025954@linuxfoundation.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Sayali Lokhande <sayalil@codeaurora.org>, "subhashj@codeaurora.org" <subhashj@codeaurora.org>, "cang@codeaurora.org" <cang@codeaurora.org>, "vivek.gautam@codeaurora.org" <vivek.gautam@codeaurora.org>, "rnayak@codeaurora.org" <rnayak@codeaurora.org>, "vinholikatti@gmail.com" <vinholikatti@gmail.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>, "evgreen@chromium.org" <evgreen@chromium.org>, "riteshh@codeaurora.org" <riteshh@codeaurora.org>
-Cc: "stummala@codeaurora.org" <stummala@codeaurora.org>, "adrian.hunter@intel.com" <adrian.hunter@intel.com>, "jlbec@evilplan.org" <jlbec@evilplan.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+To: linux-kernel@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, stable@vger.kernel.org, Andrew Jones <drjones@redhat.com>, Omar Sandoval <osandov@fb.com>, Bart Van Assche <bart.vanassche@wdc.com>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@kernel.dk>, Sasha Levin <alexander.levin@microsoft.com>
 List-Id: linux-scsi@vger.kernel.org
 
-> obj-$(CONFIG_SCSI_UFS_QCOM) +=3D ufs-qcom.o
->obj-$(CONFIG_SCSI_UFSHCD) +=3D ufshcd-core.o
->ufshcd-core-objs :=3D ufshcd.o ufs-sysfs.o
->+obj-$(CONFIG_SCSI_UFS_PROVISION) +=3D ufs-configfs.o
-Isn't ufs-configfs should be part of ufshcd-core? like ufs-sysfs ?
+4.14-stable review patch.  If anyone has any objections, please let me know.
 
+------------------
 
->+static ssize_t ufs_config_desc_show(struct config_item *item, char *buf,
->+                                   u8 index)
->+{
-The read part already exist in ufs-sysfs.
+From: Ming Lei <ming.lei@redhat.com>
 
+[ Upstream commit 1311326cf4755c7ffefd20f576144ecf46d9906b ]
 
->+ssize_t ufshcd_desc_configfs_store(struct config_item *item, const char *=
-buf,
->+                                  size_t count, u8 index)
->+{
+SCSI probing may synchronously create and destroy a lot of request_queues
+for non-existent devices. Any synchronize_rcu() in queue creation or
+destroy path may introduce long latency during booting, see detailed
+description in comment of blk_register_queue().
 
+This patch removes one synchronize_rcu() inside blk_cleanup_queue()
+for this case, commit c2856ae2f315d75(blk-mq: quiesce queue before freeing queue)
+needs synchronize_rcu() for implementing blk_mq_quiesce_queue(), but
+when queue isn't initialized, it isn't necessary to do that since
+only pass-through requests are involved, no original issue in
+scsi_execute() at all.
 
->+
->+       /*
->+        * First read the current configuration descriptor
->+        * and then update with user provided parameters
->+        */
-if originally only lun0 was configured, and you want to configure a new set=
- of luns -=20
-luns 8 to 15 (config index 0x1) - won't the read fail in that case?
+Without this patch and previous one, it may take more 20+ seconds for
+virtio-scsi to complete disk probe. With the two patches, the time becomes
+less than 100ms.
 
-Thanks,
-Avri=
+Fixes: c2856ae2f315d75 ("blk-mq: quiesce queue before freeing queue")
+Reported-by: Andrew Jones <drjones@redhat.com>
+Cc: Omar Sandoval <osandov@fb.com>
+Cc: Bart Van Assche <bart.vanassche@wdc.com>
+Cc: linux-scsi@vger.kernel.org
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Tested-by: Andrew Jones <drjones@redhat.com>
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
+Signed-off-by: Jens Axboe <axboe@kernel.dk>
+Signed-off-by: Sasha Levin <alexander.levin@microsoft.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ block/blk-core.c |    8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -669,9 +669,13 @@ void blk_cleanup_queue(struct request_qu
+ 	 * make sure all in-progress dispatch are completed because
+ 	 * blk_freeze_queue() can only complete all requests, and
+ 	 * dispatch may still be in-progress since we dispatch requests
+-	 * from more than one contexts
++	 * from more than one contexts.
++	 *
++	 * No need to quiesce queue if it isn't initialized yet since
++	 * blk_freeze_queue() should be enough for cases of passthrough
++	 * request.
+ 	 */
+-	if (q->mq_ops)
++	if (q->mq_ops && blk_queue_init_done(q))
+ 		blk_mq_quiesce_queue(q);
+ 
+ 	/* for synchronous bio-based driver finish in-flight integrity i/o */
