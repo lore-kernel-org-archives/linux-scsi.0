@@ -1,60 +1,38 @@
-From: Colin King <colin.king@canonical.com>
-Subject: [PATCH] scsi: megaraid: fix spelling mistake "maibox" -> "mailbox"
-Date: Sun, 23 Sep 2018 23:25:48 +0100
-Message-ID: <20180923222548.7908-1-colin.king@canonical.com>
+From: Josh Abraham <j.abraham1776@gmail.com>
+Subject: [PATCH] scsi: ufs: use PTR_ERR_OR_ZERO in ufs_hisi_get_resource()
+Date: Sun, 23 Sep 2018 21:29:03 -0400
+Message-ID: <20180924012903.GA24400@josh-ThinkPad-T460s>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
-To: Kashyap Desai <kashyap.desai@broadcom.com>, Sumit Saxena <sumit.saxena@broadcom.com>, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+To: vinholikatti@gmail.com
+Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, j.abraham1776@gmail.com, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Colin Ian King <colin.king@canonical.com>
+This patch uses PTR_ERR_OR_ZERO instead of IF_ERR() return PTR_ERR().
 
-Trivial fix to spelling mistake in warning message and comments
-
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Signed-off-by: Joshua Abraham <j.abraham1776@gmail.com>
 ---
- drivers/scsi/megaraid/megaraid_mbox.c | 4 ++--
- drivers/scsi/megaraid/megaraid_mbox.h | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/ufs/ufs-hisi.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_mbox.c b/drivers/scsi/megaraid/megaraid_mbox.c
-index 530358cdcb39..2013523605c5 100644
---- a/drivers/scsi/megaraid/megaraid_mbox.c
-+++ b/drivers/scsi/megaraid/megaraid_mbox.c
-@@ -484,7 +484,7 @@ megaraid_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	// Start the mailbox based controller
- 	if (megaraid_init_mbox(adapter) != 0) {
- 		con_log(CL_ANN, (KERN_WARNING
--			"megaraid: maibox adapter did not initialize\n"));
-+			"megaraid: mailbox adapter did not initialize\n"));
+diff --git a/drivers/scsi/ufs/ufs-hisi.c b/drivers/scsi/ufs/ufs-hisi.c
+index 46df707e6f2c..e79499469cb3 100644
+--- a/drivers/scsi/ufs/ufs-hisi.c
++++ b/drivers/scsi/ufs/ufs-hisi.c
+@@ -505,10 +505,8 @@ static int ufs_hisi_get_resource(struct ufs_hisi_host *host)
+ 	/* get resource of ufs sys ctrl */
+ 	mem_res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
+ 	host->ufs_sys_ctrl = devm_ioremap_resource(dev, mem_res);
+-	if (IS_ERR(host->ufs_sys_ctrl))
+-		return PTR_ERR(host->ufs_sys_ctrl);
  
- 		goto out_free_adapter;
- 	}
-@@ -950,7 +950,7 @@ megaraid_fini_mbox(adapter_t *adapter)
-  * megaraid_alloc_cmd_packets - allocate shared mailbox
-  * @adapter		: soft state of the raid controller
-  *
-- * Allocate and align the shared mailbox. This maibox is used to issue
-+ * Allocate and align the shared mailbox. This mailbox is used to issue
-  * all the commands. For IO based controllers, the mailbox is also registered
-  * with the FW. Allocate memory for all commands as well.
-  * This is our big allocator.
-diff --git a/drivers/scsi/megaraid/megaraid_mbox.h b/drivers/scsi/megaraid/megaraid_mbox.h
-index c1d86d961a92..e075aeb4012f 100644
---- a/drivers/scsi/megaraid/megaraid_mbox.h
-+++ b/drivers/scsi/megaraid/megaraid_mbox.h
-@@ -117,7 +117,7 @@
-  * @raw_mbox		: raw mailbox pointer
-  * @mbox		: mailbox
-  * @mbox64		: extended mailbox
-- * @mbox_dma_h		: maibox dma address
-+ * @mbox_dma_h		: mailbox dma address
-  * @sgl64		: 64-bit scatter-gather list
-  * @sgl32		: 32-bit scatter-gather list
-  * @sgl_dma_h		: dma handle for the scatter-gather list
+-	return 0;
++	return PTR_ERR_OR_ZERO(host->ufs_sys_ctrl);
+ }
+ 
+ static void ufs_hisi_set_pm_lvl(struct ufs_hba *hba)
 -- 
 2.17.1
