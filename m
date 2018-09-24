@@ -1,73 +1,49 @@
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 4.18 229/235] blk-mq: avoid to synchronize rcu inside blk_cleanup_queue()
-Date: Mon, 24 Sep 2018 13:53:35 +0200
-Message-ID: <20180924113125.837160833@linuxfoundation.org>
-References: <20180924113103.999624566@linuxfoundation.org>
+From: John Garry <john.garry@huawei.com>
+Subject: [PATCH 0/7] hisi_sas: Misc bugfixes and an optimisation patch
+Date: Mon, 24 Sep 2018 23:06:27 +0800
+Message-ID: <1537801594-207139-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180924113103.999624566@linuxfoundation.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, stable@vger.kernel.org, Andrew Jones <drjones@redhat.com>, Omar Sandoval <osandov@fb.com>, Bart Van Assche <bart.vanassche@wdc.com>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@kernel.dk>, Sasha Levin <alexander.levin@microsoft.com>
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-4.18-stable review patch.  If anyone has any objections, please let me know.
+This patchset introduces mostly more minor/obscure bugfixes for the
+driver.
 
-------------------
+Also included is an optimisation to use the block layer tag for the IPTT
+indexing. This quite a nice optimisation as it means we don't have to
+evaluate this in the driver - it was a bit of a bottle-neck.
 
-From: Ming Lei <ming.lei@redhat.com>
+However it does block us in future from enabling SCSI MQ in the driver.
+This is because the IPTT index must be a unique value per HBA. However,
+if we switched to SCSI MQ, the block layer tag becomes unique per queue,
+and not per HBA.
 
-[ Upstream commit 1311326cf4755c7ffefd20f576144ecf46d9906b ]
+Having said this, testing has shown that performance is better by using
+this block layer tag instead of enabling SCSI MQ in the driver.
 
-SCSI probing may synchronously create and destroy a lot of request_queues
-for non-existent devices. Any synchronize_rcu() in queue creation or
-destroy path may introduce long latency during booting, see detailed
-description in comment of blk_register_queue().
+Luo Jiaxing (2):
+  scsi: hisi_sas: Feed back linkrate(max/min) when re-attached
+  scsi: hisi_sas: Move evaluation of hisi_hba in hisi_sas_task_prep()
 
-This patch removes one synchronize_rcu() inside blk_cleanup_queue()
-for this case, commit c2856ae2f315d75(blk-mq: quiesce queue before freeing queue)
-needs synchronize_rcu() for implementing blk_mq_quiesce_queue(), but
-when queue isn't initialized, it isn't necessary to do that since
-only pass-through requests are involved, no original issue in
-scsi_execute() at all.
+Xiang Chen (5):
+  scsi: hisi_sas: Fix the race between IO completion and timeout for
+    SMP/internal IO
+  scsi: hisi_sas: Free slot later in slot_complete_vx_hw()
+  scsi: hisi_sas: unmask interrupts ent72 and ent74
+  scsi: hisi_sas: Use block layer tag instead for IPTT
+  scsi: hisi_sas: Update v3 hw AIP_LIMIT and CFG_AGING_TIME register
+    values
 
-Without this patch and previous one, it may take more 20+ seconds for
-virtio-scsi to complete disk probe. With the two patches, the time becomes
-less than 100ms.
+ drivers/scsi/hisi_sas/hisi_sas.h       |   3 +-
+ drivers/scsi/hisi_sas/hisi_sas_main.c  | 154 ++++++++++++++++++++++++---------
+ drivers/scsi/hisi_sas/hisi_sas_v1_hw.c |   1 -
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c |  11 +--
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c |  15 ++--
+ 5 files changed, 130 insertions(+), 54 deletions(-)
 
-Fixes: c2856ae2f315d75 ("blk-mq: quiesce queue before freeing queue")
-Reported-by: Andrew Jones <drjones@redhat.com>
-Cc: Omar Sandoval <osandov@fb.com>
-Cc: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Tested-by: Andrew Jones <drjones@redhat.com>
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
-Signed-off-by: Jens Axboe <axboe@kernel.dk>
-Signed-off-by: Sasha Levin <alexander.levin@microsoft.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
----
- block/blk-core.c |    8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
-
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -791,9 +791,13 @@ void blk_cleanup_queue(struct request_qu
- 	 * make sure all in-progress dispatch are completed because
- 	 * blk_freeze_queue() can only complete all requests, and
- 	 * dispatch may still be in-progress since we dispatch requests
--	 * from more than one contexts
-+	 * from more than one contexts.
-+	 *
-+	 * No need to quiesce queue if it isn't initialized yet since
-+	 * blk_freeze_queue() should be enough for cases of passthrough
-+	 * request.
- 	 */
--	if (q->mq_ops)
-+	if (q->mq_ops && blk_queue_init_done(q))
- 		blk_mq_quiesce_queue(q);
- 
- 	/* for synchronous bio-based driver finish in-flight integrity i/o */
+-- 
+1.9.1
