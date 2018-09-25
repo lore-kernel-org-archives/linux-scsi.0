@@ -1,26 +1,34 @@
-From: Greg Kroah-Hartman <greg@kroah.com>
-Subject: Re: [GIT PULL] SCSI fixes for 4.19-rc5
-Date: Tue, 25 Sep 2018 18:57:29 +0200
-Message-ID: <20180925165729.GA16781@kroah.com>
-References: <1537889692.5951.2.camel@HansenPartnership.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Tong Zhang <ztong@vt.edu>
+Subject: duplicate check for CAP_SYS_RAWIO
+Date: Tue, 25 Sep 2018 13:27:05 -0400
+Message-ID: <9CFCBC36-B08F-4920-B144-F7EED5B9BC33@vt.edu>
+Mime-Version: 1.0 (Mac OS X Mail 12.0 \(3445.100.39\))
+Content-Type: text/plain;
+        charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1537889692.5951.2.camel@HansenPartnership.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: axboe@kernel.dk, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Wenbo Shen <shenwenbosmile@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Sep 25, 2018 at 08:34:52AM -0700, James Bottomley wrote:
-> Nine obvious bug fixes mostly in individual drivers.  The target fix is
-> of particular importance because it's CVE related.
-> 
-> The patch is available here:
-> 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+Kernel Version: 4.18.5
 
-Now pulled, thanks.
+Problem Description:
 
-greg k-h
+We found a path where duplicate capability checks are observed,
+the path is :
+
+scsi_ioctl<- require CAP_SYS_ADMIN and CAP_SYS_RAWIO
+     `->sg_scsi_ioctl() 
+                `->blk_verify_command() <- require CAP_SYS_RAWIO
+
+CAP_SYS_RAWIO is checked twice.
+
+related file: 
+  block/scsi_ioctl.c:215 
+  block/scsi_ioctl.c:471
+  drivers/scsi/scsi_ioctl.c:240
+  drivers/scsi/scsi_ioctl.c:242
+
+- Tong
