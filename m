@@ -1,38 +1,68 @@
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Subject: Re: [PATCH 0/3] scsi: ufs-qcom: Remove all direct calls to qcom-ufs
- phy
-Date: Tue, 25 Sep 2018 12:12:49 +0530
-Message-ID: <75d4820c-d154-cc5c-e7b6-72defdfdce5e@ti.com>
-References: <20180904101719.18049-1-vivek.gautam@codeaurora.org>
+From: Vivek Gautam <vivek.gautam@codeaurora.org>
+Subject: Re: [PATCH 1/1] scsi/ufshcd: Fix NULL pointer dereference for in ufshcd_init
+Date: Tue, 25 Sep 2018 15:20:43 +0530
+Message-ID: <CAFp+6iFVQKvWj7o+nmoJVhgQpOz2gZ_Eo+e8c8qdoc18waJ+zw@mail.gmail.com>
+References: <20180807174739.23379-1-vivek.gautam@codeaurora.org>
+ <CAE=gft5ONyVQ6qkP41G_vx-Djo0MqHhXZ6pjTOZjTDpPgwukZQ@mail.gmail.com> <CAFp+6iEpZThehq4896dmYifvbNF5wa3ESyw7yBv7vpUbtQKzhA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180904101719.18049-1-vivek.gautam@codeaurora.org>
-Content-Language: en-US
+In-Reply-To: <CAFp+6iEpZThehq4896dmYifvbNF5wa3ESyw7yBv7vpUbtQKzhA@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Vivek Gautam <vivek.gautam@codeaurora.org>, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: subhashj@codeaurora.org, bjorn.andersson@linaro.org, evgreen@chromium.org, linux-arm-msm@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: jejb@linux.vnet.ibm.com, evgreen@chromium.org, linux-scsi@vger.kernel.org, open list <linux-kernel@vger.kernel.org>, linux-arm-msm <linux-arm-msm@vger.kernel.org>, Bjorn Andersson <bjorn.andersson@linaro.org>, Subhash Jadavani <subhashj@codeaurora.org>, mka@chromium.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Vivek,
+Hi Martin,
 
-On Tuesday 04 September 2018 03:47 PM, Vivek Gautam wrote:
-> Cleaning up the ufs-qcom host further to remove all direct calls
-> into qcom-ufs driver.
-> Only phy-qcom-ufs-qmp-20nm phy handles these direct calls from ufs host
-> and this phy is not used in any supported qcom platform in current kernel.
-> So, while we free up the host from all the ufs_qcom_phy_*() API calls
-> we should declare 20nm phy as broken.
-> For this we fork out couple of configs from PHY_QCOM_UFS -
-> PHY_QCOM_UFS_14NM and PHY_QCOM_UFS_20NM out of which we declare
-> PHY_QCOM_UFS_20NM as 'broken'.
-> 
-> This series helps in a clean use of ufs phy support for sdm845
-> and further SoCs that will also use phy-qcom-qmp phy driver.
+On Wed, Aug 29, 2018 at 1:50 PM Vivek Gautam
+<vivek.gautam@codeaurora.org> wrote:
+>
+> On Wed, Aug 29, 2018 at 1:13 AM Evan Green <evgreen@chromium.org> wrote:
+> >
+> > On Tue, Aug 7, 2018 at 10:48 AM Vivek Gautam
+> > <vivek.gautam@codeaurora.org> wrote:
+> > >
+> > > Error paths in ufshcd_init() ufshcd_hba_exit() killed clk_scaling
+> > > workqueue when the workqueue is actually created quite late in
+> > > ufshcd_init().
+> > > So, we end up getting NULL pointer dereference in such error paths.
+> > > Fix this by moving clk_scaling initialization and kill codes to
+> > > two separate methods, and call them at required places.
+> > >
+> > > Fixes: 401f1e4490ee ("scsi: ufs: don't suspend clock scaling during clock
+> > > gating")
+> > >
+> > > Signed-off-by: Vivek Gautam <vivek.gautam@codeaurora.org>
+> > > Cc: Bjorn Andersson <bjorn.andersson@linaro.org>
+> > > Cc: Subhash Jadavani <subhashj@codeaurora.org>
+> > > Cc: Matthias Kaehlcke <mka@chromium.org>
+> > > Cc: Evan Green <evgreen@chromium.org>
+> > > Cc: Martin K. Petersen <martin.petersen@oracle.com>
+> > > ---
+> > >
+> > > Bjorn, Subhash,
+> > > I am not certain of some of these devfreq, and clk_scaling bits
+> > > that are moved as part of this patch. Please help in reviewing the
+> > > change in the light of these features, and related sequence should
+> > > be followed.
+> > > Thanks.
+> > >
+> >
+> > You're right, there is a lot of logic moving around here. I think this
+> > looks okay to me.
+> >
+> > Reviewed-by: Evan Green <evgreen@chromium.org>
+>
+> Thanks Evan.
+>
+> Best regards
+> Vivek
 
-I think this entire series should go via linux-phy tree. I need ACK from UFS
-MAINTAINER for the second patch.
-
+Gentle ping. Will you please consider picking this patch for the merge?
 Thanks
-Kishon
+Vivek
+
+-- 
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member
+of Code Aurora Forum, hosted by The Linux Foundation
