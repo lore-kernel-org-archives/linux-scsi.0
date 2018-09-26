@@ -1,35 +1,46 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2] scsi: sd: don't crash the host on invalid commands
-Date: Tue, 25 Sep 2018 20:52:58 -0400
-Message-ID: <yq1tvmdgjv9.fsf@oracle.com>
-References: <20180921070101.9260-1-jthumshirn@suse.de>
+Subject: Re: [PATCH 1/1] scsi/ufshcd: Fix NULL pointer dereference for in ufshcd_init
+Date: Tue, 25 Sep 2018 21:05:03 -0400
+Message-ID: <yq1lg7pgjb4.fsf@oracle.com>
+References: <20180807174739.23379-1-vivek.gautam@codeaurora.org>
+        <CAE=gft5ONyVQ6qkP41G_vx-Djo0MqHhXZ6pjTOZjTDpPgwukZQ@mail.gmail.com>
+        <CAFp+6iEpZThehq4896dmYifvbNF5wa3ESyw7yBv7vpUbtQKzhA@mail.gmail.com>
+        <CAFp+6iFVQKvWj7o+nmoJVhgQpOz2gZ_Eo+e8c8qdoc18waJ+zw@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180921070101.9260-1-jthumshirn@suse.de> (Johannes Thumshirn's
-        message of "Fri, 21 Sep 2018 09:01:01 +0200")
+In-Reply-To: <CAFp+6iFVQKvWj7o+nmoJVhgQpOz2gZ_Eo+e8c8qdoc18waJ+zw@mail.gmail.com>
+        (Vivek Gautam's message of "Tue, 25 Sep 2018 15:20:43 +0530")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Bart Van Assche <bvanassche@acm.org>, Christoph Hellwig <hch@lst.de>
+To: Vivek Gautam <vivek.gautam@codeaurora.org>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, jejb@linux.vnet.ibm.com, evgreen@chromium.org, linux-scsi@vger.kernel.org, open list <linux-kernel@vger.kernel.org>, linux-arm-msm <linux-arm-msm@vger.kernel.org>, Bjorn Andersson <bjorn.andersson@linaro.org>, Subhash Jadavani <subhashj@codeaurora.org>, mka@chromium.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Johannes,
+Vivek,
 
-> When sd_init_command() get's a with a unknown req_op() it crashes the
-> system via BUG().
+>> > > Bjorn, Subhash,
+>> > > I am not certain of some of these devfreq, and clk_scaling bits
+>> > > that are moved as part of this patch. Please help in reviewing the
+>> > > change in the light of these features, and related sequence should
+>> > > be followed.
+>> > > Thanks.
+>> > >
+>> >
+>> > You're right, there is a lot of logic moving around here. I think this
+>> > looks okay to me.
+>> >
+>> > Reviewed-by: Evan Green <evgreen@chromium.org>
+>>
+>> Thanks Evan.
+>>
+>> Best regards
+>> Vivek
 >
-> This makes debugging the actual reason for the broken request
-> cmd_flags pretty hard as the system is down before it's able to write
-> out debugging data on the serial console or the trace buffer.
->
-> Change the BUG() to a WARN_ON() and return BLKPREP_KILL to fail
-> gracefully and return an I/O error to the producer of the request.
+> Gentle ping. Will you please consider picking this patch for the
+> merge?
 
-Looks like a bunch of my merge mails didn't make it out last week.
-
-For the record, I did merge this into 4.19/scsi-fixes and it has made
-its way upstream.
+I was waiting for some feedback from Bjorn or Subhash.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
