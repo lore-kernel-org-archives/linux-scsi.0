@@ -1,61 +1,42 @@
-From: Nathan Chancellor <natechancellor@gmail.com>
-Subject: [PATCH] scsi: bfa: Avoid implicit enum conversion in bfad_im_post_vendor_event
-Date: Tue, 25 Sep 2018 21:54:37 -0700
-Message-ID: <20180926045435.9213-1-natechancellor@gmail.com>
+From: Vivek Gautam <vivek.gautam@codeaurora.org>
+Subject: Re: [PATCH 2/3] scsi/ufs: qcom: Remove ufs_qcom_phy_*() calls from host
+Date: Wed, 26 Sep 2018 11:44:52 +0530
+Message-ID: <CAFp+6iF=teknfvdaWeiNdwVtVybjrKQyQXcLHKNKETdJftykQw@mail.gmail.com>
+References: <20180904101719.18049-1-vivek.gautam@codeaurora.org>
+ <20180904101719.18049-3-vivek.gautam@codeaurora.org> <20180924172432.GL1367@tuxbook-pro>
+ <CAFp+6iFPOGRAToBrV44VDNYG4DP2c6_+8QZbKsDmM4SF57NGfQ@mail.gmail.com> <yq1efdhhzkr.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <yq1efdhhzkr.fsf@oracle.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Nick Desaulniers <ndesaulniers@google.com>, Nathan Chancellor <natechancellor@gmail.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: kishon <kishon@ti.com>, Vinayak Holikatti <vinholikatti@gmail.com>, jejb@linux.vnet.ibm.com, open list <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Subhash Jadavani <subhashj@codeaurora.org>, evgreen@chromium.org, linux-arm-msm <linux-arm-msm@vger.kernel.org>, Bjorn Andersson <bjorn.andersson@linaro.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Clang warns when one enumerated type is implicitly converted to another.
+On Wed, Sep 26, 2018 at 5:59 AM Martin K. Petersen
+<martin.petersen@oracle.com> wrote:
+>
+>
+> Vivek,
+>
+> > Kishon is looking to pick this series through linux-phy tree.
+> > Will you please consider giving your ack for this patch? Thanks.
+>
+> Looks fine.
+>
+> Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
 
-drivers/scsi/bfa/bfa_fcs_lport.c:379:26: warning: implicit conversion
-from enumeration type 'enum bfa_lport_aen_event' to different
-enumeration type 'enum bfa_ioc_aen_event' [-Wenum-conversion]
-                                  BFA_AEN_CAT_LPORT, event);
-                                                     ^~~~~
+Thanks Martin.
 
-The root cause of these warnings is the bfad_im_post_vendor_event
-function, which expects a value from enum bfa_ioc_aen_event but there
-are multiple instances of values from enums bfa_port_aen_event,
-bfa_audit_aen_event, and bfa_lport_aen_event being used in this
-function.
+Best regards
+Vivek
+>
+> --
+> Martin K. Petersen      Oracle Linux Engineering
 
-Given that this doesn't appear to be a problem since cat helps with
-differentiating the events, just change evt's type to int so that no
-conversion needs to happen and Clang won't warn.
 
-Link: https://github.com/ClangBuiltLinux/linux/issues/147
-Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
----
 
-The alternate way of fixing these warnings is to explicitly cast the
-conversion when calling the function but since there are about 8-10 of
-these warnings, it seems logical to just change the function definiton
-which is cleaner in my opinion.
-
-See commits 3eb95feac113 ("mm/zsmalloc.c: change stat type parameter to
-int") and 04fecbf51b3c ("mm: memcontrol: use int for event/state
-parameter in several functions") for similar fixes.
-
- drivers/scsi/bfa/bfad_im.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/bfa/bfad_im.h b/drivers/scsi/bfa/bfad_im.h
-index e61ed8dad0b4..bd4ac187fd8e 100644
---- a/drivers/scsi/bfa/bfad_im.h
-+++ b/drivers/scsi/bfa/bfad_im.h
-@@ -143,7 +143,7 @@ struct bfad_im_s {
- static inline void bfad_im_post_vendor_event(struct bfa_aen_entry_s *entry,
- 					     struct bfad_s *drv, int cnt,
- 					     enum bfa_aen_category cat,
--					     enum bfa_ioc_aen_event evt)
-+					     int evt)
- {
- 	struct timespec64 ts;
- 
 -- 
-2.19.0
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member
+of Code Aurora Forum, hosted by The Linux Foundation
