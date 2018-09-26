@@ -1,81 +1,36 @@
-From: Sumit Saxena <sumit.saxena@broadcom.com>
-Subject: RE: [PATCH] scsi: megaraid: fix spelling mistake "maibox" -> "mailbox"
-Date: Wed, 26 Sep 2018 16:49:10 +0530
-Message-ID: <2517be92121ace5f4a42276bce2a413b@mail.gmail.com>
-References: <20180923222548.7908-1-colin.king@canonical.com>
+From: YueHaibing <yuehaibing@huawei.com>
+Subject: [PATCH -next] advansys: use correct srb_tag in adv_isr_callback
+Date: Wed, 26 Sep 2018 19:41:07 +0800
+Message-ID: <20180926114107.13532-1-yuehaibing@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180923222548.7908-1-colin.king@canonical.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Colin King <colin.king@canonical.com>, Kashyap Desai <kashyap.desai@broadcom.com>, Shivasharan Srikanteshwara <shivasharan.srikanteshwara@broadcom.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@broadcom.com>, linux-scsi@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+To: matthew@wil.cx, hare@suse.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, YueHaibing <yuehaibing@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-> -----Original Message-----
-> From: Colin King [mailto:colin.king@canonical.com]
-> Sent: Monday, September 24, 2018 3:56 AM
-> To: Kashyap Desai <kashyap.desai@broadcom.com>; Sumit Saxena
-> <sumit.saxena@broadcom.com>; Shivasharan S
-> <shivasharan.srikanteshwara@broadcom.com>; James E . J . Bottomley
-> <jejb@linux.vnet.ibm.com>; Martin K . Petersen
-> <martin.petersen@oracle.com>; megaraidlinux.pdl@broadcom.com; linux-
-> scsi@vger.kernel.org
-> Cc: kernel-janitors@vger.kernel.org; linux-kernel@vger.kernel.org
-> Subject: [PATCH] scsi: megaraid: fix spelling mistake "maibox" ->
-> "mailbox"
->
-> From: Colin Ian King <colin.king@canonical.com>
->
-> Trivial fix to spelling mistake in warning message and comments
->
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> ---
->  drivers/scsi/megaraid/megaraid_mbox.c | 4 ++--
-> drivers/scsi/megaraid/megaraid_mbox.h | 2 +-
->  2 files changed, 3 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/scsi/megaraid/megaraid_mbox.c
-> b/drivers/scsi/megaraid/megaraid_mbox.c
-> index 530358cdcb39..2013523605c5 100644
-> --- a/drivers/scsi/megaraid/megaraid_mbox.c
-> +++ b/drivers/scsi/megaraid/megaraid_mbox.c
-> @@ -484,7 +484,7 @@ megaraid_probe_one(struct pci_dev *pdev, const
-> struct pci_device_id *id)
->  	// Start the mailbox based controller
->  	if (megaraid_init_mbox(adapter) != 0) {
->  		con_log(CL_ANN, (KERN_WARNING
-> -			"megaraid: maibox adapter did not initialize\n"));
-> +			"megaraid: mailbox adapter did not initialize\n"));
->
->  		goto out_free_adapter;
->  	}
-> @@ -950,7 +950,7 @@ megaraid_fini_mbox(adapter_t *adapter)
->   * megaraid_alloc_cmd_packets - allocate shared mailbox
->   * @adapter		: soft state of the raid controller
->   *
-> - * Allocate and align the shared mailbox. This maibox is used to issue
-> + * Allocate and align the shared mailbox. This mailbox is used to issue
->   * all the commands. For IO based controllers, the mailbox is also
-> registered
->   * with the FW. Allocate memory for all commands as well.
->   * This is our big allocator.
-> diff --git a/drivers/scsi/megaraid/megaraid_mbox.h
-> b/drivers/scsi/megaraid/megaraid_mbox.h
-> index c1d86d961a92..e075aeb4012f 100644
-> --- a/drivers/scsi/megaraid/megaraid_mbox.h
-> +++ b/drivers/scsi/megaraid/megaraid_mbox.h
-> @@ -117,7 +117,7 @@
->   * @raw_mbox		: raw mailbox pointer
->   * @mbox		: mailbox
->   * @mbox64		: extended mailbox
-> - * @mbox_dma_h		: maibox dma address
-> + * @mbox_dma_h		: mailbox dma address
->   * @sgl64		: 64-bit scatter-gather list
->   * @sgl32		: 32-bit scatter-gather list
->   * @sgl_dma_h		: dma handle for the scatter-gather list
+'srb_tag' should be used in the scsi_host_find_tag,
+rather than 'scsiqp->srb_tag'.
 
-Acked-by: Sumit Saxena <sumit.saxena@broadcom.com>
+Fixes: 9c17c62aedb0 ("advansys: use shared host tag map for command lookup")
+Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+---
+ drivers/scsi/advansys.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> --
-> 2.17.1
+diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
+index 713f690..23f313c 100644
+--- a/drivers/scsi/advansys.c
++++ b/drivers/scsi/advansys.c
+@@ -5966,7 +5966,7 @@ static void adv_isr_callback(ADV_DVC_VAR *adv_dvc_varp, ADV_SCSI_REQ_Q *scsiqp)
+ 	 * completed ADV_SCSI_REQ_Q structure.
+ 	 */
+ 	srb_tag = le32_to_cpu(scsiqp->srb_tag);
+-	scp = scsi_host_find_tag(boardp->shost, scsiqp->srb_tag);
++	scp = scsi_host_find_tag(boardp->shost, srb_tag);
+ 
+ 	ASC_DBG(1, "scp 0x%p\n", scp);
+ 	if (scp == NULL) {
+-- 
+1.8.3.1
