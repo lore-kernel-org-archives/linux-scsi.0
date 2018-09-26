@@ -1,46 +1,32 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 1/1] scsi/ufshcd: Fix NULL pointer dereference for in ufshcd_init
-Date: Tue, 25 Sep 2018 21:05:03 -0400
-Message-ID: <yq1lg7pgjb4.fsf@oracle.com>
-References: <20180807174739.23379-1-vivek.gautam@codeaurora.org>
-        <CAE=gft5ONyVQ6qkP41G_vx-Djo0MqHhXZ6pjTOZjTDpPgwukZQ@mail.gmail.com>
-        <CAFp+6iEpZThehq4896dmYifvbNF5wa3ESyw7yBv7vpUbtQKzhA@mail.gmail.com>
-        <CAFp+6iFVQKvWj7o+nmoJVhgQpOz2gZ_Eo+e8c8qdoc18waJ+zw@mail.gmail.com>
+Subject: Re: [PATCH v4] scsi: ufs: Make sysfs attributes writable
+Date: Tue, 25 Sep 2018 21:08:09 -0400
+Message-ID: <yq1h8idgj5y.fsf@oracle.com>
+References: <20180808224454.243790-1-evgreen@chromium.org>
+        <6dd8a547-7260-09b8-9096-8a1564b08e70@intel.com>
+        <8fd05b2d-fa48-78af-6f1c-7e485c1008f6@intel.com>
+        <CAD=FV=W7h_3LwV-P5_E58-3qOo7Y-yQDTDfSLoU1+3c_6ZF0cg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAFp+6iFVQKvWj7o+nmoJVhgQpOz2gZ_Eo+e8c8qdoc18waJ+zw@mail.gmail.com>
-        (Vivek Gautam's message of "Tue, 25 Sep 2018 15:20:43 +0530")
+In-Reply-To: <CAD=FV=W7h_3LwV-P5_E58-3qOo7Y-yQDTDfSLoU1+3c_6ZF0cg@mail.gmail.com>
+        (Doug Anderson's message of "Tue, 25 Sep 2018 11:40:54 -0700")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Vivek Gautam <vivek.gautam@codeaurora.org>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, jejb@linux.vnet.ibm.com, evgreen@chromium.org, linux-scsi@vger.kernel.org, open list <linux-kernel@vger.kernel.org>, linux-arm-msm <linux-arm-msm@vger.kernel.org>, Bjorn Andersson <bjorn.andersson@linaro.org>, Subhash Jadavani <subhashj@codeaurora.org>, mka@chromium.org
+To: Doug Anderson <dianders@chromium.org>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Evan Green <evgreen@chromium.org>, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, stanislav.nijnikov@wdc.com, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Bart.VanAssche@wdc.com, Adrian Hunter <adrian.hunter@intel.com>
 List-Id: linux-scsi@vger.kernel.org
 
 
-Vivek,
+Doug,
 
->> > > Bjorn, Subhash,
->> > > I am not certain of some of these devfreq, and clk_scaling bits
->> > > that are moved as part of this patch. Please help in reviewing the
->> > > change in the light of these features, and related sequence should
->> > > be followed.
->> > > Thanks.
->> > >
->> >
->> > You're right, there is a lot of logic moving around here. I think this
->> > looks okay to me.
->> >
->> > Reviewed-by: Evan Green <evgreen@chromium.org>
->>
->> Thanks Evan.
->>
->> Best regards
->> Vivek
->
-> Gentle ping. Will you please consider picking this patch for the
-> merge?
+> I came across this patch and Evan's other one and noticed that they
+> haven't been applied though a batch of other SCSI patches for 4.20
+> were applied about a week ago.  Martin: is there something about these
+> patches that needs to change before they can land?
 
-I was waiting for some feedback from Bjorn or Subhash.
+I have simply been awaiting some sort of consensus on the various
+competing approaches. Lots of patches posted with tiny incremental fixes
+but very little discussion about the merits of one over the other.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
