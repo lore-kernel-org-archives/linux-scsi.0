@@ -1,43 +1,55 @@
-From: Doug Anderson <dianders@chromium.org>
-Subject: Re: [PATCH v4] scsi: ufs: Make sysfs attributes writable
-Date: Tue, 25 Sep 2018 18:46:13 -0700
-Message-ID: <CAD=FV=WNHDd8icQi3wtFV98w1zdEd-QqFn1PrZeXQWgYt4Yo1w@mail.gmail.com>
-References: <20180808224454.243790-1-evgreen@chromium.org> <6dd8a547-7260-09b8-9096-8a1564b08e70@intel.com>
- <8fd05b2d-fa48-78af-6f1c-7e485c1008f6@intel.com> <CAD=FV=W7h_3LwV-P5_E58-3qOo7Y-yQDTDfSLoU1+3c_6ZF0cg@mail.gmail.com>
- <yq1h8idgj5y.fsf@oracle.com>
+From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
+Subject: Re: [PATCH] scsi: qla2xxx: Fix comment in MODULE_PARM_DESC in qla2xxx
+Date: Wed, 26 Sep 2018 04:21:06 +0000
+Message-ID: <E999CEA6-97FA-4E89-A6B5-FF976EC0F0F5@cavium.com>
+References: <20180911094811.12681-1-standby24x7@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <yq1h8idgj5y.fsf@oracle.com>
+In-Reply-To: <20180911094811.12681-1-standby24x7@gmail.com>
+Content-Language: en-US
+Content-ID: <3D4D58A776993A4FA72CD7DCF699D475@namprd07.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Evan Green <evgreen@chromium.org>, Vinayak Holikatti <vinholikatti@gmail.com>, jejb@linux.vnet.ibm.com, stanislav.nijnikov@wdc.com, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Bart.VanAssche@wdc.com, Adrian Hunter <adrian.hunter@intel.com>
+To: Masanari Iida <standby24x7@gmail.com>
+Cc: Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@cavium.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Malavali, Giridhar" <Giridhar.Malavali@cavium.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Martin,
 
-On Tue, Sep 25, 2018 at 6:08 PM Martin K. Petersen
-<martin.petersen@oracle.com> wrote:
->
-> Doug,
->
-> > I came across this patch and Evan's other one and noticed that they
-> > haven't been applied though a batch of other SCSI patches for 4.20
-> > were applied about a week ago.  Martin: is there something about these
-> > patches that needs to change before they can land?
->
-> I have simply been awaiting some sort of consensus on the various
-> competing approaches. Lots of patches posted with tiny incremental fixes
-> but very little discussion about the merits of one over the other.
+> On Sep 11, 2018, at 2:48 AM, Masanari Iida <standby24x7@gmail.com> wrote:
+>=20
+> External Email
+>=20
+> Default value of ql2xasynctmfenable for qla2xxx driver was
+> set to 1 in commit 043dc1d7e8501.
+> But comment in MODULE_PARAM_DESC was not modified.
+>=20
+> Signed-off-by: Masanari Iida <standby24x7@gmail.com>
+> ---
+> drivers/scsi/qla2xxx/qla_os.c | 2 +-
+> 1 file changed, 1 insertion(+), 1 deletion(-)
+>=20
+> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.=
+c
+> index 42b8f0d3e580..fe5404be73c5 100644
+> --- a/drivers/scsi/qla2xxx/qla_os.c
+> +++ b/drivers/scsi/qla2xxx/qla_os.c
+> @@ -204,7 +204,7 @@ int ql2xasynctmfenable =3D 1;
+> module_param(ql2xasynctmfenable, int, S_IRUGO);
+> MODULE_PARM_DESC(ql2xasynctmfenable,
+>                "Enables issue of TM IOCBs asynchronously via IOCB mechani=
+sm"
+> -               "Default is 0 - Issue TM IOCBs via mailbox mechanism.");
+> +               "Default is 1 - Issue TM IOCBs via mailbox mechanism.");
+>=20
+> int ql2xdontresethba;
+> module_param(ql2xdontresethba, int, S_IRUGO|S_IWUSR);
+> --
+> 2.19.0
+>=20
 
-Ah, perfect information!  Thank you!  I was just confused because I
-didn't understand all the status and it just looked like silence here.
+Thanks for the patch.=20
 
-Maybe someone on this thread can start a discussion with all the
-stakeholders (people who have been involved in competing patches or
-other tiny bits and pieces) and summarize their view of the current
-status?  Maybe that would help get the ball rolling again?
+Acked-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 
-Thanks again!  :)
-
--Doug
+-Himanshu
