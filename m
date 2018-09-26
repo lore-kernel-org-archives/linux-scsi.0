@@ -1,36 +1,51 @@
-From: YueHaibing <yuehaibing@huawei.com>
-Subject: [PATCH -next] advansys: use correct srb_tag in adv_isr_callback
-Date: Wed, 26 Sep 2018 19:41:07 +0800
-Message-ID: <20180926114107.13532-1-yuehaibing@huawei.com>
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] scsi: qla4xxx: remove redundant check on drvr_wait
+Date: Wed, 26 Sep 2018 14:08:48 +0100
+Message-ID: <20180926130848.30645-1-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: matthew@wil.cx, hare@suse.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, YueHaibing <yuehaibing@huawei.com>
+To: QLogic-Storage-Upstream@qlogic.com, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-'srb_tag' should be used in the scsi_host_find_tag,
-rather than 'scsiqp->srb_tag'.
+From: Colin Ian King <colin.king@canonical.com>
 
-Fixes: 9c17c62aedb0 ("advansys: use shared host tag map for command lookup")
-Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+The check for a non-zero drvr_wait is redundant as the same check
+is performed earlier in the outer while loop, the inner check will
+always be true if we reached this point inside the while loop.
+Remove the redundant if check.
+
+Detected by cppcheck:
+(warning) Identical inner 'if' condition is always true.
+
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
 ---
- drivers/scsi/advansys.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/qla4xxx/ql4_init.c | 10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index 713f690..23f313c 100644
---- a/drivers/scsi/advansys.c
-+++ b/drivers/scsi/advansys.c
-@@ -5966,7 +5966,7 @@ static void adv_isr_callback(ADV_DVC_VAR *adv_dvc_varp, ADV_SCSI_REQ_Q *scsiqp)
- 	 * completed ADV_SCSI_REQ_Q structure.
- 	 */
- 	srb_tag = le32_to_cpu(scsiqp->srb_tag);
--	scp = scsi_host_find_tag(boardp->shost, scsiqp->srb_tag);
-+	scp = scsi_host_find_tag(boardp->shost, srb_tag);
- 
- 	ASC_DBG(1, "scp 0x%p\n", scp);
- 	if (scp == NULL) {
+diff --git a/drivers/scsi/qla4xxx/ql4_init.c b/drivers/scsi/qla4xxx/ql4_init.c
+index 52b1a0bc93c9..1ef74aa2d00a 100644
+--- a/drivers/scsi/qla4xxx/ql4_init.c
++++ b/drivers/scsi/qla4xxx/ql4_init.c
+@@ -766,12 +766,10 @@ int ql4xxx_lock_drvr_wait(struct scsi_qla_host *a)
+ 	while (drvr_wait) {
+ 		if (ql4xxx_lock_drvr(a) == 0) {
+ 			ssleep(QL4_LOCK_DRVR_SLEEP);
+-			if (drvr_wait) {
+-				DEBUG2(printk("scsi%ld: %s: Waiting for "
+-					      "Global Init Semaphore(%d)...\n",
+-					      a->host_no,
+-					      __func__, drvr_wait));
+-			}
++			DEBUG2(printk("scsi%ld: %s: Waiting for "
++				      "Global Init Semaphore(%d)...\n",
++				      a->host_no,
++				      __func__, drvr_wait));
+ 			drvr_wait -= QL4_LOCK_DRVR_SLEEP;
+ 		} else {
+ 			DEBUG2(printk("scsi%ld: %s: Global Init Semaphore "
 -- 
-1.8.3.1
+2.17.1
