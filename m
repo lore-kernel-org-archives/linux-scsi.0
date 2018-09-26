@@ -1,61 +1,34 @@
-From: Vivek Gautam <vivek.gautam@codeaurora.org>
-Subject: Re: [PATCH 1/1] scsi/ufshcd: Fix NULL pointer dereference for in ufshcd_init
-Date: Wed, 26 Sep 2018 11:47:21 +0530
-Message-ID: <CAFp+6iGr6w3BLz14LYS=DVDhBSeE=Z6dSC8pFjpFHa5OWGAJbQ@mail.gmail.com>
-References: <20180807174739.23379-1-vivek.gautam@codeaurora.org>
- <CAE=gft5ONyVQ6qkP41G_vx-Djo0MqHhXZ6pjTOZjTDpPgwukZQ@mail.gmail.com>
- <CAFp+6iEpZThehq4896dmYifvbNF5wa3ESyw7yBv7vpUbtQKzhA@mail.gmail.com>
- <CAFp+6iFVQKvWj7o+nmoJVhgQpOz2gZ_Eo+e8c8qdoc18waJ+zw@mail.gmail.com> <yq1lg7pgjb4.fsf@oracle.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH v2] scsi: sd: don't crash the host on invalid commands
+Date: Wed, 26 Sep 2018 08:51:19 +0200
+Message-ID: <20180926065119.GA4238@linux-x5ow.site>
+References: <20180921070101.9260-1-jthumshirn@suse.de>
+ <yq1tvmdgjv9.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <yq1lg7pgjb4.fsf@oracle.com>
+Content-Disposition: inline
+In-Reply-To: <yq1tvmdgjv9.fsf@oracle.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: jejb@linux.vnet.ibm.com, evgreen@chromium.org, linux-scsi@vger.kernel.org, open list <linux-kernel@vger.kernel.org>, linux-arm-msm <linux-arm-msm@vger.kernel.org>, Bjorn Andersson <bjorn.andersson@linaro.org>, Subhash Jadavani <subhashj@codeaurora.org>, mka@chromium.org
+Cc: Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Bart Van Assche <bvanassche@acm.org>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Sep 26, 2018 at 6:36 AM Martin K. Petersen
-<martin.petersen@oracle.com> wrote:
->
->
-> Vivek,
->
-> >> > > Bjorn, Subhash,
-> >> > > I am not certain of some of these devfreq, and clk_scaling bits
-> >> > > that are moved as part of this patch. Please help in reviewing the
-> >> > > change in the light of these features, and related sequence should
-> >> > > be followed.
-> >> > > Thanks.
-> >> > >
-> >> >
-> >> > You're right, there is a lot of logic moving around here. I think this
-> >> > looks okay to me.
-> >> >
-> >> > Reviewed-by: Evan Green <evgreen@chromium.org>
-> >>
-> >> Thanks Evan.
-> >>
-> >> Best regards
-> >> Vivek
-> >
-> > Gentle ping. Will you please consider picking this patch for the
-> > merge?
->
-> I was waiting for some feedback from Bjorn or Subhash.
-Sure.
+On Tue, Sep 25, 2018 at 08:52:58PM -0400, Martin K. Petersen wrote:
+> Looks like a bunch of my merge mails didn't make it out last week.
+> 
+> For the record, I did merge this into 4.19/scsi-fixes and it has made
+> its way upstream.
 
-Bjorn, Subhash, gentle ping. How does this change look to you?
-Would appreciate if you could please review this. Thanks.
+Thanks for the info.
 
-Best regards
-Vivek
->
-> --
-> Martin K. Petersen      Oracle Linux Engineering
-
-
-
+Byte,
+	Johannes
 -- 
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member
-of Code Aurora Forum, hosted by The Linux Foundation
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
