@@ -1,30 +1,25 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 2/3] scsi/ufs: qcom: Remove ufs_qcom_phy_*() calls from host
-Date: Tue, 25 Sep 2018 20:28:20 -0400
-Message-ID: <yq1efdhhzkr.fsf@oracle.com>
-References: <20180904101719.18049-1-vivek.gautam@codeaurora.org>
-        <20180904101719.18049-3-vivek.gautam@codeaurora.org>
-        <20180924172432.GL1367@tuxbook-pro>
-        <CAFp+6iFPOGRAToBrV44VDNYG4DP2c6_+8QZbKsDmM4SF57NGfQ@mail.gmail.com>
+Subject: Re: [RESEND PATCH v2] scsi: Use vmemdup_user to replace the open code
+Date: Tue, 25 Sep 2018 20:45:05 -0400
+Message-ID: <yq17ej9hysu.fsf@oracle.com>
+References: <1537286081-63081-1-git-send-email-zhongjiang@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAFp+6iFPOGRAToBrV44VDNYG4DP2c6_+8QZbKsDmM4SF57NGfQ@mail.gmail.com>
-        (Vivek Gautam's message of "Tue, 25 Sep 2018 15:22:38 +0530")
+In-Reply-To: <1537286081-63081-1-git-send-email-zhongjiang@huawei.com> (zhong
+        jiang's message of "Tue, 18 Sep 2018 23:54:41 +0800")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Vivek Gautam <vivek.gautam@codeaurora.org>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, kishon <kishon@ti.com>, Vinayak Holikatti <vinholikatti@gmail.com>, jejb@linux.vnet.ibm.com, open list <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Subhash Jadavani <subhashj@codeaurora.org>, evgreen@chromium.org, linux-arm-msm <linux-arm-msm@vger.kernel.org>, Bjorn Andersson <bjorn.andersson@linaro.org>
+To: zhong jiang <zhongjiang@huawei.com>
+Cc: martin.petersen@oracle.com, don.brace@microsemi.com, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Vivek,
+zhong,
 
-> Kishon is looking to pick this series through linux-phy tree.
-> Will you please consider giving your ack for this patch? Thanks.
+> vmemdup_user is better than duplicating its implementation, So just
+> replace the open code.
 
-Looks fine.
-
-Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
+Applied to 4.20/scsi-queue, thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
