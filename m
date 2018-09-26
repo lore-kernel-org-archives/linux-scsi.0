@@ -1,174 +1,81 @@
-From: YueHaibing <yuehaibing@huawei.com>
-Subject: [PATCH -next] scsi: megaraid: remove set but not used variables
-Date: Wed, 26 Sep 2018 19:09:40 +0800
-Message-ID: <20180926110940.16024-1-yuehaibing@huawei.com>
+From: Sumit Saxena <sumit.saxena@broadcom.com>
+Subject: RE: [PATCH] scsi: megaraid: fix spelling mistake "maibox" -> "mailbox"
+Date: Wed, 26 Sep 2018 16:49:10 +0530
+Message-ID: <2517be92121ace5f4a42276bce2a413b@mail.gmail.com>
+References: <20180923222548.7908-1-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20180923222548.7908-1-colin.king@canonical.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-kernel@vger.kernel.org, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, YueHaibing <yuehaibing@huawei.com>
+To: Colin King <colin.king@canonical.com>, Kashyap Desai <kashyap.desai@broadcom.com>, Shivasharan Srikanteshwara <shivasharan.srikanteshwara@broadcom.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@broadcom.com>, linux-scsi@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Fixes gcc '-Wunused-but-set-variable' warning:
+> -----Original Message-----
+> From: Colin King [mailto:colin.king@canonical.com]
+> Sent: Monday, September 24, 2018 3:56 AM
+> To: Kashyap Desai <kashyap.desai@broadcom.com>; Sumit Saxena
+> <sumit.saxena@broadcom.com>; Shivasharan S
+> <shivasharan.srikanteshwara@broadcom.com>; James E . J . Bottomley
+> <jejb@linux.vnet.ibm.com>; Martin K . Petersen
+> <martin.petersen@oracle.com>; megaraidlinux.pdl@broadcom.com; linux-
+> scsi@vger.kernel.org
+> Cc: kernel-janitors@vger.kernel.org; linux-kernel@vger.kernel.org
+> Subject: [PATCH] scsi: megaraid: fix spelling mistake "maibox" ->
+> "mailbox"
+>
+> From: Colin Ian King <colin.king@canonical.com>
+>
+> Trivial fix to spelling mistake in warning message and comments
+>
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> ---
+>  drivers/scsi/megaraid/megaraid_mbox.c | 4 ++--
+> drivers/scsi/megaraid/megaraid_mbox.h | 2 +-
+>  2 files changed, 3 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/scsi/megaraid/megaraid_mbox.c
+> b/drivers/scsi/megaraid/megaraid_mbox.c
+> index 530358cdcb39..2013523605c5 100644
+> --- a/drivers/scsi/megaraid/megaraid_mbox.c
+> +++ b/drivers/scsi/megaraid/megaraid_mbox.c
+> @@ -484,7 +484,7 @@ megaraid_probe_one(struct pci_dev *pdev, const
+> struct pci_device_id *id)
+>  	// Start the mailbox based controller
+>  	if (megaraid_init_mbox(adapter) != 0) {
+>  		con_log(CL_ANN, (KERN_WARNING
+> -			"megaraid: maibox adapter did not initialize\n"));
+> +			"megaraid: mailbox adapter did not initialize\n"));
+>
+>  		goto out_free_adapter;
+>  	}
+> @@ -950,7 +950,7 @@ megaraid_fini_mbox(adapter_t *adapter)
+>   * megaraid_alloc_cmd_packets - allocate shared mailbox
+>   * @adapter		: soft state of the raid controller
+>   *
+> - * Allocate and align the shared mailbox. This maibox is used to issue
+> + * Allocate and align the shared mailbox. This mailbox is used to issue
+>   * all the commands. For IO based controllers, the mailbox is also
+> registered
+>   * with the FW. Allocate memory for all commands as well.
+>   * This is our big allocator.
+> diff --git a/drivers/scsi/megaraid/megaraid_mbox.h
+> b/drivers/scsi/megaraid/megaraid_mbox.h
+> index c1d86d961a92..e075aeb4012f 100644
+> --- a/drivers/scsi/megaraid/megaraid_mbox.h
+> +++ b/drivers/scsi/megaraid/megaraid_mbox.h
+> @@ -117,7 +117,7 @@
+>   * @raw_mbox		: raw mailbox pointer
+>   * @mbox		: mailbox
+>   * @mbox64		: extended mailbox
+> - * @mbox_dma_h		: maibox dma address
+> + * @mbox_dma_h		: mailbox dma address
+>   * @sgl64		: 64-bit scatter-gather list
+>   * @sgl32		: 32-bit scatter-gather list
+>   * @sgl_dma_h		: dma handle for the scatter-gather list
 
-drivers/scsi/megaraid/megaraid_mbox.c: In function 'megaraid_mbox_sync_scb':
-drivers/scsi/megaraid/megaraid_mbox.c:2193:14: warning:
- variable 'ccb' set but not used [-Wunused-but-set-variable]
+Acked-by: Sumit Saxena <sumit.saxena@broadcom.com>
 
-drivers/scsi/megaraid/megaraid_mbox.c: In function 'megaraid_reset_handler':
-drivers/scsi/megaraid/megaraid_mbox.c:2580:7: warning:
- variable 'recovering' set but not used [-Wunused-but-set-variable]
-
-drivers/scsi/megaraid/megaraid_mbox.c: In function 'mbox_post_sync_cmd':
-drivers/scsi/megaraid/megaraid_mbox.c:2728:12: warning:
- variable 'mbox64' set but not used [-Wunused-but-set-variable]
-
-drivers/scsi/megaraid/megaraid_mbox.c: In function 'megaraid_mbox_support_random_del':
-drivers/scsi/megaraid/megaraid_mbox.c:3138:11: warning:
- variable 'mbox' set but not used [-Wunused-but-set-variable]
-
-drivers/scsi/megaraid/megaraid_mbox.c: In function 'megaraid_mbox_flush_cache':
-drivers/scsi/megaraid/megaraid_mbox.c:3266:10: warning:
- variable 'mbox' set but not used [-Wunused-but-set-variable]
-
-drivers/scsi/megaraid/megaraid_mbox.c: In function 'megaraid_mbox_fire_sync_cmd':
-drivers/scsi/megaraid/megaraid_mbox.c:3302:12: warning:
- variable 'mbox64' set but not used [-Wunused-but-set-variable]
-
-drivers/scsi/megaraid/megaraid_mbox.c: In function 'gather_hbainfo':
-drivers/scsi/megaraid/megaraid_mbox.c:3797:10: warning:
- variable 'dmajor' set but not used [-Wunused-but-set-variable]
-
-Signed-off-by: YueHaibing <yuehaibing@huawei.com>
----
- drivers/scsi/megaraid/megaraid_mbox.c | 31 -------------------------------
- 1 file changed, 31 deletions(-)
-
-diff --git a/drivers/scsi/megaraid/megaraid_mbox.c b/drivers/scsi/megaraid/megaraid_mbox.c
-index 530358c..e9030c9 100644
---- a/drivers/scsi/megaraid/megaraid_mbox.c
-+++ b/drivers/scsi/megaraid/megaraid_mbox.c
-@@ -202,13 +202,6 @@ static void megaraid_mbox_prepare_epthru(adapter_t *, scb_t *,
- MODULE_PARM_DESC(debug_level, "Debug level for driver (default=0)");
- 
- /*
-- * ### global data ###
-- */
--static uint8_t megaraid_mbox_version[8] =
--	{ 0x02, 0x20, 0x04, 0x06, 3, 7, 20, 5 };
--
--
--/*
-  * PCI table for all supported controllers.
-  */
- static struct pci_device_id pci_id_table_g[] =  {
-@@ -2190,10 +2183,6 @@ static DEF_SCSI_QCMD(megaraid_queue_command)
- static void
- megaraid_mbox_sync_scb(adapter_t *adapter, scb_t *scb)
- {
--	mbox_ccb_t	*ccb;
--
--	ccb	= (mbox_ccb_t *)scb->ccb;
--
- 	if (scb->dma_direction == PCI_DMA_FROMDEVICE)
- 		pci_dma_sync_sg_for_cpu(adapter->pdev,
- 					scsi_sglist(scb->scp),
-@@ -2577,7 +2566,6 @@ static DEF_SCSI_QCMD(megaraid_queue_command)
- 	uint8_t		raw_mbox[sizeof(mbox_t)];
- 	int		rval;
- 	int		recovery_window;
--	int		recovering;
- 	int		i;
- 	uioc_t		*kioc;
- 
-@@ -2591,7 +2579,6 @@ static DEF_SCSI_QCMD(megaraid_queue_command)
- 		return FAILED;
- 	}
- 
--
- 	// Under exceptional conditions, FW can take up to 3 minutes to
- 	// complete command processing. Wait for additional 2 minutes for the
- 	// pending commands counter to go down to 0. If it doesn't, let the
-@@ -2640,8 +2627,6 @@ static DEF_SCSI_QCMD(megaraid_queue_command)
- 
- 	recovery_window = MBOX_RESET_WAIT + MBOX_RESET_EXT_WAIT;
- 
--	recovering = adapter->outstanding_cmds;
--
- 	for (i = 0; i < recovery_window; i++) {
- 
- 		megaraid_ack_sequence(adapter);
-@@ -2725,13 +2710,10 @@ static DEF_SCSI_QCMD(megaraid_queue_command)
- mbox_post_sync_cmd(adapter_t *adapter, uint8_t raw_mbox[])
- {
- 	mraid_device_t	*raid_dev = ADAP2RAIDDEV(adapter);
--	mbox64_t	*mbox64;
- 	mbox_t		*mbox;
- 	uint8_t		status;
- 	int		i;
- 
--
--	mbox64	= raid_dev->mbox64;
- 	mbox	= raid_dev->mbox;
- 
- 	/*
-@@ -3135,7 +3117,6 @@ static DEF_SCSI_QCMD(megaraid_queue_command)
- static int
- megaraid_mbox_support_random_del(adapter_t *adapter)
- {
--	mbox_t		*mbox;
- 	uint8_t		raw_mbox[sizeof(mbox_t)];
- 	int		rval;
- 
-@@ -3157,8 +3138,6 @@ static DEF_SCSI_QCMD(megaraid_queue_command)
- 		return 0;
- 	}
- 
--	mbox = (mbox_t *)raw_mbox;
--
- 	memset((caddr_t)raw_mbox, 0, sizeof(mbox_t));
- 
- 	raw_mbox[0] = FC_DEL_LOGDRV;
-@@ -3263,12 +3242,8 @@ static DEF_SCSI_QCMD(megaraid_queue_command)
- static void
- megaraid_mbox_flush_cache(adapter_t *adapter)
- {
--	mbox_t	*mbox;
- 	uint8_t	raw_mbox[sizeof(mbox_t)];
- 
--
--	mbox = (mbox_t *)raw_mbox;
--
- 	memset((caddr_t)raw_mbox, 0, sizeof(mbox_t));
- 
- 	raw_mbox[0] = FLUSH_ADAPTER;
-@@ -3299,7 +3274,6 @@ static DEF_SCSI_QCMD(megaraid_queue_command)
- 	mbox_t	*mbox;
- 	uint8_t	raw_mbox[sizeof(mbox_t)];
- 	mraid_device_t	*raid_dev = ADAP2RAIDDEV(adapter);
--	mbox64_t *mbox64;
- 	int	status = 0;
- 	int i;
- 	uint32_t dword;
-@@ -3310,7 +3284,6 @@ static DEF_SCSI_QCMD(megaraid_queue_command)
- 
- 	raw_mbox[0] = 0xFF;
- 
--	mbox64	= raid_dev->mbox64;
- 	mbox	= raid_dev->mbox;
- 
- 	/* Wait until mailbox is free */
-@@ -3794,10 +3767,6 @@ static DEF_SCSI_QCMD(megaraid_queue_command)
- static int
- gather_hbainfo(adapter_t *adapter, mraid_hba_info_t *hinfo)
- {
--	uint8_t	dmajor;
--
--	dmajor			= megaraid_mbox_version[0];
--
- 	hinfo->pci_vendor_id	= adapter->pdev->vendor;
- 	hinfo->pci_device_id	= adapter->pdev->device;
- 	hinfo->subsys_vendor_id	= adapter->pdev->subsystem_vendor;
--- 
-1.8.3.1
+> --
+> 2.17.1
