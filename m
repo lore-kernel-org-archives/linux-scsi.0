@@ -1,106 +1,77 @@
-From: Nathan Chancellor <natechancellor@gmail.com>
-Subject: [PATCH] scsi: isci: Change sci_controller_start_task's return type to sci_status
-Date: Wed, 26 Sep 2018 17:12:00 -0700
-Message-ID: <20180927001200.26343-1-natechancellor@gmail.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+From: Finn Thain <fthain@telegraphics.com.au>
+Subject: [PATCH 02/10] NCR5380: Reduce goto statements in NCR5380_select()
+Date: Thu, 27 Sep 2018 11:17:11 +1000
+Message-ID: <b5b6ec6689d57bcb5ee4be1aa053a0a83fdc5dcd.1538011031.git.fthain@telegraphics.com.au>
+References: <cover.1538011031.git.fthain@telegraphics.com.au>
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <cover.1538011031.git.fthain@telegraphics.com.au>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Intel SCU Linux support <intel-linux-scu@intel.com>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Nathan Chancellor <natechancellor@gmail.com>
+To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Michael Schmitz <schmitzmic@gmail.com>, Hannes Reinecke <hare@suse.de>, Ondrey Zary <linux@rainbow-software.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Clang warns when an enumerated type is implicitly converted to another.
+Replace a 'goto' statement with a simple 'return' where possible.
+This improves readability. No functional change.
 
-drivers/scsi/isci/request.c:3476:13: warning: implicit conversion from
-enumeration type 'enum sci_task_status' to different enumeration type
-'enum sci_status' [-Wenum-conversion]
-                        status = sci_controller_start_task(ihost,
-                               ~ ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-drivers/scsi/isci/host.c:2744:10: warning: implicit conversion from
-enumeration type 'enum sci_status' to different enumeration type 'enum
-sci_task_status' [-Wenum-conversion]
-                return SCI_SUCCESS;
-                ~~~~~~ ^~~~~~~~~~~
-drivers/scsi/isci/host.c:2753:9: warning: implicit conversion from
-enumeration type 'enum sci_status' to different enumeration type 'enum
-sci_task_status' [-Wenum-conversion]
-        return status;
-        ~~~~~~ ^~~~~~
-
-Avoid all of these implicit conversion by just making
-sci_controller_start_task use sci_status. This silences
-Clang and has no functional change since sci_task_status
-has all of its values mapped to something in sci_status.
-
-Link: https://github.com/ClangBuiltLinux/linux/issues/153
-Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
+Tested-by: Michael Schmitz <schmitzmic@gmail.com>
+Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 ---
- drivers/scsi/isci/host.c | 8 ++++----
- drivers/scsi/isci/host.h | 2 +-
- drivers/scsi/isci/task.c | 4 ++--
- 3 files changed, 7 insertions(+), 7 deletions(-)
+ drivers/scsi/NCR5380.c | 21 ++++++++++++---------
+ 1 file changed, 12 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/scsi/isci/host.c b/drivers/scsi/isci/host.c
-index 1ee3868ade07..7b5deae68d33 100644
---- a/drivers/scsi/isci/host.c
-+++ b/drivers/scsi/isci/host.c
-@@ -2717,9 +2717,9 @@ enum sci_status sci_controller_continue_io(struct isci_request *ireq)
-  *    the task management request.
-  * @task_request: the handle to the task request object to start.
-  */
--enum sci_task_status sci_controller_start_task(struct isci_host *ihost,
--					       struct isci_remote_device *idev,
--					       struct isci_request *ireq)
-+enum sci_status sci_controller_start_task(struct isci_host *ihost,
-+					  struct isci_remote_device *idev,
-+					  struct isci_request *ireq)
- {
- 	enum sci_status status;
- 
-@@ -2728,7 +2728,7 @@ enum sci_task_status sci_controller_start_task(struct isci_host *ihost,
- 			 "%s: SCIC Controller starting task from invalid "
- 			 "state\n",
- 			 __func__);
--		return SCI_TASK_FAILURE_INVALID_STATE;
-+		return SCI_FAILURE_INVALID_STATE;
+diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
+index 80c20ab4fc53..c6d10780febe 100644
+--- a/drivers/scsi/NCR5380.c
++++ b/drivers/scsi/NCR5380.c
+@@ -984,7 +984,7 @@ static struct scsi_cmnd *NCR5380_select(struct Scsi_Host *instance,
+ 	if (!hostdata->selecting) {
+ 		/* Command was aborted */
+ 		NCR5380_write(MODE_REG, MR_BASE);
+-		goto out;
++		return NULL;
+ 	}
+ 	if (err < 0) {
+ 		NCR5380_write(MODE_REG, MR_BASE);
+@@ -1033,7 +1033,7 @@ static struct scsi_cmnd *NCR5380_select(struct Scsi_Host *instance,
+ 	if (!hostdata->selecting) {
+ 		NCR5380_write(MODE_REG, MR_BASE);
+ 		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
+-		goto out;
++		return NULL;
  	}
  
- 	status = sci_remote_device_start_task(ihost, idev, ireq);
-diff --git a/drivers/scsi/isci/host.h b/drivers/scsi/isci/host.h
-index b3539928073c..6bc3f022630a 100644
---- a/drivers/scsi/isci/host.h
-+++ b/drivers/scsi/isci/host.h
-@@ -489,7 +489,7 @@ enum sci_status sci_controller_start_io(
- 	struct isci_remote_device *idev,
- 	struct isci_request *ireq);
+ 	dsprintk(NDEBUG_ARBITRATION, instance, "won arbitration\n");
+@@ -1116,13 +1116,16 @@ static struct scsi_cmnd *NCR5380_select(struct Scsi_Host *instance,
+ 		spin_lock_irq(&hostdata->lock);
+ 		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
+ 		NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
++
+ 		/* Can't touch cmd if it has been reclaimed by the scsi ML */
+-		if (hostdata->selecting) {
+-			cmd->result = DID_BAD_TARGET << 16;
+-			complete_cmd(instance, cmd);
+-			dsprintk(NDEBUG_SELECTION, instance, "target did not respond within 250ms\n");
+-			cmd = NULL;
+-		}
++		if (!hostdata->selecting)
++			return NULL;
++
++		cmd->result = DID_BAD_TARGET << 16;
++		complete_cmd(instance, cmd);
++		dsprintk(NDEBUG_SELECTION, instance,
++			"target did not respond within 250ms\n");
++		cmd = NULL;
+ 		goto out;
+ 	}
  
--enum sci_task_status sci_controller_start_task(
-+enum sci_status sci_controller_start_task(
- 	struct isci_host *ihost,
- 	struct isci_remote_device *idev,
- 	struct isci_request *ireq);
-diff --git a/drivers/scsi/isci/task.c b/drivers/scsi/isci/task.c
-index 6dcaed0c1fc8..fb6eba331ac6 100644
---- a/drivers/scsi/isci/task.c
-+++ b/drivers/scsi/isci/task.c
-@@ -258,7 +258,7 @@ static int isci_task_execute_tmf(struct isci_host *ihost,
- 				 struct isci_tmf *tmf, unsigned long timeout_ms)
- {
- 	DECLARE_COMPLETION_ONSTACK(completion);
--	enum sci_task_status status = SCI_TASK_FAILURE;
-+	enum sci_status status = SCI_FAILURE;
- 	struct isci_request *ireq;
- 	int ret = TMF_RESP_FUNC_FAILED;
- 	unsigned long flags;
-@@ -301,7 +301,7 @@ static int isci_task_execute_tmf(struct isci_host *ihost,
- 	/* start the TMF io. */
- 	status = sci_controller_start_task(ihost, idev, ireq);
+@@ -1155,7 +1158,7 @@ static struct scsi_cmnd *NCR5380_select(struct Scsi_Host *instance,
+ 	}
+ 	if (!hostdata->selecting) {
+ 		do_abort(instance);
+-		goto out;
++		return NULL;
+ 	}
  
--	if (status != SCI_TASK_SUCCESS) {
-+	if (status != SCI_SUCCESS) {
- 		dev_dbg(&ihost->pdev->dev,
- 			 "%s: start_io failed - status = 0x%x, request = %p\n",
- 			 __func__,
+ 	dsprintk(NDEBUG_SELECTION, instance, "target %d selected, going into MESSAGE OUT phase.\n",
 -- 
-2.19.0
+2.16.4
