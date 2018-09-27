@@ -1,65 +1,84 @@
-From: Avri Altman <Avri.Altman@wdc.com>
-Subject: RE: [PATCH v4] scsi: ufs: Make sysfs attributes writable
-Date: Thu, 27 Sep 2018 06:32:47 +0000
-Message-ID: <SN6PR04MB4925DAB09EED762CDCCBBF47FC140@SN6PR04MB4925.namprd04.prod.outlook.com>
-References: <20180808224454.243790-1-evgreen@chromium.org>
- <6dd8a547-7260-09b8-9096-8a1564b08e70@intel.com>
- <8fd05b2d-fa48-78af-6f1c-7e485c1008f6@intel.com>
- <CAD=FV=W7h_3LwV-P5_E58-3qOo7Y-yQDTDfSLoU1+3c_6ZF0cg@mail.gmail.com>
- <yq1h8idgj5y.fsf@oracle.com>
- <CAD=FV=WNHDd8icQi3wtFV98w1zdEd-QqFn1PrZeXQWgYt4Yo1w@mail.gmail.com>
- <CAE=gft57aP3Qx-zdHR1UsJwS7JjVEpVvmCSTk3ctWrRF2=W4ww@mail.gmail.com>
+From: Lukas Wunner <lukas@wunner.de>
+Subject: Re: [PATCH v4 1/6] mpt3sas: Introduce
+ mpt3sas_base_pci_device_is_available
+Date: Thu, 27 Sep 2018 09:03:27 +0200
+Message-ID: <20180927070327.wvl5glb4c7gtjoa3@wunner.de>
+References: <1537935759-14754-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+ <1537935759-14754-2-git-send-email-suganath-prabu.subramani@broadcom.com>
+ <20180926213241.GI28024@bhelgaas-glaptop.roam.corp.google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAE=gft57aP3Qx-zdHR1UsJwS7JjVEpVvmCSTk3ctWrRF2=W4ww@mail.gmail.com>
-Content-Language: en-US
+Content-Disposition: inline
+In-Reply-To: <20180926213241.GI28024@bhelgaas-glaptop.roam.corp.google.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Evan Green <evgreen@chromium.org>, Doug Anderson <dianders@chromium.org>
-Cc: "martin.petersen@oracle.com" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, Stanislav Nijnikov <Stanislav.Nijnikov@wdc.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Bart Van Assche <Bart.VanAssche@wdc.com>, "adrian.hunter@intel.com" <adrian.hunter@intel.com>, sayali <sayalil@codeaurora.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org, andy.shevchenko@gmail.com, Sathya.Prakash@broadcom.com, sreekanth.reddy@broadcom.com, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-DQo+ID4gPg0KPiA+ID4gSSBoYXZlIHNpbXBseSBiZWVuIGF3YWl0aW5nIHNvbWUgc29ydCBvZiBj
-b25zZW5zdXMgb24gdGhlIHZhcmlvdXMNCj4gPiA+IGNvbXBldGluZyBhcHByb2FjaGVzLiBMb3Rz
-IG9mIHBhdGNoZXMgcG9zdGVkIHdpdGggdGlueSBpbmNyZW1lbnRhbCBmaXhlcw0KPiA+ID4gYnV0
-IHZlcnkgbGl0dGxlIGRpc2N1c3Npb24gYWJvdXQgdGhlIG1lcml0cyBvZiBvbmUgb3ZlciB0aGUg
-b3RoZXIuDQo+ID4NCj4gPiBBaCwgcGVyZmVjdCBpbmZvcm1hdGlvbiEgIFRoYW5rIHlvdSEgIEkg
-d2FzIGp1c3QgY29uZnVzZWQgYmVjYXVzZSBJDQo+ID4gZGlkbid0IHVuZGVyc3RhbmQgYWxsIHRo
-ZSBzdGF0dXMgYW5kIGl0IGp1c3QgbG9va2VkIGxpa2Ugc2lsZW5jZSBoZXJlLg0KPiA+DQo+ID4g
-TWF5YmUgc29tZW9uZSBvbiB0aGlzIHRocmVhZCBjYW4gc3RhcnQgYSBkaXNjdXNzaW9uIHdpdGgg
-YWxsIHRoZQ0KPiA+IHN0YWtlaG9sZGVycyAocGVvcGxlIHdobyBoYXZlIGJlZW4gaW52b2x2ZWQg
-aW4gY29tcGV0aW5nIHBhdGNoZXMgb3INCj4gPiBvdGhlciB0aW55IGJpdHMgYW5kIHBpZWNlcykg
-YW5kIHN1bW1hcml6ZSB0aGVpciB2aWV3IG9mIHRoZSBjdXJyZW50DQo+ID4gc3RhdHVzPyAgTWF5
-YmUgdGhhdCB3b3VsZCBoZWxwIGdldCB0aGUgYmFsbCByb2xsaW5nIGFnYWluPw0KPiA+DQo+IA0K
-PiBBaCwgSSBkaWQgbm90IHJlYWxpemUgdGhhdCdzIHdoYXQgd2FzIGJlaW5nIGdhdGVkIG9uLg0K
-PiANCj4gVGhlc2UgcGF0Y2hlcyBjb21wbGVtZW50LCByYXRoZXIgdGhhbiBjb21wZXRlIHdpdGgs
-IHRoZSBvdGhlciBwYXRjaGVzDQo+IG91dCB0aGVyZS4gVGhlcmUgYXJlIHR3byBjb21wb25lbnRz
-IHRvIGNvbXBsZXRlbHkgcHJvdmlzaW9uaW5nIGEgVUZTDQo+IGRldmljZTogd3JpdGluZyB0aGUg
-Y29uZmlndXJhdGlvbiBkZXNjcmlwdG9ycywgYW5kIHNldHRpbmcNCj4gYXR0cmlidXRlcy9mbGFn
-cy4gTXkgb3JpZ2luYWwgc2VyaWVzIFsxXSBkaWQgY29udGFpbiBzdXBwb3J0IGZvciB0aGUNCj4g
-cHJvdmlzaW9uaW5nIHBvcnRpb24sIGJ1dCBJIG9wdGVkIHRvIGxlYXZlIHRoYXQgdG8gU2F5YWxp
-J3MgcGF0Y2ggWzJdDQo+IHRoYXQgdXNlcyBjb25maWdmcywgcmF0aGVyIHRoYW4gZHVwbGljYXRl
-IGVmZm9ydC4gU2F5YWxpJ3Mgb3RoZXIgcGF0Y2gNCj4gWzNdIGRvZXMgaGFuZGxlIHNldHRpbmcg
-dGhlIHJlZmVyZW5jZSBjbG9jayBmcmVxdWVuY3ksIHdoaWNoIGhhcyBzb21lDQo+IG92ZXJsYXAg
-d2l0aCB0aGlzIHBhdGNoIGluIHRoYXQgYm90aCBzZXQgYlJlZkNsa0ZyZXEuIEJ1dCB0aGlzIHBh
-dGNoDQo+IGFuZCB0aGUgZmxhZyBwYXRjaCBbNF0gYXJlIHN0aWxsIG5lZWRlZCBmb3IgcHJvdmlz
-aW9uaW5nIGFjdGl2aXR5IGxpa2UNCj4gbG9ja2luZyB0aGUgZGVzY3JpcHRvcnMgZG93biBvbmNl
-IHRoZXkncmUgc2V0IHVwLCBhbmQgZW5hYmxlIG90aGVyDQo+IGRldmljZSBleHBlcmltZW50YXRp
-b24uIEluIG90aGVyIHdvcmRzLCB0aGV5J3JlIGluZGVwZW5kZW50Lg0KPiANCkFsc28sIGluIHRo
-aXMgY29udGV4dCB0aGVyZSBpcyB0aGUgc2VyaWVzIGluIA0KaHR0cHM6Ly93d3cuc3Bpbmljcy5u
-ZXQvbGlzdHMvbGludXgtc2NzaS9tc2cxMjM0NzkuaHRtbA0Kd2hpY2ggYWxsb3dzIHRvIHNlbmQg
-VVBJVXMgdmlhIGEgYnNnIGRldmljZS4NCg0KSXQncyBub3QgYSBwcm92aXNpb25pbmcgc2VyaWVz
-IHBlci1zZSBsaWtlIEV2YW4ncyBhbmQgU2F5YWxpJ3MuDQpJdCBjb3ZlcnMgdGhlIHByb3Zpc2lv
-bmluZyBmdW5jdGlvbmFsaXR5LA0KQnV0IGFsc28gYWxsb3cgdG8gc2VuZCB0YXNrIG1hbmFnZW1l
-bnQgVVBJVSwgYW5kIFVJQyBjb21tYW5kcywNCldoaWNoIGNhbiBiZSB1c2VkIGZvciB0ZXN0aW5n
-IGFuZCB2YWxpZGF0aW9uLg0KDQpUaGFua3MsDQpBdnJpDQoNCg0KPiBUaGVyZSB3YXMgYWxzbyBh
-bm90aGVyIGluZGVwZW5kZW50IGZpeCBbNV0gZm9yIGRldmljZXMgdGhhdCBzdGFydCBpbg0KPiBz
-bGVlcCBtb2RlLCB3aGljaCBMaW51eCBjdXJyZW50bHkgY2FuJ3QgaGFuZGxlLiBUaGF0IHBhdGNo
-IGdvdCBubw0KPiByZXZpZXdzLCB3aGljaCBpcyBhIHNoYW1lLCBhbmQgSSBzaG91bGQgcHJvYmFi
-bHkgcmVzZW5kIGFzIG11bHRpcGxlDQo+IHBhdGNoZXMgb3IgYXQgbGVhc3Qgd2l0aCBzb21lIGFk
-ZGl0aW9uYWwgaW5mb3JtYXRpb24uDQo+IA0KPiAtRXZhbg0KPiANCj4gWzFdIGh0dHBzOi8vbGtt
-bC5vcmcvbGttbC8yMDE4LzUvMjkvOTY5DQo+IFsyXSBodHRwczovL2xrbWwub3JnL2xrbWwvMjAx
-OC85LzE0LzI5Mw0KPiBbM10gaHR0cHM6Ly9sa21sLm9yZy9sa21sLzIwMTgvOS8xNC8yOTINCj4g
-WzRdIGh0dHBzOi8vcGF0Y2h3b3JrLmtlcm5lbC5vcmcvcGF0Y2gvMTA1NzA4MTEvDQo+IFs1XSBo
-dHRwczovL2xrbWwub3JnL2xrbWwvMjAxOC84LzEwLzY2OQ0K
+On Wed, Sep 26, 2018 at 04:32:41PM -0500, Bjorn Helgaas wrote:
+> On Wed, Sep 26, 2018 at 09:52:34AM +0530, Suganath Prabu S wrote:
+> > @@ -6853,6 +6872,13 @@ mpt3sas_wait_for_commands_to_complete(struct MPT3SAS_ADAPTER *ioc)
+> >  
+> >  	ioc->pending_io_count = 0;
+> >  
+> > +	if (!mpt3sas_base_pci_device_is_available(ioc)) {
+> > +		pr_err(MPT3SAS_FMT
+> > +		    "%s: pci error recovery reset or pci device unplug occurred\n",
+> > +		    ioc->name, __func__);
+> > +		return;
+> > +	}
+> > +
+> >  	ioc_state = mpt3sas_base_get_iocstate(ioc, 0);
+> 
+> This is a good example of why I don't like pci_device_is_present(): it
+> is fundamentally racy and gives a false sense of security.  Here we
+> *think* we're making the code safer, but in fact we could have this
+> sequence:
+> 
+>   mpt3sas_base_pci_device_is_available()    # returns true
+>   # device is removed
+>   ioc_state = mpt3sas_base_get_iocstate()
+> 
+> In this case the readl() inside mpt3sas_base_get_iocstate() will
+> probably return 0xffffffff data, and we assume that's valid and
+> continue on our merry way, pretending that "ioc_state" makes sense
+> when it really doesn't.
+
+The function does the following:
+
+	ioc_state = mpt3sas_base_get_iocstate(ioc, 0);
+	if ((ioc_state & MPI2_IOC_STATE_MASK) != MPI2_IOC_STATE_OPERATIONAL)
+		return;
+
+where MPI2_IOC_STATE_MASK is 0xF0000000 and MPI2_IOC_STATE_OPERATIONAL
+is 0x20000000.  If the device is removed after the call to
+mpt3sas_base_pci_device_is_available(), the result of the bitwise "and"
+operation would be 0xF0000000, which is unequal to 0x20000000.
+Hence this looks safe.
+
+I agree that pci_device_is_present() (and the pci_dev_is_disconnected()
+it calls) must be used judiciously, but here it seems to have been done
+correctly.
+
+One thing to be aware of is that a return value of "true" from
+pci_dev_is_disconnected() is definitive and can be trusted.
+On the other hand a return value of "false" is more like a fuzzy
+"likely not disconnected, but can't give any guarantees".
+So the boolean return value is kind of the problem here.
+Boolean logic doesn't really fit these "definitive if true,
+not definitive if false" semantics.
+
+However being able to get the definitive answer in the disconnected
+case is valuable:  pciehp is the only entity that can determine
+surprise removal authoritatively and unambiguously (albeit with
+a latency).  All the other tools that we have at our disposal don't
+have that quality:  E.g. checking the Vendor ID is ambiguous because
+it returns a valid value if a device was quickly replaced with another
+one.  Also, all ones may be returned in the case of an Uncorrectable
+Error, but the device may revert to valid responses if the error can
+be recovered.  (Please correct me if I'm wrong.)
+
+Thanks,
+
+Lukas
