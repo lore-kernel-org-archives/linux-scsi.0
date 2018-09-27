@@ -1,7 +1,7 @@
 From: Nathan Chancellor <natechancellor@gmail.com>
-Subject: [PATCH] scsi: isci: Use proper enumerated type in atapi_d2h_reg_frame_handler
-Date: Wed, 26 Sep 2018 17:11:50 -0700
-Message-ID: <20180927001150.26212-1-natechancellor@gmail.com>
+Subject: [PATCH] scsi: isci: Change sci_controller_start_task's return type to sci_status
+Date: Wed, 26 Sep 2018 17:12:00 -0700
+Message-ID: <20180927001200.26343-1-natechancellor@gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
@@ -10,46 +10,97 @@ To: Intel SCU Linux support <intel-linux-scu@intel.com>, Artur Paszkiewicz <artu
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Nathan Chancellor <natechancellor@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Clang warns when one enumerated type is implicitly converted to another.
+Clang warns when an enumerated type is implicitly converted to another.
 
-drivers/scsi/isci/request.c:1629:13: warning: implicit conversion from
-enumeration type 'enum sci_io_status' to different enumeration type
+drivers/scsi/isci/request.c:3476:13: warning: implicit conversion from
+enumeration type 'enum sci_task_status' to different enumeration type
 'enum sci_status' [-Wenum-conversion]
-                        status = SCI_IO_FAILURE_RESPONSE_VALID;
-                               ~ ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-drivers/scsi/isci/request.c:1631:12: warning: implicit conversion from
-enumeration type 'enum sci_io_status' to different enumeration type
-'enum sci_status' [-Wenum-conversion]
-                status = SCI_IO_FAILURE_RESPONSE_VALID;
-                       ~ ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                        status = sci_controller_start_task(ihost,
+                               ~ ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+drivers/scsi/isci/host.c:2744:10: warning: implicit conversion from
+enumeration type 'enum sci_status' to different enumeration type 'enum
+sci_task_status' [-Wenum-conversion]
+                return SCI_SUCCESS;
+                ~~~~~~ ^~~~~~~~~~~
+drivers/scsi/isci/host.c:2753:9: warning: implicit conversion from
+enumeration type 'enum sci_status' to different enumeration type 'enum
+sci_task_status' [-Wenum-conversion]
+        return status;
+        ~~~~~~ ^~~~~~
 
-status is of type sci_status but SCI_IO_FAILURE_RESPONSE_VALID is of
-type sci_io_status. Use SCI_FAILURE_IO_RESPONSE_VALID, which is from
-sci_status and has SCI_IO_FAILURE_RESPONSE_VALID's exact value since
-that is what SCI_IO_FAILURE_RESPONSE_VALID is mapped to in the isci.h
-file.
+Avoid all of these implicit conversion by just making
+sci_controller_start_task use sci_status. This silences
+Clang and has no functional change since sci_task_status
+has all of its values mapped to something in sci_status.
 
 Link: https://github.com/ClangBuiltLinux/linux/issues/153
 Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
 ---
- drivers/scsi/isci/request.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/isci/host.c | 8 ++++----
+ drivers/scsi/isci/host.h | 2 +-
+ drivers/scsi/isci/task.c | 4 ++--
+ 3 files changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/isci/request.c b/drivers/scsi/isci/request.c
-index ed197bc8e801..2f151708b59a 100644
---- a/drivers/scsi/isci/request.c
-+++ b/drivers/scsi/isci/request.c
-@@ -1626,9 +1626,9 @@ static enum sci_status atapi_d2h_reg_frame_handler(struct isci_request *ireq,
+diff --git a/drivers/scsi/isci/host.c b/drivers/scsi/isci/host.c
+index 1ee3868ade07..7b5deae68d33 100644
+--- a/drivers/scsi/isci/host.c
++++ b/drivers/scsi/isci/host.c
+@@ -2717,9 +2717,9 @@ enum sci_status sci_controller_continue_io(struct isci_request *ireq)
+  *    the task management request.
+  * @task_request: the handle to the task request object to start.
+  */
+-enum sci_task_status sci_controller_start_task(struct isci_host *ihost,
+-					       struct isci_remote_device *idev,
+-					       struct isci_request *ireq)
++enum sci_status sci_controller_start_task(struct isci_host *ihost,
++					  struct isci_remote_device *idev,
++					  struct isci_request *ireq)
+ {
+ 	enum sci_status status;
  
- 	if (status == SCI_SUCCESS) {
- 		if (ireq->stp.rsp.status & ATA_ERR)
--			status = SCI_IO_FAILURE_RESPONSE_VALID;
-+			status = SCI_FAILURE_IO_RESPONSE_VALID;
- 	} else {
--		status = SCI_IO_FAILURE_RESPONSE_VALID;
-+		status = SCI_FAILURE_IO_RESPONSE_VALID;
+@@ -2728,7 +2728,7 @@ enum sci_task_status sci_controller_start_task(struct isci_host *ihost,
+ 			 "%s: SCIC Controller starting task from invalid "
+ 			 "state\n",
+ 			 __func__);
+-		return SCI_TASK_FAILURE_INVALID_STATE;
++		return SCI_FAILURE_INVALID_STATE;
  	}
  
- 	if (status != SCI_SUCCESS) {
+ 	status = sci_remote_device_start_task(ihost, idev, ireq);
+diff --git a/drivers/scsi/isci/host.h b/drivers/scsi/isci/host.h
+index b3539928073c..6bc3f022630a 100644
+--- a/drivers/scsi/isci/host.h
++++ b/drivers/scsi/isci/host.h
+@@ -489,7 +489,7 @@ enum sci_status sci_controller_start_io(
+ 	struct isci_remote_device *idev,
+ 	struct isci_request *ireq);
+ 
+-enum sci_task_status sci_controller_start_task(
++enum sci_status sci_controller_start_task(
+ 	struct isci_host *ihost,
+ 	struct isci_remote_device *idev,
+ 	struct isci_request *ireq);
+diff --git a/drivers/scsi/isci/task.c b/drivers/scsi/isci/task.c
+index 6dcaed0c1fc8..fb6eba331ac6 100644
+--- a/drivers/scsi/isci/task.c
++++ b/drivers/scsi/isci/task.c
+@@ -258,7 +258,7 @@ static int isci_task_execute_tmf(struct isci_host *ihost,
+ 				 struct isci_tmf *tmf, unsigned long timeout_ms)
+ {
+ 	DECLARE_COMPLETION_ONSTACK(completion);
+-	enum sci_task_status status = SCI_TASK_FAILURE;
++	enum sci_status status = SCI_FAILURE;
+ 	struct isci_request *ireq;
+ 	int ret = TMF_RESP_FUNC_FAILED;
+ 	unsigned long flags;
+@@ -301,7 +301,7 @@ static int isci_task_execute_tmf(struct isci_host *ihost,
+ 	/* start the TMF io. */
+ 	status = sci_controller_start_task(ihost, idev, ireq);
+ 
+-	if (status != SCI_TASK_SUCCESS) {
++	if (status != SCI_SUCCESS) {
+ 		dev_dbg(&ihost->pdev->dev,
+ 			 "%s: start_io failed - status = 0x%x, request = %p\n",
+ 			 __func__,
 -- 
 2.19.0
