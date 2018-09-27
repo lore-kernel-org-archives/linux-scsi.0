@@ -1,68 +1,57 @@
-From: Lukas Wunner <lukas@wunner.de>
-Subject: Re: [PATCH v4 1/6] mpt3sas: Introduce
- mpt3sas_base_pci_device_is_available
-Date: Thu, 27 Sep 2018 21:09:59 +0200
-Message-ID: <20180927190959.dio4qwti3i4accjm@wunner.de>
-References: <1537935759-14754-1-git-send-email-suganath-prabu.subramani@broadcom.com>
- <1537935759-14754-2-git-send-email-suganath-prabu.subramani@broadcom.com>
- <20180926213241.GI28024@bhelgaas-glaptop.roam.corp.google.com>
- <20180927070327.wvl5glb4c7gtjoa3@wunner.de>
- <20180927184746.GM28024@bhelgaas-glaptop.roam.corp.google.com>
+From: Evan Green <evgreen@chromium.org>
+Subject: Re: [PATCH v4] scsi: ufs: Make sysfs attributes writable
+Date: Thu, 27 Sep 2018 16:16:33 -0700
+Message-ID: <CAE=gft5sgayo8CUOp7WfA5Vs1Pp2YR0OayyUvxOMtHEXzDJwRw@mail.gmail.com>
+References: <20180808224454.243790-1-evgreen@chromium.org> <6dd8a547-7260-09b8-9096-8a1564b08e70@intel.com>
+ <8fd05b2d-fa48-78af-6f1c-7e485c1008f6@intel.com> <CAD=FV=W7h_3LwV-P5_E58-3qOo7Y-yQDTDfSLoU1+3c_6ZF0cg@mail.gmail.com>
+ <yq1h8idgj5y.fsf@oracle.com> <CAD=FV=WNHDd8icQi3wtFV98w1zdEd-QqFn1PrZeXQWgYt4Yo1w@mail.gmail.com>
+ <CAE=gft57aP3Qx-zdHR1UsJwS7JjVEpVvmCSTk3ctWrRF2=W4ww@mail.gmail.com>
+ <SN6PR04MB4925DAB09EED762CDCCBBF47FC140@SN6PR04MB4925.namprd04.prod.outlook.com>
+ <20180927140133.GA22096@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20180927184746.GM28024@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20180927140133.GA22096@infradead.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org, andy.shevchenko@gmail.com, Sathya.Prakash@broadcom.com, sreekanth.reddy@broadcom.com, linux-kernel@vger.kernel.org, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Russell Currey <ruscur@russell.cc>, Sam Bobroff <sbobroff@linux.ibm.com>, Oliver O'Halloran <oohall@gmail.com>
+To: hch@infradead.org
+Cc: Avri.Altman@wdc.com, Doug Anderson <dianders@chromium.org>, martin.petersen@oracle.com, Vinayak Holikatti <vinholikatti@gmail.com>, jejb@linux.vnet.ibm.com, Stanislav.Nijnikov@wdc.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Bart.VanAssche@wdc.com, adrian.hunter@intel.com, sayali <sayalil@codeaurora.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Sep 27, 2018 at 01:47:46PM -0500, Bjorn Helgaas wrote:
->   mpt3sas_wait_for_commands_to_complete(...)
->   {
->     ...
->  +  if (!mpt3sas_base_pci_device_is_available(ioc))
->  +    return;
-> 
->     # In the definitive case, we returned above.  If we get here, we
->     # think the device *might* be present.  The readl() inside
->     # mpt3sas_base_get_iocstate() might fail (returning ~0 data).
->     # It happens that (~0 & MPI2_IOC_STATE_MASK) != MPI2_IOC_STATE_OPERATIONAL
->     # so we will return below if the device was removed after the
->     # check above.
-> 
->     ioc_state = mpt3sas_base_get_iocstate(ioc, 0);
->     if ((ioc_state & MPI2_IOC_STATE_MASK) != MPI2_IOC_STATE_OPERATIONAL)
->       return;
->     ...
-> 
-> 
-> I think this code is unreasonably complicated.  The multiple layers
-> and negations make it very difficult to figure out what's definitive.
+On Thu, Sep 27, 2018 at 7:01 AM Christoph Hellwig <hch@infradead.org> wrote:
+>
+> On Thu, Sep 27, 2018 at 06:32:47AM +0000, Avri Altman wrote:
+> > Also, in this context there is the series in
+> > https://www.spinics.net/lists/linux-scsi/msg123479.html
+> > which allows to send UPIUs via a bsg device.
+> >
+> > It's not a provisioning series per-se like Evan's and Sayali's.
+> > It covers the provisioning functionality,
+> > But also allow to send task management UPIU, and UIC commands,
+> > Which can be used for testing and validation.
+>
+> And as someone having been involved with review of a few different
+> UFS provisioning bits this is what I think we should be merging.
+>
+> Instead of being in a rat race of adding ever new sysfs or configfs
+> attributes for things that don't matter to normal driver operation
+> I'd rather have a relatively clean pass through interface and move
+> policy to userspace.  Especially given that there are plenty of
+> vendor specific commands at these levels as well.
 
-I agree there's room for improvement.
+There's no policy in my patches (nor Sayali's), nor are there any
+vendor-specific commands here. The sysfs interface has exposed knobs
+defined by the UFS specification, which to me seems like the kernel
+providing a sane abstraction of device functionality. I don't see
+there being a rat race, as these attributes and the config descriptor
+are all that's needed to provision a device, and any reasonable future
+versions of the UFS spec would likely be backwards compatible with
+respect to attributes and flags.
 
+The patches Avri linked to seem fine as well, but I don't see why
+there's not room for both the "roll your own driver completely in user
+mode" approach, and the "kernel provides a reasonable abstraction of
+device functionality" approach to co-exist. We do the same sort of
+thing for simple buses like I2C for example, where you can both write
+a kernel driver or do bus transactions directly from user mode.
 
-> I'm not sure how mpt3sas benefits from adding
-> mpt3sas_base_pci_device_is_available() here, other than the fact that
-> it avoids an MMIO read to the device in most cases.  I think it would
-> be simpler and better to make mpt3sas_base_get_iocstate() smarter
-> about handling ~0 values from the readl().
-
-Avoiding an MMIO read when it's known to run into a Completion Timeout
-buys about 17 ms.  If the function is executed many times (I don't know
-if that's the case here, I'm referring to the general case), or if bailing
-out of it early avoids significant amounts of further I/O, then checking
-for disconnectedness makes sense.
-
-The 17 ms number is from this talk:
-https://www.youtube.com/watch?v=GJ6B0xzgvlM&t=832
-
-It's the typical Completion Timeout on an Intel chip, but it can be up to
-50 ms in the default setting or up to 64 s if so configured in the Device
-Control 2 register (PCIe r4.0 sec 7.8.16).
-
-Thanks,
-
-Lukas
+-Evan
