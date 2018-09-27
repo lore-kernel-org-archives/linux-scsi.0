@@ -1,7 +1,7 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH 10/10] NCR5380: Check for bus reset
+Subject: [PATCH 06/10] NCR5380: Check for invalid reselection target
 Date: Thu, 27 Sep 2018 11:17:11 +1000
-Message-ID: <9258c41a3e7f30e551cb6817e60816919f4e99d0.1538011031.git.fthain@telegraphics.com.au>
+Message-ID: <6ae77d4d63ee60992e71baa281ad6e2ec7b29d25.1538011031.git.fthain@telegraphics.com.au>
 References: <cover.1538011031.git.fthain@telegraphics.com.au>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1538011031.git.fthain@telegraphics.com.au>
@@ -10,134 +10,32 @@ To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <mart
 Cc: Michael Schmitz <schmitzmic@gmail.com>, Hannes Reinecke <hare@suse.de>, Ondrey Zary <linux@rainbow-software.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-The SR_RST bit isn't latched. Hence, detecting a bus reset isn't reliable.
-When it is detected, the right thing to do is to drop all connected and
-disconnected commands. The code for that is already present so refactor
-it and call it when SR_RST is set.
+The X3T9.2 specification (draft) says, under "6.1.4.1 RESELECTION", that
+"the initiator shall not respond to a RESELECTION phase if other than two
+SCSI ID bits are on the DATA BUS." This issue (too many bits set) has
+been observed in the wild, so add a check.
 
 Tested-by: Michael Schmitz <schmitzmic@gmail.com>
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 ---
- drivers/scsi/NCR5380.c | 74 ++++++++++++++++++++++++++++++--------------------
- 1 file changed, 45 insertions(+), 29 deletions(-)
+ drivers/scsi/NCR5380.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
 diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
-index b9a3eb0647e4..8429c855701f 100644
+index e96a48b9e86c..3058b68b6740 100644
 --- a/drivers/scsi/NCR5380.c
 +++ b/drivers/scsi/NCR5380.c
-@@ -131,6 +131,7 @@
- 
- static int do_abort(struct Scsi_Host *);
- static void do_reset(struct Scsi_Host *);
-+static void bus_reset_cleanup(struct Scsi_Host *);
- 
- /**
-  * initialize_SCp - init the scsi pointer field
-@@ -883,7 +884,14 @@ static irqreturn_t __maybe_unused NCR5380_intr(int irq, void *dev_id)
- 			/* Probably Bus Reset */
- 			NCR5380_read(RESET_PARITY_INTERRUPT_REG);
- 
--			dsprintk(NDEBUG_INTR, instance, "unknown interrupt\n");
-+			if (sr & SR_RST) {
-+				/* Certainly Bus Reset */
-+				shost_printk(KERN_WARNING, instance,
-+					     "bus reset interrupt\n");
-+				bus_reset_cleanup(instance);
-+			} else {
-+				dsprintk(NDEBUG_INTR, instance, "unknown interrupt\n");
-+			}
- #ifdef SUN3_SCSI_VME
- 			dregs->csr |= CSR_DMA_ENABLE;
- #endif
-@@ -2305,31 +2313,12 @@ static int NCR5380_abort(struct scsi_cmnd *cmd)
- }
- 
- 
--/**
-- * NCR5380_host_reset - reset the SCSI host
-- * @cmd: SCSI command undergoing EH
-- *
-- * Returns SUCCESS
-- */
--
--static int NCR5380_host_reset(struct scsi_cmnd *cmd)
-+static void bus_reset_cleanup(struct Scsi_Host *instance)
- {
--	struct Scsi_Host *instance = cmd->device->host;
- 	struct NCR5380_hostdata *hostdata = shost_priv(instance);
- 	int i;
--	unsigned long flags;
- 	struct NCR5380_cmd *ncmd;
- 
--	spin_lock_irqsave(&hostdata->lock, flags);
--
--#if (NDEBUG & NDEBUG_ANY)
--	shost_printk(KERN_INFO, instance, __func__);
--#endif
--	NCR5380_dprint(NDEBUG_ANY, instance);
--	NCR5380_dprint_phase(NDEBUG_ANY, instance);
--
--	do_reset(instance);
--
- 	/* reset NCR registers */
+@@ -2016,6 +2016,11 @@ static void NCR5380_reselect(struct Scsi_Host *instance)
  	NCR5380_write(MODE_REG, MR_BASE);
- 	NCR5380_write(TARGET_COMMAND_REG, 0);
-@@ -2341,14 +2330,6 @@ static int NCR5380_host_reset(struct scsi_cmnd *cmd)
- 	 * commands!
- 	 */
  
--	list_for_each_entry(ncmd, &hostdata->unissued, list) {
--		struct scsi_cmnd *cmd = NCR5380_to_scmd(ncmd);
--
--		cmd->result = DID_RESET << 16;
--		cmd->scsi_done(cmd);
--	}
--	INIT_LIST_HEAD(&hostdata->unissued);
--
- 	if (hostdata->selecting) {
- 		hostdata->selecting->result = DID_RESET << 16;
- 		complete_cmd(instance, hostdata->selecting);
-@@ -2382,6 +2363,41 @@ static int NCR5380_host_reset(struct scsi_cmnd *cmd)
- 
- 	queue_work(hostdata->work_q, &hostdata->main_task);
- 	maybe_release_dma_irq(instance);
-+}
-+
-+/**
-+ * NCR5380_host_reset - reset the SCSI host
-+ * @cmd: SCSI command undergoing EH
-+ *
-+ * Returns SUCCESS
-+ */
-+
-+static int NCR5380_host_reset(struct scsi_cmnd *cmd)
-+{
-+	struct Scsi_Host *instance = cmd->device->host;
-+	struct NCR5380_hostdata *hostdata = shost_priv(instance);
-+	unsigned long flags;
-+	struct NCR5380_cmd *ncmd;
-+
-+	spin_lock_irqsave(&hostdata->lock, flags);
-+
-+#if (NDEBUG & NDEBUG_ANY)
-+	shost_printk(KERN_INFO, instance, __func__);
-+#endif
-+	NCR5380_dprint(NDEBUG_ANY, instance);
-+	NCR5380_dprint_phase(NDEBUG_ANY, instance);
-+
-+	list_for_each_entry(ncmd, &hostdata->unissued, list) {
-+		struct scsi_cmnd *scmd = NCR5380_to_scmd(ncmd);
-+
-+		scmd->result = DID_RESET << 16;
-+		scmd->scsi_done(scmd);
+ 	target_mask = NCR5380_read(CURRENT_SCSI_DATA_REG) & ~(hostdata->id_mask);
++	if (!target_mask || target_mask & (target_mask - 1)) {
++		shost_printk(KERN_WARNING, instance,
++			     "reselect: bad target_mask 0x%02x\n", target_mask);
++		return;
 +	}
-+	INIT_LIST_HEAD(&hostdata->unissued);
-+
-+	do_reset(instance);
-+	bus_reset_cleanup(instance);
-+
- 	spin_unlock_irqrestore(&hostdata->lock, flags);
  
- 	return SUCCESS;
+ 	dsprintk(NDEBUG_RESELECTION, instance, "reselect\n");
+ 
 -- 
 2.16.4
