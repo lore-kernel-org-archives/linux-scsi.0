@@ -1,58 +1,40 @@
-From: "Rangankar, Manish" <Manish.Rangankar@cavium.com>
-Subject: RE: [PATCH] scsi: qla4xxx: remove redundant check on drvr_wait
-Date: Thu, 27 Sep 2018 11:15:42 +0000
-Message-ID: <MW2PR07MB40429AAD3AC7C40972012788E3140@MW2PR07MB4042.namprd07.prod.outlook.com>
-References: <20180926130848.30645-1-colin.king@canonical.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v4] scsi: ufs: Make sysfs attributes writable
+Date: Thu, 27 Sep 2018 07:01:33 -0700
+Message-ID: <20180927140133.GA22096@infradead.org>
+References: <20180808224454.243790-1-evgreen@chromium.org>
+ <6dd8a547-7260-09b8-9096-8a1564b08e70@intel.com>
+ <8fd05b2d-fa48-78af-6f1c-7e485c1008f6@intel.com>
+ <CAD=FV=W7h_3LwV-P5_E58-3qOo7Y-yQDTDfSLoU1+3c_6ZF0cg@mail.gmail.com>
+ <yq1h8idgj5y.fsf@oracle.com>
+ <CAD=FV=WNHDd8icQi3wtFV98w1zdEd-QqFn1PrZeXQWgYt4Yo1w@mail.gmail.com>
+ <CAE=gft57aP3Qx-zdHR1UsJwS7JjVEpVvmCSTk3ctWrRF2=W4ww@mail.gmail.com>
+ <SN6PR04MB4925DAB09EED762CDCCBBF47FC140@SN6PR04MB4925.namprd04.prod.outlook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180926130848.30645-1-colin.king@canonical.com>
-Content-Language: en-US
+Content-Disposition: inline
+In-Reply-To: <SN6PR04MB4925DAB09EED762CDCCBBF47FC140@SN6PR04MB4925.namprd04.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Colin King <colin.king@canonical.com>, Dept-Eng QLogic Storage Upstream <QLogic-Storage-Upstream@cavium.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: Avri Altman <Avri.Altman@wdc.com>
+Cc: Evan Green <evgreen@chromium.org>, Doug Anderson <dianders@chromium.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, Stanislav Nijnikov <Stanislav.Nijnikov@wdc.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Bart Van Assche <Bart.VanAssche@wdc.com>, "adrian.hunter@intel.com" <adrian.hunter@intel.com>, sayali <sayalil@codeaurora.org>
 List-Id: linux-scsi@vger.kernel.org
 
-DQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IENvbGluIEtpbmcgPGNvbGlu
-LmtpbmdAY2Fub25pY2FsLmNvbT4NCj4gU2VudDogV2VkbmVzZGF5LCBTZXB0ZW1iZXIgMjYsIDIw
-MTggNjozOSBQTQ0KPiBUbzogRGVwdC1FbmcgUUxvZ2ljIFN0b3JhZ2UgVXBzdHJlYW0gPFFMb2dp
-Yy1TdG9yYWdlLQ0KPiBVcHN0cmVhbUBjYXZpdW0uY29tPjsgSmFtZXMgRSAuIEogLiBCb3R0b21s
-ZXkgPGplamJAbGludXgudm5ldC5pYm0uY29tPjsNCj4gTWFydGluIEsgLiBQZXRlcnNlbiA8bWFy
-dGluLnBldGVyc2VuQG9yYWNsZS5jb20+OyBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZw0KPiBD
-Yzoga2VybmVsLWphbml0b3JzQHZnZXIua2VybmVsLm9yZzsgbGludXgta2VybmVsQHZnZXIua2Vy
-bmVsLm9yZw0KPiBTdWJqZWN0OiBbUEFUQ0hdIHNjc2k6IHFsYTR4eHg6IHJlbW92ZSByZWR1bmRh
-bnQgY2hlY2sgb24gZHJ2cl93YWl0DQo+IA0KPiBFeHRlcm5hbCBFbWFpbA0KPiANCj4gRnJvbTog
-Q29saW4gSWFuIEtpbmcgPGNvbGluLmtpbmdAY2Fub25pY2FsLmNvbT4NCj4gDQo+IFRoZSBjaGVj
-ayBmb3IgYSBub24temVybyBkcnZyX3dhaXQgaXMgcmVkdW5kYW50IGFzIHRoZSBzYW1lIGNoZWNr
-IGlzIHBlcmZvcm1lZA0KPiBlYXJsaWVyIGluIHRoZSBvdXRlciB3aGlsZSBsb29wLCB0aGUgaW5u
-ZXIgY2hlY2sgd2lsbCBhbHdheXMgYmUgdHJ1ZSBpZiB3ZSByZWFjaGVkDQo+IHRoaXMgcG9pbnQg
-aW5zaWRlIHRoZSB3aGlsZSBsb29wLg0KPiBSZW1vdmUgdGhlIHJlZHVuZGFudCBpZiBjaGVjay4N
-Cj4gDQo+IERldGVjdGVkIGJ5IGNwcGNoZWNrOg0KPiAod2FybmluZykgSWRlbnRpY2FsIGlubmVy
-ICdpZicgY29uZGl0aW9uIGlzIGFsd2F5cyB0cnVlLg0KPiANCj4gU2lnbmVkLW9mZi1ieTogQ29s
-aW4gSWFuIEtpbmcgPGNvbGluLmtpbmdAY2Fub25pY2FsLmNvbT4NCj4gLS0tDQo+ICBkcml2ZXJz
-L3Njc2kvcWxhNHh4eC9xbDRfaW5pdC5jIHwgMTAgKysrKy0tLS0tLQ0KPiAgMSBmaWxlIGNoYW5n
-ZWQsIDQgaW5zZXJ0aW9ucygrKSwgNiBkZWxldGlvbnMoLSkNCj4gDQo+IGRpZmYgLS1naXQgYS9k
-cml2ZXJzL3Njc2kvcWxhNHh4eC9xbDRfaW5pdC5jIGIvZHJpdmVycy9zY3NpL3FsYTR4eHgvcWw0
-X2luaXQuYyBpbmRleA0KPiA1MmIxYTBiYzkzYzkuLjFlZjc0YWEyZDAwYSAxMDA2NDQNCj4gLS0t
-IGEvZHJpdmVycy9zY3NpL3FsYTR4eHgvcWw0X2luaXQuYw0KPiArKysgYi9kcml2ZXJzL3Njc2kv
-cWxhNHh4eC9xbDRfaW5pdC5jDQo+IEBAIC03NjYsMTIgKzc2NiwxMCBAQCBpbnQgcWw0eHh4X2xv
-Y2tfZHJ2cl93YWl0KHN0cnVjdCBzY3NpX3FsYV9ob3N0ICphKQ0KPiAgICAgICAgIHdoaWxlIChk
-cnZyX3dhaXQpIHsNCj4gICAgICAgICAgICAgICAgIGlmIChxbDR4eHhfbG9ja19kcnZyKGEpID09
-IDApIHsNCj4gICAgICAgICAgICAgICAgICAgICAgICAgc3NsZWVwKFFMNF9MT0NLX0RSVlJfU0xF
-RVApOw0KPiAtICAgICAgICAgICAgICAgICAgICAgICBpZiAoZHJ2cl93YWl0KSB7DQo+IC0gICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgREVCVUcyKHByaW50aygic2NzaSVsZDogJXM6IFdh
-aXRpbmcgZm9yICINCj4gLSAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICJHbG9iYWwgSW5pdCBTZW1hcGhvcmUoJWQpLi4uXG4iLA0KPiAtICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgYS0+aG9zdF9ubywNCj4gLSAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIF9fZnVuY19fLCBkcnZyX3dhaXQpKTsN
-Cj4gLSAgICAgICAgICAgICAgICAgICAgICAgfQ0KPiArICAgICAgICAgICAgICAgICAgICAgICBE
-RUJVRzIocHJpbnRrKCJzY3NpJWxkOiAlczogV2FpdGluZyBmb3IgIg0KPiArICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICJHbG9iYWwgSW5pdCBTZW1hcGhvcmUoJWQpLi4uXG4i
-LA0KPiArICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGEtPmhvc3Rfbm8sDQo+
-ICsgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgX19mdW5jX18sIGRydnJfd2Fp
-dCkpOw0KPiAgICAgICAgICAgICAgICAgICAgICAgICBkcnZyX3dhaXQgLT0gUUw0X0xPQ0tfRFJW
-Ul9TTEVFUDsNCj4gICAgICAgICAgICAgICAgIH0gZWxzZSB7DQo+ICAgICAgICAgICAgICAgICAg
-ICAgICAgIERFQlVHMihwcmludGsoInNjc2klbGQ6ICVzOiBHbG9iYWwgSW5pdCBTZW1hcGhvcmUg
-Ig0KPiAtLQ0KPiAyLjE3LjENCg0KVGhhbmtzLA0KDQpBY2tlZC1ieTogTWFuaXNoIFJhbmdhbmth
-ciA8TWFuaXNoLlJhbmdhbmthckBjYXZpdW0uY29tPg0K
+On Thu, Sep 27, 2018 at 06:32:47AM +0000, Avri Altman wrote:
+> Also, in this context there is the series in 
+> https://www.spinics.net/lists/linux-scsi/msg123479.html
+> which allows to send UPIUs via a bsg device.
+> 
+> It's not a provisioning series per-se like Evan's and Sayali's.
+> It covers the provisioning functionality,
+> But also allow to send task management UPIU, and UIC commands,
+> Which can be used for testing and validation.
+
+And as someone having been involved with review of a few different
+UFS provisioning bits this is what I think we should be merging.
+
+Instead of being in a rat race of adding ever new sysfs or configfs
+attributes for things that don't matter to normal driver operation
+I'd rather have a relatively clean pass through interface and move
+policy to userspace.  Especially given that there are plenty of
+vendor specific commands at these levels as well.
