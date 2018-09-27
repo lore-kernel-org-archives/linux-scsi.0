@@ -1,48 +1,65 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH 04/10] NCR5380: Withhold disconnect privilege for REQUEST
- SENSE
-Date: Thu, 27 Sep 2018 11:17:11 +1000
-Message-ID: <44118a49ffa8ea8d3bfa63ca13166946b75f1843.1538011031.git.fthain@telegraphics.com.au>
-References: <cover.1538011031.git.fthain@telegraphics.com.au>
+From: Avri Altman <Avri.Altman@wdc.com>
+Subject: RE: [PATCH v4] scsi: ufs: Make sysfs attributes writable
+Date: Thu, 27 Sep 2018 06:32:47 +0000
+Message-ID: <SN6PR04MB4925DAB09EED762CDCCBBF47FC140@SN6PR04MB4925.namprd04.prod.outlook.com>
+References: <20180808224454.243790-1-evgreen@chromium.org>
+ <6dd8a547-7260-09b8-9096-8a1564b08e70@intel.com>
+ <8fd05b2d-fa48-78af-6f1c-7e485c1008f6@intel.com>
+ <CAD=FV=W7h_3LwV-P5_E58-3qOo7Y-yQDTDfSLoU1+3c_6ZF0cg@mail.gmail.com>
+ <yq1h8idgj5y.fsf@oracle.com>
+ <CAD=FV=WNHDd8icQi3wtFV98w1zdEd-QqFn1PrZeXQWgYt4Yo1w@mail.gmail.com>
+ <CAE=gft57aP3Qx-zdHR1UsJwS7JjVEpVvmCSTk3ctWrRF2=W4ww@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <cover.1538011031.git.fthain@telegraphics.com.au>
+In-Reply-To: <CAE=gft57aP3Qx-zdHR1UsJwS7JjVEpVvmCSTk3ctWrRF2=W4ww@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Michael Schmitz <schmitzmic@gmail.com>, Hannes Reinecke <hare@suse.de>, Ondrey Zary <linux@rainbow-software.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Evan Green <evgreen@chromium.org>, Doug Anderson <dianders@chromium.org>
+Cc: "martin.petersen@oracle.com" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, Stanislav Nijnikov <Stanislav.Nijnikov@wdc.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Bart Van Assche <Bart.VanAssche@wdc.com>, "adrian.hunter@intel.com" <adrian.hunter@intel.com>, sayali <sayalil@codeaurora.org>
 List-Id: linux-scsi@vger.kernel.org
 
-This is mostly needed because an AztecMonster II target has been
-observed disconnecting REQUEST SENSE commands and then failing
-to reselect properly.
-
-Suggested-by: Michael Schmitz <schmitzmic@gmail.com>
-Tested-by: Michael Schmitz <schmitzmic@gmail.com>
-Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
----
- drivers/scsi/NCR5380.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
-index 7be1ba2b9e4e..5226164cfa65 100644
---- a/drivers/scsi/NCR5380.c
-+++ b/drivers/scsi/NCR5380.c
-@@ -936,6 +936,8 @@ static bool NCR5380_select(struct Scsi_Host *instance, struct scsi_cmnd *cmd)
- 	int len;
- 	int err;
- 	bool ret = true;
-+	bool can_disconnect = instance->irq != NO_IRQ &&
-+			      cmd->cmnd[0] != REQUEST_SENSE;
- 
- 	NCR5380_dprint(NDEBUG_ARBITRATION, instance);
- 	dsprintk(NDEBUG_ARBITRATION, instance, "starting arbitration, id = %d\n",
-@@ -1159,7 +1161,7 @@ static bool NCR5380_select(struct Scsi_Host *instance, struct scsi_cmnd *cmd)
- 
- 	dsprintk(NDEBUG_SELECTION, instance, "target %d selected, going into MESSAGE OUT phase.\n",
- 	         scmd_id(cmd));
--	tmp[0] = IDENTIFY(((instance->irq == NO_IRQ) ? 0 : 1), cmd->device->lun);
-+	tmp[0] = IDENTIFY(can_disconnect, cmd->device->lun);
- 
- 	len = 1;
- 	data = tmp;
--- 
-2.16.4
+DQo+ID4gPg0KPiA+ID4gSSBoYXZlIHNpbXBseSBiZWVuIGF3YWl0aW5nIHNvbWUgc29ydCBvZiBj
+b25zZW5zdXMgb24gdGhlIHZhcmlvdXMNCj4gPiA+IGNvbXBldGluZyBhcHByb2FjaGVzLiBMb3Rz
+IG9mIHBhdGNoZXMgcG9zdGVkIHdpdGggdGlueSBpbmNyZW1lbnRhbCBmaXhlcw0KPiA+ID4gYnV0
+IHZlcnkgbGl0dGxlIGRpc2N1c3Npb24gYWJvdXQgdGhlIG1lcml0cyBvZiBvbmUgb3ZlciB0aGUg
+b3RoZXIuDQo+ID4NCj4gPiBBaCwgcGVyZmVjdCBpbmZvcm1hdGlvbiEgIFRoYW5rIHlvdSEgIEkg
+d2FzIGp1c3QgY29uZnVzZWQgYmVjYXVzZSBJDQo+ID4gZGlkbid0IHVuZGVyc3RhbmQgYWxsIHRo
+ZSBzdGF0dXMgYW5kIGl0IGp1c3QgbG9va2VkIGxpa2Ugc2lsZW5jZSBoZXJlLg0KPiA+DQo+ID4g
+TWF5YmUgc29tZW9uZSBvbiB0aGlzIHRocmVhZCBjYW4gc3RhcnQgYSBkaXNjdXNzaW9uIHdpdGgg
+YWxsIHRoZQ0KPiA+IHN0YWtlaG9sZGVycyAocGVvcGxlIHdobyBoYXZlIGJlZW4gaW52b2x2ZWQg
+aW4gY29tcGV0aW5nIHBhdGNoZXMgb3INCj4gPiBvdGhlciB0aW55IGJpdHMgYW5kIHBpZWNlcykg
+YW5kIHN1bW1hcml6ZSB0aGVpciB2aWV3IG9mIHRoZSBjdXJyZW50DQo+ID4gc3RhdHVzPyAgTWF5
+YmUgdGhhdCB3b3VsZCBoZWxwIGdldCB0aGUgYmFsbCByb2xsaW5nIGFnYWluPw0KPiA+DQo+IA0K
+PiBBaCwgSSBkaWQgbm90IHJlYWxpemUgdGhhdCdzIHdoYXQgd2FzIGJlaW5nIGdhdGVkIG9uLg0K
+PiANCj4gVGhlc2UgcGF0Y2hlcyBjb21wbGVtZW50LCByYXRoZXIgdGhhbiBjb21wZXRlIHdpdGgs
+IHRoZSBvdGhlciBwYXRjaGVzDQo+IG91dCB0aGVyZS4gVGhlcmUgYXJlIHR3byBjb21wb25lbnRz
+IHRvIGNvbXBsZXRlbHkgcHJvdmlzaW9uaW5nIGEgVUZTDQo+IGRldmljZTogd3JpdGluZyB0aGUg
+Y29uZmlndXJhdGlvbiBkZXNjcmlwdG9ycywgYW5kIHNldHRpbmcNCj4gYXR0cmlidXRlcy9mbGFn
+cy4gTXkgb3JpZ2luYWwgc2VyaWVzIFsxXSBkaWQgY29udGFpbiBzdXBwb3J0IGZvciB0aGUNCj4g
+cHJvdmlzaW9uaW5nIHBvcnRpb24sIGJ1dCBJIG9wdGVkIHRvIGxlYXZlIHRoYXQgdG8gU2F5YWxp
+J3MgcGF0Y2ggWzJdDQo+IHRoYXQgdXNlcyBjb25maWdmcywgcmF0aGVyIHRoYW4gZHVwbGljYXRl
+IGVmZm9ydC4gU2F5YWxpJ3Mgb3RoZXIgcGF0Y2gNCj4gWzNdIGRvZXMgaGFuZGxlIHNldHRpbmcg
+dGhlIHJlZmVyZW5jZSBjbG9jayBmcmVxdWVuY3ksIHdoaWNoIGhhcyBzb21lDQo+IG92ZXJsYXAg
+d2l0aCB0aGlzIHBhdGNoIGluIHRoYXQgYm90aCBzZXQgYlJlZkNsa0ZyZXEuIEJ1dCB0aGlzIHBh
+dGNoDQo+IGFuZCB0aGUgZmxhZyBwYXRjaCBbNF0gYXJlIHN0aWxsIG5lZWRlZCBmb3IgcHJvdmlz
+aW9uaW5nIGFjdGl2aXR5IGxpa2UNCj4gbG9ja2luZyB0aGUgZGVzY3JpcHRvcnMgZG93biBvbmNl
+IHRoZXkncmUgc2V0IHVwLCBhbmQgZW5hYmxlIG90aGVyDQo+IGRldmljZSBleHBlcmltZW50YXRp
+b24uIEluIG90aGVyIHdvcmRzLCB0aGV5J3JlIGluZGVwZW5kZW50Lg0KPiANCkFsc28sIGluIHRo
+aXMgY29udGV4dCB0aGVyZSBpcyB0aGUgc2VyaWVzIGluIA0KaHR0cHM6Ly93d3cuc3Bpbmljcy5u
+ZXQvbGlzdHMvbGludXgtc2NzaS9tc2cxMjM0NzkuaHRtbA0Kd2hpY2ggYWxsb3dzIHRvIHNlbmQg
+VVBJVXMgdmlhIGEgYnNnIGRldmljZS4NCg0KSXQncyBub3QgYSBwcm92aXNpb25pbmcgc2VyaWVz
+IHBlci1zZSBsaWtlIEV2YW4ncyBhbmQgU2F5YWxpJ3MuDQpJdCBjb3ZlcnMgdGhlIHByb3Zpc2lv
+bmluZyBmdW5jdGlvbmFsaXR5LA0KQnV0IGFsc28gYWxsb3cgdG8gc2VuZCB0YXNrIG1hbmFnZW1l
+bnQgVVBJVSwgYW5kIFVJQyBjb21tYW5kcywNCldoaWNoIGNhbiBiZSB1c2VkIGZvciB0ZXN0aW5n
+IGFuZCB2YWxpZGF0aW9uLg0KDQpUaGFua3MsDQpBdnJpDQoNCg0KPiBUaGVyZSB3YXMgYWxzbyBh
+bm90aGVyIGluZGVwZW5kZW50IGZpeCBbNV0gZm9yIGRldmljZXMgdGhhdCBzdGFydCBpbg0KPiBz
+bGVlcCBtb2RlLCB3aGljaCBMaW51eCBjdXJyZW50bHkgY2FuJ3QgaGFuZGxlLiBUaGF0IHBhdGNo
+IGdvdCBubw0KPiByZXZpZXdzLCB3aGljaCBpcyBhIHNoYW1lLCBhbmQgSSBzaG91bGQgcHJvYmFi
+bHkgcmVzZW5kIGFzIG11bHRpcGxlDQo+IHBhdGNoZXMgb3IgYXQgbGVhc3Qgd2l0aCBzb21lIGFk
+ZGl0aW9uYWwgaW5mb3JtYXRpb24uDQo+IA0KPiAtRXZhbg0KPiANCj4gWzFdIGh0dHBzOi8vbGtt
+bC5vcmcvbGttbC8yMDE4LzUvMjkvOTY5DQo+IFsyXSBodHRwczovL2xrbWwub3JnL2xrbWwvMjAx
+OC85LzE0LzI5Mw0KPiBbM10gaHR0cHM6Ly9sa21sLm9yZy9sa21sLzIwMTgvOS8xNC8yOTINCj4g
+WzRdIGh0dHBzOi8vcGF0Y2h3b3JrLmtlcm5lbC5vcmcvcGF0Y2gvMTA1NzA4MTEvDQo+IFs1XSBo
+dHRwczovL2xrbWwub3JnL2xrbWwvMjAxOC84LzEwLzY2OQ0K
