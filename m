@@ -1,40 +1,151 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v4] scsi: ufs: Make sysfs attributes writable
-Date: Thu, 27 Sep 2018 07:01:33 -0700
-Message-ID: <20180927140133.GA22096@infradead.org>
-References: <20180808224454.243790-1-evgreen@chromium.org>
- <6dd8a547-7260-09b8-9096-8a1564b08e70@intel.com>
- <8fd05b2d-fa48-78af-6f1c-7e485c1008f6@intel.com>
- <CAD=FV=W7h_3LwV-P5_E58-3qOo7Y-yQDTDfSLoU1+3c_6ZF0cg@mail.gmail.com>
- <yq1h8idgj5y.fsf@oracle.com>
- <CAD=FV=WNHDd8icQi3wtFV98w1zdEd-QqFn1PrZeXQWgYt4Yo1w@mail.gmail.com>
- <CAE=gft57aP3Qx-zdHR1UsJwS7JjVEpVvmCSTk3ctWrRF2=W4ww@mail.gmail.com>
- <SN6PR04MB4925DAB09EED762CDCCBBF47FC140@SN6PR04MB4925.namprd04.prod.outlook.com>
+From: Bjorn Helgaas <helgaas@kernel.org>
+Subject: Re: [PATCH v4 1/6] mpt3sas: Introduce
+ mpt3sas_base_pci_device_is_available
+Date: Thu, 27 Sep 2018 13:47:46 -0500
+Message-ID: <20180927184746.GM28024@bhelgaas-glaptop.roam.corp.google.com>
+References: <1537935759-14754-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+ <1537935759-14754-2-git-send-email-suganath-prabu.subramani@broadcom.com>
+ <20180926213241.GI28024@bhelgaas-glaptop.roam.corp.google.com>
+ <20180927070327.wvl5glb4c7gtjoa3@wunner.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <SN6PR04MB4925DAB09EED762CDCCBBF47FC140@SN6PR04MB4925.namprd04.prod.outlook.com>
+In-Reply-To: <20180927070327.wvl5glb4c7gtjoa3@wunner.de>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Avri Altman <Avri.Altman@wdc.com>
-Cc: Evan Green <evgreen@chromium.org>, Doug Anderson <dianders@chromium.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, Stanislav Nijnikov <Stanislav.Nijnikov@wdc.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Bart Van Assche <Bart.VanAssche@wdc.com>, "adrian.hunter@intel.com" <adrian.hunter@intel.com>, sayali <sayalil@codeaurora.org>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org, andy.shevchenko@gmail.com, Sathya.Prakash@broadcom.com, sreekanth.reddy@broadcom.com, linux-kernel@vger.kernel.org, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Russell Currey <ruscur@russell.cc>, Sam Bobroff <sbobroff@linux.ibm.com>, Oliver O'Halloran <oohall@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Sep 27, 2018 at 06:32:47AM +0000, Avri Altman wrote:
-> Also, in this context there is the series in 
-> https://www.spinics.net/lists/linux-scsi/msg123479.html
-> which allows to send UPIUs via a bsg device.
+[+cc Ben, Russell, Sam, Oliver in case they have pertinent experience from
+powerpc error handling; thread begins at
+https://lore.kernel.org/linux-pci/1537935759-14754-1-git-send-email-suganath-prabu.subramani@broadcom.com/]
+
+On Thu, Sep 27, 2018 at 09:03:27AM +0200, Lukas Wunner wrote:
+> On Wed, Sep 26, 2018 at 04:32:41PM -0500, Bjorn Helgaas wrote:
+> > On Wed, Sep 26, 2018 at 09:52:34AM +0530, Suganath Prabu S wrote:
+> > > @@ -6853,6 +6872,13 @@ mpt3sas_wait_for_commands_to_complete(struct MPT3SAS_ADAPTER *ioc)
+> > >  
+> > >  	ioc->pending_io_count = 0;
+> > >  
+> > > +	if (!mpt3sas_base_pci_device_is_available(ioc)) {
+> > > +		pr_err(MPT3SAS_FMT
+> > > +		    "%s: pci error recovery reset or pci device unplug occurred\n",
+> > > +		    ioc->name, __func__);
+> > > +		return;
+> > > +	}
+> > > +
+> > >  	ioc_state = mpt3sas_base_get_iocstate(ioc, 0);
+> > 
+> > This is a good example of why I don't like pci_device_is_present(): it
+> > is fundamentally racy and gives a false sense of security.  Here we
+> > *think* we're making the code safer, but in fact we could have this
+> > sequence:
+> > 
+> >   mpt3sas_base_pci_device_is_available()    # returns true
+> >   # device is removed
+> >   ioc_state = mpt3sas_base_get_iocstate()
+> > 
+> > In this case the readl() inside mpt3sas_base_get_iocstate() will
+> > probably return 0xffffffff data, and we assume that's valid and
+> > continue on our merry way, pretending that "ioc_state" makes sense
+> > when it really doesn't.
 > 
-> It's not a provisioning series per-se like Evan's and Sayali's.
-> It covers the provisioning functionality,
-> But also allow to send task management UPIU, and UIC commands,
-> Which can be used for testing and validation.
+> The function does the following:
+> 
+> 	ioc_state = mpt3sas_base_get_iocstate(ioc, 0);
+> 	if ((ioc_state & MPI2_IOC_STATE_MASK) != MPI2_IOC_STATE_OPERATIONAL)
+> 		return;
+> 
+> where MPI2_IOC_STATE_MASK is 0xF0000000 and MPI2_IOC_STATE_OPERATIONAL
+> is 0x20000000.  If the device is removed after the call to
+> mpt3sas_base_pci_device_is_available(), the result of the bitwise "and"
+> operation would be 0xF0000000, which is unequal to 0x20000000.
+> Hence this looks safe.
 
-And as someone having been involved with review of a few different
-UFS provisioning bits this is what I think we should be merging.
+I agree this particular case is technically safe, but figuring that
+out requires an unreasonable amount of analysis.  And there's no hint
+in the code that we need to be concerned about whether the readl()
+returns valid data, so the need for the analysis won't even occur to
+most readers.
 
-Instead of being in a rat race of adding ever new sysfs or configfs
-attributes for things that don't matter to normal driver operation
-I'd rather have a relatively clean pass through interface and move
-policy to userspace.  Especially given that there are plenty of
-vendor specific commands at these levels as well.
+I don't feel good about encouraging this style of adding an explicit
+test for whether the device is available, followed by a completely
+implicit test that accidentally happens to correctly handle a device
+that was removed after the explicit test.
+
+If we instead added a test for ~0 after the readl(), we would avoid
+the race and give the reader a clue that *any* read from the device
+can potentially fail without advance warning.
+
+> I agree that pci_device_is_present() (and the pci_dev_is_disconnected()
+> it calls) must be used judiciously, but here it seems to have been done
+> correctly.
+> 
+> One thing to be aware of is that a return value of "true" from
+> pci_dev_is_disconnected() is definitive and can be trusted.
+> On the other hand a return value of "false" is more like a fuzzy
+> "likely not disconnected, but can't give any guarantees".
+> So the boolean return value is kind of the problem here.
+> Boolean logic doesn't really fit these "definitive if true,
+> not definitive if false" semantics.
+> 
+> However being able to get the definitive answer in the disconnected
+> case is valuable:  pciehp is the only entity that can determine
+> surprise removal authoritatively and unambiguously (albeit with
+> a latency).  All the other tools that we have at our disposal don't
+> have that quality:  E.g. checking the Vendor ID is ambiguous because
+> it returns a valid value if a device was quickly replaced with another
+> one.  Also, all ones may be returned in the case of an Uncorrectable
+> Error, but the device may revert to valid responses if the error can
+> be recovered.  (Please correct me if I'm wrong.)
+
+I think everything you said above is true, but I'm not yet convinced
+that it's being applied usefully in mpt3sas.
+
+  bool pci_dev_is_disconnected(pdev)       # "true" is definitive
+  {
+    return test_bit(PCI_DEV_DISCONNECTED, &dev->priv_flags);
+  }
+
+  bool pci_device_is_present(pdev)         # "false" is definitive
+  {
+    if (pci_dev_is_disconnected(pdev))
+      return false;
+    return pci_bus_read_dev_vendor_id(...);
+  }
+
+  mpt3sas_base_pci_device_is_available(ioc)  # "false" is definitive
+  {
+    return !ioc->pci_error_recovery && pci_device_is_present(ioc->pdev);
+  }
+
+  mpt3sas_wait_for_commands_to_complete(...)
+  {
+    ...
+ +  if (!mpt3sas_base_pci_device_is_available(ioc))
+ +    return;
+
+    # In the definitive case, we returned above.  If we get here, we
+    # think the device *might* be present.  The readl() inside
+    # mpt3sas_base_get_iocstate() might fail (returning ~0 data).
+    # It happens that (~0 & MPI2_IOC_STATE_MASK) != MPI2_IOC_STATE_OPERATIONAL
+    # so we will return below if the device was removed after the
+    # check above.
+
+    ioc_state = mpt3sas_base_get_iocstate(ioc, 0);
+    if ((ioc_state & MPI2_IOC_STATE_MASK) != MPI2_IOC_STATE_OPERATIONAL)
+      return;
+    ...
+
+
+I think this code is unreasonably complicated.  The multiple layers
+and negations make it very difficult to figure out what's definitive.
+
+I'm not sure how mpt3sas benefits from adding
+mpt3sas_base_pci_device_is_available() here, other than the fact that
+it avoids an MMIO read to the device in most cases.  I think it would
+be simpler and better to make mpt3sas_base_get_iocstate() smarter
+about handling ~0 values from the readl().
+
+Bjorn
