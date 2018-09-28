@@ -1,27 +1,25 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: qla4xxx: remove redundant check on drvr_wait
-Date: Fri, 28 Sep 2018 02:30:51 -0400
-Message-ID: <yq18t3mb0bo.fsf@oracle.com>
-References: <20180926130848.30645-1-colin.king@canonical.com>
+Subject: Re: [PATCH] scsi: mptfusion: Remove unnecessary parentheses and simplify null checks
+Date: Fri, 28 Sep 2018 02:31:29 -0400
+Message-ID: <yq14leab0am.fsf@oracle.com>
+References: <20180915063645.31295-1-natechancellor@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180926130848.30645-1-colin.king@canonical.com> (Colin King's
-        message of "Wed, 26 Sep 2018 14:08:48 +0100")
+In-Reply-To: <20180915063645.31295-1-natechancellor@gmail.com> (Nathan
+        Chancellor's message of "Fri, 14 Sep 2018 23:36:45 -0700")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Colin King <colin.king@canonical.com>
-Cc: QLogic-Storage-Upstream@qlogic.com, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Nathan Chancellor <natechancellor@gmail.com>
+Cc: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Nick Desaulniers <ndesaulniers@google.com>
 List-Id: linux-scsi@vger.kernel.org
 
 
-Colin,
+Nathan,
 
-> The check for a non-zero drvr_wait is redundant as the same check is
-> performed earlier in the outer while loop, the inner check will always
-> be true if we reached this point inside the while loop.  Remove the
-> redundant if check.
+> Clang warns when multiple pairs of parentheses are used for a single
+> conditional statement.
 
-Applied to 4.20/scsi-queue. Thanks!
+Applied to 4.20/scsi-queue. Thank you!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
