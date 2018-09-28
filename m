@@ -1,32 +1,27 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 00/10] NCR5380: Various improvements
-Date: Fri, 28 Sep 2018 02:29:13 -0400
-Message-ID: <yq1h8iab0ee.fsf@oracle.com>
-References: <cover.1538011031.git.fthain@telegraphics.com.au>
+Subject: Re: [PATCH] scsi: qla4xxx: remove redundant check on drvr_wait
+Date: Fri, 28 Sep 2018 02:30:51 -0400
+Message-ID: <yq18t3mb0bo.fsf@oracle.com>
+References: <20180926130848.30645-1-colin.king@canonical.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <cover.1538011031.git.fthain@telegraphics.com.au> (Finn Thain's
-        message of "Thu, 27 Sep 2018 11:17:11 +1000")
+In-Reply-To: <20180926130848.30645-1-colin.king@canonical.com> (Colin King's
+        message of "Wed, 26 Sep 2018 14:08:48 +0100")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, Hannes Reinecke <hare@suse.de>, Ondrey Zary <linux@rainbow-software.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Colin King <colin.king@canonical.com>
+Cc: QLogic-Storage-Upstream@qlogic.com, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Finn,
+Colin,
 
-> This series addresses issues which became apparent when Michael
-> Schmitz tried to use an AztecMonster II SATA/SCSI adapter with a 5380
-> host.
->
-> That target seems to have some bugs which thoroughly exercise driver
-> error paths and EH.
->
-> The patch by Hannes Reinecke was cherry-picked from his 'eh-reset.v5'
-> branch.
+> The check for a non-zero drvr_wait is redundant as the same check is
+> performed earlier in the outer while loop, the inner check will always
+> be true if we reached this point inside the while loop.  Remove the
+> redundant if check.
 
-Applied to 4.20/scsi-queue, thank you!
+Applied to 4.20/scsi-queue. Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
