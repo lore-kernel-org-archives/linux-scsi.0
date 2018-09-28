@@ -1,25 +1,44 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: mptfusion: Remove unnecessary parentheses and simplify null checks
-Date: Fri, 28 Sep 2018 02:31:29 -0400
-Message-ID: <yq14leab0am.fsf@oracle.com>
-References: <20180915063645.31295-1-natechancellor@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: Joe Perches <joe@perches.com>
+Subject: Bad MAINTAINERS pattern in section 'CXLFLASH (IBM Coherent Accelerator Processor Interface CAPI Flash) SCSI DRIVER'
+Date: Fri, 28 Sep 2018 14:52:30 -0700
+Message-ID: <20180928215230.29127-1-joe@perches.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180915063645.31295-1-natechancellor@gmail.com> (Nathan
-        Chancellor's message of "Fri, 14 Sep 2018 23:36:45 -0700")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Nathan Chancellor <natechancellor@gmail.com>
-Cc: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Nick Desaulniers <ndesaulniers@google.com>
+To: linux-kernel@vger.kernel.org
+Cc: "Manoj N . Kumar" <manoj@linux.vnet.ibm.com>, "Matthew R . Ochs" <mrochs@linux.vnet.ibm.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+Please fix this defect appropriately.
 
-Nathan,
+linux-next MAINTAINERS section:
 
-> Clang warns when multiple pairs of parentheses are used for a single
-> conditional statement.
+	3964	CXLFLASH (IBM Coherent Accelerator Processor Interface CAPI Flash) SCSI DRIVER
+	3965	M:	Manoj N. Kumar <manoj@linux.vnet.ibm.com>
+	3966	M:	Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
+	3967	M:	Uma Krishnan <ukrishn@linux.vnet.ibm.com>
+	3968	L:	linux-scsi@vger.kernel.org
+	3969	S:	Supported
+	3970	F:	drivers/scsi/cxlflash/
+-->	3971	F:	include/uapi/scsi/cxlflash_ioctls.h
+	3972	F:	Documentation/powerpc/cxlflash.txt
 
-Applied to 4.20/scsi-queue. Thank you!
+Commit that introduced this:
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+commit 11f43ae7735a04994ef3c33295d386ef4e5529b7
+ Author: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
+ Date:   Wed Oct 21 15:15:22 2015 -0500
+ 
+     MAINTAINERS: Add cxlflash driver
+     
+     Add stanza for cxlflash SCSI driver.
+     
+     Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
+     Signed-off-by: Manoj N. Kumar <manoj@linux.vnet.ibm.com>
+     Reviewed-by: Brian King <brking@linux.vnet.ibm.com>
+     Reviewed-by: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
+     Signed-off-by: James Bottomley <JBottomley@Odin.com>
+ 
+  MAINTAINERS | 9 +++++++++
+  1 file changed, 9 insertions(+)
+
+No commit with include/uapi/scsi/cxlflash_ioctls.h found
