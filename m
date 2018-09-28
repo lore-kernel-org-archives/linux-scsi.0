@@ -1,44 +1,43 @@
-From: Joe Perches <joe@perches.com>
-Subject: Bad MAINTAINERS pattern in section 'CXLFLASH (IBM Coherent Accelerator Processor Interface CAPI Flash) SCSI DRIVER'
-Date: Fri, 28 Sep 2018 14:52:30 -0700
-Message-ID: <20180928215230.29127-1-joe@perches.com>
+From: Evan Green <evgreen@chromium.org>
+Subject: [PATCH v2 0/2] scsi: ufs: Enable bInitPowerMode of sleep
+Date: Fri, 28 Sep 2018 16:02:01 -0700
+Message-ID: <20180928230203.905-1-evgreen@chromium.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: "Manoj N . Kumar" <manoj@linux.vnet.ibm.com>, "Matthew R . Ochs" <mrochs@linux.vnet.ibm.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org
+To: Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Adrian Hunter <adrian.hunter@intel.com>, Stanislav Nijnikov <stanislav.nijnikov@wdc.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Evan Green <evgreen@chromium.org>, Douglas Anderson <dianders@chromium.org>, Gwendal Grignou <gwendal@chromium.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Please fix this defect appropriately.
+This change enables Linux to enumerate UFS devices that have been configured
+to start in an initial power mode (bInitPowerMode) of sleep. The UFS spec
+indicates that for devices in sleep mode, a START_STOP_UNIT SCSI command
+must be sent to them to wake them up before doing other initialization tasks
+like getting the device or geometry descriptors. This is not trivial to do
+in the UFS driver, since it assumes that SCSI commands are only needed once
+low level initialization of the device is complete.
 
-linux-next MAINTAINERS section:
+These patches 1) Enable sending SCSI commands before the actual SCSI targets
+are created, and 2) Sends the needed commands for devices in sleep mode.
 
-	3964	CXLFLASH (IBM Coherent Accelerator Processor Interface CAPI Flash) SCSI DRIVER
-	3965	M:	Manoj N. Kumar <manoj@linux.vnet.ibm.com>
-	3966	M:	Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
-	3967	M:	Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-	3968	L:	linux-scsi@vger.kernel.org
-	3969	S:	Supported
-	3970	F:	drivers/scsi/cxlflash/
--->	3971	F:	include/uapi/scsi/cxlflash_ioctls.h
-	3972	F:	Documentation/powerpc/cxlflash.txt
+This can be tested locally by setting byte 5 of the Configuration Descriptor
+(bInitPowerMode) to zero, and rebooting. I discovered this bug by accidentally
+zeroing out too many fields while I was testing provisioning functionality.
 
-Commit that introduced this:
+Note: This series is unrelated to (and independent of) the competing UFS
+provisioning patches that have been floating around the list lately.
 
-commit 11f43ae7735a04994ef3c33295d386ef4e5529b7
- Author: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
- Date:   Wed Oct 21 15:15:22 2015 -0500
- 
-     MAINTAINERS: Add cxlflash driver
-     
-     Add stanza for cxlflash SCSI driver.
-     
-     Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
-     Signed-off-by: Manoj N. Kumar <manoj@linux.vnet.ibm.com>
-     Reviewed-by: Brian King <brking@linux.vnet.ibm.com>
-     Reviewed-by: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
-     Signed-off-by: James Bottomley <JBottomley@Odin.com>
- 
-  MAINTAINERS | 9 +++++++++
-  1 file changed, 9 insertions(+)
+Changes since v1:
+	* Split into two patches for easier comprehension. Can recombine to one
+if this split is too contrived.
+	* Fixed a leftover raw printk.
 
-No commit with include/uapi/scsi/cxlflash_ioctls.h found
+Evan Green (2):
+  scsi: ufs: Allow SCSI commands early during init
+  scsi: ufs: Execute START_STOP_UNIT during init
+
+ drivers/scsi/ufs/ufshcd.c | 208 +++++++++++++++++++++++++++++++++++++++++++---
+ drivers/scsi/ufs/ufshcd.h |  11 +++
+ 2 files changed, 206 insertions(+), 13 deletions(-)
+
+-- 
+2.16.4
