@@ -1,58 +1,47 @@
-From: Nathan Chancellor <natechancellor@gmail.com>
-Subject: [PATCH] libosd: Remove ignored __weak attribute
-Date: Sun, 30 Sep 2018 13:54:48 -0700
-Message-ID: <20180930205448.26205-1-natechancellor@gmail.com>
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] scsi: message: fusion: clean up clang warning on extraneous parentheses
+Date: Sun, 30 Sep 2018 23:31:23 +0100
+Message-ID: <20180930223123.17907-1-colin.king@canonical.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Boaz Harrosh <ooo@electrozaur.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Nick Desaulniers <ndesaulniers@google.com>, Nathan Chancellor <natechancellor@gmail.com>
+To: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Clang warns that the __weak attribute is going to be ignored on
-osd_root_object because it's not in the correct location (needs to be
-after the type).
+From: Colin Ian King <colin.king@canonical.com>
 
-./include/scsi/osd_types.h:31:21: warning: 'weak' attribute only applies
-to variables, functions, and classes [-Wignored-attributes]
-static const struct __weak osd_obj_id osd_root_object = {0, 0};
-                    ^
+There are extraneous parantheses that are causing clang to produce a
+warning so remove these. Also replace pointer comparison with NULL
+with the !ptr idiom.
 
-Turns out that GCC ignores the attribute too albeit silently because
-moving the attribute after either osd_obj_id or osd_root_object like
-all other uses of __weak on variables in the kernel causes a build
-error on both GCC and Clang because static variables cannot be weak
-since weak definitions rely on not having internal linkage:
+Clean up clang warnings:
+equality comparison with extraneous parentheses [-Wparentheses-equality]
 
-./include/scsi/osd_types.h:31:32: error: weak declaration cannot have
-internal linkage
-static const struct osd_obj_id __weak osd_root_object = {0, 0};
-                               ^
-
-Just remove the attribute because it hasn't been correct since the
-initial addition of this file in commit de258bf5e638 ("[SCSI] libosd:
-OSDv1 Headers").
-
-Reported-by: Nick Desaulniers <ndesaulniers@google.com>
-Reviewed-by: Nick Desaulniers <ndesaulniers@google.com>
-Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
 ---
- include/scsi/osd_types.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/message/fusion/mptbase.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/include/scsi/osd_types.h b/include/scsi/osd_types.h
-index 48e8a165e136..6b6fdcafa6cc 100644
---- a/include/scsi/osd_types.h
-+++ b/include/scsi/osd_types.h
-@@ -28,7 +28,7 @@ struct osd_obj_id {
- 	osd_id id;
- };
+diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+index dc1e43a02599..ba551d8dfba4 100644
+--- a/drivers/message/fusion/mptbase.c
++++ b/drivers/message/fusion/mptbase.c
+@@ -335,11 +335,11 @@ static int mpt_remove_dead_ioc_func(void *arg)
+ 	MPT_ADAPTER *ioc = (MPT_ADAPTER *)arg;
+ 	struct pci_dev *pdev;
  
--static const struct __weak osd_obj_id osd_root_object = {0, 0};
-+static const struct osd_obj_id osd_root_object = {0, 0};
+-	if ((ioc == NULL))
++	if (!ioc)
+ 		return -1;
  
- struct osd_attr {
- 	u32 attr_page;
+ 	pdev = ioc->pcidev;
+-	if ((pdev == NULL))
++	if (!pdev)
+ 		return -1;
+ 
+ 	pci_stop_and_remove_bus_device_locked(pdev);
 -- 
-2.19.0
+2.17.1
