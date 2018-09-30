@@ -1,37 +1,58 @@
-From: Feng Li <lifeng1519@gmail.com>
-Subject: virtio-console downgrade the virtio-pci-blk performance
-Date: Sun, 30 Sep 2018 13:25:58 +0800
-Message-ID: <CAEK8JBDPNqTap-LnoBxUZh4Bj9b+VgrsPm53QAivfOsLG7wuGw@mail.gmail.com>
+From: Nathan Chancellor <natechancellor@gmail.com>
+Subject: [PATCH] libosd: Remove ignored __weak attribute
+Date: Sun, 30 Sep 2018 13:54:48 -0700
+Message-ID: <20180930205448.26205-1-natechancellor@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel <linux-kernel@vger.kernel.org>, qemu-discuss@nongnu.org, qemu-devel@nongnu.org, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Boaz Harrosh <ooo@electrozaur.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Nick Desaulniers <ndesaulniers@google.com>, Nathan Chancellor <natechancellor@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi,
-I found an obvious performance downgrade when virtio-console combined
-with virtio-pci-blk.
+Clang warns that the __weak attribute is going to be ignored on
+osd_root_object because it's not in the correct location (needs to be
+after the type).
 
-This phenomenon exists in nearly all Qemu versions and all Linux
-(CentOS7, Fedora 28, Ubuntu 18.04) distros.
+./include/scsi/osd_types.h:31:21: warning: 'weak' attribute only applies
+to variables, functions, and classes [-Wignored-attributes]
+static const struct __weak osd_obj_id osd_root_object = {0, 0};
+                    ^
 
-This is a disk cmd:
--drive file=iscsi://127.0.0.1:3260/iqn.2016-02.com.test:system:fl-iscsi/1,format=raw,if=none,id=drive-virtio-disk0,cache=none,aio=native
--device virtio-blk-pci,scsi=off,bus=pci.0,addr=0x6,drive=drive-virtio-disk0,id=virtio-disk0,bootindex=1,write-cache=on
+Turns out that GCC ignores the attribute too albeit silently because
+moving the attribute after either osd_obj_id or osd_root_object like
+all other uses of __weak on variables in the kernel causes a build
+error on both GCC and Clang because static variables cannot be weak
+since weak definitions rely on not having internal linkage:
 
-If I add "-device
-virtio-serial-pci,id=virtio-serial0,bus=pci.0,addr=0x5  ", the virtio
-disk 4k iops (randread/randwrite) would downgrade from 60k to 40k.
+./include/scsi/osd_types.h:31:32: error: weak declaration cannot have
+internal linkage
+static const struct osd_obj_id __weak osd_root_object = {0, 0};
+                               ^
 
-In VM, if I rmmod virtio-console, the performance will back to normal.
+Just remove the attribute because it hasn't been correct since the
+initial addition of this file in commit de258bf5e638 ("[SCSI] libosd:
+OSDv1 Headers").
 
-Any idea about this issue?
+Reported-by: Nick Desaulniers <ndesaulniers@google.com>
+Reviewed-by: Nick Desaulniers <ndesaulniers@google.com>
+Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
+---
+ include/scsi/osd_types.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I don't know this is a qemu issue or kernel issue.
-
-
-Thanks in advance.
+diff --git a/include/scsi/osd_types.h b/include/scsi/osd_types.h
+index 48e8a165e136..6b6fdcafa6cc 100644
+--- a/include/scsi/osd_types.h
++++ b/include/scsi/osd_types.h
+@@ -28,7 +28,7 @@ struct osd_obj_id {
+ 	osd_id id;
+ };
+ 
+-static const struct __weak osd_obj_id osd_root_object = {0, 0};
++static const struct osd_obj_id osd_root_object = {0, 0};
+ 
+ struct osd_attr {
+ 	u32 attr_page;
 -- 
-Thanks and Best Regards,
-Alex
+2.19.0
