@@ -1,65 +1,98 @@
-From: Nathan Chancellor <natechancellor@gmail.com>
-Subject: Re: [PATCH] scsi: message: fusion: clean up clang warning on
- extraneous parentheses
-Date: Sun, 30 Sep 2018 16:09:53 -0700
-Message-ID: <20180930230953.GA12922@flashbox>
-References: <20180930223123.17907-1-colin.king@canonical.com>
+From: Joe Perches <joe@perches.com>
+Subject: Re: [PATCH] scsi: arcmsr: clean up clang warning on extraneous
+ parentheses
+Date: Sun, 30 Sep 2018 16:18:10 -0700
+Message-ID: <bd6313064c790b1db5806245b8c3d00e2f82c8f7.camel@perches.com>
+References: <20180930230307.18664-1-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20180930223123.17907-1-colin.king@canonical.com>
+In-Reply-To: <20180930230307.18664-1-colin.king@canonical.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Colin King <colin.king@canonical.com>
-Cc: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Colin King <colin.king@canonical.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Ching Huang <ching2048@areca.com.tw>, linux-scsi@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Sun, Sep 30, 2018 at 11:31:23PM +0100, Colin King wrote:
+On Mon, 2018-10-01 at 00:03 +0100, Colin King wrote:
 > From: Colin Ian King <colin.king@canonical.com>
 > 
 > There are extraneous parantheses that are causing clang to produce a
-> warning so remove these. Also replace pointer comparison with NULL
-> with the !ptr idiom.
+> warning so remove these.
 > 
-> Clean up clang warnings:
+> Clean up 3 clang warnings:
 > equality comparison with extraneous parentheses [-Wparentheses-equality]
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> ---
->  drivers/message/fusion/mptbase.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-> index dc1e43a02599..ba551d8dfba4 100644
-> --- a/drivers/message/fusion/mptbase.c
-> +++ b/drivers/message/fusion/mptbase.c
-> @@ -335,11 +335,11 @@ static int mpt_remove_dead_ioc_func(void *arg)
->  	MPT_ADAPTER *ioc = (MPT_ADAPTER *)arg;
->  	struct pci_dev *pdev;
->  
-> -	if ((ioc == NULL))
-> +	if (!ioc)
->  		return -1;
->  
->  	pdev = ioc->pcidev;
-> -	if ((pdev == NULL))
-> +	if (!pdev)
->  		return -1;
->  
->  	pci_stop_and_remove_bus_device_locked(pdev);
-> -- 
-> 2.17.1
-> 
+[]
+> diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
+[]
+> @@ -4135,9 +4135,9 @@ static void arcmsr_hardware_reset(struct AdapterControlBlock *acb)
+>  		pci_read_config_byte(acb->pdev, i, &value[i]);
+>  	}
+>  	/* hardware reset signal */
+> -	if ((acb->dev_id == 0x1680)) {
+> +	if (acb->dev_id == 0x1680) {
+>  		writel(ARCMSR_ARC1680_BUS_RESET, &pmuA->reserved1[0]);
+> -	} else if ((acb->dev_id == 0x1880)) {
+> +	} else if (acb->dev_id == 0x1880) {
+>  		do {
+>  			count++;
+>  			writel(0xF, &pmuC->write_sequence);
+> @@ -4161,7 +4161,7 @@ static void arcmsr_hardware_reset(struct AdapterControlBlock *acb)
+>  		} while (((readl(&pmuE->host_diagnostic_3xxx) &
+>  			ARCMSR_ARC1884_DiagWrite_ENABLE) == 0) && (count < 5));
+>  		writel(ARCMSR_ARC188X_RESET_ADAPTER, &pmuE->host_diagnostic_3xxx);
+> -	} else if ((acb->dev_id == 0x1214)) {
+> +	} else if (acb->dev_id == 0x1214) {
+>  		writel(0x20, pmuD->reset_request);
+>  	} else {
+>  		pci_write_config_byte(acb->pdev, 0x84, 0x20);
 
-Hi Colin,
+It'd probably read better using a switch/case like the below:
+---
+ drivers/scsi/arcmsr/arcmsr_hba.c | 16 +++++++++++-----
+ 1 file changed, 11 insertions(+), 5 deletions(-)
 
-I already sent a patch that was picked up by Martin a few days ago: https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git/commit/?id=90ded4e2005b1195a5e781009be991e1cd049c10
-
-I've been sending several warning fixes for Clang over the past few
-weeks that have been documented on GitHub. You may consider checking
-them out since I have started to see some overlap.
-
-Link: https://github.com/ClangBuiltLinux/linux/issues
-
-Cheers!
-Nathan
+diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
+index 12316ef4c893..ad45583f5ae0 100644
+--- a/drivers/scsi/arcmsr/arcmsr_hba.c
++++ b/drivers/scsi/arcmsr/arcmsr_hba.c
+@@ -4135,9 +4135,11 @@ static void arcmsr_hardware_reset(struct AdapterControlBlock *acb)
+ 		pci_read_config_byte(acb->pdev, i, &value[i]);
+ 	}
+ 	/* hardware reset signal */
+-	if ((acb->dev_id == 0x1680)) {
++	switch (acb->dev_id) {
++	case 0x1680:
+ 		writel(ARCMSR_ARC1680_BUS_RESET, &pmuA->reserved1[0]);
+-	} else if ((acb->dev_id == 0x1880)) {
++		break;
++	case 0x1880:
+ 		do {
+ 			count++;
+ 			writel(0xF, &pmuC->write_sequence);
+@@ -4148,7 +4150,8 @@ static void arcmsr_hardware_reset(struct AdapterControlBlock *acb)
+ 			writel(0xD, &pmuC->write_sequence);
+ 		} while (((readl(&pmuC->host_diagnostic) & ARCMSR_ARC1880_DiagWrite_ENABLE) == 0) && (count < 5));
+ 		writel(ARCMSR_ARC1880_RESET_ADAPTER, &pmuC->host_diagnostic);
+-	} else if (acb->dev_id == 0x1884) {
++		break;
++	case 0x1884:
+ 		struct MessageUnit_E __iomem *pmuE = acb->pmuE;
+ 		do {
+ 			count++;
+@@ -4161,10 +4164,13 @@ static void arcmsr_hardware_reset(struct AdapterControlBlock *acb)
+ 		} while (((readl(&pmuE->host_diagnostic_3xxx) &
+ 			ARCMSR_ARC1884_DiagWrite_ENABLE) == 0) && (count < 5));
+ 		writel(ARCMSR_ARC188X_RESET_ADAPTER, &pmuE->host_diagnostic_3xxx);
+-	} else if ((acb->dev_id == 0x1214)) {
++		break;
++	case 0x1214:
+ 		writel(0x20, pmuD->reset_request);
+-	} else {
++		break;
++	default:
+ 		pci_write_config_byte(acb->pdev, 0x84, 0x20);
++		break;
+ 	}
+ 	msleep(2000);
+ 	/* write back pci config data */
