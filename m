@@ -1,242 +1,183 @@
-From: Ioana Ciornei <ioana.ciornei@nxp.com>
-Subject: [PATCH] driver core: device: add BUS_ATTR_WO macro
-Date: Mon,  1 Oct 2018 18:32:52 +0300
-Message-ID: <1538407972-9340-1-git-send-email-ioana.ciornei@nxp.com>
+From: Paul Menzel <pmenzel+linux-scsi@molgen.mpg.de>
+Subject: Re: [PATCH] Revert "genirq/affinity: assign vectors to all possible
+ CPUs"
+Date: Mon, 1 Oct 2018 17:59:48 +0200
+Message-ID: <3480086a-1a3e-adc2-e127-8e34178da101@molgen.mpg.de>
+References: <06ee23fe-ec9e-d67b-b533-d5151be74a11@molgen.mpg.de>
+ <20180810133628.GA4131@kroah.com>
+ <29b5f3ce-2c23-bf5e-fe50-29bedd4833e1@molgen.mpg.de>
+ <20180810155511.GA17092@kroah.com>
+ <f5c57bf7-b8c1-a560-d13a-d74e0f27adbb@molgen.mpg.de>
+ <20180811135021.GA2186@kroah.com> <20180813033157.GA18254@ming.t460p>
+ <89f2b622-3d2a-04ce-a6d1-ffb5d9612763@molgen.mpg.de>
+ <cbd7cb64-dbfe-e085-e80b-67dad4084d69@molgen.mpg.de>
+ <7c51fe1d-d591-90f2-8fb5-81990f8db0fe@molgen.mpg.de>
+ <20181001123508.GA3415@lst.de>
+ <f5dde120-2d14-a7e5-8402-401f117b8c38@molgen.mpg.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256; boundary="------------ms030703080106090603070100"
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <f5dde120-2d14-a7e5-8402-401f117b8c38@molgen.mpg.de>
 Sender: linux-kernel-owner@vger.kernel.org
-To: gregkh@linuxfoundation.org, idryomov@gmail.com, sage@redhat.com, elder@kernel.org, jth@kernel.org, benh@kernel.crashing.org
-Cc: linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, ceph-devel@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Ioana Ciornei <ioana.ciornei@nxp.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Ming Lei <ming.lei@redhat.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, stable@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, it+linux-scsi@molgen.mpg.de, Adaptec OEM Raid Solutions <aacraid@microsemi.com>, linux-scsi@vger.kernel.org, Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>, Dave Carroll <david.carroll@microsemi.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Add BUS_ATTR_WO macro to make it easier to add attributes without
-auditing the mode settings. Also, use the newly added macro where
-appropriate.
+This is a cryptographically signed message in MIME format.
 
-Signed-off-by: Ioana Ciornei <ioana.ciornei@nxp.com>
----
- arch/powerpc/platforms/pseries/ibmebus.c | 12 ++++----
- drivers/block/rbd.c                      | 48 ++++++++++++++++----------------
- drivers/scsi/fcoe/fcoe_sysfs.c           |  4 +--
- drivers/scsi/fcoe/fcoe_transport.c       | 10 +++----
- include/linux/device.h                   |  2 ++
- include/scsi/libfcoe.h                   |  8 +++---
- 6 files changed, 43 insertions(+), 41 deletions(-)
+--------------ms030703080106090603070100
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/arch/powerpc/platforms/pseries/ibmebus.c b/arch/powerpc/platforms/pseries/ibmebus.c
-index c7c1140..c75006c 100644
---- a/arch/powerpc/platforms/pseries/ibmebus.c
-+++ b/arch/powerpc/platforms/pseries/ibmebus.c
-@@ -261,8 +261,8 @@ static char *ibmebus_chomp(const char *in, size_t count)
- 	return out;
- }
- 
--static ssize_t ibmebus_store_probe(struct bus_type *bus,
--				   const char *buf, size_t count)
-+static ssize_t probe_store(struct bus_type *bus,
-+			   const char *buf, size_t count)
- {
- 	struct device_node *dn = NULL;
- 	struct device *dev;
-@@ -298,10 +298,10 @@ static ssize_t ibmebus_store_probe(struct bus_type *bus,
- 		return rc;
- 	return count;
- }
--static BUS_ATTR(probe, 0200, NULL, ibmebus_store_probe);
-+static BUS_ATTR_WO(probe);
- 
--static ssize_t ibmebus_store_remove(struct bus_type *bus,
--				    const char *buf, size_t count)
-+static ssize_t remove_store(struct bus_type *bus,
-+			    const char *buf, size_t count)
- {
- 	struct device *dev;
- 	char *path;
-@@ -325,7 +325,7 @@ static ssize_t ibmebus_store_remove(struct bus_type *bus,
- 		return -ENODEV;
- 	}
- }
--static BUS_ATTR(remove, 0200, NULL, ibmebus_store_remove);
-+static BUS_ATTR_WO(remove);
- 
- static struct attribute *ibmbus_bus_attrs[] = {
- 	&bus_attr_probe.attr,
-diff --git a/drivers/block/rbd.c b/drivers/block/rbd.c
-index 73ed5f3..703d875 100644
---- a/drivers/block/rbd.c
-+++ b/drivers/block/rbd.c
-@@ -428,14 +428,14 @@ enum rbd_dev_flags {
- module_param(single_major, bool, 0444);
- MODULE_PARM_DESC(single_major, "Use a single major number for all rbd devices (default: true)");
- 
--static ssize_t rbd_add(struct bus_type *bus, const char *buf,
--		       size_t count);
--static ssize_t rbd_remove(struct bus_type *bus, const char *buf,
--			  size_t count);
--static ssize_t rbd_add_single_major(struct bus_type *bus, const char *buf,
--				    size_t count);
--static ssize_t rbd_remove_single_major(struct bus_type *bus, const char *buf,
--				       size_t count);
-+static ssize_t add_store(struct bus_type *bus, const char *buf,
-+			 size_t count);
-+static ssize_t remove_store(struct bus_type *bus, const char *buf,
-+			    size_t count);
-+static ssize_t add_single_major_store(struct bus_type *bus, const char *buf,
-+				      size_t count);
-+static ssize_t remove_single_major_store(struct bus_type *bus, const char *buf,
-+					 size_t count);
- static int rbd_dev_image_probe(struct rbd_device *rbd_dev, int depth);
- 
- static int rbd_dev_id_to_minor(int dev_id)
-@@ -469,10 +469,10 @@ static ssize_t rbd_supported_features_show(struct bus_type *bus, char *buf)
- 	return sprintf(buf, "0x%llx\n", RBD_FEATURES_SUPPORTED);
- }
- 
--static BUS_ATTR(add, 0200, NULL, rbd_add);
--static BUS_ATTR(remove, 0200, NULL, rbd_remove);
--static BUS_ATTR(add_single_major, 0200, NULL, rbd_add_single_major);
--static BUS_ATTR(remove_single_major, 0200, NULL, rbd_remove_single_major);
-+static BUS_ATTR_WO(add);
-+static BUS_ATTR_WO(remove);
-+static BUS_ATTR_WO(add_single_major);
-+static BUS_ATTR_WO(remove_single_major);
- static BUS_ATTR(supported_features, 0444, rbd_supported_features_show, NULL);
- 
- static struct attribute *rbd_bus_attrs[] = {
-@@ -5930,9 +5930,9 @@ static ssize_t do_rbd_add(struct bus_type *bus,
- 	goto out;
- }
- 
--static ssize_t rbd_add(struct bus_type *bus,
--		       const char *buf,
--		       size_t count)
-+static ssize_t add_store(struct bus_type *bus,
-+			 const char *buf,
-+			 size_t count)
- {
- 	if (single_major)
- 		return -EINVAL;
-@@ -5940,9 +5940,9 @@ static ssize_t rbd_add(struct bus_type *bus,
- 	return do_rbd_add(bus, buf, count);
- }
- 
--static ssize_t rbd_add_single_major(struct bus_type *bus,
--				    const char *buf,
--				    size_t count)
-+static ssize_t add_single_major_store(struct bus_type *bus,
-+				      const char *buf,
-+				      size_t count)
- {
- 	return do_rbd_add(bus, buf, count);
- }
-@@ -6046,9 +6046,9 @@ static ssize_t do_rbd_remove(struct bus_type *bus,
- 	return count;
- }
- 
--static ssize_t rbd_remove(struct bus_type *bus,
--			  const char *buf,
--			  size_t count)
-+static ssize_t remove_store(struct bus_type *bus,
-+			    const char *buf,
-+			    size_t count)
- {
- 	if (single_major)
- 		return -EINVAL;
-@@ -6056,9 +6056,9 @@ static ssize_t rbd_remove(struct bus_type *bus,
- 	return do_rbd_remove(bus, buf, count);
- }
- 
--static ssize_t rbd_remove_single_major(struct bus_type *bus,
--				       const char *buf,
--				       size_t count)
-+static ssize_t remove_single_major_store(struct bus_type *bus,
-+					 const char *buf,
-+					 size_t count)
- {
- 	return do_rbd_remove(bus, buf, count);
- }
-diff --git a/drivers/scsi/fcoe/fcoe_sysfs.c b/drivers/scsi/fcoe/fcoe_sysfs.c
-index 5c8310b..3c23b26 100644
---- a/drivers/scsi/fcoe/fcoe_sysfs.c
-+++ b/drivers/scsi/fcoe/fcoe_sysfs.c
-@@ -671,8 +671,8 @@ static void fcoe_fcf_device_release(struct device *dev)
- 	.release = fcoe_fcf_device_release,
- };
- 
--static BUS_ATTR(ctlr_create, S_IWUSR, NULL, fcoe_ctlr_create_store);
--static BUS_ATTR(ctlr_destroy, S_IWUSR, NULL, fcoe_ctlr_destroy_store);
-+static BUS_ATTR_WO(ctlr_create);
-+static BUS_ATTR_WO(ctlr_destroy);
- 
- static struct attribute *fcoe_bus_attrs[] = {
- 	&bus_attr_ctlr_create.attr,
-diff --git a/drivers/scsi/fcoe/fcoe_transport.c b/drivers/scsi/fcoe/fcoe_transport.c
-index f4909cd..7789141 100644
---- a/drivers/scsi/fcoe/fcoe_transport.c
-+++ b/drivers/scsi/fcoe/fcoe_transport.c
-@@ -754,8 +754,8 @@ static int libfcoe_device_notification(struct notifier_block *notifier,
- 	return NOTIFY_OK;
- }
- 
--ssize_t fcoe_ctlr_create_store(struct bus_type *bus,
--			       const char *buf, size_t count)
-+ssize_t ctlr_create_store(struct bus_type *bus,
-+			  const char *buf, size_t count)
- {
- 	struct net_device *netdev = NULL;
- 	struct fcoe_transport *ft = NULL;
-@@ -817,8 +817,8 @@ ssize_t fcoe_ctlr_create_store(struct bus_type *bus,
- 	return count;
- }
- 
--ssize_t fcoe_ctlr_destroy_store(struct bus_type *bus,
--				const char *buf, size_t count)
-+ssize_t ctlr_destroy_store(struct bus_type *bus,
-+			   const char *buf, size_t count)
- {
- 	int rc = -ENODEV;
- 	struct net_device *netdev = NULL;
-@@ -855,7 +855,7 @@ ssize_t fcoe_ctlr_destroy_store(struct bus_type *bus,
- 	mutex_unlock(&ft_mutex);
- 	return rc;
- }
--EXPORT_SYMBOL(fcoe_ctlr_destroy_store);
-+EXPORT_SYMBOL(ctlr_destroy_store);
- 
- /**
-  * fcoe_transport_create() - Create a fcoe interface
-diff --git a/include/linux/device.h b/include/linux/device.h
-index 8f88254..767cf19 100644
---- a/include/linux/device.h
-+++ b/include/linux/device.h
-@@ -55,6 +55,8 @@ struct bus_attribute {
- 	struct bus_attribute bus_attr_##_name = __ATTR_RW(_name)
- #define BUS_ATTR_RO(_name) \
- 	struct bus_attribute bus_attr_##_name = __ATTR_RO(_name)
-+#define BUS_ATTR_WO(_name) \
-+	struct bus_attribute bus_attr_##_name = __ATTR_WO(_name)
- 
- extern int __must_check bus_create_file(struct bus_type *,
- 					struct bus_attribute *);
-diff --git a/include/scsi/libfcoe.h b/include/scsi/libfcoe.h
-index cb8a273..f58388c 100644
---- a/include/scsi/libfcoe.h
-+++ b/include/scsi/libfcoe.h
-@@ -405,10 +405,10 @@ struct fcoe_netdev_mapping {
- int fcoe_transport_detach(struct fcoe_transport *ft);
- 
- /* sysfs store handler for ctrl_control interface */
--ssize_t fcoe_ctlr_create_store(struct bus_type *bus,
--			       const char *buf, size_t count);
--ssize_t fcoe_ctlr_destroy_store(struct bus_type *bus,
--				const char *buf, size_t count);
-+ssize_t ctlr_create_store(struct bus_type *bus,
-+			  const char *buf, size_t count);
-+ssize_t ctlr_destroy_store(struct bus_type *bus,
-+			   const char *buf, size_t count);
- 
- #endif /* _LIBFCOE_H */
- 
--- 
-1.9.1
+Dear Christoph,
+
+
+On 10/01/18 14:43, Paul Menzel wrote:
+
+> On 10/01/18 14:35, Christoph Hellwig wrote:
+>> On Mon, Oct 01, 2018 at 02:33:07PM +0200, Paul Menzel wrote:
+>>> Date: Wed, 29 Aug 2018 17:28:45 +0200
+>>>
+>>> This reverts commit ef86f3a72adb8a7931f67335560740a7ad696d1d.
+>>
+>> This seems rather odd.  If at all you'd revert the patch adding the
+>> PCI_IRQ_AFFINITY to aacraid, not core infrastructure.
+>=20
+> Thank you for the suggestion, but that flag was added in 2016
+> to the aacraid driver.
+>=20
+>> commit 0910d8bbdd99856af1394d3d8830955abdefee4a
+>> Author: Hannes Reinecke <hare@suse.de>
+>> Date:   Tue Nov 8 08:11:30 2016 +0100
+>>
+>>     scsi: aacraid: switch to pci_alloc_irq_vectors
+>>    =20
+>>     Use pci_alloc_irq_vectors and drop the hand-crafted interrupt affi=
+nity
+>>     routines.
+>=20
+> So what would happen, if `PCI_IRQ_AFFINITY` was removed? Will the
+> system still work with the same performance?
+>=20
+> As far as I understood, the no regression policy is there for
+> exactly that reason, and it shouldn=E2=80=99t matter if it=E2=80=99s co=
+re
+> infrastructure or not. As written, I have no idea, and just know
+> reverting the commit in question fixes the problem here. So I=E2=80=99l=
+l
+> gladly test other solutions to fix this issue.
+
+Just as another datapoint, with `PCI_IRQ_AFFINITY` removed from
+`drivers/scsi/aacraid/comminit.c` in Linux 4.14.73, the driver
+initializes correctly. I have no idea regarding the performance.
+
+
+Kind regards,
+
+Paul
+
+
+--------------ms030703080106090603070100
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
+
+MIAGCSqGSIb3DQEHAqCAMIACAQExDzANBglghkgBZQMEAgEFADCABgkqhkiG9w0BBwEAAKCC
+EFowggUSMIID+qADAgECAgkA4wvV+K8l2YEwDQYJKoZIhvcNAQELBQAwgYIxCzAJBgNVBAYT
+AkRFMSswKQYDVQQKDCJULVN5c3RlbXMgRW50ZXJwcmlzZSBTZXJ2aWNlcyBHbWJIMR8wHQYD
+VQQLDBZULVN5c3RlbXMgVHJ1c3QgQ2VudGVyMSUwIwYDVQQDDBxULVRlbGVTZWMgR2xvYmFs
+Um9vdCBDbGFzcyAyMB4XDTE2MDIyMjEzMzgyMloXDTMxMDIyMjIzNTk1OVowgZUxCzAJBgNV
+BAYTAkRFMUUwQwYDVQQKEzxWZXJlaW4genVyIEZvZXJkZXJ1bmcgZWluZXMgRGV1dHNjaGVu
+IEZvcnNjaHVuZ3NuZXR6ZXMgZS4gVi4xEDAOBgNVBAsTB0RGTi1QS0kxLTArBgNVBAMTJERG
+Ti1WZXJlaW4gQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkgMjCCASIwDQYJKoZIhvcNAQEBBQAD
+ggEPADCCAQoCggEBAMtg1/9moUHN0vqHl4pzq5lN6mc5WqFggEcVToyVsuXPztNXS43O+FZs
+FVV2B+pG/cgDRWM+cNSrVICxI5y+NyipCf8FXRgPxJiZN7Mg9mZ4F4fCnQ7MSjLnFp2uDo0p
+eQcAIFTcFV9Kltd4tjTTwXS1nem/wHdN6r1ZB+BaL2w8pQDcNb1lDY9/Mm3yWmpLYgHurDg0
+WUU2SQXaeMpqbVvAgWsRzNI8qIv4cRrKO+KA3Ra0Z3qLNupOkSk9s1FcragMvp0049ENF4N1
+xDkesJQLEvHVaY4l9Lg9K7/AjsMeO6W/VRCrKq4Xl14zzsjz9AkH4wKGMUZrAcUQDBHHWekC
+AwEAAaOCAXQwggFwMA4GA1UdDwEB/wQEAwIBBjAdBgNVHQ4EFgQUk+PYMiba1fFKpZFK4OpL
+4qIMz+EwHwYDVR0jBBgwFoAUv1kgNgB5oKAia4zV8mHSuCzLgkowEgYDVR0TAQH/BAgwBgEB
+/wIBAjAzBgNVHSAELDAqMA8GDSsGAQQBga0hgiwBAQQwDQYLKwYBBAGBrSGCLB4wCAYGZ4EM
+AQICMEwGA1UdHwRFMEMwQaA/oD2GO2h0dHA6Ly9wa2kwMzM2LnRlbGVzZWMuZGUvcmwvVGVs
+ZVNlY19HbG9iYWxSb290X0NsYXNzXzIuY3JsMIGGBggrBgEFBQcBAQR6MHgwLAYIKwYBBQUH
+MAGGIGh0dHA6Ly9vY3NwMDMzNi50ZWxlc2VjLmRlL29jc3ByMEgGCCsGAQUFBzAChjxodHRw
+Oi8vcGtpMDMzNi50ZWxlc2VjLmRlL2NydC9UZWxlU2VjX0dsb2JhbFJvb3RfQ2xhc3NfMi5j
+ZXIwDQYJKoZIhvcNAQELBQADggEBAIcL/z4Cm2XIVi3WO5qYi3FP2ropqiH5Ri71sqQPrhE4
+eTizDnS6dl2e6BiClmLbTDPo3flq3zK9LExHYFV/53RrtCyD2HlrtrdNUAtmB7Xts5et6u5/
+MOaZ/SLick0+hFvu+c+Z6n/XUjkurJgARH5pO7917tALOxrN5fcPImxHhPalR6D90Bo0fa3S
+PXez7vTXTf/D6OWST1k+kEcQSrCFWMBvf/iu7QhCnh7U3xQuTY+8npTD5+32GPg8SecmqKc2
+2CzeIs2LgtjZeOJVEqM7h0S2EQvVDFKvaYwPBt/QolOLV5h7z/0HJPT8vcP9SpIClxvyt7bP
+ZYoaorVyGTkwggWNMIIEdaADAgECAgwcOtRQhH7u81j4jncwDQYJKoZIhvcNAQELBQAwgZUx
+CzAJBgNVBAYTAkRFMUUwQwYDVQQKEzxWZXJlaW4genVyIEZvZXJkZXJ1bmcgZWluZXMgRGV1
+dHNjaGVuIEZvcnNjaHVuZ3NuZXR6ZXMgZS4gVi4xEDAOBgNVBAsTB0RGTi1QS0kxLTArBgNV
+BAMTJERGTi1WZXJlaW4gQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkgMjAeFw0xNjExMDMxNTI0
+NDhaFw0zMTAyMjIyMzU5NTlaMGoxCzAJBgNVBAYTAkRFMQ8wDQYDVQQIDAZCYXllcm4xETAP
+BgNVBAcMCE11ZW5jaGVuMSAwHgYDVQQKDBdNYXgtUGxhbmNrLUdlc2VsbHNjaGFmdDEVMBMG
+A1UEAwwMTVBHIENBIC0gRzAyMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnhx4
+59Lh4WqgOs/Md04XxU2yFtfM15ZuJV0PZP7BmqSJKLLPyqmOrADfNdJ5PIGBto2JBhtRRBHd
+G0GROOvTRHjzOga95WOTeura79T21FWwwAwa29OFnD3ZplQs6HgdwQrZWNi1WHNJxn/4mA19
+rNEBUc5urSIpZPvZi5XmlF3v3JHOlx3KWV7mUteB4pwEEfGTg4npPAJbp2o7arxQdoIq+Pu2
+OsvqhD7Rk4QeaX+EM1QS4lqd1otW4hE70h/ODPy1xffgbZiuotWQLC6nIwa65Qv6byqlIX0q
+Zuu99Vsu+r3sWYsL5SBkgecNI7fMJ5tfHrjoxfrKl/ErTAt8GQIDAQABo4ICBTCCAgEwEgYD
+VR0TAQH/BAgwBgEB/wIBATAOBgNVHQ8BAf8EBAMCAQYwKQYDVR0gBCIwIDANBgsrBgEEAYGt
+IYIsHjAPBg0rBgEEAYGtIYIsAQEEMB0GA1UdDgQWBBTEiKUH7rh7qgwTv9opdGNSG0lwFjAf
+BgNVHSMEGDAWgBST49gyJtrV8UqlkUrg6kviogzP4TCBjwYDVR0fBIGHMIGEMECgPqA8hjpo
+dHRwOi8vY2RwMS5wY2EuZGZuLmRlL2dsb2JhbC1yb290LWcyLWNhL3B1Yi9jcmwvY2Fjcmwu
+Y3JsMECgPqA8hjpodHRwOi8vY2RwMi5wY2EuZGZuLmRlL2dsb2JhbC1yb290LWcyLWNhL3B1
+Yi9jcmwvY2FjcmwuY3JsMIHdBggrBgEFBQcBAQSB0DCBzTAzBggrBgEFBQcwAYYnaHR0cDov
+L29jc3AucGNhLmRmbi5kZS9PQ1NQLVNlcnZlci9PQ1NQMEoGCCsGAQUFBzAChj5odHRwOi8v
+Y2RwMS5wY2EuZGZuLmRlL2dsb2JhbC1yb290LWcyLWNhL3B1Yi9jYWNlcnQvY2FjZXJ0LmNy
+dDBKBggrBgEFBQcwAoY+aHR0cDovL2NkcDIucGNhLmRmbi5kZS9nbG9iYWwtcm9vdC1nMi1j
+YS9wdWIvY2FjZXJ0L2NhY2VydC5jcnQwDQYJKoZIhvcNAQELBQADggEBABLpeD5FygzqOjj+
+/lAOy20UQOGWlx0RMuPcI4nuyFT8SGmK9lD7QCg/HoaJlfU/r78ex+SEide326evlFAoJXIF
+jVyzNltDhpMKrPIDuh2N12zyn1EtagqPL6hu4pVRzcBpl/F2HCvtmMx5K4WN1L1fmHWLcSap
+dhXLvAZ9RG/B3rqyULLSNN8xHXYXpmtvG0VGJAndZ+lj+BH7uvd3nHWnXEHC2q7iQlDUqg0a
+wIqWJgdLlx1Q8Dg/sodv0m+LN0kOzGvVDRCmowBdWGhhusD+duKV66pBl+qhC+4LipariWaM
+qK5ppMQROATjYeNRvwI+nDcEXr2vDaKmdbxgDVwwggWvMIIEl6ADAgECAgweKlJIhfynPMVG
+/KIwDQYJKoZIhvcNAQELBQAwajELMAkGA1UEBhMCREUxDzANBgNVBAgMBkJheWVybjERMA8G
+A1UEBwwITXVlbmNoZW4xIDAeBgNVBAoMF01heC1QbGFuY2stR2VzZWxsc2NoYWZ0MRUwEwYD
+VQQDDAxNUEcgQ0EgLSBHMDIwHhcNMTcxMTE0MTEzNDE2WhcNMjAxMTEzMTEzNDE2WjCBizEL
+MAkGA1UEBhMCREUxIDAeBgNVBAoMF01heC1QbGFuY2stR2VzZWxsc2NoYWZ0MTQwMgYDVQQL
+DCtNYXgtUGxhbmNrLUluc3RpdHV0IGZ1ZXIgbW9sZWt1bGFyZSBHZW5ldGlrMQ4wDAYDVQQL
+DAVNUElNRzEUMBIGA1UEAwwLUGF1bCBNZW56ZWwwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAw
+ggEKAoIBAQDIh/UR/AX/YQ48VWWDMLTYtXjYJyhRHMc81ZHMMoaoG66lWB9MtKRTnB5lovLZ
+enTIUyPsCrMhTqV9CWzDf6v9gOTWVxHEYqrUwK5H1gx4XoK81nfV8oGV4EKuVmmikTXiztGz
+peyDmOY8o/EFNWP7YuRkY/lPQJQBeBHYq9AYIgX4StuXu83nusq4MDydygVOeZC15ts0tv3/
+6WmibmZd1OZRqxDOkoBbY3Djx6lERohs3IKS6RKiI7e90rCSy9rtidJBOvaQS9wvtOSKPx0a
++2pAgJEVzZFjOAfBcXydXtqXhcpOi2VCyl+7+LnnTz016JJLsCBuWEcB3kP9nJYNAgMBAAGj
+ggIxMIICLTAJBgNVHRMEAjAAMA4GA1UdDwEB/wQEAwIF4DAdBgNVHSUEFjAUBggrBgEFBQcD
+AgYIKwYBBQUHAwQwHQYDVR0OBBYEFHM0Mc3XjMLlhWpp4JufRELL4A/qMB8GA1UdIwQYMBaA
+FMSIpQfuuHuqDBO/2il0Y1IbSXAWMCAGA1UdEQQZMBeBFXBtZW56ZWxAbW9sZ2VuLm1wZy5k
+ZTB9BgNVHR8EdjB0MDigNqA0hjJodHRwOi8vY2RwMS5wY2EuZGZuLmRlL21wZy1nMi1jYS9w
+dWIvY3JsL2NhY3JsLmNybDA4oDagNIYyaHR0cDovL2NkcDIucGNhLmRmbi5kZS9tcGctZzIt
+Y2EvcHViL2NybC9jYWNybC5jcmwwgc0GCCsGAQUFBwEBBIHAMIG9MDMGCCsGAQUFBzABhido
+dHRwOi8vb2NzcC5wY2EuZGZuLmRlL09DU1AtU2VydmVyL09DU1AwQgYIKwYBBQUHMAKGNmh0
+dHA6Ly9jZHAxLnBjYS5kZm4uZGUvbXBnLWcyLWNhL3B1Yi9jYWNlcnQvY2FjZXJ0LmNydDBC
+BggrBgEFBQcwAoY2aHR0cDovL2NkcDIucGNhLmRmbi5kZS9tcGctZzItY2EvcHViL2NhY2Vy
+dC9jYWNlcnQuY3J0MEAGA1UdIAQ5MDcwDwYNKwYBBAGBrSGCLAEBBDARBg8rBgEEAYGtIYIs
+AQEEAwYwEQYPKwYBBAGBrSGCLAIBBAMGMA0GCSqGSIb3DQEBCwUAA4IBAQCQs6bUDROpFO2F
+Qz2FMgrdb39VEo8P3DhmpqkaIMC5ZurGbbAL/tAR6lpe4af682nEOJ7VW86ilsIJgm1j0ueY
+aOuL8jrN4X7IF/8KdZnnNnImW3QVni6TCcc+7+ggci9JHtt0IDCj5vPJBpP/dKXLCN4M+exl
+GXYpfHgxh8gclJPY1rquhQrihCzHfKB01w9h9tWZDVMtSoy9EUJFhCXw7mYUsvBeJwZesN2B
+fndPkrXx6XWDdU3S1LyKgHlLIFtarLFm2Hb5zAUR33h+26cN6ohcGqGEEzgIG8tXS8gztEaj
+1s2RyzmKd4SXTkKR3GhkZNVWy+gM68J7jP6zzN+cMYIDmjCCA5YCAQEwejBqMQswCQYDVQQG
+EwJERTEPMA0GA1UECAwGQmF5ZXJuMREwDwYDVQQHDAhNdWVuY2hlbjEgMB4GA1UECgwXTWF4
+LVBsYW5jay1HZXNlbGxzY2hhZnQxFTATBgNVBAMMDE1QRyBDQSAtIEcwMgIMHipSSIX8pzzF
+RvyiMA0GCWCGSAFlAwQCAQUAoIIB8TAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqG
+SIb3DQEJBTEPFw0xODEwMDExNTU5NDhaMC8GCSqGSIb3DQEJBDEiBCA6M0Dw62N7AE7ZViGG
+HH+iUeY4Z5NUhpme30pIDXhbfzBsBgkqhkiG9w0BCQ8xXzBdMAsGCWCGSAFlAwQBKjALBglg
+hkgBZQMEAQIwCgYIKoZIhvcNAwcwDgYIKoZIhvcNAwICAgCAMA0GCCqGSIb3DQMCAgFAMAcG
+BSsOAwIHMA0GCCqGSIb3DQMCAgEoMIGJBgkrBgEEAYI3EAQxfDB6MGoxCzAJBgNVBAYTAkRF
+MQ8wDQYDVQQIDAZCYXllcm4xETAPBgNVBAcMCE11ZW5jaGVuMSAwHgYDVQQKDBdNYXgtUGxh
+bmNrLUdlc2VsbHNjaGFmdDEVMBMGA1UEAwwMTVBHIENBIC0gRzAyAgweKlJIhfynPMVG/KIw
+gYsGCyqGSIb3DQEJEAILMXygejBqMQswCQYDVQQGEwJERTEPMA0GA1UECAwGQmF5ZXJuMREw
+DwYDVQQHDAhNdWVuY2hlbjEgMB4GA1UECgwXTWF4LVBsYW5jay1HZXNlbGxzY2hhZnQxFTAT
+BgNVBAMMDE1QRyBDQSAtIEcwMgIMHipSSIX8pzzFRvyiMA0GCSqGSIb3DQEBAQUABIIBAAda
+94BWvCEK67NOh1nBH1pl7C1x3OT7g2haK+0HwV7isaedfQh0fGXU5J4qAxID98N7kt4qNY2E
+h9QbwxLrrRbTw9NG0PeULs5nhAzxU8xfbkB5mriOPRR/dbHOvc/TP2zk99aT3pE+amrtSyRe
+LkXFCgFVyfb3MY8lxv669bhNIlPlVpENIsvbF8VUU2v2B1TXeG/w20/ItdYOiCvrgj7eBB+E
+rrowg2YaZh+KgUn0aw/Qh38NgDQ61hG9rkn7dPuvBVZFOm+bY7RsnRw6z/H1JNy2DuZymncJ
+XGnl+OEFXdEeSgG0llRWmdXIfdUgSZG8zlmr5jEXJdD+zZRXnpAAAAAAAAA=
+--------------ms030703080106090603070100--
