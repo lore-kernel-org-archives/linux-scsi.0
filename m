@@ -1,69 +1,94 @@
-From: Nick Desaulniers <ndesaulniers@google.com>
-Subject: Re: [PATCH] libosd: Remove ignored __weak attribute
-Date: Mon, 1 Oct 2018 15:47:55 -0700
-Message-ID: <CAKwvOdmCHEB945Lr26mWt9J7jYXDo89wUt=r0UT7mZ-WcroMLA@mail.gmail.com>
-References: <20180930205448.26205-1-natechancellor@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+From: John Stultz <john.stultz@linaro.org>
+Subject: [RESEND][PATCH] scsi: ufs: Fix hynix ufs bug with quirk on hi36xx SoC
+Date: Mon,  1 Oct 2018 15:58:18 -0700
+Message-ID: <1538434698-1042-1-git-send-email-john.stultz@linaro.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180930205448.26205-1-natechancellor@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Nathan Chancellor <natechancellor@gmail.com>
-Cc: ooo@electrozaur.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: lkml <linux-kernel@vger.kernel.org>
+Cc: Wei Li <liwei213@huawei.com>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Dmitry Shmidt <dimitrysh@google.com>, John Stultz <john.stultz@linaro.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sun, Sep 30, 2018 at 1:55 PM Nathan Chancellor
-<natechancellor@gmail.com> wrote:
->
-> Clang warns that the __weak attribute is going to be ignored on
-> osd_root_object because it's not in the correct location (needs to be
-> after the type).
->
-> ./include/scsi/osd_types.h:31:21: warning: 'weak' attribute only applies
-> to variables, functions, and classes [-Wignored-attributes]
-> static const struct __weak osd_obj_id osd_root_object = {0, 0};
->                     ^
->
-> Turns out that GCC ignores the attribute too albeit silently because
-> moving the attribute after either osd_obj_id or osd_root_object like
-> all other uses of __weak on variables in the kernel causes a build
-> error on both GCC and Clang because static variables cannot be weak
-> since weak definitions rely on not having internal linkage:
->
-> ./include/scsi/osd_types.h:31:32: error: weak declaration cannot have
-> internal linkage
-> static const struct osd_obj_id __weak osd_root_object = {0, 0};
->                                ^
->
-> Just remove the attribute because it hasn't been correct since the
-> initial addition of this file in commit de258bf5e638 ("[SCSI] libosd:
-> OSDv1 Headers").
->
-> Reported-by: Nick Desaulniers <ndesaulniers@google.com>
-> Reviewed-by: Nick Desaulniers <ndesaulniers@google.com>
-> Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
-> ---
->  include/scsi/osd_types.h | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/include/scsi/osd_types.h b/include/scsi/osd_types.h
-> index 48e8a165e136..6b6fdcafa6cc 100644
-> --- a/include/scsi/osd_types.h
-> +++ b/include/scsi/osd_types.h
-> @@ -28,7 +28,7 @@ struct osd_obj_id {
->         osd_id id;
->  };
->
-> -static const struct __weak osd_obj_id osd_root_object = {0, 0};
-> +static const struct osd_obj_id osd_root_object = {0, 0};
->
->  struct osd_attr {
->         u32 attr_page;
-> --
-> 2.19.0
->
+From: Wei Li <liwei213@huawei.com>
 
-LGTM, thank you for sending, Nathan.
+Hynix ufs has deviations on hi36xx platform which will result in
+ufs bursts transfer failures.
+
+To fix the problem, the Hynix device must set the register
+VS_DebugSaveConfigTime to 0x10, which will set time reference
+for SaveConfigTime is 250 ns. The time reference for SaveConfigTime
+is 40 ns by default.
+
+This patch is necessary to boot on HiKey960 boards that use
+Hynix UFS chips.
+
+Cc: Vinayak Holikatti <vinholikatti@gmail.com>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
+Signed-off-by: Wei Li <liwei213@huawei.com>
+Signed-off-by: Dmitry Shmidt <dimitrysh@google.com>
+[jstultz: Forward ported from older code, slight tweak to commit message]
+Signed-off-by: John Stultz <john.stultz@linaro.org>
+---
+ drivers/scsi/ufs/ufs-hisi.c   | 9 +++++++++
+ drivers/scsi/ufs/ufs_quirks.h | 6 ++++++
+ drivers/scsi/ufs/ufshcd.c     | 2 ++
+ 3 files changed, 17 insertions(+)
+
+diff --git a/drivers/scsi/ufs/ufs-hisi.c b/drivers/scsi/ufs/ufs-hisi.c
+index 46df707..452e19f 100644
+--- a/drivers/scsi/ufs/ufs-hisi.c
++++ b/drivers/scsi/ufs/ufs-hisi.c
+@@ -20,6 +20,7 @@
+ #include "unipro.h"
+ #include "ufs-hisi.h"
+ #include "ufshci.h"
++#include "ufs_quirks.h"
+ 
+ static int ufs_hisi_check_hibern8(struct ufs_hba *hba)
+ {
+@@ -390,6 +391,14 @@ static void ufs_hisi_set_dev_cap(struct ufs_hisi_dev_params *hisi_param)
+ 
+ static void ufs_hisi_pwr_change_pre_change(struct ufs_hba *hba)
+ {
++	if (hba->dev_quirks & UFS_DEVICE_QUIRK_HOST_VS_DEBUGSAVECONFIGTIME) {
++		pr_info("ufs flash device must set VS_DebugSaveConfigTime 0x10\n");
++		/* VS_DebugSaveConfigTime */
++		ufshcd_dme_set(hba, UIC_ARG_MIB(0xD0A0), 0x10);
++		/* sync length */
++		ufshcd_dme_set(hba, UIC_ARG_MIB(0x1556), 0x48);
++	}
++
+ 	/* update */
+ 	ufshcd_dme_set(hba, UIC_ARG_MIB(0x15A8), 0x1);
+ 	/* PA_TxSkip */
+diff --git a/drivers/scsi/ufs/ufs_quirks.h b/drivers/scsi/ufs/ufs_quirks.h
+index 71f73d1..5d2dfdb 100644
+--- a/drivers/scsi/ufs/ufs_quirks.h
++++ b/drivers/scsi/ufs/ufs_quirks.h
+@@ -131,4 +131,10 @@ struct ufs_dev_fix {
+  */
+ #define UFS_DEVICE_QUIRK_HOST_PA_SAVECONFIGTIME	(1 << 8)
+ 
++/*
++ * Some UFS devices require VS_DebugSaveConfigTime is 0x10,
++ * enabling this quirk ensure this.
++ */
++#define UFS_DEVICE_QUIRK_HOST_VS_DEBUGSAVECONFIGTIME	(1 << 9)
++
+ #endif /* UFS_QUIRKS_H_ */
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index c55f38e..a67f298 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -230,6 +230,8 @@ static struct ufs_dev_fix ufs_fixups[] = {
+ 	UFS_FIX(UFS_VENDOR_SKHYNIX, UFS_ANY_MODEL, UFS_DEVICE_NO_VCCQ),
+ 	UFS_FIX(UFS_VENDOR_SKHYNIX, UFS_ANY_MODEL,
+ 		UFS_DEVICE_QUIRK_HOST_PA_SAVECONFIGTIME),
++	UFS_FIX(UFS_VENDOR_SKHYNIX, UFS_ANY_MODEL,
++		UFS_DEVICE_QUIRK_HOST_VS_DEBUGSAVECONFIGTIME),
+ 
+ 	END_FIX
+ };
 -- 
-Thanks,
-~Nick Desaulniers
+2.7.4
