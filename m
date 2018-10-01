@@ -1,61 +1,45 @@
-From: Nick Desaulniers <ndesaulniers@google.com>
-Subject: Re: [PATCH RESEND] scsi: sg: Prevent potential double frees in sg driver
-Date: Mon, 1 Oct 2018 10:12:32 -0700
-Message-ID: <CAKwvOdmtF-s4amu-zXbyUNe+jvCuC3hXUez6fVVq0sjuoYc3eg@mail.gmail.com>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH RESEND] scsi: sg: Prevent potential double frees in sg
+ driver
+Date: Mon, 01 Oct 2018 10:20:37 -0700
+Message-ID: <1538414437.171728.7.camel@acm.org>
 References: <20181001161506.100284-1-evgreen@chromium.org>
+         <CAKwvOdmtF-s4amu-zXbyUNe+jvCuC3hXUez6fVVq0sjuoYc3eg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="UTF-7"
+Content-Transfer-Encoding: 7bit
 Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20181001161506.100284-1-evgreen@chromium.org>
+In-Reply-To: <CAKwvOdmtF-s4amu-zXbyUNe+jvCuC3hXUez6fVVq0sjuoYc3eg@mail.gmail.com>
 Sender: stable-owner@vger.kernel.org
-To: hch@infradead.org
+To: Nick Desaulniers <ndesaulniers@google.com>, hch@infradead.org
 Cc: Doug Gilbert <dgilbert@interlog.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Robb Glasser <rglasser@google.com>, evgreen@chromium.org, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Oct 1, 2018 at 9:16 AM Evan Green <evgreen@chromium.org> wrote:
->
-> From: Robb Glasser <rglasser@google.com>
->
-> sg_ioctl could be spammed by requests, leading to a double free in
-> __free_pages. This protects the entry points of sg_ioctl where the
-> memory could be corrupted by a double call to __free_pages if multiple
-> requests are happening concurrently.
->
-> Signed-off-by: Robb Glasser <rglasser@google.com>
-> Signed-off-by: Nick Desaulniers <ndesaulniers@google.com>
-> Signed-off-by: Evan Green <evgreen@chromium.org>
-> Cc: stable@vger.kernel.org
->
-> ---
-> Reposting this patch from last summer, as it looks like it fell in between
-> the cracks.
+On Mon, 2018-10-01 at 10:12 -0700, Nick Desaulniers wrote:
++AD4 On Mon, Oct 1, 2018 at 9:16 AM Evan Green +ADw-evgreen+AEA-chromium.org+AD4 wrote:
++AD4 +AD4 
++AD4 +AD4 From: Robb Glasser +ADw-rglasser+AEA-google.com+AD4
++AD4 +AD4 
++AD4 +AD4 sg+AF8-ioctl could be spammed by requests, leading to a double free in
++AD4 +AD4 +AF8AXw-free+AF8-pages. This protects the entry points of sg+AF8-ioctl where the
++AD4 +AD4 memory could be corrupted by a double call to +AF8AXw-free+AF8-pages if multiple
++AD4 +AD4 requests are happening concurrently.
++AD4 +AD4 
++AD4 +AD4 Signed-off-by: Robb Glasser +ADw-rglasser+AEA-google.com+AD4
++AD4 +AD4 Signed-off-by: Nick Desaulniers +ADw-ndesaulniers+AEA-google.com+AD4
++AD4 +AD4 Signed-off-by: Evan Green +ADw-evgreen+AEA-chromium.org+AD4
++AD4 +AD4 Cc: stable+AEA-vger.kernel.org
++AD4 +AD4 
++AD4 +AD4 ---
++AD4 +AD4 Reposting this patch from last summer, as it looks like it fell in between
++AD4 +AD4 the cracks.
++AD4 
++AD4 Christoph, do you still feel strongly about: https://lkml.org/lkml/2017/8/5/75 ?
 
-Christoph, do you still feel strongly about: https://lkml.org/lkml/2017/8/5/75 ?
+I don't know how Christoph feels about it, but serializing all SG I/O seems
+like a regression to me. If one sg command hangs I usually try to send
+another sg command to the same SCSI device from another shell to get more
+information about the nature of the hang. Serializing all SG I/O would make
+that impossible.
 
->
->  drivers/scsi/sg.c | 2 ++
->  1 file changed, 2 insertions(+)
->
-> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-> index 8a254bb46a9b..25579d8a16b5 100644
-> --- a/drivers/scsi/sg.c
-> +++ b/drivers/scsi/sg.c
-> @@ -924,8 +924,10 @@ sg_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
->                         return -ENXIO;
->                 if (!access_ok(VERIFY_WRITE, p, SZ_SG_IO_HDR))
->                         return -EFAULT;
-> +               mutex_lock(&sfp->parentdp->open_rel_lock);
->                 result = sg_new_write(sfp, filp, p, SZ_SG_IO_HDR,
->                                  1, read_only, 1, &srp);
-> +               mutex_unlock(&sfp->parentdp->open_rel_lock);
->                 if (result < 0)
->                         return result;
->                 result = wait_event_interruptible(sfp->read_wait,
-> --
-> 2.19.0.605.g01d371f741-goog
->
-
-
--- 
-Thanks,
-~Nick Desaulniers
+Bart.
