@@ -1,98 +1,83 @@
-From: Joe Perches <joe@perches.com>
-Subject: Re: [PATCH] scsi: arcmsr: clean up clang warning on extraneous
- parentheses
-Date: Sun, 30 Sep 2018 16:18:10 -0700
-Message-ID: <bd6313064c790b1db5806245b8c3d00e2f82c8f7.camel@perches.com>
-References: <20180930230307.18664-1-colin.king@canonical.com>
+From: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
+Subject: Re: [PATCH v4 1/6] mpt3sas: Introduce mpt3sas_base_pci_device_is_available
+Date: Mon, 1 Oct 2018 12:27:28 +0530
+Message-ID: <CA+RiK64EdoSngTzDMUP4xXNcZQa6KfyucsRw42+DUo3s+JPmVQ@mail.gmail.com>
+References: <1537935759-14754-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+ <1537935759-14754-2-git-send-email-suganath-prabu.subramani@broadcom.com>
+ <20180926213241.GI28024@bhelgaas-glaptop.roam.corp.google.com>
+ <20180927070327.wvl5glb4c7gtjoa3@wunner.de> <20180927184746.GM28024@bhelgaas-glaptop.roam.corp.google.com>
+ <20180927190959.dio4qwti3i4accjm@wunner.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180930230307.18664-1-colin.king@canonical.com>
+In-Reply-To: <20180927190959.dio4qwti3i4accjm@wunner.de>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Colin King <colin.king@canonical.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Ching Huang <ching2048@areca.com.tw>, linux-scsi@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+To: lukas@wunner.de
+Cc: helgaas@kernel.org, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org, Andy Shevchenko <andy.shevchenko@gmail.com>, Sathya Prakash <Sathya.Prakash@broadcom.com>, Sreekanth Reddy <sreekanth.reddy@broadcom.com>, linux-kernel@vger.kernel.org, benh@kernel.crashing.org, ruscur@russell.cc, sbobroff@linux.ibm.com, oohall@gmail.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 2018-10-01 at 00:03 +0100, Colin King wrote:
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> There are extraneous parantheses that are causing clang to produce a
-> warning so remove these.
-> 
-> Clean up 3 clang warnings:
-> equality comparison with extraneous parentheses [-Wparentheses-equality]
-[]
-> diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
-[]
-> @@ -4135,9 +4135,9 @@ static void arcmsr_hardware_reset(struct AdapterControlBlock *acb)
->  		pci_read_config_byte(acb->pdev, i, &value[i]);
->  	}
->  	/* hardware reset signal */
-> -	if ((acb->dev_id == 0x1680)) {
-> +	if (acb->dev_id == 0x1680) {
->  		writel(ARCMSR_ARC1680_BUS_RESET, &pmuA->reserved1[0]);
-> -	} else if ((acb->dev_id == 0x1880)) {
-> +	} else if (acb->dev_id == 0x1880) {
->  		do {
->  			count++;
->  			writel(0xF, &pmuC->write_sequence);
-> @@ -4161,7 +4161,7 @@ static void arcmsr_hardware_reset(struct AdapterControlBlock *acb)
->  		} while (((readl(&pmuE->host_diagnostic_3xxx) &
->  			ARCMSR_ARC1884_DiagWrite_ENABLE) == 0) && (count < 5));
->  		writel(ARCMSR_ARC188X_RESET_ADAPTER, &pmuE->host_diagnostic_3xxx);
-> -	} else if ((acb->dev_id == 0x1214)) {
-> +	} else if (acb->dev_id == 0x1214) {
->  		writel(0x20, pmuD->reset_request);
->  	} else {
->  		pci_write_config_byte(acb->pdev, 0x84, 0x20);
+Hi Lucas and Bjorn,
+Thanks for reviewing and providing useful comments.
 
-It'd probably read better using a switch/case like the below:
----
- drivers/scsi/arcmsr/arcmsr_hba.c | 16 +++++++++++-----
- 1 file changed, 11 insertions(+), 5 deletions(-)
+On Fri, Sep 28, 2018 at 12:40 AM Lukas Wunner <lukas@wunner.de> wrote:
+>
+> On Thu, Sep 27, 2018 at 01:47:46PM -0500, Bjorn Helgaas wrote:
+> >   mpt3sas_wait_for_commands_to_complete(...)
+> >   {
+> >     ...
+> >  +  if (!mpt3sas_base_pci_device_is_available(ioc))
+> >  +    return;
+> >
+> >     # In the definitive case, we returned above.  If we get here, we
+> >     # think the device *might* be present.  The readl() inside
+> >     # mpt3sas_base_get_iocstate() might fail (returning ~0 data).
+> >     # It happens that (~0 & MPI2_IOC_STATE_MASK) != MPI2_IOC_STATE_OPERATIONAL
+> >     # so we will return below if the device was removed after the
+> >     # check above.
+> >
+> >     ioc_state = mpt3sas_base_get_iocstate(ioc, 0);
+> >     if ((ioc_state & MPI2_IOC_STATE_MASK) != MPI2_IOC_STATE_OPERATIONAL)
+> >       return;
+> >     ...
+> >
+> >
+> > I think this code is unreasonably complicated.  The multiple layers
+> > and negations make it very difficult to figure out what's definitive.
+>
+> I agree there's room for improvement.
+>
+>
+> > I'm not sure how mpt3sas benefits from adding
+> > mpt3sas_base_pci_device_is_available() here, other than the fact that
+> > it avoids an MMIO read to the device in most cases.  I think it would
+> > be simpler and better to make mpt3sas_base_get_iocstate() smarter
+> > about handling ~0 values from the readl().
+>
+> Avoiding an MMIO read when it's known to run into a Completion Timeout
+> buys about 17 ms.  If the function is executed many times (I don't know
+> if that's the case here, I'm referring to the general case), or if bailing
+> out of it early avoids significant amounts of further I/O, then checking
+> for disconnectedness makes sense.
+>
+> The 17 ms number is from this talk:
+> https://www.youtube.com/watch?v=GJ6B0xzgvlM&t=832
+>
+> It's the typical Completion Timeout on an Intel chip, but it can be up to
+> 50 ms in the default setting or up to 64 s if so configured in the Device
+> Control 2 register (PCIe r4.0 sec 7.8.16).
+>
 
-diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
-index 12316ef4c893..ad45583f5ae0 100644
---- a/drivers/scsi/arcmsr/arcmsr_hba.c
-+++ b/drivers/scsi/arcmsr/arcmsr_hba.c
-@@ -4135,9 +4135,11 @@ static void arcmsr_hardware_reset(struct AdapterControlBlock *acb)
- 		pci_read_config_byte(acb->pdev, i, &value[i]);
- 	}
- 	/* hardware reset signal */
--	if ((acb->dev_id == 0x1680)) {
-+	switch (acb->dev_id) {
-+	case 0x1680:
- 		writel(ARCMSR_ARC1680_BUS_RESET, &pmuA->reserved1[0]);
--	} else if ((acb->dev_id == 0x1880)) {
-+		break;
-+	case 0x1880:
- 		do {
- 			count++;
- 			writel(0xF, &pmuC->write_sequence);
-@@ -4148,7 +4150,8 @@ static void arcmsr_hardware_reset(struct AdapterControlBlock *acb)
- 			writel(0xD, &pmuC->write_sequence);
- 		} while (((readl(&pmuC->host_diagnostic) & ARCMSR_ARC1880_DiagWrite_ENABLE) == 0) && (count < 5));
- 		writel(ARCMSR_ARC1880_RESET_ADAPTER, &pmuC->host_diagnostic);
--	} else if (acb->dev_id == 0x1884) {
-+		break;
-+	case 0x1884:
- 		struct MessageUnit_E __iomem *pmuE = acb->pmuE;
- 		do {
- 			count++;
-@@ -4161,10 +4164,13 @@ static void arcmsr_hardware_reset(struct AdapterControlBlock *acb)
- 		} while (((readl(&pmuE->host_diagnostic_3xxx) &
- 			ARCMSR_ARC1884_DiagWrite_ENABLE) == 0) && (count < 5));
- 		writel(ARCMSR_ARC188X_RESET_ADAPTER, &pmuE->host_diagnostic_3xxx);
--	} else if ((acb->dev_id == 0x1214)) {
-+		break;
-+	case 0x1214:
- 		writel(0x20, pmuD->reset_request);
--	} else {
-+		break;
-+	default:
- 		pci_write_config_byte(acb->pdev, 0x84, 0x20);
-+		break;
- 	}
- 	msleep(2000);
- 	/* write back pci config data */
+This function is called only during controller reset, system shutdown
+and driver unload operations.
+For this case we can remove mpt3sas_base_pci_device_is_available() check,
+since we can make the device removal from readl in
+mpt3sas_base_get_iocstate() as you suggested.
+But we need mpt3sas_base_pci_device_is_available() in other places
+like while submitting the
+IO/TMs to the HBA firmware etc where driver is not checking for the
+IOC state (through readl() operation)
+ to gracefully handle the HBA hot-unplug operation.
+
+> Thanks,
+>
+> Lukas
