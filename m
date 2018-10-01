@@ -1,94 +1,73 @@
-From: John Stultz <john.stultz@linaro.org>
-Subject: [RESEND][PATCH] scsi: ufs: Fix hynix ufs bug with quirk on hi36xx SoC
-Date: Mon,  1 Oct 2018 15:58:18 -0700
-Message-ID: <1538434698-1042-1-git-send-email-john.stultz@linaro.org>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH RESEND] scsi: sg: Prevent potential double frees in sg
+ driver
+Date: Tue, 2 Oct 2018 09:34:33 +1000
+Message-ID: <ef53fcb4-9001-c06b-779f-d40949224c98@interlog.com>
+References: <20181001161506.100284-1-evgreen@chromium.org>
+Reply-To: dgilbert@interlog.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20181001161506.100284-1-evgreen@chromium.org>
+Content-Language: en-CA
 Sender: linux-kernel-owner@vger.kernel.org
-To: lkml <linux-kernel@vger.kernel.org>
-Cc: Wei Li <liwei213@huawei.com>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Dmitry Shmidt <dimitrysh@google.com>, John Stultz <john.stultz@linaro.org>
+To: Evan Green <evgreen@chromium.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Nick Desaulniers <ndesaulniers@google.com>, Christoph Hellwig <hch@infradead.org>, Robb Glasser <rglasser@google.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Wei Li <liwei213@huawei.com>
+On 2018-10-02 02:15 AM, Evan Green wrote:
+> From: Robb Glasser <rglasser@google.com>
+> 
+> sg_ioctl could be spammed by requests, leading to a double free in
+> __free_pages. This protects the entry points of sg_ioctl where the
+> memory could be corrupted by a double call to __free_pages if multiple
+> requests are happening concurrently.
 
-Hynix ufs has deviations on hi36xx platform which will result in
-ufs bursts transfer failures.
+Hi,
+I  don't like this patch. I would like to see the trace for the double
+call to the __free_pages you are referring too. A test program that
+show the fault, perhaps?
 
-To fix the problem, the Hynix device must set the register
-VS_DebugSaveConfigTime to 0x10, which will set time reference
-for SaveConfigTime is 250 ns. The time reference for SaveConfigTime
-is 40 ns by default.
+I have test code to "spam" the sg driver and have not seen a double
+__free_pages that you refer to (see sg3_utils package version 1.44,
+testing/sg_tst_async.cpp).
 
-This patch is necessary to boot on HiKey960 boards that use
-Hynix UFS chips.
+Currently I am dusting off 20 years of "laparoscopic" patches to the sg
+driver that have made a bit of a mess of the naming and comments. Also
+the 16 outstanding requests per file descriptor limit is being removed.
+Then I want to add the SG_IOSUBMIT and SG_IORECEIVE ioctls proposed by
+Linus Torvalds two week ago.
 
-Cc: Vinayak Holikatti <vinholikatti@gmail.com>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
-Signed-off-by: Wei Li <liwei213@huawei.com>
-Signed-off-by: Dmitry Shmidt <dimitrysh@google.com>
-[jstultz: Forward ported from older code, slight tweak to commit message]
-Signed-off-by: John Stultz <john.stultz@linaro.org>
----
- drivers/scsi/ufs/ufs-hisi.c   | 9 +++++++++
- drivers/scsi/ufs/ufs_quirks.h | 6 ++++++
- drivers/scsi/ufs/ufshcd.c     | 2 ++
- 3 files changed, 17 insertions(+)
+Executive summary: nak, without further information
 
-diff --git a/drivers/scsi/ufs/ufs-hisi.c b/drivers/scsi/ufs/ufs-hisi.c
-index 46df707..452e19f 100644
---- a/drivers/scsi/ufs/ufs-hisi.c
-+++ b/drivers/scsi/ufs/ufs-hisi.c
-@@ -20,6 +20,7 @@
- #include "unipro.h"
- #include "ufs-hisi.h"
- #include "ufshci.h"
-+#include "ufs_quirks.h"
- 
- static int ufs_hisi_check_hibern8(struct ufs_hba *hba)
- {
-@@ -390,6 +391,14 @@ static void ufs_hisi_set_dev_cap(struct ufs_hisi_dev_params *hisi_param)
- 
- static void ufs_hisi_pwr_change_pre_change(struct ufs_hba *hba)
- {
-+	if (hba->dev_quirks & UFS_DEVICE_QUIRK_HOST_VS_DEBUGSAVECONFIGTIME) {
-+		pr_info("ufs flash device must set VS_DebugSaveConfigTime 0x10\n");
-+		/* VS_DebugSaveConfigTime */
-+		ufshcd_dme_set(hba, UIC_ARG_MIB(0xD0A0), 0x10);
-+		/* sync length */
-+		ufshcd_dme_set(hba, UIC_ARG_MIB(0x1556), 0x48);
-+	}
-+
- 	/* update */
- 	ufshcd_dme_set(hba, UIC_ARG_MIB(0x15A8), 0x1);
- 	/* PA_TxSkip */
-diff --git a/drivers/scsi/ufs/ufs_quirks.h b/drivers/scsi/ufs/ufs_quirks.h
-index 71f73d1..5d2dfdb 100644
---- a/drivers/scsi/ufs/ufs_quirks.h
-+++ b/drivers/scsi/ufs/ufs_quirks.h
-@@ -131,4 +131,10 @@ struct ufs_dev_fix {
-  */
- #define UFS_DEVICE_QUIRK_HOST_PA_SAVECONFIGTIME	(1 << 8)
- 
-+/*
-+ * Some UFS devices require VS_DebugSaveConfigTime is 0x10,
-+ * enabling this quirk ensure this.
-+ */
-+#define UFS_DEVICE_QUIRK_HOST_VS_DEBUGSAVECONFIGTIME	(1 << 9)
-+
- #endif /* UFS_QUIRKS_H_ */
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index c55f38e..a67f298 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -230,6 +230,8 @@ static struct ufs_dev_fix ufs_fixups[] = {
- 	UFS_FIX(UFS_VENDOR_SKHYNIX, UFS_ANY_MODEL, UFS_DEVICE_NO_VCCQ),
- 	UFS_FIX(UFS_VENDOR_SKHYNIX, UFS_ANY_MODEL,
- 		UFS_DEVICE_QUIRK_HOST_PA_SAVECONFIGTIME),
-+	UFS_FIX(UFS_VENDOR_SKHYNIX, UFS_ANY_MODEL,
-+		UFS_DEVICE_QUIRK_HOST_VS_DEBUGSAVECONFIGTIME),
- 
- 	END_FIX
- };
--- 
-2.7.4
+Doug Gilbert
+
+> Signed-off-by: Robb Glasser <rglasser@google.com>
+> Signed-off-by: Nick Desaulniers <ndesaulniers@google.com>
+> Signed-off-by: Evan Green <evgreen@chromium.org>
+> Cc: stable@vger.kernel.org
+> 
+> ---
+> Reposting this patch from last summer, as it looks like it fell in between
+> the cracks.
+> 
+>   drivers/scsi/sg.c | 2 ++
+>   1 file changed, 2 insertions(+)
+> 
+> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+> index 8a254bb46a9b..25579d8a16b5 100644
+> --- a/drivers/scsi/sg.c
+> +++ b/drivers/scsi/sg.c
+> @@ -924,8 +924,10 @@ sg_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
+>   			return -ENXIO;
+>   		if (!access_ok(VERIFY_WRITE, p, SZ_SG_IO_HDR))
+>   			return -EFAULT;
+> +		mutex_lock(&sfp->parentdp->open_rel_lock);
+>   		result = sg_new_write(sfp, filp, p, SZ_SG_IO_HDR,
+>   				 1, read_only, 1, &srp);
+> +		mutex_unlock(&sfp->parentdp->open_rel_lock);
+>   		if (result < 0)
+>   			return result;
+>   		result = wait_event_interruptible(sfp->read_wait,
+> 
