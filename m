@@ -1,25 +1,31 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] libosd: Remove ignored __weak attribute
-Date: Tue, 2 Oct 2018 07:56:13 -0700
-Message-ID: <20181002145613.GA11156@infradead.org>
-References: <20180930205448.26205-1-natechancellor@gmail.com>
- <10b12992-3570-4646-374b-82cbd7276839@acm.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Uma Krishnan <ukrishn@linux.ibm.com>
+Subject: Re: [PATCH] MAINTAINERS: Fix typo in cxlflash stanza
+Date: Tue, 2 Oct 2018 09:54:51 -0500
+Message-ID: <695AFDFD-5782-4F8C-9048-A1FB4428C9BE@linux.ibm.com>
+References: <1538411170-1977-1-git-send-email-mrochs@linux.ibm.com>
+Mime-Version: 1.0 (Mac OS X Mail 11.5 \(3445.9.1\))
+Content-Type: text/plain;
+        charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <10b12992-3570-4646-374b-82cbd7276839@acm.org>
+In-Reply-To: <1538411170-1977-1-git-send-email-mrochs@linux.ibm.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Nathan Chancellor <natechancellor@gmail.com>, Boaz Harrosh <ooo@electrozaur.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Nick Desaulniers <ndesaulniers@google.com>
+To: "Matthew R. Ochs" <mrochs@linux.ibm.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, "Manoj N. Kumar" <manoj@linux.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Oct 01, 2018 at 06:16:32PM -0700, Bart Van Assche wrote:
-> Boaz, the most recent osd patch that is neither trivial nor treewide
-> refactoring is six years old (51976a8c85ce ("[SCSI] osd_uld: Add osdname &
-> systemid sysfs at scsi_osd class"). That suggests that nobody is using this
-> driver anymore. Can this driver be removed from the kernel tree?
 
-Last time we tried to exofs and the osd code Boaz complained loudly,
-but as far as I can tell it really is not used and bitrotting, so we
-should finally go ahead and drop it.
+
+> On Oct 1, 2018, at 11:26 AM, Matthew R. Ochs <mrochs@linux.ibm.com> wrote:
+> 
+> The uapi header file listed in the cxlflash stanza has a typo.
+> 
+> Removed the trailing 's' from the filename.
+> 
+> Reported-by: Joe Perches <joe@perches.com>
+> Signed-off-by: Matthew R. Ochs <mrochs@linux.ibm.com>
+> ---
+
+Thanks for taking care of this.
+
+Acked-by: Uma Krishnan <ukrishn@linux.ibm.com>
