@@ -1,42 +1,45 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH] libosd: Remove ignored __weak attribute
-Date: Mon, 1 Oct 2018 18:16:32 -0700
-Message-ID: <10b12992-3570-4646-374b-82cbd7276839@acm.org>
-References: <20180930205448.26205-1-natechancellor@gmail.com>
+From: Souptick Joarder <jrdr.linux@gmail.com>
+Subject: [PATCH] scsi/pmcraid.c: Use dma_pool_zalloc
+Date: Tue, 2 Oct 2018 10:56:32 +0530
+Message-ID: <20181002052631.GA2853@jordon-HP-15-Notebook-PC>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180930205448.26205-1-natechancellor@gmail.com>
-Content-Language: en-US
+Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
-To: Nathan Chancellor <natechancellor@gmail.com>, Boaz Harrosh <ooo@electrozaur.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Nick Desaulniers <ndesaulniers@google.com>
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, sabyasachi.linux@gmail.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 9/30/18 1:54 PM, Nathan Chancellor wrote:
-> diff --git a/include/scsi/osd_types.h b/include/scsi/osd_types.h
-> index 48e8a165e136..6b6fdcafa6cc 100644
-> --- a/include/scsi/osd_types.h
-> +++ b/include/scsi/osd_types.h
-> @@ -28,7 +28,7 @@ struct osd_obj_id {
->   	osd_id id;
->   };
->   
-> -static const struct __weak osd_obj_id osd_root_object = {0, 0};
-> +static const struct osd_obj_id osd_root_object = {0, 0};
+Replaced dma_pool_alloc + memset with dma_pool_zalloc.
 
-Structure definitions should occur in .c files instead of in header 
-files especially if the header file is included from multiple source 
-files. Please consider moving the definition of osd_root_object into a 
-.c file. Additionally, zero initializers should be left out to minimize 
-the size of object files.
+Signed-off-by: Sabyasachi Gupta <sabyasachi.linux@gmail.com>
+Signed-off-by: Souptick Joarder <jrdr.linux@gmail.com>
+---
+ drivers/scsi/pmcraid.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-Boaz, the most recent osd patch that is neither trivial nor treewide 
-refactoring is six years old (51976a8c85ce ("[SCSI] osd_uld: Add osdname 
-& systemid sysfs at scsi_osd class"). That suggests that nobody is using 
-this driver anymore. Can this driver be removed from the kernel tree?
-
-Thanks,
-
-Bart.
+diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
+index 4e86994..84a2734 100644
+--- a/drivers/scsi/pmcraid.c
++++ b/drivers/scsi/pmcraid.c
+@@ -4681,7 +4681,7 @@ static int pmcraid_allocate_control_blocks(struct pmcraid_instance *pinstance)
+ 
+ 	for (i = 0; i < PMCRAID_MAX_CMD; i++) {
+ 		pinstance->cmd_list[i]->ioa_cb =
+-			dma_pool_alloc(
++			dma_pool_zalloc(
+ 				pinstance->control_pool,
+ 				GFP_KERNEL,
+ 				&(pinstance->cmd_list[i]->ioa_cb_bus_addr));
+@@ -4690,8 +4690,6 @@ static int pmcraid_allocate_control_blocks(struct pmcraid_instance *pinstance)
+ 			pmcraid_release_control_blocks(pinstance, i);
+ 			return -ENOMEM;
+ 		}
+-		memset(pinstance->cmd_list[i]->ioa_cb, 0,
+-			sizeof(struct pmcraid_control_block));
+ 	}
+ 	return 0;
+ }
+-- 
+1.9.1
