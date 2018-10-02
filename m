@@ -1,42 +1,41 @@
-From: Evan Green <evgreen@chromium.org>
-Subject: Re: [PATCH RESEND] scsi: sg: Prevent potential double frees in sg driver
-Date: Tue, 2 Oct 2018 08:21:26 -0700
-Message-ID: <CAE=gft5TFz4XQMLp8zH83W-agq-B7Df_1X-kX-UrSg8g1vipmw@mail.gmail.com>
-References: <20181001161506.100284-1-evgreen@chromium.org> <ef53fcb4-9001-c06b-779f-d40949224c98@interlog.com>
+From: Boaz Harrosh <ooo@electrozaur.com>
+Subject: Re: [PATCH] libosd: Remove ignored __weak attribute
+Date: Tue, 2 Oct 2018 19:59:08 +0300
+Message-ID: <f4ace065-fb9c-6901-d4d9-6b849e08d054@electrozaur.com>
+References: <20180930205448.26205-1-natechancellor@gmail.com>
+ <10b12992-3570-4646-374b-82cbd7276839@acm.org>
+ <20181002145613.GA11156@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <ef53fcb4-9001-c06b-779f-d40949224c98@interlog.com>
+In-Reply-To: <20181002145613.GA11156@infradead.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: dgilbert@interlog.com
-Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, ndesaulniers@google.com, hch@infradead.org, rglasser@google.com, stable@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, Bart Van Assche <bvanassche@acm.org>
+Cc: Nathan Chancellor <natechancellor@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Nick Desaulniers <ndesaulniers@google.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Oct 1, 2018 at 4:34 PM Douglas Gilbert <dgilbert@interlog.com> wrote:
->
-> On 2018-10-02 02:15 AM, Evan Green wrote:
-> > From: Robb Glasser <rglasser@google.com>
-> >
-> > sg_ioctl could be spammed by requests, leading to a double free in
-> > __free_pages. This protects the entry points of sg_ioctl where the
-> > memory could be corrupted by a double call to __free_pages if multiple
-> > requests are happening concurrently.
->
-> Hi,
-> I  don't like this patch. I would like to see the trace for the double
-> call to the __free_pages you are referring too. A test program that
-> show the fault, perhaps?
->
-> I have test code to "spam" the sg driver and have not seen a double
-> __free_pages that you refer to (see sg3_utils package version 1.44,
-> testing/sg_tst_async.cpp).
->
-> Currently I am dusting off 20 years of "laparoscopic" patches to the sg
-> driver that have made a bit of a mess of the naming and comments. Also
-> the 16 outstanding requests per file descriptor limit is being removed.
-> Then I want to add the SG_IOSUBMIT and SG_IORECEIVE ioctls proposed by
-> Linus Torvalds two week ago.
->
-> Executive summary: nak, without further information
+On 02/10/18 17:56, Christoph Hellwig wrote:
+> On Mon, Oct 01, 2018 at 06:16:32PM -0700, Bart Van Assche wrote:
+>> Boaz, the most recent osd patch that is neither trivial nor treewide
+>> refactoring is six years old (51976a8c85ce ("[SCSI] osd_uld: Add osdname &
+>> systemid sysfs at scsi_osd class"). That suggests that nobody is using this
+>> driver anymore. Can this driver be removed from the kernel tree?
+> 
+> Last time we tried to exofs and the osd code Boaz complained loudly,
+> but as far as I can tell it really is not used and bitrotting, so we
+> should finally go ahead and drop it.
+> 
 
-That makes sense. Thanks for taking a look.
+As I said then. It is used in Universities for studies and experiments.
+Every once in a while. I get an email with questions and reports.
+
+But yes feel free to remove the all thing!!
+
+I guess I can put it up on github. In a public tree.
+
+Just that I will need to forward port it myself, til now you guys
+been doing this for me ;-)
+
+Thanks, sorry for the hassle
+Boaz
