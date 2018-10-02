@@ -1,86 +1,51 @@
-From: Nick Desaulniers <ndesaulniers@google.com>
-Subject: Re: [PATCH v2] scsi: bfa: Avoid implicit enum conversion in bfad_im_post_vendor_event
-Date: Tue, 2 Oct 2018 16:06:05 -0700
-Message-ID: <CAKwvOdkH++gmtONndVbt2qsOSjUWquwZ9vnQDvNQanF89rHUJQ@mail.gmail.com>
-References: <20180926045435.9213-1-natechancellor@gmail.com> <20180927235651.27151-1-natechancellor@gmail.com>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH] libosd: Remove ignored __weak attribute
+Date: Tue, 02 Oct 2018 16:06:31 -0700
+Message-ID: <1538521591.193396.8.camel@acm.org>
+References: <20180930205448.26205-1-natechancellor@gmail.com>
+         <10b12992-3570-4646-374b-82cbd7276839@acm.org>
+         <CAKwvOd=wgxB69dMxzMeH2edCn=TdQGPGkNVW1e=QHPTJtO9ZNw@mail.gmail.com>
+         <1538503063.193396.6.camel@acm.org>
+         <CAKwvOdmsNEexQL9R8rgcRcXTZButYM6YWwG8bhVWCoJ8bOqCrA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="UTF-7"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180927235651.27151-1-natechancellor@gmail.com>
+In-Reply-To: <CAKwvOdmsNEexQL9R8rgcRcXTZButYM6YWwG8bhVWCoJ8bOqCrA@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Nathan Chancellor <natechancellor@gmail.com>
-Cc: anil.gurumurthy@qlogic.com, sudarsana.kalluru@qlogic.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Nick Desaulniers <ndesaulniers@google.com>
+Cc: Nathan Chancellor <natechancellor@gmail.com>, ooo@electrozaur.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Sep 27, 2018 at 4:57 PM Nathan Chancellor
-<natechancellor@gmail.com> wrote:
->
-> Clang warns when one enumerated type is implicitly converted to another.
->
-> drivers/scsi/bfa/bfa_fcs_lport.c:379:26: warning: implicit conversion
-> from enumeration type 'enum bfa_lport_aen_event' to different
-> enumeration type 'enum bfa_ioc_aen_event' [-Wenum-conversion]
->                                   BFA_AEN_CAT_LPORT, event);
->                                                      ^~~~~
->
-> The root cause of these warnings is the bfad_im_post_vendor_event
-> function, which expects a value from enum bfa_ioc_aen_event but there
-> are multiple instances of values from enums bfa_port_aen_event,
-> bfa_audit_aen_event, and bfa_lport_aen_event being used in this
-> function.
->
-> Given that this doesn't appear to be a problem since cat helps with
-> differentiating the events, just change evt's type to int so that no
-> conversion needs to happen and Clang won't warn. Update aen_type's type
-> in bfa_aen_entry_s as members that hold enumerated types should be int.
->
-> Link: https://github.com/ClangBuiltLinux/linux/issues/147
-> Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
-> ---
->
-> v1 -> v2:
->
-> * Update aen_type's type in bfa_aen_entry_s to match evt
+On Tue, 2018-10-02 at 15:33 -0700, Nick Desaulniers wrote:
++AD4 On Tue, Oct 2, 2018 at 10:57 AM Bart Van Assche +ADw-bvanassche+AEA-acm.org+AD4 wrote:
++AD4 +AD4 Explicitly initialized global and static variables end up in the .data
++AD4 +AD4 section and need space in that section.
++AD4 
++AD4 Unless the initial value is zero.
++AD4 https://godbolt.org/z/curRoO
++AD4 
++AD4 So you don't wind up with an increase in binary size simply by having
++AD4 global variables initialized to zero, right?  Instead the kernel knows
++AD4 to create a zero'd out mapping for bss.  You don't need a run of zeros
++AD4 in the binary.
++AD4 
++AD4 So I disagree when you said earlier +ACI-zero initializers should be left
++AD4 out to minimize the size of object files.+ACI I assert they don't affect
++AD4 the size of the binary.
++AD4 
++AD4 If you had many global variables all initialized to zero, why would
++AD4 you encode that many zeros in a binary, when you can just set a size
++AD4 on the bss section and have the kernel create the appropriate sized
++AD4 and zero'd mapping?
++AD4 
++AD4 +AD4 That is not the case if the
++AD4 +AD4 initializer is left out and these variables end up in the .bss section.
++AD4 
++AD4 From my above link, gcc will put globals without initializers into +ACI-common.+ACI
 
-Thanks for respinning with this addition.
-Reviewed-by: Nick Desaulniers <ndesaulniers@google.com>
+No matter what particular compiler versions do with explicit initialization
+to zero, the preferred kernel coding style is to leave out such explicit
+initialization.
 
->
->  drivers/scsi/bfa/bfa_defs_svc.h | 2 +-
->  drivers/scsi/bfa/bfad_im.h      | 2 +-
->  2 files changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/scsi/bfa/bfa_defs_svc.h b/drivers/scsi/bfa/bfa_defs_svc.h
-> index 3d0c96a5c873..c19c26e0e405 100644
-> --- a/drivers/scsi/bfa/bfa_defs_svc.h
-> +++ b/drivers/scsi/bfa/bfa_defs_svc.h
-> @@ -1453,7 +1453,7 @@ union bfa_aen_data_u {
->  struct bfa_aen_entry_s {
->         struct list_head        qe;
->         enum bfa_aen_category   aen_category;
-> -       u32                     aen_type;
-> +       int                     aen_type;
->         union bfa_aen_data_u    aen_data;
->         u64                     aen_tv_sec;
->         u64                     aen_tv_usec;
-> diff --git a/drivers/scsi/bfa/bfad_im.h b/drivers/scsi/bfa/bfad_im.h
-> index e61ed8dad0b4..bd4ac187fd8e 100644
-> --- a/drivers/scsi/bfa/bfad_im.h
-> +++ b/drivers/scsi/bfa/bfad_im.h
-> @@ -143,7 +143,7 @@ struct bfad_im_s {
->  static inline void bfad_im_post_vendor_event(struct bfa_aen_entry_s *entry,
->                                              struct bfad_s *drv, int cnt,
->                                              enum bfa_aen_category cat,
-> -                                            enum bfa_ioc_aen_event evt)
-> +                                            int evt)
->  {
->         struct timespec64 ts;
->
-> --
-> 2.19.0
->
-
-
--- 
-Thanks,
-~Nick Desaulniers
+Bart.
