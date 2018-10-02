@@ -1,63 +1,42 @@
-From: Nathan Chancellor <natechancellor@gmail.com>
-Subject: Re: [PATCH] scsi: mptfusion: Remove unnecessary parentheses and
- simplify null checks
-Date: Tue, 2 Oct 2018 08:07:04 -0700
-Message-ID: <20181002150704.GA444@flashbox>
-References: <20180915063645.31295-1-natechancellor@gmail.com>
- <CAK8P3a3PaWgieA0_HBJJ-FVeBO+iAdN8_kv5YUbpKURJ3gsoaQ@mail.gmail.com>
+From: Evan Green <evgreen@chromium.org>
+Subject: Re: [PATCH RESEND] scsi: sg: Prevent potential double frees in sg driver
+Date: Tue, 2 Oct 2018 08:21:26 -0700
+Message-ID: <CAE=gft5TFz4XQMLp8zH83W-agq-B7Df_1X-kX-UrSg8g1vipmw@mail.gmail.com>
+References: <20181001161506.100284-1-evgreen@chromium.org> <ef53fcb4-9001-c06b-779f-d40949224c98@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAK8P3a3PaWgieA0_HBJJ-FVeBO+iAdN8_kv5YUbpKURJ3gsoaQ@mail.gmail.com>
+In-Reply-To: <ef53fcb4-9001-c06b-779f-d40949224c98@interlog.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Nick Desaulniers <ndesaulniers@google.com>
+To: dgilbert@interlog.com
+Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, ndesaulniers@google.com, hch@infradead.org, rglasser@google.com, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Oct 02, 2018 at 02:58:21PM +0200, Arnd Bergmann wrote:
-> On Sat, Sep 15, 2018 at 8:38 AM Nathan Chancellor
-> <natechancellor@gmail.com> wrote:
-> 
-> > Reported-by: Nick Desaulniers <ndesaulniers@google.com>
-> > Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
-> > ---
-> >  drivers/message/fusion/mptbase.c | 4 ++--
-> >  1 file changed, 2 insertions(+), 2 deletions(-)
+On Mon, Oct 1, 2018 at 4:34 PM Douglas Gilbert <dgilbert@interlog.com> wrote:
+>
+> On 2018-10-02 02:15 AM, Evan Green wrote:
+> > From: Robb Glasser <rglasser@google.com>
 > >
-> > diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-> > index dc1e43a02599..ba551d8dfba4 100644
-> > --- a/drivers/message/fusion/mptbase.c
-> > +++ b/drivers/message/fusion/mptbase.c
-> > @@ -335,11 +335,11 @@ static int mpt_remove_dead_ioc_func(void *arg)
-> >         MPT_ADAPTER *ioc = (MPT_ADAPTER *)arg;
-> >         struct pci_dev *pdev;
-> >
-> > -       if ((ioc == NULL))
-> > +       if (!ioc)
-> >                 return -1;
-> >
-> >         pdev = ioc->pcidev;
-> > -       if ((pdev == NULL))
-> > +       if (!pdev)
-> >                 return -1;
-> >
-> >         pci_stop_and_remove_bus_device_locked(pdev);
-> > --
-> 
-> 
-> The exact same code also exists in drivers/scsi/mpt3sas/. I had a similar
-> patch for both drivers, but saw that yours now got merged for fusion.
-> 
-> If you don't mind, could you fix mpt3sas_base.c the same way?
-> 
->      Arnd
+> > sg_ioctl could be spammed by requests, leading to a double free in
+> > __free_pages. This protects the entry points of sg_ioctl where the
+> > memory could be corrupted by a double call to __free_pages if multiple
+> > requests are happening concurrently.
+>
+> Hi,
+> I  don't like this patch. I would like to see the trace for the double
+> call to the __free_pages you are referring too. A test program that
+> show the fault, perhaps?
+>
+> I have test code to "spam" the sg driver and have not seen a double
+> __free_pages that you refer to (see sg3_utils package version 1.44,
+> testing/sg_tst_async.cpp).
+>
+> Currently I am dusting off 20 years of "laparoscopic" patches to the sg
+> driver that have made a bit of a mess of the naming and comments. Also
+> the 16 outstanding requests per file descriptor limit is being removed.
+> Then I want to add the SG_IOSUBMIT and SG_IORECEIVE ioctls proposed by
+> Linus Torvalds two week ago.
+>
+> Executive summary: nak, without further information
 
-Hi Arnd,
-
-I did sent a patch for this a little bit later: https://lore.kernel.org/lkml/20180920201002.23979-1-natechancellor@gmail.com/
-
-I am still waiting for it to be merged.
-
-Thanks!
-Nathan
+That makes sense. Thanks for taking a look.
