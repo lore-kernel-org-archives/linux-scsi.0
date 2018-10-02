@@ -1,60 +1,54 @@
-From: Souptick Joarder <jrdr.linux@gmail.com>
-Subject: [PATCH] scsi/mpt3sas: Use dma_pool_zalloc
-Date: Tue, 2 Oct 2018 11:18:04 +0530
-Message-ID: <20181002054804.GA11315@jordon-HP-15-Notebook-PC>
+From: Nathan Chancellor <natechancellor@gmail.com>
+Subject: Re: [PATCH] libosd: Remove ignored __weak attribute
+Date: Mon, 1 Oct 2018 23:55:22 -0700
+Message-ID: <20181002065522.GA27010@flashbox>
+References: <20180930205448.26205-1-natechancellor@gmail.com>
+ <10b12992-3570-4646-374b-82cbd7276839@acm.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
+In-Reply-To: <10b12992-3570-4646-374b-82cbd7276839@acm.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: sathya.prakash@broadcom.com, chaitra.basappa@broadcom.com, suganath-prabu.subramani@broadcom.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, brajeswar.linux@gmail.com
-Cc: MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: Boaz Harrosh <ooo@electrozaur.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Nick Desaulniers <ndesaulniers@google.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Replaced dma_pool_alloc + memset with dma_pool_zalloc.
+On Mon, Oct 01, 2018 at 06:16:32PM -0700, Bart Van Assche wrote:
+> On 9/30/18 1:54 PM, Nathan Chancellor wrote:
+> > diff --git a/include/scsi/osd_types.h b/include/scsi/osd_types.h
+> > index 48e8a165e136..6b6fdcafa6cc 100644
+> > --- a/include/scsi/osd_types.h
+> > +++ b/include/scsi/osd_types.h
+> > @@ -28,7 +28,7 @@ struct osd_obj_id {
+> >   	osd_id id;
+> >   };
+> > -static const struct __weak osd_obj_id osd_root_object = {0, 0};
+> > +static const struct osd_obj_id osd_root_object = {0, 0};
+> 
 
-Signed-off-by: Brajeswar Ghosh <brajeswar.linux@gmail.com>
-Signed-off-by: Souptick Joarder <jrdr.linux@gmail.com>
----
- drivers/scsi/mpt3sas/mpt3sas_base.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+Hi Bart,
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 59d7844..d7ef671 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -4516,7 +4516,7 @@ void mpt3sas_base_clear_st(struct MPT3SAS_ADAPTER *ioc,
- 	i = 0;
- 	do {
- 		ioc->reply_post[i].reply_post_free =
--		    dma_pool_alloc(ioc->reply_post_free_dma_pool,
-+		    dma_pool_zalloc(ioc->reply_post_free_dma_pool,
- 		    GFP_KERNEL,
- 		    &ioc->reply_post[i].reply_post_free_dma);
- 		if (!ioc->reply_post[i].reply_post_free) {
-@@ -4525,7 +4525,6 @@ void mpt3sas_base_clear_st(struct MPT3SAS_ADAPTER *ioc,
- 			ioc->name);
- 			goto out;
- 		}
--		memset(ioc->reply_post[i].reply_post_free, 0, sz);
- 		dinitprintk(ioc, pr_info(MPT3SAS_FMT
- 		    "reply post free pool (0x%p): depth(%d),"
- 		    "element_size(%d), pool_size(%d kB)\n", ioc->name,
-@@ -4852,14 +4851,13 @@ void mpt3sas_base_clear_st(struct MPT3SAS_ADAPTER *ioc,
- 			ioc->name);
- 		goto out;
- 	}
--	ioc->reply_free = dma_pool_alloc(ioc->reply_free_dma_pool, GFP_KERNEL,
-+	ioc->reply_free = dma_pool_zalloc(ioc->reply_free_dma_pool, GFP_KERNEL,
- 	    &ioc->reply_free_dma);
- 	if (!ioc->reply_free) {
- 		pr_err(MPT3SAS_FMT "reply_free pool: dma_pool_alloc failed\n",
- 			ioc->name);
- 		goto out;
- 	}
--	memset(ioc->reply_free, 0, sz);
- 	dinitprintk(ioc, pr_info(MPT3SAS_FMT "reply_free pool(0x%p): " \
- 	    "depth(%d), element_size(%d), pool_size(%d kB)\n", ioc->name,
- 	    ioc->reply_free, ioc->reply_free_queue_depth, 4, sz/1024));
--- 
-1.9.1
+> Structure definitions should occur in .c files instead of in header files
+> especially if the header file is included from multiple source files. Please
+> consider moving the definition of osd_root_object into a .c file.
+> Additionally, zero initializers should be left out to minimize the size of
+> object files.
+> 
+
+I'm perfectly happy to make this change in a v2 if necessary.
+
+> Boaz, the most recent osd patch that is neither trivial nor treewide
+> refactoring is six years old (51976a8c85ce ("[SCSI] osd_uld: Add osdname &
+> systemid sysfs at scsi_osd class"). That suggests that nobody is using this
+> driver anymore. Can this driver be removed from the kernel tree?
+> 
+
+However, this is certainly a better option if possible.
+
+> Thanks,
+> 
+> Bart.
+
+Thanks for the comments!
+Nathan
