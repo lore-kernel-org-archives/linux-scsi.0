@@ -1,51 +1,53 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH] libosd: Remove ignored __weak attribute
-Date: Tue, 02 Oct 2018 16:06:31 -0700
-Message-ID: <1538521591.193396.8.camel@acm.org>
-References: <20180930205448.26205-1-natechancellor@gmail.com>
-         <10b12992-3570-4646-374b-82cbd7276839@acm.org>
-         <CAKwvOd=wgxB69dMxzMeH2edCn=TdQGPGkNVW1e=QHPTJtO9ZNw@mail.gmail.com>
-         <1538503063.193396.6.camel@acm.org>
-         <CAKwvOdmsNEexQL9R8rgcRcXTZButYM6YWwG8bhVWCoJ8bOqCrA@mail.gmail.com>
+From: Lance Roy <ldr709@gmail.com>
+Subject: [PATCH 09/16] scsi: Replace spin_is_locked() with lockdep
+Date: Tue,  2 Oct 2018 22:38:55 -0700
+Message-ID: <20181003053902.6910-10-ldr709@gmail.com>
+References: <20181003053902.6910-1-ldr709@gmail.com>
+Reply-To: Lance Roy <ldr709@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-7"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAKwvOdmsNEexQL9R8rgcRcXTZButYM6YWwG8bhVWCoJ8bOqCrA@mail.gmail.com>
+In-Reply-To: <20181003053902.6910-1-ldr709@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Nick Desaulniers <ndesaulniers@google.com>
-Cc: Nathan Chancellor <natechancellor@gmail.com>, ooo@electrozaur.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: linux-kernel@vger.kernel.org
+Cc: "Paul E. McKenney" <paulmck@linux.ibm.com>, Lance Roy <ldr709@gmail.com>, Karan Tilak Kumar <kartilak@cisco.com>, Sesidhar Baddela <sebaddel@cisco.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 2018-10-02 at 15:33 -0700, Nick Desaulniers wrote:
-+AD4 On Tue, Oct 2, 2018 at 10:57 AM Bart Van Assche +ADw-bvanassche+AEA-acm.org+AD4 wrote:
-+AD4 +AD4 Explicitly initialized global and static variables end up in the .data
-+AD4 +AD4 section and need space in that section.
-+AD4 
-+AD4 Unless the initial value is zero.
-+AD4 https://godbolt.org/z/curRoO
-+AD4 
-+AD4 So you don't wind up with an increase in binary size simply by having
-+AD4 global variables initialized to zero, right?  Instead the kernel knows
-+AD4 to create a zero'd out mapping for bss.  You don't need a run of zeros
-+AD4 in the binary.
-+AD4 
-+AD4 So I disagree when you said earlier +ACI-zero initializers should be left
-+AD4 out to minimize the size of object files.+ACI I assert they don't affect
-+AD4 the size of the binary.
-+AD4 
-+AD4 If you had many global variables all initialized to zero, why would
-+AD4 you encode that many zeros in a binary, when you can just set a size
-+AD4 on the bss section and have the kernel create the appropriate sized
-+AD4 and zero'd mapping?
-+AD4 
-+AD4 +AD4 That is not the case if the
-+AD4 +AD4 initializer is left out and these variables end up in the .bss section.
-+AD4 
-+AD4 From my above link, gcc will put globals without initializers into +ACI-common.+ACI
+lockdep_assert_held() is better suited to checking locking requirements,
+since it won't get confused when someone else holds the lock. This is
+also a step towards possibly removing spin_is_locked().
 
-No matter what particular compiler versions do with explicit initialization
-to zero, the preferred kernel coding style is to leave out such explicit
-initialization.
+Signed-off-by: Lance Roy <ldr709@gmail.com>
+Cc: Karan Tilak Kumar <kartilak@cisco.com>
+Cc: Sesidhar Baddela <sebaddel@cisco.com>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: <linux-scsi@vger.kernel.org>
+---
+ drivers/scsi/snic/snic_scsi.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Bart.
+diff --git a/drivers/scsi/snic/snic_scsi.c b/drivers/scsi/snic/snic_scsi.c
+index d9b2e46424aa..42e485139fc9 100644
+--- a/drivers/scsi/snic/snic_scsi.c
++++ b/drivers/scsi/snic/snic_scsi.c
+@@ -2001,7 +2001,7 @@ snic_dr_finish(struct snic *snic, struct scsi_cmnd *sc)
+ 	}
+ 
+ dr_failed:
+-	SNIC_BUG_ON(!spin_is_locked(io_lock));
++	lockdep_assert_held(io_lock);
+ 	if (rqi)
+ 		CMD_SP(sc) = NULL;
+ 	spin_unlock_irqrestore(io_lock, flags);
+@@ -2604,7 +2604,7 @@ snic_internal_abort_io(struct snic *snic, struct scsi_cmnd *sc, int tmf)
+ 	ret = SUCCESS;
+ 
+ skip_internal_abts:
+-	SNIC_BUG_ON(!spin_is_locked(io_lock));
++	lockdep_assert_held(io_lock);
+ 	spin_unlock_irqrestore(io_lock, flags);
+ 
+ 	return ret;
+-- 
+2.19.0
