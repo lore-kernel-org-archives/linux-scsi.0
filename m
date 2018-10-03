@@ -1,104 +1,98 @@
 From: Evan Green <evgreen@chromium.org>
-Subject: Re: [PATCH V14 2/2] scsi: ufs: Add configfs support for UFS provisioning
-Date: Wed, 3 Oct 2018 11:01:52 -0700
-Message-ID: <CAE=gft6dLW5zzrOg470kS=O8rMgPr02Nb4NL9pEtpymc83ms+w@mail.gmail.com>
-References: <1537770516-28410-1-git-send-email-sayalil@codeaurora.org> <1537770516-28410-3-git-send-email-sayalil@codeaurora.org>
+Subject: Re: [PATCH v1] scsi: ufs: add 2 lane support
+Date: Wed, 3 Oct 2018 11:34:42 -0700
+Message-ID: <CAE=gft6f9a2RoAvXR4+2tKZE-3chobb_HfbMDErfU1Q=_8uYwA@mail.gmail.com>
+References: <20180302082346.8188-1-cang@codeaurora.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1537770516-28410-3-git-send-email-sayalil@codeaurora.org>
+In-Reply-To: <20180302082346.8188-1-cang@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: sayali <sayalil@codeaurora.org>
-Cc: subhashj@codeaurora.org, cang@codeaurora.org, vivek.gautam@codeaurora.org, Rajendra Nayak <rnayak@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, asutoshd@codeaurora.org, riteshh@codeaurora.org, stummala@codeaurora.org, adrian.hunter@intel.com, Joel Becker <jlbec@evilplan.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: subhashj@codeaurora.org, asutoshd@codeaurora.org, vivek.gautam@codeaurora.org, Rajendra Nayak <rnayak@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, venkatg@codeaurora.org, cang@codeaurora.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Sun, Sep 23, 2018 at 11:29 PM Sayali Lokhande <sayalil@codeaurora.org> wrote:
+Hi,
+
+On Wed, Oct 3, 2018 at 11:19 AM Can Guo <cang@codeaurora.org> wrote:
 >
-> This patch adds configfs support to provision UFS device at
-> runtime. This feature can be primarily useful in factory or
-> assembly line as some devices may be required to be configured
-> multiple times during initial system development phase.
-> Configuration Descriptors can be written multiple times until
-> bConfigDescrLock attribute is zero.
+> From: Venkat Gopalakrishnan <venkatg@codeaurora.org>
 >
-> Configuration descriptor buffer consists of Device and Unit
-> descriptor configurable parameters which are parsed from vendor
-> specific provisioning file and then passed via configfs node at
-> runtime to provision ufs device.
-> CONFIG_CONFIGFS_FS and CONFIG_SCSI_UFS_PROVISION needs to be enabled
-> for using this feature.
+> Qcom ufs controller v3.1.0 supports 2 lanes, add support
+> to configure 2 lanes during phy initialization.
+
+I'm reviving this old chestnut, sorry I missed it initially. This
+description is a little terse, and I'm actually confused about it. The
+description makes it sounds like this patch is adding support for
+2-lane UFS controllers, but the patch itself appears to only make the
+UFS controller tolerant of a missing lane (or more specifically, a
+missing lane clock). Can you describe a little more about what's going
+on here, and perhaps fix the description?
+
+I notice that the global clock controller has clocks for TX symbol 0,
+and RX symbol 1, but seems to be missing GCC_UFS_PHY_TX_SYMBOL_1_CLK.
+Was that an oversight, or is it really not there?
+
 >
-> Usage:
-> 1) To read current configuration descriptor with index X
->    (where index X can be 0/1/2/3) :
->    cat /config/<device_name>/ufs_config_desc_X
->
-> 2) To write configuration descriptor with index X :
->    echo <config_desc_buf> > /config/<device_name>/ufs_config_desc_X
->
-> Signed-off-by: Sayali Lokhande <sayalil@codeaurora.org>
+> Signed-off-by: Venkat Gopalakrishnan <venkatg@codeaurora.org>
+> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+> Signed-off-by: Can Guo <cang@codeaurora.org>
 > ---
->  Documentation/ABI/testing/configfs-driver-ufs |  12 ++
->  drivers/scsi/ufs/Kconfig                      |  10 ++
->  drivers/scsi/ufs/Makefile                     |   1 +
->  drivers/scsi/ufs/ufs-configfs.c               | 237 ++++++++++++++++++++++++++
->  drivers/scsi/ufs/ufshcd.c                     |   3 +-
->  drivers/scsi/ufs/ufshcd.h                     |  18 ++
->  6 files changed, 280 insertions(+), 1 deletion(-)
->  create mode 100644 Documentation/ABI/testing/configfs-driver-ufs
->  create mode 100644 drivers/scsi/ufs/ufs-configfs.c
+>  drivers/scsi/ufs/ufs-qcom.c | 20 +++++++++-----------
+>  1 file changed, 9 insertions(+), 11 deletions(-)
 >
-> diff --git a/Documentation/ABI/testing/configfs-driver-ufs b/Documentation/ABI/testing/configfs-driver-ufs
-> new file mode 100644
-> index 0000000..6743ea9
-> --- /dev/null
-> +++ b/Documentation/ABI/testing/configfs-driver-ufs
-> @@ -0,0 +1,12 @@
-> +What:          /config/*/ufs_config_desc_X
-> +Date:          Jun 2018
-> +KernelVersion: 4.20
-> +Description:
-> +               This file shows bytes of the current ufs configuration descriptor
-> +               with index X (where X = 0/1/2/3) set in device. This can be used to
-> +               provision ufs device if bConfigDescrLock is 0.
-> +               For more details, refer 14.1.6.3 Configuration Descriptor and
-> +               table 14-12 - Unit Descriptor configurable parameters from specs for
-> +               description and format of each configuration descriptor parameter.
-> +               Parameters of Configuration descriptor buffer for respective index
-> +               needs to be passed as bytes in space separated format.
-> diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
-> index e27b4d4..6e7ff35 100644
-> --- a/drivers/scsi/ufs/Kconfig
-> +++ b/drivers/scsi/ufs/Kconfig
-> @@ -100,3 +100,13 @@ config SCSI_UFS_QCOM
+> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+> index 2b38db2..51889ad 100644
+> --- a/drivers/scsi/ufs/ufs-qcom.c
+> +++ b/drivers/scsi/ufs/ufs-qcom.c
+> @@ -113,10 +113,10 @@ static void ufs_qcom_disable_lane_clks(struct ufs_qcom_host *host)
+>         if (!host->is_lane_clks_enabled)
+>                 return;
 >
->           Select this if you have UFS controller on QCOM chipset.
->           If unsure, say N.
-> +
-> +config SCSI_UFS_PROVISION
-> +       bool "Runtime UFS Provisioning support"
-> +       depends on SCSI_UFSHCD && CONFIGFS_FS
-> +       help
-> +         This enables runtime UFS provisioning support. This can be used
-> +         primarily during assembly line as some devices may be required to
-> +         be configured multiple times during initial development phase.
-> +
-> +         If unsure, say N.
-> diff --git a/drivers/scsi/ufs/Makefile b/drivers/scsi/ufs/Makefile
-> index 918f579..09880b9 100644
-> --- a/drivers/scsi/ufs/Makefile
-> +++ b/drivers/scsi/ufs/Makefile
-> @@ -5,5 +5,6 @@ obj-$(CONFIG_SCSI_UFS_DWC_TC_PLATFORM) += tc-dwc-g210-pltfrm.o ufshcd-dwc.o tc-d
->  obj-$(CONFIG_SCSI_UFS_QCOM) += ufs-qcom.o
->  obj-$(CONFIG_SCSI_UFSHCD) += ufshcd-core.o
->  ufshcd-core-objs := ufshcd.o ufs-sysfs.o
-> +obj-$(CONFIG_SCSI_UFS_PROVISION) += ufs-configfs.o
+> -       if (host->hba->lanes_per_direction > 1)
+> +       if (host->tx_l1_sync_clk)
+>                 clk_disable_unprepare(host->tx_l1_sync_clk);
+>         clk_disable_unprepare(host->tx_l0_sync_clk);
+> -       if (host->hba->lanes_per_direction > 1)
+> +       if (host->rx_l1_sync_clk)
+>                 clk_disable_unprepare(host->rx_l1_sync_clk);
+>         clk_disable_unprepare(host->rx_l0_sync_clk);
+>
+> @@ -147,18 +147,15 @@ static int ufs_qcom_enable_lane_clks(struct ufs_qcom_host *host)
+>                 if (err)
+>                         goto disable_tx_l0;
+>
+> -               err = ufs_qcom_host_clk_enable(dev, "tx_lane1_sync_clk",
+> -                       host->tx_l1_sync_clk);
+> -               if (err)
+> -                       goto disable_rx_l1;
+> +               /* The tx lane1 clk could be muxed, hence keep this optional */
 
-Hi Sayali,
-Can you try both of your patches with "make allmodconfig". There seem
-to be a few issues compiling in that configuration. Also, as it stands
-this file is either not compiled in, or baked into the kernel, where
-it really should go into the driver. Check out the patch below for how
-Guenter patched things up in our tree:
+I'm confused by this comment. What do you mean the clock could be muxed?
 
-https://chromium-review.googlesource.com/c/chromiumos/third_party/kernel/+/1255524
+> +               if (host->tx_l1_sync_clk)
+> +                       ufs_qcom_host_clk_enable(dev, "tx_lane1_sync_clk",
+> +                                                host->tx_l1_sync_clk);
+>         }
+>
+>         host->is_lane_clks_enabled = true;
+>         goto out;
+>
+> -disable_rx_l1:
+> -       if (host->hba->lanes_per_direction > 1)
+> -               clk_disable_unprepare(host->rx_l1_sync_clk);
+>  disable_tx_l0:
+>         clk_disable_unprepare(host->tx_l0_sync_clk);
+>  disable_rx_l0:
+> @@ -189,8 +186,9 @@ static int ufs_qcom_init_lane_clks(struct ufs_qcom_host *host)
+>                 if (err)
+>                         goto out;
+>
+> -               err = ufs_qcom_host_clk_get(dev, "tx_lane1_sync_clk",
+> -                       &host->tx_l1_sync_clk);
+> +               /* The tx lane1 clk could be muxed, hence keep this optional */
+> +               ufs_qcom_host_clk_get(dev, "tx_lane1_sync_clk",
+> +                                       &host->tx_l1_sync_clk);
+>         }
+>  out:
+>         return err;
