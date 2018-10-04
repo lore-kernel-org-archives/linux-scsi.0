@@ -1,13 +1,12 @@
 From: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
-Subject: Re: [PATCH 4/7] mpt3sas: Convert logging uses with MPT3SAS_FMT and
- reply_q_name to %s:
-Date: Thu, 4 Oct 2018 15:59:36 +0530
-Message-ID: <CA+RiK66nSLgzqt4atCctiH+DkB=2Z=5RgsR_oT8NareCe1e+DQ@mail.gmail.com>
-References: <cover.1537183087.git.joe@perches.com> <80a0b24fd5be85fcd87b92958691ab19484a4295.1537183088.git.joe@perches.com>
+Subject: Re: [PATCH 5/7] mpt3sas: Remove KERN_WARNING from panic uses
+Date: Thu, 4 Oct 2018 15:59:54 +0530
+Message-ID: <CA+RiK661kgeLsRkj7Mt4_U7dhNh4tOtwHYky1xohBpVENPWw5w@mail.gmail.com>
+References: <cover.1537183087.git.joe@perches.com> <36d906ff0d22e530024eb487a3a6dbb224f6a1b0.1537183088.git.joe@perches.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <80a0b24fd5be85fcd87b92958691ab19484a4295.1537183088.git.joe@perches.com>
+In-Reply-To: <36d906ff0d22e530024eb487a3a6dbb224f6a1b0.1537183088.git.joe@perches.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: joe@perches.com
 Cc: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra Basappa <chaitra.basappa@broadcom.com>, jejb@linux.vnet.ibm.com, "Martin K. Petersen" <martin.petersen@oracle.com>, PDL-MPT-FUSIONLINUX <MPT-FusionLinux.pdl@broadcom.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
@@ -19,47 +18,93 @@ Please consider this patch as Acked-by: Suganath Prabu
 Thanks.
 On Mon, Sep 17, 2018 at 8:31 PM Joe Perches <joe@perches.com> wrote:
 >
-> Convert the existing 2 uses to make the format and arguments
-> matching more obvious.
+> Remove the logging level as panic calls stop the machine and should
+> always be emitted regardless of requested logging level.
+>
+> These existing panic uses are perhaps inappropriate.
 >
 > Miscellanea:
 >
-> o Move the word "enabled" into the format to trivially reduce object size
-> o Remove unnecessary parentheses
+> o Coalesce formats and convert MPT3SAS_FMT to "%s: " to improve clarity
 >
 > Signed-off-by: Joe Perches <joe@perches.com>
 > ---
->  drivers/scsi/mpt3sas/mpt3sas_base.c | 10 +++++-----
->  1 file changed, 5 insertions(+), 5 deletions(-)
+>  drivers/scsi/mpt3sas/mpt3sas_config.c | 41 +++++++++++++----------------------
+>  1 file changed, 15 insertions(+), 26 deletions(-)
 >
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-> index 5c6634b7ca74..386af6739867 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-> @@ -2705,7 +2705,7 @@ _base_request_irq(struct MPT3SAS_ADAPTER *ioc, u8 index)
->         r = request_irq(pci_irq_vector(pdev, index), _base_interrupt,
->                         IRQF_SHARED, reply_q->name, reply_q);
->         if (r) {
-> -               pr_err(MPT3SAS_FMT "unable to allocate interrupt %d!\n",
-> +               pr_err("%s: unable to allocate interrupt %d!\n",
->                        reply_q->name, pci_irq_vector(pdev, index));
->                 kfree(reply_q);
->                 return -EBUSY;
-> @@ -3034,10 +3034,10 @@ mpt3sas_base_map_resources(struct MPT3SAS_ADAPTER *ioc)
->         }
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_config.c b/drivers/scsi/mpt3sas/mpt3sas_config.c
+> index 38d3b163b5d1..02209447f4ef 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_config.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_config.c
+> @@ -421,12 +421,10 @@ _config_request(struct MPT3SAS_ADAPTER *ioc, Mpi2ConfigRequest_t
+>                     (mpi_reply->Header.PageType & 0xF)) {
+>                         _debug_dump_mf(mpi_request, ioc->request_sz/4);
+>                         _debug_dump_reply(mpi_reply, ioc->request_sz/4);
+> -                       panic(KERN_WARNING MPT3SAS_FMT "%s: Firmware BUG:" \
+> -                           " mpi_reply mismatch: Requested PageType(0x%02x)" \
+> -                           " Reply PageType(0x%02x)\n", \
+> -                           ioc->name, __func__,
+> -                           (mpi_request->Header.PageType & 0xF),
+> -                           (mpi_reply->Header.PageType & 0xF));
+> +                       panic("%s: %s: Firmware BUG: mpi_reply mismatch: Requested PageType(0x%02x) Reply PageType(0x%02x)\n",
+> +                             ioc->name, __func__,
+> +                             mpi_request->Header.PageType & 0xF,
+> +                             mpi_reply->Header.PageType & 0xF);
+>                 }
 >
->         list_for_each_entry(reply_q, &ioc->reply_queue_list, list)
-> -               pr_info(MPT3SAS_FMT "%s: IRQ %d\n",
-> -                   reply_q->name,  ((ioc->msix_enable) ? "PCI-MSI-X enabled" :
-> -                   "IO-APIC enabled"),
-> -                   pci_irq_vector(ioc->pdev, reply_q->msix_index));
-> +               pr_info("%s: %s enabled: IRQ %d\n",
-> +                       reply_q->name,
-> +                       ioc->msix_enable ? "PCI-MSI-X" : "IO-APIC",
-> +                       pci_irq_vector(ioc->pdev, reply_q->msix_index));
+>                 if (((mpi_request->Header.PageType & 0xF) ==
+> @@ -434,11 +432,10 @@ _config_request(struct MPT3SAS_ADAPTER *ioc, Mpi2ConfigRequest_t
+>                     mpi_request->ExtPageType != mpi_reply->ExtPageType) {
+>                         _debug_dump_mf(mpi_request, ioc->request_sz/4);
+>                         _debug_dump_reply(mpi_reply, ioc->request_sz/4);
+> -                       panic(KERN_WARNING MPT3SAS_FMT "%s: Firmware BUG:" \
+> -                           " mpi_reply mismatch: Requested ExtPageType(0x%02x)"
+> -                           " Reply ExtPageType(0x%02x)\n",
+> -                           ioc->name, __func__, mpi_request->ExtPageType,
+> -                           mpi_reply->ExtPageType);
+> +                       panic("%s: %s: Firmware BUG: mpi_reply mismatch: Requested ExtPageType(0x%02x) Reply ExtPageType(0x%02x)\n",
+> +                             ioc->name, __func__,
+> +                             mpi_request->ExtPageType,
+> +                             mpi_reply->ExtPageType);
+>                 }
+>                 ioc_status = le16_to_cpu(mpi_reply->IOCStatus)
+>                     & MPI2_IOCSTATUS_MASK;
+> @@ -461,14 +458,10 @@ _config_request(struct MPT3SAS_ADAPTER *ioc, Mpi2ConfigRequest_t
+>                                 _debug_dump_reply(mpi_reply, ioc->request_sz/4);
+>                                 _debug_dump_config(p, min_t(u16, mem.sz,
+>                                     config_page_sz)/4);
+> -                               panic(KERN_WARNING MPT3SAS_FMT
+> -                                       "%s: Firmware BUG:" \
+> -                                   " config page mismatch:"
+> -                                   " Requested PageType(0x%02x)"
+> -                                   " Reply PageType(0x%02x)\n",
+> -                                   ioc->name, __func__,
+> -                                   (mpi_request->Header.PageType & 0xF),
+> -                                   (p[3] & 0xF));
+> +                               panic("%s: %s: Firmware BUG: config page mismatch: Requested PageType(0x%02x) Reply PageType(0x%02x)\n",
+> +                                     ioc->name, __func__,
+> +                                     mpi_request->Header.PageType & 0xF,
+> +                                     p[3] & 0xF);
+>                         }
 >
->         ioc_info(ioc, "iomem(%pap), mapped(0x%p), size(%d)\n",
->                  &chip_phys, ioc->chip, memap_sz);
+>                         if (((mpi_request->Header.PageType & 0xF) ==
+> @@ -478,13 +471,9 @@ _config_request(struct MPT3SAS_ADAPTER *ioc, Mpi2ConfigRequest_t
+>                                 _debug_dump_reply(mpi_reply, ioc->request_sz/4);
+>                                 _debug_dump_config(p, min_t(u16, mem.sz,
+>                                     config_page_sz)/4);
+> -                               panic(KERN_WARNING MPT3SAS_FMT
+> -                                       "%s: Firmware BUG:" \
+> -                                   " config page mismatch:"
+> -                                   " Requested ExtPageType(0x%02x)"
+> -                                   " Reply ExtPageType(0x%02x)\n",
+> -                                   ioc->name, __func__,
+> -                                   mpi_request->ExtPageType, p[6]);
+> +                               panic("%s: %s: Firmware BUG: config page mismatch: Requested ExtPageType(0x%02x) Reply ExtPageType(0x%02x)\n",
+> +                                     ioc->name, __func__,
+> +                                     mpi_request->ExtPageType, p[6]);
+>                         }
+>                 }
+>                 memcpy(config_page, mem.page, min_t(u16, mem.sz,
 > --
 > 2.15.0
 >
