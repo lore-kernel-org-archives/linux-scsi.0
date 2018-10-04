@@ -1,59 +1,47 @@
-From: John Garry <john.garry@huawei.com>
-Subject: Re: [PATCH 0/7] hisi_sas: Misc bugfixes and an optimisation patch
-Date: Thu, 4 Oct 2018 16:30:44 +0100
-Message-ID: <8e8d0006-a887-ddf3-0179-49d2370abc68@huawei.com>
-References: <1537801594-207139-1-git-send-email-john.garry@huawei.com>
+From: Nathan Chancellor <natechancellor@gmail.com>
+Subject: -Wswitch Clang warnings in drivers/scsi
+Date: Thu, 4 Oct 2018 11:30:47 -0700
+Message-ID: <20181004183047.GA1885@flashbox>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1537801594-207139-1-git-send-email-john.garry@huawei.com>
+Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 24/09/2018 16:06, John Garry wrote:
-> This patchset introduces mostly more minor/obscure bugfixes for the
-> driver.
+Hi SCSI folks,
 
-Hi Martin,
+In an effort to get the kernel building warning free with Clang, we've
+come across an interesting occurrence in a few scsi drivers:
 
-Can you please consider merging this patchset?
+drivers/scsi/hpsa.c:6533:7: warning: overflow converting case value to switch condition type (2148024833 to 18446744071562609153) [-Wswitch]
+        case CCISS_GETPCIINFO:
+             ^
+./include/uapi/linux/cciss_ioctl.h:65:26: note: expanded from macro 'CCISS_GETPCIINFO'
+#define CCISS_GETPCIINFO _IOR(CCISS_IOC_MAGIC, 1, cciss_pci_info_struct)
+                         ^
+./include/uapi/asm-generic/ioctl.h:86:28: note: expanded from macro '_IOR'
+#define _IOR(type,nr,size)      _IOC(_IOC_READ,(type),(nr),(_IOC_TYPECHECK(size)))
+                                ^
+./include/uapi/asm-generic/ioctl.h:70:2: note: expanded from macro '_IOC'
+        (((dir)  << _IOC_DIRSHIFT) | \
+        ^
 
-Thanks,
-John
+I see this warning in drivers/scsi/hpsa.c and drivers/scsi/smartpqi/smartpqi_init.c
+on an arm64 allyesconfig build and it has also been reported in a couple of files in
+drivers/scsi/cxlflash.
 
->
-> Also included is an optimisation to use the block layer tag for the IPTT
-> indexing. This quite a nice optimisation as it means we don't have to
-> evaluate this in the driver - it was a bit of a bottle-neck.
->
-> However it does block us in future from enabling SCSI MQ in the driver.
-> This is because the IPTT index must be a unique value per HBA. However,
-> if we switched to SCSI MQ, the block layer tag becomes unique per queue,
-> and not per HBA.
->
-> Having said this, testing has shown that performance is better by using
-> this block layer tag instead of enabling SCSI MQ in the driver.
->
-> Luo Jiaxing (2):
->   scsi: hisi_sas: Feed back linkrate(max/min) when re-attached
->   scsi: hisi_sas: Move evaluation of hisi_hba in hisi_sas_task_prep()
->
-> Xiang Chen (5):
->   scsi: hisi_sas: Fix the race between IO completion and timeout for
->     SMP/internal IO
->   scsi: hisi_sas: Free slot later in slot_complete_vx_hw()
->   scsi: hisi_sas: unmask interrupts ent72 and ent74
->   scsi: hisi_sas: Use block layer tag instead for IPTT
->   scsi: hisi_sas: Update v3 hw AIP_LIMIT and CFG_AGING_TIME register
->     values
->
->  drivers/scsi/hisi_sas/hisi_sas.h       |   3 +-
->  drivers/scsi/hisi_sas/hisi_sas_main.c  | 154 ++++++++++++++++++++++++---------
->  drivers/scsi/hisi_sas/hisi_sas_v1_hw.c |   1 -
->  drivers/scsi/hisi_sas/hisi_sas_v2_hw.c |  11 +--
->  drivers/scsi/hisi_sas/hisi_sas_v3_hw.c |  15 ++--
->  5 files changed, 130 insertions(+), 54 deletions(-)
->
+As the warning states, there is an overflow because the switch statement's value is of
+type int but the switch value is greater than INT_MAX. I did a brief sweep of the tree
+and it seems that all uses of _IOC in switch statement values either are small enough
+to fit into size int or the value is of size unsigned int.
+
+I am unsure of the implications of using a smaller _IOC value or converting all ioctls
+to expect a cmd of type unsigned int (especially since that has userspace implications)
+but I didn't see any negative ioctl commands. Some clarity and insight would be
+appreciated.
+
+Thank you for your time,
+Nathan
