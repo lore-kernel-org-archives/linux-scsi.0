@@ -1,69 +1,96 @@
-From: Dror Levin <drorl@infinidat.com>
-Subject: Re: Recent removal of bsg read/write support
-Date: Thu, 4 Oct 2018 09:58:37 +0300
-Message-ID: <CAOuWhkYRtTqrnp1uyDWFqXFcTLhPbcqv8XzdV_jurJHstGQmuA@mail.gmail.com>
-References: <CAOuWhkaGjX8Q_xghkFVTqzZkDrUv-sdH=VbS7hvnqFWrT+3eOQ@mail.gmail.com>
- <CAFLxGvxX8QW4wUJKommXVMpGBj7G_H3=SOwQGjGuyPZZrhCzKw@mail.gmail.com>
- <CA+55aFyLC8PhjZ+iV7MucSZ1aGKMT=S9=EkEAQ6T1=ZRqD-xLA@mail.gmail.com> <CAOuWhkbNuesaVYar6ML-qFw7RAfkPsaOYUXT4Ypfiu5=Nt1kWw@mail.gmail.com>
+From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Subject: [PATCH] scsi: aic7xxx: mark expected switch fall-throughs
+Date: Thu, 4 Oct 2018 08:59:11 +0200
+Message-ID: <20181004065641.GA11681@embeddedor.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAOuWhkbNuesaVYar6ML-qFw7RAfkPsaOYUXT4Ypfiu5=Nt1kWw@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
-To: torvalds@linux-foundation.org
-Cc: Richard Weinberger <richard.weinberger@gmail.com>, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, hch@infradead.org, axboe@kernel.dk, gregkh@linuxfoundation.org
+To: Hannes Reinecke <hare@suse.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Gustavo A. R. Silva" <gustavo@embededdor.com>
 List-Id: linux-scsi@vger.kernel.org
 
-CC'ing Greg.
+In preparation to enabling -Wimplicit-fallthrough, mark switch cases
+where we are expecting to fall through.
 
-On Mon, Sep 3, 2018 at 11:34 AM Dror Levin <drorl@infinidat.com> wrote:
->
-> On Sun, Sep 2, 2018 at 8:55 PM Linus Torvalds
-> <torvalds@linux-foundation.org> wrote:
-> >
-> > On Sun, Sep 2, 2018 at 4:44 AM Richard Weinberger
-> > <richard.weinberger@gmail.com> wrote:
-> > >
-> > > CC'ing relevant people. Otherwise your mail might get lost.
-> >
-> > Indeed.
->
-> Sorry for that.
->
-> > > On Sun, Sep 2, 2018 at 1:37 PM Dror Levin <drorl@infinidat.com> wrote:
-> > > >
-> > > > We have an internal tool that uses the bsg read/write interface to
-> > > > issue SCSI commands as part of a test suite for a storage device.
-> > > >
-> > > > After recently reading on LWN that this interface is to be removed we
-> > > > tried porting our code to use sg instead. However, that raises new
-> > > > issues - mainly getting ENOMEM over iSCSI for unknown reasons.
-> >
-> > Is there any chance that you can make more data available?
->
-> Sure, I can try.
->
-> We use writev() to send up to SG_MAX_QUEUE tasks at a time. Occasionally not
-> all tasks are written at which point we wait for tasks to return before
-> sending more, but then writev() fails with ENOMEM and we see this in the syslog:
->
-> Sep  1 20:58:14 gdc-qa-io-017 kernel: sd 441:0:0:5: [sg73]
-> sg_common_write: start_req err=-12
->
-> Failing tasks are reads of 128KiB.
->
-> > I'd rather fix the sg interface (which while also broken garbage, we
-> > can't get rid of) than re-surrect the bsg interface.
+Addresses-Coverity-ID: 114961 ("Missing break in switch")
+Addresses-Coverity-ID: 114962 ("Missing break in switch")
+Addresses-Coverity-ID: 114963 ("Missing break in switch")
+Addresses-Coverity-ID: 114964 ("Missing break in switch")
+Addresses-Coverity-ID: 114965 ("Missing break in switch")
+Addresses-Coverity-ID: 114966 ("Missing break in switch")
+Addresses-Coverity-ID: 114967 ("Missing break in switch")
+Addresses-Coverity-ID: 114968 ("Missing break in switch")
+Addresses-Coverity-ID: 114969 ("Missing break in switch")
+Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+---
+ drivers/scsi/aic7xxx/aic7xxx_core.c | 12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
 
-Discussion seems to have died down but release of 4.19 is drawing near.
-
-Is there still any chance removal of bsg can be reconsidered? Maybe
-postponed to the
-next version to allow more time to adjust?
-
-I'm especially concerned about the possibility of this being
-backported to stable kernels
-which might leave us very little time to fix our code.
-
-Thanks,
-Dror
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_core.c b/drivers/scsi/aic7xxx/aic7xxx_core.c
+index f3362f4..5fe5384 100644
+--- a/drivers/scsi/aic7xxx/aic7xxx_core.c
++++ b/drivers/scsi/aic7xxx/aic7xxx_core.c
+@@ -4920,24 +4920,30 @@ ahc_fini_scbdata(struct ahc_softc *ahc)
+ 		}
+ 		ahc_dma_tag_destroy(ahc, scb_data->sg_dmat);
+ 	}
++		/* fall through */
+ 	case 6:
+ 		ahc_dmamap_unload(ahc, scb_data->sense_dmat,
+ 				  scb_data->sense_dmamap);
++		/* fall through */
+ 	case 5:
+ 		ahc_dmamem_free(ahc, scb_data->sense_dmat, scb_data->sense,
+ 				scb_data->sense_dmamap);
+ 		ahc_dmamap_destroy(ahc, scb_data->sense_dmat,
+ 				   scb_data->sense_dmamap);
++		/* fall through */
+ 	case 4:
+ 		ahc_dma_tag_destroy(ahc, scb_data->sense_dmat);
++		/* fall through */
+ 	case 3:
+ 		ahc_dmamap_unload(ahc, scb_data->hscb_dmat,
+ 				  scb_data->hscb_dmamap);
++		/* fall through */
+ 	case 2:
+ 		ahc_dmamem_free(ahc, scb_data->hscb_dmat, scb_data->hscbs,
+ 				scb_data->hscb_dmamap);
+ 		ahc_dmamap_destroy(ahc, scb_data->hscb_dmat,
+ 				   scb_data->hscb_dmamap);
++		/* fall through */
+ 	case 1:
+ 		ahc_dma_tag_destroy(ahc, scb_data->hscb_dmat);
+ 		break;
+@@ -6002,8 +6008,8 @@ ahc_search_qinfifo(struct ahc_softc *ahc, int target, char channel,
+ 				if ((scb->flags & SCB_ACTIVE) == 0)
+ 					printk("Inactive SCB in Waiting List\n");
+ 				ahc_done(ahc, scb);
+-				/* FALLTHROUGH */
+ 			}
++				/* fall through  */
+ 			case SEARCH_REMOVE:
+ 				next = ahc_rem_wscb(ahc, next, prev);
+ 				break;
+@@ -7008,8 +7014,8 @@ ahc_download_instr(struct ahc_softc *ahc, u_int instrptr, uint8_t *dconsts)
+ 		}
+ 		address -= address_offset;
+ 		fmt3_ins->address = address;
+-		/* FALLTHROUGH */
+ 	}
++		/* fall through */
+ 	case AIC_OP_OR:
+ 	case AIC_OP_AND:
+ 	case AIC_OP_XOR:
+@@ -7035,7 +7041,7 @@ ahc_download_instr(struct ahc_softc *ahc, u_int instrptr, uint8_t *dconsts)
+ 			fmt1_ins->opcode = AIC_OP_AND;
+ 			fmt1_ins->immediate = 0xff;
+ 		}
+-		/* FALLTHROUGH */
++		/* fall through */
+ 	case AIC_OP_ROL:
+ 		if ((ahc->features & AHC_ULTRA2) != 0) {
+ 			int i, count;
+-- 
+2.7.4
