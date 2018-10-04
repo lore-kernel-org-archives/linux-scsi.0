@@ -1,53 +1,42 @@
-From: Sayali Lokhande <sayalil@codeaurora.org>
-Subject: Re: [PATCH V14 2/2] scsi: ufs: Add configfs support for UFS
- provisioning
-Date: Thu, 4 Oct 2018 16:10:27 +0530
-Message-ID: <4aca5fe6-43db-c7b0-b255-622ccec4d1fc@codeaurora.org>
-References: <1537770516-28410-1-git-send-email-sayalil@codeaurora.org>
- <1537770516-28410-3-git-send-email-sayalil@codeaurora.org>
- <SN6PR04MB4925D198F7AE8961254F43C9FC170@SN6PR04MB4925.namprd04.prod.outlook.com>
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [SCSI] pmcraid: PMC-Sierra MaxRAID driver to support 6Gb/s SAS
+ RAID controller
+Date: Thu, 4 Oct 2018 12:48:16 +0100
+Message-ID: <4910c207-5dc2-0095-7a7f-75bb025b337c@huawei.com>
+References: <f512d8fa-e782-0679-8140-0a27dd3b9062@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <SN6PR04MB4925D198F7AE8961254F43C9FC170@SN6PR04MB4925.namprd04.prod.outlook.com>
-Content-Language: en-US
+In-Reply-To: <f512d8fa-e782-0679-8140-0a27dd3b9062@canonical.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Avri Altman <Avri.Altman@wdc.com>, "subhashj@codeaurora.org" <subhashj@codeaurora.org>, "cang@codeaurora.org" <cang@codeaurora.org>, "vivek.gautam@codeaurora.org" <vivek.gautam@codeaurora.org>, "rnayak@codeaurora.org" <rnayak@codeaurora.org>, "vinholikatti@gmail.com" <vinholikatti@gmail.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>, "evgreen@chromium.org" <evgreen@chromium.org>, "riteshh@codeaurora.org" <riteshh@codeaurora.org>
-Cc: "stummala@codeaurora.org" <stummala@codeaurora.org>, "adrian.hunter@intel.com" <adrian.hunter@intel.com>, "jlbec@evilplan.org" <jlbec@evilplan.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+To: Colin Ian King <colin.king@canonical.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
+On 04/10/2018 09:28, Colin Ian King wrote:
+> Hi,
+>
+> Static analysis from CoverityScan (CID#114178 "Operands don't affect
+> result") detected an issue in drivers/scsi/pmcraid.c, function
+> pmcraid_init_res_table with the following check:
+>
+>         if (pinstance->cfg_table->flags & MICROCODE_UPDATE_REQUIRED)
+>                 pmcraid_err("IOA requires microcode download\n");
+>
+>
+> pinstance->cfg_table->flags is a u8, MICROCODE_UPDATE_REQUIRED is  1 <<
+> 31, so the & operation always results in false and the error message is
+> never displayed.  From my understanding, flags should be a u8, so there
+> is something wrong here with the check.  Any ideas?
+>
+> Colin
+>
+>
 
-On 9/24/2018 3:33 PM, Avri Altman wrote:
->> obj-$(CONFIG_SCSI_UFS_QCOM) += ufs-qcom.o
->> obj-$(CONFIG_SCSI_UFSHCD) += ufshcd-core.o
->> ufshcd-core-objs := ufshcd.o ufs-sysfs.o
->> +obj-$(CONFIG_SCSI_UFS_PROVISION) += ufs-configfs.o
-> Isn't ufs-configfs should be part of ufshcd-core? like ufs-sysfs ?
-Agree. Will update.
->
->
->> +static ssize_t ufs_config_desc_show(struct config_item *item, char *buf,
->> +                                   u8 index)
->> +{
-> The read part already exist in ufs-sysfs.
-User can just read the existing desc here and update the required fields 
-as per need and write updated buffer to same configfs path.
-I think its better to have both r/w functionality here.
->
->> +ssize_t ufshcd_desc_configfs_store(struct config_item *item, const char *buf,
->> +                                  size_t count, u8 index)
->> +{
->
->> +
->> +       /*
->> +        * First read the current configuration descriptor
->> +        * and then update with user provided parameters
->> +        */
-> if originally only lun0 was configured, and you want to configure a new set of luns -
-> luns 8 to 15 (config index 0x1) - won't the read fail in that case?
-Let me try it out on my setup internally and update once I test this 
-scenario
->
-> Thanks,
-> Avri
+Maybe MICROCODE_UPDATE_REQUIRED definition is wrong and should be:
+  /* config_table.flags value */
+-#define MICROCODE_UPDATE_REQUIRED        PMC_BIT32(0)
++#define MICROCODE_UPDATE_REQUIRED        PMC_BIT8(0)
+
+John
