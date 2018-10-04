@@ -1,42 +1,59 @@
 From: John Garry <john.garry@huawei.com>
-Subject: Re: [SCSI] pmcraid: PMC-Sierra MaxRAID driver to support 6Gb/s SAS
- RAID controller
-Date: Thu, 4 Oct 2018 12:48:16 +0100
-Message-ID: <4910c207-5dc2-0095-7a7f-75bb025b337c@huawei.com>
-References: <f512d8fa-e782-0679-8140-0a27dd3b9062@canonical.com>
+Subject: Re: [PATCH 0/7] hisi_sas: Misc bugfixes and an optimisation patch
+Date: Thu, 4 Oct 2018 16:30:44 +0100
+Message-ID: <8e8d0006-a887-ddf3-0179-49d2370abc68@huawei.com>
+References: <1537801594-207139-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <f512d8fa-e782-0679-8140-0a27dd3b9062@canonical.com>
+In-Reply-To: <1537801594-207139-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Colin Ian King <colin.king@canonical.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 04/10/2018 09:28, Colin Ian King wrote:
-> Hi,
->
-> Static analysis from CoverityScan (CID#114178 "Operands don't affect
-> result") detected an issue in drivers/scsi/pmcraid.c, function
-> pmcraid_init_res_table with the following check:
->
->         if (pinstance->cfg_table->flags & MICROCODE_UPDATE_REQUIRED)
->                 pmcraid_err("IOA requires microcode download\n");
->
->
-> pinstance->cfg_table->flags is a u8, MICROCODE_UPDATE_REQUIRED is  1 <<
-> 31, so the & operation always results in false and the error message is
-> never displayed.  From my understanding, flags should be a u8, so there
-> is something wrong here with the check.  Any ideas?
->
-> Colin
->
->
+On 24/09/2018 16:06, John Garry wrote:
+> This patchset introduces mostly more minor/obscure bugfixes for the
+> driver.
 
-Maybe MICROCODE_UPDATE_REQUIRED definition is wrong and should be:
-  /* config_table.flags value */
--#define MICROCODE_UPDATE_REQUIRED        PMC_BIT32(0)
-+#define MICROCODE_UPDATE_REQUIRED        PMC_BIT8(0)
+Hi Martin,
 
+Can you please consider merging this patchset?
+
+Thanks,
 John
+
+>
+> Also included is an optimisation to use the block layer tag for the IPTT
+> indexing. This quite a nice optimisation as it means we don't have to
+> evaluate this in the driver - it was a bit of a bottle-neck.
+>
+> However it does block us in future from enabling SCSI MQ in the driver.
+> This is because the IPTT index must be a unique value per HBA. However,
+> if we switched to SCSI MQ, the block layer tag becomes unique per queue,
+> and not per HBA.
+>
+> Having said this, testing has shown that performance is better by using
+> this block layer tag instead of enabling SCSI MQ in the driver.
+>
+> Luo Jiaxing (2):
+>   scsi: hisi_sas: Feed back linkrate(max/min) when re-attached
+>   scsi: hisi_sas: Move evaluation of hisi_hba in hisi_sas_task_prep()
+>
+> Xiang Chen (5):
+>   scsi: hisi_sas: Fix the race between IO completion and timeout for
+>     SMP/internal IO
+>   scsi: hisi_sas: Free slot later in slot_complete_vx_hw()
+>   scsi: hisi_sas: unmask interrupts ent72 and ent74
+>   scsi: hisi_sas: Use block layer tag instead for IPTT
+>   scsi: hisi_sas: Update v3 hw AIP_LIMIT and CFG_AGING_TIME register
+>     values
+>
+>  drivers/scsi/hisi_sas/hisi_sas.h       |   3 +-
+>  drivers/scsi/hisi_sas/hisi_sas_main.c  | 154 ++++++++++++++++++++++++---------
+>  drivers/scsi/hisi_sas/hisi_sas_v1_hw.c |   1 -
+>  drivers/scsi/hisi_sas/hisi_sas_v2_hw.c |  11 +--
+>  drivers/scsi/hisi_sas/hisi_sas_v3_hw.c |  15 ++--
+>  5 files changed, 130 insertions(+), 54 deletions(-)
+>
