@@ -1,95 +1,68 @@
-From: Nathan Chancellor <natechancellor@gmail.com>
-Subject: Re: -Wswitch Clang warnings in drivers/scsi
-Date: Thu, 4 Oct 2018 23:57:54 -0700
-Message-ID: <20181005065754.GA18637@flashbox>
-References: <20181004183047.GA1885@flashbox>
- <1538678069.230807.6.camel@acm.org>
- <20181004184540.GA17513@flashbox>
- <CAKwvOd=FrGZ-oh5Q9RGQD2GNORZrqwAZUzNYN+hTKkp5wrfrqw@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Evan Green <evgreen@chromium.org>
+Subject: [PATCH] scsi: ufs: Schedule clk gating work on correct queue
+Date: Fri,  5 Oct 2018 10:27:32 -0700
+Message-ID: <20181005172732.203793-1-evgreen@chromium.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAKwvOd=FrGZ-oh5Q9RGQD2GNORZrqwAZUzNYN+hTKkp5wrfrqw@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Nick Desaulniers <ndesaulniers@google.com>
-Cc: bvanassche@acm.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, sayalil@codeaurora.org
+Cc: Evan Green <evgreen@chromium.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Oct 04, 2018 at 02:16:49PM -0700, Nick Desaulniers wrote:
-> On Thu, Oct 4, 2018 at 11:45 AM Nathan Chancellor
-> <natechancellor@gmail.com> wrote:
-> >
-> > On Thu, Oct 04, 2018 at 11:34:29AM -0700, Bart Van Assche wrote:
-> > > On Thu, 2018-10-04 at 11:30 -0700, Nathan Chancellor wrote:
-> > > > Hi SCSI folks,
-> > > >
-> > > > In an effort to get the kernel building warning free with Clang, we've
-> > > > come across an interesting occurrence in a few scsi drivers:
-> > > >
-> > > > drivers/scsi/hpsa.c:6533:7: warning: overflow converting case value to switch condition type (2148024833 to 18446744071562609153) [-Wswitch]
-> > > >         case CCISS_GETPCIINFO:
-> > > >              ^
-> > > > ./include/uapi/linux/cciss_ioctl.h:65:26: note: expanded from macro 'CCISS_GETPCIINFO'
-> > > > #define CCISS_GETPCIINFO _IOR(CCISS_IOC_MAGIC, 1, cciss_pci_info_struct)
-> > > >                          ^
-> > > > ./include/uapi/asm-generic/ioctl.h:86:28: note: expanded from macro '_IOR'
-> > > > #define _IOR(type,nr,size)      _IOC(_IOC_READ,(type),(nr),(_IOC_TYPECHECK(size)))
-> > > >                                 ^
-> > > > ./include/uapi/asm-generic/ioctl.h:70:2: note: expanded from macro '_IOC'
-> > > >         (((dir)  << _IOC_DIRSHIFT) | \
-> > > >         ^
-> > > >
-> > > > I see this warning in drivers/scsi/hpsa.c and drivers/scsi/smartpqi/smartpqi_init.c
-> > > > on an arm64 allyesconfig build and it has also been reported in a couple of files in
-> > > > drivers/scsi/cxlflash.
-> > > >
-> > > > As the warning states, there is an overflow because the switch statement's value is of
-> > > > type int but the switch value is greater than INT_MAX. I did a brief sweep of the tree
-> > > > and it seems that all uses of _IOC in switch statement values either are small enough
-> > > > to fit into size int or the value is of size unsigned int.
-> > > >
-> > > > I am unsure of the implications of using a smaller _IOC value or converting all ioctls
-> > > > to expect a cmd of type unsigned int (especially since that has userspace implications)
-> > > > but I didn't see any negative ioctl commands. Some clarity and insight would be
-> > > > appreciated.
-> > >
-> > > Have you verified how gcc compiles these switch statements? Maybe gcc supports
-> > > switch / case statements on integral types that are larger than an int?
-> 
-> GCC just doesn't warn when the case expression is greater than the
-> maximal representable value and thus would wrap (or appears to, this
-> is probably undefined behavior).  Using an unsigned int here is no
-> functional change:
-> https://godbolt.org/z/1IyYV4
-> 
-> GCC and Clang do effectively the same thing as each other, and in the
-> cases of switching on an unsigned int vs signed int.
-> 
+With commit 10e5e37581fc ("scsi: ufs: Add clock ungating to a separate
+workqueue"), clock gating work was moved to a
+separate work queue with WQ_MEM_RECLAIM set, since clock
+gating could occur from a memory reclaim context. Unfortunately,
+clk_gating.gate_work was left queued via schedule_delayed_work,
+which is a system workqueue that does not have WQ_MEM_RECLAIM set.
+Because ufshcd_ungate_work attempts to cancel gate_work, the
+following warning appears:
 
-Regardless of how the overflow is handled within the switch statement,
-the overflow is also happening when passing in these values to the ioctl,
-right? I mean these case values are defined in the uapi files so that
-userspace can easily pass them in to the ioctl, meaning those values are
-being passed in as a signed integer and I would assume subsequently
-overflowing unless I'm just missing something here.
+[   14.174170] workqueue: WQ_MEM_RECLAIM ufs_clk_gating_0:ufshcd_ungate_work is flushing !WQ_MEM_RECLAIM events:ufshcd_gate_work
+[   14.174179] WARNING: CPU: 4 PID: 173 at kernel/workqueue.c:2440 check_flush_dependency+0x110/0x118
+[   14.205725] CPU: 4 PID: 173 Comm: kworker/u16:3 Not tainted 4.14.68 #1
+[   14.212437] Hardware name: Google Cheza (rev1) (DT)
+[   14.217459] Workqueue: ufs_clk_gating_0 ufshcd_ungate_work
+[   14.223107] task: ffffffc0f6a40080 task.stack: ffffff800a490000
+[   14.229195] PC is at check_flush_dependency+0x110/0x118
+[   14.234569] LR is at check_flush_dependency+0x110/0x118
+[   14.239944] pc : [<ffffff80080cad14>] lr : [<ffffff80080cad14>] pstate: 60c001c9
+[   14.333050] Call trace:
+[   14.427767] [<ffffff80080cad14>] check_flush_dependency+0x110/0x118
+[   14.434219] [<ffffff80080cafec>] start_flush_work+0xac/0x1fc
+[   14.440046] [<ffffff80080caeec>] flush_work+0x40/0x94
+[   14.445246] [<ffffff80080cb288>] __cancel_work_timer+0x11c/0x1b8
+[   14.451433] [<ffffff80080cb4b8>] cancel_delayed_work_sync+0x20/0x30
+[   14.457886] [<ffffff80085b9294>] ufshcd_ungate_work+0x24/0xd0
+[   14.463800] [<ffffff80080cfb04>] process_one_work+0x32c/0x690
+[   14.469713] [<ffffff80080d0154>] worker_thread+0x218/0x338
+[   14.475361] [<ffffff80080d527c>] kthread+0x120/0x130
+[   14.480470] [<ffffff8008084814>] ret_from_fork+0x10/0x18
 
-Nathan
+The simple solution is to put the gate_work on the same WQ_MEM_RECLAIM
+work queue as the ungate_work.
 
-> > >
-> > > Bart.
-> >
-> > Hi Bart,
-> >
-> > That is entirely possible, I will do some research. I did build with GCC
-> > to see if there was any warning and there isn't so I'll be curious to
-> > see what is happening at a lower level.
-> >
-> > Thanks for the comment!
-> > Nathan
-> 
-> 
-> 
-> -- 
-> Thanks,
-> ~Nick Desaulniers
+Fixes: 10e5e37581fc ("scsi: ufs: Add clock ungating to a separate workqueue")
+Signed-off-by: Evan Green <evgreen@chromium.org>
+
+---
+ drivers/scsi/ufs/ufshcd.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index c55f38ec391c..54074dd483a7 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -1691,8 +1691,9 @@ static void __ufshcd_release(struct ufs_hba *hba)
+ 
+ 	hba->clk_gating.state = REQ_CLKS_OFF;
+ 	trace_ufshcd_clk_gating(dev_name(hba->dev), hba->clk_gating.state);
+-	schedule_delayed_work(&hba->clk_gating.gate_work,
+-			msecs_to_jiffies(hba->clk_gating.delay_ms));
++	queue_delayed_work(hba->clk_gating.clk_gating_workq,
++			   &hba->clk_gating.gate_work,
++			   msecs_to_jiffies(hba->clk_gating.delay_ms));
+ }
+ 
+ void ufshcd_release(struct ufs_hba *hba)
+-- 
+2.16.4
