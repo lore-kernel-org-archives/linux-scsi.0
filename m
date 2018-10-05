@@ -1,68 +1,65 @@
-From: Evan Green <evgreen@chromium.org>
-Subject: [PATCH] scsi: ufs: Schedule clk gating work on correct queue
-Date: Fri,  5 Oct 2018 10:27:32 -0700
-Message-ID: <20181005172732.203793-1-evgreen@chromium.org>
+From: Nick Desaulniers <ndesaulniers@google.com>
+Subject: Re: [PATCH] scsi: iscsi_tcp: Explicitly cast param in iscsi_sw_tcp_host_get_param
+Date: Fri, 5 Oct 2018 14:20:47 -0700
+Message-ID: <CAKwvOdk1M0t2WeB5AQjwzDy5Pb6HKV=kmh5kWrxNszFzaLjo7Q@mail.gmail.com>
+References: <20181004010615.19782-1-natechancellor@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20181004010615.19782-1-natechancellor@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, sayalil@codeaurora.org
-Cc: Evan Green <evgreen@chromium.org>
+To: Nathan Chancellor <natechancellor@gmail.com>
+Cc: lduncan@suse.com, cleech@redhat.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-With commit 10e5e37581fc ("scsi: ufs: Add clock ungating to a separate
-workqueue"), clock gating work was moved to a
-separate work queue with WQ_MEM_RECLAIM set, since clock
-gating could occur from a memory reclaim context. Unfortunately,
-clk_gating.gate_work was left queued via schedule_delayed_work,
-which is a system workqueue that does not have WQ_MEM_RECLAIM set.
-Because ufshcd_ungate_work attempts to cancel gate_work, the
-following warning appears:
+On Wed, Oct 3, 2018 at 6:06 PM Nathan Chancellor
+<natechancellor@gmail.com> wrote:
+>
+> Clang warns when one enumerated type is implicitly converted to another.
+>
+> drivers/scsi/iscsi_tcp.c:803:15: warning: implicit conversion from
+> enumeration type 'enum iscsi_host_param' to different enumeration type
+> 'enum iscsi_param' [-Wenum-conversion]
+>                                                  &addr, param, buf);
+>                                                         ^~~~~
+> 1 warning generated.
+>
+> iscsi_conn_get_addr_param handles ISCSI_HOST_PARAM_IPADDRESS just fine
+> so add an explicit cast to iscsi_param to make it clear to Clang that
+> this is expected behavior.
+>
+> Link: https://github.com/ClangBuiltLinux/linux/issues/153
+> Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
+> ---
+>  drivers/scsi/iscsi_tcp.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
+> index b025a0b74341..23354f206533 100644
+> --- a/drivers/scsi/iscsi_tcp.c
+> +++ b/drivers/scsi/iscsi_tcp.c
+> @@ -800,7 +800,8 @@ static int iscsi_sw_tcp_host_get_param(struct Scsi_Host *shost,
+>                         return rc;
+>
+>                 return iscsi_conn_get_addr_param((struct sockaddr_storage *)
+> -                                                &addr, param, buf);
+> +                                                &addr,
+> +                                                (enum iscsi_param)param, buf);
 
-[   14.174170] workqueue: WQ_MEM_RECLAIM ufs_clk_gating_0:ufshcd_ungate_work is flushing !WQ_MEM_RECLAIM events:ufshcd_gate_work
-[   14.174179] WARNING: CPU: 4 PID: 173 at kernel/workqueue.c:2440 check_flush_dependency+0x110/0x118
-[   14.205725] CPU: 4 PID: 173 Comm: kworker/u16:3 Not tainted 4.14.68 #1
-[   14.212437] Hardware name: Google Cheza (rev1) (DT)
-[   14.217459] Workqueue: ufs_clk_gating_0 ufshcd_ungate_work
-[   14.223107] task: ffffffc0f6a40080 task.stack: ffffff800a490000
-[   14.229195] PC is at check_flush_dependency+0x110/0x118
-[   14.234569] LR is at check_flush_dependency+0x110/0x118
-[   14.239944] pc : [<ffffff80080cad14>] lr : [<ffffff80080cad14>] pstate: 60c001c9
-[   14.333050] Call trace:
-[   14.427767] [<ffffff80080cad14>] check_flush_dependency+0x110/0x118
-[   14.434219] [<ffffff80080cafec>] start_flush_work+0xac/0x1fc
-[   14.440046] [<ffffff80080caeec>] flush_work+0x40/0x94
-[   14.445246] [<ffffff80080cb288>] __cancel_work_timer+0x11c/0x1b8
-[   14.451433] [<ffffff80080cb4b8>] cancel_delayed_work_sync+0x20/0x30
-[   14.457886] [<ffffff80085b9294>] ufshcd_ungate_work+0x24/0xd0
-[   14.463800] [<ffffff80080cfb04>] process_one_work+0x32c/0x690
-[   14.469713] [<ffffff80080d0154>] worker_thread+0x218/0x338
-[   14.475361] [<ffffff80080d527c>] kthread+0x120/0x130
-[   14.480470] [<ffffff8008084814>] ret_from_fork+0x10/0x18
+Alternatively, you could also just pass ISCSI_HOST_PARAM_IPADDRESS in
+place of the cast (since in this case param ==
+ISCSI_HOST_PARAM_IPADDRESS), but I don't feel strongly about this
+(maybe the maintainers do).
+Reviewed-by: Nick Desaulniers <ndesaulniers@google.com>
 
-The simple solution is to put the gate_work on the same WQ_MEM_RECLAIM
-work queue as the ungate_work.
+>         default:
+>                 return iscsi_host_get_param(shost, param, buf);
+>         }
+> --
+> 2.19.0
+>
 
-Fixes: 10e5e37581fc ("scsi: ufs: Add clock ungating to a separate workqueue")
-Signed-off-by: Evan Green <evgreen@chromium.org>
 
----
- drivers/scsi/ufs/ufshcd.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index c55f38ec391c..54074dd483a7 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -1691,8 +1691,9 @@ static void __ufshcd_release(struct ufs_hba *hba)
- 
- 	hba->clk_gating.state = REQ_CLKS_OFF;
- 	trace_ufshcd_clk_gating(dev_name(hba->dev), hba->clk_gating.state);
--	schedule_delayed_work(&hba->clk_gating.gate_work,
--			msecs_to_jiffies(hba->clk_gating.delay_ms));
-+	queue_delayed_work(hba->clk_gating.clk_gating_workq,
-+			   &hba->clk_gating.gate_work,
-+			   msecs_to_jiffies(hba->clk_gating.delay_ms));
- }
- 
- void ufshcd_release(struct ufs_hba *hba)
 -- 
-2.16.4
+Thanks,
+~Nick Desaulniers
