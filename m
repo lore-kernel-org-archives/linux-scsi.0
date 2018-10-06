@@ -1,47 +1,53 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 4.19-rc5
-Date: Sat, 06 Oct 2018 10:20:12 -0700
-Message-ID: <1538846412.4088.1.camel@HansenPartnership.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
+From: Wenwen Wang <wang6495@umn.edu>
+Subject: [PATCH] scsi: megaraid_sas: fix a missing-check bug
+Date: Sat,  6 Oct 2018 13:34:21 -0500
+Message-ID: <1538850861-26882-1-git-send-email-wang6495@umn.edu>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Greg Kroah-Hartman <greg@kroah.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: Wenwen Wang <wang6495@umn.edu>
+Cc: Kangjie Lu <kjlu@umn.edu>, Kashyap Desai <kashyap.desai@broadcom.com>, Sumit Saxena <sumit.saxena@broadcom.com>, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "open list:MEGARAID SCSI/SAS DRIVERS" <megaraidlinux.pdl@broadcom.com>, "open list:MEGARAID SCSI/SAS DRIVERS" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Small fix for an unititialized mutex in the qedi driver.
+In megasas_mgmt_compat_ioctl_fw(), to handle the structure
+compat_megasas_iocpacket 'cioc', a user-space structure megasas_iocpacket
+'ioc' is allocated before megasas_mgmt_ioctl_fw() is invoked to handle the
+packet. Since the two data structures have different fields, the data is
+copied from 'cioc' to 'ioc' field by field. In the copy process,
+'sense_ptr' is prepared if the field 'sense_len' is not null, because it
+will be used in megasas_mgmt_ioctl_fw(). To prepare 'sense_ptr', the
+user-space data 'ioc->sense_off' and 'cioc->sense_off' are copied and saved
+to kernel-space variables 'local_sense_off' and 'user_sense_off'
+respectively. Given that 'ioc->sense_off' is also copied from
+'cioc->sense_off', 'local_sense_off' and 'user_sense_off' should have the
+same value. However, 'cioc' is in the user space and a malicious user can
+race to change the value of 'cioc->sense_off' after it is copied to
+'ioc->sense_off' but before it is copied to 'user_sense_off'. By doing so,
+the attacker can inject different values into 'local_sense_off' and
+'user_sense_off'. This can cause undefined behavior in the following
+execution, because the two variables are supposed to be same.
 
-The patch is available here:
+This patch enforces a check on the two kernel variables 'local_sense_off'
+and 'user_sense_off' to make sure they are the same after the copy. In case
+they are not, an error code EINVAL will be returned.
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-
-The short changelog is:
-
-Nilesh Javali (1):
-      scsi: qedi: Initialize the stats mutex lock
-
-and the diffstat:
-
- drivers/scsi/qedi/qedi_main.c | 1 +
- 1 file changed, 1 insertion(+)
-
-With full diff below.
-
-James
-
+Signed-off-by: Wenwen Wang <wang6495@umn.edu>
 ---
+ drivers/scsi/megaraid/megaraid_sas_base.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/scsi/qedi/qedi_main.c b/drivers/scsi/qedi/qedi_main.c
-index cc8e64dc65ad..e5bd035ebad0 100644
---- a/drivers/scsi/qedi/qedi_main.c
-+++ b/drivers/scsi/qedi/qedi_main.c
-@@ -2472,6 +2472,7 @@ static int __qedi_probe(struct pci_dev *pdev, int mode)
- 		/* start qedi context */
- 		spin_lock_init(&qedi->hba_lock);
- 		spin_lock_init(&qedi->task_idx_lock);
-+		mutex_init(&qedi->stats_lock);
- 	}
- 	qedi_ops->ll2->register_cb_ops(qedi->cdev, &qedi_ll2_cb_ops, qedi);
- 	qedi_ops->ll2->start(qedi->cdev, &params);
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index 9aa9590..f6de752 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -7523,6 +7523,9 @@ static int megasas_mgmt_compat_ioctl_fw(struct file *file, unsigned long arg)
+ 		get_user(user_sense_off, &cioc->sense_off))
+ 		return -EFAULT;
+ 
++	if (local_sense_off != user_sense_off)
++		return -EINVAL;
++
+ 	if (local_sense_len) {
+ 		void __user **sense_ioc_ptr =
+ 			(void __user **)((u8 *)((unsigned long)&ioc->frame.raw) + local_sense_off);
+-- 
+2.7.4
