@@ -1,112 +1,57 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: Recent removal of bsg read/write support
-Date: Fri, 5 Oct 2018 19:27:47 -0400
-Message-ID: <c443315d-eef2-31c9-754a-f24f0fcbb129@interlog.com>
-References: <CAOuWhkaGjX8Q_xghkFVTqzZkDrUv-sdH=VbS7hvnqFWrT+3eOQ@mail.gmail.com>
- <CAFLxGvxX8QW4wUJKommXVMpGBj7G_H3=SOwQGjGuyPZZrhCzKw@mail.gmail.com>
- <CA+55aFyLC8PhjZ+iV7MucSZ1aGKMT=S9=EkEAQ6T1=ZRqD-xLA@mail.gmail.com>
- <CAOuWhkbNuesaVYar6ML-qFw7RAfkPsaOYUXT4Ypfiu5=Nt1kWw@mail.gmail.com>
- <CAOuWhkYRtTqrnp1uyDWFqXFcTLhPbcqv8XzdV_jurJHstGQmuA@mail.gmail.com>
- <20181005223526.GF13613@kroah.com>
-Reply-To: dgilbert@interlog.com
+From: Bjorn Andersson <bjorn.andersson-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v2 05/17] compat_ioctl: move more drivers to
+ generic_compat_ioctl_ptrarg
+Date: Sat, 6 Oct 2018 00:05:21 -0700
+Message-ID: <20181006070521.GM12063@builder>
+References: <20180912150142.157913-1-arnd@arndb.de>
+ <20180912151134.436719-1-arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20181005223526.GF13613@kroah.com>
-Content-Language: en-CA
-Sender: linux-kernel-owner@vger.kernel.org
-To: Greg KH <gregkh@linuxfoundation.org>, Dror Levin <drorl@infinidat.com>
-Cc: torvalds@linux-foundation.org, Richard Weinberger <richard.weinberger@gmail.com>, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, hch@infradead.org, axboe@kernel.dk
+Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20180912151134.436719-1-arnd-r2nGTMty4D4@public.gmane.org>
+List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
+List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
+Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+To: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
+Cc: linux-fbdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-iio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-remoteproc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, platform-driver-x86-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, sparclinux-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, qat-linux-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, linux-input-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linaro-mm-sig-cunTk1MwBs8s++Sfvej+rw@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, ceph-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-crypto-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linuxppc-dev-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, linux-btrfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 2018-10-05 06:35 PM, Greg KH wrote:
-> On Thu, Oct 04, 2018 at 09:58:37AM +0300, Dror Levin wrote:
->> CC'ing Greg.
->>
->> On Mon, Sep 3, 2018 at 11:34 AM Dror Levin <drorl@infinidat.com> wrote:
->>>
->>> On Sun, Sep 2, 2018 at 8:55 PM Linus Torvalds
->>> <torvalds@linux-foundation.org> wrote:
->>>>
->>>> On Sun, Sep 2, 2018 at 4:44 AM Richard Weinberger
->>>> <richard.weinberger@gmail.com> wrote:
->>>>>
->>>>> CC'ing relevant people. Otherwise your mail might get lost.
->>>>
->>>> Indeed.
->>>
->>> Sorry for that.
->>>
->>>>> On Sun, Sep 2, 2018 at 1:37 PM Dror Levin <drorl@infinidat.com> wrote:
->>>>>>
->>>>>> We have an internal tool that uses the bsg read/write interface to
->>>>>> issue SCSI commands as part of a test suite for a storage device.
->>>>>>
->>>>>> After recently reading on LWN that this interface is to be removed we
->>>>>> tried porting our code to use sg instead. However, that raises new
->>>>>> issues - mainly getting ENOMEM over iSCSI for unknown reasons.
->>>>
->>>> Is there any chance that you can make more data available?
->>>
->>> Sure, I can try.
->>>
->>> We use writev() to send up to SG_MAX_QUEUE tasks at a time. Occasionally not
->>> all tasks are written at which point we wait for tasks to return before
->>> sending more, but then writev() fails with ENOMEM and we see this in the syslog:
->>>
->>> Sep  1 20:58:14 gdc-qa-io-017 kernel: sd 441:0:0:5: [sg73]
->>> sg_common_write: start_req err=-12
->>>
->>> Failing tasks are reads of 128KiB.
->>>
->>>> I'd rather fix the sg interface (which while also broken garbage, we
->>>> can't get rid of) than re-surrect the bsg interface.
->>
->> Discussion seems to have died down but release of 4.19 is drawing near.
->>
->> Is there still any chance removal of bsg can be reconsidered? Maybe
->> postponed to the
->> next version to allow more time to adjust?
->>
->> I'm especially concerned about the possibility of this being
->> backported to stable kernels
->> which might leave us very little time to fix our code.
-> 
-> What is being backported to what stable kernels and why?
+On Wed 12 Sep 08:08 PDT 2018, Arnd Bergmann wrote:
 
-What has been removed from the bsg driver is the ability to use write()
-to issue a SCSI command (and return before that command's response has
-arrived) and to use read() to wait for the issued command to complete
-and return that command's status and optionally its sense buffer.
-Basically async SCSI command capability has been removed from the bsg
-driver. The ioctl(SG_IO) for bsg device stays in place.
+[..]
+> diff --git a/drivers/rpmsg/rpmsg_char.c b/drivers/rpmsg/rpmsg_char.c
+> index a76b963a7e50..02aefb2b2d47 100644
+> --- a/drivers/rpmsg/rpmsg_char.c
+> +++ b/drivers/rpmsg/rpmsg_char.c
+> @@ -285,7 +285,7 @@ static const struct file_operations rpmsg_eptdev_fops = {
+>  	.write = rpmsg_eptdev_write,
+>  	.poll = rpmsg_eptdev_poll,
+>  	.unlocked_ioctl = rpmsg_eptdev_ioctl,
+> -	.compat_ioctl = rpmsg_eptdev_ioctl,
+> +	.compat_ioctl = generic_compat_ioctl_ptrarg,
+>  };
+>  
+>  static ssize_t name_show(struct device *dev, struct device_attribute *attr,
+> @@ -446,7 +446,7 @@ static const struct file_operations rpmsg_ctrldev_fops = {
+>  	.open = rpmsg_ctrldev_open,
+>  	.release = rpmsg_ctrldev_release,
+>  	.unlocked_ioctl = rpmsg_ctrldev_ioctl,
+> -	.compat_ioctl = rpmsg_ctrldev_ioctl,
+> +	.compat_ioctl = generic_compat_ioctl_ptrarg,
+>  };
+>  
 
-The reason is that the bsg driver has no active maintainer and its
-rather serious design flaw: when a async SCSI command is issued (by
-a write()) any process using any file descriptor (opened on that
-device) may receive its response. Actually if you tried hard with bsg,
-the synchronous SG_IO ioctl will also exhibit this behaviour.
+For rpmsg part
 
-> Is there sg patches?
+Acked-by: Bjorn Andersson <bjorn.andersson-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
 
-Well I'm working on a patch set but it won't be ready for lk 4.19 .
-Amongst other things it will remove the SG_MAX_QUEUE (16) request
-limitation per file descriptor that Dror Levin is noting as a
-hardship when re-porting their application from the bsg to sg driver.
-
-Also Linus Torvalds doesn't like the write()/read() async interface used
-by the sg driver and mimicked by the bsg driver. It has been in place in
-the sg driver since 1992 (see lk 1.0) when it was the only user space
-interface to the sg driver. Linus proposed replacing them by two new
-ioctls: SG_IOSUBMIT and SG_IORECEIVE ***. I will work on a second patch
-set for the sg driver to do exactly that (plus SG_IOABORT to abort a
-request inflight).
-
-> totally confused,
-
-Hope this helps.
-
-Doug Gilbert
-
-*** See Linux Torvalds' post to this thread on 20180902
+Regards,
+Bjorn
