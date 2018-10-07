@@ -1,53 +1,25 @@
-From: Wenwen Wang <wang6495@umn.edu>
-Subject: [PATCH] scsi: megaraid_sas: fix a missing-check bug
-Date: Sat,  6 Oct 2018 13:34:21 -0500
-Message-ID: <1538850861-26882-1-git-send-email-wang6495@umn.edu>
+From: Greg Kroah-Hartman <greg@kroah.com>
+Subject: Re: [GIT PULL] SCSI fixes for 4.19-rc5
+Date: Sun, 7 Oct 2018 07:21:52 +0200
+Message-ID: <20181007052152.GB9243@kroah.com>
+References: <1538846412.4088.1.camel@HansenPartnership.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1538846412.4088.1.camel@HansenPartnership.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Wenwen Wang <wang6495@umn.edu>
-Cc: Kangjie Lu <kjlu@umn.edu>, Kashyap Desai <kashyap.desai@broadcom.com>, Sumit Saxena <sumit.saxena@broadcom.com>, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "open list:MEGARAID SCSI/SAS DRIVERS" <megaraidlinux.pdl@broadcom.com>, "open list:MEGARAID SCSI/SAS DRIVERS" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-In megasas_mgmt_compat_ioctl_fw(), to handle the structure
-compat_megasas_iocpacket 'cioc', a user-space structure megasas_iocpacket
-'ioc' is allocated before megasas_mgmt_ioctl_fw() is invoked to handle the
-packet. Since the two data structures have different fields, the data is
-copied from 'cioc' to 'ioc' field by field. In the copy process,
-'sense_ptr' is prepared if the field 'sense_len' is not null, because it
-will be used in megasas_mgmt_ioctl_fw(). To prepare 'sense_ptr', the
-user-space data 'ioc->sense_off' and 'cioc->sense_off' are copied and saved
-to kernel-space variables 'local_sense_off' and 'user_sense_off'
-respectively. Given that 'ioc->sense_off' is also copied from
-'cioc->sense_off', 'local_sense_off' and 'user_sense_off' should have the
-same value. However, 'cioc' is in the user space and a malicious user can
-race to change the value of 'cioc->sense_off' after it is copied to
-'ioc->sense_off' but before it is copied to 'user_sense_off'. By doing so,
-the attacker can inject different values into 'local_sense_off' and
-'user_sense_off'. This can cause undefined behavior in the following
-execution, because the two variables are supposed to be same.
+On Sat, Oct 06, 2018 at 10:20:12AM -0700, James Bottomley wrote:
+> Small fix for an unititialized mutex in the qedi driver.
+> 
+> The patch is available here:
+> 
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-This patch enforces a check on the two kernel variables 'local_sense_off'
-and 'user_sense_off' to make sure they are the same after the copy. In case
-they are not, an error code EINVAL will be returned.
+Now merged, thanks.
 
-Signed-off-by: Wenwen Wang <wang6495@umn.edu>
----
- drivers/scsi/megaraid/megaraid_sas_base.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 9aa9590..f6de752 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -7523,6 +7523,9 @@ static int megasas_mgmt_compat_ioctl_fw(struct file *file, unsigned long arg)
- 		get_user(user_sense_off, &cioc->sense_off))
- 		return -EFAULT;
- 
-+	if (local_sense_off != user_sense_off)
-+		return -EINVAL;
-+
- 	if (local_sense_len) {
- 		void __user **sense_ioc_ptr =
- 			(void __user **)((u8 *)((unsigned long)&ioc->frame.raw) + local_sense_off);
--- 
-2.7.4
+greg k-h
