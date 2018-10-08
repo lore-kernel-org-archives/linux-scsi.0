@@ -1,7 +1,7 @@
 From: cang@codeaurora.org
 Subject: Re: [PATCH v1] scsi: ufs: add 2 lane support
-Date: Mon, 08 Oct 2018 16:33:29 +0800
-Message-ID: <480df72b1fd00b2c1eacb8955cf60032@codeaurora.org>
+Date: Mon, 08 Oct 2018 16:48:22 +0800
+Message-ID: <dfebd55dc6df88916876388dcdad3aa4@codeaurora.org>
 References: <20180302082346.8188-1-cang@codeaurora.org>
  <CAE=gft6f9a2RoAvXR4+2tKZE-3chobb_HfbMDErfU1Q=_8uYwA@mail.gmail.com>
 Mime-Version: 1.0
@@ -14,6 +14,8 @@ Sender: linux-kernel-owner@vger.kernel.org
 To: Evan Green <evgreen@chromium.org>
 Cc: subhashj@codeaurora.org, asutoshd@codeaurora.org, vivek.gautam@codeaurora.org, Rajendra Nayak <rnayak@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, venkatg@codeaurora.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+
+Hi Evan,
 
 On 2018-10-04 02:34, Evan Green wrote:
 > Hi,
@@ -37,6 +39,14 @@ On 2018-10-04 02:34, Evan Green wrote:
 > and RX symbol 1, but seems to be missing GCC_UFS_PHY_TX_SYMBOL_1_CLK.
 > Was that an oversight, or is it really not there?
 > 
+
+You are right. The name and commit message are not representing itself
+correctly as most of the original commit has been upstreamed already.
+I uploaded a new patch to address it.
+
+As per Qcom's design Tx Lane1 clock derives from Tx Lane0. So only
+one Tx Lane0 clock would make 2 Tx lanes work.
+
 >> 
 >> Signed-off-by: Venkat Gopalakrishnan <venkatg@codeaurora.org>
 >> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
@@ -79,14 +89,6 @@ On 2018-10-04 02:34, Evan Green wrote:
 > I'm confused by this comment. What do you mean the clock could be 
 > muxed?
 > 
-
-Hi Evan, sorry for the late response, I totally missed this mail.
-Here it means Tx Lane1 clock can be muxed with Tx Lane0 clock.
-As by design, Tx Lane1 clock derives from Tx Lane0 clock.
-
-I pushed a new change of it as I change the commit name.
-Please help review the new patch. Sorry for the inconveience.
-
 >> +               if (host->tx_l1_sync_clk)
 >> +                       ufs_qcom_host_clk_enable(dev, 
 >> "tx_lane1_sync_clk",
