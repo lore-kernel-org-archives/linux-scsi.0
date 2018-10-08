@@ -1,121 +1,66 @@
-From: cang@codeaurora.org
-Subject: Re: [PATCH v1] scsi: ufs: add 2 lane support
-Date: Mon, 08 Oct 2018 16:48:22 +0800
-Message-ID: <dfebd55dc6df88916876388dcdad3aa4@codeaurora.org>
-References: <20180302082346.8188-1-cang@codeaurora.org>
- <CAE=gft6f9a2RoAvXR4+2tKZE-3chobb_HfbMDErfU1Q=_8uYwA@mail.gmail.com>
+From: Souptick Joarder <jrdr.linux@gmail.com>
+Subject: Re: [PATCH] scsi/mpt3sas: Use dma_pool_zalloc
+Date: Mon, 8 Oct 2018 21:58:26 +0530
+Message-ID: <CAFqt6za2WuCSNxfQs48xXRctQ+V3xi-Dw7Gk785AtFXY2WCfJw@mail.gmail.com>
+References: <20181002054804.GA11315@jordon-HP-15-Notebook-PC>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAE=gft6f9a2RoAvXR4+2tKZE-3chobb_HfbMDErfU1Q=_8uYwA@mail.gmail.com>
+In-Reply-To: <20181002054804.GA11315@jordon-HP-15-Notebook-PC>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Evan Green <evgreen@chromium.org>
-Cc: subhashj@codeaurora.org, asutoshd@codeaurora.org, vivek.gautam@codeaurora.org, Rajendra Nayak <rnayak@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, venkatg@codeaurora.org, linux-kernel@vger.kernel.org
+To: sathya.prakash@broadcom.com, chaitra.basappa@broadcom.com, suganath-prabu.subramani@broadcom.com, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Brajeswar Ghosh <brajeswar.linux@gmail.com>
+Cc: MPT-FusionLinux.pdl@broadcom.com, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Evan,
+On Tue, Oct 2, 2018 at 11:14 AM Souptick Joarder <jrdr.linux@gmail.com> wrote:
+>
+> Replaced dma_pool_alloc + memset with dma_pool_zalloc.
+>
+> Signed-off-by: Brajeswar Ghosh <brajeswar.linux@gmail.com>
+> Signed-off-by: Souptick Joarder <jrdr.linux@gmail.com>
 
-On 2018-10-04 02:34, Evan Green wrote:
-> Hi,
-> 
-> On Wed, Oct 3, 2018 at 11:19 AM Can Guo <cang@codeaurora.org> wrote:
->> 
->> From: Venkat Gopalakrishnan <venkatg@codeaurora.org>
->> 
->> Qcom ufs controller v3.1.0 supports 2 lanes, add support
->> to configure 2 lanes during phy initialization.
-> 
-> I'm reviving this old chestnut, sorry I missed it initially. This
-> description is a little terse, and I'm actually confused about it. The
-> description makes it sounds like this patch is adding support for
-> 2-lane UFS controllers, but the patch itself appears to only make the
-> UFS controller tolerant of a missing lane (or more specifically, a
-> missing lane clock). Can you describe a little more about what's going
-> on here, and perhaps fix the description?
-> 
-> I notice that the global clock controller has clocks for TX symbol 0,
-> and RX symbol 1, but seems to be missing GCC_UFS_PHY_TX_SYMBOL_1_CLK.
-> Was that an oversight, or is it really not there?
-> 
-
-You are right. The name and commit message are not representing itself
-correctly as most of the original commit has been upstreamed already.
-I uploaded a new patch to address it.
-
-As per Qcom's design Tx Lane1 clock derives from Tx Lane0. So only
-one Tx Lane0 clock would make 2 Tx lanes work.
-
->> 
->> Signed-off-by: Venkat Gopalakrishnan <venkatg@codeaurora.org>
->> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
->> Signed-off-by: Can Guo <cang@codeaurora.org>
->> ---
->>  drivers/scsi/ufs/ufs-qcom.c | 20 +++++++++-----------
->>  1 file changed, 9 insertions(+), 11 deletions(-)
->> 
->> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
->> index 2b38db2..51889ad 100644
->> --- a/drivers/scsi/ufs/ufs-qcom.c
->> +++ b/drivers/scsi/ufs/ufs-qcom.c
->> @@ -113,10 +113,10 @@ static void ufs_qcom_disable_lane_clks(struct 
->> ufs_qcom_host *host)
->>         if (!host->is_lane_clks_enabled)
->>                 return;
->> 
->> -       if (host->hba->lanes_per_direction > 1)
->> +       if (host->tx_l1_sync_clk)
->>                 clk_disable_unprepare(host->tx_l1_sync_clk);
->>         clk_disable_unprepare(host->tx_l0_sync_clk);
->> -       if (host->hba->lanes_per_direction > 1)
->> +       if (host->rx_l1_sync_clk)
->>                 clk_disable_unprepare(host->rx_l1_sync_clk);
->>         clk_disable_unprepare(host->rx_l0_sync_clk);
->> 
->> @@ -147,18 +147,15 @@ static int ufs_qcom_enable_lane_clks(struct 
->> ufs_qcom_host *host)
->>                 if (err)
->>                         goto disable_tx_l0;
->> 
->> -               err = ufs_qcom_host_clk_enable(dev, 
->> "tx_lane1_sync_clk",
->> -                       host->tx_l1_sync_clk);
->> -               if (err)
->> -                       goto disable_rx_l1;
->> +               /* The tx lane1 clk could be muxed, hence keep this 
->> optional */
-> 
-> I'm confused by this comment. What do you mean the clock could be 
-> muxed?
-> 
->> +               if (host->tx_l1_sync_clk)
->> +                       ufs_qcom_host_clk_enable(dev, 
->> "tx_lane1_sync_clk",
->> +                                                
->> host->tx_l1_sync_clk);
->>         }
->> 
->>         host->is_lane_clks_enabled = true;
->>         goto out;
->> 
->> -disable_rx_l1:
->> -       if (host->hba->lanes_per_direction > 1)
->> -               clk_disable_unprepare(host->rx_l1_sync_clk);
->>  disable_tx_l0:
->>         clk_disable_unprepare(host->tx_l0_sync_clk);
->>  disable_rx_l0:
->> @@ -189,8 +186,9 @@ static int ufs_qcom_init_lane_clks(struct 
->> ufs_qcom_host *host)
->>                 if (err)
->>                         goto out;
->> 
->> -               err = ufs_qcom_host_clk_get(dev, "tx_lane1_sync_clk",
->> -                       &host->tx_l1_sync_clk);
->> +               /* The tx lane1 clk could be muxed, hence keep this 
->> optional */
->> +               ufs_qcom_host_clk_get(dev, "tx_lane1_sync_clk",
->> +                                       &host->tx_l1_sync_clk);
->>         }
->>  out:
->>         return err;
+Any comment on this patch ?
+> ---
+>  drivers/scsi/mpt3sas/mpt3sas_base.c | 6 ++----
+>  1 file changed, 2 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+> index 59d7844..d7ef671 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+> @@ -4516,7 +4516,7 @@ void mpt3sas_base_clear_st(struct MPT3SAS_ADAPTER *ioc,
+>         i = 0;
+>         do {
+>                 ioc->reply_post[i].reply_post_free =
+> -                   dma_pool_alloc(ioc->reply_post_free_dma_pool,
+> +                   dma_pool_zalloc(ioc->reply_post_free_dma_pool,
+>                     GFP_KERNEL,
+>                     &ioc->reply_post[i].reply_post_free_dma);
+>                 if (!ioc->reply_post[i].reply_post_free) {
+> @@ -4525,7 +4525,6 @@ void mpt3sas_base_clear_st(struct MPT3SAS_ADAPTER *ioc,
+>                         ioc->name);
+>                         goto out;
+>                 }
+> -               memset(ioc->reply_post[i].reply_post_free, 0, sz);
+>                 dinitprintk(ioc, pr_info(MPT3SAS_FMT
+>                     "reply post free pool (0x%p): depth(%d),"
+>                     "element_size(%d), pool_size(%d kB)\n", ioc->name,
+> @@ -4852,14 +4851,13 @@ void mpt3sas_base_clear_st(struct MPT3SAS_ADAPTER *ioc,
+>                         ioc->name);
+>                 goto out;
+>         }
+> -       ioc->reply_free = dma_pool_alloc(ioc->reply_free_dma_pool, GFP_KERNEL,
+> +       ioc->reply_free = dma_pool_zalloc(ioc->reply_free_dma_pool, GFP_KERNEL,
+>             &ioc->reply_free_dma);
+>         if (!ioc->reply_free) {
+>                 pr_err(MPT3SAS_FMT "reply_free pool: dma_pool_alloc failed\n",
+>                         ioc->name);
+>                 goto out;
+>         }
+> -       memset(ioc->reply_free, 0, sz);
+>         dinitprintk(ioc, pr_info(MPT3SAS_FMT "reply_free pool(0x%p): " \
+>             "depth(%d), element_size(%d), pool_size(%d kB)\n", ioc->name,
+>             ioc->reply_free, ioc->reply_free_queue_depth, 4, sz/1024));
+> --
+> 1.9.1
+>
