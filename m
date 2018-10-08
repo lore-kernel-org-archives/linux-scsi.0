@@ -1,182 +1,128 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH] Revert "genirq/affinity: assign vectors to all possible
- CPUs"
-Date: Mon, 8 Oct 2018 10:11:05 +0800
-Message-ID: <20181008021104.GB8155@ming.t460p>
-References: <06ee23fe-ec9e-d67b-b533-d5151be74a11@molgen.mpg.de>
- <20180810133628.GA4131@kroah.com>
- <29b5f3ce-2c23-bf5e-fe50-29bedd4833e1@molgen.mpg.de>
- <20180810155511.GA17092@kroah.com>
- <f5c57bf7-b8c1-a560-d13a-d74e0f27adbb@molgen.mpg.de>
- <20180811135021.GA2186@kroah.com>
- <20180813033157.GA18254@ming.t460p>
- <89f2b622-3d2a-04ce-a6d1-ffb5d9612763@molgen.mpg.de>
- <cbd7cb64-dbfe-e085-e80b-67dad4084d69@molgen.mpg.de>
- <7c51fe1d-d591-90f2-8fb5-81990f8db0fe@molgen.mpg.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <7c51fe1d-d591-90f2-8fb5-81990f8db0fe@molgen.mpg.de>
-Sender: stable-owner@vger.kernel.org
-To: Paul Menzel <pmenzel+linux-scsi@molgen.mpg.de>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, stable@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, it+linux-scsi@molgen.mpg.de, Adaptec OEM Raid Solutions <aacraid@microsemi.com>, linux-scsi@vger.kernel.org, Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>, Dave Carroll <david.carroll@microsemi.com>
+From: Can Guo <cang@codeaurora.org>
+Subject: [PATCH 1/1] scsi: ufs: make UFS Tx lane1 clock optional
+Date: Sun,  7 Oct 2018 21:34:34 -0700
+Message-ID: <1538973275-5961-1-git-send-email-cang@codeaurora.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: subhashj@codeaurora.org, asutoshd@codeaurora.org, vivek.gautam@codeaurora.org, rnayak@codeaurora.org, evgreen@chromium.org, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, Venkat Gopalakrishnan <venkatg@codeaurora.org>, Can Guo <cang@codeaurora.org>, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Oct 01, 2018 at 02:33:07PM +0200, Paul Menzel wrote:
-> Date: Wed, 29 Aug 2018 17:28:45 +0200
-> 
-> This reverts commit ef86f3a72adb8a7931f67335560740a7ad696d1d.
-> 
-> See the discussion in the thread *aacraid: Regression in 4.14.56
-> with *genirq/affinity: assign vectors to all possible CPUs** on
-> the linux-scsi list.
-> 
-> Reverting the commit, the aacraid driver loads correctly, and the
-> drives are visible. So revert the commit to adhere to Linux’ no
-> regression policy.
-> 
-> Strangely, the issue is not reproducible with Linux 4.18.x, but
-> Ming Lei wrote, that this might only be by chance.
-> 
-> Link: https://www.spinics.net/lists/linux-scsi/msg122732.html
-> Signed-off-by: Paul Menzel <pmenzel@molgen.mpg.de>
-> 
-> ---
->  kernel/irq/affinity.c | 30 +++++++++++++++---------------
->  1 file changed, 15 insertions(+), 15 deletions(-)
-> 
-> diff --git a/kernel/irq/affinity.c b/kernel/irq/affinity.c
-> index a37a3b4b6342..e12d35108225 100644
-> --- a/kernel/irq/affinity.c
-> +++ b/kernel/irq/affinity.c
-> @@ -39,7 +39,7 @@ static void irq_spread_init_one(struct cpumask *irqmsk, struct cpumask *nmsk,
->  	}
->  }
->  
-> -static cpumask_var_t *alloc_node_to_possible_cpumask(void)
-> +static cpumask_var_t *alloc_node_to_present_cpumask(void)
->  {
->  	cpumask_var_t *masks;
->  	int node;
-> @@ -62,7 +62,7 @@ static cpumask_var_t *alloc_node_to_possible_cpumask(void)
->  	return NULL;
->  }
->  
-> -static void free_node_to_possible_cpumask(cpumask_var_t *masks)
-> +static void free_node_to_present_cpumask(cpumask_var_t *masks)
->  {
->  	int node;
->  
-> @@ -71,22 +71,22 @@ static void free_node_to_possible_cpumask(cpumask_var_t *masks)
->  	kfree(masks);
->  }
->  
-> -static void build_node_to_possible_cpumask(cpumask_var_t *masks)
-> +static void build_node_to_present_cpumask(cpumask_var_t *masks)
->  {
->  	int cpu;
->  
-> -	for_each_possible_cpu(cpu)
-> +	for_each_present_cpu(cpu)
->  		cpumask_set_cpu(cpu, masks[cpu_to_node(cpu)]);
->  }
->  
-> -static int get_nodes_in_cpumask(cpumask_var_t *node_to_possible_cpumask,
-> +static int get_nodes_in_cpumask(cpumask_var_t *node_to_present_cpumask,
->  				const struct cpumask *mask, nodemask_t *nodemsk)
->  {
->  	int n, nodes = 0;
->  
->  	/* Calculate the number of nodes in the supplied affinity mask */
->  	for_each_node(n) {
-> -		if (cpumask_intersects(mask, node_to_possible_cpumask[n])) {
-> +		if (cpumask_intersects(mask, node_to_present_cpumask[n])) {
->  			node_set(n, *nodemsk);
->  			nodes++;
->  		}
-> @@ -109,7 +109,7 @@ irq_create_affinity_masks(int nvecs, const struct irq_affinity *affd)
->  	int last_affv = affv + affd->pre_vectors;
->  	nodemask_t nodemsk = NODE_MASK_NONE;
->  	struct cpumask *masks;
-> -	cpumask_var_t nmsk, *node_to_possible_cpumask;
-> +	cpumask_var_t nmsk, *node_to_present_cpumask;
->  
->  	/*
->  	 * If there aren't any vectors left after applying the pre/post
-> @@ -125,8 +125,8 @@ irq_create_affinity_masks(int nvecs, const struct irq_affinity *affd)
->  	if (!masks)
->  		goto out;
->  
-> -	node_to_possible_cpumask = alloc_node_to_possible_cpumask();
-> -	if (!node_to_possible_cpumask)
-> +	node_to_present_cpumask = alloc_node_to_present_cpumask();
-> +	if (!node_to_present_cpumask)
->  		goto out;
->  
->  	/* Fill out vectors at the beginning that don't need affinity */
-> @@ -135,8 +135,8 @@ irq_create_affinity_masks(int nvecs, const struct irq_affinity *affd)
->  
->  	/* Stabilize the cpumasks */
->  	get_online_cpus();
-> -	build_node_to_possible_cpumask(node_to_possible_cpumask);
-> -	nodes = get_nodes_in_cpumask(node_to_possible_cpumask, cpu_possible_mask,
-> +	build_node_to_present_cpumask(node_to_present_cpumask);
-> +	nodes = get_nodes_in_cpumask(node_to_present_cpumask, cpu_present_mask,
->  				     &nodemsk);
->  
->  	/*
-> @@ -146,7 +146,7 @@ irq_create_affinity_masks(int nvecs, const struct irq_affinity *affd)
->  	if (affv <= nodes) {
->  		for_each_node_mask(n, nodemsk) {
->  			cpumask_copy(masks + curvec,
-> -				     node_to_possible_cpumask[n]);
-> +				     node_to_present_cpumask[n]);
->  			if (++curvec == last_affv)
->  				break;
->  		}
-> @@ -160,7 +160,7 @@ irq_create_affinity_masks(int nvecs, const struct irq_affinity *affd)
->  		vecs_per_node = (affv - (curvec - affd->pre_vectors)) / nodes;
->  
->  		/* Get the cpus on this node which are in the mask */
-> -		cpumask_and(nmsk, cpu_possible_mask, node_to_possible_cpumask[n]);
-> +		cpumask_and(nmsk, cpu_present_mask, node_to_present_cpumask[n]);
->  
->  		/* Calculate the number of cpus per vector */
->  		ncpus = cpumask_weight(nmsk);
-> @@ -192,7 +192,7 @@ irq_create_affinity_masks(int nvecs, const struct irq_affinity *affd)
->  	/* Fill out vectors at the end that don't need affinity */
->  	for (; curvec < nvecs; curvec++)
->  		cpumask_copy(masks + curvec, irq_default_affinity);
-> -	free_node_to_possible_cpumask(node_to_possible_cpumask);
-> +	free_node_to_present_cpumask(node_to_present_cpumask);
->  out:
->  	free_cpumask_var(nmsk);
->  	return masks;
-> @@ -214,7 +214,7 @@ int irq_calc_affinity_vectors(int minvec, int maxvec, const struct irq_affinity
->  		return 0;
->  
->  	get_online_cpus();
-> -	ret = min_t(int, cpumask_weight(cpu_possible_mask), vecs) + resv;
-> +	ret = min_t(int, cpumask_weight(cpu_present_mask), vecs) + resv;
->  	put_online_cpus();
->  	return ret;
->  }
-> -- 
-> 2.17.1
-> 
+From: Venkat Gopalakrishnan <venkatg@codeaurora.org>
 
-Hello Paul,
+The UFS Tx lane1 clock could be muxed, hence keep it optional by ignoring
+it if it is not provided in device tree.
 
-I have explained that this is one aacraid issue in the following link:
+Signed-off-by: Venkat Gopalakrishnan <venkatg@codeaurora.org>
+Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+Signed-off-by: Can Guo <cang@codeaurora.org>
+---
+ drivers/scsi/ufs/ufs-qcom.c | 46 ++++++++++++++++++++++++---------------------
+ 1 file changed, 25 insertions(+), 21 deletions(-)
 
-https://marc.info/?l=linux-kernel&m=153413115909580&w=2
-
-So this issue should have been fixed in the driver instead of genirq
-core code, otherwise regression on other drivers can be caused too.
-
-So I suggest you to ask aacraid guys to take a look at this issue.
-
-Thanks,
-Ming
+diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+index 2b38db2..a6e2ed3 100644
+--- a/drivers/scsi/ufs/ufs-qcom.c
++++ b/drivers/scsi/ufs/ufs-qcom.c
+@@ -85,13 +85,10 @@ static int ufs_qcom_host_clk_get(struct device *dev,
+ 	int err = 0;
+ 
+ 	clk = devm_clk_get(dev, name);
+-	if (IS_ERR(clk)) {
++	if (IS_ERR(clk))
+ 		err = PTR_ERR(clk);
+-		dev_err(dev, "%s: failed to get %s err %d",
+-				__func__, name, err);
+-	} else {
++	else
+ 		*clk_out = clk;
+-	}
+ 
+ 	return err;
+ }
+@@ -113,10 +110,10 @@ static void ufs_qcom_disable_lane_clks(struct ufs_qcom_host *host)
+ 	if (!host->is_lane_clks_enabled)
+ 		return;
+ 
+-	if (host->hba->lanes_per_direction > 1)
++	if (host->tx_l1_sync_clk)
+ 		clk_disable_unprepare(host->tx_l1_sync_clk);
+ 	clk_disable_unprepare(host->tx_l0_sync_clk);
+-	if (host->hba->lanes_per_direction > 1)
++	if (host->rx_l1_sync_clk)
+ 		clk_disable_unprepare(host->rx_l1_sync_clk);
+ 	clk_disable_unprepare(host->rx_l0_sync_clk);
+ 
+@@ -141,24 +138,21 @@ static int ufs_qcom_enable_lane_clks(struct ufs_qcom_host *host)
+ 	if (err)
+ 		goto disable_rx_l0;
+ 
+-	if (host->hba->lanes_per_direction > 1) {
++	if (host->rx_l1_sync_clk) {
+ 		err = ufs_qcom_host_clk_enable(dev, "rx_lane1_sync_clk",
+ 			host->rx_l1_sync_clk);
+ 		if (err)
+ 			goto disable_tx_l0;
+-
+-		err = ufs_qcom_host_clk_enable(dev, "tx_lane1_sync_clk",
+-			host->tx_l1_sync_clk);
+-		if (err)
+-			goto disable_rx_l1;
+ 	}
+ 
++	/* The tx lane1 clk could be muxed, hence keep this optional */
++	if (host->tx_l1_sync_clk)
++		ufs_qcom_host_clk_enable(dev, "tx_lane1_sync_clk",
++					 host->tx_l1_sync_clk);
++
+ 	host->is_lane_clks_enabled = true;
+ 	goto out;
+ 
+-disable_rx_l1:
+-	if (host->hba->lanes_per_direction > 1)
+-		clk_disable_unprepare(host->rx_l1_sync_clk);
+ disable_tx_l0:
+ 	clk_disable_unprepare(host->tx_l0_sync_clk);
+ disable_rx_l0:
+@@ -174,23 +168,33 @@ static int ufs_qcom_init_lane_clks(struct ufs_qcom_host *host)
+ 
+ 	err = ufs_qcom_host_clk_get(dev,
+ 			"rx_lane0_sync_clk", &host->rx_l0_sync_clk);
+-	if (err)
++	if (err) {
++		dev_err(dev, "%s: failed to get rx_lane0_sync_clk, err %d",
++				__func__, err);
+ 		goto out;
++	}
+ 
+ 	err = ufs_qcom_host_clk_get(dev,
+ 			"tx_lane0_sync_clk", &host->tx_l0_sync_clk);
+-	if (err)
++	if (err) {
++		dev_err(dev, "%s: failed to get tx_lane0_sync_clk, err %d",
++				__func__, err);
+ 		goto out;
++	}
+ 
+ 	/* In case of single lane per direction, don't read lane1 clocks */
+ 	if (host->hba->lanes_per_direction > 1) {
+ 		err = ufs_qcom_host_clk_get(dev, "rx_lane1_sync_clk",
+ 			&host->rx_l1_sync_clk);
+-		if (err)
++		if (err) {
++			dev_err(dev, "%s: failed to get rx_lane1_sync_clk, err %d",
++					__func__, err);
+ 			goto out;
++		}
+ 
+-		err = ufs_qcom_host_clk_get(dev, "tx_lane1_sync_clk",
+-			&host->tx_l1_sync_clk);
++		/* The tx lane1 clk could be muxed, hence keep this optional */
++		ufs_qcom_host_clk_get(dev, "tx_lane1_sync_clk",
++					&host->tx_l1_sync_clk);
+ 	}
+ out:
+ 	return err;
+-- 
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
