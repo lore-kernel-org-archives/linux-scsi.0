@@ -1,8 +1,8 @@
 From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: [PATCH 03/11] scsi: sd_zbc: Fix sd_zbc_check_zones()
-	error checks
-Date: Wed, 10 Oct 2018 10:52:31 +0900
-Message-ID: <20181010015239.24930-4-damien.lemoal@wdc.com>
+Subject: [PATCH 05/11] block: Limit allocation of zone
+	descriptors for report zones
+Date: Wed, 10 Oct 2018 10:52:33 +0900
+Message-ID: <20181010015239.24930-6-damien.lemoal@wdc.com>
 References: <20181010015239.24930-1-damien.lemoal@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -22,67 +22,39 @@ To: linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.k
 Cc: Christoph Hellwig <hch@lst.de>, Matias Bjorling <matias.bjorling@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-The 32 bits overflow check for the zone size value is already done
-within sd_zbc_check_zones() with the test:
-
-} else if (logical_to_sectors(sdkp->device, zone_blocks) > UINT_MAX) {
-
-so there is no need to check again for an out of range value in
-sd_zbc_read_zones(). Simplify the code and fix sd_zbc_check_zones()
-error return to -EFBIG instead of -ENODEV if the zone size is too large.
+There is no point in allocating more zone descriptors than the number of
+zones a block device has for doing a zone report. Avoid doing that in
+blkdev_report_zones_ioctl() by limiting the number of zone decriptors
+allocated internally to process the user request.
 
 Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
 ---
- drivers/scsi/sd_zbc.c | 15 ++++++---------
- 1 file changed, 6 insertions(+), 9 deletions(-)
+ block/blk-zoned.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
-index ca73c46931c0..44b64b4a922a 100644
---- a/drivers/scsi/sd_zbc.c
-+++ b/drivers/scsi/sd_zbc.c
-@@ -373,7 +373,7 @@ static int sd_zbc_check_zoned_characteristics(struct scsi_disk *sdkp,
-  * Returns the zone size in number of blocks upon success or an error code
-  * upon failure.
-  */
--static s64 sd_zbc_check_zones(struct scsi_disk *sdkp)
-+static s32 sd_zbc_check_zones(struct scsi_disk *sdkp)
- {
- 	u64 zone_blocks = 0;
- 	sector_t max_lba, block = 0;
-@@ -472,7 +472,7 @@ static s64 sd_zbc_check_zones(struct scsi_disk *sdkp)
- 		if (sdkp->first_scan)
- 			sd_printk(KERN_NOTICE, sdkp,
- 				  "Zone size too large\n");
--		ret = -ENODEV;
-+		ret = -EFBIG;
- 	} else {
- 		ret = zone_blocks;
- 	}
-@@ -668,8 +668,7 @@ static int sd_zbc_setup(struct scsi_disk *sdkp, u32 zone_blocks)
+diff --git a/block/blk-zoned.c b/block/blk-zoned.c
+index 32e377f755d8..f2c8b859fc18 100644
+--- a/block/blk-zoned.c
++++ b/block/blk-zoned.c
+@@ -334,6 +334,7 @@ int blkdev_report_zones_ioctl(struct block_device *bdev, fmode_t mode,
+ 	struct request_queue *q;
+ 	struct blk_zone_report rep;
+ 	struct blk_zone *zones;
++	unsigned int nr_zones;
+ 	int ret;
  
- int sd_zbc_read_zones(struct scsi_disk *sdkp, unsigned char *buf)
- {
--	int64_t zone_blocks;
--	int ret;
-+	int ret, zone_blocks;
+ 	if (!argp)
+@@ -355,8 +356,9 @@ int blkdev_report_zones_ioctl(struct block_device *bdev, fmode_t mode,
+ 	if (!rep.nr_zones)
+ 		return -EINVAL;
  
- 	if (!sd_is_zoned(sdkp))
- 		/*
-@@ -688,12 +687,10 @@ int sd_zbc_read_zones(struct scsi_disk *sdkp, unsigned char *buf)
- 	 * an eventual last runt zone) that is a power of 2 are supported.
- 	 */
- 	zone_blocks = sd_zbc_check_zones(sdkp);
--	ret = -EFBIG;
--	if (zone_blocks != (u32)zone_blocks)
--		goto err;
--	ret = zone_blocks;
--	if (ret < 0)
-+	if (zone_blocks < 0) {
-+		ret = zone_blocks;
- 		goto err;
-+	}
+-	if (rep.nr_zones > INT_MAX / sizeof(struct blk_zone))
+-		return -ERANGE;
++	nr_zones = blkdev_nr_zones(bdev);
++	if (rep.nr_zones > nr_zones)
++		rep.nr_zones = nr_zones;
  
- 	/* The drive satisfies the kernel restrictions: set it up */
- 	ret = sd_zbc_setup(sdkp, zone_blocks);
+ 	zones = kvmalloc_array(rep.nr_zones, sizeof(struct blk_zone),
+ 			       GFP_KERNEL | __GFP_ZERO);
 -- 
 2.17.1
