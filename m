@@ -1,16 +1,16 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 02/11] scsi: sd_zbc: Reduce boot device scan
- and revalidate time
-Date: Wed, 10 Oct 2018 15:26:04 +0200
-Message-ID: <20181010132604.GB22273@lst.de>
+Subject: Re: [PATCH 03/11] scsi: sd_zbc: Fix sd_zbc_check_zones()
+ error checks
+Date: Wed, 10 Oct 2018 15:26:21 +0200
+Message-ID: <20181010132621.GC22273@lst.de>
 References: <20181010015239.24930-1-damien.lemoal@wdc.com>
-	<20181010015239.24930-3-damien.lemoal@wdc.com>
+	<20181010015239.24930-4-damien.lemoal@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <dm-devel-bounces@redhat.com>
 Content-Disposition: inline
-In-Reply-To: <20181010015239.24930-3-damien.lemoal@wdc.com>
+In-Reply-To: <20181010015239.24930-4-damien.lemoal@wdc.com>
 List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
 	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
 List-Archive: <https://www.redhat.com/archives/dm-devel>
