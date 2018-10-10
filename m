@@ -1,7 +1,8 @@
 From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: [PATCH 04/11] block: Introduce blkdev_nr_zones() helper
-Date: Wed, 10 Oct 2018 10:52:32 +0900
-Message-ID: <20181010015239.24930-5-damien.lemoal@wdc.com>
+Subject: [PATCH 03/11] scsi: sd_zbc: Fix sd_zbc_check_zones()
+	error checks
+Date: Wed, 10 Oct 2018 10:52:31 +0900
+Message-ID: <20181010015239.24930-4-damien.lemoal@wdc.com>
 References: <20181010015239.24930-1-damien.lemoal@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,94 +22,67 @@ To: linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.k
 Cc: Christoph Hellwig <hch@lst.de>, Matias Bjorling <matias.bjorling@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Introduce the blkdev_nr_zones() helper function to get the total
-number of zones of a zoned block device. This number is always 0 for a
-regular block device (q->limits.zoned == BLK_ZONED_NONE case).
+The 32 bits overflow check for the zone size value is already done
+within sd_zbc_check_zones() with the test:
 
-Replace hard-coded number of zones calculation in dmz_get_zoned_device()
-with a call to this helper.
+} else if (logical_to_sectors(sdkp->device, zone_blocks) > UINT_MAX) {
+
+so there is no need to check again for an out of range value in
+sd_zbc_read_zones(). Simplify the code and fix sd_zbc_check_zones()
+error return to -EFBIG instead of -ENODEV if the zone size is too large.
 
 Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
 ---
- block/blk-zoned.c            | 27 +++++++++++++++++++++++++++
- drivers/md/dm-zoned-target.c |  3 +--
- include/linux/blkdev.h       |  5 +++++
- 3 files changed, 33 insertions(+), 2 deletions(-)
+ drivers/scsi/sd_zbc.c | 15 ++++++---------
+ 1 file changed, 6 insertions(+), 9 deletions(-)
 
-diff --git a/block/blk-zoned.c b/block/blk-zoned.c
-index c461cf63f1f4..32e377f755d8 100644
---- a/block/blk-zoned.c
-+++ b/block/blk-zoned.c
-@@ -63,6 +63,33 @@ void __blk_req_zone_write_unlock(struct request *rq)
- }
- EXPORT_SYMBOL_GPL(__blk_req_zone_write_unlock);
+diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
+index ca73c46931c0..44b64b4a922a 100644
+--- a/drivers/scsi/sd_zbc.c
++++ b/drivers/scsi/sd_zbc.c
+@@ -373,7 +373,7 @@ static int sd_zbc_check_zoned_characteristics(struct scsi_disk *sdkp,
+  * Returns the zone size in number of blocks upon success or an error code
+  * upon failure.
+  */
+-static s64 sd_zbc_check_zones(struct scsi_disk *sdkp)
++static s32 sd_zbc_check_zones(struct scsi_disk *sdkp)
+ {
+ 	u64 zone_blocks = 0;
+ 	sector_t max_lba, block = 0;
+@@ -472,7 +472,7 @@ static s64 sd_zbc_check_zones(struct scsi_disk *sdkp)
+ 		if (sdkp->first_scan)
+ 			sd_printk(KERN_NOTICE, sdkp,
+ 				  "Zone size too large\n");
+-		ret = -ENODEV;
++		ret = -EFBIG;
+ 	} else {
+ 		ret = zone_blocks;
+ 	}
+@@ -668,8 +668,7 @@ static int sd_zbc_setup(struct scsi_disk *sdkp, u32 zone_blocks)
  
-+static inline unsigned int __blkdev_nr_zones(struct request_queue *q,
-+					     sector_t nr_sectors)
-+{
-+	unsigned long zone_sectors = blk_queue_zone_sectors(q);
-+
-+	return (nr_sectors + zone_sectors - 1) >> ilog2(zone_sectors);
-+}
-+
-+/**
-+ * blkdev_nr_zones - Get number of zones
-+ * @bdev:	Target block device
-+ *
-+ * Description:
-+ *    Return the total number of zones of a zoned block device.
-+ *    For a regular block device, the number of zones is always 0.
-+ */
-+unsigned int blkdev_nr_zones(struct block_device *bdev)
-+{
-+	struct request_queue *q = bdev_get_queue(bdev);
-+
-+	if (!blk_queue_is_zoned(q))
-+		return 0;
-+
-+	return __blkdev_nr_zones(q, bdev->bd_part->nr_sects);
-+}
-+EXPORT_SYMBOL_GPL(blkdev_nr_zones);
-+
- /*
-  * Check that a zone report belongs to the partition.
-  * If yes, fix its start sector and write pointer, copy it in the
-diff --git a/drivers/md/dm-zoned-target.c b/drivers/md/dm-zoned-target.c
-index a44183ff4be0..12d96a263623 100644
---- a/drivers/md/dm-zoned-target.c
-+++ b/drivers/md/dm-zoned-target.c
-@@ -702,8 +702,7 @@ static int dmz_get_zoned_device(struct dm_target *ti, char *path)
- 	dev->zone_nr_blocks = dmz_sect2blk(dev->zone_nr_sectors);
- 	dev->zone_nr_blocks_shift = ilog2(dev->zone_nr_blocks);
+ int sd_zbc_read_zones(struct scsi_disk *sdkp, unsigned char *buf)
+ {
+-	int64_t zone_blocks;
+-	int ret;
++	int ret, zone_blocks;
  
--	dev->nr_zones = (dev->capacity + dev->zone_nr_sectors - 1)
--		>> dev->zone_nr_sectors_shift;
-+	dev->nr_zones = blkdev_nr_zones(dev->bdev);
+ 	if (!sd_is_zoned(sdkp))
+ 		/*
+@@ -688,12 +687,10 @@ int sd_zbc_read_zones(struct scsi_disk *sdkp, unsigned char *buf)
+ 	 * an eventual last runt zone) that is a power of 2 are supported.
+ 	 */
+ 	zone_blocks = sd_zbc_check_zones(sdkp);
+-	ret = -EFBIG;
+-	if (zone_blocks != (u32)zone_blocks)
+-		goto err;
+-	ret = zone_blocks;
+-	if (ret < 0)
++	if (zone_blocks < 0) {
++		ret = zone_blocks;
+ 		goto err;
++	}
  
- 	dmz->dev = dev;
- 
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 6980014357d4..c24969b1741b 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -401,6 +401,7 @@ struct blk_zone_report_hdr {
- 	u8		padding[60];
- };
- 
-+extern unsigned int blkdev_nr_zones(struct block_device *bdev);
- extern int blkdev_report_zones(struct block_device *bdev,
- 			       sector_t sector, struct blk_zone *zones,
- 			       unsigned int *nr_zones, gfp_t gfp_mask);
-@@ -414,6 +415,10 @@ extern int blkdev_reset_zones_ioctl(struct block_device *bdev, fmode_t mode,
- 
- #else /* CONFIG_BLK_DEV_ZONED */
- 
-+static inline unsigned int blkdev_nr_zones(struct block_device *bdev)
-+{
-+	return 0;
-+}
- static inline int blkdev_report_zones_ioctl(struct block_device *bdev,
- 					    fmode_t mode, unsigned int cmd,
- 					    unsigned long arg)
+ 	/* The drive satisfies the kernel restrictions: set it up */
+ 	ret = sd_zbc_setup(sdkp, zone_blocks);
 -- 
 2.17.1
