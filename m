@@ -1,8 +1,7 @@
 From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: [PATCH 05/11] block: Limit allocation of zone
-	descriptors for report zones
-Date: Wed, 10 Oct 2018 10:52:33 +0900
-Message-ID: <20181010015239.24930-6-damien.lemoal@wdc.com>
+Subject: [PATCH 06/11] block: Introduce BLKGETZONESZ ioctl
+Date: Wed, 10 Oct 2018 10:52:34 +0900
+Message-ID: <20181010015239.24930-7-damien.lemoal@wdc.com>
 References: <20181010015239.24930-1-damien.lemoal@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -22,39 +21,42 @@ To: linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.k
 Cc: Christoph Hellwig <hch@lst.de>, Matias Bjorling <matias.bjorling@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-There is no point in allocating more zone descriptors than the number of
-zones a block device has for doing a zone report. Avoid doing that in
-blkdev_report_zones_ioctl() by limiting the number of zone decriptors
-allocated internally to process the user request.
+Get a zoned block device zone size in number of 512 B sectors.
+The zone size is always 0 for regular block devices.
 
 Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
 ---
- block/blk-zoned.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ block/ioctl.c                 | 2 ++
+ include/uapi/linux/blkzoned.h | 2 ++
+ 2 files changed, 4 insertions(+)
 
-diff --git a/block/blk-zoned.c b/block/blk-zoned.c
-index 32e377f755d8..f2c8b859fc18 100644
---- a/block/blk-zoned.c
-+++ b/block/blk-zoned.c
-@@ -334,6 +334,7 @@ int blkdev_report_zones_ioctl(struct block_device *bdev, fmode_t mode,
- 	struct request_queue *q;
- 	struct blk_zone_report rep;
- 	struct blk_zone *zones;
-+	unsigned int nr_zones;
- 	int ret;
+diff --git a/block/ioctl.c b/block/ioctl.c
+index 3884d810efd2..f6d2c6f1f050 100644
+--- a/block/ioctl.c
++++ b/block/ioctl.c
+@@ -532,6 +532,8 @@ int blkdev_ioctl(struct block_device *bdev, fmode_t mode, unsigned cmd,
+ 		return blkdev_report_zones_ioctl(bdev, mode, cmd, arg);
+ 	case BLKRESETZONE:
+ 		return blkdev_reset_zones_ioctl(bdev, mode, cmd, arg);
++	case BLKGETZONESZ:
++		return put_uint(arg, bdev_zone_sectors(bdev));
+ 	case HDIO_GETGEO:
+ 		return blkdev_getgeo(bdev, argp);
+ 	case BLKRAGET:
+diff --git a/include/uapi/linux/blkzoned.h b/include/uapi/linux/blkzoned.h
+index ff5a5db8906a..daf47351d519 100644
+--- a/include/uapi/linux/blkzoned.h
++++ b/include/uapi/linux/blkzoned.h
+@@ -137,8 +137,10 @@ struct blk_zone_range {
+  *                 sector specified in the report request structure.
+  * @BLKRESETZONE: Reset the write pointer of the zones in the specified
+  *                sector range. The sector range must be zone aligned.
++ * @BLKGETZONESZ: Get the device zone size in number of 512 B sectors.
+  */
+ #define BLKREPORTZONE	_IOWR(0x12, 130, struct blk_zone_report)
+ #define BLKRESETZONE	_IOW(0x12, 131, struct blk_zone_range)
++#define BLKGETZONESZ	_IOW(0x12, 132, unsigned int)
  
- 	if (!argp)
-@@ -355,8 +356,9 @@ int blkdev_report_zones_ioctl(struct block_device *bdev, fmode_t mode,
- 	if (!rep.nr_zones)
- 		return -EINVAL;
- 
--	if (rep.nr_zones > INT_MAX / sizeof(struct blk_zone))
--		return -ERANGE;
-+	nr_zones = blkdev_nr_zones(bdev);
-+	if (rep.nr_zones > nr_zones)
-+		rep.nr_zones = nr_zones;
- 
- 	zones = kvmalloc_array(rep.nr_zones, sizeof(struct blk_zone),
- 			       GFP_KERNEL | __GFP_ZERO);
+ #endif /* _UAPI_BLKZONED_H */
 -- 
 2.17.1
