@@ -1,55 +1,229 @@
-From: "Ly, Bryant" <bly@catalogicsoftware.com>
-Subject: Re: [PATCH 1/2] sched/wait: Add wait_event_lock_irq_timeout for
- TASK_UNINTERRUPTIBLE usage
-Date: Wed, 10 Oct 2018 03:59:59 +0000
-Message-ID: <B75B7DAA-69CB-4507-974E-FCB04D5D986B@catalogicsoftware.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH 0/2] target: Fix v4.19-rc active I/O shutdown deadlock
+Date: Tue, 09 Oct 2018 21:20:06 -0700
+Message-ID: <1539145206.6124.15.camel@haakon3.daterainc.com>
 References: <1539141790-13557-1-git-send-email-nab@linux-iscsi.org>
- <1539141790-13557-2-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: base64
+Content-Type: multipart/mixed; boundary="=-mAJjcxyyMXpcSErrgYWS"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1539141790-13557-2-git-send-email-nab@linux-iscsi.org>
-Content-Language: en-US
-Content-ID: <71127BA7DA5E4A4DB35B1DBA2833390D@prod.exchangelabs.com>
+In-Reply-To: <1539141790-13557-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Christie <mchristi@redhat.com>, Hannes Reinecke <hare@suse.com>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, "Peter Zijlstra (Intel)" <peterz@infradead.org>, Bart Van Assche <bvanassche@acm.org>
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Christie <mchristi@redhat.com>, Hannes Reinecke <hare@suse.com>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, "Peter Zijlstra (Intel)" <peterz@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
 
-SGkgTmljLCANCg0KR29vZCB0byBzZWUgeW91IGJhY2shDQoNCj4gT24gT2N0IDksIDIwMTgsIGF0
-IDEwOjIzIFBNLCBOaWNob2xhcyBBLiBCZWxsaW5nZXIgPG5hYkBsaW51eC1pc2NzaS5vcmc+IHdy
-b3RlOg0KPiANCj4gRnJvbTogTmljaG9sYXMgQmVsbGluZ2VyIDxuYWJAbGludXgtaXNjc2kub3Jn
-Pg0KPiANCj4gU2hvcnQgb2YgcmV2ZXJ0aW5nIGNvbW1pdCAwMGQ5MDlhMTA3IGZvciB2NC4xOSwg
-dGFyZ2V0LWNvcmUgbmVlZHMgYQ0KPiB3YWl0X2V2ZW50X3QgbWFyY28gY2FuIGJlIGV4ZWN1dGVk
-IHVzaW5nIFRBU0tfVU5JTlRFUlJVUFRJQkxFIHRvDQo+IGZ1bmN0aW9uIGNvcnJlY3RseSB3aXRo
-IGV4aXN0aW5nIGZhYnJpYyBkcml2ZXJzIHRoYXQgZXhwZWN0IHRvIHJ1bg0KPiB3aXRoIHNpZ25h
-bHMgcGVuZGluZyBkdXJpbmcgc2Vzc2lvbiBzaHV0ZG93biBhbmQgYWN0aXZlIHNlX2NtZCBJL08N
-Cj4gcXVpZXNjZS4NCj4gDQo+IFRoZSBtb3N0IG5vdGFibGUgaXMgaXNjc2ktdGFyZ2V0L2lzZXIt
-dGFyZ2V0LCB3aGlsZSBpYm12c2NzaV90Z3QgaW52b2tlcw0KPiBzZXNzaW9uIHNodXRkb3duIGxv
-Z2ljIGZyb20gdXNlcnNwYWNlIHZpYSBjb25maWdmcyBhdHRyaWJ1dGUgdGhhdCBjb3VsZA0KPiBh
-bHNvIHBvdGVudGlhbGx5IGhhdmUgc2lnbmFscyBwZW5kaW5nLg0KPiANCj4gU28gZ28gYWhlYWQg
-YW5kIGludHJvZHVjZSB3YWl0X2V2ZW50X2xvY2tfaXJxX3RpbWVvdXQoKSB0byBhY2hpZXZlIHRo
-aXMsDQo+IGFuZCB1cGRhdGUgKyByZW5hbWUgX193YWl0X2V2ZW50X2xvY2tfaXJxX3RpbWVvdXQo
-KSB0byBtYWtlIGl0IGFjY2VwdA0KPiAnc3RhdGUnIGFzIGEgcGFyYW1ldGVyLg0KPiANCj4gRml4
-ZXM6IDAwZDkwOWExMDcgKCJzY3NpOiB0YXJnZXQ6IE1ha2UgdGhlIHNlc3Npb24gc2h1dGRvd24g
-Y29kZSBhbHNvIHdhaXQgZm9yIGNvbW1hbmRzIHRoYXQgYXJlIGJlaW5nIGFib3J0ZWQiKQ0KPiBD
-YzogQmFydCBWYW4gQXNzY2hlIDxidmFuYXNzY2hlQGFjbS5vcmc+DQo+IENjOiBNaWtlIENocmlz
-dGllIDxtY2hyaXN0aUByZWRoYXQuY29tPg0KPiBDYzogSGFubmVzIFJlaW5lY2tlIDxoYXJlQHN1
-c2UuY29tPg0KPiBDYzogQ2hyaXN0b3BoIEhlbGx3aWcgPGhjaEBsc3QuZGU+DQo+IENjOiBTYWdp
-IEdyaW1iZXJnIDxzYWdpQGdyaW1iZXJnLm1lPg0KPiBDYzogQnJ5YW50IEcuIEx5IDxicnlhbnRs
-eUBsaW51eC52bmV0LmlibS5jb20+DQo+IENjOiBQZXRlciBaaWpsc3RyYSAoSW50ZWwpIDxwZXRl
-cnpAaW5mcmFkZWFkLm9yZz4NCj4gVGVzdGVkLWJ5OiBOaWNob2xhcyBCZWxsaW5nZXIgPG5hYkBs
-aW51eC1pc2NzaS5vcmc+DQo+IFNpZ25lZC1vZmYtYnk6IE5pY2hvbGFzIEJlbGxpbmdlciA8bmFi
-QGxpbnV4LWlzY3NpLm9yZz4NCj4gLS0tDQo+IGluY2x1ZGUvbGludXgvd2FpdC5oIHwgMjAgKysr
-KysrKysrKysrKysrLS0tLS0NCj4gMSBmaWxlIGNoYW5nZWQsIDE1IGluc2VydGlvbnMoKyksIDUg
-ZGVsZXRpb25zKC0pDQo+IA0KPiBkaWZmIC0tZ2l0IGEvaW5jbHVkZS9saW51eC93YWl0LmggYi9p
-bmNsdWRlL2xpbnV4L3dhaXQuaA0KPiBpbmRleCBkOWYxMzFlLi5lZDdjMTIyIDEwMDY0NA0KPiAt
-LS0gYS9pbmNsdWRlL2xpbnV4L3dhaXQuaA0KPiArKysgYi9pbmNsdWRlL2xpbnV4L3dhaXQuaA0K
-PiBAQCAtMTA1MiwxMCArMTA1Miw5IEBAIHZvaWQgX193YWtlX3VwX2xvY2tlZF9rZXlfYm9va21h
-cmsoc3RydWN0IHdhaXRfcXVldWVfaGVhZCAqd3FfaGVhZCwNCj4gCV9fcmV0OwkJCQkJCQkJCVwN
-Cj4gfSkNCj4gDQo+ICANCg0KSSBkbyBub3QgdGVjaG5pY2FsbHkgd29yayBmb3IgSUJNIGFueW1v
-cmUgYXMgb2YgMyB3ZWVrcyBhZ28sIGJ1dCBteSBuZXcgY29tcGFueSBpcyBhIHBhcnRuZXLigKYg
-QW55d2F5cywNCklCTSBkb2VzIGludm9rZSBzaHV0ZG93biBsb2dpYyBmcm9tIHVzZXJzcGFjZS4g
-VGhhbmtzIGZvciB0aGUgcGF0Y2ghDQoNClJldmlld2VkLWJ5OiBCcnlhbnQgRy4gTHkgPGJseUBj
-YXRhbG9naWNzb2Z0d2FyZS5jb20+DQoNCi1CcnlhbnQgTHkNCg0KDQoNCg==
+
+--=-mAJjcxyyMXpcSErrgYWS
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: 7bit
+
+On Wed, 2018-10-10 at 03:23 +0000, Nicholas A. Bellinger wrote:
+> From: Nicholas Bellinger <nab@linux-iscsi.org>
+> 
+> Hi MNC, MKP & Co,
+> 
+> While testing v4.19-rc recently with simple backend I/O error injection
+> (via delayed BIO completion), I was able to trigger an end-less loop
+> deadlock with recent changes in commit 00d909a107:
+> 
+>   Author: Bart Van Assche <bart.vanassche@wdc.com>
+>   Date:   Fri Jun 22 14:52:53 2018 -0700
+> 
+>       scsi: target: Make the session shutdown code also wait for commands that are being aborted
+> 
+> It comes down to an incorrect assumption wrt signals during session
+> shutdown plus active I/O quiesce, which triggers an endless loop
+> immediately during session shutdown as se_session->sess_list_wq
+> waits for outstanding backend I/O to complete.
+> 
+> The easiest reproduction is with iser-target or simulation with plain
+> old iscsi-target/TCP ports. 
+
+For reference, attached are two debug patches and instructions to
+trigger the end-less loop deadlock regression on v4.19-rc.
+
+1) Simulate iscsi-target via iscsit_transport->iscsi_wait_conn()
+
+This makes iscsi-target/TCP follow isert_wait_conn() code, and uses
+iscsit_transport->iscsi_wait_conn() during active I/O shutdown to invoke
+target_wait_for_sess_cmds() with signals pending per existing
+iser-target session shutdown logic.
+
+Useful to trigger in a VM, without a RDMA capable NIC.
+
+2) Simulate IBLOCK WRITE delayed completion by 60 seconds
+
+MNC likes to use scsi_debug for this, but I use BRD to add an arbitrary
+completion delay.
+
+-----------------------------------------------------------------------
+
+So once an /sys/kernel/config/target/core/$IBLOCK_HBA/$IBLOCK_DEV/ has
+been created + exported via /sys/kernel/config/target/iscsi/$IQN/$TPGT/,
+issue a single block WRITE.
+
+Once WRITE completion is delayed by IBLOCK, go ahead and send a 'kill
+-SIGINT $PID' to iscsi_trx kthread to trigger usual iscsi/iser session
+shutdown + reconnect for the connection with the outstanding delayed
+I/O.
+
+Once target_wait_for_sess_cmds() is called with signals pending, it will
+immediately kill the machine.
+
+--=-mAJjcxyyMXpcSErrgYWS
+Content-Disposition: attachment;
+	filename*0=0001-iscsi-target-Add-iscsit_wait_conn-simulation-for-tes.pat;
+	filename*1=ch
+Content-Type: text/x-patch;
+	name="0001-iscsi-target-Add-iscsit_wait_conn-simulation-for-tes.patch";
+	charset="ISO-8859-15"
+Content-Transfer-Encoding: 7bit
+
+>From 9b1d23148994edb0969a5efd3a131122ad25e39d Mon Sep 17 00:00:00 2001
+From: Nicholas Bellinger <nab@linux-iscsi.org>
+Date: Tue, 9 Oct 2018 01:57:53 -0700
+Subject: [PATCH 1/2] iscsi-target: Add iscsit_wait_conn() simulation for
+ testing
+
+Simulate sess_tearing_down put in iscsit_queue_rsp following how
+iser-target isert_put_cmd() works.
+
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+---
+ drivers/target/iscsi/iscsi_target.c | 27 +++++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
+
+diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+index cc756a1..b05d8af 100644
+--- a/drivers/target/iscsi/iscsi_target.c
++++ b/drivers/target/iscsi/iscsi_target.c
+@@ -485,6 +485,22 @@ int iscsit_del_np(struct iscsi_np *np)
+ 
+ int iscsit_queue_rsp(struct iscsi_conn *conn, struct iscsi_cmd *cmd)
+ {
++	if (conn && conn->sess && conn->sess->se_sess) {
++		struct se_session *se_sess = conn->sess->se_sess;
++
++		if (se_sess->sess_tearing_down) {
++			printk("Got iscsit_queue_rsp sess_tearing_down !!!!!!\n");
++
++			spin_lock_bh(&conn->cmd_lock);
++			if (!list_empty(&cmd->i_conn_node))
++				list_del_init(&cmd->i_conn_node);
++			spin_unlock_bh(&conn->cmd_lock);
++
++			transport_generic_free_cmd(&cmd->se_cmd, 0);
++			return 0;
++		}
++	}
++
+ 	return iscsit_add_cmd_to_response_queue(cmd, cmd->conn, cmd->i_state);
+ }
+ EXPORT_SYMBOL(iscsit_queue_rsp);
+@@ -667,6 +683,16 @@ static enum target_prot_op iscsit_get_sup_prot_ops(struct iscsi_conn *conn)
+ 	return TARGET_PROT_NORMAL;
+ }
+ 
++static void iscsit_wait_conn(struct iscsi_conn *conn)
++{
++        if (conn->sess) {
++                target_sess_cmd_list_set_waiting(conn->sess->se_sess);
++                printk("se_sess: %p before target_wait_for_sess_cmds\n", conn->sess->se_sess);
++                target_wait_for_sess_cmds(conn->sess->se_sess);
++                printk("se_sess: %p after target_wait_for_sess_cmds\n", conn->sess->se_sess);
++        }
++}
++
+ static struct iscsit_transport iscsi_target_transport = {
+ 	.name			= "iSCSI/TCP",
+ 	.transport_type		= ISCSI_TCP,
+@@ -686,6 +712,7 @@ static enum target_prot_op iscsit_get_sup_prot_ops(struct iscsi_conn *conn)
+ 	.iscsit_xmit_pdu	= iscsit_xmit_pdu,
+ 	.iscsit_get_rx_pdu	= iscsit_get_rx_pdu,
+ 	.iscsit_get_sup_prot_ops = iscsit_get_sup_prot_ops,
++	.iscsit_wait_conn	= iscsit_wait_conn,
+ };
+ 
+ static int __init iscsi_target_init_module(void)
+-- 
+1.9.1
+
+
+--=-mAJjcxyyMXpcSErrgYWS
+Content-Disposition: attachment;
+	filename*0=0002-target-iblock-Delayed-bios-for-active-I-O-shutdown-t.pat;
+	filename*1=ch
+Content-Type: text/x-patch;
+	name="0002-target-iblock-Delayed-bios-for-active-I-O-shutdown-t.patch";
+	charset="ISO-8859-15"
+Content-Transfer-Encoding: 7bit
+
+>From dc01432e1d561a4d20b20fe868fc8df22fcc4601 Mon Sep 17 00:00:00 2001
+From: Nicholas Bellinger <nab@linux-iscsi.org>
+Date: Thu, 9 Feb 2017 20:56:01 -0800
+Subject: [PATCH 2/2] target/iblock: Delayed bios for active I/O shutdown
+ testing
+
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+---
+ drivers/target/target_core_iblock.c | 21 +++++++++++++++++++++
+ drivers/target/target_core_iblock.h |  2 ++
+ 2 files changed, 23 insertions(+)
+
+diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
+index ce1321a..deef231 100644
+--- a/drivers/target/target_core_iblock.c
++++ b/drivers/target/target_core_iblock.c
+@@ -297,6 +297,19 @@ static void iblock_complete_cmd(struct se_cmd *cmd)
+ 	kfree(ibr);
+ }
+ 
++static void iblock_delayed_work(struct work_struct *work)
++{
++	struct iblock_req *ibr = container_of(work,
++		struct iblock_req, delayed_work.work);
++	struct bio *bio = ibr->bio;
++	struct se_cmd *cmd = bio->bi_private;
++
++	printk("iblock_delayed_work: cmd: %p\n", cmd);
++
++	bio_put(bio);
++	iblock_complete_cmd(cmd);
++}
++
+ static void iblock_bio_done(struct bio *bio)
+ {
+ 	struct se_cmd *cmd = bio->bi_private;
+@@ -311,6 +324,14 @@ static void iblock_bio_done(struct bio *bio)
+ 		smp_mb__after_atomic();
+ 	}
+ 
++	if (cmd->data_direction == DMA_TO_DEVICE) {
++		ibr->bio = bio;
++		INIT_DELAYED_WORK(&ibr->delayed_work, iblock_delayed_work);
++		schedule_delayed_work(&ibr->delayed_work, 60 * HZ);
++		printk("Queued ibr->delayed_work ! :-)\n");
++		return;
++	}
++
+ 	bio_put(bio);
+ 
+ 	iblock_complete_cmd(cmd);
+diff --git a/drivers/target/target_core_iblock.h b/drivers/target/target_core_iblock.h
+index 9cc3843..122b415 100644
+--- a/drivers/target/target_core_iblock.h
++++ b/drivers/target/target_core_iblock.h
+@@ -14,6 +14,8 @@
+ struct iblock_req {
+ 	refcount_t pending;
+ 	atomic_t ib_bio_err_cnt;
++	struct delayed_work delayed_work;
++	struct bio *bio;
+ } ____cacheline_aligned;
+ 
+ #define IBDF_HAS_UDEV_PATH		0x01
+-- 
+1.9.1
+
+
+--=-mAJjcxyyMXpcSErrgYWS--
