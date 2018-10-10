@@ -1,54 +1,114 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH 06/11] block: Introduce BLKGETZONESZ ioctl
-Date: Wed, 10 Oct 2018 09:53:26 -0700
-Message-ID: <1539190406.195557.4.camel@acm.org>
-References: <20181010015239.24930-1-damien.lemoal@wdc.com>
-	<20181010015239.24930-7-damien.lemoal@wdc.com>
+From: Mike Christie <mchristi@redhat.com>
+Subject: Re: [PATCH 2/2] target: Fix target_wait_for_sess_cmds breakage with
+ active signals
+Date: Wed, 10 Oct 2018 11:58:39 -0500
+Message-ID: <5BBE2FBF.7080804@redhat.com>
+References: <1539141790-13557-1-git-send-email-nab@linux-iscsi.org>
+ <1539141790-13557-3-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="===============5545328523444814217=="
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20181010015239.24930-7-damien.lemoal@wdc.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Damien Le Moal <damien.lemoal@wdc.com>, linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org, "Martin K .
-	Petersen" <martin.petersen@oracle.com>, dm-devel@redhat.com, Mike Snitzer <snitzer@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, Matias Bjorling <matias.bjorling@wdc.com>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1539141790-13557-3-git-send-email-nab@linux-iscsi.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.com>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, "Peter Zijlstra (Intel)" <peterz@infradead.org>, Bart Van Assche <bvanassche@acm.org>
 List-Id: linux-scsi@vger.kernel.org
 
---===============5545328523444814217==
-Content-Type: text/plain; charset="UTF-7"
-Content-Transfer-Encoding: 7bit
+On 10/09/2018 10:23 PM, Nicholas A. Bellinger wrote:
+> From: Nicholas Bellinger <nab@linux-iscsi.org>
+> 
+> With the addition of commit 00d909a107 in v4.19-rc, it incorrectly assumes no
+> signals will be pending for task_struct executing the normal session shutdown
+> and I/O quiesce code-path.
+> 
+> For example, iscsi-target and iser-target issue SIGINT to all kthreads as
+> part of session shutdown.  This has been the behaviour since day one.
+> 
+> As-is when signals are pending with se_cmds active in se_sess->sess_cmd_list,
+> wait_event_interruptible_lock_irq_timeout() returns a negative number and
+> immediately kills the machine because of the do while (ret <= 0) loop that
+> was added in commit 00d909a107 to spin while backend I/O is taking any
+> amount of extended time (say 30 seconds) to complete.
+> 
+> Here's what it looks like in action with debug plus delayed backend I/O
+> completion:
+> 
+> [ 4951.909951] se_sess: 000000003e7e08fa before target_wait_for_sess_cmds
+> [ 4951.914600] target_wait_for_sess_cmds: signal_pending: 1
+> [ 4951.918015] wait_event_interruptible_lock_irq_timeout ret: -512 signal_pending: 1 loop count: 0
+> [ 4951.921639] wait_event_interruptible_lock_irq_timeout ret: -512 signal_pending: 1 loop count: 1
+> [ 4951.921944] wait_event_interruptible_lock_irq_timeout ret: -512 signal_pending: 1 loop count: 2
+> [ 4951.921944] wait_event_interruptible_lock_irq_timeout ret: -512 signal_pending: 1 loop count: 3
+> [ 4951.921944] wait_event_interruptible_lock_irq_timeout ret: -512 signal_pending: 1 loop count: 4
+> [ 4951.921944] wait_event_interruptible_lock_irq_timeout ret: -512 signal_pending: 1 loop count: 5
+> [ 4951.921944] wait_event_interruptible_lock_irq_timeout ret: -512 signal_pending: 1 loop count: 6
+> [ 4951.921944] wait_event_interruptible_lock_irq_timeout ret: -512 signal_pending: 1 loop count: 7
+> [ 4951.921944] wait_event_interruptible_lock_irq_timeout ret: -512 signal_pending: 1 loop count: 8
+> [ 4951.921944] wait_event_interruptible_lock_irq_timeout ret: -512 signal_pending: 1 loop count: 9
+> 
+> ... followed by the usual RCU CPU stalls and deadlock.
+> 
+> There was never a case pre commit 00d909a107 where wait_for_complete(&se_cmd->cmd_wait_comp)
+> was able to be interruptted, so to address this for v4.19+ moving forward go ahead and
+> use wait_event_lock_irq_timeout() instead so new code works with all fabric drivers.
+> 
+> Also for commit 00d909a107, fix a minor regression in target_release_cmd_kref()
+> to only wake_up the new se_sess->cmd_list_wq only when shutdown has actually
+> been triggered via se_sess->sess_tearing_down.
+> 
+> Fixes: 00d909a107 ("scsi: target: Make the session shutdown code also wait for commands that are being aborted")
+> Cc: Bart Van Assche <bvanassche@acm.org>
+> Cc: Mike Christie <mchristi@redhat.com>
+> Cc: Hannes Reinecke <hare@suse.com>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Sagi Grimberg <sagi@grimberg.me>
+> Cc: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+> Tested-by: Nicholas Bellinger <nab@linux-iscsi.org>
+> Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+> ---
+>  drivers/target/target_core_transport.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+> index 86c0156..fc3093d2 100644
+> --- a/drivers/target/target_core_transport.c
+> +++ b/drivers/target/target_core_transport.c
+> @@ -2754,7 +2754,7 @@ static void target_release_cmd_kref(struct kref *kref)
+>  	if (se_sess) {
+>  		spin_lock_irqsave(&se_sess->sess_cmd_lock, flags);
+>  		list_del_init(&se_cmd->se_cmd_list);
+> -		if (list_empty(&se_sess->sess_cmd_list))
+> +		if (se_sess->sess_tearing_down && list_empty(&se_sess->sess_cmd_list))
 
-On Wed, 2018-10-10 at 10:52 +-0900, Damien Le Moal wrote:
-+AD4  +ACM-define BLKREPORTZONE	+AF8-IOWR(0x12, 130, struct blk+AF8-zone+AF8-report)
-+AD4  +ACM-define BLKRESETZONE	+AF8-IOW(0x12, 131, struct blk+AF8-zone+AF8-range)
-+AD4 +-+ACM-define BLKGETZONESZ	+AF8-IOW(0x12, 132, unsigned int)
+I think there is another issue with 00d909a107 and ibmvscsi_tgt.
 
->From Documentation/ioctl/botching-up-ioctls.txt, a collection of lessons learned
-the hard way about ioctls:
+The problem is that ibmvscsi_tgt never called
+target_sess_cmd_list_set_waiting. It only called
+target_wait_for_sess_cmds. So before 00d909a107 there was a bug in that
+driver and target_wait_for_sess_cmds never did what was intended because
+sess_wait_list would always be empty.
 
- +ACo Only use fixed sized integers. To avoid conflicts with typedefs in userspace
-   the kernel has special types like +AF8AXw-u32, +AF8AXw-s64. Use them.
+With 00d909a107, we no longer need to call
+target_sess_cmd_list_set_waiting to wait for outstanding commands, so
+for ibmvscsi_tgt will now wait for commands like we wanted. However, the
+commit added a WARN_ON that is hit if target_sess_cmd_list_set_waiting
+is not called, so we could hit that.
 
-Please follow that advice.
+So I think we need to add a target_sess_cmd_list_set_waiting call in
+ibmvscsi_tgt to go along with your patch chunk above and make sure we do
+not trigger the WARN_ON.
 
-Thanks,
-
-Bart.
-
-
---===============5545328523444814217==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-
---===============5545328523444814217==--
+>  			wake_up(&se_sess->cmd_list_wq);
+>  		spin_unlock_irqrestore(&se_sess->sess_cmd_lock, flags);
+>  	}
+> @@ -2907,7 +2907,7 @@ void target_wait_for_sess_cmds(struct se_session *se_sess)
+>  
+>  	spin_lock_irq(&se_sess->sess_cmd_lock);
+>  	do {
+> -		ret = wait_event_interruptible_lock_irq_timeout(
+> +		ret = wait_event_lock_irq_timeout(
+>  				se_sess->cmd_list_wq,
+>  				list_empty(&se_sess->sess_cmd_list),
+>  				se_sess->sess_cmd_lock, 180 * HZ);
+> 
