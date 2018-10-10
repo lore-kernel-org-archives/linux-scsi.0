@@ -1,102 +1,55 @@
 From: "Ly, Bryant" <bly@catalogicsoftware.com>
-Subject: Re: [PATCH 2/2] target: Fix target_wait_for_sess_cmds breakage with
- active signals
-Date: Wed, 10 Oct 2018 04:01:17 +0000
-Message-ID: <A95B1AA1-D330-43E6-8F80-71582B9365D8@catalogicsoftware.com>
+Subject: Re: [PATCH 1/2] sched/wait: Add wait_event_lock_irq_timeout for
+ TASK_UNINTERRUPTIBLE usage
+Date: Wed, 10 Oct 2018 03:59:59 +0000
+Message-ID: <B75B7DAA-69CB-4507-974E-FCB04D5D986B@catalogicsoftware.com>
 References: <1539141790-13557-1-git-send-email-nab@linux-iscsi.org>
- <1539141790-13557-3-git-send-email-nab@linux-iscsi.org>
+ <1539141790-13557-2-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=WINDOWS-1252
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1539141790-13557-3-git-send-email-nab@linux-iscsi.org>
+In-Reply-To: <1539141790-13557-2-git-send-email-nab@linux-iscsi.org>
 Content-Language: en-US
-Content-ID: <16B5F183E7182944B5C30EBB0DEE26A6@prod.exchangelabs.com>
+Content-ID: <71127BA7DA5E4A4DB35B1DBA2833390D@prod.exchangelabs.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Christie <mchristi@redhat.com>, Hannes Reinecke <hare@suse.com>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, "Peter Zijlstra (Intel)" <peterz@infradead.org>, Bart Van Assche <bvanassche@acm.org>
 List-Id: linux-scsi@vger.kernel.org
 
-
-
-> On Oct 9, 2018, at 10:23 PM, Nicholas A. Bellinger <nab@linux-iscsi.org> =
-wrote:
->=20
-> From: Nicholas Bellinger <nab@linux-iscsi.org>
->=20
-> With the addition of commit 00d909a107 in v4.19-rc, it incorrectly assume=
-s no
-> signals will be pending for task_struct executing the normal session shut=
-down
-> and I/O quiesce code-path.
->=20
-> For example, iscsi-target and iser-target issue SIGINT to all kthreads as
-> part of session shutdown.  This has been the behaviour since day one.
->=20
-> As-is when signals are pending with se_cmds active in se_sess->sess_cmd_l=
-ist,
-> wait_event_interruptible_lock_irq_timeout() returns a negative number and
-> immediately kills the machine because of the do while (ret <=3D 0) loop t=
-hat
-> was added in commit 00d909a107 to spin while backend I/O is taking any
-> amount of extended time (say 30 seconds) to complete.
->=20
-> Here's what it looks like in action with debug plus delayed backend I/O
-> completion:
->=20
-> [ 4951.909951] se_sess: 000000003e7e08fa before target_wait_for_sess_cmds
-> [ 4951.914600] target_wait_for_sess_cmds: signal_pending: 1
-> [ 4951.918015] wait_event_interruptible_lock_irq_timeout ret: -512 signal=
-_pending: 1 loop count: 0
-> [ 4951.921639] wait_event_interruptible_lock_irq_timeout ret: -512 signal=
-_pending: 1 loop count: 1
-> [ 4951.921944] wait_event_interruptible_lock_irq_timeout ret: -512 signal=
-_pending: 1 loop count: 2
-> [ 4951.921944] wait_event_interruptible_lock_irq_timeout ret: -512 signal=
-_pending: 1 loop count: 3
-> [ 4951.921944] wait_event_interruptible_lock_irq_timeout ret: -512 signal=
-_pending: 1 loop count: 4
-> [ 4951.921944] wait_event_interruptible_lock_irq_timeout ret: -512 signal=
-_pending: 1 loop count: 5
-> [ 4951.921944] wait_event_interruptible_lock_irq_timeout ret: -512 signal=
-_pending: 1 loop count: 6
-> [ 4951.921944] wait_event_interruptible_lock_irq_timeout ret: -512 signal=
-_pending: 1 loop count: 7
-> [ 4951.921944] wait_event_interruptible_lock_irq_timeout ret: -512 signal=
-_pending: 1 loop count: 8
-> [ 4951.921944] wait_event_interruptible_lock_irq_timeout ret: -512 signal=
-_pending: 1 loop count: 9
->=20
-> ... followed by the usual RCU CPU stalls and deadlock.
->=20
-> There was never a case pre commit 00d909a107 where wait_for_complete(&se_=
-cmd->cmd_wait_comp)
-> was able to be interruptted, so to address this for v4.19+ moving forward=
- go ahead and
-> use wait_event_lock_irq_timeout() instead so new code works with all fabr=
-ic drivers.
->=20
-> Also for commit 00d909a107, fix a minor regression in target_release_cmd_=
-kref()
-> to only wake_up the new se_sess->cmd_list_wq only when shutdown has actua=
-lly
-> been triggered via se_sess->sess_tearing_down.
->=20
-> Fixes: 00d909a107 ("scsi: target: Make the session shutdown code also wai=
-t for commands that are being aborted")
-> Cc: Bart Van Assche <bvanassche@acm.org>
-> Cc: Mike Christie <mchristi@redhat.com>
-> Cc: Hannes Reinecke <hare@suse.com>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Sagi Grimberg <sagi@grimberg.me>
-> Cc: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
-> Tested-by: Nicholas Bellinger <nab@linux-iscsi.org>
-> Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
-> ---
-> drivers/target/target_core_transport.c | 4 ++--
-> 1 file changed, 2 insertions(+), 2 deletions(-)
->=20
-
-Reviewed-by: Bryant G. Ly <bly@catalogicsoftware.com>
-
--Bryant
+SGkgTmljLCANCg0KR29vZCB0byBzZWUgeW91IGJhY2shDQoNCj4gT24gT2N0IDksIDIwMTgsIGF0
+IDEwOjIzIFBNLCBOaWNob2xhcyBBLiBCZWxsaW5nZXIgPG5hYkBsaW51eC1pc2NzaS5vcmc+IHdy
+b3RlOg0KPiANCj4gRnJvbTogTmljaG9sYXMgQmVsbGluZ2VyIDxuYWJAbGludXgtaXNjc2kub3Jn
+Pg0KPiANCj4gU2hvcnQgb2YgcmV2ZXJ0aW5nIGNvbW1pdCAwMGQ5MDlhMTA3IGZvciB2NC4xOSwg
+dGFyZ2V0LWNvcmUgbmVlZHMgYQ0KPiB3YWl0X2V2ZW50X3QgbWFyY28gY2FuIGJlIGV4ZWN1dGVk
+IHVzaW5nIFRBU0tfVU5JTlRFUlJVUFRJQkxFIHRvDQo+IGZ1bmN0aW9uIGNvcnJlY3RseSB3aXRo
+IGV4aXN0aW5nIGZhYnJpYyBkcml2ZXJzIHRoYXQgZXhwZWN0IHRvIHJ1bg0KPiB3aXRoIHNpZ25h
+bHMgcGVuZGluZyBkdXJpbmcgc2Vzc2lvbiBzaHV0ZG93biBhbmQgYWN0aXZlIHNlX2NtZCBJL08N
+Cj4gcXVpZXNjZS4NCj4gDQo+IFRoZSBtb3N0IG5vdGFibGUgaXMgaXNjc2ktdGFyZ2V0L2lzZXIt
+dGFyZ2V0LCB3aGlsZSBpYm12c2NzaV90Z3QgaW52b2tlcw0KPiBzZXNzaW9uIHNodXRkb3duIGxv
+Z2ljIGZyb20gdXNlcnNwYWNlIHZpYSBjb25maWdmcyBhdHRyaWJ1dGUgdGhhdCBjb3VsZA0KPiBh
+bHNvIHBvdGVudGlhbGx5IGhhdmUgc2lnbmFscyBwZW5kaW5nLg0KPiANCj4gU28gZ28gYWhlYWQg
+YW5kIGludHJvZHVjZSB3YWl0X2V2ZW50X2xvY2tfaXJxX3RpbWVvdXQoKSB0byBhY2hpZXZlIHRo
+aXMsDQo+IGFuZCB1cGRhdGUgKyByZW5hbWUgX193YWl0X2V2ZW50X2xvY2tfaXJxX3RpbWVvdXQo
+KSB0byBtYWtlIGl0IGFjY2VwdA0KPiAnc3RhdGUnIGFzIGEgcGFyYW1ldGVyLg0KPiANCj4gRml4
+ZXM6IDAwZDkwOWExMDcgKCJzY3NpOiB0YXJnZXQ6IE1ha2UgdGhlIHNlc3Npb24gc2h1dGRvd24g
+Y29kZSBhbHNvIHdhaXQgZm9yIGNvbW1hbmRzIHRoYXQgYXJlIGJlaW5nIGFib3J0ZWQiKQ0KPiBD
+YzogQmFydCBWYW4gQXNzY2hlIDxidmFuYXNzY2hlQGFjbS5vcmc+DQo+IENjOiBNaWtlIENocmlz
+dGllIDxtY2hyaXN0aUByZWRoYXQuY29tPg0KPiBDYzogSGFubmVzIFJlaW5lY2tlIDxoYXJlQHN1
+c2UuY29tPg0KPiBDYzogQ2hyaXN0b3BoIEhlbGx3aWcgPGhjaEBsc3QuZGU+DQo+IENjOiBTYWdp
+IEdyaW1iZXJnIDxzYWdpQGdyaW1iZXJnLm1lPg0KPiBDYzogQnJ5YW50IEcuIEx5IDxicnlhbnRs
+eUBsaW51eC52bmV0LmlibS5jb20+DQo+IENjOiBQZXRlciBaaWpsc3RyYSAoSW50ZWwpIDxwZXRl
+cnpAaW5mcmFkZWFkLm9yZz4NCj4gVGVzdGVkLWJ5OiBOaWNob2xhcyBCZWxsaW5nZXIgPG5hYkBs
+aW51eC1pc2NzaS5vcmc+DQo+IFNpZ25lZC1vZmYtYnk6IE5pY2hvbGFzIEJlbGxpbmdlciA8bmFi
+QGxpbnV4LWlzY3NpLm9yZz4NCj4gLS0tDQo+IGluY2x1ZGUvbGludXgvd2FpdC5oIHwgMjAgKysr
+KysrKysrKysrKysrLS0tLS0NCj4gMSBmaWxlIGNoYW5nZWQsIDE1IGluc2VydGlvbnMoKyksIDUg
+ZGVsZXRpb25zKC0pDQo+IA0KPiBkaWZmIC0tZ2l0IGEvaW5jbHVkZS9saW51eC93YWl0LmggYi9p
+bmNsdWRlL2xpbnV4L3dhaXQuaA0KPiBpbmRleCBkOWYxMzFlLi5lZDdjMTIyIDEwMDY0NA0KPiAt
+LS0gYS9pbmNsdWRlL2xpbnV4L3dhaXQuaA0KPiArKysgYi9pbmNsdWRlL2xpbnV4L3dhaXQuaA0K
+PiBAQCAtMTA1MiwxMCArMTA1Miw5IEBAIHZvaWQgX193YWtlX3VwX2xvY2tlZF9rZXlfYm9va21h
+cmsoc3RydWN0IHdhaXRfcXVldWVfaGVhZCAqd3FfaGVhZCwNCj4gCV9fcmV0OwkJCQkJCQkJCVwN
+Cj4gfSkNCj4gDQo+ICANCg0KSSBkbyBub3QgdGVjaG5pY2FsbHkgd29yayBmb3IgSUJNIGFueW1v
+cmUgYXMgb2YgMyB3ZWVrcyBhZ28sIGJ1dCBteSBuZXcgY29tcGFueSBpcyBhIHBhcnRuZXLigKYg
+QW55d2F5cywNCklCTSBkb2VzIGludm9rZSBzaHV0ZG93biBsb2dpYyBmcm9tIHVzZXJzcGFjZS4g
+VGhhbmtzIGZvciB0aGUgcGF0Y2ghDQoNClJldmlld2VkLWJ5OiBCcnlhbnQgRy4gTHkgPGJseUBj
+YXRhbG9naWNzb2Z0d2FyZS5jb20+DQoNCi1CcnlhbnQgTHkNCg0KDQoNCg==
