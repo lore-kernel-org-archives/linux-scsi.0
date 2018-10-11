@@ -1,7 +1,7 @@
 From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: [PATCH v2 06/11] block: Introduce BLKGETZONESZ ioctl
-Date: Thu, 11 Oct 2018 16:09:47 +0900
-Message-ID: <20181011070952.13248-7-damien.lemoal@wdc.com>
+Subject: [PATCH v2 08/11] block: Improve zone reset execution
+Date: Thu, 11 Oct 2018 16:09:49 +0900
+Message-ID: <20181011070952.13248-9-damien.lemoal@wdc.com>
 References: <20181011070952.13248-1-damien.lemoal@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,42 +21,160 @@ To: linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.k
 Cc: Christoph Hellwig <hch@lst.de>, Matias Bjorling <matias.bjorling@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Get a zoned block device zone size in number of 512 B sectors.
-The zone size is always 0 for regular block devices.
+There is no need to synchronously execute all REQ_OP_ZONE_RESET BIOs
+necessary to reset a range of zones. Similarly to what is done for
+discard BIOs in blk-lib.c, all zone reset BIOs can be chained and
+executed asynchronously and a synchronous call done only for the last
+BIO of the chain.
+
+Modify blkdev_reset_zones() to operate similarly to
+blkdev_issue_discard() using the next_bio() helper for chaining BIOs. To
+avoid code duplication of that function in blk_zoned.c, rename
+next_bio() into blk_next_bio() and declare it as a block internal
+function in blk.h.
 
 Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- block/ioctl.c                 | 2 ++
- include/uapi/linux/blkzoned.h | 2 ++
- 2 files changed, 4 insertions(+)
+ block/blk-lib.c   | 13 ++++++-------
+ block/blk-zoned.c | 29 ++++++++++++++++-------------
+ block/blk.h       |  2 ++
+ 3 files changed, 24 insertions(+), 20 deletions(-)
 
-diff --git a/block/ioctl.c b/block/ioctl.c
-index 3884d810efd2..f6d2c6f1f050 100644
---- a/block/ioctl.c
-+++ b/block/ioctl.c
-@@ -532,6 +532,8 @@ int blkdev_ioctl(struct block_device *bdev, fmode_t mode, unsigned cmd,
- 		return blkdev_report_zones_ioctl(bdev, mode, cmd, arg);
- 	case BLKRESETZONE:
- 		return blkdev_reset_zones_ioctl(bdev, mode, cmd, arg);
-+	case BLKGETZONESZ:
-+		return put_uint(arg, bdev_zone_sectors(bdev));
- 	case HDIO_GETGEO:
- 		return blkdev_getgeo(bdev, argp);
- 	case BLKRAGET:
-diff --git a/include/uapi/linux/blkzoned.h b/include/uapi/linux/blkzoned.h
-index ff5a5db8906a..281ac605f752 100644
---- a/include/uapi/linux/blkzoned.h
-+++ b/include/uapi/linux/blkzoned.h
-@@ -137,8 +137,10 @@ struct blk_zone_range {
-  *                 sector specified in the report request structure.
-  * @BLKRESETZONE: Reset the write pointer of the zones in the specified
-  *                sector range. The sector range must be zone aligned.
-+ * @BLKGETZONESZ: Get the device zone size in number of 512 B sectors.
-  */
- #define BLKREPORTZONE	_IOWR(0x12, 130, struct blk_zone_report)
- #define BLKRESETZONE	_IOW(0x12, 131, struct blk_zone_range)
-+#define BLKGETZONESZ	_IOW(0x12, 132, __u32)
+diff --git a/block/blk-lib.c b/block/blk-lib.c
+index d1b9dd03da25..d7bedee5f9ba 100644
+--- a/block/blk-lib.c
++++ b/block/blk-lib.c
+@@ -10,8 +10,7 @@
  
- #endif /* _UAPI_BLKZONED_H */
+ #include "blk.h"
+ 
+-static struct bio *next_bio(struct bio *bio, unsigned int nr_pages,
+-		gfp_t gfp)
++struct bio *blk_next_bio(struct bio *bio, unsigned int nr_pages, gfp_t gfp)
+ {
+ 	struct bio *new = bio_alloc(gfp, nr_pages);
+ 
+@@ -87,7 +86,7 @@ int __blkdev_issue_discard(struct block_device *bdev, sector_t sector,
+ 			req_sects = end_sect - sector;
+ 		}
+ 
+-		bio = next_bio(bio, 0, gfp_mask);
++		bio = blk_next_bio(bio, 0, gfp_mask);
+ 		bio->bi_iter.bi_sector = sector;
+ 		bio_set_dev(bio, bdev);
+ 		bio_set_op_attrs(bio, op, 0);
+@@ -189,7 +188,7 @@ static int __blkdev_issue_write_same(struct block_device *bdev, sector_t sector,
+ 	max_write_same_sectors = UINT_MAX >> 9;
+ 
+ 	while (nr_sects) {
+-		bio = next_bio(bio, 1, gfp_mask);
++		bio = blk_next_bio(bio, 1, gfp_mask);
+ 		bio->bi_iter.bi_sector = sector;
+ 		bio_set_dev(bio, bdev);
+ 		bio->bi_vcnt = 1;
+@@ -265,7 +264,7 @@ static int __blkdev_issue_write_zeroes(struct block_device *bdev,
+ 		return -EOPNOTSUPP;
+ 
+ 	while (nr_sects) {
+-		bio = next_bio(bio, 0, gfp_mask);
++		bio = blk_next_bio(bio, 0, gfp_mask);
+ 		bio->bi_iter.bi_sector = sector;
+ 		bio_set_dev(bio, bdev);
+ 		bio->bi_opf = REQ_OP_WRITE_ZEROES;
+@@ -316,8 +315,8 @@ static int __blkdev_issue_zero_pages(struct block_device *bdev,
+ 		return -EPERM;
+ 
+ 	while (nr_sects != 0) {
+-		bio = next_bio(bio, __blkdev_sectors_to_bio_pages(nr_sects),
+-			       gfp_mask);
++		bio = blk_next_bio(bio, __blkdev_sectors_to_bio_pages(nr_sects),
++				   gfp_mask);
+ 		bio->bi_iter.bi_sector = sector;
+ 		bio_set_dev(bio, bdev);
+ 		bio_set_op_attrs(bio, REQ_OP_WRITE, 0);
+diff --git a/block/blk-zoned.c b/block/blk-zoned.c
+index bb4ed69f917f..5d967fd39fbd 100644
+--- a/block/blk-zoned.c
++++ b/block/blk-zoned.c
+@@ -13,6 +13,8 @@
+ #include <linux/rbtree.h>
+ #include <linux/blkdev.h>
+ 
++#include "blk.h"
++
+ static inline sector_t blk_zone_start(struct request_queue *q,
+ 				      sector_t sector)
+ {
+@@ -277,16 +279,17 @@ int blkdev_reset_zones(struct block_device *bdev,
+ 	struct request_queue *q = bdev_get_queue(bdev);
+ 	sector_t zone_sectors;
+ 	sector_t end_sector = sector + nr_sectors;
+-	struct bio *bio;
++	struct bio *bio = NULL;
++	struct blk_plug plug;
+ 	int ret;
+ 
+-	if (!q)
+-		return -ENXIO;
+-
+ 	if (!blk_queue_is_zoned(q))
+ 		return -EOPNOTSUPP;
+ 
+-	if (end_sector > bdev->bd_part->nr_sects)
++	if (bdev_read_only(bdev))
++		return -EPERM;
++
++	if (!nr_sectors || end_sector > bdev->bd_part->nr_sects)
+ 		/* Out of range */
+ 		return -EINVAL;
+ 
+@@ -299,19 +302,14 @@ int blkdev_reset_zones(struct block_device *bdev,
+ 	    end_sector != bdev->bd_part->nr_sects)
+ 		return -EINVAL;
+ 
++	blk_start_plug(&plug);
+ 	while (sector < end_sector) {
+ 
+-		bio = bio_alloc(gfp_mask, 0);
++		bio = blk_next_bio(bio, 0, gfp_mask);
+ 		bio->bi_iter.bi_sector = sector;
+ 		bio_set_dev(bio, bdev);
+ 		bio_set_op_attrs(bio, REQ_OP_ZONE_RESET, 0);
+ 
+-		ret = submit_bio_wait(bio);
+-		bio_put(bio);
+-
+-		if (ret)
+-			return ret;
+-
+ 		sector += zone_sectors;
+ 
+ 		/* This may take a while, so be nice to others */
+@@ -319,7 +317,12 @@ int blkdev_reset_zones(struct block_device *bdev,
+ 
+ 	}
+ 
+-	return 0;
++	ret = submit_bio_wait(bio);
++	bio_put(bio);
++
++	blk_finish_plug(&plug);
++
++	return ret;
+ }
+ EXPORT_SYMBOL_GPL(blkdev_reset_zones);
+ 
+diff --git a/block/blk.h b/block/blk.h
+index 9db4e389582c..3d67844676fb 100644
+--- a/block/blk.h
++++ b/block/blk.h
+@@ -421,4 +421,6 @@ extern int blk_iolatency_init(struct request_queue *q);
+ static inline int blk_iolatency_init(struct request_queue *q) { return 0; }
+ #endif
+ 
++struct bio *blk_next_bio(struct bio *bio, unsigned int nr_pages, gfp_t gfp);
++
+ #endif /* BLK_INTERNAL_H */
 -- 
 2.17.1
