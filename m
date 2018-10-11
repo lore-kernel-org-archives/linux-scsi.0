@@ -1,59 +1,40 @@
-From: Peter Zijlstra <peterz@infradead.org>
-Subject: Re: [PATCH 2/2] target: Fix target_wait_for_sess_cmds breakage with
- active signals
-Date: Thu, 11 Oct 2018 09:55:52 +0200
-Message-ID: <20181011075552.GA2162@hirez.programming.kicks-ass.net>
-References: <1539141790-13557-1-git-send-email-nab@linux-iscsi.org>
- <1539141790-13557-3-git-send-email-nab@linux-iscsi.org>
- <20181010084335.GN5728@hirez.programming.kicks-ass.net>
- <1539236412.6150.18.camel@haakon3.daterainc.com>
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH 0/7] hisi_sas: Misc bugfixes and an optimisation patch
+Date: Thu, 11 Oct 2018 10:59:11 +0100
+Message-ID: <118d01db-05f4-a85b-850c-c4e5a5616a16@huawei.com>
+References: <1537801594-207139-1-git-send-email-john.garry@huawei.com>
+ <yq18t354532.fsf@oracle.com> <20181011063603.GA3456@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1539236412.6150.18.camel@haakon3.daterainc.com>
+In-Reply-To: <20181011063603.GA3456@infradead.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Christie <mchristi@redhat.com>, Hannes Reinecke <hare@suse.com>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, Bart Van Assche <bvanassche@acm.org>
+To: Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: jejb@linux.vnet.ibm.com, linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Ming Lei <ming.lei@redhat.com>, chenxiang <chenxiang66@hisilicon.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Oct 10, 2018 at 10:40:12PM -0700, Nicholas A. Bellinger wrote:
-> Hey Peter & Co,
-> 
-> On Wed, 2018-10-10 at 10:43 +0200, Peter Zijlstra wrote:
-> > On Wed, Oct 10, 2018 at 03:23:10AM +0000, Nicholas A. Bellinger wrote:
-> > > From: Nicholas Bellinger <nab@linux-iscsi.org>
-> > > 
-> > > With the addition of commit 00d909a107 in v4.19-rc, it incorrectly assumes no
-> > > signals will be pending for task_struct executing the normal session shutdown
-> > > and I/O quiesce code-path.
-> > > 
-> > > For example, iscsi-target and iser-target issue SIGINT to all kthreads as
-> > > part of session shutdown.  This has been the behaviour since day one.
-> > 
-> > Not knowing much context here; but does it make sense for those
-> > kthreads to handle signals, ever? Most kthreads should be fine with
-> > ignore_signals().
-> > 
-> 
-> iscsi-target + ib-isert uses SIGINT amongst dedicated rx/tx connection
-> kthreads to signal connection shutdown, requiring in-flight se_cmd I/O
-> descriptors to be quiesced before making forward progress to release
-> se_session.
-> 
-> By the point wait_event_lock_irq_timeout() is called in the example
-> here, one of the two rx/tx connection kthreads has been stopped, and the
-> other kthread is still processing shutdown.  So while historically the
-> pending SIGINTs where not cleared (or ignored) during shutdown at this
-> point, there is no reason why they could not be ignored for iscsi-target
-> + ib-isert.
-> 
-> That said, pre commit 00d909a107 code always used wait_for_completion()
-> and ignored pending signals.  As-is target_wait_for_sess_cmds() is
-> called directly from fabric driver code and in one case also from
-> user-space via configfs_write_file(), so AFAICT it does need
-> TASK_UNINTERRUPTIBLE.
-> 
+On 11/10/2018 07:36, Christoph Hellwig wrote:
+> On Wed, Oct 10, 2018 at 09:58:25PM -0400, Martin K. Petersen wrote:
+>>> This is because the IPTT index must be a unique value per HBA. However,
+>>> if we switched to SCSI MQ, the block layer tag becomes unique per queue,
+>>> and not per HBA.
+>>
+>> That doesn't sound right.
+>
 
-Fair enough, thanks for the background. I'm always a bit wary when
-kthreads need to deal with signals, but this seems OK.
+Hmmm, well this is what I was told ...
+
+> blk-mq tags are always per-host (which has actually caused problems for
+> ATA, which is now using its own per-device tags).
+>
+
+So, for example, if Scsi_host.can_queue = 2048 and 
+Scsi_host.nr_hw_queues = 16, then rq tags are still in range [0, 2048) 
+for that HBA, i.e. invariant on queue count?
+
+> .
+>
+
+Thanks,
+John
