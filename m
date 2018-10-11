@@ -1,8 +1,8 @@
 From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: [PATCH v2 05/11] block: Limit allocation of zone
-	descriptors for report zones
-Date: Thu, 11 Oct 2018 16:09:46 +0900
-Message-ID: <20181011070952.13248-6-damien.lemoal@wdc.com>
+Subject: [PATCH v2 04/11] block: Introduce blkdev_nr_zones()
+	helper
+Date: Thu, 11 Oct 2018 16:09:45 +0900
+Message-ID: <20181011070952.13248-5-damien.lemoal@wdc.com>
 References: <20181011070952.13248-1-damien.lemoal@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -22,30 +22,95 @@ To: linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.k
 Cc: Christoph Hellwig <hch@lst.de>, Matias Bjorling <matias.bjorling@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-There is no point in allocating more zone descriptors than the number of
-zones a block device has for doing a zone report. Avoid doing that in
-blkdev_report_zones_ioctl() by limiting the number of zone decriptors
-allocated internally to process the user request.
+Introduce the blkdev_nr_zones() helper function to get the total
+number of zones of a zoned block device. This number is always 0 for a
+regular block device (q->limits.zoned == BLK_ZONED_NONE case).
+
+Replace hard-coded number of zones calculation in dmz_get_zoned_device()
+with a call to this helper.
 
 Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- block/blk-zoned.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ block/blk-zoned.c            | 27 +++++++++++++++++++++++++++
+ drivers/md/dm-zoned-target.c |  3 +--
+ include/linux/blkdev.h       |  5 +++++
+ 3 files changed, 33 insertions(+), 2 deletions(-)
 
 diff --git a/block/blk-zoned.c b/block/blk-zoned.c
-index 32e377f755d8..bb4ed69f917f 100644
+index c461cf63f1f4..32e377f755d8 100644
 --- a/block/blk-zoned.c
 +++ b/block/blk-zoned.c
-@@ -355,8 +355,7 @@ int blkdev_report_zones_ioctl(struct block_device *bdev, fmode_t mode,
- 	if (!rep.nr_zones)
- 		return -EINVAL;
+@@ -63,6 +63,33 @@ void __blk_req_zone_write_unlock(struct request *rq)
+ }
+ EXPORT_SYMBOL_GPL(__blk_req_zone_write_unlock);
  
--	if (rep.nr_zones > INT_MAX / sizeof(struct blk_zone))
--		return -ERANGE;
-+	rep.nr_zones = min(blkdev_nr_zones(bdev), rep.nr_zones);
++static inline unsigned int __blkdev_nr_zones(struct request_queue *q,
++					     sector_t nr_sectors)
++{
++	unsigned long zone_sectors = blk_queue_zone_sectors(q);
++
++	return (nr_sectors + zone_sectors - 1) >> ilog2(zone_sectors);
++}
++
++/**
++ * blkdev_nr_zones - Get number of zones
++ * @bdev:	Target block device
++ *
++ * Description:
++ *    Return the total number of zones of a zoned block device.
++ *    For a regular block device, the number of zones is always 0.
++ */
++unsigned int blkdev_nr_zones(struct block_device *bdev)
++{
++	struct request_queue *q = bdev_get_queue(bdev);
++
++	if (!blk_queue_is_zoned(q))
++		return 0;
++
++	return __blkdev_nr_zones(q, bdev->bd_part->nr_sects);
++}
++EXPORT_SYMBOL_GPL(blkdev_nr_zones);
++
+ /*
+  * Check that a zone report belongs to the partition.
+  * If yes, fix its start sector and write pointer, copy it in the
+diff --git a/drivers/md/dm-zoned-target.c b/drivers/md/dm-zoned-target.c
+index a44183ff4be0..12d96a263623 100644
+--- a/drivers/md/dm-zoned-target.c
++++ b/drivers/md/dm-zoned-target.c
+@@ -702,8 +702,7 @@ static int dmz_get_zoned_device(struct dm_target *ti, char *path)
+ 	dev->zone_nr_blocks = dmz_sect2blk(dev->zone_nr_sectors);
+ 	dev->zone_nr_blocks_shift = ilog2(dev->zone_nr_blocks);
  
- 	zones = kvmalloc_array(rep.nr_zones, sizeof(struct blk_zone),
- 			       GFP_KERNEL | __GFP_ZERO);
+-	dev->nr_zones = (dev->capacity + dev->zone_nr_sectors - 1)
+-		>> dev->zone_nr_sectors_shift;
++	dev->nr_zones = blkdev_nr_zones(dev->bdev);
+ 
+ 	dmz->dev = dev;
+ 
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 6980014357d4..c24969b1741b 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -401,6 +401,7 @@ struct blk_zone_report_hdr {
+ 	u8		padding[60];
+ };
+ 
++extern unsigned int blkdev_nr_zones(struct block_device *bdev);
+ extern int blkdev_report_zones(struct block_device *bdev,
+ 			       sector_t sector, struct blk_zone *zones,
+ 			       unsigned int *nr_zones, gfp_t gfp_mask);
+@@ -414,6 +415,10 @@ extern int blkdev_reset_zones_ioctl(struct block_device *bdev, fmode_t mode,
+ 
+ #else /* CONFIG_BLK_DEV_ZONED */
+ 
++static inline unsigned int blkdev_nr_zones(struct block_device *bdev)
++{
++	return 0;
++}
+ static inline int blkdev_report_zones_ioctl(struct block_device *bdev,
+ 					    fmode_t mode, unsigned int cmd,
+ 					    unsigned long arg)
 -- 
 2.17.1
