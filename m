@@ -1,24 +1,22 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] MAINTAINERS: Fix typo in cxlflash stanza
-Date: Wed, 10 Oct 2018 22:01:03 -0400
-Message-ID: <yq14ldt44yo.fsf@oracle.com>
-References: <1538411170-1977-1-git-send-email-mrochs@linux.ibm.com>
+Subject: Re: [PATCH] scsi/mpt3sas: Use dma_pool_zalloc
+Date: Wed, 10 Oct 2018 22:05:25 -0400
+Message-ID: <yq1zhvl2q6y.fsf@oracle.com>
+References: <20181002054804.GA11315@jordon-HP-15-Notebook-PC>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1538411170-1977-1-git-send-email-mrochs@linux.ibm.com> (Matthew
-        R. Ochs's message of "Mon, 1 Oct 2018 11:26:10 -0500")
+In-Reply-To: <20181002054804.GA11315@jordon-HP-15-Notebook-PC> (Souptick
+        Joarder's message of "Tue, 2 Oct 2018 11:18:04 +0530")
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Matthew R. Ochs" <mrochs@linux.ibm.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Uma Krishnan <ukrishn@linux.ibm.com>, "Manoj N. Kumar" <manoj@linux.ibm.com>
+To: Souptick Joarder <jrdr.linux@gmail.com>
+Cc: sathya.prakash@broadcom.com, chaitra.basappa@broadcom.com, suganath-prabu.subramani@broadcom.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, brajeswar.linux@gmail.com, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Matthew,
+Souptick,
 
-> The uapi header file listed in the cxlflash stanza has a typo.
->
-> Removed the trailing 's' from the filename.
+> Replaced dma_pool_alloc + memset with dma_pool_zalloc.
 
 Applied to 4.20/scsi-queue, thanks!
 
