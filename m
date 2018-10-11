@@ -1,25 +1,89 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 0/7] hisi_sas: Misc bugfixes and an optimisation patch
-Date: Wed, 10 Oct 2018 23:36:03 -0700
-Message-ID: <20181011063603.GA3456@infradead.org>
-References: <1537801594-207139-1-git-send-email-john.garry@huawei.com>
- <yq18t354532.fsf@oracle.com>
+From: Damien Le Moal <damien.lemoal@wdc.com>
+Subject: [PATCH v2 00/11] Zoned block device support improvements
+Date: Thu, 11 Oct 2018 16:09:41 +0900
+Message-ID: <20181011070952.13248-1-damien.lemoal@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <yq18t354532.fsf@oracle.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: John Garry <john.garry@huawei.com>, jejb@linux.vnet.ibm.com, linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, dm-devel@redhat.com, Mike Snitzer <snitzer@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, Matias Bjorling <matias.bjorling@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Oct 10, 2018 at 09:58:25PM -0400, Martin K. Petersen wrote:
-> > This is because the IPTT index must be a unique value per HBA. However,
-> > if we switched to SCSI MQ, the block layer tag becomes unique per queue,
-> > and not per HBA.
-> 
-> That doesn't sound right.
+This series improves zoned block device support (reduce overhead) and
+introduces many simplifications to the code (overall, there are more deletions
+than insertions).
 
-blk-mq tags are always per-host (which has actually caused problems for
-ATA, which is now using its own per-device tags).
+In more details:
+* Patches 1 to 3 are SCSI side (sd driver) cleanups and improvements reducing
+  the overhead of report zones command execution during disk scan and
+  revalidation.
+* Patches 4 to 9 improve the useability and user API of zoned block devices.
+* Patch 10 is the main part of this series. This patch replaces the
+  REQ_OP_ZONE_REPORT BIO/request operation for executing report zones commands
+  with a block device file operation, removing the need for the command reply
+  payload in-place rewriting in the BIO buffer. This leads to major
+  simplification of the code in many places.
+* Patch 11 further simplifies the code of low level drivers by providing a
+  generic implementation of zoned block device request queue zone bitmaps
+  initialization and revalidation.
+
+Please consider the addition of these patches in 4.20.
+Comments are as always welcome.
+
+Changes from v1:
+* Addressed Christoph's and Bart's comments
+* Fixed several compilation errors with zoned block device support disabled
+* Rebased on latest rc including the most recent dm patches
+
+Christoph Hellwig (1):
+  block: add a report_zones method
+
+Damien Le Moal (10):
+  scsi: sd_zbc: Rearrange code
+  scsi: sd_zbc: Reduce boot device scan and revalidate time
+  scsi: sd_zbc: Fix sd_zbc_check_zones() error checks
+  block: Introduce blkdev_nr_zones() helper
+  block: Limit allocation of zone descriptors for report zones
+  block: Introduce BLKGETZONESZ ioctl
+  block: Introduce BLKGETNRZONES ioctl
+  block: Improve zone reset execution
+  block: Expose queue nr_zones in sysfs
+  block: Introduce blk_revalidate_disk_zones()
+
+ block/blk-core.c               |   1 -
+ block/blk-lib.c                |  13 +-
+ block/blk-mq-debugfs.c         |   1 -
+ block/blk-sysfs.c              |  13 +
+ block/blk-zoned.c              | 359 +++++++++++++++---------
+ block/blk.h                    |   8 +
+ block/ioctl.c                  |   4 +
+ drivers/block/null_blk.h       |  11 +-
+ drivers/block/null_blk_main.c  |  30 +-
+ drivers/block/null_blk_zoned.c |  57 +---
+ drivers/md/dm-flakey.c         |  30 +-
+ drivers/md/dm-linear.c         |  35 ++-
+ drivers/md/dm-table.c          |  10 +
+ drivers/md/dm-zoned-target.c   |   3 +-
+ drivers/md/dm.c                | 169 ++++++-----
+ drivers/scsi/sd.c              |  15 +-
+ drivers/scsi/sd.h              |  15 +-
+ drivers/scsi/sd_zbc.c          | 497 +++++++++------------------------
+ include/linux/blk_types.h      |   2 -
+ include/linux/blkdev.h         |  22 +-
+ include/linux/device-mapper.h  |  12 +-
+ include/trace/events/f2fs.h    |   1 -
+ include/uapi/linux/blkzoned.h  |   3 +
+ 23 files changed, 591 insertions(+), 720 deletions(-)
+
+-- 
+2.17.1
