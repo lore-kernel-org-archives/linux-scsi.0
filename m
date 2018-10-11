@@ -1,95 +1,63 @@
-From: "Ly, Bryant" <bly@catalogicsoftware.com>
-Subject: Re: [PATCH 2/2] target: Fix target_wait_for_sess_cmds breakage with
- active signals
-Date: Thu, 11 Oct 2018 13:05:59 +0000
-Message-ID: <F43269BA-4D7B-486C-87C6-0FB48FF890EA@catalogicsoftware.com>
-References: <1539141790-13557-1-git-send-email-nab@linux-iscsi.org>
- <1539141790-13557-3-git-send-email-nab@linux-iscsi.org>
- <5BBE2FBF.7080804@redhat.com>
- <1539237365.6150.32.camel@haakon3.daterainc.com>
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH 0/7] hisi_sas: Misc bugfixes and an optimisation patch
+Date: Thu, 11 Oct 2018 14:12:11 +0100
+Message-ID: <e2f35903-e28f-0fb5-7c61-47aa7f1a6926@huawei.com>
+References: <1537801594-207139-1-git-send-email-john.garry@huawei.com>
+ <yq18t354532.fsf@oracle.com> <20181011063603.GA3456@infradead.org>
+ <118d01db-05f4-a85b-850c-c4e5a5616a16@huawei.com>
+ <20181011101534.GA31802@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=WINDOWS-1252
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1539237365.6150.32.camel@haakon3.daterainc.com>
-Content-Language: en-US
-Content-ID: <7D799E9702521C439DB90D96510B7D4D@prod.exchangelabs.com>
+In-Reply-To: <20181011101534.GA31802@infradead.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Mike Christie <mchristi@redhat.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.com>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, "Peter Zijlstra (Intel)" <peterz@infradead.org>, Bart Van Assche <bvanassche@acm.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, jejb@linux.vnet.ibm.com, linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Ming Lei <ming.lei@redhat.com>, chenxiang <chenxiang66@hisilicon.com>
 List-Id: linux-scsi@vger.kernel.org
 
+On 11/10/2018 11:15, Christoph Hellwig wrote:
+> On Thu, Oct 11, 2018 at 10:59:11AM +0100, John Garry wrote:
+>>
+>>> blk-mq tags are always per-host (which has actually caused problems for
+>>> ATA, which is now using its own per-device tags).
+>>>
+>>
+>> So, for example, if Scsi_host.can_queue = 2048 and Scsi_host.nr_hw_queues =
+>> 16, then rq tags are still in range [0, 2048) for that HBA, i.e. invariant
+>> on queue count?
+>
+> Yes, if can_queue is 2048 you will gets tags from 0..2047.
+>
 
+I should be clear about some things before discussing this further. Our 
+device has 16 hw queues. And each command we send to any queue in the 
+device must have a unique tag across all hw queues for that device, and 
+should be in the range [0, 2048) - it's called an IPTT. So 
+Scsi_host.can_queue = 2048.
 
-> On Oct 11, 2018, at 12:56 AM, Nicholas A. Bellinger <nab@linux-iscsi.org>=
- wrote:
->=20
-> Hello MNC & Co,
->=20
-> On Wed, 2018-10-10 at 11:58 -0500, Mike Christie wrote:
->> On 10/09/2018 10:23 PM, Nicholas A. Bellinger wrote:
->>> From: Nicholas Bellinger <nab@linux-iscsi.org>
->>>=20
->>> With the addition of commit 00d909a107 in v4.19-rc, it incorrectly assu=
-mes no
->>> signals will be pending for task_struct executing the normal session sh=
-utdown
->>> and I/O quiesce code-path.
->>>=20
->=20
-> <SNIP>
->=20
->>> diff --git a/drivers/target/target_core_transport.c b/drivers/target/ta=
-rget_core_transport.c
->>> index 86c0156..fc3093d2 100644
->>> --- a/drivers/target/target_core_transport.c
->>> +++ b/drivers/target/target_core_transport.c
->>> @@ -2754,7 +2754,7 @@ static void target_release_cmd_kref(struct kref *=
-kref)
->>> =09if (se_sess) {
->>> =09=09spin_lock_irqsave(&se_sess->sess_cmd_lock, flags);
->>> =09=09list_del_init(&se_cmd->se_cmd_list);
->>> -=09=09if (list_empty(&se_sess->sess_cmd_list))
->>> +=09=09if (se_sess->sess_tearing_down && list_empty(&se_sess->sess_cmd_=
-list))
->>=20
->> I think there is another issue with 00d909a107 and ibmvscsi_tgt.
->>=20
->> The problem is that ibmvscsi_tgt never called
->> target_sess_cmd_list_set_waiting. It only called
->> target_wait_for_sess_cmds. So before 00d909a107 there was a bug in that
->> driver and target_wait_for_sess_cmds never did what was intended because
->> sess_wait_list would always be empty.
->>=20
->> With 00d909a107, we no longer need to call
->> target_sess_cmd_list_set_waiting to wait for outstanding commands, so
->> for ibmvscsi_tgt will now wait for commands like we wanted. However, the
->> commit added a WARN_ON that is hit if target_sess_cmd_list_set_waiting
->> is not called, so we could hit that.
->>=20
->> So I think we need to add a target_sess_cmd_list_set_waiting call in
->> ibmvscsi_tgt to go along with your patch chunk above and make sure we do
->> not trigger the WARN_ON.
->>=20
->=20
-> Nice catch.  :)
->=20
-> With target_wait_for_sess_cmd() usage pre 00d909a107 doing a list-splice
-> in target_sess_cmd_list_set_waiting(), this particular usage in
-> ibmvscsi_tgt has always been list_empty(&sess->sess_wait_list) =3D true
-> (eg: no se_cmd I/O is quiesced, because no se_cmd in sess_wait_list)
-> since commit 712db3eb in 4.9.y code.
->=20
-> That said, ibmvscsi_tgt usage is very similar to vhost/scsi in the
-> respect individual /sys/kernel/config/target/$FABRIC/$WWN/$TPGT/
-> endpoints used by VMs do not remove their I_T nexus while the VM is
-> active.
->=20
-> So AFAICT, ibmvscsi_tgt doesn't strictly need target_sess_wait_for_cmd()
-> at all if this is true.
->=20
+However today we only expose a single queue to upper layer (for 
+unrelated LLDD error handling restriction). We hope to expose all 16 
+queues in future, which is what I meant by "enabling SCSI MQ in the 
+driver". However, with 6/7, this creates a problem, below.
 
-VMs do not remove the I_T nexus while the VM is active, so we can remove
-the target_wait_for_sess_cmd() call.=20
+> IFF you device needs different tags for different queues it can use
+> the blk_mq_unique_tag heper to generate unique global tag.
 
--Bryant
+So this helper can't help, as fundamentially the issue is "the tag field 
+in struct request is unique per hardware queue but not all all hw 
+queues". Indeed blk_mq_unique_tag() does give a unique global tag, but 
+cannot be used for the IPTT.
+
+OTOH, We could expose 16 queues to upper layer, and drop 6/7, but we 
+found it performs worse.
+
+>
+> But unless you actuall have multiple hardware queues that latter part
+> is rather irrelevant to start with.
+>
+> .
+>
+
+Thanks,
+John
