@@ -1,94 +1,59 @@
-From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: [PATCH v2 09/11] block: Expose queue nr_zones in sysfs
-Date: Thu, 11 Oct 2018 16:09:50 +0900
-Message-ID: <20181011070952.13248-10-damien.lemoal@wdc.com>
-References: <20181011070952.13248-1-damien.lemoal@wdc.com>
+From: Peter Zijlstra <peterz@infradead.org>
+Subject: Re: [PATCH 2/2] target: Fix target_wait_for_sess_cmds breakage with
+ active signals
+Date: Thu, 11 Oct 2018 09:55:52 +0200
+Message-ID: <20181011075552.GA2162@hirez.programming.kicks-ass.net>
+References: <1539141790-13557-1-git-send-email-nab@linux-iscsi.org>
+ <1539141790-13557-3-git-send-email-nab@linux-iscsi.org>
+ <20181010084335.GN5728@hirez.programming.kicks-ass.net>
+ <1539236412.6150.18.camel@haakon3.daterainc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20181011070952.13248-1-damien.lemoal@wdc.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, dm-devel@redhat.com, Mike Snitzer <snitzer@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, Matias Bjorling <matias.bjorling@wdc.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1539236412.6150.18.camel@haakon3.daterainc.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Christie <mchristi@redhat.com>, Hannes Reinecke <hare@suse.com>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, Bart Van Assche <bvanassche@acm.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Expose through sysfs the nr_zones field of a zoned block device request
-queue. This represents the total number of zones of the device
-calculated using the known disk capacity and zone size.
+On Wed, Oct 10, 2018 at 10:40:12PM -0700, Nicholas A. Bellinger wrote:
+> Hey Peter & Co,
+> 
+> On Wed, 2018-10-10 at 10:43 +0200, Peter Zijlstra wrote:
+> > On Wed, Oct 10, 2018 at 03:23:10AM +0000, Nicholas A. Bellinger wrote:
+> > > From: Nicholas Bellinger <nab@linux-iscsi.org>
+> > > 
+> > > With the addition of commit 00d909a107 in v4.19-rc, it incorrectly assumes no
+> > > signals will be pending for task_struct executing the normal session shutdown
+> > > and I/O quiesce code-path.
+> > > 
+> > > For example, iscsi-target and iser-target issue SIGINT to all kthreads as
+> > > part of session shutdown.  This has been the behaviour since day one.
+> > 
+> > Not knowing much context here; but does it make sense for those
+> > kthreads to handle signals, ever? Most kthreads should be fine with
+> > ignore_signals().
+> > 
+> 
+> iscsi-target + ib-isert uses SIGINT amongst dedicated rx/tx connection
+> kthreads to signal connection shutdown, requiring in-flight se_cmd I/O
+> descriptors to be quiesced before making forward progress to release
+> se_session.
+> 
+> By the point wait_event_lock_irq_timeout() is called in the example
+> here, one of the two rx/tx connection kthreads has been stopped, and the
+> other kthread is still processing shutdown.  So while historically the
+> pending SIGINTs where not cleared (or ignored) during shutdown at this
+> point, there is no reason why they could not be ignored for iscsi-target
+> + ib-isert.
+> 
+> That said, pre commit 00d909a107 code always used wait_for_completion()
+> and ignored pending signals.  As-is target_wait_for_sess_cmds() is
+> called directly from fabric driver code and in one case also from
+> user-space via configfs_write_file(), so AFAICT it does need
+> TASK_UNINTERRUPTIBLE.
+> 
 
-Exposing this value helps in debugging disk issues as well as
-facilitating scripts based use of the disk (e.g. blktests).
-
-Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
----
- block/blk-sysfs.c      | 11 +++++++++++
- include/linux/blkdev.h |  2 +-
- 2 files changed, 12 insertions(+), 1 deletion(-)
-
-diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
-index 3772671cf2bc..f7060a938bf9 100644
---- a/block/blk-sysfs.c
-+++ b/block/blk-sysfs.c
-@@ -300,6 +300,11 @@ static ssize_t queue_zoned_show(struct request_queue *q, char *page)
- 	}
- }
- 
-+static ssize_t queue_nr_zones_show(struct request_queue *q, char *page)
-+{
-+	return queue_var_show(q->nr_zones, page);
-+}
-+
- static ssize_t queue_nomerges_show(struct request_queue *q, char *page)
- {
- 	return queue_var_show((blk_queue_nomerges(q) << 1) |
-@@ -637,6 +642,11 @@ static struct queue_sysfs_entry queue_zoned_entry = {
- 	.show = queue_zoned_show,
- };
- 
-+static struct queue_sysfs_entry queue_nr_zones_entry = {
-+	.attr = {.name = "nr_zones", .mode = 0444 },
-+	.show = queue_nr_zones_show,
-+};
-+
- static struct queue_sysfs_entry queue_nomerges_entry = {
- 	.attr = {.name = "nomerges", .mode = 0644 },
- 	.show = queue_nomerges_show,
-@@ -727,6 +737,7 @@ static struct attribute *default_attrs[] = {
- 	&queue_write_zeroes_max_entry.attr,
- 	&queue_nonrot_entry.attr,
- 	&queue_zoned_entry.attr,
-+	&queue_nr_zones_entry.attr,
- 	&queue_nomerges_entry.attr,
- 	&queue_rq_affinity_entry.attr,
- 	&queue_iostats_entry.attr,
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index c24969b1741b..23ab53d2d4ca 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -593,7 +593,6 @@ struct request_queue {
- 
- 	struct queue_limits	limits;
- 
--#ifdef CONFIG_BLK_DEV_ZONED
- 	/*
- 	 * Zoned block device information for request dispatch control.
- 	 * nr_zones is the total number of zones of the device. This is always
-@@ -612,6 +611,7 @@ struct request_queue {
- 	 * blk_mq_unfreeze_queue().
- 	 */
- 	unsigned int		nr_zones;
-+#ifdef CONFIG_BLK_DEV_ZONED
- 	unsigned long		*seq_zones_bitmap;
- 	unsigned long		*seq_zones_wlock;
- #endif /* CONFIG_BLK_DEV_ZONED */
--- 
-2.17.1
+Fair enough, thanks for the background. I'm always a bit wary when
+kthreads need to deal with signals, but this seems OK.
