@@ -1,124 +1,130 @@
-From: Feng Li <lifeng1519@gmail.com>
-Subject: Re: [Qemu-devel] virtio-console downgrade the virtio-pci-blk performance
-Date: Thu, 11 Oct 2018 18:15:41 +0800
-Message-ID: <CAEK8JBC-HKGb43UynWx69Lj-y48Em038eNMpOb7G72XfLF_mDg@mail.gmail.com>
-References: <CAEK8JBDPNqTap-LnoBxUZh4Bj9b+VgrsPm53QAivfOsLG7wuGw@mail.gmail.com>
- <20181001114146.GA2508@work-vm> <CAEK8JBBDPxTe0k8Nf=7PQ6gjYv4xyqQu=bef5VXmgaLVGw3JUg@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+From: Can Guo <cang@codeaurora.org>
+Subject: [PATCH v2 1/1] scsi: ufs: make UFS Tx lane1 clock optional for QCOM platforms
+Date: Thu, 11 Oct 2018 05:33:14 -0700
+Message-ID: <1539261196-14550-1-git-send-email-cang@codeaurora.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAEK8JBBDPxTe0k8Nf=7PQ6gjYv4xyqQu=bef5VXmgaLVGw3JUg@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: dgilbert@redhat.com, amit@kernel.org, virtualization@lists.linux-foundation.org
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, qemu-discuss@nongnu.org, qemu-devel@nongnu.org, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: dianders@chromium.org, subhashj@codeaurora.org, asutoshd@codeaurora.org, vivek.gautam@codeaurora.org, evgreen@chromium.org, rnayak@codeaurora.org, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, Venkat Gopalakrishnan <venkatg@codeaurora.org>, Can Guo <cang@codeaurora.org>, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Add Amit Shah.
+From: Venkat Gopalakrishnan <venkatg@codeaurora.org>
 
-After some tests, we found:
-- the virtio serial port number is inversely proportional to the iSCSI
-virtio-blk-pci performance.
-If we set the virio-serial ports to 2("<controller
-type=3D'virtio-serial' index=3D'0' ports=3D'2'/>), the performance downgrad=
-e
-is minimal.
+Per Qcom's UFS host controller HW design, the UFS Tx lane1 clock could be
+muxed with Tx lane0 clock, hence keep Tx lane1 clock optional by ignoring
+it if it is not provided in device tree. This change also performs some
+cleanup to lanes per direction checks when enable/disable lane clocks just
+for symmetry.
 
-- use local disk/ram disk as virtio-blk-pci disk, the performance
-downgrade is still obvious.
+Signed-off-by: Venkat Gopalakrishnan <venkatg@codeaurora.org>
+Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+Signed-off-by: Can Guo <cang@codeaurora.org>
+---
 
+Changes since v1:
+- Incorporated review comments from Doug.
+- Update the commit title and commit message.
 
-Could anyone give some help about this issue?
+ drivers/scsi/ufs/ufs-qcom.c | 33 ++++++++++++++++++++-------------
+ 1 file changed, 20 insertions(+), 13 deletions(-)
 
-Feng Li <lifeng1519@gmail.com> =E4=BA=8E2018=E5=B9=B410=E6=9C=881=E6=97=A5=
-=E5=91=A8=E4=B8=80 =E4=B8=8B=E5=8D=8810:58=E5=86=99=E9=81=93=EF=BC=9A
->
-> Hi Dave,
-> My comments are in-line.
->
-> Dr. David Alan Gilbert <dgilbert@redhat.com> =E4=BA=8E2018=E5=B9=B410=E6=
-=9C=881=E6=97=A5=E5=91=A8=E4=B8=80 =E4=B8=8B=E5=8D=887:41=E5=86=99=E9=81=93=
-=EF=BC=9A
-> >
-> > * Feng Li (lifeng1519@gmail.com) wrote:
-> > > Hi,
-> > > I found an obvious performance downgrade when virtio-console combined
-> > > with virtio-pci-blk.
-> > >
-> > > This phenomenon exists in nearly all Qemu versions and all Linux
-> > > (CentOS7, Fedora 28, Ubuntu 18.04) distros.
-> > >
-> > > This is a disk cmd:
-> > > -drive file=3Discsi://127.0.0.1:3260/iqn.2016-02.com.test:system:fl-i=
-scsi/1,format=3Draw,if=3Dnone,id=3Ddrive-virtio-disk0,cache=3Dnone,aio=3Dna=
-tive
-> > > -device virtio-blk-pci,scsi=3Doff,bus=3Dpci.0,addr=3D0x6,drive=3Ddriv=
-e-virtio-disk0,id=3Dvirtio-disk0,bootindex=3D1,write-cache=3Don
-> > >
-> > > If I add "-device
-> > > virtio-serial-pci,id=3Dvirtio-serial0,bus=3Dpci.0,addr=3D0x5  ", the =
-virtio
-> > > disk 4k iops (randread/randwrite) would downgrade from 60k to 40k.
-> > >
-> > > In VM, if I rmmod virtio-console, the performance will back to normal=
-.
-> > >
-> > > Any idea about this issue?
-> > >
-> > > I don't know this is a qemu issue or kernel issue.
-> >
-> > It sounds odd;  can you provide more details on:
-> >   a) The benchmark you're using.
-> I'm using fio, the config is:
-> [global]
-> ioengine=3Dlibaio
-> iodepth=3D128
-> runtime=3D120
-> time_based
-> direct=3D1
->
-> [randread]
-> stonewall
-> bs=3D4k
-> filename=3D/dev/vdb
-> rw=3Drandread
->
-> >   b) the host and the guest config (number of cpus etc)
-> The qemu cmd is : /usr/libexec/qemu-kvm --device virtio-balloon -m 16G
-> --enable-kvm -cpu host -smp 8
-> or qemu-system-x86_64 --device virtio-balloon -m 16G --enable-kvm -cpu
-> host -smp 8
->
-> The result is the same.
->
-> >   c) Why are you running it with iscsi back to the same host - why not
-> >      just simplify the test back to a simple file?
-> >
->
-> Because my ISCSI target could supply a high IOPS performance.
-> If using a slow disk, the performance downgrade would be not so obvious.
-> It's easy to be seen, you could try it.
->
->
-> > Dave
-> >
-> > >
-> > > Thanks in advance.
-> > > --
-> > > Thanks and Best Regards,
-> > > Alex
-> > >
-> > --
-> > Dr. David Alan Gilbert / dgilbert@redhat.com / Manchester, UK
->
->
->
-> --
-> Thanks and Best Regards,
-> Feng Li(Alex)
-
-
-
---
-Thanks and Best Regards,
-Feng Li(Alex)
+diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+index 2b38db2..a7ec959 100644
+--- a/drivers/scsi/ufs/ufs-qcom.c
++++ b/drivers/scsi/ufs/ufs-qcom.c
+@@ -79,13 +79,19 @@ static int ufs_qcom_get_connected_tx_lanes(struct ufs_hba *hba, u32 *tx_lanes)
+ }
+ 
+ static int ufs_qcom_host_clk_get(struct device *dev,
+-		const char *name, struct clk **clk_out)
++		const char *name, struct clk **clk_out, bool optional)
+ {
+ 	struct clk *clk;
+ 	int err = 0;
+ 
+ 	clk = devm_clk_get(dev, name);
+-	if (IS_ERR(clk)) {
++	if (clk == ERR_PTR(-EPROBE_DEFER)) {
++		err = -EPROBE_DEFER;
++		dev_warn(dev, "required clock %s hasn't probed yet, err %d\n",
++				name, err);
++	} else if (IS_ERR(clk)) {
++		if (optional)
++			return 0;
+ 		err = PTR_ERR(clk);
+ 		dev_err(dev, "%s: failed to get %s err %d",
+ 				__func__, name, err);
+@@ -113,10 +119,10 @@ static void ufs_qcom_disable_lane_clks(struct ufs_qcom_host *host)
+ 	if (!host->is_lane_clks_enabled)
+ 		return;
+ 
+-	if (host->hba->lanes_per_direction > 1)
++	if (host->tx_l1_sync_clk)
+ 		clk_disable_unprepare(host->tx_l1_sync_clk);
+ 	clk_disable_unprepare(host->tx_l0_sync_clk);
+-	if (host->hba->lanes_per_direction > 1)
++	if (host->rx_l1_sync_clk)
+ 		clk_disable_unprepare(host->rx_l1_sync_clk);
+ 	clk_disable_unprepare(host->rx_l0_sync_clk);
+ 
+@@ -141,12 +147,14 @@ static int ufs_qcom_enable_lane_clks(struct ufs_qcom_host *host)
+ 	if (err)
+ 		goto disable_rx_l0;
+ 
+-	if (host->hba->lanes_per_direction > 1) {
++	if (host->rx_l1_sync_clk) {
+ 		err = ufs_qcom_host_clk_enable(dev, "rx_lane1_sync_clk",
+ 			host->rx_l1_sync_clk);
+ 		if (err)
+ 			goto disable_tx_l0;
++	}
+ 
++	if (host->tx_l1_sync_clk) {
+ 		err = ufs_qcom_host_clk_enable(dev, "tx_lane1_sync_clk",
+ 			host->tx_l1_sync_clk);
+ 		if (err)
+@@ -157,8 +165,7 @@ static int ufs_qcom_enable_lane_clks(struct ufs_qcom_host *host)
+ 	goto out;
+ 
+ disable_rx_l1:
+-	if (host->hba->lanes_per_direction > 1)
+-		clk_disable_unprepare(host->rx_l1_sync_clk);
++	clk_disable_unprepare(host->rx_l1_sync_clk);
+ disable_tx_l0:
+ 	clk_disable_unprepare(host->tx_l0_sync_clk);
+ disable_rx_l0:
+@@ -172,25 +179,25 @@ static int ufs_qcom_init_lane_clks(struct ufs_qcom_host *host)
+ 	int err = 0;
+ 	struct device *dev = host->hba->dev;
+ 
+-	err = ufs_qcom_host_clk_get(dev,
+-			"rx_lane0_sync_clk", &host->rx_l0_sync_clk);
++	err = ufs_qcom_host_clk_get(dev, "rx_lane0_sync_clk",
++					&host->rx_l0_sync_clk, false);
+ 	if (err)
+ 		goto out;
+ 
+-	err = ufs_qcom_host_clk_get(dev,
+-			"tx_lane0_sync_clk", &host->tx_l0_sync_clk);
++	err = ufs_qcom_host_clk_get(dev, "tx_lane0_sync_clk",
++					&host->tx_l0_sync_clk, false);
+ 	if (err)
+ 		goto out;
+ 
+ 	/* In case of single lane per direction, don't read lane1 clocks */
+ 	if (host->hba->lanes_per_direction > 1) {
+ 		err = ufs_qcom_host_clk_get(dev, "rx_lane1_sync_clk",
+-			&host->rx_l1_sync_clk);
++			&host->rx_l1_sync_clk, false);
+ 		if (err)
+ 			goto out;
+ 
+ 		err = ufs_qcom_host_clk_get(dev, "tx_lane1_sync_clk",
+-			&host->tx_l1_sync_clk);
++			&host->tx_l1_sync_clk, true);
+ 	}
+ out:
+ 	return err;
+-- 
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
