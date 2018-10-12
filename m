@@ -1,59 +1,88 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v4 03/11] scsi: sd_zbc: Fix
- sd_zbc_check_zones() error checks
-Date: Fri, 12 Oct 2018 12:23:01 +0200
-Message-ID: <ad9d7c12-f2df-a345-895c-f23b18b1ec29@suse.de>
-References: <20181012100850.23316-1-damien.lemoal@wdc.com>
-	<20181012100850.23316-4-damien.lemoal@wdc.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
-Content-Transfer-Encoding: base64
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20181012100850.23316-4-damien.lemoal@wdc.com>
-Content-Language: en-US
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Damien Le Moal <damien.lemoal@wdc.com>, linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, dm-devel@redhat.com, Mike Snitzer <snitzer@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, Matias Bjorling <matias.bjorling@wdc.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] scsi: ufs: fix integer type usage in uapi header
+Date: Fri, 12 Oct 2018 12:41:28 +0200
+Message-ID: <20181012104143.1931393-1-arnd@arndb.de>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Avri Altman <avri.altman@wdc.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: linux-scsi@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-T24gMTAvMTIvMTggMTI6MDggUE0sIERhbWllbiBMZSBNb2FsIHdyb3RlOgo+IFRoZSB1bnNpZ25l
-ZCAzMiBiaXRzIG92ZXJmbG93IGNoZWNrIGZvciB0aGUgem9uZSBzaXplIHZhbHVlIGlzIGFscmVh
-ZHkKPiBkb25lIHdpdGhpbiBzZF96YmNfY2hlY2tfem9uZXMoKSB3aXRoIHRoZSB0ZXN0Ogo+IAo+
-IH0gZWxzZSBpZiAobG9naWNhbF90b19zZWN0b3JzKHNka3AtPmRldmljZSwgem9uZV9ibG9ja3Mp
-ID4gVUlOVF9NQVgpIHsKPiAKPiBzbyB0aGVyZSBpcyBubyBuZWVkIHRvIGNoZWNrIGFnYWluIGZv
-ciBhbiBvdXQgb2YgcmFuZ2UgdmFsdWUgaW4KPiBzZF96YmNfcmVhZF96b25lcygpLiBTaW1wbGlm
-eSB0aGUgY29kZSBhbmQgZml4IHNkX3piY19jaGVja196b25lcygpCj4gZXJyb3IgcmV0dXJuIHRv
-IC1FRkJJRyBpbnN0ZWFkIG9mIC1FTk9ERVYgaWYgdGhlIHpvbmUgc2l6ZSBpcyB0b28gbGFyZ2Uu
-Cj4gQ2hhbmdlIHRoZSByZXR1cm4gdHlwZSBvZiBzZF96YmNfY2hlY2tfem9uZXMoKSB0byBhbiBp
-bnQgZm9yIHRoZSBlcnJvcgo+IGNvZGUgYW5kIHJldHVybiB0aGUgem9uZSBzaXplICh6b25lX2Js
-b2NrcykgdGhyb3VnaCBhIHUzMiBwb2ludGVyIHRvCj4gYXZvaWQgb3ZlcmZsb3dpbmcgdGhlIHNp
-Z25lZCAzMiByZXR1cm4gdmFsdWUuCj4gCj4gU2lnbmVkLW9mZi1ieTogRGFtaWVuIExlIE1vYWwg
-PGRhbWllbi5sZW1vYWxAd2RjLmNvbT4KPiAtLS0KPiAgIGRyaXZlcnMvc2NzaS9zZF96YmMuYyB8
-IDE5ICsrKysrKysrLS0tLS0tLS0tLS0KPiAgIDEgZmlsZSBjaGFuZ2VkLCA4IGluc2VydGlvbnMo
-KyksIDExIGRlbGV0aW9ucygtKQo+IAo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvc2RfemJj
-LmMgYi9kcml2ZXJzL3Njc2kvc2RfemJjLmMKPiBpbmRleCBjYTczYzQ2OTMxYzAuLjA2NzhlMWUx
-MDhiMCAxMDA2NDQKPiAtLS0gYS9kcml2ZXJzL3Njc2kvc2RfemJjLmMKPiArKysgYi9kcml2ZXJz
-L3Njc2kvc2RfemJjLmMKPiBAQCAtMzczLDcgKzM3Myw3IEBAIHN0YXRpYyBpbnQgc2RfemJjX2No
-ZWNrX3pvbmVkX2NoYXJhY3RlcmlzdGljcyhzdHJ1Y3Qgc2NzaV9kaXNrICpzZGtwLAo+ICAgICog
-UmV0dXJucyB0aGUgem9uZSBzaXplIGluIG51bWJlciBvZiBibG9ja3MgdXBvbiBzdWNjZXNzIG9y
-IGFuIGVycm9yIGNvZGUKPiAgICAqIHVwb24gZmFpbHVyZS4KPiAgICAqLwo+IC1zdGF0aWMgczY0
-IHNkX3piY19jaGVja196b25lcyhzdHJ1Y3Qgc2NzaV9kaXNrICpzZGtwKQo+ICtzdGF0aWMgaW50
-IHNkX3piY19jaGVja196b25lcyhzdHJ1Y3Qgc2NzaV9kaXNrICpzZGtwLCB1MzIgKnpibG9ja3Mp
-Cj4gICB7Cj4gICAJdTY0IHpvbmVfYmxvY2tzID0gMDsKPiAgIAlzZWN0b3JfdCBtYXhfbGJhLCBi
-bG9jayA9IDA7CgpBY3R1YWxseSBJIHRob3VnaHQgdG8ganVzdCBjaGFuZ2UgdGhlICdzMzInIHRv
-ICdpbnQnLCBhbmQgbm90IGFkZGluZyAKYW5vdGhlciBwYXJhbWV0ZXI7IGJ1dCBhbnl3YXkuCgpS
-ZXZpZXdlZC1ieTogSGFubmVzIFJlaW5lY2tlIDxoYXJlQHN1c2UuY29tPgoKSGFubmVzCi0tIApE
-ci4gSGFubmVzIFJlaW5lY2tlCQkgICBUZWFtbGVhZCBTdG9yYWdlICYgTmV0d29ya2luZwpoYXJl
-QHN1c2UuZGUJCQkgICAgICAgICAgICAgICArNDkgOTExIDc0MDUzIDY4OApTVVNFIExJTlVYIEdt
-YkgsIE1heGZlbGRzdHIuIDUsIDkwNDA5IE7DvHJuYmVyZwpHRjogRi4gSW1lbmTDtnJmZmVyLCBK
-LiBTbWl0aGFyZCwgSi4gR3VpbGQsIEQuIFVwbWFueXUsIEcuIE5vcnRvbgpIUkIgMjEyODQgKEFH
-IE7DvHJuYmVyZykKCi0tCmRtLWRldmVsIG1haWxpbmcgbGlzdApkbS1kZXZlbEByZWRoYXQuY29t
-Cmh0dHBzOi8vd3d3LnJlZGhhdC5jb20vbWFpbG1hbi9saXN0aW5mby9kbS1kZXZlbA==
+We get a warning from 'make headers_check' about a newly introduced
+usage of integer types in the scsi/scsi_bsg_ufs.h uapi header:
+
+usr/include/scsi/scsi_bsg_ufs.h:18: found __[us]{8,16,32,64} type without #include <linux/types.h>
+
+Aside from the missing linux/types.h inclusion, I also noticed that it
+uses the wrong types: 'u32' is not available at all in user space,
+and 'uint32_t' depends on the inclusion of a standard header that
+we should not include from kernel headers.
+
+Change the all to __u32 and similar types here.
+
+I also note the usage of '__be32' and '__be16' that seems unfortunate
+for a user space API. I wonder if it would be better to define the
+interface in terms of a CPU-endian structure and convert it in kernel
+space.
+
+Fixes: e77044c5a842 ("scsi: ufs-bsg: Add support for uic commands in ufs_bsg_request()")
+Fixes: df032bf27a41 ("scsi: ufs: Add a bsg endpoint that supports UPIUs")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ include/uapi/scsi/scsi_bsg_ufs.h | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
+
+diff --git a/include/uapi/scsi/scsi_bsg_ufs.h b/include/uapi/scsi/scsi_bsg_ufs.h
+index 1b25930688bc..17c7abd0803a 100644
+--- a/include/uapi/scsi/scsi_bsg_ufs.h
++++ b/include/uapi/scsi/scsi_bsg_ufs.h
+@@ -8,6 +8,7 @@
+ #ifndef SCSI_BSG_UFS_H
+ #define SCSI_BSG_UFS_H
+ 
++#include <linux/types.h>
+ /*
+  * This file intended to be included by both kernel and user space
+  */
+@@ -15,7 +16,7 @@
+ #define UFS_CDB_SIZE	16
+ #define UPIU_TRANSACTION_UIC_CMD 0x1F
+ /* uic commands are 4DW long, per UFSHCI V2.1 paragraph 5.6.1 */
+-#define UIC_CMD_SIZE (sizeof(u32) * 4)
++#define UIC_CMD_SIZE (sizeof(__u32) * 4)
+ 
+ /**
+  * struct utp_upiu_header - UPIU header structure
+@@ -59,7 +60,7 @@ struct utp_upiu_query {
+  */
+ struct utp_upiu_cmd {
+ 	__be32 exp_data_transfer_len;
+-	u8 cdb[UFS_CDB_SIZE];
++	__u8 cdb[UFS_CDB_SIZE];
+ };
+ 
+ /**
+@@ -81,7 +82,7 @@ struct utp_upiu_req {
+ 
+ /* request (CDB) structure of the sg_io_v4 */
+ struct ufs_bsg_request {
+-	uint32_t msgcode;
++	__u32 msgcode;
+ 	struct utp_upiu_req upiu_req;
+ };
+ 
+@@ -95,10 +96,10 @@ struct ufs_bsg_reply {
+ 	 * msg and status fields. The per-msgcode reply structure
+ 	 * will contain valid data.
+ 	 */
+-	uint32_t result;
++	__u32 result;
+ 
+ 	/* If there was reply_payload, how much was received? */
+-	uint32_t reply_payload_rcv_len;
++	__u32 reply_payload_rcv_len;
+ 
+ 	struct utp_upiu_req upiu_rsp;
+ };
+-- 
+2.18.0
