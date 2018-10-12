@@ -1,109 +1,128 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v3 09/11] block: Expose queue nr_zones in
-	sysfs
-Date: Fri, 12 Oct 2018 10:41:32 +0200
-Message-ID: <18c7fb0a-9557-56c4-fc95-3fd0acd285b0@suse.de>
-References: <20181012023012.29923-1-damien.lemoal@wdc.com>
-	<20181012023012.29923-10-damien.lemoal@wdc.com>
-	<c13f3820-9a69-6a74-e967-b561d7778bcf@suse.de>
-	<BLUPR0401MB1636E66F2F7AA1F7D2529794E7E20@BLUPR0401MB1636.namprd04.prod.outlook.com>
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH 0/7] hisi_sas: Misc bugfixes and an optimisation patch
+Date: Fri, 12 Oct 2018 10:02:57 +0100
+Message-ID: <3322d066-d118-320f-eb99-0fb03d530c67@huawei.com>
+References: <1537801594-207139-1-git-send-email-john.garry@huawei.com>
+ <yq18t354532.fsf@oracle.com> <20181011063603.GA3456@infradead.org>
+ <118d01db-05f4-a85b-850c-c4e5a5616a16@huawei.com>
+ <20181011101534.GA31802@infradead.org>
+ <e2f35903-e28f-0fb5-7c61-47aa7f1a6926@huawei.com>
+ <20181011133159.GA31355@ming.t460p>
+ <519812c7-970a-976c-7db5-a035bf4f4e24@huawei.com>
+ <20181011233633.GA30271@ming.t460p>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
-Content-Transfer-Encoding: base64
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <BLUPR0401MB1636E66F2F7AA1F7D2529794E7E20@BLUPR0401MB1636.namprd04.prod.outlook.com>
-Content-Language: en-US
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Damien Le Moal <Damien.LeMoal@wdc.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Martin K . Petersen" <martin.petersen@oracle.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>, Mike Snitzer <snitzer@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, Matias Bjorling <Matias.Bjorling@wdc.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20181011233633.GA30271@ming.t460p>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ming Lei <ming.lei@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, jejb@linux.vnet.ibm.com, linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, chenxiang <chenxiang66@hisilicon.com>, Kashyap Desai <kashyap.desai@broadcom.com>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gMTAvMTIvMTggOTo1NSBBTSwgRGFtaWVuIExlIE1vYWwgd3JvdGU6Cj4gT24gMjAxOC8xMC8x
-MiAxNjo0MSwgSGFubmVzIFJlaW5lY2tlIHdyb3RlOgo+PiBPbiAxMC8xMi8xOCA0OjMwIEFNLCBE
-YW1pZW4gTGUgTW9hbCB3cm90ZToKPj4+IEV4cG9zZSB0aHJvdWdoIHN5c2ZzIHRoZSBucl96b25l
-cyBmaWVsZCBvZiBzdHJ1Y3QgcmVxdWVzdF9xdWV1ZS4KPj4+IEV4cG9zaW5nIHRoaXMgdmFsdWUg
-aGVscHMgaW4gZGVidWdnaW5nIGRpc2sgaXNzdWVzIGFzIHdlbGwgYXMKPj4+IGZhY2lsaXRhdGlu
-ZyBzY3JpcHRzIGJhc2VkIHVzZSBvZiB0aGUgZGlzayAoZS5nLiBibGt0ZXN0cykuCj4+Pgo+Pj4g
-Rm9yIHpvbmVkIGJsb2NrIGRldmljZXMsIHRoZSBucl96b25lcyBmaWVsZCBpbmRpY2F0ZXMgdGhl
-IHRvdGFsIG51bWJlcgo+Pj4gb2Ygem9uZXMgb2YgdGhlIGRldmljZSBjYWxjdWxhdGVkIHVzaW5n
-IHRoZSBrbm93biBkaXNrIGNhcGFjaXR5IGFuZAo+Pj4gem9uZSBzaXplLiBUaGlzIG51bWJlciBv
-ZiB6b25lcyBpcyBhbHdheXMgMCBmb3IgcmVndWxhciBibG9jayBkZXZpY2VzLgo+Pj4KPj4+IFNp
-bmNlIG5yX3pvbmVzIGlzIGRlZmluZWQgY29uZGl0aW9uYWxseSB3aXRoIENPTkZJR19CTEtfREVW
-X1pPTkVELAo+Pj4gaW50cm9kdWNlIHRoZSBibGtfcXVldWVfbnJfem9uZXMoKSBmdW5jdGlvbiB0
-byByZXR1cm4gdGhlIGNvcnJlY3QgdmFsdWUKPj4+IGZvciBhbnkgZGV2aWNlLCByZWdhcmRsZXNz
-IGlmIENPTkZJR19CTEtfREVWX1pPTkVEIGlzIHNldC4KPj4+Cj4+PiBTaWduZWQtb2ZmLWJ5OiBE
-YW1pZW4gTGUgTW9hbCA8ZGFtaWVuLmxlbW9hbEB3ZGMuY29tPgo+Pj4gLS0tCj4+PiAgICBibG9j
-ay9ibGstc3lzZnMuYyAgICAgIHwgMTEgKysrKysrKysrKysKPj4+ICAgIGluY2x1ZGUvbGludXgv
-YmxrZGV2LmggfCAxMCArKysrKysrKysrCj4+PiAgICAyIGZpbGVzIGNoYW5nZWQsIDIxIGluc2Vy
-dGlvbnMoKykKPj4+Cj4+PiBkaWZmIC0tZ2l0IGEvYmxvY2svYmxrLXN5c2ZzLmMgYi9ibG9jay9i
-bGstc3lzZnMuYwo+Pj4gaW5kZXggMzc3MjY3MWNmMmJjLi45MmJlODA5MmNhNGYgMTAwNjQ0Cj4+
-PiAtLS0gYS9ibG9jay9ibGstc3lzZnMuYwo+Pj4gKysrIGIvYmxvY2svYmxrLXN5c2ZzLmMKPj4+
-IEBAIC0zMDAsNiArMzAwLDExIEBAIHN0YXRpYyBzc2l6ZV90IHF1ZXVlX3pvbmVkX3Nob3coc3Ry
-dWN0IHJlcXVlc3RfcXVldWUgKnEsIGNoYXIgKnBhZ2UpCj4+PiAgICAJfQo+Pj4gICAgfQo+Pj4g
-ICAgCj4+PiArc3RhdGljIHNzaXplX3QgcXVldWVfbnJfem9uZXNfc2hvdyhzdHJ1Y3QgcmVxdWVz
-dF9xdWV1ZSAqcSwgY2hhciAqcGFnZSkKPj4+ICt7Cj4+PiArCXJldHVybiBxdWV1ZV92YXJfc2hv
-dyhibGtfcXVldWVfbnJfem9uZXMocSksIHBhZ2UpOwo+Pj4gK30KPj4+ICsKPj4+ICAgIHN0YXRp
-YyBzc2l6ZV90IHF1ZXVlX25vbWVyZ2VzX3Nob3coc3RydWN0IHJlcXVlc3RfcXVldWUgKnEsIGNo
-YXIgKnBhZ2UpCj4+PiAgICB7Cj4+PiAgICAJcmV0dXJuIHF1ZXVlX3Zhcl9zaG93KChibGtfcXVl
-dWVfbm9tZXJnZXMocSkgPDwgMSkgfAo+Pj4gQEAgLTYzNyw2ICs2NDIsMTEgQEAgc3RhdGljIHN0
-cnVjdCBxdWV1ZV9zeXNmc19lbnRyeSBxdWV1ZV96b25lZF9lbnRyeSA9IHsKPj4+ICAgIAkuc2hv
-dyA9IHF1ZXVlX3pvbmVkX3Nob3csCj4+PiAgICB9Owo+Pj4gICAgCj4+PiArc3RhdGljIHN0cnVj
-dCBxdWV1ZV9zeXNmc19lbnRyeSBxdWV1ZV9ucl96b25lc19lbnRyeSA9IHsKPj4+ICsJLmF0dHIg
-PSB7Lm5hbWUgPSAibnJfem9uZXMiLCAubW9kZSA9IDA0NDQgfSwKPj4+ICsJLnNob3cgPSBxdWV1
-ZV9ucl96b25lc19zaG93LAo+Pj4gK307Cj4+PiArCj4+PiAgICBzdGF0aWMgc3RydWN0IHF1ZXVl
-X3N5c2ZzX2VudHJ5IHF1ZXVlX25vbWVyZ2VzX2VudHJ5ID0gewo+Pj4gICAgCS5hdHRyID0gey5u
-YW1lID0gIm5vbWVyZ2VzIiwgLm1vZGUgPSAwNjQ0IH0sCj4+PiAgICAJLnNob3cgPSBxdWV1ZV9u
-b21lcmdlc19zaG93LAo+Pj4gQEAgLTcyNyw2ICs3MzcsNyBAQCBzdGF0aWMgc3RydWN0IGF0dHJp
-YnV0ZSAqZGVmYXVsdF9hdHRyc1tdID0gewo+Pj4gICAgCSZxdWV1ZV93cml0ZV96ZXJvZXNfbWF4
-X2VudHJ5LmF0dHIsCj4+PiAgICAJJnF1ZXVlX25vbnJvdF9lbnRyeS5hdHRyLAo+Pj4gICAgCSZx
-dWV1ZV96b25lZF9lbnRyeS5hdHRyLAo+Pj4gKwkmcXVldWVfbnJfem9uZXNfZW50cnkuYXR0ciwK
-Pj4+ICAgIAkmcXVldWVfbm9tZXJnZXNfZW50cnkuYXR0ciwKPj4+ICAgIAkmcXVldWVfcnFfYWZm
-aW5pdHlfZW50cnkuYXR0ciwKPj4+ICAgIAkmcXVldWVfaW9zdGF0c19lbnRyeS5hdHRyLAo+Pj4g
-ZGlmZiAtLWdpdCBhL2luY2x1ZGUvbGludXgvYmxrZGV2LmggYi9pbmNsdWRlL2xpbnV4L2Jsa2Rl
-di5oCj4+PiBpbmRleCBjMjQ5NjliMTc0MWIuLjg3OTc1M2IxMDI2MyAxMDA2NDQKPj4+IC0tLSBh
-L2luY2x1ZGUvbGludXgvYmxrZGV2LmgKPj4+ICsrKyBiL2luY2x1ZGUvbGludXgvYmxrZGV2LmgK
-Pj4+IEBAIC04MDQsNiArODA0LDExIEBAIHN0YXRpYyBpbmxpbmUgdW5zaWduZWQgaW50IGJsa19x
-dWV1ZV96b25lX3NlY3RvcnMoc3RydWN0IHJlcXVlc3RfcXVldWUgKnEpCj4+PiAgICB9Cj4+PiAg
-ICAKPj4+ICAgICNpZmRlZiBDT05GSUdfQkxLX0RFVl9aT05FRAo+Pj4gK3N0YXRpYyBpbmxpbmUg
-dW5zaWduZWQgaW50IGJsa19xdWV1ZV9ucl96b25lcyhzdHJ1Y3QgcmVxdWVzdF9xdWV1ZSAqcSkK
-Pj4+ICt7Cj4+PiArCXJldHVybiBibGtfcXVldWVfaXNfem9uZWQocSkgPyBxLT5ucl96b25lcyA6
-IDA7Cj4+PiArfQo+Pj4gKwo+Pj4gICAgc3RhdGljIGlubGluZSB1bnNpZ25lZCBpbnQgYmxrX3F1
-ZXVlX3pvbmVfbm8oc3RydWN0IHJlcXVlc3RfcXVldWUgKnEsCj4+PiAgICAJCQkJCSAgICAgc2Vj
-dG9yX3Qgc2VjdG9yKQo+Pj4gICAgewo+Pj4gQEAgLTgxOSw2ICs4MjQsMTEgQEAgc3RhdGljIGlu
-bGluZSBib29sIGJsa19xdWV1ZV96b25lX2lzX3NlcShzdHJ1Y3QgcmVxdWVzdF9xdWV1ZSAqcSwK
-Pj4+ICAgIAkJcmV0dXJuIGZhbHNlOwo+Pj4gICAgCXJldHVybiB0ZXN0X2JpdChibGtfcXVldWVf
-em9uZV9ubyhxLCBzZWN0b3IpLCBxLT5zZXFfem9uZXNfYml0bWFwKTsKPj4+ICAgIH0KPj4+ICsj
-ZWxzZSAvKiBDT05GSUdfQkxLX0RFVl9aT05FRCAqLwo+Pj4gK3N0YXRpYyBpbmxpbmUgdW5zaWdu
-ZWQgaW50IGJsa19xdWV1ZV9ucl96b25lcyhzdHJ1Y3QgcmVxdWVzdF9xdWV1ZSAqcSkKPj4+ICt7
-Cj4+PiArCXJldHVybiAwOwo+Pj4gK30KPj4+ICAgICNlbmRpZiAvKiBDT05GSUdfQkxLX0RFVl9a
-T05FRCAqLwo+Pj4gICAgCj4+PiAgICBzdGF0aWMgaW5saW5lIGJvb2wgcnFfaXNfc3luYyhzdHJ1
-Y3QgcmVxdWVzdCAqcnEpCj4+Pgo+PiBBY3R1YWxseSwgd2Ugc2hvdWxkIGJlIGNoZWNraW5nIHdo
-ZXRoZXIgd2UgY2FuJ3QgYmxhbmsgb3V0IHRoaXMKPj4gYXR0cmlidXRlIHZpYSB0aGUgaXNfdmlz
-aWJsZSBtZWNoYW5pc207IGFmdGVyIGFsbCwgbm90IGV2ZXJ5IGJsb2NrCj4+IGRldmljZSBpcyB6
-b25lZCwgYW5kIHRob3NlIHdoaWNoIGFyZSBub3QgaGF2ZSBubyBuZWVkIG9mIHRoZSBhdHRyaWJ1
-dGUuLi4KPiAKPiBZZXMgd2UgY291bGQuIEJ1dCBpdCBpcyBzb21ld2hhdCB0aGUgc2FtZSBhcyBk
-cml2ZXMgdGhhdCBkbyBub3Qgc3VwcG9ydCB0cmltOgo+IHRoZXkgZ2V0IG1heF9kaXNjYXJkX3Nl
-Y3RvcnMgdG8gMC4gVGhlIGF0dHJpYnV0ZSBzYXlzICJub3Qgc3VwcG9ydGVkIGJlY2F1c2UgdGhl
-Cj4gdmFsdWUgaXMgMCIuIEkgZm9sbG93ZWQgdGhlIHNhbWUgcHJpbmNpcGxlIGZvciBucl96b25l
-czogdmFsdWUgb2YgMCBzYXlzICJubwo+IHpvbmVzIiwgaG9wZWZ1bGx5IGluIHN5bmMgd2l0aCAi
-em9uZWQiIHNheWluZyAibm9uZSIuIEFuZCBpZiB0aGVzZSAyIGFyZSBub3QgaW4KPiBzeW5jIGFz
-IHN1Y2gsIHRoZW4gd2UgaGF2ZSBhIGRlZmVjdGl2ZSBkcml2ZSBvciBhIGJ1Zy4gU28gYWN0dWFs
-bHkgYWx3YXlzIGhhdmluZwo+IG5yX3pvbmVzIGlzIHVzZWZ1bCBJIHRoaW5rLgo+IAo+IEJ1dCBJ
-IGNhbiBtYWtlIGl0IGludmlzaWJsZSBmb3IgcmVndWxhciBkaXNrcyBpZiB5b3UgaW5zaXN0IDop
-Cj4gCkkgZG9uJ3QgbWluZDsgYnV0IHRoZW4gSSBtaWdodCBiZSB6YmMtYmlhc2VkIGFscmVhZHku
-CkxlYXZlIHVwIHRvIHRoZSBtYWludGFpbmVycyB0byBkZWNpZGUuCkhlbmNlOgoKUmV2aWV3ZWQt
-Ynk6IEhhbm5lcyBSZWluZWNrZSA8aGFyZUBzdXNlLmNvbT4KCkNoZWVycywKCkhhbm5lcwotLSAK
-RHIuIEhhbm5lcyBSZWluZWNrZQkJICAgVGVhbWxlYWQgU3RvcmFnZSAmIE5ldHdvcmtpbmcKaGFy
-ZUBzdXNlLmRlCQkJICAgICAgICAgICAgICAgKzQ5IDkxMSA3NDA1MyA2ODgKU1VTRSBMSU5VWCBH
-bWJILCBNYXhmZWxkc3RyLiA1LCA5MDQwOSBOw7xybmJlcmcKR0Y6IEYuIEltZW5kw7ZyZmZlciwg
-Si4gU21pdGhhcmQsIEouIEd1aWxkLCBELiBVcG1hbnl1LCBHLiBOb3J0b24KSFJCIDIxMjg0IChB
-RyBOw7xybmJlcmcpCgotLQpkbS1kZXZlbCBtYWlsaW5nIGxpc3QKZG0tZGV2ZWxAcmVkaGF0LmNv
-bQpodHRwczovL3d3dy5yZWRoYXQuY29tL21haWxtYW4vbGlzdGluZm8vZG0tZGV2ZWw=
+Hi Ming,
+
+> In theory, you still may generate and manage the IPTT in the LLDD by
+> simply ignoring rq->tag, meantime enabling SCSI_MQ with 16 hw queues.
+>
+
+Well at the moment we can't expose all 16 hw queues to upper layer 
+anyway, due to ordering restiction imposed by HW on LLDD. We have a plan 
+to solve it.
+
+Regardless, we still found performance better by using rq tag instead of 
+exposing all 16 queues.
+
+> However, not sure how much this way may improve performance, and it may
+> degrade IO perf. If 16 hw queues are exposed to blk-mq, 16*.can_queue
+> requests may be queued to the driver, and allocation & free on the single
+> IPTT pool will become a bottleneck.
+
+Right, this IPTT management doesn't scale (especially for our host with 
+2 sockets @ 48/64 cores each). So if upper layer is already generating a 
+tag which we can use, good to use it.
+
+>
+> Per my experiment on host tagset, it might be a good tradeoff to allocate
+> one hw queue for each node to avoid the remote access on dispatch
+> data/requests structure for this case, but your IPTT pool is still
+> shared all CPUs, maybe you can try the smart sbitmap.
+>
+> https://www.spinics.net/lists/linux-scsi/msg117920.html
+
+I don't understand this about allocating a hw queue per node. Surely 
+having and using all available queues in an intelligent way means less 
+queue contention, right?
+
+Looking at this change:
+@@ -5761,6 +5762,11 @@ static int hpsa_scsi_host_alloc(struct ctlr_info *h)
+  static int hpsa_scsi_add_host(struct ctlr_info *h)
+  {
+  	int rv;
++	/* 256 tags should be high enough to saturate device */
++	int max_queues = DIV_ROUND_UP(h->scsi_host->can_queue, 256);
++
++	/* per NUMA node hw queue */
++	h->scsi_host->nr_hw_queues = min_t(int, nr_node_ids, max_queues);
+
+I assume h->scsi_host->nr_hw_queues was zero-init previously, so we're 
+now using > 1 queue, but why limit?
+
+>
+>
+>>
+>>>
+>>>>
+>>>>> IFF you device needs different tags for different queues it can use
+>>>>> the blk_mq_unique_tag heper to generate unique global tag.
+>>>>
+>>>> So this helper can't help, as fundamentially the issue is "the tag field in
+>>>> struct request is unique per hardware queue but not all all hw queues".
+>>>> Indeed blk_mq_unique_tag() does give a unique global tag, but cannot be used
+>>>> for the IPTT.
+>>>>
+>>>> OTOH, We could expose 16 queues to upper layer, and drop 6/7, but we found
+>>>> it performs worse.
+>>>
+>>> We discussed this issue before, but not found a good solution yet for
+>>> exposing multiple hw queues to blk-mq.
+>>
+>> I just think that it's unfortunate that enabling blk-mq means that the LLDD
+>> loses this unique tag across all queues in range [0, Scsi_host.can_queue),
+>> so much so that we found performance better by not exposing multiple queues
+>> and continuing to use single rq tag...
+>
+> It isn't a new problem, we discussed it a lot on megaraid_sas which has
+> same situation with yours, you may find it in block list.
+
+I'll do some digging.
+
+>
+> Kashyap Desai did lots of test on this case.
+>
+>>
+>>>
+>>> However, we still get good performance in case of none scheduler by the
+>>> following patches:
+>>>
+>>> 8824f62246be blk-mq: fail the request in case issue failure
+>>> 6ce3dd6eec11 blk-mq: issue directly if hw queue isn't busy in case of 'none'
+>>>
+>>
+>> I think that these patches would have been included in our testing. I need
+>> to check.
+>
+> Please switch to none io sched in your test, and it is observed that IO
+> perf becomes good on megaraid_sas.
+
+Hmmm... I thought that deadline was preferred.
+
+>
+> Thanks,
+> Ming
+>
+> .
+>
+
+Much appreciated,
+John
