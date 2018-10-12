@@ -1,41 +1,66 @@
-From: Feng Li <lifeng1519@gmail.com>
-Subject: [PATCH] smartpqi: Fix timeout of smartpqi probe stage
-Date: Fri, 12 Oct 2018 11:13:36 +0800
-Message-ID: <CAEK8JBAgRwHZDBrNDNmmRXC3WgX9tVqeoFk5edLHfJL9OWQ-zg@mail.gmail.com>
+From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Subject: RE: [PATCH v4 1/6] mpt3sas: Introduce mpt3sas_base_pci_device_is_available
+Date: Fri, 12 Oct 2018 11:17:19 +0530
+Message-ID: <4829012be7988318dcfe406a79cc5e35@mail.gmail.com>
+References: <1537935759-14754-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+ <1537935759-14754-2-git-send-email-suganath-prabu.subramani@broadcom.com>
+ <20180926213241.GI28024@bhelgaas-glaptop.roam.corp.google.com>
+ <20180927070327.wvl5glb4c7gtjoa3@wunner.de> <20180927184746.GM28024@bhelgaas-glaptop.roam.corp.google.com>
+ <20180927190959.dio4qwti3i4accjm@wunner.de> <CA+RiK64EdoSngTzDMUP4xXNcZQa6KfyucsRw42+DUo3s+JPmVQ@mail.gmail.com>
+ <20181001204051.GD142872@bhelgaas-glaptop.roam.corp.google.com>
+ <20181002140443.GA120535@bhelgaas-glaptop.roam.corp.google.com> <CA+RiK65MkxcHapivDqcGC5pM=OL8MHN3nk58_kxmS-hsKCGWkA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CA+RiK65MkxcHapivDqcGC5pM=OL8MHN3nk58_kxmS-hsKCGWkA@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Don Brace <don.brace@microsemi.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, esc.storagedev@microsemi.com, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, helgaas@kernel.org
+Cc: lukas@wunner.de, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org, Andy Shevchenko <andy.shevchenko@gmail.com>, Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>, linux-kernel@vger.kernel.org, benh@kernel.crashing.org, ruscur@russell.cc, sbobroff@linux.ibm.com, Oliver <oohall@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-I use 'HPE Smart Array E208i-a SR Gen10 Controller', and pass through
-the SAS controller from ESXi 6.0U1 to VM, which is installed CentOS 7.4/7.5.
-The disk is not found.
+HI Bjorn,
 
-The error log is "controller not ready after 30 seconds."
+Please provide your valuable suggestion/reply here.
 
-Add some logs, and could check the probe stage needs nearly 36s to match the
-status.
+Thank you,
+Sreekanth
 
-Signed-off-by: Li Feng <fengli@smartx.com>
----
- drivers/scsi/smartpqi/smartpqi_sis.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+-----Original Message-----
+From: Suganath Prabu Subramani
+[mailto:suganath-prabu.subramani@broadcom.com]
+Sent: Monday, October 8, 2018 12:15 PM
+To: helgaas@kernel.org
+Cc: lukas@wunner.de; linux-scsi@vger.kernel.org; linux-pci@vger.kernel.org;
+Andy Shevchenko; Sathya Prakash; Sreekanth Reddy;
+linux-kernel@vger.kernel.org; benh@kernel.crashing.org; ruscur@russell.cc;
+sbobroff@linux.ibm.com; Oliver
+Subject: Re: [PATCH v4 1/6] mpt3sas: Introduce
+mpt3sas_base_pci_device_is_available
 
-diff --git a/drivers/scsi/smartpqi/smartpqi_sis.c
-b/drivers/scsi/smartpqi/smartpqi_sis.c
-index 5141bd4c9..bc7efdacb 100644
---- a/drivers/scsi/smartpqi/smartpqi_sis.c
-+++ b/drivers/scsi/smartpqi/smartpqi_sis.c
-@@ -59,7 +59,7 @@
+On Tue, Oct 2, 2018 at 7:34 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
+>
+> On Mon, Oct 01, 2018 at 03:40:51PM -0500, Bjorn Helgaas wrote:
+> > I think the names "pci_device_is_present()" and
+> > "mpt3sas_base_pci_device_is_available()" contribute to the problem
+> > because they make promises that can't be kept -- all we can say is
+> > that the device *was* present, but we know whether it is *still*
+> > present.
 
- #define SIS_CTRL_KERNEL_UP 0x80
- #define SIS_CTRL_KERNEL_PANIC 0x100
--#define SIS_CTRL_READY_TIMEOUT_SECS 30
-+#define SIS_CTRL_READY_TIMEOUT_SECS 90
- #define SIS_CTRL_READY_RESUME_TIMEOUT_SECS 90
- #define SIS_CTRL_READY_POLL_INTERVAL_MSECS 10
+Bjorn,
 
---
-2.11.0
+In the patch we are using '!' (i.e. not operation) of
+pci_device_is_present(),
+which is logically same as pci_device_is absent, and it is
+same for mpt3sas_base_pci_device_is_available().
+My understanding is that, you want us to rename these functions for
+better readability
+Is that correct ?
+
+
+> Oops, I meant "we DON'T know whether it is still present."
+>
+> > I think it would be better if the interfaces were something
+> > like "pci_device_is_absent()" because that gives a result we can rely
+> > on.  If that returns true, we know the device is definitely gone.
+> >
+> > Bjorn
