@@ -1,13 +1,16 @@
-From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: [PATCH v4 09/11] block: Expose queue nr_zones in sysfs
-Date: Fri, 12 Oct 2018 19:08:48 +0900
-Message-ID: <20181012100850.23316-10-damien.lemoal@wdc.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH v4 03/11] scsi: sd_zbc: Fix
+ sd_zbc_check_zones() error checks
+Date: Fri, 12 Oct 2018 12:23:01 +0200
+Message-ID: <ad9d7c12-f2df-a345-895c-f23b18b1ec29@suse.de>
 References: <20181012100850.23316-1-damien.lemoal@wdc.com>
+	<20181012100850.23316-4-damien.lemoal@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Content-Transfer-Encoding: base64
 Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20181012100850.23316-1-damien.lemoal@wdc.com>
+In-Reply-To: <20181012100850.23316-4-damien.lemoal@wdc.com>
+Content-Language: en-US
 List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
 	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
 List-Archive: <https://www.redhat.com/archives/dm-devel>
@@ -17,93 +20,40 @@ List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
 	<mailto:dm-devel-request@redhat.com?subject=subscribe>
 Sender: dm-devel-bounces@redhat.com
 Errors-To: dm-devel-bounces@redhat.com
-To: linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, dm-devel@redhat.com, Mike Snitzer <snitzer@redhat.com>
+To: Damien Le Moal <damien.lemoal@wdc.com>, linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, dm-devel@redhat.com, Mike Snitzer <snitzer@redhat.com>
 Cc: Christoph Hellwig <hch@lst.de>, Matias Bjorling <matias.bjorling@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Expose through sysfs the nr_zones field of struct request_queue.
-Exposing this value helps in debugging disk issues as well as
-facilitating scripts based use of the disk (e.g. blktests).
-
-For zoned block devices, the nr_zones field indicates the total number
-of zones of the device calculated using the known disk capacity and
-zone size. This number of zones is always 0 for regular block devices.
-
-Since nr_zones is defined conditionally with CONFIG_BLK_DEV_ZONED,
-introduce the blk_queue_nr_zones() function to return the correct value
-for any device, regardless if CONFIG_BLK_DEV_ZONED is set.
-
-Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
----
- block/blk-sysfs.c      | 11 +++++++++++
- include/linux/blkdev.h | 10 ++++++++++
- 2 files changed, 21 insertions(+)
-
-diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
-index 3772671cf2bc..92be8092ca4f 100644
---- a/block/blk-sysfs.c
-+++ b/block/blk-sysfs.c
-@@ -300,6 +300,11 @@ static ssize_t queue_zoned_show(struct request_queue *q, char *page)
- 	}
- }
- 
-+static ssize_t queue_nr_zones_show(struct request_queue *q, char *page)
-+{
-+	return queue_var_show(blk_queue_nr_zones(q), page);
-+}
-+
- static ssize_t queue_nomerges_show(struct request_queue *q, char *page)
- {
- 	return queue_var_show((blk_queue_nomerges(q) << 1) |
-@@ -637,6 +642,11 @@ static struct queue_sysfs_entry queue_zoned_entry = {
- 	.show = queue_zoned_show,
- };
- 
-+static struct queue_sysfs_entry queue_nr_zones_entry = {
-+	.attr = {.name = "nr_zones", .mode = 0444 },
-+	.show = queue_nr_zones_show,
-+};
-+
- static struct queue_sysfs_entry queue_nomerges_entry = {
- 	.attr = {.name = "nomerges", .mode = 0644 },
- 	.show = queue_nomerges_show,
-@@ -727,6 +737,7 @@ static struct attribute *default_attrs[] = {
- 	&queue_write_zeroes_max_entry.attr,
- 	&queue_nonrot_entry.attr,
- 	&queue_zoned_entry.attr,
-+	&queue_nr_zones_entry.attr,
- 	&queue_nomerges_entry.attr,
- 	&queue_rq_affinity_entry.attr,
- 	&queue_iostats_entry.attr,
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index c24969b1741b..879753b10263 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -804,6 +804,11 @@ static inline unsigned int blk_queue_zone_sectors(struct request_queue *q)
- }
- 
- #ifdef CONFIG_BLK_DEV_ZONED
-+static inline unsigned int blk_queue_nr_zones(struct request_queue *q)
-+{
-+	return blk_queue_is_zoned(q) ? q->nr_zones : 0;
-+}
-+
- static inline unsigned int blk_queue_zone_no(struct request_queue *q,
- 					     sector_t sector)
- {
-@@ -819,6 +824,11 @@ static inline bool blk_queue_zone_is_seq(struct request_queue *q,
- 		return false;
- 	return test_bit(blk_queue_zone_no(q, sector), q->seq_zones_bitmap);
- }
-+#else /* CONFIG_BLK_DEV_ZONED */
-+static inline unsigned int blk_queue_nr_zones(struct request_queue *q)
-+{
-+	return 0;
-+}
- #endif /* CONFIG_BLK_DEV_ZONED */
- 
- static inline bool rq_is_sync(struct request *rq)
--- 
-2.17.1
+T24gMTAvMTIvMTggMTI6MDggUE0sIERhbWllbiBMZSBNb2FsIHdyb3RlOgo+IFRoZSB1bnNpZ25l
+ZCAzMiBiaXRzIG92ZXJmbG93IGNoZWNrIGZvciB0aGUgem9uZSBzaXplIHZhbHVlIGlzIGFscmVh
+ZHkKPiBkb25lIHdpdGhpbiBzZF96YmNfY2hlY2tfem9uZXMoKSB3aXRoIHRoZSB0ZXN0Ogo+IAo+
+IH0gZWxzZSBpZiAobG9naWNhbF90b19zZWN0b3JzKHNka3AtPmRldmljZSwgem9uZV9ibG9ja3Mp
+ID4gVUlOVF9NQVgpIHsKPiAKPiBzbyB0aGVyZSBpcyBubyBuZWVkIHRvIGNoZWNrIGFnYWluIGZv
+ciBhbiBvdXQgb2YgcmFuZ2UgdmFsdWUgaW4KPiBzZF96YmNfcmVhZF96b25lcygpLiBTaW1wbGlm
+eSB0aGUgY29kZSBhbmQgZml4IHNkX3piY19jaGVja196b25lcygpCj4gZXJyb3IgcmV0dXJuIHRv
+IC1FRkJJRyBpbnN0ZWFkIG9mIC1FTk9ERVYgaWYgdGhlIHpvbmUgc2l6ZSBpcyB0b28gbGFyZ2Uu
+Cj4gQ2hhbmdlIHRoZSByZXR1cm4gdHlwZSBvZiBzZF96YmNfY2hlY2tfem9uZXMoKSB0byBhbiBp
+bnQgZm9yIHRoZSBlcnJvcgo+IGNvZGUgYW5kIHJldHVybiB0aGUgem9uZSBzaXplICh6b25lX2Js
+b2NrcykgdGhyb3VnaCBhIHUzMiBwb2ludGVyIHRvCj4gYXZvaWQgb3ZlcmZsb3dpbmcgdGhlIHNp
+Z25lZCAzMiByZXR1cm4gdmFsdWUuCj4gCj4gU2lnbmVkLW9mZi1ieTogRGFtaWVuIExlIE1vYWwg
+PGRhbWllbi5sZW1vYWxAd2RjLmNvbT4KPiAtLS0KPiAgIGRyaXZlcnMvc2NzaS9zZF96YmMuYyB8
+IDE5ICsrKysrKysrLS0tLS0tLS0tLS0KPiAgIDEgZmlsZSBjaGFuZ2VkLCA4IGluc2VydGlvbnMo
+KyksIDExIGRlbGV0aW9ucygtKQo+IAo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvc2RfemJj
+LmMgYi9kcml2ZXJzL3Njc2kvc2RfemJjLmMKPiBpbmRleCBjYTczYzQ2OTMxYzAuLjA2NzhlMWUx
+MDhiMCAxMDA2NDQKPiAtLS0gYS9kcml2ZXJzL3Njc2kvc2RfemJjLmMKPiArKysgYi9kcml2ZXJz
+L3Njc2kvc2RfemJjLmMKPiBAQCAtMzczLDcgKzM3Myw3IEBAIHN0YXRpYyBpbnQgc2RfemJjX2No
+ZWNrX3pvbmVkX2NoYXJhY3RlcmlzdGljcyhzdHJ1Y3Qgc2NzaV9kaXNrICpzZGtwLAo+ICAgICog
+UmV0dXJucyB0aGUgem9uZSBzaXplIGluIG51bWJlciBvZiBibG9ja3MgdXBvbiBzdWNjZXNzIG9y
+IGFuIGVycm9yIGNvZGUKPiAgICAqIHVwb24gZmFpbHVyZS4KPiAgICAqLwo+IC1zdGF0aWMgczY0
+IHNkX3piY19jaGVja196b25lcyhzdHJ1Y3Qgc2NzaV9kaXNrICpzZGtwKQo+ICtzdGF0aWMgaW50
+IHNkX3piY19jaGVja196b25lcyhzdHJ1Y3Qgc2NzaV9kaXNrICpzZGtwLCB1MzIgKnpibG9ja3Mp
+Cj4gICB7Cj4gICAJdTY0IHpvbmVfYmxvY2tzID0gMDsKPiAgIAlzZWN0b3JfdCBtYXhfbGJhLCBi
+bG9jayA9IDA7CgpBY3R1YWxseSBJIHRob3VnaHQgdG8ganVzdCBjaGFuZ2UgdGhlICdzMzInIHRv
+ICdpbnQnLCBhbmQgbm90IGFkZGluZyAKYW5vdGhlciBwYXJhbWV0ZXI7IGJ1dCBhbnl3YXkuCgpS
+ZXZpZXdlZC1ieTogSGFubmVzIFJlaW5lY2tlIDxoYXJlQHN1c2UuY29tPgoKSGFubmVzCi0tIApE
+ci4gSGFubmVzIFJlaW5lY2tlCQkgICBUZWFtbGVhZCBTdG9yYWdlICYgTmV0d29ya2luZwpoYXJl
+QHN1c2UuZGUJCQkgICAgICAgICAgICAgICArNDkgOTExIDc0MDUzIDY4OApTVVNFIExJTlVYIEdt
+YkgsIE1heGZlbGRzdHIuIDUsIDkwNDA5IE7DvHJuYmVyZwpHRjogRi4gSW1lbmTDtnJmZmVyLCBK
+LiBTbWl0aGFyZCwgSi4gR3VpbGQsIEQuIFVwbWFueXUsIEcuIE5vcnRvbgpIUkIgMjEyODQgKEFH
+IE7DvHJuYmVyZykKCi0tCmRtLWRldmVsIG1haWxpbmcgbGlzdApkbS1kZXZlbEByZWRoYXQuY29t
+Cmh0dHBzOi8vd3d3LnJlZGhhdC5jb20vbWFpbG1hbi9saXN0aW5mby9kbS1kZXZlbA==
