@@ -1,88 +1,54 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH] scsi: ufs: fix integer type usage in uapi header
-Date: Fri, 12 Oct 2018 12:41:28 +0200
-Message-ID: <20181012104143.1931393-1-arnd@arndb.de>
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH 0/7] hisi_sas: Misc bugfixes and an optimisation patch
+Date: Fri, 12 Oct 2018 11:47:05 +0100
+Message-ID: <e771c366-2824-8774-4c90-9906992ee813@huawei.com>
+References: <1537801594-207139-1-git-send-email-john.garry@huawei.com>
+ <yq18t354532.fsf@oracle.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <yq18t354532.fsf@oracle.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Avri Altman <avri.altman@wdc.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: linux-scsi@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: jejb@linux.vnet.ibm.com, linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-We get a warning from 'make headers_check' about a newly introduced
-usage of integer types in the scsi/scsi_bsg_ufs.h uapi header:
+On 11/10/2018 02:58, Martin K. Petersen wrote:
+>
+> John,
+>
 
-usr/include/scsi/scsi_bsg_ufs.h:18: found __[us]{8,16,32,64} type without #include <linux/types.h>
+Hi Martin,
 
-Aside from the missing linux/types.h inclusion, I also noticed that it
-uses the wrong types: 'u32' is not available at all in user space,
-and 'uint32_t' depends on the inclusion of a standard header that
-we should not include from kernel headers.
+>> However it does block us in future from enabling SCSI MQ in the driver.
+>
+> We're going to remove the legacy I/O path so I'm not particularly keen
+> on merging something that's going in the opposite direction.
 
-Change the all to __u32 and similar types here.
+What I really meant was that we cannot expose multiple queues to upper 
+layer, and nothing related to legacy IO path.
 
-I also note the usage of '__be32' and '__be16' that seems unfortunate
-for a user space API. I wonder if it would be better to define the
-interface in terms of a CPU-endian structure and convert it in kernel
-space.
+>
+>> This is because the IPTT index must be a unique value per HBA. However,
+>> if we switched to SCSI MQ, the block layer tag becomes unique per queue,
+>> and not per HBA.
+>
+> That doesn't sound right.
+>
 
-Fixes: e77044c5a842 ("scsi: ufs-bsg: Add support for uic commands in ufs_bsg_request()")
-Fixes: df032bf27a41 ("scsi: ufs: Add a bsg endpoint that supports UPIUs")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- include/uapi/scsi/scsi_bsg_ufs.h | 11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
+Again, my wording my probably was not accurate. I meant that rq tag is 
+not unqiue across all hw queues.
 
-diff --git a/include/uapi/scsi/scsi_bsg_ufs.h b/include/uapi/scsi/scsi_bsg_ufs.h
-index 1b25930688bc..17c7abd0803a 100644
---- a/include/uapi/scsi/scsi_bsg_ufs.h
-+++ b/include/uapi/scsi/scsi_bsg_ufs.h
-@@ -8,6 +8,7 @@
- #ifndef SCSI_BSG_UFS_H
- #define SCSI_BSG_UFS_H
- 
-+#include <linux/types.h>
- /*
-  * This file intended to be included by both kernel and user space
-  */
-@@ -15,7 +16,7 @@
- #define UFS_CDB_SIZE	16
- #define UPIU_TRANSACTION_UIC_CMD 0x1F
- /* uic commands are 4DW long, per UFSHCI V2.1 paragraph 5.6.1 */
--#define UIC_CMD_SIZE (sizeof(u32) * 4)
-+#define UIC_CMD_SIZE (sizeof(__u32) * 4)
- 
- /**
-  * struct utp_upiu_header - UPIU header structure
-@@ -59,7 +60,7 @@ struct utp_upiu_query {
-  */
- struct utp_upiu_cmd {
- 	__be32 exp_data_transfer_len;
--	u8 cdb[UFS_CDB_SIZE];
-+	__u8 cdb[UFS_CDB_SIZE];
- };
- 
- /**
-@@ -81,7 +82,7 @@ struct utp_upiu_req {
- 
- /* request (CDB) structure of the sg_io_v4 */
- struct ufs_bsg_request {
--	uint32_t msgcode;
-+	__u32 msgcode;
- 	struct utp_upiu_req upiu_req;
- };
- 
-@@ -95,10 +96,10 @@ struct ufs_bsg_reply {
- 	 * msg and status fields. The per-msgcode reply structure
- 	 * will contain valid data.
- 	 */
--	uint32_t result;
-+	__u32 result;
- 
- 	/* If there was reply_payload, how much was received? */
--	uint32_t reply_payload_rcv_len;
-+	__u32 reply_payload_rcv_len;
- 
- 	struct utp_upiu_req upiu_rsp;
- };
--- 
-2.18.0
+As I mentioned in the thread that spawned from this, we actually can't 
+expose multiple hw queues at the moment. And, if we did, we find a 
+performance drop due to having to go back to manage this IPTT internally.
+
+So how to handle? We're going to continue to work towards exposing 
+multiple queues to upper layer, but for the moment I think patch 6/7 is 
+a good change.
+
+Please let me know.
+
+Thanks,
+John
