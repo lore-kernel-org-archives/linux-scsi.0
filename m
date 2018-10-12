@@ -1,28 +1,46 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 0/7] Neaten logging uses
-Date: Thu, 11 Oct 2018 20:41:04 -0400
-Message-ID: <yq1a7nk0zfj.fsf@oracle.com>
-References: <cover.1537183087.git.joe@perches.com>
-        <yq1d0sh459q.fsf@oracle.com>
-        <64a18d4b6390e0c7011f440a5f1970371ce43dec.camel@perches.com>
-        <yq1efcw12xm.fsf@oracle.com>
-        <e606c5059731c3deafa5b839ab6859f22a957eb0.camel@perches.com>
+From: Damien Le Moal <Damien.LeMoal@wdc.com>
+Subject: Re: [PATCH v2 09/11] block: Expose queue nr_zones in
+	sysfs
+Date: Fri, 12 Oct 2018 00:41:59 +0000
+Message-ID: <BN3PR0401MB1640D90498CA644E582CCE46E7E20@BN3PR0401MB1640.namprd04.prod.outlook.com>
+References: <20181011070952.13248-1-damien.lemoal@wdc.com>
+	<20181011070952.13248-10-damien.lemoal@wdc.com>
+	<1539268936.20703.258.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <e606c5059731c3deafa5b839ab6859f22a957eb0.camel@perches.com> (Joe
-        Perches's message of "Thu, 11 Oct 2018 17:01:39 -0700")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Joe Perches <joe@perches.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
+Content-Language: en-US
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: "emilne@redhat.com" <emilne@redhat.com>
+Cc: Jens Axboe <axboe@kernel.dk>, "Martin K . Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Bart Van Assche <Bart.VanAssche@wdc.com>, Christoph Hellwig <hch@lst.de>, Matias Bjorling <Matias.Bjorling@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
+On 2018/10/11 23:42, Ewan D. Milne wrote:
+> So in v2 you moved the #ifdef CONFIG_BLK_DEV_ZONED
+> so that nr_zones is always present?  It was previously
+> changed to keep the request_queue size smaller.
+> 
+> Would make more sense to make the nr_zones sysfs
+> code here conditional on CONFIG_BLK_DEV_ZONED?
+> 
 
-Joe,
+Yes, I guess it would. #ifdef in c code is normally not welcome, so I was a
+little heavy handed with this v2 change to avoid adding any to blk-sysfs.c :)
 
-> Via what tree?  It doesn't seem directly pulled.
+I will rework this and send a v3.
 
-Stephen pulls both my for-next and my fixes branches.
+Thanks for the review.
+
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+Damien Le Moal
+Western Digital Research
