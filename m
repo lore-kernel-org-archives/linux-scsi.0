@@ -1,66 +1,164 @@
-From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: RE: [PATCH v4 1/6] mpt3sas: Introduce mpt3sas_base_pci_device_is_available
-Date: Fri, 12 Oct 2018 11:17:19 +0530
-Message-ID: <4829012be7988318dcfe406a79cc5e35@mail.gmail.com>
-References: <1537935759-14754-1-git-send-email-suganath-prabu.subramani@broadcom.com>
- <1537935759-14754-2-git-send-email-suganath-prabu.subramani@broadcom.com>
- <20180926213241.GI28024@bhelgaas-glaptop.roam.corp.google.com>
- <20180927070327.wvl5glb4c7gtjoa3@wunner.de> <20180927184746.GM28024@bhelgaas-glaptop.roam.corp.google.com>
- <20180927190959.dio4qwti3i4accjm@wunner.de> <CA+RiK64EdoSngTzDMUP4xXNcZQa6KfyucsRw42+DUo3s+JPmVQ@mail.gmail.com>
- <20181001204051.GD142872@bhelgaas-glaptop.roam.corp.google.com>
- <20181002140443.GA120535@bhelgaas-glaptop.roam.corp.google.com> <CA+RiK65MkxcHapivDqcGC5pM=OL8MHN3nk58_kxmS-hsKCGWkA@mail.gmail.com>
+From: Vivek Gautam <vivek.gautam@codeaurora.org>
+Subject: Re: [PATCH v3 1/1] scsi: ufs: make UFS Tx lane1 clock optional for
+ QCOM platforms
+Date: Fri, 12 Oct 2018 11:40:32 +0530
+Message-ID: <462df3c4-582b-ccf1-8ced-e0c084bca0f2@codeaurora.org>
+References: <1539306736-9519-1-git-send-email-cang@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CA+RiK65MkxcHapivDqcGC5pM=OL8MHN3nk58_kxmS-hsKCGWkA@mail.gmail.com>
+In-Reply-To: <1539306736-9519-1-git-send-email-cang@codeaurora.org>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, helgaas@kernel.org
-Cc: lukas@wunner.de, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org, Andy Shevchenko <andy.shevchenko@gmail.com>, Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>, linux-kernel@vger.kernel.org, benh@kernel.crashing.org, ruscur@russell.cc, sbobroff@linux.ibm.com, Oliver <oohall@gmail.com>
+To: Can Guo <cang@codeaurora.org>, dianders@chromium.org, subhashj@codeaurora.org, asutoshd@codeaurora.org, evgreen@chromium.org, rnayak@codeaurora.org, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, Venkat Gopalakrishnan <venkatg@codeaurora.org>, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-HI Bjorn,
 
-Please provide your valuable suggestion/reply here.
 
-Thank you,
-Sreekanth
-
------Original Message-----
-From: Suganath Prabu Subramani
-[mailto:suganath-prabu.subramani@broadcom.com]
-Sent: Monday, October 8, 2018 12:15 PM
-To: helgaas@kernel.org
-Cc: lukas@wunner.de; linux-scsi@vger.kernel.org; linux-pci@vger.kernel.org;
-Andy Shevchenko; Sathya Prakash; Sreekanth Reddy;
-linux-kernel@vger.kernel.org; benh@kernel.crashing.org; ruscur@russell.cc;
-sbobroff@linux.ibm.com; Oliver
-Subject: Re: [PATCH v4 1/6] mpt3sas: Introduce
-mpt3sas_base_pci_device_is_available
-
-On Tue, Oct 2, 2018 at 7:34 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
+On 10/12/2018 6:42 AM, Can Guo wrote:
+> From: Venkat Gopalakrishnan <venkatg@codeaurora.org>
 >
-> On Mon, Oct 01, 2018 at 03:40:51PM -0500, Bjorn Helgaas wrote:
-> > I think the names "pci_device_is_present()" and
-> > "mpt3sas_base_pci_device_is_available()" contribute to the problem
-> > because they make promises that can't be kept -- all we can say is
-> > that the device *was* present, but we know whether it is *still*
-> > present.
-
-Bjorn,
-
-In the patch we are using '!' (i.e. not operation) of
-pci_device_is_present(),
-which is logically same as pci_device_is absent, and it is
-same for mpt3sas_base_pci_device_is_available().
-My understanding is that, you want us to rename these functions for
-better readability
-Is that correct ?
-
-
-> Oops, I meant "we DON'T know whether it is still present."
+> Per Qcom's UFS host controller HW design, the UFS Tx lane1 clock could be
+> muxed with Tx lane0 clock, hence keep Tx lane1 clock optional by ignoring
+> it if it is not provided in device tree. This change also performs some
+> cleanup to lanes per direction checks when enable/disable lane clocks just
+> for symmetry.
 >
-> > I think it would be better if the interfaces were something
-> > like "pci_device_is_absent()" because that gives a result we can rely
-> > on.  If that returns true, we know the device is definitely gone.
-> >
-> > Bjorn
+> Signed-off-by: Venkat Gopalakrishnan <venkatg@codeaurora.org>
+> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+> Signed-off-by: Can Guo <cang@codeaurora.org>
+> ---
+> Changes since v2:
+> - Incorporated review comments from Doug.
+>
+> Changes since v1:
+> - Incorporated review comments from Doug.
+> - Update the commit title and commit message.
+>
+>   drivers/scsi/ufs/ufs-qcom.c | 55 ++++++++++++++++++++++++---------------------
+>   1 file changed, 29 insertions(+), 26 deletions(-)
+>
+> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+> index 2b38db2..dbc84cb 100644
+> --- a/drivers/scsi/ufs/ufs-qcom.c
+> +++ b/drivers/scsi/ufs/ufs-qcom.c
+> @@ -79,20 +79,28 @@ static int ufs_qcom_get_connected_tx_lanes(struct ufs_hba *hba, u32 *tx_lanes)
+>   }
+>   
+>   static int ufs_qcom_host_clk_get(struct device *dev,
+> -		const char *name, struct clk **clk_out)
+> +		const char *name, struct clk **clk_out, bool optional)
+>   {
+>   	struct clk *clk;
+>   	int err = 0;
+>   
+>   	clk = devm_clk_get(dev, name);
+> -	if (IS_ERR(clk)) {
+> -		err = PTR_ERR(clk);
+> -		dev_err(dev, "%s: failed to get %s err %d",
+> -				__func__, name, err);
+> -	} else {
+> +	if (!IS_ERR(clk)) {
+>   		*clk_out = clk;
+> +		return 0;
+>   	}
+>   
+> +	err = PTR_ERR(clk);
+> +
+> +	if (optional && err == -ENOENT) {
+> +		*clk_out = NULL;
+> +		return 0;
+> +	}
+> +
+> +	if (err != -EPROBE_DEFER)
+> +		dev_err(dev, "failed to get %s err %d",
+> +				name, err);
+> +
+>   	return err;
+>   }
+>   
+> @@ -113,11 +121,9 @@ static void ufs_qcom_disable_lane_clks(struct ufs_qcom_host *host)
+>   	if (!host->is_lane_clks_enabled)
+>   		return;
+>   
+> -	if (host->hba->lanes_per_direction > 1)
+> -		clk_disable_unprepare(host->tx_l1_sync_clk);
+> +	clk_disable_unprepare(host->tx_l1_sync_clk);
+>   	clk_disable_unprepare(host->tx_l0_sync_clk);
+> -	if (host->hba->lanes_per_direction > 1)
+> -		clk_disable_unprepare(host->rx_l1_sync_clk);
+> +	clk_disable_unprepare(host->rx_l1_sync_clk);
+>   	clk_disable_unprepare(host->rx_l0_sync_clk);
+>   
+>   	host->is_lane_clks_enabled = false;
+> @@ -141,24 +147,21 @@ static int ufs_qcom_enable_lane_clks(struct ufs_qcom_host *host)
+>   	if (err)
+>   		goto disable_rx_l0;
+>   
+> -	if (host->hba->lanes_per_direction > 1) {
+> -		err = ufs_qcom_host_clk_enable(dev, "rx_lane1_sync_clk",
+> +	err = ufs_qcom_host_clk_enable(dev, "rx_lane1_sync_clk",
+>   			host->rx_l1_sync_clk);
+> -		if (err)
+> -			goto disable_tx_l0;
+> +	if (err)
+> +		goto disable_tx_l0;
+>   
+> -		err = ufs_qcom_host_clk_enable(dev, "tx_lane1_sync_clk",
+> +	err = ufs_qcom_host_clk_enable(dev, "tx_lane1_sync_clk",
+>   			host->tx_l1_sync_clk);
+> -		if (err)
+> -			goto disable_rx_l1;
+> -	}
+> +	if (err)
+> +		goto disable_rx_l1;
+>   
+>   	host->is_lane_clks_enabled = true;
+>   	goto out;
+>   
+>   disable_rx_l1:
+> -	if (host->hba->lanes_per_direction > 1)
+> -		clk_disable_unprepare(host->rx_l1_sync_clk);
+> +	clk_disable_unprepare(host->rx_l1_sync_clk);
+>   disable_tx_l0:
+>   	clk_disable_unprepare(host->tx_l0_sync_clk);
+>   disable_rx_l0:
+> @@ -172,25 +175,25 @@ static int ufs_qcom_init_lane_clks(struct ufs_qcom_host *host)
+>   	int err = 0;
+>   	struct device *dev = host->hba->dev;
+>   
+> -	err = ufs_qcom_host_clk_get(dev,
+> -			"rx_lane0_sync_clk", &host->rx_l0_sync_clk);
+> +	err = ufs_qcom_host_clk_get(dev, "rx_lane0_sync_clk",
+> +					&host->rx_l0_sync_clk, false);
+>   	if (err)
+>   		goto out;
+>   
+> -	err = ufs_qcom_host_clk_get(dev,
+> -			"tx_lane0_sync_clk", &host->tx_l0_sync_clk);
+> +	err = ufs_qcom_host_clk_get(dev, "tx_lane0_sync_clk",
+> +					&host->tx_l0_sync_clk, false);
+>   	if (err)
+>   		goto out;
+>   
+>   	/* In case of single lane per direction, don't read lane1 clocks */
+>   	if (host->hba->lanes_per_direction > 1) {
+>   		err = ufs_qcom_host_clk_get(dev, "rx_lane1_sync_clk",
+> -			&host->rx_l1_sync_clk);
+> +			&host->rx_l1_sync_clk, false);
+>   		if (err)
+>   			goto out;
+>   
+>   		err = ufs_qcom_host_clk_get(dev, "tx_lane1_sync_clk",
+> -			&host->tx_l1_sync_clk);
+> +			&host->tx_l1_sync_clk, true);
+>   	}
+>   out:
+>   	return err;
+
+Reviewed-by: Vivek Gautam <vivek.gautam@codeaurora.org>
+
+Best regards
+Vivek
