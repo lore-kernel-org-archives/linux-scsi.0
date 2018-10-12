@@ -1,15 +1,14 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v3 05/11] block: Limit allocation of zone
- descriptors for report zones
-Date: Fri, 12 Oct 2018 09:36:45 +0200
-Message-ID: <34452bd8-5649-4f7f-35f6-f370811dc68c@suse.de>
+Subject: Re: [PATCH v3 06/11] block: Introduce BLKGETZONESZ ioctl
+Date: Fri, 12 Oct 2018 09:37:19 +0200
+Message-ID: <56b5e309-872d-d37e-89fc-5df15757c1a3@suse.de>
 References: <20181012023012.29923-1-damien.lemoal@wdc.com>
-	<20181012023012.29923-6-damien.lemoal@wdc.com>
+	<20181012023012.29923-7-damien.lemoal@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"; Format="flowed"
 Content-Transfer-Encoding: base64
 Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20181012023012.29923-6-damien.lemoal@wdc.com>
+In-Reply-To: <20181012023012.29923-7-damien.lemoal@wdc.com>
 Content-Language: en-US
 List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
 	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
@@ -24,19 +23,17 @@ To: Damien Le Moal <damien.lemoal@wdc.com>, linux-block@vger.kernel.org, Jens Ax
 Cc: Christoph Hellwig <hch@lst.de>, Matias Bjorling <matias.bjorling@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gMTAvMTIvMTggNDozMCBBTSwgRGFtaWVuIExlIE1vYWwgd3JvdGU6Cj4gVGhlcmUgaXMgbm8g
-cG9pbnQgaW4gYWxsb2NhdGluZyBtb3JlIHpvbmUgZGVzY3JpcHRvcnMgdGhhbiB0aGUgbnVtYmVy
-IG9mCj4gem9uZXMgYSBibG9jayBkZXZpY2UgaGFzIGZvciBkb2luZyBhIHpvbmUgcmVwb3J0LiBB
-dm9pZCBkb2luZyB0aGF0IGluCj4gYmxrZGV2X3JlcG9ydF96b25lc19pb2N0bCgpIGJ5IGxpbWl0
-aW5nIHRoZSBudW1iZXIgb2Ygem9uZSBkZWNyaXB0b3JzCj4gYWxsb2NhdGVkIGludGVybmFsbHkg
-dG8gcHJvY2VzcyB0aGUgdXNlciByZXF1ZXN0Lgo+IAo+IFNpZ25lZC1vZmYtYnk6IERhbWllbiBM
-ZSBNb2FsIDxkYW1pZW4ubGVtb2FsQHdkYy5jb20+Cj4gUmV2aWV3ZWQtYnk6IENocmlzdG9waCBI
-ZWxsd2lnIDxoY2hAbHN0LmRlPgo+IC0tLQo+ICAgYmxvY2svYmxrLXpvbmVkLmMgfCAzICstLQo+
-ICAgMSBmaWxlIGNoYW5nZWQsIDEgaW5zZXJ0aW9uKCspLCAyIGRlbGV0aW9ucygtKQo+IApSZXZp
-ZXdlZC1ieTogSGFubmVzIFJlaW5lY2tlIDxoYXJlQHN1c2UuY29tPgoKQ2hlZXJzLAoKSGFubmVz
-Ci0tIApEci4gSGFubmVzIFJlaW5lY2tlCQkgICBUZWFtbGVhZCBTdG9yYWdlICYgTmV0d29ya2lu
-ZwpoYXJlQHN1c2UuZGUJCQkgICAgICAgICAgICAgICArNDkgOTExIDc0MDUzIDY4OApTVVNFIExJ
-TlVYIEdtYkgsIE1heGZlbGRzdHIuIDUsIDkwNDA5IE7DvHJuYmVyZwpHRjogRi4gSW1lbmTDtnJm
-ZmVyLCBKLiBTbWl0aGFyZCwgSi4gR3VpbGQsIEQuIFVwbWFueXUsIEcuIE5vcnRvbgpIUkIgMjEy
-ODQgKEFHIE7DvHJuYmVyZykKCi0tCmRtLWRldmVsIG1haWxpbmcgbGlzdApkbS1kZXZlbEByZWRo
-YXQuY29tCmh0dHBzOi8vd3d3LnJlZGhhdC5jb20vbWFpbG1hbi9saXN0aW5mby9kbS1kZXZlbA==
+T24gMTAvMTIvMTggNDozMCBBTSwgRGFtaWVuIExlIE1vYWwgd3JvdGU6Cj4gR2V0IGEgem9uZWQg
+YmxvY2sgZGV2aWNlIHpvbmUgc2l6ZSBpbiBudW1iZXIgb2YgNTEyIEIgc2VjdG9ycy4KPiBUaGUg
+em9uZSBzaXplIGlzIGFsd2F5cyAwIGZvciByZWd1bGFyIGJsb2NrIGRldmljZXMuCj4gCj4gU2ln
+bmVkLW9mZi1ieTogRGFtaWVuIExlIE1vYWwgPGRhbWllbi5sZW1vYWxAd2RjLmNvbT4KPiAtLS0K
+PiAgIGJsb2NrL2lvY3RsLmMgICAgICAgICAgICAgICAgIHwgMiArKwo+ICAgaW5jbHVkZS91YXBp
+L2xpbnV4L2Jsa3pvbmVkLmggfCAyICsrCj4gICAyIGZpbGVzIGNoYW5nZWQsIDQgaW5zZXJ0aW9u
+cygrKQo+IApSZXZpZXdlZC1ieTogSGFubmVzIFJlaW5lY2tlIDxoYXJlQHN1c2UuY29tPgoKQ2hl
+ZXJzLAoKSGFubmVzCi0tIApEci4gSGFubmVzIFJlaW5lY2tlCQkgICBUZWFtbGVhZCBTdG9yYWdl
+ICYgTmV0d29ya2luZwpoYXJlQHN1c2UuZGUJCQkgICAgICAgICAgICAgICArNDkgOTExIDc0MDUz
+IDY4OApTVVNFIExJTlVYIEdtYkgsIE1heGZlbGRzdHIuIDUsIDkwNDA5IE7DvHJuYmVyZwpHRjog
+Ri4gSW1lbmTDtnJmZmVyLCBKLiBTbWl0aGFyZCwgSi4gR3VpbGQsIEQuIFVwbWFueXUsIEcuIE5v
+cnRvbgpIUkIgMjEyODQgKEFHIE7DvHJuYmVyZykKCi0tCmRtLWRldmVsIG1haWxpbmcgbGlzdApk
+bS1kZXZlbEByZWRoYXQuY29tCmh0dHBzOi8vd3d3LnJlZGhhdC5jb20vbWFpbG1hbi9saXN0aW5m
+by9kbS1kZXZlbA==
