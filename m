@@ -1,15 +1,15 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v3 11/11] block: Introduce
-	blk_revalidate_disk_zones()
-Date: Fri, 12 Oct 2018 09:44:56 +0200
-Message-ID: <783a4852-f390-c989-17eb-6cb54cc3348a@suse.de>
+From: Damien Le Moal <Damien.LeMoal@wdc.com>
+Subject: Re: [PATCH v3 02/11] scsi: sd_zbc: Reduce boot device
+ scan and revalidate time
+Date: Fri, 12 Oct 2018 07:48:52 +0000
+Message-ID: <BLUPR0401MB1636734D5CFE4AA338925BF6E7E20@BLUPR0401MB1636.namprd04.prod.outlook.com>
 References: <20181012023012.29923-1-damien.lemoal@wdc.com>
-	<20181012023012.29923-12-damien.lemoal@wdc.com>
+	<20181012023012.29923-3-damien.lemoal@wdc.com>
+	<d851a895-0340-1d8a-9aa8-1abc902be337@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20181012023012.29923-12-damien.lemoal@wdc.com>
 Content-Language: en-US
 List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
 	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
@@ -20,50 +20,58 @@ List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
 	<mailto:dm-devel-request@redhat.com?subject=subscribe>
 Sender: dm-devel-bounces@redhat.com
 Errors-To: dm-devel-bounces@redhat.com
-To: Damien Le Moal <damien.lemoal@wdc.com>, linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, dm-devel@redhat.com, Mike Snitzer <snitzer@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, Matias Bjorling <matias.bjorling@wdc.com>
+To: Hannes Reinecke <hare@suse.de>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Martin K .
+	Petersen" <martin.petersen@oracle.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>, Mike Snitzer <snitzer@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, Matias Bjorling <Matias.Bjorling@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gMTAvMTIvMTggNDozMCBBTSwgRGFtaWVuIExlIE1vYWwgd3JvdGU6Cj4gRHJpdmVycyBleHBv
-c2luZyB6b25lZCBibG9jayBkZXZpY2VzIGhhdmUgdG8gaW5pdGlhbGl6ZSBhbmQgbWFpbnRhaW4K
-PiBjb3JyZWN0bmVzcyAoaS5lLiByZXZhbGlkYXRlKSBvZiB0aGUgZGV2aWNlIHpvbmUgYml0bWFw
-cyBhdHRhY2hlZCB0bwo+IHRoZSBkZXZpY2UgcmVxdWVzdCBxdWV1ZSAoc2VxX3pvbmVzX2JpdG1h
-cCBhbmQgc2VxX3pvbmVzX3dsb2NrKS4KPiAKPiBUbyBzaW1wbGlmeSBjb2RpbmcgdGhpcywgaW50
-cm9kdWNlIGEgZ2VuZXJpYyBoZWxwZXIgZnVuY3Rpb24KPiBibGtfcmV2YWxpZGF0ZV9kaXNrX3pv
-bmVzKCkgc3VpdGFibGUgZm9yIG1vc3QgKGFuZCBsaWtlbHkgYWxsKSBjYXNlcy4KPiBUaGlzIG5l
-dyBmdW5jdGlvbiBhbHdheXMgdXBkYXRlIHRoZSBzZXFfem9uZXNfYml0bWFwIGFuZCBzZXFfem9u
-ZXNfd2xvY2sKPiBiaXRtYXBzIGFzIHdlbGwgYXMgdGhlIHF1ZXVlIG5yX3pvbmVzIGZpZWxkIHdo
-ZW4gY2FsbGVkIGZvciBhIGRpc2sKPiB1c2luZyBhIHJlcXVlc3QgYmFzZWQgcXVldWUuIEZvciBh
-IGRpc2sgdXNpbmcgYSBCSU8gYmFzZWQgcXVldWUsIG9ubHkKPiB0aGUgbnVtYmVyIG9mIHpvbmVz
-IGlzIHVwZGF0ZWQgc2luY2UgdGhlc2UgcXVldWVzIGRvIG5vdCBoYXZlCj4gc2NoZWR1bGVycyBh
-bmQgc28gZG8gbm90IG5lZWQgdGhlIHpvbmUgYml0bWFwcy4KPiAKPiBXaXRoIHRoaXMgY2hhbmdl
-LCB0aGUgem9uZSBiaXRtYXAgaW5pdGlhbGl6YXRpb24gY29kZSBpbiBzZF96YmMuYyBjYW4gYmUK
-PiByZXBsYWNlZCB3aXRoIGEgY2FsbCB0byB0aGlzIGZ1bmN0aW9uIGluIHNkX3piY19yZWFkX3pv
-bmVzKCksIHdoaWNoIGlzCj4gY2FsbGVkIGZyb20gdGhlIGRpc2sgcmV2YWxpZGF0ZSBibG9jayBv
-cGVyYXRpb24gbWV0aG9kLgo+IAo+IEEgY2FsbCB0byBibGtfcmV2YWxpZGF0ZV9kaXNrX3pvbmVz
-KCkgaXMgYWxzbyBhZGRlZCB0byB0aGUgbnVsbF9ibGsKPiBkcml2ZXIgZm9yIGRldmljZXMgY3Jl
-YXRlZCB3aXRoIHRoZSB6b25lZCBtb2RlIGVuYWJsZWQuCj4gCj4gRmluYWxseSwgdG8gZW5zdXJl
-IHRoYXQgem9uZWQgZGV2aWNlcyBjcmVhdGVkIHdpdGggZG0tbGluZWFyIG9yCj4gZG0tZmxha2V5
-IGV4cG9zZSB0aGUgY29ycmVjdCBudW1iZXIgb2Ygem9uZXMgdGhyb3VnaCBzeXNmcywgYSBjYWxs
-IHRvCj4gYmxrX3JldmFsaWRhdGVfZGlza196b25lcygpIGlzIGFkZGVkIHRvIGRtX3RhYmxlX3Nl
-dF9yZXN0cmljdGlvbnMoKS4KPiAKPiBUaGUgem9uZSBiaXRtYXBzIGFsbG9jYXRlZCBhbmQgaW5p
-dGlhbGl6ZWQgd2l0aAo+IGJsa19yZXZhbGlkYXRlX2Rpc2tfem9uZXMoKSBhcmUgZnJlZWQgYXV0
-b21hdGljYWxseSBmcm9tCj4gX19ibGtfcmVsZWFzZV9xdWV1ZSgpIHVzaW5nIHRoZSBibG9jayBp
-bnRlcm5hbCBmdW5jdGlvbgo+IGJsa19xdWV1ZV9mcmVlX3pvbmVfYml0bWFwcygpLgo+IAo+IFNp
-Z25lZC1vZmYtYnk6IERhbWllbiBMZSBNb2FsIDxkYW1pZW4ubGVtb2FsQHdkYy5jb20+Cj4gLS0t
-Cj4gICBibG9jay9ibGstc3lzZnMuYyAgICAgICAgICAgICB8ICAgMiArCj4gICBibG9jay9ibGst
-em9uZWQuYyAgICAgICAgICAgICB8IDEzNiArKysrKysrKysrKysrKysrKysrKysKPiAgIGJsb2Nr
-L2Jsay5oICAgICAgICAgICAgICAgICAgIHwgICA2ICsKPiAgIGRyaXZlcnMvYmxvY2svbnVsbF9i
-bGtfbWFpbi5jIHwgICA3ICsrCj4gICBkcml2ZXJzL21kL2RtLXRhYmxlLmMgICAgICAgICB8ICAx
-MCArKwo+ICAgZHJpdmVycy9zY3NpL3NkLmMgICAgICAgICAgICAgfCAgIDIgLQo+ICAgZHJpdmVy
-cy9zY3NpL3NkLmggICAgICAgICAgICAgfCAgIDQgLQo+ICAgZHJpdmVycy9zY3NpL3NkX3piYy5j
-ICAgICAgICAgfCAyMTggKysrKy0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQo+ICAgaW5j
-bHVkZS9saW51eC9ibGtkZXYuaCAgICAgICAgfCAgIDcgKysKPiAgIDkgZmlsZXMgY2hhbmdlZCwg
-MTk0IGluc2VydGlvbnMoKyksIDE5OCBkZWxldGlvbnMoLSkKPiAKUmV2aWV3ZWQtYnk6IEhhbm5l
-cyBSZWluZWNrZSA8aGFyZUBzdXNlLmNvbT4KCkNoZWVycywKCkhhbm5lcwotLSAKRHIuIEhhbm5l
-cyBSZWluZWNrZQkJICAgVGVhbWxlYWQgU3RvcmFnZSAmIE5ldHdvcmtpbmcKaGFyZUBzdXNlLmRl
-CQkJICAgICAgICAgICAgICAgKzQ5IDkxMSA3NDA1MyA2ODgKU1VTRSBMSU5VWCBHbWJILCBNYXhm
-ZWxkc3RyLiA1LCA5MDQwOSBOw7xybmJlcmcKR0Y6IEYuIEltZW5kw7ZyZmZlciwgSi4gU21pdGhh
-cmQsIEouIEd1aWxkLCBELiBVcG1hbnl1LCBHLiBOb3J0b24KSFJCIDIxMjg0IChBRyBOw7xybmJl
-cmcpCgotLQpkbS1kZXZlbCBtYWlsaW5nIGxpc3QKZG0tZGV2ZWxAcmVkaGF0LmNvbQpodHRwczov
-L3d3dy5yZWRoYXQuY29tL21haWxtYW4vbGlzdGluZm8vZG0tZGV2ZWw=
+On 2018/10/12 16:33, Hannes Reinecke wrote:
+> On 10/12/18 4:30 AM, Damien Le Moal wrote:
+>> Handling checks of ZBC device capacity using the max_lba field of the
+>> REPORT ZONES command reply for disks with rc_basis == 0 can be done
+>> using the same report zones command reply used to check the "same"
+>> field.
+>>
+>> Avoid executing a report zones command solely to check the disk capacity
+>> by merging sd_zbc_check_capacity() into sd_zbc_check_zone_size() and
+>> renaming that function to sd_zbc_check_zones(). This removes a costly
+>> execution of a full report zones command and so reduces device scan
+>> duration at boot time as well as the duration of disk revalidate calls.
+>>
+>> Furthermore, setting the partial report bit in the REPORT ZONES command
+>> cdb can significantly reduce this command execution time as the device
+>> does not have to count and report the total number of zones that could
+>> be reported assuming a large enough reply buffer. A non-partial zone
+>> report is necessary only for the first execution of report zones used to
+>> check the same field value (to ensure that this value applies to all
+>> zones of the disk). All other calls to sd_zbc_report_zones() can use a
+>> partial report to reduce execution time.
+>>
+>> Using a 14 TB ZBC disk, these simple changes reduce device scan time at
+>> boot from about 3.5s down to about 900ms. Disk revalidate times are also
+>> reduced from about 450ms down to 230ms.
+>>
+>> Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+>> Reviewed-by: Christoph Hellwig <hch@lst.de>
+>> ---
+>>   drivers/scsi/sd_zbc.c | 94 ++++++++++++++++++-------------------------
+>>   1 file changed, 40 insertions(+), 54 deletions(-)
+>>
+> Reviewed-by: Hannes Reinecke <hare@suse.com>
+> 
+> ... and it'll be your fault if there are drives which do not support the 
+> 'partial' bit :)
+
+The partial bit definition is in the ZBC/ZAC specs and it is not optional. If a
+drive does not support it, it would be out of specs :)
+
+> 
+> Cheers,
+> 
+> Hannes
+> 
+
+
+-- 
+Damien Le Moal
+Western Digital Research
