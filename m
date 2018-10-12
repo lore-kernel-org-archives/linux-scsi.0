@@ -1,7 +1,7 @@
 From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: [PATCH v3 06/11] block: Introduce BLKGETZONESZ ioctl
-Date: Fri, 12 Oct 2018 11:30:07 +0900
-Message-ID: <20181012023012.29923-7-damien.lemoal@wdc.com>
+Subject: [PATCH v3 07/11] block: Introduce BLKGETNRZONES ioctl
+Date: Fri, 12 Oct 2018 11:30:08 +0900
+Message-ID: <20181012023012.29923-8-damien.lemoal@wdc.com>
 References: <20181012023012.29923-1-damien.lemoal@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,41 +21,38 @@ To: linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.k
 Cc: Christoph Hellwig <hch@lst.de>, Matias Bjorling <matias.bjorling@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Get a zoned block device zone size in number of 512 B sectors.
-The zone size is always 0 for regular block devices.
+Get a zoned block device total number of zones. The device can be a
+partition of the whole device. The number of zones is always 0 for
+regular block devices.
 
 Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
 ---
  block/ioctl.c                 | 2 ++
- include/uapi/linux/blkzoned.h | 2 ++
- 2 files changed, 4 insertions(+)
+ include/uapi/linux/blkzoned.h | 1 +
+ 2 files changed, 3 insertions(+)
 
 diff --git a/block/ioctl.c b/block/ioctl.c
-index 3884d810efd2..f6d2c6f1f050 100644
+index f6d2c6f1f050..4825c78a6baa 100644
 --- a/block/ioctl.c
 +++ b/block/ioctl.c
-@@ -532,6 +532,8 @@ int blkdev_ioctl(struct block_device *bdev, fmode_t mode, unsigned cmd,
- 		return blkdev_report_zones_ioctl(bdev, mode, cmd, arg);
- 	case BLKRESETZONE:
+@@ -534,6 +534,8 @@ int blkdev_ioctl(struct block_device *bdev, fmode_t mode, unsigned cmd,
  		return blkdev_reset_zones_ioctl(bdev, mode, cmd, arg);
-+	case BLKGETZONESZ:
-+		return put_uint(arg, bdev_zone_sectors(bdev));
+ 	case BLKGETZONESZ:
+ 		return put_uint(arg, bdev_zone_sectors(bdev));
++	case BLKGETNRZONES:
++		return put_uint(arg, blkdev_nr_zones(bdev));
  	case HDIO_GETGEO:
  		return blkdev_getgeo(bdev, argp);
  	case BLKRAGET:
 diff --git a/include/uapi/linux/blkzoned.h b/include/uapi/linux/blkzoned.h
-index ff5a5db8906a..281ac605f752 100644
+index 281ac605f752..8f08ff9bdea0 100644
 --- a/include/uapi/linux/blkzoned.h
 +++ b/include/uapi/linux/blkzoned.h
-@@ -137,8 +137,10 @@ struct blk_zone_range {
-  *                 sector specified in the report request structure.
-  * @BLKRESETZONE: Reset the write pointer of the zones in the specified
-  *                sector range. The sector range must be zone aligned.
-+ * @BLKGETZONESZ: Get the device zone size in number of 512 B sectors.
-  */
+@@ -142,5 +142,6 @@ struct blk_zone_range {
  #define BLKREPORTZONE	_IOWR(0x12, 130, struct blk_zone_report)
  #define BLKRESETZONE	_IOW(0x12, 131, struct blk_zone_range)
-+#define BLKGETZONESZ	_IOW(0x12, 132, __u32)
+ #define BLKGETZONESZ	_IOW(0x12, 132, __u32)
++#define BLKGETNRZONES	_IOW(0x12, 133, __u32)
  
  #endif /* _UAPI_BLKZONED_H */
 -- 
