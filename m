@@ -1,166 +1,44 @@
-From: cang@codeaurora.org
-Subject: Re: [PATCH v3 1/1] scsi: ufs: make UFS Tx lane1 clock optional for
- QCOM platforms
-Date: Fri, 12 Oct 2018 14:46:55 +0800
-Message-ID: <6d24a84708f5682df0540d852f60314d@codeaurora.org>
-References: <1539306736-9519-1-git-send-email-cang@codeaurora.org>
- <462df3c4-582b-ccf1-8ced-e0c084bca0f2@codeaurora.org>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH v3 01/11] scsi: sd_zbc: Rearrange code
+Date: Fri, 12 Oct 2018 09:29:33 +0200
+Message-ID: <35001c63-9bde-3c73-4a18-f81145f5c424@suse.de>
+References: <20181012023012.29923-1-damien.lemoal@wdc.com>
+	<20181012023012.29923-2-damien.lemoal@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <462df3c4-582b-ccf1-8ced-e0c084bca0f2@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Vivek Gautam <vivek.gautam@codeaurora.org>
-Cc: dianders@chromium.org, subhashj@codeaurora.org, asutoshd@codeaurora.org, evgreen@chromium.org, rnayak@codeaurora.org, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, Venkat Gopalakrishnan <venkatg@codeaurora.org>, open list <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Content-Transfer-Encoding: base64
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <20181012023012.29923-2-damien.lemoal@wdc.com>
+Content-Language: en-US
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Damien Le Moal <damien.lemoal@wdc.com>, linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, dm-devel@redhat.com, Mike Snitzer <snitzer@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, Matias Bjorling <matias.bjorling@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi,
-
-On 2018-10-12 14:10, Vivek Gautam wrote:
-> On 10/12/2018 6:42 AM, Can Guo wrote:
->> From: Venkat Gopalakrishnan <venkatg@codeaurora.org>
->> 
->> Per Qcom's UFS host controller HW design, the UFS Tx lane1 clock could 
->> be
->> muxed with Tx lane0 clock, hence keep Tx lane1 clock optional by 
->> ignoring
->> it if it is not provided in device tree. This change also performs 
->> some
->> cleanup to lanes per direction checks when enable/disable lane clocks 
->> just
->> for symmetry.
->> 
->> Signed-off-by: Venkat Gopalakrishnan <venkatg@codeaurora.org>
->> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
->> Signed-off-by: Can Guo <cang@codeaurora.org>
->> ---
->> Changes since v2:
->> - Incorporated review comments from Doug.
->> 
->> Changes since v1:
->> - Incorporated review comments from Doug.
->> - Update the commit title and commit message.
->> 
->>   drivers/scsi/ufs/ufs-qcom.c | 55 
->> ++++++++++++++++++++++++---------------------
->>   1 file changed, 29 insertions(+), 26 deletions(-)
->> 
->> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
->> index 2b38db2..dbc84cb 100644
->> --- a/drivers/scsi/ufs/ufs-qcom.c
->> +++ b/drivers/scsi/ufs/ufs-qcom.c
->> @@ -79,20 +79,28 @@ static int ufs_qcom_get_connected_tx_lanes(struct 
->> ufs_hba *hba, u32 *tx_lanes)
->>   }
->>     static int ufs_qcom_host_clk_get(struct device *dev,
->> -		const char *name, struct clk **clk_out)
->> +		const char *name, struct clk **clk_out, bool optional)
->>   {
->>   	struct clk *clk;
->>   	int err = 0;
->>     	clk = devm_clk_get(dev, name);
->> -	if (IS_ERR(clk)) {
->> -		err = PTR_ERR(clk);
->> -		dev_err(dev, "%s: failed to get %s err %d",
->> -				__func__, name, err);
->> -	} else {
->> +	if (!IS_ERR(clk)) {
->>   		*clk_out = clk;
->> +		return 0;
->>   	}
->>   +	err = PTR_ERR(clk);
->> +
->> +	if (optional && err == -ENOENT) {
->> +		*clk_out = NULL;
->> +		return 0;
->> +	}
->> +
->> +	if (err != -EPROBE_DEFER)
->> +		dev_err(dev, "failed to get %s err %d",
->> +				name, err);
->> +
->>   	return err;
->>   }
->>   @@ -113,11 +121,9 @@ static void ufs_qcom_disable_lane_clks(struct 
->> ufs_qcom_host *host)
->>   	if (!host->is_lane_clks_enabled)
->>   		return;
->>   -	if (host->hba->lanes_per_direction > 1)
->> -		clk_disable_unprepare(host->tx_l1_sync_clk);
->> +	clk_disable_unprepare(host->tx_l1_sync_clk);
->>   	clk_disable_unprepare(host->tx_l0_sync_clk);
->> -	if (host->hba->lanes_per_direction > 1)
->> -		clk_disable_unprepare(host->rx_l1_sync_clk);
->> +	clk_disable_unprepare(host->rx_l1_sync_clk);
->>   	clk_disable_unprepare(host->rx_l0_sync_clk);
->>     	host->is_lane_clks_enabled = false;
->> @@ -141,24 +147,21 @@ static int ufs_qcom_enable_lane_clks(struct 
->> ufs_qcom_host *host)
->>   	if (err)
->>   		goto disable_rx_l0;
->>   -	if (host->hba->lanes_per_direction > 1) {
->> -		err = ufs_qcom_host_clk_enable(dev, "rx_lane1_sync_clk",
->> +	err = ufs_qcom_host_clk_enable(dev, "rx_lane1_sync_clk",
->>   			host->rx_l1_sync_clk);
->> -		if (err)
->> -			goto disable_tx_l0;
->> +	if (err)
->> +		goto disable_tx_l0;
->>   -		err = ufs_qcom_host_clk_enable(dev, "tx_lane1_sync_clk",
->> +	err = ufs_qcom_host_clk_enable(dev, "tx_lane1_sync_clk",
->>   			host->tx_l1_sync_clk);
->> -		if (err)
->> -			goto disable_rx_l1;
->> -	}
->> +	if (err)
->> +		goto disable_rx_l1;
->>     	host->is_lane_clks_enabled = true;
->>   	goto out;
->>     disable_rx_l1:
->> -	if (host->hba->lanes_per_direction > 1)
->> -		clk_disable_unprepare(host->rx_l1_sync_clk);
->> +	clk_disable_unprepare(host->rx_l1_sync_clk);
->>   disable_tx_l0:
->>   	clk_disable_unprepare(host->tx_l0_sync_clk);
->>   disable_rx_l0:
->> @@ -172,25 +175,25 @@ static int ufs_qcom_init_lane_clks(struct 
->> ufs_qcom_host *host)
->>   	int err = 0;
->>   	struct device *dev = host->hba->dev;
->>   -	err = ufs_qcom_host_clk_get(dev,
->> -			"rx_lane0_sync_clk", &host->rx_l0_sync_clk);
->> +	err = ufs_qcom_host_clk_get(dev, "rx_lane0_sync_clk",
->> +					&host->rx_l0_sync_clk, false);
->>   	if (err)
->>   		goto out;
->>   -	err = ufs_qcom_host_clk_get(dev,
->> -			"tx_lane0_sync_clk", &host->tx_l0_sync_clk);
->> +	err = ufs_qcom_host_clk_get(dev, "tx_lane0_sync_clk",
->> +					&host->tx_l0_sync_clk, false);
->>   	if (err)
->>   		goto out;
->>     	/* In case of single lane per direction, don't read lane1 clocks 
->> */
->>   	if (host->hba->lanes_per_direction > 1) {
->>   		err = ufs_qcom_host_clk_get(dev, "rx_lane1_sync_clk",
->> -			&host->rx_l1_sync_clk);
->> +			&host->rx_l1_sync_clk, false);
->>   		if (err)
->>   			goto out;
->>     		err = ufs_qcom_host_clk_get(dev, "tx_lane1_sync_clk",
->> -			&host->tx_l1_sync_clk);
->> +			&host->tx_l1_sync_clk, true);
->>   	}
->>   out:
->>   	return err;
-> 
-> Reviewed-by: Vivek Gautam <vivek.gautam@codeaurora.org>
-> 
-> Best regards
-> Vivek
-
-Thank you Vivek.
-
--Can Guo
+T24gMTAvMTIvMTggNDozMCBBTSwgRGFtaWVuIExlIE1vYWwgd3JvdGU6Cj4gTW92ZSB0aGUgdXJz
+d3J6IGNoZWNrIG91dCBvZiBzZF96YmNfcmVhZF96b25lcygpIGFuZCBpbnRvCj4gc2RfemJjX3Jl
+YWRfem9uZWRfY2hhcmFjdGVyaXN0aWNzKCkgd2hlcmUgdGhhdCB2YWx1ZSBpcyBvYnRhaW5lZCAo
+cmVhZAo+IGZyb20gdGhlIGRpc2sgem9uZWQgY2hhcmFjdGVyaXN0aWNzIFZQRCBwYWdlKS4gU2lu
+Y2UgdGhpcyBmdW5jdGlvbiBub3cKPiBkb2VzIG1vcmUgdGhhbiBzaW1wbHkgcmVhZGluZyB0aGUg
+VlBEIHBhZ2UsIHJlbmFtZSBpdCB0bwo+IHNkX3piY19jaGVja196b25lZF9jaGFyYWN0ZXJpc3Rp
+Y3MoKS4KPiBBbHNvIGZpeCB0aGUgZXJyb3IgbWVzc2FnZSBkaXNwbGF5ZWQgd2hlbiByZWFkaW5n
+IHRoYXQgVlBEIHBhZ2UgZmFpbHMuCj4gCj4gU2lnbmVkLW9mZi1ieTogRGFtaWVuIExlIE1vYWwg
+PGRhbWllbi5sZW1vYWxAd2RjLmNvbT4KPiBSZXZpZXdlZC1ieTogQ2hyaXN0b3BoIEhlbGx3aWcg
+PGhjaEBsc3QuZGU+Cj4gLS0tCj4gICBkcml2ZXJzL3Njc2kvc2RfemJjLmMgfCAzOSArKysrKysr
+KysrKysrKysrKysrLS0tLS0tLS0tLS0tLS0tLS0tLS0KPiAgIDEgZmlsZSBjaGFuZ2VkLCAxOSBp
+bnNlcnRpb25zKCspLCAyMCBkZWxldGlvbnMoLSkKPiAKUmV2aWV3ZWQtYnk6IEhhbm5lcyBSZWlu
+ZWNrZSA8aGFyZUBzdXNlLmNvbT4KCkNoZWVycywKCkhhbm5lcwotLSAKRHIuIEhhbm5lcyBSZWlu
+ZWNrZQkJICAgVGVhbWxlYWQgU3RvcmFnZSAmIE5ldHdvcmtpbmcKaGFyZUBzdXNlLmRlCQkJICAg
+ICAgICAgICAgICAgKzQ5IDkxMSA3NDA1MyA2ODgKU1VTRSBMSU5VWCBHbWJILCBNYXhmZWxkc3Ry
+LiA1LCA5MDQwOSBOw7xybmJlcmcKR0Y6IEYuIEltZW5kw7ZyZmZlciwgSi4gU21pdGhhcmQsIEou
+IEd1aWxkLCBELiBVcG1hbnl1LCBHLiBOb3J0b24KSFJCIDIxMjg0IChBRyBOw7xybmJlcmcpCgot
+LQpkbS1kZXZlbCBtYWlsaW5nIGxpc3QKZG0tZGV2ZWxAcmVkaGF0LmNvbQpodHRwczovL3d3dy5y
+ZWRoYXQuY29tL21haWxtYW4vbGlzdGluZm8vZG0tZGV2ZWw=
