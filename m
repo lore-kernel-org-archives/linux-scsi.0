@@ -1,11 +1,13 @@
 From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: [PATCH v4 00/11] Zoned block device support improvements
-Date: Fri, 12 Oct 2018 19:08:39 +0900
-Message-ID: <20181012100850.23316-1-damien.lemoal@wdc.com>
+Subject: [PATCH v4 01/11] scsi: sd_zbc: Rearrange code
+Date: Fri, 12 Oct 2018 19:08:40 +0900
+Message-ID: <20181012100850.23316-2-damien.lemoal@wdc.com>
+References: <20181012100850.23316-1-damien.lemoal@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <20181012100850.23316-1-damien.lemoal@wdc.com>
 List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
 	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
 List-Archive: <https://www.redhat.com/archives/dm-devel>
@@ -19,80 +21,94 @@ To: linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.k
 Cc: Christoph Hellwig <hch@lst.de>, Matias Bjorling <matias.bjorling@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-This series improves zoned block device support (reduce overhead) and
-introduces many simplifications to the code (overall, there are more deletions
-than insertions).
+Move the urswrz check out of sd_zbc_read_zones() and into
+sd_zbc_read_zoned_characteristics() where that value is obtained (read
+from the disk zoned characteristics VPD page). Since this function now
+does more than simply reading the VPD page, rename it to
+sd_zbc_check_zoned_characteristics().
+Also fix the error message displayed when reading that VPD page fails.
 
-In more details:
-* Patches 1 to 3 are SCSI side (sd driver) cleanups and improvements reducing
-  the overhead of report zones command execution during disk scan and
-  revalidation.
-* Patches 4 to 9 improve the useability and user API of zoned block devices.
-* Patch 10 is the main part of this series. This patch replaces the
-  REQ_OP_ZONE_REPORT BIO/request operation for executing report zones commands
-  with a block device file operation, removing the need for the command reply
-  payload in-place rewriting in the BIO buffer. This leads to major
-  simplification of the code in many places.
-* Patch 11 further simplifies the code of low level drivers by providing a
-  generic implementation of zoned block device request queue zone bitmaps
-  initialization and revalidation.
+Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
+---
+ drivers/scsi/sd_zbc.c | 39 +++++++++++++++++++--------------------
+ 1 file changed, 19 insertions(+), 20 deletions(-)
 
-Please consider the addition of these patches in 4.20.
-Comments are as always welcome.
-
-Changes from v3:
-* Changed the interface of sd_zbc_check_zones() in patch 3 to return an int and
-  added an argument to return the zone size to avoid potential type overflow
-  with the new int return type.
-
-Changes from v2:
-* Reworked patch 9 to preserve the declaration of struct request_queue nr_zones
-  field being conditional on CONFIG_BLK_DEV_ZONED
-
-Changes from v1:
-* Addressed Christoph's and Bart's comments
-* Fixed several compilation errors with zoned block device support disabled
-* Rebased on latest rc including the most recent dm patches
-
-Christoph Hellwig (1):
-  block: add a report_zones method
-
-Damien Le Moal (10):
-  scsi: sd_zbc: Rearrange code
-  scsi: sd_zbc: Reduce boot device scan and revalidate time
-  scsi: sd_zbc: Fix sd_zbc_check_zones() error checks
-  block: Introduce blkdev_nr_zones() helper
-  block: Limit allocation of zone descriptors for report zones
-  block: Introduce BLKGETZONESZ ioctl
-  block: Introduce BLKGETNRZONES ioctl
-  block: Improve zone reset execution
-  block: Expose queue nr_zones in sysfs
-  block: Introduce blk_revalidate_disk_zones()
-
- block/blk-core.c               |   1 -
- block/blk-lib.c                |  13 +-
- block/blk-mq-debugfs.c         |   1 -
- block/blk-sysfs.c              |  13 +
- block/blk-zoned.c              | 359 ++++++++++++++---------
- block/blk.h                    |   8 +
- block/ioctl.c                  |   4 +
- drivers/block/null_blk.h       |  11 +-
- drivers/block/null_blk_main.c  |  30 +-
- drivers/block/null_blk_zoned.c |  57 +---
- drivers/md/dm-flakey.c         |  30 +-
- drivers/md/dm-linear.c         |  35 ++-
- drivers/md/dm-table.c          |  10 +
- drivers/md/dm-zoned-target.c   |   3 +-
- drivers/md/dm.c                | 169 ++++++-----
- drivers/scsi/sd.c              |  15 +-
- drivers/scsi/sd.h              |  15 +-
- drivers/scsi/sd_zbc.c          | 501 +++++++++------------------------
- include/linux/blk_types.h      |   2 -
- include/linux/blkdev.h         |  30 +-
- include/linux/device-mapper.h  |  12 +-
- include/trace/events/f2fs.h    |   1 -
- include/uapi/linux/blkzoned.h  |   3 +
- 23 files changed, 602 insertions(+), 721 deletions(-)
-
+diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
+index 412c1787dcd9..0b7d8787f785 100644
+--- a/drivers/scsi/sd_zbc.c
++++ b/drivers/scsi/sd_zbc.c
+@@ -305,19 +305,19 @@ void sd_zbc_complete(struct scsi_cmnd *cmd, unsigned int good_bytes,
+ }
+ 
+ /**
+- * sd_zbc_read_zoned_characteristics - Read zoned block device characteristics
++ * sd_zbc_check_zoned_characteristics - Check zoned block device characteristics
+  * @sdkp: Target disk
+  * @buf: Buffer where to store the VPD page data
+  *
+- * Read VPD page B6.
++ * Read VPD page B6, get information and check that reads are unconstrained.
+  */
+-static int sd_zbc_read_zoned_characteristics(struct scsi_disk *sdkp,
+-					     unsigned char *buf)
++static int sd_zbc_check_zoned_characteristics(struct scsi_disk *sdkp,
++					      unsigned char *buf)
+ {
+ 
+ 	if (scsi_get_vpd_page(sdkp->device, 0xb6, buf, 64)) {
+ 		sd_printk(KERN_NOTICE, sdkp,
+-			  "Unconstrained-read check failed\n");
++			  "Read zoned characteristics VPD page failed\n");
+ 		return -ENODEV;
+ 	}
+ 
+@@ -335,6 +335,18 @@ static int sd_zbc_read_zoned_characteristics(struct scsi_disk *sdkp,
+ 		sdkp->zones_max_open = get_unaligned_be32(&buf[16]);
+ 	}
+ 
++	/*
++	 * Check for unconstrained reads: host-managed devices with
++	 * constrained reads (drives failing read after write pointer)
++	 * are not supported.
++	 */
++	if (!sdkp->urswrz) {
++		if (sdkp->first_scan)
++			sd_printk(KERN_NOTICE, sdkp,
++			  "constrained reads devices are not supported\n");
++		return -ENODEV;
++	}
++
+ 	return 0;
+ }
+ 
+@@ -675,24 +687,11 @@ int sd_zbc_read_zones(struct scsi_disk *sdkp, unsigned char *buf)
+ 		 */
+ 		return 0;
+ 
+-	/* Get zoned block device characteristics */
+-	ret = sd_zbc_read_zoned_characteristics(sdkp, buf);
++	/* Check zoned block device characteristics (unconstrained reads) */
++	ret = sd_zbc_check_zoned_characteristics(sdkp, buf);
+ 	if (ret)
+ 		goto err;
+ 
+-	/*
+-	 * Check for unconstrained reads: host-managed devices with
+-	 * constrained reads (drives failing read after write pointer)
+-	 * are not supported.
+-	 */
+-	if (!sdkp->urswrz) {
+-		if (sdkp->first_scan)
+-			sd_printk(KERN_NOTICE, sdkp,
+-			  "constrained reads devices are not supported\n");
+-		ret = -ENODEV;
+-		goto err;
+-	}
+-
+ 	/* Check capacity */
+ 	ret = sd_zbc_check_capacity(sdkp, buf);
+ 	if (ret)
 -- 
 2.17.1
