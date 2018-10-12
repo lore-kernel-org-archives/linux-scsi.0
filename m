@@ -1,8 +1,8 @@
 From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: [PATCH v3 02/11] scsi: sd_zbc: Reduce boot device scan
-	and revalidate time
-Date: Fri, 12 Oct 2018 11:30:03 +0900
-Message-ID: <20181012023012.29923-3-damien.lemoal@wdc.com>
+Subject: [PATCH v3 03/11] scsi: sd_zbc: Fix sd_zbc_check_zones()
+	error checks
+Date: Fri, 12 Oct 2018 11:30:04 +0900
+Message-ID: <20181012023012.29923-4-damien.lemoal@wdc.com>
 References: <20181012023012.29923-1-damien.lemoal@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -22,204 +22,68 @@ To: linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.k
 Cc: Christoph Hellwig <hch@lst.de>, Matias Bjorling <matias.bjorling@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Handling checks of ZBC device capacity using the max_lba field of the
-REPORT ZONES command reply for disks with rc_basis == 0 can be done
-using the same report zones command reply used to check the "same"
-field.
+The 32 bits overflow check for the zone size value is already done
+within sd_zbc_check_zones() with the test:
 
-Avoid executing a report zones command solely to check the disk capacity
-by merging sd_zbc_check_capacity() into sd_zbc_check_zone_size() and
-renaming that function to sd_zbc_check_zones(). This removes a costly
-execution of a full report zones command and so reduces device scan
-duration at boot time as well as the duration of disk revalidate calls.
+} else if (logical_to_sectors(sdkp->device, zone_blocks) > UINT_MAX) {
 
-Furthermore, setting the partial report bit in the REPORT ZONES command
-cdb can significantly reduce this command execution time as the device
-does not have to count and report the total number of zones that could
-be reported assuming a large enough reply buffer. A non-partial zone
-report is necessary only for the first execution of report zones used to
-check the same field value (to ensure that this value applies to all
-zones of the disk). All other calls to sd_zbc_report_zones() can use a
-partial report to reduce execution time.
-
-Using a 14 TB ZBC disk, these simple changes reduce device scan time at
-boot from about 3.5s down to about 900ms. Disk revalidate times are also
-reduced from about 450ms down to 230ms.
+so there is no need to check again for an out of range value in
+sd_zbc_read_zones(). Simplify the code and fix sd_zbc_check_zones()
+error return to -EFBIG instead of -ENODEV if the zone size is too large.
 
 Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/sd_zbc.c | 94 ++++++++++++++++++-------------------------
- 1 file changed, 40 insertions(+), 54 deletions(-)
+ drivers/scsi/sd_zbc.c | 15 ++++++---------
+ 1 file changed, 6 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
-index 0b7d8787f785..ca73c46931c0 100644
+index ca73c46931c0..44b64b4a922a 100644
 --- a/drivers/scsi/sd_zbc.c
 +++ b/drivers/scsi/sd_zbc.c
-@@ -67,11 +67,17 @@ static void sd_zbc_parse_report(struct scsi_disk *sdkp, u8 *buf,
-  * @buf: Buffer to use for the reply
-  * @buflen: the buffer size
-  * @lba: Start LBA of the report
-+ * @partial: Do partial report
-  *
-  * For internal use during device validation.
-+ * Using partial=true can significantly speed up execution of a report zones
-+ * command because the disk does not have to count all possible report matching
-+ * zones and will only report the count of zones fitting in the command reply
-+ * buffer.
-  */
- static int sd_zbc_report_zones(struct scsi_disk *sdkp, unsigned char *buf,
--			       unsigned int buflen, sector_t lba)
-+			       unsigned int buflen, sector_t lba,
-+			       bool partial)
- {
- 	struct scsi_device *sdp = sdkp->device;
- 	const int timeout = sdp->request_queue->rq_timeout;
-@@ -85,6 +91,8 @@ static int sd_zbc_report_zones(struct scsi_disk *sdkp, unsigned char *buf,
- 	cmd[1] = ZI_REPORT_ZONES;
- 	put_unaligned_be64(lba, &cmd[2]);
- 	put_unaligned_be32(buflen, &cmd[10]);
-+	if (partial)
-+		cmd[14] = ZBC_REPORT_ZONE_PARTIAL;
- 	memset(buf, 0, buflen);
- 
- 	result = scsi_execute_req(sdp, cmd, DMA_FROM_DEVICE,
-@@ -350,60 +358,25 @@ static int sd_zbc_check_zoned_characteristics(struct scsi_disk *sdkp,
- 	return 0;
- }
- 
--/**
-- * sd_zbc_check_capacity - Check reported capacity.
-- * @sdkp: Target disk
-- * @buf: Buffer to use for commands
-- *
-- * ZBC drive may report only the capacity of the first conventional zones at
-- * LBA 0. This is indicated by the RC_BASIS field of the read capacity reply.
-- * Check this here. If the disk reported only its conventional zones capacity,
-- * get the total capacity by doing a report zones.
-- */
--static int sd_zbc_check_capacity(struct scsi_disk *sdkp, unsigned char *buf)
--{
--	sector_t lba;
--	int ret;
--
--	if (sdkp->rc_basis != 0)
--		return 0;
--
--	/* Do a report zone to get the maximum LBA to check capacity */
--	ret = sd_zbc_report_zones(sdkp, buf, SD_BUF_SIZE, 0);
--	if (ret)
--		return ret;
--
--	/* The max_lba field is the capacity of this device */
--	lba = get_unaligned_be64(&buf[8]);
--	if (lba + 1 == sdkp->capacity)
--		return 0;
--
--	if (sdkp->first_scan)
--		sd_printk(KERN_WARNING, sdkp,
--			  "Changing capacity from %llu to max LBA+1 %llu\n",
--			  (unsigned long long)sdkp->capacity,
--			  (unsigned long long)lba + 1);
--	sdkp->capacity = lba + 1;
--
--	return 0;
--}
--
- #define SD_ZBC_BUF_SIZE 131072U
- 
- /**
-- * sd_zbc_check_zone_size - Check the device zone sizes
-+ * sd_zbc_check_zones - Check the device capacity and zone sizes
-  * @sdkp: Target disk
-  *
-- * Check that all zones of the device are equal. The last zone can however
-- * be smaller. The zone size must also be a power of two number of LBAs.
-+ * Check that the device capacity as reported by READ CAPACITY matches the
-+ * max_lba value (plus one)of the report zones command reply. Also check that
-+ * all zones of the device have an equal size, only allowing the last zone of
-+ * the disk to have a smaller size (runt zone). The zone size must also be a
-+ * power of two.
-  *
+@@ -373,7 +373,7 @@ static int sd_zbc_check_zoned_characteristics(struct scsi_disk *sdkp,
   * Returns the zone size in number of blocks upon success or an error code
   * upon failure.
   */
--static s64 sd_zbc_check_zone_size(struct scsi_disk *sdkp)
-+static s64 sd_zbc_check_zones(struct scsi_disk *sdkp)
+-static s64 sd_zbc_check_zones(struct scsi_disk *sdkp)
++static s32 sd_zbc_check_zones(struct scsi_disk *sdkp)
  {
  	u64 zone_blocks = 0;
--	sector_t block = 0;
-+	sector_t max_lba, block = 0;
- 	unsigned char *buf;
- 	unsigned char *rec;
- 	unsigned int buf_len;
-@@ -416,11 +389,28 @@ static s64 sd_zbc_check_zone_size(struct scsi_disk *sdkp)
- 	if (!buf)
- 		return -ENOMEM;
+ 	sector_t max_lba, block = 0;
+@@ -472,7 +472,7 @@ static s64 sd_zbc_check_zones(struct scsi_disk *sdkp)
+ 		if (sdkp->first_scan)
+ 			sd_printk(KERN_NOTICE, sdkp,
+ 				  "Zone size too large\n");
+-		ret = -ENODEV;
++		ret = -EFBIG;
+ 	} else {
+ 		ret = zone_blocks;
+ 	}
+@@ -668,8 +668,7 @@ static int sd_zbc_setup(struct scsi_disk *sdkp, u32 zone_blocks)
  
--	/* Do a report zone to get the same field */
--	ret = sd_zbc_report_zones(sdkp, buf, SD_ZBC_BUF_SIZE, 0);
-+	/* Do a report zone to get max_lba and the same field */
-+	ret = sd_zbc_report_zones(sdkp, buf, SD_ZBC_BUF_SIZE, 0, false);
- 	if (ret)
- 		goto out_free;
+ int sd_zbc_read_zones(struct scsi_disk *sdkp, unsigned char *buf)
+ {
+-	int64_t zone_blocks;
+-	int ret;
++	int ret, zone_blocks;
  
-+	if (sdkp->rc_basis == 0) {
-+		/* The max_lba field is the capacity of this device */
-+		max_lba = get_unaligned_be64(&buf[8]);
-+		if (sdkp->capacity != max_lba + 1) {
-+			if (sdkp->first_scan)
-+				sd_printk(KERN_WARNING, sdkp,
-+					"Changing capacity from %llu to max LBA+1 %llu\n",
-+					(unsigned long long)sdkp->capacity,
-+					(unsigned long long)max_lba + 1);
-+			sdkp->capacity = max_lba + 1;
-+		}
-+	}
-+
-+	/*
-+	 * Check same field: for any value other than 0, we know that all zones
-+	 * have the same size.
-+	 */
- 	same = buf[4] & 0x0f;
- 	if (same > 0) {
- 		rec = &buf[64];
-@@ -458,7 +448,7 @@ static s64 sd_zbc_check_zone_size(struct scsi_disk *sdkp)
- 
- 		if (block < sdkp->capacity) {
- 			ret = sd_zbc_report_zones(sdkp, buf,
--						  SD_ZBC_BUF_SIZE, block);
-+						  SD_ZBC_BUF_SIZE, block, true);
- 			if (ret)
- 				goto out_free;
- 		}
-@@ -574,7 +564,8 @@ sd_zbc_setup_seq_zones_bitmap(struct scsi_disk *sdkp, u32 zone_shift,
- 		goto out;
- 
- 	while (lba < sdkp->capacity) {
--		ret = sd_zbc_report_zones(sdkp, buf, SD_ZBC_BUF_SIZE, lba);
-+		ret = sd_zbc_report_zones(sdkp, buf, SD_ZBC_BUF_SIZE,
-+					  lba, true);
- 		if (ret)
- 			goto out;
- 		lba = sd_zbc_get_seq_zones(sdkp, buf, SD_ZBC_BUF_SIZE,
-@@ -692,16 +683,11 @@ int sd_zbc_read_zones(struct scsi_disk *sdkp, unsigned char *buf)
- 	if (ret)
- 		goto err;
- 
--	/* Check capacity */
--	ret = sd_zbc_check_capacity(sdkp, buf);
--	if (ret)
--		goto err;
--
- 	/*
- 	 * Check zone size: only devices with a constant zone size (except
+ 	if (!sd_is_zoned(sdkp))
+ 		/*
+@@ -688,12 +687,10 @@ int sd_zbc_read_zones(struct scsi_disk *sdkp, unsigned char *buf)
  	 * an eventual last runt zone) that is a power of 2 are supported.
  	 */
--	zone_blocks = sd_zbc_check_zone_size(sdkp);
-+	zone_blocks = sd_zbc_check_zones(sdkp);
- 	ret = -EFBIG;
- 	if (zone_blocks != (u32)zone_blocks)
+ 	zone_blocks = sd_zbc_check_zones(sdkp);
+-	ret = -EFBIG;
+-	if (zone_blocks != (u32)zone_blocks)
+-		goto err;
+-	ret = zone_blocks;
+-	if (ret < 0)
++	if (zone_blocks < 0) {
++		ret = zone_blocks;
  		goto err;
++	}
+ 
+ 	/* The drive satisfies the kernel restrictions: set it up */
+ 	ret = sd_zbc_setup(sdkp, zone_blocks);
 -- 
 2.17.1
