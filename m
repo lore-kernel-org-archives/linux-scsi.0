@@ -1,11 +1,11 @@
 From: Damien Le Moal <Damien.LeMoal@wdc.com>
-Subject: Re: [PATCH v3 03/11] scsi: sd_zbc: Fix
- sd_zbc_check_zones() error checks
-Date: Fri, 12 Oct 2018 07:50:11 +0000
-Message-ID: <BLUPR0401MB163638186F1243B1C22674EFE7E20@BLUPR0401MB1636.namprd04.prod.outlook.com>
+Subject: Re: [PATCH v3 09/11] block: Expose queue nr_zones in
+	sysfs
+Date: Fri, 12 Oct 2018 07:55:17 +0000
+Message-ID: <BLUPR0401MB1636E66F2F7AA1F7D2529794E7E20@BLUPR0401MB1636.namprd04.prod.outlook.com>
 References: <20181012023012.29923-1-damien.lemoal@wdc.com>
-	<20181012023012.29923-4-damien.lemoal@wdc.com>
-	<e45aba21-baf3-caab-de83-0c36925ebfdb@suse.de>
+	<20181012023012.29923-10-damien.lemoal@wdc.com>
+	<c13f3820-9a69-6a74-e967-b561d7778bcf@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
@@ -25,42 +25,103 @@ To: Hannes Reinecke <hare@suse.de>, "linux-block@vger.kernel.org" <linux-block@v
 Cc: Christoph Hellwig <hch@lst.de>, Matias Bjorling <Matias.Bjorling@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 2018/10/12 16:35, Hannes Reinecke wrote:
+On 2018/10/12 16:41, Hannes Reinecke wrote:
 > On 10/12/18 4:30 AM, Damien Le Moal wrote:
->> The 32 bits overflow check for the zone size value is already done
->> within sd_zbc_check_zones() with the test:
+>> Expose through sysfs the nr_zones field of struct request_queue.
+>> Exposing this value helps in debugging disk issues as well as
+>> facilitating scripts based use of the disk (e.g. blktests).
 >>
->> } else if (logical_to_sectors(sdkp->device, zone_blocks) > UINT_MAX) {
+>> For zoned block devices, the nr_zones field indicates the total number
+>> of zones of the device calculated using the known disk capacity and
+>> zone size. This number of zones is always 0 for regular block devices.
 >>
->> so there is no need to check again for an out of range value in
->> sd_zbc_read_zones(). Simplify the code and fix sd_zbc_check_zones()
->> error return to -EFBIG instead of -ENODEV if the zone size is too large.
+>> Since nr_zones is defined conditionally with CONFIG_BLK_DEV_ZONED,
+>> introduce the blk_queue_nr_zones() function to return the correct value
+>> for any device, regardless if CONFIG_BLK_DEV_ZONED is set.
 >>
 >> Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
->> Reviewed-by: Christoph Hellwig <hch@lst.de>
 >> ---
->>   drivers/scsi/sd_zbc.c | 15 ++++++---------
->>   1 file changed, 6 insertions(+), 9 deletions(-)
+>>   block/blk-sysfs.c      | 11 +++++++++++
+>>   include/linux/blkdev.h | 10 ++++++++++
+>>   2 files changed, 21 insertions(+)
 >>
->> diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
->> index ca73c46931c0..44b64b4a922a 100644
->> --- a/drivers/scsi/sd_zbc.c
->> +++ b/drivers/scsi/sd_zbc.c
->> @@ -373,7 +373,7 @@ static int sd_zbc_check_zoned_characteristics(struct scsi_disk *sdkp,
->>    * Returns the zone size in number of blocks upon success or an error code
->>    * upon failure.
->>    */
->> -static s64 sd_zbc_check_zones(struct scsi_disk *sdkp)
->> +static s32 sd_zbc_check_zones(struct scsi_disk *sdkp)
+>> diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
+>> index 3772671cf2bc..92be8092ca4f 100644
+>> --- a/block/blk-sysfs.c
+>> +++ b/block/blk-sysfs.c
+>> @@ -300,6 +300,11 @@ static ssize_t queue_zoned_show(struct request_queue *q, char *page)
+>>   	}
+>>   }
+>>   
+>> +static ssize_t queue_nr_zones_show(struct request_queue *q, char *page)
+>> +{
+>> +	return queue_var_show(blk_queue_nr_zones(q), page);
+>> +}
+>> +
+>>   static ssize_t queue_nomerges_show(struct request_queue *q, char *page)
 >>   {
->>   	u64 zone_blocks = 0;
->>   	sector_t max_lba, block = 0;
-> Does this have to be an 's32' ?
-> Seeing that it's overloaded with an error code, and never sent to any 
-> hardware, can't we just make it a simple 'int' ?
+>>   	return queue_var_show((blk_queue_nomerges(q) << 1) |
+>> @@ -637,6 +642,11 @@ static struct queue_sysfs_entry queue_zoned_entry = {
+>>   	.show = queue_zoned_show,
+>>   };
+>>   
+>> +static struct queue_sysfs_entry queue_nr_zones_entry = {
+>> +	.attr = {.name = "nr_zones", .mode = 0444 },
+>> +	.show = queue_nr_zones_show,
+>> +};
+>> +
+>>   static struct queue_sysfs_entry queue_nomerges_entry = {
+>>   	.attr = {.name = "nomerges", .mode = 0644 },
+>>   	.show = queue_nomerges_show,
+>> @@ -727,6 +737,7 @@ static struct attribute *default_attrs[] = {
+>>   	&queue_write_zeroes_max_entry.attr,
+>>   	&queue_nonrot_entry.attr,
+>>   	&queue_zoned_entry.attr,
+>> +	&queue_nr_zones_entry.attr,
+>>   	&queue_nomerges_entry.attr,
+>>   	&queue_rq_affinity_entry.attr,
+>>   	&queue_iostats_entry.attr,
+>> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+>> index c24969b1741b..879753b10263 100644
+>> --- a/include/linux/blkdev.h
+>> +++ b/include/linux/blkdev.h
+>> @@ -804,6 +804,11 @@ static inline unsigned int blk_queue_zone_sectors(struct request_queue *q)
+>>   }
+>>   
+>>   #ifdef CONFIG_BLK_DEV_ZONED
+>> +static inline unsigned int blk_queue_nr_zones(struct request_queue *q)
+>> +{
+>> +	return blk_queue_is_zoned(q) ? q->nr_zones : 0;
+>> +}
+>> +
+>>   static inline unsigned int blk_queue_zone_no(struct request_queue *q,
+>>   					     sector_t sector)
+>>   {
+>> @@ -819,6 +824,11 @@ static inline bool blk_queue_zone_is_seq(struct request_queue *q,
+>>   		return false;
+>>   	return test_bit(blk_queue_zone_no(q, sector), q->seq_zones_bitmap);
+>>   }
+>> +#else /* CONFIG_BLK_DEV_ZONED */
+>> +static inline unsigned int blk_queue_nr_zones(struct request_queue *q)
+>> +{
+>> +	return 0;
+>> +}
+>>   #endif /* CONFIG_BLK_DEV_ZONED */
+>>   
+>>   static inline bool rq_is_sync(struct request *rq)
+>>
+> Actually, we should be checking whether we can't blank out this 
+> attribute via the is_visible mechanism; after all, not every block 
+> device is zoned, and those which are not have no need of the attribute...
 
-OK. Will do.
+Yes we could. But it is somewhat the same as drives that do not support trim:
+they get max_discard_sectors to 0. The attribute says "not supported because the
+value is 0". I followed the same principle for nr_zones: value of 0 says "no
+zones", hopefully in sync with "zoned" saying "none". And if these 2 are not in
+sync as such, then we have a defective drive or a bug. So actually always having
+nr_zones is useful I think.
 
+But I can make it invisible for regular disks if you insist :)
 
 -- 
 Damien Le Moal
