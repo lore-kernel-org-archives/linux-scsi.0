@@ -1,160 +1,116 @@
-From: Can Guo <cang@codeaurora.org>
-Subject: [PATCH v5 1/1] scsi: ufs: make UFS Tx lane1 clock optional for QCOM platforms
-Date: Fri, 12 Oct 2018 19:25:02 -0700
-Message-ID: <1539397502-30120-1-git-send-email-cang@codeaurora.org>
+From: Michael Schmitz <schmitzmic@gmail.com>
+Subject: Re: [PATCH 6/6] esp_scsi: Optimize PIO loops
+Date: Sat, 13 Oct 2018 17:02:09 +1300
+Message-ID: <3ba0d49c-57ce-40df-b406-98afc183275e@gmail.com>
+References: <cover.1539391876.git.fthain@telegraphics.com.au>
+ <3a2534bff570653de6897afa081017e2a359747e.1539391876.git.fthain@telegraphics.com.au>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-15; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <3a2534bff570653de6897afa081017e2a359747e.1539391876.git.fthain@telegraphics.com.au>
 Sender: linux-kernel-owner@vger.kernel.org
-To: dianders@chromium.org, subhashj@codeaurora.org, asutoshd@codeaurora.org, vivek.gautam@codeaurora.org, evgreen@chromium.org, rnayak@codeaurora.org, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, Venkat Gopalakrishnan <venkatg@codeaurora.org>, Can Guo <cang@codeaurora.org>, open list <linux-kernel@vger.kernel.org>
+To: Finn Thain <fthain@telegraphics.com.au>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, linux-m68k@lists.linux-m68k.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Venkat Gopalakrishnan <venkatg@codeaurora.org>
+Hi Finn,
 
-Per Qcom's UFS host controller HW design, the UFS Tx lane1 clock could be
-muxed with Tx lane0 clock, hence keep Tx lane1 clock optional by ignoring
-it if it is not provided in device tree. This change also performs some
-cleanup to lanes per direction checks when enable/disable lane clocks just
-for symmetry.
+Am 13.10.2018 um 13:51 schrieb Finn Thain:
+> Avoid function calls in the inner PIO loops. On a Centris 660av this
+> improves throughput for sequential read transfers by about 40% and
+> sequential write by about 10%.
+>
+> Unfortunately it is not possible to have method calls like esp_write8()
+> placed inline so this is always going to be slow (even with LTO).
+>
+> Tested-by: Stan Johnson <userm57@yahoo.com>
+> Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
+> ---
+>  drivers/scsi/esp_scsi.c | 14 +++++++-------
+>  1 file changed, 7 insertions(+), 7 deletions(-)
+>
+> diff --git a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
+> index 646701fc22a4..9f0e68cd0e99 100644
+> --- a/drivers/scsi/esp_scsi.c
+> +++ b/drivers/scsi/esp_scsi.c
+> @@ -2788,7 +2788,7 @@ static inline unsigned int esp_wait_for_fifo(struct esp *esp)
+>  		if (fbytes)
+>  			return fbytes;
+>
+> -		udelay(2);
+> +		udelay(1);
+>  	} while (--i);
+>
+>  	pr_err("FIFO is empty (sreg %02x)\n", esp_read8(ESP_STATUS));
+> @@ -2804,7 +2804,7 @@ static inline int esp_wait_for_intr(struct esp *esp)
+>  		if (esp->sreg & ESP_STAT_INTR)
+>  			return 0;
+>
+> -		udelay(2);
+> +		udelay(1);
+>  	} while (--i);
+>
+>  	pr_err("IRQ timeout (sreg %02x)\n", esp->sreg);
+> @@ -2831,7 +2831,7 @@ void esp_send_pio_cmd(struct esp *esp, u32 addr, u32 esp_count,
+>  			if (!esp_wait_for_fifo(esp))
+>  				break;
+>
+> -			*dst++ = esp_read8(ESP_FDATA);
+> +			*dst++ = readb(esp->fifo_reg);
+>  			--esp_count;
+>
+>  			if (!esp_count)
+> @@ -2852,15 +2852,15 @@ void esp_send_pio_cmd(struct esp *esp, u32 addr, u32 esp_count,
+>  			}
+>
+>  			if (phase == ESP_MIP)
+> -				scsi_esp_cmd(esp, ESP_CMD_MOK);
+> +				esp_write8(ESP_CMD_MOK, ESP_CMD);
 
-Signed-off-by: Venkat Gopalakrishnan <venkatg@codeaurora.org>
-Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
-Signed-off-by: Can Guo <cang@codeaurora.org>
-Reviewed-by: Vivek Gautam <vivek.gautam@codeaurora.org>
-Reviewed-by: Douglas Anderson <dianders@chromium.org>
-Tested-by: Douglas Anderson <dianders@chromium.org>
----
-Changes since v4:
-- fixed one typo
+You're no longer logging this command with this patch. (That'll be the 
+reason for the speedup you saw ...)
 
-Changes since v3:
-- Incorporated review comments from Doug.
+>
+> -			scsi_esp_cmd(esp, ESP_CMD_TI);
+> +			esp_write8(ESP_CMD_TI, ESP_CMD);
 
-Changes since v2:
-- Incorporated review comments from Doug.
+Same here..
 
-Changes since v1:
-- Incorporated review comments from Doug.
-- Update the commit title and commit message.
+>  		}
+>  	} else {
+>  		unsigned int n = ESP_FIFO_SIZE;
+>  		u8 *src = (u8 *)addr;
+>
+> -		scsi_esp_cmd(esp, ESP_CMD_FLUSH);
+> +		esp_write8(ESP_CMD_FLUSH, ESP_CMD);
 
- drivers/scsi/ufs/ufs-qcom.c | 54 +++++++++++++++++++++++----------------------
- 1 file changed, 28 insertions(+), 26 deletions(-)
+here..
 
-diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-index 2b38db2..8e9d891 100644
---- a/drivers/scsi/ufs/ufs-qcom.c
-+++ b/drivers/scsi/ufs/ufs-qcom.c
-@@ -79,20 +79,27 @@ static int ufs_qcom_get_connected_tx_lanes(struct ufs_hba *hba, u32 *tx_lanes)
- }
- 
- static int ufs_qcom_host_clk_get(struct device *dev,
--		const char *name, struct clk **clk_out)
-+		const char *name, struct clk **clk_out, bool optional)
- {
- 	struct clk *clk;
- 	int err = 0;
- 
- 	clk = devm_clk_get(dev, name);
--	if (IS_ERR(clk)) {
--		err = PTR_ERR(clk);
--		dev_err(dev, "%s: failed to get %s err %d",
--				__func__, name, err);
--	} else {
-+	if (!IS_ERR(clk)) {
- 		*clk_out = clk;
-+		return 0;
- 	}
- 
-+	err = PTR_ERR(clk);
-+
-+	if (optional && err == -ENOENT) {
-+		*clk_out = NULL;
-+		return 0;
-+	}
-+
-+	if (err != -EPROBE_DEFER)
-+		dev_err(dev, "failed to get %s err %d\n", name, err);
-+
- 	return err;
- }
- 
-@@ -113,11 +120,9 @@ static void ufs_qcom_disable_lane_clks(struct ufs_qcom_host *host)
- 	if (!host->is_lane_clks_enabled)
- 		return;
- 
--	if (host->hba->lanes_per_direction > 1)
--		clk_disable_unprepare(host->tx_l1_sync_clk);
-+	clk_disable_unprepare(host->tx_l1_sync_clk);
- 	clk_disable_unprepare(host->tx_l0_sync_clk);
--	if (host->hba->lanes_per_direction > 1)
--		clk_disable_unprepare(host->rx_l1_sync_clk);
-+	clk_disable_unprepare(host->rx_l1_sync_clk);
- 	clk_disable_unprepare(host->rx_l0_sync_clk);
- 
- 	host->is_lane_clks_enabled = false;
-@@ -141,24 +146,21 @@ static int ufs_qcom_enable_lane_clks(struct ufs_qcom_host *host)
- 	if (err)
- 		goto disable_rx_l0;
- 
--	if (host->hba->lanes_per_direction > 1) {
--		err = ufs_qcom_host_clk_enable(dev, "rx_lane1_sync_clk",
-+	err = ufs_qcom_host_clk_enable(dev, "rx_lane1_sync_clk",
- 			host->rx_l1_sync_clk);
--		if (err)
--			goto disable_tx_l0;
-+	if (err)
-+		goto disable_tx_l0;
- 
--		err = ufs_qcom_host_clk_enable(dev, "tx_lane1_sync_clk",
-+	err = ufs_qcom_host_clk_enable(dev, "tx_lane1_sync_clk",
- 			host->tx_l1_sync_clk);
--		if (err)
--			goto disable_rx_l1;
--	}
-+	if (err)
-+		goto disable_rx_l1;
- 
- 	host->is_lane_clks_enabled = true;
- 	goto out;
- 
- disable_rx_l1:
--	if (host->hba->lanes_per_direction > 1)
--		clk_disable_unprepare(host->rx_l1_sync_clk);
-+	clk_disable_unprepare(host->rx_l1_sync_clk);
- disable_tx_l0:
- 	clk_disable_unprepare(host->tx_l0_sync_clk);
- disable_rx_l0:
-@@ -172,25 +174,25 @@ static int ufs_qcom_init_lane_clks(struct ufs_qcom_host *host)
- 	int err = 0;
- 	struct device *dev = host->hba->dev;
- 
--	err = ufs_qcom_host_clk_get(dev,
--			"rx_lane0_sync_clk", &host->rx_l0_sync_clk);
-+	err = ufs_qcom_host_clk_get(dev, "rx_lane0_sync_clk",
-+					&host->rx_l0_sync_clk, false);
- 	if (err)
- 		goto out;
- 
--	err = ufs_qcom_host_clk_get(dev,
--			"tx_lane0_sync_clk", &host->tx_l0_sync_clk);
-+	err = ufs_qcom_host_clk_get(dev, "tx_lane0_sync_clk",
-+					&host->tx_l0_sync_clk, false);
- 	if (err)
- 		goto out;
- 
- 	/* In case of single lane per direction, don't read lane1 clocks */
- 	if (host->hba->lanes_per_direction > 1) {
- 		err = ufs_qcom_host_clk_get(dev, "rx_lane1_sync_clk",
--			&host->rx_l1_sync_clk);
-+			&host->rx_l1_sync_clk, false);
- 		if (err)
- 			goto out;
- 
- 		err = ufs_qcom_host_clk_get(dev, "tx_lane1_sync_clk",
--			&host->tx_l1_sync_clk);
-+			&host->tx_l1_sync_clk, true);
- 	}
- out:
- 	return err;
--- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
+>
+>  		if (n > esp_count)
+>  			n = esp_count;
+> @@ -2894,7 +2894,7 @@ void esp_send_pio_cmd(struct esp *esp, u32 addr, u32 esp_count,
+>  			src += n;
+>  			esp_count -= n;
+>
+> -			scsi_esp_cmd(esp, ESP_CMD_TI);
+> +			esp_write8(ESP_CMD_TI, ESP_CMD);
+
+and here.
+
+The burst of ESP_CMD_TI's in the log was quite useful to spot what went 
+wrong during PIO. Maybe mention in the changelog that commands during 
+PIO are no longer logged? Or introduce a new ESP_EVENT_PIO and log that 
+at the start of PIO?
+
+Cheers,
+
+	Michael
+
+
+
+>  		}
+>  	}
+>
+>
