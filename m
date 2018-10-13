@@ -1,29 +1,99 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 5/6] esp_scsi: De-duplicate PIO routines
-Date: Sat, 13 Oct 2018 00:52:12 -0700
-Message-ID: <20181013075212.GA23437@infradead.org>
-References: <cover.1539391876.git.fthain@telegraphics.com.au>
- <09d3a141dc16af63921f5414263069e9b4f97222.1539391876.git.fthain@telegraphics.com.au>
- <20181013070508.GA15008@infradead.org>
- <alpine.LNX.2.21.1810131817540.375@nippy.intranet>
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 1/8] aha152x: rename the PCMCIA define
+Date: Sat, 13 Oct 2018 17:10:09 +0200
+Message-ID: <20181013151016.31674-2-hch@lst.de>
+References: <20181013151016.31674-1-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.LNX.2.21.1810131817540.375@nippy.intranet>
+In-Reply-To: <20181013151016.31674-1-hch@lst.de>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: Christoph Hellwig <hch@infradead.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, linux-m68k@lists.linux-m68k.org, linux-kernel@vger.kernel.org
+To: Masahiro Yamada <yamada.masahiro@socionext.com>
+Cc: Matt Porter <mporter@kernel.crashing.org>, Alexandre Bounine <alex.bou9@gmail.com>, Dominik Brodowski <linux@dominikbrodowski.net>, linux-kbuild@vger.kernel.org, linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, Oct 13, 2018 at 06:22:18PM +1100, Finn Thain wrote:
-> > > +	pr_err("FIFO is empty (sreg %02x)\n", esp_read8(ESP_STATUS));
-> > 
-> > This should probably use dev_err (at least with my series).
-> > 
-> 
-> How about shost_printk()? That would be consistent with the rest of 
-> esp_scsi.c. It also means my series need not depend on yours which would 
-> complicate things.
+We plan to enable building the pcmcia core and drivers, and the
+non-prefixed PCMCIA name clashes with some arch headers.
 
-Yes, that sounds even better.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/scsi/aha152x.c             | 14 +++++++-------
+ drivers/scsi/pcmcia/aha152x_core.c |  2 +-
+ 2 files changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/scsi/aha152x.c b/drivers/scsi/aha152x.c
+index 4d7b0e0adbf7..301b3cad15f8 100644
+--- a/drivers/scsi/aha152x.c
++++ b/drivers/scsi/aha152x.c
+@@ -269,7 +269,7 @@ static LIST_HEAD(aha152x_host_list);
+ /* DEFINES */
+ 
+ /* For PCMCIA cards, always use AUTOCONF */
+-#if defined(PCMCIA) || defined(MODULE)
++#if defined(AHA152X_PCMCIA) || defined(MODULE)
+ #if !defined(AUTOCONF)
+ #define AUTOCONF
+ #endif
+@@ -297,7 +297,7 @@ CMD_INC_RESID(struct scsi_cmnd *cmd, int inc)
+ 
+ #define DELAY_DEFAULT 1000
+ 
+-#if defined(PCMCIA)
++#if defined(AHA152X_PCMCIA)
+ #define IRQ_MIN 0
+ #define IRQ_MAX 16
+ #else
+@@ -328,7 +328,7 @@ MODULE_AUTHOR("Jürgen Fischer");
+ MODULE_DESCRIPTION(AHA152X_REVID);
+ MODULE_LICENSE("GPL");
+ 
+-#if !defined(PCMCIA)
++#if !defined(AHA152X_PCMCIA)
+ #if defined(MODULE)
+ static int io[] = {0, 0};
+ module_param_hw_array(io, int, ioport, NULL, 0);
+@@ -391,7 +391,7 @@ static struct isapnp_device_id id_table[] = {
+ MODULE_DEVICE_TABLE(isapnp, id_table);
+ #endif /* ISAPNP */
+ 
+-#endif /* !PCMCIA */
++#endif /* !AHA152X_PCMCIA */
+ 
+ static struct scsi_host_template aha152x_driver_template;
+ 
+@@ -863,7 +863,7 @@ void aha152x_release(struct Scsi_Host *shpnt)
+ 	if (shpnt->irq)
+ 		free_irq(shpnt->irq, shpnt);
+ 
+-#if !defined(PCMCIA)
++#if !defined(AHA152X_PCMCIA)
+ 	if (shpnt->io_port)
+ 		release_region(shpnt->io_port, IO_RANGE);
+ #endif
+@@ -2924,7 +2924,7 @@ static struct scsi_host_template aha152x_driver_template = {
+ 	.slave_alloc			= aha152x_adjust_queue,
+ };
+ 
+-#if !defined(PCMCIA)
++#if !defined(AHA152X_PCMCIA)
+ static int setup_count;
+ static struct aha152x_setup setup[2];
+ 
+@@ -3392,4 +3392,4 @@ static int __init aha152x_setup(char *str)
+ __setup("aha152x=", aha152x_setup);
+ #endif
+ 
+-#endif /* !PCMCIA */
++#endif /* !AHA152X_PCMCIA */
+diff --git a/drivers/scsi/pcmcia/aha152x_core.c b/drivers/scsi/pcmcia/aha152x_core.c
+index dba3716511c5..24b89228b241 100644
+--- a/drivers/scsi/pcmcia/aha152x_core.c
++++ b/drivers/scsi/pcmcia/aha152x_core.c
+@@ -1,3 +1,3 @@
+-#define PCMCIA	1
++#define AHA152X_PCMCIA 1
+ #define AHA152X_STAT 1
+ #include "aha152x.c"
+-- 
+2.19.1
