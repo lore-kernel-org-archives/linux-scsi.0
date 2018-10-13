@@ -1,7 +1,7 @@
 From: Can Guo <cang@codeaurora.org>
-Subject: [PATCH v4 1/1] scsi: ufs: make UFS Tx lane1 clock optional for QCOM platforms
-Date: Fri, 12 Oct 2018 19:17:10 -0700
-Message-ID: <1539397031-30014-1-git-send-email-cang@codeaurora.org>
+Subject: [PATCH v5 1/1] scsi: ufs: make UFS Tx lane1 clock optional for QCOM platforms
+Date: Fri, 12 Oct 2018 19:25:02 -0700
+Message-ID: <1539397502-30120-1-git-send-email-cang@codeaurora.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: dianders@chromium.org, subhashj@codeaurora.org, asutoshd@codeaurora.org, vivek.gautam@codeaurora.org, evgreen@chromium.org, rnayak@codeaurora.org, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
@@ -23,6 +23,9 @@ Reviewed-by: Vivek Gautam <vivek.gautam@codeaurora.org>
 Reviewed-by: Douglas Anderson <dianders@chromium.org>
 Tested-by: Douglas Anderson <dianders@chromium.org>
 ---
+Changes since v4:
+- fixed one typo
+
 Changes since v3:
 - Incorporated review comments from Doug.
 
@@ -37,7 +40,7 @@ Changes since v1:
  1 file changed, 28 insertions(+), 26 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-index 2b38db2..9f9c6c7 100644
+index 2b38db2..8e9d891 100644
 --- a/drivers/scsi/ufs/ufs-qcom.c
 +++ b/drivers/scsi/ufs/ufs-qcom.c
 @@ -79,20 +79,27 @@ static int ufs_qcom_get_connected_tx_lanes(struct ufs_hba *hba, u32 *tx_lanes)
@@ -69,7 +72,7 @@ index 2b38db2..9f9c6c7 100644
 +	}
 +
 +	if (err != -EPROBE_DEFER)
-+		dev_err(dev, "failed to get %s err %d", name, err);
++		dev_err(dev, "failed to get %s err %d\n", name, err);
 +
  	return err;
  }
