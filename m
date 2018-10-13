@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 2/8] powerpc: simplify CONFIG_PCI_QSPAN Kconfig magic
-Date: Sat, 13 Oct 2018 17:10:10 +0200
-Message-ID: <20181013151016.31674-3-hch@lst.de>
+Subject: [PATCH 3/8] powerpc: PCI_MSI needs PCI
+Date: Sat, 13 Oct 2018 17:10:11 +0200
+Message-ID: <20181013151016.31674-4-hch@lst.de>
 References: <20181013151016.31674-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -12,36 +12,56 @@ To: Masahiro Yamada <yamada.masahiro@socionext.com>
 Cc: Matt Porter <mporter@kernel.crashing.org>, Alexandre Bounine <alex.bou9@gmail.com>, Dominik Brodowski <linux@dominikbrodowski.net>, linux-kbuild@vger.kernel.org, linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
 List-Id: linux-scsi@vger.kernel.org
 
-The way how CONFIG_PCI_QSPAN selects the CONFIG_PCI default is highly
-unusual and gets in the way of moving CONFIG_PCI into
-drivers/pci/Kconfig.  Simplify it by just having it depend on
-CONFIG_PCI.
+Various powerpc boards select the PCI_MSI config option without selecting
+PCI, resulting in potentially not compilable configurations if the by
+default enabled PCI option is disabled.  Explicitly select PCI to ensure
+we always have valid configs.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- arch/powerpc/Kconfig | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ arch/powerpc/platforms/40x/Kconfig | 1 +
+ arch/powerpc/platforms/44x/Kconfig | 3 +++
+ 2 files changed, 4 insertions(+)
 
-diff --git a/arch/powerpc/Kconfig b/arch/powerpc/Kconfig
-index a80669209155..6fa6f92edb7f 100644
---- a/arch/powerpc/Kconfig
-+++ b/arch/powerpc/Kconfig
-@@ -955,7 +955,6 @@ config PCI
- 	bool "PCI support" if PPC_PCI_CHOICE
- 	default y if !40x && !CPM2 && !PPC_8xx && !PPC_83xx \
- 		&& !PPC_85xx && !PPC_86xx && !GAMECUBE_COMMON
--	default PCI_QSPAN if PPC_8xx
- 	select GENERIC_PCI_IOMAP
+diff --git a/arch/powerpc/platforms/40x/Kconfig b/arch/powerpc/platforms/40x/Kconfig
+index 60254a321a91..d5361e63e0bb 100644
+--- a/arch/powerpc/platforms/40x/Kconfig
++++ b/arch/powerpc/platforms/40x/Kconfig
+@@ -33,6 +33,7 @@ config KILAUEA
+ 	select 405EX
+ 	select PPC40x_SIMPLE
+ 	select PPC4xx_PCI_EXPRESS
++	select PCI
+ 	select PCI_MSI
+ 	select PPC4xx_MSI
  	help
- 	  Find out whether your system includes a PCI bus. PCI is the name of
-@@ -971,7 +970,7 @@ config PCI_SYSCALL
- 
- config PCI_QSPAN
- 	bool "QSpan PCI"
--	depends on PPC_8xx
-+	depends on PPC_8xx && PCI
- 	select PPC_I8259
+diff --git a/arch/powerpc/platforms/44x/Kconfig b/arch/powerpc/platforms/44x/Kconfig
+index a6011422b861..70856a213663 100644
+--- a/arch/powerpc/platforms/44x/Kconfig
++++ b/arch/powerpc/platforms/44x/Kconfig
+@@ -24,6 +24,7 @@ config BLUESTONE
+ 	default n
+ 	select PPC44x_SIMPLE
+ 	select APM821xx
++	select PCI
+ 	select PCI_MSI
+ 	select PPC4xx_MSI
+ 	select PPC4xx_PCI_EXPRESS
+@@ -78,6 +79,7 @@ config KATMAI
+ 	select 440SPe
+ 	select PCI
+ 	select PPC4xx_PCI_EXPRESS
++	select PCI
+ 	select PCI_MSI
+ 	select PPC4xx_MSI
  	help
- 	  Say Y here if you have a system based on a Motorola 8xx-series
+@@ -219,6 +221,7 @@ config AKEBONO
+ 	select SWIOTLB
+ 	select 476FPE
+ 	select PPC4xx_PCI_EXPRESS
++	select PCI
+ 	select PCI_MSI
+ 	select PPC4xx_HSTA_MSI
+ 	select I2C
 -- 
 2.19.1
