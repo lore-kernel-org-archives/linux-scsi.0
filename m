@@ -1,46 +1,33 @@
-From: Michael Schmitz <schmitzmic@gmail.com>
-Subject: Re: [PATCH 0/6] mac_esp, zorro_esp, esp_scsi: Various improvements
-Date: Sun, 14 Oct 2018 14:36:51 +1300
-Message-ID: <38b7cb8f-6adf-7097-d33c-7824dd9c013c@gmail.com>
-References: <cover.1539391876.git.fthain@telegraphics.com.au>
+From: Dominik Brodowski <linux@dominikbrodowski.net>
+Subject: Re: [PATCH 5/8] pcmcia: allow PCMCIA support independent of the
+ architecture
+Date: Sun, 14 Oct 2018 07:42:52 +0200
+Message-ID: <20181014054252.GA24103@light.dominikbrodowski.net>
+References: <20181013151016.31674-1-hch@lst.de>
+ <20181013151016.31674-6-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <cover.1539391876.git.fthain@telegraphics.com.au>
+Content-Disposition: inline
+In-Reply-To: <20181013151016.31674-6-hch@lst.de>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, linux-m68k@lists.linux-m68k.org, linux-kernel@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Masahiro Yamada <yamada.masahiro@socionext.com>, Matt Porter <mporter@kernel.crashing.org>, Alexandre Bounine <alex.bou9@gmail.com>, linux-kbuild@vger.kernel.org, linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Finn,
+On Sat, Oct 13, 2018 at 05:10:13PM +0200, Christoph Hellwig wrote:
+> There is nothing architecture specific in the PCMCIA core, so allow
+> building it everywhere.  The actual host controllers will depend on ISA,
+> PCI or a specific SOC.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Am 13.10.2018 um 13:51 schrieb Finn Thain:
-> This series has fixes and cleanup for mac_esp, zorro_esp and the
-> core esp_scsi driver.
->
-> The improvements include elimination of duplicated code temporarily
-> introduced for zorro_esp.
->
-> Michael, would you please regression test this series on elgar,
-> if convenient? So far, only mac_esp has been tested with this code.
->
->
-> Finn Thain (6):
->   zorro_esp: Limit DMA transfers to 65535 bytes
->   esp_scsi: Track residual for PIO transfers
->   esp_scsi: Grant disconnect privilege for untagged commands
->   esp_scsi: Eliminate ESP_FLAG_DOING_SLOWCMD
->   esp_scsi: De-duplicate PIO routines
->   esp_scsi: Optimize PIO loops
->
->  drivers/scsi/esp_scsi.c  | 192 +++++++++++++++++++++++++++++--------
->  drivers/scsi/esp_scsi.h  |  10 +-
->  drivers/scsi/mac_esp.c   | 171 ++-------------------------------
->  drivers/scsi/zorro_esp.c | 240 +++++++----------------------------------------
->  4 files changed, 201 insertions(+), 412 deletions(-)
->
+Looks good to me, though I'm interested on any subtle (build) breakage when
+this gets exposure in -next. Will you push this patch upstream directly, or
+should it go in via the pcmcia tree? If it is the former, feel free to add
 
-For Amiga zorro-esp:
+	Acked-by: Dominik Brodowski <linux@dominikbrodowski.net>
 
-Tested-by: Michael Schmitz <schmitzmic@gmail.com>
+
+Thanks,
+	Dominik
