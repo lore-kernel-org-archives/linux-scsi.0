@@ -1,27 +1,76 @@
-From: Thomas Gleixner <tglx@linutronix.de>
-Subject: Re: move bus (PCI, PCMCIA, EISA, rapdio) config to drivers/
-Date: Sun, 14 Oct 2018 08:23:10 +0200 (CEST)
-Message-ID: <alpine.DEB.2.21.1810140822540.1438@nanos.tec.linutronix.de>
-References: <20181013151016.31674-1-hch@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+From: Finn Thain <fthain@telegraphics.com.au>
+Subject: [PATCH v2 2/6] esp_scsi: Track residual for PIO transfers
+Date: Sun, 14 Oct 2018 17:12:00 +1100
+Message-ID: <11a3a80e74a006040460fa051747e6a79c6382ce.1539497520.git.fthain@telegraphics.com.au>
+References: <cover.1539497520.git.fthain@telegraphics.com.au>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20181013151016.31674-1-hch@lst.de>
+In-Reply-To: <cover.1539497520.git.fthain@telegraphics.com.au>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Masahiro Yamada <yamada.masahiro@socionext.com>, Matt Porter <mporter@kernel.crashing.org>, Alexandre Bounine <alex.bou9@gmail.com>, Dominik Brodowski <linux@dominikbrodowski.net>, linux-kbuild@vger.kernel.org, linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Michael Schmitz <schmitzmic@gmail.com>, Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, linux-m68k@lists.linux-m68k.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, 13 Oct 2018, Christoph Hellwig wrote:
+If a target disconnects during a PIO data transfer the command may
+fail when the target reconnects:
 
-> Hi all,
-> 
-> currently every architecture that wants to provide on of the common
-> periphal busses needs to add some boilerplate code and include the
-> right Kconfig files.   This series instead just selects the presence
-> (when needed) and then handles everything in the bus-specific
-> Kconfig file under drivers/.
+scsi host1: DMA length is zero!
+scsi host1: cur adr[04380000] len[00000000]
 
-Nice cleanup.
+The scsi bus is then reset. This happens because the residual reached
+zero before the transfer was completed.
 
-Acked-by: Thomas Gleixner <tglx@linutronix.de>
+The usual residual calculation relies on the Transfer Count registers
+which works for DMA transfers but not for PIO transfers. Fix the problem
+by storing the PIO transfer residual and using that to correctly
+calculate bytes_sent.
+
+Fixes: 6fe07aaffbf0
+Tested-by: Stan Johnson <userm57@yahoo.com>
+Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
+Tested-by: Michael Schmitz <schmitzmic@gmail.com>
+---
+ drivers/scsi/esp_scsi.c | 1 +
+ drivers/scsi/esp_scsi.h | 2 ++
+ drivers/scsi/mac_esp.c  | 2 ++
+ 3 files changed, 5 insertions(+)
+
+diff --git a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
+index c3fc34b9964d..9e5d3f7d29ae 100644
+--- a/drivers/scsi/esp_scsi.c
++++ b/drivers/scsi/esp_scsi.c
+@@ -1338,6 +1338,7 @@ static int esp_data_bytes_sent(struct esp *esp, struct esp_cmd_entry *ent,
+ 
+ 	bytes_sent = esp->data_dma_len;
+ 	bytes_sent -= ecount;
++	bytes_sent -= esp->send_cmd_residual;
+ 
+ 	/*
+ 	 * The am53c974 has a DMA 'pecularity'. The doc states:
+diff --git a/drivers/scsi/esp_scsi.h b/drivers/scsi/esp_scsi.h
+index 8163dca2071b..db4b6ea94caa 100644
+--- a/drivers/scsi/esp_scsi.h
++++ b/drivers/scsi/esp_scsi.h
+@@ -540,6 +540,8 @@ struct esp {
+ 
+ 	void			*dma;
+ 	int			dmarev;
++
++	int			send_cmd_residual;
+ };
+ 
+ /* A front-end driver for the ESP chip should do the following in
+diff --git a/drivers/scsi/mac_esp.c b/drivers/scsi/mac_esp.c
+index eb551f3cc471..71879f2207e0 100644
+--- a/drivers/scsi/mac_esp.c
++++ b/drivers/scsi/mac_esp.c
+@@ -427,6 +427,8 @@ static void mac_esp_send_pio_cmd(struct esp *esp, u32 addr, u32 esp_count,
+ 			scsi_esp_cmd(esp, ESP_CMD_TI);
+ 		}
+ 	}
++
++	esp->send_cmd_residual = esp_count;
+ }
+ 
+ static int mac_esp_irq_pending(struct esp *esp)
+-- 
+2.18.1
