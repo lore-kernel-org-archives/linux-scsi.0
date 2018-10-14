@@ -1,7 +1,7 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v2 2/6] esp_scsi: Track residual for PIO transfers
+Subject: [PATCH v2 1/6] zorro_esp: Limit DMA transfers to 65535 bytes
 Date: Sun, 14 Oct 2018 17:12:00 +1100
-Message-ID: <11a3a80e74a006040460fa051747e6a79c6382ce.1539497520.git.fthain@telegraphics.com.au>
+Message-ID: <022a8c581d228f3f01dfa783aadd183a53169daa.1539497520.git.fthain@telegraphics.com.au>
 References: <cover.1539497520.git.fthain@telegraphics.com.au>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1539497520.git.fthain@telegraphics.com.au>
@@ -10,67 +10,79 @@ To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <mart
 Cc: Michael Schmitz <schmitzmic@gmail.com>, Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, linux-m68k@lists.linux-m68k.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-If a target disconnects during a PIO data transfer the command may
-fail when the target reconnects:
+The core driver, esp_scsi, does not use the ESP_CONFIG2_FENAB bit, so
+the chip's Transfer Counter register is only 16 bits wide (not 24).
+A larger transfer cannot work and will theoretically result in a failed
+command and a "DMA length is zero" error.
 
-scsi host1: DMA length is zero!
-scsi host1: cur adr[04380000] len[00000000]
-
-The scsi bus is then reset. This happens because the residual reached
-zero before the transfer was completed.
-
-The usual residual calculation relies on the Transfer Count registers
-which works for DMA transfers but not for PIO transfers. Fix the problem
-by storing the PIO transfer residual and using that to correctly
-calculate bytes_sent.
-
-Fixes: 6fe07aaffbf0
-Tested-by: Stan Johnson <userm57@yahoo.com>
+Fixes: 3109e5ae0311
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
+Cc: Michael Schmitz <schmitzmic@gmail.com>
 Tested-by: Michael Schmitz <schmitzmic@gmail.com>
 ---
- drivers/scsi/esp_scsi.c | 1 +
- drivers/scsi/esp_scsi.h | 2 ++
- drivers/scsi/mac_esp.c  | 2 ++
- 3 files changed, 5 insertions(+)
+ drivers/scsi/zorro_esp.c | 8 +-------
+ 1 file changed, 1 insertion(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
-index c3fc34b9964d..9e5d3f7d29ae 100644
---- a/drivers/scsi/esp_scsi.c
-+++ b/drivers/scsi/esp_scsi.c
-@@ -1338,6 +1338,7 @@ static int esp_data_bytes_sent(struct esp *esp, struct esp_cmd_entry *ent,
- 
- 	bytes_sent = esp->data_dma_len;
- 	bytes_sent -= ecount;
-+	bytes_sent -= esp->send_cmd_residual;
- 
- 	/*
- 	 * The am53c974 has a DMA 'pecularity'. The doc states:
-diff --git a/drivers/scsi/esp_scsi.h b/drivers/scsi/esp_scsi.h
-index 8163dca2071b..db4b6ea94caa 100644
---- a/drivers/scsi/esp_scsi.h
-+++ b/drivers/scsi/esp_scsi.h
-@@ -540,6 +540,8 @@ struct esp {
- 
- 	void			*dma;
- 	int			dmarev;
-+
-+	int			send_cmd_residual;
- };
- 
- /* A front-end driver for the ESP chip should do the following in
-diff --git a/drivers/scsi/mac_esp.c b/drivers/scsi/mac_esp.c
-index eb551f3cc471..71879f2207e0 100644
---- a/drivers/scsi/mac_esp.c
-+++ b/drivers/scsi/mac_esp.c
-@@ -427,6 +427,8 @@ static void mac_esp_send_pio_cmd(struct esp *esp, u32 addr, u32 esp_count,
- 			scsi_esp_cmd(esp, ESP_CMD_TI);
- 		}
- 	}
-+
-+	esp->send_cmd_residual = esp_count;
+diff --git a/drivers/scsi/zorro_esp.c b/drivers/scsi/zorro_esp.c
+index bb70882e6b56..be79127db594 100644
+--- a/drivers/scsi/zorro_esp.c
++++ b/drivers/scsi/zorro_esp.c
+@@ -245,7 +245,7 @@ static int fastlane_esp_irq_pending(struct esp *esp)
+ static u32 zorro_esp_dma_length_limit(struct esp *esp, u32 dma_addr,
+ 					u32 dma_len)
+ {
+-	return dma_len > 0xFFFFFF ? 0xFFFFFF : dma_len;
++	return dma_len > 0xFFFF ? 0xFFFF : dma_len;
  }
  
- static int mac_esp_irq_pending(struct esp *esp)
+ static void zorro_esp_reset_dma(struct esp *esp)
+@@ -484,7 +484,6 @@ static void zorro_esp_send_blz1230_dma_cmd(struct esp *esp, u32 addr,
+ 	scsi_esp_cmd(esp, ESP_CMD_DMA);
+ 	zorro_esp_write8(esp, (esp_count >> 0) & 0xff, ESP_TCLOW);
+ 	zorro_esp_write8(esp, (esp_count >> 8) & 0xff, ESP_TCMED);
+-	zorro_esp_write8(esp, (esp_count >> 16) & 0xff, ESP_TCHI);
+ 
+ 	scsi_esp_cmd(esp, cmd);
+ }
+@@ -529,7 +528,6 @@ static void zorro_esp_send_blz1230II_dma_cmd(struct esp *esp, u32 addr,
+ 	scsi_esp_cmd(esp, ESP_CMD_DMA);
+ 	zorro_esp_write8(esp, (esp_count >> 0) & 0xff, ESP_TCLOW);
+ 	zorro_esp_write8(esp, (esp_count >> 8) & 0xff, ESP_TCMED);
+-	zorro_esp_write8(esp, (esp_count >> 16) & 0xff, ESP_TCHI);
+ 
+ 	scsi_esp_cmd(esp, cmd);
+ }
+@@ -574,7 +572,6 @@ static void zorro_esp_send_blz2060_dma_cmd(struct esp *esp, u32 addr,
+ 	scsi_esp_cmd(esp, ESP_CMD_DMA);
+ 	zorro_esp_write8(esp, (esp_count >> 0) & 0xff, ESP_TCLOW);
+ 	zorro_esp_write8(esp, (esp_count >> 8) & 0xff, ESP_TCMED);
+-	zorro_esp_write8(esp, (esp_count >> 16) & 0xff, ESP_TCHI);
+ 
+ 	scsi_esp_cmd(esp, cmd);
+ }
+@@ -599,7 +596,6 @@ static void zorro_esp_send_cyber_dma_cmd(struct esp *esp, u32 addr,
+ 
+ 	zorro_esp_write8(esp, (esp_count >> 0) & 0xff, ESP_TCLOW);
+ 	zorro_esp_write8(esp, (esp_count >> 8) & 0xff, ESP_TCMED);
+-	zorro_esp_write8(esp, (esp_count >> 16) & 0xff, ESP_TCHI);
+ 
+ 	if (write) {
+ 		/* DMA receive */
+@@ -649,7 +645,6 @@ static void zorro_esp_send_cyberII_dma_cmd(struct esp *esp, u32 addr,
+ 
+ 	zorro_esp_write8(esp, (esp_count >> 0) & 0xff, ESP_TCLOW);
+ 	zorro_esp_write8(esp, (esp_count >> 8) & 0xff, ESP_TCMED);
+-	zorro_esp_write8(esp, (esp_count >> 16) & 0xff, ESP_TCHI);
+ 
+ 	if (write) {
+ 		/* DMA receive */
+@@ -691,7 +686,6 @@ static void zorro_esp_send_fastlane_dma_cmd(struct esp *esp, u32 addr,
+ 
+ 	zorro_esp_write8(esp, (esp_count >> 0) & 0xff, ESP_TCLOW);
+ 	zorro_esp_write8(esp, (esp_count >> 8) & 0xff, ESP_TCMED);
+-	zorro_esp_write8(esp, (esp_count >> 16) & 0xff, ESP_TCHI);
+ 
+ 	if (write) {
+ 		/* DMA receive */
 -- 
 2.18.1
