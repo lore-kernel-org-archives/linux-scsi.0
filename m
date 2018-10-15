@@ -1,36 +1,75 @@
-From: Bjorn Helgaas <helgaas@kernel.org>
-Subject: Re: [PATCH 4/8] pci: consolidate PCI config entry in drivers/pci
-Date: Mon, 15 Oct 2018 15:58:58 -0500
-Message-ID: <20181015205857.GE5906@bhelgaas-glaptop.roam.corp.google.com>
-References: <20181013151016.31674-1-hch@lst.de>
- <20181013151016.31674-5-hch@lst.de>
+From: Finn Thain <fthain@telegraphics.com.au>
+Subject: Re: [PATCH v2 5/6] esp_scsi: De-duplicate PIO routines
+Date: Tue, 16 Oct 2018 10:52:26 +1100 (AEDT)
+Message-ID: <alpine.LNX.2.21.1810161014080.10@nippy.intranet>
+References: <cover.1539497520.git.fthain@telegraphics.com.au> <d5fe773ea8c922631836dad2ef2dbb952672c7c7.1539497520.git.fthain@telegraphics.com.au> <35ac9f31-7068-ab93-4629-363ee0bb4c70@suse.de> <alpine.LNX.2.21.1810151717520.10@nippy.intranet>
+ <2b48c925-73f0-0ca0-2f3c-3c35d90010ba@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20181013151016.31674-5-hch@lst.de>
+In-Reply-To: <2b48c925-73f0-0ca0-2f3c-3c35d90010ba@suse.de>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Masahiro Yamada <yamada.masahiro@socionext.com>, Matt Porter <mporter@kernel.crashing.org>, Alexandre Bounine <alex.bou9@gmail.com>, Dominik Brodowski <linux@dominikbrodowski.net>, linux-kbuild@vger.kernel.org, linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-scsi@vger.kernel.org, linux-m68k@lists.linux-m68k.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-s/^pci: /PCI: / in subject
+On Mon, 15 Oct 2018, Hannes Reinecke wrote:
 
-On Sat, Oct 13, 2018 at 05:10:12PM +0200, Christoph Hellwig wrote:
-> There is no good reason to duplicate the PCI menu in every architecture.
-> Instead provide a selectable HAS_PCI symbol that indicates availability
-> of PCI support and the handle the rest in drivers/pci.
+> > 
+> > In the case of send_cmd_residual, that would mean a second #ifdef 
+> > added to esp_data_bytes_sent() where it gets used. I'm happy to comply 
+> > but I fear that all these #ifdefs may harm readability...
+> > 
+> > There are already other variables in struct esp that may go unused, 
+> > such as dma_regs, that don't have #ifdefs to elide them. Are these 
+> > also problematic in some way?
+> > 
+> The unused fields in the struct are not so much an issue; in fact, it 
+> rather complicated things when having individual fields in the struct 
+> surrounded by CONFIG_XXX, as then the order of the fields would change 
+> depending on the configuration. Which makes it really hard to debug ..
 > 
-> Note that for powerpc we now select HAS_PCI globally instead of the
-> convoluted mess of conditional or or non-conditional support per board,
-> similar to what we do e.g. on x86.  For alpha PCI is selected for the
-> non-jensen configs as it was the default before, and a lot of code does
-> not compile without PCI enabled.  On other architectures with limited
-> PCI support that wasn't as complicated I've left the selection as-is.
 
-Thanks for doing this.  It's a great cleanup.  I know you have a few
-things you're cleaning up, but add my:
+True enough. We agree that this #ifdef is undesirable. And yet when I 
+tried it, I found an unexpected readability benefit to your suggestion:
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+#ifdef CONFIG_SCSI_ESP_PIO
+        u8 __iomem              *fifo_reg;
+        int                     send_cmd_error;
+        u32                     send_cmd_residual;
+#endif
 
-when you do that.
+This grouping does help convey the purpose of these struct members, even 
+though the #ifdef is meant for the compiler not for the human reader.
+
+So maybe it makes sense to group these definitions (they are all the same 
+size):
+
+        /* These are used by esp_scsi_send_pio_cmd() */
+        u8 __iomem              *fifo_reg;
+        int                     send_cmd_error;
+        u32                     send_cmd_residual;
+
+> However, the function declaration really is a worry, as the actual 
+> function body only exists when the config option is enabled. So either 
+> add a dummy function or surround the function declaration by 
+> CONFIG_ESP_PIO.
+> Otherwise I think Dan Carpenter and the likes are guaranteed to send you 
+> a nice mail complaining about this ...
+> 
+
+Do static checkers really complain about this? I think the validity of an 
+extern can't be known until the final linkage is done.
+
+At that point the checker may complain that no compilation unit references 
+a symbol in a header.
+
+But this would lead to false positives where a header file is shared by 
+separate programs which share library code but not macros.
+
+-- 
+
+> Cheers,
+> 
+> Hannes
+> 
