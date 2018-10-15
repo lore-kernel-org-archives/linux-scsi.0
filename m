@@ -1,34 +1,215 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2 3/6] esp_scsi: Grant disconnect privilege for untagged
- commands
-Date: Sun, 14 Oct 2018 22:52:01 -0700
-Message-ID: <20181015055201.GA21295@infradead.org>
-References: <cover.1539497520.git.fthain@telegraphics.com.au>
- <91b9ff9fc19ba40e3a2562171c8cd78a2ce7dc79.1539497520.git.fthain@telegraphics.com.au>
- <20181014154753.GA19252@infradead.org>
- <alpine.LNX.2.21.1810151004440.10@nippy.intranet>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 5/6] esp_scsi: De-duplicate PIO routines
+Date: Mon, 15 Oct 2018 07:54:28 +0200
+Message-ID: <a75d4dc3-5966-b437-6f18-da2d6a769ec2@suse.de>
+References: <cover.1539391876.git.fthain@telegraphics.com.au>
+ <09d3a141dc16af63921f5414263069e9b4f97222.1539391876.git.fthain@telegraphics.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.LNX.2.21.1810151004440.10@nippy.intranet>
+In-Reply-To: <09d3a141dc16af63921f5414263069e9b4f97222.1539391876.git.fthain@telegraphics.com.au>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: Christoph Hellwig <hch@infradead.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, linux-m68k@lists.linux-m68k.org, linux-kernel@vger.kernel.org
+To: Finn Thain <fthain@telegraphics.com.au>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Michael Schmitz <schmitzmic@gmail.com>, linux-scsi@vger.kernel.org, linux-m68k@lists.linux-m68k.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Oct 15, 2018 at 10:13:37AM +1100, Finn Thain wrote:
-> On Sun, 14 Oct 2018, Christoph Hellwig wrote:
+On 10/13/18 2:51 AM, Finn Thain wrote:
+> As a temporary measure, the code to implement PIO transfers was
+> duplicated in zorro_esp and mac_esp. Now that this code has stabilized,
+> move it into the core driver to eliminate the duplication.
 > 
-> > > +	*p++ = IDENTIFY(lp && (tp->flags & ESP_TGT_DISCONNECT), lun);
-> > 
-> > I think lp should always be non-NULL here.
-> > 
+> This replaces the inline assembler with more portable writesb() calls.
+> Optimizing the m68k writesb() implementation is a separate patch.
 > 
-> It's not clear from Documentation/scsi/scsi_mid_low_api.txt, but I guess 
-> that's true for scanning of targets.
+> Tested-by: Stan Johnson <userm57@yahoo.com>
+> Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
+> ---
+>   drivers/scsi/esp_scsi.c  | 126 +++++++++++++++++++++++++
+>   drivers/scsi/esp_scsi.h  |   5 +
+>   drivers/scsi/mac_esp.c   | 173 ++---------------------------------
+>   drivers/scsi/zorro_esp.c | 232 +++++++----------------------------------------
+>   4 files changed, 171 insertions(+), 365 deletions(-)
 > 
-> Is it true in general that queuecommand for a device will not occur before 
-> its slave_alloc and not after its slave_destroy invocation?
+> diff --git a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
+> index 6ccaf818357e..646701fc22a4 100644
+> --- a/drivers/scsi/esp_scsi.c
+> +++ b/drivers/scsi/esp_scsi.c
+> @@ -2776,3 +2776,129 @@ MODULE_PARM_DESC(esp_debug,
+>   
+>   module_init(esp_init);
+>   module_exit(esp_exit);
+> +
+> +#if IS_ENABLED(CONFIG_SCSI_MAC_ESP) || IS_ENABLED(CONFIG_SCSI_ZORRO_ESP)
+> +static inline unsigned int esp_wait_for_fifo(struct esp *esp)
+> +{
+> +	int i = 500000;
+> +
+> +	do {
+> +		unsigned int fbytes = esp_read8(ESP_FFLAGS) & ESP_FF_FBYTES;
+> +
+> +		if (fbytes)
+> +			return fbytes;
+> +
+> +		udelay(2);
+> +	} while (--i);
+> +
+> +	pr_err("FIFO is empty (sreg %02x)\n", esp_read8(ESP_STATUS));
+> +	return 0;
+> +}
+> +
+> +static inline int esp_wait_for_intr(struct esp *esp)
+> +{
+> +	int i = 500000;
+> +
+> +	do {
+> +		esp->sreg = esp_read8(ESP_STATUS);
+> +		if (esp->sreg & ESP_STAT_INTR)
+> +			return 0;
+> +
+> +		udelay(2);
+> +	} while (--i);
+> +
+> +	pr_err("IRQ timeout (sreg %02x)\n", esp->sreg);
+> +	return 1;
+> +}
+> +
+> +#define ESP_FIFO_SIZE 16
+> +
+> +void esp_send_pio_cmd(struct esp *esp, u32 addr, u32 esp_count,
+> +		      u32 dma_count, int write, u8 cmd)
+> +{
+> +	u8 phase = esp->sreg & ESP_STAT_PMASK;
+> +
+> +	cmd &= ~ESP_CMD_DMA;
+> +	esp->send_cmd_error = 0;
+> +
+> +	if (write) {
+> +		u8 *dst = (u8 *)addr;
+> +		u8 mask = ~(phase == ESP_MIP ? ESP_INTR_FDONE : ESP_INTR_BSERV);
+> +
+> +		scsi_esp_cmd(esp, cmd);
+> +
+> +		while (1) {
+> +			if (!esp_wait_for_fifo(esp))
+> +				break;
+> +
+> +			*dst++ = esp_read8(ESP_FDATA);
+> +			--esp_count;
+> +
+> +			if (!esp_count)
+> +				break;
+> +
+> +			if (esp_wait_for_intr(esp)) {
+> +				esp->send_cmd_error = 1;
+> +				break;
+> +			}
+> +
+> +			if ((esp->sreg & ESP_STAT_PMASK) != phase)
+> +				break;
+> +
+> +			esp->ireg = esp_read8(ESP_INTRPT);
+> +			if (esp->ireg & mask) {
+> +				esp->send_cmd_error = 1;
+> +				break;
+> +			}
+> +
+> +			if (phase == ESP_MIP)
+> +				scsi_esp_cmd(esp, ESP_CMD_MOK);
+> +
+> +			scsi_esp_cmd(esp, ESP_CMD_TI);
+> +		}
+> +	} else {
+> +		unsigned int n = ESP_FIFO_SIZE;
+> +		u8 *src = (u8 *)addr;
+> +
+> +		scsi_esp_cmd(esp, ESP_CMD_FLUSH);
+> +
+> +		if (n > esp_count)
+> +			n = esp_count;
+> +		writesb(esp->fifo_reg, src, n);
+> +		src += n;
+> +		esp_count -= n;
+> +
+> +		scsi_esp_cmd(esp, cmd);
+> +
+> +		while (esp_count) {
+> +			if (esp_wait_for_intr(esp)) {
+> +				esp->send_cmd_error = 1;
+> +				break;
+> +			}
+> +
+> +			if ((esp->sreg & ESP_STAT_PMASK) != phase)
+> +				break;
+> +
+> +			esp->ireg = esp_read8(ESP_INTRPT);
+> +			if (esp->ireg & ~ESP_INTR_BSERV) {
+> +				esp->send_cmd_error = 1;
+> +				break;
+> +			}
+> +
+> +			n = ESP_FIFO_SIZE -
+> +			    (esp_read8(ESP_FFLAGS) & ESP_FF_FBYTES);
+> +
+> +			if (n > esp_count)
+> +				n = esp_count;
+> +			writesb(esp->fifo_reg, src, n);
+> +			src += n;
+> +			esp_count -= n;
+> +
+> +			scsi_esp_cmd(esp, ESP_CMD_TI);
+> +		}
+> +	}
+> +
+> +	esp->send_cmd_residual = esp_count;
+> +}
+> +EXPORT_SYMBOL(esp_send_pio_cmd);
+> +#endif
 
-Yes.
+These function are conditional, but
+
+> diff --git a/drivers/scsi/esp_scsi.h b/drivers/scsi/esp_scsi.h
+> index d0c032803749..2590e5eda595 100644
+> --- a/drivers/scsi/esp_scsi.h
+> +++ b/drivers/scsi/esp_scsi.h
+> @@ -431,6 +431,7 @@ struct esp_driver_ops {
+>   struct esp {
+>   	void __iomem		*regs;
+>   	void __iomem		*dma_regs;
+> +	u8 __iomem		*fifo_reg;
+>   
+>   	const struct esp_driver_ops *ops;
+>   
+> @@ -540,6 +541,7 @@ struct esp {
+>   	void			*dma;
+>   	int			dmarev;
+>   
+> +	int			send_cmd_error;
+>   	int			send_cmd_residual;
+>   };
+>   
+> @@ -581,4 +583,7 @@ extern void scsi_esp_unregister(struct esp *);
+>   extern irqreturn_t scsi_esp_intr(int, void *);
+>   extern void scsi_esp_cmd(struct esp *, u8);
+>   
+> +extern void esp_send_pio_cmd(struct esp *esp, u32 dma_addr, u32 esp_count,
+> +			     u32 dma_count, int write, u8 cmd);
+> +
+>   #endif /* !(_ESP_SCSI_H) */
+These are not.
+
+Which will result in building errors when the said configuration is not 
+enabled.
+Please fix by either making everything conditional or remove the 
+conditional completely.
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
