@@ -1,31 +1,44 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [RESEND][PATCH] scsi: ufs: Fix hynix ufs bug with quirk on hi36xx SoC
-Date: Mon, 15 Oct 2018 23:41:06 -0400
-Message-ID: <yq17eiiwobx.fsf@oracle.com>
-References: <1538434698-1042-1-git-send-email-john.stultz@linaro.org>
+Subject: Re: [PATCH] scsi: megaraid_sas: fix a missing-check bug
+Date: Mon, 15 Oct 2018 23:43:12 -0400
+Message-ID: <yq136t6wo8f.fsf@oracle.com>
+References: <1538850861-26882-1-git-send-email-wang6495@umn.edu>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1538434698-1042-1-git-send-email-john.stultz@linaro.org> (John
-        Stultz's message of "Mon, 1 Oct 2018 15:58:18 -0700")
+In-Reply-To: <1538850861-26882-1-git-send-email-wang6495@umn.edu> (Wenwen
+        Wang's message of "Sat, 6 Oct 2018 13:34:21 -0500")
 Sender: linux-kernel-owner@vger.kernel.org
-To: John Stultz <john.stultz@linaro.org>
-Cc: lkml <linux-kernel@vger.kernel.org>, Wei Li <liwei213@huawei.com>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Dmitry Shmidt <dimitrysh@google.com>
+To: Wenwen Wang <wang6495@umn.edu>
+Cc: Kangjie Lu <kjlu@umn.edu>, Kashyap Desai <kashyap.desai@broadcom.com>, Sumit Saxena <sumit.saxena@broadcom.com>, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "open list:MEGARAID SCSI/SAS DRIVERS" <megaraidlinux.pdl@broadcom.com>, "open list:MEGARAID SCSI/SAS DRIVERS" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
 
-John,
+Wenwen,
 
-> Hynix ufs has deviations on hi36xx platform which will result in ufs
-> bursts transfer failures.
+> In megasas_mgmt_compat_ioctl_fw(), to handle the structure
+> compat_megasas_iocpacket 'cioc', a user-space structure megasas_iocpacket
+> 'ioc' is allocated before megasas_mgmt_ioctl_fw() is invoked to handle the
+> packet. Since the two data structures have different fields, the data is
+> copied from 'cioc' to 'ioc' field by field. In the copy process,
+> 'sense_ptr' is prepared if the field 'sense_len' is not null, because it
+> will be used in megasas_mgmt_ioctl_fw(). To prepare 'sense_ptr', the
+> user-space data 'ioc->sense_off' and 'cioc->sense_off' are copied and saved
+> to kernel-space variables 'local_sense_off' and 'user_sense_off'
+> respectively. Given that 'ioc->sense_off' is also copied from
+> 'cioc->sense_off', 'local_sense_off' and 'user_sense_off' should have the
+> same value. However, 'cioc' is in the user space and a malicious user can
+> race to change the value of 'cioc->sense_off' after it is copied to
+> 'ioc->sense_off' but before it is copied to 'user_sense_off'. By doing so,
+> the attacker can inject different values into 'local_sense_off' and
+> 'user_sense_off'. This can cause undefined behavior in the following
+> execution, because the two variables are supposed to be same.
+>
+> This patch enforces a check on the two kernel variables 'local_sense_off'
+> and 'user_sense_off' to make sure they are the same after the copy. In case
+> they are not, an error code EINVAL will be returned.
 
-Is this specific to the particular implementation on hi36xx or all SK
-Hynix implementations?
-
-> +	UFS_FIX(UFS_VENDOR_SKHYNIX, UFS_ANY_MODEL,
-> +		UFS_DEVICE_QUIRK_HOST_VS_DEBUGSAVECONFIGTIME),
-
-I am not so keen on matching on all current and future models.
+Broadcom folks: Please review!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
