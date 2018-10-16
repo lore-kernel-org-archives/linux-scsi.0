@@ -1,8 +1,7 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v3 3/6] esp_scsi: Grant disconnect privilege for untagged
- commands
+Subject: [PATCH v3 1/6] zorro_esp: Limit DMA transfers to 65535 bytes
 Date: Tue, 16 Oct 2018 16:31:25 +1100
-Message-ID: <4208077979dff12471046ab27be1d7a89887d1d3.1539667885.git.fthain@telegraphics.com.au>
+Message-ID: <089e72bf45ec4d58d3e33fe8e0dcb914fcb7753d.1539667885.git.fthain@telegraphics.com.au>
 References: <cover.1539667885.git.fthain@telegraphics.com.au>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1539667885.git.fthain@telegraphics.com.au>
@@ -11,60 +10,80 @@ To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <mart
 Cc: Michael Schmitz <schmitzmic@gmail.com>, Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, linux-m68k@lists.linux-m68k.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-A SCSI device is not granted disconnect privilege by an esp_scsi host
-unless that device has its simple_tags flag set. However, a device may
-support disconnect/reselect and not support command queueing. Allow
-such devices to disconnect and thereby improve bus utilization.
+The core driver, esp_scsi, does not use the ESP_CONFIG2_FENAB bit, so
+the chip's Transfer Counter register is only 16 bits wide (not 24).
+A larger transfer cannot work and will theoretically result in a failed
+command and a "DMA length is zero" error.
 
-Drop the redundant 'lp' check. The mid-layer invokes .slave_alloc and
-.slave_destroy in such a way that we may rely on scmd->device->hostdata
-for as long as scmd belongs to the low-level driver.
-
-Tested-by: Stan Johnson <userm57@yahoo.com>
+Fixes: 3109e5ae0311 ("scsi: zorro_esp: New driver for Amiga Zorro NCR53C9x boards")
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
+Cc: Michael Schmitz <schmitzmic@gmail.com>
 Tested-by: Michael Schmitz <schmitzmic@gmail.com>
+Reviewed-by: Michael Schmitz <schmitzmic@gmail.com>
 ---
-Changed since v2:
- - Drop redundant 'lp' check.
----
- drivers/scsi/esp_scsi.c | 11 +----------
- 1 file changed, 1 insertion(+), 10 deletions(-)
+ drivers/scsi/zorro_esp.c | 8 +-------
+ 1 file changed, 1 insertion(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
-index 9e5d3f7d29ae..5b24aa21a797 100644
---- a/drivers/scsi/esp_scsi.c
-+++ b/drivers/scsi/esp_scsi.c
-@@ -717,7 +717,6 @@ static struct esp_cmd_entry *find_and_prep_issuable_command(struct esp *esp)
- static void esp_maybe_execute_command(struct esp *esp)
+diff --git a/drivers/scsi/zorro_esp.c b/drivers/scsi/zorro_esp.c
+index bb70882e6b56..be79127db594 100644
+--- a/drivers/scsi/zorro_esp.c
++++ b/drivers/scsi/zorro_esp.c
+@@ -245,7 +245,7 @@ static int fastlane_esp_irq_pending(struct esp *esp)
+ static u32 zorro_esp_dma_length_limit(struct esp *esp, u32 dma_addr,
+ 					u32 dma_len)
  {
- 	struct esp_target_data *tp;
--	struct esp_lun_data *lp;
- 	struct scsi_device *dev;
- 	struct scsi_cmnd *cmd;
- 	struct esp_cmd_entry *ent;
-@@ -743,7 +742,6 @@ static void esp_maybe_execute_command(struct esp *esp)
- 	tgt = dev->id;
- 	lun = dev->lun;
- 	tp = &esp->target[tgt];
--	lp = dev->hostdata;
+-	return dma_len > 0xFFFFFF ? 0xFFFFFF : dma_len;
++	return dma_len > 0xFFFF ? 0xFFFF : dma_len;
+ }
  
- 	list_move(&ent->list, &esp->active_cmds);
+ static void zorro_esp_reset_dma(struct esp *esp)
+@@ -484,7 +484,6 @@ static void zorro_esp_send_blz1230_dma_cmd(struct esp *esp, u32 addr,
+ 	scsi_esp_cmd(esp, ESP_CMD_DMA);
+ 	zorro_esp_write8(esp, (esp_count >> 0) & 0xff, ESP_TCLOW);
+ 	zorro_esp_write8(esp, (esp_count >> 8) & 0xff, ESP_TCMED);
+-	zorro_esp_write8(esp, (esp_count >> 16) & 0xff, ESP_TCHI);
  
-@@ -799,14 +797,7 @@ static void esp_maybe_execute_command(struct esp *esp)
- 	}
+ 	scsi_esp_cmd(esp, cmd);
+ }
+@@ -529,7 +528,6 @@ static void zorro_esp_send_blz1230II_dma_cmd(struct esp *esp, u32 addr,
+ 	scsi_esp_cmd(esp, ESP_CMD_DMA);
+ 	zorro_esp_write8(esp, (esp_count >> 0) & 0xff, ESP_TCLOW);
+ 	zorro_esp_write8(esp, (esp_count >> 8) & 0xff, ESP_TCMED);
+-	zorro_esp_write8(esp, (esp_count >> 16) & 0xff, ESP_TCHI);
  
- build_identify:
--	/* If we don't have a lun-data struct yet, we're probing
--	 * so do not disconnect.  Also, do not disconnect unless
--	 * we have a tag on this command.
--	 */
--	if (lp && (tp->flags & ESP_TGT_DISCONNECT) && ent->tag[0])
--		*p++ = IDENTIFY(1, lun);
--	else
--		*p++ = IDENTIFY(0, lun);
-+	*p++ = IDENTIFY(tp->flags & ESP_TGT_DISCONNECT, lun);
+ 	scsi_esp_cmd(esp, cmd);
+ }
+@@ -574,7 +572,6 @@ static void zorro_esp_send_blz2060_dma_cmd(struct esp *esp, u32 addr,
+ 	scsi_esp_cmd(esp, ESP_CMD_DMA);
+ 	zorro_esp_write8(esp, (esp_count >> 0) & 0xff, ESP_TCLOW);
+ 	zorro_esp_write8(esp, (esp_count >> 8) & 0xff, ESP_TCMED);
+-	zorro_esp_write8(esp, (esp_count >> 16) & 0xff, ESP_TCHI);
  
- 	if (ent->tag[0] && esp->rev == ESP100) {
- 		/* ESP100 lacks select w/atn3 command, use select
+ 	scsi_esp_cmd(esp, cmd);
+ }
+@@ -599,7 +596,6 @@ static void zorro_esp_send_cyber_dma_cmd(struct esp *esp, u32 addr,
+ 
+ 	zorro_esp_write8(esp, (esp_count >> 0) & 0xff, ESP_TCLOW);
+ 	zorro_esp_write8(esp, (esp_count >> 8) & 0xff, ESP_TCMED);
+-	zorro_esp_write8(esp, (esp_count >> 16) & 0xff, ESP_TCHI);
+ 
+ 	if (write) {
+ 		/* DMA receive */
+@@ -649,7 +645,6 @@ static void zorro_esp_send_cyberII_dma_cmd(struct esp *esp, u32 addr,
+ 
+ 	zorro_esp_write8(esp, (esp_count >> 0) & 0xff, ESP_TCLOW);
+ 	zorro_esp_write8(esp, (esp_count >> 8) & 0xff, ESP_TCMED);
+-	zorro_esp_write8(esp, (esp_count >> 16) & 0xff, ESP_TCHI);
+ 
+ 	if (write) {
+ 		/* DMA receive */
+@@ -691,7 +686,6 @@ static void zorro_esp_send_fastlane_dma_cmd(struct esp *esp, u32 addr,
+ 
+ 	zorro_esp_write8(esp, (esp_count >> 0) & 0xff, ESP_TCLOW);
+ 	zorro_esp_write8(esp, (esp_count >> 8) & 0xff, ESP_TCMED);
+-	zorro_esp_write8(esp, (esp_count >> 16) & 0xff, ESP_TCHI);
+ 
+ 	if (write) {
+ 		/* DMA receive */
 -- 
 2.18.1
