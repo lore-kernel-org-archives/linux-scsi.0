@@ -1,15 +1,16 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v4 01/11] scsi: sd_zbc: Rearrange code
-Date: Tue, 16 Oct 2018 00:48:02 -0400
-Message-ID: <yq18t2yv6nx.fsf@oracle.com>
+Subject: Re: [PATCH v4 03/11] scsi: sd_zbc: Fix
+	sd_zbc_check_zones() error checks
+Date: Tue, 16 Oct 2018 00:51:47 -0400
+Message-ID: <yq1zhvetrx8.fsf@oracle.com>
 References: <20181012100850.23316-1-damien.lemoal@wdc.com>
-	<20181012100850.23316-2-damien.lemoal@wdc.com>
+	<20181012100850.23316-4-damien.lemoal@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20181012100850.23316-2-damien.lemoal@wdc.com> (Damien Le Moal's
-	message of "Fri, 12 Oct 2018 19:08:40 +0900")
+In-Reply-To: <20181012100850.23316-4-damien.lemoal@wdc.com> (Damien Le Moal's
+	message of "Fri, 12 Oct 2018 19:08:42 +0900")
 List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
 	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
 List-Archive: <https://www.redhat.com/archives/dm-devel>
@@ -26,12 +27,17 @@ List-Id: linux-scsi@vger.kernel.org
 
 Damien,
 
-> Move the urswrz check out of sd_zbc_read_zones() and into
-> sd_zbc_read_zoned_characteristics() where that value is obtained (read
-> from the disk zoned characteristics VPD page). Since this function now
-> does more than simply reading the VPD page, rename it to
-> sd_zbc_check_zoned_characteristics().  Also fix the error message
-> displayed when reading that VPD page fails.
+> The unsigned 32 bits overflow check for the zone size value is already
+> done within sd_zbc_check_zones() with the test:
+>
+> } else if (logical_to_sectors(sdkp->device, zone_blocks) > UINT_MAX) {
+>
+> so there is no need to check again for an out of range value in
+> sd_zbc_read_zones(). Simplify the code and fix sd_zbc_check_zones()
+> error return to -EFBIG instead of -ENODEV if the zone size is too large.
+> Change the return type of sd_zbc_check_zones() to an int for the error
+> code and return the zone size (zone_blocks) through a u32 pointer to
+> avoid overflowing the signed 32 return value.
 
 Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
 
