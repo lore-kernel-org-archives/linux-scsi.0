@@ -1,37 +1,39 @@
-From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: [PATCH] scsi: ips: fix missing break in switch
-Date: Tue, 16 Oct 2018 11:12:23 +0200
-Message-ID: <20181016091223.GA19765@embeddedor.com>
+From: Avri Altman <Avri.Altman@wdc.com>
+Subject: RE: [PATCH V15 2/2] scsi: ufs: Add configfs support for UFS
+ provisioning
+Date: Tue, 16 Oct 2018 09:43:22 +0000
+Message-ID: <SN6PR04MB4925BBEF6D9360B64DCF7F88FCFE0@SN6PR04MB4925.namprd04.prod.outlook.com>
+References: <1539680382-31136-1-git-send-email-sayalil@codeaurora.org>
+ <1539680382-31136-3-git-send-email-sayalil@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <1539680382-31136-3-git-send-email-sayalil@codeaurora.org>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Adaptec OEM Raid Solutions <aacraid@microsemi.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+To: Sayali Lokhande <sayalil@codeaurora.org>, "subhashj@codeaurora.org" <subhashj@codeaurora.org>, "cang@codeaurora.org" <cang@codeaurora.org>, "vivek.gautam@codeaurora.org" <vivek.gautam@codeaurora.org>, "rnayak@codeaurora.org" <rnayak@codeaurora.org>, "vinholikatti@gmail.com" <vinholikatti@gmail.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>, "evgreen@chromium.org" <evgreen@chromium.org>, "riteshh@codeaurora.org" <riteshh@codeaurora.org>
+Cc: "stummala@codeaurora.org" <stummala@codeaurora.org>, "adrian.hunter@intel.com" <adrian.hunter@intel.com>, "jlbec@evilplan.org" <jlbec@evilplan.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Add missing break statement in order to prevent the code from falling
-through to case TEST_UNIT_READY.
+Hi,
 
-Addresses-Coverity-ID: 1357338 ("Missing break in switch")
-Suggested-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
----
- drivers/scsi/ips.c | 1 +
- 1 file changed, 1 insertion(+)
+> +++ b/drivers/scsi/ufs/Makefile
+> @@ -4,6 +4,8 @@ obj-$(CONFIG_SCSI_UFS_DWC_TC_PCI) +=3D tc-dwc-g210-
+> pci.o ufshcd-dwc.o tc-dwc-g210.
+>  obj-$(CONFIG_SCSI_UFS_DWC_TC_PLATFORM) +=3D tc-dwc-g210-pltfrm.o
+> ufshcd-dwc.o tc-dwc-g210.o
+>  obj-$(CONFIG_SCSI_UFS_QCOM) +=3D ufs-qcom.o
+>  obj-$(CONFIG_SCSI_UFSHCD) +=3D ufshcd-core.o
+> -ufshcd-core-objs :=3D ufshcd.o ufs-sysfs.o
+> +ufshcd-core-objs-y :=3D ufshcd.o ufs-sysfs.o
+> +ufshcd-core-objs-$(CONFIG_SCSI_UFS_PROVISION) +=3D ufs-configfs.o
+> +ufshcd-core-objs :=3D $(ufshcd-core-objs-y)
+This will work, but I think it should be:
+ufshcd-core-y                          +=3D ufshcd.o ufs-sysfs.o
+ufshcd-core-$( CONFIG_SCSI_UFS_PROVISION) +=3D ufs-configfs.o
 
-diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
-index bd6ac6b..fe587ef 100644
---- a/drivers/scsi/ips.c
-+++ b/drivers/scsi/ips.c
-@@ -3485,6 +3485,7 @@ ips_send_cmd(ips_ha_t * ha, ips_scb_t * scb)
- 
- 		case START_STOP:
- 			scb->scsi_cmd->result = DID_OK << 16;
-+			break;
- 
- 		case TEST_UNIT_READY:
- 		case INQUIRY:
--- 
-2.7.4
+Also, you may want to rebase your patches with Martin's 4.20/scsi-queue
+
+Thanks,
+Avri
