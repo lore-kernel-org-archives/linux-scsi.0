@@ -1,15 +1,16 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v4 10/11] block: add a report_zones method
-Date: Tue, 16 Oct 2018 00:55:47 -0400
-Message-ID: <yq1va62trqk.fsf@oracle.com>
+Subject: Re: [PATCH v4 11/11] block: Introduce
+	blk_revalidate_disk_zones()
+Date: Tue, 16 Oct 2018 01:00:16 -0400
+Message-ID: <yq1r2gqtrj3.fsf@oracle.com>
 References: <20181012100850.23316-1-damien.lemoal@wdc.com>
-	<20181012100850.23316-11-damien.lemoal@wdc.com>
+	<20181012100850.23316-12-damien.lemoal@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20181012100850.23316-11-damien.lemoal@wdc.com> (Damien Le Moal's
-	message of "Fri, 12 Oct 2018 19:08:49 +0900")
+In-Reply-To: <20181012100850.23316-12-damien.lemoal@wdc.com> (Damien Le Moal's
+	message of "Fri, 12 Oct 2018 19:08:50 +0900")
 List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
 	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
 List-Archive: <https://www.redhat.com/archives/dm-devel>
@@ -26,22 +27,33 @@ List-Id: linux-scsi@vger.kernel.org
 
 Damien,
 
-> Dispatching a report zones command through the request queue is a
-> major pain due to the command reply payload rewriting necessary. Given
-> that blkdev_report_zones() is executing everything synchronously,
-> implement report zones as a block device file operation instead,
-> allowing major simplification of the code in many places.
+> Drivers exposing zoned block devices have to initialize and maintain
+> correctness (i.e. revalidate) of the device zone bitmaps attached to
+> the device request queue (seq_zones_bitmap and seq_zones_wlock).
 >
-> sd, null-blk, dm-linear and dm-flakey being the only block device
-> drivers supporting exposing zoned block devices, these drivers are
-> modified to provide the device side implementation of the
-> report_zones() block device file operation.
+> To simplify coding this, introduce a generic helper function
+> blk_revalidate_disk_zones() suitable for most (and likely all) cases.
+> This new function always update the seq_zones_bitmap and seq_zones_wlock
+> bitmaps as well as the queue nr_zones field when called for a disk
+> using a request based queue. For a disk using a BIO based queue, only
+> the number of zones is updated since these queues do not have
+> schedulers and so do not need the zone bitmaps.
 >
-> For device mappers, a new report_zones() target type operation is
-> defined so that the upper block layer calls blkdev_report_zones() can
-> be propagated down to the underlying devices of the dm targets.
-> Implementation for this new operation is added to the dm-linear and
-> dm-flakey targets.
+> With this change, the zone bitmap initialization code in sd_zbc.c can be
+> replaced with a call to this function in sd_zbc_read_zones(), which is
+> called from the disk revalidate block operation method.
+>
+> A call to blk_revalidate_disk_zones() is also added to the null_blk
+> driver for devices created with the zoned mode enabled.
+>
+> Finally, to ensure that zoned devices created with dm-linear or
+> dm-flakey expose the correct number of zones through sysfs, a call to
+> blk_revalidate_disk_zones() is added to dm_table_set_restrictions().
+>
+> The zone bitmaps allocated and initialized with
+> blk_revalidate_disk_zones() are freed automatically from
+> __blk_release_queue() using the block internal function
+> blk_queue_free_zone_bitmaps().
 
 Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 
