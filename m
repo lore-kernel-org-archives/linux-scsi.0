@@ -1,30 +1,36 @@
-From: "Ly, Bryant" <bly@catalogicsoftware.com>
-Subject: Re: [PATCH 2/2] target: Fix target_wait_for_sess_cmds breakage with
- active signals
-Date: Tue, 16 Oct 2018 14:37:58 +0000
-Message-ID: <01F789A9-AF3F-4226-B9D1-9BB160AC4947@catalogicsoftware.com>
-References: <1539141790-13557-1-git-send-email-nab@linux-iscsi.org>
- <1539141790-13557-3-git-send-email-nab@linux-iscsi.org>
- <5BBE2FBF.7080804@redhat.com>
- <1539237365.6150.32.camel@haakon3.daterainc.com>
- <F43269BA-4D7B-486C-87C6-0FB48FF890EA@catalogicsoftware.com>
- <yq1lg6yv899.fsf@oracle.com>
+From: John Garry <john.garry@huawei.com>
+Subject: [PATCH] scsi: hisi_sas: Fix spin lock management in slot_index_alloc_quirk_v2_hw()
+Date: Tue, 16 Oct 2018 23:00:36 +0800
+Message-ID: <1539702036-191138-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: base64
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <yq1lg6yv899.fsf@oracle.com>
-Content-Language: en-US
-Content-ID: <10F2FAACA27E1E4D8895C09EDF922C47@prod.exchangelabs.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Mike Christie <mchristi@redhat.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Hannes Reinecke <hare@suse.com>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, "Peter Zijlstra (Intel)" <peterz@infradead.org>, Bart Van Assche <bvanassche@acm.org>
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, julia.lawall@lip6.fr, linuxarm@huawei.com, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-TWFydGluLCANCg0KPiBPbiBPY3QgMTUsIDIwMTgsIGF0IDExOjEzIFBNLCBNYXJ0aW4gSy4gUGV0
-ZXJzZW4gPG1hcnRpbi5wZXRlcnNlbkBvcmFjbGUuY29tPiB3cm90ZToNCj4gDQo+IA0KPiBCcnlh
-bnQsDQo+IA0KPj4gVk1zIGRvIG5vdCByZW1vdmUgdGhlIElfVCBuZXh1cyB3aGlsZSB0aGUgVk0g
-aXMgYWN0aXZlLCBzbyB3ZSBjYW4gcmVtb3ZlDQo+PiB0aGUgdGFyZ2V0X3dhaXRfZm9yX3Nlc3Nf
-Y21kKCkgY2FsbC4gDQo+IA0KPiBQYXRjaCBmb3J0aGNvbWluZz8NCg0KSSBjYW4gcHV0IG91dCBh
-IHBhdGNoLCBJ4oCZbSB0cnlpbmcgdG8gZ2V0IHNvbWVvbmUgYXQgSUJNIHRvIHRlc3QgaXQgdGhv
-dWdoLg0KDQotQnJ5YW50
+Currently a spin_unlock_irqrestore() call is missing on the error path, so
+add it.
+
+Reported-by: Julia Lawall <julia.lawall@lip6.fr>
+Signed-off-by: John Garry <john.garry@huawei.com>
+
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+index 70d6b28..cc36b64 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+@@ -806,8 +806,10 @@ static u32 hisi_sas_phy_read32(struct hisi_hba *hisi_hba,
+ 	while (1) {
+ 		start = find_next_zero_bit(bitmap,
+ 					hisi_hba->slot_index_count, start);
+-		if (start >= end)
++		if (start >= end) {
++			spin_unlock_irqrestore(&hisi_hba->lock, flags);
+ 			return -SAS_QUEUE_FULL;
++		}
+ 		/*
+ 		  * SAS IPTT bit0 should be 1, and SATA IPTT bit0 should be 0.
+ 		  */
+-- 
+1.9.1
