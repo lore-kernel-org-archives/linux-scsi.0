@@ -1,63 +1,30 @@
-From: Sumit Saxena <sumit.saxena@broadcom.com>
-Subject: Re: [PATCH] scsi: megaraid_sas: fix a missing-check bug
-Date: Tue, 16 Oct 2018 17:26:54 +0530
-Message-ID: <CAL2rwxqeeJgSz=DePWZvh8sr15MJK8Gqta7EbfjwAUMUcvvMJA@mail.gmail.com>
-References: <1538850861-26882-1-git-send-email-wang6495@umn.edu>
+From: "Ly, Bryant" <bly@catalogicsoftware.com>
+Subject: Re: [PATCH 2/2] target: Fix target_wait_for_sess_cmds breakage with
+ active signals
+Date: Tue, 16 Oct 2018 14:37:58 +0000
+Message-ID: <01F789A9-AF3F-4226-B9D1-9BB160AC4947@catalogicsoftware.com>
+References: <1539141790-13557-1-git-send-email-nab@linux-iscsi.org>
+ <1539141790-13557-3-git-send-email-nab@linux-iscsi.org>
+ <5BBE2FBF.7080804@redhat.com>
+ <1539237365.6150.32.camel@haakon3.daterainc.com>
+ <F43269BA-4D7B-486C-87C6-0FB48FF890EA@catalogicsoftware.com>
+ <yq1lg6yv899.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1538850861-26882-1-git-send-email-wang6495@umn.edu>
+In-Reply-To: <yq1lg6yv899.fsf@oracle.com>
+Content-Language: en-US
+Content-ID: <10F2FAACA27E1E4D8895C09EDF922C47@prod.exchangelabs.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: wang6495@umn.edu
-Cc: kjlu@umn.edu, Kashyap Desai <kashyap.desai@broadcom.com>, Shivasharan Srikanteshwara <shivasharan.srikanteshwara@broadcom.com>, "James E. J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@broadcom.com>, Linux SCSI List <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Mike Christie <mchristi@redhat.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Hannes Reinecke <hare@suse.com>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, "Peter Zijlstra (Intel)" <peterz@infradead.org>, Bart Van Assche <bvanassche@acm.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sun, Oct 7, 2018 at 12:04 AM Wenwen Wang <wang6495@umn.edu> wrote:
->
-> In megasas_mgmt_compat_ioctl_fw(), to handle the structure
-> compat_megasas_iocpacket 'cioc', a user-space structure megasas_iocpacket
-> 'ioc' is allocated before megasas_mgmt_ioctl_fw() is invoked to handle the
-> packet. Since the two data structures have different fields, the data is
-> copied from 'cioc' to 'ioc' field by field. In the copy process,
-> 'sense_ptr' is prepared if the field 'sense_len' is not null, because it
-> will be used in megasas_mgmt_ioctl_fw(). To prepare 'sense_ptr', the
-> user-space data 'ioc->sense_off' and 'cioc->sense_off' are copied and saved
-> to kernel-space variables 'local_sense_off' and 'user_sense_off'
-> respectively. Given that 'ioc->sense_off' is also copied from
-> 'cioc->sense_off', 'local_sense_off' and 'user_sense_off' should have the
-> same value. However, 'cioc' is in the user space and a malicious user can
-> race to change the value of 'cioc->sense_off' after it is copied to
-> 'ioc->sense_off' but before it is copied to 'user_sense_off'. By doing so,
-> the attacker can inject different values into 'local_sense_off' and
-> 'user_sense_off'. This can cause undefined behavior in the following
-> execution, because the two variables are supposed to be same.
->
-> This patch enforces a check on the two kernel variables 'local_sense_off'
-> and 'user_sense_off' to make sure they are the same after the copy. In case
-> they are not, an error code EINVAL will be returned.
->
-> Signed-off-by: Wenwen Wang <wang6495@umn.edu>
-> ---
->  drivers/scsi/megaraid/megaraid_sas_base.c | 3 +++
->  1 file changed, 3 insertions(+)
->
-> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-> index 9aa9590..f6de752 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
-> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-> @@ -7523,6 +7523,9 @@ static int megasas_mgmt_compat_ioctl_fw(struct file *file, unsigned long arg)
->                 get_user(user_sense_off, &cioc->sense_off))
->                 return -EFAULT;
->
-> +       if (local_sense_off != user_sense_off)
-> +               return -EINVAL;
-> +
->         if (local_sense_len) {
->                 void __user **sense_ioc_ptr =
->                         (void __user **)((u8 *)((unsigned long)&ioc->frame.raw) + local_sense_off);
-
-Acked-by: Sumit Saxena <sumit.saxena@broadcom.com>
-
-> --
-> 2.7.4
->
+TWFydGluLCANCg0KPiBPbiBPY3QgMTUsIDIwMTgsIGF0IDExOjEzIFBNLCBNYXJ0aW4gSy4gUGV0
+ZXJzZW4gPG1hcnRpbi5wZXRlcnNlbkBvcmFjbGUuY29tPiB3cm90ZToNCj4gDQo+IA0KPiBCcnlh
+bnQsDQo+IA0KPj4gVk1zIGRvIG5vdCByZW1vdmUgdGhlIElfVCBuZXh1cyB3aGlsZSB0aGUgVk0g
+aXMgYWN0aXZlLCBzbyB3ZSBjYW4gcmVtb3ZlDQo+PiB0aGUgdGFyZ2V0X3dhaXRfZm9yX3Nlc3Nf
+Y21kKCkgY2FsbC4gDQo+IA0KPiBQYXRjaCBmb3J0aGNvbWluZz8NCg0KSSBjYW4gcHV0IG91dCBh
+IHBhdGNoLCBJ4oCZbSB0cnlpbmcgdG8gZ2V0IHNvbWVvbmUgYXQgSUJNIHRvIHRlc3QgaXQgdGhv
+dWdoLg0KDQotQnJ5YW50
