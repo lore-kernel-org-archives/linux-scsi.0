@@ -1,7 +1,7 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v3 6/6] esp_scsi: Optimize PIO loops
+Subject: [PATCH v3 4/6] esp_scsi: Eliminate ESP_FLAG_DOING_SLOWCMD
 Date: Tue, 16 Oct 2018 16:31:25 +1100
-Message-ID: <946e04372882bea6f6987852a49f006dfa1084ac.1539667885.git.fthain@telegraphics.com.au>
+Message-ID: <473e9839941eabf0b378104a6b992ee1da3f4179.1539667885.git.fthain@telegraphics.com.au>
 References: <cover.1539667885.git.fthain@telegraphics.com.au>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1539667885.git.fthain@telegraphics.com.au>
@@ -10,74 +10,163 @@ To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <mart
 Cc: Michael Schmitz <schmitzmic@gmail.com>, Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, linux-m68k@lists.linux-m68k.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Avoid function calls in the inner PIO loops. On a Centris 660av this
-improves throughput for sequential read transfers by about 40% and
-sequential write by about 10%.
+The concept of a 'slow command' as it appears in esp_scsi is confusing
+because it could refer to an ESP command or a SCSI command. It turns out
+that it refers to a particular ESP select command which the driver also
+tracks as 'ESP_SELECT_MSGOUT'. For readability, it is better to use the
+terminology from the datasheets.
 
-Unfortunately it is not possible to have methods like .esp_write8
-placed inline so this is always going to be slow, even with LTO.
+The global ESP_FLAG_DOING_SLOWCMD flag is redundant anyway, as it can be
+inferred from esp->select_state. Remove the ESP_FLAG_DOING_SLOWCMD cruft
+and just use a boolean local variable.
 
 Tested-by: Stan Johnson <userm57@yahoo.com>
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 Tested-by: Michael Schmitz <schmitzmic@gmail.com>
 ---
-Changed since v1:
- - Don't touch the scsi_esp_cmd(esp, ESP_CMD_FLUSH) as it's outside the loop.
----
- drivers/scsi/esp_scsi.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/scsi/esp_scsi.c | 57 +++++++++++++++++------------------------
+ drivers/scsi/esp_scsi.h |  3 +--
+ 2 files changed, 24 insertions(+), 36 deletions(-)
 
 diff --git a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
-index 0f0d486be486..c3077c064522 100644
+index 5b24aa21a797..989ed594451d 100644
 --- a/drivers/scsi/esp_scsi.c
 +++ b/drivers/scsi/esp_scsi.c
-@@ -2783,7 +2783,7 @@ static inline unsigned int esp_wait_for_fifo(struct esp *esp)
- 		if (fbytes)
- 			return fbytes;
+@@ -478,17 +478,6 @@ static void esp_restore_pointers(struct esp *esp, struct esp_cmd_entry *ent)
+ 	spriv->tot_residue = ent->saved_tot_residue;
+ }
  
--		udelay(2);
-+		udelay(1);
- 	} while (--i);
+-static void esp_check_command_len(struct esp *esp, struct scsi_cmnd *cmd)
+-{
+-	if (cmd->cmd_len == 6 ||
+-	    cmd->cmd_len == 10 ||
+-	    cmd->cmd_len == 12) {
+-		esp->flags &= ~ESP_FLAG_DOING_SLOWCMD;
+-	} else {
+-		esp->flags |= ESP_FLAG_DOING_SLOWCMD;
+-	}
+-}
+-
+ static void esp_write_tgt_config3(struct esp *esp, int tgt)
+ {
+ 	if (esp->rev > ESP100A) {
+@@ -720,6 +709,7 @@ static void esp_maybe_execute_command(struct esp *esp)
+ 	struct scsi_device *dev;
+ 	struct scsi_cmnd *cmd;
+ 	struct esp_cmd_entry *ent;
++	bool select_and_stop = false;
+ 	int tgt, lun, i;
+ 	u32 val, start_cmd;
+ 	u8 *p;
+@@ -750,7 +740,8 @@ static void esp_maybe_execute_command(struct esp *esp)
+ 	esp_map_dma(esp, cmd);
+ 	esp_save_pointers(esp, ent);
  
- 	shost_printk(KERN_ERR, esp->host, "FIFO is empty. sreg [%02x]\n",
-@@ -2800,7 +2800,7 @@ static inline int esp_wait_for_intr(struct esp *esp)
- 		if (esp->sreg & ESP_STAT_INTR)
- 			return 0;
+-	esp_check_command_len(esp, cmd);
++	if (!(cmd->cmd_len == 6 || cmd->cmd_len == 10 || cmd->cmd_len == 12))
++		select_and_stop = true;
  
--		udelay(2);
-+		udelay(1);
- 	} while (--i);
+ 	p = esp->command_block;
  
- 	shost_printk(KERN_ERR, esp->host, "IRQ timeout. sreg [%02x]\n",
-@@ -2828,7 +2828,7 @@ void esp_send_pio_cmd(struct esp *esp, u32 addr, u32 esp_count,
- 			if (!esp_wait_for_fifo(esp))
- 				break;
- 
--			*dst++ = esp_read8(ESP_FDATA);
-+			*dst++ = readb(esp->fifo_reg);
- 			--esp_count;
- 
- 			if (!esp_count)
-@@ -2849,9 +2849,9 @@ void esp_send_pio_cmd(struct esp *esp, u32 addr, u32 esp_count,
- 			}
- 
- 			if (phase == ESP_MIP)
--				scsi_esp_cmd(esp, ESP_CMD_MOK);
-+				esp_write8(ESP_CMD_MOK, ESP_CMD);
- 
--			scsi_esp_cmd(esp, ESP_CMD_TI);
-+			esp_write8(ESP_CMD_TI, ESP_CMD);
+@@ -791,9 +782,9 @@ static void esp_maybe_execute_command(struct esp *esp)
+ 			tp->flags &= ~ESP_TGT_CHECK_NEGO;
  		}
- 	} else {
- 		unsigned int n = ESP_FIFO_SIZE;
-@@ -2891,7 +2891,7 @@ void esp_send_pio_cmd(struct esp *esp, u32 addr, u32 esp_count,
- 			src += n;
- 			esp_count -= n;
  
--			scsi_esp_cmd(esp, ESP_CMD_TI);
-+			esp_write8(ESP_CMD_TI, ESP_CMD);
- 		}
+-		/* Process it like a slow command.  */
+-		if (tp->flags & (ESP_TGT_NEGO_WIDE | ESP_TGT_NEGO_SYNC))
+-			esp->flags |= ESP_FLAG_DOING_SLOWCMD;
++		/* If there are multiple message bytes, use Select and Stop */
++		if (esp->msg_out_len)
++			select_and_stop = true;
  	}
+ 
+ build_identify:
+@@ -803,23 +794,10 @@ static void esp_maybe_execute_command(struct esp *esp)
+ 		/* ESP100 lacks select w/atn3 command, use select
+ 		 * and stop instead.
+ 		 */
+-		esp->flags |= ESP_FLAG_DOING_SLOWCMD;
++		select_and_stop = true;
+ 	}
+ 
+-	if (!(esp->flags & ESP_FLAG_DOING_SLOWCMD)) {
+-		start_cmd = ESP_CMD_SELA;
+-		if (ent->tag[0]) {
+-			*p++ = ent->tag[0];
+-			*p++ = ent->tag[1];
+-
+-			start_cmd = ESP_CMD_SA3;
+-		}
+-
+-		for (i = 0; i < cmd->cmd_len; i++)
+-			*p++ = cmd->cmnd[i];
+-
+-		esp->select_state = ESP_SELECT_BASIC;
+-	} else {
++	if (select_and_stop) {
+ 		esp->cmd_bytes_left = cmd->cmd_len;
+ 		esp->cmd_bytes_ptr = &cmd->cmnd[0];
+ 
+@@ -834,6 +812,19 @@ static void esp_maybe_execute_command(struct esp *esp)
+ 
+ 		start_cmd = ESP_CMD_SELAS;
+ 		esp->select_state = ESP_SELECT_MSGOUT;
++	} else {
++		start_cmd = ESP_CMD_SELA;
++		if (ent->tag[0]) {
++			*p++ = ent->tag[0];
++			*p++ = ent->tag[1];
++
++			start_cmd = ESP_CMD_SA3;
++		}
++
++		for (i = 0; i < cmd->cmd_len; i++)
++			*p++ = cmd->cmnd[i];
++
++		esp->select_state = ESP_SELECT_BASIC;
+ 	}
+ 	val = tgt;
+ 	if (esp->rev == FASHME)
+@@ -1243,7 +1234,6 @@ static int esp_finish_select(struct esp *esp)
+ 			esp_unmap_dma(esp, cmd);
+ 			esp_free_lun_tag(ent, cmd->device->hostdata);
+ 			tp->flags &= ~(ESP_TGT_NEGO_SYNC | ESP_TGT_NEGO_WIDE);
+-			esp->flags &= ~ESP_FLAG_DOING_SLOWCMD;
+ 			esp->cmd_bytes_ptr = NULL;
+ 			esp->cmd_bytes_left = 0;
+ 		} else {
+@@ -1294,9 +1284,8 @@ static int esp_finish_select(struct esp *esp)
+ 				esp_flush_fifo(esp);
+ 		}
+ 
+-		/* If we are doing a slow command, negotiation, etc.
+-		 * we'll do the right thing as we transition to the
+-		 * next phase.
++		/* If we are doing a Select And Stop command, negotiation, etc.
++		 * we'll do the right thing as we transition to the next phase.
+ 		 */
+ 		esp_event(esp, ESP_EVENT_CHECK_PHASE);
+ 		return 0;
+diff --git a/drivers/scsi/esp_scsi.h b/drivers/scsi/esp_scsi.h
+index a77772777a30..9113812f94ba 100644
+--- a/drivers/scsi/esp_scsi.h
++++ b/drivers/scsi/esp_scsi.h
+@@ -490,7 +490,6 @@ struct esp {
+ 	u32			flags;
+ #define ESP_FLAG_DIFFERENTIAL	0x00000001
+ #define ESP_FLAG_RESETTING	0x00000002
+-#define ESP_FLAG_DOING_SLOWCMD	0x00000004
+ #define ESP_FLAG_WIDE_CAPABLE	0x00000008
+ #define ESP_FLAG_QUICKIRQ_CHECK	0x00000010
+ #define ESP_FLAG_DISABLE_SYNC	0x00000020
+@@ -532,7 +531,7 @@ struct esp {
+ 	u32			min_period;
+ 	u32			radelay;
+ 
+-	/* Slow command state.  */
++	/* ESP_CMD_SELAS command state */
+ 	u8			*cmd_bytes_ptr;
+ 	int			cmd_bytes_left;
  
 -- 
 2.18.1
