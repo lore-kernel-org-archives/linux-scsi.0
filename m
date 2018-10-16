@@ -1,53 +1,42 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH -next] scsi: megaraid: remove set but not used variables
-Date: Tue, 16 Oct 2018 18:33:11 -0400
-Message-ID: <yq1va61plnc.fsf@oracle.com>
-References: <20180926110940.16024-1-yuehaibing@huawei.com>
+From: John Stultz <john.stultz@linaro.org>
+Subject: Re: [RESEND][PATCH] scsi: ufs: Fix hynix ufs bug with quirk on hi36xx SoC
+Date: Tue, 16 Oct 2018 15:48:12 -0700
+Message-ID: <CALAqxLXYTZZ12haKHGwnTBqPgkv_JF8=fiiJrD9OWRFdcXf0Sw@mail.gmail.com>
+References: <1538434698-1042-1-git-send-email-john.stultz@linaro.org> <yq17eiiwobx.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180926110940.16024-1-yuehaibing@huawei.com>
-        (yuehaibing@huawei.com's message of "Wed, 26 Sep 2018 19:09:40 +0800")
+In-Reply-To: <yq17eiiwobx.fsf@oracle.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: YueHaibing <yuehaibing@huawei.com>
-Cc: kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-kernel@vger.kernel.org, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: lkml <linux-kernel@vger.kernel.org>, Wei Li <liwei213@huawei.com>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Dmitry Shmidt <dimitrysh@google.com>
 List-Id: linux-scsi@vger.kernel.org
 
+On Mon, Oct 15, 2018 at 8:41 PM, Martin K. Petersen
+<martin.petersen@oracle.com> wrote:
+>
+> John,
+>
+>> Hynix ufs has deviations on hi36xx platform which will result in ufs
+>> bursts transfer failures.
+>
+> Is this specific to the particular implementation on hi36xx or all SK
+> Hynix implementations?
 
-YueHaibing,
+I'd have to defer to Wei Li on that question.
 
-> Fixes gcc '-Wunused-but-set-variable' warning:
->
-> drivers/scsi/megaraid/megaraid_mbox.c: In function 'megaraid_mbox_sync_scb':
-> drivers/scsi/megaraid/megaraid_mbox.c:2193:14: warning:
->  variable 'ccb' set but not used [-Wunused-but-set-variable]
->
-> drivers/scsi/megaraid/megaraid_mbox.c: In function 'megaraid_reset_handler':
-> drivers/scsi/megaraid/megaraid_mbox.c:2580:7: warning:
->  variable 'recovering' set but not used [-Wunused-but-set-variable]
->
-> drivers/scsi/megaraid/megaraid_mbox.c: In function 'mbox_post_sync_cmd':
-> drivers/scsi/megaraid/megaraid_mbox.c:2728:12: warning:
->  variable 'mbox64' set but not used [-Wunused-but-set-variable]
->
-> drivers/scsi/megaraid/megaraid_mbox.c: In function 'megaraid_mbox_support_random_del':
-> drivers/scsi/megaraid/megaraid_mbox.c:3138:11: warning:
->  variable 'mbox' set but not used [-Wunused-but-set-variable]
->
-> drivers/scsi/megaraid/megaraid_mbox.c: In function 'megaraid_mbox_flush_cache':
-> drivers/scsi/megaraid/megaraid_mbox.c:3266:10: warning:
->  variable 'mbox' set but not used [-Wunused-but-set-variable]
->
-> drivers/scsi/megaraid/megaraid_mbox.c: In function 'megaraid_mbox_fire_sync_cmd':
-> drivers/scsi/megaraid/megaraid_mbox.c:3302:12: warning:
->  variable 'mbox64' set but not used [-Wunused-but-set-variable]
->
-> drivers/scsi/megaraid/megaraid_mbox.c: In function 'gather_hbainfo':
-> drivers/scsi/megaraid/megaraid_mbox.c:3797:10: warning:
->  variable 'dmajor' set but not used [-Wunused-but-set-variable]
+Wei Li?
 
-Applied by hand to 4.20/scsi-queue due to conflict with Christoph's DMA
-API cleanup.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+>> +     UFS_FIX(UFS_VENDOR_SKHYNIX, UFS_ANY_MODEL,
+>> +             UFS_DEVICE_QUIRK_HOST_VS_DEBUGSAVECONFIGTIME),
+>
+> I am not so keen on matching on all current and future models.
+
+I'll see if I can narrow down the affected model version on the board
+I have. Hopefully it doesn't vary too much.
+
+Really appreciate the review and the feedback!
+
+thanks
+-john
