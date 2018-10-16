@@ -1,35 +1,57 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 0/7] hisi_sas: Misc bugfixes and an optimisation patch
-Date: Tue, 16 Oct 2018 00:28:32 -0400
-Message-ID: <yq1h8hmv7kf.fsf@oracle.com>
-References: <1537801594-207139-1-git-send-email-john.garry@huawei.com>
-        <yq18t354532.fsf@oracle.com>
-        <e771c366-2824-8774-4c90-9906992ee813@huawei.com>
+Subject: Re: [PATCH v4 02/11] scsi: sd_zbc: Reduce boot device
+	scan and revalidate time
+Date: Tue, 16 Oct 2018 00:50:21 -0400
+Message-ID: <yq14ldmv6k2.fsf@oracle.com>
+References: <20181012100850.23316-1-damien.lemoal@wdc.com>
+	<20181012100850.23316-3-damien.lemoal@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <e771c366-2824-8774-4c90-9906992ee813@huawei.com> (John Garry's
-        message of "Fri, 12 Oct 2018 11:47:05 +0100")
-Sender: linux-kernel-owner@vger.kernel.org
-To: John Garry <john.garry@huawei.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, jejb@linux.vnet.ibm.com, linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <20181012100850.23316-3-damien.lemoal@wdc.com> (Damien Le Moal's
+	message of "Fri, 12 Oct 2018 19:08:41 +0900")
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Damien Le Moal <damien.lemoal@wdc.com>
+Cc: Jens Axboe <axboe@kernel.dk>, "Martin K . Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, linux-block@vger.kernel.org, dm-devel@redhat.com, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Matias Bjorling <matias.bjorling@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
 
-John,
+Damien,
 
-> As I mentioned in the thread that spawned from this, we actually can't
-> expose multiple hw queues at the moment. And, if we did, we find a
-> performance drop due to having to go back to manage this IPTT
-> internally.
+> Handling checks of ZBC device capacity using the max_lba field of the
+> REPORT ZONES command reply for disks with rc_basis == 0 can be done
+> using the same report zones command reply used to check the "same"
+> field.
 >
-> So how to handle? We're going to continue to work towards exposing
-> multiple queues to upper layer, but for the moment I think patch 6/7 is
-> a good change.
+> Avoid executing a report zones command solely to check the disk capacity
+> by merging sd_zbc_check_capacity() into sd_zbc_check_zone_size() and
+> renaming that function to sd_zbc_check_zones(). This removes a costly
+> execution of a full report zones command and so reduces device scan
+> duration at boot time as well as the duration of disk revalidate calls.
+>
+> Furthermore, setting the partial report bit in the REPORT ZONES command
+> cdb can significantly reduce this command execution time as the device
+> does not have to count and report the total number of zones that could
+> be reported assuming a large enough reply buffer. A non-partial zone
+> report is necessary only for the first execution of report zones used to
+> check the same field value (to ensure that this value applies to all
+> zones of the disk). All other calls to sd_zbc_report_zones() can use a
+> partial report to reduce execution time.
+>
+> Using a 14 TB ZBC disk, these simple changes reduce device scan time at
+> boot from about 3.5s down to about 900ms. Disk revalidate times are also
+> reduced from about 450ms down to 230ms.
 
-Thanks for the discussion. That's exactly what I was looking for.
-
-Applied to 4.20/scsi-queue.
+Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
