@@ -1,79 +1,37 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v3 2/6] esp_scsi: Track residual for PIO transfers
-Date: Tue, 16 Oct 2018 16:31:25 +1100
-Message-ID: <41d39fdc25ed8ee608369a1ed956e635921dc2eb.1539667885.git.fthain@telegraphics.com.au>
-References: <cover.1539667885.git.fthain@telegraphics.com.au>
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH 0/7] hisi_sas: Misc bugfixes and an optimisation patch
+Date: Tue, 16 Oct 2018 09:28:51 +0100
+Message-ID: <956dafea-bca3-f3a0-318e-83399b84605c@huawei.com>
+References: <1537801594-207139-1-git-send-email-john.garry@huawei.com>
+ <yq18t354532.fsf@oracle.com>
+ <e771c366-2824-8774-4c90-9906992ee813@huawei.com>
+ <yq1h8hmv7kf.fsf@oracle.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <cover.1539667885.git.fthain@telegraphics.com.au>
+In-Reply-To: <yq1h8hmv7kf.fsf@oracle.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Michael Schmitz <schmitzmic@gmail.com>, Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, linux-m68k@lists.linux-m68k.org, linux-kernel@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: jejb@linux.vnet.ibm.com, linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-If a target disconnects during a PIO data transfer the command may
-fail when the target reconnects:
+On 16/10/2018 05:28, Martin K. Petersen wrote:
+>
+> John,
+>
+>> As I mentioned in the thread that spawned from this, we actually can't
+>> expose multiple hw queues at the moment. And, if we did, we find a
+>> performance drop due to having to go back to manage this IPTT
+>> internally.
+>>
+>> So how to handle? We're going to continue to work towards exposing
+>> multiple queues to upper layer, but for the moment I think patch 6/7 is
+>> a good change.
+>
+> Thanks for the discussion. That's exactly what I was looking for.
+>
+> Applied to 4.20/scsi-queue.
+>
 
-scsi host1: DMA length is zero!
-scsi host1: cur adr[04380000] len[00000000]
-
-The scsi bus is then reset. This happens because the residual reached
-zero before the transfer was completed.
-
-The usual residual calculation relies on the Transfer Count registers.
-That works for DMA transfers but not for PIO transfers. Fix the problem
-by storing the PIO transfer residual and using that to correctly
-calculate bytes_sent.
-
-Fixes: 6fe07aaffbf0 ("[SCSI] m68k: new mac_esp scsi driver")
-Tested-by: Stan Johnson <userm57@yahoo.com>
-Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
-Tested-by: Michael Schmitz <schmitzmic@gmail.com>
----
-Changed since v2:
- - Declare send_cmd_residual as u32 instead of int.
----
- drivers/scsi/esp_scsi.c | 1 +
- drivers/scsi/esp_scsi.h | 2 ++
- drivers/scsi/mac_esp.c  | 2 ++
- 3 files changed, 5 insertions(+)
-
-diff --git a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
-index c3fc34b9964d..9e5d3f7d29ae 100644
---- a/drivers/scsi/esp_scsi.c
-+++ b/drivers/scsi/esp_scsi.c
-@@ -1338,6 +1338,7 @@ static int esp_data_bytes_sent(struct esp *esp, struct esp_cmd_entry *ent,
- 
- 	bytes_sent = esp->data_dma_len;
- 	bytes_sent -= ecount;
-+	bytes_sent -= esp->send_cmd_residual;
- 
- 	/*
- 	 * The am53c974 has a DMA 'pecularity'. The doc states:
-diff --git a/drivers/scsi/esp_scsi.h b/drivers/scsi/esp_scsi.h
-index 8163dca2071b..a77772777a30 100644
---- a/drivers/scsi/esp_scsi.h
-+++ b/drivers/scsi/esp_scsi.h
-@@ -540,6 +540,8 @@ struct esp {
- 
- 	void			*dma;
- 	int			dmarev;
-+
-+	u32			send_cmd_residual;
- };
- 
- /* A front-end driver for the ESP chip should do the following in
-diff --git a/drivers/scsi/mac_esp.c b/drivers/scsi/mac_esp.c
-index eb551f3cc471..71879f2207e0 100644
---- a/drivers/scsi/mac_esp.c
-+++ b/drivers/scsi/mac_esp.c
-@@ -427,6 +427,8 @@ static void mac_esp_send_pio_cmd(struct esp *esp, u32 addr, u32 esp_count,
- 			scsi_esp_cmd(esp, ESP_CMD_TI);
- 		}
- 	}
-+
-+	esp->send_cmd_residual = esp_count;
- }
- 
- static int mac_esp_irq_pending(struct esp *esp)
--- 
-2.18.1
+Great, thanks.
