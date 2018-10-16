@@ -1,25 +1,24 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: hisi_sas: Fix spin lock management in slot_index_alloc_quirk_v2_hw()
-Date: Tue, 16 Oct 2018 17:51:09 -0400
-Message-ID: <yq136t5sgqa.fsf@oracle.com>
-References: <1539702036-191138-1-git-send-email-john.garry@huawei.com>
+Subject: Re: [PATCH] scsi: lpfc: fix spelling mistake "Resrouce" -> "Resource"
+Date: Tue, 16 Oct 2018 17:52:23 -0400
+Message-ID: <yq1y3axr23s.fsf@oracle.com>
+References: <20181016172853.1398-1-colin.king@canonical.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1539702036-191138-1-git-send-email-john.garry@huawei.com> (John
-        Garry's message of "Tue, 16 Oct 2018 23:00:36 +0800")
+In-Reply-To: <20181016172853.1398-1-colin.king@canonical.com> (Colin King's
+        message of "Tue, 16 Oct 2018 18:28:53 +0100")
 Sender: linux-kernel-owner@vger.kernel.org
-To: John Garry <john.garry@huawei.com>
-Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, julia.lawall@lip6.fr, linuxarm@huawei.com
+To: Colin King <colin.king@canonical.com>
+Cc: James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-John,
+Colin,
 
-> Currently a spin_unlock_irqrestore() call is missing on the error path, so
-> add it.
+> Trivial fix to spelling mistake in lpfc_printf_log message text.
 
-Applied to 4.20/scsi-queue. Thanks!
+Applied to 4.20/scsi-queue, thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
