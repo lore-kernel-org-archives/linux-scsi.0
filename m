@@ -1,44 +1,28 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: mark expected switch fall-throughs
-Date: Mon, 15 Oct 2018 22:47:40 -0400
-Message-ID: <yq1murewqsz.fsf@oracle.com>
-References: <20181003145535.GA24941@embeddedor.com>
-        <yq18t352o9l.fsf@oracle.com>
-        <84512689-d898-e670-075d-509bbff20423@embeddedor.com>
+Subject: Re: [PATCH v5 1/1] scsi: ufs: make UFS Tx lane1 clock optional for QCOM platforms
+Date: Mon, 15 Oct 2018 22:56:22 -0400
+Message-ID: <yq1ftx6wqeh.fsf@oracle.com>
+References: <1539397502-30120-1-git-send-email-cang@codeaurora.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <84512689-d898-e670-075d-509bbff20423@embeddedor.com> (Gustavo
-        A. R. Silva's message of "Fri, 12 Oct 2018 14:26:58 +0200")
+In-Reply-To: <1539397502-30120-1-git-send-email-cang@codeaurora.org> (Can
+        Guo's message of "Fri, 12 Oct 2018 19:25:02 -0700")
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Don Brace <don.brace@microsemi.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Adaptec OEM Raid Solutions <aacraid@microsemi.com>, Willem Riede <osst@riede.org>, Kai =?utf-8?Q?M?= =?utf-8?Q?=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, osst-users@lists.sourceforge.net
+To: Can Guo <cang@codeaurora.org>
+Cc: dianders@chromium.org, subhashj@codeaurora.org, asutoshd@codeaurora.org, vivek.gautam@codeaurora.org, evgreen@chromium.org, rnayak@codeaurora.org, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, Venkat Gopalakrishnan <venkatg@codeaurora.org>, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
 
-Gustavo,
+Can,
 
->> I'm not entirely convinced that all these identified fall through cases
->> are intentional. From a quick glance, some of them look like bugs...
->
-> I took a second look at this and, certainly, the one below looks more like a
-> bug. The rest seem to be false positives.
+> Per Qcom's UFS host controller HW design, the UFS Tx lane1 clock could
+> be muxed with Tx lane0 clock, hence keep Tx lane1 clock optional by
+> ignoring it if it is not provided in device tree. This change also
+> performs some cleanup to lanes per direction checks when
+> enable/disable lane clocks just for symmetry.
 
-Yep.
-
->>> diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
->>> index bd6ac6b..8e1c45d 100644
->>> --- a/drivers/scsi/ips.c
->>> +++ b/drivers/scsi/ips.c
->>> @@ -3485,6 +3485,7 @@ ips_send_cmd(ips_ha_t * ha, ips_scb_t * scb)
->>>  
->>>  		case START_STOP:
->>>  			scb->scsi_cmd->result = DID_OK << 16;
->>> +			/* fall through */
->
-> If you confirm this is an actual bug, I can send a separate fix.
-
-I believe it is. So please do.
+Applied to 4.20/scsi-queue, thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
