@@ -1,84 +1,49 @@
-From: Masahiro Yamada <yamada.masahiro@socionext.com>
-Subject: Re: [PATCH 8/8] kconfig: remove CONFIG_MCA leftovers
-Date: Tue, 16 Oct 2018 14:20:23 +0900
-Message-ID: <CAK7LNAQwyWUq_ohVMe9QLLbyHHQdjkrkM9DPd3pgYLz8UhG6rA@mail.gmail.com>
-References: <20181013151016.31674-1-hch@lst.de> <20181013151016.31674-9-hch@lst.de>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH v4 10/11] block: add a report_zones method
+Date: Tue, 16 Oct 2018 00:55:47 -0400
+Message-ID: <yq1va62trqk.fsf@oracle.com>
+References: <20181012100850.23316-1-damien.lemoal@wdc.com>
+	<20181012100850.23316-11-damien.lemoal@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20181013151016.31674-9-hch@lst.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: mporter@kernel.crashing.org, Alex Bounine <alex.bou9@gmail.com>, Dominik Brodowski <linux@dominikbrodowski.net>, Linux Kbuild mailing list <linux-kbuild@vger.kernel.org>, linux-pci@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, linux-arch <linux-arch@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <20181012100850.23316-11-damien.lemoal@wdc.com> (Damien Le Moal's
+	message of "Fri, 12 Oct 2018 19:08:49 +0900")
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Damien Le Moal <damien.lemoal@wdc.com>
+Cc: Jens Axboe <axboe@kernel.dk>, "Martin K . Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, linux-block@vger.kernel.org, dm-devel@redhat.com, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Matias Bjorling <matias.bjorling@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sun, Oct 14, 2018 at 12:11 AM Christoph Hellwig <hch@lst.de> wrote:
->
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
 
+Damien,
 
-Can you use "powerpc:" or something
-for the subject line?
+> Dispatching a report zones command through the request queue is a
+> major pain due to the command reply payload rewriting necessary. Given
+> that blkdev_report_zones() is executing everything synchronously,
+> implement report zones as a block device file operation instead,
+> allowing major simplification of the code in many places.
+>
+> sd, null-blk, dm-linear and dm-flakey being the only block device
+> drivers supporting exposing zoned block devices, these drivers are
+> modified to provide the device side implementation of the
+> report_zones() block device file operation.
+>
+> For device mappers, a new report_zones() target type operation is
+> defined so that the upper block layer calls blkdev_report_zones() can
+> be propagated down to the underlying devices of the dm targets.
+> Implementation for this new operation is added to the dm-linear and
+> dm-flakey targets.
 
-I'd like to see "kconfig:" only for patches
-that touch the scripts/kconfig/ directory.
-
-
-
-
->  arch/powerpc/Kconfig | 4 ----
->  drivers/scsi/Kconfig | 6 +++---
->  2 files changed, 3 insertions(+), 7 deletions(-)
->
-> diff --git a/arch/powerpc/Kconfig b/arch/powerpc/Kconfig
-> index f0ea460653cd..8b9edf7caf96 100644
-> --- a/arch/powerpc/Kconfig
-> +++ b/arch/powerpc/Kconfig
-> @@ -944,10 +944,6 @@ config FSL_GTM
->         help
->           Freescale General-purpose Timers support
->
-> -# Yes MCA RS/6000s exist but Linux-PPC does not currently support any
-> -config MCA
-> -       bool
-> -
->  config PCI_DOMAINS
->         def_bool PCI
->
-> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-> index 7c097006c54d..d3734c54aec9 100644
-> --- a/drivers/scsi/Kconfig
-> +++ b/drivers/scsi/Kconfig
-> @@ -535,7 +535,7 @@ config SCSI_HPTIOP
->
->  config SCSI_BUSLOGIC
->         tristate "BusLogic SCSI support"
-> -       depends on (PCI || ISA || MCA) && SCSI && ISA_DMA_API && VIRT_TO_BUS
-> +       depends on (PCI || ISA) && SCSI && ISA_DMA_API && VIRT_TO_BUS
->         ---help---
->           This is support for BusLogic MultiMaster and FlashPoint SCSI Host
->           Adapters. Consult the SCSI-HOWTO, available from
-> @@ -1142,12 +1142,12 @@ config SCSI_LPFC_DEBUG_FS
->
->  config SCSI_SIM710
->         tristate "Simple 53c710 SCSI support (Compaq, NCR machines)"
-> -       depends on (EISA || MCA) && SCSI
-> +       depends on EISA && SCSI
->         select SCSI_SPI_ATTRS
->         ---help---
->           This driver is for NCR53c710 based SCSI host adapters.
->
-> -         It currently supports Compaq EISA cards and NCR MCA cards
-> +         It currently supports Compaq EISA cards.
->
->  config SCSI_DC395x
->         tristate "Tekram DC395(U/UW/F) and DC315(U) SCSI support"
-> --
-> 2.19.1
->
-
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 
 -- 
-Best Regards
-Masahiro Yamada
+Martin K. Petersen	Oracle Linux Engineering
