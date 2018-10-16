@@ -1,61 +1,40 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v4 11/11] block: Introduce
-	blk_revalidate_disk_zones()
-Date: Tue, 16 Oct 2018 01:00:16 -0400
-Message-ID: <yq1r2gqtrj3.fsf@oracle.com>
-References: <20181012100850.23316-1-damien.lemoal@wdc.com>
-	<20181012100850.23316-12-damien.lemoal@wdc.com>
+From: Finn Thain <fthain@telegraphics.com.au>
+Subject: Re: [PATCH v2 5/6] esp_scsi: De-duplicate PIO routines
+Date: Tue, 16 Oct 2018 16:39:07 +1100 (AEDT)
+Message-ID: <alpine.LNX.2.21.1810161611150.130@nippy.intranet>
+References: <cover.1539497520.git.fthain@telegraphics.com.au> <d5fe773ea8c922631836dad2ef2dbb952672c7c7.1539497520.git.fthain@telegraphics.com.au> <35ac9f31-7068-ab93-4629-363ee0bb4c70@suse.de> <alpine.LNX.2.21.1810151717520.10@nippy.intranet>
+ <2b48c925-73f0-0ca0-2f3c-3c35d90010ba@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20181012100850.23316-12-damien.lemoal@wdc.com> (Damien Le Moal's
-	message of "Fri, 12 Oct 2018 19:08:50 +0900")
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Damien Le Moal <damien.lemoal@wdc.com>
-Cc: Jens Axboe <axboe@kernel.dk>, "Martin K . Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, linux-block@vger.kernel.org, dm-devel@redhat.com, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Matias Bjorling <matias.bjorling@wdc.com>
+Content-Type: text/plain; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <2b48c925-73f0-0ca0-2f3c-3c35d90010ba@suse.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-scsi@vger.kernel.org, linux-m68k@lists.linux-m68k.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+On Mon, 15 Oct 2018, Hannes Reinecke wrote:
 
-Damien,
+> 
+> However, the function declaration really is a worry, as the actual function
+> body only exists when the config option is enabled.
+> So either add a dummy function or surround the function declaration by
+> CONFIG_ESP_PIO.
+> Otherwise I think Dan Carpenter and the likes are guaranteed to send you a
+> nice mail complaining about this ...
+> 
 
-> Drivers exposing zoned block devices have to initialize and maintain
-> correctness (i.e. revalidate) of the device zone bitmaps attached to
-> the device request queue (seq_zones_bitmap and seq_zones_wlock).
->
-> To simplify coding this, introduce a generic helper function
-> blk_revalidate_disk_zones() suitable for most (and likely all) cases.
-> This new function always update the seq_zones_bitmap and seq_zones_wlock
-> bitmaps as well as the queue nr_zones field when called for a disk
-> using a request based queue. For a disk using a BIO based queue, only
-> the number of zones is updated since these queues do not have
-> schedulers and so do not need the zone bitmaps.
->
-> With this change, the zone bitmap initialization code in sd_zbc.c can be
-> replaced with a call to this function in sd_zbc_read_zones(), which is
-> called from the disk revalidate block operation method.
->
-> A call to blk_revalidate_disk_zones() is also added to the null_blk
-> driver for devices created with the zoned mode enabled.
->
-> Finally, to ensure that zoned devices created with dm-linear or
-> dm-flakey expose the correct number of zones through sysfs, a call to
-> blk_revalidate_disk_zones() is added to dm_table_set_restrictions().
->
-> The zone bitmaps allocated and initialized with
-> blk_revalidate_disk_zones() are freed automatically from
-> __blk_release_queue() using the block internal function
-> blk_queue_free_zone_bitmaps().
+Perhaps I've misunderstood your concern here. Is it a problem that 
+esp_scsi.ko may or may not export the function, depending on .config?
 
-Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+For example, if esp_scsi.ko came from a build with CONFIG_SUN3X_ESP=y && 
+!CONFIG_SCSI_ZORRO_ESP && !CONFIG_SCSI_MAC_ESP, then it would export no 
+esp_send_pio_cmd() symbol.
+
+A dummy function (mentioned above) might then avoid a link error from 
+"modprobe zorro_esp" or "modprobe mac_esp" in this scenario. (The modules 
+would load but fail to work properly.)
+
+This seems a bit too contrived so I'll post v3 for you to consider.
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
