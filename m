@@ -1,29 +1,35 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 2/2] target: Fix target_wait_for_sess_cmds breakage with active signals
-Date: Tue, 16 Oct 2018 00:13:38 -0400
-Message-ID: <yq1lg6yv899.fsf@oracle.com>
-References: <1539141790-13557-1-git-send-email-nab@linux-iscsi.org>
-        <1539141790-13557-3-git-send-email-nab@linux-iscsi.org>
-        <5BBE2FBF.7080804@redhat.com>
-        <1539237365.6150.32.camel@haakon3.daterainc.com>
-        <F43269BA-4D7B-486C-87C6-0FB48FF890EA@catalogicsoftware.com>
+Subject: Re: [PATCH 0/7] hisi_sas: Misc bugfixes and an optimisation patch
+Date: Tue, 16 Oct 2018 00:28:32 -0400
+Message-ID: <yq1h8hmv7kf.fsf@oracle.com>
+References: <1537801594-207139-1-git-send-email-john.garry@huawei.com>
+        <yq18t354532.fsf@oracle.com>
+        <e771c366-2824-8774-4c90-9906992ee813@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <F43269BA-4D7B-486C-87C6-0FB48FF890EA@catalogicsoftware.com>
-        (Bryant Ly's message of "Thu, 11 Oct 2018 13:05:59 +0000")
+In-Reply-To: <e771c366-2824-8774-4c90-9906992ee813@huawei.com> (John Garry's
+        message of "Fri, 12 Oct 2018 11:47:05 +0100")
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Ly, Bryant" <bly@catalogicsoftware.com>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Mike Christie <mchristi@redhat.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.com>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, "Peter Zijlstra (Intel)" <peterz@infradead.org>, Bart Van Assche <bvanassche@acm.org>
+To: John Garry <john.garry@huawei.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, jejb@linux.vnet.ibm.com, linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Bryant,
+John,
 
-> VMs do not remove the I_T nexus while the VM is active, so we can remove
-> the target_wait_for_sess_cmd() call. 
+> As I mentioned in the thread that spawned from this, we actually can't
+> expose multiple hw queues at the moment. And, if we did, we find a
+> performance drop due to having to go back to manage this IPTT
+> internally.
+>
+> So how to handle? We're going to continue to work towards exposing
+> multiple queues to upper layer, but for the moment I think patch 6/7 is
+> a good change.
 
-Patch forthcoming?
+Thanks for the discussion. That's exactly what I was looking for.
+
+Applied to 4.20/scsi-queue.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
