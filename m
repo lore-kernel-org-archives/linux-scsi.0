@@ -1,26 +1,31 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: megaraid_sas: fix a missing-check bug
-Date: Tue, 16 Oct 2018 17:56:33 -0400
-Message-ID: <yq1pnw9r1wu.fsf@oracle.com>
-References: <1538850861-26882-1-git-send-email-wang6495@umn.edu>
+Subject: Re: [PATCH] scsi: qla2xxx: Remove unnecessary self assignment
+Date: Tue, 16 Oct 2018 18:20:12 -0400
+Message-ID: <yq18t2xr0tf.fsf@oracle.com>
+References: <20180920221706.4948-1-natechancellor@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1538850861-26882-1-git-send-email-wang6495@umn.edu> (Wenwen
-        Wang's message of "Sat, 6 Oct 2018 13:34:21 -0500")
+In-Reply-To: <20180920221706.4948-1-natechancellor@gmail.com> (Nathan
+        Chancellor's message of "Thu, 20 Sep 2018 15:17:06 -0700")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Wenwen Wang <wang6495@umn.edu>
-Cc: Kangjie Lu <kjlu@umn.edu>, Kashyap Desai <kashyap.desai@broadcom.com>, Sumit Saxena <sumit.saxena@broadcom.com>, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "open list:MEGARAID SCSI/SAS DRIVERS" <megaraidlinux.pdl@broadcom.com>, "open list:MEGARAID SCSI/SAS DRIVERS" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+To: Nathan Chancellor <natechancellor@gmail.com>
+Cc: qla2xxx-upstream@qlogic.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Wenwen,
+Nathan,
 
-> This patch enforces a check on the two kernel variables 'local_sense_off'
-> and 'user_sense_off' to make sure they are the same after the copy. In case
-> they are not, an error code EINVAL will be returned.
+> Clang warns when a variable is assigned to itself.
+>
+> drivers/scsi/qla2xxx/qla_mbx.c:1514:4: warning: explicitly assigning
+> value of variable of type 'uint64_t' (aka 'unsigned long long') to
+> itself [-Wself-assign]
+>         l = l;
+>         ~ ^ ~
+> 1 warning generated.
 
-Applied to 4.20/scsi-queue, thank you!
+Applied to 4.20/scsi-queue, thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
