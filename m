@@ -1,34 +1,46 @@
 From: YueHaibing <yuehaibing@huawei.com>
-Subject: Re: [PATCH -next] advansys: use correct srb_tag in adv_isr_callback
-Date: Wed, 17 Oct 2018 20:03:41 +0800
-Message-ID: <82ba2304-8dd8-5da6-29f3-40e5c878815a@huawei.com>
-References: <20180926114107.13532-1-yuehaibing@huawei.com>
- <yq1murdpd9z.fsf@oracle.com>
+Subject: [PATCH -next] advansys: remove set but not used variable 'srb_tag' in adv_isr_callback
+Date: Wed, 17 Oct 2018 20:34:32 +0800
+Message-ID: <20181017123432.18304-1-yuehaibing@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <yq1murdpd9z.fsf@oracle.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: matthew@wil.cx, hare@suse.com, jejb@linux.vnet.ibm.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: willy@infradead.org, hare@suse.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, YueHaibing <yuehaibing@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
+drivers/scsi/advansys.c: In function 'adv_isr_callback':
+drivers/scsi/advansys.c:5952:6: warning:
+ variable 'srb_tag' set but not used [-Wunused-but-set-variable]
 
-On 2018/10/17 9:34, Martin K. Petersen wrote:
-> 
-> Hi Yue Haibing,
-> 
->>  	srb_tag = le32_to_cpu(scsiqp->srb_tag);
->> -	scp = scsi_host_find_tag(boardp->shost, scsiqp->srb_tag);
->> +	scp = scsi_host_find_tag(boardp->shost, srb_tag);
-> 
-> Maybe I'm missing something, but I don't see where in the code
-> scsiqp->srb_tag is being converted to le32. srb_tag is beyond the memory
-> accessed by the controller and thus wouldn't need to be little endian.
+It never used since introduction in
+commit 9c17c62aedb0 ("advansys: use shared host tag map for command lookup")
 
-Thanks for comment this.
+Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+---
+ drivers/scsi/advansys.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-So 'srb_tag' can been removed.
-
-> 
+diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
+index 44c9619..223ef6f 100644
+--- a/drivers/scsi/advansys.c
++++ b/drivers/scsi/advansys.c
+@@ -5949,7 +5949,6 @@ static void adv_async_callback(ADV_DVC_VAR *adv_dvc_varp, uchar code)
+ static void adv_isr_callback(ADV_DVC_VAR *adv_dvc_varp, ADV_SCSI_REQ_Q *scsiqp)
+ {
+ 	struct asc_board *boardp = adv_dvc_varp->drv_ptr;
+-	u32 srb_tag;
+ 	adv_req_t *reqp;
+ 	adv_sgblk_t *sgblkp;
+ 	struct scsi_cmnd *scp;
+@@ -5965,7 +5964,6 @@ static void adv_isr_callback(ADV_DVC_VAR *adv_dvc_varp, ADV_SCSI_REQ_Q *scsiqp)
+ 	 * completed. The adv_req_t structure actually contains the
+ 	 * completed ADV_SCSI_REQ_Q structure.
+ 	 */
+-	srb_tag = le32_to_cpu(scsiqp->srb_tag);
+ 	scp = scsi_host_find_tag(boardp->shost, scsiqp->srb_tag);
+ 
+ 	ASC_DBG(1, "scp 0x%p\n", scp);
+-- 
+2.7.0
