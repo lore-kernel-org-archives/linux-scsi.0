@@ -1,63 +1,105 @@
-From: Stephen Boyd <sboyd@kernel.org>
-Subject: Re: [PATCH] scsi: ufs: Schedule clk gating work on correct queue
-Date: Wed, 17 Oct 2018 13:26:32 -0700
-Message-ID: <153980799299.5275.16452063085933398872@swboyd.mtv.corp.google.com>
-References: <20181005172732.203793-1-evgreen@chromium.org>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH] scsi/sd: Avoid that hibernation triggers a kernel warning
+Date: Wed, 17 Oct 2018 13:27:19 -0700
+Message-ID: <20181017202719.137168-1-bvanassche@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20181005172732.203793-1-evgreen@chromium.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, sayalil@codeaurora.org
-Cc: Evan Green <evgreen@chromium.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>, Lee Duncan <lduncan@suse.com>, Hannes Reinecke <hare@suse.com>, Luis Chamberlain <mcgrof@kernel.org>, Johannes Thumshirn <jthumshirn@suse.de>, Christoph Hellwig <hch@lst.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Dan Williams <dan.j.williams@intel.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Quoting Evan Green (2018-10-05 10:27:32)
-> With commit 10e5e37581fc ("scsi: ufs: Add clock ungating to a separate
-> workqueue"), clock gating work was moved to a
-> separate work queue with WQ_MEM_RECLAIM set, since clock
-> gating could occur from a memory reclaim context. Unfortunately,
-> clk_gating.gate_work was left queued via schedule_delayed_work,
-> which is a system workqueue that does not have WQ_MEM_RECLAIM set.
-> Because ufshcd_ungate_work attempts to cancel gate_work, the
-> following warning appears:
-> =
+Although the power management code never calls the system-wide and runtime
+suspend callbacks concurrently, runtime power state changes can happen
+while the system is being suspended or resumed. See also the dpm_suspend()
+and dpm_resume() calls in hibernation_snapshot(). Make sure the sd driver
+supports this. This patch avoids that the following call trace is reported
+during system-wide suspend:
 
-> [   14.174170] workqueue: WQ_MEM_RECLAIM ufs_clk_gating_0:ufshcd_ungate_w=
-ork is flushing !WQ_MEM_RECLAIM events:ufshcd_gate_work
-> [   14.174179] WARNING: CPU: 4 PID: 173 at kernel/workqueue.c:2440 check_=
-flush_dependency+0x110/0x118
-> [   14.205725] CPU: 4 PID: 173 Comm: kworker/u16:3 Not tainted 4.14.68 #1
-> [   14.212437] Hardware name: Google Cheza (rev1) (DT)
-> [   14.217459] Workqueue: ufs_clk_gating_0 ufshcd_ungate_work
-> [   14.223107] task: ffffffc0f6a40080 task.stack: ffffff800a490000
-> [   14.229195] PC is at check_flush_dependency+0x110/0x118
-> [   14.234569] LR is at check_flush_dependency+0x110/0x118
-> [   14.239944] pc : [<ffffff80080cad14>] lr : [<ffffff80080cad14>] pstate=
-: 60c001c9
-> [   14.333050] Call trace:
-> [   14.427767] [<ffffff80080cad14>] check_flush_dependency+0x110/0x118
-> [   14.434219] [<ffffff80080cafec>] start_flush_work+0xac/0x1fc
-> [   14.440046] [<ffffff80080caeec>] flush_work+0x40/0x94
-> [   14.445246] [<ffffff80080cb288>] __cancel_work_timer+0x11c/0x1b8
-> [   14.451433] [<ffffff80080cb4b8>] cancel_delayed_work_sync+0x20/0x30
-> [   14.457886] [<ffffff80085b9294>] ufshcd_ungate_work+0x24/0xd0
-> [   14.463800] [<ffffff80080cfb04>] process_one_work+0x32c/0x690
-> [   14.469713] [<ffffff80080d0154>] worker_thread+0x218/0x338
-> [   14.475361] [<ffffff80080d527c>] kthread+0x120/0x130
-> [   14.480470] [<ffffff8008084814>] ret_from_fork+0x10/0x18
-> =
+WARNING: CPU: 0 PID: 701 at drivers/scsi/scsi_lib.c:3047 scsi_device_quiesce+0x4b/0xd0
+Workqueue: events_unbound async_run_entry_fn
+RIP: 0010:scsi_device_quiesce+0x4b/0xd0
+Call Trace:
+ scsi_bus_suspend_common+0x71/0xe0
+ scsi_bus_freeze+0x15/0x20
+ dpm_run_callback+0x88/0x360
+ __device_suspend+0x1c4/0x840
+ async_suspend+0x1f/0xb0
+ async_run_entry_fn+0x6e/0x2c0
+ process_one_work+0x4ae/0xa20
+ worker_thread+0x63/0x5a0
+ kthread+0x1cf/0x1f0
+ ret_from_fork+0x24/0x30
 
-> The simple solution is to put the gate_work on the same WQ_MEM_RECLAIM
-> work queue as the ungate_work.
-> =
+Fixes: cd84a62e0078 ("block, scsi: Change the preempt-only flag into a counter")
+Cc: Lee Duncan <lduncan@suse.com>
+Cc: Hannes Reinecke <hare@suse.com>
+Cc: Luis Chamberlain <mcgrof@kernel.org>
+Cc: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Dan Williams <dan.j.williams@intel.com>
+Cc: stable@vger.kernel.org
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+---
+ drivers/scsi/scsi_lib.c    | 16 +++++-----------
+ include/scsi/scsi_device.h |  1 -
+ 2 files changed, 5 insertions(+), 12 deletions(-)
 
-> Fixes: 10e5e37581fc ("scsi: ufs: Add clock ungating to a separate workque=
-ue")
-> Signed-off-by: Evan Green <evgreen@chromium.org>
-> =
-
-> ---
-
-Reviewed-by: Stephen Boyd <swboyd@chromium.org>
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 62348412ed1b..3106e910e766 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -3040,13 +3040,11 @@ scsi_device_quiesce(struct scsi_device *sdev)
+ 	int err;
+ 
+ 	/*
+-	 * It is allowed to call scsi_device_quiesce() multiple times from
+-	 * the same context but concurrent scsi_device_quiesce() calls are
+-	 * not allowed.
++	 * Since all scsi_device_quiesce() and scsi_device_resume() calls
++	 * are serialized it is safe to check the device state without holding
++	 * the SCSI device state mutex.
+ 	 */
+-	WARN_ON_ONCE(sdev->quiesced_by && sdev->quiesced_by != current);
+-
+-	if (sdev->quiesced_by == current)
++	if (sdev->sdev_state == SDEV_QUIESCE)
+ 		return 0;
+ 
+ 	blk_set_pm_only(q);
+@@ -3063,9 +3061,7 @@ scsi_device_quiesce(struct scsi_device *sdev)
+ 
+ 	mutex_lock(&sdev->state_mutex);
+ 	err = scsi_device_set_state(sdev, SDEV_QUIESCE);
+-	if (err == 0)
+-		sdev->quiesced_by = current;
+-	else
++	if (err)
+ 		blk_clear_pm_only(q);
+ 	mutex_unlock(&sdev->state_mutex);
+ 
+@@ -3089,8 +3085,6 @@ void scsi_device_resume(struct scsi_device *sdev)
+ 	 * device deleted during suspend)
+ 	 */
+ 	mutex_lock(&sdev->state_mutex);
+-	WARN_ON_ONCE(!sdev->quiesced_by);
+-	sdev->quiesced_by = NULL;
+ 	blk_clear_pm_only(sdev->request_queue);
+ 	if (sdev->sdev_state == SDEV_QUIESCE)
+ 		scsi_device_set_state(sdev, SDEV_RUNNING);
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 202f4d6a4342..ef86c8adc5d5 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -226,7 +226,6 @@ struct scsi_device {
+ 	unsigned char		access_state;
+ 	struct mutex		state_mutex;
+ 	enum scsi_device_state sdev_state;
+-	struct task_struct	*quiesced_by;
+ 	unsigned long		sdev_data[0];
+ } __attribute__((aligned(sizeof(unsigned long))));
+ 
+-- 
+2.19.1.568.g152ad8e336-goog
