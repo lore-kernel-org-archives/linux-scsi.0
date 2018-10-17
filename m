@@ -1,35 +1,52 @@
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Subject: Re: [v5 3/4] mpt3sas:Fix driver modifying persistent data.
-Date: Wed, 17 Oct 2018 11:24:36 +0300
-Message-ID: <CAHp75Vf2HMj-DBU7TPEM2=g=XdzksnMgCvzCU6BQa9W8XJmPKQ@mail.gmail.com>
-References: <1539755947-27014-1-git-send-email-suganath-prabu.subramani@broadcom.com>
- <1539755947-27014-4-git-send-email-suganath-prabu.subramani@broadcom.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: move bus (PCI, PCMCIA, EISA, rapdio) config to drivers/ v2
+Date: Wed, 17 Oct 2018 10:30:49 +0200
+Message-ID: <CAMuHMdWMtxxu8iivcnT=uWTMHsp=iSq_QzXqDWQut5OHwTU8Sg@mail.gmail.com>
+References: <20181017080201.10866-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1539755947-27014-4-git-send-email-suganath-prabu.subramani@broadcom.com>
+In-Reply-To: <20181017080201.10866-1-hch@lst.de>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Lukas Wunner <lukas@wunner.de>, linux-scsi <linux-scsi@vger.kernel.org>, linux-pci@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, ruscur@russell.cc, sbobroff@linux.ibm.com, oohall@gmail.com, Sathya Prakash <Sathya.Prakash@broadcom.com>, Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Masahiro Yamada <yamada.masahiro@socionext.com>, Matt Porter <mporter@kernel.crashing.org>, Alex Bounine <alex.bou9@gmail.com>, Dominik Brodowski <linux@dominikbrodowski.net>, linux-kbuild <linux-kbuild@vger.kernel.org>, linux-pci <linux-pci@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>, Linux-Arch <linux-arch@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Oct 17, 2018 at 8:59 AM Suganath Prabu
-<suganath-prabu.subramani@broadcom.com> wrote:
->
-> * If EEDPTagMode field in manufacturing page11 is set,
-> unset it. This is needed to fix a hardware bug
-> in SAS3/SAS2 cards, So, skipping EEDPTagMode changes
-> in Manufacturing page11 for SAS35 controllers.
->
-> * Fix driver modifying NVRAM/persistent data in
-> Manufacturing page11 along with current copy. Driver should
-> change only current copy of Manufacturing page11.
+Hi Christoph,
 
-> -       if (ioc->manu_pg11.EEDPTagMode == 0) {
-> +       if ((!ioc->is_gen35_ioc) && (ioc->manu_pg11.EEDPTagMode == 0)) {
+On Wed, Oct 17, 2018 at 10:03 AM Christoph Hellwig <hch@lst.de> wrote:
+> currently every architecture that wants to provide on of the common
+> periphal busses needs to add some boilerplate code and include the
+> right Kconfig files.   This series instead just selects the presence
+> (when needed) and then handles everything in the bus-specific
+> Kconfig file under drivers/.
+>
+> Changes since v1:
+>  - rename all HAS_* Kconfig symbols to HAVE_*
+>  - drop the CONFIG_PCI_QSPAN option entirely
+>  - drop duplicate select from powerpc
+>  - restore missing selection of PCI_MSI for riscv
+>  - update x86 and riscv defconfigs to include PCI
+>  - actually inclue drivers/eisa/Kconfig
+>  - adjust some captilizations
 
-No need to have parens.
+Thanks for the update!
+
+Please use "git format-patch -v<N> --cover" to prepare patch series
+for sending with git-send-email.
+
+  "-v<N>" to prefix all patches with version number <N>,
+  "--cover" to have a "[PATCH 0/<M>]" prefix in the cover letter.
+
+Thanks!
+
+Gr{oetje,eeting}s,
+
+                        Geert
 
 -- 
-With Best Regards,
-Andy Shevchenko
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
