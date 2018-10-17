@@ -1,26 +1,106 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: Re: [PATCH v2 5/6] esp_scsi: De-duplicate PIO routines
-Date: Thu, 18 Oct 2018 10:01:22 +1100 (AEDT)
-Message-ID: <alpine.LNX.2.21.1810180937590.8@nippy.intranet>
-References: <cover.1539497520.git.fthain@telegraphics.com.au> <d5fe773ea8c922631836dad2ef2dbb952672c7c7.1539497520.git.fthain@telegraphics.com.au> <35ac9f31-7068-ab93-4629-363ee0bb4c70@suse.de> <alpine.LNX.2.21.1810151717520.10@nippy.intranet>
- <2b48c925-73f0-0ca0-2f3c-3c35d90010ba@suse.de> <alpine.LNX.2.21.1810161611150.130@nippy.intranet> <20181017080923.GC24540@infradead.org>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH v2 5/7] sd: Avoid that hibernation triggers a kernel warning
+Date: Wed, 17 Oct 2018 16:40:04 -0700
+Message-ID: <20181017234006.124251-6-bvanassche@acm.org>
+References: <20181017234006.124251-1-bvanassche@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20181017080923.GC24540@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, Geert Uytterhoeven <geert@linux-m68k.org>, linux-scsi@vger.kernel.org, linux-m68k@lists.linux-m68k.org, linux-kernel@vger.kernel.org
+Content-Transfer-Encoding: 8bit
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20181017234006.124251-1-bvanassche@acm.org>
+Sender: stable-owner@vger.kernel.org
+To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>, Lee Duncan <lduncan@suse.com>, Hannes Reinecke <hare@suse.com>, Luis Chamberlain <mcgrof@kernel.org>, Johannes Thumshirn <jthumshirn@suse.de>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 17 Oct 2018, Christoph Hellwig wrote:
+Although the power management code never calls the system-wide and runtime
+suspend callbacks concurrently, runtime power state changes can happen
+while the system is being suspended or resumed. See also the dpm_suspend()
+and dpm_resume() calls in hibernation_snapshot(). Make sure the sd driver
+supports this. This patch avoids that the following call trace is reported
+during system-wide suspend:
 
-> 
-> Please leave the possibly unused exports as-is.
-> 
+WARNING: CPU: 0 PID: 701 at drivers/scsi/scsi_lib.c:3047 scsi_device_quiesce+0x4b/0xd0
+Workqueue: events_unbound async_run_entry_fn
+RIP: 0010:scsi_device_quiesce+0x4b/0xd0
+Call Trace:
+ scsi_bus_suspend_common+0x71/0xe0
+ scsi_bus_freeze+0x15/0x20
+ dpm_run_callback+0x88/0x360
+ __device_suspend+0x1c4/0x840
+ async_suspend+0x1f/0xb0
+ async_run_entry_fn+0x6e/0x2c0
+ process_one_work+0x4ae/0xa20
+ worker_thread+0x63/0x5a0
+ kthread+0x1cf/0x1f0
+ ret_from_fork+0x24/0x30
 
-I take that to mean "leave the conditional export as-is". Hence, I think 
-v3 (posted on the 16th) should address all of the concerns raised by 
-reviewers...
+Fixes: cd84a62e0078 ("block, scsi: Change the preempt-only flag into a counter")
+Cc: Lee Duncan <lduncan@suse.com>
+Cc: Hannes Reinecke <hare@suse.com>
+Cc: Luis Chamberlain <mcgrof@kernel.org>
+Cc: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Dan Williams <dan.j.williams@intel.com>
+Cc: stable@vger.kernel.org
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+---
+ drivers/scsi/scsi_lib.c    | 15 ++++++---------
+ include/scsi/scsi_device.h |  1 -
+ 2 files changed, 6 insertions(+), 10 deletions(-)
 
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 7db3c5fae469..6c18a61176e5 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -3052,11 +3052,12 @@ scsi_device_quiesce(struct scsi_device *sdev)
+ 	int err;
+ 
+ 	/*
+-	 * It is allowed to call scsi_device_quiesce() multiple times from
+-	 * the same context but concurrent scsi_device_quiesce() calls are
+-	 * not allowed.
++	 * Since all scsi_device_quiesce() and scsi_device_resume() calls
++	 * are serialized it is safe here to check the device state without
++	 * holding the SCSI device state mutex.
+ 	 */
+-	WARN_ON_ONCE(sdev->quiesced_by && sdev->quiesced_by != current);
++	if (sdev->sdev_state == SDEV_QUIESCE)
++		return 0;
+ 
+ 	blk_set_preempt_only(q);
+ 
+@@ -3072,9 +3073,7 @@ scsi_device_quiesce(struct scsi_device *sdev)
+ 
+ 	mutex_lock(&sdev->state_mutex);
+ 	err = scsi_device_set_state(sdev, SDEV_QUIESCE);
+-	if (err == 0)
+-		sdev->quiesced_by = current;
+-	else
++	if (err)
+ 		blk_clear_preempt_only(q);
+ 	mutex_unlock(&sdev->state_mutex);
+ 
+@@ -3098,8 +3097,6 @@ void scsi_device_resume(struct scsi_device *sdev)
+ 	 * device deleted during suspend)
+ 	 */
+ 	mutex_lock(&sdev->state_mutex);
+-	WARN_ON_ONCE(!sdev->quiesced_by);
+-	sdev->quiesced_by = NULL;
+ 	blk_clear_preempt_only(sdev->request_queue);
+ 	if (sdev->sdev_state == SDEV_QUIESCE)
+ 		scsi_device_set_state(sdev, SDEV_RUNNING);
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 202f4d6a4342..ef86c8adc5d5 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -226,7 +226,6 @@ struct scsi_device {
+ 	unsigned char		access_state;
+ 	struct mutex		state_mutex;
+ 	enum scsi_device_state sdev_state;
+-	struct task_struct	*quiesced_by;
+ 	unsigned long		sdev_data[0];
+ } __attribute__((aligned(sizeof(unsigned long))));
+ 
 -- 
+2.19.1.568.g152ad8e336-goog
