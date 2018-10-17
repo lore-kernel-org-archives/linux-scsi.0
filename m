@@ -1,90 +1,57 @@
-From: Avri Altman <Avri.Altman@wdc.com>
-Subject: RE: [PATCH V15 2/2] scsi: ufs: Add configfs support for UFS
- provisioning
-Date: Wed, 17 Oct 2018 08:33:02 +0000
-Message-ID: <SN6PR04MB4925A7614D60E58B2E64CBCCFCFF0@SN6PR04MB4925.namprd04.prod.outlook.com>
-References: <BYAPR08MB4533120DFDB3803DB8B2E8B8DBFF0@BYAPR08MB4533.namprd08.prod.outlook.com>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH 2/8] powerpc: remove CONFIG_PCI_QSPAN
+Date: Wed, 17 Oct 2018 20:10:42 +1100
+Message-ID: <33a2232671caa008541f8de542f8e7a27ab88248.camel@kernel.crashing.org>
+References: <20181017080201.10866-1-hch@lst.de>
+         <20181017080201.10866-3-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <BYAPR08MB4533120DFDB3803DB8B2E8B8DBFF0@BYAPR08MB4533.namprd08.prod.outlook.com>
-Content-Language: en-US
+In-Reply-To: <20181017080201.10866-3-hch@lst.de>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Bean Huo (beanhuo)" <beanhuo@micron.com>, Sayali Lokhande <sayalil@codeaurora.org>, "subhashj@codeaurora.org" <subhashj@codeaurora.org>, "cang@codeaurora.org" <cang@codeaurora.org>, "vivek.gautam@codeaurora.org" <vivek.gautam@codeaurora.org>, "rnayak@codeaurora.org" <rnayak@codeaurora.org>, "vinholikatti@gmail.com" <vinholikatti@gmail.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>, "evgreen@chromium.org" <evgreen@chromium.org>, "riteshh@codeaurora.org" <riteshh@codeaurora.org>
-Cc: "stummala@codeaurora.org" <stummala@codeaurora.org>, "adrian.hunter@intel.com" <adrian.hunter@intel.com>, "jlbec@evilplan.org" <jlbec@evilplan.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>, Masahiro Yamada <yamada.masahiro@socionext.com>
+Cc: linux-arch@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kbuild@vger.kernel.org, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, Dominik Brodowski <linux@dominikbrodowski.net>, Alexandre Bounine <alex.bou9@gmail.com>, linuxppc-dev@lists.ozlabs.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hello Bean,
+On Wed, 2018-10-17 at 10:01 +0200, Christoph Hellwig wrote:
+> This option isn't actually used anywhere.
 
-> >Usage:
-> >1) To read current configuration descriptor with index X
-> >   (where index X can be 0/1/2/3) :
-> >   cat /config/<device_name>/ufs_config_desc_X
-> >
-> >2) To write configuration descriptor with index X :
-> >   echo <config_desc_buf> > /config/<device_name>/ufs_config_desc_X
-> >
-> >
-> I tested on my platform and got these error:
->=20
-> cat /sys/kernel/config/ff3b0000.ufs/ufs_config_desc_0
-> 0x90 0x1 0x0 0x1 0x0 0x1 0x7f 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0=20
-> 0x1 0x1 0x0 0x3 0x0 0x0 0x0 0x2 0x1 0xc 0x2 0x0 0x0 0x0 0x0 0x0
-> 0x1 0x2 0x0 0x3 0x0 0x0 0x0 0x2 0x1 0xc 0x2 0x0 0x0 0x0 0x0 0x0
-> 0x1 0x0 0x0 0x3 0x0 0x0 0x0 0x4 0x1 0xc 0x2 0x0 0x0 0x0 0x0 0x0
-> 0x1 0x0 0x0  0x0 0x0 0x0 0x1d 0xc7 0x1 0xc 0x2 0x0 0x0 0x0 0x0 0x0
-> 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0xc 0x0 0x0 0x0 0x0 0x0 0x0
-> 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0xc 0x0 0x0 0x0 0x0 0x0 0x0
-> 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0xc 0x0 0x0 0x0 0x0 0x0 0x0
-> 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0xc 0x0 0x0 0x0 0x0 0x0 0x0
->=20
-> cat /sys/kernel/config/ff3b0000.ufs/ufs_config_desc_1
-> [   63.631734] ufshcd-hisi ff3b0000.ufs: __ufshcd_query_descriptor: opcod=
-e
-> 0x01 for idn 1 failed, index 1, err =3D 252
-> [   63.643059] ufshcd-hisi ff3b0000.ufs: __ufshcd_query_descriptor: opcod=
-e
-> 0x01 for idn 1 failed, index 1, err =3D 252
-> [   63.653602] ufshcd-hisi ff3b0000.ufs: __ufshcd_query_descriptor: opcod=
-e
-> 0x01 for idn 1 failed, index 1, err =3D 252
-This actually does not imply an error, just that your device is currently c=
-onfigured
-With 4 luns (2 of them are bootluns), as config_desc_0 shows.
-config_desc_0 also indicate that there are no other config descriptors -=20
-the 3rd byte of its header is 0x0.
+Oh my, that's ancient. Probably didn't make the cut from arch/ppc to
+arch/powerpc
 
-It would be interesting to test however, a write operation with index 0x1 t=
-o this device.
-The current code is trying to override the config descriptor with the new c=
-onfiguration -=20
-That is, it reads it first, and then re-writes it.
-I would expect that this will fail if the you are trying to read descriptor=
- with an index that does not exist.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Thanks,
-Avri
+Acked-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 
-
-
-> cat /sys/kernel/config/ff3b0000.ufs/ufs_config_desc_2
-> [   77.946097] ufshcd-hisi ff3b0000.ufs: __ufshcd_query_descriptor: opcod=
-e
-> 0x01 for idn 1 failed, index 2, err =3D 252
-> [   77.957212] ufshcd-hisi ff3b0000.ufs: __ufshcd_query_descriptor: opcod=
-e
-> 0x01 for idn 1 failed, index 2, err =3D 252
-> [   77.968534] ufshcd-hisi ff3b0000.ufs: __ufshcd_query_descriptor: opcod=
-e
-> 0x01 for idn 1 failed, index 2, err =3D 252
-> cat /sys/kernel/config/ff3b0000.ufs/ufs_config_desc_3
-> [   82.237656] ufshcd-hisi ff3b0000.ufs: __ufshcd_query_descriptor: opcod=
-e
-> 0x01 for idn 1 failed, index 3, err =3D 252
-> [   82.248374] ufshcd-hisi ff3b0000.ufs: __ufshcd_query_descriptor: opcod=
-e
-> 0x01 for idn 1 failed, index 3, err =3D 252
-> [   82.259117] ufshcd-hisi ff3b0000.ufs: __ufshcd_query_descriptor: opcod=
-e
-> 0x01 for idn 1 failed, index 3, err =3D 252
+> ---
+>  arch/powerpc/Kconfig | 9 ---------
+>  1 file changed, 9 deletions(-)
+> 
+> diff --git a/arch/powerpc/Kconfig b/arch/powerpc/Kconfig
+> index a80669209155..e8c8970248bc 100644
+> --- a/arch/powerpc/Kconfig
+> +++ b/arch/powerpc/Kconfig
+> @@ -955,7 +955,6 @@ config PCI
+>  	bool "PCI support" if PPC_PCI_CHOICE
+>  	default y if !40x && !CPM2 && !PPC_8xx && !PPC_83xx \
+>  		&& !PPC_85xx && !PPC_86xx && !GAMECUBE_COMMON
+> -	default PCI_QSPAN if PPC_8xx
+>  	select GENERIC_PCI_IOMAP
+>  	help
+>  	  Find out whether your system includes a PCI bus. PCI is the name of
+> @@ -969,14 +968,6 @@ config PCI_DOMAINS
+>  config PCI_SYSCALL
+>  	def_bool PCI
+>  
+> -config PCI_QSPAN
+> -	bool "QSpan PCI"
+> -	depends on PPC_8xx
+> -	select PPC_I8259
+> -	help
+> -	  Say Y here if you have a system based on a Motorola 8xx-series
+> -	  embedded processor with a QSPAN PCI interface, otherwise say N.
+> -
+>  config PCI_8260
+>  	bool
+>  	depends on PCI && 8260
