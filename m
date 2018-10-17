@@ -1,52 +1,64 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: move bus (PCI, PCMCIA, EISA, rapdio) config to drivers/ v2
-Date: Wed, 17 Oct 2018 10:30:49 +0200
-Message-ID: <CAMuHMdWMtxxu8iivcnT=uWTMHsp=iSq_QzXqDWQut5OHwTU8Sg@mail.gmail.com>
-References: <20181017080201.10866-1-hch@lst.de>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Subject: Re: [v5 2/4] mpt3sas: Fix Sync cache command failure during driver unload
+Date: Wed, 17 Oct 2018 11:32:18 +0300
+Message-ID: <CAHp75Ve=X9X6xG5FpuZrmRKfSpcLwFQYE_A8vhUzNn92KSoc4w@mail.gmail.com>
+References: <1539755947-27014-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+ <1539755947-27014-3-git-send-email-suganath-prabu.subramani@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20181017080201.10866-1-hch@lst.de>
+In-Reply-To: <1539755947-27014-3-git-send-email-suganath-prabu.subramani@broadcom.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Masahiro Yamada <yamada.masahiro@socionext.com>, Matt Porter <mporter@kernel.crashing.org>, Alex Bounine <alex.bou9@gmail.com>, Dominik Brodowski <linux@dominikbrodowski.net>, linux-kbuild <linux-kbuild@vger.kernel.org>, linux-pci <linux-pci@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>, Linux-Arch <linux-arch@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
+To: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Lukas Wunner <lukas@wunner.de>, linux-scsi <linux-scsi@vger.kernel.org>, linux-pci@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, ruscur@russell.cc, sbobroff@linux.ibm.com, oohall@gmail.com, Sathya Prakash <Sathya.Prakash@broadcom.com>, Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Christoph,
-
-On Wed, Oct 17, 2018 at 10:03 AM Christoph Hellwig <hch@lst.de> wrote:
-> currently every architecture that wants to provide on of the common
-> periphal busses needs to add some boilerplate code and include the
-> right Kconfig files.   This series instead just selects the presence
-> (when needed) and then handles everything in the bus-specific
-> Kconfig file under drivers/.
+On Wed, Oct 17, 2018 at 8:59 AM Suganath Prabu
+<suganath-prabu.subramani@broadcom.com> wrote:
 >
-> Changes since v1:
->  - rename all HAS_* Kconfig symbols to HAVE_*
->  - drop the CONFIG_PCI_QSPAN option entirely
->  - drop duplicate select from powerpc
->  - restore missing selection of PCI_MSI for riscv
->  - update x86 and riscv defconfigs to include PCI
->  - actually inclue drivers/eisa/Kconfig
->  - adjust some captilizations
+> This is to fix Sync cache and start stop command
+>  failures with DID_NO_CONNECT during driver unload.
+>
+> 1) Release drives first from SML, then remove internally
+> in driver.
+> 2) And allow sync cache and Start stop commands to firmware,
+> even when remove_host flag is set.
 
-Thanks for the update!
+> +       if (ioc->hba_mpi_version_belonged == MPI2_VERSION) {
+> +               if (ioc->remove_host)
+> +                       return false;
+> +
+> +               return true;
+> +       }
+> +
+> +       if (ioc->remove_host) {
+> +
+> +               switch (scmd->cmnd[0]) {
+> +               case SYNCHRONIZE_CACHE:
+> +               case START_STOP:
+> +                       return true;
+> +               default:
+> +                       return false;
+> +               }
+> +       }
+> +
+> +       return true;
 
-Please use "git format-patch -v<N> --cover" to prepare patch series
-for sending with git-send-email.
+Wouldn't be the same as
 
-  "-v<N>" to prefix all patches with version number <N>,
-  "--cover" to have a "[PATCH 0/<M>]" prefix in the cover letter.
+if (!ioc->remove_host || ioc->hba_mpi_version_belonged == MPI2_VERSION)
+   return !ioc->remove_host;
 
-Thanks!
+ switch (scmd->cmnd[0]) {
+ case SYNCHRONIZE_CACHE:
+ case START_STOP:
+   return true;
+ default:
+   return false;
+ }
 
-Gr{oetje,eeting}s,
-
-                        Geert
+?
 
 -- 
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+With Best Regards,
+Andy Shevchenko
