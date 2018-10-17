@@ -1,36 +1,30 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2 5/6] esp_scsi: De-duplicate PIO routines
-Date: Wed, 17 Oct 2018 01:09:23 -0700
-Message-ID: <20181017080923.GC24540@infradead.org>
-References: <cover.1539497520.git.fthain@telegraphics.com.au>
- <d5fe773ea8c922631836dad2ef2dbb952672c7c7.1539497520.git.fthain@telegraphics.com.au>
- <35ac9f31-7068-ab93-4629-363ee0bb4c70@suse.de>
- <alpine.LNX.2.21.1810151717520.10@nippy.intranet>
- <2b48c925-73f0-0ca0-2f3c-3c35d90010ba@suse.de>
- <alpine.LNX.2.21.1810161611150.130@nippy.intranet>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 8/8] kconfig: remove CONFIG_MCA leftovers
+Date: Wed, 17 Oct 2018 10:17:06 +0200
+Message-ID: <20181017081706.GA24869@lst.de>
+References: <20181013151016.31674-1-hch@lst.de> <20181013151016.31674-9-hch@lst.de> <CAK7LNAQwyWUq_ohVMe9QLLbyHHQdjkrkM9DPd3pgYLz8UhG6rA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <alpine.LNX.2.21.1810161611150.130@nippy.intranet>
+In-Reply-To: <CAK7LNAQwyWUq_ohVMe9QLLbyHHQdjkrkM9DPd3pgYLz8UhG6rA@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: Hannes Reinecke <hare@suse.de>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-scsi@vger.kernel.org, linux-m68k@lists.linux-m68k.org, linux-kernel@vger.kernel.org
+To: Masahiro Yamada <yamada.masahiro@socionext.com>
+Cc: Christoph Hellwig <hch@lst.de>, mporter@kernel.crashing.org, Alex Bounine <alex.bou9@gmail.com>, Dominik Brodowski <linux@dominikbrodowski.net>, Linux Kbuild mailing list <linux-kbuild@vger.kernel.org>, linux-pci@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, linux-arch <linux-arch@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Oct 16, 2018 at 04:39:07PM +1100, Finn Thain wrote:
+On Tue, Oct 16, 2018 at 02:20:23PM +0900, Masahiro Yamada wrote:
+> On Sun, Oct 14, 2018 at 12:11 AM Christoph Hellwig <hch@lst.de> wrote:
+> >
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > ---
 > 
-> Perhaps I've misunderstood your concern here. Is it a problem that 
-> esp_scsi.ko may or may not export the function, depending on .config?
 > 
-> For example, if esp_scsi.ko came from a build with CONFIG_SUN3X_ESP=y && 
-> !CONFIG_SCSI_ZORRO_ESP && !CONFIG_SCSI_MAC_ESP, then it would export no 
-> esp_send_pio_cmd() symbol.
+> Can you use "powerpc:" or something
+> for the subject line?
 > 
-> A dummy function (mentioned above) might then avoid a link error from 
-> "modprobe zorro_esp" or "modprobe mac_esp" in this scenario. (The modules 
-> would load but fail to work properly.)
-> 
-> This seems a bit too contrived so I'll post v3 for you to consider.
+> I'd like to see "kconfig:" only for patches
+> that touch the scripts/kconfig/ directory.
 
-Please leave the possibly unused exports as-is.
+Sorry, I missed this for v2.  Will fix it up for the next version
+or let you fix it up if there isn't one.
