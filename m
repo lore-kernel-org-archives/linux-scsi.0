@@ -1,30 +1,45 @@
-From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: Re: [PATCH] scsi: aic94xx: mark expected switch fall-throughs
-Date: Wed, 17 Oct 2018 07:03:03 +0200
-Message-ID: <5cd48c48-8f52-117a-07e2-d2b530af7698@embeddedor.com>
-References: <20181004071009.GA13875@embeddedor.com>
- <yq11s8ppcap.fsf@oracle.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+From: Suganath Prabu <suganath-prabu.subramani@broadcom.com>
+Subject: [v5 0/4] mpt3sas: Hot-Plug Surprise removal support on IOC.
+Date: Wed, 17 Oct 2018 11:29:03 +0530
+Message-ID: <1539755947-27014-1-git-send-email-suganath-prabu.subramani@broadcom.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <yq11s8ppcap.fsf@oracle.com>
-Content-Language: en-GB
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: helgaas@kernel.org, lukas@wunner.de, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: benh@kernel.crashing.org, ruscur@russell.cc, sbobroff@linux.ibm.com, oohall@gmail.com, andy.shevchenko@gmail.com, Sathya.Prakash@broadcom.com, sreekanth.reddy@broadcom.com, Suganath Prabu <suganath-prabu.subramani@broadcom.com>
 List-Id: linux-scsi@vger.kernel.org
 
+V5 Change set:
+V5 post has only defect fixes.
+We are reworking and incorporating the suggestions from Bjorn.
+And after covering tests, we ll be post Hot-Plug Surprise
+ removal patches.
 
+V4 Change set:
+Reframe split strings in print statement, to avoid
 
-On 10/17/18 3:55 AM, Martin K. Petersen wrote:
+V3 Change Set:
+Simplified function "mpt3sas_base_pci_device_is_available" and
+made inline
 
->> In preparation to enabling -Wimplicit-fallthrough, mark switch cases
->> where we are expecting to fall through.
-> 
-> Applied to 4.20/scsi-queue.
-> 
+V2 changes:
+Replaced mpt3sas_base_pci_device_is_unplugged with
+pci_device_is_present.
 
-Thank you, Martin.
---
-Gustavo
+V1 changes:
+In Patch 0001 - unlock mutex, if active reset is in progress.
+
+  mpt3sas: Separate out mpt3sas_wait_for_ioc_to_operational
+  mpt3sas: Fix Sync cache command failure during driver unload
+  mpt3sas:Fix driver modifying persistent data.
+  mpt3sas: Bump driver version to 27.100.00.00.
+
+ drivers/scsi/mpt3sas/mpt3sas_base.c      | 79 +++++++++++++++++++-------------
+ drivers/scsi/mpt3sas/mpt3sas_base.h      |  8 +++-
+ drivers/scsi/mpt3sas/mpt3sas_config.c    | 29 +++---------
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c       | 22 ++-------
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c     | 38 ++++++++++++++-
+ drivers/scsi/mpt3sas/mpt3sas_transport.c | 73 +++++++----------------------
+ 6 files changed, 115 insertions(+), 134 deletions(-)
+
+-- 
+1.8.3.1
