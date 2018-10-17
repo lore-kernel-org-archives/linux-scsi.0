@@ -1,37 +1,52 @@
-From: Suganath Prabu <suganath-prabu.subramani@broadcom.com>
-Subject: [v5 4/4] mpt3sas: Bump driver version to 27.100.00.00.
-Date: Wed, 17 Oct 2018 11:29:07 +0530
-Message-ID: <1539755947-27014-5-git-send-email-suganath-prabu.subramani@broadcom.com>
-References: <1539755947-27014-1-git-send-email-suganath-prabu.subramani@broadcom.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1539755947-27014-1-git-send-email-suganath-prabu.subramani@broadcom.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: helgaas@kernel.org, lukas@wunner.de, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: benh@kernel.crashing.org, ruscur@russell.cc, sbobroff@linux.ibm.com, oohall@gmail.com, andy.shevchenko@gmail.com, Sathya.Prakash@broadcom.com, sreekanth.reddy@broadcom.com, Suganath Prabu <suganath-prabu.subramani@broadcom.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v4 03/11] scsi: sd_zbc: Fix
+ sd_zbc_check_zones() error checks
+Date: Wed, 17 Oct 2018 09:21:59 +0200
+Message-ID: <20181017072159.GE23407@lst.de>
+References: <20181012100850.23316-1-damien.lemoal@wdc.com>
+	<20181012100850.23316-4-damien.lemoal@wdc.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <20181012100850.23316-4-damien.lemoal@wdc.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Damien Le Moal <damien.lemoal@wdc.com>
+Cc: Jens Axboe <axboe@kernel.dk>, "Martin K . Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, linux-block@vger.kernel.org, dm-devel@redhat.com, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Matias Bjorling <matias.bjorling@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Modify driver version to 27.100.00.00
-(which is equivalent to PH8 OOB driver)
+> @@ -687,12 +688,8 @@ int sd_zbc_read_zones(struct scsi_disk *sdkp, unsigned char *buf)
+>  	 * Check zone size: only devices with a constant zone size (except
+>  	 * an eventual last runt zone) that is a power of 2 are supported.
+>  	 */
+> -	zone_blocks = sd_zbc_check_zones(sdkp);
+> -	ret = -EFBIG;
+> -	if (zone_blocks != (u32)zone_blocks)
+> -		goto err;
+> -	ret = zone_blocks;
+> -	if (ret < 0)
+> +	ret = sd_zbc_check_zones(sdkp, &zone_blocks);
+> +	if (ret != 0)
 
-Signed-off-by: Suganath Prabu <suganath-prabu.subramani@broadcom.com>
----
- drivers/scsi/mpt3sas/mpt3sas_base.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+This coud be simplified to
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index c860ed2..7fdaf29 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -74,8 +74,8 @@
- #define MPT3SAS_DRIVER_NAME		"mpt3sas"
- #define MPT3SAS_AUTHOR "Avago Technologies <MPT-FusionLinux.pdl@avagotech.com>"
- #define MPT3SAS_DESCRIPTION	"LSI MPT Fusion SAS 3.0 Device Driver"
--#define MPT3SAS_DRIVER_VERSION		"26.100.00.00"
--#define MPT3SAS_MAJOR_VERSION		26
-+#define MPT3SAS_DRIVER_VERSION		"27.100.00.00"
-+#define MPT3SAS_MAJOR_VERSION		27
- #define MPT3SAS_MINOR_VERSION		100
- #define MPT3SAS_BUILD_VERSION		0
- #define MPT3SAS_RELEASE_VERSION	00
--- 
-1.8.3.1
+	if (ret)
+
+or just keep the old
+
+	if (ret < 0)
+
+which would still work.
+
+Otherwise looks fine:
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
