@@ -1,66 +1,48 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 8/8] kconfig: remove CONFIG_MCA leftovers
-Date: Wed, 17 Oct 2018 10:02:01 +0200
-Message-ID: <20181017080201.10866-9-hch@lst.de>
-References: <20181017080201.10866-1-hch@lst.de>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v2 5/6] esp_scsi: De-duplicate PIO routines
+Date: Wed, 17 Oct 2018 01:08:54 -0700
+Message-ID: <20181017080854.GB24540@infradead.org>
+References: <cover.1539497520.git.fthain@telegraphics.com.au>
+ <d5fe773ea8c922631836dad2ef2dbb952672c7c7.1539497520.git.fthain@telegraphics.com.au>
+ <35ac9f31-7068-ab93-4629-363ee0bb4c70@suse.de>
+ <alpine.LNX.2.21.1810151717520.10@nippy.intranet>
+ <2b48c925-73f0-0ca0-2f3c-3c35d90010ba@suse.de>
+ <alpine.LNX.2.21.1810161014080.10@nippy.intranet>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20181017080201.10866-1-hch@lst.de>
+Content-Disposition: inline
+In-Reply-To: <alpine.LNX.2.21.1810161014080.10@nippy.intranet>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Masahiro Yamada <yamada.masahiro@socionext.com>
-Cc: Matt Porter <mporter@kernel.crashing.org>, Alexandre Bounine <alex.bou9@gmail.com>, Dominik Brodowski <linux@dominikbrodowski.net>, linux-kbuild@vger.kernel.org, linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+To: Finn Thain <fthain@telegraphics.com.au>
+Cc: Hannes Reinecke <hare@suse.de>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-scsi@vger.kernel.org, linux-m68k@lists.linux-m68k.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Acked-by: Thomas Gleixner <tglx@linutronix.de>
----
- arch/powerpc/Kconfig | 4 ----
- drivers/scsi/Kconfig | 6 +++---
- 2 files changed, 3 insertions(+), 7 deletions(-)
+On Tue, Oct 16, 2018 at 10:52:26AM +1100, Finn Thain wrote:
+> True enough. We agree that this #ifdef is undesirable. And yet when I 
+> tried it, I found an unexpected readability benefit to your suggestion:
+> 
+> #ifdef CONFIG_SCSI_ESP_PIO
+>         u8 __iomem              *fifo_reg;
+>         int                     send_cmd_error;
+>         u32                     send_cmd_residual;
+> #endif
+> 
+> This grouping does help convey the purpose of these struct members, even 
+> though the #ifdef is meant for the compiler not for the human reader.
+> 
+> So maybe it makes sense to group these definitions (they are all the same 
+> size):
+> 
+>         /* These are used by esp_scsi_send_pio_cmd() */
+>         u8 __iomem              *fifo_reg;
+>         int                     send_cmd_error;
+>         u32                     send_cmd_residual;
 
-diff --git a/arch/powerpc/Kconfig b/arch/powerpc/Kconfig
-index f2001fff14d1..f3ec13765639 100644
---- a/arch/powerpc/Kconfig
-+++ b/arch/powerpc/Kconfig
-@@ -944,10 +944,6 @@ config FSL_GTM
- 	help
- 	  Freescale General-purpose Timers support
- 
--# Yes MCA RS/6000s exist but Linux-PPC does not currently support any
--config MCA
--	bool
--
- config PCI_DOMAINS
- 	def_bool PCI
- 
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 7c097006c54d..d3734c54aec9 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -535,7 +535,7 @@ config SCSI_HPTIOP
- 
- config SCSI_BUSLOGIC
- 	tristate "BusLogic SCSI support"
--	depends on (PCI || ISA || MCA) && SCSI && ISA_DMA_API && VIRT_TO_BUS
-+	depends on (PCI || ISA) && SCSI && ISA_DMA_API && VIRT_TO_BUS
- 	---help---
- 	  This is support for BusLogic MultiMaster and FlashPoint SCSI Host
- 	  Adapters. Consult the SCSI-HOWTO, available from
-@@ -1142,12 +1142,12 @@ config SCSI_LPFC_DEBUG_FS
- 
- config SCSI_SIM710
- 	tristate "Simple 53c710 SCSI support (Compaq, NCR machines)"
--	depends on (EISA || MCA) && SCSI
-+	depends on EISA && SCSI
- 	select SCSI_SPI_ATTRS
- 	---help---
- 	  This driver is for NCR53c710 based SCSI host adapters.
- 
--	  It currently supports Compaq EISA cards and NCR MCA cards
-+	  It currently supports Compaq EISA cards.
- 
- config SCSI_DC395x
- 	tristate "Tekram DC395(U/UW/F) and DC315(U) SCSI support"
--- 
-2.19.1
+I like the grouping, and in fact the ifdef sounds fine to me as well.
+
+> Do static checkers really complain about this? I think the validity of an 
+> extern can't be known until the final linkage is done.
+
+None that I know of does, and as said before this patterns is very
+common all over the kernel.
