@@ -1,29 +1,30 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH -next] advansys: remove set but not used variable 'srb_tag' in adv_isr_callback
-Date: Wed, 17 Oct 2018 21:02:26 -0400
-Message-ID: <yq1pnw8kqxp.fsf@oracle.com>
-References: <20181017123432.18304-1-yuehaibing@huawei.com>
+Subject: Re: [PATCH v2 0/6] mac_esp, zorro_esp, esp_scsi: Various improvements
+Date: Wed, 17 Oct 2018 21:40:02 -0400
+Message-ID: <yq1h8hkkp71.fsf@oracle.com>
+References: <cover.1539497520.git.fthain@telegraphics.com.au>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20181017123432.18304-1-yuehaibing@huawei.com>
-        (yuehaibing@huawei.com's message of "Wed, 17 Oct 2018 20:34:32 +0800")
+In-Reply-To: <cover.1539497520.git.fthain@telegraphics.com.au> (Finn Thain's
+        message of "Sun, 14 Oct 2018 17:12:00 +1100")
 Sender: linux-kernel-owner@vger.kernel.org
-To: YueHaibing <yuehaibing@huawei.com>
-Cc: willy@infradead.org, hare@suse.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Finn Thain <fthain@telegraphics.com.au>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-YueHaibing,
+Finn,
 
-> drivers/scsi/advansys.c: In function 'adv_isr_callback':
-> drivers/scsi/advansys.c:5952:6: warning:
->  variable 'srb_tag' set but not used [-Wunused-but-set-variable]
+> This series has fixes and cleanup for mac_esp, zorro_esp and the core
+> esp_scsi driver.
 >
-> It never used since introduction in
-> commit 9c17c62aedb0 ("advansys: use shared host tag map for command lookup")
+> These improvements include elimination of duplicated code temporarily
+> introduced for zorro_esp.
 
-Applied to 4.20/scsi-queue. Thanks!
+Had to hand-apply patch #5. Otherwise OK.
+
+Applied to 4.20/scsi-queue. Thank you!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
