@@ -1,82 +1,78 @@
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Subject: Re: [v5 2/4] mpt3sas: Fix Sync cache command failure during driver unload
-Date: Thu, 18 Oct 2018 10:23:18 +0300
-Message-ID: <CAHp75VfENTJjJVMyQ1wnD4GXYKjhgr6h+wocPOfk16p9nWrpeg@mail.gmail.com>
-References: <1539755947-27014-1-git-send-email-suganath-prabu.subramani@broadcom.com>
- <1539755947-27014-3-git-send-email-suganath-prabu.subramani@broadcom.com>
- <CAHp75Ve=X9X6xG5FpuZrmRKfSpcLwFQYE_A8vhUzNn92KSoc4w@mail.gmail.com> <CA+RiK67067aV9Ky5m8uCGLGcvjbBRxqFVeyB0CsYcvSw7rgqJg@mail.gmail.com>
+From: Damien Le Moal <Damien.LeMoal@wdc.com>
+Subject: Re: [PATCH v4 00/11] Zoned block device support
+	improvements
+Date: Thu, 18 Oct 2018 07:57:38 +0000
+Message-ID: <BN3PR0401MB1640E5E4E056F914DB3E7D53E7F80@BN3PR0401MB1640.namprd04.prod.outlook.com>
+References: <20181012100850.23316-1-damien.lemoal@wdc.com>
+	<f6062f58-8f8a-b90a-9163-5938632e1a6a@kernel.dk>
+	<BN3PR0401MB16409A77BC3EA6E37073DD17E7FD0@BN3PR0401MB1640.namprd04.prod.outlook.com>
+	<af21e631-78bc-71f3-60a9-d021f074dab8@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CA+RiK67067aV9Ky5m8uCGLGcvjbBRxqFVeyB0CsYcvSw7rgqJg@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Lukas Wunner <lukas@wunner.de>, linux-scsi <linux-scsi@vger.kernel.org>, linux-pci@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, ruscur@russell.cc, sbobroff@linux.ibm.com, Oliver <oohall@gmail.com>, Sathya Prakash <Sathya.Prakash@broadcom.com>, Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
+Content-Language: en-US
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Jens Axboe <axboe@kernel.dk>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Martin K . Petersen" <martin.petersen@oracle.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>, Mike Snitzer <snitzer@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, Matias Bjorling <Matias.Bjorling@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Oct 18, 2018 at 10:11 AM Suganath Prabu Subramani
-<suganath-prabu.subramani@broadcom.com> wrote:
->
->
->
-> On Wed, Oct 17, 2018 at 2:02 PM Andy Shevchenko <andy.shevchenko@gmail.com> wrote:
+On 2018/10/16 11:34, Jens Axboe wrote:
+> On 10/14/18 6:45 PM, Damien Le Moal wrote:
+>> Jens,
 >>
->> On Wed, Oct 17, 2018 at 8:59 AM Suganath Prabu
->> <suganath-prabu.subramani@broadcom.com> wrote:
->> >
->> > This is to fix Sync cache and start stop command
->> >  failures with DID_NO_CONNECT during driver unload.
->> >
->> > 1) Release drives first from SML, then remove internally
->> > in driver.
->> > 2) And allow sync cache and Start stop commands to firmware,
->> > even when remove_host flag is set.
+>> On 2018/10/14 7:43, Jens Axboe wrote:
+>>> On 10/12/18 4:08 AM, Damien Le Moal wrote:
+>>>> This series improves zoned block device support (reduce overhead) and
+>>>> introduces many simplifications to the code (overall, there are more deletions
+>>>> than insertions).
+>>>>
+>>>> In more details:
+>>>> * Patches 1 to 3 are SCSI side (sd driver) cleanups and improvements reducing
+>>>>   the overhead of report zones command execution during disk scan and
+>>>>   revalidation.
+>>>> * Patches 4 to 9 improve the useability and user API of zoned block devices.
+>>>> * Patch 10 is the main part of this series. This patch replaces the
+>>>>   REQ_OP_ZONE_REPORT BIO/request operation for executing report zones commands
+>>>>   with a block device file operation, removing the need for the command reply
+>>>>   payload in-place rewriting in the BIO buffer. This leads to major
+>>>>   simplification of the code in many places.
+>>>> * Patch 11 further simplifies the code of low level drivers by providing a
+>>>>   generic implementation of zoned block device request queue zone bitmaps
+>>>>   initialization and revalidation.
+>>>>
+>>>> Please consider the addition of these patches in 4.20.
+>>>> Comments are as always welcome.
+>>>
+>>> How do we want to funnel this series? 1-3 look separate, so perhaps
+>>> they should go through the scsi tree. Then I can take the rest. Or do
+>>> some of the later ones depend on 1-3 being in, in terms of applying
+>>> cleanly?  I can also take all of them, looks like only #3 needs a
+>>> SCSI ack.
 >>
->> > +       if (ioc->hba_mpi_version_belonged == MPI2_VERSION) {
->> > +               if (ioc->remove_host)
->> > +                       return false;
->> > +
->> > +               return true;
->> > +       }
->> > +
->> > +       if (ioc->remove_host) {
->> > +
->> > +               switch (scmd->cmnd[0]) {
->> > +               case SYNCHRONIZE_CACHE:
->> > +               case START_STOP:
->> > +                       return true;
->> > +               default:
->> > +                       return false;
->> > +               }
->> > +       }
->> > +
->> > +       return true;
->>
->> Wouldn't be the same as
+>> Patch 10 and 11 will not apply cleanly for the scsi part without 1-3
+>> in first.  1-3, 10 and 11 would need an ack/review from Martin (SCSI).
+>> And 10-11 also probably need an ack/review from Mike for the DM
+>> changes.
+> 
+> Probably want to start pinging people, if you're targeting 4.20 with
+> this...
 
->> Yes it is same, but i feel original code is more readable.
+Hi Jens,
 
-OK (I didn't compare assembly, but I assume this is slow path).
+Martin and Mike acked/reviewed the SCSI and DM parts respectively (thanks !).
+Do you think you can take this series for 4.20 ?
 
->> if (!ioc->remove_host || ioc->hba_mpi_version_belonged == MPI2_VERSION)
->>    return !ioc->remove_host;
->>
->>  switch (scmd->cmnd[0]) {
->>  case SYNCHRONIZE_CACHE:
->>  case START_STOP:
->>    return true;
->>  default:
->>    return false;
->>  }
->>
->> ?
->>
->> --
->> With Best Regards,
->> Andy Shevchenko
-
-
+Thanks.
 
 -- 
-With Best Regards,
-Andy Shevchenko
+Damien Le Moal
+Western Digital Research
