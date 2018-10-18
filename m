@@ -1,41 +1,52 @@
-From: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
-Subject: Re: [v5 3/4] mpt3sas:Fix driver modifying persistent data.
-Date: Thu, 18 Oct 2018 12:46:29 +0530
-Message-ID: <CA+RiK66upf=E-LWSknA-xK4G=y+2OiqT1zUpvQAJ=aYz1yWHtw@mail.gmail.com>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Subject: Re: [v5 1/4] mpt3sas: Separate out mpt3sas_wait_for_ioc_to_operational
+Date: Thu, 18 Oct 2018 10:22:00 +0300
+Message-ID: <CAHp75Vd63Ss3WBuAA0euutGboUuOzS0EJ3J-365b5QOTz98NqQ@mail.gmail.com>
 References: <1539755947-27014-1-git-send-email-suganath-prabu.subramani@broadcom.com>
- <1539755947-27014-4-git-send-email-suganath-prabu.subramani@broadcom.com> <CAHp75Vf2HMj-DBU7TPEM2=g=XdzksnMgCvzCU6BQa9W8XJmPKQ@mail.gmail.com>
+ <1539755947-27014-2-git-send-email-suganath-prabu.subramani@broadcom.com>
+ <CAHp75Veh=CkhD67jb+Qjps-UqtcCBUsA8bWco6kqppm0Q+tcvg@mail.gmail.com>
+ <CAHp75VfPok+x4U_CmP91eG8KtOUvFYkavrw0Wg5Q9m2ZNbcVZg@mail.gmail.com> <CA+RiK66_gpLvzFyztdQ3BdX11wn2uRfxoF6hhRg1TXoERe7z3Q@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAHp75Vf2HMj-DBU7TPEM2=g=XdzksnMgCvzCU6BQa9W8XJmPKQ@mail.gmail.com>
+In-Reply-To: <CA+RiK66_gpLvzFyztdQ3BdX11wn2uRfxoF6hhRg1TXoERe7z3Q@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Andy Shevchenko <andy.shevchenko@gmail.com>
-Cc: helgaas@kernel.org, lukas@wunner.de, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, benh@kernel.crashing.org, ruscur@russell.cc, sbobroff@linux.ibm.com, Oliver <oohall@gmail.com>, Sathya Prakash <Sathya.Prakash@broadcom.com>, Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+To: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Lukas Wunner <lukas@wunner.de>, linux-scsi <linux-scsi@vger.kernel.org>, linux-pci@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, ruscur@russell.cc, sbobroff@linux.ibm.com, Oliver <oohall@gmail.com>, Sathya Prakash <Sathya.Prakash@broadcom.com>, Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Oct 17, 2018 at 1:54 PM Andy Shevchenko
-<andy.shevchenko@gmail.com> wrote:
+On Thu, Oct 18, 2018 at 10:10 AM Suganath Prabu Subramani
+<suganath-prabu.subramani@broadcom.com> wrote:
+> On Wed, Oct 17, 2018 at 1:49 PM Andy Shevchenko <andy.shevchenko@gmail.com> wrote:
+>> On Wed, Oct 17, 2018 at 11:17 AM Andy Shevchenko
+>> <andy.shevchenko@gmail.com> wrote:
+
+>> > I understand this is part of existing code, but can you consider to
+>> > modify it to something like
+>> >
+>> > do {
+>> >     ioc_state = mpt3sas_base_get_iocstate(ioc, 1);
+>> >     if (ioc_state == MPI2_IOC_STATE_OPERATIONAL)
+>> >       break;
+>>
+>> Forgot ssleep(1); here.
+>>
+>> >     ioc_info(ioc, "%s: waiting for operational state(count=%d)\n",
+>> > __func__, ++wait_state_count);
+
+>> > while (timeout--);
+
+Just noticed this should be --timeout.
+
+>> > if (!timeout) {
+>> >     ioc_err(ioc, "%s: failed due to ioc not operational\n", __func__);
+>> >     return -EFAULT;
+>> > }
+>> > Less lines, more understandable in my view.
 >
-> On Wed, Oct 17, 2018 at 8:59 AM Suganath Prabu
-> <suganath-prabu.subramani@broadcom.com> wrote:
-> >
-> > * If EEDPTagMode field in manufacturing page11 is set,
-> > unset it. This is needed to fix a hardware bug
-> > in SAS3/SAS2 cards, So, skipping EEDPTagMode changes
-> > in Manufacturing page11 for SAS35 controllers.
-> >
-> > * Fix driver modifying NVRAM/persistent data in
-> > Manufacturing page11 along with current copy. Driver should
-> > change only current copy of Manufacturing page11.
->
-> > -       if (ioc->manu_pg11.EEDPTagMode == 0) {
-> > +       if ((!ioc->is_gen35_ioc) && (ioc->manu_pg11.EEDPTagMode == 0)) {
->
-> No need to have parens.
->
-Yes, We ll remove parentheses in v6 patch set.
-Thanks,
->
-> --
-> With Best Regards,
-> Andy Shevchenko
+> Yes, We 'll take this change and resend.
+
+
+-- 
+With Best Regards,
+Andy Shevchenko
