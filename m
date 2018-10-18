@@ -1,106 +1,29 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH v2 5/7] sd: Avoid that hibernation triggers a kernel warning
-Date: Wed, 17 Oct 2018 16:40:04 -0700
-Message-ID: <20181017234006.124251-6-bvanassche@acm.org>
-References: <20181017234006.124251-1-bvanassche@acm.org>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] scsi: ufs: Schedule clk gating work on correct queue
+Date: Wed, 17 Oct 2018 20:49:30 -0400
+Message-ID: <yq1bm7sm63p.fsf@oracle.com>
+References: <20181005172732.203793-1-evgreen@chromium.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20181017234006.124251-1-bvanassche@acm.org>
-Sender: stable-owner@vger.kernel.org
-To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>, Lee Duncan <lduncan@suse.com>, Hannes Reinecke <hare@suse.com>, Luis Chamberlain <mcgrof@kernel.org>, Johannes Thumshirn <jthumshirn@suse.de>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, stable@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20181005172732.203793-1-evgreen@chromium.org> (Evan Green's
+        message of "Fri, 5 Oct 2018 10:27:32 -0700")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Evan Green <evgreen@chromium.org>
+Cc: Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, sayalil@codeaurora.org
 List-Id: linux-scsi@vger.kernel.org
 
-Although the power management code never calls the system-wide and runtime
-suspend callbacks concurrently, runtime power state changes can happen
-while the system is being suspended or resumed. See also the dpm_suspend()
-and dpm_resume() calls in hibernation_snapshot(). Make sure the sd driver
-supports this. This patch avoids that the following call trace is reported
-during system-wide suspend:
 
-WARNING: CPU: 0 PID: 701 at drivers/scsi/scsi_lib.c:3047 scsi_device_quiesce+0x4b/0xd0
-Workqueue: events_unbound async_run_entry_fn
-RIP: 0010:scsi_device_quiesce+0x4b/0xd0
-Call Trace:
- scsi_bus_suspend_common+0x71/0xe0
- scsi_bus_freeze+0x15/0x20
- dpm_run_callback+0x88/0x360
- __device_suspend+0x1c4/0x840
- async_suspend+0x1f/0xb0
- async_run_entry_fn+0x6e/0x2c0
- process_one_work+0x4ae/0xa20
- worker_thread+0x63/0x5a0
- kthread+0x1cf/0x1f0
- ret_from_fork+0x24/0x30
+Evan,
 
-Fixes: cd84a62e0078 ("block, scsi: Change the preempt-only flag into a counter")
-Cc: Lee Duncan <lduncan@suse.com>
-Cc: Hannes Reinecke <hare@suse.com>
-Cc: Luis Chamberlain <mcgrof@kernel.org>
-Cc: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Dan Williams <dan.j.williams@intel.com>
-Cc: stable@vger.kernel.org
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/scsi/scsi_lib.c    | 15 ++++++---------
- include/scsi/scsi_device.h |  1 -
- 2 files changed, 6 insertions(+), 10 deletions(-)
+> With commit 10e5e37581fc ("scsi: ufs: Add clock ungating to a separate
+> workqueue"), clock gating work was moved to a separate work queue with
+> WQ_MEM_RECLAIM set, since clock gating could occur from a memory
+> reclaim context. Unfortunately, clk_gating.gate_work was left queued
+> via schedule_delayed_work, which is a system workqueue that does not
+> have WQ_MEM_RECLAIM set.
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 7db3c5fae469..6c18a61176e5 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -3052,11 +3052,12 @@ scsi_device_quiesce(struct scsi_device *sdev)
- 	int err;
- 
- 	/*
--	 * It is allowed to call scsi_device_quiesce() multiple times from
--	 * the same context but concurrent scsi_device_quiesce() calls are
--	 * not allowed.
-+	 * Since all scsi_device_quiesce() and scsi_device_resume() calls
-+	 * are serialized it is safe here to check the device state without
-+	 * holding the SCSI device state mutex.
- 	 */
--	WARN_ON_ONCE(sdev->quiesced_by && sdev->quiesced_by != current);
-+	if (sdev->sdev_state == SDEV_QUIESCE)
-+		return 0;
- 
- 	blk_set_preempt_only(q);
- 
-@@ -3072,9 +3073,7 @@ scsi_device_quiesce(struct scsi_device *sdev)
- 
- 	mutex_lock(&sdev->state_mutex);
- 	err = scsi_device_set_state(sdev, SDEV_QUIESCE);
--	if (err == 0)
--		sdev->quiesced_by = current;
--	else
-+	if (err)
- 		blk_clear_preempt_only(q);
- 	mutex_unlock(&sdev->state_mutex);
- 
-@@ -3098,8 +3097,6 @@ void scsi_device_resume(struct scsi_device *sdev)
- 	 * device deleted during suspend)
- 	 */
- 	mutex_lock(&sdev->state_mutex);
--	WARN_ON_ONCE(!sdev->quiesced_by);
--	sdev->quiesced_by = NULL;
- 	blk_clear_preempt_only(sdev->request_queue);
- 	if (sdev->sdev_state == SDEV_QUIESCE)
- 		scsi_device_set_state(sdev, SDEV_RUNNING);
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index 202f4d6a4342..ef86c8adc5d5 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -226,7 +226,6 @@ struct scsi_device {
- 	unsigned char		access_state;
- 	struct mutex		state_mutex;
- 	enum scsi_device_state sdev_state;
--	struct task_struct	*quiesced_by;
- 	unsigned long		sdev_data[0];
- } __attribute__((aligned(sizeof(unsigned long))));
- 
+Applied to 4.20/scsi-queue, thanks!
+
 -- 
-2.19.1.568.g152ad8e336-goog
+Martin K. Petersen	Oracle Linux Engineering
