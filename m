@@ -1,38 +1,39 @@
-From: Rob Herring <robh@kernel.org>
-Subject: Re: [PATCH V15 1/2] scsi: ufs: set the device reference clock setting
-Date: Thu, 18 Oct 2018 09:30:21 -0500
-Message-ID: <20181018143021.GA18795@bogus>
-References: <1539680382-31136-1-git-send-email-sayalil@codeaurora.org>
- <1539680382-31136-2-git-send-email-sayalil@codeaurora.org>
+From: Sabyasachi Gupta <sabyasachi.linux@gmail.com>
+Subject: [PATCH] scsi/mvsas/mv_sas.c: Use dma_pool_zalloc
+Date: Thu, 18 Oct 2018 21:36:26 +0530
+Message-ID: <5bc8af85.1c69fb81.3eebc.a22b@mx.google.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1539680382-31136-2-git-send-email-sayalil@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Sayali Lokhande <sayalil@codeaurora.org>
-Cc: subhashj@codeaurora.org, cang@codeaurora.org, vivek.gautam@codeaurora.org, rnayak@codeaurora.org, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, asutoshd@codeaurora.org, evgreen@chromium.org, riteshh@codeaurora.org, stummala@codeaurora.org, adrian.hunter@intel.com, jlbec@evilplan.org, linux-scsi@vger.kernel.org, Mark Rutland <mark.rutland@arm.com>, Mathieu Malaterre <malat@debian.org>, "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" <devicetree@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, keescook@chromium.org, john.garry@huawei.com, jinpu.wang@profitbricks.com
+Cc: jrdr.linux@gmail.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, brajeswar.linux@gmail.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Oct 16, 2018 at 02:29:41PM +0530, Sayali Lokhande wrote:
-> From: Subhash Jadavani <subhashj@codeaurora.org>
-> 
-> UFS host supplies the reference clock to UFS device and UFS device
-> specification allows host to provide one of the 4 frequencies (19.2 MHz,
-> 26 MHz, 38.4 MHz, 52 MHz) for reference clock. Host should set the
-> device reference clock frequency setting in the device based on what
-> frequency it is supplying to UFS device.
-> 
-> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
-> Signed-off-by: Can Guo <cang@codeaurora.org>
-> Signed-off-by: Sayali Lokhande <sayalil@codeaurora.org>
-> Reviewed-by: Evan Green <evgreen@chromium.org>
-> ---
->  .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      |  6 ++
+Replaced dma_pool_alloc + memset with dma_pool_zalloc
+Signed-off-by: Sabyasachi Gupta <sabyasachi.linux@gmail.com>
+---
+ drivers/scsi/mvsas/mv_sas.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-Acked-by: Rob Herring <robh@kernel.org>
-
->  drivers/scsi/ufs/ufs.h                             | 14 ++++
->  drivers/scsi/ufs/ufshcd.c                          | 83 ++++++++++++++++++++++
->  drivers/scsi/ufs/ufshcd.h                          |  2 +
->  4 files changed, 105 insertions(+)
+diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
+index cff43bd..d00d37d 100644
+--- a/drivers/scsi/mvsas/mv_sas.c
++++ b/drivers/scsi/mvsas/mv_sas.c
+@@ -790,12 +790,11 @@ static int mvs_task_prep(struct sas_task *task, struct mvs_info *mvi, int is_tmf
+ 	slot->n_elem = n_elem;
+ 	slot->slot_tag = tag;
+ 
+-	slot->buf = dma_pool_alloc(mvi->dma_pool, GFP_ATOMIC, &slot->buf_dma);
++	slot->buf = dma_pool_zalloc(mvi->dma_pool, GFP_ATOMIC, &slot->buf_dma);
+ 	if (!slot->buf) {
+ 		rc = -ENOMEM;
+ 		goto err_out_tag;
+ 	}
+-	memset(slot->buf, 0, MVS_SLOT_BUF_SZ);
+ 
+ 	tei.task = task;
+ 	tei.hdr = &mvi->slot[tag];
+-- 
+2.7.4
