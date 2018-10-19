@@ -1,35 +1,35 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: move bus (PCI, PCMCIA, EISA, rapdio) config to drivers/ v2
-Date: Fri, 19 Oct 2018 14:01:59 +0200
-Message-ID: <20181019120159.GA14677@lst.de>
-References: <20181017080201.10866-1-hch@lst.de> <CAMuHMdWMtxxu8iivcnT=uWTMHsp=iSq_QzXqDWQut5OHwTU8Sg@mail.gmail.com> <20181019070001.GA30556@lst.de> <CAMuHMdXLug_T4onn23JormmYZXDWVnEFYaoMzA90bpGFvk6Eow@mail.gmail.com> <20181019071057.GA31656@lst.de> <CAMuHMdXqPNOwcjWVmH08YSfZopc0pWLUj-r0s6g=q0oUdqWhWw@mail.gmail.com>
+Subject: move bus (PCI, PCMCIA, EISA, rapdio) config to drivers/ v3
+Date: Fri, 19 Oct 2018 14:09:43 +0200
+Message-ID: <20181019120952.32763-1-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAMuHMdXqPNOwcjWVmH08YSfZopc0pWLUj-r0s6g=q0oUdqWhWw@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Christoph Hellwig <hch@lst.de>, Masahiro Yamada <yamada.masahiro@socionext.com>, Matt Porter <mporter@kernel.crashing.org>, Alex Bounine <alex.bou9@gmail.com>, Dominik Brodowski <linux@dominikbrodowski.net>, linux-kbuild <linux-kbuild@vger.kernel.org>, linux-pci <linux-pci@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>, Linux-Arch <linux-arch@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
+To: Masahiro Yamada <yamada.masahiro@socionext.com>
+Cc: Matt Porter <mporter@kernel.crashing.org>, Alexandre Bounine <alex.bou9@gmail.com>, Dominik Brodowski <linux@dominikbrodowski.net>, linux-kbuild@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Oct 19, 2018 at 09:22:08AM +0200, Geert Uytterhoeven wrote:
-> Hi Christoph,
-> 
-> On Fri, Oct 19, 2018 at 9:10 AM Christoph Hellwig <hch@lst.de> wrote:
-> > On Fri, Oct 19, 2018 at 09:07:51AM +0200, Geert Uytterhoeven wrote:
-> > > Without this:
-> > >   - It's hard to visually match your untagged cover letter with the
-> > > actual patches,
-> > >   - Your individual patches lack the version info, so people cannot see which
-> > >     version review comments in an email reply apply to.
-> >
-> > All of that is trivially solved by mail threading.
-> 
-> You forgot to answer this question:
-> 
-> | Can you please clarify what exactly that would mess up?
+Hi all,
 
-It makes the already limited space in the subject line even shorted
-(or harder to read depending on which way you go) for absolutely not
-good reason.
+currently every architecture that wants to provide on of the common
+periphal busses needs to add some boilerplate code and include the
+right Kconfig files.   This series instead just selects the presence
+(when needed) and then handles everything in the bus-specific
+Kconfig file under drivers/.
+
+Changes since v2:
+ - depend on HAVE_PCI for PCIe endpoint code
+ - fix some commit message typos
+ - remove CONFIG_PCI from xtensa iss defconfig
+ - drop EISA support from arm
+ - clean up EISA selection for alpha
+
+Changes since v1:
+ - rename all HAS_* Kconfig symbols to HAVE_*
+ - drop the CONFIG_PCI_QSPAN option entirely
+ - drop duplicate select from powerpc
+ - restore missing selection of PCI_MSI for riscv
+ - update x86 and riscv defconfigs to include PCI
+ - actually inclue drivers/eisa/Kconfig
+ - adjust some captilizations
