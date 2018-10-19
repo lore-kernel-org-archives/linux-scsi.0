@@ -1,49 +1,62 @@
-From: Masahiro Yamada <yamada.masahiro@socionext.com>
-Subject: Re: [PATCH 6/9] PCI: consolidate PCI config entry in drivers/pci
-Date: Fri, 19 Oct 2018 21:58:46 +0900
-Message-ID: <CAK7LNATZ8LagrTrTae_QCQbSuTW7_y6sDrdTHfTyONPrsYDs4A@mail.gmail.com>
-References: <20181019120952.32763-1-hch@lst.de> <20181019120952.32763-7-hch@lst.de>
- <20181019122228.GJ30658@n2100.armlinux.org.uk>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: -Wswitch Clang warnings in drivers/scsi
+Date: Fri, 19 Oct 2018 06:55:29 -0700
+Message-ID: <da70bb3c-3474-7fa5-032c-2abad01deb9d@acm.org>
+References: <20181004183047.GA1885@flashbox>
+ <1538678069.230807.6.camel@acm.org> <20181004184540.GA17513@flashbox>
+ <CAKwvOd=FrGZ-oh5Q9RGQD2GNORZrqwAZUzNYN+hTKkp5wrfrqw@mail.gmail.com>
+ <20181005065754.GA18637@flashbox> <1539024429.64374.40.camel@acm.org>
+ <20181019065104.GA27170@flashbox>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20181019122228.GJ30658@n2100.armlinux.org.uk>
+In-Reply-To: <20181019065104.GA27170@flashbox>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Russell King <linux@armlinux.org.uk>
-Cc: Christoph Hellwig <hch@lst.de>, linux-arch <linux-arch@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Kbuild mailing list <linux-kbuild@vger.kernel.org>, linux-pci@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Dominik Brodowski <linux@dominikbrodowski.net>, Alex Bounine <alex.bou9@gmail.com>, mporter@kernel.crashing.org, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
+To: Nathan Chancellor <natechancellor@gmail.com>
+Cc: Nick Desaulniers <ndesaulniers@google.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Oct 19, 2018 at 9:23 PM Russell King - ARM Linux
-<linux@armlinux.org.uk> wrote:
+On 10/18/18 11:51 PM, Nathan Chancellor wrote:
+> On Mon, Oct 08, 2018 at 11:47:09AM -0700, Bart Van Assche wrote:
+>>  From the user space header <sys/ioctl.h>:
+>>
+>> extern int ioctl (int __fd, unsigned long int __request, ...) __THROW;
+>>
+>>  From the kernel header <linux/fs.h>:
+>>
+>> 	long (*unlocked_ioctl) (struct file *, unsigned int, unsigned long);
+>> 	long (*compat_ioctl) (struct file *, unsigned int, unsigned long);
+>>
+>> Why has the second argument been declared as "unsigned long" in the glibc
+>> headers and as "unsigned int" in the kernel headers? That's not clear to me.
+>>
+>> Bart.
+>>
+> 
+> Hi Bart,
+> 
+> Sorry it took me so long to reply, somehow this email got lost in my
+> inbox...
+> 
+> Unfortuntely, I am unsure why there is that discrepency between the
+> headers. I tried to do some research but I didn't come up with much.
+> 
+> However, I did test changing the type of ioctl/compat_ioctl's cmd
+> parameter to 'unsigned int' and came up with the following diff (rather
+> large so sharing via a gist instead of pasting here):
+> 
+> https://gist.github.com/nathanchance/8febc92735f4228574cb0464520f0f6f
+> 
+> I'll obviously draft up a proper commit message before formally sending
+> but I can address any major concerns before that happens. I checked
+> every single ioctl for a negative value and there aren't any so I think
+> this change makes sense to fix this warning.
 
-> > index a68b34183107..b185794549be 100644
-> > --- a/arch/arm/mach-pxa/Kconfig
-> > +++ b/arch/arm/mach-pxa/Kconfig
-> > @@ -125,7 +125,7 @@ config MACH_ARMCORE
-> >       bool "CompuLab CM-X255/CM-X270 modules"
-> >       select ARCH_HAS_DMA_SET_COHERENT_MASK if PCI
-> >       select IWMMXT
-> > -     select MIGHT_HAVE_PCI
-> > +     select HAVE_PCI
-> >       select NEED_MACH_IO_H if PCI
-> >       select PXA25x
-> >       select PXA27x
->
-> This is wrong.  "MIGHT_HAVE_PCI" is _not_ the same as "HAVE_PCI" - we
-> have a bunch of platforms that mandatorily have PCI and these select
-> PCI directly.  "MIGHT_HAVE_PCI" controls the _visibility_ of the PCI
-> menu option, but does not prevent it being selected.  Your patch will
-> cause Kconfig to complain for those which mandatorily have PCI but
-> do not set HAVE_PCI.
+Hi Nathan,
 
+Since that change makes the SCSI code more consistent with the rest of 
+the Linux kernel, I'm in favor of making that change.
 
-Good catch!
-But, adding a bunch of 'select HAVE_PCI' along with 'select PCI' is ugly.
-
-Do you have any suggestion?
-
-How about letting CONFIG_ARM to select HAVE_PCI ?
-
--- 
-Best Regards
-Masahiro Yamada
+Bart.
