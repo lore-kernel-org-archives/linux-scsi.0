@@ -1,76 +1,71 @@
-From: "chenxiang (M)" <chenxiang66@hisilicon.com>
-Subject: Re: [PATCH v2] scsi: hisi_sas: Fix NULL pointer dereference
-Date: Fri, 19 Oct 2018 08:54:04 +0800
-Message-ID: <8bf37d22-8416-2b0b-1049-9c93b73ffc4d@hisilicon.com>
-References: <20181018165939.GA26491@embeddedor.com>
+From: Masahiro Yamada <yamada.masahiro@socionext.com>
+Subject: Re: [PATCH 7/8] eisa: consolidate EISA Kconfig entry in drivers/eisa
+Date: Fri, 19 Oct 2018 13:46:50 +0900
+Message-ID: <CAK7LNAT0pzpMZC+X5KiofPCUH89hr716WCKQkNYronQa3byT9w@mail.gmail.com>
+References: <20181017080201.10866-1-hch@lst.de> <20181017080201.10866-8-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20181018165939.GA26491@embeddedor.com>
+In-Reply-To: <20181017080201.10866-8-hch@lst.de>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>, John Garry <john.garry@huawei.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: mporter@kernel.crashing.org, Alex Bounine <alex.bou9@gmail.com>, Dominik Brodowski <linux@dominikbrodowski.net>, Linux Kbuild mailing list <linux-kbuild@vger.kernel.org>, linux-pci@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, linux-arch <linux-arch@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
 List-Id: linux-scsi@vger.kernel.org
 
-在 2018/10/19 0:59, Gustavo A. R. Silva 写道:
-> There is a NULL pointer dereference in case *slot* happens to
-> be NULL at lines 1053 and 1878:
+On Wed, Oct 17, 2018 at 5:03 PM Christoph Hellwig <hch@lst.de> wrote:
 >
-> struct hisi_sas_cq *cq =
-> 	&hisi_hba->cq[slot->dlvry_queue];
+> Let architectures opt into EISA support by selecting HAS_EISA and
+> handle everything else in drivers/eisa.
 >
-> Notice that *slot* is being NULL checked at lines 1057 and 1881:
-> if (slot), which implies it may be NULL.
->
-> Fix this by placing the declaration and definition of variable cq,
-> which contains the pointer dereference slot->dlvry_queue, after
-> slot has been properly NULL checked.
->
-> Addresses-Coverity-ID: 1474515 ("Dereference before null check")
-> Addresses-Coverity-ID: 1474520 ("Dereference before null check")
-> Fixes: 584f53fe5f52 ("scsi: hisi_sas: Fix the race between IO completion and timeout for SMP/internal IO")
-> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
-
-Reviewed-by: Xiang Chen <chenxiang66@hisilicon.com>
-Thanks!
-
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Acked-by: Thomas Gleixner <tglx@linutronix.de>
 > ---
-> Changes in v2:
->   - Fix another instance of the same issue at line 1053.
->   - Update commit log.
+
+
+> index 60e37b9a715d..c90a1a4d6079 100644
+> --- a/arch/arm/Kconfig
+> +++ b/arch/arm/Kconfig
+> @@ -59,6 +59,7 @@ config ARM
+>         select HAVE_ARCH_TRACEHOOK
+>         select HAVE_ARM_SMCCC if CPU_V7
+>         select HAVE_EBPF_JIT if !CPU_ENDIAN_BE32
+> +       select HAVE_EISA
+
+I doubt this.
+
+arch/arm/Kconfig previously did not include
+driver/eisa/Kconfig.
+
+No ARM platform enabled CONFIG_EISA either.
+
+
+>         select HAVE_CONTEXT_TRACKING
+>         select HAVE_C_RECORDMCOUNT
+>         select HAVE_DEBUG_KMEMLEAK
+> @@ -162,21 +163,6 @@ config HAVE_PROC_CPU
+>  config NO_IOPORT_MAP
+>         bool
 >
->   drivers/scsi/hisi_sas/hisi_sas_main.c | 8 ++++----
->   1 file changed, 4 insertions(+), 4 deletions(-)
+> -config EISA
+> -       bool
+> -       ---help---
+> -         The Extended Industry Standard Architecture (EISA) bus was
+> -         developed as an open alternative to the IBM MicroChannel bus.
+> -
+> -         The EISA bus provided some of the features of the IBM MicroChannel
+> -         bus while maintaining backward compatibility with cards made for
+> -         the older ISA bus.  The EISA bus saw limited use between 1988 and
+> -         1995 when it was made obsolete by the PCI bus.
+> -
+> -         Say Y here if you are building a kernel for an EISA-based machine.
+> -
+> -         Otherwise, say N.
+> -
+>  config SBUS
+>         bool
 >
-> diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-> index 2e5eaf1..b3f01d5 100644
-> --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-> +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-> @@ -1050,11 +1050,11 @@ static int hisi_sas_exec_internal_tmf_task(struct domain_device *device,
->   		if ((task->task_state_flags & SAS_TASK_STATE_ABORTED)) {
->   			if (!(task->task_state_flags & SAS_TASK_STATE_DONE)) {
->   				struct hisi_sas_slot *slot = task->lldd_task;
-> -				struct hisi_sas_cq *cq =
-> -					&hisi_hba->cq[slot->dlvry_queue];
->   
->   				dev_err(dev, "abort tmf: TMF task timeout and not done\n");
->   				if (slot) {
-> +					struct hisi_sas_cq *cq =
-> +					       &hisi_hba->cq[slot->dlvry_queue];
->   					/*
->   					 * flush tasklet to avoid free'ing task
->   					 * before using task in IO completion
-> @@ -1875,10 +1875,10 @@ hisi_sas_internal_task_abort(struct hisi_hba *hisi_hba,
->   	if ((task->task_state_flags & SAS_TASK_STATE_ABORTED)) {
->   		if (!(task->task_state_flags & SAS_TASK_STATE_DONE)) {
->   			struct hisi_sas_slot *slot = task->lldd_task;
-> -			struct hisi_sas_cq *cq =
-> -				&hisi_hba->cq[slot->dlvry_queue];
->   
->   			if (slot) {
-> +				struct hisi_sas_cq *cq =
-> +					&hisi_hba->cq[slot->dlvry_queue];
->   				/*
->   				 * flush tasklet to avoid free'ing task
->   				 * before using task in IO completion
+
+
+-- 
+Best Regards
+Masahiro Yamada
