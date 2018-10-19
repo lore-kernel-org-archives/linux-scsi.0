@@ -1,86 +1,48 @@
 From: Masahiro Yamada <yamada.masahiro@socionext.com>
-Subject: Re: [PATCH 2/9] arm: remove EISA kconfig option
-Date: Fri, 19 Oct 2018 21:56:34 +0900
-Message-ID: <CAK7LNATc54ZMaKLzabW=NqCQ+WSr-3C7PNAGL6OmOnQf_kgOyQ@mail.gmail.com>
-References: <20181019120952.32763-1-hch@lst.de> <20181019120952.32763-3-hch@lst.de>
+Subject: Re: [PATCH 6/9] PCI: consolidate PCI config entry in drivers/pci
+Date: Fri, 19 Oct 2018 21:58:46 +0900
+Message-ID: <CAK7LNATZ8LagrTrTae_QCQbSuTW7_y6sDrdTHfTyONPrsYDs4A@mail.gmail.com>
+References: <20181019120952.32763-1-hch@lst.de> <20181019120952.32763-7-hch@lst.de>
+ <20181019122228.GJ30658@n2100.armlinux.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20181019120952.32763-3-hch@lst.de>
+In-Reply-To: <20181019122228.GJ30658@n2100.armlinux.org.uk>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: mporter@kernel.crashing.org, Alex Bounine <alex.bou9@gmail.com>, Dominik Brodowski <linux@dominikbrodowski.net>, Linux Kbuild mailing list <linux-kbuild@vger.kernel.org>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, linux-pci@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, linux-arch <linux-arch@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>, Russell King <linux@armlinux.org.uk>
+To: Russell King <linux@armlinux.org.uk>
+Cc: Christoph Hellwig <hch@lst.de>, linux-arch <linux-arch@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Kbuild mailing list <linux-kbuild@vger.kernel.org>, linux-pci@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Dominik Brodowski <linux@dominikbrodowski.net>, Alex Bounine <alex.bou9@gmail.com>, mporter@kernel.crashing.org, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Oct 19, 2018 at 9:10 PM Christoph Hellwig <hch@lst.de> wrote:
+On Fri, Oct 19, 2018 at 9:23 PM Russell King - ARM Linux
+<linux@armlinux.org.uk> wrote:
+
+> > index a68b34183107..b185794549be 100644
+> > --- a/arch/arm/mach-pxa/Kconfig
+> > +++ b/arch/arm/mach-pxa/Kconfig
+> > @@ -125,7 +125,7 @@ config MACH_ARMCORE
+> >       bool "CompuLab CM-X255/CM-X270 modules"
+> >       select ARCH_HAS_DMA_SET_COHERENT_MASK if PCI
+> >       select IWMMXT
+> > -     select MIGHT_HAVE_PCI
+> > +     select HAVE_PCI
+> >       select NEED_MACH_IO_H if PCI
+> >       select PXA25x
+> >       select PXA27x
 >
-> No arm config enables EISA, and arm does not include drivers/eisa/Kconfig
-> which provides support for things like PCI to EISA bridges, so it is most
-> likely dead.
->
-> If this is wrong we will be able to resurrect it easily by selecting
-> HAVE_EISA for the right arm configs after this series.
-
-What is your concern?
-
-This absolutely looks dead to me.
+> This is wrong.  "MIGHT_HAVE_PCI" is _not_ the same as "HAVE_PCI" - we
+> have a bunch of platforms that mandatorily have PCI and these select
+> PCI directly.  "MIGHT_HAVE_PCI" controls the _visibility_ of the PCI
+> menu option, but does not prevent it being selected.  Your patch will
+> cause Kconfig to complain for those which mandatorily have PCI but
+> do not set HAVE_PCI.
 
 
-> Suggested-by: Masahiro Yamada <yamada.masahiro@socionext.com>
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  arch/arm/Kconfig | 15 ---------------
->  1 file changed, 15 deletions(-)
->
-> diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
-> index e8cd55a5b04c..e33735ce1c14 100644
-> --- a/arch/arm/Kconfig
-> +++ b/arch/arm/Kconfig
-> @@ -165,21 +165,6 @@ config HAVE_PROC_CPU
->  config NO_IOPORT_MAP
->         bool
->
-> -config EISA
-> -       bool
+Good catch!
+But, adding a bunch of 'select HAVE_PCI' along with 'select PCI' is ugly.
 
-There is no prompt for this symbol.
-Hence, there is no way for a user to enable this directly.
+Do you have any suggestion?
 
-'select EISA' is the only way to enable it.
-
-git grep 'select EISA'
-gave no hit.
-
-So, we can say it is dead.
-
-
-
-
-
-> -       ---help---
-> -         The Extended Industry Standard Architecture (EISA) bus was
-> -         developed as an open alternative to the IBM MicroChannel bus.
-> -
-> -         The EISA bus provided some of the features of the IBM MicroChannel
-> -         bus while maintaining backward compatibility with cards made for
-> -         the older ISA bus.  The EISA bus saw limited use between 1988 and
-> -         1995 when it was made obsolete by the PCI bus.
-> -
-> -         Say Y here if you are building a kernel for an EISA-based machine.
-> -
-> -         Otherwise, say N.
-> -
->  config SBUS
->         bool
-
-
-
-I guess the situation is the same as powerpc.
-
-The difference between arm and powerpc is the presence of help.
-
-You fold the powerpc change in 9/9.
-
+How about letting CONFIG_ARM to select HAVE_PCI ?
 
 -- 
 Best Regards
