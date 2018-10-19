@@ -1,25 +1,31 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: move bus (PCI, PCMCIA, EISA, rapdio) config to drivers/ v2
-Date: Fri, 19 Oct 2018 09:00:01 +0200
-Message-ID: <20181019070001.GA30556@lst.de>
-References: <20181017080201.10866-1-hch@lst.de> <CAMuHMdWMtxxu8iivcnT=uWTMHsp=iSq_QzXqDWQut5OHwTU8Sg@mail.gmail.com>
+Subject: Re: [PATCH 4/8] PCI: consolidate PCI config entry in drivers/pci
+Date: Fri, 19 Oct 2018 09:02:24 +0200
+Message-ID: <20181019070224.GB30556@lst.de>
+References: <20181017080201.10866-1-hch@lst.de> <20181017080201.10866-5-hch@lst.de> <CAK7LNASJaRrut2neRa92CudohW4A-2=GHMzgEpOzT97VdGuhng@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <CAMuHMdWMtxxu8iivcnT=uWTMHsp=iSq_QzXqDWQut5OHwTU8Sg@mail.gmail.com>
+In-Reply-To: <CAK7LNASJaRrut2neRa92CudohW4A-2=GHMzgEpOzT97VdGuhng@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Christoph Hellwig <hch@lst.de>, Masahiro Yamada <yamada.masahiro@socionext.com>, Matt Porter <mporter@kernel.crashing.org>, Alex Bounine <alex.bou9@gmail.com>, Dominik Brodowski <linux@dominikbrodowski.net>, linux-kbuild <linux-kbuild@vger.kernel.org>, linux-pci <linux-pci@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>, Linux-Arch <linux-arch@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
+To: Masahiro Yamada <yamada.masahiro@socionext.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-pci@vger.kernel.org, mporter@kernel.crashing.org, Alex Bounine <alex.bou9@gmail.com>, Dominik Brodowski <linux@dominikbrodowski.net>, Linux Kbuild mailing list <linux-kbuild@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-arch <linux-arch@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Oct 17, 2018 at 10:30:49AM +0200, Geert Uytterhoeven wrote:
-> Please use "git format-patch -v<N> --cover" to prepare patch series
-> for sending with git-send-email.
-> 
->   "-v<N>" to prefix all patches with version number <N>,
->   "--cover" to have a "[PATCH 0/<M>]" prefix in the cover letter.
+On Fri, Oct 19, 2018 at 02:07:04PM +0900, Masahiro Yamada wrote:
+> We could add 'depends on HAVE_PCI' or something
+> to guard it to avoid changing the logic.
 
-We had that discussion before and I strongly disagree with messing
-up the subject lines like that.  The git-send-email defaults are
-perfectly fine.
+I guess that makes sense.
+
+> config PCI_ENDPOINT
+>         bool "PCI Endpoint Support"
+>         depends on HAVE_PCI     # Is this correct ??
+>         depends on HAS_DMA
+> 
+> 
+> or better to have 'depends on PCI' ?
+
+It does not depend on the normal PCI support, so I don't think this
+is the right thing to do.
