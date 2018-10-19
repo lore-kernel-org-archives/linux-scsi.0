@@ -1,108 +1,76 @@
-From: Nathan Chancellor <natechancellor@gmail.com>
-Subject: [PATCH] scsi: 3w-{sas,9xxx}: Use unsigned char for cdb
-Date: Thu, 18 Oct 2018 14:55:41 -0700
-Message-ID: <20181018215541.4768-1-natechancellor@gmail.com>
+From: "chenxiang (M)" <chenxiang66@hisilicon.com>
+Subject: Re: [PATCH v2] scsi: hisi_sas: Fix NULL pointer dereference
+Date: Fri, 19 Oct 2018 08:54:04 +0800
+Message-ID: <8bf37d22-8416-2b0b-1049-9c93b73ffc4d@hisilicon.com>
+References: <20181018165939.GA26491@embeddedor.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20181018165939.GA26491@embeddedor.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Adam Radford <aradford@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Nathan Chancellor <natechancellor@gmail.com>
+To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>, John Garry <john.garry@huawei.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Clang warns a few times:
+在 2018/10/19 0:59, Gustavo A. R. Silva 写道:
+> There is a NULL pointer dereference in case *slot* happens to
+> be NULL at lines 1053 and 1878:
+>
+> struct hisi_sas_cq *cq =
+> 	&hisi_hba->cq[slot->dlvry_queue];
+>
+> Notice that *slot* is being NULL checked at lines 1057 and 1881:
+> if (slot), which implies it may be NULL.
+>
+> Fix this by placing the declaration and definition of variable cq,
+> which contains the pointer dereference slot->dlvry_queue, after
+> slot has been properly NULL checked.
+>
+> Addresses-Coverity-ID: 1474515 ("Dereference before null check")
+> Addresses-Coverity-ID: 1474520 ("Dereference before null check")
+> Fixes: 584f53fe5f52 ("scsi: hisi_sas: Fix the race between IO completion and timeout for SMP/internal IO")
+> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 
-drivers/scsi/3w-sas.c:386:11: warning: implicit conversion from 'int' to
-'char' changes value from 128 to -128 [-Wconstant-conversion]
-        cdb[4] = TW_ALLOCATION_LENGTH; /* allocation length */
-               ~ ^~~~~~~~~~~~~~~~~~~~
+Reviewed-by: Xiang Chen <chenxiang66@hisilicon.com>
+Thanks!
 
-Update cdb's type to unsigned char, which matches the type of the cdb
-member in struct TW_Command_Apache.
-
-Link: https://github.com/ClangBuiltLinux/linux/issues/158
-Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
----
- drivers/scsi/3w-9xxx.c | 12 ++++++++----
- drivers/scsi/3w-sas.c  |  8 +++++---
- 2 files changed, 13 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/scsi/3w-9xxx.c b/drivers/scsi/3w-9xxx.c
-index 05293babb031..2d655a97b959 100644
---- a/drivers/scsi/3w-9xxx.c
-+++ b/drivers/scsi/3w-9xxx.c
-@@ -143,7 +143,9 @@ static int twa_poll_status_gone(TW_Device_Extension *tw_dev, u32 flag, int secon
- static int twa_post_command_packet(TW_Device_Extension *tw_dev, int request_id, char internal);
- static int twa_reset_device_extension(TW_Device_Extension *tw_dev);
- static int twa_reset_sequence(TW_Device_Extension *tw_dev, int soft_reset);
--static int twa_scsiop_execute_scsi(TW_Device_Extension *tw_dev, int request_id, char *cdb, int use_sg, TW_SG_Entry *sglistarg);
-+static int twa_scsiop_execute_scsi(TW_Device_Extension *tw_dev, int request_id,
-+				   unsigned char *cdb, int use_sg,
-+				   TW_SG_Entry *sglistarg);
- static void twa_scsiop_execute_scsi_complete(TW_Device_Extension *tw_dev, int request_id);
- static char *twa_string_lookup(twa_message_type *table, unsigned int aen_code);
- 
-@@ -278,7 +280,7 @@ static int twa_aen_complete(TW_Device_Extension *tw_dev, int request_id)
- static int twa_aen_drain_queue(TW_Device_Extension *tw_dev, int no_check_reset)
- {
- 	int request_id = 0;
--	char cdb[TW_MAX_CDB_LEN];
-+	unsigned char cdb[TW_MAX_CDB_LEN];
- 	TW_SG_Entry sglist[1];
- 	int finished = 0, count = 0;
- 	TW_Command_Full *full_command_packet;
-@@ -423,7 +425,7 @@ static void twa_aen_queue_event(TW_Device_Extension *tw_dev, TW_Command_Apache_H
- /* This function will read the aen queue from the isr */
- static int twa_aen_read_queue(TW_Device_Extension *tw_dev, int request_id)
- {
--	char cdb[TW_MAX_CDB_LEN];
-+	unsigned char cdb[TW_MAX_CDB_LEN];
- 	TW_SG_Entry sglist[1];
- 	TW_Command_Full *full_command_packet;
- 	int retval = 1;
-@@ -1798,7 +1800,9 @@ static int twa_scsi_queue_lck(struct scsi_cmnd *SCpnt, void (*done)(struct scsi_
- static DEF_SCSI_QCMD(twa_scsi_queue)
- 
- /* This function hands scsi cdb's to the firmware */
--static int twa_scsiop_execute_scsi(TW_Device_Extension *tw_dev, int request_id, char *cdb, int use_sg, TW_SG_Entry *sglistarg)
-+static int twa_scsiop_execute_scsi(TW_Device_Extension *tw_dev, int request_id,
-+				   unsigned char *cdb, int use_sg,
-+				   TW_SG_Entry *sglistarg)
- {
- 	TW_Command_Full *full_command_packet;
- 	TW_Command_Apache *command_packet;
-diff --git a/drivers/scsi/3w-sas.c b/drivers/scsi/3w-sas.c
-index 266bdac75304..480cf82700e9 100644
---- a/drivers/scsi/3w-sas.c
-+++ b/drivers/scsi/3w-sas.c
-@@ -287,7 +287,9 @@ static int twl_post_command_packet(TW_Device_Extension *tw_dev, int request_id)
- } /* End twl_post_command_packet() */
- 
- /* This function hands scsi cdb's to the firmware */
--static int twl_scsiop_execute_scsi(TW_Device_Extension *tw_dev, int request_id, char *cdb, int use_sg, TW_SG_Entry_ISO *sglistarg)
-+static int twl_scsiop_execute_scsi(TW_Device_Extension *tw_dev, int request_id,
-+				   unsigned char *cdb, int use_sg,
-+				   TW_SG_Entry_ISO *sglistarg)
- {
- 	TW_Command_Full *full_command_packet;
- 	TW_Command_Apache *command_packet;
-@@ -372,7 +374,7 @@ static int twl_scsiop_execute_scsi(TW_Device_Extension *tw_dev, int request_id,
- /* This function will read the aen queue from the isr */
- static int twl_aen_read_queue(TW_Device_Extension *tw_dev, int request_id)
- {
--	char cdb[TW_MAX_CDB_LEN];
-+	unsigned char cdb[TW_MAX_CDB_LEN];
- 	TW_SG_Entry_ISO sglist[1];
- 	TW_Command_Full *full_command_packet;
- 	int retval = 1;
-@@ -554,7 +556,7 @@ static int twl_poll_response(TW_Device_Extension *tw_dev, int request_id, int se
- static int twl_aen_drain_queue(TW_Device_Extension *tw_dev, int no_check_reset)
- {
- 	int request_id = 0;
--	char cdb[TW_MAX_CDB_LEN];
-+	unsigned char cdb[TW_MAX_CDB_LEN];
- 	TW_SG_Entry_ISO sglist[1];
- 	int finished = 0, count = 0;
- 	TW_Command_Full *full_command_packet;
--- 
-2.19.1
+> ---
+> Changes in v2:
+>   - Fix another instance of the same issue at line 1053.
+>   - Update commit log.
+>
+>   drivers/scsi/hisi_sas/hisi_sas_main.c | 8 ++++----
+>   1 file changed, 4 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+> index 2e5eaf1..b3f01d5 100644
+> --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
+> +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+> @@ -1050,11 +1050,11 @@ static int hisi_sas_exec_internal_tmf_task(struct domain_device *device,
+>   		if ((task->task_state_flags & SAS_TASK_STATE_ABORTED)) {
+>   			if (!(task->task_state_flags & SAS_TASK_STATE_DONE)) {
+>   				struct hisi_sas_slot *slot = task->lldd_task;
+> -				struct hisi_sas_cq *cq =
+> -					&hisi_hba->cq[slot->dlvry_queue];
+>   
+>   				dev_err(dev, "abort tmf: TMF task timeout and not done\n");
+>   				if (slot) {
+> +					struct hisi_sas_cq *cq =
+> +					       &hisi_hba->cq[slot->dlvry_queue];
+>   					/*
+>   					 * flush tasklet to avoid free'ing task
+>   					 * before using task in IO completion
+> @@ -1875,10 +1875,10 @@ hisi_sas_internal_task_abort(struct hisi_hba *hisi_hba,
+>   	if ((task->task_state_flags & SAS_TASK_STATE_ABORTED)) {
+>   		if (!(task->task_state_flags & SAS_TASK_STATE_DONE)) {
+>   			struct hisi_sas_slot *slot = task->lldd_task;
+> -			struct hisi_sas_cq *cq =
+> -				&hisi_hba->cq[slot->dlvry_queue];
+>   
+>   			if (slot) {
+> +				struct hisi_sas_cq *cq =
+> +					&hisi_hba->cq[slot->dlvry_queue];
+>   				/*
+>   				 * flush tasklet to avoid free'ing task
+>   				 * before using task in IO completion
