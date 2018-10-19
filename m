@@ -1,62 +1,54 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: -Wswitch Clang warnings in drivers/scsi
-Date: Fri, 19 Oct 2018 06:55:29 -0700
-Message-ID: <da70bb3c-3474-7fa5-032c-2abad01deb9d@acm.org>
-References: <20181004183047.GA1885@flashbox>
- <1538678069.230807.6.camel@acm.org> <20181004184540.GA17513@flashbox>
- <CAKwvOd=FrGZ-oh5Q9RGQD2GNORZrqwAZUzNYN+hTKkp5wrfrqw@mail.gmail.com>
- <20181005065754.GA18637@flashbox> <1539024429.64374.40.camel@acm.org>
- <20181019065104.GA27170@flashbox>
+From: Josh Triplett <josh@joshtriplett.org>
+Subject: Re: [PATCH 5/9] powerpc: PCI_MSI needs PCI
+Date: Fri, 19 Oct 2018 08:10:23 -0700
+Message-ID: <20181019151019.GA5618@localhost>
+References: <20181019120952.32763-1-hch@lst.de>
+ <20181019120952.32763-6-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20181019065104.GA27170@flashbox>
-Content-Language: en-US
+Content-Disposition: inline
+In-Reply-To: <20181019120952.32763-6-hch@lst.de>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Nathan Chancellor <natechancellor@gmail.com>
-Cc: Nick Desaulniers <ndesaulniers@google.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Masahiro Yamada <yamada.masahiro@socionext.com>, Matt Porter <mporter@kernel.crashing.org>, Alexandre Bounine <alex.bou9@gmail.com>, Dominik Brodowski <linux@dominikbrodowski.net>, linux-kbuild@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 10/18/18 11:51 PM, Nathan Chancellor wrote:
-> On Mon, Oct 08, 2018 at 11:47:09AM -0700, Bart Van Assche wrote:
->>  From the user space header <sys/ioctl.h>:
->>
->> extern int ioctl (int __fd, unsigned long int __request, ...) __THROW;
->>
->>  From the kernel header <linux/fs.h>:
->>
->> 	long (*unlocked_ioctl) (struct file *, unsigned int, unsigned long);
->> 	long (*compat_ioctl) (struct file *, unsigned int, unsigned long);
->>
->> Why has the second argument been declared as "unsigned long" in the glibc
->> headers and as "unsigned int" in the kernel headers? That's not clear to me.
->>
->> Bart.
->>
-> 
-> Hi Bart,
-> 
-> Sorry it took me so long to reply, somehow this email got lost in my
-> inbox...
-> 
-> Unfortuntely, I am unsure why there is that discrepency between the
-> headers. I tried to do some research but I didn't come up with much.
-> 
-> However, I did test changing the type of ioctl/compat_ioctl's cmd
-> parameter to 'unsigned int' and came up with the following diff (rather
-> large so sharing via a gist instead of pasting here):
-> 
-> https://gist.github.com/nathanchance/8febc92735f4228574cb0464520f0f6f
-> 
-> I'll obviously draft up a proper commit message before formally sending
-> but I can address any major concerns before that happens. I checked
-> every single ioctl for a negative value and there aren't any so I think
-> this change makes sense to fix this warning.
+On Fri, Oct 19, 2018 at 02:09:48PM +0200, Christoph Hellwig wrote:
+> Various powerpc boards select the PCI_MSI config option without selecting
+> PCI, resulting in potentially not compilable configurations if the by
+> default enabled PCI option is disabled.  Explicitly select PCI to ensure
+> we always have valid configs.
+[...]
+> --- a/arch/powerpc/platforms/44x/Kconfig
+> +++ b/arch/powerpc/platforms/44x/Kconfig
+> @@ -24,6 +24,7 @@ config BLUESTONE
+>  	default n
+>  	select PPC44x_SIMPLE
+>  	select APM821xx
+> +	select PCI
+>  	select PCI_MSI
+>  	select PPC4xx_MSI
+>  	select PPC4xx_PCI_EXPRESS
+> @@ -78,6 +79,7 @@ config KATMAI
+>  	select 440SPe
+>  	select PCI
+>  	select PPC4xx_PCI_EXPRESS
+> +	select PCI
+>  	select PCI_MSI
 
-Hi Nathan,
+This case already had PCI selected a couple of lines above.
 
-Since that change makes the SCSI code more consistent with the rest of 
-the Linux kernel, I'm in favor of making that change.
-
-Bart.
+>  	select PPC4xx_MSI
+>  	help
+> @@ -219,6 +221,7 @@ config AKEBONO
+>  	select SWIOTLB
+>  	select 476FPE
+>  	select PPC4xx_PCI_EXPRESS
+> +	select PCI
+>  	select PCI_MSI
+>  	select PPC4xx_HSTA_MSI
+>  	select I2C
+> -- 
+> 2.19.1
+> 
