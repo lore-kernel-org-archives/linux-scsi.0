@@ -1,14 +1,14 @@
 From: adam radford <aradford@gmail.com>
 Subject: Re: [PATCH] scsi: 3w-{sas,9xxx}: Use unsigned char for cdb
-Date: Fri, 19 Oct 2018 13:59:45 -0700
-Message-ID: <CAHtARFESqN+3S+uy8pV40BFe0PZ96fDHL7WtRW3=cmtg24igzQ@mail.gmail.com>
+Date: Fri, 19 Oct 2018 14:03:51 -0700
+Message-ID: <CAHtARFFUNUty00qfmwdNQftc6HPpSDUthNfA96TO2BZpAP+OEg@mail.gmail.com>
 References: <20181018215541.4768-1-natechancellor@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20181018215541.4768-1-natechancellor@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: natechancellor@gmail.com
+To: Nathan Chancellor <natechancellor@gmail.com>
 Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
@@ -115,6 +115,6 @@ On Thu, Oct 18, 2018 at 2:55 PM Nathan Chancellor
 
 Looks ok.
 
-Signed-off-by: Adam Radford <aradford@gmail.com>
+Acked-by: Adam Radford <aradford@gmail.com>
 
 -Adam
