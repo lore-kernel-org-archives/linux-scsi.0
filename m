@@ -1,46 +1,41 @@
-From: Wenwen Wang <wang6495@umn.edu>
-Subject: [PATCH] scsi: isci: Fix a missing-check bug
-Date: Fri, 19 Oct 2018 13:20:43 -0500
-Message-ID: <1539973243-12774-1-git-send-email-wang6495@umn.edu>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH] scsi/ata: Use unsigned int for cmd's type in ioctls in
+ scsi_host_template
+Date: Fri, 19 Oct 2018 12:38:45 -0700
+Message-ID: <1539977925.81977.55.camel@acm.org>
+References: <20181019175714.444-1-natechancellor@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-7"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20181019175714.444-1-natechancellor@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Wenwen Wang <wang6495@umn.edu>
-Cc: Kangjie Lu <kjlu@umn.edu>, Intel SCU Linux support <intel-linux-scu@intel.com>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "open list:INTEL C600 SERIES SAS CONTROLLER
-        DRIVER" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+To: Nathan Chancellor <natechancellor@gmail.com>, Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Adaptec OEM Raid Solutions <aacraid@microsemi.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, Bradley Grove <linuxdrivers@attotech.com>, Don Brace <don.brace@microsemi.com>, Brian King <brking@us.ibm.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, esc.storagedev@microsemi.com
 List-Id: linux-scsi@vger.kernel.org
 
-In isci_request_oprom(), a for loop is used to find the OEM table by
-scanning the signature, which has four bytes. In each iteration, the
-signature is copied from the IO memory region 'oprom + i' to 'oem_sig'
-through memcpy_fromio(). Then 'oem_sig' is checked to see whether it is
-ISCI_OEM_SIG. If yes, the OEM table is found. Next, the header of the rom,
-including the signature, is then copied to 'oem_hdr' through
-memcpy_fromio(). It is obvious that the signature is copied twice here.
-Given that the device also has the permission to access the IO memory
-region, it is possible that a malicious device controlled by an attacker
-can modify the signature between these two copies. By doing so, the
-attacker can supply unexpected signatures, which can cause undefined
-behavior of the kernel and introduce potential security risk.
+On Fri, 2018-10-19 at 10:57 -0700, Nathan Chancellor wrote:
++AD4 Clang warns several times in the scsi subsystem (trimmed for brevity):
++AD4 
++AD4 drivers/scsi/hpsa.c:6209:7: warning: overflow converting case value to
++AD4 switch condition type (2147762695 to 18446744071562347015) +AFs--Wswitch+AF0
++AD4         case CCISS+AF8-GETBUSTYPES:
++AD4              +AF4
++AD4 drivers/scsi/hpsa.c:6208:7: warning: overflow converting case value to
++AD4 switch condition type (2147762694 to 18446744071562347014) +AFs--Wswitch+AF0
++AD4         case CCISS+AF8-GETHEARTBEAT:
++AD4              +AF4
++AD4 
++AD4 The root cause is that the +AF8-IOC macro can generate really large numbers,
++AD4 which don't find into type 'int', which is used for the cmd paremeter in
++AD4 the ioctls in scsi+AF8-host+AF8-template. My research into how GCC and Clang are
++AD4 handling this at a low level didn't prove fruitful. However, looking at
++AD4 the rest of the kernel tree, all ioctls use an 'unsigned int' for the
++AD4 cmd parameter, which will fit all of the +AF8-IOC values in the scsi/ata
++AD4 subsystems.
++AD4 
++AD4 Make that change because none of the ioctls expect to take a negative
++AD4 value, it brings the ioctls inline with the reset of the kernel, and it
++AD4 removes ambiguity, which is never good when dealing with compilers.
 
-This patch rewrites the signature after the second copy, using the value
-obtained in the first copy, and thus avoids the above issue.
-
-Signed-off-by: Wenwen Wang <wang6495@umn.edu>
----
- drivers/scsi/isci/probe_roms.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/scsi/isci/probe_roms.c b/drivers/scsi/isci/probe_roms.c
-index a2bbe46..bff54f2 100644
---- a/drivers/scsi/isci/probe_roms.c
-+++ b/drivers/scsi/isci/probe_roms.c
-@@ -68,6 +68,7 @@ struct isci_orom *isci_request_oprom(struct pci_dev *pdev)
- 			size_t copy_len;
- 
- 			memcpy_fromio(&oem_hdr, oprom + i, sizeof(oem_hdr));
-+			memcpy(&oem_hdr.sig, oem_sig, ISCI_OEM_SIG_SIZE);
- 
- 			copy_len = min(oem_hdr.len - sizeof(oem_hdr),
- 				       sizeof(*rom));
--- 
-2.7.4
+Reviewed-by: Bart Van Assche +ADw-bvanassche+AEA-acm.org+AD4
