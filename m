@@ -1,65 +1,25 @@
-From: Nathan Chancellor <natechancellor@gmail.com>
-Subject: Re: -Wswitch Clang warnings in drivers/scsi
-Date: Thu, 18 Oct 2018 23:51:04 -0700
-Message-ID: <20181019065104.GA27170@flashbox>
-References: <20181004183047.GA1885@flashbox>
- <1538678069.230807.6.camel@acm.org>
- <20181004184540.GA17513@flashbox>
- <CAKwvOd=FrGZ-oh5Q9RGQD2GNORZrqwAZUzNYN+hTKkp5wrfrqw@mail.gmail.com>
- <20181005065754.GA18637@flashbox>
- <1539024429.64374.40.camel@acm.org>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: move bus (PCI, PCMCIA, EISA, rapdio) config to drivers/ v2
+Date: Fri, 19 Oct 2018 09:00:01 +0200
+Message-ID: <20181019070001.GA30556@lst.de>
+References: <20181017080201.10866-1-hch@lst.de> <CAMuHMdWMtxxu8iivcnT=uWTMHsp=iSq_QzXqDWQut5OHwTU8Sg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1539024429.64374.40.camel@acm.org>
+In-Reply-To: <CAMuHMdWMtxxu8iivcnT=uWTMHsp=iSq_QzXqDWQut5OHwTU8Sg@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Nick Desaulniers <ndesaulniers@google.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Christoph Hellwig <hch@lst.de>, Masahiro Yamada <yamada.masahiro@socionext.com>, Matt Porter <mporter@kernel.crashing.org>, Alex Bounine <alex.bou9@gmail.com>, Dominik Brodowski <linux@dominikbrodowski.net>, linux-kbuild <linux-kbuild@vger.kernel.org>, linux-pci <linux-pci@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>, Linux-Arch <linux-arch@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Oct 08, 2018 at 11:47:09AM -0700, Bart Van Assche wrote:
-> On Thu, 2018-10-04 at 23:57 -0700, Nathan Chancellor wrote:
-> > Regardless of how the overflow is handled within the switch statement,
-> > the overflow is also happening when passing in these values to the ioctl,
-> > right? I mean these case values are defined in the uapi files so that
-> > userspace can easily pass them in to the ioctl, meaning those values are
-> > being passed in as a signed integer and I would assume subsequently
-> > overflowing unless I'm just missing something here.
+On Wed, Oct 17, 2018 at 10:30:49AM +0200, Geert Uytterhoeven wrote:
+> Please use "git format-patch -v<N> --cover" to prepare patch series
+> for sending with git-send-email.
 > 
-> From the user space header <sys/ioctl.h>:
-> 
-> extern int ioctl (int __fd, unsigned long int __request, ...) __THROW;
-> 
-> From the kernel header <linux/fs.h>:
-> 
-> 	long (*unlocked_ioctl) (struct file *, unsigned int, unsigned long);
-> 	long (*compat_ioctl) (struct file *, unsigned int, unsigned long);
-> 
-> Why has the second argument been declared as "unsigned long" in the glibc
-> headers and as "unsigned int" in the kernel headers? That's not clear to me.
-> 
-> Bart.
-> 
+>   "-v<N>" to prefix all patches with version number <N>,
+>   "--cover" to have a "[PATCH 0/<M>]" prefix in the cover letter.
 
-Hi Bart,
-
-Sorry it took me so long to reply, somehow this email got lost in my
-inbox...
-
-Unfortuntely, I am unsure why there is that discrepency between the
-headers. I tried to do some research but I didn't come up with much.
-
-However, I did test changing the type of ioctl/compat_ioctl's cmd
-parameter to 'unsigned int' and came up with the following diff (rather
-large so sharing via a gist instead of pasting here):
-
-https://gist.github.com/nathanchance/8febc92735f4228574cb0464520f0f6f
-
-I'll obviously draft up a proper commit message before formally sending
-but I can address any major concerns before that happens. I checked
-every single ioctl for a negative value and there aren't any so I think
-this change makes sense to fix this warning.
-
-Cheers,
-Nathan
+We had that discussion before and I strongly disagree with messing
+up the subject lines like that.  The git-send-email defaults are
+perfectly fine.
