@@ -1,90 +1,50 @@
-From: Dominik Brodowski <linux@dominikbrodowski.net>
-Subject: [GIT PULL] pcmcia odd fixes for v4.20-rc1
-Date: Mon, 22 Oct 2018 16:39:15 +0200
-Message-ID: <20181022143915.GA387@light.dominikbrodowski.net>
+From: John Stultz <john.stultz@linaro.org>
+Subject: Re: [RESEND][PATCH] scsi: ufs: Fix hynix ufs bug with quirk on hi36xx SoC
+Date: Mon, 22 Oct 2018 10:21:35 -0700
+Message-ID: <CALAqxLWv1v+JiLjwJpQ_rFkwM4d86YRr1WeMLjg4=Wvwpd5MGw@mail.gmail.com>
+References: <1538434698-1042-1-git-send-email-john.stultz@linaro.org>
+ <yq17eiiwobx.fsf@oracle.com> <CALAqxLXYTZZ12haKHGwnTBqPgkv_JF8=fiiJrD9OWRFdcXf0Sw@mail.gmail.com>
+ <CALAqxLX0Q3Yo-75CDdG4g7i5G=i5OPi01ApYyJO6wTn4CSCkPA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="PEIAKu/WMn1b1Hv9"
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <CALAqxLX0Q3Yo-75CDdG4g7i5G=i5OPi01ApYyJO6wTn4CSCkPA@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: torvalds@linux-foundation.org
-Cc: linux-kernel@vger.kernel.org, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, gregkh@linuxfoundation.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: lkml <linux-kernel@vger.kernel.org>, Wei Li <liwei213@huawei.com>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Dmitry Shmidt <dimitrysh@google.com>
 List-Id: linux-scsi@vger.kernel.org
 
+On Tue, Oct 16, 2018 at 4:50 PM, John Stultz <john.stultz@linaro.org> wrote:
+> On Tue, Oct 16, 2018 at 3:48 PM, John Stultz <john.stultz@linaro.org> wrote:
+>> On Mon, Oct 15, 2018 at 8:41 PM, Martin K. Petersen
+>> <martin.petersen@oracle.com> wrote:
+>>>
+>>> John,
+>>>
+>>>> Hynix ufs has deviations on hi36xx platform which will result in ufs
+>>>> bursts transfer failures.
+>>>
+>>> Is this specific to the particular implementation on hi36xx or all SK
+>>> Hynix implementations?
+>>
+>> I'd have to defer to Wei Li on that question.
 
---PEIAKu/WMn1b1Hv9
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+So I followed up with Wei Li and it seems its something specific to
+hi36xx that the specific hynix chip brings out, which most other chips
+don't seem to trigger.
 
-Linus,
 
-please pull the following changes since commit
-17b57b1883c1285f3d0dc2266e8f79286a7bef38:
+> Just to short-cut things a bit, as this is probably an obvious
+> followup: if it is hi36xx specific, how would you suggest a such a
+> targeted quirk be added?  I'm not sure I see how to get to the
+> ufs_dev_desc from the ufs-hisi.c code.
 
-  Linux 4.19-rc6 (2018-09-30 07:15:35 -0700)
+So yea, I've already reworked the quirk to be specific to the one
+model of hynix chip, but I'm still a bit confused on best practices
+for handling these quirks on the controller side. If there's a pointer
+to similar controller side quirks that are device specific, I'd be
+glad to rework the patch in that fashion. Otherwise I'll just try to
+figure out how to get to the ufs_dev_desc from ufs-hisi.c
 
-which are available in the Git repository at:
-
-  https://git.kernel.org/pub/scm/linux/kernel/git/brodo/linux.git pcmcia-next
-
-up to 95691e3eddc41da2d1cd3cca51fecdfb46bd85bc:
-
-  pcmcia: Implement CLKRUN protocol disabling for Ricoh bridges (2018-10-01 12:17:03 +0200)
-
-These are just a few odd fixes and improvements to the PCMCIA core
-and to a few PCMCIA device drivers.
-
-Thanks,
-	Dominik
-
-----------------------------------------------------------------
-Colin Ian King (1):
-      pcmcia: remove KERN_INFO level from debug message
-
-Jia-Ju Bai (2):
-      char: pcmcia: cm4000_cs: Replace mdelay with usleep_range in set_protocol
-      pcmcia: pcmcia_resource: Replace mdelay() with msleep()
-
-Maciej S. Szmigiero (1):
-      pcmcia: Implement CLKRUN protocol disabling for Ricoh bridges
-
-Vaishali Thakkar (1):
-      pcmcia: Use module_pcmcia_driver for scsi drivers
-
-Zhouyang Jia (1):
-      pcmcia: add error handling for pcmcia_enable_device in qlogic_stub
-
- drivers/char/pcmcia/cm4000_cs.c    |  4 ++--
- drivers/char/pcmcia/cm4040_cs.c    |  2 +-
- drivers/pcmcia/pcmcia_resource.c   |  4 ++--
- drivers/pcmcia/ricoh.h             | 35 +++++++++++++++++++++++++++++++++++
- drivers/pcmcia/yenta_socket.c      |  3 ++-
- drivers/scsi/pcmcia/aha152x_stub.c | 14 +-------------
- drivers/scsi/pcmcia/nsp_cs.c       | 15 +--------------
- drivers/scsi/pcmcia/nsp_cs.h       |  4 ----
- drivers/scsi/pcmcia/qlogic_stub.c  | 19 ++++++-------------
- drivers/scsi/pcmcia/sym53c500_cs.c | 16 +---------------
- 10 files changed, 51 insertions(+), 65 deletions(-)
-
---PEIAKu/WMn1b1Hv9
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEmgXaWKgmjrvkPhLCmpdgiUyNow0FAlvN4RAACgkQmpdgiUyN
-ow1t+RAApMvwnU7uwIFlYDrCiBXZECN5RsBgR0QQPkG7Qc812hE7/oxHWt2VZceJ
-JMkrYv/flk9ntXrIvdbOxHuc/iOyEweMXP445J8QUOQXr79Fi6Ju3fMOkYxQ1cK8
-e71lKB/m1v4Uf1qKsVoNZ9Kd6QHlcy6iBt3csyRjb8QE8+uGZA0AmKr9bqDT6zDB
-0Wg3Pj3l+EQnn58c0zaHtgBwGNrC9wfcSid1WIqV4Wv3wHEjKLtNpin6JcUy1Pdy
-Sz6APA828ErpN6lxJ3LP2jo5lJBAqRLP12s3ZHoliYPr/r6TqTP39jF9hOu8cNWW
-OWawMEALCo21JFl0S0EZVw+VyNVaB0sFZpDmzTNHP3fWfPien/ovUoTdWVy2fl4R
-z/HiMBDI4hpt5HV44kGj6oFHjdcHY0eyEhCpL54bjJWbuttBKhrALgnft2k9jtDs
-Cq+eF422VAUwAp2CVFQBWVT39ERxsgFea1naRLdzp/pnirrCHnzTZZk5alMzRu/2
-wHNPTGM5sN+07kretSLVDdlqJFIC/IchXppv3lib65SpqLvz64ot3sNuVOrChpY0
-bp4VVfP+qAdO//Fnf6d7+FevFgS5xDbDNNjxmB/W+xoQIKYY/R6oM/hj0+s0KJ77
-jVvtWpv2r/okshMSck3kil+ggkxnjmLdri67EKaOi6dPF1lvot0=
-=Q7jH
------END PGP SIGNATURE-----
-
---PEIAKu/WMn1b1Hv9--
+thanks
+-john
