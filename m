@@ -1,37 +1,53 @@
-From: Suganath Prabu <suganath-prabu.subramani@broadcom.com>
-Subject: [v6 4/4] mpt3sas: Bump driver version to 27.100.00.00.
-Date: Tue, 23 Oct 2018 15:51:21 +0530
-Message-ID: <1540290081-15827-5-git-send-email-suganath-prabu.subramani@broadcom.com>
-References: <1540290081-15827-1-git-send-email-suganath-prabu.subramani@broadcom.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1540290081-15827-1-git-send-email-suganath-prabu.subramani@broadcom.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: helgaas@kernel.org, lukas@wunner.de, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: benh@kernel.crashing.org, ruscur@russell.cc, sbobroff@linux.ibm.com, oohall@gmail.com, andy.shevchenko@gmail.com, Sathya.Prakash@broadcom.com, sreekanth.reddy@broadcom.com, Suganath Prabu <suganath-prabu.subramani@broadcom.com>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH v4 00/11] Zoned block device support
+	improvements
+Date: Tue, 23 Oct 2018 09:59:16 -0600
+Message-ID: <78778e22-9c5e-99d0-ef5c-85e04d03a4b7@kernel.dk>
+References: <20181012100850.23316-1-damien.lemoal@wdc.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <20181012100850.23316-1-damien.lemoal@wdc.com>
+Content-Language: en-US
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Damien Le Moal <damien.lemoal@wdc.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, dm-devel@redhat.com, Mike Snitzer <snitzer@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, Matias Bjorling <matias.bjorling@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Modify driver version to 27.100.00.00
-(which is equivalent to PH8 OOB driver)
+On 10/12/18 4:08 AM, Damien Le Moal wrote:
+> This series improves zoned block device support (reduce overhead) and
+> introduces many simplifications to the code (overall, there are more deletions
+> than insertions).
+> 
+> In more details:
+> * Patches 1 to 3 are SCSI side (sd driver) cleanups and improvements reducing
+>   the overhead of report zones command execution during disk scan and
+>   revalidation.
+> * Patches 4 to 9 improve the useability and user API of zoned block devices.
+> * Patch 10 is the main part of this series. This patch replaces the
+>   REQ_OP_ZONE_REPORT BIO/request operation for executing report zones commands
+>   with a block device file operation, removing the need for the command reply
+>   payload in-place rewriting in the BIO buffer. This leads to major
+>   simplification of the code in many places.
+> * Patch 11 further simplifies the code of low level drivers by providing a
+>   generic implementation of zoned block device reuest queue zone bitmaps
+>   initialization and revalidation.
 
-Signed-off-by: Suganath Prabu <suganath-prabu.subramani@broadcom.com>
----
- drivers/scsi/mpt3sas/mpt3sas_base.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+I've applied this, but I have two complaints:
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index c860ed2..7fdaf29 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -74,8 +74,8 @@
- #define MPT3SAS_DRIVER_NAME		"mpt3sas"
- #define MPT3SAS_AUTHOR "Avago Technologies <MPT-FusionLinux.pdl@avagotech.com>"
- #define MPT3SAS_DESCRIPTION	"LSI MPT Fusion SAS 3.0 Device Driver"
--#define MPT3SAS_DRIVER_VERSION		"26.100.00.00"
--#define MPT3SAS_MAJOR_VERSION		26
-+#define MPT3SAS_DRIVER_VERSION		"27.100.00.00"
-+#define MPT3SAS_MAJOR_VERSION		27
- #define MPT3SAS_MINOR_VERSION		100
- #define MPT3SAS_BUILD_VERSION		0
- #define MPT3SAS_RELEASE_VERSION	00
+1) Two had to be hand applied, it wasn't against the block tree.
+2) The ordering of the signed-off-by. Someone told me that this is
+   patchwork, but I absolutely hate it. SOB should go last, not before
+   the reviewed-by. I fixed that up too.
+
 -- 
-1.8.3.1
+Jens Axboe
