@@ -1,39 +1,33 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v4 00/11] Zoned block device support
-	improvements
-Date: Tue, 23 Oct 2018 22:26:48 -0400
-Message-ID: <yq1o9bkf5av.fsf@oracle.com>
-References: <20181012100850.23316-1-damien.lemoal@wdc.com>
-	<78778e22-9c5e-99d0-ef5c-85e04d03a4b7@kernel.dk>
+Subject: Re: [RFC][PATCH v2] scsi: ufs: Fix hynix ufs bug with quirk on hi36xx SoC
+Date: Tue, 23 Oct 2018 22:47:21 -0400
+Message-ID: <yq1d0s0f4cm.fsf@oracle.com>
+References: <1540254710-26936-1-git-send-email-john.stultz@linaro.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <78778e22-9c5e-99d0-ef5c-85e04d03a4b7@kernel.dk> (Jens Axboe's
-	message of "Tue, 23 Oct 2018 09:59:16 -0600")
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Damien Le Moal <damien.lemoal@wdc.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, linux-block@vger.kernel.org, dm-devel@redhat.com, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Matias Bjorling <matias.bjorling@wdc.com>
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1540254710-26936-1-git-send-email-john.stultz@linaro.org> (John
+        Stultz's message of "Mon, 22 Oct 2018 17:31:50 -0700")
+Sender: linux-kernel-owner@vger.kernel.org
+To: John Stultz <john.stultz@linaro.org>
+Cc: lkml <linux-kernel@vger.kernel.org>, Wei Li <liwei213@huawei.com>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Dmitry Shmidt <dimitrysh@google.com>
 List-Id: linux-scsi@vger.kernel.org
 
 
-Jens,
+John,
 
-> 2) The ordering of the signed-off-by. Someone told me that this is
->    patchwork, but I absolutely hate it. SOB should go last, not before
->    the reviewed-by. I fixed that up too.
+Thanks for tweaking this.
 
-You keep mentioning this, but I don't recall ever seeing anything to
-that effect. The rest of the kernel appears to be either arbitrary
-ordering or favoring author SoB as the first tag.
+> Not sure if this is the preferred way of scoping the quirk to
+> the controller or not. Feedback would be greatly appreciated!
+
+I think my preference would be to add:
+
+       UFS_FIX(UFS_VENDOR_SKHYNIX, "hB8aL1",
+                UFS_DEVICE_QUIRK_HOST_VS_DEBUG),
+
+to ufs_fixups[] and then key off of that in the driver. That's how we do
+it in SCSI but the UFS folks may have a different opinion.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
