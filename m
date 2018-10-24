@@ -1,39 +1,28 @@
-From: John Stultz <john.stultz@linaro.org>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
 Subject: Re: [RFC][PATCH v2] scsi: ufs: Fix hynix ufs bug with quirk on hi36xx SoC
-Date: Tue, 23 Oct 2018 20:02:36 -0700
-Message-ID: <CALAqxLX7d8adR6x14EbdhySE1SuoeFwxj6BFG=zitUKZEs75Tg@mail.gmail.com>
-References: <1540254710-26936-1-git-send-email-john.stultz@linaro.org> <yq1d0s0f4cm.fsf@oracle.com>
+Date: Tue, 23 Oct 2018 23:09:53 -0400
+Message-ID: <yq14ldcf3b2.fsf@oracle.com>
+References: <1540254710-26936-1-git-send-email-john.stultz@linaro.org>
+        <yq1d0s0f4cm.fsf@oracle.com>
+        <CALAqxLX7d8adR6x14EbdhySE1SuoeFwxj6BFG=zitUKZEs75Tg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <yq1d0s0f4cm.fsf@oracle.com>
+In-Reply-To: <CALAqxLX7d8adR6x14EbdhySE1SuoeFwxj6BFG=zitUKZEs75Tg@mail.gmail.com>
+        (John Stultz's message of "Tue, 23 Oct 2018 20:02:36 -0700")
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: lkml <linux-kernel@vger.kernel.org>, Wei Li <liwei213@huawei.com>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Dmitry Shmidt <dimitrysh@google.com>
+To: John Stultz <john.stultz@linaro.org>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, lkml <linux-kernel@vger.kernel.org>, Wei Li <liwei213@huawei.com>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Dmitry Shmidt <dimitrysh@google.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Oct 23, 2018 at 7:47 PM, Martin K. Petersen
-<martin.petersen@oracle.com> wrote:
->
-> John,
->
-> Thanks for tweaking this.
->
->> Not sure if this is the preferred way of scoping the quirk to
->> the controller or not. Feedback would be greatly appreciated!
->
-> I think my preference would be to add:
->
->        UFS_FIX(UFS_VENDOR_SKHYNIX, "hB8aL1",
->                 UFS_DEVICE_QUIRK_HOST_VS_DEBUG),
->
-> to ufs_fixups[] and then key off of that in the driver. That's how we do
-> it in SCSI but the UFS folks may have a different opinion.
 
-Ok. Yea, I saw something similar in the qcom code, but I wasn't sure
-if folks would want host specific quirks isolated to host code.
+John,
 
-I appreciate the clarification, I'll rework and respin it here shortly.
+> Ok. Yea, I saw something similar in the qcom code, but I wasn't sure
+> if folks would want host specific quirks isolated to host code.
 
-Thanks again!
--john
+Yeah, that's why I thought it would be good for the UFS folks to chime
+in.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
