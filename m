@@ -1,28 +1,24 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [RFC][PATCH v2] scsi: ufs: Fix hynix ufs bug with quirk on hi36xx SoC
-Date: Tue, 23 Oct 2018 23:09:53 -0400
-Message-ID: <yq14ldcf3b2.fsf@oracle.com>
-References: <1540254710-26936-1-git-send-email-john.stultz@linaro.org>
-        <yq1d0s0f4cm.fsf@oracle.com>
-        <CALAqxLX7d8adR6x14EbdhySE1SuoeFwxj6BFG=zitUKZEs75Tg@mail.gmail.com>
+Subject: Re: [PATCH] scsi/mvsas/mv_sas.c: Use dma_pool_zalloc
+Date: Tue, 23 Oct 2018 21:26:58 -0400
+Message-ID: <yq15zxsgmn1.fsf@oracle.com>
+References: <5bc8af85.1c69fb81.3eebc.a22b@mx.google.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CALAqxLX7d8adR6x14EbdhySE1SuoeFwxj6BFG=zitUKZEs75Tg@mail.gmail.com>
-        (John Stultz's message of "Tue, 23 Oct 2018 20:02:36 -0700")
+In-Reply-To: <5bc8af85.1c69fb81.3eebc.a22b@mx.google.com> (Sabyasachi Gupta's
+        message of "Thu, 18 Oct 2018 21:36:26 +0530")
 Sender: linux-kernel-owner@vger.kernel.org
-To: John Stultz <john.stultz@linaro.org>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, lkml <linux-kernel@vger.kernel.org>, Wei Li <liwei213@huawei.com>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Dmitry Shmidt <dimitrysh@google.com>
+To: Sabyasachi Gupta <sabyasachi.linux@gmail.com>
+Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, keescook@chromium.org, john.garry@huawei.com, jinpu.wang@profitbricks.com, jrdr.linux@gmail.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, brajeswar.linux@gmail.com
 List-Id: linux-scsi@vger.kernel.org
 
 
-John,
+Sabyasachi,
 
-> Ok. Yea, I saw something similar in the qcom code, but I wasn't sure
-> if folks would want host specific quirks isolated to host code.
+> Replaced dma_pool_alloc + memset with dma_pool_zalloc
 
-Yeah, that's why I thought it would be good for the UFS folks to chime
-in.
+Applied to 4.20/scsi-queue, thank you.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
