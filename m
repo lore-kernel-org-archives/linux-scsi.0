@@ -1,103 +1,105 @@
-From: John Stultz <john.stultz@linaro.org>
-Subject: [PATCH v3] scsi: ufs: Fix hynix ufs bug with quirk on hi36xx SoC
-Date: Thu, 25 Oct 2018 11:16:40 -0700
-Message-ID: <1540491400-16141-1-git-send-email-john.stultz@linaro.org>
+From: Nathan Chancellor <natechancellor@gmail.com>
+Subject: Re: [PATCH] libosd: Remove ignored __weak attribute
+Date: Thu, 25 Oct 2018 14:31:44 -0700
+Message-ID: <20181025213144.GB24709@flashbox>
+References: <20180930205448.26205-1-natechancellor@gmail.com>
+ <10b12992-3570-4646-374b-82cbd7276839@acm.org>
+ <CAKwvOd=wgxB69dMxzMeH2edCn=TdQGPGkNVW1e=QHPTJtO9ZNw@mail.gmail.com>
+ <1538503063.193396.6.camel@acm.org>
+ <CAKwvOdmsNEexQL9R8rgcRcXTZButYM6YWwG8bhVWCoJ8bOqCrA@mail.gmail.com>
+ <1538521591.193396.8.camel@acm.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1538521591.193396.8.camel@acm.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: lkml <linux-kernel@vger.kernel.org>
-Cc: Wei Li <liwei213@huawei.com>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Dmitry Shmidt <dimitrysh@google.com>, John Stultz <john.stultz@linaro.org>
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: Nick Desaulniers <ndesaulniers@google.com>, ooo@electrozaur.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Wei Li <liwei213@huawei.com>
+On Tue, Oct 02, 2018 at 04:06:31PM -0700, Bart Van Assche wrote:
+> On Tue, 2018-10-02 at 15:33 -0700, Nick Desaulniers wrote:
+> > On Tue, Oct 2, 2018 at 10:57 AM Bart Van Assche <bvanassche@acm.org> wrote:
+> > > Explicitly initialized global and static variables end up in the .data
+> > > section and need space in that section.
+> > 
+> > Unless the initial value is zero.
+> > https://godbolt.org/z/curRoO
+> > 
+> > So you don't wind up with an increase in binary size simply by having
+> > global variables initialized to zero, right?  Instead the kernel knows
+> > to create a zero'd out mapping for bss.  You don't need a run of zeros
+> > in the binary.
+> > 
+> > So I disagree when you said earlier "zero initializers should be left
+> > out to minimize the size of object files." I assert they don't affect
+> > the size of the binary.
+> > 
+> > If you had many global variables all initialized to zero, why would
+> > you encode that many zeros in a binary, when you can just set a size
+> > on the bss section and have the kernel create the appropriate sized
+> > and zero'd mapping?
+> > 
+> > > That is not the case if the
+> > > initializer is left out and these variables end up in the .bss section.
+> > 
+> > From my above link, gcc will put globals without initializers into "common."
+> 
+> No matter what particular compiler versions do with explicit initialization
+> to zero, the preferred kernel coding style is to leave out such explicit
+> initialization.
+> 
+> Bart.
 
-Hynix ufs has deviations on hi36xx platform which will result in
-ufs bursts transfer failures.
+Hi Bart,
 
-To fix the problem, the Hynix device must set the register
-VS_DebugSaveConfigTime to 0x10, which will set time reference
-for SaveConfigTime is 250 ns. The time reference for SaveConfigTime
-is 40 ns by default.
+I'm sorry if I didn't follow the conclusion of this conversation properly
+but this is the below diff you were initially looking for, correct?
 
-This patch is necessary to boot on HiKey960 boards that use
-Hynix UFS chips (H28U62301AMR model: hB8aL1).
+If so, Boaz and Nick, do you have any objections if this is v2? I'd like
+to get this patch accepted so the warning can be fixed for everyone.
 
-Cc: Vinayak Holikatti <vinholikatti@gmail.com>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
-Signed-off-by: Wei Li <liwei213@huawei.com>
-Signed-off-by: Dmitry Shmidt <dimitrysh@google.com>
-[jstultz: Forward ported from older code, slight tweak to commit message]
-Signed-off-by: John Stultz <john.stultz@linaro.org>
----
-v2:
-* Narrowed the UFS chip model to the specific model where
-  the issue has been seen. (SKhynix  H28U62301AMR model: hB8aL1)
-* Reworked logic to be contained in ufs-hisi.c since it seems to
-  be a controller issue that crops up with this specific chip
-v3:
-* Reworked back to using generic hba quriks which we then key on
-  in the hisi driver.
----
- drivers/scsi/ufs/ufs-hisi.c   | 9 +++++++++
- drivers/scsi/ufs/ufs_quirks.h | 6 ++++++
- drivers/scsi/ufs/ufshcd.c     | 2 ++
- 3 files changed, 17 insertions(+)
+Thanks,
+Nathan
 
-diff --git a/drivers/scsi/ufs/ufs-hisi.c b/drivers/scsi/ufs/ufs-hisi.c
-index 46df707..452e19f 100644
---- a/drivers/scsi/ufs/ufs-hisi.c
-+++ b/drivers/scsi/ufs/ufs-hisi.c
-@@ -20,6 +20,7 @@
- #include "unipro.h"
- #include "ufs-hisi.h"
- #include "ufshci.h"
-+#include "ufs_quirks.h"
- 
- static int ufs_hisi_check_hibern8(struct ufs_hba *hba)
- {
-@@ -390,6 +391,14 @@ static void ufs_hisi_set_dev_cap(struct ufs_hisi_dev_params *hisi_param)
- 
- static void ufs_hisi_pwr_change_pre_change(struct ufs_hba *hba)
- {
-+	if (hba->dev_quirks & UFS_DEVICE_QUIRK_HOST_VS_DEBUGSAVECONFIGTIME) {
-+		pr_info("ufs flash device must set VS_DebugSaveConfigTime 0x10\n");
-+		/* VS_DebugSaveConfigTime */
-+		ufshcd_dme_set(hba, UIC_ARG_MIB(0xD0A0), 0x10);
-+		/* sync length */
-+		ufshcd_dme_set(hba, UIC_ARG_MIB(0x1556), 0x48);
-+	}
+================================================================================
+
+diff --git a/drivers/scsi/osd/osd_initiator.c b/drivers/scsi/osd/osd_initiator.c
+index e19fa883376f..4250f739beb3 100644
+--- a/drivers/scsi/osd/osd_initiator.c
++++ b/drivers/scsi/osd/osd_initiator.c
+@@ -58,6 +58,8 @@
+
+ enum { OSD_REQ_RETRIES = 1 };
+
++static const struct osd_obj_id osd_root_object;
 +
- 	/* update */
- 	ufshcd_dme_set(hba, UIC_ARG_MIB(0x15A8), 0x1);
- 	/* PA_TxSkip */
-diff --git a/drivers/scsi/ufs/ufs_quirks.h b/drivers/scsi/ufs/ufs_quirks.h
-index 71f73d1..5d2dfdb 100644
---- a/drivers/scsi/ufs/ufs_quirks.h
-+++ b/drivers/scsi/ufs/ufs_quirks.h
-@@ -131,4 +131,10 @@ struct ufs_dev_fix {
-  */
- #define UFS_DEVICE_QUIRK_HOST_PA_SAVECONFIGTIME	(1 << 8)
- 
-+/*
-+ * Some UFS devices require VS_DebugSaveConfigTime is 0x10,
-+ * enabling this quirk ensure this.
-+ */
-+#define UFS_DEVICE_QUIRK_HOST_VS_DEBUGSAVECONFIGTIME	(1 << 9)
-+
- #endif /* UFS_QUIRKS_H_ */
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index c55f38e..9c6cac9 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -230,6 +230,8 @@ static struct ufs_dev_fix ufs_fixups[] = {
- 	UFS_FIX(UFS_VENDOR_SKHYNIX, UFS_ANY_MODEL, UFS_DEVICE_NO_VCCQ),
- 	UFS_FIX(UFS_VENDOR_SKHYNIX, UFS_ANY_MODEL,
- 		UFS_DEVICE_QUIRK_HOST_PA_SAVECONFIGTIME),
-+	UFS_FIX(UFS_VENDOR_SKHYNIX, "hB8aL1" /*H28U62301AMR*/,
-+		UFS_DEVICE_QUIRK_HOST_VS_DEBUGSAVECONFIGTIME),
- 
- 	END_FIX
+ MODULE_AUTHOR("Boaz Harrosh <ooo@electrozaur.com>");
+ MODULE_DESCRIPTION("open-osd initiator library libosd.ko");
+ MODULE_LICENSE("GPL");
+diff --git a/drivers/scsi/osd/osd_uld.c b/drivers/scsi/osd/osd_uld.c
+index eaf36ccf58db..770c758baaa9 100644
+--- a/drivers/scsi/osd/osd_uld.c
++++ b/drivers/scsi/osd/osd_uld.c
+@@ -73,6 +73,7 @@
+
+ static const char osd_name[] = "osd";
+ static const char *osd_version_string = "open-osd 0.2.1";
++static const struct osd_obj_id osd_root_object;
+
+ MODULE_AUTHOR("Boaz Harrosh <ooo@electrozaur.com>");
+ MODULE_DESCRIPTION("open-osd Upper-Layer-Driver osd.ko");
+diff --git a/include/scsi/osd_types.h b/include/scsi/osd_types.h
+index 48e8a165e136..eb31357ec8b3 100644
+--- a/include/scsi/osd_types.h
++++ b/include/scsi/osd_types.h
+@@ -28,8 +28,6 @@ struct osd_obj_id {
+        osd_id id;
  };
--- 
-2.7.4
+
+-static const struct __weak osd_obj_id osd_root_object = {0, 0};
+-
+ struct osd_attr {
+        u32 attr_page;
+        u32 attr_id;
