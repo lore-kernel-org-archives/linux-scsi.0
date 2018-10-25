@@ -1,39 +1,103 @@
-From: David Laight <David.Laight@ACULAB.COM>
-Subject: RE: [PATCH] scsi: aic7xxx: Fix unintended sign extension issue
-Date: Thu, 25 Oct 2018 15:54:38 +0000
-Message-ID: <483f04b2ad5a4858b56c2be52cea625e@AcuMS.aculab.com>
-References: <20181025151334.15622-1-colin.king@canonical.com>
- <1540481569.3006.5.camel@linux.vnet.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: base64
+From: John Stultz <john.stultz@linaro.org>
+Subject: [PATCH v3] scsi: ufs: Fix hynix ufs bug with quirk on hi36xx SoC
+Date: Thu, 25 Oct 2018 11:16:40 -0700
+Message-ID: <1540491400-16141-1-git-send-email-john.stultz@linaro.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1540481569.3006.5.camel@linux.vnet.ibm.com>
-Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: 'James Bottomley' <jejb@linux.vnet.ibm.com>, Colin King <colin.king@canonical.com>, Hannes Reinecke <hare@suse.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: lkml <linux-kernel@vger.kernel.org>
+Cc: Wei Li <liwei213@huawei.com>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Dmitry Shmidt <dimitrysh@google.com>, John Stultz <john.stultz@linaro.org>
 List-Id: linux-scsi@vger.kernel.org
 
-RnJvbTogSmFtZXMgQm90dG9tbGV5DQo+IFNlbnQ6IDI1IE9jdG9iZXIgMjAxOCAxNjozMw0KPiAN
-Cj4gT24gVGh1LCAyMDE4LTEwLTI1IGF0IDE2OjEzICswMTAwLCBDb2xpbiBLaW5nIHdyb3RlOg0K
-PiA+IEZyb206IENvbGluIElhbiBLaW5nIDxjb2xpbi5raW5nQGNhbm9uaWNhbC5jb20+DQo+ID4N
-Cj4gPiBJbiB0aGUgZXhwcmVzc2lvbiAiYWhjX2luYihhaGMsIHBvcnQrMykgPDwgMjQiLCB0aGUg
-aW5pdGlhbCB2YWx1ZSBpcw0KPiA+IGEgdTgsIGJ1dCBpcyBwcm9tb3RlZCB0byBhIHNpZ25lZCBp
-bnQsIHRoZW4gc2lnbi1leHRlbmRlZCB0bw0KPiA+IHVpbnQ2NF90Lg0KPiANCj4gV2h5IGlzIHRo
-aXMsIHRoYXQncyBoaWdobHkgbm9uIGludHVpdGl2ZT8gIFRoZSBjb21waWxlciBpcyBzdXBwb3Nl
-ZCB0bw0KPiBwcm9tb3RlIHRvIHRoZSBiaWdnZXN0IHR5cGUsIHdoaWNoIGlzIHVpbnQ2NF90IGFu
-ZCB0aGVuIGRvIHRoZQ0KPiBjYWxjdWxhdGlvbg0KDQpEbyBub3QgZG91YnQgdGhlIHdpc2RvbSBv
-biB0aGUgQU5TSSBDIGNvbW1pdHRlZSB0aGF0IGRlY2lkZWQgdG8gZG8NCid2YWx1ZSBwcmVzZXJ2
-aW5nJyBpbnRlZ2VyIHByb21vdGlvbnMgaW5zdGVhZCBvZiB0aGUgJ3NpZ24gcHJlc2VydmluZycN
-Cm9uZXMgb2YgSyZSIEMuDQoNClNvICd1bnNpZ25lZCBjaGFyJyBpcyBwcm9tb3RlZCB0byAnaW50
-JyBhbG1vc3QgZXZlcnl3aGVyZSBpdCBpcyB1c2VkDQoodW5sZXNzIHRoZXkgYXJlIGJvdGggdGhl
-IHNhbWUgc2l6ZSAtIHdoaWNoIGlzIGFsbG93ZWQpLg0KVGhpcyBtZWFucyB0aGF0IGFoY19pbmIo
-KSA8PCAyNCBpcyBhY3R1YWxseSB1bmRlZmluZWQgKHNpZ25lZCBpbnRlZ2VyDQpvdmVyZmxvdyBj
-YW4gZG8gYW55dGhpbmcgaXQgbGlrZXMpLg0KDQpCeSBmYXIgdGhlIGJlc3QgZml4IGlzIHRvIGNo
-YW5nZSB0aGUgcmV0dXJuIHR5cGUgb2YgYWhjX2luYigpIHRvDQpiZSAndW5zaWduZWQgaW50Jy4N
-Ck9uIHN5c3RlbXMgd2l0aG91dCBieXRlIHNpemVkIHJlZ2lzdGVycyAoYWJvdXQgZXZlcnl0aGlu
-ZyBleGNlcHQgeDg2KQ0KdGhpcyB3aWxsIGFsbW9zdCBjZXJ0YWlubHkgZ2VuZXJhdGUgYmV0dGVy
-IGNvZGUuDQoNCglEYXZpZA0KDQotDQpSZWdpc3RlcmVkIEFkZHJlc3MgTGFrZXNpZGUsIEJyYW1s
-ZXkgUm9hZCwgTW91bnQgRmFybSwgTWlsdG9uIEtleW5lcywgTUsxIDFQVCwgVUsNClJlZ2lzdHJh
-dGlvbiBObzogMTM5NzM4NiAoV2FsZXMpDQo=
+From: Wei Li <liwei213@huawei.com>
+
+Hynix ufs has deviations on hi36xx platform which will result in
+ufs bursts transfer failures.
+
+To fix the problem, the Hynix device must set the register
+VS_DebugSaveConfigTime to 0x10, which will set time reference
+for SaveConfigTime is 250 ns. The time reference for SaveConfigTime
+is 40 ns by default.
+
+This patch is necessary to boot on HiKey960 boards that use
+Hynix UFS chips (H28U62301AMR model: hB8aL1).
+
+Cc: Vinayak Holikatti <vinholikatti@gmail.com>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
+Signed-off-by: Wei Li <liwei213@huawei.com>
+Signed-off-by: Dmitry Shmidt <dimitrysh@google.com>
+[jstultz: Forward ported from older code, slight tweak to commit message]
+Signed-off-by: John Stultz <john.stultz@linaro.org>
+---
+v2:
+* Narrowed the UFS chip model to the specific model where
+  the issue has been seen. (SKhynix  H28U62301AMR model: hB8aL1)
+* Reworked logic to be contained in ufs-hisi.c since it seems to
+  be a controller issue that crops up with this specific chip
+v3:
+* Reworked back to using generic hba quriks which we then key on
+  in the hisi driver.
+---
+ drivers/scsi/ufs/ufs-hisi.c   | 9 +++++++++
+ drivers/scsi/ufs/ufs_quirks.h | 6 ++++++
+ drivers/scsi/ufs/ufshcd.c     | 2 ++
+ 3 files changed, 17 insertions(+)
+
+diff --git a/drivers/scsi/ufs/ufs-hisi.c b/drivers/scsi/ufs/ufs-hisi.c
+index 46df707..452e19f 100644
+--- a/drivers/scsi/ufs/ufs-hisi.c
++++ b/drivers/scsi/ufs/ufs-hisi.c
+@@ -20,6 +20,7 @@
+ #include "unipro.h"
+ #include "ufs-hisi.h"
+ #include "ufshci.h"
++#include "ufs_quirks.h"
+ 
+ static int ufs_hisi_check_hibern8(struct ufs_hba *hba)
+ {
+@@ -390,6 +391,14 @@ static void ufs_hisi_set_dev_cap(struct ufs_hisi_dev_params *hisi_param)
+ 
+ static void ufs_hisi_pwr_change_pre_change(struct ufs_hba *hba)
+ {
++	if (hba->dev_quirks & UFS_DEVICE_QUIRK_HOST_VS_DEBUGSAVECONFIGTIME) {
++		pr_info("ufs flash device must set VS_DebugSaveConfigTime 0x10\n");
++		/* VS_DebugSaveConfigTime */
++		ufshcd_dme_set(hba, UIC_ARG_MIB(0xD0A0), 0x10);
++		/* sync length */
++		ufshcd_dme_set(hba, UIC_ARG_MIB(0x1556), 0x48);
++	}
++
+ 	/* update */
+ 	ufshcd_dme_set(hba, UIC_ARG_MIB(0x15A8), 0x1);
+ 	/* PA_TxSkip */
+diff --git a/drivers/scsi/ufs/ufs_quirks.h b/drivers/scsi/ufs/ufs_quirks.h
+index 71f73d1..5d2dfdb 100644
+--- a/drivers/scsi/ufs/ufs_quirks.h
++++ b/drivers/scsi/ufs/ufs_quirks.h
+@@ -131,4 +131,10 @@ struct ufs_dev_fix {
+  */
+ #define UFS_DEVICE_QUIRK_HOST_PA_SAVECONFIGTIME	(1 << 8)
+ 
++/*
++ * Some UFS devices require VS_DebugSaveConfigTime is 0x10,
++ * enabling this quirk ensure this.
++ */
++#define UFS_DEVICE_QUIRK_HOST_VS_DEBUGSAVECONFIGTIME	(1 << 9)
++
+ #endif /* UFS_QUIRKS_H_ */
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index c55f38e..9c6cac9 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -230,6 +230,8 @@ static struct ufs_dev_fix ufs_fixups[] = {
+ 	UFS_FIX(UFS_VENDOR_SKHYNIX, UFS_ANY_MODEL, UFS_DEVICE_NO_VCCQ),
+ 	UFS_FIX(UFS_VENDOR_SKHYNIX, UFS_ANY_MODEL,
+ 		UFS_DEVICE_QUIRK_HOST_PA_SAVECONFIGTIME),
++	UFS_FIX(UFS_VENDOR_SKHYNIX, "hB8aL1" /*H28U62301AMR*/,
++		UFS_DEVICE_QUIRK_HOST_VS_DEBUGSAVECONFIGTIME),
+ 
+ 	END_FIX
+ };
+-- 
+2.7.4
