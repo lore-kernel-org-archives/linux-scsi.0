@@ -1,27 +1,39 @@
-From: James Bottomley <jejb@linux.vnet.ibm.com>
-Subject: Re: [PATCH] scsi: aic7xxx: Fix unintended sign extension issue
-Date: Thu, 25 Oct 2018 16:32:49 +0100
-Message-ID: <1540481569.3006.5.camel@linux.vnet.ibm.com>
+From: David Laight <David.Laight@ACULAB.COM>
+Subject: RE: [PATCH] scsi: aic7xxx: Fix unintended sign extension issue
+Date: Thu, 25 Oct 2018 15:54:38 +0000
+Message-ID: <483f04b2ad5a4858b56c2be52cea625e@AcuMS.aculab.com>
 References: <20181025151334.15622-1-colin.king@canonical.com>
+ <1540481569.3006.5.camel@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20181025151334.15622-1-colin.king@canonical.com>
+In-Reply-To: <1540481569.3006.5.camel@linux.vnet.ibm.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Colin King <colin.king@canonical.com>, Hannes Reinecke <hare@suse.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+To: 'James Bottomley' <jejb@linux.vnet.ibm.com>, Colin King <colin.king@canonical.com>, Hannes Reinecke <hare@suse.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 2018-10-25 at 16:13 +0100, Colin King wrote:
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> In the expression "ahc_inb(ahc, port+3) << 24", the initial value is
-> a u8, but is promoted to a signed int, then sign-extended to
-> uint64_t.
-
-Why is this, that's highly non intuitive?  The compiler is supposed to
-promote to the biggest type, which is uint64_t and then do the
-calculation
-
-James
+RnJvbTogSmFtZXMgQm90dG9tbGV5DQo+IFNlbnQ6IDI1IE9jdG9iZXIgMjAxOCAxNjozMw0KPiAN
+Cj4gT24gVGh1LCAyMDE4LTEwLTI1IGF0IDE2OjEzICswMTAwLCBDb2xpbiBLaW5nIHdyb3RlOg0K
+PiA+IEZyb206IENvbGluIElhbiBLaW5nIDxjb2xpbi5raW5nQGNhbm9uaWNhbC5jb20+DQo+ID4N
+Cj4gPiBJbiB0aGUgZXhwcmVzc2lvbiAiYWhjX2luYihhaGMsIHBvcnQrMykgPDwgMjQiLCB0aGUg
+aW5pdGlhbCB2YWx1ZSBpcw0KPiA+IGEgdTgsIGJ1dCBpcyBwcm9tb3RlZCB0byBhIHNpZ25lZCBp
+bnQsIHRoZW4gc2lnbi1leHRlbmRlZCB0bw0KPiA+IHVpbnQ2NF90Lg0KPiANCj4gV2h5IGlzIHRo
+aXMsIHRoYXQncyBoaWdobHkgbm9uIGludHVpdGl2ZT8gIFRoZSBjb21waWxlciBpcyBzdXBwb3Nl
+ZCB0bw0KPiBwcm9tb3RlIHRvIHRoZSBiaWdnZXN0IHR5cGUsIHdoaWNoIGlzIHVpbnQ2NF90IGFu
+ZCB0aGVuIGRvIHRoZQ0KPiBjYWxjdWxhdGlvbg0KDQpEbyBub3QgZG91YnQgdGhlIHdpc2RvbSBv
+biB0aGUgQU5TSSBDIGNvbW1pdHRlZSB0aGF0IGRlY2lkZWQgdG8gZG8NCid2YWx1ZSBwcmVzZXJ2
+aW5nJyBpbnRlZ2VyIHByb21vdGlvbnMgaW5zdGVhZCBvZiB0aGUgJ3NpZ24gcHJlc2VydmluZycN
+Cm9uZXMgb2YgSyZSIEMuDQoNClNvICd1bnNpZ25lZCBjaGFyJyBpcyBwcm9tb3RlZCB0byAnaW50
+JyBhbG1vc3QgZXZlcnl3aGVyZSBpdCBpcyB1c2VkDQoodW5sZXNzIHRoZXkgYXJlIGJvdGggdGhl
+IHNhbWUgc2l6ZSAtIHdoaWNoIGlzIGFsbG93ZWQpLg0KVGhpcyBtZWFucyB0aGF0IGFoY19pbmIo
+KSA8PCAyNCBpcyBhY3R1YWxseSB1bmRlZmluZWQgKHNpZ25lZCBpbnRlZ2VyDQpvdmVyZmxvdyBj
+YW4gZG8gYW55dGhpbmcgaXQgbGlrZXMpLg0KDQpCeSBmYXIgdGhlIGJlc3QgZml4IGlzIHRvIGNo
+YW5nZSB0aGUgcmV0dXJuIHR5cGUgb2YgYWhjX2luYigpIHRvDQpiZSAndW5zaWduZWQgaW50Jy4N
+Ck9uIHN5c3RlbXMgd2l0aG91dCBieXRlIHNpemVkIHJlZ2lzdGVycyAoYWJvdXQgZXZlcnl0aGlu
+ZyBleGNlcHQgeDg2KQ0KdGhpcyB3aWxsIGFsbW9zdCBjZXJ0YWlubHkgZ2VuZXJhdGUgYmV0dGVy
+IGNvZGUuDQoNCglEYXZpZA0KDQotDQpSZWdpc3RlcmVkIEFkZHJlc3MgTGFrZXNpZGUsIEJyYW1s
+ZXkgUm9hZCwgTW91bnQgRmFybSwgTWlsdG9uIEtleW5lcywgTUsxIDFQVCwgVUsNClJlZ2lzdHJh
+dGlvbiBObzogMTM5NzM4NiAoV2FsZXMpDQo=
