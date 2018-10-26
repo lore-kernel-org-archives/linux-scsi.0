@@ -1,86 +1,53 @@
-From: YueHaibing <yuehaibing@huawei.com>
-Subject: [PATCH -next] scsi: hisi_sas: Remove set but not used variable 'dq_list'
-Date: Fri, 26 Oct 2018 15:07:31 +0800
-Message-ID: <20181026070731.20024-1-yuehaibing@huawei.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: scsi: myrs: warning fix, was: [GIT PULL] first round of SCSI updates
+ for the 4.19+ merge window
+Date: Fri, 26 Oct 2018 10:16:54 +0200
+Message-ID: <CAK8P3a2R+5kLx=Fo2GTRagAk+4dPP-8GDfH9X7gCtQ7R8=bK_g@mail.gmail.com>
+References: <1540378751.3008.59.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1540378751.3008.59.camel@HansenPartnership.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: john.garry@huawei.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, YueHaibing <yuehaibing@huawei.com>
+To: James.Bottomley@hansenpartnership.com, Hannes Reinecke <hare@suse.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Fixes gcc '-Wunused-but-set-variable' warning:
+On Wed, Oct 24, 2018 at 1:00 PM James Bottomley
+<James.Bottomley@hansenpartnership.com> wrote:
+>
+> James Bottomley (1):
+>       scsi: myrs: fix build failure on 32 bit
 
-drivers/scsi/hisi_sas/hisi_sas_v1_hw.c: In function 'start_delivery_v1_hw':
-drivers/scsi/hisi_sas/hisi_sas_v1_hw.c:907:20: warning:
- variable 'dq_list' set but not used [-Wunused-but-set-variable]
+Hi James and Hannes,
 
-drivers/scsi/hisi_sas/hisi_sas_v2_hw.c: In function 'start_delivery_v2_hw':
-drivers/scsi/hisi_sas/hisi_sas_v2_hw.c:1671:20: warning:
- variable 'dq_list' set but not used [-Wunused-but-set-variable]
+Since James mentioned 32-bit compiles during the kernel summit,
+I'd like to confirm that I hit this on my randconfig builder now,
+with some latency since the last linux-next tree I tested before
+flying to Edinburgh did not have the bug, and the latest
+linux-next tree that is available now (dated last Friday) does, and
+I see your tree is fixed. During normal times, I should catch these
+within a short time of the patch getting into scsi-next.
 
-drivers/scsi/hisi_sas/hisi_sas_v3_hw.c: In function 'start_delivery_v3_hw':
-drivers/scsi/hisi_sas/hisi_sas_v3_hw.c:889:20: warning:
- variable 'dq_list' set but not used [-Wunused-but-set-variable]
+However, while looking at this bug, I found two more issues related
+to the specific computation:
 
-It never used since introduction in commit
-fa222db0b036 ("scsi: hisi_sas: Don't lock DQ for complete task sending")
+percent_complete = ldev_info->rbld_lba * 100 /  ldev_info->cfg_devsize;
 
-Signed-off-by: YueHaibing <yuehaibing@huawei.com>
----
- drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 2 --
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 2 --
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 2 --
- 3 files changed, 6 deletions(-)
+I see that both rbld_lba and cfg_devsize are reported by the
+device, but only the former is 64 bit but the latter is 32 bit and
+also intended to be the larger of the two. I suspect this is a
+bug, and the same is also present in the old DAC960.c.
+cfg_devsize is followed by four reserved bytes in the header,
+so I suppose it was meant to be 64-bit?
+If you divide two 64-bit numbers, you also have to use div_u64_64()
+instead of do_div().
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-index f0e457e..8df822a 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-@@ -904,11 +904,9 @@ static void start_delivery_v1_hw(struct hisi_sas_dq *dq)
- {
- 	struct hisi_hba *hisi_hba = dq->hisi_hba;
- 	struct hisi_sas_slot *s, *s1, *s2 = NULL;
--	struct list_head *dq_list;
- 	int dlvry_queue = dq->id;
- 	int wp;
- 
--	dq_list = &dq->list;
- 	list_for_each_entry_safe(s, s1, &dq->list, delivery) {
- 		if (!s->ready)
- 			break;
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index cc36b64..77a85ea 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -1670,11 +1670,9 @@ static void start_delivery_v2_hw(struct hisi_sas_dq *dq)
- {
- 	struct hisi_hba *hisi_hba = dq->hisi_hba;
- 	struct hisi_sas_slot *s, *s1, *s2 = NULL;
--	struct list_head *dq_list;
- 	int dlvry_queue = dq->id;
- 	int wp;
- 
--	dq_list = &dq->list;
- 	list_for_each_entry_safe(s, s1, &dq->list, delivery) {
- 		if (!s->ready)
- 			break;
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index bd4ce38..a369450 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -886,11 +886,9 @@ static void start_delivery_v3_hw(struct hisi_sas_dq *dq)
- {
- 	struct hisi_hba *hisi_hba = dq->hisi_hba;
- 	struct hisi_sas_slot *s, *s1, *s2 = NULL;
--	struct list_head *dq_list;
- 	int dlvry_queue = dq->id;
- 	int wp;
- 
--	dq_list = &dq->list;
- 	list_for_each_entry_safe(s, s1, &dq->list, delivery) {
- 		if (!s->ready)
- 			break;
--- 
-2.7.0
+On top of that, I see we get those values from the device but
+never do any endianess conversion on them. It seems likely
+that they are all little-endian and require a le32_to_cpu()
+conversion to also work on big-endian kernel builds. Alternatively
+we could make the Kconfig symbol as
+'depends on !CPU_BIG_ENDIAN || COMPILE_TEST'.
+
+        Arnd
