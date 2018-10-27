@@ -1,68 +1,31 @@
-From: Nathan Chancellor <natechancellor@gmail.com>
-Subject: Re: [PATCH] libosd: Remove ignored __weak attribute
-Date: Fri, 26 Oct 2018 23:25:25 -0700
-Message-ID: <20181027062525.GA22995@flashbox>
-References: <20181025225548.GA10326@flashbox>
- <CAKwvOdnwmf47_m_0K5OCLmXbrkLNnekpNOPCCMeJqkuqKUbQ-A@mail.gmail.com>
- <1540576908.66186.103.camel@acm.org>
- <CAKwvOdnYx60JkJHJkD7CYA9yx5Oa7Tn9q4aZ3-tcZGx++yoduQ@mail.gmail.com>
- <1540589437.66186.124.camel@acm.org>
- <CAKwvOdm-xYRqCBXhLC1ceC44_rEmggW4qiSgGpRkpL+p-NadVg@mail.gmail.com>
- <1540591147.66186.127.camel@acm.org>
- <CAKwvOdmUhtK10cbYFoEJJp4O8LA_F-+f68A_NcL_fm_FH6QodA@mail.gmail.com>
- <20181027033552.GA29237@thunk.org>
- <ac63f6d2-d9f3-c512-892d-2e4450fd4c1e@acm.org>
+From: Christoph Hellwig <hch@lst.de>
+Subject: remove exofs and the T10 OSD code V2
+Date: Sat, 27 Oct 2018 10:20:17 +0200
+Message-ID: <20181027082019.20838-1-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <ac63f6d2-d9f3-c512-892d-2e4450fd4c1e@acm.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: "Theodore Y. Ts'o" <tytso@mit.edu>, Nick Desaulniers <ndesaulniers@google.com>, Linus Torvalds <torvalds@linux-foundation.org>, ooo@electrozaur.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, hch@infradead.org
+To: ooo@electrozaur.com, martin.petersen@oracle.com
+Cc: Nick Desaulniers <ndesaulniers@google.com>, Nathan Chancellor <natechancellor@gmail.com>, Linus Torvalds <torvalds@linux-foundation.org>, osd-dev@open-osd.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Oct 26, 2018 at 11:15:11PM -0700, Bart Van Assche wrote:
-> On 10/26/18 8:35 PM, Theodore Y. Ts'o wrote:
-> > The second observation I'll make is that if someone is proposing a
-> > cleanup patch, it's unfair to dump on the person proposing the cleanup
-> > patch the (non-trivial) effort to drop a driver/file system/subsystem.
-> 
-> Hi Ted,
-> 
-> Maybe I was not clear enough. It never was my intention to suggest that Nick
-> or Nathan should remove the OSD code. This is something I'm willing to do
-> myself. BTW, I'm still waiting for someone to explain me why the patch at
-> the start of this thread was submitted by people who never have used the
-> libosd driver and who do not have any plans to use it ever.
-> 
+The only real user of the T10 OSD protocol, the pNFS object layout
+driver never went to the point of having shipping products, and we
+removed it 1.5 years ago.  Exofs is just a simple example without
+real life users.
 
-Hi Bart,
+The code has been mostly unmaintained for years and is getting in the
+way of block / SCSI changes, so I think it's finally time to drop it.
 
-We've been cleaning up Clang warnings seen in various configurations. In
-this case, I believe this warning shows up in an arm64 allyesconfig
-build (would probably show up in an x86_64 one too but I'm not going to
-test right now).
+Quote from Boaz:
 
-More info: https://github.com/ClangBuiltLinux/linux/issues/58
+"As I said then. It is used in Universities for studies and experiments.
+Every once in a while. I get an email with questions and reports.
 
-Cheers,
-Nathan
+But yes feel free to remove the all thing!!
 
-> > If the maintainer wants to drop a driver/file system, that should be
-> > the maintainer's responsibiltiy; not someone proposing a
-> > cleanup/maintenance patch.
-> 
-> I think anyone who makes tree-wide changes has the freedom to suggest to
-> remove a driver. Having to modify drivers that are no longer maintained when
-> doing tree-wide changes can be a real pain.
-> 
-> Additionally, you may have missed earlier discussions on the linux-scsi
-> mailing list about this driver. The first time it was suggested to remove
-> this driver was several years ago. The outcome of a discussion of a few
-> weeks ago is that there is agreement about the removal of this driver. See
-> also the following messages:
-> * https://www.spinics.net/lists/linux-scsi/msg123738.html
-> * https://www.spinics.net/lists/linux-scsi/msg123742.html
-> 
-> Bart.
+I guess I can put it up on github. In a public tree.
+
+Just that I will need to forward port it myself, til now you guys
+been doing this for me ;-)"
