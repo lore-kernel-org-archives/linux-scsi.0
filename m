@@ -1,10 +1,9 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 1/2] fs: remove exofs
-Date: Sat, 27 Oct 2018 10:20:18 +0200
-Message-ID: <20181027082019.20838-2-hch@lst.de>
+Subject: [PATCH 2/2] scsi: remove the SCSI OSD library
+Date: Sat, 27 Oct 2018 10:20:19 +0200
+Message-ID: <20181027082019.20838-3-hch@lst.de>
 References: <20181027082019.20838-1-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20181027082019.20838-1-hch@lst.de>
@@ -13,6767 +12,3751 @@ To: ooo@electrozaur.com, martin.petersen@oracle.com
 Cc: Nick Desaulniers <ndesaulniers@google.com>, Nathan Chancellor <natechancellor@gmail.com>, Linus Torvalds <torvalds@linux-foundation.org>, osd-dev@open-osd.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-This was an example for using the SCSI OSD protocol, which we're trying
-to remove.
+Now that all the users are gone the SCSI OSD library can be removed
+as well.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- Documentation/filesystems/exofs.txt |  185 ----
- Documentation/scsi/osd.txt          |    5 -
- MAINTAINERS                         |    1 -
- fs/Kconfig                          |    3 -
- fs/Makefile                         |    1 -
- fs/exofs/BUGS                       |    3 -
- fs/exofs/Kbuild                     |   20 -
- fs/exofs/Kconfig                    |   13 -
- fs/exofs/Kconfig.ore                |   14 -
- fs/exofs/common.h                   |  262 -----
- fs/exofs/dir.c                      |  661 ------------
- fs/exofs/exofs.h                    |  240 -----
- fs/exofs/file.c                     |   83 --
- fs/exofs/inode.c                    | 1514 ---------------------------
- fs/exofs/namei.c                    |  323 ------
- fs/exofs/ore.c                      | 1178 ---------------------
- fs/exofs/ore_raid.c                 |  756 -------------
- fs/exofs/ore_raid.h                 |   62 --
- fs/exofs/super.c                    | 1047 ------------------
- fs/exofs/sys.c                      |  205 ----
- 20 files changed, 6576 deletions(-)
- delete mode 100644 Documentation/filesystems/exofs.txt
- delete mode 100644 fs/exofs/BUGS
- delete mode 100644 fs/exofs/Kbuild
- delete mode 100644 fs/exofs/Kconfig
- delete mode 100644 fs/exofs/Kconfig.ore
- delete mode 100644 fs/exofs/common.h
- delete mode 100644 fs/exofs/dir.c
- delete mode 100644 fs/exofs/exofs.h
- delete mode 100644 fs/exofs/file.c
- delete mode 100644 fs/exofs/inode.c
- delete mode 100644 fs/exofs/namei.c
- delete mode 100644 fs/exofs/ore.c
- delete mode 100644 fs/exofs/ore_raid.c
- delete mode 100644 fs/exofs/ore_raid.h
- delete mode 100644 fs/exofs/super.c
- delete mode 100644 fs/exofs/sys.c
+ Documentation/scsi/osd.txt       |  192 ---
+ drivers/scsi/Kconfig             |    2 -
+ drivers/scsi/Makefile            |    1 -
+ drivers/scsi/osd/Kbuild          |   20 -
+ drivers/scsi/osd/Kconfig         |   49 -
+ drivers/scsi/osd/osd_debug.h     |   30 -
+ drivers/scsi/osd/osd_initiator.c | 2076 ------------------------------
+ drivers/scsi/osd/osd_uld.c       |  571 --------
+ include/scsi/osd_initiator.h     |  511 --------
+ include/scsi/osd_ore.h           |  201 ---
+ 10 files changed, 3653 deletions(-)
+ delete mode 100644 Documentation/scsi/osd.txt
+ delete mode 100644 drivers/scsi/osd/Kbuild
+ delete mode 100644 drivers/scsi/osd/Kconfig
+ delete mode 100644 drivers/scsi/osd/osd_debug.h
+ delete mode 100644 drivers/scsi/osd/osd_initiator.c
+ delete mode 100644 drivers/scsi/osd/osd_uld.c
+ delete mode 100644 include/scsi/osd_initiator.h
+ delete mode 100644 include/scsi/osd_ore.h
 
-diff --git a/Documentation/filesystems/exofs.txt b/Documentation/filesystems/exofs.txt
+diff --git a/Documentation/scsi/osd.txt b/Documentation/scsi/osd.txt
 deleted file mode 100644
-index 23583a136975..000000000000
---- a/Documentation/filesystems/exofs.txt
+index 2bc2ab06b0c0..000000000000
+--- a/Documentation/scsi/osd.txt
 +++ /dev/null
-@@ -1,185 +0,0 @@
--===============================================================================
--WHAT IS EXOFS?
--===============================================================================
+@@ -1,192 +0,0 @@
+-The OSD Standard
+-================
+-OSD (Object-Based Storage Device) is a T10 SCSI command set that is designed
+-to provide efficient operation of input/output logical units that manage the
+-allocation, placement, and accessing of variable-size data-storage containers,
+-called objects. Objects are intended to contain operating system and application
+-constructs. Each object has associated attributes attached to it, which are
+-integral part of the object and provide metadata about the object. The standard
+-defines some common obligatory attributes, but user attributes can be added as
+-needed.
 -
--exofs is a file system that uses an OSD and exports the API of a normal Linux
--file system. Users access exofs like any other local file system, and exofs
--will in turn issue commands to the local OSD initiator.
+-See: http://www.t10.org/ftp/t10/drafts/osd2/ for the latest draft for OSD 2
+-or search the web for "OSD SCSI"
 -
--OSD is a new T10 command set that views storage devices not as a large/flat
--array of sectors but as a container of objects, each having a length, quota,
--time attributes and more. Each object is addressed by a 64bit ID, and is
--contained in a 64bit ID partition. Each object has associated attributes
--attached to it, which are integral part of the object and provide metadata about
--the object. The standard defines some common obligatory attributes, but user
--attributes can be added as needed.
+-OSD in the Linux Kernel
+-=======================
+-osd-initiator:
+-  The main component of OSD in Kernel is the osd-initiator library. Its main
+-user is intended to be the pNFS-over-objects layout driver, which uses objects
+-as its back-end data storage. Other clients are the other osd parts listed below.
 -
--===============================================================================
--ENVIRONMENT
--===============================================================================
+-osd-uld:
+-  This is a SCSI ULD that registers for OSD type devices and provides a testing
+-platform, both for the in-kernel initiator as well as connected targets. It
+-currently has no useful user-mode API, though it could have if need be.
 -
--To use this file system, you need to have an object store to run it on.  You
--may download a target from:
+-osd target:
+-  There are no current plans for an OSD target implementation in kernel. For all
+-needs, a user-mode target that is based on the scsi tgt target framework is
+-available from Ohio Supercomputer Center (OSC) at:
+-http://www.open-osd.org/bin/view/Main/OscOsdProject
+-There are several other target implementations. See http://open-osd.org for more
+-links.
+-
+-Files and Folders
+-=================
+-This is the complete list of files included in this work:
+-include/scsi/
+-	osd_initiator.h   Main API for the initiator library
+-	osd_types.h	  Common OSD types
+-	osd_sec.h	  Security Manager API
+-	osd_protocol.h	  Wire definitions of the OSD standard protocol
+-	osd_attributes.h  Wire definitions of OSD attributes
+-
+-drivers/scsi/osd/
+-	osd_initiator.c   OSD-Initiator library implementation
+-	osd_uld.c	  The OSD scsi ULD
+-	osd_ktest.{h,c}	  In-kernel test suite (called by osd_uld)
+-	osd_debug.h	  Some printk macros
+-	Makefile	  For both in-tree and out-of-tree compilation
+-	Kconfig		  Enables inclusion of the different pieces
+-	osd_test.c	  User-mode application to call the kernel tests
+-
+-The OSD-Initiator Library
+-=========================
+-osd_initiator is a low level implementation of an osd initiator encoder.
+-But even though, it should be intuitive and easy to use. Perhaps over time an
+-higher lever will form that automates some of the more common recipes.
+-
+-init/fini:
+-- osd_dev_init() associates a scsi_device with an osd_dev structure
+-  and initializes some global pools. This should be done once per scsi_device
+-  (OSD LUN). The osd_dev structure is needed for calling osd_start_request().
+-
+-- osd_dev_fini() cleans up before a osd_dev/scsi_device destruction.
+-
+-OSD commands encoding, execution, and decoding of results:
+-
+-struct osd_request's is used to iteratively encode an OSD command and carry
+-its state throughout execution. Each request goes through these stages:
+-
+-a. osd_start_request() allocates the request.
+-
+-b. Any of the osd_req_* methods is used to encode a request of the specified
+-   type.
+-
+-c. osd_req_add_{get,set}_attr_* may be called to add get/set attributes to the
+-   CDB. "List" or "Page" mode can be used exclusively. The attribute-list API
+-   can be called multiple times on the same request. However, only one
+-   attribute-page can be read, as mandated by the OSD standard.
+-
+-d. osd_finalize_request() computes offsets into the data-in and data-out buffers
+-   and signs the request using the provided capability key and integrity-
+-   check parameters.
+-
+-e. osd_execute_request() may be called to execute the request via the block
+-   layer and wait for its completion.  The request can be executed
+-   asynchronously by calling the block layer API directly.
+-
+-f. After execution, osd_req_decode_sense() can be called to decode the request's
+-   sense information.
+-
+-g. osd_req_decode_get_attr() may be called to retrieve osd_add_get_attr_list()
+-   values.
+-
+-h. osd_end_request() must be called to deallocate the request and any resource
+-   associated with it. Note that osd_end_request cleans up the request at any
+-   stage and it must always be called after a successful osd_start_request().
+-
+-osd_request's structure:
+-
+-The OSD standard defines a complex structure of IO segments pointed to by
+-members in the CDB. Up to 3 segments can be deployed in the IN-Buffer and up to
+-4 in the OUT-Buffer. The ASCII illustration below depicts a secure-read with
+-associated get+set of attributes-lists. Other combinations very on the same
+-basic theme. From no-segments-used up to all-segments-used.
+-
+-|________OSD-CDB__________|
+-|                         |
+-|read_len (offset=0)     -|---------\
+-|                         |         |
+-|get_attrs_list_length    |         |
+-|get_attrs_list_offset   -|----\    |
+-|                         |    |    |
+-|retrieved_attrs_alloc_len|    |    |
+-|retrieved_attrs_offset  -|----|----|-\
+-|                         |    |    | |
+-|set_attrs_list_length    |    |    | |
+-|set_attrs_list_offset   -|-\  |    | |
+-|                         | |  |    | |
+-|in_data_integ_offset    -|-|--|----|-|-\
+-|out_data_integ_offset   -|-|--|--\ | | |
+-\_________________________/ |  |  | | | |
+-                            |  |  | | | |
+-|_______OUT-BUFFER________| |  |  | | | |
+-|      Set attr list      |</  |  | | | |
+-|                         |    |  | | | |
+-|-------------------------|    |  | | | |
+-|   Get attr descriptors  |<---/  | | | |
+-|                         |       | | | |
+-|-------------------------|       | | | |
+-|    Out-data integrity   |<------/ | | |
+-|                         |         | | |
+-\_________________________/         | | |
+-                                    | | |
+-|________IN-BUFFER________|         | | |
+-|      In-Data read       |<--------/ | |
+-|                         |           | |
+-|-------------------------|           | |
+-|      Get attr list      |<----------/ |
+-|                         |             |
+-|-------------------------|             |
+-|    In-data integrity    |<------------/
+-|                         |
+-\_________________________/
+-
+-A block device request can carry bidirectional payload by means of associating
+-a bidi_read request with a main write-request. Each in/out request is described
+-by a chain of BIOs associated with each request.
+-The CDB is of a SCSI VARLEN CDB format, as described by OSD standard.
+-The OSD standard also mandates alignment restrictions at start of each segment.
+-
+-In the code, in struct osd_request, there are two _osd_io_info structures to
+-describe the IN/OUT buffers above, two BIOs for the data payload and up to five
+-_osd_req_data_segment structures to hold the different segments allocation and
+-information.
+-
+-Important: We have chosen to disregard the assumption that a BIO-chain (and
+-the resulting sg-list) describes a linear memory buffer. Meaning only first and
+-last scatter chain can be incomplete and all the middle chains are of PAGE_SIZE.
+-For us, a scatter-gather-list, as its name implies and as used by the Networking
+-layer, is to describe a vector of buffers that will be transferred to/from the
+-wire. It works very well with current iSCSI transport. iSCSI is currently the
+-only deployed OSD transport. In the future we anticipate SAS and FC attached OSD
+-devices as well.
+-
+-The OSD Testing ULD
+-===================
+-TODO: More user-mode control on tests.
+-
+-Authors, Mailing list
+-=====================
+-Please communicate with us on any deployment of osd, whether using this code
+-or not.
+-
+-Any problems, questions, bug reports, lonely OSD nights, please email:
+-   OSD Dev List <osd-dev@open-osd.org>
+-
+-More up-to-date information can be found on:
 -http://open-osd.org
 -
--See Documentation/scsi/osd.txt for how to setup a working osd environment.
+-Boaz Harrosh <ooo@electrozaur.com>
 -
--===============================================================================
--USAGE
--===============================================================================
+-References
+-==========
+-Weber, R., "SCSI Object-Based Storage Device Commands",
+-T10/1355-D ANSI/INCITS 400-2004,
+-http://www.t10.org/ftp/t10/drafts/osd/osd-r10.pdf
 -
--1. Download and compile exofs and open-osd initiator:
--  You need an external Kernel source tree or kernel headers from your
--  distribution. (anything based on 2.6.26 or later).
--
--  a. download open-osd including exofs source using:
--     [parent-directory]$ git clone git://git.open-osd.org/open-osd.git
--
--  b. Build the library module like this:
--     [parent-directory]$ make -C KSRC=$(KER_DIR) open-osd
--
--     This will build both the open-osd initiator as well as the exofs kernel
--     module. Use whatever parameters you compiled your Kernel with and
--     $(KER_DIR) above pointing to the Kernel you compile against. See the file
--     open-osd/top-level-Makefile for an example.
--
--2. Get the OSD initiator and target set up properly, and login to the target.
--  See Documentation/scsi/osd.txt for farther instructions. Also see ./do-osd
--  for example script that does all these steps.
--
--3. Insmod the exofs.ko module:
--   [exofs]$ insmod exofs.ko
--
--4. Make sure the directory where you want to mount exists. If not, create it.
--   (For example, mkdir /mnt/exofs)
--
--5. At first run you will need to invoke the mkfs.exofs application
--
--   As an example, this will create the file system on:
--   /dev/osd0 partition ID 65536
--
--   mkfs.exofs --pid=65536 --format /dev/osd0
--
--   The --format is optional. If not specified, no OSD_FORMAT will be
--   performed and a clean file system will be created in the specified pid,
--   in the available space of the target. (Use --format=size_in_meg to limit
--   the total LUN space available)
--
--   If pid already exists, it will be deleted and a new one will be created in
--   its place. Be careful.
--
--   An exofs lives inside a single OSD partition. You can create multiple exofs
--   filesystems on the same device using multiple pids.
--
--   (run mkfs.exofs without any parameters for usage help message)
--
--6. Mount the file system.
--
--   For example, to mount /dev/osd0, partition ID 0x10000 on /mnt/exofs:
--
--	mount -t exofs -o pid=65536 /dev/osd0 /mnt/exofs/
--
--7. For reference (See do-exofs example script):
--	do-exofs start - an example of how to perform the above steps.
--	do-exofs stop - an example of how to unmount the file system.
--	do-exofs format - an example of how to format and mkfs a new exofs.
--
--8. Extra compilation flags (uncomment in fs/exofs/Kbuild):
--	CONFIG_EXOFS_DEBUG - for debug messages and extra checks.
--
--===============================================================================
--exofs mount options
--===============================================================================
--Similar to any mount command:
--	mount -t exofs -o exofs_options /dev/osdX mount_exofs_directory
--
--Where:
--    -t exofs: specifies the exofs file system
--
--    /dev/osdX: X is a decimal number. /dev/osdX was created after a successful
--               login into an OSD target.
--
--    mount_exofs_directory: The directory to mount the file system on
--
--    exofs specific options: Options are separated by commas (,)
--		pid=<integer> - The partition number to mount/create as
--                                container of the filesystem.
--                                This option is mandatory. integer can be
--                                Hex by pre-pending an 0x to the number.
--		osdname=<id>  - Mount by a device's osdname.
--                                osdname is usually a 36 character uuid of the
--                                form "d2683732-c906-4ee1-9dbd-c10c27bb40df".
--                                It is one of the device's uuid specified in the
--                                mkfs.exofs format command.
--                                If this option is specified then the /dev/osdX
--                                above can be empty and is ignored.
--                to=<integer>  - Timeout in ticks for a single command.
--                                default is (60 * HZ) [for debugging only]
--
--===============================================================================
--DESIGN
--===============================================================================
--
--* The file system control block (AKA on-disk superblock) resides in an object
--  with a special ID (defined in common.h).
--  Information included in the file system control block is used to fill the
--  in-memory superblock structure at mount time. This object is created before
--  the file system is used by mkexofs.c. It contains information such as:
--	- The file system's magic number
--	- The next inode number to be allocated
--
--* Each file resides in its own object and contains the data (and it will be
--  possible to extend the file over multiple objects, though this has not been
--  implemented yet).
--
--* A directory is treated as a file, and essentially contains a list of <file
--  name, inode #> pairs for files that are found in that directory. The object
--  IDs correspond to the files' inode numbers and will be allocated according to
--  a bitmap (stored in a separate object). Now they are allocated using a
--  counter.
--
--* Each file's control block (AKA on-disk inode) is stored in its object's
--  attributes. This applies to both regular files and other types (directories,
--  device files, symlinks, etc.).
--
--* Credentials are generated per object (inode and superblock) when they are
--  created in memory (read from disk or created). The credential works for all
--  operations and is used as long as the object remains in memory.
--
--* Async OSD operations are used whenever possible, but the target may execute
--  them out of order. The operations that concern us are create, delete,
--  readpage, writepage, update_inode, and truncate. The following pairs of
--  operations should execute in the order written, and we need to prevent them
--  from executing in reverse order:
--	- The following are handled with the OBJ_CREATED and OBJ_2BCREATED
--	  flags. OBJ_CREATED is set when we know the object exists on the OSD -
--	  in create's callback function, and when we successfully do a
--	  read_inode.
--	  OBJ_2BCREATED is set in the beginning of the create function, so we
--	  know that we should wait.
--		- create/delete: delete should wait until the object is created
--		  on the OSD.
--		- create/readpage: readpage should be able to return a page
--		  full of zeroes in this case. If there was a write already
--		  en-route (i.e. create, writepage, readpage) then the page
--		  would be locked, and so it would really be the same as
--		  create/writepage.
--		- create/writepage: if writepage is called for a sync write, it
--		  should wait until the object is created on the OSD.
--		  Otherwise, it should just return.
--		- create/truncate: truncate should wait until the object is
--		  created on the OSD.
--		- create/update_inode: update_inode should wait until the
--		  object is created on the OSD.
--	- Handled by VFS locks:
--		- readpage/delete: shouldn't happen because of page lock.
--		- writepage/delete: shouldn't happen because of page lock.
--		- readpage/writepage: shouldn't happen because of page lock.
--
--===============================================================================
--LICENSE/COPYRIGHT
--===============================================================================
--The exofs file system is based on ext2 v0.5b (distributed with the Linux kernel
--version 2.6.10).  All files include the original copyrights, and the license
--is GPL version 2 (only version 2, as is true for the Linux kernel).  The
--Linux kernel can be downloaded from www.kernel.org.
-diff --git a/Documentation/scsi/osd.txt b/Documentation/scsi/osd.txt
-index 5a9879bad073..2bc2ab06b0c0 100644
---- a/Documentation/scsi/osd.txt
-+++ b/Documentation/scsi/osd.txt
-@@ -24,11 +24,6 @@ osd-uld:
- platform, both for the in-kernel initiator as well as connected targets. It
- currently has no useful user-mode API, though it could have if need be.
+-Weber, R., "SCSI Object-Based Storage Device Commands -2 (OSD-2)"
+-T10/1729-D, Working Draft, rev. 3
+-http://www.t10.org/ftp/t10/drafts/osd2/osd2r03.pdf
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index 70988c381268..6c48e971e4c2 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -1528,6 +1528,4 @@ source "drivers/scsi/pcmcia/Kconfig"
  
--exofs:
--  Is an OSD based Linux file system. It uses the osd-initiator and osd-uld,
--to export a usable file system for users.
--See Documentation/filesystems/exofs.txt for more details
+ source "drivers/scsi/device_handler/Kconfig"
+ 
+-source "drivers/scsi/osd/Kconfig"
 -
- osd target:
-   There are no current plans for an OSD target implementation in kernel. For all
- needs, a user-mode target that is based on the scsi tgt target framework is
-diff --git a/MAINTAINERS b/MAINTAINERS
-index fdb6a298c7e7..ca4362412b78 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -10997,7 +10997,6 @@ M:	Boaz Harrosh <ooo@electrozaur.com>
- S:	Maintained
- F:	drivers/scsi/osd/
- F:	include/scsi/osd_*
--F:	fs/exofs/
+ endmenu
+diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
+index fcb41ae329c4..8826111fdf4a 100644
+--- a/drivers/scsi/Makefile
++++ b/drivers/scsi/Makefile
+@@ -150,7 +150,6 @@ obj-$(CONFIG_CHR_DEV_SG)	+= sg.o
+ obj-$(CONFIG_CHR_DEV_SCH)	+= ch.o
+ obj-$(CONFIG_SCSI_ENCLOSURE)	+= ses.o
  
- OV2659 OMNIVISION SENSOR DRIVER
- M:	"Lad, Prabhakar" <prabhakar.csengg@gmail.com>
-diff --git a/fs/Kconfig b/fs/Kconfig
-index ac474a61be37..2557506051a3 100644
---- a/fs/Kconfig
-+++ b/fs/Kconfig
-@@ -254,12 +254,9 @@ source "fs/romfs/Kconfig"
- source "fs/pstore/Kconfig"
- source "fs/sysv/Kconfig"
- source "fs/ufs/Kconfig"
--source "fs/exofs/Kconfig"
+-obj-$(CONFIG_SCSI_OSD_INITIATOR) += osd/
+ obj-$(CONFIG_SCSI_HISI_SAS) += hisi_sas/
  
- endif # MISC_FILESYSTEMS
- 
--source "fs/exofs/Kconfig.ore"
--
- menuconfig NETWORK_FILESYSTEMS
- 	bool "Network File Systems"
- 	default y
-diff --git a/fs/Makefile b/fs/Makefile
-index 293733f61594..4a930ee78d68 100644
---- a/fs/Makefile
-+++ b/fs/Makefile
-@@ -124,7 +124,6 @@ obj-$(CONFIG_OCFS2_FS)		+= ocfs2/
- obj-$(CONFIG_BTRFS_FS)		+= btrfs/
- obj-$(CONFIG_GFS2_FS)           += gfs2/
- obj-$(CONFIG_F2FS_FS)		+= f2fs/
--obj-y				+= exofs/ # Multiple modules
- obj-$(CONFIG_CEPH_FS)		+= ceph/
- obj-$(CONFIG_PSTORE)		+= pstore/
- obj-$(CONFIG_EFIVAR_FS)		+= efivarfs/
-diff --git a/fs/exofs/BUGS b/fs/exofs/BUGS
+ # This goes last, so that "real" scsi devices probe earlier
+diff --git a/drivers/scsi/osd/Kbuild b/drivers/scsi/osd/Kbuild
 deleted file mode 100644
-index 1b2d4c63a579..000000000000
---- a/fs/exofs/BUGS
-+++ /dev/null
-@@ -1,3 +0,0 @@
--- Out-of-space may cause a severe problem if the object (and directory entry)
--  were written, but the inode attributes failed. Then if the filesystem was
--  unmounted and mounted the kernel can get into an endless loop doing a readdir.
-diff --git a/fs/exofs/Kbuild b/fs/exofs/Kbuild
-deleted file mode 100644
-index a364fd0965ec..000000000000
---- a/fs/exofs/Kbuild
+index 58cecd45b0f5..000000000000
+--- a/drivers/scsi/osd/Kbuild
 +++ /dev/null
 @@ -1,20 +0,0 @@
 -#
--# Kbuild for the EXOFS module
+-# Kbuild for the OSD modules
 -#
 -# Copyright (C) 2008 Panasas Inc.  All rights reserved.
 -#
 -# Authors:
 -#   Boaz Harrosh <ooo@electrozaur.com>
+-#   Benny Halevy <bhalevy@panasas.com>
 -#
 -# This program is free software; you can redistribute it and/or modify
 -# it under the terms of the GNU General Public License version 2
 -#
--# Kbuild - Gets included from the Kernels Makefile and build system
+-
+-# libosd.ko - osd-initiator library
+-libosd-y := osd_initiator.o
+-obj-$(CONFIG_SCSI_OSD_INITIATOR) += libosd.o
+-
+-# osd.ko - SCSI ULD and char-device
+-osd-y := osd_uld.o
+-obj-$(CONFIG_SCSI_OSD_ULD) += osd.o
+diff --git a/drivers/scsi/osd/Kconfig b/drivers/scsi/osd/Kconfig
+deleted file mode 100644
+index 347cc5e33749..000000000000
+--- a/drivers/scsi/osd/Kconfig
++++ /dev/null
+@@ -1,49 +0,0 @@
 -#
--
--# ore module library
--libore-y := ore.o ore_raid.o
--obj-$(CONFIG_ORE) += libore.o
--
--exofs-y := inode.o file.o namei.o dir.o super.o sys.o
--obj-$(CONFIG_EXOFS_FS) += exofs.o
-diff --git a/fs/exofs/Kconfig b/fs/exofs/Kconfig
-deleted file mode 100644
-index 86194b2f799d..000000000000
---- a/fs/exofs/Kconfig
-+++ /dev/null
-@@ -1,13 +0,0 @@
--config EXOFS_FS
--	tristate "exofs: OSD based file system support"
--	depends on SCSI_OSD_ULD
--	help
--	  EXOFS is a file system that uses an OSD storage device,
--	  as its backing storage.
--
--# Debugging-related stuff
--config EXOFS_DEBUG
--	bool "Enable debugging"
--	depends on EXOFS_FS
--	help
--	  This option enables EXOFS debug prints.
-diff --git a/fs/exofs/Kconfig.ore b/fs/exofs/Kconfig.ore
-deleted file mode 100644
-index 2daf2329c28d..000000000000
---- a/fs/exofs/Kconfig.ore
-+++ /dev/null
-@@ -1,14 +0,0 @@
--# ORE - Objects Raid Engine (libore.ko)
+-# Kernel configuration file for the OSD scsi protocol
 -#
--# Note ORE needs to "select ASYNC_XOR". So Not to force multiple selects
--# for every ORE user we do it like this. Any user should add itself here
--# at the "depends on EXOFS_FS || ..." with an ||. The dependencies are
--# selected here, and we default to "ON". So in effect it is like been
--# selected by any of the users.
--config ORE
--	tristate
--	depends on EXOFS_FS || PNFS_OBJLAYOUT
--	select ASYNC_XOR
--	select RAID6_PQ
--	select ASYNC_PQ
--	default SCSI_OSD_ULD
-diff --git a/fs/exofs/common.h b/fs/exofs/common.h
+-# Copyright (C) 2008 Panasas Inc.  All rights reserved.
+-#
+-# Authors:
+-#   Boaz Harrosh <ooo@electrozaur.com>
+-#   Benny Halevy <bhalevy@panasas.com>
+-#
+-# This program is free software; you can redistribute it and/or modify
+-# it under the terms of the GNU General Public version 2 License as
+-# published by the Free Software Foundation
+-#
+-config SCSI_OSD_INITIATOR
+-	tristate "OSD-Initiator library"
+-	depends on SCSI
+-	help
+-		Enable the OSD-Initiator library (libosd.ko).
+-		NOTE: You must also select CRYPTO_SHA1 + CRYPTO_HMAC and their
+-		dependencies
+-
+-config SCSI_OSD_ULD
+-	tristate "OSD Upper Level driver"
+-	depends on SCSI_OSD_INITIATOR
+-	help
+-		Build a SCSI upper layer driver that exports /dev/osdX devices
+-		to user-mode for testing and controlling OSD devices. It is also
+-		needed by exofs, for mounting an OSD based file system.
+-
+-config SCSI_OSD_DPRINT_SENSE
+-    int "(0-2) When sense is returned, DEBUG print all sense descriptors"
+-    default 1
+-    depends on SCSI_OSD_INITIATOR
+-    help
+-        When a CHECK_CONDITION status is returned from a target, and a
+-        sense-buffer is retrieved, turning this on will dump a full
+-        sense-decoding message. Setting to 2 will also print recoverable
+-        errors that might be regularly returned for some filesystem
+-        operations.
+-
+-config SCSI_OSD_DEBUG
+-	bool "Compile All OSD modules with lots of DEBUG prints"
+-	default n
+-	depends on SCSI_OSD_INITIATOR
+-	help
+-		OSD Code is populated with lots of OSD_DEBUG(..) printouts to
+-		dmesg. Enable this if you found a bug and you want to help us
+-		track the problem (see also MAINTAINERS). Setting this will also
+-		force SCSI_OSD_DPRINT_SENSE=2.
+diff --git a/drivers/scsi/osd/osd_debug.h b/drivers/scsi/osd/osd_debug.h
 deleted file mode 100644
-index 7d88ef566213..000000000000
---- a/fs/exofs/common.h
+index 26341261bb5c..000000000000
+--- a/drivers/scsi/osd/osd_debug.h
 +++ /dev/null
-@@ -1,262 +0,0 @@
+@@ -1,30 +0,0 @@
 -/*
-- * common.h - Common definitions for both Kernel and user-mode utilities
+- * osd_debug.h - Some kprintf macros
 - *
-- * Copyright (C) 2005, 2006
-- * Avishay Traeger (avishay@gmail.com)
-- * Copyright (C) 2008, 2009
-- * Boaz Harrosh <ooo@electrozaur.com>
+- * Copyright (C) 2008 Panasas Inc.  All rights reserved.
 - *
-- * Copyrights for code taken from ext2:
-- *     Copyright (C) 1992, 1993, 1994, 1995
-- *     Remy Card (card@masi.ibp.fr)
-- *     Laboratoire MASI - Institut Blaise Pascal
-- *     Universite Pierre et Marie Curie (Paris VI)
-- *     from
-- *     linux/fs/minix/inode.c
-- *     Copyright (C) 1991, 1992  Linus Torvalds
+- * Authors:
+- *   Boaz Harrosh <ooo@electrozaur.com>
+- *   Benny Halevy <bhalevy@panasas.com>
 - *
-- * This file is part of exofs.
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License version 2
 - *
-- * exofs is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License as published by
-- * the Free Software Foundation.  Since it is based on ext2, and the only
-- * valid version of GPL for the Linux kernel is version 2, the only valid
-- * version of GPL for exofs is version 2.
-- *
-- * exofs is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with exofs; if not, write to the Free Software
-- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 - */
--
--#ifndef __EXOFS_COM_H__
--#define __EXOFS_COM_H__
--
--#include <linux/types.h>
--
--#include <scsi/osd_attributes.h>
--#include <scsi/osd_initiator.h>
--#include <scsi/osd_sec.h>
--
--/****************************************************************************
-- * Object ID related defines
-- * NOTE: inode# = object ID - EXOFS_OBJ_OFF
-- ****************************************************************************/
--#define EXOFS_MIN_PID   0x10000	/* Smallest partition ID */
--#define EXOFS_OBJ_OFF	0x10000	/* offset for objects */
--#define EXOFS_SUPER_ID	0x10000	/* object ID for on-disk superblock */
--#define EXOFS_DEVTABLE_ID 0x10001 /* object ID for on-disk device table */
--#define EXOFS_ROOT_ID	0x10002	/* object ID for root directory */
--
--/* exofs Application specific page/attribute */
--/* Inode attrs */
--# define EXOFS_APAGE_FS_DATA	(OSD_APAGE_APP_DEFINED_FIRST + 3)
--# define EXOFS_ATTR_INODE_DATA	1
--# define EXOFS_ATTR_INODE_FILE_LAYOUT	2
--# define EXOFS_ATTR_INODE_DIR_LAYOUT	3
--/* Partition attrs */
--# define EXOFS_APAGE_SB_DATA	(0xF0000000U + 3)
--# define EXOFS_ATTR_SB_STATS	1
--
--/*
-- * The maximum number of files we can have is limited by the size of the
-- * inode number.  This is the largest object ID that the file system supports.
-- * Object IDs 0, 1, and 2 are always in use (see above defines).
-- */
--enum {
--	EXOFS_MAX_INO_ID = (sizeof(ino_t) * 8 == 64) ? ULLONG_MAX :
--					(1ULL << (sizeof(ino_t) * 8ULL - 1ULL)),
--	EXOFS_MAX_ID	 = (EXOFS_MAX_INO_ID - 1 - EXOFS_OBJ_OFF),
--};
--
--/****************************************************************************
-- * Misc.
-- ****************************************************************************/
--#define EXOFS_BLKSHIFT	12
--#define EXOFS_BLKSIZE	(1UL << EXOFS_BLKSHIFT)
--
--/****************************************************************************
-- * superblock-related things
-- ****************************************************************************/
--#define EXOFS_SUPER_MAGIC	0x5DF5
--
--/*
-- * The file system control block - stored in object EXOFS_SUPER_ID's data.
-- * This is where the in-memory superblock is stored on disk.
-- */
--enum {EXOFS_FSCB_VER = 1, EXOFS_DT_VER = 1};
--struct exofs_fscb {
--	__le64  s_nextid;	/* Only used after mkfs */
--	__le64  s_numfiles;	/* Only used after mkfs */
--	__le32	s_version;	/* == EXOFS_FSCB_VER */
--	__le16  s_magic;	/* Magic signature */
--	__le16  s_newfs;	/* Non-zero if this is a new fs */
--
--	/* From here on it's a static part, only written by mkexofs */
--	__le64	s_dev_table_oid;   /* Resurved, not used */
--	__le64	s_dev_table_count; /* == 0 means no dev_table */
--} __packed;
--
--/*
-- * This struct is set on the FS partition's attributes.
-- * [EXOFS_APAGE_SB_DATA, EXOFS_ATTR_SB_STATS] and is written together
-- * with the create command, to atomically persist the sb writeable information.
-- */
--struct exofs_sb_stats {
--	__le64  s_nextid;	/* Highest object ID used */
--	__le64  s_numfiles;	/* Number of files on fs */
--} __packed;
--
--/*
-- * Describes the raid used in the FS. It is part of the device table.
-- * This here is taken from the pNFS-objects definition. In exofs we
-- * use one raid policy through-out the filesystem. (NOTE: the funny
-- * alignment at beginning. We take care of it at exofs_device_table.
-- */
--struct exofs_dt_data_map {
--	__le32	cb_num_comps;
--	__le64	cb_stripe_unit;
--	__le32	cb_group_width;
--	__le32	cb_group_depth;
--	__le32	cb_mirror_cnt;
--	__le32	cb_raid_algorithm;
--} __packed;
--
--/*
-- * This is an osd device information descriptor. It is a single entry in
-- * the exofs device table. It describes an osd target lun which
-- * contains data belonging to this FS. (Same partition_id on all devices)
-- */
--struct exofs_dt_device_info {
--	__le32	systemid_len;
--	u8	systemid[OSD_SYSTEMID_LEN];
--	__le64	long_name_offset;	/* If !0 then offset-in-file */
--	__le32	osdname_len;		/* */
--	u8	osdname[44];		/* Embbeded, Usually an asci uuid */
--} __packed;
--
--/*
-- * The EXOFS device table - stored in object EXOFS_DEVTABLE_ID's data.
-- * It contains the raid used for this multy-device FS and an array of
-- * participating devices.
-- */
--struct exofs_device_table {
--	__le32				dt_version;	/* == EXOFS_DT_VER */
--	struct exofs_dt_data_map	dt_data_map;	/* Raid policy to use */
--
--	/* Resurved space For future use. Total includeing this:
--	 * (8 * sizeof(le64))
--	 */
--	__le64				__Resurved[4];
--
--	__le64				dt_num_devices;	/* Array size */
--	struct exofs_dt_device_info	dt_dev_table[];	/* Array of devices */
--} __packed;
--
--/****************************************************************************
-- * inode-related things
-- ****************************************************************************/
--#define EXOFS_IDATA		5
--
--/*
-- * The file control block - stored in an object's attributes.  This is where
-- * the in-memory inode is stored on disk.
-- */
--struct exofs_fcb {
--	__le64  i_size;			/* Size of the file */
--	__le16  i_mode;         	/* File mode */
--	__le16  i_links_count;  	/* Links count */
--	__le32  i_uid;          	/* Owner Uid */
--	__le32  i_gid;          	/* Group Id */
--	__le32  i_atime;        	/* Access time */
--	__le32  i_ctime;        	/* Creation time */
--	__le32  i_mtime;        	/* Modification time */
--	__le32  i_flags;        	/* File flags (unused for now)*/
--	__le32  i_generation;   	/* File version (for NFS) */
--	__le32  i_data[EXOFS_IDATA];	/* Short symlink names and device #s */
--};
--
--#define EXOFS_INO_ATTR_SIZE	sizeof(struct exofs_fcb)
--
--/* This is the Attribute the fcb is stored in */
--static const struct __weak osd_attr g_attr_inode_data = ATTR_DEF(
--	EXOFS_APAGE_FS_DATA,
--	EXOFS_ATTR_INODE_DATA,
--	EXOFS_INO_ATTR_SIZE);
--
--/****************************************************************************
-- * dentry-related things
-- ****************************************************************************/
--#define EXOFS_NAME_LEN	255
--
--/*
-- * The on-disk directory entry
-- */
--struct exofs_dir_entry {
--	__le64		inode_no;		/* inode number           */
--	__le16		rec_len;		/* directory entry length */
--	u8		name_len;		/* name length            */
--	u8		file_type;		/* umm...file type        */
--	char		name[EXOFS_NAME_LEN];	/* file name              */
--};
--
--enum {
--	EXOFS_FT_UNKNOWN,
--	EXOFS_FT_REG_FILE,
--	EXOFS_FT_DIR,
--	EXOFS_FT_CHRDEV,
--	EXOFS_FT_BLKDEV,
--	EXOFS_FT_FIFO,
--	EXOFS_FT_SOCK,
--	EXOFS_FT_SYMLINK,
--	EXOFS_FT_MAX
--};
--
--#define EXOFS_DIR_PAD			4
--#define EXOFS_DIR_ROUND			(EXOFS_DIR_PAD - 1)
--#define EXOFS_DIR_REC_LEN(name_len) \
--	(((name_len) + offsetof(struct exofs_dir_entry, name)  + \
--	  EXOFS_DIR_ROUND) & ~EXOFS_DIR_ROUND)
--
--/*
-- * The on-disk (optional) layout structure.
-- * sits in an EXOFS_ATTR_INODE_FILE_LAYOUT or EXOFS_ATTR_INODE_DIR_LAYOUT
-- * attribute, attached to any inode, usually to a directory.
-- */
--
--enum exofs_inode_layout_gen_functions {
--	LAYOUT_MOVING_WINDOW = 0,
--	LAYOUT_IMPLICT = 1,
--};
--
--struct exofs_on_disk_inode_layout {
--	__le16 gen_func; /* One of enum exofs_inode_layout_gen_functions */
--	__le16 pad;
--	union {
--		/* gen_func == LAYOUT_MOVING_WINDOW (default) */
--		struct exofs_layout_sliding_window {
--			__le32 num_devices; /* first n devices in global-table*/
--		} sliding_window __packed;
--
--		/* gen_func == LAYOUT_IMPLICT */
--		struct exofs_layout_implict_list {
--			struct exofs_dt_data_map data_map;
--			/* Variable array of size data_map.cb_num_comps. These
--			 * are device indexes of the devices in the global table
--			 */
--			__le32 dev_indexes[];
--		} implict __packed;
--	};
--} __packed;
--
--static inline size_t exofs_on_disk_inode_layout_size(unsigned max_devs)
--{
--	return sizeof(struct exofs_on_disk_inode_layout) +
--		max_devs * sizeof(__le32);
--}
--
--#endif /*ifndef __EXOFS_COM_H__*/
-diff --git a/fs/exofs/dir.c b/fs/exofs/dir.c
-deleted file mode 100644
-index f0138674c1ed..000000000000
---- a/fs/exofs/dir.c
-+++ /dev/null
-@@ -1,661 +0,0 @@
--/*
-- * Copyright (C) 2005, 2006
-- * Avishay Traeger (avishay@gmail.com)
-- * Copyright (C) 2008, 2009
-- * Boaz Harrosh <ooo@electrozaur.com>
-- *
-- * Copyrights for code taken from ext2:
-- *     Copyright (C) 1992, 1993, 1994, 1995
-- *     Remy Card (card@masi.ibp.fr)
-- *     Laboratoire MASI - Institut Blaise Pascal
-- *     Universite Pierre et Marie Curie (Paris VI)
-- *     from
-- *     linux/fs/minix/inode.c
-- *     Copyright (C) 1991, 1992  Linus Torvalds
-- *
-- * This file is part of exofs.
-- *
-- * exofs is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License as published by
-- * the Free Software Foundation.  Since it is based on ext2, and the only
-- * valid version of GPL for the Linux kernel is version 2, the only valid
-- * version of GPL for exofs is version 2.
-- *
-- * exofs is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with exofs; if not, write to the Free Software
-- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-- */
--
--#include <linux/iversion.h>
--#include "exofs.h"
--
--static inline unsigned exofs_chunk_size(struct inode *inode)
--{
--	return inode->i_sb->s_blocksize;
--}
--
--static inline void exofs_put_page(struct page *page)
--{
--	kunmap(page);
--	put_page(page);
--}
--
--static unsigned exofs_last_byte(struct inode *inode, unsigned long page_nr)
--{
--	loff_t last_byte = inode->i_size;
--
--	last_byte -= page_nr << PAGE_SHIFT;
--	if (last_byte > PAGE_SIZE)
--		last_byte = PAGE_SIZE;
--	return last_byte;
--}
--
--static int exofs_commit_chunk(struct page *page, loff_t pos, unsigned len)
--{
--	struct address_space *mapping = page->mapping;
--	struct inode *dir = mapping->host;
--	int err = 0;
--
--	inode_inc_iversion(dir);
--
--	if (!PageUptodate(page))
--		SetPageUptodate(page);
--
--	if (pos+len > dir->i_size) {
--		i_size_write(dir, pos+len);
--		mark_inode_dirty(dir);
--	}
--	set_page_dirty(page);
--
--	if (IS_DIRSYNC(dir))
--		err = write_one_page(page);
--	else
--		unlock_page(page);
--
--	return err;
--}
--
--static bool exofs_check_page(struct page *page)
--{
--	struct inode *dir = page->mapping->host;
--	unsigned chunk_size = exofs_chunk_size(dir);
--	char *kaddr = page_address(page);
--	unsigned offs, rec_len;
--	unsigned limit = PAGE_SIZE;
--	struct exofs_dir_entry *p;
--	char *error;
--
--	/* if the page is the last one in the directory */
--	if ((dir->i_size >> PAGE_SHIFT) == page->index) {
--		limit = dir->i_size & ~PAGE_MASK;
--		if (limit & (chunk_size - 1))
--			goto Ebadsize;
--		if (!limit)
--			goto out;
--	}
--	for (offs = 0; offs <= limit - EXOFS_DIR_REC_LEN(1); offs += rec_len) {
--		p = (struct exofs_dir_entry *)(kaddr + offs);
--		rec_len = le16_to_cpu(p->rec_len);
--
--		if (rec_len < EXOFS_DIR_REC_LEN(1))
--			goto Eshort;
--		if (rec_len & 3)
--			goto Ealign;
--		if (rec_len < EXOFS_DIR_REC_LEN(p->name_len))
--			goto Enamelen;
--		if (((offs + rec_len - 1) ^ offs) & ~(chunk_size-1))
--			goto Espan;
--	}
--	if (offs != limit)
--		goto Eend;
--out:
--	SetPageChecked(page);
--	return true;
--
--Ebadsize:
--	EXOFS_ERR("ERROR [exofs_check_page]: "
--		"size of directory(0x%lx) is not a multiple of chunk size\n",
--		dir->i_ino
--	);
--	goto fail;
--Eshort:
--	error = "rec_len is smaller than minimal";
--	goto bad_entry;
--Ealign:
--	error = "unaligned directory entry";
--	goto bad_entry;
--Enamelen:
--	error = "rec_len is too small for name_len";
--	goto bad_entry;
--Espan:
--	error = "directory entry across blocks";
--	goto bad_entry;
--bad_entry:
--	EXOFS_ERR(
--		"ERROR [exofs_check_page]: bad entry in directory(0x%lx): %s - "
--		"offset=%lu, inode=0x%llx, rec_len=%d, name_len=%d\n",
--		dir->i_ino, error, (page->index<<PAGE_SHIFT)+offs,
--		_LLU(le64_to_cpu(p->inode_no)),
--		rec_len, p->name_len);
--	goto fail;
--Eend:
--	p = (struct exofs_dir_entry *)(kaddr + offs);
--	EXOFS_ERR("ERROR [exofs_check_page]: "
--		"entry in directory(0x%lx) spans the page boundary"
--		"offset=%lu, inode=0x%llx\n",
--		dir->i_ino, (page->index<<PAGE_SHIFT)+offs,
--		_LLU(le64_to_cpu(p->inode_no)));
--fail:
--	SetPageError(page);
--	return false;
--}
--
--static struct page *exofs_get_page(struct inode *dir, unsigned long n)
--{
--	struct address_space *mapping = dir->i_mapping;
--	struct page *page = read_mapping_page(mapping, n, NULL);
--
--	if (!IS_ERR(page)) {
--		kmap(page);
--		if (unlikely(!PageChecked(page))) {
--			if (PageError(page) || !exofs_check_page(page))
--				goto fail;
--		}
--	}
--	return page;
--
--fail:
--	exofs_put_page(page);
--	return ERR_PTR(-EIO);
--}
--
--static inline int exofs_match(int len, const unsigned char *name,
--					struct exofs_dir_entry *de)
--{
--	if (len != de->name_len)
--		return 0;
--	if (!de->inode_no)
--		return 0;
--	return !memcmp(name, de->name, len);
--}
--
--static inline
--struct exofs_dir_entry *exofs_next_entry(struct exofs_dir_entry *p)
--{
--	return (struct exofs_dir_entry *)((char *)p + le16_to_cpu(p->rec_len));
--}
--
--static inline unsigned
--exofs_validate_entry(char *base, unsigned offset, unsigned mask)
--{
--	struct exofs_dir_entry *de = (struct exofs_dir_entry *)(base + offset);
--	struct exofs_dir_entry *p =
--			(struct exofs_dir_entry *)(base + (offset&mask));
--	while ((char *)p < (char *)de) {
--		if (p->rec_len == 0)
--			break;
--		p = exofs_next_entry(p);
--	}
--	return (char *)p - base;
--}
--
--static unsigned char exofs_filetype_table[EXOFS_FT_MAX] = {
--	[EXOFS_FT_UNKNOWN]	= DT_UNKNOWN,
--	[EXOFS_FT_REG_FILE]	= DT_REG,
--	[EXOFS_FT_DIR]		= DT_DIR,
--	[EXOFS_FT_CHRDEV]	= DT_CHR,
--	[EXOFS_FT_BLKDEV]	= DT_BLK,
--	[EXOFS_FT_FIFO]		= DT_FIFO,
--	[EXOFS_FT_SOCK]		= DT_SOCK,
--	[EXOFS_FT_SYMLINK]	= DT_LNK,
--};
--
--#define S_SHIFT 12
--static unsigned char exofs_type_by_mode[S_IFMT >> S_SHIFT] = {
--	[S_IFREG >> S_SHIFT]	= EXOFS_FT_REG_FILE,
--	[S_IFDIR >> S_SHIFT]	= EXOFS_FT_DIR,
--	[S_IFCHR >> S_SHIFT]	= EXOFS_FT_CHRDEV,
--	[S_IFBLK >> S_SHIFT]	= EXOFS_FT_BLKDEV,
--	[S_IFIFO >> S_SHIFT]	= EXOFS_FT_FIFO,
--	[S_IFSOCK >> S_SHIFT]	= EXOFS_FT_SOCK,
--	[S_IFLNK >> S_SHIFT]	= EXOFS_FT_SYMLINK,
--};
--
--static inline
--void exofs_set_de_type(struct exofs_dir_entry *de, struct inode *inode)
--{
--	umode_t mode = inode->i_mode;
--	de->file_type = exofs_type_by_mode[(mode & S_IFMT) >> S_SHIFT];
--}
--
--static int
--exofs_readdir(struct file *file, struct dir_context *ctx)
--{
--	loff_t pos = ctx->pos;
--	struct inode *inode = file_inode(file);
--	unsigned int offset = pos & ~PAGE_MASK;
--	unsigned long n = pos >> PAGE_SHIFT;
--	unsigned long npages = dir_pages(inode);
--	unsigned chunk_mask = ~(exofs_chunk_size(inode)-1);
--	bool need_revalidate = !inode_eq_iversion(inode, file->f_version);
--
--	if (pos > inode->i_size - EXOFS_DIR_REC_LEN(1))
--		return 0;
--
--	for ( ; n < npages; n++, offset = 0) {
--		char *kaddr, *limit;
--		struct exofs_dir_entry *de;
--		struct page *page = exofs_get_page(inode, n);
--
--		if (IS_ERR(page)) {
--			EXOFS_ERR("ERROR: bad page in directory(0x%lx)\n",
--				  inode->i_ino);
--			ctx->pos += PAGE_SIZE - offset;
--			return PTR_ERR(page);
--		}
--		kaddr = page_address(page);
--		if (unlikely(need_revalidate)) {
--			if (offset) {
--				offset = exofs_validate_entry(kaddr, offset,
--								chunk_mask);
--				ctx->pos = (n<<PAGE_SHIFT) + offset;
--			}
--			file->f_version = inode_query_iversion(inode);
--			need_revalidate = false;
--		}
--		de = (struct exofs_dir_entry *)(kaddr + offset);
--		limit = kaddr + exofs_last_byte(inode, n) -
--							EXOFS_DIR_REC_LEN(1);
--		for (; (char *)de <= limit; de = exofs_next_entry(de)) {
--			if (de->rec_len == 0) {
--				EXOFS_ERR("ERROR: "
--				     "zero-length entry in directory(0x%lx)\n",
--				     inode->i_ino);
--				exofs_put_page(page);
--				return -EIO;
--			}
--			if (de->inode_no) {
--				unsigned char t;
--
--				if (de->file_type < EXOFS_FT_MAX)
--					t = exofs_filetype_table[de->file_type];
--				else
--					t = DT_UNKNOWN;
--
--				if (!dir_emit(ctx, de->name, de->name_len,
--						le64_to_cpu(de->inode_no),
--						t)) {
--					exofs_put_page(page);
--					return 0;
--				}
--			}
--			ctx->pos += le16_to_cpu(de->rec_len);
--		}
--		exofs_put_page(page);
--	}
--	return 0;
--}
--
--struct exofs_dir_entry *exofs_find_entry(struct inode *dir,
--			struct dentry *dentry, struct page **res_page)
--{
--	const unsigned char *name = dentry->d_name.name;
--	int namelen = dentry->d_name.len;
--	unsigned reclen = EXOFS_DIR_REC_LEN(namelen);
--	unsigned long start, n;
--	unsigned long npages = dir_pages(dir);
--	struct page *page = NULL;
--	struct exofs_i_info *oi = exofs_i(dir);
--	struct exofs_dir_entry *de;
--
--	if (npages == 0)
--		goto out;
--
--	*res_page = NULL;
--
--	start = oi->i_dir_start_lookup;
--	if (start >= npages)
--		start = 0;
--	n = start;
--	do {
--		char *kaddr;
--		page = exofs_get_page(dir, n);
--		if (!IS_ERR(page)) {
--			kaddr = page_address(page);
--			de = (struct exofs_dir_entry *) kaddr;
--			kaddr += exofs_last_byte(dir, n) - reclen;
--			while ((char *) de <= kaddr) {
--				if (de->rec_len == 0) {
--					EXOFS_ERR("ERROR: zero-length entry in "
--						  "directory(0x%lx)\n",
--						  dir->i_ino);
--					exofs_put_page(page);
--					goto out;
--				}
--				if (exofs_match(namelen, name, de))
--					goto found;
--				de = exofs_next_entry(de);
--			}
--			exofs_put_page(page);
--		}
--		if (++n >= npages)
--			n = 0;
--	} while (n != start);
--out:
--	return NULL;
--
--found:
--	*res_page = page;
--	oi->i_dir_start_lookup = n;
--	return de;
--}
--
--struct exofs_dir_entry *exofs_dotdot(struct inode *dir, struct page **p)
--{
--	struct page *page = exofs_get_page(dir, 0);
--	struct exofs_dir_entry *de = NULL;
--
--	if (!IS_ERR(page)) {
--		de = exofs_next_entry(
--				(struct exofs_dir_entry *)page_address(page));
--		*p = page;
--	}
--	return de;
--}
--
--ino_t exofs_parent_ino(struct dentry *child)
--{
--	struct page *page;
--	struct exofs_dir_entry *de;
--	ino_t ino;
--
--	de = exofs_dotdot(d_inode(child), &page);
--	if (!de)
--		return 0;
--
--	ino = le64_to_cpu(de->inode_no);
--	exofs_put_page(page);
--	return ino;
--}
--
--ino_t exofs_inode_by_name(struct inode *dir, struct dentry *dentry)
--{
--	ino_t res = 0;
--	struct exofs_dir_entry *de;
--	struct page *page;
--
--	de = exofs_find_entry(dir, dentry, &page);
--	if (de) {
--		res = le64_to_cpu(de->inode_no);
--		exofs_put_page(page);
--	}
--	return res;
--}
--
--int exofs_set_link(struct inode *dir, struct exofs_dir_entry *de,
--			struct page *page, struct inode *inode)
--{
--	loff_t pos = page_offset(page) +
--			(char *) de - (char *) page_address(page);
--	unsigned len = le16_to_cpu(de->rec_len);
--	int err;
--
--	lock_page(page);
--	err = exofs_write_begin(NULL, page->mapping, pos, len, 0, &page, NULL);
--	if (err)
--		EXOFS_ERR("exofs_set_link: exofs_write_begin FAILED => %d\n",
--			  err);
--
--	de->inode_no = cpu_to_le64(inode->i_ino);
--	exofs_set_de_type(de, inode);
--	if (likely(!err))
--		err = exofs_commit_chunk(page, pos, len);
--	exofs_put_page(page);
--	dir->i_mtime = dir->i_ctime = current_time(dir);
--	mark_inode_dirty(dir);
--	return err;
--}
--
--int exofs_add_link(struct dentry *dentry, struct inode *inode)
--{
--	struct inode *dir = d_inode(dentry->d_parent);
--	const unsigned char *name = dentry->d_name.name;
--	int namelen = dentry->d_name.len;
--	unsigned chunk_size = exofs_chunk_size(dir);
--	unsigned reclen = EXOFS_DIR_REC_LEN(namelen);
--	unsigned short rec_len, name_len;
--	struct page *page = NULL;
--	struct exofs_sb_info *sbi = inode->i_sb->s_fs_info;
--	struct exofs_dir_entry *de;
--	unsigned long npages = dir_pages(dir);
--	unsigned long n;
--	char *kaddr;
--	loff_t pos;
--	int err;
--
--	for (n = 0; n <= npages; n++) {
--		char *dir_end;
--
--		page = exofs_get_page(dir, n);
--		err = PTR_ERR(page);
--		if (IS_ERR(page))
--			goto out;
--		lock_page(page);
--		kaddr = page_address(page);
--		dir_end = kaddr + exofs_last_byte(dir, n);
--		de = (struct exofs_dir_entry *)kaddr;
--		kaddr += PAGE_SIZE - reclen;
--		while ((char *)de <= kaddr) {
--			if ((char *)de == dir_end) {
--				name_len = 0;
--				rec_len = chunk_size;
--				de->rec_len = cpu_to_le16(chunk_size);
--				de->inode_no = 0;
--				goto got_it;
--			}
--			if (de->rec_len == 0) {
--				EXOFS_ERR("ERROR: exofs_add_link: "
--				      "zero-length entry in directory(0x%lx)\n",
--				      inode->i_ino);
--				err = -EIO;
--				goto out_unlock;
--			}
--			err = -EEXIST;
--			if (exofs_match(namelen, name, de))
--				goto out_unlock;
--			name_len = EXOFS_DIR_REC_LEN(de->name_len);
--			rec_len = le16_to_cpu(de->rec_len);
--			if (!de->inode_no && rec_len >= reclen)
--				goto got_it;
--			if (rec_len >= name_len + reclen)
--				goto got_it;
--			de = (struct exofs_dir_entry *) ((char *) de + rec_len);
--		}
--		unlock_page(page);
--		exofs_put_page(page);
--	}
--
--	EXOFS_ERR("exofs_add_link: BAD dentry=%p or inode=0x%lx\n",
--		  dentry, inode->i_ino);
--	return -EINVAL;
--
--got_it:
--	pos = page_offset(page) +
--		(char *)de - (char *)page_address(page);
--	err = exofs_write_begin(NULL, page->mapping, pos, rec_len, 0,
--							&page, NULL);
--	if (err)
--		goto out_unlock;
--	if (de->inode_no) {
--		struct exofs_dir_entry *de1 =
--			(struct exofs_dir_entry *)((char *)de + name_len);
--		de1->rec_len = cpu_to_le16(rec_len - name_len);
--		de->rec_len = cpu_to_le16(name_len);
--		de = de1;
--	}
--	de->name_len = namelen;
--	memcpy(de->name, name, namelen);
--	de->inode_no = cpu_to_le64(inode->i_ino);
--	exofs_set_de_type(de, inode);
--	err = exofs_commit_chunk(page, pos, rec_len);
--	dir->i_mtime = dir->i_ctime = current_time(dir);
--	mark_inode_dirty(dir);
--	sbi->s_numfiles++;
--
--out_put:
--	exofs_put_page(page);
--out:
--	return err;
--out_unlock:
--	unlock_page(page);
--	goto out_put;
--}
--
--int exofs_delete_entry(struct exofs_dir_entry *dir, struct page *page)
--{
--	struct address_space *mapping = page->mapping;
--	struct inode *inode = mapping->host;
--	struct exofs_sb_info *sbi = inode->i_sb->s_fs_info;
--	char *kaddr = page_address(page);
--	unsigned from = ((char *)dir - kaddr) & ~(exofs_chunk_size(inode)-1);
--	unsigned to = ((char *)dir - kaddr) + le16_to_cpu(dir->rec_len);
--	loff_t pos;
--	struct exofs_dir_entry *pde = NULL;
--	struct exofs_dir_entry *de = (struct exofs_dir_entry *) (kaddr + from);
--	int err;
--
--	while (de < dir) {
--		if (de->rec_len == 0) {
--			EXOFS_ERR("ERROR: exofs_delete_entry:"
--				  "zero-length entry in directory(0x%lx)\n",
--				  inode->i_ino);
--			err = -EIO;
--			goto out;
--		}
--		pde = de;
--		de = exofs_next_entry(de);
--	}
--	if (pde)
--		from = (char *)pde - (char *)page_address(page);
--	pos = page_offset(page) + from;
--	lock_page(page);
--	err = exofs_write_begin(NULL, page->mapping, pos, to - from, 0,
--							&page, NULL);
--	if (err)
--		EXOFS_ERR("exofs_delete_entry: exofs_write_begin FAILED => %d\n",
--			  err);
--	if (pde)
--		pde->rec_len = cpu_to_le16(to - from);
--	dir->inode_no = 0;
--	if (likely(!err))
--		err = exofs_commit_chunk(page, pos, to - from);
--	inode->i_ctime = inode->i_mtime = current_time(inode);
--	mark_inode_dirty(inode);
--	sbi->s_numfiles--;
--out:
--	exofs_put_page(page);
--	return err;
--}
--
--/* kept aligned on 4 bytes */
--#define THIS_DIR ".\0\0"
--#define PARENT_DIR "..\0"
--
--int exofs_make_empty(struct inode *inode, struct inode *parent)
--{
--	struct address_space *mapping = inode->i_mapping;
--	struct page *page = grab_cache_page(mapping, 0);
--	unsigned chunk_size = exofs_chunk_size(inode);
--	struct exofs_dir_entry *de;
--	int err;
--	void *kaddr;
--
--	if (!page)
--		return -ENOMEM;
--
--	err = exofs_write_begin(NULL, page->mapping, 0, chunk_size, 0,
--							&page, NULL);
--	if (err) {
--		unlock_page(page);
--		goto fail;
--	}
--
--	kaddr = kmap_atomic(page);
--	de = (struct exofs_dir_entry *)kaddr;
--	de->name_len = 1;
--	de->rec_len = cpu_to_le16(EXOFS_DIR_REC_LEN(1));
--	memcpy(de->name, THIS_DIR, sizeof(THIS_DIR));
--	de->inode_no = cpu_to_le64(inode->i_ino);
--	exofs_set_de_type(de, inode);
--
--	de = (struct exofs_dir_entry *)(kaddr + EXOFS_DIR_REC_LEN(1));
--	de->name_len = 2;
--	de->rec_len = cpu_to_le16(chunk_size - EXOFS_DIR_REC_LEN(1));
--	de->inode_no = cpu_to_le64(parent->i_ino);
--	memcpy(de->name, PARENT_DIR, sizeof(PARENT_DIR));
--	exofs_set_de_type(de, inode);
--	kunmap_atomic(kaddr);
--	err = exofs_commit_chunk(page, 0, chunk_size);
--fail:
--	put_page(page);
--	return err;
--}
--
--int exofs_empty_dir(struct inode *inode)
--{
--	struct page *page = NULL;
--	unsigned long i, npages = dir_pages(inode);
--
--	for (i = 0; i < npages; i++) {
--		char *kaddr;
--		struct exofs_dir_entry *de;
--		page = exofs_get_page(inode, i);
--
--		if (IS_ERR(page))
--			continue;
--
--		kaddr = page_address(page);
--		de = (struct exofs_dir_entry *)kaddr;
--		kaddr += exofs_last_byte(inode, i) - EXOFS_DIR_REC_LEN(1);
--
--		while ((char *)de <= kaddr) {
--			if (de->rec_len == 0) {
--				EXOFS_ERR("ERROR: exofs_empty_dir: "
--					  "zero-length directory entry"
--					  "kaddr=%p, de=%p\n", kaddr, de);
--				goto not_empty;
--			}
--			if (de->inode_no != 0) {
--				/* check for . and .. */
--				if (de->name[0] != '.')
--					goto not_empty;
--				if (de->name_len > 2)
--					goto not_empty;
--				if (de->name_len < 2) {
--					if (le64_to_cpu(de->inode_no) !=
--					    inode->i_ino)
--						goto not_empty;
--				} else if (de->name[1] != '.')
--					goto not_empty;
--			}
--			de = exofs_next_entry(de);
--		}
--		exofs_put_page(page);
--	}
--	return 1;
--
--not_empty:
--	exofs_put_page(page);
--	return 0;
--}
--
--const struct file_operations exofs_dir_operations = {
--	.llseek		= generic_file_llseek,
--	.read		= generic_read_dir,
--	.iterate_shared	= exofs_readdir,
--};
-diff --git a/fs/exofs/exofs.h b/fs/exofs/exofs.h
-deleted file mode 100644
-index 5dc392404559..000000000000
---- a/fs/exofs/exofs.h
-+++ /dev/null
-@@ -1,240 +0,0 @@
--/*
-- * Copyright (C) 2005, 2006
-- * Avishay Traeger (avishay@gmail.com)
-- * Copyright (C) 2008, 2009
-- * Boaz Harrosh <ooo@electrozaur.com>
-- *
-- * Copyrights for code taken from ext2:
-- *     Copyright (C) 1992, 1993, 1994, 1995
-- *     Remy Card (card@masi.ibp.fr)
-- *     Laboratoire MASI - Institut Blaise Pascal
-- *     Universite Pierre et Marie Curie (Paris VI)
-- *     from
-- *     linux/fs/minix/inode.c
-- *     Copyright (C) 1991, 1992  Linus Torvalds
-- *
-- * This file is part of exofs.
-- *
-- * exofs is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License as published by
-- * the Free Software Foundation.  Since it is based on ext2, and the only
-- * valid version of GPL for the Linux kernel is version 2, the only valid
-- * version of GPL for exofs is version 2.
-- *
-- * exofs is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with exofs; if not, write to the Free Software
-- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-- */
--#ifndef __EXOFS_H__
--#define __EXOFS_H__
--
--#include <linux/fs.h>
--#include <linux/time.h>
--#include <linux/backing-dev.h>
--#include <scsi/osd_ore.h>
--
--#include "common.h"
--
--#define EXOFS_ERR(fmt, a...) printk(KERN_ERR "exofs: " fmt, ##a)
--
--#ifdef CONFIG_EXOFS_DEBUG
--#define EXOFS_DBGMSG(fmt, a...) \
--	printk(KERN_NOTICE "exofs @%s:%d: " fmt, __func__, __LINE__, ##a)
+-#ifndef __OSD_DEBUG_H__
+-#define __OSD_DEBUG_H__
+-
+-#define OSD_ERR(fmt, a...) printk(KERN_ERR "osd: " fmt, ##a)
+-#define OSD_INFO(fmt, a...) printk(KERN_NOTICE "osd: " fmt, ##a)
+-
+-#ifdef CONFIG_SCSI_OSD_DEBUG
+-#define OSD_DEBUG(fmt, a...) \
+-	printk(KERN_NOTICE "osd @%s:%d: " fmt, __func__, __LINE__, ##a)
 -#else
--#define EXOFS_DBGMSG(fmt, a...) \
--	do { if (0) printk(fmt, ##a); } while (0)
+-#define OSD_DEBUG(fmt, a...) do {} while (0)
 -#endif
 -
 -/* u64 has problems with printk this will cast it to unsigned long long */
 -#define _LLU(x) (unsigned long long)(x)
 -
--struct exofs_dev {
--	struct ore_dev ored;
--	unsigned did;
--	unsigned urilen;
--	uint8_t *uri;
--	struct kobject ed_kobj;
--};
--/*
-- * our extension to the in-memory superblock
-- */
--struct exofs_sb_info {
--	struct exofs_sb_stats s_ess;		/* Written often, pre-allocate*/
--	int		s_timeout;		/* timeout for OSD operations */
--	uint64_t	s_nextid;		/* highest object ID used     */
--	uint32_t	s_numfiles;		/* number of files on fs      */
--	spinlock_t	s_next_gen_lock;	/* spinlock for gen # update  */
--	u32		s_next_generation;	/* next gen # to use          */
--	atomic_t	s_curr_pending;		/* number of pending commands */
--
--	struct ore_layout	layout;		/* Default files layout       */
--	struct ore_comp one_comp;		/* id & cred of partition id=0*/
--	struct ore_components oc;		/* comps for the partition    */
--	struct kobject	s_kobj;			/* holds per-sbi kobject      */
--};
--
--/*
-- * our extension to the in-memory inode
-- */
--struct exofs_i_info {
--	struct inode   vfs_inode;          /* normal in-memory inode          */
--	wait_queue_head_t i_wq;            /* wait queue for inode            */
--	unsigned long  i_flags;            /* various atomic flags            */
--	uint32_t       i_data[EXOFS_IDATA];/*short symlink names and device #s*/
--	uint32_t       i_dir_start_lookup; /* which page to start lookup      */
--	uint64_t       i_commit_size;      /* the object's written length     */
--	struct ore_comp one_comp;	   /* same component for all devices  */
--	struct ore_components oc;	   /* inode view of the device table  */
--};
--
--static inline osd_id exofs_oi_objno(struct exofs_i_info *oi)
--{
--	return oi->vfs_inode.i_ino + EXOFS_OBJ_OFF;
--}
--
--/*
-- * our inode flags
-- */
--#define OBJ_2BCREATED	0	/* object will be created soon*/
--#define OBJ_CREATED	1	/* object has been created on the osd*/
--
--static inline int obj_2bcreated(struct exofs_i_info *oi)
--{
--	return test_bit(OBJ_2BCREATED, &oi->i_flags);
--}
--
--static inline void set_obj_2bcreated(struct exofs_i_info *oi)
--{
--	set_bit(OBJ_2BCREATED, &oi->i_flags);
--}
--
--static inline int obj_created(struct exofs_i_info *oi)
--{
--	return test_bit(OBJ_CREATED, &oi->i_flags);
--}
--
--static inline void set_obj_created(struct exofs_i_info *oi)
--{
--	set_bit(OBJ_CREATED, &oi->i_flags);
--}
--
--int __exofs_wait_obj_created(struct exofs_i_info *oi);
--static inline int wait_obj_created(struct exofs_i_info *oi)
--{
--	if (likely(obj_created(oi)))
--		return 0;
--
--	return __exofs_wait_obj_created(oi);
--}
--
--/*
-- * get to our inode from the vfs inode
-- */
--static inline struct exofs_i_info *exofs_i(struct inode *inode)
--{
--	return container_of(inode, struct exofs_i_info, vfs_inode);
--}
--
--/*
-- * Maximum count of links to a file
-- */
--#define EXOFS_LINK_MAX           32000
--
--/*************************
-- * function declarations *
-- *************************/
--
--/* inode.c               */
--unsigned exofs_max_io_pages(struct ore_layout *layout,
--			    unsigned expected_pages);
--int exofs_setattr(struct dentry *, struct iattr *);
--int exofs_write_begin(struct file *file, struct address_space *mapping,
--		loff_t pos, unsigned len, unsigned flags,
--		struct page **pagep, void **fsdata);
--extern struct inode *exofs_iget(struct super_block *, unsigned long);
--struct inode *exofs_new_inode(struct inode *, umode_t);
--extern int exofs_write_inode(struct inode *, struct writeback_control *wbc);
--extern void exofs_evict_inode(struct inode *);
--
--/* dir.c:                */
--int exofs_add_link(struct dentry *, struct inode *);
--ino_t exofs_inode_by_name(struct inode *, struct dentry *);
--int exofs_delete_entry(struct exofs_dir_entry *, struct page *);
--int exofs_make_empty(struct inode *, struct inode *);
--struct exofs_dir_entry *exofs_find_entry(struct inode *, struct dentry *,
--					 struct page **);
--int exofs_empty_dir(struct inode *);
--struct exofs_dir_entry *exofs_dotdot(struct inode *, struct page **);
--ino_t exofs_parent_ino(struct dentry *child);
--int exofs_set_link(struct inode *, struct exofs_dir_entry *, struct page *,
--		    struct inode *);
--
--/* super.c               */
--void exofs_make_credential(u8 cred_a[OSD_CAP_LEN],
--			   const struct osd_obj_id *obj);
--int exofs_sbi_write_stats(struct exofs_sb_info *sbi);
--
--/* sys.c                 */
--int exofs_sysfs_init(void);
--void exofs_sysfs_uninit(void);
--int exofs_sysfs_sb_add(struct exofs_sb_info *sbi,
--		       struct exofs_dt_device_info *dt_dev);
--void exofs_sysfs_sb_del(struct exofs_sb_info *sbi);
--int exofs_sysfs_odev_add(struct exofs_dev *edev,
--			 struct exofs_sb_info *sbi);
--void exofs_sysfs_dbg_print(void);
--
--/*********************
-- * operation vectors *
-- *********************/
--/* dir.c:            */
--extern const struct file_operations exofs_dir_operations;
--
--/* file.c            */
--extern const struct inode_operations exofs_file_inode_operations;
--extern const struct file_operations exofs_file_operations;
--
--/* inode.c           */
--extern const struct address_space_operations exofs_aops;
--
--/* namei.c           */
--extern const struct inode_operations exofs_dir_inode_operations;
--extern const struct inode_operations exofs_special_inode_operations;
--
--/* exofs_init_comps will initialize an ore_components device array
-- * pointing to a single ore_comp struct, and a round-robin view
-- * of the device table.
-- * The first device of each inode is the [inode->ino % num_devices]
-- * and the rest of the devices sequentially following where the
-- * first device is after the last device.
-- * It is assumed that the global device array at @sbi is twice
-- * bigger and that the device table repeats twice.
-- * See: exofs_read_lookup_dev_table()
-- */
--static inline void exofs_init_comps(struct ore_components *oc,
--				    struct ore_comp *one_comp,
--				    struct exofs_sb_info *sbi, osd_id oid)
--{
--	unsigned dev_mod = (unsigned)oid, first_dev;
--
--	one_comp->obj.partition = sbi->one_comp.obj.partition;
--	one_comp->obj.id = oid;
--	exofs_make_credential(one_comp->cred, &one_comp->obj);
--
--	oc->first_dev = 0;
--	oc->numdevs = sbi->layout.group_width * sbi->layout.mirrors_p1 *
--							sbi->layout.group_count;
--	oc->single_comp = EC_SINGLE_COMP;
--	oc->comps = one_comp;
--
--	/* Round robin device view of the table */
--	first_dev = (dev_mod * sbi->layout.mirrors_p1) % sbi->oc.numdevs;
--	oc->ods = &sbi->oc.ods[first_dev];
--}
--
--#endif
-diff --git a/fs/exofs/file.c b/fs/exofs/file.c
+-#endif /* ndef __OSD_DEBUG_H__ */
+diff --git a/drivers/scsi/osd/osd_initiator.c b/drivers/scsi/osd/osd_initiator.c
 deleted file mode 100644
-index a94594ea2aa3..000000000000
---- a/fs/exofs/file.c
+index e19fa883376f..000000000000
+--- a/drivers/scsi/osd/osd_initiator.c
 +++ /dev/null
-@@ -1,83 +0,0 @@
+@@ -1,2076 +0,0 @@
 -/*
-- * Copyright (C) 2005, 2006
-- * Avishay Traeger (avishay@gmail.com)
-- * Copyright (C) 2008, 2009
-- * Boaz Harrosh <ooo@electrozaur.com>
+- * osd_initiator - Main body of the osd initiator library.
 - *
-- * Copyrights for code taken from ext2:
-- *     Copyright (C) 1992, 1993, 1994, 1995
-- *     Remy Card (card@masi.ibp.fr)
-- *     Laboratoire MASI - Institut Blaise Pascal
-- *     Universite Pierre et Marie Curie (Paris VI)
-- *     from
-- *     linux/fs/minix/inode.c
-- *     Copyright (C) 1991, 1992  Linus Torvalds
+- * Note: The file does not contain the advanced security functionality which
+- * is only needed by the security_manager's initiators.
 - *
-- * This file is part of exofs.
+- * Copyright (C) 2008 Panasas Inc.  All rights reserved.
 - *
-- * exofs is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License as published by
-- * the Free Software Foundation.  Since it is based on ext2, and the only
-- * valid version of GPL for the Linux kernel is version 2, the only valid
-- * version of GPL for exofs is version 2.
+- * Authors:
+- *   Boaz Harrosh <ooo@electrozaur.com>
+- *   Benny Halevy <bhalevy@panasas.com>
 - *
-- * exofs is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License version 2
 - *
-- * You should have received a copy of the GNU General Public License
-- * along with exofs; if not, write to the Free Software
-- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-- */
--#include "exofs.h"
--
--static int exofs_release_file(struct inode *inode, struct file *filp)
--{
--	return 0;
--}
--
--/* exofs_file_fsync - flush the inode to disk
+- * Redistribution and use in source and binary forms, with or without
+- * modification, are permitted provided that the following conditions
+- * are met:
 - *
-- *   Note, in exofs all metadata is written as part of inode, regardless.
-- *   The writeout is synchronous
-- */
--static int exofs_file_fsync(struct file *filp, loff_t start, loff_t end,
--			    int datasync)
--{
--	struct inode *inode = filp->f_mapping->host;
--	int ret;
--
--	ret = file_write_and_wait_range(filp, start, end);
--	if (ret)
--		return ret;
--
--	inode_lock(inode);
--	ret = sync_inode_metadata(filp->f_mapping->host, 1);
--	inode_unlock(inode);
--	return ret;
--}
--
--static int exofs_flush(struct file *file, fl_owner_t id)
--{
--	int ret = vfs_fsync(file, 0);
--	/* TODO: Flush the OSD target */
--	return ret;
--}
--
--const struct file_operations exofs_file_operations = {
--	.llseek		= generic_file_llseek,
--	.read_iter	= generic_file_read_iter,
--	.write_iter	= generic_file_write_iter,
--	.mmap		= generic_file_mmap,
--	.open		= generic_file_open,
--	.release	= exofs_release_file,
--	.fsync		= exofs_file_fsync,
--	.flush		= exofs_flush,
--	.splice_read	= generic_file_splice_read,
--	.splice_write	= iter_file_splice_write,
--};
--
--const struct inode_operations exofs_file_inode_operations = {
--	.setattr	= exofs_setattr,
--};
-diff --git a/fs/exofs/inode.c b/fs/exofs/inode.c
-deleted file mode 100644
-index 5f81fcd383a4..000000000000
---- a/fs/exofs/inode.c
-+++ /dev/null
-@@ -1,1514 +0,0 @@
--/*
-- * Copyright (C) 2005, 2006
-- * Avishay Traeger (avishay@gmail.com)
-- * Copyright (C) 2008, 2009
-- * Boaz Harrosh <ooo@electrozaur.com>
+- *  1. Redistributions of source code must retain the above copyright
+- *     notice, this list of conditions and the following disclaimer.
+- *  2. Redistributions in binary form must reproduce the above copyright
+- *     notice, this list of conditions and the following disclaimer in the
+- *     documentation and/or other materials provided with the distribution.
+- *  3. Neither the name of the Panasas company nor the names of its
+- *     contributors may be used to endorse or promote products derived
+- *     from this software without specific prior written permission.
 - *
-- * Copyrights for code taken from ext2:
-- *     Copyright (C) 1992, 1993, 1994, 1995
-- *     Remy Card (card@masi.ibp.fr)
-- *     Laboratoire MASI - Institut Blaise Pascal
-- *     Universite Pierre et Marie Curie (Paris VI)
-- *     from
-- *     linux/fs/minix/inode.c
-- *     Copyright (C) 1991, 1992  Linus Torvalds
-- *
-- * This file is part of exofs.
-- *
-- * exofs is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License as published by
-- * the Free Software Foundation.  Since it is based on ext2, and the only
-- * valid version of GPL for the Linux kernel is version 2, the only valid
-- * version of GPL for exofs is version 2.
-- *
-- * exofs is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with exofs; if not, write to the Free Software
-- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-- */
--
--#include <linux/slab.h>
--
--#include "exofs.h"
--
--#define EXOFS_DBGMSG2(M...) do {} while (0)
--
--unsigned exofs_max_io_pages(struct ore_layout *layout,
--			    unsigned expected_pages)
--{
--	unsigned pages = min_t(unsigned, expected_pages,
--			       layout->max_io_length / PAGE_SIZE);
--
--	return pages;
--}
--
--struct page_collect {
--	struct exofs_sb_info *sbi;
--	struct inode *inode;
--	unsigned expected_pages;
--	struct ore_io_state *ios;
--
--	struct page **pages;
--	unsigned alloc_pages;
--	unsigned nr_pages;
--	unsigned long length;
--	loff_t pg_first; /* keep 64bit also in 32-arches */
--	bool read_4_write; /* This means two things: that the read is sync
--			    * And the pages should not be unlocked.
--			    */
--	struct page *that_locked_page;
--};
--
--static void _pcol_init(struct page_collect *pcol, unsigned expected_pages,
--		       struct inode *inode)
--{
--	struct exofs_sb_info *sbi = inode->i_sb->s_fs_info;
--
--	pcol->sbi = sbi;
--	pcol->inode = inode;
--	pcol->expected_pages = expected_pages;
--
--	pcol->ios = NULL;
--	pcol->pages = NULL;
--	pcol->alloc_pages = 0;
--	pcol->nr_pages = 0;
--	pcol->length = 0;
--	pcol->pg_first = -1;
--	pcol->read_4_write = false;
--	pcol->that_locked_page = NULL;
--}
--
--static void _pcol_reset(struct page_collect *pcol)
--{
--	pcol->expected_pages -= min(pcol->nr_pages, pcol->expected_pages);
--
--	pcol->pages = NULL;
--	pcol->alloc_pages = 0;
--	pcol->nr_pages = 0;
--	pcol->length = 0;
--	pcol->pg_first = -1;
--	pcol->ios = NULL;
--	pcol->that_locked_page = NULL;
--
--	/* this is probably the end of the loop but in writes
--	 * it might not end here. don't be left with nothing
--	 */
--	if (!pcol->expected_pages)
--		pcol->expected_pages =
--				exofs_max_io_pages(&pcol->sbi->layout, ~0);
--}
--
--static int pcol_try_alloc(struct page_collect *pcol)
--{
--	unsigned pages;
--
--	/* TODO: easily support bio chaining */
--	pages =  exofs_max_io_pages(&pcol->sbi->layout, pcol->expected_pages);
--
--	for (; pages; pages >>= 1) {
--		pcol->pages = kmalloc_array(pages, sizeof(struct page *),
--					    GFP_KERNEL);
--		if (likely(pcol->pages)) {
--			pcol->alloc_pages = pages;
--			return 0;
--		}
--	}
--
--	EXOFS_ERR("Failed to kmalloc expected_pages=%u\n",
--		  pcol->expected_pages);
--	return -ENOMEM;
--}
--
--static void pcol_free(struct page_collect *pcol)
--{
--	kfree(pcol->pages);
--	pcol->pages = NULL;
--
--	if (pcol->ios) {
--		ore_put_io_state(pcol->ios);
--		pcol->ios = NULL;
--	}
--}
--
--static int pcol_add_page(struct page_collect *pcol, struct page *page,
--			 unsigned len)
--{
--	if (unlikely(pcol->nr_pages >= pcol->alloc_pages))
--		return -ENOMEM;
--
--	pcol->pages[pcol->nr_pages++] = page;
--	pcol->length += len;
--	return 0;
--}
--
--enum {PAGE_WAS_NOT_IN_IO = 17};
--static int update_read_page(struct page *page, int ret)
--{
--	switch (ret) {
--	case 0:
--		/* Everything is OK */
--		SetPageUptodate(page);
--		if (PageError(page))
--			ClearPageError(page);
--		break;
--	case -EFAULT:
--		/* In this case we were trying to read something that wasn't on
--		 * disk yet - return a page full of zeroes.  This should be OK,
--		 * because the object should be empty (if there was a write
--		 * before this read, the read would be waiting with the page
--		 * locked */
--		clear_highpage(page);
--
--		SetPageUptodate(page);
--		if (PageError(page))
--			ClearPageError(page);
--		EXOFS_DBGMSG("recovered read error\n");
--		/* fall through */
--	case PAGE_WAS_NOT_IN_IO:
--		ret = 0; /* recovered error */
--		break;
--	default:
--		SetPageError(page);
--	}
--	return ret;
--}
--
--static void update_write_page(struct page *page, int ret)
--{
--	if (unlikely(ret == PAGE_WAS_NOT_IN_IO))
--		return; /* don't pass start don't collect $200 */
--
--	if (ret) {
--		mapping_set_error(page->mapping, ret);
--		SetPageError(page);
--	}
--	end_page_writeback(page);
--}
--
--/* Called at the end of reads, to optionally unlock pages and update their
-- * status.
-- */
--static int __readpages_done(struct page_collect *pcol)
--{
--	int i;
--	u64 good_bytes;
--	u64 length = 0;
--	int ret = ore_check_io(pcol->ios, NULL);
--
--	if (likely(!ret)) {
--		good_bytes = pcol->length;
--		ret = PAGE_WAS_NOT_IN_IO;
--	} else {
--		good_bytes = 0;
--	}
--
--	EXOFS_DBGMSG2("readpages_done(0x%lx) good_bytes=0x%llx"
--		     " length=0x%lx nr_pages=%u\n",
--		     pcol->inode->i_ino, _LLU(good_bytes), pcol->length,
--		     pcol->nr_pages);
--
--	for (i = 0; i < pcol->nr_pages; i++) {
--		struct page *page = pcol->pages[i];
--		struct inode *inode = page->mapping->host;
--		int page_stat;
--
--		if (inode != pcol->inode)
--			continue; /* osd might add more pages at end */
--
--		if (likely(length < good_bytes))
--			page_stat = 0;
--		else
--			page_stat = ret;
--
--		EXOFS_DBGMSG2("    readpages_done(0x%lx, 0x%lx) %s\n",
--			  inode->i_ino, page->index,
--			  page_stat ? "bad_bytes" : "good_bytes");
--
--		ret = update_read_page(page, page_stat);
--		if (!pcol->read_4_write)
--			unlock_page(page);
--		length += PAGE_SIZE;
--	}
--
--	pcol_free(pcol);
--	EXOFS_DBGMSG2("readpages_done END\n");
--	return ret;
--}
--
--/* callback of async reads */
--static void readpages_done(struct ore_io_state *ios, void *p)
--{
--	struct page_collect *pcol = p;
--
--	__readpages_done(pcol);
--	atomic_dec(&pcol->sbi->s_curr_pending);
--	kfree(pcol);
--}
--
--static void _unlock_pcol_pages(struct page_collect *pcol, int ret, int rw)
--{
--	int i;
--
--	for (i = 0; i < pcol->nr_pages; i++) {
--		struct page *page = pcol->pages[i];
--
--		if (rw == READ)
--			update_read_page(page, ret);
--		else
--			update_write_page(page, ret);
--
--		unlock_page(page);
--	}
--}
--
--static int _maybe_not_all_in_one_io(struct ore_io_state *ios,
--	struct page_collect *pcol_src, struct page_collect *pcol)
--{
--	/* length was wrong or offset was not page aligned */
--	BUG_ON(pcol_src->nr_pages < ios->nr_pages);
--
--	if (pcol_src->nr_pages > ios->nr_pages) {
--		struct page **src_page;
--		unsigned pages_less = pcol_src->nr_pages - ios->nr_pages;
--		unsigned long len_less = pcol_src->length - ios->length;
--		unsigned i;
--		int ret;
--
--		/* This IO was trimmed */
--		pcol_src->nr_pages = ios->nr_pages;
--		pcol_src->length = ios->length;
--
--		/* Left over pages are passed to the next io */
--		pcol->expected_pages += pages_less;
--		pcol->nr_pages = pages_less;
--		pcol->length = len_less;
--		src_page = pcol_src->pages + pcol_src->nr_pages;
--		pcol->pg_first = (*src_page)->index;
--
--		ret = pcol_try_alloc(pcol);
--		if (unlikely(ret))
--			return ret;
--
--		for (i = 0; i < pages_less; ++i)
--			pcol->pages[i] = *src_page++;
--
--		EXOFS_DBGMSG("Length was adjusted nr_pages=0x%x "
--			"pages_less=0x%x expected_pages=0x%x "
--			"next_offset=0x%llx next_len=0x%lx\n",
--			pcol_src->nr_pages, pages_less, pcol->expected_pages,
--			pcol->pg_first * PAGE_SIZE, pcol->length);
--	}
--	return 0;
--}
--
--static int read_exec(struct page_collect *pcol)
--{
--	struct exofs_i_info *oi = exofs_i(pcol->inode);
--	struct ore_io_state *ios;
--	struct page_collect *pcol_copy = NULL;
--	int ret;
--
--	if (!pcol->pages)
--		return 0;
--
--	if (!pcol->ios) {
--		int ret = ore_get_rw_state(&pcol->sbi->layout, &oi->oc, true,
--					     pcol->pg_first << PAGE_SHIFT,
--					     pcol->length, &pcol->ios);
--
--		if (ret)
--			return ret;
--	}
--
--	ios = pcol->ios;
--	ios->pages = pcol->pages;
--
--	if (pcol->read_4_write) {
--		ore_read(pcol->ios);
--		return __readpages_done(pcol);
--	}
--
--	pcol_copy = kmalloc(sizeof(*pcol_copy), GFP_KERNEL);
--	if (!pcol_copy) {
--		ret = -ENOMEM;
--		goto err;
--	}
--
--	*pcol_copy = *pcol;
--	ios->done = readpages_done;
--	ios->private = pcol_copy;
--
--	/* pages ownership was passed to pcol_copy */
--	_pcol_reset(pcol);
--
--	ret = _maybe_not_all_in_one_io(ios, pcol_copy, pcol);
--	if (unlikely(ret))
--		goto err;
--
--	EXOFS_DBGMSG2("read_exec(0x%lx) offset=0x%llx length=0x%llx\n",
--		pcol->inode->i_ino, _LLU(ios->offset), _LLU(ios->length));
--
--	ret = ore_read(ios);
--	if (unlikely(ret))
--		goto err;
--
--	atomic_inc(&pcol->sbi->s_curr_pending);
--
--	return 0;
--
--err:
--	if (!pcol_copy) /* Failed before ownership transfer */
--		pcol_copy = pcol;
--	_unlock_pcol_pages(pcol_copy, ret, READ);
--	pcol_free(pcol_copy);
--	kfree(pcol_copy);
--
--	return ret;
--}
--
--/* readpage_strip is called either directly from readpage() or by the VFS from
-- * within read_cache_pages(), to add one more page to be read. It will try to
-- * collect as many contiguous pages as posible. If a discontinuity is
-- * encountered, or it runs out of resources, it will submit the previous segment
-- * and will start a new collection. Eventually caller must submit the last
-- * segment if present.
-- */
--static int readpage_strip(void *data, struct page *page)
--{
--	struct page_collect *pcol = data;
--	struct inode *inode = pcol->inode;
--	struct exofs_i_info *oi = exofs_i(inode);
--	loff_t i_size = i_size_read(inode);
--	pgoff_t end_index = i_size >> PAGE_SHIFT;
--	size_t len;
--	int ret;
--
--	BUG_ON(!PageLocked(page));
--
--	/* FIXME: Just for debugging, will be removed */
--	if (PageUptodate(page))
--		EXOFS_ERR("PageUptodate(0x%lx, 0x%lx)\n", pcol->inode->i_ino,
--			  page->index);
--
--	pcol->that_locked_page = page;
--
--	if (page->index < end_index)
--		len = PAGE_SIZE;
--	else if (page->index == end_index)
--		len = i_size & ~PAGE_MASK;
--	else
--		len = 0;
--
--	if (!len || !obj_created(oi)) {
--		/* this will be out of bounds, or doesn't exist yet.
--		 * Current page is cleared and the request is split
--		 */
--		clear_highpage(page);
--
--		SetPageUptodate(page);
--		if (PageError(page))
--			ClearPageError(page);
--
--		if (!pcol->read_4_write)
--			unlock_page(page);
--		EXOFS_DBGMSG("readpage_strip(0x%lx) empty page len=%zx "
--			     "read_4_write=%d index=0x%lx end_index=0x%lx "
--			     "splitting\n", inode->i_ino, len,
--			     pcol->read_4_write, page->index, end_index);
--
--		return read_exec(pcol);
--	}
--
--try_again:
--
--	if (unlikely(pcol->pg_first == -1)) {
--		pcol->pg_first = page->index;
--	} else if (unlikely((pcol->pg_first + pcol->nr_pages) !=
--		   page->index)) {
--		/* Discontinuity detected, split the request */
--		ret = read_exec(pcol);
--		if (unlikely(ret))
--			goto fail;
--		goto try_again;
--	}
--
--	if (!pcol->pages) {
--		ret = pcol_try_alloc(pcol);
--		if (unlikely(ret))
--			goto fail;
--	}
--
--	if (len != PAGE_SIZE)
--		zero_user(page, len, PAGE_SIZE - len);
--
--	EXOFS_DBGMSG2("    readpage_strip(0x%lx, 0x%lx) len=0x%zx\n",
--		     inode->i_ino, page->index, len);
--
--	ret = pcol_add_page(pcol, page, len);
--	if (ret) {
--		EXOFS_DBGMSG2("Failed pcol_add_page pages[i]=%p "
--			  "this_len=0x%zx nr_pages=%u length=0x%lx\n",
--			  page, len, pcol->nr_pages, pcol->length);
--
--		/* split the request, and start again with current page */
--		ret = read_exec(pcol);
--		if (unlikely(ret))
--			goto fail;
--
--		goto try_again;
--	}
--
--	return 0;
--
--fail:
--	/* SetPageError(page); ??? */
--	unlock_page(page);
--	return ret;
--}
--
--static int exofs_readpages(struct file *file, struct address_space *mapping,
--			   struct list_head *pages, unsigned nr_pages)
--{
--	struct page_collect pcol;
--	int ret;
--
--	_pcol_init(&pcol, nr_pages, mapping->host);
--
--	ret = read_cache_pages(mapping, pages, readpage_strip, &pcol);
--	if (ret) {
--		EXOFS_ERR("read_cache_pages => %d\n", ret);
--		return ret;
--	}
--
--	ret = read_exec(&pcol);
--	if (unlikely(ret))
--		return ret;
--
--	return read_exec(&pcol);
--}
--
--static int _readpage(struct page *page, bool read_4_write)
--{
--	struct page_collect pcol;
--	int ret;
--
--	_pcol_init(&pcol, 1, page->mapping->host);
--
--	pcol.read_4_write = read_4_write;
--	ret = readpage_strip(&pcol, page);
--	if (ret) {
--		EXOFS_ERR("_readpage => %d\n", ret);
--		return ret;
--	}
--
--	return read_exec(&pcol);
--}
--
--/*
-- * We don't need the file
-- */
--static int exofs_readpage(struct file *file, struct page *page)
--{
--	return _readpage(page, false);
--}
--
--/* Callback for osd_write. All writes are asynchronous */
--static void writepages_done(struct ore_io_state *ios, void *p)
--{
--	struct page_collect *pcol = p;
--	int i;
--	u64  good_bytes;
--	u64  length = 0;
--	int ret = ore_check_io(ios, NULL);
--
--	atomic_dec(&pcol->sbi->s_curr_pending);
--
--	if (likely(!ret)) {
--		good_bytes = pcol->length;
--		ret = PAGE_WAS_NOT_IN_IO;
--	} else {
--		good_bytes = 0;
--	}
--
--	EXOFS_DBGMSG2("writepages_done(0x%lx) good_bytes=0x%llx"
--		     " length=0x%lx nr_pages=%u\n",
--		     pcol->inode->i_ino, _LLU(good_bytes), pcol->length,
--		     pcol->nr_pages);
--
--	for (i = 0; i < pcol->nr_pages; i++) {
--		struct page *page = pcol->pages[i];
--		struct inode *inode = page->mapping->host;
--		int page_stat;
--
--		if (inode != pcol->inode)
--			continue; /* osd might add more pages to a bio */
--
--		if (likely(length < good_bytes))
--			page_stat = 0;
--		else
--			page_stat = ret;
--
--		update_write_page(page, page_stat);
--		unlock_page(page);
--		EXOFS_DBGMSG2("    writepages_done(0x%lx, 0x%lx) status=%d\n",
--			     inode->i_ino, page->index, page_stat);
--
--		length += PAGE_SIZE;
--	}
--
--	pcol_free(pcol);
--	kfree(pcol);
--	EXOFS_DBGMSG2("writepages_done END\n");
--}
--
--static struct page *__r4w_get_page(void *priv, u64 offset, bool *uptodate)
--{
--	struct page_collect *pcol = priv;
--	pgoff_t index = offset / PAGE_SIZE;
--
--	if (!pcol->that_locked_page ||
--	    (pcol->that_locked_page->index != index)) {
--		struct page *page;
--		loff_t i_size = i_size_read(pcol->inode);
--
--		if (offset >= i_size) {
--			*uptodate = true;
--			EXOFS_DBGMSG2("offset >= i_size index=0x%lx\n", index);
--			return ZERO_PAGE(0);
--		}
--
--		page =  find_get_page(pcol->inode->i_mapping, index);
--		if (!page) {
--			page = find_or_create_page(pcol->inode->i_mapping,
--						   index, GFP_NOFS);
--			if (unlikely(!page)) {
--				EXOFS_DBGMSG("grab_cache_page Failed "
--					"index=0x%llx\n", _LLU(index));
--				return NULL;
--			}
--			unlock_page(page);
--		}
--		*uptodate = PageUptodate(page);
--		EXOFS_DBGMSG2("index=0x%lx uptodate=%d\n", index, *uptodate);
--		return page;
--	} else {
--		EXOFS_DBGMSG2("YES that_locked_page index=0x%lx\n",
--			     pcol->that_locked_page->index);
--		*uptodate = true;
--		return pcol->that_locked_page;
--	}
--}
--
--static void __r4w_put_page(void *priv, struct page *page)
--{
--	struct page_collect *pcol = priv;
--
--	if ((pcol->that_locked_page != page) && (ZERO_PAGE(0) != page)) {
--		EXOFS_DBGMSG2("index=0x%lx\n", page->index);
--		put_page(page);
--		return;
--	}
--	EXOFS_DBGMSG2("that_locked_page index=0x%lx\n",
--		     ZERO_PAGE(0) == page ? -1 : page->index);
--}
--
--static const struct _ore_r4w_op _r4w_op = {
--	.get_page = &__r4w_get_page,
--	.put_page = &__r4w_put_page,
--};
--
--static int write_exec(struct page_collect *pcol)
--{
--	struct exofs_i_info *oi = exofs_i(pcol->inode);
--	struct ore_io_state *ios;
--	struct page_collect *pcol_copy = NULL;
--	int ret;
--
--	if (!pcol->pages)
--		return 0;
--
--	BUG_ON(pcol->ios);
--	ret = ore_get_rw_state(&pcol->sbi->layout, &oi->oc, false,
--				 pcol->pg_first << PAGE_SHIFT,
--				 pcol->length, &pcol->ios);
--	if (unlikely(ret))
--		goto err;
--
--	pcol_copy = kmalloc(sizeof(*pcol_copy), GFP_KERNEL);
--	if (!pcol_copy) {
--		EXOFS_ERR("write_exec: Failed to kmalloc(pcol)\n");
--		ret = -ENOMEM;
--		goto err;
--	}
--
--	*pcol_copy = *pcol;
--
--	ios = pcol->ios;
--	ios->pages = pcol_copy->pages;
--	ios->done = writepages_done;
--	ios->r4w = &_r4w_op;
--	ios->private = pcol_copy;
--
--	/* pages ownership was passed to pcol_copy */
--	_pcol_reset(pcol);
--
--	ret = _maybe_not_all_in_one_io(ios, pcol_copy, pcol);
--	if (unlikely(ret))
--		goto err;
--
--	EXOFS_DBGMSG2("write_exec(0x%lx) offset=0x%llx length=0x%llx\n",
--		pcol->inode->i_ino, _LLU(ios->offset), _LLU(ios->length));
--
--	ret = ore_write(ios);
--	if (unlikely(ret)) {
--		EXOFS_ERR("write_exec: ore_write() Failed\n");
--		goto err;
--	}
--
--	atomic_inc(&pcol->sbi->s_curr_pending);
--	return 0;
--
--err:
--	if (!pcol_copy) /* Failed before ownership transfer */
--		pcol_copy = pcol;
--	_unlock_pcol_pages(pcol_copy, ret, WRITE);
--	pcol_free(pcol_copy);
--	kfree(pcol_copy);
--
--	return ret;
--}
--
--/* writepage_strip is called either directly from writepage() or by the VFS from
-- * within write_cache_pages(), to add one more page to be written to storage.
-- * It will try to collect as many contiguous pages as possible. If a
-- * discontinuity is encountered or it runs out of resources it will submit the
-- * previous segment and will start a new collection.
-- * Eventually caller must submit the last segment if present.
-- */
--static int writepage_strip(struct page *page,
--			   struct writeback_control *wbc_unused, void *data)
--{
--	struct page_collect *pcol = data;
--	struct inode *inode = pcol->inode;
--	struct exofs_i_info *oi = exofs_i(inode);
--	loff_t i_size = i_size_read(inode);
--	pgoff_t end_index = i_size >> PAGE_SHIFT;
--	size_t len;
--	int ret;
--
--	BUG_ON(!PageLocked(page));
--
--	ret = wait_obj_created(oi);
--	if (unlikely(ret))
--		goto fail;
--
--	if (page->index < end_index)
--		/* in this case, the page is within the limits of the file */
--		len = PAGE_SIZE;
--	else {
--		len = i_size & ~PAGE_MASK;
--
--		if (page->index > end_index || !len) {
--			/* in this case, the page is outside the limits
--			 * (truncate in progress)
--			 */
--			ret = write_exec(pcol);
--			if (unlikely(ret))
--				goto fail;
--			if (PageError(page))
--				ClearPageError(page);
--			unlock_page(page);
--			EXOFS_DBGMSG("writepage_strip(0x%lx, 0x%lx) "
--				     "outside the limits\n",
--				     inode->i_ino, page->index);
--			return 0;
--		}
--	}
--
--try_again:
--
--	if (unlikely(pcol->pg_first == -1)) {
--		pcol->pg_first = page->index;
--	} else if (unlikely((pcol->pg_first + pcol->nr_pages) !=
--		   page->index)) {
--		/* Discontinuity detected, split the request */
--		ret = write_exec(pcol);
--		if (unlikely(ret))
--			goto fail;
--
--		EXOFS_DBGMSG("writepage_strip(0x%lx, 0x%lx) Discontinuity\n",
--			     inode->i_ino, page->index);
--		goto try_again;
--	}
--
--	if (!pcol->pages) {
--		ret = pcol_try_alloc(pcol);
--		if (unlikely(ret))
--			goto fail;
--	}
--
--	EXOFS_DBGMSG2("    writepage_strip(0x%lx, 0x%lx) len=0x%zx\n",
--		     inode->i_ino, page->index, len);
--
--	ret = pcol_add_page(pcol, page, len);
--	if (unlikely(ret)) {
--		EXOFS_DBGMSG2("Failed pcol_add_page "
--			     "nr_pages=%u total_length=0x%lx\n",
--			     pcol->nr_pages, pcol->length);
--
--		/* split the request, next loop will start again */
--		ret = write_exec(pcol);
--		if (unlikely(ret)) {
--			EXOFS_DBGMSG("write_exec failed => %d", ret);
--			goto fail;
--		}
--
--		goto try_again;
--	}
--
--	BUG_ON(PageWriteback(page));
--	set_page_writeback(page);
--
--	return 0;
--
--fail:
--	EXOFS_DBGMSG("Error: writepage_strip(0x%lx, 0x%lx)=>%d\n",
--		     inode->i_ino, page->index, ret);
--	mapping_set_error(page->mapping, -EIO);
--	unlock_page(page);
--	return ret;
--}
--
--static int exofs_writepages(struct address_space *mapping,
--		       struct writeback_control *wbc)
--{
--	struct page_collect pcol;
--	long start, end, expected_pages;
--	int ret;
--
--	start = wbc->range_start >> PAGE_SHIFT;
--	end = (wbc->range_end == LLONG_MAX) ?
--			start + mapping->nrpages :
--			wbc->range_end >> PAGE_SHIFT;
--
--	if (start || end)
--		expected_pages = end - start + 1;
--	else
--		expected_pages = mapping->nrpages;
--
--	if (expected_pages < 32L)
--		expected_pages = 32L;
--
--	EXOFS_DBGMSG2("inode(0x%lx) wbc->start=0x%llx wbc->end=0x%llx "
--		     "nrpages=%lu start=0x%lx end=0x%lx expected_pages=%ld\n",
--		     mapping->host->i_ino, wbc->range_start, wbc->range_end,
--		     mapping->nrpages, start, end, expected_pages);
--
--	_pcol_init(&pcol, expected_pages, mapping->host);
--
--	ret = write_cache_pages(mapping, wbc, writepage_strip, &pcol);
--	if (unlikely(ret)) {
--		EXOFS_ERR("write_cache_pages => %d\n", ret);
--		return ret;
--	}
--
--	ret = write_exec(&pcol);
--	if (unlikely(ret))
--		return ret;
--
--	if (wbc->sync_mode == WB_SYNC_ALL) {
--		return write_exec(&pcol); /* pump the last reminder */
--	} else if (pcol.nr_pages) {
--		/* not SYNC let the reminder join the next writeout */
--		unsigned i;
--
--		for (i = 0; i < pcol.nr_pages; i++) {
--			struct page *page = pcol.pages[i];
--
--			end_page_writeback(page);
--			set_page_dirty(page);
--			unlock_page(page);
--		}
--	}
--	return 0;
--}
--
--/*
--static int exofs_writepage(struct page *page, struct writeback_control *wbc)
--{
--	struct page_collect pcol;
--	int ret;
--
--	_pcol_init(&pcol, 1, page->mapping->host);
--
--	ret = writepage_strip(page, NULL, &pcol);
--	if (ret) {
--		EXOFS_ERR("exofs_writepage => %d\n", ret);
--		return ret;
--	}
--
--	return write_exec(&pcol);
--}
--*/
--/* i_mutex held using inode->i_size directly */
--static void _write_failed(struct inode *inode, loff_t to)
--{
--	if (to > inode->i_size)
--		truncate_pagecache(inode, inode->i_size);
--}
--
--int exofs_write_begin(struct file *file, struct address_space *mapping,
--		loff_t pos, unsigned len, unsigned flags,
--		struct page **pagep, void **fsdata)
--{
--	int ret = 0;
--	struct page *page;
--
--	page = *pagep;
--	if (page == NULL) {
--		page = grab_cache_page_write_begin(mapping, pos >> PAGE_SHIFT,
--						   flags);
--		if (!page) {
--			EXOFS_DBGMSG("grab_cache_page_write_begin failed\n");
--			return -ENOMEM;
--		}
--		*pagep = page;
--	}
--
--	 /* read modify write */
--	if (!PageUptodate(page) && (len != PAGE_SIZE)) {
--		loff_t i_size = i_size_read(mapping->host);
--		pgoff_t end_index = i_size >> PAGE_SHIFT;
--
--		if (page->index > end_index) {
--			clear_highpage(page);
--			SetPageUptodate(page);
--		} else {
--			ret = _readpage(page, true);
--			if (ret) {
--				unlock_page(page);
--				EXOFS_DBGMSG("__readpage failed\n");
--			}
--		}
--	}
--	return ret;
--}
--
--static int exofs_write_begin_export(struct file *file,
--		struct address_space *mapping,
--		loff_t pos, unsigned len, unsigned flags,
--		struct page **pagep, void **fsdata)
--{
--	*pagep = NULL;
--
--	return exofs_write_begin(file, mapping, pos, len, flags, pagep,
--					fsdata);
--}
--
--static int exofs_write_end(struct file *file, struct address_space *mapping,
--			loff_t pos, unsigned len, unsigned copied,
--			struct page *page, void *fsdata)
--{
--	struct inode *inode = mapping->host;
--	loff_t last_pos = pos + copied;
--
--	if (!PageUptodate(page)) {
--		if (copied < len) {
--			_write_failed(inode, pos + len);
--			copied = 0;
--			goto out;
--		}
--		SetPageUptodate(page);
--	}
--	if (last_pos > inode->i_size) {
--		i_size_write(inode, last_pos);
--		mark_inode_dirty(inode);
--	}
--	set_page_dirty(page);
--out:
--	unlock_page(page);
--	put_page(page);
--	return copied;
--}
--
--static int exofs_releasepage(struct page *page, gfp_t gfp)
--{
--	EXOFS_DBGMSG("page 0x%lx\n", page->index);
--	WARN_ON(1);
--	return 0;
--}
--
--static void exofs_invalidatepage(struct page *page, unsigned int offset,
--				 unsigned int length)
--{
--	EXOFS_DBGMSG("page 0x%lx offset 0x%x length 0x%x\n",
--		     page->index, offset, length);
--	WARN_ON(1);
--}
--
--
-- /* TODO: Should be easy enough to do proprly */
--static ssize_t exofs_direct_IO(struct kiocb *iocb, struct iov_iter *iter)
--{
--	return 0;
--}
--
--const struct address_space_operations exofs_aops = {
--	.readpage	= exofs_readpage,
--	.readpages	= exofs_readpages,
--	.writepage	= NULL,
--	.writepages	= exofs_writepages,
--	.write_begin	= exofs_write_begin_export,
--	.write_end	= exofs_write_end,
--	.releasepage	= exofs_releasepage,
--	.set_page_dirty	= __set_page_dirty_nobuffers,
--	.invalidatepage = exofs_invalidatepage,
--
--	/* Not implemented Yet */
--	.bmap		= NULL, /* TODO: use osd's OSD_ACT_READ_MAP */
--	.direct_IO	= exofs_direct_IO,
--
--	/* With these NULL has special meaning or default is not exported */
--	.migratepage	= NULL,
--	.launder_page	= NULL,
--	.is_partially_uptodate = NULL,
--	.error_remove_page = NULL,
--};
--
--/******************************************************************************
-- * INODE OPERATIONS
-- *****************************************************************************/
--
--/*
-- * Test whether an inode is a fast symlink.
-- */
--static inline int exofs_inode_is_fast_symlink(struct inode *inode)
--{
--	struct exofs_i_info *oi = exofs_i(inode);
--
--	return S_ISLNK(inode->i_mode) && (oi->i_data[0] != 0);
--}
--
--static int _do_truncate(struct inode *inode, loff_t newsize)
--{
--	struct exofs_i_info *oi = exofs_i(inode);
--	struct exofs_sb_info *sbi = inode->i_sb->s_fs_info;
--	int ret;
--
--	inode->i_mtime = inode->i_ctime = current_time(inode);
--
--	ret = ore_truncate(&sbi->layout, &oi->oc, (u64)newsize);
--	if (likely(!ret))
--		truncate_setsize(inode, newsize);
--
--	EXOFS_DBGMSG2("(0x%lx) size=0x%llx ret=>%d\n",
--		     inode->i_ino, newsize, ret);
--	return ret;
--}
--
--/*
-- * Set inode attributes - update size attribute on OSD if needed,
-- *                        otherwise just call generic functions.
-- */
--int exofs_setattr(struct dentry *dentry, struct iattr *iattr)
--{
--	struct inode *inode = d_inode(dentry);
--	int error;
--
--	/* if we are about to modify an object, and it hasn't been
--	 * created yet, wait
--	 */
--	error = wait_obj_created(exofs_i(inode));
--	if (unlikely(error))
--		return error;
--
--	error = setattr_prepare(dentry, iattr);
--	if (unlikely(error))
--		return error;
--
--	if ((iattr->ia_valid & ATTR_SIZE) &&
--	    iattr->ia_size != i_size_read(inode)) {
--		error = _do_truncate(inode, iattr->ia_size);
--		if (unlikely(error))
--			return error;
--	}
--
--	setattr_copy(inode, iattr);
--	mark_inode_dirty(inode);
--	return 0;
--}
--
--static const struct osd_attr g_attr_inode_file_layout = ATTR_DEF(
--	EXOFS_APAGE_FS_DATA,
--	EXOFS_ATTR_INODE_FILE_LAYOUT,
--	0);
--static const struct osd_attr g_attr_inode_dir_layout = ATTR_DEF(
--	EXOFS_APAGE_FS_DATA,
--	EXOFS_ATTR_INODE_DIR_LAYOUT,
--	0);
--
--/*
-- * Read the Linux inode info from the OSD, and return it as is. In exofs the
-- * inode info is in an application specific page/attribute of the osd-object.
-- */
--static int exofs_get_inode(struct super_block *sb, struct exofs_i_info *oi,
--		    struct exofs_fcb *inode)
--{
--	struct exofs_sb_info *sbi = sb->s_fs_info;
--	struct osd_attr attrs[] = {
--		[0] = g_attr_inode_data,
--		[1] = g_attr_inode_file_layout,
--		[2] = g_attr_inode_dir_layout,
--	};
--	struct ore_io_state *ios;
--	struct exofs_on_disk_inode_layout *layout;
--	int ret;
--
--	ret = ore_get_io_state(&sbi->layout, &oi->oc, &ios);
--	if (unlikely(ret)) {
--		EXOFS_ERR("%s: ore_get_io_state failed.\n", __func__);
--		return ret;
--	}
--
--	attrs[1].len = exofs_on_disk_inode_layout_size(sbi->oc.numdevs);
--	attrs[2].len = exofs_on_disk_inode_layout_size(sbi->oc.numdevs);
--
--	ios->in_attr = attrs;
--	ios->in_attr_len = ARRAY_SIZE(attrs);
--
--	ret = ore_read(ios);
--	if (unlikely(ret)) {
--		EXOFS_ERR("object(0x%llx) corrupted, return empty file=>%d\n",
--			  _LLU(oi->one_comp.obj.id), ret);
--		memset(inode, 0, sizeof(*inode));
--		inode->i_mode = 0040000 | (0777 & ~022);
--		/* If object is lost on target we might as well enable it's
--		 * delete.
--		 */
--		ret = 0;
--		goto out;
--	}
--
--	ret = extract_attr_from_ios(ios, &attrs[0]);
--	if (ret) {
--		EXOFS_ERR("%s: extract_attr 0 of inode failed\n", __func__);
--		goto out;
--	}
--	WARN_ON(attrs[0].len != EXOFS_INO_ATTR_SIZE);
--	memcpy(inode, attrs[0].val_ptr, EXOFS_INO_ATTR_SIZE);
--
--	ret = extract_attr_from_ios(ios, &attrs[1]);
--	if (ret) {
--		EXOFS_ERR("%s: extract_attr 1 of inode failed\n", __func__);
--		goto out;
--	}
--	if (attrs[1].len) {
--		layout = attrs[1].val_ptr;
--		if (layout->gen_func != cpu_to_le16(LAYOUT_MOVING_WINDOW)) {
--			EXOFS_ERR("%s: unsupported files layout %d\n",
--				__func__, layout->gen_func);
--			ret = -ENOTSUPP;
--			goto out;
--		}
--	}
--
--	ret = extract_attr_from_ios(ios, &attrs[2]);
--	if (ret) {
--		EXOFS_ERR("%s: extract_attr 2 of inode failed\n", __func__);
--		goto out;
--	}
--	if (attrs[2].len) {
--		layout = attrs[2].val_ptr;
--		if (layout->gen_func != cpu_to_le16(LAYOUT_MOVING_WINDOW)) {
--			EXOFS_ERR("%s: unsupported meta-data layout %d\n",
--				__func__, layout->gen_func);
--			ret = -ENOTSUPP;
--			goto out;
--		}
--	}
--
--out:
--	ore_put_io_state(ios);
--	return ret;
--}
--
--static void __oi_init(struct exofs_i_info *oi)
--{
--	init_waitqueue_head(&oi->i_wq);
--	oi->i_flags = 0;
--}
--/*
-- * Fill in an inode read from the OSD and set it up for use
-- */
--struct inode *exofs_iget(struct super_block *sb, unsigned long ino)
--{
--	struct exofs_i_info *oi;
--	struct exofs_fcb fcb;
--	struct inode *inode;
--	int ret;
--
--	inode = iget_locked(sb, ino);
--	if (!inode)
--		return ERR_PTR(-ENOMEM);
--	if (!(inode->i_state & I_NEW))
--		return inode;
--	oi = exofs_i(inode);
--	__oi_init(oi);
--	exofs_init_comps(&oi->oc, &oi->one_comp, sb->s_fs_info,
--			 exofs_oi_objno(oi));
--
--	/* read the inode from the osd */
--	ret = exofs_get_inode(sb, oi, &fcb);
--	if (ret)
--		goto bad_inode;
--
--	set_obj_created(oi);
--
--	/* copy stuff from on-disk struct to in-memory struct */
--	inode->i_mode = le16_to_cpu(fcb.i_mode);
--	i_uid_write(inode, le32_to_cpu(fcb.i_uid));
--	i_gid_write(inode, le32_to_cpu(fcb.i_gid));
--	set_nlink(inode, le16_to_cpu(fcb.i_links_count));
--	inode->i_ctime.tv_sec = (signed)le32_to_cpu(fcb.i_ctime);
--	inode->i_atime.tv_sec = (signed)le32_to_cpu(fcb.i_atime);
--	inode->i_mtime.tv_sec = (signed)le32_to_cpu(fcb.i_mtime);
--	inode->i_ctime.tv_nsec =
--		inode->i_atime.tv_nsec = inode->i_mtime.tv_nsec = 0;
--	oi->i_commit_size = le64_to_cpu(fcb.i_size);
--	i_size_write(inode, oi->i_commit_size);
--	inode->i_blkbits = EXOFS_BLKSHIFT;
--	inode->i_generation = le32_to_cpu(fcb.i_generation);
--
--	oi->i_dir_start_lookup = 0;
--
--	if ((inode->i_nlink == 0) && (inode->i_mode == 0)) {
--		ret = -ESTALE;
--		goto bad_inode;
--	}
--
--	if (S_ISCHR(inode->i_mode) || S_ISBLK(inode->i_mode)) {
--		if (fcb.i_data[0])
--			inode->i_rdev =
--				old_decode_dev(le32_to_cpu(fcb.i_data[0]));
--		else
--			inode->i_rdev =
--				new_decode_dev(le32_to_cpu(fcb.i_data[1]));
--	} else {
--		memcpy(oi->i_data, fcb.i_data, sizeof(fcb.i_data));
--	}
--
--	if (S_ISREG(inode->i_mode)) {
--		inode->i_op = &exofs_file_inode_operations;
--		inode->i_fop = &exofs_file_operations;
--		inode->i_mapping->a_ops = &exofs_aops;
--	} else if (S_ISDIR(inode->i_mode)) {
--		inode->i_op = &exofs_dir_inode_operations;
--		inode->i_fop = &exofs_dir_operations;
--		inode->i_mapping->a_ops = &exofs_aops;
--	} else if (S_ISLNK(inode->i_mode)) {
--		if (exofs_inode_is_fast_symlink(inode)) {
--			inode->i_op = &simple_symlink_inode_operations;
--			inode->i_link = (char *)oi->i_data;
--		} else {
--			inode->i_op = &page_symlink_inode_operations;
--			inode_nohighmem(inode);
--			inode->i_mapping->a_ops = &exofs_aops;
--		}
--	} else {
--		inode->i_op = &exofs_special_inode_operations;
--		if (fcb.i_data[0])
--			init_special_inode(inode, inode->i_mode,
--			   old_decode_dev(le32_to_cpu(fcb.i_data[0])));
--		else
--			init_special_inode(inode, inode->i_mode,
--			   new_decode_dev(le32_to_cpu(fcb.i_data[1])));
--	}
--
--	unlock_new_inode(inode);
--	return inode;
--
--bad_inode:
--	iget_failed(inode);
--	return ERR_PTR(ret);
--}
--
--int __exofs_wait_obj_created(struct exofs_i_info *oi)
--{
--	if (!obj_created(oi)) {
--		EXOFS_DBGMSG("!obj_created\n");
--		BUG_ON(!obj_2bcreated(oi));
--		wait_event(oi->i_wq, obj_created(oi));
--		EXOFS_DBGMSG("wait_event done\n");
--	}
--	return unlikely(is_bad_inode(&oi->vfs_inode)) ? -EIO : 0;
--}
--
--/*
-- * Callback function from exofs_new_inode().  The important thing is that we
-- * set the obj_created flag so that other methods know that the object exists on
-- * the OSD.
-- */
--static void create_done(struct ore_io_state *ios, void *p)
--{
--	struct inode *inode = p;
--	struct exofs_i_info *oi = exofs_i(inode);
--	struct exofs_sb_info *sbi = inode->i_sb->s_fs_info;
--	int ret;
--
--	ret = ore_check_io(ios, NULL);
--	ore_put_io_state(ios);
--
--	atomic_dec(&sbi->s_curr_pending);
--
--	if (unlikely(ret)) {
--		EXOFS_ERR("object=0x%llx creation failed in pid=0x%llx",
--			  _LLU(exofs_oi_objno(oi)),
--			  _LLU(oi->one_comp.obj.partition));
--		/*TODO: When FS is corrupted creation can fail, object already
--		 * exist. Get rid of this asynchronous creation, if exist
--		 * increment the obj counter and try the next object. Until we
--		 * succeed. All these dangling objects will be made into lost
--		 * files by chkfs.exofs
--		 */
--	}
--
--	set_obj_created(oi);
--
--	wake_up(&oi->i_wq);
--}
--
--/*
-- * Set up a new inode and create an object for it on the OSD
-- */
--struct inode *exofs_new_inode(struct inode *dir, umode_t mode)
--{
--	struct super_block *sb = dir->i_sb;
--	struct exofs_sb_info *sbi = sb->s_fs_info;
--	struct inode *inode;
--	struct exofs_i_info *oi;
--	struct ore_io_state *ios;
--	int ret;
--
--	inode = new_inode(sb);
--	if (!inode)
--		return ERR_PTR(-ENOMEM);
--
--	oi = exofs_i(inode);
--	__oi_init(oi);
--
--	set_obj_2bcreated(oi);
--
--	inode_init_owner(inode, dir, mode);
--	inode->i_ino = sbi->s_nextid++;
--	inode->i_blkbits = EXOFS_BLKSHIFT;
--	inode->i_mtime = inode->i_atime = inode->i_ctime = current_time(inode);
--	oi->i_commit_size = inode->i_size = 0;
--	spin_lock(&sbi->s_next_gen_lock);
--	inode->i_generation = sbi->s_next_generation++;
--	spin_unlock(&sbi->s_next_gen_lock);
--	insert_inode_hash(inode);
--
--	exofs_init_comps(&oi->oc, &oi->one_comp, sb->s_fs_info,
--			 exofs_oi_objno(oi));
--	exofs_sbi_write_stats(sbi); /* Make sure new sbi->s_nextid is on disk */
--
--	mark_inode_dirty(inode);
--
--	ret = ore_get_io_state(&sbi->layout, &oi->oc, &ios);
--	if (unlikely(ret)) {
--		EXOFS_ERR("exofs_new_inode: ore_get_io_state failed\n");
--		return ERR_PTR(ret);
--	}
--
--	ios->done = create_done;
--	ios->private = inode;
--
--	ret = ore_create(ios);
--	if (ret) {
--		ore_put_io_state(ios);
--		return ERR_PTR(ret);
--	}
--	atomic_inc(&sbi->s_curr_pending);
--
--	return inode;
--}
--
--/*
-- * struct to pass two arguments to update_inode's callback
-- */
--struct updatei_args {
--	struct exofs_sb_info	*sbi;
--	struct exofs_fcb	fcb;
--};
--
--/*
-- * Callback function from exofs_update_inode().
-- */
--static void updatei_done(struct ore_io_state *ios, void *p)
--{
--	struct updatei_args *args = p;
--
--	ore_put_io_state(ios);
--
--	atomic_dec(&args->sbi->s_curr_pending);
--
--	kfree(args);
--}
--
--/*
-- * Write the inode to the OSD.  Just fill up the struct, and set the attribute
-- * synchronously or asynchronously depending on the do_sync flag.
-- */
--static int exofs_update_inode(struct inode *inode, int do_sync)
--{
--	struct exofs_i_info *oi = exofs_i(inode);
--	struct super_block *sb = inode->i_sb;
--	struct exofs_sb_info *sbi = sb->s_fs_info;
--	struct ore_io_state *ios;
--	struct osd_attr attr;
--	struct exofs_fcb *fcb;
--	struct updatei_args *args;
--	int ret;
--
--	args = kzalloc(sizeof(*args), GFP_KERNEL);
--	if (!args) {
--		EXOFS_DBGMSG("Failed kzalloc of args\n");
--		return -ENOMEM;
--	}
--
--	fcb = &args->fcb;
--
--	fcb->i_mode = cpu_to_le16(inode->i_mode);
--	fcb->i_uid = cpu_to_le32(i_uid_read(inode));
--	fcb->i_gid = cpu_to_le32(i_gid_read(inode));
--	fcb->i_links_count = cpu_to_le16(inode->i_nlink);
--	fcb->i_ctime = cpu_to_le32(inode->i_ctime.tv_sec);
--	fcb->i_atime = cpu_to_le32(inode->i_atime.tv_sec);
--	fcb->i_mtime = cpu_to_le32(inode->i_mtime.tv_sec);
--	oi->i_commit_size = i_size_read(inode);
--	fcb->i_size = cpu_to_le64(oi->i_commit_size);
--	fcb->i_generation = cpu_to_le32(inode->i_generation);
--
--	if (S_ISCHR(inode->i_mode) || S_ISBLK(inode->i_mode)) {
--		if (old_valid_dev(inode->i_rdev)) {
--			fcb->i_data[0] =
--				cpu_to_le32(old_encode_dev(inode->i_rdev));
--			fcb->i_data[1] = 0;
--		} else {
--			fcb->i_data[0] = 0;
--			fcb->i_data[1] =
--				cpu_to_le32(new_encode_dev(inode->i_rdev));
--			fcb->i_data[2] = 0;
--		}
--	} else
--		memcpy(fcb->i_data, oi->i_data, sizeof(fcb->i_data));
--
--	ret = ore_get_io_state(&sbi->layout, &oi->oc, &ios);
--	if (unlikely(ret)) {
--		EXOFS_ERR("%s: ore_get_io_state failed.\n", __func__);
--		goto free_args;
--	}
--
--	attr = g_attr_inode_data;
--	attr.val_ptr = fcb;
--	ios->out_attr_len = 1;
--	ios->out_attr = &attr;
--
--	wait_obj_created(oi);
--
--	if (!do_sync) {
--		args->sbi = sbi;
--		ios->done = updatei_done;
--		ios->private = args;
--	}
--
--	ret = ore_write(ios);
--	if (!do_sync && !ret) {
--		atomic_inc(&sbi->s_curr_pending);
--		goto out; /* deallocation in updatei_done */
--	}
--
--	ore_put_io_state(ios);
--free_args:
--	kfree(args);
--out:
--	EXOFS_DBGMSG("(0x%lx) do_sync=%d ret=>%d\n",
--		     inode->i_ino, do_sync, ret);
--	return ret;
--}
--
--int exofs_write_inode(struct inode *inode, struct writeback_control *wbc)
--{
--	/* FIXME: fix fsync and use wbc->sync_mode == WB_SYNC_ALL */
--	return exofs_update_inode(inode, 1);
--}
--
--/*
-- * Callback function from exofs_delete_inode() - don't have much cleaning up to
-- * do.
-- */
--static void delete_done(struct ore_io_state *ios, void *p)
--{
--	struct exofs_sb_info *sbi = p;
--
--	ore_put_io_state(ios);
--
--	atomic_dec(&sbi->s_curr_pending);
--}
--
--/*
-- * Called when the refcount of an inode reaches zero.  We remove the object
-- * from the OSD here.  We make sure the object was created before we try and
-- * delete it.
-- */
--void exofs_evict_inode(struct inode *inode)
--{
--	struct exofs_i_info *oi = exofs_i(inode);
--	struct super_block *sb = inode->i_sb;
--	struct exofs_sb_info *sbi = sb->s_fs_info;
--	struct ore_io_state *ios;
--	int ret;
--
--	truncate_inode_pages_final(&inode->i_data);
--
--	/* TODO: should do better here */
--	if (inode->i_nlink || is_bad_inode(inode))
--		goto no_delete;
--
--	inode->i_size = 0;
--	clear_inode(inode);
--
--	/* if we are deleting an obj that hasn't been created yet, wait.
--	 * This also makes sure that create_done cannot be called with an
--	 * already evicted inode.
--	 */
--	wait_obj_created(oi);
--	/* ignore the error, attempt a remove anyway */
--
--	/* Now Remove the OSD objects */
--	ret = ore_get_io_state(&sbi->layout, &oi->oc, &ios);
--	if (unlikely(ret)) {
--		EXOFS_ERR("%s: ore_get_io_state failed\n", __func__);
--		return;
--	}
--
--	ios->done = delete_done;
--	ios->private = sbi;
--
--	ret = ore_remove(ios);
--	if (ret) {
--		EXOFS_ERR("%s: ore_remove failed\n", __func__);
--		ore_put_io_state(ios);
--		return;
--	}
--	atomic_inc(&sbi->s_curr_pending);
--
--	return;
--
--no_delete:
--	clear_inode(inode);
--}
-diff --git a/fs/exofs/namei.c b/fs/exofs/namei.c
-deleted file mode 100644
-index 7295cd722770..000000000000
---- a/fs/exofs/namei.c
-+++ /dev/null
-@@ -1,323 +0,0 @@
--/*
-- * Copyright (C) 2005, 2006
-- * Avishay Traeger (avishay@gmail.com)
-- * Copyright (C) 2008, 2009
-- * Boaz Harrosh <ooo@electrozaur.com>
-- *
-- * Copyrights for code taken from ext2:
-- *     Copyright (C) 1992, 1993, 1994, 1995
-- *     Remy Card (card@masi.ibp.fr)
-- *     Laboratoire MASI - Institut Blaise Pascal
-- *     Universite Pierre et Marie Curie (Paris VI)
-- *     from
-- *     linux/fs/minix/inode.c
-- *     Copyright (C) 1991, 1992  Linus Torvalds
-- *
-- * This file is part of exofs.
-- *
-- * exofs is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License as published by
-- * the Free Software Foundation.  Since it is based on ext2, and the only
-- * valid version of GPL for the Linux kernel is version 2, the only valid
-- * version of GPL for exofs is version 2.
-- *
-- * exofs is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with exofs; if not, write to the Free Software
-- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-- */
--
--#include "exofs.h"
--
--static inline int exofs_add_nondir(struct dentry *dentry, struct inode *inode)
--{
--	int err = exofs_add_link(dentry, inode);
--	if (!err) {
--		d_instantiate(dentry, inode);
--		return 0;
--	}
--	inode_dec_link_count(inode);
--	iput(inode);
--	return err;
--}
--
--static struct dentry *exofs_lookup(struct inode *dir, struct dentry *dentry,
--				   unsigned int flags)
--{
--	struct inode *inode;
--	ino_t ino;
--
--	if (dentry->d_name.len > EXOFS_NAME_LEN)
--		return ERR_PTR(-ENAMETOOLONG);
--
--	ino = exofs_inode_by_name(dir, dentry);
--	inode = ino ? exofs_iget(dir->i_sb, ino) : NULL;
--	return d_splice_alias(inode, dentry);
--}
--
--static int exofs_create(struct inode *dir, struct dentry *dentry, umode_t mode,
--			 bool excl)
--{
--	struct inode *inode = exofs_new_inode(dir, mode);
--	int err = PTR_ERR(inode);
--	if (!IS_ERR(inode)) {
--		inode->i_op = &exofs_file_inode_operations;
--		inode->i_fop = &exofs_file_operations;
--		inode->i_mapping->a_ops = &exofs_aops;
--		mark_inode_dirty(inode);
--		err = exofs_add_nondir(dentry, inode);
--	}
--	return err;
--}
--
--static int exofs_mknod(struct inode *dir, struct dentry *dentry, umode_t mode,
--		       dev_t rdev)
--{
--	struct inode *inode;
--	int err;
--
--	inode = exofs_new_inode(dir, mode);
--	err = PTR_ERR(inode);
--	if (!IS_ERR(inode)) {
--		init_special_inode(inode, inode->i_mode, rdev);
--		mark_inode_dirty(inode);
--		err = exofs_add_nondir(dentry, inode);
--	}
--	return err;
--}
--
--static int exofs_symlink(struct inode *dir, struct dentry *dentry,
--			  const char *symname)
--{
--	struct super_block *sb = dir->i_sb;
--	int err = -ENAMETOOLONG;
--	unsigned l = strlen(symname)+1;
--	struct inode *inode;
--	struct exofs_i_info *oi;
--
--	if (l > sb->s_blocksize)
--		goto out;
--
--	inode = exofs_new_inode(dir, S_IFLNK | S_IRWXUGO);
--	err = PTR_ERR(inode);
--	if (IS_ERR(inode))
--		goto out;
--
--	oi = exofs_i(inode);
--	if (l > sizeof(oi->i_data)) {
--		/* slow symlink */
--		inode->i_op = &page_symlink_inode_operations;
--		inode_nohighmem(inode);
--		inode->i_mapping->a_ops = &exofs_aops;
--		memset(oi->i_data, 0, sizeof(oi->i_data));
--
--		err = page_symlink(inode, symname, l);
--		if (err)
--			goto out_fail;
--	} else {
--		/* fast symlink */
--		inode->i_op = &simple_symlink_inode_operations;
--		inode->i_link = (char *)oi->i_data;
--		memcpy(oi->i_data, symname, l);
--		inode->i_size = l-1;
--	}
--	mark_inode_dirty(inode);
--
--	err = exofs_add_nondir(dentry, inode);
--out:
--	return err;
--
--out_fail:
--	inode_dec_link_count(inode);
--	iput(inode);
--	goto out;
--}
--
--static int exofs_link(struct dentry *old_dentry, struct inode *dir,
--		struct dentry *dentry)
--{
--	struct inode *inode = d_inode(old_dentry);
--
--	inode->i_ctime = current_time(inode);
--	inode_inc_link_count(inode);
--	ihold(inode);
--
--	return exofs_add_nondir(dentry, inode);
--}
--
--static int exofs_mkdir(struct inode *dir, struct dentry *dentry, umode_t mode)
--{
--	struct inode *inode;
--	int err;
--
--	inode_inc_link_count(dir);
--
--	inode = exofs_new_inode(dir, S_IFDIR | mode);
--	err = PTR_ERR(inode);
--	if (IS_ERR(inode))
--		goto out_dir;
--
--	inode->i_op = &exofs_dir_inode_operations;
--	inode->i_fop = &exofs_dir_operations;
--	inode->i_mapping->a_ops = &exofs_aops;
--
--	inode_inc_link_count(inode);
--
--	err = exofs_make_empty(inode, dir);
--	if (err)
--		goto out_fail;
--
--	err = exofs_add_link(dentry, inode);
--	if (err)
--		goto out_fail;
--
--	d_instantiate(dentry, inode);
--out:
--	return err;
--
--out_fail:
--	inode_dec_link_count(inode);
--	inode_dec_link_count(inode);
--	iput(inode);
--out_dir:
--	inode_dec_link_count(dir);
--	goto out;
--}
--
--static int exofs_unlink(struct inode *dir, struct dentry *dentry)
--{
--	struct inode *inode = d_inode(dentry);
--	struct exofs_dir_entry *de;
--	struct page *page;
--	int err = -ENOENT;
--
--	de = exofs_find_entry(dir, dentry, &page);
--	if (!de)
--		goto out;
--
--	err = exofs_delete_entry(de, page);
--	if (err)
--		goto out;
--
--	inode->i_ctime = dir->i_ctime;
--	inode_dec_link_count(inode);
--	err = 0;
--out:
--	return err;
--}
--
--static int exofs_rmdir(struct inode *dir, struct dentry *dentry)
--{
--	struct inode *inode = d_inode(dentry);
--	int err = -ENOTEMPTY;
--
--	if (exofs_empty_dir(inode)) {
--		err = exofs_unlink(dir, dentry);
--		if (!err) {
--			inode->i_size = 0;
--			inode_dec_link_count(inode);
--			inode_dec_link_count(dir);
--		}
--	}
--	return err;
--}
--
--static int exofs_rename(struct inode *old_dir, struct dentry *old_dentry,
--			struct inode *new_dir, struct dentry *new_dentry,
--			unsigned int flags)
--{
--	struct inode *old_inode = d_inode(old_dentry);
--	struct inode *new_inode = d_inode(new_dentry);
--	struct page *dir_page = NULL;
--	struct exofs_dir_entry *dir_de = NULL;
--	struct page *old_page;
--	struct exofs_dir_entry *old_de;
--	int err = -ENOENT;
--
--	if (flags & ~RENAME_NOREPLACE)
--		return -EINVAL;
--
--	old_de = exofs_find_entry(old_dir, old_dentry, &old_page);
--	if (!old_de)
--		goto out;
--
--	if (S_ISDIR(old_inode->i_mode)) {
--		err = -EIO;
--		dir_de = exofs_dotdot(old_inode, &dir_page);
--		if (!dir_de)
--			goto out_old;
--	}
--
--	if (new_inode) {
--		struct page *new_page;
--		struct exofs_dir_entry *new_de;
--
--		err = -ENOTEMPTY;
--		if (dir_de && !exofs_empty_dir(new_inode))
--			goto out_dir;
--
--		err = -ENOENT;
--		new_de = exofs_find_entry(new_dir, new_dentry, &new_page);
--		if (!new_de)
--			goto out_dir;
--		err = exofs_set_link(new_dir, new_de, new_page, old_inode);
--		new_inode->i_ctime = current_time(new_inode);
--		if (dir_de)
--			drop_nlink(new_inode);
--		inode_dec_link_count(new_inode);
--		if (err)
--			goto out_dir;
--	} else {
--		err = exofs_add_link(new_dentry, old_inode);
--		if (err)
--			goto out_dir;
--		if (dir_de)
--			inode_inc_link_count(new_dir);
--	}
--
--	old_inode->i_ctime = current_time(old_inode);
--
--	exofs_delete_entry(old_de, old_page);
--	mark_inode_dirty(old_inode);
--
--	if (dir_de) {
--		err = exofs_set_link(old_inode, dir_de, dir_page, new_dir);
--		inode_dec_link_count(old_dir);
--		if (err)
--			goto out_dir;
--	}
--	return 0;
--
--
--out_dir:
--	if (dir_de) {
--		kunmap(dir_page);
--		put_page(dir_page);
--	}
--out_old:
--	kunmap(old_page);
--	put_page(old_page);
--out:
--	return err;
--}
--
--const struct inode_operations exofs_dir_inode_operations = {
--	.create 	= exofs_create,
--	.lookup 	= exofs_lookup,
--	.link   	= exofs_link,
--	.unlink 	= exofs_unlink,
--	.symlink	= exofs_symlink,
--	.mkdir  	= exofs_mkdir,
--	.rmdir  	= exofs_rmdir,
--	.mknod  	= exofs_mknod,
--	.rename		= exofs_rename,
--	.setattr	= exofs_setattr,
--};
--
--const struct inode_operations exofs_special_inode_operations = {
--	.setattr	= exofs_setattr,
--};
-diff --git a/fs/exofs/ore.c b/fs/exofs/ore.c
-deleted file mode 100644
-index 5331a15a61f1..000000000000
---- a/fs/exofs/ore.c
-+++ /dev/null
-@@ -1,1178 +0,0 @@
--/*
-- * Copyright (C) 2005, 2006
-- * Avishay Traeger (avishay@gmail.com)
-- * Copyright (C) 2008, 2009
-- * Boaz Harrosh <ooo@electrozaur.com>
-- *
-- * This file is part of exofs.
-- *
-- * exofs is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License as published by
-- * the Free Software Foundation.  Since it is based on ext2, and the only
-- * valid version of GPL for the Linux kernel is version 2, the only valid
-- * version of GPL for exofs is version 2.
-- *
-- * exofs is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with exofs; if not, write to the Free Software
-- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+- * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED
+- * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+- * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+- * DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+- * BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+- * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+- * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 - */
 -
 -#include <linux/slab.h>
 -#include <linux/module.h>
--#include <asm/div64.h>
--#include <linux/lcm.h>
 -
--#include "ore_raid.h"
+-#include <scsi/osd_initiator.h>
+-#include <scsi/osd_sec.h>
+-#include <scsi/osd_attributes.h>
+-#include <scsi/osd_sense.h>
+-
+-#include <scsi/scsi_device.h>
+-#include <scsi/scsi_request.h>
+-
+-#include "osd_debug.h"
+-
+-#ifndef __unused
+-#    define __unused			__attribute__((unused))
+-#endif
+-
+-enum { OSD_REQ_RETRIES = 1 };
 -
 -MODULE_AUTHOR("Boaz Harrosh <ooo@electrozaur.com>");
--MODULE_DESCRIPTION("Objects Raid Engine ore.ko");
+-MODULE_DESCRIPTION("open-osd initiator library libosd.ko");
 -MODULE_LICENSE("GPL");
 -
--/* ore_verify_layout does a couple of things:
-- * 1. Given a minimum number of needed parameters fixes up the rest of the
-- *    members to be operatonals for the ore. The needed parameters are those
-- *    that are defined by the pnfs-objects layout STD.
-- * 2. Check to see if the current ore code actually supports these parameters
-- *    for example stripe_unit must be a multple of the system PAGE_SIZE,
-- *    and etc...
-- * 3. Cache some havily used calculations that will be needed by users.
-- */
--
--enum { BIO_MAX_PAGES_KMALLOC =
--		(PAGE_SIZE - sizeof(struct bio)) / sizeof(struct bio_vec),};
--
--int ore_verify_layout(unsigned total_comps, struct ore_layout *layout)
+-static inline void build_test(void)
 -{
--	u64 stripe_length;
--
--	switch (layout->raid_algorithm) {
--	case PNFS_OSD_RAID_0:
--		layout->parity = 0;
--		break;
--	case PNFS_OSD_RAID_5:
--		layout->parity = 1;
--		break;
--	case PNFS_OSD_RAID_PQ:
--		layout->parity = 2;
--		break;
--	case PNFS_OSD_RAID_4:
--	default:
--		ORE_ERR("Only RAID_0/5/6 for now received-enum=%d\n",
--			layout->raid_algorithm);
--		return -EINVAL;
--	}
--	if (0 != (layout->stripe_unit & ~PAGE_MASK)) {
--		ORE_ERR("Stripe Unit(0x%llx)"
--			  " must be Multples of PAGE_SIZE(0x%lx)\n",
--			  _LLU(layout->stripe_unit), PAGE_SIZE);
--		return -EINVAL;
--	}
--	if (layout->group_width) {
--		if (!layout->group_depth) {
--			ORE_ERR("group_depth == 0 && group_width != 0\n");
--			return -EINVAL;
--		}
--		if (total_comps < (layout->group_width * layout->mirrors_p1)) {
--			ORE_ERR("Data Map wrong, "
--				"numdevs=%d < group_width=%d * mirrors=%d\n",
--				total_comps, layout->group_width,
--				layout->mirrors_p1);
--			return -EINVAL;
--		}
--		layout->group_count = total_comps / layout->mirrors_p1 /
--						layout->group_width;
--	} else {
--		if (layout->group_depth) {
--			printk(KERN_NOTICE "Warning: group_depth ignored "
--				"group_width == 0 && group_depth == %lld\n",
--				_LLU(layout->group_depth));
--		}
--		layout->group_width = total_comps / layout->mirrors_p1;
--		layout->group_depth = -1;
--		layout->group_count = 1;
--	}
--
--	stripe_length = (u64)layout->group_width * layout->stripe_unit;
--	if (stripe_length >= (1ULL << 32)) {
--		ORE_ERR("Stripe_length(0x%llx) >= 32bit is not supported\n",
--			_LLU(stripe_length));
--		return -EINVAL;
--	}
--
--	layout->max_io_length =
--		(BIO_MAX_PAGES_KMALLOC * PAGE_SIZE - layout->stripe_unit) *
--					(layout->group_width - layout->parity);
--	if (layout->parity) {
--		unsigned stripe_length =
--				(layout->group_width - layout->parity) *
--				layout->stripe_unit;
--
--		layout->max_io_length /= stripe_length;
--		layout->max_io_length *= stripe_length;
--	}
--	ORE_DBGMSG("max_io_length=0x%lx\n", layout->max_io_length);
--
--	return 0;
--}
--EXPORT_SYMBOL(ore_verify_layout);
--
--static u8 *_ios_cred(struct ore_io_state *ios, unsigned index)
--{
--	return ios->oc->comps[index & ios->oc->single_comp].cred;
+-	/* structures were not packed */
+-	BUILD_BUG_ON(sizeof(struct osd_capability) != OSD_CAP_LEN);
+-	BUILD_BUG_ON(sizeof(struct osdv2_cdb) != OSD_TOTAL_CDB_LEN);
+-	BUILD_BUG_ON(sizeof(struct osdv1_cdb) != OSDv1_TOTAL_CDB_LEN);
 -}
 -
--static struct osd_obj_id *_ios_obj(struct ore_io_state *ios, unsigned index)
+-static const char *_osd_ver_desc(struct osd_request *or)
 -{
--	return &ios->oc->comps[index & ios->oc->single_comp].obj;
+-	return osd_req_is_ver1(or) ? "OSD1" : "OSD2";
 -}
 -
--static struct osd_dev *_ios_od(struct ore_io_state *ios, unsigned index)
--{
--	ORE_DBGMSG2("oc->first_dev=%d oc->numdevs=%d i=%d oc->ods=%p\n",
--		    ios->oc->first_dev, ios->oc->numdevs, index,
--		    ios->oc->ods);
+-#define ATTR_DEF_RI(id, len) ATTR_DEF(OSD_APAGE_ROOT_INFORMATION, id, len)
 -
--	return ore_comp_dev(ios->oc, index);
--}
--
--int  _ore_get_io_state(struct ore_layout *layout,
--			struct ore_components *oc, unsigned numdevs,
--			unsigned sgs_per_dev, unsigned num_par_pages,
--			struct ore_io_state **pios)
--{
--	struct ore_io_state *ios;
--	size_t size_ios, size_extra, size_total;
--	void *ios_extra;
--
--	/*
--	 * The desired layout looks like this, with the extra_allocation
--	 * items pointed at from fields within ios or per_dev:
--
--	struct __alloc_all_io_state {
--		struct ore_io_state ios;
--		struct ore_per_dev_state per_dev[numdevs];
--		union {
--			struct osd_sg_entry sglist[sgs_per_dev * numdevs];
--			struct page *pages[num_par_pages];
--		} extra_allocation;
--	} whole_allocation;
--
--	*/
--
--	/* This should never happen, so abort early if it ever does. */
--	if (sgs_per_dev && num_par_pages) {
--		ORE_DBGMSG("Tried to use both pages and sglist\n");
--		*pios = NULL;
--		return -EINVAL;
--	}
--
--	if (numdevs > (INT_MAX - sizeof(*ios)) /
--		       sizeof(struct ore_per_dev_state))
--		return -ENOMEM;
--	size_ios = sizeof(*ios) + sizeof(struct ore_per_dev_state) * numdevs;
--
--	if (sgs_per_dev * numdevs > INT_MAX / sizeof(struct osd_sg_entry))
--		return -ENOMEM;
--	if (num_par_pages > INT_MAX / sizeof(struct page *))
--		return -ENOMEM;
--	size_extra = max(sizeof(struct osd_sg_entry) * (sgs_per_dev * numdevs),
--			 sizeof(struct page *) * num_par_pages);
--
--	size_total = size_ios + size_extra;
--
--	if (likely(size_total <= PAGE_SIZE)) {
--		ios = kzalloc(size_total, GFP_KERNEL);
--		if (unlikely(!ios)) {
--			ORE_DBGMSG("Failed kzalloc bytes=%zd\n", size_total);
--			*pios = NULL;
--			return -ENOMEM;
--		}
--		ios_extra = (char *)ios + size_ios;
--	} else {
--		ios = kzalloc(size_ios, GFP_KERNEL);
--		if (unlikely(!ios)) {
--			ORE_DBGMSG("Failed alloc first part bytes=%zd\n",
--				   size_ios);
--			*pios = NULL;
--			return -ENOMEM;
--		}
--		ios_extra = kzalloc(size_extra, GFP_KERNEL);
--		if (unlikely(!ios_extra)) {
--			ORE_DBGMSG("Failed alloc second part bytes=%zd\n",
--				   size_extra);
--			kfree(ios);
--			*pios = NULL;
--			return -ENOMEM;
--		}
--
--		/* In this case the per_dev[0].sgilist holds the pointer to
--		 * be freed
--		 */
--		ios->extra_part_alloc = true;
--	}
--
--	if (num_par_pages) {
--		ios->parity_pages = ios_extra;
--		ios->max_par_pages = num_par_pages;
--	}
--	if (sgs_per_dev) {
--		struct osd_sg_entry *sgilist = ios_extra;
--		unsigned d;
--
--		for (d = 0; d < numdevs; ++d) {
--			ios->per_dev[d].sglist = sgilist;
--			sgilist += sgs_per_dev;
--		}
--		ios->sgs_per_dev = sgs_per_dev;
--	}
--
--	ios->layout = layout;
--	ios->oc = oc;
--	*pios = ios;
--	return 0;
--}
--
--/* Allocate an io_state for only a single group of devices
-- *
-- * If a user needs to call ore_read/write() this version must be used becase it
-- * allocates extra stuff for striping and raid.
-- * The ore might decide to only IO less then @length bytes do to alignmets
-- * and constrains as follows:
-- * - The IO cannot cross group boundary.
-- * - In raid5/6 The end of the IO must align at end of a stripe eg.
-- *   (@offset + @length) % strip_size == 0. Or the complete range is within a
-- *   single stripe.
-- * - Memory condition only permitted a shorter IO. (A user can use @length=~0
-- *   And check the returned ios->length for max_io_size.)
-- *
-- * The caller must check returned ios->length (and/or ios->nr_pages) and
-- * re-issue these pages that fall outside of ios->length
-- */
--int  ore_get_rw_state(struct ore_layout *layout, struct ore_components *oc,
--		      bool is_reading, u64 offset, u64 length,
--		      struct ore_io_state **pios)
--{
--	struct ore_io_state *ios;
--	unsigned numdevs = layout->group_width * layout->mirrors_p1;
--	unsigned sgs_per_dev = 0, max_par_pages = 0;
--	int ret;
--
--	if (layout->parity && length) {
--		unsigned data_devs = layout->group_width - layout->parity;
--		unsigned stripe_size = layout->stripe_unit * data_devs;
--		unsigned pages_in_unit = layout->stripe_unit / PAGE_SIZE;
--		u32 remainder;
--		u64 num_stripes;
--		u64 num_raid_units;
--
--		num_stripes = div_u64_rem(length, stripe_size, &remainder);
--		if (remainder)
--			++num_stripes;
--
--		num_raid_units =  num_stripes * layout->parity;
--
--		if (is_reading) {
--			/* For reads add per_dev sglist array */
--			/* TODO: Raid 6 we need twice more. Actually:
--			*         num_stripes / LCMdP(W,P);
--			*         if (W%P != 0) num_stripes *= parity;
--			*/
--
--			/* first/last seg is split */
--			num_raid_units += layout->group_width;
--			sgs_per_dev = div_u64(num_raid_units, data_devs) + 2;
--		} else {
--			/* For Writes add parity pages array. */
--			max_par_pages = num_raid_units * pages_in_unit *
--						sizeof(struct page *);
--		}
--	}
--
--	ret = _ore_get_io_state(layout, oc, numdevs, sgs_per_dev, max_par_pages,
--				pios);
--	if (unlikely(ret))
--		return ret;
--
--	ios = *pios;
--	ios->reading = is_reading;
--	ios->offset = offset;
--
--	if (length) {
--		ore_calc_stripe_info(layout, offset, length, &ios->si);
--		ios->length = ios->si.length;
--		ios->nr_pages = ((ios->offset & (PAGE_SIZE - 1)) +
--				 ios->length + PAGE_SIZE - 1) / PAGE_SIZE;
--		if (layout->parity)
--			_ore_post_alloc_raid_stuff(ios);
--	}
--
--	return 0;
--}
--EXPORT_SYMBOL(ore_get_rw_state);
--
--/* Allocate an io_state for all the devices in the comps array
-- *
-- * This version of io_state allocation is used mostly by create/remove
-- * and trunc where we currently need all the devices. The only wastful
-- * bit is the read/write_attributes with no IO. Those sites should
-- * be converted to use ore_get_rw_state() with length=0
-- */
--int  ore_get_io_state(struct ore_layout *layout, struct ore_components *oc,
--		      struct ore_io_state **pios)
--{
--	return _ore_get_io_state(layout, oc, oc->numdevs, 0, 0, pios);
--}
--EXPORT_SYMBOL(ore_get_io_state);
--
--void ore_put_io_state(struct ore_io_state *ios)
--{
--	if (ios) {
--		unsigned i;
--
--		for (i = 0; i < ios->numdevs; i++) {
--			struct ore_per_dev_state *per_dev = &ios->per_dev[i];
--
--			if (per_dev->or)
--				osd_end_request(per_dev->or);
--			if (per_dev->bio)
--				bio_put(per_dev->bio);
--		}
--
--		_ore_free_raid_stuff(ios);
--		kfree(ios);
--	}
--}
--EXPORT_SYMBOL(ore_put_io_state);
--
--static void _sync_done(struct ore_io_state *ios, void *p)
--{
--	struct completion *waiting = p;
--
--	complete(waiting);
--}
--
--static void _last_io(struct kref *kref)
--{
--	struct ore_io_state *ios = container_of(
--					kref, struct ore_io_state, kref);
--
--	ios->done(ios, ios->private);
--}
--
--static void _done_io(struct osd_request *or, void *p)
--{
--	struct ore_io_state *ios = p;
--
--	kref_put(&ios->kref, _last_io);
--}
--
--int ore_io_execute(struct ore_io_state *ios)
--{
--	DECLARE_COMPLETION_ONSTACK(wait);
--	bool sync = (ios->done == NULL);
--	int i, ret;
--
--	if (sync) {
--		ios->done = _sync_done;
--		ios->private = &wait;
--	}
--
--	for (i = 0; i < ios->numdevs; i++) {
--		struct osd_request *or = ios->per_dev[i].or;
--		if (unlikely(!or))
--			continue;
--
--		ret = osd_finalize_request(or, 0, _ios_cred(ios, i), NULL);
--		if (unlikely(ret)) {
--			ORE_DBGMSG("Failed to osd_finalize_request() => %d\n",
--				     ret);
--			return ret;
--		}
--	}
--
--	kref_init(&ios->kref);
--
--	for (i = 0; i < ios->numdevs; i++) {
--		struct osd_request *or = ios->per_dev[i].or;
--		if (unlikely(!or))
--			continue;
--
--		kref_get(&ios->kref);
--		osd_execute_request_async(or, _done_io, ios);
--	}
--
--	kref_put(&ios->kref, _last_io);
--	ret = 0;
--
--	if (sync) {
--		wait_for_completion(&wait);
--		ret = ore_check_io(ios, NULL);
--	}
--	return ret;
--}
--
--static void _clear_bio(struct bio *bio)
--{
--	struct bio_vec *bv;
--	unsigned i;
--
--	bio_for_each_segment_all(bv, bio, i) {
--		unsigned this_count = bv->bv_len;
--
--		if (likely(PAGE_SIZE == this_count))
--			clear_highpage(bv->bv_page);
--		else
--			zero_user(bv->bv_page, bv->bv_offset, this_count);
--	}
--}
--
--int ore_check_io(struct ore_io_state *ios, ore_on_dev_error on_dev_error)
--{
--	enum osd_err_priority acumulated_osd_err = 0;
--	int acumulated_lin_err = 0;
--	int i;
--
--	for (i = 0; i < ios->numdevs; i++) {
--		struct osd_sense_info osi;
--		struct ore_per_dev_state *per_dev = &ios->per_dev[i];
--		struct osd_request *or = per_dev->or;
--		int ret;
--
--		if (unlikely(!or))
--			continue;
--
--		ret = osd_req_decode_sense(or, &osi);
--		if (likely(!ret))
--			continue;
--
--		if ((OSD_ERR_PRI_CLEAR_PAGES == osi.osd_err_pri) &&
--		    per_dev->bio) {
--			/* start read offset passed endof file.
--			 * Note: if we do not have bio it means read-attributes
--			 * In this case we should return error to caller.
--			 */
--			_clear_bio(per_dev->bio);
--			ORE_DBGMSG("start read offset passed end of file "
--				"offset=0x%llx, length=0x%llx\n",
--				_LLU(per_dev->offset),
--				_LLU(per_dev->length));
--
--			continue; /* we recovered */
--		}
--
--		if (on_dev_error) {
--			u64 residual = ios->reading ?
--					or->in.residual : or->out.residual;
--			u64 offset = (ios->offset + ios->length) - residual;
--			unsigned dev = per_dev->dev - ios->oc->first_dev;
--			struct ore_dev *od = ios->oc->ods[dev];
--
--			on_dev_error(ios, od, dev, osi.osd_err_pri,
--				     offset, residual);
--		}
--		if (osi.osd_err_pri >= acumulated_osd_err) {
--			acumulated_osd_err = osi.osd_err_pri;
--			acumulated_lin_err = ret;
--		}
--	}
--
--	return acumulated_lin_err;
--}
--EXPORT_SYMBOL(ore_check_io);
--
--/*
-- * L - logical offset into the file
-- *
-- * D - number of Data devices
-- *	D = group_width - parity
-- *
-- * U - The number of bytes in a stripe within a group
-- *	U =  stripe_unit * D
-- *
-- * T - The number of bytes striped within a group of component objects
-- *     (before advancing to the next group)
-- *	T = U * group_depth
-- *
-- * S - The number of bytes striped across all component objects
-- *     before the pattern repeats
-- *	S = T * group_count
-- *
-- * M - The "major" (i.e., across all components) cycle number
-- *	M = L / S
-- *
-- * G - Counts the groups from the beginning of the major cycle
-- *	G = (L - (M * S)) / T	[or (L % S) / T]
-- *
-- * H - The byte offset within the group
-- *	H = (L - (M * S)) % T	[or (L % S) % T]
-- *
-- * N - The "minor" (i.e., across the group) stripe number
-- *	N = H / U
-- *
-- * C - The component index coresponding to L
-- *
-- *	C = (H - (N * U)) / stripe_unit + G * D
-- *	[or (L % U) / stripe_unit + G * D]
-- *
-- * O - The component offset coresponding to L
-- *	O = L % stripe_unit + N * stripe_unit + M * group_depth * stripe_unit
-- *
-- * LCMdP – Parity cycle: Lowest Common Multiple of group_width, parity
-- *          divide by parity
-- *	LCMdP = lcm(group_width, parity) / parity
-- *
-- * R - The parity Rotation stripe
-- *     (Note parity cycle always starts at a group's boundary)
-- *	R = N % LCMdP
-- *
-- * I = the first parity device index
-- *	I = (group_width + group_width - R*parity - parity) % group_width
-- *
-- * Craid - The component index Rotated
-- *	Craid = (group_width + C - R*parity) % group_width
-- *      (We add the group_width to avoid negative numbers modulo math)
-- */
--void ore_calc_stripe_info(struct ore_layout *layout, u64 file_offset,
--			  u64 length, struct ore_striping_info *si)
--{
--	u32	stripe_unit = layout->stripe_unit;
--	u32	group_width = layout->group_width;
--	u64	group_depth = layout->group_depth;
--	u32	parity      = layout->parity;
--
--	u32	D = group_width - parity;
--	u32	U = D * stripe_unit;
--	u64	T = U * group_depth;
--	u64	S = T * layout->group_count;
--	u64	M = div64_u64(file_offset, S);
--
--	/*
--	G = (L - (M * S)) / T
--	H = (L - (M * S)) % T
--	*/
--	u64	LmodS = file_offset - M * S;
--	u32	G = div64_u64(LmodS, T);
--	u64	H = LmodS - G * T;
--
--	u32	N = div_u64(H, U);
--	u32	Nlast;
--
--	/* "H - (N * U)" is just "H % U" so it's bound to u32 */
--	u32	C = (u32)(H - (N * U)) / stripe_unit + G * group_width;
--	u32 first_dev = C - C % group_width;
--
--	div_u64_rem(file_offset, stripe_unit, &si->unit_off);
--
--	si->obj_offset = si->unit_off + (N * stripe_unit) +
--				  (M * group_depth * stripe_unit);
--	si->cur_comp = C - first_dev;
--	si->cur_pg = si->unit_off / PAGE_SIZE;
--
--	if (parity) {
--		u32 LCMdP = lcm(group_width, parity) / parity;
--		/* R     = N % LCMdP; */
--		u32 RxP   = (N % LCMdP) * parity;
--
--		si->par_dev = (group_width + group_width - parity - RxP) %
--			      group_width + first_dev;
--		si->dev = (group_width + group_width + C - RxP) %
--			  group_width + first_dev;
--		si->bytes_in_stripe = U;
--		si->first_stripe_start = M * S + G * T + N * U;
--	} else {
--		/* Make the math correct see _prepare_one_group */
--		si->par_dev = group_width;
--		si->dev = C;
--	}
--
--	si->dev *= layout->mirrors_p1;
--	si->par_dev *= layout->mirrors_p1;
--	si->offset = file_offset;
--	si->length = T - H;
--	if (si->length > length)
--		si->length = length;
--
--	Nlast = div_u64(H + si->length + U - 1, U);
--	si->maxdevUnits = Nlast - N;
--
--	si->M = M;
--}
--EXPORT_SYMBOL(ore_calc_stripe_info);
--
--int _ore_add_stripe_unit(struct ore_io_state *ios,  unsigned *cur_pg,
--			 unsigned pgbase, struct page **pages,
--			 struct ore_per_dev_state *per_dev, int cur_len)
--{
--	unsigned pg = *cur_pg;
--	struct request_queue *q =
--			osd_request_queue(_ios_od(ios, per_dev->dev));
--	unsigned len = cur_len;
--	int ret;
--
--	if (per_dev->bio == NULL) {
--		unsigned bio_size;
--
--		if (!ios->reading) {
--			bio_size = ios->si.maxdevUnits;
--		} else {
--			bio_size = (ios->si.maxdevUnits + 1) *
--			     (ios->layout->group_width - ios->layout->parity) /
--			     ios->layout->group_width;
--		}
--		bio_size *= (ios->layout->stripe_unit / PAGE_SIZE);
--
--		per_dev->bio = bio_kmalloc(GFP_KERNEL, bio_size);
--		if (unlikely(!per_dev->bio)) {
--			ORE_DBGMSG("Failed to allocate BIO size=%u\n",
--				     bio_size);
--			ret = -ENOMEM;
--			goto out;
--		}
--	}
--
--	while (cur_len > 0) {
--		unsigned pglen = min_t(unsigned, PAGE_SIZE - pgbase, cur_len);
--		unsigned added_len;
--
--		cur_len -= pglen;
--
--		added_len = bio_add_pc_page(q, per_dev->bio, pages[pg],
--					    pglen, pgbase);
--		if (unlikely(pglen != added_len)) {
--			/* If bi_vcnt == bi_max then this is a SW BUG */
--			ORE_DBGMSG("Failed bio_add_pc_page bi_vcnt=0x%x "
--				   "bi_max=0x%x BIO_MAX=0x%x cur_len=0x%x\n",
--				   per_dev->bio->bi_vcnt,
--				   per_dev->bio->bi_max_vecs,
--				   BIO_MAX_PAGES_KMALLOC, cur_len);
--			ret = -ENOMEM;
--			goto out;
--		}
--		_add_stripe_page(ios->sp2d, &ios->si, pages[pg]);
--
--		pgbase = 0;
--		++pg;
--	}
--	BUG_ON(cur_len);
--
--	per_dev->length += len;
--	*cur_pg = pg;
--	ret = 0;
--out:	/* we fail the complete unit on an error eg don't advance
--	 * per_dev->length and cur_pg. This means that we might have a bigger
--	 * bio than the CDB requested length (per_dev->length). That's fine
--	 * only the oposite is fatal.
--	 */
--	return ret;
--}
--
--static int _add_parity_units(struct ore_io_state *ios,
--			     struct ore_striping_info *si,
--			     unsigned dev, unsigned first_dev,
--			     unsigned mirrors_p1, unsigned devs_in_group,
--			     unsigned cur_len)
--{
--	unsigned do_parity;
--	int ret = 0;
--
--	for (do_parity = ios->layout->parity; do_parity; --do_parity) {
--		struct ore_per_dev_state *per_dev;
--
--		per_dev = &ios->per_dev[dev - first_dev];
--		if (!per_dev->length && !per_dev->offset) {
--			/* Only/always the parity unit of the first
--			 * stripe will be empty. So this is a chance to
--			 * initialize the per_dev info.
--			 */
--			per_dev->dev = dev;
--			per_dev->offset = si->obj_offset - si->unit_off;
--		}
--
--		ret = _ore_add_parity_unit(ios, si, per_dev, cur_len,
--					   do_parity == 1);
--		if (unlikely(ret))
--				break;
--
--		if (do_parity != 1) {
--			dev = ((dev + mirrors_p1) % devs_in_group) + first_dev;
--			si->cur_comp = (si->cur_comp + 1) %
--						       ios->layout->group_width;
--		}
--	}
--
--	return ret;
--}
--
--static int _prepare_for_striping(struct ore_io_state *ios)
--{
--	struct ore_striping_info *si = &ios->si;
--	unsigned stripe_unit = ios->layout->stripe_unit;
--	unsigned mirrors_p1 = ios->layout->mirrors_p1;
--	unsigned group_width = ios->layout->group_width;
--	unsigned devs_in_group = group_width * mirrors_p1;
--	unsigned dev = si->dev;
--	unsigned first_dev = dev - (dev % devs_in_group);
--	unsigned cur_pg = ios->pages_consumed;
--	u64 length = ios->length;
--	int ret = 0;
--
--	if (!ios->pages) {
--		ios->numdevs = ios->layout->mirrors_p1;
--		return 0;
--	}
--
--	BUG_ON(length > si->length);
--
--	while (length) {
--		struct ore_per_dev_state *per_dev =
--						&ios->per_dev[dev - first_dev];
--		unsigned cur_len, page_off = 0;
--
--		if (!per_dev->length && !per_dev->offset) {
--			/* First time initialize the per_dev info. */
--			per_dev->dev = dev;
--			if (dev == si->dev) {
--				WARN_ON(dev == si->par_dev);
--				per_dev->offset = si->obj_offset;
--				cur_len = stripe_unit - si->unit_off;
--				page_off = si->unit_off & ~PAGE_MASK;
--				BUG_ON(page_off && (page_off != ios->pgbase));
--			} else {
--				per_dev->offset = si->obj_offset - si->unit_off;
--				cur_len = stripe_unit;
--			}
--		} else {
--			cur_len = stripe_unit;
--		}
--		if (cur_len >= length)
--			cur_len = length;
--
--		ret = _ore_add_stripe_unit(ios, &cur_pg, page_off, ios->pages,
--					   per_dev, cur_len);
--		if (unlikely(ret))
--			goto out;
--
--		length -= cur_len;
--
--		dev = ((dev + mirrors_p1) % devs_in_group) + first_dev;
--		si->cur_comp = (si->cur_comp + 1) % group_width;
--		if (unlikely((dev == si->par_dev) || (!length && ios->sp2d))) {
--			if (!length && ios->sp2d) {
--				/* If we are writing and this is the very last
--				 * stripe. then operate on parity dev.
--				 */
--				dev = si->par_dev;
--				/* If last stripe operate on parity comp */
--				si->cur_comp = group_width - ios->layout->parity;
--			}
--
--			/* In writes cur_len just means if it's the
--			 * last one. See _ore_add_parity_unit.
--			 */
--			ret = _add_parity_units(ios, si, dev, first_dev,
--						mirrors_p1, devs_in_group,
--						ios->sp2d ? length : cur_len);
--			if (unlikely(ret))
--					goto out;
--
--			/* Rotate next par_dev backwards with wraping */
--			si->par_dev = (devs_in_group + si->par_dev -
--				       ios->layout->parity * mirrors_p1) %
--				      devs_in_group + first_dev;
--			/* Next stripe, start fresh */
--			si->cur_comp = 0;
--			si->cur_pg = 0;
--			si->obj_offset += cur_len;
--			si->unit_off = 0;
--		}
--	}
--out:
--	ios->numdevs = devs_in_group;
--	ios->pages_consumed = cur_pg;
--	return ret;
--}
--
--int ore_create(struct ore_io_state *ios)
--{
--	int i, ret;
--
--	for (i = 0; i < ios->oc->numdevs; i++) {
--		struct osd_request *or;
--
--		or = osd_start_request(_ios_od(ios, i));
--		if (unlikely(!or)) {
--			ORE_ERR("%s: osd_start_request failed\n", __func__);
--			ret = -ENOMEM;
--			goto out;
--		}
--		ios->per_dev[i].or = or;
--		ios->numdevs++;
--
--		osd_req_create_object(or, _ios_obj(ios, i));
--	}
--	ret = ore_io_execute(ios);
--
--out:
--	return ret;
--}
--EXPORT_SYMBOL(ore_create);
--
--int ore_remove(struct ore_io_state *ios)
--{
--	int i, ret;
--
--	for (i = 0; i < ios->oc->numdevs; i++) {
--		struct osd_request *or;
--
--		or = osd_start_request(_ios_od(ios, i));
--		if (unlikely(!or)) {
--			ORE_ERR("%s: osd_start_request failed\n", __func__);
--			ret = -ENOMEM;
--			goto out;
--		}
--		ios->per_dev[i].or = or;
--		ios->numdevs++;
--
--		osd_req_remove_object(or, _ios_obj(ios, i));
--	}
--	ret = ore_io_execute(ios);
--
--out:
--	return ret;
--}
--EXPORT_SYMBOL(ore_remove);
--
--static int _write_mirror(struct ore_io_state *ios, int cur_comp)
--{
--	struct ore_per_dev_state *master_dev = &ios->per_dev[cur_comp];
--	unsigned dev = ios->per_dev[cur_comp].dev;
--	unsigned last_comp = cur_comp + ios->layout->mirrors_p1;
--	int ret = 0;
--
--	if (ios->pages && !master_dev->length)
--		return 0; /* Just an empty slot */
--
--	for (; cur_comp < last_comp; ++cur_comp, ++dev) {
--		struct ore_per_dev_state *per_dev = &ios->per_dev[cur_comp];
--		struct osd_request *or;
--
--		or = osd_start_request(_ios_od(ios, dev));
--		if (unlikely(!or)) {
--			ORE_ERR("%s: osd_start_request failed\n", __func__);
--			ret = -ENOMEM;
--			goto out;
--		}
--		per_dev->or = or;
--
--		if (ios->pages) {
--			struct bio *bio;
--
--			if (per_dev != master_dev) {
--				bio = bio_clone_fast(master_dev->bio,
--						     GFP_KERNEL, NULL);
--				if (unlikely(!bio)) {
--					ORE_DBGMSG(
--					      "Failed to allocate BIO size=%u\n",
--					      master_dev->bio->bi_max_vecs);
--					ret = -ENOMEM;
--					goto out;
--				}
--
--				bio->bi_disk = NULL;
--				bio->bi_next = NULL;
--				per_dev->offset = master_dev->offset;
--				per_dev->length = master_dev->length;
--				per_dev->bio =  bio;
--				per_dev->dev = dev;
--			} else {
--				bio = master_dev->bio;
--				/* FIXME: bio_set_dir() */
--				bio_set_op_attrs(bio, REQ_OP_WRITE, 0);
--			}
--
--			osd_req_write(or, _ios_obj(ios, cur_comp),
--				      per_dev->offset, bio, per_dev->length);
--			ORE_DBGMSG("write(0x%llx) offset=0x%llx "
--				      "length=0x%llx dev=%d\n",
--				     _LLU(_ios_obj(ios, cur_comp)->id),
--				     _LLU(per_dev->offset),
--				     _LLU(per_dev->length), dev);
--		} else if (ios->kern_buff) {
--			per_dev->offset = ios->si.obj_offset;
--			per_dev->dev = ios->si.dev + dev;
--
--			/* no cross device without page array */
--			BUG_ON((ios->layout->group_width > 1) &&
--			       (ios->si.unit_off + ios->length >
--				ios->layout->stripe_unit));
--
--			ret = osd_req_write_kern(or, _ios_obj(ios, cur_comp),
--						 per_dev->offset,
--						 ios->kern_buff, ios->length);
--			if (unlikely(ret))
--				goto out;
--			ORE_DBGMSG2("write_kern(0x%llx) offset=0x%llx "
--				      "length=0x%llx dev=%d\n",
--				     _LLU(_ios_obj(ios, cur_comp)->id),
--				     _LLU(per_dev->offset),
--				     _LLU(ios->length), per_dev->dev);
--		} else {
--			osd_req_set_attributes(or, _ios_obj(ios, cur_comp));
--			ORE_DBGMSG2("obj(0x%llx) set_attributes=%d dev=%d\n",
--				     _LLU(_ios_obj(ios, cur_comp)->id),
--				     ios->out_attr_len, dev);
--		}
--
--		if (ios->out_attr)
--			osd_req_add_set_attr_list(or, ios->out_attr,
--						  ios->out_attr_len);
--
--		if (ios->in_attr)
--			osd_req_add_get_attr_list(or, ios->in_attr,
--						  ios->in_attr_len);
--	}
--
--out:
--	return ret;
--}
--
--int ore_write(struct ore_io_state *ios)
--{
--	int i;
--	int ret;
--
--	if (unlikely(ios->sp2d && !ios->r4w)) {
--		/* A library is attempting a RAID-write without providing
--		 * a pages lock interface.
--		 */
--		WARN_ON_ONCE(1);
--		return -ENOTSUPP;
--	}
--
--	ret = _prepare_for_striping(ios);
--	if (unlikely(ret))
--		return ret;
--
--	for (i = 0; i < ios->numdevs; i += ios->layout->mirrors_p1) {
--		ret = _write_mirror(ios, i);
--		if (unlikely(ret))
--			return ret;
--	}
--
--	ret = ore_io_execute(ios);
--	return ret;
--}
--EXPORT_SYMBOL(ore_write);
--
--int _ore_read_mirror(struct ore_io_state *ios, unsigned cur_comp)
+-static int _osd_get_print_system_info(struct osd_dev *od,
+-	void *caps, struct osd_dev_info *odi)
 -{
 -	struct osd_request *or;
--	struct ore_per_dev_state *per_dev = &ios->per_dev[cur_comp];
--	struct osd_obj_id *obj = _ios_obj(ios, cur_comp);
--	unsigned first_dev = (unsigned)obj->id;
--
--	if (ios->pages && !per_dev->length)
--		return 0; /* Just an empty slot */
--
--	first_dev = per_dev->dev + first_dev % ios->layout->mirrors_p1;
--	or = osd_start_request(_ios_od(ios, first_dev));
--	if (unlikely(!or)) {
--		ORE_ERR("%s: osd_start_request failed\n", __func__);
--		return -ENOMEM;
--	}
--	per_dev->or = or;
--
--	if (ios->pages) {
--		if (per_dev->cur_sg) {
--			/* finalize the last sg_entry */
--			_ore_add_sg_seg(per_dev, 0, false);
--			if (unlikely(!per_dev->cur_sg))
--				return 0; /* Skip parity only device */
--
--			osd_req_read_sg(or, obj, per_dev->bio,
--					per_dev->sglist, per_dev->cur_sg);
--		} else {
--			/* The no raid case */
--			osd_req_read(or, obj, per_dev->offset,
--				     per_dev->bio, per_dev->length);
--		}
--
--		ORE_DBGMSG("read(0x%llx) offset=0x%llx length=0x%llx"
--			     " dev=%d sg_len=%d\n", _LLU(obj->id),
--			     _LLU(per_dev->offset), _LLU(per_dev->length),
--			     first_dev, per_dev->cur_sg);
--	} else {
--		BUG_ON(ios->kern_buff);
--
--		osd_req_get_attributes(or, obj);
--		ORE_DBGMSG2("obj(0x%llx) get_attributes=%d dev=%d\n",
--			      _LLU(obj->id),
--			      ios->in_attr_len, first_dev);
--	}
--	if (ios->out_attr)
--		osd_req_add_set_attr_list(or, ios->out_attr, ios->out_attr_len);
--
--	if (ios->in_attr)
--		osd_req_add_get_attr_list(or, ios->in_attr, ios->in_attr_len);
--
--	return 0;
--}
--
--int ore_read(struct ore_io_state *ios)
--{
--	int i;
+-	struct osd_attr get_attrs[] = {
+-		ATTR_DEF_RI(OSD_ATTR_RI_VENDOR_IDENTIFICATION, 8),
+-		ATTR_DEF_RI(OSD_ATTR_RI_PRODUCT_IDENTIFICATION, 16),
+-		ATTR_DEF_RI(OSD_ATTR_RI_PRODUCT_MODEL, 32),
+-		ATTR_DEF_RI(OSD_ATTR_RI_PRODUCT_REVISION_LEVEL, 4),
+-		ATTR_DEF_RI(OSD_ATTR_RI_PRODUCT_SERIAL_NUMBER, 64 /*variable*/),
+-		ATTR_DEF_RI(OSD_ATTR_RI_OSD_NAME, 64 /*variable*/),
+-		ATTR_DEF_RI(OSD_ATTR_RI_TOTAL_CAPACITY, 8),
+-		ATTR_DEF_RI(OSD_ATTR_RI_USED_CAPACITY, 8),
+-		ATTR_DEF_RI(OSD_ATTR_RI_NUMBER_OF_PARTITIONS, 8),
+-		ATTR_DEF_RI(OSD_ATTR_RI_CLOCK, 6),
+-		/* IBM-OSD-SIM Has a bug with this one put it last */
+-		ATTR_DEF_RI(OSD_ATTR_RI_OSD_SYSTEM_ID, 20),
+-	};
+-	void *iter = NULL, *pFirst;
+-	int nelem = ARRAY_SIZE(get_attrs), a = 0;
 -	int ret;
 -
--	ret = _prepare_for_striping(ios);
--	if (unlikely(ret))
--		return ret;
+-	or = osd_start_request(od);
+-	if (!or)
+-		return -ENOMEM;
 -
--	for (i = 0; i < ios->numdevs; i += ios->layout->mirrors_p1) {
--		ret = _ore_read_mirror(ios, i);
--		if (unlikely(ret))
--			return ret;
--	}
+-	/* get attrs */
+-	osd_req_get_attributes(or, &osd_root_object);
+-	osd_req_add_get_attr_list(or, get_attrs, ARRAY_SIZE(get_attrs));
 -
--	ret = ore_io_execute(ios);
--	return ret;
--}
--EXPORT_SYMBOL(ore_read);
+-	ret = osd_finalize_request(or, 0, caps, NULL);
+-	if (ret)
+-		goto out;
 -
--int extract_attr_from_ios(struct ore_io_state *ios, struct osd_attr *attr)
--{
--	struct osd_attr cur_attr = {.attr_page = 0}; /* start with zeros */
--	void *iter = NULL;
--	int nelem;
--
--	do {
--		nelem = 1;
--		osd_req_decode_get_attr_list(ios->per_dev[0].or,
--					     &cur_attr, &nelem, &iter);
--		if ((cur_attr.attr_page == attr->attr_page) &&
--		    (cur_attr.attr_id == attr->attr_id)) {
--			attr->len = cur_attr.len;
--			attr->val_ptr = cur_attr.val_ptr;
--			return 0;
--		}
--	} while (iter);
--
--	return -EIO;
--}
--EXPORT_SYMBOL(extract_attr_from_ios);
--
--static int _truncate_mirrors(struct ore_io_state *ios, unsigned cur_comp,
--			     struct osd_attr *attr)
--{
--	int last_comp = cur_comp + ios->layout->mirrors_p1;
--
--	for (; cur_comp < last_comp; ++cur_comp) {
--		struct ore_per_dev_state *per_dev = &ios->per_dev[cur_comp];
--		struct osd_request *or;
--
--		or = osd_start_request(_ios_od(ios, cur_comp));
--		if (unlikely(!or)) {
--			ORE_ERR("%s: osd_start_request failed\n", __func__);
--			return -ENOMEM;
--		}
--		per_dev->or = or;
--
--		osd_req_set_attributes(or, _ios_obj(ios, cur_comp));
--		osd_req_add_set_attr_list(or, attr, 1);
--	}
--
--	return 0;
--}
--
--struct _trunc_info {
--	struct ore_striping_info si;
--	u64 prev_group_obj_off;
--	u64 next_group_obj_off;
--
--	unsigned first_group_dev;
--	unsigned nex_group_dev;
--};
--
--static void _calc_trunk_info(struct ore_layout *layout, u64 file_offset,
--			     struct _trunc_info *ti)
--{
--	unsigned stripe_unit = layout->stripe_unit;
--
--	ore_calc_stripe_info(layout, file_offset, 0, &ti->si);
--
--	ti->prev_group_obj_off = ti->si.M * stripe_unit;
--	ti->next_group_obj_off = ti->si.M ? (ti->si.M - 1) * stripe_unit : 0;
--
--	ti->first_group_dev = ti->si.dev - (ti->si.dev % layout->group_width);
--	ti->nex_group_dev = ti->first_group_dev + layout->group_width;
--}
--
--int ore_truncate(struct ore_layout *layout, struct ore_components *oc,
--		   u64 size)
--{
--	struct ore_io_state *ios;
--	struct exofs_trunc_attr {
--		struct osd_attr attr;
--		__be64 newsize;
--	} *size_attrs;
--	struct _trunc_info ti;
--	int i, ret;
--
--	ret = ore_get_io_state(layout, oc, &ios);
--	if (unlikely(ret))
--		return ret;
--
--	_calc_trunk_info(ios->layout, size, &ti);
--
--	size_attrs = kcalloc(ios->oc->numdevs, sizeof(*size_attrs),
--			     GFP_KERNEL);
--	if (unlikely(!size_attrs)) {
--		ret = -ENOMEM;
+-	ret = osd_execute_request(or);
+-	if (ret) {
+-		OSD_ERR("Failed to detect %s => %d\n", _osd_ver_desc(or), ret);
 -		goto out;
 -	}
 -
--	ios->numdevs = ios->oc->numdevs;
+-	osd_req_decode_get_attr_list(or, get_attrs, &nelem, &iter);
 -
--	for (i = 0; i < ios->numdevs; ++i) {
--		struct exofs_trunc_attr *size_attr = &size_attrs[i];
--		u64 obj_size;
+-	OSD_INFO("Detected %s device\n",
+-		_osd_ver_desc(or));
 -
--		if (i < ti.first_group_dev)
--			obj_size = ti.prev_group_obj_off;
--		else if (i >= ti.nex_group_dev)
--			obj_size = ti.next_group_obj_off;
--		else if (i < ti.si.dev) /* dev within this group */
--			obj_size = ti.si.obj_offset +
--				      ios->layout->stripe_unit - ti.si.unit_off;
--		else if (i == ti.si.dev)
--			obj_size = ti.si.obj_offset;
--		else /* i > ti.dev */
--			obj_size = ti.si.obj_offset - ti.si.unit_off;
+-	pFirst = get_attrs[a++].val_ptr;
+-	OSD_INFO("VENDOR_IDENTIFICATION  [%s]\n",
+-		(char *)pFirst);
 -
--		size_attr->newsize = cpu_to_be64(obj_size);
--		size_attr->attr = g_attr_logical_length;
--		size_attr->attr.val_ptr = &size_attr->newsize;
+-	pFirst = get_attrs[a++].val_ptr;
+-	OSD_INFO("PRODUCT_IDENTIFICATION [%s]\n",
+-		(char *)pFirst);
 -
--		ORE_DBGMSG2("trunc(0x%llx) obj_offset=0x%llx dev=%d\n",
--			     _LLU(oc->comps->obj.id), _LLU(obj_size), i);
--		ret = _truncate_mirrors(ios, i * ios->layout->mirrors_p1,
--					&size_attr->attr);
--		if (unlikely(ret))
--			goto out;
+-	pFirst = get_attrs[a++].val_ptr;
+-	OSD_INFO("PRODUCT_MODEL          [%s]\n",
+-		(char *)pFirst);
+-
+-	pFirst = get_attrs[a++].val_ptr;
+-	OSD_INFO("PRODUCT_REVISION_LEVEL [%u]\n",
+-		pFirst ? get_unaligned_be32(pFirst) : ~0U);
+-
+-	pFirst = get_attrs[a++].val_ptr;
+-	OSD_INFO("PRODUCT_SERIAL_NUMBER  [%s]\n",
+-		(char *)pFirst);
+-
+-	odi->osdname_len = get_attrs[a].len;
+-	/* Avoid NULL for memcmp optimization 0-length is good enough */
+-	odi->osdname = kzalloc(odi->osdname_len + 1, GFP_KERNEL);
+-	if (!odi->osdname) {
+-		ret = -ENOMEM;
+-		goto out;
 -	}
--	ret = ore_io_execute(ios);
+-	if (odi->osdname_len)
+-		memcpy(odi->osdname, get_attrs[a].val_ptr, odi->osdname_len);
+-	OSD_INFO("OSD_NAME               [%s]\n", odi->osdname);
+-	a++;
 -
+-	pFirst = get_attrs[a++].val_ptr;
+-	OSD_INFO("TOTAL_CAPACITY         [0x%llx]\n",
+-		pFirst ? _LLU(get_unaligned_be64(pFirst)) : ~0ULL);
+-
+-	pFirst = get_attrs[a++].val_ptr;
+-	OSD_INFO("USED_CAPACITY          [0x%llx]\n",
+-		pFirst ? _LLU(get_unaligned_be64(pFirst)) : ~0ULL);
+-
+-	pFirst = get_attrs[a++].val_ptr;
+-	OSD_INFO("NUMBER_OF_PARTITIONS   [%llu]\n",
+-		pFirst ? _LLU(get_unaligned_be64(pFirst)) : ~0ULL);
+-
+-	if (a >= nelem)
+-		goto out;
+-
+-	/* FIXME: Where are the time utilities */
+-	pFirst = get_attrs[a++].val_ptr;
+-	OSD_INFO("CLOCK                  [0x%6phN]\n", pFirst);
+-
+-	if (a < nelem) { /* IBM-OSD-SIM bug, Might not have it */
+-		unsigned len = get_attrs[a].len;
+-		char sid_dump[32*4 + 2]; /* 2nibbles+space+ASCII */
+-
+-		hex_dump_to_buffer(get_attrs[a].val_ptr, len, 32, 1,
+-				   sid_dump, sizeof(sid_dump), true);
+-		OSD_INFO("OSD_SYSTEM_ID(%d)\n"
+-			 "        [%s]\n", len, sid_dump);
+-
+-		if (unlikely(len > sizeof(odi->systemid))) {
+-			OSD_ERR("OSD Target error: OSD_SYSTEM_ID too long(%d). "
+-				"device identification might not work\n", len);
+-			len = sizeof(odi->systemid);
+-		}
+-		odi->systemid_len = len;
+-		memcpy(odi->systemid, get_attrs[a].val_ptr, len);
+-		a++;
+-	}
 -out:
--	kfree(size_attrs);
--	ore_put_io_state(ios);
+-	osd_end_request(or);
 -	return ret;
 -}
--EXPORT_SYMBOL(ore_truncate);
 -
--const struct osd_attr g_attr_logical_length = ATTR_DEF(
--	OSD_APAGE_OBJECT_INFORMATION, OSD_ATTR_OI_LOGICAL_LENGTH, 8);
--EXPORT_SYMBOL(g_attr_logical_length);
-diff --git a/fs/exofs/ore_raid.c b/fs/exofs/ore_raid.c
+-int osd_auto_detect_ver(struct osd_dev *od,
+-	void *caps, struct osd_dev_info *odi)
+-{
+-	int ret;
+-
+-	/* Auto-detect the osd version */
+-	ret = _osd_get_print_system_info(od, caps, odi);
+-	if (ret) {
+-		osd_dev_set_ver(od, OSD_VER1);
+-		OSD_DEBUG("converting to OSD1\n");
+-		ret = _osd_get_print_system_info(od, caps, odi);
+-	}
+-
+-	return ret;
+-}
+-EXPORT_SYMBOL(osd_auto_detect_ver);
+-
+-static unsigned _osd_req_cdb_len(struct osd_request *or)
+-{
+-	return osd_req_is_ver1(or) ? OSDv1_TOTAL_CDB_LEN : OSD_TOTAL_CDB_LEN;
+-}
+-
+-static unsigned _osd_req_alist_elem_size(struct osd_request *or, unsigned len)
+-{
+-	return osd_req_is_ver1(or) ?
+-		osdv1_attr_list_elem_size(len) :
+-		osdv2_attr_list_elem_size(len);
+-}
+-
+-static void _osd_req_alist_elem_encode(struct osd_request *or,
+-	void *attr_last, const struct osd_attr *oa)
+-{
+-	if (osd_req_is_ver1(or)) {
+-		struct osdv1_attributes_list_element *attr = attr_last;
+-
+-		attr->attr_page = cpu_to_be32(oa->attr_page);
+-		attr->attr_id = cpu_to_be32(oa->attr_id);
+-		attr->attr_bytes = cpu_to_be16(oa->len);
+-		memcpy(attr->attr_val, oa->val_ptr, oa->len);
+-	} else {
+-		struct osdv2_attributes_list_element *attr = attr_last;
+-
+-		attr->attr_page = cpu_to_be32(oa->attr_page);
+-		attr->attr_id = cpu_to_be32(oa->attr_id);
+-		attr->attr_bytes = cpu_to_be16(oa->len);
+-		memcpy(attr->attr_val, oa->val_ptr, oa->len);
+-	}
+-}
+-
+-static int _osd_req_alist_elem_decode(struct osd_request *or,
+-	void *cur_p, struct osd_attr *oa, unsigned max_bytes)
+-{
+-	unsigned inc;
+-	if (osd_req_is_ver1(or)) {
+-		struct osdv1_attributes_list_element *attr = cur_p;
+-
+-		if (max_bytes < sizeof(*attr))
+-			return -1;
+-
+-		oa->len = be16_to_cpu(attr->attr_bytes);
+-		inc = _osd_req_alist_elem_size(or, oa->len);
+-		if (inc > max_bytes)
+-			return -1;
+-
+-		oa->attr_page = be32_to_cpu(attr->attr_page);
+-		oa->attr_id = be32_to_cpu(attr->attr_id);
+-
+-		/* OSD1: On empty attributes we return a pointer to 2 bytes
+-		 * of zeros. This keeps similar behaviour with OSD2.
+-		 * (See below)
+-		 */
+-		oa->val_ptr = likely(oa->len) ? attr->attr_val :
+-						(u8 *)&attr->attr_bytes;
+-	} else {
+-		struct osdv2_attributes_list_element *attr = cur_p;
+-
+-		if (max_bytes < sizeof(*attr))
+-			return -1;
+-
+-		oa->len = be16_to_cpu(attr->attr_bytes);
+-		inc = _osd_req_alist_elem_size(or, oa->len);
+-		if (inc > max_bytes)
+-			return -1;
+-
+-		oa->attr_page = be32_to_cpu(attr->attr_page);
+-		oa->attr_id = be32_to_cpu(attr->attr_id);
+-
+-		/* OSD2: For convenience, on empty attributes, we return 8 bytes
+-		 * of zeros here. This keeps the same behaviour with OSD2r04,
+-		 * and is nice with null terminating ASCII fields.
+-		 * oa->val_ptr == NULL marks the end-of-list, or error.
+-		 */
+-		oa->val_ptr = likely(oa->len) ? attr->attr_val : attr->reserved;
+-	}
+-	return inc;
+-}
+-
+-static unsigned _osd_req_alist_size(struct osd_request *or, void *list_head)
+-{
+-	return osd_req_is_ver1(or) ?
+-		osdv1_list_size(list_head) :
+-		osdv2_list_size(list_head);
+-}
+-
+-static unsigned _osd_req_sizeof_alist_header(struct osd_request *or)
+-{
+-	return osd_req_is_ver1(or) ?
+-		sizeof(struct osdv1_attributes_list_header) :
+-		sizeof(struct osdv2_attributes_list_header);
+-}
+-
+-static void _osd_req_set_alist_type(struct osd_request *or,
+-	void *list, int list_type)
+-{
+-	if (osd_req_is_ver1(or)) {
+-		struct osdv1_attributes_list_header *attr_list = list;
+-
+-		memset(attr_list, 0, sizeof(*attr_list));
+-		attr_list->type = list_type;
+-	} else {
+-		struct osdv2_attributes_list_header *attr_list = list;
+-
+-		memset(attr_list, 0, sizeof(*attr_list));
+-		attr_list->type = list_type;
+-	}
+-}
+-
+-static bool _osd_req_is_alist_type(struct osd_request *or,
+-	void *list, int list_type)
+-{
+-	if (!list)
+-		return false;
+-
+-	if (osd_req_is_ver1(or)) {
+-		struct osdv1_attributes_list_header *attr_list = list;
+-
+-		return attr_list->type == list_type;
+-	} else {
+-		struct osdv2_attributes_list_header *attr_list = list;
+-
+-		return attr_list->type == list_type;
+-	}
+-}
+-
+-/* This is for List-objects not Attributes-Lists */
+-static void _osd_req_encode_olist(struct osd_request *or,
+-	struct osd_obj_id_list *list)
+-{
+-	struct osd_cdb_head *cdbh = osd_cdb_head(&or->cdb);
+-
+-	if (osd_req_is_ver1(or)) {
+-		cdbh->v1.list_identifier = list->list_identifier;
+-		cdbh->v1.start_address = list->continuation_id;
+-	} else {
+-		cdbh->v2.list_identifier = list->list_identifier;
+-		cdbh->v2.start_address = list->continuation_id;
+-	}
+-}
+-
+-static osd_cdb_offset osd_req_encode_offset(struct osd_request *or,
+-	u64 offset, unsigned *padding)
+-{
+-	return __osd_encode_offset(offset, padding,
+-			osd_req_is_ver1(or) ?
+-				OSDv1_OFFSET_MIN_SHIFT : OSD_OFFSET_MIN_SHIFT,
+-			OSD_OFFSET_MAX_SHIFT);
+-}
+-
+-static struct osd_security_parameters *
+-_osd_req_sec_params(struct osd_request *or)
+-{
+-	struct osd_cdb *ocdb = &or->cdb;
+-
+-	if (osd_req_is_ver1(or))
+-		return (struct osd_security_parameters *)&ocdb->v1.sec_params;
+-	else
+-		return (struct osd_security_parameters *)&ocdb->v2.sec_params;
+-}
+-
+-void osd_dev_init(struct osd_dev *osdd, struct scsi_device *scsi_device)
+-{
+-	memset(osdd, 0, sizeof(*osdd));
+-	osdd->scsi_device = scsi_device;
+-	osdd->def_timeout = BLK_DEFAULT_SG_TIMEOUT;
+-#ifdef OSD_VER1_SUPPORT
+-	osdd->version = OSD_VER2;
+-#endif
+-	/* TODO: Allocate pools for osd_request attributes ... */
+-}
+-EXPORT_SYMBOL(osd_dev_init);
+-
+-void osd_dev_fini(struct osd_dev *osdd)
+-{
+-	/* TODO: De-allocate pools */
+-
+-	osdd->scsi_device = NULL;
+-}
+-EXPORT_SYMBOL(osd_dev_fini);
+-
+-static struct osd_request *_osd_request_alloc(gfp_t gfp)
+-{
+-	struct osd_request *or;
+-
+-	/* TODO: Use mempool with one saved request */
+-	or = kzalloc(sizeof(*or), gfp);
+-	return or;
+-}
+-
+-static void _osd_request_free(struct osd_request *or)
+-{
+-	kfree(or);
+-}
+-
+-struct osd_request *osd_start_request(struct osd_dev *dev)
+-{
+-	struct osd_request *or;
+-
+-	or = _osd_request_alloc(GFP_KERNEL);
+-	if (!or)
+-		return NULL;
+-
+-	or->osd_dev = dev;
+-	or->timeout = dev->def_timeout;
+-	or->retries = OSD_REQ_RETRIES;
+-
+-	return or;
+-}
+-EXPORT_SYMBOL(osd_start_request);
+-
+-static void _osd_free_seg(struct osd_request *or __unused,
+-	struct _osd_req_data_segment *seg)
+-{
+-	if (!seg->buff || !seg->alloc_size)
+-		return;
+-
+-	kfree(seg->buff);
+-	seg->buff = NULL;
+-	seg->alloc_size = 0;
+-}
+-
+-static void _put_request(struct request *rq)
+-{
+-	/*
+-	 * If osd_finalize_request() was called but the request was not
+-	 * executed through the block layer, then we must release BIOs.
+-	 * TODO: Keep error code in or->async_error. Need to audit all
+-	 *       code paths.
+-	 */
+-	if (unlikely(rq->bio))
+-		blk_mq_end_request(rq, BLK_STS_IOERR);
+-	else
+-		blk_put_request(rq);
+-}
+-
+-void osd_end_request(struct osd_request *or)
+-{
+-	struct request *rq = or->request;
+-
+-	if (rq) {
+-		if (rq->next_rq) {
+-			_put_request(rq->next_rq);
+-			rq->next_rq = NULL;
+-		}
+-
+-		_put_request(rq);
+-	}
+-
+-	_osd_free_seg(or, &or->get_attr);
+-	_osd_free_seg(or, &or->enc_get_attr);
+-	_osd_free_seg(or, &or->set_attr);
+-	_osd_free_seg(or, &or->cdb_cont);
+-
+-	_osd_request_free(or);
+-}
+-EXPORT_SYMBOL(osd_end_request);
+-
+-static void _set_error_resid(struct osd_request *or, struct request *req,
+-			     blk_status_t error)
+-{
+-	or->async_error = error;
+-	or->req_errors = scsi_req(req)->result;
+-	or->sense_len = scsi_req(req)->sense_len;
+-	if (or->sense_len)
+-		memcpy(or->sense, scsi_req(req)->sense, or->sense_len);
+-	if (or->out.req)
+-		or->out.residual = scsi_req(or->out.req)->resid_len;
+-	if (or->in.req)
+-		or->in.residual = scsi_req(or->in.req)->resid_len;
+-}
+-
+-int osd_execute_request(struct osd_request *or)
+-{
+-	blk_execute_rq(or->request->q, NULL, or->request, 0);
+-
+-	if (scsi_req(or->request)->result) {
+-		_set_error_resid(or, or->request, BLK_STS_IOERR);
+-		return -EIO;
+-	}
+-
+-	_set_error_resid(or, or->request, BLK_STS_OK);
+-	return 0;
+-}
+-EXPORT_SYMBOL(osd_execute_request);
+-
+-static void osd_request_async_done(struct request *req, blk_status_t error)
+-{
+-	struct osd_request *or = req->end_io_data;
+-
+-	_set_error_resid(or, req, error);
+-	if (req->next_rq) {
+-		__blk_put_request(req->q, req->next_rq);
+-		req->next_rq = NULL;
+-	}
+-
+-	__blk_put_request(req->q, req);
+-	or->request = NULL;
+-	or->in.req = NULL;
+-	or->out.req = NULL;
+-
+-	if (or->async_done)
+-		or->async_done(or, or->async_private);
+-	else
+-		osd_end_request(or);
+-}
+-
+-int osd_execute_request_async(struct osd_request *or,
+-	osd_req_done_fn *done, void *private)
+-{
+-	or->request->end_io_data = or;
+-	or->async_private = private;
+-	or->async_done = done;
+-
+-	blk_execute_rq_nowait(or->request->q, NULL, or->request, 0,
+-			      osd_request_async_done);
+-	return 0;
+-}
+-EXPORT_SYMBOL(osd_execute_request_async);
+-
+-u8 sg_out_pad_buffer[1 << OSDv1_OFFSET_MIN_SHIFT];
+-u8 sg_in_pad_buffer[1 << OSDv1_OFFSET_MIN_SHIFT];
+-
+-static int _osd_realloc_seg(struct osd_request *or,
+-	struct _osd_req_data_segment *seg, unsigned max_bytes)
+-{
+-	void *buff;
+-
+-	if (seg->alloc_size >= max_bytes)
+-		return 0;
+-
+-	buff = krealloc(seg->buff, max_bytes, GFP_KERNEL);
+-	if (!buff) {
+-		OSD_ERR("Failed to Realloc %d-bytes was-%d\n", max_bytes,
+-			seg->alloc_size);
+-		return -ENOMEM;
+-	}
+-
+-	memset(buff + seg->alloc_size, 0, max_bytes - seg->alloc_size);
+-	seg->buff = buff;
+-	seg->alloc_size = max_bytes;
+-	return 0;
+-}
+-
+-static int _alloc_cdb_cont(struct osd_request *or, unsigned total_bytes)
+-{
+-	OSD_DEBUG("total_bytes=%d\n", total_bytes);
+-	return _osd_realloc_seg(or, &or->cdb_cont, total_bytes);
+-}
+-
+-static int _alloc_set_attr_list(struct osd_request *or,
+-	const struct osd_attr *oa, unsigned nelem, unsigned add_bytes)
+-{
+-	unsigned total_bytes = add_bytes;
+-
+-	for (; nelem; --nelem, ++oa)
+-		total_bytes += _osd_req_alist_elem_size(or, oa->len);
+-
+-	OSD_DEBUG("total_bytes=%d\n", total_bytes);
+-	return _osd_realloc_seg(or, &or->set_attr, total_bytes);
+-}
+-
+-static int _alloc_get_attr_desc(struct osd_request *or, unsigned max_bytes)
+-{
+-	OSD_DEBUG("total_bytes=%d\n", max_bytes);
+-	return _osd_realloc_seg(or, &or->enc_get_attr, max_bytes);
+-}
+-
+-static int _alloc_get_attr_list(struct osd_request *or)
+-{
+-	OSD_DEBUG("total_bytes=%d\n", or->get_attr.total_bytes);
+-	return _osd_realloc_seg(or, &or->get_attr, or->get_attr.total_bytes);
+-}
+-
+-/*
+- * Common to all OSD commands
+- */
+-
+-static void _osdv1_req_encode_common(struct osd_request *or,
+-	__be16 act, const struct osd_obj_id *obj, u64 offset, u64 len)
+-{
+-	struct osdv1_cdb *ocdb = &or->cdb.v1;
+-
+-	/*
+-	 * For speed, the commands
+-	 *	OSD_ACT_PERFORM_SCSI_COMMAND	, V1 0x8F7E, V2 0x8F7C
+-	 *	OSD_ACT_SCSI_TASK_MANAGEMENT	, V1 0x8F7F, V2 0x8F7D
+-	 * are not supported here. Should pass zero and set after the call
+-	 */
+-	act &= cpu_to_be16(~0x0080); /* V1 action code */
+-
+-	OSD_DEBUG("OSDv1 execute opcode 0x%x\n", be16_to_cpu(act));
+-
+-	ocdb->h.varlen_cdb.opcode = VARIABLE_LENGTH_CMD;
+-	ocdb->h.varlen_cdb.additional_cdb_length = OSD_ADDITIONAL_CDB_LENGTH;
+-	ocdb->h.varlen_cdb.service_action = act;
+-
+-	ocdb->h.partition = cpu_to_be64(obj->partition);
+-	ocdb->h.object = cpu_to_be64(obj->id);
+-	ocdb->h.v1.length = cpu_to_be64(len);
+-	ocdb->h.v1.start_address = cpu_to_be64(offset);
+-}
+-
+-static void _osdv2_req_encode_common(struct osd_request *or,
+-	 __be16 act, const struct osd_obj_id *obj, u64 offset, u64 len)
+-{
+-	struct osdv2_cdb *ocdb = &or->cdb.v2;
+-
+-	OSD_DEBUG("OSDv2 execute opcode 0x%x\n", be16_to_cpu(act));
+-
+-	ocdb->h.varlen_cdb.opcode = VARIABLE_LENGTH_CMD;
+-	ocdb->h.varlen_cdb.additional_cdb_length = OSD_ADDITIONAL_CDB_LENGTH;
+-	ocdb->h.varlen_cdb.service_action = act;
+-
+-	ocdb->h.partition = cpu_to_be64(obj->partition);
+-	ocdb->h.object = cpu_to_be64(obj->id);
+-	ocdb->h.v2.length = cpu_to_be64(len);
+-	ocdb->h.v2.start_address = cpu_to_be64(offset);
+-}
+-
+-static void _osd_req_encode_common(struct osd_request *or,
+-	__be16 act, const struct osd_obj_id *obj, u64 offset, u64 len)
+-{
+-	if (osd_req_is_ver1(or))
+-		_osdv1_req_encode_common(or, act, obj, offset, len);
+-	else
+-		_osdv2_req_encode_common(or, act, obj, offset, len);
+-}
+-
+-/*
+- * Device commands
+- */
+-/*TODO: void osd_req_set_master_seed_xchg(struct osd_request *, ...); */
+-/*TODO: void osd_req_set_master_key(struct osd_request *, ...); */
+-
+-void osd_req_format(struct osd_request *or, u64 tot_capacity)
+-{
+-	_osd_req_encode_common(or, OSD_ACT_FORMAT_OSD, &osd_root_object, 0,
+-				tot_capacity);
+-}
+-EXPORT_SYMBOL(osd_req_format);
+-
+-int osd_req_list_dev_partitions(struct osd_request *or,
+-	osd_id initial_id, struct osd_obj_id_list *list, unsigned nelem)
+-{
+-	return osd_req_list_partition_objects(or, 0, initial_id, list, nelem);
+-}
+-EXPORT_SYMBOL(osd_req_list_dev_partitions);
+-
+-static void _osd_req_encode_flush(struct osd_request *or,
+-	enum osd_options_flush_scope_values op)
+-{
+-	struct osd_cdb_head *ocdb = osd_cdb_head(&or->cdb);
+-
+-	ocdb->command_specific_options = op;
+-}
+-
+-void osd_req_flush_obsd(struct osd_request *or,
+-	enum osd_options_flush_scope_values op)
+-{
+-	_osd_req_encode_common(or, OSD_ACT_FLUSH_OSD, &osd_root_object, 0, 0);
+-	_osd_req_encode_flush(or, op);
+-}
+-EXPORT_SYMBOL(osd_req_flush_obsd);
+-
+-/*TODO: void osd_req_perform_scsi_command(struct osd_request *,
+-	const u8 *cdb, ...); */
+-/*TODO: void osd_req_task_management(struct osd_request *, ...); */
+-
+-/*
+- * Partition commands
+- */
+-static void _osd_req_encode_partition(struct osd_request *or,
+-	__be16 act, osd_id partition)
+-{
+-	struct osd_obj_id par = {
+-		.partition = partition,
+-		.id = 0,
+-	};
+-
+-	_osd_req_encode_common(or, act, &par, 0, 0);
+-}
+-
+-void osd_req_create_partition(struct osd_request *or, osd_id partition)
+-{
+-	_osd_req_encode_partition(or, OSD_ACT_CREATE_PARTITION, partition);
+-}
+-EXPORT_SYMBOL(osd_req_create_partition);
+-
+-void osd_req_remove_partition(struct osd_request *or, osd_id partition)
+-{
+-	_osd_req_encode_partition(or, OSD_ACT_REMOVE_PARTITION, partition);
+-}
+-EXPORT_SYMBOL(osd_req_remove_partition);
+-
+-/*TODO: void osd_req_set_partition_key(struct osd_request *,
+-	osd_id partition, u8 new_key_id[OSD_CRYPTO_KEYID_SIZE],
+-	u8 seed[OSD_CRYPTO_SEED_SIZE]); */
+-
+-static int _osd_req_list_objects(struct osd_request *or,
+-	__be16 action, const struct osd_obj_id *obj, osd_id initial_id,
+-	struct osd_obj_id_list *list, unsigned nelem)
+-{
+-	struct request_queue *q = osd_request_queue(or->osd_dev);
+-	u64 len = nelem * sizeof(osd_id) + sizeof(*list);
+-	struct bio *bio;
+-
+-	_osd_req_encode_common(or, action, obj, (u64)initial_id, len);
+-
+-	if (list->list_identifier)
+-		_osd_req_encode_olist(or, list);
+-
+-	WARN_ON(or->in.bio);
+-	bio = bio_map_kern(q, list, len, GFP_KERNEL);
+-	if (IS_ERR(bio)) {
+-		OSD_ERR("!!! Failed to allocate list_objects BIO\n");
+-		return PTR_ERR(bio);
+-	}
+-
+-	bio_set_op_attrs(bio, REQ_OP_READ, 0);
+-	or->in.bio = bio;
+-	or->in.total_bytes = bio->bi_iter.bi_size;
+-	return 0;
+-}
+-
+-int osd_req_list_partition_collections(struct osd_request *or,
+-	osd_id partition, osd_id initial_id, struct osd_obj_id_list *list,
+-	unsigned nelem)
+-{
+-	struct osd_obj_id par = {
+-		.partition = partition,
+-		.id = 0,
+-	};
+-
+-	return osd_req_list_collection_objects(or, &par, initial_id, list,
+-					       nelem);
+-}
+-EXPORT_SYMBOL(osd_req_list_partition_collections);
+-
+-int osd_req_list_partition_objects(struct osd_request *or,
+-	osd_id partition, osd_id initial_id, struct osd_obj_id_list *list,
+-	unsigned nelem)
+-{
+-	struct osd_obj_id par = {
+-		.partition = partition,
+-		.id = 0,
+-	};
+-
+-	return _osd_req_list_objects(or, OSD_ACT_LIST, &par, initial_id, list,
+-				     nelem);
+-}
+-EXPORT_SYMBOL(osd_req_list_partition_objects);
+-
+-void osd_req_flush_partition(struct osd_request *or,
+-	osd_id partition, enum osd_options_flush_scope_values op)
+-{
+-	_osd_req_encode_partition(or, OSD_ACT_FLUSH_PARTITION, partition);
+-	_osd_req_encode_flush(or, op);
+-}
+-EXPORT_SYMBOL(osd_req_flush_partition);
+-
+-/*
+- * Collection commands
+- */
+-/*TODO: void osd_req_create_collection(struct osd_request *,
+-	const struct osd_obj_id *); */
+-/*TODO: void osd_req_remove_collection(struct osd_request *,
+-	const struct osd_obj_id *); */
+-
+-int osd_req_list_collection_objects(struct osd_request *or,
+-	const struct osd_obj_id *obj, osd_id initial_id,
+-	struct osd_obj_id_list *list, unsigned nelem)
+-{
+-	return _osd_req_list_objects(or, OSD_ACT_LIST_COLLECTION, obj,
+-				     initial_id, list, nelem);
+-}
+-EXPORT_SYMBOL(osd_req_list_collection_objects);
+-
+-/*TODO: void query(struct osd_request *, ...); V2 */
+-
+-void osd_req_flush_collection(struct osd_request *or,
+-	const struct osd_obj_id *obj, enum osd_options_flush_scope_values op)
+-{
+-	_osd_req_encode_common(or, OSD_ACT_FLUSH_PARTITION, obj, 0, 0);
+-	_osd_req_encode_flush(or, op);
+-}
+-EXPORT_SYMBOL(osd_req_flush_collection);
+-
+-/*TODO: void get_member_attrs(struct osd_request *, ...); V2 */
+-/*TODO: void set_member_attrs(struct osd_request *, ...); V2 */
+-
+-/*
+- * Object commands
+- */
+-void osd_req_create_object(struct osd_request *or, struct osd_obj_id *obj)
+-{
+-	_osd_req_encode_common(or, OSD_ACT_CREATE, obj, 0, 0);
+-}
+-EXPORT_SYMBOL(osd_req_create_object);
+-
+-void osd_req_remove_object(struct osd_request *or, struct osd_obj_id *obj)
+-{
+-	_osd_req_encode_common(or, OSD_ACT_REMOVE, obj, 0, 0);
+-}
+-EXPORT_SYMBOL(osd_req_remove_object);
+-
+-
+-/*TODO: void osd_req_create_multi(struct osd_request *or,
+-	struct osd_obj_id *first, struct osd_obj_id_list *list, unsigned nelem);
+-*/
+-
+-void osd_req_write(struct osd_request *or,
+-	const struct osd_obj_id *obj, u64 offset,
+-	struct bio *bio, u64 len)
+-{
+-	_osd_req_encode_common(or, OSD_ACT_WRITE, obj, offset, len);
+-	WARN_ON(or->out.bio || or->out.total_bytes);
+-	WARN_ON(!op_is_write(bio_op(bio)));
+-	or->out.bio = bio;
+-	or->out.total_bytes = len;
+-}
+-EXPORT_SYMBOL(osd_req_write);
+-
+-int osd_req_write_kern(struct osd_request *or,
+-	const struct osd_obj_id *obj, u64 offset, void* buff, u64 len)
+-{
+-	struct request_queue *req_q = osd_request_queue(or->osd_dev);
+-	struct bio *bio = bio_map_kern(req_q, buff, len, GFP_KERNEL);
+-
+-	if (IS_ERR(bio))
+-		return PTR_ERR(bio);
+-
+-	bio_set_op_attrs(bio, REQ_OP_WRITE, 0);
+-	osd_req_write(or, obj, offset, bio, len);
+-	return 0;
+-}
+-EXPORT_SYMBOL(osd_req_write_kern);
+-
+-/*TODO: void osd_req_append(struct osd_request *,
+-	const struct osd_obj_id *, struct bio *data_out); */
+-/*TODO: void osd_req_create_write(struct osd_request *,
+-	const struct osd_obj_id *, struct bio *data_out, u64 offset); */
+-/*TODO: void osd_req_clear(struct osd_request *,
+-	const struct osd_obj_id *, u64 offset, u64 len); */
+-/*TODO: void osd_req_punch(struct osd_request *,
+-	const struct osd_obj_id *, u64 offset, u64 len); V2 */
+-
+-void osd_req_flush_object(struct osd_request *or,
+-	const struct osd_obj_id *obj, enum osd_options_flush_scope_values op,
+-	/*V2*/ u64 offset, /*V2*/ u64 len)
+-{
+-	if (unlikely(osd_req_is_ver1(or) && (offset || len))) {
+-		OSD_DEBUG("OSD Ver1 flush on specific range ignored\n");
+-		offset = 0;
+-		len = 0;
+-	}
+-
+-	_osd_req_encode_common(or, OSD_ACT_FLUSH, obj, offset, len);
+-	_osd_req_encode_flush(or, op);
+-}
+-EXPORT_SYMBOL(osd_req_flush_object);
+-
+-void osd_req_read(struct osd_request *or,
+-	const struct osd_obj_id *obj, u64 offset,
+-	struct bio *bio, u64 len)
+-{
+-	_osd_req_encode_common(or, OSD_ACT_READ, obj, offset, len);
+-	WARN_ON(or->in.bio || or->in.total_bytes);
+-	WARN_ON(op_is_write(bio_op(bio)));
+-	or->in.bio = bio;
+-	or->in.total_bytes = len;
+-}
+-EXPORT_SYMBOL(osd_req_read);
+-
+-int osd_req_read_kern(struct osd_request *or,
+-	const struct osd_obj_id *obj, u64 offset, void* buff, u64 len)
+-{
+-	struct request_queue *req_q = osd_request_queue(or->osd_dev);
+-	struct bio *bio = bio_map_kern(req_q, buff, len, GFP_KERNEL);
+-
+-	if (IS_ERR(bio))
+-		return PTR_ERR(bio);
+-
+-	osd_req_read(or, obj, offset, bio, len);
+-	return 0;
+-}
+-EXPORT_SYMBOL(osd_req_read_kern);
+-
+-static int _add_sg_continuation_descriptor(struct osd_request *or,
+-	const struct osd_sg_entry *sglist, unsigned numentries, u64 *len)
+-{
+-	struct osd_sg_continuation_descriptor *oscd;
+-	u32 oscd_size;
+-	unsigned i;
+-	int ret;
+-
+-	oscd_size = sizeof(*oscd) + numentries * sizeof(oscd->entries[0]);
+-
+-	if (!or->cdb_cont.total_bytes) {
+-		/* First time, jump over the header, we will write to:
+-		 *	cdb_cont.buff + cdb_cont.total_bytes
+-		 */
+-		or->cdb_cont.total_bytes =
+-				sizeof(struct osd_continuation_segment_header);
+-	}
+-
+-	ret = _alloc_cdb_cont(or, or->cdb_cont.total_bytes + oscd_size);
+-	if (unlikely(ret))
+-		return ret;
+-
+-	oscd = or->cdb_cont.buff + or->cdb_cont.total_bytes;
+-	oscd->hdr.type = cpu_to_be16(SCATTER_GATHER_LIST);
+-	oscd->hdr.pad_length = 0;
+-	oscd->hdr.length = cpu_to_be32(oscd_size - sizeof(*oscd));
+-
+-	*len = 0;
+-	/* copy the sg entries and convert to network byte order */
+-	for (i = 0; i < numentries; i++) {
+-		oscd->entries[i].offset = cpu_to_be64(sglist[i].offset);
+-		oscd->entries[i].len    = cpu_to_be64(sglist[i].len);
+-		*len += sglist[i].len;
+-	}
+-
+-	or->cdb_cont.total_bytes += oscd_size;
+-	OSD_DEBUG("total_bytes=%d oscd_size=%d numentries=%d\n",
+-		  or->cdb_cont.total_bytes, oscd_size, numentries);
+-	return 0;
+-}
+-
+-static int _osd_req_finalize_cdb_cont(struct osd_request *or, const u8 *cap_key)
+-{
+-	struct request_queue *req_q = osd_request_queue(or->osd_dev);
+-	struct bio *bio;
+-	struct osd_cdb_head *cdbh = osd_cdb_head(&or->cdb);
+-	struct osd_continuation_segment_header *cont_seg_hdr;
+-
+-	if (!or->cdb_cont.total_bytes)
+-		return 0;
+-
+-	cont_seg_hdr = or->cdb_cont.buff;
+-	cont_seg_hdr->format = CDB_CONTINUATION_FORMAT_V2;
+-	cont_seg_hdr->service_action = cdbh->varlen_cdb.service_action;
+-
+-	/* create a bio for continuation segment */
+-	bio = bio_map_kern(req_q, or->cdb_cont.buff, or->cdb_cont.total_bytes,
+-			   GFP_KERNEL);
+-	if (IS_ERR(bio))
+-		return PTR_ERR(bio);
+-
+-	bio_set_op_attrs(bio, REQ_OP_WRITE, 0);
+-
+-	/* integrity check the continuation before the bio is linked
+-	 * with the other data segments since the continuation
+-	 * integrity is separate from the other data segments.
+-	 */
+-	osd_sec_sign_data(cont_seg_hdr->integrity_check, bio, cap_key);
+-
+-	cdbh->v2.cdb_continuation_length = cpu_to_be32(or->cdb_cont.total_bytes);
+-
+-	/* we can't use _req_append_segment, because we need to link in the
+-	 * continuation bio to the head of the bio list - the
+-	 * continuation segment (if it exists) is always the first segment in
+-	 * the out data buffer.
+-	 */
+-	bio->bi_next = or->out.bio;
+-	or->out.bio = bio;
+-	or->out.total_bytes += or->cdb_cont.total_bytes;
+-
+-	return 0;
+-}
+-
+-/* osd_req_write_sg: Takes a @bio that points to the data out buffer and an
+- * @sglist that has the scatter gather entries. Scatter-gather enables a write
+- * of multiple none-contiguous areas of an object, in a single call. The extents
+- * may overlap and/or be in any order. The only constrain is that:
+- *	total_bytes(sglist) >= total_bytes(bio)
+- */
+-int osd_req_write_sg(struct osd_request *or,
+-	const struct osd_obj_id *obj, struct bio *bio,
+-	const struct osd_sg_entry *sglist, unsigned numentries)
+-{
+-	u64 len;
+-	int ret = _add_sg_continuation_descriptor(or, sglist, numentries, &len);
+-
+-	if (ret)
+-		return ret;
+-	osd_req_write(or, obj, 0, bio, len);
+-
+-	return 0;
+-}
+-EXPORT_SYMBOL(osd_req_write_sg);
+-
+-/* osd_req_read_sg: Read multiple extents of an object into @bio
+- * See osd_req_write_sg
+- */
+-int osd_req_read_sg(struct osd_request *or,
+-	const struct osd_obj_id *obj, struct bio *bio,
+-	const struct osd_sg_entry *sglist, unsigned numentries)
+-{
+-	u64 len;
+-	u64 off;
+-	int ret;
+-
+-	if (numentries > 1) {
+-		off = 0;
+-		ret = _add_sg_continuation_descriptor(or, sglist, numentries,
+-						      &len);
+-		if (ret)
+-			return ret;
+-	} else {
+-		/* Optimize the case of single segment, read_sg is a
+-		 * bidi operation.
+-		 */
+-		len = sglist->len;
+-		off = sglist->offset;
+-	}
+-	osd_req_read(or, obj, off, bio, len);
+-
+-	return 0;
+-}
+-EXPORT_SYMBOL(osd_req_read_sg);
+-
+-/* SG-list write/read Kern API
+- *
+- * osd_req_{write,read}_sg_kern takes an array of @buff pointers and an array
+- * of sg_entries. @numentries indicates how many pointers and sg_entries there
+- * are.  By requiring an array of buff pointers. This allows a caller to do a
+- * single write/read and scatter into multiple buffers.
+- * NOTE: Each buffer + len should not cross a page boundary.
+- */
+-static struct bio *_create_sg_bios(struct osd_request *or,
+-	void **buff, const struct osd_sg_entry *sglist, unsigned numentries)
+-{
+-	struct request_queue *q = osd_request_queue(or->osd_dev);
+-	struct bio *bio;
+-	unsigned i;
+-
+-	bio = bio_kmalloc(GFP_KERNEL, numentries);
+-	if (unlikely(!bio)) {
+-		OSD_DEBUG("Failed to allocate BIO size=%u\n", numentries);
+-		return ERR_PTR(-ENOMEM);
+-	}
+-
+-	for (i = 0; i < numentries; i++) {
+-		unsigned offset = offset_in_page(buff[i]);
+-		struct page *page = virt_to_page(buff[i]);
+-		unsigned len = sglist[i].len;
+-		unsigned added_len;
+-
+-		BUG_ON(offset + len > PAGE_SIZE);
+-		added_len = bio_add_pc_page(q, bio, page, len, offset);
+-		if (unlikely(len != added_len)) {
+-			OSD_DEBUG("bio_add_pc_page len(%d) != added_len(%d)\n",
+-				  len, added_len);
+-			bio_put(bio);
+-			return ERR_PTR(-ENOMEM);
+-		}
+-	}
+-
+-	return bio;
+-}
+-
+-int osd_req_write_sg_kern(struct osd_request *or,
+-	const struct osd_obj_id *obj, void **buff,
+-	const struct osd_sg_entry *sglist, unsigned numentries)
+-{
+-	struct bio *bio = _create_sg_bios(or, buff, sglist, numentries);
+-	if (IS_ERR(bio))
+-		return PTR_ERR(bio);
+-
+-	bio_set_op_attrs(bio, REQ_OP_WRITE, 0);
+-	osd_req_write_sg(or, obj, bio, sglist, numentries);
+-
+-	return 0;
+-}
+-EXPORT_SYMBOL(osd_req_write_sg_kern);
+-
+-int osd_req_read_sg_kern(struct osd_request *or,
+-	const struct osd_obj_id *obj, void **buff,
+-	const struct osd_sg_entry *sglist, unsigned numentries)
+-{
+-	struct bio *bio = _create_sg_bios(or, buff, sglist, numentries);
+-	if (IS_ERR(bio))
+-		return PTR_ERR(bio);
+-
+-	osd_req_read_sg(or, obj, bio, sglist, numentries);
+-
+-	return 0;
+-}
+-EXPORT_SYMBOL(osd_req_read_sg_kern);
+-
+-
+-
+-void osd_req_get_attributes(struct osd_request *or,
+-	const struct osd_obj_id *obj)
+-{
+-	_osd_req_encode_common(or, OSD_ACT_GET_ATTRIBUTES, obj, 0, 0);
+-}
+-EXPORT_SYMBOL(osd_req_get_attributes);
+-
+-void osd_req_set_attributes(struct osd_request *or,
+-	const struct osd_obj_id *obj)
+-{
+-	_osd_req_encode_common(or, OSD_ACT_SET_ATTRIBUTES, obj, 0, 0);
+-}
+-EXPORT_SYMBOL(osd_req_set_attributes);
+-
+-/*
+- * Attributes List-mode
+- */
+-
+-int osd_req_add_set_attr_list(struct osd_request *or,
+-	const struct osd_attr *oa, unsigned nelem)
+-{
+-	unsigned total_bytes = or->set_attr.total_bytes;
+-	void *attr_last;
+-	int ret;
+-
+-	if (or->attributes_mode &&
+-	    or->attributes_mode != OSD_CDB_GET_SET_ATTR_LISTS) {
+-		WARN_ON(1);
+-		return -EINVAL;
+-	}
+-	or->attributes_mode = OSD_CDB_GET_SET_ATTR_LISTS;
+-
+-	if (!total_bytes) { /* first-time: allocate and put list header */
+-		total_bytes = _osd_req_sizeof_alist_header(or);
+-		ret = _alloc_set_attr_list(or, oa, nelem, total_bytes);
+-		if (ret)
+-			return ret;
+-		_osd_req_set_alist_type(or, or->set_attr.buff,
+-					OSD_ATTR_LIST_SET_RETRIEVE);
+-	}
+-	attr_last = or->set_attr.buff + total_bytes;
+-
+-	for (; nelem; --nelem) {
+-		unsigned elem_size = _osd_req_alist_elem_size(or, oa->len);
+-
+-		total_bytes += elem_size;
+-		if (unlikely(or->set_attr.alloc_size < total_bytes)) {
+-			or->set_attr.total_bytes = total_bytes - elem_size;
+-			ret = _alloc_set_attr_list(or, oa, nelem, total_bytes);
+-			if (ret)
+-				return ret;
+-			attr_last =
+-				or->set_attr.buff + or->set_attr.total_bytes;
+-		}
+-
+-		_osd_req_alist_elem_encode(or, attr_last, oa);
+-
+-		attr_last += elem_size;
+-		++oa;
+-	}
+-
+-	or->set_attr.total_bytes = total_bytes;
+-	return 0;
+-}
+-EXPORT_SYMBOL(osd_req_add_set_attr_list);
+-
+-static int _req_append_segment(struct osd_request *or,
+-	unsigned padding, struct _osd_req_data_segment *seg,
+-	struct _osd_req_data_segment *last_seg, struct _osd_io_info *io)
+-{
+-	void *pad_buff;
+-	int ret;
+-
+-	if (padding) {
+-		/* check if we can just add it to last buffer */
+-		if (last_seg &&
+-		    (padding <= last_seg->alloc_size - last_seg->total_bytes))
+-			pad_buff = last_seg->buff + last_seg->total_bytes;
+-		else
+-			pad_buff = io->pad_buff;
+-
+-		ret = blk_rq_map_kern(io->req->q, io->req, pad_buff, padding,
+-				       GFP_KERNEL);
+-		if (ret)
+-			return ret;
+-		io->total_bytes += padding;
+-	}
+-
+-	ret = blk_rq_map_kern(io->req->q, io->req, seg->buff, seg->total_bytes,
+-			       GFP_KERNEL);
+-	if (ret)
+-		return ret;
+-
+-	io->total_bytes += seg->total_bytes;
+-	OSD_DEBUG("padding=%d buff=%p total_bytes=%d\n", padding, seg->buff,
+-		  seg->total_bytes);
+-	return 0;
+-}
+-
+-static int _osd_req_finalize_set_attr_list(struct osd_request *or)
+-{
+-	struct osd_cdb_head *cdbh = osd_cdb_head(&or->cdb);
+-	unsigned padding;
+-	int ret;
+-
+-	if (!or->set_attr.total_bytes) {
+-		cdbh->attrs_list.set_attr_offset = OSD_OFFSET_UNUSED;
+-		return 0;
+-	}
+-
+-	cdbh->attrs_list.set_attr_bytes = cpu_to_be32(or->set_attr.total_bytes);
+-	cdbh->attrs_list.set_attr_offset =
+-		osd_req_encode_offset(or, or->out.total_bytes, &padding);
+-
+-	ret = _req_append_segment(or, padding, &or->set_attr,
+-				  or->out.last_seg, &or->out);
+-	if (ret)
+-		return ret;
+-
+-	or->out.last_seg = &or->set_attr;
+-	return 0;
+-}
+-
+-int osd_req_add_get_attr_list(struct osd_request *or,
+-	const struct osd_attr *oa, unsigned nelem)
+-{
+-	unsigned total_bytes = or->enc_get_attr.total_bytes;
+-	void *attr_last;
+-	int ret;
+-
+-	if (or->attributes_mode &&
+-	    or->attributes_mode != OSD_CDB_GET_SET_ATTR_LISTS) {
+-		WARN_ON(1);
+-		return -EINVAL;
+-	}
+-	or->attributes_mode = OSD_CDB_GET_SET_ATTR_LISTS;
+-
+-	/* first time calc data-in list header size */
+-	if (!or->get_attr.total_bytes)
+-		or->get_attr.total_bytes = _osd_req_sizeof_alist_header(or);
+-
+-	/* calc data-out info */
+-	if (!total_bytes) { /* first-time: allocate and put list header */
+-		unsigned max_bytes;
+-
+-		total_bytes = _osd_req_sizeof_alist_header(or);
+-		max_bytes = total_bytes +
+-			nelem * sizeof(struct osd_attributes_list_attrid);
+-		ret = _alloc_get_attr_desc(or, max_bytes);
+-		if (ret)
+-			return ret;
+-
+-		_osd_req_set_alist_type(or, or->enc_get_attr.buff,
+-					OSD_ATTR_LIST_GET);
+-	}
+-	attr_last = or->enc_get_attr.buff + total_bytes;
+-
+-	for (; nelem; --nelem) {
+-		struct osd_attributes_list_attrid *attrid;
+-		const unsigned cur_size = sizeof(*attrid);
+-
+-		total_bytes += cur_size;
+-		if (unlikely(or->enc_get_attr.alloc_size < total_bytes)) {
+-			or->enc_get_attr.total_bytes = total_bytes - cur_size;
+-			ret = _alloc_get_attr_desc(or,
+-					total_bytes + nelem * sizeof(*attrid));
+-			if (ret)
+-				return ret;
+-			attr_last = or->enc_get_attr.buff +
+-				or->enc_get_attr.total_bytes;
+-		}
+-
+-		attrid = attr_last;
+-		attrid->attr_page = cpu_to_be32(oa->attr_page);
+-		attrid->attr_id = cpu_to_be32(oa->attr_id);
+-
+-		attr_last += cur_size;
+-
+-		/* calc data-in size */
+-		or->get_attr.total_bytes +=
+-			_osd_req_alist_elem_size(or, oa->len);
+-		++oa;
+-	}
+-
+-	or->enc_get_attr.total_bytes = total_bytes;
+-
+-	OSD_DEBUG(
+-	       "get_attr.total_bytes=%u(%u) enc_get_attr.total_bytes=%u(%zu)\n",
+-	       or->get_attr.total_bytes,
+-	       or->get_attr.total_bytes - _osd_req_sizeof_alist_header(or),
+-	       or->enc_get_attr.total_bytes,
+-	       (or->enc_get_attr.total_bytes - _osd_req_sizeof_alist_header(or))
+-			/ sizeof(struct osd_attributes_list_attrid));
+-
+-	return 0;
+-}
+-EXPORT_SYMBOL(osd_req_add_get_attr_list);
+-
+-static int _osd_req_finalize_get_attr_list(struct osd_request *or)
+-{
+-	struct osd_cdb_head *cdbh = osd_cdb_head(&or->cdb);
+-	unsigned out_padding;
+-	unsigned in_padding;
+-	int ret;
+-
+-	if (!or->enc_get_attr.total_bytes) {
+-		cdbh->attrs_list.get_attr_desc_offset = OSD_OFFSET_UNUSED;
+-		cdbh->attrs_list.get_attr_offset = OSD_OFFSET_UNUSED;
+-		return 0;
+-	}
+-
+-	ret = _alloc_get_attr_list(or);
+-	if (ret)
+-		return ret;
+-
+-	/* The out-going buffer info update */
+-	OSD_DEBUG("out-going\n");
+-	cdbh->attrs_list.get_attr_desc_bytes =
+-		cpu_to_be32(or->enc_get_attr.total_bytes);
+-
+-	cdbh->attrs_list.get_attr_desc_offset =
+-		osd_req_encode_offset(or, or->out.total_bytes, &out_padding);
+-
+-	ret = _req_append_segment(or, out_padding, &or->enc_get_attr,
+-				  or->out.last_seg, &or->out);
+-	if (ret)
+-		return ret;
+-	or->out.last_seg = &or->enc_get_attr;
+-
+-	/* The incoming buffer info update */
+-	OSD_DEBUG("in-coming\n");
+-	cdbh->attrs_list.get_attr_alloc_length =
+-		cpu_to_be32(or->get_attr.total_bytes);
+-
+-	cdbh->attrs_list.get_attr_offset =
+-		osd_req_encode_offset(or, or->in.total_bytes, &in_padding);
+-
+-	ret = _req_append_segment(or, in_padding, &or->get_attr, NULL,
+-				  &or->in);
+-	if (ret)
+-		return ret;
+-	or->in.last_seg = &or->get_attr;
+-
+-	return 0;
+-}
+-
+-int osd_req_decode_get_attr_list(struct osd_request *or,
+-	struct osd_attr *oa, int *nelem, void **iterator)
+-{
+-	unsigned cur_bytes, returned_bytes;
+-	int n;
+-	const unsigned sizeof_attr_list = _osd_req_sizeof_alist_header(or);
+-	void *cur_p;
+-
+-	if (!_osd_req_is_alist_type(or, or->get_attr.buff,
+-				    OSD_ATTR_LIST_SET_RETRIEVE)) {
+-		oa->attr_page = 0;
+-		oa->attr_id = 0;
+-		oa->val_ptr = NULL;
+-		oa->len = 0;
+-		*iterator = NULL;
+-		return 0;
+-	}
+-
+-	if (*iterator) {
+-		BUG_ON((*iterator < or->get_attr.buff) ||
+-		     (or->get_attr.buff + or->get_attr.alloc_size < *iterator));
+-		cur_p = *iterator;
+-		cur_bytes = (*iterator - or->get_attr.buff) - sizeof_attr_list;
+-		returned_bytes = or->get_attr.total_bytes;
+-	} else { /* first time decode the list header */
+-		cur_bytes = sizeof_attr_list;
+-		returned_bytes = _osd_req_alist_size(or, or->get_attr.buff) +
+-					sizeof_attr_list;
+-
+-		cur_p = or->get_attr.buff + sizeof_attr_list;
+-
+-		if (returned_bytes > or->get_attr.alloc_size) {
+-			OSD_DEBUG("target report: space was not big enough! "
+-				  "Allocate=%u Needed=%u\n",
+-				  or->get_attr.alloc_size,
+-				  returned_bytes + sizeof_attr_list);
+-
+-			returned_bytes =
+-				or->get_attr.alloc_size - sizeof_attr_list;
+-		}
+-		or->get_attr.total_bytes = returned_bytes;
+-	}
+-
+-	for (n = 0; (n < *nelem) && (cur_bytes < returned_bytes); ++n) {
+-		int inc = _osd_req_alist_elem_decode(or, cur_p, oa,
+-						 returned_bytes - cur_bytes);
+-
+-		if (inc < 0) {
+-			OSD_ERR("BAD FOOD from target. list not valid!"
+-				"c=%d r=%d n=%d\n",
+-				cur_bytes, returned_bytes, n);
+-			oa->val_ptr = NULL;
+-			cur_bytes = returned_bytes; /* break the caller loop */
+-			break;
+-		}
+-
+-		cur_bytes += inc;
+-		cur_p += inc;
+-		++oa;
+-	}
+-
+-	*iterator = (returned_bytes - cur_bytes) ? cur_p : NULL;
+-	*nelem = n;
+-	return returned_bytes - cur_bytes;
+-}
+-EXPORT_SYMBOL(osd_req_decode_get_attr_list);
+-
+-/*
+- * Attributes Page-mode
+- */
+-
+-int osd_req_add_get_attr_page(struct osd_request *or,
+-	u32 page_id, void *attar_page, unsigned max_page_len,
+-	const struct osd_attr *set_one_attr)
+-{
+-	struct osd_cdb_head *cdbh = osd_cdb_head(&or->cdb);
+-
+-	if (or->attributes_mode &&
+-	    or->attributes_mode != OSD_CDB_GET_ATTR_PAGE_SET_ONE) {
+-		WARN_ON(1);
+-		return -EINVAL;
+-	}
+-	or->attributes_mode = OSD_CDB_GET_ATTR_PAGE_SET_ONE;
+-
+-	or->get_attr.buff = attar_page;
+-	or->get_attr.total_bytes = max_page_len;
+-
+-	cdbh->attrs_page.get_attr_page = cpu_to_be32(page_id);
+-	cdbh->attrs_page.get_attr_alloc_length = cpu_to_be32(max_page_len);
+-
+-	if (!set_one_attr || !set_one_attr->attr_page)
+-		return 0; /* The set is optional */
+-
+-	or->set_attr.buff = set_one_attr->val_ptr;
+-	or->set_attr.total_bytes = set_one_attr->len;
+-
+-	cdbh->attrs_page.set_attr_page = cpu_to_be32(set_one_attr->attr_page);
+-	cdbh->attrs_page.set_attr_id = cpu_to_be32(set_one_attr->attr_id);
+-	cdbh->attrs_page.set_attr_length = cpu_to_be32(set_one_attr->len);
+-	return 0;
+-}
+-EXPORT_SYMBOL(osd_req_add_get_attr_page);
+-
+-static int _osd_req_finalize_attr_page(struct osd_request *or)
+-{
+-	struct osd_cdb_head *cdbh = osd_cdb_head(&or->cdb);
+-	unsigned in_padding, out_padding;
+-	int ret;
+-
+-	/* returned page */
+-	cdbh->attrs_page.get_attr_offset =
+-		osd_req_encode_offset(or, or->in.total_bytes, &in_padding);
+-
+-	ret = _req_append_segment(or, in_padding, &or->get_attr, NULL,
+-				  &or->in);
+-	if (ret)
+-		return ret;
+-
+-	if (or->set_attr.total_bytes == 0)
+-		return 0;
+-
+-	/* set one value */
+-	cdbh->attrs_page.set_attr_offset =
+-		osd_req_encode_offset(or, or->out.total_bytes, &out_padding);
+-
+-	ret = _req_append_segment(or, out_padding, &or->set_attr, NULL,
+-				  &or->out);
+-	return ret;
+-}
+-
+-static inline void osd_sec_parms_set_out_offset(bool is_v1,
+-	struct osd_security_parameters *sec_parms, osd_cdb_offset offset)
+-{
+-	if (is_v1)
+-		sec_parms->v1.data_out_integrity_check_offset = offset;
+-	else
+-		sec_parms->v2.data_out_integrity_check_offset = offset;
+-}
+-
+-static inline void osd_sec_parms_set_in_offset(bool is_v1,
+-	struct osd_security_parameters *sec_parms, osd_cdb_offset offset)
+-{
+-	if (is_v1)
+-		sec_parms->v1.data_in_integrity_check_offset = offset;
+-	else
+-		sec_parms->v2.data_in_integrity_check_offset = offset;
+-}
+-
+-static int _osd_req_finalize_data_integrity(struct osd_request *or,
+-	bool has_in, bool has_out, struct bio *out_data_bio, u64 out_data_bytes,
+-	const u8 *cap_key)
+-{
+-	struct osd_security_parameters *sec_parms = _osd_req_sec_params(or);
+-	int ret;
+-
+-	if (!osd_is_sec_alldata(sec_parms))
+-		return 0;
+-
+-	if (has_out) {
+-		struct _osd_req_data_segment seg = {
+-			.buff = &or->out_data_integ,
+-			.total_bytes = sizeof(or->out_data_integ),
+-		};
+-		unsigned pad;
+-
+-		or->out_data_integ.data_bytes = cpu_to_be64(out_data_bytes);
+-		or->out_data_integ.set_attributes_bytes = cpu_to_be64(
+-			or->set_attr.total_bytes);
+-		or->out_data_integ.get_attributes_bytes = cpu_to_be64(
+-			or->enc_get_attr.total_bytes);
+-
+-		osd_sec_parms_set_out_offset(osd_req_is_ver1(or), sec_parms,
+-			osd_req_encode_offset(or, or->out.total_bytes, &pad));
+-
+-		ret = _req_append_segment(or, pad, &seg, or->out.last_seg,
+-					  &or->out);
+-		if (ret)
+-			return ret;
+-		or->out.last_seg = NULL;
+-
+-		/* they are now all chained to request sign them all together */
+-		osd_sec_sign_data(&or->out_data_integ, out_data_bio,
+-				  cap_key);
+-	}
+-
+-	if (has_in) {
+-		struct _osd_req_data_segment seg = {
+-			.buff = &or->in_data_integ,
+-			.total_bytes = sizeof(or->in_data_integ),
+-		};
+-		unsigned pad;
+-
+-		osd_sec_parms_set_in_offset(osd_req_is_ver1(or), sec_parms,
+-			osd_req_encode_offset(or, or->in.total_bytes, &pad));
+-
+-		ret = _req_append_segment(or, pad, &seg, or->in.last_seg,
+-					  &or->in);
+-		if (ret)
+-			return ret;
+-
+-		or->in.last_seg = NULL;
+-	}
+-
+-	return 0;
+-}
+-
+-/*
+- * osd_finalize_request and helpers
+- */
+-static struct request *_make_request(struct request_queue *q, bool has_write,
+-			      struct _osd_io_info *oii)
+-{
+-	struct request *req;
+-	struct bio *bio = oii->bio;
+-	int ret;
+-
+-	req = blk_get_request(q, has_write ? REQ_OP_SCSI_OUT : REQ_OP_SCSI_IN,
+-			0);
+-	if (IS_ERR(req))
+-		return req;
+-
+-	for_each_bio(bio) {
+-		struct bio *bounce_bio = bio;
+-
+-		ret = blk_rq_append_bio(req, &bounce_bio);
+-		if (ret)
+-			return ERR_PTR(ret);
+-	}
+-
+-	return req;
+-}
+-
+-static int _init_blk_request(struct osd_request *or,
+-	bool has_in, bool has_out)
+-{
+-	struct scsi_device *scsi_device = or->osd_dev->scsi_device;
+-	struct request_queue *q = scsi_device->request_queue;
+-	struct request *req;
+-	int ret;
+-
+-	req = _make_request(q, has_out, has_out ? &or->out : &or->in);
+-	if (IS_ERR(req)) {
+-		ret = PTR_ERR(req);
+-		goto out;
+-	}
+-
+-	or->request = req;
+-	req->rq_flags |= RQF_QUIET;
+-
+-	req->timeout = or->timeout;
+-	scsi_req(req)->retries = or->retries;
+-
+-	if (has_out) {
+-		or->out.req = req;
+-		if (has_in) {
+-			/* allocate bidi request */
+-			req = _make_request(q, false, &or->in);
+-			if (IS_ERR(req)) {
+-				OSD_DEBUG("blk_get_request for bidi failed\n");
+-				ret = PTR_ERR(req);
+-				goto out;
+-			}
+-			or->in.req = or->request->next_rq = req;
+-		}
+-	} else if (has_in)
+-		or->in.req = req;
+-
+-	ret = 0;
+-out:
+-	OSD_DEBUG("or=%p has_in=%d has_out=%d => %d, %p\n",
+-			or, has_in, has_out, ret, or->request);
+-	return ret;
+-}
+-
+-int osd_finalize_request(struct osd_request *or,
+-	u8 options, const void *cap, const u8 *cap_key)
+-{
+-	struct osd_cdb_head *cdbh = osd_cdb_head(&or->cdb);
+-	bool has_in, has_out;
+-	 /* Save for data_integrity without the cdb_continuation */
+-	struct bio *out_data_bio = or->out.bio;
+-	u64 out_data_bytes = or->out.total_bytes;
+-	int ret;
+-
+-	if (options & OSD_REQ_FUA)
+-		cdbh->options |= OSD_CDB_FUA;
+-
+-	if (options & OSD_REQ_DPO)
+-		cdbh->options |= OSD_CDB_DPO;
+-
+-	if (options & OSD_REQ_BYPASS_TIMESTAMPS)
+-		cdbh->timestamp_control = OSD_CDB_BYPASS_TIMESTAMPS;
+-
+-	osd_set_caps(&or->cdb, cap);
+-
+-	has_in = or->in.bio || or->get_attr.total_bytes;
+-	has_out = or->out.bio || or->cdb_cont.total_bytes ||
+-		or->set_attr.total_bytes || or->enc_get_attr.total_bytes;
+-
+-	ret = _osd_req_finalize_cdb_cont(or, cap_key);
+-	if (ret) {
+-		OSD_DEBUG("_osd_req_finalize_cdb_cont failed\n");
+-		return ret;
+-	}
+-	ret = _init_blk_request(or, has_in, has_out);
+-	if (ret) {
+-		OSD_DEBUG("_init_blk_request failed\n");
+-		return ret;
+-	}
+-
+-	or->out.pad_buff = sg_out_pad_buffer;
+-	or->in.pad_buff = sg_in_pad_buffer;
+-
+-	if (!or->attributes_mode)
+-		or->attributes_mode = OSD_CDB_GET_SET_ATTR_LISTS;
+-	cdbh->command_specific_options |= or->attributes_mode;
+-	if (or->attributes_mode == OSD_CDB_GET_ATTR_PAGE_SET_ONE) {
+-		ret = _osd_req_finalize_attr_page(or);
+-		if (ret) {
+-			OSD_DEBUG("_osd_req_finalize_attr_page failed\n");
+-			return ret;
+-		}
+-	} else {
+-		/* TODO: I think that for the GET_ATTR command these 2 should
+-		 * be reversed to keep them in execution order (for embedded
+-		 * targets with low memory footprint)
+-		 */
+-		ret = _osd_req_finalize_set_attr_list(or);
+-		if (ret) {
+-			OSD_DEBUG("_osd_req_finalize_set_attr_list failed\n");
+-			return ret;
+-		}
+-
+-		ret = _osd_req_finalize_get_attr_list(or);
+-		if (ret) {
+-			OSD_DEBUG("_osd_req_finalize_get_attr_list failed\n");
+-			return ret;
+-		}
+-	}
+-
+-	ret = _osd_req_finalize_data_integrity(or, has_in, has_out,
+-					       out_data_bio, out_data_bytes,
+-					       cap_key);
+-	if (ret)
+-		return ret;
+-
+-	osd_sec_sign_cdb(&or->cdb, cap_key);
+-
+-	scsi_req(or->request)->cmd = or->cdb.buff;
+-	scsi_req(or->request)->cmd_len = _osd_req_cdb_len(or);
+-
+-	return 0;
+-}
+-EXPORT_SYMBOL(osd_finalize_request);
+-
+-static bool _is_osd_security_code(int code)
+-{
+-	return	(code == osd_security_audit_value_frozen) ||
+-		(code == osd_security_working_key_frozen) ||
+-		(code == osd_nonce_not_unique) ||
+-		(code == osd_nonce_timestamp_out_of_range) ||
+-		(code == osd_invalid_dataout_buffer_integrity_check_value);
+-}
+-
+-#define OSD_SENSE_PRINT1(fmt, a...) \
+-	do { \
+-		if (__cur_sense_need_output) \
+-			OSD_ERR(fmt, ##a); \
+-	} while (0)
+-
+-#define OSD_SENSE_PRINT2(fmt, a...) OSD_SENSE_PRINT1("    " fmt, ##a)
+-
+-int osd_req_decode_sense_full(struct osd_request *or,
+-	struct osd_sense_info *osi, bool silent,
+-	struct osd_obj_id *bad_obj_list __unused, int max_obj __unused,
+-	struct osd_attr *bad_attr_list, int max_attr)
+-{
+-	int sense_len, original_sense_len;
+-	struct osd_sense_info local_osi;
+-	struct scsi_sense_descriptor_based *ssdb;
+-	void *cur_descriptor;
+-#if (CONFIG_SCSI_OSD_DPRINT_SENSE == 0)
+-	const bool __cur_sense_need_output = false;
+-#else
+-	bool __cur_sense_need_output = !silent;
+-#endif
+-	int ret;
+-
+-	if (likely(!or->req_errors))
+-		return 0;
+-
+-	osi = osi ? : &local_osi;
+-	memset(osi, 0, sizeof(*osi));
+-
+-	ssdb = (typeof(ssdb))or->sense;
+-	sense_len = or->sense_len;
+-	if ((sense_len < (int)sizeof(*ssdb) || !ssdb->sense_key)) {
+-		OSD_ERR("Block-layer returned error(0x%x) but "
+-			"sense_len(%u) || key(%d) is empty\n",
+-			or->req_errors, sense_len, ssdb->sense_key);
+-		goto analyze;
+-	}
+-
+-	if ((ssdb->response_code != 0x72) && (ssdb->response_code != 0x73)) {
+-		OSD_ERR("Unrecognized scsi sense: rcode=%x length=%d\n",
+-			ssdb->response_code, sense_len);
+-		goto analyze;
+-	}
+-
+-	osi->key = ssdb->sense_key;
+-	osi->additional_code = be16_to_cpu(ssdb->additional_sense_code);
+-	original_sense_len = ssdb->additional_sense_length + 8;
+-
+-#if (CONFIG_SCSI_OSD_DPRINT_SENSE == 1)
+-	if (__cur_sense_need_output)
+-		__cur_sense_need_output = (osi->key > scsi_sk_recovered_error);
+-#endif
+-	OSD_SENSE_PRINT1("Main Sense information key=0x%x length(%d, %d) "
+-			"additional_code=0x%x async_error=%d errors=0x%x\n",
+-			osi->key, original_sense_len, sense_len,
+-			osi->additional_code, or->async_error,
+-			or->req_errors);
+-
+-	if (original_sense_len < sense_len)
+-		sense_len = original_sense_len;
+-
+-	cur_descriptor = ssdb->ssd;
+-	sense_len -= sizeof(*ssdb);
+-	while (sense_len > 0) {
+-		struct scsi_sense_descriptor *ssd = cur_descriptor;
+-		int cur_len = ssd->additional_length + 2;
+-
+-		sense_len -= cur_len;
+-
+-		if (sense_len < 0)
+-			break; /* sense was truncated */
+-
+-		switch (ssd->descriptor_type) {
+-		case scsi_sense_information:
+-		case scsi_sense_command_specific_information:
+-		{
+-			struct scsi_sense_command_specific_data_descriptor
+-				*sscd = cur_descriptor;
+-
+-			osi->command_info =
+-				get_unaligned_be64(&sscd->information) ;
+-			OSD_SENSE_PRINT2(
+-				"command_specific_information 0x%llx \n",
+-				_LLU(osi->command_info));
+-			break;
+-		}
+-		case scsi_sense_key_specific:
+-		{
+-			struct scsi_sense_key_specific_data_descriptor
+-				*ssks = cur_descriptor;
+-
+-			osi->sense_info = get_unaligned_be16(&ssks->value);
+-			OSD_SENSE_PRINT2(
+-				"sense_key_specific_information %u"
+-				"sksv_cd_bpv_bp (0x%x)\n",
+-				osi->sense_info, ssks->sksv_cd_bpv_bp);
+-			break;
+-		}
+-		case osd_sense_object_identification:
+-		{ /*FIXME: Keep first not last, Store in array*/
+-			struct osd_sense_identification_data_descriptor
+-				*osidd = cur_descriptor;
+-
+-			osi->not_initiated_command_functions =
+-				le32_to_cpu(osidd->not_initiated_functions);
+-			osi->completed_command_functions =
+-				le32_to_cpu(osidd->completed_functions);
+-			osi->obj.partition = be64_to_cpu(osidd->partition_id);
+-			osi->obj.id = be64_to_cpu(osidd->object_id);
+-			OSD_SENSE_PRINT2(
+-				"object_identification pid=0x%llx oid=0x%llx\n",
+-				_LLU(osi->obj.partition), _LLU(osi->obj.id));
+-			OSD_SENSE_PRINT2(
+-				"not_initiated_bits(%x) "
+-				"completed_command_bits(%x)\n",
+-				osi->not_initiated_command_functions,
+-				osi->completed_command_functions);
+-			break;
+-		}
+-		case osd_sense_response_integrity_check:
+-		{
+-			struct osd_sense_response_integrity_check_descriptor
+-				*d = cur_descriptor;
+-			/* 2nibbles+space+ASCII */
+-			char dump[sizeof(d->integrity_check_value) * 4 + 2];
+-
+-			hex_dump_to_buffer(d->integrity_check_value,
+-					sizeof(d->integrity_check_value),
+-					32, 1, dump, sizeof(dump), true);
+-			OSD_SENSE_PRINT2("response_integrity [%s]\n", dump);
+-		}
+-		case osd_sense_attribute_identification:
+-		{
+-			struct osd_sense_attributes_data_descriptor
+-				*osadd = cur_descriptor;
+-			unsigned len = min(cur_len, sense_len);
+-			struct osd_sense_attr *pattr = osadd->sense_attrs;
+-
+-			while (len >= sizeof(*pattr)) {
+-				u32 attr_page = be32_to_cpu(pattr->attr_page);
+-				u32 attr_id = be32_to_cpu(pattr->attr_id);
+-
+-				if (!osi->attr.attr_page) {
+-					osi->attr.attr_page = attr_page;
+-					osi->attr.attr_id = attr_id;
+-				}
+-
+-				if (bad_attr_list && max_attr) {
+-					bad_attr_list->attr_page = attr_page;
+-					bad_attr_list->attr_id = attr_id;
+-					bad_attr_list++;
+-					max_attr--;
+-				}
+-
+-				len -= sizeof(*pattr);
+-				OSD_SENSE_PRINT2(
+-					"osd_sense_attribute_identification"
+-					"attr_page=0x%x attr_id=0x%x\n",
+-					attr_page, attr_id);
+-			}
+-		}
+-		/*These are not legal for OSD*/
+-		case scsi_sense_field_replaceable_unit:
+-			OSD_SENSE_PRINT2("scsi_sense_field_replaceable_unit\n");
+-			break;
+-		case scsi_sense_stream_commands:
+-			OSD_SENSE_PRINT2("scsi_sense_stream_commands\n");
+-			break;
+-		case scsi_sense_block_commands:
+-			OSD_SENSE_PRINT2("scsi_sense_block_commands\n");
+-			break;
+-		case scsi_sense_ata_return:
+-			OSD_SENSE_PRINT2("scsi_sense_ata_return\n");
+-			break;
+-		default:
+-			if (ssd->descriptor_type <= scsi_sense_Reserved_last)
+-				OSD_SENSE_PRINT2(
+-					"scsi_sense Reserved descriptor (0x%x)",
+-					ssd->descriptor_type);
+-			else
+-				OSD_SENSE_PRINT2(
+-					"scsi_sense Vendor descriptor (0x%x)",
+-					ssd->descriptor_type);
+-		}
+-
+-		cur_descriptor += cur_len;
+-	}
+-
+-analyze:
+-	if (!osi->key) {
+-		/* scsi sense is Empty, the request was never issued to target
+-		 * linux return code might tell us what happened.
+-		 */
+-		if (or->async_error == BLK_STS_RESOURCE)
+-			osi->osd_err_pri = OSD_ERR_PRI_RESOURCE;
+-		else
+-			osi->osd_err_pri = OSD_ERR_PRI_UNREACHABLE;
+-		ret = or->async_error;
+-	} else if (osi->key <= scsi_sk_recovered_error) {
+-		osi->osd_err_pri = 0;
+-		ret = 0;
+-	} else if (osi->additional_code == scsi_invalid_field_in_cdb) {
+-		if (osi->cdb_field_offset == OSD_CFO_STARTING_BYTE) {
+-			osi->osd_err_pri = OSD_ERR_PRI_CLEAR_PAGES;
+-			ret = -EFAULT; /* caller should recover from this */
+-		} else if (osi->cdb_field_offset == OSD_CFO_OBJECT_ID) {
+-			osi->osd_err_pri = OSD_ERR_PRI_NOT_FOUND;
+-			ret = -ENOENT;
+-		} else if (osi->cdb_field_offset == OSD_CFO_PERMISSIONS) {
+-			osi->osd_err_pri = OSD_ERR_PRI_NO_ACCESS;
+-			ret = -EACCES;
+-		} else {
+-			osi->osd_err_pri = OSD_ERR_PRI_BAD_CRED;
+-			ret = -EINVAL;
+-		}
+-	} else if (osi->additional_code == osd_quota_error) {
+-		osi->osd_err_pri = OSD_ERR_PRI_NO_SPACE;
+-		ret = -ENOSPC;
+-	} else if (_is_osd_security_code(osi->additional_code)) {
+-		osi->osd_err_pri = OSD_ERR_PRI_BAD_CRED;
+-		ret = -EINVAL;
+-	} else {
+-		osi->osd_err_pri = OSD_ERR_PRI_EIO;
+-		ret = -EIO;
+-	}
+-
+-	if (!or->out.residual)
+-		or->out.residual = or->out.total_bytes;
+-	if (!or->in.residual)
+-		or->in.residual = or->in.total_bytes;
+-
+-	return ret;
+-}
+-EXPORT_SYMBOL(osd_req_decode_sense_full);
+-
+-/*
+- * Implementation of osd_sec.h API
+- * TODO: Move to a separate osd_sec.c file at a later stage.
+- */
+-
+-enum { OSD_SEC_CAP_V1_ALL_CAPS =
+-	OSD_SEC_CAP_APPEND | OSD_SEC_CAP_OBJ_MGMT | OSD_SEC_CAP_REMOVE   |
+-	OSD_SEC_CAP_CREATE | OSD_SEC_CAP_SET_ATTR | OSD_SEC_CAP_GET_ATTR |
+-	OSD_SEC_CAP_WRITE  | OSD_SEC_CAP_READ     | OSD_SEC_CAP_POL_SEC  |
+-	OSD_SEC_CAP_GLOBAL | OSD_SEC_CAP_DEV_MGMT
+-};
+-
+-enum { OSD_SEC_CAP_V2_ALL_CAPS =
+-	OSD_SEC_CAP_V1_ALL_CAPS | OSD_SEC_CAP_QUERY | OSD_SEC_CAP_M_OBJECT
+-};
+-
+-void osd_sec_init_nosec_doall_caps(void *caps,
+-	const struct osd_obj_id *obj, bool is_collection, const bool is_v1)
+-{
+-	struct osd_capability *cap = caps;
+-	u8 type;
+-	u8 descriptor_type;
+-
+-	if (likely(obj->id)) {
+-		if (unlikely(is_collection)) {
+-			type = OSD_SEC_OBJ_COLLECTION;
+-			descriptor_type = is_v1 ? OSD_SEC_OBJ_DESC_OBJ :
+-						  OSD_SEC_OBJ_DESC_COL;
+-		} else {
+-			type = OSD_SEC_OBJ_USER;
+-			descriptor_type = OSD_SEC_OBJ_DESC_OBJ;
+-		}
+-		WARN_ON(!obj->partition);
+-	} else {
+-		type = obj->partition ? OSD_SEC_OBJ_PARTITION :
+-					OSD_SEC_OBJ_ROOT;
+-		descriptor_type = OSD_SEC_OBJ_DESC_PAR;
+-	}
+-
+-	memset(cap, 0, sizeof(*cap));
+-
+-	cap->h.format = OSD_SEC_CAP_FORMAT_VER1;
+-	cap->h.integrity_algorithm__key_version = 0; /* MAKE_BYTE(0, 0); */
+-	cap->h.security_method = OSD_SEC_NOSEC;
+-/*	cap->expiration_time;
+-	cap->AUDIT[30-10];
+-	cap->discriminator[42-30];
+-	cap->object_created_time; */
+-	cap->h.object_type = type;
+-	osd_sec_set_caps(&cap->h, OSD_SEC_CAP_V1_ALL_CAPS);
+-	cap->h.object_descriptor_type = descriptor_type;
+-	cap->od.obj_desc.policy_access_tag = 0;
+-	cap->od.obj_desc.allowed_partition_id = cpu_to_be64(obj->partition);
+-	cap->od.obj_desc.allowed_object_id = cpu_to_be64(obj->id);
+-}
+-EXPORT_SYMBOL(osd_sec_init_nosec_doall_caps);
+-
+-/* FIXME: Extract version from caps pointer.
+- *        Also Pete's target only supports caps from OSDv1 for now
+- */
+-void osd_set_caps(struct osd_cdb *cdb, const void *caps)
+-{
+-	/* NOTE: They start at same address */
+-	memcpy(&cdb->v1.caps, caps, OSDv1_CAP_LEN);
+-}
+-
+-bool osd_is_sec_alldata(struct osd_security_parameters *sec_parms __unused)
+-{
+-	return false;
+-}
+-
+-void osd_sec_sign_cdb(struct osd_cdb *ocdb __unused, const u8 *cap_key __unused)
+-{
+-}
+-
+-void osd_sec_sign_data(void *data_integ __unused,
+-		       struct bio *bio __unused, const u8 *cap_key __unused)
+-{
+-}
+-
+-/*
+- * Declared in osd_protocol.h
+- * 4.12.5 Data-In and Data-Out buffer offsets
+- * byte offset = mantissa * (2^(exponent+8))
+- * Returns the smallest allowed encoded offset that contains given @offset
+- * The actual encoded offset returned is @offset + *@padding.
+- */
+-osd_cdb_offset __osd_encode_offset(
+-	u64 offset, unsigned *padding, int min_shift, int max_shift)
+-{
+-	u64 try_offset = -1, mod, align;
+-	osd_cdb_offset be32_offset;
+-	int shift;
+-
+-	*padding = 0;
+-	if (!offset)
+-		return 0;
+-
+-	for (shift = min_shift; shift < max_shift; ++shift) {
+-		try_offset = offset >> shift;
+-		if (try_offset < (1 << OSD_OFFSET_MAX_BITS))
+-			break;
+-	}
+-
+-	BUG_ON(shift == max_shift);
+-
+-	align = 1 << shift;
+-	mod = offset & (align - 1);
+-	if (mod) {
+-		*padding = align - mod;
+-		try_offset += 1;
+-	}
+-
+-	try_offset |= ((shift - 8) & 0xf) << 28;
+-	be32_offset = cpu_to_be32((u32)try_offset);
+-
+-	OSD_DEBUG("offset=%llu mantissa=%llu exp=%d encoded=%x pad=%d\n",
+-		 _LLU(offset), _LLU(try_offset & 0x0FFFFFFF), shift,
+-		 be32_offset, *padding);
+-	return be32_offset;
+-}
+diff --git a/drivers/scsi/osd/osd_uld.c b/drivers/scsi/osd/osd_uld.c
 deleted file mode 100644
-index 199590f36203..000000000000
---- a/fs/exofs/ore_raid.c
+index eaf36ccf58db..000000000000
+--- a/drivers/scsi/osd/osd_uld.c
 +++ /dev/null
-@@ -1,756 +0,0 @@
+@@ -1,571 +0,0 @@
+-/*
+- * osd_uld.c - OSD Upper Layer Driver
+- *
+- * A Linux driver module that registers as a SCSI ULD and probes
+- * for OSD type SCSI devices.
+- * It's main function is to export osd devices to in-kernel users like
+- * osdfs and pNFS-objects-LD. It also provides one ioctl for running
+- * in Kernel tests.
+- *
+- * Copyright (C) 2008 Panasas Inc.  All rights reserved.
+- *
+- * Authors:
+- *   Boaz Harrosh <ooo@electrozaur.com>
+- *   Benny Halevy <bhalevy@panasas.com>
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License version 2
+- *
+- * Redistribution and use in source and binary forms, with or without
+- * modification, are permitted provided that the following conditions
+- * are met:
+- *
+- *  1. Redistributions of source code must retain the above copyright
+- *     notice, this list of conditions and the following disclaimer.
+- *  2. Redistributions in binary form must reproduce the above copyright
+- *     notice, this list of conditions and the following disclaimer in the
+- *     documentation and/or other materials provided with the distribution.
+- *  3. Neither the name of the Panasas company nor the names of its
+- *     contributors may be used to endorse or promote products derived
+- *     from this software without specific prior written permission.
+- *
+- * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED
+- * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+- * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+- * DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+- * BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+- * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+- * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+- */
+-
+-#include <linux/namei.h>
+-#include <linux/cdev.h>
+-#include <linux/fs.h>
+-#include <linux/module.h>
+-#include <linux/device.h>
+-#include <linux/idr.h>
+-#include <linux/major.h>
+-#include <linux/file.h>
+-#include <linux/slab.h>
+-
+-#include <scsi/scsi.h>
+-#include <scsi/scsi_driver.h>
+-#include <scsi/scsi_device.h>
+-#include <scsi/scsi_ioctl.h>
+-
+-#include <scsi/osd_initiator.h>
+-#include <scsi/osd_sec.h>
+-
+-#include "osd_debug.h"
+-
+-#ifndef TYPE_OSD
+-#  define TYPE_OSD 0x11
+-#endif
+-
+-#ifndef SCSI_OSD_MAJOR
+-#  define SCSI_OSD_MAJOR 260
+-#endif
+-#define SCSI_OSD_MAX_MINOR MINORMASK
+-
+-static const char osd_name[] = "osd";
+-static const char *osd_version_string = "open-osd 0.2.1";
+-
+-MODULE_AUTHOR("Boaz Harrosh <ooo@electrozaur.com>");
+-MODULE_DESCRIPTION("open-osd Upper-Layer-Driver osd.ko");
+-MODULE_LICENSE("GPL");
+-MODULE_ALIAS_CHARDEV_MAJOR(SCSI_OSD_MAJOR);
+-MODULE_ALIAS_SCSI_DEVICE(TYPE_OSD);
+-
+-struct osd_uld_device {
+-	int minor;
+-	struct device class_dev;
+-	struct cdev cdev;
+-	struct osd_dev od;
+-	struct osd_dev_info odi;
+-	struct gendisk *disk;
+-};
+-
+-struct osd_dev_handle {
+-	struct osd_dev od;
+-	struct file *file;
+-	struct osd_uld_device *oud;
+-} ;
+-
+-static DEFINE_IDA(osd_minor_ida);
+-
+-/*
+- * scsi sysfs attribute operations
+- */
+-static ssize_t osdname_show(struct device *dev, struct device_attribute *attr,
+-			    char *buf)
+-{
+-	struct osd_uld_device *ould = container_of(dev, struct osd_uld_device,
+-						   class_dev);
+-	return sprintf(buf, "%s\n", ould->odi.osdname);
+-}
+-static DEVICE_ATTR_RO(osdname);
+-
+-static ssize_t systemid_show(struct device *dev, struct device_attribute *attr,
+-			    char *buf)
+-{
+-	struct osd_uld_device *ould = container_of(dev, struct osd_uld_device,
+-						   class_dev);
+-
+-	memcpy(buf, ould->odi.systemid, ould->odi.systemid_len);
+-	return ould->odi.systemid_len;
+-}
+-static DEVICE_ATTR_RO(systemid);
+-
+-static struct attribute *osd_uld_attrs[] = {
+-	&dev_attr_osdname.attr,
+-	&dev_attr_systemid.attr,
+-	NULL,
+-};
+-ATTRIBUTE_GROUPS(osd_uld);
+-
+-static struct class osd_uld_class = {
+-	.owner		= THIS_MODULE,
+-	.name		= "scsi_osd",
+-	.dev_groups	= osd_uld_groups,
+-};
+-
+-/*
+- * Char Device operations
+- */
+-
+-static int osd_uld_open(struct inode *inode, struct file *file)
+-{
+-	struct osd_uld_device *oud = container_of(inode->i_cdev,
+-					struct osd_uld_device, cdev);
+-
+-	get_device(&oud->class_dev);
+-	/* cache osd_uld_device on file handle */
+-	file->private_data = oud;
+-	OSD_DEBUG("osd_uld_open %p\n", oud);
+-	return 0;
+-}
+-
+-static int osd_uld_release(struct inode *inode, struct file *file)
+-{
+-	struct osd_uld_device *oud = file->private_data;
+-
+-	OSD_DEBUG("osd_uld_release %p\n", file->private_data);
+-	file->private_data = NULL;
+-	put_device(&oud->class_dev);
+-	return 0;
+-}
+-
+-/* FIXME: Only one vector for now */
+-unsigned g_test_ioctl;
+-do_test_fn *g_do_test;
+-
+-int osduld_register_test(unsigned ioctl, do_test_fn *do_test)
+-{
+-	if (g_test_ioctl)
+-		return -EINVAL;
+-
+-	g_test_ioctl = ioctl;
+-	g_do_test = do_test;
+-	return 0;
+-}
+-EXPORT_SYMBOL(osduld_register_test);
+-
+-void osduld_unregister_test(unsigned ioctl)
+-{
+-	if (ioctl == g_test_ioctl) {
+-		g_test_ioctl = 0;
+-		g_do_test = NULL;
+-	}
+-}
+-EXPORT_SYMBOL(osduld_unregister_test);
+-
+-static do_test_fn *_find_ioctl(unsigned cmd)
+-{
+-	if (g_test_ioctl == cmd)
+-		return g_do_test;
+-	else
+-		return NULL;
+-}
+-
+-static long osd_uld_ioctl(struct file *file, unsigned int cmd,
+-	unsigned long arg)
+-{
+-	struct osd_uld_device *oud = file->private_data;
+-	int ret;
+-	do_test_fn *do_test;
+-
+-	do_test = _find_ioctl(cmd);
+-	if (do_test)
+-		ret = do_test(&oud->od, cmd, arg);
+-	else {
+-		OSD_ERR("Unknown ioctl %d: osd_uld_device=%p\n", cmd, oud);
+-		ret = -ENOIOCTLCMD;
+-	}
+-	return ret;
+-}
+-
+-static const struct file_operations osd_fops = {
+-	.owner          = THIS_MODULE,
+-	.open           = osd_uld_open,
+-	.release        = osd_uld_release,
+-	.unlocked_ioctl = osd_uld_ioctl,
+-	.llseek		= noop_llseek,
+-};
+-
+-struct osd_dev *osduld_path_lookup(const char *name)
+-{
+-	struct osd_uld_device *oud;
+-	struct osd_dev_handle *odh;
+-	struct file *file;
+-	int error;
+-
+-	if (!name || !*name) {
+-		OSD_ERR("Mount with !path || !*path\n");
+-		return ERR_PTR(-EINVAL);
+-	}
+-
+-	odh = kzalloc(sizeof(*odh), GFP_KERNEL);
+-	if (unlikely(!odh))
+-		return ERR_PTR(-ENOMEM);
+-
+-	file = filp_open(name, O_RDWR, 0);
+-	if (IS_ERR(file)) {
+-		error = PTR_ERR(file);
+-		goto free_od;
+-	}
+-
+-	if (file->f_op != &osd_fops){
+-		error = -EINVAL;
+-		goto close_file;
+-	}
+-
+-	oud = file->private_data;
+-
+-	odh->od = oud->od;
+-	odh->file = file;
+-	odh->oud = oud;
+-
+-	return &odh->od;
+-
+-close_file:
+-	fput(file);
+-free_od:
+-	kfree(odh);
+-	return ERR_PTR(error);
+-}
+-EXPORT_SYMBOL(osduld_path_lookup);
+-
+-static inline bool _the_same_or_null(const u8 *a1, unsigned a1_len,
+-				     const u8 *a2, unsigned a2_len)
+-{
+-	if (!a2_len) /* User string is Empty means don't care */
+-		return true;
+-
+-	if (a1_len != a2_len)
+-		return false;
+-
+-	return 0 == memcmp(a1, a2, a1_len);
+-}
+-
+-static int _match_odi(struct device *dev, const void *find_data)
+-{
+-	struct osd_uld_device *oud = container_of(dev, struct osd_uld_device,
+-						  class_dev);
+-	const struct osd_dev_info *odi = find_data;
+-
+-	if (_the_same_or_null(oud->odi.systemid, oud->odi.systemid_len,
+-			      odi->systemid, odi->systemid_len) &&
+-	    _the_same_or_null(oud->odi.osdname, oud->odi.osdname_len,
+-			      odi->osdname, odi->osdname_len)) {
+-		OSD_DEBUG("found device sysid_len=%d osdname=%d\n",
+-			  odi->systemid_len, odi->osdname_len);
+-		return 1;
+-	} else {
+-		return 0;
+-	}
+-}
+-
+-/* osduld_info_lookup - Loop through all devices, return the requested osd_dev.
+- *
+- * if @odi->systemid_len and/or @odi->osdname_len are zero, they act as a don't
+- * care. .e.g if they're both zero /dev/osd0 is returned.
+- */
+-struct osd_dev *osduld_info_lookup(const struct osd_dev_info *odi)
+-{
+-	struct device *dev = class_find_device(&osd_uld_class, NULL, odi, _match_odi);
+-	if (likely(dev)) {
+-		struct osd_dev_handle *odh = kzalloc(sizeof(*odh), GFP_KERNEL);
+-		struct osd_uld_device *oud = container_of(dev,
+-			struct osd_uld_device, class_dev);
+-
+-		if (unlikely(!odh)) {
+-			put_device(dev);
+-			return ERR_PTR(-ENOMEM);
+-		}
+-
+-		odh->od = oud->od;
+-		odh->oud = oud;
+-
+-		return &odh->od;
+-	}
+-
+-	return ERR_PTR(-ENODEV);
+-}
+-EXPORT_SYMBOL(osduld_info_lookup);
+-
+-void osduld_put_device(struct osd_dev *od)
+-{
+-	if (od && !IS_ERR(od)) {
+-		struct osd_dev_handle *odh =
+-				container_of(od, struct osd_dev_handle, od);
+-		struct osd_uld_device *oud = odh->oud;
+-
+-		BUG_ON(od->scsi_device != oud->od.scsi_device);
+-
+-		/* If scsi has released the device (logout), and exofs has last
+-		 * reference on oud it will be freed by above osd_uld_release
+-		 * within fput below. But this will oops in cdev_release which
+-		 * is called after the fops->release. A get_/put_ pair makes
+-		 * sure we have a cdev for the duration of fput
+-		 */
+-		if (odh->file) {
+-			get_device(&oud->class_dev);
+-			fput(odh->file);
+-		}
+-		put_device(&oud->class_dev);
+-		kfree(odh);
+-	}
+-}
+-EXPORT_SYMBOL(osduld_put_device);
+-
+-const struct osd_dev_info *osduld_device_info(struct osd_dev *od)
+-{
+-	struct osd_dev_handle *odh =
+-				container_of(od, struct osd_dev_handle, od);
+-	return &odh->oud->odi;
+-}
+-EXPORT_SYMBOL(osduld_device_info);
+-
+-bool osduld_device_same(struct osd_dev *od, const struct osd_dev_info *odi)
+-{
+-	struct osd_dev_handle *odh =
+-				container_of(od, struct osd_dev_handle, od);
+-	struct osd_uld_device *oud = odh->oud;
+-
+-	return (oud->odi.systemid_len == odi->systemid_len) &&
+-		_the_same_or_null(oud->odi.systemid, oud->odi.systemid_len,
+-				 odi->systemid, odi->systemid_len) &&
+-		(oud->odi.osdname_len == odi->osdname_len) &&
+-		_the_same_or_null(oud->odi.osdname, oud->odi.osdname_len,
+-				  odi->osdname, odi->osdname_len);
+-}
+-EXPORT_SYMBOL(osduld_device_same);
+-
+-/*
+- * Scsi Device operations
+- */
+-
+-static int __detect_osd(struct osd_uld_device *oud)
+-{
+-	struct scsi_device *scsi_device = oud->od.scsi_device;
+-	struct scsi_sense_hdr sense_hdr;
+-	char caps[OSD_CAP_LEN];
+-	int error;
+-
+-	/* sending a test_unit_ready as first command seems to be needed
+-	 * by some targets
+-	 */
+-	OSD_DEBUG("start scsi_test_unit_ready %p %p %p\n",
+-			oud, scsi_device, scsi_device->request_queue);
+-	error = scsi_test_unit_ready(scsi_device, 10*HZ, 5, &sense_hdr);
+-	if (error)
+-		OSD_ERR("warning: scsi_test_unit_ready failed\n");
+-
+-	osd_sec_init_nosec_doall_caps(caps, &osd_root_object, false, true);
+-	if (osd_auto_detect_ver(&oud->od, caps, &oud->odi))
+-		return -ENODEV;
+-
+-	return 0;
+-}
+-
+-static void __remove(struct device *dev)
+-{
+-	struct osd_uld_device *oud = container_of(dev, struct osd_uld_device,
+-						  class_dev);
+-	struct scsi_device *scsi_device = oud->od.scsi_device;
+-
+-	kfree(oud->odi.osdname);
+-
+-	osd_dev_fini(&oud->od);
+-	scsi_device_put(scsi_device);
+-
+-	OSD_INFO("osd_remove %s\n",
+-		 oud->disk ? oud->disk->disk_name : NULL);
+-
+-	if (oud->disk)
+-		put_disk(oud->disk);
+-
+-	kfree(oud);
+-}
+-
+-static int osd_probe(struct device *dev)
+-{
+-	struct scsi_device *scsi_device = to_scsi_device(dev);
+-	struct gendisk *disk;
+-	struct osd_uld_device *oud;
+-	int minor;
+-	int error;
+-
+-	if (scsi_device->type != TYPE_OSD)
+-		return -ENODEV;
+-
+-	minor = ida_alloc_max(&osd_minor_ida, SCSI_OSD_MAX_MINOR, GFP_KERNEL);
+-	if (minor == -ENOSPC)
+-		return -EBUSY;
+-	if (minor < 0)
+-		return -ENODEV;
+-
+-	error = -ENOMEM;
+-	oud = kzalloc(sizeof(*oud), GFP_KERNEL);
+-	if (NULL == oud)
+-		goto err_retract_minor;
+-
+-	/* class device member */
+-	device_initialize(&oud->class_dev);
+-	dev_set_drvdata(dev, oud);
+-	oud->minor = minor;
+-	oud->class_dev.devt = MKDEV(SCSI_OSD_MAJOR, oud->minor);
+-	oud->class_dev.class = &osd_uld_class;
+-	oud->class_dev.parent = dev;
+-	oud->class_dev.release = __remove;
+-
+-	/* hold one more reference to the scsi_device that will get released
+-	 * in __release, in case a logout is happening while fs is mounted
+-	 */
+-	if (scsi_device_get(scsi_device))
+-		goto err_retract_minor;
+-	osd_dev_init(&oud->od, scsi_device);
+-
+-	/* allocate a disk and set it up */
+-	/* FIXME: do we need this since sg has already done that */
+-	disk = alloc_disk(1);
+-	if (!disk) {
+-		OSD_ERR("alloc_disk failed\n");
+-		goto err_free_osd;
+-	}
+-	disk->major = SCSI_OSD_MAJOR;
+-	disk->first_minor = oud->minor;
+-	sprintf(disk->disk_name, "osd%d", oud->minor);
+-	oud->disk = disk;
+-
+-	/* Detect the OSD Version */
+-	error = __detect_osd(oud);
+-	if (error) {
+-		OSD_ERR("osd detection failed, non-compatible OSD device\n");
+-		goto err_free_osd;
+-	}
+-
+-	/* init the char-device for communication with user-mode */
+-	cdev_init(&oud->cdev, &osd_fops);
+-	oud->cdev.owner = THIS_MODULE;
+-
+-	error = dev_set_name(&oud->class_dev, "%s", disk->disk_name);
+-	if (error) {
+-		OSD_ERR("dev_set_name failed => %d\n", error);
+-		goto err_free_osd;
+-	}
+-
+-	error = cdev_device_add(&oud->cdev, &oud->class_dev);
+-	if (error) {
+-		OSD_ERR("device_register failed => %d\n", error);
+-		goto err_free_osd;
+-	}
+-
+-	OSD_INFO("osd_probe %s\n", disk->disk_name);
+-	return 0;
+-
+-err_free_osd:
+-	put_device(&oud->class_dev);
+-err_retract_minor:
+-	ida_free(&osd_minor_ida, minor);
+-	return error;
+-}
+-
+-static int osd_remove(struct device *dev)
+-{
+-	struct scsi_device *scsi_device = to_scsi_device(dev);
+-	struct osd_uld_device *oud = dev_get_drvdata(dev);
+-
+-	if (oud->od.scsi_device != scsi_device) {
+-		OSD_ERR("Half cooked osd-device %p, || %p!=%p",
+-			dev, oud->od.scsi_device, scsi_device);
+-	}
+-
+-	cdev_device_del(&oud->cdev, &oud->class_dev);
+-	ida_free(&osd_minor_ida, oud->minor);
+-	put_device(&oud->class_dev);
+-
+-	return 0;
+-}
+-
+-/*
+- * Global driver and scsi registration
+- */
+-
+-static struct scsi_driver osd_driver = {
+-	.gendrv = {
+-		.name		= osd_name,
+-		.owner		= THIS_MODULE,
+-		.probe		= osd_probe,
+-		.remove		= osd_remove,
+-	}
+-};
+-
+-static int __init osd_uld_init(void)
+-{
+-	int err;
+-
+-	err = class_register(&osd_uld_class);
+-	if (err) {
+-		OSD_ERR("Unable to register sysfs class => %d\n", err);
+-		return err;
+-	}
+-
+-	err = register_chrdev_region(MKDEV(SCSI_OSD_MAJOR, 0),
+-				     SCSI_OSD_MAX_MINOR, osd_name);
+-	if (err) {
+-		OSD_ERR("Unable to register major %d for osd ULD => %d\n",
+-			SCSI_OSD_MAJOR, err);
+-		goto err_out;
+-	}
+-
+-	err = scsi_register_driver(&osd_driver.gendrv);
+-	if (err) {
+-		OSD_ERR("scsi_register_driver failed => %d\n", err);
+-		goto err_out_chrdev;
+-	}
+-
+-	OSD_INFO("LOADED %s\n", osd_version_string);
+-	return 0;
+-
+-err_out_chrdev:
+-	unregister_chrdev_region(MKDEV(SCSI_OSD_MAJOR, 0), SCSI_OSD_MAX_MINOR);
+-err_out:
+-	class_unregister(&osd_uld_class);
+-	return err;
+-}
+-
+-static void __exit osd_uld_exit(void)
+-{
+-	scsi_unregister_driver(&osd_driver.gendrv);
+-	unregister_chrdev_region(MKDEV(SCSI_OSD_MAJOR, 0), SCSI_OSD_MAX_MINOR);
+-	class_unregister(&osd_uld_class);
+-	OSD_INFO("UNLOADED %s\n", osd_version_string);
+-}
+-
+-module_init(osd_uld_init);
+-module_exit(osd_uld_exit);
+diff --git a/include/scsi/osd_initiator.h b/include/scsi/osd_initiator.h
+deleted file mode 100644
+index 86a569d008b2..000000000000
+--- a/include/scsi/osd_initiator.h
++++ /dev/null
+@@ -1,511 +0,0 @@
+-/*
+- * osd_initiator.h - OSD initiator API definition
+- *
+- * Copyright (C) 2008 Panasas Inc.  All rights reserved.
+- *
+- * Authors:
+- *   Boaz Harrosh <ooo@electrozaur.com>
+- *   Benny Halevy <bhalevy@panasas.com>
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License version 2
+- *
+- */
+-#ifndef __OSD_INITIATOR_H__
+-#define __OSD_INITIATOR_H__
+-
+-#include <scsi/osd_protocol.h>
+-#include <scsi/osd_types.h>
+-
+-#include <linux/blkdev.h>
+-#include <scsi/scsi_device.h>
+-
+-/* Note: "NI" in comments below means "Not Implemented yet" */
+-
+-/* Configure of code:
+- * #undef if you *don't* want OSD v1 support in runtime.
+- * If #defined the initiator will dynamically configure to encode OSD v1
+- * CDB's if the target is detected to be OSD v1 only.
+- * OSD v2 only commands, options, and attributes will be ignored if target
+- * is v1 only.
+- * If #defined will result in bigger/slower code (OK Slower maybe not)
+- * Q: Should this be CONFIG_SCSI_OSD_VER1_SUPPORT and set from Kconfig?
+- */
+-#define OSD_VER1_SUPPORT y
+-
+-enum osd_std_version {
+-	OSD_VER_NONE = 0,
+-	OSD_VER1 = 1,
+-	OSD_VER2 = 2,
+-};
+-
+-/*
+- * Object-based Storage Device.
+- * This object represents an OSD device.
+- * It is not a full linux device in any way. It is only
+- * a place to hang resources associated with a Linux
+- * request Q and some default properties.
+- */
+-struct osd_dev {
+-	struct scsi_device *scsi_device;
+-	unsigned def_timeout;
+-
+-#ifdef OSD_VER1_SUPPORT
+-	enum osd_std_version version;
+-#endif
+-};
+-
+-/* Unique Identification of an OSD device */
+-struct osd_dev_info {
+-	unsigned systemid_len;
+-	u8 systemid[OSD_SYSTEMID_LEN];
+-	unsigned osdname_len;
+-	u8 *osdname;
+-};
+-
+-/* Retrieve/return osd_dev(s) for use by Kernel clients
+- * Use IS_ERR/ERR_PTR on returned "osd_dev *".
+- */
+-struct osd_dev *osduld_path_lookup(const char *dev_name);
+-struct osd_dev *osduld_info_lookup(const struct osd_dev_info *odi);
+-void osduld_put_device(struct osd_dev *od);
+-
+-const struct osd_dev_info *osduld_device_info(struct osd_dev *od);
+-bool osduld_device_same(struct osd_dev *od, const struct osd_dev_info *odi);
+-
+-/* Add/remove test ioctls from external modules */
+-typedef int (do_test_fn)(struct osd_dev *od, unsigned cmd, unsigned long arg);
+-int osduld_register_test(unsigned ioctl, do_test_fn *do_test);
+-void osduld_unregister_test(unsigned ioctl);
+-
+-/* These are called by uld at probe time */
+-void osd_dev_init(struct osd_dev *od, struct scsi_device *scsi_device);
+-void osd_dev_fini(struct osd_dev *od);
+-
+-/**
+- * osd_auto_detect_ver - Detect the OSD version, return Unique Identification
+- *
+- * @od:     OSD target lun handle
+- * @caps:   Capabilities authorizing OSD root read attributes access
+- * @odi:    Retrieved information uniquely identifying the osd target lun
+- *          Note: odi->osdname must be kfreed by caller.
+- *
+- * Auto detects the OSD version of the OSD target and sets the @od
+- * accordingly. Meanwhile also returns the "system id" and "osd name" root
+- * attributes which uniquely identify the OSD target. This member is usually
+- * called by the ULD. ULD users should call osduld_device_info().
+- * This rutine allocates osd requests and memory at GFP_KERNEL level and might
+- * sleep.
+- */
+-int osd_auto_detect_ver(struct osd_dev *od,
+-	void *caps, struct osd_dev_info *odi);
+-
+-static inline struct request_queue *osd_request_queue(struct osd_dev *od)
+-{
+-	return od->scsi_device->request_queue;
+-}
+-
+-/* we might want to use function vector in the future */
+-static inline void osd_dev_set_ver(struct osd_dev *od, enum osd_std_version v)
+-{
+-#ifdef OSD_VER1_SUPPORT
+-	od->version = v;
+-#endif
+-}
+-
+-static inline bool osd_dev_is_ver1(struct osd_dev *od)
+-{
+-#ifdef OSD_VER1_SUPPORT
+-	return od->version == OSD_VER1;
+-#else
+-	return false;
+-#endif
+-}
+-
+-struct osd_request;
+-typedef void (osd_req_done_fn)(struct osd_request *or, void *private);
+-
+-struct osd_request {
+-	struct osd_cdb cdb;
+-	struct osd_data_out_integrity_info out_data_integ;
+-	struct osd_data_in_integrity_info in_data_integ;
+-
+-	struct osd_dev *osd_dev;
+-	struct request *request;
+-
+-	struct _osd_req_data_segment {
+-		void *buff;
+-		unsigned alloc_size; /* 0 here means: don't call kfree */
+-		unsigned total_bytes;
+-	} cdb_cont, set_attr, enc_get_attr, get_attr;
+-
+-	struct _osd_io_info {
+-		struct bio *bio;
+-		u64 total_bytes;
+-		u64 residual;
+-		struct request *req;
+-		struct _osd_req_data_segment *last_seg;
+-		u8 *pad_buff;
+-	} out, in;
+-
+-	unsigned timeout;
+-	unsigned retries;
+-	unsigned sense_len;
+-	u8 sense[OSD_MAX_SENSE_LEN];
+-	enum osd_attributes_mode attributes_mode;
+-
+-	osd_req_done_fn *async_done;
+-	void *async_private;
+-	blk_status_t async_error;
+-	int req_errors;
+-};
+-
+-static inline bool osd_req_is_ver1(struct osd_request *or)
+-{
+-	return osd_dev_is_ver1(or->osd_dev);
+-}
+-
+-/*
+- * How to use the osd library:
+- *
+- * osd_start_request
+- *	Allocates a request.
+- *
+- * osd_req_*
+- *	Call one of, to encode the desired operation.
+- *
+- * osd_add_{get,set}_attr
+- *	Optionally add attributes to the CDB, list or page mode.
+- *
+- * osd_finalize_request
+- *	Computes final data out/in offsets and signs the request,
+- *	making it ready for execution.
+- *
+- * osd_execute_request
+- *	May be called to execute it through the block layer. Other wise submit
+- *	the associated block request in some other way.
+- *
+- * After execution:
+- * osd_req_decode_sense
+- *	Decodes sense information to verify execution results.
+- *
+- * osd_req_decode_get_attr
+- *	Retrieve osd_add_get_attr_list() values if used.
+- *
+- * osd_end_request
+- *	Must be called to deallocate the request.
+- */
+-
+-/**
+- * osd_start_request - Allocate and initialize an osd_request
+- *
+- * @osd_dev:    OSD device that holds the scsi-device and default values
+- *              that the request is associated with.
+- *
+- * Allocate osd_request and initialize all members to the
+- * default/initial state.
+- */
+-struct osd_request *osd_start_request(struct osd_dev *od);
+-
+-enum osd_req_options {
+-	OSD_REQ_FUA = 0x08,	/* Force Unit Access */
+-	OSD_REQ_DPO = 0x10,	/* Disable Page Out */
+-
+-	OSD_REQ_BYPASS_TIMESTAMPS = 0x80,
+-};
+-
+-/**
+- * osd_finalize_request - Sign request and prepare request for execution
+- *
+- * @or:		osd_request to prepare
+- * @options:	combination of osd_req_options bit flags or 0.
+- * @cap:	A Pointer to an OSD_CAP_LEN bytes buffer that is received from
+- *              The security manager as capabilities for this cdb.
+- * @cap_key:	The cryptographic key used to sign the cdb/data. Can be null
+- *              if NOSEC is used.
+- *
+- * The actual request and bios are only allocated here, so are the get_attr
+- * buffers that will receive the returned attributes. Copy's @cap to cdb.
+- * Sign the cdb/data with @cap_key.
+- */
+-int osd_finalize_request(struct osd_request *or,
+-	u8 options, const void *cap, const u8 *cap_key);
+-
+-/**
+- * osd_execute_request - Execute the request synchronously through block-layer
+- *
+- * @or:		osd_request to Executed
+- *
+- * Calls blk_execute_rq to q the command and waits for completion.
+- */
+-int osd_execute_request(struct osd_request *or);
+-
+-/**
+- * osd_execute_request_async - Execute the request without waitting.
+- *
+- * @or:                      - osd_request to Executed
+- * @done: (Optional)         - Called at end of execution
+- * @private:                 - Will be passed to @done function
+- *
+- * Calls blk_execute_rq_nowait to queue the command. When execution is done
+- * optionally calls @done with @private as parameter. @or->async_error will
+- * have the return code
+- */
+-int osd_execute_request_async(struct osd_request *or,
+-	osd_req_done_fn *done, void *private);
+-
+-/**
+- * osd_req_decode_sense_full - Decode sense information after execution.
+- *
+- * @or:           - osd_request to examine
+- * @osi           - Receives a more detailed error report information (optional).
+- * @silent        - Do not print to dmsg (Even if enabled)
+- * @bad_obj_list  - Some commands act on multiple objects. Failed objects will
+- *                  be received here (optional)
+- * @max_obj       - Size of @bad_obj_list.
+- * @bad_attr_list - List of failing attributes (optional)
+- * @max_attr      - Size of @bad_attr_list.
+- *
+- * After execution, osd_request results are analyzed using this function. The
+- * return code is the final disposition on the error. So it is possible that a
+- * CHECK_CONDITION was returned from target but this will return NO_ERROR, for
+- * example on recovered errors. All parameters are optional if caller does
+- * not need any returned information.
+- * Note: This function will also dump the error to dmsg according to settings
+- * of the SCSI_OSD_DPRINT_SENSE Kconfig value. Set @silent if you know the
+- * command would routinely fail, to not spam the dmsg file.
+- */
+-
+-/**
+- * osd_err_priority - osd categorized return codes in ascending severity.
+- *
+- * The categories are borrowed from the pnfs_osd_errno enum.
+- * See comments for translated Linux codes returned by osd_req_decode_sense.
+- */
+-enum osd_err_priority {
+-	OSD_ERR_PRI_NO_ERROR	= 0,
+-	/* Recoverable, caller should clear_highpage() all pages */
+-	OSD_ERR_PRI_CLEAR_PAGES = 1, /* -EFAULT */
+-	OSD_ERR_PRI_RESOURCE	= 2, /* -ENOMEM */
+-	OSD_ERR_PRI_BAD_CRED	= 3, /* -EINVAL */
+-	OSD_ERR_PRI_NO_ACCESS	= 4, /* -EACCES */
+-	OSD_ERR_PRI_UNREACHABLE	= 5, /* any other */
+-	OSD_ERR_PRI_NOT_FOUND	= 6, /* -ENOENT */
+-	OSD_ERR_PRI_NO_SPACE	= 7, /* -ENOSPC */
+-	OSD_ERR_PRI_EIO		= 8, /* -EIO    */
+-};
+-
+-struct osd_sense_info {
+-	enum osd_err_priority osd_err_pri;
+-
+-	int key;		/* one of enum scsi_sense_keys */
+-	int additional_code ;	/* enum osd_additional_sense_codes */
+-	union { /* Sense specific information */
+-		u16 sense_info;
+-		u16 cdb_field_offset; 	/* scsi_invalid_field_in_cdb */
+-	};
+-	union { /* Command specific information */
+-		u64 command_info;
+-	};
+-
+-	u32 not_initiated_command_functions; /* osd_command_functions_bits */
+-	u32 completed_command_functions; /* osd_command_functions_bits */
+-	struct osd_obj_id obj;
+-	struct osd_attr attr;
+-};
+-
+-int osd_req_decode_sense_full(struct osd_request *or,
+-	struct osd_sense_info *osi, bool silent,
+-	struct osd_obj_id *bad_obj_list, int max_obj,
+-	struct osd_attr *bad_attr_list, int max_attr);
+-
+-static inline int osd_req_decode_sense(struct osd_request *or,
+-	struct osd_sense_info *osi)
+-{
+-	return osd_req_decode_sense_full(or, osi, false, NULL, 0, NULL, 0);
+-}
+-
+-/**
+- * osd_end_request - return osd_request to free store
+- *
+- * @or:		osd_request to free
+- *
+- * Deallocate all osd_request resources (struct req's, BIOs, buffers, etc.)
+- */
+-void osd_end_request(struct osd_request *or);
+-
+-/*
+- * CDB Encoding
+- *
+- * Note: call only one of the following methods.
+- */
+-
+-/*
+- * Device commands
+- */
+-void osd_req_set_master_seed_xchg(struct osd_request *or, ...);/* NI */
+-void osd_req_set_master_key(struct osd_request *or, ...);/* NI */
+-
+-void osd_req_format(struct osd_request *or, u64 tot_capacity);
+-
+-/* list all partitions
+- * @list header must be initialized to zero on first run.
+- *
+- * Call osd_is_obj_list_done() to find if we got the complete list.
+- */
+-int osd_req_list_dev_partitions(struct osd_request *or,
+-	osd_id initial_id, struct osd_obj_id_list *list, unsigned nelem);
+-
+-void osd_req_flush_obsd(struct osd_request *or,
+-	enum osd_options_flush_scope_values);
+-
+-void osd_req_perform_scsi_command(struct osd_request *or,
+-	const u8 *cdb, ...);/* NI */
+-void osd_req_task_management(struct osd_request *or, ...);/* NI */
+-
+-/*
+- * Partition commands
+- */
+-void osd_req_create_partition(struct osd_request *or, osd_id partition);
+-void osd_req_remove_partition(struct osd_request *or, osd_id partition);
+-
+-void osd_req_set_partition_key(struct osd_request *or,
+-	osd_id partition, u8 new_key_id[OSD_CRYPTO_KEYID_SIZE],
+-	u8 seed[OSD_CRYPTO_SEED_SIZE]);/* NI */
+-
+-/* list all collections in the partition
+- * @list header must be init to zero on first run.
+- *
+- * Call osd_is_obj_list_done() to find if we got the complete list.
+- */
+-int osd_req_list_partition_collections(struct osd_request *or,
+-	osd_id partition, osd_id initial_id, struct osd_obj_id_list *list,
+-	unsigned nelem);
+-
+-/* list all objects in the partition
+- * @list header must be init to zero on first run.
+- *
+- * Call osd_is_obj_list_done() to find if we got the complete list.
+- */
+-int osd_req_list_partition_objects(struct osd_request *or,
+-	osd_id partition, osd_id initial_id, struct osd_obj_id_list *list,
+-	unsigned nelem);
+-
+-void osd_req_flush_partition(struct osd_request *or,
+-	osd_id partition, enum osd_options_flush_scope_values);
+-
+-/*
+- * Collection commands
+- */
+-void osd_req_create_collection(struct osd_request *or,
+-	const struct osd_obj_id *);/* NI */
+-void osd_req_remove_collection(struct osd_request *or,
+-	const struct osd_obj_id *);/* NI */
+-
+-/* list all objects in the collection */
+-int osd_req_list_collection_objects(struct osd_request *or,
+-	const struct osd_obj_id *, osd_id initial_id,
+-	struct osd_obj_id_list *list, unsigned nelem);
+-
+-/* V2 only filtered list of objects in the collection */
+-void osd_req_query(struct osd_request *or, ...);/* NI */
+-
+-void osd_req_flush_collection(struct osd_request *or,
+-	const struct osd_obj_id *, enum osd_options_flush_scope_values);
+-
+-void osd_req_get_member_attrs(struct osd_request *or, ...);/* V2-only NI */
+-void osd_req_set_member_attrs(struct osd_request *or, ...);/* V2-only NI */
+-
+-/*
+- * Object commands
+- */
+-void osd_req_create_object(struct osd_request *or, struct osd_obj_id *);
+-void osd_req_remove_object(struct osd_request *or, struct osd_obj_id *);
+-
+-void osd_req_write(struct osd_request *or,
+-	const struct osd_obj_id *obj, u64 offset, struct bio *bio, u64 len);
+-int osd_req_write_kern(struct osd_request *or,
+-	const struct osd_obj_id *obj, u64 offset, void *buff, u64 len);
+-void osd_req_append(struct osd_request *or,
+-	const struct osd_obj_id *, struct bio *data_out);/* NI */
+-void osd_req_create_write(struct osd_request *or,
+-	const struct osd_obj_id *, struct bio *data_out, u64 offset);/* NI */
+-void osd_req_clear(struct osd_request *or,
+-	const struct osd_obj_id *, u64 offset, u64 len);/* NI */
+-void osd_req_punch(struct osd_request *or,
+-	const struct osd_obj_id *, u64 offset, u64 len);/* V2-only NI */
+-
+-void osd_req_flush_object(struct osd_request *or,
+-	const struct osd_obj_id *, enum osd_options_flush_scope_values,
+-	/*V2*/ u64 offset, /*V2*/ u64 len);
+-
+-void osd_req_read(struct osd_request *or,
+-	const struct osd_obj_id *obj, u64 offset, struct bio *bio, u64 len);
+-int osd_req_read_kern(struct osd_request *or,
+-	const struct osd_obj_id *obj, u64 offset, void *buff, u64 len);
+-
+-/* Scatter/Gather write/read commands */
+-int osd_req_write_sg(struct osd_request *or,
+-	const struct osd_obj_id *obj, struct bio *bio,
+-	const struct osd_sg_entry *sglist, unsigned numentries);
+-int osd_req_read_sg(struct osd_request *or,
+-	const struct osd_obj_id *obj, struct bio *bio,
+-	const struct osd_sg_entry *sglist, unsigned numentries);
+-int osd_req_write_sg_kern(struct osd_request *or,
+-	const struct osd_obj_id *obj, void **buff,
+-	const struct osd_sg_entry *sglist, unsigned numentries);
+-int osd_req_read_sg_kern(struct osd_request *or,
+-	const struct osd_obj_id *obj, void **buff,
+-	const struct osd_sg_entry *sglist, unsigned numentries);
+-
+-/*
+- * Root/Partition/Collection/Object Attributes commands
+- */
+-
+-/* get before set */
+-void osd_req_get_attributes(struct osd_request *or, const struct osd_obj_id *);
+-
+-/* set before get */
+-void osd_req_set_attributes(struct osd_request *or, const struct osd_obj_id *);
+-
+-/*
+- * Attributes appended to most commands
+- */
+-
+-/* Attributes List mode (or V2 CDB) */
+-  /*
+-   * TODO: In ver2 if at finalize time only one attr was set and no gets,
+-   * then the Attributes CDB mode is used automatically to save IO.
+-   */
+-
+-/* set a list of attributes. */
+-int osd_req_add_set_attr_list(struct osd_request *or,
+-	const struct osd_attr *, unsigned nelem);
+-
+-/* get a list of attributes */
+-int osd_req_add_get_attr_list(struct osd_request *or,
+-	const struct osd_attr *, unsigned nelem);
+-
+-/*
+- * Attributes list decoding
+- * Must be called after osd_request.request was executed
+- * It is called in a loop to decode the returned get_attr
+- * (see osd_add_get_attr)
+- */
+-int osd_req_decode_get_attr_list(struct osd_request *or,
+-	struct osd_attr *, int *nelem, void **iterator);
+-
+-/* Attributes Page mode */
+-
+-/*
+- * Read an attribute page and optionally set one attribute
+- *
+- * Retrieves the attribute page directly to a user buffer.
+- * @attr_page_data shall stay valid until end of execution.
+- * See osd_attributes.h for common page structures
+- */
+-int osd_req_add_get_attr_page(struct osd_request *or,
+-	u32 page_id, void *attr_page_data, unsigned max_page_len,
+-	const struct osd_attr *set_one);
+-
+-#endif /* __OSD_LIB_H__ */
+diff --git a/include/scsi/osd_ore.h b/include/scsi/osd_ore.h
+deleted file mode 100644
+index 7a8d2cd30328..000000000000
+--- a/include/scsi/osd_ore.h
++++ /dev/null
+@@ -1,201 +0,0 @@
 -/*
 - * Copyright (C) 2011
 - * Boaz Harrosh <ooo@electrozaur.com>
 - *
-- * This file is part of the objects raid engine (ore).
+- * Public Declarations of the ORE API
 - *
-- * It is free software; you can redistribute it and/or modify
+- * This file is part of the ORE (Object Raid Engine) library.
+- *
+- * ORE is free software; you can redistribute it and/or modify
 - * it under the terms of the GNU General Public License version 2 as published
-- * by the Free Software Foundation.
+- * by the Free Software Foundation. (GPL v2)
 - *
-- * You should have received a copy of the GNU General Public License
-- * along with "ore". If not, write to the Free Software Foundation, Inc:
-- *	"Free Software Foundation <info@fsf.org>"
-- */
--
--#include <linux/gfp.h>
--#include <linux/async_tx.h>
--
--#include "ore_raid.h"
--
--#undef ORE_DBGMSG2
--#define ORE_DBGMSG2 ORE_DBGMSG
--
--static struct page *_raid_page_alloc(void)
--{
--	return alloc_page(GFP_KERNEL);
--}
--
--static void _raid_page_free(struct page *p)
--{
--	__free_page(p);
--}
--
--/* This struct is forward declare in ore_io_state, but is private to here.
-- * It is put on ios->sp2d for RAID5/6 writes only. See _gen_xor_unit.
-- *
-- * __stripe_pages_2d is a 2d array of pages, and it is also a corner turn.
-- * Ascending page index access is sp2d(p-minor, c-major). But storage is
-- * sp2d[p-minor][c-major], so it can be properlly presented to the async-xor
-- * API.
-- */
--struct __stripe_pages_2d {
--	/* Cache some hot path repeated calculations */
--	unsigned parity;
--	unsigned data_devs;
--	unsigned pages_in_unit;
--
--	bool needed ;
--
--	/* Array size is pages_in_unit (layout->stripe_unit / PAGE_SIZE) */
--	struct __1_page_stripe {
--		bool alloc;
--		unsigned write_count;
--		struct async_submit_ctl submit;
--		struct dma_async_tx_descriptor *tx;
--
--		/* The size of this array is data_devs + parity */
--		struct page **pages;
--		struct page **scribble;
--		/* bool array, size of this array is data_devs */
--		char *page_is_read;
--	} _1p_stripes[];
--};
--
--/* This can get bigger then a page. So support multiple page allocations
-- * _sp2d_free should be called even if _sp2d_alloc fails (by returning
-- * none-zero).
-- */
--static int _sp2d_alloc(unsigned pages_in_unit, unsigned group_width,
--		       unsigned parity, struct __stripe_pages_2d **psp2d)
--{
--	struct __stripe_pages_2d *sp2d;
--	unsigned data_devs = group_width - parity;
--
--	/*
--	 * Desired allocation layout is, though when larger than PAGE_SIZE,
--	 * each struct __alloc_1p_arrays is separately allocated:
--
--	struct _alloc_all_bytes {
--		struct __alloc_stripe_pages_2d {
--			struct __stripe_pages_2d sp2d;
--			struct __1_page_stripe _1p_stripes[pages_in_unit];
--		} __asp2d;
--		struct __alloc_1p_arrays {
--			struct page *pages[group_width];
--			struct page *scribble[group_width];
--			char page_is_read[data_devs];
--		} __a1pa[pages_in_unit];
--	} *_aab;
--
--	struct __alloc_1p_arrays *__a1pa;
--	struct __alloc_1p_arrays *__a1pa_end;
--
--	*/
--
--	char *__a1pa;
--	char *__a1pa_end;
--
--	const size_t sizeof_stripe_pages_2d =
--		sizeof(struct __stripe_pages_2d) +
--		sizeof(struct __1_page_stripe) * pages_in_unit;
--	const size_t sizeof__a1pa =
--		ALIGN(sizeof(struct page *) * (2 * group_width) + data_devs,
--		      sizeof(void *));
--	const size_t sizeof__a1pa_arrays = sizeof__a1pa * pages_in_unit;
--	const size_t alloc_total = sizeof_stripe_pages_2d +
--				   sizeof__a1pa_arrays;
--
--	unsigned num_a1pa, alloc_size, i;
--
--	/* FIXME: check these numbers in ore_verify_layout */
--	BUG_ON(sizeof_stripe_pages_2d > PAGE_SIZE);
--	BUG_ON(sizeof__a1pa > PAGE_SIZE);
--
--	/*
--	 * If alloc_total would be larger than PAGE_SIZE, only allocate
--	 * as many a1pa items as would fill the rest of the page, instead
--	 * of the full pages_in_unit count.
--	 */
--	if (alloc_total > PAGE_SIZE) {
--		num_a1pa = (PAGE_SIZE - sizeof_stripe_pages_2d) / sizeof__a1pa;
--		alloc_size = sizeof_stripe_pages_2d + sizeof__a1pa * num_a1pa;
--	} else {
--		num_a1pa = pages_in_unit;
--		alloc_size = alloc_total;
--	}
--
--	*psp2d = sp2d = kzalloc(alloc_size, GFP_KERNEL);
--	if (unlikely(!sp2d)) {
--		ORE_DBGMSG("!! Failed to alloc sp2d size=%d\n", alloc_size);
--		return -ENOMEM;
--	}
--	/* From here Just call _sp2d_free */
--
--	/* Find start of a1pa area. */
--	__a1pa = (char *)sp2d + sizeof_stripe_pages_2d;
--	/* Find end of the _allocated_ a1pa area. */
--	__a1pa_end = __a1pa + alloc_size;
--
--	/* Allocate additionally needed a1pa items in PAGE_SIZE chunks. */
--	for (i = 0; i < pages_in_unit; ++i) {
--		struct __1_page_stripe *stripe = &sp2d->_1p_stripes[i];
--
--		if (unlikely(__a1pa >= __a1pa_end)) {
--			num_a1pa = min_t(unsigned, PAGE_SIZE / sizeof__a1pa,
--							pages_in_unit - i);
--			alloc_size = sizeof__a1pa * num_a1pa;
--
--			__a1pa = kzalloc(alloc_size, GFP_KERNEL);
--			if (unlikely(!__a1pa)) {
--				ORE_DBGMSG("!! Failed to _alloc_1p_arrays=%d\n",
--					   num_a1pa);
--				return -ENOMEM;
--			}
--			__a1pa_end = __a1pa + alloc_size;
--			/* First *pages is marked for kfree of the buffer */
--			stripe->alloc = true;
--		}
--
--		/*
--		 * Attach all _lp_stripes pointers to the allocation for
--		 * it which was either part of the original PAGE_SIZE
--		 * allocation or the subsequent allocation in this loop.
--		 */
--		stripe->pages = (void *)__a1pa;
--		stripe->scribble = stripe->pages + group_width;
--		stripe->page_is_read = (char *)stripe->scribble + group_width;
--		__a1pa += sizeof__a1pa;
--	}
--
--	sp2d->parity = parity;
--	sp2d->data_devs = data_devs;
--	sp2d->pages_in_unit = pages_in_unit;
--	return 0;
--}
--
--static void _sp2d_reset(struct __stripe_pages_2d *sp2d,
--			const struct _ore_r4w_op *r4w, void *priv)
--{
--	unsigned data_devs = sp2d->data_devs;
--	unsigned group_width = data_devs + sp2d->parity;
--	int p, c;
--
--	if (!sp2d->needed)
--		return;
--
--	for (c = data_devs - 1; c >= 0; --c)
--		for (p = sp2d->pages_in_unit - 1; p >= 0; --p) {
--			struct __1_page_stripe *_1ps = &sp2d->_1p_stripes[p];
--
--			if (_1ps->page_is_read[c]) {
--				struct page *page = _1ps->pages[c];
--
--				r4w->put_page(priv, page);
--				_1ps->page_is_read[c] = false;
--			}
--		}
--
--	for (p = 0; p < sp2d->pages_in_unit; p++) {
--		struct __1_page_stripe *_1ps = &sp2d->_1p_stripes[p];
--
--		memset(_1ps->pages, 0, group_width * sizeof(*_1ps->pages));
--		_1ps->write_count = 0;
--		_1ps->tx = NULL;
--	}
--
--	sp2d->needed = false;
--}
--
--static void _sp2d_free(struct __stripe_pages_2d *sp2d)
--{
--	unsigned i;
--
--	if (!sp2d)
--		return;
--
--	for (i = 0; i < sp2d->pages_in_unit; ++i) {
--		if (sp2d->_1p_stripes[i].alloc)
--			kfree(sp2d->_1p_stripes[i].pages);
--	}
--
--	kfree(sp2d);
--}
--
--static unsigned _sp2d_min_pg(struct __stripe_pages_2d *sp2d)
--{
--	unsigned p;
--
--	for (p = 0; p < sp2d->pages_in_unit; p++) {
--		struct __1_page_stripe *_1ps = &sp2d->_1p_stripes[p];
--
--		if (_1ps->write_count)
--			return p;
--	}
--
--	return ~0;
--}
--
--static unsigned _sp2d_max_pg(struct __stripe_pages_2d *sp2d)
--{
--	int p;
--
--	for (p = sp2d->pages_in_unit - 1; p >= 0; --p) {
--		struct __1_page_stripe *_1ps = &sp2d->_1p_stripes[p];
--
--		if (_1ps->write_count)
--			return p;
--	}
--
--	return ~0;
--}
--
--static void _gen_xor_unit(struct __stripe_pages_2d *sp2d)
--{
--	unsigned p;
--	unsigned tx_flags = ASYNC_TX_ACK;
--
--	if (sp2d->parity == 1)
--		tx_flags |= ASYNC_TX_XOR_ZERO_DST;
--
--	for (p = 0; p < sp2d->pages_in_unit; p++) {
--		struct __1_page_stripe *_1ps = &sp2d->_1p_stripes[p];
--
--		if (!_1ps->write_count)
--			continue;
--
--		init_async_submit(&_1ps->submit, tx_flags,
--			NULL, NULL, NULL, (addr_conv_t *)_1ps->scribble);
--
--		if (sp2d->parity == 1)
--			_1ps->tx = async_xor(_1ps->pages[sp2d->data_devs],
--						_1ps->pages, 0, sp2d->data_devs,
--						PAGE_SIZE, &_1ps->submit);
--		else /* parity == 2 */
--			_1ps->tx = async_gen_syndrome(_1ps->pages, 0,
--						sp2d->data_devs + sp2d->parity,
--						PAGE_SIZE, &_1ps->submit);
--	}
--
--	for (p = 0; p < sp2d->pages_in_unit; p++) {
--		struct __1_page_stripe *_1ps = &sp2d->_1p_stripes[p];
--		/* NOTE: We wait for HW synchronously (I don't have such HW
--		 * to test with.) Is parallelism needed with today's multi
--		 * cores?
--		 */
--		async_tx_issue_pending(_1ps->tx);
--	}
--}
--
--void _ore_add_stripe_page(struct __stripe_pages_2d *sp2d,
--		       struct ore_striping_info *si, struct page *page)
--{
--	struct __1_page_stripe *_1ps;
--
--	sp2d->needed = true;
--
--	_1ps = &sp2d->_1p_stripes[si->cur_pg];
--	_1ps->pages[si->cur_comp] = page;
--	++_1ps->write_count;
--
--	si->cur_pg = (si->cur_pg + 1) % sp2d->pages_in_unit;
--	/* si->cur_comp is advanced outside at main loop */
--}
--
--void _ore_add_sg_seg(struct ore_per_dev_state *per_dev, unsigned cur_len,
--		     bool not_last)
--{
--	struct osd_sg_entry *sge;
--
--	ORE_DBGMSG("dev=%d cur_len=0x%x not_last=%d cur_sg=%d "
--		     "offset=0x%llx length=0x%x last_sgs_total=0x%x\n",
--		     per_dev->dev, cur_len, not_last, per_dev->cur_sg,
--		     _LLU(per_dev->offset), per_dev->length,
--		     per_dev->last_sgs_total);
--
--	if (!per_dev->cur_sg) {
--		sge = per_dev->sglist;
--
--		/* First time we prepare two entries */
--		if (per_dev->length) {
--			++per_dev->cur_sg;
--			sge->offset = per_dev->offset;
--			sge->len = per_dev->length;
--		} else {
--			/* Here the parity is the first unit of this object.
--			 * This happens every time we reach a parity device on
--			 * the same stripe as the per_dev->offset. We need to
--			 * just skip this unit.
--			 */
--			per_dev->offset += cur_len;
--			return;
--		}
--	} else {
--		/* finalize the last one */
--		sge = &per_dev->sglist[per_dev->cur_sg - 1];
--		sge->len = per_dev->length - per_dev->last_sgs_total;
--	}
--
--	if (not_last) {
--		/* Partly prepare the next one */
--		struct osd_sg_entry *next_sge = sge + 1;
--
--		++per_dev->cur_sg;
--		next_sge->offset = sge->offset + sge->len + cur_len;
--		/* Save cur len so we know how mutch was added next time */
--		per_dev->last_sgs_total = per_dev->length;
--		next_sge->len = 0;
--	} else if (!sge->len) {
--		/* Optimize for when the last unit is a parity */
--		--per_dev->cur_sg;
--	}
--}
--
--static int _alloc_read_4_write(struct ore_io_state *ios)
--{
--	struct ore_layout *layout = ios->layout;
--	int ret;
--	/* We want to only read those pages not in cache so worst case
--	 * is a stripe populated with every other page
--	 */
--	unsigned sgs_per_dev = ios->sp2d->pages_in_unit + 2;
--
--	ret = _ore_get_io_state(layout, ios->oc,
--				layout->group_width * layout->mirrors_p1,
--				sgs_per_dev, 0, &ios->ios_read_4_write);
--	return ret;
--}
--
--/* @si contains info of the to-be-inserted page. Update of @si should be
-- * maintained by caller. Specificaly si->dev, si->obj_offset, ...
-- */
--static int _add_to_r4w(struct ore_io_state *ios, struct ore_striping_info *si,
--		       struct page *page, unsigned pg_len)
--{
--	struct request_queue *q;
--	struct ore_per_dev_state *per_dev;
--	struct ore_io_state *read_ios;
--	unsigned first_dev = si->dev - (si->dev %
--			  (ios->layout->group_width * ios->layout->mirrors_p1));
--	unsigned comp = si->dev - first_dev;
--	unsigned added_len;
--
--	if (!ios->ios_read_4_write) {
--		int ret = _alloc_read_4_write(ios);
--
--		if (unlikely(ret))
--			return ret;
--	}
--
--	read_ios = ios->ios_read_4_write;
--	read_ios->numdevs = ios->layout->group_width * ios->layout->mirrors_p1;
--
--	per_dev = &read_ios->per_dev[comp];
--	if (!per_dev->length) {
--		per_dev->bio = bio_kmalloc(GFP_KERNEL,
--					   ios->sp2d->pages_in_unit);
--		if (unlikely(!per_dev->bio)) {
--			ORE_DBGMSG("Failed to allocate BIO size=%u\n",
--				     ios->sp2d->pages_in_unit);
--			return -ENOMEM;
--		}
--		per_dev->offset = si->obj_offset;
--		per_dev->dev = si->dev;
--	} else if (si->obj_offset != (per_dev->offset + per_dev->length)) {
--		u64 gap = si->obj_offset - (per_dev->offset + per_dev->length);
--
--		_ore_add_sg_seg(per_dev, gap, true);
--	}
--	q = osd_request_queue(ore_comp_dev(read_ios->oc, per_dev->dev));
--	added_len = bio_add_pc_page(q, per_dev->bio, page, pg_len,
--				    si->obj_offset % PAGE_SIZE);
--	if (unlikely(added_len != pg_len)) {
--		ORE_DBGMSG("Failed to bio_add_pc_page bi_vcnt=%d\n",
--			      per_dev->bio->bi_vcnt);
--		return -ENOMEM;
--	}
--
--	per_dev->length += pg_len;
--	return 0;
--}
--
--/* read the beginning of an unaligned first page */
--static int _add_to_r4w_first_page(struct ore_io_state *ios, struct page *page)
--{
--	struct ore_striping_info si;
--	unsigned pg_len;
--
--	ore_calc_stripe_info(ios->layout, ios->offset, 0, &si);
--
--	pg_len = si.obj_offset % PAGE_SIZE;
--	si.obj_offset -= pg_len;
--
--	ORE_DBGMSG("offset=0x%llx len=0x%x index=0x%lx dev=%x\n",
--		   _LLU(si.obj_offset), pg_len, page->index, si.dev);
--
--	return _add_to_r4w(ios, &si, page, pg_len);
--}
--
--/* read the end of an incomplete last page */
--static int _add_to_r4w_last_page(struct ore_io_state *ios, u64 *offset)
--{
--	struct ore_striping_info si;
--	struct page *page;
--	unsigned pg_len, p, c;
--
--	ore_calc_stripe_info(ios->layout, *offset, 0, &si);
--
--	p = si.cur_pg;
--	c = si.cur_comp;
--	page = ios->sp2d->_1p_stripes[p].pages[c];
--
--	pg_len = PAGE_SIZE - (si.unit_off % PAGE_SIZE);
--	*offset += pg_len;
--
--	ORE_DBGMSG("p=%d, c=%d next-offset=0x%llx len=0x%x dev=%x par_dev=%d\n",
--		   p, c, _LLU(*offset), pg_len, si.dev, si.par_dev);
--
--	BUG_ON(!page);
--
--	return _add_to_r4w(ios, &si, page, pg_len);
--}
--
--static void _mark_read4write_pages_uptodate(struct ore_io_state *ios, int ret)
--{
--	struct bio_vec *bv;
--	unsigned i, d;
--
--	/* loop on all devices all pages */
--	for (d = 0; d < ios->numdevs; d++) {
--		struct bio *bio = ios->per_dev[d].bio;
--
--		if (!bio)
--			continue;
--
--		bio_for_each_segment_all(bv, bio, i) {
--			struct page *page = bv->bv_page;
--
--			SetPageUptodate(page);
--			if (PageError(page))
--				ClearPageError(page);
--		}
--	}
--}
--
--/* read_4_write is hacked to read the start of the first stripe and/or
-- * the end of the last stripe. If needed, with an sg-gap at each device/page.
-- * It is assumed to be called after the to_be_written pages of the first stripe
-- * are populating ios->sp2d[][]
-- *
-- * NOTE: We call ios->r4w->lock_fn for all pages needed for parity calculations
-- * These pages are held at sp2d[p].pages[c] but with
-- * sp2d[p].page_is_read[c] = true. At _sp2d_reset these pages are
-- * ios->r4w->lock_fn(). The ios->r4w->lock_fn might signal that the page is
-- * @uptodate=true, so we don't need to read it, only unlock, after IO.
-- *
-- * TODO: The read_4_write should calc a need_to_read_pages_count, if bigger then
-- * to-be-written count, we should consider the xor-in-place mode.
-- * need_to_read_pages_count is the actual number of pages not present in cache.
-- * maybe "devs_in_group - ios->sp2d[p].write_count" is a good enough
-- * approximation? In this mode the read pages are put in the empty places of
-- * ios->sp2d[p][*], xor is calculated the same way. These pages are
-- * allocated/freed and don't go through cache
-- */
--static int _read_4_write_first_stripe(struct ore_io_state *ios)
--{
--	struct ore_striping_info read_si;
--	struct __stripe_pages_2d *sp2d = ios->sp2d;
--	u64 offset = ios->si.first_stripe_start;
--	unsigned c, p, min_p = sp2d->pages_in_unit, max_p = -1;
--
--	if (offset == ios->offset) /* Go to start collect $200 */
--		goto read_last_stripe;
--
--	min_p = _sp2d_min_pg(sp2d);
--	max_p = _sp2d_max_pg(sp2d);
--
--	ORE_DBGMSG("stripe_start=0x%llx ios->offset=0x%llx min_p=%d max_p=%d\n",
--		   offset, ios->offset, min_p, max_p);
--
--	for (c = 0; ; c++) {
--		ore_calc_stripe_info(ios->layout, offset, 0, &read_si);
--		read_si.obj_offset += min_p * PAGE_SIZE;
--		offset += min_p * PAGE_SIZE;
--		for (p = min_p; p <= max_p; p++) {
--			struct __1_page_stripe *_1ps = &sp2d->_1p_stripes[p];
--			struct page **pp = &_1ps->pages[c];
--			bool uptodate;
--
--			if (*pp) {
--				if (ios->offset % PAGE_SIZE)
--					/* Read the remainder of the page */
--					_add_to_r4w_first_page(ios, *pp);
--				/* to-be-written pages start here */
--				goto read_last_stripe;
--			}
--
--			*pp = ios->r4w->get_page(ios->private, offset,
--						 &uptodate);
--			if (unlikely(!*pp))
--				return -ENOMEM;
--
--			if (!uptodate)
--				_add_to_r4w(ios, &read_si, *pp, PAGE_SIZE);
--
--			/* Mark read-pages to be cache_released */
--			_1ps->page_is_read[c] = true;
--			read_si.obj_offset += PAGE_SIZE;
--			offset += PAGE_SIZE;
--		}
--		offset += (sp2d->pages_in_unit - p) * PAGE_SIZE;
--	}
--
--read_last_stripe:
--	return 0;
--}
--
--static int _read_4_write_last_stripe(struct ore_io_state *ios)
--{
--	struct ore_striping_info read_si;
--	struct __stripe_pages_2d *sp2d = ios->sp2d;
--	u64 offset;
--	u64 last_stripe_end;
--	unsigned bytes_in_stripe = ios->si.bytes_in_stripe;
--	unsigned c, p, min_p = sp2d->pages_in_unit, max_p = -1;
--
--	offset = ios->offset + ios->length;
--	if (offset % PAGE_SIZE)
--		_add_to_r4w_last_page(ios, &offset);
--		/* offset will be aligned to next page */
--
--	last_stripe_end = div_u64(offset + bytes_in_stripe - 1, bytes_in_stripe)
--				 * bytes_in_stripe;
--	if (offset == last_stripe_end) /* Optimize for the aligned case */
--		goto read_it;
--
--	ore_calc_stripe_info(ios->layout, offset, 0, &read_si);
--	p = read_si.cur_pg;
--	c = read_si.cur_comp;
--
--	if (min_p == sp2d->pages_in_unit) {
--		/* Didn't do it yet */
--		min_p = _sp2d_min_pg(sp2d);
--		max_p = _sp2d_max_pg(sp2d);
--	}
--
--	ORE_DBGMSG("offset=0x%llx stripe_end=0x%llx min_p=%d max_p=%d\n",
--		   offset, last_stripe_end, min_p, max_p);
--
--	while (offset < last_stripe_end) {
--		struct __1_page_stripe *_1ps = &sp2d->_1p_stripes[p];
--
--		if ((min_p <= p) && (p <= max_p)) {
--			struct page *page;
--			bool uptodate;
--
--			BUG_ON(_1ps->pages[c]);
--			page = ios->r4w->get_page(ios->private, offset,
--						  &uptodate);
--			if (unlikely(!page))
--				return -ENOMEM;
--
--			_1ps->pages[c] = page;
--			/* Mark read-pages to be cache_released */
--			_1ps->page_is_read[c] = true;
--			if (!uptodate)
--				_add_to_r4w(ios, &read_si, page, PAGE_SIZE);
--		}
--
--		offset += PAGE_SIZE;
--		if (p == (sp2d->pages_in_unit - 1)) {
--			++c;
--			p = 0;
--			ore_calc_stripe_info(ios->layout, offset, 0, &read_si);
--		} else {
--			read_si.obj_offset += PAGE_SIZE;
--			++p;
--		}
--	}
--
--read_it:
--	return 0;
--}
--
--static int _read_4_write_execute(struct ore_io_state *ios)
--{
--	struct ore_io_state *ios_read;
--	unsigned i;
--	int ret;
--
--	ios_read = ios->ios_read_4_write;
--	if (!ios_read)
--		return 0;
--
--	/* FIXME: Ugly to signal _sbi_read_mirror that we have bio(s). Change
--	 * to check for per_dev->bio
--	 */
--	ios_read->pages = ios->pages;
--
--	/* Now read these devices */
--	for (i = 0; i < ios_read->numdevs; i += ios_read->layout->mirrors_p1) {
--		ret = _ore_read_mirror(ios_read, i);
--		if (unlikely(ret))
--			return ret;
--	}
--
--	ret = ore_io_execute(ios_read); /* Synchronus execution */
--	if (unlikely(ret)) {
--		ORE_DBGMSG("!! ore_io_execute => %d\n", ret);
--		return ret;
--	}
--
--	_mark_read4write_pages_uptodate(ios_read, ret);
--	ore_put_io_state(ios_read);
--	ios->ios_read_4_write = NULL; /* Might need a reuse at last stripe */
--	return 0;
--}
--
--/* In writes @cur_len means length left. .i.e cur_len==0 is the last parity U */
--int _ore_add_parity_unit(struct ore_io_state *ios,
--			    struct ore_striping_info *si,
--			    struct ore_per_dev_state *per_dev,
--			    unsigned cur_len, bool do_xor)
--{
--	if (ios->reading) {
--		if (per_dev->cur_sg >= ios->sgs_per_dev) {
--			ORE_DBGMSG("cur_sg(%d) >= sgs_per_dev(%d)\n" ,
--				per_dev->cur_sg, ios->sgs_per_dev);
--			return -ENOMEM;
--		}
--		_ore_add_sg_seg(per_dev, cur_len, true);
--	} else {
--		struct __stripe_pages_2d *sp2d = ios->sp2d;
--		struct page **pages = ios->parity_pages + ios->cur_par_page;
--		unsigned num_pages;
--		unsigned array_start = 0;
--		unsigned i;
--		int ret;
--
--		si->cur_pg = _sp2d_min_pg(sp2d);
--		num_pages  = _sp2d_max_pg(sp2d) + 1 - si->cur_pg;
--
--		if (!per_dev->length) {
--			per_dev->offset += si->cur_pg * PAGE_SIZE;
--			/* If first stripe, Read in all read4write pages
--			 * (if needed) before we calculate the first parity.
--			 */
--			if (do_xor)
--				_read_4_write_first_stripe(ios);
--		}
--		if (!cur_len && do_xor)
--			/* If last stripe r4w pages of last stripe */
--			_read_4_write_last_stripe(ios);
--		_read_4_write_execute(ios);
--
--		for (i = 0; i < num_pages; i++) {
--			pages[i] = _raid_page_alloc();
--			if (unlikely(!pages[i]))
--				return -ENOMEM;
--
--			++(ios->cur_par_page);
--		}
--
--		BUG_ON(si->cur_comp < sp2d->data_devs);
--		BUG_ON(si->cur_pg + num_pages > sp2d->pages_in_unit);
--
--		ret = _ore_add_stripe_unit(ios,  &array_start, 0, pages,
--					   per_dev, num_pages * PAGE_SIZE);
--		if (unlikely(ret))
--			return ret;
--
--		if (do_xor) {
--			_gen_xor_unit(sp2d);
--			_sp2d_reset(sp2d, ios->r4w, ios->private);
--		}
--	}
--	return 0;
--}
--
--int _ore_post_alloc_raid_stuff(struct ore_io_state *ios)
--{
--	if (ios->parity_pages) {
--		struct ore_layout *layout = ios->layout;
--		unsigned pages_in_unit = layout->stripe_unit / PAGE_SIZE;
--
--		if (_sp2d_alloc(pages_in_unit, layout->group_width,
--				layout->parity, &ios->sp2d)) {
--			return -ENOMEM;
--		}
--	}
--	return 0;
--}
--
--void _ore_free_raid_stuff(struct ore_io_state *ios)
--{
--	if (ios->sp2d) { /* writing and raid */
--		unsigned i;
--
--		for (i = 0; i < ios->cur_par_page; i++) {
--			struct page *page = ios->parity_pages[i];
--
--			if (page)
--				_raid_page_free(page);
--		}
--		if (ios->extra_part_alloc)
--			kfree(ios->parity_pages);
--		/* If IO returned an error pages might need unlocking */
--		_sp2d_reset(ios->sp2d, ios->r4w, ios->private);
--		_sp2d_free(ios->sp2d);
--	} else {
--		/* Will only be set if raid reading && sglist is big */
--		if (ios->extra_part_alloc)
--			kfree(ios->per_dev[0].sglist);
--	}
--	if (ios->ios_read_4_write)
--		ore_put_io_state(ios->ios_read_4_write);
--}
-diff --git a/fs/exofs/ore_raid.h b/fs/exofs/ore_raid.h
-deleted file mode 100644
-index a6e746775570..000000000000
---- a/fs/exofs/ore_raid.h
-+++ /dev/null
-@@ -1,62 +0,0 @@
--/*
-- * Copyright (C) from 2011
-- * Boaz Harrosh <ooo@electrozaur.com>
-- *
-- * This file is part of the objects raid engine (ore).
-- *
-- * It is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License version 2 as published
-- * by the Free Software Foundation.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with "ore". If not, write to the Free Software Foundation, Inc:
-- *	"Free Software Foundation <info@fsf.org>"
-- */
--
--#include <scsi/osd_ore.h>
--
--#define ORE_ERR(fmt, a...) printk(KERN_ERR "ore: " fmt, ##a)
--
--#ifdef CONFIG_EXOFS_DEBUG
--#define ORE_DBGMSG(fmt, a...) \
--	printk(KERN_NOTICE "ore @%s:%d: " fmt, __func__, __LINE__, ##a)
--#else
--#define ORE_DBGMSG(fmt, a...) \
--	do { if (0) printk(fmt, ##a); } while (0)
--#endif
--
--/* u64 has problems with printk this will cast it to unsigned long long */
--#define _LLU(x) (unsigned long long)(x)
--
--#define ORE_DBGMSG2(M...) do {} while (0)
--/* #define ORE_DBGMSG2 ORE_DBGMSG */
--
--/* ios_raid.c stuff needed by ios.c */
--int _ore_post_alloc_raid_stuff(struct ore_io_state *ios);
--void _ore_free_raid_stuff(struct ore_io_state *ios);
--
--void _ore_add_sg_seg(struct ore_per_dev_state *per_dev, unsigned cur_len,
--		 bool not_last);
--int _ore_add_parity_unit(struct ore_io_state *ios, struct ore_striping_info *si,
--		     struct ore_per_dev_state *per_dev, unsigned cur_len,
--		     bool do_xor);
--void _ore_add_stripe_page(struct __stripe_pages_2d *sp2d,
--		       struct ore_striping_info *si, struct page *page);
--static inline void _add_stripe_page(struct __stripe_pages_2d *sp2d,
--				struct ore_striping_info *si, struct page *page)
--{
--	if (!sp2d) /* Inline the fast path */
--		return; /* Hay no raid stuff */
--	_ore_add_stripe_page(sp2d, si, page);
--}
--
--/* ios.c stuff needed by ios_raid.c */
--int  _ore_get_io_state(struct ore_layout *layout,
--			struct ore_components *oc, unsigned numdevs,
--			unsigned sgs_per_dev, unsigned num_par_pages,
--			struct ore_io_state **pios);
--int _ore_add_stripe_unit(struct ore_io_state *ios,  unsigned *cur_pg,
--		unsigned pgbase, struct page **pages,
--		struct ore_per_dev_state *per_dev, int cur_len);
--int _ore_read_mirror(struct ore_io_state *ios, unsigned cur_comp);
--int ore_io_execute(struct ore_io_state *ios);
-diff --git a/fs/exofs/super.c b/fs/exofs/super.c
-deleted file mode 100644
-index 41cf2fbee50d..000000000000
---- a/fs/exofs/super.c
-+++ /dev/null
-@@ -1,1047 +0,0 @@
--/*
-- * Copyright (C) 2005, 2006
-- * Avishay Traeger (avishay@gmail.com)
-- * Copyright (C) 2008, 2009
-- * Boaz Harrosh <ooo@electrozaur.com>
-- *
-- * Copyrights for code taken from ext2:
-- *     Copyright (C) 1992, 1993, 1994, 1995
-- *     Remy Card (card@masi.ibp.fr)
-- *     Laboratoire MASI - Institut Blaise Pascal
-- *     Universite Pierre et Marie Curie (Paris VI)
-- *     from
-- *     linux/fs/minix/inode.c
-- *     Copyright (C) 1991, 1992  Linus Torvalds
-- *
-- * This file is part of exofs.
-- *
-- * exofs is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License as published by
-- * the Free Software Foundation.  Since it is based on ext2, and the only
-- * valid version of GPL for the Linux kernel is version 2, the only valid
-- * version of GPL for exofs is version 2.
-- *
-- * exofs is distributed in the hope that it will be useful,
+- * ORE is distributed in the hope that it will be useful,
 - * but WITHOUT ANY WARRANTY; without even the implied warranty of
 - * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 - * GNU General Public License for more details.
 - *
 - * You should have received a copy of the GNU General Public License
-- * along with exofs; if not, write to the Free Software
+- * along with the ORE; if not, write to the Free Software
 - * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 - */
+-#ifndef __ORE_H__
+-#define __ORE_H__
 -
--#include <linux/string.h>
--#include <linux/parser.h>
--#include <linux/vfs.h>
--#include <linux/random.h>
--#include <linux/module.h>
--#include <linux/exportfs.h>
--#include <linux/slab.h>
--#include <linux/iversion.h>
+-#include <scsi/osd_initiator.h>
+-#include <scsi/osd_attributes.h>
+-#include <scsi/osd_sec.h>
+-#include <linux/pnfs_osd_xdr.h>
+-#include <linux/bug.h>
 -
--#include "exofs.h"
--
--#define EXOFS_DBGMSG2(M...) do {} while (0)
--
--/******************************************************************************
-- * MOUNT OPTIONS
-- *****************************************************************************/
--
--/*
-- * struct to hold what we get from mount options
-- */
--struct exofs_mountopt {
--	bool is_osdname;
--	const char *dev_name;
--	uint64_t pid;
--	int timeout;
+-struct ore_comp {
+-	struct osd_obj_id	obj;
+-	u8			cred[OSD_CAP_LEN];
 -};
 -
--/*
-- * exofs-specific mount-time options.
-- */
--enum { Opt_name, Opt_pid, Opt_to, Opt_err };
+-struct ore_layout {
+-	/* Our way of looking at the data_map */
+-	enum pnfs_osd_raid_algorithm4
+-		 raid_algorithm;
+-	unsigned stripe_unit;
+-	unsigned mirrors_p1;
 -
--/*
-- * Our mount-time options.  These should ideally be 64-bit unsigned, but the
-- * kernel's parsing functions do not currently support that.  32-bit should be
-- * sufficient for most applications now.
-- */
--static match_table_t tokens = {
--	{Opt_name, "osdname=%s"},
--	{Opt_pid, "pid=%u"},
--	{Opt_to, "to=%u"},
--	{Opt_err, NULL}
--};
+-	unsigned group_width;
+-	unsigned parity;
+-	u64	 group_depth;
+-	unsigned group_count;
 -
--/*
-- * The main option parsing method.  Also makes sure that all of the mandatory
-- * mount options were set.
-- */
--static int parse_options(char *options, struct exofs_mountopt *opts)
--{
--	char *p;
--	substring_t args[MAX_OPT_ARGS];
--	int option;
--	bool s_pid = false;
--
--	EXOFS_DBGMSG("parse_options %s\n", options);
--	/* defaults */
--	memset(opts, 0, sizeof(*opts));
--	opts->timeout = BLK_DEFAULT_SG_TIMEOUT;
--
--	while ((p = strsep(&options, ",")) != NULL) {
--		int token;
--		char str[32];
--
--		if (!*p)
--			continue;
--
--		token = match_token(p, tokens, args);
--		switch (token) {
--		case Opt_name:
--			opts->dev_name = match_strdup(&args[0]);
--			if (unlikely(!opts->dev_name)) {
--				EXOFS_ERR("Error allocating dev_name");
--				return -ENOMEM;
--			}
--			opts->is_osdname = true;
--			break;
--		case Opt_pid:
--			if (0 == match_strlcpy(str, &args[0], sizeof(str)))
--				return -EINVAL;
--			opts->pid = simple_strtoull(str, NULL, 0);
--			if (opts->pid < EXOFS_MIN_PID) {
--				EXOFS_ERR("Partition ID must be >= %u",
--					  EXOFS_MIN_PID);
--				return -EINVAL;
--			}
--			s_pid = 1;
--			break;
--		case Opt_to:
--			if (match_int(&args[0], &option))
--				return -EINVAL;
--			if (option <= 0) {
--				EXOFS_ERR("Timeout must be > 0");
--				return -EINVAL;
--			}
--			opts->timeout = option * HZ;
--			break;
--		}
--	}
--
--	if (!s_pid) {
--		EXOFS_ERR("Need to specify the following options:\n");
--		EXOFS_ERR("    -o pid=pid_no_to_use\n");
--		return -EINVAL;
--	}
--
--	return 0;
--}
--
--/******************************************************************************
-- * INODE CACHE
-- *****************************************************************************/
--
--/*
-- * Our inode cache.  Isn't it pretty?
-- */
--static struct kmem_cache *exofs_inode_cachep;
--
--/*
-- * Allocate an inode in the cache
-- */
--static struct inode *exofs_alloc_inode(struct super_block *sb)
--{
--	struct exofs_i_info *oi;
--
--	oi = kmem_cache_alloc(exofs_inode_cachep, GFP_KERNEL);
--	if (!oi)
--		return NULL;
--
--	inode_set_iversion(&oi->vfs_inode, 1);
--	return &oi->vfs_inode;
--}
--
--static void exofs_i_callback(struct rcu_head *head)
--{
--	struct inode *inode = container_of(head, struct inode, i_rcu);
--	kmem_cache_free(exofs_inode_cachep, exofs_i(inode));
--}
--
--/*
-- * Remove an inode from the cache
-- */
--static void exofs_destroy_inode(struct inode *inode)
--{
--	call_rcu(&inode->i_rcu, exofs_i_callback);
--}
--
--/*
-- * Initialize the inode
-- */
--static void exofs_init_once(void *foo)
--{
--	struct exofs_i_info *oi = foo;
--
--	inode_init_once(&oi->vfs_inode);
--}
--
--/*
-- * Create and initialize the inode cache
-- */
--static int init_inodecache(void)
--{
--	exofs_inode_cachep = kmem_cache_create_usercopy("exofs_inode_cache",
--				sizeof(struct exofs_i_info), 0,
--				SLAB_RECLAIM_ACCOUNT | SLAB_MEM_SPREAD |
--				SLAB_ACCOUNT,
--				offsetof(struct exofs_i_info, i_data),
--				sizeof_field(struct exofs_i_info, i_data),
--				exofs_init_once);
--	if (exofs_inode_cachep == NULL)
--		return -ENOMEM;
--	return 0;
--}
--
--/*
-- * Destroy the inode cache
-- */
--static void destroy_inodecache(void)
--{
--	/*
--	 * Make sure all delayed rcu free inodes are flushed before we
--	 * destroy cache.
+-	/* Cached often needed calculations filled in by
+-	 * ore_verify_layout
 -	 */
--	rcu_barrier();
--	kmem_cache_destroy(exofs_inode_cachep);
--}
+-	unsigned long max_io_length;	/* Max length that should be passed to
+-					 * ore_get_rw_state
+-					 */
+-};
 -
--/******************************************************************************
-- * Some osd helpers
-- *****************************************************************************/
--void exofs_make_credential(u8 cred_a[OSD_CAP_LEN], const struct osd_obj_id *obj)
--{
--	osd_sec_init_nosec_doall_caps(cred_a, obj, false, true);
--}
+-struct ore_dev {
+-	struct osd_dev *od;
+-};
 -
--static int exofs_read_kern(struct osd_dev *od, u8 *cred, struct osd_obj_id *obj,
--		    u64 offset, void *p, unsigned length)
--{
--	struct osd_request *or = osd_start_request(od);
--/*	struct osd_sense_info osi = {.key = 0};*/
--	int ret;
--
--	if (unlikely(!or)) {
--		EXOFS_DBGMSG("%s: osd_start_request failed.\n", __func__);
--		return -ENOMEM;
--	}
--	ret = osd_req_read_kern(or, obj, offset, p, length);
--	if (unlikely(ret)) {
--		EXOFS_DBGMSG("%s: osd_req_read_kern failed.\n", __func__);
--		goto out;
--	}
--
--	ret = osd_finalize_request(or, 0, cred, NULL);
--	if (unlikely(ret)) {
--		EXOFS_DBGMSG("Failed to osd_finalize_request() => %d\n", ret);
--		goto out;
--	}
--
--	ret = osd_execute_request(or);
--	if (unlikely(ret))
--		EXOFS_DBGMSG("osd_execute_request() => %d\n", ret);
--	/* osd_req_decode_sense(or, ret); */
--
--out:
--	osd_end_request(or);
--	EXOFS_DBGMSG2("read_kern(0x%llx) offset=0x%llx "
--		      "length=0x%llx dev=%p ret=>%d\n",
--		      _LLU(obj->id), _LLU(offset), _LLU(length), od, ret);
--	return ret;
--}
--
--static const struct osd_attr g_attr_sb_stats = ATTR_DEF(
--	EXOFS_APAGE_SB_DATA,
--	EXOFS_ATTR_SB_STATS,
--	sizeof(struct exofs_sb_stats));
--
--static int __sbi_read_stats(struct exofs_sb_info *sbi)
--{
--	struct osd_attr attrs[] = {
--		[0] = g_attr_sb_stats,
--	};
--	struct ore_io_state *ios;
--	int ret;
--
--	ret = ore_get_io_state(&sbi->layout, &sbi->oc, &ios);
--	if (unlikely(ret)) {
--		EXOFS_ERR("%s: ore_get_io_state failed.\n", __func__);
--		return ret;
--	}
--
--	ios->in_attr = attrs;
--	ios->in_attr_len = ARRAY_SIZE(attrs);
--
--	ret = ore_read(ios);
--	if (unlikely(ret)) {
--		EXOFS_ERR("Error reading super_block stats => %d\n", ret);
--		goto out;
--	}
--
--	ret = extract_attr_from_ios(ios, &attrs[0]);
--	if (ret) {
--		EXOFS_ERR("%s: extract_attr of sb_stats failed\n", __func__);
--		goto out;
--	}
--	if (attrs[0].len) {
--		struct exofs_sb_stats *ess;
--
--		if (unlikely(attrs[0].len != sizeof(*ess))) {
--			EXOFS_ERR("%s: Wrong version of exofs_sb_stats "
--				  "size(%d) != expected(%zd)\n",
--				  __func__, attrs[0].len, sizeof(*ess));
--			goto out;
--		}
--
--		ess = attrs[0].val_ptr;
--		sbi->s_nextid = le64_to_cpu(ess->s_nextid);
--		sbi->s_numfiles = le32_to_cpu(ess->s_numfiles);
--	}
--
--out:
--	ore_put_io_state(ios);
--	return ret;
--}
--
--static void stats_done(struct ore_io_state *ios, void *p)
--{
--	ore_put_io_state(ios);
--	/* Good thanks nothing to do anymore */
--}
--
--/* Asynchronously write the stats attribute */
--int exofs_sbi_write_stats(struct exofs_sb_info *sbi)
--{
--	struct osd_attr attrs[] = {
--		[0] = g_attr_sb_stats,
--	};
--	struct ore_io_state *ios;
--	int ret;
--
--	ret = ore_get_io_state(&sbi->layout, &sbi->oc, &ios);
--	if (unlikely(ret)) {
--		EXOFS_ERR("%s: ore_get_io_state failed.\n", __func__);
--		return ret;
--	}
--
--	sbi->s_ess.s_nextid   = cpu_to_le64(sbi->s_nextid);
--	sbi->s_ess.s_numfiles = cpu_to_le64(sbi->s_numfiles);
--	attrs[0].val_ptr = &sbi->s_ess;
--
--
--	ios->done = stats_done;
--	ios->private = sbi;
--	ios->out_attr = attrs;
--	ios->out_attr_len = ARRAY_SIZE(attrs);
--
--	ret = ore_write(ios);
--	if (unlikely(ret)) {
--		EXOFS_ERR("%s: ore_write failed.\n", __func__);
--		ore_put_io_state(ios);
--	}
--
--	return ret;
--}
--
--/******************************************************************************
-- * SUPERBLOCK FUNCTIONS
-- *****************************************************************************/
--static const struct super_operations exofs_sops;
--static const struct export_operations exofs_export_ops;
--
--/*
-- * Write the superblock to the OSD
-- */
--static int exofs_sync_fs(struct super_block *sb, int wait)
--{
--	struct exofs_sb_info *sbi;
--	struct exofs_fscb *fscb;
--	struct ore_comp one_comp;
--	struct ore_components oc;
--	struct ore_io_state *ios;
--	int ret = -ENOMEM;
--
--	fscb = kmalloc(sizeof(*fscb), GFP_KERNEL);
--	if (unlikely(!fscb))
--		return -ENOMEM;
--
--	sbi = sb->s_fs_info;
--
--	/* NOTE: We no longer dirty the super_block anywhere in exofs. The
--	 * reason we write the fscb here on unmount is so we can stay backwards
--	 * compatible with fscb->s_version == 1. (What we are not compatible
--	 * with is if a new version FS crashed and then we try to mount an old
--	 * version). Otherwise the exofs_fscb is read-only from mkfs time. All
--	 * the writeable info is set in exofs_sbi_write_stats() above.
+-struct ore_components {
+-	unsigned	first_dev;		/* First logical device no    */
+-	unsigned	numdevs;		/* Num of devices in array    */
+-	/* If @single_comp == EC_SINGLE_COMP, @comps points to a single
+-	 * component. else there are @numdevs components
 -	 */
+-	enum EC_COMP_USAGE {
+-		EC_SINGLE_COMP = 0, EC_MULTPLE_COMPS = 0xffffffff
+-	}		single_comp;
+-	struct ore_comp	*comps;
 -
--	exofs_init_comps(&oc, &one_comp, sbi, EXOFS_SUPER_ID);
--
--	ret = ore_get_io_state(&sbi->layout, &oc, &ios);
--	if (unlikely(ret))
--		goto out;
--
--	ios->length = offsetof(struct exofs_fscb, s_dev_table_oid);
--	memset(fscb, 0, ios->length);
--	fscb->s_nextid = cpu_to_le64(sbi->s_nextid);
--	fscb->s_numfiles = cpu_to_le64(sbi->s_numfiles);
--	fscb->s_magic = cpu_to_le16(sb->s_magic);
--	fscb->s_newfs = 0;
--	fscb->s_version = EXOFS_FSCB_VER;
--
--	ios->offset = 0;
--	ios->kern_buff = fscb;
--
--	ret = ore_write(ios);
--	if (unlikely(ret))
--		EXOFS_ERR("%s: ore_write failed.\n", __func__);
--
--out:
--	EXOFS_DBGMSG("s_nextid=0x%llx ret=%d\n", _LLU(sbi->s_nextid), ret);
--	ore_put_io_state(ios);
--	kfree(fscb);
--	return ret;
--}
--
--static void _exofs_print_device(const char *msg, const char *dev_path,
--				struct osd_dev *od, u64 pid)
--{
--	const struct osd_dev_info *odi = osduld_device_info(od);
--
--	printk(KERN_NOTICE "exofs: %s %s osd_name-%s pid-0x%llx\n",
--		msg, dev_path ?: "", odi->osdname, _LLU(pid));
--}
--
--static void exofs_free_sbi(struct exofs_sb_info *sbi)
--{
--	unsigned numdevs = sbi->oc.numdevs;
--
--	while (numdevs) {
--		unsigned i = --numdevs;
--		struct osd_dev *od = ore_comp_dev(&sbi->oc, i);
--
--		if (od) {
--			ore_comp_set_dev(&sbi->oc, i, NULL);
--			osduld_put_device(od);
--		}
--	}
--	kfree(sbi->oc.ods);
--	kfree(sbi);
--}
--
--/*
-- * This function is called when the vfs is freeing the superblock.  We just
-- * need to free our own part.
-- */
--static void exofs_put_super(struct super_block *sb)
--{
--	int num_pend;
--	struct exofs_sb_info *sbi = sb->s_fs_info;
--
--	/* make sure there are no pending commands */
--	for (num_pend = atomic_read(&sbi->s_curr_pending); num_pend > 0;
--	     num_pend = atomic_read(&sbi->s_curr_pending)) {
--		wait_queue_head_t wq;
--
--		printk(KERN_NOTICE "%s: !!Pending operations in flight. "
--		       "This is a BUG. please report to osd-dev@open-osd.org\n",
--		       __func__);
--		init_waitqueue_head(&wq);
--		wait_event_timeout(wq,
--				  (atomic_read(&sbi->s_curr_pending) == 0),
--				  msecs_to_jiffies(100));
--	}
--
--	_exofs_print_device("Unmounting", NULL, ore_comp_dev(&sbi->oc, 0),
--			    sbi->one_comp.obj.partition);
--
--	exofs_sysfs_sb_del(sbi);
--	exofs_free_sbi(sbi);
--	sb->s_fs_info = NULL;
--}
--
--static int _read_and_match_data_map(struct exofs_sb_info *sbi, unsigned numdevs,
--				    struct exofs_device_table *dt)
--{
--	int ret;
--
--	sbi->layout.stripe_unit =
--				le64_to_cpu(dt->dt_data_map.cb_stripe_unit);
--	sbi->layout.group_width =
--				le32_to_cpu(dt->dt_data_map.cb_group_width);
--	sbi->layout.group_depth =
--				le32_to_cpu(dt->dt_data_map.cb_group_depth);
--	sbi->layout.mirrors_p1  =
--				le32_to_cpu(dt->dt_data_map.cb_mirror_cnt) + 1;
--	sbi->layout.raid_algorithm  =
--				le32_to_cpu(dt->dt_data_map.cb_raid_algorithm);
--
--	ret = ore_verify_layout(numdevs, &sbi->layout);
--
--	EXOFS_DBGMSG("exofs: layout: "
--		"num_comps=%u stripe_unit=0x%x group_width=%u "
--		"group_depth=0x%llx mirrors_p1=%u raid_algorithm=%u\n",
--		numdevs,
--		sbi->layout.stripe_unit,
--		sbi->layout.group_width,
--		_LLU(sbi->layout.group_depth),
--		sbi->layout.mirrors_p1,
--		sbi->layout.raid_algorithm);
--	return ret;
--}
--
--static unsigned __ra_pages(struct ore_layout *layout)
--{
--	const unsigned _MIN_RA = 32; /* min 128K read-ahead */
--	unsigned ra_pages = layout->group_width * layout->stripe_unit /
--				PAGE_SIZE;
--	unsigned max_io_pages = exofs_max_io_pages(layout, ~0);
--
--	ra_pages *= 2; /* two stripes */
--	if (ra_pages < _MIN_RA)
--		ra_pages = roundup(_MIN_RA, ra_pages / 2);
--
--	if (ra_pages > max_io_pages)
--		ra_pages = max_io_pages;
--
--	return ra_pages;
--}
--
--/* @odi is valid only as long as @fscb_dev is valid */
--static int exofs_devs_2_odi(struct exofs_dt_device_info *dt_dev,
--			     struct osd_dev_info *odi)
--{
--	odi->systemid_len = le32_to_cpu(dt_dev->systemid_len);
--	if (likely(odi->systemid_len))
--		memcpy(odi->systemid, dt_dev->systemid, OSD_SYSTEMID_LEN);
--
--	odi->osdname_len = le32_to_cpu(dt_dev->osdname_len);
--	odi->osdname = dt_dev->osdname;
--
--	/* FIXME support long names. Will need a _put function */
--	if (dt_dev->long_name_offset)
--		return -EINVAL;
--
--	/* Make sure osdname is printable!
--	 * mkexofs should give us space for a null-terminator else the
--	 * device-table is invalid.
+-	/* Array of pointers to ore_dev-* . User will usually have these pointed
+-	 * too a bigger struct which contain an "ore_dev ored" member and use
+-	 * container_of(oc->ods[i], struct foo_dev, ored) to access the bigger
+-	 * structure.
 -	 */
--	if (unlikely(odi->osdname_len >= sizeof(dt_dev->osdname)))
--		odi->osdname_len = sizeof(dt_dev->osdname) - 1;
--	dt_dev->osdname[odi->osdname_len] = 0;
--
--	/* If it's all zeros something is bad we read past end-of-obj */
--	return !(odi->systemid_len || odi->osdname_len);
--}
--
--static int __alloc_dev_table(struct exofs_sb_info *sbi, unsigned numdevs,
--		      struct exofs_dev **peds)
--{
--	/* Twice bigger table: See exofs_init_comps() and comment at
--	 * exofs_read_lookup_dev_table()
--	 */
--	const size_t numores = numdevs * 2 - 1;
--	struct exofs_dev *eds;
--	unsigned i;
--
--	sbi->oc.ods = kzalloc(numores * sizeof(struct ore_dev *) +
--			      numdevs * sizeof(struct exofs_dev), GFP_KERNEL);
--	if (unlikely(!sbi->oc.ods)) {
--		EXOFS_ERR("ERROR: failed allocating Device array[%d]\n",
--			  numdevs);
--		return -ENOMEM;
--	}
--
--	/* Start of allocated struct exofs_dev entries */
--	*peds = eds = (void *)sbi->oc.ods[numores];
--	/* Initialize pointers into struct exofs_dev */
--	for (i = 0; i < numdevs; ++i)
--		sbi->oc.ods[i] = &eds[i].ored;
--	return 0;
--}
--
--static int exofs_read_lookup_dev_table(struct exofs_sb_info *sbi,
--				       struct osd_dev *fscb_od,
--				       unsigned table_count)
--{
--	struct ore_comp comp;
--	struct exofs_device_table *dt;
--	struct exofs_dev *eds;
--	unsigned table_bytes = table_count * sizeof(dt->dt_dev_table[0]) +
--					     sizeof(*dt);
--	unsigned numdevs, i;
--	int ret;
--
--	dt = kmalloc(table_bytes, GFP_KERNEL);
--	if (unlikely(!dt)) {
--		EXOFS_ERR("ERROR: allocating %x bytes for device table\n",
--			  table_bytes);
--		return -ENOMEM;
--	}
--
--	sbi->oc.numdevs = 0;
--
--	comp.obj.partition = sbi->one_comp.obj.partition;
--	comp.obj.id = EXOFS_DEVTABLE_ID;
--	exofs_make_credential(comp.cred, &comp.obj);
--
--	ret = exofs_read_kern(fscb_od, comp.cred, &comp.obj, 0, dt,
--			      table_bytes);
--	if (unlikely(ret)) {
--		EXOFS_ERR("ERROR: reading device table\n");
--		goto out;
--	}
--
--	numdevs = le64_to_cpu(dt->dt_num_devices);
--	if (unlikely(!numdevs)) {
--		ret = -EINVAL;
--		goto out;
--	}
--	WARN_ON(table_count != numdevs);
--
--	ret = _read_and_match_data_map(sbi, numdevs, dt);
--	if (unlikely(ret))
--		goto out;
--
--	ret = __alloc_dev_table(sbi, numdevs, &eds);
--	if (unlikely(ret))
--		goto out;
--	/* exofs round-robins the device table view according to inode
--	 * number. We hold a: twice bigger table hence inodes can point
--	 * to any device and have a sequential view of the table
--	 * starting at this device. See exofs_init_comps()
--	 */
--	memcpy(&sbi->oc.ods[numdevs], &sbi->oc.ods[0],
--		(numdevs - 1) * sizeof(sbi->oc.ods[0]));
--
--	/* create sysfs subdir under which we put the device table
--	 * And cluster layout. A Superblock is identified by the string:
--	 *	"dev[0].osdname"_"pid"
--	 */
--	exofs_sysfs_sb_add(sbi, &dt->dt_dev_table[0]);
--
--	for (i = 0; i < numdevs; i++) {
--		struct exofs_fscb fscb;
--		struct osd_dev_info odi;
--		struct osd_dev *od;
--
--		if (exofs_devs_2_odi(&dt->dt_dev_table[i], &odi)) {
--			EXOFS_ERR("ERROR: Read all-zeros device entry\n");
--			ret = -EINVAL;
--			goto out;
--		}
--
--		printk(KERN_NOTICE "Add device[%d]: osd_name-%s\n",
--		       i, odi.osdname);
--
--		/* the exofs id is currently the table index */
--		eds[i].did = i;
--
--		/* On all devices the device table is identical. The user can
--		 * specify any one of the participating devices on the command
--		 * line. We always keep them in device-table order.
--		 */
--		if (fscb_od && osduld_device_same(fscb_od, &odi)) {
--			eds[i].ored.od = fscb_od;
--			++sbi->oc.numdevs;
--			fscb_od = NULL;
--			exofs_sysfs_odev_add(&eds[i], sbi);
--			continue;
--		}
--
--		od = osduld_info_lookup(&odi);
--		if (IS_ERR(od)) {
--			ret = PTR_ERR(od);
--			EXOFS_ERR("ERROR: device requested is not found "
--				  "osd_name-%s =>%d\n", odi.osdname, ret);
--			goto out;
--		}
--
--		eds[i].ored.od = od;
--		++sbi->oc.numdevs;
--
--		/* Read the fscb of the other devices to make sure the FS
--		 * partition is there.
--		 */
--		ret = exofs_read_kern(od, comp.cred, &comp.obj, 0, &fscb,
--				      sizeof(fscb));
--		if (unlikely(ret)) {
--			EXOFS_ERR("ERROR: Malformed participating device "
--				  "error reading fscb osd_name-%s\n",
--				  odi.osdname);
--			goto out;
--		}
--		exofs_sysfs_odev_add(&eds[i], sbi);
--
--		/* TODO: verify other information is correct and FS-uuid
--		 *	 matches. Benny what did you say about device table
--		 *	 generation and old devices?
--		 */
--	}
--
--out:
--	kfree(dt);
--	if (unlikely(fscb_od && !ret)) {
--			EXOFS_ERR("ERROR: Bad device-table container device not present\n");
--			osduld_put_device(fscb_od);
--			return -EINVAL;
--	}
--	return ret;
--}
--
--/*
-- * Read the superblock from the OSD and fill in the fields
-- */
--static int exofs_fill_super(struct super_block *sb, void *data, int silent)
--{
--	struct inode *root;
--	struct exofs_mountopt *opts = data;
--	struct exofs_sb_info *sbi;	/*extended info                  */
--	struct osd_dev *od;		/* Master device                 */
--	struct exofs_fscb fscb;		/*on-disk superblock info        */
--	struct ore_comp comp;
--	unsigned table_count;
--	int ret;
--
--	sbi = kzalloc(sizeof(*sbi), GFP_KERNEL);
--	if (!sbi)
--		return -ENOMEM;
--
--	/* use mount options to fill superblock */
--	if (opts->is_osdname) {
--		struct osd_dev_info odi = {.systemid_len = 0};
--
--		odi.osdname_len = strlen(opts->dev_name);
--		odi.osdname = (u8 *)opts->dev_name;
--		od = osduld_info_lookup(&odi);
--		kfree(opts->dev_name);
--		opts->dev_name = NULL;
--	} else {
--		od = osduld_path_lookup(opts->dev_name);
--	}
--	if (IS_ERR(od)) {
--		ret = -EINVAL;
--		goto free_sbi;
--	}
--
--	/* Default layout in case we do not have a device-table */
--	sbi->layout.stripe_unit = PAGE_SIZE;
--	sbi->layout.mirrors_p1 = 1;
--	sbi->layout.group_width = 1;
--	sbi->layout.group_depth = -1;
--	sbi->layout.group_count = 1;
--	sbi->s_timeout = opts->timeout;
--
--	sbi->one_comp.obj.partition = opts->pid;
--	sbi->one_comp.obj.id = 0;
--	exofs_make_credential(sbi->one_comp.cred, &sbi->one_comp.obj);
--	sbi->oc.single_comp = EC_SINGLE_COMP;
--	sbi->oc.comps = &sbi->one_comp;
--
--	/* fill in some other data by hand */
--	memset(sb->s_id, 0, sizeof(sb->s_id));
--	strcpy(sb->s_id, "exofs");
--	sb->s_blocksize = EXOFS_BLKSIZE;
--	sb->s_blocksize_bits = EXOFS_BLKSHIFT;
--	sb->s_maxbytes = MAX_LFS_FILESIZE;
--	sb->s_max_links = EXOFS_LINK_MAX;
--	atomic_set(&sbi->s_curr_pending, 0);
--	sb->s_bdev = NULL;
--	sb->s_dev = 0;
--
--	comp.obj.partition = sbi->one_comp.obj.partition;
--	comp.obj.id = EXOFS_SUPER_ID;
--	exofs_make_credential(comp.cred, &comp.obj);
--
--	ret = exofs_read_kern(od, comp.cred, &comp.obj, 0, &fscb, sizeof(fscb));
--	if (unlikely(ret))
--		goto free_sbi;
--
--	sb->s_magic = le16_to_cpu(fscb.s_magic);
--	/* NOTE: we read below to be backward compatible with old versions */
--	sbi->s_nextid = le64_to_cpu(fscb.s_nextid);
--	sbi->s_numfiles = le32_to_cpu(fscb.s_numfiles);
--
--	/* make sure what we read from the object store is correct */
--	if (sb->s_magic != EXOFS_SUPER_MAGIC) {
--		if (!silent)
--			EXOFS_ERR("ERROR: Bad magic value\n");
--		ret = -EINVAL;
--		goto free_sbi;
--	}
--	if (le32_to_cpu(fscb.s_version) > EXOFS_FSCB_VER) {
--		EXOFS_ERR("ERROR: Bad FSCB version expected-%d got-%d\n",
--			  EXOFS_FSCB_VER, le32_to_cpu(fscb.s_version));
--		ret = -EINVAL;
--		goto free_sbi;
--	}
--
--	/* start generation numbers from a random point */
--	get_random_bytes(&sbi->s_next_generation, sizeof(u32));
--	spin_lock_init(&sbi->s_next_gen_lock);
--
--	table_count = le64_to_cpu(fscb.s_dev_table_count);
--	if (table_count) {
--		ret = exofs_read_lookup_dev_table(sbi, od, table_count);
--		if (unlikely(ret))
--			goto free_sbi;
--	} else {
--		struct exofs_dev *eds;
--
--		ret = __alloc_dev_table(sbi, 1, &eds);
--		if (unlikely(ret))
--			goto free_sbi;
--
--		ore_comp_set_dev(&sbi->oc, 0, od);
--		sbi->oc.numdevs = 1;
--	}
--
--	__sbi_read_stats(sbi);
--
--	/* set up operation vectors */
--	ret = super_setup_bdi(sb);
--	if (ret) {
--		EXOFS_DBGMSG("Failed to super_setup_bdi\n");
--		goto free_sbi;
--	}
--	sb->s_bdi->ra_pages = __ra_pages(&sbi->layout);
--	sb->s_fs_info = sbi;
--	sb->s_op = &exofs_sops;
--	sb->s_export_op = &exofs_export_ops;
--	root = exofs_iget(sb, EXOFS_ROOT_ID - EXOFS_OBJ_OFF);
--	if (IS_ERR(root)) {
--		EXOFS_ERR("ERROR: exofs_iget failed\n");
--		ret = PTR_ERR(root);
--		goto free_sbi;
--	}
--	sb->s_root = d_make_root(root);
--	if (!sb->s_root) {
--		EXOFS_ERR("ERROR: get root inode failed\n");
--		ret = -ENOMEM;
--		goto free_sbi;
--	}
--
--	if (!S_ISDIR(root->i_mode)) {
--		dput(sb->s_root);
--		sb->s_root = NULL;
--		EXOFS_ERR("ERROR: corrupt root inode (mode = %hd)\n",
--		       root->i_mode);
--		ret = -EINVAL;
--		goto free_sbi;
--	}
--
--	exofs_sysfs_dbg_print();
--	_exofs_print_device("Mounting", opts->dev_name,
--			    ore_comp_dev(&sbi->oc, 0),
--			    sbi->one_comp.obj.partition);
--	return 0;
--
--free_sbi:
--	EXOFS_ERR("Unable to mount exofs on %s pid=0x%llx err=%d\n",
--		  opts->dev_name, sbi->one_comp.obj.partition, ret);
--	exofs_free_sbi(sbi);
--	return ret;
--}
--
--/*
-- * Set up the superblock (calls exofs_fill_super eventually)
-- */
--static struct dentry *exofs_mount(struct file_system_type *type,
--			  int flags, const char *dev_name,
--			  void *data)
--{
--	struct exofs_mountopt opts;
--	int ret;
--
--	ret = parse_options(data, &opts);
--	if (ret)
--		return ERR_PTR(ret);
--
--	if (!opts.dev_name)
--		opts.dev_name = dev_name;
--	return mount_nodev(type, flags, &opts, exofs_fill_super);
--}
--
--/*
-- * Return information about the file system state in the buffer.  This is used
-- * by the 'df' command, for example.
-- */
--static int exofs_statfs(struct dentry *dentry, struct kstatfs *buf)
--{
--	struct super_block *sb = dentry->d_sb;
--	struct exofs_sb_info *sbi = sb->s_fs_info;
--	struct ore_io_state *ios;
--	struct osd_attr attrs[] = {
--		ATTR_DEF(OSD_APAGE_PARTITION_QUOTAS,
--			OSD_ATTR_PQ_CAPACITY_QUOTA, sizeof(__be64)),
--		ATTR_DEF(OSD_APAGE_PARTITION_INFORMATION,
--			OSD_ATTR_PI_USED_CAPACITY, sizeof(__be64)),
--	};
--	uint64_t capacity = ULLONG_MAX;
--	uint64_t used = ULLONG_MAX;
--	int ret;
--
--	ret = ore_get_io_state(&sbi->layout, &sbi->oc, &ios);
--	if (ret) {
--		EXOFS_DBGMSG("ore_get_io_state failed.\n");
--		return ret;
--	}
--
--	ios->in_attr = attrs;
--	ios->in_attr_len = ARRAY_SIZE(attrs);
--
--	ret = ore_read(ios);
--	if (unlikely(ret))
--		goto out;
--
--	ret = extract_attr_from_ios(ios, &attrs[0]);
--	if (likely(!ret)) {
--		capacity = get_unaligned_be64(attrs[0].val_ptr);
--		if (unlikely(!capacity))
--			capacity = ULLONG_MAX;
--	} else
--		EXOFS_DBGMSG("exofs_statfs: get capacity failed.\n");
--
--	ret = extract_attr_from_ios(ios, &attrs[1]);
--	if (likely(!ret))
--		used = get_unaligned_be64(attrs[1].val_ptr);
--	else
--		EXOFS_DBGMSG("exofs_statfs: get used-space failed.\n");
--
--	/* fill in the stats buffer */
--	buf->f_type = EXOFS_SUPER_MAGIC;
--	buf->f_bsize = EXOFS_BLKSIZE;
--	buf->f_blocks = capacity >> 9;
--	buf->f_bfree = (capacity - used) >> 9;
--	buf->f_bavail = buf->f_bfree;
--	buf->f_files = sbi->s_numfiles;
--	buf->f_ffree = EXOFS_MAX_ID - sbi->s_numfiles;
--	buf->f_namelen = EXOFS_NAME_LEN;
--
--out:
--	ore_put_io_state(ios);
--	return ret;
--}
--
--static const struct super_operations exofs_sops = {
--	.alloc_inode    = exofs_alloc_inode,
--	.destroy_inode  = exofs_destroy_inode,
--	.write_inode    = exofs_write_inode,
--	.evict_inode    = exofs_evict_inode,
--	.put_super      = exofs_put_super,
--	.sync_fs	= exofs_sync_fs,
--	.statfs         = exofs_statfs,
+-	struct ore_dev	**ods;
 -};
 -
--/******************************************************************************
-- * EXPORT OPERATIONS
-- *****************************************************************************/
--
--static struct dentry *exofs_get_parent(struct dentry *child)
+-/* ore_comp_dev Recievies a logical device index */
+-static inline struct osd_dev *ore_comp_dev(
+-	const struct ore_components *oc, unsigned i)
 -{
--	unsigned long ino = exofs_parent_ino(child);
--
--	if (!ino)
--		return ERR_PTR(-ESTALE);
--
--	return d_obtain_alias(exofs_iget(child->d_sb, ino));
+-	BUG_ON((i < oc->first_dev) || (oc->first_dev + oc->numdevs <= i));
+-	return oc->ods[i - oc->first_dev]->od;
 -}
 -
--static struct inode *exofs_nfs_get_inode(struct super_block *sb,
--		u64 ino, u32 generation)
+-static inline void ore_comp_set_dev(
+-	struct ore_components *oc, unsigned i, struct osd_dev *od)
 -{
--	struct inode *inode;
--
--	inode = exofs_iget(sb, ino);
--	if (IS_ERR(inode))
--		return ERR_CAST(inode);
--	if (generation && inode->i_generation != generation) {
--		/* we didn't find the right inode.. */
--		iput(inode);
--		return ERR_PTR(-ESTALE);
--	}
--	return inode;
+-	oc->ods[i - oc->first_dev]->od = od;
 -}
 -
--static struct dentry *exofs_fh_to_dentry(struct super_block *sb,
--				struct fid *fid, int fh_len, int fh_type)
--{
--	return generic_fh_to_dentry(sb, fid, fh_len, fh_type,
--				    exofs_nfs_get_inode);
--}
--
--static struct dentry *exofs_fh_to_parent(struct super_block *sb,
--				struct fid *fid, int fh_len, int fh_type)
--{
--	return generic_fh_to_parent(sb, fid, fh_len, fh_type,
--				    exofs_nfs_get_inode);
--}
--
--static const struct export_operations exofs_export_ops = {
--	.fh_to_dentry = exofs_fh_to_dentry,
--	.fh_to_parent = exofs_fh_to_parent,
--	.get_parent = exofs_get_parent,
+-struct ore_striping_info {
+-	u64 offset;
+-	u64 obj_offset;
+-	u64 length;
+-	u64 first_stripe_start; /* only used in raid writes */
+-	u64 M; /* for truncate */
+-	unsigned bytes_in_stripe;
+-	unsigned dev;
+-	unsigned par_dev;
+-	unsigned unit_off;
+-	unsigned cur_pg;
+-	unsigned cur_comp;
+-	unsigned maxdevUnits;
 -};
 -
--/******************************************************************************
-- * INSMOD/RMMOD
-- *****************************************************************************/
--
--/*
-- * struct that describes this file system
-- */
--static struct file_system_type exofs_type = {
--	.owner          = THIS_MODULE,
--	.name           = "exofs",
--	.mount          = exofs_mount,
--	.kill_sb        = generic_shutdown_super,
--};
--MODULE_ALIAS_FS("exofs");
--
--static int __init init_exofs(void)
--{
--	int err;
--
--	err = init_inodecache();
--	if (err)
--		goto out;
--
--	err = register_filesystem(&exofs_type);
--	if (err)
--		goto out_d;
--
--	/* We don't fail if sysfs creation failed */
--	exofs_sysfs_init();
--
--	return 0;
--out_d:
--	destroy_inodecache();
--out:
--	return err;
--}
--
--static void __exit exit_exofs(void)
--{
--	exofs_sysfs_uninit();
--	unregister_filesystem(&exofs_type);
--	destroy_inodecache();
--}
--
--MODULE_AUTHOR("Avishay Traeger <avishay@gmail.com>");
--MODULE_DESCRIPTION("exofs");
--MODULE_LICENSE("GPL");
--
--module_init(init_exofs)
--module_exit(exit_exofs)
-diff --git a/fs/exofs/sys.c b/fs/exofs/sys.c
-deleted file mode 100644
-index 1f7d5e46cdda..000000000000
---- a/fs/exofs/sys.c
-+++ /dev/null
-@@ -1,205 +0,0 @@
--/*
-- * Copyright (C) 2012
-- * Sachin Bhamare <sbhamare@panasas.com>
-- * Boaz Harrosh <ooo@electrozaur.com>
-- *
-- * This file is part of exofs.
-- *
-- * exofs is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License 2 as published by
-- * the Free Software Foundation.
-- *
-- * exofs is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with exofs; if not, write to the:
-- *	Free Software Foundation <licensing@fsf.org>
-- */
--
--#include <linux/kobject.h>
--#include <linux/device.h>
--
--#include "exofs.h"
--
--struct odev_attr {
--	struct attribute attr;
--	ssize_t (*show)(struct exofs_dev *, char *);
--	ssize_t (*store)(struct exofs_dev *, const char *, size_t);
+-struct ore_io_state;
+-typedef void (*ore_io_done_fn)(struct ore_io_state *ios, void *private);
+-struct _ore_r4w_op {
+-	/* @Priv given here is passed ios->private */
+-	struct page * (*get_page)(void *priv, u64 page_index, bool *uptodate);
+-	void (*put_page)(void *priv, struct page *page);
 -};
 -
--static ssize_t odev_attr_show(struct kobject *kobj, struct attribute *attr,
--		char *buf)
--{
--	struct exofs_dev *edp = container_of(kobj, struct exofs_dev, ed_kobj);
--	struct odev_attr *a = container_of(attr, struct odev_attr, attr);
+-struct ore_io_state {
+-	struct kref		kref;
+-	struct ore_striping_info si;
 -
--	return a->show ? a->show(edp, buf) : 0;
--}
+-	void			*private;
+-	ore_io_done_fn	done;
 -
--static ssize_t odev_attr_store(struct kobject *kobj, struct attribute *attr,
--		const char *buf, size_t len)
--{
--	struct exofs_dev *edp = container_of(kobj, struct exofs_dev, ed_kobj);
--	struct odev_attr *a = container_of(attr, struct odev_attr, attr);
+-	struct ore_layout	*layout;
+-	struct ore_components	*oc;
 -
--	return a->store ? a->store(edp, buf, len) : len;
--}
+-	/* Global read/write IO*/
+-	loff_t			offset;
+-	unsigned long		length;
+-	void			*kern_buff;
 -
--static const struct sysfs_ops odev_attr_ops = {
--	.show  = odev_attr_show,
--	.store = odev_attr_store,
+-	struct page		**pages;
+-	unsigned		nr_pages;
+-	unsigned		pgbase;
+-	unsigned		pages_consumed;
+-
+-	/* Attributes */
+-	unsigned		in_attr_len;
+-	struct osd_attr		*in_attr;
+-	unsigned		out_attr_len;
+-	struct osd_attr		*out_attr;
+-
+-	bool			reading;
+-
+-	/* House keeping of Parity pages */
+-	bool			extra_part_alloc;
+-	struct page		**parity_pages;
+-	unsigned		max_par_pages;
+-	unsigned		cur_par_page;
+-	unsigned		sgs_per_dev;
+-	struct __stripe_pages_2d *sp2d;
+-	struct ore_io_state	 *ios_read_4_write;
+-	const struct _ore_r4w_op *r4w;
+-
+-	/* Variable array of size numdevs */
+-	unsigned numdevs;
+-	struct ore_per_dev_state {
+-		struct osd_request *or;
+-		struct bio *bio;
+-		loff_t offset;
+-		unsigned length;
+-		unsigned last_sgs_total;
+-		unsigned dev;
+-		struct osd_sg_entry *sglist;
+-		unsigned cur_sg;
+-	} per_dev[];
 -};
 -
--
--static struct kset *exofs_kset;
--
--static ssize_t osdname_show(struct exofs_dev *edp, char *buf)
+-static inline unsigned ore_io_state_size(unsigned numdevs)
 -{
--	struct osd_dev *odev = edp->ored.od;
--	const struct osd_dev_info *odi = osduld_device_info(odev);
--
--	return snprintf(buf, odi->osdname_len + 1, "%s", odi->osdname);
+-	return sizeof(struct ore_io_state) +
+-		sizeof(struct ore_per_dev_state) * numdevs;
 -}
 -
--static ssize_t systemid_show(struct exofs_dev *edp, char *buf)
--{
--	struct osd_dev *odev = edp->ored.od;
--	const struct osd_dev_info *odi = osduld_device_info(odev);
+-/* ore.c */
+-int ore_verify_layout(unsigned total_comps, struct ore_layout *layout);
+-void ore_calc_stripe_info(struct ore_layout *layout, u64 file_offset,
+-			  u64 length, struct ore_striping_info *si);
+-int ore_get_rw_state(struct ore_layout *layout, struct ore_components *comps,
+-		     bool is_reading, u64 offset, u64 length,
+-		     struct ore_io_state **ios);
+-int ore_get_io_state(struct ore_layout *layout, struct ore_components *comps,
+-		     struct ore_io_state **ios);
+-void ore_put_io_state(struct ore_io_state *ios);
 -
--	memcpy(buf, odi->systemid, odi->systemid_len);
--	return odi->systemid_len;
--}
+-typedef void (*ore_on_dev_error)(struct ore_io_state *ios, struct ore_dev *od,
+-	unsigned dev_index, enum osd_err_priority oep,
+-	u64 dev_offset, u64  dev_len);
+-int ore_check_io(struct ore_io_state *ios, ore_on_dev_error rep);
 -
--static ssize_t uri_show(struct exofs_dev *edp, char *buf)
--{
--	return snprintf(buf, edp->urilen, "%s", edp->uri);
--}
+-int ore_create(struct ore_io_state *ios);
+-int ore_remove(struct ore_io_state *ios);
+-int ore_write(struct ore_io_state *ios);
+-int ore_read(struct ore_io_state *ios);
+-int ore_truncate(struct ore_layout *layout, struct ore_components *comps,
+-		 u64 size);
 -
--static ssize_t uri_store(struct exofs_dev *edp, const char *buf, size_t len)
--{
--	uint8_t *new_uri;
+-int extract_attr_from_ios(struct ore_io_state *ios, struct osd_attr *attr);
 -
--	edp->urilen = strlen(buf) + 1;
--	new_uri = krealloc(edp->uri, edp->urilen, GFP_KERNEL);
--	if (new_uri == NULL)
--		return -ENOMEM;
--	edp->uri = new_uri;
--	strncpy(edp->uri, buf, edp->urilen);
--	return edp->urilen;
--}
+-extern const struct osd_attr g_attr_logical_length;
 -
--#define OSD_ATTR(name, mode, show, store) \
--	static struct odev_attr odev_attr_##name = \
--					__ATTR(name, mode, show, store)
--
--OSD_ATTR(osdname, S_IRUGO, osdname_show, NULL);
--OSD_ATTR(systemid, S_IRUGO, systemid_show, NULL);
--OSD_ATTR(uri, S_IRWXU, uri_show, uri_store);
--
--static struct attribute *odev_attrs[] = {
--	&odev_attr_osdname.attr,
--	&odev_attr_systemid.attr,
--	&odev_attr_uri.attr,
--	NULL,
--};
--
--static struct kobj_type odev_ktype = {
--	.default_attrs	= odev_attrs,
--	.sysfs_ops	= &odev_attr_ops,
--};
--
--static struct kobj_type uuid_ktype = {
--};
--
--void exofs_sysfs_dbg_print(void)
--{
--#ifdef CONFIG_EXOFS_DEBUG
--	struct kobject *k_name, *k_tmp;
--
--	list_for_each_entry_safe(k_name, k_tmp, &exofs_kset->list, entry) {
--		printk(KERN_INFO "%s: name %s ref %d\n",
--			__func__, kobject_name(k_name),
--			(int)kref_read(&k_name->kref));
--	}
 -#endif
--}
--/*
-- * This function removes all kobjects under exofs_kset
-- * At the end of it, exofs_kset kobject will have a refcount
-- * of 1 which gets decremented only on exofs module unload
-- */
--void exofs_sysfs_sb_del(struct exofs_sb_info *sbi)
--{
--	struct kobject *k_name, *k_tmp;
--	struct kobject *s_kobj = &sbi->s_kobj;
--
--	list_for_each_entry_safe(k_name, k_tmp, &exofs_kset->list, entry) {
--		/* Remove all that are children of this SBI */
--		if (k_name->parent == s_kobj)
--			kobject_put(k_name);
--	}
--	kobject_put(s_kobj);
--}
--
--/*
-- * This function creates sysfs entries to hold the current exofs cluster
-- * instance (uniquely identified by osdname,pid tuple).
-- * This function gets called once per exofs mount instance.
-- */
--int exofs_sysfs_sb_add(struct exofs_sb_info *sbi,
--		       struct exofs_dt_device_info *dt_dev)
--{
--	struct kobject *s_kobj;
--	int retval = 0;
--	uint64_t pid = sbi->one_comp.obj.partition;
--
--	/* allocate new uuid dirent */
--	s_kobj = &sbi->s_kobj;
--	s_kobj->kset = exofs_kset;
--	retval = kobject_init_and_add(s_kobj, &uuid_ktype,
--			&exofs_kset->kobj,  "%s_%llx", dt_dev->osdname, pid);
--	if (retval) {
--		EXOFS_ERR("ERROR: Failed to create sysfs entry for "
--			  "uuid-%s_%llx => %d\n", dt_dev->osdname, pid, retval);
--		return -ENOMEM;
--	}
--	return 0;
--}
--
--int exofs_sysfs_odev_add(struct exofs_dev *edev, struct exofs_sb_info *sbi)
--{
--	struct kobject *d_kobj;
--	int retval = 0;
--
--	/* create osd device group which contains following attributes
--	 * osdname, systemid & uri
--	 */
--	d_kobj = &edev->ed_kobj;
--	d_kobj->kset = exofs_kset;
--	retval = kobject_init_and_add(d_kobj, &odev_ktype,
--			&sbi->s_kobj, "dev%u", edev->did);
--	if (retval) {
--		EXOFS_ERR("ERROR: Failed to create sysfs entry for "
--				"device dev%u\n", edev->did);
--		return retval;
--	}
--	return 0;
--}
--
--int exofs_sysfs_init(void)
--{
--	exofs_kset = kset_create_and_add("exofs", NULL, fs_kobj);
--	if (!exofs_kset) {
--		EXOFS_ERR("ERROR: kset_create_and_add exofs failed\n");
--		return -ENOMEM;
--	}
--	return 0;
--}
--
--void exofs_sysfs_uninit(void)
--{
--	kset_unregister(exofs_kset);
--}
 -- 
 2.19.1
