@@ -1,59 +1,48 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] libosd: Remove ignored __weak attribute
-Date: Sat, 27 Oct 2018 09:28:21 -0400
-Message-ID: <yq1o9bfcydm.fsf@oracle.com>
-References: <20180930205448.26205-1-natechancellor@gmail.com>
-        <10b12992-3570-4646-374b-82cbd7276839@acm.org>
-        <CAKwvOd=wgxB69dMxzMeH2edCn=TdQGPGkNVW1e=QHPTJtO9ZNw@mail.gmail.com>
-        <1538503063.193396.6.camel@acm.org>
-        <CAKwvOdmsNEexQL9R8rgcRcXTZButYM6YWwG8bhVWCoJ8bOqCrA@mail.gmail.com>
-        <1538521591.193396.8.camel@acm.org> <20181025213144.GB24709@flashbox>
-        <CAKwvOdn=TvoGdFvgxX6TyXBXnhVLttriRrZEnzS6DjcjL64DPA@mail.gmail.com>
-        <20181025225548.GA10326@flashbox>
-        <CAKwvOdnwmf47_m_0K5OCLmXbrkLNnekpNOPCCMeJqkuqKUbQ-A@mail.gmail.com>
-        <1540576908.66186.103.camel@acm.org>
-        <CAKwvOdnYx60JkJHJkD7CYA9yx5Oa7Tn9q4aZ3-tcZGx++yoduQ@mail.gmail.com>
-        <1540589437.66186.124.camel@acm.org>
-        <CAKwvOdm-xYRqCBXhLC1ceC44_rEmggW4qiSgGpRkpL+p-NadVg@mail.gmail.com>
-        <1540591147.66186.127.camel@acm.org>
-        <CAKwvOdmUhtK10cbYFoEJJp4O8LA_F-+f68A_NcL_fm_FH6QodA@mail.gmail.com>
-        <1540592684.66186.136.camel@acm.org>
+From: Nick Desaulniers <ndesaulniers@google.com>
+Subject: Re: remove exofs and the T10 OSD code V2
+Date: Sat, 27 Oct 2018 13:32:51 -0700
+Message-ID: <CAKwvOdnK5BfpkSos6HsaQ1V7Jmo-voA0=a6NqEAUNKS3WyLwUQ@mail.gmail.com>
+References: <20181027082019.20838-1-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1540592684.66186.136.camel@acm.org> (Bart Van Assche's message
-        of "Fri, 26 Oct 2018 15:24:44 -0700")
+In-Reply-To: <20181027082019.20838-1-hch@lst.de>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Nick Desaulniers <ndesaulniers@google.com>, Linus Torvalds <torvalds@linux-foundation.org>, ooo@electrozaur.com, Nathan Chancellor <natechancellor@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, hch@infradead.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: ooo@electrozaur.com, "Martin K. Petersen" <martin.petersen@oracle.com>, Nathan Chancellor <natechancellor@gmail.com>, Linus Torvalds <torvalds@linux-foundation.org>, osd-dev@open-osd.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
+On Sat, Oct 27, 2018 at 1:20 AM Christoph Hellwig <hch@lst.de> wrote:
+>
+> The only real user of the T10 OSD protocol, the pNFS object layout
+> driver never went to the point of having shipping products, and we
+> removed it 1.5 years ago.  Exofs is just a simple example without
+> real life users.
+>
+> The code has been mostly unmaintained for years and is getting in the
+> way of block / SCSI changes, so I think it's finally time to drop it.
+>
+> Quote from Boaz:
+>
+> "As I said then. It is used in Universities for studies and experiments.
+> Every once in a while. I get an email with questions and reports.
+>
+> But yes feel free to remove the all thing!!
+>
+> I guess I can put it up on github. In a public tree.
+>
+> Just that I will need to forward port it myself, til now you guys
+> been doing this for me ;-)"
 
-Bart,
+Hi Christoph,
+Thanks for the series.  I suggest you pick up Nathan's patch:
+https://github.com/ClangBuiltLinux/linux/commit/a37fa82bde58960c5c966a5c1bef8ace6c9d4f34
+that removed the configs that were removed in this series from the
+various defconfigs.
 
-> Removing kernel drivers that are not used helps to reduce the workload
-> of a maintainer and hence is a rational action. Additionally, if
-> anyone would ever complain about removal of a kernel driver, it can be
-> brought back by reverting the commit through which it has been
-> removed.  Martin, please reply if you see this differently.
-
-We remove crusty old SCSI drivers all the time. The heuristic is based
-on lack of user bug reports and absence of commits that are not due to
-kernel interface changes or trivial cleanups. So removing stuff is
-perfectly normal.
-
-The OSD protocol failed to get traction in the industry, adoption was
-very limited. If the code just plugged straight into existing kernel
-interfaces it would be easier to justify keeping it around. However, the
-OSD support requires bidirectional command support so we carry a bunch
-of additional plumbing in both block and SCSI to accommodate it. There
-are no other users of these interfaces, so dropping OSD would mean we
-could simplify some (hot) code paths. That would be a win in my book.
-Consequently, if a patch were to materialize that disentangled and
-removed OSD, I'd be inclined to merge it.
-
-But I do think that this is an orthogonal discussion to the innocuous
-__weak attribute cleanup.
-
+I think the other thread still has some questions about when it's ok
+to remove filesystems. But it's ultimately the maintainers decision.
+Let's continue the discussion in the other thread.
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+Thanks,
+~Nick Desaulniers
