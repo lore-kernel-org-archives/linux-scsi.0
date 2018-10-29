@@ -1,31 +1,39 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH 01/14] blk-mq: kill q->mq_map
-Date: Mon, 29 Oct 2018 10:51:01 -0600
-Message-ID: <f0a96403-df1a-6151-166c-a4b82f678234@kernel.dk>
-References: <20181029163738.10172-1-axboe@kernel.dk>
- <20181029163738.10172-2-axboe@kernel.dk> <1540831588.196084.54.camel@acm.org>
+From: Thomas Gleixner <tglx@linutronix.de>
+Subject: Re: [PATCH 11/14] irq: add support for allocating (and affinitizing)
+ sets of IRQs
+Date: Mon, 29 Oct 2018 18:08:26 +0100 (CET)
+Message-ID: <alpine.DEB.2.21.1810291805540.5984@nanos.tec.linutronix.de>
+References: <20181029163738.10172-1-axboe@kernel.dk> <20181029163738.10172-12-axboe@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1540831588.196084.54.camel@acm.org>
-Content-Language: en-US
+In-Reply-To: <20181029163738.10172-12-axboe@kernel.dk>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 10/29/18 10:46 AM, Bart Van Assche wrote:
-> On Mon, 2018-10-29 at 10:37 -0600, Jens Axboe wrote:
->> It's just a pointer to set->mq_map, use that instead.
-> 
-> Please clarify in the patch description that the q->tag_set assignment
-> has been moved because this patch makes it necessary to have that pointer
-> available earlier such that it is clear that that move is intentional.
-> Anyway:
-> 
-> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Jens,
 
-Good point, I'll improve the verbiage in the commit message. Thanks.
+On Mon, 29 Oct 2018, Jens Axboe wrote:
 
--- 
-Jens Axboe
+> A driver may have a need to allocate multiple sets of MSI/MSI-X
+> interrupts, and have them appropriately affinitized. Add support for
+> defining a number of sets in the irq_affinity structure, of varying
+> sizes, and get each set affinitized correctly across the machine.
+> 
+> Cc: Thomas Gleixner <tglx@linutronix.de>
+> Cc: linux-kernel@vger.kernel.org
+> Reviewed-by: Hannes Reinecke <hare@suse.com>
+> Signed-off-by: Jens Axboe <axboe@kernel.dk>
+
+This looks good.
+
+Vs. merge logistics: I'm expecting some other changes in that area as per
+discussion with megasas (IIRC) folks. So I'd like to apply that myself
+right after -rc1 and provide it to you as a single commit to pull from so
+we can avoid collisions in next and the merge window.
+
+Thanks,
+
+	tglx
