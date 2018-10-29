@@ -1,45 +1,42 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH 11/14] irq: add support for allocating (and affinitizing)
- sets of IRQs
-Date: Mon, 29 Oct 2018 11:09:52 -0600
-Message-ID: <a4f13bb3-80e4-14ad-3631-8fd9a06a67d5@kernel.dk>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH 03/14] blk-mq: provide dummy blk_mq_map_queue_type()
+ helper
+Date: Mon, 29 Oct 2018 10:22:59 -0700
+Message-ID: <1540833779.196084.56.camel@acm.org>
 References: <20181029163738.10172-1-axboe@kernel.dk>
- <20181029163738.10172-12-axboe@kernel.dk>
- <alpine.DEB.2.21.1810291805540.5984@nanos.tec.linutronix.de>
+         <20181029163738.10172-4-axboe@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="UTF-7"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.21.1810291805540.5984@nanos.tec.linutronix.de>
-Content-Language: en-US
+In-Reply-To: <20181029163738.10172-4-axboe@kernel.dk>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 10/29/18 11:08 AM, Thomas Gleixner wrote:
-> Jens,
-> 
-> On Mon, 29 Oct 2018, Jens Axboe wrote:
-> 
->> A driver may have a need to allocate multiple sets of MSI/MSI-X
->> interrupts, and have them appropriately affinitized. Add support for
->> defining a number of sets in the irq_affinity structure, of varying
->> sizes, and get each set affinitized correctly across the machine.
->>
->> Cc: Thomas Gleixner <tglx@linutronix.de>
->> Cc: linux-kernel@vger.kernel.org
->> Reviewed-by: Hannes Reinecke <hare@suse.com>
->> Signed-off-by: Jens Axboe <axboe@kernel.dk>
-> 
-> This looks good.
-> 
-> Vs. merge logistics: I'm expecting some other changes in that area as per
-> discussion with megasas (IIRC) folks. So I'd like to apply that myself
-> right after -rc1 and provide it to you as a single commit to pull from so
-> we can avoid collisions in next and the merge window.
+On Mon, 2018-10-29 at 10:37 -0600, Jens Axboe wrote:
++AD4 diff --git a/block/blk-mq.h b/block/blk-mq.h
++AD4 index 889f0069dd80..79c300faa7ce 100644
++AD4 --- a/block/blk-mq.h
++AD4 +-+-+- b/block/blk-mq.h
++AD4 +AEAAQA -80,6 +-80,12 +AEAAQA static inline struct blk+AF8-mq+AF8-hw+AF8-ctx +ACo-blk+AF8-mq+AF8-map+AF8-queue(struct request+AF8-queue +ACo-q,
++AD4  	return q-+AD4-queue+AF8-hw+AF8-ctx+AFs-set-+AD4-map+AFs-0+AF0.mq+AF8-map+AFs-cpu+AF0AXQA7
++AD4  +AH0
++AD4  
++AD4 +-static inline struct blk+AF8-mq+AF8-hw+AF8-ctx +ACo-blk+AF8-mq+AF8-map+AF8-queue+AF8-type(struct request+AF8-queue +ACo-q,
++AD4 +-							  int type, int cpu)
++AD4 +-+AHs
++AD4 +-	return blk+AF8-mq+AF8-map+AF8-queue(q, cpu)+ADs
++AD4 +-+AH0
++AD4 +-
++AD4  /+ACo
++AD4   +ACo sysfs helpers
++AD4   +ACo-/
 
-That sounds fine, thanks Thomas!
+How about renaming 'type' into something like hw+AF8-ctx+AF8-type to make it more
+clear what its meaning is? How about declaring both the 'type' and 'cpu'
+arguments as unsigned ints?
 
--- 
-Jens Axboe
+Thanks,
+
+Bart.
