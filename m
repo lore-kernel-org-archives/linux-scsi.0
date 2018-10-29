@@ -1,7 +1,7 @@
 From: Jens Axboe <axboe@kernel.dk>
-Subject: [PATCH 09/14] blk-mq: ensure that plug lists don't straddle hardware queues
-Date: Mon, 29 Oct 2018 10:37:33 -0600
-Message-ID: <20181029163738.10172-10-axboe@kernel.dk>
+Subject: [PATCH 10/14] blk-mq: initial support for multiple queue maps
+Date: Mon, 29 Oct 2018 10:37:34 -0600
+Message-ID: <20181029163738.10172-11-axboe@kernel.dk>
 References: <20181029163738.10172-1-axboe@kernel.dk>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20181029163738.10172-1-axboe@kernel.dk>
@@ -10,80 +10,94 @@ To: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.k
 Cc: Jens Axboe <axboe@kernel.dk>
 List-Id: linux-scsi@vger.kernel.org
 
-Since we insert per hardware queue, we have to ensure that every
-request on the plug list being inserted belongs to the same
-hardware queue.
+Add a queue offset to the tag map. This enables users to map
+iteratively, for each queue map type they support.
+
+Bump maximum number of supported maps to 2, we're now fully
+able to support more than 1 map.
 
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 Signed-off-by: Jens Axboe <axboe@kernel.dk>
 ---
- block/blk-mq.c | 27 +++++++++++++++++++++++++--
- 1 file changed, 25 insertions(+), 2 deletions(-)
+ block/blk-mq-cpumap.c  | 9 +++++----
+ block/blk-mq-pci.c     | 2 +-
+ block/blk-mq-virtio.c  | 2 +-
+ include/linux/blk-mq.h | 3 ++-
+ 4 files changed, 9 insertions(+), 7 deletions(-)
 
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 60a951c4934c..52b07188b39a 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -1621,6 +1621,27 @@ static int plug_ctx_cmp(void *priv, struct list_head *a, struct list_head *b)
- 		  blk_rq_pos(rqa) < blk_rq_pos(rqb)));
+diff --git a/block/blk-mq-cpumap.c b/block/blk-mq-cpumap.c
+index 6e6686c55984..03a534820271 100644
+--- a/block/blk-mq-cpumap.c
++++ b/block/blk-mq-cpumap.c
+@@ -14,9 +14,10 @@
+ #include "blk.h"
+ #include "blk-mq.h"
+ 
+-static int cpu_to_queue_index(unsigned int nr_queues, const int cpu)
++static int cpu_to_queue_index(struct blk_mq_queue_map *qmap,
++			      unsigned int nr_queues, const int cpu)
+ {
+-	return cpu % nr_queues;
++	return qmap->queue_offset + (cpu % nr_queues);
  }
  
-+/*
-+ * Need to ensure that the hardware queue matches, so we don't submit
-+ * a list of requests that end up on different hardware queues.
-+ */
-+static bool ctx_match(struct request *req, struct blk_mq_ctx *ctx,
-+		      unsigned int flags)
-+{
-+	if (req->mq_ctx != ctx)
-+		return false;
-+
-+	/*
-+	 * If we just have one map, then we know the hctx will match
-+	 * if the ctx matches
-+	 */
-+	if (req->q->tag_set->nr_maps == 1)
-+		return true;
-+
-+	return blk_mq_map_queue(req->q, req->cmd_flags, ctx->cpu) ==
-+		blk_mq_map_queue(req->q, flags, ctx->cpu);
-+}
-+
- void blk_mq_flush_plug_list(struct blk_plug *plug, bool from_schedule)
- {
- 	struct blk_mq_ctx *this_ctx;
-@@ -1628,7 +1649,7 @@ void blk_mq_flush_plug_list(struct blk_plug *plug, bool from_schedule)
- 	struct request *rq;
- 	LIST_HEAD(list);
- 	LIST_HEAD(ctx_list);
--	unsigned int depth;
-+	unsigned int depth, this_flags;
+ static int get_first_sibling(unsigned int cpu)
+@@ -44,11 +45,11 @@ int blk_mq_map_queues(struct blk_mq_queue_map *qmap)
+ 		 * performace optimizations.
+ 		 */
+ 		if (cpu < nr_queues) {
+-			map[cpu] = cpu_to_queue_index(nr_queues, cpu);
++			map[cpu] = cpu_to_queue_index(qmap, nr_queues, cpu);
+ 		} else {
+ 			first_sibling = get_first_sibling(cpu);
+ 			if (first_sibling == cpu)
+-				map[cpu] = cpu_to_queue_index(nr_queues, cpu);
++				map[cpu] = cpu_to_queue_index(qmap, nr_queues, cpu);
+ 			else
+ 				map[cpu] = map[first_sibling];
+ 		}
+diff --git a/block/blk-mq-pci.c b/block/blk-mq-pci.c
+index 40333d60a850..1dce18553984 100644
+--- a/block/blk-mq-pci.c
++++ b/block/blk-mq-pci.c
+@@ -43,7 +43,7 @@ int blk_mq_pci_map_queues(struct blk_mq_queue_map *qmap, struct pci_dev *pdev,
+ 			goto fallback;
  
- 	list_splice_init(&plug->mq_list, &list);
+ 		for_each_cpu(cpu, mask)
+-			qmap->mq_map[cpu] = queue;
++			qmap->mq_map[cpu] = qmap->queue_offset + queue;
+ 	}
  
-@@ -1636,13 +1657,14 @@ void blk_mq_flush_plug_list(struct blk_plug *plug, bool from_schedule)
+ 	return 0;
+diff --git a/block/blk-mq-virtio.c b/block/blk-mq-virtio.c
+index 661fbfef480f..370827163835 100644
+--- a/block/blk-mq-virtio.c
++++ b/block/blk-mq-virtio.c
+@@ -44,7 +44,7 @@ int blk_mq_virtio_map_queues(struct blk_mq_queue_map *qmap,
+ 			goto fallback;
  
- 	this_q = NULL;
- 	this_ctx = NULL;
-+	this_flags = 0;
- 	depth = 0;
+ 		for_each_cpu(cpu, mask)
+-			qmap->mq_map[cpu] = queue;
++			qmap->mq_map[cpu] = qmap->queue_offset + queue;
+ 	}
  
- 	while (!list_empty(&list)) {
- 		rq = list_entry_rq(list.next);
- 		list_del_init(&rq->queuelist);
- 		BUG_ON(!rq->q);
--		if (rq->mq_ctx != this_ctx) {
-+		if (!ctx_match(rq, this_ctx, this_flags)) {
- 			if (this_ctx) {
- 				trace_block_unplug(this_q, depth, !from_schedule);
- 				blk_mq_sched_insert_requests(this_q, this_ctx,
-@@ -1650,6 +1672,7 @@ void blk_mq_flush_plug_list(struct blk_plug *plug, bool from_schedule)
- 								from_schedule);
- 			}
+ 	return 0;
+diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
+index 837087cf07cc..b5ae2b5677c1 100644
+--- a/include/linux/blk-mq.h
++++ b/include/linux/blk-mq.h
+@@ -78,10 +78,11 @@ struct blk_mq_hw_ctx {
+ struct blk_mq_queue_map {
+ 	unsigned int *mq_map;
+ 	unsigned int nr_queues;
++	unsigned int queue_offset;
+ };
  
-+			this_flags = rq->cmd_flags;
- 			this_ctx = rq->mq_ctx;
- 			this_q = rq->q;
- 			depth = 0;
+ enum {
+-	HCTX_MAX_TYPES = 1,
++	HCTX_MAX_TYPES = 2,
+ };
+ 
+ struct blk_mq_tag_set {
 -- 
 2.17.1
