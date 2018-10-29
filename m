@@ -1,43 +1,67 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] libosd: Remove ignored __weak attribute
-Date: Sun, 28 Oct 2018 08:44:06 -0700
-Message-ID: <20181028154405.GA26300@infradead.org>
-References: <20181025225548.GA10326@flashbox>
- <CAKwvOdnwmf47_m_0K5OCLmXbrkLNnekpNOPCCMeJqkuqKUbQ-A@mail.gmail.com>
- <1540576908.66186.103.camel@acm.org>
- <CAKwvOdnYx60JkJHJkD7CYA9yx5Oa7Tn9q4aZ3-tcZGx++yoduQ@mail.gmail.com>
- <1540589437.66186.124.camel@acm.org>
- <CAKwvOdm-xYRqCBXhLC1ceC44_rEmggW4qiSgGpRkpL+p-NadVg@mail.gmail.com>
- <1540591147.66186.127.camel@acm.org>
- <CAKwvOdmUhtK10cbYFoEJJp4O8LA_F-+f68A_NcL_fm_FH6QodA@mail.gmail.com>
- <1540592684.66186.136.camel@acm.org>
- <yq1o9bfcydm.fsf@oracle.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Jens Axboe <axboe@kernel.dk>
+Subject: [PATCHSET v2 0/14] blk-mq: Add support for multiple queue maps
+Date: Mon, 29 Oct 2018 10:37:24 -0600
+Message-ID: <20181029163738.10172-1-axboe@kernel.dk>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <yq1o9bfcydm.fsf@oracle.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Bart Van Assche <bvanassche@acm.org>, Nick Desaulniers <ndesaulniers@google.com>, Linus Torvalds <torvalds@linux-foundation.org>, ooo@electrozaur.com, Nathan Chancellor <natechancellor@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, hch@infradead.org
+To: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, Oct 27, 2018 at 09:28:21AM -0400, Martin K. Petersen wrote:
-> The OSD protocol failed to get traction in the industry, adoption was
-> very limited. If the code just plugged straight into existing kernel
-> interfaces it would be easier to justify keeping it around. However, the
-> OSD support requires bidirectional command support so we carry a bunch
-> of additional plumbing in both block and SCSI to accommodate it. There
-> are no other users of these interfaces, so dropping OSD would mean we
-> could simplify some (hot) code paths. That would be a win in my book.
-> Consequently, if a patch were to materialize that disentangled and
-> removed OSD, I'd be inclined to merge it.
+This series adds support for multiple queue maps for blk-mq.
+Since blk-mq was introduced, it's only support a single queue
+map. This means you can have 1 set of queues, and the mapping
+purely depends on what CPU an IO originated from. With this
+patch set, drivers can implement mappings that depend on both
+CPU and request type - and they can have multiple sets of mappings.
 
-In addition to the exofs and osd removal I sent out I've also done the
-SCSI cleanup here:
+NVMe is used as a proof of concept. It adds support for a separate
+write queue set. One way to use this would be to limit the number
+of write queues to favor reads, since NVMe does round-robin service
+of queues. An easy extension of this would be to add multiple
+sets of queues, for prioritized IO.
 
-http://git.infradead.org/users/hch/misc.git/shortlog/refs/heads/remove-scsi-osd
+NVMe also uses this feature to finally make the polling work
+efficiently, without triggering interrupts. This both increases
+performance (and decreases latency), at a lower system load. At
+the same time it's more flexible, as you don't have to worry about
+IRQ coalescing and redirection to avoid interrupts disturbing the
+workload. This is how polling should have worked from day 1.
 
-unfortunately the bsg-lib code also uses the block bidi support, but
-then again at least for the blk-mq case that code isn't too bad,
-and Jens is about to remove the legacy request code.
+This is on top of the mq-conversions branch and series just
+posted. It can also be bound in my mq-maps branch.
+
+Changes since v1:
+
+- Ensure irq_calc_affinity_vectors() doesn't return more than 'maxvec'
+- Rebase on top of current mq-conversions series
+
+ block/blk-flush.c                     |   7 +-
+ block/blk-mq-cpumap.c                 |  19 +--
+ block/blk-mq-debugfs.c                |   4 +-
+ block/blk-mq-pci.c                    |  10 +-
+ block/blk-mq-rdma.c                   |   4 +-
+ block/blk-mq-sched.c                  |  18 ++-
+ block/blk-mq-sysfs.c                  |  10 ++
+ block/blk-mq-tag.c                    |   5 +-
+ block/blk-mq-virtio.c                 |   8 +-
+ block/blk-mq.c                        | 213 ++++++++++++++++++++----------
+ block/blk-mq.h                        |  29 ++++-
+ block/blk.h                           |   6 +-
+ block/kyber-iosched.c                 |   6 +-
+ drivers/block/virtio_blk.c            |   2 +-
+ drivers/nvme/host/pci.c               | 238 ++++++++++++++++++++++++++++++----
+ drivers/scsi/qla2xxx/qla_os.c         |   5 +-
+ drivers/scsi/scsi_lib.c               |   2 +-
+ drivers/scsi/smartpqi/smartpqi_init.c |   3 +-
+ drivers/scsi/virtio_scsi.c            |   3 +-
+ fs/block_dev.c                        |   2 +
+ fs/direct-io.c                        |   2 +
+ fs/iomap.c                            |   9 +-
+ include/linux/blk-mq-pci.h            |   4 +-
+ include/linux/blk-mq-virtio.h         |   4 +-
+ include/linux/blk-mq.h                |  24 +++-
+ include/linux/blk_types.h             |   4 +-
+ include/linux/blkdev.h                |   2 -
+ include/linux/interrupt.h             |   4 +
+ kernel/irq/affinity.c                 |  40 ++++--
+ 29 files changed, 526 insertions(+), 161 deletions(-)
