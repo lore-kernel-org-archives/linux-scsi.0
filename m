@@ -1,43 +1,55 @@
-From: Bart Van Assche <bvanassche@acm.org>
+From: Jens Axboe <axboe@kernel.dk>
 Subject: Re: [PATCH 04/14] blk-mq: pass in request/bio flags to queue mapping
-Date: Mon, 29 Oct 2018 10:30:36 -0700
-Message-ID: <1540834236.196084.61.camel@acm.org>
+Date: Mon, 29 Oct 2018 11:33:32 -0600
+Message-ID: <9b61eab8-0289-2127-5529-4f599fb1da24@kernel.dk>
 References: <20181029163738.10172-1-axboe@kernel.dk>
-         <20181029163738.10172-5-axboe@kernel.dk>
+ <20181029163738.10172-5-axboe@kernel.dk> <1540834236.196084.61.camel@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-7"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20181029163738.10172-5-axboe@kernel.dk>
+In-Reply-To: <1540834236.196084.61.camel@acm.org>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 2018-10-29 at 10:37 -0600, Jens Axboe wrote:
-+AD4 +AEAAQA -400,9 +-402,15 +AEAAQA void blk+AF8-mq+AF8-sched+AF8-insert+AF8-requests(struct request+AF8-queue +ACo-q,
-+AD4  				  struct blk+AF8-mq+AF8-ctx +ACo-ctx,
-+AD4  				  struct list+AF8-head +ACo-list, bool run+AF8-queue+AF8-async)
-+AD4  +AHs
-+AD4 -	struct blk+AF8-mq+AF8-hw+AF8-ctx +ACo-hctx +AD0 blk+AF8-mq+AF8-map+AF8-queue(q, ctx-+AD4-cpu)+ADs
-+AD4 -	struct elevator+AF8-queue +ACo-e +AD0 hctx-+AD4-queue-+AD4-elevator+ADs
-+AD4 +-	struct blk+AF8-mq+AF8-hw+AF8-ctx +ACo-hctx+ADs
-+AD4 +-	struct elevator+AF8-queue +ACo-e+ADs
-+AD4 +-	struct request +ACo-rq+ADs
-+AD4 +-
-+AD4 +-	/+ACo For list inserts, requests better be on the same hw queue +ACo-/
-+AD4 +-	rq +AD0 list+AF8-first+AF8-entry(list, struct request, queuelist)+ADs
-+AD4 +-	hctx +AD0 blk+AF8-mq+AF8-map+AF8-queue(q, rq-+AD4-cmd+AF8-flags, ctx-+AD4-cpu)+ADs
+On 10/29/18 11:30 AM, Bart Van Assche wrote:
+> On Mon, 2018-10-29 at 10:37 -0600, Jens Axboe wrote:
+>> @@ -400,9 +402,15 @@ void blk_mq_sched_insert_requests(struct request_queue *q,
+>>  				  struct blk_mq_ctx *ctx,
+>>  				  struct list_head *list, bool run_queue_async)
+>>  {
+>> -	struct blk_mq_hw_ctx *hctx = blk_mq_map_queue(q, ctx->cpu);
+>> -	struct elevator_queue *e = hctx->queue->elevator;
+>> +	struct blk_mq_hw_ctx *hctx;
+>> +	struct elevator_queue *e;
+>> +	struct request *rq;
+>> +
+>> +	/* For list inserts, requests better be on the same hw queue */
+>> +	rq = list_first_entry(list, struct request, queuelist);
+>> +	hctx = blk_mq_map_queue(q, rq->cmd_flags, ctx->cpu);
+> 
+> Passing all request cmd_flags bits to blk_mq_map_queue() makes it possible
+> for that function to depend on every single cmd_flags bit even if different
+> requests have different cmd_flags. Have you considered to pass the hw_ctx
+> type only to blk_mq_map_queue() to avoid that that function would start
+> depending on other cmd_flags?
 
-Passing all request cmd+AF8-flags bits to blk+AF8-mq+AF8-map+AF8-queue() makes it possible
-for that function to depend on every single cmd+AF8-flags bit even if different
-requests have different cmd+AF8-flags. Have you considered to pass the hw+AF8-ctx
-type only to blk+AF8-mq+AF8-map+AF8-queue() to avoid that that function would start
-depending on other cmd+AF8-flags?
+The core only knows about the number of types, not what each type means
+nor how to map it outside of using the mapping functions. So I don't
+want to expose this is an explicit type, as that would then mean that
+blk-mq had to know about them.
 
-Additionally, what guarantees that all requests in queuelist have the same
-hw+AF8-ctx type? If a later patch will guarantee that, please mention that in
-the comment about list+AF8-first+AF8-entry().
+> Additionally, what guarantees that all requests in queuelist have the same
+> hw_ctx type? If a later patch will guarantee that, please mention that in
+> the comment about list_first_entry().
 
-Thanks,
+When the code is introduced, it's always the same hctx. Later on when we
+do support multiple sets, the user of the list insert (plugging) explicitly
+makes sure that a list only contains requests for the same hardware queue.
 
-Bart.
+I'll improve the comment.
+
+-- 
+Jens Axboe
