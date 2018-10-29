@@ -1,78 +1,62 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH 07/14] blk-mq: support multiple hctx maps
-Date: Mon, 29 Oct 2018 13:24:23 -0600
-Message-ID: <214cdac8-9c13-213b-023f-2fb1bf67c8db@kernel.dk>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH 09/14] blk-mq: ensure that plug lists don't straddle
+ hardware queues
+Date: Mon, 29 Oct 2018 12:27:58 -0700
+Message-ID: <1540841278.196084.84.camel@acm.org>
 References: <20181029163738.10172-1-axboe@kernel.dk>
- <20181029163738.10172-8-axboe@kernel.dk> <1540836903.196084.70.camel@acm.org>
+         <20181029163738.10172-10-axboe@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="UTF-7"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1540836903.196084.70.camel@acm.org>
-Content-Language: en-US
+In-Reply-To: <20181029163738.10172-10-axboe@kernel.dk>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 10/29/18 12:15 PM, Bart Van Assche wrote:
-> On Mon, 2018-10-29 at 10:37 -0600, Jens Axboe wrote:
->> -static inline struct blk_mq_hw_ctx *blk_mq_map_queue(struct request_queue *q,
->> -						     unsigned int flags,
->> -						     int cpu)
->> +static inline struct blk_mq_hw_ctx *blk_mq_map_queue_type(struct request_queue *q,
->> +							  int type, int cpu)
->>  {
->>  	struct blk_mq_tag_set *set = q->tag_set;
->>  
->> -	return q->queue_hw_ctx[set->map[0].mq_map[cpu]];
->> +	return q->queue_hw_ctx[set->map[type].mq_map[cpu]];
->>  }
->>  
->> -static inline struct blk_mq_hw_ctx *blk_mq_map_queue_type(struct request_queue *q,
->> -							  int type, int cpu)
->> +static inline struct blk_mq_hw_ctx *blk_mq_map_queue(struct request_queue *q,
->> +						     unsigned int flags,
->> +						     int cpu)
->>  {
->> -	return blk_mq_map_queue(q, type, cpu);
->> +	int type = 0;
->> +
->> +	if (q->mq_ops->flags_to_type)
->> +		type = q->mq_ops->flags_to_type(q, flags);
->> +
->> +	return blk_mq_map_queue_type(q, type, cpu);
->>  }
-> 
-> How about adding a comment above both these functions that explains their
-> purpose? Since blk_mq_map_queue() maps rq->cmd_flags and the cpu index to
-> a hardware context, how about renaming blk_mq_map_queue() into
-> blk_mq_map_cmd_flags()?
+On Mon, 2018-10-29 at 10:37 -0600, Jens Axboe wrote:
++AD4  void blk+AF8-mq+AF8-flush+AF8-plug+AF8-list(struct blk+AF8-plug +ACo-plug, bool from+AF8-schedule)
++AD4  +AHs
++AD4  	struct blk+AF8-mq+AF8-ctx +ACo-this+AF8-ctx+ADs
++AD4 +AEAAQA -1628,7 +-1649,7 +AEAAQA void blk+AF8-mq+AF8-flush+AF8-plug+AF8-list(struct blk+AF8-plug +ACo-plug, bool from+AF8-schedule)
++AD4  	struct request +ACo-rq+ADs
++AD4  	LIST+AF8-HEAD(list)+ADs
++AD4  	LIST+AF8-HEAD(ctx+AF8-list)+ADs
++AD4 -	unsigned int depth+ADs
++AD4 +-	unsigned int depth, this+AF8-flags+ADs
++AD4  
++AD4  	list+AF8-splice+AF8-init(+ACY-plug-+AD4-mq+AF8-list, +ACY-list)+ADs
++AD4  
++AD4 +AEAAQA -1636,13 +-1657,14 +AEAAQA void blk+AF8-mq+AF8-flush+AF8-plug+AF8-list(struct blk+AF8-plug +ACo-plug, bool from+AF8-schedule)
++AD4  
++AD4  	this+AF8-q +AD0 NULL+ADs
++AD4  	this+AF8-ctx +AD0 NULL+ADs
++AD4 +-	this+AF8-flags +AD0 0+ADs
++AD4  	depth +AD0 0+ADs
++AD4  
++AD4  	while (+ACE-list+AF8-empty(+ACY-list)) +AHs
++AD4  		rq +AD0 list+AF8-entry+AF8-rq(list.next)+ADs
++AD4  		list+AF8-del+AF8-init(+ACY-rq-+AD4-queuelist)+ADs
++AD4  		BUG+AF8-ON(+ACE-rq-+AD4-q)+ADs
++AD4 -		if (rq-+AD4-mq+AF8-ctx +ACEAPQ this+AF8-ctx) +AHs
++AD4 +-		if (+ACE-ctx+AF8-match(rq, this+AF8-ctx, this+AF8-flags)) +AHs
++AD4  			if (this+AF8-ctx) +AHs
++AD4  				trace+AF8-block+AF8-unplug(this+AF8-q, depth, +ACE-from+AF8-schedule)+ADs
++AD4  				blk+AF8-mq+AF8-sched+AF8-insert+AF8-requests(this+AF8-q, this+AF8-ctx,
++AD4 +AEAAQA -1650,6 +-1672,7 +AEAAQA void blk+AF8-mq+AF8-flush+AF8-plug+AF8-list(struct blk+AF8-plug +ACo-plug, bool from+AF8-schedule)
++AD4  								from+AF8-schedule)+ADs
++AD4  			+AH0
++AD4  
++AD4 +-			this+AF8-flags +AD0 rq-+AD4-cmd+AF8-flags+ADs
++AD4  			this+AF8-ctx +AD0 rq-+AD4-mq+AF8-ctx+ADs
++AD4  			this+AF8-q +AD0 rq-+AD4-q+ADs
++AD4  			depth +AD0 0+ADs
 
-I don't want to rename it, but I've added a kerneldoc function header to
-both of them.
+This patch will cause the function stored in the flags+AF8-to+AF8-type pointer to be
+called 2 +ACo (n - 1) times where n is the number of elements in 'list' when
+blk+AF8-mq+AF8-sched+AF8-insert+AF8-requests() is called. Have you considered to rearrange
+the code such that that number of calls is reduced to n?
 
->> diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
->> index f9e19962a22f..837087cf07cc 100644
->> --- a/include/linux/blk-mq.h
->> +++ b/include/linux/blk-mq.h
->> @@ -86,6 +86,7 @@ enum {
->>  
->>  struct blk_mq_tag_set {
->>  	struct blk_mq_queue_map	map[HCTX_MAX_TYPES];
->> +	unsigned int		nr_maps;
->>  	const struct blk_mq_ops	*ops;
->>  	unsigned int		nr_hw_queues;
->>  	unsigned int		queue_depth;	/* max hw supported */
->> @@ -109,6 +110,7 @@ struct blk_mq_queue_data {
->>  
->>  typedef blk_status_t (queue_rq_fn)(struct blk_mq_hw_ctx *,
->>  		const struct blk_mq_queue_data *);
->> +typedef int (flags_to_type_fn)(struct request_queue *, unsigned int);
-> 
-> How about adding a comment that the format of the second argument of
-> flags_to_type_fn is the same as that of rq->cmd_flags?
+Thanks,
 
-Done
-
--- 
-Jens Axboe
+Bart.
