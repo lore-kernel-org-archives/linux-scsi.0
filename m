@@ -1,29 +1,78 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH 02/14] blk-mq: abstract out queue map
-Date: Mon, 29 Oct 2018 11:33:59 -0700
-Message-ID: <1540838039.196084.78.camel@acm.org>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH 07/14] blk-mq: support multiple hctx maps
+Date: Mon, 29 Oct 2018 13:24:23 -0600
+Message-ID: <214cdac8-9c13-213b-023f-2fb1bf67c8db@kernel.dk>
 References: <20181029163738.10172-1-axboe@kernel.dk>
-         <20181029163738.10172-3-axboe@kernel.dk>
+ <20181029163738.10172-8-axboe@kernel.dk> <1540836903.196084.70.camel@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-7"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20181029163738.10172-3-axboe@kernel.dk>
+In-Reply-To: <1540836903.196084.70.camel@acm.org>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 2018-10-29 at 10:37 -0600, Jens Axboe wrote:
-+AD4 struct blk+AF8-mq+AF8-tag+AF8-set +AHs
-+AD4 -	unsigned int		+ACo-mq+AF8-map+ADs
-+AD4 +-	struct blk+AF8-mq+AF8-queue+AF8-map	map+AFs-HCTX+AF8-MAX+AF8-TYPES+AF0AOw
-+AD4  	const struct blk+AF8-mq+AF8-ops	+ACo-ops+ADs
-+AD4  	unsigned int		nr+AF8-hw+AF8-queues+ADs
-+AD4  	unsigned int		queue+AF8-depth+ADs	/+ACo max hw supported +ACo-/
+On 10/29/18 12:15 PM, Bart Van Assche wrote:
+> On Mon, 2018-10-29 at 10:37 -0600, Jens Axboe wrote:
+>> -static inline struct blk_mq_hw_ctx *blk_mq_map_queue(struct request_queue *q,
+>> -						     unsigned int flags,
+>> -						     int cpu)
+>> +static inline struct blk_mq_hw_ctx *blk_mq_map_queue_type(struct request_queue *q,
+>> +							  int type, int cpu)
+>>  {
+>>  	struct blk_mq_tag_set *set = q->tag_set;
+>>  
+>> -	return q->queue_hw_ctx[set->map[0].mq_map[cpu]];
+>> +	return q->queue_hw_ctx[set->map[type].mq_map[cpu]];
+>>  }
+>>  
+>> -static inline struct blk_mq_hw_ctx *blk_mq_map_queue_type(struct request_queue *q,
+>> -							  int type, int cpu)
+>> +static inline struct blk_mq_hw_ctx *blk_mq_map_queue(struct request_queue *q,
+>> +						     unsigned int flags,
+>> +						     int cpu)
+>>  {
+>> -	return blk_mq_map_queue(q, type, cpu);
+>> +	int type = 0;
+>> +
+>> +	if (q->mq_ops->flags_to_type)
+>> +		type = q->mq_ops->flags_to_type(q, flags);
+>> +
+>> +	return blk_mq_map_queue_type(q, type, cpu);
+>>  }
+> 
+> How about adding a comment above both these functions that explains their
+> purpose? Since blk_mq_map_queue() maps rq->cmd_flags and the cpu index to
+> a hardware context, how about renaming blk_mq_map_queue() into
+> blk_mq_map_cmd_flags()?
 
-How about documenting that nr+AF8-hw+AF8-queues is the number of hardware queues across
-all hardware queue types instead of e.g. the number of hardware queues for a
-single hardware queue type? This is something that only became clear to me after
-having reviewed a later patch in this series. Anyway:
+I don't want to rename it, but I've added a kerneldoc function header to
+both of them.
 
-Reviewed-by: Bart Van Assche +ADw-bvanassche+AEA-acm.org+AD4
+>> diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
+>> index f9e19962a22f..837087cf07cc 100644
+>> --- a/include/linux/blk-mq.h
+>> +++ b/include/linux/blk-mq.h
+>> @@ -86,6 +86,7 @@ enum {
+>>  
+>>  struct blk_mq_tag_set {
+>>  	struct blk_mq_queue_map	map[HCTX_MAX_TYPES];
+>> +	unsigned int		nr_maps;
+>>  	const struct blk_mq_ops	*ops;
+>>  	unsigned int		nr_hw_queues;
+>>  	unsigned int		queue_depth;	/* max hw supported */
+>> @@ -109,6 +110,7 @@ struct blk_mq_queue_data {
+>>  
+>>  typedef blk_status_t (queue_rq_fn)(struct blk_mq_hw_ctx *,
+>>  		const struct blk_mq_queue_data *);
+>> +typedef int (flags_to_type_fn)(struct request_queue *, unsigned int);
+> 
+> How about adding a comment that the format of the second argument of
+> flags_to_type_fn is the same as that of rq->cmd_flags?
+
+Done
+
+-- 
+Jens Axboe
