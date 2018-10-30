@@ -1,66 +1,85 @@
-From: Jan Harkes <jaharkes@cs.cmu.edu>
-Subject: Re: [PATCH v2] codafs: Fix build using bare-metal toolchain
-Date: Tue, 30 Oct 2018 09:04:01 -0400
-Message-ID: <20181030130401.3ab5gl4fsvpa2fes@cs.cmu.edu>
-References: <20181029200311.16947-1-semen.protsenko@linaro.org>
- <CAKaJLVvpNZW2a+3xc7PE0+iU1nm39A7PEjCu8F9ijrT+wEXOag@mail.gmail.com>
- <20181030063408.GA26627@kroah.com>
- <CAKaJLVtT+pFzOBjybAXmOC0mJyN=BHavsfAYEzgSWn-i7UYEjA@mail.gmail.com>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Subject: Re: [v6 0/4] mpt3sas: Hot-Plug Surprise removal support on IOC.
+Date: Tue, 30 Oct 2018 15:05:23 +0200
+Message-ID: <CAHp75VeNSG7=79pQ=9zFkp0mSSSoFnjacbQQa=kQu2+hKWvMwQ@mail.gmail.com>
+References: <1540290081-15827-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+ <CA+RiK64Y=FLr=SZmxEoCvWCvZq8ppqFsL=q2L1Q7T5sZfDQfkQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAKaJLVtT+pFzOBjybAXmOC0mJyN=BHavsfAYEzgSWn-i7UYEjA@mail.gmail.com>
+In-Reply-To: <CA+RiK64Y=FLr=SZmxEoCvWCvZq8ppqFsL=q2L1Q7T5sZfDQfkQ@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Sam Protsenko <semen.protsenko@linaro.org>
-Cc: Greg KH <gregkh@linuxfoundation.org>, linux-scsi@vger.kernel.org, Praneeth Bajjuri <praneeth@ti.com>, linux-kernel@vger.kernel.org, codalist@coda.cs.cmu.edu, coda@cs.cmu.edu, Andy Shevchenko <andy.shevchenko@gmail.com>
+To: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Lukas Wunner <lukas@wunner.de>, linux-scsi <linux-scsi@vger.kernel.org>, linux-pci@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, ruscur@russell.cc, sbobroff@linux.ibm.com, Oliver <oohall@gmail.com>, Sathya Prakash <Sathya.Prakash@broadcom.com>, Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Oct 30, 2018 at 02:01:04PM +0200, Sam Protsenko wrote:
-> On Tue, Oct 30, 2018 at 8:34 AM, Greg KH <gregkh@linuxfoundation.org> wrote:
-> > On Mon, Oct 29, 2018 at 10:05:49PM +0200, Sam Protsenko wrote:
-> >> Hi Greg,
-> >>
-> >> On Mon, Oct 29, 2018 at 10:03 PM, Sam Protsenko
-> >> <semen.protsenko@linaro.org> wrote:
-> >> > The kernel is self-contained project and can be built with bare-metal
-> >> > toolchain. But bare-metal toolchain doesn't define __linux__. Because of
-> >> > this u_quad_t type is not defined when using bare-metal toolchain and
-> >> > codafs build fails. This patch fixes it by defining u_quad_t type
-> >> > unconditionally.
-> >> >
-> >> > Signed-off-by: Sam Protsenko <semen.protsenko@linaro.org>
-> >> > ---
-> >>
-> >> Can you please pull this one, if this applicable? I sent it a while
-> >> ago, but I guess it got lost in mailing list. It might be also
-> >> applicable to stable branch (as it fixes allmodconfig build for ARM
-> >> with bare-metal toolchain).
+On Tue, Oct 30, 2018 at 8:41 AM Suganath Prabu Subramani
+<suganath-prabu.subramani@broadcom.com> wrote:
+>
+> Any update on this ?
+> In V6, I have posted has only defect fixes (Other than HBA Hot-Plug
+> Surprise remove support).
+>
+> We are reworking and incorporating the suggestions from Bjorn.
+> And after covering tests, we ll post Hot-Plug Surprise removal patches.
+>
+
+FWIW,
+Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
+
+P.S. We are in the middle of merge window, so, this week is a little
+chance anyone will look at it.
+
+> Thanks,
+> Suganath Prabu
+> On Tue, Oct 23, 2018 at 3:51 PM Suganath Prabu
+> <suganath-prabu.subramani@broadcom.com> wrote:
 > >
-> > Why are you asking me?  I'm not the maintainer of this file :(
+> > v6 Change set:
+> > Incorporated changes as suggested by Andy.
+> > In Patch 1 converted while loop to do while in
+> > function mpt3sas_wait_for_ioc_to_operational().
+> > And in patch 3 removed parentheses.
 > >
-> > confused,
+> > V5 Change set:
+> > V5 post has only defect fixes.
+> > We are reworking and incorporating the suggestions from Bjorn.
+> > And after covering tests, we ll be post Hot-Plug Surprise
+> >  removal patches.
 > >
-> 
-> Sorry to bother you. I just thought you might be interested in this
-> one, as it fixes build for "allmodconfig" configuration, hence it can
-> be related to stable branch. Also, maintainers didn't respond to that
-> patch, so I'm kinda dead in the water.
-> 
-> Anyway, will try to ping maintainers one more time.
+> > V4 Change set:
+> > Reframe split strings in print statement, to avoid
+> >
+> > V3 Change Set:
+> > Simplified function "mpt3sas_base_pci_device_is_available" and
+> > made inline
+> >
+> > V2 changes:
+> > Replaced mpt3sas_base_pci_device_is_unplugged with
+> > pci_device_is_present.
+> >
+> > V1 changes:
+> > In Patch 0001 - unlock mutex, if active reset is in progress.
+> > Suganath Prabu (4):
+> >   mpt3sas: Separate out mpt3sas_wait_for_ioc_to_operational
+> >   mpt3sas: Fix Sync cache command failure during driver unload
+> >   mpt3sas:Fix driver modifying persistent data.
+> >   mpt3sas: Bump driver version to 27.100.00.00.
+> >
+> >  drivers/scsi/mpt3sas/mpt3sas_base.c      | 75 ++++++++++++++++++--------------
+> >  drivers/scsi/mpt3sas/mpt3sas_base.h      |  8 +++-
+> >  drivers/scsi/mpt3sas/mpt3sas_config.c    | 28 +++---------
+> >  drivers/scsi/mpt3sas/mpt3sas_ctl.c       | 21 ++-------
+> >  drivers/scsi/mpt3sas/mpt3sas_scsih.c     | 38 +++++++++++++++-
+> >  drivers/scsi/mpt3sas/mpt3sas_transport.c | 70 ++++++-----------------------
+> >  6 files changed, 106 insertions(+), 134 deletions(-)
+> >
+> > --
+> > 1.8.3.1
+> >
 
-I thought I had responded, I didn't see a reason why one would want to
-compile non-userspace kernel headers outside of the context of the
-kernel and if you do have to do that why not just add -D__linux__.
 
-However, I can also see the point that anything not in uapi/ pretty much
-by definition will be compiled with __linux__ defined so it actually
-doesn't make a discernable difference to just drop the ifdef and I'm
-fine with a patch like this.
 
-These trivial patches typically get picked up through kernel janitors,
-or maybe an akpm linux-next patch queue. In fact, I'm not even sure if
-there is a designated person I would be passing updates to, I've sent
-patches to akpm, viro, hellwig, linus, and gregkh at various times.
-
-Jan
+-- 
+With Best Regards,
+Andy Shevchenko
