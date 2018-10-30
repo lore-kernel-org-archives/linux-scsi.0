@@ -1,42 +1,128 @@
-From: "Zengtao (B)" <prime.zeng@hisilicon.com>
-Subject: RE: scsi_set_medium_removal timeout issue
-Date: Tue, 30 Oct 2018 09:24:38 +0000
-Message-ID: <678F3D1BB717D949B966B68EAEB446ED1F19F218@dggemm526-mbx.china.huawei.com>
-References: <678F3D1BB717D949B966B68EAEB446ED1F19F1CF@dggemm526-mbx.china.huawei.com>
- <1540889786.12349.9.camel@suse.com>
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [PATCH 11/14] irq: add support for allocating (and affinitizing)
+ sets of IRQs
+Date: Tue, 30 Oct 2018 17:25:11 +0800
+Message-ID: <20181030092510.GB13582@ming.t460p>
+References: <20181029163738.10172-1-axboe@kernel.dk>
+ <20181029163738.10172-12-axboe@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1540889786.12349.9.camel@suse.com>
-Content-Language: zh-CN
+Content-Disposition: inline
+In-Reply-To: <20181029163738.10172-12-axboe@kernel.dk>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Oliver Neukum <oneukum@suse.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "stern@rowland.harvard.edu" <stern@rowland.harvard.edu>
-Cc: "usb-storage@lists.one-eyed-alien.net" <usb-storage@lists.one-eyed-alien.net>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>
 List-Id: linux-scsi@vger.kernel.org
 
-SGk6DQoNCj4tLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPkZyb206IE9saXZlciBOZXVrdW0g
-W21haWx0bzpvbmV1a3VtQHN1c2UuY29tXQ0KPlNlbnQ6IFR1ZXNkYXksIE9jdG9iZXIgMzAsIDIw
-MTggNDo1NiBQTQ0KPlRvOiBaZW5ndGFvIChCKSA8cHJpbWUuemVuZ0BoaXNpbGljb24uY29tPjsg
-amVqYkBsaW51eC52bmV0LmlibS5jb207DQo+Z3JlZ2toQGxpbnV4Zm91bmRhdGlvbi5vcmc7IG1h
-cnRpbi5wZXRlcnNlbkBvcmFjbGUuY29tOw0KPnN0ZXJuQHJvd2xhbmQuaGFydmFyZC5lZHUNCj5D
-YzogdXNiLXN0b3JhZ2VAbGlzdHMub25lLWV5ZWQtYWxpZW4ubmV0OyBsaW51eC1rZXJuZWxAdmdl
-ci5rZXJuZWwub3JnOw0KPmxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnOyBsaW51eC11c2JAdmdl
-ci5rZXJuZWwub3JnDQo+U3ViamVjdDogUmU6IHNjc2lfc2V0X21lZGl1bV9yZW1vdmFsIHRpbWVv
-dXQgaXNzdWUNCj4NCj5PbiBEaSwgMjAxOC0xMC0zMCBhdCAwODoyOCArMDAwMCwgIFplbmd0YW8g
-KEIpICB3cm90ZToNCj4+IEhpDQo+DQo+PiBGb3IgdGhlIGlzc3VlIGl0c2VsZiwgdGhlcmUgaXMg
-bXkgb2JzZXJ2YXRpb246DQo+PiBJbiB0aGUgc3RlcCA0LCB0aGUgSG9zdCB3aWxsIGlzc3VlIGFu
-DQo+UFJFVkVOVF9BTExPV19NRURJVU1fUkVNT1ZBTCBzY3NpIGNvbW1hbmQuDQo+PiBhbmQgYW5k
-IHRpbWVvdXQgaGFwcGVucyBkdWUgdG8gdGhlIGRldmljZSAncyB2ZXJ5IHNsb3cNCj5mc2dfbHVu
-X2ZzeW5jX3N1Yi4NCj4+IEkgZm91bmQgdGhlcmUgYXJlIHR3byBtZXRob2RzIHRvIHdvcmthcm91
-bmQgdGhlIGlzc3VlOg0KPj4gMS4gQ2hhbmdlIHRoZSB0aW1lb3V0IHZhbHVlIG9mIGhvc3Qgc2Nz
-aSBjb21tYW5kDQo+PiBQUkVWRU5UX0FMTE9XX01FRElVTV9SRU1PVkFMIHRvIHRvIGFib3V0IDYw
-IHNlY29uZHMgZnJvbSAxMA0KPnNlY29uZHMuDQo+DQo+VGhhdCBpcyBuZWFyIHVzZWxlc3MsIGJl
-Y2F1c2UgdGhlIGdhZGdldCBjYW4gYmUgdXNlZCB3aXRoIG90aGVyIHN5c3RlbXMuDQo+DQoNCklz
-IGl0IHJlYXNvbmFibGUgdG8ga2VlcCB0aGUgY3VycmVudCB2YWx1ZT8gT3IgY2FuIHdlIGNoYW5n
-ZSBpdCB0byBjb3Zlcg0KYXMgbXVjaCBzeXN0ZW1zIGFzIHBvc3NpYmxlLiANCg0KPj4gMi4gUmVt
-b3ZlIHRoZSBmc2dfbHVuX2ZzeW5jX3N1YiBpbiB0aGUgZGV2aWNlJ3MgTWFzcyBzdG9yYWdlIGdh
-ZGdldA0KPmRyaXZlci4NCj4NCj5JdCBleGlzdHMgZm9yIGEgcmVhc29uLiBUaGUgYmxvY2tzIGhh
-dmUgdG8gYmUgb24gdGhlIG1lZGl1bS4NCj5JdCBzZWVtcyB0byBtZSB0aGF0IHlvdXIgZ2FkZ2V0
-IGp1c3QgYWxsb3dzIHRvbyBtYW55IGRpcnR5IHBhZ2VzIGluIHRoZQ0KPmNhY2hlLg0KPg0KPglS
-ZWdhcmRzDQo+CQlPbGl2ZXINCg0KUmVnYXJkcw0KWmVuZ3RhbyANCg0K
+On Mon, Oct 29, 2018 at 10:37:35AM -0600, Jens Axboe wrote:
+> A driver may have a need to allocate multiple sets of MSI/MSI-X
+> interrupts, and have them appropriately affinitized. Add support for
+> defining a number of sets in the irq_affinity structure, of varying
+> sizes, and get each set affinitized correctly across the machine.
+> 
+> Cc: Thomas Gleixner <tglx@linutronix.de>
+> Cc: linux-kernel@vger.kernel.org
+> Reviewed-by: Hannes Reinecke <hare@suse.com>
+> Signed-off-by: Jens Axboe <axboe@kernel.dk>
+> ---
+>  include/linux/interrupt.h |  4 ++++
+>  kernel/irq/affinity.c     | 40 ++++++++++++++++++++++++++++++---------
+>  2 files changed, 35 insertions(+), 9 deletions(-)
+> 
+> diff --git a/include/linux/interrupt.h b/include/linux/interrupt.h
+> index 1d6711c28271..ca397ff40836 100644
+> --- a/include/linux/interrupt.h
+> +++ b/include/linux/interrupt.h
+> @@ -247,10 +247,14 @@ struct irq_affinity_notify {
+>   *			the MSI(-X) vector space
+>   * @post_vectors:	Don't apply affinity to @post_vectors at end of
+>   *			the MSI(-X) vector space
+> + * @nr_sets:		Length of passed in *sets array
+> + * @sets:		Number of affinitized sets
+>   */
+>  struct irq_affinity {
+>  	int	pre_vectors;
+>  	int	post_vectors;
+> +	int	nr_sets;
+> +	int	*sets;
+>  };
+>  
+>  #if defined(CONFIG_SMP)
+> diff --git a/kernel/irq/affinity.c b/kernel/irq/affinity.c
+> index f4f29b9d90ee..2046a0f0f0f1 100644
+> --- a/kernel/irq/affinity.c
+> +++ b/kernel/irq/affinity.c
+> @@ -180,6 +180,7 @@ irq_create_affinity_masks(int nvecs, const struct irq_affinity *affd)
+>  	int curvec, usedvecs;
+>  	cpumask_var_t nmsk, npresmsk, *node_to_cpumask;
+>  	struct cpumask *masks = NULL;
+> +	int i, nr_sets;
+>  
+>  	/*
+>  	 * If there aren't any vectors left after applying the pre/post
+> @@ -210,10 +211,23 @@ irq_create_affinity_masks(int nvecs, const struct irq_affinity *affd)
+>  	get_online_cpus();
+>  	build_node_to_cpumask(node_to_cpumask);
+>  
+> -	/* Spread on present CPUs starting from affd->pre_vectors */
+> -	usedvecs = irq_build_affinity_masks(affd, curvec, affvecs,
+> -					    node_to_cpumask, cpu_present_mask,
+> -					    nmsk, masks);
+> +	/*
+> +	 * Spread on present CPUs starting from affd->pre_vectors. If we
+> +	 * have multiple sets, build each sets affinity mask separately.
+> +	 */
+> +	nr_sets = affd->nr_sets;
+> +	if (!nr_sets)
+> +		nr_sets = 1;
+> +
+> +	for (i = 0, usedvecs = 0; i < nr_sets; i++) {
+> +		int this_vecs = affd->sets ? affd->sets[i] : affvecs;
+> +		int nr;
+> +
+> +		nr = irq_build_affinity_masks(affd, curvec, this_vecs,
+> +					      node_to_cpumask, cpu_present_mask,
+> +					      nmsk, masks + usedvecs);
+> +		usedvecs += nr;
+> +	}
+>  
+>  	/*
+>  	 * Spread on non present CPUs starting from the next vector to be
+> @@ -258,13 +272,21 @@ int irq_calc_affinity_vectors(int minvec, int maxvec, const struct irq_affinity
+>  {
+>  	int resv = affd->pre_vectors + affd->post_vectors;
+>  	int vecs = maxvec - resv;
+> -	int ret;
+> +	int set_vecs;
+>  
+>  	if (resv > minvec)
+>  		return 0;
+>  
+> -	get_online_cpus();
+> -	ret = min_t(int, cpumask_weight(cpu_possible_mask), vecs) + resv;
+> -	put_online_cpus();
+> -	return ret;
+> +	if (affd->nr_sets) {
+> +		int i;
+> +
+> +		for (i = 0, set_vecs = 0;  i < affd->nr_sets; i++)
+> +			set_vecs += affd->sets[i];
+> +	} else {
+> +		get_online_cpus();
+> +		set_vecs = cpumask_weight(cpu_possible_mask);
+> +		put_online_cpus();
+> +	}
+> +
+> +	return resv + min(set_vecs, vecs);
+>  }
+> -- 
+> 2.17.1
+> 
+
+Looks fine:
+
+Reviewed-by: Ming Lei <ming.lei@redhat.com>
+
+-- 
+Ming
