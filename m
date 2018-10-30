@@ -1,36 +1,42 @@
-From: Oliver Neukum <oneukum@suse.com>
-Subject: Re: scsi_set_medium_removal timeout issue
-Date: Tue, 30 Oct 2018 09:56:26 +0100
-Message-ID: <1540889786.12349.9.camel@suse.com>
+From: "Zengtao (B)" <prime.zeng@hisilicon.com>
+Subject: RE: scsi_set_medium_removal timeout issue
+Date: Tue, 30 Oct 2018 09:24:38 +0000
+Message-ID: <678F3D1BB717D949B966B68EAEB446ED1F19F218@dggemm526-mbx.china.huawei.com>
 References: <678F3D1BB717D949B966B68EAEB446ED1F19F1CF@dggemm526-mbx.china.huawei.com>
+ <1540889786.12349.9.camel@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <678F3D1BB717D949B966B68EAEB446ED1F19F1CF@dggemm526-mbx.china.huawei.com>
+In-Reply-To: <1540889786.12349.9.camel@suse.com>
+Content-Language: zh-CN
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Zengtao (B)" <prime.zeng@hisilicon.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "stern@rowland.harvard.edu" <stern@rowland.harvard.edu>
+To: Oliver Neukum <oneukum@suse.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "stern@rowland.harvard.edu" <stern@rowland.harvard.edu>
 Cc: "usb-storage@lists.one-eyed-alien.net" <usb-storage@lists.one-eyed-alien.net>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Di, 2018-10-30 at 08:28 +0000,  Zengtao (B)  wrote:
-> Hi 
-
-> For the issue itself, there is my observation:
-> In the step 4, the Host will issue an PREVENT_ALLOW_MEDIUM_REMOVAL scsi command.
-> and and timeout happens due to the device 's very slow fsg_lun_fsync_sub.
-> I found there are two methods to workaround the issue: 
-> 1. Change the timeout value of host scsi command PREVENT_ALLOW_MEDIUM_REMOVAL to
-> to about 60 seconds from 10 seconds.
-
-That is near useless, because the gadget can be used with other
-systems.
-
-> 2. Remove the fsg_lun_fsync_sub in the device's Mass storage gadget driver.
-
-It exists for a reason. The blocks have to be on the medium.
-It seems to me that your gadget just allows too many dirty pages in the
-cache.
-
-	Regards
-		Oliver
+SGk6DQoNCj4tLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPkZyb206IE9saXZlciBOZXVrdW0g
+W21haWx0bzpvbmV1a3VtQHN1c2UuY29tXQ0KPlNlbnQ6IFR1ZXNkYXksIE9jdG9iZXIgMzAsIDIw
+MTggNDo1NiBQTQ0KPlRvOiBaZW5ndGFvIChCKSA8cHJpbWUuemVuZ0BoaXNpbGljb24uY29tPjsg
+amVqYkBsaW51eC52bmV0LmlibS5jb207DQo+Z3JlZ2toQGxpbnV4Zm91bmRhdGlvbi5vcmc7IG1h
+cnRpbi5wZXRlcnNlbkBvcmFjbGUuY29tOw0KPnN0ZXJuQHJvd2xhbmQuaGFydmFyZC5lZHUNCj5D
+YzogdXNiLXN0b3JhZ2VAbGlzdHMub25lLWV5ZWQtYWxpZW4ubmV0OyBsaW51eC1rZXJuZWxAdmdl
+ci5rZXJuZWwub3JnOw0KPmxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnOyBsaW51eC11c2JAdmdl
+ci5rZXJuZWwub3JnDQo+U3ViamVjdDogUmU6IHNjc2lfc2V0X21lZGl1bV9yZW1vdmFsIHRpbWVv
+dXQgaXNzdWUNCj4NCj5PbiBEaSwgMjAxOC0xMC0zMCBhdCAwODoyOCArMDAwMCwgIFplbmd0YW8g
+KEIpICB3cm90ZToNCj4+IEhpDQo+DQo+PiBGb3IgdGhlIGlzc3VlIGl0c2VsZiwgdGhlcmUgaXMg
+bXkgb2JzZXJ2YXRpb246DQo+PiBJbiB0aGUgc3RlcCA0LCB0aGUgSG9zdCB3aWxsIGlzc3VlIGFu
+DQo+UFJFVkVOVF9BTExPV19NRURJVU1fUkVNT1ZBTCBzY3NpIGNvbW1hbmQuDQo+PiBhbmQgYW5k
+IHRpbWVvdXQgaGFwcGVucyBkdWUgdG8gdGhlIGRldmljZSAncyB2ZXJ5IHNsb3cNCj5mc2dfbHVu
+X2ZzeW5jX3N1Yi4NCj4+IEkgZm91bmQgdGhlcmUgYXJlIHR3byBtZXRob2RzIHRvIHdvcmthcm91
+bmQgdGhlIGlzc3VlOg0KPj4gMS4gQ2hhbmdlIHRoZSB0aW1lb3V0IHZhbHVlIG9mIGhvc3Qgc2Nz
+aSBjb21tYW5kDQo+PiBQUkVWRU5UX0FMTE9XX01FRElVTV9SRU1PVkFMIHRvIHRvIGFib3V0IDYw
+IHNlY29uZHMgZnJvbSAxMA0KPnNlY29uZHMuDQo+DQo+VGhhdCBpcyBuZWFyIHVzZWxlc3MsIGJl
+Y2F1c2UgdGhlIGdhZGdldCBjYW4gYmUgdXNlZCB3aXRoIG90aGVyIHN5c3RlbXMuDQo+DQoNCklz
+IGl0IHJlYXNvbmFibGUgdG8ga2VlcCB0aGUgY3VycmVudCB2YWx1ZT8gT3IgY2FuIHdlIGNoYW5n
+ZSBpdCB0byBjb3Zlcg0KYXMgbXVjaCBzeXN0ZW1zIGFzIHBvc3NpYmxlLiANCg0KPj4gMi4gUmVt
+b3ZlIHRoZSBmc2dfbHVuX2ZzeW5jX3N1YiBpbiB0aGUgZGV2aWNlJ3MgTWFzcyBzdG9yYWdlIGdh
+ZGdldA0KPmRyaXZlci4NCj4NCj5JdCBleGlzdHMgZm9yIGEgcmVhc29uLiBUaGUgYmxvY2tzIGhh
+dmUgdG8gYmUgb24gdGhlIG1lZGl1bS4NCj5JdCBzZWVtcyB0byBtZSB0aGF0IHlvdXIgZ2FkZ2V0
+IGp1c3QgYWxsb3dzIHRvbyBtYW55IGRpcnR5IHBhZ2VzIGluIHRoZQ0KPmNhY2hlLg0KPg0KPglS
+ZWdhcmRzDQo+CQlPbGl2ZXINCg0KUmVnYXJkcw0KWmVuZ3RhbyANCg0K
