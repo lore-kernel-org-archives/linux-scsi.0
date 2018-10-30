@@ -1,35 +1,36 @@
-From: "Zengtao (B)" <prime.zeng@hisilicon.com>
-Subject: scsi_set_medium_removal timeout issue
-Date: Tue, 30 Oct 2018 08:28:09 +0000
-Message-ID: <678F3D1BB717D949B966B68EAEB446ED1F19F1CF@dggemm526-mbx.china.huawei.com>
+From: Oliver Neukum <oneukum@suse.com>
+Subject: Re: scsi_set_medium_removal timeout issue
+Date: Tue, 30 Oct 2018 09:56:26 +0100
+Message-ID: <1540889786.12349.9.camel@suse.com>
+References: <678F3D1BB717D949B966B68EAEB446ED1F19F1CF@dggemm526-mbx.china.huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Language: zh-CN
+In-Reply-To: <678F3D1BB717D949B966B68EAEB446ED1F19F1CF@dggemm526-mbx.china.huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "stern@rowland.harvard.edu" <stern@rowland.harvard.edu>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>, "usb-storage@lists.one-eyed-alien.net" <usb-storage@lists.one-eyed-alien.net>
+To: "Zengtao (B)" <prime.zeng@hisilicon.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "stern@rowland.harvard.edu" <stern@rowland.harvard.edu>
+Cc: "usb-storage@lists.one-eyed-alien.net" <usb-storage@lists.one-eyed-alien.net>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-SGkgDQoNCkkgaGF2ZSByZWNlbnRseSBtZXQgYSBzY3NpX3NldF9tZWRpdW1fcmVtb3ZhbCB0aW1l
-b3V0IGlzc3VlLCBhbmQgaXQncyByZWxhdGVkDQogdG8gYm90aCBTQ1NJIGFuZCBVU0IgTUFTUyBz
-dG9yYWdlLiANClNpbmNlIGkgYW0gbm90IGFuIGV4cGVydCBpbiBlaXRoZXIgc2NzaSBvciB1c2Ig
-bWFzcyBzdG9yYWdlLCBpIGFtIHdyaXRpbmcgdG8gcmVwb3J0DQp0aGUgaXNzdWUgYW5kIGFzayBm
-b3IgYSBzb2x1dGlvbiBmcm9tIHlvdSBndXlzLg0KDQpNeSB0ZXN0IHNjZW5hcmlvIGlzIGFzIGZv
-bGxvdzoNCjEuTGludXggSE9TVC0tLS0tTGludXggbWFzcyBzdG9yYWdlIGdhZGdldCh0aGUgYmFj
-ayBzdG9yZSBpcyBhIGZsYXNoIHBhcnRpdGlvbikuDQoyLkhvc3QgbW91bnQgdGhlIGRldmljZS4N
-CjMuSG9zdCB3cml0ZXMgc29tZSBkYXRhIHRvIHRoZSBNYXNzIHN0b3JhZ2UgZGV2aWNlLg0KNC5I
-b3N0IFVubW91bnQgdGhlIGRldmljZS4NCkJvdGggTGludXgga2VybmVscyhIb3N0IGFuZCBEZXZp
-Y2UpIGFyZSBMaW51eCA0LjkuICANClNvbWUgaGFzIHJlcG9ydGVkIHRoZSBzYW1lIGlzc3VlIGEg
-bG9uZyB0aW1lIGFnbywgYnV0IGl0IHJlbWFpbnMgdGhlcmUuDQpodHRwczovL3d3dy5zcGluaWNz
-Lm5ldC9saXN0cy9saW51eC11c2IvbXNnNTM3MzkuaHRtbA0KDQpGb3IgdGhlIGlzc3VlIGl0c2Vs
-ZiwgdGhlcmUgaXMgbXkgb2JzZXJ2YXRpb246DQpJbiB0aGUgc3RlcCA0LCB0aGUgSG9zdCB3aWxs
-IGlzc3VlIGFuIFBSRVZFTlRfQUxMT1dfTUVESVVNX1JFTU9WQUwgc2NzaSBjb21tYW5kLg0KYW5k
-IGFuZCB0aW1lb3V0IGhhcHBlbnMgZHVlIHRvIHRoZSBkZXZpY2UgJ3MgdmVyeSBzbG93IGZzZ19s
-dW5fZnN5bmNfc3ViLg0KSSBmb3VuZCB0aGVyZSBhcmUgdHdvIG1ldGhvZHMgdG8gd29ya2Fyb3Vu
-ZCB0aGUgaXNzdWU6IA0KMS4gQ2hhbmdlIHRoZSB0aW1lb3V0IHZhbHVlIG9mIGhvc3Qgc2NzaSBj
-b21tYW5kIFBSRVZFTlRfQUxMT1dfTUVESVVNX1JFTU9WQUwgdG8NCnRvIGFib3V0IDYwIHNlY29u
-ZHMgZnJvbSAxMCBzZWNvbmRzLg0KMi4gUmVtb3ZlIHRoZSBmc2dfbHVuX2ZzeW5jX3N1YiBpbiB0
-aGUgZGV2aWNlJ3MgTWFzcyBzdG9yYWdlIGdhZGdldCBkcml2ZXIuDQoNClRoYW5rcw0KDQpSZWdh
-cmRzDQp6ZW50YW8NCg==
+On Di, 2018-10-30 at 08:28 +0000,  Zengtao (B)  wrote:
+> Hi 
+
+> For the issue itself, there is my observation:
+> In the step 4, the Host will issue an PREVENT_ALLOW_MEDIUM_REMOVAL scsi command.
+> and and timeout happens due to the device 's very slow fsg_lun_fsync_sub.
+> I found there are two methods to workaround the issue: 
+> 1. Change the timeout value of host scsi command PREVENT_ALLOW_MEDIUM_REMOVAL to
+> to about 60 seconds from 10 seconds.
+
+That is near useless, because the gadget can be used with other
+systems.
+
+> 2. Remove the fsg_lun_fsync_sub in the device's Mass storage gadget driver.
+
+It exists for a reason. The blocks have to be on the medium.
+It seems to me that your gadget just allows too many dirty pages in the
+cache.
+
+	Regards
+		Oliver
