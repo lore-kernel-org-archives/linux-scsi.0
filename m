@@ -1,71 +1,76 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH 11/14] irq: add support for allocating (and affinitizing)
- sets of IRQs
-Date: Tue, 30 Oct 2018 11:47:39 -0600
-Message-ID: <a6a5bc06-ea98-aca0-cd35-7125ee57efdc@kernel.dk>
-References: <20181029163738.10172-1-axboe@kernel.dk>
- <20181029163738.10172-12-axboe@kernel.dk>
- <20181030142601.GA18906@localhost.localdomain>
- <c11c95ae-5e10-38bd-d2c2-e2407634f52a@kernel.dk>
- <20181030144527.GB18906@localhost.localdomain>
- <46dbcbcd-799f-9970-a68f-de7e96b1a6bb@kernel.dk>
- <20181030150840.GC18906@localhost.localdomain>
- <d049e764-b9d1-f06f-40d3-39517f3f65a2@kernel.dk>
- <20181030160242.GD18906@localhost.localdomain>
- <27c1017a-9560-80cb-038d-f64727a162c3@kernel.dk>
- <alpine.DEB.2.21.1810301824570.5984@nanos.tec.linutronix.de>
- <a692fbb3-59ca-0ddb-7abd-67ffc7bfcc1f@kernel.dk>
- <alpine.DEB.2.21.1810301845330.5984@nanos.tec.linutronix.de>
+From: Sam Protsenko <semen.protsenko@linaro.org>
+Subject: Re: [PATCH v2] codafs: Fix build using bare-metal toolchain
+Date: Tue, 30 Oct 2018 20:33:28 +0200
+Message-ID: <CAKaJLVvXUTB5hyoRPZpfnzFKiLrCfLmras_37B5JxSYs4438Tg@mail.gmail.com>
+References: <20181029200311.16947-1-semen.protsenko@linaro.org>
+ <CAKaJLVvpNZW2a+3xc7PE0+iU1nm39A7PEjCu8F9ijrT+wEXOag@mail.gmail.com>
+ <20181030063408.GA26627@kroah.com> <CAKaJLVtT+pFzOBjybAXmOC0mJyN=BHavsfAYEzgSWn-i7UYEjA@mail.gmail.com>
+ <20181030130401.3ab5gl4fsvpa2fes@cs.cmu.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.21.1810301845330.5984@nanos.tec.linutronix.de>
-Content-Language: en-US
+In-Reply-To: <20181030130401.3ab5gl4fsvpa2fes@cs.cmu.edu>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Keith Busch <keith.busch@intel.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jan Harkes <jaharkes@cs.cmu.edu>
+Cc: Greg KH <gregkh@linuxfoundation.org>, linux-scsi@vger.kernel.org, Praneeth Bajjuri <praneeth@ti.com>, linux-kernel@vger.kernel.org, codalist@coda.cs.cmu.edu, coda@cs.cmu.edu, Andy Shevchenko <andy.shevchenko@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 10/30/18 11:46 AM, Thomas Gleixner wrote:
-> On Tue, 30 Oct 2018, Jens Axboe wrote:
->> On 10/30/18 11:25 AM, Thomas Gleixner wrote:
->>> Jens,
->>>
->>> On Tue, 30 Oct 2018, Jens Axboe wrote:
->>>> On 10/30/18 10:02 AM, Keith Busch wrote:
->>>>> pci_alloc_irq_vectors_affinity() starts at the provided max_vecs. If
->>>>> that doesn't work, it will iterate down to min_vecs without returning to
->>>>> the caller. The caller doesn't have a chance to adjust its sets between
->>>>> iterations when you provide a range.
->>>>>
->>>>> The 'masks' overrun problem happens if the caller provides min_vecs
->>>>> as a smaller value than the sum of the set (plus any reserved).
->>>>>
->>>>> If it's up to the caller to ensure that doesn't happen, then min and
->>>>> max must both be the same value, and that value must also be the same as
->>>>> the set sum + reserved vectors. The range just becomes redundant since
->>>>> it is already bounded by the set.
->>>>>
->>>>> Using the nvme example, it would need something like this to prevent the
->>>>> 'masks' overrun:
->>>>
->>>> OK, now I hear what you are saying. And you are right, the callers needs
->>>> to provide minvec == maxvec for sets, and then have a loop around that
->>>> to adjust as needed.
->>>
->>> But then we should enforce it in the core code, right?
+On Tue, Oct 30, 2018 at 3:04 PM, Jan Harkes <jaharkes@cs.cmu.edu> wrote:
+> On Tue, Oct 30, 2018 at 02:01:04PM +0200, Sam Protsenko wrote:
+>> On Tue, Oct 30, 2018 at 8:34 AM, Greg KH <gregkh@linuxfoundation.org> wrote:
+>> > On Mon, Oct 29, 2018 at 10:05:49PM +0200, Sam Protsenko wrote:
+>> >> Hi Greg,
+>> >>
+>> >> On Mon, Oct 29, 2018 at 10:03 PM, Sam Protsenko
+>> >> <semen.protsenko@linaro.org> wrote:
+>> >> > The kernel is self-contained project and can be built with bare-metal
+>> >> > toolchain. But bare-metal toolchain doesn't define __linux__. Because of
+>> >> > this u_quad_t type is not defined when using bare-metal toolchain and
+>> >> > codafs build fails. This patch fixes it by defining u_quad_t type
+>> >> > unconditionally.
+>> >> >
+>> >> > Signed-off-by: Sam Protsenko <semen.protsenko@linaro.org>
+>> >> > ---
+>> >>
+>> >> Can you please pull this one, if this applicable? I sent it a while
+>> >> ago, but I guess it got lost in mailing list. It might be also
+>> >> applicable to stable branch (as it fixes allmodconfig build for ARM
+>> >> with bare-metal toolchain).
+>> >
+>> > Why are you asking me?  I'm not the maintainer of this file :(
+>> >
+>> > confused,
+>> >
 >>
->> Yes, I was going to ask you if you want a followup patch for that, or
->> an updated version of the original?
-> 
-> Updated combo patch would be nice :)
+>> Sorry to bother you. I just thought you might be interested in this
+>> one, as it fixes build for "allmodconfig" configuration, hence it can
+>> be related to stable branch. Also, maintainers didn't respond to that
+>> patch, so I'm kinda dead in the water.
+>>
+>> Anyway, will try to ping maintainers one more time.
+>
+> I thought I had responded, I didn't see a reason why one would want to
+> compile non-userspace kernel headers outside of the context of the
+> kernel and if you do have to do that why not just add -D__linux__.
+>
+> However, I can also see the point that anything not in uapi/ pretty much
+> by definition will be compiled with __linux__ defined so it actually
+> doesn't make a discernable difference to just drop the ifdef and I'm
+> fine with a patch like this.
+>
+> These trivial patches typically get picked up through kernel janitors,
+> or maybe an akpm linux-next patch queue. In fact, I'm not even sure if
+> there is a designated person I would be passing updates to, I've sent
+> patches to akpm, viro, hellwig, linus, and gregkh at various times.
+>
+> Jan
 
-I'll re-post the series with the updated combo some time later today.
 
-> 	lazytglx
+Hi Jan,
 
-I understand :-)
+Thank you for the reply. Good point, I will try to re-send this one to
+Andrew Morton and kernel-janitors.
 
--- 
-Jens Axboe
+P.S. We need this patch for fixing LKFT/ci-loops build.
+
+Thanks!
