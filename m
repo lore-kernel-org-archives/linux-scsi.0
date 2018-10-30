@@ -1,128 +1,48 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH 11/14] irq: add support for allocating (and affinitizing)
- sets of IRQs
-Date: Tue, 30 Oct 2018 17:25:11 +0800
-Message-ID: <20181030092510.GB13582@ming.t460p>
-References: <20181029163738.10172-1-axboe@kernel.dk>
- <20181029163738.10172-12-axboe@kernel.dk>
+From: Sam Protsenko <semen.protsenko@linaro.org>
+Subject: Re: [PATCH v2] codafs: Fix build using bare-metal toolchain
+Date: Tue, 30 Oct 2018 14:01:04 +0200
+Message-ID: <CAKaJLVtT+pFzOBjybAXmOC0mJyN=BHavsfAYEzgSWn-i7UYEjA@mail.gmail.com>
+References: <20181029200311.16947-1-semen.protsenko@linaro.org>
+ <CAKaJLVvpNZW2a+3xc7PE0+iU1nm39A7PEjCu8F9ijrT+wEXOag@mail.gmail.com> <20181030063408.GA26627@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20181029163738.10172-12-axboe@kernel.dk>
+In-Reply-To: <20181030063408.GA26627@kroah.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, codalist@coda.cs.cmu.edu, coda@cs.cmu.edu, Andy Shevchenko <andy.shevchenko@gmail.com>, Praneeth Bajjuri <praneeth@ti.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Oct 29, 2018 at 10:37:35AM -0600, Jens Axboe wrote:
-> A driver may have a need to allocate multiple sets of MSI/MSI-X
-> interrupts, and have them appropriately affinitized. Add support for
-> defining a number of sets in the irq_affinity structure, of varying
-> sizes, and get each set affinitized correctly across the machine.
-> 
-> Cc: Thomas Gleixner <tglx@linutronix.de>
-> Cc: linux-kernel@vger.kernel.org
-> Reviewed-by: Hannes Reinecke <hare@suse.com>
-> Signed-off-by: Jens Axboe <axboe@kernel.dk>
-> ---
->  include/linux/interrupt.h |  4 ++++
->  kernel/irq/affinity.c     | 40 ++++++++++++++++++++++++++++++---------
->  2 files changed, 35 insertions(+), 9 deletions(-)
-> 
-> diff --git a/include/linux/interrupt.h b/include/linux/interrupt.h
-> index 1d6711c28271..ca397ff40836 100644
-> --- a/include/linux/interrupt.h
-> +++ b/include/linux/interrupt.h
-> @@ -247,10 +247,14 @@ struct irq_affinity_notify {
->   *			the MSI(-X) vector space
->   * @post_vectors:	Don't apply affinity to @post_vectors at end of
->   *			the MSI(-X) vector space
-> + * @nr_sets:		Length of passed in *sets array
-> + * @sets:		Number of affinitized sets
->   */
->  struct irq_affinity {
->  	int	pre_vectors;
->  	int	post_vectors;
-> +	int	nr_sets;
-> +	int	*sets;
->  };
->  
->  #if defined(CONFIG_SMP)
-> diff --git a/kernel/irq/affinity.c b/kernel/irq/affinity.c
-> index f4f29b9d90ee..2046a0f0f0f1 100644
-> --- a/kernel/irq/affinity.c
-> +++ b/kernel/irq/affinity.c
-> @@ -180,6 +180,7 @@ irq_create_affinity_masks(int nvecs, const struct irq_affinity *affd)
->  	int curvec, usedvecs;
->  	cpumask_var_t nmsk, npresmsk, *node_to_cpumask;
->  	struct cpumask *masks = NULL;
-> +	int i, nr_sets;
->  
->  	/*
->  	 * If there aren't any vectors left after applying the pre/post
-> @@ -210,10 +211,23 @@ irq_create_affinity_masks(int nvecs, const struct irq_affinity *affd)
->  	get_online_cpus();
->  	build_node_to_cpumask(node_to_cpumask);
->  
-> -	/* Spread on present CPUs starting from affd->pre_vectors */
-> -	usedvecs = irq_build_affinity_masks(affd, curvec, affvecs,
-> -					    node_to_cpumask, cpu_present_mask,
-> -					    nmsk, masks);
-> +	/*
-> +	 * Spread on present CPUs starting from affd->pre_vectors. If we
-> +	 * have multiple sets, build each sets affinity mask separately.
-> +	 */
-> +	nr_sets = affd->nr_sets;
-> +	if (!nr_sets)
-> +		nr_sets = 1;
-> +
-> +	for (i = 0, usedvecs = 0; i < nr_sets; i++) {
-> +		int this_vecs = affd->sets ? affd->sets[i] : affvecs;
-> +		int nr;
-> +
-> +		nr = irq_build_affinity_masks(affd, curvec, this_vecs,
-> +					      node_to_cpumask, cpu_present_mask,
-> +					      nmsk, masks + usedvecs);
-> +		usedvecs += nr;
-> +	}
->  
->  	/*
->  	 * Spread on non present CPUs starting from the next vector to be
-> @@ -258,13 +272,21 @@ int irq_calc_affinity_vectors(int minvec, int maxvec, const struct irq_affinity
->  {
->  	int resv = affd->pre_vectors + affd->post_vectors;
->  	int vecs = maxvec - resv;
-> -	int ret;
-> +	int set_vecs;
->  
->  	if (resv > minvec)
->  		return 0;
->  
-> -	get_online_cpus();
-> -	ret = min_t(int, cpumask_weight(cpu_possible_mask), vecs) + resv;
-> -	put_online_cpus();
-> -	return ret;
-> +	if (affd->nr_sets) {
-> +		int i;
-> +
-> +		for (i = 0, set_vecs = 0;  i < affd->nr_sets; i++)
-> +			set_vecs += affd->sets[i];
-> +	} else {
-> +		get_online_cpus();
-> +		set_vecs = cpumask_weight(cpu_possible_mask);
-> +		put_online_cpus();
-> +	}
-> +
-> +	return resv + min(set_vecs, vecs);
->  }
-> -- 
-> 2.17.1
-> 
+On Tue, Oct 30, 2018 at 8:34 AM, Greg KH <gregkh@linuxfoundation.org> wrote:
+> On Mon, Oct 29, 2018 at 10:05:49PM +0200, Sam Protsenko wrote:
+>> Hi Greg,
+>>
+>> On Mon, Oct 29, 2018 at 10:03 PM, Sam Protsenko
+>> <semen.protsenko@linaro.org> wrote:
+>> > The kernel is self-contained project and can be built with bare-metal
+>> > toolchain. But bare-metal toolchain doesn't define __linux__. Because of
+>> > this u_quad_t type is not defined when using bare-metal toolchain and
+>> > codafs build fails. This patch fixes it by defining u_quad_t type
+>> > unconditionally.
+>> >
+>> > Signed-off-by: Sam Protsenko <semen.protsenko@linaro.org>
+>> > ---
+>>
+>> Can you please pull this one, if this applicable? I sent it a while
+>> ago, but I guess it got lost in mailing list. It might be also
+>> applicable to stable branch (as it fixes allmodconfig build for ARM
+>> with bare-metal toolchain).
+>
+> Why are you asking me?  I'm not the maintainer of this file :(
+>
+> confused,
+>
 
-Looks fine:
+Sorry to bother you. I just thought you might be interested in this
+one, as it fixes build for "allmodconfig" configuration, hence it can
+be related to stable branch. Also, maintainers didn't respond to that
+patch, so I'm kinda dead in the water.
 
-Reviewed-by: Ming Lei <ming.lei@redhat.com>
+Anyway, will try to ping maintainers one more time.
 
--- 
-Ming
+> greg k-h
