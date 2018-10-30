@@ -1,99 +1,68 @@
-From: Suganath Prabu <suganath-prabu.subramani@broadcom.com>
-Subject: [v1 2/2] mpt3sas: Add support to Aero PCI IDs.
-Date: Tue, 30 Oct 2018 12:05:16 +0530
-Message-ID: <1540881316-13577-3-git-send-email-suganath-prabu.subramani@broadcom.com>
-References: <1540881316-13577-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+From: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
+Subject: Re: [v6 0/4] mpt3sas: Hot-Plug Surprise removal support on IOC.
+Date: Tue, 30 Oct 2018 12:12:42 +0530
+Message-ID: <CA+RiK64Y=FLr=SZmxEoCvWCvZq8ppqFsL=q2L1Q7T5sZfDQfkQ@mail.gmail.com>
+References: <1540290081-15827-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1540881316-13577-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+In-Reply-To: <1540290081-15827-1-git-send-email-suganath-prabu.subramani@broadcom.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Sathya.Prakash@broadcom.com, sreekanth.reddy@broadcom.com, Suganath Prabu <suganath-prabu.subramani@broadcom.com>
+To: helgaas@kernel.org, lukas@wunner.de, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: benh@kernel.crashing.org, ruscur@russell.cc, sbobroff@linux.ibm.com, Oliver <oohall@gmail.com>, Andy Shevchenko <andy.shevchenko@gmail.com>, Sathya Prakash <Sathya.Prakash@broadcom.com>, Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Add support for Aero/Sea controllers and
-add warning for configurable secure type IOC.
+Any update on this ?
+In V6, I have posted has only defect fixes (Other than HBA Hot-Plug
+Surprise remove support).
 
-Signed-off-by: Suganath Prabu <suganath-prabu.subramani@broadcom.com>
----
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 30 ++++++++++++++++++++++++++++--
- 1 file changed, 28 insertions(+), 2 deletions(-)
+We are reworking and incorporating the suggestions from Bjorn.
+And after covering tests, we ll post Hot-Plug Surprise removal patches.
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index df56cbe..e13ff84 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -10284,6 +10284,10 @@ _scsih_determine_hba_mpi_version(struct pci_dev *pdev)
- 	case MPI26_MFGPAGE_DEVID_SAS3516_1:
- 	case MPI26_MFGPAGE_DEVID_SAS3416:
- 	case MPI26_MFGPAGE_DEVID_SAS3616:
-+	case MPI26_MFGPAGE_DEVID_CFG_SEC_3916:
-+	case MPI26_MFGPAGE_DEVID_HARD_SEC_3916:
-+	case MPI26_MFGPAGE_DEVID_CFG_SEC_3816:
-+	case MPI26_MFGPAGE_DEVID_HARD_SEC_3816:
- 		return MPI26_VERSION;
- 	}
- 	return 0;
-@@ -10336,6 +10340,7 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 		ioc->hba_mpi_version_belonged = hba_mpi_version;
- 		ioc->id = mpt2_ids++;
- 		sprintf(ioc->driver_name, "%s", MPT2SAS_DRIVER_NAME);
-+		sprintf(ioc->name, "%s_cm%d", ioc->driver_name, ioc->id);
- 		switch (pdev->device) {
- 		case MPI2_MFGPAGE_DEVID_SSS6200:
- 			ioc->is_warpdrive = 1;
-@@ -10361,7 +10366,11 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 		ioc->hba_mpi_version_belonged = hba_mpi_version;
- 		ioc->id = mpt3_ids++;
- 		sprintf(ioc->driver_name, "%s", MPT3SAS_DRIVER_NAME);
-+		sprintf(ioc->name, "%s_cm%d", ioc->driver_name, ioc->id);
- 		switch (pdev->device) {
-+		case MPI26_MFGPAGE_DEVID_CFG_SEC_3816:
-+		case MPI26_MFGPAGE_DEVID_CFG_SEC_3916:
-+			ioc_warn(ioc, "HBA is in Configurable Secure mode\n");
- 		case MPI26_MFGPAGE_DEVID_SAS3508:
- 		case MPI26_MFGPAGE_DEVID_SAS3508_1:
- 		case MPI26_MFGPAGE_DEVID_SAS3408:
-@@ -10369,6 +10378,8 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 		case MPI26_MFGPAGE_DEVID_SAS3516_1:
- 		case MPI26_MFGPAGE_DEVID_SAS3416:
- 		case MPI26_MFGPAGE_DEVID_SAS3616:
-+		case MPI26_MFGPAGE_DEVID_HARD_SEC_3816:
-+		case MPI26_MFGPAGE_DEVID_HARD_SEC_3916:
- 			ioc->is_gen35_ioc = 1;
- 			break;
- 		default:
-@@ -10437,8 +10448,6 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	INIT_LIST_HEAD(&ioc->delayed_tr_volume_list);
- 	INIT_LIST_HEAD(&ioc->reply_queue_list);
- 
--	sprintf(ioc->name, "%s_cm%d", ioc->driver_name, ioc->id);
--
- 	/* init shost parameters */
- 	shost->max_cmd_len = 32;
- 	shost->max_lun = max_lun;
-@@ -10830,6 +10839,23 @@ static const struct pci_device_id mpt3sas_pci_table[] = {
- 	/* Mercator ~ 3616*/
- 	{ MPI2_MFGPAGE_VENDORID_LSI, MPI26_MFGPAGE_DEVID_SAS3616,
- 		PCI_ANY_ID, PCI_ANY_ID },
-+
-+	/* Aero SI 0x00E1 Configurable Secure
-+	 * 0x00E2 Hard Secure
-+	 */
-+	{ MPI2_MFGPAGE_VENDORID_LSI, MPI26_MFGPAGE_DEVID_CFG_SEC_3916,
-+		PCI_ANY_ID, PCI_ANY_ID },
-+	{ MPI2_MFGPAGE_VENDORID_LSI, MPI26_MFGPAGE_DEVID_HARD_SEC_3916,
-+		PCI_ANY_ID, PCI_ANY_ID },
-+
-+	/* Sea SI 0x00E5 Configurable Secure
-+	 * 0x00E6 Hard Secure
-+	 */
-+	{ MPI2_MFGPAGE_VENDORID_LSI, MPI26_MFGPAGE_DEVID_CFG_SEC_3816,
-+		PCI_ANY_ID, PCI_ANY_ID },
-+	{ MPI2_MFGPAGE_VENDORID_LSI, MPI26_MFGPAGE_DEVID_HARD_SEC_3816,
-+		PCI_ANY_ID, PCI_ANY_ID },
-+
- 	{0}     /* Terminating entry */
- };
- MODULE_DEVICE_TABLE(pci, mpt3sas_pci_table);
--- 
-1.8.3.1
+Thanks,
+Suganath Prabu
+On Tue, Oct 23, 2018 at 3:51 PM Suganath Prabu
+<suganath-prabu.subramani@broadcom.com> wrote:
+>
+> v6 Change set:
+> Incorporated changes as suggested by Andy.
+> In Patch 1 converted while loop to do while in
+> function mpt3sas_wait_for_ioc_to_operational().
+> And in patch 3 removed parentheses.
+>
+> V5 Change set:
+> V5 post has only defect fixes.
+> We are reworking and incorporating the suggestions from Bjorn.
+> And after covering tests, we ll be post Hot-Plug Surprise
+>  removal patches.
+>
+> V4 Change set:
+> Reframe split strings in print statement, to avoid
+>
+> V3 Change Set:
+> Simplified function "mpt3sas_base_pci_device_is_available" and
+> made inline
+>
+> V2 changes:
+> Replaced mpt3sas_base_pci_device_is_unplugged with
+> pci_device_is_present.
+>
+> V1 changes:
+> In Patch 0001 - unlock mutex, if active reset is in progress.
+> Suganath Prabu (4):
+>   mpt3sas: Separate out mpt3sas_wait_for_ioc_to_operational
+>   mpt3sas: Fix Sync cache command failure during driver unload
+>   mpt3sas:Fix driver modifying persistent data.
+>   mpt3sas: Bump driver version to 27.100.00.00.
+>
+>  drivers/scsi/mpt3sas/mpt3sas_base.c      | 75 ++++++++++++++++++--------------
+>  drivers/scsi/mpt3sas/mpt3sas_base.h      |  8 +++-
+>  drivers/scsi/mpt3sas/mpt3sas_config.c    | 28 +++---------
+>  drivers/scsi/mpt3sas/mpt3sas_ctl.c       | 21 ++-------
+>  drivers/scsi/mpt3sas/mpt3sas_scsih.c     | 38 +++++++++++++++-
+>  drivers/scsi/mpt3sas/mpt3sas_transport.c | 70 ++++++-----------------------
+>  6 files changed, 106 insertions(+), 134 deletions(-)
+>
+> --
+> 1.8.3.1
+>
