@@ -1,7 +1,7 @@
 From: Suganath Prabu <suganath-prabu.subramani@broadcom.com>
-Subject: [PATCH v7 4/8] mpt3sas: Call sas_remove_host before removing the target devices
-Date: Wed, 31 Oct 2018 18:53:35 +0530
-Message-ID: <1540992219-20291-5-git-send-email-suganath-prabu.subramani@broadcom.com>
+Subject: [PATCH v7 5/8] mpt3sas: Fix Sync cache command failure during driver unload
+Date: Wed, 31 Oct 2018 18:53:36 +0530
+Message-ID: <1540992219-20291-6-git-send-email-suganath-prabu.subramani@broadcom.com>
 References: <1540992219-20291-1-git-send-email-suganath-prabu.subramani@broadcom.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1540992219-20291-1-git-send-email-suganath-prabu.subramani@broadcom.com>
@@ -10,62 +10,76 @@ To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc: Sathya.Prakash@broadcom.com, sreekanth.reddy@broadcom.com, Suganath Prabu <suganath-prabu.subramani@broadcom.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Call sas_remove_host() before removing the target devices in the
-driver's .remove() callback function(i.e. during driver unload time).
-So that driver can provide a way to allow SYNC CACHE, START STOP unit
-commands etc. (which are issued from SML) to the target drives during
-driver unload time.
+This is to fix SYNC CACHE and START STOP command
+failures with DID_NO_CONNECT during driver unload.
 
-Once sas_remove_host() is called before removing the target drives then
-driver can just clean up the resources allocated for target devices and
-no need to call sas_port_delete_phy(), sas_port_delete() API's as these
-API's internally called from sas_remove_host().
+In driver's IO submission patch (i.e. in driver's .queuecommand())
+driver won't allow any SCSI commands to the IOC when ioc->remove_host
+flag is set and hence SYNC CACHE commands which are issued to the
+target drives (where write cache is enabled) during driver unload time
+is failed with DID_NO_CONNECT status.
+
+Now modified the driver to allow SYNC CACHE and START STOP commands
+to IOC, even when remove_host flag is set.
 
 Signed-off-by: Suganath Prabu <suganath-prabu.subramani@broadcom.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_scsih.c     | 2 +-
- drivers/scsi/mpt3sas/mpt3sas_transport.c | 7 +++++--
- 2 files changed, 6 insertions(+), 3 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 36 +++++++++++++++++++++++++++++++++++-
+ 1 file changed, 35 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 4d73b5e..12f565c 100644
+index 12f565c..df56cbe 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
 +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -9641,6 +9641,7 @@ static void scsih_remove(struct pci_dev *pdev)
- 
- 	/* release all the volumes */
- 	_scsih_ir_shutdown(ioc);
-+	sas_remove_host(shost);
- 	list_for_each_entry_safe(raid_device, next, &ioc->raid_device_list,
- 	    list) {
- 		if (raid_device->starget) {
-@@ -9682,7 +9683,6 @@ static void scsih_remove(struct pci_dev *pdev)
- 		ioc->sas_hba.num_phys = 0;
- 	}
- 
--	sas_remove_host(shost);
- 	mpt3sas_base_detach(ioc);
- 	spin_lock(&gioc_lock);
- 	list_del(&ioc->list);
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_transport.c b/drivers/scsi/mpt3sas/mpt3sas_transport.c
-index 9685c87..60ae2d0 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_transport.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_transport.c
-@@ -806,10 +806,13 @@ mpt3sas_transport_port_remove(struct MPT3SAS_ADAPTER *ioc, u64 sas_address,
- 			    mpt3sas_port->remote_identify.sas_address,
- 			    mpt3sas_phy->phy_id);
- 		mpt3sas_phy->phy_belongs_to_port = 0;
--		sas_port_delete_phy(mpt3sas_port->port, mpt3sas_phy->phy);
-+		if (!ioc->remove_host)
-+			sas_port_delete_phy(mpt3sas_port->port,
-+						mpt3sas_phy->phy);
- 		list_del(&mpt3sas_phy->port_siblings);
- 	}
--	sas_port_delete(mpt3sas_port->port);
-+	if (!ioc->remove_host)
-+		sas_port_delete(mpt3sas_port->port);
- 	kfree(mpt3sas_port);
+@@ -3748,6 +3748,40 @@ _scsih_tm_tr_complete(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index,
+ 	return _scsih_check_for_pending_tm(ioc, smid);
  }
  
++/** _scsih_allow_scmd_to_device - check whether scmd needs to
++ *				 issue to IOC or not.
++ * @ioc: per adapter object
++ * @scmd: pointer to scsi command object
++ *
++ * Returns true if scmd can be issued to IOC otherwise returns false.
++ */
++inline bool _scsih_allow_scmd_to_device(struct MPT3SAS_ADAPTER *ioc,
++	struct scsi_cmnd *scmd)
++{
++
++	if (ioc->pci_error_recovery)
++		return false;
++
++	if (ioc->hba_mpi_version_belonged == MPI2_VERSION) {
++		if (ioc->remove_host)
++			return false;
++
++		return true;
++	}
++
++	if (ioc->remove_host) {
++
++		switch (scmd->cmnd[0]) {
++		case SYNCHRONIZE_CACHE:
++		case START_STOP:
++			return true;
++		default:
++			return false;
++		}
++	}
++
++	return true;
++}
+ 
+ /**
+  * _scsih_sas_control_complete - completion routine
+@@ -4571,7 +4605,7 @@ scsih_qcmd(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
+ 		return 0;
+ 	}
+ 
+-	if (ioc->pci_error_recovery || ioc->remove_host) {
++	if (!(_scsih_allow_scmd_to_device(ioc, scmd))) {
+ 		scmd->result = DID_NO_CONNECT << 16;
+ 		scmd->scsi_done(scmd);
+ 		return 0;
 -- 
 1.8.3.1
