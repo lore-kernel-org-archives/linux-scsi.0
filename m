@@ -1,68 +1,117 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: RE: scsi_set_medium_removal timeout issue
-Date: Wed, 31 Oct 2018 10:19:39 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1810311018400.1531-100000@iolanthe.rowland.org>
-References: <678F3D1BB717D949B966B68EAEB446ED1F19F98A@dggemm526-mbx.china.huawei.com>
+From: Masahiro Yamada <yamada.masahiro@socionext.com>
+Subject: Re: [PATCH 1/9] aha152x: rename the PCMCIA define
+Date: Thu, 1 Nov 2018 00:22:21 +0900
+Message-ID: <CAK7LNASCtHqB8DiA8NSNYY4823NwcOMV-3sS4RLFc8pfgEQD4w@mail.gmail.com>
+References: <20181019120952.32763-1-hch@lst.de> <20181019120952.32763-2-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <678F3D1BB717D949B966B68EAEB446ED1F19F98A@dggemm526-mbx.china.huawei.com>
+In-Reply-To: <20181019120952.32763-2-hch@lst.de>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Zengtao (B)" <prime.zeng@hisilicon.com>
-Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>, "usb-storage@lists.one-eyed-alien.net" <usb-storage@lists.one-eyed-alien.net>
+To: Christoph Hellwig <hch@lst.de>
+Cc: mporter@kernel.crashing.org, Alex Bounine <alex.bou9@gmail.com>, Dominik Brodowski <linux@dominikbrodowski.net>, Linux Kbuild mailing list <linux-kbuild@vger.kernel.org>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, linux-pci@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, linux-arch <linux-arch@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 31 Oct 2018, Zengtao (B) wrote:
+On Fri, Oct 19, 2018 at 9:10 PM Christoph Hellwig <hch@lst.de> wrote:
+>
+> We plan to enable building the PCMCIA core and drivers, and the
+> non-prefixed PCMCIA name clashes with some arch headers.
+>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Acked-by: Thomas Gleixner <tglx@linutronix.de>
+> ---
 
-> Hi:
-> 
-> >-----Original Message-----
-> >From: Alan Stern [mailto:stern@rowland.harvard.edu]
-> >Sent: Tuesday, October 30, 2018 10:08 PM
-> >To: Zengtao (B) <prime.zeng@hisilicon.com>
-> >Cc: jejb@linux.vnet.ibm.com; martin.petersen@oracle.com;
-> >gregkh@linuxfoundation.org; linux-scsi@vger.kernel.org;
-> >linux-kernel@vger.kernel.org; linux-usb@vger.kernel.org;
-> >usb-storage@lists.one-eyed-alien.net
-> >Subject: Re: scsi_set_medium_removal timeout issue
-> >
-> >On Tue, 30 Oct 2018, Zengtao (B) wrote:
-> >
-> >> Hi
-> >>
-> >> I have recently met a scsi_set_medium_removal timeout issue, and it's
-> >> related  to both SCSI and USB MASS storage.
-> >> Since i am not an expert in either scsi or usb mass storage, i am
-> >> writing to report the issue and ask for a solution from you guys.
-> >>
-> >> My test scenario is as follow:
-> >> 1.Linux HOST-----Linux mass storage gadget(the back store is a flash
-> >partition).
-> >> 2.Host mount the device.
-> >> 3.Host writes some data to the Mass storage device.
-> >> 4.Host Unmount the device.
-> >> Both Linux kernels(Host and Device) are Linux 4.9.
-> >> Some has reported the same issue a long time ago, but it remains there.
-> >> https://www.spinics.net/lists/linux-usb/msg53739.html
-> >>
-> >> For the issue itself, there is my observation:
-> >> In the step 4, the Host will issue an
-> >PREVENT_ALLOW_MEDIUM_REMOVAL scsi command.
-> >> and and timeout happens due to the device 's very slow
-> >fsg_lun_fsync_sub.
-> >
-> >Something is wrong here.  Before sending PREVENT-ALLOW MEDIUM
-> >REMOVAL, the host should issue SYNCHRONIZE CACHE.  This will force
-> >fsg_lun_fsync_sub to run, and the host should allow a long timeout for
-> >this command.  Then when PREVENT-ALLOW MEDIUM REMOVAL is sent,
-> >nothing will need to be flushed.
-> >
-> 
-> Definitely, I haven't seen the SYNCHRONIZE CACHE from the host, it directly
-> issued the PREVENT-ALLOW MEDIUM REMOVAL, so maybe something wrong
-> with the scsi layer or something wrong with the mass storage class driver?
 
-Or it could be something else.  Can you please post the dmesg log from
-the host, showing what happens when the device is first plugged in?
+Applied to linux-kbuild.
 
-Alan Stern
+
+
+
+>  drivers/scsi/aha152x.c             | 14 +++++++-------
+>  drivers/scsi/pcmcia/aha152x_core.c |  2 +-
+>  2 files changed, 8 insertions(+), 8 deletions(-)
+>
+> diff --git a/drivers/scsi/aha152x.c b/drivers/scsi/aha152x.c
+> index 4d7b0e0adbf7..301b3cad15f8 100644
+> --- a/drivers/scsi/aha152x.c
+> +++ b/drivers/scsi/aha152x.c
+> @@ -269,7 +269,7 @@ static LIST_HEAD(aha152x_host_list);
+>  /* DEFINES */
+>
+>  /* For PCMCIA cards, always use AUTOCONF */
+> -#if defined(PCMCIA) || defined(MODULE)
+> +#if defined(AHA152X_PCMCIA) || defined(MODULE)
+>  #if !defined(AUTOCONF)
+>  #define AUTOCONF
+>  #endif
+> @@ -297,7 +297,7 @@ CMD_INC_RESID(struct scsi_cmnd *cmd, int inc)
+>
+>  #define DELAY_DEFAULT 1000
+>
+> -#if defined(PCMCIA)
+> +#if defined(AHA152X_PCMCIA)
+>  #define IRQ_MIN 0
+>  #define IRQ_MAX 16
+>  #else
+> @@ -328,7 +328,7 @@ MODULE_AUTHOR("J=C3=BCrgen Fischer");
+>  MODULE_DESCRIPTION(AHA152X_REVID);
+>  MODULE_LICENSE("GPL");
+>
+> -#if !defined(PCMCIA)
+> +#if !defined(AHA152X_PCMCIA)
+>  #if defined(MODULE)
+>  static int io[] =3D {0, 0};
+>  module_param_hw_array(io, int, ioport, NULL, 0);
+> @@ -391,7 +391,7 @@ static struct isapnp_device_id id_table[] =3D {
+>  MODULE_DEVICE_TABLE(isapnp, id_table);
+>  #endif /* ISAPNP */
+>
+> -#endif /* !PCMCIA */
+> +#endif /* !AHA152X_PCMCIA */
+>
+>  static struct scsi_host_template aha152x_driver_template;
+>
+> @@ -863,7 +863,7 @@ void aha152x_release(struct Scsi_Host *shpnt)
+>         if (shpnt->irq)
+>                 free_irq(shpnt->irq, shpnt);
+>
+> -#if !defined(PCMCIA)
+> +#if !defined(AHA152X_PCMCIA)
+>         if (shpnt->io_port)
+>                 release_region(shpnt->io_port, IO_RANGE);
+>  #endif
+> @@ -2924,7 +2924,7 @@ static struct scsi_host_template aha152x_driver_tem=
+plate =3D {
+>         .slave_alloc                    =3D aha152x_adjust_queue,
+>  };
+>
+> -#if !defined(PCMCIA)
+> +#if !defined(AHA152X_PCMCIA)
+>  static int setup_count;
+>  static struct aha152x_setup setup[2];
+>
+> @@ -3392,4 +3392,4 @@ static int __init aha152x_setup(char *str)
+>  __setup("aha152x=3D", aha152x_setup);
+>  #endif
+>
+> -#endif /* !PCMCIA */
+> +#endif /* !AHA152X_PCMCIA */
+> diff --git a/drivers/scsi/pcmcia/aha152x_core.c b/drivers/scsi/pcmcia/aha=
+152x_core.c
+> index dba3716511c5..24b89228b241 100644
+> --- a/drivers/scsi/pcmcia/aha152x_core.c
+> +++ b/drivers/scsi/pcmcia/aha152x_core.c
+> @@ -1,3 +1,3 @@
+> -#define PCMCIA 1
+> +#define AHA152X_PCMCIA 1
+>  #define AHA152X_STAT 1
+>  #include "aha152x.c"
+> --
+> 2.19.1
+>
+
+
+--=20
+Best Regards
+Masahiro Yamada
