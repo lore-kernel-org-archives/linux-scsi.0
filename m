@@ -1,42 +1,58 @@
-From: Sam Protsenko <semen.protsenko@linaro.org>
-Subject: [PATCH v2] codafs: Fix build using bare-metal toolchain
-Date: Tue, 30 Oct 2018 22:27:13 +0200
-Message-ID: <20181030202713.26203-1-semen.protsenko@linaro.org>
+From: "Zengtao (B)" <prime.zeng@hisilicon.com>
+Subject: RE: scsi_set_medium_removal timeout issue
+Date: Wed, 31 Oct 2018 02:34:15 +0000
+Message-ID: <678F3D1BB717D949B966B68EAEB446ED1F19F98A@dggemm526-mbx.china.huawei.com>
+References: <678F3D1BB717D949B966B68EAEB446ED1F19F1CF@dggemm526-mbx.china.huawei.com>
+ <Pine.LNX.4.44L0.1810301005200.1515-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.44L0.1810301005200.1515-100000@iolanthe.rowland.org>
+Content-Language: zh-CN
 Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, kernel-janitors@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, codalist@coda.cs.cmu.edu, coda@cs.cmu.edu, Andy Shevchenko <andy.shevchenko@gmail.com>, Praneeth Bajjuri <praneeth@ti.com>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>, "usb-storage@lists.one-eyed-alien.net" <usb-storage@lists.one-eyed-alien.net>
 List-Id: linux-scsi@vger.kernel.org
 
-The kernel is self-contained project and can be built with bare-metal
-toolchain. But bare-metal toolchain doesn't define __linux__. Because of
-this u_quad_t type is not defined when using bare-metal toolchain and
-codafs build fails. This patch fixes it by defining u_quad_t type
-unconditionally.
-
-Cc: Jan Harkes <jaharkes@cs.cmu.edu>
-Cc: Christoph Hellwig <hch@infradead.org>
-Cc: Andy Shevchenko <andy.shevchenko@gmail.com>
-Signed-off-by: Sam Protsenko <semen.protsenko@linaro.org>
----
- include/linux/coda.h | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-diff --git a/include/linux/coda.h b/include/linux/coda.h
-index d30209b9cef8..0ca0c83fdb1c 100644
---- a/include/linux/coda.h
-+++ b/include/linux/coda.h
-@@ -58,8 +58,7 @@ Mellon the rights to redistribute these changes without encumbrance.
- #ifndef _CODA_HEADER_
- #define _CODA_HEADER_
- 
--#if defined(__linux__)
- typedef unsigned long long u_quad_t;
--#endif
-+
- #include <uapi/linux/coda.h>
- #endif 
--- 
-2.19.1
+SGk6DQoNCj4tLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPkZyb206IEFsYW4gU3Rlcm4gW21h
+aWx0bzpzdGVybkByb3dsYW5kLmhhcnZhcmQuZWR1XQ0KPlNlbnQ6IFR1ZXNkYXksIE9jdG9iZXIg
+MzAsIDIwMTggMTA6MDggUE0NCj5UbzogWmVuZ3RhbyAoQikgPHByaW1lLnplbmdAaGlzaWxpY29u
+LmNvbT4NCj5DYzogamVqYkBsaW51eC52bmV0LmlibS5jb207IG1hcnRpbi5wZXRlcnNlbkBvcmFj
+bGUuY29tOw0KPmdyZWdraEBsaW51eGZvdW5kYXRpb24ub3JnOyBsaW51eC1zY3NpQHZnZXIua2Vy
+bmVsLm9yZzsNCj5saW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnOyBsaW51eC11c2JAdmdlci5r
+ZXJuZWwub3JnOw0KPnVzYi1zdG9yYWdlQGxpc3RzLm9uZS1leWVkLWFsaWVuLm5ldA0KPlN1Ympl
+Y3Q6IFJlOiBzY3NpX3NldF9tZWRpdW1fcmVtb3ZhbCB0aW1lb3V0IGlzc3VlDQo+DQo+T24gVHVl
+LCAzMCBPY3QgMjAxOCwgWmVuZ3RhbyAoQikgd3JvdGU6DQo+DQo+PiBIaQ0KPj4NCj4+IEkgaGF2
+ZSByZWNlbnRseSBtZXQgYSBzY3NpX3NldF9tZWRpdW1fcmVtb3ZhbCB0aW1lb3V0IGlzc3VlLCBh
+bmQgaXQncw0KPj4gcmVsYXRlZCAgdG8gYm90aCBTQ1NJIGFuZCBVU0IgTUFTUyBzdG9yYWdlLg0K
+Pj4gU2luY2UgaSBhbSBub3QgYW4gZXhwZXJ0IGluIGVpdGhlciBzY3NpIG9yIHVzYiBtYXNzIHN0
+b3JhZ2UsIGkgYW0NCj4+IHdyaXRpbmcgdG8gcmVwb3J0IHRoZSBpc3N1ZSBhbmQgYXNrIGZvciBh
+IHNvbHV0aW9uIGZyb20geW91IGd1eXMuDQo+Pg0KPj4gTXkgdGVzdCBzY2VuYXJpbyBpcyBhcyBm
+b2xsb3c6DQo+PiAxLkxpbnV4IEhPU1QtLS0tLUxpbnV4IG1hc3Mgc3RvcmFnZSBnYWRnZXQodGhl
+IGJhY2sgc3RvcmUgaXMgYSBmbGFzaA0KPnBhcnRpdGlvbikuDQo+PiAyLkhvc3QgbW91bnQgdGhl
+IGRldmljZS4NCj4+IDMuSG9zdCB3cml0ZXMgc29tZSBkYXRhIHRvIHRoZSBNYXNzIHN0b3JhZ2Ug
+ZGV2aWNlLg0KPj4gNC5Ib3N0IFVubW91bnQgdGhlIGRldmljZS4NCj4+IEJvdGggTGludXgga2Vy
+bmVscyhIb3N0IGFuZCBEZXZpY2UpIGFyZSBMaW51eCA0LjkuDQo+PiBTb21lIGhhcyByZXBvcnRl
+ZCB0aGUgc2FtZSBpc3N1ZSBhIGxvbmcgdGltZSBhZ28sIGJ1dCBpdCByZW1haW5zIHRoZXJlLg0K
+Pj4gaHR0cHM6Ly93d3cuc3Bpbmljcy5uZXQvbGlzdHMvbGludXgtdXNiL21zZzUzNzM5Lmh0bWwN
+Cj4+DQo+PiBGb3IgdGhlIGlzc3VlIGl0c2VsZiwgdGhlcmUgaXMgbXkgb2JzZXJ2YXRpb246DQo+
+PiBJbiB0aGUgc3RlcCA0LCB0aGUgSG9zdCB3aWxsIGlzc3VlIGFuDQo+UFJFVkVOVF9BTExPV19N
+RURJVU1fUkVNT1ZBTCBzY3NpIGNvbW1hbmQuDQo+PiBhbmQgYW5kIHRpbWVvdXQgaGFwcGVucyBk
+dWUgdG8gdGhlIGRldmljZSAncyB2ZXJ5IHNsb3cNCj5mc2dfbHVuX2ZzeW5jX3N1Yi4NCj4NCj5T
+b21ldGhpbmcgaXMgd3JvbmcgaGVyZS4gIEJlZm9yZSBzZW5kaW5nIFBSRVZFTlQtQUxMT1cgTUVE
+SVVNDQo+UkVNT1ZBTCwgdGhlIGhvc3Qgc2hvdWxkIGlzc3VlIFNZTkNIUk9OSVpFIENBQ0hFLiAg
+VGhpcyB3aWxsIGZvcmNlDQo+ZnNnX2x1bl9mc3luY19zdWIgdG8gcnVuLCBhbmQgdGhlIGhvc3Qg
+c2hvdWxkIGFsbG93IGEgbG9uZyB0aW1lb3V0IGZvcg0KPnRoaXMgY29tbWFuZC4gIFRoZW4gd2hl
+biBQUkVWRU5ULUFMTE9XIE1FRElVTSBSRU1PVkFMIGlzIHNlbnQsDQo+bm90aGluZyB3aWxsIG5l
+ZWQgdG8gYmUgZmx1c2hlZC4NCj4NCg0KRGVmaW5pdGVseSwgSSBoYXZlbid0IHNlZW4gdGhlIFNZ
+TkNIUk9OSVpFIENBQ0hFIGZyb20gdGhlIGhvc3QsIGl0IGRpcmVjdGx5DQppc3N1ZWQgdGhlIFBS
+RVZFTlQtQUxMT1cgTUVESVVNIFJFTU9WQUwsIHNvIG1heWJlIHNvbWV0aGluZyB3cm9uZw0Kd2l0
+aCB0aGUgc2NzaSBsYXllciBvciBzb21ldGhpbmcgd3Jvbmcgd2l0aCB0aGUgbWFzcyBzdG9yYWdl
+IGNsYXNzIGRyaXZlcj8NCg0KWmVuZ3RhbyANCg0KPkFsYW4gU3Rlcm4NCj4NCj4+IEkgZm91bmQg
+dGhlcmUgYXJlIHR3byBtZXRob2RzIHRvIHdvcmthcm91bmQgdGhlIGlzc3VlOg0KPj4gMS4gQ2hh
+bmdlIHRoZSB0aW1lb3V0IHZhbHVlIG9mIGhvc3Qgc2NzaSBjb21tYW5kDQo+PiBQUkVWRU5UX0FM
+TE9XX01FRElVTV9SRU1PVkFMIHRvIHRvIGFib3V0IDYwIHNlY29uZHMgZnJvbSAxMA0KPnNlY29u
+ZHMuDQo+PiAyLiBSZW1vdmUgdGhlIGZzZ19sdW5fZnN5bmNfc3ViIGluIHRoZSBkZXZpY2UncyBN
+YXNzIHN0b3JhZ2UgZ2FkZ2V0DQo+ZHJpdmVyLg0KPj4NCj4+IFRoYW5rcw0KPj4NCj4+IFJlZ2Fy
+ZHMNCj4+IHplbnRhbw0KDQo=
