@@ -1,69 +1,96 @@
 From: Boaz Harrosh <ooo@electrozaur.com>
 Subject: Re: [PATCH] libosd: Remove ignored __weak attribute
-Date: Thu, 1 Nov 2018 03:15:56 +0200
-Message-ID: <65187f1a-4e67-3d96-ea97-e37c8bf87e48@electrozaur.com>
+Date: Thu, 1 Nov 2018 03:39:54 +0200
+Message-ID: <1c58c82f-5cfa-f483-097a-5b82904e5e9a@electrozaur.com>
 References: <20180930205448.26205-1-natechancellor@gmail.com>
  <10b12992-3570-4646-374b-82cbd7276839@acm.org>
  <CAKwvOd=wgxB69dMxzMeH2edCn=TdQGPGkNVW1e=QHPTJtO9ZNw@mail.gmail.com>
  <1538503063.193396.6.camel@acm.org>
  <CAKwvOdmsNEexQL9R8rgcRcXTZButYM6YWwG8bhVWCoJ8bOqCrA@mail.gmail.com>
  <1538521591.193396.8.camel@acm.org> <20181025213144.GB24709@flashbox>
- <CAKwvOdn=TvoGdFvgxX6TyXBXnhVLttriRrZEnzS6DjcjL64DPA@mail.gmail.com>
- <20181025225548.GA10326@flashbox>
- <CAKwvOdnwmf47_m_0K5OCLmXbrkLNnekpNOPCCMeJqkuqKUbQ-A@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAKwvOdnwmf47_m_0K5OCLmXbrkLNnekpNOPCCMeJqkuqKUbQ-A@mail.gmail.com>
+In-Reply-To: <20181025213144.GB24709@flashbox>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Nick Desaulniers <ndesaulniers@google.com>, Nathan Chancellor <natechancellor@gmail.com>
-Cc: bvanassche@acm.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, hch@infradead.org
+To: Nathan Chancellor <natechancellor@gmail.com>, Bart Van Assche <bvanassche@acm.org>
+Cc: Nick Desaulniers <ndesaulniers@google.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 26/10/18 20:54, Nick Desaulniers wrote:
+On 26/10/18 00:31, Nathan Chancellor wrote:
+> On Tue, Oct 02, 2018 at 04:06:31PM -0700, Bart Van Assche wrote:
 <>
 > 
-> It's hard to say without knowing the original intent of the code.
->>From the variable's identifier and fact that it's global, I *assume*
-> that we want only 1 struct osd_obj_id which is the root, hence the
-> identifier `osd_root_object`.  It has 4 references in the entire
-> kernel; it doesn't make sense to my why those references would want to
-> be referring to two different instances of `osd_root_object`.  Maybe
-> the maintainers can clarify if 2 instances is the intent?
+> Hi Bart,
 > 
-> Further complicated is the use of the __weak attribute AND the
-> compiler flag -fno-common (which the kernel sets in the top level
-> Makefile).  Also, it seems that ODR is a C++ concept; it's not clear
-> to me if there's semantic differences with C or not (I don't think so
-> in this case, but I've learned not to bet on subtle semantic
-> differences between the languages not existing).
+> I'm sorry if I didn't follow the conclusion of this conversation properly
+> but this is the below diff you were initially looking for, correct?
 > 
-> __attribute__((weak)) AND static on a global variable declared in a
-> header raises many red flags to me.  Was weak added to work around an
-> ODR link error?
-> 
-> If creating one instance of this variable is a functional change, I
-> can't help but suspect the original code was wrong.  But maybe Bart,
-> Boaz, or Christoph can clarify or have more thoughts on this?  Looks
-> like Boaz added this header in commit de258bf5e638 ("[SCSI] libosd:
-> OSDv1 Headers").
+> If so, Boaz and Nick, do you have any objections if this is v2? I'd like
+> to get this patch accepted so the warning can be fixed for everyone.
 > 
 
-Sorry for the late response. Was off line for a bit.
+ACK on both the original and below code they will all work just fine.
 
-The original patch and all its permutations are all correct
-the definition of osd_root_object is just a fancy type cast of
-couple of zeros. IE a couple of zeroes with the right type. So they
-can be simply compared to retuned and sent line content. So it does
-not matter at all what change is accepted.
+I do like the original "just remove the _weak thingy". But this one
+will work as well.
 
-I'm so sorry for your trouble and test development. It could all
-be saved if I was noticing this thread.
+The "with extern" version suggested before is more cumbersome because it will
+need an EXPORT_SYMBOL() but will also work.
 
-I will ACK again the original simple V2 patch.
+The all use of osd_root_object is just. A properly C-types pointer to couple
+of ZEROS. but since the Interface needs a pointer, those zeros need storage
+somewhere. It does not matter where. (The value of the pointer is not used
+only its content)
+
+Do you need that I send a proper patch? Actually the original first patch
+is the version I like. (And again all 3 approaches will work)
 
 Thanks
 Boaz
 
-<>
+> Thanks,
+> Nathan
+> 
+> ================================================================================
+> 
+> diff --git a/drivers/scsi/osd/osd_initiator.c b/drivers/scsi/osd/osd_initiator.c
+> index e19fa883376f..4250f739beb3 100644
+> --- a/drivers/scsi/osd/osd_initiator.c
+> +++ b/drivers/scsi/osd/osd_initiator.c
+> @@ -58,6 +58,8 @@
+> 
+>  enum { OSD_REQ_RETRIES = 1 };
+> 
+> +static const struct osd_obj_id osd_root_object;
+> +
+>  MODULE_AUTHOR("Boaz Harrosh <ooo@electrozaur.com>");
+>  MODULE_DESCRIPTION("open-osd initiator library libosd.ko");
+>  MODULE_LICENSE("GPL");
+> diff --git a/drivers/scsi/osd/osd_uld.c b/drivers/scsi/osd/osd_uld.c
+> index eaf36ccf58db..770c758baaa9 100644
+> --- a/drivers/scsi/osd/osd_uld.c
+> +++ b/drivers/scsi/osd/osd_uld.c
+> @@ -73,6 +73,7 @@
+> 
+>  static const char osd_name[] = "osd";
+>  static const char *osd_version_string = "open-osd 0.2.1";
+> +static const struct osd_obj_id osd_root_object;
+> 
+>  MODULE_AUTHOR("Boaz Harrosh <ooo@electrozaur.com>");
+>  MODULE_DESCRIPTION("open-osd Upper-Layer-Driver osd.ko");
+> diff --git a/include/scsi/osd_types.h b/include/scsi/osd_types.h
+> index 48e8a165e136..eb31357ec8b3 100644
+> --- a/include/scsi/osd_types.h
+> +++ b/include/scsi/osd_types.h
+> @@ -28,8 +28,6 @@ struct osd_obj_id {
+>         osd_id id;
+>  };
+> 
+> -static const struct __weak osd_obj_id osd_root_object = {0, 0};
+> -
+>  struct osd_attr {
+>         u32 attr_page;
+>         u32 attr_id;
+> 
