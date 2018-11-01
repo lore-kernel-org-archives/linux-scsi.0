@@ -1,130 +1,86 @@
 From: Boaz Harrosh <ooo@electrozaur.com>
-Subject: Re: remove exofs and the T10 OSD code V2
-Date: Thu, 1 Nov 2018 02:03:41 +0200
-Message-ID: <a711a25d-e866-aabe-95c8-53bcd212a173@electrozaur.com>
-References: <20181027082019.20838-1-hch@lst.de>
- <f9423180-e0fc-efba-e759-dfa4725953ad@kernel.dk>
- <20181030074542.GB24697@lst.de>
- <ea317f79-37bb-1149-fc43-fb07f46c15e9@electrozaur.com>
- <57a73f2b-29be-6301-2f4b-df582b7d23ff@interlog.com>
+Subject: Re: [PATCH] libosd: Remove ignored __weak attribute
+Date: Thu, 1 Nov 2018 03:05:30 +0200
+Message-ID: <3839ac8c-145c-9046-32d0-ab434dcee578@electrozaur.com>
+References: <20180930205448.26205-1-natechancellor@gmail.com>
+ <10b12992-3570-4646-374b-82cbd7276839@acm.org>
+ <CAKwvOd=wgxB69dMxzMeH2edCn=TdQGPGkNVW1e=QHPTJtO9ZNw@mail.gmail.com>
+ <1538503063.193396.6.camel@acm.org>
+ <CAKwvOdmsNEexQL9R8rgcRcXTZButYM6YWwG8bhVWCoJ8bOqCrA@mail.gmail.com>
+ <1538521591.193396.8.camel@acm.org> <20181025213144.GB24709@flashbox>
+ <CAKwvOdn=TvoGdFvgxX6TyXBXnhVLttriRrZEnzS6DjcjL64DPA@mail.gmail.com>
+ <20181025225548.GA10326@flashbox>
+ <CAKwvOdnwmf47_m_0K5OCLmXbrkLNnekpNOPCCMeJqkuqKUbQ-A@mail.gmail.com>
+ <1540576908.66186.103.camel@acm.org>
+ <CAKwvOdnYx60JkJHJkD7CYA9yx5Oa7Tn9q4aZ3-tcZGx++yoduQ@mail.gmail.com>
+ <1540589437.66186.124.camel@acm.org>
+ <CAKwvOdm-xYRqCBXhLC1ceC44_rEmggW4qiSgGpRkpL+p-NadVg@mail.gmail.com>
+ <1540591147.66186.127.camel@acm.org>
+ <CAKwvOdmUhtK10cbYFoEJJp4O8LA_F-+f68A_NcL_fm_FH6QodA@mail.gmail.com>
+ <1540592684.66186.136.camel@acm.org> <yq1o9bfcydm.fsf@oracle.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <57a73f2b-29be-6301-2f4b-df582b7d23ff@interlog.com>
+In-Reply-To: <yq1o9bfcydm.fsf@oracle.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: dgilbert@interlog.com, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, martin.petersen@oracle.com, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Nick Desaulniers <ndesaulniers@google.com>, Nathan Chancellor <natechancellor@gmail.com>, osd-dev@open-osd.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, Bart Van Assche <bvanassche@acm.org>
+Cc: Nick Desaulniers <ndesaulniers@google.com>, Linus Torvalds <torvalds@linux-foundation.org>, Nathan Chancellor <natechancellor@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, hch@infradead.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 31/10/18 23:10, Douglas Gilbert wrote:
-> On 2018-10-31 4:57 p.m., Boaz Harrosh wrote:
->> On 30/10/18 09:45, Christoph Hellwig wrote:
->>> On Mon, Oct 29, 2018 at 02:42:12PM -0600, Jens Axboe wrote:
->>>> LGTM, for both:
->>>
->>> I also have this one on top as requested by Martin.  The core block
->>> bidi support is unfortunately also used by bsg-lib, although it is
->>> not anywhere near as invasive.  But that is another argument for
->>> looking into moving bsg-lib away from using block queues..
->>>
->>
->> BUT this patch is very very wrong.
->>
->> Totally apart from T10-OSD and its use in the field. Support for scsi BIDI
->> commands is not exclusive to T10-OSD at all. Even the simple scsi-array
->> command-set has BIDI operations defined. for example the write-return-xor
->> and so on.
->>
->> Also some private administrative CDBs of some vendor devices uses SCSI-BIDI.
->> So this patch just broke some drivers. (User-mode apps use bsg pass through)
->>
->> Also you might (try hard and) remove all usage of scsi-bidi as an initiator
->> from the Linux Kernel. But what about target mode. As a target we have supported
->> on the wire bidi protocols like write-return-xor and others for a long time.
->> Are you willing to silently break all these setups in the field on the next update?
->> Are you so sure these are never used?
->>
->> PLEASE, I beg of you guys. Do not remove SCSI-BIDI. It is a cry of generations.
->>
->> And I think by the rules of Linus, as far as target mode. You are not allowed
->> to break users in this way.
+On 27/10/18 16:28, Martin K. Petersen wrote:
 > 
-> Hi,
-> I'm in the process of rebuilding the sg driver with the following goals:
+> Bart,
 > 
->    - undo 20 years of road wear, some of which is caused by literally
->      hundreds of "laparoscopic" patches that gradually ruin a driver,
->      at least from the maintainer's viewpoint. Comments that once made
->      sense become cryptic or just nonsense; naming schemes that
->      obliterate variable names to the extent that a random name
->      generator would be easier to follow; and just plain broken code.
->      For example, why sort out the existing locking at a particular
->      level when you can add a new lock in a completely non-orthogonal
->      way? [Yes, I looking at you, google.] Anyway, my first cut at this
->      is out there (on the linux-scsi list, see: "[PATCH v3 0/8] sg:
->      major cleanup, remove max_queue limit"). Not much new there,
->      unless you look very closely
+>> Removing kernel drivers that are not used helps to reduce the workload
+>> of a maintainer and hence is a rational action. Additionally, if
+>> anyone would ever complain about removal of a kernel driver, it can be
+>> brought back by reverting the commit through which it has been
+>> removed.  Martin, please reply if you see this differently.
 > 
->    - the next step is to add to the sg driver async SCSI command
->      capability based on the sg_io_v4 structure previously only used
->      by the bsg driver and now removed from bsg. The main advantage
->      of the sg_io_v4 structure over previous pass-through interface
->      attempts is the support of SCSI bidi commands
+> We remove crusty old SCSI drivers all the time. The heuristic is based
+> on lack of user bug reports and absence of commits that are not due to
+> kernel interface changes or trivial cleanups. So removing stuff is
+> perfectly normal.
 > 
->    - as part of this effort introduce two new ioctls: SG_IOSUBMIT and
->      SG_IORECEIVE to replace the write()/read() technique currently
->      in use (since Linux 1.0 in 1992). The write()/read() technique
->      seems to be responsible for various security folks losing clumps
->      of their hair. One advantage of ioctls, as Alan Cox pointed out,
->      is the ability to write to and read back from the kernel in a way
->      that is naturally synchronized. [Actually, those security folks
->      shouldn't look too closely at sg_read() in that respect.]
-> 
-> In discussions with several folks who are on the T10 committee, I
-> wondered why there was no READ GATHERED command (there has been a
-> WRITE SCATTERED for 2 years). The answer was lack of interest ***,
-> plus the difficultly of implementation. You see, READ GATHERED needs
-> to send a scatter gather list to the device and get the corresponding
-> data back (as a linear array). And that requires either:
->    a) bidi commands (scatter gather list in the data-out, corresponding
->       "read" data in the data-in), or
->    b) loooong SCSI commands, up to around 256 bytes long in which the
->       sgat list is the latter part of that command
-> 
-> And the T10 folks say neither of those options is well supported or
-> is expensive. 
+> The OSD protocol failed to get traction in the industry, adoption was
+> very limited. 
 
-It is supported in Linux scsi/osd driver is a proof of that. And expensive
-it is not. I have demonstrated the ability to saturate a 10G link over
-a raid of devices from a single writer. In OSD everything is bidi.
+Very true.
 
-> I'm guessing they are referring to Linux and Windows.
-> I haven't argued much beyond that point, but it looks like a bit of
-> a chicken and egg situation.
-> 
-> 
-> Don't know too much about the T10 OSD stuff. But I can see that it
-> uses both long SCSI commands and a lot of bidi. IMO it seems to be
-> 10 or 20 years before its time. Maybe ibm/redhat need to
-> (re-)discover it for it to catch on.
-> 
-> 
-> Plus there are proprietary SCSI bidi commands out there. People contact
-> me and ask me how to issue them with sg3_utils package. Easy, I tell them,
-> just use sg_raw with a bsg device. Typically, in my experience, "no news
-> is good news" after suggestions like that. When I give bad advice, I
-> usually hear back relatively quickly. Anyone who wants SCSI bidi _async_
-> support is currently out of luck.
+> If the code just plugged straight into existing kernel
+> interfaces it would be easier to justify keeping it around. 
+
+It was using the very much straight existing kernel interfaces
+at the time of its insertion, basically the regular PC_command
+(As opposed to FS_commnnd) Where the CDB/scsi_command content is
+provided by the caller. And the commands complete as an whole.
+Plus the added support for bidi PC_commands.
+
+Please tell me what are those entangled interfaces you are unhappy with?
+I would like to help disentangle them.
+
+> However, the
+> OSD support requires bidirectional command support so we carry a bunch
+> of additional plumbing in both block and SCSI to accommodate it. There
+> are no other users of these interfaces, so dropping OSD would mean we
+> could simplify some (hot) code paths. That would be a win in my book.
+
+But OSD is not the only one or scsi command-set that is using bidi. There
+are a few more uses of scsi and BTW block-layer bidi commands in the field.
+Target drivers been supporting bidi commands. Vendor drivers use bidi interface
+for management CDBS. I'm afraid that by the Linus rules you cannot remove bidi.
+Orthogonal to t10-osd or not to be.
+
+> Consequently, if a patch were to materialize that disentangled and
+> removed OSD, I'd be inclined to merge it.
 > 
 
-Thank you Doug
+Is there a way I can help with this?
 
+> But I do think that this is an orthogonal discussion to the innocuous
+> __weak attribute cleanup.
+> 
 
-> Enough already
-> Doug Gilbert
-> 
-> 
-> *** example: loading all or most kernel modules in a few READ SCATTERED
->      commands might speed up boot time ...
-> 
+Thanks
+Boaz
