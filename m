@@ -1,110 +1,43 @@
-From: Nathan Chancellor <natechancellor@gmail.com>
-Subject: Re: [PATCH] libosd: Remove ignored __weak attribute
-Date: Wed, 31 Oct 2018 18:44:27 -0700
-Message-ID: <20181101014427.GA5060@flashbox>
-References: <20180930205448.26205-1-natechancellor@gmail.com>
- <10b12992-3570-4646-374b-82cbd7276839@acm.org>
- <CAKwvOd=wgxB69dMxzMeH2edCn=TdQGPGkNVW1e=QHPTJtO9ZNw@mail.gmail.com>
- <1538503063.193396.6.camel@acm.org>
- <CAKwvOdmsNEexQL9R8rgcRcXTZButYM6YWwG8bhVWCoJ8bOqCrA@mail.gmail.com>
- <1538521591.193396.8.camel@acm.org>
- <20181025213144.GB24709@flashbox>
- <1c58c82f-5cfa-f483-097a-5b82904e5e9a@electrozaur.com>
+From: Souptick Joarder <jrdr.linux@gmail.com>
+Subject: [PATCH] scsi/aic94xx/aic94xx_hwi.c: Use dma_pool_zalloc
+Date: Thu, 1 Nov 2018 09:49:09 +0530
+Message-ID: <20181101041909.GA3241@jordon-HP-15-Notebook-PC>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1c58c82f-5cfa-f483-097a-5b82904e5e9a@electrozaur.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Boaz Harrosh <ooo@electrozaur.com>
-Cc: Bart Van Assche <bvanassche@acm.org>, Nick Desaulniers <ndesaulniers@google.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, keescook@chromium.org
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, brajeswar.linux@gmail.com, sabyasachi.linux@gmail.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Nov 01, 2018 at 03:39:54AM +0200, Boaz Harrosh wrote:
-> On 26/10/18 00:31, Nathan Chancellor wrote:
-> > On Tue, Oct 02, 2018 at 04:06:31PM -0700, Bart Van Assche wrote:
-> <>
-> > 
-> > Hi Bart,
-> > 
-> > I'm sorry if I didn't follow the conclusion of this conversation properly
-> > but this is the below diff you were initially looking for, correct?
-> > 
-> > If so, Boaz and Nick, do you have any objections if this is v2? I'd like
-> > to get this patch accepted so the warning can be fixed for everyone.
-> > 
-> 
-> ACK on both the original and below code they will all work just fine.
-> 
-> I do like the original "just remove the _weak thingy". But this one
-> will work as well.
-> 
-> The "with extern" version suggested before is more cumbersome because it will
-> need an EXPORT_SYMBOL() but will also work.
-> 
-> The all use of osd_root_object is just. A properly C-types pointer to couple
-> of ZEROS. but since the Interface needs a pointer, those zeros need storage
-> somewhere. It does not matter where. (The value of the pointer is not used
-> only its content)
-> 
-> Do you need that I send a proper patch? Actually the original first patch
-> is the version I like. (And again all 3 approaches will work)
-> 
-> Thanks
-> Boaz
-> 
+Replaced dma_pool_alloc + memset with dma_pool_zalloc
 
-Hi Boaz,
+Signed-off-by: Brajeswar Ghosh <brajeswar.linux@gmail.com>
+Signed-off-by: Souptick Joarder <jrdr.linux@gmail.com>
+---
+ drivers/scsi/aic94xx/aic94xx_hwi.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-I am fine with the original v1 as long as you and everyone else are.
-I don't mind resending or making a v2 if I need to as well. Just would
-like everyone to come to an agreement on something!
-
-Thanks for the review and clarity,
-Nathan
-
-> > Thanks,
-> > Nathan
-> > 
-> > ================================================================================
-> > 
-> > diff --git a/drivers/scsi/osd/osd_initiator.c b/drivers/scsi/osd/osd_initiator.c
-> > index e19fa883376f..4250f739beb3 100644
-> > --- a/drivers/scsi/osd/osd_initiator.c
-> > +++ b/drivers/scsi/osd/osd_initiator.c
-> > @@ -58,6 +58,8 @@
-> > 
-> >  enum { OSD_REQ_RETRIES = 1 };
-> > 
-> > +static const struct osd_obj_id osd_root_object;
-> > +
-> >  MODULE_AUTHOR("Boaz Harrosh <ooo@electrozaur.com>");
-> >  MODULE_DESCRIPTION("open-osd initiator library libosd.ko");
-> >  MODULE_LICENSE("GPL");
-> > diff --git a/drivers/scsi/osd/osd_uld.c b/drivers/scsi/osd/osd_uld.c
-> > index eaf36ccf58db..770c758baaa9 100644
-> > --- a/drivers/scsi/osd/osd_uld.c
-> > +++ b/drivers/scsi/osd/osd_uld.c
-> > @@ -73,6 +73,7 @@
-> > 
-> >  static const char osd_name[] = "osd";
-> >  static const char *osd_version_string = "open-osd 0.2.1";
-> > +static const struct osd_obj_id osd_root_object;
-> > 
-> >  MODULE_AUTHOR("Boaz Harrosh <ooo@electrozaur.com>");
-> >  MODULE_DESCRIPTION("open-osd Upper-Layer-Driver osd.ko");
-> > diff --git a/include/scsi/osd_types.h b/include/scsi/osd_types.h
-> > index 48e8a165e136..eb31357ec8b3 100644
-> > --- a/include/scsi/osd_types.h
-> > +++ b/include/scsi/osd_types.h
-> > @@ -28,8 +28,6 @@ struct osd_obj_id {
-> >         osd_id id;
-> >  };
-> > 
-> > -static const struct __weak osd_obj_id osd_root_object = {0, 0};
-> > -
-> >  struct osd_attr {
-> >         u32 attr_page;
-> >         u32 attr_id;
-> > 
-> 
+diff --git a/drivers/scsi/aic94xx/aic94xx_hwi.c b/drivers/scsi/aic94xx/aic94xx_hwi.c
+index 3b8ad55e59de..2bc7615193bd 100644
+--- a/drivers/scsi/aic94xx/aic94xx_hwi.c
++++ b/drivers/scsi/aic94xx/aic94xx_hwi.c
+@@ -1057,14 +1057,13 @@ static struct asd_ascb *asd_ascb_alloc(struct asd_ha_struct *asd_ha,
+ 
+ 	if (ascb) {
+ 		ascb->dma_scb.size = sizeof(struct scb);
+-		ascb->dma_scb.vaddr = dma_pool_alloc(asd_ha->scb_pool,
++		ascb->dma_scb.vaddr = dma_pool_zalloc(asd_ha->scb_pool,
+ 						     gfp_flags,
+ 						    &ascb->dma_scb.dma_handle);
+ 		if (!ascb->dma_scb.vaddr) {
+ 			kmem_cache_free(asd_ascb_cache, ascb);
+ 			return NULL;
+ 		}
+-		memset(ascb->dma_scb.vaddr, 0, sizeof(struct scb));
+ 		asd_init_ascb(asd_ha, ascb);
+ 
+ 		spin_lock_irqsave(&seq->tc_index_lock, flags);
+-- 
+2.17.1
