@@ -1,55 +1,42 @@
 From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH] cxgb4i: fix thermal configuration dependencies
-Date: Fri,  2 Nov 2018 16:35:23 +0100
-Message-ID: <20181102153531.1583478-1-arnd@arndb.de>
+Subject: [PATCH] scsi: lpfc: fix remoteport access
+Date: Fri,  2 Nov 2018 16:35:48 +0100
+Message-ID: <20181102153601.1599945-1-arnd@arndb.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Karen Xie <kxie@chelsio.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, Vasyl Gomonovych <gomonovych@gmail.com>, YueHaibing <yuehaibing@huawei.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-I fixed a bug by adding a dependency in the network driver, but that
-fix caused a related bug in the SCSI driver:
+The addition of a spinlock in lpfc_debugfs_nodelist_data() introduced
+a bug that lets us not skip NULL pointers correctly, as noticed by
+gcc-8:
 
-WARNING: unmet direct dependencies detected for CHELSIO_T4
-  Depends on [m]: NETDEVICES [=y] && ETHERNET [=y] && NET_VENDOR_CHELSIO [=y] && PCI [=y] && (IPV6 [=y] || IPV6 [=y]=n) && (THERMAL [=m] || !THERMAL [=m])
-  Selected by [y]:
-  - SCSI_CXGB4_ISCSI [=y] && SCSI_LOWLEVEL [=y] && SCSI [=y] && PCI [=y] && INET [=y] && (IPV6 [=y] || IPV6 [=y]=n)
-drivers/net/ethernet/chelsio/cxgb4/cxgb4_thermal.o: In function `cxgb4_thermal_init':
-cxgb4_thermal.c:(.text+0x158): undefined reference to `thermal_zone_device_register'
-drivers/net/ethernet/chelsio/cxgb4/cxgb4_thermal.o: In function `cxgb4_thermal_remove':
-cxgb4_thermal.c:(.text+0x1d8): undefined reference to `thermal_zone_device_unregister'
-/git/arm-soc/Makefile:1042: recipe for target 'vmlinux' failed
+drivers/scsi/lpfc/lpfc_debugfs.c: In function 'lpfc_debugfs_nodelist_data.constprop':
+drivers/scsi/lpfc/lpfc_debugfs.c:728:13: error: 'nrport' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+   if (nrport->port_role & FC_PORT_ROLE_NVME_INITIATOR)
 
-The same dependency needs to be propagated here to make it work correctly
-with CONFIG_THERMAL=m and SCSI_CXGB4_ISCSI=y. That change by itself causes
-another problem with a circular dependency, as we use 'select NETDEVICES'.
-This is something we really should not do anyway, as a driver symbol
-should never select another major subsystem, so let's turn that into a
-'depends on'. I don't see any downsides of that, as NETDEVICES is only
-disabled in rather obscure cases that are not relevant to the users of
-cxgb4i.
+This changes the logic back to what it was, while keeping the added
+spinlock.
 
-Fixes: e70a57fa59bb ("cxgb4: fix thermal configuration dependencies")
+Fixes: 9e210178267b ("scsi: lpfc: Synchronize access to remoteport via rport")
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/scsi/cxgbi/cxgb4i/Kconfig | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/lpfc/lpfc_debugfs.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/scsi/cxgbi/cxgb4i/Kconfig b/drivers/scsi/cxgbi/cxgb4i/Kconfig
-index 594f593c8821..f36b76e8e12c 100644
---- a/drivers/scsi/cxgbi/cxgb4i/Kconfig
-+++ b/drivers/scsi/cxgbi/cxgb4i/Kconfig
-@@ -1,8 +1,8 @@
- config SCSI_CXGB4_ISCSI
- 	tristate "Chelsio T4 iSCSI support"
- 	depends on PCI && INET && (IPV6 || IPV6=n)
--	select NETDEVICES
--	select ETHERNET
-+	depends on THERMAL || !THERMAL
-+	depends on ETHERNET
- 	select NET_VENDOR_CHELSIO
- 	select CHELSIO_T4
- 	select CHELSIO_LIB
+diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
+index 0c8005bb0f53..34d311a7dbef 100644
+--- a/drivers/scsi/lpfc/lpfc_debugfs.c
++++ b/drivers/scsi/lpfc/lpfc_debugfs.c
+@@ -698,6 +698,8 @@ lpfc_debugfs_nodelist_data(struct lpfc_vport *vport, char *buf, int size)
+ 		rport = lpfc_ndlp_get_nrport(ndlp);
+ 		if (rport)
+ 			nrport = rport->remoteport;
++		else
++			nrport = NULL;
+ 		spin_unlock(&phba->hbalock);
+ 		if (!nrport)
+ 			continue;
 -- 
 2.18.0
