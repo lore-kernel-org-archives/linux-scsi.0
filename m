@@ -1,60 +1,55 @@
-From: Souptick Joarder <jrdr.linux@gmail.com>
-Subject: Re: [PATCH] scsi/aic94xx/aic94xx_hwi.c: Use dma_pool_zalloc
-Date: Fri, 2 Nov 2018 11:24:03 +0530
-Message-ID: <CAFqt6zbfizXX8myKgE_5k6X2gDrQGJmhWJDubgqiTL2r62gb_Q@mail.gmail.com>
-References: <20181101041909.GA3241@jordon-HP-15-Notebook-PC> <CAGXu5jLYaT7LtUS+t98GjMjjzz2kbs6JZ_WJRYnWo7iZ9nOFKQ@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] cxgb4i: fix thermal configuration dependencies
+Date: Fri,  2 Nov 2018 16:35:23 +0100
+Message-ID: <20181102153531.1583478-1-arnd@arndb.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAGXu5jLYaT7LtUS+t98GjMjjzz2kbs6JZ_WJRYnWo7iZ9nOFKQ@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Kees Cook <keescook@chromium.org>
-Cc: James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel@vger.kernel.org, Brajeswar Ghosh <brajeswar.linux@gmail.com>, Sabyasachi Gupta <sabyasachi.linux@gmail.com>
+To: Karen Xie <kxie@chelsio.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Nov 2, 2018 at 2:25 AM Kees Cook <keescook@chromium.org> wrote:
->
-> On Wed, Oct 31, 2018 at 9:19 PM, Souptick Joarder <jrdr.linux@gmail.com> wrote:
-> > Replaced dma_pool_alloc + memset with dma_pool_zalloc
-> >
-> > Signed-off-by: Brajeswar Ghosh <brajeswar.linux@gmail.com>
-> > Signed-off-by: Souptick Joarder <jrdr.linux@gmail.com>
->
-> Reviewed-by: Kees Cook <keescook@chromium.org>
+I fixed a bug by adding a dependency in the network driver, but that
+fix caused a related bug in the SCSI driver:
 
-Thanks Kees.
->
-> -Kees
->
-> > ---
-> >  drivers/scsi/aic94xx/aic94xx_hwi.c | 3 +--
-> >  1 file changed, 1 insertion(+), 2 deletions(-)
-> >
-> > diff --git a/drivers/scsi/aic94xx/aic94xx_hwi.c b/drivers/scsi/aic94xx/aic94xx_hwi.c
-> > index 3b8ad55e59de..2bc7615193bd 100644
-> > --- a/drivers/scsi/aic94xx/aic94xx_hwi.c
-> > +++ b/drivers/scsi/aic94xx/aic94xx_hwi.c
-> > @@ -1057,14 +1057,13 @@ static struct asd_ascb *asd_ascb_alloc(struct asd_ha_struct *asd_ha,
-> >
-> >         if (ascb) {
-> >                 ascb->dma_scb.size = sizeof(struct scb);
-> > -               ascb->dma_scb.vaddr = dma_pool_alloc(asd_ha->scb_pool,
-> > +               ascb->dma_scb.vaddr = dma_pool_zalloc(asd_ha->scb_pool,
-> >                                                      gfp_flags,
-> >                                                     &ascb->dma_scb.dma_handle);
-> >                 if (!ascb->dma_scb.vaddr) {
-> >                         kmem_cache_free(asd_ascb_cache, ascb);
-> >                         return NULL;
-> >                 }
-> > -               memset(ascb->dma_scb.vaddr, 0, sizeof(struct scb));
-> >                 asd_init_ascb(asd_ha, ascb);
-> >
-> >                 spin_lock_irqsave(&seq->tc_index_lock, flags);
-> > --
-> > 2.17.1
-> >
->
->
->
-> --
-> Kees Cook
+WARNING: unmet direct dependencies detected for CHELSIO_T4
+  Depends on [m]: NETDEVICES [=y] && ETHERNET [=y] && NET_VENDOR_CHELSIO [=y] && PCI [=y] && (IPV6 [=y] || IPV6 [=y]=n) && (THERMAL [=m] || !THERMAL [=m])
+  Selected by [y]:
+  - SCSI_CXGB4_ISCSI [=y] && SCSI_LOWLEVEL [=y] && SCSI [=y] && PCI [=y] && INET [=y] && (IPV6 [=y] || IPV6 [=y]=n)
+drivers/net/ethernet/chelsio/cxgb4/cxgb4_thermal.o: In function `cxgb4_thermal_init':
+cxgb4_thermal.c:(.text+0x158): undefined reference to `thermal_zone_device_register'
+drivers/net/ethernet/chelsio/cxgb4/cxgb4_thermal.o: In function `cxgb4_thermal_remove':
+cxgb4_thermal.c:(.text+0x1d8): undefined reference to `thermal_zone_device_unregister'
+/git/arm-soc/Makefile:1042: recipe for target 'vmlinux' failed
+
+The same dependency needs to be propagated here to make it work correctly
+with CONFIG_THERMAL=m and SCSI_CXGB4_ISCSI=y. That change by itself causes
+another problem with a circular dependency, as we use 'select NETDEVICES'.
+This is something we really should not do anyway, as a driver symbol
+should never select another major subsystem, so let's turn that into a
+'depends on'. I don't see any downsides of that, as NETDEVICES is only
+disabled in rather obscure cases that are not relevant to the users of
+cxgb4i.
+
+Fixes: e70a57fa59bb ("cxgb4: fix thermal configuration dependencies")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/scsi/cxgbi/cxgb4i/Kconfig | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/cxgbi/cxgb4i/Kconfig b/drivers/scsi/cxgbi/cxgb4i/Kconfig
+index 594f593c8821..f36b76e8e12c 100644
+--- a/drivers/scsi/cxgbi/cxgb4i/Kconfig
++++ b/drivers/scsi/cxgbi/cxgb4i/Kconfig
+@@ -1,8 +1,8 @@
+ config SCSI_CXGB4_ISCSI
+ 	tristate "Chelsio T4 iSCSI support"
+ 	depends on PCI && INET && (IPV6 || IPV6=n)
+-	select NETDEVICES
+-	select ETHERNET
++	depends on THERMAL || !THERMAL
++	depends on ETHERNET
+ 	select NET_VENDOR_CHELSIO
+ 	select CHELSIO_T4
+ 	select CHELSIO_LIB
+-- 
+2.18.0
