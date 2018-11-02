@@ -1,42 +1,60 @@
 From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH] scsi: lpfc: fix remoteport access
-Date: Fri,  2 Nov 2018 16:35:48 +0100
-Message-ID: <20181102153601.1599945-1-arnd@arndb.de>
+Subject: [PATCH] scsi: myrb: fix sprintf buffer overflow warning
+Date: Fri,  2 Nov 2018 16:34:49 +0100
+Message-ID: <20181102153458.1567593-1-arnd@arndb.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, Vasyl Gomonovych <gomonovych@gmail.com>, YueHaibing <yuehaibing@huawei.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Hannes Reinecke <hare@kernel.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-The addition of a spinlock in lpfc_debugfs_nodelist_data() introduced
-a bug that lets us not skip NULL pointers correctly, as noticed by
-gcc-8:
+gcc warns that the 12 byte fw_version field might not be long enough to
+contain the generated firmware name string:
 
-drivers/scsi/lpfc/lpfc_debugfs.c: In function 'lpfc_debugfs_nodelist_data.constprop':
-drivers/scsi/lpfc/lpfc_debugfs.c:728:13: error: 'nrport' may be used uninitialized in this function [-Werror=maybe-uninitialized]
-   if (nrport->port_role & FC_PORT_ROLE_NVME_INITIATOR)
+drivers/scsi/myrb.c: In function 'myrb_get_hba_config':
+drivers/scsi/myrb.c:1052:38: error: '%02d' directive writing between 2 and 3 bytes into a region of size between 2 and 5 [-Werror=format-overflow=]
+  sprintf(cb->fw_version, "%d.%02d-%c-%02d",
+                                      ^~~~
+drivers/scsi/myrb.c:1052:26: note: directive argument in the range [0, 255]
+  sprintf(cb->fw_version, "%d.%02d-%c-%02d",
+                          ^~~~~~~~~~~~~~~~~
+drivers/scsi/myrb.c:1052:2: note: 'sprintf' output between 10 and 14 bytes into a destination of size 12
+  sprintf(cb->fw_version, "%d.%02d-%c-%02d",
+  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   enquiry2->fw.major_version,
+   ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   enquiry2->fw.minor_version,
+   ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   enquiry2->fw.firmware_type,
+   ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   enquiry2->fw.turn_id);
+   ~~~~~~~~~~~~~~~~~~~~~
 
-This changes the logic back to what it was, while keeping the added
-spinlock.
+I have not checked whether there are appropriate range checks before the
+sprintf, but there is a range check after it that will bail out in case
+of out of range version numbers. This means we can simply use snprintf()
+instead of sprintf() to limit the output buffer size, and it will work
+correctly.
 
-Fixes: 9e210178267b ("scsi: lpfc: Synchronize access to remoteport via rport")
+Fixes: 081ff398c56c ("scsi: myrb: Add Mylex RAID controller (block interface)")
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/scsi/lpfc/lpfc_debugfs.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/scsi/myrb.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
-index 0c8005bb0f53..34d311a7dbef 100644
---- a/drivers/scsi/lpfc/lpfc_debugfs.c
-+++ b/drivers/scsi/lpfc/lpfc_debugfs.c
-@@ -698,6 +698,8 @@ lpfc_debugfs_nodelist_data(struct lpfc_vport *vport, char *buf, int size)
- 		rport = lpfc_ndlp_get_nrport(ndlp);
- 		if (rport)
- 			nrport = rport->remoteport;
-+		else
-+			nrport = NULL;
- 		spin_unlock(&phba->hbalock);
- 		if (!nrport)
- 			continue;
+diff --git a/drivers/scsi/myrb.c b/drivers/scsi/myrb.c
+index aeb282f617c5..0642f2d0a3bb 100644
+--- a/drivers/scsi/myrb.c
++++ b/drivers/scsi/myrb.c
+@@ -1049,7 +1049,8 @@ static int myrb_get_hba_config(struct myrb_hba *cb)
+ 		enquiry2->fw.firmware_type = '0';
+ 		enquiry2->fw.turn_id = 0;
+ 	}
+-	sprintf(cb->fw_version, "%d.%02d-%c-%02d",
++	snprintf(cb->fw_version, sizeof(cb->fw_version),
++		"%d.%02d-%c-%02d",
+ 		enquiry2->fw.major_version,
+ 		enquiry2->fw.minor_version,
+ 		enquiry2->fw.firmware_type,
 -- 
 2.18.0
