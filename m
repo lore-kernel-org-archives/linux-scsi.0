@@ -1,60 +1,60 @@
 From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH] scsi: myrb: fix sprintf buffer overflow warning
-Date: Fri,  2 Nov 2018 16:34:49 +0100
-Message-ID: <20181102153458.1567593-1-arnd@arndb.de>
+Subject: [PATCH] scsi: myrs: avoid stack overflow warning
+Date: Fri,  2 Nov 2018 16:44:13 +0100
+Message-ID: <20181102154426.1951776-1-arnd@arndb.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Hannes Reinecke <hare@kernel.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Arnd Bergmann <arnd@arndb.de>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-gcc warns that the 12 byte fw_version field might not be long enough to
-contain the generated firmware name string:
+Putting a 1024 byte data structure on the stack is generally a bad idea.
+On 32-bit systems, it also triggers a compile-time warning when building
+with -Og:
 
-drivers/scsi/myrb.c: In function 'myrb_get_hba_config':
-drivers/scsi/myrb.c:1052:38: error: '%02d' directive writing between 2 and 3 bytes into a region of size between 2 and 5 [-Werror=format-overflow=]
-  sprintf(cb->fw_version, "%d.%02d-%c-%02d",
-                                      ^~~~
-drivers/scsi/myrb.c:1052:26: note: directive argument in the range [0, 255]
-  sprintf(cb->fw_version, "%d.%02d-%c-%02d",
-                          ^~~~~~~~~~~~~~~~~
-drivers/scsi/myrb.c:1052:2: note: 'sprintf' output between 10 and 14 bytes into a destination of size 12
-  sprintf(cb->fw_version, "%d.%02d-%c-%02d",
-  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   enquiry2->fw.major_version,
-   ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   enquiry2->fw.minor_version,
-   ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   enquiry2->fw.firmware_type,
-   ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   enquiry2->fw.turn_id);
-   ~~~~~~~~~~~~~~~~~~~~~
+drivers/scsi/myrs.c: In function 'myrs_get_ctlr_info':
+drivers/scsi/myrs.c:212:1: error: the frame size of 1028 bytes is larger than 1024 bytes [-Werror=frame-larger-than=]
 
-I have not checked whether there are appropriate range checks before the
-sprintf, but there is a range check after it that will bail out in case
-of out of range version numbers. This means we can simply use snprintf()
-instead of sprintf() to limit the output buffer size, and it will work
-correctly.
+We only really need three members of the structure, so just read them
+manually here instead of copying the entire structure.
 
-Fixes: 081ff398c56c ("scsi: myrb: Add Mylex RAID controller (block interface)")
+Fixes: 77266186397c ("scsi: myrs: Add Mylex RAID controller (SCSI interface)")
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/scsi/myrb.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/scsi/myrs.c | 13 ++++++++-----
+ 1 file changed, 8 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/myrb.c b/drivers/scsi/myrb.c
-index aeb282f617c5..0642f2d0a3bb 100644
---- a/drivers/scsi/myrb.c
-+++ b/drivers/scsi/myrb.c
-@@ -1049,7 +1049,8 @@ static int myrb_get_hba_config(struct myrb_hba *cb)
- 		enquiry2->fw.firmware_type = '0';
- 		enquiry2->fw.turn_id = 0;
- 	}
--	sprintf(cb->fw_version, "%d.%02d-%c-%02d",
-+	snprintf(cb->fw_version, sizeof(cb->fw_version),
-+		"%d.%02d-%c-%02d",
- 		enquiry2->fw.major_version,
- 		enquiry2->fw.minor_version,
- 		enquiry2->fw.firmware_type,
+diff --git a/drivers/scsi/myrs.c b/drivers/scsi/myrs.c
+index 0264a2e2bc19..b8d54ef8cf6d 100644
+--- a/drivers/scsi/myrs.c
++++ b/drivers/scsi/myrs.c
+@@ -163,9 +163,12 @@ static unsigned char myrs_get_ctlr_info(struct myrs_hba *cs)
+ 	dma_addr_t ctlr_info_addr;
+ 	union myrs_sgl *sgl;
+ 	unsigned char status;
+-	struct myrs_ctlr_info old;
++	unsigned short ldev_present, ldev_critical, ldev_offline;
++
++	ldev_present = cs->ctlr_info->ldev_present;
++	ldev_critical = cs->ctlr_info->ldev_critical;
++	ldev_offline = cs->ctlr_info->ldev_offline;
+ 
+-	memcpy(&old, cs->ctlr_info, sizeof(struct myrs_ctlr_info));
+ 	ctlr_info_addr = dma_map_single(&cs->pdev->dev, cs->ctlr_info,
+ 					sizeof(struct myrs_ctlr_info),
+ 					DMA_FROM_DEVICE);
+@@ -198,9 +201,9 @@ static unsigned char myrs_get_ctlr_info(struct myrs_hba *cs)
+ 		    cs->ctlr_info->rbld_active +
+ 		    cs->ctlr_info->exp_active != 0)
+ 			cs->needs_update = true;
+-		if (cs->ctlr_info->ldev_present != old.ldev_present ||
+-		    cs->ctlr_info->ldev_critical != old.ldev_critical ||
+-		    cs->ctlr_info->ldev_offline != old.ldev_offline)
++		if (cs->ctlr_info->ldev_present != ldev_present ||
++		    cs->ctlr_info->ldev_critical != ldev_critical ||
++		    cs->ctlr_info->ldev_offline != ldev_offline)
+ 			shost_printk(KERN_INFO, cs->host,
+ 				     "Logical drive count changes (%d/%d/%d)\n",
+ 				     cs->ctlr_info->ldev_critical,
 -- 
 2.18.0
