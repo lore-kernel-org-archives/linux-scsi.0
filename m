@@ -1,28 +1,26 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: myrs: only build on little-endian platforms
-Date: Mon, 05 Nov 2018 22:36:30 -0500
-Message-ID: <yq14lcu7u81.fsf@oracle.com>
-References: <20181102154740.2011289-1-arnd@arndb.de>
+Subject: Re: [PATCH -next] scsi: hisi_sas: Remove set but not used variable 'dq_list'
+Date: Mon, 05 Nov 2018 22:44:05 -0500
+Message-ID: <yq1zhum6fay.fsf@oracle.com>
+References: <20181026070731.20024-1-yuehaibing@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20181102154740.2011289-1-arnd@arndb.de> (Arnd Bergmann's message
-        of "Fri, 2 Nov 2018 16:47:23 +0100")
+In-Reply-To: <20181026070731.20024-1-yuehaibing@huawei.com>
+        (yuehaibing@huawei.com's message of "Fri, 26 Oct 2018 15:07:31 +0800")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: YueHaibing <yuehaibing@huawei.com>
+Cc: john.garry@huawei.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Arnd,
+YueHaibing,
 
-> Reading throught the new driver, I noticed that this cannot work on
-> big-endian CPUs, and the old DAC960 had exactly the same behavior.
+> Fixes gcc '-Wunused-but-set-variable' warning:
 >
-> To document this for the future, add a Kconfig dependency that prevents it
-> from being included in big-endian kernels.  Since the hardware is really
-> old and we never had a working driver on it for big-endian platforms,
-> it's unlikely to make a difference to users.
+> drivers/scsi/hisi_sas/hisi_sas_v1_hw.c: In function 'start_delivery_v1_hw':
+> drivers/scsi/hisi_sas/hisi_sas_v1_hw.c:907:20: warning:
+>  variable 'dq_list' set but not used [-Wunused-but-set-variable]
 
 Applied to 4.20/scsi-fixes. Thank you!
 
