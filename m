@@ -1,25 +1,25 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: qla2xxx: Fix a typo in MODULE_PARM_DESC
-Date: Mon, 05 Nov 2018 22:45:46 -0500
-Message-ID: <yq1va5a6f85.fsf@oracle.com>
-References: <20181028050548.3147-1-standby24x7@gmail.com>
+Subject: Re: [PATCH] NCR5380: Return false instead of NULL
+Date: Mon, 05 Nov 2018 22:48:27 -0500
+Message-ID: <yq1r2fy6f3o.fsf@oracle.com>
+References: <2e765651c37d951fb424eb966e1a91ff08c8391b.1540367133.git.fthain@telegraphics.com.au>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20181028050548.3147-1-standby24x7@gmail.com> (Masanari Iida's
-        message of "Sun, 28 Oct 2018 14:05:48 +0900")
+In-Reply-To: <2e765651c37d951fb424eb966e1a91ff08c8391b.1540367133.git.fthain@telegraphics.com.au>
+        (Finn Thain's message of "Wed, 24 Oct 2018 18:45:33 +1100")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Masanari Iida <standby24x7@gmail.com>
-Cc: linux-kernel@vger.kernel.org, qla2xxx-upstream@qlogic.com, linux-scsi@vger.kernel.org, himanshu.madhani@cavium.com
+To: Finn Thain <fthain@telegraphics.com.au>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Masanari,
+Finn,
 
-> This patch fixes a spelling typo in MODULE_PARM_DESC
-> of ql2xplogiabsentdevice.
+> I overlooked this statement when I recently converted the function result
+> type from struct scsi_cmnd * to bool. No change to object code.
 
-Applied to 4.20/scsi-fixes. Thank you!
+Applied to 4.20/scsi-fixes, thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
