@@ -1,32 +1,26 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v7 0/8] mpt3sas: some bug fixes patches
-Date: Tue, 06 Nov 2018 20:45:52 -0500
-Message-ID: <yq1o9b13bjj.fsf@oracle.com>
-References: <1540992219-20291-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+Subject: Re: [PATCH v4 2/2] scsi: ufs: Add UFS platform driver for Cadence UFS
+Date: Tue, 06 Nov 2018 21:15:21 -0500
+Message-ID: <yq1tvkt1vly.fsf@oracle.com>
+References: <C77CE2E3-F88A-4B1E-BECB-5D031E2930E3@global.cadence.com>
+        <1A428C77-982A-4EB8-8FDD-A33979753660@global.cadence.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1540992219-20291-1-git-send-email-suganath-prabu.subramani@broadcom.com>
-        (Suganath Prabu's message of "Wed, 31 Oct 2018 18:53:31 +0530")
+In-Reply-To: <1A428C77-982A-4EB8-8FDD-A33979753660@global.cadence.com> (Janek
+        Kotas's message of "Tue, 6 Nov 2018 13:37:21 +0000")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Suganath Prabu <suganath-prabu.subramani@broadcom.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Sathya.Prakash@broadcom.com, sreekanth.reddy@broadcom.com
+To: Janek Kotas <jank@cadence.com>
+Cc: "vinholikatti@gmail.com" <vinholikatti@gmail.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "robh+dt@kernel.org" <robh+dt@kernel.org>, "mark.rutland@arm.com" <mark.rutland@arm.com>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
 
-Suganath,
+Janek,
 
-> Suganath Prabu (8):
->   mpt3sas: Added new #define variable IOC_OPERATIONAL_WAIT_COUNT
->   mpt3sas: Separate out mpt3sas_wait_for_ioc
->   mpt3sas: Refactor mpt3sas_wait_for_ioc function
->   mpt3sas: Call sas_remove_host before removing the target devices
->   mpt3sas: Fix Sync cache command failure during driver unload
->   mpt3sas: Don't modify EEDPTagMode field setting on SAS3.5 HBA devices
->   mpt3sas: Fix driver modifying persistent data in Manufacturing page11
->   mpt3sas: Bump driver version to 27.100.00.00.
+> Could you please take a look at the proposed patch?
 
-Applied to 4.21/scsi-queue. Thank you!
+Rob reviewed the dt binding patch but has it been merged or should I
+take both patches through SCSI?
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
