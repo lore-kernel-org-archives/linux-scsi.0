@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 2/5] scsi: hisi_sas: Add support for interrupt converge for v3 hw
-Date: Fri, 9 Nov 2018 22:06:33 +0800
-Message-ID: <1541772396-161814-3-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 4/5] scsi: hisi_sas: Relocate some codes to avoid an unused check
+Date: Fri, 9 Nov 2018 22:06:35 +0800
+Message-ID: <1541772396-161814-5-git-send-email-john.garry@huawei.com>
 References: <1541772396-161814-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -14,110 +14,91 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Xiang Chen <chenxiang66@hisilicon.com>
 
-If CQ_INT_CONVERGE_EN is enabled, the interrupts of all the 16 CQ queues
-will be reported by CQ0.
-
-So we need to change the process of CQ tasklet for this situation.
+In function hisi_sas_task_prep(), we check asd_sas_port, but in function
+hisi_sas_task_exec(), we already refer to asd_sas_port by using function
+dev_to_hisi_hba() implicitly. So to avoid this possible invalid
+dereference, relocate the check to function hisi_sas_task_prep().
 
 Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 29 ++++++++++++++++++++++++-----
- 1 file changed, 24 insertions(+), 5 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 44 ++++++++++++++++++-----------------
+ 1 file changed, 23 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 68a6ec2..10d1651 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -42,6 +42,7 @@
- #define MAX_CON_TIME_LIMIT_TIME		0xa4
- #define BUS_INACTIVE_LIMIT_TIME		0xa8
- #define REJECT_TO_OPEN_LIMIT_TIME	0xac
-+#define CQ_INT_CONVERGE_EN		0xb0
- #define CFG_AGING_TIME			0xbc
- #define HGC_DFX_CFG2			0xc0
- #define CFG_ABT_SET_QUERY_IPTT	0xd4
-@@ -371,6 +372,9 @@ struct hisi_sas_err_record_v3 {
- 	((fis.command == ATA_CMD_DEV_RESET) && \
- 	((fis.control & ATA_SRST) != 0)))
- 
-+static bool hisi_sas_intr_conv;
-+MODULE_PARM_DESC(intr_conv, "interrupt converge enable (0-1)");
-+
- static u32 hisi_sas_read32(struct hisi_hba *hisi_hba, u32 off)
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index 8633ff9..65dc749 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -302,36 +302,19 @@ static int hisi_sas_task_prep(struct sas_task *task,
+ 			      int *pass)
  {
- 	void __iomem *regs = hisi_hba->regs + off;
-@@ -436,6 +440,8 @@ static void init_reg_v3_hw(struct hisi_hba *hisi_hba)
- 	hisi_sas_write32(hisi_hba, INT_COAL_EN, 0x1);
- 	hisi_sas_write32(hisi_hba, OQ_INT_COAL_TIME, 0x1);
- 	hisi_sas_write32(hisi_hba, OQ_INT_COAL_CNT, 0x1);
-+	hisi_sas_write32(hisi_hba, CQ_INT_CONVERGE_EN,
-+			 hisi_sas_intr_conv);
- 	hisi_sas_write32(hisi_hba, OQ_INT_SRC, 0xffff);
- 	hisi_sas_write32(hisi_hba, ENT_INT_SRC1, 0xffffffff);
- 	hisi_sas_write32(hisi_hba, ENT_INT_SRC2, 0xffffffff);
-@@ -1880,10 +1886,12 @@ static int interrupt_init_v3_hw(struct hisi_hba *hisi_hba)
- 	for (i = 0; i < hisi_hba->queue_count; i++) {
- 		struct hisi_sas_cq *cq = &hisi_hba->cq[i];
- 		struct tasklet_struct *t = &cq->tasklet;
-+		int nr = hisi_sas_intr_conv ? 16 : 16 + i;
-+		unsigned long irqflags = hisi_sas_intr_conv ? IRQF_SHARED : 0;
+ 	struct domain_device *device = task->dev;
+-	struct hisi_hba *hisi_hba;
++	struct hisi_hba *hisi_hba = dev_to_hisi_hba(device);
+ 	struct hisi_sas_device *sas_dev = device->lldd_dev;
+ 	struct hisi_sas_port *port;
+ 	struct hisi_sas_slot *slot;
+ 	struct hisi_sas_cmd_hdr	*cmd_hdr_base;
+ 	struct asd_sas_port *sas_port = device->port;
+-	struct device *dev;
++	struct device *dev = hisi_hba->dev;
+ 	int dlvry_queue_slot, dlvry_queue, rc, slot_idx;
+ 	int n_elem = 0, n_elem_req = 0, n_elem_resp = 0;
+ 	struct hisi_sas_dq *dq;
+ 	unsigned long flags;
+ 	int wr_q_index;
  
--		rc = devm_request_irq(dev, pci_irq_vector(pdev, i+16),
--					  cq_interrupt_v3_hw, 0,
--					  DRV_NAME " cq", cq);
-+		rc = devm_request_irq(dev, pci_irq_vector(pdev, nr),
-+				      cq_interrupt_v3_hw, irqflags,
-+				      DRV_NAME " cq", cq);
- 		if (rc) {
- 			dev_err(dev,
- 				"could not request cq%d interrupt, rc=%d\n",
-@@ -1900,8 +1908,9 @@ static int interrupt_init_v3_hw(struct hisi_hba *hisi_hba)
- free_cq_irqs:
- 	for (k = 0; k < i; k++) {
- 		struct hisi_sas_cq *cq = &hisi_hba->cq[k];
-+		int nr = hisi_sas_intr_conv ? 16 : 16 + k;
+-	if (!sas_port) {
+-		struct task_status_struct *ts = &task->task_status;
+-
+-		ts->resp = SAS_TASK_UNDELIVERED;
+-		ts->stat = SAS_PHY_DOWN;
+-		/*
+-		 * libsas will use dev->port, should
+-		 * not call task_done for sata
+-		 */
+-		if (device->dev_type != SAS_SATA_DEV)
+-			task->task_done(task);
+-		return -ECOMM;
+-	}
+-
+-	hisi_hba = dev_to_hisi_hba(device);
+-	dev = hisi_hba->dev;
+-
+ 	if (DEV_IS_GONE(sas_dev)) {
+ 		if (sas_dev)
+ 			dev_info(dev, "task prep: device %d not ready\n",
+@@ -506,10 +489,29 @@ static int hisi_sas_task_exec(struct sas_task *task, gfp_t gfp_flags,
+ 	u32 rc;
+ 	u32 pass = 0;
+ 	unsigned long flags;
+-	struct hisi_hba *hisi_hba = dev_to_hisi_hba(task->dev);
+-	struct device *dev = hisi_hba->dev;
++	struct hisi_hba *hisi_hba;
++	struct device *dev;
++	struct domain_device *device = task->dev;
++	struct asd_sas_port *sas_port = device->port;
+ 	struct hisi_sas_dq *dq = NULL;
  
--		free_irq(pci_irq_vector(pdev, k+16), cq);
-+		free_irq(pci_irq_vector(pdev, nr), cq);
- 	}
- 	free_irq(pci_irq_vector(pdev, 11), hisi_hba);
- free_chnl_interrupt:
-@@ -2091,8 +2100,16 @@ static void wait_cmds_complete_timeout_v3_hw(struct hisi_hba *hisi_hba,
- 	dev_dbg(dev, "wait commands complete %dms\n", time);
- }
- 
-+static ssize_t intr_conv_v3_hw_show(struct device *dev,
-+				    struct device_attribute *attr, char *buf)
-+{
-+	return scnprintf(buf, PAGE_SIZE, "%u\n", hisi_sas_intr_conv);
-+}
-+static DEVICE_ATTR_RO(intr_conv_v3_hw);
++	if (!sas_port) {
++		struct task_status_struct *ts = &task->task_status;
 +
- struct device_attribute *host_attrs_v3_hw[] = {
- 	&dev_attr_phy_event_threshold,
-+	&dev_attr_intr_conv_v3_hw,
- 	NULL
- };
- 
-@@ -2308,8 +2325,9 @@ struct device_attribute *host_attrs_v3_hw[] = {
- 	free_irq(pci_irq_vector(pdev, 11), hisi_hba);
- 	for (i = 0; i < hisi_hba->queue_count; i++) {
- 		struct hisi_sas_cq *cq = &hisi_hba->cq[i];
-+		int nr = hisi_sas_intr_conv ? 16 : 16 + i;
- 
--		free_irq(pci_irq_vector(pdev, i+16), cq);
-+		free_irq(pci_irq_vector(pdev, nr), cq);
- 	}
- 	pci_free_irq_vectors(pdev);
- }
-@@ -2631,6 +2649,7 @@ static int hisi_sas_v3_resume(struct pci_dev *pdev)
- };
- 
- module_pci_driver(sas_v3_pci_driver);
-+module_param_named(intr_conv, hisi_sas_intr_conv, bool, 0444);
- 
- MODULE_LICENSE("GPL");
- MODULE_AUTHOR("John Garry <john.garry@huawei.com>");
++		ts->resp = SAS_TASK_UNDELIVERED;
++		ts->stat = SAS_PHY_DOWN;
++		/*
++		 * libsas will use dev->port, should
++		 * not call task_done for sata
++		 */
++		if (device->dev_type != SAS_SATA_DEV)
++			task->task_done(task);
++		return -ECOMM;
++	}
++
++	hisi_hba = dev_to_hisi_hba(device);
++	dev = hisi_hba->dev;
++
+ 	if (unlikely(test_bit(HISI_SAS_REJECT_CMD_BIT, &hisi_hba->flags))) {
+ 		if (in_softirq())
+ 			return -EINVAL;
 -- 
 1.9.1
