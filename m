@@ -1,181 +1,80 @@
-From: Guenter Roeck <linux@roeck-us.net>
-Subject: kobject lifetime issues in blk-mq
-Date: Fri, 9 Nov 2018 12:35:18 -0800
-Message-ID: <20181109203518.GA7130@roeck-us.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: [PATCH 0/3] SG_IO command filtering via sysfs
+Date: Sat, 10 Nov 2018 17:35:30 +0100
+Message-ID: <1541867733-7836-1-git-send-email-pbonzini@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
-To: Ming Lei <tom.leiming@gmail.com>, Jens Axboe <axboe@fb.com>
-Cc: Peter Zijlstra <peterz@infradead.org>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Paolo Bonzini <pbonzini@redhat.com>, Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi,
+Currently, SG_IO ioctls are implemented so that non-CAP_SYS_RAWIO users
+can send commands from a predetermined whitelist.  The whitelist is very
+simple-minded though, and basically corresponds to MMC commands---the idea
+being that it would be nice for local users to read/copy/burn CDs.
 
-Images with CONFIG_DEBUG_KOBJECT=y, CONFIG_DEBUG_KOBJECT_RELEASE=y
-enabled report kobject lifetime issues when booting an image in qemu
-using virtio-scsi-pci.
+This was probably sensible when the whitelist was first added (in the pre-git
+era), but quite a few things have changed since then:
 
-Bisect points to two different commits, depending on the kernel
-configuration.
+- there is a lot more focus on not running things as root unnecessarily;
+it is generally much more common to have non-root processes accessing disks
+and we would like that to happen more, not less.
 
-1st configuration: defconfig plus:
+- there is also a lot more focus on not giving capabilities unnecessarily.
+Using CAP_SYS_RAWIO, which gives full access to all commands, allows
+you to send a WRITE SCSI command to a file opened for reading, which is
+a nice recipe for data corruption.  A more fine-grained whitelist allows
+you to give the desired access to the application.
 
-CONFIG_VIRTIO_BLK=y
-CONFIG_SCSI_LOWLEVEL=y
-CONFIG_SCSI_VIRTIO=y
-CONFIG_VIRTIO_PCI=y
-CONFIG_VIRTIO_MMIO=y
-CONFIG_DEBUG_OBJECTS=y
-CONFIG_DEBUG_OBJECTS_FREE=y
-CONFIG_DEBUG_OBJECTS_TIMERS=y
-CONFIG_DEBUG_KOBJECT=y
-CONFIG_DEBUG_KOBJECT_RELEASE=y
+- we've discovered that some commands conflict between the various
+SCSI standards.  UNMAP (a write command) in SBC has the same number as
+the obscure MMC command READ SUBCHANNEL.  As such it's allowed if a
+block device is opened for reading!
 
-Bisecting this configuration points to commit b5b6e8c8d3b4 ("scsi:
-virtio_scsi: fix IO hang caused by automatic irq vector affinity")
-as the culprit. This commit enforces the use of blk-mq for virtio_scsi;
-the bisect log is therefore a bit misleading.
+This series, which was last sent in 2012 before I lost interest in the
+endless discussions that followed, adds the possibility to make the filter
+mutable via sysfs, so that it can be set up per device.  This of course can
+go both ways; interested applications can set a wider filter, but one can
+also imagine setting much more restrictive filters by default (possibly
+allowing little more than INQUIRY, TEST UNIT READY, READ CAPACITY and the
+like).
 
-2nd configuration: As above, plus:
-CONFIG_SCSI_MQ_DEFAULT=y
+Back then there was opposition to giving unfettered access to "dangerous"
+or "too easily destructive" commands such as WRITE SAME or PERSISTENT
+RESERVE OUT to unprivileged users.  Even then, I think this objection
+is now moot thanks to the following things that have happened in 2012:
 
-With this configuration, bisect points to commit 7ea5fe31c12d
-("blk-mq: make lifetime consitent between q/ctx and its kobject").
+- WRITE SAME commands, which were considered too destructive, have
+been added to the filter since commit 25cdb6451064 ("block: allow
+WRITE_SAME commands with the SG_IO ioctl", 2016-12-15, Linux 4.10).
+They are basically the only non-MMC commands included in the filter,
+by the way.
 
-The qemu command line used to reproduce the problem is as follows.
-The qemu version does not seem to matter (I tested with qemu versions
-2.5, 2.11, and 3.0).
+- persistent reservations are also allowed now via PR ioctls (commit
+924d55b06347, "sd: implement the Persistent Reservation API", 2015-10-21,
+Linux 4.4).  These require CAP_SYS_ADMIN, which is the same capability
+that is needed to *grant* access to PR commands via the SG_IO filter.
 
-qemu-system-x86_64 \
-	-kernel arch/x86/boot/bzImage \
-	-device virtio-scsi-pci,id=scsi \
-	-device scsi-hd,bus=scsi.0,drive=d0 \
-	-drive file=./wheezy.img,format=raw,if=none,id=d0 \
-	-snapshot \
-	-m 2G -smp 4 -enable-kvm \
-	-net user,host=10.0.2.10,hostfwd=tcp::10022-:22 -net nic \
-	-nographic -monitor none \
-	-no-reboot \
-	-append "console=ttyS0 root=/dev/sda earlyprintk=serial panic_on_warn=1 panic=-1"
+So, here is the 2018 version of these patches.  Please review! :)
 
-Root file system:
-	https://storage.googleapis.com/syzkaller/wheezy.img
-or:
-	https://github.com/groeck/linux-build-test/blob/master/rootfs/x86_64/rootfs.ext2.gz
+Paolo
 
-It seems that any root file system can be used to reproduce the problem.
-Also, the problem is not limited to virtio-scsi-pci. I also tried
-am53c974, lsi53c810, and lsi53c895a (after enabling the respective
-drivers), with the same result.
+Paolo Bonzini (3):
+  block: add back queue-private command filter
+  scsi: create an all-one filter for scanners
+  block: add back command filter modification via sysfs
 
-Overall, this suggests that the problem is related to blk-mq and was
-indeed introduced with commit 7ea5fe31c12d.
+ Documentation/block/queue-sysfs.txt |  19 +++++
+ block/Kconfig                       |  10 +++
+ block/blk-sysfs.c                   |  43 ++++++++++++
+ block/bsg-lib.c                     |   4 +-
+ block/bsg.c                         |   8 +--
+ block/scsi_ioctl.c                  | 136 +++++++++++++++++++++++++++++++++---
+ drivers/scsi/scsi_scan.c            |  13 ++++
+ drivers/scsi/sg.c                   |   6 +-
+ include/linux/blkdev.h              |  18 ++++-
+ include/linux/bsg.h                 |   4 +-
+ 10 files changed, 238 insertions(+), 23 deletions(-)
 
-For reference, I attached an actual crash log as well as a set of bisect
-logs below.
-
-Unfortunately, my understanding of blk-mq is not good enough to find the
-underlying problem and suggest a fix. Please let me know if there is
-anything else I can do to help fixing the problem.
-
-Note that the problem was originally reported by syzbot running a test
-on chromeos-4.14. It may well be that the problem has already been
-reported and is being worked on. If so, please apologize the noise.
-
-Thanks,
-Guenter
-
----
-[    8.700038] ------------[ cut here ]------------
-[    8.700376] ODEBUG: free active (active state 0) object type: timer_list hint: delayed_work_timer_fn+0x0/0x10
-[    8.701032] WARNING: CPU: 0 PID: 0 at lib/debugobjects.c:329 debug_print_object+0x6a/0x80
-[    8.701032] Kernel panic - not syncing: panic_on_warn set ...
-[    8.701032] CPU: 0 PID: 0 Comm: swapper/0 Not tainted 4.20.0-rc1 #30
-[    8.701032] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Ubuntu-1.8.2-1ubuntu1 04/01/2014
-[    8.701032] Call Trace:
-[    8.701032]  <IRQ>
-[    8.701032]  dump_stack+0x46/0x5b
-[    8.701032]  panic+0xf3/0x246
-[    8.701032]  ? debug_print_object+0x6a/0x80
-[    8.701032]  __warn+0xeb/0xf0
-[    8.701032]  ? debug_print_object+0x6a/0x80
-[    8.701032]  ? debug_print_object+0x6a/0x80
-[    8.701032]  report_bug+0xb1/0x120
-[    8.701032]  fixup_bug.part.10+0x13/0x30
-[    8.701032]  do_error_trap+0x8f/0xb0
-[    8.701032]  do_invalid_op+0x31/0x40
-[    8.701032]  ? debug_print_object+0x6a/0x80
-[    8.701032]  invalid_op+0x14/0x20
-[    8.701032] RIP: 0010:debug_print_object+0x6a/0x80
-[    8.701032] Code: 8b 43 10 83 c2 01 8b 4b 14 89 15 c1 e2 78 01 4c 8b 45 00 4c
-89 e6 48 c7 c7 f0 ca 41 a6 48 8b 14 c5 a0 f7 24 a6 e8 06 8e cc ff <0f> 0b 5b 83
-05 70 47 1a 01 01 5d 41 5c c3 83 05 65 47 1a 01 01 c3
-[    8.701032] RSP: 0018:ffff89b9fda03e48 EFLAGS: 00010082
-[    8.701032] RAX: 0000000000000000 RBX: ffff89b9fd49d0c8 RCX: ffffffffa6646e18
-[    8.701032] RDX: 0000000000000001 RSI: 0000000000000082 RDI: ffffffffa6cc596c
-[    8.701032] RBP: ffffffffa664a5c0 R08: 79616c6564203a74 R09: 5f6b726f775f6465
-[    8.701032] R10: ffff89b9fda03f10 R11: 3178302f3078302b R12: ffffffffa6403e22
-[    8.701032] R13: 0000000000000001 R14: ffffffffa6d4d458 R15: ffff89b9fc4c8780
-[    8.701032]  ? debug_print_object+0x6a/0x80
-[    8.701032]  debug_check_no_obj_freed+0x1b8/0x1ea
-[    8.701032]  ? rcu_process_callbacks+0x2a7/0x750
-[    8.701032]  kmem_cache_free+0x6e/0x1a0
-[    8.701032]  ? __blk_release_queue+0x150/0x150
-[    8.701032]  rcu_process_callbacks+0x2a7/0x750
-[    8.701032]  __do_softirq+0xf2/0x2c7
-[    8.701032]  irq_exit+0xb7/0xc0
-[    8.701032]  smp_apic_timer_interrupt+0x67/0x130
-[    8.701032]  apic_timer_interrupt+0xf/0x20
-[    8.701032]  </IRQ>
-[    8.701032] RIP: 0010:default_idle+0x12/0x140
-[    8.701032] Code: fe ff ff c6 43 08 00 fb eb b0 31 c0 eb b4 e8 65 c8 60 ff 90
-90 90 90 90 41 54 55 53 65 8b 2d 15 c4 3b 5a 66 66 66 66 90 fb f4 <65> 8b 2d 07
-c4 3b 5a 66 66 66 66 90 5b 5d 41 5c c3 65 8b 05 f6 c3
-[    8.701032] RSP: 0018:ffffffffa6603e98 EFLAGS: 00000246 ORIG_RAX: ffffffffffffff13
-[    8.701032] RAX: ffffffffa5c52d10 RBX: 0000000000000000 RCX: 0000000000000000
-[    8.701032] RDX: 0000000000000001 RSI: 0000000000000000 RDI: 000000020605092a
-[    8.701032] RBP: 0000000000000000 R08: ffffffffcff7766a R09: ffff89b9fda20b00
-[    8.701032] R10: 0000000000000000 R11: 0000000000002400 R12: ffffffffa6611740
-[    8.701032] R13: 0000000000000000 R14: 0000000000000000 R15: ffffffffa6611740
-[    8.701032]  ? __sched_text_end+0x5/0x5
-[    8.701032]  do_idle+0x19c/0x230
-[    8.701032]  cpu_startup_entry+0x14/0x20
-[    8.701032]  start_kernel+0x491/0x4b1
-[    8.701032]  secondary_startup_64+0xa4/0xb0
-[    8.701032] Kernel Offset: 0x24200000 from 0xffffffff81000000 (relocation range: 0xffffffff80000000-0xffffffffbfffffff)
-
----
-# bad: [a351e9b9fc24e982ec2f0e76379a49826036da12] Linux 4.11
-# good: [c470abd4fde40ea6a0846a2beab642a578c0b8cd] Linux 4.10
-git bisect start 'v4.11' 'v4.10'
-# good: [1ec5c1867af085897bb9e0f67bef3713334dbe7f] Merge tag 'gpio-v4.11-1' of git://git.kernel.org/pub/scm/linux/kernel/git/linusw/linux-gpio
-git bisect good 1ec5c1867af085897bb9e0f67bef3713334dbe7f
-# good: [79b17ea740d9fab178d6a1aa15d848b5e6c01b82] Merge tag 'trace-v4.11' of git://git.kernel.org/pub/scm/linux/kernel/git/rostedt/linux-trace
-git bisect good 79b17ea740d9fab178d6a1aa15d848b5e6c01b82
-# bad: [d4ee21ef61dfcaeba7542cdc1c9242364a8ca5c0] Merge tag 'reset-fixes-for-4.11-2' of git://git.pengutronix.de/git/pza/linux into fixes
-git bisect bad d4ee21ef61dfcaeba7542cdc1c9242364a8ca5c0
-# good: [5eca1c10cbaa9c366c18ca79f81f21c731e3dcc7] sched/headers: Clean up <linux/sched.h>
-git bisect good 5eca1c10cbaa9c366c18ca79f81f21c731e3dcc7
-# good: [2d62e0768d3c28536d4cfe4c40ba1e5e8e442a93] Merge tag 'kvm-4.11-2' of git://git.kernel.org/pub/scm/virt/kvm/kvm
-git bisect good 2d62e0768d3c28536d4cfe4c40ba1e5e8e442a93
-# bad: [9db61d6fd65f53eaee13fbb451fd761ce926dea9] Merge tag 'xfs-4.11-fixes-1' of git://git.kernel.org/pub/scm/fs/xfs/xfs-linux
-git bisect bad 9db61d6fd65f53eaee13fbb451fd761ce926dea9
-# good: [f7d6a7283aa1de430c6323a9714d1a787bc2d1ea] Merge tag 'powerpc-4.11-3' of git://git.kernel.org/pub/scm/linux/kernel/git/powerpc/linux
-git bisect good f7d6a7283aa1de430c6323a9714d1a787bc2d1ea
-# good: [ec3b93ae0bf4742e9cbb40e1964129926c1464e0] Merge branch 'x86-urgent-for-linus' of git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip
-git bisect good ec3b93ae0bf4742e9cbb40e1964129926c1464e0
-# bad: [34bbce9e344b47e8871273409632f525973afad4] Merge branch 'for-linus' of git://git.kernel.dk/linux-block
-git bisect bad 34bbce9e344b47e8871273409632f525973afad4
-# good: [bb61ce54e8986ea18f7eb13cfa4a6fa8eb311bbd] Merge tag 'media/v4.11-2' of git://git.kernel.org/pub/scm/linux/kernel/git/mchehab/linux-media
-git bisect good bb61ce54e8986ea18f7eb13cfa4a6fa8eb311bbd
-# bad: [b0bfdfc2bf7fa85317824c6a389fc373dfcef5bc] block/sed: Fix opal user range check and unused variables
-git bisect bad b0bfdfc2bf7fa85317824c6a389fc373dfcef5bc
-# bad: [6c8b232efea1ad3d263ff8b9c16b7e8767a77488] blk-mq: make lifetime consistent between hctx and its kobject
-git bisect bad 6c8b232efea1ad3d263ff8b9c16b7e8767a77488
-# bad: [7ea5fe31c12dd8bcf4a9c5a4a7e8e23826a9a3b8] blk-mq: make lifetime consitent between q/ctx and its kobject
-git bisect bad 7ea5fe31c12dd8bcf4a9c5a4a7e8e23826a9a3b8
-# good: [737f98cfe7de8df7433a4d846850aa8efa44bd48] blk-mq: initialize mq kobjects in blk_mq_init_allocated_queue()
-git bisect good 737f98cfe7de8df7433a4d846850aa8efa44bd48
-# first bad commit: [7ea5fe31c12dd8bcf4a9c5a4a7e8e23826a9a3b8] blk-mq: make lifetime consitent between q/ctx and its kobject
+-- 
+1.8.3.1
