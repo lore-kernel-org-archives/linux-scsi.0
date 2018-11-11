@@ -1,53 +1,36 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH 0/3] SG_IO command filtering via sysfs
-Date: Sun, 11 Nov 2018 14:26:45 +0100
-Message-ID: <566bc821-f12a-f7c1-e7c7-99092807ee27@redhat.com>
-References: <1541867733-7836-1-git-send-email-pbonzini@redhat.com>
- <20181110190521.GA2627@thunk.org>
+From: Christoph Hellwig <hch@lst.de>
+Subject: remove exofs, the T10 OSD code and block/scsi bidi support V3
+Date: Sun, 11 Nov 2018 14:32:03 +0100
+Message-ID: <20181111133211.13926-1-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20181110190521.GA2627@thunk.org>
-Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Theodore Y. Ts'o" <tytso@mit.edu>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>
+To: axboe@kernel.dk, martin.petersen@oracle.com, ooo@electrozaur.com
+Cc: Johannes Thumshirn <jthumshirn@suse.de>, Benjamin Block <bblock@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 10/11/2018 20:05, Theodore Y. Ts'o wrote:
-> I wonder if a better way of adding SG_IO command filtering is via
-> eBPF?  We are currently carrying a inside Google a patch which allows
-> a specific of SCSI commands to non-root processes --- if the process
-> belonged to a particular Unix group id.
-> 
-> It's pretty specific to our use case, in terms of the specific SCSI
-> commands we want to allow through.  I can imagine people wanting
-> different filters based on the type of the SCSI device, or a HDD's
-> WWID, not just a group id.  For example, this might be useful for
-> people wanting to do crazy things with containers --- maybe you'd
-> want to allow container root to send a SANITIZE ERASE command to one
-> of its exclusively assigned disks, but not to other HDD's.
-> 
-> So having something that's more general than a flat file in sysfs
-> might be preferable to resurrecting an interface which we would then
-> after to support forever, even if we come up with a more general
-> interface.
+The only real user of the T10 OSD protocol, the pNFS object layout
+driver never went to the point of having shipping products, and we
+removed it 1.5 years ago.  Exofs is just a simple example without
+real life users.
 
-Heh, this was exactly the answer I dreaded, because I can't deny it
-makes sense. :)
+The code has been mostly unmaintained for years and is getting in the
+way of block / SCSI changes, so I think it's finally time to drop it.
 
-My main argument against it is that while superseding an interface and
-still having to support it forever sucks, having a super-complex
-interface is also bad (back in 2012 I wrote
-https://lwn.net/Articles/501742/ which I'm not particularly enthusiastic
-about).  In many cases a combination of MAC policies, ACLs, etc. can be
-just as effective.
+Quote from Boaz:
 
-I'm not very eBPF savvy, the question I have is: what kind of
-information about the running process is available in an eBPF program?
-For example, even considering only the examples you make, would it be
-able to access the CDB, the capabilities and uid/gid of the task, the
-SCSI device type, the WWN?  Of course you also need the mode of the file
-descriptor in order to allow SANITIZE ERASE if the disk is opened for write.
+"As I said then. It is used in Universities for studies and experiments.
+Every once in a while. I get an email with questions and reports.
 
-Paolo
+But yes feel free to remove the all thing!!
+
+I guess I can put it up on github. In a public tree.
+
+Just that I will need to forward port it myself, til now you guys
+been doing this for me ;-)"
+
+Now the last time this caused a bit of a stir, but still no actual users,
+not even for SG_IO passthrough commands.  So here we go again, this time
+including removing everything in the scsi and block layer supporting it,
+and thus shrinking struct request.
