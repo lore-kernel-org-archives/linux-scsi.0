@@ -1,41 +1,66 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: RE: scsi_set_medium_removal timeout issue
-Date: Mon, 12 Nov 2018 10:33:04 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1811121031180.7773-100000@netrider.rowland.org>
-References: <678F3D1BB717D949B966B68EAEB446ED1F1B7CD4@dggemm526-mbx.china.huawei.com>
+From: Tony Battersby <tonyb-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org>
+Subject: [PATCH v4 8/9] dmapool: improve accuracy of debug statistics
+Date: Mon, 12 Nov 2018 10:45:58 -0500
+Message-ID: <bb0ee76c-78ac-b75b-b32d-8c94d881f7d6@cybernetics.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <678F3D1BB717D949B966B68EAEB446ED1F1B7CD4@dggemm526-mbx.china.huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Zengtao (B)" <prime.zeng@hisilicon.com>
-Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>, "usb-storage@lists.one-eyed-alien.net" <usb-storage@lists.one-eyed-alien.net>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Content-Language: en-US
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
+List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Marek Szyprowski <m.szyprowski-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 12 Nov 2018, Zengtao (B) wrote:
+The "total number of blocks in pool" debug statistic currently does not
+take the boundary value into account, so it diverges from the "total
+number of blocks in use" statistic when a boundary is in effect.  Add a
+calculation for the number of blocks per allocation that takes the
+boundary into account, and use it to replace the inaccurate calculation.
 
-> >> >Something is wrong here.  Before sending PREVENT-ALLOW MEDIUM
-> >> >REMOVAL, the host should issue SYNCHRONIZE CACHE.  This will force
-> >> >fsg_lun_fsync_sub to run, and the host should allow a long timeout
-> >> >for this command.  Then when PREVENT-ALLOW MEDIUM REMOVAL
-> >is sent,
-> >> >nothing will need to be flushed.
-> >> >
-> >>
-> >> Definitely, I haven't seen the SYNCHRONIZE CACHE from the host, it
-> >> directly issued the PREVENT-ALLOW MEDIUM REMOVAL, so maybe
-> >something
-> >> wrong with the scsi layer or something wrong with the mass storage
-> >class driver?
-> >
-> >Or it could be something else.  Can you please post the dmesg log from
-> >the host, showing what happens when the device is first plugged in?
-> >
-> 
-> I have enabled the SCSI log for the host, please refer to the attachment.
+Signed-off-by: Tony Battersby <tonyb-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org>
+---
 
-The log you attached was incomplete -- it was missing some commands 
-from the beginning.  In any case, it wasn't what I wanted.  I asked
-you to post the dmesg log, not the SCSI log.
+This depends on patch #1 "dmapool: fix boundary comparison" for the
+calculated blks_per_alloc value to be correct.
 
-Alan Stern
+The added blks_per_alloc value will also be used in the next patch.
+
+--- linux/mm/dmapool.c.orig	2018-08-06 17:48:54.000000000 -0400
++++ linux/mm/dmapool.c	2018-08-06 17:52:53.000000000 -0400
+@@ -61,6 +61,7 @@ struct dma_pool {		/* the pool */
+ 	struct device *dev;
+ 	unsigned int allocation;
+ 	unsigned int boundary;
++	unsigned int blks_per_alloc;
+ 	char name[32];
+ 	struct list_head pools;
+ };
+@@ -105,8 +106,7 @@ show_pools(struct device *dev, struct de
+ 		/* per-pool info, no real statistics yet */
+ 		temp = scnprintf(next, size, "%-16s %4zu %4zu %4u %2u\n",
+ 				 pool->name, blocks,
+-				 (size_t) pages *
+-				 (pool->allocation / pool->size),
++				 (size_t) pages * pool->blks_per_alloc,
+ 				 pool->size, pages);
+ 		size -= temp;
+ 		next += temp;
+@@ -182,6 +182,9 @@ struct dma_pool *dma_pool_create(const c
+ 	retval->size = size;
+ 	retval->boundary = boundary;
+ 	retval->allocation = allocation;
++	retval->blks_per_alloc =
++		(allocation / boundary) * (boundary / size) +
++		(allocation % boundary) / size;
+ 
+ 	INIT_LIST_HEAD(&retval->pools);
+ 
