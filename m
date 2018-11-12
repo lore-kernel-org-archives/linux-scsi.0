@@ -1,223 +1,175 @@
-From: Tony Battersby <tonyb-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org>
-Subject: [PATCH v4 4/9] dmapool: improve scalability of dma_pool_alloc
-Date: Mon, 12 Nov 2018 10:43:25 -0500
-Message-ID: <e982cd38-a721-bd06-8da8-0d6a0480685c@cybernetics.com>
+From: Guenter Roeck <linux@roeck-us.net>
+Subject: Re: kobject lifetime issues in blk-mq
+Date: Mon, 12 Nov 2018 08:16:58 -0800
+Message-ID: <20181112161658.GA13176@roeck-us.net>
+References: <20181109203518.GA7130@roeck-us.net>
+ <20181112092051.GA391@ming.t460p>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-Content-Language: en-US
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
-List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Marek Szyprowski <m.szyprowski-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
-Cc: "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20181112092051.GA391@ming.t460p>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ming Lei <ming.lei@redhat.com>
+Cc: Ming Lei <tom.leiming@gmail.com>, Jens Axboe <axboe@fb.com>, Peter Zijlstra <peterz@infradead.org>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Paolo Bonzini <pbonzini@redhat.com>, Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-dma_pool_alloc() scales poorly when allocating a large number of pages
-because it does a linear scan of all previously-allocated pages before
-allocating a new one.  Improve its scalability by maintaining a separate
-list of pages that have free blocks ready to (re)allocate.  In big O
-notation, this improves the algorithm from O(n^2) to O(n).
+On Mon, Nov 12, 2018 at 05:20:52PM +0800, Ming Lei wrote:
+> On Fri, Nov 09, 2018 at 12:35:18PM -0800, Guenter Roeck wrote:
+> > Hi,
+> > 
+> > Images with CONFIG_DEBUG_KOBJECT=y, CONFIG_DEBUG_KOBJECT_RELEASE=y
+> > enabled report kobject lifetime issues when booting an image in qemu
+> > using virtio-scsi-pci.
+> > 
+> > Bisect points to two different commits, depending on the kernel
+> > configuration.
+> > 
+> > 1st configuration: defconfig plus:
+> > 
+> > CONFIG_VIRTIO_BLK=y
+> > CONFIG_SCSI_LOWLEVEL=y
+> > CONFIG_SCSI_VIRTIO=y
+> > CONFIG_VIRTIO_PCI=y
+> > CONFIG_VIRTIO_MMIO=y
+> > CONFIG_DEBUG_OBJECTS=y
+> > CONFIG_DEBUG_OBJECTS_FREE=y
+> > CONFIG_DEBUG_OBJECTS_TIMERS=y
+> > CONFIG_DEBUG_KOBJECT=y
+> > CONFIG_DEBUG_KOBJECT_RELEASE=y
+> > 
+> > Bisecting this configuration points to commit b5b6e8c8d3b4 ("scsi:
+> > virtio_scsi: fix IO hang caused by automatic irq vector affinity")
+> > as the culprit. This commit enforces the use of blk-mq for virtio_scsi;
+> > the bisect log is therefore a bit misleading.
+> > 
+> > 2nd configuration: As above, plus:
+> > CONFIG_SCSI_MQ_DEFAULT=y
+> > 
+> > With this configuration, bisect points to commit 7ea5fe31c12d
+> > ("blk-mq: make lifetime consitent between q/ctx and its kobject").
+> > 
+> > The qemu command line used to reproduce the problem is as follows.
+> > The qemu version does not seem to matter (I tested with qemu versions
+> > 2.5, 2.11, and 3.0).
+> > 
+> > qemu-system-x86_64 \
+> > 	-kernel arch/x86/boot/bzImage \
+> > 	-device virtio-scsi-pci,id=scsi \
+> > 	-device scsi-hd,bus=scsi.0,drive=d0 \
+> > 	-drive file=./wheezy.img,format=raw,if=none,id=d0 \
+> > 	-snapshot \
+> > 	-m 2G -smp 4 -enable-kvm \
+> > 	-net user,host=10.0.2.10,hostfwd=tcp::10022-:22 -net nic \
+> > 	-nographic -monitor none \
+> > 	-no-reboot \
+> > 	-append "console=ttyS0 root=/dev/sda earlyprintk=serial panic_on_warn=1 panic=-1"
+> > 
+> > Root file system:
+> > 	https://storage.googleapis.com/syzkaller/wheezy.img
+> > or:
+> > 	https://github.com/groeck/linux-build-test/blob/master/rootfs/x86_64/rootfs.ext2.gz
+> > 
+> > It seems that any root file system can be used to reproduce the problem.
+> > Also, the problem is not limited to virtio-scsi-pci. I also tried
+> > am53c974, lsi53c810, and lsi53c895a (after enabling the respective
+> > drivers), with the same result.
+> > 
+> > Overall, this suggests that the problem is related to blk-mq and was
+> > indeed introduced with commit 7ea5fe31c12d.
+> > 
+> > For reference, I attached an actual crash log as well as a set of bisect
+> > logs below.
+> > 
+> > Unfortunately, my understanding of blk-mq is not good enough to find the
+> > underlying problem and suggest a fix. Please let me know if there is
+> > anything else I can do to help fixing the problem.
+> > 
+> > Note that the problem was originally reported by syzbot running a test
+> > on chromeos-4.14. It may well be that the problem has already been
+> > reported and is being worked on. If so, please apologize the noise.
+> > 
+> > Thanks,
+> > Guenter
+> > 
+> > ---
+> > [    8.700038] ------------[ cut here ]------------
+> > [    8.700376] ODEBUG: free active (active state 0) object type: timer_list hint: delayed_work_timer_fn+0x0/0x10
+> > [    8.701032] WARNING: CPU: 0 PID: 0 at lib/debugobjects.c:329 debug_print_object+0x6a/0x80
+> > [    8.701032] Kernel panic - not syncing: panic_on_warn set ...
+> > [    8.701032] CPU: 0 PID: 0 Comm: swapper/0 Not tainted 4.20.0-rc1 #30
+> > [    8.701032] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Ubuntu-1.8.2-1ubuntu1 04/01/2014
+> > [    8.701032] Call Trace:
+> > [    8.701032]  <IRQ>
+> > [    8.701032]  dump_stack+0x46/0x5b
+> > [    8.701032]  panic+0xf3/0x246
+> > [    8.701032]  ? debug_print_object+0x6a/0x80
+> > [    8.701032]  __warn+0xeb/0xf0
+> > [    8.701032]  ? debug_print_object+0x6a/0x80
+> > [    8.701032]  ? debug_print_object+0x6a/0x80
+> > [    8.701032]  report_bug+0xb1/0x120
+> > [    8.701032]  fixup_bug.part.10+0x13/0x30
+> > [    8.701032]  do_error_trap+0x8f/0xb0
+> > [    8.701032]  do_invalid_op+0x31/0x40
+> > [    8.701032]  ? debug_print_object+0x6a/0x80
+> > [    8.701032]  invalid_op+0x14/0x20
+> > [    8.701032] RIP: 0010:debug_print_object+0x6a/0x80
+> > [    8.701032] Code: 8b 43 10 83 c2 01 8b 4b 14 89 15 c1 e2 78 01 4c 8b 45 00 4c
+> > 89 e6 48 c7 c7 f0 ca 41 a6 48 8b 14 c5 a0 f7 24 a6 e8 06 8e cc ff <0f> 0b 5b 83
+> > 05 70 47 1a 01 01 5d 41 5c c3 83 05 65 47 1a 01 01 c3
+> > [    8.701032] RSP: 0018:ffff89b9fda03e48 EFLAGS: 00010082
+> > [    8.701032] RAX: 0000000000000000 RBX: ffff89b9fd49d0c8 RCX: ffffffffa6646e18
+> > [    8.701032] RDX: 0000000000000001 RSI: 0000000000000082 RDI: ffffffffa6cc596c
+> > [    8.701032] RBP: ffffffffa664a5c0 R08: 79616c6564203a74 R09: 5f6b726f775f6465
+> > [    8.701032] R10: ffff89b9fda03f10 R11: 3178302f3078302b R12: ffffffffa6403e22
+> > [    8.701032] R13: 0000000000000001 R14: ffffffffa6d4d458 R15: ffff89b9fc4c8780
+> > [    8.701032]  ? debug_print_object+0x6a/0x80
+> > [    8.701032]  debug_check_no_obj_freed+0x1b8/0x1ea
+> > [    8.701032]  ? rcu_process_callbacks+0x2a7/0x750
+> > [    8.701032]  kmem_cache_free+0x6e/0x1a0
+> > [    8.701032]  ? __blk_release_queue+0x150/0x150
+> > [    8.701032]  rcu_process_callbacks+0x2a7/0x750
+> > [    8.701032]  __do_softirq+0xf2/0x2c7
+> > [    8.701032]  irq_exit+0xb7/0xc0
+> > [    8.701032]  smp_apic_timer_interrupt+0x67/0x130
+> > [    8.701032]  apic_timer_interrupt+0xf/0x20
+> > [    8.701032]  </IRQ>
+> > [    8.701032] RIP: 0010:default_idle+0x12/0x140
+> > [    8.701032] Code: fe ff ff c6 43 08 00 fb eb b0 31 c0 eb b4 e8 65 c8 60 ff 90
+> > 90 90 90 90 41 54 55 53 65 8b 2d 15 c4 3b 5a 66 66 66 66 90 fb f4 <65> 8b 2d 07
+> > c4 3b 5a 66 66 66 66 90 5b 5d 41 5c c3 65 8b 05 f6 c3
+> > [    8.701032] RSP: 0018:ffffffffa6603e98 EFLAGS: 00000246 ORIG_RAX: ffffffffffffff13
+> > [    8.701032] RAX: ffffffffa5c52d10 RBX: 0000000000000000 RCX: 0000000000000000
+> > [    8.701032] RDX: 0000000000000001 RSI: 0000000000000000 RDI: 000000020605092a
+> > [    8.701032] RBP: 0000000000000000 R08: ffffffffcff7766a R09: ffff89b9fda20b00
+> > [    8.701032] R10: 0000000000000000 R11: 0000000000002400 R12: ffffffffa6611740
+> > [    8.701032] R13: 0000000000000000 R14: 0000000000000000 R15: ffffffffa6611740
+> > [    8.701032]  ? __sched_text_end+0x5/0x5
+> > [    8.701032]  do_idle+0x19c/0x230
+> > [    8.701032]  cpu_startup_entry+0x14/0x20
+> > [    8.701032]  start_kernel+0x491/0x4b1
+> > [    8.701032]  secondary_startup_64+0xa4/0xb0
+> > [    8.701032] Kernel Offset: 0x24200000 from 0xffffffff81000000 (relocation range: 0xffffffff80000000-0xffffffffbfffffff)
+> > 
+> 
+> That is simply caused by enabling DEBUG_KOBJECT_RELEASE itself, which
+> tries to do kboject_release() after delaying a while.
+> 
+> Wrt. this issue, q->mq_kobj is embedded in 'request_queue' whose
+> instance is freed in release handler of q->kobj. So when one instance
+> of 'request_queue' is freed, DEBUG_KOBJECT_RELEASE still expects that
+> the q->mq_kobj is active.
+> 
+> The release handler of q->mq_kobj is NOP actually, so in reality it won't
+> be one issue at all.
+> 
 
-Signed-off-by: Tony Battersby <tonyb-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org>
----
---- linux/mm/dmapool.c.orig	2018-08-03 16:16:49.000000000 -0400
-+++ linux/mm/dmapool.c	2018-08-03 16:45:33.000000000 -0400
-@@ -15,11 +15,16 @@
-  * Many older drivers still have their own code to do this.
-  *
-  * The current design of this allocator is fairly simple.  The pool is
-- * represented by the 'struct dma_pool' which keeps a doubly-linked list of
-- * allocated pages.  Each page in the page_list is split into blocks of at
-- * least 'size' bytes.  Free blocks are tracked in an unsorted singly-linked
-- * list of free blocks within the page.  Used blocks aren't tracked, but we
-- * keep a count of how many are currently allocated from each page.
-+ * represented by the 'struct dma_pool'.  Each allocated page is split into
-+ * blocks of at least 'size' bytes.  Free blocks are tracked in an unsorted
-+ * singly-linked list of free blocks within the page.  Used blocks aren't
-+ * tracked, but we keep a count of how many are currently allocated from each
-+ * page.
-+ *
-+ * The pool keeps two doubly-linked list of allocated pages.  The 'available'
-+ * list tracks pages that have one or more free blocks, and the 'full' list
-+ * tracks pages that have no free blocks.  Pages are moved from one list to
-+ * the other as their blocks are allocated and freed.
-  */
- 
- #include <linux/device.h>
-@@ -43,7 +48,10 @@
- #endif
- 
- struct dma_pool {		/* the pool */
--	struct list_head page_list;
-+#define POOL_FULL_IDX   0
-+#define POOL_AVAIL_IDX  1
-+#define POOL_MAX_IDX    2
-+	struct list_head page_list[POOL_MAX_IDX];
- 	spinlock_t lock;
- 	size_t size;
- 	struct device *dev;
-@@ -54,7 +62,7 @@ struct dma_pool {		/* the pool */
- };
- 
- struct dma_page {		/* cacheable header for 'allocation' bytes */
--	struct list_head page_list;
-+	struct list_head dma_list;
- 	void *vaddr;
- 	dma_addr_t dma;
- 	unsigned int in_use;
-@@ -70,7 +78,6 @@ show_pools(struct device *dev, struct de
- 	unsigned temp;
- 	unsigned size;
- 	char *next;
--	struct dma_page *page;
- 	struct dma_pool *pool;
- 
- 	next = buf;
-@@ -84,11 +91,18 @@ show_pools(struct device *dev, struct de
- 	list_for_each_entry(pool, &dev->dma_pools, pools) {
- 		unsigned pages = 0;
- 		unsigned blocks = 0;
-+		int list_idx;
- 
- 		spin_lock_irq(&pool->lock);
--		list_for_each_entry(page, &pool->page_list, page_list) {
--			pages++;
--			blocks += page->in_use;
-+		for (list_idx = 0; list_idx < POOL_MAX_IDX; list_idx++) {
-+			struct dma_page *page;
-+
-+			list_for_each_entry(page,
-+					    &pool->page_list[list_idx],
-+					    dma_list) {
-+				pages++;
-+				blocks += page->in_use;
-+			}
- 		}
- 		spin_unlock_irq(&pool->lock);
- 
-@@ -163,7 +177,8 @@ struct dma_pool *dma_pool_create(const c
- 
- 	retval->dev = dev;
- 
--	INIT_LIST_HEAD(&retval->page_list);
-+	INIT_LIST_HEAD(&retval->page_list[POOL_FULL_IDX]);
-+	INIT_LIST_HEAD(&retval->page_list[POOL_AVAIL_IDX]);
- 	spin_lock_init(&retval->lock);
- 	retval->size = size;
- 	retval->boundary = boundary;
-@@ -252,7 +267,7 @@ static void pool_free_page(struct dma_po
- 	void *vaddr = page->vaddr;
- 	dma_addr_t dma = page->dma;
- 
--	list_del(&page->page_list);
-+	list_del(&page->dma_list);
- 
- 	if (is_page_busy(page)) {
- 		dev_err(pool->dev,
-@@ -278,8 +293,8 @@ static void pool_free_page(struct dma_po
-  */
- void dma_pool_destroy(struct dma_pool *pool)
- {
--	struct dma_page *page;
- 	bool empty = false;
-+	int list_idx;
- 
- 	if (unlikely(!pool))
- 		return;
-@@ -294,10 +309,15 @@ void dma_pool_destroy(struct dma_pool *p
- 		device_remove_file(pool->dev, &dev_attr_pools);
- 	mutex_unlock(&pools_reg_lock);
- 
--	while ((page = list_first_entry_or_null(&pool->page_list,
--						struct dma_page,
--						page_list))) {
--		pool_free_page(pool, page);
-+	for (list_idx = 0; list_idx < POOL_MAX_IDX; list_idx++) {
-+		struct dma_page *page;
-+
-+		while ((page = list_first_entry_or_null(
-+					&pool->page_list[list_idx],
-+					struct dma_page,
-+					dma_list))) {
-+			pool_free_page(pool, page);
-+		}
- 	}
- 
- 	kfree(pool);
-@@ -325,10 +345,11 @@ void *dma_pool_alloc(struct dma_pool *po
- 	might_sleep_if(gfpflags_allow_blocking(mem_flags));
- 
- 	spin_lock_irqsave(&pool->lock, flags);
--	list_for_each_entry(page, &pool->page_list, page_list) {
--		if (page->offset < pool->allocation)
--			goto ready;
--	}
-+	page = list_first_entry_or_null(&pool->page_list[POOL_AVAIL_IDX],
-+					struct dma_page,
-+					dma_list);
-+	if (page)
-+		goto ready;
- 
- 	/* pool_alloc_page() might sleep, so temporarily drop &pool->lock */
- 	spin_unlock_irqrestore(&pool->lock, flags);
-@@ -339,11 +360,15 @@ void *dma_pool_alloc(struct dma_pool *po
- 
- 	spin_lock_irqsave(&pool->lock, flags);
- 
--	list_add(&page->page_list, &pool->page_list);
-+	list_add(&page->dma_list, &pool->page_list[POOL_AVAIL_IDX]);
-  ready:
- 	page->in_use++;
- 	offset = page->offset;
- 	page->offset = *(int *)(page->vaddr + offset);
-+	if (page->offset >= pool->allocation)
-+		/* Move page from the "available" list to the "full" list. */
-+		list_move_tail(&page->dma_list,
-+			       &pool->page_list[POOL_FULL_IDX]);
- 	retval = offset + page->vaddr;
- 	*handle = offset + page->dma;
- #ifdef	DMAPOOL_DEBUG
-@@ -381,13 +406,19 @@ EXPORT_SYMBOL(dma_pool_alloc);
- 
- static struct dma_page *pool_find_page(struct dma_pool *pool, dma_addr_t dma)
- {
--	struct dma_page *page;
-+	int list_idx;
- 
--	list_for_each_entry(page, &pool->page_list, page_list) {
--		if (dma < page->dma)
--			continue;
--		if ((dma - page->dma) < pool->allocation)
--			return page;
-+	for (list_idx = 0; list_idx < POOL_MAX_IDX; list_idx++) {
-+		struct dma_page *page;
-+
-+		list_for_each_entry(page,
-+				    &pool->page_list[list_idx],
-+				    dma_list) {
-+			if (dma < page->dma)
-+				continue;
-+			if ((dma - page->dma) < pool->allocation)
-+				return page;
-+		}
- 	}
- 	return NULL;
- }
-@@ -444,6 +475,9 @@ void dma_pool_free(struct dma_pool *pool
- #endif
- 
- 	page->in_use--;
-+	if (page->offset >= pool->allocation)
-+		/* Move page from the "full" list to the "available" list. */
-+		list_move(&page->dma_list, &pool->page_list[POOL_AVAIL_IDX]);
- 	*(int *)vaddr = page->offset;
- 	page->offset = offset;
- 	/*
+So what is the solution ? Either this is an incorrect use of kobjects,
+or DEBUG_KOBJECT_RELEASE is broken and needs to be marked as such
+(or fixed, but I would have no idea how to do that).
+
+I'll be happy to send a patch marking DEBUG_KOBJECT_RELEASE as broken,
+but I suspect that it may be rejected with prejudice.
+
+Thanks,
+Guenter
