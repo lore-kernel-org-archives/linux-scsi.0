@@ -1,7 +1,7 @@
 From: Tony Battersby <tonyb-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org>
-Subject: [PATCH v4 6/9] dmapool: improve scalability of dma_pool_free
-Date: Mon, 12 Nov 2018 10:44:40 -0500
-Message-ID: <4c3c25ab-5793-c394-9fe4-221b81805536@cybernetics.com>
+Subject: [PATCH v4 4/9] dmapool: improve scalability of dma_pool_alloc
+Date: Mon, 12 Nov 2018 10:43:25 -0500
+Message-ID: <e982cd38-a721-bd06-8da8-0d6a0480685c@cybernetics.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
@@ -20,296 +20,204 @@ To: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Christoph He
 Cc: "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-dma_pool_free() scales poorly when the pool contains many pages because
-pool_find_page() does a linear scan of all allocated pages.  Improve its
-scalability by replacing the linear scan with virt_to_page() and storing
-dmapool private data directly in 'struct page', thereby eliminating
-'struct dma_page'.  In big O notation, this improves the algorithm from
-O(n^2) to O(n) while also reducing memory usage.
-
-Thanks to Matthew Wilcox for the suggestion to use struct page.
+dma_pool_alloc() scales poorly when allocating a large number of pages
+because it does a linear scan of all previously-allocated pages before
+allocating a new one.  Improve its scalability by maintaining a separate
+list of pages that have free blocks ready to (re)allocate.  In big O
+notation, this improves the algorithm from O(n^2) to O(n).
 
 Signed-off-by: Tony Battersby <tonyb-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org>
 ---
---- linux/include/linux/mm_types.h.orig	2018-08-01 17:59:46.000000000 -0400
-+++ linux/include/linux/mm_types.h	2018-08-01 17:59:56.000000000 -0400
-@@ -156,6 +156,12 @@ struct page {
- 			unsigned long _zd_pad_1;	/* uses mapping */
- 		};
- 
-+		struct {	/* dma_pool pages */
-+			struct list_head dma_list;
-+			dma_addr_t dma;
-+			unsigned int dma_free_off;
-+		};
-+
- 		/** @rcu_head: You can use this to free a page by RCU. */
- 		struct rcu_head rcu_head;
- 	};
-@@ -177,6 +183,8 @@ struct page {
- 
- 		unsigned int active;		/* SLAB */
- 		int units;			/* SLOB */
-+
-+		unsigned int dma_in_use;	/* dma_pool pages */
- 	};
- 
- 	/* Usage count. *DO NOT USE DIRECTLY*. See page_ref.h */
---- linux/mm/dmapool.c.orig	2018-08-03 17:47:03.000000000 -0400
-+++ linux/mm/dmapool.c	2018-08-03 17:47:22.000000000 -0400
-@@ -25,6 +25,10 @@
-  * list tracks pages that have one or more free blocks, and the 'full' list
-  * tracks pages that have no free blocks.  Pages are moved from one list to
-  * the other as their blocks are allocated and freed.
+--- linux/mm/dmapool.c.orig	2018-08-03 16:16:49.000000000 -0400
++++ linux/mm/dmapool.c	2018-08-03 16:45:33.000000000 -0400
+@@ -15,11 +15,16 @@
+  * Many older drivers still have their own code to do this.
+  *
+  * The current design of this allocator is fairly simple.  The pool is
+- * represented by the 'struct dma_pool' which keeps a doubly-linked list of
+- * allocated pages.  Each page in the page_list is split into blocks of at
+- * least 'size' bytes.  Free blocks are tracked in an unsorted singly-linked
+- * list of free blocks within the page.  Used blocks aren't tracked, but we
+- * keep a count of how many are currently allocated from each page.
++ * represented by the 'struct dma_pool'.  Each allocated page is split into
++ * blocks of at least 'size' bytes.  Free blocks are tracked in an unsorted
++ * singly-linked list of free blocks within the page.  Used blocks aren't
++ * tracked, but we keep a count of how many are currently allocated from each
++ * page.
 + *
-+ * When allocating DMA pages, we use some available space in 'struct page' to
-+ * store data private to dmapool; search 'dma_pool' in the definition of
-+ * 'struct page' for details.
++ * The pool keeps two doubly-linked list of allocated pages.  The 'available'
++ * list tracks pages that have one or more free blocks, and the 'full' list
++ * tracks pages that have no free blocks.  Pages are moved from one list to
++ * the other as their blocks are allocated and freed.
   */
  
  #include <linux/device.h>
-@@ -61,14 +65,6 @@ struct dma_pool {		/* the pool */
- 	struct list_head pools;
+@@ -43,7 +48,10 @@
+ #endif
+ 
+ struct dma_pool {		/* the pool */
+-	struct list_head page_list;
++#define POOL_FULL_IDX   0
++#define POOL_AVAIL_IDX  1
++#define POOL_MAX_IDX    2
++	struct list_head page_list[POOL_MAX_IDX];
+ 	spinlock_t lock;
+ 	size_t size;
+ 	struct device *dev;
+@@ -54,7 +62,7 @@ struct dma_pool {		/* the pool */
  };
  
--struct dma_page {		/* cacheable header for 'allocation' bytes */
--	struct list_head dma_list;
--	void *vaddr;
--	dma_addr_t dma;
--	unsigned int dma_in_use;
--	unsigned int dma_free_off;
--};
--
- static DEFINE_MUTEX(pools_lock);
- static DEFINE_MUTEX(pools_reg_lock);
+ struct dma_page {		/* cacheable header for 'allocation' bytes */
+-	struct list_head page_list;
++	struct list_head dma_list;
+ 	void *vaddr;
+ 	dma_addr_t dma;
+ 	unsigned int in_use;
+@@ -70,7 +78,6 @@ show_pools(struct device *dev, struct de
+ 	unsigned temp;
+ 	unsigned size;
+ 	char *next;
+-	struct dma_page *page;
+ 	struct dma_pool *pool;
  
-@@ -95,7 +91,7 @@ show_pools(struct device *dev, struct de
+ 	next = buf;
+@@ -84,11 +91,18 @@ show_pools(struct device *dev, struct de
+ 	list_for_each_entry(pool, &dev->dma_pools, pools) {
+ 		unsigned pages = 0;
+ 		unsigned blocks = 0;
++		int list_idx;
  
  		spin_lock_irq(&pool->lock);
- 		for (list_idx = 0; list_idx < POOL_MAX_IDX; list_idx++) {
--			struct dma_page *page;
-+			struct page *page;
- 
- 			list_for_each_entry(page,
- 					    &pool->page_list[list_idx],
-@@ -218,7 +214,7 @@ struct dma_pool *dma_pool_create(const c
- }
- EXPORT_SYMBOL(dma_pool_create);
- 
--static void pool_initialise_page(struct dma_pool *pool, struct dma_page *page)
-+static void pool_initialize_free_block_list(struct dma_pool *pool, void *vaddr)
- {
- 	unsigned int offset = 0;
- 	unsigned int next_boundary = pool->boundary;
-@@ -229,47 +225,57 @@ static void pool_initialise_page(struct 
- 			next = next_boundary;
- 			next_boundary += pool->boundary;
+-		list_for_each_entry(page, &pool->page_list, page_list) {
+-			pages++;
+-			blocks += page->in_use;
++		for (list_idx = 0; list_idx < POOL_MAX_IDX; list_idx++) {
++			struct dma_page *page;
++
++			list_for_each_entry(page,
++					    &pool->page_list[list_idx],
++					    dma_list) {
++				pages++;
++				blocks += page->in_use;
++			}
  		}
--		*(int *)(page->vaddr + offset) = next;
-+		*(int *)(vaddr + offset) = next;
- 		offset = next;
- 	} while (offset < pool->allocation);
- }
+ 		spin_unlock_irq(&pool->lock);
  
--static struct dma_page *pool_alloc_page(struct dma_pool *pool, gfp_t mem_flags)
-+static struct page *pool_alloc_page(struct dma_pool *pool, gfp_t mem_flags)
- {
--	struct dma_page *page;
-+	struct page *page;
-+	dma_addr_t dma;
-+	void *vaddr;
+@@ -163,7 +177,8 @@ struct dma_pool *dma_pool_create(const c
  
--	page = kmalloc(sizeof(*page), mem_flags);
--	if (!page)
-+	vaddr = dma_alloc_coherent(pool->dev, pool->allocation, &dma,
-+				   mem_flags);
-+	if (!vaddr)
- 		return NULL;
--	page->vaddr = dma_alloc_coherent(pool->dev, pool->allocation,
--					 &page->dma, mem_flags);
--	if (page->vaddr) {
-+
- #ifdef	DMAPOOL_DEBUG
--		memset(page->vaddr, POOL_POISON_FREED, pool->allocation);
-+	memset(vaddr, POOL_POISON_FREED, pool->allocation);
- #endif
--		pool_initialise_page(pool, page);
--		page->dma_in_use = 0;
--		page->dma_free_off = 0;
--	} else {
--		kfree(page);
--		page = NULL;
--	}
-+	pool_initialize_free_block_list(pool, vaddr);
-+
-+	page = virt_to_page(vaddr);
-+	page->dma = dma;
-+	page->dma_free_off = 0;
-+	page->dma_in_use = 0;
-+
- 	return page;
- }
+ 	retval->dev = dev;
  
--static inline bool is_page_busy(struct dma_page *page)
-+static inline bool is_page_busy(struct page *page)
- {
- 	return page->dma_in_use != 0;
- }
- 
--static void pool_free_page(struct dma_pool *pool, struct dma_page *page)
-+static void pool_free_page(struct dma_pool *pool, struct page *page)
- {
--	void *vaddr = page->vaddr;
-+	/* Save local copies of some page fields. */
-+	void *vaddr = page_to_virt(page);
-+	bool busy = is_page_busy(page);
+-	INIT_LIST_HEAD(&retval->page_list);
++	INIT_LIST_HEAD(&retval->page_list[POOL_FULL_IDX]);
++	INIT_LIST_HEAD(&retval->page_list[POOL_AVAIL_IDX]);
+ 	spin_lock_init(&retval->lock);
+ 	retval->size = size;
+ 	retval->boundary = boundary;
+@@ -252,7 +267,7 @@ static void pool_free_page(struct dma_po
+ 	void *vaddr = page->vaddr;
  	dma_addr_t dma = page->dma;
  
- 	list_del(&page->dma_list);
+-	list_del(&page->page_list);
++	list_del(&page->dma_list);
  
--	if (is_page_busy(page)) {
-+	/* Clear all the page fields we use. */
-+	page->dma_list.next = NULL;
-+	page->dma_list.prev = NULL;
-+	page->dma = 0;
-+	page->dma_free_off = 0;
-+	page_mapcount_reset(page); /* clear dma_in_use */
-+
-+	if (busy) {
+ 	if (is_page_busy(page)) {
  		dev_err(pool->dev,
- 			"dma_pool_destroy %s, %p busy\n",
- 			pool->name, vaddr);
-@@ -280,7 +286,6 @@ static void pool_free_page(struct dma_po
- #endif
- 		dma_free_coherent(pool->dev, pool->allocation, vaddr, dma);
- 	}
--	kfree(page);
- }
+@@ -278,8 +293,8 @@ static void pool_free_page(struct dma_po
+  */
+ void dma_pool_destroy(struct dma_pool *pool)
+ {
+-	struct dma_page *page;
+ 	bool empty = false;
++	int list_idx;
  
- /**
-@@ -310,11 +315,11 @@ void dma_pool_destroy(struct dma_pool *p
+ 	if (unlikely(!pool))
+ 		return;
+@@ -294,10 +309,15 @@ void dma_pool_destroy(struct dma_pool *p
+ 		device_remove_file(pool->dev, &dev_attr_pools);
  	mutex_unlock(&pools_reg_lock);
  
- 	for (list_idx = 0; list_idx < POOL_MAX_IDX; list_idx++) {
--		struct dma_page *page;
-+		struct page *page;
+-	while ((page = list_first_entry_or_null(&pool->page_list,
+-						struct dma_page,
+-						page_list))) {
+-		pool_free_page(pool, page);
++	for (list_idx = 0; list_idx < POOL_MAX_IDX; list_idx++) {
++		struct dma_page *page;
++
++		while ((page = list_first_entry_or_null(
++					&pool->page_list[list_idx],
++					struct dma_page,
++					dma_list))) {
++			pool_free_page(pool, page);
++		}
+ 	}
  
- 		while ((page = list_first_entry_or_null(
- 					&pool->page_list[list_idx],
--					struct dma_page,
-+					struct page,
- 					dma_list))) {
- 			pool_free_page(pool, page);
- 		}
-@@ -338,15 +343,16 @@ void *dma_pool_alloc(struct dma_pool *po
- 		     dma_addr_t *handle)
- {
- 	unsigned long flags;
--	struct dma_page *page;
-+	struct page *page;
- 	size_t offset;
- 	void *retval;
-+	void *vaddr;
- 
+ 	kfree(pool);
+@@ -325,10 +345,11 @@ void *dma_pool_alloc(struct dma_pool *po
  	might_sleep_if(gfpflags_allow_blocking(mem_flags));
  
  	spin_lock_irqsave(&pool->lock, flags);
- 	page = list_first_entry_or_null(&pool->page_list[POOL_AVAIL_IDX],
--					struct dma_page,
-+					struct page,
- 					dma_list);
- 	if (page)
- 		goto ready;
-@@ -362,14 +368,15 @@ void *dma_pool_alloc(struct dma_pool *po
+-	list_for_each_entry(page, &pool->page_list, page_list) {
+-		if (page->offset < pool->allocation)
+-			goto ready;
+-	}
++	page = list_first_entry_or_null(&pool->page_list[POOL_AVAIL_IDX],
++					struct dma_page,
++					dma_list);
++	if (page)
++		goto ready;
  
- 	list_add(&page->dma_list, &pool->page_list[POOL_AVAIL_IDX]);
+ 	/* pool_alloc_page() might sleep, so temporarily drop &pool->lock */
+ 	spin_unlock_irqrestore(&pool->lock, flags);
+@@ -339,11 +360,15 @@ void *dma_pool_alloc(struct dma_pool *po
+ 
+ 	spin_lock_irqsave(&pool->lock, flags);
+ 
+-	list_add(&page->page_list, &pool->page_list);
++	list_add(&page->dma_list, &pool->page_list[POOL_AVAIL_IDX]);
   ready:
-+	vaddr = page_to_virt(page);
- 	page->dma_in_use++;
- 	offset = page->dma_free_off;
--	page->dma_free_off = *(int *)(page->vaddr + offset);
-+	page->dma_free_off = *(int *)(vaddr + offset);
- 	if (page->dma_free_off >= pool->allocation)
- 		/* Move page from the "available" list to the "full" list. */
- 		list_move_tail(&page->dma_list,
- 			       &pool->page_list[POOL_FULL_IDX]);
--	retval = offset + page->vaddr;
-+	retval = offset + vaddr;
+ 	page->in_use++;
+ 	offset = page->offset;
+ 	page->offset = *(int *)(page->vaddr + offset);
++	if (page->offset >= pool->allocation)
++		/* Move page from the "available" list to the "full" list. */
++		list_move_tail(&page->dma_list,
++			       &pool->page_list[POOL_FULL_IDX]);
+ 	retval = offset + page->vaddr;
  	*handle = offset + page->dma;
  #ifdef	DMAPOOL_DEBUG
- 	{
-@@ -404,25 +411,6 @@ void *dma_pool_alloc(struct dma_pool *po
- }
- EXPORT_SYMBOL(dma_pool_alloc);
+@@ -381,13 +406,19 @@ EXPORT_SYMBOL(dma_pool_alloc);
  
--static struct dma_page *pool_find_page(struct dma_pool *pool, dma_addr_t dma)
--{
--	int list_idx;
--
--	for (list_idx = 0; list_idx < POOL_MAX_IDX; list_idx++) {
--		struct dma_page *page;
--
--		list_for_each_entry(page,
--				    &pool->page_list[list_idx],
--				    dma_list) {
--			if (dma < page->dma)
--				continue;
--			if ((dma - page->dma) < pool->allocation)
--				return page;
--		}
--	}
--	return NULL;
--}
--
- /**
-  * dma_pool_free - put block back into dma pool
-  * @pool: the dma pool holding the block
-@@ -434,34 +422,35 @@ static struct dma_page *pool_find_page(s
-  */
- void dma_pool_free(struct dma_pool *pool, void *vaddr, dma_addr_t dma)
+ static struct dma_page *pool_find_page(struct dma_pool *pool, dma_addr_t dma)
  {
 -	struct dma_page *page;
-+	struct page *page;
- 	unsigned long flags;
- 	unsigned int offset;
++	int list_idx;
  
--	spin_lock_irqsave(&pool->lock, flags);
--	page = pool_find_page(pool, dma);
--	if (!page) {
--		spin_unlock_irqrestore(&pool->lock, flags);
-+	if (unlikely(!virt_addr_valid(vaddr))) {
- 		dev_err(pool->dev,
--			"dma_pool_free %s, %p/%lx (bad dma)\n",
--			pool->name, vaddr, (unsigned long)dma);
-+			"dma_pool_free %s, %p (bad vaddr)/%pad\n",
-+			pool->name, vaddr, &dma);
- 		return;
+-	list_for_each_entry(page, &pool->page_list, page_list) {
+-		if (dma < page->dma)
+-			continue;
+-		if ((dma - page->dma) < pool->allocation)
+-			return page;
++	for (list_idx = 0; list_idx < POOL_MAX_IDX; list_idx++) {
++		struct dma_page *page;
++
++		list_for_each_entry(page,
++				    &pool->page_list[list_idx],
++				    dma_list) {
++			if (dma < page->dma)
++				continue;
++			if ((dma - page->dma) < pool->allocation)
++				return page;
++		}
  	}
+ 	return NULL;
+ }
+@@ -444,6 +475,9 @@ void dma_pool_free(struct dma_pool *pool
+ #endif
  
--	offset = vaddr - page->vaddr;
--#ifdef	DMAPOOL_DEBUG
--	if ((dma - page->dma) != offset) {
--		spin_unlock_irqrestore(&pool->lock, flags);
-+	page = virt_to_page(vaddr);
-+	offset = offset_in_page(vaddr);
-+
-+	if (unlikely((dma - page->dma) != offset)) {
- 		dev_err(pool->dev,
--			"dma_pool_free %s, %p (bad vaddr)/%pad\n",
-+			"dma_pool_free %s, %p (bad vaddr)/%pad (or bad dma)\n",
- 			pool->name, vaddr, &dma);
- 		return;
- 	}
-+
-+	spin_lock_irqsave(&pool->lock, flags);
-+#ifdef	DMAPOOL_DEBUG
- 	{
-+		void *page_vaddr = vaddr - offset;
- 		unsigned int chain = page->dma_free_off;
- 		while (chain < pool->allocation) {
- 			if (chain != offset) {
--				chain = *(int *)(page->vaddr + chain);
-+				chain = *(int *)(page_vaddr + chain);
- 				continue;
- 			}
- 			spin_unlock_irqrestore(&pool->lock, flags);
+ 	page->in_use--;
++	if (page->offset >= pool->allocation)
++		/* Move page from the "full" list to the "available" list. */
++		list_move(&page->dma_list, &pool->page_list[POOL_AVAIL_IDX]);
+ 	*(int *)vaddr = page->offset;
+ 	page->offset = offset;
+ 	/*
