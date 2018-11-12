@@ -1,48 +1,27 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: remove exofs, the T10 OSD code and block/scsi bidi support V3
-Date: Sun, 11 Nov 2018 17:35:07 +0100
-Message-ID: <5c1952ce-988e-45be-db01-0cf7277be0f5@interlog.com>
-References: <20181111133211.13926-1-hch@lst.de>
-Reply-To: dgilbert@interlog.com
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 0/3] SG_IO command filtering via sysfs
+Date: Mon, 12 Nov 2018 00:20:13 -0800
+Message-ID: <20181112082013.GA9307@infradead.org>
+References: <1541867733-7836-1-git-send-email-pbonzini@redhat.com>
+ <20181111131445.GB25441@infradead.org>
+ <20181111134241.GA2447@thunk.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20181111133211.13926-1-hch@lst.de>
-Content-Language: en-CA
+Content-Disposition: inline
+In-Reply-To: <20181111134241.GA2447@thunk.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, axboe@kernel.dk, martin.petersen@oracle.com, ooo@electrozaur.com
-Cc: Johannes Thumshirn <jthumshirn@suse.de>, Benjamin Block <bblock@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "Theodore Y. Ts'o" <tytso@mit.edu>, Christoph Hellwig <hch@infradead.org>, Paolo Bonzini <pbonzini@redhat.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 2018-11-11 2:32 p.m., Christoph Hellwig wrote:
-> The only real user of the T10 OSD protocol, the pNFS object layout
-> driver never went to the point of having shipping products, and we
-> removed it 1.5 years ago.  Exofs is just a simple example without
-> real life users.
-> 
-> The code has been mostly unmaintained for years and is getting in the
-> way of block / SCSI changes, so I think it's finally time to drop it.
-> 
-> Quote from Boaz:
-> 
-> "As I said then. It is used in Universities for studies and experiments.
-> Every once in a while. I get an email with questions and reports.
-> 
-> But yes feel free to remove the all thing!!
-> 
-> I guess I can put it up on github. In a public tree.
-> 
-> Just that I will need to forward port it myself, til now you guys
-> been doing this for me ;-)"
-> 
-> Now the last time this caused a bit of a stir, but still no actual users,
-> not even for SG_IO passthrough commands.
+On Sun, Nov 11, 2018 at 08:42:42AM -0500, Theodore Y. Ts'o wrote:
+> It really depends on the security model being used on a particular
+> system.  I can easily imagine scenarios where userspace is allowed
+> full access to the device with respect to read/write/open, but the
+> security model doesn't want to allow access to various SCSI commands
+> such as firmware upload commands, TCG commads, the
+> soon-to-be-standardized Zone Activation Commands (which allow dynamic
+> conversion of HDD recording modes between CMR and SMR), etc.
 
-What?? Do any Linux distros track what commands are sent to any (or all)
-of the SG_IO passthroughs? I would hope that the last part of that
-sentence remains unprovable.
-
-Doug Gilbert
-
-"I've told you a million times, don't exaggerate!"
+Well, that's what we have the security_file_ioctl() LSM hook for so that
+your security model can arbitrate access to ioctls.
