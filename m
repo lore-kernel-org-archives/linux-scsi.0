@@ -1,8 +1,7 @@
 From: Tony Battersby <tonyb-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org>
-Subject: [PATCH v4 9/9] dmapool: debug: prevent endless loop in case of
-	corruption
-Date: Mon, 12 Nov 2018 10:46:35 -0500
-Message-ID: <9e65ec2e-5e22-4f65-7b92-ca2af0c555f3@cybernetics.com>
+Subject: [PATCH v4 0/9] mpt3sas and dmapool scalability
+Date: Mon, 12 Nov 2018 10:40:57 -0500
+Message-ID: <88395080-efc1-4e7b-f813-bb90c86d0745@cybernetics.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
@@ -17,62 +16,73 @@ List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
 	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
 Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Marek Szyprowski <m.szyprowski-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Marek Szyprowski <m.szyprowski-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 Cc: "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Prevent a possible endless loop with DMAPOOL_DEBUG enabled if a buggy
-driver corrupts DMA pool memory.
+I posted v3 on August 7.  Nobody acked or merged the patches, and then
+I got too busy with other stuff to repost until now.
 
-Signed-off-by: Tony Battersby <tonyb-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org>
+The only change since v3:
+*) Dropped patch #10 (the mpt3sas patch) since the mpt3sas maintainers
+didn't show any interest.
+
+I believe these patches are ready for merging.
+
 ---
---- linux/mm/dmapool.c.orig	2018-08-06 17:52:53.000000000 -0400
-+++ linux/mm/dmapool.c	2018-08-06 17:53:31.000000000 -0400
-@@ -454,17 +454,39 @@ void dma_pool_free(struct dma_pool *pool
- 	{
- 		void *page_vaddr = vaddr - offset;
- 		unsigned int chain = page->dma_free_off;
-+		unsigned int free_blks = 0;
-+
- 		while (chain < pool->allocation) {
--			if (chain != offset) {
--				chain = *(int *)(page_vaddr + chain);
--				continue;
-+			if (unlikely(chain == offset)) {
-+				spin_unlock_irqrestore(&pool->lock, flags);
-+				dev_err(pool->dev,
-+					"dma_pool_free %s, dma %pad already free\n",
-+					pool->name, &dma);
-+				return;
-+			}
-+
-+			/*
-+			 * A buggy driver could corrupt the freelist by
-+			 * use-after-free, buffer overflow, etc.  Besides
-+			 * checking for corruption, this also prevents an
-+			 * endless loop in case corruption causes a circular
-+			 * loop in the freelist.
-+			 */
-+			if (unlikely(++free_blks + page->dma_in_use >
-+				     pool->blks_per_alloc)) {
-+ freelist_corrupt:
-+				spin_unlock_irqrestore(&pool->lock, flags);
-+				dev_err(pool->dev,
-+					"dma_pool_free %s, freelist corrupted\n",
-+					pool->name);
-+				return;
- 			}
--			spin_unlock_irqrestore(&pool->lock, flags);
--			dev_err(pool->dev,
--				"dma_pool_free %s, dma %pad already free\n",
--				pool->name, &dma);
--			return;
-+
-+			chain = *(int *)(page_vaddr + chain);
- 		}
-+		if (unlikely(free_blks + page->dma_in_use !=
-+			     pool->blks_per_alloc))
-+			goto freelist_corrupt;
- 	}
- 	memset(vaddr, POOL_POISON_FREED, pool->size);
- #endif
+
+drivers/scsi/mpt3sas is running into a scalability problem with the
+kernel's DMA pool implementation.  With a LSI/Broadcom SAS 9300-8i
+12Gb/s HBA and max_sgl_entries=256, during modprobe, mpt3sas does the
+equivalent of:
+
+chain_dma_pool = dma_pool_create(size = 128);
+for (i = 0; i < 373959; i++)
+    {
+    dma_addr[i] = dma_pool_alloc(chain_dma_pool);
+    }
+
+And at rmmod, system shutdown, or system reboot, mpt3sas does the
+equivalent of:
+
+for (i = 0; i < 373959; i++)
+    {
+    dma_pool_free(chain_dma_pool, dma_addr[i]);
+    }
+dma_pool_destroy(chain_dma_pool);
+
+With this usage, both dma_pool_alloc() and dma_pool_free() exhibit
+O(n^2) complexity, although dma_pool_free() is much worse due to
+implementation details.  On my system, the dma_pool_free() loop above
+takes about 9 seconds to run.  Note that the problem was even worse
+before commit 74522a92bbf0 ("scsi: mpt3sas: Optimize I/O memory
+consumption in driver."), where the dma_pool_free() loop could take ~30
+seconds.
+
+mpt3sas also has some other DMA pools, but chain_dma_pool is the only
+one with so many allocations:
+
+cat /sys/devices/pci0000:80/0000:80:07.0/0000:85:00.0/pools
+(manually cleaned up column alignment)
+poolinfo - 0.1
+reply_post_free_array pool  1      21     192     1
+reply_free pool             1      1      41728   1
+reply pool                  1      1      1335296 1
+sense pool                  1      1      970272  1
+chain pool                  373959 386048 128     12064
+reply_post_free pool        12     12     166528  12
+
+The patches in this series improve the scalability of the DMA pool
+implementation, which significantly reduces the running time of the
+DMA alloc/free loops.  With the patches applied, "modprobe mpt3sas",
+"rmmod mpt3sas", and system shutdown/reboot with mpt3sas loaded are
+significantly faster.  Here are some benchmarks (of DMA alloc/free
+only, not the entire modprobe/rmmod):
+
+dma_pool_create() + dma_pool_alloc() loop, size = 128, count = 373959
+  original:        350 ms ( 1x)
+  dmapool patches:  17 ms (21x)
+
+dma_pool_free() loop + dma_pool_destroy(), size = 128, count = 373959
+  original:        8901 ms (   1x)
+  dmapool patches:   15 ms ( 618x)
