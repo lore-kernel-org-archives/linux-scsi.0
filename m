@@ -1,172 +1,36 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: kobject lifetime issues in blk-mq
-Date: Mon, 12 Nov 2018 17:44:07 +0800
-Message-ID: <20181112094406.GB391@ming.t460p>
-References: <20181109203518.GA7130@roeck-us.net>
- <20181112092051.GA391@ming.t460p>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: [PATCH 0/3] SG_IO command filtering via sysfs
+Date: Mon, 12 Nov 2018 11:17:29 +0100
+Message-ID: <79d7d4b2-e9b3-00b4-2ad0-789888f7ee36@redhat.com>
+References: <1541867733-7836-1-git-send-email-pbonzini@redhat.com>
+ <20181111131445.GB25441@infradead.org> <20181111134241.GA2447@thunk.org>
+ <20181112082013.GA9307@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20181112092051.GA391@ming.t460p>
+In-Reply-To: <20181112082013.GA9307@infradead.org>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Guenter Roeck <linux@roeck-us.net>
-Cc: Ming Lei <tom.leiming@gmail.com>, Jens Axboe <axboe@fb.com>, Peter Zijlstra <peterz@infradead.org>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Paolo Bonzini <pbonzini@redhat.com>, Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, "Theodore Y. Ts'o" <tytso@mit.edu>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Nov 12, 2018 at 05:20:51PM +0800, Ming Lei wrote:
-> On Fri, Nov 09, 2018 at 12:35:18PM -0800, Guenter Roeck wrote:
-> > Hi,
-> > 
-> > Images with CONFIG_DEBUG_KOBJECT=y, CONFIG_DEBUG_KOBJECT_RELEASE=y
-> > enabled report kobject lifetime issues when booting an image in qemu
-> > using virtio-scsi-pci.
-> > 
-> > Bisect points to two different commits, depending on the kernel
-> > configuration.
-> > 
-> > 1st configuration: defconfig plus:
-> > 
-> > CONFIG_VIRTIO_BLK=y
-> > CONFIG_SCSI_LOWLEVEL=y
-> > CONFIG_SCSI_VIRTIO=y
-> > CONFIG_VIRTIO_PCI=y
-> > CONFIG_VIRTIO_MMIO=y
-> > CONFIG_DEBUG_OBJECTS=y
-> > CONFIG_DEBUG_OBJECTS_FREE=y
-> > CONFIG_DEBUG_OBJECTS_TIMERS=y
-> > CONFIG_DEBUG_KOBJECT=y
-> > CONFIG_DEBUG_KOBJECT_RELEASE=y
-> > 
-> > Bisecting this configuration points to commit b5b6e8c8d3b4 ("scsi:
-> > virtio_scsi: fix IO hang caused by automatic irq vector affinity")
-> > as the culprit. This commit enforces the use of blk-mq for virtio_scsi;
-> > the bisect log is therefore a bit misleading.
-> > 
-> > 2nd configuration: As above, plus:
-> > CONFIG_SCSI_MQ_DEFAULT=y
-> > 
-> > With this configuration, bisect points to commit 7ea5fe31c12d
-> > ("blk-mq: make lifetime consitent between q/ctx and its kobject").
-> > 
-> > The qemu command line used to reproduce the problem is as follows.
-> > The qemu version does not seem to matter (I tested with qemu versions
-> > 2.5, 2.11, and 3.0).
-> > 
-> > qemu-system-x86_64 \
-> > 	-kernel arch/x86/boot/bzImage \
-> > 	-device virtio-scsi-pci,id=scsi \
-> > 	-device scsi-hd,bus=scsi.0,drive=d0 \
-> > 	-drive file=./wheezy.img,format=raw,if=none,id=d0 \
-> > 	-snapshot \
-> > 	-m 2G -smp 4 -enable-kvm \
-> > 	-net user,host=10.0.2.10,hostfwd=tcp::10022-:22 -net nic \
-> > 	-nographic -monitor none \
-> > 	-no-reboot \
-> > 	-append "console=ttyS0 root=/dev/sda earlyprintk=serial panic_on_warn=1 panic=-1"
-> > 
-> > Root file system:
-> > 	https://storage.googleapis.com/syzkaller/wheezy.img
-> > or:
-> > 	https://github.com/groeck/linux-build-test/blob/master/rootfs/x86_64/rootfs.ext2.gz
-> > 
-> > It seems that any root file system can be used to reproduce the problem.
-> > Also, the problem is not limited to virtio-scsi-pci. I also tried
-> > am53c974, lsi53c810, and lsi53c895a (after enabling the respective
-> > drivers), with the same result.
-> > 
-> > Overall, this suggests that the problem is related to blk-mq and was
-> > indeed introduced with commit 7ea5fe31c12d.
-> > 
-> > For reference, I attached an actual crash log as well as a set of bisect
-> > logs below.
-> > 
-> > Unfortunately, my understanding of blk-mq is not good enough to find the
-> > underlying problem and suggest a fix. Please let me know if there is
-> > anything else I can do to help fixing the problem.
-> > 
-> > Note that the problem was originally reported by syzbot running a test
-> > on chromeos-4.14. It may well be that the problem has already been
-> > reported and is being worked on. If so, please apologize the noise.
-> > 
-> > Thanks,
-> > Guenter
-> > 
-> > ---
-> > [    8.700038] ------------[ cut here ]------------
-> > [    8.700376] ODEBUG: free active (active state 0) object type: timer_list hint: delayed_work_timer_fn+0x0/0x10
-> > [    8.701032] WARNING: CPU: 0 PID: 0 at lib/debugobjects.c:329 debug_print_object+0x6a/0x80
-> > [    8.701032] Kernel panic - not syncing: panic_on_warn set ...
-> > [    8.701032] CPU: 0 PID: 0 Comm: swapper/0 Not tainted 4.20.0-rc1 #30
-> > [    8.701032] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Ubuntu-1.8.2-1ubuntu1 04/01/2014
-> > [    8.701032] Call Trace:
-> > [    8.701032]  <IRQ>
-> > [    8.701032]  dump_stack+0x46/0x5b
-> > [    8.701032]  panic+0xf3/0x246
-> > [    8.701032]  ? debug_print_object+0x6a/0x80
-> > [    8.701032]  __warn+0xeb/0xf0
-> > [    8.701032]  ? debug_print_object+0x6a/0x80
-> > [    8.701032]  ? debug_print_object+0x6a/0x80
-> > [    8.701032]  report_bug+0xb1/0x120
-> > [    8.701032]  fixup_bug.part.10+0x13/0x30
-> > [    8.701032]  do_error_trap+0x8f/0xb0
-> > [    8.701032]  do_invalid_op+0x31/0x40
-> > [    8.701032]  ? debug_print_object+0x6a/0x80
-> > [    8.701032]  invalid_op+0x14/0x20
-> > [    8.701032] RIP: 0010:debug_print_object+0x6a/0x80
-> > [    8.701032] Code: 8b 43 10 83 c2 01 8b 4b 14 89 15 c1 e2 78 01 4c 8b 45 00 4c
-> > 89 e6 48 c7 c7 f0 ca 41 a6 48 8b 14 c5 a0 f7 24 a6 e8 06 8e cc ff <0f> 0b 5b 83
-> > 05 70 47 1a 01 01 5d 41 5c c3 83 05 65 47 1a 01 01 c3
-> > [    8.701032] RSP: 0018:ffff89b9fda03e48 EFLAGS: 00010082
-> > [    8.701032] RAX: 0000000000000000 RBX: ffff89b9fd49d0c8 RCX: ffffffffa6646e18
-> > [    8.701032] RDX: 0000000000000001 RSI: 0000000000000082 RDI: ffffffffa6cc596c
-> > [    8.701032] RBP: ffffffffa664a5c0 R08: 79616c6564203a74 R09: 5f6b726f775f6465
-> > [    8.701032] R10: ffff89b9fda03f10 R11: 3178302f3078302b R12: ffffffffa6403e22
-> > [    8.701032] R13: 0000000000000001 R14: ffffffffa6d4d458 R15: ffff89b9fc4c8780
-> > [    8.701032]  ? debug_print_object+0x6a/0x80
-> > [    8.701032]  debug_check_no_obj_freed+0x1b8/0x1ea
-> > [    8.701032]  ? rcu_process_callbacks+0x2a7/0x750
-> > [    8.701032]  kmem_cache_free+0x6e/0x1a0
-> > [    8.701032]  ? __blk_release_queue+0x150/0x150
-> > [    8.701032]  rcu_process_callbacks+0x2a7/0x750
-> > [    8.701032]  __do_softirq+0xf2/0x2c7
-> > [    8.701032]  irq_exit+0xb7/0xc0
-> > [    8.701032]  smp_apic_timer_interrupt+0x67/0x130
-> > [    8.701032]  apic_timer_interrupt+0xf/0x20
-> > [    8.701032]  </IRQ>
-> > [    8.701032] RIP: 0010:default_idle+0x12/0x140
-> > [    8.701032] Code: fe ff ff c6 43 08 00 fb eb b0 31 c0 eb b4 e8 65 c8 60 ff 90
-> > 90 90 90 90 41 54 55 53 65 8b 2d 15 c4 3b 5a 66 66 66 66 90 fb f4 <65> 8b 2d 07
-> > c4 3b 5a 66 66 66 66 90 5b 5d 41 5c c3 65 8b 05 f6 c3
-> > [    8.701032] RSP: 0018:ffffffffa6603e98 EFLAGS: 00000246 ORIG_RAX: ffffffffffffff13
-> > [    8.701032] RAX: ffffffffa5c52d10 RBX: 0000000000000000 RCX: 0000000000000000
-> > [    8.701032] RDX: 0000000000000001 RSI: 0000000000000000 RDI: 000000020605092a
-> > [    8.701032] RBP: 0000000000000000 R08: ffffffffcff7766a R09: ffff89b9fda20b00
-> > [    8.701032] R10: 0000000000000000 R11: 0000000000002400 R12: ffffffffa6611740
-> > [    8.701032] R13: 0000000000000000 R14: 0000000000000000 R15: ffffffffa6611740
-> > [    8.701032]  ? __sched_text_end+0x5/0x5
-> > [    8.701032]  do_idle+0x19c/0x230
-> > [    8.701032]  cpu_startup_entry+0x14/0x20
-> > [    8.701032]  start_kernel+0x491/0x4b1
-> > [    8.701032]  secondary_startup_64+0xa4/0xb0
-> > [    8.701032] Kernel Offset: 0x24200000 from 0xffffffff81000000 (relocation range: 0xffffffff80000000-0xffffffffbfffffff)
-> > 
+On 12/11/2018 09:20, Christoph Hellwig wrote:
+> On Sun, Nov 11, 2018 at 08:42:42AM -0500, Theodore Y. Ts'o wrote:
+>> It really depends on the security model being used on a particular
+>> system.  I can easily imagine scenarios where userspace is allowed
+>> full access to the device with respect to read/write/open, but the
+>> security model doesn't want to allow access to various SCSI commands
+>> such as firmware upload commands, TCG commads, the
+>> soon-to-be-standardized Zone Activation Commands (which allow dynamic
+>> conversion of HDD recording modes between CMR and SMR), etc.
 > 
-> That is simply caused by enabling DEBUG_KOBJECT_RELEASE itself, which
-> tries to do kboject_release() after delaying a while.
-> 
-> Wrt. this issue, q->mq_kobj is embedded in 'request_queue' whose
-> instance is freed in release handler of q->kobj. So when one instance
-> of 'request_queue' is freed, DEBUG_KOBJECT_RELEASE still expects that
-> the q->mq_kobj is active.
-> 
-> The release handler of q->mq_kobj is NOP actually, so in reality it won't
-> be one issue at all.
+> Well, that's what we have the security_file_ioctl() LSM hook for so that
+> your security model can arbitrate access to ioctls.
 
-Given we have removed legacy IO path completely, it should be fine to
-remove q->mq_kobj and simply put everything under the kobj of queue,
-especially any attributes under mq aren't marked as stable ABI.
+Doesn't that have TOC-TOU races by design?
 
+Also, what about SG_IO giving write access to files that are only opened
+read-only (and only have read permissions)?
 
-Thanks,
-Ming
+Paolo
