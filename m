@@ -1,49 +1,34 @@
-From: Tony Battersby <tonyb-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org>
-Subject: Re: [PATCH v4 2/9] dmapool: remove checks for dev == NULL
-Date: Mon, 12 Nov 2018 12:06:08 -0500
-Message-ID: <0c364366-fe92-0ff8-4fdf-a2c597ed0fa8@cybernetics.com>
-References: <df529b6e-6744-b1af-01ce-a1b691fbcf0d@cybernetics.com>
-	<5a32095b-4626-9967-784b-9becac303994@huawei.com>
+From: John Garry <john.garry@huawei.com>
+Subject: [PATCH] scsi: libsas: Remove pcidev reference
+Date: Tue, 13 Nov 2018 01:28:09 +0800
+Message-ID: <1542043689-214071-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <5a32095b-4626-9967-784b-9becac303994-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Content-Language: en-US
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
-List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Marek Szyprowski <m.szyprowski-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
-Cc: "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linuxarm@huawei.com, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gMTEvMTIvMTggMTE6MzIgQU0sIEpvaG4gR2Fycnkgd3JvdGU6Cj4gT24gMTIvMTEvMjAxOCAx
-NTo0MiwgVG9ueSBCYXR0ZXJzYnkgd3JvdGU6Cj4+IGRtYXBvb2wgb3JpZ2luYWxseSB0cmllZCB0
-byBzdXBwb3J0IHBvb2xzIHdpdGhvdXQgYSBkZXZpY2UgYmVjYXVzZQo+PiBkbWFfYWxsb2NfY29o
-ZXJlbnQoKSBzdXBwb3J0cyBhbGxvY2F0aW9ucyB3aXRob3V0IGEgZGV2aWNlLiAgQnV0IG5vYm9k
-eQo+PiBlbmRlZCB1cCB1c2luZyBkbWEgcG9vbHMgd2l0aG91dCBhIGRldmljZSwgc28gdGhlIGN1
-cnJlbnQgY2hlY2tzIGluCj4+IGRtYXBvb2wuYyBmb3IgcG9vbC0+ZGV2ID09IE5VTEwgYXJlIGJv
-dGggaW5zdWZmaWNpZW50IGFuZCBjYXVzaW5nIGJsb2F0Lgo+PiBSZW1vdmUgdGhlbS4KPj4KPiBB
-cyBhbiBhc2lkZSwgaXMgaXQgcmlnaHQgdGhhdCBkbWFfcG9vbF9jcmVhdGUoKSBkb2VzIG5vdCBh
-Y3R1YWxseSByZWplY3QgCj4gZGV2PT1OVUxMIGFuZCB3b3VsZCBjcmFzaCBmcm9tIGEgTlVMTC1w
-b2ludGVyIGRlcmVmZXJlbmNlPwo+Cj4gVGhhbmtzLAo+IEpvaG4KPgpXaGVuIHBhc3NlZCBhIE5V
-TEwgZGV2LCBkbWFfcG9vbF9jcmVhdGUoKSB3aWxsIGFscmVhZHkgY3Jhc2ggd2l0aCBhCk5VTEwt
-cG9pbnRlciBkZXJlZmVyZW5jZSBiZWZvcmUgdGhpcyBwYXRjaCBzZXJpZXMsIGJlY2F1c2UgaXQg
-Y2hlY2tzIGZvcgpkZXYgPT0gTlVMTCBpbiBzb21lIHBsYWNlcyBidXQgbm90IG90aGVycy7CoCBT
-cGVjaWZpY2FsbHksIGl0IHdpbGwgY3Jhc2gKaW4gb25lIG9mIHRoZXNlIHR3byBwbGFjZXMgaW4g
-ZG1hX3Bvb2xfY3JlYXRlKCk6CgoJcmV0dmFsID0ga21hbGxvY19ub2RlKHNpemVvZigqcmV0dmFs
-KSwgR0ZQX0tFUk5FTCwgZGV2X3RvX25vZGUoZGV2KSk7Ci1vci0KCWlmIChsaXN0X2VtcHR5KCZk
-ZXYtPmRtYV9wb29scykpCgpTbyByZW1vdmluZyB0aGUgY2hlY2tzIGZvciBkZXYgPT0gTlVMTCB3
-aWxsIG5vdCBtYWtlIHByZXZpb3VzbHktd29ya2luZwpjb2RlIHRvIHN0YXJ0IGNyYXNoaW5nIHN1
-ZGRlbmx5LsKgIEFuZCBzaW5jZSBwYXNzaW5nIGRldiA9PSBOVUxMIHdvdWxkIGJlCmFuIEFQSSBt
-aXN1c2UgZXJyb3IgYW5kIG5vdCBhIHJ1bnRpbWUgZXJyb3IsIEkgd291bGQgcmF0aGVyIG5vdCBh
-ZGQgYQpuZXcgY2hlY2sgdG8gcmVqZWN0IGl0LgoKVG9ueQpfX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fXwppb21tdSBtYWlsaW5nIGxpc3QKaW9tbXVAbGlzdHMu
-bGludXgtZm91bmRhdGlvbi5vcmcKaHR0cHM6Ly9saXN0cy5saW51eGZvdW5kYXRpb24ub3JnL21h
-aWxtYW4vbGlzdGluZm8vaW9tbXU=
+Not all host drivers are PCI drivers - like hisi_sas, which supports a
+platform driver - so remove reference to "pcidev".
+
+The debug level is also downgraded to KERN_ERR for the same message.
+
+Signed-off-by: John Garry <john.garry@huawei.com>
+
+diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
+index 6b12c67..3428ea9 100644
+--- a/drivers/scsi/libsas/sas_discover.c
++++ b/drivers/scsi/libsas/sas_discover.c
+@@ -186,7 +186,7 @@ int sas_notify_lldd_dev_found(struct domain_device *dev)
+ 
+ 	res = i->dft->lldd_dev_found(dev);
+ 	if (res) {
+-		printk("sas: driver on pcidev %s cannot handle "
++		pr_err("sas: driver on host %s cannot handle "
+ 		       "device %llx, error:%d\n",
+ 		       dev_name(sas_ha->dev),
+ 		       SAS_ADDR(dev->sas_addr), res);
+-- 
+1.9.1
