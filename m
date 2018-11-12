@@ -1,7 +1,7 @@
 From: Tony Battersby <tonyb-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org>
-Subject: [PATCH v4 1/9] dmapool: fix boundary comparison
-Date: Mon, 12 Nov 2018 10:41:34 -0500
-Message-ID: <acce3a38-9930-349d-5299-95d2aa5c47e4@cybernetics.com>
+Subject: [PATCH v4 3/9] dmapool: cleanup dma_pool_destroy
+Date: Mon, 12 Nov 2018 10:42:48 -0500
+Message-ID: <2ff327bb-59f7-5105-0bba-72329cb73154@cybernetics.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
@@ -16,51 +16,73 @@ List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
 	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
 Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Marek Szyprowski <m.szyprowski-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
-Cc: "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Marek Szyprowski <m.szyprowski-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-Fix the boundary comparison when constructing the list of free blocks
-for the case that 'size' is a power of two.  Since 'boundary' is also a
-power of two, that would make 'boundary' a multiple of 'size', in which
-case a single block would never cross the boundary.  This bug would
-cause some of the allocated memory to be wasted (but not leaked).
+Remove a small amount of code duplication between dma_pool_destroy() and
+pool_free_page() in preparation for adding more code without having to
+duplicate it.  No functional changes.
 
-Example:
-
-size       = 512
-boundary   = 2048
-allocation = 4096
-
-Address range
-   0 -  511
- 512 - 1023
-1024 - 1535
-1536 - 2047 *
-2048 - 2559
-2560 - 3071
-3072 - 3583
-3584 - 4095 *
-
-Prior to this fix, the address ranges marked with "*" would not have
-been used even though they didn't cross the given boundary.
-
-Fixes: e34f44b3517f ("pool: Improve memory usage for devices which can't cross boundaries")
 Signed-off-by: Tony Battersby <tonyb-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org>
 ---
-
-Even though I described this as a "fix", it does not seem important
-enough to Cc: stable from a strict reading of the stable kernel rules. 
-IOW, it is not "bothering" anyone.
-
---- linux/mm/dmapool.c.orig	2018-08-01 17:57:04.000000000 -0400
-+++ linux/mm/dmapool.c	2018-08-01 17:57:16.000000000 -0400
-@@ -210,7 +210,7 @@ static void pool_initialise_page(struct 
+--- linux/mm/dmapool.c.orig	2018-08-02 09:59:15.000000000 -0400
++++ linux/mm/dmapool.c	2018-08-02 10:01:26.000000000 -0400
+@@ -249,13 +249,22 @@ static inline bool is_page_busy(struct d
  
- 	do {
- 		unsigned int next = offset + pool->size;
--		if (unlikely((next + pool->size) >= next_boundary)) {
-+		if (unlikely((next + pool->size) > next_boundary)) {
- 			next = next_boundary;
- 			next_boundary += pool->boundary;
- 		}
+ static void pool_free_page(struct dma_pool *pool, struct dma_page *page)
+ {
++	void *vaddr = page->vaddr;
+ 	dma_addr_t dma = page->dma;
+ 
++	list_del(&page->page_list);
++
++	if (is_page_busy(page)) {
++		dev_err(pool->dev,
++			"dma_pool_destroy %s, %p busy\n",
++			pool->name, vaddr);
++		/* leak the still-in-use consistent memory */
++	} else {
+ #ifdef	DMAPOOL_DEBUG
+-	memset(page->vaddr, POOL_POISON_FREED, pool->allocation);
++		memset(vaddr, POOL_POISON_FREED, pool->allocation);
+ #endif
+-	dma_free_coherent(pool->dev, pool->allocation, page->vaddr, dma);
+-	list_del(&page->page_list);
++		dma_free_coherent(pool->dev, pool->allocation, vaddr, dma);
++	}
+ 	kfree(page);
+ }
+ 
+@@ -269,6 +278,7 @@ static void pool_free_page(struct dma_po
+  */
+ void dma_pool_destroy(struct dma_pool *pool)
+ {
++	struct dma_page *page;
+ 	bool empty = false;
+ 
+ 	if (unlikely(!pool))
+@@ -284,19 +294,10 @@ void dma_pool_destroy(struct dma_pool *p
+ 		device_remove_file(pool->dev, &dev_attr_pools);
+ 	mutex_unlock(&pools_reg_lock);
+ 
+-	while (!list_empty(&pool->page_list)) {
+-		struct dma_page *page;
+-		page = list_entry(pool->page_list.next,
+-				  struct dma_page, page_list);
+-		if (is_page_busy(page)) {
+-			dev_err(pool->dev,
+-				"dma_pool_destroy %s, %p busy\n",
+-				pool->name, page->vaddr);
+-			/* leak the still-in-use consistent memory */
+-			list_del(&page->page_list);
+-			kfree(page);
+-		} else
+-			pool_free_page(pool, page);
++	while ((page = list_first_entry_or_null(&pool->page_list,
++						struct dma_page,
++						page_list))) {
++		pool_free_page(pool, page);
+ 	}
+ 
+ 	kfree(pool);
