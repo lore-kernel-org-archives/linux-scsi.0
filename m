@@ -1,27 +1,60 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 0/3] SG_IO command filtering via sysfs
-Date: Mon, 12 Nov 2018 00:20:13 -0800
-Message-ID: <20181112082013.GA9307@infradead.org>
-References: <1541867733-7836-1-git-send-email-pbonzini@redhat.com>
- <20181111131445.GB25441@infradead.org>
- <20181111134241.GA2447@thunk.org>
+From: Martin Wilck <mwilck@suse.com>
+Subject: [PATCH] scsi: lpfc: fix block guard enablement on SLI3 adapters
+Date: Mon, 12 Nov 2018 09:58:37 +0100
+Message-ID: <20181112085837.24450-1-mwilck@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20181111134241.GA2447@thunk.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Theodore Y. Ts'o" <tytso@mit.edu>, Christoph Hellwig <hch@infradead.org>, Paolo Bonzini <pbonzini@redhat.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>
+Content-Transfer-Encoding: 8bit
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, James Smart <jsmart2021@gmail.com>, James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>
+Cc: Hannes Reinecke <hare@suse.de>, David Bond <dbond@suse.com>, linux-scsi@vger.kernel.org, Martin Wilck <mwilck@suse.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Sun, Nov 11, 2018 at 08:42:42AM -0500, Theodore Y. Ts'o wrote:
-> It really depends on the security model being used on a particular
-> system.  I can easily imagine scenarios where userspace is allowed
-> full access to the device with respect to read/write/open, but the
-> security model doesn't want to allow access to various SCSI commands
-> such as firmware upload commands, TCG commads, the
-> soon-to-be-standardized Zone Activation Commands (which allow dynamic
-> conversion of HDD recording modes between CMR and SMR), etc.
+Since f44ac12f1dcc, BG enablement is tracked with the
+LPFC_SLI3_BG_ENABLED bit, which is set in lpfc_get_cfgparam
+before lpfc_sli_config_sli_port() is called. The bit
+shouldn't be cleared before checking the feature.
+Based on problem analysis by David Bond.
 
-Well, that's what we have the security_file_ioctl() LSM hook for so that
-your security model can arbitrate access to ioctls.
+Fixes: f44ac12f1dcc "scsi: lpfc: Memory allocation error during driver start-up on power8"
+Tested-by: David Bond <dbond@suse.com>
+Signed-off-by: Martin Wilck <mwilck@suse.com>
+Cc: stable@vger.kernel.org # 4.17.x
+Cc: stable@vger.kernel.org # 4.18.x
+Cc: stable@vger.kernel.org # 4.19.x
+---
+ drivers/scsi/lpfc/lpfc_init.c | 6 +++++-
+ drivers/scsi/lpfc/lpfc_sli.c  | 1 -
+ 2 files changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 323a32e..6b61cae 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -167,7 +167,11 @@ lpfc_config_port_prep(struct lpfc_hba *phba)
+ 		       sizeof(phba->wwpn));
+ 	}
+ 
+-	phba->sli3_options = 0x0;
++	/*
++	 * Clear all option bits except LPFC_SLI3_BG_ENABLED,
++	 * which was already set in lpfc_get_cfgparam()
++	 */
++	phba->sli3_options &= (uint32_t)LPFC_SLI3_BG_ENABLED;
+ 
+ 	/* Setup and issue mailbox READ REV command */
+ 	lpfc_read_rev(phba, pmb);
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 783a154..b9e5cd7 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -4965,7 +4965,6 @@ lpfc_sli_config_port(struct lpfc_hba *phba, int sli_mode)
+ 		phba->sli3_options &= ~(LPFC_SLI3_NPIV_ENABLED |
+ 					LPFC_SLI3_HBQ_ENABLED |
+ 					LPFC_SLI3_CRP_ENABLED |
+-					LPFC_SLI3_BG_ENABLED |
+ 					LPFC_SLI3_DSS_ENABLED);
+ 		if (rc != MBX_SUCCESS) {
+ 			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+-- 
+2.19.1
