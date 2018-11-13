@@ -1,43 +1,56 @@
-From: Sabyasachi Gupta <sabyasachi.linux@gmail.com>
-Subject: [PATCH] drivers/scsi/fnic/fnic_trace.c: Use vzalloc
-Date: Tue, 13 Nov 2018 20:38:41 +0530
-Message-ID: <5beae8ff.1c69fb81.bd59a.b7fa@mx.google.com>
+From: Joe Perches <joe@perches.com>
+Subject: Re: [PATCH] scsi: libsas: Remove pcidev reference
+Date: Tue, 13 Nov 2018 07:26:55 -0800
+Message-ID: <da1e7856fbb1c107edea42c03591161a5e808978.camel@perches.com>
+References: <1542043689-214071-1-git-send-email-john.garry@huawei.com>
+         <584e7b4fcd6f95fe0c581f6f9472852685c754d1.camel@perches.com>
+         <310504a2-f33c-183b-d00a-fa067b273dfd@huawei.com>
+         <3b62b0ad-53ba-37c2-817c-591d94eed838@huawei.com>
+         <31d224e8c4b9bcebc3657c17fa50302f7da90e64.camel@perches.com>
+         <dd39734e-4113-f9fd-6890-a83e80093c7e@huawei.com>
+         <3470156e35390d1810a6a5e4a554a77493c0d44f.camel@perches.com>
+         <39f56211-cf15-8ca5-a48f-3e4cc347cdb0@huawei.com>
+         <dda6fafd2096845ef503921703652f511d4f0daa.camel@perches.com>
+         <b63b6d3c-3b18-fcfa-1869-78b1f7637fd1@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <b63b6d3c-3b18-fcfa-1869-78b1f7637fd1@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: satishkh@cisco.com, sebaddel@cisco.com, kartilak@cisco.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: jrdr.linux@gmail.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, brajeswar.linux@gmail.com
+To: John Garry <john.garry@huawei.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linuxarm@huawei.com
 List-Id: linux-scsi@vger.kernel.org
 
-Replaced vmalloc + memset with vzalloc
+On Tue, 2018-11-13 at 13:38 +0000, John Garry wrote:
+> On 12/11/2018 19:52, Joe Perches wrote:
+> > On Mon, 2018-11-12 at 19:31 +0000, John Garry wrote:
+> > > On 12/11/2018 18:58, Joe Perches wrote:
+> > > > > > +#define pr_fmt(fmt) "sas: " fmt
+[]
+> > > > It also might useful to use the common debugging
+> > > > mechanisms and convert SAS_DPRINTK to pr_debug
+> > > > which would use the same #define pr_fmt.
+{}
+> We have almost 100 references to SAS_DPRINTK. So when we replace with 
+> pr_debug, we will frequently have to realign the indentation. I'm 
+> beginning to think it's not worth the churn to remove SAS_DPRINTK.
 
-Signed-off-by: Sabyasachi Gupta <sabyasachi.linux@gmail.com>
----
- drivers/scsi/fnic/fnic_trace.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+or just convert the #define
 
-diff --git a/drivers/scsi/fnic/fnic_trace.c b/drivers/scsi/fnic/fnic_trace.c
-index 8271785..129ab27 100644
---- a/drivers/scsi/fnic/fnic_trace.c
-+++ b/drivers/scsi/fnic/fnic_trace.c
-@@ -468,14 +468,14 @@ int fnic_trace_buf_init(void)
- 	fnic_max_trace_entries = (trace_max_pages * PAGE_SIZE)/
- 					  FNIC_ENTRY_SIZE_BYTES;
- 
--	fnic_trace_buf_p = (unsigned long)vmalloc((trace_max_pages * PAGE_SIZE));
-+	fnic_trace_buf_p = (unsigned long)vzalloc((trace_max_pages *
-+								PAGE_SIZE));
- 	if (!fnic_trace_buf_p) {
- 		printk(KERN_ERR PFX "Failed to allocate memory "
- 				  "for fnic_trace_buf_p\n");
- 		err = -ENOMEM;
- 		goto err_fnic_trace_buf_init;
- 	}
--	memset((void *)fnic_trace_buf_p, 0, (trace_max_pages * PAGE_SIZE));
- 
- 	fnic_trace_entries.page_offset =
- 		vmalloc(array_size(fnic_max_trace_entries,
--- 
-2.7.4
+> However, with regards to using pr_debug(), there are loops to jump 
+> through to ensure any output at all:
+> - ensure DEBUG is defined or DYNAMIC DEBUG enabled
+
+True
+
+> - ensure current loglevel is high enough
+
+That's already the case.
+
+> Having said that, there are actually lots of logs in libsas where debug 
+> level is too low (at pr_debug), and these could be upgraded.
+> 
+> So I think I will just go through the code and revise these levels.
+
+Nice, thanks
