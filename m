@@ -1,44 +1,76 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH V2] SCSI: fix queue cleanup race before queue
- initialization is done
-Date: Wed, 14 Nov 2018 07:02:28 -0800
-Message-ID: <1542207748.192870.14.camel@acm.org>
-References: <20181114082551.12141-1-ming.lei@redhat.com>
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH 4/5] scsi: libsas: Drop SAS_DPRINTK() and revise logs
+ levels
+Date: Wed, 14 Nov 2018 15:12:06 +0000
+Message-ID: <6c453baa-71bb-5fe0-28a1-5af097f2e9ae@huawei.com>
+References: <1542203269-174932-1-git-send-email-john.garry@huawei.com>
+ <1542203269-174932-5-git-send-email-john.garry@huawei.com>
+ <132ba0c903b36d85db30cfebf58fe1f4c3a7c05b.camel@perches.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-7"
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20181114082551.12141-1-ming.lei@redhat.com>
-Sender: stable-owner@vger.kernel.org
-To: Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, Andrew Jones <drjones@redhat.com>, Bart Van Assche <bart.vanassche@wdc.com>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, stable <stable@vger.kernel.org>, "jianchao . wang" <jianchao.w.wang@oracle.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <132ba0c903b36d85db30cfebf58fe1f4c3a7c05b.camel@perches.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Joe Perches <joe@perches.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: hare@suse.com, yanaijie@huawei.com, linuxarm@huawei.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2018-11-14 at 16:25 +-0800, Ming Lei wrote:
-+AD4 --- a/drivers/scsi/scsi+AF8-lib.c
-+AD4 +-+-+- b/drivers/scsi/scsi+AF8-lib.c
-+AD4 +AEAAQA -697,6 +-697,12 +AEAAQA static bool scsi+AF8-end+AF8-request(struct request +ACo-req,
-+AD4 blk+AF8-status+AF8-t error,
-+AD4  		 +ACo-/
-+AD4  		scsi+AF8-mq+AF8-uninit+AF8-cmd(cmd)+ADs
-+AD4  
-+AD4 +-		/+ACo
-+AD4 +-		 +ACo queue is still alive, so grab the ref for preventing it
-+AD4 +-		 +ACo from being cleaned up during running queue.
-+AD4 +-		 +ACo-/
-+AD4 +-		percpu+AF8-ref+AF8-get(+ACY-q-+AD4-q+AF8-usage+AF8-counter)+ADs
-+AD4 +-
+On 14/11/2018 14:53, Joe Perches wrote:
+> On Wed, 2018-11-14 at 21:47 +0800, John Garry wrote:
+>> Like sas_printk() did previously, SAS_DPRINTK() offers little value now
+>> that libsas logs already have the "sas" prefix through pr_fmt(fmt). So it
+>> can be dropped.
+>>
+>> However, after reviewing some logs in libsas, it is noticed that debug
+>> level is too low in many instances.
+>>
+>> So this change drops SAS_DPRINTK() and revises some logs to a more
+>> appropriate level. However many stay at debug level, although some
+>> are significantly promoted.
+> []
+>> All the pre-existing checkpatch errors for spanning messages across
+>> multiple lines are untouched.
+>
+> I think coalescing would be useful.
 
-I think the above comment is misleading. In the block layer a queue is called
-alive if the +ACI-dying+ACI flag has not been set. When the above call to
-percpu+AF8-ref+AF8-get() occurs it is not guaranteed that that flag has not yet been
-set. But it is guaranteed that q-+AD4-q+AF8-usage+AF8-counter is not zero. I would prefer
-if the comment would be modified.
+Sorry, I missed that. Do you mean that we stop spanning strings over 
+multiple lines?
 
-What's not clear to me is why this patch only protects the blk-mq path but
-not the legacy path. Does the legacy path need similar protection? It also
-triggers a queue run after having finished a request.
+If yes, I tend to agree. It means we can grep for full strings vs just a 
+different checkpatch issue (>80 lines or spanning multiple lines)
 
-Otherwise this patch looks fine to me.
+>
+> Where there are already embedded "sas: "
+> prefixes, those should be removed too.
 
-Bart.
+Ah, I missed that guy. File sas_ata.c may also have some.
+
+>
+> You could verify this by using
+>
+> 	$ strings drivers/scsi/libsas/*.o | grep "^[0-7]"
+>
+>> @@ -186,10 +186,10 @@ int sas_notify_lldd_dev_found(struct domain_device *dev)
+>>
+>>  	res = i->dft->lldd_dev_found(dev);
+>>  	if (res) {
+>> -		printk("sas: driver on pcidev %s cannot handle "
+>> -		       "device %llx, error:%d\n",
+>> -		       dev_name(sas_ha->dev),
+>> -		       SAS_ADDR(dev->sas_addr), res);
+>> +		pr_warn("sas: driver on pcidev %s cannot handle "
+>> +			"device %llx, error:%d\n",
+>> +			dev_name(sas_ha->dev),
+>> +			SAS_ADDR(dev->sas_addr), res);
+>
+> e.g.: this now emits "sas: sas: driver etc..."
+>
+>
+
+Cheers,
+John
+
+>
+> .
+>
