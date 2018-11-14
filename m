@@ -1,49 +1,24 @@
-From: Sagi Grimberg <sagi@grimberg.me>
-Subject: [PATCH] iser: set sector for ambiguous mr status errors
-Date: Wed, 14 Nov 2018 10:17:01 -0800
-Message-ID: <20181114181701.26417-1-sagi@grimberg.me>
-Return-path: <stable-owner@vger.kernel.org>
-Sender: stable-owner@vger.kernel.org
-To: linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: Dan Carpenter <dan.carpenter@oracle.com>, stable@vger.kernel.org
+From: pr-tracker-bot@kernel.org
+Subject: Re: [GIT PULL] SCSI fixes for 4.20-rc2
+Date: Wed, 14 Nov 2018 20:00:03 +0000
+Message-ID: <20181114200003.14496.22185.pr-tracker-bot@pdx-korg-gitolite-1.ci.codeaurora.org>
+References: <1542122942.3042.3.camel@HansenPartnership.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1542122942.3042.3.camel@HansenPartnership.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-If for some reason we failed to query the mr status, we need to make sure
-to provide sufficient information for an ambiguous error (guard error on
-sector 0).
+The pull request you sent on Tue, 13 Nov 2018 07:29:02 -0800:
 
-Fixes: 0a7a08ad6f5f ("IB/iser: Implement check_protection")
-Cc: <stable@vger.kernel.org>
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-Signed-off-by: Sagi Grimberg <sagi@grimberg.me>
----
- drivers/infiniband/ulp/iser/iser_verbs.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-diff --git a/drivers/infiniband/ulp/iser/iser_verbs.c b/drivers/infiniband/ulp/iser/iser_verbs.c
-index 946b623ba5eb..ab137bafa8a8 100644
---- a/drivers/infiniband/ulp/iser/iser_verbs.c
-+++ b/drivers/infiniband/ulp/iser/iser_verbs.c
-@@ -1124,7 +1124,9 @@ u8 iser_check_task_pi_status(struct iscsi_iser_task *iser_task,
- 					 IB_MR_CHECK_SIG_STATUS, &mr_status);
- 		if (ret) {
- 			pr_err("ib_check_mr_status failed, ret %d\n", ret);
--			goto err;
-+			/* Not alot we can do, return ambiguous guard error */
-+			*sector = 0;
-+			return 0x1;
- 		}
- 
- 		if (mr_status.fail_status & IB_MR_CHECK_SIG_STATUS) {
-@@ -1152,9 +1154,6 @@ u8 iser_check_task_pi_status(struct iscsi_iser_task *iser_task,
- 	}
- 
- 	return 0;
--err:
--	/* Not alot we can do here, return ambiguous guard error */
--	return 0x1;
- }
- 
- void iser_err_comp(struct ib_wc *wc, const char *type)
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/dbcec2e6bcfeb9769005cf529f0b5050f9557ff6
+
+Thank you!
+
 -- 
-2.17.1
+Deet-doot-dot, I am a bot.
+https://korg.wiki.kernel.org/userdoc/prtracker
