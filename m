@@ -1,30 +1,27 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: RE: scsi_set_medium_removal timeout issue
-Date: Wed, 14 Nov 2018 10:35:28 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1811141027420.1637-100000@iolanthe.rowland.org>
-References: <678F3D1BB717D949B966B68EAEB446ED1F1BC495@dggemm526-mbx.china.huawei.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 6/8] bsg-lib: handle bidi requests without block layer
+ help
+Date: Wed, 14 Nov 2018 16:48:57 +0100
+Message-ID: <20181114154857.GA28985@lst.de>
+References: <20181111133211.13926-1-hch@lst.de> <20181111133211.13926-7-hch@lst.de> <20181113143520.GB7222@w530-pk1mzal>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <678F3D1BB717D949B966B68EAEB446ED1F1BC495@dggemm526-mbx.china.huawei.com>
+Content-Disposition: inline
+In-Reply-To: <20181113143520.GB7222@w530-pk1mzal>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Martin Petersen <martin.petersen@oracle.com>, "Zengtao (B)" <prime.zeng@hisilicon.com>
-Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>, "usb-storage@lists.one-eyed-alien.net" <usb-storage@lists.one-eyed-alien.net>
+To: Benjamin Block <bblock@linux.ibm.com>
+Cc: Christoph Hellwig <hch@lst.de>, axboe@kernel.dk, martin.petersen@oracle.com, ooo@electrozaur.com, Johannes Thumshirn <jthumshirn@suse.de>, Benjamin Block <bblock@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 14 Nov 2018, Zengtao (B) wrote:
-
-> I just enabled the scsi log in the middle of the umount operation, otherwise I can't
-> reproduce the issue when the scsi log is enabled.
+On Tue, Nov 13, 2018 at 03:35:20PM +0100, Benjamin Block wrote:
+> This seems like a non-obvious user-breakage. So apart from removing the
+> in-kernel stuff that uses bidirectional commands you also forbid
+> userspace from every using them? That seems wrong to me.
 > 
-> >from the beginning.  In any case, it wasn't what I wanted.  I asked you to
-> >post the dmesg log, not the SCSI log.
-> 
-> Please refer to the new attachment for dmesg log.
+> There is other SCSI Command Sets than OSD that provide bidirectional
+> commands, even SBC has some (i.e.  X*WRITE*, COMPARE AND WRITE).
 
-Heh, yes, I see now.
-
-Martin, shouldn't sd_release() call sd_sync_cache() in the same way
-that sd_shutdown() does, before it calls scsi_set_medium_removal()?
-
-Alan Stern
+Yes, there are a few.  But the only driver that even supports them
+right now is iscsi_tcp to start with, and we have to drag a significant
+amount of code around just to support this corner case.
