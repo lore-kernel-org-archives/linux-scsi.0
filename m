@@ -1,44 +1,49 @@
-From: Sabyasachi Gupta <sabyasachi.linux@gmail.com>
-Subject: [PATCH v2] drivers/scsi/fnic/fnic_trace.c: Use vzalloc
-Date: Wed, 14 Nov 2018 22:24:21 +0530
-Message-ID: <5bec5342.1c69fb81.b02fa.ace9@mx.google.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: satishkh@cisco.com, sebaddel@cisco.com, kartilak@cisco.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: jrdr.linux@gmail.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, brajeswar.linux@gmail.com
+From: Sagi Grimberg <sagi@grimberg.me>
+Subject: [PATCH] iser: set sector for ambiguous mr status errors
+Date: Wed, 14 Nov 2018 10:17:01 -0800
+Message-ID: <20181114181701.26417-1-sagi@grimberg.me>
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: Dan Carpenter <dan.carpenter@oracle.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Replaced vmalloc + memset with vzalloc
+If for some reason we failed to query the mr status, we need to make sure
+to provide sufficient information for an ambiguous error (guard error on
+sector 0).
 
-Signed-off-by: Sabyasachi Gupta <sabyasachi.linux@gmail.com>
+Fixes: 0a7a08ad6f5f ("IB/iser: Implement check_protection")
+Cc: <stable@vger.kernel.org>
+Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Sagi Grimberg <sagi@grimberg.me>
 ---
-v2: Removed additional braces
+ drivers/infiniband/ulp/iser/iser_verbs.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
- drivers/scsi/fnic/fnic_trace.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/fnic/fnic_trace.c b/drivers/scsi/fnic/fnic_trace.c
-index 8271785..bf0fd2a 100644
---- a/drivers/scsi/fnic/fnic_trace.c
-+++ b/drivers/scsi/fnic/fnic_trace.c
-@@ -468,14 +468,13 @@ int fnic_trace_buf_init(void)
- 	fnic_max_trace_entries = (trace_max_pages * PAGE_SIZE)/
- 					  FNIC_ENTRY_SIZE_BYTES;
+diff --git a/drivers/infiniband/ulp/iser/iser_verbs.c b/drivers/infiniband/ulp/iser/iser_verbs.c
+index 946b623ba5eb..ab137bafa8a8 100644
+--- a/drivers/infiniband/ulp/iser/iser_verbs.c
++++ b/drivers/infiniband/ulp/iser/iser_verbs.c
+@@ -1124,7 +1124,9 @@ u8 iser_check_task_pi_status(struct iscsi_iser_task *iser_task,
+ 					 IB_MR_CHECK_SIG_STATUS, &mr_status);
+ 		if (ret) {
+ 			pr_err("ib_check_mr_status failed, ret %d\n", ret);
+-			goto err;
++			/* Not alot we can do, return ambiguous guard error */
++			*sector = 0;
++			return 0x1;
+ 		}
  
--	fnic_trace_buf_p = (unsigned long)vmalloc((trace_max_pages * PAGE_SIZE));
-+	fnic_trace_buf_p = (unsigned long)vzalloc(trace_max_pages * PAGE_SIZE);
- 	if (!fnic_trace_buf_p) {
- 		printk(KERN_ERR PFX "Failed to allocate memory "
- 				  "for fnic_trace_buf_p\n");
- 		err = -ENOMEM;
- 		goto err_fnic_trace_buf_init;
+ 		if (mr_status.fail_status & IB_MR_CHECK_SIG_STATUS) {
+@@ -1152,9 +1154,6 @@ u8 iser_check_task_pi_status(struct iscsi_iser_task *iser_task,
  	}
--	memset((void *)fnic_trace_buf_p, 0, (trace_max_pages * PAGE_SIZE));
  
- 	fnic_trace_entries.page_offset =
- 		vmalloc(array_size(fnic_max_trace_entries,
+ 	return 0;
+-err:
+-	/* Not alot we can do here, return ambiguous guard error */
+-	return 0x1;
+ }
+ 
+ void iser_err_comp(struct ib_wc *wc, const char *type)
 -- 
-2.7.4
+2.17.1
