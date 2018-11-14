@@ -1,48 +1,30 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH V2] SCSI: fix queue cleanup race before queue
- initialization is done
-Date: Wed, 14 Nov 2018 08:20:09 -0700
-Message-ID: <63c063ad-7d74-4268-bfd4-2de89908949e@kernel.dk>
-References: <20181114082551.12141-1-ming.lei@redhat.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: RE: scsi_set_medium_removal timeout issue
+Date: Wed, 14 Nov 2018 10:35:28 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1811141027420.1637-100000@iolanthe.rowland.org>
+References: <678F3D1BB717D949B966B68EAEB446ED1F1BC495@dggemm526-mbx.china.huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20181114082551.12141-1-ming.lei@redhat.com>
-Content-Language: en-US
-Sender: stable-owner@vger.kernel.org
-To: Ming Lei <ming.lei@redhat.com>
-Cc: linux-block@vger.kernel.org, Andrew Jones <drjones@redhat.com>, Bart Van Assche <bart.vanassche@wdc.com>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, stable <stable@vger.kernel.org>, "jianchao . wang" <jianchao.w.wang@oracle.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <678F3D1BB717D949B966B68EAEB446ED1F1BC495@dggemm526-mbx.china.huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Martin Petersen <martin.petersen@oracle.com>, "Zengtao (B)" <prime.zeng@hisilicon.com>
+Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>, "usb-storage@lists.one-eyed-alien.net" <usb-storage@lists.one-eyed-alien.net>
 List-Id: linux-scsi@vger.kernel.org
 
-On 11/14/18 1:25 AM, Ming Lei wrote:
-> c2856ae2f315d ("blk-mq: quiesce queue before freeing queue") has
-> already fixed this race, however the implied synchronize_rcu()
-> in blk_mq_quiesce_queue() can slow down LUN probe a lot, so caused
-> performance regression.
-> 
-> Then 1311326cf4755c7 ("blk-mq: avoid to synchronize rcu inside blk_cleanup_queue()")
-> tried to quiesce queue for avoiding unnecessary synchronize_rcu()
-> only when queue initialization is done, because it is usual to see
-> lots of inexistent LUNs which need to be probed.
-> 
-> However, turns out it isn't safe to quiesce queue only when queue
-> initialization is done. Because when one SCSI command is completed,
-> the user of sending command can be waken up immediately, then the
-> scsi device may be removed, meantime the run queue in scsi_end_request()
-> is still in-progress, so kernel panic can be caused.
-> 
-> In Red Hat QE lab, there are several reports about this kind of kernel
-> panic triggered during kernel booting.
-> 
-> This patch tries to address the issue by grabing one queue usage
-> counter during freeing one request and the following run queue.
+On Wed, 14 Nov 2018, Zengtao (B) wrote:
 
-Thanks applied, this bug was elusive but ever present in recent
-testing that we did internally, it's been a huge pain in the butt.
-The symptoms were usually a crash in blk_mq_get_driver_tag() with
-hctx->tags == NULL, or a crash inside deadline request insert off
-requeue.
+> I just enabled the scsi log in the middle of the umount operation, otherwise I can't
+> reproduce the issue when the scsi log is enabled.
+> 
+> >from the beginning.  In any case, it wasn't what I wanted.  I asked you to
+> >post the dmesg log, not the SCSI log.
+> 
+> Please refer to the new attachment for dmesg log.
 
--- 
-Jens Axboe
+Heh, yes, I see now.
+
+Martin, shouldn't sd_release() call sd_sync_cache() in the same way
+that sd_shutdown() does, before it calls scsi_set_medium_removal()?
+
+Alan Stern
