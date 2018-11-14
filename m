@@ -1,133 +1,91 @@
 From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [RFC PATCH] SCSI: fix queue cleanup race before queue is
- initialized done
-Date: Wed, 14 Nov 2018 15:58:10 +0800
-Message-ID: <20181114075808.GA20550@ming.t460p>
-References: <20181114043512.19627-1-ming.lei@redhat.com>
- <31e77713-c974-1d6a-89a6-7c09b8190ef1@oracle.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Subject: [PATCH V2] SCSI: fix queue cleanup race before queue initialization is done
+Date: Wed, 14 Nov 2018 16:25:51 +0800
+Message-ID: <20181114082551.12141-1-ming.lei@redhat.com>
 Return-path: <stable-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <31e77713-c974-1d6a-89a6-7c09b8190ef1@oracle.com>
 Sender: stable-owner@vger.kernel.org
-To: "jianchao.wang" <jianchao.w.wang@oracle.com>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, Andrew Jones <drjones@redhat.com>, Bart Van Assche <bart.vanassche@wdc.com>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, stable <stable@vger.kernel.org>
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, Ming Lei <ming.lei@redhat.com>, Andrew Jones <drjones@redhat.com>, Bart Van Assche <bart.vanassche@wdc.com>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, stable <stable@vger.kernel.org>, "jianchao . wang" <jianchao.w.wang@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Nov 14, 2018 at 01:41:46PM +0800, jianchao.wang wrote:
-> 
-> 
-> On 11/14/18 12:35 PM, Ming Lei wrote:
-> > c2856ae2f315d ("blk-mq: quiesce queue before freeing queue") has
-> > already fixed this race, however the implied synchronize_rcu()
-> > in blk_mq_quiesce_queue() can slow down LUN probe a lot, so caused
-> > performance regression.
-> > 
-> > Then 1311326cf4755c7 ("blk-mq: avoid to synchronize rcu inside blk_cleanup_queue()")
-> > tried to only quiesce queue for avoiding unnecessary synchronize_rcu()
-> > in case that queue isn't initialized done.
-> > 
-> > However, turns out we still need to quiesce the queue in case that
-> > queue isn't initialized done. Because when one SCSI command is
-> > completed, the user is waken up immediately, then the scsi device
-> > can be removed, meantime the run queue in scsi_end_request() can
-> > be still in-progress, so kernel panic is triggered.
-> > 
-> > In Red Hat QE lab, there are several reports about this kind of kernel
-> > panic triggered during kernel booting.
-> > 
-> > Fixes: 1311326cf4755c7 ("blk-mq: avoid to synchronize rcu inside blk_cleanup_queue()")
-> > Cc: Andrew Jones <drjones@redhat.com>
-> > Cc: Bart Van Assche <bart.vanassche@wdc.com>
-> > Cc: linux-scsi@vger.kernel.org
-> > Cc: Martin K. Petersen <martin.petersen@oracle.com>
-> > Cc: Christoph Hellwig <hch@lst.de>
-> > Cc: James E.J. Bottomley <jejb@linux.vnet.ibm.com>
-> > Cc: stable <stable@vger.kernel.org>
-> > Signed-off-by: Ming Lei <ming.lei@redhat.com>
-> > ---
-> >  block/blk-core.c        |  6 +++---
-> >  drivers/scsi/scsi_lib.c | 36 ++++++++++++++++++++++++++++++------
-> >  2 files changed, 33 insertions(+), 9 deletions(-)
-> > 
-> > diff --git a/block/blk-core.c b/block/blk-core.c
-> > index ce12515f9b9b..cf7742a677c4 100644
-> > --- a/block/blk-core.c
-> > +++ b/block/blk-core.c
-> > @@ -798,9 +798,9 @@ void blk_cleanup_queue(struct request_queue *q)
-> >  	 * dispatch may still be in-progress since we dispatch requests
-> >  	 * from more than one contexts.
-> >  	 *
-> > -	 * No need to quiesce queue if it isn't initialized yet since
-> > -	 * blk_freeze_queue() should be enough for cases of passthrough
-> > -	 * request.
-> > +	 * We rely on driver to deal with the race in case that queue
-> > +	 * initialization isn't done.
-> > +	 *
-> >  	 */
-> >  	if (q->mq_ops && blk_queue_init_done(q))
-> >  		blk_mq_quiesce_queue(q);
-> > diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> > index c7fccbb8f554..7ec7a8a2d000 100644
-> > --- a/drivers/scsi/scsi_lib.c
-> > +++ b/drivers/scsi/scsi_lib.c
-> > @@ -697,13 +697,37 @@ static bool scsi_end_request(struct request *req, blk_status_t error,
-> >  		 */
-> >  		scsi_mq_uninit_cmd(cmd);
-> >  
-> > -		__blk_mq_end_request(req, error);
-> > +		/*
-> > +		 * When block queue initialization isn't done, the request
-> > +		 * queue won't be quiesced in blk_cleanup_queue() for avoiding
-> > +		 * slowing down LUN probe, so queue still may be run even though
-> > +		 * its resource is cleaned up, this way can cause kernel panic.
-> > +		 *
-> > +		 * Workaround this issue by freeing request after running the
-> > +		 * queue when queue initialization isn't done, so the queue's
-> > +		 * usage counter can be held during running queue.
-> > +		 *
-> > +		 * This way is safe because sdev->device_busy has been decreased
-> > +		 * already, and scsi_queue_rq() may guarantee the forward-progress.
-> > +		 *
-> > +		 */
-> > +		if (blk_queue_init_done(q)) {
-> > +			__blk_mq_end_request(req, error);
-> > +
-> > +			if (scsi_target(sdev)->single_lun ||
-> > +					!list_empty(&sdev->host->starved_list))
-> > +				kblockd_schedule_work(&sdev->requeue_work);
-> > +			else
-> > +				blk_mq_run_hw_queues(q, true);
-> > +		} else {
-> >  
-> > -		if (scsi_target(sdev)->single_lun ||
-> > -		    !list_empty(&sdev->host->starved_list))
-> > -			kblockd_schedule_work(&sdev->requeue_work);
-> > -		else
-> > -			blk_mq_run_hw_queues(q, true);
-> > +			if (scsi_target(sdev)->single_lun ||
-> > +					!list_empty(&sdev->host->starved_list))
-> > +				kblockd_schedule_work(&sdev->requeue_work);
-> > +			else
-> > +				blk_mq_run_hw_queues(q, true);
-> > +			__blk_mq_end_request(req, error);
-> > +		}
-> >  	} else {
-> >  		unsigned long flags;
-> >  
-> > 
-> 
-> Why not get a q_usage_counter during this ?
-> 
-> Something like，
+c2856ae2f315d ("blk-mq: quiesce queue before freeing queue") has
+already fixed this race, however the implied synchronize_rcu()
+in blk_mq_quiesce_queue() can slow down LUN probe a lot, so caused
+performance regression.
 
-Yeah, it is basically the approach in my mind first, but I thought
-queue_enter/exit need to be exported, looks it is simpler to get/put
-.q_usage_counter directly.
+Then 1311326cf4755c7 ("blk-mq: avoid to synchronize rcu inside blk_cleanup_queue()")
+tried to quiesce queue for avoiding unnecessary synchronize_rcu()
+only when queue initialization is done, because it is usual to see
+lots of inexistent LUNs which need to be probed.
 
-Will do it in V2.
+However, turns out it isn't safe to quiesce queue only when queue
+initialization is done. Because when one SCSI command is completed,
+the user of sending command can be waken up immediately, then the
+scsi device may be removed, meantime the run queue in scsi_end_request()
+is still in-progress, so kernel panic can be caused.
 
-Thanks,
-Ming
+In Red Hat QE lab, there are several reports about this kind of kernel
+panic triggered during kernel booting.
+
+This patch tries to address the issue by grabing one queue usage
+counter during freeing one request and the following run queue.
+
+Fixes: 1311326cf4755c7 ("blk-mq: avoid to synchronize rcu inside blk_cleanup_queue()")
+Cc: Andrew Jones <drjones@redhat.com>
+Cc: Bart Van Assche <bart.vanassche@wdc.com>
+Cc: linux-scsi@vger.kernel.org
+Cc: Martin K. Petersen <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: James E.J. Bottomley <jejb@linux.vnet.ibm.com>
+Cc: stable <stable@vger.kernel.org>
+Cc: jianchao.wang <jianchao.w.wang@oracle.com>
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
+---
+ block/blk-core.c        | 5 ++---
+ drivers/scsi/scsi_lib.c | 8 ++++++++
+ 2 files changed, 10 insertions(+), 3 deletions(-)
+
+diff --git a/block/blk-core.c b/block/blk-core.c
+index ce12515f9b9b..deb56932f8c4 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -798,9 +798,8 @@ void blk_cleanup_queue(struct request_queue *q)
+ 	 * dispatch may still be in-progress since we dispatch requests
+ 	 * from more than one contexts.
+ 	 *
+-	 * No need to quiesce queue if it isn't initialized yet since
+-	 * blk_freeze_queue() should be enough for cases of passthrough
+-	 * request.
++	 * We rely on driver to deal with the race in case that queue
++	 * initialization isn't done.
+ 	 */
+ 	if (q->mq_ops && blk_queue_init_done(q))
+ 		blk_mq_quiesce_queue(q);
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index c7fccbb8f554..fa6e0c3b3aa6 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -697,6 +697,12 @@ static bool scsi_end_request(struct request *req, blk_status_t error,
+ 		 */
+ 		scsi_mq_uninit_cmd(cmd);
+ 
++		/*
++		 * queue is still alive, so grab the ref for preventing it
++		 * from being cleaned up during running queue.
++		 */
++		percpu_ref_get(&q->q_usage_counter);
++
+ 		__blk_mq_end_request(req, error);
+ 
+ 		if (scsi_target(sdev)->single_lun ||
+@@ -704,6 +710,8 @@ static bool scsi_end_request(struct request *req, blk_status_t error,
+ 			kblockd_schedule_work(&sdev->requeue_work);
+ 		else
+ 			blk_mq_run_hw_queues(q, true);
++
++		percpu_ref_put(&q->q_usage_counter);
+ 	} else {
+ 		unsigned long flags;
+ 
+-- 
+2.9.5
