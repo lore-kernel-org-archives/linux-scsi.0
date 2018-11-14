@@ -1,48 +1,44 @@
-From: Benjamin Block <bblock@linux.ibm.com>
-Subject: Re: [PATCH 6/8] bsg-lib: handle bidi requests without block layer
- help
-Date: Wed, 14 Nov 2018 17:44:30 +0100
-Message-ID: <20181114164430.GC7222@w530-pk1mzal>
-References: <20181111133211.13926-1-hch@lst.de>
- <20181111133211.13926-7-hch@lst.de>
- <20181113143520.GB7222@w530-pk1mzal>
- <20181114154857.GA28985@lst.de>
+From: Sabyasachi Gupta <sabyasachi.linux@gmail.com>
+Subject: [PATCH v2] drivers/scsi/fnic/fnic_trace.c: Use vzalloc
+Date: Wed, 14 Nov 2018 22:24:21 +0530
+Message-ID: <5bec5342.1c69fb81.b02fa.ace9@mx.google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20181114154857.GA28985@lst.de>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: axboe@kernel.dk, martin.petersen@oracle.com, ooo@electrozaur.com, Johannes Thumshirn <jthumshirn@suse.de>, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
+To: satishkh@cisco.com, sebaddel@cisco.com, kartilak@cisco.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: jrdr.linux@gmail.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, brajeswar.linux@gmail.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Nov 14, 2018 at 04:48:57PM +0100, Christoph Hellwig wrote:
-> On Tue, Nov 13, 2018 at 03:35:20PM +0100, Benjamin Block wrote:
-> > This seems like a non-obvious user-breakage. So apart from removing the
-> > in-kernel stuff that uses bidirectional commands you also forbid
-> > userspace from every using them? That seems wrong to me.
-> > 
-> > There is other SCSI Command Sets than OSD that provide bidirectional
-> > commands, even SBC has some (i.e.  X*WRITE*, COMPARE AND WRITE).
-> 
-> Yes, there are a few.  But the only driver that even supports them
-> right now is iscsi_tcp to start with, and we have to drag a significant
-> amount of code around just to support this corner case.
-> 
+Replaced vmalloc + memset with vzalloc
 
-But we are not talking about kernel-support here, this interface is
-user-facing, and for an interfaces that was made so people could send
-arbitrary SCSI commands, that the kernel doesn't support.
+Signed-off-by: Sabyasachi Gupta <sabyasachi.linux@gmail.com>
+---
+v2: Removed additional braces
 
-Its probably also more complicated to make sure that no one is using
-that, in contrast to the OSD stuff that - as state in the patch-letter -
-never made it out of academia. Its not like anyone has to release
-anything open if they use BSG/SG, its just syscalls after all.
+ drivers/scsi/fnic/fnic_trace.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
+diff --git a/drivers/scsi/fnic/fnic_trace.c b/drivers/scsi/fnic/fnic_trace.c
+index 8271785..bf0fd2a 100644
+--- a/drivers/scsi/fnic/fnic_trace.c
++++ b/drivers/scsi/fnic/fnic_trace.c
+@@ -468,14 +468,13 @@ int fnic_trace_buf_init(void)
+ 	fnic_max_trace_entries = (trace_max_pages * PAGE_SIZE)/
+ 					  FNIC_ENTRY_SIZE_BYTES;
+ 
+-	fnic_trace_buf_p = (unsigned long)vmalloc((trace_max_pages * PAGE_SIZE));
++	fnic_trace_buf_p = (unsigned long)vzalloc(trace_max_pages * PAGE_SIZE);
+ 	if (!fnic_trace_buf_p) {
+ 		printk(KERN_ERR PFX "Failed to allocate memory "
+ 				  "for fnic_trace_buf_p\n");
+ 		err = -ENOMEM;
+ 		goto err_fnic_trace_buf_init;
+ 	}
+-	memset((void *)fnic_trace_buf_p, 0, (trace_max_pages * PAGE_SIZE));
+ 
+ 	fnic_trace_entries.page_offset =
+ 		vmalloc(array_size(fnic_max_trace_entries,
 -- 
-With Best Regards, Benjamin Block      /      Linux on IBM Z Kernel Development
-IBM Systems & Technology Group   /  IBM Deutschland Research & Development GmbH
-Vorsitz. AufsR.: Martina Koederitz       /      Geschäftsführung: Dirk Wittkopp
-Sitz der Gesellschaft: Böblingen / Registergericht: AmtsG Stuttgart, HRB 243294
+2.7.4
