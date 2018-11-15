@@ -1,51 +1,76 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v2 0/5] libsas: Some logging tidy-up
-Date: Thu, 15 Nov 2018 18:20:27 +0800
-Message-ID: <1542277232-135789-1-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v2 2/5] scsi: libsas: Use pr_fmt(fmt)
+Date: Thu, 15 Nov 2018 18:20:29 +0800
+Message-ID: <1542277232-135789-3-git-send-email-john.garry@huawei.com>
+References: <1542277232-135789-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1542277232-135789-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
 Cc: hare@suse.com, yanaijie@huawei.com, linuxarm@huawei.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, joe@perches.com, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-This patchset presents some logging tidy-up, namely removing the printk
-wrappers and using pr_XXX() instead.
+In preparation for dropping the libsas printk wrappers, use pr_fmt(fmt)
+declaration to add the framework log prefix - "sas".
 
-In addition, some log levels are revised, as previous levels (generally
-debug) were too low.
+Suggested-by: Joe Perches <joe@perches.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
+---
+ drivers/scsi/libsas/sas_ata.c      |  2 +-
+ drivers/scsi/libsas/sas_internal.h | 13 +++++++++++--
+ drivers/scsi/libsas/sas_task.c     |  3 +++
+ 3 files changed, 15 insertions(+), 3 deletions(-)
 
-Finally a referece to "pci" is removed from a log, and unreferenced dump
-files are deleted.
-
-Differences v1->v2:
-- Reunited strings to a single line
-- fixed "sas: sas:" prefix in messages
-
-John Garry (5):
-  scsi: libsas: Delete sas_dump.{c, h}
-  scsi: libsas: Use pr_fmt(fmt)
-  scsi: libsas: Drop sas_printk()
-  scsi: libsas: Drop SAS_DPRINTK() and revise logs levels
-  scsi: libsas: Remove pcidev reference
-
- drivers/scsi/libsas/Makefile        |   3 +-
- drivers/scsi/libsas/sas_ata.c       |  26 ++--
- drivers/scsi/libsas/sas_discover.c  |  33 +++--
- drivers/scsi/libsas/sas_dump.c      |  63 ----------
- drivers/scsi/libsas/sas_dump.h      |  29 -----
- drivers/scsi/libsas/sas_event.c     |   1 -
- drivers/scsi/libsas/sas_expander.c  | 236 +++++++++++++++++-------------------
- drivers/scsi/libsas/sas_init.c      |  10 +-
- drivers/scsi/libsas/sas_internal.h  |  16 ++-
- drivers/scsi/libsas/sas_phy.c       |   8 +-
- drivers/scsi/libsas/sas_port.c      |  23 ++--
- drivers/scsi/libsas/sas_scsi_host.c | 123 +++++++++----------
- drivers/scsi/libsas/sas_task.c      |  10 +-
- 13 files changed, 233 insertions(+), 348 deletions(-)
- delete mode 100644 drivers/scsi/libsas/sas_dump.c
- delete mode 100644 drivers/scsi/libsas/sas_dump.h
-
+diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+index 4f6cdf5..9f3521f 100644
+--- a/drivers/scsi/libsas/sas_ata.c
++++ b/drivers/scsi/libsas/sas_ata.c
+@@ -375,7 +375,7 @@ static int sas_ata_printk(const char *level, const struct domain_device *ddev,
+ 	vaf.fmt = fmt;
+ 	vaf.va = &args;
+ 
+-	r = printk("%ssas: ata%u: %s: %pV",
++	r = printk("%s" SAS_FMT "ata%u: %s: %pV",
+ 		   level, ap->print_id, dev_name(dev), &vaf);
+ 
+ 	va_end(args);
+diff --git a/drivers/scsi/libsas/sas_internal.h b/drivers/scsi/libsas/sas_internal.h
+index 50e12d6..94ebf41 100644
+--- a/drivers/scsi/libsas/sas_internal.h
++++ b/drivers/scsi/libsas/sas_internal.h
+@@ -32,9 +32,18 @@
+ #include <scsi/libsas.h>
+ #include <scsi/sas_ata.h>
+ 
+-#define sas_printk(fmt, ...) printk(KERN_NOTICE "sas: " fmt, ## __VA_ARGS__)
++#ifdef pr_fmt
++#undef pr_fmt
++#endif
++
++#define SAS_FMT "sas: "
++
++#define pr_fmt(fmt) SAS_FMT fmt
++
++#define sas_printk(fmt, ...) printk(KERN_NOTICE fmt, ## __VA_ARGS__)
++
++#define SAS_DPRINTK(fmt, ...) printk(KERN_DEBUG fmt, ## __VA_ARGS__)
+ 
+-#define SAS_DPRINTK(fmt, ...) printk(KERN_DEBUG "sas: " fmt, ## __VA_ARGS__)
+ 
+ #define TO_SAS_TASK(_scsi_cmd)  ((void *)(_scsi_cmd)->host_scribble)
+ #define ASSIGN_SAS_TASK(_sc, _t) do { (_sc)->host_scribble = (void *) _t; } while (0)
+diff --git a/drivers/scsi/libsas/sas_task.c b/drivers/scsi/libsas/sas_task.c
+index a78e5bd..d305c8f 100644
+--- a/drivers/scsi/libsas/sas_task.c
++++ b/drivers/scsi/libsas/sas_task.c
+@@ -1,3 +1,6 @@
++
++#include "sas_internal.h"
++
+ #include <linux/kernel.h>
+ #include <linux/export.h>
+ #include <scsi/sas.h>
 -- 
 1.9.1
