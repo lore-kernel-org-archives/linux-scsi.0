@@ -1,23 +1,43 @@
-From: Joe Perches <joe@perches.com>
-Subject: Re: [PATCH v2 0/5] libsas: Some logging tidy-up
-Date: Thu, 15 Nov 2018 04:34:10 -0800
-Message-ID: <484c6e88e1899cf7f0b373a8bf12b55f19f7fd8c.camel@perches.com>
-References: <1542277232-135789-1-git-send-email-john.garry@huawei.com>
+From: Sabyasachi Gupta <sabyasachi.linux@gmail.com>
+Subject: [PATCH] drivers/scsi/snic/snic_trc.c: Use vzalloc
+Date: Thu, 15 Nov 2018 22:04:04 +0530
+Message-ID: <5beda000.1c69fb81.e6599.d3d8@mx.google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1542277232-135789-1-git-send-email-john.garry@huawei.com>
+Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
-To: John Garry <john.garry@huawei.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: hare@suse.com, yanaijie@huawei.com, linuxarm@huawei.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: kartilak@cisco.com, sebaddel@cisco.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: jrdr.linux@gmail.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, brajeswar.linux@gmail.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 2018-11-15 at 18:20 +0800, John Garry wrote:
-> This patchset presents some logging tidy-up, namely removing the printk
-> wrappers and using pr_XXX() instead.
-> 
-> In addition, some log levels are revised, as previous levels (generally
-> debug) were too low.
+Replaced vmalloc + memset with vzalloc
 
-Seems sensible, thanks.
+Signed-off-by: Sabyasachi Gupta <sabyasachi.linux@gmail.com>
+---
+ drivers/scsi/snic/snic_trc.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/snic/snic_trc.c b/drivers/scsi/snic/snic_trc.c
+index fc60c93..458eaba 100644
+--- a/drivers/scsi/snic/snic_trc.c
++++ b/drivers/scsi/snic/snic_trc.c
+@@ -126,7 +126,7 @@ snic_trc_init(void)
+ 	int tbuf_sz = 0, ret;
+ 
+ 	tbuf_sz = (snic_trace_max_pages * PAGE_SIZE);
+-	tbuf = vmalloc(tbuf_sz);
++	tbuf = vzalloc(tbuf_sz);
+ 	if (!tbuf) {
+ 		SNIC_ERR("Failed to Allocate Trace Buffer Size. %d\n", tbuf_sz);
+ 		SNIC_ERR("Trace Facility not enabled.\n");
+@@ -135,7 +135,6 @@ snic_trc_init(void)
+ 		return ret;
+ 	}
+ 
+-	memset(tbuf, 0, tbuf_sz);
+ 	trc->buf = (struct snic_trc_data *) tbuf;
+ 	spin_lock_init(&trc->lock);
+ 
+-- 
+2.7.4
