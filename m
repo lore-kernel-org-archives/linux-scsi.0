@@ -1,53 +1,77 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH V2] SCSI: fix queue cleanup race before queue
- initialization is done
-Date: Thu, 15 Nov 2018 08:48:39 +0800
-Message-ID: <20181115004838.GB32603@ming.t460p>
-References: <20181114082551.12141-1-ming.lei@redhat.com>
- <1542207748.192870.14.camel@acm.org>
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: kobject lifetime issues in blk-mq
+Date: Wed, 14 Nov 2018 16:56:58 -0800
+Message-ID: <20181115005658.GA24847@kroah.com>
+References: <20181109203518.GA7130@roeck-us.net>
+ <20181112092051.GA391@ming.t460p>
+ <20181112094406.GB391@ming.t460p>
+ <20181112164848.GA1790@roeck-us.net>
+ <20181112200236.GA4415@kroah.com>
+ <20181113002226.GA4455@ming.t460p>
+ <20181113004124.GC4455@ming.t460p>
+ <20181114110827.GA31430@ming.t460p>
+ <20181114151410.GB26378@kroah.com>
+ <20181115003616.GA32603@ming.t460p>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <stable-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1542207748.192870.14.camel@acm.org>
-Sender: stable-owner@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, Andrew Jones <drjones@redhat.com>, Bart Van Assche <bart.vanassche@wdc.com>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, stable <stable@vger.kernel.org>, "jianchao . wang" <jianchao.w.wang@oracle.com>
+In-Reply-To: <20181115003616.GA32603@ming.t460p>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ming Lei <ming.lei@redhat.com>
+Cc: Guenter Roeck <linux@roeck-us.net>, Ming Lei <tom.leiming@gmail.com>, Jens Axboe <axboe@fb.com>, Peter Zijlstra <peterz@infradead.org>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Paolo Bonzini <pbonzini@redhat.com>, Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Nov 14, 2018 at 07:02:28AM -0800, Bart Van Assche wrote:
-> On Wed, 2018-11-14 at 16:25 +0800, Ming Lei wrote:
-> > --- a/drivers/scsi/scsi_lib.c
-> > +++ b/drivers/scsi/scsi_lib.c
-> > @@ -697,6 +697,12 @@ static bool scsi_end_request(struct request *req,
-> > blk_status_t error,
-> >  		 */
-> >  		scsi_mq_uninit_cmd(cmd);
-> >  
-> > +		/*
-> > +		 * queue is still alive, so grab the ref for preventing it
-> > +		 * from being cleaned up during running queue.
-> > +		 */
-> > +		percpu_ref_get(&q->q_usage_counter);
-> > +
+On Thu, Nov 15, 2018 at 08:36:17AM +0800, Ming Lei wrote:
+> > So even if you think the kernel is not going to do this, remember, you
+> > have no control over it.  Reference counted objects are done this way
+> > for a reason, you really do not know who has a reference and you really
+> > do not care.
+> > 
+> > You are just papering over the real issue here, see my previous email
+> > for how to start working on resolving it.
 > 
-> I think the above comment is misleading. In the block layer a queue is called
-> alive if the "dying" flag has not been set. When the above call to
-> percpu_ref_get() occurs it is not guaranteed that that flag has not yet been
-> set. But it is guaranteed that q->q_usage_counter is not zero. I would prefer
-> if the comment would be modified.
+> IMO, there isn't real issue, and the issue is actually in 'delay release'.
 
-I am fine with either way given we know the context, not mention the first thing
-blk_cleanup_queue() does is to call blk_set_queue_dying().
+Nope, sorry, that is not true.
 
-> 
-> What's not clear to me is why this patch only protects the blk-mq path but
-> not the legacy path. Does the legacy path need similar protection? It also
-> triggers a queue run after having finished a request.
+> Please look at the code in block/blk-mq-sysfs.c, both q->mq_kobj and all
+> ctx->kobj share same lifetime with q->kobj, we even don't call get/put
+> on q->mq_kobj & all ctx->kobj, and all are simply released in q->kobj's
+> release handler.
 
-The queue_lock is held for protecting everything, so such issue in
-legacy path.
+How do you "know" you are keeping those lifetimes in sync?  The joy of a
+kobject is that _ANYTHING_ can grab a reference to your object without
+you knowing about it.  That includes userspace programs.  Yes, sysfs is
+now much better and it trys to release that reference "quickly" when it
+determines you are trying to delete a kobject, but it's not perfict,
+there are still races there.
 
+And that is what the delay release code is showing you.  It is showing
+you that you "think" your reference counting is wrong, but it is not.
+It is showing you that if someone else grabs a reference, you are not
+correctly cleaning up for yourself.
 
-Thanks,
-Ming
+Never think that you really know the lifetime of a kobject, once you
+realize that your code gets simpler and you can then just "trust" that
+the kernel will do the right thing no matter what.
+
+Because really, you are using a kobject because you want that correct
+reference counting logic.  By ignoring that logic, you are ignoring the
+reason to be using that object at all.  If you don't need reference
+counting, then don't use it at all.
+
+And if you need sysfs files, then you need to use the kobject and then
+you need to handle it properly, because again, you do NOT have full
+control over the lifetime of your object.  That's the basis for
+reference counting in the firstplace.
+
+So this code is broken without me evening having to look at it, please
+fix it to handle release properly.  Again, the kernel tried to tell you
+this, but you hacked around the kernel core to remove that warning
+incorrectly.  Please go read the kobject documentation again for even
+more details about this than what I said here.
+
+thanks,
+
+greg k-h
