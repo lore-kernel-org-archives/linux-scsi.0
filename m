@@ -1,72 +1,55 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
+From: Bart Van Assche <bvanassche@acm.org>
 Subject: Re: [PATCH 0/3] SG_IO command filtering via sysfs
-Date: Fri, 16 Nov 2018 01:26:40 +0100
-Message-ID: <98fe5cf7-722a-37d6-156d-842e8812e430@redhat.com>
+Date: Thu, 15 Nov 2018 16:37:34 -0800
+Message-ID: <1542328654.100259.18.camel@acm.org>
 References: <1541867733-7836-1-git-send-email-pbonzini@redhat.com>
- <20181110190521.GA2627@thunk.org>
- <566bc821-f12a-f7c1-e7c7-99092807ee27@redhat.com>
- <20181111141426.GA7377@thunk.org>
+         <20181110190521.GA2627@thunk.org>
+         <566bc821-f12a-f7c1-e7c7-99092807ee27@redhat.com>
+         <20181111141426.GA7377@thunk.org>
+         <98fe5cf7-722a-37d6-156d-842e8812e430@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="UTF-7"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20181111141426.GA7377@thunk.org>
-Content-Language: en-US
+In-Reply-To: <98fe5cf7-722a-37d6-156d-842e8812e430@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Theodore Y. Ts'o" <tytso@mit.edu>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Christoph Hellwig <hch@infradead.org>
+To: Paolo Bonzini <pbonzini@redhat.com>, "Theodore Y. Ts'o" <tytso@mit.edu>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 11/11/2018 15:14, Theodore Y. Ts'o wrote:
-> On Sun, Nov 11, 2018 at 02:26:45PM +0100, Paolo Bonzini wrote:
->>
->> I'm not very eBPF savvy, the question I have is: what kind of
->> information about the running process is available in an eBPF program?
->> For example, even considering only the examples you make, would it be
->> able to access the CDB, the capabilities and uid/gid of the task, the
->> SCSI device type, the WWN?  Of course you also need the mode of the file
->> descriptor in order to allow SANITIZE ERASE if the disk is opened for write.
-> 
-> The basic uid/gid of the task is certainly available.  For storage
-> stack specific things, it's a matter of what we make available to the
-> eBPF function.  For example, there is an experimental netfilter
-> replacement which uses eBPF; obviously that requires making the packet
-> which is being inspecting so it can be given a thumbs up or thumbs
-> down result.  That's going to require letting the eBPF function to
-> have access to the network header, access to the connection tracking
-> tables, etc.
+On Fri, 2018-11-16 at 01:26 +-0100, Paolo Bonzini wrote:
++AD4 Yeah, and there are even already helpers such as
++AD4 bpf+AF8-get+AF8-current+AF8-uid+AF8-gid.  So that part can be done in a sort-of generic way.
++AD4 
++AD4 I can try and do the work, but I'd like some agreement on the design
++AD4 first...  For example a more important question is how would the BPF
++AD4 filter be attached?  Two possibilities that come to mind are:
++AD4 
++AD4 - add it to the /dev/sg+ACo or /dev/sd+ACo struct file(+ACo) via a ioctl, and use
++AD4 pass the file descriptor to the unprivileged QEMU after setting up the
++AD4 BPF filter, via either fork() or SCM+AF8-RIGHTS.  This would be a very nice
++AD4 model for privilege separation, but I'm afraid it would not work for
++AD4 your use case
++AD4 
++AD4 - add BPF programs to cgroups, in the form of a new
++AD4 BPF+AF8-PROG+AF8-TYPE+AF8-CGROUP+AF8-CDB+AF8-FILTER or something like that.  That would also
++AD4 work for my usecase, and it seems to be in line with how the network
++AD4 guys are doing things.  So it would seem like the way to go.
++AD4 
++AD4 Some other details...  Registering the first cgroup-based filter would
++AD4 disable the default filter+ADs if multiple filters are attached, the
++AD4 outcomes of all filters would be AND-ed, also similarly to how socket
++AD4 and sockaddr cgroup BPF works.  Finally, filters would be applied also
++AD4 to processes with CAP+AF8-SYS+AF8-RAWIO, unlike the current filter.
++AD4 
++AD4 Needless to say, this would not add special case code, but it would
++AD4 still add a substantial amount of code, probably comparable to this series.
 
-Yeah, and there are even already helpers such as
-bpf_get_current_uid_gid.  So that part can be done in a sort-of generic way.
+All user space interfaces in the Linux kernel for storage that I'm familiar
+with not only allow configuration of parameters but also make it easy to
+query which parameters have been configured. The existing sysfs and configfs
+interfaces demonstrate this. Using BPF to configure SG/IO access has a
+significant disadvantage, namely that it is very hard to figure out what has
+been configured. Figuring out what has been configured namely requires
+disassembling BPF. I'm not sure anyone will be enthusiast about this.
 
-I can try and do the work, but I'd like some agreement on the design
-first...  For example a more important question is how would the BPF
-filter be attached?  Two possibilities that come to mind are:
-
-- add it to the /dev/sg* or /dev/sd* struct file(*) via a ioctl, and use
-pass the file descriptor to the unprivileged QEMU after setting up the
-BPF filter, via either fork() or SCM_RIGHTS.  This would be a very nice
-model for privilege separation, but I'm afraid it would not work for
-your use case
-
-- add BPF programs to cgroups, in the form of a new
-BPF_PROG_TYPE_CGROUP_CDB_FILTER or something like that.  That would also
-work for my usecase, and it seems to be in line with how the network
-guys are doing things.  So it would seem like the way to go.
-
-Some other details...  Registering the first cgroup-based filter would
-disable the default filter; if multiple filters are attached, the
-outcomes of all filters would be AND-ed, also similarly to how socket
-and sockaddr cgroup BPF works.  Finally, filters would be applied also
-to processes with CAP_SYS_RAWIO, unlike the current filter.
-
-Needless to say, this would not add special case code, but it would
-still add a substantial amount of code, probably comparable to this series.
-
-Christoph?
-
-Paolo
-
-(*) that's not immediate for /dev/sd*, because it would require using
-the block device file's private_data; that's not possible yet via struct
-block_device_operations, but as far as I can tell block devices
-themselves do not need the private_data, so it is at least doable.
+Bart.
