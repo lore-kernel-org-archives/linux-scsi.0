@@ -1,33 +1,33 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: [PATCH 0/3] SG_IO command filtering via sysfs
-Date: Fri, 16 Nov 2018 08:01:29 +0100
-Message-ID: <c819493c-2a45-4911-8879-310c910ee42a@redhat.com>
+Date: Fri, 16 Nov 2018 01:32:25 -0800
+Message-ID: <20181116093225.GA17033@infradead.org>
 References: <1541867733-7836-1-git-send-email-pbonzini@redhat.com>
- <20181110190521.GA2627@thunk.org>
- <566bc821-f12a-f7c1-e7c7-99092807ee27@redhat.com>
- <20181111141426.GA7377@thunk.org>
- <98fe5cf7-722a-37d6-156d-842e8812e430@redhat.com>
- <1542328654.100259.18.camel@acm.org>
+ <20181111131445.GB25441@infradead.org>
+ <20181111134241.GA2447@thunk.org>
+ <20181112082013.GA9307@infradead.org>
+ <79d7d4b2-e9b3-00b4-2ad0-789888f7ee36@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1542328654.100259.18.camel@acm.org>
-Content-Language: en-US
+Content-Disposition: inline
+In-Reply-To: <79d7d4b2-e9b3-00b4-2ad0-789888f7ee36@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>, "Theodore Y. Ts'o" <tytso@mit.edu>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Christoph Hellwig <hch@infradead.org>
+To: Paolo Bonzini <pbonzini@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>, "Theodore Y. Ts'o" <tytso@mit.edu>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 16/11/18 01:37, Bart Van Assche wrote:
-> All user space interfaces in the Linux kernel for storage that I'm familiar
-> with not only allow configuration of parameters but also make it easy to
-> query which parameters have been configured. The existing sysfs and configfs
-> interfaces demonstrate this. Using BPF to configure SG/IO access has a
-> significant disadvantage, namely that it is very hard to figure out what has
-> been configured. Figuring out what has been configured namely requires
-> disassembling BPF. I'm not sure anyone will be enthusiast about this.
+On Mon, Nov 12, 2018 at 11:17:29AM +0100, Paolo Bonzini wrote:
+> > Well, that's what we have the security_file_ioctl() LSM hook for so that
+> > your security model can arbitrate access to ioctls.
+> 
+> Doesn't that have TOC-TOU races by design?
 
-Well, that's a problem with BPF in general.  With great power comes
-great obscurability.
+If you want to look at the command - yes.  If you just want to filter
+read vs write vs ioctl, no.
 
-Paolo
+> Also, what about SG_IO giving write access to files that are only opened
+> read-only (and only have read permissions)?
+
+Allowing SG_IO on read-only permissions sounds like a reall bad idea,
+filtering or not.
