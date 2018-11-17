@@ -1,48 +1,88 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH 0/3] SG_IO command filtering via sysfs
-Date: Fri, 16 Nov 2018 22:08:35 +0100
-Message-ID: <c94ce566-c788-7dc2-4b76-a57fd78aaec8@redhat.com>
-References: <1541867733-7836-1-git-send-email-pbonzini@redhat.com>
- <20181111131445.GB25441@infradead.org> <20181111134241.GA2447@thunk.org>
- <20181112082013.GA9307@infradead.org>
- <79d7d4b2-e9b3-00b4-2ad0-789888f7ee36@redhat.com>
- <20181116093225.GA17033@infradead.org>
- <fa3ed175-13a3-bedf-ebf9-ddf46a2decd5@redhat.com>
- <20181116174352.GH20617@thunk.org> <1542392239.100259.52.camel@acm.org>
+From: Sabyasachi Gupta <sabyasachi.linux@gmail.com>
+Subject: [PATCH] scsi/dpt_i2o.c: Use dma_zalloc_coherent
+Date: Sat, 17 Nov 2018 18:17:28 +0530
+Message-ID: <5bf00de4.1c69fb81.7dd65.5785@mx.google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1542392239.100259.52.camel@acm.org>
-Content-Language: en-US
+Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>, "Theodore Y. Ts'o" <tytso@mit.edu>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>
+To: aacraid@microsemi.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: jrdr.linux@gmail.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, brajeswar.linux@gmail.com
 List-Id: linux-scsi@vger.kernel.org
 
-On 16/11/18 19:17, Bart Van Assche wrote:
-> On Fri, 2018-11-16 at 12:43 -0500, Theodore Y. Ts'o wrote:
->> I'd argue that a purpose-built eBPF access control facility is
->> superior to the security_file_ioctl() LSM hook because it can make
->> available to the authorization function access to the cached results
->> of the SCSI INQUIRY command, and it avoids needing to duplicate
->> knowledge of how to parse the parameters of the SG_IO ioctl in the LSM
->> module as well as in the SCSI stack.
-> 
-> If an eBPF program would decide which SG_IO commands will be executed
-> and which ones not, does that mean that a SCSI parser would have to be
-> implemented in eBPF? If so, does that mean that both the eBPF and the
-> LSM approach share the disadvantage of requiring to do SCSI CDB parsing
-> outside the SCSI core?
+Replaced dma_alloc_coherent + memset with dma_zalloc_coherent
 
-The LSM approach cannot do SCSI CDB parsing, unless you add a special
-SCSI-specific hook called after parsing the SG_IO argument, due to race
-conditions.  I'd rather not do that, however it would have that
-disadvantage indeed.
+Signed-off-by: Sabyasachi Gupta <sabyasachi.linux@gmail.com>
+---
+ drivers/scsi/dpt_i2o.c | 12 ++++--------
+ 1 file changed, 4 insertions(+), 8 deletions(-)
 
-The eBPF approach pushes the policy and the parsing entirely to
-userspace, so I'm not sure you can say it's a disadvantage.  It's just a
-different design.  If you use SG_IO you're already in for writing
-userspace code that handles CDBs, sense data etc.
-
-Paolo
+diff --git a/drivers/scsi/dpt_i2o.c b/drivers/scsi/dpt_i2o.c
+index 37de8fb..056383a 100644
+--- a/drivers/scsi/dpt_i2o.c
++++ b/drivers/scsi/dpt_i2o.c
+@@ -1370,13 +1370,12 @@ static s32 adpt_i2o_reset_hba(adpt_hba* pHba)
+ 		schedule_timeout_uninterruptible(1);
+ 	} while (m == EMPTY_QUEUE);
+ 
+-	status = dma_alloc_coherent(&pHba->pDev->dev, 4, &addr, GFP_KERNEL);
++	status = dma_zalloc_coherent(&pHba->pDev->dev, 4, &addr, GFP_KERNEL);
+ 	if(status == NULL) {
+ 		adpt_send_nop(pHba, m);
+ 		printk(KERN_ERR"IOP reset failed - no free memory.\n");
+ 		return -ENOMEM;
+ 	}
+-	memset(status,0,4);
+ 
+ 	msg[0]=EIGHT_WORD_MSG_SIZE|SGL_OFFSET_0;
+ 	msg[1]=I2O_CMD_ADAPTER_RESET<<24|HOST_TID<<12|ADAPTER_TID;
+@@ -2836,14 +2835,13 @@ static s32 adpt_i2o_init_outbound_q(adpt_hba* pHba)
+ 
+ 	msg=(u32 __iomem *)(pHba->msg_addr_virt+m);
+ 
+-	status = dma_alloc_coherent(&pHba->pDev->dev, 4, &addr, GFP_KERNEL);
++	status = dma_zalloc_coherent(&pHba->pDev->dev, 4, &addr, GFP_KERNEL);
+ 	if (!status) {
+ 		adpt_send_nop(pHba, m);
+ 		printk(KERN_WARNING"%s: IOP reset failed - no free memory.\n",
+ 			pHba->name);
+ 		return -ENOMEM;
+ 	}
+-	memset(status, 0, 4);
+ 
+ 	writel(EIGHT_WORD_MSG_SIZE| SGL_OFFSET_6, &msg[0]);
+ 	writel(I2O_CMD_OUTBOUND_INIT<<24 | HOST_TID<<12 | ADAPTER_TID, &msg[1]);
+@@ -2890,14 +2888,13 @@ static s32 adpt_i2o_init_outbound_q(adpt_hba* pHba)
+ 			pHba->reply_pool, pHba->reply_pool_pa);
+ 	}
+ 
+-	pHba->reply_pool = dma_alloc_coherent(&pHba->pDev->dev,
++	pHba->reply_pool = dma_zalloc_coherent(&pHba->pDev->dev,
+ 				pHba->reply_fifo_size * REPLY_FRAME_SIZE * 4,
+ 				&pHba->reply_pool_pa, GFP_KERNEL);
+ 	if (!pHba->reply_pool) {
+ 		printk(KERN_ERR "%s: Could not allocate reply pool\n", pHba->name);
+ 		return -ENOMEM;
+ 	}
+-	memset(pHba->reply_pool, 0 , pHba->reply_fifo_size * REPLY_FRAME_SIZE * 4);
+ 
+ 	for(i = 0; i < pHba->reply_fifo_size; i++) {
+ 		writel(pHba->reply_pool_pa + (i * REPLY_FRAME_SIZE * 4),
+@@ -3126,13 +3123,12 @@ static int adpt_i2o_build_sys_table(void)
+ 	sys_tbl_len = sizeof(struct i2o_sys_tbl) +	// Header + IOPs
+ 				(hba_count) * sizeof(struct i2o_sys_tbl_entry);
+ 
+-	sys_tbl = dma_alloc_coherent(&pHba->pDev->dev,
++	sys_tbl = dma_zalloc_coherent(&pHba->pDev->dev,
+ 				sys_tbl_len, &sys_tbl_pa, GFP_KERNEL);
+ 	if (!sys_tbl) {
+ 		printk(KERN_WARNING "SysTab Set failed. Out of memory.\n");	
+ 		return -ENOMEM;
+ 	}
+-	memset(sys_tbl, 0, sys_tbl_len);
+ 
+ 	sys_tbl->num_entries = hba_count;
+ 	sys_tbl->version = I2OVERSION;
+-- 
+2.7.4
