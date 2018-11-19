@@ -1,43 +1,38 @@
-From: Sabyasachi Gupta <sabyasachi.linux@gmail.com>
-Subject: [PATCH] scsi/lpfc/lpfc_sli.c: Use dma_zalloc_coherent
-Date: Sun, 18 Nov 2018 20:08:48 +0530
-Message-ID: <5bf1797b.1c69fb81.2368c.1ccc@mx.google.com>
+From: Avri Altman <Avri.Altman@wdc.com>
+Subject: RE: [PATCH 5/8] bsg: refactor bsg_ioctl
+Date: Mon, 19 Nov 2018 12:29:27 +0000
+Message-ID: <SN6PR04MB4925E6D8EC8D401B8C947F37FCD80@SN6PR04MB4925.namprd04.prod.outlook.com>
+References: <20181111133211.13926-1-hch@lst.de>
+ <20181111133211.13926-6-hch@lst.de> <20181113140550.GA7222@w530-pk1mzal>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <20181113140550.GA7222@w530-pk1mzal>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: james.smart@broadcom.com, dick.kennedy@broadcom.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: jrdr.linux@gmail.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, brajeswar.linux@gmail.com
+To: Benjamin Block <bblock@linux.ibm.com>, Christoph Hellwig <hch@lst.de>
+Cc: "axboe@kernel.dk" <axboe@kernel.dk>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "ooo@electrozaur.com" <ooo@electrozaur.com>, Johannes Thumshirn <jthumshirn@suse.de>, Benjamin Block <bblock@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Replaced dma_alloc_coherent + memset with dma_zalloc_coherent
 
-Signed-off-by: Sabyasachi Gupta <sabyasachi.linux@gmail.com>
----
- drivers/scsi/lpfc/lpfc_sli.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 783a154..3491ff7 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -6229,7 +6229,7 @@ lpfc_sli4_ras_dma_alloc(struct lpfc_hba *phba,
- 			goto free_mem;
- 		}
- 
--		dmabuf->virt = dma_alloc_coherent(&phba->pcidev->dev,
-+		dmabuf->virt = dma_zalloc_coherent(&phba->pcidev->dev,
- 						  LPFC_RAS_MAX_ENTRY_SIZE,
- 						  &dmabuf->phys,
- 						  GFP_KERNEL);
-@@ -6240,7 +6240,6 @@ lpfc_sli4_ras_dma_alloc(struct lpfc_hba *phba,
- 					"6187 DMA Alloc Failed FW logging");
- 			goto free_mem;
- 		}
--		memset(dmabuf->virt, 0, LPFC_RAS_MAX_ENTRY_SIZE);
- 		dmabuf->buffer_tag = i;
- 		list_add_tail(&dmabuf->list, &ras_fwlog->fwlog_buff_list);
- 	}
--- 
-2.7.4
+=20
+> On Sun, Nov 11, 2018 at 02:32:08PM +0100, Christoph Hellwig wrote:
+> > Move all actual functionality into helpers, just leaving the dispatch
+> > in this function.
+> >
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > ---
+> >  block/bsg.c | 158 ++++++++++++++++++++++++----------------------------
+> >  1 file changed, 72 insertions(+), 86 deletions(-)
+> >
+>=20
+> Looks fine to me. Did ran the same small test-tool I ran against Jens'
+> patches, nothing broke.
+>=20
+> Reviewed-by: Benjamin Block <bblock@linux.ibm.com>
+> Tested-by: Benjamin Block <bblock@linux.ibm.com>
+Tested-by: Avri Altman <avri.altman@wdc.com>
+
+Tested the scsi pass-through (ufs-bsg) path - nothing is broken.=20
