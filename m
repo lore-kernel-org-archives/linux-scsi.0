@@ -1,19 +1,19 @@
 From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 4.18 079/171] SCSI: fix queue cleanup race before queue initialization is done
-Date: Mon, 19 Nov 2018 17:27:55 +0100
-Message-ID: <20181119162632.278437995@linuxfoundation.org>
-References: <20181119162618.909354448@linuxfoundation.org>
+Subject: [PATCH 4.14 054/124] SCSI: fix queue cleanup race before queue initialization is done
+Date: Mon, 19 Nov 2018 17:28:28 +0100
+Message-ID: <20181119162623.999392166@linuxfoundation.org>
+References: <20181119162612.951907286@linuxfoundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20181119162618.909354448@linuxfoundation.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20181119162612.951907286@linuxfoundation.org>
+Sender: stable-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
 Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, stable@vger.kernel.org, Andrew Jones <drjones@redhat.com>, Bart Van Assche <bart.vanassche@wdc.com>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "jianchao.wang" <jianchao.w.wang@oracle.com>, Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@kernel.dk>
 List-Id: linux-scsi@vger.kernel.org
 
-4.18-stable review patch.  If anyone has any objections, please let me know.
+4.14-stable review patch.  If anyone has any objections, please let me know.
 
 ------------------
 
@@ -63,7 +63,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
 --- a/block/blk-core.c
 +++ b/block/blk-core.c
-@@ -793,9 +793,8 @@ void blk_cleanup_queue(struct request_qu
+@@ -671,9 +671,8 @@ void blk_cleanup_queue(struct request_qu
  	 * dispatch may still be in-progress since we dispatch requests
  	 * from more than one contexts.
  	 *
@@ -77,7 +77,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
  		blk_mq_quiesce_queue(q);
 --- a/drivers/scsi/scsi_lib.c
 +++ b/drivers/scsi/scsi_lib.c
-@@ -696,6 +696,12 @@ static bool scsi_end_request(struct requ
+@@ -683,6 +683,12 @@ static bool scsi_end_request(struct requ
  		 */
  		scsi_mq_uninit_cmd(cmd);
  
@@ -90,7 +90,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
  		__blk_mq_end_request(req, error);
  
  		if (scsi_target(sdev)->single_lun ||
-@@ -703,6 +709,8 @@ static bool scsi_end_request(struct requ
+@@ -690,6 +696,8 @@ static bool scsi_end_request(struct requ
  			kblockd_schedule_work(&sdev->requeue_work);
  		else
  			blk_mq_run_hw_queues(q, true);
