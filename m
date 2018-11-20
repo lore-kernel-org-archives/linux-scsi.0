@@ -1,102 +1,42 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: kobject lifetime issues in blk-mq
-Date: Tue, 20 Nov 2018 21:28:37 +0800
-Message-ID: <20181120132836.GA22666@ming.t460p>
-References: <20181112200236.GA4415@kroah.com>
- <20181113002226.GA4455@ming.t460p>
- <20181113004124.GC4455@ming.t460p>
- <20181114110827.GA31430@ming.t460p>
- <20181114151410.GB26378@kroah.com>
- <20181115003616.GA32603@ming.t460p>
- <20181115005658.GA24847@kroah.com>
- <CACT4Y+bSzPM022bGMmj4GQ_YHVsVqd6r+NTC4+fRrRT+yjAjEw@mail.gmail.com>
- <20181120120540.GA14861@kroah.com>
- <CACT4Y+abDYfK0bD+5E_2T_hR=-0CbJzWnEVVJTTLYAi1-QCx1w@mail.gmail.com>
+From: John Garry <john.garry@huawei.com>
+Subject: [PATCH 1/4] scsi: Add scsi_prot_op_normal()
+Date: Tue, 20 Nov 2018 22:59:01 +0800
+Message-ID: <1542725944-244183-2-git-send-email-john.garry@huawei.com>
+References: <1542725944-244183-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CACT4Y+abDYfK0bD+5E_2T_hR=-0CbJzWnEVVJTTLYAi1-QCx1w@mail.gmail.com>
+In-Reply-To: <1542725944-244183-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Dmitry Vyukov <dvyukov@google.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Guenter Roeck <linux@roeck-us.net>, Ming Lei <tom.leiming@gmail.com>, Jens Axboe <axboe@fb.com>, Peter Zijlstra <peterz@infradead.org>, linux-block@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Paolo Bonzini <pbonzini@redhat.com>, Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linuxarm@huawei.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Nov 20, 2018 at 01:53:47PM +0100, Dmitry Vyukov wrote:
-> On Tue, Nov 20, 2018 at 1:05 PM, Greg Kroah-Hartman
-> <gregkh@linuxfoundation.org> wrote:
-> > On Tue, Nov 20, 2018 at 12:34:40PM +0100, Dmitry Vyukov wrote:
-> >> On Thu, Nov 15, 2018 at 1:56 AM, Greg Kroah-Hartman
-> >> <gregkh@linuxfoundation.org> wrote:
-> >> > On Thu, Nov 15, 2018 at 08:36:17AM +0800, Ming Lei wrote:
-> >> >> > So even if you think the kernel is not going to do this, remember, you
-> >> >> > have no control over it.  Reference counted objects are done this way
-> >> >> > for a reason, you really do not know who has a reference and you really
-> >> >> > do not care.
-> >> >> >
-> >> >> > You are just papering over the real issue here, see my previous email
-> >> >> > for how to start working on resolving it.
-> >> >>
-> >> >> IMO, there isn't real issue, and the issue is actually in 'delay release'.
-> >> >
-> >> > Nope, sorry, that is not true.
-> >> >
-> >> >> Please look at the code in block/blk-mq-sysfs.c, both q->mq_kobj and all
-> >> >> ctx->kobj share same lifetime with q->kobj, we even don't call get/put
-> >> >> on q->mq_kobj & all ctx->kobj, and all are simply released in q->kobj's
-> >> >> release handler.
-> >> >
-> >> > How do you "know" you are keeping those lifetimes in sync?  The joy of a
-> >> > kobject is that _ANYTHING_ can grab a reference to your object without
-> >> > you knowing about it.  That includes userspace programs.  Yes, sysfs is
-> >> > now much better and it trys to release that reference "quickly" when it
-> >> > determines you are trying to delete a kobject, but it's not perfict,
-> >> > there are still races there.
-> >> >
-> >> > And that is what the delay release code is showing you.  It is showing
-> >> > you that you "think" your reference counting is wrong, but it is not.
-> >> > It is showing you that if someone else grabs a reference, you are not
-> >> > correctly cleaning up for yourself.
-> >> >
-> >> > Never think that you really know the lifetime of a kobject, once you
-> >> > realize that your code gets simpler and you can then just "trust" that
-> >> > the kernel will do the right thing no matter what.
-> >> >
-> >> > Because really, you are using a kobject because you want that correct
-> >> > reference counting logic.  By ignoring that logic, you are ignoring the
-> >> > reason to be using that object at all.  If you don't need reference
-> >> > counting, then don't use it at all.
-> >> >
-> >> > And if you need sysfs files, then you need to use the kobject and then
-> >> > you need to handle it properly, because again, you do NOT have full
-> >> > control over the lifetime of your object.  That's the basis for
-> >> > reference counting in the firstplace.
-> >> >
-> >> > So this code is broken without me evening having to look at it, please
-> >> > fix it to handle release properly.  Again, the kernel tried to tell you
-> >> > this, but you hacked around the kernel core to remove that warning
-> >> > incorrectly.  Please go read the kobject documentation again for even
-> >> > more details about this than what I said here.
-> >> >
-> >> > thanks,
-> >> >
-> >> > greg k-h
-> >>
-> >> Whoever is the right person to fix this, please prioritize this to the
-> >> degree possible.
-> >> This issue does not allow to use DEBUG_KOBJECT_RELEASE in any
-> >> automated testing (in particular syzbot) on both upstream and stable
-> >> trees. We have to disable it for now, so other bugs won't be noticed
-> >> and will pile up.
-> >
-> > Patches for this have already been posted :)
-> 
-> 
-> This is great.
-> What is the patch name? I can't find anything that looks relevant on
-> LKML searching by kobject.
+It is a common pattern to check if a Scsi command protection option is
+"normal", i.e. regular IO.
 
-https://marc.info/?l=linux-block&m=154270006101625&w=2
+Add a common simple wrapper for this.
 
-Thanks,
-Ming
+Signed-off-by: John Garry <john.garry@huawei.com>
+---
+ include/scsi/scsi_cmnd.h | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
+index c891ada..3b26ea1 100644
+--- a/include/scsi/scsi_cmnd.h
++++ b/include/scsi/scsi_cmnd.h
+@@ -271,6 +271,11 @@ static inline unsigned char scsi_get_prot_op(struct scsi_cmnd *scmd)
+ 	return scmd->prot_op;
+ }
+ 
++static inline bool scsi_prot_op_normal(struct scsi_cmnd *scmd)
++{
++	return scmd->prot_op == SCSI_PROT_NORMAL;
++}
++
+ enum scsi_prot_flags {
+ 	SCSI_PROT_TRANSFER_PI		= 1 << 0,
+ 	SCSI_PROT_GUARD_CHECK		= 1 << 1,
+-- 
+1.9.1
