@@ -1,7 +1,7 @@
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+From: Ming Lei <ming.lei@redhat.com>
 Subject: Re: kobject lifetime issues in blk-mq
-Date: Tue, 20 Nov 2018 14:27:57 +0100
-Message-ID: <20181120132757.GB19173@kroah.com>
+Date: Tue, 20 Nov 2018 21:28:37 +0800
+Message-ID: <20181120132836.GA22666@ming.t460p>
 References: <20181112200236.GA4415@kroah.com>
  <20181113002226.GA4455@ming.t460p>
  <20181113004124.GC4455@ming.t460p>
@@ -19,7 +19,7 @@ Content-Disposition: inline
 In-Reply-To: <CACT4Y+abDYfK0bD+5E_2T_hR=-0CbJzWnEVVJTTLYAi1-QCx1w@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Dmitry Vyukov <dvyukov@google.com>
-Cc: Ming Lei <ming.lei@redhat.com>, Guenter Roeck <linux@roeck-us.net>, Ming Lei <tom.leiming@gmail.com>, Jens Axboe <axboe@fb.com>, Peter Zijlstra <peterz@infradead.org>, linux-block@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Paolo Bonzini <pbonzini@redhat.com>, Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Guenter Roeck <linux@roeck-us.net>, Ming Lei <tom.leiming@gmail.com>, Jens Axboe <axboe@fb.com>, Peter Zijlstra <peterz@infradead.org>, linux-block@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Paolo Bonzini <pbonzini@redhat.com>, Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
 On Tue, Nov 20, 2018 at 01:53:47PM +0100, Dmitry Vyukov wrote:
@@ -71,7 +71,8 @@ On Tue, Nov 20, 2018 at 01:53:47PM +0100, Dmitry Vyukov wrote:
 > >> > you need to handle it properly, because again, you do NOT have full
 > >> > control over the lifetime of your object.  That's the basis for
 > >> > reference counting in the firstplace.
-> >> > > >> > So this code is broken without me evening having to look at it, please
+> >> >
+> >> > So this code is broken without me evening having to look at it, please
 > >> > fix it to handle release properly.  Again, the kernel tried to tell you
 > >> > this, but you hacked around the kernel core to remove that warning
 > >> > incorrectly.  Please go read the kobject documentation again for even
@@ -95,8 +96,7 @@ On Tue, Nov 20, 2018 at 01:53:47PM +0100, Dmitry Vyukov wrote:
 > What is the patch name? I can't find anything that looks relevant on
 > LKML searching by kobject.
 
-Subject: [PATCH 4.21 V3] blk-mq: not embed .mq_kobj and ctx->kobj into queue instance
+https://marc.info/?l=linux-block&m=154270006101625&w=2
 
-Hope this helps,
-
-greg k-h
+Thanks,
+Ming
