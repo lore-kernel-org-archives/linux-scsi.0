@@ -1,7 +1,7 @@
-From: fred.herard-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org
+From: Fred Herard <fred.herard-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
 Subject: [PATCH] libiscsi: Fix NULL pointer dereference in iscsi_eh_session_reset
-Date: Tue, 20 Nov 2018 20:22:45 -0500
-Message-ID: <1542763365-22253-1-git-send-email-fred.herard@oracle.com>
+Date: Tue, 20 Nov 2018 13:24:59 -0800
+Message-ID: <1542749099-7855-1-git-send-email-fred.herard@oracle.com>
 Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
@@ -15,8 +15,6 @@ List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39U
  <https://groups.google.com/group/open-iscsi/subscribe>
 To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-
-From: Fred Herard <fred.herard-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
 
 This commit addresses NULL pointer dereference in iscsi_eh_session_reset.
 Reference should not be made to session->leadconn when session->state
