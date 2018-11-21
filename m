@@ -1,64 +1,40 @@
-From: Sabyasachi Gupta <sabyasachi.linux@gmail.com>
-Subject: [PATCH] scsi/mvsas/mv_init.c: Use dma_zalloc_coherent
-Date: Wed, 21 Nov 2018 19:18:52 +0530
-Message-ID: <5bf56248.1c69fb81.21a6e.5a72@mx.google.com>
+From: John Garry <john.garry@huawei.com>
+Subject: [PATCH v2 0/3]  hisi_sas: DIF/DIX support
+Date: Wed, 21 Nov 2018 22:24:30 +0800
+Message-ID: <1542810273-134731-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, jthumshirn@suse.de
-Cc: jrdr.linux@gmail.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, brajeswar.linux@gmail.com
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linuxarm@huawei.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, hch@infradead.org, maier@linux.ibm.com, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Replace dma_alloc_coherent + memset with dma_zalloc_coherent
+This patchset introduces support to the driver for DIF/DIX (or PI -
+protection information).
 
-Signed-off-by: Sabyasachi Gupta <sabyasachi.linux@gmail.com>
----
- drivers/scsi/mvsas/mv_init.c | 12 ++++--------
- 1 file changed, 4 insertions(+), 8 deletions(-)
+We will only support PI in v3 hw at the moment, even though previous hw
+versions also support it.
 
-diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
-index 3ac3437..495bddb 100644
---- a/drivers/scsi/mvsas/mv_init.c
-+++ b/drivers/scsi/mvsas/mv_init.c
-@@ -253,33 +253,29 @@ static int mvs_alloc(struct mvs_info *mvi, struct Scsi_Host *shost)
- 	/*
- 	 * alloc and init our DMA areas
- 	 */
--	mvi->tx = dma_alloc_coherent(mvi->dev,
-+	mvi->tx = dma_zalloc_coherent(mvi->dev,
- 				     sizeof(*mvi->tx) * MVS_CHIP_SLOT_SZ,
- 				     &mvi->tx_dma, GFP_KERNEL);
- 	if (!mvi->tx)
- 		goto err_out;
--	memset(mvi->tx, 0, sizeof(*mvi->tx) * MVS_CHIP_SLOT_SZ);
--	mvi->rx_fis = dma_alloc_coherent(mvi->dev, MVS_RX_FISL_SZ,
-+	mvi->rx_fis = dma_zalloc_coherent(mvi->dev, MVS_RX_FISL_SZ,
- 					 &mvi->rx_fis_dma, GFP_KERNEL);
- 	if (!mvi->rx_fis)
- 		goto err_out;
--	memset(mvi->rx_fis, 0, MVS_RX_FISL_SZ);
- 
--	mvi->rx = dma_alloc_coherent(mvi->dev,
-+	mvi->rx = dma_zalloc_coherent(mvi->dev,
- 				     sizeof(*mvi->rx) * (MVS_RX_RING_SZ + 1),
- 				     &mvi->rx_dma, GFP_KERNEL);
- 	if (!mvi->rx)
- 		goto err_out;
--	memset(mvi->rx, 0, sizeof(*mvi->rx) * (MVS_RX_RING_SZ + 1));
- 	mvi->rx[0] = cpu_to_le32(0xfff);
- 	mvi->rx_cons = 0xfff;
- 
--	mvi->slot = dma_alloc_coherent(mvi->dev,
-+	mvi->slot = dma_zalloc_coherent(mvi->dev,
- 				       sizeof(*mvi->slot) * slot_nr,
- 				       &mvi->slot_dma, GFP_KERNEL);
- 	if (!mvi->slot)
- 		goto err_out;
--	memset(mvi->slot, 0, sizeof(*mvi->slot) * slot_nr);
- 
- 	mvi->bulk_buffer = dma_alloc_coherent(mvi->dev,
- 				       TRASH_BUCKET_SIZE,
+The series is broken down as follows:
+- Tidy sg table size config
+- Some tidy-up to accept PI support
+- Add components for PI support for main and v3 driver
+
+Difference v1->v2:
+- drop scsi_prot_op_normal()
+
+Xiang Chen (3):
+  scsi: hisi_sas: Relocate some code to reduce complexity
+  scsi: hisi_sas: Make sg_tablesize consistent value
+  scsi: hisi_sas: Add support for DIF/DIX feature for v3 hw
+
+ drivers/scsi/hisi_sas/hisi_sas.h       |  18 +++
+ drivers/scsi/hisi_sas/hisi_sas_main.c  | 242 ++++++++++++++++++++++++---------
+ drivers/scsi/hisi_sas/hisi_sas_v1_hw.c |   2 +-
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c |   2 +-
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 192 +++++++++++++++++++++++++-
+ 5 files changed, 380 insertions(+), 76 deletions(-)
+
 -- 
-2.7.4
+1.9.1
