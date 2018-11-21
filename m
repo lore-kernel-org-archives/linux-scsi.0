@@ -1,46 +1,430 @@
-From: John Garry <john.garry@huawei.com>
-Subject: Re: [PATCH] scsi/lpfc/lpfc_sli.c: Use dma_zalloc_coherent
-Date: Wed, 21 Nov 2018 07:56:24 +0000
-Message-ID: <5229ccbb-e6de-e114-52fb-235ea703a7ef@huawei.com>
-References: <5bf1797b.1c69fb81.2368c.1ccc@mx.google.com>
- <16c3b882-6e0e-b712-b4d6-78f68172da65@huawei.com>
- <34556d50-562b-43b2-873f-ba68056e5af5@broadcom.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <34556d50-562b-43b2-873f-ba68056e5af5@broadcom.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Smart <james.smart@broadcom.com>, Sabyasachi Gupta <sabyasachi.linux@gmail.com>, dick.kennedy@broadcom.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: jrdr.linux@gmail.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, brajeswar.linux@gmail.com
+From: Ganesh Goudar <ganeshgr@chelsio.com>
+Subject: [PATCH net-next] cxgb4: use new fw interface to get the VIN and smt index
+Date: Wed, 21 Nov 2018 13:40:24 +0530
+Message-ID: <1542787824-4731-1-git-send-email-ganeshgr@chelsio.com>
+Return-path: <netdev-owner@vger.kernel.org>
+Sender: netdev-owner@vger.kernel.org
+To: netdev@vger.kernel.org, davem@davemloft.net
+Cc: nirranjan@chelsio.com, indranil@chelsio.com, dt@chelsio.com, linux-rdma@vger.kernel.org, swise@opengridcomputing.com, linux-crypto@vger.kernel.org, atul.gupta@chelsio.com, linux-scsi@vger.kernel.org, varun@chelsio.com, Santosh Rastapur <santosh@chelsio.com>, Ganesh Goudar <ganeshgr@chelsio.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 20/11/2018 21:52, James Smart wrote:
-> On 11/20/2018 1:40 AM, John Garry wrote:
->>
->> please ensure that you maintain alignment with opening brackets
->
-> I don't think this is a requirement.  From the rules I've read
-> preference is tabs-only indentation.
+From: Santosh Rastapur <santosh@chelsio.com>
 
-This is the only rule (enforcement) I see:
-https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git/commit/?h=next-20181120&id=d1fe9c099cecc6e49324355f1b15573e9dbbe0f9
+If the fw supports returning VIN/VIVLD in FW_VI_CMD save it
+in port_info structure else retrieve these from viid and save
+them  in port_info structure. Do the same for smt_idx from
+FW_VI_MAC_CMD
 
-Spacing (less than a tab), after
-> tabs, for open brace alignment is allowed, thus is coder's choice.
+Signed-off-by: Santosh Rastapur <santosh@chelsio.com>
+Signed-off-by: Ganesh Goudar <ganeshgr@chelsio.com>
+---
+ drivers/crypto/chelsio/chtls/chtls_cm.c         |  3 +-
+ drivers/infiniband/hw/cxgb4/cm.c                |  6 +--
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4.h      | 12 ++++-
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c | 58 ++++++++++++-------------
+ drivers/net/ethernet/chelsio/cxgb4/l2t.c        | 13 +++---
+ drivers/net/ethernet/chelsio/cxgb4/t4_hw.c      | 46 ++++++++++++++++++--
+ drivers/net/ethernet/chelsio/cxgb4/t4fw_api.h   | 20 +++++++++
+ drivers/scsi/cxgbi/cxgb4i/cxgb4i.c              |  3 +-
+ drivers/target/iscsi/cxgbit/cxgbit_cm.c         |  8 ++--
+ 9 files changed, 114 insertions(+), 55 deletions(-)
 
-It seems that alignment was being implemented with tab+space, and now it 
-would be tab+space but no alignment.
-
-cheers,
-John
-
->
-> -- james
->
->
->
->
->
->
->
+diff --git a/drivers/crypto/chelsio/chtls/chtls_cm.c b/drivers/crypto/chelsio/chtls/chtls_cm.c
+index 20209e2..228b91b 100644
+--- a/drivers/crypto/chelsio/chtls/chtls_cm.c
++++ b/drivers/crypto/chelsio/chtls/chtls_cm.c
+@@ -1074,8 +1074,7 @@ static struct sock *chtls_recv_sock(struct sock *lsk,
+ 	csk->txq_idx = (rxq_idx < cdev->lldi->ntxq) ? rxq_idx :
+ 			port_id * step;
+ 	csk->sndbuf = newsk->sk_sndbuf;
+-	csk->smac_idx = cxgb4_tp_smt_idx(cdev->lldi->adapter_type,
+-					 cxgb4_port_viid(ndev));
++	csk->smac_idx = ((struct port_info *)netdev_priv(ndev))->smt_idx;
+ 	tp->rcv_wnd = select_rcv_wnd(csk);
+ 	RCV_WSCALE(tp) = select_rcv_wscale(tcp_full_space(newsk),
+ 					   WSCALE_OK(tp),
+diff --git a/drivers/infiniband/hw/cxgb4/cm.c b/drivers/infiniband/hw/cxgb4/cm.c
+index 8ed01e0..97ecc8c 100644
+--- a/drivers/infiniband/hw/cxgb4/cm.c
++++ b/drivers/infiniband/hw/cxgb4/cm.c
+@@ -2058,8 +2058,7 @@ static int import_ep(struct c4iw_ep *ep, int iptype, __u8 *peer_ip,
+ 		}
+ 		ep->mtu = pdev->mtu;
+ 		ep->tx_chan = cxgb4_port_chan(pdev);
+-		ep->smac_idx = cxgb4_tp_smt_idx(adapter_type,
+-						cxgb4_port_viid(pdev));
++		ep->smac_idx = ((struct port_info *)netdev_priv(pdev))->smt_idx;
+ 		step = cdev->rdev.lldi.ntxq /
+ 			cdev->rdev.lldi.nchan;
+ 		ep->txq_idx = cxgb4_port_idx(pdev) * step;
+@@ -2078,8 +2077,7 @@ static int import_ep(struct c4iw_ep *ep, int iptype, __u8 *peer_ip,
+ 			goto out;
+ 		ep->mtu = dst_mtu(dst);
+ 		ep->tx_chan = cxgb4_port_chan(pdev);
+-		ep->smac_idx = cxgb4_tp_smt_idx(adapter_type,
+-						cxgb4_port_viid(pdev));
++		ep->smac_idx = ((struct port_info *)netdev_priv(pdev))->smt_idx;
+ 		step = cdev->rdev.lldi.ntxq /
+ 			cdev->rdev.lldi.nchan;
+ 		ep->txq_idx = cxgb4_port_idx(pdev) * step;
+diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h b/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
+index b16f4b3e..2d1ca92 100644
+--- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
++++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
+@@ -404,6 +404,7 @@ struct adapter_params {
+ 	bool fr_nsmr_tpte_wr_support;	  /* FW support for FR_NSMR_TPTE_WR */
+ 	u8 fw_caps_support;		/* 32-bit Port Capabilities */
+ 	bool filter2_wr_support;	/* FW support for FILTER2_WR */
++	unsigned int viid_smt_extn_support:1; /* FW returns vin and smt index */
+ 
+ 	/* MPS Buffer Group Map[per Port].  Bit i is set if buffer group i is
+ 	 * used by the Port
+@@ -592,6 +593,13 @@ struct port_info {
+ 	bool ptp_enable;
+ 	struct sched_table *sched_tbl;
+ 	u32 eth_flags;
++
++	/* viid and smt fields either returned by fw
++	 * or decoded by parsing viid by driver.
++	 */
++	u8 vin;
++	u8 vivld;
++	u8 smt_idx;
+ };
+ 
+ struct dentry;
+@@ -1757,7 +1765,7 @@ int t4_cfg_pfvf(struct adapter *adap, unsigned int mbox, unsigned int pf,
+ 		unsigned int nexact, unsigned int rcaps, unsigned int wxcaps);
+ int t4_alloc_vi(struct adapter *adap, unsigned int mbox, unsigned int port,
+ 		unsigned int pf, unsigned int vf, unsigned int nmac, u8 *mac,
+-		unsigned int *rss_size);
++		unsigned int *rss_size, u8 *vivld, u8 *vin);
+ int t4_free_vi(struct adapter *adap, unsigned int mbox,
+ 	       unsigned int pf, unsigned int vf,
+ 	       unsigned int viid);
+@@ -1783,7 +1791,7 @@ int t4_free_mac_filt(struct adapter *adap, unsigned int mbox,
+ 		     unsigned int viid, unsigned int naddr,
+ 		     const u8 **addr, bool sleep_ok);
+ int t4_change_mac(struct adapter *adap, unsigned int mbox, unsigned int viid,
+-		  int idx, const u8 *addr, bool persist, bool add_smt);
++		  int idx, const u8 *addr, bool persist, u8 *smt_idx);
+ int t4_set_addr_hash(struct adapter *adap, unsigned int mbox, unsigned int viid,
+ 		     bool ucast, u64 vec, bool sleep_ok);
+ int t4_enable_vi_params(struct adapter *adap, unsigned int mbox,
+diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
+index 956e708..d35985f 100644
+--- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
++++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
+@@ -453,7 +453,7 @@ static int link_start(struct net_device *dev)
+ 	if (ret == 0) {
+ 		ret = t4_change_mac(pi->adapter, mb, pi->viid,
+ 				    pi->xact_addr_filt, dev->dev_addr, true,
+-				    true);
++				    &pi->smt_idx);
+ 		if (ret >= 0) {
+ 			pi->xact_addr_filt = ret;
+ 			ret = 0;
+@@ -1585,28 +1585,6 @@ unsigned int cxgb4_best_aligned_mtu(const unsigned short *mtus,
+ EXPORT_SYMBOL(cxgb4_best_aligned_mtu);
+ 
+ /**
+- *	cxgb4_tp_smt_idx - Get the Source Mac Table index for this VI
+- *	@chip: chip type
+- *	@viid: VI id of the given port
+- *
+- *	Return the SMT index for this VI.
+- */
+-unsigned int cxgb4_tp_smt_idx(enum chip_type chip, unsigned int viid)
+-{
+-	/* In T4/T5, SMT contains 256 SMAC entries organized in
+-	 * 128 rows of 2 entries each.
+-	 * In T6, SMT contains 256 SMAC entries in 256 rows.
+-	 * TODO: The below code needs to be updated when we add support
+-	 * for 256 VFs.
+-	 */
+-	if (CHELSIO_CHIP_VERSION(chip) <= CHELSIO_T5)
+-		return ((viid & 0x7f) << 1);
+-	else
+-		return (viid & 0x7f);
+-}
+-EXPORT_SYMBOL(cxgb4_tp_smt_idx);
+-
+-/**
+  *	cxgb4_port_chan - get the HW channel of a port
+  *	@dev: the net device for the port
+  *
+@@ -2871,7 +2849,8 @@ static int cxgb_set_mac_addr(struct net_device *dev, void *p)
+ 		return -EADDRNOTAVAIL;
+ 
+ 	ret = t4_change_mac(pi->adapter, pi->adapter->pf, pi->viid,
+-			    pi->xact_addr_filt, addr->sa_data, true, true);
++			    pi->xact_addr_filt, addr->sa_data, true,
++			    &pi->smt_idx);
+ 	if (ret < 0)
+ 		return ret;
+ 
+@@ -4475,6 +4454,15 @@ static int adap_init0(struct adapter *adap)
+ 		adap->params.filter2_wr_support = (ret == 0 && val[0] != 0);
+ 	}
+ 
++	/* Check if FW supports returning vin and smt index.
++	 * If this is not supported, driver will interpret
++	 * these values from viid.
++	 */
++	params[0] = FW_PARAM_DEV(OPAQUE_VIID_SMT_EXTN);
++	ret = t4_query_params(adap, adap->mbox, adap->pf, 0,
++			      1, params, val);
++	adap->params.viid_smt_extn_support = (ret == 0 && val[0] != 0);
++
+ 	/*
+ 	 * Get device capabilities so we can determine what resources we need
+ 	 * to manage.
+@@ -4785,14 +4773,26 @@ static pci_ers_result_t eeh_slot_reset(struct pci_dev *pdev)
+ 		return PCI_ERS_RESULT_DISCONNECT;
+ 
+ 	for_each_port(adap, i) {
+-		struct port_info *p = adap2pinfo(adap, i);
++		struct port_info *pi = adap2pinfo(adap, i);
++		u8 vivld = 0, vin = 0;
+ 
+-		ret = t4_alloc_vi(adap, adap->mbox, p->tx_chan, adap->pf, 0, 1,
+-				  NULL, NULL);
++		ret = t4_alloc_vi(adap, adap->mbox, pi->tx_chan, adap->pf, 0, 1,
++				  NULL, NULL, &vivld, &vin);
+ 		if (ret < 0)
+ 			return PCI_ERS_RESULT_DISCONNECT;
+-		p->viid = ret;
+-		p->xact_addr_filt = -1;
++		pi->viid = ret;
++		pi->xact_addr_filt = -1;
++		/* If fw supports returning the VIN as part of FW_VI_CMD,
++		 * save the returned values.
++		 */
++		if (adap->params.viid_smt_extn_support) {
++			pi->vivld = vivld;
++			pi->vin = vin;
++		} else {
++			/* Retrieve the values from VIID */
++			pi->vivld = FW_VIID_VIVLD_G(pi->viid);
++			pi->vin = FW_VIID_VIN_G(pi->viid);
++		}
+ 	}
+ 
+ 	t4_load_mtus(adap, adap->params.mtus, adap->params.a_wnd,
+diff --git a/drivers/net/ethernet/chelsio/cxgb4/l2t.c b/drivers/net/ethernet/chelsio/cxgb4/l2t.c
+index 99022c0..4852feb 100644
+--- a/drivers/net/ethernet/chelsio/cxgb4/l2t.c
++++ b/drivers/net/ethernet/chelsio/cxgb4/l2t.c
+@@ -495,14 +495,11 @@ u64 cxgb4_select_ntuple(struct net_device *dev,
+ 		ntuple |= (u64)IPPROTO_TCP << tp->protocol_shift;
+ 
+ 	if (tp->vnic_shift >= 0 && (tp->ingress_config & VNIC_F)) {
+-		u32 viid = cxgb4_port_viid(dev);
+-		u32 vf = FW_VIID_VIN_G(viid);
+-		u32 pf = FW_VIID_PFN_G(viid);
+-		u32 vld = FW_VIID_VIVLD_G(viid);
+-
+-		ntuple |= (u64)(FT_VNID_ID_VF_V(vf) |
+-				FT_VNID_ID_PF_V(pf) |
+-				FT_VNID_ID_VLD_V(vld)) << tp->vnic_shift;
++		struct port_info *pi = (struct port_info *)netdev_priv(dev);
++
++		ntuple |= (u64)(FT_VNID_ID_VF_V(pi->vin) |
++				FT_VNID_ID_PF_V(adap->pf) |
++				FT_VNID_ID_VLD_V(pi->vivld)) << tp->vnic_shift;
+ 	}
+ 
+ 	return ntuple;
+diff --git a/drivers/net/ethernet/chelsio/cxgb4/t4_hw.c b/drivers/net/ethernet/chelsio/cxgb4/t4_hw.c
+index cb52394..7f484c6 100644
+--- a/drivers/net/ethernet/chelsio/cxgb4/t4_hw.c
++++ b/drivers/net/ethernet/chelsio/cxgb4/t4_hw.c
+@@ -7488,7 +7488,7 @@ int t4_cfg_pfvf(struct adapter *adap, unsigned int mbox, unsigned int pf,
+  */
+ int t4_alloc_vi(struct adapter *adap, unsigned int mbox, unsigned int port,
+ 		unsigned int pf, unsigned int vf, unsigned int nmac, u8 *mac,
+-		unsigned int *rss_size)
++		unsigned int *rss_size, u8 *vivld, u8 *vin)
+ {
+ 	int ret;
+ 	struct fw_vi_cmd c;
+@@ -7523,6 +7523,13 @@ int t4_alloc_vi(struct adapter *adap, unsigned int mbox, unsigned int port,
+ 	}
+ 	if (rss_size)
+ 		*rss_size = FW_VI_CMD_RSSSIZE_G(be16_to_cpu(c.rsssize_pkd));
++
++	if (vivld)
++		*vivld = FW_VI_CMD_VFVLD_G(be32_to_cpu(c.alloc_to_len16));
++
++	if (vin)
++		*vin = FW_VI_CMD_VIN_G(be32_to_cpu(c.alloc_to_len16));
++
+ 	return FW_VI_CMD_VIID_G(be16_to_cpu(c.type_viid));
+ }
+ 
+@@ -7980,7 +7987,7 @@ int t4_free_mac_filt(struct adapter *adap, unsigned int mbox,
+  *	MAC value.
+  */
+ int t4_change_mac(struct adapter *adap, unsigned int mbox, unsigned int viid,
+-		  int idx, const u8 *addr, bool persist, bool add_smt)
++		  int idx, const u8 *addr, bool persist, u8 *smt_idx)
+ {
+ 	int ret, mode;
+ 	struct fw_vi_mac_cmd c;
+@@ -7989,7 +7996,7 @@ int t4_change_mac(struct adapter *adap, unsigned int mbox, unsigned int viid,
+ 
+ 	if (idx < 0)                             /* new allocation */
+ 		idx = persist ? FW_VI_MAC_ADD_PERSIST_MAC : FW_VI_MAC_ADD_MAC;
+-	mode = add_smt ? FW_VI_MAC_SMT_AND_MPSTCAM : FW_VI_MAC_MPS_TCAM_ENTRY;
++	mode = smt_idx ? FW_VI_MAC_SMT_AND_MPSTCAM : FW_VI_MAC_MPS_TCAM_ENTRY;
+ 
+ 	memset(&c, 0, sizeof(c));
+ 	c.op_to_viid = cpu_to_be32(FW_CMD_OP_V(FW_VI_MAC_CMD) |
+@@ -8006,6 +8013,23 @@ int t4_change_mac(struct adapter *adap, unsigned int mbox, unsigned int viid,
+ 		ret = FW_VI_MAC_CMD_IDX_G(be16_to_cpu(p->valid_to_idx));
+ 		if (ret >= max_mac_addr)
+ 			ret = -ENOMEM;
++		if (smt_idx) {
++			if (adap->params.viid_smt_extn_support) {
++				*smt_idx = FW_VI_MAC_CMD_SMTID_G
++						    (be32_to_cpu(c.op_to_viid));
++			} else {
++				/* In T4/T5, SMT contains 256 SMAC entries
++				 * organized in 128 rows of 2 entries each.
++				 * In T6, SMT contains 256 SMAC entries in
++				 * 256 rows.
++				 */
++				if (CHELSIO_CHIP_VERSION(adap->params.chip) <=
++								     CHELSIO_T5)
++					*smt_idx = (viid & FW_VIID_VIN_M) << 1;
++				else
++					*smt_idx = (viid & FW_VIID_VIN_M);
++			}
++		}
+ 	}
+ 	return ret;
+ }
+@@ -9374,6 +9398,7 @@ int t4_init_portinfo(struct port_info *pi, int mbox,
+ 	enum fw_port_type port_type;
+ 	int mdio_addr;
+ 	fw_port_cap32_t pcaps, acaps;
++	u8 vivld = 0, vin = 0;
+ 	int ret;
+ 
+ 	/* If we haven't yet determined whether we're talking to Firmware
+@@ -9428,7 +9453,8 @@ int t4_init_portinfo(struct port_info *pi, int mbox,
+ 		acaps = be32_to_cpu(cmd.u.info32.acaps32);
+ 	}
+ 
+-	ret = t4_alloc_vi(pi->adapter, mbox, port, pf, vf, 1, mac, &rss_size);
++	ret = t4_alloc_vi(pi->adapter, mbox, port, pf, vf, 1, mac, &rss_size,
++			  &vivld, &vin);
+ 	if (ret < 0)
+ 		return ret;
+ 
+@@ -9437,6 +9463,18 @@ int t4_init_portinfo(struct port_info *pi, int mbox,
+ 	pi->lport = port;
+ 	pi->rss_size = rss_size;
+ 
++	/* If fw supports returning the VIN as part of FW_VI_CMD,
++	 * save the returned values.
++	 */
++	if (adapter->params.viid_smt_extn_support) {
++		pi->vivld = vivld;
++		pi->vin = vin;
++	} else {
++		/* Retrieve the values from VIID */
++		pi->vivld = FW_VIID_VIVLD_G(pi->viid);
++		pi->vin =  FW_VIID_VIN_G(pi->viid);
++	}
++
+ 	pi->port_type = port_type;
+ 	pi->mdio_addr = mdio_addr;
+ 	pi->mod_type = FW_PORT_MOD_TYPE_NA;
+diff --git a/drivers/net/ethernet/chelsio/cxgb4/t4fw_api.h b/drivers/net/ethernet/chelsio/cxgb4/t4fw_api.h
+index 57584ab..1d9b3e1 100644
+--- a/drivers/net/ethernet/chelsio/cxgb4/t4fw_api.h
++++ b/drivers/net/ethernet/chelsio/cxgb4/t4fw_api.h
+@@ -1253,6 +1253,7 @@ enum fw_params_param_dev {
+ 	FW_PARAMS_PARAM_DEV_HMA_SIZE	= 0x20,
+ 	FW_PARAMS_PARAM_DEV_RDMA_WRITE_WITH_IMM = 0x21,
+ 	FW_PARAMS_PARAM_DEV_RI_WRITE_CMPL_WR    = 0x24,
++	FW_PARAMS_PARAM_DEV_OPAQUE_VIID_SMT_EXTN = 0x27,
+ };
+ 
+ /*
+@@ -2109,6 +2110,19 @@ struct fw_vi_cmd {
+ #define FW_VI_CMD_FREE_V(x)	((x) << FW_VI_CMD_FREE_S)
+ #define FW_VI_CMD_FREE_F	FW_VI_CMD_FREE_V(1U)
+ 
++#define FW_VI_CMD_VFVLD_S	24
++#define FW_VI_CMD_VFVLD_M	0x1
++#define FW_VI_CMD_VFVLD_V(x)	((x) << FW_VI_CMD_VFVLD_S)
++#define FW_VI_CMD_VFVLD_G(x)	\
++	(((x) >> FW_VI_CMD_VFVLD_S) & FW_VI_CMD_VFVLD_M)
++#define FW_VI_CMD_VFVLD_F	FW_VI_CMD_VFVLD_V(1U)
++
++#define FW_VI_CMD_VIN_S		16
++#define FW_VI_CMD_VIN_M		0xff
++#define FW_VI_CMD_VIN_V(x)	((x) << FW_VI_CMD_VIN_S)
++#define FW_VI_CMD_VIN_G(x)	\
++	(((x) >> FW_VI_CMD_VIN_S) & FW_VI_CMD_VIN_M)
++
+ #define FW_VI_CMD_VIID_S	0
+ #define FW_VI_CMD_VIID_M	0xfff
+ #define FW_VI_CMD_VIID_V(x)	((x) << FW_VI_CMD_VIID_S)
+@@ -2182,6 +2196,12 @@ struct fw_vi_mac_cmd {
+ 	} u;
+ };
+ 
++#define FW_VI_MAC_CMD_SMTID_S		12
++#define FW_VI_MAC_CMD_SMTID_M		0xff
++#define FW_VI_MAC_CMD_SMTID_V(x)	((x) << FW_VI_MAC_CMD_SMTID_S)
++#define FW_VI_MAC_CMD_SMTID_G(x)	\
++	(((x) >> FW_VI_MAC_CMD_SMTID_S) & FW_VI_MAC_CMD_SMTID_M)
++
+ #define FW_VI_MAC_CMD_VIID_S	0
+ #define FW_VI_MAC_CMD_VIID_V(x)	((x) << FW_VI_MAC_CMD_VIID_S)
+ 
+diff --git a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
+index 064ef57..907dd87 100644
+--- a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
++++ b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
+@@ -1767,8 +1767,7 @@ static int init_act_open(struct cxgbi_sock *csk)
+ 		csk->mtu = dst_mtu(csk->dst);
+ 	cxgb4_best_mtu(lldi->mtus, csk->mtu, &csk->mss_idx);
+ 	csk->tx_chan = cxgb4_port_chan(ndev);
+-	csk->smac_idx = cxgb4_tp_smt_idx(lldi->adapter_type,
+-					 cxgb4_port_viid(ndev));
++	csk->smac_idx = ((struct port_info *)netdev_priv(ndev))->smt_idx;
+ 	step = lldi->ntxq / lldi->nchan;
+ 	csk->txq_idx = cxgb4_port_idx(ndev) * step;
+ 	step = lldi->nrxq / lldi->nchan;
+diff --git a/drivers/target/iscsi/cxgbit/cxgbit_cm.c b/drivers/target/iscsi/cxgbit/cxgbit_cm.c
+index 71888b9..0376d73 100644
+--- a/drivers/target/iscsi/cxgbit/cxgbit_cm.c
++++ b/drivers/target/iscsi/cxgbit/cxgbit_cm.c
+@@ -932,8 +932,8 @@ cxgbit_offload_init(struct cxgbit_sock *csk, int iptype, __u8 *peer_ip,
+ 			goto out;
+ 		csk->mtu = ndev->mtu;
+ 		csk->tx_chan = cxgb4_port_chan(ndev);
+-		csk->smac_idx = cxgb4_tp_smt_idx(cdev->lldi.adapter_type,
+-						 cxgb4_port_viid(ndev));
++		csk->smac_idx =
++			       ((struct port_info *)netdev_priv(ndev))->smt_idx;
+ 		step = cdev->lldi.ntxq /
+ 			cdev->lldi.nchan;
+ 		csk->txq_idx = cxgb4_port_idx(ndev) * step;
+@@ -968,8 +968,8 @@ cxgbit_offload_init(struct cxgbit_sock *csk, int iptype, __u8 *peer_ip,
+ 		port_id = cxgb4_port_idx(ndev);
+ 		csk->mtu = dst_mtu(dst);
+ 		csk->tx_chan = cxgb4_port_chan(ndev);
+-		csk->smac_idx = cxgb4_tp_smt_idx(cdev->lldi.adapter_type,
+-						 cxgb4_port_viid(ndev));
++		csk->smac_idx =
++			       ((struct port_info *)netdev_priv(ndev))->smt_idx;
+ 		step = cdev->lldi.ntxq /
+ 			cdev->lldi.nports;
+ 		csk->txq_idx = (port_id * step) +
+-- 
+2.1.0
