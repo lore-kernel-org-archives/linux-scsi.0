@@ -1,60 +1,79 @@
-From: "Theodore Y. Ts'o" <tytso@mit.edu>
-Subject: Re: [PATCH V2] SCSI: fix queue cleanup race before queue
- initialization is done
-Date: Wed, 21 Nov 2018 17:02:13 -0500
-Message-ID: <20181121220213.GK26006@thunk.org>
-References: <20181114082551.12141-1-ming.lei@redhat.com>
- <63c063ad-7d74-4268-bfd4-2de89908949e@kernel.dk>
- <4e24ace9-c83f-5311-5419-18f4a0fb5148@kernel.dk>
+From: Jan Harkes <jaharkes@cs.cmu.edu>
+Subject: Re: [PATCH v2] codafs: Fix build using bare-metal toolchain
+Date: Wed, 21 Nov 2018 17:48:59 -0500
+Message-ID: <308CF0BD-90AE-45D2-BAF9-D297A530B0F4@cs.cmu.edu>
+References: <20181030202713.26203-1-semen.protsenko@linaro.org> <CAKaJLVu0h5woVtN5=Mh38ajACBZZQ3JHfRhkjNrwMwYXHEG-NQ@mail.gmail.com> <CAHp75Vd-ydncUWQtc8ziLpCMJRFCvjV=ueKB0wRgn7W-pnV09Q@mail.gmail.com> <20181121181042.4gzuniz2vzjikpwc@cs.cmu.edu> <CAKaJLVs4MUws7sPPdDk7hnjZ+Z1V0V6bGt=eWn=gsF_B+yULeg@mail.gmail.com> <CAKaJLVvHZwJHu_uZuUDtCZrD7EKY-5xpGhNZN7cQ2M4Bz9osDA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <stable-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4e24ace9-c83f-5311-5419-18f4a0fb5148@kernel.dk>
-Sender: stable-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Ming Lei <ming.lei@redhat.com>, linux-block@vger.kernel.org, Andrew Jones <drjones@redhat.com>, Bart Van Assche <bart.vanassche@wdc.com>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, stable <stable@vger.kernel.org>, "jianchao . wang" <jianchao.w.wang@oracle.com>
+Content-Type: text/plain;
+ charset=utf-8
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAKaJLVvHZwJHu_uZuUDtCZrD7EKY-5xpGhNZN7cQ2M4Bz9osDA@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Sam Protsenko <semen.protsenko@linaro.org>
+Cc: hch@lst.de, Andrew Morton <akpm@linux-foundation.org>, kernel-janitors@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Praneeth Bajjuri <praneeth@ti.com>, Ruslan Bilovol <ruslan.bilovol@gmail.com>, Andy Shevchenko <andy.shevchenko@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Nov 21, 2018 at 02:47:35PM -0700, Jens Axboe wrote:
-> > Thanks applied, this bug was elusive but ever present in recent
-> > testing that we did internally, it's been a huge pain in the butt.
-> > The symptoms were usually a crash in blk_mq_get_driver_tag() with
-> > hctx->tags == NULL, or a crash inside deadline request insert off
-> > requeue.
-> 
-> I'm still hitting some weird crashes even with this applied, like
-> this one:
+That actually makes a lot of sense.
 
-FYI, there are a number of Ubuntu users running 4.19, 4.19.1, and
-4.19.2 which have been reporting file system corruption problems.
-They have a fix of configurations, but one of the things which is seem
-to be a common factor is they all have CONFIG_SCSI_MQ_DEFAULT
-disabled.  (Which also happens to be how I happen to be running my
-laptop, and I've noticed no problems.)
+Jan
 
-	https://bugzilla.kernel.org/show_bug.cgi?id=201685
-
-One user in particular reported that 4.19 worked fine, and 4.19.1 had
-fs corruptions (and there are no storage-related changes between 4.19
-and 4.19.1) --- but the one thing those two kernels had in common was
-his 4.19 build had SCSI_MQ_DEFAULT disabled, and his 4.19.1 build did
-*not* have SCSI_MQ_DEFAULT enabled.  This same user tried 4.19.3, and
-after two hours of heavy I/O, he's not seen a repeat, and
-interestingly, 4.19.3 has the backport mentioned on this thread.
-
-The weird thing is that it looked like the problem that was fixed by
-this commit would only show up at queue setup and teardown time.  Is
-that correct?  Is it possible that the bug fixed here would manifest
-as data corruptions on disk?  Or would only manifest as kernel
-BUG_ON's and/or crashes?
-
-One more thing.  I tried building a 4.20-rc2 based kernel with
-CONFIG_SCSI_MQ_DEFAULT=y, and I tried running gce-xfstests (which uses
-virtio-scsi) and I saw no failures.  So I don't have a clean repro of
-Kernel Bugzilla #201685, and at the moment I'm too chicken to enable
-CONFIG_SCSI_MQ_DEFAULT on my primary development laptop...
-
-Any thoughts/suggestions appreciated.
-
-						- Ted
+On November 21, 2018 2:39:03 PM EST, Sam Protsenko <semen.protsenko@linaro.org> wrote:
+>+ Jan Harkes back to "To:" list, slipped away somehow...
+>
+>On Wed, Nov 21, 2018 at 9:36 PM Sam Protsenko
+><semen.protsenko@linaro.org> wrote:
+>>
+>> On Wed, Nov 21, 2018 at 8:10 PM Jan Harkes <jaharkes@cs.cmu.edu>
+>wrote:
+>> >
+>> > On Wed, Nov 21, 2018 at 06:41:13PM +0200, Andy Shevchenko wrote:
+>> > > I'm not sure how you managed to miss people in this list (perhaps
+>by
+>> > > default you have suppress all Cc in your Git configuration), but
+>I
+>> > > guess we may gently ask Christoph to apply this in case Jan will
+>not
+>> > > appear.
+>> >
+>> > You have got to give me a little more than 10 minutes to respond
+>before
+>> > assuming that I would not appear... I don't think I've ignored any
+>> > previous emails on this subject and the only issues has been some
+>people
+>> > not receiving my responses for unknown reasons (agressive spam
+>filter?).
+>> >
+>> > I have no problem with this patch, have it sitting with some other
+>> > non-urgent patches and in case it doesn't appear upstream it should
+>> > piggyback with whatever I have to send.
+>> >
+>>
+>> Thanks, Jan, really appreciate it. We need this patch to fix our
+>tests
+>> with allmodconfig configuration (in Linaro CI loops).
+>>
+>> > I still don't know why the bare-metal toolchain couldn't just add a
+>> > -D__linux__.  I understand that this define is expected to be
+>always
+>> > present while compiling kernel headers so that there is no good
+>reason
+>> > to even bother testing for it, which is why I have no issue with
+>the
+>> > patch. But it seems it would make your life a lot easier if you had
+>it
+>> > defined.
+>> >
+>>
+>> As I understand it, from toolchain's point of view, if __linux__ is
+>> defined then it means that the program is being built *for* Linux
+>> (i.e. we can use Linux specific features, ABI, like syscalls).
+>> Checking this definition can make sense in uapi headers, but in
+>kernel
+>> code we shouldn't use it (as kernel is baremetal program and not
+>> compiled for some OS). I presume that's why __linux__ is not defined
+>> in bare-metal toolchains (as those don't provide Linux specific
+>> features, libc, etc).
+>>
+>> > Jan
+>> >
