@@ -1,62 +1,99 @@
-From: Sam Protsenko <semen.protsenko@linaro.org>
-Subject: Re: [PATCH v2] codafs: Fix build using bare-metal toolchain
-Date: Wed, 21 Nov 2018 21:39:03 +0200
-Message-ID: <CAKaJLVvHZwJHu_uZuUDtCZrD7EKY-5xpGhNZN7cQ2M4Bz9osDA@mail.gmail.com>
-References: <20181030202713.26203-1-semen.protsenko@linaro.org>
- <CAKaJLVu0h5woVtN5=Mh38ajACBZZQ3JHfRhkjNrwMwYXHEG-NQ@mail.gmail.com>
- <CAHp75Vd-ydncUWQtc8ziLpCMJRFCvjV=ueKB0wRgn7W-pnV09Q@mail.gmail.com>
- <20181121181042.4gzuniz2vzjikpwc@cs.cmu.edu> <CAKaJLVs4MUws7sPPdDk7hnjZ+Z1V0V6bGt=eWn=gsF_B+yULeg@mail.gmail.com>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH V2] SCSI: fix queue cleanup race before queue
+ initialization is done
+Date: Wed, 21 Nov 2018 14:47:35 -0700
+Message-ID: <4e24ace9-c83f-5311-5419-18f4a0fb5148@kernel.dk>
+References: <20181114082551.12141-1-ming.lei@redhat.com>
+ <63c063ad-7d74-4268-bfd4-2de89908949e@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAKaJLVs4MUws7sPPdDk7hnjZ+Z1V0V6bGt=eWn=gsF_B+yULeg@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jan Harkes <jaharkes@cs.cmu.edu>
-Cc: hch@lst.de, Andrew Morton <akpm@linux-foundation.org>, kernel-janitors@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Praneeth Bajjuri <praneeth@ti.com>, Ruslan Bilovol <ruslan.bilovol@gmail.com>, Andy Shevchenko <andy.shevchenko@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <63c063ad-7d74-4268-bfd4-2de89908949e@kernel.dk>
+Content-Language: en-US
+Sender: stable-owner@vger.kernel.org
+To: Ming Lei <ming.lei@redhat.com>
+Cc: linux-block@vger.kernel.org, Andrew Jones <drjones@redhat.com>, Bart Van Assche <bart.vanassche@wdc.com>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, stable <stable@vger.kernel.org>, "jianchao . wang" <jianchao.w.wang@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-+ Jan Harkes back to "To:" list, slipped away somehow...
+On 11/14/18 8:20 AM, Jens Axboe wrote:
+> On 11/14/18 1:25 AM, Ming Lei wrote:
+>> c2856ae2f315d ("blk-mq: quiesce queue before freeing queue") has
+>> already fixed this race, however the implied synchronize_rcu()
+>> in blk_mq_quiesce_queue() can slow down LUN probe a lot, so caused
+>> performance regression.
+>>
+>> Then 1311326cf4755c7 ("blk-mq: avoid to synchronize rcu inside blk_cleanup_queue()")
+>> tried to quiesce queue for avoiding unnecessary synchronize_rcu()
+>> only when queue initialization is done, because it is usual to see
+>> lots of inexistent LUNs which need to be probed.
+>>
+>> However, turns out it isn't safe to quiesce queue only when queue
+>> initialization is done. Because when one SCSI command is completed,
+>> the user of sending command can be waken up immediately, then the
+>> scsi device may be removed, meantime the run queue in scsi_end_request()
+>> is still in-progress, so kernel panic can be caused.
+>>
+>> In Red Hat QE lab, there are several reports about this kind of kernel
+>> panic triggered during kernel booting.
+>>
+>> This patch tries to address the issue by grabing one queue usage
+>> counter during freeing one request and the following run queue.
+> 
+> Thanks applied, this bug was elusive but ever present in recent
+> testing that we did internally, it's been a huge pain in the butt.
+> The symptoms were usually a crash in blk_mq_get_driver_tag() with
+> hctx->tags == NULL, or a crash inside deadline request insert off
+> requeue.
 
-On Wed, Nov 21, 2018 at 9:36 PM Sam Protsenko
-<semen.protsenko@linaro.org> wrote:
->
-> On Wed, Nov 21, 2018 at 8:10 PM Jan Harkes <jaharkes@cs.cmu.edu> wrote:
-> >
-> > On Wed, Nov 21, 2018 at 06:41:13PM +0200, Andy Shevchenko wrote:
-> > > I'm not sure how you managed to miss people in this list (perhaps by
-> > > default you have suppress all Cc in your Git configuration), but I
-> > > guess we may gently ask Christoph to apply this in case Jan will not
-> > > appear.
-> >
-> > You have got to give me a little more than 10 minutes to respond before
-> > assuming that I would not appear... I don't think I've ignored any
-> > previous emails on this subject and the only issues has been some people
-> > not receiving my responses for unknown reasons (agressive spam filter?).
-> >
-> > I have no problem with this patch, have it sitting with some other
-> > non-urgent patches and in case it doesn't appear upstream it should
-> > piggyback with whatever I have to send.
-> >
->
-> Thanks, Jan, really appreciate it. We need this patch to fix our tests
-> with allmodconfig configuration (in Linaro CI loops).
->
-> > I still don't know why the bare-metal toolchain couldn't just add a
-> > -D__linux__.  I understand that this define is expected to be always
-> > present while compiling kernel headers so that there is no good reason
-> > to even bother testing for it, which is why I have no issue with the
-> > patch. But it seems it would make your life a lot easier if you had it
-> > defined.
-> >
->
-> As I understand it, from toolchain's point of view, if __linux__ is
-> defined then it means that the program is being built *for* Linux
-> (i.e. we can use Linux specific features, ABI, like syscalls).
-> Checking this definition can make sense in uapi headers, but in kernel
-> code we shouldn't use it (as kernel is baremetal program and not
-> compiled for some OS). I presume that's why __linux__ is not defined
-> in bare-metal toolchains (as those don't provide Linux specific
-> features, libc, etc).
->
-> > Jan
-> >
+I'm still hitting some weird crashes even with this applied, like
+this one:
+
+ BUG: unable to handle kernel NULL pointer dereference at 0000000000000148      
+ PGD 0 P4D 0.                                                                   
+ Oops: 0000 [#1] SMP PTI                                                        
+ CPU: 37 PID: 763 Comm: kworker/37:1H Not tainted 4.20.0-rc3-00649-ge64d9a554a91-dirty #14
+ Hardware name: Wiwynn Leopard-Orv2/Leopard-DDR BW, BIOS LBM08   03/03/2017     
+ Workqueue: kblockd blk_mq_run_work_fn                                          
+ RIP: 0010:blk_mq_get_driver_tag+0x81/0x120                                     
+ Code: 24 10 48 89 7c 24 20 74 21 83 fa ff 0f 95 c0 48 8b 4c 24 28 65 48 33 0c 25 28 00 00 00 0f 85 96 00 00 00 48 83 c4 30 5b 5d c3 <48> 8b 87 48 01 00 00 8b 40 04 39 43 20 72 37 f6 87 b0 00 00 00 02
+ RSP: 0018:ffffc90004aabd30 EFLAGS: 00010246                                    
+ RAX: 0000000000000003 RBX: ffff888465ea1300 RCX: ffffc90004aabde8              
+ RDX: 00000000ffffffff RSI: ffffc90004aabde8 RDI: 0000000000000000              
+ RBP: 0000000000000000 R08: ffff888465ea1348 R09: 0000000000000000              
+ R10: 0000000000001000 R11: 00000000ffffffff R12: ffff888465ea1300              
+ R13: 0000000000000000 R14: ffff888465ea1348 R15: ffff888465d10000              
+ FS:  0000000000000000(0000) GS:ffff88846f9c0000(0000) knlGS:0000000000000000   
+ CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033                              
+ CR2: 0000000000000148 CR3: 000000000220a003 CR4: 00000000003606e0              
+ DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000              
+ DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400              
+ Call Trace:                                                                    
+  blk_mq_dispatch_rq_list+0xec/0x480                                            
+  ? elv_rb_del+0x11/0x30                                                        
+  blk_mq_do_dispatch_sched+0x6e/0xf0                                            
+  blk_mq_sched_dispatch_requests+0xfa/0x170                                     
+  __blk_mq_run_hw_queue+0x5f/0xe0                                               
+  process_one_work+0x154/0x350                                                  
+  worker_thread+0x46/0x3c0                                                      
+  kthread+0xf5/0x130                                                            
+  ? process_one_work+0x350/0x350                                                
+  ? kthread_destroy_worker+0x50/0x50                                            
+  ret_from_fork+0x1f/0x30                                                       
+ Modules linked in: sb_edac x86_pkg_temp_thermal intel_powerclamp coretemp kvm_intel kvm switchtec irqbypass iTCO_wdt iTCO_vendor_support efivars cdc_ether usbnet mii cdc_acm i2c_i801 lpc_ich mfd_core ipmi_si ipmi_devintf ipmi_msghandler acpi_cpufreq button sch_fq_codel nfsd nfs_acl lockd grace auth_rpcgss oid_registry sunrpc nvme nvme_core fuse sg loop efivarfs autofs4
+ CR2: 0000000000000148                                                          
+ ---[ end trace 340a1fb996df1b9b ]---                                           
+ RIP: 0010:blk_mq_get_driver_tag+0x81/0x120                                     
+ Code: 24 10 48 89 7c 24 20 74 21 83 fa ff 0f 95 c0 48 8b 4c 24 28 65 48 33 0c 25 28 00 00 00 0f 85 96 00 00 00 48 83 c4 30 5b 5d c3 <48> 8b 87 48 01 00 00 8b 40 04 39 43 20 72 37 f6 87 b0 00 00 00 02
+
+which doesn't look that great... Are we sure this patch closed the window
+completely?
+
+One thing I'm pondering is we're running the queue async, so the
+ref get will protect whatever blk_mq_run_hw_queues() does, but
+what is preventing the queue from going away as soon as we've
+returned from that call? Meanwhile we still have the work item
+queued up, and it'll run, and go boom like above.
+
+-- 
+Jens Axboe
