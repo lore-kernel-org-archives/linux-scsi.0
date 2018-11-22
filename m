@@ -1,24 +1,46 @@
-From: pr-tracker-bot@kernel.org
-Subject: Re: [GIT PULL] SCSI fixes for 4.20-rc3
-Date: Thu, 22 Nov 2018 17:05:01 +0000
-Message-ID: <20181122170501.15903.6620.pr-tracker-bot@pdx-korg-gitolite-1.ci.codeaurora.org>
-References: <1542864853.23253.6.camel@HansenPartnership.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1542864853.23253.6.camel@HansenPartnership.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH net-next] cxgb4: use new fw interface to get the VIN
+ and smt index
+Date: Thu, 22 Nov 2018 10:53:49 -0800 (PST)
+Message-ID: <20181122.105349.1035544140286401266.davem@davemloft.net>
+References: <1542787824-4731-1-git-send-email-ganeshgr@chelsio.com>
+        <20181122024624.GA28494@ziepe.ca>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <20181122024624.GA28494@ziepe.ca>
+Sender: netdev-owner@vger.kernel.org
+To: jgg@ziepe.ca
+Cc: ganeshgr@chelsio.com, netdev@vger.kernel.org, nirranjan@chelsio.com, indranil@chelsio.com, dt@chelsio.com, linux-rdma@vger.kernel.org, swise@opengridcomputing.com, linux-crypto@vger.kernel.org, atul.gupta@chelsio.com, linux-scsi@vger.kernel.org, varun@chelsio.com, santosh@chelsio.com
 List-Id: linux-scsi@vger.kernel.org
 
-The pull request you sent on Wed, 21 Nov 2018 21:34:13 -0800:
+From: Jason Gunthorpe <jgg@ziepe.ca>
+Date: Wed, 21 Nov 2018 19:46:24 -0700
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+> On Wed, Nov 21, 2018 at 01:40:24PM +0530, Ganesh Goudar wrote:
+>> From: Santosh Rastapur <santosh@chelsio.com>
+>> 
+>> If the fw supports returning VIN/VIVLD in FW_VI_CMD save it
+>> in port_info structure else retrieve these from viid and save
+>> them  in port_info structure. Do the same for smt_idx from
+>> FW_VI_MAC_CMD
+>> 
+>> Signed-off-by: Santosh Rastapur <santosh@chelsio.com>
+>> Signed-off-by: Ganesh Goudar <ganeshgr@chelsio.com>
+>>  drivers/crypto/chelsio/chtls/chtls_cm.c         |  3 +-
+>>  drivers/infiniband/hw/cxgb4/cm.c                |  6 +--
+>>  drivers/net/ethernet/chelsio/cxgb4/cxgb4.h      | 12 ++++-
+>>  drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c | 58 ++++++++++++-------------
+>>  drivers/net/ethernet/chelsio/cxgb4/l2t.c        | 13 +++---
+>>  drivers/net/ethernet/chelsio/cxgb4/t4_hw.c      | 46 ++++++++++++++++++--
+>>  drivers/net/ethernet/chelsio/cxgb4/t4fw_api.h   | 20 +++++++++
+>>  drivers/scsi/cxgbi/cxgb4i/cxgb4i.c              |  3 +-
+>>  drivers/target/iscsi/cxgbit/cxgbit_cm.c         |  8 ++--
+>>  9 files changed, 114 insertions(+), 55 deletions(-)
+> 
+> Applied to for-next, but please try to write better commit messages in
+> future, explain what benifit your change is bringing.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/b84b6345e3827ab616946b52f46e95179657b596
-
-Thank you!
-
--- 
-Deet-doot-dot, I am a bot.
-https://korg.wiki.kernel.org/userdoc/prtracker
+The subject line indicates this is targetting my net-next tree, therefore
+why did you apply it to your's?
