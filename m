@@ -1,24 +1,25 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi/aic94xx/aic94xx_hwi.c: Use dma_pool_zalloc
-Date: Wed, 21 Nov 2018 22:06:29 -0500
-Message-ID: <yq18t1l95fu.fsf@oracle.com>
-References: <20181101041909.GA3241@jordon-HP-15-Notebook-PC>
+Subject: Re: [PATCH] cxgb4i: fix thermal configuration dependencies
+Date: Wed, 21 Nov 2018 22:09:57 -0500
+Message-ID: <yq14lc995a2.fsf@oracle.com>
+References: <20181102153531.1583478-1-arnd@arndb.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20181101041909.GA3241@jordon-HP-15-Notebook-PC> (Souptick
-        Joarder's message of "Thu, 1 Nov 2018 09:49:09 +0530")
+In-Reply-To: <20181102153531.1583478-1-arnd@arndb.de> (Arnd Bergmann's message
+        of "Fri, 2 Nov 2018 16:35:23 +0100")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Souptick Joarder <jrdr.linux@gmail.com>
-Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, keescook@chromium.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, brajeswar.linux@gmail.com, sabyasachi.linux@gmail.com
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Karen Xie <kxie@chelsio.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Souptick,
+Arnd,
 
-> Replaced dma_pool_alloc + memset with dma_pool_zalloc
+> I fixed a bug by adding a dependency in the network driver, but that
+> fix caused a related bug in the SCSI driver:
 
-Applied to 4.21/scsi-queue, thanks.
+Applied to 4.21/scsi-queue, thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
