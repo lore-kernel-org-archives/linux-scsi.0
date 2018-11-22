@@ -1,10 +1,10 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.19 09/36] scsi: NCR5380: Return false instead of NULL
-Date: Thu, 22 Nov 2018 14:52:13 -0500
-Message-ID: <20181122195240.13123-9-sashal@kernel.org>
-References: <20181122195240.13123-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 02/21] scsi: NCR5380: Return false instead of NULL
+Date: Thu, 22 Nov 2018 14:54:33 -0500
+Message-ID: <20181122195452.13520-2-sashal@kernel.org>
+References: <20181122195452.13520-1-sashal@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20181122195240.13123-1-sashal@kernel.org>
+In-Reply-To: <20181122195452.13520-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: stable@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc: Finn Thain <fthain@telegraphics.com.au>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
@@ -25,7 +25,7 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
-index 90ea0f5d9bdb..fbcbd6db371f 100644
+index 777b0222d021..f2783441b830 100644
 --- a/drivers/scsi/NCR5380.c
 +++ b/drivers/scsi/NCR5380.c
 @@ -1190,7 +1190,7 @@ static struct scsi_cmnd *NCR5380_select(struct Scsi_Host *instance,
