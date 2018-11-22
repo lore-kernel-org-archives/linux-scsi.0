@@ -1,25 +1,27 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] cxgb4i: fix thermal configuration dependencies
-Date: Wed, 21 Nov 2018 22:09:57 -0500
-Message-ID: <yq14lc995a2.fsf@oracle.com>
-References: <20181102153531.1583478-1-arnd@arndb.de>
+Subject: Re: [PATCH] scsi: lpfc: fix block guard enablement on SLI3 adapters
+Date: Wed, 21 Nov 2018 22:28:15 -0500
+Message-ID: <yq11s7d7pv4.fsf@oracle.com>
+References: <20181112085837.24450-1-mwilck@suse.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20181102153531.1583478-1-arnd@arndb.de> (Arnd Bergmann's message
-        of "Fri, 2 Nov 2018 16:35:23 +0100")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Karen Xie <kxie@chelsio.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20181112085837.24450-1-mwilck@suse.com> (Martin Wilck's message
+        of "Mon, 12 Nov 2018 09:58:37 +0100")
+Sender: stable-owner@vger.kernel.org
+To: James Smart <james.smart@broadcom.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Martin Wilck <mwilck@suse.com>, James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, Hannes Reinecke <hare@suse.de>, David Bond <dbond@suse.com>, linux-scsi@vger.kernel.org, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Arnd,
+> Since f44ac12f1dcc, BG enablement is tracked with the
+> LPFC_SLI3_BG_ENABLED bit, which is set in lpfc_get_cfgparam before
+> lpfc_sli_config_sli_port() is called. The bit shouldn't be cleared
+> before checking the feature.
 
-> I fixed a bug by adding a dependency in the network driver, but that
-> fix caused a related bug in the SCSI driver:
+James, please review.
 
-Applied to 4.21/scsi-queue, thanks!
+Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
