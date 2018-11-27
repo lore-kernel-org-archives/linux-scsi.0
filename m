@@ -1,136 +1,60 @@
-From: Boaz Harrosh <ooo@electrozaur.com>
-Subject: Re: remove exofs, the T10 OSD code and block/scsi bidi support V3
-Date: Mon, 26 Nov 2018 19:11:10 +0200
-Message-ID: <4f4b6aff-6726-c500-e3e4-f8b73d641851@electrozaur.com>
-References: <20181111133211.13926-1-hch@lst.de>
+From: Lee Duncan <lduncan-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH] libiscsi: Fix NULL pointer dereference in
+ iscsi_eh_session_reset
+Date: Mon, 26 Nov 2018 16:57:59 -0800
+Message-ID: <96ce0aea-42a3-fec2-2ba8-cf1076e2d0da@suse.com>
+References: <1542763365-22253-1-git-send-email-fred.herard@oracle.com>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20181111133211.13926-1-hch@lst.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, axboe@kernel.dk, martin.petersen@oracle.com
-Cc: Johannes Thumshirn <jthumshirn@suse.de>, Benjamin Block <bblock@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <open-iscsi+bncBD54HHNYIIIJZLPS34CRUBHXWAWHG-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+In-Reply-To: <1542763365-22253-1-git-send-email-fred.herard-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Content-Language: en-US
+List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <https://groups.google.com/group/open-iscsi
+List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
+ <https://groups.google.com/group/open-iscsi/subscribe>
+To: fred.herard-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 11/11/18 15:32, Christoph Hellwig wrote:
-> The only real user of the T10 OSD protocol, the pNFS object layout
-> driver never went to the point of having shipping products, and we
-> removed it 1.5 years ago.  Exofs is just a simple example without
-> real life users.
+On 11/20/18 5:22 PM, fred.herard-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org wrote:
+> From: Fred Herard <fred.herard-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+> 
+> This commit addresses NULL pointer dereference in iscsi_eh_session_reset.
+> Reference should not be made to session->leadconn when session->state
+> is set to ISCSI_STATE_TERMINATE.
+> 
+> Signed-off-by: Fred Herard <fred.herard-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+> Reviewed-by: Konrad Rzeszutek Wilk <konrad.wilk-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+> ---
+>  drivers/scsi/libiscsi.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+> index 088e903..21d2a6d 100644
+> --- a/drivers/scsi/libiscsi.c
+> +++ b/drivers/scsi/libiscsi.c
+> @@ -2426,8 +2426,8 @@ int iscsi_eh_session_reset(struct scsi_cmnd *sc)
+>  failed:
+>  		ISCSI_DBG_EH(session,
+>  			     "failing session reset: Could not log back into "
+> -			     "%s, %s [age %d]\n", session->targetname,
+> -			     conn->persistent_address, session->age);
+> +			     "%s [age %d]\n", session->targetname,
+> +			     session->age);
+>  		spin_unlock_bh(&session->frwd_lock);
+>  		mutex_unlock(&session->eh_mutex);
+>  		return FAILED;
 > 
 
-You have failed to say what is your motivation for this patchset? What
-is it you are trying to fix/improve.
+Reviewed-by: Lee Duncan <lduncan-IBi9RG/b67k@public.gmane.org>
 
-For the sake of "not used much" I fail to see the risk taking of
-this removal.
-
-> The code has been mostly unmaintained for years and is getting in the
-> way of block / SCSI changes, so I think it's finally time to drop it.
-> 
-> Quote from Boaz:
-> 
-> "As I said then. It is used in Universities for studies and experiments.
-> Every once in a while. I get an email with questions and reports.
-> 
-> But yes feel free to remove the all thing!!
-> 
-> I guess I can put it up on github. In a public tree.
-> 
-> Just that I will need to forward port it myself, til now you guys
-> been doing this for me ;-)"
-> 
-
-Yes I wrote that for V1. But I wrote the *opposite* thing in a later mail.
-Which nullifies this statement above. So please remove this quote in future
-submits.
-
-Here is what I wrote later as response of V2 of this set:
-
-<Re: remove exofs and the T10 OSD code V2>
-
-I think I'm changing my mind about this.
-
-Because of two reasons:
-
-One: I see 3 thousands bit-rots in the Kernel and particularly SCSI drivers
-that are much older and fat-and-ugliness consuming then the clean osd
-stack. For example the all ISA bus and ZONE_DMA stuff.
-
-Two: I have offered many times, every time this came up. That if
-anyone has a major (or even minor) change to the block and/or scsi layers
-that he/she has done. And that now breaks the compilation/run time of
-OSD or exofs.
-  I'm personally willing to spend my weekends and fix it myself. Send me
-  a URL of the tree with the work done, and I will send the patches needed
-  to revitalize OSD/exofs as part of that change set.
-
-I have never received any such requests to date.
-
-So I would please like to protest on two of Christoph's statements above.
-
-"The code has been mostly unmaintained for years and is getting in the
- way of block / SCSI changes"
-
-1. What does "maintained" means? I have for all these years been immediately
-   responsive to any inquiries and patches to the code in question.
-   And am listed as MAINTAINER of this code.
-2. I have regularly, for ever, every kernel release around the RC3-RC4
-   time frame, compiled and ran my almost automatic setup and made sure
-   the things still run as expected (No regressions).
-
-So Yes the code has not seen any new fixtures for years. But it is regularly
-tested and proven to work, on latest kernel. So it fails the definition 
-of a "bit rot"
-
-Christoph you've been saying for so long "getting in the way of block/SCSI
-changes". And every time and again this time please tell me, you never answered
-before. What are these changes you want to make? can I please help?
-
-Send me any tree where exofs/osd compilation is broken and I will personally
-fix it in "ONE WEEK" time.
-
-(If compilation is fine but you know runtime will break, its nice to have an
- heads up, but if not my automatic system will detect it anyway)
-
-Lets say that if in the FUTURE a change-set is submitted that breaks OSD/EXOFS
-compilation, and I failed to respond with a fix within "ONE WEEK". Then
-this goes in as part of that change-set. And not with the argument of
-"Not used, not maintained" - But as "Breaks compilation of the following changes"
-I promise I will gladly ACK it then.
-
-So for now. A personal NACK from me on the grounds that. You never told me
-why / what this is breaking.
-
-Thanks
-Boaz
-
-</Re: remove exofs and the T10 OSD code V2>
-
-> Now the last time this caused a bit of a stir, but still no actual users,
-> not even for SG_IO passthrough commands.  So here we go again, this time
-> including removing everything in the scsi and block layer supporting it,
-> and thus shrinking struct request.
-> 
-
-Again. T10-OSD or not. Bidi is currently actively used. By Linus rules
-You are not allowed to remove it.
-
-Two use paths:
-1. Management CDBS of private vendors yes via iscsi. virt_io and usb-scsi
-2. Target mode support of WRITE-RETURN-XOR, and COMPARE_AND_WRITE
-
----
-You guys should do what you feel best. Even not answering my questions and
-of course not agreeing with my advise, .i.e about breaking people's setups.
-
-But please remove the wrong quote from me. Please quote my objection
-of the matter. (pretty please because you may surly ignore that request as
-well)
-
-[I am not fighting about this at all. Please do what you need to do.
- Just want to set the record strait that's all]
-
-Cheers :-)
-Boaz
+-- 
+You received this message because you are subscribed to the Google Groups "open-iscsi" group.
+To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+Visit this group at https://groups.google.com/group/open-iscsi.
+For more options, visit https://groups.google.com/d/optout.
