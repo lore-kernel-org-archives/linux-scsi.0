@@ -1,42 +1,53 @@
-From: James Smart <james.smart@broadcom.com>
-Subject: Re: [PATCH] scsi: lpfc: fix block guard enablement on SLI3 adapters
-Date: Tue, 27 Nov 2018 09:12:21 -0800
-Message-ID: <be0d06ae-6860-c172-604b-25a1d1c1183c@broadcom.com>
-References: <20181112085837.24450-1-mwilck@suse.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20181112085837.24450-1-mwilck@suse.com>
-Content-Language: en-US
-Sender: stable-owner@vger.kernel.org
-To: Martin Wilck <mwilck@suse.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>
-Cc: Hannes Reinecke <hare@suse.de>, David Bond <dbond@suse.com>, linux-scsi@vger.kernel.org, stable@vger.kernel.org
+From: Cathy Avery <cavery@redhat.com>
+Subject: [PATCH] scsi: vmw_pscsi: Rearrange code to avoid multiple calls to free_irq during unload
+Date: Tue, 27 Nov 2018 14:28:53 -0500
+Message-ID: <1543346933-440-1-git-send-email-cavery@redhat.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hch@lst.de, jgill@vmware.com
+Cc: emilne@redhat.com, devel@linuxdriverproject.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+Currently pvscsi_remove calls free_irq more than once as
+pvscsi_release_resources and __pvscsi_shutdown both call
+pvscsi_shutdown_intr. This results in a 'Trying to free
+already-free IRQ' warning and stack trace. To solve the problem
+pvscsi_shutdown_intr has been moved out of pvscsi_release_resources.
 
+Signed-off-by: Cathy Avery <cavery@redhat.com>
+Reviewed-by: Ewan D. Milne <emilne@redhat.com>
+---
+ drivers/scsi/vmw_pvscsi.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-On 11/12/2018 12:58 AM, Martin Wilck wrote:
-> Since f44ac12f1dcc, BG enablement is tracked with the
-> LPFC_SLI3_BG_ENABLED bit, which is set in lpfc_get_cfgparam
-> before lpfc_sli_config_sli_port() is called. The bit
-> shouldn't be cleared before checking the feature.
-> Based on problem analysis by David Bond.
->
-> Fixes: f44ac12f1dcc "scsi: lpfc: Memory allocation error during driver start-up on power8"
-> Tested-by: David Bond <dbond@suse.com>
-> Signed-off-by: Martin Wilck <mwilck@suse.com>
-> Cc: stable@vger.kernel.org # 4.17.x
-> Cc: stable@vger.kernel.org # 4.18.x
-> Cc: stable@vger.kernel.org # 4.19.x
-> ---
->   drivers/scsi/lpfc/lpfc_init.c | 6 +++++-
->   drivers/scsi/lpfc/lpfc_sli.c  | 1 -
->   2 files changed, 5 insertions(+), 2 deletions(-)
->
->
-thanks
-
-Signed-off-by:  James Smart <jsmart2021@gmail.com>
-
--- james
+diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
+index 6e49102..0d6b2a8 100644
+--- a/drivers/scsi/vmw_pvscsi.c
++++ b/drivers/scsi/vmw_pvscsi.c
+@@ -1202,8 +1202,6 @@ static void pvscsi_shutdown_intr(struct pvscsi_adapter *adapter)
+ 
+ static void pvscsi_release_resources(struct pvscsi_adapter *adapter)
+ {
+-	pvscsi_shutdown_intr(adapter);
+-
+ 	if (adapter->workqueue)
+ 		destroy_workqueue(adapter->workqueue);
+ 
+@@ -1534,6 +1532,7 @@ static int pvscsi_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ out_reset_adapter:
+ 	ll_adapter_reset(adapter);
+ out_release_resources:
++	pvscsi_shutdown_intr(adapter);
+ 	pvscsi_release_resources(adapter);
+ 	scsi_host_put(host);
+ out_disable_device:
+@@ -1542,6 +1541,7 @@ static int pvscsi_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	return error;
+ 
+ out_release_resources_and_disable:
++	pvscsi_shutdown_intr(adapter);
+ 	pvscsi_release_resources(adapter);
+ 	goto out_disable_device;
+ }
+-- 
+2.5.5
