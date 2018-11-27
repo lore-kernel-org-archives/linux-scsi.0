@@ -1,53 +1,42 @@
-From: Cathy Avery <cavery@redhat.com>
-Subject: [PATCH] scsi: vmw_pscsi: Rearrange code to avoid multiple calls to free_irq during unload
-Date: Tue, 27 Nov 2018 14:28:53 -0500
-Message-ID: <1543346933-440-1-git-send-email-cavery@redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hch@lst.de, jgill@vmware.com
-Cc: emilne@redhat.com, devel@linuxdriverproject.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: Re: [PATCH] scsi: vmw_pscsi: Rearrange code to avoid multiple calls
+ to free_irq during unload
+Date: Tue, 27 Nov 2018 23:12:23 +0300
+Message-ID: <20181127201222.GA3095@unbuntlaptop>
+References: <1543346933-440-1-git-send-email-cavery@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+Content-Disposition: inline
+In-Reply-To: <1543346933-440-1-git-send-email-cavery@redhat.com>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: Cathy Avery <cavery@redhat.com>
+Cc: jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, martin.petersen@oracle.com, linux-kernel@vger.kernel.org, emilne@redhat.com, jgill@vmware.com, devel@linuxdriverproject.org, hch@lst.de
 List-Id: linux-scsi@vger.kernel.org
 
-Currently pvscsi_remove calls free_irq more than once as
-pvscsi_release_resources and __pvscsi_shutdown both call
-pvscsi_shutdown_intr. This results in a 'Trying to free
-already-free IRQ' warning and stack trace. To solve the problem
-pvscsi_shutdown_intr has been moved out of pvscsi_release_resources.
+On Tue, Nov 27, 2018 at 02:28:53PM -0500, Cathy Avery wrote:
+> Currently pvscsi_remove calls free_irq more than once as
+> pvscsi_release_resources and __pvscsi_shutdown both call
+> pvscsi_shutdown_intr. This results in a 'Trying to free
+> already-free IRQ' warning and stack trace. To solve the problem
+> pvscsi_shutdown_intr has been moved out of pvscsi_release_resources.
+> 
+> Signed-off-by: Cathy Avery <cavery@redhat.com>
+> Reviewed-by: Ewan D. Milne <emilne@redhat.com>
 
-Signed-off-by: Cathy Avery <cavery@redhat.com>
-Reviewed-by: Ewan D. Milne <emilne@redhat.com>
----
- drivers/scsi/vmw_pvscsi.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+That bug has been there since the driver was introduced in 2009.  It's
+so amazing that no one has fixed it until now...
 
-diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
-index 6e49102..0d6b2a8 100644
---- a/drivers/scsi/vmw_pvscsi.c
-+++ b/drivers/scsi/vmw_pvscsi.c
-@@ -1202,8 +1202,6 @@ static void pvscsi_shutdown_intr(struct pvscsi_adapter *adapter)
- 
- static void pvscsi_release_resources(struct pvscsi_adapter *adapter)
- {
--	pvscsi_shutdown_intr(adapter);
--
- 	if (adapter->workqueue)
- 		destroy_workqueue(adapter->workqueue);
- 
-@@ -1534,6 +1532,7 @@ static int pvscsi_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- out_reset_adapter:
- 	ll_adapter_reset(adapter);
- out_release_resources:
-+	pvscsi_shutdown_intr(adapter);
- 	pvscsi_release_resources(adapter);
- 	scsi_host_put(host);
- out_disable_device:
-@@ -1542,6 +1541,7 @@ static int pvscsi_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	return error;
- 
- out_release_resources_and_disable:
-+	pvscsi_shutdown_intr(adapter);
- 	pvscsi_release_resources(adapter);
- 	goto out_disable_device;
- }
--- 
-2.5.5
+Reviewed-by: Dan Carpenter <dan.carpenter@oracle.com>
+
+regards,
+dan carpenter
