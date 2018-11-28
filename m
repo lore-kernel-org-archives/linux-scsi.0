@@ -1,7 +1,8 @@
 From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: [PATCH 16/41] scsi: imm: mark expected switch fall-throughs
-Date: Tue, 27 Nov 2018 22:29:48 -0600
-Message-ID: <42e3f9f751b662b7f0e4e763aa880bd752511c60.1543374820.git.gustavo@embeddedor.com>
+Subject: [PATCH 21/41] scsi: libfc: fc_rport: Mark expected switch
+ fall-through
+Date: Tue, 27 Nov 2018 22:30:55 -0600
+Message-ID: <1713e55b2fa29809530bc694c37d9cadb22c6f98.1543374820.git.gustavo@embeddedor.com>
 References: <cover.1543374820.git.gustavo@embeddedor.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -9,115 +10,29 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
 In-Reply-To: <cover.1543374820.git.gustavo@embeddedor.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+To: Johannes Thumshirn <jth@kernel.org>
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Gustavo A. R. Silva" <gustavo@embeddedor.com>
 List-Id: linux-scsi@vger.kernel.org
 
 In preparation to enabling -Wimplicit-fallthrough, mark switch cases
 where we are expecting to fall through.
 
-Notice that, in this particular case, I placed all the "Phase N - ..."
-comments on the same line as its corresponding switch case. The same
-way in which similar comments appear in drivers/scsi/ppa.c. This makes
-it possible to place the "fall through" annotations at the bottom of
-each switch case, which is what GCC is expecting to find.
-
 Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 ---
- drivers/scsi/imm.c | 33 +++++++++++++++++----------------
- 1 file changed, 17 insertions(+), 16 deletions(-)
+ drivers/scsi/libfc/fc_rport.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/imm.c b/drivers/scsi/imm.c
-index 8c6627bc8a39..629e0bc70d3e 100644
---- a/drivers/scsi/imm.c
-+++ b/drivers/scsi/imm.c
-@@ -796,21 +796,21 @@ static int imm_engine(imm_struct *dev, struct scsi_cmnd *cmd)
- 			return 0;
+diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
+index 638f42a5200e..9192a1d9dec6 100644
+--- a/drivers/scsi/libfc/fc_rport.c
++++ b/drivers/scsi/libfc/fc_rport.c
+@@ -1722,6 +1722,7 @@ static void fc_rport_recv_els_req(struct fc_lport *lport, struct fc_frame *fp)
+ 			kref_put(&rdata->kref, fc_rport_destroy);
+ 			goto busy;
  		}
- 		return 1;	/* wait until imm_wakeup claims parport */
--		/* Phase 1 - Connected */
--	case 1:
-+
-+	case 1:		/* Phase 1 - Connected */
- 		imm_connect(dev, CONNECT_EPP_MAYBE);
- 		cmd->SCp.phase++;
 +		/* fall through */
- 
--		/* Phase 2 - We are now talking to the scsi bus */
--	case 2:
-+	case 2:		/* Phase 2 - We are now talking to the scsi bus */
- 		if (!imm_select(dev, scmd_id(cmd))) {
- 			imm_fail(dev, DID_NO_CONNECT);
- 			return 0;
- 		}
- 		cmd->SCp.phase++;
-+		/* fall through */
- 
--		/* Phase 3 - Ready to accept a command */
--	case 3:
-+	case 3:		/* Phase 3 - Ready to accept a command */
- 		w_ctr(ppb, 0x0c);
- 		if (!(r_str(ppb) & 0x80))
- 			return 1;
-@@ -818,9 +818,9 @@ static int imm_engine(imm_struct *dev, struct scsi_cmnd *cmd)
- 		if (!imm_send_command(cmd))
- 			return 0;
- 		cmd->SCp.phase++;
-+		/* fall through */
- 
--		/* Phase 4 - Setup scatter/gather buffers */
--	case 4:
-+	case 4:		/* Phase 4 - Setup scatter/gather buffers */
- 		if (scsi_bufflen(cmd)) {
- 			cmd->SCp.buffer = scsi_sglist(cmd);
- 			cmd->SCp.this_residual = cmd->SCp.buffer->length;
-@@ -834,8 +834,9 @@ static int imm_engine(imm_struct *dev, struct scsi_cmnd *cmd)
- 		cmd->SCp.phase++;
- 		if (cmd->SCp.this_residual & 0x01)
- 			cmd->SCp.this_residual++;
--		/* Phase 5 - Pre-Data transfer stage */
--	case 5:
-+		/* fall through */
-+
-+	case 5:		/* Phase 5 - Pre-Data transfer stage */
- 		/* Spin lock for BUSY */
- 		w_ctr(ppb, 0x0c);
- 		if (!(r_str(ppb) & 0x80))
-@@ -850,9 +851,9 @@ static int imm_engine(imm_struct *dev, struct scsi_cmnd *cmd)
- 			if (imm_negotiate(dev))
- 				return 0;
- 		cmd->SCp.phase++;
-+		/* fall through */
- 
--		/* Phase 6 - Data transfer stage */
--	case 6:
-+	case 6:		/* Phase 6 - Data transfer stage */
- 		/* Spin lock for BUSY */
- 		w_ctr(ppb, 0x0c);
- 		if (!(r_str(ppb) & 0x80))
-@@ -866,9 +867,9 @@ static int imm_engine(imm_struct *dev, struct scsi_cmnd *cmd)
- 				return 1;
- 		}
- 		cmd->SCp.phase++;
-+		/* fall through */
- 
--		/* Phase 7 - Post data transfer stage */
--	case 7:
-+	case 7:		/* Phase 7 - Post data transfer stage */
- 		if ((dev->dp) && (dev->rd)) {
- 			if ((dev->mode == IMM_NIBBLE) || (dev->mode == IMM_PS2)) {
- 				w_ctr(ppb, 0x4);
-@@ -878,9 +879,9 @@ static int imm_engine(imm_struct *dev, struct scsi_cmnd *cmd)
- 			}
- 		}
- 		cmd->SCp.phase++;
-+		/* fall through */
- 
--		/* Phase 8 - Read status/message */
--	case 8:
-+	case 8:		/* Phase 8 - Read status/message */
- 		/* Check for data overrun */
- 		if (imm_wait(dev) != (unsigned char) 0xb8) {
- 			imm_fail(dev, DID_ERROR);
+ 	default:
+ 		FC_RPORT_DBG(rdata,
+ 			     "Reject ELS 0x%02x while in state %s\n",
 -- 
 2.17.1
