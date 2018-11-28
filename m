@@ -1,8 +1,8 @@
 From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: [PATCH 08/41] scsi: be2iscsi: be_main: Mark expected switch
- fall-through
-Date: Tue, 27 Nov 2018 22:27:00 -0600
-Message-ID: <ca994231ba2101ba489ee7b18862a10a8c9dad7e.1543374820.git.gustavo@embeddedor.com>
+Subject: [PATCH 19/41] scsi: isci: remote_node_context: mark expected switch
+ fall-throughs
+Date: Tue, 27 Nov 2018 22:30:11 -0600
+Message-ID: <b54e3cf608d656ce6d8445becd105d1613325198.1543374820.git.gustavo@embeddedor.com>
 References: <cover.1543374820.git.gustavo@embeddedor.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -10,30 +10,37 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
 In-Reply-To: <cover.1543374820.git.gustavo@embeddedor.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Subbu Seetharaman <subbu.seetharaman@broadcom.com>, Ketan Mukadam <ketan.mukadam@broadcom.com>, Jitendra Bhivare <jitendra.bhivare@broadcom.com>
+To: Intel SCU Linux support <intel-linux-scu@intel.com>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Gustavo A. R. Silva" <gustavo@embeddedor.com>
 List-Id: linux-scsi@vger.kernel.org
 
 In preparation to enabling -Wimplicit-fallthrough, mark switch cases
 where we are expecting to fall through.
 
-Addresses-Coverity-ID: 1357387 ("Missing break in switch")
+Notice that, in this particular case, a dash is added as a token in
+order to separate the "Fall through" annotations from the rest of
+the comment on the same line, which is what GCC is expecting to find.
+
 Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 ---
- drivers/scsi/be2iscsi/be_main.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/scsi/isci/remote_node_context.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index effb6fc95af4..b6449da1320c 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -1539,6 +1539,7 @@ beiscsi_hdl_get_handle(struct beiscsi_conn *beiscsi_conn,
- 		break;
- 	case UNSOL_DATA_DIGEST_ERROR_NOTIFY:
- 		error = 1;
-+		/* fall through */
- 	case UNSOL_DATA_NOTIFY:
- 		pasync_handle = pasync_ctx->async_entry[ci].data;
- 		break;
+diff --git a/drivers/scsi/isci/remote_node_context.c b/drivers/scsi/isci/remote_node_context.c
+index e3f2a5359d71..474a43460963 100644
+--- a/drivers/scsi/isci/remote_node_context.c
++++ b/drivers/scsi/isci/remote_node_context.c
+@@ -601,9 +601,9 @@ enum sci_status sci_remote_node_context_suspend(
+ 				 __func__, sci_rnc);
+ 			return SCI_FAILURE_INVALID_STATE;
+ 		}
+-		/* Fall through and handle like SCI_RNC_POSTING */
++		/* Fall through - and handle like SCI_RNC_POSTING */
+ 	case SCI_RNC_RESUMING:
+-		/* Fall through and handle like SCI_RNC_POSTING */
++		/* Fall through - and handle like SCI_RNC_POSTING */
+ 	case SCI_RNC_POSTING:
+ 		/* Set the destination state to AWAIT - this signals the
+ 		 * entry into the SCI_RNC_READY state that a suspension
 -- 
 2.17.1
