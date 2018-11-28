@@ -1,40 +1,37 @@
-From: <Don.Brace@microchip.com>
-Subject: RE: [PATCH 15/41] scsi: hpsa: mark expected switch fall-throughs
-Date: Wed, 28 Nov 2018 15:14:45 +0000
-Message-ID: <BYAPR11MB2855A40D2B3D808AF09B89CBE1D10@BYAPR11MB2855.namprd11.prod.outlook.com>
-References: <cover.1543374820.git.gustavo@embeddedor.com>
- <991ec154d1a1da019442e4fd025a39fa2ad2bebb.1543374820.git.gustavo@embeddedor.com>
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] scsi: mpt3sas: fix spelling mistake "manufaucturing" -> "manufacturing"
+Date: Wed, 28 Nov 2018 15:30:48 +0000
+Message-ID: <20181128153048.13804-1-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <991ec154d1a1da019442e4fd025a39fa2ad2bebb.1543374820.git.gustavo@embeddedor.com>
-Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: gustavo@embeddedor.com, don.brace@microsemi.com, esc.storagedev@microsemi.com
-Cc: jejb@linux.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
------Original Message-----
-From: Gustavo A. R. Silva [mailto:gustavo@embeddedor.com]=20
-Sent: Tuesday, November 27, 2018 10:29 PM
-To: Don Brace <don.brace@microsemi.com>; esc.storagedev@microsemi.com
-Cc: James E.J. Bottomley <jejb@linux.ibm.com>; Martin K. Petersen <martin.p=
-etersen@oracle.com>; linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.o=
-rg; Gustavo A. R. Silva <gustavo@embeddedor.com>
-Subject: [PATCH 15/41] scsi: hpsa: mark expected switch fall-throughs
+From: Colin Ian King <colin.king@canonical.com>
 
-EXTERNAL EMAIL
+There is a spelling mistake in some description text, fix it.
 
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/scsi/mpt3sas/mpt3sas_config.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-In preparation to enabling -Wimplicit-fallthrough, mark switch cases where =
-we are expecting to fall through.
-
-Addresses-Coverity-ID: 1195463 ("Missing break in switch")
-Addresses-Coverity-ID: 1195464 ("Missing break in switch")
-Addresses-Coverity-ID: 1195465 ("Missing break in switch")
-Addresses-Coverity-ID: 1195466 ("Missing break in switch")
-Addresses-Coverity-ID: 1357338 ("Missing break in switch")
-Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
-
-Acked-by: Don Brace <don.brace@microsemi.com>
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_config.c b/drivers/scsi/mpt3sas/mpt3sas_config.c
+index 8516713f980b..fb0a17252f86 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_config.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_config.c
+@@ -119,7 +119,7 @@ _config_display_some_debug(struct MPT3SAS_ADAPTER *ioc, u16 smid,
+ 		desc = "raid_volume";
+ 		break;
+ 	case MPI2_CONFIG_PAGETYPE_MANUFACTURING:
+-		desc = "manufaucturing";
++		desc = "manufacturing";
+ 		break;
+ 	case MPI2_CONFIG_PAGETYPE_RAID_PHYSDISK:
+ 		desc = "physdisk";
+-- 
+2.19.1
