@@ -1,121 +1,123 @@
 From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: [PATCH 00/41] scsi: Mark expected switch fall-throughs
-Date: Tue, 27 Nov 2018 22:18:05 -0600
-Message-ID: <cover.1543374820.git.gustavo@embeddedor.com>
+Subject: [PATCH 16/41] scsi: imm: mark expected switch fall-throughs
+Date: Tue, 27 Nov 2018 22:29:48 -0600
+Message-ID: <42e3f9f751b662b7f0e4e763aa880bd752511c60.1543374820.git.gustavo@embeddedor.com>
+References: <cover.1543374820.git.gustavo@embeddedor.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <xen-devel-bounces@lists.xenproject.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-List-Unsubscribe: <https://lists.xenproject.org/mailman/options/xen-devel>,
- <mailto:xen-devel-request@lists.xenproject.org?subject=unsubscribe>
-List-Post: <mailto:xen-devel@lists.xenproject.org>
-List-Help: <mailto:xen-devel-request@lists.xenproject.org?subject=help>
-List-Subscribe: <https://lists.xenproject.org/mailman/listinfo/xen-devel>,
- <mailto:xen-devel-request@lists.xenproject.org?subject=subscribe>
-Errors-To: xen-devel-bounces@lists.xenproject.org
-Sender: "Xen-devel" <xen-devel-bounces@lists.xenproject.org>
-To: Khalid Aziz <khalid@gonehiking.org>, Finn Thain <fthain@telegraphics.com.au>, Michael Schmitz <schmitzmic@gmail.com>, Adaptec OEM Raid Solutions <aacraid@microsemi.com>, Hannes Reinecke <hare@suse.com>, Subbu Seetharaman <subbu.seetharaman@broadcom.com>, Ketan Mukadam <ketan.mukadam@broadcom.com>, Jitendra Bhivare <jitendra.bhivare@broadcom.com>, Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, Bradley Grove <linuxdrivers@attotech.com>, Don Brace <don.brace@microsemi.com>, Intel SCU Linux support <intel-linux-scu@intel.com>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>, Johannes Thumshirn <jth@kernel.org>, James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, Kashyap Desai <kashyap.desai@broadcom.com>, Sumit Saxena <sumit.saxena@broadcom.com>, Shivasharan S <shivasharan.srikanteshwara@bro>
-Cc: Kees Cook <keescook@chromium.org>, linux-scsi@vger.kernel.org, "Gustavo A. R. Silva" <gustavo@embeddedor.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, linux-kernel@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>
+In-Reply-To: <cover.1543374820.git.gustavo@embeddedor.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, "Gustavo A. R. Silva" <gustavo@embeddedor.com>
 List-Id: linux-scsi@vger.kernel.org
 
-SW4gcHJlcGFyYXRpb24gdG8gZW5hYmxpbmcgLVdpbXBsaWNpdC1mYWxsdGhyb3VnaCwgdGhpcyBw
-YXRjaHNldCBhaW1zCnRvIG1hcmsgc3dpdGNoIGNhc2VzIHdoZXJlIHdlIGFyZSBleHBlY3Rpbmcg
-dG8gZmFsbCB0aHJvdWdoLgoKSSByZXZpZXdlZCBjYXNlIGJ5IGNhc2UgYW5kIGNvbmNsdWRlZCB0
-aGF0IGVhY2ggb2YgdGhlbSBpcyBhbgppbnRlbnRpb25hbCBmYWxsLXRocm91Z2guIEhvd2V2ZXIs
-IGl0IGRvZXNuJ3QgaHVydCB0aGF0IHRoZQptYWludGFpbmVycyBhbmQgc3VwcG9ydGVycyBvZiBl
-YWNoIGRyaXZlciB0YWtlIGEgbG9vay4gOikKCkVhY2ggY29tbWl0IGxvZyBjb250YWlucyB0aGUg
-cGFydGljdWxhciBkZXRhaWxzIGZvciB0aGUgY2hhbmdlcyBpbiB0aGUKY29ycmVzcG9uZGluZyBm
-aWxlLgoKVGhpcyBzZXJpZXMgZml4IGEgdG90YWwgb2YgMTEwIG9mIHRoZSBmb2xsb3dpbmcgdHlw
-ZSBvZiB3YXJuaW5ncyBpbgpkcml2ZXJzL3Njc2k6Cgpkcml2ZXJzL3Njc2kvYWljN3h4eC9haWM3
-eHh4X2NvcmUuYzo0OTIxOjM6IHdhcm5pbmc6IHRoaXMgc3RhdGVtZW50IG1heSBmYWxsIHRocm91
-Z2ggWy1XaW1wbGljaXQtZmFsbHRocm91Z2g9XQogICBhaGNfZG1hX3RhZ19kZXN0cm95KGFoYywg
-c2NiX2RhdGEtPnNnX2RtYXQpOwogICBefn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+
-fn5+fn5+fn5+CmRyaXZlcnMvc2NzaS9haWM3eHh4L2FpYzd4eHhfY29yZS5jOjQ5MjM6Mjogbm90
-ZTogaGVyZQogIGNhc2UgNjoKICBefn5+CgpUaGFua3MhCgpHdXN0YXZvIEEuIFIuIFNpbHZhICg0
-MSk6CiAgc2NzaTogQnVzTG9naWM6IG1hcmsgZXhwZWN0ZWQgc3dpdGNoIGZhbGwtdGhyb3VnaAog
-IHNjc2k6IE5DUjUzODA6IE1hcmsgZXhwZWN0ZWQgc3dpdGNoIGZhbGwtdGhyb3VnaAogIHNjc2k6
-IGFhY3JhaWQ6IGFhY2hiYTogTWFyayBleHBlY3RlZCBzd2l0Y2ggZmFsbC10aHJvdWdocwogIHNj
-c2k6IGFhY3JhaWQ6IGxpbml0OiBNYXJrIGV4cGVjdGVkIHN3aXRjaCBmYWxsLXRocm91Z2gKICBz
-Y3NpOiBhaWM3eHh4OiBhaWM3OXh4OiBtYXJrIGV4cGVjdGVkIHN3aXRjaCBmYWxsLXRocm91Z2gK
-ICBzY3NpOiBhaWM3eHh4OiBtYXJrIGV4cGVjdGVkIHN3aXRjaCBmYWxsLXRocm91Z2hzCiAgc2Nz
-aTogYmUyaXNjc2k6IGJlX2lzY3NpOiBNYXJrIGV4cGVjdGVkIHN3aXRjaCBmYWxsLXRocm91Z2gK
-ICBzY3NpOiBiZTJpc2NzaTogYmVfbWFpbjogTWFyayBleHBlY3RlZCBzd2l0Y2ggZmFsbC10aHJv
-dWdoCiAgc2NzaTogYmZhOiBiZmFfZmNwaW06IE1hcmsgZXhwZWN0ZWQgc3dpdGNoIGZhbGwtdGhy
-b3VnaHMKICBzY3NpOiBiZmE6IGJmYV9mY3NfbHBvcnQ6IE1hcmsgZXhwZWN0ZWQgc3dpdGNoIGZh
-bGwtdGhyb3VnaHMKICBzY3NpOiBiZmE6IGJmYV9mY3NfcnBvcnQ6IE1hcmsgZXhwZWN0ZWQgc3dp
-dGNoIGZhbGwtdGhyb3VnaHMKICBzY3NpOiBiZmE6IGJmYV9pb2M6IE1hcmsgZXhwZWN0ZWQgc3dp
-dGNoIGZhbGwtdGhyb3VnaHMKICBzY3NpOiBjc2lvc3RvcjogY3Npb193cjogbWFyayBleHBlY3Rl
-ZCBzd2l0Y2ggZmFsbC10aHJvdWdoCiAgc2NzaTogZXNhczJyOiBlc2FzMnJfaW5pdDogbWFyayBl
-eHBlY3RlZCBzd2l0Y2ggZmFsbC10aHJvdWdocwogIHNjc2k6IGhwc2E6IG1hcmsgZXhwZWN0ZWQg
-c3dpdGNoIGZhbGwtdGhyb3VnaHMKICBzY3NpOiBpbW06IG1hcmsgZXhwZWN0ZWQgc3dpdGNoIGZh
-bGwtdGhyb3VnaHMKICBzY3NpOiBpc2NpOiBwaHk6IE1hcmsgZXhwZWN0ZWQgc3dpdGNoIGZhbGwt
-dGhyb3VnaAogIHNjc2k6IGlzY2k6IHJlbW90ZV9kZXZpY2U6IE1hcmsgZXhwZWN0ZWQgc3dpdGNo
-IGZhbGwtdGhyb3VnaHMKICBzY3NpOiBpc2NpOiByZW1vdGVfbm9kZV9jb250ZXh0OiBtYXJrIGV4
-cGVjdGVkIHN3aXRjaCBmYWxsLXRocm91Z2hzCiAgc2NzaTogaXNjaTogcmVxdWVzdDogbWFyayBl
-eHBlY3RlZCBzd2l0Y2ggZmFsbC10aHJvdWdoCiAgc2NzaTogbGliZmM6IGZjX3Jwb3J0OiBNYXJr
-IGV4cGVjdGVkIHN3aXRjaCBmYWxsLXRocm91Z2gKICBzY3NpOiBscGZjOiBscGZjX2N0OiBNYXJr
-IGV4cGVjdGVkIHN3aXRjaCBmYWxsLXRocm91Z2hzCiAgc2NzaTogbHBmYzogbHBmY19lbHM6IE1h
-cmsgZXhwZWN0ZWQgc3dpdGNoIGZhbGwtdGhyb3VnaHMKICBzY3NpOiBscGZjOiBscGZjX2hiYWRp
-c2M6IE1hcmsgZXhwZWN0ZWQgc3dpdGNoIGZhbGwtdGhyb3VnaHMKICBzY3NpOiBscGZjOiBscGZj
-X25wb3J0ZGlzYzogTWFyayBleHBlY3RlZCBzd2l0Y2ggZmFsbC10aHJvdWdoCiAgc2NzaTogbHBm
-YzogbHBmY19udm1lOiBNYXJrIGV4cGVjdGVkIHN3aXRjaCBmYWxsLXRocm91Z2gKICBzY3NpOiBs
-cGZjOiBscGZjX3Njc2k6IE1hcmsgZXhwZWN0ZWQgc3dpdGNoIGZhbGwtdGhyb3VnaHMKICBzY3Np
-OiBscGZjOiBscGZjX3NsaTogTWFyayBleHBlY3RlZCBzd2l0Y2ggZmFsbC10aHJvdWdocwogIHNj
-c2k6IG1lZ2FyYWlkOiBtZWdhcmFpZF9zYXNfYmFzZTogTWFyayBleHBlY3RlZCBzd2l0Y2ggZmFs
-bC10aHJvdWdoCiAgc2NzaTogbWVnYXJhaWRfc2FzX2Z1c2lvbjogTWFyayBleHBlY3RlZCBzd2l0
-Y2ggZmFsbC10aHJvdWdoCiAgc2NzaTogbXB0M3NhczogbXB0M3Nhc19zY3NpaDogTWFyayBleHBl
-Y3RlZCBzd2l0Y2ggZmFsbC10aHJvdWdoCiAgc2NzaTogbXlyYjogTWFyayBleHBlY3RlZCBzd2l0
-Y2ggZmFsbC10aHJvdWdocwogIHNjc2k6IG9zZDogb3NkX2luaXRpYXRvcjogbWFyayBleHBlY3Rl
-ZCBzd2l0Y2ggZmFsbC10aHJvdWdocwogIHNjc2k6IG9zc3Q6IG1hcmsgZXhwZWN0ZWQgc3dpdGNo
-IGZhbGwtdGhyb3VnaHMKICBzY3NpOiBwcGE6IG1hcmsgZXhwZWN0ZWQgc3dpdGNoIGZhbGwtdGhy
-b3VnaAogIHNjc2k6IHFsYTR4eHg6IHFsNF9vczogbWFyayBleHBlY3RlZCBzd2l0Y2ggZmFsbC10
-aHJvdWdoCiAgc2NzaTogc3Q6IG1hcmsgZXhwZWN0ZWQgc3dpdGNoIGZhbGwtdGhyb3VnaHMKICBz
-Y3NpOiBzeW01M2M4eHhfMjogc3ltX2hpcGQ6IG1hcmsgZXhwZWN0ZWQgc3dpdGNoIGZhbGwtdGhy
-b3VnaHMKICBzY3NpOiBzeW01M2M4eHhfMjogc3ltX252cmFtOiBNYXJrIGV4cGVjdGVkIHN3aXRj
-aCBmYWxsLXRocm91Z2gKICBzY3NpOiB1ZnM6IHVmc2hjZDogbWFyayBleHBlY3RlZCBzd2l0Y2gg
-ZmFsbC10aHJvdWdocwogIHNjc2k6IHhlbi1zY3NpZnJvbnQ6IG1hcmsgZXhwZWN0ZWQgc3dpdGNo
-IGZhbGwtdGhyb3VnaAoKIGRyaXZlcnMvc2NzaS9CdXNMb2dpYy5jICAgICAgICAgICAgICAgICAg
-ICAgfCAgMSArCiBkcml2ZXJzL3Njc2kvTkNSNTM4MC5jICAgICAgICAgICAgICAgICAgICAgIHwg
-IDMgKy0KIGRyaXZlcnMvc2NzaS9hYWNyYWlkL2FhY2hiYS5jICAgICAgICAgICAgICAgfCAgNSAr
-KystCiBkcml2ZXJzL3Njc2kvYWFjcmFpZC9saW5pdC5jICAgICAgICAgICAgICAgIHwgIDEgKwog
-ZHJpdmVycy9zY3NpL2FpYzd4eHgvYWljNzl4eF9jb3JlLmMgICAgICAgICB8IDE0ICsrKysrLS0t
-LQogZHJpdmVycy9zY3NpL2FpYzd4eHgvYWljN3h4eF9jb3JlLmMgICAgICAgICB8IDEyICsrKysr
-Ky0tCiBkcml2ZXJzL3Njc2kvYmUyaXNjc2kvYmVfaXNjc2kuYyAgICAgICAgICAgIHwgIDEgKwog
-ZHJpdmVycy9zY3NpL2JlMmlzY3NpL2JlX21haW4uYyAgICAgICAgICAgICB8ICAxICsKIGRyaXZl
-cnMvc2NzaS9iZmEvYmZhX2ZjcGltLmMgICAgICAgICAgICAgICAgfCAgNiArKy0tCiBkcml2ZXJz
-L3Njc2kvYmZhL2JmYV9mY3NfbHBvcnQuYyAgICAgICAgICAgIHwgIDggKystLS0KIGRyaXZlcnMv
-c2NzaS9iZmEvYmZhX2Zjc19ycG9ydC5jICAgICAgICAgICAgfCAxOSArKysrKy0tLS0tLS0KIGRy
-aXZlcnMvc2NzaS9iZmEvYmZhX2lvYy5jICAgICAgICAgICAgICAgICAgfCAgOSArKy0tLS0KIGRy
-aXZlcnMvc2NzaS9jc2lvc3Rvci9jc2lvX3dyLmMgICAgICAgICAgICAgfCAgMSArCiBkcml2ZXJz
-L3Njc2kvZXNhczJyL2VzYXMycl9pbml0LmMgICAgICAgICAgIHwgIDMgKy0KIGRyaXZlcnMvc2Nz
-aS9ocHNhLmMgICAgICAgICAgICAgICAgICAgICAgICAgfCAgNSArKysrCiBkcml2ZXJzL3Njc2kv
-aW1tLmMgICAgICAgICAgICAgICAgICAgICAgICAgIHwgMzMgKysrKysrKysrKystLS0tLS0tLS0t
-CiBkcml2ZXJzL3Njc2kvaXNjaS9waHkuYyAgICAgICAgICAgICAgICAgICAgIHwgIDEgKwogZHJp
-dmVycy9zY3NpL2lzY2kvcmVtb3RlX2RldmljZS5jICAgICAgICAgICB8ICA0ICstLQogZHJpdmVy
-cy9zY3NpL2lzY2kvcmVtb3RlX25vZGVfY29udGV4dC5jICAgICB8ICA0ICstLQogZHJpdmVycy9z
-Y3NpL2lzY2kvcmVxdWVzdC5jICAgICAgICAgICAgICAgICB8ICAyICstCiBkcml2ZXJzL3Njc2kv
-bGliZmMvZmNfcnBvcnQuYyAgICAgICAgICAgICAgIHwgIDEgKwogZHJpdmVycy9zY3NpL2xwZmMv
-bHBmY19jdC5jICAgICAgICAgICAgICAgICB8ICAyICsrCiBkcml2ZXJzL3Njc2kvbHBmYy9scGZj
-X2Vscy5jICAgICAgICAgICAgICAgIHwgIDEgKwogZHJpdmVycy9zY3NpL2xwZmMvbHBmY19oYmFk
-aXNjLmMgICAgICAgICAgICB8ICA0ICsrLQogZHJpdmVycy9zY3NpL2xwZmMvbHBmY19ucG9ydGRp
-c2MuYyAgICAgICAgICB8ICAxICsKIGRyaXZlcnMvc2NzaS9scGZjL2xwZmNfbnZtZS5jICAgICAg
-ICAgICAgICAgfCAgMSArCiBkcml2ZXJzL3Njc2kvbHBmYy9scGZjX3Njc2kuYyAgICAgICAgICAg
-ICAgIHwgIDggKystLS0KIGRyaXZlcnMvc2NzaS9scGZjL2xwZmNfc2xpLmMgICAgICAgICAgICAg
-ICAgfCAyMCArKysrKysrLS0tLS0tCiBkcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJhaWRfc2Fz
-X2Jhc2UuYyAgIHwgIDEgKwogZHJpdmVycy9zY3NpL21lZ2FyYWlkL21lZ2FyYWlkX3Nhc19mdXNp
-b24uYyB8ICAyICstCiBkcml2ZXJzL3Njc2kvbXB0M3Nhcy9tcHQzc2FzX3Njc2loLmMgICAgICAg
-IHwgIDEgKwogZHJpdmVycy9zY3NpL215cmIuYyAgICAgICAgICAgICAgICAgICAgICAgICB8ICAz
-ICsrCiBkcml2ZXJzL3Njc2kvb3NkL29zZF9pbml0aWF0b3IuYyAgICAgICAgICAgIHwgIDMgKy0K
-IGRyaXZlcnMvc2NzaS9vc3N0LmMgICAgICAgICAgICAgICAgICAgICAgICAgfCAgNiArKysrCiBk
-cml2ZXJzL3Njc2kvcHBhLmMgICAgICAgICAgICAgICAgICAgICAgICAgIHwgIDEgKwogZHJpdmVy
-cy9zY3NpL3FsYTR4eHgvcWw0X29zLmMgICAgICAgICAgICAgICB8ICAyICstCiBkcml2ZXJzL3Nj
-c2kvc3QuYyAgICAgICAgICAgICAgICAgICAgICAgICAgIHwgIDQgKysrCiBkcml2ZXJzL3Njc2kv
-c3ltNTNjOHh4XzIvc3ltX2hpcGQuYyAgICAgICAgIHwgIDIgKysKIGRyaXZlcnMvc2NzaS9zeW01
-M2M4eHhfMi9zeW1fbnZyYW0uYyAgICAgICAgfCAgMSArCiBkcml2ZXJzL3Njc2kvdWZzL3Vmc2hj
-ZC5jICAgICAgICAgICAgICAgICAgIHwgIDMgKysKIGRyaXZlcnMvc2NzaS94ZW4tc2NzaWZyb250
-LmMgICAgICAgICAgICAgICAgfCAgMiArLQogNDEgZmlsZXMgY2hhbmdlZCwgMTI0IGluc2VydGlv
-bnMoKyksIDc4IGRlbGV0aW9ucygtKQoKLS0gCjIuMTcuMQoKCl9fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fClhlbi1kZXZlbCBtYWlsaW5nIGxpc3QKWGVuLWRl
-dmVsQGxpc3RzLnhlbnByb2plY3Qub3JnCmh0dHBzOi8vbGlzdHMueGVucHJvamVjdC5vcmcvbWFp
-bG1hbi9saXN0aW5mby94ZW4tZGV2ZWw=
+In preparation to enabling -Wimplicit-fallthrough, mark switch cases
+where we are expecting to fall through.
+
+Notice that, in this particular case, I placed all the "Phase N - ..."
+comments on the same line as its corresponding switch case. The same
+way in which similar comments appear in drivers/scsi/ppa.c. This makes
+it possible to place the "fall through" annotations at the bottom of
+each switch case, which is what GCC is expecting to find.
+
+Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+---
+ drivers/scsi/imm.c | 33 +++++++++++++++++----------------
+ 1 file changed, 17 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/scsi/imm.c b/drivers/scsi/imm.c
+index 8c6627bc8a39..629e0bc70d3e 100644
+--- a/drivers/scsi/imm.c
++++ b/drivers/scsi/imm.c
+@@ -796,21 +796,21 @@ static int imm_engine(imm_struct *dev, struct scsi_cmnd *cmd)
+ 			return 0;
+ 		}
+ 		return 1;	/* wait until imm_wakeup claims parport */
+-		/* Phase 1 - Connected */
+-	case 1:
++
++	case 1:		/* Phase 1 - Connected */
+ 		imm_connect(dev, CONNECT_EPP_MAYBE);
+ 		cmd->SCp.phase++;
++		/* fall through */
+ 
+-		/* Phase 2 - We are now talking to the scsi bus */
+-	case 2:
++	case 2:		/* Phase 2 - We are now talking to the scsi bus */
+ 		if (!imm_select(dev, scmd_id(cmd))) {
+ 			imm_fail(dev, DID_NO_CONNECT);
+ 			return 0;
+ 		}
+ 		cmd->SCp.phase++;
++		/* fall through */
+ 
+-		/* Phase 3 - Ready to accept a command */
+-	case 3:
++	case 3:		/* Phase 3 - Ready to accept a command */
+ 		w_ctr(ppb, 0x0c);
+ 		if (!(r_str(ppb) & 0x80))
+ 			return 1;
+@@ -818,9 +818,9 @@ static int imm_engine(imm_struct *dev, struct scsi_cmnd *cmd)
+ 		if (!imm_send_command(cmd))
+ 			return 0;
+ 		cmd->SCp.phase++;
++		/* fall through */
+ 
+-		/* Phase 4 - Setup scatter/gather buffers */
+-	case 4:
++	case 4:		/* Phase 4 - Setup scatter/gather buffers */
+ 		if (scsi_bufflen(cmd)) {
+ 			cmd->SCp.buffer = scsi_sglist(cmd);
+ 			cmd->SCp.this_residual = cmd->SCp.buffer->length;
+@@ -834,8 +834,9 @@ static int imm_engine(imm_struct *dev, struct scsi_cmnd *cmd)
+ 		cmd->SCp.phase++;
+ 		if (cmd->SCp.this_residual & 0x01)
+ 			cmd->SCp.this_residual++;
+-		/* Phase 5 - Pre-Data transfer stage */
+-	case 5:
++		/* fall through */
++
++	case 5:		/* Phase 5 - Pre-Data transfer stage */
+ 		/* Spin lock for BUSY */
+ 		w_ctr(ppb, 0x0c);
+ 		if (!(r_str(ppb) & 0x80))
+@@ -850,9 +851,9 @@ static int imm_engine(imm_struct *dev, struct scsi_cmnd *cmd)
+ 			if (imm_negotiate(dev))
+ 				return 0;
+ 		cmd->SCp.phase++;
++		/* fall through */
+ 
+-		/* Phase 6 - Data transfer stage */
+-	case 6:
++	case 6:		/* Phase 6 - Data transfer stage */
+ 		/* Spin lock for BUSY */
+ 		w_ctr(ppb, 0x0c);
+ 		if (!(r_str(ppb) & 0x80))
+@@ -866,9 +867,9 @@ static int imm_engine(imm_struct *dev, struct scsi_cmnd *cmd)
+ 				return 1;
+ 		}
+ 		cmd->SCp.phase++;
++		/* fall through */
+ 
+-		/* Phase 7 - Post data transfer stage */
+-	case 7:
++	case 7:		/* Phase 7 - Post data transfer stage */
+ 		if ((dev->dp) && (dev->rd)) {
+ 			if ((dev->mode == IMM_NIBBLE) || (dev->mode == IMM_PS2)) {
+ 				w_ctr(ppb, 0x4);
+@@ -878,9 +879,9 @@ static int imm_engine(imm_struct *dev, struct scsi_cmnd *cmd)
+ 			}
+ 		}
+ 		cmd->SCp.phase++;
++		/* fall through */
+ 
+-		/* Phase 8 - Read status/message */
+-	case 8:
++	case 8:		/* Phase 8 - Read status/message */
+ 		/* Check for data overrun */
+ 		if (imm_wait(dev) != (unsigned char) 0xb8) {
+ 			imm_fail(dev, DID_ERROR);
+-- 
+2.17.1
