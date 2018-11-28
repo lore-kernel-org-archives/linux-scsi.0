@@ -1,37 +1,27 @@
-From: Colin King <colin.king@canonical.com>
-Subject: [PATCH] scsi: mpt3sas: fix spelling mistake "manufaucturing" -> "manufacturing"
-Date: Wed, 28 Nov 2018 15:30:48 +0000
-Message-ID: <20181128153048.13804-1-colin.king@canonical.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] scsi: lpfc: fix block guard enablement on SLI3 adapters
+Date: Wed, 28 Nov 2018 12:20:43 -0500
+Message-ID: <yq1pnup2k5w.fsf@oracle.com>
+References: <20181112085837.24450-1-mwilck@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20181112085837.24450-1-mwilck@suse.com> (Martin Wilck's message
+        of "Mon, 12 Nov 2018 09:58:37 +0100")
+Sender: stable-owner@vger.kernel.org
+To: Martin Wilck <mwilck@suse.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Smart <jsmart2021@gmail.com>, James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, Hannes Reinecke <hare@suse.de>, David Bond <dbond@suse.com>, linux-scsi@vger.kernel.org, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Colin Ian King <colin.king@canonical.com>
 
-There is a spelling mistake in some description text, fix it.
+Martin,
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/scsi/mpt3sas/mpt3sas_config.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> Since f44ac12f1dcc, BG enablement is tracked with the
+> LPFC_SLI3_BG_ENABLED bit, which is set in lpfc_get_cfgparam before
+> lpfc_sli_config_sli_port() is called. The bit shouldn't be cleared
+> before checking the feature.  Based on problem analysis by David Bond.
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_config.c b/drivers/scsi/mpt3sas/mpt3sas_config.c
-index 8516713f980b..fb0a17252f86 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_config.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_config.c
-@@ -119,7 +119,7 @@ _config_display_some_debug(struct MPT3SAS_ADAPTER *ioc, u16 smid,
- 		desc = "raid_volume";
- 		break;
- 	case MPI2_CONFIG_PAGETYPE_MANUFACTURING:
--		desc = "manufaucturing";
-+		desc = "manufacturing";
- 		break;
- 	case MPI2_CONFIG_PAGETYPE_RAID_PHYSDISK:
- 		desc = "physdisk";
+Applied to 4.20/scsi-fixes, thanks!
+
 -- 
-2.19.1
+Martin K. Petersen	Oracle Linux Engineering
