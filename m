@@ -1,7 +1,8 @@
 From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: [PATCH 22/41] scsi: lpfc: lpfc_ct: Mark expected switch fall-throughs
-Date: Tue, 27 Nov 2018 22:31:08 -0600
-Message-ID: <4e80e3ae7cd0f0c54b45530a3772af4f606b0c8e.1543374820.git.gustavo@embeddedor.com>
+Subject: [PATCH 25/41] scsi: lpfc: lpfc_nportdisc: Mark expected switch
+ fall-through
+Date: Tue, 27 Nov 2018 22:31:33 -0600
+Message-ID: <8d1c41fb93d54415cfd0a8c1fa6d31a6a76db461.1543374820.git.gustavo@embeddedor.com>
 References: <cover.1543374820.git.gustavo@embeddedor.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -18,28 +19,20 @@ where we are expecting to fall through.
 
 Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 ---
- drivers/scsi/lpfc/lpfc_ct.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/scsi/lpfc/lpfc_nportdisc.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
-index 6305ffeba7ea..b2b7fcc23654 100644
---- a/drivers/scsi/lpfc/lpfc_ct.c
-+++ b/drivers/scsi/lpfc/lpfc_ct.c
-@@ -3050,6 +3050,7 @@ lpfc_fdmi_cmd(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 	case SLI_MGMT_GHAT:
- 	case SLI_MGMT_GRPL:
- 		rsp_size = FC_MAX_NS_RSP;
+diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
+index 7d5693cfaa87..e8583496feaf 100644
+--- a/drivers/scsi/lpfc/lpfc_nportdisc.c
++++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
+@@ -360,6 +360,7 @@ lpfc_rcv_plogi(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+ 	case  NLP_STE_NPR_NODE:
+ 		if (!(ndlp->nlp_flag & NLP_NPR_ADISC))
+ 			break;
 +		/* fall through */
- 	case SLI_MGMT_DHBA:
- 	case SLI_MGMT_DHAT:
- 		pe = (struct lpfc_fdmi_port_entry *)&CtReq->un.PortID;
-@@ -3062,6 +3063,7 @@ lpfc_fdmi_cmd(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 	case SLI_MGMT_GPAT:
- 	case SLI_MGMT_GPAS:
- 		rsp_size = FC_MAX_NS_RSP;
-+		/* fall through */
- 	case SLI_MGMT_DPRT:
- 	case SLI_MGMT_DPA:
- 		pe = (struct lpfc_fdmi_port_entry *)&CtReq->un.PortID;
+ 	case  NLP_STE_REG_LOGIN_ISSUE:
+ 	case  NLP_STE_PRLI_ISSUE:
+ 	case  NLP_STE_UNMAPPED_NODE:
 -- 
 2.17.1
