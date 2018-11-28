@@ -1,44 +1,62 @@
-From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: [PATCH 41/41] scsi: xen-scsifront: mark expected switch fall-through
-Date: Tue, 27 Nov 2018 22:34:35 -0600
-Message-ID: <00c2a9d45e39fb294f4995b07a9b7547206c3085.1543374820.git.gustavo@embeddedor.com>
-References: <cover.1543374820.git.gustavo@embeddedor.com>
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+Subject: Re: linux-next: Tree for Nov 27 (scsi/aha1542)
+Date: Wed, 28 Nov 2018 15:38:47 +1100
+Message-ID: <20181128153847.08ead1c9@canb.auug.org.au>
+References: <20181127152539.55426063@canb.auug.org.au>
+        <ef9090cf-e86a-7fd0-dfa9-6810eaaf7e65@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ boundary="Sig_/UQWXzwPW6x4LyBoYK=gMBs/"; protocol="application/pgp-signature"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <cover.1543374820.git.gustavo@embeddedor.com>
+In-Reply-To: <ef9090cf-e86a-7fd0-dfa9-6810eaaf7e65@infradead.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Boris Ostrovsky <boris.ostrovsky@oracle.com>, Juergen Gross <jgross@suse.com>, Stefano Stabellini <sstabellini@kernel.org>, xen-devel@lists.xenproject.org
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+To: Randy Dunlap <rdunlap@infradead.org>
+Cc: Linux Next Mailing List <linux-next@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
-In preparation to enabling -Wimplicit-fallthrough, mark switch cases
-where we are expecting to fall through.
+--Sig_/UQWXzwPW6x4LyBoYK=gMBs/
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Notice that, in this particular case, I replaced
-"Missed the backend's Closing state -- fallthrough" with
-"fall through - Missed the backend's Closing state", which
-contains the "fall through" annotation at the beginnig of
-the code comment, which is what GCC is expecting to find.
+Hi all,
 
-Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
----
- drivers/scsi/xen-scsifront.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On Tue, 27 Nov 2018 20:14:58 -0800 Randy Dunlap <rdunlap@infradead.org> wro=
+te:
+>
+> On 11/26/18 8:25 PM, Stephen Rothwell wrote:
+> > Hi all,
+> >=20
+> > Changes since 20181126:
+> >  =20
+>=20
+> on i386:
+>=20
+> ERROR: "__udivdi3" [drivers/scsi/aha1542.ko] undefined!
+>=20
+> somewhere in aha1542_interrupt() according to objdump.
 
-diff --git a/drivers/scsi/xen-scsifront.c b/drivers/scsi/xen-scsifront.c
-index 61389bdc7926..bb76d0d2022b 100644
---- a/drivers/scsi/xen-scsifront.c
-+++ b/drivers/scsi/xen-scsifront.c
-@@ -1112,7 +1112,7 @@ static void scsifront_backend_changed(struct xenbus_device *dev,
- 	case XenbusStateClosed:
- 		if (dev->state == XenbusStateClosed)
- 			break;
--		/* Missed the backend's Closing state -- fallthrough */
-+		/* fall through - Missed the backend's Closing state */
- 	case XenbusStateClosing:
- 		scsifront_disconnect(info);
- 		break;
--- 
-2.17.1
+Presumably caused by commit
+
+  1794ef2b150d ("scsi: aha1542: convert to DMA mapping API")
+
+--=20
+Cheers,
+Stephen Rothwell
+
+--Sig_/UQWXzwPW6x4LyBoYK=gMBs/
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAlv+G9cACgkQAVBC80lX
+0GznJQgAhVR9Ayj/3/ionZLz8Fdbqjs0Hr2rG5KDRY9cHogF7ZusSUhjOGTMwzZD
+0yc461rVUKyDosMl4sy9zuN0v87dAgTLMoIGRsiPaIQu/jsnqrrEKnALBsc5HDx/
+RbsFqUd04+XWXQkXAUDNxOupxqSumb8e+EkAW/NZcXXVRqOA6cmrUo3Jgnd+IVNO
+NOKUlQ5DJVKl2MKNOd6SUuh4cqPTUBl15gbhLR3wzXLok2D/HbQgUgJrPXC4h/Dp
+WJxWfeK66+77ID9DUywQb5+hIgP5Hhg3JBxUAZpUHH0klEMKmO1gH2pN3xdfEA9P
+8z6d+Xp6Gg9xlT5QzrxLq+tYRVRvAQ==
+=2/vb
+-----END PGP SIGNATURE-----
+
+--Sig_/UQWXzwPW6x4LyBoYK=gMBs/--
