@@ -1,62 +1,38 @@
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: Re: linux-next: Tree for Nov 27 (scsi/aha1542)
-Date: Wed, 28 Nov 2018 15:38:47 +1100
-Message-ID: <20181128153847.08ead1c9@canb.auug.org.au>
-References: <20181127152539.55426063@canb.auug.org.au>
-        <ef9090cf-e86a-7fd0-dfa9-6810eaaf7e65@infradead.org>
+From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Subject: [PATCH 01/41] scsi: BusLogic: mark expected switch fall-through
+Date: Tue, 27 Nov 2018 22:21:23 -0600
+Message-ID: <de0c68b4f655080a7336d1ad256d77a83ab0b7d6.1543374820.git.gustavo@embeddedor.com>
+References: <cover.1543374820.git.gustavo@embeddedor.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- boundary="Sig_/UQWXzwPW6x4LyBoYK=gMBs/"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <ef9090cf-e86a-7fd0-dfa9-6810eaaf7e65@infradead.org>
+Content-Disposition: inline
+In-Reply-To: <cover.1543374820.git.gustavo@embeddedor.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Randy Dunlap <rdunlap@infradead.org>
-Cc: Linux Next Mailing List <linux-next@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
+To: Khalid Aziz <khalid@gonehiking.org>
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Gustavo A. R. Silva" <gustavo@embeddedor.com>
 List-Id: linux-scsi@vger.kernel.org
 
---Sig_/UQWXzwPW6x4LyBoYK=gMBs/
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+In preparation to enabling -Wimplicit-fallthrough, mark switch cases
+where we are expecting to fall through.
 
-Hi all,
+Addresses-Coverity-ID: 1056537 ("Missing break in switch")
+Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+---
+ drivers/scsi/BusLogic.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-On Tue, 27 Nov 2018 20:14:58 -0800 Randy Dunlap <rdunlap@infradead.org> wro=
-te:
->
-> On 11/26/18 8:25 PM, Stephen Rothwell wrote:
-> > Hi all,
-> >=20
-> > Changes since 20181126:
-> >  =20
->=20
-> on i386:
->=20
-> ERROR: "__udivdi3" [drivers/scsi/aha1542.ko] undefined!
->=20
-> somewhere in aha1542_interrupt() according to objdump.
-
-Presumably caused by commit
-
-  1794ef2b150d ("scsi: aha1542: convert to DMA mapping API")
-
---=20
-Cheers,
-Stephen Rothwell
-
---Sig_/UQWXzwPW6x4LyBoYK=gMBs/
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAlv+G9cACgkQAVBC80lX
-0GznJQgAhVR9Ayj/3/ionZLz8Fdbqjs0Hr2rG5KDRY9cHogF7ZusSUhjOGTMwzZD
-0yc461rVUKyDosMl4sy9zuN0v87dAgTLMoIGRsiPaIQu/jsnqrrEKnALBsc5HDx/
-RbsFqUd04+XWXQkXAUDNxOupxqSumb8e+EkAW/NZcXXVRqOA6cmrUo3Jgnd+IVNO
-NOKUlQ5DJVKl2MKNOd6SUuh4cqPTUBl15gbhLR3wzXLok2D/HbQgUgJrPXC4h/Dp
-WJxWfeK66+77ID9DUywQb5+hIgP5Hhg3JBxUAZpUHH0klEMKmO1gH2pN3xdfEA9P
-8z6d+Xp6Gg9xlT5QzrxLq+tYRVRvAQ==
-=2/vb
------END PGP SIGNATURE-----
-
---Sig_/UQWXzwPW6x4LyBoYK=gMBs/--
+diff --git a/drivers/scsi/BusLogic.c b/drivers/scsi/BusLogic.c
+index 9cee941f97d6..717eef3ee893 100644
+--- a/drivers/scsi/BusLogic.c
++++ b/drivers/scsi/BusLogic.c
+@@ -2641,6 +2641,7 @@ static int blogic_resultcode(struct blogic_adapter *adapter,
+ 	case BLOGIC_BAD_CMD_PARAM:
+ 		blogic_warn("BusLogic Driver Protocol Error 0x%02X\n",
+ 				adapter, adapter_status);
++		/* fall through */
+ 	case BLOGIC_DATA_UNDERRUN:
+ 	case BLOGIC_DATA_OVERRUN:
+ 	case BLOGIC_NOEXPECT_BUSFREE:
+-- 
+2.17.1
