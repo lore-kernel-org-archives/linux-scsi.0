@@ -1,40 +1,38 @@
-From: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] libiscsi: Fix NULL pointer dereference in iscsi_eh_session_reset
-Date: Wed, 28 Nov 2018 18:42:23 -0500
-Message-ID: <yq1d0qo3h28.fsf@oracle.com>
-References: <1542763365-22253-1-git-send-email-fred.herard@oracle.com>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] scsi: vmw_pscsi: Rearrange code to avoid multiple calls
+ to free_irq during unload
+Date: Wed, 28 Nov 2018 18:56:41 -0500
+Message-ID: <yq14lc03gee.fsf@oracle.com>
+References: <1543346933-440-1-git-send-email-cavery@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <open-iscsi+bncBDVIJONZ3YDRBZGP7TPQKGQEU2DNRSQ-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-In-Reply-To: <1542763365-22253-1-git-send-email-fred.herard-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org> (fred
-	herard's message of "Tue, 20 Nov 2018 20:22:45 -0500")
-List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <https://groups.google.com/group/open-iscsi
-List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
- <https://groups.google.com/group/open-iscsi/subscribe>
-To: fred.herard-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org
-Cc: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <1543346933-440-1-git-send-email-cavery@redhat.com> (Cathy
+ Avery's message of "Tue, 27 Nov 2018 14:28:53 -0500")
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: Cathy Avery <cavery@redhat.com>
+Cc: jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, martin.petersen@oracle.com, linux-kernel@vger.kernel.org, emilne@redhat.com, jgill@vmware.com, devel@linuxdriverproject.org, hch@lst.de
 List-Id: linux-scsi@vger.kernel.org
 
 
-Fred,
+Cathy,
 
-> This commit addresses NULL pointer dereference in
-> iscsi_eh_session_reset.  Reference should not be made to
-> session->leadconn when session->state is set to ISCSI_STATE_TERMINATE.
+> Currently pvscsi_remove calls free_irq more than once as
+> pvscsi_release_resources and __pvscsi_shutdown both call
+> pvscsi_shutdown_intr. This results in a 'Trying to free
+> already-free IRQ' warning and stack trace. To solve the problem
+> pvscsi_shutdown_intr has been moved out of pvscsi_release_resources.
 
 Applied to 4.20/scsi-fixes, thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
-
--- 
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-Visit this group at https://groups.google.com/group/open-iscsi.
-For more options, visit https://groups.google.com/d/optout.
