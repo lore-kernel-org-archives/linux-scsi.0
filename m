@@ -1,8 +1,8 @@
 From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: [PATCH 25/41] scsi: lpfc: lpfc_nportdisc: Mark expected switch
+Subject: [PATCH 26/41] scsi: lpfc: lpfc_nvme: Mark expected switch
  fall-through
-Date: Tue, 27 Nov 2018 22:31:33 -0600
-Message-ID: <8d1c41fb93d54415cfd0a8c1fa6d31a6a76db461.1543374820.git.gustavo@embeddedor.com>
+Date: Tue, 27 Nov 2018 22:31:49 -0600
+Message-ID: <79e1e3ed62a02dc3caf264f6960e7be68bbbc70c.1543374820.git.gustavo@embeddedor.com>
 References: <cover.1543374820.git.gustavo@embeddedor.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -19,20 +19,20 @@ where we are expecting to fall through.
 
 Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 ---
- drivers/scsi/lpfc/lpfc_nportdisc.c | 1 +
+ drivers/scsi/lpfc/lpfc_nvme.c | 1 +
  1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
-index 7d5693cfaa87..e8583496feaf 100644
---- a/drivers/scsi/lpfc/lpfc_nportdisc.c
-+++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
-@@ -360,6 +360,7 @@ lpfc_rcv_plogi(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 	case  NLP_STE_NPR_NODE:
- 		if (!(ndlp->nlp_flag & NLP_NPR_ADISC))
- 			break;
-+		/* fall through */
- 	case  NLP_STE_REG_LOGIN_ISSUE:
- 	case  NLP_STE_PRLI_ISSUE:
- 	case  NLP_STE_UNMAPPED_NODE:
+diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
+index ba831def9301..942fe58c433d 100644
+--- a/drivers/scsi/lpfc/lpfc_nvme.c
++++ b/drivers/scsi/lpfc/lpfc_nvme.c
+@@ -1115,6 +1115,7 @@ lpfc_nvme_io_cmd_wqe_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pwqeIn,
+ 					 lpfc_ncmd, nCmd,
+ 					 lpfc_ncmd->cur_iocbq.sli4_xritag,
+ 					 bf_get(lpfc_wcqe_c_xb, wcqe));
++			/* fall through */
+ 		default:
+ out_err:
+ 			lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_IOERR,
 -- 
 2.17.1
