@@ -1,7 +1,7 @@
 From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: [PATCH 20/41] scsi: isci: request: mark expected switch fall-through
-Date: Tue, 27 Nov 2018 22:30:27 -0600
-Message-ID: <544d1da2adb45f369f002638760d1c933b482cb0.1543374820.git.gustavo@embeddedor.com>
+Subject: [PATCH 17/41] scsi: isci: phy: Mark expected switch fall-through
+Date: Tue, 27 Nov 2018 22:29:55 -0600
+Message-ID: <c07224fd421852f2cb717e6a3e6180eacb5ba372.1543374820.git.gustavo@embeddedor.com>
 References: <cover.1543374820.git.gustavo@embeddedor.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -16,27 +16,23 @@ List-Id: linux-scsi@vger.kernel.org
 In preparation to enabling -Wimplicit-fallthrough, mark switch cases
 where we are expecting to fall through.
 
-Notice that, in this particular case, a dash is added as a token in
-order to separate the "Fall through" annotation from the rest of the
-comment on the same line, which is what GCC is expecting to find.
-
+Addresses-Coverity-ID: 703127 ("Missing break in switch")
 Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 ---
- drivers/scsi/isci/request.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/isci/phy.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/isci/request.c b/drivers/scsi/isci/request.c
-index 2f151708b59a..1b18cf55167e 100644
---- a/drivers/scsi/isci/request.c
-+++ b/drivers/scsi/isci/request.c
-@@ -894,7 +894,7 @@ sci_io_request_terminate(struct isci_request *ireq)
- 		 * and don't wait for the task response.
- 		 */
- 		sci_change_state(&ireq->sm, SCI_REQ_ABORTING);
--		/* Fall through and handle like ABORTING... */
-+		/* Fall through - and handle like ABORTING... */
- 	case SCI_REQ_ABORTING:
- 		if (!isci_remote_device_is_safe_to_abort(ireq->target_device))
- 			set_bit(IREQ_PENDING_ABORT, &ireq->flags);
+diff --git a/drivers/scsi/isci/phy.c b/drivers/scsi/isci/phy.c
+index 1deca8c5a94f..7f9b3f20e5e4 100644
+--- a/drivers/scsi/isci/phy.c
++++ b/drivers/scsi/isci/phy.c
+@@ -778,6 +778,7 @@ enum sci_status sci_phy_event_handler(struct isci_phy *iphy, u32 event_code)
+ 			break;
+ 		case SCU_EVENT_LINK_FAILURE:
+ 			scu_link_layer_set_txcomsas_timeout(iphy, SCU_SAS_LINK_LAYER_TXCOMSAS_NEGTIME_DEFAULT);
++			/* fall through */
+ 		case SCU_EVENT_HARD_RESET_RECEIVED:
+ 			/* Start the oob/sn state machine over again */
+ 			sci_change_state(&iphy->sm, SCI_PHY_STARTING);
 -- 
 2.17.1
