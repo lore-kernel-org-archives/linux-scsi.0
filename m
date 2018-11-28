@@ -1,8 +1,8 @@
 From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: [PATCH 13/41] scsi: csiostor: csio_wr: mark expected switch
- fall-through
-Date: Tue, 27 Nov 2018 22:28:52 -0600
-Message-ID: <5e846a635bfaf121af56e1f60a99816091e55170.1543374820.git.gustavo@embeddedor.com>
+Subject: [PATCH 14/41] scsi: esas2r: esas2r_init: mark expected switch
+ fall-throughs
+Date: Tue, 27 Nov 2018 22:28:57 -0600
+Message-ID: <eb98d6f510cd93e45d7832837acd4e5811f3d20e.1543374820.git.gustavo@embeddedor.com>
 References: <cover.1543374820.git.gustavo@embeddedor.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -10,30 +10,38 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
 In-Reply-To: <cover.1543374820.git.gustavo@embeddedor.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+To: Bradley Grove <linuxdrivers@attotech.com>
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Gustavo A. R. Silva" <gustavo@embeddedor.com>
 List-Id: linux-scsi@vger.kernel.org
 
 In preparation to enabling -Wimplicit-fallthrough, mark switch cases
 where we are expecting to fall through.
 
-Addresses-Coverity-ID: 1056538 ("Missing break in switch")
 Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 ---
- drivers/scsi/csiostor/csio_wr.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/scsi/esas2r/esas2r_init.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/csiostor/csio_wr.c b/drivers/scsi/csiostor/csio_wr.c
-index dc12933533d5..b6861ea66c9f 100644
---- a/drivers/scsi/csiostor/csio_wr.c
-+++ b/drivers/scsi/csiostor/csio_wr.c
-@@ -808,6 +808,7 @@ csio_wr_destroy_queues(struct csio_hw *hw, bool cmd)
+diff --git a/drivers/scsi/esas2r/esas2r_init.c b/drivers/scsi/esas2r/esas2r_init.c
+index 46b2c83ba21f..950cd92df2ff 100644
+--- a/drivers/scsi/esas2r/esas2r_init.c
++++ b/drivers/scsi/esas2r/esas2r_init.c
+@@ -1241,6 +1241,7 @@ static bool esas2r_format_init_msg(struct esas2r_adapter *a,
+ 			a->init_msg = ESAS2R_INIT_MSG_GET_INIT;
+ 			break;
+ 		}
++		/* fall through */
  
- 				csio_q_eqid(hw, i) = CSIO_MAX_QID;
+ 	case ESAS2R_INIT_MSG_GET_INIT:
+ 		if (msg == ESAS2R_INIT_MSG_GET_INIT) {
+@@ -1254,7 +1255,7 @@ static bool esas2r_format_init_msg(struct esas2r_adapter *a,
+ 				esas2r_hdebug("FAILED");
  			}
-+			/* fall through */
- 		case CSIO_INGRESS:
- 			if (csio_q_iqid(hw, i) != CSIO_MAX_QID) {
- 				csio_wr_cleanup_iq_ftr(hw, i);
+ 		}
+-	/* fall through */
++		/* fall through */
+ 
+ 	default:
+ 		rq->req_stat = RS_SUCCESS;
 -- 
 2.17.1
