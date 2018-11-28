@@ -1,38 +1,40 @@
-From: <Dave.Carroll@microchip.com>
-Subject: RE: [PATCH 04/41] scsi: aacraid: linit: Mark expected switch
- fall-through
-Date: Wed, 28 Nov 2018 19:24:03 +0000
-Message-ID: <BYAPR11MB3447CB719791FC8249AF938B88D10@BYAPR11MB3447.namprd11.prod.outlook.com>
-References: <cover.1543374820.git.gustavo@embeddedor.com>
- <d59c13880a70724c3645d96945bf8a128f835244.1543374820.git.gustavo@embeddedor.com>
+From: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] libiscsi: Fix NULL pointer dereference in iscsi_eh_session_reset
+Date: Wed, 28 Nov 2018 18:42:23 -0500
+Message-ID: <yq1d0qo3h28.fsf@oracle.com>
+References: <1542763365-22253-1-git-send-email-fred.herard@oracle.com>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <d59c13880a70724c3645d96945bf8a128f835244.1543374820.git.gustavo@embeddedor.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: gustavo@embeddedor.com, aacraid@microsemi.com
-Cc: jejb@linux.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <open-iscsi+bncBDVIJONZ3YDRBZGP7TPQKGQEU2DNRSQ-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+In-Reply-To: <1542763365-22253-1-git-send-email-fred.herard-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org> (fred
+	herard's message of "Tue, 20 Nov 2018 20:22:45 -0500")
+List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <https://groups.google.com/group/open-iscsi
+List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
+ <https://groups.google.com/group/open-iscsi/subscribe>
+To: fred.herard-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org
+Cc: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-> -----Original Message-----
-> From: Gustavo A. R. Silva [mailto:gustavo@embeddedor.com]
-> Sent: Tuesday, November 27, 2018 9:26 PM
-> To: Adaptec OEM Raid Solutions <aacraid@microsemi.com>
-> Cc: James E.J. Bottomley <jejb@linux.ibm.com>; Martin K. Petersen
-> <martin.petersen@oracle.com>; linux-scsi@vger.kernel.org; linux-
-> kernel@vger.kernel.org; Gustavo A. R. Silva <gustavo@embeddedor.com>
-> Subject: [PATCH 04/41] scsi: aacraid: linit: Mark expected switch fall-th=
-rough
->=20
->=20
-> In preparation to enabling -Wimplicit-fallthrough, mark switch cases wher=
-e
-> we are expecting to fall through.
->=20
-> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
-> ---
->  drivers/scsi/aacraid/linit.c | 1 +
 
-Reviewed-by: Dave Carroll <david.carroll@microsemi.com>
+Fred,
+
+> This commit addresses NULL pointer dereference in
+> iscsi_eh_session_reset.  Reference should not be made to
+> session->leadconn when session->state is set to ISCSI_STATE_TERMINATE.
+
+Applied to 4.20/scsi-fixes, thanks!
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
+
+-- 
+You received this message because you are subscribed to the Google Groups "open-iscsi" group.
+To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+Visit this group at https://groups.google.com/group/open-iscsi.
+For more options, visit https://groups.google.com/d/optout.
