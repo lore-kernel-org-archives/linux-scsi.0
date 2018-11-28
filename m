@@ -1,75 +1,42 @@
-From: Avri Altman <Avri.Altman@wdc.com>
-Subject: RE: [PATCH 40/41] scsi: ufs: ufshcd: mark expected switch
- fall-throughs
-Date: Wed, 28 Nov 2018 06:15:41 +0000
-Message-ID: <SN6PR04MB4925E511F16036DF52A6FFA7FCD10@SN6PR04MB4925.namprd04.prod.outlook.com>
-References: <cover.1543374820.git.gustavo@embeddedor.com>
- <f4ee30ab52b0fadd2242dd189fe03b60ecba1f47.1543374820.git.gustavo@embeddedor.com>
+From: Sumit Saxena <sumit.saxena@broadcom.com>
+Subject: Re: [PATCH 29/41] scsi: megaraid: megaraid_sas_base: Mark expected
+ switch fall-through
+Date: Wed, 28 Nov 2018 12:10:07 +0530
+Message-ID: <CAL2rwxodKijDbDYEEDSn_CfdFZ3k1md7GbvoNM8Eu6SaZV=oXA@mail.gmail.com>
+References: <cover.1543374820.git.gustavo@embeddedor.com> <073efb316d0acba28e6105fcd4f4d5deda2ff3f7.1543374820.git.gustavo@embeddedor.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <f4ee30ab52b0fadd2242dd189fe03b60ecba1f47.1543374820.git.gustavo@embeddedor.com>
-Content-Language: en-US
+In-Reply-To: <073efb316d0acba28e6105fcd4f4d5deda2ff3f7.1543374820.git.gustavo@embeddedor.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>, Vinayak Holikatti <vinholikatti@gmail.com>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Tomas Winkler <tomas.winkler@intel.com>
+To: gustavo@embeddedor.com
+Cc: Kashyap Desai <kashyap.desai@broadcom.com>, Shivasharan Srikanteshwara <shivasharan.srikanteshwara@broadcom.com>, megaraidlinux.pdl@broadcom.com, jejb@linux.ibm.com, "Martin K. Petersen" <martin.petersen@oracle.com>, Linux SCSI List <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Already submitted by Tomas:
-https://www.spinics.net/lists/linux-scsi/msg125659.html
-
-Thanks,
-Avri
-
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org <linux-scsi-owner@vger.kernel.org>
-> On Behalf Of Gustavo A. R. Silva
-> Sent: Wednesday, November 28, 2018 6:34 AM
-> To: Vinayak Holikatti <vinholikatti@gmail.com>
-> Cc: James E.J. Bottomley <jejb@linux.ibm.com>; Martin K. Petersen
-> <martin.petersen@oracle.com>; linux-scsi@vger.kernel.org; linux-
-> kernel@vger.kernel.org; Gustavo A. R. Silva <gustavo@embeddedor.com>
-> Subject: [PATCH 40/41] scsi: ufs: ufshcd: mark expected switch fall-throu=
-ghs
->=20
+On Wed, Nov 28, 2018 at 10:02 AM Gustavo A. R. Silva
+<gustavo@embeddedor.com> wrote:
+>
 > In preparation to enabling -Wimplicit-fallthrough, mark switch cases
 > where we are expecting to fall through.
->=20
-> Addresses-Coverity-ID: 1087954 ("Missing break in switch")
+>
 > Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+Acked-by: Sumit Saxena <sumit.saxena@broadcom.com>
 > ---
->  drivers/scsi/ufs/ufshcd.c | 3 +++
->  1 file changed, 3 insertions(+)
->=20
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 003d489f1b4b..be207197b63f 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -1551,6 +1551,7 @@ int ufshcd_hold(struct ufs_hba *hba, bool async)
->  		 * currently running. Hence, fall through to cancel gating
->  		 * work and to enable clocks.
->  		 */
-> +		/* fall through */
->  	case CLKS_OFF:
->  		ufshcd_scsi_block_requests(hba);
->  		hba->clk_gating.state =3D REQ_CLKS_ON;
-> @@ -1562,6 +1563,7 @@ int ufshcd_hold(struct ufs_hba *hba, bool async)
->  		 * fall through to check if we should wait for this
->  		 * work to be done or not.
->  		 */
-> +		/* fall through */
->  	case REQ_CLKS_ON:
->  		if (async) {
->  			rc =3D -EAGAIN;
-> @@ -4620,6 +4622,7 @@ ufshcd_scsi_cmd_status(struct ufshcd_lrb *lrbp,
-> int scsi_status)
->  	switch (scsi_status) {
->  	case SAM_STAT_CHECK_CONDITION:
->  		ufshcd_copy_sense_data(lrbp);
-> +		/* fall through */
->  	case SAM_STAT_GOOD:
->  		result |=3D DID_OK << 16 |
->  			  COMMAND_COMPLETE << 8 |
+>  drivers/scsi/megaraid/megaraid_sas_base.c | 1 +
+>  1 file changed, 1 insertion(+)
+>
+> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+> index b7d3fc6fb118..9db7aebc3564 100644
+> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
+> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+> @@ -3281,6 +3281,7 @@ megasas_complete_cmd(struct megasas_instance *instance, struct megasas_cmd *cmd,
+>                         megasas_complete_int_cmd(instance, cmd);
+>                         break;
+>                 }
+> +               /* fall through */
+>
+>         case MFI_CMD_LD_READ:
+>         case MFI_CMD_LD_WRITE:
 > --
 > 2.17.1
+>
