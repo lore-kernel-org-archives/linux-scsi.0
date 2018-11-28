@@ -1,8 +1,7 @@
 From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: [PATCH 21/41] scsi: libfc: fc_rport: Mark expected switch
- fall-through
-Date: Tue, 27 Nov 2018 22:30:55 -0600
-Message-ID: <1713e55b2fa29809530bc694c37d9cadb22c6f98.1543374820.git.gustavo@embeddedor.com>
+Subject: [PATCH 22/41] scsi: lpfc: lpfc_ct: Mark expected switch fall-throughs
+Date: Tue, 27 Nov 2018 22:31:08 -0600
+Message-ID: <4e80e3ae7cd0f0c54b45530a3772af4f606b0c8e.1543374820.git.gustavo@embeddedor.com>
 References: <cover.1543374820.git.gustavo@embeddedor.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -10,7 +9,7 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
 In-Reply-To: <cover.1543374820.git.gustavo@embeddedor.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Johannes Thumshirn <jth@kernel.org>
+To: James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>
 Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Gustavo A. R. Silva" <gustavo@embeddedor.com>
 List-Id: linux-scsi@vger.kernel.org
 
@@ -19,20 +18,28 @@ where we are expecting to fall through.
 
 Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 ---
- drivers/scsi/libfc/fc_rport.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/scsi/lpfc/lpfc_ct.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
-index 638f42a5200e..9192a1d9dec6 100644
---- a/drivers/scsi/libfc/fc_rport.c
-+++ b/drivers/scsi/libfc/fc_rport.c
-@@ -1722,6 +1722,7 @@ static void fc_rport_recv_els_req(struct fc_lport *lport, struct fc_frame *fp)
- 			kref_put(&rdata->kref, fc_rport_destroy);
- 			goto busy;
- 		}
+diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
+index 6305ffeba7ea..b2b7fcc23654 100644
+--- a/drivers/scsi/lpfc/lpfc_ct.c
++++ b/drivers/scsi/lpfc/lpfc_ct.c
+@@ -3050,6 +3050,7 @@ lpfc_fdmi_cmd(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+ 	case SLI_MGMT_GHAT:
+ 	case SLI_MGMT_GRPL:
+ 		rsp_size = FC_MAX_NS_RSP;
 +		/* fall through */
- 	default:
- 		FC_RPORT_DBG(rdata,
- 			     "Reject ELS 0x%02x while in state %s\n",
+ 	case SLI_MGMT_DHBA:
+ 	case SLI_MGMT_DHAT:
+ 		pe = (struct lpfc_fdmi_port_entry *)&CtReq->un.PortID;
+@@ -3062,6 +3063,7 @@ lpfc_fdmi_cmd(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+ 	case SLI_MGMT_GPAT:
+ 	case SLI_MGMT_GPAS:
+ 		rsp_size = FC_MAX_NS_RSP;
++		/* fall through */
+ 	case SLI_MGMT_DPRT:
+ 	case SLI_MGMT_DPA:
+ 		pe = (struct lpfc_fdmi_port_entry *)&CtReq->un.PortID;
 -- 
 2.17.1
