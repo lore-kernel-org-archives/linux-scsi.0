@@ -1,24 +1,26 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: mpt3sas: fix spelling mistake "manufaucturing" -> "manufacturing"
-Date: Wed, 28 Nov 2018 21:37:53 -0500
-Message-ID: <yq11s741uda.fsf@oracle.com>
-References: <20181128153048.13804-1-colin.king@canonical.com>
+Subject: Re: [PATCH 03/41] scsi: aacraid: aachba: Mark expected switch fall-throughs
+Date: Wed, 28 Nov 2018 21:50:52 -0500
+Message-ID: <yq1k1kwzjeb.fsf@oracle.com>
+References: <cover.1543374820.git.gustavo@embeddedor.com>
+        <fba277107d0b94bdd6e7cabf1d17e0fb0b6e13d8.1543374820.git.gustavo@embeddedor.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20181128153048.13804-1-colin.king@canonical.com> (Colin King's
-        message of "Wed, 28 Nov 2018 15:30:48 +0000")
+In-Reply-To: <fba277107d0b94bdd6e7cabf1d17e0fb0b6e13d8.1543374820.git.gustavo@embeddedor.com>
+        (Gustavo A. R. Silva's message of "Tue, 27 Nov 2018 22:25:41 -0600")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Colin King <colin.king@canonical.com>
-Cc: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Cc: Adaptec OEM Raid Solutions <aacraid@microsemi.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Colin,
+Gustavo A.,
 
-> There is a spelling mistake in some description text, fix it.
+> In preparation to enabling -Wimplicit-fallthrough, mark switch cases
+> where we are expecting to fall through.
 
-Applied to 4.21/scsi-queue, thanks!
+Applied to 4.21/scsi-queue.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
