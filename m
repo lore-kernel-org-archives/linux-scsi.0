@@ -1,121 +1,100 @@
-From: Wen Yang <wen.yang99@zte.com.cn>
-Subject: [PATCH] scsi: Fix bad alignments
-Date: Thu, 29 Nov 2018 11:18:55 +0800
-Message-ID: <20181129031855.18701-1-wen.yang99@zte.com.cn>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+From: Sasha Levin <sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 09/68] scsi: ufs: Fix hynix ufs bug with quirk on hi36xx SoC
+Date: Thu, 29 Nov 2018 00:55:00 -0500
+Message-ID: <20181129055559.159228-9-sashal@kernel.org>
+References: <20181129055559.159228-1-sashal@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20181129055559.159228-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, zhong.weidong@zte.com.cn, Wen Yang <wen.yang99@zte.com.cn>, Julia Lawall <julia.lawall@lip6.fr>, Willem Riede <osst@riede.org>, Kashyap Desai <kashyap.desai@broadcom.com>, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
+To: stable@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Wei Li <liwei213@huawei.com>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Dmitry Shmidt <dimitrysh@google.com>, John Stultz <john.stultz@linaro.org>, Sasha Levin <sashal@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-As reported by cocinelle:
+From: Wei Li <liwei213@huawei.com>
 
-drivers/scsi/sym53c8xx=5F2/sym=5Fhipd.c:5411:1-49: code aligned with follow=
-ing code on line 5418
-drivers/scsi/osst.c:4701:3-9: code aligned with following code on line 4703
-drivers/scsi/osst.c:4206:3-17: code aligned with following code on line 4207
-drivers/scsi/osst.c:5570:2-25: code aligned with following code on line 5571
-drivers/scsi/osst.c:5572:2-59: code aligned with following code on line 5573
-drivers/scsi/osst.c:5574:2-42: code aligned with following code on line 5575
-drivers/scsi/megaraid/megaraid=5Fsas=5Fbase.c:1825:2-59: code aligned with =
-following code on line 1827
+[ Upstream commit 8e4829c6f7470722c1f5a1dc5769ebe09ef036d6 ]
 
-Signed-off-by: Wen Yang <wen.yang99@zte.com.cn>
-CC: Julia Lawall <julia.lawall@lip6.fr>
-CC: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
-CC: "Martin K. Petersen" <martin.petersen@oracle.com>
-CC: Willem Riede <osst@riede.org>
-CC: Kashyap Desai <kashyap.desai@broadcom.com>
-CC: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-CC: linux-scsi@vger.kernel.org
-CC: linux-kernel@vger.kernel.org
+Hynix ufs has deviations on hi36xx platform which will result in ufs bursts
+transfer failures.
+
+To fix the problem, the Hynix device must set the register
+VS_DebugSaveConfigTime to 0x10, which will set time reference for
+SaveConfigTime is 250 ns. The time reference for SaveConfigTime is 40 ns by
+default.
+
+This patch is necessary to boot on HiKey960 boards that use Hynix UFS chips
+(H28U62301AMR model: hB8aL1).
+
+Cc: Vinayak Holikatti <vinholikatti@gmail.com>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
+Signed-off-by: Wei Li <liwei213@huawei.com>
+Signed-off-by: Dmitry Shmidt <dimitrysh@google.com>
+[jstultz: Forward ported from older code, slight tweak to commit message]
+Signed-off-by: John Stultz <john.stultz@linaro.org>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/megaraid/megaraid=5Fsas=5Fbase.c |  3 ++-
- drivers/scsi/osst.c                       | 10 +++++-----
- drivers/scsi/sym53c8xx=5F2/sym=5Fhipd.c       |  8 ++++----
- 3 files changed, 11 insertions(+), 10 deletions(-)
+ drivers/scsi/ufs/ufs-hisi.c   | 9 +++++++++
+ drivers/scsi/ufs/ufs_quirks.h | 6 ++++++
+ drivers/scsi/ufs/ufshcd.c     | 2 ++
+ 3 files changed, 17 insertions(+)
 
-diff --git a/drivers/scsi/megaraid/megaraid=5Fsas=5Fbase.c b/drivers/scsi/m=
-egaraid/megaraid=5Fsas=5Fbase.c
-index 9b90c716f06d..e00b44babb28 100644
---- a/drivers/scsi/megaraid/megaraid=5Fsas=5Fbase.c
-+++ b/drivers/scsi/megaraid/megaraid=5Fsas=5Fbase.c
-@@ -1822,7 +1822,8 @@ void megasas=5Fset=5Fdynamic=5Ftarget=5Fproperties(st=
-ruct scsi=5Fdevice *sdev,
- 		raid =3D MR=5FLdRaidGet(ld, local=5Fmap=5Fptr);
-=20
- 		if (raid->capability.ldPiMode =3D=3D MR=5FPROT=5FINFO=5FTYPE=5FCONTROLLE=
-R)
--		blk=5Fqueue=5Fupdate=5Fdma=5Falignment(sdev->request=5Fqueue, 0x7);
-+			blk=5Fqueue=5Fupdate=5Fdma=5Falignment(
-+					sdev->request=5Fqueue, 0x7);
-=20
- 		mr=5Fdevice=5Fpriv=5Fdata->is=5Ftm=5Fcapable =3D
- 			raid->capability.tmCapable;
-diff --git a/drivers/scsi/osst.c b/drivers/scsi/osst.c
-index 7a1a1edde35d..bbf8e60dbb04 100644
---- a/drivers/scsi/osst.c
-+++ b/drivers/scsi/osst.c
-@@ -4698,7 +4698,7 @@ static int =5F=5Fos=5Fscsi=5Ftape=5Fopen(struct inode=
- * inode, struct file * filp)
- 						    STp->timeout, MAX=5FRETRIES, 1);
- 			if ((SRpnt->sense[0] & 0x70) !=3D 0x70 ||
- 			    (SRpnt->sense[2] & 0x0f) =3D=3D NOT=5FREADY)
--			break;
-+				break;
-=20
- 			if ((SRpnt->sense[2] & 0x0f) =3D=3D UNIT=5FATTENTION) {
- 				int j;
-@@ -5567,13 +5567,13 @@ static int osst=5Fcopy=5Ffrom=5Fbuffer(struct osst=
-=5Fbuffer *st=5Fbp, unsigned char *ptr)
- static void validate=5Foptions (void)
+diff --git a/drivers/scsi/ufs/ufs-hisi.c b/drivers/scsi/ufs/ufs-hisi.c
+index 46df707e6f2c..452e19f8fb47 100644
+--- a/drivers/scsi/ufs/ufs-hisi.c
++++ b/drivers/scsi/ufs/ufs-hisi.c
+@@ -20,6 +20,7 @@
+ #include "unipro.h"
+ #include "ufs-hisi.h"
+ #include "ufshci.h"
++#include "ufs_quirks.h"
+ 
+ static int ufs_hisi_check_hibern8(struct ufs_hba *hba)
  {
-   if (max=5Fdev > 0)
--		osst=5Fmax=5Fdev =3D max=5Fdev; =20
-+	osst=5Fmax=5Fdev =3D max=5Fdev;
-   if (write=5Fthreshold=5Fkbs > 0)
--		osst=5Fwrite=5Fthreshold =3D write=5Fthreshold=5Fkbs * ST=5FKILOBYTE;
-+	osst=5Fwrite=5Fthreshold =3D write=5Fthreshold=5Fkbs * ST=5FKILOBYTE;
-   if (osst=5Fwrite=5Fthreshold > osst=5Fbuffer=5Fsize)
--		osst=5Fwrite=5Fthreshold =3D osst=5Fbuffer=5Fsize;
-+	osst=5Fwrite=5Fthreshold =3D osst=5Fbuffer=5Fsize;
-   if (max=5Fsg=5Fsegs >=3D OSST=5FFIRST=5FSG)
--		osst=5Fmax=5Fsg=5Fsegs =3D max=5Fsg=5Fsegs;
-+	osst=5Fmax=5Fsg=5Fsegs =3D max=5Fsg=5Fsegs;
- #if DEBUG
-   printk(OSST=5FDEB=5FMSG "osst :D: max tapes %d, write threshold %d, max =
-s/g segs %d.\n",
- 			   osst=5Fmax=5Fdev, osst=5Fwrite=5Fthreshold, osst=5Fmax=5Fsg=5Fsegs);
-diff --git a/drivers/scsi/sym53c8xx=5F2/sym=5Fhipd.c b/drivers/scsi/sym53c8=
-xx=5F2/sym=5Fhipd.c
-index 0a2a54517b15..29be0f4e8bd6 100644
---- a/drivers/scsi/sym53c8xx=5F2/sym=5Fhipd.c
-+++ b/drivers/scsi/sym53c8xx=5F2/sym=5Fhipd.c
-@@ -5407,8 +5407,8 @@ void sym=5Fcomplete=5Ferror(struct sym=5Fhcb *np, str=
-uct sym=5Fccb *cp)
- 		cp->sv=5Fresid =3D 0;
- 	}
- #ifdef DEBUG=5F2=5F0=5FX
--if (resid)
--	printf("XXXX RESID=3D %d - 0x%x\n", resid, resid);
-+	if (resid)
-+		printf("XXXX RESID=3D %d - 0x%x\n", resid, resid);
- #endif
-=20
- 	/*
-@@ -5531,8 +5531,8 @@ void sym=5Fcomplete=5Fok (struct sym=5Fhcb *np, struc=
-t sym=5Fccb *cp)
- 	if (!SYM=5FSETUP=5FRESIDUAL=5FSUPPORT)
- 		resid  =3D 0;
- #ifdef DEBUG=5F2=5F0=5FX
--if (resid)
--	printf("XXXX RESID=3D %d - 0x%x\n", resid, resid);
-+	if (resid)
-+		printf("XXXX RESID=3D %d - 0x%x\n", resid, resid);
- #endif
-=20
- 	/*
---=20
-2.19.1
+@@ -390,6 +391,14 @@ static void ufs_hisi_set_dev_cap(struct ufs_hisi_dev_params *hisi_param)
+ 
+ static void ufs_hisi_pwr_change_pre_change(struct ufs_hba *hba)
+ {
++	if (hba->dev_quirks & UFS_DEVICE_QUIRK_HOST_VS_DEBUGSAVECONFIGTIME) {
++		pr_info("ufs flash device must set VS_DebugSaveConfigTime 0x10\n");
++		/* VS_DebugSaveConfigTime */
++		ufshcd_dme_set(hba, UIC_ARG_MIB(0xD0A0), 0x10);
++		/* sync length */
++		ufshcd_dme_set(hba, UIC_ARG_MIB(0x1556), 0x48);
++	}
++
+ 	/* update */
+ 	ufshcd_dme_set(hba, UIC_ARG_MIB(0x15A8), 0x1);
+ 	/* PA_TxSkip */
+diff --git a/drivers/scsi/ufs/ufs_quirks.h b/drivers/scsi/ufs/ufs_quirks.h
+index 71f73d1d1ad1..5d2dfdb41a6f 100644
+--- a/drivers/scsi/ufs/ufs_quirks.h
++++ b/drivers/scsi/ufs/ufs_quirks.h
+@@ -131,4 +131,10 @@ struct ufs_dev_fix {
+  */
+ #define UFS_DEVICE_QUIRK_HOST_PA_SAVECONFIGTIME	(1 << 8)
+ 
++/*
++ * Some UFS devices require VS_DebugSaveConfigTime is 0x10,
++ * enabling this quirk ensure this.
++ */
++#define UFS_DEVICE_QUIRK_HOST_VS_DEBUGSAVECONFIGTIME	(1 << 9)
++
+ #endif /* UFS_QUIRKS_H_ */
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 54074dd483a7..0b81d9d03357 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -230,6 +230,8 @@ static struct ufs_dev_fix ufs_fixups[] = {
+ 	UFS_FIX(UFS_VENDOR_SKHYNIX, UFS_ANY_MODEL, UFS_DEVICE_NO_VCCQ),
+ 	UFS_FIX(UFS_VENDOR_SKHYNIX, UFS_ANY_MODEL,
+ 		UFS_DEVICE_QUIRK_HOST_PA_SAVECONFIGTIME),
++	UFS_FIX(UFS_VENDOR_SKHYNIX, "hB8aL1" /*H28U62301AMR*/,
++		UFS_DEVICE_QUIRK_HOST_VS_DEBUGSAVECONFIGTIME),
+ 
+ 	END_FIX
+ };
+-- 
+2.17.1
