@@ -1,100 +1,186 @@
-From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.19 09/68] scsi: ufs: Fix hynix ufs bug with quirk on hi36xx SoC
-Date: Thu, 29 Nov 2018 00:55:00 -0500
-Message-ID: <20181129055559.159228-9-sashal@kernel.org>
-References: <20181129055559.159228-1-sashal@kernel.org>
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH] scsi: libsas: Add missing license and update to SPDX
+ license identifier
+Date: Thu, 29 Nov 2018 11:52:39 +0000
+Message-ID: <07b65f80-9b73-472f-1fb8-7c0133f1d1ab@huawei.com>
+References: <1543328132-243266-1-git-send-email-john.garry@huawei.com>
+ <20181127144333.GA11004@kroah.com>
+ <8ae3a984-b4d4-f2eb-4aaa-b460441fa403@huawei.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20181129055559.159228-1-sashal@kernel.org>
+In-Reply-To: <8ae3a984-b4d4-f2eb-4aaa-b460441fa403@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: stable@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Wei Li <liwei213@huawei.com>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Dmitry Shmidt <dimitrysh@google.com>, John Stultz <john.stultz@linaro.org>, Sasha Levin <sashal@kernel.org>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linuxarm@huawei.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Wei Li <liwei213@huawei.com>
+On 27/11/2018 15:23, John Garry wrote:
+> On 27/11/2018 14:43, Greg KH wrote:
+>
+> Hi Greg,
+>
+>> On Tue, Nov 27, 2018 at 10:15:32PM +0800, John Garry wrote:
+>>> Currently sas_task.c has no license specifier, so add SPDX license
+>>> identifier for GPL-2.0+.
+>>>
+>>> As mentioned in commit b24413180f56 ("License cleanup: add SPDX GPL-2.0
+>>> license identifier to files with no license"), files with no license in
+>>> the kernel are under default kernel license.
+>>
+>> The default is GPLv2, not v2+.
+>
+> So sas_task.c should be v2.
 
-[ Upstream commit 8e4829c6f7470722c1f5a1dc5769ebe09ef036d6 ]
+Hi Greg,
 
-Hynix ufs has deviations on hi36xx platform which will result in ufs bursts
-transfer failures.
+I also note that currently we have an inconsistency in license of 
+sas_init.c:
 
-To fix the problem, the Hynix device must set the register
-VS_DebugSaveConfigTime to 0x10, which will set time reference for
-SaveConfigTime is 250 ns. The time reference for SaveConfigTime is 40 ns by
-default.
-
-This patch is necessary to boot on HiKey960 boards that use Hynix UFS chips
-(H28U62301AMR model: hB8aL1).
-
-Cc: Vinayak Holikatti <vinholikatti@gmail.com>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
-Signed-off-by: Wei Li <liwei213@huawei.com>
-Signed-off-by: Dmitry Shmidt <dimitrysh@google.com>
-[jstultz: Forward ported from older code, slight tweak to commit message]
-Signed-off-by: John Stultz <john.stultz@linaro.org>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/scsi/ufs/ufs-hisi.c   | 9 +++++++++
- drivers/scsi/ufs/ufs_quirks.h | 6 ++++++
- drivers/scsi/ufs/ufshcd.c     | 2 ++
- 3 files changed, 17 insertions(+)
-
-diff --git a/drivers/scsi/ufs/ufs-hisi.c b/drivers/scsi/ufs/ufs-hisi.c
-index 46df707e6f2c..452e19f8fb47 100644
---- a/drivers/scsi/ufs/ufs-hisi.c
-+++ b/drivers/scsi/ufs/ufs-hisi.c
-@@ -20,6 +20,7 @@
- #include "unipro.h"
- #include "ufs-hisi.h"
- #include "ufshci.h"
-+#include "ufs_quirks.h"
- 
- static int ufs_hisi_check_hibern8(struct ufs_hba *hba)
- {
-@@ -390,6 +391,14 @@ static void ufs_hisi_set_dev_cap(struct ufs_hisi_dev_params *hisi_param)
- 
- static void ufs_hisi_pwr_change_pre_change(struct ufs_hba *hba)
- {
-+	if (hba->dev_quirks & UFS_DEVICE_QUIRK_HOST_VS_DEBUGSAVECONFIGTIME) {
-+		pr_info("ufs flash device must set VS_DebugSaveConfigTime 0x10\n");
-+		/* VS_DebugSaveConfigTime */
-+		ufshcd_dme_set(hba, UIC_ARG_MIB(0xD0A0), 0x10);
-+		/* sync length */
-+		ufshcd_dme_set(hba, UIC_ARG_MIB(0x1556), 0x48);
-+	}
-+
- 	/* update */
- 	ufshcd_dme_set(hba, UIC_ARG_MIB(0x15A8), 0x1);
- 	/* PA_TxSkip */
-diff --git a/drivers/scsi/ufs/ufs_quirks.h b/drivers/scsi/ufs/ufs_quirks.h
-index 71f73d1d1ad1..5d2dfdb41a6f 100644
---- a/drivers/scsi/ufs/ufs_quirks.h
-+++ b/drivers/scsi/ufs/ufs_quirks.h
-@@ -131,4 +131,10 @@ struct ufs_dev_fix {
+/*
+  * Serial Attached SCSI (SAS) Transport Layer initialization
+  *
+  * Copyright (C) 2005 Adaptec, Inc.  All rights reserved.
+  * Copyright (C) 2005 Luben Tuikov <luben_tuikov@adaptec.com>
+  *
+  * This file is licensed under GPLv2.
+  *
+  * This program is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU General Public License as
+  * published by the Free Software Foundation; either version 2 of the
+  * License, or (at your option) any later version.
+  *
+  * This program is distributed in the hope that it will be useful, but
+  * WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  * General Public License for more details.
+  *
+  * You should have received a copy of the GNU General Public License
+  * along with this program; if not, write to the Free Software
+  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
+  * USA
+  *
   */
- #define UFS_DEVICE_QUIRK_HOST_PA_SAVECONFIGTIME	(1 << 8)
- 
-+/*
-+ * Some UFS devices require VS_DebugSaveConfigTime is 0x10,
-+ * enabling this quirk ensure this.
-+ */
-+#define UFS_DEVICE_QUIRK_HOST_VS_DEBUGSAVECONFIGTIME	(1 << 9)
-+
- #endif /* UFS_QUIRKS_H_ */
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 54074dd483a7..0b81d9d03357 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -230,6 +230,8 @@ static struct ufs_dev_fix ufs_fixups[] = {
- 	UFS_FIX(UFS_VENDOR_SKHYNIX, UFS_ANY_MODEL, UFS_DEVICE_NO_VCCQ),
- 	UFS_FIX(UFS_VENDOR_SKHYNIX, UFS_ANY_MODEL,
- 		UFS_DEVICE_QUIRK_HOST_PA_SAVECONFIGTIME),
-+	UFS_FIX(UFS_VENDOR_SKHYNIX, "hB8aL1" /*H28U62301AMR*/,
-+		UFS_DEVICE_QUIRK_HOST_VS_DEBUGSAVECONFIGTIME),
- 
- 	END_FIX
- };
--- 
-2.17.1
+
+...
+
+MODULE_AUTHOR("Luben Tuikov <luben_tuikov@adaptec.com>");
+MODULE_DESCRIPTION("SAS Transport Layer");
+MODULE_LICENSE("GPL v2");
+
+So the license specifies v2+ but module license states v2.
+
+I could not find a docment for guidance on this. I also note that making 
+sas_task.c v2 would mean mixing v2 and v2+ into the module.
+
+I did find an example of someone changing the license:
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/drivers/i2c/busses/i2c-designware-slave.c?h=v4.20-rc4&id=15c566fcff9cc7b8fd64461d6ee6fd1bc665b444
+
+Then someone changes the module license (but same company):
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/sound/soc/sh/rcar/core.c?h=v4.20-rc4&id=1e0edd4deadbbacd3b35179c233efa26624ab2af
+
+At this point I'm reluctant to touch this in case I mess up, but there 
+is still the missing license in sas_task.c .
+
+Thanks,
+John
+
+>
+>>
+>>>
+>>> While I'm at it, all other libsas source code files are updated to use
+>>> SPDX license identifier for GPL-2.0+.
+>>>
+>>> Signed-off-by: John Garry <john.garry@huawei.com>
+>>>
+>>> diff --git a/drivers/scsi/libsas/Kconfig b/drivers/scsi/libsas/Kconfig
+>>> index 13739bfa..bdc6bce 100644
+>>> --- a/drivers/scsi/libsas/Kconfig
+>>> +++ b/drivers/scsi/libsas/Kconfig
+>>> @@ -4,22 +4,7 @@
+>>>  # Copyright (C) 2005 Adaptec, Inc.  All rights reserved.
+>>>  # Copyright (C) 2005 Luben Tuikov <luben_tuikov@adaptec.com>
+>>>  #
+>>> -# This file is licensed under GPLv2.
+>>> -#
+>>> -# This program is free software; you can redistribute it and/or
+>>> -# modify it under the terms of the GNU General Public License as
+>>> -# published by the Free Software Foundation; version 2 of the
+>>> -# License.
+>>> -#
+>>> -# This program is distributed in the hope that it will be useful,
+>>> -# but WITHOUT ANY WARRANTY; without even the implied warranty of
+>>> -# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+>>> -# General Public License for more details.
+>>> -#
+>>> -# You should have received a copy of the GNU General Public License
+>>> -# along with this program; if not, write to the Free Software
+>>> -# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
+>>> -# USA
+>>> +# SPDX-License-Identifier: GPL-2.0+
+>>
+>> No, the above license is GPLv2 only, do NOT change the license of a file
+>> unless you have permission to do so.
+>
+> Of course. That was not my intention. My mistake.
+>
+>>
+>> Also, the spdx line goes at the first line of the file.
+>
+> JFYI, checkpatch.pl does pick up on this for .c/.h files but not this one.
+>
+>>
+>>
+>>>  #
+>>>
+>>>  config SCSI_SAS_LIBSAS
+>>> diff --git a/drivers/scsi/libsas/Makefile b/drivers/scsi/libsas/Makefile
+>>> index 5d51520..75998b7 100644
+>>> --- a/drivers/scsi/libsas/Makefile
+>>> +++ b/drivers/scsi/libsas/Makefile
+>>> @@ -4,22 +4,7 @@
+>>>  # Copyright (C) 2005 Adaptec, Inc.  All rights reserved.
+>>>  # Copyright (C) 2005 Luben Tuikov <luben_tuikov@adaptec.com>
+>>>  #
+>>> -# This file is licensed under GPLv2.
+>>> -#
+>>> -# This program is free software; you can redistribute it and/or
+>>> -# modify it under the terms of the GNU General Public License as
+>>> -# published by the Free Software Foundation; version 2 of the
+>>> -# License.
+>>> -#
+>>> -# This program is distributed in the hope that it will be useful,
+>>> -# but WITHOUT ANY WARRANTY; without even the implied warranty of
+>>> -# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+>>> -# General Public License for more details.
+>>> -#
+>>> -# You should have received a copy of the GNU General Public License
+>>> -# along with this program; if not, write to the Free Software
+>>> -# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
+>>> -# USA
+>>> +# SPDX-License-Identifier: GPL-2.0+
+>>
+>> Again you changed the license, not good :(
+>
+> I was thrown by having a different license for the Kconfig+Makefile vs
+> .c/.h.
+>
+>>
+>> Please do not make these types of changes unless you really know what
+>> you are doing, it is not ok to change the license of files.
+>
+> Right, of course.
+>
+>>
+>> greg k-h
+>>
+>
+> Thanks, I'll fix them properly,
+> John
+>
+>
+>
+>
+> .
+>
