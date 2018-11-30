@@ -1,43 +1,118 @@
-From: liujian <liujian56@huawei.com>
-Subject: [PATCH 1/2] driver: scsi: ufs-qcom: fix returnvar.cocci warning
-Date: Sat, 1 Dec 2018 02:07:43 +0800
-Message-ID: <1543601264-12610-1-git-send-email-liujian56@huawei.com>
+From: Ric Wheeler <ricwheeler@gmail.com>
+Subject: block layer API for file system creation - when to use
+	multidisk mode
+Date: Fri, 30 Nov 2018 13:00:52 -0500
+Message-ID: <3da04164-a89f-f4c0-1529-eab12b3226e1@gmail.com>
+References: <20181004222952.GV31060@dastard>
+	<CAOi1vP_U-QpABgs+a9oYpYvLWs4D2qVmff=-JEikn7S_=eCAXQ@mail.gmail.com>
+	<67627995-714c-5c38-a796-32b503de7d13@sandeen.net>
+	<20181005232710.GH12041@dastard>
+	<CAOi1vP-Z7xZk1YvWHYWQGOHfyWccFCkyn8je0HBvGhGuUrXmaQ@mail.gmail.com>
+	<20181006232037.GB18095@dastard>
+	<36bc3f17-e7d1-ce8b-2088-36ff5d7b1e8b@sandeen.net>
+	<0290ec9f-ab2b-7c1b-faaf-409d72f99e5f@gmail.com>
+	<20181129214851.GU6311@dastard>
+	<39031e68-3936-b5e1-bcb6-6fdecc5988c1@gmail.com>
+	<20181130022510.GW6311@dastard>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: qla2xxx-upstream@qlogic.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, vinholikatti@gmail.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Content-Transfer-Encoding: base64
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <20181130022510.GW6311@dastard>
+Content-Language: en-US
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Eric Sandeen <sandeen@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Mike Snitzer <snitzer@redhat.com>, Eric Sandeen <sandeen@sandeen.net>, xfs <linux-xfs@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>, Mark Nelson <mnelson@redhat.com>, Ilya Dryomov <idryomov@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Remove unneeded variable used to store return value,
-detected by the semantic patch returnvar.cocci.
-
-Signed-off-by: liujian <liujian56@huawei.com>
----
- drivers/scsi/ufs/ufs-qcom.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-index 3aeadb1..4d5532d 100644
---- a/drivers/scsi/ufs/ufs-qcom.c
-+++ b/drivers/scsi/ufs/ufs-qcom.c
-@@ -543,7 +543,6 @@ static int ufs_qcom_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- {
- 	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
- 	struct phy *phy = host->generic_phy;
--	int ret = 0;
- 
- 	if (ufs_qcom_is_link_off(hba)) {
- 		/*
-@@ -569,7 +568,7 @@ static int ufs_qcom_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 	}
- 
- out:
--	return ret;
-+	return 0;
- }
- 
- static int ufs_qcom_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
--- 
-2.7.4
+T24gMTEvMzAvMTggNzo1NSBBTSwgRGF2ZSBDaGlubmVyIHdyb3RlOgo+IE9uIFRodSwgTm92IDI5
+LCAyMDE4IGF0IDA2OjUzOjE0UE0gLTA1MDAsIFJpYyBXaGVlbGVyIHdyb3RlOgo+PiBPbiAxMS8y
+OS8xOCA0OjQ4IFBNLCBEYXZlIENoaW5uZXIgd3JvdGU6Cj4+PiBPbiBUaHUsIE5vdiAyOSwgMjAx
+OCBhdCAwODo1MzozOUFNIC0wNTAwLCBSaWMgV2hlZWxlciB3cm90ZToKPj4+PiBPbiAxMC82LzE4
+IDg6MTQgUE0sIEVyaWMgU2FuZGVlbiB3cm90ZToKPj4+Pj4gT24gMTAvNi8xOCA2OjIwIFBNLCBE
+YXZlIENoaW5uZXIgd3JvdGU6Cj4+Pj4+Pj4gQ2FuIHlvdSBnaXZlIGFuIGV4YW1wbGUgb2YgYSB1
+c2UgY2FzZSB0aGF0IHdvdWxkIGJlIG5lZ2F0aXZlbHkgYWZmZWN0ZWQKPj4+Pj4+PiBpZiB0aGlz
+IGhldXJpc3RpYyB3YXMgc3dpdGNoZWQgZnJvbSAic3VuaXQiIHRvICJzdW5pdCA8IHN3aWR0aCI/
+Cj4+Pj4+PiBBbnkgdGltZSB5b3Ugb25seSBrbm93IGEgc2luZ2xlIGFsaWdubWVudCBjaGFyYWN0
+ZXJpc3RpYyBvZiB0aGUKPj4+Pj4+IHVuZGVybHlpbmcgbXVsdGktZGlzayBzdG9yYWdlLiBlLmcu
+IGhhcmR3YXJlIFJBSUQwLzUvNiB0aGF0IHNldHMKPj4+Pj4+IGlvbWluID0gaW9vcHQsIG11bHRp
+LWxldmVsIFJBSUQgY29uc3RydWN0cyB3aGVyZSBvbmx5IHRoZSBsYXJnZXN0Cj4+Pj4+PiBhbGln
+bm1lbnQgcmVxdWlyZW1lbnQgaXMgZXhwb3NlZCwgUkFJRDEgZGV2aWNlcyBleHBvc2luZyB0aGVp
+ciBjaHVuawo+Pj4+Pj4gc2l6ZSwgcmVtb3RlIHJlcGxpY2F0aW9uIGNodW5rIGFsaWdubWVudCAo
+YmVjYXVzZSByZW1vdGUgcmVwLiBpcwo+Pj4+Pj4gc2xvdyBhbmQgc28gd2UgbmVlZCBtb3JlIGNv
+bmN1cnJlbmN5IHRvIGtlZXAgdGhlIHBpcGVsaW5lIGZ1bGwpLAo+Pj4+Pj4gZXRjLgo+Pj4+PiBT
+byB0aGUgdGw7ZHIgaGVyZSBpcyAiZ2l2ZW4gYW55IGlvbWluID4gNTEyLCB3ZSBzaG91bGQgaW5m
+ZXIgbG93IHNlZWsKPj4+Pj4gbGF0ZW5jeSBhbmQgcGFyYWxsZWxpc20gYW5kIGFkanVzdCBnZW9t
+ZXRyeSBhY2NvcmRpbmdseT8iCj4+Pj4+Cj4+Pj4+IC1FcmljCj4+Pj4gQ2hpbWluZyBpbiBsYXRl
+IGhlcmUsIGJ1dCBJIGRvIHRoaW5rIHRoYXQgZXZlcnkgZGVjYWRlIG9yIHR3byAobm8KPj4+PiBk
+aXNyZXNwZWN0IHRvIHhmcyEpLCBpdCBpcyB3b3J0aCBoYXZpbmcgYSBzZWNvbmQgbG9vayBhdCBo
+b3cgdGhlCj4+Pj4gc3RvcmFnZSBoYXMgY2hhbmdlZCB1bmRlciB1cy4KPj4+Pgo+Pj4+IFRoZSB3
+b3JrbG9hZCB0aGF0IGhhcyBsb3RzIG9mIGZpbGUgc3lzdGVtcyBwb3VuZGluZyBvbiBhIHNoYXJl
+ZAo+Pj4+IGRldmljZSBmb3IgZXhhbXBsZSBpcyBvbmUgd2F5IHRvIGxheSBvdXQgY29udGFpbmVy
+IHN0b3JhZ2UuCj4+PiBUaGUgcHJvYmxlbSBpcyB0aGF0IGRlZmF1bHRzIGNhbid0IGNhdGVyIGZv
+ciBldmVyeSB1c2UgY2FzZS4KPj4+IEFuZCBpbiB0aGlzIGNhc2UsIHdlJ3ZlIGdvdCBub3RoaW5n
+IHRvIHRlbGwgdXMgdGhhdCB0aGlzIGlzCj4+PiBhZ2dyZWdhdGVkL3NoYXJlZCBzdG9yYWdlIHJh
+dGhlciB0aGFuICJ0aGUgZmlsZXlzdGVtIG93bnMgdGhlCj4+PiBlbnRpcmUgZGV2aWNlIi4KPj4+
+Cj4+Pj4gTm8gYXJndW1lbnQgYWJvdXQgZG9jdW1lbnRpbmcgaG93IHRvIGZpeCB0aGlzIHdpdGgg
+Y29tbWFuZCBsaW5lCj4+Pj4gdHdlYWtzIGZvciBub3csIGJ1dCBtYXliZSB0aGlzIHdvdWxkIGJl
+IGEgZ29vZCB0b3BpYyBmb3IgdGhlIG5leHQKPj4+PiBMU0YvTU0gc2hhcmVkIHRyYWNrIG9mIGZp
+bGUgJiBzdG9yYWdlIHBlb3BsZSB0byBkZWJhdGU/Cj4+PiBEb3VidCBpdCAtIHRoaXMgaXMgcmVh
+bGx5IG9ubHkgYW4gWEZTIHByb2JsZW0gYXQgdGhpcyBwb2ludC4KPj4+Cj4+PiBpLmUuIGlmIHdl
+IGNhbid0IGluZmVyIHdoYXQgdGhlIHVzZXIgd2FudHMgZnJvbSBleGlzdGluZwo+Pj4gaW5mb3Jt
+YXRpb24sIHRoZW4gSSBkb24ndCBzZWUgaG93IHRoZSBzdG9yYWdlIGlzIGdvaW5nIHRvIGJlIGFi
+bGUgdG8KPj4+IHRlbGwgdXMgYW55dGhpbmcgZGlmZmVyZW50LCBlaXRoZXIuICBpLmUuIHNvbWV3
+aGVyZSBpbiB0aGUgc3RhY2sgdGhlCj4+PiB1c2VyIGlzIGdvaW5nIHRvIGhhdmUgdG8gdGVsbCB0
+aGUgYmxvY2sgZGV2aWNlIHRoYXQgdGhpcyBpcwo+Pj4gYWdncmVnYXRlZCBzdG9yYWdlLgo+Pj4K
+Pj4+IEJ1dCBldmVuIHRoZW4sIGlmIGl0J3MgYWdncmVnYXRlZCBzb2xpZCBzdGF0ZSBzdG9yYWdl
+LCB3ZSBzdGlsbCB3YW50Cj4+PiB0byBtYWtlIHVzZSBvZiB0aGUgY29uY3VyZW5jeSBvbiBpbmNy
+ZWFzZWQgQUcgY291bnQgYmVjYXVzZSB0aGVyZSBpcwo+Pj4gbm8gc2VlayBwZW5hbHR5IGxpa2Ug
+c3Bpbm5pbmcgZHJpdmVzIGVuZCB1cCB3aXRoLiBPciBpZiB0aGUKPj4+IGFnZ3JlZ2F0ZWQgc3Rv
+cmFnZSBpcyB0aGlubHkgcHJvdmlzaW9uZWQsIHRoZSBBRyBjb3VudCBvZiBmaWxlc3lzdGVtCj4+
+PiBqdXN0IGRvZXNuJ3QgbWF0dGVyIGJlY2F1c2UgdGhlIElPIGlzIGdvaW5nIHRvIGJlIG1hc3Np
+dmVseQo+Pj4gcmFuZG9taXNlZCAoaS5lIHRha2UgcmFuZG9tIHNlZWsgcGVuYWx0aWVzKSBieSB0
+aGUgdGhpbnAgbGF5b3V0Lgo+Pj4KPj4+IFNvIHRoZXJlJ3MgcmVhbGx5IG5vIGdvb2Qgd2F5IG9m
+ICJndWVzc2luZyIgd2hldGhlciBhZ2dyZWdhdGVkCj4+PiBzdG9yYWdlIHNob3VsZCBvciBzaG91
+bGRuJ3QgdXNlIGVsZXZhdGVkIEFHIGNvdW50cyBldmVuIGlmIHRoZQo+Pj4gc3RvcmFnZSBzYXlz
+ICJ0aGlzIGlzIGFnZ3JlZ2F0ZWQgc3RvcmFnZSIuIFRoZSB1c2VyIHN0aWxsIGhhcyB0bwo+Pj4g
+Z2l2ZSB1cyBzb21lIGtpbmQgb2YgZXhwbGljdCBoaW50IGFib3V0IGhvdyB0aGUgZmlsZXN5c3Rl
+bSBzaG91bGQKPj4+IGJlIGNvbmZpZ3VyZWQuCj4+Pgo+Pj4gV2hhdCB3ZSBuZWVkIGlzIGZvciBh
+IHNvbGlkLCByZWxpYWJsZSBkZXRlY3Rpb24gaHVlcmlzdGljIHRvIGJlCj4+PiBzdWdnZXN0ZWQg
+YnkgdGhlIHBlb3BsZSB0aGF0IG5lZWQgdGhpcyBmdW5jdGlvbmFsaXR5IGJlZm9yZSB0aGVyZSdz
+Cj4+PiBhbnl0aGluZyB3ZSBjYW4gdGFsayBhYm91dC4KPj4gSSB0aGluayB0aGF0IGlzIGV4YWN0
+bHkgdGhlIGtpbmQgb2YgZGlzY3Vzc2lvbiB0aGF0IHRoZSBzaGFyZWQKPj4gZmlsZS9zdG9yYWdl
+IHRyYWNrIGlzIGdvb2QgZm9yLgo+IFllcywgYnV0IHdoeSBvbiBlYXJ0aCBkbyB3ZSBuZWVkIHRv
+IHdhaXQgNiBtb250aHMgdG8gaGF2ZSB0aGF0Cj4gY29udmVyc2F0aW9uLiBTdGFydCBpdCBub3cu
+Li4KCgpTdXJlLCB0aGF0IGlzIGRlZmluaXRlbHkgYSBnb29kIGlkZWEgLSBhZGRlZCBpbiBzb21l
+IG9mIHRoZSBzdG9yYWdlIGxpc3RzIHRvIAp0aGlzIHJlcGx5LiBObyBwZXJmZWN0IGFsbCBlbmNv
+bXBhc3NpbmcgYmxvY2sgbGF5ZXIgbGlzdCB0aGF0IEkga25vdyBvZi4KCgo+Cj4+IE90aGVyIGZp
+bGUgc3lzdGVtcyBhbHNvIG5lZWQgdG8KPj4gYWNjb21tb2RhdGUvcHJvYmUgYmVoaW5kIHRoZSBm
+aWN0aXRpb3VzIHZpc2libGUgc3RvcmFnZSBkZXZpY2UKPj4gbGF5ZXIuLi4gU3BlY2lmaWNhbGx5
+LCBpcyB0aGVyZSBzb21ldGhpbmcgd2UgY2FuIGFkZCBwZXIgYmxvY2sKPj4gZGV2aWNlIHRvIGhl
+bHAgaGVyZT8gTnVtYmVyIG9mIGluZGVwZW5kZW50IGRldmljZXMKPiBUaGF0J3MgaG93IG1rZnMu
+eGZzIHVzZWQgdG8gZG8gc3RyaXBlIHVuaXQvc3RyaXBlIHdpZHRoIGNhbGN1bGF0aW9ucwo+IGF1
+dG9tYXRpY2FsbHkgb24gTUQgZGV2aWNlcyBiYWNrIGluIHRoZSAyMDAwcy4gV2UgZ290IHJpZCBv
+ZiB0aGF0Cj4gZm9yIG1vcmUgZ2VuZXJhbHkgYXBwbGljYWJsZSBjb25maWd1cmF0aW9uIGluZm9y
+bWF0aW9uIHN1Y2ggYXMKPiBtaW5pbXVtL29wdGltYWwgSU8gc2l6ZXMgc28gd2UgY291bGQgZXhw
+b3NlIGVxdWl2YWxlbnQgYWxpZ25tZW50Cj4gaW5mb3JtYXRpb24gZnJvbSBsb3RzIG9mIGRpZmZl
+cmVudCB0eXBlcyBvZiBzdG9yYWdlIGRldmljZS4uLi4KPgo+PiBvciBhIG1hcCBvZgo+PiB0aG9z
+ZSByZWdpb25zPwo+IE5vdCBzdXJlIHdoYXQgdGhpcyBtZWFucyBvciBob3cgd2UnZCB1c2UgaXQu
+Cj4KPiBDaGVlcnMsCj4KPiBEYXZlLgoKV2hhdCBJIHdhcyB0aGlua2luZyBvZiB3YXMgYSB3YXkg
+b2YgZ2l2aW5nIHVwIGEgZ29vZCBvdXRsaW5lIG9mIGhvdyBtYW55IAppbmRlcGVuZGVudCByZWdp
+b25zIHRoYXQgYXJlIGJlaGluZCBvbmUgInZpcnR1YWwiIGJsb2NrIGRldmljZSBsaWtlIGEgY2Vw
+aCByYmQgCm9yIGRldmljZSBtYXBwZXIgZGV2aWNlLiBNeSBhc3N1bXB0aW9uIGlzIHRoYXQgd2Ug
+YXJlIHRyeWluZyB0byBsYXkgZG93biAoYXQgCmxlYXN0IG9uZSkgYWxsb2NhdGlvbiBncm91cCBw
+ZXIgcmVnaW9uLgoKV2hhdCB3ZSBuZWVkIHRvIG9wdGltaXplIGZvciBpbmNsdWRlczoKCiDCoMKg
+wqAgKiBob3cgbWFueSBpbmRlcGVuZGVudCByZWdpb25zIGFyZSB0aGVyZT8KCiDCoMKgwqAgKiB3
+aGF0IGFyZSB0aGUgYm91bmRhcmllcyBvZiB0aG9zZSByZWdpb25zPwoKIMKgwqDCoCAqIG9wdGlt
+YWwgSU8gc2l6ZS9hbGlnbm1lbnQvZXRjCgpTb21lIG9mIHRoYXQgd2UgaGF2ZSwgYnV0IHRoZSBj
+dXJyZW50IGFzc3VtcHRpb25zIGRvbid0IHdvcmsgd2VsbCBmb3IgYWxsIGRldmljZSAKdHlwZXMu
+CgpSZWdhcmRzLAoKUmljCgoKCi0tCmRtLWRldmVsIG1haWxpbmcgbGlzdApkbS1kZXZlbEByZWRo
+YXQuY29tCmh0dHBzOi8vd3d3LnJlZGhhdC5jb20vbWFpbG1hbi9saXN0aW5mby9kbS1kZXZlbA==
