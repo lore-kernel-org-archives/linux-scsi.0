@@ -1,109 +1,127 @@
-From: Sumit Saxena <sumit.saxena@broadcom.com>
-Subject: Re: [PATCH] scsi: megaraid_sas: NULL check before some freeing
- functions is not needed.
-Date: Mon, 3 Dec 2018 12:10:07 +0530
-Message-ID: <CAL2rwxpYLUWCVSZJNB0_BRh0DXRab9TRVnWsvpkph3GNCOfT7w@mail.gmail.com>
-References: <1543760930050-1499171309-0-diffsplit-thomas@m3y3r.de> <1543760930052-918941928-10-diffsplit-thomas@m3y3r.de>
+From: Mark Nelson <mnelson@redhat.com>
+Subject: Re: block layer API for file system creation - when to
+ use multidisk mode
+Date: Fri, 30 Nov 2018 12:05:46 -0600
+Message-ID: <4125f92c-25f6-3397-19bb-61ce71c615c0@redhat.com>
+References: <20181004222952.GV31060@dastard>
+	<CAOi1vP_U-QpABgs+a9oYpYvLWs4D2qVmff=-JEikn7S_=eCAXQ@mail.gmail.com>
+	<67627995-714c-5c38-a796-32b503de7d13@sandeen.net>
+	<20181005232710.GH12041@dastard>
+	<CAOi1vP-Z7xZk1YvWHYWQGOHfyWccFCkyn8je0HBvGhGuUrXmaQ@mail.gmail.com>
+	<20181006232037.GB18095@dastard>
+	<36bc3f17-e7d1-ce8b-2088-36ff5d7b1e8b@sandeen.net>
+	<0290ec9f-ab2b-7c1b-faaf-409d72f99e5f@gmail.com>
+	<20181129214851.GU6311@dastard>
+	<39031e68-3936-b5e1-bcb6-6fdecc5988c1@gmail.com>
+	<20181130022510.GW6311@dastard>
+	<3da04164-a89f-f4c0-1529-eab12b3226e1@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1543760930052-918941928-10-diffsplit-thomas@m3y3r.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: thomas@m3y3r.de
-Cc: Kashyap Desai <kashyap.desai@broadcom.com>, Shivasharan Srikanteshwara <shivasharan.srikanteshwara@broadcom.com>, "James E. J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, megaraidlinux.pdl@broadcom.com, Linux SCSI List <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Content-Transfer-Encoding: base64
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <3da04164-a89f-f4c0-1529-eab12b3226e1@gmail.com>
+Content-Language: en-US
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Ric Wheeler <ricwheeler@gmail.com>, Dave Chinner <david@fromorbit.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Eric Sandeen <sandeen@redhat.com>, Mike Snitzer <snitzer@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Eric Sandeen <sandeen@sandeen.net>, xfs <linux-xfs@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>, Ilya Dryomov <idryomov@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Dec 3, 2018 at 2:25 AM Thomas Meyer <thomas@m3y3r.de> wrote:
->
-> NULL check before some freeing functions is not needed.
->
-> Signed-off-by: Thomas Meyer <thomas@m3y3r.de>
-
-Acked-by: Sumit Saxena <sumit.saxena@broadcom.com>
-
-> ---
->
-> diff -u -p a/drivers/scsi/megaraid/megaraid_mbox.c b/drivers/scsi/megaraid/megaraid_mbox.c
-> --- a/drivers/scsi/megaraid/megaraid_mbox.c
-> +++ b/drivers/scsi/megaraid/megaraid_mbox.c
-> @@ -1243,8 +1243,7 @@ megaraid_mbox_teardown_dma_pools(adapter
->                 dma_pool_free(raid_dev->sg_pool_handle, sg_pci_blk[i].vaddr,
->                         sg_pci_blk[i].dma_addr);
->         }
-> -       if (raid_dev->sg_pool_handle)
-> -               dma_pool_destroy(raid_dev->sg_pool_handle);
-> +       dma_pool_destroy(raid_dev->sg_pool_handle);
->
->
->         epthru_pci_blk = raid_dev->epthru_pool;
-> @@ -1252,8 +1251,7 @@ megaraid_mbox_teardown_dma_pools(adapter
->                 dma_pool_free(raid_dev->epthru_pool_handle,
->                         epthru_pci_blk[i].vaddr, epthru_pci_blk[i].dma_addr);
->         }
-> -       if (raid_dev->epthru_pool_handle)
-> -               dma_pool_destroy(raid_dev->epthru_pool_handle);
-> +       dma_pool_destroy(raid_dev->epthru_pool_handle);
->
->
->         mbox_pci_blk = raid_dev->mbox_pool;
-> @@ -1261,8 +1259,7 @@ megaraid_mbox_teardown_dma_pools(adapter
->                 dma_pool_free(raid_dev->mbox_pool_handle,
->                         mbox_pci_blk[i].vaddr, mbox_pci_blk[i].dma_addr);
->         }
-> -       if (raid_dev->mbox_pool_handle)
-> -               dma_pool_destroy(raid_dev->mbox_pool_handle);
-> +       dma_pool_destroy(raid_dev->mbox_pool_handle);
->
->         return;
->  }
-> diff -u -p a/drivers/scsi/megaraid/megaraid_mm.c b/drivers/scsi/megaraid/megaraid_mm.c
-> --- a/drivers/scsi/megaraid/megaraid_mm.c
-> +++ b/drivers/scsi/megaraid/megaraid_mm.c
-> @@ -1017,8 +1017,7 @@ memalloc_error:
->         kfree(adapter->kioc_list);
->         kfree(adapter->mbox_list);
->
-> -       if (adapter->pthru_dma_pool)
-> -               dma_pool_destroy(adapter->pthru_dma_pool);
-> +       dma_pool_destroy(adapter->pthru_dma_pool);
->
->         kfree(adapter);
->
-> diff -u -p a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> @@ -807,10 +807,8 @@ megasas_free_rdpq_fusion(struct megasas_
->
->         }
->
-> -       if (fusion->reply_frames_desc_pool)
-> -               dma_pool_destroy(fusion->reply_frames_desc_pool);
-> -       if (fusion->reply_frames_desc_pool_align)
-> -               dma_pool_destroy(fusion->reply_frames_desc_pool_align);
-> +       dma_pool_destroy(fusion->reply_frames_desc_pool);
-> +       dma_pool_destroy(fusion->reply_frames_desc_pool_align);
->
->         if (fusion->rdpq_virt)
->                 dma_free_coherent(&instance->pdev->dev,
-> @@ -830,8 +828,7 @@ megasas_free_reply_fusion(struct megasas
->                         fusion->reply_frames_desc[0],
->                         fusion->reply_frames_desc_phys[0]);
->
-> -       if (fusion->reply_frames_desc_pool)
-> -               dma_pool_destroy(fusion->reply_frames_desc_pool);
-> +       dma_pool_destroy(fusion->reply_frames_desc_pool);
->
->  }
->
-> @@ -1627,8 +1624,7 @@ static inline void megasas_free_ioc_init
->                                   fusion->ioc_init_cmd->frame,
->                                   fusion->ioc_init_cmd->frame_phys_addr);
->
-> -       if (fusion->ioc_init_cmd)
-> -               kfree(fusion->ioc_init_cmd);
-> +       kfree(fusion->ioc_init_cmd);
->  }
->
->  /**
->
->
+Ck9uIDExLzMwLzE4IDEyOjAwIFBNLCBSaWMgV2hlZWxlciB3cm90ZToKPiBPbiAxMS8zMC8xOCA3
+OjU1IEFNLCBEYXZlIENoaW5uZXIgd3JvdGU6Cj4+IE9uIFRodSwgTm92IDI5LCAyMDE4IGF0IDA2
+OjUzOjE0UE0gLTA1MDAsIFJpYyBXaGVlbGVyIHdyb3RlOgo+Pj4gT24gMTEvMjkvMTggNDo0OCBQ
+TSwgRGF2ZSBDaGlubmVyIHdyb3RlOgo+Pj4+IE9uIFRodSwgTm92IDI5LCAyMDE4IGF0IDA4OjUz
+OjM5QU0gLTA1MDAsIFJpYyBXaGVlbGVyIHdyb3RlOgo+Pj4+PiBPbiAxMC82LzE4IDg6MTQgUE0s
+IEVyaWMgU2FuZGVlbiB3cm90ZToKPj4+Pj4+IE9uIDEwLzYvMTggNjoyMCBQTSwgRGF2ZSBDaGlu
+bmVyIHdyb3RlOgo+Pj4+Pj4+PiBDYW4geW91IGdpdmUgYW4gZXhhbXBsZSBvZiBhIHVzZSBjYXNl
+IHRoYXQgd291bGQgYmUgbmVnYXRpdmVseSAKPj4+Pj4+Pj4gYWZmZWN0ZWQKPj4+Pj4+Pj4gaWYg
+dGhpcyBoZXVyaXN0aWMgd2FzIHN3aXRjaGVkIGZyb20gInN1bml0IiB0byAic3VuaXQgPCBzd2lk
+dGgiPwo+Pj4+Pj4+IEFueSB0aW1lIHlvdSBvbmx5IGtub3cgYSBzaW5nbGUgYWxpZ25tZW50IGNo
+YXJhY3RlcmlzdGljIG9mIHRoZQo+Pj4+Pj4+IHVuZGVybHlpbmcgbXVsdGktZGlzayBzdG9yYWdl
+LiBlLmcuIGhhcmR3YXJlIFJBSUQwLzUvNiB0aGF0IHNldHMKPj4+Pj4+PiBpb21pbiA9IGlvb3B0
+LCBtdWx0aS1sZXZlbCBSQUlEIGNvbnN0cnVjdHMgd2hlcmUgb25seSB0aGUgbGFyZ2VzdAo+Pj4+
+Pj4+IGFsaWdubWVudCByZXF1aXJlbWVudCBpcyBleHBvc2VkLCBSQUlEMSBkZXZpY2VzIGV4cG9z
+aW5nIHRoZWlyIAo+Pj4+Pj4+IGNodW5rCj4+Pj4+Pj4gc2l6ZSwgcmVtb3RlIHJlcGxpY2F0aW9u
+IGNodW5rIGFsaWdubWVudCAoYmVjYXVzZSByZW1vdGUgcmVwLiBpcwo+Pj4+Pj4+IHNsb3cgYW5k
+IHNvIHdlIG5lZWQgbW9yZSBjb25jdXJyZW5jeSB0byBrZWVwIHRoZSBwaXBlbGluZSBmdWxsKSwK
+Pj4+Pj4+PiBldGMuCj4+Pj4+PiBTbyB0aGUgdGw7ZHIgaGVyZSBpcyAiZ2l2ZW4gYW55IGlvbWlu
+ID4gNTEyLCB3ZSBzaG91bGQgaW5mZXIgbG93IAo+Pj4+Pj4gc2Vlawo+Pj4+Pj4gbGF0ZW5jeSBh
+bmQgcGFyYWxsZWxpc20gYW5kIGFkanVzdCBnZW9tZXRyeSBhY2NvcmRpbmdseT8iCj4+Pj4+Pgo+
+Pj4+Pj4gLUVyaWMKPj4+Pj4gQ2hpbWluZyBpbiBsYXRlIGhlcmUsIGJ1dCBJIGRvIHRoaW5rIHRo
+YXQgZXZlcnkgZGVjYWRlIG9yIHR3byAobm8KPj4+Pj4gZGlzcmVzcGVjdCB0byB4ZnMhKSwgaXQg
+aXMgd29ydGggaGF2aW5nIGEgc2Vjb25kIGxvb2sgYXQgaG93IHRoZQo+Pj4+PiBzdG9yYWdlIGhh
+cyBjaGFuZ2VkIHVuZGVyIHVzLgo+Pj4+Pgo+Pj4+PiBUaGUgd29ya2xvYWQgdGhhdCBoYXMgbG90
+cyBvZiBmaWxlIHN5c3RlbXMgcG91bmRpbmcgb24gYSBzaGFyZWQKPj4+Pj4gZGV2aWNlIGZvciBl
+eGFtcGxlIGlzIG9uZSB3YXkgdG8gbGF5IG91dCBjb250YWluZXIgc3RvcmFnZS4KPj4+PiBUaGUg
+cHJvYmxlbSBpcyB0aGF0IGRlZmF1bHRzIGNhbid0IGNhdGVyIGZvciBldmVyeSB1c2UgY2FzZS4K
+Pj4+PiBBbmQgaW4gdGhpcyBjYXNlLCB3ZSd2ZSBnb3Qgbm90aGluZyB0byB0ZWxsIHVzIHRoYXQg
+dGhpcyBpcwo+Pj4+IGFnZ3JlZ2F0ZWQvc2hhcmVkIHN0b3JhZ2UgcmF0aGVyIHRoYW4gInRoZSBm
+aWxleXN0ZW0gb3ducyB0aGUKPj4+PiBlbnRpcmUgZGV2aWNlIi4KPj4+Pgo+Pj4+PiBObyBhcmd1
+bWVudCBhYm91dCBkb2N1bWVudGluZyBob3cgdG8gZml4IHRoaXMgd2l0aCBjb21tYW5kIGxpbmUK
+Pj4+Pj4gdHdlYWtzIGZvciBub3csIGJ1dCBtYXliZSB0aGlzIHdvdWxkIGJlIGEgZ29vZCB0b3Bp
+YyBmb3IgdGhlIG5leHQKPj4+Pj4gTFNGL01NIHNoYXJlZCB0cmFjayBvZiBmaWxlICYgc3RvcmFn
+ZSBwZW9wbGUgdG8gZGViYXRlPwo+Pj4+IERvdWJ0IGl0IC0gdGhpcyBpcyByZWFsbHkgb25seSBh
+biBYRlMgcHJvYmxlbSBhdCB0aGlzIHBvaW50Lgo+Pj4+Cj4+Pj4gaS5lLiBpZiB3ZSBjYW4ndCBp
+bmZlciB3aGF0IHRoZSB1c2VyIHdhbnRzIGZyb20gZXhpc3RpbmcKPj4+PiBpbmZvcm1hdGlvbiwg
+dGhlbiBJIGRvbid0IHNlZSBob3cgdGhlIHN0b3JhZ2UgaXMgZ29pbmcgdG8gYmUgYWJsZSB0bwo+
+Pj4+IHRlbGwgdXMgYW55dGhpbmcgZGlmZmVyZW50LCBlaXRoZXIuwqAgaS5lLiBzb21ld2hlcmUg
+aW4gdGhlIHN0YWNrIHRoZQo+Pj4+IHVzZXIgaXMgZ29pbmcgdG8gaGF2ZSB0byB0ZWxsIHRoZSBi
+bG9jayBkZXZpY2UgdGhhdCB0aGlzIGlzCj4+Pj4gYWdncmVnYXRlZCBzdG9yYWdlLgo+Pj4+Cj4+
+Pj4gQnV0IGV2ZW4gdGhlbiwgaWYgaXQncyBhZ2dyZWdhdGVkIHNvbGlkIHN0YXRlIHN0b3JhZ2Us
+IHdlIHN0aWxsIHdhbnQKPj4+PiB0byBtYWtlIHVzZSBvZiB0aGUgY29uY3VyZW5jeSBvbiBpbmNy
+ZWFzZWQgQUcgY291bnQgYmVjYXVzZSB0aGVyZSBpcwo+Pj4+IG5vIHNlZWsgcGVuYWx0eSBsaWtl
+IHNwaW5uaW5nIGRyaXZlcyBlbmQgdXAgd2l0aC4gT3IgaWYgdGhlCj4+Pj4gYWdncmVnYXRlZCBz
+dG9yYWdlIGlzIHRoaW5seSBwcm92aXNpb25lZCwgdGhlIEFHIGNvdW50IG9mIGZpbGVzeXN0ZW0K
+Pj4+PiBqdXN0IGRvZXNuJ3QgbWF0dGVyIGJlY2F1c2UgdGhlIElPIGlzIGdvaW5nIHRvIGJlIG1h
+c3NpdmVseQo+Pj4+IHJhbmRvbWlzZWQgKGkuZSB0YWtlIHJhbmRvbSBzZWVrIHBlbmFsdGllcykg
+YnkgdGhlIHRoaW5wIGxheW91dC4KPj4+Pgo+Pj4+IFNvIHRoZXJlJ3MgcmVhbGx5IG5vIGdvb2Qg
+d2F5IG9mICJndWVzc2luZyIgd2hldGhlciBhZ2dyZWdhdGVkCj4+Pj4gc3RvcmFnZSBzaG91bGQg
+b3Igc2hvdWxkbid0IHVzZSBlbGV2YXRlZCBBRyBjb3VudHMgZXZlbiBpZiB0aGUKPj4+PiBzdG9y
+YWdlIHNheXMgInRoaXMgaXMgYWdncmVnYXRlZCBzdG9yYWdlIi4gVGhlIHVzZXIgc3RpbGwgaGFz
+IHRvCj4+Pj4gZ2l2ZSB1cyBzb21lIGtpbmQgb2YgZXhwbGljdCBoaW50IGFib3V0IGhvdyB0aGUg
+ZmlsZXN5c3RlbSBzaG91bGQKPj4+PiBiZSBjb25maWd1cmVkLgo+Pj4+Cj4+Pj4gV2hhdCB3ZSBu
+ZWVkIGlzIGZvciBhIHNvbGlkLCByZWxpYWJsZSBkZXRlY3Rpb24gaHVlcmlzdGljIHRvIGJlCj4+
+Pj4gc3VnZ2VzdGVkIGJ5IHRoZSBwZW9wbGUgdGhhdCBuZWVkIHRoaXMgZnVuY3Rpb25hbGl0eSBi
+ZWZvcmUgdGhlcmUncwo+Pj4+IGFueXRoaW5nIHdlIGNhbiB0YWxrIGFib3V0Lgo+Pj4gSSB0aGlu
+ayB0aGF0IGlzIGV4YWN0bHkgdGhlIGtpbmQgb2YgZGlzY3Vzc2lvbiB0aGF0IHRoZSBzaGFyZWQK
+Pj4+IGZpbGUvc3RvcmFnZSB0cmFjayBpcyBnb29kIGZvci4KPj4gWWVzLCBidXQgd2h5IG9uIGVh
+cnRoIGRvIHdlIG5lZWQgdG8gd2FpdCA2IG1vbnRocyB0byBoYXZlIHRoYXQKPj4gY29udmVyc2F0
+aW9uLiBTdGFydCBpdCBub3cuLi4KPgo+Cj4gU3VyZSwgdGhhdCBpcyBkZWZpbml0ZWx5IGEgZ29v
+ZCBpZGVhIC0gYWRkZWQgaW4gc29tZSBvZiB0aGUgc3RvcmFnZSAKPiBsaXN0cyB0byB0aGlzIHJl
+cGx5LiBObyBwZXJmZWN0IGFsbCBlbmNvbXBhc3NpbmcgYmxvY2sgbGF5ZXIgbGlzdCB0aGF0IAo+
+IEkga25vdyBvZi4KPgo+Cj4+Cj4+PiBPdGhlciBmaWxlIHN5c3RlbXMgYWxzbyBuZWVkIHRvCj4+
+PiBhY2NvbW1vZGF0ZS9wcm9iZSBiZWhpbmQgdGhlIGZpY3RpdGlvdXMgdmlzaWJsZSBzdG9yYWdl
+IGRldmljZQo+Pj4gbGF5ZXIuLi4gU3BlY2lmaWNhbGx5LCBpcyB0aGVyZSBzb21ldGhpbmcgd2Ug
+Y2FuIGFkZCBwZXIgYmxvY2sKPj4+IGRldmljZSB0byBoZWxwIGhlcmU/IE51bWJlciBvZiBpbmRl
+cGVuZGVudCBkZXZpY2VzCj4+IFRoYXQncyBob3cgbWtmcy54ZnMgdXNlZCB0byBkbyBzdHJpcGUg
+dW5pdC9zdHJpcGUgd2lkdGggY2FsY3VsYXRpb25zCj4+IGF1dG9tYXRpY2FsbHkgb24gTUQgZGV2
+aWNlcyBiYWNrIGluIHRoZSAyMDAwcy4gV2UgZ290IHJpZCBvZiB0aGF0Cj4+IGZvciBtb3JlIGdl
+bmVyYWx5IGFwcGxpY2FibGUgY29uZmlndXJhdGlvbiBpbmZvcm1hdGlvbiBzdWNoIGFzCj4+IG1p
+bmltdW0vb3B0aW1hbCBJTyBzaXplcyBzbyB3ZSBjb3VsZCBleHBvc2UgZXF1aXZhbGVudCBhbGln
+bm1lbnQKPj4gaW5mb3JtYXRpb24gZnJvbSBsb3RzIG9mIGRpZmZlcmVudCB0eXBlcyBvZiBzdG9y
+YWdlIGRldmljZS4uLi4KPj4KPj4+IG9yIGEgbWFwIG9mCj4+PiB0aG9zZSByZWdpb25zPwo+PiBO
+b3Qgc3VyZSB3aGF0IHRoaXMgbWVhbnMgb3IgaG93IHdlJ2QgdXNlIGl0Lgo+Pgo+PiBDaGVlcnMs
+Cj4+Cj4+IERhdmUuCj4KPiBXaGF0IEkgd2FzIHRoaW5raW5nIG9mIHdhcyBhIHdheSBvZiBnaXZp
+bmcgdXAgYSBnb29kIG91dGxpbmUgb2YgaG93IAo+IG1hbnkgaW5kZXBlbmRlbnQgcmVnaW9ucyB0
+aGF0IGFyZSBiZWhpbmQgb25lICJ2aXJ0dWFsIiBibG9jayBkZXZpY2UgCj4gbGlrZSBhIGNlcGgg
+cmJkIG9yIGRldmljZSBtYXBwZXIgZGV2aWNlLiBNeSBhc3N1bXB0aW9uIGlzIHRoYXQgd2UgYXJl
+IAo+IHRyeWluZyB0byBsYXkgZG93biAoYXQgbGVhc3Qgb25lKSBhbGxvY2F0aW9uIGdyb3VwIHBl
+ciByZWdpb24uCj4KPiBXaGF0IHdlIG5lZWQgdG8gb3B0aW1pemUgZm9yIGluY2x1ZGVzOgo+Cj4g
+wqDCoMKgICogaG93IG1hbnkgaW5kZXBlbmRlbnQgcmVnaW9ucyBhcmUgdGhlcmU/Cj4KPiDCoMKg
+wqAgKiB3aGF0IGFyZSB0aGUgYm91bmRhcmllcyBvZiB0aG9zZSByZWdpb25zPwo+Cj4gwqDCoMKg
+ICogb3B0aW1hbCBJTyBzaXplL2FsaWdubWVudC9ldGMKPgo+IFNvbWUgb2YgdGhhdCB3ZSBoYXZl
+LCBidXQgdGhlIGN1cnJlbnQgYXNzdW1wdGlvbnMgZG9uJ3Qgd29yayB3ZWxsIGZvciAKPiBhbGwg
+ZGV2aWNlIHR5cGVzLgo+Cj4gUmVnYXJkcywKPgo+IFJpYwo+Ckkgd29uJ3QgY29tbWVudCBvbiB0
+aGUgZGV0YWlscyBhcyB0aGVyZSBhcmUgb3RoZXJzIGhlcmUgdGhhdCBhcmUgZmFyIAptb3JlIGtu
+b3dsZWRnZWFibGUgdGhhbiBJIGFtLCBidXQgYXQgYSBoaWdoIGxldmVsIEkgdGhpbmsgeW91ciBp
+ZGVhIGlzIAphYnNvbHV0ZWx5IGZhbnRhc3RpYyBmcm9tIHRoZSBzdGFuZHBvaW50IG9mIG1ha2lu
+ZyB0aGlzIGRlY2lzaW9uIHByb2Nlc3MgCm1vcmUgZXhwbGljaXQuCgoKTWFyawoKLS0KZG0tZGV2
+ZWwgbWFpbGluZyBsaXN0CmRtLWRldmVsQHJlZGhhdC5jb20KaHR0cHM6Ly93d3cucmVkaGF0LmNv
+bS9tYWlsbWFuL2xpc3RpbmZvL2RtLWRldmVs
