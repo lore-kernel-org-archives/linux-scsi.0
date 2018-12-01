@@ -1,96 +1,99 @@
-From: Sabyasachi Gupta <sabyasachi.linux@gmail.com>
-Subject: Re: [PATCH] scsi/dpt_i2o.c: Use dma_zalloc_coherent
-Date: Sat, 1 Dec 2018 18:45:23 +0530
-Message-ID: <CAJr6mf2Kvj0FJb2zf9FZUNEkyQtYZVbFNBwG+dH_LyhSDU92wg@mail.gmail.com>
-References: <5bf00de4.1c69fb81.7dd65.5785@mx.google.com>
+From: Ric Wheeler <ricwheeler@gmail.com>
+Subject: Re: block layer API for file system creation - when to
+ use multidisk mode
+Date: Sat, 1 Dec 2018 15:52:31 -0500
+Message-ID: <80505ddf-8c6f-50d7-1e6d-2e50e7349c6f@gmail.com>
+References: <67627995-714c-5c38-a796-32b503de7d13@sandeen.net>
+	<20181005232710.GH12041@dastard>
+	<CAOi1vP-Z7xZk1YvWHYWQGOHfyWccFCkyn8je0HBvGhGuUrXmaQ@mail.gmail.com>
+	<20181006232037.GB18095@dastard>
+	<36bc3f17-e7d1-ce8b-2088-36ff5d7b1e8b@sandeen.net>
+	<0290ec9f-ab2b-7c1b-faaf-409d72f99e5f@gmail.com>
+	<20181129214851.GU6311@dastard>
+	<39031e68-3936-b5e1-bcb6-6fdecc5988c1@gmail.com>
+	<20181130022510.GW6311@dastard>
+	<3da04164-a89f-f4c0-1529-eab12b3226e1@gmail.com>
+	<20181201043509.GZ6311@dastard>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <5bf00de4.1c69fb81.7dd65.5785@mx.google.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: aacraid@microsemi.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: Souptick Joarder <jrdr.linux@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Brajeswar Ghosh <brajeswar.linux@gmail.com>
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Content-Transfer-Encoding: base64
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <20181201043509.GZ6311@dastard>
+Content-Language: en-US
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Eric Sandeen <sandeen@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Mike Snitzer <snitzer@redhat.com>, Eric Sandeen <sandeen@sandeen.net>, xfs <linux-xfs@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>, linux-block@vger.kernel.org, Mark Nelson <mnelson@redhat.com>, Ilya Dryomov <idryomov@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, Nov 17, 2018 at 6:17 PM Sabyasachi Gupta
-<sabyasachi.linux@gmail.com> wrote:
->
-> Replaced dma_alloc_coherent + memset with dma_zalloc_coherent
->
-> Signed-off-by: Sabyasachi Gupta <sabyasachi.linux@gmail.com>
-
-Any comment on this patch?
-
-> ---
->  drivers/scsi/dpt_i2o.c | 12 ++++--------
->  1 file changed, 4 insertions(+), 8 deletions(-)
->
-> diff --git a/drivers/scsi/dpt_i2o.c b/drivers/scsi/dpt_i2o.c
-> index 37de8fb..056383a 100644
-> --- a/drivers/scsi/dpt_i2o.c
-> +++ b/drivers/scsi/dpt_i2o.c
-> @@ -1370,13 +1370,12 @@ static s32 adpt_i2o_reset_hba(adpt_hba* pHba)
->                 schedule_timeout_uninterruptible(1);
->         } while (m == EMPTY_QUEUE);
->
-> -       status = dma_alloc_coherent(&pHba->pDev->dev, 4, &addr, GFP_KERNEL);
-> +       status = dma_zalloc_coherent(&pHba->pDev->dev, 4, &addr, GFP_KERNEL);
->         if(status == NULL) {
->                 adpt_send_nop(pHba, m);
->                 printk(KERN_ERR"IOP reset failed - no free memory.\n");
->                 return -ENOMEM;
->         }
-> -       memset(status,0,4);
->
->         msg[0]=EIGHT_WORD_MSG_SIZE|SGL_OFFSET_0;
->         msg[1]=I2O_CMD_ADAPTER_RESET<<24|HOST_TID<<12|ADAPTER_TID;
-> @@ -2836,14 +2835,13 @@ static s32 adpt_i2o_init_outbound_q(adpt_hba* pHba)
->
->         msg=(u32 __iomem *)(pHba->msg_addr_virt+m);
->
-> -       status = dma_alloc_coherent(&pHba->pDev->dev, 4, &addr, GFP_KERNEL);
-> +       status = dma_zalloc_coherent(&pHba->pDev->dev, 4, &addr, GFP_KERNEL);
->         if (!status) {
->                 adpt_send_nop(pHba, m);
->                 printk(KERN_WARNING"%s: IOP reset failed - no free memory.\n",
->                         pHba->name);
->                 return -ENOMEM;
->         }
-> -       memset(status, 0, 4);
->
->         writel(EIGHT_WORD_MSG_SIZE| SGL_OFFSET_6, &msg[0]);
->         writel(I2O_CMD_OUTBOUND_INIT<<24 | HOST_TID<<12 | ADAPTER_TID, &msg[1]);
-> @@ -2890,14 +2888,13 @@ static s32 adpt_i2o_init_outbound_q(adpt_hba* pHba)
->                         pHba->reply_pool, pHba->reply_pool_pa);
->         }
->
-> -       pHba->reply_pool = dma_alloc_coherent(&pHba->pDev->dev,
-> +       pHba->reply_pool = dma_zalloc_coherent(&pHba->pDev->dev,
->                                 pHba->reply_fifo_size * REPLY_FRAME_SIZE * 4,
->                                 &pHba->reply_pool_pa, GFP_KERNEL);
->         if (!pHba->reply_pool) {
->                 printk(KERN_ERR "%s: Could not allocate reply pool\n", pHba->name);
->                 return -ENOMEM;
->         }
-> -       memset(pHba->reply_pool, 0 , pHba->reply_fifo_size * REPLY_FRAME_SIZE * 4);
->
->         for(i = 0; i < pHba->reply_fifo_size; i++) {
->                 writel(pHba->reply_pool_pa + (i * REPLY_FRAME_SIZE * 4),
-> @@ -3126,13 +3123,12 @@ static int adpt_i2o_build_sys_table(void)
->         sys_tbl_len = sizeof(struct i2o_sys_tbl) +      // Header + IOPs
->                                 (hba_count) * sizeof(struct i2o_sys_tbl_entry);
->
-> -       sys_tbl = dma_alloc_coherent(&pHba->pDev->dev,
-> +       sys_tbl = dma_zalloc_coherent(&pHba->pDev->dev,
->                                 sys_tbl_len, &sys_tbl_pa, GFP_KERNEL);
->         if (!sys_tbl) {
->                 printk(KERN_WARNING "SysTab Set failed. Out of memory.\n");
->                 return -ENOMEM;
->         }
-> -       memset(sys_tbl, 0, sys_tbl_len);
->
->         sys_tbl->num_entries = hba_count;
->         sys_tbl->version = I2OVERSION;
-> --
-> 2.7.4
->
+T24gMTEvMzAvMTggMTE6MzUgUE0sIERhdmUgQ2hpbm5lciB3cm90ZToKPiBPbiBGcmksIE5vdiAz
+MCwgMjAxOCBhdCAwMTowMDo1MlBNIC0wNTAwLCBSaWMgV2hlZWxlciB3cm90ZToKPj4gT24gMTEv
+MzAvMTggNzo1NSBBTSwgRGF2ZSBDaGlubmVyIHdyb3RlOgo+Pj4gT24gVGh1LCBOb3YgMjksIDIw
+MTggYXQgMDY6NTM6MTRQTSAtMDUwMCwgUmljIFdoZWVsZXIgd3JvdGU6Cj4+Pj4gT3RoZXIgZmls
+ZSBzeXN0ZW1zIGFsc28gbmVlZCB0bwo+Pj4+IGFjY29tbW9kYXRlL3Byb2JlIGJlaGluZCB0aGUg
+ZmljdGl0aW91cyB2aXNpYmxlIHN0b3JhZ2UgZGV2aWNlCj4+Pj4gbGF5ZXIuLi4gU3BlY2lmaWNh
+bGx5LCBpcyB0aGVyZSBzb21ldGhpbmcgd2UgY2FuIGFkZCBwZXIgYmxvY2sKPj4+PiBkZXZpY2Ug
+dG8gaGVscCBoZXJlPyBOdW1iZXIgb2YgaW5kZXBlbmRlbnQgZGV2aWNlcwo+Pj4gVGhhdCdzIGhv
+dyBta2ZzLnhmcyB1c2VkIHRvIGRvIHN0cmlwZSB1bml0L3N0cmlwZSB3aWR0aCBjYWxjdWxhdGlv
+bnMKPj4+IGF1dG9tYXRpY2FsbHkgb24gTUQgZGV2aWNlcyBiYWNrIGluIHRoZSAyMDAwcy4gV2Ug
+Z290IHJpZCBvZiB0aGF0Cj4+PiBmb3IgbW9yZSBnZW5lcmFseSBhcHBsaWNhYmxlIGNvbmZpZ3Vy
+YXRpb24gaW5mb3JtYXRpb24gc3VjaCBhcwo+Pj4gbWluaW11bS9vcHRpbWFsIElPIHNpemVzIHNv
+IHdlIGNvdWxkIGV4cG9zZSBlcXVpdmFsZW50IGFsaWdubWVudAo+Pj4gaW5mb3JtYXRpb24gZnJv
+bSBsb3RzIG9mIGRpZmZlcmVudCB0eXBlcyBvZiBzdG9yYWdlIGRldmljZS4uLi4KPj4+Cj4+Pj4g
+b3IgYSBtYXAgb2YKPj4+PiB0aG9zZSByZWdpb25zPwo+Pj4gTm90IHN1cmUgd2hhdCB0aGlzIG1l
+YW5zIG9yIGhvdyB3ZSdkIHVzZSBpdC4KPj4+IERhdmUuCj4+IFdoYXQgSSB3YXMgdGhpbmtpbmcg
+b2Ygd2FzIGEgd2F5IG9mIGdpdmluZyB1cCBhIGdvb2Qgb3V0bGluZSBvZiBob3cKPj4gbWFueSBp
+bmRlcGVuZGVudCByZWdpb25zIHRoYXQgYXJlIGJlaGluZCBvbmUgInZpcnR1YWwiIGJsb2NrIGRl
+dmljZQo+PiBsaWtlIGEgY2VwaCByYmQgb3IgZGV2aWNlIG1hcHBlciBkZXZpY2UuIE15IGFzc3Vt
+cHRpb24gaXMgdGhhdCB3ZQo+PiBhcmUgdHJ5aW5nIHRvIGxheSBkb3duIChhdCBsZWFzdCBvbmUp
+IGFsbG9jYXRpb24gZ3JvdXAgcGVyIHJlZ2lvbi4KPj4KPj4gV2hhdCB3ZSBuZWVkIHRvIG9wdGlt
+aXplIGZvciBpbmNsdWRlczoKPj4KPj4gIMKgwqDCoCAqIGhvdyBtYW55IGluZGVwZW5kZW50IHJl
+Z2lvbnMgYXJlIHRoZXJlPwo+Pgo+PiAgwqDCoMKgICogd2hhdCBhcmUgdGhlIGJvdW5kYXJpZXMg
+b2YgdGhvc2UgcmVnaW9ucz8KPj4KPj4gIMKgwqDCoCAqIG9wdGltYWwgSU8gc2l6ZS9hbGlnbm1l
+bnQvZXRjCj4+Cj4+IFNvbWUgb2YgdGhhdCB3ZSBoYXZlLCBidXQgdGhlIGN1cnJlbnQgYXNzdW1w
+dGlvbnMgZG9uJ3Qgd29yayB3ZWxsCj4+IGZvciBhbGwgZGV2aWNlIHR5cGVzLgo+IE9oLCBzbyBl
+c3NlbnRpYWwgImluZGVwZW5kZW50IHJlZ2lvbnMiIG9mIHRoZSBzdG9yYWdlIGRldmljZS4gSQo+
+IHdyb3RlIHRoaXMgaW4gMjAwODoKPgo+IGh0dHA6Ly94ZnMub3JnL2luZGV4LnBocC9SZWxpYWJs
+ZV9EZXRlY3Rpb25fYW5kX1JlcGFpcl9vZl9NZXRhZGF0YV9Db3JydXB0aW9uI0ZhaWx1cmVfRG9t
+YWlucwo+Cj4gVGhpcyB3YXMgZGVyaXZlZCBmcm9tIHRoZSBpZGVhcyBpbiBwcm90b3R5cGUgY29k
+ZSBJIHdyb3RlIGluIH4yMDA3Cj4gdG8gdHJ5IHRvIG9wdGltaXNlIGZpbGUgbGF5b3V0IGFuZCBs
+b2FkIGRpc3RyaWJ1dGlvbiBhY3Jvc3MgbGluZWFyCj4gY29uY2F0cyBvZiBtdWx0aS1UQiBSQUlE
+NiBsdW5zLiBTb21lIG9mIHRoYXQgd29yayB3YXMgcHVibGlzaGVkCj4gbG9uZyBhZnRlciBJIGxl
+ZnQgU0dJOgo+Cj4gaHR0cHM6Ly9tYXJjLmluZm8vP2w9bGludXgteGZzJm09MTIzNDQxMTkxMjIy
+NzE0Jnc9Mgo+Cj4gRXNzZW50aWFsbHksIGluZGVwZW5kZW50IHJlZ2lvbnMgLSBjYWxsZWQgIkxv
+Z2ljYWwKPiBFeHRlbnNpb24gR3JvdXBzIiwgb3IgImxlZ3MiIG9mIHRoZSBmaWxlc3lzdGVtIC0g
+YW5kIHdvdWxkCj4gZXNzZW50aWFsbHkgYmUgYW4gYWdncmVnYXRpb24gb2YgQUdzIGluIHRoYXQg
+cmVnaW9uLiBUaGUKPiBjb25jZXB0IHdhcyB0aGF0IHdlJ2QgbW92ZSB0aGUgZ2VvbWV0cnkgaW5m
+b3JtYXRpb24gZnJvbSB0aGUKPiBzdXBlcmJsb2NrIGludG8gdGhlIGxlZ3MsIGFuZCBzbyB3ZSBj
+b3VsZCBoYXZlIGRpZmZlcmVudCBBRwo+IGdlb2VtZXRyeSBvcHRpbWllcyBmb3IgZWFjaCBpbmRl
+cGVuZGVudCBsZWcgb2YgdGhlIGZpbGVzeXN0ZW0uCj4KPiBlZyB0aGUgU1NEIHJlZ2lvbiBjb3Vs
+ZCBoYXZlIG51bWVyb3VzIHNtYWxsIEFHcywgdGhlIGxhcmdlLAo+IGNvbnRpZ3VvdXMgUkFJRDYg
+cGFydCBjb3VsZCBoYXZlIG1heGltYWxseSBzaXplIEFHcyBvciBldmVuIG1ha2UgdXNlCj4gb2Yg
+dGhlIFJUIGFsbG9jYXRvciBmb3IgZnJlZSBzcGFjZSBtYW5hZ2VtZW50IGluc3RlYWQgb2YgdGhl
+Cj4gQUcvYnRyZWUgYWxsb2NhdG9yLiBCYXNpY2FsbHkgaXQgd2FzIHNlZW4gYXMgYSBtZWNoYW5p
+c20gZm9yIGdldHRpbmcKPiByaWQgb2YgbmVlZGluZyB0byBzcGVjaWZ5IGJsb2NrIGRldmljZXMg
+YXMgY29tbWFuZCBsaW5lIG9yIG1vdW50Cj4gb3B0aW9ucy4KPgo+IEZ1bmRhbWVudGFsbHksIHRo
+b3VnaCwgaXQgd2FzIGJhc2VkIG9uIHRoZSBjb25jZXB0IHRoYXQgTGludXggd291bGQKPiBldmVu
+dHVhbGx5IGdyb3cgYW4gaW50ZXJmYWNlIGZvciB0aGUgYmxvY2sgZGV2aWNlL3ZvbHVtZSBtYW5h
+Z2VyIHRvCj4gdGVsbCB0aGUgZmlsZXN5c3RlbSB3aGVyZSB0aGUgaW5kZXBlbmRlbnQgcmVnaW9u
+cyBpbiB0aGUgZGV2aWNlCj4gd2VyZSgqKSwgYnV0IHRoYXQncyBub3Qgc29tZXRoaW5nIHRoYXQg
+aGFzIGV2ZXIgYXBwZWFyZWQuIElmIHlvdSBjYW4KPiBwcm92aWRlIGFuIGluZGVwZWRlbnQgcmVn
+aW9uIG1hcCBpbiBhbiBlYXN5IHRvIGRpZ2VzdCBmb3JtYXQgKGUuZy4gYQo+IHNldCBvZiB7b2Zm
+c2V0LCBsZW4sIGdlb21ldHJ5fSB0dXBsZXMpLCB0aGVuIHdlIGNhbiBvYnZpb3VzbHkgbWFrZQo+
+IHVzZSBvZiBpdCBpbiBYRlMuLi4uCj4KPiBDaGVlcnMsCj4KPiBEYXZlLgo+Cj4gKCopIEJhc2lj
+YWxseSBwcm92aWRlIGEgbGludXggdmVyc2lvbiBvZiB0aGUgZnVuY3Rpb25hbGl0eSBJcml4Cj4g
+dm9sdW1lIG1hbmFnZXJzIGhhZCBwcm92aWRlZCBmaWxlc3lzdGVtcyBzaW5jZSB0aGUgbGF0ZSA4
+MHMuLi4uCj4KSGkgRGF2ZSwKClRoaXMgaXMgZXhhY3RseSB0aGUga2luZCBvZiB0aGluZyBJIHRo
+aW5rIHdvdWxkIGJlIHVzZWZ1bC7CoCBXZSBtaWdodCB3YW50IHRvIApoYXZlIGEgZGlzdGluY3Qg
+dmFsdWUgKGxpa2UgdGhlIHJvdGF0aW9uYWwpIHRoYXQgaW5kaWNhdGVzIHRoaXMgaXMgYSBkZXZp
+Y2Ugd2l0aCAKbXVsdGlwbGUgImxlZ3MiIHNvIHRoYXQgbm9ybWFsbHkgd2UgcXVlcnkgdGhhdCBh
+bmQgZG9uJ3QgaGF2ZSB0byBsb29rIGZvciB0aGUgCm1vcmUgY29tcGxpY2F0ZWQgaW5mb3JtYXRp
+b24uCgpSZWdhcmRzLAoKUmljCgoKLS0KZG0tZGV2ZWwgbWFpbGluZyBsaXN0CmRtLWRldmVsQHJl
+ZGhhdC5jb20KaHR0cHM6Ly93d3cucmVkaGF0LmNvbS9tYWlsbWFuL2xpc3RpbmZvL2RtLWRldmVs
