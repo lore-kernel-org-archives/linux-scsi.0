@@ -1,109 +1,44 @@
-From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
-Subject: Re: [EXT] [PATCH] scsi: qla2xxx: NULL check before some freeing
- functions is not needed.
-Date: Mon, 3 Dec 2018 18:07:57 +0000
-Message-ID: <E79150BB-BD16-4A01-9938-761303E15B3B@cavium.com>
-References: <1543760930050-1499171309-0-diffsplit-thomas@m3y3r.de>
- <1543760930052-275330559-13-diffsplit-thomas@m3y3r.de>
+From: Khalid Aziz <khalid@gonehiking.org>
+Subject: Re: [PATCH 01/41] scsi: BusLogic: mark expected switch fall-through
+Date: Mon, 3 Dec 2018 11:33:23 -0700
+Message-ID: <0d5df4a3-c614-572b-45e6-bd29f13ed361@gonehiking.org>
+References: <cover.1543374820.git.gustavo@embeddedor.com>
+ <de0c68b4f655080a7336d1ad256d77a83ab0b7d6.1543374820.git.gustavo@embeddedor.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1543760930052-275330559-13-diffsplit-thomas@m3y3r.de>
+In-Reply-To: <de0c68b4f655080a7336d1ad256d77a83ab0b7d6.1543374820.git.gustavo@embeddedor.com>
 Content-Language: en-US
-Content-ID: <C5F60E2152C76D4C8874DB1503106190@namprd07.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Thomas Meyer <thomas@m3y3r.de>
-Cc: Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@cavium.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-
-> On Dec 2, 2018, at 12:52 PM, Thomas Meyer <thomas@m3y3r.de> wrote:
->=20
-> External Email
->=20
-> ----------------------------------------------------------------------
-> External Email
->=20
-> NULL check before some freeing functions is not needed.
->=20
-> Signed-off-by: Thomas Meyer <thomas@m3y3r.de>
+On 11/27/18 9:21 PM, Gustavo A. R. Silva wrote:
+> In preparation to enabling -Wimplicit-fallthrough, mark switch cases
+> where we are expecting to fall through.
+> 
+> Addresses-Coverity-ID: 1056537 ("Missing break in switch")
+> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 > ---
->=20
-> diff -u -p a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.=
-c
-> --- a/drivers/scsi/qla2xxx/qla_os.c
-> +++ b/drivers/scsi/qla2xxx/qla_os.c
-> @@ -4191,12 +4191,10 @@ fail_free_nvram:
->        kfree(ha->nvram);
->        ha->nvram =3D NULL;
-> fail_free_ctx_mempool:
-> -       if (ha->ctx_mempool)
-> -               mempool_destroy(ha->ctx_mempool);
-> +       mempool_destroy(ha->ctx_mempool);
->        ha->ctx_mempool =3D NULL;
-> fail_free_srb_mempool:
-> -       if (ha->srb_mempool)
-> -               mempool_destroy(ha->srb_mempool);
-> +       mempool_destroy(ha->srb_mempool);
->        ha->srb_mempool =3D NULL;
-> fail_free_gid_list:
->        dma_free_coherent(&ha->pdev->dev, qla2x00_gid_list_size(ha),
-> @@ -4498,8 +4496,7 @@ qla2x00_mem_free(struct qla_hw_data *ha)
->                dma_free_coherent(&ha->pdev->dev, MCTP_DUMP_SIZE, ha->mctp=
-_dump,
->                    ha->mctp_dump_dma);
->=20
-> -       if (ha->srb_mempool)
-> -               mempool_destroy(ha->srb_mempool);
-> +       mempool_destroy(ha->srb_mempool);
->=20
->        if (ha->dcbx_tlv)
->                dma_free_coherent(&ha->pdev->dev, DCBX_TLV_DATA_SIZE,
-> @@ -4531,8 +4528,7 @@ qla2x00_mem_free(struct qla_hw_data *ha)
->        if (ha->async_pd)
->                dma_pool_free(ha->s_dma_pool, ha->async_pd, ha->async_pd_d=
-ma);
->=20
-> -       if (ha->s_dma_pool)
-> -               dma_pool_destroy(ha->s_dma_pool);
-> +       dma_pool_destroy(ha->s_dma_pool);
->=20
->        if (ha->gid_list)
->                dma_free_coherent(&ha->pdev->dev, qla2x00_gid_list_size(ha=
-),
-> @@ -4553,14 +4549,11 @@ qla2x00_mem_free(struct qla_hw_data *ha)
->                }
->        }
->=20
-> -       if (ha->dl_dma_pool)
-> -               dma_pool_destroy(ha->dl_dma_pool);
-> +       dma_pool_destroy(ha->dl_dma_pool);
->=20
-> -       if (ha->fcp_cmnd_dma_pool)
-> -               dma_pool_destroy(ha->fcp_cmnd_dma_pool);
-> +       dma_pool_destroy(ha->fcp_cmnd_dma_pool);
->=20
-> -       if (ha->ctx_mempool)
-> -               mempool_destroy(ha->ctx_mempool);
-> +       mempool_destroy(ha->ctx_mempool);
->=20
->        qlt_mem_free(ha);
->=20
-> @@ -7106,8 +7099,7 @@ qla2x00_module_exit(void)
->        qla2x00_release_firmware();
->        kmem_cache_destroy(srb_cachep);
->        qlt_exit();
-> -       if (ctx_cachep)
-> -               kmem_cache_destroy(ctx_cachep);
-> +       kmem_cache_destroy(ctx_cachep);
->        fc_release_transport(qla2xxx_transport_template);
->        fc_release_transport(qla2xxx_transport_vport_template);
-> }
+>  drivers/scsi/BusLogic.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/scsi/BusLogic.c b/drivers/scsi/BusLogic.c
+> index 9cee941f97d6..717eef3ee893 100644
+> --- a/drivers/scsi/BusLogic.c
+> +++ b/drivers/scsi/BusLogic.c
+> @@ -2641,6 +2641,7 @@ static int blogic_resultcode(struct blogic_adapter *adapter,
+>  	case BLOGIC_BAD_CMD_PARAM:
+>  		blogic_warn("BusLogic Driver Protocol Error 0x%02X\n",
+>  				adapter, adapter_status);
+> +		/* fall through */
+>  	case BLOGIC_DATA_UNDERRUN:
+>  	case BLOGIC_DATA_OVERRUN:
+>  	case BLOGIC_NOEXPECT_BUSFREE:
+> 
 
-Looks good.=20
+Looks good.
 
-Acked-by: Himanshu Madhani <hmadhani@marvell.com>
-
-Thanks,
-- Himanshu
+Acked-by: Khalid Aziz <khalid@gonehiking.org>
