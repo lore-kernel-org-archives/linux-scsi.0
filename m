@@ -1,36 +1,109 @@
-From: "Rangankar, Manish" <Manish.Rangankar@cavium.com>
-Subject: RE: [PATCH] scsi: qedf: NULL check before some freeing functions is
- not needed.
-Date: Mon, 3 Dec 2018 05:57:42 +0000
-Message-ID: <MW2PR07MB4042B569F3E1BD643DE67022E3AE0@MW2PR07MB4042.namprd07.prod.outlook.com>
-References: <1543760930050-1499171309-0-diffsplit-thomas@m3y3r.de>
- <1543760930052-271366275-12-diffsplit-thomas@m3y3r.de>
+From: Sumit Saxena <sumit.saxena@broadcom.com>
+Subject: Re: [PATCH] scsi: megaraid_sas: NULL check before some freeing
+ functions is not needed.
+Date: Mon, 3 Dec 2018 12:10:07 +0530
+Message-ID: <CAL2rwxpYLUWCVSZJNB0_BRh0DXRab9TRVnWsvpkph3GNCOfT7w@mail.gmail.com>
+References: <1543760930050-1499171309-0-diffsplit-thomas@m3y3r.de> <1543760930052-918941928-10-diffsplit-thomas@m3y3r.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1543760930052-271366275-12-diffsplit-thomas@m3y3r.de>
-Content-Language: en-US
+In-Reply-To: <1543760930052-918941928-10-diffsplit-thomas@m3y3r.de>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Thomas Meyer <thomas@m3y3r.de>, Dept-Eng QLogic Storage Upstream <QLogic-Storage-Upstream@cavium.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: thomas@m3y3r.de
+Cc: Kashyap Desai <kashyap.desai@broadcom.com>, Shivasharan Srikanteshwara <shivasharan.srikanteshwara@broadcom.com>, "James E. J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, megaraidlinux.pdl@broadcom.com, Linux SCSI List <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-DQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IFRob21hcyBNZXllciA8dGhv
-bWFzQG0zeTNyLmRlPg0KPiBTZW50OiBNb25kYXksIERlY2VtYmVyIDMsIDIwMTggMjoyMiBBTQ0K
-PiBUbzogRGVwdC1FbmcgUUxvZ2ljIFN0b3JhZ2UgVXBzdHJlYW0gPFFMb2dpYy1TdG9yYWdlLQ0K
-PiBVcHN0cmVhbUBjYXZpdW0uY29tPjsgamVqYkBsaW51eC52bmV0LmlibS5jb207DQo+IG1hcnRp
-bi5wZXRlcnNlbkBvcmFjbGUuY29tOyBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZzsgbGludXgt
-DQo+IGtlcm5lbEB2Z2VyLmtlcm5lbC5vcmcNCj4gU3ViamVjdDogW1BBVENIXSBzY3NpOiBxZWRm
-OiBOVUxMIGNoZWNrIGJlZm9yZSBzb21lIGZyZWVpbmcgZnVuY3Rpb25zIGlzIG5vdA0KPiBuZWVk
-ZWQuDQo+IA0KPiBFeHRlcm5hbCBFbWFpbA0KPiANCj4gTlVMTCBjaGVjayBiZWZvcmUgc29tZSBm
-cmVlaW5nIGZ1bmN0aW9ucyBpcyBub3QgbmVlZGVkLg0KPiANCj4gU2lnbmVkLW9mZi1ieTogVGhv
-bWFzIE1leWVyIDx0aG9tYXNAbTN5M3IuZGU+DQo+IC0tLQ0KPiANCj4gZGlmZiAtdSAtcCBhL2Ry
-aXZlcnMvc2NzaS9xZWRmL3FlZGZfbWFpbi5jIGIvZHJpdmVycy9zY3NpL3FlZGYvcWVkZl9tYWlu
-LmMNCj4gLS0tIGEvZHJpdmVycy9zY3NpL3FlZGYvcWVkZl9tYWluLmMNCj4gKysrIGIvZHJpdmVy
-cy9zY3NpL3FlZGYvcWVkZl9tYWluLmMNCj4gQEAgLTI5MzUsOCArMjkzNSw3IEBAIHN0YXRpYyB2
-b2lkIHFlZGZfZnJlZV9mY29lX3BmX3BhcmFtKHN0cnUNCj4gDQo+ICAgICAgICAgcWVkZl9mcmVl
-X2dsb2JhbF9xdWV1ZXMocWVkZik7DQo+IA0KPiAtICAgICAgIGlmIChxZWRmLT5nbG9iYWxfcXVl
-dWVzKQ0KPiAtICAgICAgICAgICAgICAga2ZyZWUocWVkZi0+Z2xvYmFsX3F1ZXVlcyk7DQo+ICsg
-ICAgICAga2ZyZWUocWVkZi0+Z2xvYmFsX3F1ZXVlcyk7DQo+ICB9DQo+IA0KPiAgLyoNCg0KVGhh
-bmtzDQpBY2tlZC1ieTogTWFuaXNoIFJhbmdhbmthciA8TWFuaXNoLlJhbmdhbmthckBjYXZpdW0u
-Y29tPg0K
+On Mon, Dec 3, 2018 at 2:25 AM Thomas Meyer <thomas@m3y3r.de> wrote:
+>
+> NULL check before some freeing functions is not needed.
+>
+> Signed-off-by: Thomas Meyer <thomas@m3y3r.de>
+
+Acked-by: Sumit Saxena <sumit.saxena@broadcom.com>
+
+> ---
+>
+> diff -u -p a/drivers/scsi/megaraid/megaraid_mbox.c b/drivers/scsi/megaraid/megaraid_mbox.c
+> --- a/drivers/scsi/megaraid/megaraid_mbox.c
+> +++ b/drivers/scsi/megaraid/megaraid_mbox.c
+> @@ -1243,8 +1243,7 @@ megaraid_mbox_teardown_dma_pools(adapter
+>                 dma_pool_free(raid_dev->sg_pool_handle, sg_pci_blk[i].vaddr,
+>                         sg_pci_blk[i].dma_addr);
+>         }
+> -       if (raid_dev->sg_pool_handle)
+> -               dma_pool_destroy(raid_dev->sg_pool_handle);
+> +       dma_pool_destroy(raid_dev->sg_pool_handle);
+>
+>
+>         epthru_pci_blk = raid_dev->epthru_pool;
+> @@ -1252,8 +1251,7 @@ megaraid_mbox_teardown_dma_pools(adapter
+>                 dma_pool_free(raid_dev->epthru_pool_handle,
+>                         epthru_pci_blk[i].vaddr, epthru_pci_blk[i].dma_addr);
+>         }
+> -       if (raid_dev->epthru_pool_handle)
+> -               dma_pool_destroy(raid_dev->epthru_pool_handle);
+> +       dma_pool_destroy(raid_dev->epthru_pool_handle);
+>
+>
+>         mbox_pci_blk = raid_dev->mbox_pool;
+> @@ -1261,8 +1259,7 @@ megaraid_mbox_teardown_dma_pools(adapter
+>                 dma_pool_free(raid_dev->mbox_pool_handle,
+>                         mbox_pci_blk[i].vaddr, mbox_pci_blk[i].dma_addr);
+>         }
+> -       if (raid_dev->mbox_pool_handle)
+> -               dma_pool_destroy(raid_dev->mbox_pool_handle);
+> +       dma_pool_destroy(raid_dev->mbox_pool_handle);
+>
+>         return;
+>  }
+> diff -u -p a/drivers/scsi/megaraid/megaraid_mm.c b/drivers/scsi/megaraid/megaraid_mm.c
+> --- a/drivers/scsi/megaraid/megaraid_mm.c
+> +++ b/drivers/scsi/megaraid/megaraid_mm.c
+> @@ -1017,8 +1017,7 @@ memalloc_error:
+>         kfree(adapter->kioc_list);
+>         kfree(adapter->mbox_list);
+>
+> -       if (adapter->pthru_dma_pool)
+> -               dma_pool_destroy(adapter->pthru_dma_pool);
+> +       dma_pool_destroy(adapter->pthru_dma_pool);
+>
+>         kfree(adapter);
+>
+> diff -u -p a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> @@ -807,10 +807,8 @@ megasas_free_rdpq_fusion(struct megasas_
+>
+>         }
+>
+> -       if (fusion->reply_frames_desc_pool)
+> -               dma_pool_destroy(fusion->reply_frames_desc_pool);
+> -       if (fusion->reply_frames_desc_pool_align)
+> -               dma_pool_destroy(fusion->reply_frames_desc_pool_align);
+> +       dma_pool_destroy(fusion->reply_frames_desc_pool);
+> +       dma_pool_destroy(fusion->reply_frames_desc_pool_align);
+>
+>         if (fusion->rdpq_virt)
+>                 dma_free_coherent(&instance->pdev->dev,
+> @@ -830,8 +828,7 @@ megasas_free_reply_fusion(struct megasas
+>                         fusion->reply_frames_desc[0],
+>                         fusion->reply_frames_desc_phys[0]);
+>
+> -       if (fusion->reply_frames_desc_pool)
+> -               dma_pool_destroy(fusion->reply_frames_desc_pool);
+> +       dma_pool_destroy(fusion->reply_frames_desc_pool);
+>
+>  }
+>
+> @@ -1627,8 +1624,7 @@ static inline void megasas_free_ioc_init
+>                                   fusion->ioc_init_cmd->frame,
+>                                   fusion->ioc_init_cmd->frame_phys_addr);
+>
+> -       if (fusion->ioc_init_cmd)
+> -               kfree(fusion->ioc_init_cmd);
+> +       kfree(fusion->ioc_init_cmd);
+>  }
+>
+>  /**
+>
+>
