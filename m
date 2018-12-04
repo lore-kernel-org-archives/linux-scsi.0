@@ -1,80 +1,59 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: RE: scsi_set_medium_removal timeout issue
-Date: Tue, 4 Dec 2018 11:36:51 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1812041135300.1537-100000@iolanthe.rowland.org>
-References: <678F3D1BB717D949B966B68EAEB446ED24E0118D@dggemm526-mbx.china.huawei.com>
+From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Subject: Re: [PATCH v4 9/9] dmapool: debug: prevent endless loop in case of
+	corruption
+Date: Tue, 4 Dec 2018 12:14:43 -0800
+Message-ID: <20181204121443.1430883634a6ecf5f4a6a4a2@linux-foundation.org>
+References: <9e65ec2e-5e22-4f65-7b92-ca2af0c555f3@cybernetics.com>
+	<20181113063601.GT21824@bombadil.infradead.org>
+	<4dcb22b0-a348-841d-8175-e368f67f33c3@cybernetics.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <678F3D1BB717D949B966B68EAEB446ED24E0118D@dggemm526-mbx.china.huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Zengtao (B)" <prime.zeng@hisilicon.com>
-Cc: Martin Petersen <martin.petersen@oracle.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>, "usb-storage@lists.one-eyed-alien.net" <usb-storage@lists.one-eyed-alien.net>
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <4dcb22b0-a348-841d-8175-e368f67f33c3-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
+List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Tony Battersby <tonyb-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org>
+Cc: "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andy Shevchenko <andy.shevchenko-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 29 Nov 2018, Zengtao (B) wrote:
+On Tue, 4 Dec 2018 11:22:34 -0500 Tony Battersby <tonyb-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org> wr=
+ote:
 
-> Ping?
-> 
-> >-----Original Message-----
-> >From: Alan Stern [mailto:stern@rowland.harvard.edu]
-> >Sent: Wednesday, November 14, 2018 11:35 PM
-> >To: Martin Petersen <martin.petersen@oracle.com>; Zengtao (B)
-> ><prime.zeng@hisilicon.com>
-> >Cc: jejb@linux.vnet.ibm.com; gregkh@linuxfoundation.org;
-> >linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org;
-> >linux-usb@vger.kernel.org; usb-storage@lists.one-eyed-alien.net
-> >Subject: RE: scsi_set_medium_removal timeout issue
-> >
-> >On Wed, 14 Nov 2018, Zengtao (B) wrote:
-> >
-> >> I just enabled the scsi log in the middle of the umount operation,
-> >> otherwise I can't reproduce the issue when the scsi log is enabled.
+> On 11/13/18 1:36 AM, Matthew Wilcox wrote:
+> > On Mon, Nov 12, 2018 at 10:46:35AM -0500, Tony Battersby wrote:
+> >> Prevent a possible endless loop with DMAPOOL_DEBUG enabled if a buggy
+> >> driver corrupts DMA pool memory.
 > >>
-> >> >from the beginning.  In any case, it wasn't what I wanted.  I asked
-> >> >you to post the dmesg log, not the SCSI log.
-> >>
-> >> Please refer to the new attachment for dmesg log.
+> >> Signed-off-by: Tony Battersby <tonyb-vFAe+i1/wJI5UWNf+nJyDw@public.gmane.org>
+> > I like it!  Also, here you're using blks_per_alloc in a way which isn't
+> > normally in the performance path, but might be with the right config
+> > options.  With that, I withdraw my objection to the previous patch and
 > >
-> >Heh, yes, I see now.
+> > Acked-by: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 > >
-> >Martin, shouldn't sd_release() call sd_sync_cache() in the same way that
-> >sd_shutdown() does, before it calls scsi_set_medium_removal()?
+> > Andrew, can you funnel these in through your tree?  If you'd rather not,
+> > I don't mind stuffing them into a git tree and asking Linus to pull
+> > for 4.21.
 > >
-> >Alan Stern
+> No reply for 3 weeks, so adding Andrew Morton to recipient list.
+> =
 
-I don't know if this is the right thing to do, but you can try out the 
-following patch to see if it helps.
-
-Alan Stern
-
+> Andrew, I have 9 dmapool patches ready for merging in 4.21.=A0 See Matthew
+> Wilcox's request above.
+> =
 
 
-Index: usb-4.x/drivers/scsi/sd.c
-===================================================================
---- usb-4.x.orig/drivers/scsi/sd.c
-+++ usb-4.x/drivers/scsi/sd.c
-@@ -113,6 +113,7 @@ static void sd_shutdown(struct device *)
- static int sd_suspend_system(struct device *);
- static int sd_suspend_runtime(struct device *);
- static int sd_resume(struct device *);
-+static int sd_sync_cache(struct scsi_disk *sdkp, struct scsi_sense_hdr *sshdr);
- static void sd_rescan(struct device *);
- static int sd_init_command(struct scsi_cmnd *SCpnt);
- static void sd_uninit_command(struct scsi_cmnd *SCpnt);
-@@ -1393,8 +1394,14 @@ static void sd_release(struct gendisk *d
- 	SCSI_LOG_HLQUEUE(3, sd_printk(KERN_INFO, sdkp, "sd_release\n"));
- 
- 	if (atomic_dec_return(&sdkp->openers) == 0 && sdev->removable) {
--		if (scsi_block_when_processing_errors(sdev))
-+		if (scsi_block_when_processing_errors(sdev)) {
-+			if (sdkp->WCE && sdkp->media_present) {
-+				sd_printk(KERN_NOTICE, sdkp,
-+						"Synchronizing SCSI cache\n");
-+				sd_sync_cache(sdkp, NULL);
-+			}
- 			scsi_set_medium_removal(sdev, SCSI_REMOVAL_ALLOW);
-+		}
- 	}
- 
- 	/*
+I'll take a look, but I see that this v4 series has several review
+comments from Matthew which remain unresponded to.  Please attend to
+that.
+
+Also, Andy had issues with the v2 series so it would be good to hear an
+update from him?
