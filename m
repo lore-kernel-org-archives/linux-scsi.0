@@ -1,53 +1,44 @@
-From: John Garry <john.garry@huawei.com>
-Subject: Re: [PATCH v3 4/4] scsi: hisi_sas: Add support for DIF feature for v3
- hw
-Date: Wed, 5 Dec 2018 15:12:27 +0000
-Message-ID: <9c08d3fa-5043-7d38-7b6c-574b7344409b@huawei.com>
-References: <1543838994-30028-1-git-send-email-john.garry@huawei.com>
- <1543838994-30028-5-git-send-email-john.garry@huawei.com>
- <yq1ftveszew.fsf@oracle.com>
- <358aae82-394e-9df2-6b05-5af8e0f196b3@huawei.com>
- <yq1k1kosorw.fsf@oracle.com>
+From: Rob Herring <robh@kernel.org>
+Subject: [PATCH] scsi: Use of_node_name_eq for node name comparisons
+Date: Wed,  5 Dec 2018 13:50:39 -0600
+Message-ID: <20181205195050.4759-23-robh@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <yq1k1kosorw.fsf@oracle.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: jejb@linux.vnet.ibm.com, linuxarm@huawei.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Xiang Chen <chenxiang66@hisilicon.com>
+To: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 05/12/2018 02:14, Martin K. Petersen wrote:
->
-> John,
+Convert string compares of DT node names to use of_node_name_eq helper
+instead. This removes direct access to the node name pointer.
 
-Hi Martin,
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
+Signed-off-by: Rob Herring <robh@kernel.org>
+---
+ drivers/scsi/sun_esp.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
->
->> Are you happy for us to make DIX support in this driver "hisi_sas DIX
->> experimental" short term?
->
-> That's entirely your call, it's your driver/controller.  I just want the
-> experimental tag to be due to reasons on *your* end.
->
-
-Well unfortunately at the moment we cannot definitively say that it is 
-an issue on our end. There's a reasonable chance it is.
-
-> If it's reasons on my end they'll need to get fixed. We shouldn't have
-> drivers circumventing features because of bugs in the core block/SCSI
-> code...
->
-
-Right, of course not. I'm just a bit stuck now, since we need to 
-upstream the DIF support ASAP, but it is being held back by the DIX support.
-
-You did request not to throw away DIX support, so I can send a new 
-patchset with DIF and DIX support separated out, and we can leave the 
-DIX patch in limbo until we get to the bottom of the DIX issue.
-
-I hope it's ok.
-
-Thanks,
-John
+diff --git a/drivers/scsi/sun_esp.c b/drivers/scsi/sun_esp.c
+index a11efbcb7f8b..c71bd01fef94 100644
+--- a/drivers/scsi/sun_esp.c
++++ b/drivers/scsi/sun_esp.c
+@@ -529,11 +529,10 @@ static int esp_sbus_probe(struct platform_device *op)
+ 	int hme = 0;
+ 	int ret;
+ 
+-	if (dp->parent &&
+-	    (!strcmp(dp->parent->name, "espdma") ||
+-	     !strcmp(dp->parent->name, "dma")))
++	if (of_node_name_eq(dp->parent, "espdma") ||
++	    of_node_name_eq(dp->parent, "dma"))
+ 		dma_node = dp->parent;
+-	else if (!strcmp(dp->name, "SUNW,fas")) {
++	else if (of_node_name_eq(dp, "SUNW,fas")) {
+ 		dma_node = op->dev.of_node;
+ 		hme = 1;
+ 	}
+-- 
+2.19.1
