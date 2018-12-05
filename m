@@ -1,49 +1,35 @@
-From: "Sesidhar Baddela (sebaddel)" <sebaddel@cisco.com>
-Subject: Re: [PATCH] drivers/scsi/snic/snic_trc.c: Use vzalloc
-Date: Wed, 5 Dec 2018 06:28:02 +0000
-Message-ID: <B16AE34C-4395-434E-98AD-C5F7AB818C49@cisco.com>
-References: <5beda000.1c69fb81.e6599.d3d8@mx.google.com>
- <CAJr6mf0rawk6rDRB7NzsTUXyqvt0U5J4SUnVYck2_-jh6D6MoQ@mail.gmail.com>
- <CAJr6mf2obk8MgPc3AO74EwsiXt66OZGni57Z8v3TgnePyACLmg@mail.gmail.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] scsi: t10-pi: Return correct ref tag when queue has no integrity profile
+Date: Wed, 05 Dec 2018 09:04:33 -0500
+Message-ID: <yq1d0qgqdce.fsf@oracle.com>
+References: <yq1ftvcsoes.fsf@oracle.com>
+        <20181205023110.20162-1-martin.petersen@oracle.com>
+        <2abe64a3-d54b-4cbb-bc56-1796e62fd0f9@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAJr6mf2obk8MgPc3AO74EwsiXt66OZGni57Z8v3TgnePyACLmg@mail.gmail.com>
-Content-Language: en-US
-Content-ID: <B51B4681C3481C4DB5F0D1E9B56628A5@emea.cisco.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Sabyasachi Gupta <sabyasachi.linux@gmail.com>, "Karan Tilak Kumar (kartilak)" <kartilak@cisco.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: Souptick Joarder <jrdr.linux@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Brajeswar Ghosh <brajeswar.linux@gmail.com>
+Content-Type: text/plain
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <2abe64a3-d54b-4cbb-bc56-1796e62fd0f9@acm.org> (Bart Van Assche's
+        message of "Tue, 4 Dec 2018 20:24:32 -0800")
+Sender: stable-owner@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, john.garry@huawei.com, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-TG9va3MgZ29vZCB0byBtZS4NCg0KQWNrZWQtYnk6ICAgU2VzaWRoYXIgQmFkZGVsYSAgICAgPHNl
-YmFkZGVsQGNpc2NvLmNvbT4NCg0KT24gMTIvNC8xOCwgODozMyBQTSwgIlNhYnlhc2FjaGkgR3Vw
-dGEiIDxzYWJ5YXNhY2hpLmxpbnV4QGdtYWlsLmNvbT4gd3JvdGU6DQoNCiAgICBPbiBGcmksIE5v
-diAyMywgMjAxOCBhdCA4OjA3IFBNIFNhYnlhc2FjaGkgR3VwdGENCiAgICA8c2FieWFzYWNoaS5s
-aW51eEBnbWFpbC5jb20+IHdyb3RlOg0KICAgID4NCiAgICA+IE9uIFRodSwgTm92IDE1LCAyMDE4
-IGF0IDEwOjA0IFBNIFNhYnlhc2FjaGkgR3VwdGENCiAgICA+IDxzYWJ5YXNhY2hpLmxpbnV4QGdt
-YWlsLmNvbT4gd3JvdGU6DQogICAgPiA+DQogICAgPiA+IFJlcGxhY2VkIHZtYWxsb2MgKyBtZW1z
-ZXQgd2l0aCB2emFsbG9jDQogICAgPiA+DQogICAgPiA+IFNpZ25lZC1vZmYtYnk6IFNhYnlhc2Fj
-aGkgR3VwdGEgPHNhYnlhc2FjaGkubGludXhAZ21haWwuY29tPg0KICAgID4NCiAgICA+IEFueSBj
-b21tZW50IG9uIHRoaXMgcGF0Y2g/DQogICAgDQogICAgQW55IGNvbW1lbnQgb24gdGhpcyBwYXRj
-aD8NCiAgICANCiAgICA+DQogICAgPiA+IC0tLQ0KICAgID4gPiAgZHJpdmVycy9zY3NpL3NuaWMv
-c25pY190cmMuYyB8IDMgKy0tDQogICAgPiA+ICAxIGZpbGUgY2hhbmdlZCwgMSBpbnNlcnRpb24o
-KyksIDIgZGVsZXRpb25zKC0pDQogICAgPiA+DQogICAgPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJz
-L3Njc2kvc25pYy9zbmljX3RyYy5jIGIvZHJpdmVycy9zY3NpL3NuaWMvc25pY190cmMuYw0KICAg
-ID4gPiBpbmRleCBmYzYwYzkzLi40NThlYWJhIDEwMDY0NA0KICAgID4gPiAtLS0gYS9kcml2ZXJz
-L3Njc2kvc25pYy9zbmljX3RyYy5jDQogICAgPiA+ICsrKyBiL2RyaXZlcnMvc2NzaS9zbmljL3Nu
-aWNfdHJjLmMNCiAgICA+ID4gQEAgLTEyNiw3ICsxMjYsNyBAQCBzbmljX3RyY19pbml0KHZvaWQp
-DQogICAgPiA+ICAgICAgICAgaW50IHRidWZfc3ogPSAwLCByZXQ7DQogICAgPiA+DQogICAgPiA+
-ICAgICAgICAgdGJ1Zl9zeiA9IChzbmljX3RyYWNlX21heF9wYWdlcyAqIFBBR0VfU0laRSk7DQog
-ICAgPiA+IC0gICAgICAgdGJ1ZiA9IHZtYWxsb2ModGJ1Zl9zeik7DQogICAgPiA+ICsgICAgICAg
-dGJ1ZiA9IHZ6YWxsb2ModGJ1Zl9zeik7DQogICAgPiA+ICAgICAgICAgaWYgKCF0YnVmKSB7DQog
-ICAgPiA+ICAgICAgICAgICAgICAgICBTTklDX0VSUigiRmFpbGVkIHRvIEFsbG9jYXRlIFRyYWNl
-IEJ1ZmZlciBTaXplLiAlZFxuIiwgdGJ1Zl9zeik7DQogICAgPiA+ICAgICAgICAgICAgICAgICBT
-TklDX0VSUigiVHJhY2UgRmFjaWxpdHkgbm90IGVuYWJsZWQuXG4iKTsNCiAgICA+ID4gQEAgLTEz
-NSw3ICsxMzUsNiBAQCBzbmljX3RyY19pbml0KHZvaWQpDQogICAgPiA+ICAgICAgICAgICAgICAg
-ICByZXR1cm4gcmV0Ow0KICAgID4gPiAgICAgICAgIH0NCiAgICA+ID4NCiAgICA+ID4gLSAgICAg
-ICBtZW1zZXQodGJ1ZiwgMCwgdGJ1Zl9zeik7DQogICAgPiA+ICAgICAgICAgdHJjLT5idWYgPSAo
-c3RydWN0IHNuaWNfdHJjX2RhdGEgKikgdGJ1ZjsNCiAgICA+ID4gICAgICAgICBzcGluX2xvY2tf
-aW5pdCgmdHJjLT5sb2NrKTsNCiAgICA+ID4NCiAgICA+ID4gLS0NCiAgICA+ID4gMi43LjQNCiAg
-ICA+ID4NCiAgICANCg0K
+
+Hi Bart,
+
+> Since the return value of this function is 'u32', can the ' &
+> 0xffffffff' be left out?
+
+Absolutely, and I almost zapped it. However, I decided to leave it to
+emphasize the point that the reference tag is truncated to a 32-bit
+value. To me, this is more obvious than having to backtrack and spot the
+u32 in the function definition. I generally appreciate some sort of
+commentary around a return statement if the value deviates from the
+ordinary.
+
+The parentheses around the shift value irk me but had to leave those in
+place to silence gcc.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
