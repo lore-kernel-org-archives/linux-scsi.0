@@ -1,58 +1,54 @@
-From: Sabyasachi Gupta <sabyasachi.linux@gmail.com>
+From: "Sesidhar Baddela (sebaddel)" <sebaddel@cisco.com>
 Subject: Re: [PATCH v2] drivers/scsi/fnic/fnic_trace.c: Use vzalloc
-Date: Wed, 5 Dec 2018 10:07:51 +0530
-Message-ID: <CAJr6mf1wqNq02e89U85u=h1Ge0MSzAOk+wQc9q_gWurEZzWZUw@mail.gmail.com>
-References: <5bec5342.1c69fb81.b02fa.ace9@mx.google.com> <CAJr6mf1d=tviauDfd4Hq_750mGiypheUxHhQEv_tsdR_TrTkNA@mail.gmail.com>
+Date: Wed, 5 Dec 2018 06:30:56 +0000
+Message-ID: <12CB1ACA-CE7D-4534-87D2-CBD96E301D9A@cisco.com>
+References: <5bec5342.1c69fb81.b02fa.ace9@mx.google.com>
+ <CAJr6mf1d=tviauDfd4Hq_750mGiypheUxHhQEv_tsdR_TrTkNA@mail.gmail.com>
+ <CAJr6mf1wqNq02e89U85u=h1Ge0MSzAOk+wQc9q_gWurEZzWZUw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAJr6mf1d=tviauDfd4Hq_750mGiypheUxHhQEv_tsdR_TrTkNA@mail.gmail.com>
+In-Reply-To: <CAJr6mf1wqNq02e89U85u=h1Ge0MSzAOk+wQc9q_gWurEZzWZUw@mail.gmail.com>
+Content-Language: en-US
+Content-ID: <18DD16CDF211CB4C91FFB7E71A082844@emea.cisco.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: satishkh@cisco.com, sebaddel@cisco.com, kartilak@cisco.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: Souptick Joarder <jrdr.linux@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Brajeswar Ghosh <brajeswar.linux@gmail.com>
+To: Sabyasachi Gupta <sabyasachi.linux@gmail.com>, "Satish Kharat (satishkh)" <satishkh@cisco.com>, "Karan Tilak Kumar (kartilak)" <kartilak@cisco.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: Souptick Joarder <jrdr.linux@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Brajeswar Ghosh <brajeswar.linux@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Nov 23, 2018 at 8:13 PM Sabyasachi Gupta
-<sabyasachi.linux@gmail.com> wrote:
->
-> On Wed, Nov 14, 2018 at 10:24 PM Sabyasachi Gupta
-> <sabyasachi.linux@gmail.com> wrote:
-> >
-> > Replaced vmalloc + memset with vzalloc
-> >
-> > Signed-off-by: Sabyasachi Gupta <sabyasachi.linux@gmail.com>
->
-> Any comment on this patch?
-
-Any comment on this patch?
-
->
-> > ---
-> > v2: Removed additional braces
-> >
-> >  drivers/scsi/fnic/fnic_trace.c | 3 +--
-> >  1 file changed, 1 insertion(+), 2 deletions(-)
-> >
-> > diff --git a/drivers/scsi/fnic/fnic_trace.c b/drivers/scsi/fnic/fnic_trace.c
-> > index 8271785..bf0fd2a 100644
-> > --- a/drivers/scsi/fnic/fnic_trace.c
-> > +++ b/drivers/scsi/fnic/fnic_trace.c
-> > @@ -468,14 +468,13 @@ int fnic_trace_buf_init(void)
-> >         fnic_max_trace_entries = (trace_max_pages * PAGE_SIZE)/
-> >                                           FNIC_ENTRY_SIZE_BYTES;
-> >
-> > -       fnic_trace_buf_p = (unsigned long)vmalloc((trace_max_pages * PAGE_SIZE));
-> > +       fnic_trace_buf_p = (unsigned long)vzalloc(trace_max_pages * PAGE_SIZE);
-> >         if (!fnic_trace_buf_p) {
-> >                 printk(KERN_ERR PFX "Failed to allocate memory "
-> >                                   "for fnic_trace_buf_p\n");
-> >                 err = -ENOMEM;
-> >                 goto err_fnic_trace_buf_init;
-> >         }
-> > -       memset((void *)fnic_trace_buf_p, 0, (trace_max_pages * PAGE_SIZE));
-> >
-> >         fnic_trace_entries.page_offset =
-> >                 vmalloc(array_size(fnic_max_trace_entries,
-> > --
-> > 2.7.4
-> >
+TG9va3MgZ29vZC4gQXBvbG9naXplIGZvciB0aGUgZGVsYXkgaW4gYWNrbm93bGVkZ2luZyB0aGUg
+cGF0Y2guDQoNCkFja2VkLWJ5OiAgIFNlc2lkaGFyIEJhZGRlbGEgICAgPHNlYmFkZGVsQGNpc2Nv
+LmNvbT4NCg0KDQpPbiAxMi80LzE4LCA4OjM3IFBNLCAiU2FieWFzYWNoaSBHdXB0YSIgPHNhYnlh
+c2FjaGkubGludXhAZ21haWwuY29tPiB3cm90ZToNCg0KICAgIE9uIEZyaSwgTm92IDIzLCAyMDE4
+IGF0IDg6MTMgUE0gU2FieWFzYWNoaSBHdXB0YQ0KICAgIDxzYWJ5YXNhY2hpLmxpbnV4QGdtYWls
+LmNvbT4gd3JvdGU6DQogICAgPg0KICAgID4gT24gV2VkLCBOb3YgMTQsIDIwMTggYXQgMTA6MjQg
+UE0gU2FieWFzYWNoaSBHdXB0YQ0KICAgID4gPHNhYnlhc2FjaGkubGludXhAZ21haWwuY29tPiB3
+cm90ZToNCiAgICA+ID4NCiAgICA+ID4gUmVwbGFjZWQgdm1hbGxvYyArIG1lbXNldCB3aXRoIHZ6
+YWxsb2MNCiAgICA+ID4NCiAgICA+ID4gU2lnbmVkLW9mZi1ieTogU2FieWFzYWNoaSBHdXB0YSA8
+c2FieWFzYWNoaS5saW51eEBnbWFpbC5jb20+DQogICAgPg0KICAgID4gQW55IGNvbW1lbnQgb24g
+dGhpcyBwYXRjaD8NCiAgICANCiAgICBBbnkgY29tbWVudCBvbiB0aGlzIHBhdGNoPw0KICAgIA0K
+ICAgID4NCiAgICA+ID4gLS0tDQogICAgPiA+IHYyOiBSZW1vdmVkIGFkZGl0aW9uYWwgYnJhY2Vz
+DQogICAgPiA+DQogICAgPiA+ICBkcml2ZXJzL3Njc2kvZm5pYy9mbmljX3RyYWNlLmMgfCAzICst
+LQ0KICAgID4gPiAgMSBmaWxlIGNoYW5nZWQsIDEgaW5zZXJ0aW9uKCspLCAyIGRlbGV0aW9ucygt
+KQ0KICAgID4gPg0KICAgID4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL2ZuaWMvZm5pY190
+cmFjZS5jIGIvZHJpdmVycy9zY3NpL2ZuaWMvZm5pY190cmFjZS5jDQogICAgPiA+IGluZGV4IDgy
+NzE3ODUuLmJmMGZkMmEgMTAwNjQ0DQogICAgPiA+IC0tLSBhL2RyaXZlcnMvc2NzaS9mbmljL2Zu
+aWNfdHJhY2UuYw0KICAgID4gPiArKysgYi9kcml2ZXJzL3Njc2kvZm5pYy9mbmljX3RyYWNlLmMN
+CiAgICA+ID4gQEAgLTQ2OCwxNCArNDY4LDEzIEBAIGludCBmbmljX3RyYWNlX2J1Zl9pbml0KHZv
+aWQpDQogICAgPiA+ICAgICAgICAgZm5pY19tYXhfdHJhY2VfZW50cmllcyA9ICh0cmFjZV9tYXhf
+cGFnZXMgKiBQQUdFX1NJWkUpLw0KICAgID4gPiAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICBGTklDX0VOVFJZX1NJWkVfQllURVM7DQogICAgPiA+DQogICAgPiA+IC0g
+ICAgICAgZm5pY190cmFjZV9idWZfcCA9ICh1bnNpZ25lZCBsb25nKXZtYWxsb2MoKHRyYWNlX21h
+eF9wYWdlcyAqIFBBR0VfU0laRSkpOw0KICAgID4gPiArICAgICAgIGZuaWNfdHJhY2VfYnVmX3Ag
+PSAodW5zaWduZWQgbG9uZyl2emFsbG9jKHRyYWNlX21heF9wYWdlcyAqIFBBR0VfU0laRSk7DQog
+ICAgPiA+ICAgICAgICAgaWYgKCFmbmljX3RyYWNlX2J1Zl9wKSB7DQogICAgPiA+ICAgICAgICAg
+ICAgICAgICBwcmludGsoS0VSTl9FUlIgUEZYICJGYWlsZWQgdG8gYWxsb2NhdGUgbWVtb3J5ICIN
+CiAgICA+ID4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICJmb3IgZm5pY190cmFj
+ZV9idWZfcFxuIik7DQogICAgPiA+ICAgICAgICAgICAgICAgICBlcnIgPSAtRU5PTUVNOw0KICAg
+ID4gPiAgICAgICAgICAgICAgICAgZ290byBlcnJfZm5pY190cmFjZV9idWZfaW5pdDsNCiAgICA+
+ID4gICAgICAgICB9DQogICAgPiA+IC0gICAgICAgbWVtc2V0KCh2b2lkICopZm5pY190cmFjZV9i
+dWZfcCwgMCwgKHRyYWNlX21heF9wYWdlcyAqIFBBR0VfU0laRSkpOw0KICAgID4gPg0KICAgID4g
+PiAgICAgICAgIGZuaWNfdHJhY2VfZW50cmllcy5wYWdlX29mZnNldCA9DQogICAgPiA+ICAgICAg
+ICAgICAgICAgICB2bWFsbG9jKGFycmF5X3NpemUoZm5pY19tYXhfdHJhY2VfZW50cmllcywNCiAg
+ICA+ID4gLS0NCiAgICA+ID4gMi43LjQNCiAgICA+ID4NCiAgICANCg0K
