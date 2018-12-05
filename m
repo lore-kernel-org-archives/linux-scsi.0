@@ -1,21 +1,21 @@
 From: Sabyasachi Gupta <sabyasachi.linux@gmail.com>
-Subject: Re: [PATCH] drivers/scsi/snic/snic_trc.c: Use vzalloc
-Date: Wed, 5 Dec 2018 10:03:19 +0530
-Message-ID: <CAJr6mf2obk8MgPc3AO74EwsiXt66OZGni57Z8v3TgnePyACLmg@mail.gmail.com>
-References: <5beda000.1c69fb81.e6599.d3d8@mx.google.com> <CAJr6mf0rawk6rDRB7NzsTUXyqvt0U5J4SUnVYck2_-jh6D6MoQ@mail.gmail.com>
+Subject: Re: [PATCH v2] drivers/scsi/fnic/fnic_trace.c: Use vzalloc
+Date: Wed, 5 Dec 2018 10:07:51 +0530
+Message-ID: <CAJr6mf1wqNq02e89U85u=h1Ge0MSzAOk+wQc9q_gWurEZzWZUw@mail.gmail.com>
+References: <5bec5342.1c69fb81.b02fa.ace9@mx.google.com> <CAJr6mf1d=tviauDfd4Hq_750mGiypheUxHhQEv_tsdR_TrTkNA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAJr6mf0rawk6rDRB7NzsTUXyqvt0U5J4SUnVYck2_-jh6D6MoQ@mail.gmail.com>
+In-Reply-To: <CAJr6mf1d=tviauDfd4Hq_750mGiypheUxHhQEv_tsdR_TrTkNA@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: kartilak@cisco.com, sebaddel@cisco.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+To: satishkh@cisco.com, sebaddel@cisco.com, kartilak@cisco.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
 Cc: Souptick Joarder <jrdr.linux@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Brajeswar Ghosh <brajeswar.linux@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Nov 23, 2018 at 8:07 PM Sabyasachi Gupta
+On Fri, Nov 23, 2018 at 8:13 PM Sabyasachi Gupta
 <sabyasachi.linux@gmail.com> wrote:
 >
-> On Thu, Nov 15, 2018 at 10:04 PM Sabyasachi Gupta
+> On Wed, Nov 14, 2018 at 10:24 PM Sabyasachi Gupta
 > <sabyasachi.linux@gmail.com> wrote:
 > >
 > > Replaced vmalloc + memset with vzalloc
@@ -28,30 +28,31 @@ Any comment on this patch?
 
 >
 > > ---
-> >  drivers/scsi/snic/snic_trc.c | 3 +--
+> > v2: Removed additional braces
+> >
+> >  drivers/scsi/fnic/fnic_trace.c | 3 +--
 > >  1 file changed, 1 insertion(+), 2 deletions(-)
 > >
-> > diff --git a/drivers/scsi/snic/snic_trc.c b/drivers/scsi/snic/snic_trc.c
-> > index fc60c93..458eaba 100644
-> > --- a/drivers/scsi/snic/snic_trc.c
-> > +++ b/drivers/scsi/snic/snic_trc.c
-> > @@ -126,7 +126,7 @@ snic_trc_init(void)
-> >         int tbuf_sz = 0, ret;
+> > diff --git a/drivers/scsi/fnic/fnic_trace.c b/drivers/scsi/fnic/fnic_trace.c
+> > index 8271785..bf0fd2a 100644
+> > --- a/drivers/scsi/fnic/fnic_trace.c
+> > +++ b/drivers/scsi/fnic/fnic_trace.c
+> > @@ -468,14 +468,13 @@ int fnic_trace_buf_init(void)
+> >         fnic_max_trace_entries = (trace_max_pages * PAGE_SIZE)/
+> >                                           FNIC_ENTRY_SIZE_BYTES;
 > >
-> >         tbuf_sz = (snic_trace_max_pages * PAGE_SIZE);
-> > -       tbuf = vmalloc(tbuf_sz);
-> > +       tbuf = vzalloc(tbuf_sz);
-> >         if (!tbuf) {
-> >                 SNIC_ERR("Failed to Allocate Trace Buffer Size. %d\n", tbuf_sz);
-> >                 SNIC_ERR("Trace Facility not enabled.\n");
-> > @@ -135,7 +135,6 @@ snic_trc_init(void)
-> >                 return ret;
+> > -       fnic_trace_buf_p = (unsigned long)vmalloc((trace_max_pages * PAGE_SIZE));
+> > +       fnic_trace_buf_p = (unsigned long)vzalloc(trace_max_pages * PAGE_SIZE);
+> >         if (!fnic_trace_buf_p) {
+> >                 printk(KERN_ERR PFX "Failed to allocate memory "
+> >                                   "for fnic_trace_buf_p\n");
+> >                 err = -ENOMEM;
+> >                 goto err_fnic_trace_buf_init;
 > >         }
+> > -       memset((void *)fnic_trace_buf_p, 0, (trace_max_pages * PAGE_SIZE));
 > >
-> > -       memset(tbuf, 0, tbuf_sz);
-> >         trc->buf = (struct snic_trc_data *) tbuf;
-> >         spin_lock_init(&trc->lock);
-> >
+> >         fnic_trace_entries.page_offset =
+> >                 vmalloc(array_size(fnic_max_trace_entries,
 > > --
 > > 2.7.4
 > >
