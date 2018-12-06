@@ -1,70 +1,39 @@
-From: Wen Yang <wen.yang99@zte.com.cn>
-Subject: [PATCH] scsi: aic7xxx: Remove unnecessary NULL check before kfree
-Date: Thu, 6 Dec 2018 12:37:49 +0800
-Message-ID: <20181206043749.34535-1-wen.yang99@zte.com.cn>
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH] scsi: t10-pi: Return correct ref tag when queue has no
+ integrity profile
+Date: Thu, 6 Dec 2018 12:04:29 +0000
+Message-ID: <e8555cc6-1186-c5f9-ab8c-0c2ec90bae22@huawei.com>
+References: <yq1ftvcsoes.fsf@oracle.com>
+ <20181205023110.20162-1-martin.petersen@oracle.com>
+ <2abe64a3-d54b-4cbb-bc56-1796e62fd0f9@acm.org> <yq1d0qgqdce.fsf@oracle.com>
+ <4f705b13-84aa-b8bd-9c92-ab619a653f9c@acm.org> <yq1mupjp9v9.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.com>, jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, zhong.weidong@zte.com.cn, Wen Yang <wen.yang99@zte.com.cn>, Alex Deucher <alexander.deucher@amd.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <yq1mupjp9v9.fsf@oracle.com>
+Sender: stable-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, Bart Van Assche <bvanassche@acm.org>
+Cc: linux-scsi@vger.kernel.org, stable@vger.kernel.org, chenxiang <chenxiang66@hisilicon.com>
 List-Id: linux-scsi@vger.kernel.org
 
-kfree(NULL) is safe, so removes NULL check before freeing the mem.
-This patch also fix the ifnullfree.cocci warnings.
+On 06/12/2018 04:17, Martin K. Petersen wrote:
 
-Signed-off-by: Wen Yang <wen.yang99@zte.com.cn>
-CC: Alex Deucher <alexander.deucher@amd.com>
-CC: Hannes Reinecke <hare@suse.com>
-CC: "James E.J. Bottomley" <jejb@linux.ibm.com>
-CC: "Martin K. Petersen" <martin.petersen@oracle.com>
-CC: linux-scsi@vger.kernel.org
-CC: linux-kernel@vger.kernel.org
----
- drivers/scsi/aic7xxx/aic79xx=5Fcore.c | 15 +++++----------
- 1 file changed, 5 insertions(+), 10 deletions(-)
++
 
-diff --git a/drivers/scsi/aic7xxx/aic79xx=5Fcore.c b/drivers/scsi/aic7xxx/a=
-ic79xx=5Fcore.c
-index 9ee75c9a9aa1..090440f2ebed 100644
---- a/drivers/scsi/aic7xxx/aic79xx=5Fcore.c
-+++ b/drivers/scsi/aic7xxx/aic79xx=5Fcore.c
-@@ -3673,8 +3673,7 @@ ahd=5Ffree=5Ftstate(struct ahd=5Fsoftc *ahd, u=5Fint =
-scsi=5Fid, char channel, int force)
- 		return;
-=20
- 	tstate =3D ahd->enabled=5Ftargets[scsi=5Fid];
--	if (tstate !=3D NULL)
--		kfree(tstate);
-+	kfree(tstate);
- 	ahd->enabled=5Ftargets[scsi=5Fid] =3D NULL;
- }
- #endif
-@@ -6136,8 +6135,7 @@ ahd=5Fset=5Funit(struct ahd=5Fsoftc *ahd, int unit)
- void
- ahd=5Fset=5Fname(struct ahd=5Fsoftc *ahd, char *name)
- {
--	if (ahd->name !=3D NULL)
--		kfree(ahd->name);
-+	kfree(ahd->name);
- 	ahd->name =3D name;
- }
-=20
-@@ -6198,12 +6196,9 @@ ahd=5Ffree(struct ahd=5Fsoftc *ahd)
- 		kfree(ahd->black=5Fhole);
- 	}
- #endif
--	if (ahd->name !=3D NULL)
--		kfree(ahd->name);
--	if (ahd->seep=5Fconfig !=3D NULL)
--		kfree(ahd->seep=5Fconfig);
--	if (ahd->saved=5Fstack !=3D NULL)
--		kfree(ahd->saved=5Fstack);
-+	kfree(ahd->name);
-+	kfree(ahd->seep=5Fconfig);
-+	kfree(ahd->saved=5Fstack);
- #ifndef =5F=5FFreeBSD=5F=5F
- 	kfree(ahd);
- #endif
---=20
-2.19.1
+>
+> Bart,
+>
+>> Had you considered to use lower_32_bits() instead of "0xffffffff"?
+>> That would to avoid that reviewers have to count the 'f'-s to verify
+>> correctness of t10_pi_ref_tag().
+>
+> I hadn't. I guess I tend to think of lower_32_bits() as something you do
+> to pointers, not to block numbers.
+>
+
+Xiang Chen tested the patch successfully. I'll let him provide tested-by 
+tag.
+
+Thanks,
+John
