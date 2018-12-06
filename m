@@ -1,97 +1,115 @@
-From: Steffen Maier <maier@linux.ibm.com>
-Subject: [PATCH 1/2] zfcp: fix posting too many status read buffers leading to adapter shutdown
-Date: Thu,  6 Dec 2018 17:31:20 +0100
-Message-ID: <20181206163121.32160-2-maier@linux.ibm.com>
-References: <20181206163121.32160-1-maier@linux.ibm.com>
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20181206163121.32160-1-maier@linux.ibm.com>
-Sender: stable-owner@vger.kernel.org
-To: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Benjamin Block <bblock@linux.ibm.com>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, Steffen Maier <maier@linux.ibm.com>, stable@vger.kernel.org
+From: Qian Cai <cai@lca.pw>
+Subject: [PATCH v2] megaraid: fix out-of-bound array accesses
+Date: Thu,  6 Dec 2018 16:22:52 -0500
+Message-ID: <20181206212252.36732-1-cai@lca.pw>
+References: <20181206155351.36099-1-cai@gmx.us>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20181206155351.36099-1-cai@gmx.us>
+Sender: linux-kernel-owner@vger.kernel.org
+To: kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com
+Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, thenzl@redhat.com, hch@lst.de, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Qian Cai <cai@lca.pw>
 List-Id: linux-scsi@vger.kernel.org
 
-Suppose adapter (open) recovery is between opened QDIO queues and before
-(the end of) initial posting of status read buffers (SRBs). This time
-window can be seconds long due to FSF_PROT_HOST_CONNECTION_INITIALIZING
-causing by design looping with exponential increase sleeps in the function
-performing exchange config data during recovery
-[zfcp_erp_adapter_strat_fsf_xconf()]. Recovery triggered by local link up.
+UBSAN reported those with MegaRAID SAS-3 3108,
 
-Suppose an event occurs for which the FCP channel would send an
-unsolicited notification to zfcp by means of a previously posted SRB.
-We saw it with local cable pull (link down) in multi-initiator zoning
-with multiple NPIV-enabled subchannels of the same shared FCP channel.
+[   77.467308] UBSAN: Undefined behaviour in drivers/scsi/megaraid/megaraid_sas_fp.c:117:32
+[   77.475402] index 255 is out of range for type 'MR_LD_SPAN_MAP [1]'
+[   77.481677] CPU: 16 PID: 333 Comm: kworker/16:1 Not tainted 4.20.0-rc5+ #1
+[   77.488556] Hardware name: Huawei TaiShan 2280 /BC11SPCD, BIOS 1.50 06/01/2018
+[   77.495791] Workqueue: events work_for_cpu_fn
+[   77.500154] Call trace:
+[   77.502610]  dump_backtrace+0x0/0x2c8
+[   77.506279]  show_stack+0x24/0x30
+[   77.509604]  dump_stack+0x118/0x19c
+[   77.513098]  ubsan_epilogue+0x14/0x60
+[   77.516765]  __ubsan_handle_out_of_bounds+0xfc/0x13c
+[   77.521767]  mr_update_load_balance_params+0x150/0x158 [megaraid_sas]
+[   77.528230]  MR_ValidateMapInfo+0x2cc/0x10d0 [megaraid_sas]
+[   77.533825]  megasas_get_map_info+0x244/0x2f0 [megaraid_sas]
+[   77.539505]  megasas_init_adapter_fusion+0x9b0/0xf48 [megaraid_sas]
+[   77.545794]  megasas_init_fw+0x1ab4/0x3518 [megaraid_sas]
+[   77.551212]  megasas_probe_one+0x2c4/0xbe0 [megaraid_sas]
+[   77.556614]  local_pci_probe+0x7c/0xf0
+[   77.560365]  work_for_cpu_fn+0x34/0x50
+[   77.564118]  process_one_work+0x61c/0xf08
+[   77.568129]  worker_thread+0x534/0xa70
+[   77.571882]  kthread+0x1c8/0x1d0
+[   77.575114]  ret_from_fork+0x10/0x1c
 
-As soon as zfcp_erp_adapter_strategy_open_fsf() starts posting the
-initial status read buffers from within the adapter's ERP thread,
-the channel does send an unsolicited notification.
+[   89.240332] UBSAN: Undefined behaviour in drivers/scsi/megaraid/megaraid_sas_fp.c:117:32
+[   89.248426] index 255 is out of range for type 'MR_LD_SPAN_MAP [1]'
+[   89.254700] CPU: 16 PID: 95 Comm: kworker/u130:0 Not tainted 4.20.0-rc5+ #1
+[   89.261665] Hardware name: Huawei TaiShan 2280 /BC11SPCD, BIOS 1.50 06/01/2018
+[   89.268903] Workqueue: events_unbound async_run_entry_fn
+[   89.274222] Call trace:
+[   89.276680]  dump_backtrace+0x0/0x2c8
+[   89.280348]  show_stack+0x24/0x30
+[   89.283671]  dump_stack+0x118/0x19c
+[   89.287167]  ubsan_epilogue+0x14/0x60
+[   89.290835]  __ubsan_handle_out_of_bounds+0xfc/0x13c
+[   89.295828]  MR_LdRaidGet+0x50/0x58 [megaraid_sas]
+[   89.300638]  megasas_build_io_fusion+0xbb8/0xd90 [megaraid_sas]
+[   89.306576]  megasas_build_and_issue_cmd_fusion+0x138/0x460 [megaraid_sas]
+[   89.313468]  megasas_queue_command+0x398/0x3d0 [megaraid_sas]
+[   89.319222]  scsi_dispatch_cmd+0x1dc/0x8a8
+[   89.323321]  scsi_request_fn+0x8e8/0xdd0
+[   89.327249]  __blk_run_queue+0xc4/0x158
+[   89.331090]  blk_execute_rq_nowait+0xf4/0x158
+[   89.335449]  blk_execute_rq+0xdc/0x158
+[   89.339202]  __scsi_execute+0x130/0x258
+[   89.343041]  scsi_probe_and_add_lun+0x2fc/0x1488
+[   89.347661]  __scsi_scan_target+0x1cc/0x8c8
+[   89.351848]  scsi_scan_channel.part.3+0x8c/0xc0
+[   89.356382]  scsi_scan_host_selected+0x130/0x1f0
+[   89.361002]  do_scsi_scan_host+0xd8/0xf0
+[   89.364927]  do_scan_async+0x9c/0x320
+[   89.368594]  async_run_entry_fn+0x138/0x420
+[   89.372780]  process_one_work+0x61c/0xf08
+[   89.376793]  worker_thread+0x13c/0xa70
+[   89.380546]  kthread+0x1c8/0x1d0
+[   89.383778]  ret_from_fork+0x10/0x1c
 
-Since v2.6.27 commit d26ab06ede83 ("[SCSI] zfcp: receiving an unsolicted
-status can lead to I/O stall"), zfcp_fsf_status_read_handler() schedules
-adapter->stat_work to re-fill the just consumed SRB from a work item.
+This is because when populating Driver Map using firmware raid map, all
+non-existing VDs set their ldTgtIdToLd to 0xff, so it can be skipped
+later. However, there are a few places that failed to skip those
+non-existing VDs due to off-by-one errors. Then, those 0xff leaked into
+MR_LdRaidGet(0xff, map) and triggered the out-of-bound accesses.
 
-Now the ERP thread and the work item post SRBs in parallel.
-Both contexts call the helper function zfcp_status_read_refill().
-The tracking of missing (to be posted / re-filled) SRBs is not thread-safe
-due to separate atomic_read() and atomic_dec(), in order to depend on
-posting success. Hence, both contexts can see
-atomic_read(&adapter->stat_miss) == 1. One of the two contexts posts
-one too many SRB. Zfcp gets QDIO_ERROR_SLSB_STATE on the output queue
-(trace tag "qdireq1") leading to zfcp_erp_adapter_shutdown() in
-zfcp_qdio_handler_error().
-
-An obvious and seemingly clean fix would be to schedule stat_work
-from the ERP thread and wait for it to finish. This would serialize
-all SRB re-fills. However, we already have another work item wait on the
-ERP thread: adapter->scan_work runs zfcp_fc_scan_ports() which calls
-zfcp_fc_eval_gpn_ft(). The latter calls zfcp_erp_wait() to wait for all
-the open port recoveries during zfcp auto port scan, but in fact it waits
-for any pending recovery including an adapter recovery. This approach
-leads to a deadlock.
-[see also v3.19 commit 18f87a67e6d6 ("zfcp: auto port scan resiliency");
-v2.6.37 commit d3e1088d6873
-("[SCSI] zfcp: No ERP escalation on gpn_ft eval");
-v2.6.28 commit fca55b6fb587
-("[SCSI] zfcp: fix deadlock between wq triggered port scan and ERP")
-fixing v2.6.27 commit c57a39a45a76
-("[SCSI] zfcp: wait until adapter is finished with ERP during auto-port");
-v2.6.27 commit cc8c282963bd
-("[SCSI] zfcp: Automatically attach remote ports")]
-
-Instead make the accounting of missing SRBs atomic for parallel
-execution in both the ERP thread and adapter->stat_work.
-
-Signed-off-by: Steffen Maier <maier@linux.ibm.com>
-Fixes: d26ab06ede83 ("[SCSI] zfcp: receiving an unsolicted status can lead to I/O stall")
-Cc: <stable@vger.kernel.org> #2.6.27+
-Reviewed-by: Jens Remus <jremus@linux.ibm.com>
+Fixes: 51087a8617fe (megaraid_sas : Extended VD support)
+Signed-off-by: Qian Cai <cai@lca.pw>
 ---
- drivers/s390/scsi/zfcp_aux.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/s390/scsi/zfcp_aux.c b/drivers/s390/scsi/zfcp_aux.c
-index df10f4e07a4a..882789fff574 100644
---- a/drivers/s390/scsi/zfcp_aux.c
-+++ b/drivers/s390/scsi/zfcp_aux.c
-@@ -271,16 +271,16 @@ static void zfcp_free_low_mem_buffers(struct zfcp_adapter *adapter)
-  */
- int zfcp_status_read_refill(struct zfcp_adapter *adapter)
- {
--	while (atomic_read(&adapter->stat_miss) > 0)
-+	while (atomic_add_unless(&adapter->stat_miss, -1, 0))
- 		if (zfcp_fsf_status_read(adapter->qdio)) {
-+			atomic_inc(&adapter->stat_miss); /* undo add -1 */
- 			if (atomic_read(&adapter->stat_miss) >=
- 			    adapter->stat_read_buf_num) {
- 				zfcp_erp_adapter_reopen(adapter, 0, "axsref1");
- 				return 1;
- 			}
- 			break;
--		} else
--			atomic_dec(&adapter->stat_miss);
-+		}
- 	return 0;
- }
+v2: fix the right place in megaraid_sas_fusion.c.
+
+ drivers/scsi/megaraid/megaraid_sas_fp.c     | 2 +-
+ drivers/scsi/megaraid/megaraid_sas_fusion.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fp.c b/drivers/scsi/megaraid/megaraid_sas_fp.c
+index 59ecbb3b53b5..a33628550425 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fp.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fp.c
+@@ -1266,7 +1266,7 @@ void mr_update_load_balance_params(struct MR_DRV_RAID_MAP_ALL *drv_map,
  
+ 	for (ldCount = 0; ldCount < MAX_LOGICAL_DRIVES_EXT; ldCount++) {
+ 		ld = MR_TargetIdToLdGet(ldCount, drv_map);
+-		if (ld >= MAX_LOGICAL_DRIVES_EXT) {
++		if (ld >= MAX_LOGICAL_DRIVES_EXT - 1) {
+ 			lbInfo[ldCount].loadBalanceFlag = 0;
+ 			continue;
+ 		}
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+index f74b5ea24f0f..49eaa87608f6 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+@@ -2832,7 +2832,7 @@ static void megasas_build_ld_nonrw_fusion(struct megasas_instance *instance,
+ 		device_id < instance->fw_supported_vd_count)) {
+ 
+ 		ld = MR_TargetIdToLdGet(device_id, local_map_ptr);
+-		if (ld >= instance->fw_supported_vd_count)
++		if (ld >= instance->fw_supported_vd_count - 1)
+ 			fp_possible = 0;
+ 		else {
+ 			raid = MR_LdRaidGet(ld, local_map_ptr);
 -- 
-2.16.4
+2.17.2 (Apple Git-113)
