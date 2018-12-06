@@ -1,37 +1,97 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH v4 2/5] scsi: hisi_sas: Relocate some code to reduce
- complexity
-Date: Thu, 6 Dec 2018 17:20:34 +0100
-Message-ID: <778770d5-b377-2aaa-c2a0-9c548de74f17@suse.de>
-References: <1544103284-100497-1-git-send-email-john.garry@huawei.com>
- <1544103284-100497-3-git-send-email-john.garry@huawei.com>
- <c7ec9e23-6da8-35e0-1996-02db3d640f4b@suse.de>
- <2da87e22-1bbc-aff9-c0be-85a3fd8f4393@huawei.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <2da87e22-1bbc-aff9-c0be-85a3fd8f4393@huawei.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: John Garry <john.garry@huawei.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linuxarm@huawei.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Xiang Chen <chenxiang66@hisilicon.com>
+From: Steffen Maier <maier@linux.ibm.com>
+Subject: [PATCH 1/2] zfcp: fix posting too many status read buffers leading to adapter shutdown
+Date: Thu,  6 Dec 2018 17:31:20 +0100
+Message-ID: <20181206163121.32160-2-maier@linux.ibm.com>
+References: <20181206163121.32160-1-maier@linux.ibm.com>
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20181206163121.32160-1-maier@linux.ibm.com>
+Sender: stable-owner@vger.kernel.org
+To: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Benjamin Block <bblock@linux.ibm.com>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, Steffen Maier <maier@linux.ibm.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 06/12/2018 16:37, John Garry wrote:
-> which is important. Let me know if you disagree and I can change it.
+Suppose adapter (open) recovery is between opened QDIO queues and before
+(the end of) initial posting of status read buffers (SRBs). This time
+window can be seconds long due to FSF_PROT_HOST_CONNECTION_INITIALIZING
+causing by design looping with exponential increase sleeps in the function
+performing exchange config data during recovery
+[zfcp_erp_adapter_strat_fsf_xconf()]. Recovery triggered by local link up.
 
-Sure, it's your driver. It was just because the patch is even titled
-"Relocate some code to reduce complexity", so I thought of reducing the
-complexity for readers even further (like you don't need the line wrap
-at 80 chars, and so on).
+Suppose an event occurs for which the FCP channel would send an
+unsolicited notification to zfcp by means of a previously posted SRB.
+We saw it with local cable pull (link down) in multi-initiator zoning
+with multiple NPIV-enabled subchannels of the same shared FCP channel.
 
-Byte,
-	Johannes
+As soon as zfcp_erp_adapter_strategy_open_fsf() starts posting the
+initial status read buffers from within the adapter's ERP thread,
+the channel does send an unsolicited notification.
+
+Since v2.6.27 commit d26ab06ede83 ("[SCSI] zfcp: receiving an unsolicted
+status can lead to I/O stall"), zfcp_fsf_status_read_handler() schedules
+adapter->stat_work to re-fill the just consumed SRB from a work item.
+
+Now the ERP thread and the work item post SRBs in parallel.
+Both contexts call the helper function zfcp_status_read_refill().
+The tracking of missing (to be posted / re-filled) SRBs is not thread-safe
+due to separate atomic_read() and atomic_dec(), in order to depend on
+posting success. Hence, both contexts can see
+atomic_read(&adapter->stat_miss) == 1. One of the two contexts posts
+one too many SRB. Zfcp gets QDIO_ERROR_SLSB_STATE on the output queue
+(trace tag "qdireq1") leading to zfcp_erp_adapter_shutdown() in
+zfcp_qdio_handler_error().
+
+An obvious and seemingly clean fix would be to schedule stat_work
+from the ERP thread and wait for it to finish. This would serialize
+all SRB re-fills. However, we already have another work item wait on the
+ERP thread: adapter->scan_work runs zfcp_fc_scan_ports() which calls
+zfcp_fc_eval_gpn_ft(). The latter calls zfcp_erp_wait() to wait for all
+the open port recoveries during zfcp auto port scan, but in fact it waits
+for any pending recovery including an adapter recovery. This approach
+leads to a deadlock.
+[see also v3.19 commit 18f87a67e6d6 ("zfcp: auto port scan resiliency");
+v2.6.37 commit d3e1088d6873
+("[SCSI] zfcp: No ERP escalation on gpn_ft eval");
+v2.6.28 commit fca55b6fb587
+("[SCSI] zfcp: fix deadlock between wq triggered port scan and ERP")
+fixing v2.6.27 commit c57a39a45a76
+("[SCSI] zfcp: wait until adapter is finished with ERP during auto-port");
+v2.6.27 commit cc8c282963bd
+("[SCSI] zfcp: Automatically attach remote ports")]
+
+Instead make the accounting of missing SRBs atomic for parallel
+execution in both the ERP thread and adapter->stat_work.
+
+Signed-off-by: Steffen Maier <maier@linux.ibm.com>
+Fixes: d26ab06ede83 ("[SCSI] zfcp: receiving an unsolicted status can lead to I/O stall")
+Cc: <stable@vger.kernel.org> #2.6.27+
+Reviewed-by: Jens Remus <jremus@linux.ibm.com>
+---
+ drivers/s390/scsi/zfcp_aux.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/s390/scsi/zfcp_aux.c b/drivers/s390/scsi/zfcp_aux.c
+index df10f4e07a4a..882789fff574 100644
+--- a/drivers/s390/scsi/zfcp_aux.c
++++ b/drivers/s390/scsi/zfcp_aux.c
+@@ -271,16 +271,16 @@ static void zfcp_free_low_mem_buffers(struct zfcp_adapter *adapter)
+  */
+ int zfcp_status_read_refill(struct zfcp_adapter *adapter)
+ {
+-	while (atomic_read(&adapter->stat_miss) > 0)
++	while (atomic_add_unless(&adapter->stat_miss, -1, 0))
+ 		if (zfcp_fsf_status_read(adapter->qdio)) {
++			atomic_inc(&adapter->stat_miss); /* undo add -1 */
+ 			if (atomic_read(&adapter->stat_miss) >=
+ 			    adapter->stat_read_buf_num) {
+ 				zfcp_erp_adapter_reopen(adapter, 0, "axsref1");
+ 				return 1;
+ 			}
+ 			break;
+-		} else
+-			atomic_dec(&adapter->stat_miss);
++		}
+ 	return 0;
+ }
+ 
 -- 
-Johannes Thumshirn                            SUSE Labs Filesystems
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+2.16.4
