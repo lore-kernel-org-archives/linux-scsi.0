@@ -1,93 +1,58 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v4 3/5] scsi: hisi_sas: Make sg_tablesize consistent value
-Date: Thu, 6 Dec 2018 21:34:42 +0800
-Message-ID: <1544103284-100497-4-git-send-email-john.garry@huawei.com>
-References: <1544103284-100497-1-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v4 0/5]  hisi_sas: DIF support
+Date: Thu, 6 Dec 2018 21:34:39 +0800
+Message-ID: <1544103284-100497-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1544103284-100497-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linuxarm@huawei.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
+Cc: linuxarm@huawei.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Xiang Chen <chenxiang66@hisilicon.com>
+This patchset introduces support to the driver for DIF/DIX.
 
-Sht->sg_tablesize is set in the driver, and it will be assigned to
-shost->sg_tablesize in SCSI mid-layer. So it is not necessary to
-assign shost->sg_table one more time in the driver.
+We are making DIX support as RFC for now, based on issues discussed in the
+following:
+https://marc.info/?l=linux-scsi&m=154357719329297&w=4 and
+https://marc.info/?l=linux-scsi&m=154406987703456&w=2
 
-In addition to the change, change each scsi_host_template.sg_tablesize
-to HISI_SAS_SGE_PAGE_CNT instead of SG_ALL.
+We will only support PI in v3 hw at the moment, even though previous hw
+versions also support it.
 
-Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
-Signed-off-by: John Garry <john.garry@huawei.com>
----
- drivers/scsi/hisi_sas/hisi_sas_main.c  | 1 -
- drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 2 +-
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 2 +-
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 3 +--
- 4 files changed, 3 insertions(+), 5 deletions(-)
+The series is broken down as follows:
+- Fix pre-existing sparse warnings
+- Tidy sg table size config
+- Some tidy-up to accept PI support
+- Add components for PI support for main and v3 driver
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 95350fd..eed7fc5 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -2410,7 +2410,6 @@ int hisi_sas_probe(struct platform_device *pdev,
- 	shost->max_lun = ~0;
- 	shost->max_channel = 1;
- 	shost->max_cmd_len = 16;
--	shost->sg_tablesize = min_t(u16, SG_ALL, HISI_SAS_SGE_PAGE_CNT);
- 	if (hisi_hba->hw->slot_index_alloc) {
- 		shost->can_queue = hisi_hba->hw->max_command_entries;
- 		shost->cmd_per_lun = hisi_hba->hw->max_command_entries;
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-index 7186648..107f7c9 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-@@ -1816,7 +1816,7 @@ static int hisi_sas_v1_init(struct hisi_hba *hisi_hba)
- 	.change_queue_depth	= sas_change_queue_depth,
- 	.bios_param		= sas_bios_param,
- 	.this_id		= -1,
--	.sg_tablesize		= SG_ALL,
-+	.sg_tablesize		= HISI_SAS_SGE_PAGE_CNT,
- 	.max_sectors		= SCSI_DEFAULT_MAX_SECTORS,
- 	.use_clustering		= ENABLE_CLUSTERING,
- 	.eh_device_reset_handler = sas_eh_device_reset_handler,
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index 8580c71..8760987 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -3578,7 +3578,7 @@ static void wait_cmds_complete_timeout_v2_hw(struct hisi_hba *hisi_hba,
- 	.change_queue_depth	= sas_change_queue_depth,
- 	.bios_param		= sas_bios_param,
- 	.this_id		= -1,
--	.sg_tablesize		= SG_ALL,
-+	.sg_tablesize		= HISI_SAS_SGE_PAGE_CNT,
- 	.max_sectors		= SCSI_DEFAULT_MAX_SECTORS,
- 	.use_clustering		= ENABLE_CLUSTERING,
- 	.eh_device_reset_handler = sas_eh_device_reset_handler,
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 59b5f64..44781e3 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -2231,7 +2231,7 @@ static ssize_t intr_coal_count_v3_hw_store(struct device *dev,
- 	.change_queue_depth	= sas_change_queue_depth,
- 	.bios_param		= sas_bios_param,
- 	.this_id		= -1,
--	.sg_tablesize		= SG_ALL,
-+	.sg_tablesize		= HISI_SAS_SGE_PAGE_CNT,
- 	.max_sectors		= SCSI_DEFAULT_MAX_SECTORS,
- 	.use_clustering		= ENABLE_CLUSTERING,
- 	.eh_device_reset_handler = sas_eh_device_reset_handler,
-@@ -2373,7 +2373,6 @@ static ssize_t intr_coal_count_v3_hw_store(struct device *dev,
- 	shost->max_lun = ~0;
- 	shost->max_channel = 1;
- 	shost->max_cmd_len = 16;
--	shost->sg_tablesize = min_t(u16, SG_ALL, HISI_SAS_SGE_PAGE_CNT);
- 	shost->can_queue = hisi_hba->hw->max_command_entries -
- 		HISI_SAS_RESERVED_IPTT_CNT;
- 	shost->cmd_per_lun = hisi_hba->hw->max_command_entries -
+Differences:
+v3->v4:
+- re-add DIX support as RFC - do not commit please!
+- also DIX support is labelled experimental in the driver
+
+v2->v3:
+- fix sparse warnings
+- drop DIX support
+
+v1->v2:
+- drop scsi_prot_op_normal()
+
+John Garry (1):
+  scsi: hisi_sas: Fix warnings detected by sparse
+
+Xiang Chen (4):
+  scsi: hisi_sas: Relocate some code to reduce complexity
+  scsi: hisi_sas: Make sg_tablesize consistent value
+  scsi: hisi_sas: Add support for DIF feature for v3 hw
+  scsi: hisi_sas: Add support for DIX feature for v3 hw as experimental
+
+ drivers/scsi/hisi_sas/hisi_sas.h       |  21 ++-
+ drivers/scsi/hisi_sas/hisi_sas_main.c  | 246 ++++++++++++++++++++++++---------
+ drivers/scsi/hisi_sas/hisi_sas_v1_hw.c |  17 +--
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c |  68 +++++----
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 243 +++++++++++++++++++++++++++++---
+ 5 files changed, 464 insertions(+), 131 deletions(-)
+
 -- 
 1.9.1
