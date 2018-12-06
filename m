@@ -1,115 +1,124 @@
-From: Qian Cai <cai@lca.pw>
-Subject: [PATCH v2] megaraid: fix out-of-bound array accesses
-Date: Thu,  6 Dec 2018 16:22:52 -0500
-Message-ID: <20181206212252.36732-1-cai@lca.pw>
-References: <20181206155351.36099-1-cai@gmx.us>
+From: Anatoliy Glagolev <glagolig@gmail.com>
+Subject: [PATCH] scsi: qla2xxx: deadlock by configfs_depend_item
+Date: Thu,  6 Dec 2018 16:48:45 -0700
+Message-ID: <1544140125-3060-1-git-send-email-glagolig@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20181206155351.36099-1-cai@gmx.us>
 Sender: linux-kernel-owner@vger.kernel.org
-To: kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com
-Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, thenzl@redhat.com, hch@lst.de, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Qian Cai <cai@lca.pw>
+To: aglagolev@purestorage.com, adailey@purestorage.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, hch@lst.de, qla2xxx-upstream@qlogic.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Anatoliy Glagolev <glagolig@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-UBSAN reported those with MegaRAID SAS-3 3108,
+The intent of invoking configfs_depend_item in commit 7474f52a82d51
+("tcm_qla2xxx: Perform configfs depend/undepend for base_tpg")
+was to prevent a physical Fibre Channel port removal when
+virtual (NPIV) ports announced through that physical port are active.
+The change does not work as expected: it makes enabled physical port
+dependent on target configfs subsystem (the port's parent), something
+the configfs guarantees anyway.
 
-[   77.467308] UBSAN: Undefined behaviour in drivers/scsi/megaraid/megaraid_sas_fp.c:117:32
-[   77.475402] index 255 is out of range for type 'MR_LD_SPAN_MAP [1]'
-[   77.481677] CPU: 16 PID: 333 Comm: kworker/16:1 Not tainted 4.20.0-rc5+ #1
-[   77.488556] Hardware name: Huawei TaiShan 2280 /BC11SPCD, BIOS 1.50 06/01/2018
-[   77.495791] Workqueue: events work_for_cpu_fn
-[   77.500154] Call trace:
-[   77.502610]  dump_backtrace+0x0/0x2c8
-[   77.506279]  show_stack+0x24/0x30
-[   77.509604]  dump_stack+0x118/0x19c
-[   77.513098]  ubsan_epilogue+0x14/0x60
-[   77.516765]  __ubsan_handle_out_of_bounds+0xfc/0x13c
-[   77.521767]  mr_update_load_balance_params+0x150/0x158 [megaraid_sas]
-[   77.528230]  MR_ValidateMapInfo+0x2cc/0x10d0 [megaraid_sas]
-[   77.533825]  megasas_get_map_info+0x244/0x2f0 [megaraid_sas]
-[   77.539505]  megasas_init_adapter_fusion+0x9b0/0xf48 [megaraid_sas]
-[   77.545794]  megasas_init_fw+0x1ab4/0x3518 [megaraid_sas]
-[   77.551212]  megasas_probe_one+0x2c4/0xbe0 [megaraid_sas]
-[   77.556614]  local_pci_probe+0x7c/0xf0
-[   77.560365]  work_for_cpu_fn+0x34/0x50
-[   77.564118]  process_one_work+0x61c/0xf08
-[   77.568129]  worker_thread+0x534/0xa70
-[   77.571882]  kthread+0x1c8/0x1d0
-[   77.575114]  ret_from_fork+0x10/0x1c
+Besides, scheduling work in a worker thread and waiting for the work's
+completion is not really a valid workaround for the requirement not
+to call configfs_depend_item from a configfs callback: the call
+occasionally deadlocks.
 
-[   89.240332] UBSAN: Undefined behaviour in drivers/scsi/megaraid/megaraid_sas_fp.c:117:32
-[   89.248426] index 255 is out of range for type 'MR_LD_SPAN_MAP [1]'
-[   89.254700] CPU: 16 PID: 95 Comm: kworker/u130:0 Not tainted 4.20.0-rc5+ #1
-[   89.261665] Hardware name: Huawei TaiShan 2280 /BC11SPCD, BIOS 1.50 06/01/2018
-[   89.268903] Workqueue: events_unbound async_run_entry_fn
-[   89.274222] Call trace:
-[   89.276680]  dump_backtrace+0x0/0x2c8
-[   89.280348]  show_stack+0x24/0x30
-[   89.283671]  dump_stack+0x118/0x19c
-[   89.287167]  ubsan_epilogue+0x14/0x60
-[   89.290835]  __ubsan_handle_out_of_bounds+0xfc/0x13c
-[   89.295828]  MR_LdRaidGet+0x50/0x58 [megaraid_sas]
-[   89.300638]  megasas_build_io_fusion+0xbb8/0xd90 [megaraid_sas]
-[   89.306576]  megasas_build_and_issue_cmd_fusion+0x138/0x460 [megaraid_sas]
-[   89.313468]  megasas_queue_command+0x398/0x3d0 [megaraid_sas]
-[   89.319222]  scsi_dispatch_cmd+0x1dc/0x8a8
-[   89.323321]  scsi_request_fn+0x8e8/0xdd0
-[   89.327249]  __blk_run_queue+0xc4/0x158
-[   89.331090]  blk_execute_rq_nowait+0xf4/0x158
-[   89.335449]  blk_execute_rq+0xdc/0x158
-[   89.339202]  __scsi_execute+0x130/0x258
-[   89.343041]  scsi_probe_and_add_lun+0x2fc/0x1488
-[   89.347661]  __scsi_scan_target+0x1cc/0x8c8
-[   89.351848]  scsi_scan_channel.part.3+0x8c/0xc0
-[   89.356382]  scsi_scan_host_selected+0x130/0x1f0
-[   89.361002]  do_scsi_scan_host+0xd8/0xf0
-[   89.364927]  do_scan_async+0x9c/0x320
-[   89.368594]  async_run_entry_fn+0x138/0x420
-[   89.372780]  process_one_work+0x61c/0xf08
-[   89.376793]  worker_thread+0x13c/0xa70
-[   89.380546]  kthread+0x1c8/0x1d0
-[   89.383778]  ret_from_fork+0x10/0x1c
+Thus, removing configfs_depend_item calls does not break anything
+and fixes the deadlock problem.
 
-This is because when populating Driver Map using firmware raid map, all
-non-existing VDs set their ldTgtIdToLd to 0xff, so it can be skipped
-later. However, there are a few places that failed to skip those
-non-existing VDs due to off-by-one errors. Then, those 0xff leaked into
-MR_LdRaidGet(0xff, map) and triggered the out-of-bound accesses.
-
-Fixes: 51087a8617fe (megaraid_sas : Extended VD support)
-Signed-off-by: Qian Cai <cai@lca.pw>
+Signed-off-by: Anatoliy Glagolev <glagolig@gmail.com>
 ---
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c | 48 +++++++-------------------------------
+ drivers/scsi/qla2xxx/tcm_qla2xxx.h |  3 ---
+ 2 files changed, 8 insertions(+), 43 deletions(-)
 
-v2: fix the right place in megaraid_sas_fusion.c.
-
- drivers/scsi/megaraid/megaraid_sas_fp.c     | 2 +-
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fp.c b/drivers/scsi/megaraid/megaraid_sas_fp.c
-index 59ecbb3b53b5..a33628550425 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fp.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fp.c
-@@ -1266,7 +1266,7 @@ void mr_update_load_balance_params(struct MR_DRV_RAID_MAP_ALL *drv_map,
+diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+index 7732e93..1c7ca84 100644
+--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
++++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+@@ -929,38 +929,14 @@ static ssize_t tcm_qla2xxx_tpg_enable_show(struct config_item *item,
+ 			atomic_read(&tpg->lport_tpg_enabled));
+ }
  
- 	for (ldCount = 0; ldCount < MAX_LOGICAL_DRIVES_EXT; ldCount++) {
- 		ld = MR_TargetIdToLdGet(ldCount, drv_map);
--		if (ld >= MAX_LOGICAL_DRIVES_EXT) {
-+		if (ld >= MAX_LOGICAL_DRIVES_EXT - 1) {
- 			lbInfo[ldCount].loadBalanceFlag = 0;
- 			continue;
- 		}
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index f74b5ea24f0f..49eaa87608f6 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -2832,7 +2832,7 @@ static void megasas_build_ld_nonrw_fusion(struct megasas_instance *instance,
- 		device_id < instance->fw_supported_vd_count)) {
+-static void tcm_qla2xxx_depend_tpg(struct work_struct *work)
+-{
+-	struct tcm_qla2xxx_tpg *base_tpg = container_of(work,
+-				struct tcm_qla2xxx_tpg, tpg_base_work);
+-	struct se_portal_group *se_tpg = &base_tpg->se_tpg;
+-	struct scsi_qla_host *base_vha = base_tpg->lport->qla_vha;
+-
+-	if (!target_depend_item(&se_tpg->tpg_group.cg_item)) {
+-		atomic_set(&base_tpg->lport_tpg_enabled, 1);
+-		qlt_enable_vha(base_vha);
+-	}
+-	complete(&base_tpg->tpg_base_comp);
+-}
+-
+-static void tcm_qla2xxx_undepend_tpg(struct work_struct *work)
+-{
+-	struct tcm_qla2xxx_tpg *base_tpg = container_of(work,
+-				struct tcm_qla2xxx_tpg, tpg_base_work);
+-	struct se_portal_group *se_tpg = &base_tpg->se_tpg;
+-	struct scsi_qla_host *base_vha = base_tpg->lport->qla_vha;
+-
+-	if (!qlt_stop_phase1(base_vha->vha_tgt.qla_tgt)) {
+-		atomic_set(&base_tpg->lport_tpg_enabled, 0);
+-		target_undepend_item(&se_tpg->tpg_group.cg_item);
+-	}
+-	complete(&base_tpg->tpg_base_comp);
+-}
+-
+ static ssize_t tcm_qla2xxx_tpg_enable_store(struct config_item *item,
+ 		const char *page, size_t count)
+ {
+ 	struct se_portal_group *se_tpg = to_tpg(item);
++	struct se_wwn *se_wwn = se_tpg->se_tpg_wwn;
++	struct tcm_qla2xxx_lport *lport = container_of(se_wwn,
++			struct tcm_qla2xxx_lport, lport_wwn);
++	struct scsi_qla_host *vha = lport->qla_vha;
+ 	struct tcm_qla2xxx_tpg *tpg = container_of(se_tpg,
+ 			struct tcm_qla2xxx_tpg, se_tpg);
+ 	unsigned long op;
+@@ -979,24 +955,16 @@ static ssize_t tcm_qla2xxx_tpg_enable_store(struct config_item *item,
+ 		if (atomic_read(&tpg->lport_tpg_enabled))
+ 			return -EEXIST;
  
- 		ld = MR_TargetIdToLdGet(device_id, local_map_ptr);
--		if (ld >= instance->fw_supported_vd_count)
-+		if (ld >= instance->fw_supported_vd_count - 1)
- 			fp_possible = 0;
- 		else {
- 			raid = MR_LdRaidGet(ld, local_map_ptr);
+-		INIT_WORK(&tpg->tpg_base_work, tcm_qla2xxx_depend_tpg);
++		atomic_set(&tpg->lport_tpg_enabled, 1);
++		qlt_enable_vha(vha);
+ 	} else {
+ 		if (!atomic_read(&tpg->lport_tpg_enabled))
+ 			return count;
+ 
+-		INIT_WORK(&tpg->tpg_base_work, tcm_qla2xxx_undepend_tpg);
++		atomic_set(&tpg->lport_tpg_enabled, 0);
++		qlt_stop_phase1(vha->vha_tgt.qla_tgt);
+ 	}
+-	init_completion(&tpg->tpg_base_comp);
+-	schedule_work(&tpg->tpg_base_work);
+-	wait_for_completion(&tpg->tpg_base_comp);
+ 
+-	if (op) {
+-		if (!atomic_read(&tpg->lport_tpg_enabled))
+-			return -ENODEV;
+-	} else {
+-		if (atomic_read(&tpg->lport_tpg_enabled))
+-			return -EPERM;
+-	}
+ 	return count;
+ }
+ 
+diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.h b/drivers/scsi/qla2xxx/tcm_qla2xxx.h
+index 7550ba2..147cf6c 100644
+--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.h
++++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.h
+@@ -48,9 +48,6 @@ struct tcm_qla2xxx_tpg {
+ 	struct tcm_qla2xxx_tpg_attrib tpg_attrib;
+ 	/* Returned by tcm_qla2xxx_make_tpg() */
+ 	struct se_portal_group se_tpg;
+-	/* Items for dealing with configfs_depend_item */
+-	struct completion tpg_base_comp;
+-	struct work_struct tpg_base_work;
+ };
+ 
+ struct tcm_qla2xxx_fc_loopid {
 -- 
-2.17.2 (Apple Git-113)
+1.9.1
