@@ -1,34 +1,38 @@
 From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Subject: [PATCH 0/3] Add UFS controller support for HI3670 SoC
-Date: Fri,  7 Dec 2018 23:21:48 +0530
-Message-ID: <20181207175151.8969-1-manivannan.sadhasivam@linaro.org>
+Subject: [PATCH 1/3] dt-bindings: ufs: Add HI3670 UFS controller binding
+Date: Fri,  7 Dec 2018 23:21:49 +0530
+Message-ID: <20181207175151.8969-2-manivannan.sadhasivam@linaro.org>
+References: <20181207175151.8969-1-manivannan.sadhasivam@linaro.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20181207175151.8969-1-manivannan.sadhasivam@linaro.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, liwei213@huawei.com, robh+dt@kernel.org
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org, john.stultz@linaro.org, amit.kucheria@linaro.org, guodong.xu@linaro.org, Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hello,
+Add devicetree binding for HI3670 UFS controller. HI3760 SoC is very
+similar to HI3660 SoC with almost same IPs. Only major difference interms
+of UFS is the PHY. HI3670 has 10nm PHY.
 
-This patchset adds UFS controller support for HiSilicon HI3670 SoC.
-HI3760 SoC is very similar to HI3660 SoC with almost same IPs, hence
-the same driver is extended to provide UFS support. Only major difference
-is the PHY. HI3670 has 10nm PHY, hence that parameter is used to
-distinguish the difference between two in driver.
+Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+---
+ Documentation/devicetree/bindings/ufs/ufs-hisi.txt | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-Thanks,
-Mani
-
-Manivannan Sadhasivam (3):
-  dt-bindings: ufs: Add HI3670 UFS controller binding
-  arm64: dts: hisilicon: hi3670: Add UFS controller support
-  scsi: ufs: Add HI3670 SoC UFS driver support
-
- .../devicetree/bindings/ufs/ufs-hisi.txt      |   4 +-
- arch/arm64/boot/dts/hisilicon/hi3670.dtsi     |  18 +++
- drivers/scsi/ufs/ufs-hisi.c                   | 127 +++++++++++++++---
- drivers/scsi/ufs/ufs-hisi.h                   |   4 +
- 4 files changed, 130 insertions(+), 23 deletions(-)
-
+diff --git a/Documentation/devicetree/bindings/ufs/ufs-hisi.txt b/Documentation/devicetree/bindings/ufs/ufs-hisi.txt
+index a48c44817367..a327c1e24365 100644
+--- a/Documentation/devicetree/bindings/ufs/ufs-hisi.txt
++++ b/Documentation/devicetree/bindings/ufs/ufs-hisi.txt
+@@ -6,7 +6,9 @@ Each UFS Host Controller should have its own node.
+ Required properties:
+ - compatible        : compatible list, contains one of the following -
+ 					"hisilicon,hi3660-ufs", "jedec,ufs-1.1" for hisi ufs
+-					host controller present on Hi36xx chipset.
++					host controller present on Hi3660 chipset.
++					"hisilicon,hi3670-ufs", "jedec,ufs-2.1" for hisi ufs
++					host controller present on Hi3670 chipset.
+ - reg               : should contain UFS register address space & UFS SYS CTRL register address,
+ - interrupt-parent  : interrupt device
+ - interrupts        : interrupt number
 -- 
 2.17.1
