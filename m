@@ -1,124 +1,41 @@
-From: Anatoliy Glagolev <glagolig@gmail.com>
-Subject: [PATCH] scsi: qla2xxx: deadlock by configfs_depend_item
-Date: Thu,  6 Dec 2018 16:48:45 -0700
-Message-ID: <1544140125-3060-1-git-send-email-glagolig@gmail.com>
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH v4 2/5] scsi: hisi_sas: Relocate some code to reduce
+ complexity
+Date: Fri, 7 Dec 2018 10:07:13 +0000
+Message-ID: <0cfe35c7-89c4-b65a-ba25-dfcf5d59a564@huawei.com>
+References: <1544103284-100497-1-git-send-email-john.garry@huawei.com>
+ <1544103284-100497-3-git-send-email-john.garry@huawei.com>
+ <c7ec9e23-6da8-35e0-1996-02db3d640f4b@suse.de>
+ <2da87e22-1bbc-aff9-c0be-85a3fd8f4393@huawei.com>
+ <778770d5-b377-2aaa-c2a0-9c548de74f17@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <778770d5-b377-2aaa-c2a0-9c548de74f17@suse.de>
 Sender: linux-kernel-owner@vger.kernel.org
-To: aglagolev@purestorage.com, adailey@purestorage.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, hch@lst.de, qla2xxx-upstream@qlogic.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Anatoliy Glagolev <glagolig@gmail.com>
+To: Johannes Thumshirn <jthumshirn@suse.de>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linuxarm@huawei.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Xiang Chen <chenxiang66@hisilicon.com>
 List-Id: linux-scsi@vger.kernel.org
 
-The intent of invoking configfs_depend_item in commit 7474f52a82d51
-("tcm_qla2xxx: Perform configfs depend/undepend for base_tpg")
-was to prevent a physical Fibre Channel port removal when
-virtual (NPIV) ports announced through that physical port are active.
-The change does not work as expected: it makes enabled physical port
-dependent on target configfs subsystem (the port's parent), something
-the configfs guarantees anyway.
+On 06/12/2018 16:20, Johannes Thumshirn wrote:
+> On 06/12/2018 16:37, John Garry wrote:
+>> which is important. Let me know if you disagree and I can change it.
+>
+> Sure, it's your driver. It was just because the patch is even titled
+> "Relocate some code to reduce complexity", so I thought of reducing the
+> complexity for readers even further (like you don't need the line wrap
+> at 80 chars, and so on).
+>
+> Byte,
+> 	Johannes
+>
 
-Besides, scheduling work in a worker thread and waiting for the work's
-completion is not really a valid workaround for the requirement not
-to call configfs_depend_item from a configfs callback: the call
-occasionally deadlocks.
+I would rather not change if you don't mind. When we say "reduce 
+complexity", we are talking about moving the DMA mapping code from the 
+task prep function, as, when we add the DIX-related DMA mapping code, 
+leaving all the DMA mapping code in the task prep function would make it 
+a monster.
 
-Thus, removing configfs_depend_item calls does not break anything
-and fixes the deadlock problem.
-
-Signed-off-by: Anatoliy Glagolev <glagolig@gmail.com>
----
- drivers/scsi/qla2xxx/tcm_qla2xxx.c | 48 +++++++-------------------------------
- drivers/scsi/qla2xxx/tcm_qla2xxx.h |  3 ---
- 2 files changed, 8 insertions(+), 43 deletions(-)
-
-diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-index 7732e93..1c7ca84 100644
---- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-+++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-@@ -929,38 +929,14 @@ static ssize_t tcm_qla2xxx_tpg_enable_show(struct config_item *item,
- 			atomic_read(&tpg->lport_tpg_enabled));
- }
- 
--static void tcm_qla2xxx_depend_tpg(struct work_struct *work)
--{
--	struct tcm_qla2xxx_tpg *base_tpg = container_of(work,
--				struct tcm_qla2xxx_tpg, tpg_base_work);
--	struct se_portal_group *se_tpg = &base_tpg->se_tpg;
--	struct scsi_qla_host *base_vha = base_tpg->lport->qla_vha;
--
--	if (!target_depend_item(&se_tpg->tpg_group.cg_item)) {
--		atomic_set(&base_tpg->lport_tpg_enabled, 1);
--		qlt_enable_vha(base_vha);
--	}
--	complete(&base_tpg->tpg_base_comp);
--}
--
--static void tcm_qla2xxx_undepend_tpg(struct work_struct *work)
--{
--	struct tcm_qla2xxx_tpg *base_tpg = container_of(work,
--				struct tcm_qla2xxx_tpg, tpg_base_work);
--	struct se_portal_group *se_tpg = &base_tpg->se_tpg;
--	struct scsi_qla_host *base_vha = base_tpg->lport->qla_vha;
--
--	if (!qlt_stop_phase1(base_vha->vha_tgt.qla_tgt)) {
--		atomic_set(&base_tpg->lport_tpg_enabled, 0);
--		target_undepend_item(&se_tpg->tpg_group.cg_item);
--	}
--	complete(&base_tpg->tpg_base_comp);
--}
--
- static ssize_t tcm_qla2xxx_tpg_enable_store(struct config_item *item,
- 		const char *page, size_t count)
- {
- 	struct se_portal_group *se_tpg = to_tpg(item);
-+	struct se_wwn *se_wwn = se_tpg->se_tpg_wwn;
-+	struct tcm_qla2xxx_lport *lport = container_of(se_wwn,
-+			struct tcm_qla2xxx_lport, lport_wwn);
-+	struct scsi_qla_host *vha = lport->qla_vha;
- 	struct tcm_qla2xxx_tpg *tpg = container_of(se_tpg,
- 			struct tcm_qla2xxx_tpg, se_tpg);
- 	unsigned long op;
-@@ -979,24 +955,16 @@ static ssize_t tcm_qla2xxx_tpg_enable_store(struct config_item *item,
- 		if (atomic_read(&tpg->lport_tpg_enabled))
- 			return -EEXIST;
- 
--		INIT_WORK(&tpg->tpg_base_work, tcm_qla2xxx_depend_tpg);
-+		atomic_set(&tpg->lport_tpg_enabled, 1);
-+		qlt_enable_vha(vha);
- 	} else {
- 		if (!atomic_read(&tpg->lport_tpg_enabled))
- 			return count;
- 
--		INIT_WORK(&tpg->tpg_base_work, tcm_qla2xxx_undepend_tpg);
-+		atomic_set(&tpg->lport_tpg_enabled, 0);
-+		qlt_stop_phase1(vha->vha_tgt.qla_tgt);
- 	}
--	init_completion(&tpg->tpg_base_comp);
--	schedule_work(&tpg->tpg_base_work);
--	wait_for_completion(&tpg->tpg_base_comp);
- 
--	if (op) {
--		if (!atomic_read(&tpg->lport_tpg_enabled))
--			return -ENODEV;
--	} else {
--		if (atomic_read(&tpg->lport_tpg_enabled))
--			return -EPERM;
--	}
- 	return count;
- }
- 
-diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.h b/drivers/scsi/qla2xxx/tcm_qla2xxx.h
-index 7550ba2..147cf6c 100644
---- a/drivers/scsi/qla2xxx/tcm_qla2xxx.h
-+++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.h
-@@ -48,9 +48,6 @@ struct tcm_qla2xxx_tpg {
- 	struct tcm_qla2xxx_tpg_attrib tpg_attrib;
- 	/* Returned by tcm_qla2xxx_make_tpg() */
- 	struct se_portal_group se_tpg;
--	/* Items for dealing with configfs_depend_item */
--	struct completion tpg_base_comp;
--	struct work_struct tpg_base_work;
- };
- 
- struct tcm_qla2xxx_fc_loopid {
--- 
-1.9.1
+Thanks,
+John
