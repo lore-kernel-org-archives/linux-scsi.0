@@ -1,26 +1,25 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 01/41] scsi: BusLogic: mark expected switch fall-through
-Date: Fri, 07 Dec 2018 21:35:46 -0500
-Message-ID: <yq1y390n3st.fsf@oracle.com>
-References: <cover.1543374820.git.gustavo@embeddedor.com>
-        <de0c68b4f655080a7336d1ad256d77a83ab0b7d6.1543374820.git.gustavo@embeddedor.com>
+Subject: Re: [PATCH] scsi: megaraid_sas: NULL check before some freeing functions is not needed.
+Date: Fri, 07 Dec 2018 21:40:42 -0500
+Message-ID: <yq1h8fon3kl.fsf@oracle.com>
+References: <1543760930050-1499171309-0-diffsplit-thomas@m3y3r.de>
+        <1543760930052-918941928-10-diffsplit-thomas@m3y3r.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <de0c68b4f655080a7336d1ad256d77a83ab0b7d6.1543374820.git.gustavo@embeddedor.com>
-        (Gustavo A. R. Silva's message of "Tue, 27 Nov 2018 22:21:23 -0600")
+In-Reply-To: <1543760930052-918941928-10-diffsplit-thomas@m3y3r.de> (Thomas
+        Meyer's message of "Sun, 02 Dec 2018 21:52:11 +0100")
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Cc: Khalid Aziz <khalid@gonehiking.org>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Thomas Meyer <thomas@m3y3r.de>
+Cc: kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Gustavo A.,
+Thomas,
 
-> In preparation to enabling -Wimplicit-fallthrough, mark switch cases
-> where we are expecting to fall through.
+> NULL check before some freeing functions is not needed.
 
-Applied to 4.21/scsi-queue, thanks.
+Applied to 4.21/scsi-queue.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
