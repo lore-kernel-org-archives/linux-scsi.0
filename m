@@ -1,128 +1,45 @@
-From: Anatoliy Glagolev <glagolig@gmail.com>
-Subject: Re: [PATCH] scsi: qla2xxx: disabling pci error handler early
-Date: Mon, 10 Dec 2018 10:38:54 -0700
-Message-ID: <20181210173853.GA36196@xldev-tmpl.dev.purestorage.com>
-References: <1544212602-28085-1-git-send-email-glagolig@gmail.com>
- <d7b867f3-22d1-855d-86ce-43089e46ca6a@linux.vnet.ibm.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] scsi: qla2xxx: fix unused function warning
+Date: Mon, 10 Dec 2018 21:51:43 +0100
+Message-ID: <20181210205215.2703138-1-arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <d7b867f3-22d1-855d-86ce-43089e46ca6a@linux.vnet.ibm.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Brian King <brking@linux.vnet.ibm.com>
-Cc: aglagolev@purestorage.com, qla2xxx-upstream@qlogic.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Benjamin Herrenschmidt <benh@au1.ibm.com>, kmahlkuc@linux.vnet.ibm.com
+To: qla2xxx-upstream@qlogic.com, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Bart Van Assche <bvanassche@acm.org>, Laurence Oberman <loberman@redhat.com>, Himanshu Madhani <himanshu.madhani@cavium.com>, Stephen Rothwell <sfr@canb.auug.org.au>, Arnd Bergmann <arnd@arndb.de>, Himanshu Madhani <hmadhani@marvell.com>, Quinn Tran <quinn.tran@cavium.com>, Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@kernel.dk>, Darren Trapp <darren.trapp@cavium.com>, Bill Kuzeja <William.Kuzeja@stratus.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Thanks, Brian. Great point. Even for AER, it looks like in-flight
-error handler completion is not guaranteed on
-pci_disable_pcie_error_reporting call, so the crash is still possible.
-It looks like we need to maintain per-pci_dev context and keep track
-of in-flight callbacks to make a clean fix. I will send a new patch.
+In what seems to be a mismatch between the scsi-fixes branch and
+the scsi-mkp/for-next branch, a newly introduced variable from
+one patch got obsoleted in another one:
 
-On Fri, Dec 07, 2018 at 04:00:27PM -0600, Brian King wrote:
-> On 12/07/2018 01:56 PM, Anatoliy Glagolev wrote:
-> > qla2x00_disable_board_on_pci_error and pcie error handlers may run
-> > in parallel. Specifically, I observed qla2xxx_pci_slot_reset running
-> > at around the same moment as qla2x00_disable_board_on_pci_error.
-> > If scsi_qla_host_t or qla_hw_data structs are removed before an error
-> > handler completes, the handler crashes.
-> > 
-> > This patch disables pcie error handling early in
-> > qla2x00_disable_board_on_pci_error and in other paths that remove
-> > those structs.
-> 
-> While this may fix this issue for PCIe AER, I think you'll still have
-> the exposure for EEH errors on a Power system, since we don't have
-> the pci_enable_pcie_error_reporting API wired up to do anything,
-> nor do we have much ability to do anything with it since its an
-> attribute of the hardware.
-> 
-> Is there a way to fix this that doesn't break Power?
-> 
-> Thanks,
-> 
-> Brian
-> 
-> > 
-> > Signed-off-by: Anatoliy Glagolev <glagolig@gmail.com>
-> > ---
-> >  drivers/scsi/qla2xxx/qla_os.c | 15 +++++++++------
-> >  1 file changed, 9 insertions(+), 6 deletions(-)
-> > 
-> > diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-> > index e881fce..b8f277a 100644
-> > --- a/drivers/scsi/qla2xxx/qla_os.c
-> > +++ b/drivers/scsi/qla2xxx/qla_os.c
-> > @@ -2775,9 +2775,6 @@ static void qla2x00_iocb_work_fn(struct work_struct *work)
-> >  			return ret;
-> >  	}
-> > 
-> > -	/* This may fail but that's ok */
-> > -	pci_enable_pcie_error_reporting(pdev);
-> > -
-> >  	ha = kzalloc(sizeof(struct qla_hw_data), GFP_KERNEL);
-> >  	if (!ha) {
-> >  		ql_log_pci(ql_log_fatal, pdev, 0x0009,
-> > @@ -3039,6 +3036,9 @@ static void qla2x00_iocb_work_fn(struct work_struct *work)
-> >  		goto probe_hw_failed;
-> >  	}
-> > 
-> > +	/* This may fail but that's ok */
-> > +	pci_enable_pcie_error_reporting(pdev);
-> > +
-> >  	pci_set_drvdata(pdev, base_vha);
-> >  	set_bit(PFLG_DRIVER_PROBING, &base_vha->pci_flags);
-> > 
-> > @@ -3400,6 +3400,8 @@ static void qla2x00_iocb_work_fn(struct work_struct *work)
-> >  		kthread_stop(t);
-> >  	}
-> > 
-> > +	pci_disable_pcie_error_reporting();
-> > +
-> >  	qla2x00_free_device(base_vha);
-> >  	scsi_host_put(base_vha->host);
-> >  	/*
-> > @@ -3625,6 +3627,8 @@ static void qla2x00_iocb_work_fn(struct work_struct *work)
-> >  	}
-> >  	qla2x00_wait_for_hba_ready(base_vha);
-> > 
-> > +	pci_disable_pcie_error_reporting(pdev);
-> > +
-> >  	qla2x00_wait_for_sess_deletion(base_vha);
-> > 
-> >  	/*
-> > @@ -3698,8 +3702,6 @@ static void qla2x00_iocb_work_fn(struct work_struct *work)
-> >  	pci_release_selected_regions(ha->pdev, ha->bars);
-> >  	kfree(ha);
-> > 
-> > -	pci_disable_pcie_error_reporting(pdev);
-> > -
-> >  	pci_disable_device(pdev);
-> >  }
-> > 
-> > @@ -5826,6 +5828,8 @@ void qla2x00_relogin(struct scsi_qla_host *vha)
-> >  		return;
-> >  	}
-> > 
-> > +	pci_disable_pcie_error_reporting(pdev);
-> > +
-> >  	qla2x00_wait_for_sess_deletion(base_vha);
-> > 
-> >  	set_bit(UNLOADING, &base_vha->dpc_flags);
-> > @@ -5866,7 +5870,6 @@ void qla2x00_relogin(struct scsi_qla_host *vha)
-> >  	qla2x00_unmap_iobases(ha);
-> > 
-> >  	pci_release_selected_regions(ha->pdev, ha->bars);
-> > -	pci_disable_pcie_error_reporting(pdev);
-> >  	pci_disable_device(pdev);
-> > 
-> >  	/*
-> > 
-> 
-> 
-> -- 
-> Brian King
-> Power Linux I/O
-> IBM Linux Technology Center
-> 
+drivers/scsi/qla2xxx/qla_os.c: In function '__qla2x00_abort_all_cmds':
+drivers/scsi/qla2xxx/qla_os.c:1791:11: error: unused variable 'status' [-Werror=unused-variable]
+
+Remove the variable again.
+
+Fixes: c4e521b654e1 ("scsi: qla2xxx: Split the __qla2x00_abort_all_cmds() function")
+Fixes: f2ffd4e5bc7b ("scsi: qla2xxx: Timeouts occur on surprise removal of QLogic adapter")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+Maybe check carefully that the merge in linux-next is otherwise correct
+---
+ drivers/scsi/qla2xxx/qla_os.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 63c47bc7ae59..db331cb5ba3c 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -1788,7 +1788,7 @@ static void qla2x00_abort_srb(struct qla_qpair *qp, srb_t *sp, const int res,
+ static void
+ __qla2x00_abort_all_cmds(struct qla_qpair *qp, int res)
+ {
+-	int cnt, status;
++	int cnt;
+ 	unsigned long flags;
+ 	srb_t *sp;
+ 	scsi_qla_host_t *vha = qp->vha;
+-- 
+2.20.0
