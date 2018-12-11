@@ -1,367 +1,185 @@
-From: Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH] scsi: ufs: revamp string descriptor reading
-Date: Tue, 11 Dec 2018 13:07:05 +0200
-Message-ID: <20181211110705.11646-1-tomas.winkler@intel.com>
+From: Greg KH <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH 2/2] scsi: ufs: add inline crypto support to UFS HCD
+Date: Tue, 11 Dec 2018 13:03:37 +0100
+Message-ID: <20181211120337.GA3023@kroah.com>
+References: <20181211095027.GA3316@lvlogina.cadence.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20181211095027.GA3316@lvlogina.cadence.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Adrian Hunter <adrian.hunter@intel.com>
-Cc: Christoph Hellwig <hch@lst.de>, Vivek Gautam <vivek.gautam@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, Alex Lemberg <Alex.Lemberg@wdc.com>, Avri Altman <Avri.Altman@wdc.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Tomas Winkler <tomas.winkler@intel.com>
+To: Parshuram Thombare <pthombar@cadence.com>
+Cc: axboe@kernel.dk, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, mchehab+samsung@kernel.org, davem@davemloft.net, akpm@linux-foundation.org, nicolas.ferre@microchip.com, arnd@arndb.de, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, adouglas@cadence.com, jank@cadence.com, rafalc@cadence.com
 List-Id: linux-scsi@vger.kernel.org
 
-Define new a type: uc_string_id for easier string
-handling and less casting. Reduce number or string
-copies in price of a dynamic allocation.
+On Tue, Dec 11, 2018 at 09:50:27AM +0000, Parshuram Thombare wrote:
+> Add real time crypto support to UFS HCD using new device
+> mapper 'crypto-ufs'. dmsetup tool can be used to enable
+> real time / inline crypto support using device mapper
+> 'crypt-ufs'.
+> 
+> Signed-off-by: Parshuram Thombare <pthombar@cadence.com>
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- drivers/scsi/ufs/ufs-sysfs.c |  20 ++---
- drivers/scsi/ufs/ufs.h       |   2 +-
- drivers/scsi/ufs/ufshcd.c    | 164 +++++++++++++++++++++--------------
- drivers/scsi/ufs/ufshcd.h    |   9 +-
- 4 files changed, 115 insertions(+), 80 deletions(-)
+As you cc:ed me, I'll provide some minor review comments:
 
-diff --git a/drivers/scsi/ufs/ufs-sysfs.c b/drivers/scsi/ufs/ufs-sysfs.c
-index 8d9332bb7d0c..0b221c5a244c 100644
---- a/drivers/scsi/ufs/ufs-sysfs.c
-+++ b/drivers/scsi/ufs/ufs-sysfs.c
-@@ -570,10 +570,11 @@ static ssize_t _name##_show(struct device *dev,				\
- 	struct ufs_hba *hba = dev_get_drvdata(dev);			\
- 	int ret;							\
- 	int desc_len = QUERY_DESC_MAX_SIZE;				\
--	u8 *desc_buf;							\
-+	char *desc_buf;							\
-+									\
- 	desc_buf = kzalloc(QUERY_DESC_MAX_SIZE, GFP_ATOMIC);		\
--	if (!desc_buf)							\
--		return -ENOMEM;						\
-+	if (!desc_buf)                                                  \
-+		return -ENOMEM;                                         \
- 	ret = ufshcd_query_descriptor_retry(hba,			\
- 		UPIU_QUERY_OPCODE_READ_DESC, QUERY_DESC_IDN_DEVICE,	\
- 		0, 0, desc_buf, &desc_len);				\
-@@ -582,14 +583,13 @@ static ssize_t _name##_show(struct device *dev,				\
- 		goto out;						\
- 	}								\
- 	index = desc_buf[DEVICE_DESC_PARAM##_pname];			\
--	memset(desc_buf, 0, QUERY_DESC_MAX_SIZE);			\
--	if (ufshcd_read_string_desc(hba, index, desc_buf,		\
--		QUERY_DESC_MAX_SIZE, true)) {				\
--		ret = -EINVAL;						\
-+	kfree(desc_buf);						\
-+	desc_buf = NULL;						\
-+	ret = ufshcd_read_string_desc(hba, index, &desc_buf,		\
-+				      SD_ASCII_STD);			\
-+	if (ret < 0)							\
- 		goto out;						\
--	}								\
--	ret = snprintf(buf, PAGE_SIZE, "%s\n",				\
--		desc_buf + QUERY_DESC_HDR_SIZE);			\
-+	ret = snprintf(buf, PAGE_SIZE, "%s\n", desc_buf);		\
- out:									\
- 	kfree(desc_buf);						\
- 	return ret;							\
-diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
-index dd65fea07687..06ec7bbf5b97 100644
---- a/drivers/scsi/ufs/ufs.h
-+++ b/drivers/scsi/ufs/ufs.h
-@@ -543,7 +543,7 @@ struct ufs_dev_info {
-  */
- struct ufs_dev_desc {
- 	u16 wmanufacturerid;
--	char model[MAX_MODEL_LEN + 1];
-+	char *model;
- };
- 
- /**
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 86fe114f1f53..f1845698413c 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -298,16 +298,6 @@ static void ufshcd_scsi_block_requests(struct ufs_hba *hba)
- 		scsi_block_requests(hba->host);
- }
- 
--/* replace non-printable or non-ASCII characters with spaces */
--static inline void ufshcd_remove_non_printable(char *val)
--{
--	if (!val)
--		return;
--
--	if (*val < 0x20 || *val > 0x7e)
--		*val = ' ';
--}
--
- static void ufshcd_add_cmd_upiu_trace(struct ufs_hba *hba, unsigned int tag,
- 		const char *str)
- {
-@@ -3124,7 +3114,7 @@ int ufshcd_read_desc_param(struct ufs_hba *hba,
- 			   enum desc_idn desc_id,
- 			   int desc_index,
- 			   u8 param_offset,
--			   u8 *param_read_buf,
-+			   void *param_read_buf,
- 			   u8 param_size)
- {
- 	int ret;
-@@ -3192,7 +3182,7 @@ int ufshcd_read_desc_param(struct ufs_hba *hba,
- static inline int ufshcd_read_desc(struct ufs_hba *hba,
- 				   enum desc_idn desc_id,
- 				   int desc_index,
--				   u8 *buf,
-+				   void *buf,
- 				   u32 size)
- {
- 	return ufshcd_read_desc_param(hba, desc_id, desc_index, 0, buf, size);
-@@ -3210,49 +3200,78 @@ static int ufshcd_read_device_desc(struct ufs_hba *hba, u8 *buf, u32 size)
- 	return ufshcd_read_desc(hba, QUERY_DESC_IDN_DEVICE, 0, buf, size);
- }
- 
-+/**
-+ * struct uc_string_id - unicode string
-+ *
-+ * @len: size of this descriptor inclusive
-+ * @type: descriptor type
-+ * @uc: unicode string character
-+ */
-+struct uc_string_id {
-+	u8 len;
-+	u8 type;
-+	wchar_t uc[0];
-+} __packed;
-+
-+/* replace non-printable or non-ASCII characters with spaces */
-+static inline char ufshcd_remove_non_printable(char ch)
-+{
-+	return (ch >= 0x20 && ch <= 0x7e) ? ch : ' ';
-+}
-+
- /**
-  * ufshcd_read_string_desc - read string descriptor
-  * @hba: pointer to adapter instance
-  * @desc_index: descriptor index
-- * @buf: pointer to buffer where descriptor would be read
-- * @size: size of buf
-+ * @buf: pointer to buffer where descriptor would be read,
-+ *       the caller should free the memory.
-  * @ascii: if true convert from unicode to ascii characters
-+ *         null terminated string.
-  *
-- * Return 0 in case of success, non-zero otherwise
-+ * Return:
-+ * *      string size on success.
-+ * *      -ENOMEM: on allocation failure
-+ * *      -EINVAL: on a wrong parameter
-  */
--int ufshcd_read_string_desc(struct ufs_hba *hba, int desc_index,
--			    u8 *buf, u32 size, bool ascii)
-+int ufshcd_read_string_desc(struct ufs_hba *hba, u8 desc_index,
-+			    char **buf, bool ascii)
- {
--	int err = 0;
-+	struct uc_string_id *uc_str;
-+	char *str;
-+	int ret;
- 
--	err = ufshcd_read_desc(hba,
--				QUERY_DESC_IDN_STRING, desc_index, buf, size);
-+	if (!buf)
-+		return -EINVAL;
- 
--	if (err) {
--		dev_err(hba->dev, "%s: reading String Desc failed after %d retries. err = %d\n",
--			__func__, QUERY_REQ_RETRIES, err);
-+	uc_str = kzalloc(QUERY_DESC_MAX_SIZE, GFP_KERNEL);
-+	if (!uc_str)
-+		return -ENOMEM;
-+
-+	ret = ufshcd_read_desc(hba, QUERY_DESC_IDN_STRING,
-+			       desc_index, uc_str,
-+			       QUERY_DESC_MAX_SIZE);
-+	if (ret < 0) {
-+		dev_err(hba->dev, "Reading String Desc failed after %d retries. err = %d\n",
-+			QUERY_REQ_RETRIES, ret);
-+		str = NULL;
-+		goto out;
-+	}
-+
-+	if (uc_str->len <= QUERY_DESC_HDR_SIZE) {
-+		dev_dbg(hba->dev, "String Desc is of zero length\n");
-+		str = NULL;
-+		ret = 0;
- 		goto out;
- 	}
- 
- 	if (ascii) {
--		int desc_len;
--		int ascii_len;
-+		ssize_t ascii_len;
- 		int i;
--		char *buff_ascii;
--
--		desc_len = buf[0];
- 		/* remove header and divide by 2 to move from UTF16 to UTF8 */
--		ascii_len = (desc_len - QUERY_DESC_HDR_SIZE) / 2 + 1;
--		if (size < ascii_len + QUERY_DESC_HDR_SIZE) {
--			dev_err(hba->dev, "%s: buffer allocated size is too small\n",
--					__func__);
--			err = -ENOMEM;
--			goto out;
--		}
--
--		buff_ascii = kmalloc(ascii_len, GFP_KERNEL);
--		if (!buff_ascii) {
--			err = -ENOMEM;
-+		ascii_len = (uc_str->len - QUERY_DESC_HDR_SIZE) / 2 + 1;
-+		str = kzalloc(ascii_len, GFP_KERNEL);
-+		if (!str) {
-+			ret = -ENOMEM;
- 			goto out;
- 		}
- 
-@@ -3260,22 +3279,29 @@ int ufshcd_read_string_desc(struct ufs_hba *hba, int desc_index,
- 		 * the descriptor contains string in UTF16 format
- 		 * we need to convert to utf-8 so it can be displayed
- 		 */
--		utf16s_to_utf8s((wchar_t *)&buf[QUERY_DESC_HDR_SIZE],
--				desc_len - QUERY_DESC_HDR_SIZE,
--				UTF16_BIG_ENDIAN, buff_ascii, ascii_len);
-+		ret = utf16s_to_utf8s(uc_str->uc,
-+				      uc_str->len - QUERY_DESC_HDR_SIZE,
-+				      UTF16_BIG_ENDIAN, str, ascii_len);
- 
- 		/* replace non-printable or non-ASCII characters with spaces */
--		for (i = 0; i < ascii_len; i++)
--			ufshcd_remove_non_printable(&buff_ascii[i]);
-+		for (i = 0; i < ret; i++)
-+			str[i] = ufshcd_remove_non_printable(str[i]);
- 
--		memset(buf + QUERY_DESC_HDR_SIZE, 0,
--				size - QUERY_DESC_HDR_SIZE);
--		memcpy(buf + QUERY_DESC_HDR_SIZE, buff_ascii, ascii_len);
--		buf[QUERY_DESC_LENGTH_OFFSET] = ascii_len + QUERY_DESC_HDR_SIZE;
--		kfree(buff_ascii);
-+		str[ret++] = '\0';
-+
-+	} else {
-+		str = kzalloc(uc_str->len, GFP_KERNEL);
-+		if (!str) {
-+			ret = -ENOMEM;
-+			goto out;
-+		}
-+		memcpy(str, uc_str, uc_str->len);
-+		ret = uc_str->len;
- 	}
- out:
--	return err;
-+	*buf = str;
-+	kfree(uc_str);
-+	return ret;
- }
- 
- /**
-@@ -6409,6 +6435,9 @@ static int ufs_get_device_desc(struct ufs_hba *hba,
- 	u8 model_index;
- 	u8 *desc_buf;
- 
-+	if (!dev_desc)
-+		return -EINVAL;
-+
- 	buff_len = max_t(size_t, hba->desc_size.dev_desc,
- 			 QUERY_DESC_MAX_SIZE + 1);
- 	desc_buf = kmalloc(buff_len, GFP_KERNEL);
-@@ -6432,31 +6461,31 @@ static int ufs_get_device_desc(struct ufs_hba *hba,
- 				     desc_buf[DEVICE_DESC_PARAM_MANF_ID + 1];
- 
- 	model_index = desc_buf[DEVICE_DESC_PARAM_PRDCT_NAME];
--
--	/* Zero-pad entire buffer for string termination. */
--	memset(desc_buf, 0, buff_len);
--
--	err = ufshcd_read_string_desc(hba, model_index, desc_buf,
--				      QUERY_DESC_MAX_SIZE, true/*ASCII*/);
--	if (err) {
-+	err = ufshcd_read_string_desc(hba, model_index,
-+				      &dev_desc->model, SD_ASCII_STD);
-+	if (err < 0) {
- 		dev_err(hba->dev, "%s: Failed reading Product Name. err = %d\n",
- 			__func__, err);
- 		goto out;
- 	}
- 
--	desc_buf[QUERY_DESC_MAX_SIZE] = '\0';
--	strlcpy(dev_desc->model, (desc_buf + QUERY_DESC_HDR_SIZE),
--		min_t(u8, desc_buf[QUERY_DESC_LENGTH_OFFSET],
--		      MAX_MODEL_LEN));
--
--	/* Null terminate the model string */
--	dev_desc->model[MAX_MODEL_LEN] = '\0';
-+	/*
-+	 * ufshcd_read_string_desc returns size of the string
-+	 * reset the error value
-+	 */
-+	err = 0;
- 
- out:
- 	kfree(desc_buf);
- 	return err;
- }
- 
-+static void ufs_put_device_desc(struct ufs_dev_desc *dev_desc)
-+{
-+	kfree(dev_desc->model);
-+	dev_desc->model = NULL;
-+}
-+
- static void ufs_fixup_device_setup(struct ufs_hba *hba,
- 				   struct ufs_dev_desc *dev_desc)
- {
-@@ -6465,8 +6494,9 @@ static void ufs_fixup_device_setup(struct ufs_hba *hba,
- 	for (f = ufs_fixups; f->quirk; f++) {
- 		if ((f->card.wmanufacturerid == dev_desc->wmanufacturerid ||
- 		     f->card.wmanufacturerid == UFS_ANY_VENDOR) &&
--		    (STR_PRFX_EQUAL(f->card.model, dev_desc->model) ||
--		     !strcmp(f->card.model, UFS_ANY_MODEL)))
-+		     ((dev_desc->model &&
-+		       STR_PRFX_EQUAL(f->card.model, dev_desc->model)) ||
-+		      !strcmp(f->card.model, UFS_ANY_MODEL)))
- 			hba->dev_quirks |= f->quirk;
- 	}
- }
-@@ -6817,6 +6847,8 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
- 	}
- 
- 	ufs_fixup_device_setup(hba, &card);
-+	ufs_put_device_desc(&card);
-+
- 	ufshcd_tune_unipro_params(hba);
- 
- 	ret = ufshcd_set_vccq_rail_unused(hba,
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 69ba7445d2b3..4647bd0745c4 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -880,14 +880,17 @@ int ufshcd_read_desc_param(struct ufs_hba *hba,
- 			   enum desc_idn desc_id,
- 			   int desc_index,
- 			   u8 param_offset,
--			   u8 *param_read_buf,
-+			   void *param_read_buf,
- 			   u8 param_size);
- int ufshcd_query_attr(struct ufs_hba *hba, enum query_opcode opcode,
- 		      enum attr_idn idn, u8 index, u8 selector, u32 *attr_val);
- int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
- 	enum flag_idn idn, bool *flag_res);
--int ufshcd_read_string_desc(struct ufs_hba *hba, int desc_index,
--			    u8 *buf, u32 size, bool ascii);
-+
-+#define SD_ASCII_STD true
-+#define SD_RAW false
-+int ufshcd_read_string_desc(struct ufs_hba *hba, u8 desc_index,
-+			    char **buf, bool ascii);
- 
- int ufshcd_hold(struct ufs_hba *hba, bool async);
- void ufshcd_release(struct ufs_hba *hba);
--- 
-2.19.2
+> +config BLK_DEV_HW_RT_ENCRYPTION
+> +	bool
+> +	depends on SCSI_UFSHCD_RT_ENCRYPTION
+> +	default n
+
+n is always the default, you never need to list that.
+
+> +
+>  source block/Kconfig.iosched
+> diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
+> index 2ddbb26..09a3ec0 100644
+> --- a/drivers/scsi/ufs/Kconfig
+> +++ b/drivers/scsi/ufs/Kconfig
+> @@ -136,3 +136,15 @@ config SCSI_UFS_BSG
+>  
+>  	  Select this if you need a bsg device node for your UFS controller.
+>  	  If unsure, say N.
+> +
+> +config SCSI_UFSHCD_RT_ENCRYPTION
+> +	bool "Universal Flash Storage Controller RT encryption support"
+> +	depends on SCSI_UFSHCD
+> +	default n
+
+Same here.
+
+> +	select BLK_DEV_HW_RT_ENCRYPTION if SCSI_UFSHCD_RT_ENCRYPTION
+> +	select BLK_DEV_DM if SCSI_UFSHCD_RT_ENCRYPTION
+> +	help
+> +	Universal Flash Storage Controller RT encryption support
+> +
+> +	Select this if you want to enable real time encryption on UFS controller
+> +	If unsure, say N.
+
+Don't you need to indent the help lines?
+
+> +int ufshcd_crypto_init(struct ufs_hba *hba);
+> +void ufshcd_crypto_remove(struct ufs_hba *hba);
+> +void ufshcd_prepare_for_crypto(struct ufs_hba *hba, struct ufshcd_lrb *lrbp);
+> +#endif
+
+You need to provide inline functions for when your config option is not
+enabled here.
+
+That way you don't have to do this mess:
+
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index 86fe114..a96b038 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -47,6 +47,9 @@
+>  #include "unipro.h"
+>  #include "ufs-sysfs.h"
+>  #include "ufs_bsg.h"
+> +#ifdef CONFIG_SCSI_UFSHCD_RT_ENCRYPTION
+> +#include "ufshcd-crypto.h"
+> +#endif
+
+No need for #ifdefs in .c files at all.  Always include the .h file, and
+then since your functions are all inline void functions, the code just
+compiles away into nothing.
+
+
+>  
+>  #define CREATE_TRACE_POINTS
+>  #include <trace/events/ufs.h>
+> @@ -2198,6 +2201,14 @@ static void ufshcd_prepare_req_desc_hdr(struct ufshcd_lrb *lrbp,
+>  
+>  	dword_0 = data_direction | (lrbp->command_type
+>  				<< UPIU_COMMAND_TYPE_OFFSET);
+> +#ifdef CONFIG_SCSI_UFSHCD_RT_ENCRYPTION
+> +	if (lrbp->cci >= 0) {
+> +		dword_0 |= (1 << CRYPTO_UTP_REQ_DESC_DWORD0_CE_SHIFT);
+> +		dword_0 |= ((lrbp->cci << CRYPTO_UTP_REQ_DESC_DWORD0_CCI_SHIFT)
+> +				& CRYPTO_UTP_REQ_DESC_DWORD0_CCI_MASK);
+> +	} else
+> +		dword_0 &= ~CRYPTO_UTP_REQ_DESC_DWORD0_CE_MASK;
+> +#endif
+
+Some comments on what this is trying to do here?
+
+
+>  	if (lrbp->intr_cmd)
+>  		dword_0 |= UTP_REQ_DESC_INT_CMD;
+>  
+> @@ -2462,6 +2473,12 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+>  	lrbp->intr_cmd = !ufshcd_is_intr_aggr_allowed(hba) ? true : false;
+>  	lrbp->req_abort_skip = false;
+>  
+> +#ifdef CONFIG_SCSI_UFSHCD_RT_ENCRYPTION
+> +	lrbp->cci = -1;
+
+What does -1 mean?  You should have a type for it if it is something
+"special".
+
+> +	/* prepare block for crypto */
+> +	if (hba->capabilities & MASK_CRYPTO_SUPPORT)
+> +		ufshcd_prepare_for_crypto(hba, lrbp);
+> +#endif
+
+Again, no #ifdefs needed please.
+
+
+>  	ufshcd_comp_scsi_upiu(hba, lrbp);
+>  
+>  	err = ufshcd_map_sg(hba, lrbp);
+> @@ -8119,6 +8136,11 @@ void ufshcd_remove(struct ufs_hba *hba)
+>  	ufs_bsg_remove(hba);
+>  	ufs_sysfs_remove_nodes(hba->dev);
+>  	scsi_remove_host(hba->host);
+> +#ifdef CONFIG_SCSI_UFSHCD_RT_ENCRYPTION
+> +	if (hba->capabilities & MASK_CRYPTO_SUPPORT)
+> +		ufshcd_crypto_remove(hba);
+> +#endif
+
+Same ifdef here, and everywhere else in this file.
+
+> --- a/drivers/scsi/ufs/ufshcd.h
+> +++ b/drivers/scsi/ufs/ufshcd.h
+> @@ -193,6 +193,9 @@ struct ufshcd_lrb {
+>  	ktime_t compl_time_stamp;
+>  
+>  	bool req_abort_skip;
+> +#ifdef CONFIG_SCSI_UFSHCD_RT_ENCRYPTION
+> +	int cci;
+> +#endif
+
+No need for a #ifdef here.  But comment on exactly what "cci" means,
+that seems to not make any sense to me.
+
+>  };
+>  
+>  /**
+> @@ -706,6 +709,9 @@ struct ufs_hba {
+>  
+>  	struct device		bsg_dev;
+>  	struct request_queue	*bsg_queue;
+> +#ifdef CONFIG_SCSI_UFSHCD_RT_ENCRYPTION
+> +	struct ufshcd_crypto_ctx *cctx;
+> +#endif
+
+or here.
+
+>  };
+>  
+>  /* Returns true if clocks can be gated. Otherwise false */
+> diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
+> index 6fa889d..fe5a92d 100644
+> --- a/drivers/scsi/ufs/ufshci.h
+> +++ b/drivers/scsi/ufs/ufshci.h
+> @@ -90,6 +90,7 @@ enum {
+>  	MASK_64_ADDRESSING_SUPPORT		= 0x01000000,
+>  	MASK_OUT_OF_ORDER_DATA_DELIVERY_SUPPORT	= 0x02000000,
+>  	MASK_UIC_DME_TEST_MODE_SUPPORT		= 0x04000000,
+> +	MASK_CRYPTO_SUPPORT                     = 0x10000000,
+
+Why are you all not using the BIT(N) macro for these?
+
+thanks,
+
+greg k-h
