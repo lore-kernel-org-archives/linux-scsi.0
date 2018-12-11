@@ -1,96 +1,105 @@
-From: Marc Gonzalez <marc.w.gonzalez@free.fr>
-Subject: [PATCH v1] scsi: ufs: Use explicit access size in ufshcd_dump_regs
-Date: Tue, 11 Dec 2018 15:18:18 +0100
-Message-ID: <3bf7ea8e-4cf2-1f9b-7f46-15609dfcad19@free.fr>
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [PATCH 4.19 009/118] scsi: ufs: Fix hynix ufs bug with quirk on hi36xx SoC
+Date: Tue, 11 Dec 2018 16:40:28 +0100
+Message-ID: <20181211151644.599741132@linuxfoundation.org>
+References: <20181211151644.216668863@linuxfoundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-Content-Language: en-US
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Vinayak Holikatti <vinholikatti@gmail.com>, Joao Pinto <jpinto@synopsys.com>, Tomas Winkler <tomas.winkler@intel.com>, Avri Altman <avri.altman@wdc.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Robin Murphy <robin.murphy@arm.com>
-Cc: MSM <linux-arm-msm@vger.kernel.org>, SCSI <linux-scsi@vger.kernel.org>, Linux ARM <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20181211151644.216668863@linuxfoundation.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, stable@vger.kernel.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Wei Li <liwei213@huawei.com>, Dmitry Shmidt <dimitrysh@google.com>, John Stultz <john.stultz@linaro.org>, Sasha Levin <sashal@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-memcpy_fromio() doesn't provide any control over access size.
-For example, on arm64, it is implemented using readb and readq.
-This may trigger a synchronous external abort:
+4.19-stable review patch.  If anyone has any objections, please let me know.
 
-[    3.729943] Internal error: synchronous external abort: 96000210 [#1] PREEMPT SMP
-[    3.737000] Modules linked in:
-[    3.744371] CPU: 2 PID: 1 Comm: swapper/0 Tainted: G S                4.20.0-rc4 #16
-[    3.747413] Hardware name: Qualcomm Technologies, Inc. MSM8998 v1 MTP (DT)
-[    3.755295] pstate: 00000005 (nzcv daif -PAN -UAO)
-[    3.761978] pc : __memcpy_fromio+0x68/0x80
-[    3.766718] lr : ufshcd_dump_regs+0x50/0xb0
-[    3.770767] sp : ffff00000807ba00
-[    3.774830] x29: ffff00000807ba00 x28: 00000000fffffffb
-[    3.778344] x27: ffff0000089db068 x26: ffff8000f6e58000
-[    3.783728] x25: 000000000000000e x24: 0000000000000800
-[    3.789023] x23: ffff8000f6e587c8 x22: 0000000000000800
-[    3.794319] x21: ffff000008908368 x20: ffff8000f6e1ab80
-[    3.799615] x19: 000000000000006c x18: ffffffffffffffff
-[    3.804910] x17: 0000000000000000 x16: 0000000000000000
-[    3.810206] x15: ffff000009199648 x14: ffff000089244187
-[    3.815502] x13: ffff000009244195 x12: ffff0000091ab000
-[    3.820797] x11: 0000000005f5e0ff x10: ffff0000091998a0
-[    3.826093] x9 : 0000000000000000 x8 : ffff8000f6e1ac00
-[    3.831389] x7 : 0000000000000000 x6 : 0000000000000068
-[    3.836676] x5 : ffff8000f6e1abe8 x4 : 0000000000000000
-[    3.841971] x3 : ffff00000928c868 x2 : ffff8000f6e1abec
-[    3.847267] x1 : ffff00000928c868 x0 : ffff8000f6e1abe8
-[    3.852567] Process swapper/0 (pid: 1, stack limit = 0x(____ptrval____))
-[    3.857900] Call trace:
-[    3.864473]  __memcpy_fromio+0x68/0x80
-[    3.866683]  ufs_qcom_dump_dbg_regs+0x1c0/0x370
-[    3.870522]  ufshcd_print_host_regs+0x168/0x190
-[    3.874946]  ufshcd_init+0xd4c/0xde0
-[    3.879459]  ufshcd_pltfrm_init+0x3c8/0x550
-[    3.883264]  ufs_qcom_probe+0x24/0x60
-[    3.887188]  platform_drv_probe+0x50/0xa0
+------------------
 
-Assuming aligned 32-bit registers, let's use readl, after making sure
-that 'offset' and 'len' are indeed multiples of 4.
+[ Upstream commit 8e4829c6f7470722c1f5a1dc5769ebe09ef036d6 ]
 
-Fixes: ba80917d9932d ("scsi: ufs: ufshcd_dump_regs to use memcpy_fromio")
-Signed-off-by: Marc Gonzalez <marc.w.gonzalez@free.fr>
+Hynix ufs has deviations on hi36xx platform which will result in ufs bursts
+transfer failures.
+
+To fix the problem, the Hynix device must set the register
+VS_DebugSaveConfigTime to 0x10, which will set time reference for
+SaveConfigTime is 250 ns. The time reference for SaveConfigTime is 40 ns by
+default.
+
+This patch is necessary to boot on HiKey960 boards that use Hynix UFS chips
+(H28U62301AMR model: hB8aL1).
+
+Cc: Vinayak Holikatti <vinholikatti@gmail.com>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
+Signed-off-by: Wei Li <liwei213@huawei.com>
+Signed-off-by: Dmitry Shmidt <dimitrysh@google.com>
+[jstultz: Forward ported from older code, slight tweak to commit message]
+Signed-off-by: John Stultz <john.stultz@linaro.org>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+ drivers/scsi/ufs/ufs-hisi.c   | 9 +++++++++
+ drivers/scsi/ufs/ufs_quirks.h | 6 ++++++
+ drivers/scsi/ufs/ufshcd.c     | 2 ++
+ 3 files changed, 17 insertions(+)
 
+diff --git a/drivers/scsi/ufs/ufs-hisi.c b/drivers/scsi/ufs/ufs-hisi.c
+index 46df707e6f2c..452e19f8fb47 100644
+--- a/drivers/scsi/ufs/ufs-hisi.c
++++ b/drivers/scsi/ufs/ufs-hisi.c
+@@ -20,6 +20,7 @@
+ #include "unipro.h"
+ #include "ufs-hisi.h"
+ #include "ufshci.h"
++#include "ufs_quirks.h"
+ 
+ static int ufs_hisi_check_hibern8(struct ufs_hba *hba)
+ {
+@@ -390,6 +391,14 @@ static void ufs_hisi_set_dev_cap(struct ufs_hisi_dev_params *hisi_param)
+ 
+ static void ufs_hisi_pwr_change_pre_change(struct ufs_hba *hba)
+ {
++	if (hba->dev_quirks & UFS_DEVICE_QUIRK_HOST_VS_DEBUGSAVECONFIGTIME) {
++		pr_info("ufs flash device must set VS_DebugSaveConfigTime 0x10\n");
++		/* VS_DebugSaveConfigTime */
++		ufshcd_dme_set(hba, UIC_ARG_MIB(0xD0A0), 0x10);
++		/* sync length */
++		ufshcd_dme_set(hba, UIC_ARG_MIB(0x1556), 0x48);
++	}
++
+ 	/* update */
+ 	ufshcd_dme_set(hba, UIC_ARG_MIB(0x15A8), 0x1);
+ 	/* PA_TxSkip */
+diff --git a/drivers/scsi/ufs/ufs_quirks.h b/drivers/scsi/ufs/ufs_quirks.h
+index 71f73d1d1ad1..5d2dfdb41a6f 100644
+--- a/drivers/scsi/ufs/ufs_quirks.h
++++ b/drivers/scsi/ufs/ufs_quirks.h
+@@ -131,4 +131,10 @@ struct ufs_dev_fix {
+  */
+ #define UFS_DEVICE_QUIRK_HOST_PA_SAVECONFIGTIME	(1 << 8)
+ 
++/*
++ * Some UFS devices require VS_DebugSaveConfigTime is 0x10,
++ * enabling this quirk ensure this.
++ */
++#define UFS_DEVICE_QUIRK_HOST_VS_DEBUGSAVECONFIGTIME	(1 << 9)
++
+ #endif /* UFS_QUIRKS_H_ */
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 535180c01ce8..320bbd9849bc 100644
+index 54074dd483a7..0b81d9d03357 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -112,13 +112,19 @@
- int ufshcd_dump_regs(struct ufs_hba *hba, size_t offset, size_t len,
- 		     const char *prefix)
- {
--	u8 *regs;
-+	u32 *regs;
-+	size_t pos;
-+
-+	if (offset % 4 != 0 || len % 4 != 0) /* keep readl happy */
-+		return -EINVAL;
+@@ -230,6 +230,8 @@ static struct ufs_dev_fix ufs_fixups[] = {
+ 	UFS_FIX(UFS_VENDOR_SKHYNIX, UFS_ANY_MODEL, UFS_DEVICE_NO_VCCQ),
+ 	UFS_FIX(UFS_VENDOR_SKHYNIX, UFS_ANY_MODEL,
+ 		UFS_DEVICE_QUIRK_HOST_PA_SAVECONFIGTIME),
++	UFS_FIX(UFS_VENDOR_SKHYNIX, "hB8aL1" /*H28U62301AMR*/,
++		UFS_DEVICE_QUIRK_HOST_VS_DEBUGSAVECONFIGTIME),
  
- 	regs = kzalloc(len, GFP_KERNEL);
- 	if (!regs)
- 		return -ENOMEM;
- 
--	memcpy_fromio(regs, hba->mmio_base + offset, len);
-+	for (pos = 0; pos < len; pos += 4)
-+		regs[pos / 4] = ufshcd_readl(hba, offset + pos);
-+
- 	ufshcd_hex_dump(prefix, regs, len);
- 	kfree(regs);
- 
+ 	END_FIX
+ };
 -- 
-2.17.1
+2.19.1
