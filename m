@@ -1,50 +1,25 @@
-From: Nathan Chancellor <natechancellor@gmail.com>
-Subject: [PATCH] pcmcia: Remove unnecessary parentheses
-Date: Mon, 10 Dec 2018 16:55:40 -0700
-Message-ID: <20181210235540.7039-1-natechancellor@gmail.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH 1/2] scsi: aacraid: change wait_sem to a completion
+Date: Tue, 11 Dec 2018 08:44:27 +0100
+Message-ID: <a282ab7f-7f10-a0b2-9153-9db797bd019d@suse.de>
+References: <20181210213301.1065510-1-arnd@arndb.de>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20181210213301.1065510-1-arnd@arndb.de>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Nathan Chancellor <natechancellor@gmail.com>
+To: Arnd Bergmann <arnd@arndb.de>, Adaptec OEM Raid Solutions <aacraid@microsemi.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>, Prasad B Munirathnam <prasad.munirathnam@microsemi.com>, Dave Carroll <david.carroll@microsemi.com>, Dan Carpenter <dan.carpenter@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Clang warns:
-
-drivers/scsi/pcmcia/nsp_cs.c:1137:27: warning: equality comparison with
-extraneous parentheses [-Wparentheses-equality]
-                if ((tmpSC->SCp.Message == MSG_COMMAND_COMPLETE)) {
-                     ~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~
-drivers/scsi/pcmcia/nsp_cs.c:1137:27: note: remove extraneous
-parentheses around the comparison to silence this warning
-                if ((tmpSC->SCp.Message == MSG_COMMAND_COMPLETE)) {
-                    ~                   ^                      ~
-drivers/scsi/pcmcia/nsp_cs.c:1137:27: note: use '=' to turn this
-equality comparison into an assignment
-                if ((tmpSC->SCp.Message == MSG_COMMAND_COMPLETE)) {
-                                        ^~
-                                        =
-1 warning generated.
-
-Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
----
- drivers/scsi/pcmcia/nsp_cs.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/pcmcia/nsp_cs.c b/drivers/scsi/pcmcia/nsp_cs.c
-index f3230494a8c9..f28105b144fc 100644
---- a/drivers/scsi/pcmcia/nsp_cs.c
-+++ b/drivers/scsi/pcmcia/nsp_cs.c
-@@ -1134,7 +1134,8 @@ static irqreturn_t nspintr(int irq, void *dev_id)
- 
- 		//*sync_neg       = SYNC_NOT_YET;
- 
--		if ((tmpSC->SCp.Message == MSG_COMMAND_COMPLETE)) {     /* all command complete and return status */
-+		/* all command complete and return status */
-+		if (tmpSC->SCp.Message == MSG_COMMAND_COMPLETE) {
- 			tmpSC->result = (DID_OK		             << 16) |
- 					((tmpSC->SCp.Message & 0xff) <<  8) |
- 					((tmpSC->SCp.Status  & 0xff) <<  0);
+Looks good,
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 -- 
-2.20.0
+Johannes Thumshirn                            SUSE Labs Filesystems
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
