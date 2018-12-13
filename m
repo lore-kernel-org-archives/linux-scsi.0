@@ -1,122 +1,98 @@
-From: Qian Cai <cai@lca.pw>
-Subject: [RESEND PATCH v2] megaraid: fix out-of-bound array accesses
-Date: Thu, 13 Dec 2018 08:27:27 -0500
-Message-ID: <20181213132727.57058-1-cai@lca.pw>
-References: <20181206212252.36732-1-cai@lca.pw>
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH v4 4/5] scsi: hisi_sas: Add support for DIF feature for v3
+ hw
+Date: Thu, 13 Dec 2018 13:35:56 +0000
+Message-ID: <4752be71-f39c-ac55-0e51-36c146108a38@huawei.com>
+References: <1544103284-100497-1-git-send-email-john.garry@huawei.com>
+ <1544103284-100497-5-git-send-email-john.garry@huawei.com>
+ <yq1o99qgobi.fsf@oracle.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20181206212252.36732-1-cai@lca.pw>
+In-Reply-To: <yq1o99qgobi.fsf@oracle.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: akpm@linux-foundation.org
-Cc: kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, thenzl@redhat.com, hch@lst.de, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Qian Cai <cai@lca.pw>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: jejb@linux.vnet.ibm.com, linuxarm@huawei.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Xiang Chen <chenxiang66@hisilicon.com>
 List-Id: linux-scsi@vger.kernel.org
 
-UBSAN reported those with MegaRAID SAS-3 3108,
+On 13/12/2018 02:20, Martin K. Petersen wrote:
+>
+> John,
 
-[   77.467308] UBSAN: Undefined behaviour in drivers/scsi/megaraid/megaraid_sas_fp.c:117:32
-[   77.475402] index 255 is out of range for type 'MR_LD_SPAN_MAP [1]'
-[   77.481677] CPU: 16 PID: 333 Comm: kworker/16:1 Not tainted 4.20.0-rc5+ #1
-[   77.488556] Hardware name: Huawei TaiShan 2280 /BC11SPCD, BIOS 1.50 06/01/2018
-[   77.495791] Workqueue: events work_for_cpu_fn
-[   77.500154] Call trace:
-[   77.502610]  dump_backtrace+0x0/0x2c8
-[   77.506279]  show_stack+0x24/0x30
-[   77.509604]  dump_stack+0x118/0x19c
-[   77.513098]  ubsan_epilogue+0x14/0x60
-[   77.516765]  __ubsan_handle_out_of_bounds+0xfc/0x13c
-[   77.521767]  mr_update_load_balance_params+0x150/0x158 [megaraid_sas]
-[   77.528230]  MR_ValidateMapInfo+0x2cc/0x10d0 [megaraid_sas]
-[   77.533825]  megasas_get_map_info+0x244/0x2f0 [megaraid_sas]
-[   77.539505]  megasas_init_adapter_fusion+0x9b0/0xf48 [megaraid_sas]
-[   77.545794]  megasas_init_fw+0x1ab4/0x3518 [megaraid_sas]
-[   77.551212]  megasas_probe_one+0x2c4/0xbe0 [megaraid_sas]
-[   77.556614]  local_pci_probe+0x7c/0xf0
-[   77.560365]  work_for_cpu_fn+0x34/0x50
-[   77.564118]  process_one_work+0x61c/0xf08
-[   77.568129]  worker_thread+0x534/0xa70
-[   77.571882]  kthread+0x1c8/0x1d0
-[   77.575114]  ret_from_fork+0x10/0x1c
+Hi Martin,
 
-[   89.240332] UBSAN: Undefined behaviour in drivers/scsi/megaraid/megaraid_sas_fp.c:117:32
-[   89.248426] index 255 is out of range for type 'MR_LD_SPAN_MAP [1]'
-[   89.254700] CPU: 16 PID: 95 Comm: kworker/u130:0 Not tainted 4.20.0-rc5+ #1
-[   89.261665] Hardware name: Huawei TaiShan 2280 /BC11SPCD, BIOS 1.50 06/01/2018
-[   89.268903] Workqueue: events_unbound async_run_entry_fn
-[   89.274222] Call trace:
-[   89.276680]  dump_backtrace+0x0/0x2c8
-[   89.280348]  show_stack+0x24/0x30
-[   89.283671]  dump_stack+0x118/0x19c
-[   89.287167]  ubsan_epilogue+0x14/0x60
-[   89.290835]  __ubsan_handle_out_of_bounds+0xfc/0x13c
-[   89.295828]  MR_LdRaidGet+0x50/0x58 [megaraid_sas]
-[   89.300638]  megasas_build_io_fusion+0xbb8/0xd90 [megaraid_sas]
-[   89.306576]  megasas_build_and_issue_cmd_fusion+0x138/0x460 [megaraid_sas]
-[   89.313468]  megasas_queue_command+0x398/0x3d0 [megaraid_sas]
-[   89.319222]  scsi_dispatch_cmd+0x1dc/0x8a8
-[   89.323321]  scsi_request_fn+0x8e8/0xdd0
-[   89.327249]  __blk_run_queue+0xc4/0x158
-[   89.331090]  blk_execute_rq_nowait+0xf4/0x158
-[   89.335449]  blk_execute_rq+0xdc/0x158
-[   89.339202]  __scsi_execute+0x130/0x258
-[   89.343041]  scsi_probe_and_add_lun+0x2fc/0x1488
-[   89.347661]  __scsi_scan_target+0x1cc/0x8c8
-[   89.351848]  scsi_scan_channel.part.3+0x8c/0xc0
-[   89.356382]  scsi_scan_host_selected+0x130/0x1f0
-[   89.361002]  do_scsi_scan_host+0xd8/0xf0
-[   89.364927]  do_scan_async+0x9c/0x320
-[   89.368594]  async_run_entry_fn+0x138/0x420
-[   89.372780]  process_one_work+0x61c/0xf08
-[   89.376793]  worker_thread+0x13c/0xa70
-[   89.380546]  kthread+0x1c8/0x1d0
-[   89.383778]  ret_from_fork+0x10/0x1c
+>
+>> +static void fill_prot_v3_hw(struct scsi_cmnd *scsi_cmnd,
+>> +			    struct hisi_sas_protect_iu_v3_hw *prot)
+>> +{
+>> +	u8 prot_type = scsi_get_prot_type(scsi_cmnd);
+>> +	u8 prot_op = scsi_get_prot_op(scsi_cmnd);
+>> +	unsigned int interval = scsi_prot_interval(scsi_cmnd);
+>> +	u32 lbrt_chk_val;
+>> +
+>> +	if (interval == 4096)
+>> +		lbrt_chk_val = (u32)(scsi_get_lba(scsi_cmnd) >> 3);
+>> +	else
+>> +		lbrt_chk_val = (u32)scsi_get_lba(scsi_cmnd);
+>
+> lbrt_chk_val = t10_pi_ref_tag(scmd->request);
+>
 
-This is because when populating Driver Map using firmware raid map, all
-non-existing VDs set their ldTgtIdToLd to 0xff, so it can be skipped
-later.
+ok
 
->From drivers/scsi/megaraid/megaraid_sas_base.c ,
-memset(instance->ld_ids, 0xff, MEGASAS_MAX_LD_IDS);
+> +
+>> +	switch (prot_op) {
+>> +	case SCSI_PROT_READ_STRIP:
+>> +		prot->dw0 |= (T10_RMV_EN_MSK | T10_CHK_EN_MSK);
+>> +		prot->lbrtcv = lbrt_chk_val;
+>> +		if (prot_type == SCSI_PROT_DIF_TYPE1)
+>> +			prot->dw4 |= (0xc << 16);
+>> +		else if (prot_type == SCSI_PROT_DIF_TYPE3)
+>> +			prot->dw4 |= (0xfc << 16);
+>
+> We're moving away from prot_type. You should use:
+>
+> enum scsi_prot_flags {
+>         SCSI_PROT_TRANSFER_PI           = 1 << 0,
+>         SCSI_PROT_GUARD_CHECK           = 1 << 1,
+>         SCSI_PROT_REF_CHECK             = 1 << 2,
+>         SCSI_PROT_REF_INCREMENT         = 1 << 3,
+>         SCSI_PROT_IP_CHECKSUM           = 1 << 4,
+> };
 
->From drivers/scsi/megaraid/megaraid_sas_fp.c ,
-/* For non existing VDs, iterate to next VD*/
-if (ld >= (MAX_LOGICAL_DRIVES_EXT - 1))
-	continue;
+ok
 
-However, there are a few places that failed to skip those non-existing
-VDs due to off-by-one errors. Then, those 0xff leaked into
-MR_LdRaidGet(0xff, map) and triggered the out-of-bound accesses.
+>
+> to set your controller flags.
+>
+> +		if (prot_op == SCSI_PROT_WRITE_INSERT) {
+> +			unsigned int interval = scsi_prot_interval(scsi_cmnd);
+> +			unsigned int ilog2_interval = ilog2(interval);
+> +
+> +			len = (task->total_xfer_len >> ilog2_interval) * 8;
+>
+> scsi_transfer_length(struct scsi_cmnd *scmd)
 
-Fixes: 51087a8617fe (megaraid_sas : Extended VD support)
-Signed-off-by: Qian Cai <cai@lca.pw>
----
- drivers/scsi/megaraid/megaraid_sas_fp.c     | 2 +-
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ok
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fp.c b/drivers/scsi/megaraid/megaraid_sas_fp.c
-index 59ecbb3b53b5..a33628550425 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fp.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fp.c
-@@ -1266,7 +1266,7 @@ void mr_update_load_balance_params(struct MR_DRV_RAID_MAP_ALL *drv_map,
- 
- 	for (ldCount = 0; ldCount < MAX_LOGICAL_DRIVES_EXT; ldCount++) {
- 		ld = MR_TargetIdToLdGet(ldCount, drv_map);
--		if (ld >= MAX_LOGICAL_DRIVES_EXT) {
-+		if (ld >= MAX_LOGICAL_DRIVES_EXT - 1) {
- 			lbInfo[ldCount].loadBalanceFlag = 0;
- 			continue;
- 		}
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index f74b5ea24f0f..49eaa87608f6 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -2832,7 +2832,7 @@ static void megasas_build_ld_nonrw_fusion(struct megasas_instance *instance,
- 		device_id < instance->fw_supported_vd_count)) {
- 
- 		ld = MR_TargetIdToLdGet(device_id, local_map_ptr);
--		if (ld >= instance->fw_supported_vd_count)
-+		if (ld >= instance->fw_supported_vd_count - 1)
- 			fp_possible = 0;
- 		else {
- 			raid = MR_LdRaidGet(ld, local_map_ptr);
--- 
-2.17.2 (Apple Git-113)
+>
+>> +	if (hisi_hba->enable_dif) {
+>> +		dev_info(dev, "Registering for DIF type 1/2/3 protection.\n");
+>> +		prot |=	SHOST_DIF_TYPE1_PROTECTION |
+>> +			SHOST_DIF_TYPE2_PROTECTION |
+>> +			SHOST_DIF_TYPE3_PROTECTION;
+>> +	}
+>> +
+>> +	scsi_host_set_prot(hisi_hba->shost, prot);
+>
+> I'm not so keen on this enable_dif/enable_dix business in module
+> parameters. I suggest you just allow the user to specify the host
+> protection mask instead of having a layer of indirection.
+>
+
+Fine, we can let the user select the mask. However, for now, I would 
+like to keep default at off. When soaks a bit, we can make default on @ 0x7.
+
+Cheers,
+John
