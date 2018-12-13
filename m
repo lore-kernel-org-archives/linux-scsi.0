@@ -1,24 +1,48 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v4 0/5]  hisi_sas: DIF support
-Date: Wed, 12 Dec 2018 21:23:51 -0500
-Message-ID: <yq1k1kego5k.fsf@oracle.com>
-References: <1544103284-100497-1-git-send-email-john.garry@huawei.com>
+From: Sasha Levin <sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 04/73] scsi: libiscsi: Fix NULL pointer dereference in iscsi_eh_session_reset
+Date: Wed, 12 Dec 2018 23:27:29 -0500
+Message-ID: <20181213042838.75160-4-sashal@kernel.org>
+References: <20181213042838.75160-1-sashal@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1544103284-100497-1-git-send-email-john.garry@huawei.com> (John
-        Garry's message of "Thu, 6 Dec 2018 21:34:39 +0800")
-Sender: linux-kernel-owner@vger.kernel.org
-To: John Garry <john.garry@huawei.com>
-Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linuxarm@huawei.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Transfer-Encoding: 8bit
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20181213042838.75160-1-sashal@kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc: Fred Herard <fred.herard@oracle.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+From: Fred Herard <fred.herard@oracle.com>
 
-John,
+[ Upstream commit 5db6dd14b31397e8cccaaddab2ff44ebec1acf25 ]
 
-> This patchset introduces support to the driver for DIF/DIX.
+This commit addresses NULL pointer dereference in iscsi_eh_session_reset.
+Reference should not be made to session->leadconn when session->state is
+set to ISCSI_STATE_TERMINATE.
 
-Applied 1-3 to 4.21/scsi-queue.
+Signed-off-by: Fred Herard <fred.herard@oracle.com>
+Reviewed-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Reviewed-by: Lee Duncan <lduncan@suse.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/scsi/libiscsi.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index 93c66ebad907..f78d2e5c1471 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -2416,8 +2416,8 @@ int iscsi_eh_session_reset(struct scsi_cmnd *sc)
+ failed:
+ 		ISCSI_DBG_EH(session,
+ 			     "failing session reset: Could not log back into "
+-			     "%s, %s [age %d]\n", session->targetname,
+-			     conn->persistent_address, session->age);
++			     "%s [age %d]\n", session->targetname,
++			     session->age);
+ 		spin_unlock_bh(&session->frwd_lock);
+ 		mutex_unlock(&session->eh_mutex);
+ 		return FAILED;
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+2.19.1
