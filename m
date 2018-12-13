@@ -1,11 +1,13 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 3.18 01/16] scsi: libiscsi: Fix NULL pointer dereference in iscsi_eh_session_reset
-Date: Wed, 12 Dec 2018 23:33:28 -0500
-Message-ID: <20181213043343.76896-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.4 02/23] scsi: libiscsi: Fix NULL pointer dereference in iscsi_eh_session_reset
+Date: Wed, 12 Dec 2018 23:32:38 -0500
+Message-ID: <20181213043259.76643-2-sashal@kernel.org>
+References: <20181213043259.76643-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
-Sender: stable-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20181213043259.76643-1-sashal@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc: Fred Herard <fred.herard@oracle.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -28,10 +30,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 857bf9417817..56441a5ec3d7 100644
+index a74f8fbefd33..009a2ef829d6 100644
 --- a/drivers/scsi/libiscsi.c
 +++ b/drivers/scsi/libiscsi.c
-@@ -2433,8 +2433,8 @@ int iscsi_eh_session_reset(struct scsi_cmnd *sc)
+@@ -2416,8 +2416,8 @@ int iscsi_eh_session_reset(struct scsi_cmnd *sc)
  failed:
  		ISCSI_DBG_EH(session,
  			     "failing session reset: Could not log back into "
