@@ -1,601 +1,688 @@
-From: Anatoliy Glagolev <glagolig@gmail.com>
-Subject: [PATCH v2] scsi: qla2xxx: pci error handler sync
-Date: Thu, 13 Dec 2018 12:29:08 -0700
-Message-ID: <1544729348-7286-1-git-send-email-glagolig@gmail.com>
-References: <1544212602-28085-1-git-send-email-glagolig@gmail.com>
+From: Ladvine D Almeida <ladvine.dalmeida@synopsys.com>
+Subject: Re: [PATCH 2/2] scsi: ufs: add inline crypto support to UFS HCD
+Date: Thu, 13 Dec 2018 19:39:33 +0000
+Message-ID: <BD7FB879CC136E419544C8E2AE7B9C30227EE5@IN01WEMBXA.internal.synopsys.com>
+References: <20181211095027.GA3316@lvlogina.cadence.com>
+ <20181211181647.GC221175@gmail.com>
+ <CO2PR07MB2469AD9C0A121EBF94129A11C1A70@CO2PR07MB2469.namprd07.prod.outlook.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1544212602-28085-1-git-send-email-glagolig@gmail.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: qla2xxx-upstream@qlogic.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com, kmahlkuc@linux.vnet.ibm.com, benh@au1.ibm.com, aglagolev@purestorage.com
-Cc: Anatoliy Glagolev <glagolig@gmail.com>
+To: Parshuram Raju Thombare <pthombar@cadence.com>, Eric Biggers <ebiggers@kernel.org>
+Cc: "axboe@kernel.dk" <axboe@kernel.dk>, "vinholikatti@gmail.com" <vinholikatti@gmail.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "mchehab+samsung@kernel.org" <mchehab+samsung@kernel.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "davem@davemloft.net" <davem@davemloft.net>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "nicolas.ferre@microchip.com" <nicolas.ferre@microchip.com>, "arnd@arndb.de" <arnd@arndb.de>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Alan Douglas <adouglas@cadence.com>, Janek Kotas <jank@cadence.com>, Rafal
 List-Id: linux-scsi@vger.kernel.org
 
-qla2x00_disable_board_on_pci_error and PCI error handlers may run
-in parallel. Specifically, I observed qla2xxx_pci_slot_reset running
-at around the same moment as qla2x00_disable_board_on_pci_error.
-If scsi_qla_host_t or qla_hw_data structs are removed before an error
-handler completes, the handler crashes.
-
-This patch provides syncronization of paths deleting PCI device
-specific structs and PCI error handlers, so that the handlers
-always run race-free.
-
-Under the most generic assumptions about the PCI error handling
-the handlers may run at any moment between pci_register_driver
-and pci_unregister_driver. Then we have to maintain per-pci_dev
-context with the state of in-flight handlers and the driver
-structures associated with pci_dev. The contet outlives both
-the structs and the pci_dev.
-
-Signed-off-by: Anatoliy Glagolev <glagolig@gmail.com>
----
- drivers/scsi/qla2xxx/Makefile                |   3 +-
- drivers/scsi/qla2xxx/qla_os.c                | 117 +++++++++++----
- drivers/scsi/qla2xxx/qla_pci_error_handler.c | 212 +++++++++++++++++++++++++++
- drivers/scsi/qla2xxx/qla_pci_error_handler.h |  46 ++++++
- 4 files changed, 352 insertions(+), 26 deletions(-)
- create mode 100644 drivers/scsi/qla2xxx/qla_pci_error_handler.c
- create mode 100644 drivers/scsi/qla2xxx/qla_pci_error_handler.h
-
-diff --git a/drivers/scsi/qla2xxx/Makefile b/drivers/scsi/qla2xxx/Makefile
-index 17d5bc1..04f41d6 100644
---- a/drivers/scsi/qla2xxx/Makefile
-+++ b/drivers/scsi/qla2xxx/Makefile
-@@ -1,7 +1,8 @@
- # SPDX-License-Identifier: GPL-2.0
- qla2xxx-y := qla_os.o qla_init.o qla_mbx.o qla_iocb.o qla_isr.o qla_gs.o \
- 		qla_dbg.o qla_sup.o qla_attr.o qla_mid.o qla_dfs.o qla_bsg.o \
--		qla_nx.o qla_mr.o qla_nx2.o qla_target.o qla_tmpl.o qla_nvme.o
-+		qla_nx.o qla_mr.o qla_nx2.o qla_target.o qla_tmpl.o qla_nvme.o \
-+		qla_pci_error_handler.o
- 
- obj-$(CONFIG_SCSI_QLA_FC) += qla2xxx.o
- obj-$(CONFIG_TCM_QLA2XXX) += tcm_qla2xxx.o
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index e881fce..37ee188 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -20,6 +20,7 @@
- #include <scsi/scsi_transport_fc.h>
- 
- #include "qla_target.h"
-+#include "qla_pci_error_handler.h"
- 
- /*
-  * Driver version
-@@ -2775,9 +2776,6 @@ static void qla2x00_iocb_work_fn(struct work_struct *work)
- 			return ret;
- 	}
- 
--	/* This may fail but that's ok */
--	pci_enable_pcie_error_reporting(pdev);
--
- 	ha = kzalloc(sizeof(struct qla_hw_data), GFP_KERNEL);
- 	if (!ha) {
- 		ql_log_pci(ql_log_fatal, pdev, 0x0009,
-@@ -3091,6 +3089,14 @@ static void qla2x00_iocb_work_fn(struct work_struct *work)
- 	    host->max_cmd_len, host->max_channel, host->max_lun,
- 	    host->transportt, sht->vendor_id);
- 
-+	/* This may fail but that's ok */
-+	ret = qla_enable_pci_error_handler(pdev);
-+	if (ret) {
-+		ql_log_pci(ql_log_fatal, pdev, 0x0031,
-+			"qla_enable_pci_error_handler failed\n");
-+		ret = 0;
-+	}
-+
- 	INIT_WORK(&base_vha->iocb_work, qla2x00_iocb_work_fn);
- 
- 	/* Set up the irqs */
-@@ -3400,6 +3406,8 @@ static void qla2x00_iocb_work_fn(struct work_struct *work)
- 		kthread_stop(t);
- 	}
- 
-+	qla_disable_pci_error_handler(pdev);
-+
- 	qla2x00_free_device(base_vha);
- 	scsi_host_put(base_vha->host);
- 	/*
-@@ -3625,6 +3633,8 @@ static void qla2x00_iocb_work_fn(struct work_struct *work)
- 	}
- 	qla2x00_wait_for_hba_ready(base_vha);
- 
-+	qla_disable_pci_error_handler(pdev);
-+
- 	qla2x00_wait_for_sess_deletion(base_vha);
- 
- 	/*
-@@ -3698,8 +3708,6 @@ static void qla2x00_iocb_work_fn(struct work_struct *work)
- 	pci_release_selected_regions(ha->pdev, ha->bars);
- 	kfree(ha);
- 
--	pci_disable_pcie_error_reporting(pdev);
--
- 	pci_disable_device(pdev);
- }
- 
-@@ -5826,6 +5834,8 @@ void qla2x00_relogin(struct scsi_qla_host *vha)
- 		return;
- 	}
- 
-+	qla_disable_pci_error_handler(pdev);
-+
- 	qla2x00_wait_for_sess_deletion(base_vha);
- 
- 	set_bit(UNLOADING, &base_vha->dpc_flags);
-@@ -5866,7 +5876,6 @@ void qla2x00_relogin(struct scsi_qla_host *vha)
- 	qla2x00_unmap_iobases(ha);
- 
- 	pci_release_selected_regions(ha->pdev, ha->bars);
--	pci_disable_pcie_error_reporting(pdev);
- 	pci_disable_device(pdev);
- 
- 	/*
-@@ -6543,8 +6552,15 @@ struct fw_blob *
- static pci_ers_result_t
- qla2xxx_pci_error_detected(struct pci_dev *pdev, pci_channel_state_t state)
- {
--	scsi_qla_host_t *vha = pci_get_drvdata(pdev);
--	struct qla_hw_data *ha = vha->hw;
-+	scsi_qla_host_t *vha;
-+	struct qla_hw_data *ha;
-+	pci_ers_result_t ret = PCI_ERS_RESULT_DISCONNECT;
-+
-+	if (qla_on_pci_error_handler_entry(pdev) != 0)
-+		return ret;
-+
-+	vha = pci_get_drvdata(pdev);
-+	ha = vha->hw;
- 
- 	ql_dbg(ql_dbg_aer, vha, 0x9000,
- 	    "PCI error detected, state %x.\n", state);
-@@ -6552,7 +6568,8 @@ struct fw_blob *
- 	if (!atomic_read(&pdev->enable_cnt)) {
- 		ql_log(ql_log_info, vha, 0xffff,
- 			"PCI device is disabled,state %x\n", state);
--		return PCI_ERS_RESULT_NEED_RESET;
-+		ret = PCI_ERS_RESULT_NEED_RESET;
-+		goto exit_error_detected;
- 	}
- 
- 	switch (state) {
-@@ -6562,7 +6579,8 @@ struct fw_blob *
- 			set_bit(QPAIR_ONLINE_CHECK_NEEDED, &vha->dpc_flags);
- 			qla2xxx_wake_dpc(vha);
- 		}
--		return PCI_ERS_RESULT_CAN_RECOVER;
-+		ret = PCI_ERS_RESULT_CAN_RECOVER;
-+		break;
- 	case pci_channel_io_frozen:
- 		ha->flags.eeh_busy = 1;
- 		/* For ISP82XX complete any pending mailbox cmd */
-@@ -6579,7 +6597,8 @@ struct fw_blob *
- 			set_bit(QPAIR_ONLINE_CHECK_NEEDED, &vha->dpc_flags);
- 			qla2xxx_wake_dpc(vha);
- 		}
--		return PCI_ERS_RESULT_NEED_RESET;
-+		ret = PCI_ERS_RESULT_NEED_RESET;
-+		break;
- 	case pci_channel_io_perm_failure:
- 		ha->flags.pci_channel_io_perm_failure = 1;
- 		qla2x00_abort_all_cmds(vha, DID_NO_CONNECT << 16);
-@@ -6587,9 +6606,15 @@ struct fw_blob *
- 			set_bit(QPAIR_ONLINE_CHECK_NEEDED, &vha->dpc_flags);
- 			qla2xxx_wake_dpc(vha);
- 		}
--		return PCI_ERS_RESULT_DISCONNECT;
-+		ret = PCI_ERS_RESULT_DISCONNECT;
-+		break;
-+	default:
-+		ret = PCI_ERS_RESULT_NEED_RESET;
- 	}
--	return PCI_ERS_RESULT_NEED_RESET;
-+
-+exit_error_detected:
-+	qla_on_pci_error_handler_exit(pdev);
-+	return ret;
- }
- 
- static pci_ers_result_t
-@@ -6598,13 +6623,24 @@ struct fw_blob *
- 	int risc_paused = 0;
- 	uint32_t stat;
- 	unsigned long flags;
--	scsi_qla_host_t *base_vha = pci_get_drvdata(pdev);
--	struct qla_hw_data *ha = base_vha->hw;
--	struct device_reg_2xxx __iomem *reg = &ha->iobase->isp;
--	struct device_reg_24xx __iomem *reg24 = &ha->iobase->isp24;
-+	pci_ers_result_t ret;
-+	scsi_qla_host_t *base_vha;
-+	struct qla_hw_data *ha;
-+	struct device_reg_2xxx __iomem *reg;
-+	struct device_reg_24xx __iomem *reg24;
- 
--	if (IS_QLA82XX(ha))
--		return PCI_ERS_RESULT_RECOVERED;
-+	if (qla_on_pci_error_handler_entry(pdev) != 0)
-+		return PCI_ERS_RESULT_DISCONNECT;
-+
-+	base_vha = pci_get_drvdata(pdev);
-+	ha = base_vha->hw;
-+	reg = &ha->iobase->isp;
-+	reg24 = &ha->iobase->isp24;
-+
-+	if (IS_QLA82XX(ha)) {
-+		ret = PCI_ERS_RESULT_RECOVERED;
-+		goto exit_mmio_enabled;
-+	}
- 
- 	spin_lock_irqsave(&ha->hardware_lock, flags);
- 	if (IS_QLA2100(ha) || IS_QLA2200(ha)){
-@@ -6627,9 +6663,13 @@ struct fw_blob *
- 		    "RISC paused -- mmio_enabled, Dumping firmware.\n");
- 		ha->isp_ops->fw_dump(base_vha, 0);
- 
--		return PCI_ERS_RESULT_NEED_RESET;
-+		ret = PCI_ERS_RESULT_NEED_RESET;
- 	} else
--		return PCI_ERS_RESULT_RECOVERED;
-+		ret = PCI_ERS_RESULT_RECOVERED;
-+
-+exit_mmio_enabled:
-+	qla_on_pci_error_handler_exit(pdev);
-+	return ret;
- }
- 
- static uint32_t
-@@ -6744,11 +6784,17 @@ struct fw_blob *
- qla2xxx_pci_slot_reset(struct pci_dev *pdev)
- {
- 	pci_ers_result_t ret = PCI_ERS_RESULT_DISCONNECT;
--	scsi_qla_host_t *base_vha = pci_get_drvdata(pdev);
--	struct qla_hw_data *ha = base_vha->hw;
-+	scsi_qla_host_t *base_vha;
-+	struct qla_hw_data *ha;
- 	struct rsp_que *rsp;
- 	int rc, retries = 10;
- 
-+	if (qla_on_pci_error_handler_entry(pdev) != 0)
-+		return ret;
-+
-+	base_vha = pci_get_drvdata(pdev);
-+	ha = base_vha->hw;
-+
- 	ql_dbg(ql_dbg_aer, base_vha, 0x9004,
- 	    "Slot Reset.\n");
- 
-@@ -6804,15 +6850,23 @@ struct fw_blob *
- 	ql_dbg(ql_dbg_aer, base_vha, 0x900e,
- 	    "slot_reset return %x.\n", ret);
- 
-+	qla_on_pci_error_handler_exit(pdev);
-+
- 	return ret;
- }
- 
- static void
- qla2xxx_pci_resume(struct pci_dev *pdev)
- {
--	scsi_qla_host_t *base_vha = pci_get_drvdata(pdev);
--	struct qla_hw_data *ha = base_vha->hw;
- 	int ret;
-+	scsi_qla_host_t *base_vha;
-+	struct qla_hw_data *ha;
-+
-+	if (qla_on_pci_error_handler_entry(pdev) != 0)
-+		return;
-+
-+	base_vha = pci_get_drvdata(pdev);
-+	ha = base_vha->hw;
- 
- 	ql_dbg(ql_dbg_aer, base_vha, 0x900f,
- 	    "pci_resume.\n");
-@@ -6826,6 +6880,7 @@ struct fw_blob *
- 	pci_cleanup_aer_uncorrect_error_status(pdev);
- 
- 	ha->flags.eeh_busy = 0;
-+	qla_on_pci_error_handler_exit(pdev);
- }
- 
- static int qla2xxx_map_queues(struct Scsi_Host *shost)
-@@ -6959,8 +7014,19 @@ static int qla2xxx_map_queues(struct Scsi_Host *shost)
- 	ql_log(ql_log_info, NULL, 0x0005,
- 	    "QLogic Fibre Channel HBA Driver: %s.\n",
- 	    qla2x00_version_str);
-+	ret = qla_init_pci_error_handlers();
-+	if (ret) {
-+		kmem_cache_destroy(srb_cachep);
-+		qlt_exit();
-+		fc_release_transport(qla2xxx_transport_template);
-+		fc_release_transport(qla2xxx_transport_vport_template);
-+		ql_log(ql_log_fatal, NULL, 0x0006,
-+		    "qla_init_pci_error_handlers failed.\n");
-+		return -ENOMEM;
-+	}
- 	ret = pci_register_driver(&qla2xxx_pci_driver);
- 	if (ret) {
-+		qla_cleanup_pci_error_handlers();
- 		kmem_cache_destroy(srb_cachep);
- 		qlt_exit();
- 		fc_release_transport(qla2xxx_transport_template);
-@@ -6980,6 +7046,7 @@ static int qla2xxx_map_queues(struct Scsi_Host *shost)
- {
- 	unregister_chrdev(apidev_major, QLA2XXX_APIDEV);
- 	pci_unregister_driver(&qla2xxx_pci_driver);
-+	qla_cleanup_pci_error_handlers();
- 	qla2x00_release_firmware();
- 	kmem_cache_destroy(srb_cachep);
- 	qlt_exit();
-diff --git a/drivers/scsi/qla2xxx/qla_pci_error_handler.c b/drivers/scsi/qla2xxx/qla_pci_error_handler.c
-new file mode 100644
-index 0000000..454aa1c
---- /dev/null
-+++ b/drivers/scsi/qla2xxx/qla_pci_error_handler.c
-@@ -0,0 +1,212 @@
-+// SPDX-License-Identifier: LGPL-2.1+
-+
-+/*
-+ * The implementation part of PCIe error handler sync helpers
-+ * for Qlogic FC adapter driver to guarantee race-free handler completion
-+ * prior to releasing the driver contexts associated with PCI devices.
-+ */
-+
-+#include "qla_pci_error_handler.h"
-+
-+#include <linux/aer.h>
-+#include <linux/semaphore.h>
-+#include <linux/spinlock.h>
-+
-+/*
-+ * State of the whole implementation: array of per-device contexts, its lock.
-+ */
-+struct qla_pci_error_handler_state {
-+	/* Spinlock for access synchronization */
-+	spinlock_t lock;
-+	/* Array size */
-+	int dev_count;
-+	/* Count of valid contexts in the array */
-+	int dev_index;
-+	/* Pointer to buffers storing contexts */
-+	struct qla_pci_error_handler_dev_context *contexts;
-+};
-+
-+static struct qla_pci_error_handler_state state;
-+
-+#define QLA_DEFAULT_PCI_DEV_COUNT 8
-+
-+/*
-+ * Per-PCI-device context.
-+ */
-+struct qla_pci_error_handler_dev_context {
-+	/* The device */
-+	struct pci_dev *dev;
-+	/* ..disable.. calls wait on this semaphore for callbacks in-flight */
-+	struct semaphore sem;
-+	/* Callbacks in-flight */
-+	int callback_count;
-+	/* ..disable.. calls waiting for callbacks in-flight */
-+	int waiter_count;
-+	/* true if ..disable.. call was invoked */
-+	bool disabled;
-+};
-+
-+/*
-+ * Runs before any PCI callbacks are possible (before pci_register_driver).
-+ * Initializes the state. Returns 0 on success.
-+ */
-+int qla_init_pci_error_handlers(void)
-+{
-+	spin_lock_init(&state.lock);
-+	state.contexts = kzalloc(sizeof(
-+		struct qla_pci_error_handler_dev_context) *
-+			QLA_DEFAULT_PCI_DEV_COUNT, GFP_KERNEL);
-+	if (!state.contexts)
-+		return -1;
-+	state.dev_count = QLA_DEFAULT_PCI_DEV_COUNT;
-+	return 0;
-+}
-+
-+/*
-+ * Runs after any PCI callbacks are possible and all PCI-related work threads
-+ * are joined (after pci_unregister_driver). Thus no ..endble.., ..disable..
-+ * calls or PCI callbacks can run in parallel with this function. Cleans up
-+ * the state, frees the buffer holding per-pci_dev contexts.
-+ */
-+void qla_cleanup_pci_error_handlers(void)
-+{
-+	kfree(state.contexts);
-+}
-+
-+/*
-+ * Enables PCI error callbacks for 'dev'. (Before this call, any
-+ * PCI handler callbacks bypass the functions defined by the driver.)
-+ * Returns 0 on success.
-+ */
-+int qla_enable_pci_error_handler(struct pci_dev *dev)
-+{
-+	unsigned long flags = 0;
-+
-+	spin_lock_irqsave(&state.lock, flags);
-+	if (state.dev_index == state.dev_count) {
-+		/*
-+		 * We are out of space in the per-'dev' context buffer.
-+		 * Re-allocating twice the old size.
-+		 */
-+		struct qla_pci_error_handler_dev_context *new_contexts;
-+
-+		new_contexts = krealloc(state.contexts,
-+			sizeof(struct qla_pci_error_handler_dev_context) *
-+				state.dev_count * 2,
-+			GFP_ATOMIC);
-+		if (!new_contexts) {
-+			spin_unlock_irqrestore(&state.lock, flags);
-+			return -1;
-+		}
-+		state.contexts = new_contexts;
-+		memset(state.contexts + state.dev_count, 0,
-+			sizeof(struct qla_pci_error_handler_dev_context) *
-+				state.dev_count);
-+		state.dev_count *= 2;
-+	}
-+	state.contexts[state.dev_index].dev = dev;
-+	sema_init(&state.contexts[state.dev_index].sem, 0);
-+	++state.dev_index;
-+	spin_unlock_irqrestore(&state.lock, flags);
-+
-+	return pci_enable_pcie_error_reporting(dev);
-+}
-+
-+/*
-+ * Disables future PCI error callbacks for 'dev'. Blocks for in-flight
-+ * callbacks. On return from this call, any in-flight callbacks are gone
-+ * and no future callbacks are possible.
-+ */
-+void qla_disable_pci_error_handler(struct pci_dev *dev)
-+{
-+	unsigned long flags = 0;
-+	int i;
-+	struct qla_pci_error_handler_dev_context *context = NULL;
-+	struct semaphore *p = NULL;
-+
-+	pci_disable_pcie_error_reporting(dev);
-+
-+	spin_lock_irqsave(&state.lock, flags);
-+	for (i = 0; i < state.dev_index; ++i) {
-+		if (state.contexts[i].dev == dev) {
-+			context = state.contexts + i;
-+			break;
-+		}
-+	}
-+	if (!context) {
-+		spin_unlock_irqrestore(&state.lock, flags);
-+		return;
-+	}
-+	context->disabled = 1;
-+	if (context->callback_count != 0) {
-+		++context->waiter_count;
-+		p = &context->sem;
-+	}
-+	spin_unlock_irqrestore(&state.lock, flags);
-+	if (p)
-+		down(p);
-+}
-+
-+/*
-+ * Runs on PCI error callback entry. Looks up per-'dev' context,
-+ * if callbacks have not been disabled, increments the callback
-+ * count and returns 0. Then the the driver-defined callback goes
-+ * on. If the context is not found or it has been disabled,
-+ * returns -1 and the the driver-defined callback returns right away.
-+ */
-+int qla_on_pci_error_handler_entry(struct pci_dev *dev)
-+{
-+	unsigned long flags = 0;
-+	struct qla_pci_error_handler_dev_context *context = NULL;
-+	int i;
-+	int ret = 0;
-+
-+	spin_lock_irqsave(&state.lock, flags);
-+	for (i = 0; i < state.dev_index; ++i) {
-+		if (state.contexts[i].dev == dev) {
-+			context = state.contexts + i;
-+			break;
-+		}
-+	}
-+	if (!context || context->disabled)
-+		ret = -1;
-+	else
-+		++context->callback_count;
-+	spin_unlock_irqrestore(&state.lock, flags);
-+	return ret;
-+}
-+
-+/*
-+ * Runs on PCI error callback exit, if the entry allowed running the
-+ * driver-defined callback. Decrements the in-flight callback count.
-+ * If there are any waiting ..disable.. calls, signals the semaphore
-+ * to unblock those calls.
-+ */
-+void qla_on_pci_error_handler_exit(struct pci_dev *dev)
-+{
-+	unsigned long flags = 0;
-+	struct qla_pci_error_handler_dev_context *context = NULL;
-+	int i;
-+	struct semaphore *p = NULL;
-+	int waiters = 0;
-+
-+	spin_lock_irqsave(&state.lock, flags);
-+	for (i = 0; i < state.dev_index; ++i) {
-+		if (state.contexts[i].dev == dev) {
-+			context = state.contexts + i;
-+			break;
-+		}
-+	}
-+	if (context) {
-+		--context->callback_count;
-+		if (!context->callback_count && context->disabled) {
-+			waiters = context->waiter_count;
-+			p = &context->sem;
-+			context->dev = NULL;
-+		}
-+	}
-+	spin_unlock_irqrestore(&state.lock, flags);
-+	for (i = 0; i < waiters; ++i)
-+		down(p);
-+}
-+
-diff --git a/drivers/scsi/qla2xxx/qla_pci_error_handler.h b/drivers/scsi/qla2xxx/qla_pci_error_handler.h
-new file mode 100644
-index 0000000..9130c14
---- /dev/null
-+++ b/drivers/scsi/qla2xxx/qla_pci_error_handler.h
-@@ -0,0 +1,46 @@
-+/* SPDX-License-Identifier: LGPL-2.1+
-+ *
-+ * PCI error handler synchronization helpers for Qlogic FC adapter driver
-+ * to guarantee race-free handler completion prior to releasing
-+ * the driver contexts associated with PCI devices.
-+ */
-+
-+#ifndef __QLA_PCI_ERROR_HANDLER_H
-+#define __QLA_PCI_ERROR_HANDLER_H
-+
-+#include <linux/pci.h>
-+
-+/* Initialization; runs before any PCI callbacks */
-+int qla_init_pci_error_handlers(void);
-+
-+/* Cleanup; runs after any PCI callbacks */
-+void qla_cleanup_pci_error_handlers(void);
-+
-+/* Enables PCI error callbacks for 'dev' */
-+int qla_enable_pci_error_handler(struct pci_dev *dev);
-+
-+/* Disables PCI error callbacks for 'dev' */
-+void qla_disable_pci_error_handler(struct pci_dev *dev);
-+
-+/*
-+ * Called by PCI error callbacks on callback entry.
-+ * Returns 0 if the callback is allowed to proceed.
-+ */
-+int qla_on_pci_error_handler_entry(struct pci_dev *dev);
-+
-+/* Called by PCI error callbacks on callback exit */
-+void qla_on_pci_error_handler_exit(struct pci_dev *dev);
-+
-+/*
-+ * Usage: assume that we want to define 'pci_resume' PCI error handler callback.
-+ *
-+ * void qla_pci_resume(struct pci_dev *dev)
-+ * {
-+ *         if (qla_on_pci_error_handler_entry(dev) != 0)
-+ *                 return;
-+ *         ... code here ...
-+ *         qla_on_pci_error_handler_exit(dev);
-+ * }
-+ */
-+
-+#endif
--- 
-1.9.1
+On 12/12/18 5:52 AM, Parshuram Raju Thombare wrote:=0A=
+> Hello Eric,=0A=
+> =0A=
+> Thank you for a comment.=0A=
+> =0A=
+>> -----Original Message-----=0A=
+>> From: Eric Biggers <ebiggers@kernel.org>=0A=
+>> Sent: Tuesday, December 11, 2018 11:47 PM=0A=
+>> To: Parshuram Raju Thombare <pthombar@cadence.com>=0A=
+>> Cc: axboe@kernel.dk; vinholikatti@gmail.com; jejb@linux.vnet.ibm.com;=0A=
+>> martin.petersen@oracle.com; mchehab+samsung@kernel.org;=0A=
+>> gregkh@linuxfoundation.org; davem@davemloft.net; akpm@linux-=0A=
+>> foundation.org; nicolas.ferre@microchip.com; arnd@arndb.de; linux-=0A=
+>> kernel@vger.kernel.org; linux-block@vger.kernel.org; linux-=0A=
+>> scsi@vger.kernel.org; Alan Douglas <adouglas@cadence.com>; Janek Kotas=
+=0A=
+>> <jank@cadence.com>; Rafal Ciepiela <rafalc@cadence.com>; AnilKumar=0A=
+>> Chimata <anilc@codeaurora.org>; Ladvine D Almeida <ladvine@synopsys.com>=
+;=0A=
+>> Satya Tangirala <satyat@google.com>; Paul Crowley=0A=
+>> <paulcrowley@google.com>=0A=
+>> Subject: Re: [PATCH 2/2] scsi: ufs: add inline crypto support to UFS HCD=
+=0A=
+>>=0A=
+>> EXTERNAL MAIL=0A=
+>>=0A=
+>>=0A=
+>> [+Cc other people who have been working on this]=0A=
+Eric, Thanks for cc-ing me to the mail chain.=0A=
+=0A=
+Parshuram,=0A=
+Glad to know that you are working on the Inline Encryption support.=0A=
+My concerns are mentioned inline below.=0A=
+=0A=
+>>=0A=
+>>=0A=
+>>=0A=
+>> Hi Parshuram,=0A=
+>>=0A=
+>>=0A=
+>>=0A=
+>> On Tue, Dec 11, 2018 at 09:50:27AM +0000, Parshuram Thombare wrote:=0A=
+>>=0A=
+>>> Add real time crypto support to UFS HCD using new device=0A=
+>>=0A=
+>>> mapper 'crypto-ufs'. dmsetup tool can be used to enable=0A=
+>>=0A=
+>>> real time / inline crypto support using device mapper=0A=
+>>=0A=
+>>> 'crypt-ufs'.=0A=
+=0A=
+Where is Crypto target 'crypto-ufs' implementation available? Did you=0A=
+submitted any other patch for the same?=0A=
+Also, it is better to provide a generic name as the target is valid for=0A=
+all other block devices.=0A=
+=0A=
+>>=0A=
+>>>=0A=
+>>=0A=
+>>> Signed-off-by: Parshuram Thombare <pthombar@cadence.com>=0A=
+>>=0A=
+>>> ---=0A=
+>>=0A=
+>>>  MAINTAINERS                      |    7 +=0A=
+>>=0A=
+>>>  block/Kconfig                    |    5 +=0A=
+>>=0A=
+>>>  drivers/scsi/ufs/Kconfig         |   12 +=0A=
+>>=0A=
+>>>  drivers/scsi/ufs/Makefile        |    1 +=0A=
+>>=0A=
+>>>  drivers/scsi/ufs/ufshcd-crypto.c |  453=0A=
+>> ++++++++++++++++++++++++++++++++++++++=0A=
+>>=0A=
+>>>  drivers/scsi/ufs/ufshcd-crypto.h |  102 +++++++++=0A=
+>>=0A=
+>>>  drivers/scsi/ufs/ufshcd.c        |   27 +++-=0A=
+>>=0A=
+>>>  drivers/scsi/ufs/ufshcd.h        |    6 +=0A=
+>>=0A=
+>>>  drivers/scsi/ufs/ufshci.h        |    1 +=0A=
+>>=0A=
+>>>  9 files changed, 613 insertions(+), 1 deletions(-)=0A=
+>>=0A=
+>>>  create mode 100644 drivers/scsi/ufs/ufshcd-crypto.c=0A=
+>>=0A=
+>>>  create mode 100644 drivers/scsi/ufs/ufshcd-crypto.h=0A=
+>>=0A=
+>>>=0A=
+>>=0A=
+>>> diff --git a/MAINTAINERS b/MAINTAINERS=0A=
+>>=0A=
+>>> index f485597..3a68126 100644=0A=
+>>=0A=
+>>> --- a/MAINTAINERS=0A=
+>>=0A=
+>>> +++ b/MAINTAINERS=0A=
+>>=0A=
+>>> @@ -15340,6 +15340,13 @@ S:	Supported=0A=
+>>=0A=
+>>>  F:	Documentation/scsi/ufs.txt=0A=
+>>=0A=
+>>>  F:	drivers/scsi/ufs/=0A=
+>>=0A=
+>>>=0A=
+>>=0A=
+>>> +UNIVERSAL FLASH STORAGE HOST CONTROLLER CRYPTO DRIVER=0A=
+>>=0A=
+>>> +M:	Parshuram Thombare <pthombar@cadence.com>=0A=
+>>=0A=
+>>> +L:	linux-scsi@vger.kernel.org=0A=
+>>=0A=
+>>> +S:	Supported=0A=
+>>=0A=
+>>> +F:	drivers/scsi/ufs/ufshcd-crypto.c=0A=
+>>=0A=
+>>> +F:	drivers/scsi/ufs/ufshcd-crypto.h=0A=
+>>=0A=
+>>> +=0A=
+>>=0A=
+>>>  UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER DWC HOOKS=0A=
+>>=0A=
+>>>  M:	Joao Pinto <jpinto@synopsys.com>=0A=
+>>=0A=
+>>>  L:	linux-scsi@vger.kernel.org=0A=
+>>=0A=
+>>> diff --git a/block/Kconfig b/block/Kconfig=0A=
+>>=0A=
+>>> index f7045aa..6afe131 100644=0A=
+>>=0A=
+>>> --- a/block/Kconfig=0A=
+>>=0A=
+>>> +++ b/block/Kconfig=0A=
+>>=0A=
+>>> @@ -224,4 +224,9 @@ config BLK_MQ_RDMA=0A=
+>>=0A=
+>>>  config BLK_PM=0A=
+>>=0A=
+>>>  	def_bool BLOCK && PM=0A=
+>>=0A=
+>>>=0A=
+>>=0A=
+>>> +config BLK_DEV_HW_RT_ENCRYPTION=0A=
+>>=0A=
+>>> +	bool=0A=
+>>=0A=
+>>> +	depends on SCSI_UFSHCD_RT_ENCRYPTION=0A=
+>>=0A=
+>>> +	default n=0A=
+>>=0A=
+>>> +=0A=
+>>=0A=
+>>>  source block/Kconfig.iosched=0A=
+>>=0A=
+>>> diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig=0A=
+>>=0A=
+>>> index 2ddbb26..09a3ec0 100644=0A=
+>>=0A=
+>>> --- a/drivers/scsi/ufs/Kconfig=0A=
+>>=0A=
+>>> +++ b/drivers/scsi/ufs/Kconfig=0A=
+>>=0A=
+>>> @@ -136,3 +136,15 @@ config SCSI_UFS_BSG=0A=
+>>=0A=
+>>>=0A=
+>>=0A=
+>>>  	  Select this if you need a bsg device node for your UFS controller.=
+=0A=
+>>=0A=
+>>>  	  If unsure, say N.=0A=
+>>=0A=
+>>> +=0A=
+>>=0A=
+>>> +config SCSI_UFSHCD_RT_ENCRYPTION=0A=
+>>=0A=
+>>> +	bool "Universal Flash Storage Controller RT encryption support"=0A=
+>>=0A=
+>>> +	depends on SCSI_UFSHCD=0A=
+>>=0A=
+>>> +	default n=0A=
+>>=0A=
+>>> +	select BLK_DEV_HW_RT_ENCRYPTION if SCSI_UFSHCD_RT_ENCRYPTION=0A=
+>>=0A=
+>>> +	select BLK_DEV_DM if SCSI_UFSHCD_RT_ENCRYPTION=0A=
+>>=0A=
+>>> +	help=0A=
+>>=0A=
+>>> +	Universal Flash Storage Controller RT encryption support=0A=
+>>=0A=
+>>> +=0A=
+>>=0A=
+>>> +	Select this if you want to enable real time encryption on UFS control=
+ler=0A=
+>>=0A=
+>>> +	If unsure, say N.=0A=
+>>=0A=
+>>> diff --git a/drivers/scsi/ufs/Makefile b/drivers/scsi/ufs/Makefile=0A=
+>>=0A=
+>>> index a3bd70c..6169096 100644=0A=
+>>=0A=
+>>> --- a/drivers/scsi/ufs/Makefile=0A=
+>>=0A=
+>>> +++ b/drivers/scsi/ufs/Makefile=0A=
+>>=0A=
+>>> @@ -7,6 +7,7 @@ obj-$(CONFIG_SCSI_UFS_QCOM) +=3D ufs-qcom.o=0A=
+>>=0A=
+>>>  obj-$(CONFIG_SCSI_UFSHCD) +=3D ufshcd-core.o=0A=
+>>=0A=
+>>>  ufshcd-core-y				+=3D ufshcd.o ufs-sysfs.o=0A=
+>>=0A=
+>>>  ufshcd-core-$(CONFIG_SCSI_UFS_BSG)	+=3D ufs_bsg.o=0A=
+>>=0A=
+>>> +ufshcd-core-$(CONFIG_SCSI_UFSHCD_RT_ENCRYPTION) +=3D ufshcd-crypto.o=
+=0A=
+>>=0A=
+>>>  obj-$(CONFIG_SCSI_UFSHCD_PCI) +=3D ufshcd-pci.o=0A=
+>>=0A=
+>>>  obj-$(CONFIG_SCSI_UFSHCD_PLATFORM) +=3D ufshcd-pltfrm.o=0A=
+>>=0A=
+>>>  obj-$(CONFIG_SCSI_UFS_HISI) +=3D ufs-hisi.o=0A=
+>>=0A=
+>>> diff --git a/drivers/scsi/ufs/ufshcd-crypto.c b/drivers/scsi/ufs/ufshcd=
+-crypto.c=0A=
+>>=0A=
+>>> new file mode 100644=0A=
+>>=0A=
+>>> index 0000000..9c95ff3=0A=
+>>=0A=
+>>> --- /dev/null=0A=
+>>=0A=
+>>> +++ b/drivers/scsi/ufs/ufshcd-crypto.c=0A=
+>>=0A=
+>>> @@ -0,0 +1,453 @@=0A=
+>>=0A=
+>>> +// SPDX-License-Identifier: GPL-2.0=0A=
+>>=0A=
+>>> +/*=0A=
+>>=0A=
+>>> + * UFS Host controller crypto driver=0A=
+>>=0A=
+>>> + *=0A=
+>>=0A=
+>>> + * Copyright (C) 2018 Cadence Design Systems, Inc.=0A=
+>>=0A=
+>>> + *=0A=
+>>=0A=
+>>> + * Authors:=0A=
+>>=0A=
+>>> + *	Parshuram Thombare <pthombar@cadence.com>=0A=
+>>=0A=
+>>> + *=0A=
+>>=0A=
+>>> + */=0A=
+>>=0A=
+>>> +=0A=
+>>=0A=
+>>> +#include <linux/module.h>=0A=
+>>=0A=
+>>> +#include <linux/kernel.h>=0A=
+>>=0A=
+>>> +#include <crypto/aes.h>=0A=
+>>=0A=
+>>> +#include <linux/device-mapper.h>=0A=
+>>=0A=
+>>> +#include "ufshcd.h"=0A=
+>>=0A=
+>>> +#include "ufshcd-crypto.h"=0A=
+>>=0A=
+>>> +#include "scsi/scsi_device.h"=0A=
+>>=0A=
+>>> +#include "scsi/scsi_host.h"=0A=
+>>=0A=
+>>> +=0A=
+>>=0A=
+>>> +struct ufshcd_dm_ctx {=0A=
+>>=0A=
+>>> +	struct dm_dev *dev;=0A=
+>>=0A=
+>>> +	sector_t start;=0A=
+>>=0A=
+>>> +	unsigned short int sector_size;=0A=
+>>=0A=
+>>> +	unsigned char sector_shift;=0A=
+>>=0A=
+>>> +	int cci;=0A=
+>>=0A=
+>>> +	int cap_idx;=0A=
+>>=0A=
+>>> +	char key[AES_MAX_KEY_SIZE];=0A=
+>>=0A=
+>>> +	struct ufs_hba *hba;=0A=
+>>=0A=
+>>> +};=0A=
+>>=0A=
+>>> +=0A=
+>>=0A=
+>>> +static int dm_registered;=0A=
+>>=0A=
+>>> +=0A=
+>>=0A=
+>>> +static inline int=0A=
+>>=0A=
+>>> +ufshcd_key_id_to_len(int key_id)=0A=
+>>=0A=
+>>> +{=0A=
+>>=0A=
+>>> +	int key_len =3D -1;=0A=
+>>=0A=
+>>> +=0A=
+>>=0A=
+>>> +	switch (key_id) {=0A=
+>>=0A=
+>>> +	case UFS_CRYPTO_KEY_ID_128BITS:=0A=
+>>=0A=
+>>> +		key_len =3D AES_KEYSIZE_128;=0A=
+>>=0A=
+>>> +		break;=0A=
+>>=0A=
+>>> +	case UFS_CRYPTO_KEY_ID_192BITS:=0A=
+>>=0A=
+>>> +		key_len =3D AES_KEYSIZE_192;=0A=
+>>=0A=
+>>> +		break;=0A=
+>>=0A=
+>>> +	case UFS_CRYPTO_KEY_ID_256BITS:=0A=
+>>=0A=
+>>> +		key_len =3D AES_KEYSIZE_256;=0A=
+>>=0A=
+>>> +		break;=0A=
+>>=0A=
+>>> +	default:=0A=
+>>=0A=
+>>> +		break;=0A=
+>>=0A=
+>>> +	}=0A=
+>>=0A=
+>>> +	return key_len;=0A=
+>>=0A=
+>>> +}=0A=
+=0A=
+Why not -EINVAL for invalid key length?=0A=
+=0A=
+>>=0A=
+>>> +=0A=
+>>=0A=
+>>> +static inline int=0A=
+>>=0A=
+>>> +ufshcd_key_len_to_id(int key_len)=0A=
+>>=0A=
+>>> +{=0A=
+>>=0A=
+>>> +	int key_id =3D -1;=0A=
+>>=0A=
+>>> +=0A=
+>>=0A=
+>>> +	switch (key_len) {=0A=
+>>=0A=
+>>> +	case AES_KEYSIZE_128:=0A=
+>>=0A=
+>>> +		key_id =3D UFS_CRYPTO_KEY_ID_128BITS;=0A=
+>>=0A=
+>>> +		break;=0A=
+>>=0A=
+>>> +	case AES_KEYSIZE_192:=0A=
+>>=0A=
+>>> +		key_id =3D UFS_CRYPTO_KEY_ID_192BITS;=0A=
+>>=0A=
+>>> +		break;=0A=
+>>=0A=
+>>> +	case AES_KEYSIZE_256:=0A=
+>>=0A=
+>>> +		key_id =3D UFS_CRYPTO_KEY_ID_256BITS;=0A=
+>>=0A=
+>>> +		break;=0A=
+>>=0A=
+>>> +	default:=0A=
+>>=0A=
+>>> +		break;=0A=
+>>=0A=
+>>> +	}=0A=
+>>=0A=
+>>> +	return key_id;=0A=
+>>=0A=
+>>> +}=0A=
+>>=0A=
+>>> +=0A=
+>>=0A=
+>>> +static void=0A=
+>>=0A=
+>>> +ufshcd_read_crypto_capabilities(struct ufs_hba *hba)=0A=
+>>=0A=
+>>> +{=0A=
+>>=0A=
+>>> +	u32 tmp, i;=0A=
+>>=0A=
+>>> +	struct ufshcd_crypto_ctx *cctx =3D hba->cctx;=0A=
+>>=0A=
+>>> +=0A=
+>>=0A=
+>>> +	for (i =3D 0; i < cctx->cap_cnt; i++) {=0A=
+>>=0A=
+>>> +		tmp =3D ufshcd_readl(hba, REG_UFS_CRYPTOCAP + i);=0A=
+>>=0A=
+>>> +		cctx->ccaps[i].key_id =3D (tmp & CRYPTO_CAPS_KS_MASK) >>=0A=
+>>=0A=
+>>> +						CRYPTO_CAPS_KS_SHIFT;=0A=
+>>=0A=
+>>> +		cctx->ccaps[i].sdusb =3D (tmp & CRYPTO_CAPS_SDUSB_MASK) >>=0A=
+>>=0A=
+>>> +						CRYPTO_CAPS_SDUSB_SHIFT;=0A=
+>>=0A=
+>>> +		cctx->ccaps[i].alg_id =3D (tmp & CRYPTO_CAPS_ALG_ID_MASK) >>=0A=
+>>=0A=
+>>> +						CRYPTO_CAPS_ALG_ID_SHIFT;=0A=
+>>=0A=
+>>> +	}=0A=
+>>=0A=
+>>> +}=0A=
+>>=0A=
+>>> +=0A=
+>>=0A=
+>>> +static inline int=0A=
+>>=0A=
+>>> +ufshcd_get_cap_idx(struct ufshcd_crypto_ctx *cctx, int alg_id,=0A=
+>>=0A=
+>>> +	int key_id)=0A=
+>>=0A=
+>>> +{=0A=
+>>=0A=
+>>> +	int cap_idx;=0A=
+>>=0A=
+>>> +=0A=
+>>=0A=
+>>> +	for (cap_idx =3D 0; cap_idx < cctx->cap_cnt; cap_idx++) {=0A=
+>>=0A=
+>>> +		if (((cctx->ccaps[cap_idx].alg_id =3D=3D alg_id) &&=0A=
+>>=0A=
+>>> +			cctx->ccaps[cap_idx].key_id =3D=3D key_id))=0A=
+>>=0A=
+>>> +			break;=0A=
+>>=0A=
+>>> +	}=0A=
+>>=0A=
+>>> +	return ((cap_idx < cctx->cap_cnt) ? cap_idx : -1);=0A=
+>>=0A=
+>>> +}=0A=
+>>=0A=
+>>> +=0A=
+>>=0A=
+>>> +static inline int=0A=
+>>=0A=
+>>> +ufshcd_get_cci_slot(struct ufshcd_crypto_ctx *cctx)=0A=
+>>=0A=
+>>> +{=0A=
+>>=0A=
+>>> +	int  cci;=0A=
+>>=0A=
+>>> +=0A=
+>>=0A=
+>>> +	for (cci =3D 0; cci < cctx->config_cnt; cci++) {=0A=
+>>=0A=
+>>> +		if (!cctx->cconfigs[cci].cfge) {=0A=
+>>=0A=
+>>> +			cctx->cconfigs[cci].cfge =3D 1;=0A=
+>>=0A=
+>>> +			break;=0A=
+>>=0A=
+>>> +		}=0A=
+>>=0A=
+>>> +	}=0A=
+>>=0A=
+>>> +	return ((cci < cctx->config_cnt) ? cci : -1);=0A=
+>>=0A=
+>>> +}=0A=
+>>=0A=
+>>> +=0A=
+>>=0A=
+>>> +static void=0A=
+>>=0A=
+>>> +ufshcd_aes_ecb_set_key(struct ufshcd_dm_ctx *ctx)=0A=
+>>=0A=
+>>> +{=0A=
+>>=0A=
+>>> +	int i, key_size;=0A=
+>>=0A=
+>>> +	u32 val, cconfig16, crypto_config_addr;=0A=
+>>=0A=
+>>> +	struct ufshcd_crypto_ctx *cctx;=0A=
+>>=0A=
+>>> +	struct ufshcd_crypto_config *cconfig;=0A=
+>>=0A=
+>>> +	struct ufshcd_crypto_cap ccap;=0A=
+>>=0A=
+>>> +=0A=
+>>=0A=
+>>> +	cctx =3D ctx->hba->cctx;=0A=
+>>=0A=
+>>> +	if (ctx->cci <=3D 0)=0A=
+>>=0A=
+>>> +		ctx->cci =3D ufshcd_get_cci_slot(cctx);=0A=
+>>=0A=
+>>> +	/* If no slot is available, slot 0 is shared */=0A=
+>>=0A=
+>>> +	ctx->cci =3D ctx->cci < 0 ? 0 : ctx->cci;=0A=
+>>=0A=
+>>> +	cconfig =3D &(cctx->cconfigs[ctx->cci]);=0A=
+>>=0A=
+>>> +	ccap =3D cctx->ccaps[ctx->cap_idx];=0A=
+>>=0A=
+>>> +	key_size =3D ufshcd_key_id_to_len(ccap.key_id);=0A=
+>>=0A=
+>>> +=0A=
+>>=0A=
+>>> +	if ((cconfig->cap_idx !=3D ctx->cap_idx) ||=0A=
+>>=0A=
+>>> +		((key_size > 0) &&=0A=
+>>=0A=
+>>> +		memcmp(cconfig->key, ctx->key, key_size))) {=0A=
+>>=0A=
+>>> +		cconfig->cap_idx =3D ctx->cap_idx;=0A=
+>>=0A=
+>>> +		memcpy(cconfig->key, ctx->key, key_size);=0A=
+>>=0A=
+>>> +		crypto_config_addr =3D cctx->crypto_config_base_addr +=0A=
+>>=0A=
+>>> +				ctx->cci * CRYPTO_CONFIG_SIZE;=0A=
+>>=0A=
+>>> +		cconfig16 =3D ccap.sdusb | (1 <<=0A=
+>> CRYPTO_CCONFIG16_CFGE_SHIFT);=0A=
+>>=0A=
+>>> +		cconfig16 |=3D ((ctx->cap_idx <<=0A=
+>> CRYPTO_CCONFIG16_CAP_IDX_SHIFT) &=0A=
+>>=0A=
+>>> +				CRYPTO_CCONFIG16_CAP_IDX_MASK);=0A=
+>>=0A=
+>>> +		spin_lock(&cctx->crypto_lock);=0A=
+>>=0A=
+>>> +		for (i =3D 0; i < key_size; i +=3D 4) {=0A=
+>>=0A=
+>>> +			val =3D (ctx->key[i] | (ctx->key[i + 1] << 8) |=0A=
+>>=0A=
+>>> +				(ctx->key[i + 2] << 16) |=0A=
+>>=0A=
+>>> +				(ctx->key[i + 3] << 24));=0A=
+>>=0A=
+>>> +			ufshcd_writel(ctx->hba, val, crypto_config_addr + i);=0A=
+>>=0A=
+>>> +		}=0A=
+>>=0A=
+>>> +		ufshcd_writel(ctx->hba, cpu_to_le32(cconfig16),=0A=
+>>=0A=
+>>> +				crypto_config_addr + (4 * 16));=0A=
+>>=0A=
+>>> +		spin_unlock(&cctx->crypto_lock);=0A=
+>>=0A=
+>>> +		/* Make sure keys are programmed */=0A=
+>>=0A=
+>>> +		mb();=0A=
+>>=0A=
+>>> +	}=0A=
+>>=0A=
+>>> +}=0A=
+>>=0A=
+>>=0A=
+>>=0A=
+>> First of all, thanks for working on this.  A lot of Android device vendo=
+rs would=0A=
+>>=0A=
+>> like to have upstream support for inline encryption.  However, are you a=
+ware of=0A=
+>>=0A=
+>> previous (unsuccessful) patchsets by other people working on this?  Have=
+ you=0A=
+>>=0A=
+>> addressed the concerns and improved on their work, or is this just yet a=
+nother=0A=
+>>=0A=
+>> new effort starting from scratch?=0A=
+>>=0A=
+>>=0A=
+>>=0A=
+>> AnilKumar Chimata <anilc@codeaurora.org> (Qualcomm) in October 2018:=0A=
+>>=0A=
+>>=0A=
+>>=0A=
+>> 	https://urldefense.proofpoint.com/v2/url?u=3Dhttps-=0A=
+>> 3A__patchwork.kernel.org_cover_10645739_&d=3DDwIBAg&c=3DaUq983L2pue2FqKF=
+=0A=
+>> oP6PGHMJQyoJ7kl3s3GZ-_haXqY&r=3DGTefrem3hiBCnsjCOqAuapQHRN8-=0A=
+>> rKC1FRbk0it-=0A=
+>> LDs&m=3DL9VLjsZ31dZ4TP4LdveuvcjPFzdZWGlZaZnzqGZH3zc&s=3DZzYaAaVic5TB4RUS=
+=0A=
+>> cR5kzcM_8gvLYdlNAzuY80_ASzI&e=3D=0A=
+>>=0A=
+>>=0A=
+>>=0A=
+>> Ladvine D Almeida <ladvine@synopsys.com> in May 2018:=0A=
+>>=0A=
+>>=0A=
+>>=0A=
+>> 	https://urldefense.proofpoint.com/v2/url?u=3Dhttp-3A__lists-=0A=
+>> 2Darchives.com_linux-2Dkernel_29135393-2Dscsi-2Dufs-2Dufs-2Dhost-=0A=
+>> 2Dcontroller-2Dcrypto-=0A=
+>> 2Dchanges.html&d=3DDwIBAg&c=3DaUq983L2pue2FqKFoP6PGHMJQyoJ7kl3s3GZ-=0A=
+>> _haXqY&r=3DGTefrem3hiBCnsjCOqAuapQHRN8-rKC1FRbk0it-=0A=
+>> LDs&m=3DL9VLjsZ31dZ4TP4LdveuvcjPFzdZWGlZaZnzqGZH3zc&s=3D3pxSBZrt_DpDSz-=
+=0A=
+>> ZXrM7_bj0QXmRzcbasPl_wB259Us&e=3D=0A=
+>>=0A=
+>>=0A=
+>>=0A=
+>> Satya Tangirala <satyat@google.com> is also working on it but I don't be=
+lieve=0A=
+>>=0A=
+>> he's sent out a patchset yet.=0A=
+>>=0A=
+>>=0A=
+>>=0A=
+>> It would be nice to coordinate to get a proper solution upstream that wo=
+rks for=0A=
+>>=0A=
+>> everyone, rather than having everyone try independently and fail repeate=
+dly :-)=0A=
+> I had look at Ladvine's submission and think the approach of using Linux =
+crypto API and=0A=
+> adding algorithm which is supposed to work inline (and with UFS devices o=
+nly) in global=0A=
+> pool of algorithms (which is supposed to be generic) makes it risky, if s=
+elected/used for=0A=
+> other type of device not supporting inline encryption. Also apparently it=
+ is not possible to=0A=
+> support multiple UFS controllers in the system with that approach.=0A=
+> There was suggestion from Milan to use separate device mapper which seems=
+ cleaner way=0A=
+> of enabling inline encryption. Hence new device mapper is used.=0A=
+> I think this is better idea to coordinate and come up with a generic solu=
+tion.=0A=
+=0A=
+Suggest to take a look into the article https://lwn.net/Articles/717754=0A=
+My real concern is how to achieve it without any modifications to the=0A=
+bio.(because key slot information has to finally reach the target block=0A=
+device)=0A=
+=0A=
+>>=0A=
+>>=0A=
+>>=0A=
+>> Also, note that ECB mode is not appropriate for disk encryption.  So thi=
+s patch=0A=
+>>=0A=
+>> (and the hardware you tested it on, if that's all it supports) is effect=
+ively=0A=
+>>=0A=
+>> useless as-is.  You need to support XTS mode.=0A=
+> For now only AES-ECB is supported, we are working on adding other modes.=
+=0A=
+>>=0A=
+>>=0A=
+>>=0A=
+>> Thanks!=0A=
+>>=0A=
+>>=0A=
+>>=0A=
+>> - Eric=0A=
+> =0A=
+> Regards,=0A=
+> Parshuram Thombare=0A=
+> =0A=
+=0A=
+Thanks,=0A=
+Ladvine=0A=
+=0A=
