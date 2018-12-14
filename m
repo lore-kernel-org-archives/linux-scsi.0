@@ -1,7 +1,7 @@
 From: Ivan Mironov <mironov.ivan@gmail.com>
-Subject: [PATCH 5/6] scsi: hpsa: Name more fields in "struct bmic_identify_controller"
-Date: Fri, 14 Dec 2018 18:21:14 +0500
-Message-ID: <20181214132115.21440-6-mironov.ivan@gmail.com>
+Subject: [PATCH 6/6] scsi: hpsa: Do not use HBA flag from NVRAM if HBA is not supported
+Date: Fri, 14 Dec 2018 18:21:15 +0500
+Message-ID: <20181214132115.21440-7-mironov.ivan@gmail.com>
 References: <20181214132115.21440-1-mironov.ivan@gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -12,137 +12,80 @@ To: linux-scsi@vger.kernel.org, mironov.ivan@gmail.com
 Cc: linux-kernel@vger.kernel.org, Don Brace <don.brace@microsemi.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, esc.storagedev@microsemi.com
 List-Id: linux-scsi@vger.kernel.org
 
-Based on information from "struct identify_controller" from
-cciss_vol_status.c from the cciss_vol_status tool[1].
+Check bmic_identify_controller.yet_more_controller_flags for HBA support
+bit before trying to enable HBA mode.
 
-[1] https://sourceforge.net/projects/cciss/files/cciss_vol_status/
+HP's ssacli tool calls this bit "Hba Mode Supported" in full diagnostics
+report.
 
 Signed-off-by: Ivan Mironov <mironov.ivan@gmail.com>
 ---
- drivers/scsi/hpsa_cmd.h | 109 ++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 106 insertions(+), 3 deletions(-)
+ drivers/scsi/hpsa.c     | 16 ++++++++++++++--
+ drivers/scsi/hpsa_cmd.h |  4 ++++
+ 2 files changed, 18 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 0b5b3a651b70..38026b82ac6b 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -4342,6 +4342,12 @@ static bool hpsa_skip_device(struct ctlr_info *h, u8 *lunaddrbytes,
+ 	return false;
+ }
+ 
++static bool is_hba_supported(const struct bmic_identify_controller *id_ctlr)
++{
++	return le32_to_cpu(id_ctlr->yet_more_controller_flags) &
++			YET_MORE_CTLR_FLAG_HBA_MODE_SUPP;
++}
++
+ static int hpsa_nvram_hba_flag_enabled(struct ctlr_info *h, bool *flag_enabled)
+ {
+ 	int rc;
+@@ -4364,7 +4370,8 @@ static int hpsa_nvram_hba_flag_enabled(struct ctlr_info *h, bool *flag_enabled)
+ 	return rc;
+ }
+ 
+-static int hpsa_update_nvram_hba_mode(struct ctlr_info *h, u32 nlogicals)
++static int hpsa_update_nvram_hba_mode(struct ctlr_info *h, u32 nlogicals,
++	const struct bmic_identify_controller *id_ctlr)
+ {
+ 	int rc;
+ 	bool flag_enabled;
+@@ -4373,6 +4380,11 @@ static int hpsa_update_nvram_hba_mode(struct ctlr_info *h, u32 nlogicals)
+ 	if (!hpsa_use_nvram_hba_flag)
+ 		return 0;
+ 
++	if (!is_hba_supported(id_ctlr)) {
++		dev_info(&h->pdev->dev, "NVRAM HBA flag: not supported\n");
++		return 0;
++	}
++
+ 	rc = hpsa_nvram_hba_flag_enabled(h, &flag_enabled);
+ 	if (rc == -ENOMEM)
+ 		dev_warn(&h->pdev->dev, "Out of memory.\n");
+@@ -4446,7 +4458,7 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h)
+ 			__func__);
+ 	}
+ 
+-	if (hpsa_update_nvram_hba_mode(h, nlogicals)) {
++	if (hpsa_update_nvram_hba_mode(h, nlogicals, id_ctlr)) {
+ 		h->drv_req_rescan = 1;
+ 		goto out;
+ 	}
 diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h
-index 21a726e2eec6..64100a33f844 100644
+index 64100a33f844..b27f94b257bc 100644
 --- a/drivers/scsi/hpsa_cmd.h
 +++ b/drivers/scsi/hpsa_cmd.h
-@@ -695,11 +695,114 @@ struct hpsa_pci_info {
- 
- struct bmic_identify_controller {
- 	u8	configured_logical_drive_count;	/* offset 0 */
--	u8	pad1[153];
-+	__le32	signature;
-+	char	running_firm_rev[4];
-+	char	rom_firm_rev[4];
-+	u8	hardware_rev;
-+	u8	reserved_1[4];
-+	__le32	drive_present_bit_map;
-+	__le32	external_drive_bit_map;
-+	__le32	board_id;
-+	u8	reserved_2;
-+	__le32	non_disk_map;
-+	u8	reserved_3[5];
-+	u8	marketing_revision;
-+	u8	controller_flags;
-+	u8	host_flags;
-+	u8	expand_disable_code;
-+	u8	scsi_chip_count;
-+	u8	reserved_4[4];
-+	__le32	ctlr_clock;
-+	u8	drives_per_scsi_bus;
-+	__le16	big_drive_present_map[8];
-+	__le16	big_ext_drive_map[8];
-+	__le16	big_non_disk_map[8];
-+
-+	/* used for FW debugging */
-+	__le16	task_flags;
-+	/* Bitmap used for ICL between controllers */
-+	u8	icl_bus_map;
-+	/* See REDUNDANT MODE VALUES */
-+	u8	redund_ctlr_modes_support;
-+	/* See REDUNDANT MODE VALUES */
-+	u8	curr_redund_ctlr_mode;
-+	/* See REDUNDANT STATUS FLAG */
-+	u8	redund_ctlr_status;
-+	/* See REDUNDANT FAILURE VALUES */
-+	u8	redund_op_failure_code;
-+	u8	unsupported_nile_bus;
-+	u8	host_i2c_autorev;
-+	u8	cpld_revision;
-+	u8	fibre_chip_count;
-+	u8	daughterboard_type;
-+	u8	reserved_5[2];
-+
-+	u8	access_module_status;
-+	u8	features_supported[12];
-+	/* Recovery ROM inactive f/w revision */
-+	char	rec_rom_inactive_rev[4];
-+	/* Recovery ROM flags */
-+	u8	rec_rom_flags;
-+	u8	pci_to_pci_bridge_status;
-+	/* Reserved for future use */
-+	u8	reserved_6[4];
-+	/* Percent of memory allocated to write cache */
-+	u8	percent_write_cache;
-+	/* Total cache board size */
-+	__le16	daughter_board_cache_size;
-+	/* Number of cache batteries */
-+	u8	cache_battery_count;
-+	/* Total size (MB) of atttached memory */
-+	__le16	total_memory_size;
-+	/* Additional controller flags byte */
-+	u8	more_controller_flags;
-+	/* 2nd byte of 3 byte autorev field */
-+	u8	x_board_host_i2c_autorev;
-+	/* BBWC PIC revision */
-+	u8	battery_pic_rev;
-+	/* DDFF update engine version */
-+	u8	ddff_version[4];
-+	/* Maximum logical units supported */
-+	__le16	max_logical_units;
-+	/* Big num configured logical units */
- 	__le16	extended_logical_unit_count;	/* offset 154 */
--	u8	pad2[136];
-+	/* Maximum physical devices supported */
-+	__le16	max_physical_devices;
-+	/* Max physical drive per logical unit */
-+	__le16	max_phy_drv_per_logical_unit;
-+	/* Number of attached enclosures */
-+	u8	enclosure_count;
-+	/* Number of expanders detected */
-+	u8	expander_count;
-+	/* Offset to extended drive present map*/
-+	__le16	offset_to_edp_bitmap;
-+	/* Offset to extended external drive present map */
-+	__le16	offset_to_eedp_bitmap;
-+	/* Offset to extended non-disk map */
-+	__le16	offset_to_end_bitmap;
-+	/* Internal port status bytes */
-+	u8	internal_port_status[8];
-+	/* External port status bytes */
-+	u8	external_port_status[8];
-+	/* Yet More Controller flags  */
-+	__le32	yet_more_controller_flags;
-+	/* Last lockup code */
-+	u8	last_lockup;
-+	/* PCI slot according to option ROM*/
-+	u8	pci_slot;
-+	/* Build number */
-+	__le16	build_num;
-+	/* Maximum safe full stripe size */
-+	__le32	max_safe_full_stripe_size;
-+	/* Total structure length */
-+	__le32	total_length;
-+	/* Vendor ID */
-+	char	vendor_id[8];
-+	/* Product ID */
-+	char	product_id[16];
-+	u8	reserved_7[68];
- 	u8	controller_mode;	/* offset 292 */
--	u8	pad3[32];
-+	u8	reserved_8[32];
+@@ -806,6 +806,10 @@ struct bmic_identify_controller {
  };
  
  
++/* ssacli calls this bit "Hba Mode Supported". */
++#define YET_MORE_CTLR_FLAG_HBA_MODE_SUPP (1 << 25)
++
++
+ struct bmic_identify_physical_device {
+ 	u8    scsi_bus;          /* SCSI Bus number on controller */
+ 	u8    scsi_id;           /* SCSI ID on this bus */
 -- 
 2.19.2
