@@ -1,7 +1,7 @@
 From: Ivan Mironov <mironov.ivan@gmail.com>
-Subject: [PATCH 6/6] scsi: hpsa: Do not use HBA flag from NVRAM if HBA is not supported
-Date: Fri, 14 Dec 2018 18:21:15 +0500
-Message-ID: <20181214132115.21440-7-mironov.ivan@gmail.com>
+Subject: [PATCH 2/6] scsi: hpsa: Support HBA mode on HP Smart Array P410i controllers
+Date: Fri, 14 Dec 2018 18:21:11 +0500
+Message-ID: <20181214132115.21440-3-mironov.ivan@gmail.com>
 References: <20181214132115.21440-1-mironov.ivan@gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -12,80 +12,194 @@ To: linux-scsi@vger.kernel.org, mironov.ivan@gmail.com
 Cc: linux-kernel@vger.kernel.org, Don Brace <don.brace@microsemi.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, esc.storagedev@microsemi.com
 List-Id: linux-scsi@vger.kernel.org
 
-Check bmic_identify_controller.yet_more_controller_flags for HBA support
-bit before trying to enable HBA mode.
+This patch is based on code from the 316b221, most of which was removed by
+the b9092b7.
 
-HP's ssacli tool calls this bit "Hba Mode Supported" in full diagnostics
-report.
+Originally, HBA mode on these controllers was supported only on
+Itanium-based HP Integrity servers running HP-UX. Tool for switching
+between RAID and HBA modes existed only in form of EFI binary for
+ia64 architecture: saupdate.efi[1]. However, I guessed how to overwrite the
+corresponding flags field in controller's NVRAM, and was able to
+reimplement RAID/HBA mode switching tool for Linux[2].
+
+This change was successfully tested using blktests[3] and xfstests[4] on
+my hardware, with embedded P410i controller (PCI ID: 103c:3245, board
+ID: 0x3245103c) with firmware version 6.64.
+
+This may work with some other controllers, but it is not tested
+(because I do not have the hardware) and it may be very dangerous. That is
+why this functionality is disabled by default and may be enabled only
+manually using the new module parameter.
+
+[1] https://support.hpe.com/hpsc/swd/public/detail?swItemId=MTX_0b76aec489764aea9802a6d27b
+[2] https://github.com/im-0/hpsahba
+[3] https://github.com/osandov/blktests
+[4] https://git.kernel.org/pub/scm/fs/xfs/xfstests-dev.git
 
 Signed-off-by: Ivan Mironov <mironov.ivan@gmail.com>
 ---
- drivers/scsi/hpsa.c     | 16 ++++++++++++++--
- drivers/scsi/hpsa_cmd.h |  4 ++++
- 2 files changed, 18 insertions(+), 2 deletions(-)
+ drivers/scsi/hpsa.c | 98 +++++++++++++++++++++++++++++++++++++++++++--
+ drivers/scsi/hpsa.h |  3 ++
+ 2 files changed, 97 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 0b5b3a651b70..38026b82ac6b 100644
+index fc06b790f16b..ee3d7c722a63 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -4342,6 +4342,12 @@ static bool hpsa_skip_device(struct ctlr_info *h, u8 *lunaddrbytes,
- 	return false;
- }
+@@ -88,6 +88,11 @@ module_param(hpsa_simple_mode, int, S_IRUGO|S_IWUSR);
+ MODULE_PARM_DESC(hpsa_simple_mode,
+ 	"Use 'simple mode' rather than 'performant mode'");
  
-+static bool is_hba_supported(const struct bmic_identify_controller *id_ctlr)
-+{
-+	return le32_to_cpu(id_ctlr->yet_more_controller_flags) &
-+			YET_MORE_CTLR_FLAG_HBA_MODE_SUPP;
-+}
++static bool hpsa_use_nvram_hba_flag;
++module_param(hpsa_use_nvram_hba_flag, bool, 0444);
++MODULE_PARM_DESC(hpsa_use_nvram_hba_flag,
++	"Use flag from NVRAM to enable HBA mode");
 +
- static int hpsa_nvram_hba_flag_enabled(struct ctlr_info *h, bool *flag_enabled)
- {
- 	int rc;
-@@ -4364,7 +4370,8 @@ static int hpsa_nvram_hba_flag_enabled(struct ctlr_info *h, bool *flag_enabled)
+ /* define the PCI info for the cards we can control */
+ static const struct pci_device_id hpsa_pci_device_id[] = {
+ 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C, 0x3241},
+@@ -3039,6 +3044,37 @@ static int hpsa_scsi_do_inquiry(struct ctlr_info *h, unsigned char *scsi3addr,
  	return rc;
  }
  
--static int hpsa_update_nvram_hba_mode(struct ctlr_info *h, u32 nlogicals)
-+static int hpsa_update_nvram_hba_mode(struct ctlr_info *h, u32 nlogicals,
-+	const struct bmic_identify_controller *id_ctlr)
- {
- 	int rc;
- 	bool flag_enabled;
-@@ -4373,6 +4380,11 @@ static int hpsa_update_nvram_hba_mode(struct ctlr_info *h, u32 nlogicals)
- 	if (!hpsa_use_nvram_hba_flag)
- 		return 0;
- 
-+	if (!is_hba_supported(id_ctlr)) {
-+		dev_info(&h->pdev->dev, "NVRAM HBA flag: not supported\n");
-+		return 0;
++static int hpsa_bmic_ctrl_mode_sense(struct ctlr_info *h,
++	struct bmic_controller_parameters *buf)
++{
++	int rc = IO_OK;
++	struct CommandList *c;
++	struct ErrorInfo *ei;
++
++	c = cmd_alloc(h);
++
++	if (fill_cmd(c, BMIC_SENSE_CONTROLLER_PARAMETERS, h, buf, sizeof(*buf),
++			0, RAID_CTLR_LUNID, TYPE_CMD)) {
++		rc = -1;
++		goto out;
 +	}
 +
- 	rc = hpsa_nvram_hba_flag_enabled(h, &flag_enabled);
- 	if (rc == -ENOMEM)
- 		dev_warn(&h->pdev->dev, "Out of memory.\n");
-@@ -4446,7 +4458,7 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h)
++	rc = hpsa_scsi_do_simple_cmd_with_retry(h, c, PCI_DMA_FROMDEVICE,
++		NO_TIMEOUT);
++	if (rc)
++		goto out;
++
++	ei = c->err_info;
++	if (ei->CommandStatus != 0 && ei->CommandStatus != CMD_DATA_UNDERRUN) {
++		hpsa_scsi_interpret_error(h, c);
++		rc = -1;
++	}
++
++out:
++	cmd_free(h, c);
++	return rc;
++}
++
+ static int hpsa_send_reset(struct ctlr_info *h, unsigned char *scsi3addr,
+ 	u8 reset_type, int reply_queue)
+ {
+@@ -4296,6 +4332,50 @@ static bool hpsa_skip_device(struct ctlr_info *h, u8 *lunaddrbytes,
+ 	return false;
+ }
+ 
++static int hpsa_nvram_hba_flag_enabled(struct ctlr_info *h, bool *flag_enabled)
++{
++	int rc;
++	struct bmic_controller_parameters *ctlr_params;
++
++	ctlr_params = kzalloc(sizeof(*ctlr_params), GFP_KERNEL);
++	if (!ctlr_params) {
++		rc = -ENOMEM;
++		goto out;
++	}
++
++	rc = hpsa_bmic_ctrl_mode_sense(h, ctlr_params);
++	if (rc)
++		goto out;
++
++	*flag_enabled = ctlr_params->nvram_flags & HPSA_NVRAM_FLAG_HBA;
++
++out:
++	kfree(ctlr_params);
++	return rc;
++}
++
++static int hpsa_update_nvram_hba_mode(struct ctlr_info *h)
++{
++	int rc;
++	bool flag_enabled;
++
++	if (!hpsa_use_nvram_hba_flag)
++		return 0;
++
++	rc = hpsa_nvram_hba_flag_enabled(h, &flag_enabled);
++	if (rc == -ENOMEM)
++		dev_warn(&h->pdev->dev, "Out of memory.\n");
++	if (rc)
++		return rc;
++
++	dev_info(&h->pdev->dev, "NVRAM HBA flag: %s\n",
++		flag_enabled ? "enabled" : "disabled");
++
++	h->nvram_hba_mode_enabled = flag_enabled;
++
++	return 0;
++}
++
+ static void hpsa_update_scsi_devices(struct ctlr_info *h)
+ {
+ 	/* the idea here is we could get notified
+@@ -4352,6 +4432,11 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h)
  			__func__);
  	}
  
--	if (hpsa_update_nvram_hba_mode(h, nlogicals)) {
-+	if (hpsa_update_nvram_hba_mode(h, nlogicals, id_ctlr)) {
- 		h->drv_req_rescan = 1;
- 		goto out;
- 	}
-diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h
-index 64100a33f844..b27f94b257bc 100644
---- a/drivers/scsi/hpsa_cmd.h
-+++ b/drivers/scsi/hpsa_cmd.h
-@@ -806,6 +806,10 @@ struct bmic_identify_controller {
++	if (hpsa_update_nvram_hba_mode(h)) {
++		h->drv_req_rescan = 1;
++		goto out;
++	}
++
+ 	/* We might see up to the maximum number of logical and physical disks
+ 	 * plus external target devices, and a device for the local RAID
+ 	 * controller.
+@@ -4437,11 +4522,16 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h)
+ 		 * Expose all devices except for physical devices that
+ 		 * are masked.
+ 		 */
+-		if (MASKED_DEVICE(lunaddrbytes) && this_device->physical_device)
+-			this_device->expose_device = 0;
+-		else
++		if (MASKED_DEVICE(lunaddrbytes) &&
++				this_device->physical_device) {
++			if (is_disk_or_zbc(this_device) &&
++					h->nvram_hba_mode_enabled)
++				this_device->expose_device = 1;
++			else
++				this_device->expose_device = 0;
++		} else {
+ 			this_device->expose_device = 1;
+-
++		}
+ 
+ 		/*
+ 		 * Get the SAS address for physical devices that are exposed.
+diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
+index 59e023696fff..5b508f270520 100644
+--- a/drivers/scsi/hpsa.h
++++ b/drivers/scsi/hpsa.h
+@@ -158,6 +158,8 @@ struct bmic_controller_parameters {
  };
+ #pragma pack()
  
++#define HPSA_NVRAM_FLAG_HBA (1 << 3)
++
+ struct ctlr_info {
+ 	unsigned int *reply_map;
+ 	int	ctlr;
+@@ -182,6 +184,7 @@ struct ctlr_info {
+ 	unsigned int msix_vectors;
+ 	int intr_mode; /* either PERF_MODE_INT or SIMPLE_MODE_INT */
+ 	struct access_method access;
++	bool nvram_hba_mode_enabled;
  
-+/* ssacli calls this bit "Hba Mode Supported". */
-+#define YET_MORE_CTLR_FLAG_HBA_MODE_SUPP (1 << 25)
-+
-+
- struct bmic_identify_physical_device {
- 	u8    scsi_bus;          /* SCSI Bus number on controller */
- 	u8    scsi_id;           /* SCSI ID on this bus */
+ 	/* queue and queue Info */
+ 	unsigned int Qdepth;
 -- 
 2.19.2
