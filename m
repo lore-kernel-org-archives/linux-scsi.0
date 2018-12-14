@@ -1,68 +1,63 @@
-From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: [PATCH] scsi: mptfusion: Fix potential Spectre v1 vulnerabilities
-Date: Fri, 14 Dec 2018 10:47:29 -0600
-Message-ID: <20181214164729.GA23188@embeddedor>
+From: <Don.Brace@microchip.com>
+Subject: RE: [PATCH 0/6] Add support of the HBA mode on HP Smart Array P410i
+ controllers
+Date: Fri, 14 Dec 2018 19:38:52 +0000
+Message-ID: <BYAPR11MB285586623125DD1C98EE87F1E1A10@BYAPR11MB2855.namprd11.prod.outlook.com>
+References: <20181214132115.21440-1-mironov.ivan@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <20181214132115.21440-1-mironov.ivan@gmail.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
-Cc: MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+To: mironov.ivan@gmail.com, linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, don.brace@microsemi.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, esc.storagedev@microsemi.com
 List-Id: linux-scsi@vger.kernel.org
 
-karg.hdr.id and port are indirectly controlled by user-space, hence leading
-to a potential exploitation of the Spectre variant 1 vulnerability.
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-owner@vger.kernel=
+.org] On Behalf Of Ivan Mironov
+Sent: Friday, December 14, 2018 7:21 AM
+To: linux-scsi@vger.kernel.org; mironov.ivan@gmail.com
+Cc: linux-kernel@vger.kernel.org; Don Brace <don.brace@microsemi.com>; Jame=
+s E.J. Bottomley <jejb@linux.vnet.ibm.com>; Martin K. Petersen <martin.pete=
+rsen@oracle.com>; esc.storagedev@microsemi.com
+Subject: [PATCH 0/6] Add support of the HBA mode on HP Smart Array P410i co=
+ntrollers
 
-This issue was detected with the help of Smatch:
+This series of patches adds support of the HBA mode on HP Smart Array P410i=
+ RAID controllers.
 
-drivers/message/fusion/mptctl.c:1360 mptctl_getiocinfo() warn: potential spectre issue 'ioc->pfacts' [r]
-drivers/message/fusion/mptctl.c:2788 mptctl_hp_targetinfo() warn: potential spectre issue 'hd->sel_timeout' [r] (local cap)
+This is not guaranteed to be correct as I do not have any access to documen=
+tation on these controllers. However, this works fine for me on hardware th=
+at I have. Also, these changes successfully passes blktests[1] and xfstests=
+[2].
 
-Fix this by sanitizing  both karg.hdr.id and port before using them to
-index ioc->pfacts and hd->sel_timeout.
+To make sure that this new functionality does not break anything, it is dis=
+abled by default and may be enabled only manually using new module paramete=
+r.
 
-Notice that given that speculation windows are large, the policy is
-to kill the speculation on the first load and not worry if it can be
-completed with a dependent load/store [1].
+[1] https://github.com/osandov/blktests
+[2] https://git.kernel.org/pub/scm/fs/xfs/xfstests-dev.git
 
-[1] https://marc.info/?l=linux-kernel&m=152449131114778&w=2
+Ivan Mironov (6):
+  scsi: hpsa: Add function to check if device is a disk or a zoned
+    device
+  scsi: hpsa: Support HBA mode on HP Smart Array P410i controllers
+  scsi: hpsa: Add/mask existing devices on rescan if visibility changes
+  scsi: hpsa: Ignore HBA flag from NVRAM if logical devices exist
+  scsi: hpsa: Name more fields in "struct bmic_identify_controller"
+  scsi: hpsa: Do not use HBA flag from NVRAM if HBA is not supported
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
----
- drivers/message/fusion/mptctl.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/scsi/hpsa.c     | 145 ++++++++++++++++++++++++++++++++++++----
+ drivers/scsi/hpsa.h     |   3 +
+ drivers/scsi/hpsa_cmd.h | 113 ++++++++++++++++++++++++++++++-
+ 3 files changed, 244 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/message/fusion/mptctl.c b/drivers/message/fusion/mptctl.c
-index 8d22d6134a89..f6c1311ae86f 100644
---- a/drivers/message/fusion/mptctl.c
-+++ b/drivers/message/fusion/mptctl.c
-@@ -66,6 +66,8 @@
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_tcq.h>
- 
-+#include <linux/nospec.h>
-+
- #define COPYRIGHT	"Copyright (c) 1999-2008 LSI Corporation"
- #define MODULEAUTHOR	"LSI Corporation"
- #include "mptbase.h"
-@@ -1306,7 +1308,7 @@ mptctl_getiocinfo (unsigned long arg, unsigned int data_size)
- 		kfree(karg);
- 		return -EINVAL;
- 	}
--	port = karg->hdr.port;
-+	port = array_index_nospec(karg->hdr.port, 2);
- 
- 	karg->port = port;
- 	pdev = (struct pci_dev *) ioc->pcidev;
-@@ -2689,6 +2691,7 @@ mptctl_hp_targetinfo(unsigned long arg)
- 	}
- 	if (karg.hdr.id >= MPT_MAX_FC_DEVICES)
- 		return -EINVAL;
-+	karg.hdr.id = array_index_nospec(karg.hdr.id, MPT_MAX_FC_DEVICES);
- 	dctlprintk(ioc, printk(MYIOC_s_DEBUG_FMT "mptctl_hp_targetinfo called.\n",
- 	    ioc->name));
- 
--- 
+--
 2.19.2
+
+NAKing this series.
+- The P410 controllers do not fully support HBA mode and we do not support =
+adding it to the hpsa driver.
