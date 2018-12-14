@@ -1,107 +1,736 @@
-From: "Winkler, Tomas" <tomas.winkler@intel.com>
-Subject: RE: [PATCH v1] scsi: ufs: Use explicit access size in ufshcd_dump_regs
-Date: Thu, 13 Dec 2018 22:34:52 +0000
-Message-ID: <5B8DA87D05A7694D9FA63FD143655C1B9DA52659@hasmsx108.ger.corp.intel.com>
-References: <3bf7ea8e-4cf2-1f9b-7f46-15609dfcad19@free.fr>
+From: Parshuram Raju Thombare <pthombar@cadence.com>
+Subject: RE: [PATCH 2/2] scsi: ufs: add inline crypto support to UFS HCD
+Date: Fri, 14 Dec 2018 05:43:46 +0000
+Message-ID: <SN2PR07MB24803F60A3290CD95A0FFDFAC1A10@SN2PR07MB2480.namprd07.prod.outlook.com>
+References: <20181211095027.GA3316@lvlogina.cadence.com>
+ <20181211181647.GC221175@gmail.com>
+ <CO2PR07MB2469AD9C0A121EBF94129A11C1A70@CO2PR07MB2469.namprd07.prod.outlook.com>
+ <BD7FB879CC136E419544C8E2AE7B9C30227EE5@IN01WEMBXA.internal.synopsys.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <3bf7ea8e-4cf2-1f9b-7f46-15609dfcad19@free.fr>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <BD7FB879CC136E419544C8E2AE7B9C30227EE5@IN01WEMBXA.internal.synopsys.com>
 Content-Language: en-US
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Marc Gonzalez <marc.w.gonzalez@free.fr>, Vinayak Holikatti <vinholikatti@gmail.com>, Joao Pinto <jpinto@synopsys.com>, Avri Altman <avri.altman@wdc.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Robin Murphy <robin.murphy@arm.com>
-Cc: MSM <linux-arm-msm@vger.kernel.org>, SCSI <linux-scsi@vger.kernel.org>, Linux ARM <linux-arm-kernel@lists.infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ladvine D Almeida <ladvine.dalmeida@synopsys.com>, Eric Biggers <ebiggers@kernel.org>
+Cc: "axboe@kernel.dk" <axboe@kernel.dk>, "vinholikatti@gmail.com" <vinholikatti@gmail.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "mchehab+samsung@kernel.org" <mchehab+samsung@kernel.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "davem@davemloft.net" <davem@davemloft.net>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "nicolas.ferre@microchip.com" <nicolas.ferre@microchip.com>, "arnd@arndb.de" <arnd@arndb.de>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Alan Douglas <adouglas@cadence.com>, Janek Kotas <jank@cadence.com>, Rafal
 List-Id: linux-scsi@vger.kernel.org
 
+Hi Ladvine,
 
+>From: Ladvine D Almeida <ladvine.dalmeida@synopsys.com>
+>Sent: Friday, December 14, 2018 1:10 AM
+>Subject: Re: [PATCH 2/2] scsi: ufs: add inline crypto support to UFS HCD
+>Where is Crypto target 'crypto-ufs' implementation available? Did you subm=
+itted
+>any other patch for the same?
+>Also, it is better to provide a generic name as the target is valid for al=
+l other block
+>devices.
 
-> memcpy_fromio() doesn't provide any control over access size.
-> For example, on arm64, it is implemented using readb and readq.
-> This may trigger a synchronous external abort:
-> 
-> [    3.729943] Internal error: synchronous external abort: 96000210 [#1]
-> PREEMPT SMP
-> [    3.737000] Modules linked in:
-> [    3.744371] CPU: 2 PID: 1 Comm: swapper/0 Tainted: G S                4.20.0-rc4
-> #16
-> [    3.747413] Hardware name: Qualcomm Technologies, Inc. MSM8998 v1
-> MTP (DT)
-> [    3.755295] pstate: 00000005 (nzcv daif -PAN -UAO)
-> [    3.761978] pc : __memcpy_fromio+0x68/0x80
-> [    3.766718] lr : ufshcd_dump_regs+0x50/0xb0
-> [    3.770767] sp : ffff00000807ba00
-> [    3.774830] x29: ffff00000807ba00 x28: 00000000fffffffb
-> [    3.778344] x27: ffff0000089db068 x26: ffff8000f6e58000
-> [    3.783728] x25: 000000000000000e x24: 0000000000000800
-> [    3.789023] x23: ffff8000f6e587c8 x22: 0000000000000800
-> [    3.794319] x21: ffff000008908368 x20: ffff8000f6e1ab80
-> [    3.799615] x19: 000000000000006c x18: ffffffffffffffff
-> [    3.804910] x17: 0000000000000000 x16: 0000000000000000
-> [    3.810206] x15: ffff000009199648 x14: ffff000089244187
-> [    3.815502] x13: ffff000009244195 x12: ffff0000091ab000
-> [    3.820797] x11: 0000000005f5e0ff x10: ffff0000091998a0
-> [    3.826093] x9 : 0000000000000000 x8 : ffff8000f6e1ac00
-> [    3.831389] x7 : 0000000000000000 x6 : 0000000000000068
-> [    3.836676] x5 : ffff8000f6e1abe8 x4 : 0000000000000000
-> [    3.841971] x3 : ffff00000928c868 x2 : ffff8000f6e1abec
-> [    3.847267] x1 : ffff00000928c868 x0 : ffff8000f6e1abe8
-> [    3.852567] Process swapper/0 (pid: 1, stack limit = 0x(____ptrval____))
-> [    3.857900] Call trace:
-> [    3.864473]  __memcpy_fromio+0x68/0x80
-> [    3.866683]  ufs_qcom_dump_dbg_regs+0x1c0/0x370
-> [    3.870522]  ufshcd_print_host_regs+0x168/0x190
-> [    3.874946]  ufshcd_init+0xd4c/0xde0
-> [    3.879459]  ufshcd_pltfrm_init+0x3c8/0x550
-> [    3.883264]  ufs_qcom_probe+0x24/0x60
-> [    3.887188]  platform_drv_probe+0x50/0xa0
-> 
-> Assuming aligned 32-bit registers, let's use readl, after making sure that 'offset'
-> and 'len' are indeed multiples of 4.
-> 
-> Fixes: ba80917d9932d ("scsi: ufs: ufshcd_dump_regs to use memcpy_fromio")
-> Signed-off-by: Marc Gonzalez <marc.w.gonzalez@free.fr>
-LGTM
-Thanks
-Tomas
+[PATCH 2/2] have crypto-ufs implementation. [PATCH 1/2] add variable to str=
+uct bio.
+Device mapper name is not generic because there are ufs specific things but=
+ we should
+be able to make it generic.
 
-> ---
->  drivers/scsi/ufs/ufshcd.c | 10 ++++++++--
->  1 file changed, 8 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c index
-> 535180c01ce8..320bbd9849bc 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -112,13 +112,19 @@
->  int ufshcd_dump_regs(struct ufs_hba *hba, size_t offset, size_t len,
->  		     const char *prefix)
->  {
-> -	u8 *regs;
-> +	u32 *regs;
-> +	size_t pos;
-> +
-> +	if (offset % 4 != 0 || len % 4 != 0) /* keep readl happy */
-> +		return -EINVAL;
-> 
->  	regs = kzalloc(len, GFP_KERNEL);
->  	if (!regs)
->  		return -ENOMEM;
-> 
-> -	memcpy_fromio(regs, hba->mmio_base + offset, len);
-> +	for (pos = 0; pos < len; pos += 4)
-> +		regs[pos / 4] = ufshcd_readl(hba, offset + pos);
-> +
->  	ufshcd_hex_dump(prefix, regs, len);
->  	kfree(regs);
-> 
-> --
-> 2.17.1
+Regards,
+Parshuram Thombare
+
+>-----Original Message-----
+>From: Ladvine D Almeida <ladvine.dalmeida@synopsys.com>
+>Sent: Friday, December 14, 2018 1:10 AM
+>To: Parshuram Raju Thombare <pthombar@cadence.com>; Eric Biggers
+><ebiggers@kernel.org>
+>Cc: axboe@kernel.dk; vinholikatti@gmail.com; jejb@linux.vnet.ibm.com;
+>martin.petersen@oracle.com; mchehab+samsung@kernel.org;
+>gregkh@linuxfoundation.org; davem@davemloft.net; akpm@linux-
+>foundation.org; nicolas.ferre@microchip.com; arnd@arndb.de; linux-
+>kernel@vger.kernel.org; linux-block@vger.kernel.org; linux-
+>scsi@vger.kernel.org; Alan Douglas <adouglas@cadence.com>; Janek Kotas
+><jank@cadence.com>; Rafal Ciepiela <rafalc@cadence.com>; AnilKumar
+>Chimata <anilc@codeaurora.org>; Ladvine D Almeida
+><ladvine.dalmeida@synopsys.com>; Satya Tangirala <satyat@google.com>; Paul
+>Crowley <paulcrowley@google.com>; Manjunath M Bettegowda
+><manjunath.mb@synopsys.com>; Tejas Joglekar
+><tejas.joglekar@synopsys.com>; Joao Pinto <Joao.Pinto@synopsys.com>; linux=
+-
+>crypto@vger.kernel.org
+>Subject: Re: [PATCH 2/2] scsi: ufs: add inline crypto support to UFS HCD
+>
+>EXTERNAL MAIL
+>
+>
+>On 12/12/18 5:52 AM, Parshuram Raju Thombare wrote:
+>> Hello Eric,
+>>
+>> Thank you for a comment.
+>>
+>>> -----Original Message-----
+>>> From: Eric Biggers <ebiggers@kernel.org>
+>>> Sent: Tuesday, December 11, 2018 11:47 PM
+>>> To: Parshuram Raju Thombare <pthombar@cadence.com>
+>>> Cc: axboe@kernel.dk; vinholikatti@gmail.com; jejb@linux.vnet.ibm.com;
+>>> martin.petersen@oracle.com; mchehab+samsung@kernel.org;
+>>> gregkh@linuxfoundation.org; davem@davemloft.net; akpm@linux-
+>>> foundation.org; nicolas.ferre@microchip.com; arnd@arndb.de; linux-
+>>> kernel@vger.kernel.org; linux-block@vger.kernel.org; linux-
+>>> scsi@vger.kernel.org; Alan Douglas <adouglas@cadence.com>; Janek
+>>> Kotas <jank@cadence.com>; Rafal Ciepiela <rafalc@cadence.com>;
+>>> AnilKumar Chimata <anilc@codeaurora.org>; Ladvine D Almeida
+>>> <ladvine@synopsys.com>; Satya Tangirala <satyat@google.com>; Paul
+>>> Crowley <paulcrowley@google.com>
+>>> Subject: Re: [PATCH 2/2] scsi: ufs: add inline crypto support to UFS
+>>> HCD
+>>>
+>>> EXTERNAL MAIL
+>>>
+>>>
+>>> [+Cc other people who have been working on this]
+>Eric, Thanks for cc-ing me to the mail chain.
+>
+>Parshuram,
+>Glad to know that you are working on the Inline Encryption support.
+>My concerns are mentioned inline below.
+>
+>>>
+>>>
+>>>
+>>> Hi Parshuram,
+>>>
+>>>
+>>>
+>>> On Tue, Dec 11, 2018 at 09:50:27AM +0000, Parshuram Thombare wrote:
+>>>
+>>>> Add real time crypto support to UFS HCD using new device
+>>>
+>>>> mapper 'crypto-ufs'. dmsetup tool can be used to enable
+>>>
+>>>> real time / inline crypto support using device mapper
+>>>
+>>>> 'crypt-ufs'.
+>
+>Where is Crypto target 'crypto-ufs' implementation available? Did you subm=
+itted
+>any other patch for the same?
+>Also, it is better to provide a generic name as the target is valid for al=
+l other block
+>devices.
+>
+>>>
+>>>>
+>>>
+>>>> Signed-off-by: Parshuram Thombare <pthombar@cadence.com>
+>>>
+>>>> ---
+>>>
+>>>>  MAINTAINERS                      |    7 +
+>>>
+>>>>  block/Kconfig                    |    5 +
+>>>
+>>>>  drivers/scsi/ufs/Kconfig         |   12 +
+>>>
+>>>>  drivers/scsi/ufs/Makefile        |    1 +
+>>>
+>>>>  drivers/scsi/ufs/ufshcd-crypto.c |  453
+>>> ++++++++++++++++++++++++++++++++++++++
+>>>
+>>>>  drivers/scsi/ufs/ufshcd-crypto.h |  102 +++++++++
+>>>
+>>>>  drivers/scsi/ufs/ufshcd.c        |   27 +++-
+>>>
+>>>>  drivers/scsi/ufs/ufshcd.h        |    6 +
+>>>
+>>>>  drivers/scsi/ufs/ufshci.h        |    1 +
+>>>
+>>>>  9 files changed, 613 insertions(+), 1 deletions(-)
+>>>
+>>>>  create mode 100644 drivers/scsi/ufs/ufshcd-crypto.c
+>>>
+>>>>  create mode 100644 drivers/scsi/ufs/ufshcd-crypto.h
+>>>
+>>>>
+>>>
+>>>> diff --git a/MAINTAINERS b/MAINTAINERS
+>>>
+>>>> index f485597..3a68126 100644
+>>>
+>>>> --- a/MAINTAINERS
+>>>
+>>>> +++ b/MAINTAINERS
+>>>
+>>>> @@ -15340,6 +15340,13 @@ S:	Supported
+>>>
+>>>>  F:	Documentation/scsi/ufs.txt
+>>>
+>>>>  F:	drivers/scsi/ufs/
+>>>
+>>>>
+>>>
+>>>> +UNIVERSAL FLASH STORAGE HOST CONTROLLER CRYPTO DRIVER
+>>>
+>>>> +M:	Parshuram Thombare <pthombar@cadence.com>
+>>>
+>>>> +L:	linux-scsi@vger.kernel.org
+>>>
+>>>> +S:	Supported
+>>>
+>>>> +F:	drivers/scsi/ufs/ufshcd-crypto.c
+>>>
+>>>> +F:	drivers/scsi/ufs/ufshcd-crypto.h
+>>>
+>>>> +
+>>>
+>>>>  UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER DWC HOOKS
+>>>
+>>>>  M:	Joao Pinto <jpinto@synopsys.com>
+>>>
+>>>>  L:	linux-scsi@vger.kernel.org
+>>>
+>>>> diff --git a/block/Kconfig b/block/Kconfig
+>>>
+>>>> index f7045aa..6afe131 100644
+>>>
+>>>> --- a/block/Kconfig
+>>>
+>>>> +++ b/block/Kconfig
+>>>
+>>>> @@ -224,4 +224,9 @@ config BLK_MQ_RDMA
+>>>
+>>>>  config BLK_PM
+>>>
+>>>>  	def_bool BLOCK && PM
+>>>
+>>>>
+>>>
+>>>> +config BLK_DEV_HW_RT_ENCRYPTION
+>>>
+>>>> +	bool
+>>>
+>>>> +	depends on SCSI_UFSHCD_RT_ENCRYPTION
+>>>
+>>>> +	default n
+>>>
+>>>> +
+>>>
+>>>>  source block/Kconfig.iosched
+>>>
+>>>> diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
+>>>
+>>>> index 2ddbb26..09a3ec0 100644
+>>>
+>>>> --- a/drivers/scsi/ufs/Kconfig
+>>>
+>>>> +++ b/drivers/scsi/ufs/Kconfig
+>>>
+>>>> @@ -136,3 +136,15 @@ config SCSI_UFS_BSG
+>>>
+>>>>
+>>>
+>>>>  	  Select this if you need a bsg device node for your UFS controller.
+>>>
+>>>>  	  If unsure, say N.
+>>>
+>>>> +
+>>>
+>>>> +config SCSI_UFSHCD_RT_ENCRYPTION
+>>>
+>>>> +	bool "Universal Flash Storage Controller RT encryption support"
+>>>
+>>>> +	depends on SCSI_UFSHCD
+>>>
+>>>> +	default n
+>>>
+>>>> +	select BLK_DEV_HW_RT_ENCRYPTION if SCSI_UFSHCD_RT_ENCRYPTION
+>>>
+>>>> +	select BLK_DEV_DM if SCSI_UFSHCD_RT_ENCRYPTION
+>>>
+>>>> +	help
+>>>
+>>>> +	Universal Flash Storage Controller RT encryption support
+>>>
+>>>> +
+>>>
+>>>> +	Select this if you want to enable real time encryption on UFS
+>>>> +controller
+>>>
+>>>> +	If unsure, say N.
+>>>
+>>>> diff --git a/drivers/scsi/ufs/Makefile b/drivers/scsi/ufs/Makefile
+>>>
+>>>> index a3bd70c..6169096 100644
+>>>
+>>>> --- a/drivers/scsi/ufs/Makefile
+>>>
+>>>> +++ b/drivers/scsi/ufs/Makefile
+>>>
+>>>> @@ -7,6 +7,7 @@ obj-$(CONFIG_SCSI_UFS_QCOM) +=3D ufs-qcom.o
+>>>
+>>>>  obj-$(CONFIG_SCSI_UFSHCD) +=3D ufshcd-core.o
+>>>
+>>>>  ufshcd-core-y				+=3D ufshcd.o ufs-sysfs.o
+>>>
+>>>>  ufshcd-core-$(CONFIG_SCSI_UFS_BSG)	+=3D ufs_bsg.o
+>>>
+>>>> +ufshcd-core-$(CONFIG_SCSI_UFSHCD_RT_ENCRYPTION) +=3D ufshcd-crypto.o
+>>>
+>>>>  obj-$(CONFIG_SCSI_UFSHCD_PCI) +=3D ufshcd-pci.o
+>>>
+>>>>  obj-$(CONFIG_SCSI_UFSHCD_PLATFORM) +=3D ufshcd-pltfrm.o
+>>>
+>>>>  obj-$(CONFIG_SCSI_UFS_HISI) +=3D ufs-hisi.o
+>>>
+>>>> diff --git a/drivers/scsi/ufs/ufshcd-crypto.c
+>>>> b/drivers/scsi/ufs/ufshcd-crypto.c
+>>>
+>>>> new file mode 100644
+>>>
+>>>> index 0000000..9c95ff3
+>>>
+>>>> --- /dev/null
+>>>
+>>>> +++ b/drivers/scsi/ufs/ufshcd-crypto.c
+>>>
+>>>> @@ -0,0 +1,453 @@
+>>>
+>>>> +// SPDX-License-Identifier: GPL-2.0
+>>>
+>>>> +/*
+>>>
+>>>> + * UFS Host controller crypto driver
+>>>
+>>>> + *
+>>>
+>>>> + * Copyright (C) 2018 Cadence Design Systems, Inc.
+>>>
+>>>> + *
+>>>
+>>>> + * Authors:
+>>>
+>>>> + *	Parshuram Thombare <pthombar@cadence.com>
+>>>
+>>>> + *
+>>>
+>>>> + */
+>>>
+>>>> +
+>>>
+>>>> +#include <linux/module.h>
+>>>
+>>>> +#include <linux/kernel.h>
+>>>
+>>>> +#include <crypto/aes.h>
+>>>
+>>>> +#include <linux/device-mapper.h>
+>>>
+>>>> +#include "ufshcd.h"
+>>>
+>>>> +#include "ufshcd-crypto.h"
+>>>
+>>>> +#include "scsi/scsi_device.h"
+>>>
+>>>> +#include "scsi/scsi_host.h"
+>>>
+>>>> +
+>>>
+>>>> +struct ufshcd_dm_ctx {
+>>>
+>>>> +	struct dm_dev *dev;
+>>>
+>>>> +	sector_t start;
+>>>
+>>>> +	unsigned short int sector_size;
+>>>
+>>>> +	unsigned char sector_shift;
+>>>
+>>>> +	int cci;
+>>>
+>>>> +	int cap_idx;
+>>>
+>>>> +	char key[AES_MAX_KEY_SIZE];
+>>>
+>>>> +	struct ufs_hba *hba;
+>>>
+>>>> +};
+>>>
+>>>> +
+>>>
+>>>> +static int dm_registered;
+>>>
+>>>> +
+>>>
+>>>> +static inline int
+>>>
+>>>> +ufshcd_key_id_to_len(int key_id)
+>>>
+>>>> +{
+>>>
+>>>> +	int key_len =3D -1;
+>>>
+>>>> +
+>>>
+>>>> +	switch (key_id) {
+>>>
+>>>> +	case UFS_CRYPTO_KEY_ID_128BITS:
+>>>
+>>>> +		key_len =3D AES_KEYSIZE_128;
+>>>
+>>>> +		break;
+>>>
+>>>> +	case UFS_CRYPTO_KEY_ID_192BITS:
+>>>
+>>>> +		key_len =3D AES_KEYSIZE_192;
+>>>
+>>>> +		break;
+>>>
+>>>> +	case UFS_CRYPTO_KEY_ID_256BITS:
+>>>
+>>>> +		key_len =3D AES_KEYSIZE_256;
+>>>
+>>>> +		break;
+>>>
+>>>> +	default:
+>>>
+>>>> +		break;
+>>>
+>>>> +	}
+>>>
+>>>> +	return key_len;
+>>>
+>>>> +}
+>
+>Why not -EINVAL for invalid key length?
+>
+>>>
+>>>> +
+>>>
+>>>> +static inline int
+>>>
+>>>> +ufshcd_key_len_to_id(int key_len)
+>>>
+>>>> +{
+>>>
+>>>> +	int key_id =3D -1;
+>>>
+>>>> +
+>>>
+>>>> +	switch (key_len) {
+>>>
+>>>> +	case AES_KEYSIZE_128:
+>>>
+>>>> +		key_id =3D UFS_CRYPTO_KEY_ID_128BITS;
+>>>
+>>>> +		break;
+>>>
+>>>> +	case AES_KEYSIZE_192:
+>>>
+>>>> +		key_id =3D UFS_CRYPTO_KEY_ID_192BITS;
+>>>
+>>>> +		break;
+>>>
+>>>> +	case AES_KEYSIZE_256:
+>>>
+>>>> +		key_id =3D UFS_CRYPTO_KEY_ID_256BITS;
+>>>
+>>>> +		break;
+>>>
+>>>> +	default:
+>>>
+>>>> +		break;
+>>>
+>>>> +	}
+>>>
+>>>> +	return key_id;
+>>>
+>>>> +}
+>>>
+>>>> +
+>>>
+>>>> +static void
+>>>
+>>>> +ufshcd_read_crypto_capabilities(struct ufs_hba *hba)
+>>>
+>>>> +{
+>>>
+>>>> +	u32 tmp, i;
+>>>
+>>>> +	struct ufshcd_crypto_ctx *cctx =3D hba->cctx;
+>>>
+>>>> +
+>>>
+>>>> +	for (i =3D 0; i < cctx->cap_cnt; i++) {
+>>>
+>>>> +		tmp =3D ufshcd_readl(hba, REG_UFS_CRYPTOCAP + i);
+>>>
+>>>> +		cctx->ccaps[i].key_id =3D (tmp & CRYPTO_CAPS_KS_MASK) >>
+>>>
+>>>> +						CRYPTO_CAPS_KS_SHIFT;
+>>>
+>>>> +		cctx->ccaps[i].sdusb =3D (tmp & CRYPTO_CAPS_SDUSB_MASK) >>
+>>>
+>>>> +						CRYPTO_CAPS_SDUSB_SHIFT;
+>>>
+>>>> +		cctx->ccaps[i].alg_id =3D (tmp & CRYPTO_CAPS_ALG_ID_MASK) >>
+>>>
+>>>> +						CRYPTO_CAPS_ALG_ID_SHIFT;
+>>>
+>>>> +	}
+>>>
+>>>> +}
+>>>
+>>>> +
+>>>
+>>>> +static inline int
+>>>
+>>>> +ufshcd_get_cap_idx(struct ufshcd_crypto_ctx *cctx, int alg_id,
+>>>
+>>>> +	int key_id)
+>>>
+>>>> +{
+>>>
+>>>> +	int cap_idx;
+>>>
+>>>> +
+>>>
+>>>> +	for (cap_idx =3D 0; cap_idx < cctx->cap_cnt; cap_idx++) {
+>>>
+>>>> +		if (((cctx->ccaps[cap_idx].alg_id =3D=3D alg_id) &&
+>>>
+>>>> +			cctx->ccaps[cap_idx].key_id =3D=3D key_id))
+>>>
+>>>> +			break;
+>>>
+>>>> +	}
+>>>
+>>>> +	return ((cap_idx < cctx->cap_cnt) ? cap_idx : -1);
+>>>
+>>>> +}
+>>>
+>>>> +
+>>>
+>>>> +static inline int
+>>>
+>>>> +ufshcd_get_cci_slot(struct ufshcd_crypto_ctx *cctx)
+>>>
+>>>> +{
+>>>
+>>>> +	int  cci;
+>>>
+>>>> +
+>>>
+>>>> +	for (cci =3D 0; cci < cctx->config_cnt; cci++) {
+>>>
+>>>> +		if (!cctx->cconfigs[cci].cfge) {
+>>>
+>>>> +			cctx->cconfigs[cci].cfge =3D 1;
+>>>
+>>>> +			break;
+>>>
+>>>> +		}
+>>>
+>>>> +	}
+>>>
+>>>> +	return ((cci < cctx->config_cnt) ? cci : -1);
+>>>
+>>>> +}
+>>>
+>>>> +
+>>>
+>>>> +static void
+>>>
+>>>> +ufshcd_aes_ecb_set_key(struct ufshcd_dm_ctx *ctx)
+>>>
+>>>> +{
+>>>
+>>>> +	int i, key_size;
+>>>
+>>>> +	u32 val, cconfig16, crypto_config_addr;
+>>>
+>>>> +	struct ufshcd_crypto_ctx *cctx;
+>>>
+>>>> +	struct ufshcd_crypto_config *cconfig;
+>>>
+>>>> +	struct ufshcd_crypto_cap ccap;
+>>>
+>>>> +
+>>>
+>>>> +	cctx =3D ctx->hba->cctx;
+>>>
+>>>> +	if (ctx->cci <=3D 0)
+>>>
+>>>> +		ctx->cci =3D ufshcd_get_cci_slot(cctx);
+>>>
+>>>> +	/* If no slot is available, slot 0 is shared */
+>>>
+>>>> +	ctx->cci =3D ctx->cci < 0 ? 0 : ctx->cci;
+>>>
+>>>> +	cconfig =3D &(cctx->cconfigs[ctx->cci]);
+>>>
+>>>> +	ccap =3D cctx->ccaps[ctx->cap_idx];
+>>>
+>>>> +	key_size =3D ufshcd_key_id_to_len(ccap.key_id);
+>>>
+>>>> +
+>>>
+>>>> +	if ((cconfig->cap_idx !=3D ctx->cap_idx) ||
+>>>
+>>>> +		((key_size > 0) &&
+>>>
+>>>> +		memcmp(cconfig->key, ctx->key, key_size))) {
+>>>
+>>>> +		cconfig->cap_idx =3D ctx->cap_idx;
+>>>
+>>>> +		memcpy(cconfig->key, ctx->key, key_size);
+>>>
+>>>> +		crypto_config_addr =3D cctx->crypto_config_base_addr +
+>>>
+>>>> +				ctx->cci * CRYPTO_CONFIG_SIZE;
+>>>
+>>>> +		cconfig16 =3D ccap.sdusb | (1 <<
+>>> CRYPTO_CCONFIG16_CFGE_SHIFT);
+>>>
+>>>> +		cconfig16 |=3D ((ctx->cap_idx <<
+>>> CRYPTO_CCONFIG16_CAP_IDX_SHIFT) &
+>>>
+>>>> +				CRYPTO_CCONFIG16_CAP_IDX_MASK);
+>>>
+>>>> +		spin_lock(&cctx->crypto_lock);
+>>>
+>>>> +		for (i =3D 0; i < key_size; i +=3D 4) {
+>>>
+>>>> +			val =3D (ctx->key[i] | (ctx->key[i + 1] << 8) |
+>>>
+>>>> +				(ctx->key[i + 2] << 16) |
+>>>
+>>>> +				(ctx->key[i + 3] << 24));
+>>>
+>>>> +			ufshcd_writel(ctx->hba, val, crypto_config_addr + i);
+>>>
+>>>> +		}
+>>>
+>>>> +		ufshcd_writel(ctx->hba, cpu_to_le32(cconfig16),
+>>>
+>>>> +				crypto_config_addr + (4 * 16));
+>>>
+>>>> +		spin_unlock(&cctx->crypto_lock);
+>>>
+>>>> +		/* Make sure keys are programmed */
+>>>
+>>>> +		mb();
+>>>
+>>>> +	}
+>>>
+>>>> +}
+>>>
+>>>
+>>>
+>>> First of all, thanks for working on this.  A lot of Android device
+>>> vendors would
+>>>
+>>> like to have upstream support for inline encryption.  However, are
+>>> you aware of
+>>>
+>>> previous (unsuccessful) patchsets by other people working on this?
+>>> Have you
+>>>
+>>> addressed the concerns and improved on their work, or is this just
+>>> yet another
+>>>
+>>> new effort starting from scratch?
+>>>
+>>>
+>>>
+>>> AnilKumar Chimata <anilc@codeaurora.org> (Qualcomm) in October 2018:
+>>>
+>>>
+>>>
+>>> 	https://urldefense.proofpoint.com/v2/url?u=3Dhttps-
+>>>
+>3A__patchwork.kernel.org_cover_10645739_&d=3DDwIBAg&c=3DaUq983L2pue2FqKF
+>>> oP6PGHMJQyoJ7kl3s3GZ-_haXqY&r=3DGTefrem3hiBCnsjCOqAuapQHRN8-
+>>> rKC1FRbk0it-
+>>>
+>LDs&m=3DL9VLjsZ31dZ4TP4LdveuvcjPFzdZWGlZaZnzqGZH3zc&s=3DZzYaAaVic5TB4RUS
+>>> cR5kzcM_8gvLYdlNAzuY80_ASzI&e=3D
+>>>
+>>>
+>>>
+>>> Ladvine D Almeida <ladvine@synopsys.com> in May 2018:
+>>>
+>>>
+>>>
+>>> 	https://urldefense.proofpoint.com/v2/url?u=3Dhttp-3A__lists-
+>>> 2Darchives.com_linux-2Dkernel_29135393-2Dscsi-2Dufs-2Dufs-2Dhost-
+>>> 2Dcontroller-2Dcrypto-
+>>> 2Dchanges.html&d=3DDwIBAg&c=3DaUq983L2pue2FqKFoP6PGHMJQyoJ7kl3s3GZ-
+>>> _haXqY&r=3DGTefrem3hiBCnsjCOqAuapQHRN8-rKC1FRbk0it-
+>>>
+>LDs&m=3DL9VLjsZ31dZ4TP4LdveuvcjPFzdZWGlZaZnzqGZH3zc&s=3D3pxSBZrt_DpDSz-
+>>> ZXrM7_bj0QXmRzcbasPl_wB259Us&e=3D
+>>>
+>>>
+>>>
+>>> Satya Tangirala <satyat@google.com> is also working on it but I don't
+>>> believe
+>>>
+>>> he's sent out a patchset yet.
+>>>
+>>>
+>>>
+>>> It would be nice to coordinate to get a proper solution upstream that
+>>> works for
+>>>
+>>> everyone, rather than having everyone try independently and fail
+>>> repeatedly :-)
+>> I had look at Ladvine's submission and think the approach of using
+>> Linux crypto API and adding algorithm which is supposed to work inline
+>> (and with UFS devices only) in global pool of algorithms (which is
+>> supposed to be generic) makes it risky, if selected/used for other
+>> type of device not supporting inline encryption. Also apparently it is n=
+ot possible
+>to support multiple UFS controllers in the system with that approach.
+>> There was suggestion from Milan to use separate device mapper which
+>> seems cleaner way of enabling inline encryption. Hence new device mapper=
+ is
+>used.
+>> I think this is better idea to coordinate and come up with a generic sol=
+ution.
+>
+>Suggest to take a look into the article
+>https://urldefense.proofpoint.com/v2/url?u=3Dhttps-
+>3A__lwn.net_Articles_717754&d=3DDwIFAg&c=3DaUq983L2pue2FqKFoP6PGHMJQyoJ
+>7kl3s3GZ-_haXqY&r=3DGTefrem3hiBCnsjCOqAuapQHRN8-rKC1FRbk0it-
+>LDs&m=3DrOQpiy7-
+>jae72qATLWxXtCnoEXCjZLklWrHo5NtcUqo&s=3DxVHqE7JfiKf0rCQozZrYr6eeFn5D6U
+>OCvXJMP-mjYX8&e=3D
+>My real concern is how to achieve it without any modifications to the
+>bio.(because key slot information has to finally reach the target block
+>device)
+>
+>>>
+>>>
+>>>
+>>> Also, note that ECB mode is not appropriate for disk encryption.  So
+>>> this patch
+>>>
+>>> (and the hardware you tested it on, if that's all it supports) is
+>>> effectively
+>>>
+>>> useless as-is.  You need to support XTS mode.
+>> For now only AES-ECB is supported, we are working on adding other modes.
+>>>
+>>>
+>>>
+>>> Thanks!
+>>>
+>>>
+>>>
+>>> - Eric
+>>
+>> Regards,
+>> Parshuram Thombare
+>>
+>
+>Thanks,
+>Ladvine
