@@ -1,56 +1,37 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH 2/7] scsi: raid_attrs: fix unused variable warning
-Date: Fri, 14 Dec 2018 23:10:07 +0100
-Message-ID: <20181214221023.3878670-3-arnd@arndb.de>
-References: <20181214221023.3878670-1-arnd@arndb.de>
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] scsi: 3w-xxx: fix indentation issue, add missing tab
+Date: Sat, 15 Dec 2018 14:17:08 +0000
+Message-ID: <20181215141708.30883-1-colin.king@canonical.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20181214221023.3878670-1-arnd@arndb.de>
-Sender: stable-owner@vger.kernel.org
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: stable@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Adam Radford <aradford@gmail.com>, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Commit 0eeec01488da9b1403c8c29e73eacac8af9e4bf2 upstream.
+From: Colin Ian King <colin.king@canonical.com>
 
-I ran into a new warning on randconfig kernels:
+There is a tab missing on a return statement, add the missing tab.
 
-drivers/scsi/raid_class.c: In function 'raid_match':
-drivers/scsi/raid_class.c:64:24: error: unused variable 'i' [-Werror=unused-variable]
-
-This looks like a very old problem that for some reason was very hard to
-run into, but it is very easy to fix, by replacing the incorrect #ifdef
-with a simpler IS_ENABLED() check.
-
-Fixes: fac829fdcaf4 ("[SCSI] raid_attrs: fix dependency problems")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
 ---
- drivers/scsi/raid_class.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ drivers/scsi/3w-xxxx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/raid_class.c b/drivers/scsi/raid_class.c
-index ea88906d2cc5..5c3d6e1e0145 100644
---- a/drivers/scsi/raid_class.c
-+++ b/drivers/scsi/raid_class.c
-@@ -63,8 +63,7 @@ static int raid_match(struct attribute_container *cont, struct device *dev)
- 	 * emulated RAID devices, so start with SCSI */
- 	struct raid_internal *i = ac_to_raid_internal(cont);
- 
--#if defined(CONFIG_SCSI) || defined(CONFIG_SCSI_MODULE)
--	if (scsi_is_sdev_device(dev)) {
-+	if (IS_ENABLED(CONFIG_SCSI) && scsi_is_sdev_device(dev)) {
- 		struct scsi_device *sdev = to_scsi_device(dev);
- 
- 		if (i->f->cookie != sdev->host->hostt)
-@@ -72,7 +71,6 @@ static int raid_match(struct attribute_container *cont, struct device *dev)
- 
- 		return i->f->is_raid(dev);
+diff --git a/drivers/scsi/3w-xxxx.c b/drivers/scsi/3w-xxxx.c
+index a58257645e94..04164d2f03dd 100644
+--- a/drivers/scsi/3w-xxxx.c
++++ b/drivers/scsi/3w-xxxx.c
+@@ -1174,7 +1174,7 @@ static int tw_setfeature(TW_Device_Extension *tw_dev, int parm, int param_size,
+   	command_que_value = tw_dev->command_packet_physical_address[request_id];
+ 	if (command_que_value == 0) {
+ 		printk(KERN_WARNING "3w-xxxx: tw_setfeature(): Bad command packet physical address.\n");
+-	return 1;
++		return 1;
  	}
--#endif
- 	/* FIXME: look at other subsystems too */
- 	return 0;
- }
+ 
+ 	/* Send command packet to the board */
 -- 
-2.20.0
+2.19.1
