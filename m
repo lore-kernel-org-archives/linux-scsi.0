@@ -1,46 +1,48 @@
-From: John Garry <john.garry@huawei.com>
-Subject: Re: [PATCH v4 4/5] scsi: hisi_sas: Add support for DIF feature for v3
- hw
-Date: Mon, 17 Dec 2018 14:51:36 +0000
-Message-ID: <afb32599-9b81-9d56-3ae7-2797992353a1@huawei.com>
-References: <1544103284-100497-1-git-send-email-john.garry@huawei.com>
- <1544103284-100497-5-git-send-email-john.garry@huawei.com>
- <yq1o99qgobi.fsf@oracle.com>
- <4752be71-f39c-ac55-0e51-36c146108a38@huawei.com>
+From: <Don.Brace@microchip.com>
+Subject: RE: [PATCH 0/6] Add support of the HBA mode on HP Smart Array P410i
+ controllers
+Date: Mon, 17 Dec 2018 16:32:10 +0000
+Message-ID: <BYAPR11MB285502EFDD672C228F9FFB73E1BC0@BYAPR11MB2855.namprd11.prod.outlook.com>
+References: <20181214132115.21440-1-mironov.ivan@gmail.com>
+         <BYAPR11MB285586623125DD1C98EE87F1E1A10@BYAPR11MB2855.namprd11.prod.outlook.com>
+ <449fb880e94d478fb35e01da93c5b1fa1732f7d8.camel@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4752be71-f39c-ac55-0e51-36c146108a38@huawei.com>
+In-Reply-To: <449fb880e94d478fb35e01da93c5b1fa1732f7d8.camel@gmail.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: jejb@linux.vnet.ibm.com, linuxarm@huawei.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Xiang Chen <chenxiang66@hisilicon.com>
+To: mironov.ivan@gmail.com, linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, don.brace@microsemi.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, esc.storagedev@microsemi.com
 List-Id: linux-scsi@vger.kernel.org
 
-On 13/12/2018 13:35, John Garry wrote:
->
->>
->> to set your controller flags.
->>
->> +        if (prot_op == SCSI_PROT_WRITE_INSERT) {
->> +            unsigned int interval = scsi_prot_interval(scsi_cmnd);
->> +            unsigned int ilog2_interval = ilog2(interval);
->> +
->> +            len = (task->total_xfer_len >> ilog2_interval) * 8;
->>
->> scsi_transfer_length(struct scsi_cmnd *scmd)
->
-> ok
-
-Hi Martin,
-
-We have an issue with using scsi_transfer_length().
-
-As I understand, for our controller we need to set the host structure 
-data transfer size to the size of data to write to the disk for WRITE 
-type command, and at size of info received to host memory for READ type 
-command. As such, for READ STRIP, we only want the SCSI buf len, and not 
-the scsi buf len and PI (this is what scsi_transfer_length() provides).
-
-Thanks,
-John
+LS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEl2YW4gTWlyb25vdiBbbWFpbHRvOm1p
+cm9ub3YuaXZhbkBnbWFpbC5jb21dIA0KU2VudDogRnJpZGF5LCBEZWNlbWJlciAxNCwgMjAxOCAy
+OjMwIFBNDQpUbzogRG9uIEJyYWNlIC0gQzMzNzA2IDxEb24uQnJhY2VAbWljcm9jaGlwLmNvbT47
+IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnDQpDYzogbGludXgta2VybmVsQHZnZXIua2VybmVs
+Lm9yZzsgZG9uLmJyYWNlQG1pY3Jvc2VtaS5jb207IGplamJAbGludXgudm5ldC5pYm0uY29tOyBt
+YXJ0aW4ucGV0ZXJzZW5Ab3JhY2xlLmNvbTsgZXNjLnN0b3JhZ2VkZXZAbWljcm9zZW1pLmNvbQ0K
+U3ViamVjdDogUmU6IFtQQVRDSCAwLzZdIEFkZCBzdXBwb3J0IG9mIHRoZSBIQkEgbW9kZSBvbiBI
+UCBTbWFydCBBcnJheSBQNDEwaSBjb250cm9sbGVycw0KDQpFWFRFUk5BTCBFTUFJTA0KDQoNCk9u
+IEZyaSwgMjAxOC0xMi0xNCBhdCAxOTozOCArMDAwMCwgRG9uLkJyYWNlQG1pY3JvY2hpcC5jb20g
+d3JvdGU6DQo+IE5BS2luZyB0aGlzIHNlcmllcy4NCj4gLSBUaGUgUDQxMCBjb250cm9sbGVycyBk
+byBub3QgZnVsbHkgc3VwcG9ydCBIQkEgbW9kZSBhbmQgd2UgZG8gbm90IHN1cHBvcnQgYWRkaW5n
+IGl0IHRvIHRoZSBocHNhIGRyaXZlci4NCj4NCg0KQ291bGQgeW91IHBsZWFzZSBlbGFib3JhdGUg
+b24gd2hhdCBleGFjdGx5IHlvdSBtZWFuIGJ5ICJkbyBub3QgZnVsbHkgc3VwcG9ydCBIQkEgbW9k
+ZSI/DQoNCkRvbj4gSEJBIG1vZGUgbWF5IGhhdmUgc3RhcnRlZCBvbiB0aGlzIGNvbnRyb2xsZXIg
+ZmFtaWx5LCBidXQgd2FzIG5vdCBmdWxseSBkZXZlbG9wZWQuDQpEb24+IFJlZ2FyZGxlc3Mgb2Yg
+dGhlIHNlcnZlciwgSXQncyBub3QgYSBnZW5lcmljIG9mZmVyaW5nIGFuZCBzaG91bGQgbm90IGJl
+IGFjY2VwdGVkIGludG8gdGhlIGdlbmVyYWwgZHJpdmVyIHNwYWNlLg0KRG9uPiBBZGRpbmcgdGhp
+cyB0byBrZXJuZWwub3JnIG1lYW5zIGl0IHdpbGwgZmluZCBpdHMgd2F5IGludG8gb3RoZXIgTGlu
+dXggdmVuZG9ycyBhbmQgd2UgZG8gbm90IHdhbnQgdGhpcyBlaXRoZXIuDQoNCkhCQSBtb2RlIGxv
+b2tzIHN1cHBvcnRlZCBvbiBQNDEwaSAoYXQgbGVhc3QgdG8gc29tZSBkZWdyZWUpIGJlY2F1c2U6
+DQoqKSBUaGVyZSBpcyBhbiBvZmZpY2lhbCBtZXRob2QgdG8gZW5hYmxlL2Rpc2FibGUgaXQgb24g
+dGhlc2UgY29udHJvbGxlcnMuIE9ubHkgZm9yIGl0YW5pdW0tYmFzZWQgc2VydmVycyB1bmZvcnR1
+bmF0ZWx5Lg0KKikgVGhpcyBtZXRob2QgaXMgbWVudGlvbmVkIGluIHZhcmlvdXMgZG9jdW1lbnRz
+IGZyb20gSFAgcmVnYXJkaW5nIEludGVncml0eSBzZXJ2ZXJzLg0KKikgQ29udHJvbGxlciByZWFj
+dHMgb24gdGhlIGNoYW5nZSBvZiBjb3JyZXNwb25naW5nIGJpdCBpbiBudnJhbV9mbGFncyBieSBp
+bW1lZGlhdGVseSByZW1vdmluZyBhbnkgY29uZmlndXJlZCBSQUlEIGFycmF5cyBhbmQgYnkgcmVm
+dXNpbmcgdG8gY29uZmlndXJlIG5ldyBhcnJheXMuIFdoaWNoIGlzIHRvdGFsbHkgZXhwZWN0ZWQg
+Zm9yIEhCQSBtb2RlLg0KKikgSEJBIG1vZGUgd29ya3MgZm9yIG1lIG9uIFA0MTBpIHdpdGggcGF0
+Y2hlZCBkcml2ZXIuDQoNCg==
