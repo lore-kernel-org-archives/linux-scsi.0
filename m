@@ -1,135 +1,97 @@
-From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: Re: [PATCH 00/41] scsi: Mark expected switch
- fall-throughs
-Date: Tue, 18 Dec 2018 09:23:54 -0600
-Message-ID: <304623b0-e0ad-ec9c-7097-c6f00ba43948@embeddedor.com>
-References: <cover.1543374820.git.gustavo@embeddedor.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 4.20-rc7
+Date: Tue, 18 Dec 2018 07:57:14 -0800
+Message-ID: <1545148634.2837.6.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
-Content-Transfer-Encoding: base64
-Return-path: <xen-devel-bounces@lists.xenproject.org>
-In-Reply-To: <cover.1543374820.git.gustavo@embeddedor.com>
-Content-Language: en-US
-List-Unsubscribe: <https://lists.xenproject.org/mailman/options/xen-devel>,
- <mailto:xen-devel-request@lists.xenproject.org?subject=unsubscribe>
-List-Post: <mailto:xen-devel@lists.xenproject.org>
-List-Help: <mailto:xen-devel-request@lists.xenproject.org?subject=help>
-List-Subscribe: <https://lists.xenproject.org/mailman/listinfo/xen-devel>,
- <mailto:xen-devel-request@lists.xenproject.org?subject=subscribe>
-Errors-To: xen-devel-bounces@lists.xenproject.org
-Sender: "Xen-devel" <xen-devel-bounces@lists.xenproject.org>
-To: Khalid Aziz <khalid@gonehiking.org>, Finn Thain <fthain@telegraphics.com.au>, Michael Schmitz <schmitzmic@gmail.com>, Adaptec OEM Raid Solutions <aacraid@microsemi.com>, Hannes Reinecke <hare@suse.com>, Subbu Seetharaman <subbu.seetharaman@broadcom.com>, Ketan Mukadam <ketan.mukadam@broadcom.com>, Jitendra Bhivare <jitendra.bhivare@broadcom.com>, Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, Bradley Grove <linuxdrivers@attotech.com>, Don Brace <don.brace@microsemi.com>, Intel SCU Linux support <intel-linux-scu@intel.com>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>, Johannes Thumshirn <jth@kernel.org>, James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, Kashyap Desai <kashyap.desai@broadcom.com>, Sumit Saxena <sumit.saxena@broadcom.com>, Shivasharan S <shivasharan.srikanteshwara@broa>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Kees Cook <keescook@chromium.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-SGkgTWFydGluLAoKRnJpZW5kbHkgcGluZzoKCk9ubHkgOCBvdXQgdGhlIDQxIHBhdGNoZXMgaW4g
-dGhpcyBzZXJpZXMgaGF2ZSBiZWVuIGFwcGxpZWQgc28gZmFyLgoKSSB3b25kZXIgaWYgeW91IGNv
-dWxkIGFwcGx5IHRoZSByZXN0IG9mIHRoaXMgc2VyaWVzLCBleGNlcHQ6CgogIFtQQVRDSCAwMi80
-MV0gc2NzaTogTkNSNTM4MDogTWFyayBleHBlY3RlZCBzd2l0Y2ggZmFsbC10aHJvdWdoCgooSSds
-bCBzZW5kIGEgdjIgb2YgdGhpcyBwYXRjaCkKClRoYW5rcwotLQpHdXN0YXZvCgpPbiAxMS8yNy8x
-OCAxMDoxOCBQTSwgR3VzdGF2byBBLiBSLiBTaWx2YSB3cm90ZToKPiBJbiBwcmVwYXJhdGlvbiB0
-byBlbmFibGluZyAtV2ltcGxpY2l0LWZhbGx0aHJvdWdoLCB0aGlzIHBhdGNoc2V0IGFpbXMKPiB0
-byBtYXJrIHN3aXRjaCBjYXNlcyB3aGVyZSB3ZSBhcmUgZXhwZWN0aW5nIHRvIGZhbGwgdGhyb3Vn
-aC4KPiAKPiBJIHJldmlld2VkIGNhc2UgYnkgY2FzZSBhbmQgY29uY2x1ZGVkIHRoYXQgZWFjaCBv
-ZiB0aGVtIGlzIGFuCj4gaW50ZW50aW9uYWwgZmFsbC10aHJvdWdoLiBIb3dldmVyLCBpdCBkb2Vz
-bid0IGh1cnQgdGhhdCB0aGUKPiBtYWludGFpbmVycyBhbmQgc3VwcG9ydGVycyBvZiBlYWNoIGRy
-aXZlciB0YWtlIGEgbG9vay4gOikKPiAKPiBFYWNoIGNvbW1pdCBsb2cgY29udGFpbnMgdGhlIHBh
-cnRpY3VsYXIgZGV0YWlscyBmb3IgdGhlIGNoYW5nZXMgaW4gdGhlCj4gY29ycmVzcG9uZGluZyBm
-aWxlLgo+IAo+IFRoaXMgc2VyaWVzIGZpeCBhIHRvdGFsIG9mIDExMCBvZiB0aGUgZm9sbG93aW5n
-IHR5cGUgb2Ygd2FybmluZ3MgaW4KPiBkcml2ZXJzL3Njc2k6Cj4gCj4gZHJpdmVycy9zY3NpL2Fp
-Yzd4eHgvYWljN3h4eF9jb3JlLmM6NDkyMTozOiB3YXJuaW5nOiB0aGlzIHN0YXRlbWVudCBtYXkg
-ZmFsbCB0aHJvdWdoIFstV2ltcGxpY2l0LWZhbGx0aHJvdWdoPV0KPiAgICAgYWhjX2RtYV90YWdf
-ZGVzdHJveShhaGMsIHNjYl9kYXRhLT5zZ19kbWF0KTsKPiAgICAgXn5+fn5+fn5+fn5+fn5+fn5+
-fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fgo+IGRyaXZlcnMvc2NzaS9haWM3eHh4L2FpYzd4eHhf
-Y29yZS5jOjQ5MjM6Mjogbm90ZTogaGVyZQo+ICAgIGNhc2UgNjoKPiAgICBefn5+Cj4gCj4gVGhh
-bmtzIQo+IAo+IEd1c3Rhdm8gQS4gUi4gU2lsdmEgKDQxKToKPiAgICBzY3NpOiBCdXNMb2dpYzog
-bWFyayBleHBlY3RlZCBzd2l0Y2ggZmFsbC10aHJvdWdoCj4gICAgc2NzaTogTkNSNTM4MDogTWFy
-ayBleHBlY3RlZCBzd2l0Y2ggZmFsbC10aHJvdWdoCj4gICAgc2NzaTogYWFjcmFpZDogYWFjaGJh
-OiBNYXJrIGV4cGVjdGVkIHN3aXRjaCBmYWxsLXRocm91Z2hzCj4gICAgc2NzaTogYWFjcmFpZDog
-bGluaXQ6IE1hcmsgZXhwZWN0ZWQgc3dpdGNoIGZhbGwtdGhyb3VnaAo+ICAgIHNjc2k6IGFpYzd4
-eHg6IGFpYzc5eHg6IG1hcmsgZXhwZWN0ZWQgc3dpdGNoIGZhbGwtdGhyb3VnaAo+ICAgIHNjc2k6
-IGFpYzd4eHg6IG1hcmsgZXhwZWN0ZWQgc3dpdGNoIGZhbGwtdGhyb3VnaHMKPiAgICBzY3NpOiBi
-ZTJpc2NzaTogYmVfaXNjc2k6IE1hcmsgZXhwZWN0ZWQgc3dpdGNoIGZhbGwtdGhyb3VnaAo+ICAg
-IHNjc2k6IGJlMmlzY3NpOiBiZV9tYWluOiBNYXJrIGV4cGVjdGVkIHN3aXRjaCBmYWxsLXRocm91
-Z2gKPiAgICBzY3NpOiBiZmE6IGJmYV9mY3BpbTogTWFyayBleHBlY3RlZCBzd2l0Y2ggZmFsbC10
-aHJvdWdocwo+ICAgIHNjc2k6IGJmYTogYmZhX2Zjc19scG9ydDogTWFyayBleHBlY3RlZCBzd2l0
-Y2ggZmFsbC10aHJvdWdocwo+ICAgIHNjc2k6IGJmYTogYmZhX2Zjc19ycG9ydDogTWFyayBleHBl
-Y3RlZCBzd2l0Y2ggZmFsbC10aHJvdWdocwo+ICAgIHNjc2k6IGJmYTogYmZhX2lvYzogTWFyayBl
-eHBlY3RlZCBzd2l0Y2ggZmFsbC10aHJvdWdocwo+ICAgIHNjc2k6IGNzaW9zdG9yOiBjc2lvX3dy
-OiBtYXJrIGV4cGVjdGVkIHN3aXRjaCBmYWxsLXRocm91Z2gKPiAgICBzY3NpOiBlc2FzMnI6IGVz
-YXMycl9pbml0OiBtYXJrIGV4cGVjdGVkIHN3aXRjaCBmYWxsLXRocm91Z2hzCj4gICAgc2NzaTog
-aHBzYTogbWFyayBleHBlY3RlZCBzd2l0Y2ggZmFsbC10aHJvdWdocwo+ICAgIHNjc2k6IGltbTog
-bWFyayBleHBlY3RlZCBzd2l0Y2ggZmFsbC10aHJvdWdocwo+ICAgIHNjc2k6IGlzY2k6IHBoeTog
-TWFyayBleHBlY3RlZCBzd2l0Y2ggZmFsbC10aHJvdWdoCj4gICAgc2NzaTogaXNjaTogcmVtb3Rl
-X2RldmljZTogTWFyayBleHBlY3RlZCBzd2l0Y2ggZmFsbC10aHJvdWdocwo+ICAgIHNjc2k6IGlz
-Y2k6IHJlbW90ZV9ub2RlX2NvbnRleHQ6IG1hcmsgZXhwZWN0ZWQgc3dpdGNoIGZhbGwtdGhyb3Vn
-aHMKPiAgICBzY3NpOiBpc2NpOiByZXF1ZXN0OiBtYXJrIGV4cGVjdGVkIHN3aXRjaCBmYWxsLXRo
-cm91Z2gKPiAgICBzY3NpOiBsaWJmYzogZmNfcnBvcnQ6IE1hcmsgZXhwZWN0ZWQgc3dpdGNoIGZh
-bGwtdGhyb3VnaAo+ICAgIHNjc2k6IGxwZmM6IGxwZmNfY3Q6IE1hcmsgZXhwZWN0ZWQgc3dpdGNo
-IGZhbGwtdGhyb3VnaHMKPiAgICBzY3NpOiBscGZjOiBscGZjX2VsczogTWFyayBleHBlY3RlZCBz
-d2l0Y2ggZmFsbC10aHJvdWdocwo+ICAgIHNjc2k6IGxwZmM6IGxwZmNfaGJhZGlzYzogTWFyayBl
-eHBlY3RlZCBzd2l0Y2ggZmFsbC10aHJvdWdocwo+ICAgIHNjc2k6IGxwZmM6IGxwZmNfbnBvcnRk
-aXNjOiBNYXJrIGV4cGVjdGVkIHN3aXRjaCBmYWxsLXRocm91Z2gKPiAgICBzY3NpOiBscGZjOiBs
-cGZjX252bWU6IE1hcmsgZXhwZWN0ZWQgc3dpdGNoIGZhbGwtdGhyb3VnaAo+ICAgIHNjc2k6IGxw
-ZmM6IGxwZmNfc2NzaTogTWFyayBleHBlY3RlZCBzd2l0Y2ggZmFsbC10aHJvdWdocwo+ICAgIHNj
-c2k6IGxwZmM6IGxwZmNfc2xpOiBNYXJrIGV4cGVjdGVkIHN3aXRjaCBmYWxsLXRocm91Z2hzCj4g
-ICAgc2NzaTogbWVnYXJhaWQ6IG1lZ2FyYWlkX3Nhc19iYXNlOiBNYXJrIGV4cGVjdGVkIHN3aXRj
-aCBmYWxsLXRocm91Z2gKPiAgICBzY3NpOiBtZWdhcmFpZF9zYXNfZnVzaW9uOiBNYXJrIGV4cGVj
-dGVkIHN3aXRjaCBmYWxsLXRocm91Z2gKPiAgICBzY3NpOiBtcHQzc2FzOiBtcHQzc2FzX3Njc2lo
-OiBNYXJrIGV4cGVjdGVkIHN3aXRjaCBmYWxsLXRocm91Z2gKPiAgICBzY3NpOiBteXJiOiBNYXJr
-IGV4cGVjdGVkIHN3aXRjaCBmYWxsLXRocm91Z2hzCj4gICAgc2NzaTogb3NkOiBvc2RfaW5pdGlh
-dG9yOiBtYXJrIGV4cGVjdGVkIHN3aXRjaCBmYWxsLXRocm91Z2hzCj4gICAgc2NzaTogb3NzdDog
-bWFyayBleHBlY3RlZCBzd2l0Y2ggZmFsbC10aHJvdWdocwo+ICAgIHNjc2k6IHBwYTogbWFyayBl
-eHBlY3RlZCBzd2l0Y2ggZmFsbC10aHJvdWdoCj4gICAgc2NzaTogcWxhNHh4eDogcWw0X29zOiBt
-YXJrIGV4cGVjdGVkIHN3aXRjaCBmYWxsLXRocm91Z2gKPiAgICBzY3NpOiBzdDogbWFyayBleHBl
-Y3RlZCBzd2l0Y2ggZmFsbC10aHJvdWdocwo+ICAgIHNjc2k6IHN5bTUzYzh4eF8yOiBzeW1faGlw
-ZDogbWFyayBleHBlY3RlZCBzd2l0Y2ggZmFsbC10aHJvdWdocwo+ICAgIHNjc2k6IHN5bTUzYzh4
-eF8yOiBzeW1fbnZyYW06IE1hcmsgZXhwZWN0ZWQgc3dpdGNoIGZhbGwtdGhyb3VnaAo+ICAgIHNj
-c2k6IHVmczogdWZzaGNkOiBtYXJrIGV4cGVjdGVkIHN3aXRjaCBmYWxsLXRocm91Z2hzCj4gICAg
-c2NzaTogeGVuLXNjc2lmcm9udDogbWFyayBleHBlY3RlZCBzd2l0Y2ggZmFsbC10aHJvdWdoCj4g
-Cj4gICBkcml2ZXJzL3Njc2kvQnVzTG9naWMuYyAgICAgICAgICAgICAgICAgICAgIHwgIDEgKwo+
-ICAgZHJpdmVycy9zY3NpL05DUjUzODAuYyAgICAgICAgICAgICAgICAgICAgICB8ICAzICstCj4g
-ICBkcml2ZXJzL3Njc2kvYWFjcmFpZC9hYWNoYmEuYyAgICAgICAgICAgICAgIHwgIDUgKysrLQo+
-ICAgZHJpdmVycy9zY3NpL2FhY3JhaWQvbGluaXQuYyAgICAgICAgICAgICAgICB8ICAxICsKPiAg
-IGRyaXZlcnMvc2NzaS9haWM3eHh4L2FpYzc5eHhfY29yZS5jICAgICAgICAgfCAxNCArKysrKy0t
-LS0KPiAgIGRyaXZlcnMvc2NzaS9haWM3eHh4L2FpYzd4eHhfY29yZS5jICAgICAgICAgfCAxMiAr
-KysrKystLQo+ICAgZHJpdmVycy9zY3NpL2JlMmlzY3NpL2JlX2lzY3NpLmMgICAgICAgICAgICB8
-ICAxICsKPiAgIGRyaXZlcnMvc2NzaS9iZTJpc2NzaS9iZV9tYWluLmMgICAgICAgICAgICAgfCAg
-MSArCj4gICBkcml2ZXJzL3Njc2kvYmZhL2JmYV9mY3BpbS5jICAgICAgICAgICAgICAgIHwgIDYg
-KystLQo+ICAgZHJpdmVycy9zY3NpL2JmYS9iZmFfZmNzX2xwb3J0LmMgICAgICAgICAgICB8ICA4
-ICsrLS0tCj4gICBkcml2ZXJzL3Njc2kvYmZhL2JmYV9mY3NfcnBvcnQuYyAgICAgICAgICAgIHwg
-MTkgKysrKystLS0tLS0tCj4gICBkcml2ZXJzL3Njc2kvYmZhL2JmYV9pb2MuYyAgICAgICAgICAg
-ICAgICAgIHwgIDkgKystLS0tCj4gICBkcml2ZXJzL3Njc2kvY3Npb3N0b3IvY3Npb193ci5jICAg
-ICAgICAgICAgIHwgIDEgKwo+ICAgZHJpdmVycy9zY3NpL2VzYXMyci9lc2FzMnJfaW5pdC5jICAg
-ICAgICAgICB8ICAzICstCj4gICBkcml2ZXJzL3Njc2kvaHBzYS5jICAgICAgICAgICAgICAgICAg
-ICAgICAgIHwgIDUgKysrKwo+ICAgZHJpdmVycy9zY3NpL2ltbS5jICAgICAgICAgICAgICAgICAg
-ICAgICAgICB8IDMzICsrKysrKysrKysrLS0tLS0tLS0tLQo+ICAgZHJpdmVycy9zY3NpL2lzY2kv
-cGh5LmMgICAgICAgICAgICAgICAgICAgICB8ICAxICsKPiAgIGRyaXZlcnMvc2NzaS9pc2NpL3Jl
-bW90ZV9kZXZpY2UuYyAgICAgICAgICAgfCAgNCArLS0KPiAgIGRyaXZlcnMvc2NzaS9pc2NpL3Jl
-bW90ZV9ub2RlX2NvbnRleHQuYyAgICAgfCAgNCArLS0KPiAgIGRyaXZlcnMvc2NzaS9pc2NpL3Jl
-cXVlc3QuYyAgICAgICAgICAgICAgICAgfCAgMiArLQo+ICAgZHJpdmVycy9zY3NpL2xpYmZjL2Zj
-X3Jwb3J0LmMgICAgICAgICAgICAgICB8ICAxICsKPiAgIGRyaXZlcnMvc2NzaS9scGZjL2xwZmNf
-Y3QuYyAgICAgICAgICAgICAgICAgfCAgMiArKwo+ICAgZHJpdmVycy9zY3NpL2xwZmMvbHBmY19l
-bHMuYyAgICAgICAgICAgICAgICB8ICAxICsKPiAgIGRyaXZlcnMvc2NzaS9scGZjL2xwZmNfaGJh
-ZGlzYy5jICAgICAgICAgICAgfCAgNCArKy0KPiAgIGRyaXZlcnMvc2NzaS9scGZjL2xwZmNfbnBv
-cnRkaXNjLmMgICAgICAgICAgfCAgMSArCj4gICBkcml2ZXJzL3Njc2kvbHBmYy9scGZjX252bWUu
-YyAgICAgICAgICAgICAgIHwgIDEgKwo+ICAgZHJpdmVycy9zY3NpL2xwZmMvbHBmY19zY3NpLmMg
-ICAgICAgICAgICAgICB8ICA4ICsrLS0tCj4gICBkcml2ZXJzL3Njc2kvbHBmYy9scGZjX3NsaS5j
-ICAgICAgICAgICAgICAgIHwgMjAgKysrKysrKy0tLS0tLQo+ICAgZHJpdmVycy9zY3NpL21lZ2Fy
-YWlkL21lZ2FyYWlkX3Nhc19iYXNlLmMgICB8ICAxICsKPiAgIGRyaXZlcnMvc2NzaS9tZWdhcmFp
-ZC9tZWdhcmFpZF9zYXNfZnVzaW9uLmMgfCAgMiArLQo+ICAgZHJpdmVycy9zY3NpL21wdDNzYXMv
-bXB0M3Nhc19zY3NpaC5jICAgICAgICB8ICAxICsKPiAgIGRyaXZlcnMvc2NzaS9teXJiLmMgICAg
-ICAgICAgICAgICAgICAgICAgICAgfCAgMyArKwo+ICAgZHJpdmVycy9zY3NpL29zZC9vc2RfaW5p
-dGlhdG9yLmMgICAgICAgICAgICB8ICAzICstCj4gICBkcml2ZXJzL3Njc2kvb3NzdC5jICAgICAg
-ICAgICAgICAgICAgICAgICAgIHwgIDYgKysrKwo+ICAgZHJpdmVycy9zY3NpL3BwYS5jICAgICAg
-ICAgICAgICAgICAgICAgICAgICB8ICAxICsKPiAgIGRyaXZlcnMvc2NzaS9xbGE0eHh4L3FsNF9v
-cy5jICAgICAgICAgICAgICAgfCAgMiArLQo+ICAgZHJpdmVycy9zY3NpL3N0LmMgICAgICAgICAg
-ICAgICAgICAgICAgICAgICB8ICA0ICsrKwo+ICAgZHJpdmVycy9zY3NpL3N5bTUzYzh4eF8yL3N5
-bV9oaXBkLmMgICAgICAgICB8ICAyICsrCj4gICBkcml2ZXJzL3Njc2kvc3ltNTNjOHh4XzIvc3lt
-X252cmFtLmMgICAgICAgIHwgIDEgKwo+ICAgZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuYyAgICAg
-ICAgICAgICAgICAgICB8ICAzICsrCj4gICBkcml2ZXJzL3Njc2kveGVuLXNjc2lmcm9udC5jICAg
-ICAgICAgICAgICAgIHwgIDIgKy0KPiAgIDQxIGZpbGVzIGNoYW5nZWQsIDEyNCBpbnNlcnRpb25z
-KCspLCA3OCBkZWxldGlvbnMoLSkKPiAKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fClhlbi1kZXZlbCBtYWlsaW5nIGxpc3QKWGVuLWRldmVsQGxpc3RzLnhl
-bnByb2plY3Qub3JnCmh0dHBzOi8vbGlzdHMueGVucHJvamVjdC5vcmcvbWFpbG1hbi9saXN0aW5m
-by94ZW4tZGV2ZWw=
+Three fixes: The t10-pi one is a regression from the 4.19 release, the
+qla2xxx one is a 4.20 merge window regression and the bnx2fc is a very
+old bug.
+
+The patch is available here:
+
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+
+The short changelog is:
+
+Dan Carpenter (1):
+      scsi: bnx2fc: Fix NULL dereference in error handling
+
+Himanshu Madhani (1):
+      Revert "scsi: qla2xxx: Fix NVMe Target discovery"
+
+Martin K. Petersen (1):
+      scsi: t10-pi: Return correct ref tag when queue has no integrity profile
+
+And the diffstat:
+
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c | 2 +-
+ drivers/scsi/qla2xxx/qla_os.c     | 4 ++--
+ include/linux/t10-pi.h            | 9 +++++----
+ 3 files changed, 8 insertions(+), 7 deletions(-)
+
+With full diff below.
+
+James
+
+---
+
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+index cd160f2ec75d..bcd30e2374f1 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+@@ -2364,7 +2364,7 @@ static int _bnx2fc_create(struct net_device *netdev,
+ 	if (!interface) {
+ 		printk(KERN_ERR PFX "bnx2fc_interface_create failed\n");
+ 		rc = -ENOMEM;
+-		goto ifput_err;
++		goto netdev_err;
+ 	}
+ 
+ 	if (is_vlan_dev(netdev)) {
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index b658b9a5eb1e..d0ecc729a90a 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -4886,10 +4886,10 @@ void qla24xx_create_new_sess(struct scsi_qla_host *vha, struct qla_work_evt *e)
+ 			fcport->d_id = e->u.new_sess.id;
+ 			fcport->flags |= FCF_FABRIC_DEVICE;
+ 			fcport->fw_login_state = DSC_LS_PLOGI_PEND;
+-			if (e->u.new_sess.fc4_type & FS_FC4TYPE_FCP)
++			if (e->u.new_sess.fc4_type == FS_FC4TYPE_FCP)
+ 				fcport->fc4_type = FC4_TYPE_FCP_SCSI;
+ 
+-			if (e->u.new_sess.fc4_type & FS_FC4TYPE_NVME) {
++			if (e->u.new_sess.fc4_type == FS_FC4TYPE_NVME) {
+ 				fcport->fc4_type = FC4_TYPE_OTHER;
+ 				fcport->fc4f_nvme = FC4_TYPE_NVME;
+ 			}
+diff --git a/include/linux/t10-pi.h b/include/linux/t10-pi.h
+index b9626aa7e90c..3e2a80cc7b56 100644
+--- a/include/linux/t10-pi.h
++++ b/include/linux/t10-pi.h
+@@ -39,12 +39,13 @@ struct t10_pi_tuple {
+ 
+ static inline u32 t10_pi_ref_tag(struct request *rq)
+ {
++	unsigned int shift = ilog2(queue_logical_block_size(rq->q));
++
+ #ifdef CONFIG_BLK_DEV_INTEGRITY
+-	return blk_rq_pos(rq) >>
+-		(rq->q->integrity.interval_exp - 9) & 0xffffffff;
+-#else
+-	return -1U;
++	if (rq->q->integrity.interval_exp)
++		shift = rq->q->integrity.interval_exp;
+ #endif
++	return blk_rq_pos(rq) >> (shift - SECTOR_SHIFT) & 0xffffffff;
+ }
+ 
+ extern const struct blk_integrity_profile t10_pi_type1_crc;
