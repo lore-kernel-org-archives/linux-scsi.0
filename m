@@ -1,72 +1,51 @@
-From: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 0/7] v4.19-stable randconfig fixes
-Date: Tue, 18 Dec 2018 11:20:21 -0500
-Message-ID: <20181218162021.GZ2746@sasha-vm>
-References: <20181214221023.3878670-1-arnd@arndb.de>
- <20181218002028.GX2746@sasha-vm> <20181218151230.GA30844@kroah.com>
+From: Boaz Harrosh <ooo@electrozaur.com>
+Subject: Re: [PATCH 33/41] scsi: osd: osd_initiator: mark expected switch
+ fall-throughs
+Date: Tue, 18 Dec 2018 19:13:45 +0200
+Message-ID: <ee906c63-72cd-8d3c-d5c8-50dc59d984d8@electrozaur.com>
+References: <cover.1543374820.git.gustavo@embeddedor.com>
+ <09026c2661bf3c4bcf41dbb265cf1dae2c3487fd.1543374820.git.gustavo@embeddedor.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
-Content-Transfer-Encoding: base64
-Return-path: <freedreno-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20181218151230.GA30844-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/freedreno>,
- <mailto:freedreno-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/freedreno>
-List-Post: <mailto:freedreno-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-List-Help: <mailto:freedreno-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/freedreno>,
- <mailto:freedreno-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
-Errors-To: freedreno-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
-Sender: "Freedreno" <freedreno-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-To: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
-Cc: Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, linux-aspeed-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, David Brown <david.brown-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Srinivas Kandagatla <srinivas.kandagatla-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, linux-i2c-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Daniel Drake <dsd-2X9k7bc8m7Mdnm+yROfE0A@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Jens Frederich <jfrederich-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, openbmc-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Andy Gross <andy.gross-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, linux-arm-msm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Lubomir Rintel <lkundrak-NGH9Lh4a5iE@public.gmane.org>, dou_liyang-9Onoh4P/yGk@public.gmane.org, Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Andrew Jeffery <andrew-zrmu5oMJ5Fs@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <09026c2661bf3c4bcf41dbb265cf1dae2c3487fd.1543374820.git.gustavo@embeddedor.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-T24gVHVlLCBEZWMgMTgsIDIwMTggYXQgMDQ6MTI6MzBQTSArMDEwMCwgR3JlZyBLcm9haC1IYXJ0
-bWFuIHdyb3RlOgo+T24gTW9uLCBEZWMgMTcsIDIwMTggYXQgMDc6MjA6MjhQTSAtMDUwMCwgU2Fz
-aGEgTGV2aW4gd3JvdGU6Cj4+IE9uIEZyaSwgRGVjIDE0LCAyMDE4IGF0IDExOjEwOjA1UE0gKzAx
-MDAsIEFybmQgQmVyZ21hbm4gd3JvdGU6Cj4+ID4gSGkgR3JlZywKPj4gPgo+PiA+IEkgZGlkIHNv
-bWUgcmFuZGNvbmZpZyB0ZXN0aW5nIG9uIGxpbnV4LTQuMTkgYXJtL2FybTY0L3g4Ni4gU28gZmFy
-IEkgbmVlZGVkCj4+ID4gMjcgcGF0Y2hlcywgbW9zdCBvZiB3aGljaCBhcmUgYWxzbyBzdGlsbCBu
-ZWVkZWQgaW4gbWFpbmxpbmUgTGludXguIEkKPj4gPiBoYWQgc3VibWl0dGVkIHNvbWUgYmVmb3Jl
-LCBhbmQgb3RoZXJzIHdlcmUgbm90IHN1Ym1pdHRlZCBwcmV2aW91c2x5Cj4+ID4gZm9yIHNvbWUg
-cmVhc29uLiBJJ2xsIHRyeSB0byBnZXQgdGhvc2UgZml4ZWQgaW4gbWFpbmxpbmUgYW5kIHRoZW4K
-Pj4gPiBtYWtlIHN1cmUgd2UgZ2V0IHRoZW0gaW50byA0LjE5IGFzIHdlbGwuCj4+ID4KPj4gPiBU
-aGlzIHNlcmllcyBmb3Igbm93IGNvbnRhaW5zIGZvdXIgcGF0Y2hlcyB0aGF0IGRpZCBtYWtlIGl0
-IGludG8gbWFpbmxpbmU6Cj4+ID4KPj4gPiAyZTZhZTExZGQwZDEgKCJzbGltYnVzOiBuZ2Q6IG1h
-cmsgUE0gZnVuY3Rpb25zIGFzIF9fbWF5YmVfdW51c2VkIikKPj4gPiAzM2Y0OTU3MWQ3NTAgKCJz
-dGFnaW5nOiBvbHBjX2Rjb246IGFkZCBhIG1pc3NpbmcgZGVwZW5kZW5jeSIpCj4+ID4gMGVlZWMw
-MTQ4OGRhICgic2NzaTogcmFpZF9hdHRyczogZml4IHVudXNlZCB2YXJpYWJsZSB3YXJuaW5nIikK
-Pj4gPiAxMWQ0YWZkNGZmNjYgKCJzY2hlZC9wZWx0OiBGaXggd2FybmluZyBhbmQgY2xlYW4gdXAg
-SVJRIFBFTFQgY29uZmlnIikKPj4gPgo+PiA+IEZlZWwgZnJlZSB0byBlaXRoZXIgY2hlcnJ5LXBp
-Y2sgdGhvc2UgZnJvbSBtYWlubGluZSBvciBhcHBseSB0aGUKPj4gPiBwYXRjaCBmcm9tIHRoaXMg
-c2VyaWVzLCB3aGljaGV2ZXIgd29ya3MgYmVzdCBmb3IgeW91Lgo+PiA+Cj4+ID4gVGhlIG90aGVy
-IHRocmVlIHBhdGNoZXMgYXJlIGZvciB3YXJuaW5ncyBpbiBjb2RlIHRoYXQgZ290IHJlbW92ZWQg
-aW4KPj4gPiBtYWlubGluZSBrZXJuZWxzOgo+PiA+Cj4+ID4gM2U5ZWZjMzI5OWRkICgiaTJjOiBh
-c3BlZWQ6IEhhbmRsZSBtYXN0ZXIvc2xhdmUgY29tYmluZWQgaXJxIGV2ZW50cyBwcm9wZXJseSIp
-Cj4+ID4gOTcyOTEwOTQ4ZmI2ICgiQVJNOiBkdHM6IHFjb206IFJlbW92ZSBBcnJvdyBTRDYwMCBl
-dmFsIGJvYXJkIikKPj4gPiBlZmZlYzg3NDc5MmYgKCJkcm0vbXNtL2RwdTogUmVtb3ZlIGRwdV9k
-YmciKQo+PiA+Cj4+ID4gTXkgZmVlbGluZyB3YXMgdGhhdCBpdCdzIHNhZmVyIHRvIGp1c3QgYWRk
-cmVzcyB0aGUgd2FybmluZyBieSBmaXhpbmcKPj4gPiB0aGUgY29kZSBjb3JyZWN0bHkgaW4gZWFj
-aCBvZiB0aGVzZSBjYXNlcywgYnV0IGlmIHlvdSBkaXNhZ3JlZSwKPj4gPiBhcHBseWluZyB0aGUg
-bWFpbmxpbmUgY2hhbmdlIHNob3VsZCB3b3JrIGVxdWFsbHkgd2VsbCwgc28gZGVjaWRlCj4+ID4g
-Zm9yIHlvdXJzZWxmLgo+Pgo+PiBUaGFua3MgQXJuZCwgSSB0b29rIHRoZSBzZXJpZXMgYXMgaXMu
-Cj4+Cj4+IFdlIHJlYWxseSBuZWVkIHRvIGRpc2N1c3MgaG93IC1zdGFibGUgZGVhbHMgd2l0aCBy
-ZW1vdmVkIGNvZGUgdXBzdHJlYW0uCj4+IEZvciBzb21lIGNhc2VzLCB3ZSBzaG91bGQgcHJvYmFi
-bHkgZm9sbG93IHN1aXQgYW5kIHJlbW92ZSBpdCBmcm9tCj4+IC1zdGFibGUgYXMgd2VsbCAoSSdt
-IG1vc3RseSB0aGlua2luZyBkb2RneSBjb2RlIHdpdGggcG90ZW50aWFsIHNlY3VyaXR5Cj4+IGlz
-c3VlcykuCj4KPkl0IHdvdWxkIGJlIG5pY2UgdG8gZG8gdGhhdCBhdCB0aW1lcyAobGlrZSBsdXN0
-cmUgYW5kIGlweCksIGJ1dCBpdCdzCj5nb29kIHRvIGtlZXAgdGhhdCBjb2RlIGFyb3VuZCBhcyBt
-YXliZSBzb21lb25lIGlzIHVzaW5nIGl0PyAgSSBkb24ndAo+a25vdywgaXQncyBhIHRvdWdoIGNh
-bGwuLi4KClllYWgsIGl0J3MgcmVhbGx5IGEgY2FzZS1ieS1jYXNlIGJhc2lzLiBJJ20gcmVhbGx5
-IGNvbmNlcm5lZCBhYm91dCBhbgp1bm1haW50YWluZWQgcGllY2Ugb2YgY29kZSBpbiBzdGFibGUg
-a2VybmVscywgbm8gb25lIGFjdHVhbGx5IGZpeGVzIGJ1ZwppbiBpdC4KCldpdGggdGhlIGV4YW1w
-bGUgaGVyZSB3aGVyZSB0aGF0IGV2YWwgYm9hcmQgd2FzIHJlbW92ZWQgYmVjYXVzZSBubyBvbmUK
-d2FzIHVzaW5nIGl0IGlzIGEgZ3JlYXQgZXhhbXBsZSBvZiBjb2RlIHdlIHNob3VsZCBiZSByZW1v
-dmluZyBmcm9tCnN0YWJsZSB0cmVlcyBhcyB3ZWxsLiBJZiBubyBvbmUgaXMgdXNpbmcgaXQgLSBn
-cmVhdCEgYnV0IGlmIHNvbWVvbmUKZG9lcywgdGhlbiB0aGUgcmVtb3ZhbCBzaG91bGQgYmUgcmV2
-ZXJ0ZWQgdXBzdHJlYW0gYXMgd2VsbC4KCi0tClRoYW5rcywKU2FzaGEKX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KRnJlZWRyZW5vIG1haWxpbmcgbGlzdApG
-cmVlZHJlbm9AbGlzdHMuZnJlZWRlc2t0b3Aub3JnCmh0dHBzOi8vbGlzdHMuZnJlZWRlc2t0b3Au
-b3JnL21haWxtYW4vbGlzdGluZm8vZnJlZWRyZW5vCg==
+On 28/11/18 06:32, Gustavo A. R. Silva wrote:
+> In preparation to enabling -Wimplicit-fallthrough, mark switch cases
+> where we are expecting to fall through.
+> 
+> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+
+ACK-by: Boaz Harrosh <ooo@electrozaur.com>
+
+> ---
+>  drivers/scsi/osd/osd_initiator.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/osd/osd_initiator.c b/drivers/scsi/osd/osd_initiator.c
+> index 60cf7c5eb880..cb26f26d5ec1 100644
+> --- a/drivers/scsi/osd/osd_initiator.c
+> +++ b/drivers/scsi/osd/osd_initiator.c
+> @@ -1849,6 +1849,7 @@ int osd_req_decode_sense_full(struct osd_request *or,
+>  					32, 1, dump, sizeof(dump), true);
+>  			OSD_SENSE_PRINT2("response_integrity [%s]\n", dump);
+>  		}
+> +		/* fall through */
+>  		case osd_sense_attribute_identification:
+>  		{
+>  			struct osd_sense_attributes_data_descriptor
+> @@ -1879,7 +1880,7 @@ int osd_req_decode_sense_full(struct osd_request *or,
+>  					attr_page, attr_id);
+>  			}
+>  		}
+> -		/*These are not legal for OSD*/
+> +		/* fall through - These are not legal for OSD */
+>  		case scsi_sense_field_replaceable_unit:
+>  			OSD_SENSE_PRINT2("scsi_sense_field_replaceable_unit\n");
+>  			break;
+> 
