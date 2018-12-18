@@ -1,87 +1,63 @@
-From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Subject: [PATCH 1/2] megaraid_sas: Use 63-bit DMA addressing
-Date: Tue, 18 Dec 2018 05:59:54 -0800
-Message-ID: <1545141595-1467-2-git-send-email-shivasharan.srikanteshwara@broadcom.com>
-References: <1545141595-1467-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <1545141595-1467-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
-Sender: stable-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>, stable@vger.kernel.org
+From: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+Subject: Re: [PATCH 0/7] v4.19-stable randconfig fixes
+Date: Tue, 18 Dec 2018 16:12:30 +0100
+Message-ID: <20181218151230.GA30844@kroah.com>
+References: <20181214221023.3878670-1-arnd@arndb.de>
+ <20181218002028.GX2746@sasha-vm>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <freedreno-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20181218002028.GX2746@sasha-vm>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/freedreno>,
+ <mailto:freedreno-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/freedreno>
+List-Post: <mailto:freedreno-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+List-Help: <mailto:freedreno-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/freedreno>,
+ <mailto:freedreno-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
+Errors-To: freedreno-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
+Sender: "Freedreno" <freedreno-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+To: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, linux-aspeed-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, David Brown <david.brown-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Srinivas Kandagatla <srinivas.kandagatla-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, linux-i2c-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Daniel Drake <dsd-2X9k7bc8m7Mdnm+yROfE0A@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Jens Frederich <jfrederich-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, openbmc-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Andy Gross <andy.gross-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, linux-arm-msm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Lubomir Rintel <lkundrak-NGH9Lh4a5iE@public.gmane.org>, dou_liyang-9Onoh4P/yGk@public.gmane.org, Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Andrew Jeffery <andrew-zrmu5oMJ5Fs@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-Although MegaRAID controllers support 64-bit DMA addressing,
-as per hardware design, DMA address with all 64-bits set
-(0xFFFFFFFF-FFFFFFFF) results in a firmware fault.
-
-Fix -
-Driver will set 63-bit DMA mask to ensure the above address
-will not be used.
-
-Cc: stable@vger.kernel.org
-Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
----
- drivers/scsi/megaraid/megaraid_sas_base.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index b2d11e8f56b5..634cc8aed1c7 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -6185,13 +6185,13 @@ static int megasas_io_attach(struct megasas_instance *instance)
-  * @instance:		Adapter soft state
-  * Description:
-  *
-- * For Ventura, driver/FW will operate in 64bit DMA addresses.
-+ * For Ventura, driver/FW will operate in 63bit DMA addresses.
-  *
-  * For invader-
-  *	By default, driver/FW will operate in 32bit DMA addresses
-  *	for consistent DMA mapping but if 32 bit consistent
-- *	DMA mask fails, driver will try with 64 bit consistent
-- *	mask provided FW is true 64bit DMA capable
-+ *	DMA mask fails, driver will try with 63 bit consistent
-+ *	mask provided FW is true 63bit DMA capable
-  *
-  * For older controllers(Thunderbolt and MFI based adapters)-
-  *	driver/FW will operate in 32 bit consistent DMA addresses.
-@@ -6205,14 +6205,14 @@ megasas_set_dma_mask(struct megasas_instance *instance)
- 
- 	pdev = instance->pdev;
- 	consistent_mask = (instance->adapter_type >= VENTURA_SERIES) ?
--				DMA_BIT_MASK(64) : DMA_BIT_MASK(32);
-+				DMA_BIT_MASK(63) : DMA_BIT_MASK(32);
- 
- 	if (IS_DMA64) {
--		if (dma_set_mask(&pdev->dev, DMA_BIT_MASK(64)) &&
-+		if (dma_set_mask(&pdev->dev, DMA_BIT_MASK(63)) &&
- 		    dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32)))
- 			goto fail_set_dma_mask;
- 
--		if ((*pdev->dev.dma_mask == DMA_BIT_MASK(64)) &&
-+		if ((*pdev->dev.dma_mask == DMA_BIT_MASK(63)) &&
- 		    (dma_set_coherent_mask(&pdev->dev, consistent_mask) &&
- 		     dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32)))) {
- 			/*
-@@ -6225,7 +6225,7 @@ megasas_set_dma_mask(struct megasas_instance *instance)
- 			if (!(scratch_pad_1 & MR_CAN_HANDLE_64_BIT_DMA_OFFSET))
- 				goto fail_set_dma_mask;
- 			else if (dma_set_mask_and_coherent(&pdev->dev,
--							   DMA_BIT_MASK(64)))
-+							   DMA_BIT_MASK(63)))
- 				goto fail_set_dma_mask;
- 		}
- 	} else if (dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32)))
-@@ -6237,8 +6237,8 @@ megasas_set_dma_mask(struct megasas_instance *instance)
- 		instance->consistent_mask_64bit = true;
- 
- 	dev_info(&pdev->dev, "%s bit DMA mask and %s bit consistent mask\n",
--		 ((*pdev->dev.dma_mask == DMA_BIT_MASK(64)) ? "64" : "32"),
--		 (instance->consistent_mask_64bit ? "64" : "32"));
-+		 ((*pdev->dev.dma_mask == DMA_BIT_MASK(64)) ? "63" : "32"),
-+		 (instance->consistent_mask_64bit ? "63" : "32"));
- 
- 	return 0;
- 
--- 
-2.16.1
+T24gTW9uLCBEZWMgMTcsIDIwMTggYXQgMDc6MjA6MjhQTSAtMDUwMCwgU2FzaGEgTGV2aW4gd3Jv
+dGU6Cj4gT24gRnJpLCBEZWMgMTQsIDIwMTggYXQgMTE6MTA6MDVQTSArMDEwMCwgQXJuZCBCZXJn
+bWFubiB3cm90ZToKPiA+IEhpIEdyZWcsCj4gPiAKPiA+IEkgZGlkIHNvbWUgcmFuZGNvbmZpZyB0
+ZXN0aW5nIG9uIGxpbnV4LTQuMTkgYXJtL2FybTY0L3g4Ni4gU28gZmFyIEkgbmVlZGVkCj4gPiAy
+NyBwYXRjaGVzLCBtb3N0IG9mIHdoaWNoIGFyZSBhbHNvIHN0aWxsIG5lZWRlZCBpbiBtYWlubGlu
+ZSBMaW51eC4gSQo+ID4gaGFkIHN1Ym1pdHRlZCBzb21lIGJlZm9yZSwgYW5kIG90aGVycyB3ZXJl
+IG5vdCBzdWJtaXR0ZWQgcHJldmlvdXNseQo+ID4gZm9yIHNvbWUgcmVhc29uLiBJJ2xsIHRyeSB0
+byBnZXQgdGhvc2UgZml4ZWQgaW4gbWFpbmxpbmUgYW5kIHRoZW4KPiA+IG1ha2Ugc3VyZSB3ZSBn
+ZXQgdGhlbSBpbnRvIDQuMTkgYXMgd2VsbC4KPiA+IAo+ID4gVGhpcyBzZXJpZXMgZm9yIG5vdyBj
+b250YWlucyBmb3VyIHBhdGNoZXMgdGhhdCBkaWQgbWFrZSBpdCBpbnRvIG1haW5saW5lOgo+ID4g
+Cj4gPiAyZTZhZTExZGQwZDEgKCJzbGltYnVzOiBuZ2Q6IG1hcmsgUE0gZnVuY3Rpb25zIGFzIF9f
+bWF5YmVfdW51c2VkIikKPiA+IDMzZjQ5NTcxZDc1MCAoInN0YWdpbmc6IG9scGNfZGNvbjogYWRk
+IGEgbWlzc2luZyBkZXBlbmRlbmN5IikKPiA+IDBlZWVjMDE0ODhkYSAoInNjc2k6IHJhaWRfYXR0
+cnM6IGZpeCB1bnVzZWQgdmFyaWFibGUgd2FybmluZyIpCj4gPiAxMWQ0YWZkNGZmNjYgKCJzY2hl
+ZC9wZWx0OiBGaXggd2FybmluZyBhbmQgY2xlYW4gdXAgSVJRIFBFTFQgY29uZmlnIikKPiA+IAo+
+ID4gRmVlbCBmcmVlIHRvIGVpdGhlciBjaGVycnktcGljayB0aG9zZSBmcm9tIG1haW5saW5lIG9y
+IGFwcGx5IHRoZQo+ID4gcGF0Y2ggZnJvbSB0aGlzIHNlcmllcywgd2hpY2hldmVyIHdvcmtzIGJl
+c3QgZm9yIHlvdS4KPiA+IAo+ID4gVGhlIG90aGVyIHRocmVlIHBhdGNoZXMgYXJlIGZvciB3YXJu
+aW5ncyBpbiBjb2RlIHRoYXQgZ290IHJlbW92ZWQgaW4KPiA+IG1haW5saW5lIGtlcm5lbHM6Cj4g
+PiAKPiA+IDNlOWVmYzMyOTlkZCAoImkyYzogYXNwZWVkOiBIYW5kbGUgbWFzdGVyL3NsYXZlIGNv
+bWJpbmVkIGlycSBldmVudHMgcHJvcGVybHkiKQo+ID4gOTcyOTEwOTQ4ZmI2ICgiQVJNOiBkdHM6
+IHFjb206IFJlbW92ZSBBcnJvdyBTRDYwMCBldmFsIGJvYXJkIikKPiA+IGVmZmVjODc0NzkyZiAo
+ImRybS9tc20vZHB1OiBSZW1vdmUgZHB1X2RiZyIpCj4gPiAKPiA+IE15IGZlZWxpbmcgd2FzIHRo
+YXQgaXQncyBzYWZlciB0byBqdXN0IGFkZHJlc3MgdGhlIHdhcm5pbmcgYnkgZml4aW5nCj4gPiB0
+aGUgY29kZSBjb3JyZWN0bHkgaW4gZWFjaCBvZiB0aGVzZSBjYXNlcywgYnV0IGlmIHlvdSBkaXNh
+Z3JlZSwKPiA+IGFwcGx5aW5nIHRoZSBtYWlubGluZSBjaGFuZ2Ugc2hvdWxkIHdvcmsgZXF1YWxs
+eSB3ZWxsLCBzbyBkZWNpZGUKPiA+IGZvciB5b3Vyc2VsZi4KPiAKPiBUaGFua3MgQXJuZCwgSSB0
+b29rIHRoZSBzZXJpZXMgYXMgaXMuCj4gCj4gV2UgcmVhbGx5IG5lZWQgdG8gZGlzY3VzcyBob3cg
+LXN0YWJsZSBkZWFscyB3aXRoIHJlbW92ZWQgY29kZSB1cHN0cmVhbS4KPiBGb3Igc29tZSBjYXNl
+cywgd2Ugc2hvdWxkIHByb2JhYmx5IGZvbGxvdyBzdWl0IGFuZCByZW1vdmUgaXQgZnJvbQo+IC1z
+dGFibGUgYXMgd2VsbCAoSSdtIG1vc3RseSB0aGlua2luZyBkb2RneSBjb2RlIHdpdGggcG90ZW50
+aWFsIHNlY3VyaXR5Cj4gaXNzdWVzKS4KCkl0IHdvdWxkIGJlIG5pY2UgdG8gZG8gdGhhdCBhdCB0
+aW1lcyAobGlrZSBsdXN0cmUgYW5kIGlweCksIGJ1dCBpdCdzCmdvb2QgdG8ga2VlcCB0aGF0IGNv
+ZGUgYXJvdW5kIGFzIG1heWJlIHNvbWVvbmUgaXMgdXNpbmcgaXQ/ICBJIGRvbid0Cmtub3csIGl0
+J3MgYSB0b3VnaCBjYWxsLi4uCgp0aGFua3MsCgpncmVnIGstaApfX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fXwpGcmVlZHJlbm8gbWFpbGluZyBsaXN0CkZyZWVk
+cmVub0BsaXN0cy5mcmVlZGVza3RvcC5vcmcKaHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcv
+bWFpbG1hbi9saXN0aW5mby9mcmVlZHJlbm8K
