@@ -1,484 +1,56 @@
-From: Nathan Chancellor <natechancellor@gmail.com>
-Subject: Re: [PATCH v2] scsi/ata: Use unsigned int for cmd's type in ioctls
- in scsi_host_template
-Date: Mon, 17 Dec 2018 10:31:57 -0700
-Message-ID: <20181217173157.GA32586@flashbox>
-References: <20181019175714.444-1-natechancellor@gmail.com>
- <20181020050143.589-1-natechancellor@gmail.com>
+From: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 0/7] v4.19-stable randconfig fixes
+Date: Mon, 17 Dec 2018 19:20:28 -0500
+Message-ID: <20181218002028.GX2746@sasha-vm>
+References: <20181214221023.3878670-1-arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Content-Transfer-Encoding: base64
+Return-path: <freedreno-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20181020050143.589-1-natechancellor@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Adaptec OEM Raid Solutions <aacraid@microsemi.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, Bradley Grove <linuxdrivers@attotech.com>, Don Brace <don.brace@microsemi.com>, Brian King <brking@us.ibm.com>, Bart Van Assche <bvanassche@acm.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, esc.storagedev@microsemi.com, Nick Desaulniers <ndesaulniers@google.com>
+In-Reply-To: <20181214221023.3878670-1-arnd-r2nGTMty4D4@public.gmane.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/freedreno>,
+ <mailto:freedreno-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/freedreno>
+List-Post: <mailto:freedreno-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+List-Help: <mailto:freedreno-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/freedreno>,
+ <mailto:freedreno-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
+Errors-To: freedreno-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
+Sender: "Freedreno" <freedreno-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+To: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
+Cc: Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, linux-aspeed-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, David Brown <david.brown-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Srinivas Kandagatla <srinivas.kandagatla-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, linux-i2c-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Daniel Drake <dsd-2X9k7bc8m7Mdnm+yROfE0A@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Jens Frederich <jfrederich-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, openbmc-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Andy Gross <andy.gross-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-msm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Lubomir Rintel <lkundrak-NGH9Lh4a5iE@public.gmane.org>, dou_liyang-9Onoh4P/yGk@public.gmane.org, Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Andrew Jeffery <andrew-zrmu5oMJ5Fs@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stabl
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Oct 19, 2018 at 10:01:44PM -0700, Nathan Chancellor wrote:
-> Clang warns several times in the scsi subsystem (trimmed for brevity):
-> 
-> drivers/scsi/hpsa.c:6209:7: warning: overflow converting case value to
-> switch condition type (2147762695 to 18446744071562347015) [-Wswitch]
->         case CCISS_GETBUSTYPES:
->              ^
-> drivers/scsi/hpsa.c:6208:7: warning: overflow converting case value to
-> switch condition type (2147762694 to 18446744071562347014) [-Wswitch]
->         case CCISS_GETHEARTBEAT:
->              ^
-> 
-> The root cause is that the _IOC macro can generate really large numbers,
-> which don't find into type 'int', which is used for the cmd paremeter in
-> the ioctls in scsi_host_template. My research into how GCC and Clang are
-> handling this at a low level didn't prove fruitful. However, looking at
-> the rest of the kernel tree, all ioctls use an 'unsigned int' for the
-> cmd parameter, which will fit all of the _IOC values in the scsi/ata
-> subsystems.
-> 
-> Make that change because none of the ioctls expect to take a negative
-> value, it brings the ioctls inline with the reset of the kernel, and it
-> removes ambiguity, which is never good when dealing with compilers.
-> 
-> Link: https://github.com/ClangBuiltLinux/linux/issues/85
-> Link: https://github.com/ClangBuiltLinux/linux/issues/154
-> Link: https://github.com/ClangBuiltLinux/linux/issues/157
-> Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
-> ---
-> 
-> v1 -> 2:
-> 
-> * Fix build breakage in cxlflash driver from forgetting to update
->   prototype (thanks to 0day for catching it).
-> 
->  drivers/ata/libata-scsi.c             |  5 +++--
->  drivers/scsi/aacraid/aachba.c         |  2 +-
->  drivers/scsi/aacraid/aacraid.h        |  4 ++--
->  drivers/scsi/aacraid/commctrl.c       |  2 +-
->  drivers/scsi/aacraid/linit.c          |  6 ++++--
->  drivers/scsi/cxlflash/common.h        |  3 ++-
->  drivers/scsi/cxlflash/superpipe.c     | 12 +++++-------
->  drivers/scsi/esas2r/esas2r.h          |  4 ++--
->  drivers/scsi/esas2r/esas2r_ioctl.c    | 13 ++++++-------
->  drivers/scsi/esas2r/esas2r_main.c     |  2 +-
->  drivers/scsi/hpsa.c                   | 15 +++++++++------
->  drivers/scsi/ipr.c                    |  3 ++-
->  drivers/scsi/libsas/sas_scsi_host.c   |  2 +-
->  drivers/scsi/scsi_debug.c             |  3 ++-
->  drivers/scsi/smartpqi/smartpqi_init.c |  3 ++-
->  include/linux/libata.h                |  5 +++--
->  include/scsi/libsas.h                 |  3 ++-
->  include/scsi/scsi_host.h              |  6 ++++--
->  18 files changed, 52 insertions(+), 41 deletions(-)
-> 
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index 3d4887d0e84a..6291f1dbf342 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -778,7 +778,7 @@ static int ata_ioc32(struct ata_port *ap)
->  }
->  
->  int ata_sas_scsi_ioctl(struct ata_port *ap, struct scsi_device *scsidev,
-> -		     int cmd, void __user *arg)
-> +		     unsigned int cmd, void __user *arg)
->  {
->  	unsigned long val;
->  	int rc = -EINVAL;
-> @@ -829,7 +829,8 @@ int ata_sas_scsi_ioctl(struct ata_port *ap, struct scsi_device *scsidev,
->  }
->  EXPORT_SYMBOL_GPL(ata_sas_scsi_ioctl);
->  
-> -int ata_scsi_ioctl(struct scsi_device *scsidev, int cmd, void __user *arg)
-> +int ata_scsi_ioctl(struct scsi_device *scsidev, unsigned int cmd,
-> +		   void __user *arg)
->  {
->  	return ata_sas_scsi_ioctl(ata_shost_to_port(scsidev->host),
->  				scsidev, cmd, arg);
-> diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
-> index bd7f352c28f3..a6399fac3333 100644
-> --- a/drivers/scsi/aacraid/aachba.c
-> +++ b/drivers/scsi/aacraid/aachba.c
-> @@ -3452,7 +3452,7 @@ static int delete_disk(struct aac_dev *dev, void __user *arg)
->  	}
->  }
->  
-> -int aac_dev_ioctl(struct aac_dev *dev, int cmd, void __user *arg)
-> +int aac_dev_ioctl(struct aac_dev *dev, unsigned int cmd, void __user *arg)
->  {
->  	switch (cmd) {
->  	case FSACTL_QUERY_DISK:
-> diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-> index 39eb415987fc..1965072ab673 100644
-> --- a/drivers/scsi/aacraid/aacraid.h
-> +++ b/drivers/scsi/aacraid/aacraid.h
-> @@ -2705,12 +2705,12 @@ void aac_set_intx_mode(struct aac_dev *dev);
->  int aac_get_config_status(struct aac_dev *dev, int commit_flag);
->  int aac_get_containers(struct aac_dev *dev);
->  int aac_scsi_cmd(struct scsi_cmnd *cmd);
-> -int aac_dev_ioctl(struct aac_dev *dev, int cmd, void __user *arg);
-> +int aac_dev_ioctl(struct aac_dev *dev, unsigned int cmd, void __user *arg);
->  #ifndef shost_to_class
->  #define shost_to_class(shost) &shost->shost_dev
->  #endif
->  ssize_t aac_get_serial_number(struct device *dev, char *buf);
-> -int aac_do_ioctl(struct aac_dev * dev, int cmd, void __user *arg);
-> +int aac_do_ioctl(struct aac_dev *dev, unsigned int cmd, void __user *arg);
->  int aac_rx_init(struct aac_dev *dev);
->  int aac_rkt_init(struct aac_dev *dev);
->  int aac_nark_init(struct aac_dev *dev);
-> diff --git a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commctrl.c
-> index 25f6600d6c09..fd8a10871598 100644
-> --- a/drivers/scsi/aacraid/commctrl.c
-> +++ b/drivers/scsi/aacraid/commctrl.c
-> @@ -1061,7 +1061,7 @@ static int aac_send_reset_adapter(struct aac_dev *dev, void __user *arg)
->  	return retval;
->  }
->  
-> -int aac_do_ioctl(struct aac_dev * dev, int cmd, void __user *arg)
-> +int aac_do_ioctl(struct aac_dev *dev, unsigned int cmd, void __user *arg)
->  {
->  	int status;
->  
-> diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-> index 2d4e4ddc5ace..cd2efb44f62c 100644
-> --- a/drivers/scsi/aacraid/linit.c
-> +++ b/drivers/scsi/aacraid/linit.c
-> @@ -616,7 +616,8 @@ static struct device_attribute *aac_dev_attrs[] = {
->  	NULL,
->  };
->  
-> -static int aac_ioctl(struct scsi_device *sdev, int cmd, void __user * arg)
-> +static int aac_ioctl(struct scsi_device *sdev, unsigned int cmd,
-> +		     void __user *arg)
->  {
->  	struct aac_dev *dev = (struct aac_dev *)sdev->host->hostdata;
->  	if (!capable(CAP_SYS_RAWIO))
-> @@ -1205,7 +1206,8 @@ static long aac_compat_do_ioctl(struct aac_dev *dev, unsigned cmd, unsigned long
->  	return ret;
->  }
->  
-> -static int aac_compat_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
-> +static int aac_compat_ioctl(struct scsi_device *sdev, unsigned int cmd,
-> +			    void __user *arg)
->  {
->  	struct aac_dev *dev = (struct aac_dev *)sdev->host->hostdata;
->  	if (!capable(CAP_SYS_RAWIO))
-> diff --git a/drivers/scsi/cxlflash/common.h b/drivers/scsi/cxlflash/common.h
-> index 8908a20065c8..4d90106fcb37 100644
-> --- a/drivers/scsi/cxlflash/common.h
-> +++ b/drivers/scsi/cxlflash/common.h
-> @@ -334,7 +334,8 @@ int cxlflash_afu_sync(struct afu *afu, ctx_hndl_t c, res_hndl_t r, u8 mode);
->  void cxlflash_list_init(void);
->  void cxlflash_term_global_luns(void);
->  void cxlflash_free_errpage(void);
-> -int cxlflash_ioctl(struct scsi_device *sdev, int cmd, void __user *arg);
-> +int cxlflash_ioctl(struct scsi_device *sdev, unsigned int cmd,
-> +		   void __user *arg);
->  void cxlflash_stop_term_user_contexts(struct cxlflash_cfg *cfg);
->  int cxlflash_mark_contexts_error(struct cxlflash_cfg *cfg);
->  void cxlflash_term_local_luns(struct cxlflash_cfg *cfg);
-> diff --git a/drivers/scsi/cxlflash/superpipe.c b/drivers/scsi/cxlflash/superpipe.c
-> index acac6152f50b..1a94a469051e 100644
-> --- a/drivers/scsi/cxlflash/superpipe.c
-> +++ b/drivers/scsi/cxlflash/superpipe.c
-> @@ -1924,7 +1924,7 @@ static int cxlflash_disk_verify(struct scsi_device *sdev,
->   *
->   * Return: A string identifying the decoded ioctl.
->   */
-> -static char *decode_ioctl(int cmd)
-> +static char *decode_ioctl(unsigned int cmd)
->  {
->  	switch (cmd) {
->  	case DK_CXLFLASH_ATTACH:
-> @@ -2051,7 +2051,7 @@ static int cxlflash_disk_direct_open(struct scsi_device *sdev, void *arg)
->   *
->   * Return: 0 on success, -errno on failure
->   */
-> -static int ioctl_common(struct scsi_device *sdev, int cmd)
-> +static int ioctl_common(struct scsi_device *sdev, unsigned int cmd)
->  {
->  	struct cxlflash_cfg *cfg = shost_priv(sdev->host);
->  	struct device *dev = &cfg->dev->dev;
-> @@ -2096,7 +2096,7 @@ static int ioctl_common(struct scsi_device *sdev, int cmd)
->   *
->   * Return: 0 on success, -errno on failure
->   */
-> -int cxlflash_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
-> +int cxlflash_ioctl(struct scsi_device *sdev, unsigned int cmd, void __user *arg)
->  {
->  	typedef int (*sioctl) (struct scsi_device *, void *);
->  
-> @@ -2179,8 +2179,7 @@ int cxlflash_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
->  	}
->  
->  	if (unlikely(copy_from_user(&buf, arg, size))) {
-> -		dev_err(dev, "%s: copy_from_user() fail "
-> -			"size=%lu cmd=%d (%s) arg=%p\n",
-> +		dev_err(dev, "%s: copy_from_user() fail size=%lu cmd=%u (%s) arg=%p\n",
->  			__func__, size, cmd, decode_ioctl(cmd), arg);
->  		rc = -EFAULT;
->  		goto cxlflash_ioctl_exit;
-> @@ -2203,8 +2202,7 @@ int cxlflash_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
->  	rc = do_ioctl(sdev, (void *)&buf);
->  	if (likely(!rc))
->  		if (unlikely(copy_to_user(arg, &buf, size))) {
-> -			dev_err(dev, "%s: copy_to_user() fail "
-> -				"size=%lu cmd=%d (%s) arg=%p\n",
-> +			dev_err(dev, "%s: copy_to_user() fail size=%lu cmd=%u (%s) arg=%p\n",
->  				__func__, size, cmd, decode_ioctl(cmd), arg);
->  			rc = -EFAULT;
->  		}
-> diff --git a/drivers/scsi/esas2r/esas2r.h b/drivers/scsi/esas2r/esas2r.h
-> index 858c3b33db78..7f43b95f4e94 100644
-> --- a/drivers/scsi/esas2r/esas2r.h
-> +++ b/drivers/scsi/esas2r/esas2r.h
-> @@ -965,8 +965,8 @@ struct esas2r_adapter {
->  const char *esas2r_info(struct Scsi_Host *);
->  int esas2r_write_params(struct esas2r_adapter *a, struct esas2r_request *rq,
->  			struct esas2r_sas_nvram *data);
-> -int esas2r_ioctl_handler(void *hostdata, int cmd, void __user *arg);
-> -int esas2r_ioctl(struct scsi_device *dev, int cmd, void __user *arg);
-> +int esas2r_ioctl_handler(void *hostdata, unsigned int cmd, void __user *arg);
-> +int esas2r_ioctl(struct scsi_device *dev, unsigned int cmd, void __user *arg);
->  u8 handle_hba_ioctl(struct esas2r_adapter *a,
->  		    struct atto_ioctl *ioctl_hba);
->  int esas2r_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd);
-> diff --git a/drivers/scsi/esas2r/esas2r_ioctl.c b/drivers/scsi/esas2r/esas2r_ioctl.c
-> index 34bcc8c04ff4..916b9adf4921 100644
-> --- a/drivers/scsi/esas2r/esas2r_ioctl.c
-> +++ b/drivers/scsi/esas2r/esas2r_ioctl.c
-> @@ -1274,7 +1274,7 @@ int esas2r_write_params(struct esas2r_adapter *a, struct esas2r_request *rq,
->  
->  
->  /* This function only cares about ATTO-specific ioctls (atto_express_ioctl) */
-> -int esas2r_ioctl_handler(void *hostdata, int cmd, void __user *arg)
-> +int esas2r_ioctl_handler(void *hostdata, unsigned int cmd, void __user *arg)
->  {
->  	struct atto_express_ioctl *ioctl = NULL;
->  	struct esas2r_adapter *a;
-> @@ -1292,7 +1292,7 @@ int esas2r_ioctl_handler(void *hostdata, int cmd, void __user *arg)
->  	ioctl = memdup_user(arg, sizeof(struct atto_express_ioctl));
->  	if (IS_ERR(ioctl)) {
->  		esas2r_log(ESAS2R_LOG_WARN,
-> -			   "ioctl_handler access_ok failed for cmd %d, "
-> +			   "ioctl_handler access_ok failed for cmd %u, "
->  			   "address %p", cmd,
->  			   arg);
->  		return PTR_ERR(ioctl);
-> @@ -1493,7 +1493,7 @@ int esas2r_ioctl_handler(void *hostdata, int cmd, void __user *arg)
->  ioctl_done:
->  
->  	if (err < 0) {
-> -		esas2r_log(ESAS2R_LOG_WARN, "err %d on ioctl cmd %d", err,
-> +		esas2r_log(ESAS2R_LOG_WARN, "err %d on ioctl cmd %u", err,
->  			   cmd);
->  
->  		switch (err) {
-> @@ -1518,9 +1518,8 @@ int esas2r_ioctl_handler(void *hostdata, int cmd, void __user *arg)
->  	err = __copy_to_user(arg, ioctl, sizeof(struct atto_express_ioctl));
->  	if (err != 0) {
->  		esas2r_log(ESAS2R_LOG_WARN,
-> -			   "ioctl_handler copy_to_user didn't copy "
-> -			   "everything (err %d, cmd %d)", err,
-> -			   cmd);
-> +			   "ioctl_handler copy_to_user didn't copy everything (err %d, cmd %u)",
-> +			   err, cmd);
->  		kfree(ioctl);
->  
->  		return -EFAULT;
-> @@ -1531,7 +1530,7 @@ int esas2r_ioctl_handler(void *hostdata, int cmd, void __user *arg)
->  	return 0;
->  }
->  
-> -int esas2r_ioctl(struct scsi_device *sd, int cmd, void __user *arg)
-> +int esas2r_ioctl(struct scsi_device *sd, unsigned int cmd, void __user *arg)
->  {
->  	return esas2r_ioctl_handler(sd->host->hostdata, cmd, arg);
->  }
-> diff --git a/drivers/scsi/esas2r/esas2r_main.c b/drivers/scsi/esas2r/esas2r_main.c
-> index c07118617d89..25dc8d44ed8e 100644
-> --- a/drivers/scsi/esas2r/esas2r_main.c
-> +++ b/drivers/scsi/esas2r/esas2r_main.c
-> @@ -624,7 +624,7 @@ static int esas2r_proc_major;
->  long esas2r_proc_ioctl(struct file *fp, unsigned int cmd, unsigned long arg)
->  {
->  	return esas2r_ioctl_handler(esas2r_proc_host->hostdata,
-> -				    (int)cmd, (void __user *)arg);
-> +				    cmd, (void __user *)arg);
->  }
->  
->  static void __exit esas2r_exit(void)
-> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> index c9cccf35e9d7..c9d41d3b50f1 100644
-> --- a/drivers/scsi/hpsa.c
-> +++ b/drivers/scsi/hpsa.c
-> @@ -251,10 +251,11 @@ static int number_of_controllers;
->  
->  static irqreturn_t do_hpsa_intr_intx(int irq, void *dev_id);
->  static irqreturn_t do_hpsa_intr_msi(int irq, void *dev_id);
-> -static int hpsa_ioctl(struct scsi_device *dev, int cmd, void __user *arg);
-> +static int hpsa_ioctl(struct scsi_device *dev, unsigned int cmd,
-> +		      void __user *arg);
->  
->  #ifdef CONFIG_COMPAT
-> -static int hpsa_compat_ioctl(struct scsi_device *dev, int cmd,
-> +static int hpsa_compat_ioctl(struct scsi_device *dev, unsigned int cmd,
->  	void __user *arg);
->  #endif
->  
-> @@ -6123,7 +6124,7 @@ static void cmd_free(struct ctlr_info *h, struct CommandList *c)
->  
->  #ifdef CONFIG_COMPAT
->  
-> -static int hpsa_ioctl32_passthru(struct scsi_device *dev, int cmd,
-> +static int hpsa_ioctl32_passthru(struct scsi_device *dev, unsigned int cmd,
->  	void __user *arg)
->  {
->  	IOCTL32_Command_struct __user *arg32 =
-> @@ -6160,7 +6161,7 @@ static int hpsa_ioctl32_passthru(struct scsi_device *dev, int cmd,
->  }
->  
->  static int hpsa_ioctl32_big_passthru(struct scsi_device *dev,
-> -	int cmd, void __user *arg)
-> +	unsigned int cmd, void __user *arg)
->  {
->  	BIG_IOCTL32_Command_struct __user *arg32 =
->  	    (BIG_IOCTL32_Command_struct __user *) arg;
-> @@ -6197,7 +6198,8 @@ static int hpsa_ioctl32_big_passthru(struct scsi_device *dev,
->  	return err;
->  }
->  
-> -static int hpsa_compat_ioctl(struct scsi_device *dev, int cmd, void __user *arg)
-> +static int hpsa_compat_ioctl(struct scsi_device *dev, unsigned int cmd,
-> +			     void __user *arg)
->  {
->  	switch (cmd) {
->  	case CCISS_GETPCIINFO:
-> @@ -6517,7 +6519,8 @@ static void check_ioctl_unit_attention(struct ctlr_info *h,
->  /*
->   * ioctl
->   */
-> -static int hpsa_ioctl(struct scsi_device *dev, int cmd, void __user *arg)
-> +static int hpsa_ioctl(struct scsi_device *dev, unsigned int cmd,
-> +		      void __user *arg)
->  {
->  	struct ctlr_info *h;
->  	void __user *argp = (void __user *)arg;
-> diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-> index 271990bc065b..97fcc881f9f1 100644
-> --- a/drivers/scsi/ipr.c
-> +++ b/drivers/scsi/ipr.c
-> @@ -6696,7 +6696,8 @@ static int ipr_queuecommand(struct Scsi_Host *shost,
->   * Return value:
->   * 	0 on success / other on failure
->   **/
-> -static int ipr_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
-> +static int ipr_ioctl(struct scsi_device *sdev, unsigned int cmd,
-> +		     void __user *arg)
->  {
->  	struct ipr_resource_entry *res;
->  
-> diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-> index 33229348dcb6..4eeaafbe0504 100644
-> --- a/drivers/scsi/libsas/sas_scsi_host.c
-> +++ b/drivers/scsi/libsas/sas_scsi_host.c
-> @@ -805,7 +805,7 @@ void sas_scsi_recover_host(struct Scsi_Host *shost)
->  		    shost->host_failed, tries);
->  }
->  
-> -int sas_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
-> +int sas_ioctl(struct scsi_device *sdev, unsigned int cmd, void __user *arg)
->  {
->  	struct domain_device *dev = sdev_to_domain_dev(sdev);
->  
-> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-> index 60bcc6df97a9..4c513651c95f 100644
-> --- a/drivers/scsi/scsi_debug.c
-> +++ b/drivers/scsi/scsi_debug.c
-> @@ -836,7 +836,8 @@ static void mk_sense_invalid_opcode(struct scsi_cmnd *scp)
->  	mk_sense_buffer(scp, ILLEGAL_REQUEST, INVALID_OPCODE, 0);
->  }
->  
-> -static int scsi_debug_ioctl(struct scsi_device *dev, int cmd, void __user *arg)
-> +static int scsi_debug_ioctl(struct scsi_device *dev, unsigned int cmd,
-> +			    void __user *arg)
->  {
->  	if (sdebug_verbose) {
->  		if (0x1261 == cmd)
-> diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-> index a25a07a0b7f0..498bdfbbebfa 100644
-> --- a/drivers/scsi/smartpqi/smartpqi_init.c
-> +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-> @@ -5572,7 +5572,8 @@ static int pqi_passthru_ioctl(struct pqi_ctrl_info *ctrl_info, void __user *arg)
->  	return rc;
->  }
->  
-> -static int pqi_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
-> +static int pqi_ioctl(struct scsi_device *sdev, unsigned int cmd,
-> +		     void __user *arg)
->  {
->  	int rc;
->  	struct pqi_ctrl_info *ctrl_info;
-> diff --git a/include/linux/libata.h b/include/linux/libata.h
-> index 38c95d66ab12..263ca4f05c24 100644
-> --- a/include/linux/libata.h
-> +++ b/include/linux/libata.h
-> @@ -1123,10 +1123,11 @@ extern int ata_host_activate(struct ata_host *host, int irq,
->  extern void ata_host_detach(struct ata_host *host);
->  extern void ata_host_init(struct ata_host *, struct device *, struct ata_port_operations *);
->  extern int ata_scsi_detect(struct scsi_host_template *sht);
-> -extern int ata_scsi_ioctl(struct scsi_device *dev, int cmd, void __user *arg);
-> +extern int ata_scsi_ioctl(struct scsi_device *dev, unsigned int cmd,
-> +			  void __user *arg);
->  extern int ata_scsi_queuecmd(struct Scsi_Host *h, struct scsi_cmnd *cmd);
->  extern int ata_sas_scsi_ioctl(struct ata_port *ap, struct scsi_device *dev,
-> -			    int cmd, void __user *arg);
-> +			    unsigned int cmd, void __user *arg);
->  extern void ata_sas_port_destroy(struct ata_port *);
->  extern struct ata_port *ata_sas_port_alloc(struct ata_host *,
->  					   struct ata_port_info *, struct Scsi_Host *);
-> diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-> index 3de3b10da19a..70461264d6e7 100644
-> --- a/include/scsi/libsas.h
-> +++ b/include/scsi/libsas.h
-> @@ -709,7 +709,8 @@ int sas_eh_target_reset_handler(struct scsi_cmnd *cmd);
->  
->  extern void sas_target_destroy(struct scsi_target *);
->  extern int sas_slave_alloc(struct scsi_device *);
-> -extern int sas_ioctl(struct scsi_device *sdev, int cmd, void __user *arg);
-> +extern int sas_ioctl(struct scsi_device *sdev, unsigned int cmd,
-> +		     void __user *arg);
->  extern int sas_drain_work(struct sas_ha_struct *ha);
->  
->  extern void sas_ssp_task_response(struct device *dev, struct sas_task *task,
-> diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-> index 5ea06d310a25..5c1df26e1d4f 100644
-> --- a/include/scsi/scsi_host.h
-> +++ b/include/scsi/scsi_host.h
-> @@ -65,7 +65,8 @@ struct scsi_host_template {
->  	 *
->  	 * Status: OPTIONAL
->  	 */
-> -	int (* ioctl)(struct scsi_device *dev, int cmd, void __user *arg);
-> +	int (*ioctl)(struct scsi_device *dev, unsigned int cmd,
-> +		     void __user *arg);
->  
->  
->  #ifdef CONFIG_COMPAT
-> @@ -75,7 +76,8 @@ struct scsi_host_template {
->  	 *
->  	 * Status: OPTIONAL
->  	 */
-> -	int (* compat_ioctl)(struct scsi_device *dev, int cmd, void __user *arg);
-> +	int (*compat_ioctl)(struct scsi_device *dev, unsigned int cmd,
-> +			    void __user *arg);
->  #endif
->  
->  	/*
-> -- 
-> 2.19.1
-> 
-
-Gentle ping for review, it would be nice to get this into 4.21/5.0 since
-I sent it out almost two months ago.
-
-Nathan
+T24gRnJpLCBEZWMgMTQsIDIwMTggYXQgMTE6MTA6MDVQTSArMDEwMCwgQXJuZCBCZXJnbWFubiB3
+cm90ZToKPkhpIEdyZWcsCj4KPkkgZGlkIHNvbWUgcmFuZGNvbmZpZyB0ZXN0aW5nIG9uIGxpbnV4
+LTQuMTkgYXJtL2FybTY0L3g4Ni4gU28gZmFyIEkgbmVlZGVkCj4yNyBwYXRjaGVzLCBtb3N0IG9m
+IHdoaWNoIGFyZSBhbHNvIHN0aWxsIG5lZWRlZCBpbiBtYWlubGluZSBMaW51eC4gSQo+aGFkIHN1
+Ym1pdHRlZCBzb21lIGJlZm9yZSwgYW5kIG90aGVycyB3ZXJlIG5vdCBzdWJtaXR0ZWQgcHJldmlv
+dXNseQo+Zm9yIHNvbWUgcmVhc29uLiBJJ2xsIHRyeSB0byBnZXQgdGhvc2UgZml4ZWQgaW4gbWFp
+bmxpbmUgYW5kIHRoZW4KPm1ha2Ugc3VyZSB3ZSBnZXQgdGhlbSBpbnRvIDQuMTkgYXMgd2VsbC4K
+Pgo+VGhpcyBzZXJpZXMgZm9yIG5vdyBjb250YWlucyBmb3VyIHBhdGNoZXMgdGhhdCBkaWQgbWFr
+ZSBpdCBpbnRvIG1haW5saW5lOgo+Cj4yZTZhZTExZGQwZDEgKCJzbGltYnVzOiBuZ2Q6IG1hcmsg
+UE0gZnVuY3Rpb25zIGFzIF9fbWF5YmVfdW51c2VkIikKPjMzZjQ5NTcxZDc1MCAoInN0YWdpbmc6
+IG9scGNfZGNvbjogYWRkIGEgbWlzc2luZyBkZXBlbmRlbmN5IikKPjBlZWVjMDE0ODhkYSAoInNj
+c2k6IHJhaWRfYXR0cnM6IGZpeCB1bnVzZWQgdmFyaWFibGUgd2FybmluZyIpCj4xMWQ0YWZkNGZm
+NjYgKCJzY2hlZC9wZWx0OiBGaXggd2FybmluZyBhbmQgY2xlYW4gdXAgSVJRIFBFTFQgY29uZmln
+IikKPgo+RmVlbCBmcmVlIHRvIGVpdGhlciBjaGVycnktcGljayB0aG9zZSBmcm9tIG1haW5saW5l
+IG9yIGFwcGx5IHRoZQo+cGF0Y2ggZnJvbSB0aGlzIHNlcmllcywgd2hpY2hldmVyIHdvcmtzIGJl
+c3QgZm9yIHlvdS4KPgo+VGhlIG90aGVyIHRocmVlIHBhdGNoZXMgYXJlIGZvciB3YXJuaW5ncyBp
+biBjb2RlIHRoYXQgZ290IHJlbW92ZWQgaW4KPm1haW5saW5lIGtlcm5lbHM6Cj4KPjNlOWVmYzMy
+OTlkZCAoImkyYzogYXNwZWVkOiBIYW5kbGUgbWFzdGVyL3NsYXZlIGNvbWJpbmVkIGlycSBldmVu
+dHMgcHJvcGVybHkiKQo+OTcyOTEwOTQ4ZmI2ICgiQVJNOiBkdHM6IHFjb206IFJlbW92ZSBBcnJv
+dyBTRDYwMCBldmFsIGJvYXJkIikKPmVmZmVjODc0NzkyZiAoImRybS9tc20vZHB1OiBSZW1vdmUg
+ZHB1X2RiZyIpCj4KPk15IGZlZWxpbmcgd2FzIHRoYXQgaXQncyBzYWZlciB0byBqdXN0IGFkZHJl
+c3MgdGhlIHdhcm5pbmcgYnkgZml4aW5nCj50aGUgY29kZSBjb3JyZWN0bHkgaW4gZWFjaCBvZiB0
+aGVzZSBjYXNlcywgYnV0IGlmIHlvdSBkaXNhZ3JlZSwKPmFwcGx5aW5nIHRoZSBtYWlubGluZSBj
+aGFuZ2Ugc2hvdWxkIHdvcmsgZXF1YWxseSB3ZWxsLCBzbyBkZWNpZGUKPmZvciB5b3Vyc2VsZi4K
+ClRoYW5rcyBBcm5kLCBJIHRvb2sgdGhlIHNlcmllcyBhcyBpcy4KCldlIHJlYWxseSBuZWVkIHRv
+IGRpc2N1c3MgaG93IC1zdGFibGUgZGVhbHMgd2l0aCByZW1vdmVkIGNvZGUgdXBzdHJlYW0uCkZv
+ciBzb21lIGNhc2VzLCB3ZSBzaG91bGQgcHJvYmFibHkgZm9sbG93IHN1aXQgYW5kIHJlbW92ZSBp
+dCBmcm9tCi1zdGFibGUgYXMgd2VsbCAoSSdtIG1vc3RseSB0aGlua2luZyBkb2RneSBjb2RlIHdp
+dGggcG90ZW50aWFsIHNlY3VyaXR5Cmlzc3VlcykuCgotLQpUaGFua3MsClNhc2hhCl9fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCkZyZWVkcmVubyBtYWlsaW5n
+IGxpc3QKRnJlZWRyZW5vQGxpc3RzLmZyZWVkZXNrdG9wLm9yZwpodHRwczovL2xpc3RzLmZyZWVk
+ZXNrdG9wLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2ZyZWVkcmVubwo=
