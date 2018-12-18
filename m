@@ -1,34 +1,24 @@
-From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: Re: [PATCH 33/41] scsi: osd: osd_initiator: mark expected switch
- fall-throughs
-Date: Tue, 18 Dec 2018 11:19:34 -0600
-Message-ID: <172604f4-daff-48bc-2933-38b51ef1aa3a@embeddedor.com>
-References: <cover.1543374820.git.gustavo@embeddedor.com>
- <09026c2661bf3c4bcf41dbb265cf1dae2c3487fd.1543374820.git.gustavo@embeddedor.com>
- <ee906c63-72cd-8d3c-d5c8-50dc59d984d8@electrozaur.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: pr-tracker-bot@kernel.org
+Subject: Re: [GIT PULL] SCSI fixes for 4.20-rc7
+Date: Tue, 18 Dec 2018 17:55:02 +0000
+Message-ID: <20181218175502.21421.6167.pr-tracker-bot@pdx-korg-gitolite-1.ci.codeaurora.org>
+References: <1545148634.2837.6.camel@HansenPartnership.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <ee906c63-72cd-8d3c-d5c8-50dc59d984d8@electrozaur.com>
-Content-Language: en-US
+In-Reply-To: <1545148634.2837.6.camel@HansenPartnership.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Boaz Harrosh <ooo@electrozaur.com>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
+The pull request you sent on Tue, 18 Dec 2018 07:57:14 -0800:
 
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-On 12/18/18 11:13 AM, Boaz Harrosh wrote:
-> On 28/11/18 06:32, Gustavo A. R. Silva wrote:
->> In preparation to enabling -Wimplicit-fallthrough, mark switch cases
->> where we are expecting to fall through.
->>
->> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
-> 
-> ACK-by: Boaz Harrosh <ooo@electrozaur.com>
-> 
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/ddfbab46539f2d37a9e9d357b054486b51f7dc27
 
-Thank you, Boaz.
---
-Gustavo
+Thank you!
+
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.wiki.kernel.org/userdoc/prtracker
