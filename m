@@ -1,15 +1,15 @@
 From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: Re: [PATCH 11/41] scsi: bfa: bfa_fcs_rport: Mark expected switch
+Subject: Re: [PATCH 12/41] scsi: bfa: bfa_ioc: Mark expected switch
  fall-throughs
-Date: Wed, 19 Dec 2018 09:39:19 -0600
-Message-ID: <d81468df-1de5-8aaf-9c7b-ce490a358bea@embeddedor.com>
+Date: Wed, 19 Dec 2018 09:39:31 -0600
+Message-ID: <b5f0c0bf-f671-65b0-dfed-39cefcd3fde1@embeddedor.com>
 References: <cover.1543374820.git.gustavo@embeddedor.com>
- <c2a6667094f80fd7f72c887b2e7844b6341ce961.1543374820.git.gustavo@embeddedor.com>
+ <520fb16cd3630d612c5768989e2ffa90f1a73f97.1543374820.git.gustavo@embeddedor.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <c2a6667094f80fd7f72c887b2e7844b6341ce961.1543374820.git.gustavo@embeddedor.com>
+In-Reply-To: <520fb16cd3630d612c5768989e2ffa90f1a73f97.1543374820.git.gustavo@embeddedor.com>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 To: Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>
@@ -30,86 +30,48 @@ On 11/27/18 10:27 PM, Gustavo A. R. Silva wrote:
 > In preparation to enabling -Wimplicit-fallthrough, mark switch cases
 > where we are expecting to fall through.
 > 
-> Notice that I replaced "!! fall through !!" and "!!! fall through !!!"
-> comments with "fall through" annotations, which is what GCC is
-> expecting to find.
+> Notice that, in this particular case, I replaced "!!! fall through !!!"
+> comment with "fall through" annotations, which is what GCC is expecting
+> to find.
 > 
-> Addresses-Coverity-ID: 744899 ("Missing break in switch")
-> Addresses-Coverity-ID: 744900 ("Missing break in switch")
-> Addresses-Coverity-ID: 744901 ("Missing break in switch")
+> Addresses-Coverity-ID: 146155 ("Missing break in switch")
 > Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 > ---
->   drivers/scsi/bfa/bfa_fcs_rport.c | 19 +++++++------------
->   1 file changed, 7 insertions(+), 12 deletions(-)
+>   drivers/scsi/bfa/bfa_ioc.c | 9 +++------
+>   1 file changed, 3 insertions(+), 6 deletions(-)
 > 
-> diff --git a/drivers/scsi/bfa/bfa_fcs_rport.c b/drivers/scsi/bfa/bfa_fcs_rport.c
-> index de50349a39ce..1e400f2aaece 100644
-> --- a/drivers/scsi/bfa/bfa_fcs_rport.c
-> +++ b/drivers/scsi/bfa/bfa_fcs_rport.c
-> @@ -427,17 +427,13 @@ bfa_fcs_rport_sm_plogi(struct bfa_fcs_rport_s *rport, enum rport_event event)
+> diff --git a/drivers/scsi/bfa/bfa_ioc.c b/drivers/scsi/bfa/bfa_ioc.c
+> index 16d3aeb0e572..32b24e51cce6 100644
+> --- a/drivers/scsi/bfa/bfa_ioc.c
+> +++ b/drivers/scsi/bfa/bfa_ioc.c
+> @@ -978,9 +978,7 @@ bfa_iocpf_sm_enabling(struct bfa_iocpf_s *iocpf, enum iocpf_event event)
 >   
->   	case RPSM_EVENT_LOGO_RCVD:
->   		bfa_fcs_rport_send_logo_acc(rport);
-> -		/*
-> -		 * !! fall through !!
-> -		 */
-> +		/* fall through */
->   	case RPSM_EVENT_PRLO_RCVD:
->   		if (rport->prlo == BFA_TRUE)
->   			bfa_fcs_rport_send_prlo_acc(rport);
->   
->   		bfa_fcxp_discard(rport->fcxp);
-> -		/*
-> -		 * !! fall through !!
-> -		 */
-> +		/* fall through */
->   	case RPSM_EVENT_FAILED:
->   		if (rport->plogi_retries < BFA_FCS_RPORT_MAX_RETRIES) {
->   			rport->plogi_retries++;
-> @@ -868,9 +864,7 @@ bfa_fcs_rport_sm_adisc_online(struct bfa_fcs_rport_s *rport,
->   		 * At least go offline when a PLOGI is received.
->   		 */
->   		bfa_fcxp_discard(rport->fcxp);
+>   	case IOCPF_E_INITFAIL:
+>   		bfa_iocpf_timer_stop(ioc);
 > -		/*
 > -		 * !!! fall through !!!
 > -		 */
 > +		/* fall through */
 >   
->   	case RPSM_EVENT_FAILED:
->   	case RPSM_EVENT_ADDRESS_CHANGE:
-> @@ -1056,6 +1050,7 @@ bfa_fcs_rport_sm_fc4_logosend(struct bfa_fcs_rport_s *rport,
+>   	case IOCPF_E_TIMEOUT:
+>   		writel(1, ioc->ioc_regs.ioc_sem_reg);
+> @@ -1056,9 +1054,7 @@ bfa_iocpf_sm_disabling(struct bfa_iocpf_s *iocpf, enum iocpf_event event)
 >   
->   	case RPSM_EVENT_LOGO_RCVD:
->   		bfa_fcs_rport_send_logo_acc(rport);
-> +		/* fall through */
->   	case RPSM_EVENT_PRLO_RCVD:
->   		if (rport->prlo == BFA_TRUE)
->   			bfa_fcs_rport_send_prlo_acc(rport);
-> @@ -1144,9 +1139,7 @@ bfa_fcs_rport_sm_hcb_offline(struct bfa_fcs_rport_s *rport,
->   			bfa_fcs_rport_send_plogiacc(rport, NULL);
->   			break;
->   		}
+>   	case IOCPF_E_FAIL:
+>   		bfa_iocpf_timer_stop(ioc);
 > -		/*
-> -		 * !! fall through !!
+> -		 * !!! fall through !!!
 > -		 */
 > +		/* fall through */
 >   
->   	case RPSM_EVENT_ADDRESS_CHANGE:
->   		if (!bfa_fcs_lport_is_online(rport->port)) {
-> @@ -1303,6 +1296,7 @@ bfa_fcs_rport_sm_hcb_logosend(struct bfa_fcs_rport_s *rport,
->   
->   	case RPSM_EVENT_LOGO_RCVD:
->   		bfa_fcs_rport_send_logo_acc(rport);
+>   	case IOCPF_E_TIMEOUT:
+>   		bfa_ioc_set_cur_ioc_fwstate(ioc, BFI_IOC_FAIL);
+> @@ -6007,6 +6003,7 @@ bfa_dconf_sm_final_sync(struct bfa_dconf_mod_s *dconf,
+>   	case BFA_DCONF_SM_IOCDISABLE:
+>   	case BFA_DCONF_SM_FLASH_COMP:
+>   		bfa_timer_stop(&dconf->timer);
 > +		/* fall through */
->   	case RPSM_EVENT_PRLO_RCVD:
->   		if (rport->prlo == BFA_TRUE)
->   			bfa_fcs_rport_send_prlo_acc(rport);
-> @@ -1346,6 +1340,7 @@ bfa_fcs_rport_sm_logo_sending(struct bfa_fcs_rport_s *rport,
->   
->   	case RPSM_EVENT_LOGO_RCVD:
->   		bfa_fcs_rport_send_logo_acc(rport);
-> +		/* fall through */
->   	case RPSM_EVENT_PRLO_RCVD:
->   		if (rport->prlo == BFA_TRUE)
->   			bfa_fcs_rport_send_prlo_acc(rport);
+>   	case BFA_DCONF_SM_TIMEOUT:
+>   		bfa_sm_set_state(dconf, bfa_dconf_sm_uninit);
+>   		bfa_fsm_send_event(&dconf->bfa->iocfc, IOCFC_E_DCONF_DONE);
 > 
