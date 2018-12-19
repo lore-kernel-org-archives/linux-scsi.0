@@ -1,35 +1,40 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: remove exofs, the T10 OSD code and block/scsi bidi support V3
-Date: Wed, 19 Dec 2018 15:43:47 +0100
-Message-ID: <20181219144347.GB23410@lst.de>
-References: <20181111133211.13926-1-hch@lst.de> <4f4b6aff-6726-c500-e3e4-f8b73d641851@electrozaur.com>
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH v5 1/2] scsi: hisi_sas: Add support for DIF feature for v2
+ hw
+Date: Wed, 19 Dec 2018 15:02:17 +0000
+Message-ID: <66f049e4-912c-5e4d-5cd2-4e1586715b2e@huawei.com>
+References: <1545057608-89965-1-git-send-email-john.garry@huawei.com>
+ <1545057608-89965-2-git-send-email-john.garry@huawei.com>
+ <yq1pntygmlk.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4f4b6aff-6726-c500-e3e4-f8b73d641851@electrozaur.com>
+In-Reply-To: <yq1pntygmlk.fsf@oracle.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Boaz Harrosh <ooo@electrozaur.com>
-Cc: Christoph Hellwig <hch@lst.de>, axboe@kernel.dk, martin.petersen@oracle.com, Johannes Thumshirn <jthumshirn@suse.de>, Benjamin Block <bblock@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: jejb@linux.vnet.ibm.com, linuxarm@huawei.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Xiang Chen <chenxiang66@hisilicon.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Nov 26, 2018 at 07:11:10PM +0200, Boaz Harrosh wrote:
-> On 11/11/18 15:32, Christoph Hellwig wrote:
-> > The only real user of the T10 OSD protocol, the pNFS object layout
-> > driver never went to the point of having shipping products, and we
-> > removed it 1.5 years ago.  Exofs is just a simple example without
-> > real life users.
-> > 
-> 
-> You have failed to say what is your motivation for this patchset? What
-> is it you are trying to fix/improve.
+On 19/12/2018 04:35, Martin K. Petersen wrote:
+>
+> John,
+>
+>> From: Xiang Chen <chenxiang66@hisilicon.com>
+>>
+>> For v3 hw, we support DIF operation for SAS, but not SATA.
+>>
+>> In addition, DIF CRC16 is supported.
+>>
+>> This patchset adds the SW support for the described features. The main
+>> components are as follows:
+>> - Get protection mask from module param
+>> - Fill PI fields
+>> - Fill related to DIF in DQ and protection iu memories
+>
+> Applied to 4.21/scsi-queue, thanks!
+>
 
-Drop basically unused support, which allows us to
+Thanks, and we're still looking at the DIX issue.
 
- 1) reduce the size of every kernel with block layer support, and
-    even more for every kernel with scsi support
- 2) reduce the size of the critical struct request structure by
-    128 bits, thus reducing the memory used by every blk-mq driver
-    significantly, never mind the cache effects
- 3) stop having the maintainance overhead for this code in the
-    block layer, which has been rather painful at times
+John
