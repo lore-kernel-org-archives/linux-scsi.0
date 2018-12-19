@@ -1,17 +1,18 @@
 From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: Re: [PATCH 06/41] scsi: aic7xxx: mark expected switch fall-throughs
-Date: Wed, 19 Dec 2018 09:37:08 -0600
-Message-ID: <76760259-100e-f149-bbbf-4c1044152ff7@embeddedor.com>
+Subject: Re: [PATCH 07/41] scsi: be2iscsi: be_iscsi: Mark expected switch
+ fall-through
+Date: Wed, 19 Dec 2018 09:37:59 -0600
+Message-ID: <bc99a534-bc6c-d093-eca2-a085bd1dfd82@embeddedor.com>
 References: <cover.1543374820.git.gustavo@embeddedor.com>
- <b55c3f902d88871053983314cfa837e641db5db6.1543374820.git.gustavo@embeddedor.com>
+ <4da131a74bf4d88c49307ade507b48aee86b4714.1543374820.git.gustavo@embeddedor.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <b55c3f902d88871053983314cfa837e641db5db6.1543374820.git.gustavo@embeddedor.com>
+In-Reply-To: <4da131a74bf4d88c49307ade507b48aee86b4714.1543374820.git.gustavo@embeddedor.com>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.com>
+To: Subbu Seetharaman <subbu.seetharaman@broadcom.com>, Ketan Mukadam <ketan.mukadam@broadcom.com>, Jitendra Bhivare <jitendra.bhivare@broadcom.com>
 Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
@@ -29,77 +30,21 @@ On 11/27/18 10:26 PM, Gustavo A. R. Silva wrote:
 > In preparation to enabling -Wimplicit-fallthrough, mark switch cases
 > where we are expecting to fall through.
 > 
-> Notice that, in some cases, I replaced "FALLTHROUGH" with a "fall through"
-> annotation and then placed it at the bottom of the corresponding switch
-> case, which is what GCC is expecting to find.
-> 
 > Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 > ---
->   drivers/scsi/aic7xxx/aic7xxx_core.c | 12 +++++++++---
->   1 file changed, 9 insertions(+), 3 deletions(-)
+>   drivers/scsi/be2iscsi/be_iscsi.c | 1 +
+>   1 file changed, 1 insertion(+)
 > 
-> diff --git a/drivers/scsi/aic7xxx/aic7xxx_core.c b/drivers/scsi/aic7xxx/aic7xxx_core.c
-> index f3362f4ab16e..d4a7263e4b8f 100644
-> --- a/drivers/scsi/aic7xxx/aic7xxx_core.c
-> +++ b/drivers/scsi/aic7xxx/aic7xxx_core.c
-> @@ -4920,24 +4920,30 @@ ahc_fini_scbdata(struct ahc_softc *ahc)
->   		}
->   		ahc_dma_tag_destroy(ahc, scb_data->sg_dmat);
+> diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
+> index 96b96e2ab91a..ed1bd369baa0 100644
+> --- a/drivers/scsi/be2iscsi/be_iscsi.c
+> +++ b/drivers/scsi/be2iscsi/be_iscsi.c
+> @@ -679,6 +679,7 @@ int beiscsi_set_param(struct iscsi_cls_conn *cls_conn,
+>   	case ISCSI_PARAM_MAX_XMIT_DLENGTH:
+>   		if (conn->max_xmit_dlength > 65536)
+>   			conn->max_xmit_dlength = 65536;
+> +		/* fall through */
+>   	default:
+>   		return 0;
 >   	}
-> +		/* fall through */
->   	case 6:
->   		ahc_dmamap_unload(ahc, scb_data->sense_dmat,
->   				  scb_data->sense_dmamap);
-> +		/* fall through */
->   	case 5:
->   		ahc_dmamem_free(ahc, scb_data->sense_dmat, scb_data->sense,
->   				scb_data->sense_dmamap);
->   		ahc_dmamap_destroy(ahc, scb_data->sense_dmat,
->   				   scb_data->sense_dmamap);
-> +		/* fall through */
->   	case 4:
->   		ahc_dma_tag_destroy(ahc, scb_data->sense_dmat);
-> +		/* fall through */
->   	case 3:
->   		ahc_dmamap_unload(ahc, scb_data->hscb_dmat,
->   				  scb_data->hscb_dmamap);
-> +		/* fall through */
->   	case 2:
->   		ahc_dmamem_free(ahc, scb_data->hscb_dmat, scb_data->hscbs,
->   				scb_data->hscb_dmamap);
->   		ahc_dmamap_destroy(ahc, scb_data->hscb_dmat,
->   				   scb_data->hscb_dmamap);
-> +		/* fall through */
->   	case 1:
->   		ahc_dma_tag_destroy(ahc, scb_data->hscb_dmat);
->   		break;
-> @@ -6002,8 +6008,8 @@ ahc_search_qinfifo(struct ahc_softc *ahc, int target, char channel,
->   				if ((scb->flags & SCB_ACTIVE) == 0)
->   					printk("Inactive SCB in Waiting List\n");
->   				ahc_done(ahc, scb);
-> -				/* FALLTHROUGH */
->   			}
-> +				/* fall through */
->   			case SEARCH_REMOVE:
->   				next = ahc_rem_wscb(ahc, next, prev);
->   				break;
-> @@ -7008,8 +7014,8 @@ ahc_download_instr(struct ahc_softc *ahc, u_int instrptr, uint8_t *dconsts)
->   		}
->   		address -= address_offset;
->   		fmt3_ins->address = address;
-> -		/* FALLTHROUGH */
->   	}
-> +		/* fall through */
->   	case AIC_OP_OR:
->   	case AIC_OP_AND:
->   	case AIC_OP_XOR:
-> @@ -7035,7 +7041,7 @@ ahc_download_instr(struct ahc_softc *ahc, u_int instrptr, uint8_t *dconsts)
->   			fmt1_ins->opcode = AIC_OP_AND;
->   			fmt1_ins->immediate = 0xff;
->   		}
-> -		/* FALLTHROUGH */
-> +		/* fall through */
->   	case AIC_OP_ROL:
->   		if ((ahc->features & AHC_ULTRA2) != 0) {
->   			int i, count;
 > 
