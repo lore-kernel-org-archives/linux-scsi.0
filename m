@@ -1,8 +1,8 @@
 From: Ching Huang <ching2048@areca.com.tw>
-Subject: [PATCH 11/12] scsi: arcmsr: Fix suspend/resume of
- ACB_ADAPTER_TYPE_B
-Date: Wed, 19 Dec 2018 16:59:48 +0800
-Message-ID: <1545209988.4457.47.camel@Centos6.3-64>
+Subject: [PATCH 12/12] scsi: arcmsr: Update driver version to
+ v1.40.00.10-20181217
+Date: Wed, 19 Dec 2018 17:02:08 +0800
+Message-ID: <1545210128.4457.50.camel@Centos6.3-64>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
@@ -14,35 +14,21 @@ List-Id: linux-scsi@vger.kernel.org
 
 >From Ching Huang <ching2048@areca.com.tw>
 
-Fix suspend/resume of ACB_ADAPTER_TYPE_B
+Update driver version to v1.40.00.10-20181217
 
 Signed-off-by: Ching Huang <ching2048@areca.com.tw>
 ---
 
-diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
-index 30dff6c..9f85d5a 100755
---- a/drivers/scsi/arcmsr/arcmsr_hba.c
-+++ b/drivers/scsi/arcmsr/arcmsr_hba.c
-@@ -1110,12 +1110,21 @@ static int arcmsr_resume(struct pci_dev *pdev)
- 	pci_set_master(pdev);
- 	if (arcmsr_request_irq(pdev, acb) == FAILED)
- 		goto controller_stop;
--	if (acb->adapter_type == ACB_ADAPTER_TYPE_E) {
-+	switch (acb->adapter_type) {
-+	case ACB_ADAPTER_TYPE_B: {
-+		struct MessageUnit_B *reg = acb->pmuB;
-+		reg->post_qbuffer[0] = 0;
-+		reg->postq_index = 0;
-+		reg->doneq_index = 0;
-+		break;
-+		}
-+	case ACB_ADAPTER_TYPE_E:
- 		writel(0, &acb->pmuE->host_int_status);
- 		writel(ARCMSR_HBEMU_DOORBELL_SYNC, &acb->pmuE->iobound_doorbell);
- 		acb->in_doorbell = 0;
- 		acb->out_doorbell = 0;
- 		acb->doneq_index = 0;
-+		break;
- 	}
- 	arcmsr_iop_init(acb);
- 	arcmsr_init_get_devmap_timer(acb);
+diff --git a/drivers/scsi/arcmsr/arcmsr.h b/drivers/scsi/arcmsr/arcmsr.h
+index 9041edc..a94c513 100755
+--- a/drivers/scsi/arcmsr/arcmsr.h
++++ b/drivers/scsi/arcmsr/arcmsr.h
+@@ -49,7 +49,7 @@ struct device_attribute;
+ #define ARCMSR_MAX_OUTSTANDING_CMD	1024
+ #define ARCMSR_DEFAULT_OUTSTANDING_CMD	128
+ #define ARCMSR_MIN_OUTSTANDING_CMD	32
+-#define ARCMSR_DRIVER_VERSION		"v1.40.00.09-20180709"
++#define ARCMSR_DRIVER_VERSION		"v1.40.00.10-20181217"
+ #define ARCMSR_SCSI_INITIATOR_ID	255
+ #define ARCMSR_MAX_XFER_SECTORS		512
+ #define ARCMSR_MAX_XFER_SECTORS_B	4096
