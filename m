@@ -1,40 +1,130 @@
-From: John Garry <john.garry@huawei.com>
-Subject: Re: [PATCH v5 1/2] scsi: hisi_sas: Add support for DIF feature for v2
- hw
-Date: Wed, 19 Dec 2018 15:02:17 +0000
-Message-ID: <66f049e4-912c-5e4d-5cd2-4e1586715b2e@huawei.com>
-References: <1545057608-89965-1-git-send-email-john.garry@huawei.com>
- <1545057608-89965-2-git-send-email-john.garry@huawei.com>
- <yq1pntygmlk.fsf@oracle.com>
+From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Subject: Re: [PATCH 05/41] scsi: aic7xxx: aic79xx: mark expected switch
+ fall-through
+Date: Wed, 19 Dec 2018 09:36:17 -0600
+Message-ID: <1d73dbbd-7e8e-e5ba-6a0f-97fdd799d4c4@embeddedor.com>
+References: <cover.1543374820.git.gustavo@embeddedor.com>
+ <ff0ea78271abe136badebfbeba1d4373fb836bce.1543374820.git.gustavo@embeddedor.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <yq1pntygmlk.fsf@oracle.com>
+In-Reply-To: <ff0ea78271abe136badebfbeba1d4373fb836bce.1543374820.git.gustavo@embeddedor.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: jejb@linux.vnet.ibm.com, linuxarm@huawei.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Xiang Chen <chenxiang66@hisilicon.com>
+To: Hannes Reinecke <hare@suse.com>
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 19/12/2018 04:35, Martin K. Petersen wrote:
->
-> John,
->
->> From: Xiang Chen <chenxiang66@hisilicon.com>
->>
->> For v3 hw, we support DIF operation for SAS, but not SATA.
->>
->> In addition, DIF CRC16 is supported.
->>
->> This patchset adds the SW support for the described features. The main
->> components are as follows:
->> - Get protection mask from module param
->> - Fill PI fields
->> - Fill related to DIF in DQ and protection iu memories
->
-> Applied to 4.21/scsi-queue, thanks!
->
+Hi,
 
-Thanks, and we're still looking at the DIX issue.
+Friendly ping:
 
-John
+Who can ack or review this patch, please?
+
+Thanks
+--
+Gustavo
+
+On 11/27/18 10:26 PM, Gustavo A. R. Silva wrote:
+> In preparation to enabling -Wimplicit-fallthrough, mark switch cases
+> where we are expecting to fall through.
+> 
+> Notice that, in some cases, I replaced "FALLTHROUGH" with a "fall through"
+> annotation and then placed it at the bottom of the corresponding switch
+> case, which is what GCC is expecting to find.
+> 
+> Addresses-Coverity-ID: 114961 ("Missing break in switch")
+> Addresses-Coverity-ID: 114962 ("Missing break in switch")
+> Addresses-Coverity-ID: 114963 ("Missing break in switch")
+> Addresses-Coverity-ID: 114964 ("Missing break in switch")
+> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+> ---
+>   drivers/scsi/aic7xxx/aic79xx_core.c | 14 +++++++++-----
+>   1 file changed, 9 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/scsi/aic7xxx/aic79xx_core.c b/drivers/scsi/aic7xxx/aic79xx_core.c
+> index 9ee75c9a9aa1..7e5044bf05c0 100644
+> --- a/drivers/scsi/aic7xxx/aic79xx_core.c
+> +++ b/drivers/scsi/aic7xxx/aic79xx_core.c
+> @@ -2285,6 +2285,7 @@ ahd_handle_seqint(struct ahd_softc *ahd, u_int intstat)
+>   			switch (scb->hscb->task_management) {
+>   			case SIU_TASKMGMT_ABORT_TASK:
+>   				tag = SCB_GET_TAG(scb);
+> +				/* fall through */
+>   			case SIU_TASKMGMT_ABORT_TASK_SET:
+>   			case SIU_TASKMGMT_CLEAR_TASK_SET:
+>   				lun = scb->hscb->lun;
+> @@ -2295,6 +2296,7 @@ ahd_handle_seqint(struct ahd_softc *ahd, u_int intstat)
+>   				break;
+>   			case SIU_TASKMGMT_LUN_RESET:
+>   				lun = scb->hscb->lun;
+> +				/* fall through */
+>   			case SIU_TASKMGMT_TARGET_RESET:
+>   			{
+>   				struct ahd_devinfo devinfo;
+> @@ -6550,8 +6552,8 @@ ahd_fini_scbdata(struct ahd_softc *ahd)
+>   			kfree(sns_map);
+>   		}
+>   		ahd_dma_tag_destroy(ahd, scb_data->sense_dmat);
+> -		/* FALLTHROUGH */
+>   	}
+> +		/* fall through */
+>   	case 6:
+>   	{
+>   		struct map_node *sg_map;
+> @@ -6565,8 +6567,8 @@ ahd_fini_scbdata(struct ahd_softc *ahd)
+>   			kfree(sg_map);
+>   		}
+>   		ahd_dma_tag_destroy(ahd, scb_data->sg_dmat);
+> -		/* FALLTHROUGH */
+>   	}
+> +		/* fall through */
+>   	case 5:
+>   	{
+>   		struct map_node *hscb_map;
+> @@ -7209,6 +7211,7 @@ ahd_init(struct ahd_softc *ahd)
+>   		case FLX_CSTAT_OVER:
+>   		case FLX_CSTAT_UNDER:
+>   			warn_user++;
+> +			/* fall through */
+>   		case FLX_CSTAT_INVALID:
+>   		case FLX_CSTAT_OKAY:
+>   			if (warn_user == 0 && bootverbose == 0)
+> @@ -8413,7 +8416,7 @@ ahd_search_scb_list(struct ahd_softc *ahd, int target, char channel,
+>   			if ((scb->flags & SCB_ACTIVE) == 0)
+>   				printk("Inactive SCB in Waiting List\n");
+>   			ahd_done_with_status(ahd, scb, status);
+> -			/* FALLTHROUGH */
+> +			/* fall through */
+>   		case SEARCH_REMOVE:
+>   			ahd_rem_wscb(ahd, scbid, prev, next, tid);
+>   			*list_tail = prev;
+> @@ -8422,6 +8425,7 @@ ahd_search_scb_list(struct ahd_softc *ahd, int target, char channel,
+>   			break;
+>   		case SEARCH_PRINT:
+>   			printk("0x%x ", scbid);
+> +			/* fall through */
+>   		case SEARCH_COUNT:
+>   			prev = scbid;
+>   			break;
+> @@ -9547,8 +9551,8 @@ ahd_download_instr(struct ahd_softc *ahd, u_int instrptr, uint8_t *dconsts)
+>   	{
+>   		fmt3_ins = &instr.format3;
+>   		fmt3_ins->address = ahd_resolve_seqaddr(ahd, fmt3_ins->address);
+> -		/* FALLTHROUGH */
+>   	}
+> +		/* fall through */
+>   	case AIC_OP_OR:
+>   	case AIC_OP_AND:
+>   	case AIC_OP_XOR:
+> @@ -9559,7 +9563,7 @@ ahd_download_instr(struct ahd_softc *ahd, u_int instrptr, uint8_t *dconsts)
+>   			fmt1_ins->immediate = dconsts[fmt1_ins->immediate];
+>   		}
+>   		fmt1_ins->parity = 0;
+> -		/* FALLTHROUGH */
+> +		/* fall through */
+>   	case AIC_OP_ROL:
+>   	{
+>   		int i, count;
+> 
