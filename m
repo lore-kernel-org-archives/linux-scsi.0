@@ -1,78 +1,35 @@
-From: Sabyasachi Gupta <sabyasachi.linux@gmail.com>
-Subject: Re: [PATCH] scsi/mvsas/mv_init.c: Use dma_zalloc_coherent
-Date: Wed, 19 Dec 2018 18:49:27 +0530
-Message-ID: <CAJr6mf2kr4BmCWZU0=EwXURWUZWRHHLifi_2aiUrJSCjnWusZg@mail.gmail.com>
-References: <5bf56248.1c69fb81.21a6e.5a72@mx.google.com> <CAJr6mf11gp9iV=NiFEFyo7kSZfCfMsEySdijem_PhMFEAwqucA@mail.gmail.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: remove exofs, the T10 OSD code and block/scsi bidi support V3
+Date: Wed, 19 Dec 2018 15:43:47 +0100
+Message-ID: <20181219144347.GB23410@lst.de>
+References: <20181111133211.13926-1-hch@lst.de> <4f4b6aff-6726-c500-e3e4-f8b73d641851@electrozaur.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAJr6mf11gp9iV=NiFEFyo7kSZfCfMsEySdijem_PhMFEAwqucA@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <4f4b6aff-6726-c500-e3e4-f8b73d641851@electrozaur.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, jthumshirn@suse.de
-Cc: Souptick Joarder <jrdr.linux@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Brajeswar Ghosh <brajeswar.linux@gmail.com>
+To: Boaz Harrosh <ooo@electrozaur.com>
+Cc: Christoph Hellwig <hch@lst.de>, axboe@kernel.dk, martin.petersen@oracle.com, Johannes Thumshirn <jthumshirn@suse.de>, Benjamin Block <bblock@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, Dec 1, 2018 at 6:40 PM Sabyasachi Gupta
-<sabyasachi.linux@gmail.com> wrote:
->
-> On Wed, Nov 21, 2018 at 7:18 PM Sabyasachi Gupta
-> <sabyasachi.linux@gmail.com> wrote:
-> >
-> > Replace dma_alloc_coherent + memset with dma_zalloc_coherent
-> >
-> > Signed-off-by: Sabyasachi Gupta <sabyasachi.linux@gmail.com>
->
-> Any comment on this patch?
+On Mon, Nov 26, 2018 at 07:11:10PM +0200, Boaz Harrosh wrote:
+> On 11/11/18 15:32, Christoph Hellwig wrote:
+> > The only real user of the T10 OSD protocol, the pNFS object layout
+> > driver never went to the point of having shipping products, and we
+> > removed it 1.5 years ago.  Exofs is just a simple example without
+> > real life users.
+> > 
+> 
+> You have failed to say what is your motivation for this patchset? What
+> is it you are trying to fix/improve.
 
-Any comment on this patch?
+Drop basically unused support, which allows us to
 
->
-> > ---
-> >  drivers/scsi/mvsas/mv_init.c | 12 ++++--------
-> >  1 file changed, 4 insertions(+), 8 deletions(-)
-> >
-> > diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
-> > index 3ac3437..495bddb 100644
-> > --- a/drivers/scsi/mvsas/mv_init.c
-> > +++ b/drivers/scsi/mvsas/mv_init.c
-> > @@ -253,33 +253,29 @@ static int mvs_alloc(struct mvs_info *mvi, struct Scsi_Host *shost)
-> >         /*
-> >          * alloc and init our DMA areas
-> >          */
-> > -       mvi->tx = dma_alloc_coherent(mvi->dev,
-> > +       mvi->tx = dma_zalloc_coherent(mvi->dev,
-> >                                      sizeof(*mvi->tx) * MVS_CHIP_SLOT_SZ,
-> >                                      &mvi->tx_dma, GFP_KERNEL);
-> >         if (!mvi->tx)
-> >                 goto err_out;
-> > -       memset(mvi->tx, 0, sizeof(*mvi->tx) * MVS_CHIP_SLOT_SZ);
-> > -       mvi->rx_fis = dma_alloc_coherent(mvi->dev, MVS_RX_FISL_SZ,
-> > +       mvi->rx_fis = dma_zalloc_coherent(mvi->dev, MVS_RX_FISL_SZ,
-> >                                          &mvi->rx_fis_dma, GFP_KERNEL);
-> >         if (!mvi->rx_fis)
-> >                 goto err_out;
-> > -       memset(mvi->rx_fis, 0, MVS_RX_FISL_SZ);
-> >
-> > -       mvi->rx = dma_alloc_coherent(mvi->dev,
-> > +       mvi->rx = dma_zalloc_coherent(mvi->dev,
-> >                                      sizeof(*mvi->rx) * (MVS_RX_RING_SZ + 1),
-> >                                      &mvi->rx_dma, GFP_KERNEL);
-> >         if (!mvi->rx)
-> >                 goto err_out;
-> > -       memset(mvi->rx, 0, sizeof(*mvi->rx) * (MVS_RX_RING_SZ + 1));
-> >         mvi->rx[0] = cpu_to_le32(0xfff);
-> >         mvi->rx_cons = 0xfff;
-> >
-> > -       mvi->slot = dma_alloc_coherent(mvi->dev,
-> > +       mvi->slot = dma_zalloc_coherent(mvi->dev,
-> >                                        sizeof(*mvi->slot) * slot_nr,
-> >                                        &mvi->slot_dma, GFP_KERNEL);
-> >         if (!mvi->slot)
-> >                 goto err_out;
-> > -       memset(mvi->slot, 0, sizeof(*mvi->slot) * slot_nr);
-> >
-> >         mvi->bulk_buffer = dma_alloc_coherent(mvi->dev,
-> >                                        TRASH_BUCKET_SIZE,
-> > --
-> > 2.7.4
-> >
+ 1) reduce the size of every kernel with block layer support, and
+    even more for every kernel with scsi support
+ 2) reduce the size of the critical struct request structure by
+    128 bits, thus reducing the memory used by every blk-mq driver
+    significantly, never mind the cache effects
+ 3) stop having the maintainance overhead for this code in the
+    block layer, which has been rather painful at times
