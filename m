@@ -1,8 +1,8 @@
 From: Ching Huang <ching2048@areca.com.tw>
-Subject: [PATCH 3/12] scsi: arcmsr: Merge arcmsr_alloc_io_queue to
- arcmsr_alloc_ccb_pool
-Date: Wed, 19 Dec 2018 16:31:00 +0800
-Message-ID: <1545208260.4457.22.camel@Centos6.3-64>
+Subject: [PATCH 4/12] scsi: arcmsr: Update arcmsr_alloc_ccb_pool for ccb
+ buffer address can above 4GB
+Date: Wed, 19 Dec 2018 16:34:58 +0800
+Message-ID: <1545208498.4457.26.camel@Centos6.3-64>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
@@ -14,214 +14,104 @@ List-Id: linux-scsi@vger.kernel.org
 
 >From Ching Huang <ching2048@areca.com.tw>
 
-Merge arcmsr_alloc_io_queue to arcmsr_alloc_ccb_pool
+Update arcmsr_alloc_ccb_pool for ccb buffer address can above 4GB
 
 Signed-off-by: Ching Huang <ching2048@areca.com.tw>
 ---
 
+diff --git a/drivers/scsi/arcmsr/arcmsr.h b/drivers/scsi/arcmsr/arcmsr.h
+index 256fe9a..9041edc 100755
+--- a/drivers/scsi/arcmsr/arcmsr.h
++++ b/drivers/scsi/arcmsr/arcmsr.h
+@@ -747,6 +747,7 @@ struct AdapterControlBlock
+ 	uint32_t		outbound_int_enable;
+ 	uint32_t		cdb_phyaddr_hi32;
+ 	uint32_t		reg_mu_acc_handle0;
++	uint64_t		cdb_phyadd_hipart;
+ 	spinlock_t		eh_lock;
+ 	spinlock_t		ccblist_lock;
+ 	spinlock_t		postq_lock;
+@@ -855,11 +856,11 @@ struct AdapterControlBlock
+ *******************************************************************************
+ */
+ struct CommandControlBlock{
+-	/*x32:sizeof struct_CCB=(32+60)byte, x64:sizeof struct_CCB=(64+60)byte*/
++	/*x32:sizeof struct_CCB=(64+60)byte, x64:sizeof struct_CCB=(64+60)byte*/
+ 	struct list_head		list;		/*x32: 8byte, x64: 16byte*/
+ 	struct scsi_cmnd		*pcmd;		/*8 bytes pointer of linux scsi command */
+ 	struct AdapterControlBlock	*acb;		/*x32: 4byte, x64: 8byte*/
+-	uint32_t			cdb_phyaddr;	/*x32: 4byte, x64: 4byte*/
++	unsigned long			cdb_phyaddr;	/*x32: 4byte, x64: 8byte*/
+ 	uint32_t			arc_cdb_size;	/*x32:4byte,x64:4byte*/
+ 	uint16_t			ccb_flags;	/*x32: 2byte, x64: 2byte*/
+ #define	CCB_FLAG_READ		0x0000
+@@ -875,10 +876,10 @@ struct CommandControlBlock{
+ 	uint32_t			smid;
+ #if BITS_PER_LONG == 64
+ 	/*  ======================512+64 bytes========================  */
+-		uint32_t		reserved[4];	/*16 byte*/
++		uint32_t		reserved[3];	/*12 byte*/
+ #else
+ 	/*  ======================512+32 bytes========================  */
+-	//	uint32_t		reserved;	/*4  byte*/
++		uint32_t		reserved[8];	/*32  byte*/
+ #endif
+ 	/*  =======================================================   */
+ 	struct ARCMSR_CDB		arcmsr_cdb;
 diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
-index f831c13..e1c75ca 100755
+index e1c75ca..5353dbb 100755
 --- a/drivers/scsi/arcmsr/arcmsr_hba.c
 +++ b/drivers/scsi/arcmsr/arcmsr_hba.c
-@@ -576,6 +576,58 @@ static void arcmsr_flush_adapter_cache(struct AdapterControlBlock *acb)
- 	}
- }
+@@ -694,11 +694,11 @@ static int arcmsr_alloc_ccb_pool(struct AdapterControlBlock *acb)
+ 	dma_addr_t dma_coherent_handle;
+ 	struct CommandControlBlock *ccb_tmp;
+ 	int i = 0, j = 0;
+-	dma_addr_t cdb_phyaddr;
++	unsigned long cdb_phyaddr, next_ccb_phy;
+ 	unsigned long roundup_ccbsize;
+ 	unsigned long max_xfer_len;
+ 	unsigned long max_sg_entrys;
+-	uint32_t  firm_config_version;
++	uint32_t  firm_config_version, curr_phy_upper32;
  
-+static void arcmsr_hbaB_assign_regAddr(struct AdapterControlBlock *acb)
-+{
-+	struct MessageUnit_B *reg = acb->pmuB;
-+
-+	if (acb->pdev->device == PCI_DEVICE_ID_ARECA_1203) {
-+		reg->drv2iop_doorbell = MEM_BASE0(ARCMSR_DRV2IOP_DOORBELL_1203);
-+		reg->drv2iop_doorbell_mask = MEM_BASE0(ARCMSR_DRV2IOP_DOORBELL_MASK_1203);
-+		reg->iop2drv_doorbell = MEM_BASE0(ARCMSR_IOP2DRV_DOORBELL_1203);
-+		reg->iop2drv_doorbell_mask = MEM_BASE0(ARCMSR_IOP2DRV_DOORBELL_MASK_1203);
-+	} else {
-+		reg->drv2iop_doorbell= MEM_BASE0(ARCMSR_DRV2IOP_DOORBELL);
-+		reg->drv2iop_doorbell_mask = MEM_BASE0(ARCMSR_DRV2IOP_DOORBELL_MASK);
-+		reg->iop2drv_doorbell = MEM_BASE0(ARCMSR_IOP2DRV_DOORBELL);
-+		reg->iop2drv_doorbell_mask = MEM_BASE0(ARCMSR_IOP2DRV_DOORBELL_MASK);
-+	}
-+	reg->message_wbuffer = MEM_BASE1(ARCMSR_MESSAGE_WBUFFER);
-+	reg->message_rbuffer =  MEM_BASE1(ARCMSR_MESSAGE_RBUFFER);
-+	reg->message_rwbuffer = MEM_BASE1(ARCMSR_MESSAGE_RWBUFFER);
-+}
-+
-+static void arcmsr_hbaD_assign_regAddr(struct AdapterControlBlock *acb)
-+{
-+	struct MessageUnit_D *reg = acb->pmuD;
-+
-+	reg->chip_id = MEM_BASE0(ARCMSR_ARC1214_CHIP_ID);
-+	reg->cpu_mem_config = MEM_BASE0(ARCMSR_ARC1214_CPU_MEMORY_CONFIGURATION);
-+	reg->i2o_host_interrupt_mask = MEM_BASE0(ARCMSR_ARC1214_I2_HOST_INTERRUPT_MASK);
-+	reg->sample_at_reset = MEM_BASE0(ARCMSR_ARC1214_SAMPLE_RESET);
-+	reg->reset_request = MEM_BASE0(ARCMSR_ARC1214_RESET_REQUEST);
-+	reg->host_int_status = MEM_BASE0(ARCMSR_ARC1214_MAIN_INTERRUPT_STATUS);
-+	reg->pcief0_int_enable = MEM_BASE0(ARCMSR_ARC1214_PCIE_F0_INTERRUPT_ENABLE);
-+	reg->inbound_msgaddr0 = MEM_BASE0(ARCMSR_ARC1214_INBOUND_MESSAGE0);
-+	reg->inbound_msgaddr1 = MEM_BASE0(ARCMSR_ARC1214_INBOUND_MESSAGE1);
-+	reg->outbound_msgaddr0 = MEM_BASE0(ARCMSR_ARC1214_OUTBOUND_MESSAGE0);
-+	reg->outbound_msgaddr1 = MEM_BASE0(ARCMSR_ARC1214_OUTBOUND_MESSAGE1);
-+	reg->inbound_doorbell = MEM_BASE0(ARCMSR_ARC1214_INBOUND_DOORBELL);
-+	reg->outbound_doorbell = MEM_BASE0(ARCMSR_ARC1214_OUTBOUND_DOORBELL);
-+	reg->outbound_doorbell_enable = MEM_BASE0(ARCMSR_ARC1214_OUTBOUND_DOORBELL_ENABLE);
-+	reg->inboundlist_base_low = MEM_BASE0(ARCMSR_ARC1214_INBOUND_LIST_BASE_LOW);
-+	reg->inboundlist_base_high = MEM_BASE0(ARCMSR_ARC1214_INBOUND_LIST_BASE_HIGH);
-+	reg->inboundlist_write_pointer = MEM_BASE0(ARCMSR_ARC1214_INBOUND_LIST_WRITE_POINTER);
-+	reg->outboundlist_base_low = MEM_BASE0(ARCMSR_ARC1214_OUTBOUND_LIST_BASE_LOW);
-+	reg->outboundlist_base_high = MEM_BASE0(ARCMSR_ARC1214_OUTBOUND_LIST_BASE_HIGH);
-+	reg->outboundlist_copy_pointer = MEM_BASE0(ARCMSR_ARC1214_OUTBOUND_LIST_COPY_POINTER);
-+	reg->outboundlist_read_pointer = MEM_BASE0(ARCMSR_ARC1214_OUTBOUND_LIST_READ_POINTER);
-+	reg->outboundlist_interrupt_cause = MEM_BASE0(ARCMSR_ARC1214_OUTBOUND_INTERRUPT_CAUSE);
-+	reg->outboundlist_interrupt_enable = MEM_BASE0(ARCMSR_ARC1214_OUTBOUND_INTERRUPT_ENABLE);
-+	reg->message_wbuffer = MEM_BASE0(ARCMSR_ARC1214_MESSAGE_WBUFFER);
-+	reg->message_rbuffer = MEM_BASE0(ARCMSR_ARC1214_MESSAGE_RBUFFER);
-+	reg->msgcode_rwbuffer = MEM_BASE0(ARCMSR_ARC1214_MESSAGE_RWBUFFER);
-+}
-+
- static bool arcmsr_alloc_io_queue(struct AdapterControlBlock *acb)
- {
- 	bool rtn = true;
-@@ -585,7 +637,6 @@ static bool arcmsr_alloc_io_queue(struct AdapterControlBlock *acb)
- 
- 	switch (acb->adapter_type) {
- 	case ACB_ADAPTER_TYPE_B: {
--		struct MessageUnit_B *reg;
- 		acb->ioqueue_size = roundup(sizeof(struct MessageUnit_B), 32);
- 		dma_coherent = dma_zalloc_coherent(&pdev->dev, acb->ioqueue_size,
- 			&dma_coherent_handle, GFP_KERNEL);
-@@ -595,27 +646,11 @@ static bool arcmsr_alloc_io_queue(struct AdapterControlBlock *acb)
- 		}
- 		acb->dma_coherent_handle2 = dma_coherent_handle;
- 		acb->dma_coherent2 = dma_coherent;
--		reg = (struct MessageUnit_B *)dma_coherent;
--		acb->pmuB = reg;
--		if (acb->pdev->device == PCI_DEVICE_ID_ARECA_1203) {
--			reg->drv2iop_doorbell = MEM_BASE0(ARCMSR_DRV2IOP_DOORBELL_1203);
--			reg->drv2iop_doorbell_mask = MEM_BASE0(ARCMSR_DRV2IOP_DOORBELL_MASK_1203);
--			reg->iop2drv_doorbell = MEM_BASE0(ARCMSR_IOP2DRV_DOORBELL_1203);
--			reg->iop2drv_doorbell_mask = MEM_BASE0(ARCMSR_IOP2DRV_DOORBELL_MASK_1203);
--		} else {
--			reg->drv2iop_doorbell = MEM_BASE0(ARCMSR_DRV2IOP_DOORBELL);
--			reg->drv2iop_doorbell_mask = MEM_BASE0(ARCMSR_DRV2IOP_DOORBELL_MASK);
--			reg->iop2drv_doorbell = MEM_BASE0(ARCMSR_IOP2DRV_DOORBELL);
--			reg->iop2drv_doorbell_mask = MEM_BASE0(ARCMSR_IOP2DRV_DOORBELL_MASK);
--		}
--		reg->message_wbuffer = MEM_BASE1(ARCMSR_MESSAGE_WBUFFER);
--		reg->message_rbuffer = MEM_BASE1(ARCMSR_MESSAGE_RBUFFER);
--		reg->message_rwbuffer = MEM_BASE1(ARCMSR_MESSAGE_RWBUFFER);
-+		acb->pmuB = (struct MessageUnit_B *)dma_coherent;
-+		arcmsr_hbaB_assign_regAddr(acb);
- 		}
- 		break;
- 	case ACB_ADAPTER_TYPE_D: {
--		struct MessageUnit_D *reg;
--
- 		acb->ioqueue_size = roundup(sizeof(struct MessageUnit_D), 32);
- 		dma_coherent = dma_zalloc_coherent(&pdev->dev, acb->ioqueue_size,
- 			&dma_coherent_handle, GFP_KERNEL);
-@@ -625,34 +660,8 @@ static bool arcmsr_alloc_io_queue(struct AdapterControlBlock *acb)
- 		}
- 		acb->dma_coherent_handle2 = dma_coherent_handle;
- 		acb->dma_coherent2 = dma_coherent;
--		reg = (struct MessageUnit_D *)dma_coherent;
--		acb->pmuD = reg;
--		reg->chip_id = MEM_BASE0(ARCMSR_ARC1214_CHIP_ID);
--		reg->cpu_mem_config = MEM_BASE0(ARCMSR_ARC1214_CPU_MEMORY_CONFIGURATION);
--		reg->i2o_host_interrupt_mask = MEM_BASE0(ARCMSR_ARC1214_I2_HOST_INTERRUPT_MASK);
--		reg->sample_at_reset = MEM_BASE0(ARCMSR_ARC1214_SAMPLE_RESET);
--		reg->reset_request = MEM_BASE0(ARCMSR_ARC1214_RESET_REQUEST);
--		reg->host_int_status = MEM_BASE0(ARCMSR_ARC1214_MAIN_INTERRUPT_STATUS);
--		reg->pcief0_int_enable = MEM_BASE0(ARCMSR_ARC1214_PCIE_F0_INTERRUPT_ENABLE);
--		reg->inbound_msgaddr0 = MEM_BASE0(ARCMSR_ARC1214_INBOUND_MESSAGE0);
--		reg->inbound_msgaddr1 = MEM_BASE0(ARCMSR_ARC1214_INBOUND_MESSAGE1);
--		reg->outbound_msgaddr0 = MEM_BASE0(ARCMSR_ARC1214_OUTBOUND_MESSAGE0);
--		reg->outbound_msgaddr1 = MEM_BASE0(ARCMSR_ARC1214_OUTBOUND_MESSAGE1);
--		reg->inbound_doorbell = MEM_BASE0(ARCMSR_ARC1214_INBOUND_DOORBELL);
--		reg->outbound_doorbell = MEM_BASE0(ARCMSR_ARC1214_OUTBOUND_DOORBELL);
--		reg->outbound_doorbell_enable = MEM_BASE0(ARCMSR_ARC1214_OUTBOUND_DOORBELL_ENABLE);
--		reg->inboundlist_base_low = MEM_BASE0(ARCMSR_ARC1214_INBOUND_LIST_BASE_LOW);
--		reg->inboundlist_base_high = MEM_BASE0(ARCMSR_ARC1214_INBOUND_LIST_BASE_HIGH);
--		reg->inboundlist_write_pointer = MEM_BASE0(ARCMSR_ARC1214_INBOUND_LIST_WRITE_POINTER);
--		reg->outboundlist_base_low = MEM_BASE0(ARCMSR_ARC1214_OUTBOUND_LIST_BASE_LOW);
--		reg->outboundlist_base_high = MEM_BASE0(ARCMSR_ARC1214_OUTBOUND_LIST_BASE_HIGH);
--		reg->outboundlist_copy_pointer = MEM_BASE0(ARCMSR_ARC1214_OUTBOUND_LIST_COPY_POINTER);
--		reg->outboundlist_read_pointer = MEM_BASE0(ARCMSR_ARC1214_OUTBOUND_LIST_READ_POINTER);
--		reg->outboundlist_interrupt_cause = MEM_BASE0(ARCMSR_ARC1214_OUTBOUND_INTERRUPT_CAUSE);
--		reg->outboundlist_interrupt_enable = MEM_BASE0(ARCMSR_ARC1214_OUTBOUND_INTERRUPT_ENABLE);
--		reg->message_wbuffer = MEM_BASE0(ARCMSR_ARC1214_MESSAGE_WBUFFER);
--		reg->message_rbuffer = MEM_BASE0(ARCMSR_ARC1214_MESSAGE_RBUFFER);
--		reg->msgcode_rwbuffer = MEM_BASE0(ARCMSR_ARC1214_MESSAGE_RWBUFFER);
-+		acb->pmuD = (struct MessageUnit_D *)dma_coherent;
-+		arcmsr_hbaD_assign_regAddr(acb);
- 		}
- 		break;
- 	case ACB_ADAPTER_TYPE_E: {
-@@ -706,6 +715,7 @@ static int arcmsr_alloc_ccb_pool(struct AdapterControlBlock *acb)
- 	acb->host->sg_tablesize = max_sg_entrys;
- 	roundup_ccbsize = roundup(sizeof(struct CommandControlBlock) + (max_sg_entrys - 1) * sizeof(struct SG64ENTRY), 32);
- 	acb->uncache_size = roundup_ccbsize * acb->maxFreeCCB;
-+	acb->uncache_size += acb->ioqueue_size;
- 	dma_coherent = dma_alloc_coherent(&pdev->dev, acb->uncache_size, &dma_coherent_handle, GFP_KERNEL);
- 	if(!dma_coherent){
- 		printk(KERN_NOTICE "arcmsr%d: dma_alloc_coherent got error\n", acb->host->host_no);
-@@ -738,6 +748,23 @@ static int arcmsr_alloc_ccb_pool(struct AdapterControlBlock *acb)
+ 	for (i = 0; i < ARCMSR_MAX_TARGETID; i++)
+ 		for (j = 0; j < ARCMSR_MAX_TARGETLUN; j++)
+@@ -726,9 +726,10 @@ static int arcmsr_alloc_ccb_pool(struct AdapterControlBlock *acb)
+ 	memset(dma_coherent, 0, acb->uncache_size);
+ 	acb->ccbsize = roundup_ccbsize;
+ 	ccb_tmp = dma_coherent;
++	curr_phy_upper32 = upper_32_bits(dma_coherent_handle);
+ 	acb->vir2phy_offset = (unsigned long)dma_coherent - (unsigned long)dma_coherent_handle;
+ 	for(i = 0; i < acb->maxFreeCCB; i++){
+-		cdb_phyaddr = dma_coherent_handle + offsetof(struct CommandControlBlock, arcmsr_cdb);
++		cdb_phyaddr = (unsigned long)dma_coherent_handle + offsetof(struct CommandControlBlock, arcmsr_cdb);
+ 		switch (acb->adapter_type) {
+ 		case ACB_ADAPTER_TYPE_A:
+ 		case ACB_ADAPTER_TYPE_B:
+@@ -744,9 +745,16 @@ static int arcmsr_alloc_ccb_pool(struct AdapterControlBlock *acb)
+ 		ccb_tmp->acb = acb;
+ 		ccb_tmp->smid = (u32)i << 16;
+ 		INIT_LIST_HEAD(&ccb_tmp->list);
+-		list_add_tail(&ccb_tmp->list, &acb->ccb_free_list);
++		next_ccb_phy = dma_coherent_handle + roundup_ccbsize;
++		if (upper_32_bits(next_ccb_phy) != curr_phy_upper32) {
++			acb->maxFreeCCB = i;
++			acb->host->can_queue = i;
++			break;
++		}
++		else
++			list_add_tail(&ccb_tmp->list, &acb->ccb_free_list);
  		ccb_tmp = (struct CommandControlBlock *)((unsigned long)ccb_tmp + roundup_ccbsize);
- 		dma_coherent_handle = dma_coherent_handle + roundup_ccbsize;
+-		dma_coherent_handle = dma_coherent_handle + roundup_ccbsize;
++		dma_coherent_handle = next_ccb_phy;
  	}
-+	acb->dma_coherent_handle2 = dma_coherent_handle;
-+	acb->dma_coherent2 = ccb_tmp;
-+	switch (acb->adapter_type) {
-+	case ACB_ADAPTER_TYPE_B:
-+		acb->pmuB = (struct MessageUnit_B *)acb->dma_coherent2;
-+		arcmsr_hbaB_assign_regAddr(acb);
-+		break;
-+	case ACB_ADAPTER_TYPE_D:
-+		acb->pmuD = (struct MessageUnit_D *)acb->dma_coherent2;
-+		arcmsr_hbaD_assign_regAddr(acb);
-+		break;
-+	case ACB_ADAPTER_TYPE_E:
-+		acb->pCompletionQ = acb->dma_coherent2;
-+		acb->completionQ_entry = acb->ioqueue_size / sizeof(struct deliver_completeQ);
-+		acb->doneq_index = 0;
-+		break;
-+	}	
- 	return 0;
- }
- 
-@@ -959,9 +986,10 @@ static int arcmsr_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	if(!error){
- 		goto free_hbb_mu;
- 	}
-+	arcmsr_free_io_queue(acb);
- 	error = arcmsr_alloc_ccb_pool(acb);
- 	if(error){
--		goto free_hbb_mu;
-+		goto unmap_pci_region;
- 	}
- 	error = scsi_add_host(host, &pdev->dev);
- 	if(error){
-@@ -989,6 +1017,7 @@ scsi_host_remove:
- 	scsi_remove_host(host);
- free_ccb_pool:
- 	arcmsr_free_ccb_pool(acb);
-+	goto unmap_pci_region;
- free_hbb_mu:
- 	arcmsr_free_io_queue(acb);
- unmap_pci_region:
-@@ -1500,7 +1529,6 @@ static void arcmsr_free_pcidev(struct AdapterControlBlock *acb)
- 	pdev = acb->pdev;
- 	arcmsr_free_irq(pdev, acb);
- 	arcmsr_free_ccb_pool(acb);
--	arcmsr_free_io_queue(acb);
- 	arcmsr_unmap_pciregion(acb);
- 	pci_release_regions(pdev);
- 	scsi_host_put(host);
-@@ -1558,7 +1586,6 @@ static void arcmsr_remove(struct pci_dev *pdev)
- 	}
- 	arcmsr_free_irq(pdev, acb);
- 	arcmsr_free_ccb_pool(acb);
--	arcmsr_free_io_queue(acb);
- 	arcmsr_unmap_pciregion(acb);
- 	pci_release_regions(pdev);
- 	scsi_host_put(host);
+ 	acb->dma_coherent_handle2 = dma_coherent_handle;
+ 	acb->dma_coherent2 = ccb_tmp;
+@@ -3701,6 +3709,7 @@ static int arcmsr_iop_confirm(struct AdapterControlBlock *acb)
+ 	cdb_phyaddr = lower_32_bits(dma_coherent_handle);
+ 	cdb_phyaddr_hi32 = upper_32_bits(dma_coherent_handle);
+ 	acb->cdb_phyaddr_hi32 = cdb_phyaddr_hi32;
++	acb->cdb_phyadd_hipart = ((uint64_t)cdb_phyaddr_hi32) << 32;
+ 	/*
+ 	***********************************************************************
+ 	**    if adapter type B, set window of "post command Q"
