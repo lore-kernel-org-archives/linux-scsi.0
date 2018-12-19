@@ -1,18 +1,18 @@
 From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: Re: [PATCH 08/41] scsi: be2iscsi: be_main: Mark expected switch
- fall-through
-Date: Wed, 19 Dec 2018 09:38:27 -0600
-Message-ID: <8cecc2e7-5008-678f-e2de-7d8ab3b95195@embeddedor.com>
+Subject: Re: [PATCH 09/41] scsi: bfa: bfa_fcpim: Mark expected switch
+ fall-throughs
+Date: Wed, 19 Dec 2018 09:38:46 -0600
+Message-ID: <8d5684c5-7b09-3e4a-d0ad-a024e3d06d05@embeddedor.com>
 References: <cover.1543374820.git.gustavo@embeddedor.com>
- <ca994231ba2101ba489ee7b18862a10a8c9dad7e.1543374820.git.gustavo@embeddedor.com>
+ <8f042a78366807fe4cf3c1f7157dc80f1dd49219.1543374820.git.gustavo@embeddedor.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <ca994231ba2101ba489ee7b18862a10a8c9dad7e.1543374820.git.gustavo@embeddedor.com>
+In-Reply-To: <8f042a78366807fe4cf3c1f7157dc80f1dd49219.1543374820.git.gustavo@embeddedor.com>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Subbu Seetharaman <subbu.seetharaman@broadcom.com>, Ketan Mukadam <ketan.mukadam@broadcom.com>, Jitendra Bhivare <jitendra.bhivare@broadcom.com>
+To: Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>
 Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
@@ -30,22 +30,44 @@ On 11/27/18 10:27 PM, Gustavo A. R. Silva wrote:
 > In preparation to enabling -Wimplicit-fallthrough, mark switch cases
 > where we are expecting to fall through.
 > 
-> Addresses-Coverity-ID: 1357387 ("Missing break in switch")
+> Notice that I replaced "Fall through !!!" with a "fall through"
+> annotation, which is what GCC is expecting to find.
+> 
+> Addresses-Coverity-ID: 114971 ("Missing break in switch")
 > Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 > ---
->   drivers/scsi/be2iscsi/be_main.c | 1 +
->   1 file changed, 1 insertion(+)
+>   drivers/scsi/bfa/bfa_fcpim.c | 6 +++---
+>   1 file changed, 3 insertions(+), 3 deletions(-)
 > 
-> diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-> index effb6fc95af4..b6449da1320c 100644
-> --- a/drivers/scsi/be2iscsi/be_main.c
-> +++ b/drivers/scsi/be2iscsi/be_main.c
-> @@ -1539,6 +1539,7 @@ beiscsi_hdl_get_handle(struct beiscsi_conn *beiscsi_conn,
->   		break;
->   	case UNSOL_DATA_DIGEST_ERROR_NOTIFY:
->   		error = 1;
+> diff --git a/drivers/scsi/bfa/bfa_fcpim.c b/drivers/scsi/bfa/bfa_fcpim.c
+> index 2c85f5b1f9c1..7e996bcf026c 100644
+> --- a/drivers/scsi/bfa/bfa_fcpim.c
+> +++ b/drivers/scsi/bfa/bfa_fcpim.c
+> @@ -2586,6 +2586,7 @@ bfa_ioim_send_ioreq(struct bfa_ioim_s *ioim)
+>   	case FCP_IODIR_RW:
+>   		bfa_stats(itnim, input_reqs);
+>   		bfa_stats(itnim, output_reqs);
 > +		/* fall through */
->   	case UNSOL_DATA_NOTIFY:
->   		pasync_handle = pasync_ctx->async_entry[ci].data;
->   		break;
+>   	default:
+>   		bfi_h2i_set(m->mh, BFI_MC_IOIM_IO, 0, bfa_fn_lpu(ioim->bfa));
+>   	}
+> @@ -2820,6 +2821,7 @@ bfa_ioim_isr(struct bfa_s *bfa, struct bfi_msg_s *m)
+>   
+>   	case BFI_IOIM_STS_TIMEDOUT:
+>   		bfa_stats(ioim->itnim, iocomp_timedout);
+> +		/* fall through */
+>   	case BFI_IOIM_STS_ABORTED:
+>   		rsp->io_status = BFI_IOIM_STS_ABORTED;
+>   		bfa_stats(ioim->itnim, iocomp_aborted);
+> @@ -3215,9 +3217,7 @@ bfa_tskim_sm_cleanup_qfull(struct bfa_tskim_s *tskim,
+>   	switch (event) {
+>   	case BFA_TSKIM_SM_DONE:
+>   		bfa_reqq_wcancel(&tskim->reqq_wait);
+> -		/*
+> -		 * Fall through !!!
+> -		 */
+> +		/* fall through */
+>   	case BFA_TSKIM_SM_QRESUME:
+>   		bfa_sm_set_state(tskim, bfa_tskim_sm_cleanup);
+>   		bfa_tskim_send_abort(tskim);
 > 
