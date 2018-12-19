@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 1/8] scsi: hisi_sas: Create root and device debugfs directories
-Date: Wed, 19 Dec 2018 23:56:39 +0800
-Message-ID: <1545235006-151716-2-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 7/8] scsi: hisi_sas: Add debugfs DQ file and add file operations
+Date: Wed, 19 Dec 2018 23:56:45 +0800
+Message-ID: <1545235006-151716-8-git-send-email-john.garry@huawei.com>
 References: <1545235006-151716-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -14,138 +14,90 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Luo Jiaxing <luojiaxing@huawei.com>
 
-This patch creates root directory at hisi_sas_init() and generate device
-directory when we probe device driver.
-
-And we remove the root directory at hisi_sas_exit(), but recursively
-delete device directory when we remove device driver.
+This patch create debugfs file for DQ and add file operations
 
 Signed-off-by: Luo Jiaxing <luojiaxing@huawei.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas.h       |  9 +++++++++
- drivers/scsi/hisi_sas/hisi_sas_main.c  | 27 +++++++++++++++++++++++++++
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c |  5 +++++
- 3 files changed, 41 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 52 +++++++++++++++++++++++++++++++++++
+ 1 file changed, 52 insertions(+)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index af29194..3ad8746 100644
---- a/drivers/scsi/hisi_sas/hisi_sas.h
-+++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -14,6 +14,7 @@
- 
- #include <linux/acpi.h>
- #include <linux/clk.h>
-+#include <linux/debugfs.h>
- #include <linux/dmapool.h>
- #include <linux/iopoll.h>
- #include <linux/lcm.h>
-@@ -332,6 +333,8 @@ struct hisi_hba {
- 	u32 phy_state;
- 	u32 intr_coal_ticks;	/* Time of interrupt coalesce in us */
- 	u32 intr_coal_count;	/* Interrupt count to coalesce */
-+
-+	struct dentry *debugfs_dir;
- };
- 
- /* Generic HW DMA host memory structures */
-@@ -461,6 +464,10 @@ struct hisi_sas_slot_buf_table {
- };
- 
- extern struct scsi_transport_template *hisi_sas_stt;
-+
-+extern bool hisi_sas_debugfs_enable;
-+extern struct dentry *hisi_sas_debugfs_dir;
-+
- extern void hisi_sas_stop_phys(struct hisi_hba *hisi_hba);
- extern int hisi_sas_alloc(struct hisi_hba *hisi_hba, struct Scsi_Host *shost);
- extern void hisi_sas_free(struct hisi_hba *hisi_hba);
-@@ -493,4 +500,6 @@ extern bool hisi_sas_notify_phy_event(struct hisi_sas_phy *phy,
- extern u8 hisi_sas_get_prog_phy_linkrate_mask(enum sas_linkrate max);
- extern void hisi_sas_controller_reset_prepare(struct hisi_hba *hisi_hba);
- extern void hisi_sas_controller_reset_done(struct hisi_hba *hisi_hba);
-+extern void hisi_sas_debugfs_init(struct hisi_hba *hisi_hba);
-+extern void hisi_sas_debugfs_exit(struct hisi_hba *hisi_hba);
- #endif
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index eed7fc5..919cd3b 100644
+index ce0a9dc..45a0be2 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -2457,6 +2457,23 @@ int hisi_sas_probe(struct platform_device *pdev,
- }
- EXPORT_SYMBOL_GPL(hisi_sas_probe);
+@@ -2685,6 +2685,43 @@ static int hisi_sas_debugfs_cq_open(struct inode *inode, struct file *filp)
+ 	.owner = THIS_MODULE,
+ };
  
-+struct dentry *hisi_sas_debugfs_dir;
-+
-+void hisi_sas_debugfs_init(struct hisi_hba *hisi_hba)
++static int hisi_sas_dq_show_slot(struct seq_file *s, int slot, void *dq_ptr)
 +{
-+	struct device *dev = hisi_hba->dev;
++	struct hisi_sas_dq *dq = dq_ptr;
++	struct hisi_hba *hisi_hba = dq->hisi_hba;
++	void *cmd_queue = hisi_hba->debugfs_cmd_hdr[dq->id];
++	void *cmd_hdr = cmd_queue +
++		hisi_hba->hw->complete_hdr_size * slot;
 +
-+	hisi_hba->debugfs_dir = debugfs_create_dir(dev_name(dev),
-+						   hisi_sas_debugfs_dir);
++	return hisi_sas_show_row_32(s, slot, sizeof(struct hisi_sas_cmd_hdr),
++				    cmd_hdr);
 +}
-+EXPORT_SYMBOL_GPL(hisi_sas_debugfs_init);
 +
-+void hisi_sas_debugfs_exit(struct hisi_hba *hisi_hba)
++static int hisi_sas_debugfs_dq_show(struct seq_file *s, void *p)
 +{
-+	debugfs_remove_recursive(hisi_hba->debugfs_dir);
++	int slot, ret;
++
++	for (slot = 0; slot < HISI_SAS_QUEUE_SLOTS; slot++) {
++		ret = hisi_sas_dq_show_slot(s, slot, s->private);
++		if (ret)
++			return ret;
++	}
++	return 0;
 +}
-+EXPORT_SYMBOL_GPL(hisi_sas_debugfs_exit);
 +
- int hisi_sas_remove(struct platform_device *pdev)
++static int hisi_sas_debugfs_dq_open(struct inode *inode, struct file *filp)
++{
++	return single_open(filp, hisi_sas_debugfs_dq_show, inode->i_private);
++}
++
++static const struct file_operations hisi_sas_debugfs_dq_fops = {
++	.open = hisi_sas_debugfs_dq_open,
++	.read = seq_read,
++	.llseek = seq_lseek,
++	.release = single_release,
++	.owner = THIS_MODULE,
++};
++
+ static void hisi_sas_debugfs_create_files(struct hisi_hba *hisi_hba)
  {
- 	struct sas_ha_struct *sha = platform_get_drvdata(pdev);
-@@ -2475,18 +2492,28 @@ int hisi_sas_remove(struct platform_device *pdev)
- }
- EXPORT_SYMBOL_GPL(hisi_sas_remove);
+ 	struct dentry *dump_dentry;
+@@ -2692,6 +2729,7 @@ static void hisi_sas_debugfs_create_files(struct hisi_hba *hisi_hba)
+ 	char name[256];
+ 	int p;
+ 	int c;
++	int d;
  
-+bool hisi_sas_debugfs_enable;
-+EXPORT_SYMBOL_GPL(hisi_sas_debugfs_enable);
-+module_param_named(debugfs_enable, hisi_sas_debugfs_enable, bool, 0444);
-+MODULE_PARM_DESC(hisi_sas_debugfs_enable, "Enable driver debugfs (default disabled)");
-+
- static __init int hisi_sas_init(void)
- {
- 	hisi_sas_stt = sas_domain_attach_transport(&hisi_sas_transport_ops);
- 	if (!hisi_sas_stt)
- 		return -ENOMEM;
- 
-+	if (hisi_sas_debugfs_enable)
-+		hisi_sas_debugfs_dir = debugfs_create_dir("hisi_sas", NULL);
-+
- 	return 0;
- }
- 
- static __exit void hisi_sas_exit(void)
- {
- 	sas_release_transport(hisi_sas_stt);
-+
-+	debugfs_remove(hisi_sas_debugfs_dir);
- }
- 
- module_init(hisi_sas_init);
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index add7616..d2e1c85 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -2509,6 +2509,9 @@ static ssize_t intr_coal_count_v3_hw_store(struct device *dev,
- 		sha->sas_port[i] = &hisi_hba->port[i].sas_port;
+ 	/* Create dump dir inside device dir */
+ 	dump_dentry = debugfs_create_dir("dump", hisi_hba->debugfs_dir);
+@@ -2731,6 +2769,20 @@ static void hisi_sas_debugfs_create_files(struct hisi_hba *hisi_hba)
+ 			goto fail;
  	}
  
-+	if (hisi_sas_debugfs_enable)
-+		hisi_sas_debugfs_init(hisi_hba);
++	/* Create DQ dir and files */
++	dentry = debugfs_create_dir("dq", dump_dentry);
++	if (!dentry)
++		goto fail;
 +
- 	rc = scsi_add_host(shost, dev);
- 	if (rc)
- 		goto err_out_ha;
-@@ -2567,6 +2570,8 @@ static void hisi_sas_v3_remove(struct pci_dev *pdev)
- 	struct hisi_hba *hisi_hba = sha->lldd_ha;
- 	struct Scsi_Host *shost = sha->core.shost;
- 
-+	hisi_sas_debugfs_exit(hisi_hba);
++	for (d = 0; d < hisi_hba->queue_count; d++) {
++		snprintf(name, 256, "%d", d);
 +
- 	if (timer_pending(&hisi_hba->timer))
- 		del_timer(&hisi_hba->timer);
- 
++		if (!debugfs_create_file(name, 0400, dentry,
++					 &hisi_hba->dq[d],
++					 &hisi_sas_debugfs_dq_fops))
++			goto fail;
++	}
++
+ 	return;
+ fail:
+ 	debugfs_remove_recursive(hisi_hba->debugfs_dir);
 -- 
 1.9.1
