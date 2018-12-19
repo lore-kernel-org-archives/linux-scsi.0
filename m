@@ -1,18 +1,18 @@
 From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: Re: [PATCH 19/41] scsi: isci: remote_node_context: mark expected
- switch fall-throughs
-Date: Wed, 19 Dec 2018 16:26:56 -0600
-Message-ID: <d9022b4f-35c9-4a7d-68e6-c942a538da02@embeddedor.com>
+Subject: Re: [PATCH 22/41] scsi: lpfc: lpfc_ct: Mark expected switch
+ fall-throughs
+Date: Wed, 19 Dec 2018 16:27:19 -0600
+Message-ID: <ff237a7e-0e0c-94e4-c977-134d071c9061@embeddedor.com>
 References: <cover.1543374820.git.gustavo@embeddedor.com>
- <b54e3cf608d656ce6d8445becd105d1613325198.1543374820.git.gustavo@embeddedor.com>
+ <4e80e3ae7cd0f0c54b45530a3772af4f606b0c8e.1543374820.git.gustavo@embeddedor.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <b54e3cf608d656ce6d8445becd105d1613325198.1543374820.git.gustavo@embeddedor.com>
+In-Reply-To: <4e80e3ae7cd0f0c54b45530a3772af4f606b0c8e.1543374820.git.gustavo@embeddedor.com>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Intel SCU Linux support <intel-linux-scu@intel.com>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+To: James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>
 Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
@@ -26,33 +26,33 @@ Thanks
 -- 
 Gustavo
 
-On 11/27/18 10:30 PM, Gustavo A. R. Silva wrote:
+On 11/27/18 10:31 PM, Gustavo A. R. Silva wrote:
 > In preparation to enabling -Wimplicit-fallthrough, mark switch cases
 > where we are expecting to fall through.
 > 
-> Notice that, in this particular case, a dash is added as a token in
-> order to separate the "Fall through" annotations from the rest of
-> the comment on the same line, which is what GCC is expecting to find.
-> 
 > Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 > ---
->   drivers/scsi/isci/remote_node_context.c | 4 ++--
->   1 file changed, 2 insertions(+), 2 deletions(-)
+>   drivers/scsi/lpfc/lpfc_ct.c | 2 ++
+>   1 file changed, 2 insertions(+)
 > 
-> diff --git a/drivers/scsi/isci/remote_node_context.c b/drivers/scsi/isci/remote_node_context.c
-> index e3f2a5359d71..474a43460963 100644
-> --- a/drivers/scsi/isci/remote_node_context.c
-> +++ b/drivers/scsi/isci/remote_node_context.c
-> @@ -601,9 +601,9 @@ enum sci_status sci_remote_node_context_suspend(
->   				 __func__, sci_rnc);
->   			return SCI_FAILURE_INVALID_STATE;
->   		}
-> -		/* Fall through and handle like SCI_RNC_POSTING */
-> +		/* Fall through - and handle like SCI_RNC_POSTING */
->   	case SCI_RNC_RESUMING:
-> -		/* Fall through and handle like SCI_RNC_POSTING */
-> +		/* Fall through - and handle like SCI_RNC_POSTING */
->   	case SCI_RNC_POSTING:
->   		/* Set the destination state to AWAIT - this signals the
->   		 * entry into the SCI_RNC_READY state that a suspension
+> diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
+> index 6305ffeba7ea..b2b7fcc23654 100644
+> --- a/drivers/scsi/lpfc/lpfc_ct.c
+> +++ b/drivers/scsi/lpfc/lpfc_ct.c
+> @@ -3050,6 +3050,7 @@ lpfc_fdmi_cmd(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+>   	case SLI_MGMT_GHAT:
+>   	case SLI_MGMT_GRPL:
+>   		rsp_size = FC_MAX_NS_RSP;
+> +		/* fall through */
+>   	case SLI_MGMT_DHBA:
+>   	case SLI_MGMT_DHAT:
+>   		pe = (struct lpfc_fdmi_port_entry *)&CtReq->un.PortID;
+> @@ -3062,6 +3063,7 @@ lpfc_fdmi_cmd(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+>   	case SLI_MGMT_GPAT:
+>   	case SLI_MGMT_GPAS:
+>   		rsp_size = FC_MAX_NS_RSP;
+> +		/* fall through */
+>   	case SLI_MGMT_DPRT:
+>   	case SLI_MGMT_DPA:
+>   		pe = (struct lpfc_fdmi_port_entry *)&CtReq->un.PortID;
 > 
