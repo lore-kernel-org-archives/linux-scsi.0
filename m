@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 4/8] scsi: hisi_sas: Debugfs global register create file and add file operations
-Date: Wed, 19 Dec 2018 23:56:42 +0800
-Message-ID: <1545235006-151716-5-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 5/8] scsi: hisi_sas: Add debugfs for port registers
+Date: Wed, 19 Dec 2018 23:56:43 +0800
+Message-ID: <1545235006-151716-6-git-send-email-john.garry@huawei.com>
 References: <1545235006-151716-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -14,99 +14,43 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Luo Jiaxing <luojiaxing@huawei.com>
 
-This patch create debugfs file for global register and add file
-operations.
+This patch create debugfs file for port register and add file operations.
 
 Signed-off-by: Luo Jiaxing <luojiaxing@huawei.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas.h       |  8 ++++
- drivers/scsi/hisi_sas/hisi_sas_main.c  | 64 +++++++++++++++++++++++++++++++
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 69 ++++++++++++++++++++++++++++++++++
- 3 files changed, 141 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas_main.c  | 43 ++++++++++++++++++++++++++
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 55 ++++++++++++++++++++++++++++++++++
+ 2 files changed, 98 insertions(+)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index 3b5fd6d..6a1a5ad 100644
---- a/drivers/scsi/hisi_sas/hisi_sas.h
-+++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -221,7 +221,15 @@ struct hisi_sas_slot {
- 	u16	idx;
- };
- 
-+#define HISI_SAS_DEBUGFS_REG(x) {#x, x}
-+
-+struct hisi_sas_debugfs_reg_lu {
-+	char *name;
-+	int off;
-+};
-+
- struct hisi_sas_debugfs_reg {
-+	const struct hisi_sas_debugfs_reg_lu *lu;
- 	int count;
- 	int base_off;
- 	union {
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 742f71a..fd85934 100644
+index fd85934..fbd9b4a 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -2544,6 +2544,66 @@ static void hisi_sas_debugfs_snapshot_iost_reg(struct hisi_hba *hisi_hba)
- 	}
- }
+@@ -2604,9 +2604,38 @@ static int hisi_sas_debugfs_global_open(struct inode *inode, struct file *filp)
+ 	.owner = THIS_MODULE,
+ };
  
-+const char *
-+hisi_sas_debugfs_to_reg_name(int off, int base_off,
-+			     const struct hisi_sas_debugfs_reg_lu *lu)
++static int hisi_sas_debugfs_port_show(struct seq_file *s, void *p)
 +{
-+	for (; lu->name; lu++) {
-+		if (off == lu->off - base_off)
-+			return lu->name;
-+	}
-+
-+	return NULL;
-+}
-+
-+static void hisi_sas_debugfs_print_reg(u32 *regs_val, const void *ptr,
-+				       struct seq_file *s)
-+{
-+	const struct hisi_sas_debugfs_reg *reg = ptr;
-+	int i;
-+
-+	for (i = 0; i < reg->count; i++) {
-+		int off = i * 4;
-+		const char *name;
-+
-+		name = hisi_sas_debugfs_to_reg_name(off, reg->base_off,
-+						    reg->lu);
-+
-+		if (name)
-+			seq_printf(s, "0x%08x 0x%08x %s\n", off,
-+				   le32_to_cpu(regs_val[i]), name);
-+		else
-+			seq_printf(s, "0x%08x 0x%08x\n", off,
-+				   le32_to_cpu(regs_val[i]));
-+	}
-+}
-+
-+static int hisi_sas_debugfs_global_show(struct seq_file *s, void *p)
-+{
-+	struct hisi_hba *hisi_hba = s->private;
++	struct hisi_sas_phy *phy = s->private;
++	struct hisi_hba *hisi_hba = phy->hisi_hba;
 +	const struct hisi_sas_hw *hw = hisi_hba->hw;
-+	const struct hisi_sas_debugfs_reg *reg_global = hw->debugfs_reg_global;
++	const struct hisi_sas_debugfs_reg *reg_port = hw->debugfs_reg_port;
++	u32 *databuf = hisi_hba->debugfs_port_reg[phy->sas_phy.id];
 +
-+	hisi_sas_debugfs_print_reg((u32 *)hisi_hba->debugfs_global_reg,
-+				   reg_global, s);
++	hisi_sas_debugfs_print_reg(databuf, reg_port, s);
 +
 +	return 0;
 +}
 +
-+static int hisi_sas_debugfs_global_open(struct inode *inode, struct file *filp)
++static int hisi_sas_debugfs_port_open(struct inode *inode, struct file *filp)
 +{
-+	return single_open(filp, hisi_sas_debugfs_global_show,
-+			   inode->i_private);
++	return single_open(filp, hisi_sas_debugfs_port_show, inode->i_private);
 +}
 +
-+static const struct file_operations hisi_sas_debugfs_global_fops = {
-+	.open = hisi_sas_debugfs_global_open,
++static const struct file_operations hisi_sas_debugfs_port_fops = {
++	.open = hisi_sas_debugfs_port_open,
 +	.read = seq_read,
 +	.llseek = seq_lseek,
 +	.release = single_release,
@@ -116,97 +60,113 @@ index 742f71a..fd85934 100644
  static void hisi_sas_debugfs_create_files(struct hisi_hba *hisi_hba)
  {
  	struct dentry *dump_dentry;
-@@ -2554,6 +2614,10 @@ static void hisi_sas_debugfs_create_files(struct hisi_hba *hisi_hba)
- 		goto fail;
++	struct dentry *dentry;
++	char name[256];
++	int p;
  
- 	hisi_hba->debugfs_dump_dentry = dump_dentry;
+ 	/* Create dump dir inside device dir */
+ 	dump_dentry = debugfs_create_dir("dump", hisi_hba->debugfs_dir);
+@@ -2618,6 +2647,20 @@ static void hisi_sas_debugfs_create_files(struct hisi_hba *hisi_hba)
+ 	if (!debugfs_create_file("global", 0400, dump_dentry, hisi_hba,
+ 				 &hisi_sas_debugfs_global_fops))
+ 		goto fail;
 +
-+	if (!debugfs_create_file("global", 0400, dump_dentry, hisi_hba,
-+				 &hisi_sas_debugfs_global_fops))
++	/* Create port dir and files */
++	dentry = debugfs_create_dir("port", dump_dentry);
++	if (!dentry)
 +		goto fail;
++
++	for (p = 0; p < hisi_hba->n_phy; p++) {
++		snprintf(name, 256, "%d", p);
++		if (!debugfs_create_file(name, 0400, dentry,
++					 &hisi_hba->phy[p],
++					 &hisi_sas_debugfs_port_fops))
++			goto fail;
++	}
++
  	return;
  fail:
  	debugfs_remove_recursive(hisi_hba->debugfs_dir);
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 4dd48ac..ca3d13b 100644
+index ca3d13b..cda1e40 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -2344,7 +2344,76 @@ static ssize_t intr_coal_count_v3_hw_store(struct device *dev,
- 	.read_port_reg = hisi_sas_phy_read32,
+@@ -186,6 +186,7 @@
+ #define CHL_INT0_MSK			(PORT_BASE + 0x1c0)
+ #define CHL_INT1_MSK			(PORT_BASE + 0x1c4)
+ #define CHL_INT2_MSK			(PORT_BASE + 0x1c8)
++#define SAS_EC_INT_COAL_TIME		(PORT_BASE + 0x1cc)
+ #define CHL_INT_COAL_EN			(PORT_BASE + 0x1d0)
+ #define SAS_RX_TRAIN_TIMER		(PORT_BASE + 0x2a4)
+ #define PHY_CTRL_RDY_MSK		(PORT_BASE + 0x2b0)
+@@ -205,6 +206,7 @@
+ #define ERR_CNT_DWS_LOST		(PORT_BASE + 0x380)
+ #define ERR_CNT_RESET_PROB		(PORT_BASE + 0x384)
+ #define ERR_CNT_INVLD_DW		(PORT_BASE + 0x390)
++#define ERR_CNT_CODE_ERR		(PORT_BASE + 0x394)
+ #define ERR_CNT_DISP_ERR		(PORT_BASE + 0x398)
+ 
+ #define DEFAULT_ITCT_HW		2048 /* reset value, not reprogrammed */
+@@ -2339,7 +2341,60 @@ static ssize_t intr_coal_count_v3_hw_store(struct device *dev,
+ 	NULL
  };
  
-+static const struct hisi_sas_debugfs_reg_lu debugfs_global_reg_lu[] = {
-+	HISI_SAS_DEBUGFS_REG(DLVRY_QUEUE_ENABLE),
-+	HISI_SAS_DEBUGFS_REG(PHY_CONTEXT),
-+	HISI_SAS_DEBUGFS_REG(PHY_STATE),
-+	HISI_SAS_DEBUGFS_REG(PHY_PORT_NUM_MA),
-+	HISI_SAS_DEBUGFS_REG(PHY_CONN_RATE),
-+	HISI_SAS_DEBUGFS_REG(ITCT_CLR),
-+	HISI_SAS_DEBUGFS_REG(IO_SATA_BROKEN_MSG_ADDR_LO),
-+	HISI_SAS_DEBUGFS_REG(IO_SATA_BROKEN_MSG_ADDR_HI),
-+	HISI_SAS_DEBUGFS_REG(SATA_INITI_D2H_STORE_ADDR_LO),
-+	HISI_SAS_DEBUGFS_REG(SATA_INITI_D2H_STORE_ADDR_HI),
-+	HISI_SAS_DEBUGFS_REG(CFG_MAX_TAG),
-+	HISI_SAS_DEBUGFS_REG(HGC_SAS_TX_OPEN_FAIL_RETRY_CTRL),
-+	HISI_SAS_DEBUGFS_REG(HGC_SAS_TXFAIL_RETRY_CTRL),
-+	HISI_SAS_DEBUGFS_REG(HGC_GET_ITV_TIME),
-+	HISI_SAS_DEBUGFS_REG(DEVICE_MSG_WORK_MODE),
-+	HISI_SAS_DEBUGFS_REG(OPENA_WT_CONTI_TIME),
-+	HISI_SAS_DEBUGFS_REG(I_T_NEXUS_LOSS_TIME),
-+	HISI_SAS_DEBUGFS_REG(MAX_CON_TIME_LIMIT_TIME),
-+	HISI_SAS_DEBUGFS_REG(BUS_INACTIVE_LIMIT_TIME),
-+	HISI_SAS_DEBUGFS_REG(REJECT_TO_OPEN_LIMIT_TIME),
-+	HISI_SAS_DEBUGFS_REG(CQ_INT_CONVERGE_EN),
-+	HISI_SAS_DEBUGFS_REG(CFG_AGING_TIME),
-+	HISI_SAS_DEBUGFS_REG(HGC_DFX_CFG2),
-+	HISI_SAS_DEBUGFS_REG(CFG_ABT_SET_QUERY_IPTT),
-+	HISI_SAS_DEBUGFS_REG(CFG_ABT_SET_IPTT_DONE),
-+	HISI_SAS_DEBUGFS_REG(HGC_IOMB_PROC1_STATUS),
-+	HISI_SAS_DEBUGFS_REG(CHNL_INT_STATUS),
-+	HISI_SAS_DEBUGFS_REG(HGC_AXI_FIFO_ERR_INFO),
-+	HISI_SAS_DEBUGFS_REG(INT_COAL_EN),
-+	HISI_SAS_DEBUGFS_REG(OQ_INT_COAL_TIME),
-+	HISI_SAS_DEBUGFS_REG(OQ_INT_COAL_CNT),
-+	HISI_SAS_DEBUGFS_REG(ENT_INT_COAL_TIME),
-+	HISI_SAS_DEBUGFS_REG(ENT_INT_COAL_CNT),
-+	HISI_SAS_DEBUGFS_REG(OQ_INT_SRC),
-+	HISI_SAS_DEBUGFS_REG(OQ_INT_SRC_MSK),
-+	HISI_SAS_DEBUGFS_REG(ENT_INT_SRC1),
-+	HISI_SAS_DEBUGFS_REG(ENT_INT_SRC2),
-+	HISI_SAS_DEBUGFS_REG(ENT_INT_SRC3),
-+	HISI_SAS_DEBUGFS_REG(ENT_INT_SRC_MSK1),
-+	HISI_SAS_DEBUGFS_REG(ENT_INT_SRC_MSK2),
-+	HISI_SAS_DEBUGFS_REG(ENT_INT_SRC_MSK3),
-+	HISI_SAS_DEBUGFS_REG(CHNL_PHYUPDOWN_INT_MSK),
-+	HISI_SAS_DEBUGFS_REG(CHNL_ENT_INT_MSK),
-+	HISI_SAS_DEBUGFS_REG(HGC_COM_INT_MSK),
-+	HISI_SAS_DEBUGFS_REG(SAS_ECC_INTR),
-+	HISI_SAS_DEBUGFS_REG(SAS_ECC_INTR_MSK),
-+	HISI_SAS_DEBUGFS_REG(HGC_ERR_STAT_EN),
-+	HISI_SAS_DEBUGFS_REG(CQE_SEND_CNT),
-+	HISI_SAS_DEBUGFS_REG(DLVRY_Q_0_DEPTH),
-+	HISI_SAS_DEBUGFS_REG(DLVRY_Q_0_WR_PTR),
-+	HISI_SAS_DEBUGFS_REG(DLVRY_Q_0_RD_PTR),
-+	HISI_SAS_DEBUGFS_REG(HYPER_STREAM_ID_EN_CFG),
-+	HISI_SAS_DEBUGFS_REG(OQ0_INT_SRC_MSK),
-+	HISI_SAS_DEBUGFS_REG(COMPL_Q_0_DEPTH),
-+	HISI_SAS_DEBUGFS_REG(COMPL_Q_0_WR_PTR),
-+	HISI_SAS_DEBUGFS_REG(COMPL_Q_0_RD_PTR),
-+	HISI_SAS_DEBUGFS_REG(AWQOS_AWCACHE_CFG),
-+	HISI_SAS_DEBUGFS_REG(ARQOS_ARCACHE_CFG),
-+	HISI_SAS_DEBUGFS_REG(HILINK_ERR_DFX),
-+	HISI_SAS_DEBUGFS_REG(SAS_GPIO_CFG_0),
-+	HISI_SAS_DEBUGFS_REG(SAS_GPIO_CFG_1),
-+	HISI_SAS_DEBUGFS_REG(SAS_GPIO_TX_0_1),
-+	HISI_SAS_DEBUGFS_REG(SAS_CFG_DRIVE_VLD),
++static const struct hisi_sas_debugfs_reg_lu debugfs_port_reg_lu[] = {
++	HISI_SAS_DEBUGFS_REG(PHY_CFG),
++	HISI_SAS_DEBUGFS_REG(HARD_PHY_LINKRATE),
++	HISI_SAS_DEBUGFS_REG(PROG_PHY_LINK_RATE),
++	HISI_SAS_DEBUGFS_REG(PHY_CTRL),
++	HISI_SAS_DEBUGFS_REG(SL_CFG),
++	HISI_SAS_DEBUGFS_REG(AIP_LIMIT),
++	HISI_SAS_DEBUGFS_REG(SL_CONTROL),
++	HISI_SAS_DEBUGFS_REG(RX_PRIMS_STATUS),
++	HISI_SAS_DEBUGFS_REG(TX_ID_DWORD0),
++	HISI_SAS_DEBUGFS_REG(TX_ID_DWORD1),
++	HISI_SAS_DEBUGFS_REG(TX_ID_DWORD2),
++	HISI_SAS_DEBUGFS_REG(TX_ID_DWORD3),
++	HISI_SAS_DEBUGFS_REG(TX_ID_DWORD4),
++	HISI_SAS_DEBUGFS_REG(TX_ID_DWORD5),
++	HISI_SAS_DEBUGFS_REG(TX_ID_DWORD6),
++	HISI_SAS_DEBUGFS_REG(TXID_AUTO),
++	HISI_SAS_DEBUGFS_REG(RX_IDAF_DWORD0),
++	HISI_SAS_DEBUGFS_REG(RXOP_CHECK_CFG_H),
++	HISI_SAS_DEBUGFS_REG(STP_LINK_TIMER),
++	HISI_SAS_DEBUGFS_REG(STP_LINK_TIMEOUT_STATE),
++	HISI_SAS_DEBUGFS_REG(CON_CFG_DRIVER),
++	HISI_SAS_DEBUGFS_REG(SAS_SSP_CON_TIMER_CFG),
++	HISI_SAS_DEBUGFS_REG(SAS_SMP_CON_TIMER_CFG),
++	HISI_SAS_DEBUGFS_REG(SAS_STP_CON_TIMER_CFG),
++	HISI_SAS_DEBUGFS_REG(CHL_INT0),
++	HISI_SAS_DEBUGFS_REG(CHL_INT1),
++	HISI_SAS_DEBUGFS_REG(CHL_INT2),
++	HISI_SAS_DEBUGFS_REG(CHL_INT0_MSK),
++	HISI_SAS_DEBUGFS_REG(CHL_INT1_MSK),
++	HISI_SAS_DEBUGFS_REG(CHL_INT2_MSK),
++	HISI_SAS_DEBUGFS_REG(SAS_EC_INT_COAL_TIME),
++	HISI_SAS_DEBUGFS_REG(CHL_INT_COAL_EN),
++	HISI_SAS_DEBUGFS_REG(SAS_RX_TRAIN_TIMER),
++	HISI_SAS_DEBUGFS_REG(PHY_CTRL_RDY_MSK),
++	HISI_SAS_DEBUGFS_REG(PHYCTRL_NOT_RDY_MSK),
++	HISI_SAS_DEBUGFS_REG(PHYCTRL_DWS_RESET_MSK),
++	HISI_SAS_DEBUGFS_REG(PHYCTRL_PHY_ENA_MSK),
++	HISI_SAS_DEBUGFS_REG(SL_RX_BCAST_CHK_MSK),
++	HISI_SAS_DEBUGFS_REG(PHYCTRL_OOB_RESTART_MSK),
++	HISI_SAS_DEBUGFS_REG(DMA_TX_STATUS),
++	HISI_SAS_DEBUGFS_REG(DMA_RX_STATUS),
++	HISI_SAS_DEBUGFS_REG(COARSETUNE_TIME),
++	HISI_SAS_DEBUGFS_REG(ERR_CNT_DWS_LOST),
++	HISI_SAS_DEBUGFS_REG(ERR_CNT_RESET_PROB),
++	HISI_SAS_DEBUGFS_REG(ERR_CNT_INVLD_DW),
++	HISI_SAS_DEBUGFS_REG(ERR_CNT_CODE_ERR),
++	HISI_SAS_DEBUGFS_REG(ERR_CNT_DISP_ERR),
 +	{}
 +};
 +
- static const struct hisi_sas_debugfs_reg debugfs_global_reg = {
-+	.lu = debugfs_global_reg_lu,
-+	.count = 0x800,
- 	.read_global_reg = hisi_sas_read32,
+ static const struct hisi_sas_debugfs_reg debugfs_port_reg = {
++	.lu = debugfs_port_reg_lu,
++	.count = 0x100,
+ 	.base_off = PORT_BASE,
+ 	.read_port_reg = hisi_sas_phy_read32,
  };
- 
 -- 
 1.9.1
