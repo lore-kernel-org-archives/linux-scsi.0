@@ -1,172 +1,39 @@
-From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 5/8] scsi: hisi_sas: Add debugfs for port registers
-Date: Wed, 19 Dec 2018 23:56:43 +0800
-Message-ID: <1545235006-151716-6-git-send-email-john.garry@huawei.com>
-References: <1545235006-151716-1-git-send-email-john.garry@huawei.com>
+From: Michael Kelley <mikelley@microsoft.com>
+Subject: [PATCH 1/1] scsi: storvsc: Always use blk-mq
+Date: Wed, 19 Dec 2018 18:40:49 +0000
+Message-ID: <1545243282-10573-1-git-send-email-mikelley@microsoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1545235006-151716-1-git-send-email-john.garry@huawei.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linuxarm@huawei.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Luo Jiaxing <luojiaxing@huawei.com>, John Garry <john.garry@huawei.com>
+To: KY Srinivasan <kys@microsoft.com>, Stephen Hemminger <sthemmin@microsoft.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, Long Li <longli@microsoft.com>, "James.Bottomley@hansenpartnership.com" <James.Bottomley@hansenpartnership.com>, "emilne@redhat.com" <emilne@redhat.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: Michael Kelley <mikelley@microsoft.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Luo Jiaxing <luojiaxing@huawei.com>
+With high IOPS storage being increasingly prevalent for guests
+on Hyper-V and in Azure, make blk-mq the default so that the
+full performance of the storage can be realized without having
+to tweak other configuration settings.
 
-This patch create debugfs file for port register and add file operations.
-
-Signed-off-by: Luo Jiaxing <luojiaxing@huawei.com>
-Signed-off-by: John Garry <john.garry@huawei.com>
+Signed-off-by: Michael Kelley <mikelley@microsoft.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_main.c  | 43 ++++++++++++++++++++++++++
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 55 ++++++++++++++++++++++++++++++++++
- 2 files changed, 98 insertions(+)
+ drivers/scsi/storvsc_drv.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index fd85934..fbd9b4a 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -2604,9 +2604,38 @@ static int hisi_sas_debugfs_global_open(struct inode *inode, struct file *filp)
- 	.owner = THIS_MODULE,
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index f03dc03..3dbbd14 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -1703,6 +1703,7 @@ static int storvsc_queuecommand(struct Scsi_Host *hos=
+t, struct scsi_cmnd *scmnd)
+ 	.dma_boundary =3D		PAGE_SIZE-1,
+ 	.no_write_same =3D	1,
+ 	.track_queue_depth =3D	1,
++	.force_blk_mq =3D		1,
  };
- 
-+static int hisi_sas_debugfs_port_show(struct seq_file *s, void *p)
-+{
-+	struct hisi_sas_phy *phy = s->private;
-+	struct hisi_hba *hisi_hba = phy->hisi_hba;
-+	const struct hisi_sas_hw *hw = hisi_hba->hw;
-+	const struct hisi_sas_debugfs_reg *reg_port = hw->debugfs_reg_port;
-+	u32 *databuf = hisi_hba->debugfs_port_reg[phy->sas_phy.id];
-+
-+	hisi_sas_debugfs_print_reg(databuf, reg_port, s);
-+
-+	return 0;
-+}
-+
-+static int hisi_sas_debugfs_port_open(struct inode *inode, struct file *filp)
-+{
-+	return single_open(filp, hisi_sas_debugfs_port_show, inode->i_private);
-+}
-+
-+static const struct file_operations hisi_sas_debugfs_port_fops = {
-+	.open = hisi_sas_debugfs_port_open,
-+	.read = seq_read,
-+	.llseek = seq_lseek,
-+	.release = single_release,
-+	.owner = THIS_MODULE,
-+};
-+
- static void hisi_sas_debugfs_create_files(struct hisi_hba *hisi_hba)
- {
- 	struct dentry *dump_dentry;
-+	struct dentry *dentry;
-+	char name[256];
-+	int p;
- 
- 	/* Create dump dir inside device dir */
- 	dump_dentry = debugfs_create_dir("dump", hisi_hba->debugfs_dir);
-@@ -2618,6 +2647,20 @@ static void hisi_sas_debugfs_create_files(struct hisi_hba *hisi_hba)
- 	if (!debugfs_create_file("global", 0400, dump_dentry, hisi_hba,
- 				 &hisi_sas_debugfs_global_fops))
- 		goto fail;
-+
-+	/* Create port dir and files */
-+	dentry = debugfs_create_dir("port", dump_dentry);
-+	if (!dentry)
-+		goto fail;
-+
-+	for (p = 0; p < hisi_hba->n_phy; p++) {
-+		snprintf(name, 256, "%d", p);
-+		if (!debugfs_create_file(name, 0400, dentry,
-+					 &hisi_hba->phy[p],
-+					 &hisi_sas_debugfs_port_fops))
-+			goto fail;
-+	}
-+
- 	return;
- fail:
- 	debugfs_remove_recursive(hisi_hba->debugfs_dir);
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index ca3d13b..cda1e40 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -186,6 +186,7 @@
- #define CHL_INT0_MSK			(PORT_BASE + 0x1c0)
- #define CHL_INT1_MSK			(PORT_BASE + 0x1c4)
- #define CHL_INT2_MSK			(PORT_BASE + 0x1c8)
-+#define SAS_EC_INT_COAL_TIME		(PORT_BASE + 0x1cc)
- #define CHL_INT_COAL_EN			(PORT_BASE + 0x1d0)
- #define SAS_RX_TRAIN_TIMER		(PORT_BASE + 0x2a4)
- #define PHY_CTRL_RDY_MSK		(PORT_BASE + 0x2b0)
-@@ -205,6 +206,7 @@
- #define ERR_CNT_DWS_LOST		(PORT_BASE + 0x380)
- #define ERR_CNT_RESET_PROB		(PORT_BASE + 0x384)
- #define ERR_CNT_INVLD_DW		(PORT_BASE + 0x390)
-+#define ERR_CNT_CODE_ERR		(PORT_BASE + 0x394)
- #define ERR_CNT_DISP_ERR		(PORT_BASE + 0x398)
- 
- #define DEFAULT_ITCT_HW		2048 /* reset value, not reprogrammed */
-@@ -2339,7 +2341,60 @@ static ssize_t intr_coal_count_v3_hw_store(struct device *dev,
- 	NULL
- };
- 
-+static const struct hisi_sas_debugfs_reg_lu debugfs_port_reg_lu[] = {
-+	HISI_SAS_DEBUGFS_REG(PHY_CFG),
-+	HISI_SAS_DEBUGFS_REG(HARD_PHY_LINKRATE),
-+	HISI_SAS_DEBUGFS_REG(PROG_PHY_LINK_RATE),
-+	HISI_SAS_DEBUGFS_REG(PHY_CTRL),
-+	HISI_SAS_DEBUGFS_REG(SL_CFG),
-+	HISI_SAS_DEBUGFS_REG(AIP_LIMIT),
-+	HISI_SAS_DEBUGFS_REG(SL_CONTROL),
-+	HISI_SAS_DEBUGFS_REG(RX_PRIMS_STATUS),
-+	HISI_SAS_DEBUGFS_REG(TX_ID_DWORD0),
-+	HISI_SAS_DEBUGFS_REG(TX_ID_DWORD1),
-+	HISI_SAS_DEBUGFS_REG(TX_ID_DWORD2),
-+	HISI_SAS_DEBUGFS_REG(TX_ID_DWORD3),
-+	HISI_SAS_DEBUGFS_REG(TX_ID_DWORD4),
-+	HISI_SAS_DEBUGFS_REG(TX_ID_DWORD5),
-+	HISI_SAS_DEBUGFS_REG(TX_ID_DWORD6),
-+	HISI_SAS_DEBUGFS_REG(TXID_AUTO),
-+	HISI_SAS_DEBUGFS_REG(RX_IDAF_DWORD0),
-+	HISI_SAS_DEBUGFS_REG(RXOP_CHECK_CFG_H),
-+	HISI_SAS_DEBUGFS_REG(STP_LINK_TIMER),
-+	HISI_SAS_DEBUGFS_REG(STP_LINK_TIMEOUT_STATE),
-+	HISI_SAS_DEBUGFS_REG(CON_CFG_DRIVER),
-+	HISI_SAS_DEBUGFS_REG(SAS_SSP_CON_TIMER_CFG),
-+	HISI_SAS_DEBUGFS_REG(SAS_SMP_CON_TIMER_CFG),
-+	HISI_SAS_DEBUGFS_REG(SAS_STP_CON_TIMER_CFG),
-+	HISI_SAS_DEBUGFS_REG(CHL_INT0),
-+	HISI_SAS_DEBUGFS_REG(CHL_INT1),
-+	HISI_SAS_DEBUGFS_REG(CHL_INT2),
-+	HISI_SAS_DEBUGFS_REG(CHL_INT0_MSK),
-+	HISI_SAS_DEBUGFS_REG(CHL_INT1_MSK),
-+	HISI_SAS_DEBUGFS_REG(CHL_INT2_MSK),
-+	HISI_SAS_DEBUGFS_REG(SAS_EC_INT_COAL_TIME),
-+	HISI_SAS_DEBUGFS_REG(CHL_INT_COAL_EN),
-+	HISI_SAS_DEBUGFS_REG(SAS_RX_TRAIN_TIMER),
-+	HISI_SAS_DEBUGFS_REG(PHY_CTRL_RDY_MSK),
-+	HISI_SAS_DEBUGFS_REG(PHYCTRL_NOT_RDY_MSK),
-+	HISI_SAS_DEBUGFS_REG(PHYCTRL_DWS_RESET_MSK),
-+	HISI_SAS_DEBUGFS_REG(PHYCTRL_PHY_ENA_MSK),
-+	HISI_SAS_DEBUGFS_REG(SL_RX_BCAST_CHK_MSK),
-+	HISI_SAS_DEBUGFS_REG(PHYCTRL_OOB_RESTART_MSK),
-+	HISI_SAS_DEBUGFS_REG(DMA_TX_STATUS),
-+	HISI_SAS_DEBUGFS_REG(DMA_RX_STATUS),
-+	HISI_SAS_DEBUGFS_REG(COARSETUNE_TIME),
-+	HISI_SAS_DEBUGFS_REG(ERR_CNT_DWS_LOST),
-+	HISI_SAS_DEBUGFS_REG(ERR_CNT_RESET_PROB),
-+	HISI_SAS_DEBUGFS_REG(ERR_CNT_INVLD_DW),
-+	HISI_SAS_DEBUGFS_REG(ERR_CNT_CODE_ERR),
-+	HISI_SAS_DEBUGFS_REG(ERR_CNT_DISP_ERR),
-+	{}
-+};
-+
- static const struct hisi_sas_debugfs_reg debugfs_port_reg = {
-+	.lu = debugfs_port_reg_lu,
-+	.count = 0x100,
- 	.base_off = PORT_BASE,
- 	.read_port_reg = hisi_sas_phy_read32,
- };
--- 
-1.9.1
+=20
+ enum {
+--=20
+1.8.3.1
