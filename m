@@ -1,35 +1,31 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v5 1/2] scsi: hisi_sas: Add support for DIF feature for v2 hw
-Date: Tue, 18 Dec 2018 23:35:35 -0500
-Message-ID: <yq1pntygmlk.fsf@oracle.com>
-References: <1545057608-89965-1-git-send-email-john.garry@huawei.com>
-        <1545057608-89965-2-git-send-email-john.garry@huawei.com>
+From: Ching Huang <ching2048@areca.com.tw>
+Subject: [PATCH 0/12] scsi: arcmsr: update for ccb structure address can
+ above 4GB
+Date: Wed, 19 Dec 2018 16:17:41 +0800
+Message-ID: <1545207461.4457.10.camel@Centos6.3-64>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1545057608-89965-2-git-send-email-john.garry@huawei.com> (John
-        Garry's message of "Mon, 17 Dec 2018 22:40:07 +0800")
 Sender: linux-kernel-owner@vger.kernel.org
-To: John Garry <john.garry@huawei.com>
-Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linuxarm@huawei.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Xiang Chen <chenxiang66@hisilicon.com>
+To: martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: dan.carpenter@oracle.com, hch@infradead.org, colin.king@canonical.com
 List-Id: linux-scsi@vger.kernel.org
 
+>From Ching Huang <ching2048@areca.com.tw>
 
-John,
+This patch series are against to mkp's 4.21/scsi-queue.
 
-> From: Xiang Chen <chenxiang66@hisilicon.com>
->
-> For v3 hw, we support DIF operation for SAS, but not SATA.
->
-> In addition, DIF CRC16 is supported.
->
-> This patchset adds the SW support for the described features. The main
-> components are as follows:
-> - Get protection mask from module param
-> - Fill PI fields
-> - Fill related to DIF in DQ and protection iu memories
-
-Applied to 4.21/scsi-queue, thanks!
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+1. Rename acb structure member roundup_ccbsize to ioqueue_size
+2. Rename arcmsr_free_mu to arcmsr_free_io_queue
+3. Merge arcmsr_alloc_io_queue to arcmsr_alloc_ccb_pool
+4. Update arcmsr_alloc_ccb_pool for ccb buffer address above 4GB
+5. Update codes for ACB_ADAPTER_TYPE_A in case of ccb address above 4GB
+6. Update codes for ACB_ADAPTER_TYPE_B in case of ccb address above 4GB
+7. Update codes for ACB_ADAPTER_TYPE_C in case of ccb address above 4GB
+8. Update codes for ACB_ADAPTER_TYPE_D in case of ccb address above 4GB
+9. Add an option of set dma_mask_64 for ACB_ADAPTER_TYPE_A
+10.Separate 'set dma mask' as a function
+11.Fix suspend/resume of ACB_ADAPTER_TYPE_B
+12.Update driver version to v1.40.00.10-20181217
+---
