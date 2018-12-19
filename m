@@ -1,15 +1,15 @@
 From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: Re: [PATCH 24/41] scsi: lpfc: lpfc_hbadisc: Mark expected switch
- fall-throughs
-Date: Wed, 19 Dec 2018 16:27:37 -0600
-Message-ID: <1d7a5578-e917-edad-cb47-cbb907897292@embeddedor.com>
+Subject: Re: [PATCH 25/41] scsi: lpfc: lpfc_nportdisc: Mark expected switch
+ fall-through
+Date: Wed, 19 Dec 2018 16:27:46 -0600
+Message-ID: <7e647723-0fdf-97c0-4e54-3d663db91392@embeddedor.com>
 References: <cover.1543374820.git.gustavo@embeddedor.com>
- <8db99b2700dd1589b8cf5ddb6b3de84dfe1e9f82.1543374820.git.gustavo@embeddedor.com>
+ <8d1c41fb93d54415cfd0a8c1fa6d31a6a76db461.1543374820.git.gustavo@embeddedor.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <8db99b2700dd1589b8cf5ddb6b3de84dfe1e9f82.1543374820.git.gustavo@embeddedor.com>
+In-Reply-To: <8d1c41fb93d54415cfd0a8c1fa6d31a6a76db461.1543374820.git.gustavo@embeddedor.com>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 To: James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>
@@ -30,39 +30,21 @@ On 11/27/18 10:31 PM, Gustavo A. R. Silva wrote:
 > In preparation to enabling -Wimplicit-fallthrough, mark switch cases
 > where we are expecting to fall through.
 > 
-> Notice that, in this particular case, I replaced "Drop thru" with a
-> "fall through" annotation, which is what GCC is expecting to find.
-> 
-> Addresses-Coverity-ID: 114976 ("Missing break in switch")
-> Addresses-Coverity-ID: 114977 ("Missing break in switch")
 > Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 > ---
->   drivers/scsi/lpfc/lpfc_hbadisc.c | 4 +++-
->   1 file changed, 3 insertions(+), 1 deletion(-)
+>   drivers/scsi/lpfc/lpfc_nportdisc.c | 1 +
+>   1 file changed, 1 insertion(+)
 > 
-> diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
-> index 6c2fb55d739b..1a61806739ff 100644
-> --- a/drivers/scsi/lpfc/lpfc_hbadisc.c
-> +++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
-> @@ -4645,9 +4645,11 @@ lpfc_check_sli_ndlp(struct lpfc_hba *phba,
->   		case CMD_GEN_REQUEST64_CR:
->   			if (iocb->context_un.ndlp == ndlp)
->   				return 1;
-> +			/* fall through */
->   		case CMD_ELS_REQUEST64_CR:
->   			if (icmd->un.elsreq64.remoteID == ndlp->nlp_DID)
->   				return 1;
-> +			/* fall through */
->   		case CMD_XMIT_ELS_RSP64_CX:
->   			if (iocb->context1 == (uint8_t *) ndlp)
->   				return 1;
-> @@ -5791,7 +5793,7 @@ lpfc_disc_timeout_handler(struct lpfc_vport *vport)
->   
->   	case LPFC_LINK_UP:
->   		lpfc_issue_clear_la(phba, vport);
-> -		/* Drop thru */
+> diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
+> index 7d5693cfaa87..e8583496feaf 100644
+> --- a/drivers/scsi/lpfc/lpfc_nportdisc.c
+> +++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
+> @@ -360,6 +360,7 @@ lpfc_rcv_plogi(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+>   	case  NLP_STE_NPR_NODE:
+>   		if (!(ndlp->nlp_flag & NLP_NPR_ADISC))
+>   			break;
 > +		/* fall through */
->   	case LPFC_LINK_UNKNOWN:
->   	case LPFC_WARM_START:
->   	case LPFC_INIT_START:
+>   	case  NLP_STE_REG_LOGIN_ISSUE:
+>   	case  NLP_STE_PRLI_ISSUE:
+>   	case  NLP_STE_UNMAPPED_NODE:
 > 
