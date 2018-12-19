@@ -1,8 +1,8 @@
 From: Ching Huang <ching2048@areca.com.tw>
-Subject: [PATCH 7/12] scsi: arcmsr: Update for ACB_ADAPTER_TYPE_C that ccb
+Subject: [PATCH 8/12] scsi: arcmsr: Update for ACB_ADAPTER_TYPE_D that ccb
  address can above 4GB
-Date: Wed, 19 Dec 2018 16:48:16 +0800
-Message-ID: <1545209296.4457.35.camel@Centos6.3-64>
+Date: Wed, 19 Dec 2018 16:51:14 +0800
+Message-ID: <1545209474.4457.38.camel@Centos6.3-64>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
@@ -14,100 +14,91 @@ List-Id: linux-scsi@vger.kernel.org
 
 >From Ching Huang <ching2048@areca.com.tw>
 
-Update for ACB_ADAPTER_TYPE_C that ccb address can above 4GB
+Update for ACB_ADAPTER_TYPE_D that ccb address can above 4GB
 
 Signed-off-by: Ching Huang <ching2048@areca.com.tw>
 ---
 
 diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
-index 3d2727c..39f3cd0 100755
+index 39f3cd0..8cc2134 100755
 --- a/drivers/scsi/arcmsr/arcmsr_hba.c
 +++ b/drivers/scsi/arcmsr/arcmsr_hba.c
-@@ -1438,7 +1438,9 @@ static void arcmsr_done4abort_postqueue(struct AdapterControlBlock *acb)
- 			/*need to do*/
- 			flag_ccb = readl(&reg->outbound_queueport_low);
- 			ccb_cdb_phy = (flag_ccb & 0xFFFFFFF0);
--			pARCMSR_CDB = (struct  ARCMSR_CDB *)(acb->vir2phy_offset+ccb_cdb_phy);/*frame must be 32 bytes aligned*/
-+			if (acb->cdb_phyadd_hipart)
-+				ccb_cdb_phy = ccb_cdb_phy | acb->cdb_phyadd_hipart;
-+			pARCMSR_CDB = (struct  ARCMSR_CDB *)(acb->vir2phy_offset + ccb_cdb_phy);
- 			pCCB = container_of(pARCMSR_CDB, struct CommandControlBlock, arcmsr_cdb);
- 			error = (flag_ccb & ARCMSR_CCBREPLY_FLAG_ERROR_MODE1) ? true : false;
- 			arcmsr_drain_donequeue(acb, pCCB, error);
-@@ -1786,12 +1788,8 @@ static void arcmsr_post_ccb(struct AdapterControlBlock *acb, struct CommandContr
- 
- 		arc_cdb_size = (ccb->arc_cdb_size > 0x300) ? 0x300 : ccb->arc_cdb_size;
- 		ccb_post_stamp = (cdb_phyaddr | ((arc_cdb_size - 1) >> 6) | 1);
--		if (acb->cdb_phyaddr_hi32) {
--			writel(acb->cdb_phyaddr_hi32, &phbcmu->inbound_queueport_high);
--			writel(ccb_post_stamp, &phbcmu->inbound_queueport_low);
--		} else {
--			writel(ccb_post_stamp, &phbcmu->inbound_queueport_low);
--		}
-+		writel(upper_32_bits(ccb->cdb_phyaddr), &phbcmu->inbound_queueport_high);
-+		writel(ccb_post_stamp, &phbcmu->inbound_queueport_low);
- 		}
- 		break;
- 	case ACB_ADAPTER_TYPE_D: {
-@@ -2384,7 +2382,8 @@ static void arcmsr_hbaC_postqueue_isr(struct AdapterControlBlock *acb)
- 	struct MessageUnit_C __iomem *phbcmu;
+@@ -1468,9 +1468,13 @@ static void arcmsr_done4abort_postqueue(struct AdapterControlBlock *acb)
+ 					((toggle ^ 0x4000) + 1);
+ 				doneq_index = pmu->doneq_index;
+ 				spin_unlock_irqrestore(&acb->doneq_lock, flags);
++				cdb_phy_hipart = pmu->done_qbuffer[doneq_index &
++					0xFFF].addressHigh;
+ 				addressLow = pmu->done_qbuffer[doneq_index &
+ 					0xFFF].addressLow;
+ 				ccb_cdb_phy = (addressLow & 0xFFFFFFF0);
++				if (acb->cdb_phyadd_hipart)
++					ccb_cdb_phy = ccb_cdb_phy | acb->cdb_phyadd_hipart;
+ 				pARCMSR_CDB = (struct  ARCMSR_CDB *)
+ 					(acb->vir2phy_offset + ccb_cdb_phy);
+ 				pCCB = container_of(pARCMSR_CDB,
+@@ -1802,8 +1806,8 @@ static void arcmsr_post_ccb(struct AdapterControlBlock *acb, struct CommandContr
+ 		spin_lock_irqsave(&acb->postq_lock, flags);
+ 		postq_index = pmu->postq_index;
+ 		pinbound_srb = (struct InBound_SRB *)&(pmu->post_qbuffer[postq_index & 0xFF]);
+-		pinbound_srb->addressHigh = dma_addr_hi32(cdb_phyaddr);
+-		pinbound_srb->addressLow = dma_addr_lo32(cdb_phyaddr);
++		pinbound_srb->addressHigh = upper_32_bits(ccb->cdb_phyaddr);
++		pinbound_srb->addressLow = cdb_phyaddr;
+ 		pinbound_srb->length = ccb->arc_cdb_size >> 2;
+ 		arcmsr_cdb->msgContext = dma_addr_lo32(cdb_phyaddr);
+ 		toggle = postq_index & 0x4000;
+@@ -2415,12 +2419,12 @@ static void arcmsr_hbaC_postqueue_isr(struct AdapterControlBlock *acb)
+ static void arcmsr_hbaD_postqueue_isr(struct AdapterControlBlock *acb)
+ {
+ 	u32 outbound_write_pointer, doneq_index, index_stripped, toggle;
+-	uint32_t addressLow, ccb_cdb_phy;
++	uint32_t addressLow;
+ 	int error;
+ 	struct MessageUnit_D  *pmu;
  	struct ARCMSR_CDB *arcmsr_cdb;
  	struct CommandControlBlock *ccb;
--	uint32_t flag_ccb, ccb_cdb_phy, throttling = 0;
-+	uint32_t flag_ccb, throttling = 0;
-+	unsigned long ccb_cdb_phy;
- 	int error;
+-	unsigned long flags;
++	unsigned long flags, ccb_cdb_phy, cdb_phy_hipart;
  
- 	phbcmu = acb->pmuC;
-@@ -2394,6 +2393,8 @@ static void arcmsr_hbaC_postqueue_isr(struct AdapterControlBlock *acb)
- 	while ((flag_ccb = readl(&phbcmu->outbound_queueport_low)) !=
- 			0xFFFFFFFF) {
- 		ccb_cdb_phy = (flag_ccb & 0xFFFFFFF0);
-+		if (acb->cdb_phyadd_hipart)
-+			ccb_cdb_phy = ccb_cdb_phy | acb->cdb_phyadd_hipart;
- 		arcmsr_cdb = (struct ARCMSR_CDB *)(acb->vir2phy_offset
- 			+ ccb_cdb_phy);
- 		ccb = container_of(arcmsr_cdb, struct CommandControlBlock,
-@@ -3401,12 +3402,14 @@ static int arcmsr_hbaC_polling_ccbdone(struct AdapterControlBlock *acb,
- 		struct CommandControlBlock *poll_ccb)
+ 	spin_lock_irqsave(&acb->doneq_lock, flags);
+ 	pmu = acb->pmuD;
+@@ -2434,9 +2438,13 @@ static void arcmsr_hbaD_postqueue_isr(struct AdapterControlBlock *acb)
+ 			pmu->doneq_index = index_stripped ? (index_stripped | toggle) :
+ 				((toggle ^ 0x4000) + 1);
+ 			doneq_index = pmu->doneq_index;
++			cdb_phy_hipart = pmu->done_qbuffer[doneq_index &
++				0xFFF].addressHigh;
+ 			addressLow = pmu->done_qbuffer[doneq_index &
+ 				0xFFF].addressLow;
+ 			ccb_cdb_phy = (addressLow & 0xFFFFFFF0);
++			if (acb->cdb_phyadd_hipart)
++				ccb_cdb_phy = ccb_cdb_phy | acb->cdb_phyadd_hipart;
+ 			arcmsr_cdb = (struct ARCMSR_CDB *)(acb->vir2phy_offset
+ 				+ ccb_cdb_phy);
+ 			ccb = container_of(arcmsr_cdb,
+@@ -3464,9 +3472,9 @@ static int arcmsr_hbaD_polling_ccbdone(struct AdapterControlBlock *acb,
+ 				struct CommandControlBlock *poll_ccb)
  {
- 	struct MessageUnit_C __iomem *reg = acb->pmuC;
--	uint32_t flag_ccb, ccb_cdb_phy;
-+	uint32_t flag_ccb;
- 	struct ARCMSR_CDB *arcmsr_cdb;
  	bool error;
+-	uint32_t poll_ccb_done = 0, poll_count = 0, flag_ccb, ccb_cdb_phy;
++	uint32_t poll_ccb_done = 0, poll_count = 0, flag_ccb;
+ 	int rtn, doneq_index, index_stripped, outbound_write_pointer, toggle;
+-	unsigned long flags;
++	unsigned long flags, ccb_cdb_phy, cdb_phy_hipart;
+ 	struct ARCMSR_CDB *arcmsr_cdb;
  	struct CommandControlBlock *pCCB;
- 	uint32_t poll_ccb_done = 0, poll_count = 0;
- 	int rtn;
-+	unsigned long ccb_cdb_phy;
-+
- polling_hbc_ccb_retry:
- 	poll_count++;
- 	while (1) {
-@@ -3425,7 +3428,9 @@ polling_hbc_ccb_retry:
- 		}
- 		flag_ccb = readl(&reg->outbound_queueport_low);
+ 	struct MessageUnit_D *pmu = acb->pmuD;
+@@ -3498,8 +3506,12 @@ polling_hbaD_ccb_retry:
+ 				((toggle ^ 0x4000) + 1);
+ 		doneq_index = pmu->doneq_index;
+ 		spin_unlock_irqrestore(&acb->doneq_lock, flags);
++		cdb_phy_hipart = pmu->done_qbuffer[doneq_index &
++				0xFFF].addressHigh;
+ 		flag_ccb = pmu->done_qbuffer[doneq_index & 0xFFF].addressLow;
  		ccb_cdb_phy = (flag_ccb & 0xFFFFFFF0);
--		arcmsr_cdb = (struct ARCMSR_CDB *)(acb->vir2phy_offset + ccb_cdb_phy);/*frame must be 32 bytes aligned*/
 +		if (acb->cdb_phyadd_hipart)
 +			ccb_cdb_phy = ccb_cdb_phy | acb->cdb_phyadd_hipart;
-+		arcmsr_cdb = (struct ARCMSR_CDB *)(acb->vir2phy_offset + ccb_cdb_phy);
- 		pCCB = container_of(arcmsr_cdb, struct CommandControlBlock, arcmsr_cdb);
- 		poll_ccb_done |= (pCCB == poll_ccb) ? 1 : 0;
- 		/* check ifcommand done with no error*/
-@@ -3801,7 +3806,6 @@ static int arcmsr_iop_confirm(struct AdapterControlBlock *acb)
- 		}
- 		break;
- 	case ACB_ADAPTER_TYPE_C: {
--		if (cdb_phyaddr_hi32 != 0) {
- 			struct MessageUnit_C __iomem *reg = acb->pmuC;
- 
- 			printk(KERN_NOTICE "arcmsr%d: cdb_phyaddr_hi32=0x%x\n",
-@@ -3816,7 +3820,6 @@ static int arcmsr_iop_confirm(struct AdapterControlBlock *acb)
- 				return 1;
- 			}
- 		}
--		}
- 		break;
- 	case ACB_ADAPTER_TYPE_D: {
- 		uint32_t __iomem *rwbuffer;
+ 		arcmsr_cdb = (struct ARCMSR_CDB *)(acb->vir2phy_offset +
+ 			ccb_cdb_phy);
+ 		pCCB = container_of(arcmsr_cdb, struct CommandControlBlock,
