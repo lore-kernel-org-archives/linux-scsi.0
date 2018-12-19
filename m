@@ -1,8 +1,8 @@
 From: Ching Huang <ching2048@areca.com.tw>
-Subject: [PATCH 6/12] scsi: arcmsr: Update for ACB_ADAPTER_TYPE_B that ccb
+Subject: [PATCH 7/12] scsi: arcmsr: Update for ACB_ADAPTER_TYPE_C that ccb
  address can above 4GB
-Date: Wed, 19 Dec 2018 16:45:46 +0800
-Message-ID: <1545209146.4457.32.camel@Centos6.3-64>
+Date: Wed, 19 Dec 2018 16:48:16 +0800
+Message-ID: <1545209296.4457.35.camel@Centos6.3-64>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
@@ -14,68 +14,100 @@ List-Id: linux-scsi@vger.kernel.org
 
 >From Ching Huang <ching2048@areca.com.tw>
 
-Update for ACB_ADAPTER_TYPE_B that ccb address can above 4GB
+Update for ACB_ADAPTER_TYPE_C that ccb address can above 4GB
 
 Signed-off-by: Ching Huang <ching2048@areca.com.tw>
 ---
 
 diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
-index 2ff1c9a..3d2727c 100755
+index 3d2727c..39f3cd0 100755
 --- a/drivers/scsi/arcmsr/arcmsr_hba.c
 +++ b/drivers/scsi/arcmsr/arcmsr_hba.c
-@@ -1418,7 +1418,10 @@ static void arcmsr_done4abort_postqueue(struct AdapterControlBlock *acb)
- 			flag_ccb = reg->done_qbuffer[i];
- 			if (flag_ccb != 0) {
- 				reg->done_qbuffer[i] = 0;
--				pARCMSR_CDB = (struct ARCMSR_CDB *)(acb->vir2phy_offset+(flag_ccb << 5));/*frame must be 32 bytes aligned*/
-+				ccb_cdb_phy = (flag_ccb << 5) & 0xffffffff;
-+				if (acb->cdb_phyadd_hipart)
-+					ccb_cdb_phy = ccb_cdb_phy | acb->cdb_phyadd_hipart;
-+				pARCMSR_CDB = (struct ARCMSR_CDB *)(acb->vir2phy_offset + ccb_cdb_phy);
- 				pCCB = container_of(pARCMSR_CDB, struct CommandControlBlock, arcmsr_cdb);
- 				error = (flag_ccb & ARCMSR_CCBREPLY_FLAG_ERROR_MODE0) ? true : false;
- 				arcmsr_drain_donequeue(acb, pCCB, error);
-@@ -2358,13 +2361,18 @@ static void arcmsr_hbaB_postqueue_isr(struct AdapterControlBlock *acb)
- 	struct ARCMSR_CDB *pARCMSR_CDB;
- 	struct CommandControlBlock *pCCB;
- 	bool error;
-+	unsigned long cdb_phy_addr;
-+
- 	index = reg->doneq_index;
- 	while ((flag_ccb = reg->done_qbuffer[index]) != 0) {
--		reg->done_qbuffer[index] = 0;
--		pARCMSR_CDB = (struct ARCMSR_CDB *)(acb->vir2phy_offset+(flag_ccb << 5));/*frame must be 32 bytes aligned*/
-+		cdb_phy_addr = (flag_ccb << 5) & 0xffffffff;
-+		if (acb->cdb_phyadd_hipart)
-+			cdb_phy_addr = cdb_phy_addr | acb->cdb_phyadd_hipart;
-+		pARCMSR_CDB = (struct ARCMSR_CDB *)(acb->vir2phy_offset + cdb_phy_addr);
- 		pCCB = container_of(pARCMSR_CDB, struct CommandControlBlock, arcmsr_cdb);
- 		error = (flag_ccb & ARCMSR_CCBREPLY_FLAG_ERROR_MODE0) ? true : false;
- 		arcmsr_drain_donequeue(acb, pCCB, error);
-+		reg->done_qbuffer[index] = 0;
- 		index++;
- 		index %= ARCMSR_MAX_HBB_POSTQUEUE;
- 		reg->doneq_index = index;
-@@ -3329,8 +3337,9 @@ static int arcmsr_hbaB_polling_ccbdone(struct AdapterControlBlock *acb,
- 	uint32_t flag_ccb, poll_ccb_done = 0, poll_count = 0;
- 	int index, rtn;
- 	bool error;
--	polling_hbb_ccb_retry:
-+	unsigned long ccb_cdb_phy;
+@@ -1438,7 +1438,9 @@ static void arcmsr_done4abort_postqueue(struct AdapterControlBlock *acb)
+ 			/*need to do*/
+ 			flag_ccb = readl(&reg->outbound_queueport_low);
+ 			ccb_cdb_phy = (flag_ccb & 0xFFFFFFF0);
+-			pARCMSR_CDB = (struct  ARCMSR_CDB *)(acb->vir2phy_offset+ccb_cdb_phy);/*frame must be 32 bytes aligned*/
++			if (acb->cdb_phyadd_hipart)
++				ccb_cdb_phy = ccb_cdb_phy | acb->cdb_phyadd_hipart;
++			pARCMSR_CDB = (struct  ARCMSR_CDB *)(acb->vir2phy_offset + ccb_cdb_phy);
+ 			pCCB = container_of(pARCMSR_CDB, struct CommandControlBlock, arcmsr_cdb);
+ 			error = (flag_ccb & ARCMSR_CCBREPLY_FLAG_ERROR_MODE1) ? true : false;
+ 			arcmsr_drain_donequeue(acb, pCCB, error);
+@@ -1786,12 +1788,8 @@ static void arcmsr_post_ccb(struct AdapterControlBlock *acb, struct CommandContr
  
-+polling_hbb_ccb_retry:
+ 		arc_cdb_size = (ccb->arc_cdb_size > 0x300) ? 0x300 : ccb->arc_cdb_size;
+ 		ccb_post_stamp = (cdb_phyaddr | ((arc_cdb_size - 1) >> 6) | 1);
+-		if (acb->cdb_phyaddr_hi32) {
+-			writel(acb->cdb_phyaddr_hi32, &phbcmu->inbound_queueport_high);
+-			writel(ccb_post_stamp, &phbcmu->inbound_queueport_low);
+-		} else {
+-			writel(ccb_post_stamp, &phbcmu->inbound_queueport_low);
+-		}
++		writel(upper_32_bits(ccb->cdb_phyaddr), &phbcmu->inbound_queueport_high);
++		writel(ccb_post_stamp, &phbcmu->inbound_queueport_low);
+ 		}
+ 		break;
+ 	case ACB_ADAPTER_TYPE_D: {
+@@ -2384,7 +2382,8 @@ static void arcmsr_hbaC_postqueue_isr(struct AdapterControlBlock *acb)
+ 	struct MessageUnit_C __iomem *phbcmu;
+ 	struct ARCMSR_CDB *arcmsr_cdb;
+ 	struct CommandControlBlock *ccb;
+-	uint32_t flag_ccb, ccb_cdb_phy, throttling = 0;
++	uint32_t flag_ccb, throttling = 0;
++	unsigned long ccb_cdb_phy;
+ 	int error;
+ 
+ 	phbcmu = acb->pmuC;
+@@ -2394,6 +2393,8 @@ static void arcmsr_hbaC_postqueue_isr(struct AdapterControlBlock *acb)
+ 	while ((flag_ccb = readl(&phbcmu->outbound_queueport_low)) !=
+ 			0xFFFFFFFF) {
+ 		ccb_cdb_phy = (flag_ccb & 0xFFFFFFF0);
++		if (acb->cdb_phyadd_hipart)
++			ccb_cdb_phy = ccb_cdb_phy | acb->cdb_phyadd_hipart;
+ 		arcmsr_cdb = (struct ARCMSR_CDB *)(acb->vir2phy_offset
+ 			+ ccb_cdb_phy);
+ 		ccb = container_of(arcmsr_cdb, struct CommandControlBlock,
+@@ -3401,12 +3402,14 @@ static int arcmsr_hbaC_polling_ccbdone(struct AdapterControlBlock *acb,
+ 		struct CommandControlBlock *poll_ccb)
+ {
+ 	struct MessageUnit_C __iomem *reg = acb->pmuC;
+-	uint32_t flag_ccb, ccb_cdb_phy;
++	uint32_t flag_ccb;
+ 	struct ARCMSR_CDB *arcmsr_cdb;
+ 	bool error;
+ 	struct CommandControlBlock *pCCB;
+ 	uint32_t poll_ccb_done = 0, poll_count = 0;
+ 	int rtn;
++	unsigned long ccb_cdb_phy;
++
+ polling_hbc_ccb_retry:
  	poll_count++;
- 	/* clear doorbell interrupt */
- 	writel(ARCMSR_DOORBELL_INT_CLEAR_PATTERN, reg->iop2drv_doorbell);
-@@ -3356,7 +3365,10 @@ static int arcmsr_hbaB_polling_ccbdone(struct AdapterControlBlock *acb,
- 		index %= ARCMSR_MAX_HBB_POSTQUEUE;
- 		reg->doneq_index = index;
- 		/* check if command done with no error*/
--		arcmsr_cdb = (struct ARCMSR_CDB *)(acb->vir2phy_offset + (flag_ccb << 5));
-+		ccb_cdb_phy = (flag_ccb << 5) & 0xffffffff;
+ 	while (1) {
+@@ -3425,7 +3428,9 @@ polling_hbc_ccb_retry:
+ 		}
+ 		flag_ccb = readl(&reg->outbound_queueport_low);
+ 		ccb_cdb_phy = (flag_ccb & 0xFFFFFFF0);
+-		arcmsr_cdb = (struct ARCMSR_CDB *)(acb->vir2phy_offset + ccb_cdb_phy);/*frame must be 32 bytes aligned*/
 +		if (acb->cdb_phyadd_hipart)
 +			ccb_cdb_phy = ccb_cdb_phy | acb->cdb_phyadd_hipart;
 +		arcmsr_cdb = (struct ARCMSR_CDB *)(acb->vir2phy_offset + ccb_cdb_phy);
- 		ccb = container_of(arcmsr_cdb, struct CommandControlBlock, arcmsr_cdb);
- 		poll_ccb_done |= (ccb == poll_ccb) ? 1 : 0;
- 		if ((ccb->acb != acb) || (ccb->startdone != ARCMSR_CCB_START)) {
+ 		pCCB = container_of(arcmsr_cdb, struct CommandControlBlock, arcmsr_cdb);
+ 		poll_ccb_done |= (pCCB == poll_ccb) ? 1 : 0;
+ 		/* check ifcommand done with no error*/
+@@ -3801,7 +3806,6 @@ static int arcmsr_iop_confirm(struct AdapterControlBlock *acb)
+ 		}
+ 		break;
+ 	case ACB_ADAPTER_TYPE_C: {
+-		if (cdb_phyaddr_hi32 != 0) {
+ 			struct MessageUnit_C __iomem *reg = acb->pmuC;
+ 
+ 			printk(KERN_NOTICE "arcmsr%d: cdb_phyaddr_hi32=0x%x\n",
+@@ -3816,7 +3820,6 @@ static int arcmsr_iop_confirm(struct AdapterControlBlock *acb)
+ 				return 1;
+ 			}
+ 		}
+-		}
+ 		break;
+ 	case ACB_ADAPTER_TYPE_D: {
+ 		uint32_t __iomem *rwbuffer;
