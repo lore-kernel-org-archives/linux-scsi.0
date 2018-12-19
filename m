@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 6/8] scsi: hisi_sas: Add debugfs CQ file and add file operations
-Date: Wed, 19 Dec 2018 23:56:44 +0800
-Message-ID: <1545235006-151716-7-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 8/8] scsi: hisi_sas: Add debugfs IOST file and add file operations
+Date: Wed, 19 Dec 2018 23:56:46 +0800
+Message-ID: <1545235006-151716-9-git-send-email-john.garry@huawei.com>
 References: <1545235006-151716-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -14,71 +14,70 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Luo Jiaxing <luojiaxing@huawei.com>
 
-This patch create debugfs file for CQ and add file operations.
+This patch create debugfs file for IOST and add file operations.
 
 Signed-off-by: Luo Jiaxing <luojiaxing@huawei.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_main.c | 70 +++++++++++++++++++++++++++++++++++
- 1 file changed, 70 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 51 +++++++++++++++++++++++++++++++++++
+ 1 file changed, 51 insertions(+)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index fbd9b4a..ce0a9dc 100644
+index 45a0be2..3d24366 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -2630,12 +2630,68 @@ static int hisi_sas_debugfs_port_open(struct inode *inode, struct file *filp)
+@@ -2630,6 +2630,24 @@ static int hisi_sas_debugfs_port_open(struct inode *inode, struct file *filp)
  	.owner = THIS_MODULE,
  };
  
-+static int hisi_sas_show_row_32(struct seq_file *s, int index,
-+				int sz, u32 *ptr)
++static int hisi_sas_show_row_64(struct seq_file *s, int index,
++				int sz, u64 *ptr)
 +{
 +	int i;
 +
 +	/* completion header size not fixed per HW version */
 +	seq_printf(s, "index %04d:\n\t", index);
-+	for (i = 1; i <= sz / 4; i++, ptr++) {
-+		if (!(i % 4))
++	for (i = 1; i <= sz / 8; i++, ptr++) {
++		seq_printf(s, " 0x%016llx", le64_to_cpu(*ptr));
++		if (!(i % 2))
 +			seq_puts(s, "\n\t");
 +	}
++
 +	seq_puts(s, "\n");
 +
 +	return 0;
 +}
 +
-+static int hisi_sas_cq_show_slot(struct seq_file *s, int slot, void *cq_ptr)
+ static int hisi_sas_show_row_32(struct seq_file *s, int index,
+ 				int sz, u32 *ptr)
+ {
+@@ -2722,6 +2740,35 @@ static int hisi_sas_debugfs_dq_open(struct inode *inode, struct file *filp)
+ 	.owner = THIS_MODULE,
+ };
+ 
++static int hisi_sas_debugfs_iost_show(struct seq_file *s, void *p)
 +{
-+	struct hisi_sas_cq *cq = cq_ptr;
-+	struct hisi_hba *hisi_hba = cq->hisi_hba;
-+	void *complete_queue = hisi_hba->debugfs_complete_hdr[cq->id];
-+	void *complete_hdr = complete_queue +
-+			(hisi_hba->hw->complete_hdr_size * slot);
++	struct hisi_hba *hisi_hba = s->private;
++	struct hisi_sas_iost *debugfs_iost = hisi_hba->debugfs_iost;
++	int i, ret, max_command_entries = hisi_hba->hw->max_command_entries;
 +
-+	return hisi_sas_show_row_32(s, slot,
-+				hisi_hba->hw->complete_hdr_size,
-+				complete_hdr);
-+}
-+
-+static int hisi_sas_debugfs_cq_show(struct seq_file *s, void *p)
-+{
-+	struct hisi_sas_cq *cq = s->private;
-+	int slot, ret;
-+
-+	for (slot = 0; slot < HISI_SAS_QUEUE_SLOTS; slot++) {
-+		ret = hisi_sas_cq_show_slot(s, slot, cq);
++	for (i = 0; i < max_command_entries; i++, debugfs_iost++) {
++		ret = hisi_sas_show_row_64(s, i, sizeof(*debugfs_iost),
++					   (u64 *)debugfs_iost);
 +		if (ret)
 +			return ret;
 +	}
++
 +	return 0;
 +}
 +
-+static int hisi_sas_debugfs_cq_open(struct inode *inode, struct file *filp)
++static int hisi_sas_debugfs_iost_open(struct inode *inode, struct file *filp)
 +{
-+	return single_open(filp, hisi_sas_debugfs_cq_show, inode->i_private);
++	return single_open(filp, hisi_sas_debugfs_iost_show, inode->i_private);
 +}
 +
-+static const struct file_operations hisi_sas_debugfs_cq_fops = {
-+	.open = hisi_sas_debugfs_cq_open,
++static const struct file_operations hisi_sas_debugfs_iost_fops = {
++	.open = hisi_sas_debugfs_iost_open,
 +	.read = seq_read,
 +	.llseek = seq_lseek,
 +	.release = single_release,
@@ -88,30 +87,13 @@ index fbd9b4a..ce0a9dc 100644
  static void hisi_sas_debugfs_create_files(struct hisi_hba *hisi_hba)
  {
  	struct dentry *dump_dentry;
- 	struct dentry *dentry;
- 	char name[256];
- 	int p;
-+	int c;
- 
- 	/* Create dump dir inside device dir */
- 	dump_dentry = debugfs_create_dir("dump", hisi_hba->debugfs_dir);
-@@ -2661,6 +2717,20 @@ static void hisi_sas_debugfs_create_files(struct hisi_hba *hisi_hba)
+@@ -2783,6 +2830,10 @@ static void hisi_sas_debugfs_create_files(struct hisi_hba *hisi_hba)
  			goto fail;
  	}
  
-+	/* Create CQ dir and files */
-+	dentry = debugfs_create_dir("cq", dump_dentry);
-+	if (!dentry)
++	if (!debugfs_create_file("iost", 0400, dump_dentry, hisi_hba,
++				 &hisi_sas_debugfs_iost_fops))
 +		goto fail;
-+
-+	for (c = 0; c < hisi_hba->queue_count; c++) {
-+		snprintf(name, 256, "%d", c);
-+
-+		if (!debugfs_create_file(name, 0400, dentry,
-+					 &hisi_hba->cq[c],
-+					 &hisi_sas_debugfs_cq_fops))
-+			goto fail;
-+	}
 +
  	return;
  fail:
