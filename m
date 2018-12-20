@@ -1,18 +1,19 @@
 From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: Re: [PATCH 35/41] scsi: ppa: mark expected switch fall-through
-Date: Wed, 19 Dec 2018 18:07:48 -0600
-Message-ID: <a83c27d7-28e6-faef-9730-8276aa57b499@embeddedor.com>
+Subject: Re: [PATCH 36/41] scsi: qla4xxx: ql4_os: mark expected switch
+ fall-through
+Date: Wed, 19 Dec 2018 18:07:56 -0600
+Message-ID: <d1b5f382-cdf6-8cba-c5a7-f695c65b7cd7@embeddedor.com>
 References: <cover.1543374820.git.gustavo@embeddedor.com>
- <ac6de237bf4ee2d748eed7bbc3b2582f54650c0a.1543374820.git.gustavo@embeddedor.com>
+ <a118ae0eeeb3cdcd4846bc1031ea89ca62af1e00.1543374820.git.gustavo@embeddedor.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <ac6de237bf4ee2d748eed7bbc3b2582f54650c0a.1543374820.git.gustavo@embeddedor.com>
+In-Reply-To: <a118ae0eeeb3cdcd4846bc1031ea89ca62af1e00.1543374820.git.gustavo@embeddedor.com>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+To: QLogic-Storage-Upstream@qlogic.com
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 Hi,
@@ -29,22 +30,26 @@ On 11/27/18 10:33 PM, Gustavo A. R. Silva wrote:
 > In preparation to enabling -Wimplicit-fallthrough, mark switch cases
 > where we are expecting to fall through.
 > 
-> Addresses-Coverity-ID: 114988 ("Missing break in switch")
+> Notice that, in this particular case, I replaced "allow fall-through"
+> with a "fall through" annotation, which is what GCC is expecting to
+> find.
+> 
 > Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 > ---
->   drivers/scsi/ppa.c | 1 +
->   1 file changed, 1 insertion(+)
+>   drivers/scsi/qla4xxx/ql4_os.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/drivers/scsi/ppa.c b/drivers/scsi/ppa.c
-> index ee86a0c62dbf..d29999ba5458 100644
-> --- a/drivers/scsi/ppa.c
-> +++ b/drivers/scsi/ppa.c
-> @@ -717,6 +717,7 @@ static int ppa_engine(ppa_struct *dev, struct scsi_cmnd *cmd)
+> diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+> index 1c702cd22359..7fd3491ea2d9 100644
+> --- a/drivers/scsi/qla4xxx/ql4_os.c
+> +++ b/drivers/scsi/qla4xxx/ql4_os.c
+> @@ -2876,7 +2876,7 @@ static int qla4xxx_session_get_param(struct iscsi_cls_session *cls_sess,
+>   						chap_tbl.secret_len);
 >   			}
->   			cmd->SCp.phase++;
 >   		}
+> -		/* allow fall-through */
 > +		/* fall through */
->   
->   	case 2:		/* Phase 2 - We are now talking to the scsi bus */
->   		if (!ppa_select(dev, scmd_id(cmd))) {
+>   	default:
+>   		return iscsi_session_get_param(cls_sess, param, buf);
+>   	}
 > 
