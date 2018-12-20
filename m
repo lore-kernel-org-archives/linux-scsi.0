@@ -1,38 +1,27 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: qla2xxx: deadlock by configfs_depend_item
-Date: Wed, 19 Dec 2018 21:27:23 -0500
-Message-ID: <yq1tvj9exv8.fsf@oracle.com>
-References: <1544140125-3060-1-git-send-email-glagolig@gmail.com>
+Subject: Re: [PATCH 1/1] scsi: storvsc: Always use blk-mq
+Date: Wed, 19 Dec 2018 21:51:04 -0500
+Message-ID: <yq14lb8gbc7.fsf@oracle.com>
+References: <1545243282-10573-1-git-send-email-mikelley@microsoft.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1544140125-3060-1-git-send-email-glagolig@gmail.com> (Anatoliy
-        Glagolev's message of "Thu, 6 Dec 2018 16:48:45 -0700")
+In-Reply-To: <1545243282-10573-1-git-send-email-mikelley@microsoft.com>
+        (Michael Kelley's message of "Wed, 19 Dec 2018 18:40:49 +0000")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Anatoliy Glagolev <glagolig@gmail.com>
-Cc: aglagolev@purestorage.com, adailey@purestorage.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, hch@lst.de, qla2xxx-upstream@qlogic.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Michael Kelley <mikelley@microsoft.com>
+Cc: KY Srinivasan <kys@microsoft.com>, Stephen Hemminger <sthemmin@microsoft.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, Long Li <longli@microsoft.com>, "James.Bottomley@hansenpartnership.com" <James.Bottomley@hansenpartnership.com>, "emilne@redhat.com" <emilne@redhat.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
 
-Anatoliy,
+Michael,
 
-> The intent of invoking configfs_depend_item in commit 7474f52a82d51
-> ("tcm_qla2xxx: Perform configfs depend/undepend for base_tpg") was to
-> prevent a physical Fibre Channel port removal when virtual (NPIV)
-> ports announced through that physical port are active.  The change
-> does not work as expected: it makes enabled physical port dependent on
-> target configfs subsystem (the port's parent), something the configfs
-> guarantees anyway.
->
-> Besides, scheduling work in a worker thread and waiting for the work's
-> completion is not really a valid workaround for the requirement not to
-> call configfs_depend_item from a configfs callback: the call
-> occasionally deadlocks.
->
-> Thus, removing configfs_depend_item calls does not break anything and
-> fixes the deadlock problem.
+> With high IOPS storage being increasingly prevalent for guests
+> on Hyper-V and in Azure, make blk-mq the default so that the
+> full performance of the storage can be realized without having
+> to tweak other configuration settings.
 
-Applied to 4.21/scsi-queue, thank you!
+The legacy I/O path will be gone in 4.21 so this patch isn't needed.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
