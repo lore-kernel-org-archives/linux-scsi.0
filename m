@@ -1,69 +1,38 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: remove exofs, the T10 OSD code and block/scsi bidi support V3
-Date: Wed, 19 Dec 2018 21:01:53 -0500
-Message-ID: <0e8b8d45-cfeb-ba9d-c92f-953cabede1ee@interlog.com>
-References: <20181111133211.13926-1-hch@lst.de>
- <4f4b6aff-6726-c500-e3e4-f8b73d641851@electrozaur.com>
- <20181219144347.GB23410@lst.de>
-Reply-To: dgilbert@interlog.com
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] scsi: qla2xxx: deadlock by configfs_depend_item
+Date: Wed, 19 Dec 2018 21:27:23 -0500
+Message-ID: <yq1tvj9exv8.fsf@oracle.com>
+References: <1544140125-3060-1-git-send-email-glagolig@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20181219144347.GB23410@lst.de>
-Content-Language: en-CA
+In-Reply-To: <1544140125-3060-1-git-send-email-glagolig@gmail.com> (Anatoliy
+        Glagolev's message of "Thu, 6 Dec 2018 16:48:45 -0700")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, Boaz Harrosh <ooo@electrozaur.com>
-Cc: axboe@kernel.dk, martin.petersen@oracle.com, Johannes Thumshirn <jthumshirn@suse.de>, Benjamin Block <bblock@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Anatoliy Glagolev <glagolig@gmail.com>
+Cc: aglagolev@purestorage.com, adailey@purestorage.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, hch@lst.de, qla2xxx-upstream@qlogic.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 2018-12-19 9:43 a.m., Christoph Hellwig wrote:
-> On Mon, Nov 26, 2018 at 07:11:10PM +0200, Boaz Harrosh wrote:
->> On 11/11/18 15:32, Christoph Hellwig wrote:
->>> The only real user of the T10 OSD protocol, the pNFS object layout
->>> driver never went to the point of having shipping products, and we
->>> removed it 1.5 years ago.  Exofs is just a simple example without
->>> real life users.
->>>
->>
->> You have failed to say what is your motivation for this patchset? What
->> is it you are trying to fix/improve.
-> 
-> Drop basically unused support, which allows us to
-> 
->   1) reduce the size of every kernel with block layer support, and
->      even more for every kernel with scsi support
 
-By proposing the removal of bidi support from the block layer, it isn't
-just the SCSI subsystem that will be impacted. Those NVMe documents
-that you referred me to earlier in the year, in the command tables
-in 1.3c and earlier you have noticed the 2 bit direction field and
-what 11b means? Even if there aren't any bidi NVMe commands *** yet,
-the fact that NVMe's 64 byte command format has provision for 4
-(not 2) independent data transfers (data + meta, for each direction).
-Surely NVMe will sooner or later take advantage of those ... a
-command like READ GATHERED comes to mind.
+Anatoliy,
 
->   2) reduce the size of the critical struct request structure by
->      128 bits, thus reducing the memory used by every blk-mq driver
->      significantly, never mind the cache effects
+> The intent of invoking configfs_depend_item in commit 7474f52a82d51
+> ("tcm_qla2xxx: Perform configfs depend/undepend for base_tpg") was to
+> prevent a physical Fibre Channel port removal when virtual (NPIV)
+> ports announced through that physical port are active.  The change
+> does not work as expected: it makes enabled physical port dependent on
+> target configfs subsystem (the port's parent), something the configfs
+> guarantees anyway.
+>
+> Besides, scheduling work in a worker thread and waiting for the work's
+> completion is not really a valid workaround for the requirement not to
+> call configfs_depend_item from a configfs callback: the call
+> occasionally deadlocks.
+>
+> Thus, removing configfs_depend_item calls does not break anything and
+> fixes the deadlock problem.
 
-Hmm, one pointer (that is null in the non-bidi case) should be enough,
-that's 64 or 32 bits.
+Applied to 4.21/scsi-queue, thank you!
 
->   3) stop having the maintainance overhead for this code in the
->      block layer, which has been rather painful at times
-
-You won't get any sympathy from me :-) The sg driver is trying to
-inject _SCSI_ commands into the SCSI mid-level for onward processing
-by SCSI LLDs. So WTF does it have to deal with the block layer.
-
-
-While on the subject of bidi, the order of transfers: is the data-out
-(to the target) always before the data-in or is it the target device
-that decides (depending on the semantics of the command) who is first?
-
-Doug Gilbert
-
-  *** there could already be vendor specific bidi NVMe commands out
-     there (ditto for SCSI)
+-- 
+Martin K. Petersen	Oracle Linux Engineering
