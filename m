@@ -1,17 +1,18 @@
 From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: Re: [PATCH 37/41] scsi: st: mark expected switch fall-throughs
-Date: Wed, 19 Dec 2018 18:08:07 -0600
-Message-ID: <99e896e6-b54b-540f-9c44-52dede4f2265@embeddedor.com>
+Subject: Re: [PATCH 39/41] scsi: sym53c8xx_2: sym_nvram: Mark expected switch
+ fall-through
+Date: Wed, 19 Dec 2018 18:08:28 -0600
+Message-ID: <c2ae15f3-63a6-26df-179f-99f76c827ef8@embeddedor.com>
 References: <cover.1543374820.git.gustavo@embeddedor.com>
- <e0f4aa25970996146427e633bbf92be3eeee2e35.1543374820.git.gustavo@embeddedor.com>
+ <5e410e73a46bb5722617d4060bd5d92ca5be34bd.1543374820.git.gustavo@embeddedor.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <e0f4aa25970996146427e633bbf92be3eeee2e35.1543374820.git.gustavo@embeddedor.com>
+In-Reply-To: <5e410e73a46bb5722617d4060bd5d92ca5be34bd.1543374820.git.gustavo@embeddedor.com>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: =?UTF-8?Q?Kai_M=c3=a4kisara?= <Kai.Makisara@kolumbus.fi>
+To: Matthew Wilcox <willy@infradead.org>
 Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
@@ -25,50 +26,25 @@ Thanks
 --
 Gustavo
 
-On 11/27/18 10:33 PM, Gustavo A. R. Silva wrote:
+On 11/27/18 10:34 PM, Gustavo A. R. Silva wrote:
 > In preparation to enabling -Wimplicit-fallthrough, mark switch cases
 > where we are expecting to fall through.
 > 
-> Addresses-Coverity-ID: 114994 ("Missing break in switch")
-> Addresses-Coverity-ID: 114995 ("Missing break in switch")
 > Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 > ---
->   drivers/scsi/st.c | 4 ++++
->   1 file changed, 4 insertions(+)
+>   drivers/scsi/sym53c8xx_2/sym_nvram.c | 1 +
+>   1 file changed, 1 insertion(+)
 > 
-> diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-> index 7ff22d3f03e3..7c7a742a5ef7 100644
-> --- a/drivers/scsi/st.c
-> +++ b/drivers/scsi/st.c
-> @@ -337,12 +337,14 @@ static void st_analyze_sense(struct st_request *SRpnt, struct st_cmdstatus *s)
->   		switch (sense[0] & 0x7f) {
->   		case 0x71:
->   			s->deferred = 1;
-> +			/* fall through */
->   		case 0x70:
->   			s->fixed_format = 1;
->   			s->flags = sense[2] & 0xe0;
+> diff --git a/drivers/scsi/sym53c8xx_2/sym_nvram.c b/drivers/scsi/sym53c8xx_2/sym_nvram.c
+> index 5662fbb3ff60..0d37b4f07b5e 100644
+> --- a/drivers/scsi/sym53c8xx_2/sym_nvram.c
+> +++ b/drivers/scsi/sym53c8xx_2/sym_nvram.c
+> @@ -708,6 +708,7 @@ static int sym_read_Tekram_nvram (struct sym_device *np, Tekram_nvram *nvram)
+>   					  data, len);
+>   		if (!x)
 >   			break;
->   		case 0x73:
->   			s->deferred = 1;
-> +			/* fall through */
->   		case 0x72:
->   			s->fixed_format = 0;
->   			ucp = scsi_sense_desc_find(sense, SCSI_SENSE_BUFFERSIZE, 4);
-> @@ -2721,6 +2723,7 @@ static int st_int_ioctl(struct scsi_tape *STp, unsigned int cmd_in, unsigned lon
->   	switch (cmd_in) {
->   	case MTFSFM:
->   		chg_eof = 0;	/* Changed from the FSF after this */
 > +		/* fall through */
->   	case MTFSF:
->   		cmd[0] = SPACE;
->   		cmd[1] = 0x01;	/* Space FileMarks */
-> @@ -2735,6 +2738,7 @@ static int st_int_ioctl(struct scsi_tape *STp, unsigned int cmd_in, unsigned lon
+>   	default:
+>   		x = sym_read_T93C46_nvram(np, nvram);
 >   		break;
->   	case MTBSFM:
->   		chg_eof = 0;	/* Changed from the FSF after this */
-> +		/* fall through */
->   	case MTBSF:
->   		cmd[0] = SPACE;
->   		cmd[1] = 0x01;	/* Space FileMarks */
 > 
