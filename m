@@ -1,18 +1,17 @@
 From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: Re: [PATCH 31/41] scsi: mpt3sas: mpt3sas_scsih: Mark expected switch
- fall-through
-Date: Wed, 19 Dec 2018 18:07:00 -0600
-Message-ID: <4bce4543-ae65-8dfa-cbe6-405d78003129@embeddedor.com>
+Subject: Re: [PATCH 32/41] scsi: myrb: Mark expected switch fall-throughs
+Date: Wed, 19 Dec 2018 18:07:15 -0600
+Message-ID: <025dd9a3-e2a0-cb21-8458-f671a673f634@embeddedor.com>
 References: <cover.1543374820.git.gustavo@embeddedor.com>
- <892c3e5e27213c1c2f3da128afe958429bbef672.1543374820.git.gustavo@embeddedor.com>
+ <15cf75b544d6b2eae77ba98cd201620b44abec36.1543374820.git.gustavo@embeddedor.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <892c3e5e27213c1c2f3da128afe958429bbef672.1543374820.git.gustavo@embeddedor.com>
+In-Reply-To: <15cf75b544d6b2eae77ba98cd201620b44abec36.1543374820.git.gustavo@embeddedor.com>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, MPT-FusionLinux.pdl@broadcom.com
+To: Hannes Reinecke <hare@kernel.org>
 Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
@@ -30,22 +29,40 @@ On 11/27/18 10:32 PM, Gustavo A. R. Silva wrote:
 > In preparation to enabling -Wimplicit-fallthrough, mark switch cases
 > where we are expecting to fall through.
 > 
-> Addresses-Coverity-ID: 1475400 ("Missing break in switch")
+> Addresses-Coverity-ID: 1465234 ("Missing break in switch")
+> Addresses-Coverity-ID: 1465238 ("Missing break in switch")
+> Addresses-Coverity-ID: 1465242 ("Missing break in switch")
 > Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 > ---
->   drivers/scsi/mpt3sas/mpt3sas_scsih.c | 1 +
->   1 file changed, 1 insertion(+)
+>   drivers/scsi/myrb.c | 3 +++
+>   1 file changed, 3 insertions(+)
 > 
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> index 5b9806d0719e..920b80ce4748 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> @@ -10370,6 +10370,7 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
->   		case MPI26_MFGPAGE_DEVID_CFG_SEC_3916:
->   			dev_info(&pdev->dev,
->   			    "HBA is in Configurable Secure mode\n");
-> +			/* fall through */
->   		case MPI26_MFGPAGE_DEVID_SAS3508:
->   		case MPI26_MFGPAGE_DEVID_SAS3508_1:
->   		case MPI26_MFGPAGE_DEVID_SAS3408:
+> diff --git a/drivers/scsi/myrb.c b/drivers/scsi/myrb.c
+> index 0642f2d0a3bb..539ac8ce4fcd 100644
+> --- a/drivers/scsi/myrb.c
+> +++ b/drivers/scsi/myrb.c
+> @@ -1528,6 +1528,7 @@ static int myrb_ldev_queuecommand(struct Scsi_Host *shost,
+>   			scmd->scsi_done(scmd);
+>   			return 0;
+>   		}
+> +		/* fall through */
+>   	case WRITE_6:
+>   		lba = (((scmd->cmnd[1] & 0x1F) << 16) |
+>   		       (scmd->cmnd[2] << 8) |
+> @@ -1544,6 +1545,7 @@ static int myrb_ldev_queuecommand(struct Scsi_Host *shost,
+>   			scmd->scsi_done(scmd);
+>   			return 0;
+>   		}
+> +		/* fall through */
+>   	case WRITE_10:
+>   	case VERIFY:		/* 0x2F */
+>   	case WRITE_VERIFY:	/* 0x2E */
+> @@ -1560,6 +1562,7 @@ static int myrb_ldev_queuecommand(struct Scsi_Host *shost,
+>   			scmd->scsi_done(scmd);
+>   			return 0;
+>   		}
+> +		/* fall through */
+>   	case WRITE_12:
+>   	case VERIFY_12: /* 0xAF */
+>   	case WRITE_VERIFY_12:	/* 0xAE */
 > 
