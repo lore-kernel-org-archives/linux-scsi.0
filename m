@@ -1,44 +1,54 @@
-From: Colin King <colin.king@canonical.com>
-Subject: [PATCH][next] scsi: lpfc: replace snprintf with strscpy
-Date: Thu, 20 Dec 2018 17:08:05 +0000
-Message-ID: <20181220170805.17802-1-colin.king@canonical.com>
+From: Rob Herring <robh@kernel.org>
+Subject: Re: [PATCH 1/3] dt-bindings: ufs: Add HI3670 UFS controller binding
+Date: Thu, 20 Dec 2018 11:12:44 -0600
+Message-ID: <20181220171244.GA22403@bogus>
+References: <20181207175151.8969-1-manivannan.sadhasivam@linaro.org>
+ <20181207175151.8969-2-manivannan.sadhasivam@linaro.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20181207175151.8969-2-manivannan.sadhasivam@linaro.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Cc: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, liwei213@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org, john.stultz@linaro.org, amit.kucheria@linaro.org, guodong.xu@linaro.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Colin Ian King <colin.king@canonical.com>
+On Fri, Dec 07, 2018 at 11:21:49PM +0530, Manivannan Sadhasivam wrote:
+> Add devicetree binding for HI3670 UFS controller. HI3760 SoC is very
+> similar to HI3660 SoC with almost same IPs. Only major difference interms
 
-Using snprintf without a format specifier is potentially risky if the
-string phba->ModelDesc contains format specifiers. Replace this with
-the safer and more efficient strscpy.
+s/interms/in terms/
 
-Cleans up clang warning:
-drivers/scsi/lpfc/lpfc_scsi.c:4543:31: warning: format string is not a
-string literal (potentially insecure) [-Wformat-security]
+> of UFS is the PHY. HI3670 has 10nm PHY.
+> 
+> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+> ---
+>  Documentation/devicetree/bindings/ufs/ufs-hisi.txt | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/ufs/ufs-hisi.txt b/Documentation/devicetree/bindings/ufs/ufs-hisi.txt
+> index a48c44817367..a327c1e24365 100644
+> --- a/Documentation/devicetree/bindings/ufs/ufs-hisi.txt
+> +++ b/Documentation/devicetree/bindings/ufs/ufs-hisi.txt
+> @@ -6,7 +6,9 @@ Each UFS Host Controller should have its own node.
+>  Required properties:
+>  - compatible        : compatible list, contains one of the following -
+>  					"hisilicon,hi3660-ufs", "jedec,ufs-1.1" for hisi ufs
+> -					host controller present on Hi36xx chipset.
+> +					host controller present on Hi3660 chipset.
+> +					"hisilicon,hi3670-ufs", "jedec,ufs-2.1" for hisi ufs
+> +					host controller present on Hi3670 chipset.
 
-Fixes: 5021267af132 ("scsi: lpfc: Adding ability to reset chip via pci bus reset")
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/scsi/lpfc/lpfc_scsi.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+>From the description, sounds like having "hisilicon,hi3660-ufs" as a 
+fallback would be appropriate?
 
-diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-index b4f1a840b3b4..7b0cce3b42ed 100644
---- a/drivers/scsi/lpfc/lpfc_scsi.c
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c
-@@ -4540,7 +4540,7 @@ lpfc_info(struct Scsi_Host *host)
- 	memset(lpfcinfobuf, 0, sizeof(lpfcinfobuf));
- 	if (phba && phba->pcidev){
- 		/* Model Description */
--		scnprintf(tmp, sizeof(tmp), phba->ModelDesc);
-+		strscpy(tmp, phba->ModelDesc, sizeof(tmp));
- 		if (strlcat(lpfcinfobuf, tmp, sizeof(lpfcinfobuf)) >=
- 		    sizeof(lpfcinfobuf))
- 			goto buffer_done;
--- 
-2.19.1
+>  - reg               : should contain UFS register address space & UFS SYS CTRL register address,
+>  - interrupt-parent  : interrupt device
+
+Don't document interrupt-parent. It is implied.
+
+>  - interrupts        : interrupt number
+> -- 
+> 2.17.1
+> 
