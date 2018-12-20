@@ -1,15 +1,15 @@
 From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: Re: [PATCH 39/41] scsi: sym53c8xx_2: sym_nvram: Mark expected switch
- fall-through
-Date: Wed, 19 Dec 2018 18:08:28 -0600
-Message-ID: <c2ae15f3-63a6-26df-179f-99f76c827ef8@embeddedor.com>
+Subject: Re: [PATCH 38/41] scsi: sym53c8xx_2: sym_hipd: mark expected switch
+ fall-throughs
+Date: Wed, 19 Dec 2018 18:08:18 -0600
+Message-ID: <7ecbfc9c-4c03-c441-cf9b-c5a44d5a9ea5@embeddedor.com>
 References: <cover.1543374820.git.gustavo@embeddedor.com>
- <5e410e73a46bb5722617d4060bd5d92ca5be34bd.1543374820.git.gustavo@embeddedor.com>
+ <81f959a632339d224fd0dd894746d1081bf249f3.1543374820.git.gustavo@embeddedor.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <5e410e73a46bb5722617d4060bd5d92ca5be34bd.1543374820.git.gustavo@embeddedor.com>
+In-Reply-To: <81f959a632339d224fd0dd894746d1081bf249f3.1543374820.git.gustavo@embeddedor.com>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 To: Matthew Wilcox <willy@infradead.org>
@@ -30,21 +30,30 @@ On 11/27/18 10:34 PM, Gustavo A. R. Silva wrote:
 > In preparation to enabling -Wimplicit-fallthrough, mark switch cases
 > where we are expecting to fall through.
 > 
+> Addresses-Coverity-ID: 114996 ("Missing break in switch")
 > Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 > ---
->   drivers/scsi/sym53c8xx_2/sym_nvram.c | 1 +
->   1 file changed, 1 insertion(+)
+>   drivers/scsi/sym53c8xx_2/sym_hipd.c | 2 ++
+>   1 file changed, 2 insertions(+)
 > 
-> diff --git a/drivers/scsi/sym53c8xx_2/sym_nvram.c b/drivers/scsi/sym53c8xx_2/sym_nvram.c
-> index 5662fbb3ff60..0d37b4f07b5e 100644
-> --- a/drivers/scsi/sym53c8xx_2/sym_nvram.c
-> +++ b/drivers/scsi/sym53c8xx_2/sym_nvram.c
-> @@ -708,6 +708,7 @@ static int sym_read_Tekram_nvram (struct sym_device *np, Tekram_nvram *nvram)
->   					  data, len);
->   		if (!x)
->   			break;
+> diff --git a/drivers/scsi/sym53c8xx_2/sym_hipd.c b/drivers/scsi/sym53c8xx_2/sym_hipd.c
+> index 0a2a54517b15..054fb0599263 100644
+> --- a/drivers/scsi/sym53c8xx_2/sym_hipd.c
+> +++ b/drivers/scsi/sym53c8xx_2/sym_hipd.c
+> @@ -3072,6 +3072,7 @@ static void sym_sir_bad_scsi_status(struct sym_hcb *np, int num, struct sym_ccb
+>   			sym_print_addr(cp->cmd, "%s\n",
+>   			        s_status == S_BUSY ? "BUSY" : "QUEUE FULL\n");
+>   		}
 > +		/* fall through */
->   	default:
->   		x = sym_read_T93C46_nvram(np, nvram);
+>   	default:	/* S_INT, S_INT_COND_MET, S_CONFLICT */
+>   		sym_complete_error (np, cp);
 >   		break;
+> @@ -4632,6 +4633,7 @@ static void sym_int_sir(struct sym_hcb *np)
+>   	 *  Negotiation failed.
+>   	 *  Target does not want answer message.
+>   	 */
+> +	/* fall through */
+>   	case SIR_NEGO_PROTO:
+>   		sym_nego_default(np, tp, cp);
+>   		goto out;
 > 
