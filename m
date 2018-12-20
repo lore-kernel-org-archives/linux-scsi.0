@@ -1,35 +1,37 @@
 From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: Re: [PATCH 31/41] scsi: mpt3sas: mpt3sas_scsih: Mark expected switch
+Subject: [PATCH] scsi: mpt3sas: mpt3sas_scsih: Mark expected switch
  fall-through
-Date: Thu, 20 Dec 2018 09:35:44 -0600
-Message-ID: <49711a00-c9f5-9da7-3c05-816bb6901378@embeddedor.com>
-References: <cover.1543374820.git.gustavo@embeddedor.com>
- <892c3e5e27213c1c2f3da128afe958429bbef672.1543374820.git.gustavo@embeddedor.com>
- <4bce4543-ae65-8dfa-cbe6-405d78003129@embeddedor.com>
- <CA+RiK64O=zLKdbF4KRXYGD23qi3Ajv5S2oPoKuSbksbMwOHu_A@mail.gmail.com>
+Date: Thu, 20 Dec 2018 09:43:53 -0600
+Message-ID: <20181220154353.GA17873@embeddedor>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CA+RiK64O=zLKdbF4KRXYGD23qi3Ajv5S2oPoKuSbksbMwOHu_A@mail.gmail.com>
-Content-Language: en-US
+Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
-To: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
-Cc: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, PDL-MPT-FUSIONLINUX <MPT-FusionLinux.pdl@broadcom.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+To: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Gustavo A. R. Silva" <gustavo@embeddedor.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Suganath,
+In preparation to enabling -Wimplicit-fallthrough, mark switch cases
+where we are expecting to fall through.
 
-On 12/19/18 10:19 PM, Suganath Prabu Subramani wrote:
-> Hi Gustavo,
-> 
-> This patch may not apply smoothly over 4.21/scsi-queue.
-> Our previous patch for Aero had some changes in this switch case.
-> Can you resend this patch with latest code base ?
-> 
+Addresses-Coverity-ID: 1475400 ("Missing break in switch")
+Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+---
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Okay. I'll send a separate patch.
-
-Thanks for the feedback.
---
-Gustavo
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 22df12698d43..6be39dc27103 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -10377,6 +10377,7 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		case MPI26_MFGPAGE_DEVID_CFG_SEC_3916:
+ 			dev_info(&pdev->dev,
+ 			    "HBA is in Configurable Secure mode\n");
++			/* fall through */
+ 		case MPI26_MFGPAGE_DEVID_HARD_SEC_3816:
+ 		case MPI26_MFGPAGE_DEVID_HARD_SEC_3916:
+ 			ioc->is_aero_ioc = ioc->is_gen35_ioc = 1;
+-- 
+2.20.1
