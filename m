@@ -1,69 +1,129 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: remove exofs, the T10 OSD code and block/scsi bidi support V3
-Date: Thu, 20 Dec 2018 08:26:56 +0100
-Message-ID: <20181220072656.GA10011@lst.de>
-References: <20181111133211.13926-1-hch@lst.de> <4f4b6aff-6726-c500-e3e4-f8b73d641851@electrozaur.com> <20181219144347.GB23410@lst.de> <0e8b8d45-cfeb-ba9d-c92f-953cabede1ee@interlog.com>
+From: Sumit Saxena <sumit.saxena@broadcom.com>
+Subject: Re: [RESEND PATCH v2] megaraid: fix out-of-bound array accesses
+Date: Thu, 20 Dec 2018 13:25:12 +0530
+Message-ID: <CAL2rwxrBn6bn0-5GR8nbPys7tS0+x8CzVYCSf_yPFEnvktTktw@mail.gmail.com>
+References: <20181206212252.36732-1-cai@lca.pw> <20181213132727.57058-1-cai@lca.pw>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <0e8b8d45-cfeb-ba9d-c92f-953cabede1ee@interlog.com>
+In-Reply-To: <20181213132727.57058-1-cai@lca.pw>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Douglas Gilbert <dgilbert@interlog.com>
-Cc: Christoph Hellwig <hch@lst.de>, Boaz Harrosh <ooo@electrozaur.com>, axboe@kernel.dk, martin.petersen@oracle.com, Johannes Thumshirn <jthumshirn@suse.de>, Benjamin Block <bblock@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
+To: cai@lca.pw
+Cc: akpm@linux-foundation.org, Kashyap Desai <kashyap.desai@broadcom.com>, Shivasharan Srikanteshwara <shivasharan.srikanteshwara@broadcom.com>, "James E. J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Tomas Henzl <thenzl@redhat.com>, Christoph Hellwig <hch@lst.de>, "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@broadcom.com>, Linux SCSI List <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Dec 19, 2018 at 09:01:53PM -0500, Douglas Gilbert wrote:
->>   1) reduce the size of every kernel with block layer support, and
->>      even more for every kernel with scsi support
+On Thu, Dec 13, 2018 at 6:57 PM Qian Cai <cai@lca.pw> wrote:
 >
-> By proposing the removal of bidi support from the block layer, it isn't
-> just the SCSI subsystem that will be impacted. Those NVMe documents
-> that you referred me to earlier in the year, in the command tables
-> in 1.3c and earlier you have noticed the 2 bit direction field and
-> what 11b means? Even if there aren't any bidi NVMe commands *** yet,
-> the fact that NVMe's 64 byte command format has provision for 4
-> (not 2) independent data transfers (data + meta, for each direction).
-> Surely NVMe will sooner or later take advantage of those ... a
-> command like READ GATHERED comes to mind.
-
-NVMe on the other hand does have support for separate read and write
-buffers as in the current SCSI bidi support, as it encodes the data
-transfers in that SQE.  So IFF NVMe does bidi commands it would have
-to use a single buffer for data in/out, which can be easily done
-in the block layer without the current bidi support that chains
-two struct request instances for data in and data out.
-
->>   2) reduce the size of the critical struct request structure by
->>      128 bits, thus reducing the memory used by every blk-mq driver
->>      significantly, never mind the cache effects
+> UBSAN reported those with MegaRAID SAS-3 3108,
 >
-> Hmm, one pointer (that is null in the non-bidi case) should be enough,
-> that's 64 or 32 bits.
-
-Due to the way we use request chaining we need two fields at the
-moment.  ->special and ->next_rq.  If we'd refactor the whole thing
-for the basically non-existent user we could indeed probably get it
-down to a single pointer. 
-
-> While on the subject of bidi, the order of transfers: is the data-out
-> (to the target) always before the data-in or is it the target device
-> that decides (depending on the semantics of the command) who is first?
-
-The way I read SAM data needs to be transferred to the device for
-processing first, then the processing occurs and then it is transferred
-out, so the order seems fixed.
-
+> [   77.467308] UBSAN: Undefined behaviour in drivers/scsi/megaraid/megaraid_sas_fp.c:117:32
+> [   77.475402] index 255 is out of range for type 'MR_LD_SPAN_MAP [1]'
+> [   77.481677] CPU: 16 PID: 333 Comm: kworker/16:1 Not tainted 4.20.0-rc5+ #1
+> [   77.488556] Hardware name: Huawei TaiShan 2280 /BC11SPCD, BIOS 1.50 06/01/2018
+> [   77.495791] Workqueue: events work_for_cpu_fn
+> [   77.500154] Call trace:
+> [   77.502610]  dump_backtrace+0x0/0x2c8
+> [   77.506279]  show_stack+0x24/0x30
+> [   77.509604]  dump_stack+0x118/0x19c
+> [   77.513098]  ubsan_epilogue+0x14/0x60
+> [   77.516765]  __ubsan_handle_out_of_bounds+0xfc/0x13c
+> [   77.521767]  mr_update_load_balance_params+0x150/0x158 [megaraid_sas]
+> [   77.528230]  MR_ValidateMapInfo+0x2cc/0x10d0 [megaraid_sas]
+> [   77.533825]  megasas_get_map_info+0x244/0x2f0 [megaraid_sas]
+> [   77.539505]  megasas_init_adapter_fusion+0x9b0/0xf48 [megaraid_sas]
+> [   77.545794]  megasas_init_fw+0x1ab4/0x3518 [megaraid_sas]
+> [   77.551212]  megasas_probe_one+0x2c4/0xbe0 [megaraid_sas]
+> [   77.556614]  local_pci_probe+0x7c/0xf0
+> [   77.560365]  work_for_cpu_fn+0x34/0x50
+> [   77.564118]  process_one_work+0x61c/0xf08
+> [   77.568129]  worker_thread+0x534/0xa70
+> [   77.571882]  kthread+0x1c8/0x1d0
+> [   77.575114]  ret_from_fork+0x10/0x1c
 >
-> Doug Gilbert
+> [   89.240332] UBSAN: Undefined behaviour in drivers/scsi/megaraid/megaraid_sas_fp.c:117:32
+> [   89.248426] index 255 is out of range for type 'MR_LD_SPAN_MAP [1]'
+> [   89.254700] CPU: 16 PID: 95 Comm: kworker/u130:0 Not tainted 4.20.0-rc5+ #1
+> [   89.261665] Hardware name: Huawei TaiShan 2280 /BC11SPCD, BIOS 1.50 06/01/2018
+> [   89.268903] Workqueue: events_unbound async_run_entry_fn
+> [   89.274222] Call trace:
+> [   89.276680]  dump_backtrace+0x0/0x2c8
+> [   89.280348]  show_stack+0x24/0x30
+> [   89.283671]  dump_stack+0x118/0x19c
+> [   89.287167]  ubsan_epilogue+0x14/0x60
+> [   89.290835]  __ubsan_handle_out_of_bounds+0xfc/0x13c
+> [   89.295828]  MR_LdRaidGet+0x50/0x58 [megaraid_sas]
+> [   89.300638]  megasas_build_io_fusion+0xbb8/0xd90 [megaraid_sas]
+> [   89.306576]  megasas_build_and_issue_cmd_fusion+0x138/0x460 [megaraid_sas]
+> [   89.313468]  megasas_queue_command+0x398/0x3d0 [megaraid_sas]
+> [   89.319222]  scsi_dispatch_cmd+0x1dc/0x8a8
+> [   89.323321]  scsi_request_fn+0x8e8/0xdd0
+> [   89.327249]  __blk_run_queue+0xc4/0x158
+> [   89.331090]  blk_execute_rq_nowait+0xf4/0x158
+> [   89.335449]  blk_execute_rq+0xdc/0x158
+> [   89.339202]  __scsi_execute+0x130/0x258
+> [   89.343041]  scsi_probe_and_add_lun+0x2fc/0x1488
+> [   89.347661]  __scsi_scan_target+0x1cc/0x8c8
+> [   89.351848]  scsi_scan_channel.part.3+0x8c/0xc0
+> [   89.356382]  scsi_scan_host_selected+0x130/0x1f0
+> [   89.361002]  do_scsi_scan_host+0xd8/0xf0
+> [   89.364927]  do_scan_async+0x9c/0x320
+> [   89.368594]  async_run_entry_fn+0x138/0x420
+> [   89.372780]  process_one_work+0x61c/0xf08
+> [   89.376793]  worker_thread+0x13c/0xa70
+> [   89.380546]  kthread+0x1c8/0x1d0
+> [   89.383778]  ret_from_fork+0x10/0x1c
 >
->  *** there could already be vendor specific bidi NVMe commands out
->     there (ditto for SCSI)
+> This is because when populating Driver Map using firmware raid map, all
+> non-existing VDs set their ldTgtIdToLd to 0xff, so it can be skipped
+> later.
+>
+> From drivers/scsi/megaraid/megaraid_sas_base.c ,
+> memset(instance->ld_ids, 0xff, MEGASAS_MAX_LD_IDS);
+>
+> From drivers/scsi/megaraid/megaraid_sas_fp.c ,
+> /* For non existing VDs, iterate to next VD*/
+> if (ld >= (MAX_LOGICAL_DRIVES_EXT - 1))
+>         continue;
+>
+> However, there are a few places that failed to skip those non-existing
+> VDs due to off-by-one errors. Then, those 0xff leaked into
+> MR_LdRaidGet(0xff, map) and triggered the out-of-bound accesses.
+>
+> Fixes: 51087a8617fe (megaraid_sas : Extended VD support)
+> Signed-off-by: Qian Cai <cai@lca.pw>
 
-For NVMe they'd need to transfer data in and out in the same buffer
-to sort work, and even then only if we don't happen to be bounce
-buffering using swiotlb, or using a network transport.  Similarly for
-SCSI only iSCSI at the moment supports bidi CDBs, so we could have
-applications using vendor specific bidi commands on iSCSI, which
-is exactly what we're trying to find out, but it is a bit of a very
-niche use case.
+Acked-by: Sumit Saxena <sumit.saxena@broadcom.com>
+> ---
+>  drivers/scsi/megaraid/megaraid_sas_fp.c     | 2 +-
+>  drivers/scsi/megaraid/megaraid_sas_fusion.c | 2 +-
+>  2 files changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/scsi/megaraid/megaraid_sas_fp.c b/drivers/scsi/megaraid/megaraid_sas_fp.c
+> index 59ecbb3b53b5..a33628550425 100644
+> --- a/drivers/scsi/megaraid/megaraid_sas_fp.c
+> +++ b/drivers/scsi/megaraid/megaraid_sas_fp.c
+> @@ -1266,7 +1266,7 @@ void mr_update_load_balance_params(struct MR_DRV_RAID_MAP_ALL *drv_map,
+>
+>         for (ldCount = 0; ldCount < MAX_LOGICAL_DRIVES_EXT; ldCount++) {
+>                 ld = MR_TargetIdToLdGet(ldCount, drv_map);
+> -               if (ld >= MAX_LOGICAL_DRIVES_EXT) {
+> +               if (ld >= MAX_LOGICAL_DRIVES_EXT - 1) {
+>                         lbInfo[ldCount].loadBalanceFlag = 0;
+>                         continue;
+>                 }
+> diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> index f74b5ea24f0f..49eaa87608f6 100644
+> --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> @@ -2832,7 +2832,7 @@ static void megasas_build_ld_nonrw_fusion(struct megasas_instance *instance,
+>                 device_id < instance->fw_supported_vd_count)) {
+>
+>                 ld = MR_TargetIdToLdGet(device_id, local_map_ptr);
+> -               if (ld >= instance->fw_supported_vd_count)
+> +               if (ld >= instance->fw_supported_vd_count - 1)
+>                         fp_possible = 0;
+>                 else {
+>                         raid = MR_LdRaidGet(ld, local_map_ptr);
+> --
+> 2.17.2 (Apple Git-113)
+>
