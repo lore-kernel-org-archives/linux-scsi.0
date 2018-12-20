@@ -1,37 +1,35 @@
-From: Yanjiang Jin <yanjiang.jin@hxt-semitech.com>
-Subject: [PATCH] How to reproduce this issue
-Date: Thu, 20 Dec 2018 16:32:34 +0800
-Message-ID: <1545294755-29565-1-git-send-email-yanjiang.jin@hxt-semitech.com>
+From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Subject: Re: [PATCH 31/41] scsi: mpt3sas: mpt3sas_scsih: Mark expected switch
+ fall-through
+Date: Thu, 20 Dec 2018 09:35:44 -0600
+Message-ID: <49711a00-c9f5-9da7-3c05-816bb6901378@embeddedor.com>
+References: <cover.1543374820.git.gustavo@embeddedor.com>
+ <892c3e5e27213c1c2f3da128afe958429bbef672.1543374820.git.gustavo@embeddedor.com>
+ <4bce4543-ae65-8dfa-cbe6-405d78003129@embeddedor.com>
+ <CA+RiK64O=zLKdbF4KRXYGD23qi3Ajv5S2oPoKuSbksbMwOHu_A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CA+RiK64O=zLKdbF4KRXYGD23qi3Ajv5S2oPoKuSbksbMwOHu_A@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: don.brace@microsemi.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, yanjiang.jin@hxt-semitech.com
-Cc: yu.zheng@hxt-semitech.com, jinyanjiang@gmail.com, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
+Cc: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, PDL-MPT-FUSIONLINUX <MPT-FusionLinux.pdl@broadcom.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 List-Id: linux-scsi@vger.kernel.org
 
-This happens only in the following combinations:
+Hi Suganath,
 
-1. smartpqi is built as module, not built-in;
-2. We have a disk connected to smartpqi card;
-3. Both kexec's 1st and 2nd kernels use this disk as Rootfs' mount point.
+On 12/19/18 10:19 PM, Suganath Prabu Subramani wrote:
+> Hi Gustavo,
+> 
+> This patch may not apply smoothly over 4.21/scsi-queue.
+> Our previous patch for Aero had some changes in this switch case.
+> Can you resend this patch with latest code base ?
+> 
 
-This issue can be found on my ARM64 board: QDF2400:
+Okay. I'll send a separate patch.
 
-kexec -l /boot/vmlinuz-4.20.0-rc6+ --initrd=/boot/initramfs-4.20.0-rc6+.img --append="$(cat /proc/cmdline)"
-kexec -e
-
-Yanjiang Jin (1):
-  scsi: smartpqi: call pqi_free_interrupts() in pqi_shutdown()
-
- drivers/scsi/smartpqi/smartpqi_init.c | 1 +
- 1 file changed, 1 insertion(+)
-
+Thanks for the feedback.
 --
-1.8.3.1
-
-
-
-
-This email is intended only for the named addressee. It may contain information that is confidential/private, legally privileged, or copyright-protected, and you should handle it accordingly. If you are not the intended recipient, you do not have legal rights to retain, copy, or distribute this email or its contents, and should promptly delete the email and all electronic copies in your system; do not retain copies in any media. If you have received this email in error, please notify the sender promptly. Thank you.
+Gustavo
