@@ -1,54 +1,79 @@
-From: Rob Herring <robh@kernel.org>
-Subject: Re: [PATCH 1/3] dt-bindings: ufs: Add HI3670 UFS controller binding
-Date: Thu, 20 Dec 2018 11:12:44 -0600
-Message-ID: <20181220171244.GA22403@bogus>
-References: <20181207175151.8969-1-manivannan.sadhasivam@linaro.org>
- <20181207175151.8969-2-manivannan.sadhasivam@linaro.org>
+From: <Don.Brace@microchip.com>
+Subject: RE: [PATCH] scsi: smartpqi: call pqi_free_interrupts() in
+ pqi_shutdown()
+Date: Thu, 20 Dec 2018 21:21:08 +0000
+Message-ID: <BYAPR11MB285583497B3E108B77267240E1BF0@BYAPR11MB2855.namprd11.prod.outlook.com>
+References: <1545294755-29565-1-git-send-email-yanjiang.jin@hxt-semitech.com>
+ <1545294755-29565-2-git-send-email-yanjiang.jin@hxt-semitech.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20181207175151.8969-2-manivannan.sadhasivam@linaro.org>
+In-Reply-To: <1545294755-29565-2-git-send-email-yanjiang.jin@hxt-semitech.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Cc: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, liwei213@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org, john.stultz@linaro.org, amit.kucheria@linaro.org, guodong.xu@linaro.org
+To: yanjiang.jin@hxt-semitech.com, don.brace@microsemi.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: yu.zheng@hxt-semitech.com, jinyanjiang@gmail.com, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Dec 07, 2018 at 11:21:49PM +0530, Manivannan Sadhasivam wrote:
-> Add devicetree binding for HI3670 UFS controller. HI3760 SoC is very
-> similar to HI3660 SoC with almost same IPs. Only major difference interms
+-----Original Message-----
+From: Yanjiang Jin [mailto:yanjiang.jin@hxt-semitech.com]=20
+Sent: Thursday, December 20, 2018 2:33 AM
+To: don.brace@microsemi.com; jejb@linux.vnet.ibm.com; martin.petersen@oracl=
+e.com; yanjiang.jin@hxt-semitech.com
+Cc: yu.zheng@hxt-semitech.com; jinyanjiang@gmail.com; esc.storagedev@micros=
+emi.com; linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: smartpqi: call pqi_free_interrupts() in pqi_shutdown=
+()
 
-s/interms/in terms/
+We must free all irqs during shutdown, else kexec's 2nd kernel would hang i=
+n pqi_wait_for_completion_io() as below:
 
-> of UFS is the PHY. HI3670 has 10nm PHY.
-> 
-> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-> ---
->  Documentation/devicetree/bindings/ufs/ufs-hisi.txt | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/ufs/ufs-hisi.txt b/Documentation/devicetree/bindings/ufs/ufs-hisi.txt
-> index a48c44817367..a327c1e24365 100644
-> --- a/Documentation/devicetree/bindings/ufs/ufs-hisi.txt
-> +++ b/Documentation/devicetree/bindings/ufs/ufs-hisi.txt
-> @@ -6,7 +6,9 @@ Each UFS Host Controller should have its own node.
->  Required properties:
->  - compatible        : compatible list, contains one of the following -
->  					"hisilicon,hi3660-ufs", "jedec,ufs-1.1" for hisi ufs
-> -					host controller present on Hi36xx chipset.
-> +					host controller present on Hi3660 chipset.
-> +					"hisilicon,hi3670-ufs", "jedec,ufs-2.1" for hisi ufs
-> +					host controller present on Hi3670 chipset.
+Call trace:
 
->From the description, sounds like having "hisilicon,hi3660-ufs" as a 
-fallback would be appropriate?
+ pqi_wait_for_completion_io
+ pqi_submit_raid_request_
 
->  - reg               : should contain UFS register address space & UFS SYS CTRL register address,
->  - interrupt-parent  : interrupt device
 
-Don't document interrupt-parent. It is implied.
+This happens only in the following combinations:
 
->  - interrupts        : interrupt number
-> -- 
-> 2.17.1
-> 
+1. smartpqi is built as module, not built-in; 2. We have a disk connected t=
+o smartpqi card; 3. Both kexec's 1st and 2nd kernels use this disk as Rootf=
+s' mount point.
+
+Signed-off-by: Yanjiang Jin <yanjiang.jin@hxt-semitech.com>
+
+Thank-you for your patch.
+
+Acked-by: Don Brace <don.brace@microsemi.com>
+
+---
+ drivers/scsi/smartpqi/smartpqi_init.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/=
+smartpqi_init.c
+index a25a07a..55c1d82 100644
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -6670,6 +6670,7 @@ static void pqi_shutdown(struct pci_dev *pci_dev)
+         * storage.
+         */
+        rc =3D pqi_flush_cache(ctrl_info, SHUTDOWN);
++       pqi_free_interrupts(ctrl_info);
+        pqi_reset(ctrl_info);
+        if (rc =3D=3D 0)
+                return;
+--
+1.8.3.1
+
+
+
+
+This email is intended only for the named addressee. It may contain informa=
+tion that is confidential/private, legally privileged, or copyright-protect=
+ed, and you should handle it accordingly. If you are not the intended recip=
+ient, you do not have legal rights to retain, copy, or distribute this emai=
+l or its contents, and should promptly delete the email and all electronic =
+copies in your system; do not retain copies in any media. If you have recei=
+ved this email in error, please notify the sender promptly. Thank you.
