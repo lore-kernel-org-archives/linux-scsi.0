@@ -1,32 +1,364 @@
-From: "Elliott, Robert (Persistent Memory)" <elliott@hpe.com>
-Subject: RE: remove exofs, the T10 OSD code and block/scsi bidi support V3
-Date: Thu, 20 Dec 2018 16:08:39 +0000
-Message-ID: <AT5PR8401MB1169FF6CBFDD789452E9CB17ABBF0@AT5PR8401MB1169.NAMPRD84.PROD.OUTLOOK.COM>
-References: <20181111133211.13926-1-hch@lst.de>
- <4f4b6aff-6726-c500-e3e4-f8b73d641851@electrozaur.com>
- <20181219144347.GB23410@lst.de>
- <0e8b8d45-cfeb-ba9d-c92f-953cabede1ee@interlog.com>
+From: Fred Herard <fred.herard-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] iscsi: Capture iscsi debug messages using tracepoints
+Date: Thu, 20 Dec 2018 16:45:19 -0500
+Message-ID: <b8cb3596-9307-1309-aaa3-e621ba5bef83@oracle.com>
+References: <1542819883-15685-1-git-send-email-fred.herard@oracle.com>
+ <65d1a89a-da7c-892b-7231-69c509333811@suse.com>
+ <edb2cb72-df44-0549-eab1-c2848a328887@interlog.com>
+ <1325e1ee-f690-f6c8-c2a8-fdf26f3c0c51@oracle.com>
+ <c5f86116-6bdb-3fd2-2ecb-8ce5f24774ae@oracle.com>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <0e8b8d45-cfeb-ba9d-c92f-953cabede1ee@interlog.com>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <open-iscsi+bncBCHYH6ECSQDBB5U26DQAKGQEA2JOFKA-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+In-Reply-To: <c5f86116-6bdb-3fd2-2ecb-8ce5f24774ae-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
 Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: "dgilbert@interlog.com" <dgilbert@interlog.com>, Christoph Hellwig <hch@lst.de>, Boaz Harrosh <ooo@electrozaur.com>
-Cc: "axboe@kernel.dk" <axboe@kernel.dk>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, Johannes Thumshirn <jthumshirn@suse.de>, Benjamin Block <bblock@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <https://groups.google.com/group/open-iscsi
+List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
+ <https://groups.google.com/group/open-iscsi/subscribe>
+To: dgilbert-qazKcTl6WRFWk0Htik3J/w@public.gmane.org, Lee Duncan <lduncan-IBi9RG/b67k@public.gmane.org>, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGludXgta2VybmVsLW93
-bmVyQHZnZXIua2VybmVsLm9yZyA8bGludXgta2VybmVsLQ0KPiBvd25lckB2Z2VyLmtlcm5lbC5v
-cmc+IE9uIEJlaGFsZiBPZiBEb3VnbGFzIEdpbGJlcnQNCj4gU2VudDogV2VkbmVzZGF5LCBEZWNl
-bWJlciAxOSwgMjAxOCA5OjAyIFBNDQo+IFN1YmplY3Q6IFJlOiByZW1vdmUgZXhvZnMsIHRoZSBU
-MTAgT1NEIGNvZGUgYW5kIGJsb2NrL3Njc2kgYmlkaSBzdXBwb3J0IFYzDQo+IA0KLi4uIA0KPiBX
-aGlsZSBvbiB0aGUgc3ViamVjdCBvZiBiaWRpLCB0aGUgb3JkZXIgb2YgdHJhbnNmZXJzOiBpcyB0
-aGUgZGF0YS1vdXQNCj4gKHRvIHRoZSB0YXJnZXQpIGFsd2F5cyBiZWZvcmUgdGhlIGRhdGEtaW4g
-b3IgaXMgaXQgdGhlIHRhcmdldCBkZXZpY2UNCj4gdGhhdCBkZWNpZGVzIChkZXBlbmRpbmcgb24g
-dGhlIHNlbWFudGljcyBvZiB0aGUgY29tbWFuZCkgd2hvIGlzIGZpcnN0Pw0KDQpJbiBTQ1NJLCB0
-aGF0IHdhcyBjb21tYW5kLXNwZWNpZmljLiBTb21lIG5lY2Vzc2l0YXRlZCBpbnRlcm1peGluZyB0
-aGUNCnRyYW5zZmVycywgd2hpbGUgb3RoZXJzIGRpZCBhbGwgb25lIGRpcmVjdGlvbiBiZWZvcmUg
-YWxsIHRoZSBvdGhlcg0KZGlyZWN0aW9uLg0KDQotLS0NClJvYmVydCBFbGxpb3R0LCBIUEUgUGVy
-c2lzdGVudCBNZW1vcnkNCg0KDQoNCg0K
+ping(Doug);
+
+Thanks,
+Fred
+
+On 12/9/2018 5:01 PM, Fred Herard wrote:
+> Gentle reminder...
+> 
+> Reviewed-by: Rajan Shanmugavelu <rajan.shanmugavelu-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+> Reviewed-by: Lee Duncan <lduncan-IBi9RG/b67k@public.gmane.org>
+> 
+> Thanks,
+> Fred
+> 
+> On 12/2/2018 1:47 AM, Fred Herard wrote:
+>> Hi Doug,
+>>
+>> Here's an updated patch with removal of the misplaced semicolons:
+>>
+>> From da1f3c2ff78881c439d53820f3b82d4c54ac5cf9 Mon Sep 17 00:00:00 2001
+>> From: Fred Herard <fred.herard-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+>> Date: Fri, 12 Oct 2018 15:45:47 -0700
+>> Subject: [PATCH] iscsi: Capture iscsi debug messages using tracepoints
+>>
+>> This commit enhances iscsi initiator modules to capture iscsi debug messages
+>> using linux kernel tracepoint facility:
+>>
+>> https://www.kernel.org/doc/Documentation/trace/tracepoints.txt
+>>
+>> The following tracepoint events have been created under the iscsi tracepoint
+>> event group:
+>>
+>> iscsi_dbg_conn - to capture connection debug messages (libiscsi module)
+>> iscsi_dbg_session - to capture session debug messages (libiscsi module)
+>> iscsi_dbg_eh - to capture error handling debug messages (libiscsi module)
+>> iscsi_dbg_tcp - to capture iscsi tcp debug messages (libiscsi_tcp module)
+>> iscsi_dbg_sw_tcp - to capture iscsi sw tcp debug messages (iscsi_tcp module)
+>> iscsi_dbg_trans_session - to cpature iscsi trasnsport sess debug messages
+>> 	(scsi_transport_iscsi module)
+>> iscsi_dbg_trans_conn - to capture iscsi tansport conn debug messages
+>> 	(scsi_transport_iscsi module)
+>>
+>> Signed-off-by: Fred Herard <fred.herard-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+>> Reviewed-by: Rajan Shanmugavelu <rajan.shanmugavelu-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+>> ---
+>>  drivers/scsi/iscsi_tcp.c            |   6 +-
+>>  drivers/scsi/libiscsi.c             |  16 +++++-
+>>  drivers/scsi/libiscsi_tcp.c         |   6 +-
+>>  drivers/scsi/scsi_transport_iscsi.c |  38 ++++++++++++-
+>>  include/trace/events/iscsi.h        | 107 ++++++++++++++++++++++++++++++++++++
+>>  5 files changed, 165 insertions(+), 8 deletions(-)
+>>  create mode 100644 include/trace/events/iscsi.h
+>>
+>> diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
+>> index e11eff6..33bfb0a 100644
+>> --- a/drivers/scsi/iscsi_tcp.c
+>> +++ b/drivers/scsi/iscsi_tcp.c
+>> @@ -44,6 +44,7 @@
+>>  #include <scsi/scsi_host.h>
+>>  #include <scsi/scsi.h>
+>>  #include <scsi/scsi_transport_iscsi.h>
+>> +#include <trace/events/iscsi.h>
+>>  
+>>  #include "iscsi_tcp.h"
+>>  
+>> @@ -72,7 +73,10 @@
+>>  			iscsi_conn_printk(KERN_INFO, _conn,	\
+>>  					     "%s " dbg_fmt,	\
+>>  					     __func__, ##arg);	\
+>> -	} while (0);
+>> +		iscsi_dbg_trace(trace_iscsi_dbg_sw_tcp,		\
+>> +				&(_conn)->cls_conn->dev,	\
+>> +				"%s " dbg_fmt, __func__, ##arg);\
+>> +	} while (0)
+>>  
+>>  
+>>  /**
+>> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+>> index cf8a15e..3a7e3e7 100644
+>> --- a/drivers/scsi/libiscsi.c
+>> +++ b/drivers/scsi/libiscsi.c
+>> @@ -40,6 +40,7 @@
+>>  #include <scsi/scsi_transport.h>
+>>  #include <scsi/scsi_transport_iscsi.h>
+>>  #include <scsi/libiscsi.h>
+>> +#include <trace/events/iscsi.h>
+>>  
+>>  static int iscsi_dbg_lib_conn;
+>>  module_param_named(debug_libiscsi_conn, iscsi_dbg_lib_conn, int,
+>> @@ -68,7 +69,10 @@
+>>  			iscsi_conn_printk(KERN_INFO, _conn,	\
+>>  					     "%s " dbg_fmt,	\
+>>  					     __func__, ##arg);	\
+>> -	} while (0);
+>> +		iscsi_dbg_trace(trace_iscsi_dbg_conn,		\
+>> +				&(_conn)->cls_conn->dev,	\
+>> +				"%s " dbg_fmt, __func__, ##arg);\
+>> +	} while (0)
+>>  
+>>  #define ISCSI_DBG_SESSION(_session, dbg_fmt, arg...)			\
+>>  	do {								\
+>> @@ -76,7 +80,10 @@
+>>  			iscsi_session_printk(KERN_INFO, _session,	\
+>>  					     "%s " dbg_fmt,		\
+>>  					     __func__, ##arg);		\
+>> -	} while (0);
+>> +		iscsi_dbg_trace(trace_iscsi_dbg_session, 		\
+>> +				&(_session)->cls_session->dev,		\
+>> +				"%s " dbg_fmt, __func__, ##arg);	\
+>> +	} while (0)
+>>  
+>>  #define ISCSI_DBG_EH(_session, dbg_fmt, arg...)				\
+>>  	do {								\
+>> @@ -84,7 +91,10 @@
+>>  			iscsi_session_printk(KERN_INFO, _session,	\
+>>  					     "%s " dbg_fmt,		\
+>>  					     __func__, ##arg);		\
+>> -	} while (0);
+>> +		iscsi_dbg_trace(trace_iscsi_dbg_eh,			\
+>> +				&(_session)->cls_session->dev,		\
+>> +				"%s " dbg_fmt, __func__, ##arg);	\
+>> +	} while (0)
+>>  
+>>  inline void iscsi_conn_queue_work(struct iscsi_conn *conn)
+>>  {
+>> diff --git a/drivers/scsi/libiscsi_tcp.c b/drivers/scsi/libiscsi_tcp.c
+>> index 63a1d69..75426b1 100644
+>> --- a/drivers/scsi/libiscsi_tcp.c
+>> +++ b/drivers/scsi/libiscsi_tcp.c
+>> @@ -43,6 +43,7 @@
+>>  #include <scsi/scsi_host.h>
+>>  #include <scsi/scsi.h>
+>>  #include <scsi/scsi_transport_iscsi.h>
+>> +#include <trace/events/iscsi.h>
+>>  
+>>  #include "iscsi_tcp.h"
+>>  
+>> @@ -65,7 +66,10 @@
+>>  			iscsi_conn_printk(KERN_INFO, _conn,	\
+>>  					     "%s " dbg_fmt,	\
+>>  					     __func__, ##arg);	\
+>> -	} while (0);
+>> +		iscsi_dbg_trace(trace_iscsi_dbg_tcp,		\
+>> +				&(_conn)->cls_conn->dev,	\
+>> +				"%s " dbg_fmt, __func__, ##arg);\
+>> +	} while (0)
+>>  
+>>  static int iscsi_tcp_hdr_recv_done(struct iscsi_tcp_conn *tcp_conn,
+>>  				   struct iscsi_segment *segment);
+>> diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+>> index f6542c1..b370f7b 100644
+>> --- a/drivers/scsi/scsi_transport_iscsi.c
+>> +++ b/drivers/scsi/scsi_transport_iscsi.c
+>> @@ -37,6 +37,18 @@
+>>  
+>>  #define ISCSI_TRANSPORT_VERSION "2.0-870"
+>>  
+>> +#define CREATE_TRACE_POINTS
+>> +#include <trace/events/iscsi.h>
+>> +
+>> +/*
+>> + * Export tracepoint symbols to be used by other modules.
+>> + */
+>> +EXPORT_TRACEPOINT_SYMBOL_GPL(iscsi_dbg_conn);
+>> +EXPORT_TRACEPOINT_SYMBOL_GPL(iscsi_dbg_eh);
+>> +EXPORT_TRACEPOINT_SYMBOL_GPL(iscsi_dbg_session);
+>> +EXPORT_TRACEPOINT_SYMBOL_GPL(iscsi_dbg_tcp);
+>> +EXPORT_TRACEPOINT_SYMBOL_GPL(iscsi_dbg_sw_tcp);
+>> +
+>>  static int dbg_session;
+>>  module_param_named(debug_session, dbg_session, int,
+>>  		   S_IRUGO | S_IWUSR);
+>> @@ -59,15 +71,21 @@
+>>  			iscsi_cls_session_printk(KERN_INFO, _session,	\
+>>  						 "%s: " dbg_fmt,	\
+>>  						 __func__, ##arg);	\
+>> -	} while (0);
+>> +		iscsi_dbg_trace(trace_iscsi_dbg_trans_session,		\
+>> +				&(_session)->dev,			\
+>> +				"%s " dbg_fmt, __func__, ##arg);	\
+>> +	} while (0)
+>>  
+>>  #define ISCSI_DBG_TRANS_CONN(_conn, dbg_fmt, arg...)			\
+>>  	do {								\
+>>  		if (dbg_conn)						\
+>>  			iscsi_cls_conn_printk(KERN_INFO, _conn,		\
+>>  					      "%s: " dbg_fmt,		\
+>> -					      __func__, ##arg);	\
+>> -	} while (0);
+>> +					      __func__, ##arg);		\
+>> +		iscsi_dbg_trace(trace_iscsi_dbg_trans_conn,		\
+>> +				&(_conn)->dev,				\
+>> +				"%s " dbg_fmt, __func__, ##arg);	\
+>> +	} while (0)
+>>  
+>>  struct iscsi_internal {
+>>  	struct scsi_transport_template t;
+>> @@ -4497,6 +4515,20 @@ int iscsi_unregister_transport(struct iscsi_transport *tt)
+>>  }
+>>  EXPORT_SYMBOL_GPL(iscsi_unregister_transport);
+>>  
+>> +void iscsi_dbg_trace(void (*trace)(struct device *dev, struct va_format *),
+>> +		     struct device *dev, const char *fmt, ...)
+>> +{
+>> +	struct va_format vaf;
+>> +	va_list args;
+>> +
+>> +	va_start(args, fmt);
+>> +	vaf.fmt = fmt;
+>> +	vaf.va = &args;
+>> +	trace(dev, &vaf);
+>> +	va_end(args);
+>> +}
+>> +EXPORT_SYMBOL_GPL(iscsi_dbg_trace);
+>> +
+>>  static __init int iscsi_transport_init(void)
+>>  {
+>>  	int err;
+>> diff --git a/include/trace/events/iscsi.h b/include/trace/events/iscsi.h
+>> new file mode 100644
+>> index 0000000..87408fa
+>> --- /dev/null
+>> +++ b/include/trace/events/iscsi.h
+>> @@ -0,0 +1,107 @@
+>> +#undef TRACE_SYSTEM
+>> +#define TRACE_SYSTEM iscsi
+>> +
+>> +#if !defined(_TRACE_ISCSI_H) || defined(TRACE_HEADER_MULTI_READ)
+>> +#define _TRACE_ISCSI_H
+>> +
+>> +#include <linux/tracepoint.h>
+>> +
+>> +/* max debug message length */
+>> +#define ISCSI_MSG_MAX	256
+>> +
+>> +/*
+>> + * Declare tracepoint helper function.
+>> + */
+>> +void iscsi_dbg_trace(void (*trace)(struct device *dev, struct va_format *),
+>> +		     struct device *dev, const char *fmt, ...);
+>> +
+>> +/*
+>> + * Declare event class for iscsi debug messages.
+>> + */
+>> +DECLARE_EVENT_CLASS(iscsi_log_msg,
+>> +
+>> +	TP_PROTO(struct device *dev, struct va_format *vaf),
+>> +
+>> +	TP_ARGS(dev, vaf),
+>> +
+>> +	TP_STRUCT__entry(
+>> +		__string(dname, 	dev_name(dev)		)
+>> +		__dynamic_array(char,	msg, ISCSI_MSG_MAX	)
+>> +	),
+>> +
+>> +	TP_fast_assign(
+>> +		__assign_str(dname, dev_name(dev));
+>> +		vsnprintf(__get_str(msg), ISCSI_MSG_MAX, vaf->fmt, *vaf->va);
+>> +	),
+>> +
+>> +	TP_printk("%s: %s",__get_str(dname),  __get_str(msg)
+>> +	)
+>> +);
+>> +
+>> +/*
+>> + * Define event to capture iscsi connection debug messages.
+>> + */
+>> +DEFINE_EVENT(iscsi_log_msg, iscsi_dbg_conn,
+>> +	TP_PROTO(struct device *dev, struct va_format *vaf),
+>> +
+>> +	TP_ARGS(dev, vaf)
+>> +);
+>> +
+>> +/*
+>> + * Define event to capture iscsi session debug messages.
+>> + */
+>> +DEFINE_EVENT(iscsi_log_msg, iscsi_dbg_session,
+>> +	TP_PROTO(struct device *dev, struct va_format *vaf),
+>> +
+>> +	TP_ARGS(dev, vaf)
+>> +);
+>> +
+>> +/*
+>> + * Define event to capture iscsi error handling debug messages.
+>> + */
+>> +DEFINE_EVENT(iscsi_log_msg, iscsi_dbg_eh,
+>> +        TP_PROTO(struct device *dev, struct va_format *vaf),
+>> +
+>> +        TP_ARGS(dev, vaf)
+>> +);
+>> +
+>> +/*
+>> + * Define event to capture iscsi tcp debug messages.
+>> + */
+>> +DEFINE_EVENT(iscsi_log_msg, iscsi_dbg_tcp,
+>> +        TP_PROTO(struct device *dev, struct va_format *vaf),
+>> +
+>> +        TP_ARGS(dev, vaf)
+>> +);
+>> +
+>> +/*
+>> + * Define event to capture iscsi sw tcp debug messages.
+>> + */
+>> +DEFINE_EVENT(iscsi_log_msg, iscsi_dbg_sw_tcp,
+>> +	TP_PROTO(struct device *dev, struct va_format *vaf),
+>> +
+>> +	TP_ARGS(dev, vaf)
+>> +);
+>> +
+>> +/*
+>> + * Define event to capture iscsi transport session debug messages.
+>> + */
+>> +DEFINE_EVENT(iscsi_log_msg, iscsi_dbg_trans_session,
+>> +	TP_PROTO(struct device *dev, struct va_format *vaf),
+>> +
+>> +	TP_ARGS(dev, vaf)
+>> +);
+>> +
+>> +/*
+>> + * Define event to capture iscsi transport connection debug messages.
+>> + */
+>> +DEFINE_EVENT(iscsi_log_msg, iscsi_dbg_trans_conn,
+>> +	TP_PROTO(struct device *dev, struct va_format *vaf),
+>> +
+>> +	TP_ARGS(dev, vaf)
+>> +);
+>> +
+>> +#endif /* _TRACE_ISCSI_H */
+>> +
+>> +/* This part must be outside protection */
+>> +#include <trace/define_trace.h>
+>>
+
+-- 
+You received this message because you are subscribed to the Google Groups "open-iscsi" group.
+To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+Visit this group at https://groups.google.com/group/open-iscsi.
+For more options, visit https://groups.google.com/d/optout.
