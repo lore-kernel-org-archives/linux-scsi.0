@@ -1,25 +1,25 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: mpt3sas: mpt3sas_scsih: Mark expected switch fall-through
-Date: Thu, 20 Dec 2018 19:48:25 -0500
-Message-ID: <yq1zhszbt7q.fsf@oracle.com>
-References: <20181220154353.GA17873@embeddedor>
+Subject: Re: [RESEND PATCH v2] megaraid: fix out-of-bound array accesses
+Date: Thu, 20 Dec 2018 19:50:34 -0500
+Message-ID: <yq1va3nbt45.fsf@oracle.com>
+References: <20181206212252.36732-1-cai@lca.pw>
+        <20181213132727.57058-1-cai@lca.pw>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20181220154353.GA17873@embeddedor> (Gustavo A. R. Silva's
-        message of "Thu, 20 Dec 2018 09:43:53 -0600")
+In-Reply-To: <20181213132727.57058-1-cai@lca.pw> (Qian Cai's message of "Thu,
+        13 Dec 2018 08:27:27 -0500")
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Cc: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Qian Cai <cai@lca.pw>
+Cc: akpm@linux-foundation.org, kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, thenzl@redhat.com, hch@lst.de, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Gustavo A.,
+Qian,
 
-> In preparation to enabling -Wimplicit-fallthrough, mark switch cases
-> where we are expecting to fall through.
+> UBSAN reported those with MegaRAID SAS-3 3108,
 
-Applied to 4.21/scsi-queue. Thanks!
+Applied to 4.21/scsi-queue, thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
