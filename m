@@ -1,26 +1,33 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 32/41] scsi: myrb: Mark expected switch fall-throughs
-Date: Thu, 20 Dec 2018 19:52:10 -0500
-Message-ID: <yq1r2ebbt1h.fsf@oracle.com>
+Subject: Re: [PATCH 17/41] scsi: isci: phy: Mark expected switch fall-through
+Date: Thu, 20 Dec 2018 19:56:53 -0500
+Message-ID: <yq1muozbstm.fsf@oracle.com>
 References: <cover.1543374820.git.gustavo@embeddedor.com>
-        <15cf75b544d6b2eae77ba98cd201620b44abec36.1543374820.git.gustavo@embeddedor.com>
+        <ceff1b50e91a4c13b49423b08ec9447b@fmsmsx108.amr.corp.intel.com>
+        <cfd08179-b03a-53d6-9765-b1555eaf9719@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <15cf75b544d6b2eae77ba98cd201620b44abec36.1543374820.git.gustavo@embeddedor.com>
-        (Gustavo A. R. Silva's message of "Tue, 27 Nov 2018 22:32:52 -0600")
+In-Reply-To: <cfd08179-b03a-53d6-9765-b1555eaf9719@intel.com> (Artur
+        Paszkiewicz's message of "Thu, 20 Dec 2018 09:51:22 +0100")
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Cc: Hannes Reinecke <hare@kernel.org>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Cc: "Gustavo A. R. Silva" <gustavo@embeddedor.com>, intel-linux-scu <intel-linux-scu@intel.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
 
-Gustavo A.,
+Artur,
 
-> In preparation to enabling -Wimplicit-fallthrough, mark switch cases
-> where we are expecting to fall through.
+> On 11/28/18 5:29 AM, Gustavo A. R. Silva wrote:
+>> In preparation to enabling -Wimplicit-fallthrough, mark switch cases
+>> where we are expecting to fall through.
+>> 
+>> Addresses-Coverity-ID: 703127 ("Missing break in switch")
+>> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+>
+> Acked-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 
-Applied to 4.21/scsi-queue. Thanks.
+Applied the 4 isci patches to 4.21/scsi-queue. Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
