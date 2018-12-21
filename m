@@ -1,33 +1,43 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 17/41] scsi: isci: phy: Mark expected switch fall-through
-Date: Thu, 20 Dec 2018 19:56:53 -0500
-Message-ID: <yq1muozbstm.fsf@oracle.com>
-References: <cover.1543374820.git.gustavo@embeddedor.com>
-        <ceff1b50e91a4c13b49423b08ec9447b@fmsmsx108.amr.corp.intel.com>
-        <cfd08179-b03a-53d6-9765-b1555eaf9719@intel.com>
+From: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] iscsi: Capture iscsi debug messages using tracepoints
+Date: Thu, 20 Dec 2018 20:04:33 -0500
+Message-ID: <yq1imznbsgu.fsf@oracle.com>
+References: <1542819883-15685-1-git-send-email-fred.herard@oracle.com>
+	<65d1a89a-da7c-892b-7231-69c509333811@suse.com>
+	<edb2cb72-df44-0549-eab1-c2848a328887@interlog.com>
+	<1325e1ee-f690-f6c8-c2a8-fdf26f3c0c51@oracle.com>
+	<c5f86116-6bdb-3fd2-2ecb-8ce5f24774ae@oracle.com>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <cfd08179-b03a-53d6-9765-b1555eaf9719@intel.com> (Artur
-        Paszkiewicz's message of "Thu, 20 Dec 2018 09:51:22 +0100")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Cc: "Gustavo A. R. Silva" <gustavo@embeddedor.com>, intel-linux-scu <intel-linux-scu@intel.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <open-iscsi+bncBDVIJONZ3YDRBLPY6DQAKGQEIGEYOMA-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+In-Reply-To: <c5f86116-6bdb-3fd2-2ecb-8ce5f24774ae-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org> (Fred Herard's
+	message of "Sun, 9 Dec 2018 17:01:27 -0500")
+List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <https://groups.google.com/group/open-iscsi
+List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
+ <https://groups.google.com/group/open-iscsi/subscribe>
+To: Fred Herard <fred.herard-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Cc: dgilbert-qazKcTl6WRFWk0Htik3J/w@public.gmane.org, Lee Duncan <lduncan-IBi9RG/b67k@public.gmane.org>, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Artur,
+Fred,
 
-> On 11/28/18 5:29 AM, Gustavo A. R. Silva wrote:
->> In preparation to enabling -Wimplicit-fallthrough, mark switch cases
->> where we are expecting to fall through.
->> 
->> Addresses-Coverity-ID: 703127 ("Missing break in switch")
->> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
->
-> Acked-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+> This commit enhances iscsi initiator modules to capture iscsi debug
+> messages using linux kernel tracepoint facility:
 
-Applied the 4 isci patches to 4.21/scsi-queue. Thanks!
+Applied to 4.21/scsi-queue, thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
+
+-- 
+You received this message because you are subscribed to the Google Groups "open-iscsi" group.
+To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+Visit this group at https://groups.google.com/group/open-iscsi.
+For more options, visit https://groups.google.com/d/optout.
