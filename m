@@ -1,43 +1,73 @@
-From: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] iscsi: Capture iscsi debug messages using tracepoints
-Date: Thu, 20 Dec 2018 20:04:33 -0500
-Message-ID: <yq1imznbsgu.fsf@oracle.com>
-References: <1542819883-15685-1-git-send-email-fred.herard@oracle.com>
-	<65d1a89a-da7c-892b-7231-69c509333811@suse.com>
-	<edb2cb72-df44-0549-eab1-c2848a328887@interlog.com>
-	<1325e1ee-f690-f6c8-c2a8-fdf26f3c0c51@oracle.com>
-	<c5f86116-6bdb-3fd2-2ecb-8ce5f24774ae@oracle.com>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Subject: Re: [PATCH 1/3] dt-bindings: ufs: Add HI3670 UFS controller binding
+Date: Fri, 21 Dec 2018 07:54:44 +0530
+Message-ID: <20181221022444.GA3233@Mani-XPS-13-9360>
+References: <20181207175151.8969-1-manivannan.sadhasivam@linaro.org>
+ <20181207175151.8969-2-manivannan.sadhasivam@linaro.org>
+ <20181220171244.GA22403@bogus>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <open-iscsi+bncBDVIJONZ3YDRBLPY6DQAKGQEIGEYOMA-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-In-Reply-To: <c5f86116-6bdb-3fd2-2ecb-8ce5f24774ae-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org> (Fred Herard's
-	message of "Sun, 9 Dec 2018 17:01:27 -0500")
-List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <https://groups.google.com/group/open-iscsi
-List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
- <https://groups.google.com/group/open-iscsi/subscribe>
-To: Fred Herard <fred.herard-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Cc: dgilbert-qazKcTl6WRFWk0Htik3J/w@public.gmane.org, Lee Duncan <lduncan-IBi9RG/b67k@public.gmane.org>, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20181220171244.GA22403@bogus>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Rob Herring <robh@kernel.org>
+Cc: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, liwei213@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org, john.stultz@linaro.org, amit.kucheria@linaro.org, guodong.xu@linaro.org
 List-Id: linux-scsi@vger.kernel.org
 
+Hi Rob,
 
-Fred,
+On Thu, Dec 20, 2018 at 11:12:44AM -0600, Rob Herring wrote:
+> On Fri, Dec 07, 2018 at 11:21:49PM +0530, Manivannan Sadhasivam wrote:
+> > Add devicetree binding for HI3670 UFS controller. HI3760 SoC is very
+> > similar to HI3660 SoC with almost same IPs. Only major difference interms
+> 
+> s/interms/in terms/
+> 
 
-> This commit enhances iscsi initiator modules to capture iscsi debug
-> messages using linux kernel tracepoint facility:
+Ack.
 
-Applied to 4.21/scsi-queue, thanks!
+> > of UFS is the PHY. HI3670 has 10nm PHY.
+> > 
+> > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+> > ---
+> >  Documentation/devicetree/bindings/ufs/ufs-hisi.txt | 4 +++-
+> >  1 file changed, 3 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/Documentation/devicetree/bindings/ufs/ufs-hisi.txt b/Documentation/devicetree/bindings/ufs/ufs-hisi.txt
+> > index a48c44817367..a327c1e24365 100644
+> > --- a/Documentation/devicetree/bindings/ufs/ufs-hisi.txt
+> > +++ b/Documentation/devicetree/bindings/ufs/ufs-hisi.txt
+> > @@ -6,7 +6,9 @@ Each UFS Host Controller should have its own node.
+> >  Required properties:
+> >  - compatible        : compatible list, contains one of the following -
+> >  					"hisilicon,hi3660-ufs", "jedec,ufs-1.1" for hisi ufs
+> > -					host controller present on Hi36xx chipset.
+> > +					host controller present on Hi3660 chipset.
+> > +					"hisilicon,hi3670-ufs", "jedec,ufs-2.1" for hisi ufs
+> > +					host controller present on Hi3670 chipset.
+> 
+> From the description, sounds like having "hisilicon,hi3660-ufs" as a 
+> fallback would be appropriate?
+> 
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+I don't think so. As per my understanding, fallback should be only used
+when it can make the device functional. But in this case,
+"hisilicon,hi3660-ufs" will not make the HI3670 UFS functional. So, I
+will stick to "hisilicon,hi3670-ufs" only.
 
--- 
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-Visit this group at https://groups.google.com/group/open-iscsi.
-For more options, visit https://groups.google.com/d/optout.
+> >  - reg               : should contain UFS register address space & UFS SYS CTRL register address,
+> >  - interrupt-parent  : interrupt device
+> 
+> Don't document interrupt-parent. It is implied.
+> 
+
+Ack.
+
+Thanks,
+Mani
+
+> >  - interrupts        : interrupt number
+> > -- 
+> > 2.17.1
+> > 
