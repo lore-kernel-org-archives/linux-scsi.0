@@ -1,25 +1,26 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [RESEND PATCH v2] megaraid: fix out-of-bound array accesses
-Date: Thu, 20 Dec 2018 19:50:34 -0500
-Message-ID: <yq1va3nbt45.fsf@oracle.com>
-References: <20181206212252.36732-1-cai@lca.pw>
-        <20181213132727.57058-1-cai@lca.pw>
+Subject: Re: [PATCH 32/41] scsi: myrb: Mark expected switch fall-throughs
+Date: Thu, 20 Dec 2018 19:52:10 -0500
+Message-ID: <yq1r2ebbt1h.fsf@oracle.com>
+References: <cover.1543374820.git.gustavo@embeddedor.com>
+        <15cf75b544d6b2eae77ba98cd201620b44abec36.1543374820.git.gustavo@embeddedor.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20181213132727.57058-1-cai@lca.pw> (Qian Cai's message of "Thu,
-        13 Dec 2018 08:27:27 -0500")
+In-Reply-To: <15cf75b544d6b2eae77ba98cd201620b44abec36.1543374820.git.gustavo@embeddedor.com>
+        (Gustavo A. R. Silva's message of "Tue, 27 Nov 2018 22:32:52 -0600")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Qian Cai <cai@lca.pw>
-Cc: akpm@linux-foundation.org, kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, thenzl@redhat.com, hch@lst.de, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Cc: Hannes Reinecke <hare@kernel.org>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Qian,
+Gustavo A.,
 
-> UBSAN reported those with MegaRAID SAS-3 3108,
+> In preparation to enabling -Wimplicit-fallthrough, mark switch cases
+> where we are expecting to fall through.
 
-Applied to 4.21/scsi-queue, thanks!
+Applied to 4.21/scsi-queue. Thanks.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
