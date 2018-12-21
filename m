@@ -1,73 +1,68 @@
-From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Subject: Re: [PATCH 1/3] dt-bindings: ufs: Add HI3670 UFS controller binding
-Date: Fri, 21 Dec 2018 07:54:44 +0530
-Message-ID: <20181221022444.GA3233@Mani-XPS-13-9360>
-References: <20181207175151.8969-1-manivannan.sadhasivam@linaro.org>
- <20181207175151.8969-2-manivannan.sadhasivam@linaro.org>
- <20181220171244.GA22403@bogus>
+From: Nathan Chancellor <natechancellor@gmail.com>
+Subject: Clang build error in drivers/scsi/smartpqi/smartpqi_init.c
+Date: Fri, 21 Dec 2018 00:11:00 -0700
+Message-ID: <20181221071100.GA20515@flashbox>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20181220171244.GA22403@bogus>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Rob Herring <robh@kernel.org>
-Cc: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, liwei213@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org, john.stultz@linaro.org, amit.kucheria@linaro.org, guodong.xu@linaro.org
+To: Don Brace <don.brace@microsemi.com>, esc.storagedev@microsemi.com
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Nick Desaulniers <ndesaulniers@google.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Rob,
+Hi all,
 
-On Thu, Dec 20, 2018 at 11:12:44AM -0600, Rob Herring wrote:
-> On Fri, Dec 07, 2018 at 11:21:49PM +0530, Manivannan Sadhasivam wrote:
-> > Add devicetree binding for HI3670 UFS controller. HI3760 SoC is very
-> > similar to HI3660 SoC with almost same IPs. Only major difference interms
-> 
-> s/interms/in terms/
-> 
+After commit 4fd22c13ad44 ("scsi: smartpqi: add ofa support"), an arm
+allyesconfig build with Clang fails with the following warning/error:
 
-Ack.
+drivers/scsi/smartpqi/smartpqi_init.c:7473:2: warning: comparison of distinct pointer types ('typeof ((sg_count)) *' (aka 'unsigned int *') and 'uint64_t *' (aka 'unsigned long long *')) [-Wcompare-distinct-pointer-types]
+        do_div(sg_count, chunk_size);
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+./include/asm-generic/div64.h:222:28: note: expanded from macro 'do_div'
+        (void)(((typeof((n)) *)0) == ((uint64_t *)0));  \
+               ~~~~~~~~~~~~~~~~~~ ^  ~~~~~~~~~~~~~~~
+drivers/scsi/smartpqi/smartpqi_init.c:7473:2: error: incompatible pointer types passing 'u32 *' (aka 'unsigned int *') to parameter of type 'uint64_t *' (aka 'unsigned long long *') [-Werror,-Wincompatible-pointer-types]
+        do_div(sg_count, chunk_size);
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+./include/asm-generic/div64.h:239:22: note: expanded from macro 'do_div'
+                __rem = __div64_32(&(n), __base);       \
+                                   ^~~~
+./arch/arm/include/asm/div64.h:33:45: note: passing argument to parameter 'n' here
+static inline uint32_t __div64_32(uint64_t *n, uint32_t base)
+                                            ^
+drivers/scsi/smartpqi/smartpqi_init.c:7473:2: warning: shift count >= width of type [-Wshift-count-overflow]
+        do_div(sg_count, chunk_size);
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+./include/asm-generic/div64.h:235:25: note: expanded from macro 'do_div'
+        } else if (likely(((n) >> 32) == 0)) {          \
+                               ^  ~~
+./include/linux/compiler.h:76:40: note: expanded from macro 'likely'
+# define likely(x)      __builtin_expect(!!(x), 1)
+                                            ^
 
-> > of UFS is the PHY. HI3670 has 10nm PHY.
-> > 
-> > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-> > ---
-> >  Documentation/devicetree/bindings/ufs/ufs-hisi.txt | 4 +++-
-> >  1 file changed, 3 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/Documentation/devicetree/bindings/ufs/ufs-hisi.txt b/Documentation/devicetree/bindings/ufs/ufs-hisi.txt
-> > index a48c44817367..a327c1e24365 100644
-> > --- a/Documentation/devicetree/bindings/ufs/ufs-hisi.txt
-> > +++ b/Documentation/devicetree/bindings/ufs/ufs-hisi.txt
-> > @@ -6,7 +6,9 @@ Each UFS Host Controller should have its own node.
-> >  Required properties:
-> >  - compatible        : compatible list, contains one of the following -
-> >  					"hisilicon,hi3660-ufs", "jedec,ufs-1.1" for hisi ufs
-> > -					host controller present on Hi36xx chipset.
-> > +					host controller present on Hi3660 chipset.
-> > +					"hisilicon,hi3670-ufs", "jedec,ufs-2.1" for hisi ufs
-> > +					host controller present on Hi3670 chipset.
-> 
-> From the description, sounds like having "hisilicon,hi3660-ufs" as a 
-> fallback would be appropriate?
-> 
+According to include/asm-generic/div64.h, the first parameter of do_div
+must be a 64-bit number, meaning the below diff would properly fix it.
 
-I don't think so. As per my understanding, fallback should be only used
-when it can make the device functional. But in this case,
-"hisilicon,hi3660-ufs" will not make the HI3670 UFS functional. So, I
-will stick to "hisilicon,hi3670-ufs" only.
+However, I am not sure if there are any unintended consequences of this
+change, hence reaching out before sending it in. If you have a more
+preferred way of fixing it, please do so.
 
-> >  - reg               : should contain UFS register address space & UFS SYS CTRL register address,
-> >  - interrupt-parent  : interrupt device
-> 
-> Don't document interrupt-parent. It is implied.
-> 
+Thank you,
+Nathan
 
-Ack.
+==========================================================================================
 
-Thanks,
-Mani
-
-> >  - interrupts        : interrupt number
-> > -- 
-> > 2.17.1
-> > 
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+index e57fbff08f03..6a185a6172c4 100644
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -7460,7 +7460,7 @@ static void pqi_ofa_ctrl_unquiesce(struct pqi_ctrl_info *ctrl_info)
+ static int pqi_ofa_alloc_mem(struct pqi_ctrl_info *ctrl_info,
+        u32 total_size, u32 chunk_size)
+ {
+-       u32 sg_count;
++       u64 sg_count;
+        u32 size;
+        int i;
+        struct pqi_sg_descriptor *mem_descriptor = NULL;
