@@ -1,24 +1,57 @@
-From: pr-tracker-bot@kernel.org
-Subject: Re: [GIT PULL] SCSI fixes for 4.20-rc7
-Date: Sat, 22 Dec 2018 23:10:02 +0000
-Message-ID: <20181222231002.28463.71855.pr-tracker-bot@pdx-korg-gitolite-1.ci.codeaurora.org>
-References: <1545447056.2776.11.camel@HansenPartnership.com>
+From: Ivan Mironov <mironov.ivan@gmail.com>
+Subject: [PATCH] scsi: sd: Fix cache_type_store()
+Date: Sun, 23 Dec 2018 12:41:58 +0500
+Message-ID: <20181223074158.22796-1-mironov.ivan@gmail.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1545447056.2776.11.camel@HansenPartnership.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Ivan Mironov <mironov.ivan@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-The pull request you sent on Fri, 21 Dec 2018 18:50:56 -0800:
+Changing of caching mode via /sys/devices/.../scsi_disk/.../cache_type
+may fail if device responses to MODE SENSE command with DPOFUA flag set,
+and then checks this flag to be not set on MODE SELECT command.
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+When trying to change cache_type, write always fails:
+	# echo "none" >cache_type
+	bash: echo: write error: Invalid argument
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/9105b8aa50c182371533fc97db64fc8f26f051b3
+And following appears in dmesg:
+	[13007.865745] sd 1:0:1:0: [sda] Sense Key : Illegal Request [current]
+	[13007.865753] sd 1:0:1:0: [sda] Add. Sense: Invalid field in parameter list
 
-Thank you!
+Signed-off-by: Ivan Mironov <mironov.ivan@gmail.com>
+---
+ drivers/scsi/sd.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index bd0a5c694a97..698fe651fb1a 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -206,6 +206,21 @@ cache_type_store(struct device *dev, struct device_attribute *attr,
+ 	sp = buffer_data[0] & 0x80 ? 1 : 0;
+ 	buffer_data[0] &= ~0x80;
+ 
++	/* From SBC-4 r15, 6.5.1 "Mode pages overview", description of
++	 * DEVICE-SPECIFIC PARAMETER field in the mode parameter header:
++	 *     ...
++	 *     The write protect (WP) bit for mode data sent with a MODE SELECT
++	 *     command shall be ignored by the device server.
++	 *     ...
++	 *     The DPOFUA bit is reserved for mode data sent with a MODE SELECT
++	 *     command.
++	 *     ...
++	 * All other bits are also reserved, and all reserved bits shall be set
++	 * to zero according to the same document. So, we can simply set this
++	 * field to zero for compatibility.
++	 */
++	data.device_specific = 0;
++
+ 	if (scsi_mode_select(sdp, 1, sp, 8, buffer_data, len, SD_TIMEOUT,
+ 			     SD_MAX_RETRIES, &data, &sshdr)) {
+ 		if (scsi_sense_valid(&sshdr))
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.wiki.kernel.org/userdoc/prtracker
+2.20.1
