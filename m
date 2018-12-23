@@ -1,51 +1,29 @@
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-Subject: [PATCH 03/20] scsi: lpfc: lpfc_nvme: drop useless LIST_HEAD
-Date: Sun, 23 Dec 2018 09:56:58 +0100
-Message-ID: <1545555435-24576-4-git-send-email-Julia.Lawall@lip6.fr>
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Subject: Re: [PATCH 00/20] drop useless LIST_HEAD
+Date: Sun, 23 Dec 2018 13:13:37 +0100
+Message-ID: <d44a1dfe-691e-cfa2-6c8d-56cca6ae4575@users.sourceforge.net>
 References: <1545555435-24576-1-git-send-email-Julia.Lawall@lip6.fr>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <xen-devel-bounces@lists.xenproject.org>
 In-Reply-To: <1545555435-24576-1-git-send-email-Julia.Lawall@lip6.fr>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Smart <james.smart@broadcom.com>
-Cc: kernel-janitors@vger.kernel.org, Dick Kennedy <dick.kennedy@broadcom.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Language: en-GB
+List-Unsubscribe: <https://lists.xenproject.org/mailman/options/xen-devel>,
+ <mailto:xen-devel-request@lists.xenproject.org?subject=unsubscribe>
+List-Post: <mailto:xen-devel@lists.xenproject.org>
+List-Help: <mailto:xen-devel-request@lists.xenproject.org?subject=help>
+List-Subscribe: <https://lists.xenproject.org/mailman/listinfo/xen-devel>,
+ <mailto:xen-devel-request@lists.xenproject.org?subject=subscribe>
+Errors-To: xen-devel-bounces@lists.xenproject.org
+Sender: "Xen-devel" <xen-devel-bounces@lists.xenproject.org>
+To: Julia Lawall <Julia.Lawall@lip6.fr>, kernel-janitors@vger.kernel.org
+Cc: linux-nfs@vger.kernel.org, Stefano Stabellini <sstabellini@kernel.org>, linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-arm-kernel@lists.infradead.org, dmaengine@vger.kernel.org, xen-devel@lists.xenproject.org, Dan Williams <dan.j.williams@intel.com>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, linux-btrfs@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Drop LIST_HEAD where the variable it declares is never used.
-
-These were introduced with the file, but were not even used
-at that time.
-
-The semantic patch that fixes this problem is as follows:
-(http://coccinelle.lip6.fr/)
-
-// <smpl>
-@@
-identifier x;
-@@
-- LIST_HEAD(x);
-  ... when != x
-// </smpl>
-
-Fixes: 01649561a8b4b ("scsi: lpfc: NVME Initiator: bind to nvme_fc api")
-Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
-
----
-Successfully 0-day tested on 151 configurations.
-
- drivers/scsi/lpfc/lpfc_nvme.c |    2 --
- 1 file changed, 2 deletions(-)
-
-diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
-index 4c66b19e6199..2119f36213e4 100644
---- a/drivers/scsi/lpfc/lpfc_nvme.c
-+++ b/drivers/scsi/lpfc/lpfc_nvme.c
-@@ -2234,9 +2234,7 @@ lpfc_new_nvme_buf(struct lpfc_vport *vport, int num_to_alloc)
- 	dma_addr_t pdma_phys_sgl;
- 	uint16_t iotag, lxri = 0;
- 	int bcnt, num_posted;
--	LIST_HEAD(prep_nblist);
- 	LIST_HEAD(post_nblist);
--	LIST_HEAD(nvme_nblist);
- 
- 	for (bcnt = 0; bcnt < num_to_alloc; bcnt++) {
- 		lpfc_ncmd = kzalloc(sizeof(struct lpfc_nvme_buf), GFP_KERNEL);
+PiBEcm9wIExJU1RfSEVBRCB3aGVyZSB0aGUgdmFyaWFibGUgaXQgZGVjbGFyZXMgaXMgbmV2ZXIg
+dXNlZC4KCkRvIHlvdSBrbm93IGFueSBtb3JlIHBsYWNlcyB3aGVyZSBjYWxscyBvZiBvdGhlciBt
+YWNyb3MgY2FuIGJlIGRlbGV0ZWQ/CgpSZWdhcmRzLApNYXJrdXMKCl9fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fClhlbi1kZXZlbCBtYWlsaW5nIGxpc3QKWGVu
+LWRldmVsQGxpc3RzLnhlbnByb2plY3Qub3JnCmh0dHBzOi8vbGlzdHMueGVucHJvamVjdC5vcmcv
+bWFpbG1hbi9saXN0aW5mby94ZW4tZGV2ZWw=
