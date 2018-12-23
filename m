@@ -1,15 +1,30 @@
-From: Frank Lee <tiny.windzz@gmail.com>
-Subject: Re: [PATCH] scsi: convert to DEFINE_SHOW_ATTRIBUTE
-Date: Sun, 23 Dec 2018 23:50:00 +0800
-Message-ID: <CAEExFWv4FNUMt=SbK8UtD5NF9k3uoAirP+n6JwZ4pcBMaMZ2MA@mail.gmail.com>
-References: <20181202065913.10377-1-tiny.windzz@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+From: Leo Zhang <nguzcf@gmail.com>
+Subject: [PATCH] target/iscsi: fix error msg typo when create lio_qr_cache failed
+Date: Mon, 24 Dec 2018 00:18:27 +0800
+Message-ID: <1545581907-920233-1-git-send-email-nguzcf@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20181202065913.10377-1-tiny.windzz@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: qla2xxx-upstream@qlogic.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, kartilak@cisco.com, sebaddel@cisco.com
-Cc: linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Christie <mchristi@redhat.com>, Bart Van Assche <bvanassche@acm.org>, Matthew Wilcox <willy@infradead.org>, Sagi Grimberg <sagi@grimberg.me>, Colin Ian King <colin.king@canonical.com>, Laura Abbott <labbott@redhat.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org, Leo Zhang <nguzcf@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-ping......
+Signed-off-by: Leo Zhang <nguzcf@gmail.com>
+---
+ drivers/target/iscsi/iscsi_target.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+index c1d5a17..780a914 100644
+--- a/drivers/target/iscsi/iscsi_target.c
++++ b/drivers/target/iscsi/iscsi_target.c
+@@ -714,7 +714,7 @@ static int __init iscsi_target_init_module(void)
+ 			sizeof(struct iscsi_queue_req),
+ 			__alignof__(struct iscsi_queue_req), 0, NULL);
+ 	if (!lio_qr_cache) {
+-		pr_err("nable to kmem_cache_create() for"
++		pr_err("Unable to kmem_cache_create() for"
+ 				" lio_qr_cache\n");
+ 		goto bitmap_out;
+ 	}
+-- 
+1.8.3.1
