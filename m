@@ -1,57 +1,46 @@
-From: Ivan Mironov <mironov.ivan@gmail.com>
-Subject: [PATCH] scsi: sd: Fix cache_type_store()
-Date: Sun, 23 Dec 2018 12:41:58 +0500
-Message-ID: <20181223074158.22796-1-mironov.ivan@gmail.com>
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+Subject: [PATCH 00/20] drop useless LIST_HEAD
+Date: Sun, 23 Dec 2018 09:56:55 +0100
+Message-ID: <1545555435-24576-1-git-send-email-Julia.Lawall@lip6.fr>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Ivan Mironov <mironov.ivan@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org, linux-nfs@vger.kernel.org, Stefano Stabellini <sstabellini@kernel.org>, linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, dmaengine@vger.kernel.org, xen-devel@lists.xenproject.org, Dan Williams <dan.j.williams@intel.com>, linux-arm-kernel@lists.infradead.org
 List-Id: linux-scsi@vger.kernel.org
 
-Changing of caching mode via /sys/devices/.../scsi_disk/.../cache_type
-may fail if device responses to MODE SENSE command with DPOFUA flag set,
-and then checks this flag to be not set on MODE SELECT command.
+Drop LIST_HEAD where the variable it declares is never used.
 
-When trying to change cache_type, write always fails:
-	# echo "none" >cache_type
-	bash: echo: write error: Invalid argument
-
-And following appears in dmesg:
-	[13007.865745] sd 1:0:1:0: [sda] Sense Key : Illegal Request [current]
-	[13007.865753] sd 1:0:1:0: [sda] Add. Sense: Invalid field in parameter list
-
-Signed-off-by: Ivan Mironov <mironov.ivan@gmail.com>
 ---
- drivers/scsi/sd.c | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index bd0a5c694a97..698fe651fb1a 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -206,6 +206,21 @@ cache_type_store(struct device *dev, struct device_attribute *attr,
- 	sp = buffer_data[0] & 0x80 ? 1 : 0;
- 	buffer_data[0] &= ~0x80;
- 
-+	/* From SBC-4 r15, 6.5.1 "Mode pages overview", description of
-+	 * DEVICE-SPECIFIC PARAMETER field in the mode parameter header:
-+	 *     ...
-+	 *     The write protect (WP) bit for mode data sent with a MODE SELECT
-+	 *     command shall be ignored by the device server.
-+	 *     ...
-+	 *     The DPOFUA bit is reserved for mode data sent with a MODE SELECT
-+	 *     command.
-+	 *     ...
-+	 * All other bits are also reserved, and all reserved bits shall be set
-+	 * to zero according to the same document. So, we can simply set this
-+	 * field to zero for compatibility.
-+	 */
-+	data.device_specific = 0;
-+
- 	if (scsi_mode_select(sdp, 1, sp, 8, buffer_data, len, SD_TIMEOUT,
- 			     SD_MAX_RETRIES, &data, &sshdr)) {
- 		if (scsi_sense_valid(&sshdr))
--- 
-2.20.1
+ drivers/dma/at_hdmac.c                                |    5 -----
+ drivers/dma/dw/core.c                                 |    1 -
+ drivers/dma/pl330.c                                   |    1 -
+ drivers/dma/sa11x0-dma.c                              |    2 --
+ drivers/dma/st_fdma.c                                 |    3 ---
+ drivers/infiniband/ulp/ipoib/ipoib_ib.c               |    1 -
+ drivers/net/ethernet/mellanox/mlx4/resource_tracker.c |    5 -----
+ drivers/net/ethernet/mellanox/mlx5/core/en_tc.c       |    3 ---
+ drivers/net/ethernet/mellanox/mlxsw/spectrum.c        |    1 -
+ drivers/net/wireless/st/cw1200/queue.c                |    1 -
+ drivers/scsi/lpfc/lpfc_nvme.c                         |    2 --
+ drivers/scsi/lpfc/lpfc_scsi.c                         |    2 --
+ drivers/scsi/lpfc/lpfc_sli.c                          |    1 -
+ drivers/scsi/qla2xxx/qla_init.c                       |    1 -
+ drivers/xen/xenbus/xenbus_dev_frontend.c              |    2 --
+ fs/btrfs/relocation.c                                 |    1 -
+ fs/nfs/nfs4client.c                                   |    1 -
+ fs/nfsd/nfs4layouts.c                                 |    1 -
+ fs/xfs/xfs_buf.c                                      |    1 -
+ fs/xfs/xfs_fsops.c                                    |    1 -
+ 20 files changed, 36 deletions(-)
