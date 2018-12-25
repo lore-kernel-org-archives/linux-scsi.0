@@ -1,43 +1,36 @@
 From: Kangjie Lu <kjlu@umn.edu>
-Subject: [PATCH] scsi: avoid a double-fetch and a redundant copy
-Date: Tue, 25 Dec 2018 14:15:54 -0600
-Message-ID: <20181225201554.69395-1-kjlu@umn.edu>
+Subject: [PATCH] scsi: fix a double-fetch bug in sg_write
+Date: Tue, 25 Dec 2018 14:24:26 -0600
+Message-ID: <20181225202427.69476-1-kjlu@umn.edu>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: kjlu@umn.edu
 Cc: pakki001@umn.edu, Doug Gilbert <dgilbert@interlog.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-What we need is only "pack_id", so do not create a heap object or copy
-the whole object in. The fix efficiently copies "pack_id" only.
+"opcode" has been copied in from user space and checked. We should not
+copy it in again, which may have been modified by malicous
+multi-threading user programs through race conditions. The fix uses the
+opcode fetched in the first copy.
 
 Signed-off-by: Kangjie Lu <kjlu@umn.edu>
 ---
- drivers/scsi/sg.c | 12 ++----------
- 1 file changed, 2 insertions(+), 10 deletions(-)
+ drivers/scsi/sg.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index c6ad00703c5b..4dacbfffd113 100644
+index 4dacbfffd113..41774e4f9508 100644
 --- a/drivers/scsi/sg.c
 +++ b/drivers/scsi/sg.c
-@@ -446,16 +446,8 @@ sg_read(struct file *filp, char __user *buf, size_t count, loff_t * ppos)
- 		}
- 		if (old_hdr->reply_len < 0) {
- 			if (count >= SZ_SG_IO_HDR) {
--				sg_io_hdr_t *new_hdr;
--				new_hdr = kmalloc(SZ_SG_IO_HDR, GFP_KERNEL);
--				if (!new_hdr) {
--					retval = -ENOMEM;
--					goto free_old_hdr;
--				}
--				retval =__copy_from_user
--				    (new_hdr, buf, SZ_SG_IO_HDR);
--				req_pack_id = new_hdr->pack_id;
--				kfree(new_hdr);
-+				retval = get_user(req_pack_id,
-+						&((sg_io_hdr_t *)buf->pack_id));
- 				if (retval) {
- 					retval = -EFAULT;
- 					goto free_old_hdr;
+@@ -686,7 +686,8 @@ sg_write(struct file *filp, const char __user *buf, size_t count, loff_t * ppos)
+ 	hp->flags = input_size;	/* structure abuse ... */
+ 	hp->pack_id = old_hdr.pack_id;
+ 	hp->usr_ptr = NULL;
+-	if (__copy_from_user(cmnd, buf, cmd_size))
++	cmnd[0] = opcode;
++	if (__copy_from_user(cmnd + 1, buf + 1, cmd_size - 1))
+ 		return -EFAULT;
+ 	/*
+ 	 * SG_DXFER_TO_FROM_DEV is functionally equivalent to SG_DXFER_FROM_DEV,
 -- 
 2.17.2 (Apple Git-113)
