@@ -1,34 +1,37 @@
 From: Kangjie Lu <kjlu@umn.edu>
-Subject: [PATCH] scsi: aacraid: fix a potential data inconsistency caused by double-fetch
-Date: Tue, 25 Dec 2018 15:11:36 -0600
-Message-ID: <20181225211136.69702-1-kjlu@umn.edu>
+Subject: [PATCH] scsi: fix a double-fetch bug in adpt_i2o_passthru
+Date: Tue, 25 Dec 2018 15:20:47 -0600
+Message-ID: <20181225212048.69782-1-kjlu@umn.edu>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: kjlu@umn.edu
 Cc: pakki001@umn.edu, Adaptec OEM Raid Solutions <aacraid@microsemi.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-"user_srb->count" may be changed by malicious user races. Let's set
-"user_srbcmd->count" fetched in the second copy to be the one fetched in
-the first copy.
+user_msg[0] is a size variable, which is copied in from user space and
+checked. It is copied in again from user space after the check, and used
+in the following execution. Malicious user programs can race to change
+user_msg[0] between the two copies, leading to incorrect size. The fix
+ensures to use the checked size.
 
 Signed-off-by: Kangjie Lu <kjlu@umn.edu>
 ---
- drivers/scsi/aacraid/commctrl.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/scsi/dpt_i2o.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commctrl.c
-index 25f6600d6c09..eb18117c431a 100644
---- a/drivers/scsi/aacraid/commctrl.c
-+++ b/drivers/scsi/aacraid/commctrl.c
-@@ -539,6 +539,8 @@ static int aac_send_raw_srb(struct aac_dev* dev, void __user * arg)
- 		rcode = -EFAULT;
- 		goto cleanup;
+diff --git a/drivers/scsi/dpt_i2o.c b/drivers/scsi/dpt_i2o.c
+index 37de8fb186d7..93bd1d1bd5b5 100644
+--- a/drivers/scsi/dpt_i2o.c
++++ b/drivers/scsi/dpt_i2o.c
+@@ -1733,6 +1733,9 @@ static int adpt_i2o_passthru(adpt_hba* pHba, u32 __user *arg)
+ 	if(copy_from_user(msg, user_msg, size)) {
+ 		return -EFAULT;
  	}
-+	/* Ensure user_srb->count is not changed */
-+	user_srbcmd->count = fibsize;
- 
- 	flags = user_srbcmd->flags; /* from user in cpu order */
- 	switch (flags & (SRB_DataIn | SRB_DataOut)) {
++	/* Ensure it is not changed in the second copy */
++	msg[0] = size;
++
+ 	get_user(reply_size, &user_reply[0]);
+ 	reply_size = reply_size>>16;
+ 	if(reply_size > REPLY_FRAME_SIZE){
 -- 
 2.17.2 (Apple Git-113)
