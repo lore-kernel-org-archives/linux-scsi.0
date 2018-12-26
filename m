@@ -1,98 +1,200 @@
-From: Kangjie Lu <kjlu@umn.edu>
-Subject: [PATCH] scsi: avoid a double-fetch and a redundant copy
-Date: Tue, 25 Dec 2018 16:47:18 -0600
-Message-ID: <20181225224718.70271-1-kjlu@umn.edu>
+From: Finn Thain <fthain@telegraphics.com.au>
+Subject: [PATCH v8 03/25] m68k/atari: Replace nvram_{read,write}_byte with
+ arch_nvram_ops
+Date: Wed, 26 Dec 2018 11:37:59 +1100
+Message-ID: <0e72ee3231529ab642f6aea94cb93644689e79b5.1545784679.git.fthain@telegraphics.com.au>
+References: <cover.1545784679.git.fthain@telegraphics.com.au>
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <cover.1545784679.git.fthain@telegraphics.com.au>
 Sender: linux-kernel-owner@vger.kernel.org
-To: kjlu@umn.edu
-Cc: pakki001@umn.edu, Doug Gilbert <dgilbert@interlog.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Geert Uytterhoeven <geert@linux-m68k.org>, Michael Schmitz <schmitzmic@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-kernel@vger.kernel.org, linux-m68k@lists.linux-m68k.org, linuxppc-dev@lists.ozlabs.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-What we need is only "pack_id", so do not create a heap object or copy
-the whole object in. The fix efficiently copies "pack_id" only.
+By implementing an arch_nvram_ops struct, any platform can re-use the
+drivers/char/nvram.c module without needing any arch-specific code
+in that module. Atari does so here.
 
-Signed-off-by: Kangjie Lu <kjlu@umn.edu>
+Atari has one user of nvram_check_checksum() whereas the other "CMOS"
+platforms don't use that function at all. Replace this
+validate-checksum-and-read-byte sequence with the equivalent
+rtc_nvram_ops.read() call and remove the now unused functions.
+
+Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
+Tested-by: Christian T. Steigies <cts@debian.org>
+Acked-by: Geert Uytterhoeven <geert@linux-m68k.org>
 ---
- drivers/scsi/sg.c   |  4 ++--
- kernel/sched/core.c | 18 ++++++++++++------
- 2 files changed, 14 insertions(+), 8 deletions(-)
+The advantage of the new ops struct over the old global nvram_* functions
+is that the misc device module can be shared by different platforms
+without requiring every platform to implement every nvram_* function.
+E.g. only RTC "CMOS" NVRAMs have a checksum for the entire NVRAM
+and only PowerPC platforms have a "sync" ioctl.
+---
+ arch/m68k/atari/nvram.c   | 89 ++++++++++++++++++++++++---------------
+ drivers/scsi/atari_scsi.c |  8 ++--
+ include/linux/nvram.h     |  9 ++++
+ 3 files changed, 70 insertions(+), 36 deletions(-)
 
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 41774e4f9508..75842ceabc7f 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -446,8 +446,8 @@ sg_read(struct file *filp, char __user *buf, size_t count, loff_t * ppos)
- 		}
- 		if (old_hdr->reply_len < 0) {
- 			if (count >= SZ_SG_IO_HDR) {
--				retval = get_user(req_pack_id,
--						&((sg_io_hdr_t *)buf->pack_id));
-+				retval =
-+					get_user(req_pack_id, &(sg_io_hdr_t __user *)buf->pack_id);
- 				if (retval) {
- 					retval = -EFAULT;
- 					goto free_old_hdr;
-diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index 6fedf3a98581..0a55bdce9a42 100644
---- a/kernel/sched/core.c
-+++ b/kernel/sched/core.c
-@@ -4447,7 +4447,7 @@ do_sched_setscheduler(pid_t pid, int policy, struct sched_param __user *param)
-  */
- static int sched_copy_attr(struct sched_attr __user *uattr, struct sched_attr *attr)
+diff --git a/arch/m68k/atari/nvram.c b/arch/m68k/atari/nvram.c
+index 3e620ee955ba..bafc9dc32830 100644
+--- a/arch/m68k/atari/nvram.c
++++ b/arch/m68k/atari/nvram.c
+@@ -39,33 +39,12 @@ unsigned char __nvram_read_byte(int i)
+ 	return CMOS_READ(NVRAM_FIRST_BYTE + i);
+ }
+ 
+-unsigned char nvram_read_byte(int i)
+-{
+-	unsigned long flags;
+-	unsigned char c;
+-
+-	spin_lock_irqsave(&rtc_lock, flags);
+-	c = __nvram_read_byte(i);
+-	spin_unlock_irqrestore(&rtc_lock, flags);
+-	return c;
+-}
+-EXPORT_SYMBOL(nvram_read_byte);
+-
+ /* This races nicely with trying to read with checksum checking */
+ void __nvram_write_byte(unsigned char c, int i)
  {
--	u32 size;
-+	u32 size, size_cp;
- 	int ret;
+ 	CMOS_WRITE(c, NVRAM_FIRST_BYTE + i);
+ }
  
- 	if (!access_ok(VERIFY_WRITE, uattr, SCHED_ATTR_SIZE_VER0))
-@@ -4460,15 +4460,17 @@ static int sched_copy_attr(struct sched_attr __user *uattr, struct sched_attr *a
- 	if (ret)
- 		return ret;
+-void nvram_write_byte(unsigned char c, int i)
+-{
+-	unsigned long flags;
+-
+-	spin_lock_irqsave(&rtc_lock, flags);
+-	__nvram_write_byte(c, i);
+-	spin_unlock_irqrestore(&rtc_lock, flags);
+-}
+-
+ /* On Ataris, the checksum is over all bytes except the checksum bytes
+  * themselves; these are at the very end.
+  */
+@@ -84,18 +63,6 @@ int __nvram_check_checksum(void)
+ 	       (__nvram_read_byte(ATARI_CKS_LOC + 1) == (sum & 0xff));
+ }
  
-+	size_cp = size;
+-int nvram_check_checksum(void)
+-{
+-	unsigned long flags;
+-	int rv;
+-
+-	spin_lock_irqsave(&rtc_lock, flags);
+-	rv = __nvram_check_checksum();
+-	spin_unlock_irqrestore(&rtc_lock, flags);
+-	return rv;
+-}
+-EXPORT_SYMBOL(nvram_check_checksum);
+-
+ static void __nvram_set_checksum(void)
+ {
+ 	int i;
+@@ -107,6 +74,62 @@ static void __nvram_set_checksum(void)
+ 	__nvram_write_byte(sum, ATARI_CKS_LOC + 1);
+ }
+ 
++static ssize_t nvram_read(char *buf, size_t count, loff_t *ppos)
++{
++	char *p = buf;
++	loff_t i;
 +
- 	/* Bail out on silly large: */
- 	if (size > PAGE_SIZE)
- 		goto err_size;
++	spin_lock_irq(&rtc_lock);
++
++	if (!__nvram_check_checksum()) {
++		spin_unlock_irq(&rtc_lock);
++		return -EIO;
++	}
++
++	for (i = *ppos; count > 0 && i < NVRAM_BYTES; --count, ++i, ++p)
++		*p = __nvram_read_byte(i);
++
++	spin_unlock_irq(&rtc_lock);
++
++	*ppos = i;
++	return p - buf;
++}
++
++static ssize_t nvram_write(char *buf, size_t count, loff_t *ppos)
++{
++	char *p = buf;
++	loff_t i;
++
++	spin_lock_irq(&rtc_lock);
++
++	if (!__nvram_check_checksum()) {
++		spin_unlock_irq(&rtc_lock);
++		return -EIO;
++	}
++
++	for (i = *ppos; count > 0 && i < NVRAM_BYTES; --count, ++i, ++p)
++		__nvram_write_byte(*p, i);
++
++	__nvram_set_checksum();
++
++	spin_unlock_irq(&rtc_lock);
++
++	*ppos = i;
++	return p - buf;
++}
++
++static ssize_t nvram_get_size(void)
++{
++	return NVRAM_BYTES;
++}
++
++const struct nvram_ops arch_nvram_ops = {
++	.read           = nvram_read,
++	.write          = nvram_write,
++	.get_size       = nvram_get_size,
++};
++EXPORT_SYMBOL(arch_nvram_ops);
++
+ #ifdef CONFIG_PROC_FS
+ static struct {
+ 	unsigned char val;
+diff --git a/drivers/scsi/atari_scsi.c b/drivers/scsi/atari_scsi.c
+index 99e5729d910d..f55d13e400da 100644
+--- a/drivers/scsi/atari_scsi.c
++++ b/drivers/scsi/atari_scsi.c
+@@ -760,13 +760,15 @@ static int __init atari_scsi_probe(struct platform_device *pdev)
+ #ifdef CONFIG_NVRAM
+ 	else
+ 		/* Test if a host id is set in the NVRam */
+-		if (ATARIHW_PRESENT(TT_CLK) && nvram_check_checksum()) {
+-			unsigned char b = nvram_read_byte(16);
++		if (ATARIHW_PRESENT(TT_CLK)) {
++			unsigned char b;
++			loff_t offset = 16;
++			ssize_t count = arch_nvram_ops.read(&b, 1, &offset);
  
- 	/* ABI compatibility quirk: */
- 	if (!size)
--		size = SCHED_ATTR_SIZE_VER0;
-+		size_cp = SCHED_ATTR_SIZE_VER0;
- 
--	if (size < SCHED_ATTR_SIZE_VER0)
-+	else if (size < SCHED_ATTR_SIZE_VER0)
- 		goto err_size;
- 
- 	/*
-@@ -4483,7 +4485,7 @@ static int sched_copy_attr(struct sched_attr __user *uattr, struct sched_attr *a
- 		unsigned char val;
- 
- 		addr = (void __user *)uattr + sizeof(*attr);
--		end  = (void __user *)uattr + size;
-+		end  = (void __user *)uattr + size_cp;
- 
- 		for (; addr < end; addr++) {
- 			ret = get_user(val, addr);
-@@ -4492,13 +4494,17 @@ static int sched_copy_attr(struct sched_attr __user *uattr, struct sched_attr *a
- 			if (val)
- 				goto err_size;
+ 			/* Arbitration enabled? (for TOS)
+ 			 * If yes, use configured host ID
+ 			 */
+-			if (b & 0x80)
++			if ((count == 1) && (b & 0x80))
+ 				atari_scsi_template.this_id = b & 7;
  		}
--		size = sizeof(*attr);
-+		size_cp = sizeof(*attr);
- 	}
- 
--	ret = copy_from_user(attr, uattr, size);
-+	ret = copy_from_user(attr, uattr, size_cp);
- 	if (ret)
- 		return -EFAULT;
- 
-+	/* Sanity check if size was changed in user space */
-+	if (attr->size != size)
-+		return -EINVAL;
+ #endif
+diff --git a/include/linux/nvram.h b/include/linux/nvram.h
+index 28bfb9ab94ca..4f78147e74d9 100644
+--- a/include/linux/nvram.h
++++ b/include/linux/nvram.h
+@@ -11,4 +11,13 @@ extern void __nvram_write_byte(unsigned char c, int i);
+ extern void nvram_write_byte(unsigned char c, int i);
+ extern int __nvram_check_checksum(void);
+ extern int nvram_check_checksum(void);
 +
- 	/*
- 	 * XXX: Do we want to be lenient like existing syscalls; or do we want
- 	 * to be strict and return an error on out-of-bounds values?
++struct nvram_ops {
++	ssize_t         (*read)(char *, size_t, loff_t *);
++	ssize_t         (*write)(char *, size_t, loff_t *);
++	ssize_t         (*get_size)(void);
++};
++
++extern const struct nvram_ops arch_nvram_ops;
++
+ #endif  /* _LINUX_NVRAM_H */
 -- 
-2.17.2 (Apple Git-113)
+2.19.2
