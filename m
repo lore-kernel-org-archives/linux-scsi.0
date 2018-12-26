@@ -1,57 +1,33 @@
-From: Randall Huang <ihhuang@abmail.org>
-Subject: [PATCH] scsi: associate bio write hint with WRITE CDB
-Date: Wed, 26 Dec 2018 13:51:11 +0800
-Message-ID: <20181226055111.101325-1-huangrandall@google.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+From: Kangjie Lu <kjlu@umn.edu>
+Subject: [PATCH] scsi: aacraid: add a check for aac_fib_send
+Date: Tue, 25 Dec 2018 23:51:03 -0600
+Message-ID: <20181226055103.74893-1-kjlu@umn.edu>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: huangrandall@google.com
+To: kjlu@umn.edu
+Cc: pakki001@umn.edu, Adaptec OEM Raid Solutions <aacraid@microsemi.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-In SPC-3, WRITE(10)/(16) support grouping function.
-Let's associate bio write hint with group number for
-enabling StreamID or Turbo Write feature.
+aac_fib_send could fail, so add a check to its return value: If it
+fails, issue an error message.
 
-Signed-off-by: Randall Huang <huangrandall@google.com>
+Signed-off-by: Kangjie Lu <kjlu@umn.edu>
 ---
- drivers/scsi/sd.c | 14 ++++++++++++--
- 1 file changed, 12 insertions(+), 2 deletions(-)
+ drivers/scsi/aacraid/dpcsup.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 4b49cb67617e..28bfa9ed2b54 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1201,7 +1201,12 @@ static int sd_setup_read_write_cmnd(struct scsi_cmnd *SCpnt)
- 		SCpnt->cmnd[11] = (unsigned char) (this_count >> 16) & 0xff;
- 		SCpnt->cmnd[12] = (unsigned char) (this_count >> 8) & 0xff;
- 		SCpnt->cmnd[13] = (unsigned char) this_count & 0xff;
--		SCpnt->cmnd[14] = SCpnt->cmnd[15] = 0;
-+		if (rq_data_dir(rq) == WRITE) {
-+			SCpnt->cmnd[14] = rq->bio->bi_write_hint & 0x3f;
-+		} else {
-+			SCpnt->cmnd[14] = 0;
-+		}
-+		SCpnt->cmnd[15] = 0;
- 	} else if ((this_count > 0xff) || (block > 0x1fffff) ||
- 		   scsi_device_protection(SCpnt->device) ||
- 		   SCpnt->device->use_10_for_rw) {
-@@ -1211,9 +1216,14 @@ static int sd_setup_read_write_cmnd(struct scsi_cmnd *SCpnt)
- 		SCpnt->cmnd[3] = (unsigned char) (block >> 16) & 0xff;
- 		SCpnt->cmnd[4] = (unsigned char) (block >> 8) & 0xff;
- 		SCpnt->cmnd[5] = (unsigned char) block & 0xff;
--		SCpnt->cmnd[6] = SCpnt->cmnd[9] = 0;
-+		if (rq_data_dir(rq) == WRITE) {
-+			SCpnt->cmnd[6] = rq->bio->bi_write_hint & 0x1f;
-+		} else {
-+			SCpnt->cmnd[6] = 0;
-+		}
- 		SCpnt->cmnd[7] = (unsigned char) (this_count >> 8) & 0xff;
- 		SCpnt->cmnd[8] = (unsigned char) this_count & 0xff;
-+		SCpnt->cmnd[9] = 0;
- 	} else {
- 		if (unlikely(rq->cmd_flags & REQ_FUA)) {
- 			/*
+diff --git a/drivers/scsi/aacraid/dpcsup.c b/drivers/scsi/aacraid/dpcsup.c
+index ddc69738375f..0fbdc0dbf9d8 100644
+--- a/drivers/scsi/aacraid/dpcsup.c
++++ b/drivers/scsi/aacraid/dpcsup.c
+@@ -271,6 +271,8 @@ static void aac_aif_callback(void *context, struct fib * fibptr)
+ 		FsaNormal,
+ 		0, 1,
+ 		(fib_callback)aac_aif_callback, fibctx);
++	if (status)
++		pr_err("failure in aac_fib_send: %d\n", status);
+ }
+ 
+ 
 -- 
-2.20.1.415.g653613c723-goog
+2.17.2 (Apple Git-113)
