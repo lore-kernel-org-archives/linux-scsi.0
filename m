@@ -1,52 +1,57 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH] scsi: fix a double-fetch bug in sg_write
-Date: Tue, 25 Dec 2018 22:42:52 -0500
-Message-ID: <7e727b1a-88e5-7062-159e-bf4be110d168@interlog.com>
-References: <20181225202427.69476-1-kjlu@umn.edu>
-Reply-To: dgilbert@interlog.com
+From: Randall Huang <ihhuang@abmail.org>
+Subject: [PATCH] scsi: associate bio write hint with WRITE CDB
+Date: Wed, 26 Dec 2018 13:51:11 +0800
+Message-ID: <20181226055111.101325-1-huangrandall@google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20181225202427.69476-1-kjlu@umn.edu>
-Content-Language: en-CA
 Sender: linux-kernel-owner@vger.kernel.org
-To: Kangjie Lu <kjlu@umn.edu>
-Cc: pakki001@umn.edu, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: huangrandall@google.com
 List-Id: linux-scsi@vger.kernel.org
 
-On 2018-12-25 3:24 p.m., Kangjie Lu wrote:
-> "opcode" has been copied in from user space and checked. We should not
-> copy it in again, which may have been modified by malicous
-> multi-threading user programs through race conditions. The fix uses the
-> opcode fetched in the first copy.
-> 
-> Signed-off-by: Kangjie Lu <kjlu@umn.edu>
-  Acked-by: Douglas Gilbert <dgilbert@interlog.com>
+In SPC-3, WRITE(10)/(16) support grouping function.
+Let's associate bio write hint with group number for
+enabling StreamID or Turbo Write feature.
 
-Also applied to my sg v4 driver code. The v1 and v2 interfaces (based on
-struct sg_header) did not provide a command length field. The sg driver
-needed to read the first byte of the command (the "opcode") to determine
-the full command's length prior to actually reading it in full.
+Signed-off-by: Randall Huang <huangrandall@google.com>
+---
+ drivers/scsi/sd.c | 14 ++++++++++++--
+ 1 file changed, 12 insertions(+), 2 deletions(-)
 
-Hard to think of an example of an exploit based on this double read.
-
-> ---
->   drivers/scsi/sg.c | 3 ++-
->   1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-> index 4dacbfffd113..41774e4f9508 100644
-> --- a/drivers/scsi/sg.c
-> +++ b/drivers/scsi/sg.c
-> @@ -686,7 +686,8 @@ sg_write(struct file *filp, const char __user *buf, size_t count, loff_t * ppos)
->   	hp->flags = input_size;	/* structure abuse ... */
->   	hp->pack_id = old_hdr.pack_id;
->   	hp->usr_ptr = NULL;
-> -	if (__copy_from_user(cmnd, buf, cmd_size))
-> +	cmnd[0] = opcode;
-> +	if (__copy_from_user(cmnd + 1, buf + 1, cmd_size - 1))
->   		return -EFAULT;
->   	/*
->   	 * SG_DXFER_TO_FROM_DEV is functionally equivalent to SG_DXFER_FROM_DEV,
-> 
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 4b49cb67617e..28bfa9ed2b54 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1201,7 +1201,12 @@ static int sd_setup_read_write_cmnd(struct scsi_cmnd *SCpnt)
+ 		SCpnt->cmnd[11] = (unsigned char) (this_count >> 16) & 0xff;
+ 		SCpnt->cmnd[12] = (unsigned char) (this_count >> 8) & 0xff;
+ 		SCpnt->cmnd[13] = (unsigned char) this_count & 0xff;
+-		SCpnt->cmnd[14] = SCpnt->cmnd[15] = 0;
++		if (rq_data_dir(rq) == WRITE) {
++			SCpnt->cmnd[14] = rq->bio->bi_write_hint & 0x3f;
++		} else {
++			SCpnt->cmnd[14] = 0;
++		}
++		SCpnt->cmnd[15] = 0;
+ 	} else if ((this_count > 0xff) || (block > 0x1fffff) ||
+ 		   scsi_device_protection(SCpnt->device) ||
+ 		   SCpnt->device->use_10_for_rw) {
+@@ -1211,9 +1216,14 @@ static int sd_setup_read_write_cmnd(struct scsi_cmnd *SCpnt)
+ 		SCpnt->cmnd[3] = (unsigned char) (block >> 16) & 0xff;
+ 		SCpnt->cmnd[4] = (unsigned char) (block >> 8) & 0xff;
+ 		SCpnt->cmnd[5] = (unsigned char) block & 0xff;
+-		SCpnt->cmnd[6] = SCpnt->cmnd[9] = 0;
++		if (rq_data_dir(rq) == WRITE) {
++			SCpnt->cmnd[6] = rq->bio->bi_write_hint & 0x1f;
++		} else {
++			SCpnt->cmnd[6] = 0;
++		}
+ 		SCpnt->cmnd[7] = (unsigned char) (this_count >> 8) & 0xff;
+ 		SCpnt->cmnd[8] = (unsigned char) this_count & 0xff;
++		SCpnt->cmnd[9] = 0;
+ 	} else {
+ 		if (unlikely(rq->cmd_flags & REQ_FUA)) {
+ 			/*
+-- 
+2.20.1.415.g653613c723-goog
