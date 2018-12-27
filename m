@@ -1,17 +1,15 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: Re: [PATCH 00/20] drop useless LIST_HEAD
-Date: Thu, 27 Dec 2018 16:40:55 +0300
-Message-ID: <20181227134055.GA2272@kadam>
-References: <1545555435-24576-1-git-send-email-Julia.Lawall@lip6.fr>
- <CAKR_QVJefW1vxYb7-qiU8=0YdbFghYo15SK2eGjOC-dntRfyYA@mail.gmail.com>
- <alpine.DEB.2.21.1812232304130.2940@hadrien>
- <CAKR_QVLeZBL43W4x1mzcfcakSZyyh9L81vgUMxfnSccKawEfdg@mail.gmail.com>
+From: Marc Gonzalez <marc.w.gonzalez@free.fr>
+Subject: Re: [PATCH v1] scsi: ufs: Use explicit access size in ufshcd_dump_regs
+Date: Thu, 27 Dec 2018 16:54:21 +0100
+Message-ID: <9ae9debe-5621-a729-e254-dbf1728dea99@free.fr>
+References: <3bf7ea8e-4cf2-1f9b-7f46-15609dfcad19@free.fr>
+ <5B8DA87D05A7694D9FA63FD143655C1B9DA52659@hasmsx108.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-Content-Disposition: inline
-In-Reply-To: <CAKR_QVLeZBL43W4x1mzcfcakSZyyh9L81vgUMxfnSccKawEfdg@mail.gmail.com>
+In-Reply-To: <5B8DA87D05A7694D9FA63FD143655C1B9DA52659@hasmsx108.ger.corp.intel.com>
+Content-Language: en-US
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -21,33 +19,21 @@ List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Tom Psyborg <pozega.tomislav@gmail.com>
-Cc: linux-wireless@vger.kernel.org, linux-nfs@vger.kernel.org, Stefano Stabellini <sstabellini@kernel.org>, linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>, linux-btrfs@vger.kernel.org, dmaengine@vger.kernel.org, xen-devel@lists.xenproject.org, Dan Williams <dan.j.williams@intel.com>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, linux-arm-kernel@lists.infradead.org
+To: Vinayak Holikatti <vinholikatti@gmail.com>, Joao Pinto <jpinto@synopsys.com>
+Cc: SCSI <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, MSM <linux-arm-msm@vger.kernel.org>, Avri Altman <avri.altman@wdc.com>, "Winkler, Tomas" <tomas.winkler@intel.com>, Robin Murphy <robin.murphy@arm.com>, Linux ARM <linux-arm-kernel@lists.infradead.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Dec 25, 2018 at 11:12:20PM +0100, Tom Psyborg wrote:
-> there was discussion about this just some days ago. CC 4-5 lists is
-> more than enough
+On 13/12/2018 23:34, Winkler, Tomas wrote:
+
+> On 11/12/2018 15:18, Marc Gonzalez wrote:
 > 
+>> Fixes: ba80917d9932d ("scsi: ufs: ufshcd_dump_regs to use memcpy_fromio")
+>> Signed-off-by: Marc Gonzalez <marc.w.gonzalez@free.fr>
+>
+> LGTM
 
-I don't know who you were discussing this with...
+Vinayak, Joao,
 
-You should CC the 0th patch to all the mailinglists.  That much is a
-clear rule.
+What do you think?
 
-For the rest, Julia's position is the more conservative one.  I was in
-a conversation in RL and they were like, "CC everyone for all the
-patches".  It depends on the context, of course.  If the patches are
-dependent on each other then you *have* to CC everyone for everything.
-
-If we really have other clear rules, then it should be encoded into
-get_maintainer.pl so that it's automatic.
-
-My other question is why do the linux-arm-kernel@lists.infradead.org
-people feel like they need to be CC'd about every driver???  I always
-remove them from the CC list unless it's an arch/arm issue.
-
-regards,
-dan carpenter
-
-PS:  Please, no more top posting.
+Regards.
