@@ -1,39 +1,63 @@
-From: Marc Gonzalez <marc.w.gonzalez@free.fr>
-Subject: Re: [PATCH v1] scsi: ufs: Use explicit access size in ufshcd_dump_regs
-Date: Thu, 27 Dec 2018 16:54:21 +0100
-Message-ID: <9ae9debe-5621-a729-e254-dbf1728dea99@free.fr>
-References: <3bf7ea8e-4cf2-1f9b-7f46-15609dfcad19@free.fr>
- <5B8DA87D05A7694D9FA63FD143655C1B9DA52659@hasmsx108.ger.corp.intel.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 03/10] SCSI: fcoe: convert to use BUS_ATTR_WO
+Date: Fri, 28 Dec 2018 13:50:53 +0100
+Message-ID: <5691ac07-ec5d-893f-09e4-ff1acd889abd@suse.de>
+References: <20181221075442.17109-1-gregkh@linuxfoundation.org>
+ <20181221075442.17109-4-gregkh@linuxfoundation.org>
+ <1545406185.2765.8.camel@linux.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <5B8DA87D05A7694D9FA63FD143655C1B9DA52659@hasmsx108.ger.corp.intel.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1545406185.2765.8.camel@linux.ibm.com>
 Content-Language: en-US
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Vinayak Holikatti <vinholikatti@gmail.com>, Joao Pinto <jpinto@synopsys.com>
-Cc: SCSI <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, MSM <linux-arm-msm@vger.kernel.org>, Avri Altman <avri.altman@wdc.com>, "Winkler, Tomas" <tomas.winkler@intel.com>, Robin Murphy <robin.murphy@arm.com>, Linux ARM <linux-arm-kernel@lists.infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <jejb@linux.ibm.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-kernel@vger.kernel.org
+Cc: Johannes Thumshirn <jth@kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 13/12/2018 23:34, Winkler, Tomas wrote:
-
-> On 11/12/2018 15:18, Marc Gonzalez wrote:
+On 12/21/18 4:29 PM, James Bottomley wrote:
+> [scsi list cc added]
+> On Fri, 2018-12-21 at 08:54 +0100, Greg Kroah-Hartman wrote:
+>> We are trying to get rid of BUS_ATTR() and the usage of that in the
+>> fcoe driver can be trivially converted to use BUS_ATTR_WO(), so use
+>> that instead.
+>>
+>> At the same time remove a unneeded EXPORT_SYMBOL() marking for the
+>> sysfs callback function we are renaming, no idea of how that got into
+>> the tree...
 > 
->> Fixes: ba80917d9932d ("scsi: ufs: ufshcd_dump_regs to use memcpy_fromio")
->> Signed-off-by: Marc Gonzalez <marc.w.gonzalez@free.fr>
->
-> LGTM
+> The EXPORT_SYMBOL removal is fine, but
+> 
+> [...]
+>> --- a/include/scsi/libfcoe.h
+>> +++ b/include/scsi/libfcoe.h
+>> @@ -405,10 +405,8 @@ int fcoe_transport_attach(struct fcoe_transport
+>> *ft);
+>>   int fcoe_transport_detach(struct fcoe_transport *ft);
+>>
+>>   /* sysfs store handler for ctrl_control interface */
+>> -ssize_t fcoe_ctlr_create_store(struct bus_type *bus,
+>> -			       const char *buf, size_t count);
+>> -ssize_t fcoe_ctlr_destroy_store(struct bus_type *bus,
+>> -				const char *buf, size_t count);
+>> +ssize_t ctlr_create_store(struct bus_type *bus, const char *buf,
+>> size_t count);
+>> +ssize_t ctlr_destroy_store(struct bus_type *bus, const char *buf,
+>> size_t count);
+> 
+> You're really damaging our prefix namespace here.  It looks like the
+> ctlr_ name is a farly recent addition for sysfs (only myra/b) use it in
+> SCSI but it's inviting symbol clashes.
+> 
+Hmm. I was under the impression that all sysfs functions from myrb/myrs 
+are local, hence I would not need to prefix them.
+If this isn't the case I definitely will be fixing them.
 
-Vinayak, Joao,
+But in any case, if possible any sysfs function should be local to the 
+driver; no-one else should ever attempt to use them.
+And we should be making it so if that's not the case.
 
-What do you think?
+Cheers,
 
-Regards.
+Hannes
