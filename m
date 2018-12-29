@@ -1,118 +1,65 @@
-From: Michael Schmitz <schmitzmic@gmail.com>
-Subject: Re: [PATCH v8 01/25] scsi/atari_scsi: Don't select CONFIG_NVRAM
-Date: Sat, 29 Dec 2018 15:54:24 +1300
-Message-ID: <1ece01a1-dc68-daa3-218c-4b3d45375861@gmail.com>
-References: <cover.1545784679.git.fthain@telegraphics.com.au>
- <e68fcc3ec0a6cd4e14f763366d4d9445890b9b82.1545784679.git.fthain@telegraphics.com.au>
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 00/20] drop useless LIST_HEAD
+Date: Fri, 28 Dec 2018 21:25:04 -0800
+Message-ID: <20181229052504.GA16315@magnolia>
+References: <1545555435-24576-1-git-send-email-Julia.Lawall@lip6.fr>
+ <CAKR_QVJefW1vxYb7-qiU8=0YdbFghYo15SK2eGjOC-dntRfyYA@mail.gmail.com>
+ <alpine.DEB.2.21.1812232304130.2940@hadrien>
+ <CAKR_QVLeZBL43W4x1mzcfcakSZyyh9L81vgUMxfnSccKawEfdg@mail.gmail.com>
+ <20181227134055.GA2272@kadam>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <e68fcc3ec0a6cd4e14f763366d4d9445890b9b82.1545784679.git.fthain@telegraphics.com.au>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>, Arnd Bergmann <arnd@arndb.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-kernel@vger.kernel.org, linux-m68k@lists.linux-m68k.org, linuxppc-dev@lists.ozlabs.org, linux-scsi@vger.kernel.org
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+Content-Disposition: inline
+In-Reply-To: <20181227134055.GA2272@kadam>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: linux-wireless@vger.kernel.org, linux-nfs@vger.kernel.org, Stefano Stabellini <sstabellini@kernel.org>, linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>, linux-btrfs@vger.kernel.org, dmaengine@vger.kernel.org, xen-devel@lists.xenproject.org, Dan Williams <dan.j.williams@intel.com>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Tom Psyborg <pozega.tomislav@gmail.com>, linux-arm-kernel@lists.infradead.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Finn,
+On Thu, Dec 27, 2018 at 04:40:55PM +0300, Dan Carpenter wrote:
+> On Tue, Dec 25, 2018 at 11:12:20PM +0100, Tom Psyborg wrote:
+> > there was discussion about this just some days ago. CC 4-5 lists is
+> > more than enough
+> > 
+> 
+> I don't know who you were discussing this with...
+> 
+> You should CC the 0th patch to all the mailinglists.  That much is a
+> clear rule.
+> 
+> For the rest, Julia's position is the more conservative one.  I was in
+> a conversation in RL and they were like, "CC everyone for all the
+> patches".  It depends on the context, of course.  If the patches are
+> dependent on each other then you *have* to CC everyone for everything.
 
-Am 26.12.2018 um 13:37 schrieb Finn Thain:
-> On powerpc, setting CONFIG_NVRAM=n builds a kernel with no NVRAM support.
-> Setting CONFIG_NVRAM=m enables the /dev/nvram misc device module without
-> enabling NVRAM support in drivers. Setting CONFIG_NVRAM=y enables the
-> misc device (built-in) and also enables NVRAM support in drivers.
->
-> m68k shares the valkyriefb driver with powerpc, and since that driver uses
-> NVRAM, it is affected by CONFIG_ATARI_SCSI, because of the use of
-> "select NVRAM".
->
-> Adopt the powerpc convention on m68k to avoid surprises.
->
-> Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
-> Tested-by: Christian T. Steigies <cts@debian.org>
+Agreed.  Ms. Lawall, sending "Cover letter + all relevant XFS patches"
+(as you did) was exactly the right thing for us xfs types. :)
 
-Acked-by: Michael Schmitz <schmitzmic@gmail.com>
+For that matter, we prefer to receive through linux-xfs more patches
+than necessary (one can send the entire series if one is unsure) than to
+go wanting for more context.
 
-> ---
-> This patch temporarily disables CONFIG_NVRAM on Atari, to prevent build
-> failures when bisecting the rest of this patch series. It gets enabled
-> again with the introduction of CONFIG_HAVE_ARCH_NVRAM_OPS, once the
-> nvram_* global functions have been moved to an ops struct.
-> ---
->  drivers/char/Kconfig      | 5 +----
->  drivers/scsi/Kconfig      | 6 +++---
->  drivers/scsi/atari_scsi.c | 7 ++++---
->  3 files changed, 8 insertions(+), 10 deletions(-)
->
-> diff --git a/drivers/char/Kconfig b/drivers/char/Kconfig
-> index 9d03b2ff5df6..5b54595dfe30 100644
-> --- a/drivers/char/Kconfig
-> +++ b/drivers/char/Kconfig
-> @@ -236,7 +236,7 @@ source "drivers/char/hw_random/Kconfig"
->
->  config NVRAM
->  	tristate "/dev/nvram support"
-> -	depends on ATARI || X86 || GENERIC_NVRAM
-> +	depends on X86 || GENERIC_NVRAM
->  	---help---
->  	  If you say Y here and create a character special file /dev/nvram
->  	  with major number 10 and minor number 144 using mknod ("man mknod"),
-> @@ -254,9 +254,6 @@ config NVRAM
->  	  should NEVER idly tamper with it. See Ralf Brown's interrupt list
->  	  for a guide to the use of CMOS bytes by your BIOS.
->
-> -	  On Atari machines, /dev/nvram is always configured and does not need
-> -	  to be selected.
-> -
->  	  To compile this driver as a module, choose M here: the
->  	  module will be called nvram.
->
-> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-> index 640cd1b31a18..924eb69e7fc4 100644
-> --- a/drivers/scsi/Kconfig
-> +++ b/drivers/scsi/Kconfig
-> @@ -1381,14 +1381,14 @@ config ATARI_SCSI
->  	tristate "Atari native SCSI support"
->  	depends on ATARI && SCSI
->  	select SCSI_SPI_ATTRS
-> -	select NVRAM
->  	---help---
->  	  If you have an Atari with built-in NCR5380 SCSI controller (TT,
->  	  Falcon, ...) say Y to get it supported. Of course also, if you have
->  	  a compatible SCSI controller (e.g. for Medusa).
->
-> -	  To compile this driver as a module, choose M here: the
-> -	  module will be called atari_scsi.
-> +	  To compile this driver as a module, choose M here: the module will
-> +	  be called atari_scsi. If you also enable NVRAM support, the SCSI
-> +	  host's ID is taken from the setting in TT RTC NVRAM.
->
->  	  This driver supports both styles of NCR integration into the
->  	  system: the TT style (separate DMA), and the Falcon style (via
-> diff --git a/drivers/scsi/atari_scsi.c b/drivers/scsi/atari_scsi.c
-> index 89f5154c40b6..99e5729d910d 100644
-> --- a/drivers/scsi/atari_scsi.c
-> +++ b/drivers/scsi/atari_scsi.c
-> @@ -755,9 +755,10 @@ static int __init atari_scsi_probe(struct platform_device *pdev)
->  	if (ATARIHW_PRESENT(TT_SCSI) && setup_sg_tablesize >= 0)
->  		atari_scsi_template.sg_tablesize = setup_sg_tablesize;
->
-> -	if (setup_hostid >= 0) {
-> +	if (setup_hostid >= 0)
->  		atari_scsi_template.this_id = setup_hostid & 7;
-> -	} else {
-> +#ifdef CONFIG_NVRAM
-> +	else
->  		/* Test if a host id is set in the NVRam */
->  		if (ATARIHW_PRESENT(TT_CLK) && nvram_check_checksum()) {
->  			unsigned char b = nvram_read_byte(16);
-> @@ -768,7 +769,7 @@ static int __init atari_scsi_probe(struct platform_device *pdev)
->  			if (b & 0x80)
->  				atari_scsi_template.this_id = b & 7;
->  		}
-> -	}
-> +#endif
->
->  	/* If running on a Falcon and if there's TT-Ram (i.e., more than one
->  	 * memory block, since there's always ST-Ram in a Falcon), then
->
+--D
+
+> If we really have other clear rules, then it should be encoded into
+> get_maintainer.pl so that it's automatic.
+> 
+> My other question is why do the linux-arm-kernel@lists.infradead.org
+> people feel like they need to be CC'd about every driver???  I always
+> remove them from the CC list unless it's an arch/arm issue.
+> 
+> regards,
+> dan carpenter
+> 
+> PS:  Please, no more top posting.
+> 
