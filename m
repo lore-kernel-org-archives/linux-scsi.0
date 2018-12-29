@@ -1,49 +1,76 @@
-From: Julia Lawall <julia.lawall@lip6.fr>
-Subject: Re: [PATCH 00/20] drop useless LIST_HEAD
-Date: Sat, 29 Dec 2018 07:19:35 +0100 (CET)
-Message-ID: <alpine.DEB.2.21.1812290717010.2673@hadrien>
-References: <1545555435-24576-1-git-send-email-Julia.Lawall@lip6.fr> <CAKR_QVJefW1vxYb7-qiU8=0YdbFghYo15SK2eGjOC-dntRfyYA@mail.gmail.com> <alpine.DEB.2.21.1812232304130.2940@hadrien> <CAKR_QVLeZBL43W4x1mzcfcakSZyyh9L81vgUMxfnSccKawEfdg@mail.gmail.com>
- <20181227134055.GA2272@kadam> <20181229052504.GA16315@magnolia>
+From: LEROY Christophe <christophe.leroy@c-s.fr>
+Subject: Re: [PATCH v8 01/25] scsi/atari_scsi: Don't select CONFIG_NVRAM
+Date: Sat, 29 Dec 2018 17:55:02 +0100
+Message-ID: <20181229175502.Horde.OaGr035vfDpvlvNGdmoaOQ2@messagerie.si.c-s.fr>
+References: <cover.1545784679.git.fthain@telegraphics.com.au>
+ <e68fcc3ec0a6cd4e14f763366d4d9445890b9b82.1545784679.git.fthain@telegraphics.com.au>
+ <20181228173846.Horde.z_zDEJN0rVd8tkt3HjYzmg2@messagerie.si.c-s.fr>
+ <alpine.LNX.2.21.1812291050330.152@nippy.intranet>
+ <a170720a-fe17-744d-790b-e258465bd75e@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <20181229052504.GA16315@magnolia>
-Sender: netdev-owner@vger.kernel.org
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>, Tom Psyborg <pozega.tomislav@gmail.com>, Julia Lawall <julia.lawall@lip6.fr>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, kernel-janitors@vger.kernel.org, dmaengine@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Dan Williams <dan.j.williams@intel.com>, linux-scsi@vger.kernel.org, linux-nfs@vger.kernel.org, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, linux-rdma@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, Stefano Stabellini <sstabellini@kernel.org>, xen-devel@lists.xenproject.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8; format=flowed; DelSp=Yes
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <a170720a-fe17-744d-790b-e258465bd75e@gmail.com>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: Michael Schmitz <schmitzmic@gmail.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-m68k@lists.linux-m68k.org, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Finn Thain <fthain@telegraphics.com.au>
 List-Id: linux-scsi@vger.kernel.org
 
+Michael Schmitz <schmitzmic@gmail.com> a écrit :
 
-
-On Fri, 28 Dec 2018, Darrick J. Wong wrote:
-
-> On Thu, Dec 27, 2018 at 04:40:55PM +0300, Dan Carpenter wrote:
-> > On Tue, Dec 25, 2018 at 11:12:20PM +0100, Tom Psyborg wrote:
-> > > there was discussion about this just some days ago. CC 4-5 lists is
-> > > more than enough
-> > >
-> >
-> > I don't know who you were discussing this with...
-> >
-> > You should CC the 0th patch to all the mailinglists.  That much is a
-> > clear rule.
-> >
-> > For the rest, Julia's position is the more conservative one.  I was in
-> > a conversation in RL and they were like, "CC everyone for all the
-> > patches".  It depends on the context, of course.  If the patches are
-> > dependent on each other then you *have* to CC everyone for everything.
+> Hi Finn,
 >
-> Agreed.  Ms. Lawall, sending "Cover letter + all relevant XFS patches"
-> (as you did) was exactly the right thing for us xfs types. :)
+> Am 29.12.2018 um 14:06 schrieb Finn Thain:
+>> On Fri, 28 Dec 2018, LEROY Christophe wrote:
+>>>> diff --git a/drivers/scsi/atari_scsi.c b/drivers/scsi/atari_scsi.c
+>>>> index 89f5154c40b6..99e5729d910d 100644
+>>>> --- a/drivers/scsi/atari_scsi.c
+>>>> +++ b/drivers/scsi/atari_scsi.c
+>>>> @@ -755,9 +755,10 @@ static int __init atari_scsi_probe(struct
+>>>> platform_device *pdev)
+>>>> 	if (ATARIHW_PRESENT(TT_SCSI) && setup_sg_tablesize >= 0)
+>>>> 		atari_scsi_template.sg_tablesize = setup_sg_tablesize;
+>>>>
+>>>> -	if (setup_hostid >= 0) {
+>>>> +	if (setup_hostid >= 0)
+>>>> 		atari_scsi_template.this_id = setup_hostid & 7;
+>>>> -	} else {
+>>>> +#ifdef CONFIG_NVRAM
+>>>> +	else
+>>>
+>>> Such ifdefs should be avoided in C files.
+>>> It would be better to use
+>>>
+>>> } else if (IS_ENABLED(CONFIG_NVRAM)) {
+>>>
+>>
+>> I don't like #ifdefs either. However, as the maintainer of this file, I am
+>> okay with this one.
+>>
+>> The old #ifdef CONFIG_NVRAM conditional compilation convention that gets
+>> used here and under drivers/video/fbdev could probably be improved upon
+>> but I consider this to be out-of-scope for this series, which is
+>> complicated enough.
+>>
+>> And as explained in the commit log, CONFIG_NVRAM=y and CONFIG_NVRAM=m are
+>> treaded differently by drivers. Therefore, IS_ENABLED would be incorrect.
 >
-> For that matter, we prefer to receive through linux-xfs more patches
-> than necessary (one can send the entire series if one is unsure) than to
-> go wanting for more context.
+> IS_BUILTIN(CONFIG_NVRAM) is probably what Christophe really meant to suggest.
 
-Thanks for the confirmation.  I was planning to ignore the 4-5 advice,
-because there is no way in this case to make a meaningful 4-5 list
-suggestion - it's either all or nothing.  But 20 patches at once is
-perhaps a lot as well.  In this case, I just wanted to get rid of the
-whole issue at once.
+Doesn't #ifdef means either y or m ? So the same as IS_ENABLED() ?
 
-julia
+Christophe
+
+>
+> Or (really going out on a limb here):
+>
+> IS_BUILTIN(CONFIG_NVRAM) ||
+> ( IS_MODULE(CONFIG_ATARI_SCSI) && IS_ENABLED(CONFIG_NVRAM) )
+>
+> Not that I'd advocate that, for this series.
+>
+> Cheers,
+>
+> 	Michael
