@@ -1,94 +1,61 @@
-From: Michael Schmitz <schmitzmic@gmail.com>
+From: Arnd Bergmann <arnd@arndb.de>
 Subject: Re: [PATCH v8 01/25] scsi/atari_scsi: Don't select CONFIG_NVRAM
-Date: Sun, 30 Dec 2018 07:54:24 +1300
-Message-ID: <c50e2aa2-85d5-4eba-f74b-a3f9c0963c97@gmail.com>
+Date: Sat, 29 Dec 2018 22:37:20 +0100
+Message-ID: <CAK8P3a1J3sy55nd5QbxR5AjxkLyE-RE=bDNKB9sG27xx=mZ60A@mail.gmail.com>
 References: <cover.1545784679.git.fthain@telegraphics.com.au>
  <e68fcc3ec0a6cd4e14f763366d4d9445890b9b82.1545784679.git.fthain@telegraphics.com.au>
  <20181228173846.Horde.z_zDEJN0rVd8tkt3HjYzmg2@messagerie.si.c-s.fr>
- <alpine.LNX.2.21.1812291050330.152@nippy.intranet>
- <a170720a-fe17-744d-790b-e258465bd75e@gmail.com>
- <20181229175502.Horde.OaGr035vfDpvlvNGdmoaOQ2@messagerie.si.c-s.fr>
+ <alpine.LNX.2.21.1812291050330.152@nippy.intranet> <a170720a-fe17-744d-790b-e258465bd75e@gmail.com>
+ <alpine.LNX.2.21.1812291327380.152@nippy.intranet> <5e901432-65e2-c87b-31e3-36a394687a9a@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20181229175502.Horde.OaGr035vfDpvlvNGdmoaOQ2@messagerie.si.c-s.fr>
+In-Reply-To: <5e901432-65e2-c87b-31e3-36a394687a9a@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: LEROY Christophe <christophe.leroy@c-s.fr>
-Cc: Arnd Bergmann <arnd@arndb.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-m68k@lists.linux-m68k.org, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Finn Thain <fthain@telegraphics.com.au>
+To: Michael Schmitz <schmitzmic@gmail.com>
+Cc: Finn Thain <fthain@telegraphics.com.au>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-m68k <linux-m68k@lists.linux-m68k.org>, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Christophe,
-
-Am 30.12.2018 um 05:55 schrieb LEROY Christophe:
-> Michael Schmitz <schmitzmic@gmail.com> a écrit :
+On Sat, Dec 29, 2018 at 3:51 AM Michael Schmitz <schmitzmic@gmail.com> wrote:
 >
->> Hi Finn,
->>
->> Am 29.12.2018 um 14:06 schrieb Finn Thain:
->>> On Fri, 28 Dec 2018, LEROY Christophe wrote:
->>>>> diff --git a/drivers/scsi/atari_scsi.c b/drivers/scsi/atari_scsi.c
->>>>> index 89f5154c40b6..99e5729d910d 100644
->>>>> --- a/drivers/scsi/atari_scsi.c
->>>>> +++ b/drivers/scsi/atari_scsi.c
->>>>> @@ -755,9 +755,10 @@ static int __init atari_scsi_probe(struct
->>>>> platform_device *pdev)
->>>>>     if (ATARIHW_PRESENT(TT_SCSI) && setup_sg_tablesize >= 0)
->>>>>         atari_scsi_template.sg_tablesize = setup_sg_tablesize;
->>>>>
->>>>> -    if (setup_hostid >= 0) {
->>>>> +    if (setup_hostid >= 0)
->>>>>         atari_scsi_template.this_id = setup_hostid & 7;
->>>>> -    } else {
->>>>> +#ifdef CONFIG_NVRAM
->>>>> +    else
->>>>
->>>> Such ifdefs should be avoided in C files.
->>>> It would be better to use
->>>>
->>>> } else if (IS_ENABLED(CONFIG_NVRAM)) {
->>>>
->>>
->>> I don't like #ifdefs either. However, as the maintainer of this file,
->>> I am
->>> okay with this one.
->>>
->>> The old #ifdef CONFIG_NVRAM conditional compilation convention that gets
->>> used here and under drivers/video/fbdev could probably be improved upon
->>> but I consider this to be out-of-scope for this series, which is
->>> complicated enough.
->>>
->>> And as explained in the commit log, CONFIG_NVRAM=y and CONFIG_NVRAM=m
->>> are
->>> treaded differently by drivers. Therefore, IS_ENABLED would be
->>> incorrect.
->>
->> IS_BUILTIN(CONFIG_NVRAM) is probably what Christophe really meant to
->> suggest.
+> Hi Finn,
 >
-> Doesn't #ifdef means either y or m ? So the same as IS_ENABLED() ?
-
-#ifdef CONFIG_NVRAM is used if you want to match CONFIG_NVRAM=y. For 
-CONFIG_NVRAM=m, you'd use #ifdef CONFIG_NVRAM_MODULE.
-
-Cheers,
-
-	Michael
-
-
+> Am 29.12.2018 um 15:34 schrieb Finn Thain:
+> > On Sat, 29 Dec 2018, Michael Schmitz wrote:
+> >
+> >>
+> >> IS_BUILTIN(CONFIG_NVRAM) is probably what Christophe really meant to suggest.
+> >>
+> >> Or (really going out on a limb here):
+> >>
+> >> IS_BUILTIN(CONFIG_NVRAM) ||
+> >> ( IS_MODULE(CONFIG_ATARI_SCSI) && IS_ENABLED(CONFIG_NVRAM) )
+> >>
+> >> Not that I'd advocate that, for this series.
+> >>
+> >
+> > Well, you are a maintainer for atari_scsi.c.
+> >
+> > Are you saying that you want IS_BUILTIN(CONFIG_NVRAM) used here instead of
+> > ifdef?
 >
-> Christophe
+> No, just pointing out that there would be a way to avoid the ifdef
+> without messing up driver behaviour. I'm fine with the ifdef - not least
+> because it clearly eliminates code that would be unreachable.
 >
->>
->> Or (really going out on a limb here):
->>
->> IS_BUILTIN(CONFIG_NVRAM) ||
->> ( IS_MODULE(CONFIG_ATARI_SCSI) && IS_ENABLED(CONFIG_NVRAM) )
->>
->> Not that I'd advocate that, for this series.
->>
->> Cheers,
->>
->>     Michael
->
->
+> (On second thought - I don't want to speculate whether there's weird
+> compiler options that could result in the nvram_check_checksum and
+> nvram_read_bytes symbols to still be referenced in the final link, even
+> though IS_BUILTIN(CONFIG_NVRAM) always evaluates to false. Best leave
+> this as-is.)
+
+As far as I know, it's totally reliable with the supported compilers (gcc-4.6+).
+In the older compilers (e.g. 4.1), there was a corner case, where it could
+have failed to eliminate a function that was only referenced through a pointer
+from a discarded variable, but a plain IS_ENABLED() check like the one here
+was still ok, and lots of code relies on that.
+
+Other than that, I agree either way is totally fine here, so no objections
+to using the #ifdef.
+
+      Arnd
