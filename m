@@ -1,59 +1,59 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: Re: [PATCH v8 01/25] scsi/atari_scsi: Don't select CONFIG_NVRAM
-Date: Mon, 31 Dec 2018 09:45:16 +1100 (AEDT)
-Message-ID: <alpine.LNX.2.21.1812310933450.444@nippy.intranet>
-References: <cover.1545784679.git.fthain@telegraphics.com.au>         <e68fcc3ec0a6cd4e14f763366d4d9445890b9b82.1545784679.git.fthain@telegraphics.com.au>         <20181228173846.Horde.z_zDEJN0rVd8tkt3HjYzmg2@messagerie.si.c-s.fr>        
- <alpine.LNX.2.21.1812291050330.152@nippy.intranet>         <a170720a-fe17-744d-790b-e258465bd75e@gmail.com>         <alpine.LNX.2.21.1812291327380.152@nippy.intranet>         <5e901432-65e2-c87b-31e3-36a394687a9a@gmail.com>        
- <CAK8P3a1J3sy55nd5QbxR5AjxkLyE-RE=bDNKB9sG27xx=mZ60A@mail.gmail.com>         <20181230185002.Horde.AdSknvcs4hP1Kh_T_Cos6w8@messagerie.si.c-s.fr> <1546193203.2844.9.camel@linux.vnet.ibm.com> <alpine.LNX.2.21.1812310839050.444@nippy.intranet>
+From: Jinpu Wang <jinpu.wang@cloud.ionos.com>
+Subject: Re: [PATCH 6/8] scsi: pm80xx: reduce indentation
+Date: Wed, 2 Jan 2019 08:27:50 +0100
+Message-ID: <CAMGffEkWoK_tgndeEa-TYFy+wbFyKW4B_rBcqC=HTB+FcV=Sjw@mail.gmail.com>
+References: <1546185195-25676-1-git-send-email-Julia.Lawall@lip6.fr> <1546185195-25676-7-git-send-email-Julia.Lawall@lip6.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <alpine.LNX.2.21.1812310839050.444@nippy.intranet>
+In-Reply-To: <1546185195-25676-7-git-send-email-Julia.Lawall@lip6.fr>
 Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <jejb@linux.vnet.ibm.com>
-Cc: LEROY Christophe <christophe.leroy@c-s.fr>, Arnd Bergmann <arnd@arndb.de>, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>, linux-m68k <linux-m68k@lists.linux-m68k.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, Michael Schmitz <schmitzmic@gmail.com>
+To: Julia Lawall <Julia.Lawall@lip6.fr>
+Cc: Jack Wang <jinpu.wang@profitbricks.com>, kernel-janitors@vger.kernel.org, lindar_liu <lindar_liu@usish.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 31 Dec 2018, Finn Thain wrote:
+On Sun, Dec 30, 2018 at 5:29 PM Julia Lawall <Julia.Lawall@lip6.fr> wrote:
+>
+> Delete tab aligning a statement with the right hand side of a
+> preceding assignment rather than the left hand side.
+>
+> Found with the help of Coccinelle.
+>
+> Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+Thanks, Julia.
+Acked-by: Jack Wang <jinpu.wang@cloud.ionos.com>
+>
+> ---
+>  drivers/scsi/pm8001/pm8001_sas.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
+> index b3be49d41375..44b630aceb12 100644
+> --- a/drivers/scsi/pm8001/pm8001_sas.c
+> +++ b/drivers/scsi/pm8001/pm8001_sas.c
+> @@ -657,7 +657,7 @@ static int pm8001_dev_found_notify(struct domain_device *dev)
+>                 if (dev->dev_type == SAS_SATA_DEV) {
+>                         pm8001_device->attached_phy =
+>                                 dev->rphy->identify.phy_identifier;
+> -                               flag = 1; /* directly sata*/
+> +                       flag = 1; /* directly sata*/
+>                 }
+>         } /*register this device to HBA*/
+>         PM8001_DISC_DBG(pm8001_ha, pm8001_printk("Found device\n"));
+>
 
-> On Sun, 30 Dec 2018, James Bottomley wrote:
-> 
-> > 
-> > That said, as has been pointed out, the current #ifdef has a failing 
-> > corner case when both are modular (because the code should then be 
-> > included).  The runtime macro that correctly expresses this is 
-> > IS_REACHABLE(CONFIG_NVRAM).
-> > 
-> 
-> No, in the case of CONFIG_NVRAM=m, the conditional code is deliberately 
-> excluded. This is discussed in the patch description. The convention on 
-> PPC32 is that device drivers drop support for NVRAM in this situation. 
-> 
-> I've adopted the PPC32 convention here because M68K drivers and PPC32 
-> drivers have to co-exist (I'm thinking of valkyriefb, but there are other 
-> examples).
-> 
-
-I agree with your comment in principle, that these drivers should be using 
-IS_REACHABLE(CONFIG_NVRAM), not defined(CONFIG_NVRAM).
-
-$ grep -lrw CONFIG_NVRAM drivers/
-drivers/video/fbdev/matrox/matroxfb_base.c
-drivers/video/fbdev/platinumfb.c
-drivers/video/fbdev/controlfb.c
-drivers/video/fbdev/valkyriefb.c
-drivers/video/fbdev/imsttfb.c
-drivers/scsi/atari_scsi.c
-$ 
-
-But I think this is not the fault of this patch; it's just a historical 
-accident.
-
-Having said that, I will rework this series to convert all of the above 
-drivers to IS_REACHABLE(CONFIG_NVRAM). I think it would be an improvement.
-
-Besides, it seems likely that some rework involving ppc_md will be needed 
-too because as Arnd pointed out, it would be good to avoid two sets of 
-nvram accessor methods.
 
 -- 
+Jack Wang
+Linux Kernel Developer
+
+1&1 IONOS Cloud GmbH | Greifswalder Str. 207 | 10405 Berlin | Germany
+Phone: +49 30 57700-8042 | Fax: +49 30 57700-8598
+E-mail: jinpu.wang@cloud.ionos.com | Web: www.ionos.de
+
+
+Head Office: Berlin, Germany
+District Court Berlin Charlottenburg, Registration number: HRB 125506 B
+Executive Management: Christoph Steffens, Matthias Steinberg, Achim Weiss
+
+Member of United Internet
