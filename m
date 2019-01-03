@@ -1,86 +1,57 @@
-From: Stanley Chu <stanley.chu@mediatek.com>
-Subject: Re: [PATCH v2 1/1] scsi: Synchronize request queue PM status only
- on successful resume
-Date: Thu, 3 Jan 2019 17:06:21 +0800
-Message-ID: <1546506381.20657.15.camel@mtkswgap22>
-References: <1546498395-4184-1-git-send-email-stanley.chu@mediatek.com>
-         <1546498395-4184-3-git-send-email-stanley.chu@mediatek.com>
-         <20190103082333.GL2469@lahna.fi.intel.com>
+From: Randall Huang <ihhuang@abmail.org>
+Subject: [PATCH] scsi: associate bio write hint with WRITE CDB
+Date: Thu,  3 Jan 2019 17:19:35 +0800
+Message-ID: <20190103091935.380-1-huangrandall@google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20190103082333.GL2469@lahna.fi.intel.com>
-Sender: stable-owner@vger.kernel.org
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: linux-scsi@vger.kernel.org, wsd_upstream@mediatek.com, kuohong.wang@mediatek.com, stable@vger.kernel.org, linux-mediatek@lists.infradead.org, matthias.bgg@gmail.com, peter.wang@mediatek.com
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: huangrandall@google.com
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Mika,
+In SPC-3, WRITE(10)/(16) support grouping function.
+Let's associate bio write hint with group number for
+enabling StreamID or Turbo Write feature.
 
-On Thu, 2019-01-03 at 10:23 +0200, Mika Westerberg wrote:
-> Hi,
-> 
-> On Thu, Jan 03, 2019 at 02:53:15PM +0800, stanley.chu@mediatek.com wrote:
-> > From: Stanley Chu <stanley.chu@mediatek.com>
-> > 
-> > The commit 356fd2663cff ("scsi: Set request queue runtime PM status
-> > back to active on resume") fixed up the inconsistent RPM status between
-> > request queue and device. However changing request queue RPM status
-> > shall be done only on successful resume, otherwise status may be still
-> > inconsistent as below,
-> > 
-> > Request queue: RPM_ACTIVE
-> > Device: RPM_SUSPENDED
-> > 
-> > This ends up soft lockup because requests can be submitted to
-> > underlying devices but those devices and their required resource
-> > are not resumed.
-> 
-> It would be good to add some example of the soft lockup you are seeing
-> here.
+Bug: 120900381
+Change-Id: I565c8e0c1d10e17a23e73f2a02c1adbd198b04b3
+Signed-off-by: Randall Huang <huangrandall@google.com>
+---
+ drivers/scsi/sd.c | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
 
-Thanks for remind, I will add below example in commit message in v3.
-
-For example,
-
-After above inconsistent status happens, IO request can be submitted
-to UFS device driver but required resource (like clock) is not resumed
-yet thus lead to warning as below call stack,
-
-WARN_ON(hba->clk_gating.state != CLKS_ON);
-ufshcd_queuecommand
-scsi_dispatch_cmd
-scsi_request_fn
-__blk_run_queue
-cfq_insert_request
-__elv_add_request
-blk_flush_plug_list
-blk_finish_plug
-jbd2_journal_commit_transaction
-kjournald2
-
-We may see all behind IO requests hang because of no response from
-storage host or device and then soft lockup happens in system. In the
-end, system may crash in many ways.
-
-> 
-> > Fixes: 356fd2663cff ("scsi: Set request queue runtime PM status
-> > back to active on resume")
-> 
-> You don't need to wrap this.
-
-OK! Will fix it.
-
-> 
-> The change itself looks fine.
-
-Thanks.
-
-Stanley
-
-> 
-> _______________________________________________
-> Linux-mediatek mailing list
-> Linux-mediatek@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-mediatek
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 4b49cb67617e..831c0c81ffb9 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1201,7 +1201,11 @@ static int sd_setup_read_write_cmnd(struct scsi_cmnd *SCpnt)
+ 		SCpnt->cmnd[11] = (unsigned char) (this_count >> 16) & 0xff;
+ 		SCpnt->cmnd[12] = (unsigned char) (this_count >> 8) & 0xff;
+ 		SCpnt->cmnd[13] = (unsigned char) this_count & 0xff;
+-		SCpnt->cmnd[14] = SCpnt->cmnd[15] = 0;
++		if (rq_data_dir(rq) == WRITE) {
++			SCpnt->cmnd[14] = rq->bio->bi_write_hint & 0x3f;
++		} else
++			SCpnt->cmnd[14] = 0;
++		SCpnt->cmnd[15] = 0;
+ 	} else if ((this_count > 0xff) || (block > 0x1fffff) ||
+ 		   scsi_device_protection(SCpnt->device) ||
+ 		   SCpnt->device->use_10_for_rw) {
+@@ -1211,9 +1215,13 @@ static int sd_setup_read_write_cmnd(struct scsi_cmnd *SCpnt)
+ 		SCpnt->cmnd[3] = (unsigned char) (block >> 16) & 0xff;
+ 		SCpnt->cmnd[4] = (unsigned char) (block >> 8) & 0xff;
+ 		SCpnt->cmnd[5] = (unsigned char) block & 0xff;
+-		SCpnt->cmnd[6] = SCpnt->cmnd[9] = 0;
++		if (rq_data_dir(rq) == WRITE) {
++			SCpnt->cmnd[6] = rq->bio->bi_write_hint & 0x1f;
++		} else
++			SCpnt->cmnd[6] = 0;
+ 		SCpnt->cmnd[7] = (unsigned char) (this_count >> 8) & 0xff;
+ 		SCpnt->cmnd[8] = (unsigned char) this_count & 0xff;
++		SCpnt->cmnd[9] = 0;
+ 	} else {
+ 		if (unlikely(rq->cmd_flags & REQ_FUA)) {
+ 			/*
+-- 
+2.20.1.415.g653613c723-goog
