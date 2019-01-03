@@ -1,56 +1,106 @@
-From: Randall Huang <ihhuang@abmail.org>
-Subject: [PATCH] scsi: associate bio write hint with WRITE CDB
-Date: Thu,  3 Jan 2019 17:55:28 +0800
-Message-ID: <20190103095528.102345-1-huangrandall@google.com>
+From: <stanley.chu@mediatek.com>
+Subject: [PATCH v3 1/1] scsi: Synchronize request queue PM status only on successful resume
+Date: Thu, 3 Jan 2019 22:08:05 +0800
+Message-ID: <1546524485-25610-3-git-send-email-stanley.chu@mediatek.com>
+References: <1546524485-25610-1-git-send-email-stanley.chu@mediatek.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: huangrandall@google.com
+Content-Type: text/plain
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <1546524485-25610-1-git-send-email-stanley.chu@mediatek.com>
+Sender: stable-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org, matthias.bgg@gmail.com, mika.westerberg@linux.intel.com, kuohong.wang@mediatek.com, peter.wang@mediatek.com, Stanley Chu <stanley.chu@mediatek.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-In SPC-3, WRITE(10)/(16) support grouping function.
-Let's associate bio write hint with group number for
-enabling StreamID or Turbo Write feature.
+From: Stanley Chu <stanley.chu@mediatek.com>
 
-Change-Id: I565c8e0c1d10e17a23e73f2a02c1adbd198b04b3
-Signed-off-by: Randall Huang <huangrandall@google.com>
+The commit 356fd2663cff ("scsi: Set request queue runtime PM status
+back to active on resume") fixed up the inconsistent RPM status between
+request queue and device. However changing request queue RPM status
+shall be done only on successful resume, otherwise status may be still
+inconsistent as below,
+
+Request queue: RPM_ACTIVE
+Device: RPM_SUSPENDED
+
+This ends up soft lockup because requests can be submitted to
+underlying devices but those devices and their required resource
+are not resumed.
+
+For example,
+
+After above inconsistent status happens, IO request can be submitted
+to UFS device driver but required resource (like clock) is not resumed
+yet thus lead to warning as below call stack,
+
+WARN_ON(hba->clk_gating.state != CLKS_ON);
+ufshcd_queuecommand
+scsi_dispatch_cmd
+scsi_request_fn
+__blk_run_queue
+cfq_insert_request
+__elv_add_request
+blk_flush_plug_list
+blk_finish_plug
+jbd2_journal_commit_transaction
+kjournald2
+
+We may see all behind IO requests hang because of no response from
+storage host or device and then soft lockup happens in system. In the
+end, system may crash in many ways.
+
+Fixes: 356fd2663cff (scsi: Set request queue runtime PM status
+back to active on resume)
+Cc: stable@vger.kernel.org
+Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
 ---
- drivers/scsi/sd.c | 12 ++++++++++--
- 1 file changed, 10 insertions(+), 2 deletions(-)
+ drivers/scsi/scsi_pm.c | 26 +++++++++++++++-----------
+ 1 file changed, 15 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 4b49cb67617e..db48a849107e 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1201,7 +1201,11 @@ static int sd_setup_read_write_cmnd(struct scsi_cmnd *SCpnt)
- 		SCpnt->cmnd[11] = (unsigned char) (this_count >> 16) & 0xff;
- 		SCpnt->cmnd[12] = (unsigned char) (this_count >> 8) & 0xff;
- 		SCpnt->cmnd[13] = (unsigned char) this_count & 0xff;
--		SCpnt->cmnd[14] = SCpnt->cmnd[15] = 0;
-+		if (rq_data_dir(rq) == WRITE)
-+			SCpnt->cmnd[14] = rq->bio->bi_write_hint & 0x3f;
-+		else
-+			SCpnt->cmnd[14] = 0;
-+		SCpnt->cmnd[15] = 0;
- 	} else if ((this_count > 0xff) || (block > 0x1fffff) ||
- 		   scsi_device_protection(SCpnt->device) ||
- 		   SCpnt->device->use_10_for_rw) {
-@@ -1211,9 +1215,13 @@ static int sd_setup_read_write_cmnd(struct scsi_cmnd *SCpnt)
- 		SCpnt->cmnd[3] = (unsigned char) (block >> 16) & 0xff;
- 		SCpnt->cmnd[4] = (unsigned char) (block >> 8) & 0xff;
- 		SCpnt->cmnd[5] = (unsigned char) block & 0xff;
--		SCpnt->cmnd[6] = SCpnt->cmnd[9] = 0;
-+		if (rq_data_dir(rq) == WRITE)
-+			SCpnt->cmnd[6] = rq->bio->bi_write_hint & 0x1f;
-+		else
-+			SCpnt->cmnd[6] = 0;
- 		SCpnt->cmnd[7] = (unsigned char) (this_count >> 8) & 0xff;
- 		SCpnt->cmnd[8] = (unsigned char) this_count & 0xff;
-+		SCpnt->cmnd[9] = 0;
- 	} else {
- 		if (unlikely(rq->cmd_flags & REQ_FUA)) {
- 			/*
+diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
+index a2b4179bfdf7..7639df91b110 100644
+--- a/drivers/scsi/scsi_pm.c
++++ b/drivers/scsi/scsi_pm.c
+@@ -80,8 +80,22 @@ static int scsi_dev_type_resume(struct device *dev,
+ 
+ 	if (err == 0) {
+ 		pm_runtime_disable(dev);
+-		pm_runtime_set_active(dev);
++		err = pm_runtime_set_active(dev);
+ 		pm_runtime_enable(dev);
++
++		/*
++		 * Forcibly set runtime PM status of request queue to "active"
++		 * to make sure we can again get requests from the queue
++		 * (see also blk_pm_peek_request()).
++		 *
++		 * The resume hook will correct runtime PM status of the disk.
++		 */
++		if (!err && scsi_is_sdev_device(dev)) {
++			struct scsi_device *sdev = to_scsi_device(dev);
++
++			if (sdev->request_queue->dev)
++				blk_set_runtime_active(sdev->request_queue);
++		}
+ 	}
+ 
+ 	return err;
+@@ -140,16 +154,6 @@ static int scsi_bus_resume_common(struct device *dev,
+ 	else
+ 		fn = NULL;
+ 
+-	/*
+-	 * Forcibly set runtime PM status of request queue to "active" to
+-	 * make sure we can again get requests from the queue (see also
+-	 * blk_pm_peek_request()).
+-	 *
+-	 * The resume hook will correct runtime PM status of the disk.
+-	 */
+-	if (scsi_is_sdev_device(dev) && pm_runtime_suspended(dev))
+-		blk_set_runtime_active(to_scsi_device(dev)->request_queue);
+-
+ 	if (fn) {
+ 		async_schedule_domain(fn, dev, &scsi_sd_pm_domain);
+ 
 -- 
-2.20.1.415.g653613c723-goog
+2.18.0
