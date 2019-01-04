@@ -1,28 +1,41 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 28/41] scsi: lpfc: lpfc_sli: Mark expected switch fall-throughs
-Date: Fri, 04 Jan 2019 01:06:54 -0500
-Message-ID: <yq1a7kh6jnl.fsf@oracle.com>
-References: <cover.1543374820.git.gustavo@embeddedor.com>
-        <cb80d182329a02971ff365446b0e04771fc77da8.1543374820.git.gustavo@embeddedor.com>
-        <1a29b249-e248-d4ea-525e-e5f3efece00f@embeddedor.com>
-        <CAGx+d6e+rCLjFEFCThgQwewod9Ni_wroV0cE_bceTXTFcsbe9A@mail.gmail.com>
+Subject: Re: [PATCH] scsi: associate bio write hint with WRITE CDB
+Date: Fri, 04 Jan 2019 01:11:49 -0500
+Message-ID: <yq15zv56jfe.fsf@oracle.com>
+References: <20181226041504.66283-1-huangrandall@google.com>
+        <20190103075133.GA5141@infradead.org>
+        <20190103094755.GA96532@google.com>
+        <e5bc96cd-1b48-3b7e-706f-4cbbd1a040a4@interlog.com>
+        <6152b478ea77dacf57eef6f758ba795f756cd3da.camel@redhat.com>
+        <yq1ef9t81fh.fsf@oracle.com> <20190104052251.GA205256@google.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAGx+d6e+rCLjFEFCThgQwewod9Ni_wroV0cE_bceTXTFcsbe9A@mail.gmail.com>
-        (Dick Kennedy's message of "Wed, 2 Jan 2019 10:05:30 -0500")
+In-Reply-To: <20190104052251.GA205256@google.com> (Randall Huang's message of
+        "Fri, 4 Jan 2019 13:22:51 +0800")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Dick Kennedy <dick.kennedy@broadcom.com>
-Cc: "Gustavo A. R. Silva" <gustavo@embeddedor.com>, James Smart <james.smart@broadcom.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>
+To: Randall Huang <ihhuang@abmail.org>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, huangrandall@google.com
 List-Id: linux-scsi@vger.kernel.org
 
 
-Dick,
+Hi Randall,
 
-> Looks good.
-> Ack
+> I am working on Android phone.
 
-Applied to 4.21/scsi-fixes. Thanks, Gustavo.
+> The idea is to enable write hint for Turbo write UFS feature.  Turbo
+> write feature in UFS 3.x is under discussion in JEDEC JC-64.  This
+> patch is the under-lying framework for supporting this feature.
+
+OK, but we can't blindly go setting GROUP NUMBER to a non-zero value.
+That'll break a massive amount of devices which will fail READ/WRITE
+commands with INVALID FIELD IN CDB.
+
+So aside from requiring the device to report GROUP_SUP=1, we'll need
+some sort of indication that this device supports the UFS Turbo Write
+feature. If you are engaged with JEDEC on this, please tell them we'll
+need a VPD page, a mode page, or something similar to use as trigger to
+entertain enabling this feature.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
