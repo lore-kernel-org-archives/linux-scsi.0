@@ -1,41 +1,85 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: associate bio write hint with WRITE CDB
-Date: Fri, 04 Jan 2019 01:11:49 -0500
-Message-ID: <yq15zv56jfe.fsf@oracle.com>
-References: <20181226041504.66283-1-huangrandall@google.com>
-        <20190103075133.GA5141@infradead.org>
-        <20190103094755.GA96532@google.com>
-        <e5bc96cd-1b48-3b7e-706f-4cbbd1a040a4@interlog.com>
-        <6152b478ea77dacf57eef6f758ba795f756cd3da.camel@redhat.com>
-        <yq1ef9t81fh.fsf@oracle.com> <20190104052251.GA205256@google.com>
+From: Sabyasachi Gupta <sabyasachi.linux@gmail.com>
+Subject: Re: [PATCH] scsi/mvsas/mv_init.c: Use dma_zalloc_coherent
+Date: Fri, 4 Jan 2019 18:18:16 +0530
+Message-ID: <CAJr6mf29hJft=rurUK8EJRQ1MS_3_MXb7f-zX0vyXUrQNLcWYA@mail.gmail.com>
+References: <5bf56248.1c69fb81.21a6e.5a72@mx.google.com> <CAJr6mf11gp9iV=NiFEFyo7kSZfCfMsEySdijem_PhMFEAwqucA@mail.gmail.com>
+ <CAJr6mf2kr4BmCWZU0=EwXURWUZWRHHLifi_2aiUrJSCjnWusZg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190104052251.GA205256@google.com> (Randall Huang's message of
-        "Fri, 4 Jan 2019 13:22:51 +0800")
+In-Reply-To: <CAJr6mf2kr4BmCWZU0=EwXURWUZWRHHLifi_2aiUrJSCjnWusZg@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Randall Huang <ihhuang@abmail.org>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, huangrandall@google.com
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, jthumshirn@suse.de
+Cc: Souptick Joarder <jrdr.linux@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Brajeswar Ghosh <brajeswar.linux@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
+On Wed, Dec 19, 2018 at 6:49 PM Sabyasachi Gupta
+<sabyasachi.linux@gmail.com> wrote:
+>
+> On Sat, Dec 1, 2018 at 6:40 PM Sabyasachi Gupta
+> <sabyasachi.linux@gmail.com> wrote:
+> >
+> > On Wed, Nov 21, 2018 at 7:18 PM Sabyasachi Gupta
+> > <sabyasachi.linux@gmail.com> wrote:
+> > >
+> > > Replace dma_alloc_coherent + memset with dma_zalloc_coherent
+> > >
+> > > Signed-off-by: Sabyasachi Gupta <sabyasachi.linux@gmail.com>
+> >
+> > Any comment on this patch?
+>
+> Any comment on this patch?
 
-Hi Randall,
+Any comment on this patch?
 
-> I am working on Android phone.
-
-> The idea is to enable write hint for Turbo write UFS feature.  Turbo
-> write feature in UFS 3.x is under discussion in JEDEC JC-64.  This
-> patch is the under-lying framework for supporting this feature.
-
-OK, but we can't blindly go setting GROUP NUMBER to a non-zero value.
-That'll break a massive amount of devices which will fail READ/WRITE
-commands with INVALID FIELD IN CDB.
-
-So aside from requiring the device to report GROUP_SUP=1, we'll need
-some sort of indication that this device supports the UFS Turbo Write
-feature. If you are engaged with JEDEC on this, please tell them we'll
-need a VPD page, a mode page, or something similar to use as trigger to
-entertain enabling this feature.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+>
+> >
+> > > ---
+> > >  drivers/scsi/mvsas/mv_init.c | 12 ++++--------
+> > >  1 file changed, 4 insertions(+), 8 deletions(-)
+> > >
+> > > diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
+> > > index 3ac3437..495bddb 100644
+> > > --- a/drivers/scsi/mvsas/mv_init.c
+> > > +++ b/drivers/scsi/mvsas/mv_init.c
+> > > @@ -253,33 +253,29 @@ static int mvs_alloc(struct mvs_info *mvi, struct Scsi_Host *shost)
+> > >         /*
+> > >          * alloc and init our DMA areas
+> > >          */
+> > > -       mvi->tx = dma_alloc_coherent(mvi->dev,
+> > > +       mvi->tx = dma_zalloc_coherent(mvi->dev,
+> > >                                      sizeof(*mvi->tx) * MVS_CHIP_SLOT_SZ,
+> > >                                      &mvi->tx_dma, GFP_KERNEL);
+> > >         if (!mvi->tx)
+> > >                 goto err_out;
+> > > -       memset(mvi->tx, 0, sizeof(*mvi->tx) * MVS_CHIP_SLOT_SZ);
+> > > -       mvi->rx_fis = dma_alloc_coherent(mvi->dev, MVS_RX_FISL_SZ,
+> > > +       mvi->rx_fis = dma_zalloc_coherent(mvi->dev, MVS_RX_FISL_SZ,
+> > >                                          &mvi->rx_fis_dma, GFP_KERNEL);
+> > >         if (!mvi->rx_fis)
+> > >                 goto err_out;
+> > > -       memset(mvi->rx_fis, 0, MVS_RX_FISL_SZ);
+> > >
+> > > -       mvi->rx = dma_alloc_coherent(mvi->dev,
+> > > +       mvi->rx = dma_zalloc_coherent(mvi->dev,
+> > >                                      sizeof(*mvi->rx) * (MVS_RX_RING_SZ + 1),
+> > >                                      &mvi->rx_dma, GFP_KERNEL);
+> > >         if (!mvi->rx)
+> > >                 goto err_out;
+> > > -       memset(mvi->rx, 0, sizeof(*mvi->rx) * (MVS_RX_RING_SZ + 1));
+> > >         mvi->rx[0] = cpu_to_le32(0xfff);
+> > >         mvi->rx_cons = 0xfff;
+> > >
+> > > -       mvi->slot = dma_alloc_coherent(mvi->dev,
+> > > +       mvi->slot = dma_zalloc_coherent(mvi->dev,
+> > >                                        sizeof(*mvi->slot) * slot_nr,
+> > >                                        &mvi->slot_dma, GFP_KERNEL);
+> > >         if (!mvi->slot)
+> > >                 goto err_out;
+> > > -       memset(mvi->slot, 0, sizeof(*mvi->slot) * slot_nr);
+> > >
+> > >         mvi->bulk_buffer = dma_alloc_coherent(mvi->dev,
+> > >                                        TRASH_BUCKET_SIZE,
+> > > --
+> > > 2.7.4
+> > >
