@@ -1,25 +1,25 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: smartpqi_init: fix boolean expression in pqi_device_remove_start
-Date: Fri, 04 Jan 2019 01:02:31 -0500
-Message-ID: <yq1imz56juw.fsf@oracle.com>
-References: <20190103164744.GA16360@embeddedor>
+Subject: Re: [PATCH -next] scsi: qla4xxx: check return code of qla4xxx_copy_from_fwddb_param
+Date: Fri, 04 Jan 2019 01:04:37 -0500
+Message-ID: <yq1ef9t6jre.fsf@oracle.com>
+References: <20181220031607.10588-1-yuehaibing@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190103164744.GA16360@embeddedor> (Gustavo A. R. Silva's
-        message of "Thu, 3 Jan 2019 10:47:44 -0600")
+In-Reply-To: <20181220031607.10588-1-yuehaibing@huawei.com> (YueHaibing's
+        message of "Thu, 20 Dec 2018 11:16:07 +0800")
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Cc: Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>, Don Brace <don.brace@microsemi.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: YueHaibing <yuehaibing@huawei.com>
+Cc: QLogic-Storage-Upstream@qlogic.com, jejb@linux.ibm.com, martin.petersen@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Gustavo,
+YueHaibing,
 
-> Fix boolean expression by using logical AND operator '&&' instead of
-> bitwise operator '&'.
+> The return code should be check while qla4xxx_copy_from_fwddb_param
+> fails.
 
-Applied to 4.21/scsi-fixes, thanks!
+Applied to 4.21/scsi-fixes, thank you.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
