@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 3/3] scsi: libsas: Support SATA PHY connection rate unmatch fixing during discovery
-Date: Sat, 5 Jan 2019 00:01:28 +0800
-Message-ID: <1546617688-240623-4-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 1/3] scsi: libsas: Fix some indentation in libsas.h
+Date: Sat, 5 Jan 2019 00:01:26 +0800
+Message-ID: <1546617688-240623-2-git-send-email-john.garry@huawei.com>
 References: <1546617688-240623-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,91 +12,132 @@ To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
 Cc: yanaijie@huawei.com, linuxarm@huawei.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-   +----------+             +----------+
-   |          |             |          |
-   |          |--- 3.0 G ---|          |--- 6.0 G --- SAS  disk
-   |          |             |          |
-   |          |--- 3.0 G ---|          |--- 6.0 G --- SAS  disk
-   |initiator |             |          |
-   | device   |--- 3.0 G ---| Expander |--- 6.0 G --- SAS  disk
-   |          |             |          |
-   |          |--- 3.0 G ---|          |--- 6.0 G --- SATA disk  -->failed to connect
-   |          |             |          |
-   |          |             |          |--- 6.0 G --- SATA disk  -->failed to connect
-   |          |             |          |
-   +----------+             +----------+
+Currently much indentation in this file is done with whitespaces instead
+of tabs, which can make reading difficult, so fix this up.
 
-According to Serial Attached SCSI - 1.1 (SAS-1.1):
-If an expander PHY attached to a SATA PHY is using a physical link rate
-greater than the maximum connection rate supported by the pathway from an
-STP initiator port, a management application client should use the SMP PHY
-CONTROL function (see 10.4.3.10) to set the PROGRAMMED MAXIMUM PHYSICAL
-LINK RATE field of the expander PHY to the maximum connection rate
-supported by the pathway from that STP initiator port.
+Some other little minor tidy-up is done, but this file still has many
+other checkpatch warnings (generally linelength > 80 or function
+arguments have no identifier names).
 
-Currently libsas does not support checking if this condition occurs, nor
-rectifying when it does.
+All libsas code can be audited for checkpatch issues later.
 
-Such a condition is not at all common, however it has been seen on some
-pre-silicon environments where the initiator PHY only supports a 1.5 Gbit
-maximum linkrate, mated with 12G expander PHYs and 3/6G SATA phy.
-
-This patch adds support for checking and rectifying this condition during
-initial device discovery only.
-
-We do support checking min pathway connection rate during revalidation phase,
-when new devices can be detected in the topology. However we do not
-support in the case of the the user reprogramming PHY linkrates, such that
-min pathway condition is not met/maintained.
-
-A note on root port PHY rates:
-The libsas root port PHY rates calculation is broken. Libsas sets the
-rates (min, max, and current linkrate) of a root port to the same linkrate
-of the first PHY member of that same port. In doing so, it assumes that
-all other PHYs which subsequently join the port to have the same
-negotiated linkrate, when they could actually be different.
-
-In practice this doesn't happen, as initiator and expander PHYs are
-normally initialised with consistent min/max linkrates.
-
-This has not caused an issue so far, so leave alone for now.
-
-Tested-by: Jian Luo <luojian5@huawei.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/libsas/sas_expander.c | 20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
+ include/scsi/libsas.h | 56 +++++++++++++++++++++++++--------------------------
+ 1 file changed, 27 insertions(+), 29 deletions(-)
 
-diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-index 8817b8e..83e3715 100644
---- a/drivers/scsi/libsas/sas_expander.c
-+++ b/drivers/scsi/libsas/sas_expander.c
-@@ -824,6 +824,26 @@ static struct domain_device *sas_ex_discover_end_dev(
+diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
+index 3de3b10..857086c 100644
+--- a/include/scsi/libsas.h
++++ b/include/scsi/libsas.h
+@@ -52,8 +52,8 @@ enum sas_phy_role {
+ };
  
- #ifdef CONFIG_SCSI_SAS_ATA
- 	if ((phy->attached_tproto & SAS_PROTOCOL_STP) || phy->attached_sata_dev) {
-+		if (child->linkrate > parent->min_linkrate) {
-+			struct sas_phy_linkrates rates = {
-+				.maximum_linkrate = parent->min_linkrate,
-+				.minimum_linkrate = parent->min_linkrate,
-+			};
-+			int ret;
-+
-+			pr_notice("ex %016llx phy%02d SATA device linkrate > min pathway connection rate, attempting to lower device linkrate\n",
-+				   SAS_ADDR(child->sas_addr), phy_id);
-+			ret = sas_smp_phy_control(parent, phy_id,
-+						  PHY_FUNC_LINK_RESET, &rates);
-+			if (ret) {
-+				pr_err("ex %016llx phy%02d SATA device could not set linkrate (%d)\n",
-+				       SAS_ADDR(child->sas_addr), phy_id, ret);
-+				goto out_free;
-+			}
-+			pr_notice("ex %016llx phy%02d SATA device set linkrate successfully\n",
-+				  SAS_ADDR(child->sas_addr), phy_id);
-+			child->linkrate = child->min_linkrate;
-+		}
- 		res = sas_get_ata_info(child, phy);
- 		if (res)
- 			goto out_free;
+ enum sas_phy_type {
+-        PHY_TYPE_PHYSICAL,
+-        PHY_TYPE_VIRTUAL
++	PHY_TYPE_PHYSICAL,
++	PHY_TYPE_VIRTUAL
+ };
+ 
+ /* The events are mnemonically described in sas_dump.c
+@@ -91,7 +91,7 @@ enum discover_event {
+ 
+ #define to_dom_device(_obj) container_of(_obj, struct domain_device, dev_obj)
+ #define to_dev_attr(_attr)  container_of(_attr, struct domain_dev_attribute,\
+-                                         attr)
++					 attr)
+ 
+ enum routing_attribute {
+ 	DIRECT_ROUTING,
+@@ -184,37 +184,37 @@ struct domain_device {
+ 	spinlock_t done_lock;
+ 	enum sas_device_type dev_type;
+ 
+-        enum sas_linkrate linkrate;
+-        enum sas_linkrate min_linkrate;
+-        enum sas_linkrate max_linkrate;
++	enum sas_linkrate linkrate;
++	enum sas_linkrate min_linkrate;
++	enum sas_linkrate max_linkrate;
+ 
+-        int  pathways;
++	int  pathways;
+ 
+-        struct domain_device *parent;
+-        struct list_head siblings; /* devices on the same level */
+-        struct asd_sas_port *port;        /* shortcut to root of the tree */
++	struct domain_device *parent;
++	struct list_head siblings; /* devices on the same level */
++	struct asd_sas_port *port;        /* shortcut to root of the tree */
+ 	struct sas_phy *phy;
+ 
+-        struct list_head dev_list_node;
++	struct list_head dev_list_node;
+ 	struct list_head disco_list_node; /* awaiting probe or destruct */
+ 
+-        enum sas_protocol    iproto;
+-        enum sas_protocol    tproto;
++	enum sas_protocol    iproto;
++	enum sas_protocol    tproto;
+ 
+-        struct sas_rphy *rphy;
++	struct sas_rphy *rphy;
+ 
+-        u8  sas_addr[SAS_ADDR_SIZE];
+-        u8  hashed_sas_addr[HASHED_SAS_ADDR_SIZE];
++	u8  sas_addr[SAS_ADDR_SIZE];
++	u8  hashed_sas_addr[HASHED_SAS_ADDR_SIZE];
+ 
+-        u8  frame_rcvd[32];
++	u8  frame_rcvd[32];
+ 
+-        union {
+-                struct expander_device ex_dev;
+-                struct sata_device     sata_dev; /* STP & directly attached */
++	union {
++		struct expander_device ex_dev;
++		struct sata_device     sata_dev; /* STP & directly attached */
+ 		struct ssp_device      ssp_dev;
+-        };
++	};
+ 
+-        void *lldd_dev;
++	void *lldd_dev;
+ 	unsigned long state;
+ 	struct kref kref;
+ };
+@@ -512,10 +512,10 @@ enum exec_status {
+ 
+ /* When a task finishes with a response, the LLDD examines the
+  * response:
+- * 	- For an ATA task task_status_struct::stat is set to
++ *	- For an ATA task task_status_struct::stat is set to
+  * SAS_PROTO_RESPONSE, and the task_status_struct::buf is set to the
+  * contents of struct ata_task_resp.
+- * 	- For SSP tasks, if no data is present or status/TMF response
++ *	- For SSP tasks, if no data is present or status/TMF response
+  * is valid, task_status_struct::stat is set.  If data is present
+  * (SENSE data), the LLDD copies up to SAS_STATUS_BUF_SIZE, sets
+  * task_status_struct::buf_valid_size, and task_status_struct::stat is
+@@ -671,15 +671,13 @@ struct sas_domain_function_template {
+ extern void sas_resume_ha(struct sas_ha_struct *sas_ha);
+ extern void sas_suspend_ha(struct sas_ha_struct *sas_ha);
+ 
+-int sas_set_phy_speed(struct sas_phy *phy,
+-		      struct sas_phy_linkrates *rates);
++int sas_set_phy_speed(struct sas_phy *phy, struct sas_phy_linkrates *rates);
+ int sas_phy_reset(struct sas_phy *phy, int hard_reset);
+-extern int sas_queuecommand(struct Scsi_Host * ,struct scsi_cmnd *);
++extern int sas_queuecommand(struct Scsi_Host *, struct scsi_cmnd *);
+ extern int sas_target_alloc(struct scsi_target *);
+ extern int sas_slave_configure(struct scsi_device *);
+ extern int sas_change_queue_depth(struct scsi_device *, int new_depth);
+-extern int sas_bios_param(struct scsi_device *,
+-			  struct block_device *,
++extern int sas_bios_param(struct scsi_device *, struct block_device *,
+ 			  sector_t capacity, int *hsc);
+ extern struct scsi_transport_template *
+ sas_domain_attach_transport(struct sas_domain_function_template *);
 -- 
 1.9.1
