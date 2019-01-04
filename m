@@ -1,111 +1,52 @@
-From: Sabyasachi Gupta <sabyasachi.linux@gmail.com>
-Subject: Re: [PATCH] scsi/mvsas/mv_init.c: Use dma_zalloc_coherent
-Date: Fri, 4 Jan 2019 20:41:36 +0530
-Message-ID: <CAJr6mf1ebw16j0AZSDDxnK2t_=8wdzZBm=X_3DW=zP+XRbRFsw@mail.gmail.com>
-References: <5bf56248.1c69fb81.21a6e.5a72@mx.google.com> <CAJr6mf11gp9iV=NiFEFyo7kSZfCfMsEySdijem_PhMFEAwqucA@mail.gmail.com>
- <CAJr6mf2kr4BmCWZU0=EwXURWUZWRHHLifi_2aiUrJSCjnWusZg@mail.gmail.com>
- <CAJr6mf29hJft=rurUK8EJRQ1MS_3_MXb7f-zX0vyXUrQNLcWYA@mail.gmail.com> <ff090818-2f5f-1fa0-2eff-6988e1660345@huawei.com>
+From: John Garry <john.garry@huawei.com>
+Subject: [PATCH 2/3] scsi: libsas: Check SMP PHY control function result
+Date: Sat, 5 Jan 2019 00:01:27 +0800
+Message-ID: <1546617688-240623-3-git-send-email-john.garry@huawei.com>
+References: <1546617688-240623-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <ff090818-2f5f-1fa0-2eff-6988e1660345@huawei.com>
+In-Reply-To: <1546617688-240623-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: John Garry <john.garry@huawei.com>
-Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, jthumshirn@suse.de, Souptick Joarder <jrdr.linux@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Brajeswar Ghosh <brajeswar.linux@gmail.com>
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: yanaijie@huawei.com, linuxarm@huawei.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Jan 4, 2019 at 6:43 PM John Garry <john.garry@huawei.com> wrote:
->
-> On 04/01/2019 12:48, Sabyasachi Gupta wrote:
-> > On Wed, Dec 19, 2018 at 6:49 PM Sabyasachi Gupta
-> > <sabyasachi.linux@gmail.com> wrote:
-> >>
-> >> On Sat, Dec 1, 2018 at 6:40 PM Sabyasachi Gupta
-> >> <sabyasachi.linux@gmail.com> wrote:
-> >>>
-> >>> On Wed, Nov 21, 2018 at 7:18 PM Sabyasachi Gupta
-> >>> <sabyasachi.linux@gmail.com> wrote:
-> >>>>
-> >>>> Replace dma_alloc_coherent + memset with dma_zalloc_coherent
-> >>>>
->
-> If you're going to make this change, then how about change these to the
-> managed version, so that we can avoid the explicit free'ing at driver
-> removal?
+Currently the SMP PHY control execution result is checked, however the
+function result for the command is not.
 
-I can't get it
+As such, we may be missing all potential errors, like SMP FUNCTION FAILED,
+INVALID REQUEST FRAME LENGTH, etc., meaning the PHY control request has
+failed.
 
->
-> >>>> Signed-off-by: Sabyasachi Gupta <sabyasachi.linux@gmail.com>
-> >>>
-> >>> Any comment on this patch?
-> >>
-> >> Any comment on this patch?
-> >
-> > Any comment on this patch?
-> >
-> >>
-> >>>
-> >>>> ---
-> >>>>  drivers/scsi/mvsas/mv_init.c | 12 ++++--------
-> >>>>  1 file changed, 4 insertions(+), 8 deletions(-)
-> >>>>
-> >>>> diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
-> >>>> index 3ac3437..495bddb 100644
-> >>>> --- a/drivers/scsi/mvsas/mv_init.c
-> >>>> +++ b/drivers/scsi/mvsas/mv_init.c
-> >>>> @@ -253,33 +253,29 @@ static int mvs_alloc(struct mvs_info *mvi, struct Scsi_Host *shost)
-> >>>>         /*
-> >>>>          * alloc and init our DMA areas
-> >>>>          */
-> >>>> -       mvi->tx = dma_alloc_coherent(mvi->dev,
-> >>>> +       mvi->tx = dma_zalloc_coherent(mvi->dev,
-> >>>>                                      sizeof(*mvi->tx) * MVS_CHIP_SLOT_SZ,
-> >>>>                                      &mvi->tx_dma, GFP_KERNEL);
->
-> I'm guessing that this does not pass checkpatch with --strict option.
->
-> Thanks,
-> John
+In some scenarios we need to ensure the function result is accepted, so
+add a check for this.
 
-I have not not checked with --strict option
+Tested-by: Jian Luo <luojian5@huawei.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
+---
+ drivers/scsi/libsas/sas_expander.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
->
-> >>>>         if (!mvi->tx)
-> >>>>                 goto err_out;
-> >>>> -       memset(mvi->tx, 0, sizeof(*mvi->tx) * MVS_CHIP_SLOT_SZ);
-> >>>> -       mvi->rx_fis = dma_alloc_coherent(mvi->dev, MVS_RX_FISL_SZ,
-> >>>> +       mvi->rx_fis = dma_zalloc_coherent(mvi->dev, MVS_RX_FISL_SZ,
-> >>>>                                          &mvi->rx_fis_dma, GFP_KERNEL);
-> >>>>         if (!mvi->rx_fis)
-> >>>>                 goto err_out;
-> >>>> -       memset(mvi->rx_fis, 0, MVS_RX_FISL_SZ);
-> >>>>
-> >>>> -       mvi->rx = dma_alloc_coherent(mvi->dev,
-> >>>> +       mvi->rx = dma_zalloc_coherent(mvi->dev,
-> >>>>                                      sizeof(*mvi->rx) * (MVS_RX_RING_SZ + 1),
-> >>>>                                      &mvi->rx_dma, GFP_KERNEL);
-> >>>>         if (!mvi->rx)
-> >>>>                 goto err_out;
-> >>>> -       memset(mvi->rx, 0, sizeof(*mvi->rx) * (MVS_RX_RING_SZ + 1));
-> >>>>         mvi->rx[0] = cpu_to_le32(0xfff);
-> >>>>         mvi->rx_cons = 0xfff;
-> >>>>
-> >>>> -       mvi->slot = dma_alloc_coherent(mvi->dev,
-> >>>> +       mvi->slot = dma_zalloc_coherent(mvi->dev,
-> >>>>                                        sizeof(*mvi->slot) * slot_nr,
-> >>>>                                        &mvi->slot_dma, GFP_KERNEL);
-> >>>>         if (!mvi->slot)
-> >>>>                 goto err_out;
-> >>>> -       memset(mvi->slot, 0, sizeof(*mvi->slot) * slot_nr);
-> >>>>
-> >>>>         mvi->bulk_buffer = dma_alloc_coherent(mvi->dev,
-> >>>>                                        TRASH_BUCKET_SIZE,
-> >>>> --
-> >>>> 2.7.4
-> >>>>
-> >
-> > .
-> >
->
->
+diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
+index 17eb418..8817b8e 100644
+--- a/drivers/scsi/libsas/sas_expander.c
++++ b/drivers/scsi/libsas/sas_expander.c
+@@ -614,7 +614,14 @@ int sas_smp_phy_control(struct domain_device *dev, int phy_id,
+ 	}
+ 
+ 	res = smp_execute_task(dev, pc_req, PC_REQ_SIZE, pc_resp,PC_RESP_SIZE);
+-
++	if (res) {
++		pr_err("ex %016llx phy%02d PHY control failed: %d\n",
++		       SAS_ADDR(dev->sas_addr), phy_id, res);
++	} else if (pc_resp[2] != SMP_RESP_FUNC_ACC) {
++		pr_err("ex %016llx phy%02d PHY control failed: function result 0x%x\n",
++		       SAS_ADDR(dev->sas_addr), phy_id, pc_resp[2]);
++		res = pc_resp[2];
++	}
+ 	kfree(pc_resp);
+ 	kfree(pc_req);
+ 	return res;
+-- 
+1.9.1
