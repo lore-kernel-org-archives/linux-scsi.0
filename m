@@ -1,41 +1,50 @@
 From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Subject: [PATCH v2 0/3] Add UFS controller support for HI3670 SoC
-Date: Sat,  5 Jan 2019 12:58:56 +0530
-Message-ID: <20190105072859.9134-1-manivannan.sadhasivam@linaro.org>
+Subject: [PATCH v2 2/3] arm64: dts: hisilicon: hi3670: Add UFS controller support
+Date: Sat,  5 Jan 2019 12:58:58 +0530
+Message-ID: <20190105072859.9134-3-manivannan.sadhasivam@linaro.org>
+References: <20190105072859.9134-1-manivannan.sadhasivam@linaro.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190105072859.9134-1-manivannan.sadhasivam@linaro.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, liwei213@huawei.com, robh+dt@kernel.org
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org, john.stultz@linaro.org, amit.kucheria@linaro.org, guodong.xu@linaro.org, Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hello,
+Add UFS controller support for HiSilicon HI3670 SoC.
 
-This patchset adds UFS controller support for HiSilicon HI3670 SoC.
-HI3760 SoC is very similar to HI3660 SoC with almost same IPs, hence
-the same driver is extended to provide UFS support. Only major difference
-is the PHY. HI3670 has 10nm PHY, hence that parameter is used to
-distinguish the difference between two in driver.
+Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+---
+ arch/arm64/boot/dts/hisilicon/hi3670.dtsi | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
 
-Thanks,
-Mani
-
-Changes in v2:
-
-As per Rob's review:
-
-* Removed interrupt-parent property from binding.
-* Fixed the bindings patch commit message.
-
-Manivannan Sadhasivam (3):
-  dt-bindings: ufs: Add HI3670 UFS controller binding
-  arm64: dts: hisilicon: hi3670: Add UFS controller support
-  scsi: ufs: Add HI3670 SoC UFS driver support
-
- .../devicetree/bindings/ufs/ufs-hisi.txt      |   5 +-
- arch/arm64/boot/dts/hisilicon/hi3670.dtsi     |  18 +++
- drivers/scsi/ufs/ufs-hisi.c                   | 127 +++++++++++++++---
- drivers/scsi/ufs/ufs-hisi.h                   |   4 +
- 4 files changed, 130 insertions(+), 24 deletions(-)
-
+diff --git a/arch/arm64/boot/dts/hisilicon/hi3670.dtsi b/arch/arm64/boot/dts/hisilicon/hi3670.dtsi
+index 6ccdf5040ffd..285219dd657f 100644
+--- a/arch/arm64/boot/dts/hisilicon/hi3670.dtsi
++++ b/arch/arm64/boot/dts/hisilicon/hi3670.dtsi
+@@ -654,6 +654,24 @@
+ 			clock-names = "apb_pclk";
+ 		};
+ 
++		/* UFS */
++		ufs: ufs@ff3c0000 {
++			compatible = "hisilicon,hi3670-ufs", "jedec,ufs-2.1";
++			/* 0: HCI standard */
++			/* 1: UFS SYS CTRL */
++			reg = <0x0 0xff3c0000 0x0 0x1000>,
++				<0x0 0xff3e0000 0x0 0x1000>;
++			interrupt-parent = <&gic>;
++			interrupts = <GIC_SPI 278 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&crg_ctrl HI3670_CLK_GATE_UFSIO_REF>,
++				<&crg_ctrl HI3670_CLK_GATE_UFS_SUBSYS>;
++			clock-names = "ref_clk", "phy_clk";
++			freq-table-hz = <0 0>, <0 0>;
++			/* offset: 0x84; bit: 12 */
++			resets = <&crg_rst 0x84 12>;
++			reset-names = "rst";
++		};
++
+ 		/* SD */
+ 		dwmmc1: dwmmc1@ff37f000 {
+ 			compatible = "hisilicon,hi3670-dw-mshc";
 -- 
 2.17.1
