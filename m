@@ -1,266 +1,42 @@
-From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Subject: [PATCH v2 3/3] scsi: ufs: Add HI3670 SoC UFS driver support
-Date: Sat,  5 Jan 2019 12:58:59 +0530
-Message-ID: <20190105072859.9134-4-manivannan.sadhasivam@linaro.org>
-References: <20190105072859.9134-1-manivannan.sadhasivam@linaro.org>
+From: Manish Rangankar <mrangankar@marvell.com>
+Subject: RE: [EXT] [PATCH] scsi: bnx2i: fix indentation issue, remove a tab
+Date: Mon, 7 Jan 2019 11:01:19 +0000
+Message-ID: <DM5PR18MB2134A42C00C81B9C2168AAEFD8890@DM5PR18MB2134.namprd18.prod.outlook.com>
+References: <20190104170224.8147-1-colin.king@canonical.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190105072859.9134-1-manivannan.sadhasivam@linaro.org>
+In-Reply-To: <20190104170224.8147-1-colin.king@canonical.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, liwei213@huawei.com, robh+dt@kernel.org
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org, john.stultz@linaro.org, amit.kucheria@linaro.org, guodong.xu@linaro.org, Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To: Colin King <colin.king@canonical.com>, "QLogic-Storage-Upstream@qlogic.com" <QLogic-Storage-Upstream@qlogic.com>, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Add HI3670 SoC UFS driver support by extending the common ufs-hisi
-driver. One major difference between HI3660 ad HI3670 SoCs interms of
-UFS is the PHY. HI3670 has a 10nm variant PHY and hence this parameter is
-used to distinguish the configuration.
-
-Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
----
- drivers/scsi/ufs/ufs-hisi.c | 127 +++++++++++++++++++++++++++++-------
- drivers/scsi/ufs/ufs-hisi.h |   4 ++
- 2 files changed, 109 insertions(+), 22 deletions(-)
-
-diff --git a/drivers/scsi/ufs/ufs-hisi.c b/drivers/scsi/ufs/ufs-hisi.c
-index 452e19f8fb47..f2d3df357a97 100644
---- a/drivers/scsi/ufs/ufs-hisi.c
-+++ b/drivers/scsi/ufs/ufs-hisi.c
-@@ -66,7 +66,7 @@ static int ufs_hisi_check_hibern8(struct ufs_hba *hba)
- 	return err;
- }
- 
--static void ufs_hi3660_clk_init(struct ufs_hba *hba)
-+static void ufs_hisi_clk_init(struct ufs_hba *hba)
- {
- 	struct ufs_hisi_host *host = ufshcd_get_variant(hba);
- 
-@@ -80,7 +80,7 @@ static void ufs_hi3660_clk_init(struct ufs_hba *hba)
- 	ufs_sys_ctrl_set_bits(host, BIT_SYSCTRL_REF_CLOCK_EN, PHY_CLK_CTRL);
- }
- 
--static void ufs_hi3660_soc_init(struct ufs_hba *hba)
-+static void ufs_hisi_soc_init(struct ufs_hba *hba)
- {
- 	struct ufs_hisi_host *host = ufshcd_get_variant(hba);
- 	u32 reg;
-@@ -139,6 +139,7 @@ static void ufs_hi3660_soc_init(struct ufs_hba *hba)
- 
- static int ufs_hisi_link_startup_pre_change(struct ufs_hba *hba)
- {
-+	struct ufs_hisi_host *host = ufshcd_get_variant(hba);
- 	int err;
- 	uint32_t value;
- 	uint32_t reg;
-@@ -153,6 +154,14 @@ static int ufs_hisi_link_startup_pre_change(struct ufs_hba *hba)
- 	ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x8121, 0x0), 0x2D);
- 	/* MPHY CBOVRCTRL3 */
- 	ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x8122, 0x0), 0x1);
-+
-+	if (host->caps & UFS_HISI_CAP_PHY10nm) {
-+		/* MPHY CBOVRCTRL4 */
-+		ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x8127, 0x0), 0x98);
-+		/* MPHY CBOVRCTRL5 */
-+		ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x8128, 0x0), 0x1);
-+	}
-+
- 	/* Unipro VS_MphyCfgUpdt */
- 	ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0xD085, 0x0), 0x1);
- 	/* MPHY RXOVRCTRL4 rx0 */
-@@ -173,10 +182,21 @@ static int ufs_hisi_link_startup_pre_change(struct ufs_hba *hba)
- 	ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x8113, 0x0), 0x1);
- 	ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0xD085, 0x0), 0x1);
- 
--	/* Tactive RX */
--	ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x008F, 0x4), 0x7);
--	/* Tactive RX */
--	ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x008F, 0x5), 0x7);
-+	if (host->caps & UFS_HISI_CAP_PHY10nm) {
-+		/* RX_Hibern8Time_Capability*/
-+		ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x0092, 0x4), 0xA);
-+		/* RX_Hibern8Time_Capability*/
-+		ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x0092, 0x5), 0xA);
-+		/* RX_Min_ActivateTime */
-+		ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x008f, 0x4), 0xA);
-+		/* RX_Min_ActivateTime*/
-+		ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x008f, 0x5), 0xA);
-+	} else {
-+		/* Tactive RX */
-+		ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x008F, 0x4), 0x7);
-+		/* Tactive RX */
-+		ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x008F, 0x5), 0x7);
-+	}
- 
- 	/* Gear3 Synclength */
- 	ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x0095, 0x4), 0x4F);
-@@ -208,7 +228,8 @@ static int ufs_hisi_link_startup_pre_change(struct ufs_hba *hba)
- 	if (err)
- 		dev_err(hba->dev, "ufs_hisi_check_hibern8 error\n");
- 
--	ufshcd_writel(hba, UFS_HCLKDIV_NORMAL_VALUE, UFS_REG_HCLKDIV);
-+	if (!(host->caps & UFS_HISI_CAP_PHY10nm))
-+		ufshcd_writel(hba, UFS_HCLKDIV_NORMAL_VALUE, UFS_REG_HCLKDIV);
- 
- 	/* disable auto H8 */
- 	reg = ufshcd_readl(hba, REG_AUTO_HIBERNATE_IDLE_TIMER);
-@@ -253,7 +274,7 @@ static int ufs_hisi_link_startup_post_change(struct ufs_hba *hba)
- 	return 0;
- }
- 
--static int ufs_hi3660_link_startup_notify(struct ufs_hba *hba,
-+static int ufs_hisi_link_startup_notify(struct ufs_hba *hba,
- 					  enum ufs_notify_change_status status)
- {
- 	int err = 0;
-@@ -391,6 +412,28 @@ static void ufs_hisi_set_dev_cap(struct ufs_hisi_dev_params *hisi_param)
- 
- static void ufs_hisi_pwr_change_pre_change(struct ufs_hba *hba)
- {
-+	struct ufs_hisi_host *host = ufshcd_get_variant(hba);
-+
-+	if (host->caps & UFS_HISI_CAP_PHY10nm) {
-+		/*
-+		 * Boston platform need to set SaveConfigTime to 0x13,
-+		 * and change sync length to maximum value
-+		 */
-+		/* VS_DebugSaveConfigTime */
-+		ufshcd_dme_set(hba, UIC_ARG_MIB((u32)0xD0A0), 0x13);
-+		/* g1 sync length */
-+		ufshcd_dme_set(hba, UIC_ARG_MIB((u32)0x1552), 0x4f);
-+		/* g2 sync length */
-+		ufshcd_dme_set(hba, UIC_ARG_MIB((u32)0x1554), 0x4f);
-+		/* g3 sync length */
-+		ufshcd_dme_set(hba, UIC_ARG_MIB((u32)0x1556), 0x4f);
-+		/* PA_Hibern8Time */
-+		ufshcd_dme_set(hba, UIC_ARG_MIB((u32)0x15a7), 0xA);
-+		/* PA_Tactivate */
-+		ufshcd_dme_set(hba, UIC_ARG_MIB((u32)0x15a8), 0xA);
-+		ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0xd085, 0x0), 0x01);
-+	}
-+
- 	if (hba->dev_quirks & UFS_DEVICE_QUIRK_HOST_VS_DEBUGSAVECONFIGTIME) {
- 		pr_info("ufs flash device must set VS_DebugSaveConfigTime 0x10\n");
- 		/* VS_DebugSaveConfigTime */
-@@ -429,7 +472,7 @@ static void ufs_hisi_pwr_change_pre_change(struct ufs_hba *hba)
- 	ufshcd_dme_set(hba, UIC_ARG_MIB(0xd046), 32767);
- }
- 
--static int ufs_hi3660_pwr_change_notify(struct ufs_hba *hba,
-+static int ufs_hisi_pwr_change_notify(struct ufs_hba *hba,
- 				       enum ufs_notify_change_status status,
- 				       struct ufs_pa_layer_attr *dev_max_params,
- 				       struct ufs_pa_layer_attr *dev_req_params)
-@@ -567,25 +610,72 @@ static int ufs_hi3660_init(struct ufs_hba *hba)
- 		return ret;
- 	}
- 
--	ufs_hi3660_clk_init(hba);
-+	ufs_hisi_clk_init(hba);
-+
-+	ufs_hisi_soc_init(hba);
-+
-+	return 0;
-+}
-+
-+static int ufs_hi3670_init(struct ufs_hba *hba)
-+{
-+	int ret = 0;
-+	struct device *dev = hba->dev;
-+	struct ufs_hisi_host *host;
-+
-+	ret = ufs_hisi_init_common(hba);
-+	if (ret) {
-+		dev_err(dev, "%s: ufs common init fail\n", __func__);
-+		return ret;
-+	}
-+
-+	ufs_hisi_clk_init(hba);
-+
-+	ufs_hisi_soc_init(hba);
- 
--	ufs_hi3660_soc_init(hba);
-+	/* Add cap for 10nm PHY variant on HI3670 SoC */
-+	host = ufshcd_get_variant(hba);
-+	host->caps |= UFS_HISI_CAP_PHY10nm;
- 
- 	return 0;
- }
- 
--static struct ufs_hba_variant_ops ufs_hba_hisi_vops = {
-+static struct ufs_hba_variant_ops ufs_hba_hi3660_vops = {
- 	.name = "hi3660",
- 	.init = ufs_hi3660_init,
--	.link_startup_notify = ufs_hi3660_link_startup_notify,
--	.pwr_change_notify = ufs_hi3660_pwr_change_notify,
-+	.link_startup_notify = ufs_hisi_link_startup_notify,
-+	.pwr_change_notify = ufs_hisi_pwr_change_notify,
- 	.suspend = ufs_hisi_suspend,
- 	.resume = ufs_hisi_resume,
- };
- 
-+static struct ufs_hba_variant_ops ufs_hba_hi3670_vops = {
-+	.name = "hi3670",
-+	.init = ufs_hi3670_init,
-+	.link_startup_notify = ufs_hisi_link_startup_notify,
-+	.pwr_change_notify = ufs_hisi_pwr_change_notify,
-+	.suspend = ufs_hisi_suspend,
-+	.resume = ufs_hisi_resume,
-+};
-+
-+static const struct of_device_id ufs_hisi_of_match[] = {
-+	{ .compatible = "hisilicon,hi3660-ufs", .data = &ufs_hba_hi3660_vops },
-+	{ .compatible = "hisilicon,hi3670-ufs", .data = &ufs_hba_hi3670_vops },
-+	{},
-+};
-+
-+MODULE_DEVICE_TABLE(of, ufs_hisi_of_match);
-+
- static int ufs_hisi_probe(struct platform_device *pdev)
- {
--	return ufshcd_pltfrm_init(pdev, &ufs_hba_hisi_vops);
-+	const struct of_device_id *of_id;
-+	struct ufs_hba_variant_ops *vops;
-+	struct device *dev = &pdev->dev;
-+
-+	of_id = of_match_node(ufs_hisi_of_match, dev->of_node);
-+	vops = (struct ufs_hba_variant_ops *)of_id->data;
-+
-+	return ufshcd_pltfrm_init(pdev, vops);
- }
- 
- static int ufs_hisi_remove(struct platform_device *pdev)
-@@ -596,13 +686,6 @@ static int ufs_hisi_remove(struct platform_device *pdev)
- 	return 0;
- }
- 
--static const struct of_device_id ufs_hisi_of_match[] = {
--	{ .compatible = "hisilicon,hi3660-ufs" },
--	{},
--};
--
--MODULE_DEVICE_TABLE(of, ufs_hisi_of_match);
--
- static const struct dev_pm_ops ufs_hisi_pm_ops = {
- 	.suspend	= ufshcd_pltfrm_suspend,
- 	.resume		= ufshcd_pltfrm_resume,
-diff --git a/drivers/scsi/ufs/ufs-hisi.h b/drivers/scsi/ufs/ufs-hisi.h
-index 3df9cd7acc29..667dfe39b57e 100644
---- a/drivers/scsi/ufs/ufs-hisi.h
-+++ b/drivers/scsi/ufs/ufs-hisi.h
-@@ -91,6 +91,9 @@ enum {
- #define UFS_HISI_LIMIT_HS_RATE	PA_HS_MODE_B
- #define UFS_HISI_LIMIT_DESIRED_MODE	FAST
- 
-+#define UFS_HISI_CAP_RESERVED		BIT(0)
-+#define UFS_HISI_CAP_PHY10nm		BIT(1)
-+
- struct ufs_hisi_host {
- 	struct ufs_hba *hba;
- 	void __iomem *ufs_sys_ctrl;
-@@ -112,4 +115,5 @@ struct ufs_hisi_host {
- 	ufs_sys_ctrl_writel((host),                                            \
- 			    ((~(mask)) & (ufs_sys_ctrl_readl((host), (reg)))), \
- 			    (reg))
-+
- #endif /* UFS_HISI_H_ */
--- 
-2.17.1
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBDb2xpbiBLaW5nIDxjb2xpbi5r
+aW5nQGNhbm9uaWNhbC5jb20+DQo+IFNlbnQ6IEZyaWRheSwgSmFudWFyeSA0LCAyMDE5IDEwOjMy
+IFBNDQo+IFRvOiBRTG9naWMtU3RvcmFnZS1VcHN0cmVhbUBxbG9naWMuY29tOyBKYW1lcyBFIC4g
+SiAuIEJvdHRvbWxleQ0KPiA8amVqYkBsaW51eC5pYm0uY29tPjsgTWFydGluIEsgLiBQZXRlcnNl
+biA8bWFydGluLnBldGVyc2VuQG9yYWNsZS5jb20+Ow0KPiBsaW51eC1zY3NpQHZnZXIua2VybmVs
+Lm9yZw0KPiBDYzoga2VybmVsLWphbml0b3JzQHZnZXIua2VybmVsLm9yZzsgbGludXgta2VybmVs
+QHZnZXIua2VybmVsLm9yZw0KPiBTdWJqZWN0OiBbRVhUXSBbUEFUQ0hdIHNjc2k6IGJueDJpOiBm
+aXggaW5kZW50YXRpb24gaXNzdWUsIHJlbW92ZSBhIHRhYg0KPiANCj4gRXh0ZXJuYWwgRW1haWwN
+Cj4gDQo+IC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0NCj4gRXh0ZXJuYWwgRW1haWwNCj4gDQo+IEZyb206IENvbGlu
+IElhbiBLaW5nIDxjb2xpbi5raW5nQGNhbm9uaWNhbC5jb20+DQo+IA0KPiBUaGUgcmV0dXJuIHN0
+YXRlbWVudCBpcyBpbmRlbnRlZCBpbmNvcnJlY3RseSwgZml4IHRoaXMgYnkgcmVtb3ZpbmcgYSBz
+aW5nbGUgdGFiLg0KPiANCj4gU2lnbmVkLW9mZi1ieTogQ29saW4gSWFuIEtpbmcgPGNvbGluLmtp
+bmdAY2Fub25pY2FsLmNvbT4NCj4gLS0tDQo+ICBkcml2ZXJzL3Njc2kvYm54MmkvYm54MmlfaXNj
+c2kuYyB8IDIgKy0NCj4gIDEgZmlsZSBjaGFuZ2VkLCAxIGluc2VydGlvbigrKSwgMSBkZWxldGlv
+bigtKQ0KPiANCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9ibngyaS9ibngyaV9pc2NzaS5j
+IGIvZHJpdmVycy9zY3NpL2JueDJpL2JueDJpX2lzY3NpLmMNCj4gaW5kZXggNjljNzU0MjZjNWVi
+Li5jNWZhNWYzYjAwZTkgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvc2NzaS9ibngyaS9ibngyaV9p
+c2NzaS5jDQo+ICsrKyBiL2RyaXZlcnMvc2NzaS9ibngyaS9ibngyaV9pc2NzaS5jDQo+IEBAIC01
+NzcsNyArNTc3LDcgQEAgc3RhdGljIHZvaWQgYm54MmlfZnJlZV9tcF9iZHQoc3RydWN0IGJueDJp
+X2hiYSAqaGJhKQ0KPiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgaGJhLT5kdW1t
+eV9idWZmZXIsIGhiYS0+ZHVtbXlfYnVmX2RtYSk7DQo+ICAgICAgICAgICAgICAgICBoYmEtPmR1
+bW15X2J1ZmZlciA9IE5VTEw7DQo+ICAgICAgICAgfQ0KPiAtICAgICAgICAgICAgICAgcmV0dXJu
+Ow0KPiArICAgICAgIHJldHVybjsNCj4gIH0NCj4gDQo+ICAvKioNCj4gLS0NCj4gMi4xOS4xDQoN
+ClRoYW5rcw0KQWNrZWQtYnk6IE1hbmlzaCBSYW5nYW5rYXIgPG1yYW5nYW5rYXJAbWFydmVsbC5j
+b20+DQoNCg==
