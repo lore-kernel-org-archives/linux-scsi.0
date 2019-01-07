@@ -1,51 +1,49 @@
-From: John Garry <john.garry@huawei.com>
+From: Bart Van Assche <bvanassche@acm.org>
 Subject: Re: [PATCH] scsi: sd: Make protection lookup tables static
-Date: Mon, 7 Jan 2019 17:27:58 +0000
-Message-ID: <b269a676-8941-4de4-faed-c40ec0d0a45a@huawei.com>
+Date: Mon, 07 Jan 2019 09:33:28 -0800
+Message-ID: <1546882408.83374.14.camel@acm.org>
 References: <1546872111-5627-1-git-send-email-john.garry@huawei.com>
- <1546880243.83374.12.camel@acm.org>
+         <1546880243.83374.12.camel@acm.org>
+         <b269a676-8941-4de4-faed-c40ec0d0a45a@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain; charset="UTF-7"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1546880243.83374.12.camel@acm.org>
+In-Reply-To: <b269a676-8941-4de4-faed-c40ec0d0a45a@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+To: John Garry <john.garry@huawei.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
 Cc: linuxarm@huawei.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 07/01/2019 16:57, Bart Van Assche wrote:
-> On Mon, 2019-01-07 at 22:41 +0800, John Garry wrote:
->> Currently the protection lookup tables in sd_prot_flag_mask() and
->> sd_prot_op() are declared non-static. As such, they will be rebuilt for
->> each respective function call.
->>
->> Optimise by making them static.
->>
->> This saves ~100B object code for sd.c:
->>
->> Before:
->>    text	   data	    bss	    dec	    hex	filename
->>   25403	   1024	     16	  26443	   674b	drivers/scsi/sd.o
->>
->> After:
->>   text	   data	    bss	    dec	    hex	filename
->>   25299	   1024	     16	  26339	   66e3	drivers/scsi/sd.o
->
-> Since the sd_prot_op() function only has a single caller, please move it from sd.h
-> into sd.c.
+On Mon, 2019-01-07 at 17:27 +-0000, John Garry wrote:
++AD4 On 07/01/2019 16:57, Bart Van Assche wrote:
++AD4 +AD4 On Mon, 2019-01-07 at 22:41 +-0800, John Garry wrote:
++AD4 +AD4 +AD4 Currently the protection lookup tables in sd+AF8-prot+AF8-flag+AF8-mask() and
++AD4 +AD4 +AD4 sd+AF8-prot+AF8-op() are declared non-static. As such, they will be rebuilt for
++AD4 +AD4 +AD4 each respective function call.
++AD4 +AD4 +AD4 
++AD4 +AD4 +AD4 Optimise by making them static.
++AD4 +AD4 +AD4 
++AD4 +AD4 +AD4 This saves +AH4-100B object code for sd.c:
++AD4 +AD4 +AD4 
++AD4 +AD4 +AD4 Before:
++AD4 +AD4 +AD4    text	   data	    bss	    dec	    hex	filename
++AD4 +AD4 +AD4   25403	   1024	     16	  26443	   674b	drivers/scsi/sd.o
++AD4 +AD4 +AD4 
++AD4 +AD4 +AD4 After:
++AD4 +AD4 +AD4   text	   data	    bss	    dec	    hex	filename
++AD4 +AD4 +AD4   25299	   1024	     16	  26339	   66e3	drivers/scsi/sd.o
++AD4 +AD4 
++AD4 +AD4 Since the sd+AF8-prot+AF8-op() function only has a single caller, please move it from sd.h
++AD4 +AD4 into sd.c.
++AD4 
++AD4 Can do, as long as no one has objection.
++AD4 
++AD4 Function sd+AF8-prot+AF8-flag+AF8-mask() also has a single caller AFAICS, so this 
++AD4 could also be relocated.
 
-Can do, as long as no one has objection.
+Please move that function too from sd.h into sd.c.
 
-Function sd_prot_flag_mask() also has a single caller AFAICS, so this 
-could also be relocated.
+Thanks,
 
-Cheers,
-John
-
->
-> Thanks,
->
-> Bart.
->
->
+Bart.
