@@ -1,33 +1,70 @@
-From: <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH v1 0/1] scsi: ufs: Fix system suspend status
-Date: Mon, 7 Jan 2019 22:19:33 +0800
-Message-ID: <1546870774-19691-2-git-send-email-stanley.chu@mediatek.com>
-References: <1546870774-19691-1-git-send-email-stanley.chu@mediatek.com>
+From: John Garry <john.garry@huawei.com>
+Subject: [PATCH] scsi: sd: Make protection lookup tables static
+Date: Mon, 7 Jan 2019 22:41:51 +0800
+Message-ID: <1546872111-5627-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-In-Reply-To: <1546870774-19691-1-git-send-email-stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-mediatek>,
- <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-mediatek/>
-List-Post: <mailto:linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-List-Help: <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-mediatek>,
- <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=subscribe>
-Sender: "Linux-mediatek" <linux-mediatek-bounces-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-Errors-To: linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
-To: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: wsd_upstream-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, kuohong.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, peter.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linuxarm@huawei.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
+Currently the protection lookup tables in sd_prot_flag_mask() and
+sd_prot_op() are declared non-static. As such, they will be rebuilt for
+each respective function call.
 
-Stanley Chu (1):
-  scsi: ufs: Fix system suspend status
+Optimise by making them static.
 
- drivers/scsi/ufs/ufshcd.c | 2 ++
- 1 file changed, 2 insertions(+)
+This saves ~100B object code for sd.c:
 
+Before:
+   text	   data	    bss	    dec	    hex	filename
+  25403	   1024	     16	  26443	   674b	drivers/scsi/sd.o
+
+After:
+  text	   data	    bss	    dec	    hex	filename
+  25299	   1024	     16	  26339	   66e3	drivers/scsi/sd.o
+
+Signed-off-by: John Garry <john.garry@huawei.com>
+
+diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
+index 1d63f3a..89e6d42 100644
+--- a/drivers/scsi/sd.h
++++ b/drivers/scsi/sd.h
+@@ -195,15 +195,15 @@ static inline sector_t sectors_to_logical(struct scsi_device *sdev, sector_t sec
+ static inline unsigned int sd_prot_op(bool write, bool dix, bool dif)
+ {
+ 	/* Lookup table: bit 2 (write), bit 1 (dix), bit 0 (dif) */
+-	const unsigned int ops[] = {	/* wrt dix dif */
+-		SCSI_PROT_NORMAL,	/*  0	0   0  */
+-		SCSI_PROT_READ_STRIP,	/*  0	0   1  */
+-		SCSI_PROT_READ_INSERT,	/*  0	1   0  */
+-		SCSI_PROT_READ_PASS,	/*  0	1   1  */
+-		SCSI_PROT_NORMAL,	/*  1	0   0  */
+-		SCSI_PROT_WRITE_INSERT, /*  1	0   1  */
+-		SCSI_PROT_WRITE_STRIP,	/*  1	1   0  */
+-		SCSI_PROT_WRITE_PASS,	/*  1	1   1  */
++	static const unsigned int ops[] = {	/* wrt dix dif */
++		SCSI_PROT_NORMAL,		/*  0	0   0  */
++		SCSI_PROT_READ_STRIP,		/*  0	0   1  */
++		SCSI_PROT_READ_INSERT,		/*  0	1   0  */
++		SCSI_PROT_READ_PASS,		/*  0	1   1  */
++		SCSI_PROT_NORMAL,		/*  1	0   0  */
++		SCSI_PROT_WRITE_INSERT,		/*  1	0   1  */
++		SCSI_PROT_WRITE_STRIP,		/*  1	1   0  */
++		SCSI_PROT_WRITE_PASS,		/*  1	1   1  */
+ 	};
+ 
+ 	return ops[write << 2 | dix << 1 | dif];
+@@ -215,7 +215,7 @@ static inline unsigned int sd_prot_op(bool write, bool dix, bool dif)
+  */
+ static inline unsigned int sd_prot_flag_mask(unsigned int prot_op)
+ {
+-	const unsigned int flag_mask[] = {
++	static const unsigned int flag_mask[] = {
+ 		[SCSI_PROT_NORMAL]		= 0,
+ 
+ 		[SCSI_PROT_READ_STRIP]		= SCSI_PROT_TRANSFER_PI |
 -- 
 1.9.1
