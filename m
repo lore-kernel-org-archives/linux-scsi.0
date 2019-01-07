@@ -1,151 +1,55 @@
-From: John Garry <john.garry@huawei.com>
-Subject: Re: [PATCH] scsi/mvsas/mv_init.c: Use dma_zalloc_coherent
-Date: Mon, 7 Jan 2019 13:50:29 +0000
-Message-ID: <1e3d2653-67b5-07a2-37c3-d3e39532cbcb@huawei.com>
-References: <5bf56248.1c69fb81.21a6e.5a72@mx.google.com>
- <CAJr6mf11gp9iV=NiFEFyo7kSZfCfMsEySdijem_PhMFEAwqucA@mail.gmail.com>
- <CAJr6mf2kr4BmCWZU0=EwXURWUZWRHHLifi_2aiUrJSCjnWusZg@mail.gmail.com>
- <CAJr6mf29hJft=rurUK8EJRQ1MS_3_MXb7f-zX0vyXUrQNLcWYA@mail.gmail.com>
- <ff090818-2f5f-1fa0-2eff-6988e1660345@huawei.com>
- <CAJr6mf1ebw16j0AZSDDxnK2t_=8wdzZBm=X_3DW=zP+XRbRFsw@mail.gmail.com>
- <8af8ef0a-add1-1010-6ef3-7e5c6ff51aa9@huawei.com>
- <CAFqt6zbZaOA9+SX8CwYobBN_3hhhWOWkcBJ_qdgEuELoOBU5=w@mail.gmail.com>
+From: <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
+Subject: [PATCH v1 1/1] scsi: ufs: Fix system suspend status
+Date: Mon, 7 Jan 2019 22:19:34 +0800
+Message-ID: <1546870774-19691-3-git-send-email-stanley.chu@mediatek.com>
+References: <1546870774-19691-1-git-send-email-stanley.chu@mediatek.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAFqt6zbZaOA9+SX8CwYobBN_3hhhWOWkcBJ_qdgEuELoOBU5=w@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Souptick Joarder <jrdr.linux@gmail.com>
-Cc: Sabyasachi Gupta <sabyasachi.linux@gmail.com>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Johannes Thumshirn <jthumshirn@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel@vger.kernel.org, Brajeswar Ghosh <brajeswar.linux@gmail.com>
+Return-path: <linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+In-Reply-To: <1546870774-19691-1-git-send-email-stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-mediatek>,
+ <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-mediatek/>
+List-Post: <mailto:linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+List-Help: <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-mediatek>,
+ <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=subscribe>
+Sender: "Linux-mediatek" <linux-mediatek-bounces-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+Errors-To: linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
+To: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: wsd_upstream-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, kuohong.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, peter.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 04/01/2019 19:49, Souptick Joarder wrote:
-> On Fri, Jan 4, 2019 at 9:34 PM John Garry <john.garry@huawei.com> wrote:
->>
->> On 04/01/2019 15:11, Sabyasachi Gupta wrote:
->>> On Fri, Jan 4, 2019 at 6:43 PM John Garry <john.garry@huawei.com> wrote:
->>>>
->>>> On 04/01/2019 12:48, Sabyasachi Gupta wrote:
->>>>> On Wed, Dec 19, 2018 at 6:49 PM Sabyasachi Gupta
->>>>> <sabyasachi.linux@gmail.com> wrote:
->>>>>>
->>>>>> On Sat, Dec 1, 2018 at 6:40 PM Sabyasachi Gupta
->>>>>> <sabyasachi.linux@gmail.com> wrote:
->>>>>>>
->>>>>>> On Wed, Nov 21, 2018 at 7:18 PM Sabyasachi Gupta
->>>>>>> <sabyasachi.linux@gmail.com> wrote:
->>>>>>>>
->>>>>>>> Replace dma_alloc_coherent + memset with dma_zalloc_coherent
->>>>>>>>
->>>>
->>>> If you're going to make this change, then how about change these to the
->>>> managed version, so that we can avoid the explicit free'ing at driver
->>>> removal?
->>>
->>> I can't get it
->>
->> Please see dmam_alloc_coherent(). You can set __GFP_ZERO in the gfp
->> argument to memset(0).
->
-> and dma_zalloc_coherent() did the same. So both are same right ? No ?
->
+From: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
 
-Firstly I would to say that I am not so keen on changes like this since 
-(I assume) it will not be tested at all.
+hba->is_sys_suspended is set after successful system suspend but
+not clear after successful system resume.
 
-However, having said that, the reason to use dmam_alloc_coherent() is 
-that you can also drop the dma_free_coherent() in mvs_free(). But 
-changes like that would actually require some code analysis effort...
+According to current behavior, hba->is_sys_suspended will not
+be set if host is runtime-suspended but not system-suspended. Thus
+we shall aligh the same policy: clear this flag even if host remains
+runtime-suspended after ufshcd_system_resume is successfully returned.
 
-John
+Simply fix this flag to correct host status logs.
 
->>
->> I would say that this is a more useful change.
->>
->>>
->>>>
->>>>>>>> Signed-off-by: Sabyasachi Gupta <sabyasachi.linux@gmail.com>
->>>>>>>
->>>>>>> Any comment on this patch?
->>>>>>
->>>>>> Any comment on this patch?
->>>>>
->>>>> Any comment on this patch?
->>>>>
->>>>>>
->>>>>>>
->>>>>>>> ---
->>>>>>>>  drivers/scsi/mvsas/mv_init.c | 12 ++++--------
->>>>>>>>  1 file changed, 4 insertions(+), 8 deletions(-)
->>>>>>>>
->>>>>>>> diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
->>>>>>>> index 3ac3437..495bddb 100644
->>>>>>>> --- a/drivers/scsi/mvsas/mv_init.c
->>>>>>>> +++ b/drivers/scsi/mvsas/mv_init.c
->>>>>>>> @@ -253,33 +253,29 @@ static int mvs_alloc(struct mvs_info *mvi, struct Scsi_Host *shost)
->>>>>>>>         /*
->>>>>>>>          * alloc and init our DMA areas
->>>>>>>>          */
->>>>>>>> -       mvi->tx = dma_alloc_coherent(mvi->dev,
->>>>>>>> +       mvi->tx = dma_zalloc_coherent(mvi->dev,
->>>>>>>>                                      sizeof(*mvi->tx) * MVS_CHIP_SLOT_SZ,
->>>>>>>>                                      &mvi->tx_dma, GFP_KERNEL);
->>>>
->>>> I'm guessing that this does not pass checkpatch with --strict option.
->>>>
->>>> Thanks,
->>>> John
->>>
->>> I have not not checked with --strict option
->>
->> It may warn that you're not maintaining alignment.
->>
->>>
->>>>
->>>>>>>>         if (!mvi->tx)
->>>>>>>>                 goto err_out;
->>>>>>>> -       memset(mvi->tx, 0, sizeof(*mvi->tx) * MVS_CHIP_SLOT_SZ);
->>>>>>>> -       mvi->rx_fis = dma_alloc_coherent(mvi->dev, MVS_RX_FISL_SZ,
->>>>>>>> +       mvi->rx_fis = dma_zalloc_coherent(mvi->dev, MVS_RX_FISL_SZ,
->>>>>>>>                                          &mvi->rx_fis_dma, GFP_KERNEL);
->>>>>>>>         if (!mvi->rx_fis)
->>>>>>>>                 goto err_out;
->>>>>>>> -       memset(mvi->rx_fis, 0, MVS_RX_FISL_SZ);
->>>>>>>>
->>>>>>>> -       mvi->rx = dma_alloc_coherent(mvi->dev,
->>>>>>>> +       mvi->rx = dma_zalloc_coherent(mvi->dev,
->>>>>>>>                                      sizeof(*mvi->rx) * (MVS_RX_RING_SZ + 1),
->>>>>>>>                                      &mvi->rx_dma, GFP_KERNEL);
->>>>>>>>         if (!mvi->rx)
->>>>>>>>                 goto err_out;
->>>>>>>> -       memset(mvi->rx, 0, sizeof(*mvi->rx) * (MVS_RX_RING_SZ + 1));
->>>>>>>>         mvi->rx[0] = cpu_to_le32(0xfff);
->>>>>>>>         mvi->rx_cons = 0xfff;
->>>>>>>>
->>>>>>>> -       mvi->slot = dma_alloc_coherent(mvi->dev,
->>>>>>>> +       mvi->slot = dma_zalloc_coherent(mvi->dev,
->>>>>>>>                                        sizeof(*mvi->slot) * slot_nr,
->>>>>>>>                                        &mvi->slot_dma, GFP_KERNEL);
->>>>>>>>         if (!mvi->slot)
->>>>>>>>                 goto err_out;
->>>>>>>> -       memset(mvi->slot, 0, sizeof(*mvi->slot) * slot_nr);
->>>>>>>>
->>>>>>>>         mvi->bulk_buffer = dma_alloc_coherent(mvi->dev,
->>>>>>>>                                        TRASH_BUCKET_SIZE,
->>>>>>>> --
->>>>>>>> 2.7.4
->>>>>>>>
->>>>>
->>>>> .
->>>>>
->>>>
->>>>
->>>
->>> .
->>>
->>
->>
->
-> .
->
+Signed-off-by: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
+---
+ drivers/scsi/ufs/ufshcd.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 23d7cca..17536bd 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -7916,6 +7916,8 @@ int ufshcd_system_resume(struct ufs_hba *hba)
+ 	trace_ufshcd_system_resume(dev_name(hba->dev), ret,
+ 		ktime_to_us(ktime_sub(ktime_get(), start)),
+ 		hba->curr_dev_pwr_mode, hba->uic_link_state);
++	if (!ret)
++		hba->is_sys_suspended = false;
+ 	return ret;
+ }
+ EXPORT_SYMBOL(ufshcd_system_resume);
+-- 
+1.9.1
