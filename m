@@ -1,42 +1,151 @@
-From: Manish Rangankar <mrangankar@marvell.com>
-Subject: RE: [EXT] [PATCH] scsi: bnx2i: fix indentation issue, remove a tab
-Date: Mon, 7 Jan 2019 11:01:19 +0000
-Message-ID: <DM5PR18MB2134A42C00C81B9C2168AAEFD8890@DM5PR18MB2134.namprd18.prod.outlook.com>
-References: <20190104170224.8147-1-colin.king@canonical.com>
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH] scsi/mvsas/mv_init.c: Use dma_zalloc_coherent
+Date: Mon, 7 Jan 2019 13:50:29 +0000
+Message-ID: <1e3d2653-67b5-07a2-37c3-d3e39532cbcb@huawei.com>
+References: <5bf56248.1c69fb81.21a6e.5a72@mx.google.com>
+ <CAJr6mf11gp9iV=NiFEFyo7kSZfCfMsEySdijem_PhMFEAwqucA@mail.gmail.com>
+ <CAJr6mf2kr4BmCWZU0=EwXURWUZWRHHLifi_2aiUrJSCjnWusZg@mail.gmail.com>
+ <CAJr6mf29hJft=rurUK8EJRQ1MS_3_MXb7f-zX0vyXUrQNLcWYA@mail.gmail.com>
+ <ff090818-2f5f-1fa0-2eff-6988e1660345@huawei.com>
+ <CAJr6mf1ebw16j0AZSDDxnK2t_=8wdzZBm=X_3DW=zP+XRbRFsw@mail.gmail.com>
+ <8af8ef0a-add1-1010-6ef3-7e5c6ff51aa9@huawei.com>
+ <CAFqt6zbZaOA9+SX8CwYobBN_3hhhWOWkcBJ_qdgEuELoOBU5=w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190104170224.8147-1-colin.king@canonical.com>
-Content-Language: en-US
+In-Reply-To: <CAFqt6zbZaOA9+SX8CwYobBN_3hhhWOWkcBJ_qdgEuELoOBU5=w@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Colin King <colin.king@canonical.com>, "QLogic-Storage-Upstream@qlogic.com" <QLogic-Storage-Upstream@qlogic.com>, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: Souptick Joarder <jrdr.linux@gmail.com>
+Cc: Sabyasachi Gupta <sabyasachi.linux@gmail.com>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Johannes Thumshirn <jthumshirn@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel@vger.kernel.org, Brajeswar Ghosh <brajeswar.linux@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBDb2xpbiBLaW5nIDxjb2xpbi5r
-aW5nQGNhbm9uaWNhbC5jb20+DQo+IFNlbnQ6IEZyaWRheSwgSmFudWFyeSA0LCAyMDE5IDEwOjMy
-IFBNDQo+IFRvOiBRTG9naWMtU3RvcmFnZS1VcHN0cmVhbUBxbG9naWMuY29tOyBKYW1lcyBFIC4g
-SiAuIEJvdHRvbWxleQ0KPiA8amVqYkBsaW51eC5pYm0uY29tPjsgTWFydGluIEsgLiBQZXRlcnNl
-biA8bWFydGluLnBldGVyc2VuQG9yYWNsZS5jb20+Ow0KPiBsaW51eC1zY3NpQHZnZXIua2VybmVs
-Lm9yZw0KPiBDYzoga2VybmVsLWphbml0b3JzQHZnZXIua2VybmVsLm9yZzsgbGludXgta2VybmVs
-QHZnZXIua2VybmVsLm9yZw0KPiBTdWJqZWN0OiBbRVhUXSBbUEFUQ0hdIHNjc2k6IGJueDJpOiBm
-aXggaW5kZW50YXRpb24gaXNzdWUsIHJlbW92ZSBhIHRhYg0KPiANCj4gRXh0ZXJuYWwgRW1haWwN
-Cj4gDQo+IC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0NCj4gRXh0ZXJuYWwgRW1haWwNCj4gDQo+IEZyb206IENvbGlu
-IElhbiBLaW5nIDxjb2xpbi5raW5nQGNhbm9uaWNhbC5jb20+DQo+IA0KPiBUaGUgcmV0dXJuIHN0
-YXRlbWVudCBpcyBpbmRlbnRlZCBpbmNvcnJlY3RseSwgZml4IHRoaXMgYnkgcmVtb3ZpbmcgYSBz
-aW5nbGUgdGFiLg0KPiANCj4gU2lnbmVkLW9mZi1ieTogQ29saW4gSWFuIEtpbmcgPGNvbGluLmtp
-bmdAY2Fub25pY2FsLmNvbT4NCj4gLS0tDQo+ICBkcml2ZXJzL3Njc2kvYm54MmkvYm54MmlfaXNj
-c2kuYyB8IDIgKy0NCj4gIDEgZmlsZSBjaGFuZ2VkLCAxIGluc2VydGlvbigrKSwgMSBkZWxldGlv
-bigtKQ0KPiANCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9ibngyaS9ibngyaV9pc2NzaS5j
-IGIvZHJpdmVycy9zY3NpL2JueDJpL2JueDJpX2lzY3NpLmMNCj4gaW5kZXggNjljNzU0MjZjNWVi
-Li5jNWZhNWYzYjAwZTkgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvc2NzaS9ibngyaS9ibngyaV9p
-c2NzaS5jDQo+ICsrKyBiL2RyaXZlcnMvc2NzaS9ibngyaS9ibngyaV9pc2NzaS5jDQo+IEBAIC01
-NzcsNyArNTc3LDcgQEAgc3RhdGljIHZvaWQgYm54MmlfZnJlZV9tcF9iZHQoc3RydWN0IGJueDJp
-X2hiYSAqaGJhKQ0KPiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgaGJhLT5kdW1t
-eV9idWZmZXIsIGhiYS0+ZHVtbXlfYnVmX2RtYSk7DQo+ICAgICAgICAgICAgICAgICBoYmEtPmR1
-bW15X2J1ZmZlciA9IE5VTEw7DQo+ICAgICAgICAgfQ0KPiAtICAgICAgICAgICAgICAgcmV0dXJu
-Ow0KPiArICAgICAgIHJldHVybjsNCj4gIH0NCj4gDQo+ICAvKioNCj4gLS0NCj4gMi4xOS4xDQoN
-ClRoYW5rcw0KQWNrZWQtYnk6IE1hbmlzaCBSYW5nYW5rYXIgPG1yYW5nYW5rYXJAbWFydmVsbC5j
-b20+DQoNCg==
+On 04/01/2019 19:49, Souptick Joarder wrote:
+> On Fri, Jan 4, 2019 at 9:34 PM John Garry <john.garry@huawei.com> wrote:
+>>
+>> On 04/01/2019 15:11, Sabyasachi Gupta wrote:
+>>> On Fri, Jan 4, 2019 at 6:43 PM John Garry <john.garry@huawei.com> wrote:
+>>>>
+>>>> On 04/01/2019 12:48, Sabyasachi Gupta wrote:
+>>>>> On Wed, Dec 19, 2018 at 6:49 PM Sabyasachi Gupta
+>>>>> <sabyasachi.linux@gmail.com> wrote:
+>>>>>>
+>>>>>> On Sat, Dec 1, 2018 at 6:40 PM Sabyasachi Gupta
+>>>>>> <sabyasachi.linux@gmail.com> wrote:
+>>>>>>>
+>>>>>>> On Wed, Nov 21, 2018 at 7:18 PM Sabyasachi Gupta
+>>>>>>> <sabyasachi.linux@gmail.com> wrote:
+>>>>>>>>
+>>>>>>>> Replace dma_alloc_coherent + memset with dma_zalloc_coherent
+>>>>>>>>
+>>>>
+>>>> If you're going to make this change, then how about change these to the
+>>>> managed version, so that we can avoid the explicit free'ing at driver
+>>>> removal?
+>>>
+>>> I can't get it
+>>
+>> Please see dmam_alloc_coherent(). You can set __GFP_ZERO in the gfp
+>> argument to memset(0).
+>
+> and dma_zalloc_coherent() did the same. So both are same right ? No ?
+>
+
+Firstly I would to say that I am not so keen on changes like this since 
+(I assume) it will not be tested at all.
+
+However, having said that, the reason to use dmam_alloc_coherent() is 
+that you can also drop the dma_free_coherent() in mvs_free(). But 
+changes like that would actually require some code analysis effort...
+
+John
+
+>>
+>> I would say that this is a more useful change.
+>>
+>>>
+>>>>
+>>>>>>>> Signed-off-by: Sabyasachi Gupta <sabyasachi.linux@gmail.com>
+>>>>>>>
+>>>>>>> Any comment on this patch?
+>>>>>>
+>>>>>> Any comment on this patch?
+>>>>>
+>>>>> Any comment on this patch?
+>>>>>
+>>>>>>
+>>>>>>>
+>>>>>>>> ---
+>>>>>>>>  drivers/scsi/mvsas/mv_init.c | 12 ++++--------
+>>>>>>>>  1 file changed, 4 insertions(+), 8 deletions(-)
+>>>>>>>>
+>>>>>>>> diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
+>>>>>>>> index 3ac3437..495bddb 100644
+>>>>>>>> --- a/drivers/scsi/mvsas/mv_init.c
+>>>>>>>> +++ b/drivers/scsi/mvsas/mv_init.c
+>>>>>>>> @@ -253,33 +253,29 @@ static int mvs_alloc(struct mvs_info *mvi, struct Scsi_Host *shost)
+>>>>>>>>         /*
+>>>>>>>>          * alloc and init our DMA areas
+>>>>>>>>          */
+>>>>>>>> -       mvi->tx = dma_alloc_coherent(mvi->dev,
+>>>>>>>> +       mvi->tx = dma_zalloc_coherent(mvi->dev,
+>>>>>>>>                                      sizeof(*mvi->tx) * MVS_CHIP_SLOT_SZ,
+>>>>>>>>                                      &mvi->tx_dma, GFP_KERNEL);
+>>>>
+>>>> I'm guessing that this does not pass checkpatch with --strict option.
+>>>>
+>>>> Thanks,
+>>>> John
+>>>
+>>> I have not not checked with --strict option
+>>
+>> It may warn that you're not maintaining alignment.
+>>
+>>>
+>>>>
+>>>>>>>>         if (!mvi->tx)
+>>>>>>>>                 goto err_out;
+>>>>>>>> -       memset(mvi->tx, 0, sizeof(*mvi->tx) * MVS_CHIP_SLOT_SZ);
+>>>>>>>> -       mvi->rx_fis = dma_alloc_coherent(mvi->dev, MVS_RX_FISL_SZ,
+>>>>>>>> +       mvi->rx_fis = dma_zalloc_coherent(mvi->dev, MVS_RX_FISL_SZ,
+>>>>>>>>                                          &mvi->rx_fis_dma, GFP_KERNEL);
+>>>>>>>>         if (!mvi->rx_fis)
+>>>>>>>>                 goto err_out;
+>>>>>>>> -       memset(mvi->rx_fis, 0, MVS_RX_FISL_SZ);
+>>>>>>>>
+>>>>>>>> -       mvi->rx = dma_alloc_coherent(mvi->dev,
+>>>>>>>> +       mvi->rx = dma_zalloc_coherent(mvi->dev,
+>>>>>>>>                                      sizeof(*mvi->rx) * (MVS_RX_RING_SZ + 1),
+>>>>>>>>                                      &mvi->rx_dma, GFP_KERNEL);
+>>>>>>>>         if (!mvi->rx)
+>>>>>>>>                 goto err_out;
+>>>>>>>> -       memset(mvi->rx, 0, sizeof(*mvi->rx) * (MVS_RX_RING_SZ + 1));
+>>>>>>>>         mvi->rx[0] = cpu_to_le32(0xfff);
+>>>>>>>>         mvi->rx_cons = 0xfff;
+>>>>>>>>
+>>>>>>>> -       mvi->slot = dma_alloc_coherent(mvi->dev,
+>>>>>>>> +       mvi->slot = dma_zalloc_coherent(mvi->dev,
+>>>>>>>>                                        sizeof(*mvi->slot) * slot_nr,
+>>>>>>>>                                        &mvi->slot_dma, GFP_KERNEL);
+>>>>>>>>         if (!mvi->slot)
+>>>>>>>>                 goto err_out;
+>>>>>>>> -       memset(mvi->slot, 0, sizeof(*mvi->slot) * slot_nr);
+>>>>>>>>
+>>>>>>>>         mvi->bulk_buffer = dma_alloc_coherent(mvi->dev,
+>>>>>>>>                                        TRASH_BUCKET_SIZE,
+>>>>>>>> --
+>>>>>>>> 2.7.4
+>>>>>>>>
+>>>>>
+>>>>> .
+>>>>>
+>>>>
+>>>>
+>>>
+>>> .
+>>>
+>>
+>>
+>
+> .
+>
