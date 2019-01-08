@@ -1,87 +1,75 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.20 104/117] scsi: smartpqi: correct lun reset issues
-Date: Tue,  8 Jan 2019 14:26:12 -0500
-Message-ID: <20190108192628.121270-104-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.20 106/117] scsi: smartpqi: call pqi_free_interrupts() in pqi_shutdown()
+Date: Tue,  8 Jan 2019 14:26:14 -0500
+Message-ID: <20190108192628.121270-106-sashal@kernel.org>
 References: <20190108192628.121270-1-sashal@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20190108192628.121270-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Kevin Barnett <kevin.barnett@microsemi.com>, Don Brace <don.brace@microsemi.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org
+Cc: Yanjiang Jin <yanjiang.jin@hxt-semitech.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Kevin Barnett <kevin.barnett@microsemi.com>
+From: Yanjiang Jin <yanjiang.jin@hxt-semitech.com>
 
-[ Upstream commit 2ba55c9851d74eb015a554ef69ddf2ef061d5780 ]
+[ Upstream commit e57b2945aa654e48f85a41e8917793c64ecb9de8 ]
 
-Problem:
-The Linux kernel takes a logical volume offline after a LUN reset.  This is
-generally accompanied by this message in the dmesg output:
+We must free all irqs during shutdown, else kexec's 2nd kernel would hang
+in pqi_wait_for_completion_io() as below:
 
-Device offlined - not ready after error recovery
+Call trace:
 
-Root Cause:
-The root cause is a "quirk" in the timeout handling in the Linux SCSI
-layer. The Linux kernel places a 30-second timeout on most media access
-commands (reads and writes) that it send to device drivers.  When a media
-access command times out, the Linux kernel goes into error recovery mode
-for the LUN that was the target of the command that timed out. Every
-command that timed out is kept on a list inside of the Linux kernel to be
-retried later. The kernel attempts to recover the command(s) that timed out
-by issuing a LUN reset followed by a TEST UNIT READY. If the LUN reset and
-TEST UNIT READY commands are successful, the kernel retries the command(s)
-that timed out.
+ pqi_wait_for_completion_io
+ pqi_submit_raid_request_synchronous.constprop.78+0x23c/0x310 [smartpqi]
+ pqi_configure_events+0xec/0x1f8 [smartpqi]
+ pqi_ctrl_init+0x814/0xca0 [smartpqi]
+ pqi_pci_probe+0x400/0x46c [smartpqi]
+ local_pci_probe+0x48/0xb0
+ pci_device_probe+0x14c/0x1b0
+ really_probe+0x218/0x3fc
+ driver_probe_device+0x70/0x140
+ __driver_attach+0x11c/0x134
+ bus_for_each_dev+0x70/0xc8
+ driver_attach+0x30/0x38
+ bus_add_driver+0x1f0/0x294
+ driver_register+0x74/0x12c
+ __pci_register_driver+0x64/0x70
+ pqi_init+0xd0/0x10000 [smartpqi]
+ do_one_initcall+0x60/0x1d8
+ do_init_module+0x64/0x1f8
+ load_module+0x10ec/0x1350
+ __se_sys_finit_module+0xd4/0x100
+ __arm64_sys_finit_module+0x28/0x34
+ el0_svc_handler+0x104/0x160
+ el0_svc+0x8/0xc
 
-Each SCSI command issued by the kernel has a result field associated with
-it. This field indicates the final result of the command (success or
-error). When a command times out, the kernel places a value in this result
-field indicating that the command timed out.
+This happens only in the following combinations:
 
-The "quirk" is that after the LUN reset and TEST UNIT READY commands are
-completed, the kernel checks each command on the timed-out command list
-before retrying it. If the result field is still "timed out", the kernel
-treats that command as not having been successfully recovered for a
-retry. If the number of commands that are in this state are greater than
-two, the kernel takes the LUN offline.
+1. smartpqi is built as module, not built-in;
+2. We have a disk connected to smartpqi card;
+3. Both kexec's 1st and 2nd kernels use this disk as Rootfs' mount point.
 
-Fix:
-When our RAIDStack receives a LUN reset, it simply waits until all
-outstanding commands complete. Generally, all of these outstanding commands
-complete successfully. Therefore, the fix in the smartpqi driver is to
-always set the command result field to indicate success when a request
-completes successfully. This normally isn’t necessary because the result
-field is always initialized to success when the command is submitted to the
-driver. So when the command completes successfully, the result field is
-left untouched. But in this case, the kernel changes the result field
-behind the driver’s back and then expects the field to be changed by the
-driver as the commands that timed-out complete.
-
-Reviewed-by: Dave Carroll <david.carroll@microsemi.com>
-Reviewed-by: Scott Teel <scott.teel@microsemi.com>
-Signed-off-by: Kevin Barnett <kevin.barnett@microsemi.com>
-Signed-off-by: Don Brace <don.brace@microsemi.com>
+Signed-off-by: Yanjiang Jin <yanjiang.jin@hxt-semitech.com>
+Acked-by: Don Brace <don.brace@microsemi.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/smartpqi/smartpqi_init.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/scsi/smartpqi/smartpqi_init.c | 1 +
+ 1 file changed, 1 insertion(+)
 
 diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index a25a07a0b7f0..c1efc182f5ea 100644
+index c1efc182f5ea..6f4cb3be97aa 100644
 --- a/drivers/scsi/smartpqi/smartpqi_init.c
 +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -2704,6 +2704,9 @@ static unsigned int pqi_process_io_intr(struct pqi_ctrl_info *ctrl_info,
- 		switch (response->header.iu_type) {
- 		case PQI_RESPONSE_IU_RAID_PATH_IO_SUCCESS:
- 		case PQI_RESPONSE_IU_AIO_PATH_IO_SUCCESS:
-+			if (io_request->scmd)
-+				io_request->scmd->result = 0;
-+			/* fall through */
- 		case PQI_RESPONSE_IU_GENERAL_MANAGEMENT:
- 			break;
- 		case PQI_RESPONSE_IU_TASK_MANAGEMENT:
+@@ -6673,6 +6673,7 @@ static void pqi_shutdown(struct pci_dev *pci_dev)
+ 	 * storage.
+ 	 */
+ 	rc = pqi_flush_cache(ctrl_info, SHUTDOWN);
++	pqi_free_interrupts(ctrl_info);
+ 	pqi_reset(ctrl_info);
+ 	if (rc == 0)
+ 		return;
 -- 
 2.19.1
