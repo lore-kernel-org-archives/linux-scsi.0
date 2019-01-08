@@ -1,67 +1,87 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.20 103/117] scsi: mpt3sas: fix memory ordering on 64bit writes
-Date: Tue,  8 Jan 2019 14:26:11 -0500
-Message-ID: <20190108192628.121270-103-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.20 058/117] scsi: target: use consistent left-aligned ASCII INQUIRY data
+Date: Tue,  8 Jan 2019 14:25:26 -0500
+Message-ID: <20190108192628.121270-58-sashal@kernel.org>
 References: <20190108192628.121270-1-sashal@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20190108192628.121270-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: =?UTF-8?q?Stephan=20G=C3=BCnther?= <moepi@moepi.net>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
+Cc: David Disseldorp <ddiss@suse.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Stephan Günther <moepi@moepi.net>
+From: David Disseldorp <ddiss@suse.de>
 
-[ Upstream commit 23c3828aa2f84edec7020c7397a22931e7a879e1 ]
+[ Upstream commit 0de263577de5d5e052be5f4f93334e63cc8a7f0b ]
 
-With commit 09c2f95ad404 ("scsi: mpt3sas: Swap I/O memory read value back
-to cpu endianness"), 64bit writes in _base_writeq() were rewritten to use
-__raw_writeq() instad of writeq().
+spc5r17.pdf specifies:
 
-This introduced a bug apparent on powerpc64 systems such as the Raptor
-Talos II that causes the HBA to drop from the PCIe bus under heavy load and
-being reinitialized after a couple of seconds.
+  4.3.1 ASCII data field requirements
+  ASCII data fields shall contain only ASCII printable characters (i.e.,
+  code values 20h to 7Eh) and may be terminated with one or more ASCII null
+  (00h) characters.  ASCII data fields described as being left-aligned
+  shall have any unused bytes at the end of the field (i.e., highest
+  offset) and the unused bytes shall be filled with ASCII space characters
+  (20h).
 
-It can easily be triggered on affacted systems by using something like
+LIO currently space-pads the T10 VENDOR IDENTIFICATION and PRODUCT
+IDENTIFICATION fields in the standard INQUIRY data. However, the PRODUCT
+REVISION LEVEL field in the standard INQUIRY data as well as the T10 VENDOR
+IDENTIFICATION field in the INQUIRY Device Identification VPD Page are
+zero-terminated/zero-padded.
 
-  fio --name=random-write --iodepth=4 --rw=randwrite --bs=4k --direct=0 \
-    --size=128M --numjobs=64 --end_fsync=1
-  fio --name=random-write --iodepth=4 --rw=randwrite --bs=64k --direct=0 \
-    --size=128M --numjobs=64 --end_fsync=1
+Fix this inconsistency by using space-padding for all of the above fields.
 
-a couple of times. In my case I tested it on both a ZFS raidz2 and a btrfs
-raid6 using LSI 9300-8i and 9400-8i controllers.
-
-The fix consists in resembling the write ordering of writeq() by adding a
-mandatory write memory barrier before device access and a compiler barrier
-afterwards. The additional MMIO barrier is superfluous.
-
-Signed-off-by: Stephan Günther <moepi@moepi.net>
-Reported-by: Matt Corallo <linux@bluematt.me>
-Acked-by: Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>
+Signed-off-by: David Disseldorp <ddiss@suse.de>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Bryant G. Ly <bly@catalogicsoftware.com>
+Reviewed-by: Lee Duncan <lduncan@suse.com>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
+Reviewed-by: Roman Bolshakov <r.bolshakov@yadro.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/target/target_core_spc.c | 17 ++++++++++++-----
+ 1 file changed, 12 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 2500377d0723..bfd826deabbe 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -3319,8 +3319,9 @@ _base_mpi_ep_writeq(__u64 b, volatile void __iomem *addr,
- static inline void
- _base_writeq(__u64 b, volatile void __iomem *addr, spinlock_t *writeq_lock)
- {
-+	wmb();
- 	__raw_writeq(b, addr);
--	mmiowb();
-+	barrier();
- }
- #else
- static inline void
+diff --git a/drivers/target/target_core_spc.c b/drivers/target/target_core_spc.c
+index f459118bc11b..c37dd36ec77d 100644
+--- a/drivers/target/target_core_spc.c
++++ b/drivers/target/target_core_spc.c
+@@ -108,12 +108,17 @@ spc_emulate_inquiry_std(struct se_cmd *cmd, unsigned char *buf)
+ 
+ 	buf[7] = 0x2; /* CmdQue=1 */
+ 
+-	memcpy(&buf[8], "LIO-ORG ", 8);
+-	memset(&buf[16], 0x20, 16);
++	/*
++	 * ASCII data fields described as being left-aligned shall have any
++	 * unused bytes at the end of the field (i.e., highest offset) and the
++	 * unused bytes shall be filled with ASCII space characters (20h).
++	 */
++	memset(&buf[8], 0x20, 8 + 16 + 4);
++	memcpy(&buf[8], "LIO-ORG", sizeof("LIO-ORG") - 1);
+ 	memcpy(&buf[16], dev->t10_wwn.model,
+-	       min_t(size_t, strlen(dev->t10_wwn.model), 16));
++	       strnlen(dev->t10_wwn.model, 16));
+ 	memcpy(&buf[32], dev->t10_wwn.revision,
+-	       min_t(size_t, strlen(dev->t10_wwn.revision), 4));
++	       strnlen(dev->t10_wwn.revision, 4));
+ 	buf[4] = 31; /* Set additional length to 31 */
+ 
+ 	return 0;
+@@ -251,7 +256,9 @@ spc_emulate_evpd_83(struct se_cmd *cmd, unsigned char *buf)
+ 	buf[off] = 0x2; /* ASCII */
+ 	buf[off+1] = 0x1; /* T10 Vendor ID */
+ 	buf[off+2] = 0x0;
+-	memcpy(&buf[off+4], "LIO-ORG", 8);
++	/* left align Vendor ID and pad with spaces */
++	memset(&buf[off+4], 0x20, 8);
++	memcpy(&buf[off+4], "LIO-ORG", sizeof("LIO-ORG") - 1);
+ 	/* Extra Byte for NULL Terminator */
+ 	id_len++;
+ 	/* Identifier Length */
 -- 
 2.19.1
