@@ -1,232 +1,87 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.20 059/117] scsi: target/core: Make sure that target_wait_for_sess_cmds() waits long enough
-Date: Tue,  8 Jan 2019 14:25:27 -0500
-Message-ID: <20190108192628.121270-59-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.20 104/117] scsi: smartpqi: correct lun reset issues
+Date: Tue,  8 Jan 2019 14:26:12 -0500
+Message-ID: <20190108192628.121270-104-sashal@kernel.org>
 References: <20190108192628.121270-1-sashal@kernel.org>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20190108192628.121270-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Bart Van Assche <bvanassche@acm.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Mike Christie <mchristi@redhat.com>, Christoph Hellwig <hch@lst.de>, David Disseldorp <ddiss@suse.de>, Hannes Reinecke <hare@suse.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Cc: Kevin Barnett <kevin.barnett@microsemi.com>, Don Brace <don.brace@microsemi.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Bart Van Assche <bvanassche@acm.org>
+From: Kevin Barnett <kevin.barnett@microsemi.com>
 
-[ Upstream commit ad669505c4e9db9af9faeb5c51aa399326a80d91 ]
+[ Upstream commit 2ba55c9851d74eb015a554ef69ddf2ef061d5780 ]
 
-A session must only be released after all code that accesses the session
-structure has finished. Make sure that this is the case by introducing a
-new command counter per session that is only decremented after the
-.release_cmd() callback has finished. This patch fixes the following crash:
+Problem:
+The Linux kernel takes a logical volume offline after a LUN reset.  This is
+generally accompanied by this message in the dmesg output:
 
-BUG: KASAN: use-after-free in do_raw_spin_lock+0x1c/0x130
-Read of size 4 at addr ffff8801534b16e4 by task rmdir/14805
-CPU: 16 PID: 14805 Comm: rmdir Not tainted 4.18.0-rc2-dbg+ #5
-Call Trace:
-dump_stack+0xa4/0xf5
-print_address_description+0x6f/0x270
-kasan_report+0x241/0x360
-__asan_load4+0x78/0x80
-do_raw_spin_lock+0x1c/0x130
-_raw_spin_lock_irqsave+0x52/0x60
-srpt_set_ch_state+0x27/0x70 [ib_srpt]
-srpt_disconnect_ch+0x1b/0xc0 [ib_srpt]
-srpt_close_session+0xa8/0x260 [ib_srpt]
-target_shutdown_sessions+0x170/0x180 [target_core_mod]
-core_tpg_del_initiator_node_acl+0xf3/0x200 [target_core_mod]
-target_fabric_nacl_base_release+0x25/0x30 [target_core_mod]
-config_item_release+0x9c/0x110 [configfs]
-config_item_put+0x26/0x30 [configfs]
-configfs_rmdir+0x3b8/0x510 [configfs]
-vfs_rmdir+0xb3/0x1e0
-do_rmdir+0x262/0x2c0
-do_syscall_64+0x77/0x230
-entry_SYSCALL_64_after_hwframe+0x49/0xbe
+Device offlined - not ready after error recovery
 
-Cc: Nicholas Bellinger <nab@linux-iscsi.org>
-Cc: Mike Christie <mchristi@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: David Disseldorp <ddiss@suse.de>
-Cc: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+Root Cause:
+The root cause is a "quirk" in the timeout handling in the Linux SCSI
+layer. The Linux kernel places a 30-second timeout on most media access
+commands (reads and writes) that it send to device drivers.  When a media
+access command times out, the Linux kernel goes into error recovery mode
+for the LUN that was the target of the command that timed out. Every
+command that timed out is kept on a list inside of the Linux kernel to be
+retried later. The kernel attempts to recover the command(s) that timed out
+by issuing a LUN reset followed by a TEST UNIT READY. If the LUN reset and
+TEST UNIT READY commands are successful, the kernel retries the command(s)
+that timed out.
+
+Each SCSI command issued by the kernel has a result field associated with
+it. This field indicates the final result of the command (success or
+error). When a command times out, the kernel places a value in this result
+field indicating that the command timed out.
+
+The "quirk" is that after the LUN reset and TEST UNIT READY commands are
+completed, the kernel checks each command on the timed-out command list
+before retrying it. If the result field is still "timed out", the kernel
+treats that command as not having been successfully recovered for a
+retry. If the number of commands that are in this state are greater than
+two, the kernel takes the LUN offline.
+
+Fix:
+When our RAIDStack receives a LUN reset, it simply waits until all
+outstanding commands complete. Generally, all of these outstanding commands
+complete successfully. Therefore, the fix in the smartpqi driver is to
+always set the command result field to indicate success when a request
+completes successfully. This normally isn’t necessary because the result
+field is always initialized to success when the command is submitted to the
+driver. So when the command completes successfully, the result field is
+left untouched. But in this case, the kernel changes the result field
+behind the driver’s back and then expects the field to be changed by the
+driver as the commands that timed-out complete.
+
+Reviewed-by: Dave Carroll <david.carroll@microsemi.com>
+Reviewed-by: Scott Teel <scott.teel@microsemi.com>
+Signed-off-by: Kevin Barnett <kevin.barnett@microsemi.com>
+Signed-off-by: Don Brace <don.brace@microsemi.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/target/target_core_transport.c | 35 ++++++++++++++++++--------
- drivers/target/target_core_xcopy.c     |  6 ++++-
- include/target/target_core_base.h      |  1 +
- include/target/target_core_fabric.h    |  2 +-
- 4 files changed, 32 insertions(+), 12 deletions(-)
+ drivers/scsi/smartpqi/smartpqi_init.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 2cfd61d62e97..ffa5b9f771b5 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -224,19 +224,28 @@ void transport_subsystem_check_init(void)
- 	sub_api_initialized = 1;
- }
- 
-+static void target_release_sess_cmd_refcnt(struct percpu_ref *ref)
-+{
-+	struct se_session *sess = container_of(ref, typeof(*sess), cmd_count);
-+
-+	wake_up(&sess->cmd_list_wq);
-+}
-+
- /**
-  * transport_init_session - initialize a session object
-  * @se_sess: Session object pointer.
-  *
-  * The caller must have zero-initialized @se_sess before calling this function.
-  */
--void transport_init_session(struct se_session *se_sess)
-+int transport_init_session(struct se_session *se_sess)
- {
- 	INIT_LIST_HEAD(&se_sess->sess_list);
- 	INIT_LIST_HEAD(&se_sess->sess_acl_list);
- 	INIT_LIST_HEAD(&se_sess->sess_cmd_list);
- 	spin_lock_init(&se_sess->sess_cmd_lock);
- 	init_waitqueue_head(&se_sess->cmd_list_wq);
-+	return percpu_ref_init(&se_sess->cmd_count,
-+			       target_release_sess_cmd_refcnt, 0, GFP_KERNEL);
- }
- EXPORT_SYMBOL(transport_init_session);
- 
-@@ -247,6 +256,7 @@ EXPORT_SYMBOL(transport_init_session);
- struct se_session *transport_alloc_session(enum target_prot_op sup_prot_ops)
- {
- 	struct se_session *se_sess;
-+	int ret;
- 
- 	se_sess = kmem_cache_zalloc(se_sess_cache, GFP_KERNEL);
- 	if (!se_sess) {
-@@ -254,7 +264,11 @@ struct se_session *transport_alloc_session(enum target_prot_op sup_prot_ops)
- 				" se_sess_cache\n");
- 		return ERR_PTR(-ENOMEM);
- 	}
--	transport_init_session(se_sess);
-+	ret = transport_init_session(se_sess);
-+	if (ret < 0) {
-+		kfree(se_sess);
-+		return ERR_PTR(ret);
-+	}
- 	se_sess->sup_prot_ops = sup_prot_ops;
- 
- 	return se_sess;
-@@ -581,6 +595,7 @@ void transport_free_session(struct se_session *se_sess)
- 		sbitmap_queue_free(&se_sess->sess_tag_pool);
- 		kvfree(se_sess->sess_cmd_map);
- 	}
-+	percpu_ref_exit(&se_sess->cmd_count);
- 	kmem_cache_free(se_sess_cache, se_sess);
- }
- EXPORT_SYMBOL(transport_free_session);
-@@ -2719,6 +2734,7 @@ int target_get_sess_cmd(struct se_cmd *se_cmd, bool ack_kref)
- 	}
- 	se_cmd->transport_state |= CMD_T_PRE_EXECUTE;
- 	list_add_tail(&se_cmd->se_cmd_list, &se_sess->sess_cmd_list);
-+	percpu_ref_get(&se_sess->cmd_count);
- out:
- 	spin_unlock_irqrestore(&se_sess->sess_cmd_lock, flags);
- 
-@@ -2749,8 +2765,6 @@ static void target_release_cmd_kref(struct kref *kref)
- 	if (se_sess) {
- 		spin_lock_irqsave(&se_sess->sess_cmd_lock, flags);
- 		list_del_init(&se_cmd->se_cmd_list);
--		if (se_sess->sess_tearing_down && list_empty(&se_sess->sess_cmd_list))
--			wake_up(&se_sess->cmd_list_wq);
- 		spin_unlock_irqrestore(&se_sess->sess_cmd_lock, flags);
- 	}
- 
-@@ -2758,6 +2772,8 @@ static void target_release_cmd_kref(struct kref *kref)
- 	se_cmd->se_tfo->release_cmd(se_cmd);
- 	if (compl)
- 		complete(compl);
-+
-+	percpu_ref_put(&se_sess->cmd_count);
- }
- 
- /**
-@@ -2886,6 +2902,8 @@ void target_sess_cmd_list_set_waiting(struct se_session *se_sess)
- 	spin_lock_irqsave(&se_sess->sess_cmd_lock, flags);
- 	se_sess->sess_tearing_down = 1;
- 	spin_unlock_irqrestore(&se_sess->sess_cmd_lock, flags);
-+
-+	percpu_ref_kill(&se_sess->cmd_count);
- }
- EXPORT_SYMBOL(target_sess_cmd_list_set_waiting);
- 
-@@ -2900,17 +2918,14 @@ void target_wait_for_sess_cmds(struct se_session *se_sess)
- 
- 	WARN_ON_ONCE(!se_sess->sess_tearing_down);
- 
--	spin_lock_irq(&se_sess->sess_cmd_lock);
- 	do {
--		ret = wait_event_lock_irq_timeout(
--				se_sess->cmd_list_wq,
--				list_empty(&se_sess->sess_cmd_list),
--				se_sess->sess_cmd_lock, 180 * HZ);
-+		ret = wait_event_timeout(se_sess->cmd_list_wq,
-+				percpu_ref_is_zero(&se_sess->cmd_count),
-+				180 * HZ);
- 		list_for_each_entry(cmd, &se_sess->sess_cmd_list, se_cmd_list)
- 			target_show_cmd("session shutdown: still waiting for ",
- 					cmd);
- 	} while (ret <= 0);
--	spin_unlock_irq(&se_sess->sess_cmd_lock);
- }
- EXPORT_SYMBOL(target_wait_for_sess_cmds);
- 
-diff --git a/drivers/target/target_core_xcopy.c b/drivers/target/target_core_xcopy.c
-index 70adcfdca8d1..124495f953fa 100644
---- a/drivers/target/target_core_xcopy.c
-+++ b/drivers/target/target_core_xcopy.c
-@@ -479,6 +479,8 @@ static const struct target_core_fabric_ops xcopy_pt_tfo = {
- 
- int target_xcopy_setup_pt(void)
- {
-+	int ret;
-+
- 	xcopy_wq = alloc_workqueue("xcopy_wq", WQ_MEM_RECLAIM, 0);
- 	if (!xcopy_wq) {
- 		pr_err("Unable to allocate xcopy_wq\n");
-@@ -496,7 +498,9 @@ int target_xcopy_setup_pt(void)
- 	INIT_LIST_HEAD(&xcopy_pt_nacl.acl_list);
- 	INIT_LIST_HEAD(&xcopy_pt_nacl.acl_sess_list);
- 	memset(&xcopy_pt_sess, 0, sizeof(struct se_session));
--	transport_init_session(&xcopy_pt_sess);
-+	ret = transport_init_session(&xcopy_pt_sess);
-+	if (ret < 0)
-+		return ret;
- 
- 	xcopy_pt_nacl.se_tpg = &xcopy_pt_tpg;
- 	xcopy_pt_nacl.nacl_sess = &xcopy_pt_sess;
-diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index e3bdb0550a59..d9fd4eac58c2 100644
---- a/include/target/target_core_base.h
-+++ b/include/target/target_core_base.h
-@@ -601,6 +601,7 @@ struct se_session {
- 	struct se_node_acl	*se_node_acl;
- 	struct se_portal_group *se_tpg;
- 	void			*fabric_sess_ptr;
-+	struct percpu_ref	cmd_count;
- 	struct list_head	sess_list;
- 	struct list_head	sess_acl_list;
- 	struct list_head	sess_cmd_list;
-diff --git a/include/target/target_core_fabric.h b/include/target/target_core_fabric.h
-index f4147b398431..eb9d0923c55c 100644
---- a/include/target/target_core_fabric.h
-+++ b/include/target/target_core_fabric.h
-@@ -116,7 +116,7 @@ struct se_session *target_setup_session(struct se_portal_group *,
- 				struct se_session *, void *));
- void target_remove_session(struct se_session *);
- 
--void transport_init_session(struct se_session *);
-+int transport_init_session(struct se_session *se_sess);
- struct se_session *transport_alloc_session(enum target_prot_op);
- int transport_alloc_session_tags(struct se_session *, unsigned int,
- 		unsigned int);
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+index a25a07a0b7f0..c1efc182f5ea 100644
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -2704,6 +2704,9 @@ static unsigned int pqi_process_io_intr(struct pqi_ctrl_info *ctrl_info,
+ 		switch (response->header.iu_type) {
+ 		case PQI_RESPONSE_IU_RAID_PATH_IO_SUCCESS:
+ 		case PQI_RESPONSE_IU_AIO_PATH_IO_SUCCESS:
++			if (io_request->scmd)
++				io_request->scmd->result = 0;
++			/* fall through */
+ 		case PQI_RESPONSE_IU_GENERAL_MANAGEMENT:
+ 			break;
+ 		case PQI_RESPONSE_IU_TASK_MANAGEMENT:
 -- 
 2.19.1
