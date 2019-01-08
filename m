@@ -1,76 +1,97 @@
-From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.20 037/117] scsi: qedi: Check for session online before getting iSCSI TLV data.
-Date: Tue,  8 Jan 2019 14:25:05 -0500
-Message-ID: <20190108192628.121270-37-sashal@kernel.org>
-References: <20190108192628.121270-1-sashal@kernel.org>
+From: Logan Gunthorpe <logang@deltatee.com>
+Subject: [PATCH] scsi: isci: initialize shost fully before calling scsi_add_host()
+Date: Tue,  8 Jan 2019 13:50:43 -0700
+Message-ID: <20190108205043.3122-1-logang@deltatee.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190108192628.121270-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Manish Rangankar <manish.rangankar@cavium.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Logan Gunthorpe <logang@deltatee.com>, Intel SCU Linux support <intel-linux-scu@intel.com>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Jeff Moyer <jmoyer@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Manish Rangankar <manish.rangankar@cavium.com>
+scsi_mq_setup_tags(), which is called by scsi_add_host(), calculates
+the command size to allocate based on the prot_capabilities. In the
+isci driver, scsi_host_set_prot() is called after scsi_add_host()
+so the command size gets calculated to be smaller than it needs to be.
+Eventually, scsi_mq_init_request() locates the 'prot_sdb' after the command
+assuming it was sized correctly and a buffer overrun may occur.
 
-[ Upstream commit d5632b11f0a17efa6356311e535ae135d178438d ]
+However, seeing blk_mq_alloc_rqs() rounds up to the nearest cache line
+size, the mistake can go unnoticed.
 
-The kernel panic was observed after switch side perturbation,
+The bug was noticed after the struct request size was reduced by
+commit 9d037ad707ed ("block: remove req->timeout_list")
 
-BUG: unable to handle kernel NULL pointer dereference at (null)
-     IP: [<ffffffff8132b5a0>] strcmp+0x20/0x40
-     PGD 0 Oops: 0000 [#1] SMP
-CPU: 8 PID: 647 Comm: kworker/8:1 Tainted: G        W  OE  ------------   3.10.0-693.el7.x86_64 #1
-Hardware name: HPE ProLiant DL380 Gen10/ProLiant DL380 Gen10, BIOS U30 06/20/2018
-Workqueue: slowpath-13:00. qed_slowpath_task [qed]
-task: ffff880429eb8fd0 ti: ffff880429190000 task.ti: ffff880429190000
-RIP: 0010:[<ffffffff8132b5a0>]  [<ffffffff8132b5a0>] strcmp+0x20/0x40
-RSP: 0018:ffff880429193c68  EFLAGS: 00010202
-RAX: 000000000000000a RBX: 0000000000000002 RCX: 0000000000000000
-RDX: 0000000000000001 RSI: 0000000000000001 RDI: ffff88042bda7a41
-RBP: ffff880429193c68 R08: 000000000000ffff R09: 000000000000ffff
-R10: 0000000000000007 R11: ffff88042b3af338 R12: ffff880420b007a0
-R13: ffff88081aa56af8 R14: 0000000000000001 R15: ffff88081aa50410
-FS:  0000000000000000(0000) GS:ffff88042fe00000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 0000000000000000 CR3: 00000000019f2000 CR4: 00000000003407e0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-Stack:
-ffff880429193d20 ffffffffc02a0c90 ffffc90004b32000 ffff8803fd3ec600
-ffff88042bda7800 ffff88042bda7a00 ffff88042bda7840 ffff88042bda7a40
-0000000129193d10 2e3836312e323931 ff000a342e363232 ffffffffc01ad99d
-Call Trace:
-[<ffffffffc02a0c90>] qedi_get_protocol_tlv_data+0x270/0x470 [qedi]
-[<ffffffffc01ad99d>] ? qed_mfw_process_tlv_req+0x24d/0xbf0 [qed]
-[<ffffffffc01653ae>] qed_mfw_fill_tlv_data+0x5e/0xd0 [qed]
-[<ffffffffc01ad9b9>] qed_mfw_process_tlv_req+0x269/0xbf0 [qed]
+Which likely reduced the allocated space for the request by an entire
+cache line, enough that the overflow could be hit and it caused a panic,
+on boot, at:
 
-Fix kernel NULL pointer deref by checking for session is online before
-getting iSCSI TLV data.
+  RIP: 0010:t10_pi_complete+0x77/0x1c0
+  Call Trace:
+    <IRQ>
+    sd_done+0xf5/0x340
+    scsi_finish_command+0xc3/0x120
+    blk_done_softirq+0x83/0xb0
+    __do_softirq+0xa1/0x2e6
+    irq_exit+0xbc/0xd0
+    call_function_single_interrupt+0xf/0x20
+    </IRQ>
 
-Signed-off-by: Manish Rangankar <manish.rangankar@cavium.com>
-Reviewed-by: Lee Duncan <lduncan@suse.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
+sd_done() would call scsi_prot_sg_count() which reads the number of
+entities in 'prot_sdb', but seeing 'prot_sdb' is located after the end of
+the allocated space it reads a garbage number and erroneously calls
+t10_pi_complete().
+
+To prevent this, the calls to scsi_host_set_prot() are moved into
+isci_host_alloc() before the call to scsi_add_host(). Out of caution,
+also move the similar call to scsi_host_set_guard().
+
+Fixes: 3d2d75254915 ("[SCSI] isci: T10 DIF support")
+Link: http://lkml.kernel.org/r/da851333-eadd-163a-8c78-e1f4ec5ec857@deltatee.com
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Cc: Intel SCU Linux support <intel-linux-scu@intel.com>
+Cc: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>
+Cc: Jeff Moyer <jmoyer@redhat.com>
 ---
- drivers/scsi/qedi/qedi_main.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/scsi/isci/init.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/qedi/qedi_main.c b/drivers/scsi/qedi/qedi_main.c
-index 105b0e4d7818..5d7d018dad6e 100644
---- a/drivers/scsi/qedi/qedi_main.c
-+++ b/drivers/scsi/qedi/qedi_main.c
-@@ -952,6 +952,9 @@ static int qedi_find_boot_info(struct qedi_ctx *qedi,
- 		cls_sess = iscsi_conn_to_session(cls_conn);
- 		sess = cls_sess->dd_data;
+diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
+index 68b90c4f79a3..1727d0c71b12 100644
+--- a/drivers/scsi/isci/init.c
++++ b/drivers/scsi/isci/init.c
+@@ -576,6 +576,13 @@ static struct isci_host *isci_host_alloc(struct pci_dev *pdev, int id)
+ 	shost->max_lun = ~0;
+ 	shost->max_cmd_len = MAX_COMMAND_SIZE;
  
-+		if (!iscsi_is_session_online(cls_sess))
-+			continue;
++	/* turn on DIF support */
++	scsi_host_set_prot(shost,
++			   SHOST_DIF_TYPE1_PROTECTION |
++			   SHOST_DIF_TYPE2_PROTECTION |
++			   SHOST_DIF_TYPE3_PROTECTION);
++	scsi_host_set_guard(shost, SHOST_DIX_GUARD_CRC);
 +
- 		if (pri_ctrl_flags) {
- 			if (!strcmp(pri_tgt->iscsi_name, sess->targetname) &&
- 			    !strcmp(pri_tgt->ip_addr, ep_ip_addr)) {
+ 	err = scsi_add_host(shost, &pdev->dev);
+ 	if (err)
+ 		goto err_shost;
+@@ -663,13 +670,6 @@ static int isci_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 			goto err_host_alloc;
+ 		}
+ 		pci_info->hosts[i] = h;
+-
+-		/* turn on DIF support */
+-		scsi_host_set_prot(to_shost(h),
+-				   SHOST_DIF_TYPE1_PROTECTION |
+-				   SHOST_DIF_TYPE2_PROTECTION |
+-				   SHOST_DIF_TYPE3_PROTECTION);
+-		scsi_host_set_guard(to_shost(h), SHOST_DIX_GUARD_CRC);
+ 	}
+ 
+ 	err = isci_setup_interrupts(pdev);
 -- 
-2.19.1
+2.19.0
