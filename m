@@ -1,7 +1,7 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.19 88/97] scsi: smartpqi: correct lun reset issues
-Date: Tue,  8 Jan 2019 14:29:37 -0500
-Message-ID: <20190108192949.122407-88-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 87/97] scsi: mpt3sas: fix memory ordering on 64bit writes
+Date: Tue,  8 Jan 2019 14:29:36 -0500
+Message-ID: <20190108192949.122407-87-sashal@kernel.org>
 References: <20190108192949.122407-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -10,78 +10,58 @@ Return-path: <stable-owner@vger.kernel.org>
 In-Reply-To: <20190108192949.122407-1-sashal@kernel.org>
 Sender: stable-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Kevin Barnett <kevin.barnett@microsemi.com>, Don Brace <don.brace@microsemi.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org
+Cc: =?UTF-8?q?Stephan=20G=C3=BCnther?= <moepi@moepi.net>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Kevin Barnett <kevin.barnett@microsemi.com>
+From: Stephan Günther <moepi@moepi.net>
 
-[ Upstream commit 2ba55c9851d74eb015a554ef69ddf2ef061d5780 ]
+[ Upstream commit 23c3828aa2f84edec7020c7397a22931e7a879e1 ]
 
-Problem:
-The Linux kernel takes a logical volume offline after a LUN reset.  This is
-generally accompanied by this message in the dmesg output:
+With commit 09c2f95ad404 ("scsi: mpt3sas: Swap I/O memory read value back
+to cpu endianness"), 64bit writes in _base_writeq() were rewritten to use
+__raw_writeq() instad of writeq().
 
-Device offlined - not ready after error recovery
+This introduced a bug apparent on powerpc64 systems such as the Raptor
+Talos II that causes the HBA to drop from the PCIe bus under heavy load and
+being reinitialized after a couple of seconds.
 
-Root Cause:
-The root cause is a "quirk" in the timeout handling in the Linux SCSI
-layer. The Linux kernel places a 30-second timeout on most media access
-commands (reads and writes) that it send to device drivers.  When a media
-access command times out, the Linux kernel goes into error recovery mode
-for the LUN that was the target of the command that timed out. Every
-command that timed out is kept on a list inside of the Linux kernel to be
-retried later. The kernel attempts to recover the command(s) that timed out
-by issuing a LUN reset followed by a TEST UNIT READY. If the LUN reset and
-TEST UNIT READY commands are successful, the kernel retries the command(s)
-that timed out.
+It can easily be triggered on affacted systems by using something like
 
-Each SCSI command issued by the kernel has a result field associated with
-it. This field indicates the final result of the command (success or
-error). When a command times out, the kernel places a value in this result
-field indicating that the command timed out.
+  fio --name=random-write --iodepth=4 --rw=randwrite --bs=4k --direct=0 \
+    --size=128M --numjobs=64 --end_fsync=1
+  fio --name=random-write --iodepth=4 --rw=randwrite --bs=64k --direct=0 \
+    --size=128M --numjobs=64 --end_fsync=1
 
-The "quirk" is that after the LUN reset and TEST UNIT READY commands are
-completed, the kernel checks each command on the timed-out command list
-before retrying it. If the result field is still "timed out", the kernel
-treats that command as not having been successfully recovered for a
-retry. If the number of commands that are in this state are greater than
-two, the kernel takes the LUN offline.
+a couple of times. In my case I tested it on both a ZFS raidz2 and a btrfs
+raid6 using LSI 9300-8i and 9400-8i controllers.
 
-Fix:
-When our RAIDStack receives a LUN reset, it simply waits until all
-outstanding commands complete. Generally, all of these outstanding commands
-complete successfully. Therefore, the fix in the smartpqi driver is to
-always set the command result field to indicate success when a request
-completes successfully. This normally isn’t necessary because the result
-field is always initialized to success when the command is submitted to the
-driver. So when the command completes successfully, the result field is
-left untouched. But in this case, the kernel changes the result field
-behind the driver’s back and then expects the field to be changed by the
-driver as the commands that timed-out complete.
+The fix consists in resembling the write ordering of writeq() by adding a
+mandatory write memory barrier before device access and a compiler barrier
+afterwards. The additional MMIO barrier is superfluous.
 
-Reviewed-by: Dave Carroll <david.carroll@microsemi.com>
-Reviewed-by: Scott Teel <scott.teel@microsemi.com>
-Signed-off-by: Kevin Barnett <kevin.barnett@microsemi.com>
-Signed-off-by: Don Brace <don.brace@microsemi.com>
+Signed-off-by: Stephan Günther <moepi@moepi.net>
+Reported-by: Matt Corallo <linux@bluematt.me>
+Acked-by: Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/smartpqi/smartpqi_init.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index 2112ea6723c6..c62df3eefd5a 100644
---- a/drivers/scsi/smartpqi/smartpqi_init.c
-+++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -2720,6 +2720,9 @@ static unsigned int pqi_process_io_intr(struct pqi_ctrl_info *ctrl_info,
- 		switch (response->header.iu_type) {
- 		case PQI_RESPONSE_IU_RAID_PATH_IO_SUCCESS:
- 		case PQI_RESPONSE_IU_AIO_PATH_IO_SUCCESS:
-+			if (io_request->scmd)
-+				io_request->scmd->result = 0;
-+			/* fall through */
- 		case PQI_RESPONSE_IU_GENERAL_MANAGEMENT:
- 			break;
- 		case PQI_RESPONSE_IU_TASK_MANAGEMENT:
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 59d7844ee022..b59bba3e6516 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -3344,8 +3344,9 @@ _base_mpi_ep_writeq(__u64 b, volatile void __iomem *addr,
+ static inline void
+ _base_writeq(__u64 b, volatile void __iomem *addr, spinlock_t *writeq_lock)
+ {
++	wmb();
+ 	__raw_writeq(b, addr);
+-	mmiowb();
++	barrier();
+ }
+ #else
+ static inline void
 -- 
 2.19.1
