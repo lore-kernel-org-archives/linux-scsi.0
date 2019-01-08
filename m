@@ -1,130 +1,87 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.20 109/117] scsi: megaraid: fix out-of-bound array accesses
-Date: Tue,  8 Jan 2019 14:26:17 -0500
-Message-ID: <20190108192628.121270-109-sashal@kernel.org>
-References: <20190108192628.121270-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 46/97] scsi: target: use consistent left-aligned ASCII INQUIRY data
+Date: Tue,  8 Jan 2019 14:28:55 -0500
+Message-ID: <20190108192949.122407-46-sashal@kernel.org>
+References: <20190108192949.122407-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190108192628.121270-1-sashal@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20190108192949.122407-1-sashal@kernel.org>
+Sender: stable-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Qian Cai <cai@lca.pw>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
+Cc: David Disseldorp <ddiss@suse.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Qian Cai <cai@lca.pw>
+From: David Disseldorp <ddiss@suse.de>
 
-[ Upstream commit c7a082e4242fd8cd21a441071e622f87c16bdacc ]
+[ Upstream commit 0de263577de5d5e052be5f4f93334e63cc8a7f0b ]
 
-UBSAN reported those with MegaRAID SAS-3 3108,
+spc5r17.pdf specifies:
 
-[   77.467308] UBSAN: Undefined behaviour in drivers/scsi/megaraid/megaraid_sas_fp.c:117:32
-[   77.475402] index 255 is out of range for type 'MR_LD_SPAN_MAP [1]'
-[   77.481677] CPU: 16 PID: 333 Comm: kworker/16:1 Not tainted 4.20.0-rc5+ #1
-[   77.488556] Hardware name: Huawei TaiShan 2280 /BC11SPCD, BIOS 1.50 06/01/2018
-[   77.495791] Workqueue: events work_for_cpu_fn
-[   77.500154] Call trace:
-[   77.502610]  dump_backtrace+0x0/0x2c8
-[   77.506279]  show_stack+0x24/0x30
-[   77.509604]  dump_stack+0x118/0x19c
-[   77.513098]  ubsan_epilogue+0x14/0x60
-[   77.516765]  __ubsan_handle_out_of_bounds+0xfc/0x13c
-[   77.521767]  mr_update_load_balance_params+0x150/0x158 [megaraid_sas]
-[   77.528230]  MR_ValidateMapInfo+0x2cc/0x10d0 [megaraid_sas]
-[   77.533825]  megasas_get_map_info+0x244/0x2f0 [megaraid_sas]
-[   77.539505]  megasas_init_adapter_fusion+0x9b0/0xf48 [megaraid_sas]
-[   77.545794]  megasas_init_fw+0x1ab4/0x3518 [megaraid_sas]
-[   77.551212]  megasas_probe_one+0x2c4/0xbe0 [megaraid_sas]
-[   77.556614]  local_pci_probe+0x7c/0xf0
-[   77.560365]  work_for_cpu_fn+0x34/0x50
-[   77.564118]  process_one_work+0x61c/0xf08
-[   77.568129]  worker_thread+0x534/0xa70
-[   77.571882]  kthread+0x1c8/0x1d0
-[   77.575114]  ret_from_fork+0x10/0x1c
+  4.3.1 ASCII data field requirements
+  ASCII data fields shall contain only ASCII printable characters (i.e.,
+  code values 20h to 7Eh) and may be terminated with one or more ASCII null
+  (00h) characters.  ASCII data fields described as being left-aligned
+  shall have any unused bytes at the end of the field (i.e., highest
+  offset) and the unused bytes shall be filled with ASCII space characters
+  (20h).
 
-[   89.240332] UBSAN: Undefined behaviour in drivers/scsi/megaraid/megaraid_sas_fp.c:117:32
-[   89.248426] index 255 is out of range for type 'MR_LD_SPAN_MAP [1]'
-[   89.254700] CPU: 16 PID: 95 Comm: kworker/u130:0 Not tainted 4.20.0-rc5+ #1
-[   89.261665] Hardware name: Huawei TaiShan 2280 /BC11SPCD, BIOS 1.50 06/01/2018
-[   89.268903] Workqueue: events_unbound async_run_entry_fn
-[   89.274222] Call trace:
-[   89.276680]  dump_backtrace+0x0/0x2c8
-[   89.280348]  show_stack+0x24/0x30
-[   89.283671]  dump_stack+0x118/0x19c
-[   89.287167]  ubsan_epilogue+0x14/0x60
-[   89.290835]  __ubsan_handle_out_of_bounds+0xfc/0x13c
-[   89.295828]  MR_LdRaidGet+0x50/0x58 [megaraid_sas]
-[   89.300638]  megasas_build_io_fusion+0xbb8/0xd90 [megaraid_sas]
-[   89.306576]  megasas_build_and_issue_cmd_fusion+0x138/0x460 [megaraid_sas]
-[   89.313468]  megasas_queue_command+0x398/0x3d0 [megaraid_sas]
-[   89.319222]  scsi_dispatch_cmd+0x1dc/0x8a8
-[   89.323321]  scsi_request_fn+0x8e8/0xdd0
-[   89.327249]  __blk_run_queue+0xc4/0x158
-[   89.331090]  blk_execute_rq_nowait+0xf4/0x158
-[   89.335449]  blk_execute_rq+0xdc/0x158
-[   89.339202]  __scsi_execute+0x130/0x258
-[   89.343041]  scsi_probe_and_add_lun+0x2fc/0x1488
-[   89.347661]  __scsi_scan_target+0x1cc/0x8c8
-[   89.351848]  scsi_scan_channel.part.3+0x8c/0xc0
-[   89.356382]  scsi_scan_host_selected+0x130/0x1f0
-[   89.361002]  do_scsi_scan_host+0xd8/0xf0
-[   89.364927]  do_scan_async+0x9c/0x320
-[   89.368594]  async_run_entry_fn+0x138/0x420
-[   89.372780]  process_one_work+0x61c/0xf08
-[   89.376793]  worker_thread+0x13c/0xa70
-[   89.380546]  kthread+0x1c8/0x1d0
-[   89.383778]  ret_from_fork+0x10/0x1c
+LIO currently space-pads the T10 VENDOR IDENTIFICATION and PRODUCT
+IDENTIFICATION fields in the standard INQUIRY data. However, the PRODUCT
+REVISION LEVEL field in the standard INQUIRY data as well as the T10 VENDOR
+IDENTIFICATION field in the INQUIRY Device Identification VPD Page are
+zero-terminated/zero-padded.
 
-This is because when populating Driver Map using firmware raid map, all
-non-existing VDs set their ldTgtIdToLd to 0xff, so it can be skipped later.
+Fix this inconsistency by using space-padding for all of the above fields.
 
->From drivers/scsi/megaraid/megaraid_sas_base.c ,
-memset(instance->ld_ids, 0xff, MEGASAS_MAX_LD_IDS);
-
->From drivers/scsi/megaraid/megaraid_sas_fp.c ,
-/* For non existing VDs, iterate to next VD*/
-if (ld >= (MAX_LOGICAL_DRIVES_EXT - 1))
-	continue;
-
-However, there are a few places that failed to skip those non-existing VDs
-due to off-by-one errors. Then, those 0xff leaked into MR_LdRaidGet(0xff,
-map) and triggered the out-of-bound accesses.
-
-Fixes: 51087a8617fe ("megaraid_sas : Extended VD support")
-Signed-off-by: Qian Cai <cai@lca.pw>
-Acked-by: Sumit Saxena <sumit.saxena@broadcom.com>
+Signed-off-by: David Disseldorp <ddiss@suse.de>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Bryant G. Ly <bly@catalogicsoftware.com>
+Reviewed-by: Lee Duncan <lduncan@suse.com>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
+Reviewed-by: Roman Bolshakov <r.bolshakov@yadro.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/megaraid/megaraid_sas_fp.c     | 2 +-
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/target/target_core_spc.c | 17 ++++++++++++-----
+ 1 file changed, 12 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fp.c b/drivers/scsi/megaraid/megaraid_sas_fp.c
-index 59ecbb3b53b5..a33628550425 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fp.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fp.c
-@@ -1266,7 +1266,7 @@ void mr_update_load_balance_params(struct MR_DRV_RAID_MAP_ALL *drv_map,
+diff --git a/drivers/target/target_core_spc.c b/drivers/target/target_core_spc.c
+index cb0461a10808..93424db5f002 100644
+--- a/drivers/target/target_core_spc.c
++++ b/drivers/target/target_core_spc.c
+@@ -108,12 +108,17 @@ spc_emulate_inquiry_std(struct se_cmd *cmd, unsigned char *buf)
  
- 	for (ldCount = 0; ldCount < MAX_LOGICAL_DRIVES_EXT; ldCount++) {
- 		ld = MR_TargetIdToLdGet(ldCount, drv_map);
--		if (ld >= MAX_LOGICAL_DRIVES_EXT) {
-+		if (ld >= MAX_LOGICAL_DRIVES_EXT - 1) {
- 			lbInfo[ldCount].loadBalanceFlag = 0;
- 			continue;
- 		}
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index f74b5ea24f0f..49eaa87608f6 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -2832,7 +2832,7 @@ static void megasas_build_ld_nonrw_fusion(struct megasas_instance *instance,
- 		device_id < instance->fw_supported_vd_count)) {
+ 	buf[7] = 0x2; /* CmdQue=1 */
  
- 		ld = MR_TargetIdToLdGet(device_id, local_map_ptr);
--		if (ld >= instance->fw_supported_vd_count)
-+		if (ld >= instance->fw_supported_vd_count - 1)
- 			fp_possible = 0;
- 		else {
- 			raid = MR_LdRaidGet(ld, local_map_ptr);
+-	memcpy(&buf[8], "LIO-ORG ", 8);
+-	memset(&buf[16], 0x20, 16);
++	/*
++	 * ASCII data fields described as being left-aligned shall have any
++	 * unused bytes at the end of the field (i.e., highest offset) and the
++	 * unused bytes shall be filled with ASCII space characters (20h).
++	 */
++	memset(&buf[8], 0x20, 8 + 16 + 4);
++	memcpy(&buf[8], "LIO-ORG", sizeof("LIO-ORG") - 1);
+ 	memcpy(&buf[16], dev->t10_wwn.model,
+-	       min_t(size_t, strlen(dev->t10_wwn.model), 16));
++	       strnlen(dev->t10_wwn.model, 16));
+ 	memcpy(&buf[32], dev->t10_wwn.revision,
+-	       min_t(size_t, strlen(dev->t10_wwn.revision), 4));
++	       strnlen(dev->t10_wwn.revision, 4));
+ 	buf[4] = 31; /* Set additional length to 31 */
+ 
+ 	return 0;
+@@ -251,7 +256,9 @@ spc_emulate_evpd_83(struct se_cmd *cmd, unsigned char *buf)
+ 	buf[off] = 0x2; /* ASCII */
+ 	buf[off+1] = 0x1; /* T10 Vendor ID */
+ 	buf[off+2] = 0x0;
+-	memcpy(&buf[off+4], "LIO-ORG", 8);
++	/* left align Vendor ID and pad with spaces */
++	memset(&buf[off+4], 0x20, 8);
++	memcpy(&buf[off+4], "LIO-ORG", sizeof("LIO-ORG") - 1);
+ 	/* Extra Byte for NULL Terminator */
+ 	id_len++;
+ 	/* Identifier Length */
 -- 
 2.19.1
