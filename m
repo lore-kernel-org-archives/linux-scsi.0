@@ -1,87 +1,87 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.19 46/97] scsi: target: use consistent left-aligned ASCII INQUIRY data
-Date: Tue,  8 Jan 2019 14:28:55 -0500
-Message-ID: <20190108192949.122407-46-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 88/97] scsi: smartpqi: correct lun reset issues
+Date: Tue,  8 Jan 2019 14:29:37 -0500
+Message-ID: <20190108192949.122407-88-sashal@kernel.org>
 References: <20190108192949.122407-1-sashal@kernel.org>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Return-path: <stable-owner@vger.kernel.org>
 In-Reply-To: <20190108192949.122407-1-sashal@kernel.org>
 Sender: stable-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: David Disseldorp <ddiss@suse.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Cc: Kevin Barnett <kevin.barnett@microsemi.com>, Don Brace <don.brace@microsemi.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: David Disseldorp <ddiss@suse.de>
+From: Kevin Barnett <kevin.barnett@microsemi.com>
 
-[ Upstream commit 0de263577de5d5e052be5f4f93334e63cc8a7f0b ]
+[ Upstream commit 2ba55c9851d74eb015a554ef69ddf2ef061d5780 ]
 
-spc5r17.pdf specifies:
+Problem:
+The Linux kernel takes a logical volume offline after a LUN reset.  This is
+generally accompanied by this message in the dmesg output:
 
-  4.3.1 ASCII data field requirements
-  ASCII data fields shall contain only ASCII printable characters (i.e.,
-  code values 20h to 7Eh) and may be terminated with one or more ASCII null
-  (00h) characters.  ASCII data fields described as being left-aligned
-  shall have any unused bytes at the end of the field (i.e., highest
-  offset) and the unused bytes shall be filled with ASCII space characters
-  (20h).
+Device offlined - not ready after error recovery
 
-LIO currently space-pads the T10 VENDOR IDENTIFICATION and PRODUCT
-IDENTIFICATION fields in the standard INQUIRY data. However, the PRODUCT
-REVISION LEVEL field in the standard INQUIRY data as well as the T10 VENDOR
-IDENTIFICATION field in the INQUIRY Device Identification VPD Page are
-zero-terminated/zero-padded.
+Root Cause:
+The root cause is a "quirk" in the timeout handling in the Linux SCSI
+layer. The Linux kernel places a 30-second timeout on most media access
+commands (reads and writes) that it send to device drivers.  When a media
+access command times out, the Linux kernel goes into error recovery mode
+for the LUN that was the target of the command that timed out. Every
+command that timed out is kept on a list inside of the Linux kernel to be
+retried later. The kernel attempts to recover the command(s) that timed out
+by issuing a LUN reset followed by a TEST UNIT READY. If the LUN reset and
+TEST UNIT READY commands are successful, the kernel retries the command(s)
+that timed out.
 
-Fix this inconsistency by using space-padding for all of the above fields.
+Each SCSI command issued by the kernel has a result field associated with
+it. This field indicates the final result of the command (success or
+error). When a command times out, the kernel places a value in this result
+field indicating that the command timed out.
 
-Signed-off-by: David Disseldorp <ddiss@suse.de>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Bryant G. Ly <bly@catalogicsoftware.com>
-Reviewed-by: Lee Duncan <lduncan@suse.com>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
-Reviewed-by: Roman Bolshakov <r.bolshakov@yadro.com>
+The "quirk" is that after the LUN reset and TEST UNIT READY commands are
+completed, the kernel checks each command on the timed-out command list
+before retrying it. If the result field is still "timed out", the kernel
+treats that command as not having been successfully recovered for a
+retry. If the number of commands that are in this state are greater than
+two, the kernel takes the LUN offline.
+
+Fix:
+When our RAIDStack receives a LUN reset, it simply waits until all
+outstanding commands complete. Generally, all of these outstanding commands
+complete successfully. Therefore, the fix in the smartpqi driver is to
+always set the command result field to indicate success when a request
+completes successfully. This normally isn’t necessary because the result
+field is always initialized to success when the command is submitted to the
+driver. So when the command completes successfully, the result field is
+left untouched. But in this case, the kernel changes the result field
+behind the driver’s back and then expects the field to be changed by the
+driver as the commands that timed-out complete.
+
+Reviewed-by: Dave Carroll <david.carroll@microsemi.com>
+Reviewed-by: Scott Teel <scott.teel@microsemi.com>
+Signed-off-by: Kevin Barnett <kevin.barnett@microsemi.com>
+Signed-off-by: Don Brace <don.brace@microsemi.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/target/target_core_spc.c | 17 ++++++++++++-----
- 1 file changed, 12 insertions(+), 5 deletions(-)
+ drivers/scsi/smartpqi/smartpqi_init.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/target/target_core_spc.c b/drivers/target/target_core_spc.c
-index cb0461a10808..93424db5f002 100644
---- a/drivers/target/target_core_spc.c
-+++ b/drivers/target/target_core_spc.c
-@@ -108,12 +108,17 @@ spc_emulate_inquiry_std(struct se_cmd *cmd, unsigned char *buf)
- 
- 	buf[7] = 0x2; /* CmdQue=1 */
- 
--	memcpy(&buf[8], "LIO-ORG ", 8);
--	memset(&buf[16], 0x20, 16);
-+	/*
-+	 * ASCII data fields described as being left-aligned shall have any
-+	 * unused bytes at the end of the field (i.e., highest offset) and the
-+	 * unused bytes shall be filled with ASCII space characters (20h).
-+	 */
-+	memset(&buf[8], 0x20, 8 + 16 + 4);
-+	memcpy(&buf[8], "LIO-ORG", sizeof("LIO-ORG") - 1);
- 	memcpy(&buf[16], dev->t10_wwn.model,
--	       min_t(size_t, strlen(dev->t10_wwn.model), 16));
-+	       strnlen(dev->t10_wwn.model, 16));
- 	memcpy(&buf[32], dev->t10_wwn.revision,
--	       min_t(size_t, strlen(dev->t10_wwn.revision), 4));
-+	       strnlen(dev->t10_wwn.revision, 4));
- 	buf[4] = 31; /* Set additional length to 31 */
- 
- 	return 0;
-@@ -251,7 +256,9 @@ spc_emulate_evpd_83(struct se_cmd *cmd, unsigned char *buf)
- 	buf[off] = 0x2; /* ASCII */
- 	buf[off+1] = 0x1; /* T10 Vendor ID */
- 	buf[off+2] = 0x0;
--	memcpy(&buf[off+4], "LIO-ORG", 8);
-+	/* left align Vendor ID and pad with spaces */
-+	memset(&buf[off+4], 0x20, 8);
-+	memcpy(&buf[off+4], "LIO-ORG", sizeof("LIO-ORG") - 1);
- 	/* Extra Byte for NULL Terminator */
- 	id_len++;
- 	/* Identifier Length */
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+index 2112ea6723c6..c62df3eefd5a 100644
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -2720,6 +2720,9 @@ static unsigned int pqi_process_io_intr(struct pqi_ctrl_info *ctrl_info,
+ 		switch (response->header.iu_type) {
+ 		case PQI_RESPONSE_IU_RAID_PATH_IO_SUCCESS:
+ 		case PQI_RESPONSE_IU_AIO_PATH_IO_SUCCESS:
++			if (io_request->scmd)
++				io_request->scmd->result = 0;
++			/* fall through */
+ 		case PQI_RESPONSE_IU_GENERAL_MANAGEMENT:
+ 			break;
+ 		case PQI_RESPONSE_IU_TASK_MANAGEMENT:
 -- 
 2.19.1
