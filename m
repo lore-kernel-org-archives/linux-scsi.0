@@ -1,76 +1,67 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.19 29/97] scsi: qedi: Check for session online before getting iSCSI TLV data.
-Date: Tue,  8 Jan 2019 14:28:38 -0500
-Message-ID: <20190108192949.122407-29-sashal@kernel.org>
-References: <20190108192949.122407-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.20 103/117] scsi: mpt3sas: fix memory ordering on 64bit writes
+Date: Tue,  8 Jan 2019 14:26:11 -0500
+Message-ID: <20190108192628.121270-103-sashal@kernel.org>
+References: <20190108192628.121270-1-sashal@kernel.org>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190108192949.122407-1-sashal@kernel.org>
+In-Reply-To: <20190108192628.121270-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Manish Rangankar <manish.rangankar@cavium.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Cc: =?UTF-8?q?Stephan=20G=C3=BCnther?= <moepi@moepi.net>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Manish Rangankar <manish.rangankar@cavium.com>
+From: Stephan Günther <moepi@moepi.net>
 
-[ Upstream commit d5632b11f0a17efa6356311e535ae135d178438d ]
+[ Upstream commit 23c3828aa2f84edec7020c7397a22931e7a879e1 ]
 
-The kernel panic was observed after switch side perturbation,
+With commit 09c2f95ad404 ("scsi: mpt3sas: Swap I/O memory read value back
+to cpu endianness"), 64bit writes in _base_writeq() were rewritten to use
+__raw_writeq() instad of writeq().
 
-BUG: unable to handle kernel NULL pointer dereference at (null)
-     IP: [<ffffffff8132b5a0>] strcmp+0x20/0x40
-     PGD 0 Oops: 0000 [#1] SMP
-CPU: 8 PID: 647 Comm: kworker/8:1 Tainted: G        W  OE  ------------   3.10.0-693.el7.x86_64 #1
-Hardware name: HPE ProLiant DL380 Gen10/ProLiant DL380 Gen10, BIOS U30 06/20/2018
-Workqueue: slowpath-13:00. qed_slowpath_task [qed]
-task: ffff880429eb8fd0 ti: ffff880429190000 task.ti: ffff880429190000
-RIP: 0010:[<ffffffff8132b5a0>]  [<ffffffff8132b5a0>] strcmp+0x20/0x40
-RSP: 0018:ffff880429193c68  EFLAGS: 00010202
-RAX: 000000000000000a RBX: 0000000000000002 RCX: 0000000000000000
-RDX: 0000000000000001 RSI: 0000000000000001 RDI: ffff88042bda7a41
-RBP: ffff880429193c68 R08: 000000000000ffff R09: 000000000000ffff
-R10: 0000000000000007 R11: ffff88042b3af338 R12: ffff880420b007a0
-R13: ffff88081aa56af8 R14: 0000000000000001 R15: ffff88081aa50410
-FS:  0000000000000000(0000) GS:ffff88042fe00000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 0000000000000000 CR3: 00000000019f2000 CR4: 00000000003407e0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-Stack:
-ffff880429193d20 ffffffffc02a0c90 ffffc90004b32000 ffff8803fd3ec600
-ffff88042bda7800 ffff88042bda7a00 ffff88042bda7840 ffff88042bda7a40
-0000000129193d10 2e3836312e323931 ff000a342e363232 ffffffffc01ad99d
-Call Trace:
-[<ffffffffc02a0c90>] qedi_get_protocol_tlv_data+0x270/0x470 [qedi]
-[<ffffffffc01ad99d>] ? qed_mfw_process_tlv_req+0x24d/0xbf0 [qed]
-[<ffffffffc01653ae>] qed_mfw_fill_tlv_data+0x5e/0xd0 [qed]
-[<ffffffffc01ad9b9>] qed_mfw_process_tlv_req+0x269/0xbf0 [qed]
+This introduced a bug apparent on powerpc64 systems such as the Raptor
+Talos II that causes the HBA to drop from the PCIe bus under heavy load and
+being reinitialized after a couple of seconds.
 
-Fix kernel NULL pointer deref by checking for session is online before
-getting iSCSI TLV data.
+It can easily be triggered on affacted systems by using something like
 
-Signed-off-by: Manish Rangankar <manish.rangankar@cavium.com>
-Reviewed-by: Lee Duncan <lduncan@suse.com>
+  fio --name=random-write --iodepth=4 --rw=randwrite --bs=4k --direct=0 \
+    --size=128M --numjobs=64 --end_fsync=1
+  fio --name=random-write --iodepth=4 --rw=randwrite --bs=64k --direct=0 \
+    --size=128M --numjobs=64 --end_fsync=1
+
+a couple of times. In my case I tested it on both a ZFS raidz2 and a btrfs
+raid6 using LSI 9300-8i and 9400-8i controllers.
+
+The fix consists in resembling the write ordering of writeq() by adding a
+mandatory write memory barrier before device access and a compiler barrier
+afterwards. The additional MMIO barrier is superfluous.
+
+Signed-off-by: Stephan Günther <moepi@moepi.net>
+Reported-by: Matt Corallo <linux@bluematt.me>
+Acked-by: Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qedi/qedi_main.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/qedi/qedi_main.c b/drivers/scsi/qedi/qedi_main.c
-index e5bd035ebad0..4de740da547b 100644
---- a/drivers/scsi/qedi/qedi_main.c
-+++ b/drivers/scsi/qedi/qedi_main.c
-@@ -952,6 +952,9 @@ static int qedi_find_boot_info(struct qedi_ctx *qedi,
- 		cls_sess = iscsi_conn_to_session(cls_conn);
- 		sess = cls_sess->dd_data;
- 
-+		if (!iscsi_is_session_online(cls_sess))
-+			continue;
-+
- 		if (pri_ctrl_flags) {
- 			if (!strcmp(pri_tgt->iscsi_name, sess->targetname) &&
- 			    !strcmp(pri_tgt->ip_addr, ep_ip_addr)) {
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 2500377d0723..bfd826deabbe 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -3319,8 +3319,9 @@ _base_mpi_ep_writeq(__u64 b, volatile void __iomem *addr,
+ static inline void
+ _base_writeq(__u64 b, volatile void __iomem *addr, spinlock_t *writeq_lock)
+ {
++	wmb();
+ 	__raw_writeq(b, addr);
+-	mmiowb();
++	barrier();
+ }
+ #else
+ static inline void
 -- 
 2.19.1
