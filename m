@@ -1,130 +1,87 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.19 91/97] scsi: megaraid: fix out-of-bound array accesses
-Date: Tue,  8 Jan 2019 14:29:40 -0500
-Message-ID: <20190108192949.122407-91-sashal@kernel.org>
-References: <20190108192949.122407-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 47/53] scsi: smartpqi: correct lun reset issues
+Date: Tue,  8 Jan 2019 14:32:15 -0500
+Message-ID: <20190108193222.123316-47-sashal@kernel.org>
+References: <20190108193222.123316-1-sashal@kernel.org>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190108192949.122407-1-sashal@kernel.org>
+In-Reply-To: <20190108193222.123316-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Qian Cai <cai@lca.pw>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
+Cc: Kevin Barnett <kevin.barnett@microsemi.com>, Don Brace <don.brace@microsemi.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Qian Cai <cai@lca.pw>
+From: Kevin Barnett <kevin.barnett@microsemi.com>
 
-[ Upstream commit c7a082e4242fd8cd21a441071e622f87c16bdacc ]
+[ Upstream commit 2ba55c9851d74eb015a554ef69ddf2ef061d5780 ]
 
-UBSAN reported those with MegaRAID SAS-3 3108,
+Problem:
+The Linux kernel takes a logical volume offline after a LUN reset.  This is
+generally accompanied by this message in the dmesg output:
 
-[   77.467308] UBSAN: Undefined behaviour in drivers/scsi/megaraid/megaraid_sas_fp.c:117:32
-[   77.475402] index 255 is out of range for type 'MR_LD_SPAN_MAP [1]'
-[   77.481677] CPU: 16 PID: 333 Comm: kworker/16:1 Not tainted 4.20.0-rc5+ #1
-[   77.488556] Hardware name: Huawei TaiShan 2280 /BC11SPCD, BIOS 1.50 06/01/2018
-[   77.495791] Workqueue: events work_for_cpu_fn
-[   77.500154] Call trace:
-[   77.502610]  dump_backtrace+0x0/0x2c8
-[   77.506279]  show_stack+0x24/0x30
-[   77.509604]  dump_stack+0x118/0x19c
-[   77.513098]  ubsan_epilogue+0x14/0x60
-[   77.516765]  __ubsan_handle_out_of_bounds+0xfc/0x13c
-[   77.521767]  mr_update_load_balance_params+0x150/0x158 [megaraid_sas]
-[   77.528230]  MR_ValidateMapInfo+0x2cc/0x10d0 [megaraid_sas]
-[   77.533825]  megasas_get_map_info+0x244/0x2f0 [megaraid_sas]
-[   77.539505]  megasas_init_adapter_fusion+0x9b0/0xf48 [megaraid_sas]
-[   77.545794]  megasas_init_fw+0x1ab4/0x3518 [megaraid_sas]
-[   77.551212]  megasas_probe_one+0x2c4/0xbe0 [megaraid_sas]
-[   77.556614]  local_pci_probe+0x7c/0xf0
-[   77.560365]  work_for_cpu_fn+0x34/0x50
-[   77.564118]  process_one_work+0x61c/0xf08
-[   77.568129]  worker_thread+0x534/0xa70
-[   77.571882]  kthread+0x1c8/0x1d0
-[   77.575114]  ret_from_fork+0x10/0x1c
+Device offlined - not ready after error recovery
 
-[   89.240332] UBSAN: Undefined behaviour in drivers/scsi/megaraid/megaraid_sas_fp.c:117:32
-[   89.248426] index 255 is out of range for type 'MR_LD_SPAN_MAP [1]'
-[   89.254700] CPU: 16 PID: 95 Comm: kworker/u130:0 Not tainted 4.20.0-rc5+ #1
-[   89.261665] Hardware name: Huawei TaiShan 2280 /BC11SPCD, BIOS 1.50 06/01/2018
-[   89.268903] Workqueue: events_unbound async_run_entry_fn
-[   89.274222] Call trace:
-[   89.276680]  dump_backtrace+0x0/0x2c8
-[   89.280348]  show_stack+0x24/0x30
-[   89.283671]  dump_stack+0x118/0x19c
-[   89.287167]  ubsan_epilogue+0x14/0x60
-[   89.290835]  __ubsan_handle_out_of_bounds+0xfc/0x13c
-[   89.295828]  MR_LdRaidGet+0x50/0x58 [megaraid_sas]
-[   89.300638]  megasas_build_io_fusion+0xbb8/0xd90 [megaraid_sas]
-[   89.306576]  megasas_build_and_issue_cmd_fusion+0x138/0x460 [megaraid_sas]
-[   89.313468]  megasas_queue_command+0x398/0x3d0 [megaraid_sas]
-[   89.319222]  scsi_dispatch_cmd+0x1dc/0x8a8
-[   89.323321]  scsi_request_fn+0x8e8/0xdd0
-[   89.327249]  __blk_run_queue+0xc4/0x158
-[   89.331090]  blk_execute_rq_nowait+0xf4/0x158
-[   89.335449]  blk_execute_rq+0xdc/0x158
-[   89.339202]  __scsi_execute+0x130/0x258
-[   89.343041]  scsi_probe_and_add_lun+0x2fc/0x1488
-[   89.347661]  __scsi_scan_target+0x1cc/0x8c8
-[   89.351848]  scsi_scan_channel.part.3+0x8c/0xc0
-[   89.356382]  scsi_scan_host_selected+0x130/0x1f0
-[   89.361002]  do_scsi_scan_host+0xd8/0xf0
-[   89.364927]  do_scan_async+0x9c/0x320
-[   89.368594]  async_run_entry_fn+0x138/0x420
-[   89.372780]  process_one_work+0x61c/0xf08
-[   89.376793]  worker_thread+0x13c/0xa70
-[   89.380546]  kthread+0x1c8/0x1d0
-[   89.383778]  ret_from_fork+0x10/0x1c
+Root Cause:
+The root cause is a "quirk" in the timeout handling in the Linux SCSI
+layer. The Linux kernel places a 30-second timeout on most media access
+commands (reads and writes) that it send to device drivers.  When a media
+access command times out, the Linux kernel goes into error recovery mode
+for the LUN that was the target of the command that timed out. Every
+command that timed out is kept on a list inside of the Linux kernel to be
+retried later. The kernel attempts to recover the command(s) that timed out
+by issuing a LUN reset followed by a TEST UNIT READY. If the LUN reset and
+TEST UNIT READY commands are successful, the kernel retries the command(s)
+that timed out.
 
-This is because when populating Driver Map using firmware raid map, all
-non-existing VDs set their ldTgtIdToLd to 0xff, so it can be skipped later.
+Each SCSI command issued by the kernel has a result field associated with
+it. This field indicates the final result of the command (success or
+error). When a command times out, the kernel places a value in this result
+field indicating that the command timed out.
 
->From drivers/scsi/megaraid/megaraid_sas_base.c ,
-memset(instance->ld_ids, 0xff, MEGASAS_MAX_LD_IDS);
+The "quirk" is that after the LUN reset and TEST UNIT READY commands are
+completed, the kernel checks each command on the timed-out command list
+before retrying it. If the result field is still "timed out", the kernel
+treats that command as not having been successfully recovered for a
+retry. If the number of commands that are in this state are greater than
+two, the kernel takes the LUN offline.
 
->From drivers/scsi/megaraid/megaraid_sas_fp.c ,
-/* For non existing VDs, iterate to next VD*/
-if (ld >= (MAX_LOGICAL_DRIVES_EXT - 1))
-	continue;
+Fix:
+When our RAIDStack receives a LUN reset, it simply waits until all
+outstanding commands complete. Generally, all of these outstanding commands
+complete successfully. Therefore, the fix in the smartpqi driver is to
+always set the command result field to indicate success when a request
+completes successfully. This normally isn’t necessary because the result
+field is always initialized to success when the command is submitted to the
+driver. So when the command completes successfully, the result field is
+left untouched. But in this case, the kernel changes the result field
+behind the driver’s back and then expects the field to be changed by the
+driver as the commands that timed-out complete.
 
-However, there are a few places that failed to skip those non-existing VDs
-due to off-by-one errors. Then, those 0xff leaked into MR_LdRaidGet(0xff,
-map) and triggered the out-of-bound accesses.
-
-Fixes: 51087a8617fe ("megaraid_sas : Extended VD support")
-Signed-off-by: Qian Cai <cai@lca.pw>
-Acked-by: Sumit Saxena <sumit.saxena@broadcom.com>
+Reviewed-by: Dave Carroll <david.carroll@microsemi.com>
+Reviewed-by: Scott Teel <scott.teel@microsemi.com>
+Signed-off-by: Kevin Barnett <kevin.barnett@microsemi.com>
+Signed-off-by: Don Brace <don.brace@microsemi.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/megaraid/megaraid_sas_fp.c     | 2 +-
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/smartpqi/smartpqi_init.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fp.c b/drivers/scsi/megaraid/megaraid_sas_fp.c
-index 59ecbb3b53b5..a33628550425 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fp.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fp.c
-@@ -1266,7 +1266,7 @@ void mr_update_load_balance_params(struct MR_DRV_RAID_MAP_ALL *drv_map,
- 
- 	for (ldCount = 0; ldCount < MAX_LOGICAL_DRIVES_EXT; ldCount++) {
- 		ld = MR_TargetIdToLdGet(ldCount, drv_map);
--		if (ld >= MAX_LOGICAL_DRIVES_EXT) {
-+		if (ld >= MAX_LOGICAL_DRIVES_EXT - 1) {
- 			lbInfo[ldCount].loadBalanceFlag = 0;
- 			continue;
- 		}
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index c7f95bace353..f45c54f02bfa 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -2832,7 +2832,7 @@ static void megasas_build_ld_nonrw_fusion(struct megasas_instance *instance,
- 		device_id < instance->fw_supported_vd_count)) {
- 
- 		ld = MR_TargetIdToLdGet(device_id, local_map_ptr);
--		if (ld >= instance->fw_supported_vd_count)
-+		if (ld >= instance->fw_supported_vd_count - 1)
- 			fp_possible = 0;
- 		else {
- 			raid = MR_LdRaidGet(ld, local_map_ptr);
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+index 83bdbd84eb01..b662f58203ac 100644
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -2709,6 +2709,9 @@ static unsigned int pqi_process_io_intr(struct pqi_ctrl_info *ctrl_info,
+ 		switch (response->header.iu_type) {
+ 		case PQI_RESPONSE_IU_RAID_PATH_IO_SUCCESS:
+ 		case PQI_RESPONSE_IU_AIO_PATH_IO_SUCCESS:
++			if (io_request->scmd)
++				io_request->scmd->result = 0;
++			/* fall through */
+ 		case PQI_RESPONSE_IU_GENERAL_MANAGEMENT:
+ 			break;
+ 		case PQI_RESPONSE_IU_TASK_MANAGEMENT:
 -- 
 2.19.1
