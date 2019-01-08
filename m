@@ -1,188 +1,232 @@
-From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v2] scsi: sd: Make protection lookup tables static and relocate functions
-Date: Tue, 8 Jan 2019 23:14:52 +0800
-Message-ID: <1546960492-218420-1-git-send-email-john.garry@huawei.com>
+From: Sasha Levin <sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.20 059/117] scsi: target/core: Make sure that target_wait_for_sess_cmds() waits long enough
+Date: Tue,  8 Jan 2019 14:25:27 -0500
+Message-ID: <20190108192628.121270-59-sashal@kernel.org>
+References: <20190108192628.121270-1-sashal@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190108192628.121270-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linuxarm@huawei.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, John Garry <john.garry@huawei.com>
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc: Bart Van Assche <bvanassche@acm.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Mike Christie <mchristi@redhat.com>, Christoph Hellwig <hch@lst.de>, David Disseldorp <ddiss@suse.de>, Hannes Reinecke <hare@suse.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Currently the protection lookup tables in sd_prot_flag_mask() and
-sd_prot_op() are declared as non-static. As such, they will be rebuilt
-for each respective function call.
+From: Bart Van Assche <bvanassche@acm.org>
 
-Optimise by making them static.
+[ Upstream commit ad669505c4e9db9af9faeb5c51aa399326a80d91 ]
 
-This saves ~100B object code for sd.c:
+A session must only be released after all code that accesses the session
+structure has finished. Make sure that this is the case by introducing a
+new command counter per session that is only decremented after the
+.release_cmd() callback has finished. This patch fixes the following crash:
 
-Before:
-   text	   data	    bss	    dec	    hex	filename
-  25403	   1024	     16	  26443	   674b	drivers/scsi/sd.o
+BUG: KASAN: use-after-free in do_raw_spin_lock+0x1c/0x130
+Read of size 4 at addr ffff8801534b16e4 by task rmdir/14805
+CPU: 16 PID: 14805 Comm: rmdir Not tainted 4.18.0-rc2-dbg+ #5
+Call Trace:
+dump_stack+0xa4/0xf5
+print_address_description+0x6f/0x270
+kasan_report+0x241/0x360
+__asan_load4+0x78/0x80
+do_raw_spin_lock+0x1c/0x130
+_raw_spin_lock_irqsave+0x52/0x60
+srpt_set_ch_state+0x27/0x70 [ib_srpt]
+srpt_disconnect_ch+0x1b/0xc0 [ib_srpt]
+srpt_close_session+0xa8/0x260 [ib_srpt]
+target_shutdown_sessions+0x170/0x180 [target_core_mod]
+core_tpg_del_initiator_node_acl+0xf3/0x200 [target_core_mod]
+target_fabric_nacl_base_release+0x25/0x30 [target_core_mod]
+config_item_release+0x9c/0x110 [configfs]
+config_item_put+0x26/0x30 [configfs]
+configfs_rmdir+0x3b8/0x510 [configfs]
+vfs_rmdir+0xb3/0x1e0
+do_rmdir+0x262/0x2c0
+do_syscall_64+0x77/0x230
+entry_SYSCALL_64_after_hwframe+0x49/0xbe
 
-After:
-  text	   data	    bss	    dec	    hex	filename
-  25299	   1024	     16	  26339	   66e3	drivers/scsi/sd.o
-
-In addition, since those same functions are declared in sd.h, but each are
-only referenced in sd.c, relocate them to that same c file.
-
-The inline specifier is dropped also, since gcc should be able to make the
-decision to inline.
-
-Signed-off-by: John Garry <john.garry@huawei.com>
+Cc: Nicholas Bellinger <nab@linux-iscsi.org>
+Cc: Mike Christie <mchristi@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: David Disseldorp <ddiss@suse.de>
+Cc: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
+ drivers/target/target_core_transport.c | 35 ++++++++++++++++++--------
+ drivers/target/target_core_xcopy.c     |  6 ++++-
+ include/target/target_core_base.h      |  1 +
+ include/target/target_core_fabric.h    |  2 +-
+ 4 files changed, 32 insertions(+), 12 deletions(-)
 
-Differences v1->v2:
-- relocate functions to sd.c and drop inline specifier
-
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 3bb2b33..e7dcc02 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -658,6 +658,68 @@ static int sd_sec_submit(void *data, u16 spsp, u8 secp, void *buffer,
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index 2cfd61d62e97..ffa5b9f771b5 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -224,19 +224,28 @@ void transport_subsystem_check_init(void)
+ 	sub_api_initialized = 1;
  }
- #endif /* CONFIG_BLK_SED_OPAL */
  
-+/*
-+ * Look up the DIX operation based on whether the command is read or
-+ * write and whether dix and dif are enabled.
-+ */
-+static unsigned int sd_prot_op(bool write, bool dix, bool dif)
++static void target_release_sess_cmd_refcnt(struct percpu_ref *ref)
 +{
-+	/* Lookup table: bit 2 (write), bit 1 (dix), bit 0 (dif) */
-+	static const unsigned int ops[] = {	/* wrt dix dif */
-+		SCSI_PROT_NORMAL,		/*  0	0   0  */
-+		SCSI_PROT_READ_STRIP,		/*  0	0   1  */
-+		SCSI_PROT_READ_INSERT,		/*  0	1   0  */
-+		SCSI_PROT_READ_PASS,		/*  0	1   1  */
-+		SCSI_PROT_NORMAL,		/*  1	0   0  */
-+		SCSI_PROT_WRITE_INSERT,		/*  1	0   1  */
-+		SCSI_PROT_WRITE_STRIP,		/*  1	1   0  */
-+		SCSI_PROT_WRITE_PASS,		/*  1	1   1  */
-+	};
++	struct se_session *sess = container_of(ref, typeof(*sess), cmd_count);
 +
-+	return ops[write << 2 | dix << 1 | dif];
++	wake_up(&sess->cmd_list_wq);
 +}
 +
-+/*
-+ * Returns a mask of the protection flags that are valid for a given DIX
-+ * operation.
-+ */
-+static unsigned int sd_prot_flag_mask(unsigned int prot_op)
-+{
-+	static const unsigned int flag_mask[] = {
-+		[SCSI_PROT_NORMAL]		= 0,
-+
-+		[SCSI_PROT_READ_STRIP]		= SCSI_PROT_TRANSFER_PI |
-+						  SCSI_PROT_GUARD_CHECK |
-+						  SCSI_PROT_REF_CHECK |
-+						  SCSI_PROT_REF_INCREMENT,
-+
-+		[SCSI_PROT_READ_INSERT]		= SCSI_PROT_REF_INCREMENT |
-+						  SCSI_PROT_IP_CHECKSUM,
-+
-+		[SCSI_PROT_READ_PASS]		= SCSI_PROT_TRANSFER_PI |
-+						  SCSI_PROT_GUARD_CHECK |
-+						  SCSI_PROT_REF_CHECK |
-+						  SCSI_PROT_REF_INCREMENT |
-+						  SCSI_PROT_IP_CHECKSUM,
-+
-+		[SCSI_PROT_WRITE_INSERT]	= SCSI_PROT_TRANSFER_PI |
-+						  SCSI_PROT_REF_INCREMENT,
-+
-+		[SCSI_PROT_WRITE_STRIP]		= SCSI_PROT_GUARD_CHECK |
-+						  SCSI_PROT_REF_CHECK |
-+						  SCSI_PROT_REF_INCREMENT |
-+						  SCSI_PROT_IP_CHECKSUM,
-+
-+		[SCSI_PROT_WRITE_PASS]		= SCSI_PROT_TRANSFER_PI |
-+						  SCSI_PROT_GUARD_CHECK |
-+						  SCSI_PROT_REF_CHECK |
-+						  SCSI_PROT_REF_INCREMENT |
-+						  SCSI_PROT_IP_CHECKSUM,
-+	};
-+
-+	return flag_mask[prot_op];
-+}
-+
- static unsigned char sd_setup_protect_cmnd(struct scsi_cmnd *scmd,
- 					   unsigned int dix, unsigned int dif)
+ /**
+  * transport_init_session - initialize a session object
+  * @se_sess: Session object pointer.
+  *
+  * The caller must have zero-initialized @se_sess before calling this function.
+  */
+-void transport_init_session(struct se_session *se_sess)
++int transport_init_session(struct se_session *se_sess)
  {
-diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
-index 1d63f3a..6e68baf 100644
---- a/drivers/scsi/sd.h
-+++ b/drivers/scsi/sd.h
-@@ -188,68 +188,6 @@ static inline sector_t sectors_to_logical(struct scsi_device *sdev, sector_t sec
- 	return sector >> (ilog2(sdev->sector_size) - 9);
+ 	INIT_LIST_HEAD(&se_sess->sess_list);
+ 	INIT_LIST_HEAD(&se_sess->sess_acl_list);
+ 	INIT_LIST_HEAD(&se_sess->sess_cmd_list);
+ 	spin_lock_init(&se_sess->sess_cmd_lock);
+ 	init_waitqueue_head(&se_sess->cmd_list_wq);
++	return percpu_ref_init(&se_sess->cmd_count,
++			       target_release_sess_cmd_refcnt, 0, GFP_KERNEL);
+ }
+ EXPORT_SYMBOL(transport_init_session);
+ 
+@@ -247,6 +256,7 @@ EXPORT_SYMBOL(transport_init_session);
+ struct se_session *transport_alloc_session(enum target_prot_op sup_prot_ops)
+ {
+ 	struct se_session *se_sess;
++	int ret;
+ 
+ 	se_sess = kmem_cache_zalloc(se_sess_cache, GFP_KERNEL);
+ 	if (!se_sess) {
+@@ -254,7 +264,11 @@ struct se_session *transport_alloc_session(enum target_prot_op sup_prot_ops)
+ 				" se_sess_cache\n");
+ 		return ERR_PTR(-ENOMEM);
+ 	}
+-	transport_init_session(se_sess);
++	ret = transport_init_session(se_sess);
++	if (ret < 0) {
++		kfree(se_sess);
++		return ERR_PTR(ret);
++	}
+ 	se_sess->sup_prot_ops = sup_prot_ops;
+ 
+ 	return se_sess;
+@@ -581,6 +595,7 @@ void transport_free_session(struct se_session *se_sess)
+ 		sbitmap_queue_free(&se_sess->sess_tag_pool);
+ 		kvfree(se_sess->sess_cmd_map);
+ 	}
++	percpu_ref_exit(&se_sess->cmd_count);
+ 	kmem_cache_free(se_sess_cache, se_sess);
+ }
+ EXPORT_SYMBOL(transport_free_session);
+@@ -2719,6 +2734,7 @@ int target_get_sess_cmd(struct se_cmd *se_cmd, bool ack_kref)
+ 	}
+ 	se_cmd->transport_state |= CMD_T_PRE_EXECUTE;
+ 	list_add_tail(&se_cmd->se_cmd_list, &se_sess->sess_cmd_list);
++	percpu_ref_get(&se_sess->cmd_count);
+ out:
+ 	spin_unlock_irqrestore(&se_sess->sess_cmd_lock, flags);
+ 
+@@ -2749,8 +2765,6 @@ static void target_release_cmd_kref(struct kref *kref)
+ 	if (se_sess) {
+ 		spin_lock_irqsave(&se_sess->sess_cmd_lock, flags);
+ 		list_del_init(&se_cmd->se_cmd_list);
+-		if (se_sess->sess_tearing_down && list_empty(&se_sess->sess_cmd_list))
+-			wake_up(&se_sess->cmd_list_wq);
+ 		spin_unlock_irqrestore(&se_sess->sess_cmd_lock, flags);
+ 	}
+ 
+@@ -2758,6 +2772,8 @@ static void target_release_cmd_kref(struct kref *kref)
+ 	se_cmd->se_tfo->release_cmd(se_cmd);
+ 	if (compl)
+ 		complete(compl);
++
++	percpu_ref_put(&se_sess->cmd_count);
  }
  
--/*
-- * Look up the DIX operation based on whether the command is read or
-- * write and whether dix and dif are enabled.
-- */
--static inline unsigned int sd_prot_op(bool write, bool dix, bool dif)
--{
--	/* Lookup table: bit 2 (write), bit 1 (dix), bit 0 (dif) */
--	const unsigned int ops[] = {	/* wrt dix dif */
--		SCSI_PROT_NORMAL,	/*  0	0   0  */
--		SCSI_PROT_READ_STRIP,	/*  0	0   1  */
--		SCSI_PROT_READ_INSERT,	/*  0	1   0  */
--		SCSI_PROT_READ_PASS,	/*  0	1   1  */
--		SCSI_PROT_NORMAL,	/*  1	0   0  */
--		SCSI_PROT_WRITE_INSERT, /*  1	0   1  */
--		SCSI_PROT_WRITE_STRIP,	/*  1	1   0  */
--		SCSI_PROT_WRITE_PASS,	/*  1	1   1  */
--	};
--
--	return ops[write << 2 | dix << 1 | dif];
--}
--
--/*
-- * Returns a mask of the protection flags that are valid for a given DIX
-- * operation.
-- */
--static inline unsigned int sd_prot_flag_mask(unsigned int prot_op)
--{
--	const unsigned int flag_mask[] = {
--		[SCSI_PROT_NORMAL]		= 0,
--
--		[SCSI_PROT_READ_STRIP]		= SCSI_PROT_TRANSFER_PI |
--						  SCSI_PROT_GUARD_CHECK |
--						  SCSI_PROT_REF_CHECK |
--						  SCSI_PROT_REF_INCREMENT,
--
--		[SCSI_PROT_READ_INSERT]		= SCSI_PROT_REF_INCREMENT |
--						  SCSI_PROT_IP_CHECKSUM,
--
--		[SCSI_PROT_READ_PASS]		= SCSI_PROT_TRANSFER_PI |
--						  SCSI_PROT_GUARD_CHECK |
--						  SCSI_PROT_REF_CHECK |
--						  SCSI_PROT_REF_INCREMENT |
--						  SCSI_PROT_IP_CHECKSUM,
--
--		[SCSI_PROT_WRITE_INSERT]	= SCSI_PROT_TRANSFER_PI |
--						  SCSI_PROT_REF_INCREMENT,
--
--		[SCSI_PROT_WRITE_STRIP]		= SCSI_PROT_GUARD_CHECK |
--						  SCSI_PROT_REF_CHECK |
--						  SCSI_PROT_REF_INCREMENT |
--						  SCSI_PROT_IP_CHECKSUM,
--
--		[SCSI_PROT_WRITE_PASS]		= SCSI_PROT_TRANSFER_PI |
--						  SCSI_PROT_GUARD_CHECK |
--						  SCSI_PROT_REF_CHECK |
--						  SCSI_PROT_REF_INCREMENT |
--						  SCSI_PROT_IP_CHECKSUM,
--	};
--
--	return flag_mask[prot_op];
--}
--
- #ifdef CONFIG_BLK_DEV_INTEGRITY
+ /**
+@@ -2886,6 +2902,8 @@ void target_sess_cmd_list_set_waiting(struct se_session *se_sess)
+ 	spin_lock_irqsave(&se_sess->sess_cmd_lock, flags);
+ 	se_sess->sess_tearing_down = 1;
+ 	spin_unlock_irqrestore(&se_sess->sess_cmd_lock, flags);
++
++	percpu_ref_kill(&se_sess->cmd_count);
+ }
+ EXPORT_SYMBOL(target_sess_cmd_list_set_waiting);
  
- extern void sd_dif_config_host(struct scsi_disk *);
+@@ -2900,17 +2918,14 @@ void target_wait_for_sess_cmds(struct se_session *se_sess)
+ 
+ 	WARN_ON_ONCE(!se_sess->sess_tearing_down);
+ 
+-	spin_lock_irq(&se_sess->sess_cmd_lock);
+ 	do {
+-		ret = wait_event_lock_irq_timeout(
+-				se_sess->cmd_list_wq,
+-				list_empty(&se_sess->sess_cmd_list),
+-				se_sess->sess_cmd_lock, 180 * HZ);
++		ret = wait_event_timeout(se_sess->cmd_list_wq,
++				percpu_ref_is_zero(&se_sess->cmd_count),
++				180 * HZ);
+ 		list_for_each_entry(cmd, &se_sess->sess_cmd_list, se_cmd_list)
+ 			target_show_cmd("session shutdown: still waiting for ",
+ 					cmd);
+ 	} while (ret <= 0);
+-	spin_unlock_irq(&se_sess->sess_cmd_lock);
+ }
+ EXPORT_SYMBOL(target_wait_for_sess_cmds);
+ 
+diff --git a/drivers/target/target_core_xcopy.c b/drivers/target/target_core_xcopy.c
+index 70adcfdca8d1..124495f953fa 100644
+--- a/drivers/target/target_core_xcopy.c
++++ b/drivers/target/target_core_xcopy.c
+@@ -479,6 +479,8 @@ static const struct target_core_fabric_ops xcopy_pt_tfo = {
+ 
+ int target_xcopy_setup_pt(void)
+ {
++	int ret;
++
+ 	xcopy_wq = alloc_workqueue("xcopy_wq", WQ_MEM_RECLAIM, 0);
+ 	if (!xcopy_wq) {
+ 		pr_err("Unable to allocate xcopy_wq\n");
+@@ -496,7 +498,9 @@ int target_xcopy_setup_pt(void)
+ 	INIT_LIST_HEAD(&xcopy_pt_nacl.acl_list);
+ 	INIT_LIST_HEAD(&xcopy_pt_nacl.acl_sess_list);
+ 	memset(&xcopy_pt_sess, 0, sizeof(struct se_session));
+-	transport_init_session(&xcopy_pt_sess);
++	ret = transport_init_session(&xcopy_pt_sess);
++	if (ret < 0)
++		return ret;
+ 
+ 	xcopy_pt_nacl.se_tpg = &xcopy_pt_tpg;
+ 	xcopy_pt_nacl.nacl_sess = &xcopy_pt_sess;
+diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
+index e3bdb0550a59..d9fd4eac58c2 100644
+--- a/include/target/target_core_base.h
++++ b/include/target/target_core_base.h
+@@ -601,6 +601,7 @@ struct se_session {
+ 	struct se_node_acl	*se_node_acl;
+ 	struct se_portal_group *se_tpg;
+ 	void			*fabric_sess_ptr;
++	struct percpu_ref	cmd_count;
+ 	struct list_head	sess_list;
+ 	struct list_head	sess_acl_list;
+ 	struct list_head	sess_cmd_list;
+diff --git a/include/target/target_core_fabric.h b/include/target/target_core_fabric.h
+index f4147b398431..eb9d0923c55c 100644
+--- a/include/target/target_core_fabric.h
++++ b/include/target/target_core_fabric.h
+@@ -116,7 +116,7 @@ struct se_session *target_setup_session(struct se_portal_group *,
+ 				struct se_session *, void *));
+ void target_remove_session(struct se_session *);
+ 
+-void transport_init_session(struct se_session *);
++int transport_init_session(struct se_session *se_sess);
+ struct se_session *transport_alloc_session(enum target_prot_op);
+ int transport_alloc_session_tags(struct se_session *, unsigned int,
+ 		unsigned int);
 -- 
-1.9.1
+2.19.1
