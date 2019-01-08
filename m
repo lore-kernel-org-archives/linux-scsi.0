@@ -1,13 +1,13 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.14 47/53] scsi: smartpqi: correct lun reset issues
-Date: Tue,  8 Jan 2019 14:32:15 -0500
-Message-ID: <20190108193222.123316-47-sashal@kernel.org>
-References: <20190108193222.123316-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 32/36] scsi: smartpqi: correct lun reset issues
+Date: Tue,  8 Jan 2019 14:33:44 -0500
+Message-ID: <20190108193348.123880-32-sashal@kernel.org>
+References: <20190108193348.123880-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190108193222.123316-1-sashal@kernel.org>
+In-Reply-To: <20190108193348.123880-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc: Kevin Barnett <kevin.barnett@microsemi.com>, Don Brace <don.brace@microsemi.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org
@@ -70,10 +70,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 3 insertions(+)
 
 diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index 83bdbd84eb01..b662f58203ac 100644
+index 96a343ec8313..b2b969990a5d 100644
 --- a/drivers/scsi/smartpqi/smartpqi_init.c
 +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -2709,6 +2709,9 @@ static unsigned int pqi_process_io_intr(struct pqi_ctrl_info *ctrl_info,
+@@ -2523,6 +2523,9 @@ static unsigned int pqi_process_io_intr(struct pqi_ctrl_info *ctrl_info,
  		switch (response->header.iu_type) {
  		case PQI_RESPONSE_IU_RAID_PATH_IO_SUCCESS:
  		case PQI_RESPONSE_IU_AIO_PATH_IO_SUCCESS:
