@@ -1,61 +1,41 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH] scsi: isci: initialize shost fully before calling
- scsi_add_host()
-Date: Tue, 8 Jan 2019 14:30:36 -0700
-Message-ID: <0d986fa7-b510-07d0-02bd-cf4da11fd84e@kernel.dk>
-References: <20190108205043.3122-1-logang@deltatee.com>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH v2] scsi: sd: Make protection lookup tables static and
+ relocate functions
+Date: Tue, 8 Jan 2019 18:42:35 -0800
+Message-ID: <29616f54-5c48-96da-e3b4-c211fd28d82e@acm.org>
+References: <1546960492-218420-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190108205043.3122-1-logang@deltatee.com>
+In-Reply-To: <1546960492-218420-1-git-send-email-john.garry@huawei.com>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Logan Gunthorpe <logang@deltatee.com>, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Intel SCU Linux support <intel-linux-scu@intel.com>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Jeff Moyer <jmoyer@redhat.com>
+To: John Garry <john.garry@huawei.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linuxarm@huawei.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 1/8/19 1:50 PM, Logan Gunthorpe wrote:
-> scsi_mq_setup_tags(), which is called by scsi_add_host(), calculates
-> the command size to allocate based on the prot_capabilities. In the
-> isci driver, scsi_host_set_prot() is called after scsi_add_host()
-> so the command size gets calculated to be smaller than it needs to be.
-> Eventually, scsi_mq_init_request() locates the 'prot_sdb' after the command
-> assuming it was sized correctly and a buffer overrun may occur.
+On 1/8/19 7:14 AM, John Garry wrote:
+> Currently the protection lookup tables in sd_prot_flag_mask() and
+> sd_prot_op() are declared as non-static. As such, they will be rebuilt
+> for each respective function call.
 > 
-> However, seeing blk_mq_alloc_rqs() rounds up to the nearest cache line
-> size, the mistake can go unnoticed.
+> Optimise by making them static.
 > 
-> The bug was noticed after the struct request size was reduced by
-> commit 9d037ad707ed ("block: remove req->timeout_list")
+> This saves ~100B object code for sd.c:
 > 
-> Which likely reduced the allocated space for the request by an entire
-> cache line, enough that the overflow could be hit and it caused a panic,
-> on boot, at:
+> Before:
+>     text	   data	    bss	    dec	    hex	filename
+>    25403	   1024	     16	  26443	   674b	drivers/scsi/sd.o
 > 
->   RIP: 0010:t10_pi_complete+0x77/0x1c0
->   Call Trace:
->     <IRQ>
->     sd_done+0xf5/0x340
->     scsi_finish_command+0xc3/0x120
->     blk_done_softirq+0x83/0xb0
->     __do_softirq+0xa1/0x2e6
->     irq_exit+0xbc/0xd0
->     call_function_single_interrupt+0xf/0x20
->     </IRQ>
+> After:
+>    text	   data	    bss	    dec	    hex	filename
+>    25299	   1024	     16	  26339	   66e3	drivers/scsi/sd.o
 > 
-> sd_done() would call scsi_prot_sg_count() which reads the number of
-> entities in 'prot_sdb', but seeing 'prot_sdb' is located after the end of
-> the allocated space it reads a garbage number and erroneously calls
-> t10_pi_complete().
+> In addition, since those same functions are declared in sd.h, but each are
+> only referenced in sd.c, relocate them to that same c file.
 > 
-> To prevent this, the calls to scsi_host_set_prot() are moved into
-> isci_host_alloc() before the call to scsi_add_host(). Out of caution,
-> also move the similar call to scsi_host_set_guard().
+> The inline specifier is dropped also, since gcc should be able to make the
+> decision to inline.
 
-Nice work!
-
-Reviewed-by: Jens Axboe <axboe@kernel.dk>
-
--- 
-Jens Axboe
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
