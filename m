@@ -1,46 +1,47 @@
-From: Kangjie Lu <kjlu@umn.edu>
-Subject: [PATCH v2] scsi: avoid a double-fetch and a redundant copy
-Date: Wed,  9 Jan 2019 01:25:57 -0600
-Message-ID: <20190109072557.9818-1-kjlu@umn.edu>
-References: <e68496e2-248b-e7ec-9bc2-597446c5b495@interlog.com>
+From: John Garry <john.garry@huawei.com>
+Subject: [PATCH] scsi: hisi_sas: Use scsi lld debugfs folder
+Date: Wed, 9 Jan 2019 20:43:34 +0800
+Message-ID: <1547037814-99911-1-git-send-email-john.garry@huawei.com>
+Mime-Version: 1.0
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <e68496e2-248b-e7ec-9bc2-597446c5b495@interlog.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: kjlu@umn.edu
-Cc: pakki001@umn.edu, Doug Gilbert <dgilbert@interlog.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linuxarm@huawei.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, dgilbert@interlog.com, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-What we need is only "pack_id", so do not create a heap object or copy
-the whole object in. The fix efficiently copies "pack_id" only and
-also avoids double-fetch.
+Since we now have a dedicated folder for scsi llds in the debugfs tree,
+relocate the root of the driver debugfs folder to that same location.
 
-Signed-off-by: Kangjie Lu <kjlu@umn.edu>
+Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/sg.c | 12 ++----------
- 1 file changed, 2 insertions(+), 10 deletions(-)
+This patch depends on https://www.spinics.net/lists/linux-scsi/msg126764.html
 
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index c6ad00703c5b..13662c41058a 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -446,16 +446,8 @@ sg_read(struct file *filp, char __user *buf, size_t count, loff_t * ppos)
- 		}
- 		if (old_hdr->reply_len < 0) {
- 			if (count >= SZ_SG_IO_HDR) {
--				sg_io_hdr_t *new_hdr;
--				new_hdr = kmalloc(SZ_SG_IO_HDR, GFP_KERNEL);
--				if (!new_hdr) {
--					retval = -ENOMEM;
--					goto free_old_hdr;
--				}
--				retval =__copy_from_user
--				    (new_hdr, buf, SZ_SG_IO_HDR);
--				req_pack_id = new_hdr->pack_id;
--				kfree(new_hdr);
-+				retval = get_user(req_pack_id,
-+						&((sg_io_hdr_t *)buf)->pack_id);
- 				if (retval) {
- 					retval = -EFAULT;
- 					goto free_old_hdr;
+diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
+index 6a1a5ad..ce527b7 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas.h
++++ b/drivers/scsi/hisi_sas/hisi_sas.h
+@@ -26,6 +26,7 @@
+ #include <linux/property.h>
+ #include <linux/regmap.h>
+ #include <scsi/sas_ata.h>
++#include <scsi/scsi_dbg.h>
+ #include <scsi/libsas.h>
+ 
+ #define HISI_SAS_MAX_PHYS	9
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index 3d24366..e27a06c 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -2985,7 +2985,8 @@ static __init int hisi_sas_init(void)
+ 		return -ENOMEM;
+ 
+ 	if (hisi_sas_debugfs_enable)
+-		hisi_sas_debugfs_dir = debugfs_create_dir("hisi_sas", NULL);
++		hisi_sas_debugfs_dir = debugfs_create_dir("hisi_sas",
++							  scsi_debugfs_lld);
+ 
+ 	return 0;
+ }
 -- 
-2.17.1
+1.9.1
