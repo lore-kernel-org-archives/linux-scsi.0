@@ -1,120 +1,92 @@
-From: Jeffrey Hugo <jhugo@codeaurora.org>
-Subject: Re: [PATCH v1] scsi: ufs: Use explicit access size in ufshcd_dump_regs
-Date: Wed, 9 Jan 2019 08:38:57 -0700
-Message-ID: <4c367e20-3ae8-ba28-75dc-b07805e27ea8@codeaurora.org>
-References: <3bf7ea8e-4cf2-1f9b-7f46-15609dfcad19@free.fr>
- <214700f8-a381-5740-47c0-54923dae60b1@free.fr>
+From: Sam Protsenko <semen.protsenko@linaro.org>
+Subject: Re: [PATCH v2] codafs: Fix build using bare-metal toolchain
+Date: Wed, 9 Jan 2019 17:45:59 +0200
+Message-ID: <CAKaJLVum=eOgsnsaoNzp4WJ7NpAekeuKH2C8Cbk57z0Oy0GM=w@mail.gmail.com>
+References: <20181030202713.26203-1-semen.protsenko@linaro.org>
+ <CAKaJLVu0h5woVtN5=Mh38ajACBZZQ3JHfRhkjNrwMwYXHEG-NQ@mail.gmail.com>
+ <CAHp75Vd-ydncUWQtc8ziLpCMJRFCvjV=ueKB0wRgn7W-pnV09Q@mail.gmail.com>
+ <20181121181042.4gzuniz2vzjikpwc@cs.cmu.edu> <CAKaJLVs4MUws7sPPdDk7hnjZ+Z1V0V6bGt=eWn=gsF_B+yULeg@mail.gmail.com>
+ <CAKaJLVvHZwJHu_uZuUDtCZrD7EKY-5xpGhNZN7cQ2M4Bz9osDA@mail.gmail.com> <308CF0BD-90AE-45D2-BAF9-D297A530B0F4@cs.cmu.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <214700f8-a381-5740-47c0-54923dae60b1@free.fr>
-Content-Language: en-US
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Marc Gonzalez <marc.w.gonzalez@free.fr>, Bjorn Andersson <bjorn.andersson@linaro.org>, Andy Gross <andy.gross@linaro.org>
-Cc: SCSI <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Joao Pinto <jpinto@synopsys.com>, MSM <linux-arm-msm@vger.kernel.org>, Avri Altman <avri.altman@wdc.com>, Tomas Winkler <tomas.winkler@intel.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Robin Murphy <robin.murphy@arm.com>, Linux ARM <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <308CF0BD-90AE-45D2-BAF9-D297A530B0F4@cs.cmu.edu>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jan Harkes <jaharkes@cs.cmu.edu>
+Cc: hch@lst.de, Andrew Morton <akpm@linux-foundation.org>, kernel-janitors@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Praneeth Bajjuri <praneeth@ti.com>, Ruslan Bilovol <ruslan.bilovol@gmail.com>, Andy Shevchenko <andy.shevchenko@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 1/9/2019 5:42 AM, Marc Gonzalez wrote:
-> Bjorn, Andy, Jeffrey,
-> 
-> What do you think about the patch below?
-> 
-> Regards.
-> 
-> On 11/12/2018 15:18, Marc Gonzalez wrote:
-> 
->> memcpy_fromio() doesn't provide any control over access size.
->> For example, on arm64, it is implemented using readb and readq.
->> This may trigger a synchronous external abort:
->>
->> [    3.729943] Internal error: synchronous external abort: 96000210 [#1] PREEMPT SMP
->> [    3.737000] Modules linked in:
->> [    3.744371] CPU: 2 PID: 1 Comm: swapper/0 Tainted: G S                4.20.0-rc4 #16
->> [    3.747413] Hardware name: Qualcomm Technologies, Inc. MSM8998 v1 MTP (DT)
->> [    3.755295] pstate: 00000005 (nzcv daif -PAN -UAO)
->> [    3.761978] pc : __memcpy_fromio+0x68/0x80
->> [    3.766718] lr : ufshcd_dump_regs+0x50/0xb0
->> [    3.770767] sp : ffff00000807ba00
->> [    3.774830] x29: ffff00000807ba00 x28: 00000000fffffffb
->> [    3.778344] x27: ffff0000089db068 x26: ffff8000f6e58000
->> [    3.783728] x25: 000000000000000e x24: 0000000000000800
->> [    3.789023] x23: ffff8000f6e587c8 x22: 0000000000000800
->> [    3.794319] x21: ffff000008908368 x20: ffff8000f6e1ab80
->> [    3.799615] x19: 000000000000006c x18: ffffffffffffffff
->> [    3.804910] x17: 0000000000000000 x16: 0000000000000000
->> [    3.810206] x15: ffff000009199648 x14: ffff000089244187
->> [    3.815502] x13: ffff000009244195 x12: ffff0000091ab000
->> [    3.820797] x11: 0000000005f5e0ff x10: ffff0000091998a0
->> [    3.826093] x9 : 0000000000000000 x8 : ffff8000f6e1ac00
->> [    3.831389] x7 : 0000000000000000 x6 : 0000000000000068
->> [    3.836676] x5 : ffff8000f6e1abe8 x4 : 0000000000000000
->> [    3.841971] x3 : ffff00000928c868 x2 : ffff8000f6e1abec
->> [    3.847267] x1 : ffff00000928c868 x0 : ffff8000f6e1abe8
->> [    3.852567] Process swapper/0 (pid: 1, stack limit = 0x(____ptrval____))
->> [    3.857900] Call trace:
->> [    3.864473]  __memcpy_fromio+0x68/0x80
->> [    3.866683]  ufs_qcom_dump_dbg_regs+0x1c0/0x370
->> [    3.870522]  ufshcd_print_host_regs+0x168/0x190
->> [    3.874946]  ufshcd_init+0xd4c/0xde0
->> [    3.879459]  ufshcd_pltfrm_init+0x3c8/0x550
->> [    3.883264]  ufs_qcom_probe+0x24/0x60
->> [    3.887188]  platform_drv_probe+0x50/0xa0
->>
->> Assuming aligned 32-bit registers, let's use readl, after making sure
->> that 'offset' and 'len' are indeed multiples of 4.
->>
->> Fixes: ba80917d9932d ("scsi: ufs: ufshcd_dump_regs to use memcpy_fromio")
->> Signed-off-by: Marc Gonzalez <marc.w.gonzalez@free.fr>
->> ---
->>   drivers/scsi/ufs/ufshcd.c | 10 ++++++++--
->>   1 file changed, 8 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
->> index 535180c01ce8..320bbd9849bc 100644
->> --- a/drivers/scsi/ufs/ufshcd.c
->> +++ b/drivers/scsi/ufs/ufshcd.c
->> @@ -112,13 +112,19 @@
->>   int ufshcd_dump_regs(struct ufs_hba *hba, size_t offset, size_t len,
->>   		     const char *prefix)
->>   {
->> -	u8 *regs;
->> +	u32 *regs;
->> +	size_t pos;
->> +
->> +	if (offset % 4 != 0 || len % 4 != 0) /* keep readl happy */
->> +		return -EINVAL;
+Hi Jan,
 
-Hmm.  It seems like these cases could be handled, but I guess we cannot 
-necessarily assume that reading past the bounds specified by the client 
-is safe, so this seems reasonable.
+Can you please clarify on this patch? As I can see v5.0-rc1 is out
+now, which means merge window is closed, but I can't see this patch in
+linux-mainline yet. Do you need any additional steps from my side
+(like rebasing, etc)?
 
->>   
->>   	regs = kzalloc(len, GFP_KERNEL);
->>   	if (!regs)
->>   		return -ENOMEM;
->>   
->> -	memcpy_fromio(regs, hba->mmio_base + offset, len);
->> +	for (pos = 0; pos < len; pos += 4)
->> +		regs[pos / 4] = ufshcd_readl(hba, offset + pos);
->> +
->>   	ufshcd_hex_dump(prefix, regs, len);
->>   	kfree(regs);
->>   
+Thanks!
 
-Reviewed-by: Jeffrey Hugo <jhugo@codeaurora.org>
-
--- 
-Jeffrey Hugo
-Qualcomm Datacenter Technologies as an affiliate of Qualcomm 
-Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the
-Code Aurora Forum, a Linux Foundation Collaborative Project.
+On Thu, Nov 22, 2018 at 12:49 AM Jan Harkes <jaharkes@cs.cmu.edu> wrote:
+>
+> That actually makes a lot of sense.
+>
+> Jan
+>
+> On November 21, 2018 2:39:03 PM EST, Sam Protsenko <semen.protsenko@linaro.org> wrote:
+> >+ Jan Harkes back to "To:" list, slipped away somehow...
+> >
+> >On Wed, Nov 21, 2018 at 9:36 PM Sam Protsenko
+> ><semen.protsenko@linaro.org> wrote:
+> >>
+> >> On Wed, Nov 21, 2018 at 8:10 PM Jan Harkes <jaharkes@cs.cmu.edu>
+> >wrote:
+> >> >
+> >> > On Wed, Nov 21, 2018 at 06:41:13PM +0200, Andy Shevchenko wrote:
+> >> > > I'm not sure how you managed to miss people in this list (perhaps
+> >by
+> >> > > default you have suppress all Cc in your Git configuration), but
+> >I
+> >> > > guess we may gently ask Christoph to apply this in case Jan will
+> >not
+> >> > > appear.
+> >> >
+> >> > You have got to give me a little more than 10 minutes to respond
+> >before
+> >> > assuming that I would not appear... I don't think I've ignored any
+> >> > previous emails on this subject and the only issues has been some
+> >people
+> >> > not receiving my responses for unknown reasons (agressive spam
+> >filter?).
+> >> >
+> >> > I have no problem with this patch, have it sitting with some other
+> >> > non-urgent patches and in case it doesn't appear upstream it should
+> >> > piggyback with whatever I have to send.
+> >> >
+> >>
+> >> Thanks, Jan, really appreciate it. We need this patch to fix our
+> >tests
+> >> with allmodconfig configuration (in Linaro CI loops).
+> >>
+> >> > I still don't know why the bare-metal toolchain couldn't just add a
+> >> > -D__linux__.  I understand that this define is expected to be
+> >always
+> >> > present while compiling kernel headers so that there is no good
+> >reason
+> >> > to even bother testing for it, which is why I have no issue with
+> >the
+> >> > patch. But it seems it would make your life a lot easier if you had
+> >it
+> >> > defined.
+> >> >
+> >>
+> >> As I understand it, from toolchain's point of view, if __linux__ is
+> >> defined then it means that the program is being built *for* Linux
+> >> (i.e. we can use Linux specific features, ABI, like syscalls).
+> >> Checking this definition can make sense in uapi headers, but in
+> >kernel
+> >> code we shouldn't use it (as kernel is baremetal program and not
+> >> compiled for some OS). I presume that's why __linux__ is not defined
+> >> in bare-metal toolchains (as those don't provide Linux specific
+> >> features, libc, etc).
+> >>
+> >> > Jan
+> >> >
