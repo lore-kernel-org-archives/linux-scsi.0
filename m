@@ -1,19 +1,19 @@
 From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: Re: [PATCH 07/41] scsi: be2iscsi: be_iscsi: Mark expected switch
- fall-through
-Date: Thu, 10 Jan 2019 14:13:08 -0600
-Message-ID: <1b24ffa5-0553-b295-378b-1fed2b2c5dca@embeddedor.com>
+Subject: Re: [PATCH 12/41] scsi: bfa: bfa_ioc: Mark expected switch
+ fall-throughs
+Date: Thu, 10 Jan 2019 14:11:26 -0600
+Message-ID: <16aade69-ac0e-7d8c-0ffb-35564ee334cd@embeddedor.com>
 References: <cover.1543374820.git.gustavo@embeddedor.com>
- <4da131a74bf4d88c49307ade507b48aee86b4714.1543374820.git.gustavo@embeddedor.com>
- <bc99a534-bc6c-d093-eca2-a085bd1dfd82@embeddedor.com>
+ <520fb16cd3630d612c5768989e2ffa90f1a73f97.1543374820.git.gustavo@embeddedor.com>
+ <b5f0c0bf-f671-65b0-dfed-39cefcd3fde1@embeddedor.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <bc99a534-bc6c-d093-eca2-a085bd1dfd82@embeddedor.com>
+In-Reply-To: <b5f0c0bf-f671-65b0-dfed-39cefcd3fde1@embeddedor.com>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Subbu Seetharaman <subbu.seetharaman@broadcom.com>, Ketan Mukadam <ketan.mukadam@broadcom.com>, Jitendra Bhivare <jitendra.bhivare@broadcom.com>
+To: Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>
 Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
@@ -27,7 +27,7 @@ Thanks
 --
 Gustavo
 
-On 12/19/18 9:37 AM, Gustavo A. R. Silva wrote:
+On 12/19/18 9:39 AM, Gustavo A. R. Silva wrote:
 > Hi,
 > 
 > Friendly ping:
@@ -38,25 +38,48 @@ On 12/19/18 9:37 AM, Gustavo A. R. Silva wrote:
 > -- 
 > Gustavo
 > 
-> On 11/27/18 10:26 PM, Gustavo A. R. Silva wrote:
+> On 11/27/18 10:27 PM, Gustavo A. R. Silva wrote:
 >> In preparation to enabling -Wimplicit-fallthrough, mark switch cases
 >> where we are expecting to fall through.
 >>
+>> Notice that, in this particular case, I replaced "!!! fall through !!!"
+>> comment with "fall through" annotations, which is what GCC is expecting
+>> to find.
+>>
+>> Addresses-Coverity-ID: 146155 ("Missing break in switch")
 >> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 >> ---
->>   drivers/scsi/be2iscsi/be_iscsi.c | 1 +
->>   1 file changed, 1 insertion(+)
+>>   drivers/scsi/bfa/bfa_ioc.c | 9 +++------
+>>   1 file changed, 3 insertions(+), 6 deletions(-)
 >>
->> diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
->> index 96b96e2ab91a..ed1bd369baa0 100644
->> --- a/drivers/scsi/be2iscsi/be_iscsi.c
->> +++ b/drivers/scsi/be2iscsi/be_iscsi.c
->> @@ -679,6 +679,7 @@ int beiscsi_set_param(struct iscsi_cls_conn *cls_conn,
->>       case ISCSI_PARAM_MAX_XMIT_DLENGTH:
->>           if (conn->max_xmit_dlength > 65536)
->>               conn->max_xmit_dlength = 65536;
+>> diff --git a/drivers/scsi/bfa/bfa_ioc.c b/drivers/scsi/bfa/bfa_ioc.c
+>> index 16d3aeb0e572..32b24e51cce6 100644
+>> --- a/drivers/scsi/bfa/bfa_ioc.c
+>> +++ b/drivers/scsi/bfa/bfa_ioc.c
+>> @@ -978,9 +978,7 @@ bfa_iocpf_sm_enabling(struct bfa_iocpf_s *iocpf, enum iocpf_event event)
+>>       case IOCPF_E_INITFAIL:
+>>           bfa_iocpf_timer_stop(ioc);
+>> -        /*
+>> -         * !!! fall through !!!
+>> -         */
 >> +        /* fall through */
->>       default:
->>           return 0;
->>       }
+>>       case IOCPF_E_TIMEOUT:
+>>           writel(1, ioc->ioc_regs.ioc_sem_reg);
+>> @@ -1056,9 +1054,7 @@ bfa_iocpf_sm_disabling(struct bfa_iocpf_s *iocpf, enum iocpf_event event)
+>>       case IOCPF_E_FAIL:
+>>           bfa_iocpf_timer_stop(ioc);
+>> -        /*
+>> -         * !!! fall through !!!
+>> -         */
+>> +        /* fall through */
+>>       case IOCPF_E_TIMEOUT:
+>>           bfa_ioc_set_cur_ioc_fwstate(ioc, BFI_IOC_FAIL);
+>> @@ -6007,6 +6003,7 @@ bfa_dconf_sm_final_sync(struct bfa_dconf_mod_s *dconf,
+>>       case BFA_DCONF_SM_IOCDISABLE:
+>>       case BFA_DCONF_SM_FLASH_COMP:
+>>           bfa_timer_stop(&dconf->timer);
+>> +        /* fall through */
+>>       case BFA_DCONF_SM_TIMEOUT:
+>>           bfa_sm_set_state(dconf, bfa_dconf_sm_uninit);
+>>           bfa_fsm_send_event(&dconf->bfa->iocfc, IOCFC_E_DCONF_DONE);
 >>
