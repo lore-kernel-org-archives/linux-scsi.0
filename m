@@ -1,65 +1,39 @@
-From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: Re: [PATCH 13/41] scsi: csiostor: csio_wr: mark expected switch
- fall-through
-Date: Thu, 10 Jan 2019 14:10:53 -0600
-Message-ID: <8f7b1fb9-260a-93aa-ec88-8d48ca9b2513@embeddedor.com>
-References: <cover.1543374820.git.gustavo@embeddedor.com>
- <5e846a635bfaf121af56e1f60a99816091e55170.1543374820.git.gustavo@embeddedor.com>
- <a05a7975-b09b-fd0a-8af1-82ab3b90596e@embeddedor.com>
+From: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+Subject: Re: [PATCH] ibmvscsi: use GFP_ATOMIC with dma_alloc_coherent in
+ map_sg_data
+Date: Thu, 10 Jan 2019 12:11:53 -0800
+Message-ID: <1214b6b5-92f2-7789-7530-36a0d16323c5@linux.vnet.ibm.com>
+References: <1547089136-20264-1-git-send-email-tyreld@linux.vnet.ibm.com>
+ <20190110150703.GA26696@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <a05a7975-b09b-fd0a-8af1-82ab3b90596e@embeddedor.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20190110150703.GA26696@infradead.org>
 Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Sender: stable-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: james.bottomley@hansenpartnership.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, brking@linux.vnet.ibm.com, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi,
-
-Friendly ping (second one):
-
-Who can ack/review/take this patch, please?
-
-Martin: apparently, the only maintainers for
-this driver are you and James.
-
-Thanks
---
-Gustavo
-
-On 12/19/18 9:39 AM, Gustavo A. R. Silva wrote:
-> Hi,
-> 
-> Friendly ping:
-> 
-> Who can ack or review this patch, please?
-> 
-> Thanks
-> -- 
-> Gustavo
-> 
-> On 11/27/18 10:28 PM, Gustavo A. R. Silva wrote:
->> In preparation to enabling -Wimplicit-fallthrough, mark switch cases
->> where we are expecting to fall through.
+On 01/10/2019 07:07 AM, Christoph Hellwig wrote:
+> On Wed, Jan 09, 2019 at 06:58:56PM -0800, Tyrel Datwyler wrote:
+>> While mapping DMA for scatter list when a scsi command is queued the
+>> existing call to dma_alloc_coherent() in our map_sg_data() function
+>> passes zero for the gfp_flags parameter. We are most definitly in atomic
+>> context at this point as queue_command() is called in softirq context
+>> and further we have a spinlock holding the scsi host lock.
 >>
->> Addresses-Coverity-ID: 1056538 ("Missing break in switch")
->> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
->> ---
->>   drivers/scsi/csiostor/csio_wr.c | 1 +
->>   1 file changed, 1 insertion(+)
->>
->> diff --git a/drivers/scsi/csiostor/csio_wr.c b/drivers/scsi/csiostor/csio_wr.c
->> index dc12933533d5..b6861ea66c9f 100644
->> --- a/drivers/scsi/csiostor/csio_wr.c
->> +++ b/drivers/scsi/csiostor/csio_wr.c
->> @@ -808,6 +808,7 @@ csio_wr_destroy_queues(struct csio_hw *hw, bool cmd)
->>                   csio_q_eqid(hw, i) = CSIO_MAX_QID;
->>               }
->> +            /* fall through */
->>           case CSIO_INGRESS:
->>               if (csio_q_iqid(hw, i) != CSIO_MAX_QID) {
->>                   csio_wr_cleanup_iq_ftr(hw, i);
->>
+>> Fix this by passing GFP_ATOMIC to dma_alloc_coherent() to prevent any
+>> sort of sleeping in atomic context deadlock.
+> 
+> This is a pretty clear sign you should not be using dma_alloc_coherent
+> to start with.  GFP_ATOMIC support in many of the implementations either
+> doesn't work at all or is severly constrained.  Given that the
+> descriptor is written by the OS and read by the hardware exactly once
+> there is no point in having the coherent mapping to start with.
+> 
+
+This allocation isn't a single use allocation. The driver is just lazy about allocating our ext_list area for large SG lists (ie. SG_ALL). When the driver was first written it only supported up to 10 indirect SRP buffers. James Bottemley added the large SG support back in 2005 with the commit referenced here in the fixes tag "4dddbc26c389". We only allocate the ext_list when we come across a SG list requiring more than 10 indirect buffers. Once allocated we will reuse if already allocated.
+
+-Tyrel
