@@ -1,19 +1,18 @@
 From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: Re: [PATCH 05/41] scsi: aic7xxx: aic79xx: mark expected switch
- fall-through
-Date: Thu, 10 Jan 2019 14:15:03 -0600
-Message-ID: <a676a977-c55b-a0ce-1be3-b4d53ec68411@embeddedor.com>
+Subject: Re: [PATCH 27/41] scsi: lpfc: lpfc_scsi: Mark expected switch
+ fall-throughs
+Date: Thu, 10 Jan 2019 14:01:09 -0600
+Message-ID: <feef9be1-02e5-60cf-434e-f0a9659b6566@embeddedor.com>
 References: <cover.1543374820.git.gustavo@embeddedor.com>
- <ff0ea78271abe136badebfbeba1d4373fb836bce.1543374820.git.gustavo@embeddedor.com>
- <1d73dbbd-7e8e-e5ba-6a0f-97fdd799d4c4@embeddedor.com>
+ <4c7efa89883829e21a09e558139e5d8a0d94dee0.1543374820.git.gustavo@embeddedor.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1d73dbbd-7e8e-e5ba-6a0f-97fdd799d4c4@embeddedor.com>
+In-Reply-To: <4c7efa89883829e21a09e558139e5d8a0d94dee0.1543374820.git.gustavo@embeddedor.com>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.com>
+To: James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>
 Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
@@ -27,116 +26,56 @@ Thanks
 --
 Gustavo
 
-On 12/19/18 9:36 AM, Gustavo A. R. Silva wrote:
-> Hi,
+On 11/27/18 10:32 PM, Gustavo A. R. Silva wrote:
+> In preparation to enabling -Wimplicit-fallthrough, mark switch cases
+> where we are expecting to fall through.
 > 
-> Friendly ping:
+> Notice that, in this particular case, I replaced "Drop thru" with
+> "fall through" annotations, which is what GCC is expecting to find.
 > 
-> Who can ack or review this patch, please?
+> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+> ---
+>   drivers/scsi/lpfc/lpfc_scsi.c | 8 ++++----
+>   1 file changed, 4 insertions(+), 4 deletions(-)
 > 
-> Thanks
-> -- 
-> Gustavo
+> diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+> index baed2b891efb..0eeed6c4c2ee 100644
+> --- a/drivers/scsi/lpfc/lpfc_scsi.c
+> +++ b/drivers/scsi/lpfc/lpfc_scsi.c
+> @@ -1427,7 +1427,7 @@ lpfc_bg_err_inject(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+>   
+>   					break;
+>   				}
+> -				/* Drop thru */
+> +				/* fall through */
+>   			case SCSI_PROT_WRITE_INSERT:
+>   				/*
+>   				 * For WRITE_INSERT, force the error
+> @@ -1546,7 +1546,7 @@ lpfc_bg_err_inject(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+>   					rc = BG_ERR_TGT | BG_ERR_CHECK;
+>   					break;
+>   				}
+> -				/* Drop thru */
+> +				/* fall through */
+>   			case SCSI_PROT_WRITE_INSERT:
+>   				/*
+>   				 * For WRITE_INSERT, force the
+> @@ -1628,7 +1628,7 @@ lpfc_bg_err_inject(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+>   			switch (op) {
+>   			case SCSI_PROT_WRITE_PASS:
+>   				rc = BG_ERR_CHECK;
+> -				/* Drop thru */
+> +				/* fall through */
+>   
+>   			case SCSI_PROT_WRITE_INSERT:
+>   				/*
+> @@ -4115,7 +4115,7 @@ lpfc_scsi_cmd_iocb_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pIocbIn,
+>   					lpfc_cmd->cur_iocbq.sli4_lxritag,
+>   					0, 0);
+>   			}
+> -		/* else: fall through */
+> +			/* fall through */
+>   		default:
+>   			cmd->result = DID_ERROR << 16;
+>   			break;
 > 
-> On 11/27/18 10:26 PM, Gustavo A. R. Silva wrote:
->> In preparation to enabling -Wimplicit-fallthrough, mark switch cases
->> where we are expecting to fall through.
->>
->> Notice that, in some cases, I replaced "FALLTHROUGH" with a "fall through"
->> annotation and then placed it at the bottom of the corresponding switch
->> case, which is what GCC is expecting to find.
->>
->> Addresses-Coverity-ID: 114961 ("Missing break in switch")
->> Addresses-Coverity-ID: 114962 ("Missing break in switch")
->> Addresses-Coverity-ID: 114963 ("Missing break in switch")
->> Addresses-Coverity-ID: 114964 ("Missing break in switch")
->> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
->> ---
->>   drivers/scsi/aic7xxx/aic79xx_core.c | 14 +++++++++-----
->>   1 file changed, 9 insertions(+), 5 deletions(-)
->>
->> diff --git a/drivers/scsi/aic7xxx/aic79xx_core.c b/drivers/scsi/aic7xxx/aic79xx_core.c
->> index 9ee75c9a9aa1..7e5044bf05c0 100644
->> --- a/drivers/scsi/aic7xxx/aic79xx_core.c
->> +++ b/drivers/scsi/aic7xxx/aic79xx_core.c
->> @@ -2285,6 +2285,7 @@ ahd_handle_seqint(struct ahd_softc *ahd, u_int intstat)
->>               switch (scb->hscb->task_management) {
->>               case SIU_TASKMGMT_ABORT_TASK:
->>                   tag = SCB_GET_TAG(scb);
->> +                /* fall through */
->>               case SIU_TASKMGMT_ABORT_TASK_SET:
->>               case SIU_TASKMGMT_CLEAR_TASK_SET:
->>                   lun = scb->hscb->lun;
->> @@ -2295,6 +2296,7 @@ ahd_handle_seqint(struct ahd_softc *ahd, u_int intstat)
->>                   break;
->>               case SIU_TASKMGMT_LUN_RESET:
->>                   lun = scb->hscb->lun;
->> +                /* fall through */
->>               case SIU_TASKMGMT_TARGET_RESET:
->>               {
->>                   struct ahd_devinfo devinfo;
->> @@ -6550,8 +6552,8 @@ ahd_fini_scbdata(struct ahd_softc *ahd)
->>               kfree(sns_map);
->>           }
->>           ahd_dma_tag_destroy(ahd, scb_data->sense_dmat);
->> -        /* FALLTHROUGH */
->>       }
->> +        /* fall through */
->>       case 6:
->>       {
->>           struct map_node *sg_map;
->> @@ -6565,8 +6567,8 @@ ahd_fini_scbdata(struct ahd_softc *ahd)
->>               kfree(sg_map);
->>           }
->>           ahd_dma_tag_destroy(ahd, scb_data->sg_dmat);
->> -        /* FALLTHROUGH */
->>       }
->> +        /* fall through */
->>       case 5:
->>       {
->>           struct map_node *hscb_map;
->> @@ -7209,6 +7211,7 @@ ahd_init(struct ahd_softc *ahd)
->>           case FLX_CSTAT_OVER:
->>           case FLX_CSTAT_UNDER:
->>               warn_user++;
->> +            /* fall through */
->>           case FLX_CSTAT_INVALID:
->>           case FLX_CSTAT_OKAY:
->>               if (warn_user == 0 && bootverbose == 0)
->> @@ -8413,7 +8416,7 @@ ahd_search_scb_list(struct ahd_softc *ahd, int target, char channel,
->>               if ((scb->flags & SCB_ACTIVE) == 0)
->>                   printk("Inactive SCB in Waiting List\n");
->>               ahd_done_with_status(ahd, scb, status);
->> -            /* FALLTHROUGH */
->> +            /* fall through */
->>           case SEARCH_REMOVE:
->>               ahd_rem_wscb(ahd, scbid, prev, next, tid);
->>               *list_tail = prev;
->> @@ -8422,6 +8425,7 @@ ahd_search_scb_list(struct ahd_softc *ahd, int target, char channel,
->>               break;
->>           case SEARCH_PRINT:
->>               printk("0x%x ", scbid);
->> +            /* fall through */
->>           case SEARCH_COUNT:
->>               prev = scbid;
->>               break;
->> @@ -9547,8 +9551,8 @@ ahd_download_instr(struct ahd_softc *ahd, u_int instrptr, uint8_t *dconsts)
->>       {
->>           fmt3_ins = &instr.format3;
->>           fmt3_ins->address = ahd_resolve_seqaddr(ahd, fmt3_ins->address);
->> -        /* FALLTHROUGH */
->>       }
->> +        /* fall through */
->>       case AIC_OP_OR:
->>       case AIC_OP_AND:
->>       case AIC_OP_XOR:
->> @@ -9559,7 +9563,7 @@ ahd_download_instr(struct ahd_softc *ahd, u_int instrptr, uint8_t *dconsts)
->>               fmt1_ins->immediate = dconsts[fmt1_ins->immediate];
->>           }
->>           fmt1_ins->parity = 0;
->> -        /* FALLTHROUGH */
->> +        /* fall through */
->>       case AIC_OP_ROL:
->>       {
->>           int i, count;
->>
