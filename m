@@ -1,48 +1,50 @@
-From: James Bottomley <jejb@linux.ibm.com>
-Subject: Re: PROBLEM: syzkaller found / pool corruption-overwrite / page in
- user-area or NULL
-Date: Thu, 10 Jan 2019 11:58:59 -0800
-Message-ID: <1547150339.2814.9.camel@linux.ibm.com>
-References: <t78EEfgpy3uIwPUvqvmuQEYEWKG9avWzjUD3EyR93Qaf_tfx1gqt4XplrqMgdxR1U9SsrVdA7G9XeUZacgUin0n6lBzoxJHVJ9Ko0yzzrxI=@protonmail.ch>
+From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Subject: Re: [PATCH 26/41] scsi: lpfc: lpfc_nvme: Mark expected switch
+ fall-through
+Date: Thu, 10 Jan 2019 14:02:11 -0600
+Message-ID: <fffe7a61-abb9-6715-9104-6381002196cd@embeddedor.com>
+References: <cover.1543374820.git.gustavo@embeddedor.com>
+ <79e1e3ed62a02dc3caf264f6960e7be68bbbc70c.1543374820.git.gustavo@embeddedor.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <t78EEfgpy3uIwPUvqvmuQEYEWKG9avWzjUD3EyR93Qaf_tfx1gqt4XplrqMgdxR1U9SsrVdA7G9XeUZacgUin0n6lBzoxJHVJ9Ko0yzzrxI=@protonmail.ch>
+In-Reply-To: <79e1e3ed62a02dc3caf264f6960e7be68bbbc70c.1543374820.git.gustavo@embeddedor.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Esme <esploit@protonmail.ch>, "dgilbert@interlog.com" <dgilbert@interlog.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-mm@kvack.org
-Cc: "security@kernel.org" <security@kernel.org>
+To: James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 2019-01-10 at 19:12 +0000, Esme wrote:
-> Sorry for the resend some mail servers rejected the mime type.
+Hi,
+
+Friendly ping (second one):
+
+Who can ack/review/take this patch, please?
+
+Thanks
+--
+Gustavo
+
+On 11/27/18 10:31 PM, Gustavo A. R. Silva wrote:
+> In preparation to enabling -Wimplicit-fallthrough, mark switch cases
+> where we are expecting to fall through.
 > 
-> Hi, I've been getting more into Kernel stuff lately and forged ahead
-> with some syzkaller bug finding.  I played with reducing it further
-> as you can see from the attached c code but am moving on and hope to
-> get better about this process moving forward as I'm still building
-> out my test systems/debugging tools.
+> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+> ---
+>   drivers/scsi/lpfc/lpfc_nvme.c | 1 +
+>   1 file changed, 1 insertion(+)
 > 
-> Attached is the report and C repro that still triggers on a fresh git
-> pull as of a few minutes ago, if you need anything else please let me
-> know.
-> Esme
+> diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
+> index ba831def9301..942fe58c433d 100644
+> --- a/drivers/scsi/lpfc/lpfc_nvme.c
+> +++ b/drivers/scsi/lpfc/lpfc_nvme.c
+> @@ -1115,6 +1115,7 @@ lpfc_nvme_io_cmd_wqe_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pwqeIn,
+>   					 lpfc_ncmd, nCmd,
+>   					 lpfc_ncmd->cur_iocbq.sli4_xritag,
+>   					 bf_get(lpfc_wcqe_c_xb, wcqe));
+> +			/* fall through */
+>   		default:
+>   out_err:
+>   			lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_IOERR,
 > 
-> Linux syzkaller 5.0.0-rc1+ #5 SMP Tue Jan 8 20:39:33 EST 2019 x86_64
-> GNU/Linux
-
-I'm not sure I'm reading this right, but it seems that a simple
-allocation inside block/scsi_ioctl.h
-
-	buffer = kzalloc(bytes, q->bounce_gfp | GFP_USER| __GFP_NOWARN);
-
-(where bytes is < 4k) caused a slub padding check failure on free. 
->From the internal details, the freeing entity seems to be KASAN as part
-of its quarantine reduction (albeit triggered by this kzalloc).  I'm
-not remotely familiar with what KASAN is doing, but it seems the memory
-corruption problem is somewhere within the KASAN tracking?
-
-I added linux-mm in case they can confirm this diagnosis or give me a
-pointer to what might be wrong in scsi.
-
-James
