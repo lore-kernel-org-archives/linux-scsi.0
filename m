@@ -1,31 +1,54 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] ibmvscsi: use GFP_ATOMIC with dma_alloc_coherent in
- map_sg_data
-Date: Thu, 10 Jan 2019 07:07:03 -0800
-Message-ID: <20190110150703.GA26696@infradead.org>
-References: <1547089136-20264-1-git-send-email-tyreld@linux.vnet.ibm.com>
+From: Alex Lemberg <Alex.Lemberg@wdc.com>
+Subject: Re: [PATCH] scsi: associate bio write hint with WRITE CDB
+Date: Thu, 10 Jan 2019 17:33:00 +0000
+Message-ID: <1547141575.2982.4.camel@alexl-VirtualBox>
+References: <20181226041504.66283-1-huangrandall@google.com>
+         <20190103075133.GA5141@infradead.org> <20190103094755.GA96532@google.com>
+         <e5bc96cd-1b48-3b7e-706f-4cbbd1a040a4@interlog.com>
+         <6152b478ea77dacf57eef6f758ba795f756cd3da.camel@redhat.com>
+         <yq1ef9t81fh.fsf@oracle.com> <20190104052251.GA205256@google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <stable-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1547089136-20264-1-git-send-email-tyreld@linux.vnet.ibm.com>
-Sender: stable-owner@vger.kernel.org
-To: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
-Cc: james.bottomley@hansenpartnership.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, brking@linux.vnet.ibm.com, stable@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190104052251.GA205256@google.com>
+Content-Language: en-US
+Content-ID: <FB221D84882AF042BE46CB56DE0D84C8@namprd04.prod.outlook.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "ihhuang@abmail.org" <ihhuang@abmail.org>
+Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "huangrandall@google.com" <huangrandall@google.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Jan 09, 2019 at 06:58:56PM -0800, Tyrel Datwyler wrote:
-> While mapping DMA for scatter list when a scsi command is queued the
-> existing call to dma_alloc_coherent() in our map_sg_data() function
-> passes zero for the gfp_flags parameter. We are most definitly in atomic
-> context at this point as queue_command() is called in softirq context
-> and further we have a spinlock holding the scsi host lock.
-> 
-> Fix this by passing GFP_ATOMIC to dma_alloc_coherent() to prevent any
-> sort of sleeping in atomic context deadlock.
-
-This is a pretty clear sign you should not be using dma_alloc_coherent
-to start with.  GFP_ATOMIC support in many of the implementations either
-doesn't work at all or is severly constrained.  Given that the
-descriptor is written by the OS and read by the hardware exactly once
-there is no point in having the coherent mapping to start with.
+SGkgUmFuZGFsbCwNCg0KT24gRnJpLCAyMDE5LTAxLTA0IGF0IDEzOjIyICswODAwLCBSYW5kYWxs
+IEh1YW5nIHdyb3RlOg0KPiBPbiBUaHUsIEphbiAwMywgMjAxOSBhdCAxMTo1NzozOFBNIC0wNTAw
+LCBNYXJ0aW4gSy4gUGV0ZXJzZW4gd3JvdGU6DQo+ID4gDQo+ID4gRXdhbiwNCj4gPiANCj4gPiA+
+IFNCQy01IHNheXMgdGhhdCBzdXBwb3J0IGZvciB0aGUgZ3JvdXBpbmcgZnVuY3Rpb24gaXMgaW5k
+aWNhdGVkIGJ5IHRoZQ0KPiA+ID4gR1JPVVBfU1VQIGJpdCBpbiB0aGUgRXh0ZW5kZWQgSW5xdWly
+eSBWUEQgcGFnZSAoODZoKS4gIEknbSBub3Qgc3VyZQ0KPiA+ID4gaG93IG1hbnkgZGV2aWNlcyBh
+Y3R1YWxseSBzdXBwb3J0IHRoYXQgcGFnZSB0aG91Z2guICBQcm9iYWJseSBtb3N0DQo+ID4gPiBk
+b24ndC4NCj4gPiANCj4gPiBTZXZlcmFsIGRldmljZXMgc3VwcG9ydCBpdCwgYWxiZWl0IGZvciB2
+YXJpb3VzIGRpZmZlcmVudCBwdXJwb3Nlcy4gSXQncw0KPiA+IG9uZSBvZiB0aGVzZSB3b25kZXJm
+dWwgZmVhdHVyZXMgd2hvc2UgaW50ZXJwcmV0YXRpb24gd2FzIGxlZnQgb3V0c2lkZQ0KPiA+IHRo
+ZSBzY29wZSBvZiB0aGUgc3BlYyBmb3IgYSBsb25nIHRpbWUuDQo+ID4gDQo+ID4gU28gZXZlbiB0
+aG91Z2ggd2UgYWJzb2x1dGVseSBhbmQgcG9zaXRpdmVseSBuZWVkIHRvIG1ha2Ugc2V0dGluZyBH
+Uk9VUA0KPiA+IE5VTUJFUiBjb25kaXRpb25hbCBvbiBHUk9VUF9TVVAgYmVpbmcgcmVwb3J0ZWQs
+IHdlIGFsc28gbmVlZCBhZGRpdGlvbmFsDQo+ID4gaW5mb3JtYXRpb24gZnJvbSB0aGUgc3RvcmFn
+ZSBhYm91dCBob3cgdGhlIGZpZWxkIHNob3VsZCBiZSBpbnRlcnByZXRlZC4NCj4gPiANCj4gPiBU
+aGUgb2ZmaWNpYWwgd2F5IHRvIHJlcG9ydCBoaW50aW5nIGlzIGZvciB0aGUgZGV2aWNlIHRvIGlt
+cGxlbWVudCB0aGUgSU8NCj4gPiBBZHZpY2UgSGludHMgR3JvdXBpbmcgbW9kZSBwYWdlLiBJIHdy
+b3RlIHNvbWUgY29kZSB0byBzdXBwb3J0IHRoYXQgYnV0DQo+ID4gbm8gdmVuZG9ycyB0aGF0IEkg
+a25vdyBvZiBlbmRlZCB1cCBhY3R1YWxseSBzaGlwcGluZyBhbiBpbXBsZW1lbnRhdGlvbi4NCj4g
+PiBBIGZldyBpbXBsZW1lbnRlZCBteSBvbGRlciBJL08gY2xhc3MgcHJvcG9zYWwgYnV0IGRpZG4n
+dCBzaGlwIHRoYXQNCj4gPiBlaXRoZXIgZGVzcGl0ZSByZWFsbHkgY29udmluY2luZyBwZXJmb3Jt
+YW5jZSByZXN1bHRzLg0KPiA+IA0KPiA+IElmIFJhbmRhbGwgaGFzIGFjY2VzcyB0byBhIGRldmlj
+ZSB3aGljaCBpbXBsZW1lbnRzIGhpbnRpbmcsIEknZCBsb3ZlIHRvDQo+ID4ga25vdyBtb3JlLg0K
+PiBJIGFtIHdvcmtpbmcgb24gQW5kcm9pZCBwaG9uZS4NCj4gVGhlIGlkZWEgaXMgdG8gZW5hYmxl
+IHdyaXRlIGhpbnQgZm9yIFR1cmJvIHdyaXRlIFVGUyBmZWF0dXJlLg0KPiBUdXJibyB3cml0ZSBm
+ZWF0dXJlIGluIFVGUyAzLnggaXMgdW5kZXIgZGlzY3Vzc2lvbiBpbiBKRURFQyBKQy02NC4gDQo+
+IFRoaXMgcGF0Y2ggaXMgdGhlIHVuZGVyLWx5aW5nIGZyYW1ld29yayBmb3Igc3VwcG9ydGluZyB0
+aGlzIGZlYXR1cmUuDQoNCkFzIGZhciBhcyBJIGtub3csIHRoZXJlIGFyZSBtb3JlIHRoYW4gb25l
+IFR1cmJvIFdyaXRlIGZlYXR1cmUNCnByb3Bvc2FscyBpbiBKRURFQywgd2hpY2ggYXJlIGN1cnJl
+bnRseSB1bmRlciBkaXNjdXNzaW9uLg0KRm9yIG5vdywgbm90IGFsbCBwcm9wb3NhbHMgYXJlIHVz
+aW5nIENEQiBieXRlcyBmb3IgZW5hYmxpbmcNClR1cmJvV3JpdGUuDQpTbywgbWF5YmUgbWFraW5n
+IHRoaXMgY2hhbmdlIGluIFNDU0kgaXMgc3RpbGwgdG9vIGVhcmx5Lg0KDQo+ID4gDQo+ID4gLS0g
+DQo+ID4gTWFydGluIEsuIFBldGVyc2VuCU9yYWNsZSBMaW51eCBFbmdpbmVlcmluZw0KDQo=
