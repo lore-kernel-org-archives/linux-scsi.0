@@ -1,43 +1,55 @@
-From: Avri Altman <Avri.Altman-Sjgp3cTcYWE@public.gmane.org>
-Subject: RE: [PATCH v1 1/1] scsi: ufs: Fix system suspend status
-Date: Thu, 10 Jan 2019 11:59:29 +0000
-Message-ID: <DM6PR04MB4923B04AB170A024F341AA31FC840@DM6PR04MB4923.namprd04.prod.outlook.com>
-References: <1546870774-19691-1-git-send-email-stanley.chu@mediatek.com>
- <1546870774-19691-3-git-send-email-stanley.chu@mediatek.com>
+From: John Garry <john.garry@huawei.com>
+Subject: [PATCH] scsi: hisi_sas: Set protection parameters prior to adding SCSI host
+Date: Thu, 10 Jan 2019 21:32:41 +0800
+Message-ID: <1547127161-213124-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-In-Reply-To: <1546870774-19691-3-git-send-email-stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-Content-Language: en-US
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-mediatek>,
- <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-mediatek/>
-List-Post: <mailto:linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-List-Help: <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-mediatek>,
- <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=subscribe>
-Sender: "Linux-mediatek" <linux-mediatek-bounces-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-Errors-To: linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
-To: "stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org" <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Cc: "matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "kuohong.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org" <kuohong.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, "linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, "peter.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org" <peter.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, "wsd_upstream-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org" <wsd_upstream-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linuxarm@huawei.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi,
-> 
-> hba->is_sys_suspended is set after successful system suspend but
-> not clear after successful system resume.
-> 
-> According to current behavior, hba->is_sys_suspended will not
-> be set if host is runtime-suspended but not system-suspended. Thus
-> we shall aligh the same policy: clear this flag even if host remains
-> runtime-suspended after ufshcd_system_resume is successfully returned.
-> 
-> Simply fix this flag to correct host status logs.
-> 
-> Signed-off-by: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-Reviewed-by: Avri Altman <avri.altman-Sjgp3cTcYWE@public.gmane.org>
+Currently we set the protection parameters after calling scsi_add_host()
+for v3 hw.
 
-This is already happening today for Qualcomm's vops,
-but you are right - it should happen anyway,
-regardless the platform's vendor specific resume callback.
+They should be set beforehand, so make this change.
+
+Appearantly this fixes our DIX issue (not mainline yet) also, but more
+testing required.
+
+Fixes: d6a9000b81be ("scsi: hisi_sas: Add support for DIF feature for v2 hw")
+Signed-off-by: John Garry <john.garry@huawei.com>
+
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index b780b52..18d1f2cb 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -2675,6 +2675,12 @@ static void debugfs_snapshot_restore_v3_hw(struct hisi_hba *hisi_hba)
+ 	if (hisi_sas_debugfs_enable)
+ 		hisi_sas_debugfs_init(hisi_hba);
+ 
++	if (hisi_hba->prot_mask) {
++		dev_info(dev, "Registering for DIF/DIX prot_mask=0x%x\n",
++			 prot_mask);
++		scsi_host_set_prot(hisi_hba->shost, prot_mask);
++	}
++
+ 	rc = scsi_add_host(shost, dev);
+ 	if (rc)
+ 		goto err_out_ha;
+@@ -2687,12 +2693,6 @@ static void debugfs_snapshot_restore_v3_hw(struct hisi_hba *hisi_hba)
+ 	if (rc)
+ 		goto err_out_register_ha;
+ 
+-	if (hisi_hba->prot_mask) {
+-		dev_info(dev, "Registering for DIF/DIX prot_mask=0x%x\n",
+-			 prot_mask);
+-		scsi_host_set_prot(hisi_hba->shost, prot_mask);
+-	}
+-
+ 	scsi_scan_host(shost);
+ 
+ 	return 0;
+-- 
+1.9.1
