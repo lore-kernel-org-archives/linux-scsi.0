@@ -1,18 +1,19 @@
 From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: Re: [PATCH 27/41] scsi: lpfc: lpfc_scsi: Mark expected switch
- fall-throughs
-Date: Thu, 10 Jan 2019 14:01:09 -0600
-Message-ID: <feef9be1-02e5-60cf-434e-f0a9659b6566@embeddedor.com>
+Subject: Re: [PATCH 07/41] scsi: be2iscsi: be_iscsi: Mark expected switch
+ fall-through
+Date: Thu, 10 Jan 2019 14:13:08 -0600
+Message-ID: <1b24ffa5-0553-b295-378b-1fed2b2c5dca@embeddedor.com>
 References: <cover.1543374820.git.gustavo@embeddedor.com>
- <4c7efa89883829e21a09e558139e5d8a0d94dee0.1543374820.git.gustavo@embeddedor.com>
+ <4da131a74bf4d88c49307ade507b48aee86b4714.1543374820.git.gustavo@embeddedor.com>
+ <bc99a534-bc6c-d093-eca2-a085bd1dfd82@embeddedor.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4c7efa89883829e21a09e558139e5d8a0d94dee0.1543374820.git.gustavo@embeddedor.com>
+In-Reply-To: <bc99a534-bc6c-d093-eca2-a085bd1dfd82@embeddedor.com>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>
+To: Subbu Seetharaman <subbu.seetharaman@broadcom.com>, Ketan Mukadam <ketan.mukadam@broadcom.com>, Jitendra Bhivare <jitendra.bhivare@broadcom.com>
 Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
@@ -26,56 +27,36 @@ Thanks
 --
 Gustavo
 
-On 11/27/18 10:32 PM, Gustavo A. R. Silva wrote:
-> In preparation to enabling -Wimplicit-fallthrough, mark switch cases
-> where we are expecting to fall through.
+On 12/19/18 9:37 AM, Gustavo A. R. Silva wrote:
+> Hi,
 > 
-> Notice that, in this particular case, I replaced "Drop thru" with
-> "fall through" annotations, which is what GCC is expecting to find.
+> Friendly ping:
 > 
-> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
-> ---
->   drivers/scsi/lpfc/lpfc_scsi.c | 8 ++++----
->   1 file changed, 4 insertions(+), 4 deletions(-)
+> Who can ack or review this patch, please?
 > 
-> diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-> index baed2b891efb..0eeed6c4c2ee 100644
-> --- a/drivers/scsi/lpfc/lpfc_scsi.c
-> +++ b/drivers/scsi/lpfc/lpfc_scsi.c
-> @@ -1427,7 +1427,7 @@ lpfc_bg_err_inject(struct lpfc_hba *phba, struct scsi_cmnd *sc,
->   
->   					break;
->   				}
-> -				/* Drop thru */
-> +				/* fall through */
->   			case SCSI_PROT_WRITE_INSERT:
->   				/*
->   				 * For WRITE_INSERT, force the error
-> @@ -1546,7 +1546,7 @@ lpfc_bg_err_inject(struct lpfc_hba *phba, struct scsi_cmnd *sc,
->   					rc = BG_ERR_TGT | BG_ERR_CHECK;
->   					break;
->   				}
-> -				/* Drop thru */
-> +				/* fall through */
->   			case SCSI_PROT_WRITE_INSERT:
->   				/*
->   				 * For WRITE_INSERT, force the
-> @@ -1628,7 +1628,7 @@ lpfc_bg_err_inject(struct lpfc_hba *phba, struct scsi_cmnd *sc,
->   			switch (op) {
->   			case SCSI_PROT_WRITE_PASS:
->   				rc = BG_ERR_CHECK;
-> -				/* Drop thru */
-> +				/* fall through */
->   
->   			case SCSI_PROT_WRITE_INSERT:
->   				/*
-> @@ -4115,7 +4115,7 @@ lpfc_scsi_cmd_iocb_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pIocbIn,
->   					lpfc_cmd->cur_iocbq.sli4_lxritag,
->   					0, 0);
->   			}
-> -		/* else: fall through */
-> +			/* fall through */
->   		default:
->   			cmd->result = DID_ERROR << 16;
->   			break;
+> Thanks
+> -- 
+> Gustavo
 > 
+> On 11/27/18 10:26 PM, Gustavo A. R. Silva wrote:
+>> In preparation to enabling -Wimplicit-fallthrough, mark switch cases
+>> where we are expecting to fall through.
+>>
+>> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+>> ---
+>>   drivers/scsi/be2iscsi/be_iscsi.c | 1 +
+>>   1 file changed, 1 insertion(+)
+>>
+>> diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
+>> index 96b96e2ab91a..ed1bd369baa0 100644
+>> --- a/drivers/scsi/be2iscsi/be_iscsi.c
+>> +++ b/drivers/scsi/be2iscsi/be_iscsi.c
+>> @@ -679,6 +679,7 @@ int beiscsi_set_param(struct iscsi_cls_conn *cls_conn,
+>>       case ISCSI_PARAM_MAX_XMIT_DLENGTH:
+>>           if (conn->max_xmit_dlength > 65536)
+>>               conn->max_xmit_dlength = 65536;
+>> +        /* fall through */
+>>       default:
+>>           return 0;
+>>       }
+>>
