@@ -1,85 +1,50 @@
-From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: Re: [PATCH 12/41] scsi: bfa: bfa_ioc: Mark expected switch
- fall-throughs
-Date: Thu, 10 Jan 2019 14:11:26 -0600
-Message-ID: <16aade69-ac0e-7d8c-0ffb-35564ee334cd@embeddedor.com>
-References: <cover.1543374820.git.gustavo@embeddedor.com>
- <520fb16cd3630d612c5768989e2ffa90f1a73f97.1543374820.git.gustavo@embeddedor.com>
- <b5f0c0bf-f671-65b0-dfed-39cefcd3fde1@embeddedor.com>
+From: Qian Cai <cai@lca.pw>
+Subject: Re: PROBLEM: syzkaller found / pool corruption-overwrite / page in
+ user-area or NULL
+Date: Thu, 10 Jan 2019 15:39:51 -0500
+Message-ID: <1547152791.6911.6.camel@lca.pw>
+References: <t78EEfgpy3uIwPUvqvmuQEYEWKG9avWzjUD3EyR93Qaf_tfx1gqt4XplrqMgdxR1U9SsrVdA7G9XeUZacgUin0n6lBzoxJHVJ9Ko0yzzrxI=@protonmail.ch>
+         <1547150339.2814.9.camel@linux.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <b5f0c0bf-f671-65b0-dfed-39cefcd3fde1@embeddedor.com>
-Content-Language: en-US
+In-Reply-To: <1547150339.2814.9.camel@linux.ibm.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: James Bottomley <jejb@linux.ibm.com>, Esme <esploit@protonmail.ch>, "dgilbert@interlog.com" <dgilbert@interlog.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-mm@kvack.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi,
-
-Friendly ping (second one):
-
-Who can ack/review/take this patch, please?
-
-Thanks
---
-Gustavo
-
-On 12/19/18 9:39 AM, Gustavo A. R. Silva wrote:
-> Hi,
+On Thu, 2019-01-10 at 11:58 -0800, James Bottomley wrote:
+> On Thu, 2019-01-10 at 19:12 +0000, Esme wrote:
+> > Sorry for the resend some mail servers rejected the mime type.
+> > 
+> > Hi, I've been getting more into Kernel stuff lately and forged ahead
+> > with some syzkaller bug finding.  I played with reducing it further
+> > as you can see from the attached c code but am moving on and hope to
+> > get better about this process moving forward as I'm still building
+> > out my test systems/debugging tools.
+> > 
+> > Attached is the report and C repro that still triggers on a fresh git
+> > pull as of a few minutes ago, if you need anything else please let me
+> > know.
+> > Esme
+> > 
+> > Linux syzkaller 5.0.0-rc1+ #5 SMP Tue Jan 8 20:39:33 EST 2019 x86_64
+> > GNU/Linux
 > 
-> Friendly ping:
+> I'm not sure I'm reading this right, but it seems that a simple
+> allocation inside block/scsi_ioctl.h
 > 
-> Who can ack or review this patch, please?
+> 	buffer = kzalloc(bytes, q->bounce_gfp | GFP_USER| __GFP_NOWARN);
 > 
-> Thanks
-> -- 
-> Gustavo
+> (where bytes is < 4k) caused a slub padding check failure on free. 
+> From the internal details, the freeing entity seems to be KASAN as part
+> of its quarantine reduction (albeit triggered by this kzalloc).  I'm
+> not remotely familiar with what KASAN is doing, but it seems the memory
+> corruption problem is somewhere within the KASAN tracking?
 > 
-> On 11/27/18 10:27 PM, Gustavo A. R. Silva wrote:
->> In preparation to enabling -Wimplicit-fallthrough, mark switch cases
->> where we are expecting to fall through.
->>
->> Notice that, in this particular case, I replaced "!!! fall through !!!"
->> comment with "fall through" annotations, which is what GCC is expecting
->> to find.
->>
->> Addresses-Coverity-ID: 146155 ("Missing break in switch")
->> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
->> ---
->>   drivers/scsi/bfa/bfa_ioc.c | 9 +++------
->>   1 file changed, 3 insertions(+), 6 deletions(-)
->>
->> diff --git a/drivers/scsi/bfa/bfa_ioc.c b/drivers/scsi/bfa/bfa_ioc.c
->> index 16d3aeb0e572..32b24e51cce6 100644
->> --- a/drivers/scsi/bfa/bfa_ioc.c
->> +++ b/drivers/scsi/bfa/bfa_ioc.c
->> @@ -978,9 +978,7 @@ bfa_iocpf_sm_enabling(struct bfa_iocpf_s *iocpf, enum iocpf_event event)
->>       case IOCPF_E_INITFAIL:
->>           bfa_iocpf_timer_stop(ioc);
->> -        /*
->> -         * !!! fall through !!!
->> -         */
->> +        /* fall through */
->>       case IOCPF_E_TIMEOUT:
->>           writel(1, ioc->ioc_regs.ioc_sem_reg);
->> @@ -1056,9 +1054,7 @@ bfa_iocpf_sm_disabling(struct bfa_iocpf_s *iocpf, enum iocpf_event event)
->>       case IOCPF_E_FAIL:
->>           bfa_iocpf_timer_stop(ioc);
->> -        /*
->> -         * !!! fall through !!!
->> -         */
->> +        /* fall through */
->>       case IOCPF_E_TIMEOUT:
->>           bfa_ioc_set_cur_ioc_fwstate(ioc, BFI_IOC_FAIL);
->> @@ -6007,6 +6003,7 @@ bfa_dconf_sm_final_sync(struct bfa_dconf_mod_s *dconf,
->>       case BFA_DCONF_SM_IOCDISABLE:
->>       case BFA_DCONF_SM_FLASH_COMP:
->>           bfa_timer_stop(&dconf->timer);
->> +        /* fall through */
->>       case BFA_DCONF_SM_TIMEOUT:
->>           bfa_sm_set_state(dconf, bfa_dconf_sm_uninit);
->>           bfa_fsm_send_event(&dconf->bfa->iocfc, IOCFC_E_DCONF_DONE);
->>
+> I added linux-mm in case they can confirm this diagnosis or give me a
+> pointer to what might be wrong in scsi.
+> 
+
+Did you enable page_poison with PAGE_POISONING_ZERO=y ?
