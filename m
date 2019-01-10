@@ -1,18 +1,20 @@
 From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: Re: [PATCH 16/41] scsi: imm: mark expected switch fall-throughs
-Date: Thu, 10 Jan 2019 14:07:13 -0600
-Message-ID: <bb9000e6-837f-6978-9b09-02dc592ef5f4@embeddedor.com>
+Subject: Re: [PATCH 14/41] scsi: esas2r: esas2r_init: mark expected switch
+ fall-throughs
+Date: Thu, 10 Jan 2019 14:08:56 -0600
+Message-ID: <3751e0eb-e57b-9aed-c23a-f593b780605b@embeddedor.com>
 References: <cover.1543374820.git.gustavo@embeddedor.com>
- <42e3f9f751b662b7f0e4e763aa880bd752511c60.1543374820.git.gustavo@embeddedor.com>
+ <eb98d6f510cd93e45d7832837acd4e5811f3d20e.1543374820.git.gustavo@embeddedor.com>
+ <b7f0fbf6-a793-c22c-cc3e-e35706d722f9@embeddedor.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <42e3f9f751b662b7f0e4e763aa880bd752511c60.1543374820.git.gustavo@embeddedor.com>
+In-Reply-To: <b7f0fbf6-a793-c22c-cc3e-e35706d722f9@embeddedor.com>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+To: Bradley Grove <linuxdrivers@attotech.com>
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 Hi,
@@ -21,118 +23,47 @@ Friendly ping (second one):
 
 Who can ack/review/take this patch, please?
 
-Martin: apparently, the only maintainers for this
-driver are you and James.
-
 Thanks
 --
 Gustavo
 
-On 11/27/18 10:29 PM, Gustavo A. R. Silva wrote:
-> In preparation to enabling -Wimplicit-fallthrough, mark switch cases
-> where we are expecting to fall through.
+On 12/19/18 9:39 AM, Gustavo A. R. Silva wrote:
+> Hi,
 > 
-> Notice that, in this particular case, I placed all the "Phase N - ..."
-> comments on the same line as its corresponding switch case. The same
-> way in which similar comments appear in drivers/scsi/ppa.c. This makes
-> it possible to place the "fall through" annotations at the bottom of
-> each switch case, which is what GCC is expecting to find.
+> Friendly ping:
 > 
-> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
-> ---
->   drivers/scsi/imm.c | 33 +++++++++++++++++----------------
->   1 file changed, 17 insertions(+), 16 deletions(-)
+> Who can ack or review this patch, please?
 > 
-> diff --git a/drivers/scsi/imm.c b/drivers/scsi/imm.c
-> index 8c6627bc8a39..629e0bc70d3e 100644
-> --- a/drivers/scsi/imm.c
-> +++ b/drivers/scsi/imm.c
-> @@ -796,21 +796,21 @@ static int imm_engine(imm_struct *dev, struct scsi_cmnd *cmd)
->   			return 0;
->   		}
->   		return 1;	/* wait until imm_wakeup claims parport */
-> -		/* Phase 1 - Connected */
-> -	case 1:
-> +
-> +	case 1:		/* Phase 1 - Connected */
->   		imm_connect(dev, CONNECT_EPP_MAYBE);
->   		cmd->SCp.phase++;
-> +		/* fall through */
->   
-> -		/* Phase 2 - We are now talking to the scsi bus */
-> -	case 2:
-> +	case 2:		/* Phase 2 - We are now talking to the scsi bus */
->   		if (!imm_select(dev, scmd_id(cmd))) {
->   			imm_fail(dev, DID_NO_CONNECT);
->   			return 0;
->   		}
->   		cmd->SCp.phase++;
-> +		/* fall through */
->   
-> -		/* Phase 3 - Ready to accept a command */
-> -	case 3:
-> +	case 3:		/* Phase 3 - Ready to accept a command */
->   		w_ctr(ppb, 0x0c);
->   		if (!(r_str(ppb) & 0x80))
->   			return 1;
-> @@ -818,9 +818,9 @@ static int imm_engine(imm_struct *dev, struct scsi_cmnd *cmd)
->   		if (!imm_send_command(cmd))
->   			return 0;
->   		cmd->SCp.phase++;
-> +		/* fall through */
->   
-> -		/* Phase 4 - Setup scatter/gather buffers */
-> -	case 4:
-> +	case 4:		/* Phase 4 - Setup scatter/gather buffers */
->   		if (scsi_bufflen(cmd)) {
->   			cmd->SCp.buffer = scsi_sglist(cmd);
->   			cmd->SCp.this_residual = cmd->SCp.buffer->length;
-> @@ -834,8 +834,9 @@ static int imm_engine(imm_struct *dev, struct scsi_cmnd *cmd)
->   		cmd->SCp.phase++;
->   		if (cmd->SCp.this_residual & 0x01)
->   			cmd->SCp.this_residual++;
-> -		/* Phase 5 - Pre-Data transfer stage */
-> -	case 5:
-> +		/* fall through */
-> +
-> +	case 5:		/* Phase 5 - Pre-Data transfer stage */
->   		/* Spin lock for BUSY */
->   		w_ctr(ppb, 0x0c);
->   		if (!(r_str(ppb) & 0x80))
-> @@ -850,9 +851,9 @@ static int imm_engine(imm_struct *dev, struct scsi_cmnd *cmd)
->   			if (imm_negotiate(dev))
->   				return 0;
->   		cmd->SCp.phase++;
-> +		/* fall through */
->   
-> -		/* Phase 6 - Data transfer stage */
-> -	case 6:
-> +	case 6:		/* Phase 6 - Data transfer stage */
->   		/* Spin lock for BUSY */
->   		w_ctr(ppb, 0x0c);
->   		if (!(r_str(ppb) & 0x80))
-> @@ -866,9 +867,9 @@ static int imm_engine(imm_struct *dev, struct scsi_cmnd *cmd)
->   				return 1;
->   		}
->   		cmd->SCp.phase++;
-> +		/* fall through */
->   
-> -		/* Phase 7 - Post data transfer stage */
-> -	case 7:
-> +	case 7:		/* Phase 7 - Post data transfer stage */
->   		if ((dev->dp) && (dev->rd)) {
->   			if ((dev->mode == IMM_NIBBLE) || (dev->mode == IMM_PS2)) {
->   				w_ctr(ppb, 0x4);
-> @@ -878,9 +879,9 @@ static int imm_engine(imm_struct *dev, struct scsi_cmnd *cmd)
->   			}
->   		}
->   		cmd->SCp.phase++;
-> +		/* fall through */
->   
-> -		/* Phase 8 - Read status/message */
-> -	case 8:
-> +	case 8:		/* Phase 8 - Read status/message */
->   		/* Check for data overrun */
->   		if (imm_wait(dev) != (unsigned char) 0xb8) {
->   			imm_fail(dev, DID_ERROR);
+> Thanks
+> -- 
+> Gustavo
 > 
+> On 11/27/18 10:28 PM, Gustavo A. R. Silva wrote:
+>> In preparation to enabling -Wimplicit-fallthrough, mark switch cases
+>> where we are expecting to fall through.
+>>
+>> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+>> ---
+>>   drivers/scsi/esas2r/esas2r_init.c | 3 ++-
+>>   1 file changed, 2 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/scsi/esas2r/esas2r_init.c b/drivers/scsi/esas2r/esas2r_init.c
+>> index 46b2c83ba21f..950cd92df2ff 100644
+>> --- a/drivers/scsi/esas2r/esas2r_init.c
+>> +++ b/drivers/scsi/esas2r/esas2r_init.c
+>> @@ -1241,6 +1241,7 @@ static bool esas2r_format_init_msg(struct esas2r_adapter *a,
+>>               a->init_msg = ESAS2R_INIT_MSG_GET_INIT;
+>>               break;
+>>           }
+>> +        /* fall through */
+>>       case ESAS2R_INIT_MSG_GET_INIT:
+>>           if (msg == ESAS2R_INIT_MSG_GET_INIT) {
+>> @@ -1254,7 +1255,7 @@ static bool esas2r_format_init_msg(struct esas2r_adapter *a,
+>>                   esas2r_hdebug("FAILED");
+>>               }
+>>           }
+>> -    /* fall through */
+>> +        /* fall through */
+>>       default:
+>>           rq->req_stat = RS_SUCCESS;
+>>
