@@ -1,8 +1,8 @@
 From: Qian Cai <cai@lca.pw>
 Subject: Re: PROBLEM: syzkaller found / pool corruption-overwrite / page in
  user-area or NULL
-Date: Thu, 10 Jan 2019 15:39:51 -0500
-Message-ID: <1547152791.6911.6.camel@lca.pw>
+Date: Thu, 10 Jan 2019 15:44:34 -0500
+Message-ID: <1547153074.6911.8.camel@lca.pw>
 References: <t78EEfgpy3uIwPUvqvmuQEYEWKG9avWzjUD3EyR93Qaf_tfx1gqt4XplrqMgdxR1U9SsrVdA7G9XeUZacgUin0n6lBzoxJHVJ9Ko0yzzrxI=@protonmail.ch>
          <1547150339.2814.9.camel@linux.ibm.com>
 Mime-Version: 1.0
@@ -47,4 +47,4 @@ On Thu, 2019-01-10 at 11:58 -0800, James Bottomley wrote:
 > pointer to what might be wrong in scsi.
 > 
 
-Did you enable page_poison with PAGE_POISONING_ZERO=y ?
+Well, need your .config and /proc/cmdline then.
