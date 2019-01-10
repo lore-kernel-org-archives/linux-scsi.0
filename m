@@ -1,39 +1,120 @@
-From: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
-Subject: Re: [PATCH] ibmvscsi: use GFP_ATOMIC with dma_alloc_coherent in
- map_sg_data
-Date: Thu, 10 Jan 2019 12:11:53 -0800
-Message-ID: <1214b6b5-92f2-7789-7530-36a0d16323c5@linux.vnet.ibm.com>
-References: <1547089136-20264-1-git-send-email-tyreld@linux.vnet.ibm.com>
- <20190110150703.GA26696@infradead.org>
+From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Subject: Re: [PATCH 11/41] scsi: bfa: bfa_fcs_rport: Mark expected switch
+ fall-throughs
+Date: Thu, 10 Jan 2019 14:12:07 -0600
+Message-ID: <b20da67e-578a-341e-bb7c-d79fe096b573@embeddedor.com>
+References: <cover.1543374820.git.gustavo@embeddedor.com>
+ <c2a6667094f80fd7f72c887b2e7844b6341ce961.1543374820.git.gustavo@embeddedor.com>
+ <d81468df-1de5-8aaf-9c7b-ce490a358bea@embeddedor.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20190110150703.GA26696@infradead.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <d81468df-1de5-8aaf-9c7b-ce490a358bea@embeddedor.com>
 Content-Language: en-US
-Sender: stable-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: james.bottomley@hansenpartnership.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, brking@linux.vnet.ibm.com, stable@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 01/10/2019 07:07 AM, Christoph Hellwig wrote:
-> On Wed, Jan 09, 2019 at 06:58:56PM -0800, Tyrel Datwyler wrote:
->> While mapping DMA for scatter list when a scsi command is queued the
->> existing call to dma_alloc_coherent() in our map_sg_data() function
->> passes zero for the gfp_flags parameter. We are most definitly in atomic
->> context at this point as queue_command() is called in softirq context
->> and further we have a spinlock holding the scsi host lock.
+Hi,
+
+Friendly ping (second one):
+
+Who can ack/review/take this patch, please?
+
+Thanks
+--
+Gustavo
+
+On 12/19/18 9:39 AM, Gustavo A. R. Silva wrote:
+> Hi,
+> 
+> Friendly ping:
+> 
+> Who can ack or review this patch, please?
+> 
+> Thanks
+> -- 
+> Gustavo
+> 
+> On 11/27/18 10:27 PM, Gustavo A. R. Silva wrote:
+>> In preparation to enabling -Wimplicit-fallthrough, mark switch cases
+>> where we are expecting to fall through.
 >>
->> Fix this by passing GFP_ATOMIC to dma_alloc_coherent() to prevent any
->> sort of sleeping in atomic context deadlock.
-> 
-> This is a pretty clear sign you should not be using dma_alloc_coherent
-> to start with.  GFP_ATOMIC support in many of the implementations either
-> doesn't work at all or is severly constrained.  Given that the
-> descriptor is written by the OS and read by the hardware exactly once
-> there is no point in having the coherent mapping to start with.
-> 
-
-This allocation isn't a single use allocation. The driver is just lazy about allocating our ext_list area for large SG lists (ie. SG_ALL). When the driver was first written it only supported up to 10 indirect SRP buffers. James Bottemley added the large SG support back in 2005 with the commit referenced here in the fixes tag "4dddbc26c389". We only allocate the ext_list when we come across a SG list requiring more than 10 indirect buffers. Once allocated we will reuse if already allocated.
-
--Tyrel
+>> Notice that I replaced "!! fall through !!" and "!!! fall through !!!"
+>> comments with "fall through" annotations, which is what GCC is
+>> expecting to find.
+>>
+>> Addresses-Coverity-ID: 744899 ("Missing break in switch")
+>> Addresses-Coverity-ID: 744900 ("Missing break in switch")
+>> Addresses-Coverity-ID: 744901 ("Missing break in switch")
+>> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+>> ---
+>>   drivers/scsi/bfa/bfa_fcs_rport.c | 19 +++++++------------
+>>   1 file changed, 7 insertions(+), 12 deletions(-)
+>>
+>> diff --git a/drivers/scsi/bfa/bfa_fcs_rport.c b/drivers/scsi/bfa/bfa_fcs_rport.c
+>> index de50349a39ce..1e400f2aaece 100644
+>> --- a/drivers/scsi/bfa/bfa_fcs_rport.c
+>> +++ b/drivers/scsi/bfa/bfa_fcs_rport.c
+>> @@ -427,17 +427,13 @@ bfa_fcs_rport_sm_plogi(struct bfa_fcs_rport_s *rport, enum rport_event event)
+>>       case RPSM_EVENT_LOGO_RCVD:
+>>           bfa_fcs_rport_send_logo_acc(rport);
+>> -        /*
+>> -         * !! fall through !!
+>> -         */
+>> +        /* fall through */
+>>       case RPSM_EVENT_PRLO_RCVD:
+>>           if (rport->prlo == BFA_TRUE)
+>>               bfa_fcs_rport_send_prlo_acc(rport);
+>>           bfa_fcxp_discard(rport->fcxp);
+>> -        /*
+>> -         * !! fall through !!
+>> -         */
+>> +        /* fall through */
+>>       case RPSM_EVENT_FAILED:
+>>           if (rport->plogi_retries < BFA_FCS_RPORT_MAX_RETRIES) {
+>>               rport->plogi_retries++;
+>> @@ -868,9 +864,7 @@ bfa_fcs_rport_sm_adisc_online(struct bfa_fcs_rport_s *rport,
+>>            * At least go offline when a PLOGI is received.
+>>            */
+>>           bfa_fcxp_discard(rport->fcxp);
+>> -        /*
+>> -         * !!! fall through !!!
+>> -         */
+>> +        /* fall through */
+>>       case RPSM_EVENT_FAILED:
+>>       case RPSM_EVENT_ADDRESS_CHANGE:
+>> @@ -1056,6 +1050,7 @@ bfa_fcs_rport_sm_fc4_logosend(struct bfa_fcs_rport_s *rport,
+>>       case RPSM_EVENT_LOGO_RCVD:
+>>           bfa_fcs_rport_send_logo_acc(rport);
+>> +        /* fall through */
+>>       case RPSM_EVENT_PRLO_RCVD:
+>>           if (rport->prlo == BFA_TRUE)
+>>               bfa_fcs_rport_send_prlo_acc(rport);
+>> @@ -1144,9 +1139,7 @@ bfa_fcs_rport_sm_hcb_offline(struct bfa_fcs_rport_s *rport,
+>>               bfa_fcs_rport_send_plogiacc(rport, NULL);
+>>               break;
+>>           }
+>> -        /*
+>> -         * !! fall through !!
+>> -         */
+>> +        /* fall through */
+>>       case RPSM_EVENT_ADDRESS_CHANGE:
+>>           if (!bfa_fcs_lport_is_online(rport->port)) {
+>> @@ -1303,6 +1296,7 @@ bfa_fcs_rport_sm_hcb_logosend(struct bfa_fcs_rport_s *rport,
+>>       case RPSM_EVENT_LOGO_RCVD:
+>>           bfa_fcs_rport_send_logo_acc(rport);
+>> +        /* fall through */
+>>       case RPSM_EVENT_PRLO_RCVD:
+>>           if (rport->prlo == BFA_TRUE)
+>>               bfa_fcs_rport_send_prlo_acc(rport);
+>> @@ -1346,6 +1340,7 @@ bfa_fcs_rport_sm_logo_sending(struct bfa_fcs_rport_s *rport,
+>>       case RPSM_EVENT_LOGO_RCVD:
+>>           bfa_fcs_rport_send_logo_acc(rport);
+>> +        /* fall through */
+>>       case RPSM_EVENT_PRLO_RCVD:
+>>           if (rport->prlo == BFA_TRUE)
+>>               bfa_fcs_rport_send_prlo_acc(rport);
+>>
