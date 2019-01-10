@@ -1,41 +1,47 @@
 From: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
-Subject: [PATCH] ibmvscsi: use GFP_ATOMIC with dma_alloc_coherent in map_sg_data
-Date: Wed,  9 Jan 2019 18:58:56 -0800
-Message-ID: <1547089136-20264-1-git-send-email-tyreld@linux.vnet.ibm.com>
-Return-path: <stable-owner@vger.kernel.org>
-Sender: stable-owner@vger.kernel.org
+Subject: [PATCH] ibmvscsi: use GFP_KERNEL with dma_alloc_coherent in
+ initialize_event_pool
+Date: Wed,  9 Jan 2019 18:59:09 -0800
+Message-ID: <1547089149-20577-1-git-send-email-tyreld@linux.vnet.ibm.com>
+Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+Sender: "Linuxppc-dev"
+ <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
 To: james.bottomley@hansenpartnership.com
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, brking@linux.vnet.ibm.com, Tyrel Datwyler <tyreld@linux.vnet.ibm.com>, stable@vger.kernel.org
+Cc: brking@linux.vnet.ibm.com, linuxppc-dev@lists.ozlabs.org, linux-scsi@vger.kernel.org, martin.petersen@oracle.com, Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-While mapping DMA for scatter list when a scsi command is queued the
-existing call to dma_alloc_coherent() in our map_sg_data() function
-passes zero for the gfp_flags parameter. We are most definitly in atomic
-context at this point as queue_command() is called in softirq context
-and further we have a spinlock holding the scsi host lock.
+During driver probe we allocate a dma region for our event pool.
+Currently, zero is passed for the gfp_flags parameter. Driver probe
+callbacks run in process context and we hold no locks so we can sleep
+here if necessary.
 
-Fix this by passing GFP_ATOMIC to dma_alloc_coherent() to prevent any
-sort of sleeping in atomic context deadlock.
+Fix by passing GFP_KERNEL explicitly to dma_alloc_coherent().
 
-Fixes: 4dddbc26c389 ("[SCSI] ibmvscsi: handle large scatter/gather lists")
-Cc: stable@vger.kernel.org
 Signed-off-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
 ---
  drivers/scsi/ibmvscsi/ibmvscsi.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
-index 1135e74..cb8535e 100644
+index cb8535e..10d5e77 100644
 --- a/drivers/scsi/ibmvscsi/ibmvscsi.c
 +++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
-@@ -731,7 +731,7 @@ static int map_sg_data(struct scsi_cmnd *cmd,
- 		evt_struct->ext_list = (struct srp_direct_buf *)
- 			dma_alloc_coherent(dev,
- 					   SG_ALL * sizeof(struct srp_direct_buf),
--					   &evt_struct->ext_list_token, 0);
-+					   &evt_struct->ext_list_token, GFP_ATOMIC);
- 		if (!evt_struct->ext_list) {
- 			if (!firmware_has_feature(FW_FEATURE_CMO))
- 				sdev_printk(KERN_ERR, cmd->device,
+@@ -465,7 +465,7 @@ static int initialize_event_pool(struct event_pool *pool,
+ 	pool->iu_storage =
+ 	    dma_alloc_coherent(hostdata->dev,
+ 			       pool->size * sizeof(*pool->iu_storage),
+-			       &pool->iu_token, 0);
++			       &pool->iu_token, GFP_KERNEL);
+ 	if (!pool->iu_storage) {
+ 		kfree(pool->events);
+ 		return -ENOMEM;
 -- 
 1.8.3.1
