@@ -1,71 +1,48 @@
-From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: Re: [PATCH 33/41] scsi: osd: osd_initiator: mark expected switch
- fall-throughs
-Date: Thu, 10 Jan 2019 13:58:33 -0600
-Message-ID: <99e33184-09ca-4b74-cdab-c87160aac255@embeddedor.com>
-References: <cover.1543374820.git.gustavo@embeddedor.com>
- <09026c2661bf3c4bcf41dbb265cf1dae2c3487fd.1543374820.git.gustavo@embeddedor.com>
- <ad100db6-ea99-e537-333b-8018ae6a05f8@embeddedor.com>
+From: James Bottomley <jejb@linux.ibm.com>
+Subject: Re: PROBLEM: syzkaller found / pool corruption-overwrite / page in
+ user-area or NULL
+Date: Thu, 10 Jan 2019 11:58:59 -0800
+Message-ID: <1547150339.2814.9.camel@linux.ibm.com>
+References: <t78EEfgpy3uIwPUvqvmuQEYEWKG9avWzjUD3EyR93Qaf_tfx1gqt4XplrqMgdxR1U9SsrVdA7G9XeUZacgUin0n6lBzoxJHVJ9Ko0yzzrxI=@protonmail.ch>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <ad100db6-ea99-e537-333b-8018ae6a05f8@embeddedor.com>
-Content-Language: en-US
+In-Reply-To: <t78EEfgpy3uIwPUvqvmuQEYEWKG9avWzjUD3EyR93Qaf_tfx1gqt4XplrqMgdxR1U9SsrVdA7G9XeUZacgUin0n6lBzoxJHVJ9Ko0yzzrxI=@protonmail.ch>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Boaz Harrosh <ooo@electrozaur.com>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Esme <esploit@protonmail.ch>, "dgilbert@interlog.com" <dgilbert@interlog.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-mm@kvack.org
+Cc: "security@kernel.org" <security@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi,
-
-Friendly ping (second one):
-
-Who can ack/review/take this patch, please?
-
-Thanks
---
-Gustavo
-
-On 12/19/18 6:07 PM, Gustavo A. R. Silva wrote:
-> Hi,
+On Thu, 2019-01-10 at 19:12 +0000, Esme wrote:
+> Sorry for the resend some mail servers rejected the mime type.
 > 
-> Friendly ping:
+> Hi, I've been getting more into Kernel stuff lately and forged ahead
+> with some syzkaller bug finding.  I played with reducing it further
+> as you can see from the attached c code but am moving on and hope to
+> get better about this process moving forward as I'm still building
+> out my test systems/debugging tools.
 > 
-> Who can ack or review this patch, please?
+> Attached is the report and C repro that still triggers on a fresh git
+> pull as of a few minutes ago, if you need anything else please let me
+> know.
+> Esme
 > 
-> Thanks
-> -- 
-> Gustavo
-> 
-> On 11/27/18 10:32 PM, Gustavo A. R. Silva wrote:
->> In preparation to enabling -Wimplicit-fallthrough, mark switch cases
->> where we are expecting to fall through.
->>
->> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
->> ---
->>   drivers/scsi/osd/osd_initiator.c | 3 ++-
->>   1 file changed, 2 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/scsi/osd/osd_initiator.c b/drivers/scsi/osd/osd_initiator.c
->> index 60cf7c5eb880..cb26f26d5ec1 100644
->> --- a/drivers/scsi/osd/osd_initiator.c
->> +++ b/drivers/scsi/osd/osd_initiator.c
->> @@ -1849,6 +1849,7 @@ int osd_req_decode_sense_full(struct osd_request *or,
->>                       32, 1, dump, sizeof(dump), true);
->>               OSD_SENSE_PRINT2("response_integrity [%s]\n", dump);
->>           }
->> +        /* fall through */
->>           case osd_sense_attribute_identification:
->>           {
->>               struct osd_sense_attributes_data_descriptor
->> @@ -1879,7 +1880,7 @@ int osd_req_decode_sense_full(struct osd_request *or,
->>                       attr_page, attr_id);
->>               }
->>           }
->> -        /*These are not legal for OSD*/
->> +        /* fall through - These are not legal for OSD */
->>           case scsi_sense_field_replaceable_unit:
->>               OSD_SENSE_PRINT2("scsi_sense_field_replaceable_unit\n");
->>               break;
->>
+> Linux syzkaller 5.0.0-rc1+ #5 SMP Tue Jan 8 20:39:33 EST 2019 x86_64
+> GNU/Linux
+
+I'm not sure I'm reading this right, but it seems that a simple
+allocation inside block/scsi_ioctl.h
+
+	buffer = kzalloc(bytes, q->bounce_gfp | GFP_USER| __GFP_NOWARN);
+
+(where bytes is < 4k) caused a slub padding check failure on free. 
+>From the internal details, the freeing entity seems to be KASAN as part
+of its quarantine reduction (albeit triggered by this kzalloc).  I'm
+not remotely familiar with what KASAN is doing, but it seems the memory
+corruption problem is somewhere within the KASAN tracking?
+
+I added linux-mm in case they can confirm this diagnosis or give me a
+pointer to what might be wrong in scsi.
+
+James
