@@ -1,15 +1,15 @@
 From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: Re: [PATCH 23/41] scsi: lpfc: lpfc_els: Mark expected switch
+Subject: Re: [PATCH 22/41] scsi: lpfc: lpfc_ct: Mark expected switch
  fall-throughs
-Date: Thu, 10 Jan 2019 14:03:25 -0600
-Message-ID: <39c21b2b-7f38-1da3-1f67-93e2ae5d9339@embeddedor.com>
+Date: Thu, 10 Jan 2019 14:03:37 -0600
+Message-ID: <3f4cadf2-7251-96e7-0626-4c91fb363b34@embeddedor.com>
 References: <cover.1543374820.git.gustavo@embeddedor.com>
- <b62df6563753e04e09d533154b73a3ed5c694418.1543374820.git.gustavo@embeddedor.com>
+ <4e80e3ae7cd0f0c54b45530a3772af4f606b0c8e.1543374820.git.gustavo@embeddedor.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <b62df6563753e04e09d533154b73a3ed5c694418.1543374820.git.gustavo@embeddedor.com>
+In-Reply-To: <4e80e3ae7cd0f0c54b45530a3772af4f606b0c8e.1543374820.git.gustavo@embeddedor.com>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 To: James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>
@@ -30,22 +30,29 @@ On 11/27/18 10:31 PM, Gustavo A. R. Silva wrote:
 > In preparation to enabling -Wimplicit-fallthrough, mark switch cases
 > where we are expecting to fall through.
 > 
-> Addresses-Coverity-ID: 114978 ("Missing break in switch")
 > Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 > ---
->   drivers/scsi/lpfc/lpfc_els.c | 1 +
->   1 file changed, 1 insertion(+)
+>   drivers/scsi/lpfc/lpfc_ct.c | 2 ++
+>   1 file changed, 2 insertions(+)
 > 
-> diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-> index 5c34bfa624ef..1f20c35e0f84 100644
-> --- a/drivers/scsi/lpfc/lpfc_els.c
-> +++ b/drivers/scsi/lpfc/lpfc_els.c
-> @@ -8649,6 +8649,7 @@ lpfc_cmpl_reg_new_vport(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
->   				lpfc_nlp_put(ndlp);
->   				return;
->   			}
-> +			/* fall through */
->   
->   		default:
->   			/* Try to recover from this error */
+> diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
+> index 6305ffeba7ea..b2b7fcc23654 100644
+> --- a/drivers/scsi/lpfc/lpfc_ct.c
+> +++ b/drivers/scsi/lpfc/lpfc_ct.c
+> @@ -3050,6 +3050,7 @@ lpfc_fdmi_cmd(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+>   	case SLI_MGMT_GHAT:
+>   	case SLI_MGMT_GRPL:
+>   		rsp_size = FC_MAX_NS_RSP;
+> +		/* fall through */
+>   	case SLI_MGMT_DHBA:
+>   	case SLI_MGMT_DHAT:
+>   		pe = (struct lpfc_fdmi_port_entry *)&CtReq->un.PortID;
+> @@ -3062,6 +3063,7 @@ lpfc_fdmi_cmd(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+>   	case SLI_MGMT_GPAT:
+>   	case SLI_MGMT_GPAS:
+>   		rsp_size = FC_MAX_NS_RSP;
+> +		/* fall through */
+>   	case SLI_MGMT_DPRT:
+>   	case SLI_MGMT_DPA:
+>   		pe = (struct lpfc_fdmi_port_entry *)&CtReq->un.PortID;
 > 
