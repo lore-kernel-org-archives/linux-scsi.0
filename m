@@ -1,15 +1,16 @@
 From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: Re: [PATCH 06/41] scsi: aic7xxx: mark expected switch fall-throughs
-Date: Thu, 10 Jan 2019 14:14:37 -0600
-Message-ID: <5f0bdfb2-da5d-c63b-cf52-9395b066eb04@embeddedor.com>
+Subject: Re: [PATCH 05/41] scsi: aic7xxx: aic79xx: mark expected switch
+ fall-through
+Date: Thu, 10 Jan 2019 14:15:03 -0600
+Message-ID: <a676a977-c55b-a0ce-1be3-b4d53ec68411@embeddedor.com>
 References: <cover.1543374820.git.gustavo@embeddedor.com>
- <b55c3f902d88871053983314cfa837e641db5db6.1543374820.git.gustavo@embeddedor.com>
- <76760259-100e-f149-bbbf-4c1044152ff7@embeddedor.com>
+ <ff0ea78271abe136badebfbeba1d4373fb836bce.1543374820.git.gustavo@embeddedor.com>
+ <1d73dbbd-7e8e-e5ba-6a0f-97fdd799d4c4@embeddedor.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <76760259-100e-f149-bbbf-4c1044152ff7@embeddedor.com>
+In-Reply-To: <1d73dbbd-7e8e-e5ba-6a0f-97fdd799d4c4@embeddedor.com>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 To: Hannes Reinecke <hare@suse.com>
@@ -26,7 +27,7 @@ Thanks
 --
 Gustavo
 
-On 12/19/18 9:37 AM, Gustavo A. R. Silva wrote:
+On 12/19/18 9:36 AM, Gustavo A. R. Silva wrote:
 > Hi,
 > 
 > Friendly ping:
@@ -45,73 +46,97 @@ On 12/19/18 9:37 AM, Gustavo A. R. Silva wrote:
 >> annotation and then placed it at the bottom of the corresponding switch
 >> case, which is what GCC is expecting to find.
 >>
+>> Addresses-Coverity-ID: 114961 ("Missing break in switch")
+>> Addresses-Coverity-ID: 114962 ("Missing break in switch")
+>> Addresses-Coverity-ID: 114963 ("Missing break in switch")
+>> Addresses-Coverity-ID: 114964 ("Missing break in switch")
 >> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 >> ---
->>   drivers/scsi/aic7xxx/aic7xxx_core.c | 12 +++++++++---
->>   1 file changed, 9 insertions(+), 3 deletions(-)
+>>   drivers/scsi/aic7xxx/aic79xx_core.c | 14 +++++++++-----
+>>   1 file changed, 9 insertions(+), 5 deletions(-)
 >>
->> diff --git a/drivers/scsi/aic7xxx/aic7xxx_core.c b/drivers/scsi/aic7xxx/aic7xxx_core.c
->> index f3362f4ab16e..d4a7263e4b8f 100644
->> --- a/drivers/scsi/aic7xxx/aic7xxx_core.c
->> +++ b/drivers/scsi/aic7xxx/aic7xxx_core.c
->> @@ -4920,24 +4920,30 @@ ahc_fini_scbdata(struct ahc_softc *ahc)
+>> diff --git a/drivers/scsi/aic7xxx/aic79xx_core.c b/drivers/scsi/aic7xxx/aic79xx_core.c
+>> index 9ee75c9a9aa1..7e5044bf05c0 100644
+>> --- a/drivers/scsi/aic7xxx/aic79xx_core.c
+>> +++ b/drivers/scsi/aic7xxx/aic79xx_core.c
+>> @@ -2285,6 +2285,7 @@ ahd_handle_seqint(struct ahd_softc *ahd, u_int intstat)
+>>               switch (scb->hscb->task_management) {
+>>               case SIU_TASKMGMT_ABORT_TASK:
+>>                   tag = SCB_GET_TAG(scb);
+>> +                /* fall through */
+>>               case SIU_TASKMGMT_ABORT_TASK_SET:
+>>               case SIU_TASKMGMT_CLEAR_TASK_SET:
+>>                   lun = scb->hscb->lun;
+>> @@ -2295,6 +2296,7 @@ ahd_handle_seqint(struct ahd_softc *ahd, u_int intstat)
+>>                   break;
+>>               case SIU_TASKMGMT_LUN_RESET:
+>>                   lun = scb->hscb->lun;
+>> +                /* fall through */
+>>               case SIU_TASKMGMT_TARGET_RESET:
+>>               {
+>>                   struct ahd_devinfo devinfo;
+>> @@ -6550,8 +6552,8 @@ ahd_fini_scbdata(struct ahd_softc *ahd)
+>>               kfree(sns_map);
 >>           }
->>           ahc_dma_tag_destroy(ahc, scb_data->sg_dmat);
+>>           ahd_dma_tag_destroy(ahd, scb_data->sense_dmat);
+>> -        /* FALLTHROUGH */
 >>       }
 >> +        /* fall through */
 >>       case 6:
->>           ahc_dmamap_unload(ahc, scb_data->sense_dmat,
->>                     scb_data->sense_dmamap);
+>>       {
+>>           struct map_node *sg_map;
+>> @@ -6565,8 +6567,8 @@ ahd_fini_scbdata(struct ahd_softc *ahd)
+>>               kfree(sg_map);
+>>           }
+>>           ahd_dma_tag_destroy(ahd, scb_data->sg_dmat);
+>> -        /* FALLTHROUGH */
+>>       }
 >> +        /* fall through */
 >>       case 5:
->>           ahc_dmamem_free(ahc, scb_data->sense_dmat, scb_data->sense,
->>                   scb_data->sense_dmamap);
->>           ahc_dmamap_destroy(ahc, scb_data->sense_dmat,
->>                      scb_data->sense_dmamap);
->> +        /* fall through */
->>       case 4:
->>           ahc_dma_tag_destroy(ahc, scb_data->sense_dmat);
->> +        /* fall through */
->>       case 3:
->>           ahc_dmamap_unload(ahc, scb_data->hscb_dmat,
->>                     scb_data->hscb_dmamap);
->> +        /* fall through */
->>       case 2:
->>           ahc_dmamem_free(ahc, scb_data->hscb_dmat, scb_data->hscbs,
->>                   scb_data->hscb_dmamap);
->>           ahc_dmamap_destroy(ahc, scb_data->hscb_dmat,
->>                      scb_data->hscb_dmamap);
->> +        /* fall through */
->>       case 1:
->>           ahc_dma_tag_destroy(ahc, scb_data->hscb_dmat);
->>           break;
->> @@ -6002,8 +6008,8 @@ ahc_search_qinfifo(struct ahc_softc *ahc, int target, char channel,
->>                   if ((scb->flags & SCB_ACTIVE) == 0)
->>                       printk("Inactive SCB in Waiting List\n");
->>                   ahc_done(ahc, scb);
->> -                /* FALLTHROUGH */
->>               }
->> +                /* fall through */
->>               case SEARCH_REMOVE:
->>                   next = ahc_rem_wscb(ahc, next, prev);
->>                   break;
->> @@ -7008,8 +7014,8 @@ ahc_download_instr(struct ahc_softc *ahc, u_int instrptr, uint8_t *dconsts)
->>           }
->>           address -= address_offset;
->>           fmt3_ins->address = address;
+>>       {
+>>           struct map_node *hscb_map;
+>> @@ -7209,6 +7211,7 @@ ahd_init(struct ahd_softc *ahd)
+>>           case FLX_CSTAT_OVER:
+>>           case FLX_CSTAT_UNDER:
+>>               warn_user++;
+>> +            /* fall through */
+>>           case FLX_CSTAT_INVALID:
+>>           case FLX_CSTAT_OKAY:
+>>               if (warn_user == 0 && bootverbose == 0)
+>> @@ -8413,7 +8416,7 @@ ahd_search_scb_list(struct ahd_softc *ahd, int target, char channel,
+>>               if ((scb->flags & SCB_ACTIVE) == 0)
+>>                   printk("Inactive SCB in Waiting List\n");
+>>               ahd_done_with_status(ahd, scb, status);
+>> -            /* FALLTHROUGH */
+>> +            /* fall through */
+>>           case SEARCH_REMOVE:
+>>               ahd_rem_wscb(ahd, scbid, prev, next, tid);
+>>               *list_tail = prev;
+>> @@ -8422,6 +8425,7 @@ ahd_search_scb_list(struct ahd_softc *ahd, int target, char channel,
+>>               break;
+>>           case SEARCH_PRINT:
+>>               printk("0x%x ", scbid);
+>> +            /* fall through */
+>>           case SEARCH_COUNT:
+>>               prev = scbid;
+>>               break;
+>> @@ -9547,8 +9551,8 @@ ahd_download_instr(struct ahd_softc *ahd, u_int instrptr, uint8_t *dconsts)
+>>       {
+>>           fmt3_ins = &instr.format3;
+>>           fmt3_ins->address = ahd_resolve_seqaddr(ahd, fmt3_ins->address);
 >> -        /* FALLTHROUGH */
 >>       }
 >> +        /* fall through */
 >>       case AIC_OP_OR:
 >>       case AIC_OP_AND:
 >>       case AIC_OP_XOR:
->> @@ -7035,7 +7041,7 @@ ahc_download_instr(struct ahc_softc *ahc, u_int instrptr, uint8_t *dconsts)
->>               fmt1_ins->opcode = AIC_OP_AND;
->>               fmt1_ins->immediate = 0xff;
+>> @@ -9559,7 +9563,7 @@ ahd_download_instr(struct ahd_softc *ahd, u_int instrptr, uint8_t *dconsts)
+>>               fmt1_ins->immediate = dconsts[fmt1_ins->immediate];
 >>           }
+>>           fmt1_ins->parity = 0;
 >> -        /* FALLTHROUGH */
 >> +        /* fall through */
 >>       case AIC_OP_ROL:
->>           if ((ahc->features & AHC_ULTRA2) != 0) {
->>               int i, count;
+>>       {
+>>           int i, count;
 >>
