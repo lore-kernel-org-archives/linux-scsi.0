@@ -1,38 +1,47 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] ibmvscsi: use GFP_ATOMIC with dma_alloc_coherent in
- map_sg_data
-Date: Fri, 11 Jan 2019 10:27:28 -0800
-Message-ID: <20190111182728.GB5469@infradead.org>
-References: <1547089136-20264-1-git-send-email-tyreld@linux.vnet.ibm.com>
- <20190110150703.GA26696@infradead.org>
- <4c5a470e-fa98-1ffd-7f55-5a4ffb3a692a@linux.vnet.ibm.com>
+From: Mike Christie <mchristi@redhat.com>
+Subject: Re: [PATCH] target: fix a missing check for match_int
+Date: Fri, 11 Jan 2019 14:06:03 -0600
+Message-ID: <5C38F72B.5000203@redhat.com>
+References: <20181226064818.75984-1-kjlu@umn.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <stable-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4c5a470e-fa98-1ffd-7f55-5a4ffb3a692a@linux.vnet.ibm.com>
-Sender: stable-owner@vger.kernel.org
-To: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
-Cc: Christoph Hellwig <hch@infradead.org>, james.bottomley@hansenpartnership.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, brking@linux.vnet.ibm.com, stable@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20181226064818.75984-1-kjlu@umn.edu>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Kangjie Lu <kjlu@umn.edu>
+Cc: pakki001@umn.edu, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Jan 10, 2019 at 03:15:35PM -0800, Tyrel Datwyler wrote:
-> On a secondary note I was unaware of the GFP_ATOMIC limitations. Should this be
-> added to the documentation somewhere? I don't see any mention here form
-> DMA-API-HOWTO.txt.
+On 12/26/2018 12:48 AM, Kangjie Lu wrote:
+> When match_int fails, "arg" is left uninitialized and may contain random
+> value, thus should not be used.
+> The fix checks if match_int fails, and if so, break.
+> 
+> Signed-off-by: Kangjie Lu <kjlu@umn.edu>
+> ---
+>  drivers/target/target_core_rd.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/target/target_core_rd.c b/drivers/target/target_core_rd.c
+> index a6e8106abd6f..3138123143e8 100644
+> --- a/drivers/target/target_core_rd.c
+> +++ b/drivers/target/target_core_rd.c
+> @@ -573,7 +573,8 @@ static ssize_t rd_set_configfs_dev_params(struct se_device *dev,
+>  		token = match_token(ptr, tokens, args);
+>  		switch (token) {
+>  		case Opt_rd_pages:
+> -			match_int(args, &arg);
+> +			if (match_int(args, &arg))
+> +				break;
 
-The DMA documentation unfortauntely doesn't seem very good.  It's been
-on my todo list to eventually update it, but I'm still discoverying
-various warts.
+I think if this fails you would want to return an error.
 
-GFP_ATOMIC allocations generally work fine on DMA coherent
-architectures, but tend to cause problems on a lot of non-coherent
-ones with the notable exceptions of arm and arm64 that go to great
-length to introduce special pools for them.  But that code is rarely
-exercised, so I found various bugs e.g. in the arm64 iommu code for
-this case.
+Also, I think you want to add a similar check for the Opt_rd_nullio call
+below this chunk because arg may initialized to junk.
 
-But more importantly there really should be no need for the coherent
-allocation from irq context - we only need coherent for descriptors
-that don't have clear ownership, and aything allocated in the I/O path
-generally has that.
+
+>  			rd_dev->rd_page_count = arg;
+>  			pr_debug("RAMDISK: Referencing Page"
+>  				" Count: %u\n", rd_dev->rd_page_count);
+> 
