@@ -1,95 +1,100 @@
-From: Sudarsana Reddy Kalluru <skalluru@marvell.com>
-Subject: RE: [PATCH 11/41] scsi: bfa: bfa_fcs_rport: Mark expected switch
- fall-throughs
-Date: Fri, 11 Jan 2019 06:33:49 +0000
-Message-ID: <CY4PR18MB1253DEBBCC169C26445F14F6D3850@CY4PR18MB1253.namprd18.prod.outlook.com>
-References: <cover.1543374820.git.gustavo@embeddedor.com>
- <c2a6667094f80fd7f72c887b2e7844b6341ce961.1543374820.git.gustavo@embeddedor.com>
- <d81468df-1de5-8aaf-9c7b-ce490a358bea@embeddedor.com>
- <b20da67e-578a-341e-bb7c-d79fe096b573@embeddedor.com>
+From: Avri Altman <Avri.Altman@wdc.com>
+Subject: Re: ufshcd_queuecommand() triggering after ufshcd_suspend()?
+Date: Fri, 11 Jan 2019 06:39:56 +0000
+Message-ID: <SN6PR04MB4925CA2AFE5F060469E6F018FC850@SN6PR04MB4925.namprd04.prod.outlook.com>
+References: <CALAqxLURfQcSy2w7F7NCPtGaChka4U5LmvufLd0VZ73S=AzHkA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <b20da67e-578a-341e-bb7c-d79fe096b573@embeddedor.com>
+In-Reply-To: <CALAqxLURfQcSy2w7F7NCPtGaChka4U5LmvufLd0VZ73S=AzHkA@mail.gmail.com>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>, Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: John Stultz <john.stultz@linaro.org>, Sahitya Tummala <stummala@codeaurora.org>, Christoph Hellwig <hch@lst.de>, Wei Li <liwei213@huawei.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, zangleigang <zangleigang@hisilicon.com>
+Cc: Evan Green <evgreen@chromium.org>, Vijay Viswanath <vviswana@codeaurora.org>, lkml <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-DQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogR3VzdGF2byBBLiBSLiBTaWx2YSBb
-bWFpbHRvOmd1c3Rhdm9AZW1iZWRkZWRvci5jb21dIA0KU2VudDogMTEgSmFudWFyeSAyMDE5IDAx
-OjQyDQpUbzogQW5pbCBHdXJ1bXVydGh5IDxhbmlsLmd1cnVtdXJ0aHlAcWxvZ2ljLmNvbT47IFN1
-ZGFyc2FuYSBLYWxsdXJ1IDxzdWRhcnNhbmEua2FsbHVydUBxbG9naWMuY29tPg0KQ2M6IEphbWVz
-IEUuSi4gQm90dG9tbGV5IDxqZWpiQGxpbnV4LmlibS5jb20+OyBNYXJ0aW4gSy4gUGV0ZXJzZW4g
-PG1hcnRpbi5wZXRlcnNlbkBvcmFjbGUuY29tPjsgbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmc7
-IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmcNClN1YmplY3Q6IFJlOiBbUEFUQ0ggMTEvNDFd
-IHNjc2k6IGJmYTogYmZhX2Zjc19ycG9ydDogTWFyayBleHBlY3RlZCBzd2l0Y2ggZmFsbC10aHJv
-dWdocw0KDQpFeHRlcm5hbCBFbWFpbA0KDQpIaSwNCg0KRnJpZW5kbHkgcGluZyAoc2Vjb25kIG9u
-ZSk6DQoNCldobyBjYW4gYWNrL3Jldmlldy90YWtlIHRoaXMgcGF0Y2gsIHBsZWFzZT8NCg0KVGhh
-bmtzDQotLQ0KR3VzdGF2bw0KDQpPbiAxMi8xOS8xOCA5OjM5IEFNLCBHdXN0YXZvIEEuIFIuIFNp
-bHZhIHdyb3RlOg0KPiBIaSwNCj4NCj4gRnJpZW5kbHkgcGluZzoNCj4NCj4gV2hvIGNhbiBhY2sg
-b3IgcmV2aWV3IHRoaXMgcGF0Y2gsIHBsZWFzZT8NCj4NCj4gVGhhbmtzDQo+IC0tDQo+IEd1c3Rh
-dm8NCj4NCj4gT24gMTEvMjcvMTggMTA6MjcgUE0sIEd1c3Rhdm8gQS4gUi4gU2lsdmEgd3JvdGU6
-DQo+PiBJbiBwcmVwYXJhdGlvbiB0byBlbmFibGluZyAtV2ltcGxpY2l0LWZhbGx0aHJvdWdoLCBt
-YXJrIHN3aXRjaCBjYXNlcyANCj4+IHdoZXJlIHdlIGFyZSBleHBlY3RpbmcgdG8gZmFsbCB0aHJv
-dWdoLg0KPj4NCj4+IE5vdGljZSB0aGF0IEkgcmVwbGFjZWQgIiEhIGZhbGwgdGhyb3VnaCAhISIg
-YW5kICIhISEgZmFsbCB0aHJvdWdoICEhISINCj4+IGNvbW1lbnRzIHdpdGggImZhbGwgdGhyb3Vn
-aCIgYW5ub3RhdGlvbnMsIHdoaWNoIGlzIHdoYXQgR0NDIGlzIA0KPj4gZXhwZWN0aW5nIHRvIGZp
-bmQuDQo+Pg0KPj4gQWRkcmVzc2VzLUNvdmVyaXR5LUlEOiA3NDQ4OTkgKCJNaXNzaW5nIGJyZWFr
-IGluIHN3aXRjaCIpDQo+PiBBZGRyZXNzZXMtQ292ZXJpdHktSUQ6IDc0NDkwMCAoIk1pc3Npbmcg
-YnJlYWsgaW4gc3dpdGNoIikNCj4+IEFkZHJlc3Nlcy1Db3Zlcml0eS1JRDogNzQ0OTAxICgiTWlz
-c2luZyBicmVhayBpbiBzd2l0Y2giKQ0KPj4gU2lnbmVkLW9mZi1ieTogR3VzdGF2byBBLiBSLiBT
-aWx2YSA8Z3VzdGF2b0BlbWJlZGRlZG9yLmNvbT4NCj4+IC0tLQ0KPj4gICBkcml2ZXJzL3Njc2kv
-YmZhL2JmYV9mY3NfcnBvcnQuYyB8IDE5ICsrKysrKystLS0tLS0tLS0tLS0NCj4+ICAgMSBmaWxl
-IGNoYW5nZWQsIDcgaW5zZXJ0aW9ucygrKSwgMTIgZGVsZXRpb25zKC0pDQo+Pg0KPj4gZGlmZiAt
-LWdpdCBhL2RyaXZlcnMvc2NzaS9iZmEvYmZhX2Zjc19ycG9ydC5jIA0KPj4gYi9kcml2ZXJzL3Nj
-c2kvYmZhL2JmYV9mY3NfcnBvcnQuYw0KPj4gaW5kZXggZGU1MDM0OWEzOWNlLi4xZTQwMGYyYWFl
-Y2UgMTAwNjQ0DQo+PiAtLS0gYS9kcml2ZXJzL3Njc2kvYmZhL2JmYV9mY3NfcnBvcnQuYw0KPj4g
-KysrIGIvZHJpdmVycy9zY3NpL2JmYS9iZmFfZmNzX3Jwb3J0LmMNCj4+IEBAIC00MjcsMTcgKzQy
-NywxMyBAQCBiZmFfZmNzX3Jwb3J0X3NtX3Bsb2dpKHN0cnVjdCBiZmFfZmNzX3Jwb3J0X3MgKnJw
-b3J0LCBlbnVtIHJwb3J0X2V2ZW50IGV2ZW50KQ0KPj4gICAgICAgY2FzZSBSUFNNX0VWRU5UX0xP
-R09fUkNWRDoNCj4+ICAgICAgICAgICBiZmFfZmNzX3Jwb3J0X3NlbmRfbG9nb19hY2MocnBvcnQp
-Ow0KPj4gLSAgICAgICAgLyoNCj4+IC0gICAgICAgICAqICEhIGZhbGwgdGhyb3VnaCAhIQ0KPj4g
-LSAgICAgICAgICovDQo+PiArICAgICAgICAvKiBmYWxsIHRocm91Z2ggKi8NCj4+ICAgICAgIGNh
-c2UgUlBTTV9FVkVOVF9QUkxPX1JDVkQ6DQo+PiAgICAgICAgICAgaWYgKHJwb3J0LT5wcmxvID09
-IEJGQV9UUlVFKQ0KPj4gICAgICAgICAgICAgICBiZmFfZmNzX3Jwb3J0X3NlbmRfcHJsb19hY2Mo
-cnBvcnQpOw0KPj4gICAgICAgICAgIGJmYV9mY3hwX2Rpc2NhcmQocnBvcnQtPmZjeHApOw0KPj4g
-LSAgICAgICAgLyoNCj4+IC0gICAgICAgICAqICEhIGZhbGwgdGhyb3VnaCAhIQ0KPj4gLSAgICAg
-ICAgICovDQo+PiArICAgICAgICAvKiBmYWxsIHRocm91Z2ggKi8NCj4+ICAgICAgIGNhc2UgUlBT
-TV9FVkVOVF9GQUlMRUQ6DQo+PiAgICAgICAgICAgaWYgKHJwb3J0LT5wbG9naV9yZXRyaWVzIDwg
-QkZBX0ZDU19SUE9SVF9NQVhfUkVUUklFUykgew0KPj4gICAgICAgICAgICAgICBycG9ydC0+cGxv
-Z2lfcmV0cmllcysrOyBAQCAtODY4LDkgKzg2NCw3IEBAIA0KPj4gYmZhX2Zjc19ycG9ydF9zbV9h
-ZGlzY19vbmxpbmUoc3RydWN0IGJmYV9mY3NfcnBvcnRfcyAqcnBvcnQsDQo+PiAgICAgICAgICAg
-ICogQXQgbGVhc3QgZ28gb2ZmbGluZSB3aGVuIGEgUExPR0kgaXMgcmVjZWl2ZWQuDQo+PiAgICAg
-ICAgICAgICovDQo+PiAgICAgICAgICAgYmZhX2ZjeHBfZGlzY2FyZChycG9ydC0+ZmN4cCk7DQo+
-PiAtICAgICAgICAvKg0KPj4gLSAgICAgICAgICogISEhIGZhbGwgdGhyb3VnaCAhISENCj4+IC0g
-ICAgICAgICAqLw0KPj4gKyAgICAgICAgLyogZmFsbCB0aHJvdWdoICovDQo+PiAgICAgICBjYXNl
-IFJQU01fRVZFTlRfRkFJTEVEOg0KPj4gICAgICAgY2FzZSBSUFNNX0VWRU5UX0FERFJFU1NfQ0hB
-TkdFOg0KPj4gQEAgLTEwNTYsNiArMTA1MCw3IEBAIGJmYV9mY3NfcnBvcnRfc21fZmM0X2xvZ29z
-ZW5kKHN0cnVjdCBiZmFfZmNzX3Jwb3J0X3MgKnJwb3J0LA0KPj4gICAgICAgY2FzZSBSUFNNX0VW
-RU5UX0xPR09fUkNWRDoNCj4+ICAgICAgICAgICBiZmFfZmNzX3Jwb3J0X3NlbmRfbG9nb19hY2Mo
-cnBvcnQpOw0KPj4gKyAgICAgICAgLyogZmFsbCB0aHJvdWdoICovDQo+PiAgICAgICBjYXNlIFJQ
-U01fRVZFTlRfUFJMT19SQ1ZEOg0KPj4gICAgICAgICAgIGlmIChycG9ydC0+cHJsbyA9PSBCRkFf
-VFJVRSkNCj4+ICAgICAgICAgICAgICAgYmZhX2Zjc19ycG9ydF9zZW5kX3BybG9fYWNjKHJwb3J0
-KTsNCj4+IEBAIC0xMTQ0LDkgKzExMzksNyBAQCBiZmFfZmNzX3Jwb3J0X3NtX2hjYl9vZmZsaW5l
-KHN0cnVjdCBiZmFfZmNzX3Jwb3J0X3MgKnJwb3J0LA0KPj4gICAgICAgICAgICAgICBiZmFfZmNz
-X3Jwb3J0X3NlbmRfcGxvZ2lhY2MocnBvcnQsIE5VTEwpOw0KPj4gICAgICAgICAgICAgICBicmVh
-azsNCj4+ICAgICAgICAgICB9DQo+PiAtICAgICAgICAvKg0KPj4gLSAgICAgICAgICogISEgZmFs
-bCB0aHJvdWdoICEhDQo+PiAtICAgICAgICAgKi8NCj4+ICsgICAgICAgIC8qIGZhbGwgdGhyb3Vn
-aCAqLw0KPj4gICAgICAgY2FzZSBSUFNNX0VWRU5UX0FERFJFU1NfQ0hBTkdFOg0KPj4gICAgICAg
-ICAgIGlmICghYmZhX2Zjc19scG9ydF9pc19vbmxpbmUocnBvcnQtPnBvcnQpKSB7IEBAIC0xMzAz
-LDYgDQo+PiArMTI5Niw3IEBAIGJmYV9mY3NfcnBvcnRfc21faGNiX2xvZ29zZW5kKHN0cnVjdCBi
-ZmFfZmNzX3Jwb3J0X3MgKnJwb3J0LA0KPj4gICAgICAgY2FzZSBSUFNNX0VWRU5UX0xPR09fUkNW
-RDoNCj4+ICAgICAgICAgICBiZmFfZmNzX3Jwb3J0X3NlbmRfbG9nb19hY2MocnBvcnQpOw0KPj4g
-KyAgICAgICAgLyogZmFsbCB0aHJvdWdoICovDQo+PiAgICAgICBjYXNlIFJQU01fRVZFTlRfUFJM
-T19SQ1ZEOg0KPj4gICAgICAgICAgIGlmIChycG9ydC0+cHJsbyA9PSBCRkFfVFJVRSkNCj4+ICAg
-ICAgICAgICAgICAgYmZhX2Zjc19ycG9ydF9zZW5kX3BybG9fYWNjKHJwb3J0KTsNCj4+IEBAIC0x
-MzQ2LDYgKzEzNDAsNyBAQCBiZmFfZmNzX3Jwb3J0X3NtX2xvZ29fc2VuZGluZyhzdHJ1Y3QgYmZh
-X2Zjc19ycG9ydF9zICpycG9ydCwNCj4+ICAgICAgIGNhc2UgUlBTTV9FVkVOVF9MT0dPX1JDVkQ6
-DQo+PiAgICAgICAgICAgYmZhX2Zjc19ycG9ydF9zZW5kX2xvZ29fYWNjKHJwb3J0KTsNCj4+ICsg
-ICAgICAgIC8qIGZhbGwgdGhyb3VnaCAqLw0KPj4gICAgICAgY2FzZSBSUFNNX0VWRU5UX1BSTE9f
-UkNWRDoNCj4+ICAgICAgICAgICBpZiAocnBvcnQtPnBybG8gPT0gQkZBX1RSVUUpDQo+PiAgICAg
-ICAgICAgICAgIGJmYV9mY3NfcnBvcnRfc2VuZF9wcmxvX2FjYyhycG9ydCk7DQo+Pg0KDQpBY2tl
-ZC1ieTogU3VkYXJzYW5hIEthbGx1cnUgPFN1ZGFyc2FuYS5LYWxsdXJ1QHFsb2dpYy5jb20+DQo=
++Zang
+
+Thanks,
+Avri
+
+
+
+________________________________________
+From: John Stultz <john.stultz@linaro.org>
+Sent: Friday, January 11, 2019 1:02:21 AM
+To: Sahitya Tummala; Christoph Hellwig; Wei Li; Martin K. Petersen
+Cc: Evan Green; Avri Altman; Vijay Viswanath; lkml; linux-scsi@vger.kernel.=
+org
+Subject: ufshcd_queuecommand() triggering after ufshcd_suspend()?
+
+Hey all,
+  Frequently, since support for the HiKey960's UFS code landed in
+4.19, I've noticed the following warning on reboot:
+
+[   23.086860] WARNING: CPU: 0 PID: 2507 at
+drivers/scsi/ufs/ufshcd.c:2460 ufshcd_queuecommand+0x59c/0x5a8
+[   23.096256] Modules linked in:
+[   23.099313] CPU: 0 PID: 2507 Comm: kworker/0:1H Tainted: G S
+        5.0.0-rc1-00068-g3f81a19 #273
+[   23.108873] Hardware name: HiKey960 (DT)
+[   23.112802] Workqueue: kblockd blk_mq_requeue_work
+[   23.117591] pstate: 80400005 (Nzcv daif +PAN -UAO)
+[   23.122378] pc : ufshcd_queuecommand+0x59c/0x5a8
+[   23.126990] lr : ufshcd_queuecommand+0x58c/0x5a8
+[   23.131600] sp : ffffff8015e1ba80
+[   23.134907] x29: ffffff8015e1ba80 x28: ffffffc217f94048
+[   23.140214] x27: 0000000000000010 x26: ffffffc217a7c8b8
+[   23.145520] x25: ffffffc217a7c000 x24: ffffffc217a7ceb0
+[   23.150827] x23: 0000000000000000 x22: ffffffc217a7c808
+[   23.156133] x21: ffffffc217f94120 x20: 0000000000000010
+[   23.161440] x19: ffffff801186d000 x18: ffffff801186db08
+[   23.166746] x17: 0000000000000000 x16: 0000000000000000
+[   23.172053] x15: ffffff8095e1b7c7 x14: 692064616574736e
+[   23.177360] x13: 6928204e4f5f534b x12: 4c43203d21206574
+[   23.182666] x11: 6174732e676e6974 x10: 61675f6b6c633e2d
+[   23.187973] x9 : 61626820646e616d x8 : 6d6f636575657571
+[   23.193280] x7 : 0000000000000000 x6 : ffffff801186e000
+[   23.198586] x5 : ffffff801186e270 x4 : ffffff8010096dc0
+[   23.203894] x3 : 0000000000010000 x2 : 47dd99afde511d00
+[   23.209201] x1 : 0000000000000000 x0 : 0000000000000000
+[   23.214509] Call trace:
+[   23.216952]  ufshcd_queuecommand+0x59c/0x5a8
+[   23.221220]  scsi_queue_rq+0x5b4/0x880
+[   23.224964]  blk_mq_dispatch_rq_list+0xb0/0x510
+[   23.229492]  blk_mq_sched_dispatch_requests+0xf4/0x198
+[   23.234626]  __blk_mq_run_hw_queue+0xb4/0x120
+[   23.238978]  __blk_mq_delay_run_hw_queue+0x110/0x200
+[   23.243937]  blk_mq_run_hw_queue+0xb8/0x118
+[   23.248114]  blk_mq_run_hw_queues+0x58/0x78
+[   23.252291]  blk_mq_requeue_work+0x140/0x168
+[   23.256560]  process_one_work+0x158/0x468
+[   23.260564]  worker_thread+0x50/0x460
+[   23.264222]  kthread+0x104/0x130
+[   23.267447]  ret_from_fork+0x10/0x1c
+[   23.271017] ---[ end trace 45f1ee04059cdf00 ]---
+
+Since the warning is triggering from the WARN_ON(hba->clk_gating.state
+!=3D CLKS_ON) line, I annotated the clk_gating.state changes, and am
+seeing on reboot:
+  vdc: Waited 0ms for vold
+  sd 0:0:0:3: [sdd] Synchronizing SCSI cache
+  sd 0:0:0:2: [sdc] Synchronizing SCSI cache
+  sd 0:0:0:1: [sdb] Synchronizing SCSI cache
+  sd 0:0:0:0: [sda] Synchronizing SCSI cache
+  ufshcd_suspend: setting clk_gating.state CLKS_OFF
+  ufshcd_queuecommand hba->clk_gating.state !=3D CLKS_ON (instead its 0)
+<warning splat>
+
+So it seems like ufshcd_suspend() is has run, but then the workqueue
+(occasionally) fires afterwards triggering the issue.
+
+Maybe should something in ufshcd_queuecommand be checking the
+clk_gating.is_suspended flag before proceeding?
+
+Other ideas?  The logic all seems to be in the generic code, but I'm
+not sure if maybe the ufs-hisi.c code is mis-managing something?
+
+thanks
+-john
