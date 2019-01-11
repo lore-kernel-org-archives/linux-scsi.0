@@ -1,56 +1,42 @@
-From: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
-Subject: Re: [PATCH] ibmvscsi: use GFP_ATOMIC with dma_alloc_coherent in
- map_sg_data
-Date: Thu, 10 Jan 2019 15:15:35 -0800
-Message-ID: <4c5a470e-fa98-1ffd-7f55-5a4ffb3a692a@linux.vnet.ibm.com>
-References: <1547089136-20264-1-git-send-email-tyreld@linux.vnet.ibm.com>
- <20190110150703.GA26696@infradead.org>
+From: Qian Cai <cai@lca.pw>
+Subject: Re: PROBLEM: syzkaller found / pool corruption-overwrite / page in
+ user-area or NULL
+Date: Thu, 10 Jan 2019 20:30:55 -0500
+Message-ID: <7416c812-f452-9c23-9d0c-37eac0174231@lca.pw>
+References: <t78EEfgpy3uIwPUvqvmuQEYEWKG9avWzjUD3EyR93Qaf_tfx1gqt4XplrqMgdxR1U9SsrVdA7G9XeUZacgUin0n6lBzoxJHVJ9Ko0yzzrxI=@protonmail.ch>
+ <1547150339.2814.9.camel@linux.ibm.com> <1547153074.6911.8.camel@lca.pw>
+ <4u36JfbOrbu9CXLDErzQKvorP0gc2CzyGe60rBmZsGAGIw6RacZnIfoSsAF0I0TCnVx0OvcqCZFN6ntbgicJ66cWew9cOXRgcuWxSPdL3ko=@protonmail.ch>
+ <1547154231.6911.10.camel@lca.pw>
+ <hFmbfypBKySVyM6ITf55xUsPWifgqJy6MZ-kFJcYna61S-u2hoClrqr87QTF4F2LhW-K42T2lcCbvsEyGAL0dJTq5CndQBiMT6JnlW4xmdc=@protonmail.ch>
+ <1547159604.6911.12.camel@lca.pw>
+ <olV6qm38nrHhMMH3bq9cY3h60MaHsW5U9n6xn3_PVP1UkFNJBNbVuS-8P_FdCazGJX6GZX_Qqe2Nj8_hbLJsgto76Xo-gLQ8We-hsc_vRKk=@protonmail.ch>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20190110150703.GA26696@infradead.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <olV6qm38nrHhMMH3bq9cY3h60MaHsW5U9n6xn3_PVP1UkFNJBNbVuS-8P_FdCazGJX6GZX_Qqe2Nj8_hbLJsgto76Xo-gLQ8We-hsc_vRKk=@protonmail.ch>
 Content-Language: en-US
-Sender: stable-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: james.bottomley@hansenpartnership.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, brking@linux.vnet.ibm.com, stable@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: Esme <esploit@protonmail.ch>
+Cc: James Bottomley <jejb@linux.ibm.com>, "dgilbert@interlog.com" <dgilbert@interlog.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 01/10/2019 07:07 AM, Christoph Hellwig wrote:
-> On Wed, Jan 09, 2019 at 06:58:56PM -0800, Tyrel Datwyler wrote:
->> While mapping DMA for scatter list when a scsi command is queued the
->> existing call to dma_alloc_coherent() in our map_sg_data() function
->> passes zero for the gfp_flags parameter. We are most definitly in atomic
->> context at this point as queue_command() is called in softirq context
->> and further we have a spinlock holding the scsi host lock.
->>
->> Fix this by passing GFP_ATOMIC to dma_alloc_coherent() to prevent any
->> sort of sleeping in atomic context deadlock.
+
+
+On 1/10/19 5:58 PM, Esme wrote:
+> The console debug/stacks/info from just now.  The previous config, current kernel from github.
+> --
+> Esme
 > 
-> This is a pretty clear sign you should not be using dma_alloc_coherent
-> to start with.  GFP_ATOMIC support in many of the implementations either
-> doesn't work at all or is severly constrained.  
+> [   75.783231] kasan: CONFIG_KASAN_INLINE enabled
+> [   75.785870] kasan: GPF could be caused by NULL-ptr deref or user memory access
+> [   75.787695] general protection fault: 0000 [#1] SMP KASAN
+> [   75.789084] CPU: 0 PID: 3434 Comm: systemd-journal Not tainted 5.0.0-rc1+ #5
+> [   75.790938] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.11.1-1ubuntu1 04/01/2014
+> [   75.793150] RIP: 0010:rb_insert_color+0x189/0x1480
 
-On a secondary note I was unaware of the GFP_ATOMIC limitations. Should this be
-added to the documentation somewhere? I don't see any mention here form
-DMA-API-HOWTO.txt.
+What's in that line? Try,
 
-Using Consistent DMA mappings
-=============================
+$ ./scripts/faddr2line vmlinux rb_insert_color+0x189/0x1480
 
-To allocate and map large (PAGE_SIZE or so) consistent DMA regions,
-you should do::
-
-        dma_addr_t dma_handle;
-
-        cpu_addr = dma_alloc_coherent(dev, size, &dma_handle, gfp);
-
-where device is a ``struct device *``. This may be called in interrupt
-context with the GFP_ATOMIC flag.
-
--Tyrel
-
-Given that the
-> descriptor is written by the OS and read by the hardware exactly once
-> there is no point in having the coherent mapping to start with.
-> 
+What's steps to reproduce this?
