@@ -1,67 +1,62 @@
-From: Esme <esploit@protonmail.ch>
-Subject: Re: PROBLEM: syzkaller found / pool corruption-overwrite / page in user-area or NULL
-Date: Fri, 11 Jan 2019 05:01:36 +0000
-Message-ID: <rYrcPMrGmYbPe_xgNEV6Q0jqc5XuPYmL2AFSyeNmg1gW531bgZnBGfEUK5_ktqDBaNW37b-NP2VXvlliM7_PsBRhSfB649MaW1Ne7zT9lHc=@protonmail.ch>
-References: <t78EEfgpy3uIwPUvqvmuQEYEWKG9avWzjUD3EyR93Qaf_tfx1gqt4XplrqMgdxR1U9SsrVdA7G9XeUZacgUin0n6lBzoxJHVJ9Ko0yzzrxI=@protonmail.ch>
- <4u36JfbOrbu9CXLDErzQKvorP0gc2CzyGe60rBmZsGAGIw6RacZnIfoSsAF0I0TCnVx0OvcqCZFN6ntbgicJ66cWew9cOXRgcuWxSPdL3ko=@protonmail.ch>
- <1547154231.6911.10.camel@lca.pw>
- <hFmbfypBKySVyM6ITf55xUsPWifgqJy6MZ-kFJcYna61S-u2hoClrqr87QTF4F2LhW-K42T2lcCbvsEyGAL0dJTq5CndQBiMT6JnlW4xmdc=@protonmail.ch>
- <1547159604.6911.12.camel@lca.pw>
- <olV6qm38nrHhMMH3bq9cY3h60MaHsW5U9n6xn3_PVP1UkFNJBNbVuS-8P_FdCazGJX6GZX_Qqe2Nj8_hbLJsgto76Xo-gLQ8We-hsc_vRKk=@protonmail.ch>
- <7416c812-f452-9c23-9d0c-37eac0174231@lca.pw>
- <fkYi1Hgt2t5U6zQt5Kz4ej-TFyVsn2Qp2OLrMbmt2418U1rn20DPZGqgCN-rmCZgFgGKXhl3-IGciCJ-G9fV_lkBuy_Vb7QFouBhwBE--Eo=@protonmail.ch>
- <3b3184e0-d913-6519-0f9d-2f01ef795650@lca.pw>
-Reply-To: Esme <esploit@protonmail.ch>
+From: Sudarsana Reddy Kalluru <skalluru@marvell.com>
+Subject: RE: [PATCH 10/41] scsi: bfa: bfa_fcs_lport: Mark expected switch
+ fall-throughs
+Date: Fri, 11 Jan 2019 06:33:17 +0000
+Message-ID: <CY4PR18MB1253EC0F2D3C0F4AE86AEA02D3850@CY4PR18MB1253.namprd18.prod.outlook.com>
+References: <cover.1543374820.git.gustavo@embeddedor.com>
+ <5cc329185c0b92f3aad001fc1afa54996a2c1112.1543374820.git.gustavo@embeddedor.com>
+ <a2a4fd41-d231-4d72-a95e-e1109c209f94@embeddedor.com>
+ <fad1ad2c-1004-6064-931a-6c898ba00915@embeddedor.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <3b3184e0-d913-6519-0f9d-2f01ef795650@lca.pw>
+In-Reply-To: <fad1ad2c-1004-6064-931a-6c898ba00915@embeddedor.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Qian Cai <cai@lca.pw>
-Cc: James Bottomley <jejb@linux.ibm.com>, "dgilbert@interlog.com" <dgilbert@interlog.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>
+To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>, Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-=E2=80=90=E2=80=90=E2=80=90=E2=80=90=E2=80=90=E2=80=90=E2=80=90 Original Me=
-ssage =E2=80=90=E2=80=90=E2=80=90=E2=80=90=E2=80=90=E2=80=90=E2=80=90
-On Thursday, January 10, 2019 11:52 PM, Qian Cai <cai@lca.pw> wrote:
-
-> On 1/10/19 10:15 PM, Esme wrote:
->
-> > > > [ 75.793150] RIP: 0010:rb_insert_color+0x189/0x1480
-> > >
-> > > What's in that line? Try,
-> > > $ ./scripts/faddr2line vmlinux rb_insert_color+0x189/0x1480
-> >
-> > rb_insert_color+0x189/0x1480:
-> > __rb_insert at /home/files/git/linux/lib/rbtree.c:131
-> > (inlined by) rb_insert_color at /home/files/git/linux/lib/rbtree.c:452
->
-> gparent =3D rb_red_parent(parent);
->
-> tmp =3D gparent->rb_right; <-- GFP triggered here.
->
-> It suggests gparent is NULL. Looks like it misses a check there because p=
-arent
-> is the top node.
->
-> > > What's steps to reproduce this?
-> >
-> > The steps is the kernel config provided (proc.config) and I double chec=
-ked the attached C code from the qemu image (attached here). If the kernel =
-does not immediately crash, a ^C will cause the fault to be noticed. The re=
-port from earlier is the report from the same code, my assumption was that =
-the possible pool/redzone corruption is making it a bit tricky to pin down.
-> > If you would like alternative kernel settings please let me know, I can=
- do that, also, my current test-bench has about 256 core's on x64, 64 of th=
-em are bare metal and 32 are arm64. Any possible preferred configuration tw=
-eaks I'm all ears, I'll be including some of these steps you suggested to m=
-e in any/additional upcoming threads (Thank you for that so far and future =
-suggestions).
-> > Also, there is some occasionally varying stacks depending on the corrup=
-tion, so this stack just now (another execution of test3.c);
->
-> I am unable to reproduce any of those here. What's is the output of
-> /proc/cmdline in your guest when this happens?
-
-console=3DttyS0 root=3D/dev/sda debug earlyprintk=3Dserial slub_debug=3DQUZ
+DQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogR3VzdGF2byBBLiBSLiBTaWx2YSBb
+bWFpbHRvOmd1c3Rhdm9AZW1iZWRkZWRvci5jb21dIA0KU2VudDogMTEgSmFudWFyeSAyMDE5IDAx
+OjQyDQpUbzogQW5pbCBHdXJ1bXVydGh5IDxhbmlsLmd1cnVtdXJ0aHlAcWxvZ2ljLmNvbT47IFN1
+ZGFyc2FuYSBLYWxsdXJ1IDxzdWRhcnNhbmEua2FsbHVydUBxbG9naWMuY29tPg0KQ2M6IEphbWVz
+IEUuSi4gQm90dG9tbGV5IDxqZWpiQGxpbnV4LmlibS5jb20+OyBNYXJ0aW4gSy4gUGV0ZXJzZW4g
+PG1hcnRpbi5wZXRlcnNlbkBvcmFjbGUuY29tPjsgbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmc7
+IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmcNClN1YmplY3Q6IFJlOiBbUEFUQ0ggMTAvNDFd
+IHNjc2k6IGJmYTogYmZhX2Zjc19scG9ydDogTWFyayBleHBlY3RlZCBzd2l0Y2ggZmFsbC10aHJv
+dWdocw0KDQpFeHRlcm5hbCBFbWFpbA0KDQpIaSwNCg0KRnJpZW5kbHkgcGluZyAoc2Vjb25kIG9u
+ZSk6DQoNCldobyBjYW4gYWNrL3Jldmlldy90YWtlIHRoaXMgcGF0Y2gsIHBsZWFzZT8NCg0KVGhh
+bmtzDQotLQ0KR3VzdGF2bw0KDQpPbiAxMi8xOS8xOCA5OjM5IEFNLCBHdXN0YXZvIEEuIFIuIFNp
+bHZhIHdyb3RlOg0KPiBIaSwNCj4NCj4gRnJpZW5kbHkgcGluZzoNCj4NCj4gV2hvIGNhbiBhY2sg
+b3IgcmV2aWV3IHRoaXMgcGF0Y2gsIHBsZWFzZT8NCj4NCj4gVGhhbmtzDQo+IC0tDQo+IEd1c3Rh
+dm8NCj4NCj4gT24gMTEvMjcvMTggMTA6MjcgUE0sIEd1c3Rhdm8gQS4gUi4gU2lsdmEgd3JvdGU6
+DQo+PiBJbiBwcmVwYXJhdGlvbiB0byBlbmFibGluZyAtV2ltcGxpY2l0LWZhbGx0aHJvdWdoLCBt
+YXJrIHN3aXRjaCBjYXNlcyANCj4+IHdoZXJlIHdlIGFyZSBleHBlY3RpbmcgdG8gZmFsbCB0aHJv
+dWdoLg0KPj4NCj4+IE5vdGljZSB0aGF0LCBpbiB0aGlzIHBhcnRpY3VsYXIgY2FzZSwgSSByZXBs
+YWNlZCAiISEhIGZhbGwgdGhyb3VnaCAhISEiDQo+PiB3aXRoIGEgImZhbGwgdGhyb3VnaCIgYW5u
+b3RhdGlvbiwgd2hpY2ggaXMgd2hhdCBHQ0MgaXMgZXhwZWN0aW5nIHRvIA0KPj4gZmluZC4NCj4+
+DQo+PiBTaWduZWQtb2ZmLWJ5OiBHdXN0YXZvIEEuIFIuIFNpbHZhIDxndXN0YXZvQGVtYmVkZGVk
+b3IuY29tPg0KPj4gLS0tDQo+PiAgIGRyaXZlcnMvc2NzaS9iZmEvYmZhX2Zjc19scG9ydC5jIHwg
+OCArKy0tLS0tLQ0KPj4gICAxIGZpbGUgY2hhbmdlZCwgMiBpbnNlcnRpb25zKCspLCA2IGRlbGV0
+aW9ucygtKQ0KPj4NCj4+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvYmZhL2JmYV9mY3NfbHBv
+cnQuYyANCj4+IGIvZHJpdmVycy9zY3NpL2JmYS9iZmFfZmNzX2xwb3J0LmMNCj4+IGluZGV4IGI0
+ZjJjMWQ4NzQyZS4uNjQ2ZjA5ZjY2NDQzIDEwMDY0NA0KPj4gLS0tIGEvZHJpdmVycy9zY3NpL2Jm
+YS9iZmFfZmNzX2xwb3J0LmMNCj4+ICsrKyBiL2RyaXZlcnMvc2NzaS9iZmEvYmZhX2Zjc19scG9y
+dC5jDQo+PiBAQCAtNjQzMCw5ICs2NDMwLDcgQEAgYmZhX2Zjc192cG9ydF9zbV9sb2dvX2Zvcl9z
+dG9wKHN0cnVjdCBiZmFfZmNzX3Zwb3J0X3MgKnZwb3J0LA0KPj4gICAgICAgc3dpdGNoIChldmVu
+dCkgew0KPj4gICAgICAgY2FzZSBCRkFfRkNTX1ZQT1JUX1NNX09GRkxJTkU6DQo+PiAgICAgICAg
+ICAgYmZhX3NtX3NlbmRfZXZlbnQodnBvcnQtPmxwcywgQkZBX0xQU19TTV9PRkZMSU5FKTsNCj4+
+IC0gICAgICAgIC8qDQo+PiAtICAgICAgICAgKiAhISEgZmFsbCB0aHJvdWdoICEhIQ0KPj4gLSAg
+ICAgICAgICovDQo+PiArICAgICAgICAvKiBmYWxsIHRocm91Z2ggKi8NCj4+ICAgICAgIGNhc2Ug
+QkZBX0ZDU19WUE9SVF9TTV9SU1BfT0s6DQo+PiAgICAgICBjYXNlIEJGQV9GQ1NfVlBPUlRfU01f
+UlNQX0VSUk9SOg0KPj4gQEAgLTY0NTgsOSArNjQ1Niw3IEBAIGJmYV9mY3NfdnBvcnRfc21fbG9n
+byhzdHJ1Y3QgYmZhX2Zjc192cG9ydF9zICp2cG9ydCwNCj4+ICAgICAgIHN3aXRjaCAoZXZlbnQp
+IHsNCj4+ICAgICAgIGNhc2UgQkZBX0ZDU19WUE9SVF9TTV9PRkZMSU5FOg0KPj4gICAgICAgICAg
+IGJmYV9zbV9zZW5kX2V2ZW50KHZwb3J0LT5scHMsIEJGQV9MUFNfU01fT0ZGTElORSk7DQo+PiAt
+ICAgICAgICAvKg0KPj4gLSAgICAgICAgICogISEhIGZhbGwgdGhyb3VnaCAhISENCj4+IC0gICAg
+ICAgICAqLw0KPj4gKyAgICAgICAgLyogZmFsbCB0aHJvdWdoICovDQo+PiAgICAgICBjYXNlIEJG
+QV9GQ1NfVlBPUlRfU01fUlNQX09LOg0KPj4gICAgICAgY2FzZSBCRkFfRkNTX1ZQT1JUX1NNX1JT
+UF9FUlJPUjoNCj4+DQoNCkFja2VkLWJ5OiBTdWRhcnNhbmEgS2FsbHVydSA8U3VkYXJzYW5hLkth
+bGx1cnVAcWxvZ2ljLmNvbT4NCg==
