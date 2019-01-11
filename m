@@ -1,47 +1,30 @@
-From: Mike Christie <mchristi@redhat.com>
-Subject: Re: [PATCH] target: fix a missing check for match_int
-Date: Fri, 11 Jan 2019 14:06:03 -0600
-Message-ID: <5C38F72B.5000203@redhat.com>
-References: <20181226064818.75984-1-kjlu@umn.edu>
+From: Rob Herring <robh@kernel.org>
+Subject: Re: [PATCH v2 1/3] dt-bindings: ufs: Add HI3670 UFS controller
+ binding
+Date: Fri, 11 Jan 2019 15:35:02 -0600
+Message-ID: <20190111213502.GA24538@bogus>
+References: <20190105072859.9134-1-manivannan.sadhasivam@linaro.org>
+ <20190105072859.9134-2-manivannan.sadhasivam@linaro.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20181226064818.75984-1-kjlu@umn.edu>
+Content-Disposition: inline
+In-Reply-To: <20190105072859.9134-2-manivannan.sadhasivam@linaro.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Kangjie Lu <kjlu@umn.edu>
-Cc: pakki001@umn.edu, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, liwei213@huawei.com, robh+dt@kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org, john.stultz@linaro.org, amit.kucheria@linaro.org, guodong.xu@linaro.org, Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 12/26/2018 12:48 AM, Kangjie Lu wrote:
-> When match_int fails, "arg" is left uninitialized and may contain random
-> value, thus should not be used.
-> The fix checks if match_int fails, and if so, break.
+On Sat,  5 Jan 2019 12:58:57 +0530, Manivannan Sadhasivam wrote:
+> Add devicetree binding for HI3670 UFS controller. HI3760 SoC is very
+> similar to HI3660 SoC with almost same IPs. Only major difference in terms
+> of UFS is the PHY. HI3670 has 10nm PHY. But since the original driver
+> (HI3660 UFS) cannot make HI3670 UFS functional, a separate compatible
+> is added for HI3670 without any fallback.
 > 
-> Signed-off-by: Kangjie Lu <kjlu@umn.edu>
+> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 > ---
->  drivers/target/target_core_rd.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
+>  Documentation/devicetree/bindings/ufs/ufs-hisi.txt | 5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
 > 
-> diff --git a/drivers/target/target_core_rd.c b/drivers/target/target_core_rd.c
-> index a6e8106abd6f..3138123143e8 100644
-> --- a/drivers/target/target_core_rd.c
-> +++ b/drivers/target/target_core_rd.c
-> @@ -573,7 +573,8 @@ static ssize_t rd_set_configfs_dev_params(struct se_device *dev,
->  		token = match_token(ptr, tokens, args);
->  		switch (token) {
->  		case Opt_rd_pages:
-> -			match_int(args, &arg);
-> +			if (match_int(args, &arg))
-> +				break;
 
-I think if this fails you would want to return an error.
-
-Also, I think you want to add a similar check for the Opt_rd_nullio call
-below this chunk because arg may initialized to junk.
-
-
->  			rd_dev->rd_page_count = arg;
->  			pr_debug("RAMDISK: Referencing Page"
->  				" Count: %u\n", rd_dev->rd_page_count);
-> 
+Reviewed-by: Rob Herring <robh@kernel.org>
