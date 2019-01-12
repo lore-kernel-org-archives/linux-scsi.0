@@ -1,27 +1,30 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: qla1280: set 64bit coherent mask
-Date: Fri, 11 Jan 2019 22:31:18 -0500
-Message-ID: <yq1r2div9fd.fsf@oracle.com>
-References: <20190109140902.21638-1-tbogendoerfer@suse.de>
+Subject: Re: [PATCH] scsi: ufs: Remove select of phy-qcom-ufs from ufs-qcom
+Date: Fri, 11 Jan 2019 22:37:19 -0500
+Message-ID: <yq1imyuv95c.fsf@oracle.com>
+References: <20190111233159.218342-1-evgreen@chromium.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190109140902.21638-1-tbogendoerfer@suse.de> (Thomas
-        Bogendoerfer's message of "Wed, 9 Jan 2019 15:09:02 +0100")
+In-Reply-To: <20190111233159.218342-1-evgreen@chromium.org> (Evan Green's
+        message of "Fri, 11 Jan 2019 15:31:59 -0800")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Thomas Bogendoerfer <tbogendoerfer@suse.de>
-Cc: Michael Reed <mdr@sgi.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Evan Green <evgreen@chromium.org>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Douglas Anderson <dianders@chromium.org>, "James E.J. Bottomley" <jejb@linux.ibm.com>, Vinayak Holikatti <vinholikatti@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Thomas,
+Evan,
 
-> Reason is that SGI IP27 always generates 64bit DMA addresses and has
-> no fallback mode for 32bit DMA addresses implemented. QLA1280
-> supports 64bit addressing for all DMA accesses so setting coherent mask
-> to 64bit fixes the issue.
+> CONFIG_SCSI_UFS_QCOM selects CONFIG_PHY_QCOM_UFS, assuming that
+> this was the only possible PHY driver Qualcomm's UFS controller
+> would use. But in SDM845, the UFS driver is bundled into phy-qcom-qmp,
+> and phy-qcom-ufs is unused.
+>
+> Remove the select, since for SDM845 it adds useless drivers to the
+> build.
 
-Applied to 5.0/scsi-fixes, thanks!
+Applied to 5.1/scsi-queue.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
