@@ -1,30 +1,26 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 05/41] scsi: aic7xxx: aic79xx: mark expected switch fall-through
-Date: Fri, 11 Jan 2019 21:52:30 -0500
-Message-ID: <yq1wonawpsh.fsf@oracle.com>
-References: <cover.1543374820.git.gustavo@embeddedor.com>
-        <ff0ea78271abe136badebfbeba1d4373fb836bce.1543374820.git.gustavo@embeddedor.com>
-        <1d73dbbd-7e8e-e5ba-6a0f-97fdd799d4c4@embeddedor.com>
-        <a676a977-c55b-a0ce-1be3-b4d53ec68411@embeddedor.com>
-        <a1c70e7c-5936-a094-7487-8b18318e6257@suse.com>
+Subject: Re: [PATCH 0/3] libsas: SATA PHY connection rate matching during disovery
+Date: Fri, 11 Jan 2019 22:15:23 -0500
+Message-ID: <yq1h8eewoqc.fsf@oracle.com>
+References: <1546617688-240623-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <a1c70e7c-5936-a094-7487-8b18318e6257@suse.com> (Hannes
-        Reinecke's message of "Fri, 11 Jan 2019 08:42:23 +0100")
+In-Reply-To: <1546617688-240623-1-git-send-email-john.garry@huawei.com> (John
+        Garry's message of "Sat, 5 Jan 2019 00:01:25 +0800")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.com>
-Cc: "Gustavo A. R. Silva" <gustavo@embeddedor.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: John Garry <john.garry@huawei.com>
+Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, yanaijie@huawei.com, linuxarm@huawei.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Hannes,
+John,
 
->> Friendly ping (second one):
->>
->> Who can ack/review/take this patch, please?
+> This patchset looks to resolve an issue we see whereby a SATA end device
+> negotiated linkrate may exceed the min linkrate to the initiator, and
+> not be able to establish a connection.
 
-Applied to 5.1/scsi-queue.
+Looks good to me. Applied to 5.1/scsi-queue. Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
