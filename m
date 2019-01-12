@@ -1,62 +1,146 @@
-From: Kangjie Lu <kjlu@umn.edu>
-Subject: [PATCH v2] target: fix a missing check of match_int
-Date: Fri, 11 Jan 2019 23:31:59 -0600
-Message-ID: <20190112053159.99406-1-kjlu@umn.edu>
-References: <5C38F72B.5000203@redhat.com>
+From: Lukas Bulwahn <lukas.bulwahn@gmail.com>
+Subject: [PATCH] fcoe: make use of fip_mode enum complete
+Date: Sat, 12 Jan 2019 06:34:27 +0100
+Message-ID: <20190112053427.35696-1-lukas.bulwahn@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <5C38F72B.5000203@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: kjlu@umn.edu
-Cc: pakki001@umn.edu, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: QLogic-Storage-Upstream@qlogic.com, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Johannes Thumshirn <jth@kernel.org>, QLogic-Storage-Upstream@cavium.com, linux-kernel@vger.kernel.org, Lukas Bulwahn <lukas.bulwahn@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-When match_int fails, "arg" is left uninitialized and may contain random
-value, thus should not be used.
-The fix checks if match_int fails, and if so, returns its error code.
+commit 1917d42d14b7 ("fcoe: use enum for fip_mode") introduces a separate
+enum for the fip_mode that shall be used during initialisation handling
+until it is passed to fcoe_ctrl_link_up to set the initial fip_state.
+That change was incomplete and gcc quietly converted in various places
+between the fip_mode and the fip_state enum values with implicit enum
+conversions, which fortunately cannot cause any issues in the actual
+code's execution.
 
-Signed-off-by: Kangjie Lu <kjlu@umn.edu>
+clang however warns about these implicit enum conversions in the scsi
+drivers. This commit consolidates the use of the two enums, guided by
+clang's enum-conversion warnings.
+
+This commit now completes the use of the fip_mode:
+It expects and uses fip_mode in {bnx2fc,fcoe}_interface_create and
+fcoe_ctlr_init, and it explicitly converts from fip_mode to fip_state
+only at the single point in fcoe_ctlr_link_up.
+
+To eliminate that adding or removing values from fip_mode or fip_state enum
+break the right mapping of values, all fip_mode values are assigned to
+their fip_state counterparts.
+
+Signed-off-by: Lukas Bulwahn <lukas.bulwahn@gmail.com>
 ---
- drivers/target/target_core_rd.c | 15 +++++++++++++--
- 1 file changed, 13 insertions(+), 2 deletions(-)
+resending of this patch:
+https://patchwork.kernel.org/patch/10589865/
 
-diff --git a/drivers/target/target_core_rd.c b/drivers/target/target_core_rd.c
-index a6e8106abd6f..3b7657b2f2f1 100644
---- a/drivers/target/target_core_rd.c
-+++ b/drivers/target/target_core_rd.c
-@@ -559,6 +559,7 @@ static ssize_t rd_set_configfs_dev_params(struct se_device *dev,
- 	char *orig, *ptr, *opts;
- 	substring_t args[MAX_OPT_ARGS];
- 	int arg, token;
-+	int ret;
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c  | 2 +-
+ drivers/scsi/fcoe/fcoe.c           | 2 +-
+ drivers/scsi/fcoe/fcoe_ctlr.c      | 4 ++--
+ drivers/scsi/fcoe/fcoe_transport.c | 2 +-
+ drivers/scsi/qedf/qedf_main.c      | 2 +-
+ include/scsi/libfcoe.h             | 8 ++++----
+ 6 files changed, 10 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+index f00045813378..83aaab4fdab5 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+@@ -1445,7 +1445,7 @@ static struct bnx2fc_hba *bnx2fc_hba_create(struct cnic_dev *cnic)
+ static struct bnx2fc_interface *
+ bnx2fc_interface_create(struct bnx2fc_hba *hba,
+ 			struct net_device *netdev,
+-			enum fip_state fip_mode)
++			enum fip_mode fip_mode)
+ {
+ 	struct fcoe_ctlr_device *ctlr_dev;
+ 	struct bnx2fc_interface *interface;
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index f46b312d04bc..6768b2e8148a 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -390,7 +390,7 @@ static int fcoe_interface_setup(struct fcoe_interface *fcoe,
+  * Returns: pointer to a struct fcoe_interface or NULL on error
+  */
+ static struct fcoe_interface *fcoe_interface_create(struct net_device *netdev,
+-						    enum fip_state fip_mode)
++						    enum fip_mode fip_mode)
+ {
+ 	struct fcoe_ctlr_device *ctlr_dev;
+ 	struct fcoe_ctlr *ctlr;
+diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
+index 54da3166da8d..a52d3ad94876 100644
+--- a/drivers/scsi/fcoe/fcoe_ctlr.c
++++ b/drivers/scsi/fcoe/fcoe_ctlr.c
+@@ -147,7 +147,7 @@ static void fcoe_ctlr_map_dest(struct fcoe_ctlr *fip)
+  * fcoe_ctlr_init() - Initialize the FCoE Controller instance
+  * @fip: The FCoE controller to initialize
+  */
+-void fcoe_ctlr_init(struct fcoe_ctlr *fip, enum fip_state mode)
++void fcoe_ctlr_init(struct fcoe_ctlr *fip, enum fip_mode mode)
+ {
+ 	fcoe_ctlr_set_state(fip, FIP_ST_LINK_WAIT);
+ 	fip->mode = mode;
+@@ -454,7 +454,7 @@ void fcoe_ctlr_link_up(struct fcoe_ctlr *fip)
+ 		mutex_unlock(&fip->ctlr_mutex);
+ 		fc_linkup(fip->lp);
+ 	} else if (fip->state == FIP_ST_LINK_WAIT) {
+-		fcoe_ctlr_set_state(fip, fip->mode);
++		fcoe_ctlr_set_state(fip, (enum fip_state) fip->mode);
+ 		switch (fip->mode) {
+ 		default:
+ 			LIBFCOE_FIP_DBG(fip, "invalid mode %d\n", fip->mode);
+diff --git a/drivers/scsi/fcoe/fcoe_transport.c b/drivers/scsi/fcoe/fcoe_transport.c
+index f4909cd206d3..b381ab066b9c 100644
+--- a/drivers/scsi/fcoe/fcoe_transport.c
++++ b/drivers/scsi/fcoe/fcoe_transport.c
+@@ -873,7 +873,7 @@ static int fcoe_transport_create(const char *buffer,
+ 	int rc = -ENODEV;
+ 	struct net_device *netdev = NULL;
+ 	struct fcoe_transport *ft = NULL;
+-	enum fip_state fip_mode = (enum fip_state)(long)kp->arg;
++	enum fip_mode fip_mode = (enum fip_mode)(long)kp->arg;
  
- 	opts = kstrdup(page, GFP_KERNEL);
- 	if (!opts)
-@@ -573,14 +574,24 @@ static ssize_t rd_set_configfs_dev_params(struct se_device *dev,
- 		token = match_token(ptr, tokens, args);
- 		switch (token) {
- 		case Opt_rd_pages:
--			match_int(args, &arg);
-+			ret = match_int(args, &arg);
-+			if (ret) {
-+				kfree(orig);
-+				return ret;
-+			}
-+
- 			rd_dev->rd_page_count = arg;
- 			pr_debug("RAMDISK: Referencing Page"
- 				" Count: %u\n", rd_dev->rd_page_count);
- 			rd_dev->rd_flags |= RDF_HAS_PAGE_COUNT;
- 			break;
- 		case Opt_rd_nullio:
--			match_int(args, &arg);
-+			ret = match_int(args, &arg);
-+			if (ret) {
-+				kfree(orig);
-+				return ret;
-+			}
-+
- 			if (arg != 1)
- 				break;
+ 	mutex_lock(&ft_mutex);
  
+diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
+index 0a5dd5595dd3..cd61905ca2f5 100644
+--- a/drivers/scsi/qedf/qedf_main.c
++++ b/drivers/scsi/qedf/qedf_main.c
+@@ -1418,7 +1418,7 @@ static struct libfc_function_template qedf_lport_template = {
+ 
+ static void qedf_fcoe_ctlr_setup(struct qedf_ctx *qedf)
+ {
+-	fcoe_ctlr_init(&qedf->ctlr, FIP_ST_AUTO);
++	fcoe_ctlr_init(&qedf->ctlr, FIP_MODE_AUTO);
+ 
+ 	qedf->ctlr.send = qedf_fip_send;
+ 	qedf->ctlr.get_src_addr = qedf_get_src_mac;
+diff --git a/include/scsi/libfcoe.h b/include/scsi/libfcoe.h
+index cb8a273732cf..f8f1f039a611 100644
+--- a/include/scsi/libfcoe.h
++++ b/include/scsi/libfcoe.h
+@@ -80,9 +80,9 @@ enum fip_state {
+  */
+ enum fip_mode {
+ 	FIP_MODE_AUTO = FIP_ST_AUTO,
+-	FIP_MODE_NON_FIP,
+-	FIP_MODE_FABRIC,
+-	FIP_MODE_VN2VN,
++	FIP_MODE_NON_FIP = FIP_ST_NON_FIP,
++	FIP_MODE_FABRIC = FIP_ST_ENABLED,
++	FIP_MODE_VN2VN = FIP_ST_VNMP_START,
+ };
+ 
+ /**
+@@ -250,7 +250,7 @@ struct fcoe_rport {
+ };
+ 
+ /* FIP API functions */
+-void fcoe_ctlr_init(struct fcoe_ctlr *, enum fip_state);
++void fcoe_ctlr_init(struct fcoe_ctlr *fip, enum fip_mode);
+ void fcoe_ctlr_destroy(struct fcoe_ctlr *);
+ void fcoe_ctlr_link_up(struct fcoe_ctlr *);
+ int fcoe_ctlr_link_down(struct fcoe_ctlr *);
 -- 
-2.17.2 (Apple Git-113)
+2.17.1
