@@ -1,146 +1,95 @@
-From: Lukas Bulwahn <lukas.bulwahn@gmail.com>
-Subject: [PATCH] fcoe: make use of fip_mode enum complete
-Date: Sat, 12 Jan 2019 06:34:27 +0100
-Message-ID: <20190112053427.35696-1-lukas.bulwahn@gmail.com>
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+Subject: Re: [PATCH] scsi: ufs: Consider device limitations for dma_mask
+Date: Sat, 12 Jan 2019 09:46:42 -0800
+Message-ID: <20190112174642.GC1992@tuxbook-pro>
+References: <20190111225402.6133-1-bjorn.andersson@linaro.org>
+ <CAD=FV=WdCVENn8-5qBUPmiWm5z95_+pxuKv=075e6n1tcaS97w@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CAD=FV=WdCVENn8-5qBUPmiWm5z95_+pxuKv=075e6n1tcaS97w@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: QLogic-Storage-Upstream@qlogic.com, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Johannes Thumshirn <jth@kernel.org>, QLogic-Storage-Upstream@cavium.com, linux-kernel@vger.kernel.org, Lukas Bulwahn <lukas.bulwahn@gmail.com>
+To: Doug Anderson <dianders@chromium.org>
+Cc: Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-arm-msm <linux-arm-msm@vger.kernel.org>, Yaniv Gardi <ygardi@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, Vivek Gautam <vivek.gautam@codeaurora.org>
 List-Id: linux-scsi@vger.kernel.org
 
-commit 1917d42d14b7 ("fcoe: use enum for fip_mode") introduces a separate
-enum for the fip_mode that shall be used during initialisation handling
-until it is passed to fcoe_ctrl_link_up to set the initial fip_state.
-That change was incomplete and gcc quietly converted in various places
-between the fip_mode and the fip_state enum values with implicit enum
-conversions, which fortunately cannot cause any issues in the actual
-code's execution.
+On Fri 11 Jan 15:33 PST 2019, Doug Anderson wrote:
 
-clang however warns about these implicit enum conversions in the scsi
-drivers. This commit consolidates the use of the two enums, guided by
-clang's enum-conversion warnings.
+> Hi,
+> 
+> On Fri, Jan 11, 2019 at 2:54 PM Bjorn Andersson
+> <bjorn.andersson@linaro.org> wrote:
+> >
+> > On Qualcomm SDM845 the capabilities of the UFS MEM controller states
+> > that it's capable of dealing with 64 bit addresses, but DMA addresses
+> > are truncated causing IOMMU faults when trying to issue operations.
+> >
+> > Limit the DMA mask to that of the device, so that DMA allocations
+> > is limited to the range supported by the bus and device and not just
+> > following what the controller's capabilities states.
+> >
+> > Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+> > ---
+> >  drivers/scsi/ufs/ufshcd.c | 13 ++++++++-----
+> >  1 file changed, 8 insertions(+), 5 deletions(-)
+> >
+> > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> > index 9ba7671b84f8..dc0eb59dd46f 100644
+> > --- a/drivers/scsi/ufs/ufshcd.c
+> > +++ b/drivers/scsi/ufs/ufshcd.c
+> > @@ -8151,11 +8151,14 @@ EXPORT_SYMBOL_GPL(ufshcd_dealloc_host);
+> >   */
+> >  static int ufshcd_set_dma_mask(struct ufs_hba *hba)
+> >  {
+> > -       if (hba->capabilities & MASK_64_ADDRESSING_SUPPORT) {
+> > -               if (!dma_set_mask_and_coherent(hba->dev, DMA_BIT_MASK(64)))
+> > -                       return 0;
+> > -       }
+> > -       return dma_set_mask_and_coherent(hba->dev, DMA_BIT_MASK(32));
+> > +       u64 dma_mask = dma_get_mask(hba->dev);
+> > +
+> > +       if (hba->capabilities & MASK_64_ADDRESSING_SUPPORT)
+> > +               dma_mask &= DMA_BIT_MASK(64);
+> > +       else
+> > +               dma_mask &= DMA_BIT_MASK(32);
+> 
+> Just because I'm annoying like that, I'll point out  that the above is
+> a bit on the silly side.  Instead I'd do:
+> 
+> if (!(hba->capabilities & MASK_64_ADDRESSING_SUPPORT))
+>     dma_mask &= DMA_BIT_MASK(32);
+> 
+> AKA: your code is masking a 64-bit variable with a value that is known
+> to be 0xffffffffffffffff, which is kinda a no-op.
+> 
 
-This commit now completes the use of the fip_mode:
-It expects and uses fip_mode in {bnx2fc,fcoe}_interface_create and
-fcoe_ctlr_init, and it explicitly converts from fip_mode to fip_state
-only at the single point in fcoe_ctlr_link_up.
+You're right, so I took a stab at reworking the patch, but we end up
+with something:
 
-To eliminate that adding or removing values from fip_mode or fip_state enum
-break the right mapping of values, all fip_mode values are assigned to
-their fip_state counterparts.
+	u64 dma_mask;
 
-Signed-off-by: Lukas Bulwahn <lukas.bulwahn@gmail.com>
----
-resending of this patch:
-https://patchwork.kernel.org/patch/10589865/
+	if (!(hba->capabilities & MASK_64_ADDRESSING_SUPPORT)) {
+		dma_mask = dma_get_mask(hba->dev);
+		dma_mash &= DMA_BIT_MASK(32);
+		return dma_set_mask_and_coherent(hba->dev, dma_mask);
+	}
 
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c  | 2 +-
- drivers/scsi/fcoe/fcoe.c           | 2 +-
- drivers/scsi/fcoe/fcoe_ctlr.c      | 4 ++--
- drivers/scsi/fcoe/fcoe_transport.c | 2 +-
- drivers/scsi/qedf/qedf_main.c      | 2 +-
- include/scsi/libfcoe.h             | 8 ++++----
- 6 files changed, 10 insertions(+), 10 deletions(-)
+	return 0;
+}
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-index f00045813378..83aaab4fdab5 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-@@ -1445,7 +1445,7 @@ static struct bnx2fc_hba *bnx2fc_hba_create(struct cnic_dev *cnic)
- static struct bnx2fc_interface *
- bnx2fc_interface_create(struct bnx2fc_hba *hba,
- 			struct net_device *netdev,
--			enum fip_state fip_mode)
-+			enum fip_mode fip_mode)
- {
- 	struct fcoe_ctlr_device *ctlr_dev;
- 	struct bnx2fc_interface *interface;
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index f46b312d04bc..6768b2e8148a 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -390,7 +390,7 @@ static int fcoe_interface_setup(struct fcoe_interface *fcoe,
-  * Returns: pointer to a struct fcoe_interface or NULL on error
-  */
- static struct fcoe_interface *fcoe_interface_create(struct net_device *netdev,
--						    enum fip_state fip_mode)
-+						    enum fip_mode fip_mode)
- {
- 	struct fcoe_ctlr_device *ctlr_dev;
- 	struct fcoe_ctlr *ctlr;
-diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
-index 54da3166da8d..a52d3ad94876 100644
---- a/drivers/scsi/fcoe/fcoe_ctlr.c
-+++ b/drivers/scsi/fcoe/fcoe_ctlr.c
-@@ -147,7 +147,7 @@ static void fcoe_ctlr_map_dest(struct fcoe_ctlr *fip)
-  * fcoe_ctlr_init() - Initialize the FCoE Controller instance
-  * @fip: The FCoE controller to initialize
-  */
--void fcoe_ctlr_init(struct fcoe_ctlr *fip, enum fip_state mode)
-+void fcoe_ctlr_init(struct fcoe_ctlr *fip, enum fip_mode mode)
- {
- 	fcoe_ctlr_set_state(fip, FIP_ST_LINK_WAIT);
- 	fip->mode = mode;
-@@ -454,7 +454,7 @@ void fcoe_ctlr_link_up(struct fcoe_ctlr *fip)
- 		mutex_unlock(&fip->ctlr_mutex);
- 		fc_linkup(fip->lp);
- 	} else if (fip->state == FIP_ST_LINK_WAIT) {
--		fcoe_ctlr_set_state(fip, fip->mode);
-+		fcoe_ctlr_set_state(fip, (enum fip_state) fip->mode);
- 		switch (fip->mode) {
- 		default:
- 			LIBFCOE_FIP_DBG(fip, "invalid mode %d\n", fip->mode);
-diff --git a/drivers/scsi/fcoe/fcoe_transport.c b/drivers/scsi/fcoe/fcoe_transport.c
-index f4909cd206d3..b381ab066b9c 100644
---- a/drivers/scsi/fcoe/fcoe_transport.c
-+++ b/drivers/scsi/fcoe/fcoe_transport.c
-@@ -873,7 +873,7 @@ static int fcoe_transport_create(const char *buffer,
- 	int rc = -ENODEV;
- 	struct net_device *netdev = NULL;
- 	struct fcoe_transport *ft = NULL;
--	enum fip_state fip_mode = (enum fip_state)(long)kp->arg;
-+	enum fip_mode fip_mode = (enum fip_mode)(long)kp->arg;
- 
- 	mutex_lock(&ft_mutex);
- 
-diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
-index 0a5dd5595dd3..cd61905ca2f5 100644
---- a/drivers/scsi/qedf/qedf_main.c
-+++ b/drivers/scsi/qedf/qedf_main.c
-@@ -1418,7 +1418,7 @@ static struct libfc_function_template qedf_lport_template = {
- 
- static void qedf_fcoe_ctlr_setup(struct qedf_ctx *qedf)
- {
--	fcoe_ctlr_init(&qedf->ctlr, FIP_ST_AUTO);
-+	fcoe_ctlr_init(&qedf->ctlr, FIP_MODE_AUTO);
- 
- 	qedf->ctlr.send = qedf_fip_send;
- 	qedf->ctlr.get_src_addr = qedf_get_src_mac;
-diff --git a/include/scsi/libfcoe.h b/include/scsi/libfcoe.h
-index cb8a273732cf..f8f1f039a611 100644
---- a/include/scsi/libfcoe.h
-+++ b/include/scsi/libfcoe.h
-@@ -80,9 +80,9 @@ enum fip_state {
-  */
- enum fip_mode {
- 	FIP_MODE_AUTO = FIP_ST_AUTO,
--	FIP_MODE_NON_FIP,
--	FIP_MODE_FABRIC,
--	FIP_MODE_VN2VN,
-+	FIP_MODE_NON_FIP = FIP_ST_NON_FIP,
-+	FIP_MODE_FABRIC = FIP_ST_ENABLED,
-+	FIP_MODE_VN2VN = FIP_ST_VNMP_START,
- };
- 
- /**
-@@ -250,7 +250,7 @@ struct fcoe_rport {
- };
- 
- /* FIP API functions */
--void fcoe_ctlr_init(struct fcoe_ctlr *, enum fip_state);
-+void fcoe_ctlr_init(struct fcoe_ctlr *fip, enum fip_mode);
- void fcoe_ctlr_destroy(struct fcoe_ctlr *);
- void fcoe_ctlr_link_up(struct fcoe_ctlr *);
- int fcoe_ctlr_link_down(struct fcoe_ctlr *);
--- 
-2.17.1
+Which makes me feel I need a comment here describing that what happens
+in the 64-bit case (i.e. nothing). So I think the proposed form is
+clearer, even though the compiler is expected to optimize away one of
+the branches.
+
+James, Martin, do you have a preference?
+
+> 
+> ...other than the nit, this seems sane to me.
+> 
+> Reviewed-by: Douglas Anderson <dianders@chromium.org>
+> Tested-by: Douglas Anderson <dianders@chromium.org>
+
+Thanks,
+Bjorn
