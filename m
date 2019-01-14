@@ -1,43 +1,45 @@
 From: Evan Green <evgreen@chromium.org>
-Subject: Re: [PATCH] scsi: ufs: Remove select of phy-qcom-ufs from ufs-qcom
-Date: Mon, 14 Jan 2019 10:41:43 -0800
-Message-ID: <CAE=gft7OhomkDT7pMBbRRgKK89CVhmigbebgqiDEqTZtjeXhcg@mail.gmail.com>
-References: <20190111233159.218342-1-evgreen@chromium.org> <yq1imyuv95c.fsf@oracle.com>
- <CAD=FV=ULU0JA1LAruHh2KyXOc0dzuQNZTjV0PAEX2J_Ra2=ZRw@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Subject: [PATCH] arm64: defconfig: Add Qualcomm UFS PHY
+Date: Mon, 14 Jan 2019 11:01:12 -0800
+Message-ID: <20190114190112.167922-1-evgreen@chromium.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAD=FV=ULU0JA1LAruHh2KyXOc0dzuQNZTjV0PAEX2J_Ra2=ZRw@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Doug Anderson <dianders@chromium.org>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Bjorn Andersson <bjorn.andersson@linaro.org>, Andy Gross <andy.gross@linaro.org>, masneyb@onstation.org, "James E.J. Bottomley" <jejb@linux.ibm.com>, Vinayak Holikatti <vinholikatti@gmail.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-arm-msm <linux-arm-msm@vger.kernel.org>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>, Will Deacon <will.deacon@arm.com>
+Cc: Douglas Anderson <dianders@chromium.org>, linux-scsi@vger.kernel.org, Evan Green <evgreen@chromium.org>, Bjorn Andersson <bjorn.andersson@linaro.org>, Arnd Bergmann <arnd@arndb.de>, Enric Balletbo i Serra <enric.balletbo@collabora.com>, Heiko Stuebner <heiko@sntech.de>, Marc Gonzalez <marc.w.gonzalez@free.fr>, linux-kernel@vger.kernel.org, Jagan Teki <jagan@amarulasolutions.com>, Andy Gross <andy.gross@linaro.org>, Catalin Marinas <catalin.marinas@arm.com>, Olof Johansson <olof@lixom.net>, linux-arm-kernel@lists.infradead.org, Simon Horman <horms+renesas@verge.net.au>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Jan 14, 2019 at 9:08 AM Doug Anderson <dianders@chromium.org> wrote:
->
-> Hi,
->
-> On Fri, Jan 11, 2019 at 7:37 PM Martin K. Petersen
-> <martin.petersen@oracle.com> wrote:
-> >
-> >
-> > Evan,
-> >
-> > > CONFIG_SCSI_UFS_QCOM selects CONFIG_PHY_QCOM_UFS, assuming that
-> > > this was the only possible PHY driver Qualcomm's UFS controller
-> > > would use. But in SDM845, the UFS driver is bundled into phy-qcom-qmp,
-> > > and phy-qcom-ufs is unused.
-> > >
-> > > Remove the select, since for SDM845 it adds useless drivers to the
-> > > build.
-> >
-> > Applied to 5.1/scsi-queue.
->
-> Should this be accompanied by a change to arch/arm64/configs/defconfig
-> that sets 'CONFIG_PHY_QCOM_UFS=m'?  I don't personally have any
-> non-SDM845 devices to test on, but I'm sorta assuming they will all
-> break without the defconfig update?
+With commit 326a859b2814 ("scsi: ufs: Remove select of phy-qcom-ufs from
+ufs-qcom"), the Qualcomm UFS controller no longer selects the Qualcomm
+UFS phy (since it's not a given that PHY will be the one present).
 
-Right, thanks for pointing that out. I'll send out another patch to
-tweak the defconfig.
--Evan
+Add that PHY into the defconfig since it's no longer being selected, and
+Qualcomm platforms except for SDM845 need it.
+
+Fixes: 326a859b2814 ("scsi: ufs: Remove select of phy-qcom-ufs from ufs-qcom")
+Signed-off-by: Evan Green <evgreen@chromium.org>
+---
+I unfortunately don't have a non-SDM845 device to test this on. I'm hoping
+it Just Works, or someone might be willing to give it a try.
+
+Also, Martin, I'm not sure if your git commit IDs are stable, or whether or
+not I should put the Fixes: in there. If they're not, this could be reordered
+with the other commit and then there wouldn't need to be a Fixes. Let me know.
+
+ arch/arm64/configs/defconfig | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index 0478ef9e4b78e..d43644ca75997 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -694,6 +694,8 @@ CONFIG_PHY_HISTB_COMBPHY=y
+ CONFIG_PHY_HISI_INNO_USB2=y
+ CONFIG_PHY_MVEBU_CP110_COMPHY=y
+ CONFIG_PHY_QCOM_QMP=m
++CONFIG_PHY_QCOM_UFS=m
++CONFIG_PHY_QCOM_UFS_14NM=m
+ CONFIG_PHY_QCOM_USB_HS=y
+ CONFIG_PHY_RCAR_GEN3_PCIE=y
+ CONFIG_PHY_RCAR_GEN3_USB2=y
+-- 
+2.18.1
