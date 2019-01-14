@@ -1,40 +1,43 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] scsi: ufs: Consider device limitations for dma_mask
-Date: Mon, 14 Jan 2019 09:36:59 -0800
-Message-ID: <20190114173659.GA17788@infradead.org>
-References: <20190111225402.6133-1-bjorn.andersson@linaro.org>
- <20190114111109.GA18673@infradead.org>
- <20190114173051.GA9278@minitux>
+From: Evan Green <evgreen@chromium.org>
+Subject: Re: [PATCH] scsi: ufs: Remove select of phy-qcom-ufs from ufs-qcom
+Date: Mon, 14 Jan 2019 10:41:43 -0800
+Message-ID: <CAE=gft7OhomkDT7pMBbRRgKK89CVhmigbebgqiDEqTZtjeXhcg@mail.gmail.com>
+References: <20190111233159.218342-1-evgreen@chromium.org> <yq1imyuv95c.fsf@oracle.com>
+ <CAD=FV=ULU0JA1LAruHh2KyXOc0dzuQNZTjV0PAEX2J_Ra2=ZRw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20190114173051.GA9278@minitux>
+In-Reply-To: <CAD=FV=ULU0JA1LAruHh2KyXOc0dzuQNZTjV0PAEX2J_Ra2=ZRw@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Bjorn Andersson <bjorn.andersson@linaro.org>
-Cc: Christoph Hellwig <hch@infradead.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, Douglas Anderson <dianders@chromium.org>
+To: Doug Anderson <dianders@chromium.org>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Bjorn Andersson <bjorn.andersson@linaro.org>, Andy Gross <andy.gross@linaro.org>, masneyb@onstation.org, "James E.J. Bottomley" <jejb@linux.ibm.com>, Vinayak Holikatti <vinholikatti@gmail.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-arm-msm <linux-arm-msm@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Jan 14, 2019 at 09:30:51AM -0800, Bjorn Andersson wrote:
-> The problem here is that the capability bit states that the controller
-> itself claim to be able to deal with 64-bit addresses, which is probably
-> true. The thing that the struct device represents (the integrated
-> controller, on a bus in this SoC) doesn't.
-> 
-> The device model accurately handles this and carries a dma_mask that's
-> appropriate for the device in this system - the capability is not.
-> 
-> > You either need to introduce a quirk or a way to communicate the
-> > different limit so that it can be set by the core.
-> 
-> The system's limit is already communicated in hba->dev->dma_mask, but
-> the ufshcd driver overwrites this. I expect that this would make sense
-> if the device model claims we can do e.g. 40 bit addressing, but the
-> 64-bit capability is not set in the controller - in which case ufshcd
-> would accurately lower this to 32-bits.
+On Mon, Jan 14, 2019 at 9:08 AM Doug Anderson <dianders@chromium.org> wrote:
+>
+> Hi,
+>
+> On Fri, Jan 11, 2019 at 7:37 PM Martin K. Petersen
+> <martin.petersen@oracle.com> wrote:
+> >
+> >
+> > Evan,
+> >
+> > > CONFIG_SCSI_UFS_QCOM selects CONFIG_PHY_QCOM_UFS, assuming that
+> > > this was the only possible PHY driver Qualcomm's UFS controller
+> > > would use. But in SDM845, the UFS driver is bundled into phy-qcom-qmp,
+> > > and phy-qcom-ufs is unused.
+> > >
+> > > Remove the select, since for SDM845 it adds useless drivers to the
+> > > build.
+> >
+> > Applied to 5.1/scsi-queue.
+>
+> Should this be accompanied by a change to arch/arm64/configs/defconfig
+> that sets 'CONFIG_PHY_QCOM_UFS=m'?  I don't personally have any
+> non-SDM845 devices to test on, but I'm sorta assuming they will all
+> break without the defconfig update?
 
-No, that is absolutely not true.  dev->dma_mask is set by the driver
-to what the driver based on the device specsheet/register claims to
-support.  dev->bus_dma_mask contains any additional limits imposed
-by the bus/system, but that is handled transparently by the dma mapping
-code.
+Right, thanks for pointing that out. I'll send out another patch to
+tweak the defconfig.
+-Evan
