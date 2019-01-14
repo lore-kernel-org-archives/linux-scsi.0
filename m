@@ -1,41 +1,62 @@
-From: Doug Anderson <dianders@chromium.org>
-Subject: Re: [PATCH] scsi: ufs: Remove select of phy-qcom-ufs from ufs-qcom
-Date: Mon, 14 Jan 2019 09:07:57 -0800
-Message-ID: <CAD=FV=ULU0JA1LAruHh2KyXOc0dzuQNZTjV0PAEX2J_Ra2=ZRw@mail.gmail.com>
-References: <20190111233159.218342-1-evgreen@chromium.org> <yq1imyuv95c.fsf@oracle.com>
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+Subject: Re: [PATCH] scsi: ufs: Consider device limitations for dma_mask
+Date: Mon, 14 Jan 2019 09:30:51 -0800
+Message-ID: <20190114173051.GA9278@minitux>
+References: <20190111225402.6133-1-bjorn.andersson@linaro.org>
+ <20190114111109.GA18673@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <yq1imyuv95c.fsf@oracle.com>
+Content-Disposition: inline
+In-Reply-To: <20190114111109.GA18673@infradead.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, Bjorn Andersson <bjorn.andersson@linaro.org>, Andy Gross <andy.gross@linaro.org>, masneyb@onstation.org
-Cc: Evan Green <evgreen@chromium.org>, "James E.J. Bottomley" <jejb@linux.ibm.com>, Vinayak Holikatti <vinholikatti@gmail.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-arm-msm <linux-arm-msm@vger.kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, Douglas Anderson <dianders@chromium.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi,
+On Mon 14 Jan 03:11 PST 2019, Christoph Hellwig wrote:
 
-On Fri, Jan 11, 2019 at 7:37 PM Martin K. Petersen
-<martin.petersen@oracle.com> wrote:
->
->
-> Evan,
->
-> > CONFIG_SCSI_UFS_QCOM selects CONFIG_PHY_QCOM_UFS, assuming that
-> > this was the only possible PHY driver Qualcomm's UFS controller
-> > would use. But in SDM845, the UFS driver is bundled into phy-qcom-qmp,
-> > and phy-qcom-ufs is unused.
-> >
-> > Remove the select, since for SDM845 it adds useless drivers to the
-> > build.
->
-> Applied to 5.1/scsi-queue.
+> On Fri, Jan 11, 2019 at 02:54:02PM -0800, Bjorn Andersson wrote:
+> >   */
+> >  static int ufshcd_set_dma_mask(struct ufs_hba *hba)
+> >  {
+> > -	if (hba->capabilities & MASK_64_ADDRESSING_SUPPORT) {
+> > -		if (!dma_set_mask_and_coherent(hba->dev, DMA_BIT_MASK(64)))
+> > -			return 0;
+> > -	}
+> > -	return dma_set_mask_and_coherent(hba->dev, DMA_BIT_MASK(32));
+> > +	u64 dma_mask = dma_get_mask(hba->dev);
+> > +
+> > +	if (hba->capabilities & MASK_64_ADDRESSING_SUPPORT)
+> > +		dma_mask &= DMA_BIT_MASK(64);
+> > +	else
+> > +		dma_mask &= DMA_BIT_MASK(32);
+> > +
+> > +	return dma_set_mask_and_coherent(hba->dev, dma_mask);
+> 
+> NAK.  ufshcd clearly is in charge of setting the dma mask, so reading
+> it back from someone else who might have set it is completely bogus.
+> 
 
-Should this be accompanied by a change to arch/arm64/configs/defconfig
-that sets 'CONFIG_PHY_QCOM_UFS=m'?  I don't personally have any
-non-SDM845 devices to test on, but I'm sorta assuming they will all
-break without the defconfig update?
+The problem here is that the capability bit states that the controller
+itself claim to be able to deal with 64-bit addresses, which is probably
+true. The thing that the struct device represents (the integrated
+controller, on a bus in this SoC) doesn't.
 
-Added a few more people (and linux-arm-msm list) to this thread in
-case this matters to anyone.
+The device model accurately handles this and carries a dma_mask that's
+appropriate for the device in this system - the capability is not.
 
--Doug
+> You either need to introduce a quirk or a way to communicate the
+> different limit so that it can be set by the core.
+
+The system's limit is already communicated in hba->dev->dma_mask, but
+the ufshcd driver overwrites this. I expect that this would make sense
+if the device model claims we can do e.g. 40 bit addressing, but the
+64-bit capability is not set in the controller - in which case ufshcd
+would accurately lower this to 32-bits.
+
+
+I'm not sure what to quirk here, but will look into this...
+
+Regards,
+Bjorn
