@@ -1,43 +1,55 @@
-From: voytikd@gmail.com
-Subject: [PATCH] scsi: be2iscsi: fix potential NULL pointer dereference
-Date: Wed, 16 Jan 2019 00:51:52 +0100
-Message-ID: <20190115235152.32499-1-voytikd@gmail.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] scsi: isci: initialize shost fully before calling scsi_add_host()
+Date: Tue, 15 Jan 2019 21:54:01 -0500
+Message-ID: <yq1sgxts46u.fsf@oracle.com>
+References: <20190108205043.3122-1-logang@deltatee.com>
+        <20190109184105.GB22070@lst.de>
+        <8d96b40d-fc83-9218-9479-3de423594ddb@huawei.com>
+        <yq1lg3qy578.fsf@oracle.com>
+        <0ffaf166-c7e5-b135-fdc5-bcac24148e62@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <0ffaf166-c7e5-b135-fdc5-bcac24148e62@huawei.com> (John Garry's
+        message of "Mon, 14 Jan 2019 12:10:23 +0000")
 Sender: linux-kernel-owner@vger.kernel.org
-To: "James E . J . Bottomley" <jejb@linux.ibm.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Ketan Mukadam <ketan.mukadam@broadcom.com>, Jitendra Bhivare <jitendra.bhivare@broadcom.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Dmitry Voytik <voytikd@gmail.com>
+To: John Garry <john.garry@huawei.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Logan Gunthorpe <logang@deltatee.com>, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, Intel SCU Linux support <intel-linux-scu@intel.com>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, Jens Axboe <axboe@kernel.dk>, Jeff Moyer <jmoyer@redhat.com>, chenxiang <chenxiang66@hisilicon.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Dmitry Voytik <voytikd@gmail.com>
 
-Fix potential NULL pointer dereference wich might happen
-in function beiscsi_alloc_mem() if kmalloc_array() for
-mem_descr->mem_array fails and as a result deref of NULL
-occurs while passing parameters to dma_free_coherent().
+Hi John,
 
-Signed-off-by: Dmitry Voytik <voytikd@gmail.com>
----
- drivers/scsi/be2iscsi/be_main.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+>> So in this case I think that accessor functions are actually better
+>> because they allow us to print a big fat warning when you twiddle
+>> something you shouldn't post-initialization. So that's something I think
+>> we could--and should--improve.
+>>
+> Sure, this is an alternative, but I would rather make it obvious when
+> these parameters should be set so that this would not be required.
 
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 74e260027c7d..7867f7d2aca7 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -2527,8 +2527,11 @@ static int beiscsi_alloc_mem(struct beiscsi_hba *phba)
- 		mem_descr->size_in_bytes = phba->mem_req[i];
- 		mem_descr->mem_array = kmalloc_array(j, sizeof(*mem_arr),
- 						     GFP_KERNEL);
--		if (!mem_descr->mem_array)
-+		if (!mem_descr->mem_array) {
-+			/* mem_array must point to valid memory. */
-+			mem_descr->mem_array = mem_arr_orig;
- 			goto free_mem;
-+		}
- 
- 		memcpy(mem_descr->mem_array, mem_arr_orig,
- 		       sizeof(struct mem_array) * j);
+I would like to have a mechanism in place that warns if you twiddle
+things that break assumptions made at host registration time. That's not
+a scenario the old registration interface was designed to handle.
+
+I am not sure I agree with your assertion that setting these masks in
+the struct prior to scsi_add_host() makes this ordering requirement much
+more obvious. It is not like you are passing in a list of parameters and
+then receiving a separately instantiated immutable scsi_host object. You
+are performing an operation on something you already have and own.
+
+That's why I commented that the current intersection between
+compile-time static host template, dynamically discovered
+pre-registration scsi_host parameters, and the registered runtime
+scsi_host struct is somewhat messy.
+
+Btw. I have no attachment to the prot wrappers whatsoever. The reason
+they exist is that the SCSI integrity support was optional. And
+therefore we had stub functions so things could be compiled without any
+of the integrity fields being present in the various SCSI structs. So I
+don't have any problem killing the wrappers except they may actually be
+handy for regressions like this one where you could #error if the driver
+writer violates the ordering requirement.
+
 -- 
-2.20.1
+Martin K. Petersen	Oracle Linux Engineering
