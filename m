@@ -1,277 +1,120 @@
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Subject: Re: [PATCH v1 5/8] scsi: ufs: qcom: Expose the reset controller for
- PHY
-Date: Wed, 16 Jan 2019 14:22:25 +0530
-Message-ID: <a289d841-858d-5583-ce9a-8dc0f2d18a78@ti.com>
-References: <20190111230129.127037-1-evgreen@chromium.org>
- <20190111230129.127037-6-evgreen@chromium.org>
+From: Marc Gonzalez <marc.w.gonzalez@free.fr>
+Subject: Re: [PATCH v1] scsi: ufs: Use explicit access size in ufshcd_dump_regs
+Date: Wed, 16 Jan 2019 10:36:45 +0100
+Message-ID: <c3c4e886-39ef-6384-5772-96b865d0b059@free.fr>
+References: <3bf7ea8e-4cf2-1f9b-7f46-15609dfcad19@free.fr>
+ <214700f8-a381-5740-47c0-54923dae60b1@free.fr>
+ <4c367e20-3ae8-ba28-75dc-b07805e27ea8@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190111230129.127037-6-evgreen@chromium.org>
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <4c367e20-3ae8-ba28-75dc-b07805e27ea8@codeaurora.org>
 Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Evan Green <evgreen@chromium.org>, Andy Gross <andy.gross@linaro.org>, Rob Herring <robh+dt@kernel.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Can Guo <cang@codeaurora.org>, Douglas Anderson <dianders@chromium.org>, Asutosh Das <asutoshd@codeaurora.org>, Stephen Boyd <swboyd@chromium.org>, Vivek Gautam <vivek.gautam@codeaurora.org>, "James E.J. Bottomley" <jejb@linux.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Vinayak Holikatti <vinholikatti@gmail.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <jejb@linux.ibm.com>
+Cc: SCSI <linux-scsi@vger.kernel.org>, Avri Altman <avri.altman@wdc.com>, Jeffrey Hugo <jhugo@codeaurora.org>, MSM <linux-arm-msm@vger.kernel.org>, Bjorn Andersson <bjorn.andersson@linaro.org>, Joao Pinto <jpinto@synopsys.com>, Andy Gross <andy.gross@linaro.org>, Tomas Winkler <tomas.winkler@intel.com>, Robin Murphy <robin.murphy@arm.com>, Linux ARM <linux-arm-kernel@lists.infradead.org>
 List-Id: linux-scsi@vger.kernel.org
 
+On 09/01/2019 16:38, Jeffrey Hugo wrote:
 
+>> On 11/12/2018 15:18, Marc Gonzalez wrote:
+>>
+>>> memcpy_fromio() doesn't provide any control over access size.
+>>> For example, on arm64, it is implemented using readb and readq.
+>>> This may trigger a synchronous external abort:
+>>>
+>>> [    3.729943] Internal error: synchronous external abort: 96000210 [#1] PREEMPT SMP
+>>> [    3.737000] Modules linked in:
+>>> [    3.744371] CPU: 2 PID: 1 Comm: swapper/0 Tainted: G S                4.20.0-rc4 #16
+>>> [    3.747413] Hardware name: Qualcomm Technologies, Inc. MSM8998 v1 MTP (DT)
+>>> [    3.755295] pstate: 00000005 (nzcv daif -PAN -UAO)
+>>> [    3.761978] pc : __memcpy_fromio+0x68/0x80
+>>> [    3.766718] lr : ufshcd_dump_regs+0x50/0xb0
+>>> [    3.770767] sp : ffff00000807ba00
+>>> [    3.774830] x29: ffff00000807ba00 x28: 00000000fffffffb
+>>> [    3.778344] x27: ffff0000089db068 x26: ffff8000f6e58000
+>>> [    3.783728] x25: 000000000000000e x24: 0000000000000800
+>>> [    3.789023] x23: ffff8000f6e587c8 x22: 0000000000000800
+>>> [    3.794319] x21: ffff000008908368 x20: ffff8000f6e1ab80
+>>> [    3.799615] x19: 000000000000006c x18: ffffffffffffffff
+>>> [    3.804910] x17: 0000000000000000 x16: 0000000000000000
+>>> [    3.810206] x15: ffff000009199648 x14: ffff000089244187
+>>> [    3.815502] x13: ffff000009244195 x12: ffff0000091ab000
+>>> [    3.820797] x11: 0000000005f5e0ff x10: ffff0000091998a0
+>>> [    3.826093] x9 : 0000000000000000 x8 : ffff8000f6e1ac00
+>>> [    3.831389] x7 : 0000000000000000 x6 : 0000000000000068
+>>> [    3.836676] x5 : ffff8000f6e1abe8 x4 : 0000000000000000
+>>> [    3.841971] x3 : ffff00000928c868 x2 : ffff8000f6e1abec
+>>> [    3.847267] x1 : ffff00000928c868 x0 : ffff8000f6e1abe8
+>>> [    3.852567] Process swapper/0 (pid: 1, stack limit = 0x(____ptrval____))
+>>> [    3.857900] Call trace:
+>>> [    3.864473]  __memcpy_fromio+0x68/0x80
+>>> [    3.866683]  ufs_qcom_dump_dbg_regs+0x1c0/0x370
+>>> [    3.870522]  ufshcd_print_host_regs+0x168/0x190
+>>> [    3.874946]  ufshcd_init+0xd4c/0xde0
+>>> [    3.879459]  ufshcd_pltfrm_init+0x3c8/0x550
+>>> [    3.883264]  ufs_qcom_probe+0x24/0x60
+>>> [    3.887188]  platform_drv_probe+0x50/0xa0
+>>>
+>>> Assuming aligned 32-bit registers, let's use readl, after making sure
+>>> that 'offset' and 'len' are indeed multiples of 4.
+>>>
+>>> Fixes: ba80917d9932d ("scsi: ufs: ufshcd_dump_regs to use memcpy_fromio")
+>>> Signed-off-by: Marc Gonzalez <marc.w.gonzalez@free.fr>
+>>> ---
+>>>   drivers/scsi/ufs/ufshcd.c | 10 ++++++++--
+>>>   1 file changed, 8 insertions(+), 2 deletions(-)
+>>>
+>>> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+>>> index 535180c01ce8..320bbd9849bc 100644
+>>> --- a/drivers/scsi/ufs/ufshcd.c
+>>> +++ b/drivers/scsi/ufs/ufshcd.c
+>>> @@ -112,13 +112,19 @@
+>>>   int ufshcd_dump_regs(struct ufs_hba *hba, size_t offset, size_t len,
+>>>   		     const char *prefix)
+>>>   {
+>>> -	u8 *regs;
+>>> +	u32 *regs;
+>>> +	size_t pos;
+>>> +
+>>> +	if (offset % 4 != 0 || len % 4 != 0) /* keep readl happy */
+>>> +		return -EINVAL;
+> 
+> Hmm.  It seems like these cases could be handled, but I guess we cannot 
+> necessarily assume that reading past the bounds specified by the client 
+> is safe, so this seems reasonable.
+> 
+>>>   
+>>>   	regs = kzalloc(len, GFP_KERNEL);
+>>>   	if (!regs)
+>>>   		return -ENOMEM;
+>>>   
+>>> -	memcpy_fromio(regs, hba->mmio_base + offset, len);
+>>> +	for (pos = 0; pos < len; pos += 4)
+>>> +		regs[pos / 4] = ufshcd_readl(hba, offset + pos);
+>>> +
+>>>   	ufshcd_hex_dump(prefix, regs, len);
+>>>   	kfree(regs);
+>>>   
+> 
+> Reviewed-by: Jeffrey Hugo <jhugo@codeaurora.org>
 
-On 12/01/19 4:31 AM, Evan Green wrote:
-> Expose a reset controller that the phy can use to perform its
-> initialization in a single callback.
-> 
-> Also, change the use of the phy functions from ufs-qcom such that
-> phy_poweron actually fires up the phy, and phy_poweroff actually
-> powers it down.
-> 
-> Signed-off-by: Evan Green <evgreen@chromium.org>
+James, Martin,
 
-Can I get Ack for this patch from SCSI MAINTAINERS?
+I haven't heard back from Vinayak. (In fact, his last review dates back
+to 2016. Should MAINTAINERS be updated? I can send a patch.)
 
-Thanks
-Kishon
+Would you mind taking this patch through the SCSI tree?
 
-> 
-> ---
-> Note: This change depends on the remaining changes in this series,
-> since UFS PHY reset now needs to be done by the PHY driver.
-> 
->  drivers/scsi/ufs/Kconfig    |   1 +
->  drivers/scsi/ufs/ufs-qcom.c | 110 +++++++++++++++++++++---------------
->  drivers/scsi/ufs/ufs-qcom.h |   4 ++
->  3 files changed, 71 insertions(+), 44 deletions(-)
-> 
-> diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
-> index 2ddbb26d9c265..63c5c4115981f 100644
-> --- a/drivers/scsi/ufs/Kconfig
-> +++ b/drivers/scsi/ufs/Kconfig
-> @@ -100,6 +100,7 @@ config SCSI_UFS_QCOM
->  	tristate "QCOM specific hooks to UFS controller platform driver"
->  	depends on SCSI_UFSHCD_PLATFORM && ARCH_QCOM
->  	select PHY_QCOM_UFS
-> +	select RESET_CONTROLLER
->  	help
->  	  This selects the QCOM specific additions to UFSHCD platform driver.
->  	  UFS host on QCOM needs some vendor specific configuration before
-> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-> index 3aeadb14aae1e..db46f9a64b54c 100644
-> --- a/drivers/scsi/ufs/ufs-qcom.c
-> +++ b/drivers/scsi/ufs/ufs-qcom.c
-> @@ -16,6 +16,7 @@
->  #include <linux/of.h>
->  #include <linux/platform_device.h>
->  #include <linux/phy/phy.h>
-> +#include <linux/reset.h>
->  
->  #include "ufshcd.h"
->  #include "ufshcd-pltfrm.h"
-> @@ -49,6 +50,11 @@ static void ufs_qcom_get_default_testbus_cfg(struct ufs_qcom_host *host);
->  static int ufs_qcom_set_dme_vs_core_clk_ctrl_clear_div(struct ufs_hba *hba,
->  						       u32 clk_cycles);
->  
-> +static struct ufs_qcom_host *rcdev_to_ufs_host(struct reset_controller_dev *rcd)
-> +{
-> +	return container_of(rcd, struct ufs_qcom_host, rcdev);
-> +}
-> +
->  static void ufs_qcom_dump_regs_wrapper(struct ufs_hba *hba, int offset, int len,
->  				       const char *prefix, void *priv)
->  {
-> @@ -255,11 +261,6 @@ static int ufs_qcom_power_up_sequence(struct ufs_hba *hba)
->  	if (is_rate_B)
->  		phy_set_mode(phy, PHY_MODE_UFS_HS_B);
->  
-> -	/* Assert PHY reset and apply PHY calibration values */
-> -	ufs_qcom_assert_reset(hba);
-> -	/* provide 1ms delay to let the reset pulse propagate */
-> -	usleep_range(1000, 1100);
-> -
->  	/* phy initialization - calibrate the phy */
->  	ret = phy_init(phy);
->  	if (ret) {
-> @@ -268,15 +269,6 @@ static int ufs_qcom_power_up_sequence(struct ufs_hba *hba)
->  		goto out;
->  	}
->  
-> -	/* De-assert PHY reset and start serdes */
-> -	ufs_qcom_deassert_reset(hba);
-> -
-> -	/*
-> -	 * after reset deassertion, phy will need all ref clocks,
-> -	 * voltage, current to settle down before starting serdes.
-> -	 */
-> -	usleep_range(1000, 1100);
-> -
->  	/* power on phy - start serdes and phy's power and clocks */
->  	ret = phy_power_on(phy);
->  	if (ret) {
-> @@ -290,7 +282,6 @@ static int ufs_qcom_power_up_sequence(struct ufs_hba *hba)
->  	return 0;
->  
->  out_disable_phy:
-> -	ufs_qcom_assert_reset(hba);
->  	phy_exit(phy);
->  out:
->  	return ret;
-> @@ -554,21 +545,10 @@ static int ufs_qcom_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
->  		ufs_qcom_disable_lane_clks(host);
->  		phy_power_off(phy);
->  
-> -		/* Assert PHY soft reset */
-> -		ufs_qcom_assert_reset(hba);
-> -		goto out;
-> -	}
-> -
-> -	/*
-> -	 * If UniPro link is not active, PHY ref_clk, main PHY analog power
-> -	 * rail and low noise analog power rail for PLL can be switched off.
-> -	 */
-> -	if (!ufs_qcom_is_link_active(hba)) {
-> +	} else if (!ufs_qcom_is_link_active(hba)) {
->  		ufs_qcom_disable_lane_clks(host);
-> -		phy_power_off(phy);
->  	}
->  
-> -out:
->  	return ret;
->  }
->  
-> @@ -578,21 +558,26 @@ static int ufs_qcom_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
->  	struct phy *phy = host->generic_phy;
->  	int err;
->  
-> -	err = phy_power_on(phy);
-> -	if (err) {
-> -		dev_err(hba->dev, "%s: failed enabling regs, err = %d\n",
-> -			__func__, err);
-> -		goto out;
-> -	}
-> +	if (ufs_qcom_is_link_off(hba)) {
-> +		err = phy_power_on(phy);
-> +		if (err) {
-> +			dev_err(hba->dev, "%s: failed enabling regs, err = %d\n",
-> +				__func__, err);
-> +			return err;
-> +		}
->  
-> -	err = ufs_qcom_enable_lane_clks(host);
-> -	if (err)
-> -		goto out;
-> +		err = ufs_qcom_enable_lane_clks(host);
-> +		if (err)
-> +			return err;
->  
-> -	hba->is_sys_suspended = false;
-> +	} else if (!ufs_qcom_is_link_active(hba)) {
-> +		err = ufs_qcom_enable_lane_clks(host);
-> +		if (err)
-> +			return err;
-> +	}
->  
-> -out:
-> -	return err;
-> +	hba->is_sys_suspended = false;
-> +	return 0;
->  }
->  
->  struct ufs_qcom_dev_params {
-> @@ -1118,8 +1103,6 @@ static int ufs_qcom_setup_clocks(struct ufs_hba *hba, bool on,
->  		return 0;
->  
->  	if (on && (status == POST_CHANGE)) {
-> -		phy_power_on(host->generic_phy);
-> -
->  		/* enable the device ref clock for HS mode*/
->  		if (ufshcd_is_hs_mode(&hba->pwr_info))
->  			ufs_qcom_dev_ref_clk_ctrl(host, true);
-> @@ -1131,9 +1114,6 @@ static int ufs_qcom_setup_clocks(struct ufs_hba *hba, bool on,
->  		if (!ufs_qcom_is_link_active(hba)) {
->  			/* disable device ref_clk */
->  			ufs_qcom_dev_ref_clk_ctrl(host, false);
-> -
-> -			/* powering off PHY during aggressive clk gating */
-> -			phy_power_off(host->generic_phy);
->  		}
->  
->  		vote = host->bus_vote.min_bw_vote;
-> @@ -1147,6 +1127,39 @@ static int ufs_qcom_setup_clocks(struct ufs_hba *hba, bool on,
->  	return err;
->  }
->  
-> +static int
-> +ufs_qcom_reset_assert(struct reset_controller_dev *rcdev, unsigned long id)
-> +{
-> +	struct ufs_qcom_host *host = rcdev_to_ufs_host(rcdev);
-> +
-> +	WARN_ON(id);
-> +	ufs_qcom_assert_reset(host->hba);
-> +	/* provide 1ms delay to let the reset pulse propagate */
-> +	usleep_range(1000, 1100);
-> +	return 0;
-> +}
-> +
-> +static int
-> +ufs_qcom_reset_deassert(struct reset_controller_dev *rcdev, unsigned long id)
-> +{
-> +	struct ufs_qcom_host *host = rcdev_to_ufs_host(rcdev);
-> +
-> +	WARN_ON(id);
-> +	ufs_qcom_deassert_reset(host->hba);
-> +
-> +	/*
-> +	 * after reset deassertion, phy will need all ref clocks,
-> +	 * voltage, current to settle down before starting serdes.
-> +	 */
-> +	usleep_range(1000, 1100);
-> +	return 0;
-> +}
-> +
-> +const struct reset_control_ops ufs_qcom_reset_ops = {
-> +	.assert = ufs_qcom_reset_assert,
-> +	.deassert = ufs_qcom_reset_deassert,
-> +};
-> +
->  #define	ANDROID_BOOT_DEV_MAX	30
->  static char android_boot_dev[ANDROID_BOOT_DEV_MAX];
->  
-> @@ -1191,6 +1204,15 @@ static int ufs_qcom_init(struct ufs_hba *hba)
->  	host->hba = hba;
->  	ufshcd_set_variant(hba, host);
->  
-> +	/* Fire up the reset controller. Failure here is non-fatal. */
-> +	host->rcdev.of_node = dev->of_node;
-> +	host->rcdev.ops = &ufs_qcom_reset_ops;
-> +	host->rcdev.owner = dev->driver->owner;
-> +	host->rcdev.nr_resets = 1;
-> +	err = devm_reset_controller_register(dev, &host->rcdev);
-> +	if (err)
-> +		dev_warn(dev, "Failed to register reset controller\n");
-> +
->  	/*
->  	 * voting/devoting device ref_clk source is time consuming hence
->  	 * skip devoting it during aggressive clock gating. This clock
-> diff --git a/drivers/scsi/ufs/ufs-qcom.h b/drivers/scsi/ufs/ufs-qcom.h
-> index c114826316eb0..68a8801857529 100644
-> --- a/drivers/scsi/ufs/ufs-qcom.h
-> +++ b/drivers/scsi/ufs/ufs-qcom.h
-> @@ -14,6 +14,8 @@
->  #ifndef UFS_QCOM_H_
->  #define UFS_QCOM_H_
->  
-> +#include <linux/reset-controller.h>
-> +
->  #define MAX_UFS_QCOM_HOSTS	1
->  #define MAX_U32                 (~(u32)0)
->  #define MPHY_TX_FSM_STATE       0x41
-> @@ -237,6 +239,8 @@ struct ufs_qcom_host {
->  	/* Bitmask for enabling debug prints */
->  	u32 dbg_print_en;
->  	struct ufs_qcom_testbus testbus;
-> +
-> +	struct reset_controller_dev rcdev;
->  };
->  
->  static inline u32
-> 
+Tomas, does "LGTM" translate to Acked-by? :-D
+
+Regards.
