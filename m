@@ -1,35 +1,41 @@
-From: John Stultz <john.stultz@linaro.org>
-Subject: Re: ufshcd_queuecommand() triggering after ufshcd_suspend()?
-Date: Wed, 16 Jan 2019 14:14:09 -0800
-Message-ID: <CALAqxLXhR2Fny4L4wqEHnZ+w0ktTp=ntvxuPU8h-vLwZW51k0Q@mail.gmail.com>
-References: <CALAqxLURfQcSy2w7F7NCPtGaChka4U5LmvufLd0VZ73S=AzHkA@mail.gmail.com>
- <SN6PR04MB4925CA2AFE5F060469E6F018FC850@SN6PR04MB4925.namprd04.prod.outlook.com>
- <20190114032444.GA124121@hisi.inhuawei.com>
+From: Stephen Boyd <swboyd@chromium.org>
+Subject: Re: [PATCH v1 0/8] phy: qcom-ufs: Enable regulators to be off in suspend
+Date: Wed, 16 Jan 2019 14:32:13 -0800
+Message-ID: <154767793304.169631.18064099850112277477@swboyd.mtv.corp.google.com>
+References: <20190111230129.127037-1-evgreen@chromium.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190114032444.GA124121@hisi.inhuawei.com>
+In-Reply-To: <20190111230129.127037-1-evgreen@chromium.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Zang Leigang <zangleigang@hisilicon.com>
-Cc: Avri Altman <Avri.Altman@wdc.com>, Sahitya Tummala <stummala@codeaurora.org>, Christoph Hellwig <hch@lst.de>, Wei Li <liwei213@huawei.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Evan Green <evgreen@chromium.org>, Vijay Viswanath <vviswana@codeaurora.org>, lkml <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Andy Gross <andy.gross@linaro.org>, Kishon Vijay Abraham I <kishon@ti.com>, Rob Herring <robh+dt@kernel.org>
+Cc: Can Guo <cang@codeaurora.org>, Douglas Anderson <dianders@chromium.org>, Asutosh Das <asutoshd@codeaurora.org>, Vivek Gautam <vivek.gautam@codeaurora.org>, Evan Green <evgreen@chromium.org>, devicetree@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, Grygorii Strashko <grygorii.strashko@ti.com>, linux-scsi@vger.kernel.org, Bjorn Andersson <bjorn.andersson@linaro.org>, linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org, Vinayak Holikatti <vinholikatti@gmail.com>, Manu Gautam <mgautam@codeaurora.org>, David Brown <david.brown@linaro.org>, Mark Rutland <mark.rutland@arm.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sun, Jan 13, 2019 at 7:25 PM Zang Leigang <zangleigang@hisilicon.com> wrote:
->   I think there are two different issues:
->
->   1. clk_gating's state(including state's trace event) and is_suspended is not
->      wrapped by ufshcd_is_clkgating_allowed which Hisilicon's kirin platoform
->      soc does not need but is set and checked in a regular path.
->   2. I think SCSI is necessary to block queue to stop sending to ufs after
->      system suspend or, add a new state for ufs like UFSHCD_STATE_SUSPENDING
->      or what else. hba->is_sys_suspended is too late to stop ufshcd_queuecommand
->
+Quoting Evan Green (2019-01-11 15:01:21)
+>=20
+> Because the UFS PHY reset bit is now toggled in the PHY, rather
+> than in ufs-qcom, this also percolated to all other PHYs using
+> ufs-qcom, which from what I can see is just 8996.
+>=20
+> There are a couple of tradeoffs in this series that I'd welcome feedback
+> on. First, it breaks compatibility with device trees that don't expose
+> this new reset controller. Making this work with older device trees
+> would be pretty ugly in the code, and given that the SDM845 UFS DT nodes
+> aren't accepted upstream yet, the breakage seemed worth it. I'm not as
+> sure about 8996.
 
-Hey Zang,
-  Thanks for the suggestions. I'm not sure I have enough context to
-try to come up with a patch. I'll try to take a stab at it, but I'd
-appreciate it if  you have any more specific suggestions or patches
-for me to try. :)
+It may take some minor surgery to the reset framework, but it should be
+possible to register a reset lookup that can be used if nothing matches
+in DT. Right now the reset code looks to only want to use DT if it's
+there for the device requesting the reset. If there isn't a DT node for
+the device it will look in the global lookup list. That could be changed
+to fallback to the global lookup that uses device names (similar to clk
+framework) when the DT lookup fails. Then it's just a matter of
+registering the lookup for this reset with the handful of device names
+that need the non-DT way of finding the reset.
 
-thanks
--john
+Of course, that's another change and if breaking DT is simpler and
+acceptable then I would say go for the path of least resistance and
+don't try to modify reset framework for this.
