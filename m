@@ -1,21 +1,56 @@
-From: Ching Huang <ching2048@areca.com.tw>
-Subject: [PATCH 0/3] scsi: arcmsr: Fix suspend/resume of ACB_ADAPTER_TYPE_B
- part 2
-Date: Thu, 17 Jan 2019 11:55:24 +0800
-Message-ID: <1547697324.4339.27.camel@Centos6.3-64>
+From: "Winkler, Tomas" <tomas.winkler@intel.com>
+Subject: RE: [PATCH] scsi: ufs: revamp string descriptor reading
+Date: Thu, 17 Jan 2019 07:51:04 +0000
+Message-ID: <5B8DA87D05A7694D9FA63FD143655C1B9DA7C91D@hasmsx108.ger.corp.intel.com>
+References: <20181211110705.11646-1-tomas.winkler@intel.com>
+ <DM6PR04MB4923D16D47784A1750811A19FCA60@DM6PR04MB4923.namprd04.prod.outlook.com>
+ <5B8DA87D05A7694D9FA63FD143655C1B9DA525B5@hasmsx108.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <5B8DA87D05A7694D9FA63FD143655C1B9DA525B5@hasmsx108.ger.corp.intel.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: dan.carpenter@oracle.com, hch@infradead.org, colin.king@canonical.com
+To: Avri Altman <Avri.Altman@wdc.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>, "Hunter, Adrian" <adrian.hunter@intel.com>
+Cc: Christoph Hellwig <hch@lst.de>, Vivek Gautam <vivek.gautam@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, Alex Lemberg <Alex.Lemberg@wdc.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Winkler, Tomas" <tomas.winkler@intel.com>
 List-Id: linux-scsi@vger.kernel.org
 
-This patch series are against to mkp's 5.1/scsi-queue.
+> > Hello Tomas,
+> >
+> > >
+> > > Define new a type: uc_string_id for easier string handling and less
+> > > casting. Reduce number or string copies in price of a dynamic
+> > > allocation.
+> > >
+> > > Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+> > Tested-by: Avri Altman <avri.altman@wdc.com>
+> >
+> > Just one nit - doesn't really matters.
+> >
+> > Cheers,
+> > Avri
+> >
+> > > ---
+> > >  drivers/scsi/ufs/ufs-sysfs.c |  20 ++---
+> > >  drivers/scsi/ufs/ufs.h       |   2 +-
+> > >  drivers/scsi/ufs/ufshcd.c    | 164 +++++++++++++++++++++--------------
+> > >  drivers/scsi/ufs/ufshcd.h    |   9 +-
+> > >  4 files changed, 115 insertions(+), 80 deletions(-)
+> >
+> >
+> > >
+> > >  	ufs_fixup_device_setup(hba, &card);
+> > > +	ufs_put_device_desc(&card);
+> > ufs_get_device_desc() and ufs_put_device_desc() actually serves the
+> > quirks setup.
+> > Make sense to call it from within so the logic is clear and in one place.
+> > Might also save ufs_put_device_desc().
+> 
+> You are right from the current perspective , just I'd need it also for the RPMB
+> patches that should follow, then it will have bit larger span than the quirks.
+> 
 
-1. Due to dma_zalloc_coherent will be phase out, so use dma_alloc_coherent to replace
- it.
-2. Fix suspend/resume of ACB_ADAPTER_TYPE_B part 2.
-3. Update driver version to v1.40.00.10-20190116
----
+Is this okay, can we merge?
+Thanks
+Tomas
