@@ -1,8 +1,8 @@
 From: Ching Huang <ching2048@areca.com.tw>
-Subject: [PATCH 3/3] scsi: arcmsr: Update driver version to
- v1.40.00.10-20190116
-Date: Thu, 17 Jan 2019 11:47:48 +0800
-Message-ID: <1547696868.4339.24.camel@Centos6.3-64>
+Subject: [PATCH 0/3] scsi: arcmsr: Fix suspend/resume of ACB_ADAPTER_TYPE_B
+ part 2
+Date: Thu, 17 Jan 2019 11:55:24 +0800
+Message-ID: <1547697324.4339.27.camel@Centos6.3-64>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
@@ -12,23 +12,10 @@ To: martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com, linux-scs
 Cc: dan.carpenter@oracle.com, hch@infradead.org, colin.king@canonical.com
 List-Id: linux-scsi@vger.kernel.org
 
->From Ching Huang <ching2048@areca.com.tw>
+This patch series are against to mkp's 5.1/scsi-queue.
 
-Update driver version to v1.40.00.10-20190116.
-
-Signed-off-by: Ching Huang <ching2048@areca.com.tw>
+1. Due to dma_zalloc_coherent will be phase out, so use dma_alloc_coherent to replace
+ it.
+2. Fix suspend/resume of ACB_ADAPTER_TYPE_B part 2.
+3. Update driver version to v1.40.00.10-20190116
 ---
-
-diff --git a/drivers/scsi/arcmsr/arcmsr.h b/drivers/scsi/arcmsr/arcmsr.h
-index b98c632..6033bcc 100755
---- a/drivers/scsi/arcmsr/arcmsr.h
-+++ b/drivers/scsi/arcmsr/arcmsr.h
-@@ -49,7 +49,7 @@ struct device_attribute;
- #define ARCMSR_MAX_OUTSTANDING_CMD	1024
- #define ARCMSR_DEFAULT_OUTSTANDING_CMD	128
- #define ARCMSR_MIN_OUTSTANDING_CMD	32
--#define ARCMSR_DRIVER_VERSION		"v1.40.00.10-20181217"
-+#define ARCMSR_DRIVER_VERSION		"v1.40.00.10-20190116"
- #define ARCMSR_SCSI_INITIATOR_ID	255
- #define ARCMSR_MAX_XFER_SECTORS		512
- #define ARCMSR_MAX_XFER_SECTORS_B	4096
