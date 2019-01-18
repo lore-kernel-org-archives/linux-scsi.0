@@ -1,8 +1,8 @@
 From: Ching Huang <ching2048@areca.com.tw>
-Subject: [PATCH v2 0/3] scsi: arcmsr: Fix suspend/resume of
- ACB_ADAPTER_TYPE_B part 2
-Date: Fri, 18 Jan 2019 10:47:25 +0800
-Message-ID: <1547779645.4532.9.camel@Centos6.3-64>
+Subject: [PATCH v2 1/3] scsi: arcmsr: Use dma_alloc_coherent to replace
+ dma_zalloc_coherent
+Date: Fri, 18 Jan 2019 10:53:41 +0800
+Message-ID: <1547780021.4532.14.camel@Centos6.3-64>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
@@ -12,10 +12,42 @@ To: martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com, linux-scs
 Cc: dan.carpenter@oracle.com, hch@infradead.org, colin.king@canonical.com
 List-Id: linux-scsi@vger.kernel.org
 
-This patch series are against to mkp's 5.1/scsi-queue.
+>From Ching Huang <ching2048@areca.com.tw>
 
-1. Due to dma_zalloc_coherent will be phase out, so use dma_alloc_coherent instead.
-2. For ACB_ADAPTER_TYPE_B controller, the read/write after hibernate and resume may
-got 'isr get an illegal ccb command' in log/messages sometimes. This patch fix it.
-3. Update driver version to v1.40.00.10-20190116
+Due to dma_zalloc_coherent will be phase out, so use dma_alloc_coherent
+ instead.
+
+Signed-off-by: Ching Huang <ching2048@areca.com.tw>
 ---
+
+diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
+index 9f85d5a..5736434 100755
+--- a/drivers/scsi/arcmsr/arcmsr_hba.c
++++ b/drivers/scsi/arcmsr/arcmsr_hba.c
+@@ -642,7 +642,7 @@ static bool arcmsr_alloc_io_queue(struct AdapterControlBlock *acb)
+ 	switch (acb->adapter_type) {
+ 	case ACB_ADAPTER_TYPE_B: {
+ 		acb->ioqueue_size = roundup(sizeof(struct MessageUnit_B), 32);
+-		dma_coherent = dma_zalloc_coherent(&pdev->dev, acb->ioqueue_size,
++		dma_coherent = dma_alloc_coherent(&pdev->dev, acb->ioqueue_size,
+ 			&dma_coherent_handle, GFP_KERNEL);
+ 		if (!dma_coherent) {
+ 			pr_notice("arcmsr%d: DMA allocation failed\n", acb->host->host_no);
+@@ -656,7 +656,7 @@ static bool arcmsr_alloc_io_queue(struct AdapterControlBlock *acb)
+ 		break;
+ 	case ACB_ADAPTER_TYPE_D: {
+ 		acb->ioqueue_size = roundup(sizeof(struct MessageUnit_D), 32);
+-		dma_coherent = dma_zalloc_coherent(&pdev->dev, acb->ioqueue_size,
++		dma_coherent = dma_alloc_coherent(&pdev->dev, acb->ioqueue_size,
+ 			&dma_coherent_handle, GFP_KERNEL);
+ 		if (!dma_coherent) {
+ 			pr_notice("arcmsr%d: DMA allocation failed\n", acb->host->host_no);
+@@ -672,7 +672,7 @@ static bool arcmsr_alloc_io_queue(struct AdapterControlBlock *acb)
+ 		uint32_t completeQ_size;
+ 		completeQ_size = sizeof(struct deliver_completeQ) * ARCMSR_MAX_HBE_DONEQUEUE + 128;
+ 		acb->ioqueue_size = roundup(completeQ_size, 32);
+-		dma_coherent = dma_zalloc_coherent(&pdev->dev, acb->ioqueue_size,
++		dma_coherent = dma_alloc_coherent(&pdev->dev, acb->ioqueue_size,
+ 			&dma_coherent_handle, GFP_KERNEL);
+ 		if (!dma_coherent){
+ 			pr_notice("arcmsr%d: DMA allocation failed\n", acb->host->host_no);
