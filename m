@@ -1,108 +1,229 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: LSF/MM 2019: Call for Proposals
-Date: Fri, 18 Jan 2019 09:32:22 -0700
-Message-ID: <51b4b263-a0f2-113d-7bdc-f7960b540929@kernel.dk>
+From: Stephen Boyd <swboyd@chromium.org>
+Subject: Re: [PATCH v1 5/8] scsi: ufs: qcom: Expose the reset controller for PHY
+Date: Fri, 18 Jan 2019 14:31:01 -0800
+Message-ID: <154785066196.169631.9228316876601255899@swboyd.mtv.corp.google.com>
+References: <20190111230129.127037-1-evgreen@chromium.org> <20190111230129.127037-6-evgreen@chromium.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Language: en-US
+In-Reply-To: <20190111230129.127037-6-evgreen@chromium.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
+To: Andy Gross <andy.gross@linaro.org>, Kishon Vijay Abraham I <kishon@ti.com>, Rob Herring <robh+dt@kernel.org>
+Cc: Can Guo <cang@codeaurora.org>, Douglas Anderson <dianders@chromium.org>, Asutosh Das <asutoshd@codeaurora.org>, Vivek Gautam <vivek.gautam@codeaurora.org>, Evan Green <evgreen@chromium.org>, "James E.J. Bottomley" <jejb@linux.ibm.com>, Vinayak Holikatti <vinholikatti@gmail.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi,
+Quoting Evan Green (2019-01-11 15:01:26)
+> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+> index 3aeadb14aae1e..db46f9a64b54c 100644
+> --- a/drivers/scsi/ufs/ufs-qcom.c
+> +++ b/drivers/scsi/ufs/ufs-qcom.c
+> @@ -16,6 +16,7 @@
+>  #include <linux/of.h>
+>  #include <linux/platform_device.h>
+>  #include <linux/phy/phy.h>
+> +#include <linux/reset.h>
 
-The annual Linux Storage, Filesystem and Memory Management (LSF/MM)
-Summit for 2019 will be held from April 30 - May 2 at the Sheraton
-Puerto Rico Hotel & Casino Lodges in San Juan, Puerto Rico. LSF/MM is an
-invitation-only technical workshop to map out improvements to the Linux
-storage, filesystem and memory management subsystems that will make
-their way into the mainline kernel within the coming years.
+Shouldn't this be <linux/reset-controller.h>?
 
-https://events.linuxfoundation.org/events/linux-storage-filesystem-mm-summit-2019/
+> =20
+>  #include "ufshcd.h"
+>  #include "ufshcd-pltfrm.h"
+> @@ -255,11 +261,6 @@ static int ufs_qcom_power_up_sequence(struct ufs_hba=
+ *hba)
+>         if (is_rate_B)
+>                 phy_set_mode(phy, PHY_MODE_UFS_HS_B);
+> =20
+> -       /* Assert PHY reset and apply PHY calibration values */
+> -       ufs_qcom_assert_reset(hba);
+> -       /* provide 1ms delay to let the reset pulse propagate */
+> -       usleep_range(1000, 1100);
+> -
+>         /* phy initialization - calibrate the phy */
+>         ret =3D phy_init(phy);
+>         if (ret) {
+> @@ -268,15 +269,6 @@ static int ufs_qcom_power_up_sequence(struct ufs_hba=
+ *hba)
+>                 goto out;
+>         }
+> =20
+> -       /* De-assert PHY reset and start serdes */
+> -       ufs_qcom_deassert_reset(hba);
+> -
+> -       /*
+> -        * after reset deassertion, phy will need all ref clocks,
+> -        * voltage, current to settle down before starting serdes.
+> -        */
+> -       usleep_range(1000, 1100);
+> -
+>         /* power on phy - start serdes and phy's power and clocks */
+>         ret =3D phy_power_on(phy);
+>         if (ret) {
+> @@ -290,7 +282,6 @@ static int ufs_qcom_power_up_sequence(struct ufs_hba =
+*hba)
+>         return 0;
+> =20
+>  out_disable_phy:
+> -       ufs_qcom_assert_reset(hba);
+>         phy_exit(phy);
+>  out:
+>         return ret;
+> @@ -554,21 +545,10 @@ static int ufs_qcom_suspend(struct ufs_hba *hba, en=
+um ufs_pm_op pm_op)
+>                 ufs_qcom_disable_lane_clks(host);
+>                 phy_power_off(phy);
+> =20
+> -               /* Assert PHY soft reset */
+> -               ufs_qcom_assert_reset(hba);
+> -               goto out;
+> -       }
+> -
+> -       /*
+> -        * If UniPro link is not active, PHY ref_clk, main PHY analog pow=
+er
+> -        * rail and low noise analog power rail for PLL can be switched o=
+ff.
 
-LSF/MM 2019 will be a three day, stand-alone conference with three
-subsystem-specific tracks, cross-track discussions, as well as BoF and
-hacking sessions.
+We lost this comment?
 
-On behalf of the committee I am issuing a call for agenda proposals
-that are suitable for cross-track discussion as well as technical
-subjects for the breakout sessions.
+> -        */
+> -       if (!ufs_qcom_is_link_active(hba)) {
+> +       } else if (!ufs_qcom_is_link_active(hba)) {
+>                 ufs_qcom_disable_lane_clks(host);
+> -               phy_power_off(phy);
 
-If advance notice is required for visa applications then please point
-that out in your proposal or request to attend, and submit the topic
-as soon as possible.
+And now this looks similar to the above if statement, so can they be
+combined?
 
-1) Proposals for agenda topics should be sent before February 15th,
-2019 to:
+> =20
+> -out:
+>         return ret;
+>  }
+> =20
+> @@ -578,21 +558,26 @@ static int ufs_qcom_resume(struct ufs_hba *hba, enu=
+m ufs_pm_op pm_op)
+>         struct phy *phy =3D host->generic_phy;
+>         int err;
+> =20
+> -       err =3D phy_power_on(phy);
+> -       if (err) {
+> -               dev_err(hba->dev, "%s: failed enabling regs, err =3D %d\n=
+",
+> -                       __func__, err);
+> -               goto out;
+> -       }
+> +       if (ufs_qcom_is_link_off(hba)) {
+> +               err =3D phy_power_on(phy);
+> +               if (err) {
+> +                       dev_err(hba->dev, "%s: failed enabling regs, err =
+=3D %d\n",
 
-	lsf-pc@lists.linux-foundation.org
+Not a problem with this translation, but I would expect this error to
+say something more like 'failed to power on phy' instead of 'enabling
+regs'.
 
-and CC the mailing lists that are relevant for the topic in question:
+> +                               __func__, err);
+> +                       return err;
+> +               }
+> =20
+> -       err =3D ufs_qcom_enable_lane_clks(host);
+> -       if (err)
+> -               goto out;
+> +               err =3D ufs_qcom_enable_lane_clks(host);
+> +               if (err)
+> +                       return err;
+> =20
+> -       hba->is_sys_suspended =3D false;
+> +       } else if (!ufs_qcom_is_link_active(hba)) {
+> +               err =3D ufs_qcom_enable_lane_clks(host);
+> +               if (err)
+> +                       return err;
+> +       }
+> =20
+> -out:
+> -       return err;
+> +       hba->is_sys_suspended =3D false;
+> +       return 0;
+>  }
+> =20
+>  struct ufs_qcom_dev_params {
+> @@ -1118,8 +1103,6 @@ static int ufs_qcom_setup_clocks(struct ufs_hba *hb=
+a, bool on,
+>                 return 0;
+> =20
+>         if (on && (status =3D=3D POST_CHANGE)) {
+> -               phy_power_on(host->generic_phy);
+> -
 
-	FS:	linux-fsdevel@vger.kernel.org
-	MM:	linux-mm@kvack.org
-	Block:	linux-block@vger.kernel.org
-	ATA:	linux-ide@vger.kernel.org
-	SCSI:	linux-scsi@vger.kernel.org
-	NVMe:	linux-nvme@lists.infradead.org
+How is it ok to remove this call here?
 
-Please tag your proposal with [LSF/MM TOPIC] to make it easier to
-track. In addition, please make sure to start a new thread for each
-topic rather than following up to an existing one. Agenda topics and
-attendees will be selected by the program committee, but the final
-agenda will be formed by consensus of the attendees on the day.
+>                 /* enable the device ref clock for HS mode*/
+>                 if (ufshcd_is_hs_mode(&hba->pwr_info))
+>                         ufs_qcom_dev_ref_clk_ctrl(host, true);
+> @@ -1131,9 +1114,6 @@ static int ufs_qcom_setup_clocks(struct ufs_hba *hb=
+a, bool on,
+>                 if (!ufs_qcom_is_link_active(hba)) {
+>                         /* disable device ref_clk */
+>                         ufs_qcom_dev_ref_clk_ctrl(host, false);
+> -
+> -                       /* powering off PHY during aggressive clk gating =
+*/
+> -                       phy_power_off(host->generic_phy);
 
-2) Requests to attend the summit for those that are not proposing a
-topic should be sent to:
+And here?
 
-	lsf-pc@lists.linux-foundation.org
+>                 }
+> =20
+>                 vote =3D host->bus_vote.min_bw_vote;
+> @@ -1147,6 +1127,39 @@ static int ufs_qcom_setup_clocks(struct ufs_hba *h=
+ba, bool on,
+>         return err;
+>  }
+> =20
+> +static int
+> +ufs_qcom_reset_assert(struct reset_controller_dev *rcdev, unsigned long =
+id)
+> +{
+> +       struct ufs_qcom_host *host =3D rcdev_to_ufs_host(rcdev);
+> +
+> +       WARN_ON(id);
 
-Please summarize what expertise you will bring to the meeting, and
-what you would like to discuss. Please also tag your email with
-[LSF/MM ATTEND] and send it as a new thread so there is less chance of
-it getting lost.
+Nitpick: Add a comment explaining that there's only one reset expected?
 
-We will try to cap attendance at around 25-30 per track to facilitate
-discussions although the final numbers will depend on the room sizes
-at the venue.
+> +       ufs_qcom_assert_reset(host->hba);
+> +       /* provide 1ms delay to let the reset pulse propagate */
+> +       usleep_range(1000, 1100);
+> +       return 0;
+> +}
+> +
+> +static int
+> +ufs_qcom_reset_deassert(struct reset_controller_dev *rcdev, unsigned lon=
+g id)
+> +{
+> +       struct ufs_qcom_host *host =3D rcdev_to_ufs_host(rcdev);
+> +
+> +       WARN_ON(id);
 
-For discussion leaders, slides and visualizations are encouraged to
-outline the subject matter and focus the discussions. Please refrain
-from lengthy presentations and talks; the sessions are supposed to be
-interactive, inclusive discussions.
+Same nitpick.
 
-There will be no recording or audio bridge. However, we expect that
-written minutes will be published as we did in previous years:
+> +       ufs_qcom_deassert_reset(host->hba);
+> +
+> +       /*
+> +        * after reset deassertion, phy will need all ref clocks,
+> +        * voltage, current to settle down before starting serdes.
+> +        */
+> +       usleep_range(1000, 1100);
+> +       return 0;
+> +}
+> +
+> +const struct reset_control_ops ufs_qcom_reset_ops =3D {
 
-2018: https://lwn.net/Articles/lsfmm2018/
+Can it be static?
 
-2017: https://lwn.net/Articles/lsfmm2017/
-
-2016: https://lwn.net/Articles/lsfmm2016/
-
-2015: https://lwn.net/Articles/lsfmm2015/
-
-2014: http://lwn.net/Articles/LSFMM2014/
-
-2013: http://lwn.net/Articles/548089/
-
-3) If you have feedback on last year's meeting that we can use to
-improve this year's, please also send that to:
-
-	lsf-pc@lists.linux-foundation.org
-
-Thank you on behalf of the program committee:
-
-	Anna Schumaker (Filesystems)
-	Josef Bacik (Filesystems)
-	Martin K. Petersen (Storage)
-	Jens Axboe (Storage)
-	Michal Hocko (MM)
-	Rik van Riel (MM)
-	Johannes Weiner (MM)
-
--- 
-Jens Axboe
+> +       .assert =3D ufs_qcom_reset_assert,
+> +       .deassert =3D ufs_qcom_reset_deassert,
+> +};
+> +
+>  #define        ANDROID_BOOT_DEV_MAX    30
+>  static char android_boot_dev[ANDROID_BOOT_DEV_MAX];
+> =20
