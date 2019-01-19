@@ -1,26 +1,50 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/2] RDMA/srp: Rework SCSI device reset handling
-Date: Sat, 19 Jan 2019 02:04:52 -0800
-Message-ID: <20190119100452.GC24246@infradead.org>
-References: <20190117002717.84686-1-bvanassche@acm.org>
- <20190117002717.84686-3-bvanassche@acm.org>
+From: Mike Christie <mchristi@redhat.com>
+Subject: Re: [PATCH v2] target: fix a missing check of match_int
+Date: Sat, 19 Jan 2019 13:06:31 -0600
+Message-ID: <5C437537.8010304@redhat.com>
+References: <5C38F72B.5000203@redhat.com>
+ <20190112053159.99406-1-kjlu@umn.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <stable-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20190117002717.84686-3-bvanassche@acm.org>
-Sender: stable-owner@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Jason Gunthorpe <jgg@ziepe.ca>, Doug Ledford <dledford@redhat.com>, linux-rdma@vger.kernel.org, Sergey Gorenko <sergeygo@mellanox.com>, Max Gurtovoy <maxg@mellanox.com>, Laurence Oberman <loberman@redhat.com>, stable@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190112053159.99406-1-kjlu@umn.edu>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Kangjie Lu <kjlu@umn.edu>
+Cc: pakki001@umn.edu, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-> +	/* Check whether all requests have finished. */
-> +	blk_freeze_queue_start(q);
-> +	time_left = blk_mq_freeze_queue_wait_timeout(q, 1 * HZ);
-> +	blk_mq_unfreeze_queue(q);
+On 01/11/2019 11:31 PM, Kangjie Lu wrote:
+> When match_int fails, "arg" is left uninitialized and may contain random
+> value, thus should not be used.
+> The fix checks if match_int fails, and if so, returns its error code.
+> 
+> Signed-off-by: Kangjie Lu <kjlu@umn.edu>
+> ---
+>  drivers/target/target_core_rd.c | 15 +++++++++++++--
+>  1 file changed, 13 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/target/target_core_rd.c b/drivers/target/target_core_rd.c
+> index a6e8106abd6f..3b7657b2f2f1 100644
+> --- a/drivers/target/target_core_rd.c
+> +++ b/drivers/target/target_core_rd.c
+> @@ -559,6 +559,7 @@ static ssize_t rd_set_configfs_dev_params(struct se_device *dev,
+>  	char *orig, *ptr, *opts;
+>  	substring_t args[MAX_OPT_ARGS];
+>  	int arg, token;
+> +	int ret;
 >  
-> +	return time_left > 0 ? SUCCESS : FAILED;
+>  	opts = kstrdup(page, GFP_KERNEL);
+>  	if (!opts)
+> @@ -573,14 +574,24 @@ static ssize_t rd_set_configfs_dev_params(struct se_device *dev,
+>  		token = match_token(ptr, tokens, args);
+>  		switch (token) {
+>  		case Opt_rd_pages:
+> -			match_int(args, &arg);
+> +			ret = match_int(args, &arg);
+> +			if (ret) {
+> +				kfree(orig);
+> +				return ret;
 
-This is entirely generic SCSI/block evel functionality.  I'd rather have
-a new WAIT_FOR_FREEZE return value from ->eh_device_reset_handler and
-handle this in the SCSI midlayer.
+Just set ret to the return value and then break, so all the error and
+success paths are going through the same code path.
