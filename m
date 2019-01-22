@@ -1,7 +1,7 @@
 From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH v2] SCSI: fcoe: convert to use BUS_ATTR_WO
-Date: Tue, 22 Jan 2019 15:27:35 +0100
-Message-ID: <20190122142735.GB18225@kroah.com>
+Subject: [PATCH] SCSI: fcoe: remove unneeded fcoe_ctlr_destroy_store export
+Date: Tue, 22 Jan 2019 15:28:18 +0100
+Message-ID: <20190122142818.GC18225@kroah.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
@@ -11,48 +11,28 @@ To: Johannes Thumshirn <jth@kernel.org>, "James E.J. Bottomley" <jejb@linux.vnet
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-We are trying to get rid of BUS_ATTR() and the usage of that in the fcoe
-driver can be trivially converted to use BUS_ATTR_WO(), so use that
-instead.
+There's no need to export fcoe_ctlr_destroy_store as a symbol, so remove
+the EXPORT_SYMBOL() line for it.
 
 Cc: Johannes Thumshirn <jth@kernel.org>
 Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 ---
-v2: Made simpler with wrapper functions to call the "real" show/store
-    functions, thanks to James for the idea.
-    Removed the EXPORT_SYMBOL() removal line, that belongs in a separate
-    patch
+ drivers/scsi/fcoe/fcoe_transport.c | 1 -
+ 1 file changed, 1 deletion(-)
 
- drivers/scsi/fcoe/fcoe_sysfs.c | 15 +++++++++++++--
- 1 file changed, 13 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/fcoe/fcoe_sysfs.c b/drivers/scsi/fcoe/fcoe_sysfs.c
-index 5c8310bade61..c3dcbdc3aa64 100644
---- a/drivers/scsi/fcoe/fcoe_sysfs.c
-+++ b/drivers/scsi/fcoe/fcoe_sysfs.c
-@@ -671,8 +671,19 @@ static const struct device_type fcoe_fcf_device_type = {
- 	.release = fcoe_fcf_device_release,
- };
+diff --git a/drivers/scsi/fcoe/fcoe_transport.c b/drivers/scsi/fcoe/fcoe_transport.c
+index f4909cd206d3..6d3949b687ef 100644
+--- a/drivers/scsi/fcoe/fcoe_transport.c
++++ b/drivers/scsi/fcoe/fcoe_transport.c
+@@ -855,7 +855,6 @@ ssize_t fcoe_ctlr_destroy_store(struct bus_type *bus,
+ 	mutex_unlock(&ft_mutex);
+ 	return rc;
+ }
+-EXPORT_SYMBOL(fcoe_ctlr_destroy_store);
  
--static BUS_ATTR(ctlr_create, S_IWUSR, NULL, fcoe_ctlr_create_store);
--static BUS_ATTR(ctlr_destroy, S_IWUSR, NULL, fcoe_ctlr_destroy_store);
-+static ssize_t ctlr_create_store(struct bus_type *bus, const char *buf,
-+				 size_t count)
-+{
-+	return fcoe_ctlr_create_store(bus, buf, count);
-+}
-+static BUS_ATTR_WO(ctlr_create);
-+
-+static ssize_t ctlr_destroy_store(struct bus_type *bus, const char *buf,
-+				  size_t count)
-+{
-+	return fcoe_ctlr_destroy_store(bus, buf, count);
-+}
-+static BUS_ATTR_WO(ctlr_destroy);
- 
- static struct attribute *fcoe_bus_attrs[] = {
- 	&bus_attr_ctlr_create.attr,
+ /**
+  * fcoe_transport_create() - Create a fcoe interface
 -- 
 2.20.1
