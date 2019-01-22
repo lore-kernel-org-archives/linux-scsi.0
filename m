@@ -1,67 +1,70 @@
 From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH v9 00/22] Re-use nvram module
-Date: Tue, 22 Jan 2019 10:22:34 +0100
-Message-ID: <20190122092234.GA15813@kroah.com>
-References: <cover.1547525936.git.fthain@telegraphics.com.au>
+Subject: Re: [PATCH 03/10] SCSI: fcoe: convert to use BUS_ATTR_WO
+Date: Tue, 22 Jan 2019 15:22:28 +0100
+Message-ID: <20190122142228.GA18225@kroah.com>
+References: <20181221075442.17109-1-gregkh@linuxfoundation.org>
+ <20181221075442.17109-4-gregkh@linuxfoundation.org>
+ <1545406185.2765.8.camel@linux.ibm.com>
+ <5691ac07-ec5d-893f-09e4-ff1acd889abd@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <dri-devel-bounces@lists.freedesktop.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <cover.1547525936.git.fthain@telegraphics.com.au>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
-List-Post: <mailto:dri-devel@lists.freedesktop.org>
-List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: dri-devel-bounces@lists.freedesktop.org
-Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: Michael Schmitz <schmitzmic@gmail.com>, linux-fbdev@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-scsi@vger.kernel.org, linux-m68k@lists.linux-m68k.org, Geert Uytterhoeven <geert@linux-m68k.org>, Michael Ellerman <mpe@ellerman.id.au>, Paul Mackerras <paulus@samba.org>, linuxppc-dev@lists.ozlabs.org, Joshua Thompson <funaho@jurai.org>
+In-Reply-To: <5691ac07-ec5d-893f-09e4-ff1acd889abd@suse.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <jejb@linux.ibm.com>, linux-kernel@vger.kernel.org, Johannes Thumshirn <jth@kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gVHVlLCBKYW4gMTUsIDIwMTkgYXQgMDM6MTg6NTZQTSArMTEwMCwgRmlubiBUaGFpbiB3cm90
-ZToKPiBUaGUgImdlbmVyaWMiIE5WUkFNIG1vZHVsZSwgZHJpdmVycy9jaGFyL2dlbmVyaWNfbnZy
-YW0uYywgaW1wbGVtZW50cyBhCj4gL2Rldi9udnJhbSBtaXNjIGRldmljZS4gVGhpcyBtb2R1bGUg
-aXMgdXNlZCBvbmx5IGJ5IDMyLWJpdCBQb3dlclBDCj4gcGxhdGZvcm1zLgo+IAo+IFRoZSBSVEMg
-IkNNT1MiIE5WUkFNIG1vZHVsZSwgZHJpdmVycy9jaGFyL252cmFtLmMsIGFsc28gaW1wbGVtZW50
-cyBhCj4gL2Rldi9udnJhbSBtaXNjIGRldmljZS4gVGhpcyBtb2R1bGUgaXMgbm93IHVzZWQgb25s
-eSBieSB4ODYgYW5kIG02OGsKPiB0aGFua3MgdG8gY29tbWl0IDNiYTlmYWVkYzE4MCAoImNoYXI6
-IG52cmFtOiBkaXNhYmxlIG9uIEFSTSIpLgo+IAo+IFRoZSAiZ2VuZXJpYyIgbW9kdWxlIGNhbm5v
-dCBiZSB1c2VkIGJ5IHg4NiBvciBtNjhrIHBsYXRmb3JtcyBiZWNhdXNlIGl0Cj4gY2Fubm90IGNv
-LWV4aXN0IHdpdGggdGhlICJDTU9TIiBtb2R1bGUuIE9uZSByZWFzb24gZm9yIHRoYXQgaXMgdGhl
-Cj4gQ09ORklHX0dFTkVSSUNfTlZSQU0ga2x1ZGdlIGluIGRyaXZlcnMvY2hhci9NYWtlZmlsZS4g
-QW5vdGhlciByZWFzb24gaXMKPiB0aGF0IGF1dG9tYXRpY2FsbHkgbG9hZGluZyB0aGUgYXBwcm9w
-cmlhdGUgbW9kdWxlIHdvdWxkIGJlIGltcG9zc2libGUKPiBiZWNhdXNlIG9ubHkgb25lIG1vZHVs
-ZSBjYW4gcHJvdmlkZSB0aGUgY2hhci1tYWpvci0xMC0xNDQgYWxpYXMuCj4gCj4gQSBtdWx0aS1w
-bGF0Zm9ybSBrZXJuZWwgYmluYXJ5IG5lZWRzIGEgc2luZ2xlLCBnZW5lcmljIG1vZHVsZS4gV2l0
-aCB0aGlzCj4gcGF0Y2ggc2VyaWVzLCBkcml2ZXJzL2NoYXIvbnZyYW0uYyBiZWNvbWVzIG1vcmUg
-Z2VuZXJpYyBhbmQgc29tZSBvZiB0aGUKPiBhcmNoLXNwZWNpZmljIGNvZGUgZ2V0cyBtb3ZlZCB1
-bmRlciBhcmNoLy4gVGhlIG52cmFtIG1vZHVsZSBpcyB0aGVuCj4gdXNhYmxlIGJ5IGFsbCBtNjhr
-LCBwb3dlcnBjIGFuZCB4ODYgcGxhdGZvcm1zLgo+IAo+IFRoaXMgYWxsb3dzIGZvciByZW1vdmFs
-IG9mIGRyaXZlcnMvY2hhci9nZW5lcmljX252cmFtLmMgYXMgd2VsbCBhcyBhCj4gZHVwbGljYXRl
-IGluIGFyY2gvcG93ZXJwYy9rZXJuZWwvbnZyYW1fNjQuYy4gQnkgcmVkdWNpbmcgdGhlIG51bWJl
-ciBvZgo+IC9kZXYvbnZyYW0gY2hhciBtaXNjIGRldmljZSBpbXBsZW1lbnRhdGlvbnMsIHRoZSBu
-dW1iZXIgb2YgYnVncyBhbmQKPiBpbmNvbnNpc3RlbmNpZXMgaXMgYWxzbyByZWR1Y2VkLgo+IAo+
-IFRoaXMgYXBwcm9hY2ggcmVkdWNlcyBpbmNvbnNpc3RlbmNpZXMgYmV0d2VlbiBQUEMzMiBhbmQg
-UFBDNjQgYW5kIGFsc28KPiBiZXR3ZWVuIFBQQ19QTUFDIGFuZCBNQUMuIEEgdW5pZm9ybSBBUEkg
-aGFzIGJlbmVmaXRzIGZvciB1c2Vyc3BhY2UuCj4gCj4gRm9yIGV4YW1wbGUsIHNvbWUgZXJyb3Ig
-Y29kZXMgZm9yIHNvbWUgaW9jdGwgY2FsbHMgYmVjb21lIGNvbnNpc3RlbnQKPiBhY3Jvc3MgUG93
-ZXJQQyBwbGF0Zm9ybXMuIFRoZSB1bmlmb3JtIEFQSSBjYW4gcG90ZW50aWFsbHkgYmVuZWZpdCBh
-bnkKPiBib290bG9hZGVyIHRoYXQgd29ya3MgYWNyb3NzIHRoZSB2YXJpb3VzIHBsYXRmb3JtcyBo
-YXZpbmcgWFBSQU0KPiAoZS5nLiBFbWlsZSkuCj4gCj4gVGhpcyBwYXRjaCBzZXJpZXMgd2FzIHRl
-c3RlZCBvbiBBdGFyaSwgTWFjLCBQb3dlck1hYyAoYm90aCAzMi1iaXQgYW5kCj4gNjQtYml0KSBh
-bmQgVGhpbmtQYWQgaGFyZHdhcmUuIEFGQUlLLCBpdCBoYXMgbm90IHlldCBiZWVuIHRlc3RlZCBv
-bgo+IHBTZXJpZXMgb3IgQ0hSUC4KPiAKPiBJIHRoaW5rIHRoZXJlIGFyZSB0d28gcG9zc2libGUg
-bWVyZ2Ugc3RyYXRlZ2llcyBmb3IgdGhpcyBwYXRjaCBzZXJpZXMuCj4gVGhlIGNoYXIgbWlzYyBt
-YWludGFpbmVyIGNvdWxkIHRha2UgdGhlIGVudGlyZSBzZXJpZXMuIEFsdGVybmF0aXZlbHksCj4g
-dGhlIG02OGsgbWFpbnRhaW5lciBjb3VsZCB0YWtlIHBhdGNoZXMgMSB0aHJ1IDE2ICh0aG91Z2gg
-c29tZSBvZiB0aGVzZQo+IGhhdmUgbm90aGluZyB0byBkbyB3aXRoIG02OGspIGFuZCBhZnRlciB0
-aG9zZSBwYXRjaGVzIHJlYWNoIG1haW5saW5lCj4gdGhlIHBvd2VycGMgbWFpbnRhaW5lciBjb3Vs
-ZCB0YWtlIDE3IHRocnUgMjIuCgpJIGp1c3QgdG9vayB0aGUgd2hvbGUgc2VyaWVzLCB0aGFua3Mg
-Zm9yIGRvaW5nIHRoaXMsIGxvb2tzIGdvb2QuCgpncmVnIGstaApfX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fXwpkcmktZGV2ZWwgbWFpbGluZyBsaXN0CmRyaS1k
-ZXZlbEBsaXN0cy5mcmVlZGVza3RvcC5vcmcKaHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcv
-bWFpbG1hbi9saXN0aW5mby9kcmktZGV2ZWwK
+On Fri, Dec 28, 2018 at 01:50:53PM +0100, Hannes Reinecke wrote:
+> On 12/21/18 4:29 PM, James Bottomley wrote:
+> > [scsi list cc added]
+> > On Fri, 2018-12-21 at 08:54 +0100, Greg Kroah-Hartman wrote:
+> > > We are trying to get rid of BUS_ATTR() and the usage of that in the
+> > > fcoe driver can be trivially converted to use BUS_ATTR_WO(), so use
+> > > that instead.
+> > > 
+> > > At the same time remove a unneeded EXPORT_SYMBOL() marking for the
+> > > sysfs callback function we are renaming, no idea of how that got into
+> > > the tree...
+> > 
+> > The EXPORT_SYMBOL removal is fine, but
+> > 
+> > [...]
+> > > --- a/include/scsi/libfcoe.h
+> > > +++ b/include/scsi/libfcoe.h
+> > > @@ -405,10 +405,8 @@ int fcoe_transport_attach(struct fcoe_transport
+> > > *ft);
+> > >   int fcoe_transport_detach(struct fcoe_transport *ft);
+> > > 
+> > >   /* sysfs store handler for ctrl_control interface */
+> > > -ssize_t fcoe_ctlr_create_store(struct bus_type *bus,
+> > > -			       const char *buf, size_t count);
+> > > -ssize_t fcoe_ctlr_destroy_store(struct bus_type *bus,
+> > > -				const char *buf, size_t count);
+> > > +ssize_t ctlr_create_store(struct bus_type *bus, const char *buf,
+> > > size_t count);
+> > > +ssize_t ctlr_destroy_store(struct bus_type *bus, const char *buf,
+> > > size_t count);
+> > 
+> > You're really damaging our prefix namespace here.  It looks like the
+> > ctlr_ name is a farly recent addition for sysfs (only myra/b) use it in
+> > SCSI but it's inviting symbol clashes.
+> > 
+> Hmm. I was under the impression that all sysfs functions from myrb/myrs are
+> local, hence I would not need to prefix them.
+> If this isn't the case I definitely will be fixing them.
+> 
+> But in any case, if possible any sysfs function should be local to the
+> driver; no-one else should ever attempt to use them.
+> And we should be making it so if that's not the case.
+
+This is all in the same "driver", just that the driver is spread out
+over multiple files.
+
+James, thanks for the fixup, I'll go respin this and break this up into
+two patches and resend in a bit.
+
+thanks,
+
+greg k-h
