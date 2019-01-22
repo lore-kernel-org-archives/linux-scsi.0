@@ -1,7 +1,7 @@
 From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 5/7] scsi: lpfc: no need to check return value of debugfs_create functions
-Date: Tue, 22 Jan 2019 16:09:04 +0100
-Message-ID: <20190122150906.12470-6-gregkh@linuxfoundation.org>
+Subject: [PATCH 7/7] scsi: qla2xxx: no need to check return value of debugfs_create functions
+Date: Tue, 22 Jan 2019 16:09:06 +0100
+Message-ID: <20190122150906.12470-8-gregkh@linuxfoundation.org>
 References: <20190122150906.12470-1-gregkh@linuxfoundation.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -9,415 +9,103 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20190122150906.12470-1-gregkh@linuxfoundation.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: James Bottomley <jejb@linux.ibm.com>, Martin Petersen <martin.petersen@oracle.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, qla2xxx-upstream@qlogic.com
 List-Id: linux-scsi@vger.kernel.org
 
 When calling debugfs functions, there is no need to ever check the
 return value.  The function can work or not, but the code logic should
 never do something different based on this.
 
-Cc: James Smart <james.smart@broadcom.com>
-Cc: Dick Kennedy <dick.kennedy@broadcom.com>
+Cc: qla2xxx-upstream@qlogic.com
 Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org
 Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 ---
- drivers/scsi/lpfc/lpfc_debugfs.c | 170 -------------------------------
- 1 file changed, 170 deletions(-)
+ drivers/scsi/qla2xxx/qla_dfs.c | 43 +---------------------------------
+ 1 file changed, 1 insertion(+), 42 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
-index a58f0b3f03a9..a851dee09587 100644
---- a/drivers/scsi/lpfc/lpfc_debugfs.c
-+++ b/drivers/scsi/lpfc/lpfc_debugfs.c
-@@ -5280,11 +5280,6 @@ lpfc_debugfs_initialize(struct lpfc_vport *vport)
- 	if (!lpfc_debugfs_root) {
- 		lpfc_debugfs_root = debugfs_create_dir("lpfc", NULL);
- 		atomic_set(&lpfc_debugfs_hba_count, 0);
--		if (!lpfc_debugfs_root) {
--			lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
--					 "0408 Cannot create debugfs root\n");
--			goto debug_failed;
--		}
- 	}
- 	if (!lpfc_debugfs_start_time)
- 		lpfc_debugfs_start_time = jiffies;
-@@ -5295,11 +5290,6 @@ lpfc_debugfs_initialize(struct lpfc_vport *vport)
- 		pport_setup = true;
- 		phba->hba_debugfs_root =
- 			debugfs_create_dir(name, lpfc_debugfs_root);
--		if (!phba->hba_debugfs_root) {
--			lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
--					 "0412 Cannot create debugfs hba\n");
--			goto debug_failed;
--		}
- 		atomic_inc(&lpfc_debugfs_hba_count);
- 		atomic_set(&phba->debugfs_vport_count, 0);
+diff --git a/drivers/scsi/qla2xxx/qla_dfs.c b/drivers/scsi/qla2xxx/qla_dfs.c
+index 0b190082aa8d..ead17288e2a7 100644
+--- a/drivers/scsi/qla2xxx/qla_dfs.c
++++ b/drivers/scsi/qla2xxx/qla_dfs.c
+@@ -446,11 +446,6 @@ qla2x00_dfs_setup(scsi_qla_host_t *vha)
  
-@@ -5309,11 +5299,6 @@ lpfc_debugfs_initialize(struct lpfc_vport *vport)
- 			debugfs_create_file(name, S_IFREG|S_IRUGO|S_IWUSR,
- 				 phba->hba_debugfs_root,
- 				 phba, &lpfc_debugfs_op_hbqinfo);
--		if (!phba->debug_hbqinfo) {
--			lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
--				"0411 Cannot create debugfs hbqinfo\n");
--			goto debug_failed;
--		}
- 
- 		/* Setup dumpHBASlim */
- 		if (phba->sli_rev < LPFC_SLI_REV4) {
-@@ -5323,12 +5308,6 @@ lpfc_debugfs_initialize(struct lpfc_vport *vport)
- 					S_IFREG|S_IRUGO|S_IWUSR,
- 					phba->hba_debugfs_root,
- 					phba, &lpfc_debugfs_op_dumpHBASlim);
--			if (!phba->debug_dumpHBASlim) {
--				lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
--						 "0413 Cannot create debugfs "
--						"dumpHBASlim\n");
--				goto debug_failed;
--			}
- 		} else
- 			phba->debug_dumpHBASlim = NULL;
- 
-@@ -5340,12 +5319,6 @@ lpfc_debugfs_initialize(struct lpfc_vport *vport)
- 					S_IFREG|S_IRUGO|S_IWUSR,
- 					phba->hba_debugfs_root,
- 					phba, &lpfc_debugfs_op_dumpHostSlim);
--			if (!phba->debug_dumpHostSlim) {
--				lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
--						 "0414 Cannot create debugfs "
--						 "dumpHostSlim\n");
--				goto debug_failed;
--			}
- 		} else
- 			phba->debug_dumpHostSlim = NULL;
- 
-@@ -5355,11 +5328,6 @@ lpfc_debugfs_initialize(struct lpfc_vport *vport)
- 			debugfs_create_file(name, S_IFREG|S_IRUGO|S_IWUSR,
- 				 phba->hba_debugfs_root,
- 				 phba, &lpfc_debugfs_op_dumpData);
--		if (!phba->debug_dumpData) {
--			lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
--				"0800 Cannot create debugfs dumpData\n");
--			goto debug_failed;
--		}
- 
- 		/* Setup dumpDif */
- 		snprintf(name, sizeof(name), "dumpDif");
-@@ -5367,11 +5335,6 @@ lpfc_debugfs_initialize(struct lpfc_vport *vport)
- 			debugfs_create_file(name, S_IFREG|S_IRUGO|S_IWUSR,
- 				 phba->hba_debugfs_root,
- 				 phba, &lpfc_debugfs_op_dumpDif);
--		if (!phba->debug_dumpDif) {
--			lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
--				"0801 Cannot create debugfs dumpDif\n");
--			goto debug_failed;
--		}
- 
- 		/* Setup DIF Error Injections */
- 		snprintf(name, sizeof(name), "InjErrLBA");
-@@ -5379,11 +5342,6 @@ lpfc_debugfs_initialize(struct lpfc_vport *vport)
- 			debugfs_create_file(name, S_IFREG|S_IRUGO|S_IWUSR,
- 			phba->hba_debugfs_root,
- 			phba, &lpfc_debugfs_op_dif_err);
--		if (!phba->debug_InjErrLBA) {
--			lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
--				"0807 Cannot create debugfs InjErrLBA\n");
--			goto debug_failed;
--		}
- 		phba->lpfc_injerr_lba = LPFC_INJERR_LBA_OFF;
- 
- 		snprintf(name, sizeof(name), "InjErrNPortID");
-@@ -5391,88 +5349,48 @@ lpfc_debugfs_initialize(struct lpfc_vport *vport)
- 			debugfs_create_file(name, S_IFREG|S_IRUGO|S_IWUSR,
- 			phba->hba_debugfs_root,
- 			phba, &lpfc_debugfs_op_dif_err);
--		if (!phba->debug_InjErrNPortID) {
--			lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
--				"0809 Cannot create debugfs InjErrNPortID\n");
--			goto debug_failed;
--		}
- 
- 		snprintf(name, sizeof(name), "InjErrWWPN");
- 		phba->debug_InjErrWWPN =
- 			debugfs_create_file(name, S_IFREG|S_IRUGO|S_IWUSR,
- 			phba->hba_debugfs_root,
- 			phba, &lpfc_debugfs_op_dif_err);
--		if (!phba->debug_InjErrWWPN) {
--			lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
--				"0810 Cannot create debugfs InjErrWWPN\n");
--			goto debug_failed;
--		}
- 
- 		snprintf(name, sizeof(name), "writeGuardInjErr");
- 		phba->debug_writeGuard =
- 			debugfs_create_file(name, S_IFREG|S_IRUGO|S_IWUSR,
- 			phba->hba_debugfs_root,
- 			phba, &lpfc_debugfs_op_dif_err);
--		if (!phba->debug_writeGuard) {
--			lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
--				"0802 Cannot create debugfs writeGuard\n");
--			goto debug_failed;
--		}
- 
- 		snprintf(name, sizeof(name), "writeAppInjErr");
- 		phba->debug_writeApp =
- 			debugfs_create_file(name, S_IFREG|S_IRUGO|S_IWUSR,
- 			phba->hba_debugfs_root,
- 			phba, &lpfc_debugfs_op_dif_err);
--		if (!phba->debug_writeApp) {
--			lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
--				"0803 Cannot create debugfs writeApp\n");
--			goto debug_failed;
--		}
- 
- 		snprintf(name, sizeof(name), "writeRefInjErr");
- 		phba->debug_writeRef =
- 			debugfs_create_file(name, S_IFREG|S_IRUGO|S_IWUSR,
- 			phba->hba_debugfs_root,
- 			phba, &lpfc_debugfs_op_dif_err);
--		if (!phba->debug_writeRef) {
--			lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
--				"0804 Cannot create debugfs writeRef\n");
--			goto debug_failed;
--		}
- 
- 		snprintf(name, sizeof(name), "readGuardInjErr");
- 		phba->debug_readGuard =
- 			debugfs_create_file(name, S_IFREG|S_IRUGO|S_IWUSR,
- 			phba->hba_debugfs_root,
- 			phba, &lpfc_debugfs_op_dif_err);
--		if (!phba->debug_readGuard) {
--			lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
--				"0808 Cannot create debugfs readGuard\n");
--			goto debug_failed;
--		}
- 
- 		snprintf(name, sizeof(name), "readAppInjErr");
- 		phba->debug_readApp =
- 			debugfs_create_file(name, S_IFREG|S_IRUGO|S_IWUSR,
- 			phba->hba_debugfs_root,
- 			phba, &lpfc_debugfs_op_dif_err);
--		if (!phba->debug_readApp) {
--			lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
--				"0805 Cannot create debugfs readApp\n");
--			goto debug_failed;
--		}
- 
- 		snprintf(name, sizeof(name), "readRefInjErr");
- 		phba->debug_readRef =
- 			debugfs_create_file(name, S_IFREG|S_IRUGO|S_IWUSR,
- 			phba->hba_debugfs_root,
- 			phba, &lpfc_debugfs_op_dif_err);
--		if (!phba->debug_readRef) {
--			lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
--				"0806 Cannot create debugfs readApp\n");
--			goto debug_failed;
--		}
- 
- 		/* Setup slow ring trace */
- 		if (lpfc_debugfs_max_slow_ring_trc) {
-@@ -5496,12 +5414,6 @@ lpfc_debugfs_initialize(struct lpfc_vport *vport)
- 			debugfs_create_file(name, S_IFREG|S_IRUGO|S_IWUSR,
- 				 phba->hba_debugfs_root,
- 				 phba, &lpfc_debugfs_op_slow_ring_trc);
--		if (!phba->debug_slow_ring_trc) {
--			lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
--					 "0415 Cannot create debugfs "
--					 "slow_ring_trace\n");
--			goto debug_failed;
--		}
- 		if (!phba->slow_ring_trc) {
- 			phba->slow_ring_trc = kmalloc(
- 				(sizeof(struct lpfc_debugfs_trc) *
-@@ -5524,11 +5436,6 @@ lpfc_debugfs_initialize(struct lpfc_vport *vport)
- 			debugfs_create_file(name, 0644,
- 					    phba->hba_debugfs_root,
- 					    phba, &lpfc_debugfs_op_nvmeio_trc);
--		if (!phba->debug_nvmeio_trc) {
--			lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
--					 "0574 No create debugfs nvmeio_trc\n");
--			goto debug_failed;
--		}
- 
- 		atomic_set(&phba->nvmeio_trc_cnt, 0);
- 		if (lpfc_debugfs_max_nvmeio_trc) {
-@@ -5576,11 +5483,6 @@ lpfc_debugfs_initialize(struct lpfc_vport *vport)
- 	if (!vport->vport_debugfs_root) {
- 		vport->vport_debugfs_root =
- 			debugfs_create_dir(name, phba->hba_debugfs_root);
--		if (!vport->vport_debugfs_root) {
--			lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
--					 "0417 Can't create debugfs\n");
--			goto debug_failed;
--		}
- 		atomic_inc(&phba->debugfs_vport_count);
- 	}
- 
-@@ -5617,55 +5519,29 @@ lpfc_debugfs_initialize(struct lpfc_vport *vport)
- 		debugfs_create_file(name, S_IFREG|S_IRUGO|S_IWUSR,
- 				 vport->vport_debugfs_root,
- 				 vport, &lpfc_debugfs_op_disc_trc);
--	if (!vport->debug_disc_trc) {
--		lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
--				 "0419 Cannot create debugfs "
--				 "discovery_trace\n");
--		goto debug_failed;
--	}
- 	snprintf(name, sizeof(name), "nodelist");
- 	vport->debug_nodelist =
- 		debugfs_create_file(name, S_IFREG|S_IRUGO|S_IWUSR,
- 				 vport->vport_debugfs_root,
- 				 vport, &lpfc_debugfs_op_nodelist);
--	if (!vport->debug_nodelist) {
--		lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
--				 "2985 Can't create debugfs nodelist\n");
--		goto debug_failed;
+ 	atomic_set(&qla2x00_dfs_root_count, 0);
+ 	qla2x00_dfs_root = debugfs_create_dir(QLA2XXX_DRIVER_NAME, NULL);
+-	if (!qla2x00_dfs_root) {
+-		ql_log(ql_log_warn, vha, 0x00f7,
+-		    "Unable to create debugfs root directory.\n");
+-		goto out;
 -	}
  
- 	snprintf(name, sizeof(name), "nvmestat");
- 	vport->debug_nvmestat =
- 		debugfs_create_file(name, 0644,
- 				    vport->vport_debugfs_root,
- 				    vport, &lpfc_debugfs_op_nvmestat);
--	if (!vport->debug_nvmestat) {
--		lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
--				 "0811 Cannot create debugfs nvmestat\n");
--		goto debug_failed;
+ create_dir:
+ 	if (ha->dfs_dir)
+@@ -458,64 +453,28 @@ qla2x00_dfs_setup(scsi_qla_host_t *vha)
+ 
+ 	mutex_init(&ha->fce_mutex);
+ 	ha->dfs_dir = debugfs_create_dir(vha->host_str, qla2x00_dfs_root);
+-	if (!ha->dfs_dir) {
+-		ql_log(ql_log_warn, vha, 0x00f8,
+-		    "Unable to create debugfs ha directory.\n");
+-		goto out;
 -	}
  
- 	snprintf(name, sizeof(name), "nvmektime");
- 	vport->debug_nvmektime =
- 		debugfs_create_file(name, 0644,
- 				    vport->vport_debugfs_root,
- 				    vport, &lpfc_debugfs_op_nvmektime);
--	if (!vport->debug_nvmektime) {
--		lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
--				 "0815 Cannot create debugfs nvmektime\n");
--		goto debug_failed;
+ 	atomic_inc(&qla2x00_dfs_root_count);
+ 
+ create_nodes:
+ 	ha->dfs_fw_resource_cnt = debugfs_create_file("fw_resource_count",
+ 	    S_IRUSR, ha->dfs_dir, vha, &dfs_fw_resource_cnt_ops);
+-	if (!ha->dfs_fw_resource_cnt) {
+-		ql_log(ql_log_warn, vha, 0x00fd,
+-		    "Unable to create debugFS fw_resource_count node.\n");
+-		goto out;
 -	}
  
- 	snprintf(name, sizeof(name), "cpucheck");
- 	vport->debug_cpucheck =
- 		debugfs_create_file(name, 0644,
- 				    vport->vport_debugfs_root,
- 				    vport, &lpfc_debugfs_op_cpucheck);
--	if (!vport->debug_cpucheck) {
--		lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
--				 "0819 Cannot create debugfs cpucheck\n");
--		goto debug_failed;
+ 	ha->dfs_tgt_counters = debugfs_create_file("tgt_counters", S_IRUSR,
+ 	    ha->dfs_dir, vha, &dfs_tgt_counters_ops);
+-	if (!ha->dfs_tgt_counters) {
+-		ql_log(ql_log_warn, vha, 0xd301,
+-		    "Unable to create debugFS tgt_counters node.\n");
+-		goto out;
 -	}
  
- 	/*
- 	 * The following section is for additional directories/files for the
-@@ -5685,11 +5561,6 @@ lpfc_debugfs_initialize(struct lpfc_vport *vport)
- 	if (!phba->idiag_root) {
- 		phba->idiag_root =
- 			debugfs_create_dir(name, phba->hba_debugfs_root);
--		if (!phba->idiag_root) {
--			lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
--					 "2922 Can't create idiag debugfs\n");
--			goto debug_failed;
--		}
- 		/* Initialize iDiag data structure */
- 		memset(&idiag, 0, sizeof(idiag));
- 	}
-@@ -5700,11 +5571,6 @@ lpfc_debugfs_initialize(struct lpfc_vport *vport)
- 		phba->idiag_pci_cfg =
- 			debugfs_create_file(name, S_IFREG|S_IRUGO|S_IWUSR,
- 				phba->idiag_root, phba, &lpfc_idiag_op_pciCfg);
--		if (!phba->idiag_pci_cfg) {
--			lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
--					 "2923 Can't create idiag debugfs\n");
--			goto debug_failed;
--		}
- 		idiag.offset.last_rd = 0;
- 	}
+ 	ha->tgt.dfs_tgt_port_database = debugfs_create_file("tgt_port_database",
+ 	    S_IRUSR,  ha->dfs_dir, vha, &dfs_tgt_port_database_ops);
+-	if (!ha->tgt.dfs_tgt_port_database) {
+-		ql_log(ql_log_warn, vha, 0xd03f,
+-		    "Unable to create debugFS tgt_port_database node.\n");
+-		goto out;
+-	}
  
-@@ -5714,11 +5580,6 @@ lpfc_debugfs_initialize(struct lpfc_vport *vport)
- 		phba->idiag_bar_acc =
- 			debugfs_create_file(name, S_IFREG|S_IRUGO|S_IWUSR,
- 				phba->idiag_root, phba, &lpfc_idiag_op_barAcc);
--		if (!phba->idiag_bar_acc) {
--			lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
--					"3056 Can't create idiag debugfs\n");
--			goto debug_failed;
+ 	ha->dfs_fce = debugfs_create_file("fce", S_IRUSR, ha->dfs_dir, vha,
+ 	    &dfs_fce_ops);
+-	if (!ha->dfs_fce) {
+-		ql_log(ql_log_warn, vha, 0x00f9,
+-		    "Unable to create debugfs fce node.\n");
+-		goto out;
+-	}
+ 
+ 	ha->tgt.dfs_tgt_sess = debugfs_create_file("tgt_sess",
+ 		S_IRUSR, ha->dfs_dir, vha, &dfs_tgt_sess_ops);
+-	if (!ha->tgt.dfs_tgt_sess) {
+-		ql_log(ql_log_warn, vha, 0xd040,
+-		    "Unable to create debugFS tgt_sess node.\n");
+-		goto out;
+-	}
+ 
+-	if (IS_QLA27XX(ha) || IS_QLA83XX(ha)) {
++	if (IS_QLA27XX(ha) || IS_QLA83XX(ha))
+ 		ha->tgt.dfs_naqp = debugfs_create_file("naqp",
+ 		    0400, ha->dfs_dir, vha, &dfs_naqp_ops);
+-		if (!ha->tgt.dfs_naqp) {
+-			ql_log(ql_log_warn, vha, 0xd011,
+-			    "Unable to create debugFS naqp node.\n");
+-			goto out;
 -		}
- 		idiag.offset.last_rd = 0;
- 	}
- 
-@@ -5728,11 +5589,6 @@ lpfc_debugfs_initialize(struct lpfc_vport *vport)
- 		phba->idiag_que_info =
- 			debugfs_create_file(name, S_IFREG|S_IRUGO,
- 			phba->idiag_root, phba, &lpfc_idiag_op_queInfo);
--		if (!phba->idiag_que_info) {
--			lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
--					 "2924 Can't create idiag debugfs\n");
--			goto debug_failed;
--		}
- 	}
- 
- 	/* iDiag access PCI function queue */
-@@ -5741,11 +5597,6 @@ lpfc_debugfs_initialize(struct lpfc_vport *vport)
- 		phba->idiag_que_acc =
- 			debugfs_create_file(name, S_IFREG|S_IRUGO|S_IWUSR,
- 				phba->idiag_root, phba, &lpfc_idiag_op_queAcc);
--		if (!phba->idiag_que_acc) {
--			lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
--					 "2926 Can't create idiag debugfs\n");
--			goto debug_failed;
--		}
- 	}
- 
- 	/* iDiag access PCI function doorbell registers */
-@@ -5754,11 +5605,6 @@ lpfc_debugfs_initialize(struct lpfc_vport *vport)
- 		phba->idiag_drb_acc =
- 			debugfs_create_file(name, S_IFREG|S_IRUGO|S_IWUSR,
- 				phba->idiag_root, phba, &lpfc_idiag_op_drbAcc);
--		if (!phba->idiag_drb_acc) {
--			lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
--					 "2927 Can't create idiag debugfs\n");
--			goto debug_failed;
--		}
- 	}
- 
- 	/* iDiag access PCI function control registers */
-@@ -5767,11 +5613,6 @@ lpfc_debugfs_initialize(struct lpfc_vport *vport)
- 		phba->idiag_ctl_acc =
- 			debugfs_create_file(name, S_IFREG|S_IRUGO|S_IWUSR,
- 				phba->idiag_root, phba, &lpfc_idiag_op_ctlAcc);
--		if (!phba->idiag_ctl_acc) {
--			lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
--					 "2981 Can't create idiag debugfs\n");
--			goto debug_failed;
--		}
- 	}
- 
- 	/* iDiag access mbox commands */
-@@ -5780,11 +5621,6 @@ lpfc_debugfs_initialize(struct lpfc_vport *vport)
- 		phba->idiag_mbx_acc =
- 			debugfs_create_file(name, S_IFREG|S_IRUGO|S_IWUSR,
- 				phba->idiag_root, phba, &lpfc_idiag_op_mbxAcc);
--		if (!phba->idiag_mbx_acc) {
--			lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
--					"2980 Can't create idiag debugfs\n");
--			goto debug_failed;
--		}
- 	}
- 
- 	/* iDiag extents access commands */
-@@ -5796,12 +5632,6 @@ lpfc_debugfs_initialize(struct lpfc_vport *vport)
- 						    S_IFREG|S_IRUGO|S_IWUSR,
- 						    phba->idiag_root, phba,
- 						    &lpfc_idiag_op_extAcc);
--			if (!phba->idiag_ext_acc) {
--				lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
--						"2986 Cant create "
--						"idiag debugfs\n");
--				goto debug_failed;
--			}
- 		}
- 	}
- 
+-	}
+ out:
+ 	return 0;
+ }
 -- 
 2.20.1
