@@ -1,83 +1,67 @@
-From: Ching Huang <ching2048@areca.com.tw>
-Subject: Re: [PATCH 2/3] scsi: arcmsr: Fix suspend/resume of
- ACB_ADAPTER_TYPE_B part 2
-Date: Tue, 22 Jan 2019 08:03:42 +0800
-Message-ID: <1548115422.4292.1.camel@Centos6.3-64>
-References: <1547696703.4339.21.camel@Centos6.3-64>
-         <20190117070227.GM4504@kadam> <1547714827.5079.19.camel@Centos6.3-64>
-         <20190117091646.GA11828@kadam> <1547718748.5079.34.camel@Centos6.3-64>
-         <20190122074816.GC11828@kadam>
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH v9 00/22] Re-use nvram module
+Date: Tue, 22 Jan 2019 10:22:34 +0100
+Message-ID: <20190122092234.GA15813@kroah.com>
+References: <cover.1547525936.git.fthain@telegraphics.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190122074816.GC11828@kadam>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, hch@infradead.org, colin.king@canonical.com
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <dri-devel-bounces@lists.freedesktop.org>
+Content-Disposition: inline
+In-Reply-To: <cover.1547525936.git.fthain@telegraphics.com.au>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
+List-Post: <mailto:dri-devel@lists.freedesktop.org>
+List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: dri-devel-bounces@lists.freedesktop.org
+Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
+To: Finn Thain <fthain@telegraphics.com.au>
+Cc: Michael Schmitz <schmitzmic@gmail.com>, linux-fbdev@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-scsi@vger.kernel.org, linux-m68k@lists.linux-m68k.org, Geert Uytterhoeven <geert@linux-m68k.org>, Michael Ellerman <mpe@ellerman.id.au>, Paul Mackerras <paulus@samba.org>, linuxppc-dev@lists.ozlabs.org, Joshua Thompson <funaho@jurai.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 2019-01-22 at 10:48 +0300, Dan Carpenter wrote:
-> On Thu, Jan 17, 2019 at 05:52:28PM +0800, Ching Huang wrote:
-> > On Thu, 2019-01-17 at 12:16 +0300, Dan Carpenter wrote:
-> > > On Thu, Jan 17, 2019 at 04:47:07PM +0800, Ching Huang wrote:
-> > > > On Thu, 2019-01-17 at 10:59 +0300, Dan Carpenter wrote:
-> > > > > On Thu, Jan 17, 2019 at 11:45:03AM +0800, Ching Huang wrote:
-> > > > > > >From Ching Huang <ching2048@areca.com.tw>
-> > > > > > 
-> > > > > > Fix suspend/resume of ACB_ADAPTER_TYPE_B part 2.
-> > > > > > 
-> > > > > 
-> > > > > What does this look like from a user perspective?  Does it fail every
-> > > > > time or does it only fail sometimes?
-> > > > > 
-> > > > > What's the bug exactly?
-> > > > > 
-> > > > > There is no Fixes tag...
-> > > > >From user's perspective, hibernate/resume are OK.
-> > > > But following IO may cause 'isr get an illegal ccb command' in
-> > > > log/messages sometime.
-> > > > > 
-> > > 
-> > > 
-> > > You will need to resend with that information included in the commit
-> > > message.
-> > OK. I will resend this patch later.
-> > > 
-> > > > > > Signed-off-by: Ching Huang <ching2048@areca.com.tw>
-> > > > > > ---
-> > > > > > 
-> > > > > > diff --git a/drivers/scsi/arcmsr/arcmsr.h b/drivers/scsi/arcmsr/arcmsr.h
-> > > > > > index a94c513..b98c632 100755
-> > > > > > --- a/drivers/scsi/arcmsr/arcmsr.h
-> > > > > > +++ b/drivers/scsi/arcmsr/arcmsr.h
-> > > > > > @@ -508,9 +508,9 @@ struct MessageUnit_A
-> > > > > >  struct MessageUnit_B
-> > > > > >  {
-> > > > > >  	uint32_t	post_qbuffer[ARCMSR_MAX_HBB_POSTQUEUE];
-> > > > > > -	uint32_t	done_qbuffer[ARCMSR_MAX_HBB_POSTQUEUE];
-> > > > > > +	volatile uint32_t	done_qbuffer[ARCMSR_MAX_HBB_POSTQUEUE];
-> > > > > 
-> > > > > There is a well known rule of thumb that when someone uses "volatile"
-> > > > > in the kernel it means there is a locking problem...  Is this __iomem or
-> > > > > something?
-> > > > The done_qbuffer was a command completion queue, it was an area written
-> > > > by IO processor and read by device driver. So, ...
-> > > 
-> > > I'm not totally positive I understand this sentence.  I can find a bunch
-> > > of places which read from this buffer, but I haven't immediately found
-> > > which place writes to it.  Can you give me a function name that I should
-> > > read?
-> > Well, we allocate memory for struct MessageUnit_B in
-> > arcmsr_alloc_ccb_pool(), by assign to acb->dma_coherent_handle2.
-> > Then we tell IO controller its DMA address in arcmsr_iop_confirm().
-> > When a command was completed, controller's firmware program will write a
-> > completion ccb in done_qbuffer through DMA. So, you can't see any driver
-> > funtion write to it.
-> 
-> DMA memory doesn't need to be marked as volatile.
-I see. So I have removed the volatile in patch v2.
-> 
-> regards,
-> dan carpenter
-> 
+T24gVHVlLCBKYW4gMTUsIDIwMTkgYXQgMDM6MTg6NTZQTSArMTEwMCwgRmlubiBUaGFpbiB3cm90
+ZToKPiBUaGUgImdlbmVyaWMiIE5WUkFNIG1vZHVsZSwgZHJpdmVycy9jaGFyL2dlbmVyaWNfbnZy
+YW0uYywgaW1wbGVtZW50cyBhCj4gL2Rldi9udnJhbSBtaXNjIGRldmljZS4gVGhpcyBtb2R1bGUg
+aXMgdXNlZCBvbmx5IGJ5IDMyLWJpdCBQb3dlclBDCj4gcGxhdGZvcm1zLgo+IAo+IFRoZSBSVEMg
+IkNNT1MiIE5WUkFNIG1vZHVsZSwgZHJpdmVycy9jaGFyL252cmFtLmMsIGFsc28gaW1wbGVtZW50
+cyBhCj4gL2Rldi9udnJhbSBtaXNjIGRldmljZS4gVGhpcyBtb2R1bGUgaXMgbm93IHVzZWQgb25s
+eSBieSB4ODYgYW5kIG02OGsKPiB0aGFua3MgdG8gY29tbWl0IDNiYTlmYWVkYzE4MCAoImNoYXI6
+IG52cmFtOiBkaXNhYmxlIG9uIEFSTSIpLgo+IAo+IFRoZSAiZ2VuZXJpYyIgbW9kdWxlIGNhbm5v
+dCBiZSB1c2VkIGJ5IHg4NiBvciBtNjhrIHBsYXRmb3JtcyBiZWNhdXNlIGl0Cj4gY2Fubm90IGNv
+LWV4aXN0IHdpdGggdGhlICJDTU9TIiBtb2R1bGUuIE9uZSByZWFzb24gZm9yIHRoYXQgaXMgdGhl
+Cj4gQ09ORklHX0dFTkVSSUNfTlZSQU0ga2x1ZGdlIGluIGRyaXZlcnMvY2hhci9NYWtlZmlsZS4g
+QW5vdGhlciByZWFzb24gaXMKPiB0aGF0IGF1dG9tYXRpY2FsbHkgbG9hZGluZyB0aGUgYXBwcm9w
+cmlhdGUgbW9kdWxlIHdvdWxkIGJlIGltcG9zc2libGUKPiBiZWNhdXNlIG9ubHkgb25lIG1vZHVs
+ZSBjYW4gcHJvdmlkZSB0aGUgY2hhci1tYWpvci0xMC0xNDQgYWxpYXMuCj4gCj4gQSBtdWx0aS1w
+bGF0Zm9ybSBrZXJuZWwgYmluYXJ5IG5lZWRzIGEgc2luZ2xlLCBnZW5lcmljIG1vZHVsZS4gV2l0
+aCB0aGlzCj4gcGF0Y2ggc2VyaWVzLCBkcml2ZXJzL2NoYXIvbnZyYW0uYyBiZWNvbWVzIG1vcmUg
+Z2VuZXJpYyBhbmQgc29tZSBvZiB0aGUKPiBhcmNoLXNwZWNpZmljIGNvZGUgZ2V0cyBtb3ZlZCB1
+bmRlciBhcmNoLy4gVGhlIG52cmFtIG1vZHVsZSBpcyB0aGVuCj4gdXNhYmxlIGJ5IGFsbCBtNjhr
+LCBwb3dlcnBjIGFuZCB4ODYgcGxhdGZvcm1zLgo+IAo+IFRoaXMgYWxsb3dzIGZvciByZW1vdmFs
+IG9mIGRyaXZlcnMvY2hhci9nZW5lcmljX252cmFtLmMgYXMgd2VsbCBhcyBhCj4gZHVwbGljYXRl
+IGluIGFyY2gvcG93ZXJwYy9rZXJuZWwvbnZyYW1fNjQuYy4gQnkgcmVkdWNpbmcgdGhlIG51bWJl
+ciBvZgo+IC9kZXYvbnZyYW0gY2hhciBtaXNjIGRldmljZSBpbXBsZW1lbnRhdGlvbnMsIHRoZSBu
+dW1iZXIgb2YgYnVncyBhbmQKPiBpbmNvbnNpc3RlbmNpZXMgaXMgYWxzbyByZWR1Y2VkLgo+IAo+
+IFRoaXMgYXBwcm9hY2ggcmVkdWNlcyBpbmNvbnNpc3RlbmNpZXMgYmV0d2VlbiBQUEMzMiBhbmQg
+UFBDNjQgYW5kIGFsc28KPiBiZXR3ZWVuIFBQQ19QTUFDIGFuZCBNQUMuIEEgdW5pZm9ybSBBUEkg
+aGFzIGJlbmVmaXRzIGZvciB1c2Vyc3BhY2UuCj4gCj4gRm9yIGV4YW1wbGUsIHNvbWUgZXJyb3Ig
+Y29kZXMgZm9yIHNvbWUgaW9jdGwgY2FsbHMgYmVjb21lIGNvbnNpc3RlbnQKPiBhY3Jvc3MgUG93
+ZXJQQyBwbGF0Zm9ybXMuIFRoZSB1bmlmb3JtIEFQSSBjYW4gcG90ZW50aWFsbHkgYmVuZWZpdCBh
+bnkKPiBib290bG9hZGVyIHRoYXQgd29ya3MgYWNyb3NzIHRoZSB2YXJpb3VzIHBsYXRmb3JtcyBo
+YXZpbmcgWFBSQU0KPiAoZS5nLiBFbWlsZSkuCj4gCj4gVGhpcyBwYXRjaCBzZXJpZXMgd2FzIHRl
+c3RlZCBvbiBBdGFyaSwgTWFjLCBQb3dlck1hYyAoYm90aCAzMi1iaXQgYW5kCj4gNjQtYml0KSBh
+bmQgVGhpbmtQYWQgaGFyZHdhcmUuIEFGQUlLLCBpdCBoYXMgbm90IHlldCBiZWVuIHRlc3RlZCBv
+bgo+IHBTZXJpZXMgb3IgQ0hSUC4KPiAKPiBJIHRoaW5rIHRoZXJlIGFyZSB0d28gcG9zc2libGUg
+bWVyZ2Ugc3RyYXRlZ2llcyBmb3IgdGhpcyBwYXRjaCBzZXJpZXMuCj4gVGhlIGNoYXIgbWlzYyBt
+YWludGFpbmVyIGNvdWxkIHRha2UgdGhlIGVudGlyZSBzZXJpZXMuIEFsdGVybmF0aXZlbHksCj4g
+dGhlIG02OGsgbWFpbnRhaW5lciBjb3VsZCB0YWtlIHBhdGNoZXMgMSB0aHJ1IDE2ICh0aG91Z2gg
+c29tZSBvZiB0aGVzZQo+IGhhdmUgbm90aGluZyB0byBkbyB3aXRoIG02OGspIGFuZCBhZnRlciB0
+aG9zZSBwYXRjaGVzIHJlYWNoIG1haW5saW5lCj4gdGhlIHBvd2VycGMgbWFpbnRhaW5lciBjb3Vs
+ZCB0YWtlIDE3IHRocnUgMjIuCgpJIGp1c3QgdG9vayB0aGUgd2hvbGUgc2VyaWVzLCB0aGFua3Mg
+Zm9yIGRvaW5nIHRoaXMsIGxvb2tzIGdvb2QuCgpncmVnIGstaApfX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fXwpkcmktZGV2ZWwgbWFpbGluZyBsaXN0CmRyaS1k
+ZXZlbEBsaXN0cy5mcmVlZGVza3RvcC5vcmcKaHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcv
+bWFpbG1hbi9saXN0aW5mby9kcmktZGV2ZWwK
