@@ -1,55 +1,81 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH 1/2] RDMA/srp: Avoid calling mutex_lock() from inside
- scsi_queue_rq()
-Date: Mon, 21 Jan 2019 13:21:08 -0800
-Message-ID: <0bb65e25-fcb9-76aa-aad7-811ef7e6f6ef@acm.org>
-References: <20190117002717.84686-1-bvanassche@acm.org>
- <20190117002717.84686-2-bvanassche@acm.org>
- <20190119100304.GB24246@infradead.org>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: Re: [PATCH 2/3] scsi: arcmsr: Fix suspend/resume of
+ ACB_ADAPTER_TYPE_B part 2
+Date: Tue, 22 Jan 2019 10:48:16 +0300
+Message-ID: <20190122074816.GC11828@kadam>
+References: <1547696703.4339.21.camel@Centos6.3-64>
+ <20190117070227.GM4504@kadam>
+ <1547714827.5079.19.camel@Centos6.3-64>
+ <20190117091646.GA11828@kadam>
+ <1547718748.5079.34.camel@Centos6.3-64>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20190119100304.GB24246@infradead.org>
-Content-Language: en-US
-Sender: stable-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Jason Gunthorpe <jgg@ziepe.ca>, Doug Ledford <dledford@redhat.com>, linux-rdma@vger.kernel.org, Sergey Gorenko <sergeygo@mellanox.com>, Max Gurtovoy <maxg@mellanox.com>, Laurence Oberman <loberman@redhat.com>, stable@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1547718748.5079.34.camel@Centos6.3-64>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ching Huang <ching2048@areca.com.tw>
+Cc: martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, hch@infradead.org, colin.king@canonical.com
 List-Id: linux-scsi@vger.kernel.org
 
-On 1/19/19 2:03 AM, Christoph Hellwig wrote:
-> On Wed, Jan 16, 2019 at 04:27:16PM -0800, Bart Van Assche wrote:
->> In scsi-mq mode it is not allowed to sleep inside srp_queuecommand()
->> since the flag BLK_MQ_F_BLOCKING has not been set. Since setting the
->> request queue flag BLK_MQ_F_BLOCKING would slow down the hot path, make
->> srp_queuecommand() skip the mutex_lock() and mutex_unlock() calls when
->> called from inside scsi_queue_rq() from the SCSI EH thread.
->>
->> This patch avoids that the following appears in the kernel log:
-> 
-> I think we need to get rid of the taking a sleeping lock in
-> ->queuecomand entirely.  These checks are way to fragile.
+On Thu, Jan 17, 2019 at 05:52:28PM +0800, Ching Huang wrote:
+> On Thu, 2019-01-17 at 12:16 +0300, Dan Carpenter wrote:
+> > On Thu, Jan 17, 2019 at 04:47:07PM +0800, Ching Huang wrote:
+> > > On Thu, 2019-01-17 at 10:59 +0300, Dan Carpenter wrote:
+> > > > On Thu, Jan 17, 2019 at 11:45:03AM +0800, Ching Huang wrote:
+> > > > > >From Ching Huang <ching2048@areca.com.tw>
+> > > > > 
+> > > > > Fix suspend/resume of ACB_ADAPTER_TYPE_B part 2.
+> > > > > 
+> > > > 
+> > > > What does this look like from a user perspective?  Does it fail every
+> > > > time or does it only fail sometimes?
+> > > > 
+> > > > What's the bug exactly?
+> > > > 
+> > > > There is no Fixes tag...
+> > > >From user's perspective, hibernate/resume are OK.
+> > > But following IO may cause 'isr get an illegal ccb command' in
+> > > log/messages sometime.
+> > > > 
+> > 
+> > 
+> > You will need to resend with that information included in the commit
+> > message.
+> OK. I will resend this patch later.
+> > 
+> > > > > Signed-off-by: Ching Huang <ching2048@areca.com.tw>
+> > > > > ---
+> > > > > 
+> > > > > diff --git a/drivers/scsi/arcmsr/arcmsr.h b/drivers/scsi/arcmsr/arcmsr.h
+> > > > > index a94c513..b98c632 100755
+> > > > > --- a/drivers/scsi/arcmsr/arcmsr.h
+> > > > > +++ b/drivers/scsi/arcmsr/arcmsr.h
+> > > > > @@ -508,9 +508,9 @@ struct MessageUnit_A
+> > > > >  struct MessageUnit_B
+> > > > >  {
+> > > > >  	uint32_t	post_qbuffer[ARCMSR_MAX_HBB_POSTQUEUE];
+> > > > > -	uint32_t	done_qbuffer[ARCMSR_MAX_HBB_POSTQUEUE];
+> > > > > +	volatile uint32_t	done_qbuffer[ARCMSR_MAX_HBB_POSTQUEUE];
+> > > > 
+> > > > There is a well known rule of thumb that when someone uses "volatile"
+> > > > in the kernel it means there is a locking problem...  Is this __iomem or
+> > > > something?
+> > > The done_qbuffer was a command completion queue, it was an area written
+> > > by IO processor and read by device driver. So, ...
+> > 
+> > I'm not totally positive I understand this sentence.  I can find a bunch
+> > of places which read from this buffer, but I haven't immediately found
+> > which place writes to it.  Can you give me a function name that I should
+> > read?
+> Well, we allocate memory for struct MessageUnit_B in
+> arcmsr_alloc_ccb_pool(), by assign to acb->dma_coherent_handle2.
+> Then we tell IO controller its DMA address in arcmsr_iop_confirm().
+> When a command was completed, controller's firmware program will write a
+> completion ccb in done_qbuffer through DMA. So, you can't see any driver
+> funtion write to it.
 
-Hi Christoph,
+DMA memory doesn't need to be marked as volatile.
 
-My own opinion is that the SCSI core should allow SCSI drivers to block 
-all .queuecommand() calls e.g. to allow SCSI LLDs to perform error 
-recovery. That is possible today for .queuecommand() calls that are the 
-result of queueing a new command but not for .queuecommand() calls from 
-the SCSI error handler. About three years ago I came up with multiple 
-proposals for realizing such a change in the SCSI error handler. No 
-matter what approach I proposed, the SCSI maintainer did not agree. No 
-alternative approach was proposed either by the SCSI maintainer. That is 
-why the srp_queuecommand() context check has been added to the SRP 
-driver - there was no alternative.
-
-How about proceeding with this patch and bringing up the SCSI error 
-handler issue during LSF/MM? I hope that meeting in person will make it 
-easier to reach agreement compared to an e-mail discussion. After an 
-agreement has been reached and the SCSI error handler has been improved 
-it will be possible to remove the context check from the SRP initiator 
-driver.
-
-Thanks,
-
-Bart.
+regards,
+dan carpenter
