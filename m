@@ -1,63 +1,69 @@
-From: John Garry <john.garry@huawei.com>
-Subject: Re: [PATCH 0/7] SCSI: cleanup debugfs usage
-Date: Wed, 23 Jan 2019 09:23:55 +0000
-Message-ID: <de49a145-cdbe-75a4-da8a-e2d376baad19@huawei.com>
-References: <20190122150906.12470-1-gregkh@linuxfoundation.org>
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] scsi: dpt_i2o: clean up indentation issues, remove spaces
+Date: Wed, 23 Jan 2019 12:53:19 +0000
+Message-ID: <20190123125319.17193-1-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190122150906.12470-1-gregkh@linuxfoundation.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, James Bottomley <jejb@linux.ibm.com>, Martin Petersen <martin.petersen@oracle.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Adaptec OEM Raid Solutions <aacraid@microsemi.com>, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 22/01/2019 15:08, Greg Kroah-Hartman wrote:
-> When calling debugfs code, there is no need to ever check the return
-> value of the call, as no logic should ever change if a call works
-> properly or not.  Fix up a bunch of x86-specific code to not care about
-> the results of debugfs.
->
-> Greg Kroah-Hartman (7):
->   scsi: bfa: no need to check return value of debugfs_create functions
->   scsi: csiostor: no need to check return value of debugfs_create
->     functions
->   scsi: fnic: no need to check return value of debugfs_create functions
->   scsi: snic: no need to check return value of debugfs_create functions
->   scsi: lpfc: no need to check return value of debugfs_create functions
->   scsi: qlogic: no need to check return value of debugfs_create
->     functions
->   scsi: qla2xxx: no need to check return value of debugfs_create
->     functions
->
+From: Colin Ian King <colin.king@canonical.com>
 
-JFYI, Martin has some more debugfs usage queued for 5.1 here:
-https://kernel.googlesource.com/pub/scm/linux/kernel/git/mkp/scsi/+log/5.1/scsi-queue/drivers/scsi/hisi_sas
+There are several lines where the indentation has an extra space,
+fix this by removing the spaces.
 
-I'll send a patch to tidy-up, as above. It would not be x86 specific, 
-but I am not sure what above is.
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/scsi/dpt_i2o.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-Thanks,
-John
-
-
-
->  drivers/scsi/bfa/bfad_debugfs.c   |  17 ---
->  drivers/scsi/csiostor/csio_init.c |   6 +-
->  drivers/scsi/fnic/fnic_debugfs.c  |  88 +---------------
->  drivers/scsi/fnic/fnic_main.c     |   7 +-
->  drivers/scsi/fnic/fnic_stats.h    |   2 +-
->  drivers/scsi/fnic/fnic_trace.c    |  17 +--
->  drivers/scsi/fnic/fnic_trace.h    |   4 +-
->  drivers/scsi/lpfc/lpfc_debugfs.c  | 170 ------------------------------
->  drivers/scsi/qedf/qedf_debugfs.c  |  18 +---
->  drivers/scsi/qedi/qedi_debugfs.c  |  17 +--
->  drivers/scsi/qla2xxx/qla_dfs.c    |  43 +-------
->  drivers/scsi/snic/snic_debugfs.c  | 133 +++++------------------
->  drivers/scsi/snic/snic_main.c     |  14 +--
->  drivers/scsi/snic/snic_stats.h    |   2 +-
->  drivers/scsi/snic/snic_trc.c      |  12 +--
->  drivers/scsi/snic/snic_trc.h      |   4 +-
->  16 files changed, 48 insertions(+), 506 deletions(-)
->
+diff --git a/drivers/scsi/dpt_i2o.c b/drivers/scsi/dpt_i2o.c
+index 70d1a18278af..f9560a183c12 100644
+--- a/drivers/scsi/dpt_i2o.c
++++ b/drivers/scsi/dpt_i2o.c
+@@ -877,8 +877,8 @@ static void adpt_i2o_sys_shutdown(void)
+ 	adpt_hba *pHba, *pNext;
+ 	struct adpt_i2o_post_wait_data *p1, *old;
+ 
+-	 printk(KERN_INFO"Shutting down Adaptec I2O controllers.\n");
+-	 printk(KERN_INFO"   This could take a few minutes if there are many devices attached\n");
++	printk(KERN_INFO "Shutting down Adaptec I2O controllers.\n");
++	printk(KERN_INFO "   This could take a few minutes if there are many devices attached\n");
+ 	/* Delete all IOPs from the controller chain */
+ 	/* They should have already been released by the
+ 	 * scsi-core
+@@ -901,7 +901,7 @@ static void adpt_i2o_sys_shutdown(void)
+ //	spin_unlock_irqrestore(&adpt_post_wait_lock, flags);
+ 	adpt_post_wait_queue = NULL;
+ 
+-	 printk(KERN_INFO "Adaptec I2O controllers down.\n");
++	printk(KERN_INFO "Adaptec I2O controllers down.\n");
+ }
+ 
+ static int adpt_install_hba(struct scsi_host_template* sht, struct pci_dev* pDev)
+@@ -3427,7 +3427,7 @@ static int adpt_i2o_issue_params(int cmd, adpt_hba* pHba, int tid,
+ 		return -((res[1] >> 16) & 0xFF); /* -BlockStatus */
+ 	}
+ 
+-	 return 4 + ((res[1] & 0x0000FFFF) << 2); /* bytes used in resblk */ 
++	return 4 + ((res[1] & 0x0000FFFF) << 2); /* bytes used in resblk */
+ }
+ 
+ 
+@@ -3500,8 +3500,8 @@ static int adpt_i2o_enable_hba(adpt_hba* pHba)
+ 
+ static int adpt_i2o_systab_send(adpt_hba* pHba)
+ {
+-	 u32 msg[12];
+-	 int ret;
++	u32 msg[12];
++	int ret;
+ 
+ 	msg[0] = I2O_MESSAGE_SIZE(12) | SGL_OFFSET_6;
+ 	msg[1] = I2O_CMD_SYS_TAB_SET<<24 | HOST_TID<<12 | ADAPTER_TID;
+-- 
+2.19.1
