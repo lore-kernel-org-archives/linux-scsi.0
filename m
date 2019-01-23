@@ -1,146 +1,63 @@
-From: Manish Rangankar <mrangankar@marvell.com>
-Subject: RE: [PATCH 6/7] scsi: qlogic: no need to check return value of
- debugfs_create functions
-Date: Wed, 23 Jan 2019 05:36:50 +0000
-Message-ID: <BYAPR18MB2485661ACC93D549309BB720D8990@BYAPR18MB2485.namprd18.prod.outlook.com>
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH 0/7] SCSI: cleanup debugfs usage
+Date: Wed, 23 Jan 2019 09:23:55 +0000
+Message-ID: <de49a145-cdbe-75a4-da8a-e2d376baad19@huawei.com>
 References: <20190122150906.12470-1-gregkh@linuxfoundation.org>
- <20190122150906.12470-7-gregkh@linuxfoundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190122150906.12470-7-gregkh@linuxfoundation.org>
-Content-Language: en-US
+In-Reply-To: <20190122150906.12470-1-gregkh@linuxfoundation.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, James Bottomley <jejb@linux.ibm.com>, Martin Petersen <martin.petersen@oracle.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "QLogic-Storage-Upstream@cavium.com" <QLogic-Storage-Upstream@cavium.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-> -----Original Message-----
-> From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> Sent: Tuesday, January 22, 2019 8:39 PM
-> To: James Bottomley <jejb@linux.ibm.com>; Martin Petersen
-> <martin.petersen@oracle.com>
-> Cc: linux-kernel@vger.kernel.org; linux-scsi@vger.kernel.org; Greg Kroah-
-> Hartman <gregkh@linuxfoundation.org>; QLogic-Storage-
-> Upstream@cavium.com
-> Subject: [PATCH 6/7] scsi: qlogic: no need to check return value of
-> debugfs_create functions
->=20
-> External Email
->=20
-> When calling debugfs functions, there is no need to ever check the return
-> value.  The function can work or not, but the code logic should never do
-> something different based on this.
->=20
-> Cc: QLogic-Storage-Upstream@cavium.com
-> Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-> Cc: linux-scsi@vger.kernel.org
-> Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> ---
->  drivers/scsi/qedf/qedf_debugfs.c | 18 ++----------------
-> drivers/scsi/qedi/qedi_debugfs.c | 17 ++---------------
->  2 files changed, 4 insertions(+), 31 deletions(-)
->=20
-> diff --git a/drivers/scsi/qedf/qedf_debugfs.c
-> b/drivers/scsi/qedf/qedf_debugfs.c
-> index c29c162a494f..a32d8ee4666e 100644
-> --- a/drivers/scsi/qedf/qedf_debugfs.c
-> +++ b/drivers/scsi/qedf/qedf_debugfs.c
-> @@ -27,30 +27,19 @@ qedf_dbg_host_init(struct qedf_dbg_ctx *qedf,
->                     const struct file_operations *fops)  {
->         char host_dirname[32];
-> -       struct dentry *file_dentry =3D NULL;
->=20
->         QEDF_INFO(qedf, QEDF_LOG_DEBUGFS, "Creating debugfs host
-> node\n");
->         /* create pf dir */
->         sprintf(host_dirname, "host%u", qedf->host_no);
->         qedf->bdf_dentry =3D debugfs_create_dir(host_dirname,
-> qedf_dbg_root);
-> -       if (!qedf->bdf_dentry)
-> -               return;
->=20
->         /* create debugfs files */
->         while (dops) {
->                 if (!(dops->name))
->                         break;
->=20
-> -               file_dentry =3D debugfs_create_file(dops->name, 0600,
-> -                                                 qedf->bdf_dentry, qedf,
-> -                                                 fops);
-> -               if (!file_dentry) {
-> -                       QEDF_INFO(qedf, QEDF_LOG_DEBUGFS,
-> -                                  "Debugfs entry %s creation failed\n",
-> -                                  dops->name);
-> -                       debugfs_remove_recursive(qedf->bdf_dentry);
-> -                       return;
-> -               }
-> +               debugfs_create_file(dops->name, 0600, qedf->bdf_dentry, q=
-edf,
-> +                                   fops);
->                 dops++;
->                 fops++;
->         }
-> @@ -80,9 +69,6 @@ qedf_dbg_init(char *drv_name)
->=20
->         /* create qed dir in root of debugfs. NULL means debugfs root */
->         qedf_dbg_root =3D debugfs_create_dir(drv_name, NULL);
-> -       if (!qedf_dbg_root)
-> -               QEDF_INFO(NULL, QEDF_LOG_DEBUGFS, "Init of debugfs "
-> -                          "failed\n");
->  }
->=20
->  /**
-> diff --git a/drivers/scsi/qedi/qedi_debugfs.c
-> b/drivers/scsi/qedi/qedi_debugfs.c
-> index fd914ca4149a..5667e4752e2e 100644
-> --- a/drivers/scsi/qedi/qedi_debugfs.c
-> +++ b/drivers/scsi/qedi/qedi_debugfs.c
-> @@ -23,27 +23,16 @@ qedi_dbg_host_init(struct qedi_dbg_ctx *qedi,
->                    const struct file_operations *fops)  {
->         char host_dirname[32];
-> -       struct dentry *file_dentry =3D NULL;
->=20
->         sprintf(host_dirname, "host%u", qedi->host_no);
->         qedi->bdf_dentry =3D debugfs_create_dir(host_dirname, qedi_dbg_ro=
-ot);
-> -       if (!qedi->bdf_dentry)
-> -               return;
->=20
->         while (dops) {
->                 if (!(dops->name))
->                         break;
->=20
-> -               file_dentry =3D debugfs_create_file(dops->name, 0600,
-> -                                                 qedi->bdf_dentry, qedi,
-> -                                                 fops);
-> -               if (!file_dentry) {
-> -                       QEDI_INFO(qedi, QEDI_LOG_DEBUGFS,
-> -                                 "Debugfs entry %s creation failed\n",
-> -                                 dops->name);
-> -                       debugfs_remove_recursive(qedi->bdf_dentry);
-> -                       return;
-> -               }
-> +               debugfs_create_file(dops->name, 0600, qedi->bdf_dentry, q=
-edi,
-> +                                   fops);
->                 dops++;
->                 fops++;
->         }
-> @@ -60,8 +49,6 @@ void
->  qedi_dbg_init(char *drv_name)
->  {
->         qedi_dbg_root =3D debugfs_create_dir(drv_name, NULL);
-> -       if (!qedi_dbg_root)
-> -               QEDI_INFO(NULL, QEDI_LOG_DEBUGFS, "Init of debugfs failed=
-\n");
->  }
->=20
->  void
-> --
-> 2.20.1
+On 22/01/2019 15:08, Greg Kroah-Hartman wrote:
+> When calling debugfs code, there is no need to ever check the return
+> value of the call, as no logic should ever change if a call works
+> properly or not.  Fix up a bunch of x86-specific code to not care about
+> the results of debugfs.
+>
+> Greg Kroah-Hartman (7):
+>   scsi: bfa: no need to check return value of debugfs_create functions
+>   scsi: csiostor: no need to check return value of debugfs_create
+>     functions
+>   scsi: fnic: no need to check return value of debugfs_create functions
+>   scsi: snic: no need to check return value of debugfs_create functions
+>   scsi: lpfc: no need to check return value of debugfs_create functions
+>   scsi: qlogic: no need to check return value of debugfs_create
+>     functions
+>   scsi: qla2xxx: no need to check return value of debugfs_create
+>     functions
+>
 
-Thanks
-Acked-by: Manish Rangankar <mrangankar@marvell.com>
+JFYI, Martin has some more debugfs usage queued for 5.1 here:
+https://kernel.googlesource.com/pub/scm/linux/kernel/git/mkp/scsi/+log/5.1/scsi-queue/drivers/scsi/hisi_sas
+
+I'll send a patch to tidy-up, as above. It would not be x86 specific, 
+but I am not sure what above is.
+
+Thanks,
+John
+
+
+
+>  drivers/scsi/bfa/bfad_debugfs.c   |  17 ---
+>  drivers/scsi/csiostor/csio_init.c |   6 +-
+>  drivers/scsi/fnic/fnic_debugfs.c  |  88 +---------------
+>  drivers/scsi/fnic/fnic_main.c     |   7 +-
+>  drivers/scsi/fnic/fnic_stats.h    |   2 +-
+>  drivers/scsi/fnic/fnic_trace.c    |  17 +--
+>  drivers/scsi/fnic/fnic_trace.h    |   4 +-
+>  drivers/scsi/lpfc/lpfc_debugfs.c  | 170 ------------------------------
+>  drivers/scsi/qedf/qedf_debugfs.c  |  18 +---
+>  drivers/scsi/qedi/qedi_debugfs.c  |  17 +--
+>  drivers/scsi/qla2xxx/qla_dfs.c    |  43 +-------
+>  drivers/scsi/snic/snic_debugfs.c  | 133 +++++------------------
+>  drivers/scsi/snic/snic_main.c     |  14 +--
+>  drivers/scsi/snic/snic_stats.h    |   2 +-
+>  drivers/scsi/snic/snic_trc.c      |  12 +--
+>  drivers/scsi/snic/snic_trc.h      |   4 +-
+>  16 files changed, 48 insertions(+), 506 deletions(-)
+>
