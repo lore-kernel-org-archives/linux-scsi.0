@@ -1,69 +1,47 @@
 From: Colin King <colin.king@canonical.com>
-Subject: [PATCH] scsi: dpt_i2o: clean up indentation issues, remove spaces
-Date: Wed, 23 Jan 2019 12:53:19 +0000
-Message-ID: <20190123125319.17193-1-colin.king@canonical.com>
+Subject: [PATCH] scsi: qlogicfas408: clean up a couple of indentation issues
+Date: Wed, 23 Jan 2019 13:10:04 +0000
+Message-ID: <20190123131004.24460-1-colin.king@canonical.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Adaptec OEM Raid Solutions <aacraid@microsemi.com>, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+To: "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
 Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 From: Colin Ian King <colin.king@canonical.com>
 
-There are several lines where the indentation has an extra space,
-fix this by removing the spaces.
+An if statement is indented correctly and an outb statement has
+a redundant empty comment and incorrect indentation. Fix these.
 
 Signed-off-by: Colin Ian King <colin.king@canonical.com>
 ---
- drivers/scsi/dpt_i2o.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/scsi/qlogicfas408.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/dpt_i2o.c b/drivers/scsi/dpt_i2o.c
-index 70d1a18278af..f9560a183c12 100644
---- a/drivers/scsi/dpt_i2o.c
-+++ b/drivers/scsi/dpt_i2o.c
-@@ -877,8 +877,8 @@ static void adpt_i2o_sys_shutdown(void)
- 	adpt_hba *pHba, *pNext;
- 	struct adpt_i2o_post_wait_data *p1, *old;
- 
--	 printk(KERN_INFO"Shutting down Adaptec I2O controllers.\n");
--	 printk(KERN_INFO"   This could take a few minutes if there are many devices attached\n");
-+	printk(KERN_INFO "Shutting down Adaptec I2O controllers.\n");
-+	printk(KERN_INFO "   This could take a few minutes if there are many devices attached\n");
- 	/* Delete all IOPs from the controller chain */
- 	/* They should have already been released by the
- 	 * scsi-core
-@@ -901,7 +901,7 @@ static void adpt_i2o_sys_shutdown(void)
- //	spin_unlock_irqrestore(&adpt_post_wait_lock, flags);
- 	adpt_post_wait_queue = NULL;
- 
--	 printk(KERN_INFO "Adaptec I2O controllers down.\n");
-+	printk(KERN_INFO "Adaptec I2O controllers down.\n");
- }
- 
- static int adpt_install_hba(struct scsi_host_template* sht, struct pci_dev* pDev)
-@@ -3427,7 +3427,7 @@ static int adpt_i2o_issue_params(int cmd, adpt_hba* pHba, int tid,
- 		return -((res[1] >> 16) & 0xFF); /* -BlockStatus */
- 	}
- 
--	 return 4 + ((res[1] & 0x0000FFFF) << 2); /* bytes used in resblk */ 
-+	return 4 + ((res[1] & 0x0000FFFF) << 2); /* bytes used in resblk */
- }
- 
- 
-@@ -3500,8 +3500,8 @@ static int adpt_i2o_enable_hba(adpt_hba* pHba)
- 
- static int adpt_i2o_systab_send(adpt_hba* pHba)
- {
--	 u32 msg[12];
--	 int ret;
-+	u32 msg[12];
-+	int ret;
- 
- 	msg[0] = I2O_MESSAGE_SIZE(12) | SGL_OFFSET_6;
- 	msg[1] = I2O_CMD_SYS_TAB_SET<<24 | HOST_TID<<12 | ADAPTER_TID;
+diff --git a/drivers/scsi/qlogicfas408.c b/drivers/scsi/qlogicfas408.c
+index 8b471a925b43..136681ad18a5 100644
+--- a/drivers/scsi/qlogicfas408.c
++++ b/drivers/scsi/qlogicfas408.c
+@@ -139,7 +139,7 @@ static int ql_pdma(struct qlogicfas408_priv *priv, int phase, char *request, int
+ 	} else {		/* out */
+ #if QL_TURBO_PDMA
+ 		rtrc(4)
+-		    if (reqlen >= 128 && inb(qbase + 8) & 0x10) {	/* empty */
++		if (reqlen >= 128 && inb(qbase + 8) & 0x10) {	/* empty */
+ 			outsl(qbase + 4, request, 32);
+ 			reqlen -= 128;
+ 			request += 128;
+@@ -240,7 +240,7 @@ static void ql_icmd(struct scsi_cmnd *cmd)
+ 	outb(0x40 | qlcfg8 | priv->qinitid, qbase + 8);
+ 	outb(qlcfg7, qbase + 7);
+ 	outb(qlcfg6, qbase + 6);
+-	 /**/ outb(qlcfg5, qbase + 5);	/* select timer */
++	outb(qlcfg5, qbase + 5);	/* select timer */
+ 	outb(qlcfg9 & 7, qbase + 9);	/* prescaler */
+ /*	outb(0x99, qbase + 5);	*/
+ 	outb(scmd_id(cmd), qbase + 4);
 -- 
 2.19.1
