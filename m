@@ -1,317 +1,47 @@
-From: Georgi Djakov <georgi.djakov@linaro.org>
-Subject: Re: [<PATCH v1> 1/1] scsi: qcom-ufs: Add support for bus voting using
- ICB framework
-Date: Thu, 24 Jan 2019 13:46:22 +0200
-Message-ID: <e91d4007-edab-da66-e241-bdf55bcf58aa@linaro.org>
-References: <cover.1548312692.git.asutoshd@codeaurora.org>
- <d6aa4d9bd29bbb2c3ee78e6635d4704e4113a26e.1548312692.git.asutoshd@codeaurora.org>
+From: chenxiang <chenxiang66@hisilicon.com>
+Subject: [PATCH] block: set rq->cmd_flags with bio->opf instead of data->cmd_flags when bio is not Null
+Date: Thu, 24 Jan 2019 21:43:50 +0800
+Message-ID: <1548337430-66690-1-git-send-email-chenxiang66@hisilicon.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <d6aa4d9bd29bbb2c3ee78e6635d4704e4113a26e.1548312692.git.asutoshd@codeaurora.org>
-Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Asutosh Das <asutoshd@codeaurora.org>, subhashj@codeaurora.org, cang@codeaurora.org, vivek.gautam@codeaurora.org, rnayak@codeaurora.org, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
-Cc: linux-arm-msm@vger.kernel.org, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" <devicetree@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, john.garry@huawei.com, chenxiang <chenxiang66@hisilicon.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Asutosh,
+In function blk_mq_make_request(), though data->cmd_flags will be
+initialized with bio->opf, later bio->opf may be set as REQ_INTEGRITY
+if enabled DIX. So need to use bio->opf instead of data->cmd_flags in
+function blk_mq_rq_ctx_init(), or  flags REQ_INTEGRITY will not be set
+for rq->cmd_flags. It will cause dix=0 in function
+sd_setup_read_write_cmnd() when enabled DIX, which will cause IO 
+exception when enabled DIX.
 
-Thanks for the patch!
+For some IOs such as internal IO from SCSI layer, the parameter bio of
+function blk_mq_get_request() is Null, so need to check bio to
+decise rq->cmd_flags.
 
-On 1/24/19 09:01, Asutosh Das wrote:
-> Adapt to the new ICB framework for bus bandwidth voting.
+Fixes: f9afca4d367b ("blk-mq: pass in request/bio flags to queue mapping")
 
-It's actually called interconnect API or interconnect framework.
+Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+Reviewed-by: John Garry <john.garry@huawei.com>
+---
+ block/blk-mq.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> This requires the source/destination port ids.
-> Also this requires a tuple of values.
-> 
-> The tuple is for two different paths - from UFS master
-> to BIMC slave. The other is from CPU master to UFS slave.
-> This tuple consists of the average and peak bandwidth.
-> 
-> Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
-> ---
-
-You can put here (below the --- line) the text from the cover letter.
-Usually people do not add separate cover letters for single patches.
-
->  .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      |  12 ++
->  drivers/scsi/ufs/ufs-qcom.c                        | 234 ++++++++++++++++-----
->  drivers/scsi/ufs/ufs-qcom.h                        |  20 ++
->  3 files changed, 218 insertions(+), 48 deletions(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-> index a99ed55..94249ef 100644
-> --- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-> +++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-> @@ -45,6 +45,18 @@ Optional properties:
->  Note: If above properties are not defined it can be assumed that the supply
->  regulators or clocks are always on.
->  
-> +* Following bus parameters are required:
-> +interconnects
-> +interconnect-names
-
-Is the above really required? Are the interconnect bandwidth requests
-required to enable something critical to UFS functionality?
-Would UFS still work without any bandwidth scaling, although for example
-slower? Could you please clarify.
-
-> +- Please refer to Documentation/devicetree/bindings/interconnect/
-> +  for more details on the above.
-> +qcom,msm-bus,name - string describing the bus path
-> +qcom,msm-bus,num-cases - number of configurations in which ufs can operate in
-> +qcom,msm-bus,num-paths - number of paths to vote for
-> +qcom,msm-bus,vectors-KBps - Takes a tuple <ib ab>, <ib ab> (2 tuples for 2 num-paths)
-> +			    The number of these entries *must* be same as
-> +			    num-cases.
-
-DT bindings should be submitted as a separate patch. Anyway, people
-frown upon putting configuration data in DT. Could we put this data into
-the driver as a static table instead of DT? Also maybe use ab/pb for
-average/peak bandwidth.
-
-> +
->  Example:
->  	ufshc@0xfc598000 {
->  		compatible = "jedec,ufs-1.1";
-> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-> index 2b38db2..213e975 100644
-> --- a/drivers/scsi/ufs/ufs-qcom.c
-> +++ b/drivers/scsi/ufs/ufs-qcom.c
-> @@ -16,6 +16,7 @@
->  #include <linux/of.h>
->  #include <linux/platform_device.h>
->  #include <linux/phy/phy.h>
-> +#include <linux/interconnect.h>
->  #include <linux/phy/phy-qcom-ufs.h>
-
-Alphabetical order?
-
->  
->  #include "ufshcd.h"
-> @@ -27,6 +28,10 @@
->  #define UFS_QCOM_DEFAULT_DBG_PRINT_EN	\
->  	(UFS_QCOM_DBG_PRINT_REGS_EN | UFS_QCOM_DBG_PRINT_TEST_BUS_EN)
->  
-> +#define UFS_DDR "ufs-ddr"
-> +#define CPU_UFS "cpu-ufs"
-
-Not sure if it's really useful to have them as #defines. Also maybe use
-"ufs-mem" instead of "ufs-ddr" to be more consistent with other users.
-
-> +
-> +
->  enum {
->  	TSTBUS_UAWM,
->  	TSTBUS_UARM,
-> @@ -714,7 +719,6 @@ static int ufs_qcom_get_pwr_dev_param(struct ufs_qcom_dev_params *qcom_param,
->  	return 0;
->  }
->  
-> -#ifdef CONFIG_MSM_BUS_SCALING
->  static int ufs_qcom_get_bus_vote(struct ufs_qcom_host *host,
->  		const char *speed_mode)
->  {
-> @@ -768,24 +772,83 @@ static void ufs_qcom_get_speed_mode(struct ufs_pa_layer_attr *p, char *result)
->  	}
->  }
->  
-> +static int ufs_qcom_get_ib_ab(struct ufs_qcom_host *host, int index,
-> +			      struct qcom_bus_vectors *ufs_ddr_vec,
-> +			      struct qcom_bus_vectors *cpu_ufs_vec)
-> +{
-> +	struct qcom_bus_path *usecase;
-> +
-> +	if (!host->qbsd)
-> +		return -EINVAL;
-> +
-> +	if (index > host->qbsd->num_usecase)
-> +		return -EINVAL;
-> +
-> +	usecase = host->qbsd->usecase;
-> +
-> +	/*
-> +	 *
-> +	 * usecase:0  usecase:0
-> +	 * ufs->ddr   cpu->ufs
-> +	 * |vec[0&1] | vec[2&3]|
-> +	 * +----+----+----+----+
-> +	 * | ab | ib | ab | ib |
-> +	 * |----+----+----+----+
-> +	 * .
-> +	 * .
-> +	 * .
-> +	 * usecase:n  usecase:n
-> +	 * ufs->ddr   cpu->ufs
-> +	 * |vec[0&1] | vec[2&3]|
-> +	 * +----+----+----+----+
-> +	 * | ab | ib | ab | ib |
-> +	 * |----+----+----+----+
-> +	 */
-> +
-> +	/* index refers to offset in usecase */
-> +	ufs_ddr_vec->ab = usecase[index].vec[0].ab;
-> +	ufs_ddr_vec->ib = usecase[index].vec[0].ib;
-> +
-> +	cpu_ufs_vec->ab = usecase[index].vec[1].ab;
-> +	cpu_ufs_vec->ib = usecase[index].vec[1].ib;
-> +
-> +	return 0;
-> +}
-> +
->  static int ufs_qcom_set_bus_vote(struct ufs_qcom_host *host, int vote)
->  {
->  	int err = 0;
-> +	struct qcom_bus_scale_data *d = host->qbsd;
-> +	struct qcom_bus_vectors path0, path1;
-> +	struct device *dev = host->hba->dev;
->  
-> -	if (vote != host->bus_vote.curr_vote) {
-> -		err = msm_bus_scale_client_update_request(
-> -				host->bus_vote.client_handle, vote);
-> -		if (err) {
-> -			dev_err(host->hba->dev,
-> -				"%s: msm_bus_scale_client_update_request() failed: bus_client_handle=0x%x, vote=%d, err=%d\n",
-> -				__func__, host->bus_vote.client_handle,
-> -				vote, err);
-> -			goto out;
-> -		}
-> +	err = ufs_qcom_get_ib_ab(host, vote, &path0, &path1);
-> +	if (err) {
-> +		dev_err(dev, "Error: failed (%d) to get ib/ab\n",
-> +			err);
-> +		return err;
-> +	}
->  
-> -		host->bus_vote.curr_vote = vote;
-> +	dev_dbg(dev, "Setting vote: %d: ufs-ddr: ab: %llu ib: %llu\n", vote,
-> +		path0.ab, path0.ib);
-> +	err = icc_set_bw(d->ufs_ddr, path0.ab, path0.ib);
-> +	if (err) {
-> +		dev_err(dev, "Error: (%d) failed setting (%s) bus vote\n", err,
-> +			UFS_DDR);
-> +		return err;
->  	}
-> -out:
-> +
-> +	dev_dbg(dev, "Setting: cpu-ufs: ab: %llu ib: %llu\n", path1.ab,
-> +		path1.ib);
-> +	err = icc_set(d->cpu_ufs, path1.ab, path1.ib);
-> +	if (err) {
-> +		dev_err(dev, "Error: (%d) failed setting (%s) bus vote\n", err,
-> +			CPU_UFS);
-> +		return err;
-> +	}
-> +
-> +	host->bus_vote.curr_vote = vote;
-> +
->  	return err;
->  }
->  
-> @@ -807,6 +870,7 @@ static int ufs_qcom_update_bus_bw_vote(struct ufs_qcom_host *host)
->  		dev_err(host->hba->dev, "%s: failed %d\n", __func__, err);
->  	else
->  		host->bus_vote.saved_vote = vote;
-> +
->  	return err;
->  }
->  
-> @@ -837,34 +901,114 @@ static int ufs_qcom_update_bus_bw_vote(struct ufs_qcom_host *host)
->  	return count;
->  }
->  
-> +static struct qcom_bus_scale_data *ufs_qcom_get_bus_scale_data(struct device
-> +							       *dev)
-> +
-> +{
-> +	struct platform_device *pdev = to_platform_device(dev);
-> +	struct device_node *of_node = dev->of_node;
-> +	struct qcom_bus_scale_data *qsd;
-> +	struct qcom_bus_path *usecase = NULL;
-> +	int ret = 0, i = 0, j, num_paths, len;
-> +	const uint32_t *vec_arr = NULL;
-
-Please use u32 instead of uint32_t.
-
-> +	bool mem_err = false;
-> +
-> +	if (!pdev) {
-> +		dev_err(dev, "Null platform device!\n");
-> +		return NULL;
-> +	}
-> +
-> +	qsd = devm_kzalloc(dev, sizeof(struct qcom_bus_scale_data), GFP_KERNEL);
-> +	if (!qsd)
-> +		return NULL;
-> +
-> +	ret = of_property_read_string(of_node, "qcom,msm-bus,name", &qsd->name);
-> +	if (ret) {
-> +		dev_err(dev, "Error: (%d) Bus name missing!\n", ret);
-> +		return NULL;
-> +	}
-> +
-> +	ret = of_property_read_u32(of_node, "qcom,msm-bus,num-cases",
-> +		&qsd->num_usecase);
-> +	if (ret) {
-> +		pr_err("Error: num-usecases not found\n");
-> +		goto err;
-> +	}
-> +
-> +	usecase = devm_kzalloc(dev, (sizeof(struct qcom_bus_path) *
-> +				   qsd->num_usecase), GFP_KERNEL);
-> +	if (!usecase)
-> +		return NULL;
-> +
-> +	ret = of_property_read_u32(of_node, "qcom,msm-bus,num-paths",
-> +				   &num_paths);
-> +	if (ret) {
-> +		pr_err("Error: num_paths not found\n");
-> +		return NULL;
-> +	}
-> +
-> +	vec_arr = of_get_property(of_node, "qcom,msm-bus,vectors-KBps", &len);
-> +	if (vec_arr == NULL) {
-> +		pr_err("Error: Vector array not found\n");
-> +		return NULL;
-> +	}
-> +
-> +	for (i = 0; i < qsd->num_usecase; i++) {
-> +		usecase[i].num_paths = num_paths;
-> +		usecase[i].vec = devm_kzalloc(dev, num_paths *
-> +					      sizeof(struct qcom_bus_vectors),
-> +					      GFP_KERNEL);
-> +		if (!usecase[i].vec) {
-> +			mem_err = true;
-> +			dev_err(dev, "Error: Failed to alloc mem for vectors\n");
-> +			goto err;
-> +		}
-> +
-> +		for (j = 0; j < num_paths; j++) {
-> +			int idx = ((i * num_paths) + j) * 2;
-> +
-> +			usecase[i].vec[j].ab = (uint64_t)
-> +				be32_to_cpu(vec_arr[idx]);
-> +			usecase[i].vec[j].ib = (uint64_t)
-> +				be32_to_cpu(vec_arr[idx + 1]);
-> +		}
-> +	}
-> +
-> +	qsd->usecase = usecase;
-> +	return qsd;
-> +err:
-> +	if (mem_err) {
-> +		for (; i > 0; i--)
-> +			kfree(usecase[i].vec);
-> +	}
-> +	return NULL;
-> +}
-
-We wouldn't need all the above DT parsing if we add a sdm845 bandwidth
-usecase table. Could you give it a try?
-
-Thanks,
-Georgi
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 3ba37b9..c4a1c63 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -394,7 +394,7 @@ static struct request *blk_mq_get_request(struct request_queue *q,
+ 		return NULL;
+ 	}
+ 
+-	rq = blk_mq_rq_ctx_init(data, tag, data->cmd_flags);
++	rq = blk_mq_rq_ctx_init(data, tag, bio ? bio->bi_opf : data->cmd_flags);
+ 	if (!op_is_flush(data->cmd_flags)) {
+ 		rq->elv.icq = NULL;
+ 		if (e && e->type->ops.prepare_request) {
+-- 
+2.8.1
