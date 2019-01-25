@@ -1,66 +1,56 @@
-From: YueHaibing <yuehaibing@huawei.com>
-Subject: [PATCH -next] scsi: fnic: Remove set but not used variable 'vdev'
-Date: Fri, 25 Jan 2019 10:00:14 +0800
-Message-ID: <20190125020014.11184-1-yuehaibing@huawei.com>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: Masahiro Yamada <yamada.masahiro@socionext.com>
+Subject: [PATCH 2/2] scsi: prefix header search paths with $(srctree)/
+Date: Fri, 25 Jan 2019 16:09:04 +0900
+Message-ID: <1548400144-22513-3-git-send-email-yamada.masahiro@socionext.com>
+References: <1548400144-22513-1-git-send-email-yamada.masahiro@socionext.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1548400144-22513-1-git-send-email-yamada.masahiro@socionext.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: satishkh@cisco.com, sebaddel@cisco.com, kartilak@cisco.com, jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, YueHaibing <yuehaibing@huawei.com>
+To: "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Cc: Masahiro Yamada <yamada.masahiro@socionext.com>, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Fixes gcc '-Wunused-but-set-variable' warning:
+Currently, the Kbuild core manipulates header search paths in a crazy
+way [1].
 
-drivers/scsi/fnic/vnic_wq.c: In function 'vnic_wq_alloc_bufs':
-drivers/scsi/fnic/vnic_wq.c:50:19: warning:
- variable 'vdev' set but not used [-Wunused-but-set-variable]
+To fix this mess, I want all Makefiles to add explicit $(srctree)/ to
+the search paths in the srctree. Some Makefiles are already written in
+that way, but not all. The goal of this work is to make the notation
+consistent, and finally get rid of the gross hacks.
 
-drivers/scsi/fnic/vnic_rq.c: In function 'vnic_rq_alloc_bufs':
-drivers/scsi/fnic/vnic_rq.c:30:19: warning:
- variable 'vdev' set but not used [-Wunused-but-set-variable]
+Having whitespaces after -I does not matter since commit 48f6e3cf5bc6
+("kbuild: do not drop -I without parameter").
 
-It never used since introduction
+[1]: https://patchwork.kernel.org/patch/9632347/
 
-Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+Signed-off-by: Masahiro Yamada <yamada.masahiro@socionext.com>
 ---
- drivers/scsi/fnic/vnic_rq.c | 3 ---
- drivers/scsi/fnic/vnic_wq.c | 3 ---
- 2 files changed, 6 deletions(-)
 
-diff --git a/drivers/scsi/fnic/vnic_rq.c b/drivers/scsi/fnic/vnic_rq.c
-index 74d2f2c..6a35b1b 100644
---- a/drivers/scsi/fnic/vnic_rq.c
-+++ b/drivers/scsi/fnic/vnic_rq.c
-@@ -27,12 +27,9 @@
- static int vnic_rq_alloc_bufs(struct vnic_rq *rq)
- {
- 	struct vnic_rq_buf *buf;
--	struct vnic_dev *vdev;
- 	unsigned int i, j, count = rq->ring.desc_count;
- 	unsigned int blks = VNIC_RQ_BUF_BLKS_NEEDED(count);
+ drivers/scsi/cxgbi/Makefile  | 2 +-
+ drivers/scsi/pcmcia/Makefile | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/cxgbi/Makefile b/drivers/scsi/cxgbi/Makefile
+index a73781a..f78c9cc 100644
+--- a/drivers/scsi/cxgbi/Makefile
++++ b/drivers/scsi/cxgbi/Makefile
+@@ -1,4 +1,4 @@
+-ccflags-y += -Idrivers/net/ethernet/chelsio/libcxgb
++ccflags-y += -I $(srctree)/drivers/net/ethernet/chelsio/libcxgb
  
--	vdev = rq->vdev;
--
- 	for (i = 0; i < blks; i++) {
- 		rq->bufs[i] = kzalloc(VNIC_RQ_BUF_BLK_SZ, GFP_ATOMIC);
- 		if (!rq->bufs[i]) {
-diff --git a/drivers/scsi/fnic/vnic_wq.c b/drivers/scsi/fnic/vnic_wq.c
-index 74cfc56..015af2c 100644
---- a/drivers/scsi/fnic/vnic_wq.c
-+++ b/drivers/scsi/fnic/vnic_wq.c
-@@ -47,12 +47,9 @@ int vnic_wq_alloc_ring(struct vnic_dev *vdev, struct vnic_wq *wq,
- static int vnic_wq_alloc_bufs(struct vnic_wq *wq)
- {
- 	struct vnic_wq_buf *buf;
--	struct vnic_dev *vdev;
- 	unsigned int i, j, count = wq->ring.desc_count;
- 	unsigned int blks = VNIC_WQ_BUF_BLKS_NEEDED(count);
+ obj-$(CONFIG_SCSI_CXGB3_ISCSI)	+= libcxgbi.o cxgb3i/
+ obj-$(CONFIG_SCSI_CXGB4_ISCSI)	+= libcxgbi.o cxgb4i/
+diff --git a/drivers/scsi/pcmcia/Makefile b/drivers/scsi/pcmcia/Makefile
+index faa87a4..a5a24dd 100644
+--- a/drivers/scsi/pcmcia/Makefile
++++ b/drivers/scsi/pcmcia/Makefile
+@@ -1,6 +1,6 @@
+ # SPDX-License-Identifier: GPL-2.0
  
--	vdev = wq->vdev;
--
- 	for (i = 0; i < blks; i++) {
- 		wq->bufs[i] = kzalloc(VNIC_WQ_BUF_BLK_SZ, GFP_ATOMIC);
- 		if (!wq->bufs[i]) {
+-ccflags-y		:= -Idrivers/scsi
++ccflags-y		:= -I $(srctree)/drivers/scsi
+ 
+ # 16-bit client drivers
+ obj-$(CONFIG_PCMCIA_QLOGIC)	+= qlogic_cs.o
 -- 
-2.7.0
+2.7.4
