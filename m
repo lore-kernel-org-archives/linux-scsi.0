@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 06/13] scsi: hisi_sas: remove the check of sas_dev status in hisi_sas_I_T_nexus_reset()
-Date: Fri, 25 Jan 2019 22:22:32 +0800
-Message-ID: <1548426159-225679-7-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 01/13] scsi: hisi_sas: No need to check return value of debugfs_create functions
+Date: Fri, 25 Jan 2019 22:22:27 +0800
+Message-ID: <1548426159-225679-2-git-send-email-john.garry@huawei.com>
 References: <1548426159-225679-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -9,120 +9,140 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1548426159-225679-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linuxarm@huawei.com, linux-kernel@vger.kernel.org, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
+Cc: linux-scsi@vger.kernel.org, linuxarm@huawei.com, linux-kernel@vger.kernel.org, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Xiang Chen <chenxiang66@hisilicon.com>
+When calling debugfs functions, there is no need to ever check the return
+value. The function can work or not, but the code logic should never do
+something different based on this.
 
-When issing a hardreset to a SATA device when running IO, it is possible
-that abnormal CQs of the device are returned. Then enter error handle, it
-doesn't enter function hisi_sas_abort_task() as there is no timeout IO,
-and it doesn't set device as HISI_SAS_DEV_EH. So when hardreset by libata
-later, it actually doesn't issue hardreset as there is a check to judge
-whether device is in error.
-
-For this situation, actually need to hardreset the device to recover.
-So remove the check of sas_dev status in hisi_sas_I_T_nexus_reset().
-
-Before we add the check to avoid the endless loop of reset for
-directly-attached SATA device at probe time, actually we flutter it for
-it, so it is not necessary to add the check now.
-
-Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas.h       | 6 ------
- drivers/scsi/hisi_sas/hisi_sas_main.c  | 9 ---------
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 1 -
- 3 files changed, 16 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas.h      |  1 +
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 53 +++++++++++------------------------
+ 2 files changed, 17 insertions(+), 37 deletions(-)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index 97f0fda..aac8b38 100644
+index 6a1a5ad..b8b1ded 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas.h
 +++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -83,11 +83,6 @@ enum {
- 	PORT_TYPE_SATA = (1U << 0),
+@@ -368,6 +368,7 @@ struct hisi_hba {
+ 
+ 	struct dentry *debugfs_dir;
+ 	struct dentry *debugfs_dump_dentry;
++	bool debugfs_snapshot;
  };
  
--enum dev_status {
--	HISI_SAS_DEV_NORMAL,
--	HISI_SAS_DEV_EH,
--};
--
- enum {
- 	HISI_SAS_INT_ABT_CMD = 0,
- 	HISI_SAS_INT_ABT_DEV = 1,
-@@ -188,7 +183,6 @@ struct hisi_sas_device {
- 	enum sas_device_type	dev_type;
- 	int device_id;
- 	int sata_idx;
--	u8 dev_status;
- };
- 
- struct hisi_sas_tmf_task {
+ /* Generic HW DMA host memory structures */
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index e586660..b57a44b 100644
+index 535d347..72d2295 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -626,7 +626,6 @@ static struct hisi_sas_device *hisi_sas_alloc_dev(struct domain_device *device)
+@@ -1429,8 +1429,7 @@ static int hisi_sas_controller_reset(struct hisi_hba *hisi_hba)
+ 	struct Scsi_Host *shost = hisi_hba->shost;
+ 	int rc;
  
- 			hisi_hba->devices[i].device_id = i;
- 			sas_dev = &hisi_hba->devices[i];
--			sas_dev->dev_status = HISI_SAS_DEV_NORMAL;
- 			sas_dev->dev_type = device->dev_type;
- 			sas_dev->hisi_hba = hisi_hba;
- 			sas_dev->sas_device = device;
-@@ -1495,7 +1494,6 @@ static int hisi_sas_abort_task(struct sas_task *task)
- 	task->task_state_flags |= SAS_TASK_STATE_ABORTED;
- 	spin_unlock_irqrestore(&task->task_state_lock, flags);
+-	if (hisi_sas_debugfs_enable && hisi_hba->debugfs_itct &&
+-	    !hisi_hba->debugfs_dump_dentry)
++	if (hisi_sas_debugfs_enable && hisi_hba->debugfs_itct)
+ 		queue_work(hisi_hba->wq, &hisi_hba->debugfs_work);
  
--	sas_dev->dev_status = HISI_SAS_DEV_EH;
- 	if (task->lldd_task && task->task_proto & SAS_PROTOCOL_SSP) {
- 		struct scsi_cmnd *cmnd = task->uldd_task;
- 		struct hisi_sas_slot *slot = task->lldd_task;
-@@ -1639,15 +1637,10 @@ static int hisi_sas_debug_I_T_nexus_reset(struct domain_device *device)
+ 	if (!hisi_hba->hw->soft_reset)
+@@ -2784,63 +2783,42 @@ static void hisi_sas_debugfs_create_files(struct hisi_hba *hisi_hba)
  
- static int hisi_sas_I_T_nexus_reset(struct domain_device *device)
- {
--	struct hisi_sas_device *sas_dev = device->lldd_dev;
- 	struct hisi_hba *hisi_hba = dev_to_hisi_hba(device);
- 	struct device *dev = hisi_hba->dev;
- 	int rc = TMF_RESP_FUNC_FAILED;
- 
--	if (sas_dev->dev_status != HISI_SAS_DEV_EH)
--		return TMF_RESP_FUNC_FAILED;
--	sas_dev->dev_status = HISI_SAS_DEV_NORMAL;
+ 	/* Create dump dir inside device dir */
+ 	dump_dentry = debugfs_create_dir("dump", hisi_hba->debugfs_dir);
+-	if (!dump_dentry)
+-		goto fail;
 -
- 	rc = hisi_sas_internal_task_abort(hisi_hba, device,
- 					HISI_SAS_INT_ABT_DEV, 0);
- 	if (rc < 0) {
-@@ -1671,7 +1664,6 @@ static int hisi_sas_lu_reset(struct domain_device *device, u8 *lun)
- 	struct device *dev = hisi_hba->dev;
- 	int rc = TMF_RESP_FUNC_FAILED;
+ 	hisi_hba->debugfs_dump_dentry = dump_dentry;
  
--	sas_dev->dev_status = HISI_SAS_DEV_EH;
- 	if (dev_is_sata(device)) {
- 		struct sas_phy *phy;
+-	if (!debugfs_create_file("global", 0400, dump_dentry, hisi_hba,
+-				 &hisi_sas_debugfs_global_fops))
+-		goto fail;
++	debugfs_create_file("global", 0400, dump_dentry, hisi_hba,
++			    &hisi_sas_debugfs_global_fops);
  
-@@ -2100,7 +2092,6 @@ int hisi_sas_alloc(struct hisi_hba *hisi_hba, struct Scsi_Host *shost)
- 	for (i = 0; i < HISI_SAS_MAX_DEVICES; i++) {
- 		hisi_hba->devices[i].dev_type = SAS_PHY_UNUSED;
- 		hisi_hba->devices[i].device_id = i;
--		hisi_hba->devices[i].dev_status = HISI_SAS_DEV_NORMAL;
+ 	/* Create port dir and files */
+ 	dentry = debugfs_create_dir("port", dump_dentry);
+-	if (!dentry)
+-		goto fail;
+-
+ 	for (p = 0; p < hisi_hba->n_phy; p++) {
+ 		snprintf(name, 256, "%d", p);
+-		if (!debugfs_create_file(name, 0400, dentry,
+-					 &hisi_hba->phy[p],
+-					 &hisi_sas_debugfs_port_fops))
+-			goto fail;
++
++		debugfs_create_file(name, 0400, dentry, &hisi_hba->phy[p],
++				    &hisi_sas_debugfs_port_fops);
  	}
  
- 	for (i = 0; i < hisi_hba->queue_count; i++) {
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index fc0bcfa..85236ef 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -868,7 +868,6 @@ hisi_sas_device *alloc_dev_quirk_v2_hw(struct domain_device *device)
+ 	/* Create CQ dir and files */
+ 	dentry = debugfs_create_dir("cq", dump_dentry);
+-	if (!dentry)
+-		goto fail;
+-
+ 	for (c = 0; c < hisi_hba->queue_count; c++) {
+ 		snprintf(name, 256, "%d", c);
  
- 			hisi_hba->devices[i].device_id = i;
- 			sas_dev = &hisi_hba->devices[i];
--			sas_dev->dev_status = HISI_SAS_DEV_NORMAL;
- 			sas_dev->dev_type = device->dev_type;
- 			sas_dev->hisi_hba = hisi_hba;
- 			sas_dev->sas_device = device;
+-		if (!debugfs_create_file(name, 0400, dentry,
+-					 &hisi_hba->cq[c],
+-					 &hisi_sas_debugfs_cq_fops))
+-			goto fail;
++		debugfs_create_file(name, 0400, dentry, &hisi_hba->cq[c],
++				    &hisi_sas_debugfs_cq_fops);
+ 	}
+ 
+ 	/* Create DQ dir and files */
+ 	dentry = debugfs_create_dir("dq", dump_dentry);
+-	if (!dentry)
+-		goto fail;
+-
+ 	for (d = 0; d < hisi_hba->queue_count; d++) {
+ 		snprintf(name, 256, "%d", d);
+ 
+-		if (!debugfs_create_file(name, 0400, dentry,
+-					 &hisi_hba->dq[d],
+-					 &hisi_sas_debugfs_dq_fops))
+-			goto fail;
++		debugfs_create_file(name, 0400, dentry, &hisi_hba->dq[d],
++				    &hisi_sas_debugfs_dq_fops);
+ 	}
+ 
+-	if (!debugfs_create_file("iost", 0400, dump_dentry, hisi_hba,
+-				 &hisi_sas_debugfs_iost_fops))
+-		goto fail;
++	debugfs_create_file("iost", 0400, dump_dentry, hisi_hba,
++			    &hisi_sas_debugfs_iost_fops);
+ 
+ 	return;
+-fail:
+-	debugfs_remove_recursive(hisi_hba->debugfs_dir);
+ }
+ 
+ static void hisi_sas_debugfs_snapshot_regs(struct hisi_hba *hisi_hba)
+@@ -2864,6 +2842,10 @@ void hisi_sas_debugfs_work_handler(struct work_struct *work)
+ 	struct hisi_hba *hisi_hba =
+ 		container_of(work, struct hisi_hba, debugfs_work);
+ 
++	if (hisi_hba->debugfs_snapshot)
++		return;
++	hisi_hba->debugfs_snapshot = true;
++
+ 	hisi_sas_debugfs_snapshot_regs(hisi_hba);
+ }
+ EXPORT_SYMBOL_GPL(hisi_sas_debugfs_work_handler);
+@@ -2878,9 +2860,6 @@ void hisi_sas_debugfs_init(struct hisi_hba *hisi_hba)
+ 	hisi_hba->debugfs_dir = debugfs_create_dir(dev_name(dev),
+ 						   hisi_sas_debugfs_dir);
+ 
+-	if (!hisi_hba->debugfs_dir)
+-		return;
+-
+ 	/* Alloc buffer for global */
+ 	sz = hisi_hba->hw->debugfs_reg_global->count * 4;
+ 	hisi_hba->debugfs_global_reg =
 -- 
 1.9.1
