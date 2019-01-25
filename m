@@ -1,52 +1,128 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 00/13] hisi_sas: Misc fixes and other more minor patches
-Date: Fri, 25 Jan 2019 22:22:26 +0800
-Message-ID: <1548426159-225679-1-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 06/13] scsi: hisi_sas: remove the check of sas_dev status in hisi_sas_I_T_nexus_reset()
+Date: Fri, 25 Jan 2019 22:22:32 +0800
+Message-ID: <1548426159-225679-7-git-send-email-john.garry@huawei.com>
+References: <1548426159-225679-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1548426159-225679-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linuxarm@huawei.com, linux-kernel@vger.kernel.org, John Garry <john.garry@huawei.com>
+Cc: linux-scsi@vger.kernel.org, linuxarm@huawei.com, linux-kernel@vger.kernel.org, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-This series includes a misc assortment of fixes found during testing.
+From: Xiang Chen <chenxiang66@hisilicon.com>
 
-Also includes is some debugfs tidy-up and a patch missed from original
-upstreaming.
+When issing a hardreset to a SATA device when running IO, it is possible
+that abnormal CQs of the device are returned. Then enter error handle, it
+doesn't enter function hisi_sas_abort_task() as there is no timeout IO,
+and it doesn't set device as HISI_SAS_DEV_EH. So when hardreset by libata
+later, it actually doesn't issue hardreset as there is a check to judge
+whether device is in error.
 
-John Garry (5):
-  scsi: hisi_sas: No need to check return value of debugfs_create
-    functions
-  scsi: hisi_sas: Fix type casting and missing static qualifier in
-    debugfs code
-  scsi: hisi_sas: Some misc tidy-up
-  scsi: hisi_sas: Fix to only call scsi_get_prot_op() for non-NULL
-    scsi_cmnd
-  scsi: hisi_sas: Add missing seq_printf() call in
-    hisi_sas_show_row_32()
+For this situation, actually need to hardreset the device to recover.
+So remove the check of sas_dev status in hisi_sas_I_T_nexus_reset().
 
-Luo Jiaxing (3):
-  scsi: hisi_sas: Add debugfs ITCT file and add file operations
-  scsi: hisi_sas: Reject setting programmed minimum linkrate > 1.5G
-  scsi: hisi_sas: Correct memory allocation size for DQ debugfs
+Before we add the check to avoid the endless loop of reset for
+directly-attached SATA device at probe time, actually we flutter it for
+it, so it is not necessary to add the check now.
 
-Xiang Chen (4):
-  scsi: hisi_sas: send primitive NOTIFY to SSP situation only
-  scsi: hisi_sas: shutdown axi bus to avoid exception CQ returned
-  scsi: hisi_sas: remove the check of sas_dev status in
-    hisi_sas_I_T_nexus_reset()
-  scsi: hisi_sas: Remove unused parameter of function hisi_sas_alloc()
+Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
+---
+ drivers/scsi/hisi_sas/hisi_sas.h       | 6 ------
+ drivers/scsi/hisi_sas/hisi_sas_main.c  | 9 ---------
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 1 -
+ 3 files changed, 16 deletions(-)
 
-Xiaofei Tan (1):
-  scsi: hisi_sas: Fix losing directly attached disk when hot-plug
-
- drivers/scsi/hisi_sas/hisi_sas.h       |  19 ++--
- drivers/scsi/hisi_sas/hisi_sas_main.c  | 199 ++++++++++++++++++++-------------
- drivers/scsi/hisi_sas/hisi_sas_v1_hw.c |   4 +-
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c |  13 ++-
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c |  48 +++++---
- 5 files changed, 179 insertions(+), 104 deletions(-)
-
+diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
+index 97f0fda..aac8b38 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas.h
++++ b/drivers/scsi/hisi_sas/hisi_sas.h
+@@ -83,11 +83,6 @@ enum {
+ 	PORT_TYPE_SATA = (1U << 0),
+ };
+ 
+-enum dev_status {
+-	HISI_SAS_DEV_NORMAL,
+-	HISI_SAS_DEV_EH,
+-};
+-
+ enum {
+ 	HISI_SAS_INT_ABT_CMD = 0,
+ 	HISI_SAS_INT_ABT_DEV = 1,
+@@ -188,7 +183,6 @@ struct hisi_sas_device {
+ 	enum sas_device_type	dev_type;
+ 	int device_id;
+ 	int sata_idx;
+-	u8 dev_status;
+ };
+ 
+ struct hisi_sas_tmf_task {
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index e586660..b57a44b 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -626,7 +626,6 @@ static struct hisi_sas_device *hisi_sas_alloc_dev(struct domain_device *device)
+ 
+ 			hisi_hba->devices[i].device_id = i;
+ 			sas_dev = &hisi_hba->devices[i];
+-			sas_dev->dev_status = HISI_SAS_DEV_NORMAL;
+ 			sas_dev->dev_type = device->dev_type;
+ 			sas_dev->hisi_hba = hisi_hba;
+ 			sas_dev->sas_device = device;
+@@ -1495,7 +1494,6 @@ static int hisi_sas_abort_task(struct sas_task *task)
+ 	task->task_state_flags |= SAS_TASK_STATE_ABORTED;
+ 	spin_unlock_irqrestore(&task->task_state_lock, flags);
+ 
+-	sas_dev->dev_status = HISI_SAS_DEV_EH;
+ 	if (task->lldd_task && task->task_proto & SAS_PROTOCOL_SSP) {
+ 		struct scsi_cmnd *cmnd = task->uldd_task;
+ 		struct hisi_sas_slot *slot = task->lldd_task;
+@@ -1639,15 +1637,10 @@ static int hisi_sas_debug_I_T_nexus_reset(struct domain_device *device)
+ 
+ static int hisi_sas_I_T_nexus_reset(struct domain_device *device)
+ {
+-	struct hisi_sas_device *sas_dev = device->lldd_dev;
+ 	struct hisi_hba *hisi_hba = dev_to_hisi_hba(device);
+ 	struct device *dev = hisi_hba->dev;
+ 	int rc = TMF_RESP_FUNC_FAILED;
+ 
+-	if (sas_dev->dev_status != HISI_SAS_DEV_EH)
+-		return TMF_RESP_FUNC_FAILED;
+-	sas_dev->dev_status = HISI_SAS_DEV_NORMAL;
+-
+ 	rc = hisi_sas_internal_task_abort(hisi_hba, device,
+ 					HISI_SAS_INT_ABT_DEV, 0);
+ 	if (rc < 0) {
+@@ -1671,7 +1664,6 @@ static int hisi_sas_lu_reset(struct domain_device *device, u8 *lun)
+ 	struct device *dev = hisi_hba->dev;
+ 	int rc = TMF_RESP_FUNC_FAILED;
+ 
+-	sas_dev->dev_status = HISI_SAS_DEV_EH;
+ 	if (dev_is_sata(device)) {
+ 		struct sas_phy *phy;
+ 
+@@ -2100,7 +2092,6 @@ int hisi_sas_alloc(struct hisi_hba *hisi_hba, struct Scsi_Host *shost)
+ 	for (i = 0; i < HISI_SAS_MAX_DEVICES; i++) {
+ 		hisi_hba->devices[i].dev_type = SAS_PHY_UNUSED;
+ 		hisi_hba->devices[i].device_id = i;
+-		hisi_hba->devices[i].dev_status = HISI_SAS_DEV_NORMAL;
+ 	}
+ 
+ 	for (i = 0; i < hisi_hba->queue_count; i++) {
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+index fc0bcfa..85236ef 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+@@ -868,7 +868,6 @@ hisi_sas_device *alloc_dev_quirk_v2_hw(struct domain_device *device)
+ 
+ 			hisi_hba->devices[i].device_id = i;
+ 			sas_dev = &hisi_hba->devices[i];
+-			sas_dev->dev_status = HISI_SAS_DEV_NORMAL;
+ 			sas_dev->dev_type = device->dev_type;
+ 			sas_dev->hisi_hba = hisi_hba;
+ 			sas_dev->sas_device = device;
 -- 
 1.9.1
