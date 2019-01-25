@@ -1,63 +1,52 @@
-From: Kyungtae Kim <kt0755@gmail.com>
-Subject: UBSAN: Undefined behaviour in drivers/scsi/sr_ioctl.c
-Date: Thu, 24 Jan 2019 19:23:43 -0500
-Message-ID: <CAEAjamuFYNYTn8eqNZg-VU9A2=hrHxarhoFz+JEMmx0yVm40LQ@mail.gmail.com>
+From: "chenxiang (M)" <chenxiang66@hisilicon.com>
+Subject: Re: [PATCH] block: set rq->cmd_flags with bio->opf instead of
+ data->cmd_flags when bio is not Null
+Date: Fri, 25 Jan 2019 08:57:24 +0800
+Message-ID: <1c34d6f9-8c3c-a7ff-a956-46e9dc3c2298@hisilicon.com>
+References: <1548337430-66690-1-git-send-email-chenxiang66@hisilicon.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="gbk"; format=flowed
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1548337430-66690-1-git-send-email-chenxiang66@hisilicon.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: Byoungyoung Lee <lifeasageek@gmail.com>, DaeRyong Jeong <threeearcat@gmail.com>, syzkaller <syzkaller@googlegroups.com>, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, john.garry@huawei.com, axboe@kernel.dk, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-I'm reporting a bug in linux-5.0-rc2: "UBSAN: Undefined behaviour in
-drivers/scsi/sr_ioctl.c"
++cc Jens + linux-block
 
-kernel config: https://kt0755.github.io/etc/config-5.0-rc2
-repro: https://kt0755.github.io/etc/repro.01311.c (need to provide cdrom image)
-
-Integer overflow arose in sr_select_speed() when "speed *= 177"
-is larger than the size of the type "int".
-A sanity check right before it would help.
-
-=========================================
-UBSAN: Undefined behaviour in drivers/scsi/sr_ioctl.c:424:9
-signed integer overflow:
--2147483648 * 177 cannot be represented in type 'int'
-CPU: 0 PID: 22452 Comm: syz-executor4 Not tainted 5.0.0-rc2 #1
-Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Bochs 01/01/2011
-Call Trace:
- __dump_stack lib/dump_stack.c:77 [inline]
- dump_stack+0xb1/0x118 lib/dump_stack.c:113
- ubsan_epilogue+0x12/0x94 lib/ubsan.c:159
- handle_overflow+0x1cf/0x21a lib/ubsan.c:190
- __ubsan_handle_mul_overflow+0x2a/0x35 lib/ubsan.c:214
- sr_select_speed+0x179/0x1a0 drivers/scsi/sr_ioctl.c:424
- cdrom_ioctl_select_speed drivers/cdrom/cdrom.c:2435 [inline]
- cdrom_ioctl+0x850/0x2ffa drivers/cdrom/cdrom.c:3347
- sr_block_ioctl+0x129/0x180 drivers/scsi/sr.c:587
- __blkdev_driver_ioctl block/ioctl.c:303 [inline]
- blkdev_ioctl+0x1378/0x1b50 block/ioctl.c:605
- block_ioctl+0x105/0x150 fs/block_dev.c:1906
- vfs_ioctl fs/ioctl.c:46 [inline]
- do_vfs_ioctl+0x1aa/0x1160 fs/ioctl.c:698
- ksys_ioctl+0x9e/0xb0 fs/ioctl.c:713
- __do_sys_ioctl fs/ioctl.c:720 [inline]
- __se_sys_ioctl fs/ioctl.c:718 [inline]
- __x64_sys_ioctl+0x7e/0xc0 fs/ioctl.c:718
- do_syscall_64+0xbe/0x4f0 arch/x86/entry/common.c:290
- entry_SYSCALL_64_after_hwframe+0x49/0xbe
-RIP: 0033:0x4497b9
-Code: e8 8c 9f 02 00 48 83 c4 18 c3 0f 1f 80 00 00 00 00 48 89 f8 48
-89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d
-01 f0 ff ff 0f 83 9b 6b fc ff c3 66 2e 0f 1f 84 00 00 00 00
-RSP: 002b:00007f4a70139c68 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
-RAX: ffffffffffffffda RBX: 00007f4a7013a6cc RCX: 00000000004497b9
-RDX: 0000000080000000 RSI: 0000000000005322 RDI: 0000000000000013
-RBP: 000000000071bea0 R08: 0000000000000000 R09: 0000000000000000
-R10: 0000000000000000 R11: 0000000000000246 R12: 00000000ffffffff
-R13: 0000000000002dd8 R14: 00000000006ebe78 R15: 00007f4a7013a700
-=========================================
-
-Thanks,
-Kyungtae Kim
+ÔÚ 2019/1/24 21:43, chenxiang Ð´µÀ:
+> In function blk_mq_make_request(), though data->cmd_flags will be
+> initialized with bio->opf, later bio->opf may be set as REQ_INTEGRITY
+> if enabled DIX. So need to use bio->opf instead of data->cmd_flags in
+> function blk_mq_rq_ctx_init(), or  flags REQ_INTEGRITY will not be set
+> for rq->cmd_flags. It will cause dix=0 in function
+> sd_setup_read_write_cmnd() when enabled DIX, which will cause IO
+> exception when enabled DIX.
+>
+> For some IOs such as internal IO from SCSI layer, the parameter bio of
+> function blk_mq_get_request() is Null, so need to check bio to
+> decise rq->cmd_flags.
+>
+> Fixes: f9afca4d367b ("blk-mq: pass in request/bio flags to queue mapping")
+>
+> Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+> Reviewed-by: John Garry <john.garry@huawei.com>
+> ---
+>   block/blk-mq.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/block/blk-mq.c b/block/blk-mq.c
+> index 3ba37b9..c4a1c63 100644
+> --- a/block/blk-mq.c
+> +++ b/block/blk-mq.c
+> @@ -394,7 +394,7 @@ static struct request *blk_mq_get_request(struct request_queue *q,
+>   		return NULL;
+>   	}
+>   
+> -	rq = blk_mq_rq_ctx_init(data, tag, data->cmd_flags);
+> +	rq = blk_mq_rq_ctx_init(data, tag, bio ? bio->bi_opf : data->cmd_flags);
+>   	if (!op_is_flush(data->cmd_flags)) {
+>   		rq->elv.icq = NULL;
+>   		if (e && e->type->ops.prepare_request) {
