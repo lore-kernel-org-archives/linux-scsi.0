@@ -1,148 +1,103 @@
-From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 01/13] scsi: hisi_sas: No need to check return value of debugfs_create functions
-Date: Fri, 25 Jan 2019 22:22:27 +0800
-Message-ID: <1548426159-225679-2-git-send-email-john.garry@huawei.com>
-References: <1548426159-225679-1-git-send-email-john.garry@huawei.com>
+From: "Satish Kharat (satishkh)" <satishkh@cisco.com>
+Subject: RE: [PATCH -next] scsi: fnic: Remove set but not used variable 'vdev'
+Date: Fri, 25 Jan 2019 19:41:56 +0000
+Message-ID: <e2c3cd5a937045269760d703985392bb@XCH-RCD-012.cisco.com>
+References: <20190125020014.11184-1-yuehaibing@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1548426159-225679-1-git-send-email-john.garry@huawei.com>
+In-Reply-To: <20190125020014.11184-1-yuehaibing@huawei.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linuxarm@huawei.com, linux-kernel@vger.kernel.org, John Garry <john.garry@huawei.com>
+To: YueHaibing <yuehaibing@huawei.com>, "Sesidhar Baddela (sebaddel)" <sebaddel@cisco.com>, "Karan Tilak Kumar (kartilak)" <kartilak@cisco.com>, "jejb@linux.ibm.com" <jejb@linux.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-When calling debugfs functions, there is no need to ever check the return
-value. The function can work or not, but the code logic should never do
-something different based on this.
+Looks good to me.
 
-Signed-off-by: John Garry <john.garry@huawei.com>
+Acked-by: Satish Kharat <satishkh@cisco.com>
+
+
+Satish Kharat
+TECHNICAL LEADER.ENGINEERING
+satishkh@cisco.com
+Tel: +1 408 526 7504
+
+Cisco Systems, Inc.
+3800 Zanker Road
+SAN JOSE
+95134
+United States
+cisco.com
+
+Think before you print.
+This email may contain confidential and privileged material for the sole us=
+e of the intended recipient. Any review, use, distribution or disclosure by=
+ others is strictly prohibited. If you are not the intended recipient (or a=
+uthorized to receive for the recipient), please contact the sender by reply=
+ email and delete all copies of this message.
+http://www.cisco.com/c/en/us/about/legal/terms-sale-software-license-agreem=
+ent/company-registration-information.html
+-----Original Message-----
+From: YueHaibing <yuehaibing@huawei.com>=20
+Sent: Thursday, January 24, 2019 6:00 PM
+To: Satish Kharat (satishkh) <satishkh@cisco.com>; Sesidhar Baddela (sebadd=
+el) <sebaddel@cisco.com>; Karan Tilak Kumar (kartilak) <kartilak@cisco.com>=
+; jejb@linux.ibm.com; martin.petersen@oracle.com
+Cc: linux-kernel@vger.kernel.org; linux-scsi@vger.kernel.org; YueHaibing <y=
+uehaibing@huawei.com>
+Subject: [PATCH -next] scsi: fnic: Remove set but not used variable 'vdev'
+
+Fixes gcc '-Wunused-but-set-variable' warning:
+
+drivers/scsi/fnic/vnic_wq.c: In function 'vnic_wq_alloc_bufs':
+drivers/scsi/fnic/vnic_wq.c:50:19: warning:
+ variable 'vdev' set but not used [-Wunused-but-set-variable]
+
+drivers/scsi/fnic/vnic_rq.c: In function 'vnic_rq_alloc_bufs':
+drivers/scsi/fnic/vnic_rq.c:30:19: warning:
+ variable 'vdev' set but not used [-Wunused-but-set-variable]
+
+It never used since introduction
+
+Signed-off-by: YueHaibing <yuehaibing@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas.h      |  1 +
- drivers/scsi/hisi_sas/hisi_sas_main.c | 53 +++++++++++------------------------
- 2 files changed, 17 insertions(+), 37 deletions(-)
+ drivers/scsi/fnic/vnic_rq.c | 3 ---
+ drivers/scsi/fnic/vnic_wq.c | 3 ---
+ 2 files changed, 6 deletions(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index 6a1a5ad..b8b1ded 100644
---- a/drivers/scsi/hisi_sas/hisi_sas.h
-+++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -368,6 +368,7 @@ struct hisi_hba {
- 
- 	struct dentry *debugfs_dir;
- 	struct dentry *debugfs_dump_dentry;
-+	bool debugfs_snapshot;
- };
- 
- /* Generic HW DMA host memory structures */
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 535d347..72d2295 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -1429,8 +1429,7 @@ static int hisi_sas_controller_reset(struct hisi_hba *hisi_hba)
- 	struct Scsi_Host *shost = hisi_hba->shost;
- 	int rc;
- 
--	if (hisi_sas_debugfs_enable && hisi_hba->debugfs_itct &&
--	    !hisi_hba->debugfs_dump_dentry)
-+	if (hisi_sas_debugfs_enable && hisi_hba->debugfs_itct)
- 		queue_work(hisi_hba->wq, &hisi_hba->debugfs_work);
- 
- 	if (!hisi_hba->hw->soft_reset)
-@@ -2784,63 +2783,42 @@ static void hisi_sas_debugfs_create_files(struct hisi_hba *hisi_hba)
- 
- 	/* Create dump dir inside device dir */
- 	dump_dentry = debugfs_create_dir("dump", hisi_hba->debugfs_dir);
--	if (!dump_dentry)
--		goto fail;
+diff --git a/drivers/scsi/fnic/vnic_rq.c b/drivers/scsi/fnic/vnic_rq.c inde=
+x 74d2f2c..6a35b1b 100644
+--- a/drivers/scsi/fnic/vnic_rq.c
++++ b/drivers/scsi/fnic/vnic_rq.c
+@@ -27,12 +27,9 @@
+ static int vnic_rq_alloc_bufs(struct vnic_rq *rq)  {
+ 	struct vnic_rq_buf *buf;
+-	struct vnic_dev *vdev;
+ 	unsigned int i, j, count =3D rq->ring.desc_count;
+ 	unsigned int blks =3D VNIC_RQ_BUF_BLKS_NEEDED(count);
+=20
+-	vdev =3D rq->vdev;
 -
- 	hisi_hba->debugfs_dump_dentry = dump_dentry;
- 
--	if (!debugfs_create_file("global", 0400, dump_dentry, hisi_hba,
--				 &hisi_sas_debugfs_global_fops))
--		goto fail;
-+	debugfs_create_file("global", 0400, dump_dentry, hisi_hba,
-+			    &hisi_sas_debugfs_global_fops);
- 
- 	/* Create port dir and files */
- 	dentry = debugfs_create_dir("port", dump_dentry);
--	if (!dentry)
--		goto fail;
+ 	for (i =3D 0; i < blks; i++) {
+ 		rq->bufs[i] =3D kzalloc(VNIC_RQ_BUF_BLK_SZ, GFP_ATOMIC);
+ 		if (!rq->bufs[i]) {
+diff --git a/drivers/scsi/fnic/vnic_wq.c b/drivers/scsi/fnic/vnic_wq.c inde=
+x 74cfc56..015af2c 100644
+--- a/drivers/scsi/fnic/vnic_wq.c
++++ b/drivers/scsi/fnic/vnic_wq.c
+@@ -47,12 +47,9 @@ int vnic_wq_alloc_ring(struct vnic_dev *vdev, struct vni=
+c_wq *wq,  static int vnic_wq_alloc_bufs(struct vnic_wq *wq)  {
+ 	struct vnic_wq_buf *buf;
+-	struct vnic_dev *vdev;
+ 	unsigned int i, j, count =3D wq->ring.desc_count;
+ 	unsigned int blks =3D VNIC_WQ_BUF_BLKS_NEEDED(count);
+=20
+-	vdev =3D wq->vdev;
 -
- 	for (p = 0; p < hisi_hba->n_phy; p++) {
- 		snprintf(name, 256, "%d", p);
--		if (!debugfs_create_file(name, 0400, dentry,
--					 &hisi_hba->phy[p],
--					 &hisi_sas_debugfs_port_fops))
--			goto fail;
-+
-+		debugfs_create_file(name, 0400, dentry, &hisi_hba->phy[p],
-+				    &hisi_sas_debugfs_port_fops);
- 	}
- 
- 	/* Create CQ dir and files */
- 	dentry = debugfs_create_dir("cq", dump_dentry);
--	if (!dentry)
--		goto fail;
--
- 	for (c = 0; c < hisi_hba->queue_count; c++) {
- 		snprintf(name, 256, "%d", c);
- 
--		if (!debugfs_create_file(name, 0400, dentry,
--					 &hisi_hba->cq[c],
--					 &hisi_sas_debugfs_cq_fops))
--			goto fail;
-+		debugfs_create_file(name, 0400, dentry, &hisi_hba->cq[c],
-+				    &hisi_sas_debugfs_cq_fops);
- 	}
- 
- 	/* Create DQ dir and files */
- 	dentry = debugfs_create_dir("dq", dump_dentry);
--	if (!dentry)
--		goto fail;
--
- 	for (d = 0; d < hisi_hba->queue_count; d++) {
- 		snprintf(name, 256, "%d", d);
- 
--		if (!debugfs_create_file(name, 0400, dentry,
--					 &hisi_hba->dq[d],
--					 &hisi_sas_debugfs_dq_fops))
--			goto fail;
-+		debugfs_create_file(name, 0400, dentry, &hisi_hba->dq[d],
-+				    &hisi_sas_debugfs_dq_fops);
- 	}
- 
--	if (!debugfs_create_file("iost", 0400, dump_dentry, hisi_hba,
--				 &hisi_sas_debugfs_iost_fops))
--		goto fail;
-+	debugfs_create_file("iost", 0400, dump_dentry, hisi_hba,
-+			    &hisi_sas_debugfs_iost_fops);
- 
- 	return;
--fail:
--	debugfs_remove_recursive(hisi_hba->debugfs_dir);
- }
- 
- static void hisi_sas_debugfs_snapshot_regs(struct hisi_hba *hisi_hba)
-@@ -2864,6 +2842,10 @@ void hisi_sas_debugfs_work_handler(struct work_struct *work)
- 	struct hisi_hba *hisi_hba =
- 		container_of(work, struct hisi_hba, debugfs_work);
- 
-+	if (hisi_hba->debugfs_snapshot)
-+		return;
-+	hisi_hba->debugfs_snapshot = true;
-+
- 	hisi_sas_debugfs_snapshot_regs(hisi_hba);
- }
- EXPORT_SYMBOL_GPL(hisi_sas_debugfs_work_handler);
-@@ -2878,9 +2860,6 @@ void hisi_sas_debugfs_init(struct hisi_hba *hisi_hba)
- 	hisi_hba->debugfs_dir = debugfs_create_dir(dev_name(dev),
- 						   hisi_sas_debugfs_dir);
- 
--	if (!hisi_hba->debugfs_dir)
--		return;
--
- 	/* Alloc buffer for global */
- 	sz = hisi_hba->hw->debugfs_reg_global->count * 4;
- 	hisi_hba->debugfs_global_reg =
--- 
-1.9.1
+ 	for (i =3D 0; i < blks; i++) {
+ 		wq->bufs[i] =3D kzalloc(VNIC_WQ_BUF_BLK_SZ, GFP_ATOMIC);
+ 		if (!wq->bufs[i]) {
+--
+2.7.0
