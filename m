@@ -1,82 +1,125 @@
-From: "Asutosh Das (asd)" <asutoshd@codeaurora.org>
-Subject: Re: [<PATCH v1> 1/1] scsi: qcom-ufs: Add support for bus voting using
- ICB framework
-Date: Fri, 25 Jan 2019 15:59:37 +0530
-Message-ID: <926d2232-67f2-bd3a-ab79-87bbca3a1add@codeaurora.org>
-References: <cover.1548312692.git.asutoshd@codeaurora.org>
- <d6aa4d9bd29bbb2c3ee78e6635d4704e4113a26e.1548312692.git.asutoshd@codeaurora.org>
- <CAE=gft6P9ssNp_GRUFJT7BvJUHduorg=-bvi0KytDMWTd0pGew@mail.gmail.com>
+From: John Garry <john.garry@huawei.com>
+Subject: [PATCH 04/13] scsi: hisi_sas: send primitive NOTIFY to SSP situation only
+Date: Fri, 25 Jan 2019 22:22:30 +0800
+Message-ID: <1548426159-225679-5-git-send-email-john.garry@huawei.com>
+References: <1548426159-225679-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAE=gft6P9ssNp_GRUFJT7BvJUHduorg=-bvi0KytDMWTd0pGew@mail.gmail.com>
-Content-Language: en-US
+In-Reply-To: <1548426159-225679-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Evan Green <evgreen@chromium.org>
-Cc: subhashj@codeaurora.org, cang@codeaurora.org, vivek.gautam@codeaurora.org, Rajendra Nayak <rnayak@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, jejb@linux.vnet.ibm.com, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-arm-msm <linux-arm-msm@vger.kernel.org>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" <devicetree@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, linuxarm@huawei.com, linux-kernel@vger.kernel.org, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 1/24/2019 10:22 PM, Evan Green wrote:
-> On Wed, Jan 23, 2019 at 11:02 PM Asutosh Das <asutoshd@codeaurora.org> wrote:
->>
->> Adapt to the new ICB framework for bus bandwidth voting.
->>
->> This requires the source/destination port ids.
->> Also this requires a tuple of values.
->>
->> The tuple is for two different paths - from UFS master
->> to BIMC slave. The other is from CPU master to UFS slave.
->> This tuple consists of the average and peak bandwidth.
->>
->> Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
->> ---
->>   .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      |  12 ++
->>   drivers/scsi/ufs/ufs-qcom.c                        | 234 ++++++++++++++++-----
->>   drivers/scsi/ufs/ufs-qcom.h                        |  20 ++
->>   3 files changed, 218 insertions(+), 48 deletions(-)
->>
->> diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
->> index a99ed55..94249ef 100644
->> --- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
->> +++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
->> @@ -45,6 +45,18 @@ Optional properties:
->>   Note: If above properties are not defined it can be assumed that the supply
->>   regulators or clocks are always on.
->>
->> +* Following bus parameters are required:
->> +interconnects
->> +interconnect-names
->> +- Please refer to Documentation/devicetree/bindings/interconnect/
->> +  for more details on the above.
->> +qcom,msm-bus,name - string describing the bus path
->> +qcom,msm-bus,num-cases - number of configurations in which ufs can operate in
->> +qcom,msm-bus,num-paths - number of paths to vote for
->> +qcom,msm-bus,vectors-KBps - Takes a tuple <ib ab>, <ib ab> (2 tuples for 2 num-paths)
->> +                           The number of these entries *must* be same as
->> +                           num-cases.
-> 
-> I think we can do away with all of the qcom* ones, right? This should
-> be achievable with just interconnects and interconnect-names.
-Let me give that a bit more thought - though I'm not sure how that'd work.
+From: Xiang Chen <chenxiang66@hisilicon.com>
 
-> 
-> Also, is this patch based on a downstream tree? I don't recognize a
-> lot of the context. We'll need a patch that's based on an upstream
-> tree.
-This was developed on the internal Chrome AU and ported to ufs-next.
-Let me check internally on this anyway.
+Send primitive NOTIFY to SSP situation only, or it causes underflow issue
+when sending IO. And also rename hisi_sas_hw.sl_notify() to hisi_sas_hw.
+sl_notify_ssp().
 
-> 
-> I'll wait to review the rest of the patch until rev 2, since it's hard
-> to reason about the patch with all the downstream stuff in there.
-> -Evan
-> 
+Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
+---
+ drivers/scsi/hisi_sas/hisi_sas.h       | 2 +-
+ drivers/scsi/hisi_sas/hisi_sas_main.c  | 3 ++-
+ drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 4 ++--
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 4 ++--
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 4 ++--
+ 5 files changed, 9 insertions(+), 8 deletions(-)
 
-Hi Evan - thanks for the comments.
-
--asd
-
+diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
+index 5bb6759..97f0fda 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas.h
++++ b/drivers/scsi/hisi_sas/hisi_sas.h
+@@ -246,7 +246,7 @@ struct hisi_sas_hw {
+ 	int (*slot_index_alloc)(struct hisi_hba *hisi_hba,
+ 				struct domain_device *device);
+ 	struct hisi_sas_device *(*alloc_dev)(struct domain_device *device);
+-	void (*sl_notify)(struct hisi_hba *hisi_hba, int phy_no);
++	void (*sl_notify_ssp)(struct hisi_hba *hisi_hba, int phy_no);
+ 	int (*get_free_slot)(struct hisi_hba *hisi_hba, struct hisi_sas_dq *dq);
+ 	void (*start_delivery)(struct hisi_sas_dq *dq);
+ 	void (*prep_ssp)(struct hisi_hba *hisi_hba,
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index c0aacb0..e586660 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -778,7 +778,8 @@ static void hisi_sas_phyup_work(struct work_struct *work)
+ 	struct asd_sas_phy *sas_phy = &phy->sas_phy;
+ 	int phy_no = sas_phy->id;
+ 
+-	hisi_hba->hw->sl_notify(hisi_hba, phy_no); /* This requires a sleep */
++	if (phy->identify.target_port_protocols == SAS_PROTOCOL_SSP)
++		hisi_hba->hw->sl_notify_ssp(hisi_hba, phy_no);
+ 	hisi_sas_bytes_dmaed(hisi_hba, phy_no);
+ }
+ 
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+index 28ab52a..c8f808f 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+@@ -835,7 +835,7 @@ static void phys_init_v1_hw(struct hisi_hba *hisi_hba)
+ 	mod_timer(timer, jiffies + HZ);
+ }
+ 
+-static void sl_notify_v1_hw(struct hisi_hba *hisi_hba, int phy_no)
++static void sl_notify_ssp_v1_hw(struct hisi_hba *hisi_hba, int phy_no)
+ {
+ 	u32 sl_control;
+ 
+@@ -1826,7 +1826,7 @@ static int hisi_sas_v1_init(struct hisi_hba *hisi_hba)
+ static const struct hisi_sas_hw hisi_sas_v1_hw = {
+ 	.hw_init = hisi_sas_v1_init,
+ 	.setup_itct = setup_itct_v1_hw,
+-	.sl_notify = sl_notify_v1_hw,
++	.sl_notify_ssp = sl_notify_ssp_v1_hw,
+ 	.clear_itct = clear_itct_v1_hw,
+ 	.prep_smp = prep_smp_v1_hw,
+ 	.prep_ssp = prep_ssp_v1_hw,
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+index 9506ab1..fc0bcfa 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+@@ -1589,7 +1589,7 @@ static void phys_init_v2_hw(struct hisi_hba *hisi_hba)
+ 	}
+ }
+ 
+-static void sl_notify_v2_hw(struct hisi_hba *hisi_hba, int phy_no)
++static void sl_notify_ssp_v2_hw(struct hisi_hba *hisi_hba, int phy_no)
+ {
+ 	u32 sl_control;
+ 
+@@ -3625,7 +3625,7 @@ static void debugfs_snapshot_restore_v2_hw(struct hisi_hba *hisi_hba)
+ 	.setup_itct = setup_itct_v2_hw,
+ 	.slot_index_alloc = slot_index_alloc_quirk_v2_hw,
+ 	.alloc_dev = alloc_dev_quirk_v2_hw,
+-	.sl_notify = sl_notify_v2_hw,
++	.sl_notify_ssp = sl_notify_ssp_v2_hw,
+ 	.get_wideport_bitmap = get_wideport_bitmap_v2_hw,
+ 	.clear_itct = clear_itct_v2_hw,
+ 	.free_device = free_device_v2_hw,
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index b780b52..726ac4bd 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -870,7 +870,7 @@ static void phys_init_v3_hw(struct hisi_hba *hisi_hba)
+ 	}
+ }
+ 
+-static void sl_notify_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
++static void sl_notify_ssp_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
+ {
+ 	u32 sl_control;
+ 
+@@ -2520,7 +2520,7 @@ static void debugfs_snapshot_restore_v3_hw(struct hisi_hba *hisi_hba)
+ 	.get_wideport_bitmap = get_wideport_bitmap_v3_hw,
+ 	.complete_hdr_size = sizeof(struct hisi_sas_complete_v3_hdr),
+ 	.clear_itct = clear_itct_v3_hw,
+-	.sl_notify = sl_notify_v3_hw,
++	.sl_notify_ssp = sl_notify_ssp_v3_hw,
+ 	.prep_ssp = prep_ssp_v3_hw,
+ 	.prep_smp = prep_smp_v3_hw,
+ 	.prep_stp = prep_ata_v3_hw,
 -- 
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a 
-Linux Foundation Collaborative Project
+1.9.1
