@@ -1,77 +1,289 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v2] SCSI: fcoe: convert to use BUS_ATTR_WO
-Date: Sat, 26 Jan 2019 11:40:17 +0100
-Message-ID: <af215322-c5c4-6757-173e-5f243b7d940d@suse.de>
-References: <20190122142735.GB18225@kroah.com>
- <3e91c991-8090-405a-58cf-0686e9a82a51@suse.de>
- <20190126103906.GA9483@kroah.com>
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Subject: Re: [PATCH v2 3/3] scsi: ufs: Add HI3670 SoC UFS driver support
+Date: Sat, 26 Jan 2019 20:17:11 +0530
+Message-ID: <20190126144711.GA14260@Mani-XPS-13-9360>
+References: <20190105072859.9134-1-manivannan.sadhasivam@linaro.org>
+ <20190105072859.9134-4-manivannan.sadhasivam@linaro.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190126103906.GA9483@kroah.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Johannes Thumshirn <jth@kernel.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+Content-Disposition: inline
+In-Reply-To: <20190105072859.9134-4-manivannan.sadhasivam@linaro.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, liwei213@huawei.com, robh+dt@kernel.org
+Cc: devicetree@vger.kernel.org, guodong.xu@linaro.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, amit.kucheria@linaro.org, john.stultz@linaro.org, linux-arm-kernel@lists.infradead.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 1/26/19 11:39 AM, Greg Kroah-Hartman wrote:
-> On Sat, Jan 26, 2019 at 11:26:47AM +0100, Hannes Reinecke wrote:
->> On 1/22/19 3:27 PM, Greg Kroah-Hartman wrote:
->>> We are trying to get rid of BUS_ATTR() and the usage of that in the fcoe
->>> driver can be trivially converted to use BUS_ATTR_WO(), so use that
->>> instead.
->>>
->>> Cc: Johannes Thumshirn <jth@kernel.org>
->>> Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
->>> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
->>> Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
->>> ---
->>> v2: Made simpler with wrapper functions to call the "real" show/store
->>>       functions, thanks to James for the idea.
->>>       Removed the EXPORT_SYMBOL() removal line, that belongs in a separate
->>>       patch
->>>
->>>    drivers/scsi/fcoe/fcoe_sysfs.c | 15 +++++++++++++--
->>>    1 file changed, 13 insertions(+), 2 deletions(-)
->>>
->>> diff --git a/drivers/scsi/fcoe/fcoe_sysfs.c b/drivers/scsi/fcoe/fcoe_sysfs.c
->>> index 5c8310bade61..c3dcbdc3aa64 100644
->>> --- a/drivers/scsi/fcoe/fcoe_sysfs.c
->>> +++ b/drivers/scsi/fcoe/fcoe_sysfs.c
->>> @@ -671,8 +671,19 @@ static const struct device_type fcoe_fcf_device_type = {
->>>    	.release = fcoe_fcf_device_release,
->>>    };
->>> -static BUS_ATTR(ctlr_create, S_IWUSR, NULL, fcoe_ctlr_create_store);
->>> -static BUS_ATTR(ctlr_destroy, S_IWUSR, NULL, fcoe_ctlr_destroy_store);
->>> +static ssize_t ctlr_create_store(struct bus_type *bus, const char *buf,
->>> +				 size_t count)
->>> +{
->>> +	return fcoe_ctlr_create_store(bus, buf, count);
->>> +}
->>> +static BUS_ATTR_WO(ctlr_create);
->>> +
->>> +static ssize_t ctlr_destroy_store(struct bus_type *bus, const char *buf,
->>> +				  size_t count)
->>> +{
->>> +	return fcoe_ctlr_destroy_store(bus, buf, count);
->>> +}
->>> +static BUS_ATTR_WO(ctlr_destroy);
->>>    static struct attribute *fcoe_bus_attrs[] = {
->>>    	&bus_attr_ctlr_create.attr,
->>>
->> Why not renaming the functions and drop the wrapper?
+On Sat, Jan 05, 2019 at 12:58:59PM +0530, Manivannan Sadhasivam wrote:
+> Add HI3670 SoC UFS driver support by extending the common ufs-hisi
+> driver. One major difference between HI3660 ad HI3670 SoCs interms of
+> UFS is the PHY. HI3670 has a 10nm variant PHY and hence this parameter is
+> used to distinguish the configuration.
 > 
-> I did that in v1 of this patch, but people complained I was messing up
-> their function namespace :)
+> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+
+Hello,
+
+Ping on this patch!
+
+Thanks,
+Mani
+
+> ---
+>  drivers/scsi/ufs/ufs-hisi.c | 127 +++++++++++++++++++++++++++++-------
+>  drivers/scsi/ufs/ufs-hisi.h |   4 ++
+>  2 files changed, 109 insertions(+), 22 deletions(-)
 > 
-Sigh.
-
-Okay, then.
-
-Reviewed-by: Hannes Reinecke <hare@suse.com>
-
-Cheers,
-
-Hannes
+> diff --git a/drivers/scsi/ufs/ufs-hisi.c b/drivers/scsi/ufs/ufs-hisi.c
+> index 452e19f8fb47..f2d3df357a97 100644
+> --- a/drivers/scsi/ufs/ufs-hisi.c
+> +++ b/drivers/scsi/ufs/ufs-hisi.c
+> @@ -66,7 +66,7 @@ static int ufs_hisi_check_hibern8(struct ufs_hba *hba)
+>  	return err;
+>  }
+>  
+> -static void ufs_hi3660_clk_init(struct ufs_hba *hba)
+> +static void ufs_hisi_clk_init(struct ufs_hba *hba)
+>  {
+>  	struct ufs_hisi_host *host = ufshcd_get_variant(hba);
+>  
+> @@ -80,7 +80,7 @@ static void ufs_hi3660_clk_init(struct ufs_hba *hba)
+>  	ufs_sys_ctrl_set_bits(host, BIT_SYSCTRL_REF_CLOCK_EN, PHY_CLK_CTRL);
+>  }
+>  
+> -static void ufs_hi3660_soc_init(struct ufs_hba *hba)
+> +static void ufs_hisi_soc_init(struct ufs_hba *hba)
+>  {
+>  	struct ufs_hisi_host *host = ufshcd_get_variant(hba);
+>  	u32 reg;
+> @@ -139,6 +139,7 @@ static void ufs_hi3660_soc_init(struct ufs_hba *hba)
+>  
+>  static int ufs_hisi_link_startup_pre_change(struct ufs_hba *hba)
+>  {
+> +	struct ufs_hisi_host *host = ufshcd_get_variant(hba);
+>  	int err;
+>  	uint32_t value;
+>  	uint32_t reg;
+> @@ -153,6 +154,14 @@ static int ufs_hisi_link_startup_pre_change(struct ufs_hba *hba)
+>  	ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x8121, 0x0), 0x2D);
+>  	/* MPHY CBOVRCTRL3 */
+>  	ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x8122, 0x0), 0x1);
+> +
+> +	if (host->caps & UFS_HISI_CAP_PHY10nm) {
+> +		/* MPHY CBOVRCTRL4 */
+> +		ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x8127, 0x0), 0x98);
+> +		/* MPHY CBOVRCTRL5 */
+> +		ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x8128, 0x0), 0x1);
+> +	}
+> +
+>  	/* Unipro VS_MphyCfgUpdt */
+>  	ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0xD085, 0x0), 0x1);
+>  	/* MPHY RXOVRCTRL4 rx0 */
+> @@ -173,10 +182,21 @@ static int ufs_hisi_link_startup_pre_change(struct ufs_hba *hba)
+>  	ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x8113, 0x0), 0x1);
+>  	ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0xD085, 0x0), 0x1);
+>  
+> -	/* Tactive RX */
+> -	ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x008F, 0x4), 0x7);
+> -	/* Tactive RX */
+> -	ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x008F, 0x5), 0x7);
+> +	if (host->caps & UFS_HISI_CAP_PHY10nm) {
+> +		/* RX_Hibern8Time_Capability*/
+> +		ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x0092, 0x4), 0xA);
+> +		/* RX_Hibern8Time_Capability*/
+> +		ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x0092, 0x5), 0xA);
+> +		/* RX_Min_ActivateTime */
+> +		ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x008f, 0x4), 0xA);
+> +		/* RX_Min_ActivateTime*/
+> +		ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x008f, 0x5), 0xA);
+> +	} else {
+> +		/* Tactive RX */
+> +		ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x008F, 0x4), 0x7);
+> +		/* Tactive RX */
+> +		ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x008F, 0x5), 0x7);
+> +	}
+>  
+>  	/* Gear3 Synclength */
+>  	ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x0095, 0x4), 0x4F);
+> @@ -208,7 +228,8 @@ static int ufs_hisi_link_startup_pre_change(struct ufs_hba *hba)
+>  	if (err)
+>  		dev_err(hba->dev, "ufs_hisi_check_hibern8 error\n");
+>  
+> -	ufshcd_writel(hba, UFS_HCLKDIV_NORMAL_VALUE, UFS_REG_HCLKDIV);
+> +	if (!(host->caps & UFS_HISI_CAP_PHY10nm))
+> +		ufshcd_writel(hba, UFS_HCLKDIV_NORMAL_VALUE, UFS_REG_HCLKDIV);
+>  
+>  	/* disable auto H8 */
+>  	reg = ufshcd_readl(hba, REG_AUTO_HIBERNATE_IDLE_TIMER);
+> @@ -253,7 +274,7 @@ static int ufs_hisi_link_startup_post_change(struct ufs_hba *hba)
+>  	return 0;
+>  }
+>  
+> -static int ufs_hi3660_link_startup_notify(struct ufs_hba *hba,
+> +static int ufs_hisi_link_startup_notify(struct ufs_hba *hba,
+>  					  enum ufs_notify_change_status status)
+>  {
+>  	int err = 0;
+> @@ -391,6 +412,28 @@ static void ufs_hisi_set_dev_cap(struct ufs_hisi_dev_params *hisi_param)
+>  
+>  static void ufs_hisi_pwr_change_pre_change(struct ufs_hba *hba)
+>  {
+> +	struct ufs_hisi_host *host = ufshcd_get_variant(hba);
+> +
+> +	if (host->caps & UFS_HISI_CAP_PHY10nm) {
+> +		/*
+> +		 * Boston platform need to set SaveConfigTime to 0x13,
+> +		 * and change sync length to maximum value
+> +		 */
+> +		/* VS_DebugSaveConfigTime */
+> +		ufshcd_dme_set(hba, UIC_ARG_MIB((u32)0xD0A0), 0x13);
+> +		/* g1 sync length */
+> +		ufshcd_dme_set(hba, UIC_ARG_MIB((u32)0x1552), 0x4f);
+> +		/* g2 sync length */
+> +		ufshcd_dme_set(hba, UIC_ARG_MIB((u32)0x1554), 0x4f);
+> +		/* g3 sync length */
+> +		ufshcd_dme_set(hba, UIC_ARG_MIB((u32)0x1556), 0x4f);
+> +		/* PA_Hibern8Time */
+> +		ufshcd_dme_set(hba, UIC_ARG_MIB((u32)0x15a7), 0xA);
+> +		/* PA_Tactivate */
+> +		ufshcd_dme_set(hba, UIC_ARG_MIB((u32)0x15a8), 0xA);
+> +		ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0xd085, 0x0), 0x01);
+> +	}
+> +
+>  	if (hba->dev_quirks & UFS_DEVICE_QUIRK_HOST_VS_DEBUGSAVECONFIGTIME) {
+>  		pr_info("ufs flash device must set VS_DebugSaveConfigTime 0x10\n");
+>  		/* VS_DebugSaveConfigTime */
+> @@ -429,7 +472,7 @@ static void ufs_hisi_pwr_change_pre_change(struct ufs_hba *hba)
+>  	ufshcd_dme_set(hba, UIC_ARG_MIB(0xd046), 32767);
+>  }
+>  
+> -static int ufs_hi3660_pwr_change_notify(struct ufs_hba *hba,
+> +static int ufs_hisi_pwr_change_notify(struct ufs_hba *hba,
+>  				       enum ufs_notify_change_status status,
+>  				       struct ufs_pa_layer_attr *dev_max_params,
+>  				       struct ufs_pa_layer_attr *dev_req_params)
+> @@ -567,25 +610,72 @@ static int ufs_hi3660_init(struct ufs_hba *hba)
+>  		return ret;
+>  	}
+>  
+> -	ufs_hi3660_clk_init(hba);
+> +	ufs_hisi_clk_init(hba);
+> +
+> +	ufs_hisi_soc_init(hba);
+> +
+> +	return 0;
+> +}
+> +
+> +static int ufs_hi3670_init(struct ufs_hba *hba)
+> +{
+> +	int ret = 0;
+> +	struct device *dev = hba->dev;
+> +	struct ufs_hisi_host *host;
+> +
+> +	ret = ufs_hisi_init_common(hba);
+> +	if (ret) {
+> +		dev_err(dev, "%s: ufs common init fail\n", __func__);
+> +		return ret;
+> +	}
+> +
+> +	ufs_hisi_clk_init(hba);
+> +
+> +	ufs_hisi_soc_init(hba);
+>  
+> -	ufs_hi3660_soc_init(hba);
+> +	/* Add cap for 10nm PHY variant on HI3670 SoC */
+> +	host = ufshcd_get_variant(hba);
+> +	host->caps |= UFS_HISI_CAP_PHY10nm;
+>  
+>  	return 0;
+>  }
+>  
+> -static struct ufs_hba_variant_ops ufs_hba_hisi_vops = {
+> +static struct ufs_hba_variant_ops ufs_hba_hi3660_vops = {
+>  	.name = "hi3660",
+>  	.init = ufs_hi3660_init,
+> -	.link_startup_notify = ufs_hi3660_link_startup_notify,
+> -	.pwr_change_notify = ufs_hi3660_pwr_change_notify,
+> +	.link_startup_notify = ufs_hisi_link_startup_notify,
+> +	.pwr_change_notify = ufs_hisi_pwr_change_notify,
+>  	.suspend = ufs_hisi_suspend,
+>  	.resume = ufs_hisi_resume,
+>  };
+>  
+> +static struct ufs_hba_variant_ops ufs_hba_hi3670_vops = {
+> +	.name = "hi3670",
+> +	.init = ufs_hi3670_init,
+> +	.link_startup_notify = ufs_hisi_link_startup_notify,
+> +	.pwr_change_notify = ufs_hisi_pwr_change_notify,
+> +	.suspend = ufs_hisi_suspend,
+> +	.resume = ufs_hisi_resume,
+> +};
+> +
+> +static const struct of_device_id ufs_hisi_of_match[] = {
+> +	{ .compatible = "hisilicon,hi3660-ufs", .data = &ufs_hba_hi3660_vops },
+> +	{ .compatible = "hisilicon,hi3670-ufs", .data = &ufs_hba_hi3670_vops },
+> +	{},
+> +};
+> +
+> +MODULE_DEVICE_TABLE(of, ufs_hisi_of_match);
+> +
+>  static int ufs_hisi_probe(struct platform_device *pdev)
+>  {
+> -	return ufshcd_pltfrm_init(pdev, &ufs_hba_hisi_vops);
+> +	const struct of_device_id *of_id;
+> +	struct ufs_hba_variant_ops *vops;
+> +	struct device *dev = &pdev->dev;
+> +
+> +	of_id = of_match_node(ufs_hisi_of_match, dev->of_node);
+> +	vops = (struct ufs_hba_variant_ops *)of_id->data;
+> +
+> +	return ufshcd_pltfrm_init(pdev, vops);
+>  }
+>  
+>  static int ufs_hisi_remove(struct platform_device *pdev)
+> @@ -596,13 +686,6 @@ static int ufs_hisi_remove(struct platform_device *pdev)
+>  	return 0;
+>  }
+>  
+> -static const struct of_device_id ufs_hisi_of_match[] = {
+> -	{ .compatible = "hisilicon,hi3660-ufs" },
+> -	{},
+> -};
+> -
+> -MODULE_DEVICE_TABLE(of, ufs_hisi_of_match);
+> -
+>  static const struct dev_pm_ops ufs_hisi_pm_ops = {
+>  	.suspend	= ufshcd_pltfrm_suspend,
+>  	.resume		= ufshcd_pltfrm_resume,
+> diff --git a/drivers/scsi/ufs/ufs-hisi.h b/drivers/scsi/ufs/ufs-hisi.h
+> index 3df9cd7acc29..667dfe39b57e 100644
+> --- a/drivers/scsi/ufs/ufs-hisi.h
+> +++ b/drivers/scsi/ufs/ufs-hisi.h
+> @@ -91,6 +91,9 @@ enum {
+>  #define UFS_HISI_LIMIT_HS_RATE	PA_HS_MODE_B
+>  #define UFS_HISI_LIMIT_DESIRED_MODE	FAST
+>  
+> +#define UFS_HISI_CAP_RESERVED		BIT(0)
+> +#define UFS_HISI_CAP_PHY10nm		BIT(1)
+> +
+>  struct ufs_hisi_host {
+>  	struct ufs_hba *hba;
+>  	void __iomem *ufs_sys_ctrl;
+> @@ -112,4 +115,5 @@ struct ufs_hisi_host {
+>  	ufs_sys_ctrl_writel((host),                                            \
+>  			    ((~(mask)) & (ufs_sys_ctrl_readl((host), (reg)))), \
+>  			    (reg))
+> +
+>  #endif /* UFS_HISI_H_ */
+> -- 
+> 2.17.1
+> 
