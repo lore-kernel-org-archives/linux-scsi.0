@@ -1,47 +1,69 @@
 From: Avri Altman <avri.altman@wdc.com>
-Subject: [PATCH v4 0/3] scsi: ufs-bsg: Add read descriptor
-Date: Sun, 27 Jan 2019 09:07:45 +0200
-Message-ID: <1548572868-12589-1-git-send-email-avri.altman@wdc.com>
+Subject: [PATCH v4 2/3] scsi: ufs: Allow reading descriptor via raw upiu
+Date: Sun, 27 Jan 2019 09:07:47 +0200
+Message-ID: <1548572868-12589-3-git-send-email-avri.altman@wdc.com>
+References: <1548572868-12589-1-git-send-email-avri.altman@wdc.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1548572868-12589-1-git-send-email-avri.altman@wdc.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Evan Green <evgreen@chromium.org>
 Cc: Avi Shchislowski <avi.shchislowski@wdc.com>, Alex Lemberg <alex.lemberg@wdc.com>, Avri Altman <avri.altman@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-UFS Protocol Information Units (UPIU) are UFS packets that travel
-between the host and the device on the UniPro bus. Our previous series
-added the capability to send UPIUs to the ufs driver. It does not cover
-all the possible UPIU types - we are mainly focused on device management,
-provisioning, testing and validation, so it covers UPIUs that falls in
-that box.
+Allow to read descriptors via raw upiu. This in fact was forbidden just
+as a precaution, as ufs-bsg actually enforces which functionality is
+supported.
 
-Our intension is to publish ufs-utils soon - an open source user space
-utility that relies on that infrastructure to perform those tasks.
-This short series is adding one last functionality needed by ufs-utils
-that was somehow left behind - allowing reading descriptors as well.
+Signed-off-by: Avri Altman <avri.altman@wdc.com>
+Reviewed-by: Evan Green <evgreen@chromium.org>
+---
+ drivers/scsi/ufs/ufshcd.c | 20 ++++++++++++++------
+ 1 file changed, 14 insertions(+), 6 deletions(-)
 
-V3->v4:
-Improve code readability in ufs-bsg: Allow reading descriptors
-Update Reviewed-by tag.
-
-V2->v3:
-Add a prep patch with write descriptor calling convention changes.
-Elaborate the commit log of ufs-bsg: Allow reading descriptors
-Add Reviewed-by tag.
-
-v1->v2:
-Withdraw from the attempt to change the reply buffer, instead place the
-descriptor being read in the actual data buffer in the bio.
-
-Avri Altman (3):
-  scsi: ufs-bsg: Change the calling convention for write descriptor
-  scsi: ufs: Allow reading descriptor via raw upiu
-  scsi: ufs-bsg: Allow reading descriptors
-
- Documentation/scsi/ufs.txt | 11 ++++++++
- drivers/scsi/ufs/ufs_bsg.c | 63 ++++++++++++++++++++++++++--------------------
- drivers/scsi/ufs/ufshcd.c  | 20 ++++++++++-----
- 3 files changed, 61 insertions(+), 33 deletions(-)
-
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 2ddf244..6b9ed21 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -5775,6 +5775,20 @@ static int ufshcd_issue_devman_upiu_cmd(struct ufs_hba *hba,
+ 
+ 	/* just copy the upiu response as it is */
+ 	memcpy(rsp_upiu, lrbp->ucd_rsp_ptr, sizeof(*rsp_upiu));
++	if (desc_buff && desc_op == UPIU_QUERY_OPCODE_READ_DESC) {
++		u8 *descp = (u8 *)lrbp->ucd_rsp_ptr + sizeof(*rsp_upiu);
++		u16 resp_len = be32_to_cpu(lrbp->ucd_rsp_ptr->header.dword_2) &
++			       MASK_QUERY_DATA_SEG_LEN;
++
++		if (*buff_len >= resp_len) {
++			memcpy(desc_buff, descp, resp_len);
++			*buff_len = resp_len;
++		} else {
++			dev_warn(hba->dev, "rsp size is bigger than buffer");
++			*buff_len = 0;
++			err = -EINVAL;
++		}
++	}
+ 
+ 	ufshcd_put_dev_cmd_tag(hba, tag);
+ 	wake_up(&hba->dev_cmd.tag_wq);
+@@ -5810,11 +5824,6 @@ int ufshcd_exec_raw_upiu_cmd(struct ufs_hba *hba,
+ 	int ocs_value;
+ 	u8 tm_f = be32_to_cpu(req_upiu->header.dword_1) >> 16 & MASK_TM_FUNC;
+ 
+-	if (desc_buff && desc_op != UPIU_QUERY_OPCODE_WRITE_DESC) {
+-		err = -ENOTSUPP;
+-		goto out;
+-	}
+-
+ 	switch (msgcode) {
+ 	case UPIU_TRANSACTION_NOP_OUT:
+ 		cmd_type = DEV_CMD_TYPE_NOP;
+@@ -5855,7 +5864,6 @@ int ufshcd_exec_raw_upiu_cmd(struct ufs_hba *hba,
+ 		break;
+ 	}
+ 
+-out:
+ 	return err;
+ }
+ 
 -- 
 1.9.1
