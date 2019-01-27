@@ -1,24 +1,47 @@
-From: pr-tracker-bot@kernel.org
-Subject: Re: [GIT PULL] SCSI fixes for 5.0-rc3
-Date: Sat, 26 Jan 2019 23:15:03 +0000
-Message-ID: <154854450368.25415.2953905535171484031.pr-tracker-bot@kernel.org>
-References: <1548454506.3212.26.camel@HansenPartnership.com>
+From: Avri Altman <avri.altman@wdc.com>
+Subject: [PATCH v4 0/3] scsi: ufs-bsg: Add read descriptor
+Date: Sun, 27 Jan 2019 09:07:45 +0200
+Message-ID: <1548572868-12589-1-git-send-email-avri.altman@wdc.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1548454506.3212.26.camel@HansenPartnership.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Evan Green <evgreen@chromium.org>
+Cc: Avi Shchislowski <avi.shchislowski@wdc.com>, Alex Lemberg <alex.lemberg@wdc.com>, Avri Altman <avri.altman@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-The pull request you sent on Fri, 25 Jan 2019 14:15:06 -0800:
+UFS Protocol Information Units (UPIU) are UFS packets that travel
+between the host and the device on the UniPro bus. Our previous series
+added the capability to send UPIUs to the ufs driver. It does not cover
+all the possible UPIU types - we are mainly focused on device management,
+provisioning, testing and validation, so it covers UPIUs that falls in
+that box.
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+Our intension is to publish ufs-utils soon - an open source user space
+utility that relies on that infrastructure to perform those tasks.
+This short series is adding one last functionality needed by ufs-utils
+that was somehow left behind - allowing reading descriptors as well.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/7930851ef10c137c1035d1ef2addfdb3c53a1273
+V3->v4:
+Improve code readability in ufs-bsg: Allow reading descriptors
+Update Reviewed-by tag.
 
-Thank you!
+V2->v3:
+Add a prep patch with write descriptor calling convention changes.
+Elaborate the commit log of ufs-bsg: Allow reading descriptors
+Add Reviewed-by tag.
+
+v1->v2:
+Withdraw from the attempt to change the reply buffer, instead place the
+descriptor being read in the actual data buffer in the bio.
+
+Avri Altman (3):
+  scsi: ufs-bsg: Change the calling convention for write descriptor
+  scsi: ufs: Allow reading descriptor via raw upiu
+  scsi: ufs-bsg: Allow reading descriptors
+
+ Documentation/scsi/ufs.txt | 11 ++++++++
+ drivers/scsi/ufs/ufs_bsg.c | 63 ++++++++++++++++++++++++++--------------------
+ drivers/scsi/ufs/ufshcd.c  | 20 ++++++++++-----
+ 3 files changed, 61 insertions(+), 33 deletions(-)
 
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.wiki.kernel.org/userdoc/prtracker
+1.9.1
