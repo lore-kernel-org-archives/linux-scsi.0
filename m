@@ -1,71 +1,53 @@
-From: John Garry <john.garry@huawei.com>
-Subject: Re: [PATCH] block: set rq->cmd_flags with bio->opf instead of
- data->cmd_flags when bio is not Null
-Date: Mon, 28 Jan 2019 16:05:47 +0000
-Message-ID: <872f8c26-1c88-fe50-ffec-01c1e882245b@huawei.com>
-References: <1548337430-66690-1-git-send-email-chenxiang66@hisilicon.com>
- <1c34d6f9-8c3c-a7ff-a956-46e9dc3c2298@hisilicon.com>
- <20190128140716.GA18162@infradead.org>
- <55972c1a-051a-1396-6796-84f349830a35@huawei.com>
- <20190128155752.GA29076@infradead.org>
+From: Sasha Levin <sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 191/258] scsi: smartpqi: correct volume status
+Date: Mon, 28 Jan 2019 10:58:17 -0500
+Message-ID: <20190128155924.51521-191-sashal@kernel.org>
+References: <20190128155924.51521-1-sashal@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190128155752.GA29076@infradead.org>
+In-Reply-To: <20190128155924.51521-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "chenxiang (M)" <chenxiang66@hisilicon.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, axboe@kernel.dk, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc: Dave Carroll <david.carroll@microsemi.com>, Don Brace <don.brace@microsemi.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 28/01/2019 15:57, Christoph Hellwig wrote:
-> On Mon, Jan 28, 2019 at 03:36:58PM +0000, John Garry wrote:
->> As I understood, the problem is the scenario of calling
->> blk_mq_make_request()->bio_integrity_prep() where we then allocate a bio
->> integrity payload in calling bio_integrity_alloc().
->>
->> In this case, bio_integrity_alloc() sets bio->bi_opf |= REQ_INTEGRITY, which
->> is no longer consistent with data.cmd_flags.
->
-> I don't see how that could happen:
->
-> static blk_qc_t blk_mq_make_request(struct request_queue *q, struct bio *bio)
-> {
-> 	...
->
-> 	if (!bio_integrity_prep(bio))
-> 		return BLK_QC_T_NONE;
->
-> 	...
->
-> 	data.cmd_flags = bio->bi_opf;
->         rq = blk_mq_get_request(q, bio, &data);
->
->
+From: Dave Carroll <david.carroll@microsemi.com>
 
-Your code is different to mine, then I see that this has been fixed in 
-5.0-rc3:
+[ Upstream commit 7ff44499bafbd376115f0bb6b578d980f56ee13b ]
 
-commit 7809167da5c86fd6bf309b33dee7a797e263342f
-Author: Ming Lei <ming.lei@redhat.com>
-Date:   Wed Jan 16 19:08:15 2019 +0800
+- fix race condition when a unit is deleted after an RLL,
+  and before we have gotten the LV_STATUS page of the unit.
+  - In this case we will get a standard inquiry, rather than
+    the desired page.  This will result in a unit presented
+    which no longer exists.
+  - If we ask for LV_STATUS, insure we get LV_STATUS
 
-     block: don't lose track of REQ_INTEGRITY flag
+Reviewed-by: Murthy Bhat <murthy.bhat@microsemi.com>
+Reviewed-by: Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>
+Reviewed-by: Scott Teel <scott.teel@microsemi.com>
+Reviewed-by: Kevin Barnett <kevin.barnett@microsemi.com>
+Signed-off-by: Dave Carroll <david.carroll@microsemi.com>
+Signed-off-by: Don Brace <don.brace@microsemi.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/scsi/smartpqi/smartpqi_init.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-     We need to pass bio->bi_opf after bio intergrity preparing, otherwise
-     the flag of REQ_INTEGRITY may not be set on the allocated request, then
-     breaks block integrity.
-
-     Fixes: f9afca4d367b ("blk-mq: pass in request/bio flags to queue 
-mapping")
-     Cc: Hannes Reinecke <hare@suse.com>
-     Cc: Keith Busch <keith.busch@intel.com>
-     Signed-off-by: Ming Lei <ming.lei@redhat.com>
-     Signed-off-by: Jens Axboe <axboe@kernel.dk>
-
-
-Sorry for the noise,
-John
-
-> .
->
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+index 58eb0d31d8d9..3781e8109dd7 100644
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -1184,6 +1184,9 @@ static void pqi_get_volume_status(struct pqi_ctrl_info *ctrl_info,
+ 	if (rc)
+ 		goto out;
+ 
++	if (vpd->page_code != CISS_VPD_LV_STATUS)
++		goto out;
++
+ 	page_length = offsetof(struct ciss_vpd_logical_volume_status,
+ 		volume_status) + vpd->page_length;
+ 	if (page_length < sizeof(*vpd))
+-- 
+2.19.1
