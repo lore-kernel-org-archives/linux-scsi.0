@@ -1,51 +1,60 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] MAINTAINERS: Move FCoE to Hannes Reinecke
-Date: Mon, 28 Jan 2019 12:37:56 +0100
-Message-ID: <049182df-4bfa-a93f-3773-0a9789516c2b@suse.de>
-References: <20190128110634.17243-1-jthumshirn@suse.de>
+From: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
+Subject: [PATCH v1 1/1] scsi: ufs: Print uic error history in time order
+Date: Mon, 28 Jan 2019 22:04:26 +0800
+Message-ID: <1548684266-8792-1-git-send-email-stanley.chu@mediatek.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190128110634.17243-1-jthumshirn@suse.de>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-mediatek>,
+ <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-mediatek/>
+List-Post: <mailto:linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+List-Help: <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-mediatek>,
+ <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=subscribe>
+Sender: "Linux-mediatek" <linux-mediatek-bounces-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+Errors-To: linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
+To: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Cc: wsd_upstream-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, kuohong.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, avri.altman-Sjgp3cTcYWE@public.gmane.org, linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, peter.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 1/28/19 12:06 PM, Johannes Thumshirn wrote:
-> I'll be moving on to different things in the storage stack and Hannes
-> agreed to take over FCoE.
-> 
-> Cc: Hannes Reinecke <hare@suse.de>
-> Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-> ---
->   MAINTAINERS | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 9f64f8d3740e..49b829794699 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -5855,7 +5855,7 @@ S:	Maintained
->   F:	drivers/media/tuners/fc2580*
->   
->   FCOE SUBSYSTEM (libfc, libfcoe, fcoe)
-> -M:	Johannes Thumshirn <jth@kernel.org>
-> +M:	Hannes Reinecke <hare@suse.de>
->   L:	linux-scsi@vger.kernel.org
->   W:	www.Open-FCoE.org
->   S:	Supported
-> 
-Acked-by: Hannes Reinecke <hare@suse.com>
+Now uic errors are printed out of time order.
 
-Cheers,
+Simply make it more readable by printing logs
+in time order, and printing "No record" if history
+is empty.
 
-Hannes
+Signed-off-by: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
+---
+ drivers/scsi/ufs/ufshcd.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 9ba7671b84f8..f90badcb8318 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -393,15 +393,20 @@ static void ufshcd_print_uic_err_hist(struct ufs_hba *hba,
+ 		struct ufs_uic_err_reg_hist *err_hist, char *err_name)
+ {
+ 	int i;
++	bool found = false;
+ 
+ 	for (i = 0; i < UIC_ERR_REG_HIST_LENGTH; i++) {
+-		int p = (i + err_hist->pos - 1) % UIC_ERR_REG_HIST_LENGTH;
++		int p = (i + err_hist->pos) % UIC_ERR_REG_HIST_LENGTH;
+ 
+ 		if (err_hist->reg[p] == 0)
+ 			continue;
+ 		dev_err(hba->dev, "%s[%d] = 0x%x at %lld us\n", err_name, i,
+ 			err_hist->reg[p], ktime_to_us(err_hist->tstamp[p]));
++		found = true;
+ 	}
++
++	if (!found)
++		dev_err(hba->dev, "No record of %s uic errors\n", err_name);
+ }
+ 
+ static void ufshcd_print_host_regs(struct ufs_hba *hba)
 -- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+2.18.0
