@@ -1,81 +1,47 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.19 016/258] scsi: mpt3sas: Call sas_remove_host before removing the target devices
-Date: Mon, 28 Jan 2019 10:55:22 -0500
-Message-ID: <20190128155924.51521-16-sashal@kernel.org>
-References: <20190128155924.51521-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.20 050/304] scsi: hisi_sas: change the time of SAS SSP connection
+Date: Mon, 28 Jan 2019 10:39:27 -0500
+Message-ID: <20190128154341.47195-50-sashal@kernel.org>
+References: <20190128154341.47195-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190128155924.51521-1-sashal@kernel.org>
+In-Reply-To: <20190128154341.47195-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Suganath Prabu <suganath-prabu.subramani@broadcom.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
+Cc: Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Suganath Prabu <suganath-prabu.subramani@broadcom.com>
+From: Xiang Chen <chenxiang66@hisilicon.com>
 
-[ Upstream commit dc730212e8a378763cb182b889f90c8101331332 ]
+[ Upstream commit 15bc43f31a074076f114e0b87931e3b220b7bff1 ]
 
-Call sas_remove_host() before removing the target devices in the driver's
-.remove() callback function(i.e. during driver unload time).  So that
-driver can provide a way to allow SYNC CACHE, START STOP unit commands
-etc. (which are issued from SML) to the target drives during driver unload
-time.
+Currently the time of SAS SSP connection is 1ms, which means the link
+connection will fail if no IO response after this period.
 
-Once sas_remove_host() is called before removing the target drives then
-driver can just clean up the resources allocated for target devices and no
-need to call sas_port_delete_phy(), sas_port_delete() API's as these API's
-internally called from sas_remove_host().
+For some disks handling large IO (such as 512k), 1ms is not enough, so
+change it to 5ms.
 
-Signed-off-by: Suganath Prabu <suganath-prabu.subramani@broadcom.com>
-Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
+Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/mpt3sas/mpt3sas_scsih.c     | 2 +-
- drivers/scsi/mpt3sas/mpt3sas_transport.c | 7 +++++--
- 2 files changed, 6 insertions(+), 3 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 53133cfd420f..622832e55211 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -9809,6 +9809,7 @@ static void scsih_remove(struct pci_dev *pdev)
- 
- 	/* release all the volumes */
- 	_scsih_ir_shutdown(ioc);
-+	sas_remove_host(shost);
- 	list_for_each_entry_safe(raid_device, next, &ioc->raid_device_list,
- 	    list) {
- 		if (raid_device->starget) {
-@@ -9851,7 +9852,6 @@ static void scsih_remove(struct pci_dev *pdev)
- 		ioc->sas_hba.num_phys = 0;
- 	}
- 
--	sas_remove_host(shost);
- 	mpt3sas_base_detach(ioc);
- 	spin_lock(&gioc_lock);
- 	list_del(&ioc->list);
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_transport.c b/drivers/scsi/mpt3sas/mpt3sas_transport.c
-index f8cc2677c1cd..20d36061c217 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_transport.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_transport.c
-@@ -834,10 +834,13 @@ mpt3sas_transport_port_remove(struct MPT3SAS_ADAPTER *ioc, u64 sas_address,
- 			    mpt3sas_port->remote_identify.sas_address,
- 			    mpt3sas_phy->phy_id);
- 		mpt3sas_phy->phy_belongs_to_port = 0;
--		sas_port_delete_phy(mpt3sas_port->port, mpt3sas_phy->phy);
-+		if (!ioc->remove_host)
-+			sas_port_delete_phy(mpt3sas_port->port,
-+						mpt3sas_phy->phy);
- 		list_del(&mpt3sas_phy->port_siblings);
- 	}
--	sas_port_delete(mpt3sas_port->port);
-+	if (!ioc->remove_host)
-+		sas_port_delete(mpt3sas_port->port);
- 	kfree(mpt3sas_port);
- }
- 
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index a369450a1fa7..c3e0be90e19f 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -494,7 +494,7 @@ static void init_reg_v3_hw(struct hisi_hba *hisi_hba)
+ 		hisi_sas_phy_write32(hisi_hba, i, PHYCTRL_OOB_RESTART_MSK, 0x1);
+ 		hisi_sas_phy_write32(hisi_hba, i, STP_LINK_TIMER, 0x7f7a120);
+ 		hisi_sas_phy_write32(hisi_hba, i, CON_CFG_DRIVER, 0x2a0a01);
+-
++		hisi_sas_phy_write32(hisi_hba, i, SAS_SSP_CON_TIMER_CFG, 0x32);
+ 		/* used for 12G negotiate */
+ 		hisi_sas_phy_write32(hisi_hba, i, COARSETUNE_TIME, 0x1e);
+ 		hisi_sas_phy_write32(hisi_hba, i, AIP_LIMIT, 0x2ffff);
 -- 
 2.19.1
