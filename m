@@ -1,40 +1,47 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] block: set rq->cmd_flags with bio->opf instead of
- data->cmd_flags when bio is not Null
-Date: Mon, 28 Jan 2019 07:57:52 -0800
-Message-ID: <20190128155752.GA29076@infradead.org>
-References: <1548337430-66690-1-git-send-email-chenxiang66@hisilicon.com>
- <1c34d6f9-8c3c-a7ff-a956-46e9dc3c2298@hisilicon.com>
- <20190128140716.GA18162@infradead.org>
- <55972c1a-051a-1396-6796-84f349830a35@huawei.com>
+From: Sasha Levin <sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 015/258] scsi: lpfc: Correct LCB RJT handling
+Date: Mon, 28 Jan 2019 10:55:21 -0500
+Message-ID: <20190128155924.51521-15-sashal@kernel.org>
+References: <20190128155924.51521-1-sashal@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <55972c1a-051a-1396-6796-84f349830a35@huawei.com>
+In-Reply-To: <20190128155924.51521-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: John Garry <john.garry@huawei.com>
-Cc: Christoph Hellwig <hch@infradead.org>, "chenxiang (M)" <chenxiang66@hisilicon.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, axboe@kernel.dk, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Jan 28, 2019 at 03:36:58PM +0000, John Garry wrote:
-> As I understood, the problem is the scenario of calling
-> blk_mq_make_request()->bio_integrity_prep() where we then allocate a bio
-> integrity payload in calling bio_integrity_alloc().
-> 
-> In this case, bio_integrity_alloc() sets bio->bi_opf |= REQ_INTEGRITY, which
-> is no longer consistent with data.cmd_flags.
+From: James Smart <jsmart2021@gmail.com>
 
-I don't see how that could happen:
+[ Upstream commit b114d9009d386276bfc3352289fc235781ae3353 ]
 
-static blk_qc_t blk_mq_make_request(struct request_queue *q, struct bio *bio)
-{
-	...
+When LCB's are rejected, if beaconing was already in progress, the
+Reason Code Explanation was not being set. Should have been set to
+command in progress.
 
-	if (!bio_integrity_prep(bio))
-		return BLK_QC_T_NONE;
+Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
+Signed-off-by: James Smart <jsmart2021@gmail.com>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/scsi/lpfc/lpfc_els.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-	...
-
-	data.cmd_flags = bio->bi_opf;
-        rq = blk_mq_get_request(q, bio, &data);
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index 4dda969e947c..56a4f626349c 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -5701,6 +5701,9 @@ lpfc_els_lcb_rsp(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
+ 	stat = (struct ls_rjt *)(pcmd + sizeof(uint32_t));
+ 	stat->un.b.lsRjtRsnCode = LSRJT_UNABLE_TPC;
+ 
++	if (shdr_add_status == ADD_STATUS_OPERATION_ALREADY_ACTIVE)
++		stat->un.b.lsRjtRsnCodeExp = LSEXP_CMD_IN_PROGRESS;
++
+ 	elsiocb->iocb_cmpl = lpfc_cmpl_els_rsp;
+ 	phba->fc_stat.elsXmitLSRJT++;
+ 	rc = lpfc_sli_issue_iocb(phba, LPFC_ELS_RING, elsiocb, 0);
+-- 
+2.19.1
