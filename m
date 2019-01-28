@@ -1,198 +1,69 @@
-From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.14 010/170] scsi: lpfc: Fix LOGO/PLOGI handling when triggerd by ABTS Timeout event
-Date: Mon, 28 Jan 2019 11:09:20 -0500
-Message-ID: <20190128161200.55107-10-sashal@kernel.org>
-References: <20190128161200.55107-1-sashal@kernel.org>
+From: <Don.Brace@microchip.com>
+Subject: RE: [PATCH v4] scsi/ata: Use unsigned int for cmd's type in ioctls in
+ scsi_host_template
+Date: Mon, 28 Jan 2019 16:16:34 +0000
+Message-ID: <SN6PR11MB2767DF2A2BEF95EE07C15172E1960@SN6PR11MB2767.namprd11.prod.outlook.com>
+References: <20190114044206.6351-1-natechancellor@gmail.com>
+ <20190126075256.29608-1-natechancellor@gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190128161200.55107-1-sashal@kernel.org>
+In-Reply-To: <20190126075256.29608-1-natechancellor@gmail.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+To: natechancellor@gmail.com, axboe@kernel.dk, aacraid@microsemi.com, jejb@linux.ibm.com, martin.petersen@oracle.com, manoj@linux.ibm.com, mrochs@linux.ibm.com, ukrishn@linux.ibm.com, linuxdrivers@attotech.com, don.brace@microsemi.com, brking@us.ibm.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, esc.storagedev@microsemi.com, ndesaulniers@google.com, bvanassche@acm.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: James Smart <jsmart2021@gmail.com>
 
-[ Upstream commit 30e196cacefdd9a38c857caed23cefc9621bc5c1 ]
+Clang warns several times in the scsi subsystem (trimmed for brevity):
 
-After a LOGO in response to an ABTS timeout, a PLOGI wasn't issued to
-re-establish the login.  An nlp_type check in the LOGO completion
-handler failed to restart discovery for NVME targets.  Revised the
-nlp_type check for NVME as well as SCSI.
+drivers/scsi/hpsa.c:6209:7: warning: overflow converting case value to swit=
+ch condition type (2147762695 to 18446744071562347015) [-Wswitch]
+        case CCISS_GETBUSTYPES:
+             ^
+drivers/scsi/hpsa.c:6208:7: warning: overflow converting case value to swit=
+ch condition type (2147762694 to 18446744071562347014) [-Wswitch]
+        case CCISS_GETHEARTBEAT:
+             ^
 
-While reviewing the LOGO handling a few other issues were seen and
-were addressed:
+The root cause is that the _IOC macro can generate really large numbers, wh=
+ich don't find into type 'int', which is used for the cmd paremeter in the =
+ioctls in scsi_host_template. My research into how GCC and Clang are handli=
+ng this at a low level didn't prove fruitful. However, looking at the rest =
+of the kernel tree, all ioctls use an 'unsigned int' for the cmd parameter,=
+ which will fit all of the _IOC values in the scsi/ata subsystems.
 
-- Better lock synchronization around ndlp data types
+Make that change because none of the ioctls expect to take a negative value=
+, it brings the ioctls inline with the reset of the kernel, and it removes =
+ambiguity, which is never good when dealing with compilers.
 
-- When the ABTS times out, unregister the RPI before sending the LOGO
-  so that all local exchange contexts are cleared and nothing received
-  while awaiting LOGO/PLOGI handling will be accepted.
+Link: https://github.com/ClangBuiltLinux/linux/issues/85
+Link: https://github.com/ClangBuiltLinux/linux/issues/154
+Link: https://github.com/ClangBuiltLinux/linux/issues/157
+Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 
-- LOGO handling optimized to:
-   Wait only R_A_TOV for a response.
-   It doesn't need to be retried on timeout. If there wasn't a
-     response, a PLOGI will be sent, thus an implicit logout
-     applies as well when the other port sees it.
-   If there is a response, any kind of response is considered "good"
-     and the XRI quarantined for a exchange qualifier window.
+ static void __exit esas2r_exit(void)
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c index ff67ef5d5347..=
+28cfd3d01c5a 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -251,10 +251,11 @@ static int number_of_controllers;
 
-- PLOGI is issued as soon a LOGO state is resolved.
+Acked-by: Don Brace <don.brace@microsemi.com>
 
-Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-Signed-off-by: James Smart <jsmart2021@gmail.com>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/scsi/lpfc/lpfc_els.c       | 49 +++++++++++++-----------------
- drivers/scsi/lpfc/lpfc_nportdisc.c |  5 +++
- 2 files changed, 26 insertions(+), 28 deletions(-)
-
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index fffe8a643e25..57cddbc4a977 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -242,6 +242,8 @@ lpfc_prep_els_iocb(struct lpfc_vport *vport, uint8_t expectRsp,
- 		icmd->ulpCommand = CMD_ELS_REQUEST64_CR;
- 		if (elscmd == ELS_CMD_FLOGI)
- 			icmd->ulpTimeout = FF_DEF_RATOV * 2;
-+		else if (elscmd == ELS_CMD_LOGO)
-+			icmd->ulpTimeout = phba->fc_ratov;
- 		else
- 			icmd->ulpTimeout = phba->fc_ratov * 2;
- 	} else {
-@@ -2674,16 +2676,15 @@ lpfc_cmpl_els_logo(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 		goto out;
- 	}
- 
-+	/* The LOGO will not be retried on failure.  A LOGO was
-+	 * issued to the remote rport and a ACC or RJT or no Answer are
-+	 * all acceptable.  Note the failure and move forward with
-+	 * discovery.  The PLOGI will retry.
-+	 */
- 	if (irsp->ulpStatus) {
--		/* Check for retry */
--		if (lpfc_els_retry(phba, cmdiocb, rspiocb)) {
--			/* ELS command is being retried */
--			skip_recovery = 1;
--			goto out;
--		}
- 		/* LOGO failed */
- 		lpfc_printf_vlog(vport, KERN_ERR, LOG_ELS,
--				 "2756 LOGO failure DID:%06X Status:x%x/x%x\n",
-+				 "2756 LOGO failure, No Retry DID:%06X Status:x%x/x%x\n",
- 				 ndlp->nlp_DID, irsp->ulpStatus,
- 				 irsp->un.ulpWord[4]);
- 		/* Do not call DSM for lpfc_els_abort'ed ELS cmds */
-@@ -2729,7 +2730,8 @@ lpfc_cmpl_els_logo(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 	 * For any other port type, the rpi is unregistered as an implicit
- 	 * LOGO.
- 	 */
--	if ((ndlp->nlp_type & NLP_FCP_TARGET) && (skip_recovery == 0)) {
-+	if (ndlp->nlp_type & (NLP_FCP_TARGET | NLP_NVME_TARGET) &&
-+	    skip_recovery == 0) {
- 		lpfc_cancel_retry_delay_tmo(vport, ndlp);
- 		spin_lock_irqsave(shost->host_lock, flags);
- 		ndlp->nlp_flag |= NLP_NPR_2B_DISC;
-@@ -2762,6 +2764,8 @@ lpfc_cmpl_els_logo(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
-  * will be stored into the context1 field of the IOCB for the completion
-  * callback function to the LOGO ELS command.
-  *
-+ * Callers of this routine are expected to unregister the RPI first
-+ *
-  * Return code
-  *   0 - successfully issued logo
-  *   1 - failed to issue logo
-@@ -2803,22 +2807,6 @@ lpfc_issue_els_logo(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 		"Issue LOGO:      did:x%x",
- 		ndlp->nlp_DID, 0, 0);
- 
--	/*
--	 * If we are issuing a LOGO, we may try to recover the remote NPort
--	 * by issuing a PLOGI later. Even though we issue ELS cmds by the
--	 * VPI, if we have a valid RPI, and that RPI gets unreg'ed while
--	 * that ELS command is in-flight, the HBA returns a IOERR_INVALID_RPI
--	 * for that ELS cmd. To avoid this situation, lets get rid of the
--	 * RPI right now, before any ELS cmds are sent.
--	 */
--	spin_lock_irq(shost->host_lock);
--	ndlp->nlp_flag |= NLP_ISSUE_LOGO;
--	spin_unlock_irq(shost->host_lock);
--	if (lpfc_unreg_rpi(vport, ndlp)) {
--		lpfc_els_free_iocb(phba, elsiocb);
--		return 0;
--	}
--
- 	phba->fc_stat.elsXmitLOGO++;
- 	elsiocb->iocb_cmpl = lpfc_cmpl_els_logo;
- 	spin_lock_irq(shost->host_lock);
-@@ -2826,7 +2814,6 @@ lpfc_issue_els_logo(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 	ndlp->nlp_flag &= ~NLP_ISSUE_LOGO;
- 	spin_unlock_irq(shost->host_lock);
- 	rc = lpfc_sli_issue_iocb(phba, LPFC_ELS_RING, elsiocb, 0);
--
- 	if (rc == IOCB_ERROR) {
- 		spin_lock_irq(shost->host_lock);
- 		ndlp->nlp_flag &= ~NLP_LOGO_SND;
-@@ -2834,6 +2821,11 @@ lpfc_issue_els_logo(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 		lpfc_els_free_iocb(phba, elsiocb);
- 		return 1;
- 	}
-+
-+	spin_lock_irq(shost->host_lock);
-+	ndlp->nlp_prev_state = ndlp->nlp_state;
-+	spin_unlock_irq(shost->host_lock);
-+	lpfc_nlp_set_state(vport, ndlp, NLP_STE_LOGO_ISSUE);
- 	return 0;
+=20
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/=
+smartpqi_init.c
+index f564af8949e8..5d9ccbab7581 100644
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -6043,7 +6043,8 @@ static int pqi_passthru_ioctl(struct pqi_ctrl_info *c=
+trl_info, void __user *arg)
+ 	return rc;
  }
- 
-@@ -9483,7 +9475,8 @@ lpfc_sli_abts_recover_port(struct lpfc_vport *vport,
- 				"rport in state 0x%x\n", ndlp->nlp_state);
- 		return;
- 	}
--	lpfc_printf_log(phba, KERN_INFO, LOG_SLI,
-+	lpfc_printf_log(phba, KERN_ERR,
-+			LOG_ELS | LOG_FCP_ERROR | LOG_NVME_IOERR,
- 			"3094 Start rport recovery on shost id 0x%x "
- 			"fc_id 0x%06x vpi 0x%x rpi 0x%x state 0x%x "
- 			"flags 0x%x\n",
-@@ -9496,8 +9489,8 @@ lpfc_sli_abts_recover_port(struct lpfc_vport *vport,
- 	 */
- 	spin_lock_irqsave(shost->host_lock, flags);
- 	ndlp->nlp_fcp_info &= ~NLP_FCP_2_DEVICE;
-+	ndlp->nlp_flag |= NLP_ISSUE_LOGO;
- 	spin_unlock_irqrestore(shost->host_lock, flags);
--	lpfc_issue_els_logo(vport, ndlp, 0);
--	lpfc_nlp_set_state(vport, ndlp, NLP_STE_LOGO_ISSUE);
-+	lpfc_unreg_rpi(vport, ndlp);
- }
- 
-diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
-index d489f6827cc1..36fb549eb4e8 100644
---- a/drivers/scsi/lpfc/lpfc_nportdisc.c
-+++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
-@@ -801,7 +801,9 @@ lpfc_disc_set_adisc(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
- 	struct Scsi_Host *shost = lpfc_shost_from_vport(vport);
- 
- 	if (!(ndlp->nlp_flag & NLP_RPI_REGISTERED)) {
-+		spin_lock_irq(shost->host_lock);
- 		ndlp->nlp_flag &= ~NLP_NPR_ADISC;
-+		spin_unlock_irq(shost->host_lock);
- 		return 0;
- 	}
- 
-@@ -816,7 +818,10 @@ lpfc_disc_set_adisc(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
- 			return 1;
- 		}
- 	}
-+
-+	spin_lock_irq(shost->host_lock);
- 	ndlp->nlp_flag &= ~NLP_NPR_ADISC;
-+	spin_unlock_irq(shost->host_lock);
- 	lpfc_unreg_rpi(vport, ndlp);
- 	return 0;
- }
--- 
-2.19.1
+
+Acked-by: Don Brace <don.brace@microsemi.com>
+=20
