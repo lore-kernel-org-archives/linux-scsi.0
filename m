@@ -1,7 +1,7 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.20 061/304] scsi: cxgb4i: fix thermal configuration dependencies
-Date: Mon, 28 Jan 2019 10:39:38 -0500
-Message-ID: <20190128154341.47195-61-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.20 226/304] scsi: smartpqi: correct host serial num for ssa
+Date: Mon, 28 Jan 2019 10:42:23 -0500
+Message-ID: <20190128154341.47195-226-sashal@kernel.org>
 References: <20190128154341.47195-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -9,56 +9,48 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20190128154341.47195-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Arnd Bergmann <arnd@arndb.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Cc: Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>, Don Brace <don.brace@microsemi.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Arnd Bergmann <arnd@arndb.de>
+From: Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>
 
-[ Upstream commit 8d0bb86e2cf6c96d88c3de56a2a29329872c454d ]
+[ Upstream commit b2346b5030cf9458f30a84028d9fe904b8c942a7 ]
 
-I fixed a bug by adding a dependency in the network driver, but that fix
-caused a related bug in the SCSI driver:
-
-WARNING: unmet direct dependencies detected for CHELSIO_T4
-  Depends on [m]: NETDEVICES [=y] && ETHERNET [=y] && NET_VENDOR_CHELSIO [=y] && PCI [=y] && (IPV6 [=y] || IPV6 [=y]=n) && (THERMAL [=m] || !THERMAL [=m])
-  Selected by [y]:
-  - SCSI_CXGB4_ISCSI [=y] && SCSI_LOWLEVEL [=y] && SCSI [=y] && PCI [=y] && INET [=y] && (IPV6 [=y] || IPV6 [=y]=n)
-drivers/net/ethernet/chelsio/cxgb4/cxgb4_thermal.o: In function `cxgb4_thermal_init':
-cxgb4_thermal.c:(.text+0x158): undefined reference to `thermal_zone_device_register'
-drivers/net/ethernet/chelsio/cxgb4/cxgb4_thermal.o: In function `cxgb4_thermal_remove':
-cxgb4_thermal.c:(.text+0x1d8): undefined reference to `thermal_zone_device_unregister'
-/git/arm-soc/Makefile:1042: recipe for target 'vmlinux' failed
-
-The same dependency needs to be propagated here to make it work correctly
-with CONFIG_THERMAL=m and SCSI_CXGB4_ISCSI=y. That change by itself causes
-another problem with a circular dependency, as we use 'select NETDEVICES'.
-This is something we really should not do anyway, as a driver symbol should
-never select another major subsystem, so let's turn that into a 'depends
-on'. I don't see any downsides of that, as NETDEVICES is only disabled in
-rather obscure cases that are not relevant to the users of cxgb4i.
-
-Fixes: e70a57fa59bb ("cxgb4: fix thermal configuration dependencies")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
+Reviewed-by: Ajish Koshy <ajish.koshy@microsemi.com>
+Reviewed-by: Murthy Bhat <murthy.bhat@microsemi.com>
+Reviewed-by: Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>
+Reviewed-by: Dave Carroll <david.carroll@microsemi.com>
+Reviewed-by: Scott Teel <scott.teel@microsemi.com>
+Reviewed-by: Kevin Barnett <kevin.barnett@microsemi.com>
+Signed-off-by: Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>
+Signed-off-by: Don Brace <don.brace@microsemi.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/cxgbi/cxgb4i/Kconfig | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/smartpqi/smartpqi_init.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/scsi/cxgbi/cxgb4i/Kconfig b/drivers/scsi/cxgbi/cxgb4i/Kconfig
-index 594f593c8821..f36b76e8e12c 100644
---- a/drivers/scsi/cxgbi/cxgb4i/Kconfig
-+++ b/drivers/scsi/cxgbi/cxgb4i/Kconfig
-@@ -1,8 +1,8 @@
- config SCSI_CXGB4_ISCSI
- 	tristate "Chelsio T4 iSCSI support"
- 	depends on PCI && INET && (IPV6 || IPV6=n)
--	select NETDEVICES
--	select ETHERNET
-+	depends on THERMAL || !THERMAL
-+	depends on ETHERNET
- 	select NET_VENDOR_CHELSIO
- 	select CHELSIO_T4
- 	select CHELSIO_LIB
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+index 6f4cb3be97aa..5a86dddbd8ba 100644
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -640,6 +640,7 @@ struct bmic_host_wellness_driver_version {
+ 	u8	driver_version_tag[2];
+ 	__le16	driver_version_length;
+ 	char	driver_version[32];
++	u8	dont_write_tag[2];
+ 	u8	end_tag[2];
+ };
+ 
+@@ -669,6 +670,8 @@ static int pqi_write_driver_version_to_host_wellness(
+ 	strncpy(buffer->driver_version, "Linux " DRIVER_VERSION,
+ 		sizeof(buffer->driver_version) - 1);
+ 	buffer->driver_version[sizeof(buffer->driver_version) - 1] = '\0';
++	buffer->dont_write_tag[0] = 'D';
++	buffer->dont_write_tag[1] = 'W';
+ 	buffer->end_tag[0] = 'Z';
+ 	buffer->end_tag[1] = 'Z';
+ 
 -- 
 2.19.1
