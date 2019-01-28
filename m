@@ -1,47 +1,53 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.4 05/80] scsi: lpfc: Correct LCB RJT handling
-Date: Mon, 28 Jan 2019 11:22:46 -0500
-Message-ID: <20190128162401.58841-5-sashal@kernel.org>
-References: <20190128162401.58841-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 069/107] scsi: smartpqi: correct volume status
+Date: Mon, 28 Jan 2019 11:19:09 -0500
+Message-ID: <20190128161947.57405-69-sashal@kernel.org>
+References: <20190128161947.57405-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190128162401.58841-1-sashal@kernel.org>
+In-Reply-To: <20190128161947.57405-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Cc: Dave Carroll <david.carroll@microsemi.com>, Don Brace <don.brace@microsemi.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: James Smart <jsmart2021@gmail.com>
+From: Dave Carroll <david.carroll@microsemi.com>
 
-[ Upstream commit b114d9009d386276bfc3352289fc235781ae3353 ]
+[ Upstream commit 7ff44499bafbd376115f0bb6b578d980f56ee13b ]
 
-When LCB's are rejected, if beaconing was already in progress, the
-Reason Code Explanation was not being set. Should have been set to
-command in progress.
+- fix race condition when a unit is deleted after an RLL,
+  and before we have gotten the LV_STATUS page of the unit.
+  - In this case we will get a standard inquiry, rather than
+    the desired page.  This will result in a unit presented
+    which no longer exists.
+  - If we ask for LV_STATUS, insure we get LV_STATUS
 
-Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-Signed-off-by: James Smart <jsmart2021@gmail.com>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+Reviewed-by: Murthy Bhat <murthy.bhat@microsemi.com>
+Reviewed-by: Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>
+Reviewed-by: Scott Teel <scott.teel@microsemi.com>
+Reviewed-by: Kevin Barnett <kevin.barnett@microsemi.com>
+Signed-off-by: Dave Carroll <david.carroll@microsemi.com>
+Signed-off-by: Don Brace <don.brace@microsemi.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_els.c | 3 +++
+ drivers/scsi/smartpqi/smartpqi_init.c | 3 +++
  1 file changed, 3 insertions(+)
 
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index fd8fe1202dbe..398c9a0a5ade 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -5105,6 +5105,9 @@ lpfc_els_lcb_rsp(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
- 	stat = (struct ls_rjt *)(pcmd + sizeof(uint32_t));
- 	stat->un.b.lsRjtRsnCode = LSRJT_UNABLE_TPC;
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+index 9a208961cc0b..06a062455404 100644
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -983,6 +983,9 @@ static void pqi_get_volume_status(struct pqi_ctrl_info *ctrl_info,
+ 	if (rc)
+ 		goto out;
  
-+	if (shdr_add_status == ADD_STATUS_OPERATION_ALREADY_ACTIVE)
-+		stat->un.b.lsRjtRsnCodeExp = LSEXP_CMD_IN_PROGRESS;
++	if (vpd->page_code != CISS_VPD_LV_STATUS)
++		goto out;
 +
- 	elsiocb->iocb_cmpl = lpfc_cmpl_els_rsp;
- 	phba->fc_stat.elsXmitLSRJT++;
- 	rc = lpfc_sli_issue_iocb(phba, LPFC_ELS_RING, elsiocb, 0);
+ 	page_length = offsetof(struct ciss_vpd_logical_volume_status,
+ 		volume_status) + vpd->page_length;
+ 	if (page_length < sizeof(*vpd))
 -- 
 2.19.1
