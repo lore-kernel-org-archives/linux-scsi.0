@@ -1,56 +1,40 @@
-From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.20 228/304] scsi: smartpqi: increase fw status register read timeout
-Date: Mon, 28 Jan 2019 10:42:25 -0500
-Message-ID: <20190128154341.47195-228-sashal@kernel.org>
-References: <20190128154341.47195-1-sashal@kernel.org>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] block: set rq->cmd_flags with bio->opf instead of
+ data->cmd_flags when bio is not Null
+Date: Mon, 28 Jan 2019 07:57:52 -0800
+Message-ID: <20190128155752.GA29076@infradead.org>
+References: <1548337430-66690-1-git-send-email-chenxiang66@hisilicon.com>
+ <1c34d6f9-8c3c-a7ff-a956-46e9dc3c2298@hisilicon.com>
+ <20190128140716.GA18162@infradead.org>
+ <55972c1a-051a-1396-6796-84f349830a35@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190128154341.47195-1-sashal@kernel.org>
+Content-Disposition: inline
+In-Reply-To: <55972c1a-051a-1396-6796-84f349830a35@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>, Don Brace <don.brace@microsemi.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org
+To: John Garry <john.garry@huawei.com>
+Cc: Christoph Hellwig <hch@infradead.org>, "chenxiang (M)" <chenxiang66@hisilicon.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, axboe@kernel.dk, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>
+On Mon, Jan 28, 2019 at 03:36:58PM +0000, John Garry wrote:
+> As I understood, the problem is the scenario of calling
+> blk_mq_make_request()->bio_integrity_prep() where we then allocate a bio
+> integrity payload in calling bio_integrity_alloc().
+> 
+> In this case, bio_integrity_alloc() sets bio->bi_opf |= REQ_INTEGRITY, which
+> is no longer consistent with data.cmd_flags.
 
-[ Upstream commit 65111785acccb836ec75263b03b0e33f21e74f47 ]
+I don't see how that could happen:
 
-Problem:
- - during the driver initialization, driver will poll fw
-   for KERNEL_UP in a 30 seconds timeout.
+static blk_qc_t blk_mq_make_request(struct request_queue *q, struct bio *bio)
+{
+	...
 
- - if the firmware is not ready after 30 seconds,
-   driver will not be loaded.
+	if (!bio_integrity_prep(bio))
+		return BLK_QC_T_NONE;
 
-Fix:
- - change timeout from 30 seconds to 3 minutes.
+	...
 
-Reported-by: Feng Li <lifeng1519@gmail.com>
-Reviewed-by: Ajish Koshy <ajish.koshy@microsemi.com>
-Reviewed-by: Murthy Bhat <Murthy.Bhat@microsemi.com>
-Reviewed-by: Dave Carroll <david.carroll@microsemi.com>
-Reviewed-by: Kevin Barnett <kevin.barnett@microsemi.com>
-Signed-off-by: Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>
-Signed-off-by: Don Brace <don.brace@microsemi.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/scsi/smartpqi/smartpqi_sis.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/smartpqi/smartpqi_sis.c b/drivers/scsi/smartpqi/smartpqi_sis.c
-index ea91658c7060..9d3043df22af 100644
---- a/drivers/scsi/smartpqi/smartpqi_sis.c
-+++ b/drivers/scsi/smartpqi/smartpqi_sis.c
-@@ -59,7 +59,7 @@
- 
- #define SIS_CTRL_KERNEL_UP			0x80
- #define SIS_CTRL_KERNEL_PANIC			0x100
--#define SIS_CTRL_READY_TIMEOUT_SECS		30
-+#define SIS_CTRL_READY_TIMEOUT_SECS		180
- #define SIS_CTRL_READY_RESUME_TIMEOUT_SECS	90
- #define SIS_CTRL_READY_POLL_INTERVAL_MSECS	10
- 
--- 
-2.19.1
+	data.cmd_flags = bio->bi_opf;
+        rq = blk_mq_get_request(q, bio, &data);
