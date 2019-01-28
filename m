@@ -1,47 +1,71 @@
-From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.19 043/258] scsi: hisi_sas: change the time of SAS SSP connection
-Date: Mon, 28 Jan 2019 10:55:49 -0500
-Message-ID: <20190128155924.51521-43-sashal@kernel.org>
-References: <20190128155924.51521-1-sashal@kernel.org>
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH] block: set rq->cmd_flags with bio->opf instead of
+ data->cmd_flags when bio is not Null
+Date: Mon, 28 Jan 2019 16:05:47 +0000
+Message-ID: <872f8c26-1c88-fe50-ffec-01c1e882245b@huawei.com>
+References: <1548337430-66690-1-git-send-email-chenxiang66@hisilicon.com>
+ <1c34d6f9-8c3c-a7ff-a956-46e9dc3c2298@hisilicon.com>
+ <20190128140716.GA18162@infradead.org>
+ <55972c1a-051a-1396-6796-84f349830a35@huawei.com>
+ <20190128155752.GA29076@infradead.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190128155924.51521-1-sashal@kernel.org>
+In-Reply-To: <20190128155752.GA29076@infradead.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "chenxiang (M)" <chenxiang66@hisilicon.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, axboe@kernel.dk, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Xiang Chen <chenxiang66@hisilicon.com>
+On 28/01/2019 15:57, Christoph Hellwig wrote:
+> On Mon, Jan 28, 2019 at 03:36:58PM +0000, John Garry wrote:
+>> As I understood, the problem is the scenario of calling
+>> blk_mq_make_request()->bio_integrity_prep() where we then allocate a bio
+>> integrity payload in calling bio_integrity_alloc().
+>>
+>> In this case, bio_integrity_alloc() sets bio->bi_opf |= REQ_INTEGRITY, which
+>> is no longer consistent with data.cmd_flags.
+>
+> I don't see how that could happen:
+>
+> static blk_qc_t blk_mq_make_request(struct request_queue *q, struct bio *bio)
+> {
+> 	...
+>
+> 	if (!bio_integrity_prep(bio))
+> 		return BLK_QC_T_NONE;
+>
+> 	...
+>
+> 	data.cmd_flags = bio->bi_opf;
+>         rq = blk_mq_get_request(q, bio, &data);
+>
+>
 
-[ Upstream commit 15bc43f31a074076f114e0b87931e3b220b7bff1 ]
+Your code is different to mine, then I see that this has been fixed in 
+5.0-rc3:
 
-Currently the time of SAS SSP connection is 1ms, which means the link
-connection will fail if no IO response after this period.
+commit 7809167da5c86fd6bf309b33dee7a797e263342f
+Author: Ming Lei <ming.lei@redhat.com>
+Date:   Wed Jan 16 19:08:15 2019 +0800
 
-For some disks handling large IO (such as 512k), 1ms is not enough, so
-change it to 5ms.
+     block: don't lose track of REQ_INTEGRITY flag
 
-Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
-Signed-off-by: John Garry <john.garry@huawei.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+     We need to pass bio->bi_opf after bio intergrity preparing, otherwise
+     the flag of REQ_INTEGRITY may not be set on the allocated request, then
+     breaks block integrity.
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 687ff61bba9f..3922b17e2ea3 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -492,7 +492,7 @@ static void init_reg_v3_hw(struct hisi_hba *hisi_hba)
- 		hisi_sas_phy_write32(hisi_hba, i, PHYCTRL_OOB_RESTART_MSK, 0x1);
- 		hisi_sas_phy_write32(hisi_hba, i, STP_LINK_TIMER, 0x7f7a120);
- 		hisi_sas_phy_write32(hisi_hba, i, CON_CFG_DRIVER, 0x2a0a01);
--
-+		hisi_sas_phy_write32(hisi_hba, i, SAS_SSP_CON_TIMER_CFG, 0x32);
- 		/* used for 12G negotiate */
- 		hisi_sas_phy_write32(hisi_hba, i, COARSETUNE_TIME, 0x1e);
- 	}
--- 
-2.19.1
+     Fixes: f9afca4d367b ("blk-mq: pass in request/bio flags to queue 
+mapping")
+     Cc: Hannes Reinecke <hare@suse.com>
+     Cc: Keith Busch <keith.busch@intel.com>
+     Signed-off-by: Ming Lei <ming.lei@redhat.com>
+     Signed-off-by: Jens Axboe <axboe@kernel.dk>
+
+
+Sorry for the noise,
+John
+
+> .
+>
