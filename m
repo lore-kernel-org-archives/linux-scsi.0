@@ -1,56 +1,81 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.19 192/258] scsi: smartpqi: increase fw status register read timeout
-Date: Mon, 28 Jan 2019 10:58:18 -0500
-Message-ID: <20190128155924.51521-192-sashal@kernel.org>
-References: <20190128155924.51521-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 009/170] scsi: mpt3sas: Call sas_remove_host before removing the target devices
+Date: Mon, 28 Jan 2019 11:09:19 -0500
+Message-ID: <20190128161200.55107-9-sashal@kernel.org>
+References: <20190128161200.55107-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190128155924.51521-1-sashal@kernel.org>
+In-Reply-To: <20190128161200.55107-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>, Don Brace <don.brace@microsemi.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org
+Cc: Suganath Prabu <suganath-prabu.subramani@broadcom.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>
+From: Suganath Prabu <suganath-prabu.subramani@broadcom.com>
 
-[ Upstream commit 65111785acccb836ec75263b03b0e33f21e74f47 ]
+[ Upstream commit dc730212e8a378763cb182b889f90c8101331332 ]
 
-Problem:
- - during the driver initialization, driver will poll fw
-   for KERNEL_UP in a 30 seconds timeout.
+Call sas_remove_host() before removing the target devices in the driver's
+.remove() callback function(i.e. during driver unload time).  So that
+driver can provide a way to allow SYNC CACHE, START STOP unit commands
+etc. (which are issued from SML) to the target drives during driver unload
+time.
 
- - if the firmware is not ready after 30 seconds,
-   driver will not be loaded.
+Once sas_remove_host() is called before removing the target drives then
+driver can just clean up the resources allocated for target devices and no
+need to call sas_port_delete_phy(), sas_port_delete() API's as these API's
+internally called from sas_remove_host().
 
-Fix:
- - change timeout from 30 seconds to 3 minutes.
-
-Reported-by: Feng Li <lifeng1519@gmail.com>
-Reviewed-by: Ajish Koshy <ajish.koshy@microsemi.com>
-Reviewed-by: Murthy Bhat <Murthy.Bhat@microsemi.com>
-Reviewed-by: Dave Carroll <david.carroll@microsemi.com>
-Reviewed-by: Kevin Barnett <kevin.barnett@microsemi.com>
-Signed-off-by: Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>
-Signed-off-by: Don Brace <don.brace@microsemi.com>
+Signed-off-by: Suganath Prabu <suganath-prabu.subramani@broadcom.com>
+Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/smartpqi/smartpqi_sis.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c     | 2 +-
+ drivers/scsi/mpt3sas/mpt3sas_transport.c | 7 +++++--
+ 2 files changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/smartpqi/smartpqi_sis.c b/drivers/scsi/smartpqi/smartpqi_sis.c
-index 5141bd4c9f06..ca7dfb3a520f 100644
---- a/drivers/scsi/smartpqi/smartpqi_sis.c
-+++ b/drivers/scsi/smartpqi/smartpqi_sis.c
-@@ -59,7 +59,7 @@
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index ae5e579ac473..b28efddab7b1 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -8260,6 +8260,7 @@ static void scsih_remove(struct pci_dev *pdev)
  
- #define SIS_CTRL_KERNEL_UP			0x80
- #define SIS_CTRL_KERNEL_PANIC			0x100
--#define SIS_CTRL_READY_TIMEOUT_SECS		30
-+#define SIS_CTRL_READY_TIMEOUT_SECS		180
- #define SIS_CTRL_READY_RESUME_TIMEOUT_SECS	90
- #define SIS_CTRL_READY_POLL_INTERVAL_MSECS	10
+ 	/* release all the volumes */
+ 	_scsih_ir_shutdown(ioc);
++	sas_remove_host(shost);
+ 	list_for_each_entry_safe(raid_device, next, &ioc->raid_device_list,
+ 	    list) {
+ 		if (raid_device->starget) {
+@@ -8296,7 +8297,6 @@ static void scsih_remove(struct pci_dev *pdev)
+ 		ioc->sas_hba.num_phys = 0;
+ 	}
+ 
+-	sas_remove_host(shost);
+ 	mpt3sas_base_detach(ioc);
+ 	spin_lock(&gioc_lock);
+ 	list_del(&ioc->list);
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_transport.c b/drivers/scsi/mpt3sas/mpt3sas_transport.c
+index 63dd9bc21ff2..66d9f04c4c0b 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_transport.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_transport.c
+@@ -846,10 +846,13 @@ mpt3sas_transport_port_remove(struct MPT3SAS_ADAPTER *ioc, u64 sas_address,
+ 			    mpt3sas_port->remote_identify.sas_address,
+ 			    mpt3sas_phy->phy_id);
+ 		mpt3sas_phy->phy_belongs_to_port = 0;
+-		sas_port_delete_phy(mpt3sas_port->port, mpt3sas_phy->phy);
++		if (!ioc->remove_host)
++			sas_port_delete_phy(mpt3sas_port->port,
++						mpt3sas_phy->phy);
+ 		list_del(&mpt3sas_phy->port_siblings);
+ 	}
+-	sas_port_delete(mpt3sas_port->port);
++	if (!ioc->remove_host)
++		sas_port_delete(mpt3sas_port->port);
+ 	kfree(mpt3sas_port);
+ }
  
 -- 
 2.19.1
