@@ -1,7 +1,7 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.20 021/304] scsi: lpfc: Fix LOGO/PLOGI handling when triggerd by ABTS Timeout event
-Date: Mon, 28 Jan 2019 10:38:58 -0500
-Message-ID: <20190128154341.47195-21-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.20 061/304] scsi: cxgb4i: fix thermal configuration dependencies
+Date: Mon, 28 Jan 2019 10:39:38 -0500
+Message-ID: <20190128154341.47195-61-sashal@kernel.org>
 References: <20190128154341.47195-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -9,190 +9,56 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20190128154341.47195-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Cc: Arnd Bergmann <arnd@arndb.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: James Smart <jsmart2021@gmail.com>
+From: Arnd Bergmann <arnd@arndb.de>
 
-[ Upstream commit 30e196cacefdd9a38c857caed23cefc9621bc5c1 ]
+[ Upstream commit 8d0bb86e2cf6c96d88c3de56a2a29329872c454d ]
 
-After a LOGO in response to an ABTS timeout, a PLOGI wasn't issued to
-re-establish the login.  An nlp_type check in the LOGO completion
-handler failed to restart discovery for NVME targets.  Revised the
-nlp_type check for NVME as well as SCSI.
+I fixed a bug by adding a dependency in the network driver, but that fix
+caused a related bug in the SCSI driver:
 
-While reviewing the LOGO handling a few other issues were seen and
-were addressed:
+WARNING: unmet direct dependencies detected for CHELSIO_T4
+  Depends on [m]: NETDEVICES [=y] && ETHERNET [=y] && NET_VENDOR_CHELSIO [=y] && PCI [=y] && (IPV6 [=y] || IPV6 [=y]=n) && (THERMAL [=m] || !THERMAL [=m])
+  Selected by [y]:
+  - SCSI_CXGB4_ISCSI [=y] && SCSI_LOWLEVEL [=y] && SCSI [=y] && PCI [=y] && INET [=y] && (IPV6 [=y] || IPV6 [=y]=n)
+drivers/net/ethernet/chelsio/cxgb4/cxgb4_thermal.o: In function `cxgb4_thermal_init':
+cxgb4_thermal.c:(.text+0x158): undefined reference to `thermal_zone_device_register'
+drivers/net/ethernet/chelsio/cxgb4/cxgb4_thermal.o: In function `cxgb4_thermal_remove':
+cxgb4_thermal.c:(.text+0x1d8): undefined reference to `thermal_zone_device_unregister'
+/git/arm-soc/Makefile:1042: recipe for target 'vmlinux' failed
 
-- Better lock synchronization around ndlp data types
+The same dependency needs to be propagated here to make it work correctly
+with CONFIG_THERMAL=m and SCSI_CXGB4_ISCSI=y. That change by itself causes
+another problem with a circular dependency, as we use 'select NETDEVICES'.
+This is something we really should not do anyway, as a driver symbol should
+never select another major subsystem, so let's turn that into a 'depends
+on'. I don't see any downsides of that, as NETDEVICES is only disabled in
+rather obscure cases that are not relevant to the users of cxgb4i.
 
-- When the ABTS times out, unregister the RPI before sending the LOGO
-  so that all local exchange contexts are cleared and nothing received
-  while awaiting LOGO/PLOGI handling will be accepted.
-
-- LOGO handling optimized to:
-   Wait only R_A_TOV for a response.
-   It doesn't need to be retried on timeout. If there wasn't a
-     response, a PLOGI will be sent, thus an implicit logout
-     applies as well when the other port sees it.
-   If there is a response, any kind of response is considered "good"
-     and the XRI quarantined for a exchange qualifier window.
-
-- PLOGI is issued as soon a LOGO state is resolved.
-
-Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-Signed-off-by: James Smart <jsmart2021@gmail.com>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+Fixes: e70a57fa59bb ("cxgb4: fix thermal configuration dependencies")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_els.c       | 49 +++++++++++++-----------------
- drivers/scsi/lpfc/lpfc_nportdisc.c |  5 +++
- 2 files changed, 26 insertions(+), 28 deletions(-)
+ drivers/scsi/cxgbi/cxgb4i/Kconfig | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 96e2f542734a..c2dae02f193e 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -242,6 +242,8 @@ lpfc_prep_els_iocb(struct lpfc_vport *vport, uint8_t expectRsp,
- 		icmd->ulpCommand = CMD_ELS_REQUEST64_CR;
- 		if (elscmd == ELS_CMD_FLOGI)
- 			icmd->ulpTimeout = FF_DEF_RATOV * 2;
-+		else if (elscmd == ELS_CMD_LOGO)
-+			icmd->ulpTimeout = phba->fc_ratov;
- 		else
- 			icmd->ulpTimeout = phba->fc_ratov * 2;
- 	} else {
-@@ -2682,16 +2684,15 @@ lpfc_cmpl_els_logo(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 		goto out;
- 	}
- 
-+	/* The LOGO will not be retried on failure.  A LOGO was
-+	 * issued to the remote rport and a ACC or RJT or no Answer are
-+	 * all acceptable.  Note the failure and move forward with
-+	 * discovery.  The PLOGI will retry.
-+	 */
- 	if (irsp->ulpStatus) {
--		/* Check for retry */
--		if (lpfc_els_retry(phba, cmdiocb, rspiocb)) {
--			/* ELS command is being retried */
--			skip_recovery = 1;
--			goto out;
--		}
- 		/* LOGO failed */
- 		lpfc_printf_vlog(vport, KERN_ERR, LOG_ELS,
--				 "2756 LOGO failure DID:%06X Status:x%x/x%x\n",
-+				 "2756 LOGO failure, No Retry DID:%06X Status:x%x/x%x\n",
- 				 ndlp->nlp_DID, irsp->ulpStatus,
- 				 irsp->un.ulpWord[4]);
- 		/* Do not call DSM for lpfc_els_abort'ed ELS cmds */
-@@ -2737,7 +2738,8 @@ out:
- 	 * For any other port type, the rpi is unregistered as an implicit
- 	 * LOGO.
- 	 */
--	if ((ndlp->nlp_type & NLP_FCP_TARGET) && (skip_recovery == 0)) {
-+	if (ndlp->nlp_type & (NLP_FCP_TARGET | NLP_NVME_TARGET) &&
-+	    skip_recovery == 0) {
- 		lpfc_cancel_retry_delay_tmo(vport, ndlp);
- 		spin_lock_irqsave(shost->host_lock, flags);
- 		ndlp->nlp_flag |= NLP_NPR_2B_DISC;
-@@ -2770,6 +2772,8 @@ out:
-  * will be stored into the context1 field of the IOCB for the completion
-  * callback function to the LOGO ELS command.
-  *
-+ * Callers of this routine are expected to unregister the RPI first
-+ *
-  * Return code
-  *   0 - successfully issued logo
-  *   1 - failed to issue logo
-@@ -2811,22 +2815,6 @@ lpfc_issue_els_logo(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 		"Issue LOGO:      did:x%x",
- 		ndlp->nlp_DID, 0, 0);
- 
--	/*
--	 * If we are issuing a LOGO, we may try to recover the remote NPort
--	 * by issuing a PLOGI later. Even though we issue ELS cmds by the
--	 * VPI, if we have a valid RPI, and that RPI gets unreg'ed while
--	 * that ELS command is in-flight, the HBA returns a IOERR_INVALID_RPI
--	 * for that ELS cmd. To avoid this situation, lets get rid of the
--	 * RPI right now, before any ELS cmds are sent.
--	 */
--	spin_lock_irq(shost->host_lock);
--	ndlp->nlp_flag |= NLP_ISSUE_LOGO;
--	spin_unlock_irq(shost->host_lock);
--	if (lpfc_unreg_rpi(vport, ndlp)) {
--		lpfc_els_free_iocb(phba, elsiocb);
--		return 0;
--	}
--
- 	phba->fc_stat.elsXmitLOGO++;
- 	elsiocb->iocb_cmpl = lpfc_cmpl_els_logo;
- 	spin_lock_irq(shost->host_lock);
-@@ -2834,7 +2822,6 @@ lpfc_issue_els_logo(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 	ndlp->nlp_flag &= ~NLP_ISSUE_LOGO;
- 	spin_unlock_irq(shost->host_lock);
- 	rc = lpfc_sli_issue_iocb(phba, LPFC_ELS_RING, elsiocb, 0);
--
- 	if (rc == IOCB_ERROR) {
- 		spin_lock_irq(shost->host_lock);
- 		ndlp->nlp_flag &= ~NLP_LOGO_SND;
-@@ -2842,6 +2829,11 @@ lpfc_issue_els_logo(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 		lpfc_els_free_iocb(phba, elsiocb);
- 		return 1;
- 	}
-+
-+	spin_lock_irq(shost->host_lock);
-+	ndlp->nlp_prev_state = ndlp->nlp_state;
-+	spin_unlock_irq(shost->host_lock);
-+	lpfc_nlp_set_state(vport, ndlp, NLP_STE_LOGO_ISSUE);
- 	return 0;
- }
- 
-@@ -9508,7 +9500,8 @@ lpfc_sli_abts_recover_port(struct lpfc_vport *vport,
- 				"rport in state 0x%x\n", ndlp->nlp_state);
- 		return;
- 	}
--	lpfc_printf_log(phba, KERN_INFO, LOG_SLI,
-+	lpfc_printf_log(phba, KERN_ERR,
-+			LOG_ELS | LOG_FCP_ERROR | LOG_NVME_IOERR,
- 			"3094 Start rport recovery on shost id 0x%x "
- 			"fc_id 0x%06x vpi 0x%x rpi 0x%x state 0x%x "
- 			"flags 0x%x\n",
-@@ -9521,8 +9514,8 @@ lpfc_sli_abts_recover_port(struct lpfc_vport *vport,
- 	 */
- 	spin_lock_irqsave(shost->host_lock, flags);
- 	ndlp->nlp_fcp_info &= ~NLP_FCP_2_DEVICE;
-+	ndlp->nlp_flag |= NLP_ISSUE_LOGO;
- 	spin_unlock_irqrestore(shost->host_lock, flags);
--	lpfc_issue_els_logo(vport, ndlp, 0);
--	lpfc_nlp_set_state(vport, ndlp, NLP_STE_LOGO_ISSUE);
-+	lpfc_unreg_rpi(vport, ndlp);
- }
- 
-diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
-index 269808e8480f..394ffbe9cb6d 100644
---- a/drivers/scsi/lpfc/lpfc_nportdisc.c
-+++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
-@@ -836,7 +836,9 @@ lpfc_disc_set_adisc(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
- 	struct Scsi_Host *shost = lpfc_shost_from_vport(vport);
- 
- 	if (!(ndlp->nlp_flag & NLP_RPI_REGISTERED)) {
-+		spin_lock_irq(shost->host_lock);
- 		ndlp->nlp_flag &= ~NLP_NPR_ADISC;
-+		spin_unlock_irq(shost->host_lock);
- 		return 0;
- 	}
- 
-@@ -851,7 +853,10 @@ lpfc_disc_set_adisc(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
- 			return 1;
- 		}
- 	}
-+
-+	spin_lock_irq(shost->host_lock);
- 	ndlp->nlp_flag &= ~NLP_NPR_ADISC;
-+	spin_unlock_irq(shost->host_lock);
- 	lpfc_unreg_rpi(vport, ndlp);
- 	return 0;
- }
+diff --git a/drivers/scsi/cxgbi/cxgb4i/Kconfig b/drivers/scsi/cxgbi/cxgb4i/Kconfig
+index 594f593c8821..f36b76e8e12c 100644
+--- a/drivers/scsi/cxgbi/cxgb4i/Kconfig
++++ b/drivers/scsi/cxgbi/cxgb4i/Kconfig
+@@ -1,8 +1,8 @@
+ config SCSI_CXGB4_ISCSI
+ 	tristate "Chelsio T4 iSCSI support"
+ 	depends on PCI && INET && (IPV6 || IPV6=n)
+-	select NETDEVICES
+-	select ETHERNET
++	depends on THERMAL || !THERMAL
++	depends on ETHERNET
+ 	select NET_VENDOR_CHELSIO
+ 	select CHELSIO_T4
+ 	select CHELSIO_LIB
 -- 
 2.19.1
