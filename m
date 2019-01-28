@@ -1,7 +1,7 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.19 017/258] scsi: lpfc: Fix LOGO/PLOGI handling when triggerd by ABTS Timeout event
-Date: Mon, 28 Jan 2019 10:55:23 -0500
-Message-ID: <20190128155924.51521-17-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 016/258] scsi: mpt3sas: Call sas_remove_host before removing the target devices
+Date: Mon, 28 Jan 2019 10:55:22 -0500
+Message-ID: <20190128155924.51521-16-sashal@kernel.org>
 References: <20190128155924.51521-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -9,190 +9,73 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20190128155924.51521-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Cc: Suganath Prabu <suganath-prabu.subramani@broadcom.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: James Smart <jsmart2021@gmail.com>
+From: Suganath Prabu <suganath-prabu.subramani@broadcom.com>
 
-[ Upstream commit 30e196cacefdd9a38c857caed23cefc9621bc5c1 ]
+[ Upstream commit dc730212e8a378763cb182b889f90c8101331332 ]
 
-After a LOGO in response to an ABTS timeout, a PLOGI wasn't issued to
-re-establish the login.  An nlp_type check in the LOGO completion
-handler failed to restart discovery for NVME targets.  Revised the
-nlp_type check for NVME as well as SCSI.
+Call sas_remove_host() before removing the target devices in the driver's
+.remove() callback function(i.e. during driver unload time).  So that
+driver can provide a way to allow SYNC CACHE, START STOP unit commands
+etc. (which are issued from SML) to the target drives during driver unload
+time.
 
-While reviewing the LOGO handling a few other issues were seen and
-were addressed:
+Once sas_remove_host() is called before removing the target drives then
+driver can just clean up the resources allocated for target devices and no
+need to call sas_port_delete_phy(), sas_port_delete() API's as these API's
+internally called from sas_remove_host().
 
-- Better lock synchronization around ndlp data types
-
-- When the ABTS times out, unregister the RPI before sending the LOGO
-  so that all local exchange contexts are cleared and nothing received
-  while awaiting LOGO/PLOGI handling will be accepted.
-
-- LOGO handling optimized to:
-   Wait only R_A_TOV for a response.
-   It doesn't need to be retried on timeout. If there wasn't a
-     response, a PLOGI will be sent, thus an implicit logout
-     applies as well when the other port sees it.
-   If there is a response, any kind of response is considered "good"
-     and the XRI quarantined for a exchange qualifier window.
-
-- PLOGI is issued as soon a LOGO state is resolved.
-
-Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-Signed-off-by: James Smart <jsmart2021@gmail.com>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+Signed-off-by: Suganath Prabu <suganath-prabu.subramani@broadcom.com>
+Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_els.c       | 49 +++++++++++++-----------------
- drivers/scsi/lpfc/lpfc_nportdisc.c |  5 +++
- 2 files changed, 26 insertions(+), 28 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c     | 2 +-
+ drivers/scsi/mpt3sas/mpt3sas_transport.c | 7 +++++--
+ 2 files changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 56a4f626349c..0d214e6b8e9a 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -242,6 +242,8 @@ lpfc_prep_els_iocb(struct lpfc_vport *vport, uint8_t expectRsp,
- 		icmd->ulpCommand = CMD_ELS_REQUEST64_CR;
- 		if (elscmd == ELS_CMD_FLOGI)
- 			icmd->ulpTimeout = FF_DEF_RATOV * 2;
-+		else if (elscmd == ELS_CMD_LOGO)
-+			icmd->ulpTimeout = phba->fc_ratov;
- 		else
- 			icmd->ulpTimeout = phba->fc_ratov * 2;
- 	} else {
-@@ -2682,16 +2684,15 @@ lpfc_cmpl_els_logo(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 		goto out;
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 53133cfd420f..622832e55211 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -9809,6 +9809,7 @@ static void scsih_remove(struct pci_dev *pdev)
+ 
+ 	/* release all the volumes */
+ 	_scsih_ir_shutdown(ioc);
++	sas_remove_host(shost);
+ 	list_for_each_entry_safe(raid_device, next, &ioc->raid_device_list,
+ 	    list) {
+ 		if (raid_device->starget) {
+@@ -9851,7 +9852,6 @@ static void scsih_remove(struct pci_dev *pdev)
+ 		ioc->sas_hba.num_phys = 0;
  	}
  
-+	/* The LOGO will not be retried on failure.  A LOGO was
-+	 * issued to the remote rport and a ACC or RJT or no Answer are
-+	 * all acceptable.  Note the failure and move forward with
-+	 * discovery.  The PLOGI will retry.
-+	 */
- 	if (irsp->ulpStatus) {
--		/* Check for retry */
--		if (lpfc_els_retry(phba, cmdiocb, rspiocb)) {
--			/* ELS command is being retried */
--			skip_recovery = 1;
--			goto out;
--		}
- 		/* LOGO failed */
- 		lpfc_printf_vlog(vport, KERN_ERR, LOG_ELS,
--				 "2756 LOGO failure DID:%06X Status:x%x/x%x\n",
-+				 "2756 LOGO failure, No Retry DID:%06X Status:x%x/x%x\n",
- 				 ndlp->nlp_DID, irsp->ulpStatus,
- 				 irsp->un.ulpWord[4]);
- 		/* Do not call DSM for lpfc_els_abort'ed ELS cmds */
-@@ -2737,7 +2738,8 @@ lpfc_cmpl_els_logo(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 	 * For any other port type, the rpi is unregistered as an implicit
- 	 * LOGO.
- 	 */
--	if ((ndlp->nlp_type & NLP_FCP_TARGET) && (skip_recovery == 0)) {
-+	if (ndlp->nlp_type & (NLP_FCP_TARGET | NLP_NVME_TARGET) &&
-+	    skip_recovery == 0) {
- 		lpfc_cancel_retry_delay_tmo(vport, ndlp);
- 		spin_lock_irqsave(shost->host_lock, flags);
- 		ndlp->nlp_flag |= NLP_NPR_2B_DISC;
-@@ -2770,6 +2772,8 @@ lpfc_cmpl_els_logo(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
-  * will be stored into the context1 field of the IOCB for the completion
-  * callback function to the LOGO ELS command.
-  *
-+ * Callers of this routine are expected to unregister the RPI first
-+ *
-  * Return code
-  *   0 - successfully issued logo
-  *   1 - failed to issue logo
-@@ -2811,22 +2815,6 @@ lpfc_issue_els_logo(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 		"Issue LOGO:      did:x%x",
- 		ndlp->nlp_DID, 0, 0);
- 
--	/*
--	 * If we are issuing a LOGO, we may try to recover the remote NPort
--	 * by issuing a PLOGI later. Even though we issue ELS cmds by the
--	 * VPI, if we have a valid RPI, and that RPI gets unreg'ed while
--	 * that ELS command is in-flight, the HBA returns a IOERR_INVALID_RPI
--	 * for that ELS cmd. To avoid this situation, lets get rid of the
--	 * RPI right now, before any ELS cmds are sent.
--	 */
--	spin_lock_irq(shost->host_lock);
--	ndlp->nlp_flag |= NLP_ISSUE_LOGO;
--	spin_unlock_irq(shost->host_lock);
--	if (lpfc_unreg_rpi(vport, ndlp)) {
--		lpfc_els_free_iocb(phba, elsiocb);
--		return 0;
--	}
--
- 	phba->fc_stat.elsXmitLOGO++;
- 	elsiocb->iocb_cmpl = lpfc_cmpl_els_logo;
- 	spin_lock_irq(shost->host_lock);
-@@ -2834,7 +2822,6 @@ lpfc_issue_els_logo(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 	ndlp->nlp_flag &= ~NLP_ISSUE_LOGO;
- 	spin_unlock_irq(shost->host_lock);
- 	rc = lpfc_sli_issue_iocb(phba, LPFC_ELS_RING, elsiocb, 0);
--
- 	if (rc == IOCB_ERROR) {
- 		spin_lock_irq(shost->host_lock);
- 		ndlp->nlp_flag &= ~NLP_LOGO_SND;
-@@ -2842,6 +2829,11 @@ lpfc_issue_els_logo(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 		lpfc_els_free_iocb(phba, elsiocb);
- 		return 1;
+-	sas_remove_host(shost);
+ 	mpt3sas_base_detach(ioc);
+ 	spin_lock(&gioc_lock);
+ 	list_del(&ioc->list);
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_transport.c b/drivers/scsi/mpt3sas/mpt3sas_transport.c
+index f8cc2677c1cd..20d36061c217 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_transport.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_transport.c
+@@ -834,10 +834,13 @@ mpt3sas_transport_port_remove(struct MPT3SAS_ADAPTER *ioc, u64 sas_address,
+ 			    mpt3sas_port->remote_identify.sas_address,
+ 			    mpt3sas_phy->phy_id);
+ 		mpt3sas_phy->phy_belongs_to_port = 0;
+-		sas_port_delete_phy(mpt3sas_port->port, mpt3sas_phy->phy);
++		if (!ioc->remove_host)
++			sas_port_delete_phy(mpt3sas_port->port,
++						mpt3sas_phy->phy);
+ 		list_del(&mpt3sas_phy->port_siblings);
  	}
-+
-+	spin_lock_irq(shost->host_lock);
-+	ndlp->nlp_prev_state = ndlp->nlp_state;
-+	spin_unlock_irq(shost->host_lock);
-+	lpfc_nlp_set_state(vport, ndlp, NLP_STE_LOGO_ISSUE);
- 	return 0;
+-	sas_port_delete(mpt3sas_port->port);
++	if (!ioc->remove_host)
++		sas_port_delete(mpt3sas_port->port);
+ 	kfree(mpt3sas_port);
  }
  
-@@ -9505,7 +9497,8 @@ lpfc_sli_abts_recover_port(struct lpfc_vport *vport,
- 				"rport in state 0x%x\n", ndlp->nlp_state);
- 		return;
- 	}
--	lpfc_printf_log(phba, KERN_INFO, LOG_SLI,
-+	lpfc_printf_log(phba, KERN_ERR,
-+			LOG_ELS | LOG_FCP_ERROR | LOG_NVME_IOERR,
- 			"3094 Start rport recovery on shost id 0x%x "
- 			"fc_id 0x%06x vpi 0x%x rpi 0x%x state 0x%x "
- 			"flags 0x%x\n",
-@@ -9518,8 +9511,8 @@ lpfc_sli_abts_recover_port(struct lpfc_vport *vport,
- 	 */
- 	spin_lock_irqsave(shost->host_lock, flags);
- 	ndlp->nlp_fcp_info &= ~NLP_FCP_2_DEVICE;
-+	ndlp->nlp_flag |= NLP_ISSUE_LOGO;
- 	spin_unlock_irqrestore(shost->host_lock, flags);
--	lpfc_issue_els_logo(vport, ndlp, 0);
--	lpfc_nlp_set_state(vport, ndlp, NLP_STE_LOGO_ISSUE);
-+	lpfc_unreg_rpi(vport, ndlp);
- }
- 
-diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
-index bd9bce9d9974..a6619fd8238c 100644
---- a/drivers/scsi/lpfc/lpfc_nportdisc.c
-+++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
-@@ -836,7 +836,9 @@ lpfc_disc_set_adisc(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
- 	struct Scsi_Host *shost = lpfc_shost_from_vport(vport);
- 
- 	if (!(ndlp->nlp_flag & NLP_RPI_REGISTERED)) {
-+		spin_lock_irq(shost->host_lock);
- 		ndlp->nlp_flag &= ~NLP_NPR_ADISC;
-+		spin_unlock_irq(shost->host_lock);
- 		return 0;
- 	}
- 
-@@ -851,7 +853,10 @@ lpfc_disc_set_adisc(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
- 			return 1;
- 		}
- 	}
-+
-+	spin_lock_irq(shost->host_lock);
- 	ndlp->nlp_flag &= ~NLP_NPR_ADISC;
-+	spin_unlock_irq(shost->host_lock);
- 	lpfc_unreg_rpi(vport, ndlp);
- 	return 0;
- }
 -- 
 2.19.1
