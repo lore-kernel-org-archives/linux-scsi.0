@@ -1,7 +1,7 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.19 015/258] scsi: lpfc: Correct LCB RJT handling
-Date: Mon, 28 Jan 2019 10:55:21 -0500
-Message-ID: <20190128155924.51521-15-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 043/258] scsi: hisi_sas: change the time of SAS SSP connection
+Date: Mon, 28 Jan 2019 10:55:49 -0500
+Message-ID: <20190128155924.51521-43-sashal@kernel.org>
 References: <20190128155924.51521-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -9,39 +9,39 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20190128155924.51521-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Cc: Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: James Smart <jsmart2021@gmail.com>
+From: Xiang Chen <chenxiang66@hisilicon.com>
 
-[ Upstream commit b114d9009d386276bfc3352289fc235781ae3353 ]
+[ Upstream commit 15bc43f31a074076f114e0b87931e3b220b7bff1 ]
 
-When LCB's are rejected, if beaconing was already in progress, the
-Reason Code Explanation was not being set. Should have been set to
-command in progress.
+Currently the time of SAS SSP connection is 1ms, which means the link
+connection will fail if no IO response after this period.
 
-Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-Signed-off-by: James Smart <jsmart2021@gmail.com>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+For some disks handling large IO (such as 512k), 1ms is not enough, so
+change it to 5ms.
+
+Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_els.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 4dda969e947c..56a4f626349c 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -5701,6 +5701,9 @@ lpfc_els_lcb_rsp(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
- 	stat = (struct ls_rjt *)(pcmd + sizeof(uint32_t));
- 	stat->un.b.lsRjtRsnCode = LSRJT_UNABLE_TPC;
- 
-+	if (shdr_add_status == ADD_STATUS_OPERATION_ALREADY_ACTIVE)
-+		stat->un.b.lsRjtRsnCodeExp = LSEXP_CMD_IN_PROGRESS;
-+
- 	elsiocb->iocb_cmpl = lpfc_cmpl_els_rsp;
- 	phba->fc_stat.elsXmitLSRJT++;
- 	rc = lpfc_sli_issue_iocb(phba, LPFC_ELS_RING, elsiocb, 0);
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index 687ff61bba9f..3922b17e2ea3 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -492,7 +492,7 @@ static void init_reg_v3_hw(struct hisi_hba *hisi_hba)
+ 		hisi_sas_phy_write32(hisi_hba, i, PHYCTRL_OOB_RESTART_MSK, 0x1);
+ 		hisi_sas_phy_write32(hisi_hba, i, STP_LINK_TIMER, 0x7f7a120);
+ 		hisi_sas_phy_write32(hisi_hba, i, CON_CFG_DRIVER, 0x2a0a01);
+-
++		hisi_sas_phy_write32(hisi_hba, i, SAS_SSP_CON_TIMER_CFG, 0x32);
+ 		/* used for 12G negotiate */
+ 		hisi_sas_phy_write32(hisi_hba, i, COARSETUNE_TIME, 0x1e);
+ 	}
 -- 
 2.19.1
