@@ -1,53 +1,45 @@
-From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.9 069/107] scsi: smartpqi: correct volume status
-Date: Mon, 28 Jan 2019 11:19:09 -0500
-Message-ID: <20190128161947.57405-69-sashal@kernel.org>
-References: <20190128161947.57405-1-sashal@kernel.org>
+From: <Don.Brace@microchip.com>
+Subject: RE: [PATCH] scsi: hpsa: clean up two indentation issues
+Date: Mon, 28 Jan 2019 16:18:33 +0000
+Message-ID: <SN6PR11MB2767CD2DC52BC47972BF7E33E1960@SN6PR11MB2767.namprd11.prod.outlook.com>
+References: <20190122151830.7230-1-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190128161947.57405-1-sashal@kernel.org>
+In-Reply-To: <20190122151830.7230-1-colin.king@canonical.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Dave Carroll <david.carroll@microsemi.com>, Don Brace <don.brace@microsemi.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org
+To: colin.king@canonical.com, don.brace@microsemi.com, jejb@linux.ibm.com, martin.petersen@oracle.com, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Dave Carroll <david.carroll@microsemi.com>
-
-[ Upstream commit 7ff44499bafbd376115f0bb6b578d980f56ee13b ]
-
-- fix race condition when a unit is deleted after an RLL,
-  and before we have gotten the LV_STATUS page of the unit.
-  - In this case we will get a standard inquiry, rather than
-    the desired page.  This will result in a unit presented
-    which no longer exists.
-  - If we ask for LV_STATUS, insure we get LV_STATUS
-
-Reviewed-by: Murthy Bhat <murthy.bhat@microsemi.com>
-Reviewed-by: Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>
-Reviewed-by: Scott Teel <scott.teel@microsemi.com>
-Reviewed-by: Kevin Barnett <kevin.barnett@microsemi.com>
-Signed-off-by: Dave Carroll <david.carroll@microsemi.com>
-Signed-off-by: Don Brace <don.brace@microsemi.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/scsi/smartpqi/smartpqi_init.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index 9a208961cc0b..06a062455404 100644
---- a/drivers/scsi/smartpqi/smartpqi_init.c
-+++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -983,6 +983,9 @@ static void pqi_get_volume_status(struct pqi_ctrl_info *ctrl_info,
- 	if (rc)
- 		goto out;
- 
-+	if (vpd->page_code != CISS_VPD_LV_STATUS)
-+		goto out;
-+
- 	page_length = offsetof(struct ciss_vpd_logical_volume_status,
- 		volume_status) + vpd->page_length;
- 	if (page_length < sizeof(*vpd))
--- 
-2.19.1
+DQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogbGludXgtc2NzaS1vd25lckB2Z2Vy
+Lmtlcm5lbC5vcmcgW21haWx0bzpsaW51eC1zY3NpLW93bmVyQHZnZXIua2VybmVsLm9yZ10gT24g
+QmVoYWxmIE9mIENvbGluIEtpbmcNClNlbnQ6IFR1ZXNkYXksIEphbnVhcnkgMjIsIDIwMTkgOTox
+OSBBTQ0KVG86IERvbiBCcmFjZSA8ZG9uLmJyYWNlQG1pY3Jvc2VtaS5jb20+OyBKYW1lcyBFIC4g
+SiAuIEJvdHRvbWxleSA8amVqYkBsaW51eC5pYm0uY29tPjsgTWFydGluIEsgLiBQZXRlcnNlbiA8
+bWFydGluLnBldGVyc2VuQG9yYWNsZS5jb20+OyBlc2Muc3RvcmFnZWRldkBtaWNyb3NlbWkuY29t
+OyBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZw0KQ2M6IGtlcm5lbC1qYW5pdG9yc0B2Z2VyLmtl
+cm5lbC5vcmc7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmcNClN1YmplY3Q6IFtQQVRDSF0g
+c2NzaTogaHBzYTogY2xlYW4gdXAgdHdvIGluZGVudGF0aW9uIGlzc3Vlcw0KDQpGcm9tOiBDb2xp
+biBJYW4gS2luZyA8Y29saW4ua2luZ0BjYW5vbmljYWwuY29tPg0KDQpUaGVyZSBhcmUgdHdvIHN0
+YXRlbWVudHMgdGhhdCBhcmUgaW5kZW50ZWQgaW5jb3JyZWN0bHkuIEZpeCB0aGVzZS4NCg0KU2ln
+bmVkLW9mZi1ieTogQ29saW4gSWFuIEtpbmcgPGNvbGluLmtpbmdAY2Fub25pY2FsLmNvbT4NCi0t
+LQ0KIGRyaXZlcnMvc2NzaS9ocHNhLmMgfCA0ICsrLS0NCiAxIGZpbGUgY2hhbmdlZCwgMiBpbnNl
+cnRpb25zKCspLCAyIGRlbGV0aW9ucygtKQ0KDQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL2hw
+c2EuYyBiL2RyaXZlcnMvc2NzaS9ocHNhLmMgaW5kZXggZmY2N2VmNWQ1MzQ3Li41Mjg0NDQ0ZmRk
+MTAgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL3Njc2kvaHBzYS5jDQorKysgYi9kcml2ZXJzL3Njc2kv
+aHBzYS5jDQpAQCAtMTMyNyw3ICsxMzI3LDcgQEAgc3RhdGljIGludCBocHNhX3Njc2lfYWRkX2Vu
+dHJ5KHN0cnVjdCBjdGxyX2luZm8gKmgsDQogCQlkZXZfd2FybigmaC0+cGRldi0+ZGV2LCAicGh5
+c2ljYWwgZGV2aWNlIHdpdGggbm8gTFVOPTAsIg0KIAkJCSIgc3VzcGVjdCBmaXJtd2FyZSBidWcg
+b3IgdW5zdXBwb3J0ZWQgaGFyZHdhcmUgIg0KIAkJCSJjb25maWd1cmF0aW9uLlxuIik7DQotCQkJ
+cmV0dXJuIC0xOw0KKwkJcmV0dXJuIC0xOw0KIAl9DQogDQogbHVuX2Fzc2lnbmVkOg0KQEAgLTQx
+MTAsNyArNDExMCw3IEBAIHN0YXRpYyBpbnQgaHBzYV9nYXRoZXJfbHVuX2luZm8oc3RydWN0IGN0
+bHJfaW5mbyAqaCwNCiAJCQkibWF4aW11bSBsb2dpY2FsIExVTnMgKCVkKSBleGNlZWRlZC4gICIN
+CiAJCQkiJWQgTFVOcyBpZ25vcmVkLlxuIiwgSFBTQV9NQVhfTFVOLA0KIAkJCSpubG9naWNhbHMg
+LSBIUFNBX01BWF9MVU4pOw0KLQkJCSpubG9naWNhbHMgPSBIUFNBX01BWF9MVU47DQorCQkqbmxv
+Z2ljYWxzID0gSFBTQV9NQVhfTFVOOw0KIAl9DQogCWlmICgqbmxvZ2ljYWxzICsgKm5waHlzaWNh
+bHMgPiBIUFNBX01BWF9QSFlTX0xVTikgew0KIAkJZGV2X3dhcm4oJmgtPnBkZXYtPmRldiwNCi0t
+DQoyLjE5LjENCg0KQWNrZWQtYnk6IERvbiBCcmFjZSA8ZG9uLmJyYWNlQG1pY3Jvc2VtaS5jb20+
+Pw0KDQo=
