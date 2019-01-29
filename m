@@ -1,33 +1,72 @@
-From: Avri Altman <Avri.Altman-Sjgp3cTcYWE@public.gmane.org>
-Subject: RE: [PATCH v1 1/1] scsi: ufs: Print uic error history in time order
-Date: Tue, 29 Jan 2019 07:28:44 +0000
-Message-ID: <SN6PR04MB49257E6E541B870867A96521FC970@SN6PR04MB4925.namprd04.prod.outlook.com>
-References: <1548684266-8792-1-git-send-email-stanley.chu@mediatek.com>
+From: Hannes Reinecke <hare@suse.com>
+Subject: Re: Question on handling managed IRQs when hotplugging CPUs
+Date: Tue, 29 Jan 2019 12:54:44 +0100
+Message-ID: <5bff8227-16fd-6bca-c16e-3992ef6bec5a@suse.com>
+References: <f6f6e031-8b79-439d-c2af-8d3e76f30710@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-In-Reply-To: <1548684266-8792-1-git-send-email-stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <f6f6e031-8b79-439d-c2af-8d3e76f30710@huawei.com>
 Content-Language: en-US
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-mediatek>,
- <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-mediatek/>
-List-Post: <mailto:linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-List-Help: <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-mediatek>,
- <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=subscribe>
-Sender: "Linux-mediatek" <linux-mediatek-bounces-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-Errors-To: linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
-To: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: "matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "kuohong.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org" <kuohong.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, "linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, "peter.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org" <peter.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, "wsd_upstream-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org" <wsd_upstream-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: John Garry <john.garry@huawei.com>, tglx@linutronix.de, Christoph Hellwig <hch@lst.de>
+Cc: Marc Zyngier <marc.zyngier@arm.com>, "axboe@kernel.dk" <axboe@kernel.dk>, Keith Busch <keith.busch@intel.com>, Peter Zijlstra <peterz@infradead.org>, Michael Ellerman <mpe@ellerman.id.au>, Linuxarm <linuxarm@huawei.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
+On 1/29/19 12:25 PM, John Garry wrote:
+> Hi,
 > 
-> Now uic errors are printed out of time order.
+> I have a question on $subject which I hope you can shed some light on.
 > 
-> Simply make it more readable by printing logs
-> in time order, and printing "No record" if history
-> is empty.
+> According to commit c5cb83bb337c25 ("genirq/cpuhotplug: Handle managed 
+> IRQs on CPU hotplug"), if we offline the last CPU in a managed IRQ 
+> affinity mask, the IRQ is shutdown.
 > 
-> Signed-off-by: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-Reviewed-by: Avri Altman <avri.altman-Sjgp3cTcYWE@public.gmane.org>
+> The reasoning is that this IRQ is thought to be associated with a 
+> specific queue on a MQ device, and the CPUs in the IRQ affinity mask are 
+> the same CPUs associated with the queue. So, if no CPU is using the 
+> queue, then no need for the IRQ.
+> 
+> However how does this handle scenario of last CPU in IRQ affinity mask 
+> being offlined while IO associated with queue is still in flight?
+> 
+> Or if we make the decision to use queue associated with the current CPU, 
+> and then that CPU (being the last CPU online in the queue's IRQ 
+> afffinity mask) goes offline and we finish the delivery with another CPU?
+> 
+> In these cases, when the IO completes, it would not be serviced and 
+> timeout.
+> 
+> I have actually tried this on my arm64 system and I see IO timeouts.
+> 
+That actually is a very good question, and I have been wondering about 
+this for quite some time.
+
+I find it a bit hard to envision a scenario where the IRQ affinity is 
+automatically (and, more importantly, atomically!) re-routed to one of 
+the other CPUs.
+And even it it were, chances are that there are checks in the driver 
+_preventing_ them from handling those requests, seeing that they should 
+have been handled by another CPU ...
+
+I guess the safest bet is to implement a 'cleanup' worker queue which is 
+responsible of looking through all the outstanding commands (on all 
+hardware queues), and then complete those for which no corresponding CPU 
+/ irqhandler can be found.
+
+But I defer to the higher authorities here; maybe I'm totally wrong and 
+it's already been taken care of.
+
+But if there is no generic mechanism this really is a fit topic for 
+LSF/MM, as most other drivers would be affected, too.
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		               zSeries & Storage
+hare@suse.com			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
