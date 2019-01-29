@@ -1,27 +1,24 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 0/7] SCSI: cleanup debugfs usage
-Date: Tue, 29 Jan 2019 00:37:47 -0500
-Message-ID: <yq1zhrkdnx0.fsf@oracle.com>
-References: <20190122150906.12470-1-gregkh@linuxfoundation.org>
+Subject: Re: [PATCH] scsi: hpsa: clean up two indentation issues
+Date: Tue, 29 Jan 2019 00:42:35 -0500
+Message-ID: <yq1va28dnp0.fsf@oracle.com>
+References: <20190122151830.7230-1-colin.king@canonical.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190122150906.12470-1-gregkh@linuxfoundation.org> (Greg
-        Kroah-Hartman's message of "Tue, 22 Jan 2019 16:08:59 +0100")
+In-Reply-To: <20190122151830.7230-1-colin.king@canonical.com> (Colin King's
+        message of "Tue, 22 Jan 2019 15:18:30 +0000")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: James Bottomley <jejb@linux.ibm.com>, Martin Petersen <martin.petersen@oracle.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Colin King <colin.king@canonical.com>
+Cc: Don Brace <don.brace@microsemi.com>, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Greg,
+Colin,
 
-> When calling debugfs code, there is no need to ever check the return
-> value of the call, as no logic should ever change if a call works
-> properly or not.  Fix up a bunch of x86-specific code to not care
-> about the results of debugfs.
+> There are two statements that are indented incorrectly. Fix these.
 
-Applied to 5.1/scsi-queue, thank you!
+Applied to 5.1/scsi-queue, thanks.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
