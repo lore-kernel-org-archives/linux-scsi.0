@@ -1,25 +1,27 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] MAINTAINERS: Move FCoE to Hannes Reinecke
-Date: Tue, 29 Jan 2019 00:32:21 -0500
-Message-ID: <yq14l9sf2qi.fsf@oracle.com>
-References: <20190128110634.17243-1-jthumshirn@suse.de>
+Subject: Re: [PATCH 0/7] SCSI: cleanup debugfs usage
+Date: Tue, 29 Jan 2019 00:37:47 -0500
+Message-ID: <yq1zhrkdnx0.fsf@oracle.com>
+References: <20190122150906.12470-1-gregkh@linuxfoundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190128110634.17243-1-jthumshirn@suse.de> (Johannes Thumshirn's
-        message of "Mon, 28 Jan 2019 12:06:34 +0100")
+In-Reply-To: <20190122150906.12470-1-gregkh@linuxfoundation.org> (Greg
+        Kroah-Hartman's message of "Tue, 22 Jan 2019 16:08:59 +0100")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Hannes Reinecke <hare@suse.de>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: James Bottomley <jejb@linux.ibm.com>, Martin Petersen <martin.petersen@oracle.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Johannes,
+Greg,
 
-> I'll be moving on to different things in the storage stack and Hannes
-> agreed to take over FCoE.
+> When calling debugfs code, there is no need to ever check the return
+> value of the call, as no logic should ever change if a call works
+> properly or not.  Fix up a bunch of x86-specific code to not care
+> about the results of debugfs.
 
-Applied to 5.1/scsi-queue. Thanks.
+Applied to 5.1/scsi-queue, thank you!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
