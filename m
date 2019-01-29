@@ -1,28 +1,27 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: nsp32: Remove unnecessary self assignment in nsp32_set_sync_entry
-Date: Tue, 29 Jan 2019 01:27:48 -0500
-Message-ID: <yq1womoc717.fsf@oracle.com>
-References: <20181210235156.6237-1-natechancellor@gmail.com>
-        <20190126191143.GB25003@archlinux-ryzen>
+Subject: Re: [PATCH 00/13] hisi_sas: Misc fixes and other more minor patches
+Date: Tue, 29 Jan 2019 01:43:19 -0500
+Message-ID: <yq1fttcc6bc.fsf@oracle.com>
+References: <1548426159-225679-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190126191143.GB25003@archlinux-ryzen> (Nathan Chancellor's
-        message of "Sat, 26 Jan 2019 12:11:43 -0700")
+In-Reply-To: <1548426159-225679-1-git-send-email-john.garry@huawei.com> (John
+        Garry's message of "Fri, 25 Jan 2019 22:22:26 +0800")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Nathan Chancellor <natechancellor@gmail.com>
-Cc: GOTO Masanori <gotom@debian.or.jp>, YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: John Garry <john.garry@huawei.com>
+Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linuxarm@huawei.com, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Nathan,
+John,
 
->> drivers/scsi/nsp32.c:2444:14: warning: explicitly assigning value of
->> variable of type 'unsigned char' to itself [-Wself-assign]
->>         offset      = offset;
->>         ~~~~~~      ^
+> This series includes a misc assortment of fixes found during testing.
+>
+> Also includes is some debugfs tidy-up and a patch missed from original
+> upstreaming.
 
-Applied to 5.1/scsi-queue. Thanks.
+Applied to 5.1/scsi-queue, thanks.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
