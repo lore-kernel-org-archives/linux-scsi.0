@@ -1,7 +1,7 @@
 From: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
-Subject: [PATCH 3/4] mpt3sas: Add support for ATLAS PCIe switch.
-Date: Tue, 29 Jan 2019 07:14:42 -0500
-Message-ID: <1548764083-5781-4-git-send-email-suganath-prabu.subramani@broadcom.com>
+Subject: [PATCH 4/4] mpt3sas: Update driver version to 27.102.00.00
+Date: Tue, 29 Jan 2019 07:14:43 -0500
+Message-ID: <1548764083-5781-5-git-send-email-suganath-prabu.subramani@broadcom.com>
 References: <1548764083-5781-1-git-send-email-suganath-prabu.subramani@broadcom.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1548764083-5781-1-git-send-email-suganath-prabu.subramani@broadcom.com>
@@ -10,63 +10,28 @@ To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc: Sathya.Prakash@broadcom.com, sreekanth.reddy@broadcom.com, Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Add Atlas PCIe Switch Management Port device PNPID,
-Vendor Id: 0x1000
-device Id: 0x00B2
-
-This device is based on MPI 2.6 spec and it exposes one
-SES device to accept management commands for the PCIe switch.
+Updated driver version to 27.102.00.00 from 27.101.00.00.
 
 Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.h  | 3 +++
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 6 ++++++
- 2 files changed, 9 insertions(+)
+ drivers/scsi/mpt3sas/mpt3sas_base.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index 8003519..db12c1b 100644
+index db12c1b..19158cb 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_base.h
 +++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -193,6 +193,9 @@ struct mpt3sas_nvme_cmd {
- #define SAS2_PCI_DEVICE_B0_REVISION	(0x01)
- #define SAS3_PCI_DEVICE_C0_REVISION	(0x02)
+@@ -75,9 +75,9 @@
+ #define MPT3SAS_DRIVER_NAME		"mpt3sas"
+ #define MPT3SAS_AUTHOR "Avago Technologies <MPT-FusionLinux.pdl@avagotech.com>"
+ #define MPT3SAS_DESCRIPTION	"LSI MPT Fusion SAS 3.0 Device Driver"
+-#define MPT3SAS_DRIVER_VERSION		"27.101.00.00"
++#define MPT3SAS_DRIVER_VERSION		"27.102.00.00"
+ #define MPT3SAS_MAJOR_VERSION		27
+-#define MPT3SAS_MINOR_VERSION		101
++#define MPT3SAS_MINOR_VERSION		102
+ #define MPT3SAS_BUILD_VERSION		0
+ #define MPT3SAS_RELEASE_VERSION	00
  
-+/* Atlas PCIe Switch Management Port */
-+#define MPI26_ATLAS_PCIe_SWITCH_DEVID	(0x00B2)
-+
- /*
-  * Intel HBA branding
-  */
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 4a73753..8bb5b8f 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -10283,6 +10283,7 @@ _scsih_determine_hba_mpi_version(struct pci_dev *pdev)
- 	case MPI26_MFGPAGE_DEVID_SAS3516_1:
- 	case MPI26_MFGPAGE_DEVID_SAS3416:
- 	case MPI26_MFGPAGE_DEVID_SAS3616:
-+	case MPI26_ATLAS_PCIe_SWITCH_DEVID:
- 	case MPI26_MFGPAGE_DEVID_CFG_SEC_3916:
- 	case MPI26_MFGPAGE_DEVID_HARD_SEC_3916:
- 	case MPI26_MFGPAGE_DEVID_CFG_SEC_3816:
-@@ -10373,6 +10374,7 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 		case MPI26_MFGPAGE_DEVID_SAS3516_1:
- 		case MPI26_MFGPAGE_DEVID_SAS3416:
- 		case MPI26_MFGPAGE_DEVID_SAS3616:
-+		case MPI26_ATLAS_PCIe_SWITCH_DEVID:
- 			ioc->is_gen35_ioc = 1;
- 			break;
- 		case MPI26_MFGPAGE_DEVID_CFG_SEC_3816:
-@@ -10853,6 +10855,10 @@ static const struct pci_device_id mpt3sas_pci_table[] = {
- 	{ MPI2_MFGPAGE_VENDORID_LSI, MPI26_MFGPAGE_DEVID_HARD_SEC_3916,
- 		PCI_ANY_ID, PCI_ANY_ID },
- 
-+	/* Atlas PCIe Switch Management Port */
-+	{ MPI2_MFGPAGE_VENDORID_LSI, MPI26_ATLAS_PCIe_SWITCH_DEVID,
-+		PCI_ANY_ID, PCI_ANY_ID },
-+
- 	/* Sea SI 0x00E5 Configurable Secure
- 	 * 0x00E6 Hard Secure
- 	 */
 -- 
 1.8.3.1
