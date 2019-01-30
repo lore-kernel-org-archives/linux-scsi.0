@@ -1,83 +1,78 @@
-From: Joao Pinto <joao.pinto@synopsys.com>
-Subject: Re: [PATCH for-next] scsi: ufs: Update dwc driver maintainer to Pedro
- Sousa
-Date: Wed, 30 Jan 2019 19:15:56 +0000
-Message-ID: <f0ff398e-cc13-d70d-0488-d35faa126a5a@synopsys.com>
-References: <812e9e1426555808ad1bd5fbfda320c6684abc81.1548869844.git.jpinto@synopsys.com>
- <1548870848.213038.3.camel@acm.org>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH v2] RDMA/srp: Rework SCSI device reset handling
+Date: Wed, 30 Jan 2019 14:05:55 -0800
+Message-ID: <20190130220555.8949-1-bvanassche@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1548870848.213038.3.camel@acm.org>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>, Joao Pinto <joao.pinto@synopsys.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: pedrom.sousa@synopsys.com, marc.w.gonzalez@free.fr, Alex.Lemberg@wdc.com
+Content-Transfer-Encoding: 8bit
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: Jason Gunthorpe <jgg@ziepe.ca>
+Cc: Doug Ledford <dledford@redhat.com>, linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>, Sergey Gorenko <sergeygo@mellanox.com>, Max Gurtovoy <maxg@mellanox.com>, Laurence Oberman <loberman@redhat.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hello Bart,
+Since .scsi_done() must only be called after scsi_queue_rq() has
+finished, make sure that the SRP initiator driver does not call
+.scsi_done() while scsi_queue_rq() is in progress. Although
+invoking sg_reset -d while I/O is in progress works fine with kernel
+v4.20 and before, that is not the case with kernel v5.0-rc1. This
+patch avoids that the following crash is triggered with kernel
+v5.0-rc1:
 
-First of all thanks for the feedback.
+BUG: unable to handle kernel NULL pointer dereference at 0000000000000138
+CPU: 0 PID: 360 Comm: kworker/0:1H Tainted: G    B             5.0.0-rc1-dbg+ #1
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.10.2-1 04/01/2014
+Workqueue: kblockd blk_mq_run_work_fn
+RIP: 0010:blk_mq_dispatch_rq_list+0x116/0xb10
+Call Trace:
+ blk_mq_sched_dispatch_requests+0x2f7/0x300
+ __blk_mq_run_hw_queue+0xd6/0x180
+ blk_mq_run_work_fn+0x27/0x30
+ process_one_work+0x4f1/0xa20
+ worker_thread+0x67/0x5b0
+ kthread+0x1cf/0x1f0
+ ret_from_fork+0x24/0x30
 
-On 1/30/2019 5:54 PM, Bart Van Assche wrote:
-> On Wed, 2019-01-30 at 18:48 +0100, Joao Pinto wrote:
->> Currently I am managing the Synopsys drivers & tools team (full-time) and
->> so I am passing the DWC UFS driver maintenance to Pedro Sousa.
->>
->> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
->> Cc: Pedro Sousa <pedrom.sousa@synopsys.com>
->> Cc: Marc Gonzalez <marc.w.gonzalez@free.fr>
->> Cc: Alex Lemberg <Alex.Lemberg@wdc.com>
->> ---
->>  MAINTAINERS | 2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/MAINTAINERS b/MAINTAINERS
->> index 70c93b1..458a2a2 100644
->> --- a/MAINTAINERS
->> +++ b/MAINTAINERS
->> @@ -15673,7 +15673,7 @@ F:	Documentation/scsi/ufs.txt
->>  F:	drivers/scsi/ufs/
->>  
->>  UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER DWC HOOKS
->> -M:	Joao Pinto <jpinto@synopsys.com>
->> +M:	Pedro Sousa <pedrom.sousa@synopsys.com>
->>  L:	linux-scsi@vger.kernel.org
->>  S:	Supported
->>  F:	drivers/scsi/ufs/*dwc*
-> Shouldn't people have proven to be willing to stick around before being
-> added as a kernel maintainer? Additionally, what is the experience level of
-> Pedro with kernel development? All I know is the following:
+Cc: Sergey Gorenko <sergeygo@mellanox.com>
+Cc: Max Gurtovoy <maxg@mellanox.com>
+Cc: Laurence Oberman <loberman@redhat.com>
+Cc: <stable@vger.kernel.org>
+Fixes: 94a9174c630c ("IB/srp: reduce lock coverage of command completion") # v2.6.38
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+---
 
-Pedro Sousa is my team member and has been working in Unipro/UFS Synopsys
-drivers for almost 2 years.
+Changes compared to v1: left out the code that waits until in-progress requests
+  have finished.
 
-His work has been mainly internal, and now our goal is to start using the
-mainline DWC UFS driver I submitted 2 years ago in our regular activities,
-update and maintain it effectively as we are doing in other titles.
+ drivers/infiniband/ulp/srp/ib_srp.c | 10 ----------
+ 1 file changed, 10 deletions(-)
 
-Currently I am Pedro' manager, and in my opinion he has the right experience for
-this step and that is why I am suggesting to transfer Synopsys driver
-maintenance from me to him.
-
->
-> $ git log --author "Pedro Sousa" | wc -l
-> 0
-> $ git log | grep -c "Pedro Sousa"
-> 0
->
-> Are you aware that people who are not mentioned in the MAINTAINERS file are
-> allowed to review kernel patches?
-
-Yes, I am aware and Pedro is perfectly capable of doing that, and for that
-reason I am suggesting him as the right person to maintain Synopsys UFS driver.
-
->
-> Thanks,
->
-> Bart.
->
-Thanks,
-
-Joao
+diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/ulp/srp/ib_srp.c
+index af5197b5e7f1..085dba075651 100644
+--- a/drivers/infiniband/ulp/srp/ib_srp.c
++++ b/drivers/infiniband/ulp/srp/ib_srp.c
+@@ -3037,7 +3037,6 @@ static int srp_reset_device(struct scsi_cmnd *scmnd)
+ {
+ 	struct srp_target_port *target = host_to_target(scmnd->device->host);
+ 	struct srp_rdma_ch *ch;
+-	int i, j;
+ 	u8 status;
+ 
+ 	shost_printk(KERN_ERR, target->scsi_host, "SRP reset_device called\n");
+@@ -3049,15 +3048,6 @@ static int srp_reset_device(struct scsi_cmnd *scmnd)
+ 	if (status)
+ 		return FAILED;
+ 
+-	for (i = 0; i < target->ch_count; i++) {
+-		ch = &target->ch[i];
+-		for (j = 0; j < target->req_ring_size; ++j) {
+-			struct srp_request *req = &ch->req_ring[j];
+-
+-			srp_finish_req(ch, req, scmnd->device, DID_RESET << 16);
+-		}
+-	}
+-
+ 	return SUCCESS;
+ }
+ 
+-- 
+2.20.1.495.gaa96b0ce6b-goog
