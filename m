@@ -1,80 +1,86 @@
-From: Vaibhav Jain <vaibhav@linux.ibm.com>
-Subject: [PATCH] scsi: cxlflash: Prevent deadlock when adapter probe fails
-Date: Wed, 30 Jan 2019 17:56:51 +0530
-Message-ID: <20190130122651.19255-1-vaibhav@linux.ibm.com>
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH v2 1/7] scsi: libsas: reset the negotiated_linkrate when
+ phy is down
+Date: Wed, 30 Jan 2019 13:08:26 +0000
+Message-ID: <6b06f81e-9ede-014d-b678-1996044106e3@huawei.com>
+References: <20190130082412.9357-1-yanaijie@huawei.com>
+ <20190130082412.9357-2-yanaijie@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
-Sender: stable-owner@vger.kernel.org
-To: "Manoj N . Kumar" <manoj@linux.ibm.com>, "Matthew R . Ochs" <mrochs@linux.ibm.com>, Uma Krishnan <ukrishn@linux.ibm.com>
-Cc: Vaibhav Jain <vaibhav@linux.ibm.com>, Frederic Barrat <fbarrat@linux.ibm.com>, linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, stable@vger.kernel.org
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190130082412.9357-2-yanaijie@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jason Yan <yanaijie@huawei.com>, martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, zhaohongjiang@huawei.com, hare@suse.com, dan.j.williams@intel.com, jthumshirn@suse.de, hch@lst.de, huangdaode@hisilicon.com, chenxiang66@hisilicon.com, xiexiuqi@huawei.com, tj@kernel.org, miaoxie@huawei.com, Ewan Milne <emilne@redhat.com>, Tomas Henzl <thenzl@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
+On 30/01/2019 08:24, Jason Yan wrote:
+> If the device is unplugged or disconnected, the negotiated_linkrate
+> still can be seen from the userspace by sysfs. This makes people
+> confused and leaks information of the device last used. So let's reset
+> the negotiated_linkrate after the phy is down.
+>
+> Signed-off-by: Jason Yan <yanaijie@huawei.com>
+> CC: John Garry <john.garry@huawei.com>
+> CC: Johannes Thumshirn <jthumshirn@suse.de>
+> CC: Ewan Milne <emilne@redhat.com>
+> CC: Christoph Hellwig <hch@lst.de>
+> CC: Tomas Henzl <thenzl@redhat.com>
+> CC: Dan Williams <dan.j.williams@intel.com>
+> CC: Hannes Reinecke <hare@suse.com>
+> ---
+>  drivers/scsi/libsas/sas_expander.c | 2 ++
+>  include/scsi/libsas.h              | 3 +++
+>  2 files changed, 5 insertions(+)
+>
+> diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
+> index 17eb4185f29d..7b0e6dcef6e6 100644
+> --- a/drivers/scsi/libsas/sas_expander.c
+> +++ b/drivers/scsi/libsas/sas_expander.c
+> @@ -1904,6 +1904,8 @@ static void sas_unregister_devs_sas_addr(struct domain_device *parent,
+>  				&parent->port->sas_port_del_list);
+>  		phy->port = NULL;
+>  	}
+> +	if (phy->phy)
+> +		phy->phy->negotiated_linkrate = SAS_LINK_RATE_UNKNOWN;
 
-Presently when an error is encountered during probe of the cxlflash
-adapter, a deadlock is seen with cpu thread stuck inside
-cxlflash_remove(). Below is the trace of the deadlock as logged by
-khungtaskd:
+Does this work for both PHYs which were either directly attached or just 
+forming part of a wideport?
 
-cxlflash 0006:00:00.0: cxlflash_probe: init_afu failed rc=-16
-INFO: task kworker/80:1:890 blocked for more than 120 seconds.
-       Not tainted 5.0.0-rc4-capi2-kexec+ #2
-"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-kworker/80:1    D    0   890      2 0x00000808
-Workqueue: events work_for_cpu_fn
+Please also note that the expander PHY which was previously attached may 
+also show the incorrect value.
 
-Call Trace:
- 0x4d72136320 (unreliable)
- __switch_to+0x2cc/0x460
- __schedule+0x2bc/0xac0
- schedule+0x40/0xb0
- cxlflash_remove+0xec/0x640 [cxlflash]
- cxlflash_probe+0x370/0x8f0 [cxlflash]
- local_pci_probe+0x6c/0x140
- work_for_cpu_fn+0x38/0x60
- process_one_work+0x260/0x530
- worker_thread+0x280/0x5d0
- kthread+0x1a8/0x1b0
- ret_from_kernel_thread+0x5c/0x80
-INFO: task systemd-udevd:5160 blocked for more than 120 seconds.
+>  }
+>
+>  static int sas_discover_bfs_by_root_level(struct domain_device *root,
+> diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
+> index 3de3b10da19a..420156cea3ee 100644
+> --- a/include/scsi/libsas.h
+> +++ b/include/scsi/libsas.h
+> @@ -448,6 +448,9 @@ static inline void sas_phy_disconnected(struct asd_sas_phy *phy)
+>  {
+>  	phy->oob_mode = OOB_NOT_CONNECTED;
+>  	phy->linkrate = SAS_LINK_RATE_UNKNOWN;
+> +
 
-The deadlock occurs as cxlflash_remove() is called from
-cxlflash_probe() without setting 'cxlflash_cfg->state' to STATE_PROBED
-and the probe thread starts to wait on
-'cxlflash_cfg->reset_waitq'. Since the device was never successfully
-probed the 'cxlflash_cfg->state' never changes from STATE_PROBING
-hence the deadlock occurs.
+Then idea behind sas_phy_disconnected() was to set root PHY values only:
 
-We fix this deadlock by setting the variable 'cxlflash_cfg->state' to
-STATE_PROBED in case an error occurs during cxlflash_probe() and just
-before calling cxlflash_remove().
+/* Before calling a notify event, LLDD should use this function
+  * when the link is severed (possibly from its tasklet).
+  * The idea is that the Class only reads those, while the LLDD,
+  * can R/W these (thus avoiding a race)
 
-Cc: stable@vger.kernel.org
-Fixes: c21e0bbfc485("cxlflash: Base support for IBM CXL Flash Adapter")
-Signed-off-by: Vaibhav Jain <vaibhav@linux.ibm.com>
----
- drivers/scsi/cxlflash/main.c | 2 ++
- 1 file changed, 2 insertions(+)
+libsas does set sas_phy negotiated_linkrate (but only for expander 
+PHYs), so not the perfect place to set this. I'm nitpicking a bit here.
 
-diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
-index bfa13e3b191c..c8bad2c093b8 100644
---- a/drivers/scsi/cxlflash/main.c
-+++ b/drivers/scsi/cxlflash/main.c
-@@ -3687,6 +3687,7 @@ static int cxlflash_probe(struct pci_dev *pdev,
- 	host->max_cmd_len = CXLFLASH_MAX_CDB_LEN;
- 
- 	cfg = shost_priv(host);
-+	cfg->state = STATE_PROBING;
- 	cfg->host = host;
- 	rc = alloc_mem(cfg);
- 	if (rc) {
-@@ -3775,6 +3776,7 @@ static int cxlflash_probe(struct pci_dev *pdev,
- 	return rc;
- 
- out_remove:
-+	cfg->state = STATE_PROBED;
- 	cxlflash_remove(pdev);
- 	goto out;
- }
--- 
-2.20.1
+
+> +	if (phy->phy)
+> +		phy->phy->negotiated_linkrate = SAS_LINK_RATE_UNKNOWN;
+>  }
+>
+>  static inline unsigned int to_sas_gpio_od(int device, int bit)
+
+Thanks,
+
+>
