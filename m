@@ -1,63 +1,36 @@
-From: John Garry <john.garry@huawei.com>
-Subject: Re: [PATCH v2 6/7] scsi: libsas: reset the phy address if discover
- failed
-Date: Wed, 30 Jan 2019 17:36:20 +0000
-Message-ID: <e6bb5696-b2ad-d546-5571-1e2fe39edb61@huawei.com>
-References: <20190130082412.9357-1-yanaijie@huawei.com>
- <20190130082412.9357-7-yanaijie@huawei.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Joao Pinto <joao.pinto@synopsys.com>
+Subject: [PATCH for-next] scsi: ufs: Update dwc driver maintainer to Pedro Sousa
+Date: Wed, 30 Jan 2019 18:48:13 +0100
+Message-ID: <812e9e1426555808ad1bd5fbfda320c6684abc81.1548869844.git.jpinto@synopsys.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190130082412.9357-7-yanaijie@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jason Yan <yanaijie@huawei.com>, martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, zhaohongjiang@huawei.com, hare@suse.com, dan.j.williams@intel.com, jthumshirn@suse.de, hch@lst.de, huangdaode@hisilicon.com, chenxiang66@hisilicon.com, xiexiuqi@huawei.com, tj@kernel.org, miaoxie@huawei.com, Xiaofei Tan <tanxiaofei@huawei.com>, Ewan Milne <emilne@redhat.com>, Tomas Henzl <thenzl@redhat.com>
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: joao.pinto@synopsys.com, pedrom.sousa@synopsys.com, marc.w.gonzalez@free.fr, Alex.Lemberg@wdc.com
 List-Id: linux-scsi@vger.kernel.org
 
-On 30/01/2019 08:24, Jason Yan wrote:
-> When we failed to discover the device, the phy address is still kept
-> in ex_phy. So when the next time we revalidate this phy the
-> address and device type is the same, it will be considered as flutter
-> and will not be discovered again. So the device will not be brought up.
->
-> Fix this by reset the phy address to the initial value. Then
-> in the next revalidation the device will be discovered agian.
+Currently I am managing the Synopsys drivers & tools team (full-time) and
+so I am passing the DWC UFS driver maintenance to Pedro Sousa.
 
-Why fail to discover the device? I wonder in which scenario you have 
-seen this, such that it is worth rediscovery.
+Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+Cc: Pedro Sousa <pedrom.sousa@synopsys.com>
+Cc: Marc Gonzalez <marc.w.gonzalez@free.fr>
+Cc: Alex Lemberg <Alex.Lemberg@wdc.com>
+---
+ MAINTAINERS | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
->
-> Tested-by: Chen Liangfei <chenliangfei1@huawei.com>
-> Signed-off-by: Jason Yan <yanaijie@huawei.com>
-> CC: Xiaofei Tan <tanxiaofei@huawei.com>
-> CC: John Garry <john.garry@huawei.com>
-> CC: Johannes Thumshirn <jthumshirn@suse.de>
-> CC: Ewan Milne <emilne@redhat.com>
-> CC: Christoph Hellwig <hch@lst.de>
-> CC: Tomas Henzl <thenzl@redhat.com>
-> CC: Dan Williams <dan.j.williams@intel.com>
-> CC: Hannes Reinecke <hare@suse.com>
-> ---
->  drivers/scsi/libsas/sas_expander.c | 7 +++++++
->  1 file changed, 7 insertions(+)
->
-> diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-> index 6e56ebdc2148..e781941a7088 100644
-> --- a/drivers/scsi/libsas/sas_expander.c
-> +++ b/drivers/scsi/libsas/sas_expander.c
-> @@ -1100,6 +1100,13 @@ static int sas_ex_discover_dev(struct domain_device *dev, int phy_id)
->  						 i, SAS_ADDR(ex->ex_phy[i].attached_sas_addr));
->  			}
->  		}
-> +	} else {
-> +		/* if we failed to discover this device, we have to
-> +		 * reset the expander phy attached address so that we
-> +		 * will not treat the phy as flutter in the next
-> +		 * revalidation
-> +		 */
-> +		memset(ex_phy->attached_sas_addr, 0, SAS_ADDR_SIZE);
->  	}
->
->  	return res;
->
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 70c93b1..458a2a2 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -15673,7 +15673,7 @@ F:	Documentation/scsi/ufs.txt
+ F:	drivers/scsi/ufs/
+ 
+ UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER DWC HOOKS
+-M:	Joao Pinto <jpinto@synopsys.com>
++M:	Pedro Sousa <pedrom.sousa@synopsys.com>
+ L:	linux-scsi@vger.kernel.org
+ S:	Supported
+ F:	drivers/scsi/ufs/*dwc*
+-- 
+2.7.4
