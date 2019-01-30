@@ -1,38 +1,80 @@
-From: YueHaibing <yuehaibing@huawei.com>
-Subject: [PATCH -next] scsi: libfc: Fix potential NULL pointer dereference
-Date: Wed, 30 Jan 2019 18:11:41 +0800
-Message-ID: <20190130101141.20132-1-yuehaibing@huawei.com>
+From: Vaibhav Jain <vaibhav@linux.ibm.com>
+Subject: [PATCH] scsi: cxlflash: Prevent deadlock when adapter probe fails
+Date: Wed, 30 Jan 2019 17:56:51 +0530
+Message-ID: <20190130122651.19255-1-vaibhav@linux.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: hare@suse.de, jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, YueHaibing <yuehaibing@huawei.com>
+Content-Transfer-Encoding: 8bit
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: "Manoj N . Kumar" <manoj@linux.ibm.com>, "Matthew R . Ochs" <mrochs@linux.ibm.com>, Uma Krishnan <ukrishn@linux.ibm.com>
+Cc: Vaibhav Jain <vaibhav@linux.ibm.com>, Frederic Barrat <fbarrat@linux.ibm.com>, linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-There is a potential NULL pointer dereference in case
-fc_rport_create() fails and returns NULL.
 
-Fixes: 2580064b5ec6 ("scsi: libfc: Replace ->rport_create callback with function call")
-Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+Presently when an error is encountered during probe of the cxlflash
+adapter, a deadlock is seen with cpu thread stuck inside
+cxlflash_remove(). Below is the trace of the deadlock as logged by
+khungtaskd:
+
+cxlflash 0006:00:00.0: cxlflash_probe: init_afu failed rc=-16
+INFO: task kworker/80:1:890 blocked for more than 120 seconds.
+       Not tainted 5.0.0-rc4-capi2-kexec+ #2
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+kworker/80:1    D    0   890      2 0x00000808
+Workqueue: events work_for_cpu_fn
+
+Call Trace:
+ 0x4d72136320 (unreliable)
+ __switch_to+0x2cc/0x460
+ __schedule+0x2bc/0xac0
+ schedule+0x40/0xb0
+ cxlflash_remove+0xec/0x640 [cxlflash]
+ cxlflash_probe+0x370/0x8f0 [cxlflash]
+ local_pci_probe+0x6c/0x140
+ work_for_cpu_fn+0x38/0x60
+ process_one_work+0x260/0x530
+ worker_thread+0x280/0x5d0
+ kthread+0x1a8/0x1b0
+ ret_from_kernel_thread+0x5c/0x80
+INFO: task systemd-udevd:5160 blocked for more than 120 seconds.
+
+The deadlock occurs as cxlflash_remove() is called from
+cxlflash_probe() without setting 'cxlflash_cfg->state' to STATE_PROBED
+and the probe thread starts to wait on
+'cxlflash_cfg->reset_waitq'. Since the device was never successfully
+probed the 'cxlflash_cfg->state' never changes from STATE_PROBING
+hence the deadlock occurs.
+
+We fix this deadlock by setting the variable 'cxlflash_cfg->state' to
+STATE_PROBED in case an error occurs during cxlflash_probe() and just
+before calling cxlflash_remove().
+
+Cc: stable@vger.kernel.org
+Fixes: c21e0bbfc485("cxlflash: Base support for IBM CXL Flash Adapter")
+Signed-off-by: Vaibhav Jain <vaibhav@linux.ibm.com>
 ---
- drivers/scsi/libfc/fc_lport.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/scsi/cxlflash/main.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
-index ff943f4..e2a3551 100644
---- a/drivers/scsi/libfc/fc_lport.c
-+++ b/drivers/scsi/libfc/fc_lport.c
-@@ -250,6 +250,10 @@ static void fc_lport_ptp_setup(struct fc_lport *lport,
- 	}
- 	mutex_lock(&lport->disc.disc_mutex);
- 	lport->ptp_rdata = fc_rport_create(lport, remote_fid);
-+	if (!lport->ptp_rdata) {
-+		mutex_unlock(&lport->disc.disc_mutex);
-+		return;
-+	}
- 	kref_get(&lport->ptp_rdata->kref);
- 	lport->ptp_rdata->ids.port_name = remote_wwpn;
- 	lport->ptp_rdata->ids.node_name = remote_wwnn;
+diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
+index bfa13e3b191c..c8bad2c093b8 100644
+--- a/drivers/scsi/cxlflash/main.c
++++ b/drivers/scsi/cxlflash/main.c
+@@ -3687,6 +3687,7 @@ static int cxlflash_probe(struct pci_dev *pdev,
+ 	host->max_cmd_len = CXLFLASH_MAX_CDB_LEN;
+ 
+ 	cfg = shost_priv(host);
++	cfg->state = STATE_PROBING;
+ 	cfg->host = host;
+ 	rc = alloc_mem(cfg);
+ 	if (rc) {
+@@ -3775,6 +3776,7 @@ static int cxlflash_probe(struct pci_dev *pdev,
+ 	return rc;
+ 
+ out_remove:
++	cfg->state = STATE_PROBED;
+ 	cxlflash_remove(pdev);
+ 	goto out;
+ }
 -- 
-2.7.0
+2.20.1
