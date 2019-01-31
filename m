@@ -1,259 +1,137 @@
 From: John Garry <john.garry@huawei.com>
-Subject: Re: [PATCH v2 4/7] scsi: libsas: split the replacement of sas disks
- in two steps
-Date: Thu, 31 Jan 2019 10:29:17 +0000
-Message-ID: <7ad77303-9960-5b8c-f26e-fc825ac57621@huawei.com>
+Subject: Re: [PATCH v2 7/7] scsi: libsas: fix issue of swapping two sas disks
+Date: Thu, 31 Jan 2019 16:34:32 +0000
+Message-ID: <1135102e-e563-d3ab-9b44-d8691c3e6ccb@huawei.com>
 References: <20190130082412.9357-1-yanaijie@huawei.com>
- <20190130082412.9357-5-yanaijie@huawei.com>
- <17908564-35f2-4c5d-e9e4-4fe109fae4cc@huawei.com>
- <5C5257AC.3040303@huawei.com>
+ <20190130082412.9357-8-yanaijie@huawei.com>
+ <368786a4-9c18-7d5b-e62b-5dcdc634d3e6@huawei.com>
+ <5C5263BD.7060002@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="windows-1252"; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <5C5257AC.3040303@huawei.com>
+In-Reply-To: <5C5263BD.7060002@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Jason Yan <yanaijie@huawei.com>, martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, zhaohongjiang@huawei.com, hare@suse.com, dan.j.williams@intel.com, jthumshirn@suse.de, hch@lst.de, huangdaode@hisilicon.com, chenxiang66@hisilicon.com, xiexiuqi@huawei.com, tj@kernel.org, miaoxie@huawei.com, Ewan Milne <emilne@redhat.com>, Tomas Henzl <thenzl@redhat.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, zhaohongjiang@huawei.com, hare@suse.com, dan.j.williams@intel.com, jthumshirn@suse.de, hch@lst.de, huangdaode@hisilicon.com, chenxiang66@hisilicon.com, xiexiuqi@huawei.com, tj@kernel.org, miaoxie@huawei.com, Xiaofei Tan <tanxiaofei@huawei.com>, Ewan Milne <emilne@redhat.com>, Tomas Henzl <thenzl@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 31/01/2019 02:04, Jason Yan wrote:
+On 31/01/2019 02:55, Jason Yan wrote:
 >
 >
-> On 2019/1/31 1:22, John Garry wrote:
+> On 2019/1/31 1:53, John Garry wrote:
 >> On 30/01/2019 08:24, Jason Yan wrote:
->>> Now if a new device replaced a old device, the sas address will change.
->>
->> Hmmm... not if it's a SATA disk, which would have some same invented SAS
->> address.
->>
->
-> Yes, it's only for a SAS disk.
->
->>> We unregister the old device and discover the new device in one
->>> revalidation process. But after we deferred the sas_port_delete(), the
->>> sas port is not deleted when we registering the new port and device.
->>> The sas port cannot be added because the name of the new port is the
->>> same as the old.
+>>> The work flow of revalidation now is scanning expander phy by the
+>>> sequence of the phy and check if the phy have changed. This will leads
+>>> to an issue of swapping two sas disks on one expander.
 >>>
->>> Fix this by doing the replacement in two steps. The first revalidation
->>> only delete the old device and trigger a new revalidation. The second
->>> revalidation discover the new device. To keep the event processing
->>> synchronised to the original event,
+>>> Assume we have two sas disks, connected with expander phy10 and phy11:
+>>>
+>>> phy10: 5000cca04eb1001d  port-0:0:10
+>>> phy11: 5000cca04eb043ad  port-0:0:11
+>>>
+>>> Swap these two disks, and imaging the following scenario:
+>>>
+>>> revalidation 1:
 >>
->> Did I originally suggest this? It seems to needlessly make the code more
->> complicated.
+>> What does "revalidation 1" actually mean?
+>
+> 'revalidation 1' means one entry in sas_discover_domain().
+>
+>>
+>>>   -->phy10: 0 --> delete phy10 domain device
+>>>   -->phy11: 5000cca04eb043ad (no change)
+>>
+>> so is disk 11 still inserted at this stage?
+>
+> Maybe, but that's what we read from the hardware.
+>
+>>
+>>> revalidation done
+>>>
+>>> revalidation 2:
+>>
+>> is port-0:0:10 deleted now?
 >>
 >
-> Yes, my first version was raise a new bcast event, and you said it's not
-> synchronised to the original event.  Shall I get back to that approach?
+> Yes. But we don't care about it.
+>
+>>>   -->step 1, check phy10:
+>>>   -->phy10: 5000cca04eb043ad   --> add to wide port(port-0:0:11) (phy11
+>>>        address is still 5000cca04eb043ad now)
 
-Not sure. This patch seems to fix something closely related to that in 
-"scsi: libsas: fix issue of swapping two sas disks", which I will check 
-further.
+We do not want this to happen and it seems to be the crux of the problem.
 
-EOM
+As an alternate to your solution, how about check if the PHY is an end 
+device. If so, it should not form/join a wideport; that is, apart from 
+dual-port disks, which I am not sure about - I think each port still has 
+a unique WWN, so should be ok.
 
->
->> we wrapped a loop and added a new
->>> parameter to see if we should revalidate again.
->>>
->>> Signed-off-by: Jason Yan <yanaijie@huawei.com>
->>> CC: chenxiang <chenxiang66@hisilicon.com>
->>> CC: John Garry <john.garry@huawei.com>
->>> CC: Johannes Thumshirn <jthumshirn@suse.de>
->>> CC: Ewan Milne <emilne@redhat.com>
->>> CC: Christoph Hellwig <hch@lst.de>
->>> CC: Tomas Henzl <thenzl@redhat.com>
->>> CC: Dan Williams <dan.j.williams@intel.com>
->>> CC: Hannes Reinecke <hare@suse.com>
->>> ---
->>>  drivers/scsi/libsas/sas_discover.c | 20 +++++++++++++++-----
->>>  drivers/scsi/libsas/sas_expander.c | 20 ++++++++++++++------
->>>  include/scsi/libsas.h              |  2 +-
->>>  3 files changed, 30 insertions(+), 12 deletions(-)
->>>
->>> diff --git a/drivers/scsi/libsas/sas_discover.c
->>> b/drivers/scsi/libsas/sas_discover.c
->>> index ffc571a12916..c825c89fbddd 100644
->>> --- a/drivers/scsi/libsas/sas_discover.c
->>> +++ b/drivers/scsi/libsas/sas_discover.c
->>> @@ -498,12 +498,10 @@ static void sas_discover_domain(struct
->>> work_struct *work)
->>>           task_pid_nr(current), error);
->>>  }
->>>
->>> -static void sas_revalidate_domain(struct work_struct *work)
->>> +static void sas_do_revalidate_domain(struct asd_sas_port *port, bool
->>> *retry)
->>>  {
->>> -    struct sas_discovery_event *ev = to_sas_discovery_event(work);
->>> -    struct asd_sas_port *port = ev->port;
->>> -    struct sas_ha_struct *ha = port->ha;
->>>      struct domain_device *ddev = port->port_dev;
->>> +    struct sas_ha_struct *ha = port->ha;
->>>
->>>      /* prevent revalidation from finding sata links in recovery */
->>>      mutex_lock(&ha->disco_mutex);
->>> @@ -520,7 +518,7 @@ static void sas_revalidate_domain(struct
->>> work_struct *work)
->>>
->>>      if (ddev && (ddev->dev_type == SAS_FANOUT_EXPANDER_DEVICE ||
->>>               ddev->dev_type == SAS_EDGE_EXPANDER_DEVICE))
->>> -        sas_ex_revalidate_domain(ddev);
->>> +        sas_ex_revalidate_domain(ddev, retry);
->>>
->>>      pr_debug("done REVALIDATING DOMAIN on port %d, pid:%d\n",
->>>           port->id, task_pid_nr(current));
->>> @@ -532,6 +530,18 @@ static void sas_revalidate_domain(struct
->>> work_struct *work)
->>>      sas_probe_devices(port);
->>>  }
->>>
->>> +static void sas_revalidate_domain(struct work_struct *work)
->>> +{
->>> +    struct sas_discovery_event *ev = to_sas_discovery_event(work);
->>> +    struct asd_sas_port *port = ev->port;
->>> +    bool retry;
->>> +
->>> +    do {
->>> +        retry = false;
->>> +        sas_do_revalidate_domain(port, &retry);
->>> +    } while (retry);
->>> +}
->>> +
->>>  /* ---------- Events ---------- */
->>>
->>>  static void sas_chain_work(struct sas_ha_struct *ha, struct sas_work
->>> *sw)
->>> diff --git a/drivers/scsi/libsas/sas_expander.c
->>> b/drivers/scsi/libsas/sas_expander.c
->>> index 5cd720f93f96..cdbf8d8a28bf 100644
->>> --- a/drivers/scsi/libsas/sas_expander.c
->>> +++ b/drivers/scsi/libsas/sas_expander.c
->>> @@ -1994,7 +1994,8 @@ static bool dev_type_flutter(enum
->>> sas_device_type new, enum sas_device_type old)
->>>      return false;
->>>  }
->>>
->>> -static int sas_rediscover_dev(struct domain_device *dev, int phy_id,
->>> bool last)
->>> +static int sas_unregister(struct domain_device *dev, int phy_id, bool
->>> last,
->>> +                  bool *retry)
->>>  {
->>>      struct expander_device *ex = &dev->ex_dev;
->>>      struct ex_phy *phy = &ex->ex_phy[phy_id];
->>> @@ -2045,7 +2046,12 @@ static int sas_rediscover_dev(struct
->>> domain_device *dev, int phy_id, bool last)
->>>          SAS_ADDR(phy->attached_sas_addr));
->>>      sas_unregister_devs_sas_addr(dev, phy_id, last);
->>>
->>> -    return sas_discover_new(dev, phy_id);
->>> +    /* force the next revalidation find this phy and bring it up */
->>> +    phy->phy_change_count = -1;
->>> +    ex->ex_change_count = -1;
->>> +    *retry = true;
 >>
->> Ohh, sorry to say, but that's a real hack :)
+>> So this should not happen. How are you physcially swapping them such
+>> that phy11 address is still 5000cca04eb043ad? I don't see how this would
+>> be true at revalidation 1.
 >>
 >
-> This is the way sas_resume_port() already in use.
+> This issue is because we always process the PHYs from 0 to max phy
+> number. And please be aware of the real physcial address of the PHY and
+> the address stored in the memory is not always the same.
+> Actually when you checking phy10, phy11 physcial address is not
+> 5000cca04eb043ad. But the address stored in domain device is still
+> 5000cca04eb043ad. We have not get a chance to to read it because we are
+> processing phy10 now, right?
 >
->> Could we just add a flag for the expander PHY to force a discovery
->> instead of this?
->>
+
+I see.
+
+> It's very easy to reproduce. I suggest you to do it yourself and look at
+> the logs.
 >
-> of course we can add a flag instead of this, but I don't think it worth
-> to do this. We have to change the logic of sas_find_bcast_dev() and
-> sas_find_bcast_phy() to achieve this. Or we have to add a new function
-> to find out which PHY's flag is set.
->
->> I assume that you need to do this as the expander PHY change count will
->> not be modified for the next revalidation (so no discovery on that PHY).
->>
->
-> To save one instruction(assign), we have to add two(check and assign)?
-> And how to predict if the PHY change count will be modified or not?
-> It's unnessesary to do this.
->
->>> +
->>> +    return 0;
->>>  }
+
+I can't physically access the backpane, and this is not the sort of 
+thing which is easy to fake by hacking the driver.
+
+And the log which you provided internally does not have much - if any - 
+libsas logs to help me understand it.
+
 >>>
->>>  /**
->>> @@ -2062,7 +2068,8 @@ static int sas_rediscover_dev(struct
->>> domain_device *dev, int phy_id, bool last)
->>>   * first phy,for other phys in this port, we add it to the port to
->>>   * forming the wide-port.
->>>   */
->>> -static void sas_rediscover(struct domain_device *dev, const int phy_id)
->>> +static void sas_rediscover(struct domain_device *dev, const int phy_id,
->>> +               bool *retry)
->>>  {
->>>      struct expander_device *ex = &dev->ex_dev;
->>>      struct ex_phy *changed_phy = &ex->ex_phy[phy_id];
->>> @@ -2087,7 +2094,7 @@ static void sas_rediscover(struct domain_device
->>> *dev, const int phy_id)
->>>                  break;
->>>              }
->>>          }
->>> -        res = sas_rediscover_dev(dev, phy_id, last);
->>> +        res = sas_unregister(dev, phy_id, last, retry);
->>>      } else
->>>          res = sas_discover_new(dev, phy_id);
+>>>   -->step 2, check phy11:
+>>>   -->phy11: 0  --> phy11 address is 0 now, but it's part of wide
+>>>        port(port-0:0:11), the domain device will not be deleted.
+>>> revalidation done
 >>>
->>> @@ -2098,13 +2105,14 @@ static void sas_rediscover(struct
->>> domain_device *dev, const int phy_id)
->>>  /**
->>>   * sas_ex_revalidate_domain - revalidate the domain
->>>   * @port_dev: port domain device.
->>> + * @retry: do we need to revalidate again
->>>   *
->>>   * NOTE: this process _must_ quit (return) as soon as any connection
->>>   * errors are encountered.  Connection recovery is done elsewhere.
->>>   * Discover process only interrogates devices in order to discover the
->>>   * domain.
->>>   */
->>> -void sas_ex_revalidate_domain(struct domain_device *port_dev)
->>> +void sas_ex_revalidate_domain(struct domain_device *port_dev, bool
->>> *retry)
->>>  {
->>>      int res;
->>>      struct domain_device *dev = NULL;
->>> @@ -2119,7 +2127,7 @@ void sas_ex_revalidate_domain(struct
->>> domain_device *port_dev)
->>>              res = sas_find_bcast_phy(dev, &phy_id, i, true);
->>>              if (phy_id == -1)
->>>                  break;
->>> -            sas_rediscover(dev, phy_id);
->>> +            sas_rediscover(dev, phy_id, retry);
->>>              i = phy_id + 1;
->>>          } while (i < ex->num_phys);
->>>      }
->>> diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
->>> index e557bcb0c266..deb75765e555 100644
->>> --- a/include/scsi/libsas.h
->>> +++ b/include/scsi/libsas.h
->>> @@ -692,7 +692,7 @@ int  sas_discover_root_expander(struct
->>> domain_device *);
+>>> revalidation 3:
+>>>   -->phy10, 5000cca04eb043ad (no change)
+>>>   -->phy11: 5000cca04eb1001d --> try to add port-0:0:11 but failed,
+>>>        port-0:0:11 already exist, trigger a warning as follows
+>>> revalidation done
 >>>
->>>  void sas_init_ex_attr(void);
+>>> [14790.189699] sysfs: cannot create duplicate filename
+>>> '/devices/pci0000:74/0000:74:02.0/host0/port-0:0/expander-0:0/port-0:0:11'
 >>>
->>> -void sas_ex_revalidate_domain(struct domain_device *);
->>> +void sas_ex_revalidate_domain(struct domain_device *port_dev, bool
->>> *retry);
 >>>
->>>  void sas_unregister_domain_devices(struct asd_sas_port *port, int
->>> gone);
->>>  void sas_init_disc(struct sas_discovery *disc, struct asd_sas_port *);
+>>> [14790.201081] CPU: 25 PID: 5031 Comm: kworker/u192:3 Not tainted
+>>> 4.16.0-rc1-191134-g138f084-dirty #228
+>>> [14790.210199] Hardware name: Huawei D06/D06, BIOS Hisilicon D06 EC UEFI
+>>> Nemo 2.0 RC0 - B303 05/16/2018
+>>> [14790.219323] Workqueue: 0000:74:02.0_disco_q sas_revalidate_domain
+>>> [14790.225404] Call trace:
+>>> [14790.227842]  dump_backtrace+0x0/0x18c
+>>> [14790.231492]  show_stack+0x14/0x1c
+>>> [14790.234798]  dump_stack+0x88/0xac
+>>> [14790.238101]  sysfs_warn_dup+0x64/0x7c
+>>> [14790.241751]  sysfs_create_dir_ns+0x90/0xa0
+>>> [14790.245835]  kobject_add_internal+0xa0/0x284
+>>> [14790.250092]  kobject_add+0xb8/0x11c
+>>> [14790.253570]  device_add+0xe8/0x598
+>>> [14790.256960]  sas_port_add+0x24/0x50
+>>> [14790.260436]  sas_ex_discover_devices+0xb10/0xc30
+>>> [14790.265040]  sas_ex_revalidate_domain+0x1d8/0x518
+>>> [14790.269731]  sas_revalidate_domain+0x12c/0x154
+>>> [14790.274163]  process_one_work+0x128/0x2b0
+>>> [14790.278160]  worker_thread+0x14c/0x408
+>>> [14790.281897]  kthread+0xfc/0x128
+>>> [14790.285026]  ret_from_fork+0x10/0x18
+>>> [14790.288598] ------------[ cut here ]------------
 >>>
->>
->>
->>
->> .
->>
->
->
-> .
->
+>>> At last, the disk 5000cca04eb1001d is lost.
