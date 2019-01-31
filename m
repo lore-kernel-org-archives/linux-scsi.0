@@ -1,16 +1,16 @@
 From: Jason Yan <yanaijie@huawei.com>
-Subject: Re: [PATCH v2 1/7] scsi: libsas: reset the negotiated_linkrate when
- phy is down
-Date: Thu, 31 Jan 2019 09:11:23 +0800
-Message-ID: <5C524B3B.5030007@huawei.com>
+Subject: Re: [PATCH v2 2/7] scsi: libsas: only clear phy->in_shutdown after
+ shutdown event done
+Date: Thu, 31 Jan 2019 09:13:42 +0800
+Message-ID: <5C524BC6.3010006@huawei.com>
 References: <20190130082412.9357-1-yanaijie@huawei.com>
- <20190130082412.9357-2-yanaijie@huawei.com>
- <6b06f81e-9ede-014d-b678-1996044106e3@huawei.com>
+ <20190130082412.9357-3-yanaijie@huawei.com>
+ <5643a038-a62f-e19c-1073-d845a8344b9f@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="windows-1252"; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <6b06f81e-9ede-014d-b678-1996044106e3@huawei.com>
+In-Reply-To: <5643a038-a62f-e19c-1073-d845a8344b9f@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: John Garry <john.garry@huawei.com>, martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, zhaohongjiang@huawei.com, hare@suse.com, dan.j.williams@intel.com, jthumshirn@suse.de, hch@lst.de, huangdaode@hisilicon.com, chenxiang66@hisilicon.com, xiexiuqi@huawei.com, tj@kernel.org, miaoxie@huawei.com, Ewan Milne <emilne@redhat.com>, Tomas Henzl <thenzl@redhat.com>
@@ -18,13 +18,31 @@ List-Id: linux-scsi@vger.kernel.org
 
 
 
-On 2019/1/30 21:08, John Garry wrote:
+On 2019/1/31 0:26, John Garry wrote:
 > On 30/01/2019 08:24, Jason Yan wrote:
->> If the device is unplugged or disconnected, the negotiated_linkrate
->> still can be seen from the userspace by sysfs. This makes people
->> confused and leaks information of the device last used. So let's reset
->> the negotiated_linkrate after the phy is down.
+>> When the event queue is full of phy up and down events and reached the
+>> threshold, we will queue a shutdown-event, and set phy->in_shutdown so
+>> that we will not queue a shutdown-event again. But before the
+>> shutdown-event can be executed, every phy-down event will clear
+>> phy->in_shutdown and a new shutdown-event will be queued. The queue will
+>> be full of these shutdown-events.
 >>
+>> Fix this by only clear phy->in_shutdown in sas_phye_shutdown(), that is
+>> after the first shutdown-event has been executed.
+>>
+>
+> Seems ok as a fix:
+> Reviewed-by: John Garry <john.garry@huawei.com>
+>
+> After this fix, could we change to use a static per-PHY shutdown event
+> so that we cannot re-queue it? I know that this is going against idea of
+> dynamic events, but it's easier than messing with flags like this.
+>
+
+Thanks, I will consider this.
+
+>> Fixes: f12486e06ae8 ("scsi: libsas: shut down the PHY if events
+>> reached the threshold")
 >> Signed-off-by: Jason Yan <yanaijie@huawei.com>
 >> CC: John Garry <john.garry@huawei.com>
 >> CC: Johannes Thumshirn <jthumshirn@suse.de>
@@ -34,73 +52,41 @@ On 2019/1/30 21:08, John Garry wrote:
 >> CC: Dan Williams <dan.j.williams@intel.com>
 >> CC: Hannes Reinecke <hare@suse.com>
 >> ---
->>  drivers/scsi/libsas/sas_expander.c | 2 ++
->>  include/scsi/libsas.h              | 3 +++
->>  2 files changed, 5 insertions(+)
+>>  drivers/scsi/libsas/sas_phy.c | 3 +--
+>>  1 file changed, 1 insertion(+), 2 deletions(-)
 >>
->> diff --git a/drivers/scsi/libsas/sas_expander.c
->> b/drivers/scsi/libsas/sas_expander.c
->> index 17eb4185f29d..7b0e6dcef6e6 100644
->> --- a/drivers/scsi/libsas/sas_expander.c
->> +++ b/drivers/scsi/libsas/sas_expander.c
->> @@ -1904,6 +1904,8 @@ static void sas_unregister_devs_sas_addr(struct
->> domain_device *parent,
->>                  &parent->port->sas_port_del_list);
->>          phy->port = NULL;
->>      }
->> +    if (phy->phy)
->> +        phy->phy->negotiated_linkrate = SAS_LINK_RATE_UNKNOWN;
->
-> Does this work for both PHYs which were either directly attached or just
-> forming part of a wideport?
->
-> Please also note that the expander PHY which was previously attached may
-> also show the incorrect value.
-
-Good catch, all PHYs need to do this, not only the last PHY of the wideport.
-
->
+>> diff --git a/drivers/scsi/libsas/sas_phy.c
+>> b/drivers/scsi/libsas/sas_phy.c
+>> index 0374243c85d0..762bb13cca74 100644
+>> --- a/drivers/scsi/libsas/sas_phy.c
+>> +++ b/drivers/scsi/libsas/sas_phy.c
+>> @@ -35,7 +35,6 @@ static void sas_phye_loss_of_signal(struct
+>> work_struct *work)
+>>      struct asd_sas_event *ev = to_asd_sas_event(work);
+>>      struct asd_sas_phy *phy = ev->phy;
+>>
+>> -    phy->in_shutdown = 0;
+>>      phy->error = 0;
+>>      sas_deform_port(phy, 1);
+>>  }
+>> @@ -45,7 +44,6 @@ static void sas_phye_oob_done(struct work_struct *work)
+>>      struct asd_sas_event *ev = to_asd_sas_event(work);
+>>      struct asd_sas_phy *phy = ev->phy;
+>>
+>> -    phy->in_shutdown = 0;
+>>      phy->error = 0;
 >>  }
 >>
->>  static int sas_discover_bfs_by_root_level(struct domain_device *root,
->> diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
->> index 3de3b10da19a..420156cea3ee 100644
->> --- a/include/scsi/libsas.h
->> +++ b/include/scsi/libsas.h
->> @@ -448,6 +448,9 @@ static inline void sas_phy_disconnected(struct
->> asd_sas_phy *phy)
->>  {
->>      phy->oob_mode = OOB_NOT_CONNECTED;
->>      phy->linkrate = SAS_LINK_RATE_UNKNOWN;
->> +
->
-> Then idea behind sas_phy_disconnected() was to set root PHY values only:
->
-> /* Before calling a notify event, LLDD should use this function
->   * when the link is severed (possibly from its tasklet).
->   * The idea is that the Class only reads those, while the LLDD,
->   * can R/W these (thus avoiding a race)
->
-> libsas does set sas_phy negotiated_linkrate (but only for expander
-> PHYs), so not the perfect place to set this. I'm nitpicking a bit here.
->
-
-I don't want to put it here. I asked chenxiang to fix this in LLDD, but 
-he insist libsas to do this. Would you please discuss with chenxiang and 
-come to an agreement?
-
->
->> +    if (phy->phy)
->> +        phy->phy->negotiated_linkrate = SAS_LINK_RATE_UNKNOWN;
+>> @@ -127,6 +125,7 @@ static void sas_phye_shutdown(struct work_struct
+>> *work)
+>>      } else
+>>          pr_notice("phy%02d is not enabled, cannot shutdown\n",
+>>                phy->id);
+>> +    phy->in_shutdown = 0;
 >>  }
 >>
->>  static inline unsigned int to_sas_gpio_od(int device, int bit)
->
-> Thanks,
->
+>>  /* ---------- Phy class registration ---------- */
 >>
->
->
 >
 >
 >
