@@ -1,78 +1,108 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH v2] RDMA/srp: Rework SCSI device reset handling
-Date: Wed, 30 Jan 2019 14:05:55 -0800
-Message-ID: <20190130220555.8949-1-bvanassche@acm.org>
+From: Jason Yan <yanaijie@huawei.com>
+Subject: Re: [PATCH v2 1/7] scsi: libsas: reset the negotiated_linkrate when
+ phy is down
+Date: Thu, 31 Jan 2019 09:11:23 +0800
+Message-ID: <5C524B3B.5030007@huawei.com>
+References: <20190130082412.9357-1-yanaijie@huawei.com>
+ <20190130082412.9357-2-yanaijie@huawei.com>
+ <6b06f81e-9ede-014d-b678-1996044106e3@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
-Sender: stable-owner@vger.kernel.org
-To: Jason Gunthorpe <jgg@ziepe.ca>
-Cc: Doug Ledford <dledford@redhat.com>, linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>, Sergey Gorenko <sergeygo@mellanox.com>, Max Gurtovoy <maxg@mellanox.com>, Laurence Oberman <loberman@redhat.com>, stable@vger.kernel.org
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <6b06f81e-9ede-014d-b678-1996044106e3@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: John Garry <john.garry@huawei.com>, martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, zhaohongjiang@huawei.com, hare@suse.com, dan.j.williams@intel.com, jthumshirn@suse.de, hch@lst.de, huangdaode@hisilicon.com, chenxiang66@hisilicon.com, xiexiuqi@huawei.com, tj@kernel.org, miaoxie@huawei.com, Ewan Milne <emilne@redhat.com>, Tomas Henzl <thenzl@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Since .scsi_done() must only be called after scsi_queue_rq() has
-finished, make sure that the SRP initiator driver does not call
-.scsi_done() while scsi_queue_rq() is in progress. Although
-invoking sg_reset -d while I/O is in progress works fine with kernel
-v4.20 and before, that is not the case with kernel v5.0-rc1. This
-patch avoids that the following crash is triggered with kernel
-v5.0-rc1:
 
-BUG: unable to handle kernel NULL pointer dereference at 0000000000000138
-CPU: 0 PID: 360 Comm: kworker/0:1H Tainted: G    B             5.0.0-rc1-dbg+ #1
-Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.10.2-1 04/01/2014
-Workqueue: kblockd blk_mq_run_work_fn
-RIP: 0010:blk_mq_dispatch_rq_list+0x116/0xb10
-Call Trace:
- blk_mq_sched_dispatch_requests+0x2f7/0x300
- __blk_mq_run_hw_queue+0xd6/0x180
- blk_mq_run_work_fn+0x27/0x30
- process_one_work+0x4f1/0xa20
- worker_thread+0x67/0x5b0
- kthread+0x1cf/0x1f0
- ret_from_fork+0x24/0x30
 
-Cc: Sergey Gorenko <sergeygo@mellanox.com>
-Cc: Max Gurtovoy <maxg@mellanox.com>
-Cc: Laurence Oberman <loberman@redhat.com>
-Cc: <stable@vger.kernel.org>
-Fixes: 94a9174c630c ("IB/srp: reduce lock coverage of command completion") # v2.6.38
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
+On 2019/1/30 21:08, John Garry wrote:
+> On 30/01/2019 08:24, Jason Yan wrote:
+>> If the device is unplugged or disconnected, the negotiated_linkrate
+>> still can be seen from the userspace by sysfs. This makes people
+>> confused and leaks information of the device last used. So let's reset
+>> the negotiated_linkrate after the phy is down.
+>>
+>> Signed-off-by: Jason Yan <yanaijie@huawei.com>
+>> CC: John Garry <john.garry@huawei.com>
+>> CC: Johannes Thumshirn <jthumshirn@suse.de>
+>> CC: Ewan Milne <emilne@redhat.com>
+>> CC: Christoph Hellwig <hch@lst.de>
+>> CC: Tomas Henzl <thenzl@redhat.com>
+>> CC: Dan Williams <dan.j.williams@intel.com>
+>> CC: Hannes Reinecke <hare@suse.com>
+>> ---
+>>  drivers/scsi/libsas/sas_expander.c | 2 ++
+>>  include/scsi/libsas.h              | 3 +++
+>>  2 files changed, 5 insertions(+)
+>>
+>> diff --git a/drivers/scsi/libsas/sas_expander.c
+>> b/drivers/scsi/libsas/sas_expander.c
+>> index 17eb4185f29d..7b0e6dcef6e6 100644
+>> --- a/drivers/scsi/libsas/sas_expander.c
+>> +++ b/drivers/scsi/libsas/sas_expander.c
+>> @@ -1904,6 +1904,8 @@ static void sas_unregister_devs_sas_addr(struct
+>> domain_device *parent,
+>>                  &parent->port->sas_port_del_list);
+>>          phy->port = NULL;
+>>      }
+>> +    if (phy->phy)
+>> +        phy->phy->negotiated_linkrate = SAS_LINK_RATE_UNKNOWN;
+>
+> Does this work for both PHYs which were either directly attached or just
+> forming part of a wideport?
+>
+> Please also note that the expander PHY which was previously attached may
+> also show the incorrect value.
 
-Changes compared to v1: left out the code that waits until in-progress requests
-  have finished.
+Good catch, all PHYs need to do this, not only the last PHY of the wideport.
 
- drivers/infiniband/ulp/srp/ib_srp.c | 10 ----------
- 1 file changed, 10 deletions(-)
+>
+>>  }
+>>
+>>  static int sas_discover_bfs_by_root_level(struct domain_device *root,
+>> diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
+>> index 3de3b10da19a..420156cea3ee 100644
+>> --- a/include/scsi/libsas.h
+>> +++ b/include/scsi/libsas.h
+>> @@ -448,6 +448,9 @@ static inline void sas_phy_disconnected(struct
+>> asd_sas_phy *phy)
+>>  {
+>>      phy->oob_mode = OOB_NOT_CONNECTED;
+>>      phy->linkrate = SAS_LINK_RATE_UNKNOWN;
+>> +
+>
+> Then idea behind sas_phy_disconnected() was to set root PHY values only:
+>
+> /* Before calling a notify event, LLDD should use this function
+>   * when the link is severed (possibly from its tasklet).
+>   * The idea is that the Class only reads those, while the LLDD,
+>   * can R/W these (thus avoiding a race)
+>
+> libsas does set sas_phy negotiated_linkrate (but only for expander
+> PHYs), so not the perfect place to set this. I'm nitpicking a bit here.
+>
 
-diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/ulp/srp/ib_srp.c
-index af5197b5e7f1..085dba075651 100644
---- a/drivers/infiniband/ulp/srp/ib_srp.c
-+++ b/drivers/infiniband/ulp/srp/ib_srp.c
-@@ -3037,7 +3037,6 @@ static int srp_reset_device(struct scsi_cmnd *scmnd)
- {
- 	struct srp_target_port *target = host_to_target(scmnd->device->host);
- 	struct srp_rdma_ch *ch;
--	int i, j;
- 	u8 status;
- 
- 	shost_printk(KERN_ERR, target->scsi_host, "SRP reset_device called\n");
-@@ -3049,15 +3048,6 @@ static int srp_reset_device(struct scsi_cmnd *scmnd)
- 	if (status)
- 		return FAILED;
- 
--	for (i = 0; i < target->ch_count; i++) {
--		ch = &target->ch[i];
--		for (j = 0; j < target->req_ring_size; ++j) {
--			struct srp_request *req = &ch->req_ring[j];
--
--			srp_finish_req(ch, req, scmnd->device, DID_RESET << 16);
--		}
--	}
--
- 	return SUCCESS;
- }
- 
--- 
-2.20.1.495.gaa96b0ce6b-goog
+I don't want to put it here. I asked chenxiang to fix this in LLDD, but 
+he insist libsas to do this. Would you please discuss with chenxiang and 
+come to an agreement?
+
+>
+>> +    if (phy->phy)
+>> +        phy->phy->negotiated_linkrate = SAS_LINK_RATE_UNKNOWN;
+>>  }
+>>
+>>  static inline unsigned int to_sas_gpio_od(int device, int bit)
+>
+> Thanks,
+>
+>>
+>
+>
+>
+>
+>
+> .
+>
