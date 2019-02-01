@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 8/8] block: remove bidi support
-Date: Fri,  1 Feb 2019 08:55:57 +0100
-Message-ID: <20190201075557.9249-9-hch@lst.de>
+Subject: [PATCH 6/8] scsi: stop setting up request->special
+Date: Fri,  1 Feb 2019 08:55:55 +0100
+Message-ID: <20190201075557.9249-7-hch@lst.de>
 References: <20190201075557.9249-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -12,78 +12,78 @@ To: axboe@kernel.dk, martin.petersen@oracle.com, ooo@electrozaur.com
 Cc: Johannes Thumshirn <jthumshirn@suse.de>, Benjamin Block <bblock@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Unused now, and another field in struct request bites the dust.
+No more need in a blk-mq world where the scsi command and request
+are allocated together.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- block/blk-mq-debugfs.c | 1 -
- block/blk-mq.c         | 3 ---
- include/linux/blkdev.h | 6 ------
- 3 files changed, 10 deletions(-)
+ drivers/scsi/qedf/qedf_io.c | 6 ------
+ drivers/scsi/qedi/qedi_fw.c | 7 -------
+ drivers/scsi/scsi_lib.c     | 3 ---
+ drivers/scsi/sr.c           | 1 -
+ 4 files changed, 17 deletions(-)
 
-diff --git a/block/blk-mq-debugfs.c b/block/blk-mq-debugfs.c
-index 90d68760af08..ac832547160a 100644
---- a/block/blk-mq-debugfs.c
-+++ b/block/blk-mq-debugfs.c
-@@ -115,7 +115,6 @@ static int queue_pm_only_show(void *data, struct seq_file *m)
- static const char *const blk_queue_flag_name[] = {
- 	QUEUE_FLAG_NAME(STOPPED),
- 	QUEUE_FLAG_NAME(DYING),
--	QUEUE_FLAG_NAME(BIDI),
- 	QUEUE_FLAG_NAME(NOMERGES),
- 	QUEUE_FLAG_NAME(SAME_COMP),
- 	QUEUE_FLAG_NAME(FAIL_IO),
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 502cbf964a3b..820d131a6893 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -339,7 +339,6 @@ static struct request *blk_mq_rq_ctx_init(struct blk_mq_alloc_data *data,
- 
- 	rq->end_io = NULL;
- 	rq->end_io_data = NULL;
--	rq->next_rq = NULL;
- 
- 	data->ctx->rq_dispatched[op_is_sync(op)]++;
- 	refcount_set(&rq->ref, 1);
-@@ -549,8 +548,6 @@ inline void __blk_mq_end_request(struct request *rq, blk_status_t error)
- 		rq_qos_done(rq->q, rq);
- 		rq->end_io(rq, error);
- 	} else {
--		if (unlikely(blk_bidi_rq(rq)))
--			blk_mq_free_request(rq->next_rq);
- 		blk_mq_free_request(rq);
+diff --git a/drivers/scsi/qedf/qedf_io.c b/drivers/scsi/qedf/qedf_io.c
+index 6bbc38b1b465..6ca583bdde23 100644
+--- a/drivers/scsi/qedf/qedf_io.c
++++ b/drivers/scsi/qedf/qedf_io.c
+@@ -1128,12 +1128,6 @@ void qedf_scsi_completion(struct qedf_ctx *qedf, struct fcoe_cqe *cqe,
+ 		return;
  	}
- }
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index fd1450d53f1c..21beb456b97a 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -234,9 +234,6 @@ struct request {
- 	 */
- 	rq_end_io_fn *end_io;
- 	void *end_io_data;
+ 
+-	if (!sc_cmd->request->special) {
+-		QEDF_WARN(&(qedf->dbg_ctx), "request->special is NULL so "
+-		    "request not valid, sc_cmd=%p.\n", sc_cmd);
+-		return;
+-	}
 -
--	/* for bidi */
--	struct request *next_rq;
- };
+ 	if (!sc_cmd->request->q) {
+ 		QEDF_WARN(&(qedf->dbg_ctx), "request->q is NULL so request "
+ 		   "is not valid, sc_cmd=%p.\n", sc_cmd);
+diff --git a/drivers/scsi/qedi/qedi_fw.c b/drivers/scsi/qedi/qedi_fw.c
+index 25d763ae5d5a..e2a995a6e8e7 100644
+--- a/drivers/scsi/qedi/qedi_fw.c
++++ b/drivers/scsi/qedi/qedi_fw.c
+@@ -616,13 +616,6 @@ static void qedi_scsi_completion(struct qedi_ctx *qedi,
+ 		goto error;
+ 	}
  
- static inline bool blk_op_is_scsi(unsigned int op)
-@@ -572,7 +569,6 @@ struct request_queue {
- 
- #define QUEUE_FLAG_STOPPED	1	/* queue is stopped */
- #define QUEUE_FLAG_DYING	2	/* queue being torn down */
--#define QUEUE_FLAG_BIDI		4	/* queue supports bidi requests */
- #define QUEUE_FLAG_NOMERGES     5	/* disable merge attempts */
- #define QUEUE_FLAG_SAME_COMP	6	/* complete on same CPU-group */
- #define QUEUE_FLAG_FAIL_IO	7	/* fake timeout */
-@@ -644,8 +640,6 @@ static inline bool blk_account_rq(struct request *rq)
- 	return (rq->rq_flags & RQF_STARTED) && !blk_rq_is_passthrough(rq);
- }
- 
--#define blk_bidi_rq(rq)		((rq)->next_rq != NULL)
+-	if (!sc_cmd->request->special) {
+-		QEDI_WARN(&qedi->dbg_ctx,
+-			  "request->special is NULL so request not valid, sc_cmd=%p.\n",
+-			  sc_cmd);
+-		goto error;
+-	}
 -
- #define list_entry_rq(ptr)	list_entry((ptr), struct request, queuelist)
+ 	if (!sc_cmd->request->q) {
+ 		QEDI_WARN(&qedi->dbg_ctx,
+ 			  "request->q is NULL so request is not valid, sc_cmd=%p.\n",
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 6fd1d8d83f07..7e256b384a99 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1568,10 +1568,7 @@ static blk_status_t scsi_mq_prep_fn(struct request *req)
  
- #define rq_data_dir(rq)		(op_is_write(req_op(rq)) ? WRITE : READ)
+ 	scsi_init_command(sdev, cmd);
+ 
+-	req->special = cmd;
+-
+ 	cmd->request = req;
+-
+ 	cmd->tag = req->tag;
+ 	cmd->prot_op = SCSI_PROT_NORMAL;
+ 
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index 38ddbbfe5f3c..039c27c2d7b3 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -394,7 +394,6 @@ static blk_status_t sr_init_command(struct scsi_cmnd *SCpnt)
+ 	ret = scsi_init_io(SCpnt);
+ 	if (ret != BLK_STS_OK)
+ 		goto out;
+-	WARN_ON_ONCE(SCpnt != rq->special);
+ 	cd = scsi_cd(rq->rq_disk);
+ 
+ 	/* from here on until we're complete, any goto out
 -- 
 2.20.1
