@@ -1,138 +1,276 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: Recent removal of bsg read/write support
-Date: Fri, 1 Feb 2019 12:44:42 -0500
-Message-ID: <b60e424c-9dd0-beb8-cbf5-0b4daa83c105@interlog.com>
-References: <CAOuWhkaGjX8Q_xghkFVTqzZkDrUv-sdH=VbS7hvnqFWrT+3eOQ@mail.gmail.com>
- <CAFLxGvxX8QW4wUJKommXVMpGBj7G_H3=SOwQGjGuyPZZrhCzKw@mail.gmail.com>
- <CA+55aFyLC8PhjZ+iV7MucSZ1aGKMT=S9=EkEAQ6T1=ZRqD-xLA@mail.gmail.com>
- <CAOuWhkbNuesaVYar6ML-qFw7RAfkPsaOYUXT4Ypfiu5=Nt1kWw@mail.gmail.com>
-Reply-To: dgilbert@interlog.com
+From: Stephen Boyd <swboyd@chromium.org>
+Subject: Re: [PATCH v2 6/9] scsi: ufs: qcom: Expose the reset controller for PHY
+Date: Fri, 01 Feb 2019 09:56:27 -0800
+Message-ID: <154904378780.169292.8490930189606724579@swboyd.mtv.corp.google.com>
+References: <20190123221137.41722-1-evgreen@chromium.org> <20190123221137.41722-7-evgreen@chromium.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAOuWhkbNuesaVYar6ML-qFw7RAfkPsaOYUXT4Ypfiu5=Nt1kWw@mail.gmail.com>
-Content-Language: en-CA
+In-Reply-To: <20190123221137.41722-7-evgreen@chromium.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Dror Levin <drorl@infinidat.com>, torvalds@linux-foundation.org
-Cc: richard.weinberger@gmail.com, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, hch@infradead.org, axboe@kernel.dk
+To: Andy Gross <andy.gross@linaro.org>, Kishon Vijay Abraham I <kishon@ti.com>, Rob Herring <robh+dt@kernel.org>
+Cc: Can Guo <cang@codeaurora.org>, Douglas Anderson <dianders@chromium.org>, Asutosh Das <asutoshd@codeaurora.org>, Vivek Gautam <vivek.gautam@codeaurora.org>, Evan Green <evgreen@chromium.org>, "James E.J. Bottomley" <jejb@linux.ibm.com>, Vinayak Holikatti <vinholikatti@gmail.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Updated reply, see below.
+Quoting Evan Green (2019-01-23 14:11:34)
+> Expose a reset controller that the phy can use to perform its
+> initialization in a single callback.
+>=20
+> Also, change the use of the phy functions from ufs-qcom such that
+> phy_poweron actually fires up the phy, and phy_poweroff actually
+> powers it down.
 
-On 2018-09-03 4:34 a.m., Dror Levin wrote:
-> On Sun, Sep 2, 2018 at 8:55 PM Linus Torvalds
-> <torvalds@linux-foundation.org> wrote:
->>
->> On Sun, Sep 2, 2018 at 4:44 AM Richard Weinberger
->> <richard.weinberger@gmail.com> wrote:
->>>
->>> CC'ing relevant people. Otherwise your mail might get lost.
->>
->> Indeed.
-> 
-> Sorry for that.
-> 
->>> On Sun, Sep 2, 2018 at 1:37 PM Dror Levin <drorl@infinidat.com> wrote:
->>>>
->>>> We have an internal tool that uses the bsg read/write interface to
->>>> issue SCSI commands as part of a test suite for a storage device.
->>>>
->>>> After recently reading on LWN that this interface is to be removed we
->>>> tried porting our code to use sg instead. However, that raises new
->>>> issues - mainly getting ENOMEM over iSCSI for unknown reasons.
->>
->> Is there any chance that you can make more data available?
-> 
-> Sure, I can try.
-> 
-> We use writev() to send up to SG_MAX_QUEUE tasks at a time. Occasionally not
-> all tasks are written at which point we wait for tasks to return before
-> sending more, but then writev() fails with ENOMEM and we see this in the syslog:
-> 
-> Sep  1 20:58:14 gdc-qa-io-017 kernel: sd 441:0:0:5: [sg73]
-> sg_common_write: start_req err=-12
-> 
-> Failing tasks are reads of 128KiB.
+This looks like two patches. One introduces a reset controller and the
+other changes the phy functions somehow. Can this be split up and then
+the commit text for the second half to change the phy functions can
+explain a little more of the theory behind how it's OK to change the
+code flow that way?
 
-This is the block layer running out of resources. The sg driver is a
-relatively thin shim and when it gets a "no can do" from the layers
-below it, the driver has little option than to return said errno.
+>=20
+> Signed-off-by: Evan Green <evgreen@chromium.org>
+>=20
+> ---
+> Note: This change depends on the remaining changes in this series,
+> since UFS PHY reset now needs to be done by the PHY driver.
 
->> I'd rather fix the sg interface (which while also broken garbage, we
->> can't get rid of) than re-surrect the bsg interface.
->>
->> That said, the removed bsg code looks a hell of a lot prettier than
->> the nasty sg interface code does, although it also lacks ansolutely
->> _any_ kind of security checking.
-> 
-> For us the bsg interface also has several advantages over sg:
-> 1. The device name is its HCTL which is nicer than an arbitrary integer.
+What does it depend on? Is there a bisection hole introduced here? An by
+bisection hole I mean more than the problem that an older DT is used
+with this new code.
 
-Not much the sg driver can do about that. The minor number the sg driver
-uses and HCT are all arbitrary integers (with the L coming from the
-storage device), but I agree the HCTL is more widely used. The
-ioctl(<sg_fd>, SG_GET_SCSI_ID) fills a structure which includes HCTL. In
-my sg v4 driver rewrite the L (LUN) has been tweaked to additionally
-send back the 8 byte T10 LUN representation.
+>=20
+> Changes in v2:
+> - Remove include of reset.h (Stephen)
 
-The lsscsi utility will show the relationship between HCTL and sg driver
-device name with 'lsscsi -g'. It uses sysfs datamining.
+Usually we include headers in both the C file and the header files that
+use structs from header files. It wouldn't hurt to include
+reset-controller.h in the ufs-qcom.c file. For one thing, it would help
+a grep find reset controller drivers trim based on files ending in .c
+instead of having to figure out which C file includes the .h file where
+the reset-controller header is included.
 
-> 2. write() supports writing more than one sg_io_v4 struct so we don't have
->     to resort to writev().
+> - Fix error print of phy_power_on (Stephen)
+> - Comment for reset controller warnings on id !=3D 0 (Stephen)
+> - Add static to ufs_qcom_reset_ops (Stephen).
+>=20
+>  drivers/scsi/ufs/Kconfig    |   1 +
+>  drivers/scsi/ufs/ufs-qcom.c | 111 ++++++++++++++++++++++--------------
+>  drivers/scsi/ufs/ufs-qcom.h |   4 ++
+>  3 files changed, 72 insertions(+), 44 deletions(-)
+>=20
+> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+> index 3aeadb14aae1e..277ed6ad71c9b 100644
+> --- a/drivers/scsi/ufs/ufs-qcom.c
+> +++ b/drivers/scsi/ufs/ufs-qcom.c
+> @@ -255,11 +260,6 @@ static int ufs_qcom_power_up_sequence(struct ufs_hba=
+ *hba)
+>         if (is_rate_B)
+>                 phy_set_mode(phy, PHY_MODE_UFS_HS_B);
+> =20
+> -       /* Assert PHY reset and apply PHY calibration values */
+> -       ufs_qcom_assert_reset(hba);
+> -       /* provide 1ms delay to let the reset pulse propagate */
+> -       usleep_range(1000, 1100);
+> -
+>         /* phy initialization - calibrate the phy */
+>         ret =3D phy_init(phy);
+>         if (ret) {
+> @@ -268,15 +268,6 @@ static int ufs_qcom_power_up_sequence(struct ufs_hba=
+ *hba)
+>                 goto out;
+>         }
+> =20
+> -       /* De-assert PHY reset and start serdes */
+> -       ufs_qcom_deassert_reset(hba);
+> -
+> -       /*
+> -        * after reset deassertion, phy will need all ref clocks,
+> -        * voltage, current to settle down before starting serdes.
+> -        */
+> -       usleep_range(1000, 1100);
+> -
+>         /* power on phy - start serdes and phy's power and clocks */
+>         ret =3D phy_power_on(phy);
+>         if (ret) {
+> @@ -290,7 +281,6 @@ static int ufs_qcom_power_up_sequence(struct ufs_hba =
+*hba)
+>         return 0;
+> =20
+>  out_disable_phy:
+> -       ufs_qcom_assert_reset(hba);
+>         phy_exit(phy);
+>  out:
+>         return ret;
+> @@ -554,21 +544,10 @@ static int ufs_qcom_suspend(struct ufs_hba *hba, en=
+um ufs_pm_op pm_op)
+>                 ufs_qcom_disable_lane_clks(host);
+>                 phy_power_off(phy);
+> =20
+> -               /* Assert PHY soft reset */
+> -               ufs_qcom_assert_reset(hba);
+> -               goto out;
+> -       }
+> -
+> -       /*
+> -        * If UniPro link is not active, PHY ref_clk, main PHY analog pow=
+er
+> -        * rail and low noise analog power rail for PLL can be switched o=
+ff.
+> -        */
+> -       if (!ufs_qcom_is_link_active(hba)) {
+> +       } else if (!ufs_qcom_is_link_active(hba)) {
+>                 ufs_qcom_disable_lane_clks(host);
+> -               phy_power_off(phy);
+>         }
+> =20
+> -out:
+>         return ret;
+>  }
+> =20
+> @@ -578,21 +557,26 @@ static int ufs_qcom_resume(struct ufs_hba *hba, enu=
+m ufs_pm_op pm_op)
+>         struct phy *phy =3D host->generic_phy;
+>         int err;
+> =20
+> -       err =3D phy_power_on(phy);
+> -       if (err) {
+> -               dev_err(hba->dev, "%s: failed enabling regs, err =3D %d\n=
+",
+> -                       __func__, err);
+> -               goto out;
+> -       }
+> +       if (ufs_qcom_is_link_off(hba)) {
+> +               err =3D phy_power_on(phy);
+> +               if (err) {
+> +                       dev_err(hba->dev, "%s: failed PHY power on: %d\n",
+> +                               __func__, err);
+> +                       return err;
+> +               }
+> =20
+> -       err =3D ufs_qcom_enable_lane_clks(host);
+> -       if (err)
+> -               goto out;
+> +               err =3D ufs_qcom_enable_lane_clks(host);
+> +               if (err)
+> +                       return err;
+> =20
+> -       hba->is_sys_suspended =3D false;
+> +       } else if (!ufs_qcom_is_link_active(hba)) {
+> +               err =3D ufs_qcom_enable_lane_clks(host);
+> +               if (err)
+> +                       return err;
+> +       }
+> =20
+> -out:
+> -       return err;
+> +       hba->is_sys_suspended =3D false;
+> +       return 0;
+>  }
+> =20
+>  struct ufs_qcom_dev_params {
+> @@ -1118,8 +1102,6 @@ static int ufs_qcom_setup_clocks(struct ufs_hba *hb=
+a, bool on,
+>                 return 0;
+> =20
+>         if (on && (status =3D=3D POST_CHANGE)) {
+> -               phy_power_on(host->generic_phy);
+> -
+>                 /* enable the device ref clock for HS mode*/
+>                 if (ufshcd_is_hs_mode(&hba->pwr_info))
+>                         ufs_qcom_dev_ref_clk_ctrl(host, true);
+> @@ -1131,9 +1113,6 @@ static int ufs_qcom_setup_clocks(struct ufs_hba *hb=
+a, bool on,
+>                 if (!ufs_qcom_is_link_active(hba)) {
+>                         /* disable device ref_clk */
+>                         ufs_qcom_dev_ref_clk_ctrl(host, false);
+> -
+> -                       /* powering off PHY during aggressive clk gating =
+*/
+> -                       phy_power_off(host->generic_phy);
+>                 }
+> =20
+>                 vote =3D host->bus_vote.min_bw_vote;
 
-In my sg v4 rewrite the sg_io_v4 interface can only be sent through
-ioctl(SG_IO) [for sync usage] and ioctl(SG_IOSUBMIT) [for async usage].
-So it can't be sent through write(2). SG_IOSUBMIT is new and uses the
-_IOWR macro which encodes the expected length into the SG_IOSUBMIT value
-and that is the size of sg_io_v4. So you can't send an arbitrary number of
-sg_io_v4 objects through that ioctl directly. If need be, that can be
-cured with another level of indirection (e.g. with a new flag the data-out
-can be interpreted as an array sg_io_v4 objects).
+All the above hunks should probably be another patch with a motivation
+and explanation about what's going on in the commit text.
 
-> 3. Queue size is the device's queue depth and not SG_MAX_QUEUE which is 16.
+> @@ -1147,6 +1126,41 @@ static int ufs_qcom_setup_clocks(struct ufs_hba *h=
+ba, bool on,
+>         return err;
+>  }
+> =20
+> +static int
+> +ufs_qcom_reset_assert(struct reset_controller_dev *rcdev, unsigned long =
+id)
+> +{
+> +       struct ufs_qcom_host *host =3D rcdev_to_ufs_host(rcdev);
+> +
+> +       /* Currently this code only knows about a single reset. */
 
-That limit is gone in the sg v4 driver rewrite.
+Ultra nitpick: Drop the full stop to be consistent with single line
+comment style in this function?
 
->>>> Because of this we would like to continue using the bsg interface,
->>>> even if some changes are required to meet security concerns.
->>
->> I wonder if we could at least try to unify the bsg/sg code - possibly
->> by making sg use the prettier bsg code (but definitely have to add all
->> the security measures).
->>
->> And dammit, the SCSI people need to get their heads out of their
->> arses. This whole "stream random commands over read/write" needs to go
->> the f*ck away.
->>
->> Could we perhaps extend the SG_IO interace to have an async mode?
->> Instead of "read/write", have "SG_IOSUBMIT" and "SG_IORECEIVE" and
->> have the SG_IO ioctl just be a shorthand of "both".
+> +       WARN_ON(id);
+> +       ufs_qcom_assert_reset(host->hba);
+> +       /* provide 1ms delay to let the reset pulse propagate */
+> +       usleep_range(1000, 1100);
+> +       return 0;
+> +}
+> +
+> +static int
+> +ufs_qcom_reset_deassert(struct reset_controller_dev *rcdev, unsigned lon=
+g id)
+> +{
+> +       struct ufs_qcom_host *host =3D rcdev_to_ufs_host(rcdev);
+> +
+> +       /* Currently this code only knows about a single reset. */
 
-Done.
+Well now it's different!
 
-> Just my two cents - having an interface other than read/write won't allow
-> users to treat this fd as a regular file with epoll() and read(). This is
-> a major bonus for this interface - an sg/bsg device can be used just like
-> a socket or pipe in any reactor (we use boost asio for example).
+> +       WARN_ON(id);
+> +       ufs_qcom_deassert_reset(host->hba);
+> +
+> +       /*
+> +        * after reset deassertion, phy will need all ref clocks,
+> +        * voltage, current to settle down before starting serdes.
+> +        */
+> +       usleep_range(1000, 1100);
+> +       return 0;
+> +}
+> +
+> +const static struct reset_control_ops ufs_qcom_reset_ops =3D {
 
-Well poll() certainly works (see sg3_utils beta rev 809 testing/sgs_dd.c and
-testing/sgh_dd.c) and I can't see why epoll() won't work. These calls work
-against the file descriptor and the sg driver keeps the same context around
-sg device file descriptors as it has always done. [And that is the major
-design flaw in the bsg driver: it doesn't keep proper file descriptor context.]
+const goes after static. Funny, there are some other grep hits for
+'const static' in the kernel, but it's a small minority. Maybe those
+should be fixed.
 
-It is the security folks who don't like the sg inspired (there in lk 1.0.0
-from 1992) write(2)/read(2) asynchronous interface. Also, ideally we need
-two streams: one for metadata (e.g. commands and responses (status and sense
-data)) and another for user data. Protection information could be a third
-stream, between the other two. Jamming that all into one stream is a bit ugly.
+> +       .assert =3D ufs_qcom_reset_assert,
+> +       .deassert =3D ufs_qcom_reset_deassert,
+> +};
+> +
+>  #define        ANDROID_BOOT_DEV_MAX    30
+>  static char android_boot_dev[ANDROID_BOOT_DEV_MAX];
+> =20
 
-References:
-   sg v3 driver rewrite, description and downloads:
-      http://sg.danny.cz/sg/sg_v40.html
-   sg3_utils version 1.45 beta, rev 809, link at the top of this page:
-      http://sg.danny.cz/sg
+Ooh Android!
 
-Doug Gilbert
+> @@ -1191,6 +1205,15 @@ static int ufs_qcom_init(struct ufs_hba *hba)
+>         host->hba =3D hba;
+>         ufshcd_set_variant(hba, host);
+> =20
+> +       /* Fire up the reset controller. Failure here is non-fatal. */
+> +       host->rcdev.of_node =3D dev->of_node;
+> +       host->rcdev.ops =3D &ufs_qcom_reset_ops;
+> +       host->rcdev.owner =3D dev->driver->owner;
+> +       host->rcdev.nr_resets =3D 1;
+> +       err =3D devm_reset_controller_register(dev, &host->rcdev);
+> +       if (err)
+> +               dev_warn(dev, "Failed to register reset controller\n");
+
+reset err to 0 because we don't care to fail here (it's just a warn, not
+a dev_err)?
+
+> +
+>         /*
+>          * voting/devoting device ref_clk source is time consuming hence
+>          * skip devoting it during aggressive clock gating. This clock
