@@ -1,90 +1,24 @@
-From: Colin King <colin.king@canonical.com>
-Subject: [PATCH] scsi: aacraid: clean up some indentation and formatting issues
-Date: Sat,  2 Feb 2019 10:40:52 +0000
-Message-ID: <20190202104052.16552-1-colin.king@canonical.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+From: pr-tracker-bot@kernel.org
+Subject: Re: [GIT PULL] SCSI fixes for 5.0-rc4
+Date: Sat, 02 Feb 2019 18:45:03 +0000
+Message-ID: <154913310366.3857.17186316293757104027.pr-tracker-bot@kernel.org>
+References: <1549066005.2964.12.camel@HansenPartnership.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1549066005.2964.12.camel@HansenPartnership.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Adaptec OEM Raid Solutions <aacraid@microsemi.com>, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Colin Ian King <colin.king@canonical.com>
+The pull request you sent on Fri, 01 Feb 2019 16:06:45 -0800:
 
-There are several issues with badly indented statements. Fix these
-and clean up the formatting.
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/scsi/aacraid/commsup.c | 25 +++++++++++++------------
- drivers/scsi/aacraid/linit.c   |  3 +--
- drivers/scsi/aacraid/src.c     |  2 +-
- 3 files changed, 15 insertions(+), 15 deletions(-)
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/3cde55ee7921609331178c84cca485491c97df2a
 
-diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
-index d5a6aa9676c8..0bdc6b0f725f 100644
---- a/drivers/scsi/aacraid/commsup.c
-+++ b/drivers/scsi/aacraid/commsup.c
-@@ -1376,18 +1376,19 @@ static void aac_handle_aif(struct aac_dev * dev, struct fib * fibptr)
- 
- 	container = 0;
- retry_next:
--	if (device_config_needed == NOTHING)
--	for (; container < dev->maximum_num_containers; ++container) {
--		if ((dev->fsa_dev[container].config_waiting_on == 0) &&
--			(dev->fsa_dev[container].config_needed != NOTHING) &&
--			time_before(jiffies, dev->fsa_dev[container].config_waiting_stamp + AIF_SNIFF_TIMEOUT)) {
--			device_config_needed =
--				dev->fsa_dev[container].config_needed;
--			dev->fsa_dev[container].config_needed = NOTHING;
--			channel = CONTAINER_TO_CHANNEL(container);
--			id = CONTAINER_TO_ID(container);
--			lun = CONTAINER_TO_LUN(container);
--			break;
-+	if (device_config_needed == NOTHING) {
-+		for (; container < dev->maximum_num_containers; ++container) {
-+			if ((dev->fsa_dev[container].config_waiting_on == 0) &&
-+			    (dev->fsa_dev[container].config_needed != NOTHING) &&
-+			    time_before(jiffies, dev->fsa_dev[container].config_waiting_stamp + AIF_SNIFF_TIMEOUT)) {
-+				device_config_needed =
-+					dev->fsa_dev[container].config_needed;
-+				dev->fsa_dev[container].config_needed = NOTHING;
-+				channel = CONTAINER_TO_CHANNEL(container);
-+				id = CONTAINER_TO_ID(container);
-+				lun = CONTAINER_TO_LUN(container);
-+				break;
-+			}
- 		}
- 	}
- 	if (device_config_needed == NOTHING)
-diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index 7e56a11836c1..e977b459f823 100644
---- a/drivers/scsi/aacraid/linit.c
-+++ b/drivers/scsi/aacraid/linit.c
-@@ -852,8 +852,7 @@ static u8 aac_eh_tmf_hard_reset_fib(struct aac_hba_map_info *info,
- 
- 	address = (u64)fib->hw_error_pa;
- 	rst->error_ptr_hi = cpu_to_le32((u32)(address >> 32));
--	rst->error_ptr_lo = cpu_to_le32
--		((u32)(address & 0xffffffff));
-+	rst->error_ptr_lo = cpu_to_le32((u32)(address & 0xffffffff));
- 	rst->error_length = cpu_to_le32(FW_ERROR_BUFFER_SIZE);
- 	fib->hbacmd_size = sizeof(*rst);
- 
-diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c
-index 8377aec0649d..97bb9e9d201c 100644
---- a/drivers/scsi/aacraid/src.c
-+++ b/drivers/scsi/aacraid/src.c
-@@ -1157,7 +1157,7 @@ static int aac_src_soft_reset(struct aac_dev *dev)
- 		dev_err(&dev->pdev->dev, "%s: %s status = %d", __func__,
- 			state_str[state], rc);
- 
--return rc;
-+	return rc;
- }
- /**
-  *  aac_srcv_init	-	initialize an SRCv card
+Thank you!
+
 -- 
-2.20.1
+Deet-doot-dot, I am a bot.
+https://korg.wiki.kernel.org/userdoc/prtracker
