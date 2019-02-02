@@ -1,70 +1,90 @@
 From: Colin King <colin.king@canonical.com>
-Subject: [PATCH] scsi: mvsas: clean up a few indentation issues
-Date: Sat,  2 Feb 2019 10:30:35 +0000
-Message-ID: <20190202103035.16043-1-colin.king@canonical.com>
+Subject: [PATCH] scsi: aacraid: clean up some indentation and formatting issues
+Date: Sat,  2 Feb 2019 10:40:52 +0000
+Message-ID: <20190202104052.16552-1-colin.king@canonical.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+To: Adaptec OEM Raid Solutions <aacraid@microsemi.com>, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
 Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 From: Colin Ian King <colin.king@canonical.com>
 
-There are a few statements that are not indented correctly,
-so fix these. Also add empty line between variable declaration and
-first statements in functions. Also remove whitespace between *
-and mvi_dev to clean up a cppcheck warning.
+There are several issues with badly indented statements. Fix these
+and clean up the formatting.
 
 Signed-off-by: Colin Ian King <colin.king@canonical.com>
 ---
- drivers/scsi/mvsas/mv_64xx.c | 3 ++-
- drivers/scsi/mvsas/mv_94xx.c | 3 ++-
- drivers/scsi/mvsas/mv_sas.c  | 2 +-
- 3 files changed, 5 insertions(+), 3 deletions(-)
+ drivers/scsi/aacraid/commsup.c | 25 +++++++++++++------------
+ drivers/scsi/aacraid/linit.c   |  3 +--
+ drivers/scsi/aacraid/src.c     |  2 +-
+ 3 files changed, 15 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/scsi/mvsas/mv_64xx.c b/drivers/scsi/mvsas/mv_64xx.c
-index b757d389e32f..2c699bc785a8 100644
---- a/drivers/scsi/mvsas/mv_64xx.c
-+++ b/drivers/scsi/mvsas/mv_64xx.c
-@@ -678,7 +678,8 @@ static u32 mvs_64xx_spi_read_data(struct mvs_info *mvi)
- static void mvs_64xx_spi_write_data(struct mvs_info *mvi, u32 data)
- {
- 	void __iomem *regs = mvi->regs_ex;
--	 iow32(SPI_DATA_REG_64XX, data);
-+
-+	iow32(SPI_DATA_REG_64XX, data);
+diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
+index d5a6aa9676c8..0bdc6b0f725f 100644
+--- a/drivers/scsi/aacraid/commsup.c
++++ b/drivers/scsi/aacraid/commsup.c
+@@ -1376,18 +1376,19 @@ static void aac_handle_aif(struct aac_dev * dev, struct fib * fibptr)
+ 
+ 	container = 0;
+ retry_next:
+-	if (device_config_needed == NOTHING)
+-	for (; container < dev->maximum_num_containers; ++container) {
+-		if ((dev->fsa_dev[container].config_waiting_on == 0) &&
+-			(dev->fsa_dev[container].config_needed != NOTHING) &&
+-			time_before(jiffies, dev->fsa_dev[container].config_waiting_stamp + AIF_SNIFF_TIMEOUT)) {
+-			device_config_needed =
+-				dev->fsa_dev[container].config_needed;
+-			dev->fsa_dev[container].config_needed = NOTHING;
+-			channel = CONTAINER_TO_CHANNEL(container);
+-			id = CONTAINER_TO_ID(container);
+-			lun = CONTAINER_TO_LUN(container);
+-			break;
++	if (device_config_needed == NOTHING) {
++		for (; container < dev->maximum_num_containers; ++container) {
++			if ((dev->fsa_dev[container].config_waiting_on == 0) &&
++			    (dev->fsa_dev[container].config_needed != NOTHING) &&
++			    time_before(jiffies, dev->fsa_dev[container].config_waiting_stamp + AIF_SNIFF_TIMEOUT)) {
++				device_config_needed =
++					dev->fsa_dev[container].config_needed;
++				dev->fsa_dev[container].config_needed = NOTHING;
++				channel = CONTAINER_TO_CHANNEL(container);
++				id = CONTAINER_TO_ID(container);
++				lun = CONTAINER_TO_LUN(container);
++				break;
++			}
+ 		}
+ 	}
+ 	if (device_config_needed == NOTHING)
+diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+index 7e56a11836c1..e977b459f823 100644
+--- a/drivers/scsi/aacraid/linit.c
++++ b/drivers/scsi/aacraid/linit.c
+@@ -852,8 +852,7 @@ static u8 aac_eh_tmf_hard_reset_fib(struct aac_hba_map_info *info,
+ 
+ 	address = (u64)fib->hw_error_pa;
+ 	rst->error_ptr_hi = cpu_to_le32((u32)(address >> 32));
+-	rst->error_ptr_lo = cpu_to_le32
+-		((u32)(address & 0xffffffff));
++	rst->error_ptr_lo = cpu_to_le32((u32)(address & 0xffffffff));
+ 	rst->error_length = cpu_to_le32(FW_ERROR_BUFFER_SIZE);
+ 	fib->hbacmd_size = sizeof(*rst);
+ 
+diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c
+index 8377aec0649d..97bb9e9d201c 100644
+--- a/drivers/scsi/aacraid/src.c
++++ b/drivers/scsi/aacraid/src.c
+@@ -1157,7 +1157,7 @@ static int aac_src_soft_reset(struct aac_dev *dev)
+ 		dev_err(&dev->pdev->dev, "%s: %s status = %d", __func__,
+ 			state_str[state], rc);
+ 
+-return rc;
++	return rc;
  }
- 
- 
-diff --git a/drivers/scsi/mvsas/mv_94xx.c b/drivers/scsi/mvsas/mv_94xx.c
-index eb5471bc7263..68b5b5f39a03 100644
---- a/drivers/scsi/mvsas/mv_94xx.c
-+++ b/drivers/scsi/mvsas/mv_94xx.c
-@@ -946,7 +946,8 @@ static u32 mvs_94xx_spi_read_data(struct mvs_info *mvi)
- static void mvs_94xx_spi_write_data(struct mvs_info *mvi, u32 data)
- {
- 	void __iomem *regs = mvi->regs_ex - 0x10200;
--	 mw32(SPI_RD_DATA_REG_94XX, data);
-+
-+	mw32(SPI_RD_DATA_REG_94XX, data);
- }
- 
- 
-diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
-index 311d23c727ce..e205e4057e6f 100644
---- a/drivers/scsi/mvsas/mv_sas.c
-+++ b/drivers/scsi/mvsas/mv_sas.c
-@@ -1422,7 +1422,7 @@ int mvs_I_T_nexus_reset(struct domain_device *dev)
- {
- 	unsigned long flags;
- 	int rc = TMF_RESP_FUNC_FAILED;
--    struct mvs_device * mvi_dev = (struct mvs_device *)dev->lldd_dev;
-+	struct mvs_device *mvi_dev = (struct mvs_device *)dev->lldd_dev;
- 	struct mvs_info *mvi = mvi_dev->mvi_info;
- 
- 	if (mvi_dev->dev_status != MVS_DEV_EH)
+ /**
+  *  aac_srcv_init	-	initialize an SRCv card
 -- 
 2.20.1
