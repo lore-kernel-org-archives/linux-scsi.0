@@ -1,38 +1,62 @@
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
-Subject: Re: [PATCH v3 5/5] Revert "scsi: ufs: disable vccq if it's not
- needed by UFS device"
-Date: Mon, 4 Feb 2019 12:27:04 -0800
-Message-ID: <20190204202704.GA31919@minitux>
-References: <e3c82a49-c601-effc-348f-f768656c659f@free.fr>
- <70618c25-83f0-b9db-51a3-c1d74b605a45@free.fr>
- <SN6PR04MB49255ADE41BBD35F894FD4CBFC6D0@SN6PR04MB4925.namprd04.prod.outlook.com>
+From: Boaz Harrosh <ooo@electrozaur.com>
+Subject: Re: remove exofs, the T10 OSD code and block/scsi bidi support V4
+Date: Mon, 4 Feb 2019 22:31:39 +0200
+Message-ID: <3be11773-5ea9-4c08-25a5-dc556ded2d6f@electrozaur.com>
+References: <20190201075557.9249-1-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <SN6PR04MB49255ADE41BBD35F894FD4CBFC6D0@SN6PR04MB4925.namprd04.prod.outlook.com>
+In-Reply-To: <20190201075557.9249-1-hch@lst.de>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Avri Altman <Avri.Altman@wdc.com>
-Cc: Marc Gonzalez <marc.w.gonzalez@free.fr>, MSM <linux-arm-msm@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Jeffrey Hugo <jhugo@codeaurora.org>, Andy Gross <andy.gross@linaro.org>, David Brown <david.brown@linaro.org>, Evan Green <evgreen@chromium.org>, Douglas Anderson <dianders@chromium.org>, Alim Akhtar <alim.akhtar@samsung.com>, Pedro Sousa <pedrom.sousa@synopsys.com>, Subhash Jadavani <subhashj@codeaurora.org>, Bart Van Assche <bvanassche@acm.org>, SCSI <linux-scsi@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>, axboe@kernel.dk, martin.petersen@oracle.com
+Cc: Johannes Thumshirn <jthumshirn@suse.de>, Benjamin Block <bblock@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon 04 Feb 11:51 PST 2019, Avri Altman wrote:
-
+On 01/02/19 09:55, Christoph Hellwig wrote:
+> The only real user of the T10 OSD protocol, the pNFS object layout
+> driver never went to the point of having shipping products, and we
+> removed it 1.5 years ago.  Exofs is just a simple example without
+> real life users.
 > 
-> > This reverts commit 60f0187031c05e04cbadffb62f557d0ff3564490.
-> > 
-> > Calling ufshcd_set_vccq_rail_unused hangs my system.
-> > It seems vccq is not *not* needed.
-> This patch essentially implements the UFS_DEVICE_NO_VCCQ quirk,
-> Which is needed for both Samsung and Hynix devices.
-> Once acked by those vendors, can be removed from the quirk list as well.
+> The code has been mostly unmaintained for years and is getting in the
+> way of block / SCSI changes, 
+
+For the 4th time: Which ?
+
+> and does not even work properly currently,
+> so I think it's finally time to drop it.
+> 
+> Quote from Boaz:
 > 
 
-If a device does not need VCCQ, for some reason, then why is the VCCQ
-supply specified for this device?
+Hello? anyone home?
 
-Disabling unused regulators is already handled by the regulator
-framework, so why does the UFSHCD driver take this role as well?
+Please resend without the below Quote!!!
+Because yes I said that but I have also said the opposite. And I have clearly
+stated in reaction to the last 3 resends. That I now oppose to the below statement.
+And that you should please remove it.
 
-Regards,
-Bjorn
+Do your own text please. Don't drag me in the mud
+
+> "As I said then. It is used in Universities for studies and experiments.
+> Every once in a while. I get an email with questions and reports.
+> 
+> But yes feel free to remove the all thing!!
+> 
+> I guess I can put it up on github. In a public tree.
+> 
+> Just that I will need to forward port it myself, til now you guys
+> been doing this for me ;-)"
+> 
+> Now the last time this caused a bit of a stir, but still no actual users,
+> not even for SG_IO passthrough commands.  So here we go again, this time
+> including removing everything in the scsi and block layer supporting it,
+> and thus shrinking struct request.
+> 
+
+NAK-by: Boaz harrosh <ooo@electrozaur.com>
+For what ever that means ...
+
+Cheers
+Boaz
