@@ -1,143 +1,152 @@
-From: <Mahesh.Rajashekhara@microchip.com>
-Subject: RE: [PATCH] scsi: aacraid: clean up some indentation and formatting
- issues
-Date: Mon, 4 Feb 2019 10:37:02 +0000
-Message-ID: <BL0PR11MB289749AD4D35250355C72423FE6D0@BL0PR11MB2897.namprd11.prod.outlook.com>
-References: <20190202104052.16552-1-colin.king@canonical.com>
- <7293537e-5619-4e08-846d-d5016001d891@email.android.com>
- <BYAPR11MB322448EB89EA76E8727A92B3E26C0@BYAPR11MB3224.namprd11.prod.outlook.com>
+From: Marc Gonzalez <marc.w.gonzalez@free.fr>
+Subject: [PATCH v3 5/5] Revert "scsi: ufs: disable vccq if it's not needed by
+ UFS device"
+Date: Mon, 4 Feb 2019 18:42:19 +0100
+Message-ID: <70618c25-83f0-b9db-51a3-c1d74b605a45@free.fr>
+References: <e3c82a49-c601-effc-348f-f768656c659f@free.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <BYAPR11MB322448EB89EA76E8727A92B3E26C0@BYAPR11MB3224.namprd11.prod.outlook.com>
+In-Reply-To: <e3c82a49-c601-effc-348f-f768656c659f@free.fr>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: aacraid@microsemi.com, jejb@linux.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+To: MSM <linux-arm-msm@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+Cc: Jeffrey Hugo <jhugo@codeaurora.org>, Bjorn Andersson <bjorn.andersson@linaro.org>, Andy Gross <andy.gross@linaro.org>, David Brown <david.brown@linaro.org>, Evan Green <evgreen@chromium.org>, Douglas Anderson <dianders@chromium.org>, Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, Pedro Sousa <pedrom.sousa@synopsys.com>, Subhash Jadavani <subhashj@codeaurora.org>, Bart Van Assche <bvanassche@acm.org>, SCSI <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Acked-by: Mahesh Rajashekhara <mahesh.rajashekhara@microchip.com>
+This reverts commit 60f0187031c05e04cbadffb62f557d0ff3564490.
 
----------- Forwarded message ----------
-From: Colin King <mailto:colin.king@canonical.com>
-Date: Feb 2, 2019 2:41 AM
-Subject: [PATCH] scsi: aacraid: clean up some indentation and formatting is=
-sues
-To: Adaptec OEM Raid Solutions <mailto:aacraid@microsemi.com>,"James E . J =
-. Bottomley" <mailto:jejb@linux.ibm.com>,"Martin K . Petersen" <mailto:mart=
-in.petersen@oracle.com>,linux-scsi@vger.kernel.org
-Cc: mailto:kernel-janitors@vger.kernel.org,linux-kernel@vger.kernel.org
-EXTERNAL EMAIL
+Calling ufshcd_set_vccq_rail_unused hangs my system.
+It seems vccq is not *not* needed.
 
-
-From: Colin Ian King <mailto:colin.king@canonical.com>
-
-There are several issues with badly indented statements. Fix these
-and clean up the formatting.
-
-Signed-off-by: Colin Ian King <mailto:colin.king@canonical.com>
+Signed-off-by: Marc Gonzalez <marc.w.gonzalez@free.fr>
 ---
-=A0drivers/scsi/aacraid/commsup.c | 25 +++++++++++++------------
-=A0drivers/scsi/aacraid/linit.c=A0=A0 |=A0 3 +--
-=A0drivers/scsi/aacraid/src.c=A0=A0=A0=A0 |=A0 2 +-
-=A03 files changed, 15 insertions(+), 15 deletions(-)
+ drivers/scsi/ufs/ufs.h    |  1 -
+ drivers/scsi/ufs/ufshcd.c | 59 +++------------------------------------
+ 2 files changed, 4 insertions(+), 56 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.=
-c
-index d5a6aa9676c8..0bdc6b0f725f 100644
---- a/drivers/scsi/aacraid/commsup.c
-+++ b/drivers/scsi/aacraid/commsup.c
-@@ -1376,18 +1376,19 @@ static void aac_handle_aif(struct aac_dev * dev, st=
-ruct fib * fibptr)
-
-=A0=A0=A0=A0=A0=A0=A0 container =3D 0;
-=A0retry_next:
--=A0=A0=A0=A0=A0=A0 if (device_config_needed =3D=3D NOTHING)
--=A0=A0=A0=A0=A0=A0 for (; container < dev->maximum_num_containers; ++conta=
-iner) {
--=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 if ((dev->fsa_dev[container].co=
-nfig_waiting_on =3D=3D 0) &&
--=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 (dev->f=
-sa_dev[container].config_needed !=3D NOTHING) &&
--=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 time_be=
-fore(jiffies, dev->fsa_dev[container].config_waiting_stamp + AIF_SNIFF_TIME=
-OUT)) {
--=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 device_=
-config_needed =3D
--=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0 dev->fsa_dev[container].config_needed;
--=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 dev->fs=
-a_dev[container].config_needed =3D NOTHING;
--=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 channel=
- =3D CONTAINER_TO_CHANNEL(container);
--=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 id =3D =
-CONTAINER_TO_ID(container);
--=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 lun =3D=
- CONTAINER_TO_LUN(container);
--=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 break;
-+=A0=A0=A0=A0=A0=A0 if (device_config_needed =3D=3D NOTHING) {
-+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 for (; container < dev->maximum=
-_num_containers; ++container) {
-+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 if ((de=
-v->fsa_dev[container].config_waiting_on =3D=3D 0) &&
-+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0 (dev->fsa_dev[container].config_needed !=3D NOTHING) &&
-+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0 time_before(jiffies, dev->fsa_dev[container].config_waiting_stamp + =
-AIF_SNIFF_TIMEOUT)) {
-+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0 device_config_needed =3D
-+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 dev->fsa_dev[container].config_n=
-eeded;
-+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0 dev->fsa_dev[container].config_needed =3D NOTHING;
-+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0 channel =3D CONTAINER_TO_CHANNEL(container);
-+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0 id =3D CONTAINER_TO_ID(container);
-+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0 lun =3D CONTAINER_TO_LUN(container);
-+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0 break;
-+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 }
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 }
-=A0=A0=A0=A0=A0=A0=A0 }
-=A0=A0=A0=A0=A0=A0=A0 if (device_config_needed =3D=3D NOTHING)
-diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index 7e56a11836c1..e977b459f823 100644
---- a/drivers/scsi/aacraid/linit.c
-+++ b/drivers/scsi/aacraid/linit.c
-@@ -852,8 +852,7 @@ static u8 aac_eh_tmf_hard_reset_fib(struct aac_hba_map_=
-info *info,
-
-=A0=A0=A0=A0=A0=A0=A0 address =3D (u64)fib->hw_error_pa;
-=A0=A0=A0=A0=A0=A0=A0 rst->error_ptr_hi =3D cpu_to_le32((u32)(address >> 32=
-));
--=A0=A0=A0=A0=A0=A0 rst->error_ptr_lo =3D cpu_to_le32
--=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 ((u32)(address & 0xffffffff));
-+=A0=A0=A0=A0=A0=A0 rst->error_ptr_lo =3D cpu_to_le32((u32)(address & 0xfff=
-fffff));
-=A0=A0=A0=A0=A0=A0=A0 rst->error_length =3D cpu_to_le32(FW_ERROR_BUFFER_SIZ=
-E);
-=A0=A0=A0=A0=A0=A0=A0 fib->hbacmd_size =3D sizeof(*rst);
-
-diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c
-index 8377aec0649d..97bb9e9d201c 100644
---- a/drivers/scsi/aacraid/src.c
-+++ b/drivers/scsi/aacraid/src.c
-@@ -1157,7 +1157,7 @@ static int aac_src_soft_reset(struct aac_dev *dev)
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 dev_err(&dev->pdev->dev, "%s:=
- %s status =3D %d", __func__,
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 state=
-_str[state], rc);
-
--return rc;
-+=A0=A0=A0=A0=A0=A0 return rc;
-=A0}
-=A0/**
-=A0 *=A0 aac_srcv_init=A0=A0=A0=A0=A0 -=A0=A0=A0=A0=A0=A0 initialize an SRC=
-v card
---
-2.20.1
+diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+index dd65fea07687..7da7318eb6a6 100644
+--- a/drivers/scsi/ufs/ufs.h
++++ b/drivers/scsi/ufs/ufs.h
+@@ -514,7 +514,6 @@ struct ufs_vreg {
+ 	struct regulator *reg;
+ 	const char *name;
+ 	bool enabled;
+-	bool unused;
+ 	int min_uV;
+ 	int max_uV;
+ 	int min_uA;
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 9ba7671b84f8..8b9a01073d62 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -245,7 +245,6 @@ static int ufshcd_probe_hba(struct ufs_hba *hba);
+ static int __ufshcd_setup_clocks(struct ufs_hba *hba, bool on,
+ 				 bool skip_ref_clk);
+ static int ufshcd_setup_clocks(struct ufs_hba *hba, bool on);
+-static int ufshcd_set_vccq_rail_unused(struct ufs_hba *hba, bool unused);
+ static int ufshcd_uic_hibern8_exit(struct ufs_hba *hba);
+ static int ufshcd_uic_hibern8_enter(struct ufs_hba *hba);
+ static inline void ufshcd_add_delay_before_dme_cmd(struct ufs_hba *hba);
+@@ -6819,11 +6818,6 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
+ 	ufs_fixup_device_setup(hba, &card);
+ 	ufshcd_tune_unipro_params(hba);
+ 
+-	ret = ufshcd_set_vccq_rail_unused(hba,
+-		(hba->dev_quirks & UFS_DEVICE_NO_VCCQ) ? true : false);
+-	if (ret)
+-		goto out;
+-
+ 	/* UFS device is also active now */
+ 	ufshcd_set_ufs_dev_active(hba);
+ 	ufshcd_force_reset_auto_bkops(hba);
+@@ -7007,24 +7001,13 @@ static int ufshcd_config_vreg_load(struct device *dev, struct ufs_vreg *vreg,
+ static inline int ufshcd_config_vreg_lpm(struct ufs_hba *hba,
+ 					 struct ufs_vreg *vreg)
+ {
+-	if (!vreg)
+-		return 0;
+-	else if (vreg->unused)
+-		return 0;
+-	else
+-		return ufshcd_config_vreg_load(hba->dev, vreg,
+-					       UFS_VREG_LPM_LOAD_UA);
++	return ufshcd_config_vreg_load(hba->dev, vreg, UFS_VREG_LPM_LOAD_UA);
+ }
+ 
+ static inline int ufshcd_config_vreg_hpm(struct ufs_hba *hba,
+ 					 struct ufs_vreg *vreg)
+ {
+-	if (!vreg)
+-		return 0;
+-	else if (vreg->unused)
+-		return 0;
+-	else
+-		return ufshcd_config_vreg_load(hba->dev, vreg, vreg->max_uA);
++	return ufshcd_config_vreg_load(hba->dev, vreg, vreg->max_uA);
+ }
+ 
+ static int ufshcd_config_vreg(struct device *dev,
+@@ -7062,9 +7045,7 @@ static int ufshcd_enable_vreg(struct device *dev, struct ufs_vreg *vreg)
+ {
+ 	int ret = 0;
+ 
+-	if (!vreg)
+-		goto out;
+-	else if (vreg->enabled || vreg->unused)
++	if (!vreg || vreg->enabled)
+ 		goto out;
+ 
+ 	ret = ufshcd_config_vreg(dev, vreg, true);
+@@ -7084,9 +7065,7 @@ static int ufshcd_disable_vreg(struct device *dev, struct ufs_vreg *vreg)
+ {
+ 	int ret = 0;
+ 
+-	if (!vreg)
+-		goto out;
+-	else if (!vreg->enabled || vreg->unused)
++	if (!vreg || !vreg->enabled)
+ 		goto out;
+ 
+ 	ret = regulator_disable(vreg->reg);
+@@ -7192,36 +7171,6 @@ static int ufshcd_init_hba_vreg(struct ufs_hba *hba)
+ 	return 0;
+ }
+ 
+-static int ufshcd_set_vccq_rail_unused(struct ufs_hba *hba, bool unused)
+-{
+-	int ret = 0;
+-	struct ufs_vreg_info *info = &hba->vreg_info;
+-
+-	if (!info)
+-		goto out;
+-	else if (!info->vccq)
+-		goto out;
+-
+-	if (unused) {
+-		/* shut off the rail here */
+-		ret = ufshcd_toggle_vreg(hba->dev, info->vccq, false);
+-		/*
+-		 * Mark this rail as no longer used, so it doesn't get enabled
+-		 * later by mistake
+-		 */
+-		if (!ret)
+-			info->vccq->unused = true;
+-	} else {
+-		/*
+-		 * rail should have been already enabled hence just make sure
+-		 * that unused flag is cleared.
+-		 */
+-		info->vccq->unused = false;
+-	}
+-out:
+-	return ret;
+-}
+-
+ static int __ufshcd_setup_clocks(struct ufs_hba *hba, bool on,
+ 					bool skip_ref_clk)
+ {
+-- 
+2.17.1
