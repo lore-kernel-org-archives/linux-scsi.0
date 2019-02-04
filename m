@@ -1,62 +1,53 @@
-From: Boaz Harrosh <ooo@electrozaur.com>
-Subject: Re: remove exofs, the T10 OSD code and block/scsi bidi support V4
-Date: Mon, 4 Feb 2019 22:31:39 +0200
-Message-ID: <3be11773-5ea9-4c08-25a5-dc556ded2d6f@electrozaur.com>
-References: <20190201075557.9249-1-hch@lst.de>
+From: Jason Gunthorpe <jgg@ziepe.ca>
+Subject: Re: [PATCH v2] RDMA/srp: Rework SCSI device reset handling
+Date: Mon, 4 Feb 2019 16:31:58 -0700
+Message-ID: <20190204233158.GA14895@ziepe.ca>
+References: <20190130220555.8949-1-bvanassche@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190201075557.9249-1-hch@lst.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, axboe@kernel.dk, martin.petersen@oracle.com
-Cc: Johannes Thumshirn <jthumshirn@suse.de>, Benjamin Block <bblock@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <stable-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20190130220555.8949-1-bvanassche@acm.org>
+Sender: stable-owner@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: Doug Ledford <dledford@redhat.com>, linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org, Sergey Gorenko <sergeygo@mellanox.com>, Max Gurtovoy <maxg@mellanox.com>, Laurence Oberman <loberman@redhat.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 01/02/19 09:55, Christoph Hellwig wrote:
-> The only real user of the T10 OSD protocol, the pNFS object layout
-> driver never went to the point of having shipping products, and we
-> removed it 1.5 years ago.  Exofs is just a simple example without
-> real life users.
+On Wed, Jan 30, 2019 at 02:05:55PM -0800, Bart Van Assche wrote:
+> Since .scsi_done() must only be called after scsi_queue_rq() has
+> finished, make sure that the SRP initiator driver does not call
+> .scsi_done() while scsi_queue_rq() is in progress. Although
+> invoking sg_reset -d while I/O is in progress works fine with kernel
+> v4.20 and before, that is not the case with kernel v5.0-rc1. This
+> patch avoids that the following crash is triggered with kernel
+> v5.0-rc1:
 > 
-> The code has been mostly unmaintained for years and is getting in the
-> way of block / SCSI changes, 
-
-For the 4th time: Which ?
-
-> and does not even work properly currently,
-> so I think it's finally time to drop it.
+> BUG: unable to handle kernel NULL pointer dereference at 0000000000000138
+> CPU: 0 PID: 360 Comm: kworker/0:1H Tainted: G    B             5.0.0-rc1-dbg+ #1
+> Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.10.2-1 04/01/2014
+> Workqueue: kblockd blk_mq_run_work_fn
+> RIP: 0010:blk_mq_dispatch_rq_list+0x116/0xb10
+> Call Trace:
+>  blk_mq_sched_dispatch_requests+0x2f7/0x300
+>  __blk_mq_run_hw_queue+0xd6/0x180
+>  blk_mq_run_work_fn+0x27/0x30
+>  process_one_work+0x4f1/0xa20
+>  worker_thread+0x67/0x5b0
+>  kthread+0x1cf/0x1f0
+>  ret_from_fork+0x24/0x30
 > 
-> Quote from Boaz:
+> Cc: Sergey Gorenko <sergeygo@mellanox.com>
+> Cc: Max Gurtovoy <maxg@mellanox.com>
+> Cc: Laurence Oberman <loberman@redhat.com>
+> Cc: <stable@vger.kernel.org>
+> Fixes: 94a9174c630c ("IB/srp: reduce lock coverage of command completion") # v2.6.38
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> ---
 > 
+> Changes compared to v1: left out the code that waits until in-progress requests
+>   have finished.
 
-Hello? anyone home?
+Applied to for-rc
 
-Please resend without the below Quote!!!
-Because yes I said that but I have also said the opposite. And I have clearly
-stated in reaction to the last 3 resends. That I now oppose to the below statement.
-And that you should please remove it.
-
-Do your own text please. Don't drag me in the mud
-
-> "As I said then. It is used in Universities for studies and experiments.
-> Every once in a while. I get an email with questions and reports.
-> 
-> But yes feel free to remove the all thing!!
-> 
-> I guess I can put it up on github. In a public tree.
-> 
-> Just that I will need to forward port it myself, til now you guys
-> been doing this for me ;-)"
-> 
-> Now the last time this caused a bit of a stir, but still no actual users,
-> not even for SG_IO passthrough commands.  So here we go again, this time
-> including removing everything in the scsi and block layer supporting it,
-> and thus shrinking struct request.
-> 
-
-NAK-by: Boaz harrosh <ooo@electrozaur.com>
-For what ever that means ...
-
-Cheers
-Boaz
+Thanks,
+Jason
