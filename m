@@ -1,545 +1,98 @@
-From: Evan Green <evgreen@chromium.org>
-Subject: [PATCH v3 8/8] phy: ufs-qcom: Refactor all init steps into phy_poweron
-Date: Tue,  5 Feb 2019 10:59:02 -0800
-Message-ID: <20190205185902.106085-9-evgreen@chromium.org>
-References: <20190205185902.106085-1-evgreen@chromium.org>
+From: Jeffrey Hugo <jhugo@codeaurora.org>
+Subject: Re: [PATCH v3 5/5] Revert "scsi: ufs: disable vccq if it's not needed
+ by UFS device"
+Date: Tue, 5 Feb 2019 12:37:26 -0700
+Message-ID: <fe4e6e20-2017-0a50-232d-52582983146d@codeaurora.org>
+References: <e3c82a49-c601-effc-348f-f768656c659f@free.fr>
+ <CGME20190204174549epcas4p4682667176f55101f69cc24cc455c9f3c@epcas4p4.samsung.com>
+ <70618c25-83f0-b9db-51a3-c1d74b605a45@free.fr>
+ <5f2a8378-1f22-6a52-356d-56d3b393ab1d@samsung.com>
+ <05d2d193-4181-12ce-b4fb-4e8dec5aef27@free.fr>
+ <7610c262-1451-9bb2-48a6-4daf6f534f6c@free.fr>
+ <CAE=gft5yAqLZDnYnjF2T1QbKfOKOagX+C1qQqD1DFU+2pr_WPw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190205185902.106085-1-evgreen@chromium.org>
+In-Reply-To: <CAE=gft5yAqLZDnYnjF2T1QbKfOKOagX+C1qQqD1DFU+2pr_WPw@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Andy Gross <andy.gross@linaro.org>, Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Stephen Boyd <swboyd@chromium.org>, Marc Gonzalez <marc.w.gonzalez@free.fr>, Can Guo <cang@codeaurora.org>, Vivek Gautam <vivek.gautam@codeaurora.org>, Douglas Anderson <dianders@chromium.org>, Asutosh Das <asutoshd@codeaurora.org>, Evan Green <evgreen@chromium.org>, Jeffrey Hugo <jhugo@codeaurora.org>, Arnd Bergmann <arnd@arndb.de>, linux-scsi@vger.kernel.org, Grygorii Strashko <grygorii.strashko@ti.com>, Bjorn Andersson <bjorn.andersson@linaro.org>, linux-kernel@vger.kernel.org, Manu Gautam <mgautam@codeaurora.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, Vinayak Holikatti <vinholikatti@gmail.com>
+To: Evan Green <evgreen@chromium.org>, Marc Gonzalez <marc.w.gonzalez@free.fr>
+Cc: Alim Akhtar <alim.akhtar@samsung.com>, MSM <linux-arm-msm@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Bjorn Andersson <bjorn.andersson@linaro.org>, Andy Gross <andy.gross@linaro.org>, David Brown <david.brown@linaro.org>, Douglas Anderson <dianders@chromium.org>, Avri Altman <avri.altman@wdc.com>, Pedro Sousa <pedrom.sousa@synopsys.com>, Subhash Jadavani <subhashj@codeaurora.org>, Bart Van Assche <bvanassche@acm.org>, SCSI <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-The phy code was using implicit sequencing between the PHY driver
-and the UFS driver to implement certain hardware requirements.
-Specifically, the PHY reset register in the UFS controller needs
-to be deasserted before serdes start occurs in the PHY.
+On 2/5/2019 11:19 AM, Evan Green wrote:
+> On Tue, Feb 5, 2019 at 9:52 AM Marc Gonzalez <marc.w.gonzalez@free.fr> wrote:
+>>
+>> On 05/02/2019 18:24, Marc Gonzalez wrote:
+>>
+>>> /*** system hangs here for several seconds, then reboots ***/
+>>
+>> Silly me. The system crashes in ufshcd_dump_regs() which is a bug
+>> I fixed myself. Once I cherry-pick the appropriate fix, the board
+>> no longer reboots, but UFS init does fail.
+>>
+>> Full boot log here:
+>> https://pastebin.ubuntu.com/p/KwpRnWMFw5/
+>>
+>> In any case, it's obvious that disabling vccq on this system is
+>> a mistake. How would you solve the problem? (A quirk on top of a
+>> quirk sounds silly.)
+>>
+> 
+> I think Bjorn is right that this whole quirk seems to be compensating
+> for an incorrectly specified device tree (one that specifies
+> vccq-supply but that doesn't go anywhere).... though maybe this was
+> made to support boards with footprint-compatible UFS parts from
+> different vendors? Like the same DT is used for two different SKUs,
+> one which stamps down a UFS part that uses VCCQ, and another that
+> doesn't use it, though the wire is there.
 
-Before this change, the code was doing this by utilizing the two
-phy callbacks, phy_init() and phy_poweron(), as "init step 1" and
-"init step 2", where the UFS driver would deassert reset between
-these two steps.
+This doesn't make sense from a DT perspective, as I understand it.  If 
+some board has different configurations (say different display panels), 
+FW is supposed to somehow detect that, and edit the DT before passing 
+the DT off to Linux.
 
-This makes it challenging to power off the regulators in suspend,
-as regulators are initialized in init, not in poweron(), but only
-poweroff() is called during suspend, not exit().
+In your example, if SKU1 has a UFS part that needs VCCQ, and SKU2 does 
+not, then FW should somehow query the HW, determine which SKU the device 
+is, and patch vccq in or out of the DT as necessary.
 
-For UFS, move the actual firing up of the PHY to phy_poweron() and
-phy_poweroff() callbacks, rather than init()/exit(). UFS calls
-phy_poweroff() during suspend, so now all clocks and regulators for
-the phy can be powered down during suspend.
+> 
+> But the revert itself shouldn't really fix anything for you Marc,
+> should it? It looks like this quirk turns on for Samsung and SKHynix
+> parts, which presumably just don't use VCCQ. So maybe your device tree
+> doesn't match your schematics, where the DT's vccq supply is actually
+> the vccq2 supply going into the UFS chip?
 
-QMP is a little tricky because the PHY is also shared with PCIe and
-USB3, which have their own definitions for init() and poweron(). Rename
-the meaty functions to _enable() and _disable() to disentangle from the
-PHY core names, and then create two different ops structures: one for
-UFS and one for the other PHY types.
+I see the same issue on the reference device, the MSM8998 MTP.  The 
+schematics for that indicate there is both vccq and vccq2, at different 
+voltages.  vccq goes to both the UFS block, and the phy.
 
-In phy-qcom-ufs, remove the 'is_powered_on' and 'is_started' guards,
-as the generic PHY code does the reference counting. The
-14/20nm-specific init functions get collapsed into the generic power_on()
-function, with the addition of a calibrate() callback specific to 14/20nm.
+Digging into things, the problem doesn't seem to be that vccq is off - 
+the phy will keep it on.  However, the load from the phy is minimal. 
+What really loads the regulator is the UFS block.  Without the load from 
+the UFS block, the regulator is likely in a low power mode.
 
-Signed-off-by: Evan Green <evgreen@chromium.org>
----
+I cannot tell if vccq is routed to the actual storage chip based on the 
+documentation I see, however I can tell that it powers blocks within the 
+host controller block which assist the controller in communicating with 
+the storage chip.  These blocks consume quite a bit of power, so likely, 
+if the regulator load is not properly accounted for, these blocks 
+brownout, and communication with the storage chip is broken.
 
-Changes in v3:
-- Refactor init => poweron for all PHYs and UFS in one step (Stephen)
+The schematics do refer to this input to the UFS block as "vccq".
 
-Changes in v2:
-- Use devm_ to get the reset (Stephen)
-- Removed whitespace changes (Stephen)
+So, at a minimum, the host controller itself consumes vccq, and 
+therefore it is unfair to disable vccq solely based on the UFS storage 
+chip that happens to be connected to the controller.
 
- drivers/phy/qualcomm/phy-qcom-qmp.c          | 80 ++++++--------------
- drivers/phy/qualcomm/phy-qcom-ufs-i.h        |  4 +-
- drivers/phy/qualcomm/phy-qcom-ufs-qmp-14nm.c | 35 +--------
- drivers/phy/qualcomm/phy-qcom-ufs-qmp-20nm.c | 35 +--------
- drivers/phy/qualcomm/phy-qcom-ufs.c          | 44 ++++++-----
- drivers/scsi/ufs/ufs-qcom.c                  | 44 +++++------
- 6 files changed, 68 insertions(+), 174 deletions(-)
+So, we've got two boards that are actually harmed by this quirk.  I've 
+not seen anything indicating what harm happens without this quirk.  Can 
+someone indicate what that is?
 
-diff --git a/drivers/phy/qualcomm/phy-qcom-qmp.c b/drivers/phy/qualcomm/phy-qcom-qmp.c
-index 2861c64b9bcc..3597c4c0e50f 100644
---- a/drivers/phy/qualcomm/phy-qcom-qmp.c
-+++ b/drivers/phy/qualcomm/phy-qcom-qmp.c
-@@ -1341,8 +1341,7 @@ static int qcom_qmp_phy_com_exit(struct qcom_qmp *qmp)
- 	return 0;
- }
- 
--/* PHY Initialization */
--static int qcom_qmp_phy_init(struct phy *phy)
-+static int qcom_qmp_phy_enable(struct phy *phy)
- {
- 	struct qmp_phy *qphy = phy_get_drvdata(phy);
- 	struct qcom_qmp *qmp = qphy->qmp;
-@@ -1423,14 +1422,6 @@ static int qcom_qmp_phy_init(struct phy *phy)
- 			goto err_lane_rst;
- 	}
- 
--	/*
--	 * UFS PHY requires the deassert of software reset before serdes start.
--	 * For UFS PHYs that do not have software reset control bits, defer
--	 * starting serdes until the power on callback.
--	 */
--	if ((cfg->type == PHY_TYPE_UFS) && cfg->no_pcs_sw_reset)
--		goto out;
--
- 	/*
- 	 * Pull out PHY from POWER DOWN state.
- 	 * This is active low enable signal to power-down PHY.
-@@ -1442,7 +1433,9 @@ static int qcom_qmp_phy_init(struct phy *phy)
- 		usleep_range(cfg->pwrdn_delay_min, cfg->pwrdn_delay_max);
- 
- 	/* Pull PHY out of reset state */
--	qphy_clrbits(pcs, cfg->regs[QPHY_SW_RESET], SW_RESET);
-+	if (!cfg->no_pcs_sw_reset)
-+		qphy_clrbits(pcs, cfg->regs[QPHY_SW_RESET], SW_RESET);
-+
- 	if (cfg->has_phy_dp_com_ctrl)
- 		qphy_clrbits(dp_com, QPHY_V3_DP_COM_SW_RESET, SW_RESET);
- 
-@@ -1459,11 +1452,12 @@ static int qcom_qmp_phy_init(struct phy *phy)
- 		goto err_pcs_ready;
- 	}
- 	qmp->phy_initialized = true;
--
--out:
--	return ret;
-+	return 0;
- 
- err_pcs_ready:
-+	if (qmp->ufs_reset)
-+		reset_control_assert(qmp->ufs_reset);
-+
- 	clk_disable_unprepare(qphy->pipe_clk);
- err_clk_enable:
- 	if (cfg->has_lane_rst)
-@@ -1474,7 +1468,7 @@ static int qcom_qmp_phy_init(struct phy *phy)
- 	return ret;
- }
- 
--static int qcom_qmp_phy_exit(struct phy *phy)
-+static int qcom_qmp_phy_disable(struct phy *phy)
- {
- 	struct qmp_phy *qphy = phy_get_drvdata(phy);
- 	struct qcom_qmp *qmp = qphy->qmp;
-@@ -1502,44 +1496,6 @@ static int qcom_qmp_phy_exit(struct phy *phy)
- 	return 0;
- }
- 
--static int qcom_qmp_phy_poweron(struct phy *phy)
--{
--	struct qmp_phy *qphy = phy_get_drvdata(phy);
--	struct qcom_qmp *qmp = qphy->qmp;
--	const struct qmp_phy_cfg *cfg = qmp->cfg;
--	void __iomem *pcs = qphy->pcs;
--	void __iomem *status;
--	unsigned int mask, val;
--	int ret = 0;
--
--	if (cfg->type != PHY_TYPE_UFS)
--		return 0;
--
--	/*
--	 * For UFS PHY that has not software reset control, serdes start
--	 * should only happen when UFS driver explicitly calls phy_power_on
--	 * after it deasserts software reset.
--	 */
--	if (cfg->no_pcs_sw_reset && !qmp->phy_initialized &&
--	    (qmp->init_count != 0)) {
--		/* start SerDes and Phy-Coding-Sublayer */
--		qphy_setbits(pcs, cfg->regs[QPHY_START_CTRL], cfg->start_ctrl);
--
--		status = pcs + cfg->regs[QPHY_PCS_READY_STATUS];
--		mask = cfg->mask_pcs_ready;
--
--		ret = readl_poll_timeout(status, val, !(val & mask), 1,
--					 PHY_INIT_COMPLETE_TIMEOUT);
--		if (ret) {
--			dev_err(qmp->dev, "phy initialization timed-out\n");
--			return ret;
--		}
--		qmp->phy_initialized = true;
--	}
--
--	return ret;
--}
--
- static int qcom_qmp_phy_set_mode(struct phy *phy,
- 				 enum phy_mode mode, int submode)
- {
-@@ -1789,9 +1745,15 @@ static int phy_pipe_clk_register(struct qcom_qmp *qmp, struct device_node *np)
- }
- 
- static const struct phy_ops qcom_qmp_phy_gen_ops = {
--	.init		= qcom_qmp_phy_init,
--	.exit		= qcom_qmp_phy_exit,
--	.power_on	= qcom_qmp_phy_poweron,
-+	.init		= qcom_qmp_phy_enable,
-+	.exit		= qcom_qmp_phy_disable,
-+	.set_mode	= qcom_qmp_phy_set_mode,
-+	.owner		= THIS_MODULE,
-+};
-+
-+static const struct phy_ops qcom_qmp_ufs_ops = {
-+	.power_on	= qcom_qmp_phy_enable,
-+	.power_off	= qcom_qmp_phy_disable,
- 	.set_mode	= qcom_qmp_phy_set_mode,
- 	.owner		= THIS_MODULE,
- };
-@@ -1802,6 +1764,7 @@ int qcom_qmp_phy_create(struct device *dev, struct device_node *np, int id)
- 	struct qcom_qmp *qmp = dev_get_drvdata(dev);
- 	struct phy *generic_phy;
- 	struct qmp_phy *qphy;
-+	const struct phy_ops *ops = &qcom_qmp_phy_gen_ops;
- 	char prop_name[MAX_PROP_NAME];
- 	int ret;
- 
-@@ -1888,7 +1851,10 @@ int qcom_qmp_phy_create(struct device *dev, struct device_node *np, int id)
- 		}
- 	}
- 
--	generic_phy = devm_phy_create(dev, np, &qcom_qmp_phy_gen_ops);
-+	if (qmp->cfg->type == PHY_TYPE_UFS)
-+		ops = &qcom_qmp_ufs_ops;
-+
-+	generic_phy = devm_phy_create(dev, np, ops);
- 	if (IS_ERR(generic_phy)) {
- 		ret = PTR_ERR(generic_phy);
- 		dev_err(dev, "failed to create qphy %d\n", ret);
-diff --git a/drivers/phy/qualcomm/phy-qcom-ufs-i.h b/drivers/phy/qualcomm/phy-qcom-ufs-i.h
-index ba77348d807c..109ddd67be82 100644
---- a/drivers/phy/qualcomm/phy-qcom-ufs-i.h
-+++ b/drivers/phy/qualcomm/phy-qcom-ufs-i.h
-@@ -97,8 +97,6 @@ struct ufs_qcom_phy {
- 	char name[UFS_QCOM_PHY_NAME_LEN];
- 	struct ufs_qcom_phy_calibration *cached_regs;
- 	int cached_regs_table_size;
--	bool is_powered_on;
--	bool is_started;
- 	struct ufs_qcom_phy_specific_ops *phy_spec_ops;
- 
- 	enum phy_mode mode;
-@@ -117,6 +115,7 @@ struct ufs_qcom_phy {
-  * and writes to QSERDES_RX_SIGDET_CNTRL attribute
-  */
- struct ufs_qcom_phy_specific_ops {
-+	int (*calibrate)(struct ufs_qcom_phy *ufs_qcom_phy, bool is_rate_B);
- 	void (*start_serdes)(struct ufs_qcom_phy *phy);
- 	int (*is_physical_coding_sublayer_ready)(struct ufs_qcom_phy *phy);
- 	void (*set_tx_lane_enable)(struct ufs_qcom_phy *phy, u32 val);
-@@ -134,7 +133,6 @@ struct phy *ufs_qcom_phy_generic_probe(struct platform_device *pdev,
- 			struct ufs_qcom_phy *common_cfg,
- 			const struct phy_ops *ufs_qcom_phy_gen_ops,
- 			struct ufs_qcom_phy_specific_ops *phy_spec_ops);
--int ufs_qcom_phy_get_reset(struct ufs_qcom_phy *phy_common);
- int ufs_qcom_phy_calibrate(struct ufs_qcom_phy *ufs_qcom_phy,
- 			struct ufs_qcom_phy_calibration *tbl_A, int tbl_size_A,
- 			struct ufs_qcom_phy_calibration *tbl_B, int tbl_size_B,
-diff --git a/drivers/phy/qualcomm/phy-qcom-ufs-qmp-14nm.c b/drivers/phy/qualcomm/phy-qcom-ufs-qmp-14nm.c
-index ef1383123883..4815546f228c 100644
---- a/drivers/phy/qualcomm/phy-qcom-ufs-qmp-14nm.c
-+++ b/drivers/phy/qualcomm/phy-qcom-ufs-qmp-14nm.c
-@@ -42,38 +42,6 @@ void ufs_qcom_phy_qmp_14nm_advertise_quirks(struct ufs_qcom_phy *phy_common)
- 		UFS_QCOM_PHY_QUIRK_HIBERN8_EXIT_AFTER_PHY_PWR_COLLAPSE;
- }
- 
--static int ufs_qcom_phy_qmp_14nm_init(struct phy *generic_phy)
--{
--	struct ufs_qcom_phy *phy_common = get_ufs_qcom_phy(generic_phy);
--	bool is_rate_B = false;
--	int ret;
--
--	ret = ufs_qcom_phy_get_reset(phy_common);
--	if (ret)
--		return ret;
--
--	if (phy_common->ufs_reset) {
--		ret = reset_control_assert(phy_common->ufs_reset);
--		if (ret)
--			return ret;
--	}
--
--	if (phy_common->mode == PHY_MODE_UFS_HS_B)
--		is_rate_B = true;
--
--	ret = ufs_qcom_phy_qmp_14nm_phy_calibrate(phy_common, is_rate_B);
--	if (!ret)
--		/* phy calibrated, but yet to be started */
--		phy_common->is_started = false;
--
--	return ret;
--}
--
--static int ufs_qcom_phy_qmp_14nm_exit(struct phy *generic_phy)
--{
--	return 0;
--}
--
- static
- int ufs_qcom_phy_qmp_14nm_set_mode(struct phy *generic_phy,
- 				   enum phy_mode mode, int submode)
-@@ -134,8 +102,6 @@ static int ufs_qcom_phy_qmp_14nm_is_pcs_ready(struct ufs_qcom_phy *phy_common)
- }
- 
- static const struct phy_ops ufs_qcom_phy_qmp_14nm_phy_ops = {
--	.init		= ufs_qcom_phy_qmp_14nm_init,
--	.exit		= ufs_qcom_phy_qmp_14nm_exit,
- 	.power_on	= ufs_qcom_phy_power_on,
- 	.power_off	= ufs_qcom_phy_power_off,
- 	.set_mode	= ufs_qcom_phy_qmp_14nm_set_mode,
-@@ -143,6 +109,7 @@ static const struct phy_ops ufs_qcom_phy_qmp_14nm_phy_ops = {
- };
- 
- static struct ufs_qcom_phy_specific_ops phy_14nm_ops = {
-+	.calibrate		= ufs_qcom_phy_qmp_14nm_phy_calibrate,
- 	.start_serdes		= ufs_qcom_phy_qmp_14nm_start_serdes,
- 	.is_physical_coding_sublayer_ready = ufs_qcom_phy_qmp_14nm_is_pcs_ready,
- 	.set_tx_lane_enable	= ufs_qcom_phy_qmp_14nm_set_tx_lane_enable,
-diff --git a/drivers/phy/qualcomm/phy-qcom-ufs-qmp-20nm.c b/drivers/phy/qualcomm/phy-qcom-ufs-qmp-20nm.c
-index b05f89d734f0..f1cf819e12ea 100644
---- a/drivers/phy/qualcomm/phy-qcom-ufs-qmp-20nm.c
-+++ b/drivers/phy/qualcomm/phy-qcom-ufs-qmp-20nm.c
-@@ -61,38 +61,6 @@ void ufs_qcom_phy_qmp_20nm_advertise_quirks(struct ufs_qcom_phy *phy_common)
- 		UFS_QCOM_PHY_QUIRK_HIBERN8_EXIT_AFTER_PHY_PWR_COLLAPSE;
- }
- 
--static int ufs_qcom_phy_qmp_20nm_init(struct phy *generic_phy)
--{
--	struct ufs_qcom_phy *phy_common = get_ufs_qcom_phy(generic_phy);
--	bool is_rate_B = false;
--	int ret;
--
--	ret = ufs_qcom_phy_get_reset(phy_common);
--	if (ret)
--		return ret;
--
--	if (phy_common->ufs_reset) {
--		ret = reset_control_assert(phy_common->ufs_reset);
--		if (ret)
--			return ret;
--	}
--
--	if (phy_common->mode == PHY_MODE_UFS_HS_B)
--		is_rate_B = true;
--
--	ret = ufs_qcom_phy_qmp_20nm_phy_calibrate(phy_common, is_rate_B);
--	if (!ret)
--		/* phy calibrated, but yet to be started */
--		phy_common->is_started = false;
--
--	return ret;
--}
--
--static int ufs_qcom_phy_qmp_20nm_exit(struct phy *generic_phy)
--{
--	return 0;
--}
--
- static
- int ufs_qcom_phy_qmp_20nm_set_mode(struct phy *generic_phy,
- 				   enum phy_mode mode, int submode)
-@@ -192,8 +160,6 @@ static int ufs_qcom_phy_qmp_20nm_is_pcs_ready(struct ufs_qcom_phy *phy_common)
- }
- 
- static const struct phy_ops ufs_qcom_phy_qmp_20nm_phy_ops = {
--	.init		= ufs_qcom_phy_qmp_20nm_init,
--	.exit		= ufs_qcom_phy_qmp_20nm_exit,
- 	.power_on	= ufs_qcom_phy_power_on,
- 	.power_off	= ufs_qcom_phy_power_off,
- 	.set_mode	= ufs_qcom_phy_qmp_20nm_set_mode,
-@@ -201,6 +167,7 @@ static const struct phy_ops ufs_qcom_phy_qmp_20nm_phy_ops = {
- };
- 
- static struct ufs_qcom_phy_specific_ops phy_20nm_ops = {
-+	.calibrate		= ufs_qcom_phy_qmp_20nm_phy_calibrate,
- 	.start_serdes		= ufs_qcom_phy_qmp_20nm_start_serdes,
- 	.is_physical_coding_sublayer_ready = ufs_qcom_phy_qmp_20nm_is_pcs_ready,
- 	.set_tx_lane_enable	= ufs_qcom_phy_qmp_20nm_set_tx_lane_enable,
-diff --git a/drivers/phy/qualcomm/phy-qcom-ufs.c b/drivers/phy/qualcomm/phy-qcom-ufs.c
-index 9cc8aa0b7a4f..8860ced486f3 100644
---- a/drivers/phy/qualcomm/phy-qcom-ufs.c
-+++ b/drivers/phy/qualcomm/phy-qcom-ufs.c
-@@ -147,7 +147,7 @@ struct phy *ufs_qcom_phy_generic_probe(struct platform_device *pdev,
- }
- EXPORT_SYMBOL_GPL(ufs_qcom_phy_generic_probe);
- 
--int ufs_qcom_phy_get_reset(struct ufs_qcom_phy *phy_common)
-+static int ufs_qcom_phy_get_reset(struct ufs_qcom_phy *phy_common)
- {
- 	struct reset_control *reset;
- 
-@@ -161,7 +161,6 @@ int ufs_qcom_phy_get_reset(struct ufs_qcom_phy *phy_common)
- 	phy_common->ufs_reset = reset;
- 	return 0;
- }
--EXPORT_SYMBOL_GPL(ufs_qcom_phy_get_reset);
- 
- static int __ufs_qcom_phy_clk_get(struct device *dev,
- 			 const char *name, struct clk **clk_out, bool err_print)
-@@ -544,10 +543,25 @@ int ufs_qcom_phy_power_on(struct phy *generic_phy)
- {
- 	struct ufs_qcom_phy *phy_common = get_ufs_qcom_phy(generic_phy);
- 	struct device *dev = phy_common->dev;
-+	bool is_rate_B = false;
- 	int err;
- 
--	if (phy_common->is_powered_on)
--		return 0;
-+	err = ufs_qcom_phy_get_reset(phy_common);
-+	if (err)
-+		return err;
-+
-+	if (phy_common->ufs_reset) {
-+		err = reset_control_assert(phy_common->ufs_reset);
-+		if (err)
-+			return err;
-+	}
-+
-+	if (phy_common->mode == PHY_MODE_UFS_HS_B)
-+		is_rate_B = true;
-+
-+	err = phy_common->phy_spec_ops->calibrate(phy_common, is_rate_B);
-+	if (err)
-+		return err;
- 
- 	if (phy_common->ufs_reset) {
- 		err = reset_control_deassert(phy_common->ufs_reset);
-@@ -557,17 +571,13 @@ int ufs_qcom_phy_power_on(struct phy *generic_phy)
- 		}
- 	}
- 
--	if (!phy_common->is_started) {
--		err = ufs_qcom_phy_start_serdes(phy_common);
--		if (err)
--			return err;
--
--		err = ufs_qcom_phy_is_pcs_ready(phy_common);
--		if (err)
--			return err;
-+	err = ufs_qcom_phy_start_serdes(phy_common);
-+	if (err)
-+		return err;
- 
--		phy_common->is_started = true;
--	}
-+	err = ufs_qcom_phy_is_pcs_ready(phy_common);
-+	if (err)
-+		return err;
- 
- 	err = ufs_qcom_phy_enable_vreg(dev, &phy_common->vdda_phy);
- 	if (err) {
-@@ -611,7 +621,6 @@ int ufs_qcom_phy_power_on(struct phy *generic_phy)
- 		}
- 	}
- 
--	phy_common->is_powered_on = true;
- 	goto out;
- 
- out_disable_ref_clk:
-@@ -631,9 +640,6 @@ int ufs_qcom_phy_power_off(struct phy *generic_phy)
- {
- 	struct ufs_qcom_phy *phy_common = get_ufs_qcom_phy(generic_phy);
- 
--	if (!phy_common->is_powered_on)
--		return 0;
--
- 	phy_common->phy_spec_ops->power_control(phy_common, false);
- 
- 	if (phy_common->vddp_ref_clk.reg)
-@@ -647,8 +653,6 @@ int ufs_qcom_phy_power_off(struct phy *generic_phy)
- 	if (phy_common->ufs_reset)
- 		reset_control_assert(phy_common->ufs_reset);
- 
--	phy_common->is_powered_on = false;
--
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(ufs_qcom_phy_power_off);
-diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-index 1c25b1c82314..de9d3f56b58c 100644
---- a/drivers/scsi/ufs/ufs-qcom.c
-+++ b/drivers/scsi/ufs/ufs-qcom.c
-@@ -544,19 +544,11 @@ static int ufs_qcom_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 		 */
- 		ufs_qcom_disable_lane_clks(host);
- 		phy_power_off(phy);
--		goto out;
--	}
- 
--	/*
--	 * If UniPro link is not active, PHY ref_clk, main PHY analog power
--	 * rail and low noise analog power rail for PLL can be switched off.
--	 */
--	if (!ufs_qcom_is_link_active(hba)) {
-+	} else if (!ufs_qcom_is_link_active(hba)) {
- 		ufs_qcom_disable_lane_clks(host);
--		phy_power_off(phy);
- 	}
- 
--out:
- 	return ret;
- }
- 
-@@ -566,21 +558,26 @@ static int ufs_qcom_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 	struct phy *phy = host->generic_phy;
- 	int err;
- 
--	err = phy_power_on(phy);
--	if (err) {
--		dev_err(hba->dev, "%s: failed enabling regs, err = %d\n",
--			__func__, err);
--		goto out;
--	}
-+	if (ufs_qcom_is_link_off(hba)) {
-+		err = phy_power_on(phy);
-+		if (err) {
-+			dev_err(hba->dev, "%s: failed PHY power on: %d\n",
-+				__func__, err);
-+			return err;
-+		}
- 
--	err = ufs_qcom_enable_lane_clks(host);
--	if (err)
--		goto out;
-+		err = ufs_qcom_enable_lane_clks(host);
-+		if (err)
-+			return err;
- 
--	hba->is_sys_suspended = false;
-+	} else if (!ufs_qcom_is_link_active(hba)) {
-+		err = ufs_qcom_enable_lane_clks(host);
-+		if (err)
-+			return err;
-+	}
- 
--out:
--	return err;
-+	hba->is_sys_suspended = false;
-+	return 0;
- }
- 
- struct ufs_qcom_dev_params {
-@@ -1106,8 +1103,6 @@ static int ufs_qcom_setup_clocks(struct ufs_hba *hba, bool on,
- 		return 0;
- 
- 	if (on && (status == POST_CHANGE)) {
--		phy_power_on(host->generic_phy);
--
- 		/* enable the device ref clock for HS mode*/
- 		if (ufshcd_is_hs_mode(&hba->pwr_info))
- 			ufs_qcom_dev_ref_clk_ctrl(host, true);
-@@ -1119,9 +1114,6 @@ static int ufs_qcom_setup_clocks(struct ufs_hba *hba, bool on,
- 		if (!ufs_qcom_is_link_active(hba)) {
- 			/* disable device ref_clk */
- 			ufs_qcom_dev_ref_clk_ctrl(host, false);
--
--			/* powering off PHY during aggressive clk gating */
--			phy_power_off(host->generic_phy);
- 		}
- 
- 		vote = host->bus_vote.min_bw_vote;
 -- 
-2.20.1
+Jeffrey Hugo
+Qualcomm Datacenter Technologies as an affiliate of Qualcomm 
+Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the
+Code Aurora Forum, a Linux Foundation Collaborative Project.
