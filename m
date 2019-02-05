@@ -1,195 +1,38 @@
-From: Alim Akhtar <alim.akhtar@samsung.com>
-Subject: Re: [PATCH v3 5/5] Revert
- "scsi: ufs: disable vccq if it's not needed by UFS device"
-Date: Tue, 5 Feb 2019 16:22:50 +0530
-Message-ID: <b190a7f0-eec9-3e87-f9c7-4969e05590df@samsung.com>
-References: <e3c82a49-c601-effc-348f-f768656c659f@free.fr>
-        <CGME20190204174549epcas4p4682667176f55101f69cc24cc455c9f3c@epcas4p4.samsung.com>
-        <70618c25-83f0-b9db-51a3-c1d74b605a45@free.fr>
-        <5f2a8378-1f22-6a52-356d-56d3b393ab1d@samsung.com>
-        <20190205062720.GF31919@minitux>
+From: Avri Altman <Avri.Altman@wdc.com>
+Subject: RE: [PATCH v4 3/3] scsi: ufs-bsg: Allow reading descriptors
+Date: Tue, 5 Feb 2019 12:07:25 +0000
+Message-ID: <SN6PR04MB4925C574E60B3BA44DD6E0A0FC6E0@SN6PR04MB4925.namprd04.prod.outlook.com>
+References: <1548572868-12589-1-git-send-email-avri.altman@wdc.com>
+ <1548572868-12589-4-git-send-email-avri.altman@wdc.com>
+ <CAE=gft6mLsW-iEBZ9pFRWWyDQz_gCs20_4JBoBzxL1tYv0rbYg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190205062720.GF31919@minitux>
+In-Reply-To: <CAE=gft6mLsW-iEBZ9pFRWWyDQz_gCs20_4JBoBzxL1tYv0rbYg@mail.gmail.com>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Bjorn Andersson <bjorn.andersson@linaro.org>
-Cc: Marc Gonzalez <marc.w.gonzalez@free.fr>, MSM <linux-arm-msm@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Jeffrey Hugo <jhugo@codeaurora.org>, Andy Gross <andy.gross@linaro.org>, David Brown <david.brown@linaro.org>, Evan Green <evgreen@chromium.org>, Douglas Anderson <dianders@chromium.org>, Avri Altman <avri.altman@wdc.com>, Pedro Sousa <pedrom.sousa@synopsys.com>, Subhash Jadavani <subhashj@codeaurora.org>, Bart Van Assche <bvanassche@acm.org>, SCSI <linux-scsi@vger.kernel.org>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, SCSI <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Avi Shchislowski <Avi.Shchislowski@wdc.com>, Alex Lemberg <Alex.Lemberg@wdc.com>, Evan Green <evgreen@chromium.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Bjorn,
-
-On 05/02/19 11:57 AM, Bjorn Andersson wrote:
-> On Mon 04 Feb 20:58 PST 2019, Alim Akhtar wrote:
-> 
->> Hi Marc,
->>
->> On 04/02/19 11:12 PM, Marc Gonzalez wrote:
->>> This reverts commit 60f0187031c05e04cbadffb62f557d0ff3564490.
->>>
->>> Calling ufshcd_set_vccq_rail_unused hangs my system.
->>> It seems vccq is not *not* needed.
->>>
->>> Signed-off-by: Marc Gonzalez <marc.w.gonzalez@free.fr>
->>> ---
->>
->> AFAIK Samsung and Toshiba UFS devices does not use VCCQ (this pin is
->> either floating or connected to Ground, at least on the devices that I
->> have worked on).
-> 
-> But why does such system define a vccq-supply? If the system doesn't
-> have a regulator connected to VCCQ, then the UFS driver shouldn't be
-> told that there is one. And if VCCQ is optional the UFS driver should
-> support the fact that this regulator might not be supplied (i.e. call
-> regulator_get_optional() and handle the error indicating that the supply
-> isn't specified).
-> 
-As per JESD220C, chapter 6.1, it does says "VCCQ - Supply voltage used 
-typically for the memory controller and optionally for the PHY 
-interface, the memory IO, and any other internal very low voltage block"
-And we have VCCQ2 - which serve the pretty much same purpose. The 
-voltage range for VCCQ and VCCQ2 are different, VCCQ has a lower voltage 
-suitable to some low voltage block inside UFS device. I think this is 
-design consideration which allow some vendor to use one less physical 
-pin may be. And also depends on the voltage requirements of some of the 
-internal circuit.
-
-
-> Regards,
-> Bjorn
-> 
->> You said your system hanged, I believe you have set UFS_DEVICE_NO_VCCQ
->> quirks, in that case VCCQ regulator should having been disabled.
->> So you mean your system hanged because vccq regulator got disabled?
->>
->>>    drivers/scsi/ufs/ufs.h    |  1 -
->>>    drivers/scsi/ufs/ufshcd.c | 59 +++------------------------------------
->>>    2 files changed, 4 insertions(+), 56 deletions(-)
->>>
->>> diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
->>> index dd65fea07687..7da7318eb6a6 100644
->>> --- a/drivers/scsi/ufs/ufs.h
->>> +++ b/drivers/scsi/ufs/ufs.h
->>> @@ -514,7 +514,6 @@ struct ufs_vreg {
->>>    	struct regulator *reg;
->>>    	const char *name;
->>>    	bool enabled;
->>> -	bool unused;
->>>    	int min_uV;
->>>    	int max_uV;
->>>    	int min_uA;
->>> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
->>> index 9ba7671b84f8..8b9a01073d62 100644
->>> --- a/drivers/scsi/ufs/ufshcd.c
->>> +++ b/drivers/scsi/ufs/ufshcd.c
->>> @@ -245,7 +245,6 @@ static int ufshcd_probe_hba(struct ufs_hba *hba);
->>>    static int __ufshcd_setup_clocks(struct ufs_hba *hba, bool on,
->>>    				 bool skip_ref_clk);
->>>    static int ufshcd_setup_clocks(struct ufs_hba *hba, bool on);
->>> -static int ufshcd_set_vccq_rail_unused(struct ufs_hba *hba, bool unused);
->>>    static int ufshcd_uic_hibern8_exit(struct ufs_hba *hba);
->>>    static int ufshcd_uic_hibern8_enter(struct ufs_hba *hba);
->>>    static inline void ufshcd_add_delay_before_dme_cmd(struct ufs_hba *hba);
->>> @@ -6819,11 +6818,6 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
->>>    	ufs_fixup_device_setup(hba, &card);
->>>    	ufshcd_tune_unipro_params(hba);
->>>    
->>> -	ret = ufshcd_set_vccq_rail_unused(hba,
->>> -		(hba->dev_quirks & UFS_DEVICE_NO_VCCQ) ? true : false);
->>> -	if (ret)
->>> -		goto out;
->>> -
->>>    	/* UFS device is also active now */
->>>    	ufshcd_set_ufs_dev_active(hba);
->>>    	ufshcd_force_reset_auto_bkops(hba);
->>> @@ -7007,24 +7001,13 @@ static int ufshcd_config_vreg_load(struct device *dev, struct ufs_vreg *vreg,
->>>    static inline int ufshcd_config_vreg_lpm(struct ufs_hba *hba,
->>>    					 struct ufs_vreg *vreg)
->>>    {
->>> -	if (!vreg)
->>> -		return 0;
->>> -	else if (vreg->unused)
->>> -		return 0;
->>> -	else
->>> -		return ufshcd_config_vreg_load(hba->dev, vreg,
->>> -					       UFS_VREG_LPM_LOAD_UA);
->>> +	return ufshcd_config_vreg_load(hba->dev, vreg, UFS_VREG_LPM_LOAD_UA);
->>>    }
->>>    
->>>    static inline int ufshcd_config_vreg_hpm(struct ufs_hba *hba,
->>>    					 struct ufs_vreg *vreg)
->>>    {
->>> -	if (!vreg)
->>> -		return 0;
->>> -	else if (vreg->unused)
->>> -		return 0;
->>> -	else
->>> -		return ufshcd_config_vreg_load(hba->dev, vreg, vreg->max_uA);
->>> +	return ufshcd_config_vreg_load(hba->dev, vreg, vreg->max_uA);
->>>    }
->>>    
->>>    static int ufshcd_config_vreg(struct device *dev,
->>> @@ -7062,9 +7045,7 @@ static int ufshcd_enable_vreg(struct device *dev, struct ufs_vreg *vreg)
->>>    {
->>>    	int ret = 0;
->>>    
->>> -	if (!vreg)
->>> -		goto out;
->>> -	else if (vreg->enabled || vreg->unused)
->>> +	if (!vreg || vreg->enabled)
->>>    		goto out;
->>>    
->>>    	ret = ufshcd_config_vreg(dev, vreg, true);
->>> @@ -7084,9 +7065,7 @@ static int ufshcd_disable_vreg(struct device *dev, struct ufs_vreg *vreg)
->>>    {
->>>    	int ret = 0;
->>>    
->>> -	if (!vreg)
->>> -		goto out;
->>> -	else if (!vreg->enabled || vreg->unused)
->>> +	if (!vreg || !vreg->enabled)
->>>    		goto out;
->>>    
->>>    	ret = regulator_disable(vreg->reg);
->>> @@ -7192,36 +7171,6 @@ static int ufshcd_init_hba_vreg(struct ufs_hba *hba)
->>>    	return 0;
->>>    }
->>>    
->>> -static int ufshcd_set_vccq_rail_unused(struct ufs_hba *hba, bool unused)
->>> -{
->>> -	int ret = 0;
->>> -	struct ufs_vreg_info *info = &hba->vreg_info;
->>> -
->>> -	if (!info)
->>> -		goto out;
->>> -	else if (!info->vccq)
->>> -		goto out;
->>> -
->>> -	if (unused) {
->>> -		/* shut off the rail here */
->>> -		ret = ufshcd_toggle_vreg(hba->dev, info->vccq, false);
->>> -		/*
->>> -		 * Mark this rail as no longer used, so it doesn't get enabled
->>> -		 * later by mistake
->>> -		 */
->>> -		if (!ret)
->>> -			info->vccq->unused = true;
->>> -	} else {
->>> -		/*
->>> -		 * rail should have been already enabled hence just make sure
->>> -		 * that unused flag is cleared.
->>> -		 */
->>> -		info->vccq->unused = false;
->>> -	}
->>> -out:
->>> -	return ret;
->>> -}
->>> -
->>>    static int __ufshcd_setup_clocks(struct ufs_hba *hba, bool on,
->>>    					bool skip_ref_clk)
->>>    {
->>>
-> 
-> 
+TWFydGluLA0KQW55IGZ1cnRoZXIgY29tbWVudHM/DQoNClRoYW5rcywNCkF2cmkNCg0KDQo+IC0t
+LS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEV2YW4gR3JlZW4gPGV2Z3JlZW5AY2hy
+b21pdW0ub3JnPg0KPiBTZW50OiBNb25kYXksIEphbnVhcnkgMjgsIDIwMTkgODo0MiBQTQ0KPiBU
+bzogQXZyaSBBbHRtYW4gPEF2cmkuQWx0bWFuQHdkYy5jb20+DQo+IENjOiBKYW1lcyBFLkouIEJv
+dHRvbWxleSA8amVqYkBsaW51eC52bmV0LmlibS5jb20+OyBNYXJ0aW4gSy4gUGV0ZXJzZW4NCj4g
+PG1hcnRpbi5wZXRlcnNlbkBvcmFjbGUuY29tPjsgU0NTSSA8bGludXgtc2NzaUB2Z2VyLmtlcm5l
+bC5vcmc+OyBMS01MDQo+IDxsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnPjsgQXZpIFNoY2hp
+c2xvd3NraSA8QXZpLlNoY2hpc2xvd3NraUB3ZGMuY29tPjsNCj4gQWxleCBMZW1iZXJnIDxBbGV4
+LkxlbWJlcmdAd2RjLmNvbT4NCj4gU3ViamVjdDogUmU6IFtQQVRDSCB2NCAzLzNdIHNjc2k6IHVm
+cy1ic2c6IEFsbG93IHJlYWRpbmcgZGVzY3JpcHRvcnMNCj4gDQo+IE9uIFNhdCwgSmFuIDI2LCAy
+MDE5IGF0IDExOjA4IFBNIEF2cmkgQWx0bWFuIDxhdnJpLmFsdG1hbkB3ZGMuY29tPiB3cm90ZToN
+Cj4gPg0KPiA+IEFkZCB0aGlzIGZ1bmN0aW9uYWxpdHksIHBsYWNpbmcgdGhlIGRlc2NyaXB0b3Ig
+YmVpbmcgcmVhZCBpbiB0aGUgYWN0dWFsDQo+ID4gZGF0YSBidWZmZXIgaW4gdGhlIGJpby4NCj4g
+Pg0KPiA+IFRoYXQgaXMsIGZvciBib3RoIHJlYWQgYW5kIHdyaXRlIGRlc2NyaXB0b3JzIHF1ZXJ5
+IHVwaXUsIHdlIGFyZSB1c2luZw0KPiA+IHRoZSBqb2IncyByZXF1ZXN0X3BheWxvYWQuICBUaGlz
+IGluIHR1cm4sIGlzIG1hcHBlZCBiYWNrIGluIHVzZXIgbGFuZCB0bw0KPiA+IHRoZSBhcHBsaWNh
+YmxlIHNnX2lvX3Y0IHhmZXJwOiBkb3V0X3hmZXJwIGZvciB3cml0ZSBkZXNjcmlwdG9yLA0KPiA+
+IGFuZCBkaW5feGZlcnAgZm9yIHJlYWQgZGVzY3JpcHRvci4NCj4gPg0KPiA+IFNpZ25lZC1vZmYt
+Ynk6IEF2cmkgQWx0bWFuIDxhdnJpLmFsdG1hbkB3ZGMuY29tPg0KPiANCj4gUmV2aWV3ZWQtYnk6
+IEV2YW4gR3JlZW4gPGV2Z3JlZW5AY2hyb21pdW0ub3JnPg0K
