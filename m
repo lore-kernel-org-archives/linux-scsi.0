@@ -1,27 +1,45 @@
-From: Joao Pinto <joao.pinto@synopsys.com>
-Subject: Re: [PATCH for-next] scsi: ufs: Update dwc driver maintainer to Pedro
- Sousa
-Date: Tue, 5 Feb 2019 14:02:28 +0000
-Message-ID: <2d6b34bc-370f-8dbd-a301-f292591c87f1@synopsys.com>
-References: <812e9e1426555808ad1bd5fbfda320c6684abc81.1548869844.git.jpinto@synopsys.com>
- <yq1a7ja3nxp.fsf@oracle.com>
+From: Keith Busch <keith.busch@intel.com>
+Subject: Re: Question on handling managed IRQs when hotplugging CPUs
+Date: Tue, 5 Feb 2019 07:52:44 -0700
+Message-ID: <20190205145244.GB28023@localhost.localdomain>
+References: <20190129154433.GF15302@localhost.localdomain>
+ <757902fc-a9ea-090b-7853-89944a0ce1b5@huawei.com>
+ <20190129172059.GC17132@localhost.localdomain>
+ <3fe63dab-0791-f476-69c4-9866b70e8520@huawei.com>
+ <alpine.DEB.2.21.1901301338170.5537@nanos.tec.linutronix.de>
+ <86d5028d-44ab-3696-f7fe-828d7655faa9@huawei.com>
+ <745609be-b215-dd2d-c31f-0bd84572f49f@suse.de>
+ <alpine.DEB.2.21.1902012255550.8200@nanos.tec.linutronix.de>
+ <d93ff049-e96d-36ce-7e58-ec97cbb27ed0@suse.de>
+ <42d149c5-0380-c357-8811-81015159ac04@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <yq1a7ja3nxp.fsf@oracle.com>
-Content-Language: en-US
+Content-Disposition: inline
+In-Reply-To: <42d149c5-0380-c357-8811-81015159ac04@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, Joao Pinto <joao.pinto@synopsys.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, pedrom.sousa@synopsys.com, marc.w.gonzalez@free.fr, Alex.Lemberg@wdc.com
+To: John Garry <john.garry@huawei.com>
+Cc: Hannes Reinecke <hare@suse.de>, Thomas Gleixner <tglx@linutronix.de>, Christoph Hellwig <hch@lst.de>, Marc Zyngier <marc.zyngier@arm.com>, "axboe@kernel.dk" <axboe@kernel.dk>, Peter Zijlstra <peterz@infradead.org>, Michael Ellerman <mpe@ellerman.id.au>, Linuxarm <linuxarm@huawei.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Hannes Reinecke <hare@suse.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Thanks Martin.
+On Tue, Feb 05, 2019 at 05:24:11AM -0800, John Garry wrote:
+> On 04/02/2019 07:12, Hannes Reinecke wrote:
+> 
+> Hi Hannes,
+> 
+> >
+> > So, as the user then has to wait for the system to declars 'ready for
+> > CPU remove', why can't we just disable the SQ and wait for all I/O to
+> > complete?
+> > We can make it more fine-grained by just waiting on all outstanding I/O
+> > on that SQ to complete, but waiting for all I/O should be good as an
+> > initial try.
+> > With that we wouldn't need to fiddle with driver internals, and could
+> > make it pretty generic.
+> 
+> I don't fully understand this idea - specifically, at which layer would 
+> we be waiting for all the IO to complete?
 
-On 2/5/2019 3:37 AM, Martin K. Petersen wrote:
-> Joao,
->
->> Currently I am managing the Synopsys drivers & tools team (full-time) and
->> so I am passing the DWC UFS driver maintenance to Pedro Sousa.
-> Applied to 5.1/scsi-queue, thanks.
->
+Whichever layer dispatched the IO to a CPU specific context should
+be the one to wait for its completion. That should be blk-mq for most
+block drivers.
