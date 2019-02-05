@@ -1,98 +1,215 @@
-From: Jeffrey Hugo <jhugo@codeaurora.org>
-Subject: Re: [PATCH v3 5/5] Revert "scsi: ufs: disable vccq if it's not needed
- by UFS device"
-Date: Tue, 5 Feb 2019 12:37:26 -0700
-Message-ID: <fe4e6e20-2017-0a50-232d-52582983146d@codeaurora.org>
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+Subject: Re: [PATCH v3 5/5] Revert "scsi: ufs: disable vccq if it's not
+ needed by UFS device"
+Date: Tue, 5 Feb 2019 11:46:07 -0800
+Message-ID: <20190205194607.GH31919@minitux>
 References: <e3c82a49-c601-effc-348f-f768656c659f@free.fr>
  <CGME20190204174549epcas4p4682667176f55101f69cc24cc455c9f3c@epcas4p4.samsung.com>
  <70618c25-83f0-b9db-51a3-c1d74b605a45@free.fr>
  <5f2a8378-1f22-6a52-356d-56d3b393ab1d@samsung.com>
- <05d2d193-4181-12ce-b4fb-4e8dec5aef27@free.fr>
- <7610c262-1451-9bb2-48a6-4daf6f534f6c@free.fr>
- <CAE=gft5yAqLZDnYnjF2T1QbKfOKOagX+C1qQqD1DFU+2pr_WPw@mail.gmail.com>
+ <20190205062720.GF31919@minitux>
+ <b190a7f0-eec9-3e87-f9c7-4969e05590df@samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAE=gft5yAqLZDnYnjF2T1QbKfOKOagX+C1qQqD1DFU+2pr_WPw@mail.gmail.com>
-Content-Language: en-US
+Content-Disposition: inline
+In-Reply-To: <b190a7f0-eec9-3e87-f9c7-4969e05590df@samsung.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Evan Green <evgreen@chromium.org>, Marc Gonzalez <marc.w.gonzalez@free.fr>
-Cc: Alim Akhtar <alim.akhtar@samsung.com>, MSM <linux-arm-msm@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Bjorn Andersson <bjorn.andersson@linaro.org>, Andy Gross <andy.gross@linaro.org>, David Brown <david.brown@linaro.org>, Douglas Anderson <dianders@chromium.org>, Avri Altman <avri.altman@wdc.com>, Pedro Sousa <pedrom.sousa@synopsys.com>, Subhash Jadavani <subhashj@codeaurora.org>, Bart Van Assche <bvanassche@acm.org>, SCSI <linux-scsi@vger.kernel.org>
+To: Alim Akhtar <alim.akhtar@samsung.com>
+Cc: Marc Gonzalez <marc.w.gonzalez@free.fr>, MSM <linux-arm-msm@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Jeffrey Hugo <jhugo@codeaurora.org>, Andy Gross <andy.gross@linaro.org>, David Brown <david.brown@linaro.org>, Evan Green <evgreen@chromium.org>, Douglas Anderson <dianders@chromium.org>, Avri Altman <avri.altman@wdc.com>, Pedro Sousa <pedrom.sousa@synopsys.com>, Subhash Jadavani <subhashj@codeaurora.org>, Bart Van Assche <bvanassche@acm.org>, SCSI <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 2/5/2019 11:19 AM, Evan Green wrote:
-> On Tue, Feb 5, 2019 at 9:52 AM Marc Gonzalez <marc.w.gonzalez@free.fr> wrote:
->>
->> On 05/02/2019 18:24, Marc Gonzalez wrote:
->>
->>> /*** system hangs here for several seconds, then reboots ***/
->>
->> Silly me. The system crashes in ufshcd_dump_regs() which is a bug
->> I fixed myself. Once I cherry-pick the appropriate fix, the board
->> no longer reboots, but UFS init does fail.
->>
->> Full boot log here:
->> https://pastebin.ubuntu.com/p/KwpRnWMFw5/
->>
->> In any case, it's obvious that disabling vccq on this system is
->> a mistake. How would you solve the problem? (A quirk on top of a
->> quirk sounds silly.)
->>
+On Tue 05 Feb 02:52 PST 2019, Alim Akhtar wrote:
+
+> Hi Bjorn,
 > 
-> I think Bjorn is right that this whole quirk seems to be compensating
-> for an incorrectly specified device tree (one that specifies
-> vccq-supply but that doesn't go anywhere).... though maybe this was
-> made to support boards with footprint-compatible UFS parts from
-> different vendors? Like the same DT is used for two different SKUs,
-> one which stamps down a UFS part that uses VCCQ, and another that
-> doesn't use it, though the wire is there.
+> On 05/02/19 11:57 AM, Bjorn Andersson wrote:
+> > On Mon 04 Feb 20:58 PST 2019, Alim Akhtar wrote:
+> > 
+> >> Hi Marc,
+> >>
+> >> On 04/02/19 11:12 PM, Marc Gonzalez wrote:
+> >>> This reverts commit 60f0187031c05e04cbadffb62f557d0ff3564490.
+> >>>
+> >>> Calling ufshcd_set_vccq_rail_unused hangs my system.
+> >>> It seems vccq is not *not* needed.
+> >>>
+> >>> Signed-off-by: Marc Gonzalez <marc.w.gonzalez@free.fr>
+> >>> ---
+> >>
+> >> AFAIK Samsung and Toshiba UFS devices does not use VCCQ (this pin is
+> >> either floating or connected to Ground, at least on the devices that I
+> >> have worked on).
+> > 
+> > But why does such system define a vccq-supply? If the system doesn't
+> > have a regulator connected to VCCQ, then the UFS driver shouldn't be
+> > told that there is one. And if VCCQ is optional the UFS driver should
+> > support the fact that this regulator might not be supplied (i.e. call
+> > regulator_get_optional() and handle the error indicating that the supply
+> > isn't specified).
+> > 
+> As per JESD220C, chapter 6.1, it does says "VCCQ - Supply voltage used 
+> typically for the memory controller and optionally for the PHY 
+> interface, the memory IO, and any other internal very low voltage block"
+> And we have VCCQ2 - which serve the pretty much same purpose. The 
+> voltage range for VCCQ and VCCQ2 are different, VCCQ has a lower voltage 
+> suitable to some low voltage block inside UFS device. I think this is 
+> design consideration which allow some vendor to use one less physical 
+> pin may be. And also depends on the voltage requirements of some of the 
+> internal circuit.
+> 
 
-This doesn't make sense from a DT perspective, as I understand it.  If 
-some board has different configurations (say different display panels), 
-FW is supposed to somehow detect that, and edit the DT before passing 
-the DT off to Linux.
+This looks to me that you are required to have a VCCQ. But you said that
+you do not have a regulator supplying VCCQ on your board, and if that
+really is the case then you should not specify vccq-supply.
 
-In your example, if SKU1 has a UFS part that needs VCCQ, and SKU2 does 
-not, then FW should somehow query the HW, determine which SKU the device 
-is, and patch vccq in or out of the DT as necessary.
+The patch Marc is reverting states that for devices that does not have
+VCCQ connected, some unrelated regulator should be assigned to the UFS
+driver so that it can turn it off.
+
+
+If you have a regulator connected to VCCQ then it should go in
+vccq-supply, if you have a regulator connected to VCCQ2 the is should go
+in vccq2-supply. If you don't have these pins connected then there
+shouldn't be any regulators specified here!
+
+Regards,
+Bjorn
 
 > 
-> But the revert itself shouldn't really fix anything for you Marc,
-> should it? It looks like this quirk turns on for Samsung and SKHynix
-> parts, which presumably just don't use VCCQ. So maybe your device tree
-> doesn't match your schematics, where the DT's vccq supply is actually
-> the vccq2 supply going into the UFS chip?
-
-I see the same issue on the reference device, the MSM8998 MTP.  The 
-schematics for that indicate there is both vccq and vccq2, at different 
-voltages.  vccq goes to both the UFS block, and the phy.
-
-Digging into things, the problem doesn't seem to be that vccq is off - 
-the phy will keep it on.  However, the load from the phy is minimal. 
-What really loads the regulator is the UFS block.  Without the load from 
-the UFS block, the regulator is likely in a low power mode.
-
-I cannot tell if vccq is routed to the actual storage chip based on the 
-documentation I see, however I can tell that it powers blocks within the 
-host controller block which assist the controller in communicating with 
-the storage chip.  These blocks consume quite a bit of power, so likely, 
-if the regulator load is not properly accounted for, these blocks 
-brownout, and communication with the storage chip is broken.
-
-The schematics do refer to this input to the UFS block as "vccq".
-
-So, at a minimum, the host controller itself consumes vccq, and 
-therefore it is unfair to disable vccq solely based on the UFS storage 
-chip that happens to be connected to the controller.
-
-So, we've got two boards that are actually harmed by this quirk.  I've 
-not seen anything indicating what harm happens without this quirk.  Can 
-someone indicate what that is?
-
--- 
-Jeffrey Hugo
-Qualcomm Datacenter Technologies as an affiliate of Qualcomm 
-Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the
-Code Aurora Forum, a Linux Foundation Collaborative Project.
+> > Regards,
+> > Bjorn
+> > 
+> >> You said your system hanged, I believe you have set UFS_DEVICE_NO_VCCQ
+> >> quirks, in that case VCCQ regulator should having been disabled.
+> >> So you mean your system hanged because vccq regulator got disabled?
+> >>
+> >>>    drivers/scsi/ufs/ufs.h    |  1 -
+> >>>    drivers/scsi/ufs/ufshcd.c | 59 +++------------------------------------
+> >>>    2 files changed, 4 insertions(+), 56 deletions(-)
+> >>>
+> >>> diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+> >>> index dd65fea07687..7da7318eb6a6 100644
+> >>> --- a/drivers/scsi/ufs/ufs.h
+> >>> +++ b/drivers/scsi/ufs/ufs.h
+> >>> @@ -514,7 +514,6 @@ struct ufs_vreg {
+> >>>    	struct regulator *reg;
+> >>>    	const char *name;
+> >>>    	bool enabled;
+> >>> -	bool unused;
+> >>>    	int min_uV;
+> >>>    	int max_uV;
+> >>>    	int min_uA;
+> >>> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> >>> index 9ba7671b84f8..8b9a01073d62 100644
+> >>> --- a/drivers/scsi/ufs/ufshcd.c
+> >>> +++ b/drivers/scsi/ufs/ufshcd.c
+> >>> @@ -245,7 +245,6 @@ static int ufshcd_probe_hba(struct ufs_hba *hba);
+> >>>    static int __ufshcd_setup_clocks(struct ufs_hba *hba, bool on,
+> >>>    				 bool skip_ref_clk);
+> >>>    static int ufshcd_setup_clocks(struct ufs_hba *hba, bool on);
+> >>> -static int ufshcd_set_vccq_rail_unused(struct ufs_hba *hba, bool unused);
+> >>>    static int ufshcd_uic_hibern8_exit(struct ufs_hba *hba);
+> >>>    static int ufshcd_uic_hibern8_enter(struct ufs_hba *hba);
+> >>>    static inline void ufshcd_add_delay_before_dme_cmd(struct ufs_hba *hba);
+> >>> @@ -6819,11 +6818,6 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
+> >>>    	ufs_fixup_device_setup(hba, &card);
+> >>>    	ufshcd_tune_unipro_params(hba);
+> >>>    
+> >>> -	ret = ufshcd_set_vccq_rail_unused(hba,
+> >>> -		(hba->dev_quirks & UFS_DEVICE_NO_VCCQ) ? true : false);
+> >>> -	if (ret)
+> >>> -		goto out;
+> >>> -
+> >>>    	/* UFS device is also active now */
+> >>>    	ufshcd_set_ufs_dev_active(hba);
+> >>>    	ufshcd_force_reset_auto_bkops(hba);
+> >>> @@ -7007,24 +7001,13 @@ static int ufshcd_config_vreg_load(struct device *dev, struct ufs_vreg *vreg,
+> >>>    static inline int ufshcd_config_vreg_lpm(struct ufs_hba *hba,
+> >>>    					 struct ufs_vreg *vreg)
+> >>>    {
+> >>> -	if (!vreg)
+> >>> -		return 0;
+> >>> -	else if (vreg->unused)
+> >>> -		return 0;
+> >>> -	else
+> >>> -		return ufshcd_config_vreg_load(hba->dev, vreg,
+> >>> -					       UFS_VREG_LPM_LOAD_UA);
+> >>> +	return ufshcd_config_vreg_load(hba->dev, vreg, UFS_VREG_LPM_LOAD_UA);
+> >>>    }
+> >>>    
+> >>>    static inline int ufshcd_config_vreg_hpm(struct ufs_hba *hba,
+> >>>    					 struct ufs_vreg *vreg)
+> >>>    {
+> >>> -	if (!vreg)
+> >>> -		return 0;
+> >>> -	else if (vreg->unused)
+> >>> -		return 0;
+> >>> -	else
+> >>> -		return ufshcd_config_vreg_load(hba->dev, vreg, vreg->max_uA);
+> >>> +	return ufshcd_config_vreg_load(hba->dev, vreg, vreg->max_uA);
+> >>>    }
+> >>>    
+> >>>    static int ufshcd_config_vreg(struct device *dev,
+> >>> @@ -7062,9 +7045,7 @@ static int ufshcd_enable_vreg(struct device *dev, struct ufs_vreg *vreg)
+> >>>    {
+> >>>    	int ret = 0;
+> >>>    
+> >>> -	if (!vreg)
+> >>> -		goto out;
+> >>> -	else if (vreg->enabled || vreg->unused)
+> >>> +	if (!vreg || vreg->enabled)
+> >>>    		goto out;
+> >>>    
+> >>>    	ret = ufshcd_config_vreg(dev, vreg, true);
+> >>> @@ -7084,9 +7065,7 @@ static int ufshcd_disable_vreg(struct device *dev, struct ufs_vreg *vreg)
+> >>>    {
+> >>>    	int ret = 0;
+> >>>    
+> >>> -	if (!vreg)
+> >>> -		goto out;
+> >>> -	else if (!vreg->enabled || vreg->unused)
+> >>> +	if (!vreg || !vreg->enabled)
+> >>>    		goto out;
+> >>>    
+> >>>    	ret = regulator_disable(vreg->reg);
+> >>> @@ -7192,36 +7171,6 @@ static int ufshcd_init_hba_vreg(struct ufs_hba *hba)
+> >>>    	return 0;
+> >>>    }
+> >>>    
+> >>> -static int ufshcd_set_vccq_rail_unused(struct ufs_hba *hba, bool unused)
+> >>> -{
+> >>> -	int ret = 0;
+> >>> -	struct ufs_vreg_info *info = &hba->vreg_info;
+> >>> -
+> >>> -	if (!info)
+> >>> -		goto out;
+> >>> -	else if (!info->vccq)
+> >>> -		goto out;
+> >>> -
+> >>> -	if (unused) {
+> >>> -		/* shut off the rail here */
+> >>> -		ret = ufshcd_toggle_vreg(hba->dev, info->vccq, false);
+> >>> -		/*
+> >>> -		 * Mark this rail as no longer used, so it doesn't get enabled
+> >>> -		 * later by mistake
+> >>> -		 */
+> >>> -		if (!ret)
+> >>> -			info->vccq->unused = true;
+> >>> -	} else {
+> >>> -		/*
+> >>> -		 * rail should have been already enabled hence just make sure
+> >>> -		 * that unused flag is cleared.
+> >>> -		 */
+> >>> -		info->vccq->unused = false;
+> >>> -	}
+> >>> -out:
+> >>> -	return ret;
+> >>> -}
+> >>> -
+> >>>    static int __ufshcd_setup_clocks(struct ufs_hba *hba, bool on,
+> >>>    					bool skip_ref_clk)
+> >>>    {
+> >>>
+> > 
+> > 
