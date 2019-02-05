@@ -1,25 +1,27 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: aacraid: clean up some indentation and formatting issues
-Date: Mon, 04 Feb 2019 22:20:03 -0500
-Message-ID: <yq1muna3org.fsf@oracle.com>
-References: <20190202104052.16552-1-colin.king@canonical.com>
+Subject: Re: [PATCH] scsi: cxlflash: Prevent deadlock when adapter probe fails
+Date: Mon, 04 Feb 2019 22:24:37 -0500
+Message-ID: <yq1imxy3oju.fsf@oracle.com>
+References: <20190130122651.19255-1-vaibhav@linux.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190202104052.16552-1-colin.king@canonical.com> (Colin King's
-        message of "Sat, 2 Feb 2019 10:40:52 +0000")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Colin King <colin.king@canonical.com>
-Cc: Adaptec OEM Raid Solutions <aacraid@microsemi.com>, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20190130122651.19255-1-vaibhav@linux.ibm.com> (Vaibhav Jain's
+        message of "Wed, 30 Jan 2019 17:56:51 +0530")
+Sender: stable-owner@vger.kernel.org
+To: Vaibhav Jain <vaibhav@linux.ibm.com>
+Cc: "Manoj N . Kumar" <manoj@linux.ibm.com>, "Matthew R . Ochs" <mrochs@linux.ibm.com>, Uma Krishnan <ukrishn@linux.ibm.com>, Frederic Barrat <fbarrat@linux.ibm.com>, linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Colin,
+Vaibhav,
 
-> There are several issues with badly indented statements. Fix these and
-> clean up the formatting.
+> Presently when an error is encountered during probe of the cxlflash
+> adapter, a deadlock is seen with cpu thread stuck inside
+> cxlflash_remove(). Below is the trace of the deadlock as logged by
+> khungtaskd:
 
-Applied to 5.1/scsi-queue, thanks!
+Applied to 5.0/scsi-fixes, thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
