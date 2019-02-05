@@ -1,120 +1,291 @@
 From: Evan Green <evgreen@chromium.org>
-Subject: [PATCH v3 0/8] phy: qcom-ufs: Enable regulators to be off in suspend
-Date: Tue,  5 Feb 2019 10:58:54 -0800
-Message-ID: <20190205185902.106085-1-evgreen@chromium.org>
+Subject: [PATCH v3 7/8] phy: qcom: Utilize UFS reset controller
+Date: Tue,  5 Feb 2019 10:59:01 -0800
+Message-ID: <20190205185902.106085-8-evgreen@chromium.org>
+References: <20190205185902.106085-1-evgreen@chromium.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190205185902.106085-1-evgreen@chromium.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Andy Gross <andy.gross@linaro.org>, Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Stephen Boyd <swboyd@chromium.org>, Marc Gonzalez <marc.w.gonzalez@free.fr>, Can Guo <cang@codeaurora.org>, Vivek Gautam <vivek.gautam@codeaurora.org>, Douglas Anderson <dianders@chromium.org>, Asutosh Das <asutoshd@codeaurora.org>, Evan Green <evgreen@chromium.org>, Bjorn Andersson <bjorn.andersson@linaro.org>, Arnd Bergmann <arnd@arndb.de>, Grygorii Strashko <grygorii.strashko@ti.com>, Rob Herring <robh+dt@kernel.org>, Vinayak Holikatti <vinholikatti@gmail.com>, Jeffrey Hugo <jhugo@codeaurora.org>, linux-scsi@vger.kernel.org, David Brown <david.brown@linaro.org>, "James E.J. Bottomley" <jejb@linux.ibm.com>, devicetree@vger.kernel.org, liwei <liwei213@huawei.com>, linux-arm-msm@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Stephen Boyd <swboyd@chromium.org>, Marc Gonzalez <marc.w.gonzalez@free.fr>, Can Guo <cang@codeaurora.org>, Vivek Gautam <vivek.gautam@codeaurora.org>, Douglas Anderson <dianders@chromium.org>, Asutosh Das <asutoshd@codeaurora.org>, Evan Green <evgreen@chromium.org>, Jeffrey Hugo <jhugo@codeaurora.org>, Arnd Bergmann <arnd@arndb.de>, linux-scsi@vger.kernel.org, Grygorii Strashko <grygorii.strashko@ti.com>, Bjorn Andersson <bjorn.andersson@linaro.org>, linux-kernel@vger.kernel.org, Manu Gautam <mgautam@codeaurora.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, Vinayak Holikatti <vinholikatti@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-The goal with this series is to enable shutting off regulators that power
-UFS during system suspend.
+Move the PHY reset from ufs-qcom into the respective PHYs. This will
+allow us to merge the two phases of UFS PHY initialization.
 
-In "the good life" version of this, we'd just disable the regulators
-in phy_poweroff() and be done with it. Unfortunately, that's not symmetric,
-as regulators are not enabled during phy_poweron(). Ok, so you might think
-we could just move the regulator enable and anything else that needs to
-come along into phy_poweron(), so that we can then undo it all in
-phy_poweroff(). That's where things get tricky.
+Signed-off-by: Evan Green <evgreen@chromium.org>
 
-The qcom-qmp-phy overloaded the phy_init() and phy_poweron() callbacks,
-basically to mean "init phase 1" and "init phase 2". There are two phases
-because they have this phy_reset bit outside of the phy (in the UFS
-controller registers), and they need to make sure this bit is toggled at
-specific points in the phy init sequence. So there's this implicit
-sequence in the init dance between ufs-qcom.c and phy-qcom-qmp.c:
-1) ufs-qcom asserts the PHY reset bit.
-2) phy-qcom-qmp phy_init() does most of its initialization, but exits early.
-3) ufs-qcom deasserts the PHY reset bit.
-4) phy-qcom-qmp phy_poweron() finishes its initialization.
-
-This init dance is very difficult to follow in the code (since it's split
-between two drivers and not spelled out well), and arguably represents a
-deficiency in the hardware description of these devices.
-
-In this series I'm proposing tweaking the bindings for the Qualcomm
-UFS controller and PHY. In it we expose a reset controller from the
-UFS controller, that is then picked up and used from the PHY code.
-With this, the phy code can be reorganized to complete its initialization
-in a single function, removing the implicit two-phase overloading.
-
-Then I can move most of the phy initialization, including enabling
-the regulators, into phy_poweron(). Now, when phy_poweroff() is called,
-the phy actually powers off. This finally disables the regulators
-and allows me to save power in system suspend.
-
-Because the UFS PHY reset bit is now toggled in the PHY, rather
-than in ufs-qcom, this also percolated to all other PHYs using
-ufs-qcom, which from what I can see is just 8996.
-
-I removed the calls to phy_poweroff() during clock gating. This
-was originally dialing down a clock or two, while leaving the phy powered.
-I've now changed the semantics of phy_poweroff() to, well, actually power off.
-This works great for userlands that have set UFS's spm_lvl to 5 (off) like
-I have, but maybe changes power consumption for devices that have spm_lvl
-set to 3. I could try to use phy_init() and phy_poweron() as the two
-different possible transitions (fully off, and clocks off respectively),
-but I'm not sure if it actually matters, and I like the idea that
-phy_poweroff() really does power the thing off.
-
-Also, I don't have an 8996 device to test. If someone is able to test this
-out and perhaps point out any (hopefully obvious) bugs in the 8996 portion,
-I'd be grateful.
-
-This patch is based atop phy-next, plus the UFS DT nodes, which are now
-patch 3, 4, 5 of [1].
-
-[1] https://lore.kernel.org/lkml/20181210192826.241350-1-evgreen@chromium.org/
+---
 
 Changes in v3:
-- Refactor to only expose the reset controller in one change (Stephen).
-- Add period to comment (Stephen).
-- Reset err to 0 in ignored error case (Stephen).
-- Add include of reset-controller.h (Stephen)
 - Refactored to move reset control in a single commit (Stephen)
 - Use no_pcs_sw_reset as an indicator of UFS reset in qmp-phy (Stephen).
 - Assign ret = PTR_ERR() earlier, for better reuse (Stephen).
-- Refactor init => poweron for all PHYs and UFS in one step (Stephen)
 
 Changes in v2:
-- Added resets to example (Stephen).
-- Remove include of reset.h (Stephen)
-- Fix error print of phy_power_on (Stephen)
-- Comment for reset controller warnings on id != 0 (Stephen)
-- Add static to ufs_qcom_reset_ops (Stephen).
 - Use devm_* to get the reset (Stephen)
 - Clear ufs_reset on error getting it
 - Remove needless error print (Stephen)
-- Use devm_ to get the reset (Stephen)
-- Removed whitespace changes (Stephen)
 
-Evan Green (8):
-  dt-bindings: ufs: Add #reset-cells for Qualcomm controllers
-  dt-bindings: phy-qcom-qmp: Add UFS PHY reset
-  dt-bindings: phy: qcom-ufs: Add resets property
-  arm64: dts: sdm845: Add UFS PHY reset
-  arm64: dts: msm8996: Add UFS PHY reset controller
-  scsi: ufs: qcom: Expose the reset controller for PHY
-  phy: qcom: Utilize UFS reset controller
-  phy: ufs-qcom: Refactor all init steps into phy_poweron
+ drivers/phy/qualcomm/phy-qcom-qmp.c          | 39 ++++++++++++++++++++
+ drivers/phy/qualcomm/phy-qcom-ufs-i.h        |  3 ++
+ drivers/phy/qualcomm/phy-qcom-ufs-qmp-14nm.c | 10 +++++
+ drivers/phy/qualcomm/phy-qcom-ufs-qmp-20nm.c | 10 +++++
+ drivers/phy/qualcomm/phy-qcom-ufs.c          | 27 ++++++++++++++
+ drivers/scsi/ufs/ufs-qcom.c                  | 18 ---------
+ 6 files changed, 89 insertions(+), 18 deletions(-)
 
- .../devicetree/bindings/phy/qcom-qmp-phy.txt  |   6 +-
- .../devicetree/bindings/ufs/ufs-qcom.txt      |   5 +-
- .../devicetree/bindings/ufs/ufshcd-pltfrm.txt |   3 +
- arch/arm64/boot/dts/qcom/msm8996.dtsi         |   4 +-
- arch/arm64/boot/dts/qcom/sdm845.dtsi          |   3 +
- drivers/phy/qualcomm/phy-qcom-qmp.c           | 117 +++++++++---------
- drivers/phy/qualcomm/phy-qcom-ufs-i.h         |   5 +-
- drivers/phy/qualcomm/phy-qcom-ufs-qmp-14nm.c  |  25 +---
- drivers/phy/qualcomm/phy-qcom-ufs-qmp-20nm.c  |  25 +---
- drivers/phy/qualcomm/phy-qcom-ufs.c           |  57 +++++++--
- drivers/scsi/ufs/Kconfig                      |   1 +
- drivers/scsi/ufs/ufs-qcom.c                   | 114 ++++++++++-------
- drivers/scsi/ufs/ufs-qcom.h                   |   4 +
- 13 files changed, 202 insertions(+), 167 deletions(-)
-
+diff --git a/drivers/phy/qualcomm/phy-qcom-qmp.c b/drivers/phy/qualcomm/phy-qcom-qmp.c
+index daf751500232..2861c64b9bcc 100644
+--- a/drivers/phy/qualcomm/phy-qcom-qmp.c
++++ b/drivers/phy/qualcomm/phy-qcom-qmp.c
+@@ -897,6 +897,7 @@ struct qmp_phy {
+  * @init_count: phy common block initialization count
+  * @phy_initialized: indicate if PHY has been initialized
+  * @mode: current PHY mode
++ * @ufs_reset: optional UFS PHY reset handle
+  */
+ struct qcom_qmp {
+ 	struct device *dev;
+@@ -914,6 +915,8 @@ struct qcom_qmp {
+ 	int init_count;
+ 	bool phy_initialized;
+ 	enum phy_mode mode;
++
++	struct reset_control *ufs_reset;
+ };
+ 
+ static inline void qphy_setbits(void __iomem *base, u32 offset, u32 val)
+@@ -1314,6 +1317,9 @@ static int qcom_qmp_phy_com_exit(struct qcom_qmp *qmp)
+ 		return 0;
+ 	}
+ 
++	if (qmp->ufs_reset)
++		reset_control_assert(qmp->ufs_reset);
++
+ 	if (cfg->has_phy_com_ctrl) {
+ 		qphy_setbits(serdes, cfg->regs[QPHY_COM_START_CONTROL],
+ 			     SERDES_START | PCS_START);
+@@ -1351,6 +1357,33 @@ static int qcom_qmp_phy_init(struct phy *phy)
+ 
+ 	dev_vdbg(qmp->dev, "Initializing QMP phy\n");
+ 
++	if (cfg->no_pcs_sw_reset) {
++		/*
++		 * Get UFS reset, which is delayed until now to avoid a
++		 * circular dependency where UFS needs its PHY, but the PHY
++		 * needs this UFS reset.
++		 */
++		if (!qmp->ufs_reset) {
++			qmp->ufs_reset =
++				devm_reset_control_get_exclusive(qmp->dev,
++								 "ufsphy");
++
++			if (IS_ERR(qmp->ufs_reset)) {
++				ret = PTR_ERR(qmp->ufs_reset);
++				dev_err(qmp->dev,
++					"failed to get UFS reset: %d\n",
++					ret);
++
++				qmp->ufs_reset = NULL;
++				return ret;
++			}
++		}
++
++		ret = reset_control_assert(qmp->ufs_reset);
++		if (ret)
++			goto err_lane_rst;
++	}
++
+ 	ret = qcom_qmp_phy_com_init(qphy);
+ 	if (ret)
+ 		return ret;
+@@ -1384,6 +1417,12 @@ static int qcom_qmp_phy_init(struct phy *phy)
+ 
+ 	qcom_qmp_phy_configure(pcs, cfg->regs, cfg->pcs_tbl, cfg->pcs_tbl_num);
+ 
++	if (qmp->ufs_reset) {
++		ret = reset_control_deassert(qmp->ufs_reset);
++		if (ret)
++			goto err_lane_rst;
++	}
++
+ 	/*
+ 	 * UFS PHY requires the deassert of software reset before serdes start.
+ 	 * For UFS PHYs that do not have software reset control bits, defer
+diff --git a/drivers/phy/qualcomm/phy-qcom-ufs-i.h b/drivers/phy/qualcomm/phy-qcom-ufs-i.h
+index f798fb64de94..ba77348d807c 100644
+--- a/drivers/phy/qualcomm/phy-qcom-ufs-i.h
++++ b/drivers/phy/qualcomm/phy-qcom-ufs-i.h
+@@ -19,6 +19,7 @@
+ #include <linux/clk.h>
+ #include <linux/phy/phy.h>
+ #include <linux/regulator/consumer.h>
++#include <linux/reset.h>
+ #include <linux/slab.h>
+ #include <linux/platform_device.h>
+ #include <linux/io.h>
+@@ -101,6 +102,7 @@ struct ufs_qcom_phy {
+ 	struct ufs_qcom_phy_specific_ops *phy_spec_ops;
+ 
+ 	enum phy_mode mode;
++	struct reset_control *ufs_reset;
+ };
+ 
+ /**
+@@ -132,6 +134,7 @@ struct phy *ufs_qcom_phy_generic_probe(struct platform_device *pdev,
+ 			struct ufs_qcom_phy *common_cfg,
+ 			const struct phy_ops *ufs_qcom_phy_gen_ops,
+ 			struct ufs_qcom_phy_specific_ops *phy_spec_ops);
++int ufs_qcom_phy_get_reset(struct ufs_qcom_phy *phy_common);
+ int ufs_qcom_phy_calibrate(struct ufs_qcom_phy *ufs_qcom_phy,
+ 			struct ufs_qcom_phy_calibration *tbl_A, int tbl_size_A,
+ 			struct ufs_qcom_phy_calibration *tbl_B, int tbl_size_B,
+diff --git a/drivers/phy/qualcomm/phy-qcom-ufs-qmp-14nm.c b/drivers/phy/qualcomm/phy-qcom-ufs-qmp-14nm.c
+index 1e0d4f2046a4..ef1383123883 100644
+--- a/drivers/phy/qualcomm/phy-qcom-ufs-qmp-14nm.c
++++ b/drivers/phy/qualcomm/phy-qcom-ufs-qmp-14nm.c
+@@ -48,6 +48,16 @@ static int ufs_qcom_phy_qmp_14nm_init(struct phy *generic_phy)
+ 	bool is_rate_B = false;
+ 	int ret;
+ 
++	ret = ufs_qcom_phy_get_reset(phy_common);
++	if (ret)
++		return ret;
++
++	if (phy_common->ufs_reset) {
++		ret = reset_control_assert(phy_common->ufs_reset);
++		if (ret)
++			return ret;
++	}
++
+ 	if (phy_common->mode == PHY_MODE_UFS_HS_B)
+ 		is_rate_B = true;
+ 
+diff --git a/drivers/phy/qualcomm/phy-qcom-ufs-qmp-20nm.c b/drivers/phy/qualcomm/phy-qcom-ufs-qmp-20nm.c
+index aef40f7a41d4..b05f89d734f0 100644
+--- a/drivers/phy/qualcomm/phy-qcom-ufs-qmp-20nm.c
++++ b/drivers/phy/qualcomm/phy-qcom-ufs-qmp-20nm.c
+@@ -67,6 +67,16 @@ static int ufs_qcom_phy_qmp_20nm_init(struct phy *generic_phy)
+ 	bool is_rate_B = false;
+ 	int ret;
+ 
++	ret = ufs_qcom_phy_get_reset(phy_common);
++	if (ret)
++		return ret;
++
++	if (phy_common->ufs_reset) {
++		ret = reset_control_assert(phy_common->ufs_reset);
++		if (ret)
++			return ret;
++	}
++
+ 	if (phy_common->mode == PHY_MODE_UFS_HS_B)
+ 		is_rate_B = true;
+ 
+diff --git a/drivers/phy/qualcomm/phy-qcom-ufs.c b/drivers/phy/qualcomm/phy-qcom-ufs.c
+index f2979ccad00a..9cc8aa0b7a4f 100644
+--- a/drivers/phy/qualcomm/phy-qcom-ufs.c
++++ b/drivers/phy/qualcomm/phy-qcom-ufs.c
+@@ -147,6 +147,22 @@ struct phy *ufs_qcom_phy_generic_probe(struct platform_device *pdev,
+ }
+ EXPORT_SYMBOL_GPL(ufs_qcom_phy_generic_probe);
+ 
++int ufs_qcom_phy_get_reset(struct ufs_qcom_phy *phy_common)
++{
++	struct reset_control *reset;
++
++	if (phy_common->ufs_reset)
++		return 0;
++
++	reset = devm_reset_control_get_exclusive_by_index(phy_common->dev, 0);
++	if (IS_ERR(reset))
++		return PTR_ERR(reset);
++
++	phy_common->ufs_reset = reset;
++	return 0;
++}
++EXPORT_SYMBOL_GPL(ufs_qcom_phy_get_reset);
++
+ static int __ufs_qcom_phy_clk_get(struct device *dev,
+ 			 const char *name, struct clk **clk_out, bool err_print)
+ {
+@@ -533,6 +549,14 @@ int ufs_qcom_phy_power_on(struct phy *generic_phy)
+ 	if (phy_common->is_powered_on)
+ 		return 0;
+ 
++	if (phy_common->ufs_reset) {
++		err = reset_control_deassert(phy_common->ufs_reset);
++		if (err) {
++			dev_err(dev, "Failed to assert UFS PHY reset");
++			return err;
++		}
++	}
++
+ 	if (!phy_common->is_started) {
+ 		err = ufs_qcom_phy_start_serdes(phy_common);
+ 		if (err)
+@@ -620,6 +644,9 @@ int ufs_qcom_phy_power_off(struct phy *generic_phy)
+ 
+ 	ufs_qcom_phy_disable_vreg(phy_common->dev, &phy_common->vdda_pll);
+ 	ufs_qcom_phy_disable_vreg(phy_common->dev, &phy_common->vdda_phy);
++	if (phy_common->ufs_reset)
++		reset_control_assert(phy_common->ufs_reset);
++
+ 	phy_common->is_powered_on = false;
+ 
+ 	return 0;
+diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+index ab05ef5cfdcd..1c25b1c82314 100644
+--- a/drivers/scsi/ufs/ufs-qcom.c
++++ b/drivers/scsi/ufs/ufs-qcom.c
+@@ -261,11 +261,6 @@ static int ufs_qcom_power_up_sequence(struct ufs_hba *hba)
+ 	if (is_rate_B)
+ 		phy_set_mode(phy, PHY_MODE_UFS_HS_B);
+ 
+-	/* Assert PHY reset and apply PHY calibration values */
+-	ufs_qcom_assert_reset(hba);
+-	/* provide 1ms delay to let the reset pulse propagate */
+-	usleep_range(1000, 1100);
+-
+ 	/* phy initialization - calibrate the phy */
+ 	ret = phy_init(phy);
+ 	if (ret) {
+@@ -274,15 +269,6 @@ static int ufs_qcom_power_up_sequence(struct ufs_hba *hba)
+ 		goto out;
+ 	}
+ 
+-	/* De-assert PHY reset and start serdes */
+-	ufs_qcom_deassert_reset(hba);
+-
+-	/*
+-	 * after reset deassertion, phy will need all ref clocks,
+-	 * voltage, current to settle down before starting serdes.
+-	 */
+-	usleep_range(1000, 1100);
+-
+ 	/* power on phy - start serdes and phy's power and clocks */
+ 	ret = phy_power_on(phy);
+ 	if (ret) {
+@@ -296,7 +282,6 @@ static int ufs_qcom_power_up_sequence(struct ufs_hba *hba)
+ 	return 0;
+ 
+ out_disable_phy:
+-	ufs_qcom_assert_reset(hba);
+ 	phy_exit(phy);
+ out:
+ 	return ret;
+@@ -559,9 +544,6 @@ static int ufs_qcom_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ 		 */
+ 		ufs_qcom_disable_lane_clks(host);
+ 		phy_power_off(phy);
+-
+-		/* Assert PHY soft reset */
+-		ufs_qcom_assert_reset(hba);
+ 		goto out;
+ 	}
+ 
 -- 
 2.20.1
