@@ -1,53 +1,36 @@
-From: Jason Gunthorpe <jgg@ziepe.ca>
-Subject: Re: [PATCH v2] RDMA/srp: Rework SCSI device reset handling
-Date: Mon, 4 Feb 2019 16:31:58 -0700
-Message-ID: <20190204233158.GA14895@ziepe.ca>
-References: <20190130220555.8949-1-bvanassche@acm.org>
+From: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v1 1/1] scsi: ufs: Print uic error history in time order
+Date: Mon, 04 Feb 2019 22:04:36 -0500
+Message-ID: <yq14l9j3ph7.fsf@oracle.com>
+References: <1548684266-8792-1-git-send-email-stanley.chu@mediatek.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <stable-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20190130220555.8949-1-bvanassche@acm.org>
-Sender: stable-owner@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Doug Ledford <dledford@redhat.com>, linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org, Sergey Gorenko <sergeygo@mellanox.com>, Max Gurtovoy <maxg@mellanox.com>, Laurence Oberman <loberman@redhat.com>, stable@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+In-Reply-To: <1548684266-8792-1-git-send-email-stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
+ (Stanley Chu's message of "Mon, 28 Jan 2019 22:04:26 +0800")
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-mediatek>,
+ <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-mediatek/>
+List-Post: <mailto:linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+List-Help: <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-mediatek>,
+ <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=subscribe>
+Sender: "Linux-mediatek" <linux-mediatek-bounces-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+Errors-To: linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
+To: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
+Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, wsd_upstream-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, kuohong.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, avri.altman-Sjgp3cTcYWE@public.gmane.org, linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, peter.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Jan 30, 2019 at 02:05:55PM -0800, Bart Van Assche wrote:
-> Since .scsi_done() must only be called after scsi_queue_rq() has
-> finished, make sure that the SRP initiator driver does not call
-> .scsi_done() while scsi_queue_rq() is in progress. Although
-> invoking sg_reset -d while I/O is in progress works fine with kernel
-> v4.20 and before, that is not the case with kernel v5.0-rc1. This
-> patch avoids that the following crash is triggered with kernel
-> v5.0-rc1:
-> 
-> BUG: unable to handle kernel NULL pointer dereference at 0000000000000138
-> CPU: 0 PID: 360 Comm: kworker/0:1H Tainted: G    B             5.0.0-rc1-dbg+ #1
-> Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.10.2-1 04/01/2014
-> Workqueue: kblockd blk_mq_run_work_fn
-> RIP: 0010:blk_mq_dispatch_rq_list+0x116/0xb10
-> Call Trace:
->  blk_mq_sched_dispatch_requests+0x2f7/0x300
->  __blk_mq_run_hw_queue+0xd6/0x180
->  blk_mq_run_work_fn+0x27/0x30
->  process_one_work+0x4f1/0xa20
->  worker_thread+0x67/0x5b0
->  kthread+0x1cf/0x1f0
->  ret_from_fork+0x24/0x30
-> 
-> Cc: Sergey Gorenko <sergeygo@mellanox.com>
-> Cc: Max Gurtovoy <maxg@mellanox.com>
-> Cc: Laurence Oberman <loberman@redhat.com>
-> Cc: <stable@vger.kernel.org>
-> Fixes: 94a9174c630c ("IB/srp: reduce lock coverage of command completion") # v2.6.38
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> ---
-> 
-> Changes compared to v1: left out the code that waits until in-progress requests
->   have finished.
 
-Applied to for-rc
+Stanley,
 
-Thanks,
-Jason
+> Now uic errors are printed out of time order.
+>
+> Simply make it more readable by printing logs in time order, and
+> printing "No record" if history is empty.
+
+Applied to 5.1/scsi-queue, thanks!
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
