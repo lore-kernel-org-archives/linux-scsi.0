@@ -1,52 +1,49 @@
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Subject: Re: [PATCH v3 6/8] scsi: ufs: qcom: Expose the reset controller for
- PHY
-Date: Wed, 6 Feb 2019 17:42:01 +0530
-Message-ID: <720c0327-e6b7-67f8-7756-d3861d66dede@ti.com>
-References: <20190205185902.106085-1-evgreen@chromium.org>
- <20190205185902.106085-7-evgreen@chromium.org>
- <10ea3fe2-e331-0342-cfad-eccce3753d2e@ti.com>
- <8d94b1ae-8084-ed06-19ed-36dd99837703@free.fr>
+From: Benjamin Block <bblock@linux.ibm.com>
+Subject: Re: Question on handling managed IRQs when hotplugging CPUs
+Date: Wed, 6 Feb 2019 14:34:32 +0100
+Message-ID: <20190206133432.GB14106@t480-pf1aa2c2>
+References: <alpine.DEB.2.21.1901301338170.5537@nanos.tec.linutronix.de>
+ <86d5028d-44ab-3696-f7fe-828d7655faa9@huawei.com>
+ <745609be-b215-dd2d-c31f-0bd84572f49f@suse.de>
+ <alpine.DEB.2.21.1902012255550.8200@nanos.tec.linutronix.de>
+ <d93ff049-e96d-36ce-7e58-ec97cbb27ed0@suse.de>
+ <42d149c5-0380-c357-8811-81015159ac04@huawei.com>
+ <20190205145244.GB28023@localhost.localdomain>
+ <d4a04c13-b7db-84df-b1d3-90022905c084@huawei.com>
+ <20190205182325.GA3302@lst.de>
+ <3413b0b1-cb3f-3b09-106d-89cf8be30178@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <8d94b1ae-8084-ed06-19ed-36dd99837703@free.fr>
-Content-Language: en-US
+Content-Disposition: inline
+In-Reply-To: <3413b0b1-cb3f-3b09-106d-89cf8be30178@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Marc Gonzalez <marc.w.gonzalez@free.fr>, Evan Green <evgreen@chromium.org>, Andy Gross <andy.gross@linaro.org>, Vinayak Holikatti <vinholikatti@gmail.com>, Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, Pedro Sousa <pedrom.sousa@synopsys.com>
-Cc: Stephen Boyd <swboyd@chromium.org>, Can Guo <cang@codeaurora.org>, Vivek Gautam <vivek.gautam@codeaurora.org>, Douglas Anderson <dianders@chromium.org>, Asutosh Das <asutoshd@codeaurora.org>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, SCSI <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+To: John Garry <john.garry@huawei.com>
+Cc: Christoph Hellwig <hch@lst.de>, Keith Busch <keith.busch@intel.com>, Hannes Reinecke <hare@suse.de>, Thomas Gleixner <tglx@linutronix.de>, Marc Zyngier <marc.zyngier@arm.com>, "axboe@kernel.dk" <axboe@kernel.dk>, Peter Zijlstra <peterz@infradead.org>, Michael Ellerman <mpe@ellerman.id.au>, Linuxarm <linuxarm@huawei.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Hannes Reinecke <hare@suse.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Marc,
+On Wed, Feb 06, 2019 at 09:21:40AM +0000, John Garry wrote:
+> On 05/02/2019 18:23, Christoph Hellwig wrote:
+> > On Tue, Feb 05, 2019 at 03:09:28PM +0000, John Garry wrote:
+> > > For SCSI devices, unfortunately not all IO sent to the HW originates from
+> > > blk-mq or any other single entity.
+> > 
+> > Where else would SCSI I/O originate from?
+> 
+> Please note that I was referring to other management IO, like SAS SMP, TMFs,
+> and other proprietary commands which the driver may generate for the HBA -
+> https://marc.info/?l=linux-scsi&m=154831889001973&w=2 discusses some of them
+> also.
+> 
 
-On 06/02/19 5:24 PM, Marc Gonzalez wrote:
-> On 06/02/2019 12:42, Kishon Vijay Abraham I wrote:
-> 
->> On 06/02/19 12:29 AM, Evan Green wrote:
->>
->>> Expose a reset controller that the phy will later use to control its
->>> own PHY reset in the UFS controller. This will enable the combining
->>> of PHY init functionality into a single function.
->>>
->>> Signed-off-by: Evan Green <evgreen@chromium.org>
->>
->> I'd like to get ACK from scsi/ufs/ MAINTAINER Vinayak for me merge it in PHY tree.
-> 
-> Kishon, I haven't seen any messages from Vinayak in a while.
-> 
-> https://patchwork.kernel.org/patch/10795501/
-> 
-> New reviewers are Alim, Avri, and Pedro (haven't heard from Pedro yet).
+Especially the TMFs send via SCSI EH are a bit of a pain I guess,
+because they are entirely managed by the device drivers, but depending
+on the device driver they might not even qualify for the problem Hannes
+is seeing.
 
-Thanks for letting me know.
-
-Alim, Avri,
-
-Can you give your ACK for this patch?
-
-Thanks
-Kishon
-> 
-> Regards.
-> 
+-- 
+With Best Regards, Benjamin Block      /      Linux on IBM Z Kernel Development
+IBM Systems & Technology Group   /  IBM Deutschland Research & Development GmbH
+Vorsitz. AufsR.: Matthias Hartmann       /      Geschäftsführung: Dirk Wittkopp
+Sitz der Gesellschaft: Böblingen / Registergericht: AmtsG Stuttgart, HRB 243294
