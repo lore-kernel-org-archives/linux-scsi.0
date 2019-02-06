@@ -1,31 +1,90 @@
-From: Avri Altman <Avri.Altman@wdc.com>
-Subject: RE: [PATCH v3 6/8] scsi: ufs: qcom: Expose the reset controller for
- PHY
-Date: Wed, 6 Feb 2019 13:57:17 +0000
-Message-ID: <SN6PR04MB4925A158FB93AC99D15ED3EBFC6F0@SN6PR04MB4925.namprd04.prod.outlook.com>
-References: <20190205185902.106085-1-evgreen@chromium.org>
- <20190205185902.106085-7-evgreen@chromium.org>
- <10ea3fe2-e331-0342-cfad-eccce3753d2e@ti.com>
+From: Marc Gonzalez <marc.w.gonzalez@free.fr>
+Subject: Re: [PATCH] dt-bindings: ufs: Fix the compatible string definition
+Date: Wed, 6 Feb 2019 14:59:41 +0100
+Message-ID: <1ca83453-89e1-82c1-2720-987407bd9fa8@free.fr>
+References: <20181012213926.253765-1-dianders@chromium.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <10ea3fe2-e331-0342-cfad-eccce3753d2e@ti.com>
+In-Reply-To: <20181012213926.253765-1-dianders@chromium.org>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Kishon Vijay Abraham I <kishon@ti.com>, Evan Green <evgreen@chromium.org>, Andy Gross <andy.gross@linaro.org>, Vinayak Holikatti <vinholikatti@gmail.com>
-Cc: Stephen Boyd <swboyd@chromium.org>, Marc Gonzalez <marc.w.gonzalez@free.fr>, Can Guo <cang@codeaurora.org>, Vivek Gautam <vivek.gautam@codeaurora.org>, Douglas Anderson <dianders@chromium.org>, Asutosh Das <asutoshd@codeaurora.org>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Douglas Anderson <dianders@chromium.org>, Evan Green <evgreen@chromium.org>, Rob Herring <robh+dt@kernel.org>, SCSI <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, Pedro Sousa <pedrom.sousa@synopsys.com>, Bjorn Andersson <bjorn.andersson@linaro.org>, Andy Gross <andy.gross@linaro.org>, Jeffrey Hugo <jhugo@codeaurora.org>, Vivek Gautam <vivek.gautam@codeaurora.org>
 List-Id: linux-scsi@vger.kernel.org
 
-SGksDQoNCj4gT24gMDYvMDIvMTkgMTI6MjkgQU0sIEV2YW4gR3JlZW4gd3JvdGU6DQo+ID4gRXhw
-b3NlIGEgcmVzZXQgY29udHJvbGxlciB0aGF0IHRoZSBwaHkgd2lsbCBsYXRlciB1c2UgdG8gY29u
-dHJvbCBpdHMNCj4gPiBvd24gUEhZIHJlc2V0IGluIHRoZSBVRlMgY29udHJvbGxlci4gVGhpcyB3
-aWxsIGVuYWJsZSB0aGUgY29tYmluaW5nDQo+ID4gb2YgUEhZIGluaXQgZnVuY3Rpb25hbGl0eSBp
-bnRvIGEgc2luZ2xlIGZ1bmN0aW9uLg0KPiA+DQo+ID4gU2lnbmVkLW9mZi1ieTogRXZhbiBHcmVl
-biA8ZXZncmVlbkBjaHJvbWl1bS5vcmc+DQo+IA0KPiBJJ2QgbGlrZSB0byBnZXQgQUNLIGZyb20g
-c2NzaS91ZnMvIE1BSU5UQUlORVIgVmluYXlhayBmb3IgbWUgbWVyZ2UgaXQgaW4gUEhZDQo+IHRy
-ZWUuDQpMb29rcyBsaWtlIHRoaXMgc2VyaWVzIGlzIHFjb20gc3BlY2lmaWMsIGFuZCBoYXMgbGVz
-cyBpbXBhY3Qgb2YgdGhlIHVmcyBjb3JlIGRyaXZlci4NCg0KPiA+ICsJZXJyID0gZGV2bV9yZXNl
-dF9jb250cm9sbGVyX3JlZ2lzdGVyKGRldiwgJmhvc3QtPnJjZGV2KTsNCkp1c3QgbXkgMiBjZW50
-czoNCklzbid0IHRoaXMgc2hvdWxkIGJlIGRvbmUgc29tZXdoZXJlIGluIGRyaXZlcnMvY2xrL3Fj
-b20sDQpMaWtlIGl0cyBkb25lIGZvciBhbnkgb3RoZXIgcWNvbSBib2FyZD8NCg==
+On 12/10/2018 23:39, Douglas Anderson wrote:
+
+> If you look at the bindings for the UFS Host Controller it says:
+> 
+> - compatible: must contain "jedec,ufs-1.1" or "jedec,ufs-2.0", may
+>               also list one or more of the following:
+>                  "qcom,msm8994-ufshc"
+>                  "qcom,msm8996-ufshc"
+>                  "qcom,ufshc"
+> 
+> My reading of that is that it's fine to just have either of these:
+> 1. "qcom,msm8996-ufshc", "jedec,ufs-2.0"
+> 2. "qcom,ufshc", "jedec,ufs-2.0"
+> 
+> As far as I can tell neither of the above is actually a good idea.
+> 
+> For #1 it turns out that the driver currently only keys off the
+> compatible string "qcom,ufshc" so it won't actually probe.
+> 
+> For #2 the driver won't probe but it's not a good idea to keep the SoC
+> name out of the compatible string.
+> 
+> Let's update the compatible string to make it really explicit.  We'll
+> include a nod to the existing driver and the old binding and say that
+> we should always include the "qcom,ufshc" string in addition to the
+> SoC compatible string.
+> 
+> While we're at it we'll also include another example SoC known to have
+> UFS: sdm845.
+> 
+> Fixes: 47555a5c8a11 ("scsi: ufs: make the UFS variant a platform device")
+> Signed-off-by: Douglas Anderson <dianders@chromium.org>
+> ---
+> 
+>  .../devicetree/bindings/ufs/ufshcd-pltfrm.txt       | 13 ++++++++-----
+>  1 file changed, 8 insertions(+), 5 deletions(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+> index 2df00524bd21..69a06a1b732e 100644
+> --- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+> +++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+> @@ -4,11 +4,14 @@ UFSHC nodes are defined to describe on-chip UFS host controllers.
+>  Each UFS controller instance should have its own node.
+>  
+>  Required properties:
+> -- compatible		: must contain "jedec,ufs-1.1" or "jedec,ufs-2.0", may
+> -			  also list one or more of the following:
+> -					  "qcom,msm8994-ufshc"
+> -					  "qcom,msm8996-ufshc"
+> -					  "qcom,ufshc"
+> +- compatible		: must contain "jedec,ufs-1.1" or "jedec,ufs-2.0"
+> +
+> +			  For Qualcomm SoCs must contain, as below, an
+> +			  SoC-specific compatible along with "qcom,ufshc" and
+> +			  the appropriate jedec string:
+> +			    "qcom,msm8994-ufshc", "qcom,ufshc", "jedec,ufs-2.0"
+> +			    "qcom,msm8996-ufshc", "qcom,ufshc", "jedec,ufs-2.0"
+> +			    "qcom,sdm845-ufshc", "qcom,ufshc", "jedec,ufs-2.0"
+>  - interrupts        : <interrupt mapping for UFS host controller IRQ>
+>  - reg               : <registers mapping>
+>  
+
+Tweaking CC list.
+
+Martin, this one's for you, according to Rob ;-)
+
+https://lore.kernel.org/patchwork/patch/999046/
+
+FWIW, it has already been:
+
+Reviewed-by: Vivek Gautam <vivek.gautam@codeaurora.org>
+Reviewed-by: Rob Herring <robh@kernel.org>
+
+Regards.
