@@ -1,43 +1,41 @@
 From: John Garry <john.garry@huawei.com>
-Subject: Re: Question on handling managed IRQs when hotplugging CPUs
-Date: Wed, 6 Feb 2019 09:21:40 +0000
-Message-ID: <3413b0b1-cb3f-3b09-106d-89cf8be30178@huawei.com>
-References: <20190129172059.GC17132@localhost.localdomain>
- <3fe63dab-0791-f476-69c4-9866b70e8520@huawei.com>
- <alpine.DEB.2.21.1901301338170.5537@nanos.tec.linutronix.de>
- <86d5028d-44ab-3696-f7fe-828d7655faa9@huawei.com>
- <745609be-b215-dd2d-c31f-0bd84572f49f@suse.de>
- <alpine.DEB.2.21.1902012255550.8200@nanos.tec.linutronix.de>
- <d93ff049-e96d-36ce-7e58-ec97cbb27ed0@suse.de>
- <42d149c5-0380-c357-8811-81015159ac04@huawei.com>
- <20190205145244.GB28023@localhost.localdomain>
- <d4a04c13-b7db-84df-b1d3-90022905c084@huawei.com>
- <20190205182325.GA3302@lst.de>
+Subject: [PATCH 3/6] scsi: hisi_sas: change queue depth from 512 to 4096
+Date: Wed, 6 Feb 2019 18:52:53 +0800
+Message-ID: <1549450376-114929-4-git-send-email-john.garry@huawei.com>
+References: <1549450376-114929-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190205182325.GA3302@lst.de>
+In-Reply-To: <1549450376-114929-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Keith Busch <keith.busch@intel.com>, Hannes Reinecke <hare@suse.de>, Thomas Gleixner <tglx@linutronix.de>, Marc Zyngier <marc.zyngier@arm.com>, "axboe@kernel.dk" <axboe@kernel.dk>, Peter Zijlstra <peterz@infradead.org>, Michael Ellerman <mpe@ellerman.id.au>, Linuxarm <linuxarm@huawei.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Hannes Reinecke <hare@suse.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linuxarm@huawei.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 05/02/2019 18:23, Christoph Hellwig wrote:
-> On Tue, Feb 05, 2019 at 03:09:28PM +0000, John Garry wrote:
->> For SCSI devices, unfortunately not all IO sent to the HW originates from
->> blk-mq or any other single entity.
->
-> Where else would SCSI I/O originate from?
+From: Xiang Chen <chenxiang66@hisilicon.com>
 
-Please note that I was referring to other management IO, like SAS SMP, 
-TMFs, and other proprietary commands which the driver may generate for 
-the HBA - https://marc.info/?l=linux-scsi&m=154831889001973&w=2 
-discusses some of them also.
+If sending IOs to many disks from single queue, it is possible that the
+queue may be full. To avoid the situation, change queue depth from 512
+to 4096 which is the max number of IOs for v3 hw.
 
-Thanks,
-John
+Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
+---
+ drivers/scsi/hisi_sas/hisi_sas.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
->
-> .
->
+diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
+index df2a92a0e7a1..ff844d4ba0d3 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas.h
++++ b/drivers/scsi/hisi_sas/hisi_sas.h
+@@ -30,7 +30,7 @@
+ 
+ #define HISI_SAS_MAX_PHYS	9
+ #define HISI_SAS_MAX_QUEUES	32
+-#define HISI_SAS_QUEUE_SLOTS 512
++#define HISI_SAS_QUEUE_SLOTS	4096
+ #define HISI_SAS_MAX_ITCT_ENTRIES 1024
+ #define HISI_SAS_MAX_DEVICES HISI_SAS_MAX_ITCT_ENTRIES
+ #define HISI_SAS_RESET_BIT	0
+-- 
+2.17.1
