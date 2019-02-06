@@ -1,8 +1,8 @@
 From: Marc Gonzalez <marc.w.gonzalez@free.fr>
 Subject: Re: [PATCH v3 5/5] Revert "scsi: ufs: disable vccq if it's not needed
  by UFS device"
-Date: Wed, 6 Feb 2019 15:53:46 +0100
-Message-ID: <03485de4-0919-0771-9bb5-a7829000f0d8@free.fr>
+Date: Wed, 6 Feb 2019 15:59:57 +0100
+Message-ID: <42c86292-22e9-4c5e-d64d-bc6107af45bf@free.fr>
 References: <e3c82a49-c601-effc-348f-f768656c659f@free.fr>
  <CGME20190204174549epcas4p4682667176f55101f69cc24cc455c9f3c@epcas4p4.samsung.com>
  <70618c25-83f0-b9db-51a3-c1d74b605a45@free.fr>
@@ -19,6 +19,8 @@ Sender: linux-kernel-owner@vger.kernel.org
 To: Alim Akhtar <alim.akhtar@samsung.com>, MSM <linux-arm-msm@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 Cc: Jeffrey Hugo <jhugo@codeaurora.org>, Bjorn Andersson <bjorn.andersson@linaro.org>, Andy Gross <andy.gross@linaro.org>, David Brown <david.brown@linaro.org>, Evan Green <evgreen@chromium.org>, Douglas Anderson <dianders@chromium.org>, Avri Altman <avri.altman@wdc.com>, Pedro Sousa <pedrom.sousa@synopsys.com>, Subhash Jadavani <subhashj@codeaurora.org>, Bart Van Assche <bvanassche@acm.org>, SCSI <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
+
+[ Google, stop making email so hard. No, this is not spam, you twat of a Bayesian filter ]
 
 On 05/02/2019 18:51, Marc Gonzalez wrote:
 
