@@ -1,105 +1,510 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: LSF/MM 2019: Call for Proposals (UPDATED!)
-Date: Thu, 7 Feb 2019 08:35:06 -0700
-Message-ID: <4f5a15c1-4f9e-acae-5094-2f38c8eebd96@kernel.dk>
+From: Nathan Chancellor <natechancellor@gmail.com>
+Subject: [PATCH v5] scsi/ata: Use unsigned int for cmd's type in ioctls in scsi_host_template
+Date: Thu,  7 Feb 2019 09:07:20 -0700
+Message-ID: <20190207160719.28895-1-natechancellor@gmail.com>
+References: <20190126075256.29608-1-natechancellor@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Language: en-US
+In-Reply-To: <20190126075256.29608-1-natechancellor@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, bpf@vger.kernel.org, ast@kernel.org
+To: Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Manoj N. Kumar" <manoj@linux.ibm.com>, "Matthew R. Ochs" <mrochs@linux.ibm.com>, Uma Krishnan <ukrishn@linux.ibm.com>, Brian King <brking@us.ibm.com>
+Cc: Adaptec OEM Raid Solutions <aacraid@microsemi.com>, Marc Gonzalez <marc.w.gonzalez@free.fr>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, esc.storagedev@microsemi.com, Nathan Chancellor <natechancellor@gmail.com>, Bradley Grove <bgrove@attotech.com>, Don Brace <don.brace@microsemi.com>, Bart Van Assche <bvanassche@acm.org>, Nick Desaulniers <ndesaulniers@google.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi,
+Clang warns several times in the scsi subsystem (trimmed for brevity):
 
-This is an important UPDATE to the previous LSF/MM announcement:
+drivers/scsi/hpsa.c:6209:7: warning: overflow converting case value to
+switch condition type (2147762695 to 18446744071562347015) [-Wswitch]
+        case CCISS_GETBUSTYPES:
+             ^
+drivers/scsi/hpsa.c:6208:7: warning: overflow converting case value to
+switch condition type (2147762694 to 18446744071562347014) [-Wswitch]
+        case CCISS_GETHEARTBEAT:
+             ^
 
-https://lore.kernel.org/linux-block/51b4b263-a0f2-113d-7bdc-f7960b540929@kernel.dk/
+The root cause is that the _IOC macro can generate really large numbers,
+which don't fit into type 'int', which is used for the cmd parameter in
+the ioctls in scsi_host_template. My research into how GCC and Clang are
+handling this at a low level didn't prove fruitful. However, looking at
+the rest of the kernel tree, all ioctls use an 'unsigned int' for the
+cmd parameter, which will fit all of the _IOC values in the scsi/ata
+subsystems.
 
-A BPF track will join the annual LSF/MM Summit this year! Please read
-the updated description and CFP information below.
+Make that change because none of the ioctls expect a negative value for
+any command, it brings the ioctls inline with the reset of the kernel,
+and it removes ambiguity, which is never good when dealing with compilers.
 
-It will be held from April 30 - May 2 at the Sheraton Puerto Rico Hotel &
-Casino Lodges in San Juan, Puerto Rico.
-LSF/MM is an invitation-only technical workshop to map out improvements to
-the Linux storage, filesystem, memory management, and bpf subsystems that
-will make their way into the mainline kernel within the coming years.
+Link: https://github.com/ClangBuiltLinux/linux/issues/85
+Link: https://github.com/ClangBuiltLinux/linux/issues/154
+Link: https://github.com/ClangBuiltLinux/linux/issues/157
+Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
+Acked-by: Bradley Grove <bgrove@attotech.com>
+Acked-by: Don Brace <don.brace@microsemi.com>
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Tested-by: Nick Desaulniers <ndesaulniers@google.com>
+---
 
-https://events.linuxfoundation.org/events/linux-storage-filesystem-mm-summit-2019/
+v4 -> v5:
 
-LSF/MM 2019 will be a three day, stand-alone conference with three
-subsystem-specific tracks, cross-track discussions, as well as BoF and
-hacking sessions.
+* Collect tags.
+* Fix mispellings in the commit message, thanks to Marc Gonzalez for the
+  review.
 
-On behalf of the committee I am issuing a call for agenda proposals
-that are suitable for cross-track discussion as well as technical
-subjects for the breakout sessions.
+v3 -> v4:
 
-If advance notice is required for visa applications then please point
-that out in your proposal or request to attend, and submit the topic
-as soon as possible.
+* Repost with Bart's suggested change and his reviewed by.
 
-1) Proposals for agenda topics should be sent before February 22th,
-2019 to:
+v2 -> v3:
 
-	lsf-pc@lists.linux-foundation.org
+* Fix another -Wswitch warning from drivers/scsi/cxlflash/main.c, coming
+  from decode_hioctl (uncovered via a powernv_defconfig build).
 
-and CC the mailing lists that are relevant for the topic in question:
+v1 -> v2:
 
-	FS:	linux-fsdevel@vger.kernel.org
-	MM:	linux-mm@kvack.org
-	Block:	linux-block@vger.kernel.org
-	ATA:	linux-ide@vger.kernel.org
-	SCSI:	linux-scsi@vger.kernel.org
-	NVMe:	linux-nvme@lists.infradead.org
-        BPF:    bpf@vger.kernel.org
+* Fix build breakage in cxlflash driver from forgetting to update
+  prototype (thanks to 0day for catching it).
 
-Note that we have extended the original deadline by a week, to
-accommodate the late arrival of the BPF track.
+ drivers/ata/libata-scsi.c             |  5 +++--
+ drivers/scsi/aacraid/aachba.c         |  2 +-
+ drivers/scsi/aacraid/aacraid.h        |  4 ++--
+ drivers/scsi/aacraid/commctrl.c       |  2 +-
+ drivers/scsi/aacraid/linit.c          |  6 ++++--
+ drivers/scsi/cxlflash/common.h        |  3 ++-
+ drivers/scsi/cxlflash/main.c          |  2 +-
+ drivers/scsi/cxlflash/superpipe.c     | 12 +++++-------
+ drivers/scsi/esas2r/esas2r.h          |  4 ++--
+ drivers/scsi/esas2r/esas2r_ioctl.c    | 16 +++++++---------
+ drivers/scsi/esas2r/esas2r_main.c     |  2 +-
+ drivers/scsi/hpsa.c                   | 15 +++++++++------
+ drivers/scsi/ipr.c                    |  3 ++-
+ drivers/scsi/libsas/sas_scsi_host.c   |  2 +-
+ drivers/scsi/scsi_debug.c             |  3 ++-
+ drivers/scsi/smartpqi/smartpqi_init.c |  3 ++-
+ include/linux/libata.h                |  5 +++--
+ include/scsi/libsas.h                 |  3 ++-
+ include/scsi/scsi_host.h              |  6 ++++--
+ 19 files changed, 54 insertions(+), 44 deletions(-)
 
-Please tag your proposal with [LSF/MM TOPIC] to make it easier to
-track. In addition, please make sure to start a new thread for each
-topic rather than following up to an existing one. Agenda topics and
-attendees will be selected by the program committee, but the final
-agenda will be formed by consensus of the attendees on the day.
-
-2) Requests to attend the summit for those that are not proposing a
-topic should be sent to:
-
-	lsf-pc@lists.linux-foundation.org
-
-Please summarize what expertise you will bring to the meeting, and
-what you would like to discuss. Please also tag your email with
-[LSF/MM ATTEND] and send it as a new thread so there is less chance of
-it getting lost.
-
-We will try to cap attendance at around 25-30 per track to facilitate
-discussions although the final numbers will depend on the room sizes
-at the venue. Note that BPF track will be limited to 10-15 attendees.
-
-For discussion leaders, slides and visualizations are encouraged to
-outline the subject matter and focus the discussions. Please refrain
-from lengthy presentations and talks; the sessions are supposed to be
-interactive, inclusive discussions.
-
-In particular BPF topics are encouraged to be storage, fs, mm, tracing,
-security related or advancing the state of the art of BPF core.
-BPF and networking related topics are recommended to be submitted for
-Linux Plumbers Conference and corresponding Networking and BPF microconf
-later this year.
-
-Thank you on behalf of the program committee:
-
-	Anna Schumaker (Filesystems)
-	Josef Bacik (Filesystems)
-	Martin K. Petersen (Storage)
-	Jens Axboe (Storage)
-	Michal Hocko (MM)
-	Rik van Riel (MM)
-	Johannes Weiner (MM)
-        Alexei Starovoitov (BPF)
-
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 3d4887d0e84a..6291f1dbf342 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -778,7 +778,7 @@ static int ata_ioc32(struct ata_port *ap)
+ }
+ 
+ int ata_sas_scsi_ioctl(struct ata_port *ap, struct scsi_device *scsidev,
+-		     int cmd, void __user *arg)
++		     unsigned int cmd, void __user *arg)
+ {
+ 	unsigned long val;
+ 	int rc = -EINVAL;
+@@ -829,7 +829,8 @@ int ata_sas_scsi_ioctl(struct ata_port *ap, struct scsi_device *scsidev,
+ }
+ EXPORT_SYMBOL_GPL(ata_sas_scsi_ioctl);
+ 
+-int ata_scsi_ioctl(struct scsi_device *scsidev, int cmd, void __user *arg)
++int ata_scsi_ioctl(struct scsi_device *scsidev, unsigned int cmd,
++		   void __user *arg)
+ {
+ 	return ata_sas_scsi_ioctl(ata_shost_to_port(scsidev->host),
+ 				scsidev, cmd, arg);
+diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
+index 75ab5ff6b78c..6085aa087a2f 100644
+--- a/drivers/scsi/aacraid/aachba.c
++++ b/drivers/scsi/aacraid/aachba.c
+@@ -3455,7 +3455,7 @@ static int delete_disk(struct aac_dev *dev, void __user *arg)
+ 	}
+ }
+ 
+-int aac_dev_ioctl(struct aac_dev *dev, int cmd, void __user *arg)
++int aac_dev_ioctl(struct aac_dev *dev, unsigned int cmd, void __user *arg)
+ {
+ 	switch (cmd) {
+ 	case FSACTL_QUERY_DISK:
+diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
+index 3291d1c16864..1df5171594b8 100644
+--- a/drivers/scsi/aacraid/aacraid.h
++++ b/drivers/scsi/aacraid/aacraid.h
+@@ -2706,12 +2706,12 @@ void aac_set_intx_mode(struct aac_dev *dev);
+ int aac_get_config_status(struct aac_dev *dev, int commit_flag);
+ int aac_get_containers(struct aac_dev *dev);
+ int aac_scsi_cmd(struct scsi_cmnd *cmd);
+-int aac_dev_ioctl(struct aac_dev *dev, int cmd, void __user *arg);
++int aac_dev_ioctl(struct aac_dev *dev, unsigned int cmd, void __user *arg);
+ #ifndef shost_to_class
+ #define shost_to_class(shost) &shost->shost_dev
+ #endif
+ ssize_t aac_get_serial_number(struct device *dev, char *buf);
+-int aac_do_ioctl(struct aac_dev * dev, int cmd, void __user *arg);
++int aac_do_ioctl(struct aac_dev *dev, unsigned int cmd, void __user *arg);
+ int aac_rx_init(struct aac_dev *dev);
+ int aac_rkt_init(struct aac_dev *dev);
+ int aac_nark_init(struct aac_dev *dev);
+diff --git a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commctrl.c
+index e2899ff7913e..f0ff40332753 100644
+--- a/drivers/scsi/aacraid/commctrl.c
++++ b/drivers/scsi/aacraid/commctrl.c
+@@ -1060,7 +1060,7 @@ static int aac_send_reset_adapter(struct aac_dev *dev, void __user *arg)
+ 	return retval;
+ }
+ 
+-int aac_do_ioctl(struct aac_dev * dev, int cmd, void __user *arg)
++int aac_do_ioctl(struct aac_dev *dev, unsigned int cmd, void __user *arg)
+ {
+ 	int status;
+ 
+diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+index e977b459f823..a45f81ec80ce 100644
+--- a/drivers/scsi/aacraid/linit.c
++++ b/drivers/scsi/aacraid/linit.c
+@@ -616,7 +616,8 @@ static struct device_attribute *aac_dev_attrs[] = {
+ 	NULL,
+ };
+ 
+-static int aac_ioctl(struct scsi_device *sdev, int cmd, void __user * arg)
++static int aac_ioctl(struct scsi_device *sdev, unsigned int cmd,
++		     void __user *arg)
+ {
+ 	struct aac_dev *dev = (struct aac_dev *)sdev->host->hostdata;
+ 	if (!capable(CAP_SYS_RAWIO))
+@@ -1205,7 +1206,8 @@ static long aac_compat_do_ioctl(struct aac_dev *dev, unsigned cmd, unsigned long
+ 	return ret;
+ }
+ 
+-static int aac_compat_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
++static int aac_compat_ioctl(struct scsi_device *sdev, unsigned int cmd,
++			    void __user *arg)
+ {
+ 	struct aac_dev *dev = (struct aac_dev *)sdev->host->hostdata;
+ 	if (!capable(CAP_SYS_RAWIO))
+diff --git a/drivers/scsi/cxlflash/common.h b/drivers/scsi/cxlflash/common.h
+index 8908a20065c8..4d90106fcb37 100644
+--- a/drivers/scsi/cxlflash/common.h
++++ b/drivers/scsi/cxlflash/common.h
+@@ -334,7 +334,8 @@ int cxlflash_afu_sync(struct afu *afu, ctx_hndl_t c, res_hndl_t r, u8 mode);
+ void cxlflash_list_init(void);
+ void cxlflash_term_global_luns(void);
+ void cxlflash_free_errpage(void);
+-int cxlflash_ioctl(struct scsi_device *sdev, int cmd, void __user *arg);
++int cxlflash_ioctl(struct scsi_device *sdev, unsigned int cmd,
++		   void __user *arg);
+ void cxlflash_stop_term_user_contexts(struct cxlflash_cfg *cfg);
+ int cxlflash_mark_contexts_error(struct cxlflash_cfg *cfg);
+ void cxlflash_term_local_luns(struct cxlflash_cfg *cfg);
+diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
+index c8bad2c093b8..7096810fd222 100644
+--- a/drivers/scsi/cxlflash/main.c
++++ b/drivers/scsi/cxlflash/main.c
+@@ -3282,7 +3282,7 @@ static int cxlflash_chr_open(struct inode *inode, struct file *file)
+  *
+  * Return: A string identifying the decoded host ioctl.
+  */
+-static char *decode_hioctl(int cmd)
++static char *decode_hioctl(unsigned int cmd)
+ {
+ 	switch (cmd) {
+ 	case HT_CXLFLASH_LUN_PROVISION:
+diff --git a/drivers/scsi/cxlflash/superpipe.c b/drivers/scsi/cxlflash/superpipe.c
+index acac6152f50b..1a94a469051e 100644
+--- a/drivers/scsi/cxlflash/superpipe.c
++++ b/drivers/scsi/cxlflash/superpipe.c
+@@ -1924,7 +1924,7 @@ static int cxlflash_disk_verify(struct scsi_device *sdev,
+  *
+  * Return: A string identifying the decoded ioctl.
+  */
+-static char *decode_ioctl(int cmd)
++static char *decode_ioctl(unsigned int cmd)
+ {
+ 	switch (cmd) {
+ 	case DK_CXLFLASH_ATTACH:
+@@ -2051,7 +2051,7 @@ static int cxlflash_disk_direct_open(struct scsi_device *sdev, void *arg)
+  *
+  * Return: 0 on success, -errno on failure
+  */
+-static int ioctl_common(struct scsi_device *sdev, int cmd)
++static int ioctl_common(struct scsi_device *sdev, unsigned int cmd)
+ {
+ 	struct cxlflash_cfg *cfg = shost_priv(sdev->host);
+ 	struct device *dev = &cfg->dev->dev;
+@@ -2096,7 +2096,7 @@ static int ioctl_common(struct scsi_device *sdev, int cmd)
+  *
+  * Return: 0 on success, -errno on failure
+  */
+-int cxlflash_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
++int cxlflash_ioctl(struct scsi_device *sdev, unsigned int cmd, void __user *arg)
+ {
+ 	typedef int (*sioctl) (struct scsi_device *, void *);
+ 
+@@ -2179,8 +2179,7 @@ int cxlflash_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
+ 	}
+ 
+ 	if (unlikely(copy_from_user(&buf, arg, size))) {
+-		dev_err(dev, "%s: copy_from_user() fail "
+-			"size=%lu cmd=%d (%s) arg=%p\n",
++		dev_err(dev, "%s: copy_from_user() fail size=%lu cmd=%u (%s) arg=%p\n",
+ 			__func__, size, cmd, decode_ioctl(cmd), arg);
+ 		rc = -EFAULT;
+ 		goto cxlflash_ioctl_exit;
+@@ -2203,8 +2202,7 @@ int cxlflash_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
+ 	rc = do_ioctl(sdev, (void *)&buf);
+ 	if (likely(!rc))
+ 		if (unlikely(copy_to_user(arg, &buf, size))) {
+-			dev_err(dev, "%s: copy_to_user() fail "
+-				"size=%lu cmd=%d (%s) arg=%p\n",
++			dev_err(dev, "%s: copy_to_user() fail size=%lu cmd=%u (%s) arg=%p\n",
+ 				__func__, size, cmd, decode_ioctl(cmd), arg);
+ 			rc = -EFAULT;
+ 		}
+diff --git a/drivers/scsi/esas2r/esas2r.h b/drivers/scsi/esas2r/esas2r.h
+index 858c3b33db78..7f43b95f4e94 100644
+--- a/drivers/scsi/esas2r/esas2r.h
++++ b/drivers/scsi/esas2r/esas2r.h
+@@ -965,8 +965,8 @@ struct esas2r_adapter {
+ const char *esas2r_info(struct Scsi_Host *);
+ int esas2r_write_params(struct esas2r_adapter *a, struct esas2r_request *rq,
+ 			struct esas2r_sas_nvram *data);
+-int esas2r_ioctl_handler(void *hostdata, int cmd, void __user *arg);
+-int esas2r_ioctl(struct scsi_device *dev, int cmd, void __user *arg);
++int esas2r_ioctl_handler(void *hostdata, unsigned int cmd, void __user *arg);
++int esas2r_ioctl(struct scsi_device *dev, unsigned int cmd, void __user *arg);
+ u8 handle_hba_ioctl(struct esas2r_adapter *a,
+ 		    struct atto_ioctl *ioctl_hba);
+ int esas2r_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd);
+diff --git a/drivers/scsi/esas2r/esas2r_ioctl.c b/drivers/scsi/esas2r/esas2r_ioctl.c
+index 34bcc8c04ff4..3d130523c288 100644
+--- a/drivers/scsi/esas2r/esas2r_ioctl.c
++++ b/drivers/scsi/esas2r/esas2r_ioctl.c
+@@ -1274,7 +1274,7 @@ int esas2r_write_params(struct esas2r_adapter *a, struct esas2r_request *rq,
+ 
+ 
+ /* This function only cares about ATTO-specific ioctls (atto_express_ioctl) */
+-int esas2r_ioctl_handler(void *hostdata, int cmd, void __user *arg)
++int esas2r_ioctl_handler(void *hostdata, unsigned int cmd, void __user *arg)
+ {
+ 	struct atto_express_ioctl *ioctl = NULL;
+ 	struct esas2r_adapter *a;
+@@ -1292,9 +1292,8 @@ int esas2r_ioctl_handler(void *hostdata, int cmd, void __user *arg)
+ 	ioctl = memdup_user(arg, sizeof(struct atto_express_ioctl));
+ 	if (IS_ERR(ioctl)) {
+ 		esas2r_log(ESAS2R_LOG_WARN,
+-			   "ioctl_handler access_ok failed for cmd %d, "
+-			   "address %p", cmd,
+-			   arg);
++			   "ioctl_handler access_ok failed for cmd %u, address %p",
++			   cmd, arg);
+ 		return PTR_ERR(ioctl);
+ 	}
+ 
+@@ -1493,7 +1492,7 @@ int esas2r_ioctl_handler(void *hostdata, int cmd, void __user *arg)
+ ioctl_done:
+ 
+ 	if (err < 0) {
+-		esas2r_log(ESAS2R_LOG_WARN, "err %d on ioctl cmd %d", err,
++		esas2r_log(ESAS2R_LOG_WARN, "err %d on ioctl cmd %u", err,
+ 			   cmd);
+ 
+ 		switch (err) {
+@@ -1518,9 +1517,8 @@ int esas2r_ioctl_handler(void *hostdata, int cmd, void __user *arg)
+ 	err = __copy_to_user(arg, ioctl, sizeof(struct atto_express_ioctl));
+ 	if (err != 0) {
+ 		esas2r_log(ESAS2R_LOG_WARN,
+-			   "ioctl_handler copy_to_user didn't copy "
+-			   "everything (err %d, cmd %d)", err,
+-			   cmd);
++			   "ioctl_handler copy_to_user didn't copy everything (err %d, cmd %u)",
++			   err, cmd);
+ 		kfree(ioctl);
+ 
+ 		return -EFAULT;
+@@ -1531,7 +1529,7 @@ int esas2r_ioctl_handler(void *hostdata, int cmd, void __user *arg)
+ 	return 0;
+ }
+ 
+-int esas2r_ioctl(struct scsi_device *sd, int cmd, void __user *arg)
++int esas2r_ioctl(struct scsi_device *sd, unsigned int cmd, void __user *arg)
+ {
+ 	return esas2r_ioctl_handler(sd->host->hostdata, cmd, arg);
+ }
+diff --git a/drivers/scsi/esas2r/esas2r_main.c b/drivers/scsi/esas2r/esas2r_main.c
+index 64397d441bae..fdbda5c05aa0 100644
+--- a/drivers/scsi/esas2r/esas2r_main.c
++++ b/drivers/scsi/esas2r/esas2r_main.c
+@@ -623,7 +623,7 @@ static int esas2r_proc_major;
+ long esas2r_proc_ioctl(struct file *fp, unsigned int cmd, unsigned long arg)
+ {
+ 	return esas2r_ioctl_handler(esas2r_proc_host->hostdata,
+-				    (int)cmd, (void __user *)arg);
++				    cmd, (void __user *)arg);
+ }
+ 
+ static void __exit esas2r_exit(void)
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 5284444fdd10..f044e7d10d63 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -251,10 +251,11 @@ static int number_of_controllers;
+ 
+ static irqreturn_t do_hpsa_intr_intx(int irq, void *dev_id);
+ static irqreturn_t do_hpsa_intr_msi(int irq, void *dev_id);
+-static int hpsa_ioctl(struct scsi_device *dev, int cmd, void __user *arg);
++static int hpsa_ioctl(struct scsi_device *dev, unsigned int cmd,
++		      void __user *arg);
+ 
+ #ifdef CONFIG_COMPAT
+-static int hpsa_compat_ioctl(struct scsi_device *dev, int cmd,
++static int hpsa_compat_ioctl(struct scsi_device *dev, unsigned int cmd,
+ 	void __user *arg);
+ #endif
+ 
+@@ -6127,7 +6128,7 @@ static void cmd_free(struct ctlr_info *h, struct CommandList *c)
+ 
+ #ifdef CONFIG_COMPAT
+ 
+-static int hpsa_ioctl32_passthru(struct scsi_device *dev, int cmd,
++static int hpsa_ioctl32_passthru(struct scsi_device *dev, unsigned int cmd,
+ 	void __user *arg)
+ {
+ 	IOCTL32_Command_struct __user *arg32 =
+@@ -6164,7 +6165,7 @@ static int hpsa_ioctl32_passthru(struct scsi_device *dev, int cmd,
+ }
+ 
+ static int hpsa_ioctl32_big_passthru(struct scsi_device *dev,
+-	int cmd, void __user *arg)
++	unsigned int cmd, void __user *arg)
+ {
+ 	BIG_IOCTL32_Command_struct __user *arg32 =
+ 	    (BIG_IOCTL32_Command_struct __user *) arg;
+@@ -6201,7 +6202,8 @@ static int hpsa_ioctl32_big_passthru(struct scsi_device *dev,
+ 	return err;
+ }
+ 
+-static int hpsa_compat_ioctl(struct scsi_device *dev, int cmd, void __user *arg)
++static int hpsa_compat_ioctl(struct scsi_device *dev, unsigned int cmd,
++			     void __user *arg)
+ {
+ 	switch (cmd) {
+ 	case CCISS_GETPCIINFO:
+@@ -6521,7 +6523,8 @@ static void check_ioctl_unit_attention(struct ctlr_info *h,
+ /*
+  * ioctl
+  */
+-static int hpsa_ioctl(struct scsi_device *dev, int cmd, void __user *arg)
++static int hpsa_ioctl(struct scsi_device *dev, unsigned int cmd,
++		      void __user *arg)
+ {
+ 	struct ctlr_info *h;
+ 	void __user *argp = (void __user *)arg;
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index d1b4025a4503..6d053e220153 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -6696,7 +6696,8 @@ static int ipr_queuecommand(struct Scsi_Host *shost,
+  * Return value:
+  * 	0 on success / other on failure
+  **/
+-static int ipr_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
++static int ipr_ioctl(struct scsi_device *sdev, unsigned int cmd,
++		     void __user *arg)
+ {
+ 	struct ipr_resource_entry *res;
+ 
+diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
+index c43a00a9d819..b775445892af 100644
+--- a/drivers/scsi/libsas/sas_scsi_host.c
++++ b/drivers/scsi/libsas/sas_scsi_host.c
+@@ -799,7 +799,7 @@ void sas_scsi_recover_host(struct Scsi_Host *shost)
+ 		  shost->host_failed, tries);
+ }
+ 
+-int sas_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
++int sas_ioctl(struct scsi_device *sdev, unsigned int cmd, void __user *arg)
+ {
+ 	struct domain_device *dev = sdev_to_domain_dev(sdev);
+ 
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index d4aede324e84..3eb47207c7b0 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -832,7 +832,8 @@ static void mk_sense_invalid_opcode(struct scsi_cmnd *scp)
+ 	mk_sense_buffer(scp, ILLEGAL_REQUEST, INVALID_OPCODE, 0);
+ }
+ 
+-static int scsi_debug_ioctl(struct scsi_device *dev, int cmd, void __user *arg)
++static int scsi_debug_ioctl(struct scsi_device *dev, unsigned int cmd,
++			    void __user *arg)
+ {
+ 	if (sdebug_verbose) {
+ 		if (0x1261 == cmd)
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+index f564af8949e8..5d9ccbab7581 100644
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -6043,7 +6043,8 @@ static int pqi_passthru_ioctl(struct pqi_ctrl_info *ctrl_info, void __user *arg)
+ 	return rc;
+ }
+ 
+-static int pqi_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
++static int pqi_ioctl(struct scsi_device *sdev, unsigned int cmd,
++		     void __user *arg)
+ {
+ 	int rc;
+ 	struct pqi_ctrl_info *ctrl_info;
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 68133842e6d7..c9419c05a90a 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -1122,10 +1122,11 @@ extern int ata_host_activate(struct ata_host *host, int irq,
+ extern void ata_host_detach(struct ata_host *host);
+ extern void ata_host_init(struct ata_host *, struct device *, struct ata_port_operations *);
+ extern int ata_scsi_detect(struct scsi_host_template *sht);
+-extern int ata_scsi_ioctl(struct scsi_device *dev, int cmd, void __user *arg);
++extern int ata_scsi_ioctl(struct scsi_device *dev, unsigned int cmd,
++			  void __user *arg);
+ extern int ata_scsi_queuecmd(struct Scsi_Host *h, struct scsi_cmnd *cmd);
+ extern int ata_sas_scsi_ioctl(struct ata_port *ap, struct scsi_device *dev,
+-			    int cmd, void __user *arg);
++			    unsigned int cmd, void __user *arg);
+ extern void ata_sas_port_destroy(struct ata_port *);
+ extern struct ata_port *ata_sas_port_alloc(struct ata_host *,
+ 					   struct ata_port_info *, struct Scsi_Host *);
+diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
+index 857086cf7ebf..56b2dba7d911 100644
+--- a/include/scsi/libsas.h
++++ b/include/scsi/libsas.h
+@@ -707,7 +707,8 @@ int sas_eh_target_reset_handler(struct scsi_cmnd *cmd);
+ 
+ extern void sas_target_destroy(struct scsi_target *);
+ extern int sas_slave_alloc(struct scsi_device *);
+-extern int sas_ioctl(struct scsi_device *sdev, int cmd, void __user *arg);
++extern int sas_ioctl(struct scsi_device *sdev, unsigned int cmd,
++		     void __user *arg);
+ extern int sas_drain_work(struct sas_ha_struct *ha);
+ 
+ extern void sas_ssp_task_response(struct device *dev, struct sas_task *task,
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index 6ca954e9f752..4047d68d1b08 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -60,7 +60,8 @@ struct scsi_host_template {
+ 	 *
+ 	 * Status: OPTIONAL
+ 	 */
+-	int (* ioctl)(struct scsi_device *dev, int cmd, void __user *arg);
++	int (*ioctl)(struct scsi_device *dev, unsigned int cmd,
++		     void __user *arg);
+ 
+ 
+ #ifdef CONFIG_COMPAT
+@@ -70,7 +71,8 @@ struct scsi_host_template {
+ 	 *
+ 	 * Status: OPTIONAL
+ 	 */
+-	int (* compat_ioctl)(struct scsi_device *dev, int cmd, void __user *arg);
++	int (*compat_ioctl)(struct scsi_device *dev, unsigned int cmd,
++			    void __user *arg);
+ #endif
+ 
+ 	/*
 -- 
-Jens Axboe
+2.20.1
