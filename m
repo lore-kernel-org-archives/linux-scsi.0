@@ -1,74 +1,83 @@
-From: Alim Akhtar <alim.akhtar@samsung.com>
-Subject: Re: [PATCH v3 5/5] Revert
- "scsi: ufs: disable vccq if it's not needed by UFS device"
-Date: Thu, 7 Feb 2019 14:20:39 +0530
-Message-ID: <90f24b35-89b0-cea0-1ab3-13c2a419b138@samsung.com>
-References: <e3c82a49-c601-effc-348f-f768656c659f@free.fr>
-        <CGME20190204174549epcas4p4682667176f55101f69cc24cc455c9f3c@epcas4p4.samsung.com>
-        <70618c25-83f0-b9db-51a3-c1d74b605a45@free.fr>
-        <5f2a8378-1f22-6a52-356d-56d3b393ab1d@samsung.com>
-        <05d2d193-4181-12ce-b4fb-4e8dec5aef27@free.fr>
-        <7610c262-1451-9bb2-48a6-4daf6f534f6c@free.fr>
-        <42c86292-22e9-4c5e-d64d-bc6107af45bf@free.fr>
-        <740e6332-b54f-ab62-915a-0aec6be450d3@samsung.com>
-        <2a59c11a-037f-c8c3-235a-9b21183a0801@free.fr>
+From: Marc Gonzalez <marc.w.gonzalez@free.fr>
+Subject: Re: [PATCH v4] scsi/ata: Use unsigned int for cmd's type in ioctls in
+ scsi_host_template
+Date: Thu, 7 Feb 2019 11:52:58 +0100
+Message-ID: <97d4ab84-f64b-9276-b7a9-3b3be5f5d527@free.fr>
+References: <20190114044206.6351-1-natechancellor@gmail.com>
+ <20190126075256.29608-1-natechancellor@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <2a59c11a-037f-c8c3-235a-9b21183a0801@free.fr>
+In-Reply-To: <20190126075256.29608-1-natechancellor@gmail.com>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Marc Gonzalez <marc.w.gonzalez@free.fr>, MSM <linux-arm-msm@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
-Cc: Jeffrey Hugo <jhugo@codeaurora.org>, Bjorn Andersson <bjorn.andersson@linaro.org>, Andy Gross <andy.gross@linaro.org>, David Brown <david.brown@linaro.org>, Evan Green <evgreen@chromium.org>, Douglas Anderson <dianders@chromium.org>, Avri Altman <avri.altman@wdc.com>, Pedro Sousa <pedrom.sousa@synopsys.com>, Subhash Jadavani <subhashj@codeaurora.org>, Bart Van Assche <bvanassche@acm.org>, SCSI <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>
+To: Nathan Chancellor <natechancellor@gmail.com>
+Cc: Jens Axboe <axboe@kernel.dk>, "Martin K. Petersen" <martin.petersen@oracle.com>, SCSI <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Marc,
+On 26/01/2019 08:52, Nathan Chancellor wrote:
 
-On 06/02/19 9:22 PM, Marc Gonzalez wrote:
-> On 06/02/2019 16:27, Alim Akhtar wrote:
+> Clang warns several times in the scsi subsystem (trimmed for brevity):
 > 
->> On 06/02/19 8:29 PM, Marc Gonzalez wrote:
->>
->>> [    2.405734] regulator_disable: ENTER vdd_l26
->>> [    2.405958] regulator_disable: EXIT vdd_l26
->>> [    2.406032]   regulator_set_load: vdd_l26 = 0 uA
->>> [    3.930447] ufshcd-qcom 1da4000.ufshc: ufshcd_query_attr: opcode 0x04 for idn 13 failed, index 0, err = -11
->>> [    5.434358] ufshcd-qcom 1da4000.ufshc: ufshcd_query_attr: opcode 0x04 for idn 13 failed, index 0, err = -11
->>> [    6.938318] ufshcd-qcom 1da4000.ufshc: ufshcd_query_attr: opcode 0x04 for idn 13 failed, index 0, err = -11
->>> [    6.938414] ufshcd-qcom 1da4000.ufshc: ufshcd_query_attr_retry: query attribute, idn 13, failed with error -11 after 3 retires
->>> [    6.946959] ufshcd-qcom 1da4000.ufshc: ufshcd_disable_auto_bkops: failed to enable exception event -11
->>> [    6.958523] ufshcd-qcom 1da4000.ufshc: dme-peer-get: attr-id 0x1587 failed 3 retries
->>> [    6.967730] ufshcd-qcom 1da4000.ufshc: dme-peer-get: attr-id 0x1586 failed 3 retries
->>> [    6.975576] ufshcd-qcom 1da4000.ufshc: ufshcd_get_max_pwr_mode: invalid max pwm tx gear read = 0
->>> [    6.983306] ufshcd-qcom 1da4000.ufshc: ufshcd_probe_hba: Failed getting max supported power mode
->>> [    8.506314] ufshcd-qcom 1da4000.ufshc: ufshcd_query_flag: Sending flag query for idn 3 failed, err = -11
->>> [   10.010352] ufshcd-qcom 1da4000.ufshc: ufshcd_query_flag: Sending flag query for idn 3 failed, err = -11
->>> [   11.514313] ufshcd-qcom 1da4000.ufshc: ufshcd_query_flag: Sending flag query for idn 3 failed, err = -11
->>> [   11.514412] ufshcd-qcom 1da4000.ufshc: ufshcd_query_flag_retry: query attribute, opcode 5, idn 3, failed with error -11 after 3 retires
->>> [   13.050354] ufshcd-qcom 1da4000.ufshc: __ufshcd_query_descriptor: opcode 0x01 for idn 8 failed, index 0, err = -11
->>> [   14.554313] ufshcd-qcom 1da4000.ufshc: __ufshcd_query_descriptor: opcode 0x01 for idn 8 failed, index 0, err = -11
->>> [   16.058313] ufshcd-qcom 1da4000.ufshc: __ufshcd_query_descriptor: opcode 0x01 for idn 8 failed, index 0, err = -11
->>> [   16.058421] ufshcd-qcom 1da4000.ufshc: ufshcd_read_desc_param: Failed reading descriptor. desc_id 8, desc_index 0, param_offset 0, ret -11
->>> [   16.067654] ufshcd-qcom 1da4000.ufshc: ufshcd_init_icc_levels: Failed reading power descriptor.len = 98 ret = -11
->>> [   37.074334] ufshcd-qcom 1da4000.ufshc: link startup failed 1
->>
->> Can you check if your UFS device RESET_N is asserted correctly. It might
->> be connected to some regulator and may be you can try keeping that
->> regulator as "regulator-always-on" from your DT node.
+> drivers/scsi/hpsa.c:6209:7: warning: overflow converting case value to
+> switch condition type (2147762695 to 18446744071562347015) [-Wswitch]
+>         case CCISS_GETBUSTYPES:
+>              ^
+> drivers/scsi/hpsa.c:6208:7: warning: overflow converting case value to
+> switch condition type (2147762694 to 18446744071562347014) [-Wswitch]
+>         case CCISS_GETHEARTBEAT:
+>              ^
 > 
-> How do I check RESET_N? In software or hardware?
-> 
-RST_N is the reset logic for UFS device core logic and it is input to 
-the device from UFS host controller.So, in your platform please check if 
-this line somehow connected to (pulled up) a PMIC supply. If that is the 
-case, please keep that regulator ON and see if this issue is resolved.
-> Do you think it is not a good idea to revert 60f0187031c05e04cbadffb62f557d0ff3564490 ?
-> 
-Please hold on till we understand the real cause of this issue. Or we 
-have a consensuses for reverting the said commit.
-Thanks!
+> The root cause is that the _IOC macro can generate really large numbers,
+> which don't find into type 'int', which is used for the cmd paremeter in
+              ^^^^                                            ^^^^^^^^^
 
-> Regards.
+"which don't fit"
+"the cmd parameter"
+
+Regards.
+
+> the ioctls in scsi_host_template. My research into how GCC and Clang are
+> handling this at a low level didn't prove fruitful. However, looking at
+> the rest of the kernel tree, all ioctls use an 'unsigned int' for the
+> cmd parameter, which will fit all of the _IOC values in the scsi/ata
+> subsystems.
 > 
+> Make that change because none of the ioctls expect to take a negative
+> value, it brings the ioctls inline with the reset of the kernel, and it
+> removes ambiguity, which is never good when dealing with compilers.
 > 
+> Link: https://github.com/ClangBuiltLinux/linux/issues/85
+> Link: https://github.com/ClangBuiltLinux/linux/issues/154
+> Link: https://github.com/ClangBuiltLinux/linux/issues/157
+> Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
+> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+> ---
+> 
+> v3 -> v4:
+> 
+> * Repost with Bart's suggested change and his reviewed by (mainly as an
+>   excuse to repost with the below comment).
+> 
+> v2 -> v3:
+> 
+> * Fix another -Wswitch warning from drivers/scsi/cxlflash/main.c, coming
+>   from decode_hioctl (uncovered via a powernv_defconfig build).
+> 
+> v1 -> v2:
+> 
+> * Fix build breakage in cxlflash driver from forgetting to update
+>   prototype (thanks to 0day for catching it).
+> 
+> I apologize for resending this so soon after v3 but it has been three
+> months since I sent this patch and I have yet to receive a single
+> comment from ANY of the maintainers that './scripts/get_maintainer.pl'
+> spits out for this patch so it feels like I am sending it into the void.
+> 
+> I understand you all are busy people and such and maybe I am being
+> impatient but these warnings are rather spammy and we're trying to get
+> that category cleaned up as quick as possible so that new warnings are
+> easier to spot. I'd appreciate any and all reviews/acks/testing that I
+> can get on this patch (especially since it is so simple) so it can be
+> accepted and merged into mainline.
