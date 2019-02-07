@@ -1,48 +1,27 @@
-From: Avri Altman <Avri.Altman@wdc.com>
-Subject: RE: [PATCH v4 3/3] scsi: ufs-bsg: Allow reading descriptors
-Date: Thu, 7 Feb 2019 14:15:40 +0000
-Message-ID: <SN6PR04MB49259233067FBEC4AFA35963FC680@SN6PR04MB4925.namprd04.prod.outlook.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH v4 3/3] scsi: ufs-bsg: Allow reading descriptors
+Date: Thu, 07 Feb 2019 09:41:45 -0500
+Message-ID: <yq1bm3nzmmu.fsf@oracle.com>
 References: <1548572868-12589-1-git-send-email-avri.altman@wdc.com>
- <1548572868-12589-4-git-send-email-avri.altman@wdc.com>
- <CAE=gft6mLsW-iEBZ9pFRWWyDQz_gCs20_4JBoBzxL1tYv0rbYg@mail.gmail.com>
+        <1548572868-12589-4-git-send-email-avri.altman@wdc.com>
+        <CAE=gft6mLsW-iEBZ9pFRWWyDQz_gCs20_4JBoBzxL1tYv0rbYg@mail.gmail.com>
+        <SN6PR04MB49259233067FBEC4AFA35963FC680@SN6PR04MB4925.namprd04.prod.outlook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Language: en-US
+In-Reply-To: <SN6PR04MB49259233067FBEC4AFA35963FC680@SN6PR04MB4925.namprd04.prod.outlook.com>
+        (Avri Altman's message of "Thu, 7 Feb 2019 14:15:40 +0000")
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, SCSI <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Avi Shchislowski <Avi.Shchislowski@wdc.com>, Alex Lemberg <Alex.Lemberg@wdc.com>, Evan Green <evgreen@chromium.org>
+To: Avri Altman <Avri.Altman@wdc.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, SCSI <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Avi Shchislowski <Avi.Shchislowski@wdc.com>, Alex Lemberg <Alex.Lemberg@wdc.com>, Evan Green <evgreen@chromium.org>
 List-Id: linux-scsi@vger.kernel.org
 
-TWFydGluLA0KSXMgdGhlcmUgYW55IHJlYXNvbiB3aHkgdGhpcyBzaXJlcyBpcyBub3QgYXBwbGll
-ZCBmb3IgNS4xPw0KDQpUaGFua3MsDQpBdnJpDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0t
-LS0NCj4gRnJvbTogQXZyaSBBbHRtYW4NCj4gU2VudDogVHVlc2RheSwgRmVicnVhcnkgMDUsIDIw
-MTkgMjowNyBQTQ0KPiBUbzogTWFydGluIEsuIFBldGVyc2VuIDxtYXJ0aW4ucGV0ZXJzZW5Ab3Jh
-Y2xlLmNvbT4NCj4gQ2M6IEphbWVzIEUuSi4gQm90dG9tbGV5IDxqZWpiQGxpbnV4LnZuZXQuaWJt
-LmNvbT47IFNDU0kgPGxpbnV4LQ0KPiBzY3NpQHZnZXIua2VybmVsLm9yZz47IExLTUwgPGxpbnV4
-LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc+OyBBdmkNCj4gU2hjaGlzbG93c2tpIDxBdmkuU2hjaGlz
-bG93c2tpQHdkYy5jb20+OyBBbGV4IExlbWJlcmcNCj4gPEFsZXguTGVtYmVyZ0B3ZGMuY29tPjsg
-J0V2YW4gR3JlZW4nIDxldmdyZWVuQGNocm9taXVtLm9yZz4NCj4gU3ViamVjdDogUkU6IFtQQVRD
-SCB2NCAzLzNdIHNjc2k6IHVmcy1ic2c6IEFsbG93IHJlYWRpbmcgZGVzY3JpcHRvcnMNCj4gDQo+
-IE1hcnRpbiwNCj4gQW55IGZ1cnRoZXIgY29tbWVudHM/DQo+IA0KPiBUaGFua3MsDQo+IEF2cmkN
-Cj4gDQo+IA0KPiA+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+ID4gRnJvbTogRXZhbiBH
-cmVlbiA8ZXZncmVlbkBjaHJvbWl1bS5vcmc+DQo+ID4gU2VudDogTW9uZGF5LCBKYW51YXJ5IDI4
-LCAyMDE5IDg6NDIgUE0NCj4gPiBUbzogQXZyaSBBbHRtYW4gPEF2cmkuQWx0bWFuQHdkYy5jb20+
-DQo+ID4gQ2M6IEphbWVzIEUuSi4gQm90dG9tbGV5IDxqZWpiQGxpbnV4LnZuZXQuaWJtLmNvbT47
-IE1hcnRpbiBLLiBQZXRlcnNlbg0KPiA+IDxtYXJ0aW4ucGV0ZXJzZW5Ab3JhY2xlLmNvbT47IFND
-U0kgPGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnPjsgTEtNTA0KPiA+IDxsaW51eC1rZXJuZWxA
-dmdlci5rZXJuZWwub3JnPjsgQXZpIFNoY2hpc2xvd3NraQ0KPiA8QXZpLlNoY2hpc2xvd3NraUB3
-ZGMuY29tPjsNCj4gPiBBbGV4IExlbWJlcmcgPEFsZXguTGVtYmVyZ0B3ZGMuY29tPg0KPiA+IFN1
-YmplY3Q6IFJlOiBbUEFUQ0ggdjQgMy8zXSBzY3NpOiB1ZnMtYnNnOiBBbGxvdyByZWFkaW5nIGRl
-c2NyaXB0b3JzDQo+ID4NCj4gPiBPbiBTYXQsIEphbiAyNiwgMjAxOSBhdCAxMTowOCBQTSBBdnJp
-IEFsdG1hbiA8YXZyaS5hbHRtYW5Ad2RjLmNvbT4NCj4gd3JvdGU6DQo+ID4gPg0KPiA+ID4gQWRk
-IHRoaXMgZnVuY3Rpb25hbGl0eSwgcGxhY2luZyB0aGUgZGVzY3JpcHRvciBiZWluZyByZWFkIGlu
-IHRoZSBhY3R1YWwNCj4gPiA+IGRhdGEgYnVmZmVyIGluIHRoZSBiaW8uDQo+ID4gPg0KPiA+ID4g
-VGhhdCBpcywgZm9yIGJvdGggcmVhZCBhbmQgd3JpdGUgZGVzY3JpcHRvcnMgcXVlcnkgdXBpdSwg
-d2UgYXJlIHVzaW5nDQo+ID4gPiB0aGUgam9iJ3MgcmVxdWVzdF9wYXlsb2FkLiAgVGhpcyBpbiB0
-dXJuLCBpcyBtYXBwZWQgYmFjayBpbiB1c2VyIGxhbmQgdG8NCj4gPiA+IHRoZSBhcHBsaWNhYmxl
-IHNnX2lvX3Y0IHhmZXJwOiBkb3V0X3hmZXJwIGZvciB3cml0ZSBkZXNjcmlwdG9yLA0KPiA+ID4g
-YW5kIGRpbl94ZmVycCBmb3IgcmVhZCBkZXNjcmlwdG9yLg0KPiA+ID4NCj4gPiA+IFNpZ25lZC1v
-ZmYtYnk6IEF2cmkgQWx0bWFuIDxhdnJpLmFsdG1hbkB3ZGMuY29tPg0KPiA+DQo+ID4gUmV2aWV3
-ZWQtYnk6IEV2YW4gR3JlZW4gPGV2Z3JlZW5AY2hyb21pdW0ub3JnPg0K
+
+Avri,
+
+> Is there any reason why this sires is not applied for 5.1?
+
+I haven't had time to review it yet. I'll get there...
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
