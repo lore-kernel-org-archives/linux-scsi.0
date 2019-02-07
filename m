@@ -1,92 +1,105 @@
-From: Jeffrey Hugo <jhugo@codeaurora.org>
-Subject: Re: [PATCH v3 5/5] Revert "scsi: ufs: disable vccq if it's not needed
- by UFS device"
-Date: Thu, 7 Feb 2019 07:52:26 -0700
-Message-ID: <81b85f39-49b5-901b-ec79-19708509965e@codeaurora.org>
-References: <e3c82a49-c601-effc-348f-f768656c659f@free.fr>
- <CGME20190204174549epcas4p4682667176f55101f69cc24cc455c9f3c@epcas4p4.samsung.com>
- <70618c25-83f0-b9db-51a3-c1d74b605a45@free.fr>
- <5f2a8378-1f22-6a52-356d-56d3b393ab1d@samsung.com>
- <05d2d193-4181-12ce-b4fb-4e8dec5aef27@free.fr>
- <7610c262-1451-9bb2-48a6-4daf6f534f6c@free.fr>
- <42c86292-22e9-4c5e-d64d-bc6107af45bf@free.fr>
- <740e6332-b54f-ab62-915a-0aec6be450d3@samsung.com>
- <2a59c11a-037f-c8c3-235a-9b21183a0801@free.fr>
- <90f24b35-89b0-cea0-1ab3-13c2a419b138@samsung.com>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: LSF/MM 2019: Call for Proposals (UPDATED!)
+Date: Thu, 7 Feb 2019 08:35:06 -0700
+Message-ID: <4f5a15c1-4f9e-acae-5094-2f38c8eebd96@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <90f24b35-89b0-cea0-1ab3-13c2a419b138@samsung.com>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Alim Akhtar <alim.akhtar@samsung.com>, Marc Gonzalez <marc.w.gonzalez@free.fr>, MSM <linux-arm-msm@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
-Cc: Bjorn Andersson <bjorn.andersson@linaro.org>, Andy Gross <andy.gross@linaro.org>, David Brown <david.brown@linaro.org>, Evan Green <evgreen@chromium.org>, Douglas Anderson <dianders@chromium.org>, Avri Altman <avri.altman@wdc.com>, Pedro Sousa <pedrom.sousa@synopsys.com>, Subhash Jadavani <subhashj@codeaurora.org>, Bart Van Assche <bvanassche@acm.org>, SCSI <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>
+To: linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, bpf@vger.kernel.org, ast@kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 2/7/2019 1:50 AM, Alim Akhtar wrote:
-> Hi Marc,
-> 
-> On 06/02/19 9:22 PM, Marc Gonzalez wrote:
->> On 06/02/2019 16:27, Alim Akhtar wrote:
->>
->>> On 06/02/19 8:29 PM, Marc Gonzalez wrote:
->>>
->>>> [    2.405734] regulator_disable: ENTER vdd_l26
->>>> [    2.405958] regulator_disable: EXIT vdd_l26
->>>> [    2.406032]   regulator_set_load: vdd_l26 = 0 uA
->>>> [    3.930447] ufshcd-qcom 1da4000.ufshc: ufshcd_query_attr: opcode 0x04 for idn 13 failed, index 0, err = -11
->>>> [    5.434358] ufshcd-qcom 1da4000.ufshc: ufshcd_query_attr: opcode 0x04 for idn 13 failed, index 0, err = -11
->>>> [    6.938318] ufshcd-qcom 1da4000.ufshc: ufshcd_query_attr: opcode 0x04 for idn 13 failed, index 0, err = -11
->>>> [    6.938414] ufshcd-qcom 1da4000.ufshc: ufshcd_query_attr_retry: query attribute, idn 13, failed with error -11 after 3 retires
->>>> [    6.946959] ufshcd-qcom 1da4000.ufshc: ufshcd_disable_auto_bkops: failed to enable exception event -11
->>>> [    6.958523] ufshcd-qcom 1da4000.ufshc: dme-peer-get: attr-id 0x1587 failed 3 retries
->>>> [    6.967730] ufshcd-qcom 1da4000.ufshc: dme-peer-get: attr-id 0x1586 failed 3 retries
->>>> [    6.975576] ufshcd-qcom 1da4000.ufshc: ufshcd_get_max_pwr_mode: invalid max pwm tx gear read = 0
->>>> [    6.983306] ufshcd-qcom 1da4000.ufshc: ufshcd_probe_hba: Failed getting max supported power mode
->>>> [    8.506314] ufshcd-qcom 1da4000.ufshc: ufshcd_query_flag: Sending flag query for idn 3 failed, err = -11
->>>> [   10.010352] ufshcd-qcom 1da4000.ufshc: ufshcd_query_flag: Sending flag query for idn 3 failed, err = -11
->>>> [   11.514313] ufshcd-qcom 1da4000.ufshc: ufshcd_query_flag: Sending flag query for idn 3 failed, err = -11
->>>> [   11.514412] ufshcd-qcom 1da4000.ufshc: ufshcd_query_flag_retry: query attribute, opcode 5, idn 3, failed with error -11 after 3 retires
->>>> [   13.050354] ufshcd-qcom 1da4000.ufshc: __ufshcd_query_descriptor: opcode 0x01 for idn 8 failed, index 0, err = -11
->>>> [   14.554313] ufshcd-qcom 1da4000.ufshc: __ufshcd_query_descriptor: opcode 0x01 for idn 8 failed, index 0, err = -11
->>>> [   16.058313] ufshcd-qcom 1da4000.ufshc: __ufshcd_query_descriptor: opcode 0x01 for idn 8 failed, index 0, err = -11
->>>> [   16.058421] ufshcd-qcom 1da4000.ufshc: ufshcd_read_desc_param: Failed reading descriptor. desc_id 8, desc_index 0, param_offset 0, ret -11
->>>> [   16.067654] ufshcd-qcom 1da4000.ufshc: ufshcd_init_icc_levels: Failed reading power descriptor.len = 98 ret = -11
->>>> [   37.074334] ufshcd-qcom 1da4000.ufshc: link startup failed 1
->>>
->>> Can you check if your UFS device RESET_N is asserted correctly. It might
->>> be connected to some regulator and may be you can try keeping that
->>> regulator as "regulator-always-on" from your DT node.
->>
->> How do I check RESET_N? In software or hardware?
->>
-> RST_N is the reset logic for UFS device core logic and it is input to
-> the device from UFS host controller.So, in your platform please check if
-> this line somehow connected to (pulled up) a PMIC supply. If that is the
-> case, please keep that regulator ON and see if this issue is resolved.
+Hi,
 
-The reset line is routed though the global clock controller (GCC), and 
-must be explicitly asserted within the GCC to trigger a reset.  As far 
-as I am aware, Linux is not touching this.
+This is an important UPDATE to the previous LSF/MM announcement:
 
-Additionally, I fail to see how if this was a reset issue, reverting 
-60f0187031c0 would have any impact (which doing so addresses our issue)
+https://lore.kernel.org/linux-block/51b4b263-a0f2-113d-7bdc-f7960b540929@kernel.dk/
 
->> Do you think it is not a good idea to revert 60f0187031c05e04cbadffb62f557d0ff3564490 ?
->>
-> Please hold on till we understand the real cause of this issue. Or we
-> have a consensuses for reverting the said commit.
-> Thanks!
+A BPF track will join the annual LSF/MM Summit this year! Please read
+the updated description and CFP information below.
 
-Did you see https://lkml.org/lkml/2019/2/5/659 where I indicated VCCQ 
-powers components within the host controller, and by not setting load on 
-the regulator properly, we are likely undervolting those components due 
-to the current draw?
+It will be held from April 30 - May 2 at the Sheraton Puerto Rico Hotel &
+Casino Lodges in San Juan, Puerto Rico.
+LSF/MM is an invitation-only technical workshop to map out improvements to
+the Linux storage, filesystem, memory management, and bpf subsystems that
+will make their way into the mainline kernel within the coming years.
+
+https://events.linuxfoundation.org/events/linux-storage-filesystem-mm-summit-2019/
+
+LSF/MM 2019 will be a three day, stand-alone conference with three
+subsystem-specific tracks, cross-track discussions, as well as BoF and
+hacking sessions.
+
+On behalf of the committee I am issuing a call for agenda proposals
+that are suitable for cross-track discussion as well as technical
+subjects for the breakout sessions.
+
+If advance notice is required for visa applications then please point
+that out in your proposal or request to attend, and submit the topic
+as soon as possible.
+
+1) Proposals for agenda topics should be sent before February 22th,
+2019 to:
+
+	lsf-pc@lists.linux-foundation.org
+
+and CC the mailing lists that are relevant for the topic in question:
+
+	FS:	linux-fsdevel@vger.kernel.org
+	MM:	linux-mm@kvack.org
+	Block:	linux-block@vger.kernel.org
+	ATA:	linux-ide@vger.kernel.org
+	SCSI:	linux-scsi@vger.kernel.org
+	NVMe:	linux-nvme@lists.infradead.org
+        BPF:    bpf@vger.kernel.org
+
+Note that we have extended the original deadline by a week, to
+accommodate the late arrival of the BPF track.
+
+Please tag your proposal with [LSF/MM TOPIC] to make it easier to
+track. In addition, please make sure to start a new thread for each
+topic rather than following up to an existing one. Agenda topics and
+attendees will be selected by the program committee, but the final
+agenda will be formed by consensus of the attendees on the day.
+
+2) Requests to attend the summit for those that are not proposing a
+topic should be sent to:
+
+	lsf-pc@lists.linux-foundation.org
+
+Please summarize what expertise you will bring to the meeting, and
+what you would like to discuss. Please also tag your email with
+[LSF/MM ATTEND] and send it as a new thread so there is less chance of
+it getting lost.
+
+We will try to cap attendance at around 25-30 per track to facilitate
+discussions although the final numbers will depend on the room sizes
+at the venue. Note that BPF track will be limited to 10-15 attendees.
+
+For discussion leaders, slides and visualizations are encouraged to
+outline the subject matter and focus the discussions. Please refrain
+from lengthy presentations and talks; the sessions are supposed to be
+interactive, inclusive discussions.
+
+In particular BPF topics are encouraged to be storage, fs, mm, tracing,
+security related or advancing the state of the art of BPF core.
+BPF and networking related topics are recommended to be submitted for
+Linux Plumbers Conference and corresponding Networking and BPF microconf
+later this year.
+
+Thank you on behalf of the program committee:
+
+	Anna Schumaker (Filesystems)
+	Josef Bacik (Filesystems)
+	Martin K. Petersen (Storage)
+	Jens Axboe (Storage)
+	Michal Hocko (MM)
+	Rik van Riel (MM)
+	Johannes Weiner (MM)
+        Alexei Starovoitov (BPF)
 
 -- 
-Jeffrey Hugo
-Qualcomm Datacenter Technologies as an affiliate of Qualcomm 
-Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the
-Code Aurora Forum, a Linux Foundation Collaborative Project.
+Jens Axboe
