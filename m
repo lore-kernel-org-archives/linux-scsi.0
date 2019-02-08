@@ -1,125 +1,175 @@
-From: Evan Green <evgreen@chromium.org>
-Subject: Re: [PATCH v3 7/8] phy: qcom: Utilize UFS reset controller
-Date: Fri, 8 Feb 2019 10:59:49 -0800
-Message-ID: <CAE=gft5H1mWdi3iL22v2reD7AK4rwxwSq=YX2DpykAcys8fyZg@mail.gmail.com>
-References: <20190205185902.106085-1-evgreen@chromium.org> <20190205185902.106085-8-evgreen@chromium.org>
- <154948878332.115909.8361746129233481633@swboyd.mtv.corp.google.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 5.0-rc5
+Date: Fri, 08 Feb 2019 14:17:59 -0500
+Message-ID: <1549653479.3647.13.camel@HansenPartnership.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <154948878332.115909.8361746129233481633@swboyd.mtv.corp.google.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Stephen Boyd <swboyd@chromium.org>
-Cc: Andy Gross <andy.gross@linaro.org>, Kishon Vijay Abraham I <kishon@ti.com>, Marc Gonzalez <marc.w.gonzalez@free.fr>, Can Guo <cang@codeaurora.org>, Vivek Gautam <vivek.gautam@codeaurora.org>, Douglas Anderson <dianders@chromium.org>, Asutosh Das <asutoshd@codeaurora.org>, Jeffrey Hugo <jhugo@codeaurora.org>, Arnd Bergmann <arnd@arndb.de>, SCSI <linux-scsi@vger.kernel.org>, Grygorii Strashko <grygorii.strashko@ti.com>, Bjorn Andersson <bjorn.andersson@linaro.org>, LKML <linux-kernel@vger.kernel.org>, Manu Gautam <mgautam@codeaurora.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, Vinayak Holikatti <vinholikatti@gmail.com>
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Feb 6, 2019 at 1:33 PM Stephen Boyd <swboyd@chromium.org> wrote:
->
-> Quoting Evan Green (2019-02-05 10:59:01)
-> > diff --git a/drivers/phy/qualcomm/phy-qcom-ufs-qmp-20nm.c b/drivers/phy/qualcomm/phy-qcom-ufs-qmp-20nm.c
-> > index aef40f7a41d4..b05f89d734f0 100644
-> > --- a/drivers/phy/qualcomm/phy-qcom-ufs-qmp-20nm.c
-> > +++ b/drivers/phy/qualcomm/phy-qcom-ufs-qmp-20nm.c
-> > @@ -67,6 +67,16 @@ static int ufs_qcom_phy_qmp_20nm_init(struct phy *generic_phy)
-> >         bool is_rate_B = false;
-> >         int ret;
-> >
-> > +       ret = ufs_qcom_phy_get_reset(phy_common);
-> > +       if (ret)
-> > +               return ret;
-> > +
-> > +       if (phy_common->ufs_reset) {
-> > +               ret = reset_control_assert(phy_common->ufs_reset);
->
-> It looks like you can always call this and set phy_common->ufs_reset to
-> NULL when it should be a no-op. But it would never be NULL because we
-> would always fail earlier in ufs_qcom_phy_get_reset()?
+This is a set of five minor fixes (although, tecnhincally, the aicxxx
+fix is for a major problem in that the driver won't load without it,
+but I think the fact it's taken us since 4.10 to discover this
+indicates that the user base for these things has declined).
 
-True, I'll do this unconditionally.
+The patch is available here:
 
->
-> > +               if (ret)
-> > +                       return ret;
-> > +       }
-> > +
-> >         if (phy_common->mode == PHY_MODE_UFS_HS_B)
-> >                 is_rate_B = true;
-> >
-> > diff --git a/drivers/phy/qualcomm/phy-qcom-ufs.c b/drivers/phy/qualcomm/phy-qcom-ufs.c
-> > index f2979ccad00a..9cc8aa0b7a4f 100644
-> > --- a/drivers/phy/qualcomm/phy-qcom-ufs.c
-> > +++ b/drivers/phy/qualcomm/phy-qcom-ufs.c
-> > @@ -147,6 +147,22 @@ struct phy *ufs_qcom_phy_generic_probe(struct platform_device *pdev,
-> >  }
-> >  EXPORT_SYMBOL_GPL(ufs_qcom_phy_generic_probe);
-> >
-> > +int ufs_qcom_phy_get_reset(struct ufs_qcom_phy *phy_common)
-> > +{
-> > +       struct reset_control *reset;
-> > +
-> > +       if (phy_common->ufs_reset)
-> > +               return 0;
-> > +
-> > +       reset = devm_reset_control_get_exclusive_by_index(phy_common->dev, 0);
-> > +       if (IS_ERR(reset))
-> > +               return PTR_ERR(reset);
-> > +
-> > +       phy_common->ufs_reset = reset;
-> > +       return 0;
->
-> I find this API weird that it doesn't return the pointer to the reset
-> controller. It would be more kernel idiomatic if it returned the pointer
-> and used error pointers.
->
-> Are there now two places where we're getting the reset controller? I'm
-> confused now.
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-Yeah, this was never meant to be an API, just a little static helper
-function. But in order to structure the changes so that this change is
-strictly "move the reset" (and not "combine init and poweron"), I had
-to export this function and use it in the 14nm and 20nm init
-functions. Those drivers do init() entirely themselves, and don't call
-the common driver. In the next change, those init functions smoosh
-into the common power_on() here, and then this function goes from
-exported back to static. ... so yeah, temporary scaffolding to make
-the series clearer.
+The short changelog is:
 
->
-> > +}
-> > +EXPORT_SYMBOL_GPL(ufs_qcom_phy_get_reset);
-> > +
-> >  static int __ufs_qcom_phy_clk_get(struct device *dev,
-> >                          const char *name, struct clk **clk_out, bool err_print)
-> >  {
-> > @@ -533,6 +549,14 @@ int ufs_qcom_phy_power_on(struct phy *generic_phy)
-> >         if (phy_common->is_powered_on)
-> >                 return 0;
-> >
-> > +       if (phy_common->ufs_reset) {
-> > +               err = reset_control_deassert(phy_common->ufs_reset);
-> > +               if (err) {
-> > +                       dev_err(dev, "Failed to assert UFS PHY reset");
-> > +                       return err;
-> > +               }
-> > +       }
-> > +
-> >         if (!phy_common->is_started) {
-> >                 err = ufs_qcom_phy_start_serdes(phy_common);
-> >                 if (err)
-> > @@ -620,6 +644,9 @@ int ufs_qcom_phy_power_off(struct phy *generic_phy)
-> >
-> >         ufs_qcom_phy_disable_vreg(phy_common->dev, &phy_common->vdda_pll);
-> >         ufs_qcom_phy_disable_vreg(phy_common->dev, &phy_common->vdda_phy);
-> > +       if (phy_common->ufs_reset)
-> > +               reset_control_assert(phy_common->ufs_reset);
->
-> All these ifs can go away basically.
+Damien Le Moal (1):
+      scsi: sd_zbc: Fix zone information messages
 
-Righto.
+David Disseldorp (1):
+      scsi: target: make the pi_prot_format ConfigFS path readable
 
+James Bottomley (1):
+      scsi: aic94xx: fix module loading
 
->
-> > +
-> >         phy_common->is_powered_on = false;
-> >
-> >         return 0;
+Ross Lagerwall (1):
+      Revert "scsi: libfc: Add WARN_ON() when deleting rports"
+
+Vaibhav Jain (1):
+      scsi: cxlflash: Prevent deadlock when adapter probe fails
+
+And the diffstat:
+
+ drivers/scsi/aic94xx/aic94xx_init.c   |  8 ++++----
+ drivers/scsi/cxlflash/main.c          |  2 ++
+ drivers/scsi/libfc/fc_rport.c         |  1 -
+ drivers/scsi/sd_zbc.c                 | 12 ++++++++----
+ drivers/target/target_core_configfs.c |  8 +++++++-
+ 5 files changed, 21 insertions(+), 10 deletions(-)
+
+With full diff below.
+
+James
+
+---
+
+diff --git a/drivers/scsi/aic94xx/aic94xx_init.c b/drivers/scsi/aic94xx/aic94xx_init.c
+index f83f79b07b50..07efcb9b5b94 100644
+--- a/drivers/scsi/aic94xx/aic94xx_init.c
++++ b/drivers/scsi/aic94xx/aic94xx_init.c
+@@ -280,7 +280,7 @@ static ssize_t asd_show_dev_rev(struct device *dev,
+ 	return snprintf(buf, PAGE_SIZE, "%s\n",
+ 			asd_dev_rev[asd_ha->revision_id]);
+ }
+-static DEVICE_ATTR(revision, S_IRUGO, asd_show_dev_rev, NULL);
++static DEVICE_ATTR(aic_revision, S_IRUGO, asd_show_dev_rev, NULL);
+ 
+ static ssize_t asd_show_dev_bios_build(struct device *dev,
+ 				       struct device_attribute *attr,char *buf)
+@@ -477,7 +477,7 @@ static int asd_create_dev_attrs(struct asd_ha_struct *asd_ha)
+ {
+ 	int err;
+ 
+-	err = device_create_file(&asd_ha->pcidev->dev, &dev_attr_revision);
++	err = device_create_file(&asd_ha->pcidev->dev, &dev_attr_aic_revision);
+ 	if (err)
+ 		return err;
+ 
+@@ -499,13 +499,13 @@ static int asd_create_dev_attrs(struct asd_ha_struct *asd_ha)
+ err_biosb:
+ 	device_remove_file(&asd_ha->pcidev->dev, &dev_attr_bios_build);
+ err_rev:
+-	device_remove_file(&asd_ha->pcidev->dev, &dev_attr_revision);
++	device_remove_file(&asd_ha->pcidev->dev, &dev_attr_aic_revision);
+ 	return err;
+ }
+ 
+ static void asd_remove_dev_attrs(struct asd_ha_struct *asd_ha)
+ {
+-	device_remove_file(&asd_ha->pcidev->dev, &dev_attr_revision);
++	device_remove_file(&asd_ha->pcidev->dev, &dev_attr_aic_revision);
+ 	device_remove_file(&asd_ha->pcidev->dev, &dev_attr_bios_build);
+ 	device_remove_file(&asd_ha->pcidev->dev, &dev_attr_pcba_sn);
+ 	device_remove_file(&asd_ha->pcidev->dev, &dev_attr_update_bios);
+diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
+index bfa13e3b191c..c8bad2c093b8 100644
+--- a/drivers/scsi/cxlflash/main.c
++++ b/drivers/scsi/cxlflash/main.c
+@@ -3687,6 +3687,7 @@ static int cxlflash_probe(struct pci_dev *pdev,
+ 	host->max_cmd_len = CXLFLASH_MAX_CDB_LEN;
+ 
+ 	cfg = shost_priv(host);
++	cfg->state = STATE_PROBING;
+ 	cfg->host = host;
+ 	rc = alloc_mem(cfg);
+ 	if (rc) {
+@@ -3775,6 +3776,7 @@ static int cxlflash_probe(struct pci_dev *pdev,
+ 	return rc;
+ 
+ out_remove:
++	cfg->state = STATE_PROBED;
+ 	cxlflash_remove(pdev);
+ 	goto out;
+ }
+diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
+index 9192a1d9dec6..dfba4921b265 100644
+--- a/drivers/scsi/libfc/fc_rport.c
++++ b/drivers/scsi/libfc/fc_rport.c
+@@ -184,7 +184,6 @@ void fc_rport_destroy(struct kref *kref)
+ 	struct fc_rport_priv *rdata;
+ 
+ 	rdata = container_of(kref, struct fc_rport_priv, kref);
+-	WARN_ON(!list_empty(&rdata->peers));
+ 	kfree_rcu(rdata, rcu);
+ }
+ EXPORT_SYMBOL(fc_rport_destroy);
+diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
+index 83365b29a4d8..fff86940388b 100644
+--- a/drivers/scsi/sd_zbc.c
++++ b/drivers/scsi/sd_zbc.c
+@@ -462,12 +462,16 @@ int sd_zbc_read_zones(struct scsi_disk *sdkp, unsigned char *buf)
+ 	sdkp->device->use_10_for_rw = 0;
+ 
+ 	/*
+-	 * If something changed, revalidate the disk zone bitmaps once we have
+-	 * the capacity, that is on the second revalidate execution during disk
+-	 * scan and always during normal revalidate.
++	 * Revalidate the disk zone bitmaps once the block device capacity is
++	 * set on the second revalidate execution during disk scan and if
++	 * something changed when executing a normal revalidate.
+ 	 */
+-	if (sdkp->first_scan)
++	if (sdkp->first_scan) {
++		sdkp->zone_blocks = zone_blocks;
++		sdkp->nr_zones = nr_zones;
+ 		return 0;
++	}
++
+ 	if (sdkp->zone_blocks != zone_blocks ||
+ 	    sdkp->nr_zones != nr_zones ||
+ 	    disk->queue->nr_zones != nr_zones) {
+diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
+index 72016d0dfca5..8e7fffbb8802 100644
+--- a/drivers/target/target_core_configfs.c
++++ b/drivers/target/target_core_configfs.c
+@@ -852,6 +852,12 @@ static ssize_t pi_prot_type_store(struct config_item *item,
+ 	return count;
+ }
+ 
++/* always zero, but attr needs to remain RW to avoid userspace breakage */
++static ssize_t pi_prot_format_show(struct config_item *item, char *page)
++{
++	return snprintf(page, PAGE_SIZE, "0\n");
++}
++
+ static ssize_t pi_prot_format_store(struct config_item *item,
+ 		const char *page, size_t count)
+ {
+@@ -1132,7 +1138,7 @@ CONFIGFS_ATTR(, emulate_3pc);
+ CONFIGFS_ATTR(, emulate_pr);
+ CONFIGFS_ATTR(, pi_prot_type);
+ CONFIGFS_ATTR_RO(, hw_pi_prot_type);
+-CONFIGFS_ATTR_WO(, pi_prot_format);
++CONFIGFS_ATTR(, pi_prot_format);
+ CONFIGFS_ATTR(, pi_prot_verify);
+ CONFIGFS_ATTR(, enforce_pr_isids);
+ CONFIGFS_ATTR(, is_nonrot);
