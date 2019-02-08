@@ -1,39 +1,25 @@
-From: Marc Gonzalez <marc.w.gonzalez@free.fr>
-Subject: [PATCH v4 4/7] phy: qcom-qmp: Add QMP UFS PHY support for msm8998
-Date: Fri, 8 Feb 2019 23:14:30 +0100
-Message-ID: <0ec5703a-85da-0b54-22fc-2094562b187e@free.fr>
-References: <09ce9c20-c47b-f936-a8a9-6c8ec8f0f867@free.fr>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH v5] scsi/ata: Use unsigned int for cmd's type in ioctls in scsi_host_template
+Date: Fri, 08 Feb 2019 17:33:22 -0500
+Message-ID: <yq1pns1x64t.fsf@oracle.com>
+References: <20190126075256.29608-1-natechancellor@gmail.com>
+        <20190207160719.28895-1-natechancellor@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <09ce9c20-c47b-f936-a8a9-6c8ec8f0f867@free.fr>
+In-Reply-To: <20190207160719.28895-1-natechancellor@gmail.com> (Nathan
+        Chancellor's message of "Thu, 7 Feb 2019 09:07:20 -0700")
 Sender: linux-kernel-owner@vger.kernel.org
-To: MSM <linux-arm-msm@vger.kernel.org>, SCSI <linux-scsi@vger.kernel.org>
-Cc: Jeffrey Hugo <jhugo@codeaurora.org>, Bjorn Andersson <bjorn.andersson@linaro.org>, Andy Gross <andy.gross@linaro.org>, David Brown <david.brown@linaro.org>, Evan Green <evgreen@chromium.org>, Douglas Anderson <dianders@chromium.org>, Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, Pedro Sousa <pedrom.sousa@synopsys.com>, Rob Herring <robh+dt@kernel.org>, Kishon Vijay Abraham <kishon@ti.com>, Liam Girdwood <lgirdwood@gmail.com>, Mark Brown <broonie@kernel.org>, Martin Petersen <martin.petersen@oracle.com>, LKML <linux-kernel@vger.kernel.org>
+To: Nathan Chancellor <natechancellor@gmail.com>
+Cc: Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Manoj N. Kumar" <manoj@linux.ibm.com>, "Matthew R. Ochs" <mrochs@linux.ibm.com>, Uma Krishnan <ukrishn@linux.ibm.com>, Brian King <brking@us.ibm.com>, Adaptec OEM Raid Solutions <aacraid@microsemi.com>, Marc Gonzalez <marc.w.gonzalez@free.fr>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, esc.storagedev@microsemi.com, Bradley Grove <bgrove@attotech.com>, Don Brace <don.brace@microsemi.com>, Bart Van Assche <bvanassche@acm.org>, Nick Desaulniers <ndesaulniers@google.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Use same init sequence as sdm845.
 
-Reviewed-by: Jeffrey Hugo <jhugo@codeaurora.org>
-Signed-off-by: Marc Gonzalez <marc.w.gonzalez@free.fr>
----
- drivers/phy/qualcomm/phy-qcom-qmp.c | 3 +++
- 1 file changed, 3 insertions(+)
+Nathan,
 
-diff --git a/drivers/phy/qualcomm/phy-qcom-qmp.c b/drivers/phy/qualcomm/phy-qcom-qmp.c
-index daf751500232..08d6f6f7f039 100644
---- a/drivers/phy/qualcomm/phy-qcom-qmp.c
-+++ b/drivers/phy/qualcomm/phy-qcom-qmp.c
-@@ -1872,6 +1872,9 @@ static const struct of_device_id qcom_qmp_phy_of_match_table[] = {
- 	}, {
- 		.compatible = "qcom,msm8996-qmp-usb3-phy",
- 		.data = &msm8996_usb3phy_cfg,
-+	}, {
-+		.compatible = "qcom,msm8998-qmp-ufs-phy",
-+		.data = &sdm845_ufsphy_cfg,
- 	}, {
- 		.compatible = "qcom,ipq8074-qmp-pcie-phy",
- 		.data = &ipq8074_pciephy_cfg,
+> Clang warns several times in the scsi subsystem (trimmed for brevity):
+
+Applied to 5.1/scsi-queue, thanks!
+
 -- 
-2.17.1
+Martin K. Petersen	Oracle Linux Engineering
