@@ -1,7 +1,8 @@
 From: Marc Gonzalez <marc.w.gonzalez@free.fr>
-Subject: [PATCH v4 5/7] arm64: dts: qcom: msm8998: Allow drivers to set-load
-Date: Fri, 8 Feb 2019 23:15:20 +0100
-Message-ID: <31519816-a641-ebfe-64c7-039aff074187@free.fr>
+Subject: [PATCH v4 6/7] Revert "scsi: ufs: disable vccq if it's not needed by
+ UFS device"
+Date: Fri, 8 Feb 2019 23:20:24 +0100
+Message-ID: <817ff724-2a30-99fb-8a92-c77797651bde@free.fr>
 References: <09ce9c20-c47b-f936-a8a9-6c8ec8f0f867@free.fr>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-15
@@ -13,43 +14,139 @@ To: MSM <linux-arm-msm@vger.kernel.org>, SCSI <linux-scsi@vger.kernel.org>
 Cc: Jeffrey Hugo <jhugo@codeaurora.org>, Bjorn Andersson <bjorn.andersson@linaro.org>, Andy Gross <andy.gross@linaro.org>, David Brown <david.brown@linaro.org>, Evan Green <evgreen@chromium.org>, Douglas Anderson <dianders@chromium.org>, Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, Pedro Sousa <pedrom.sousa@synopsys.com>, Rob Herring <robh+dt@kernel.org>, Kishon Vijay Abraham <kishon@ti.com>, Liam Girdwood <lgirdwood@gmail.com>, Mark Brown <broonie@kernel.org>, Martin Petersen <martin.petersen@oracle.com>, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-The UFS host controller driver needs to set the load on 3 power rails
-(l20, l26, s4) but the operation fails silently unless we specify the
-regulator-allow-set-load property in the corresponding DT nodes.
+This reverts commit 60f0187031c05e04cbadffb62f557d0ff3564490.
+
+Calling ufshcd_set_vccq_rail_unused() breaks UFS init on two boards.
+I would say that vccq is *not* not needed.
 
 Reviewed-by: Jeffrey Hugo <jhugo@codeaurora.org>
 Signed-off-by: Marc Gonzalez <marc.w.gonzalez@free.fr>
 ---
- arch/arm64/boot/dts/qcom/msm8998-mtp.dtsi | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/scsi/ufs/ufs.h    |  1 -
+ drivers/scsi/ufs/ufshcd.c | 59 +++------------------------------------
+ 2 files changed, 4 insertions(+), 56 deletions(-)
 
-diff --git a/arch/arm64/boot/dts/qcom/msm8998-mtp.dtsi b/arch/arm64/boot/dts/qcom/msm8998-mtp.dtsi
-index f0901067b043..19775cae1381 100644
---- a/arch/arm64/boot/dts/qcom/msm8998-mtp.dtsi
-+++ b/arch/arm64/boot/dts/qcom/msm8998-mtp.dtsi
-@@ -111,6 +111,7 @@
- 		vreg_s4a_1p8: s4 {
- 			regulator-min-microvolt = <1800000>;
- 			regulator-max-microvolt = <1800000>;
-+			regulator-allow-set-load;
- 		};
- 		vreg_s5a_2p04: s5 {
- 			regulator-min-microvolt = <1904000>;
-@@ -195,6 +196,7 @@
- 		vreg_l20a_2p95: l20 {
- 			regulator-min-microvolt = <2960000>;
- 			regulator-max-microvolt = <2960000>;
-+			regulator-allow-set-load;
- 		};
- 		vreg_l21a_2p95: l21 {
- 			regulator-min-microvolt = <2960000>;
-@@ -221,6 +223,7 @@
- 		vreg_l26a_1p2: l26 {
- 			regulator-min-microvolt = <1200000>;
- 			regulator-max-microvolt = <1200000>;
-+			regulator-allow-set-load;
- 		};
- 		vreg_l28_3p0: l28 {
- 			regulator-min-microvolt = <3008000>;
+diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+index 6d176815e6ce..21e4ccb5ba6e 100644
+--- a/drivers/scsi/ufs/ufs.h
++++ b/drivers/scsi/ufs/ufs.h
+@@ -514,7 +514,6 @@ struct ufs_vreg {
+ 	struct regulator *reg;
+ 	const char *name;
+ 	bool enabled;
+-	bool unused;
+ 	int min_uV;
+ 	int max_uV;
+ 	int min_uA;
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 4bc55a2f5689..c78f5f199aff 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -254,7 +254,6 @@ static int ufshcd_probe_hba(struct ufs_hba *hba);
+ static int __ufshcd_setup_clocks(struct ufs_hba *hba, bool on,
+ 				 bool skip_ref_clk);
+ static int ufshcd_setup_clocks(struct ufs_hba *hba, bool on);
+-static int ufshcd_set_vccq_rail_unused(struct ufs_hba *hba, bool unused);
+ static int ufshcd_uic_hibern8_exit(struct ufs_hba *hba);
+ static int ufshcd_uic_hibern8_enter(struct ufs_hba *hba);
+ static inline void ufshcd_add_delay_before_dme_cmd(struct ufs_hba *hba);
+@@ -5857,11 +5856,6 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
+ 	ufs_fixup_device_setup(hba, &card);
+ 	ufshcd_tune_unipro_params(hba);
+ 
+-	ret = ufshcd_set_vccq_rail_unused(hba,
+-		(hba->dev_quirks & UFS_DEVICE_NO_VCCQ) ? true : false);
+-	if (ret)
+-		goto out;
+-
+ 	/* UFS device is also active now */
+ 	ufshcd_set_ufs_dev_active(hba);
+ 	ufshcd_force_reset_auto_bkops(hba);
+@@ -6030,24 +6024,13 @@ static int ufshcd_config_vreg_load(struct device *dev, struct ufs_vreg *vreg,
+ static inline int ufshcd_config_vreg_lpm(struct ufs_hba *hba,
+ 					 struct ufs_vreg *vreg)
+ {
+-	if (!vreg)
+-		return 0;
+-	else if (vreg->unused)
+-		return 0;
+-	else
+-		return ufshcd_config_vreg_load(hba->dev, vreg,
+-					       UFS_VREG_LPM_LOAD_UA);
++	return ufshcd_config_vreg_load(hba->dev, vreg, UFS_VREG_LPM_LOAD_UA);
+ }
+ 
+ static inline int ufshcd_config_vreg_hpm(struct ufs_hba *hba,
+ 					 struct ufs_vreg *vreg)
+ {
+-	if (!vreg)
+-		return 0;
+-	else if (vreg->unused)
+-		return 0;
+-	else
+-		return ufshcd_config_vreg_load(hba->dev, vreg, vreg->max_uA);
++	return ufshcd_config_vreg_load(hba->dev, vreg, vreg->max_uA);
+ }
+ 
+ static int ufshcd_config_vreg(struct device *dev,
+@@ -6085,9 +6068,7 @@ static int ufshcd_enable_vreg(struct device *dev, struct ufs_vreg *vreg)
+ {
+ 	int ret = 0;
+ 
+-	if (!vreg)
+-		goto out;
+-	else if (vreg->enabled || vreg->unused)
++	if (!vreg || vreg->enabled)
+ 		goto out;
+ 
+ 	ret = ufshcd_config_vreg(dev, vreg, true);
+@@ -6107,9 +6088,7 @@ static int ufshcd_disable_vreg(struct device *dev, struct ufs_vreg *vreg)
+ {
+ 	int ret = 0;
+ 
+-	if (!vreg)
+-		goto out;
+-	else if (!vreg->enabled || vreg->unused)
++	if (!vreg || !vreg->enabled)
+ 		goto out;
+ 
+ 	ret = regulator_disable(vreg->reg);
+@@ -6215,36 +6194,6 @@ static int ufshcd_init_hba_vreg(struct ufs_hba *hba)
+ 	return 0;
+ }
+ 
+-static int ufshcd_set_vccq_rail_unused(struct ufs_hba *hba, bool unused)
+-{
+-	int ret = 0;
+-	struct ufs_vreg_info *info = &hba->vreg_info;
+-
+-	if (!info)
+-		goto out;
+-	else if (!info->vccq)
+-		goto out;
+-
+-	if (unused) {
+-		/* shut off the rail here */
+-		ret = ufshcd_toggle_vreg(hba->dev, info->vccq, false);
+-		/*
+-		 * Mark this rail as no longer used, so it doesn't get enabled
+-		 * later by mistake
+-		 */
+-		if (!ret)
+-			info->vccq->unused = true;
+-	} else {
+-		/*
+-		 * rail should have been already enabled hence just make sure
+-		 * that unused flag is cleared.
+-		 */
+-		info->vccq->unused = false;
+-	}
+-out:
+-	return ret;
+-}
+-
+ static int __ufshcd_setup_clocks(struct ufs_hba *hba, bool on,
+ 					bool skip_ref_clk)
+ {
 -- 
 2.17.1
