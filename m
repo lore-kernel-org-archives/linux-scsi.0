@@ -1,59 +1,125 @@
-From: Nathan Chancellor <natechancellor@gmail.com>
-Subject: Re: [PATCH v5] scsi/ata: Use unsigned int for cmd's type in ioctls
- in scsi_host_template
-Date: Fri, 8 Feb 2019 09:00:44 -0700
-Message-ID: <20190208160044.GB26005@archlinux-ryzen>
-References: <20190126075256.29608-1-natechancellor@gmail.com>
- <20190207160719.28895-1-natechancellor@gmail.com>
- <20190208080501.GA18530@infradead.org>
+From: Evan Green <evgreen@chromium.org>
+Subject: Re: [PATCH v3 7/8] phy: qcom: Utilize UFS reset controller
+Date: Fri, 8 Feb 2019 10:59:49 -0800
+Message-ID: <CAE=gft5H1mWdi3iL22v2reD7AK4rwxwSq=YX2DpykAcys8fyZg@mail.gmail.com>
+References: <20190205185902.106085-1-evgreen@chromium.org> <20190205185902.106085-8-evgreen@chromium.org>
+ <154948878332.115909.8361746129233481633@swboyd.mtv.corp.google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20190208080501.GA18530@infradead.org>
+In-Reply-To: <154948878332.115909.8361746129233481633@swboyd.mtv.corp.google.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Manoj N. Kumar" <manoj@linux.ibm.com>, "Matthew R. Ochs" <mrochs@linux.ibm.com>, Uma Krishnan <ukrishn@linux.ibm.com>, Brian King <brking@us.ibm.com>, Adaptec OEM Raid Solutions <aacraid@microsemi.com>, Marc Gonzalez <marc.w.gonzalez@free.fr>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, esc.storagedev@microsemi.com, Bradley Grove <bgrove@attotech.com>, Don Brace <don.brace@microsemi.com>, Bart Van Assche <bvanassche@acm.org>, Nick Desaulniers <ndesaulniers@google.com>
+To: Stephen Boyd <swboyd@chromium.org>
+Cc: Andy Gross <andy.gross@linaro.org>, Kishon Vijay Abraham I <kishon@ti.com>, Marc Gonzalez <marc.w.gonzalez@free.fr>, Can Guo <cang@codeaurora.org>, Vivek Gautam <vivek.gautam@codeaurora.org>, Douglas Anderson <dianders@chromium.org>, Asutosh Das <asutoshd@codeaurora.org>, Jeffrey Hugo <jhugo@codeaurora.org>, Arnd Bergmann <arnd@arndb.de>, SCSI <linux-scsi@vger.kernel.org>, Grygorii Strashko <grygorii.strashko@ti.com>, Bjorn Andersson <bjorn.andersson@linaro.org>, LKML <linux-kernel@vger.kernel.org>, Manu Gautam <mgautam@codeaurora.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, Vinayak Holikatti <vinholikatti@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Feb 08, 2019 at 12:05:01AM -0800, Christoph Hellwig wrote:
-> On Thu, Feb 07, 2019 at 09:07:20AM -0700, Nathan Chancellor wrote:
-> > Clang warns several times in the scsi subsystem (trimmed for brevity):
-> > 
-> > drivers/scsi/hpsa.c:6209:7: warning: overflow converting case value to
-> > switch condition type (2147762695 to 18446744071562347015) [-Wswitch]
-> >         case CCISS_GETBUSTYPES:
-> >              ^
-> > drivers/scsi/hpsa.c:6208:7: warning: overflow converting case value to
-> > switch condition type (2147762694 to 18446744071562347014) [-Wswitch]
-> >         case CCISS_GETHEARTBEAT:
-> >              ^
-> > 
-> > The root cause is that the _IOC macro can generate really large numbers,
-> > which don't fit into type 'int', which is used for the cmd parameter in
-> > the ioctls in scsi_host_template. My research into how GCC and Clang are
-> > handling this at a low level didn't prove fruitful. However, looking at
-> > the rest of the kernel tree, all ioctls use an 'unsigned int' for the
-> > cmd parameter, which will fit all of the _IOC values in the scsi/ata
-> > subsystems.
-> > 
-> > Make that change because none of the ioctls expect a negative value for
-> > any command, it brings the ioctls inline with the reset of the kernel,
-> > and it removes ambiguity, which is never good when dealing with compilers.
-> > 
-> > Link: https://github.com/ClangBuiltLinux/linux/issues/85
-> > Link: https://github.com/ClangBuiltLinux/linux/issues/154
-> > Link: https://github.com/ClangBuiltLinux/linux/issues/157
-> > Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
-> > Acked-by: Bradley Grove <bgrove@attotech.com>
-> > Acked-by: Don Brace <don.brace@microsemi.com>
-> > Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-> > Tested-by: Nick Desaulniers <ndesaulniers@google.com>
-> 
-> Looks good:
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+On Wed, Feb 6, 2019 at 1:33 PM Stephen Boyd <swboyd@chromium.org> wrote:
+>
+> Quoting Evan Green (2019-02-05 10:59:01)
+> > diff --git a/drivers/phy/qualcomm/phy-qcom-ufs-qmp-20nm.c b/drivers/phy/qualcomm/phy-qcom-ufs-qmp-20nm.c
+> > index aef40f7a41d4..b05f89d734f0 100644
+> > --- a/drivers/phy/qualcomm/phy-qcom-ufs-qmp-20nm.c
+> > +++ b/drivers/phy/qualcomm/phy-qcom-ufs-qmp-20nm.c
+> > @@ -67,6 +67,16 @@ static int ufs_qcom_phy_qmp_20nm_init(struct phy *generic_phy)
+> >         bool is_rate_B = false;
+> >         int ret;
+> >
+> > +       ret = ufs_qcom_phy_get_reset(phy_common);
+> > +       if (ret)
+> > +               return ret;
+> > +
+> > +       if (phy_common->ufs_reset) {
+> > +               ret = reset_control_assert(phy_common->ufs_reset);
+>
+> It looks like you can always call this and set phy_common->ufs_reset to
+> NULL when it should be a no-op. But it would never be NULL because we
+> would always fail earlier in ufs_qcom_phy_get_reset()?
 
-Thank you for the review, it is much appreciated!
+True, I'll do this unconditionally.
 
-Nathan
+>
+> > +               if (ret)
+> > +                       return ret;
+> > +       }
+> > +
+> >         if (phy_common->mode == PHY_MODE_UFS_HS_B)
+> >                 is_rate_B = true;
+> >
+> > diff --git a/drivers/phy/qualcomm/phy-qcom-ufs.c b/drivers/phy/qualcomm/phy-qcom-ufs.c
+> > index f2979ccad00a..9cc8aa0b7a4f 100644
+> > --- a/drivers/phy/qualcomm/phy-qcom-ufs.c
+> > +++ b/drivers/phy/qualcomm/phy-qcom-ufs.c
+> > @@ -147,6 +147,22 @@ struct phy *ufs_qcom_phy_generic_probe(struct platform_device *pdev,
+> >  }
+> >  EXPORT_SYMBOL_GPL(ufs_qcom_phy_generic_probe);
+> >
+> > +int ufs_qcom_phy_get_reset(struct ufs_qcom_phy *phy_common)
+> > +{
+> > +       struct reset_control *reset;
+> > +
+> > +       if (phy_common->ufs_reset)
+> > +               return 0;
+> > +
+> > +       reset = devm_reset_control_get_exclusive_by_index(phy_common->dev, 0);
+> > +       if (IS_ERR(reset))
+> > +               return PTR_ERR(reset);
+> > +
+> > +       phy_common->ufs_reset = reset;
+> > +       return 0;
+>
+> I find this API weird that it doesn't return the pointer to the reset
+> controller. It would be more kernel idiomatic if it returned the pointer
+> and used error pointers.
+>
+> Are there now two places where we're getting the reset controller? I'm
+> confused now.
+
+Yeah, this was never meant to be an API, just a little static helper
+function. But in order to structure the changes so that this change is
+strictly "move the reset" (and not "combine init and poweron"), I had
+to export this function and use it in the 14nm and 20nm init
+functions. Those drivers do init() entirely themselves, and don't call
+the common driver. In the next change, those init functions smoosh
+into the common power_on() here, and then this function goes from
+exported back to static. ... so yeah, temporary scaffolding to make
+the series clearer.
+
+>
+> > +}
+> > +EXPORT_SYMBOL_GPL(ufs_qcom_phy_get_reset);
+> > +
+> >  static int __ufs_qcom_phy_clk_get(struct device *dev,
+> >                          const char *name, struct clk **clk_out, bool err_print)
+> >  {
+> > @@ -533,6 +549,14 @@ int ufs_qcom_phy_power_on(struct phy *generic_phy)
+> >         if (phy_common->is_powered_on)
+> >                 return 0;
+> >
+> > +       if (phy_common->ufs_reset) {
+> > +               err = reset_control_deassert(phy_common->ufs_reset);
+> > +               if (err) {
+> > +                       dev_err(dev, "Failed to assert UFS PHY reset");
+> > +                       return err;
+> > +               }
+> > +       }
+> > +
+> >         if (!phy_common->is_started) {
+> >                 err = ufs_qcom_phy_start_serdes(phy_common);
+> >                 if (err)
+> > @@ -620,6 +644,9 @@ int ufs_qcom_phy_power_off(struct phy *generic_phy)
+> >
+> >         ufs_qcom_phy_disable_vreg(phy_common->dev, &phy_common->vdda_pll);
+> >         ufs_qcom_phy_disable_vreg(phy_common->dev, &phy_common->vdda_phy);
+> > +       if (phy_common->ufs_reset)
+> > +               reset_control_assert(phy_common->ufs_reset);
+>
+> All these ifs can go away basically.
+
+Righto.
+
+
+>
+> > +
+> >         phy_common->is_powered_on = false;
+> >
+> >         return 0;
