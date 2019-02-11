@@ -1,67 +1,55 @@
-From: James Smart <james.smart@broadcom.com>
-Subject: Re: [PATCH] scsi: lpfc: fix calls to dma_set_mask_and_coherent()
-Date: Mon, 11 Feb 2019 11:19:51 -0800
-Message-ID: <313fc267-4954-76ef-2102-f15da7ddad36@broadcom.com>
-References: <20190211150502.9999-1-emilne@redhat.com>
+From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Subject: [PATCH] scsi: mptfusion: mark expected switch fall-through
+Date: Mon, 11 Feb 2019 16:45:30 -0600
+Message-ID: <20190211224530.GA12844@embeddedor>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20190211150502.9999-1-emilne@redhat.com>
-Content-Language: en-US
-Sender: stable-owner@vger.kernel.org
-To: "Ewan D. Milne" <emilne@redhat.com>, linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org
-Cc: stable@vger.kernel.org, dick.kennedy@broadcom.com, martin.petersen@oracle.com, jejb@linux.ibm.com
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
+Cc: MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Gustavo A. R. Silva" <gustavo@embeddedor.com>, Kees Cook <keescook@chromium.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 2/11/2019 7:05 AM, Ewan D. Milne wrote:
-> The change to use dma_set_mask_and_coherent() incorrectly made a second
-> call with the 32 bit DMA mask value when the call with the 64 bit DMA
-> mask value succeeded.  This resulted in NVMe/FC connections failing due
-> to corrupted data buffers, and various other SCSI/FCP I/O errors.
->
-> Fixes: f30e1bfd6154 ("scsi: lpfc: use dma_set_mask_and_coherent")
-> Cc: <stable@vger.kernel.org>
-> Suggested-by: Don Dutile <ddutile@redhat.com>
-> Signed-off-by: Ewan D. Milne <emilne@redhat.com>
-> ---
->   drivers/scsi/lpfc/lpfc_init.c | 12 ++++++------
->   1 file changed, 6 insertions(+), 6 deletions(-)
->
-> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-> index bede11e..60c178d 100644
-> --- a/drivers/scsi/lpfc/lpfc_init.c
-> +++ b/drivers/scsi/lpfc/lpfc_init.c
-> @@ -7367,9 +7367,9 @@ struct lpfc_rpi_hdr *
->   		return error;
->   
->   	/* Set the device DMA mask size */
-> -	if (dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64)) ||
-> -	    dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32)))
-> -		return error;
-> +	if (dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64)) != 0)
-> +		if (dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32)) != 0)
-> +			return error;
->   
->   	/* Get the bus address of Bar0 and Bar2 and the number of bytes
->   	 * required by each mapping.
-> @@ -9745,9 +9745,9 @@ struct lpfc_cq_event *
->   		return error;
->   
->   	/* Set the device DMA mask size */
-> -	if (dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64)) ||
-> -	    dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32)))
-> -		return error;
-> +	if (dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64)) != 0)
-> +		if (dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32)) != 0)
-> +			return error;
->   
->   	/*
->   	 * The BARs and register set definitions and offset locations are
+In preparation to enabling -Wimplicit-fallthrough, mark switch
+cases where we are expecting to fall through.
 
-Thanks Ewan.
+This patch fixes the following warning:
 
+drivers/message/fusion/mptbase.c: In function ‘mptbase_reply’:
+drivers/message/fusion/mptbase.c:643:6: warning: this statement may fall through [-Wimplicit-fallthrough=]
+   if (event != MPI_EVENT_EVENT_CHANGE)
+      ^
+drivers/message/fusion/mptbase.c:646:2: note: here
+  case MPI_FUNCTION_CONFIG:
+  ^~~~
 
-Signed-off-by:  James Smart  <james.smart@broadcom.com>
+Warning level 3 was used: -Wimplicit-fallthrough=3
 
--- james
+Notice that, in this particular case, the code comment is modified
+in accordance with what GCC is expecting to find.
+
+This patch is part of the ongoing efforts to enable
+-Wimplicit-fallthrough.
+
+Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+---
+ drivers/message/fusion/mptbase.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+index ba551d8dfba4..d8882b0a1338 100644
+--- a/drivers/message/fusion/mptbase.c
++++ b/drivers/message/fusion/mptbase.c
+@@ -642,7 +642,7 @@ mptbase_reply(MPT_ADAPTER *ioc, MPT_FRAME_HDR *req, MPT_FRAME_HDR *reply)
+ 			freereq = 0;
+ 		if (event != MPI_EVENT_EVENT_CHANGE)
+ 			break;
+-		/* else: fall through */
++		/* fall through */
+ 	case MPI_FUNCTION_CONFIG:
+ 	case MPI_FUNCTION_SAS_IO_UNIT_CONTROL:
+ 		ioc->mptbase_cmds.status |= MPT_MGMT_STATUS_COMMAND_GOOD;
+-- 
+2.20.1
