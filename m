@@ -1,163 +1,190 @@
-From: Jeremy Cline <jeremy@jcline.org>
-Subject: Re: [PATCH] scsi: sd: block: Handle cases where devices come online
- read-only
-Date: Mon, 11 Feb 2019 15:50:28 +0000
-Message-ID: <01000168dd40a901-e418f724-3fe3-47e3-bbea-05fea79f169e-000000@email.amazonses.com>
-References: <20190208233831.31377-1-martin.petersen@oracle.com>
+From: Sedat Dilek <sedat.dilek@credativ.de>
+Subject: [PATCH RFC v2] fcoe: make use of fip_mode enum complete
+Date: Mon, 11 Feb 2019 18:07:51 +0100
+Message-ID: <20190211170751.1687-1-sedat.dilek@credativ.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20190208233831.31377-1-martin.petersen@oracle.com>
-Content-Language: en-US
-Sender: stable-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
-Cc: Oleksii Kurochko <olkuroch@cisco.com>, stable@vger.kernel.org
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: QLogic-Storage-Upstream@qlogic.com, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Johannes Thumshirn <jth@kernel.org>, QLogic-Storage-Upstream@cavium.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Sedat Dilek <sedat.dilek@gmail.com>, Lukas Bulwahn <lukas.bulwahn@gmail.com>, Nick Desaulniers <ndesaulniers@google.com>, Nathan Chancellor <natechancellor@gmail.com>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 
-On 2/8/19 6:38 PM, Martin K. Petersen wrote:
-> Some devices come online in write protected state and switch to
-> read-write once they are ready to process I/O requests. These devices
-> broke with commit 20bd1d026aac ("scsi: sd: Keep disk read-only when
-> re-reading partition") because we have no way to distinguish between a
-> user decision to set a block_device read-only and the disk being write
-> protected as a result of the hardware state.
-> 
-> To overcome this we add a third state to the gendisk read-only
-> policy. This flag is exlusively used when the user forces a struct
-> block_device read-only via BLKROSET. We currently don't allow
-> switching ro state in sysfs so the ioctl is the only entry point for
-> this new state.
-> 
-> In set_disk_ro() we check whether the user override flag is in effect
-> for a disk before changing read-only state based on the device
-> settings. This means that devices that have a delay before going
-> read-write will now be able to clear the read-only state. And devices
-> where the admin or udev has forced the disk read-only will not cause
-> the gendisk policy to reflect the mode reported by the device.
-> 
-> Cc: Jeremy Cline <jeremy@jcline.org>
-> Cc: Oleksii Kurochko <olkuroch@cisco.com>
-> Cc: stable@vger.kernel.org # v4.16+
-> Reported-by: Oleksii Kurochko <olkuroch@cisco.com>
-> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=201221
-> Fixes: 20bd1d026aac ("scsi: sd: Keep disk read-only when re-reading partition")
-> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-> 
-> ---
-> 
-> I have verified that get_disk_ro() and bdev_read_only() callers all
-> handle the additional value correctly. Same is true for "ro" in
-> sysfs.
-> 
-> Note that per-partition ro settings are lost on revalidate. This has
-> been broken for at least a decade and it will require major surgery to
-> fix. To my knowledge nobody has complained about being unable to make
-> partition read-only settings stick through a revalidate. So hopefully
-> this patch will suffice as a simple fix for stable.
-> ---
+From: Sedat Dilek <sedat.dilek@gmail.com>
 
-Oof, my apologies for this regression. This looks like nice, tidy way to
-fix it.
+commit 1917d42d14b7 ("fcoe: use enum for fip_mode") introduces a separate
+enum for the fip_mode that shall be used during initialisation handling
+until it is passed to fcoe_ctrl_link_up to set the initial fip_state.
+That change was incomplete and gcc quietly converted in various places
+between the fip_mode and the fip_state enum values with implicit enum
+conversions, which fortunately cannot cause any issues in the actual
+code's execution.
 
->   block/genhd.c         | 13 ++++++++++++-
->   block/ioctl.c         |  3 ++-
->   drivers/scsi/sd.c     |  4 +---
->   include/linux/genhd.h |  6 ++++++
->   4 files changed, 21 insertions(+), 5 deletions(-)
-> 
-> diff --git a/block/genhd.c b/block/genhd.c
-> index 1dd8fd6613b8..e29805bfa989 100644
-> --- a/block/genhd.c
-> +++ b/block/genhd.c
-> @@ -1549,11 +1549,22 @@ void set_disk_ro(struct gendisk *disk, int flag)
->   	struct disk_part_iter piter;
->   	struct hd_struct *part;
->   
-> +	/*
-> +	 * If the user has forced disk read-only with BLKROSET, ignore
-> +	 * any device state change requested by the driver.
-> +	 */
-> +	if (disk->part0.policy == DISK_POLICY_USER_WRITE_PROTECT)
-> +		return;
+clang however warns about these implicit enum conversions in the scsi
+drivers. This commit consolidates the use of the two enums, guided by
+clang's enum-conversion warnings.
 
-I noticed drivers/s390/block/dasd_ioctl.c calls set_disk_ro() to set the
-policy, where-as the policy is set with set_device_ro() in the generic
-ioctl.
+This commit now completes the use of the fip_mode:
+It expects and uses fip_mode in {bnx2fc,fcoe}_interface_create and
+fcoe_ctlr_init, and it explicitly converts from fip_mode to fip_state
+only at the single point in fcoe_ctlr_link_up.
 
-It's not setting the policy to DISK_POLICY_USER_WRITE_PROTECT so I think
-it would only be a problem if the user set it to 2 instead of 1 assuming
-any truthy value is acceptable. Then the user wouldn't be able to mark
-the disk as writable again since this would be true. Perhaps it's a
-somewhat far-fetched scenario.
+To eliminate that adding or removing values from fip_mode or fip_state enum
+break the right mapping of values, all fip_mode values are assigned to
+their fip_state counterparts.
 
->   	if (disk->part0.policy != flag) {
->   		set_disk_ro_uevent(disk, flag);
->   		disk->part0.policy = flag;
->   	}
-> -
-> +	/*
-> +	 * If set_disk_ro() is called from revalidate, all partitions
-> +	 * have already been dropped at this point and thus any
-> +	 * per-partition user setting lost. Each partition will
-> +	 * inherit part0 policy when subsequently re-added.
-> +	 */
->   	disk_part_iter_init(&piter, disk, DISK_PITER_INCL_EMPTY);
->   	while ((part = disk_part_iter_next(&piter)))
->   		part->policy = flag;
-> diff --git a/block/ioctl.c b/block/ioctl.c
-> index 4825c78a6baa..16c42e1b18c8 100644
-> --- a/block/ioctl.c
-> +++ b/block/ioctl.c
-> @@ -451,7 +451,8 @@ static int blkdev_roset(struct block_device *bdev, fmode_t mode,
->   		return ret;
->   	if (get_user(n, (int __user *)arg))
->   		return -EFAULT;
-> -	set_device_ro(bdev, n);
-> +	set_device_ro(bdev, n ? DISK_POLICY_USER_WRITE_PROTECT :
-> +		      DISK_POLICY_WRITABLE);
->   	return 0;
->   }
->   
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index b2da8a00ec33..9aa409b38765 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -2591,10 +2591,8 @@ sd_read_write_protect_flag(struct scsi_disk *sdkp, unsigned char *buffer)
->   	int res;
->   	struct scsi_device *sdp = sdkp->device;
->   	struct scsi_mode_data data;
-> -	int disk_ro = get_disk_ro(sdkp->disk);
->   	int old_wp = sdkp->write_prot;
->   
-> -	set_disk_ro(sdkp->disk, 0);
->   	if (sdp->skip_ms_page_3f) {
->   		sd_first_printk(KERN_NOTICE, sdkp, "Assuming Write Enabled\n");
->   		return;
-> @@ -2632,7 +2630,7 @@ sd_read_write_protect_flag(struct scsi_disk *sdkp, unsigned char *buffer)
->   			  "Test WP failed, assume Write Enabled\n");
->   	} else {
->   		sdkp->write_prot = ((data.device_specific & 0x80) != 0);
-> -		set_disk_ro(sdkp->disk, sdkp->write_prot || disk_ro);
-> +		set_disk_ro(sdkp->disk, sdkp->write_prot);
->   		if (sdkp->first_scan || old_wp != sdkp->write_prot) {
->   			sd_printk(KERN_NOTICE, sdkp, "Write Protect is %s\n",
->   				  sdkp->write_prot ? "on" : "off");
-> diff --git a/include/linux/genhd.h b/include/linux/genhd.h
-> index 06c0fd594097..2bef434d4dff 100644
-> --- a/include/linux/genhd.h
-> +++ b/include/linux/genhd.h
-> @@ -150,6 +150,12 @@ enum {
->   	DISK_EVENT_EJECT_REQUEST		= 1 << 1, /* eject requested */
->   };
->   
-> +enum {
-> +	DISK_POLICY_WRITABLE			= 0, /* Default */
-> +	DISK_POLICY_DEVICE_WRITE_PROTECT	= 1, /* Set by device driver */
-> +	DISK_POLICY_USER_WRITE_PROTECT		= 2, /* Set via BLKROSET */
-> +};
-> +
->   struct disk_part_tbl {
->   	struct rcu_head rcu_head;
->   	int len;
-> 
+Link: https://github.com/ClangBuiltLinux/linux/issues/151
+Fixes: 1917d42d14b7 ("fcoe: use enum for fip_mode")
+Reported-by: Dmitry Golovin "Twisted Pair in my Hair" <dima@golovin.in>
+CC: Lukas Bulwahn <lukas.bulwahn@gmail.com>
+CC: Nick Desaulniers <ndesaulniers@google.com>
+CC: Nathan Chancellor <natechancellor@gmail.com>
+CC: Hannes Reinecke <hare@suse.com>
+Suggested-by: Johannes Thumshirn <jthumshirn@suse.de>
+---
+
+[ v2:
+   - Based on the original patch by Lukas Bulwahn
+   - Suggestion by Johannes T. [1] required some changes:
+     + s/case FIP_ST_VMMP_START/case FIP_ST_V*N*MP_START
+     + s/return FIP_ST_AUTO/return FIP_MODE_AUTO
+   - Add Link to ClangBuiltLinux issue #151
+   - S-o-b line later when there is an OK from the FCoE maintainers
+
+NOTE: Compile-tested against Linux-v5.0-rc6 with LLVM/Clang from Git with
+      experimental asm-goto support via executing:
+      $ make V=1 CC=clang-9 HOSTCC=clang-9 drivers/scsi/fcoe/
+
+[1] https://marc.info/?l=linux-scsi&m=154745527612152&w=2
+
+  -dileks ]
+
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c  |  2 +-
+ drivers/scsi/fcoe/fcoe.c           |  2 +-
+ drivers/scsi/fcoe/fcoe_ctlr.c      |  4 ++--
+ drivers/scsi/fcoe/fcoe_transport.c |  2 +-
+ drivers/scsi/qedf/qedf_main.c      |  2 +-
+ include/scsi/libfcoe.h             | 22 ++++++++++++++++++++--
+ 6 files changed, 26 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+index 2e4e7159ebf9..a75e74ad1698 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+@@ -1438,7 +1438,7 @@ static struct bnx2fc_hba *bnx2fc_hba_create(struct cnic_dev *cnic)
+ static struct bnx2fc_interface *
+ bnx2fc_interface_create(struct bnx2fc_hba *hba,
+ 			struct net_device *netdev,
+-			enum fip_state fip_mode)
++			enum fip_mode fip_mode)
+ {
+ 	struct fcoe_ctlr_device *ctlr_dev;
+ 	struct bnx2fc_interface *interface;
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index cd19be3f3405..8ba8862d3292 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -389,7 +389,7 @@ static int fcoe_interface_setup(struct fcoe_interface *fcoe,
+  * Returns: pointer to a struct fcoe_interface or NULL on error
+  */
+ static struct fcoe_interface *fcoe_interface_create(struct net_device *netdev,
+-						    enum fip_state fip_mode)
++						    enum fip_mode fip_mode)
+ {
+ 	struct fcoe_ctlr_device *ctlr_dev;
+ 	struct fcoe_ctlr *ctlr;
+diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
+index 54da3166da8d..a52d3ad94876 100644
+--- a/drivers/scsi/fcoe/fcoe_ctlr.c
++++ b/drivers/scsi/fcoe/fcoe_ctlr.c
+@@ -147,7 +147,7 @@ static void fcoe_ctlr_map_dest(struct fcoe_ctlr *fip)
+  * fcoe_ctlr_init() - Initialize the FCoE Controller instance
+  * @fip: The FCoE controller to initialize
+  */
+-void fcoe_ctlr_init(struct fcoe_ctlr *fip, enum fip_state mode)
++void fcoe_ctlr_init(struct fcoe_ctlr *fip, enum fip_mode mode)
+ {
+ 	fcoe_ctlr_set_state(fip, FIP_ST_LINK_WAIT);
+ 	fip->mode = mode;
+@@ -454,7 +454,7 @@ void fcoe_ctlr_link_up(struct fcoe_ctlr *fip)
+ 		mutex_unlock(&fip->ctlr_mutex);
+ 		fc_linkup(fip->lp);
+ 	} else if (fip->state == FIP_ST_LINK_WAIT) {
+-		fcoe_ctlr_set_state(fip, fip->mode);
++		fcoe_ctlr_set_state(fip, (enum fip_state) fip->mode);
+ 		switch (fip->mode) {
+ 		default:
+ 			LIBFCOE_FIP_DBG(fip, "invalid mode %d\n", fip->mode);
+diff --git a/drivers/scsi/fcoe/fcoe_transport.c b/drivers/scsi/fcoe/fcoe_transport.c
+index f4909cd206d3..b381ab066b9c 100644
+--- a/drivers/scsi/fcoe/fcoe_transport.c
++++ b/drivers/scsi/fcoe/fcoe_transport.c
+@@ -873,7 +873,7 @@ static int fcoe_transport_create(const char *buffer,
+ 	int rc = -ENODEV;
+ 	struct net_device *netdev = NULL;
+ 	struct fcoe_transport *ft = NULL;
+-	enum fip_state fip_mode = (enum fip_state)(long)kp->arg;
++	enum fip_mode fip_mode = (enum fip_mode)(long)kp->arg;
+ 
+ 	mutex_lock(&ft_mutex);
+ 
+diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
+index 9bbc19fc190b..9f9431a4cc0e 100644
+--- a/drivers/scsi/qedf/qedf_main.c
++++ b/drivers/scsi/qedf/qedf_main.c
+@@ -1418,7 +1418,7 @@ static struct libfc_function_template qedf_lport_template = {
+ 
+ static void qedf_fcoe_ctlr_setup(struct qedf_ctx *qedf)
+ {
+-	fcoe_ctlr_init(&qedf->ctlr, FIP_ST_AUTO);
++	fcoe_ctlr_init(&qedf->ctlr, FIP_MODE_AUTO);
+ 
+ 	qedf->ctlr.send = qedf_fip_send;
+ 	qedf->ctlr.get_src_addr = qedf_get_src_mac;
+diff --git a/include/scsi/libfcoe.h b/include/scsi/libfcoe.h
+index cb8a273732cf..38bb5b798a81 100644
+--- a/include/scsi/libfcoe.h
++++ b/include/scsi/libfcoe.h
+@@ -79,12 +79,30 @@ enum fip_state {
+  * It must not change after fcoe_ctlr_init() sets it.
+  */
+ enum fip_mode {
+-	FIP_MODE_AUTO = FIP_ST_AUTO,
++	FIP_MODE_AUTO,
+ 	FIP_MODE_NON_FIP,
+ 	FIP_MODE_FABRIC,
+ 	FIP_MODE_VN2VN,
+ };
+ 
++static inline enum fip_mode fip_state_to_mode(enum fip_state state)
++{
++	switch (state) {
++	case FIP_ST_AUTO:
++		return FIP_MODE_AUTO;
++	case FIP_ST_NON_FIP:
++		return FIP_MODE_NON_FIP;
++	case FIP_ST_ENABLED:
++		return FIP_MODE_FABRIC;
++	case FIP_ST_VNMP_START:
++		return FIP_MODE_VN2VN;
++	default:
++		WARN(1, "Invalid FIP state");
++	}
++
++	return FIP_MODE_AUTO;
++}
++
+ /**
+  * struct fcoe_ctlr - FCoE Controller and FIP state
+  * @state:	   internal FIP state for network link and FIP or non-FIP mode.
+@@ -250,7 +268,7 @@ struct fcoe_rport {
+ };
+ 
+ /* FIP API functions */
+-void fcoe_ctlr_init(struct fcoe_ctlr *, enum fip_state);
++void fcoe_ctlr_init(struct fcoe_ctlr *, enum fip_mode);
+ void fcoe_ctlr_destroy(struct fcoe_ctlr *);
+ void fcoe_ctlr_link_up(struct fcoe_ctlr *);
+ int fcoe_ctlr_link_down(struct fcoe_ctlr *);
+-- 
+2.20.1
