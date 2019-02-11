@@ -1,34 +1,47 @@
-From: Sedat Dilek <sedat.dilek@gmail.com>
-Subject: Re: [PATCH] fcoe: make use of fip_mode enum complete
-Date: Mon, 11 Feb 2019 09:59:38 +0100
-Message-ID: <CA+icZUWPw3tzKAKAt=rLv09nPCwXVbc2h=Thb-5EOxc7Jx60fQ@mail.gmail.com>
-Reply-To: sedat.dilek@gmail.com
+From: "chenxiang (M)" <chenxiang66@hisilicon.com>
+Subject: Re: [PATCH 1/6] scsi: hisi_sas: Add support for DIX feature for v3 hw
+Date: Mon, 11 Feb 2019 19:36:01 +0800
+Message-ID: <53c516cc-cce3-a3e1-718f-6fc465b6e401@hisilicon.com>
+References: <1549450376-114929-1-git-send-email-john.garry@huawei.com>
+ <1549450376-114929-2-git-send-email-john.garry@huawei.com>
+ <yq1zhr5vpos.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="gbk"; format=flowed
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <yq1zhr5vpos.fsf@oracle.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Lukas Bulwahn <lukas.bulwahn@gmail.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Cc: Hannes Reinecke" <hare@suse.de>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, QLogic-Storage-Upstream@qlogic.com, "Martin K . Petersen" <martin.petersen@oracle.com>, Johannes Thumshirn <jth@kernel.org>, QLogic-Storage-Upstream@cavium.com, Nick Desaulniers <ndesaulniers@google.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, John Garry <john.garry@huawei.com>
+Cc: jejb@linux.vnet.ibm.com, linuxarm@huawei.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Lukas,
+Hi Martin,
 
-I have tested your patch with LLVM/Clang from Git (will get version 9)
-with (RFC) asm-goto support.
+ÔÚ 2019/2/9 7:13, Martin K. Petersen Ð´µÀ:
+> John,
+>
+> Just noticed this while inspecting the resulting complete diff:
+>
+>>   static u32 get_prot_chk_msk_v3_hw(struct scsi_cmnd *scsi_cmnd)
+>>   {
+>>   	unsigned char prot_flags = scsi_cmnd->prot_flags;
+>>   
+>> -	if (prot_flags & SCSI_PROT_TRANSFER_PI) {
+>> -		if (prot_flags & SCSI_PROT_REF_CHECK)
+>> -			return 0xc << 16;
+>> -		return 0xfc << 16;
+>> -	}
+>> -	return 0;
+>> +	if (prot_flags & SCSI_PROT_REF_CHECK)
+>> +		return T10_CHK_APP_TAG_MSK;
+> Polarity is a bit unclear here. Is this statement disabling checking of
+> the app tag?
 
-I was able to build with CONFIG_FCOE=m and CONFIG_LIBFCOE=m and boot
-on bare metal.
+Yes, disabling checking of app tag.
+For here, 1'b0 presents the related byte in DIF will be checked, and 
+1'b1 presents the related byte in DIF will not be checked.
 
-Feel free to add my...
 
-     Tested-by: Sedat Dilek <sedat.dilek@gmail.com>
-
-If you want to send out a v2 please feel free to add the following Link.
-
-     Link: https://github.com/ClangBuiltLinux/linux/issues/151
-("-Wenum-conversion in drivers/scsi/fcoe/fcoe{_ctlr,_transport}.c")
-
-Thanks.
-
-Regards,
-- Sedat -
+>
+>> +	return T10_CHK_REF_TAG_MSK | T10_CHK_APP_TAG_MSK;
+>>   }
