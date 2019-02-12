@@ -1,33 +1,30 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: sd: block: Handle cases where devices come online read-only
-Date: Tue, 12 Feb 2019 11:50:06 -0500
-Message-ID: <yq18syluf29.fsf@oracle.com>
-References: <20190208233831.31377-1-martin.petersen@oracle.com>
-        <20190212080319.GA10547@infradead.org>
-        <6121a378-d92f-3acb-8932-433c777205c3@suse.de>
+Subject: Re: [PATCH] scsi: sd: fix entropy gathering for most rotational disks
+Date: Tue, 12 Feb 2019 11:59:27 -0500
+Message-ID: <yq1zhr1t028.fsf@oracle.com>
+References: <1549987525.3173.17.camel@HansenPartnership.com>
+        <e9a411a2-49e2-4897-4e02-1cf790465cbd@kernel.dk>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <6121a378-d92f-3acb-8932-433c777205c3@suse.de> (Hannes Reinecke's
-        message of "Tue, 12 Feb 2019 09:08:40 +0100")
-Sender: stable-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Jeremy Cline <jeremy@jcline.org>, Oleksii Kurochko <olkuroch@cisco.com>, stable@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <e9a411a2-49e2-4897-4e02-1cf790465cbd@kernel.dk> (Jens Axboe's
+        message of "Tue, 12 Feb 2019 09:06:29 -0700")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, Xuewei Zhang <xueweiz@google.com>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, Mikael Pettersson <mikpelinux@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
 
-Hannes,
+Jens,
 
-> And once we stop sending I/O to it we'll lose the ability to figure
-> out that the device switched back to R/W mode.
+>> The fix is to set the non-rotational and add-randomness flags
+>> unconditionally early on in the disk initialization path, so they can
+>> be reset only if the device actually reports being non-rotational via
+>> the VPD page.
 >
-> (Always assuming that we'll be getting a sense code in the first
-> place).
+> Reviewed-by: Jens Axboe <axboe@kernel.dk>
 
-FWIW, I did get correct sense on all the drives I tested and verified
-that the code does the right thing.
-
-But obviously I have my doubts about $RANDOM_USB_GIZMO.
+Yeah, this looks good to me. I'll queue it up for fixes.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
