@@ -1,41 +1,40 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH] scsi: sd: fix entropy gathering for most rotational disks
-Date: Tue, 12 Feb 2019 09:06:29 -0700
-Message-ID: <e9a411a2-49e2-4897-4e02-1cf790465cbd@kernel.dk>
-References: <1549987525.3173.17.camel@HansenPartnership.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] scsi: sd: block: Handle cases where devices come online read-only
+Date: Tue, 12 Feb 2019 11:26:46 -0500
+Message-ID: <yq1h8d9ug55.fsf@oracle.com>
+References: <20190208233831.31377-1-martin.petersen@oracle.com>
+        <01000168dd40a901-e418f724-3fe3-47e3-bbea-05fea79f169e-000000@email.amazonses.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1549987525.3173.17.camel@HansenPartnership.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Xuewei Zhang <xueweiz@google.com>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, Mikael Pettersson <mikpelinux@gmail.com>
+Content-Type: text/plain
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <01000168dd40a901-e418f724-3fe3-47e3-bbea-05fea79f169e-000000@email.amazonses.com>
+        (Jeremy Cline's message of "Mon, 11 Feb 2019 15:50:28 +0000")
+Sender: stable-owner@vger.kernel.org
+To: Jeremy Cline <jeremy@jcline.org>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Oleksii Kurochko <olkuroch@cisco.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 2/12/19 9:05 AM, James Bottomley wrote:
-> The problem is that the default for MQ is not to gather entropy,
-> whereas the default for the legacy queue was always to gather it.  The
-> original attempt to fix entropy gathering for rotational disks under MQ
-> added an else branch in sd_read_block_characteristics(). 
-> Unfortunately, the entire check isn't reached if the device has no
-> characteristics VPD page.  Since this page was only introduced in SBC-3 
-> and its optional anyway, most less expensive rotational disks don't
-> have one, meaning they all stopped gathering entropy when we made MQ
-> the default.  In a wholly unrelated change, openssl and openssh won't
-> function until the random number generator is initialised, meaning lots
-> of people have been seeing large delays before they could log into
-> systems with default MQ kernels due to this lack of entropy, because it
-> now can take tens of minutes to initialise the kernel random number
-> generator.
-> 
-> The fix is to set the non-rotational and add-randomness flags
-> unconditionally early on in the disk initialization path, so they can
-> be reset only if the device actually reports being non-rotational via
-> the VPD page.
 
-Reviewed-by: Jens Axboe <axboe@kernel.dk>
+Jeremy,
+
+> I noticed drivers/s390/block/dasd_ioctl.c calls set_disk_ro() to set the
+> policy, where-as the policy is set with set_device_ro() in the generic
+> ioctl.
+
+There's a subtle distinction here:
+
+ - set_disk_ro() sets the policy for a whole disk
+
+ - set_device_ro() sets the policy for a block_device (typically
+   partition)
+
+> It's not setting the policy to DISK_POLICY_USER_WRITE_PROTECT so I
+> think it would only be a problem if the user set it to 2 instead of 1
+> assuming any truthy value is acceptable. Then the user wouldn't be
+> able to mark the disk as writable again since this would be
+> true. Perhaps it's a somewhat far-fetched scenario.
+
+OK, I missed that particular entry point. Will fix.
 
 -- 
-Jens Axboe
+Martin K. Petersen	Oracle Linux Engineering
