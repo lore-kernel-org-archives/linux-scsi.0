@@ -1,8 +1,8 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [5.0-rc5 regression] "scsi: kill off the legacy IO path" causes 5
+From: "Elliott, Robert (Persistent Memory)" <elliott@hpe.com>
+Subject: RE: [5.0-rc5 regression] "scsi: kill off the legacy IO path" causes 5
  minute delay during boot on Sun Blade 2500
-Date: Mon, 11 Feb 2019 19:50:28 -0700
-Message-ID: <fc547d40-9a42-a823-b62f-460c3244fe7d@kernel.dk>
+Date: Tue, 12 Feb 2019 03:37:22 +0000
+Message-ID: <AT5PR8401MB1169D3DBEBC4F88D76BD1710AB650@AT5PR8401MB1169.NAMPRD84.PROD.OUTLOOK.COM>
 References: <CAM43=SO6bdDAEULEPArfgdbjLAYDo9OiPBa8gL4fsSg7Dky=gA@mail.gmail.com>
  <1549736341.2971.7.camel@HansenPartnership.com>
  <CAM43=SPUMzOLRmkoT+DQSpzu2DYRTyOhU6o8KRUU_Q902o2e1Q@mail.gmail.com>
@@ -17,85 +17,38 @@ References: <CAM43=SO6bdDAEULEPArfgdbjLAYDo9OiPBa8gL4fsSg7Dky=gA@mail.gmail.com>
  <1549902521.2831.23.camel@HansenPartnership.com>
  <fce66227-ff41-3a4e-4c6a-f4c2ca492b95@kernel.dk>
  <1549937598.2857.8.camel@HansenPartnership.com>
+ <fc547d40-9a42-a823-b62f-460c3244fe7d@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1549937598.2857.8.camel@HansenPartnership.com>
+In-Reply-To: <fc547d40-9a42-a823-b62f-460c3244fe7d@kernel.dk>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, Mikael Pettersson <mikpelinux@gmail.com>
-Cc: Linux SPARC Kernel Mailing List <sparclinux@vger.kernel.org>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+To: Jens Axboe <axboe@kernel.dk>, James Bottomley <James.Bottomley@HansenPartnership.com>, Mikael Pettersson <mikpelinux@gmail.com>
+Cc: Linux SPARC Kernel Mailing List <sparclinux@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 2/11/19 7:13 PM, James Bottomley wrote:
-> On Mon, 2019-02-11 at 09:31 -0700, Jens Axboe wrote:
->> On 2/11/19 9:28 AM, James Bottomley wrote:
->>> On Mon, 2019-02-11 at 08:46 -0700, Jens Axboe wrote:
->>>> On 2/11/19 8:42 AM, James Bottomley wrote:
->>>>> On Mon, 2019-02-11 at 08:28 -0700, Jens Axboe wrote:
->>>>>> On 2/11/19 8:25 AM, James Bottomley wrote:
->>>>>>> On Sun, 2019-02-10 at 09:35 -0700, Jens Axboe wrote:
->>>>>>>> On 2/10/19 9:25 AM, James Bottomley wrote:
->>>
->>> [...]
->>>>>>>>> That check wasn't changed by the code removal.
->>>>>>>>
->>>>>>>> As I said above, for sd. This isn't true for non-disks.
->>>>>>>
->>>>>>> Yes, but the behaviour above doesn't change across a switch
->>>>>>> to MQ, so I don't quite understand how it bisects back to
->>>>>>> that change.  If we're not gathering entropy for the device
->>>>>>> now, we wouldn't have been before the switch, so the
->>>>>>> entropy characteristics shouldn't have changed.
->>>>>>
->>>>>> But it does, as I also wrote in that first email. The legacy
->>>>>> queue flags had QUEUE_FLAG_ADD_RANDOM set by default, the MQ
->>>>>> ones do not. Hence any non-sd device would previously ALWAYS
->>>>>> have ADD_RANDOM set, now none of them do. Also see the patch
->>>>>> I sent.
->>>>>
->>>>> So your theory is that the disk in question never gets to the
->>>>> rotational check?  because the check will clear the flag if
->>>>> it's non-rotational and set it if it's not, so the default
->>>>> state of the flag shouldn't matter.
->>>>
->>>> No, my point is about non-disks, devices that aren't driven by
->>>> sd. The behavior for sd hasn't changed, as it sets/clears it
->>>> unconditionally. 
->>>
->>> I agree, but I don't think any of them were significant entropy
->>> contributors before: things like nvme have always been outside of
->>> this and sr and st don't really contribute much to the seek load
->>> during boot because they're probed but not used by the boot
->>> sequence, so I can't see how they would cause this behaviour.  I
->>> suppose it could be target probing, but even that seems unlikely
->>> because it should be dwarfed by the number of root disk reads
->>> during boot.
->>>
->>> For the rng to take an additional 5 minutes to initialize, we must
->>> have lost a significant entropy source somewhere.
->>
->> I agree it's not a significant amount of entropy, but even just one
->> bit could mean a long stall if that put us over the edge of just not
->> having enough for whatever is blocking on /dev/random. Mikael's boot
->> did have a CDROM, it's not impossible that the handful of commands we
->> end up doing to that device would have contributed enough entropy to
->> get the boot done without stalling for minutes.
->>
->> One way to know for sure, and that's if Mikael tests the patch.
-> 
-> I think I've got the root cause.  I have one system in my test bed
-> exhibiting this behaviour.  It turns out the disk in it has no
-> characteristics VPD page.  The 0xB1 VPD was a SBC-3 addition, so that's
-> not surprising.  However, the characteristics check bails before
-> setting the flags, so it takes the default flag which has flipped.
-> 
-> We can either fix this by setting the QUEUE_FLAG_ADD_RANDOM if there's
-> no 0xB1 page or by setting the default as Jens proposed.
-
-I'd recommend just doing my patch, since that'll be the same behavior
-that SCSI had before.
-
--- 
-Jens Axboe
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGludXgta2VybmVsLW93
+bmVyQHZnZXIua2VybmVsLm9yZyA8bGludXgta2VybmVsLQ0KPiBvd25lckB2Z2VyLmtlcm5lbC5v
+cmc+IE9uIEJlaGFsZiBPZiBKZW5zIEF4Ym9lDQo+IFNlbnQ6IE1vbmRheSwgRmVicnVhcnkgMTEs
+IDIwMTkgODo1MCBQTQ0KPiBUbzogSmFtZXMgQm90dG9tbGV5IDxKYW1lcy5Cb3R0b21sZXlASGFu
+c2VuUGFydG5lcnNoaXAuY29tPjsgTWlrYWVsDQo+IFBldHRlcnNzb24gPG1pa3BlbGludXhAZ21h
+aWwuY29tPg0KPiBDYzogTGludXggU1BBUkMgS2VybmVsIE1haWxpbmcgTGlzdCA8c3BhcmNsaW51
+eEB2Z2VyLmtlcm5lbC5vcmc+Ow0KPiBsaW51eC1ibG9ja0B2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4
+LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LXNjc2kNCj4gPGxpbnV4LXNjc2lAdmdlci5r
+ZXJuZWwub3JnPg0KPiBTdWJqZWN0OiBSZTogWzUuMC1yYzUgcmVncmVzc2lvbl0gInNjc2k6IGtp
+bGwgb2ZmIHRoZSBsZWdhY3kgSU8gcGF0aCINCj4gY2F1c2VzIDUgbWludXRlIGRlbGF5IGR1cmlu
+ZyBib290IG9uIFN1biBCbGFkZSAyNTAwDQouLi4NCg0KPiA+IFdlIGNhbiBlaXRoZXIgZml4IHRo
+aXMgYnkgc2V0dGluZyB0aGUgUVVFVUVfRkxBR19BRERfUkFORE9NIGlmDQo+ID4gdGhlcmUncyBu
+byAweEIxIHBhZ2Ugb3IgYnkgc2V0dGluZyB0aGUgZGVmYXVsdCBhcyBKZW5zIHByb3Bvc2VkLg0K
+PiANCj4gSSdkIHJlY29tbWVuZCBqdXN0IGRvaW5nIG15IHBhdGNoLCBzaW5jZSB0aGF0J2xsIGJl
+IHRoZSBzYW1lIGJlaGF2aW9yDQo+IHRoYXQgU0NTSSBoYWQgYmVmb3JlLg0KDQpXaGVuIGJsay1t
+cSBhbmQgc2NzaS1tcSB3ZXJlIGludHJvZHVjZWQgdG8gYm9vc3QgU0FTIFNTRHMgb3Zlcg0KMSBt
+aWxsaW9uIElPUFMsIHRoaXMgd2FzIHB1cnBvc2VseSBrZXB0IG9mZiwgYmVjYXVzZSBpdCBnZW5l
+cmF0ZWQNCmEgbm90aWNlYWJsZSAzLTEyIHVzIGxhdGVuY3kgYmxpcCB3aGVuZXZlciB0aGUgImZh
+c3RfbWl4IiBjb2RlIHJhbg0Kb3V0IG9mIGJpdHMuIElmIEplbnMnIHBhdGNoIGNoYW5nZXMgdGhl
+IGRlZmF1bHQgdG8gYmUgZW5hYmxlZCBmb3INCmFsbCBzY3NpLW1xIHVzZXJzLCB0aGF0J2xsIGJl
+IGEgY2hhbmdlIGZvciB0aGUgbmV3ZXIgbGVnYWN5DQpzY3NpLW1xIHVzZXJzIChleGNlcHQgZm9y
+IHVzZXJzIHRoYXQgZG9uJ3QgdHJ1c3QgdGhlIGRlZmF1bHQgYW5kDQphbHdheXMgc2V0IHRoZSB2
+YWx1ZSBpbiBzeXNmcykuDQoNCg0K
