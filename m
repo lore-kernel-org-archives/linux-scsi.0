@@ -1,32 +1,37 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] scsi: lpfc: fix calls to dma_set_mask_and_coherent()
-Date: Tue, 12 Feb 2019 10:34:52 -0800
-Message-ID: <20190212183452.GA25206@infradead.org>
-References: <20190211150502.9999-1-emilne@redhat.com>
- <20190212080627.GC10547@infradead.org>
- <9572ae3b0131ad1c74d6a775f819437e3d4f1795.camel@redhat.com>
+From: Xuewei Zhang <xueweiz@google.com>
+Subject: Re: [PATCH] scsi: sd: fix entropy gathering for most rotational disks
+Date: Tue, 12 Feb 2019 12:00:18 -0800
+Message-ID: <CAPtwhKpqggL1k8wsh-ECS6aUr7qThUyHjgx9BGeL84bCbj9Lvw@mail.gmail.com>
+References: <1549987525.3173.17.camel@HansenPartnership.com>
+ <e9a411a2-49e2-4897-4e02-1cf790465cbd@kernel.dk> <yq1zhr1t028.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <stable-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <9572ae3b0131ad1c74d6a775f819437e3d4f1795.camel@redhat.com>
-Sender: stable-owner@vger.kernel.org
-To: "Ewan D. Milne" <emilne@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, stable@vger.kernel.org, james.smart@broadcom.com, dick.kennedy@broadcom.com, martin.petersen@oracle.com, jejb@linux.ibm.com
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <yq1zhr1t028.fsf@oracle.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Jens Axboe <axboe@kernel.dk>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, Mikael Pettersson <mikpelinux@gmail.com>, Theodore Tso <tytso@google.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Feb 12, 2019 at 10:37:45AM -0500, Ewan D. Milne wrote:
-> 
-> It looks like this would introduce a different problem.  "error" is set to
-> -ENODEV earlier in the two functions so that the various error paths will return
-> that value.  If it is overwritten with a successful result from the call to
-> dma_set_mask_and_coherent() but a later call to e.g. ioremap() fails, the
-> functions will incorrectly return a value indicating that they have succeeded.
-> 
-> It also appears as if the patches to hptiop, hisi_sas and bfa need to be fixed up.
-> I don't have a test environment for these, although I might be able to modify the
-> test environment for bfa.  Martin/James, what about the others?
+Thanks for the fix James!
 
-I don't have a test environment for them either, and I doubt many
-people have.  If you don't feel comfortable I can send a fix for
-them.
+On Tue, Feb 12, 2019 at 8:59 AM Martin K. Petersen
+<martin.petersen@oracle.com> wrote:
+>
+>
+> Jens,
+>
+> >> The fix is to set the non-rotational and add-randomness flags
+> >> unconditionally early on in the disk initialization path, so they can
+> >> be reset only if the device actually reports being non-rotational via
+> >> the VPD page.
+> >
+> > Reviewed-by: Jens Axboe <axboe@kernel.dk>
+
+Reviewed-by: Xuewei Zhang <xueweiz@google.com>
+
+>
+> Yeah, this looks good to me. I'll queue it up for fixes.
+>
+> --
+> Martin K. Petersen      Oracle Linux Engineering
