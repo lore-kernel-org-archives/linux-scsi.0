@@ -1,51 +1,50 @@
-From: ira.weiny@intel.com
-Subject: [PATCH V2 7/7] IB/mthca: Use the new FOLL_LONGTERM flag to
- get_user_pages_fast()
-Date: Wed, 13 Feb 2019 15:04:55 -0800
-Message-ID: <20190213230455.5605-8-ira.weiny@intel.com>
+From: Jason Gunthorpe <jgg@ziepe.ca>
+Subject: Re: [PATCH V2 3/7] mm/gup: Change GUP fast to use flags
+ rather than a write 'bool'
+Date: Wed, 13 Feb 2019 16:11:10 -0700
+Message-ID: <20190213231110.GD24692@ziepe.ca>
 References: <20190211201643.7599-1-ira.weiny@intel.com>
  <20190213230455.5605-1-ira.weiny@intel.com>
+ <20190213230455.5605-4-ira.weiny@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <20190213230455.5605-1-ira.weiny@intel.com>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: linux-mips@vger.kernel.org, linux-kernel@vger.kernel.org, kvm-ppc@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org, linux-sh@vger.kernel.org, sparclinux@vger.kernel.org, kvm@vger.kernel.org, linux-fpga@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-rdma@vger.kernel.org, linux-media@vger.kernel.org, linux-scsi@vger.kernel.org, devel@driverdev.osuosl.org, virtualization@lists.linux-foundation.org, netdev@vger.kernel.org, linux-fbdev@vger.kernel.org, xen-devel@lists.xenproject.org, devel@lists.orangefs.org, linux-mm@kvack.org, ceph-devel@vger.kernel.org, rds-devel@oss.oracle.com
-Cc: Martin Brandenburg <martin@omnibond.com>, Rich Felker <dalias@libc.org>, David Hildenbrand <david@redhat.com>, David Airlie <airlied@linux.ie>, Jason Wang <jasowang@redhat.com>, =?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>, Michal Hocko <mhocko@suse.com>, Rob Springer <rspringer@google.com>, Todd Poynor <toddpoynor@google.com>, Yoshinori Sato <ysato@users.sourceforge.jp>, Joerg Roedel <joro@8bytes.org>, "Michael S. Tsirkin" <mst@redhat.com>, Jason Gunthorpe <jgg@ziepe.ca>, Ingo Molnar <mingo@redhat.com>, Matt Porter <mporter@kernel.crashing.org>, Wu Hao <hao.wu@intel.com>, Alan Tull <atull@kernel.org>, John Hubbard <jhubbard@nvidia.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, Alex Williamson <alex.williamson@redhat.com>, Stefano Stabellini <sstabellini@kernel.org>, Borislav Petkov <bp@alien8.de>, Alexander Viro <viro@zeniv.linux.org.uk>, Thomas
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <xen-devel-bounces@lists.xenproject.org>
+Content-Disposition: inline
+In-Reply-To: <20190213230455.5605-4-ira.weiny@intel.com>
+List-Unsubscribe: <https://lists.xenproject.org/mailman/options/xen-devel>,
+ <mailto:xen-devel-request@lists.xenproject.org?subject=unsubscribe>
+List-Post: <mailto:xen-devel@lists.xenproject.org>
+List-Help: <mailto:xen-devel-request@lists.xenproject.org?subject=help>
+List-Subscribe: <https://lists.xenproject.org/mailman/listinfo/xen-devel>,
+ <mailto:xen-devel-request@lists.xenproject.org?subject=subscribe>
+Errors-To: xen-devel-bounces@lists.xenproject.org
+Sender: "Xen-devel" <xen-devel-bounces@lists.xenproject.org>
+To: ira.weiny@intel.com
+Cc: Martin Brandenburg <martin@omnibond.com>, linux-fbdev@vger.kernel.org, Rich Felker <dalias@libc.org>, kvm@vger.kernel.org, linux-sh@vger.kernel.org, David Airlie <airlied@linux.ie>, linux-fpga@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Michal Hocko <mhocko@suse.com>, sparclinux@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>, devel@driverdev.osuosl.org, linux-s390@vger.kernel.org, rds-devel@oss.oracle.com, Mauro Carvalho Chehab <mchehab@kernel.org>, linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org, Joerg Roedel <joro@8bytes.org>, David Hildenbrand <david@redhat.com>, Rob Springer <rspringer@google.com>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, xen-devel@lists.xenproject.org, Matt Porter <mporter@kernel.crashing.org>, Jason Wang <jasowang@redhat.com>, devel@lists.orangefs.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Ira Weiny <ira.weiny@intel.com>
-
-Use the new FOLL_LONGTERM to get_user_pages_fast() to protect against
-FS DAX pages being mapped.
-
-Signed-off-by: Ira Weiny <ira.weiny@intel.com>
----
- drivers/infiniband/hw/mthca/mthca_memfree.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/infiniband/hw/mthca/mthca_memfree.c b/drivers/infiniband/hw/mthca/mthca_memfree.c
-index 112d2f38e0de..8ff0e90d7564 100644
---- a/drivers/infiniband/hw/mthca/mthca_memfree.c
-+++ b/drivers/infiniband/hw/mthca/mthca_memfree.c
-@@ -472,7 +472,8 @@ int mthca_map_user_db(struct mthca_dev *dev, struct mthca_uar *uar,
- 		goto out;
- 	}
- 
--	ret = get_user_pages_fast(uaddr & PAGE_MASK, 1, FOLL_WRITE, pages);
-+	ret = get_user_pages_fast(uaddr & PAGE_MASK, 1,
-+				  FOLL_WRITE | FOLL_LONGTERM, pages);
- 	if (ret < 0)
- 		goto out;
- 
--- 
-2.20.1
+T24gV2VkLCBGZWIgMTMsIDIwMTkgYXQgMDM6MDQ6NTFQTSAtMDgwMCwgaXJhLndlaW55QGludGVs
+LmNvbSB3cm90ZToKPiBGcm9tOiBJcmEgV2VpbnkgPGlyYS53ZWlueUBpbnRlbC5jb20+Cj4gCj4g
+VG8gZmFjaWxpdGF0ZSBhZGRpdGlvbmFsIG9wdGlvbnMgdG8gZ2V0X3VzZXJfcGFnZXNfZmFzdCgp
+IGNoYW5nZSB0aGUKPiBzaW5ndWxhciB3cml0ZSBwYXJhbWV0ZXIgdG8gYmUgZ3VwX2ZsYWdzLgoK
+U28gbm93IHdlIGhhdmU6Cgpsb25nIGdldF91c2VyX3BhZ2VzX3VubG9ja2VkKHVuc2lnbmVkIGxv
+bmcgc3RhcnQsIHVuc2lnbmVkIGxvbmcgbnJfcGFnZXMsCgkJICAgIHN0cnVjdCBwYWdlICoqcGFn
+ZXMsIHVuc2lnbmVkIGludCBndXBfZmxhZ3MpOwoKYW5kIAoKaW50IGdldF91c2VyX3BhZ2VzX2Zh
+c3QodW5zaWduZWQgbG9uZyBzdGFydCwgaW50IG5yX3BhZ2VzLAoJCQl1bnNpZ25lZCBpbnQgZ3Vw
+X2ZsYWdzLCBzdHJ1Y3QgcGFnZSAqKnBhZ2VzKQoKRG9lcyB0aGlzIG1ha2UgYW55IHNlbnNlPyBB
+dCBsZWFzdCB0aGUgYXJndW1lbnRzIHNob3VsZCBiZSBpbiB0aGUgc2FtZQpvcmRlciwgSSB0aGlu
+ay4KCkFsc28gdGhpcyBjb21tZW50OgovKgogKiBnZXRfdXNlcl9wYWdlc191bmxvY2tlZCgpIGlz
+IHN1aXRhYmxlIHRvIHJlcGxhY2UgdGhlIGZvcm06CiAqCiAqICAgICAgZG93bl9yZWFkKCZtbS0+
+bW1hcF9zZW0pOwogKiAgICAgIGdldF91c2VyX3BhZ2VzKHRzaywgbW0sIC4uLiwgcGFnZXMsIE5V
+TEwpOwogKiAgICAgIHVwX3JlYWQoJm1tLT5tbWFwX3NlbSk7CiAqCiAqICB3aXRoOgogKgogKiAg
+ICAgIGdldF91c2VyX3BhZ2VzX3VubG9ja2VkKHRzaywgbW0sIC4uLiwgcGFnZXMpOwogKgogKiBJ
+dCBpcyBmdW5jdGlvbmFsbHkgZXF1aXZhbGVudCB0byBnZXRfdXNlcl9wYWdlc19mYXN0IHNvCiAq
+IGdldF91c2VyX3BhZ2VzX2Zhc3Qgc2hvdWxkIGJlIHVzZWQgaW5zdGVhZCBpZiBzcGVjaWZpYyBn
+dXBfZmxhZ3MKICogKGUuZy4gRk9MTF9GT1JDRSkgYXJlIG5vdCByZXF1aXJlZC4KICovCgpOZWVk
+cyBzb21lIGF0dGVudGlvbiBhcyB0aGUgcmVjb21tZW5kYXRpb24gaXMgbm93IG5vbnNlbnNlLgoK
+SG9uZXN0bHkgYSBwcm9wZXIgZXhwbGFuYXRpb24gb2Ygd2h5IHR3byBmdW5jdGlvbnMgZXhpc3Qg
+d291bGQgYmUKZ3JlYXQgYXQgdGhpcyBwb2ludCA6KQoKSmFzb24KCl9fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fClhlbi1kZXZlbCBtYWlsaW5nIGxpc3QKWGVu
+LWRldmVsQGxpc3RzLnhlbnByb2plY3Qub3JnCmh0dHBzOi8vbGlzdHMueGVucHJvamVjdC5vcmcv
+bWFpbG1hbi9saXN0aW5mby94ZW4tZGV2ZWw=
