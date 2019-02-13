@@ -1,74 +1,35 @@
-From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.20 061/105] scsi: qedi: Add ep_state for login completion on un-reachable targets
-Date: Tue, 12 Feb 2019 21:32:52 -0500
-Message-ID: <20190213023336.19019-61-sashal@kernel.org>
-References: <20190213023336.19019-1-sashal@kernel.org>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 1/6] scsi: hisi_sas: Add support for DIX feature for v3 hw
+Date: Tue, 12 Feb 2019 22:01:46 -0500
+Message-ID: <yq1a7j0tmqt.fsf@oracle.com>
+References: <1549450376-114929-1-git-send-email-john.garry@huawei.com>
+        <1549450376-114929-2-git-send-email-john.garry@huawei.com>
+        <yq1zhr5vpos.fsf@oracle.com>
+        <53c516cc-cce3-a3e1-718f-6fc465b6e401@hisilicon.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190213023336.19019-1-sashal@kernel.org>
+In-Reply-To: <53c516cc-cce3-a3e1-718f-6fc465b6e401@hisilicon.com> (chenxiang's
+        message of "Mon, 11 Feb 2019 19:36:01 +0800")
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Manish Rangankar <mrangankar@marvell.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+To: "chenxiang (M)" <chenxiang66@hisilicon.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, John Garry <john.garry@huawei.com>, jejb@linux.vnet.ibm.com, linuxarm@huawei.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Manish Rangankar <mrangankar@marvell.com>
 
-[ Upstream commit 34a2ce887668db9dda4b56e6f155c49ac13f3e54 ]
+chenxiang,
 
-When the driver finds invalid destination MAC for the first un-reachable
-target, and before completes the PATH_REQ operation, set new ep_state to
-OFFLDCONN_NONE so that as part of driver ep_poll mechanism, the upper
-open-iscsi layer is notified to complete the login process on the first
-un-reachable target and thus proceed login to other reachable targets.
+>>> +	if (prot_flags & SCSI_PROT_REF_CHECK)
+>>> +		return T10_CHK_APP_TAG_MSK;
 
-Signed-off-by: Manish Rangankar <mrangankar@marvell.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/scsi/qedi/qedi_iscsi.c | 3 +++
- drivers/scsi/qedi/qedi_iscsi.h | 1 +
- 2 files changed, 4 insertions(+)
+>> Polarity is a bit unclear here. Is this statement disabling checking of
+>> the app tag?
+>
+> Yes, disabling checking of app tag.
+> For here, 1'b0 presents the related byte in DIF will be checked, and
+> 1'b1 presents the related byte in DIF will not be checked.
 
-diff --git a/drivers/scsi/qedi/qedi_iscsi.c b/drivers/scsi/qedi/qedi_iscsi.c
-index 2f0a4f2c5ff8..d4821b9dea45 100644
---- a/drivers/scsi/qedi/qedi_iscsi.c
-+++ b/drivers/scsi/qedi/qedi_iscsi.c
-@@ -954,6 +954,7 @@ static int qedi_ep_poll(struct iscsi_endpoint *ep, int timeout_ms)
- 
- 	qedi_ep = ep->dd_data;
- 	if (qedi_ep->state == EP_STATE_IDLE ||
-+	    qedi_ep->state == EP_STATE_OFLDCONN_NONE ||
- 	    qedi_ep->state == EP_STATE_OFLDCONN_FAILED)
- 		return -1;
- 
-@@ -1036,6 +1037,7 @@ static void qedi_ep_disconnect(struct iscsi_endpoint *ep)
- 
- 	switch (qedi_ep->state) {
- 	case EP_STATE_OFLDCONN_START:
-+	case EP_STATE_OFLDCONN_NONE:
- 		goto ep_release_conn;
- 	case EP_STATE_OFLDCONN_FAILED:
- 			break;
-@@ -1226,6 +1228,7 @@ static int qedi_set_path(struct Scsi_Host *shost, struct iscsi_path *path_data)
- 
- 	if (!is_valid_ether_addr(&path_data->mac_addr[0])) {
- 		QEDI_NOTICE(&qedi->dbg_ctx, "dst mac NOT VALID\n");
-+		qedi_ep->state = EP_STATE_OFLDCONN_NONE;
- 		ret = -EIO;
- 		goto set_path_exit;
- 	}
-diff --git a/drivers/scsi/qedi/qedi_iscsi.h b/drivers/scsi/qedi/qedi_iscsi.h
-index 11260776212f..892d70d54553 100644
---- a/drivers/scsi/qedi/qedi_iscsi.h
-+++ b/drivers/scsi/qedi/qedi_iscsi.h
-@@ -59,6 +59,7 @@ enum {
- 	EP_STATE_OFLDCONN_FAILED        = 0x2000,
- 	EP_STATE_CONNECT_FAILED         = 0x4000,
- 	EP_STATE_DISCONN_TIMEDOUT       = 0x8000,
-+	EP_STATE_OFLDCONN_NONE          = 0x10000,
- };
- 
- struct qedi_conn;
+OK, thanks for the clarification!
+
 -- 
-2.19.1
+Martin K. Petersen	Oracle Linux Engineering
