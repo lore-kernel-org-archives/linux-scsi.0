@@ -1,178 +1,331 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH v2] scsi: sd: block: Fix regressions in read-only block device handling
-Date: Tue, 12 Feb 2019 21:57:17 -0500
-Message-ID: <20190213025717.20057-1-martin.petersen@oracle.com>
-References: <yq1d0nxuf73.fsf@oracle.com>
+From: Sasha Levin <sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.20 059/105] scsi: tcmu: avoid cmd/qfull timers updated whenever a new cmd comes
+Date: Tue, 12 Feb 2019 21:32:50 -0500
+Message-ID: <20190213023336.19019-59-sashal@kernel.org>
+References: <20190213023336.19019-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <yq1d0nxuf73.fsf@oracle.com>
-Sender: stable-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Jeremy Cline <jeremy@jcline.org>, Oleksii Kurochko <olkuroch@cisco.com>, stable@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190213023336.19019-1-sashal@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc: Xiubo Li <xiubli@redhat.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Some devices come online in write protected state and switch to
-read-write once they are ready to process I/O requests. These devices
-broke with commit 20bd1d026aac ("scsi: sd: Keep disk read-only when
-re-reading partition") because we had no way to distinguish between a
-user decision to set a block_device read-only and the actual hardware
-device being write-protected.
+From: Xiubo Li <xiubli@redhat.com>
 
-Because partitions are dropped and recreated on revalidate we are
-unable to persist any user-provided policy in hd_struct. Introduce a
-bitmap in struct gendisk to track the user configuration. This bitmap
-is updated when BLKROSET is called on a given disk or partition.
+[ Upstream commit a94a2572b97744d3a35a1996df0e5cf6b2461a4a ]
 
-A helper function, get_user_ro(), is provided to determine whether the
-ioctl has forced read-only state for a given block device. This helper
-is used by set_disk_ro() and add_partition() to ensure that both
-existing and newly created partitions will get the correct state.
+Currently there is one cmd timeout timer and one qfull timer for each udev,
+and whenever any new command is coming in we will update the cmd timer or
+qfull timer. For some corner cases the timers are always working only for
+the ringbuffer's and full queue's newest cmd. That's to say the timer won't
+be fired even if one cmd has been stuck for a very long time and the
+deadline is reached.
 
- - If BLKROSET sets a whole disk device read-only, all partitions will
-   now end up in a read-only state.
+This fix will keep the cmd/qfull timers to be pended for the oldest cmd in
+ringbuffer and full queue, and will update them with the next cmd's
+deadline only when the old cmd's deadline is reached or removed from the
+ringbuffer and full queue.
 
- - If BLKROSET sets a given partition read-only, that partition will
-   remain read-only post revalidate.
-
- - Otherwise both the whole disk device and any partitions will
-   reflect the write protect state of the underlying device.
-
-Cc: Jeremy Cline <jeremy@jcline.org>
-Cc: Oleksii Kurochko <olkuroch@cisco.com>
-Cc: stable@vger.kernel.org # v4.16+
-Reported-by: Oleksii Kurochko <olkuroch@cisco.com>
-Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=201221
-Fixes: 20bd1d026aac ("scsi: sd: Keep disk read-only when re-reading partition")
+Signed-off-by: Xiubo Li <xiubli@redhat.com>
+Acked-by: Mike Christie <mchristi@redhat.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
+ drivers/target/target_core_user.c | 88 +++++++++++++++++++++----------
+ 1 file changed, 61 insertions(+), 27 deletions(-)
 
-v2:
-	- Track user read-only state in a bitmap
-
-	- Work around the regression that caused us to drop user
-	  preferences on revalidate
----
- block/genhd.c             | 22 +++++++++++++++++-----
- block/ioctl.c             |  4 ++++
- block/partition-generic.c |  2 +-
- drivers/scsi/sd.c         |  4 +---
- include/linux/genhd.h     |  2 ++
- 5 files changed, 25 insertions(+), 9 deletions(-)
-
-diff --git a/block/genhd.c b/block/genhd.c
-index 1dd8fd6613b8..34667eb1d3cc 100644
---- a/block/genhd.c
-+++ b/block/genhd.c
-@@ -1544,19 +1544,31 @@ void set_device_ro(struct block_device *bdev, int flag)
+diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+index 9cd404acdb82..ac7620120491 100644
+--- a/drivers/target/target_core_user.c
++++ b/drivers/target/target_core_user.c
+@@ -148,7 +148,7 @@ struct tcmu_dev {
+ 	size_t ring_size;
  
- EXPORT_SYMBOL(set_device_ro);
+ 	struct mutex cmdr_lock;
+-	struct list_head cmdr_queue;
++	struct list_head qfull_queue;
  
-+bool get_user_ro(struct gendisk *disk, unsigned int partno)
-+{
-+	/* Is the user read-only bit set for the whole disk device? */
-+	if (test_bit(0, disk->user_ro_bitmap))
-+		return true;
+ 	uint32_t dbi_max;
+ 	uint32_t dbi_thresh;
+@@ -159,6 +159,7 @@ struct tcmu_dev {
+ 
+ 	struct timer_list cmd_timer;
+ 	unsigned int cmd_time_out;
++	struct list_head inflight_queue;
+ 
+ 	struct timer_list qfull_timer;
+ 	int qfull_time_out;
+@@ -179,7 +180,7 @@ struct tcmu_dev {
+ struct tcmu_cmd {
+ 	struct se_cmd *se_cmd;
+ 	struct tcmu_dev *tcmu_dev;
+-	struct list_head cmdr_queue_entry;
++	struct list_head queue_entry;
+ 
+ 	uint16_t cmd_id;
+ 
+@@ -192,6 +193,7 @@ struct tcmu_cmd {
+ 	unsigned long deadline;
+ 
+ #define TCMU_CMD_BIT_EXPIRED 0
++#define TCMU_CMD_BIT_INFLIGHT 1
+ 	unsigned long flags;
+ };
+ /*
+@@ -586,7 +588,7 @@ static struct tcmu_cmd *tcmu_alloc_cmd(struct se_cmd *se_cmd)
+ 	if (!tcmu_cmd)
+ 		return NULL;
+ 
+-	INIT_LIST_HEAD(&tcmu_cmd->cmdr_queue_entry);
++	INIT_LIST_HEAD(&tcmu_cmd->queue_entry);
+ 	tcmu_cmd->se_cmd = se_cmd;
+ 	tcmu_cmd->tcmu_dev = udev;
+ 
+@@ -915,11 +917,13 @@ setup_timer:
+ 		return 0;
+ 
+ 	tcmu_cmd->deadline = round_jiffies_up(jiffies + msecs_to_jiffies(tmo));
+-	mod_timer(timer, tcmu_cmd->deadline);
++	if (!timer_pending(timer))
++		mod_timer(timer, tcmu_cmd->deadline);
 +
-+	/* Is the user read-only bit set for this particular partition? */
-+	if (test_bit(partno, disk->user_ro_bitmap))
-+		return true;
-+
-+	return false;
-+}
-+EXPORT_SYMBOL(get_user_ro);
-+
- void set_disk_ro(struct gendisk *disk, int flag)
- {
- 	struct disk_part_iter piter;
- 	struct hd_struct *part;
- 
--	if (disk->part0.policy != flag) {
-+	if (disk->part0.policy != flag)
- 		set_disk_ro_uevent(disk, flag);
--		disk->part0.policy = flag;
--	}
- 
--	disk_part_iter_init(&piter, disk, DISK_PITER_INCL_EMPTY);
-+	disk_part_iter_init(&piter, disk, DISK_PITER_INCL_EMPTY_PART0);
- 	while ((part = disk_part_iter_next(&piter)))
--		part->policy = flag;
-+		part->policy = get_user_ro(disk, part->partno) ?: flag;
- 	disk_part_iter_exit(&piter);
- }
- 
-diff --git a/block/ioctl.c b/block/ioctl.c
-index 4825c78a6baa..41206df89485 100644
---- a/block/ioctl.c
-+++ b/block/ioctl.c
-@@ -451,6 +451,10 @@ static int blkdev_roset(struct block_device *bdev, fmode_t mode,
- 		return ret;
- 	if (get_user(n, (int __user *)arg))
- 		return -EFAULT;
-+	if (n)
-+		set_bit(bdev->bd_partno, bdev->bd_disk->user_ro_bitmap);
-+	else
-+		clear_bit(bdev->bd_partno, bdev->bd_disk->user_ro_bitmap);
- 	set_device_ro(bdev, n);
  	return 0;
  }
-diff --git a/block/partition-generic.c b/block/partition-generic.c
-index 8e596a8dff32..c6a3c21c2496 100644
---- a/block/partition-generic.c
-+++ b/block/partition-generic.c
-@@ -338,7 +338,7 @@ struct hd_struct *add_partition(struct gendisk *disk, int partno,
- 		queue_limit_discard_alignment(&disk->queue->limits, start);
- 	p->nr_sects = len;
- 	p->partno = partno;
--	p->policy = get_disk_ro(disk);
-+	p->policy = get_user_ro(disk, partno) ?: get_disk_ro(disk);
  
- 	if (info) {
- 		struct partition_meta_info *pinfo = alloc_part_info(disk);
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 67cc439b86e4..5dfe37b08d3b 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -2591,10 +2591,8 @@ sd_read_write_protect_flag(struct scsi_disk *sdkp, unsigned char *buffer)
- 	int res;
- 	struct scsi_device *sdp = sdkp->device;
- 	struct scsi_mode_data data;
--	int disk_ro = get_disk_ro(sdkp->disk);
- 	int old_wp = sdkp->write_prot;
- 
--	set_disk_ro(sdkp->disk, 0);
- 	if (sdp->skip_ms_page_3f) {
- 		sd_first_printk(KERN_NOTICE, sdkp, "Assuming Write Enabled\n");
- 		return;
-@@ -2632,7 +2630,7 @@ sd_read_write_protect_flag(struct scsi_disk *sdkp, unsigned char *buffer)
- 			  "Test WP failed, assume Write Enabled\n");
- 	} else {
- 		sdkp->write_prot = ((data.device_specific & 0x80) != 0);
--		set_disk_ro(sdkp->disk, sdkp->write_prot || disk_ro);
-+		set_disk_ro(sdkp->disk, sdkp->write_prot);
- 		if (sdkp->first_scan || old_wp != sdkp->write_prot) {
- 			sd_printk(KERN_NOTICE, sdkp, "Write Protect is %s\n",
- 				  sdkp->write_prot ? "on" : "off");
-diff --git a/include/linux/genhd.h b/include/linux/genhd.h
-index 06c0fd594097..9645c2604465 100644
---- a/include/linux/genhd.h
-+++ b/include/linux/genhd.h
-@@ -194,6 +194,7 @@ struct gendisk {
- 	 */
- 	struct disk_part_tbl __rcu *part_tbl;
- 	struct hd_struct part0;
-+	DECLARE_BITMAP(user_ro_bitmap, DISK_MAX_PARTS);
- 
- 	const struct block_device_operations *fops;
- 	struct request_queue *queue;
-@@ -433,6 +434,7 @@ extern struct block_device *bdget_disk(struct gendisk *disk, int partno);
- 
- extern void set_device_ro(struct block_device *bdev, int flag);
- extern void set_disk_ro(struct gendisk *disk, int flag);
-+extern bool get_user_ro(struct gendisk *disk, unsigned int partno);
- 
- static inline int get_disk_ro(struct gendisk *disk)
+-static int add_to_cmdr_queue(struct tcmu_cmd *tcmu_cmd)
++static int add_to_qfull_queue(struct tcmu_cmd *tcmu_cmd)
  {
+ 	struct tcmu_dev *udev = tcmu_cmd->tcmu_dev;
+ 	unsigned int tmo;
+@@ -942,7 +946,7 @@ static int add_to_cmdr_queue(struct tcmu_cmd *tcmu_cmd)
+ 	if (ret)
+ 		return ret;
+ 
+-	list_add_tail(&tcmu_cmd->cmdr_queue_entry, &udev->cmdr_queue);
++	list_add_tail(&tcmu_cmd->queue_entry, &udev->qfull_queue);
+ 	pr_debug("adding cmd %u on dev %s to ring space wait queue\n",
+ 		 tcmu_cmd->cmd_id, udev->name);
+ 	return 0;
+@@ -999,7 +1003,7 @@ static sense_reason_t queue_cmd_ring(struct tcmu_cmd *tcmu_cmd, int *scsi_err)
+ 	base_command_size = tcmu_cmd_get_base_cmd_size(tcmu_cmd->dbi_cnt);
+ 	command_size = tcmu_cmd_get_cmd_size(tcmu_cmd, base_command_size);
+ 
+-	if (!list_empty(&udev->cmdr_queue))
++	if (!list_empty(&udev->qfull_queue))
+ 		goto queue;
+ 
+ 	mb = udev->mb_addr;
+@@ -1096,13 +1100,16 @@ static sense_reason_t queue_cmd_ring(struct tcmu_cmd *tcmu_cmd, int *scsi_err)
+ 	UPDATE_HEAD(mb->cmd_head, command_size, udev->cmdr_size);
+ 	tcmu_flush_dcache_range(mb, sizeof(*mb));
+ 
++	list_add_tail(&tcmu_cmd->queue_entry, &udev->inflight_queue);
++	set_bit(TCMU_CMD_BIT_INFLIGHT, &tcmu_cmd->flags);
++
+ 	/* TODO: only if FLUSH and FUA? */
+ 	uio_event_notify(&udev->uio_info);
+ 
+ 	return 0;
+ 
+ queue:
+-	if (add_to_cmdr_queue(tcmu_cmd)) {
++	if (add_to_qfull_queue(tcmu_cmd)) {
+ 		*scsi_err = TCM_OUT_OF_RESOURCES;
+ 		return -1;
+ 	}
+@@ -1145,6 +1152,8 @@ static void tcmu_handle_completion(struct tcmu_cmd *cmd, struct tcmu_cmd_entry *
+ 	if (test_bit(TCMU_CMD_BIT_EXPIRED, &cmd->flags))
+ 		goto out;
+ 
++	list_del_init(&cmd->queue_entry);
++
+ 	tcmu_cmd_reset_dbi_cur(cmd);
+ 
+ 	if (entry->hdr.uflags & TCMU_UFLAG_UNKNOWN_OP) {
+@@ -1194,9 +1203,29 @@ out:
+ 	tcmu_free_cmd(cmd);
+ }
+ 
++static void tcmu_set_next_deadline(struct list_head *queue,
++				   struct timer_list *timer)
++{
++	struct tcmu_cmd *tcmu_cmd, *tmp_cmd;
++	unsigned long deadline = 0;
++
++	list_for_each_entry_safe(tcmu_cmd, tmp_cmd, queue, queue_entry) {
++		if (!time_after(jiffies, tcmu_cmd->deadline)) {
++			deadline = tcmu_cmd->deadline;
++			break;
++		}
++	}
++
++	if (deadline)
++		mod_timer(timer, deadline);
++	else
++		del_timer(timer);
++}
++
+ static unsigned int tcmu_handle_completions(struct tcmu_dev *udev)
+ {
+ 	struct tcmu_mailbox *mb;
++	struct tcmu_cmd *cmd;
+ 	int handled = 0;
+ 
+ 	if (test_bit(TCMU_DEV_BIT_BROKEN, &udev->flags)) {
+@@ -1210,7 +1239,6 @@ static unsigned int tcmu_handle_completions(struct tcmu_dev *udev)
+ 	while (udev->cmdr_last_cleaned != READ_ONCE(mb->cmd_tail)) {
+ 
+ 		struct tcmu_cmd_entry *entry = (void *) mb + CMDR_OFF + udev->cmdr_last_cleaned;
+-		struct tcmu_cmd *cmd;
+ 
+ 		tcmu_flush_dcache_range(entry, sizeof(*entry));
+ 
+@@ -1243,7 +1271,7 @@ static unsigned int tcmu_handle_completions(struct tcmu_dev *udev)
+ 		/* no more pending commands */
+ 		del_timer(&udev->cmd_timer);
+ 
+-		if (list_empty(&udev->cmdr_queue)) {
++		if (list_empty(&udev->qfull_queue)) {
+ 			/*
+ 			 * no more pending or waiting commands so try to
+ 			 * reclaim blocks if needed.
+@@ -1252,6 +1280,8 @@ static unsigned int tcmu_handle_completions(struct tcmu_dev *udev)
+ 			    tcmu_global_max_blocks)
+ 				schedule_delayed_work(&tcmu_unmap_work, 0);
+ 		}
++	} else if (udev->cmd_time_out) {
++		tcmu_set_next_deadline(&udev->inflight_queue, &udev->cmd_timer);
+ 	}
+ 
+ 	return handled;
+@@ -1271,7 +1301,7 @@ static int tcmu_check_expired_cmd(int id, void *p, void *data)
+ 	if (!time_after(jiffies, cmd->deadline))
+ 		return 0;
+ 
+-	is_running = list_empty(&cmd->cmdr_queue_entry);
++	is_running = test_bit(TCMU_CMD_BIT_INFLIGHT, &cmd->flags);
+ 	se_cmd = cmd->se_cmd;
+ 
+ 	if (is_running) {
+@@ -1288,12 +1318,11 @@ static int tcmu_check_expired_cmd(int id, void *p, void *data)
+ 		 */
+ 		scsi_status = SAM_STAT_CHECK_CONDITION;
+ 	} else {
+-		list_del_init(&cmd->cmdr_queue_entry);
+-
+ 		idr_remove(&udev->commands, id);
+ 		tcmu_free_cmd(cmd);
+ 		scsi_status = SAM_STAT_TASK_SET_FULL;
+ 	}
++	list_del_init(&cmd->queue_entry);
+ 
+ 	pr_debug("Timing out cmd %u on dev %s that is %s.\n",
+ 		 id, udev->name, is_running ? "inflight" : "queued");
+@@ -1372,7 +1401,8 @@ static struct se_device *tcmu_alloc_device(struct se_hba *hba, const char *name)
+ 
+ 	INIT_LIST_HEAD(&udev->node);
+ 	INIT_LIST_HEAD(&udev->timedout_entry);
+-	INIT_LIST_HEAD(&udev->cmdr_queue);
++	INIT_LIST_HEAD(&udev->qfull_queue);
++	INIT_LIST_HEAD(&udev->inflight_queue);
+ 	idr_init(&udev->commands);
+ 
+ 	timer_setup(&udev->qfull_timer, tcmu_qfull_timedout, 0);
+@@ -1383,7 +1413,7 @@ static struct se_device *tcmu_alloc_device(struct se_hba *hba, const char *name)
+ 	return &udev->se_dev;
+ }
+ 
+-static bool run_cmdr_queue(struct tcmu_dev *udev, bool fail)
++static bool run_qfull_queue(struct tcmu_dev *udev, bool fail)
+ {
+ 	struct tcmu_cmd *tcmu_cmd, *tmp_cmd;
+ 	LIST_HEAD(cmds);
+@@ -1391,15 +1421,15 @@ static bool run_cmdr_queue(struct tcmu_dev *udev, bool fail)
+ 	sense_reason_t scsi_ret;
+ 	int ret;
+ 
+-	if (list_empty(&udev->cmdr_queue))
++	if (list_empty(&udev->qfull_queue))
+ 		return true;
+ 
+ 	pr_debug("running %s's cmdr queue forcefail %d\n", udev->name, fail);
+ 
+-	list_splice_init(&udev->cmdr_queue, &cmds);
++	list_splice_init(&udev->qfull_queue, &cmds);
+ 
+-	list_for_each_entry_safe(tcmu_cmd, tmp_cmd, &cmds, cmdr_queue_entry) {
+-		list_del_init(&tcmu_cmd->cmdr_queue_entry);
++	list_for_each_entry_safe(tcmu_cmd, tmp_cmd, &cmds, queue_entry) {
++		list_del_init(&tcmu_cmd->queue_entry);
+ 
+ 	        pr_debug("removing cmd %u on dev %s from queue\n",
+ 		         tcmu_cmd->cmd_id, udev->name);
+@@ -1437,14 +1467,13 @@ static bool run_cmdr_queue(struct tcmu_dev *udev, bool fail)
+ 			 * cmd was requeued, so just put all cmds back in
+ 			 * the queue
+ 			 */
+-			list_splice_tail(&cmds, &udev->cmdr_queue);
++			list_splice_tail(&cmds, &udev->qfull_queue);
+ 			drained = false;
+-			goto done;
++			break;
+ 		}
+ 	}
+-	if (list_empty(&udev->cmdr_queue))
+-		del_timer(&udev->qfull_timer);
+-done:
++
++	tcmu_set_next_deadline(&udev->qfull_queue, &udev->qfull_timer);
+ 	return drained;
+ }
+ 
+@@ -1454,7 +1483,7 @@ static int tcmu_irqcontrol(struct uio_info *info, s32 irq_on)
+ 
+ 	mutex_lock(&udev->cmdr_lock);
+ 	tcmu_handle_completions(udev);
+-	run_cmdr_queue(udev, false);
++	run_qfull_queue(udev, false);
+ 	mutex_unlock(&udev->cmdr_lock);
+ 
+ 	return 0;
+@@ -1982,7 +2011,7 @@ static void tcmu_block_dev(struct tcmu_dev *udev)
+ 	/* complete IO that has executed successfully */
+ 	tcmu_handle_completions(udev);
+ 	/* fail IO waiting to be queued */
+-	run_cmdr_queue(udev, true);
++	run_qfull_queue(udev, true);
+ 
+ unlock:
+ 	mutex_unlock(&udev->cmdr_lock);
+@@ -1997,7 +2026,7 @@ static void tcmu_reset_ring(struct tcmu_dev *udev, u8 err_level)
+ 	mutex_lock(&udev->cmdr_lock);
+ 
+ 	idr_for_each_entry(&udev->commands, cmd, i) {
+-		if (!list_empty(&cmd->cmdr_queue_entry))
++		if (!test_bit(TCMU_CMD_BIT_INFLIGHT, &cmd->flags))
+ 			continue;
+ 
+ 		pr_debug("removing cmd %u on dev %s from ring (is expired %d)\n",
+@@ -2006,6 +2035,7 @@ static void tcmu_reset_ring(struct tcmu_dev *udev, u8 err_level)
+ 
+ 		idr_remove(&udev->commands, i);
+ 		if (!test_bit(TCMU_CMD_BIT_EXPIRED, &cmd->flags)) {
++			list_del_init(&cmd->queue_entry);
+ 			if (err_level == 1) {
+ 				/*
+ 				 * Userspace was not able to start the
+@@ -2666,6 +2696,10 @@ static void check_timedout_devices(void)
+ 
+ 		mutex_lock(&udev->cmdr_lock);
+ 		idr_for_each(&udev->commands, tcmu_check_expired_cmd, NULL);
++
++		tcmu_set_next_deadline(&udev->inflight_queue, &udev->cmd_timer);
++		tcmu_set_next_deadline(&udev->qfull_queue, &udev->qfull_timer);
++
+ 		mutex_unlock(&udev->cmdr_lock);
+ 
+ 		spin_lock_bh(&timed_out_udevs_lock);
 -- 
-2.19.2
+2.19.1
