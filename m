@@ -1,41 +1,63 @@
-From: Colin King <colin.king@canonical.com>
-Subject: [PATCH] scsi: qla2xxx: remove redundant null check on pointer sess
-Date: Wed, 13 Feb 2019 13:53:35 +0000
-Message-ID: <20190213135335.4790-1-colin.king@canonical.com>
+From: Rob Herring <robh@kernel.org>
+Subject: [PATCH] scsi: qlogicpti: Use of_node_name_eq for node name comparisons
+Date: Wed, 13 Feb 2019 10:08:29 -0600
+Message-ID: <20190213160829.3923-1-robh@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: qla2xxx-upstream@qlogic.com, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.ibm.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Colin Ian King <colin.king@canonical.com>
+Convert string compares of DT node names to use of_node_name_eq helper
+instead. This removes direct access to the node name pointer.
 
-The null check on pointer sess and the subsequent call is redundant
-as sess is null on all the the paths that lead to the out_term2 label.
-Hence the null check and the call can be removed.
+As prom_name is not used for anything else, remove it.
 
-Detected by CoverityScan, CID#1420663 ("Logically dead code")
-
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
+Signed-off-by: Rob Herring <robh@kernel.org>
 ---
- drivers/scsi/qla2xxx/qla_target.c | 2 --
- 1 file changed, 2 deletions(-)
+ drivers/scsi/qlogicpti.c | 3 +--
+ drivers/scsi/qlogicpti.h | 3 +--
+ 2 files changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 6b8c655d9eb4..9af329a5ed90 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -6396,8 +6396,6 @@ static void qlt_tmr_work(struct qla_tgt *tgt,
- 	return;
+diff --git a/drivers/scsi/qlogicpti.c b/drivers/scsi/qlogicpti.c
+index e35ce762d454..0e22512bd3e4 100644
+--- a/drivers/scsi/qlogicpti.c
++++ b/drivers/scsi/qlogicpti.c
+@@ -1314,8 +1314,7 @@ static int qpti_sbus_probe(struct platform_device *op)
+ 	qpti->qhost = host;
+ 	qpti->op = op;
+ 	qpti->qpti_id = nqptis;
+-	strcpy(qpti->prom_name, op->dev.of_node->name);
+-	qpti->is_pti = strcmp(qpti->prom_name, "QLGC,isp");
++	qpti->is_pti = !of_node_name_eq(op->dev.of_node, "QLGC,isp");
  
- out_term2:
--	if (sess)
--		ha->tgt.tgt_ops->put_sess(sess);
- 	spin_unlock_irqrestore(&ha->tgt.sess_lock, flags);
- out_term:
- 	qlt_send_term_exchange(ha->base_qpair, NULL, &prm->tm_iocb2, 1, 0);
+ 	if (qpti_map_regs(qpti) < 0)
+ 		goto fail_unlink;
+diff --git a/drivers/scsi/qlogicpti.h b/drivers/scsi/qlogicpti.h
+index 884ad72ade57..2b6374e08a7d 100644
+--- a/drivers/scsi/qlogicpti.h
++++ b/drivers/scsi/qlogicpti.h
+@@ -364,7 +364,6 @@ struct qlogicpti {
+ 	int                       qpti_id;
+ 	int                       scsi_id;
+ 	int                       prom_node;
+-	char                      prom_name[64];
+ 	int                       irq;
+ 	char                      differential, ultra, clock;
+ 	unsigned char             bursts;
+@@ -379,7 +378,7 @@ struct qlogicpti {
+ #define SREG_IMASK                0x0c   /* Interrupt level            */
+ #define SREG_SPMASK               0x03   /* Mask for switch pack       */
+ 	unsigned char             swsreg;
+-	unsigned int	
++	unsigned int
+ 		gotirq	:	1,	/* this instance got an irq */
+ 		is_pti	: 	1;	/* Non-zero if this is a PTI board. */
+ };
 -- 
-2.20.1
+2.19.1
