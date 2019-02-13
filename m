@@ -1,43 +1,107 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.9 12/21] scsi: qla4xxx: check return code of qla4xxx_copy_from_fwddb_param
-Date: Tue, 12 Feb 2019 21:40:31 -0500
-Message-ID: <20190213024040.21740-12-sashal@kernel.org>
-References: <20190213024040.21740-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.4 11/16] scsi: isci: initialize shost fully before calling scsi_add_host()
+Date: Tue, 12 Feb 2019 21:41:07 -0500
+Message-ID: <20190213024112.22038-11-sashal@kernel.org>
+References: <20190213024112.22038-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20190213024040.21740-1-sashal@kernel.org>
-Sender: stable-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190213024112.22038-1-sashal@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: YueHaibing <yuehaibing@huawei.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Cc: Logan Gunthorpe <logang@deltatee.com>, Intel SCU Linux support <intel-linux-scu@intel.com>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Jeff Moyer <jmoyer@redhat.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: YueHaibing <yuehaibing@huawei.com>
+From: Logan Gunthorpe <logang@deltatee.com>
 
-[ Upstream commit 72b4a0465f995175a2e22cf4a636bf781f1f28a7 ]
+[ Upstream commit cc29a1b0a3f2597ce887d339222fa85b9307706d ]
 
-The return code should be check while qla4xxx_copy_from_fwddb_param fails.
+scsi_mq_setup_tags(), which is called by scsi_add_host(), calculates the
+command size to allocate based on the prot_capabilities. In the isci
+driver, scsi_host_set_prot() is called after scsi_add_host() so the command
+size gets calculated to be smaller than it needs to be.  Eventually,
+scsi_mq_init_request() locates the 'prot_sdb' after the command assuming it
+was sized correctly and a buffer overrun may occur.
 
-Signed-off-by: YueHaibing <yuehaibing@huawei.com>
-Acked-by: Manish Rangankar <mrangankar@marvell.com>
+However, seeing blk_mq_alloc_rqs() rounds up to the nearest cache line
+size, the mistake can go unnoticed.
+
+The bug was noticed after the struct request size was reduced by commit
+9d037ad707ed ("block: remove req->timeout_list")
+
+Which likely reduced the allocated space for the request by an entire cache
+line, enough that the overflow could be hit and it caused a panic, on boot,
+at:
+
+  RIP: 0010:t10_pi_complete+0x77/0x1c0
+  Call Trace:
+    <IRQ>
+    sd_done+0xf5/0x340
+    scsi_finish_command+0xc3/0x120
+    blk_done_softirq+0x83/0xb0
+    __do_softirq+0xa1/0x2e6
+    irq_exit+0xbc/0xd0
+    call_function_single_interrupt+0xf/0x20
+    </IRQ>
+
+sd_done() would call scsi_prot_sg_count() which reads the number of
+entities in 'prot_sdb', but seeing 'prot_sdb' is located after the end of
+the allocated space it reads a garbage number and erroneously calls
+t10_pi_complete().
+
+To prevent this, the calls to scsi_host_set_prot() are moved into
+isci_host_alloc() before the call to scsi_add_host(). Out of caution, also
+move the similar call to scsi_host_set_guard().
+
+Fixes: 3d2d75254915 ("[SCSI] isci: T10 DIF support")
+Link: http://lkml.kernel.org/r/da851333-eadd-163a-8c78-e1f4ec5ec857@deltatee.com
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Cc: Intel SCU Linux support <intel-linux-scu@intel.com>
+Cc: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>
+Cc: Jeff Moyer <jmoyer@redhat.com>
+Reviewed-by: Jeff Moyer <jmoyer@redhat.com>
+Reviewed-by: Jens Axboe <axboe@kernel.dk>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qla4xxx/ql4_os.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/scsi/isci/init.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index d8c03431d0aa..f9f899ec9427 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -7245,6 +7245,8 @@ static int qla4xxx_sysfs_ddb_tgt_create(struct scsi_qla_host *ha,
+diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
+index 77128d680e3b..6f38fa1f468a 100644
+--- a/drivers/scsi/isci/init.c
++++ b/drivers/scsi/isci/init.c
+@@ -595,6 +595,13 @@ static struct isci_host *isci_host_alloc(struct pci_dev *pdev, int id)
+ 	shost->max_lun = ~0;
+ 	shost->max_cmd_len = MAX_COMMAND_SIZE;
  
- 	rc = qla4xxx_copy_from_fwddb_param(fnode_sess, fnode_conn,
- 					   fw_ddb_entry);
-+	if (rc)
-+		goto free_sess;
++	/* turn on DIF support */
++	scsi_host_set_prot(shost,
++			   SHOST_DIF_TYPE1_PROTECTION |
++			   SHOST_DIF_TYPE2_PROTECTION |
++			   SHOST_DIF_TYPE3_PROTECTION);
++	scsi_host_set_guard(shost, SHOST_DIX_GUARD_CRC);
++
+ 	err = scsi_add_host(shost, &pdev->dev);
+ 	if (err)
+ 		goto err_shost;
+@@ -682,13 +689,6 @@ static int isci_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 			goto err_host_alloc;
+ 		}
+ 		pci_info->hosts[i] = h;
+-
+-		/* turn on DIF support */
+-		scsi_host_set_prot(to_shost(h),
+-				   SHOST_DIF_TYPE1_PROTECTION |
+-				   SHOST_DIF_TYPE2_PROTECTION |
+-				   SHOST_DIF_TYPE3_PROTECTION);
+-		scsi_host_set_guard(to_shost(h), SHOST_DIX_GUARD_CRC);
+ 	}
  
- 	ql4_printk(KERN_INFO, ha, "%s: sysfs entry %s created\n",
- 		   __func__, fnode_sess->dev.kobj.name);
+ 	err = isci_setup_interrupts(pdev);
 -- 
 2.19.1
