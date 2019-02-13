@@ -1,107 +1,74 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.9 13/21] scsi: isci: initialize shost fully before calling scsi_add_host()
-Date: Tue, 12 Feb 2019 21:40:32 -0500
-Message-ID: <20190213024040.21740-13-sashal@kernel.org>
-References: <20190213024040.21740-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 25/34] scsi: qedi: Add ep_state for login completion on un-reachable targets
+Date: Tue, 12 Feb 2019 21:39:43 -0500
+Message-ID: <20190213023952.21311-25-sashal@kernel.org>
+References: <20190213023952.21311-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190213024040.21740-1-sashal@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20190213023952.21311-1-sashal@kernel.org>
+Sender: stable-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Logan Gunthorpe <logang@deltatee.com>, Intel SCU Linux support <intel-linux-scu@intel.com>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Jeff Moyer <jmoyer@redhat.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Cc: Manish Rangankar <mrangankar@marvell.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Logan Gunthorpe <logang@deltatee.com>
+From: Manish Rangankar <mrangankar@marvell.com>
 
-[ Upstream commit cc29a1b0a3f2597ce887d339222fa85b9307706d ]
+[ Upstream commit 34a2ce887668db9dda4b56e6f155c49ac13f3e54 ]
 
-scsi_mq_setup_tags(), which is called by scsi_add_host(), calculates the
-command size to allocate based on the prot_capabilities. In the isci
-driver, scsi_host_set_prot() is called after scsi_add_host() so the command
-size gets calculated to be smaller than it needs to be.  Eventually,
-scsi_mq_init_request() locates the 'prot_sdb' after the command assuming it
-was sized correctly and a buffer overrun may occur.
+When the driver finds invalid destination MAC for the first un-reachable
+target, and before completes the PATH_REQ operation, set new ep_state to
+OFFLDCONN_NONE so that as part of driver ep_poll mechanism, the upper
+open-iscsi layer is notified to complete the login process on the first
+un-reachable target and thus proceed login to other reachable targets.
 
-However, seeing blk_mq_alloc_rqs() rounds up to the nearest cache line
-size, the mistake can go unnoticed.
-
-The bug was noticed after the struct request size was reduced by commit
-9d037ad707ed ("block: remove req->timeout_list")
-
-Which likely reduced the allocated space for the request by an entire cache
-line, enough that the overflow could be hit and it caused a panic, on boot,
-at:
-
-  RIP: 0010:t10_pi_complete+0x77/0x1c0
-  Call Trace:
-    <IRQ>
-    sd_done+0xf5/0x340
-    scsi_finish_command+0xc3/0x120
-    blk_done_softirq+0x83/0xb0
-    __do_softirq+0xa1/0x2e6
-    irq_exit+0xbc/0xd0
-    call_function_single_interrupt+0xf/0x20
-    </IRQ>
-
-sd_done() would call scsi_prot_sg_count() which reads the number of
-entities in 'prot_sdb', but seeing 'prot_sdb' is located after the end of
-the allocated space it reads a garbage number and erroneously calls
-t10_pi_complete().
-
-To prevent this, the calls to scsi_host_set_prot() are moved into
-isci_host_alloc() before the call to scsi_add_host(). Out of caution, also
-move the similar call to scsi_host_set_guard().
-
-Fixes: 3d2d75254915 ("[SCSI] isci: T10 DIF support")
-Link: http://lkml.kernel.org/r/da851333-eadd-163a-8c78-e1f4ec5ec857@deltatee.com
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Cc: Intel SCU Linux support <intel-linux-scu@intel.com>
-Cc: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: Jeff Moyer <jmoyer@redhat.com>
-Reviewed-by: Jeff Moyer <jmoyer@redhat.com>
-Reviewed-by: Jens Axboe <axboe@kernel.dk>
+Signed-off-by: Manish Rangankar <mrangankar@marvell.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/isci/init.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+ drivers/scsi/qedi/qedi_iscsi.c | 3 +++
+ drivers/scsi/qedi/qedi_iscsi.h | 1 +
+ 2 files changed, 4 insertions(+)
 
-diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
-index 77128d680e3b..6f38fa1f468a 100644
---- a/drivers/scsi/isci/init.c
-+++ b/drivers/scsi/isci/init.c
-@@ -595,6 +595,13 @@ static struct isci_host *isci_host_alloc(struct pci_dev *pdev, int id)
- 	shost->max_lun = ~0;
- 	shost->max_cmd_len = MAX_COMMAND_SIZE;
+diff --git a/drivers/scsi/qedi/qedi_iscsi.c b/drivers/scsi/qedi/qedi_iscsi.c
+index a02b34ea5cab..45f044f35cea 100644
+--- a/drivers/scsi/qedi/qedi_iscsi.c
++++ b/drivers/scsi/qedi/qedi_iscsi.c
+@@ -961,6 +961,7 @@ static int qedi_ep_poll(struct iscsi_endpoint *ep, int timeout_ms)
  
-+	/* turn on DIF support */
-+	scsi_host_set_prot(shost,
-+			   SHOST_DIF_TYPE1_PROTECTION |
-+			   SHOST_DIF_TYPE2_PROTECTION |
-+			   SHOST_DIF_TYPE3_PROTECTION);
-+	scsi_host_set_guard(shost, SHOST_DIX_GUARD_CRC);
-+
- 	err = scsi_add_host(shost, &pdev->dev);
- 	if (err)
- 		goto err_shost;
-@@ -682,13 +689,6 @@ static int isci_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 			goto err_host_alloc;
- 		}
- 		pci_info->hosts[i] = h;
--
--		/* turn on DIF support */
--		scsi_host_set_prot(to_shost(h),
--				   SHOST_DIF_TYPE1_PROTECTION |
--				   SHOST_DIF_TYPE2_PROTECTION |
--				   SHOST_DIF_TYPE3_PROTECTION);
--		scsi_host_set_guard(to_shost(h), SHOST_DIX_GUARD_CRC);
+ 	qedi_ep = ep->dd_data;
+ 	if (qedi_ep->state == EP_STATE_IDLE ||
++	    qedi_ep->state == EP_STATE_OFLDCONN_NONE ||
+ 	    qedi_ep->state == EP_STATE_OFLDCONN_FAILED)
+ 		return -1;
+ 
+@@ -1043,6 +1044,7 @@ static void qedi_ep_disconnect(struct iscsi_endpoint *ep)
+ 
+ 	switch (qedi_ep->state) {
+ 	case EP_STATE_OFLDCONN_START:
++	case EP_STATE_OFLDCONN_NONE:
+ 		goto ep_release_conn;
+ 	case EP_STATE_OFLDCONN_FAILED:
+ 			break;
+@@ -1233,6 +1235,7 @@ static int qedi_set_path(struct Scsi_Host *shost, struct iscsi_path *path_data)
+ 
+ 	if (!is_valid_ether_addr(&path_data->mac_addr[0])) {
+ 		QEDI_NOTICE(&qedi->dbg_ctx, "dst mac NOT VALID\n");
++		qedi_ep->state = EP_STATE_OFLDCONN_NONE;
+ 		ret = -EIO;
+ 		goto set_path_exit;
  	}
+diff --git a/drivers/scsi/qedi/qedi_iscsi.h b/drivers/scsi/qedi/qedi_iscsi.h
+index 3247287cb0e7..812b4b68e6e4 100644
+--- a/drivers/scsi/qedi/qedi_iscsi.h
++++ b/drivers/scsi/qedi/qedi_iscsi.h
+@@ -59,6 +59,7 @@ enum {
+ 	EP_STATE_OFLDCONN_FAILED        = 0x2000,
+ 	EP_STATE_CONNECT_FAILED         = 0x4000,
+ 	EP_STATE_DISCONN_TIMEDOUT       = 0x8000,
++	EP_STATE_OFLDCONN_NONE          = 0x10000,
+ };
  
- 	err = isci_setup_interrupts(pdev);
+ struct qedi_conn;
 -- 
 2.19.1
