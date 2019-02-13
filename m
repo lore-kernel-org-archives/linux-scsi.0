@@ -1,63 +1,69 @@
-From: Rob Herring <robh@kernel.org>
-Subject: [PATCH] scsi: qlogicpti: Use of_node_name_eq for node name comparisons
-Date: Wed, 13 Feb 2019 10:08:29 -0600
-Message-ID: <20190213160829.3923-1-robh@kernel.org>
+From: "Ewan D. Milne" <emilne@redhat.com>
+Subject: Re: [PATCH 1/4] lpfc: fix calls to dma_set_mask_and_coherent()
+Date: Wed, 13 Feb 2019 13:52:10 -0500
+Message-ID: <8d799a1a4e8b801bdf9ae019510582264d0695e6.camel@redhat.com>
+References: <20190213114234.67275-1-hare@suse.de>
+         <20190213114234.67275-2-hare@suse.de>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.ibm.com>, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20190213114234.67275-2-hare@suse.de>
+Sender: stable-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, stable@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Convert string compares of DT node names to use of_node_name_eq helper
-instead. This removes direct access to the node name pointer.
+See below.  Also, this patch only fixes 1 of the 2 places,
+we need to fix lpfc_sli4_pci_mem_setup() also.  With the
+same code applied in both places, the NVMe/FC issue is fixed.
+I expect the SCSI/FCP tests would pass too, but those take
+a couple of days.
 
-As prom_name is not used for anything else, remove it.
+-Ewan
 
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
-Signed-off-by: Rob Herring <robh@kernel.org>
----
- drivers/scsi/qlogicpti.c | 3 +--
- drivers/scsi/qlogicpti.h | 3 +--
- 2 files changed, 2 insertions(+), 4 deletions(-)
+On Wed, 2019-02-13 at 12:42 +0100, Hannes Reinecke wrote:
+> The change to use dma_set_mask_and_coherent() incorrectly made a second
+> call with the 32 bit DMA mask value when the call with the 64 bit DMA
+> mask value succeeded.  This resulted in NVMe/FC connections failing due
+> to corrupted data buffers, and various other SCSI/FCP I/O errors.
+> 
+> Fixes: f30e1bfd6154 ("scsi: lpfc: use dma_set_mask_and_coherent")
+> Cc: <stable@vger.kernel.org>
+> Suggested-by: Don Dutile <ddutile@redhat.com>
+> Signed-off-by: Ewan D. Milne <emilne@redhat.com>
+> Signed-off-by: Hannes Reinecke <hare@suse.com>
+> ---
+>  drivers/scsi/lpfc/lpfc_init.c | 9 ++++++---
+>  1 file changed, 6 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+> index bede11e16349..8a4b096ffe47 100644
+> --- a/drivers/scsi/lpfc/lpfc_init.c
+> +++ b/drivers/scsi/lpfc/lpfc_init.c
+> @@ -7361,15 +7361,18 @@ lpfc_sli_pci_mem_setup(struct lpfc_hba *phba)
+>  	unsigned long bar0map_len, bar2map_len;
+>  	int i, hbq_count;
+>  	void *ptr;
+> -	int error = -ENODEV;
+> +	int error;
+>  
+>  	if (!pdev)
+>  		return error;
 
-diff --git a/drivers/scsi/qlogicpti.c b/drivers/scsi/qlogicpti.c
-index e35ce762d454..0e22512bd3e4 100644
---- a/drivers/scsi/qlogicpti.c
-+++ b/drivers/scsi/qlogicpti.c
-@@ -1314,8 +1314,7 @@ static int qpti_sbus_probe(struct platform_device *op)
- 	qpti->qhost = host;
- 	qpti->op = op;
- 	qpti->qpti_id = nqptis;
--	strcpy(qpti->prom_name, op->dev.of_node->name);
--	qpti->is_pti = strcmp(qpti->prom_name, "QLGC,isp");
-+	qpti->is_pti = !of_node_name_eq(op->dev.of_node, "QLGC,isp");
- 
- 	if (qpti_map_regs(qpti) < 0)
- 		goto fail_unlink;
-diff --git a/drivers/scsi/qlogicpti.h b/drivers/scsi/qlogicpti.h
-index 884ad72ade57..2b6374e08a7d 100644
---- a/drivers/scsi/qlogicpti.h
-+++ b/drivers/scsi/qlogicpti.h
-@@ -364,7 +364,6 @@ struct qlogicpti {
- 	int                       qpti_id;
- 	int                       scsi_id;
- 	int                       prom_node;
--	char                      prom_name[64];
- 	int                       irq;
- 	char                      differential, ultra, clock;
- 	unsigned char             bursts;
-@@ -379,7 +378,7 @@ struct qlogicpti {
- #define SREG_IMASK                0x0c   /* Interrupt level            */
- #define SREG_SPMASK               0x03   /* Mask for switch pack       */
- 	unsigned char             swsreg;
--	unsigned int	
-+	unsigned int
- 		gotirq	:	1,	/* this instance got an irq */
- 		is_pti	: 	1;	/* Non-zero if this is a PTI board. */
- };
--- 
-2.19.1
+Since this patch removes the initialization of "error" above, this return
+statement returns an undefined value.  Change it to return -ENODEV?
+
+>  
+>  	/* Set the device DMA mask size */
+> -	if (dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64)) ||
+> -	    dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32)))
+> +	error = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64));
+> +	if (error)
+> +		error = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32));
+> +	if (error)
+>  		return error;
+> +	error = -ENODEV;
+>  
+>  	/* Get the bus address of Bar0 and Bar2 and the number of bytes
+>  	 * required by each mapping.
