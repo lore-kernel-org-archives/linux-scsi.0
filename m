@@ -1,48 +1,54 @@
-From: Alim Akhtar <alim.akhtar@samsung.com>
-Subject: Re: [PATCH v5 0/2] Clean up UFSHC driver
-Date: Wed, 13 Feb 2019 15:55:54 +0530
-Message-ID: <7ce5a14a-56a7-22bb-b16e-fc898c0ea6e8@samsung.com>
-References: <CGME20190211133457epcas3p2dc95fa2c93c3cf884a376f0282be8b8a@epcas3p2.samsung.com>
-        <494cd639-89a7-8868-b63a-ea7cdcba9777@free.fr>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <494cd639-89a7-8868-b63a-ea7cdcba9777@free.fr>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Marc Gonzalez <marc.w.gonzalez@free.fr>, SCSI <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
-Cc: Jeffrey Hugo <jhugo@codeaurora.org>, Bjorn Andersson <bjorn.andersson@linaro.org>, Evan Green <evgreen@chromium.org>, Douglas Anderson <dianders@chromium.org>, Avri Altman <avri.altman@wdc.com>, Pedro Sousa <pedrom.sousa@synopsys.com>, Joao Pinto <jpinto@synopsys.com>, Mark Brown <broonie@kernel.org>, Liam Girdwood <lgirdwood@gmail.com>, Rob Herring <robh+dt@kernel.org>, Bart Van Assche <bart.vanassche@wdc.com>, Stanislav Nijnikov <stanislav.nijnikov@wdc.com>, Alex Lemberg <alex.lemberg@wdc.com>, Ohad Sharabi <ohad.sharabi@wdc.com>, Venkat Gopalakrishnan <venkatg@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, Yaniv Gardi <ygardi@codeaurora.org>, Gilad Broner <gbroner@codeaurora.org>, Raviv Shvili <rshvili@codeaurora.org>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 1/4] lpfc: fix calls to dma_set_mask_and_coherent()
+Date: Wed, 13 Feb 2019 12:42:31 +0100
+Message-ID: <20190213114234.67275-2-hare@suse.de>
+References: <20190213114234.67275-1-hare@suse.de>
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20190213114234.67275-1-hare@suse.de>
+Sender: stable-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>, Hannes Reinecke <hare@suse.de>, stable@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Marc,
+The change to use dma_set_mask_and_coherent() incorrectly made a second
+call with the 32 bit DMA mask value when the call with the 64 bit DMA
+mask value succeeded.  This resulted in NVMe/FC connections failing due
+to corrupted data buffers, and various other SCSI/FCP I/O errors.
 
-On 11/02/19 7:01 PM, Marc Gonzalez wrote:
-> Casting a wide net to get as many eyeballs on the subject as possible.
-> 
-> I'm splitting this mini series off from the main "UFS on APQ8098/MSM8998"
-> as it's 1) ufs/scsi specific 2) controversial (to my surprise)
-> 
-> Please send all your Reviewed-by: tags if you agree with the patch,
-> and/or voice your concerns ASAP.
-> 
-> This series removes the "disable-VCCQ-power-rail-for-some-Flash-chips" quirk,
-> and cleans up after the dust settles.
-> 
-> Marc Gonzalez (2):
->    scsi: ufs: Do not disable vccq in UFSHC driver
->    scsi: ufs: Remove unused device quirks
-> 
->   drivers/scsi/ufs/ufs.h        |  1 -
->   drivers/scsi/ufs/ufs_quirks.h | 29 ----------------
->   drivers/scsi/ufs/ufshcd.c     | 63 +++--------------------------------
->   3 files changed, 4 insertions(+), 89 deletions(-)
-> 
-For this series
-Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
-As no other platform has claimed issues with this we can land this.
-Others let us know if your opinion differs here.
+Fixes: f30e1bfd6154 ("scsi: lpfc: use dma_set_mask_and_coherent")
+Cc: <stable@vger.kernel.org>
+Suggested-by: Don Dutile <ddutile@redhat.com>
+Signed-off-by: Ewan D. Milne <emilne@redhat.com>
+Signed-off-by: Hannes Reinecke <hare@suse.com>
+---
+ drivers/scsi/lpfc/lpfc_init.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-Acked-by: Alim Akhtar <alim.akhtar@samsung.com>
-
-Thanks!
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index bede11e16349..8a4b096ffe47 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -7361,15 +7361,18 @@ lpfc_sli_pci_mem_setup(struct lpfc_hba *phba)
+ 	unsigned long bar0map_len, bar2map_len;
+ 	int i, hbq_count;
+ 	void *ptr;
+-	int error = -ENODEV;
++	int error;
+ 
+ 	if (!pdev)
+ 		return error;
+ 
+ 	/* Set the device DMA mask size */
+-	if (dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64)) ||
+-	    dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32)))
++	error = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64));
++	if (error)
++		error = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32));
++	if (error)
+ 		return error;
++	error = -ENODEV;
+ 
+ 	/* Get the bus address of Bar0 and Bar2 and the number of bytes
+ 	 * required by each mapping.
+-- 
+2.16.4
