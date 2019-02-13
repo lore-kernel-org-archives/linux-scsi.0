@@ -1,43 +1,178 @@
-From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.19 33/83] scsi: qla4xxx: check return code of qla4xxx_copy_from_fwddb_param
-Date: Tue, 12 Feb 2019 21:36:11 -0500
-Message-ID: <20190213023701.20286-33-sashal@kernel.org>
-References: <20190213023701.20286-1-sashal@kernel.org>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: [PATCH v2] scsi: sd: block: Fix regressions in read-only block device handling
+Date: Tue, 12 Feb 2019 21:57:17 -0500
+Message-ID: <20190213025717.20057-1-martin.petersen@oracle.com>
+References: <yq1d0nxuf73.fsf@oracle.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190213023701.20286-1-sashal@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: YueHaibing <yuehaibing@huawei.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <yq1d0nxuf73.fsf@oracle.com>
+Sender: stable-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Jeremy Cline <jeremy@jcline.org>, Oleksii Kurochko <olkuroch@cisco.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: YueHaibing <yuehaibing@huawei.com>
+Some devices come online in write protected state and switch to
+read-write once they are ready to process I/O requests. These devices
+broke with commit 20bd1d026aac ("scsi: sd: Keep disk read-only when
+re-reading partition") because we had no way to distinguish between a
+user decision to set a block_device read-only and the actual hardware
+device being write-protected.
 
-[ Upstream commit 72b4a0465f995175a2e22cf4a636bf781f1f28a7 ]
+Because partitions are dropped and recreated on revalidate we are
+unable to persist any user-provided policy in hd_struct. Introduce a
+bitmap in struct gendisk to track the user configuration. This bitmap
+is updated when BLKROSET is called on a given disk or partition.
 
-The return code should be check while qla4xxx_copy_from_fwddb_param fails.
+A helper function, get_user_ro(), is provided to determine whether the
+ioctl has forced read-only state for a given block device. This helper
+is used by set_disk_ro() and add_partition() to ensure that both
+existing and newly created partitions will get the correct state.
 
-Signed-off-by: YueHaibing <yuehaibing@huawei.com>
-Acked-by: Manish Rangankar <mrangankar@marvell.com>
+ - If BLKROSET sets a whole disk device read-only, all partitions will
+   now end up in a read-only state.
+
+ - If BLKROSET sets a given partition read-only, that partition will
+   remain read-only post revalidate.
+
+ - Otherwise both the whole disk device and any partitions will
+   reflect the write protect state of the underlying device.
+
+Cc: Jeremy Cline <jeremy@jcline.org>
+Cc: Oleksii Kurochko <olkuroch@cisco.com>
+Cc: stable@vger.kernel.org # v4.16+
+Reported-by: Oleksii Kurochko <olkuroch@cisco.com>
+Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=201221
+Fixes: 20bd1d026aac ("scsi: sd: Keep disk read-only when re-reading partition")
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/scsi/qla4xxx/ql4_os.c | 2 ++
- 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index 0e13349dce57..575445c761b4 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -7237,6 +7237,8 @@ static int qla4xxx_sysfs_ddb_tgt_create(struct scsi_qla_host *ha,
+---
+
+v2:
+	- Track user read-only state in a bitmap
+
+	- Work around the regression that caused us to drop user
+	  preferences on revalidate
+---
+ block/genhd.c             | 22 +++++++++++++++++-----
+ block/ioctl.c             |  4 ++++
+ block/partition-generic.c |  2 +-
+ drivers/scsi/sd.c         |  4 +---
+ include/linux/genhd.h     |  2 ++
+ 5 files changed, 25 insertions(+), 9 deletions(-)
+
+diff --git a/block/genhd.c b/block/genhd.c
+index 1dd8fd6613b8..34667eb1d3cc 100644
+--- a/block/genhd.c
++++ b/block/genhd.c
+@@ -1544,19 +1544,31 @@ void set_device_ro(struct block_device *bdev, int flag)
  
- 	rc = qla4xxx_copy_from_fwddb_param(fnode_sess, fnode_conn,
- 					   fw_ddb_entry);
-+	if (rc)
-+		goto free_sess;
+ EXPORT_SYMBOL(set_device_ro);
  
- 	ql4_printk(KERN_INFO, ha, "%s: sysfs entry %s created\n",
- 		   __func__, fnode_sess->dev.kobj.name);
++bool get_user_ro(struct gendisk *disk, unsigned int partno)
++{
++	/* Is the user read-only bit set for the whole disk device? */
++	if (test_bit(0, disk->user_ro_bitmap))
++		return true;
++
++	/* Is the user read-only bit set for this particular partition? */
++	if (test_bit(partno, disk->user_ro_bitmap))
++		return true;
++
++	return false;
++}
++EXPORT_SYMBOL(get_user_ro);
++
+ void set_disk_ro(struct gendisk *disk, int flag)
+ {
+ 	struct disk_part_iter piter;
+ 	struct hd_struct *part;
+ 
+-	if (disk->part0.policy != flag) {
++	if (disk->part0.policy != flag)
+ 		set_disk_ro_uevent(disk, flag);
+-		disk->part0.policy = flag;
+-	}
+ 
+-	disk_part_iter_init(&piter, disk, DISK_PITER_INCL_EMPTY);
++	disk_part_iter_init(&piter, disk, DISK_PITER_INCL_EMPTY_PART0);
+ 	while ((part = disk_part_iter_next(&piter)))
+-		part->policy = flag;
++		part->policy = get_user_ro(disk, part->partno) ?: flag;
+ 	disk_part_iter_exit(&piter);
+ }
+ 
+diff --git a/block/ioctl.c b/block/ioctl.c
+index 4825c78a6baa..41206df89485 100644
+--- a/block/ioctl.c
++++ b/block/ioctl.c
+@@ -451,6 +451,10 @@ static int blkdev_roset(struct block_device *bdev, fmode_t mode,
+ 		return ret;
+ 	if (get_user(n, (int __user *)arg))
+ 		return -EFAULT;
++	if (n)
++		set_bit(bdev->bd_partno, bdev->bd_disk->user_ro_bitmap);
++	else
++		clear_bit(bdev->bd_partno, bdev->bd_disk->user_ro_bitmap);
+ 	set_device_ro(bdev, n);
+ 	return 0;
+ }
+diff --git a/block/partition-generic.c b/block/partition-generic.c
+index 8e596a8dff32..c6a3c21c2496 100644
+--- a/block/partition-generic.c
++++ b/block/partition-generic.c
+@@ -338,7 +338,7 @@ struct hd_struct *add_partition(struct gendisk *disk, int partno,
+ 		queue_limit_discard_alignment(&disk->queue->limits, start);
+ 	p->nr_sects = len;
+ 	p->partno = partno;
+-	p->policy = get_disk_ro(disk);
++	p->policy = get_user_ro(disk, partno) ?: get_disk_ro(disk);
+ 
+ 	if (info) {
+ 		struct partition_meta_info *pinfo = alloc_part_info(disk);
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 67cc439b86e4..5dfe37b08d3b 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -2591,10 +2591,8 @@ sd_read_write_protect_flag(struct scsi_disk *sdkp, unsigned char *buffer)
+ 	int res;
+ 	struct scsi_device *sdp = sdkp->device;
+ 	struct scsi_mode_data data;
+-	int disk_ro = get_disk_ro(sdkp->disk);
+ 	int old_wp = sdkp->write_prot;
+ 
+-	set_disk_ro(sdkp->disk, 0);
+ 	if (sdp->skip_ms_page_3f) {
+ 		sd_first_printk(KERN_NOTICE, sdkp, "Assuming Write Enabled\n");
+ 		return;
+@@ -2632,7 +2630,7 @@ sd_read_write_protect_flag(struct scsi_disk *sdkp, unsigned char *buffer)
+ 			  "Test WP failed, assume Write Enabled\n");
+ 	} else {
+ 		sdkp->write_prot = ((data.device_specific & 0x80) != 0);
+-		set_disk_ro(sdkp->disk, sdkp->write_prot || disk_ro);
++		set_disk_ro(sdkp->disk, sdkp->write_prot);
+ 		if (sdkp->first_scan || old_wp != sdkp->write_prot) {
+ 			sd_printk(KERN_NOTICE, sdkp, "Write Protect is %s\n",
+ 				  sdkp->write_prot ? "on" : "off");
+diff --git a/include/linux/genhd.h b/include/linux/genhd.h
+index 06c0fd594097..9645c2604465 100644
+--- a/include/linux/genhd.h
++++ b/include/linux/genhd.h
+@@ -194,6 +194,7 @@ struct gendisk {
+ 	 */
+ 	struct disk_part_tbl __rcu *part_tbl;
+ 	struct hd_struct part0;
++	DECLARE_BITMAP(user_ro_bitmap, DISK_MAX_PARTS);
+ 
+ 	const struct block_device_operations *fops;
+ 	struct request_queue *queue;
+@@ -433,6 +434,7 @@ extern struct block_device *bdget_disk(struct gendisk *disk, int partno);
+ 
+ extern void set_device_ro(struct block_device *bdev, int flag);
+ extern void set_disk_ro(struct gendisk *disk, int flag);
++extern bool get_user_ro(struct gendisk *disk, unsigned int partno);
+ 
+ static inline int get_disk_ro(struct gendisk *disk)
+ {
 -- 
-2.19.1
+2.19.2
