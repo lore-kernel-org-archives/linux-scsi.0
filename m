@@ -1,48 +1,48 @@
-From: Marc Gonzalez <marc.w.gonzalez@free.fr>
-Subject: Re: [PATCH v5 1/2] scsi: ufs: Do not disable vccq in UFSHC driver
-Date: Wed, 13 Feb 2019 11:05:28 +0100
-Message-ID: <cc915cc2-722b-5cae-6c8b-b0d50d90c56d@free.fr>
-References: <494cd639-89a7-8868-b63a-ea7cdcba9777@free.fr>
- <be3ef9bf-438b-4e8a-62c4-f75458e8ecc0@free.fr>
- <20190211172340.GG22391@sirena.org.uk>
+From: Alim Akhtar <alim.akhtar@samsung.com>
+Subject: Re: [PATCH v5 0/2] Clean up UFSHC driver
+Date: Wed, 13 Feb 2019 15:55:54 +0530
+Message-ID: <7ce5a14a-56a7-22bb-b16e-fc898c0ea6e8@samsung.com>
+References: <CGME20190211133457epcas3p2dc95fa2c93c3cf884a376f0282be8b8a@epcas3p2.samsung.com>
+        <494cd639-89a7-8868-b63a-ea7cdcba9777@free.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190211172340.GG22391@sirena.org.uk>
+In-Reply-To: <494cd639-89a7-8868-b63a-ea7cdcba9777@free.fr>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Mark Brown <broonie@kernel.org>
-Cc: SCSI <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Jeffrey Hugo <jhugo@codeaurora.org>, Bjorn Andersson <bjorn.andersson@linaro.org>, Evan Green <evgreen@chromium.org>, Douglas Anderson <dianders@chromium.org>, Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, Pedro Sousa <pedrom.sousa@synopsys.com>, Joao Pinto <jpinto@synopsys.com>, Liam Girdwood <lgirdwood@gmail.com>, Rob Herring <robh+dt@kernel.org>, Bart Van Assche <bart.vanassche@wdc.com>, Stanislav Nijnikov <stanislav.nijnikov@wdc.com>, Alex Lemberg <alex.lemberg@wdc.com>, Ohad Sharabi <ohad.sharabi@wdc.com>, Venkat Gopalakrishnan <venkatg@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, Yaniv Gardi <ygardi@codeaurora.org>
+To: Marc Gonzalez <marc.w.gonzalez@free.fr>, SCSI <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+Cc: Jeffrey Hugo <jhugo@codeaurora.org>, Bjorn Andersson <bjorn.andersson@linaro.org>, Evan Green <evgreen@chromium.org>, Douglas Anderson <dianders@chromium.org>, Avri Altman <avri.altman@wdc.com>, Pedro Sousa <pedrom.sousa@synopsys.com>, Joao Pinto <jpinto@synopsys.com>, Mark Brown <broonie@kernel.org>, Liam Girdwood <lgirdwood@gmail.com>, Rob Herring <robh+dt@kernel.org>, Bart Van Assche <bart.vanassche@wdc.com>, Stanislav Nijnikov <stanislav.nijnikov@wdc.com>, Alex Lemberg <alex.lemberg@wdc.com>, Ohad Sharabi <ohad.sharabi@wdc.com>, Venkat Gopalakrishnan <venkatg@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, Yaniv Gardi <ygardi@codeaurora.org>, Gilad Broner <gbroner@codeaurora.org>, Raviv Shvili <rshvili@codeaurora.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 11/02/2019 18:23, Mark Brown wrote:
+Hi Marc,
 
-> On Mon, Feb 11, 2019 at 02:32:15PM +0100, Marc Gonzalez wrote:
+On 11/02/19 7:01 PM, Marc Gonzalez wrote:
+> Casting a wide net to get as many eyeballs on the subject as possible.
 > 
->> Unfortunately, this optimization breaks UFS on systems where vccq
->> powers not only the Flash chip, but the host controller as well,
->> such as APQ8098 MEDIABOX or MTP8998.
->> 
->> In my opinion, the rationale for the original patch is questionable.
->> If neither the UFSHC, nor the Flash chip, require any load from vccq,
->> then that power rail should simply not be specified at all in the DT.
+> I'm splitting this mini series off from the main "UFS on APQ8098/MSM8998"
+> as it's 1) ufs/scsi specific 2) controversial (to my surprise)
 > 
-> If the supply is physically connected it should be valid to represent
-> this in DT regardless of how or if the supply gets used at runtime.
-> However it does sound like this support needs to be better thought
-> through to make sure we have represented the supplies to the flash chip
-> and the controller separately - it seems like right now there's no
-> tracking of the supplies needed for the controller and the assumption is
-> that only the flash chip needs managing which is breaking things.
+> Please send all your Reviewed-by: tags if you agree with the patch,
+> and/or voice your concerns ASAP.
+> 
+> This series removes the "disable-VCCQ-power-rail-for-some-Flash-chips" quirk,
+> and cleans up after the dust settles.
+> 
+> Marc Gonzalez (2):
+>    scsi: ufs: Do not disable vccq in UFSHC driver
+>    scsi: ufs: Remove unused device quirks
+> 
+>   drivers/scsi/ufs/ufs.h        |  1 -
+>   drivers/scsi/ufs/ufs_quirks.h | 29 ----------------
+>   drivers/scsi/ufs/ufshcd.c     | 63 +++--------------------------------
+>   3 files changed, 4 insertions(+), 89 deletions(-)
+> 
+For this series
+Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
+As no other platform has claimed issues with this we can land this.
+Others let us know if your opinion differs here.
 
-As far as I'm aware, the conflation of host controller with their respective
-storage medium occurs across several techs: UFS, NAND, SDHC, EMMC.
+Acked-by: Alim Akhtar <alim.akhtar@samsung.com>
 
-There might be room for improvement, but I don't think these considerations
-should hold up this series, which fixes something that is broken *today*.
-
-UFS reviewers (Alim, Avri, Pedro), can I get at least one Acked-by to remove
-this small power optimization that breaks UFS on my system?
-
-Regards.
+Thanks!
