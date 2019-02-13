@@ -1,90 +1,162 @@
-From: ira.weiny@intel.com
-Subject: [PATCH V2 0/7] Add FOLL_LONGTERM to GUP fast and use it
-Date: Wed, 13 Feb 2019 15:04:48 -0800
-Message-ID: <20190213230455.5605-1-ira.weiny@intel.com>
+From: "ira.weiny--- via dri-devel" <dri-devel@lists.freedesktop.org>
+Subject: [PATCH V2 2/7] mm/gup: Change write parameter to flags in fast walk
+Date: Wed, 13 Feb 2019 15:04:50 -0800
+Message-ID: <20190213230455.5605-3-ira.weiny@intel.com>
 References: <20190211201643.7599-1-ira.weiny@intel.com>
+ <20190213230455.5605-1-ira.weiny@intel.com>
+Reply-To: ira.weiny@intel.com
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <20190211201643.7599-1-ira.weiny@intel.com>
-Sender: netdev-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <dri-devel-bounces@lists.freedesktop.org>
+In-Reply-To: <20190213230455.5605-1-ira.weiny@intel.com>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
+List-Post: <mailto:dri-devel@lists.freedesktop.org>
+List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: dri-devel-bounces@lists.freedesktop.org
+Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
 To: linux-mips@vger.kernel.org, linux-kernel@vger.kernel.org, kvm-ppc@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org, linux-sh@vger.kernel.org, sparclinux@vger.kernel.org, kvm@vger.kernel.org, linux-fpga@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-rdma@vger.kernel.org, linux-media@vger.kernel.org, linux-scsi@vger.kernel.org, devel@driverdev.osuosl.org, virtualization@lists.linux-foundation.org, netdev@vger.kernel.org, linux-fbdev@vger.kernel.org, xen-devel@lists.xenproject.org, devel@lists.orangefs.org, linux-mm@kvack.org, ceph-devel@vger.kernel.org, rds-devel@oss.oracle.com
-Cc: Ira Weiny <ira.weiny@intel.com>, John Hubbard <jhubbard@nvidia.com>, David Hildenbrand <david@redhat.com>, Cornelia Huck <cohuck@redhat.com>, Yoshinori Sato <ysato@users.sourceforge.jp>, Rich Felker <dalias@libc.org>, "David S. Miller" <davem@davemloft.net>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, Joerg Roedel <joro@8bytes.org>, Wu Hao <hao.wu@intel.com>, Alan Tull <atull@kernel.org>, Moritz Fischer <mdf@kernel.org>, David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>, Jason Gunthorpe <jgg@ziepe.ca>, Dennis Dalessandro <dennis.dalessandro@intel.com>, Christian Benvenuti <benve@cisco.com>, Mauro Carvalho Chehab <mchehab@kernel.org>, Matt Porter <mporter@kernel.crashing.org>
+Cc: Martin Brandenburg <martin@omnibond.com>, Rich Felker <dalias@libc.org>, David Hildenbrand <david@redhat.com>, David Airlie <airlied@linux.ie>, Jason Wang <jasowang@redhat.com>, =?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>, Michal Hocko <mhocko@suse.com>, Ira Weiny <ira.weiny@intel.com>, Ben Chan <benchan@chromium.org>, Rob Springer <rspringer@google.com>, Todd Poynor <toddpoynor@google.com>, Yoshinori Sato <ysato@users.sourceforge.jp>, "Michael S. Tsirkin" <mst@redhat.com>, Jason Gunthorpe <jgg@ziepe.ca>, Ingo Molnar <mingo@redhat.com>, Matt Porter <mporter@kernel.crashing.org>, Wu Hao <hao.wu@intel.com>, Alan Tull <atull@kernel.org>, John Hubbard <jhubbard@nvidia.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, Alex Williamson <alex.williamson@redhat.com>, Stefano Stabellini <sstabellini@kernel.org>, Borislav Petkov <bp@alien8.de>, Alexander Viro <vir>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Ira Weiny <ira.weiny@intel.com>
-
-NOTE: This series depends on my clean up patch to remove the write parameter
-from gup_fast_permitted()[1]
-
-HFI1, qib, and mthca, use get_user_pages_fast() due to it performance
-advantages.  These pages can be held for a significant time.  But
-get_user_pages_fast() does not protect against mapping of FS DAX pages.
-
-Introduce FOLL_LONGTERM and use this flag in get_user_pages_fast() which
-retains the performance while also adding the FS DAX checks.  XDP has also
-shown interest in using this functionality.[2]
-
-In addition we change get_user_pages() to use the new FOLL_LONGTERM flag and
-remove the specialized get_user_pages_longterm call.
-
-[1] https://lkml.org/lkml/2019/2/11/237
-[2] https://lkml.org/lkml/2019/2/11/1789
-
-Ira Weiny (7):
-  mm/gup: Replace get_user_pages_longterm() with FOLL_LONGTERM
-  mm/gup: Change write parameter to flags in fast walk
-  mm/gup: Change GUP fast to use flags rather than a write 'bool'
-  mm/gup: Add FOLL_LONGTERM capability to GUP fast
-  IB/hfi1: Use the new FOLL_LONGTERM flag to get_user_pages_fast()
-  IB/qib: Use the new FOLL_LONGTERM flag to get_user_pages_fast()
-  IB/mthca: Use the new FOLL_LONGTERM flag to get_user_pages_fast()
-
- arch/mips/mm/gup.c                          |  11 +-
- arch/powerpc/kvm/book3s_64_mmu_hv.c         |   4 +-
- arch/powerpc/kvm/e500_mmu.c                 |   2 +-
- arch/powerpc/mm/mmu_context_iommu.c         |   4 +-
- arch/s390/kvm/interrupt.c                   |   2 +-
- arch/s390/mm/gup.c                          |  12 +-
- arch/sh/mm/gup.c                            |  11 +-
- arch/sparc/mm/gup.c                         |   9 +-
- arch/x86/kvm/paging_tmpl.h                  |   2 +-
- arch/x86/kvm/svm.c                          |   2 +-
- drivers/fpga/dfl-afu-dma-region.c           |   2 +-
- drivers/gpu/drm/via/via_dmablit.c           |   3 +-
- drivers/infiniband/core/umem.c              |   5 +-
- drivers/infiniband/hw/hfi1/user_pages.c     |   5 +-
- drivers/infiniband/hw/mthca/mthca_memfree.c |   3 +-
- drivers/infiniband/hw/qib/qib_user_pages.c  |   8 +-
- drivers/infiniband/hw/qib/qib_user_sdma.c   |   2 +-
- drivers/infiniband/hw/usnic/usnic_uiom.c    |   9 +-
- drivers/media/v4l2-core/videobuf-dma-sg.c   |   6 +-
- drivers/misc/genwqe/card_utils.c            |   2 +-
- drivers/misc/vmw_vmci/vmci_host.c           |   2 +-
- drivers/misc/vmw_vmci/vmci_queue_pair.c     |   6 +-
- drivers/platform/goldfish/goldfish_pipe.c   |   3 +-
- drivers/rapidio/devices/rio_mport_cdev.c    |   4 +-
- drivers/sbus/char/oradax.c                  |   2 +-
- drivers/scsi/st.c                           |   3 +-
- drivers/staging/gasket/gasket_page_table.c  |   4 +-
- drivers/tee/tee_shm.c                       |   2 +-
- drivers/vfio/vfio_iommu_spapr_tce.c         |   3 +-
- drivers/vfio/vfio_iommu_type1.c             |   3 +-
- drivers/vhost/vhost.c                       |   2 +-
- drivers/video/fbdev/pvr2fb.c                |   2 +-
- drivers/virt/fsl_hypervisor.c               |   2 +-
- drivers/xen/gntdev.c                        |   2 +-
- fs/orangefs/orangefs-bufmap.c               |   2 +-
- include/linux/mm.h                          |  17 +-
- kernel/futex.c                              |   2 +-
- lib/iov_iter.c                              |   7 +-
- mm/gup.c                                    | 220 ++++++++++++--------
- mm/gup_benchmark.c                          |   5 +-
- mm/util.c                                   |   8 +-
- net/ceph/pagevec.c                          |   2 +-
- net/rds/info.c                              |   2 +-
- net/rds/rdma.c                              |   3 +-
- 44 files changed, 232 insertions(+), 180 deletions(-)
-
--- 
-2.20.1
+RnJvbTogSXJhIFdlaW55IDxpcmEud2VpbnlAaW50ZWwuY29tPgoKSW4gb3JkZXIgdG8gc3VwcG9y
+dCBtb3JlIG9wdGlvbnMgaW4gdGhlIEdVUCBmYXN0IHdhbGssIGNoYW5nZQp0aGUgd3JpdGUgcGFy
+YW1ldGVyIHRvIGZsYWdzIHRocm91Z2hvdXQgdGhlIGNhbGwgc3RhY2suCgpUaGlzIHBhdGNoIGRv
+ZXMgbm90IGNoYW5nZSBmdW5jdGlvbmFsaXR5IGFuZCBwYXNzZXMgRk9MTF9XUklURQp3aGVyZSB3
+cml0ZSB3YXMgcHJldmlvdXNseSB1c2VkLgoKU2lnbmVkLW9mZi1ieTogSXJhIFdlaW55IDxpcmEu
+d2VpbnlAaW50ZWwuY29tPgotLS0KIG1tL2d1cC5jIHwgNTIgKysrKysrKysrKysrKysrKysrKysr
+KysrKystLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQogMSBmaWxlIGNoYW5nZWQsIDI2IGluc2Vy
+dGlvbnMoKyksIDI2IGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL21tL2d1cC5jIGIvbW0vZ3Vw
+LmMKaW5kZXggZWU5NmVhZmYxMThjLi42ODEzODgyMzYxMDYgMTAwNjQ0Ci0tLSBhL21tL2d1cC5j
+CisrKyBiL21tL2d1cC5jCkBAIC0xNDE3LDcgKzE0MTcsNyBAQCBzdGF0aWMgdm9pZCB1bmRvX2Rl
+dl9wYWdlbWFwKGludCAqbnIsIGludCBucl9zdGFydCwgc3RydWN0IHBhZ2UgKipwYWdlcykKIAog
+I2lmZGVmIENPTkZJR19BUkNIX0hBU19QVEVfU1BFQ0lBTAogc3RhdGljIGludCBndXBfcHRlX3Jh
+bmdlKHBtZF90IHBtZCwgdW5zaWduZWQgbG9uZyBhZGRyLCB1bnNpZ25lZCBsb25nIGVuZCwKLQkJ
+CSBpbnQgd3JpdGUsIHN0cnVjdCBwYWdlICoqcGFnZXMsIGludCAqbnIpCisJCQkgdW5zaWduZWQg
+aW50IGZsYWdzLCBzdHJ1Y3QgcGFnZSAqKnBhZ2VzLCBpbnQgKm5yKQogewogCXN0cnVjdCBkZXZf
+cGFnZW1hcCAqcGdtYXAgPSBOVUxMOwogCWludCBucl9zdGFydCA9ICpuciwgcmV0ID0gMDsKQEAg
+LTE0MzUsNyArMTQzNSw3IEBAIHN0YXRpYyBpbnQgZ3VwX3B0ZV9yYW5nZShwbWRfdCBwbWQsIHVu
+c2lnbmVkIGxvbmcgYWRkciwgdW5zaWduZWQgbG9uZyBlbmQsCiAJCWlmIChwdGVfcHJvdG5vbmUo
+cHRlKSkKIAkJCWdvdG8gcHRlX3VubWFwOwogCi0JCWlmICghcHRlX2FjY2Vzc19wZXJtaXR0ZWQo
+cHRlLCB3cml0ZSkpCisJCWlmICghcHRlX2FjY2Vzc19wZXJtaXR0ZWQocHRlLCBmbGFncyAmIEZP
+TExfV1JJVEUpKQogCQkJZ290byBwdGVfdW5tYXA7CiAKIAkJaWYgKHB0ZV9kZXZtYXAocHRlKSkg
+ewpAQCAtMTQ4Nyw3ICsxNDg3LDcgQEAgc3RhdGljIGludCBndXBfcHRlX3JhbmdlKHBtZF90IHBt
+ZCwgdW5zaWduZWQgbG9uZyBhZGRyLCB1bnNpZ25lZCBsb25nIGVuZCwKICAqIHVzZWZ1bCB0byBo
+YXZlIGd1cF9odWdlX3BtZCBldmVuIGlmIHdlIGNhbid0IG9wZXJhdGUgb24gcHRlcy4KICAqLwog
+c3RhdGljIGludCBndXBfcHRlX3JhbmdlKHBtZF90IHBtZCwgdW5zaWduZWQgbG9uZyBhZGRyLCB1
+bnNpZ25lZCBsb25nIGVuZCwKLQkJCSBpbnQgd3JpdGUsIHN0cnVjdCBwYWdlICoqcGFnZXMsIGlu
+dCAqbnIpCisJCQkgdW5zaWduZWQgaW50IGZsYWdzLCBzdHJ1Y3QgcGFnZSAqKnBhZ2VzLCBpbnQg
+Km5yKQogewogCXJldHVybiAwOwogfQpAQCAtMTU3MCwxMiArMTU3MCwxMiBAQCBzdGF0aWMgaW50
+IF9fZ3VwX2RldmljZV9odWdlX3B1ZChwdWRfdCBwdWQsIHB1ZF90ICpwdWRwLCB1bnNpZ25lZCBs
+b25nIGFkZHIsCiAjZW5kaWYKIAogc3RhdGljIGludCBndXBfaHVnZV9wbWQocG1kX3Qgb3JpZywg
+cG1kX3QgKnBtZHAsIHVuc2lnbmVkIGxvbmcgYWRkciwKLQkJdW5zaWduZWQgbG9uZyBlbmQsIGlu
+dCB3cml0ZSwgc3RydWN0IHBhZ2UgKipwYWdlcywgaW50ICpucikKKwkJdW5zaWduZWQgbG9uZyBl
+bmQsIHVuc2lnbmVkIGludCBmbGFncywgc3RydWN0IHBhZ2UgKipwYWdlcywgaW50ICpucikKIHsK
+IAlzdHJ1Y3QgcGFnZSAqaGVhZCwgKnBhZ2U7CiAJaW50IHJlZnM7CiAKLQlpZiAoIXBtZF9hY2Nl
+c3NfcGVybWl0dGVkKG9yaWcsIHdyaXRlKSkKKwlpZiAoIXBtZF9hY2Nlc3NfcGVybWl0dGVkKG9y
+aWcsIGZsYWdzICYgRk9MTF9XUklURSkpCiAJCXJldHVybiAwOwogCiAJaWYgKHBtZF9kZXZtYXAo
+b3JpZykpCkBAIC0xNjA4LDEyICsxNjA4LDEyIEBAIHN0YXRpYyBpbnQgZ3VwX2h1Z2VfcG1kKHBt
+ZF90IG9yaWcsIHBtZF90ICpwbWRwLCB1bnNpZ25lZCBsb25nIGFkZHIsCiB9CiAKIHN0YXRpYyBp
+bnQgZ3VwX2h1Z2VfcHVkKHB1ZF90IG9yaWcsIHB1ZF90ICpwdWRwLCB1bnNpZ25lZCBsb25nIGFk
+ZHIsCi0JCXVuc2lnbmVkIGxvbmcgZW5kLCBpbnQgd3JpdGUsIHN0cnVjdCBwYWdlICoqcGFnZXMs
+IGludCAqbnIpCisJCXVuc2lnbmVkIGxvbmcgZW5kLCB1bnNpZ25lZCBpbnQgZmxhZ3MsIHN0cnVj
+dCBwYWdlICoqcGFnZXMsIGludCAqbnIpCiB7CiAJc3RydWN0IHBhZ2UgKmhlYWQsICpwYWdlOwog
+CWludCByZWZzOwogCi0JaWYgKCFwdWRfYWNjZXNzX3Blcm1pdHRlZChvcmlnLCB3cml0ZSkpCisJ
+aWYgKCFwdWRfYWNjZXNzX3Blcm1pdHRlZChvcmlnLCBmbGFncyAmIEZPTExfV1JJVEUpKQogCQly
+ZXR1cm4gMDsKIAogCWlmIChwdWRfZGV2bWFwKG9yaWcpKQpAQCAtMTY0NiwxMyArMTY0NiwxMyBA
+QCBzdGF0aWMgaW50IGd1cF9odWdlX3B1ZChwdWRfdCBvcmlnLCBwdWRfdCAqcHVkcCwgdW5zaWdu
+ZWQgbG9uZyBhZGRyLAogfQogCiBzdGF0aWMgaW50IGd1cF9odWdlX3BnZChwZ2RfdCBvcmlnLCBw
+Z2RfdCAqcGdkcCwgdW5zaWduZWQgbG9uZyBhZGRyLAotCQkJdW5zaWduZWQgbG9uZyBlbmQsIGlu
+dCB3cml0ZSwKKwkJCXVuc2lnbmVkIGxvbmcgZW5kLCB1bnNpZ25lZCBpbnQgZmxhZ3MsCiAJCQlz
+dHJ1Y3QgcGFnZSAqKnBhZ2VzLCBpbnQgKm5yKQogewogCWludCByZWZzOwogCXN0cnVjdCBwYWdl
+ICpoZWFkLCAqcGFnZTsKIAotCWlmICghcGdkX2FjY2Vzc19wZXJtaXR0ZWQob3JpZywgd3JpdGUp
+KQorCWlmICghcGdkX2FjY2Vzc19wZXJtaXR0ZWQob3JpZywgZmxhZ3MgJiBGT0xMX1dSSVRFKSkK
+IAkJcmV0dXJuIDA7CiAKIAlCVUlMRF9CVUdfT04ocGdkX2Rldm1hcChvcmlnKSk7CkBAIC0xNjgz
+LDcgKzE2ODMsNyBAQCBzdGF0aWMgaW50IGd1cF9odWdlX3BnZChwZ2RfdCBvcmlnLCBwZ2RfdCAq
+cGdkcCwgdW5zaWduZWQgbG9uZyBhZGRyLAogfQogCiBzdGF0aWMgaW50IGd1cF9wbWRfcmFuZ2Uo
+cHVkX3QgcHVkLCB1bnNpZ25lZCBsb25nIGFkZHIsIHVuc2lnbmVkIGxvbmcgZW5kLAotCQlpbnQg
+d3JpdGUsIHN0cnVjdCBwYWdlICoqcGFnZXMsIGludCAqbnIpCisJCXVuc2lnbmVkIGludCBmbGFn
+cywgc3RydWN0IHBhZ2UgKipwYWdlcywgaW50ICpucikKIHsKIAl1bnNpZ25lZCBsb25nIG5leHQ7
+CiAJcG1kX3QgKnBtZHA7CkBAIC0xNzA1LDcgKzE3MDUsNyBAQCBzdGF0aWMgaW50IGd1cF9wbWRf
+cmFuZ2UocHVkX3QgcHVkLCB1bnNpZ25lZCBsb25nIGFkZHIsIHVuc2lnbmVkIGxvbmcgZW5kLAog
+CQkJaWYgKHBtZF9wcm90bm9uZShwbWQpKQogCQkJCXJldHVybiAwOwogCi0JCQlpZiAoIWd1cF9o
+dWdlX3BtZChwbWQsIHBtZHAsIGFkZHIsIG5leHQsIHdyaXRlLAorCQkJaWYgKCFndXBfaHVnZV9w
+bWQocG1kLCBwbWRwLCBhZGRyLCBuZXh0LCBmbGFncywKIAkJCQlwYWdlcywgbnIpKQogCQkJCXJl
+dHVybiAwOwogCkBAIC0xNzE1LDkgKzE3MTUsOSBAQCBzdGF0aWMgaW50IGd1cF9wbWRfcmFuZ2Uo
+cHVkX3QgcHVkLCB1bnNpZ25lZCBsb25nIGFkZHIsIHVuc2lnbmVkIGxvbmcgZW5kLAogCQkJICog
+cG1kIGZvcm1hdCBhbmQgVEhQIHBtZCBmb3JtYXQKIAkJCSAqLwogCQkJaWYgKCFndXBfaHVnZV9w
+ZChfX2h1Z2VwZChwbWRfdmFsKHBtZCkpLCBhZGRyLAotCQkJCQkgUE1EX1NISUZULCBuZXh0LCB3
+cml0ZSwgcGFnZXMsIG5yKSkKKwkJCQkJIFBNRF9TSElGVCwgbmV4dCwgZmxhZ3MsIHBhZ2VzLCBu
+cikpCiAJCQkJcmV0dXJuIDA7Ci0JCX0gZWxzZSBpZiAoIWd1cF9wdGVfcmFuZ2UocG1kLCBhZGRy
+LCBuZXh0LCB3cml0ZSwgcGFnZXMsIG5yKSkKKwkJfSBlbHNlIGlmICghZ3VwX3B0ZV9yYW5nZShw
+bWQsIGFkZHIsIG5leHQsIGZsYWdzLCBwYWdlcywgbnIpKQogCQkJcmV0dXJuIDA7CiAJfSB3aGls
+ZSAocG1kcCsrLCBhZGRyID0gbmV4dCwgYWRkciAhPSBlbmQpOwogCkBAIC0xNzI1LDcgKzE3MjUs
+NyBAQCBzdGF0aWMgaW50IGd1cF9wbWRfcmFuZ2UocHVkX3QgcHVkLCB1bnNpZ25lZCBsb25nIGFk
+ZHIsIHVuc2lnbmVkIGxvbmcgZW5kLAogfQogCiBzdGF0aWMgaW50IGd1cF9wdWRfcmFuZ2UocDRk
+X3QgcDRkLCB1bnNpZ25lZCBsb25nIGFkZHIsIHVuc2lnbmVkIGxvbmcgZW5kLAotCQkJIGludCB3
+cml0ZSwgc3RydWN0IHBhZ2UgKipwYWdlcywgaW50ICpucikKKwkJCSB1bnNpZ25lZCBpbnQgZmxh
+Z3MsIHN0cnVjdCBwYWdlICoqcGFnZXMsIGludCAqbnIpCiB7CiAJdW5zaWduZWQgbG9uZyBuZXh0
+OwogCXB1ZF90ICpwdWRwOwpAQCAtMTczOCwxNCArMTczOCwxNCBAQCBzdGF0aWMgaW50IGd1cF9w
+dWRfcmFuZ2UocDRkX3QgcDRkLCB1bnNpZ25lZCBsb25nIGFkZHIsIHVuc2lnbmVkIGxvbmcgZW5k
+LAogCQlpZiAocHVkX25vbmUocHVkKSkKIAkJCXJldHVybiAwOwogCQlpZiAodW5saWtlbHkocHVk
+X2h1Z2UocHVkKSkpIHsKLQkJCWlmICghZ3VwX2h1Z2VfcHVkKHB1ZCwgcHVkcCwgYWRkciwgbmV4
+dCwgd3JpdGUsCisJCQlpZiAoIWd1cF9odWdlX3B1ZChwdWQsIHB1ZHAsIGFkZHIsIG5leHQsIGZs
+YWdzLAogCQkJCQkgIHBhZ2VzLCBucikpCiAJCQkJcmV0dXJuIDA7CiAJCX0gZWxzZSBpZiAodW5s
+aWtlbHkoaXNfaHVnZXBkKF9faHVnZXBkKHB1ZF92YWwocHVkKSkpKSkgewogCQkJaWYgKCFndXBf
+aHVnZV9wZChfX2h1Z2VwZChwdWRfdmFsKHB1ZCkpLCBhZGRyLAotCQkJCQkgUFVEX1NISUZULCBu
+ZXh0LCB3cml0ZSwgcGFnZXMsIG5yKSkKKwkJCQkJIFBVRF9TSElGVCwgbmV4dCwgZmxhZ3MsIHBh
+Z2VzLCBucikpCiAJCQkJcmV0dXJuIDA7Ci0JCX0gZWxzZSBpZiAoIWd1cF9wbWRfcmFuZ2UocHVk
+LCBhZGRyLCBuZXh0LCB3cml0ZSwgcGFnZXMsIG5yKSkKKwkJfSBlbHNlIGlmICghZ3VwX3BtZF9y
+YW5nZShwdWQsIGFkZHIsIG5leHQsIGZsYWdzLCBwYWdlcywgbnIpKQogCQkJcmV0dXJuIDA7CiAJ
+fSB3aGlsZSAocHVkcCsrLCBhZGRyID0gbmV4dCwgYWRkciAhPSBlbmQpOwogCkBAIC0xNzUzLDcg
+KzE3NTMsNyBAQCBzdGF0aWMgaW50IGd1cF9wdWRfcmFuZ2UocDRkX3QgcDRkLCB1bnNpZ25lZCBs
+b25nIGFkZHIsIHVuc2lnbmVkIGxvbmcgZW5kLAogfQogCiBzdGF0aWMgaW50IGd1cF9wNGRfcmFu
+Z2UocGdkX3QgcGdkLCB1bnNpZ25lZCBsb25nIGFkZHIsIHVuc2lnbmVkIGxvbmcgZW5kLAotCQkJ
+IGludCB3cml0ZSwgc3RydWN0IHBhZ2UgKipwYWdlcywgaW50ICpucikKKwkJCSB1bnNpZ25lZCBp
+bnQgZmxhZ3MsIHN0cnVjdCBwYWdlICoqcGFnZXMsIGludCAqbnIpCiB7CiAJdW5zaWduZWQgbG9u
+ZyBuZXh0OwogCXA0ZF90ICpwNGRwOwpAQCAtMTc2OCw5ICsxNzY4LDkgQEAgc3RhdGljIGludCBn
+dXBfcDRkX3JhbmdlKHBnZF90IHBnZCwgdW5zaWduZWQgbG9uZyBhZGRyLCB1bnNpZ25lZCBsb25n
+IGVuZCwKIAkJQlVJTERfQlVHX09OKHA0ZF9odWdlKHA0ZCkpOwogCQlpZiAodW5saWtlbHkoaXNf
+aHVnZXBkKF9faHVnZXBkKHA0ZF92YWwocDRkKSkpKSkgewogCQkJaWYgKCFndXBfaHVnZV9wZChf
+X2h1Z2VwZChwNGRfdmFsKHA0ZCkpLCBhZGRyLAotCQkJCQkgUDREX1NISUZULCBuZXh0LCB3cml0
+ZSwgcGFnZXMsIG5yKSkKKwkJCQkJIFA0RF9TSElGVCwgbmV4dCwgZmxhZ3MsIHBhZ2VzLCBucikp
+CiAJCQkJcmV0dXJuIDA7Ci0JCX0gZWxzZSBpZiAoIWd1cF9wdWRfcmFuZ2UocDRkLCBhZGRyLCBu
+ZXh0LCB3cml0ZSwgcGFnZXMsIG5yKSkKKwkJfSBlbHNlIGlmICghZ3VwX3B1ZF9yYW5nZShwNGQs
+IGFkZHIsIG5leHQsIGZsYWdzLCBwYWdlcywgbnIpKQogCQkJcmV0dXJuIDA7CiAJfSB3aGlsZSAo
+cDRkcCsrLCBhZGRyID0gbmV4dCwgYWRkciAhPSBlbmQpOwogCkBAIC0xNzc4LDcgKzE3NzgsNyBA
+QCBzdGF0aWMgaW50IGd1cF9wNGRfcmFuZ2UocGdkX3QgcGdkLCB1bnNpZ25lZCBsb25nIGFkZHIs
+IHVuc2lnbmVkIGxvbmcgZW5kLAogfQogCiBzdGF0aWMgdm9pZCBndXBfcGdkX3JhbmdlKHVuc2ln
+bmVkIGxvbmcgYWRkciwgdW5zaWduZWQgbG9uZyBlbmQsCi0JCWludCB3cml0ZSwgc3RydWN0IHBh
+Z2UgKipwYWdlcywgaW50ICpucikKKwkJdW5zaWduZWQgaW50IGZsYWdzLCBzdHJ1Y3QgcGFnZSAq
+KnBhZ2VzLCBpbnQgKm5yKQogewogCXVuc2lnbmVkIGxvbmcgbmV4dDsKIAlwZ2RfdCAqcGdkcDsK
+QEAgLTE3OTEsMTQgKzE3OTEsMTQgQEAgc3RhdGljIHZvaWQgZ3VwX3BnZF9yYW5nZSh1bnNpZ25l
+ZCBsb25nIGFkZHIsIHVuc2lnbmVkIGxvbmcgZW5kLAogCQlpZiAocGdkX25vbmUocGdkKSkKIAkJ
+CXJldHVybjsKIAkJaWYgKHVubGlrZWx5KHBnZF9odWdlKHBnZCkpKSB7Ci0JCQlpZiAoIWd1cF9o
+dWdlX3BnZChwZ2QsIHBnZHAsIGFkZHIsIG5leHQsIHdyaXRlLAorCQkJaWYgKCFndXBfaHVnZV9w
+Z2QocGdkLCBwZ2RwLCBhZGRyLCBuZXh0LCBmbGFncywKIAkJCQkJICBwYWdlcywgbnIpKQogCQkJ
+CXJldHVybjsKIAkJfSBlbHNlIGlmICh1bmxpa2VseShpc19odWdlcGQoX19odWdlcGQocGdkX3Zh
+bChwZ2QpKSkpKSB7CiAJCQlpZiAoIWd1cF9odWdlX3BkKF9faHVnZXBkKHBnZF92YWwocGdkKSks
+IGFkZHIsCi0JCQkJCSBQR0RJUl9TSElGVCwgbmV4dCwgd3JpdGUsIHBhZ2VzLCBucikpCisJCQkJ
+CSBQR0RJUl9TSElGVCwgbmV4dCwgZmxhZ3MsIHBhZ2VzLCBucikpCiAJCQkJcmV0dXJuOwotCQl9
+IGVsc2UgaWYgKCFndXBfcDRkX3JhbmdlKHBnZCwgYWRkciwgbmV4dCwgd3JpdGUsIHBhZ2VzLCBu
+cikpCisJCX0gZWxzZSBpZiAoIWd1cF9wNGRfcmFuZ2UocGdkLCBhZGRyLCBuZXh0LCBmbGFncywg
+cGFnZXMsIG5yKSkKIAkJCXJldHVybjsKIAl9IHdoaWxlIChwZ2RwKyssIGFkZHIgPSBuZXh0LCBh
+ZGRyICE9IGVuZCk7CiB9CkBAIC0xODUyLDcgKzE4NTIsNyBAQCBpbnQgX19nZXRfdXNlcl9wYWdl
+c19mYXN0KHVuc2lnbmVkIGxvbmcgc3RhcnQsIGludCBucl9wYWdlcywgaW50IHdyaXRlLAogCiAJ
+aWYgKGd1cF9mYXN0X3Blcm1pdHRlZChzdGFydCwgbnJfcGFnZXMpKSB7CiAJCWxvY2FsX2lycV9z
+YXZlKGZsYWdzKTsKLQkJZ3VwX3BnZF9yYW5nZShzdGFydCwgZW5kLCB3cml0ZSwgcGFnZXMsICZu
+cik7CisJCWd1cF9wZ2RfcmFuZ2Uoc3RhcnQsIGVuZCwgd3JpdGUgPyBGT0xMX1dSSVRFIDogMCwg
+cGFnZXMsICZucik7CiAJCWxvY2FsX2lycV9yZXN0b3JlKGZsYWdzKTsKIAl9CiAKQEAgLTE4OTQs
+NyArMTg5NCw3IEBAIGludCBnZXRfdXNlcl9wYWdlc19mYXN0KHVuc2lnbmVkIGxvbmcgc3RhcnQs
+IGludCBucl9wYWdlcywgaW50IHdyaXRlLAogCiAJaWYgKGd1cF9mYXN0X3Blcm1pdHRlZChzdGFy
+dCwgbnJfcGFnZXMpKSB7CiAJCWxvY2FsX2lycV9kaXNhYmxlKCk7Ci0JCWd1cF9wZ2RfcmFuZ2Uo
+YWRkciwgZW5kLCB3cml0ZSwgcGFnZXMsICZucik7CisJCWd1cF9wZ2RfcmFuZ2UoYWRkciwgZW5k
+LCB3cml0ZSA/IEZPTExfV1JJVEUgOiAwLCBwYWdlcywgJm5yKTsKIAkJbG9jYWxfaXJxX2VuYWJs
+ZSgpOwogCQlyZXQgPSBucjsKIAl9Ci0tIAoyLjIwLjEKCl9fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fCmRyaS1kZXZlbCBtYWlsaW5nIGxpc3QKZHJpLWRldmVs
+QGxpc3RzLmZyZWVkZXNrdG9wLm9yZwpodHRwczovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9tYWls
+bWFuL2xpc3RpbmZvL2RyaS1kZXZlbA==
