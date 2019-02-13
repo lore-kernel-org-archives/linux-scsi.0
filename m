@@ -1,68 +1,41 @@
-From: John Garry <john.garry@huawei.com>
-Subject: Re: [PATCH 4/4] hisi_sas: fix calls to dma_set_mask_and_coherent()
-Date: Wed, 13 Feb 2019 11:51:23 +0000
-Message-ID: <f94c768d-0890-d419-752e-a19019a9e09f@huawei.com>
-References: <20190213114234.67275-1-hare@suse.de>
- <20190213114234.67275-5-hare@suse.de>
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] scsi: qla2xxx: remove redundant null check on pointer sess
+Date: Wed, 13 Feb 2019 13:53:35 +0000
+Message-ID: <20190213135335.4790-1-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20190213114234.67275-5-hare@suse.de>
-Sender: stable-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>, stable@vger.kernel.org, Hannes Reinecke <hare@suse.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: qla2xxx-upstream@qlogic.com, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 13/02/2019 11:42, Hannes Reinecke wrote:
-> The change to use dma_set_mask_and_coherent() incorrectly made a second
-> call with the 32 bit DMA mask value when the call with the 64 bit DMA
-> mask value succeeded.  This resulted in FC connections failing due
-> to corrupted data buffers, and various other SCSI/FCP I/O errors.
->
-> Fixes: e4db40e7a1a2 ("scsi: hisi_sas: use dma_set_mask_and_coherent")
-> Cc: <stable@vger.kernel.org>
-> Suggested-by: Ewan D. Milne <emilne@redhat.com>
-> Signed-off-by: Hannes Reinecke <hare@suse.com>
-> ---
->  drivers/scsi/hisi_sas/hisi_sas_main.c | 8 ++++++--
->  1 file changed, 6 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-> index eed7fc5b3389..bc17fa0d8375 100644
-> --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-> +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-> @@ -2323,6 +2323,7 @@ static struct Scsi_Host *hisi_sas_shost_alloc(struct platform_device *pdev,
->  	struct Scsi_Host *shost;
->  	struct hisi_hba *hisi_hba;
->  	struct device *dev = &pdev->dev;
-> +	int error;
->
->  	shost = scsi_host_alloc(hw->sht, sizeof(*hisi_hba));
->  	if (!shost) {
-> @@ -2343,8 +2344,11 @@ static struct Scsi_Host *hisi_sas_shost_alloc(struct platform_device *pdev,
->  	if (hisi_sas_get_fw_info(hisi_hba) < 0)
->  		goto err_out;
->
-> -	if (dma_set_mask_and_coherent(dev, DMA_BIT_MASK(64)) &&
-> -	    dma_set_mask_and_coherent(dev, DMA_BIT_MASK(32))) {
+From: Colin Ian King <colin.king@canonical.com>
 
-Aren't we supposed to be fixing hisi_sas_v3_probe()? We have a path for 
-platform device probe and a path for pci device probe. You're changing 
-the platform device probe, which is currently ok.
+The null check on pointer sess and the subsequent call is redundant
+as sess is null on all the the paths that lead to the out_term2 label.
+Hence the null check and the call can be removed.
 
-I meant to unify all this. Now would be a good time, as it's not a fix. 
-Can do it later.
+Detected by CoverityScan, CID#1420663 ("Logically dead code")
 
-Thanks,
-John
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/scsi/qla2xxx/qla_target.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-> +	error = dma_set_mask_and_coherent(dev, DMA_BIT_MASK(64));
-> +	if (error)
-> +		error = dma_set_mask_and_coherent(dev, DMA_BIT_MASK(32));
-> +
-> +	if (error) {
->  		dev_err(dev, "No usable DMA addressing method\n");
->  		goto err_out;
->  	}
->
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index 6b8c655d9eb4..9af329a5ed90 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -6396,8 +6396,6 @@ static void qlt_tmr_work(struct qla_tgt *tgt,
+ 	return;
+ 
+ out_term2:
+-	if (sess)
+-		ha->tgt.tgt_ops->put_sess(sess);
+ 	spin_unlock_irqrestore(&ha->tgt.sess_lock, flags);
+ out_term:
+ 	qlt_send_term_exchange(ha->base_qpair, NULL, &prm->tm_iocb2, 1, 0);
+-- 
+2.20.1
