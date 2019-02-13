@@ -1,13 +1,13 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.14 18/34] scsi: qla4xxx: check return code of qla4xxx_copy_from_fwddb_param
-Date: Tue, 12 Feb 2019 21:39:36 -0500
-Message-ID: <20190213023952.21311-18-sashal@kernel.org>
-References: <20190213023952.21311-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 12/21] scsi: qla4xxx: check return code of qla4xxx_copy_from_fwddb_param
+Date: Tue, 12 Feb 2019 21:40:31 -0500
+Message-ID: <20190213024040.21740-12-sashal@kernel.org>
+References: <20190213024040.21740-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190213023952.21311-1-sashal@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20190213024040.21740-1-sashal@kernel.org>
+Sender: stable-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc: YueHaibing <yuehaibing@huawei.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -27,10 +27,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 2 insertions(+)
 
 diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index a6aa08d9a171..22dc70a2138e 100644
+index d8c03431d0aa..f9f899ec9427 100644
 --- a/drivers/scsi/qla4xxx/ql4_os.c
 +++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -7241,6 +7241,8 @@ static int qla4xxx_sysfs_ddb_tgt_create(struct scsi_qla_host *ha,
+@@ -7245,6 +7245,8 @@ static int qla4xxx_sysfs_ddb_tgt_create(struct scsi_qla_host *ha,
  
  	rc = qla4xxx_copy_from_fwddb_param(fnode_sess, fnode_conn,
  					   fw_ddb_entry);
