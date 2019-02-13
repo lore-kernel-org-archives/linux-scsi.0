@@ -1,12 +1,12 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.4 11/16] scsi: isci: initialize shost fully before calling scsi_add_host()
-Date: Tue, 12 Feb 2019 21:41:07 -0500
-Message-ID: <20190213024112.22038-11-sashal@kernel.org>
-References: <20190213024112.22038-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 3.18 09/14] scsi: isci: initialize shost fully before calling scsi_add_host()
+Date: Tue, 12 Feb 2019 21:41:33 -0500
+Message-ID: <20190213024139.22268-9-sashal@kernel.org>
+References: <20190213024139.22268-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190213024112.22038-1-sashal@kernel.org>
+In-Reply-To: <20190213024139.22268-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc: Logan Gunthorpe <logang@deltatee.com>, Intel SCU Linux support <intel-linux-scu@intel.com>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Jeff Moyer <jmoyer@redhat.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
@@ -72,10 +72,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 7 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
-index 77128d680e3b..6f38fa1f468a 100644
+index 2e890b1e2526..05b5747b7d41 100644
 --- a/drivers/scsi/isci/init.c
 +++ b/drivers/scsi/isci/init.c
-@@ -595,6 +595,13 @@ static struct isci_host *isci_host_alloc(struct pci_dev *pdev, int id)
+@@ -598,6 +598,13 @@ static struct isci_host *isci_host_alloc(struct pci_dev *pdev, int id)
  	shost->max_lun = ~0;
  	shost->max_cmd_len = MAX_COMMAND_SIZE;
  
@@ -89,7 +89,7 @@ index 77128d680e3b..6f38fa1f468a 100644
  	err = scsi_add_host(shost, &pdev->dev);
  	if (err)
  		goto err_shost;
-@@ -682,13 +689,6 @@ static int isci_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+@@ -685,13 +692,6 @@ static int isci_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
  			goto err_host_alloc;
  		}
  		pci_info->hosts[i] = h;
