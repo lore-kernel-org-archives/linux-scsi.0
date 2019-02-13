@@ -1,7 +1,7 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.14 25/34] scsi: qedi: Add ep_state for login completion on un-reachable targets
-Date: Tue, 12 Feb 2019 21:39:43 -0500
-Message-ID: <20190213023952.21311-25-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 24/34] scsi: ufs: Fix system suspend status
+Date: Tue, 12 Feb 2019 21:39:42 -0500
+Message-ID: <20190213023952.21311-24-sashal@kernel.org>
 References: <20190213023952.21311-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -9,66 +9,43 @@ Return-path: <stable-owner@vger.kernel.org>
 In-Reply-To: <20190213023952.21311-1-sashal@kernel.org>
 Sender: stable-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Manish Rangankar <mrangankar@marvell.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Cc: Stanley Chu <stanley.chu@mediatek.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Manish Rangankar <mrangankar@marvell.com>
+From: Stanley Chu <stanley.chu@mediatek.com>
 
-[ Upstream commit 34a2ce887668db9dda4b56e6f155c49ac13f3e54 ]
+[ Upstream commit ce9e7bce43526626f7cffe2e657953997870197e ]
 
-When the driver finds invalid destination MAC for the first un-reachable
-target, and before completes the PATH_REQ operation, set new ep_state to
-OFFLDCONN_NONE so that as part of driver ep_poll mechanism, the upper
-open-iscsi layer is notified to complete the login process on the first
-un-reachable target and thus proceed login to other reachable targets.
+hba->is_sys_suspended is set after successful system suspend but
+not clear after successful system resume.
 
-Signed-off-by: Manish Rangankar <mrangankar@marvell.com>
+According to current behavior, hba->is_sys_suspended will not be set if
+host is runtime-suspended but not system-suspended. Thus we shall aligh the
+same policy: clear this flag even if host remains runtime-suspended after
+ufshcd_system_resume is successfully returned.
+
+Simply fix this flag to correct host status logs.
+
+Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
+Reviewed-by: Avri Altman <avri.altman@wdc.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qedi/qedi_iscsi.c | 3 +++
- drivers/scsi/qedi/qedi_iscsi.h | 1 +
- 2 files changed, 4 insertions(+)
+ drivers/scsi/ufs/ufshcd.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/scsi/qedi/qedi_iscsi.c b/drivers/scsi/qedi/qedi_iscsi.c
-index a02b34ea5cab..45f044f35cea 100644
---- a/drivers/scsi/qedi/qedi_iscsi.c
-+++ b/drivers/scsi/qedi/qedi_iscsi.c
-@@ -961,6 +961,7 @@ static int qedi_ep_poll(struct iscsi_endpoint *ep, int timeout_ms)
- 
- 	qedi_ep = ep->dd_data;
- 	if (qedi_ep->state == EP_STATE_IDLE ||
-+	    qedi_ep->state == EP_STATE_OFLDCONN_NONE ||
- 	    qedi_ep->state == EP_STATE_OFLDCONN_FAILED)
- 		return -1;
- 
-@@ -1043,6 +1044,7 @@ static void qedi_ep_disconnect(struct iscsi_endpoint *ep)
- 
- 	switch (qedi_ep->state) {
- 	case EP_STATE_OFLDCONN_START:
-+	case EP_STATE_OFLDCONN_NONE:
- 		goto ep_release_conn;
- 	case EP_STATE_OFLDCONN_FAILED:
- 			break;
-@@ -1233,6 +1235,7 @@ static int qedi_set_path(struct Scsi_Host *shost, struct iscsi_path *path_data)
- 
- 	if (!is_valid_ether_addr(&path_data->mac_addr[0])) {
- 		QEDI_NOTICE(&qedi->dbg_ctx, "dst mac NOT VALID\n");
-+		qedi_ep->state = EP_STATE_OFLDCONN_NONE;
- 		ret = -EIO;
- 		goto set_path_exit;
- 	}
-diff --git a/drivers/scsi/qedi/qedi_iscsi.h b/drivers/scsi/qedi/qedi_iscsi.h
-index 3247287cb0e7..812b4b68e6e4 100644
---- a/drivers/scsi/qedi/qedi_iscsi.h
-+++ b/drivers/scsi/qedi/qedi_iscsi.h
-@@ -59,6 +59,7 @@ enum {
- 	EP_STATE_OFLDCONN_FAILED        = 0x2000,
- 	EP_STATE_CONNECT_FAILED         = 0x4000,
- 	EP_STATE_DISCONN_TIMEDOUT       = 0x8000,
-+	EP_STATE_OFLDCONN_NONE          = 0x10000,
- };
- 
- struct qedi_conn;
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 21c81c1feac5..66540491839e 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -7520,6 +7520,8 @@ int ufshcd_system_resume(struct ufs_hba *hba)
+ 	trace_ufshcd_system_resume(dev_name(hba->dev), ret,
+ 		ktime_to_us(ktime_sub(ktime_get(), start)),
+ 		hba->curr_dev_pwr_mode, hba->uic_link_state);
++	if (!ret)
++		hba->is_sys_suspended = false;
+ 	return ret;
+ }
+ EXPORT_SYMBOL(ufshcd_system_resume);
 -- 
 2.19.1
