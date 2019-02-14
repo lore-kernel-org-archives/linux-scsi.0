@@ -1,31 +1,25 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: qlogicpti: Use of_node_name_eq for node name comparisons
-Date: Wed, 13 Feb 2019 22:14:21 -0500
-Message-ID: <yq11s4bqcxe.fsf@oracle.com>
-References: <20190213160829.3923-1-robh@kernel.org>
+Subject: Re: [PATCH] scsi: lpfc: fix a handful of indentation issues
+Date: Wed, 13 Feb 2019 22:16:21 -0500
+Message-ID: <yq1wom3oy9m.fsf@oracle.com>
+References: <20190212152945.11362-1-colin.king@canonical.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190213160829.3923-1-robh@kernel.org> (Rob Herring's message of
-        "Wed, 13 Feb 2019 10:08:29 -0600")
+In-Reply-To: <20190212152945.11362-1-colin.king@canonical.com> (Colin King's
+        message of "Tue, 12 Feb 2019 15:29:45 +0000")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Rob Herring <robh@kernel.org>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.ibm.com>, linux-scsi@vger.kernel.org, Meelis Roos <mroos@linux.ee>
+To: Colin King <colin.king@canonical.com>
+Cc: James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Rob,
+Colin,
 
-> -	qpti->is_pti = strcmp(qpti->prom_name, "QLGC,isp");
-> +	qpti->is_pti = !of_node_name_eq(op->dev.of_node, "QLGC,isp");
+> There are a handful of statements that are indented incorrectly. Fix
+> these.
 
-The apparent polarity inversion made me blink but it appears to be
-correct (is_pti is set if it's not an isp controller). Makes me wonder
-if the driver is doing the right thing for a "SUNW,isp", though...
-
-Meelis: Do you have anything that identifies itself as SUNW,isp?
-
-In any case: Applied to 5.1/scsi-queue.
+Applied to 5.1/scsi-queue, thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
