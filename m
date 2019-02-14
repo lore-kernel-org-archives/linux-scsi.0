@@ -1,54 +1,57 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: Re: [PATCH] scsi: qla2xxx: remove redundant null check on pointer
- sess
-Date: Thu, 14 Feb 2019 08:54:57 +0300
-Message-ID: <20190214055457.GA2326@kadam>
-References: <20190213135335.4790-1-colin.king@canonical.com>
+From: "liwei (CM)" <liwei213@huawei.com>
+Subject: =?gb2312?B?tPC4tDogW1BBVENIIHYyIDEvM10gZHQtYmluZGluZ3M6IHVmczogQWRkIEhJ?=
+ =?gb2312?Q?3670_UFS_controller_binding?=
+Date: Thu, 14 Feb 2019 06:37:01 +0000
+Message-ID: <1699CE87DE933F49876AD744B5DC140F0672AA0D@dggemm526-mbx.china.huawei.com>
+References: <20190105072859.9134-1-manivannan.sadhasivam@linaro.org>
+ <20190105072859.9134-2-manivannan.sadhasivam@linaro.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20190213135335.4790-1-colin.king@canonical.com>
+In-Reply-To: <20190105072859.9134-2-manivannan.sadhasivam@linaro.org>
+Content-Language: zh-CN
 Sender: linux-kernel-owner@vger.kernel.org
-To: Colin King <colin.king@canonical.com>
-Cc: qla2xxx-upstream@qlogic.com, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, "vinholikatti@gmail.com" <vinholikatti@gmail.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "robh+dt@kernel.org" <robh+dt@kernel.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "john.stultz@linaro.org" <john.stultz@linaro.org>, "amit.kucheria@linaro.org" <amit.kucheria@linaro.org>, "guodong.xu@linaro.org" <guodong.xu@linaro.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Feb 13, 2019 at 01:53:35PM +0000, Colin King wrote:
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> The null check on pointer sess and the subsequent call is redundant
-> as sess is null on all the the paths that lead to the out_term2 label.
-> Hence the null check and the call can be removed.
-> 
-> Detected by CoverityScan, CID#1420663 ("Logically dead code")
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> ---
->  drivers/scsi/qla2xxx/qla_target.c | 2 --
->  1 file changed, 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-> index 6b8c655d9eb4..9af329a5ed90 100644
-> --- a/drivers/scsi/qla2xxx/qla_target.c
-> +++ b/drivers/scsi/qla2xxx/qla_target.c
-> @@ -6396,8 +6396,6 @@ static void qlt_tmr_work(struct qla_tgt *tgt,
->  	return;
->  
->  out_term2:
-> -	if (sess)
-> -		ha->tgt.tgt_ops->put_sess(sess);
-
-Several places do:
-
-		sess = NULL;
-		goto out_term2;
-
-We could remove the "sess = NULL;" because it's not required now.
-
->  	spin_unlock_irqrestore(&ha->tgt.sess_lock, flags);
->  out_term:
->  	qlt_send_term_exchange(ha->base_qpair, NULL, &prm->tm_iocb2, 1, 0);
-
-regards,
-dan carpenter
+RmluZSB0byBtZS4gVGhhbmtzIQ0KQWNrZWQtYnk6IFdlaSBMaSA8bGl3ZWkyMTNAaHVhd2VpLmNv
+bT4NCg0KLS0tLS3Tyrz+1K28/i0tLS0tDQq3orz+yMs6IE1hbml2YW5uYW4gU2FkaGFzaXZhbSBb
+bWFpbHRvOm1hbml2YW5uYW4uc2FkaGFzaXZhbUBsaW5hcm8ub3JnXSANCreiy83KsbzkOiAyMDE5
+xOox1MI1yNUgMTU6MjkNCsrVvP7IyzogdmluaG9saWthdHRpQGdtYWlsLmNvbTsgamVqYkBsaW51
+eC52bmV0LmlibS5jb207IG1hcnRpbi5wZXRlcnNlbkBvcmFjbGUuY29tOyBsaXdlaSAoQ00pOyBy
+b2JoK2R0QGtlcm5lbC5vcmcNCrOty806IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnOyBsaW51
+eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnOyBsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVh
+ZC5vcmc7IGRldmljZXRyZWVAdmdlci5rZXJuZWwub3JnOyBqb2huLnN0dWx0ekBsaW5hcm8ub3Jn
+OyBhbWl0Lmt1Y2hlcmlhQGxpbmFyby5vcmc7IGd1b2RvbmcueHVAbGluYXJvLm9yZzsgTWFuaXZh
+bm5hbiBTYWRoYXNpdmFtDQrW98ziOiBbUEFUQ0ggdjIgMS8zXSBkdC1iaW5kaW5nczogdWZzOiBB
+ZGQgSEkzNjcwIFVGUyBjb250cm9sbGVyIGJpbmRpbmcNCg0KQWRkIGRldmljZXRyZWUgYmluZGlu
+ZyBmb3IgSEkzNjcwIFVGUyBjb250cm9sbGVyLiBISTM3NjAgU29DIGlzIHZlcnkNCnNpbWlsYXIg
+dG8gSEkzNjYwIFNvQyB3aXRoIGFsbW9zdCBzYW1lIElQcy4gT25seSBtYWpvciBkaWZmZXJlbmNl
+IGluIHRlcm1zDQpvZiBVRlMgaXMgdGhlIFBIWS4gSEkzNjcwIGhhcyAxMG5tIFBIWS4gQnV0IHNp
+bmNlIHRoZSBvcmlnaW5hbCBkcml2ZXINCihISTM2NjAgVUZTKSBjYW5ub3QgbWFrZSBISTM2NzAg
+VUZTIGZ1bmN0aW9uYWwsIGEgc2VwYXJhdGUgY29tcGF0aWJsZQ0KaXMgYWRkZWQgZm9yIEhJMzY3
+MCB3aXRob3V0IGFueSBmYWxsYmFjay4NCg0KU2lnbmVkLW9mZi1ieTogTWFuaXZhbm5hbiBTYWRo
+YXNpdmFtIDxtYW5pdmFubmFuLnNhZGhhc2l2YW1AbGluYXJvLm9yZz4NCi0tLQ0KIERvY3VtZW50
+YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy91ZnMvdWZzLWhpc2kudHh0IHwgNSArKystLQ0KIDEg
+ZmlsZSBjaGFuZ2VkLCAzIGluc2VydGlvbnMoKyksIDIgZGVsZXRpb25zKC0pDQoNCmRpZmYgLS1n
+aXQgYS9Eb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvdWZzL3Vmcy1oaXNpLnR4dCBi
+L0RvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy91ZnMvdWZzLWhpc2kudHh0DQppbmRl
+eCBhNDhjNDQ4MTczNjcuLjBiODNkZjFhNTQxOCAxMDA2NDQNCi0tLSBhL0RvY3VtZW50YXRpb24v
+ZGV2aWNldHJlZS9iaW5kaW5ncy91ZnMvdWZzLWhpc2kudHh0DQorKysgYi9Eb2N1bWVudGF0aW9u
+L2RldmljZXRyZWUvYmluZGluZ3MvdWZzL3Vmcy1oaXNpLnR4dA0KQEAgLTYsOSArNiwxMCBAQCBF
+YWNoIFVGUyBIb3N0IENvbnRyb2xsZXIgc2hvdWxkIGhhdmUgaXRzIG93biBub2RlLg0KIFJlcXVp
+cmVkIHByb3BlcnRpZXM6DQogLSBjb21wYXRpYmxlICAgICAgICA6IGNvbXBhdGlibGUgbGlzdCwg
+Y29udGFpbnMgb25lIG9mIHRoZSBmb2xsb3dpbmcgLQ0KIAkJCQkJImhpc2lsaWNvbixoaTM2NjAt
+dWZzIiwgImplZGVjLHVmcy0xLjEiIGZvciBoaXNpIHVmcw0KLQkJCQkJaG9zdCBjb250cm9sbGVy
+IHByZXNlbnQgb24gSGkzNnh4IGNoaXBzZXQuDQorCQkJCQlob3N0IGNvbnRyb2xsZXIgcHJlc2Vu
+dCBvbiBIaTM2NjAgY2hpcHNldC4NCisJCQkJCSJoaXNpbGljb24saGkzNjcwLXVmcyIsICJqZWRl
+Yyx1ZnMtMi4xIiBmb3IgaGlzaSB1ZnMNCisJCQkJCWhvc3QgY29udHJvbGxlciBwcmVzZW50IG9u
+IEhpMzY3MCBjaGlwc2V0Lg0KIC0gcmVnICAgICAgICAgICAgICAgOiBzaG91bGQgY29udGFpbiBV
+RlMgcmVnaXN0ZXIgYWRkcmVzcyBzcGFjZSAmIFVGUyBTWVMgQ1RSTCByZWdpc3RlciBhZGRyZXNz
+LA0KLS0gaW50ZXJydXB0LXBhcmVudCAgOiBpbnRlcnJ1cHQgZGV2aWNlDQogLSBpbnRlcnJ1cHRz
+ICAgICAgICA6IGludGVycnVwdCBudW1iZXINCiAtIGNsb2NrcwkgICAgICAgIDogTGlzdCBvZiBw
+aGFuZGxlIGFuZCBjbG9jayBzcGVjaWZpZXIgcGFpcnMNCiAtIGNsb2NrLW5hbWVzICAgICAgIDog
+TGlzdCBvZiBjbG9jayBpbnB1dCBuYW1lIHN0cmluZ3Mgc29ydGVkIGluIHRoZSBzYW1lDQotLSAN
+CjIuMTcuMQ0KDQo=
