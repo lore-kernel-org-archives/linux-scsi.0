@@ -1,36 +1,53 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [Lsf-pc] LSF/MM 2019: Call for Proposals (UPDATED!)
-Date: Thu, 14 Feb 2019 15:08:22 +0100
-Message-ID: <20190214140822.GA7251@dhcp22.suse.cz>
-References: <4f5a15c1-4f9e-acae-5094-2f38c8eebd96@kernel.dk>
+From: Zhiwei Jiang <qq282012236@gmail.com>
+Subject: [PATCH] scsi: target: move spin_lock_bh to spin_lock in tasklet
+Date: Thu, 14 Feb 2019 22:06:51 +0800
+Message-ID: <20190214140651.65514-1-qq282012236@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4f5a15c1-4f9e-acae-5094-2f38c8eebd96@kernel.dk>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, bpf@vger.kernel.org, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, ast@kernel.org
+To: qq282012236@gmail.com
+Cc: mikecyr@linux.ibm.com, jejb@linux.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org, martin.petersen@oracle.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu 07-02-19 08:35:06, Jens Axboe wrote:
-[...]
-> 2) Requests to attend the summit for those that are not proposing a
-> topic should be sent to:
-> 
-> 	lsf-pc@lists.linux-foundation.org
-> 
-> Please summarize what expertise you will bring to the meeting, and
-> what you would like to discuss. Please also tag your email with
-> [LSF/MM ATTEND] and send it as a new thread so there is less chance of
-> it getting lost.
+as you are already in a tasklet, it is unnecessary to call
+spin_lock_bh, because softirq already disable BH.
 
-Just a reminder. Please do not forget to send the ATTEND request and
-make it clear which track you would like to participate in the most.
-It is quite common that people only send topic proposals without and
-expclicit ATTEND request or they do not mention the track.
+Signed-off-by: Zhiwei Jiang <qq282012236@gmail.com>
+---
+ drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Thanks!
+diff --git a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
+index cc9cae469c4b..29e7c51fcc4b 100644
+--- a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
++++ b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
+@@ -3346,7 +3346,7 @@ static void ibmvscsis_handle_crq(unsigned long data)
+ 	bool ack = true;
+ 	volatile u8 valid;
+ 
+-	spin_lock_bh(&vscsi->intr_lock);
++	spin_lock(&vscsi->intr_lock);
+ 
+ 	dev_dbg(&vscsi->dev, "got interrupt\n");
+ 
+@@ -3360,7 +3360,7 @@ static void ibmvscsis_handle_crq(unsigned long data)
+ 
+ 		dev_dbg(&vscsi->dev, "handle_crq, don't process: flags 0x%x, state 0x%hx\n",
+ 			vscsi->flags, vscsi->state);
+-		spin_unlock_bh(&vscsi->intr_lock);
++		spin_unlock(&vscsi->intr_lock);
+ 		return;
+ 	}
+ 
+@@ -3437,7 +3437,7 @@ static void ibmvscsis_handle_crq(unsigned long data)
+ 		(int)list_empty(&vscsi->schedule_q), vscsi->flags,
+ 		vscsi->state);
+ 
+-	spin_unlock_bh(&vscsi->intr_lock);
++	spin_unlock(&vscsi->intr_lock);
+ }
+ 
+ static int ibmvscsis_probe(struct vio_dev *vdev,
 -- 
-Michal Hocko
-SUSE Labs
+2.19.0
