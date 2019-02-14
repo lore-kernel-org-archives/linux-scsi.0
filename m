@@ -1,53 +1,84 @@
-From: Zhiwei Jiang <qq282012236@gmail.com>
-Subject: [PATCH] scsi: target: move spin_lock_bh to spin_lock in tasklet
-Date: Thu, 14 Feb 2019 22:06:51 +0800
-Message-ID: <20190214140651.65514-1-qq282012236@gmail.com>
+From: John Garry <john.garry@huawei.com>
+Subject: [PATCH] scsi: libsas: Fix rphy phy_identifier for PHYs with end devices attached
+Date: Fri, 15 Feb 2019 00:37:57 +0800
+Message-ID: <1550162277-17615-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: qq282012236@gmail.com
-Cc: mikecyr@linux.ibm.com, jejb@linux.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org, martin.petersen@oracle.com
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linuxarm@huawei.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, dann.frazier@canonical.com, yanaijie@huawei.com, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-as you are already in a tasklet, it is unnecessary to call
-spin_lock_bh, because softirq already disable BH.
+The sysfs phy_identifier attribute for a sas_end_device comes
+from the rphy phy_identifier value.
 
-Signed-off-by: Zhiwei Jiang <qq282012236@gmail.com>
----
- drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Currently this is not being set for rphys with an end device attached,
+so we see incorrect symlinks from systemd disk/by-path:
 
-diff --git a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-index cc9cae469c4b..29e7c51fcc4b 100644
---- a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-+++ b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-@@ -3346,7 +3346,7 @@ static void ibmvscsis_handle_crq(unsigned long data)
- 	bool ack = true;
- 	volatile u8 valid;
+root@localhost:~# ls -l /dev/disk/by-path/
+total 0
+lrwxrwxrwx 1 root root  9 Feb 13 12:26 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy0-lun-0 -> ../../sdb
+lrwxrwxrwx 1 root root 10 Feb 13 12:26 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy0-lun-0-part1 -> ../../sdb1
+lrwxrwxrwx 1 root root 10 Feb 13 12:26 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy0-lun-0-part2 -> ../../sdb2
+lrwxrwxrwx 1 root root 10 Feb 13 12:26 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy0-lun-0-part3 -> ../../sdc3
+
+Indeed, each sas_end_device phy_identifier value is 0:
+
+root@localhost:/# more sys/class/sas_device/end_device-0\:0\:2/phy_identifier
+0
+root@localhost:/# more sys/class/sas_device/end_device-0\:0\:10/phy_identifier
+0
+
+This patch fixes the discovery code to set the phy_identifier.
+With this, we now get proper symlinks:
+
+root@localhost:~# ls -l /dev/disk/by-path/
+total 0
+lrwxrwxrwx 1 root root  9 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy10-lun-0 -> ../../sdg
+lrwxrwxrwx 1 root root  9 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy11-lun-0 -> ../../sdh
+lrwxrwxrwx 1 root root  9 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy2-lun-0 -> ../../sda
+lrwxrwxrwx 1 root root 10 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy2-lun-0-part1 -> ../../sda1
+lrwxrwxrwx 1 root root  9 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy3-lun-0 -> ../../sdb
+lrwxrwxrwx 1 root root 10 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy3-lun-0-part1 -> ../../sdb1
+lrwxrwxrwx 1 root root 10 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy3-lun-0-part2 -> ../../sdb2
+lrwxrwxrwx 1 root root  9 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy4-lun-0 -> ../../sdc
+lrwxrwxrwx 1 root root 10 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy4-lun-0-part1 -> ../../sdc1
+lrwxrwxrwx 1 root root 10 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy4-lun-0-part2 -> ../../sdc2
+lrwxrwxrwx 1 root root 10 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy4-lun-0-part3 -> ../../sdc3
+lrwxrwxrwx 1 root root  9 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy5-lun-0 -> ../../sdd
+lrwxrwxrwx 1 root root  9 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy7-lun-0 -> ../../sde
+lrwxrwxrwx 1 root root 10 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy7-lun-0-part1 -> ../../sde1
+lrwxrwxrwx 1 root root 10 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy7-lun-0-part2 -> ../../sde2
+lrwxrwxrwx 1 root root 10 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy7-lun-0-part3 -> ../../sde3
+lrwxrwxrwx 1 root root  9 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy8-lun-0 -> ../../sdf
+lrwxrwxrwx 1 root root 10 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy8-lun-0-part1 -> ../../sdf1
+lrwxrwxrwx 1 root root 10 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy8-lun-0-part2 -> ../../sdf2
+lrwxrwxrwx 1 root root 10 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy8-lun-0-part3 -> ../../sdf3
+
+Fixes: 2908d778ab3e ("[SCSI] aic94xx: new driver")
+Reported-by: dann frazier <dann.frazier@canonical.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
+
+diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
+index 17eb4185f29d..f21c93bbb35c 100644
+--- a/drivers/scsi/libsas/sas_expander.c
++++ b/drivers/scsi/libsas/sas_expander.c
+@@ -828,6 +828,7 @@ static struct domain_device *sas_ex_discover_end_dev(
+ 		rphy = sas_end_device_alloc(phy->port);
+ 		if (!rphy)
+ 			goto out_free;
++		rphy->identify.phy_identifier = phy_id;
  
--	spin_lock_bh(&vscsi->intr_lock);
-+	spin_lock(&vscsi->intr_lock);
+ 		child->rphy = rphy;
+ 		get_device(&rphy->dev);
+@@ -854,6 +855,7 @@ static struct domain_device *sas_ex_discover_end_dev(
  
- 	dev_dbg(&vscsi->dev, "got interrupt\n");
+ 		child->rphy = rphy;
+ 		get_device(&rphy->dev);
++		rphy->identify.phy_identifier = phy_id;
+ 		sas_fill_in_rphy(child, rphy);
  
-@@ -3360,7 +3360,7 @@ static void ibmvscsis_handle_crq(unsigned long data)
- 
- 		dev_dbg(&vscsi->dev, "handle_crq, don't process: flags 0x%x, state 0x%hx\n",
- 			vscsi->flags, vscsi->state);
--		spin_unlock_bh(&vscsi->intr_lock);
-+		spin_unlock(&vscsi->intr_lock);
- 		return;
- 	}
- 
-@@ -3437,7 +3437,7 @@ static void ibmvscsis_handle_crq(unsigned long data)
- 		(int)list_empty(&vscsi->schedule_q), vscsi->flags,
- 		vscsi->state);
- 
--	spin_unlock_bh(&vscsi->intr_lock);
-+	spin_unlock(&vscsi->intr_lock);
- }
- 
- static int ibmvscsis_probe(struct vio_dev *vdev,
+ 		list_add_tail(&child->disco_list_node, &parent->port->disco_list);
 -- 
-2.19.0
+2.17.1
