@@ -1,114 +1,50 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.19 43/65] scsi: lpfc: nvme: avoid hang / use-after-free when destroying localport
-Date: Thu, 14 Feb 2019 21:10:59 -0500
-Message-ID: <20190215021121.177674-43-sashal@kernel.org>
-References: <20190215021121.177674-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 3.18 10/16] scsi: csiostor: fix NULL pointer dereference in csio_vport_set_state()
+Date: Thu, 14 Feb 2019 21:15:40 -0500
+Message-ID: <20190215021546.179605-10-sashal@kernel.org>
+References: <20190215021546.179605-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190215021121.177674-1-sashal@kernel.org>
+In-Reply-To: <20190215021546.179605-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: "Ewan D. Milne" <emilne@redhat.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Cc: Varun Prakash <varun@chelsio.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: "Ewan D. Milne" <emilne@redhat.com>
+From: Varun Prakash <varun@chelsio.com>
 
-[ Upstream commit 7961cba6f7d8215fa632df3d220e5154bb825249 ]
+[ Upstream commit fe35a40e675473eb65f2f5462b82770f324b5689 ]
 
-We cannot wait on a completion object in the lpfc_nvme_lport structure in
-the _destroy_localport() code path because the NVMe/fc transport will free
-that structure immediately after the .localport_delete() callback.  This
-results in a use-after-free, and a hang if slub_debug=FZPU is enabled.
+Assign fc_vport to ln->fc_vport before calling csio_fcoe_alloc_vnp() to
+avoid a NULL pointer dereference in csio_vport_set_state().
 
-Fix this by putting the completion on the stack.
+ln->fc_vport is dereferenced in csio_vport_set_state().
 
-Signed-off-by: Ewan D. Milne <emilne@redhat.com>
-Acked-by: James Smart <james.smart@broadcom.com>
+Signed-off-by: Varun Prakash <varun@chelsio.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_nvme.c | 16 +++++++++-------
- drivers/scsi/lpfc/lpfc_nvme.h |  2 +-
- 2 files changed, 10 insertions(+), 8 deletions(-)
+ drivers/scsi/csiostor/csio_attr.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
-index 918ae18ef8a8..ca62117a2d13 100644
---- a/drivers/scsi/lpfc/lpfc_nvme.c
-+++ b/drivers/scsi/lpfc/lpfc_nvme.c
-@@ -297,7 +297,8 @@ lpfc_nvme_localport_delete(struct nvme_fc_local_port *localport)
- 			 lport);
+diff --git a/drivers/scsi/csiostor/csio_attr.c b/drivers/scsi/csiostor/csio_attr.c
+index 065a87ace623..22b800b5ac7f 100644
+--- a/drivers/scsi/csiostor/csio_attr.c
++++ b/drivers/scsi/csiostor/csio_attr.c
+@@ -582,12 +582,12 @@ csio_vport_create(struct fc_vport *fc_vport, bool disable)
+ 	}
  
- 	/* release any threads waiting for the unreg to complete */
--	complete(&lport->lport_unreg_done);
-+	if (lport->vport->localport)
-+		complete(lport->lport_unreg_cmp);
- }
+ 	fc_vport_set_state(fc_vport, FC_VPORT_INITIALIZING);
++	ln->fc_vport = fc_vport;
  
- /* lpfc_nvme_remoteport_delete
-@@ -2556,7 +2557,8 @@ lpfc_nvme_create_localport(struct lpfc_vport *vport)
-  */
- void
- lpfc_nvme_lport_unreg_wait(struct lpfc_vport *vport,
--			   struct lpfc_nvme_lport *lport)
-+			   struct lpfc_nvme_lport *lport,
-+			   struct completion *lport_unreg_cmp)
- {
- #if (IS_ENABLED(CONFIG_NVME_FC))
- 	u32 wait_tmo;
-@@ -2568,8 +2570,7 @@ lpfc_nvme_lport_unreg_wait(struct lpfc_vport *vport,
- 	 */
- 	wait_tmo = msecs_to_jiffies(LPFC_NVME_WAIT_TMO * 1000);
- 	while (true) {
--		ret = wait_for_completion_timeout(&lport->lport_unreg_done,
--						  wait_tmo);
-+		ret = wait_for_completion_timeout(lport_unreg_cmp, wait_tmo);
- 		if (unlikely(!ret)) {
- 			lpfc_printf_vlog(vport, KERN_ERR, LOG_NVME_IOERR,
- 					 "6176 Lport %p Localport %p wait "
-@@ -2603,12 +2604,12 @@ lpfc_nvme_destroy_localport(struct lpfc_vport *vport)
- 	struct lpfc_nvme_lport *lport;
- 	struct lpfc_nvme_ctrl_stat *cstat;
- 	int ret;
-+	DECLARE_COMPLETION_ONSTACK(lport_unreg_cmp);
+ 	if (csio_fcoe_alloc_vnp(hw, ln))
+ 		goto error;
  
- 	if (vport->nvmei_support == 0)
- 		return;
- 
- 	localport = vport->localport;
--	vport->localport = NULL;
- 	lport = (struct lpfc_nvme_lport *)localport->private;
- 	cstat = lport->cstat;
- 
-@@ -2619,13 +2620,14 @@ lpfc_nvme_destroy_localport(struct lpfc_vport *vport)
- 	/* lport's rport list is clear.  Unregister
- 	 * lport and release resources.
- 	 */
--	init_completion(&lport->lport_unreg_done);
-+	lport->lport_unreg_cmp = &lport_unreg_cmp;
- 	ret = nvme_fc_unregister_localport(localport);
- 
- 	/* Wait for completion.  This either blocks
- 	 * indefinitely or succeeds
- 	 */
--	lpfc_nvme_lport_unreg_wait(vport, lport);
-+	lpfc_nvme_lport_unreg_wait(vport, lport, &lport_unreg_cmp);
-+	vport->localport = NULL;
- 	kfree(cstat);
- 
- 	/* Regardless of the unregister upcall response, clear
-diff --git a/drivers/scsi/lpfc/lpfc_nvme.h b/drivers/scsi/lpfc/lpfc_nvme.h
-index cfd4719be25c..b234d0298994 100644
---- a/drivers/scsi/lpfc/lpfc_nvme.h
-+++ b/drivers/scsi/lpfc/lpfc_nvme.h
-@@ -50,7 +50,7 @@ struct lpfc_nvme_ctrl_stat {
- /* Declare nvme-based local and remote port definitions. */
- struct lpfc_nvme_lport {
- 	struct lpfc_vport *vport;
--	struct completion lport_unreg_done;
-+	struct completion *lport_unreg_cmp;
- 	/* Add stats counters here */
- 	struct lpfc_nvme_ctrl_stat *cstat;
- 	atomic_t fc4NvmeLsRequests;
+ 	*(struct csio_lnode **)fc_vport->dd_data = ln;
+-	ln->fc_vport = fc_vport;
+ 	if (!fc_vport->node_name)
+ 		fc_vport->node_name = wwn_to_u64(csio_ln_wwnn(ln));
+ 	if (!fc_vport->port_name)
 -- 
 2.19.1
