@@ -1,95 +1,94 @@
-From: Ira Weiny <ira.weiny@intel.com>
-Subject: Re: [PATCH V2 0/7] Add FOLL_LONGTERM to GUP fast and use it
-Date: Fri, 15 Feb 2019 10:29:36 -0800
-Message-ID: <20190215182935.GC26988@iweiny-DESK2.sc.intel.com>
-Reply-To: 20190211201643.7599-1-ira.weiny@intel.com
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 5.0-rc
+Date: Fri, 15 Feb 2019 11:17:11 -0800
+Message-ID: <1550258231.3406.15.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-mips@vger.kernel.org, linux-kernel@vger.kernel.org, kvm-ppc@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org, linux-sh@vger.kernel.org, sparclinux@vger.kernel.org, kvm@vger.kernel.org, linux-fpga@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-rdma@vger.kernel.org, linux-media@vger.kernel.org, linux-scsi@vger.kernel.org, devel@driverdev.osuosl.org, virtualization@lists.linux-foundation.org, netdev@vger.kernel.org, linux-fbdev@vger.kernel.org, xen-devel@lists.xenproject.org, devel@lists.orangefs.org, linux-mm@kvack.org, ceph-devel@vger.kernel.org, rds-devel@oss.oracle.com
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-> NOTE: This series depends on my clean up patch to remove the write parameter
-> from gup_fast_permitted()[1]
-> 
-> HFI1, qib, and mthca, use get_user_pages_fast() due to it performance
-> advantages.  These pages can be held for a significant time.  But
-> get_user_pages_fast() does not protect against mapping of FS DAX pages.
-> 
-> Introduce FOLL_LONGTERM and use this flag in get_user_pages_fast() which
-> retains the performance while also adding the FS DAX checks.  XDP has also
-> shown interest in using this functionality.[2]
-> 
-> In addition we change get_user_pages() to use the new FOLL_LONGTERM flag and
-> remove the specialized get_user_pages_longterm call.
-> 
-> [1] https://lkml.org/lkml/2019/2/11/237
-> [2] https://lkml.org/lkml/2019/2/11/1789
+Two fairly small fixes: the qla one is a panic inducing use after free
+and the entropy fix may seem minor but it has had huge userspace impact
+thanks to an unrelated change in openssl that causes sshd to refuse
+logins until it has enough entropy for the session keys, which causes
+tens of minutes delay before the affected systems allow logins after
+reboot.
 
-Any comments on this series?  I've touched a lot of subsystems which I think
-require review.
+The patch is available here:
 
-Thanks,
-Ira
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-> 
-> Ira Weiny (7):
->   mm/gup: Replace get_user_pages_longterm() with FOLL_LONGTERM
->   mm/gup: Change write parameter to flags in fast walk
->   mm/gup: Change GUP fast to use flags rather than a write 'bool'
->   mm/gup: Add FOLL_LONGTERM capability to GUP fast
->   IB/hfi1: Use the new FOLL_LONGTERM flag to get_user_pages_fast()
->   IB/qib: Use the new FOLL_LONGTERM flag to get_user_pages_fast()
->   IB/mthca: Use the new FOLL_LONGTERM flag to get_user_pages_fast()
-> 
->  arch/mips/mm/gup.c                          |  11 +-
->  arch/powerpc/kvm/book3s_64_mmu_hv.c         |   4 +-
->  arch/powerpc/kvm/e500_mmu.c                 |   2 +-
->  arch/powerpc/mm/mmu_context_iommu.c         |   4 +-
->  arch/s390/kvm/interrupt.c                   |   2 +-
->  arch/s390/mm/gup.c                          |  12 +-
->  arch/sh/mm/gup.c                            |  11 +-
->  arch/sparc/mm/gup.c                         |   9 +-
->  arch/x86/kvm/paging_tmpl.h                  |   2 +-
->  arch/x86/kvm/svm.c                          |   2 +-
->  drivers/fpga/dfl-afu-dma-region.c           |   2 +-
->  drivers/gpu/drm/via/via_dmablit.c           |   3 +-
->  drivers/infiniband/core/umem.c              |   5 +-
->  drivers/infiniband/hw/hfi1/user_pages.c     |   5 +-
->  drivers/infiniband/hw/mthca/mthca_memfree.c |   3 +-
->  drivers/infiniband/hw/qib/qib_user_pages.c  |   8 +-
->  drivers/infiniband/hw/qib/qib_user_sdma.c   |   2 +-
->  drivers/infiniband/hw/usnic/usnic_uiom.c    |   9 +-
->  drivers/media/v4l2-core/videobuf-dma-sg.c   |   6 +-
->  drivers/misc/genwqe/card_utils.c            |   2 +-
->  drivers/misc/vmw_vmci/vmci_host.c           |   2 +-
->  drivers/misc/vmw_vmci/vmci_queue_pair.c     |   6 +-
->  drivers/platform/goldfish/goldfish_pipe.c   |   3 +-
->  drivers/rapidio/devices/rio_mport_cdev.c    |   4 +-
->  drivers/sbus/char/oradax.c                  |   2 +-
->  drivers/scsi/st.c                           |   3 +-
->  drivers/staging/gasket/gasket_page_table.c  |   4 +-
->  drivers/tee/tee_shm.c                       |   2 +-
->  drivers/vfio/vfio_iommu_spapr_tce.c         |   3 +-
->  drivers/vfio/vfio_iommu_type1.c             |   3 +-
->  drivers/vhost/vhost.c                       |   2 +-
->  drivers/video/fbdev/pvr2fb.c                |   2 +-
->  drivers/virt/fsl_hypervisor.c               |   2 +-
->  drivers/xen/gntdev.c                        |   2 +-
->  fs/orangefs/orangefs-bufmap.c               |   2 +-
->  include/linux/mm.h                          |  17 +-
->  kernel/futex.c                              |   2 +-
->  lib/iov_iter.c                              |   7 +-
->  mm/gup.c                                    | 220 ++++++++++++--------
->  mm/gup_benchmark.c                          |   5 +-
->  mm/util.c                                   |   8 +-
->  net/ceph/pagevec.c                          |   2 +-
->  net/rds/info.c                              |   2 +-
->  net/rds/rdma.c                              |   3 +-
->  44 files changed, 232 insertions(+), 180 deletions(-)
-> 
-> -- 
-> 2.20.1
-> 
+The short changelog is:
+
+Bill Kuzeja (1):
+      scsi: qla2xxx: Fix panic from use after free in qla2x00_async_tm_cmd
+
+James Bottomley (1):
+      scsi: sd: fix entropy gathering for most rotational disks
+
+And the diffstat:
+
+ drivers/scsi/qla2xxx/qla_init.c |  4 ++--
+ drivers/scsi/sd.c               | 12 +++++++++---
+ 2 files changed, 11 insertions(+), 5 deletions(-)
+
+With full diff below.
+
+James
+
+---
+
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 364bb52ed2a6..109587e62983 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -1785,13 +1785,13 @@ qla2x00_async_tm_cmd(fc_port_t *fcport, uint32_t flags, uint32_t lun,
+ 
+ 		/* Issue Marker IOCB */
+ 		qla2x00_marker(vha, vha->hw->req_q_map[0],
+-		    vha->hw->rsp_q_map[0], sp->fcport->loop_id, lun,
++		    vha->hw->rsp_q_map[0], fcport->loop_id, lun,
+ 		    flags == TCF_LUN_RESET ? MK_SYNC_ID_LUN : MK_SYNC_ID);
+ 	}
+ 
+ done_free_sp:
+ 	sp->free(sp);
+-	sp->fcport->flags &= ~FCF_ASYNC_SENT;
++	fcport->flags &= ~FCF_ASYNC_SENT;
+ done:
+ 	return rval;
+ }
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index b2da8a00ec33..5464d467e23e 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -2951,9 +2951,6 @@ static void sd_read_block_characteristics(struct scsi_disk *sdkp)
+ 	if (rot == 1) {
+ 		blk_queue_flag_set(QUEUE_FLAG_NONROT, q);
+ 		blk_queue_flag_clear(QUEUE_FLAG_ADD_RANDOM, q);
+-	} else {
+-		blk_queue_flag_clear(QUEUE_FLAG_NONROT, q);
+-		blk_queue_flag_set(QUEUE_FLAG_ADD_RANDOM, q);
+ 	}
+ 
+ 	if (sdkp->device->type == TYPE_ZBC) {
+@@ -3090,6 +3087,15 @@ static int sd_revalidate_disk(struct gendisk *disk)
+ 	if (sdkp->media_present) {
+ 		sd_read_capacity(sdkp, buffer);
+ 
++		/*
++		 * set the default to rotational.  All non-rotational devices
++		 * support the block characteristics VPD page, which will
++		 * cause this to be updated correctly and any device which
++		 * doesn't support it should be treated as rotational.
++		 */
++		blk_queue_flag_clear(QUEUE_FLAG_NONROT, q);
++		blk_queue_flag_set(QUEUE_FLAG_ADD_RANDOM, q);
++
+ 		if (scsi_device_supports_vpd(sdp)) {
+ 			sd_read_block_provisioning(sdkp);
+ 			sd_read_block_limits(sdkp);
