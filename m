@@ -1,12 +1,12 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.14 28/40] scsi: csiostor: fix NULL pointer dereference in csio_vport_set_state()
-Date: Thu, 14 Feb 2019 21:13:01 -0500
-Message-ID: <20190215021313.178476-28-sashal@kernel.org>
-References: <20190215021313.178476-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 45/65] scsi: csiostor: fix NULL pointer dereference in csio_vport_set_state()
+Date: Thu, 14 Feb 2019 21:11:01 -0500
+Message-ID: <20190215021121.177674-45-sashal@kernel.org>
+References: <20190215021121.177674-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190215021313.178476-1-sashal@kernel.org>
+In-Reply-To: <20190215021121.177674-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc: Varun Prakash <varun@chelsio.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
@@ -29,10 +29,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/csiostor/csio_attr.c b/drivers/scsi/csiostor/csio_attr.c
-index 2d1c4ebd40f9..6587f20cff1a 100644
+index 8a004036e3d7..9bd2bd8dc2be 100644
 --- a/drivers/scsi/csiostor/csio_attr.c
 +++ b/drivers/scsi/csiostor/csio_attr.c
-@@ -582,12 +582,12 @@ csio_vport_create(struct fc_vport *fc_vport, bool disable)
+@@ -594,12 +594,12 @@ csio_vport_create(struct fc_vport *fc_vport, bool disable)
  	}
  
  	fc_vport_set_state(fc_vport, FC_VPORT_INITIALIZING);
