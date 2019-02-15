@@ -1,12 +1,12 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.9 17/27] scsi: csiostor: fix NULL pointer dereference in csio_vport_set_state()
-Date: Thu, 14 Feb 2019 21:14:14 -0500
-Message-ID: <20190215021424.178979-17-sashal@kernel.org>
-References: <20190215021424.178979-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 28/40] scsi: csiostor: fix NULL pointer dereference in csio_vport_set_state()
+Date: Thu, 14 Feb 2019 21:13:01 -0500
+Message-ID: <20190215021313.178476-28-sashal@kernel.org>
+References: <20190215021313.178476-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190215021424.178979-1-sashal@kernel.org>
+In-Reply-To: <20190215021313.178476-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc: Varun Prakash <varun@chelsio.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
