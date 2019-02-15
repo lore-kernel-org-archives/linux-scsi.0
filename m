@@ -1,90 +1,131 @@
-From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: [PATCH] scsi: mpt3sas: Add missing breaks in switch statements
-Date: Fri, 15 Feb 2019 15:54:14 -0600
-Message-ID: <20190215215414.GA10944@embeddedor>
+From: Lee Duncan <lduncan-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [RESEND PATCH] libiscsi: Fix race between iscsi_xmit_task and
+ iscsi_complete_task
+Date: Fri, 15 Feb 2019 14:09:46 -0800
+Message-ID: <dac046d3-8089-8752-1b03-ec62c19a7b18@suse.com>
+References: <20190213052139.27249-1-bob.liu@oracle.com>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Gustavo A. R. Silva" <gustavo@embeddedor.com>, Kees Cook <keescook@chromium.org>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <open-iscsi+bncBD54HHNYIIILF4M44MCRUBFAO7R2A-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+In-Reply-To: <20190213052139.27249-1-bob.liu-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Content-Language: en-US
+List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <https://groups.google.com/group/open-iscsi
+List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
+ <https://groups.google.com/group/open-iscsi/subscribe>
+To: Bob Liu <bob.liu-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, shirley.ma-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, Anoob Soman <anoob.soman-Sxgqhf6Nn4DQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Fix the following warnings by adding the proper missing breaks:
+On 2/12/19 9:21 PM, Bob Liu wrote:
+> From: Anoob Soman <anoob.soman-Sxgqhf6Nn4DQT0dZR+AlfA@public.gmane.org>
+> 
+> When a target sends Check Condition, whilst initiator is busy xmiting
+> re-queued data, could lead to race between iscsi_complete_task() and
+> iscsi_xmit_task() and eventually crashing with the following kernel
+> backtrace.
+> 
+> [3326150.987523] ALERT: BUG: unable to handle kernel NULL pointer dereference at 0000000000000078
+> [3326150.987549] ALERT: IP: [<ffffffffa05ce70d>] iscsi_xmit_task+0x2d/0xc0 [libiscsi]
+> [3326150.987571] WARN: PGD 569c8067 PUD 569c9067 PMD 0
+> [3326150.987582] WARN: Oops: 0002 [#1] SMP
+> [3326150.987593] WARN: Modules linked in: tun nfsv3 nfs fscache dm_round_robin
+> [3326150.987762] WARN: CPU: 2 PID: 8399 Comm: kworker/u32:1 Tainted: G O 4.4.0+2 #1
+> [3326150.987774] WARN: Hardware name: Dell Inc. PowerEdge R720/0W7JN5, BIOS 2.5.4 01/22/2016
+> [3326150.987790] WARN: Workqueue: iscsi_q_13 iscsi_xmitworker [libiscsi]
+> [3326150.987799] WARN: task: ffff8801d50f3800 ti: ffff8801f5458000 task.ti: ffff8801f5458000
+> [3326150.987810] WARN: RIP: e030:[<ffffffffa05ce70d>] [<ffffffffa05ce70d>] iscsi_xmit_task+0x2d/0xc0 [libiscsi]
+> [3326150.987825] WARN: RSP: e02b:ffff8801f545bdb0 EFLAGS: 00010246
+> [3326150.987831] WARN: RAX: 00000000ffffffc3 RBX: ffff880282d2ab20 RCX: ffff88026b6ac480
+> [3326150.987842] WARN: RDX: 0000000000000000 RSI: 00000000fffffe01 RDI: ffff880282d2ab20
+> [3326150.987852] WARN: RBP: ffff8801f545bdc8 R08: 0000000000000000 R09: 0000000000000008
+> [3326150.987862] WARN: R10: 0000000000000000 R11: 000000000000fe88 R12: 0000000000000000
+> [3326150.987872] WARN: R13: ffff880282d2abe8 R14: ffff880282d2abd8 R15: ffff880282d2ac08
+> [3326150.987890] WARN: FS: 00007f5a866b4840(0000) GS:ffff88028a640000(0000) knlGS:0000000000000000
+> [3326150.987900] WARN: CS: e033 DS: 0000 ES: 0000 CR0: 0000000080050033
+> [3326150.987907] WARN: CR2: 0000000000000078 CR3: 0000000070244000 CR4: 0000000000042660
+> [3326150.987918] WARN: Stack:
+> [3326150.987924] WARN: ffff880282d2ad58 ffff880282d2ab20 ffff880282d2abe8 ffff8801f545be18
+> [3326150.987938] WARN: ffffffffa05cea90 ffff880282d2abf8 ffff88026b59cc80 ffff88026b59cc00
+> [3326150.987951] WARN: ffff88022acf32c0 ffff880289491800 ffff880255a80800 0000000000000400
+> [3326150.987964] WARN: Call Trace:
+> [3326150.987975] WARN: [<ffffffffa05cea90>] iscsi_xmitworker+0x2f0/0x360 [libiscsi]
+> [3326150.987988] WARN: [<ffffffff8108862c>] process_one_work+0x1fc/0x3b0
+> [3326150.987997] WARN: [<ffffffff81088f95>] worker_thread+0x2a5/0x470
+> [3326150.988006] WARN: [<ffffffff8159cad8>] ? __schedule+0x648/0x870
+> [3326150.988015] WARN: [<ffffffff81088cf0>] ? rescuer_thread+0x300/0x300
+> [3326150.988023] WARN: [<ffffffff8108ddf5>] kthread+0xd5/0xe0
+> [3326150.988031] WARN: [<ffffffff8108dd20>] ? kthread_stop+0x110/0x110
+> [3326150.988040] WARN: [<ffffffff815a0bcf>] ret_from_fork+0x3f/0x70
+> [3326150.988048] WARN: [<ffffffff8108dd20>] ? kthread_stop+0x110/0x110
+> [3326150.988127] ALERT: RIP [<ffffffffa05ce70d>] iscsi_xmit_task+0x2d/0xc0 [libiscsi]
+> [3326150.988138] WARN: RSP <ffff8801f545bdb0>
+> [3326150.988144] WARN: CR2: 0000000000000078
+> [3326151.020366] WARN: ---[ end trace 1c60974d4678d81b ]---
+> 
+> Commit 6f8830f5bbab (scsi: libiscsi: add lock around task lists to fix list
+> corruption regression) introduced "taskqueuelock" to fix list corruption during
+> the race, but this wasn't enough.
+> 
+> Re-setting of conn->task to NULL, could race with iscsi_xmit_task().
+> iscsi_complete_task()
+> {
+>     ....
+>     if (conn->task == task)
+>         conn->task = NULL;
+> }
+> 
+> conn->task in iscsi_xmit_task() could be NULL and so will be task.
+> __iscsi_get_task(task) will crash (NullPtr de-ref), trying to access refcount.
+> 
+> iscsi_xmit_task()
+> {
+>     struct iscsi_task *task = conn->task;
+> 
+>     __iscsi_get_task(task);
+> }
+> 
+> This commit will take extra conn->session->back_lock in iscsi_xmit_task()
+> to ensure iscsi_xmit_task() waits for iscsi_complete_task(), if
+> iscsi_complete_task() wins the race.
+> If iscsi_xmit_task() wins the race, iscsi_xmit_task() increments task->refcount
+> (__iscsi_get_task) ensuring iscsi_complete_task() will not iscsi_free_task().
+> 
+> Signed-off-by: Anoob Soman <anoob.soman-Sxgqhf6Nn4DQT0dZR+AlfA@public.gmane.org>
+> Signed-off-by: Bob Liu <bob.liu-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+> ---
+>  drivers/scsi/libiscsi.c | 6 ++++++
+>  1 file changed, 6 insertions(+)
+> 
+> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+> index b8d325ce8754..120fc520f27a 100644
+> --- a/drivers/scsi/libiscsi.c
+> +++ b/drivers/scsi/libiscsi.c
+> @@ -1459,7 +1459,13 @@ static int iscsi_xmit_task(struct iscsi_conn *conn)
+>  	if (test_bit(ISCSI_SUSPEND_BIT, &conn->suspend_tx))
+>  		return -ENODATA;
+>  
+> +	spin_lock_bh(&conn->session->back_lock);
+> +	if (conn->task == NULL) {
+> +		spin_unlock_bh(&conn->session->back_lock);
+> +		return -ENODATA;
+> +	}
+>  	__iscsi_get_task(task);
+> +	spin_unlock_bh(&conn->session->back_lock);
+>  	spin_unlock_bh(&conn->session->frwd_lock);
+>  	rc = conn->session->tt->xmit_task(task);
+>  	spin_lock_bh(&conn->session->frwd_lock);
+> 
 
-drivers/scsi/mpt3sas/mpt3sas_base.c: In function ‘_base_display_OEMs_branding’:
-drivers/scsi/mpt3sas/mpt3sas_base.c:3548:4: warning: this statement may fall through [-Wimplicit-fallthrough=]
-    switch (ioc->pdev->subsystem_device) {
-    ^~~~~~
-drivers/scsi/mpt3sas/mpt3sas_base.c:3566:3: note: here
-   case MPI2_MFGPAGE_DEVID_SAS2308_2:
-   ^~~~
-drivers/scsi/mpt3sas/mpt3sas_base.c:3567:4: warning: this statement may fall through [-Wimplicit-fallthrough=]
-    switch (ioc->pdev->subsystem_device) {
-    ^~~~~~
-drivers/scsi/mpt3sas/mpt3sas_base.c:3601:3: note: here
-   case MPI25_MFGPAGE_DEVID_SAS3008:
-   ^~~~
-drivers/scsi/mpt3sas/mpt3sas_base.c:3735:4: warning: this statement may fall through [-Wimplicit-fallthrough=]
-    switch (ioc->pdev->subsystem_device) {
-    ^~~~~~
-drivers/scsi/mpt3sas/mpt3sas_base.c:3745:3: note: here
-   case MPI2_MFGPAGE_DEVID_SAS2308_2:
-   ^~~~
-drivers/scsi/mpt3sas/mpt3sas_base.c:3746:4: warning: this statement may fall through [-Wimplicit-fallthrough=]
-    switch (ioc->pdev->subsystem_device) {
-    ^~~~~~
-drivers/scsi/mpt3sas/mpt3sas_base.c:3768:3: note: here
-   default:
-   ^~~~~~~
+Signed-off-by: Lee Duncan <lduncan-IBi9RG/b67k@public.gmane.org>
 
-Warning level 3 was used: -Wimplicit-fallthrough=3
-
-This patch is part of the ongoing efforts to enable
--Wimplicit-fallthrough.
-
-Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
----
- drivers/scsi/mpt3sas/mpt3sas_base.c | 4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 0a6cb8f0680c..e57774472e75 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -3563,6 +3563,7 @@ _base_display_OEMs_branding(struct MPT3SAS_ADAPTER *ioc)
- 					 ioc->pdev->subsystem_device);
- 				break;
- 			}
-+			break;
- 		case MPI2_MFGPAGE_DEVID_SAS2308_2:
- 			switch (ioc->pdev->subsystem_device) {
- 			case MPT2SAS_INTEL_RS25GB008_SSDID:
-@@ -3598,6 +3599,7 @@ _base_display_OEMs_branding(struct MPT3SAS_ADAPTER *ioc)
- 					 ioc->pdev->subsystem_device);
- 				break;
- 			}
-+			break;
- 		case MPI25_MFGPAGE_DEVID_SAS3008:
- 			switch (ioc->pdev->subsystem_device) {
- 			case MPT3SAS_INTEL_RMS3JC080_SSDID:
-@@ -3742,6 +3744,7 @@ _base_display_OEMs_branding(struct MPT3SAS_ADAPTER *ioc)
- 					 ioc->pdev->subsystem_device);
- 				break;
- 			}
-+			break;
- 		case MPI2_MFGPAGE_DEVID_SAS2308_2:
- 			switch (ioc->pdev->subsystem_device) {
- 			case MPT2SAS_HP_2_4_INTERNAL_SSDID:
-@@ -3765,6 +3768,7 @@ _base_display_OEMs_branding(struct MPT3SAS_ADAPTER *ioc)
- 					 ioc->pdev->subsystem_device);
- 				break;
- 			}
-+			break;
- 		default:
- 			ioc_info(ioc, "HP SAS HBA: Subsystem ID: 0x%X\n",
- 				 ioc->pdev->subsystem_device);
 -- 
-2.20.1
+You received this message because you are subscribed to the Google Groups "open-iscsi" group.
+To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+Visit this group at https://groups.google.com/group/open-iscsi.
+For more options, visit https://groups.google.com/d/optout.
