@@ -1,94 +1,94 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 5.0-rc
-Date: Fri, 15 Feb 2019 11:17:11 -0800
-Message-ID: <1550258231.3406.15.camel@HansenPartnership.com>
+From: dann frazier <dann.frazier@canonical.com>
+Subject: Re: [PATCH] scsi: libsas: Fix rphy phy_identifier for PHYs with end
+ devices attached
+Date: Fri, 15 Feb 2019 13:44:15 -0700
+Message-ID: <20190215204415.GA1006@xps13.dannf>
+References: <1550162277-17615-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1550162277-17615-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: John Garry <john.garry@huawei.com>
+Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linuxarm@huawei.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, yanaijie@huawei.com
 List-Id: linux-scsi@vger.kernel.org
 
-Two fairly small fixes: the qla one is a panic inducing use after free
-and the entropy fix may seem minor but it has had huge userspace impact
-thanks to an unrelated change in openssl that causes sshd to refuse
-logins until it has enough entropy for the session keys, which causes
-tens of minutes delay before the affected systems allow logins after
-reboot.
+On Fri, Feb 15, 2019 at 12:37:57AM +0800, John Garry wrote:
+> The sysfs phy_identifier attribute for a sas_end_device comes
+> from the rphy phy_identifier value.
+> 
+> Currently this is not being set for rphys with an end device attached,
+> so we see incorrect symlinks from systemd disk/by-path:
+> 
+> root@localhost:~# ls -l /dev/disk/by-path/
+> total 0
+> lrwxrwxrwx 1 root root  9 Feb 13 12:26 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy0-lun-0 -> ../../sdb
+> lrwxrwxrwx 1 root root 10 Feb 13 12:26 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy0-lun-0-part1 -> ../../sdb1
+> lrwxrwxrwx 1 root root 10 Feb 13 12:26 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy0-lun-0-part2 -> ../../sdb2
+> lrwxrwxrwx 1 root root 10 Feb 13 12:26 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy0-lun-0-part3 -> ../../sdc3
+> 
+> Indeed, each sas_end_device phy_identifier value is 0:
+> 
+> root@localhost:/# more sys/class/sas_device/end_device-0\:0\:2/phy_identifier
+> 0
+> root@localhost:/# more sys/class/sas_device/end_device-0\:0\:10/phy_identifier
+> 0
+> 
+> This patch fixes the discovery code to set the phy_identifier.
+> With this, we now get proper symlinks:
+> 
+> root@localhost:~# ls -l /dev/disk/by-path/
+> total 0
+> lrwxrwxrwx 1 root root  9 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy10-lun-0 -> ../../sdg
+> lrwxrwxrwx 1 root root  9 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy11-lun-0 -> ../../sdh
+> lrwxrwxrwx 1 root root  9 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy2-lun-0 -> ../../sda
+> lrwxrwxrwx 1 root root 10 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy2-lun-0-part1 -> ../../sda1
+> lrwxrwxrwx 1 root root  9 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy3-lun-0 -> ../../sdb
+> lrwxrwxrwx 1 root root 10 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy3-lun-0-part1 -> ../../sdb1
+> lrwxrwxrwx 1 root root 10 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy3-lun-0-part2 -> ../../sdb2
+> lrwxrwxrwx 1 root root  9 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy4-lun-0 -> ../../sdc
+> lrwxrwxrwx 1 root root 10 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy4-lun-0-part1 -> ../../sdc1
+> lrwxrwxrwx 1 root root 10 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy4-lun-0-part2 -> ../../sdc2
+> lrwxrwxrwx 1 root root 10 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy4-lun-0-part3 -> ../../sdc3
+> lrwxrwxrwx 1 root root  9 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy5-lun-0 -> ../../sdd
+> lrwxrwxrwx 1 root root  9 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy7-lun-0 -> ../../sde
+> lrwxrwxrwx 1 root root 10 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy7-lun-0-part1 -> ../../sde1
+> lrwxrwxrwx 1 root root 10 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy7-lun-0-part2 -> ../../sde2
+> lrwxrwxrwx 1 root root 10 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy7-lun-0-part3 -> ../../sde3
+> lrwxrwxrwx 1 root root  9 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy8-lun-0 -> ../../sdf
+> lrwxrwxrwx 1 root root 10 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy8-lun-0-part1 -> ../../sdf1
+> lrwxrwxrwx 1 root root 10 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy8-lun-0-part2 -> ../../sdf2
+> lrwxrwxrwx 1 root root 10 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy8-lun-0-part3 -> ../../sdf3
+> 
+> Fixes: 2908d778ab3e ("[SCSI] aic94xx: new driver")
+> Reported-by: dann frazier <dann.frazier@canonical.com>
 
-The patch is available here:
+Thanks John. Solves the problem for me as well.
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+Tested-by: dann frazier <dann.frazier@canonical.com>
 
-The short changelog is:
+  -dann
 
-Bill Kuzeja (1):
-      scsi: qla2xxx: Fix panic from use after free in qla2x00_async_tm_cmd
-
-James Bottomley (1):
-      scsi: sd: fix entropy gathering for most rotational disks
-
-And the diffstat:
-
- drivers/scsi/qla2xxx/qla_init.c |  4 ++--
- drivers/scsi/sd.c               | 12 +++++++++---
- 2 files changed, 11 insertions(+), 5 deletions(-)
-
-With full diff below.
-
-James
-
----
-
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 364bb52ed2a6..109587e62983 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -1785,13 +1785,13 @@ qla2x00_async_tm_cmd(fc_port_t *fcport, uint32_t flags, uint32_t lun,
- 
- 		/* Issue Marker IOCB */
- 		qla2x00_marker(vha, vha->hw->req_q_map[0],
--		    vha->hw->rsp_q_map[0], sp->fcport->loop_id, lun,
-+		    vha->hw->rsp_q_map[0], fcport->loop_id, lun,
- 		    flags == TCF_LUN_RESET ? MK_SYNC_ID_LUN : MK_SYNC_ID);
- 	}
- 
- done_free_sp:
- 	sp->free(sp);
--	sp->fcport->flags &= ~FCF_ASYNC_SENT;
-+	fcport->flags &= ~FCF_ASYNC_SENT;
- done:
- 	return rval;
- }
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index b2da8a00ec33..5464d467e23e 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -2951,9 +2951,6 @@ static void sd_read_block_characteristics(struct scsi_disk *sdkp)
- 	if (rot == 1) {
- 		blk_queue_flag_set(QUEUE_FLAG_NONROT, q);
- 		blk_queue_flag_clear(QUEUE_FLAG_ADD_RANDOM, q);
--	} else {
--		blk_queue_flag_clear(QUEUE_FLAG_NONROT, q);
--		blk_queue_flag_set(QUEUE_FLAG_ADD_RANDOM, q);
- 	}
- 
- 	if (sdkp->device->type == TYPE_ZBC) {
-@@ -3090,6 +3087,15 @@ static int sd_revalidate_disk(struct gendisk *disk)
- 	if (sdkp->media_present) {
- 		sd_read_capacity(sdkp, buffer);
- 
-+		/*
-+		 * set the default to rotational.  All non-rotational devices
-+		 * support the block characteristics VPD page, which will
-+		 * cause this to be updated correctly and any device which
-+		 * doesn't support it should be treated as rotational.
-+		 */
-+		blk_queue_flag_clear(QUEUE_FLAG_NONROT, q);
-+		blk_queue_flag_set(QUEUE_FLAG_ADD_RANDOM, q);
-+
- 		if (scsi_device_supports_vpd(sdp)) {
- 			sd_read_block_provisioning(sdkp);
- 			sd_read_block_limits(sdkp);
+> Signed-off-by: John Garry <john.garry@huawei.com>
+> 
+> diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
+> index 17eb4185f29d..f21c93bbb35c 100644
+> --- a/drivers/scsi/libsas/sas_expander.c
+> +++ b/drivers/scsi/libsas/sas_expander.c
+> @@ -828,6 +828,7 @@ static struct domain_device *sas_ex_discover_end_dev(
+>  		rphy = sas_end_device_alloc(phy->port);
+>  		if (!rphy)
+>  			goto out_free;
+> +		rphy->identify.phy_identifier = phy_id;
+>  
+>  		child->rphy = rphy;
+>  		get_device(&rphy->dev);
+> @@ -854,6 +855,7 @@ static struct domain_device *sas_ex_discover_end_dev(
+>  
+>  		child->rphy = rphy;
+>  		get_device(&rphy->dev);
+> +		rphy->identify.phy_identifier = phy_id;
+>  		sas_fill_in_rphy(child, rphy);
+>  
+>  		list_add_tail(&child->disco_list_node, &parent->port->disco_list);
