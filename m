@@ -1,12 +1,12 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.19 44/65] scsi: lpfc: nvmet: avoid hang / use-after-free when destroying targetport
-Date: Thu, 14 Feb 2019 21:11:00 -0500
-Message-ID: <20190215021121.177674-44-sashal@kernel.org>
-References: <20190215021121.177674-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.20 51/77] scsi: lpfc: nvme: avoid hang / use-after-free when destroying localport
+Date: Thu, 14 Feb 2019 21:08:29 -0500
+Message-ID: <20190215020855.176727-51-sashal@kernel.org>
+References: <20190215020855.176727-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190215021121.177674-1-sashal@kernel.org>
+In-Reply-To: <20190215020855.176727-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc: "Ewan D. Milne" <emilne@redhat.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
@@ -14,12 +14,12 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: "Ewan D. Milne" <emilne@redhat.com>
 
-[ Upstream commit c41f59884be5cca293ed61f3d64637dbba3a6381 ]
+[ Upstream commit 7961cba6f7d8215fa632df3d220e5154bb825249 ]
 
-We cannot wait on a completion object in the lpfc_nvme_targetport structure
-in the _destroy_targetport() code path because the NVMe/fc transport will
-free that structure immediately after the .targetport_delete() callback.
-This results in a use-after-free, and a hang if slub_debug=FZPU is enabled.
+We cannot wait on a completion object in the lpfc_nvme_lport structure in
+the _destroy_localport() code path because the NVMe/fc transport will free
+that structure immediately after the .localport_delete() callback.  This
+results in a use-after-free, and a hang if slub_debug=FZPU is enabled.
 
 Fix this by putting the completion on the stack.
 
@@ -28,56 +28,87 @@ Acked-by: James Smart <james.smart@broadcom.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_nvmet.c | 8 +++++---
- drivers/scsi/lpfc/lpfc_nvmet.h | 2 +-
- 2 files changed, 6 insertions(+), 4 deletions(-)
+ drivers/scsi/lpfc/lpfc_nvme.c | 16 +++++++++-------
+ drivers/scsi/lpfc/lpfc_nvme.h |  2 +-
+ 2 files changed, 10 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
-index b766afe10d3d..e2575c8ec93e 100644
---- a/drivers/scsi/lpfc/lpfc_nvmet.c
-+++ b/drivers/scsi/lpfc/lpfc_nvmet.c
-@@ -1003,7 +1003,8 @@ lpfc_nvmet_targetport_delete(struct nvmet_fc_target_port *targetport)
- 	struct lpfc_nvmet_tgtport *tport = targetport->private;
+diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
+index ba831def9301..b6fe88de372a 100644
+--- a/drivers/scsi/lpfc/lpfc_nvme.c
++++ b/drivers/scsi/lpfc/lpfc_nvme.c
+@@ -297,7 +297,8 @@ lpfc_nvme_localport_delete(struct nvme_fc_local_port *localport)
+ 			 lport);
  
  	/* release any threads waiting for the unreg to complete */
--	complete(&tport->tport_unreg_done);
-+	if (tport->phba->targetport)
-+		complete(tport->tport_unreg_cmp);
+-	complete(&lport->lport_unreg_done);
++	if (lport->vport->localport)
++		complete(lport->lport_unreg_cmp);
  }
  
- static void
-@@ -1700,6 +1701,7 @@ lpfc_nvmet_destroy_targetport(struct lpfc_hba *phba)
- 	struct lpfc_nvmet_tgtport *tgtp;
- 	struct lpfc_queue *wq;
- 	uint32_t qidx;
-+	DECLARE_COMPLETION_ONSTACK(tport_unreg_cmp);
+ /* lpfc_nvme_remoteport_delete
+@@ -2547,7 +2548,8 @@ lpfc_nvme_create_localport(struct lpfc_vport *vport)
+  */
+ void
+ lpfc_nvme_lport_unreg_wait(struct lpfc_vport *vport,
+-			   struct lpfc_nvme_lport *lport)
++			   struct lpfc_nvme_lport *lport,
++			   struct completion *lport_unreg_cmp)
+ {
+ #if (IS_ENABLED(CONFIG_NVME_FC))
+ 	u32 wait_tmo;
+@@ -2559,8 +2561,7 @@ lpfc_nvme_lport_unreg_wait(struct lpfc_vport *vport,
+ 	 */
+ 	wait_tmo = msecs_to_jiffies(LPFC_NVME_WAIT_TMO * 1000);
+ 	while (true) {
+-		ret = wait_for_completion_timeout(&lport->lport_unreg_done,
+-						  wait_tmo);
++		ret = wait_for_completion_timeout(lport_unreg_cmp, wait_tmo);
+ 		if (unlikely(!ret)) {
+ 			lpfc_printf_vlog(vport, KERN_ERR, LOG_NVME_IOERR,
+ 					 "6176 Lport %p Localport %p wait "
+@@ -2594,12 +2595,12 @@ lpfc_nvme_destroy_localport(struct lpfc_vport *vport)
+ 	struct lpfc_nvme_lport *lport;
+ 	struct lpfc_nvme_ctrl_stat *cstat;
+ 	int ret;
++	DECLARE_COMPLETION_ONSTACK(lport_unreg_cmp);
  
- 	if (phba->nvmet_support == 0)
+ 	if (vport->nvmei_support == 0)
  		return;
-@@ -1709,9 +1711,9 @@ lpfc_nvmet_destroy_targetport(struct lpfc_hba *phba)
- 			wq = phba->sli4_hba.nvme_wq[qidx];
- 			lpfc_nvmet_wqfull_flush(phba, wq, NULL);
- 		}
--		init_completion(&tgtp->tport_unreg_done);
-+		tgtp->tport_unreg_cmp = &tport_unreg_cmp;
- 		nvmet_fc_unregister_targetport(phba->targetport);
--		wait_for_completion_timeout(&tgtp->tport_unreg_done, 5);
-+		wait_for_completion_timeout(&tport_unreg_cmp, 5);
- 		lpfc_nvmet_cleanup_io_context(phba);
- 	}
- 	phba->targetport = NULL;
-diff --git a/drivers/scsi/lpfc/lpfc_nvmet.h b/drivers/scsi/lpfc/lpfc_nvmet.h
-index 1aaff63f1f41..0ec1082ce7ef 100644
---- a/drivers/scsi/lpfc/lpfc_nvmet.h
-+++ b/drivers/scsi/lpfc/lpfc_nvmet.h
-@@ -34,7 +34,7 @@
- /* Used for NVME Target */
- struct lpfc_nvmet_tgtport {
- 	struct lpfc_hba *phba;
--	struct completion tport_unreg_done;
-+	struct completion *tport_unreg_cmp;
  
- 	/* Stats counters - lpfc_nvmet_unsol_ls_buffer */
- 	atomic_t rcv_ls_req_in;
+ 	localport = vport->localport;
+-	vport->localport = NULL;
+ 	lport = (struct lpfc_nvme_lport *)localport->private;
+ 	cstat = lport->cstat;
+ 
+@@ -2610,13 +2611,14 @@ lpfc_nvme_destroy_localport(struct lpfc_vport *vport)
+ 	/* lport's rport list is clear.  Unregister
+ 	 * lport and release resources.
+ 	 */
+-	init_completion(&lport->lport_unreg_done);
++	lport->lport_unreg_cmp = &lport_unreg_cmp;
+ 	ret = nvme_fc_unregister_localport(localport);
+ 
+ 	/* Wait for completion.  This either blocks
+ 	 * indefinitely or succeeds
+ 	 */
+-	lpfc_nvme_lport_unreg_wait(vport, lport);
++	lpfc_nvme_lport_unreg_wait(vport, lport, &lport_unreg_cmp);
++	vport->localport = NULL;
+ 	kfree(cstat);
+ 
+ 	/* Regardless of the unregister upcall response, clear
+diff --git a/drivers/scsi/lpfc/lpfc_nvme.h b/drivers/scsi/lpfc/lpfc_nvme.h
+index cfd4719be25c..b234d0298994 100644
+--- a/drivers/scsi/lpfc/lpfc_nvme.h
++++ b/drivers/scsi/lpfc/lpfc_nvme.h
+@@ -50,7 +50,7 @@ struct lpfc_nvme_ctrl_stat {
+ /* Declare nvme-based local and remote port definitions. */
+ struct lpfc_nvme_lport {
+ 	struct lpfc_vport *vport;
+-	struct completion lport_unreg_done;
++	struct completion *lport_unreg_cmp;
+ 	/* Add stats counters here */
+ 	struct lpfc_nvme_ctrl_stat *cstat;
+ 	atomic_t fc4NvmeLsRequests;
 -- 
 2.19.1
