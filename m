@@ -1,56 +1,42 @@
-From: YueHaibing <yuehaibing@huawei.com>
-Subject: [PATCH -next] scsi: mvumi: Using plain integer as NULL pointer
-Date: Sat, 16 Feb 2019 18:01:30 +0800
-Message-ID: <20190216100130.19396-1-yuehaibing@huawei.com>
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] scsi: mvumi: fix 32 bit shift of a 32 bit unsigned int
+Date: Sat, 16 Feb 2019 14:44:24 +0000
+Message-ID: <20190216144424.21438-1-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, YueHaibing <yuehaibing@huawei.com>
+To: Jianyun Li <jyli@marvell.com>, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Fix following sparse warning:
+From: Colin Ian King <colin.king@canonical.com>
 
-drivers/scsi/mvumi.c:1797:48: warning: Using plain integer as NULL pointer
-drivers/scsi/mvumi.c:2143:50: warning: Using plain integer as NULL pointer
-drivers/scsi/mvumi.c:755:58: warning: Using plain integer as NULL pointer
+Currently m_sg->baseaddr_h (a 32 bit unsigned int) is being shifted by a
+total of 32 bits; this always produces a 0 result.  Fix this by casting
+it to a dma_addr_t (a 64 bit unsigned int) before performing the shift.
 
-Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+Detected by CoverityScan, CID#147270 ("Operands don't affect result")
+
+Fixes: f0c568a478f0 ("[SCSI] mvumi: Add Marvell UMI driver")
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
 ---
- drivers/scsi/mvumi.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/mvumi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/mvumi.c b/drivers/scsi/mvumi.c
-index 36f6420..a8fe1f8 100644
+index 36f64205ecfa..d3582accfd09 100644
 --- a/drivers/scsi/mvumi.c
 +++ b/drivers/scsi/mvumi.c
-@@ -752,7 +752,7 @@ static int mvumi_issue_blocked_cmd(struct mvumi_hba *mhba,
- 		spin_lock_irqsave(mhba->shost->host_lock, flags);
- 		atomic_dec(&cmd->sync_cmd);
- 		if (mhba->tag_cmd[cmd->frame->tag]) {
--			mhba->tag_cmd[cmd->frame->tag] = 0;
-+			mhba->tag_cmd[cmd->frame->tag] = NULL;
- 			dev_warn(&mhba->pdev->dev, "TIMEOUT:release tag [%d]\n",
- 							cmd->frame->tag);
- 			tag_release_one(mhba, &mhba->tag_pool, cmd->frame->tag);
-@@ -1794,7 +1794,7 @@ static void mvumi_handle_clob(struct mvumi_hba *mhba)
- 		cmd = mhba->tag_cmd[ob_frame->tag];
+@@ -313,7 +313,7 @@ static void mvumi_delete_internal_cmd(struct mvumi_hba *mhba,
+ 			sgd_getsz(mhba, m_sg, size);
  
- 		atomic_dec(&mhba->fw_outstanding);
--		mhba->tag_cmd[ob_frame->tag] = 0;
-+		mhba->tag_cmd[ob_frame->tag] = NULL;
- 		tag_release_one(mhba, &mhba->tag_pool, ob_frame->tag);
- 		if (cmd->scmd)
- 			mvumi_complete_cmd(mhba, cmd, ob_frame);
-@@ -2140,7 +2140,7 @@ static enum blk_eh_timer_return mvumi_timed_out(struct scsi_cmnd *scmd)
- 	spin_lock_irqsave(mhba->shost->host_lock, flags);
+ 			phy_addr = (dma_addr_t) m_sg->baseaddr_l |
+-				(dma_addr_t) ((m_sg->baseaddr_h << 16) << 16);
++				(((dma_addr_t) m_sg->baseaddr_h << 16) << 16);
  
- 	if (mhba->tag_cmd[cmd->frame->tag]) {
--		mhba->tag_cmd[cmd->frame->tag] = 0;
-+		mhba->tag_cmd[cmd->frame->tag] = NULL;
- 		tag_release_one(mhba, &mhba->tag_pool, cmd->frame->tag);
- 	}
- 	if (!list_empty(&cmd->queue_pointer))
+ 			dma_free_coherent(&mhba->pdev->dev, size, cmd->data_buf,
+ 								phy_addr);
 -- 
-2.7.0
+2.20.1
