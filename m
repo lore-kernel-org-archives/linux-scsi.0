@@ -1,41 +1,25 @@
-From: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [RESEND PATCH] libiscsi: Fix race between iscsi_xmit_task and iscsi_complete_task
-Date: Fri, 15 Feb 2019 22:06:30 -0500
-Message-ID: <yq18sygo2ix.fsf@oracle.com>
-References: <20190213052139.27249-1-bob.liu@oracle.com>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] scsi: libsas: Fix rphy phy_identifier for PHYs with end devices attached
+Date: Fri, 15 Feb 2019 22:17:01 -0500
+Message-ID: <yq1va1kmngy.fsf@oracle.com>
+References: <1550162277-17615-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <open-iscsi+bncBDVIJONZ3YDRBPX4TXRQKGQEYGAXIZY-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-In-Reply-To: <20190213052139.27249-1-bob.liu-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org> (Bob Liu's message of
-	"Wed, 13 Feb 2019 13:21:39 +0800")
-List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <https://groups.google.com/group/open-iscsi
-List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
- <https://groups.google.com/group/open-iscsi/subscribe>
-To: Bob Liu <bob.liu-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, lduncan-IBi9RG/b67k@public.gmane.org, cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, shirley.ma-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, Anoob Soman <anoob.soman-Sxgqhf6Nn4DQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1550162277-17615-1-git-send-email-john.garry@huawei.com> (John
+        Garry's message of "Fri, 15 Feb 2019 00:37:57 +0800")
+Sender: linux-kernel-owner@vger.kernel.org
+To: John Garry <john.garry@huawei.com>
+Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linuxarm@huawei.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, dann.frazier@canonical.com, yanaijie@huawei.com
 List-Id: linux-scsi@vger.kernel.org
 
 
-Bob,
+John,
 
-> When a target sends Check Condition, whilst initiator is busy xmiting
-> re-queued data, could lead to race between iscsi_complete_task() and
-> iscsi_xmit_task() and eventually crashing with the following kernel
-> backtrace.
+> The sysfs phy_identifier attribute for a sas_end_device comes
+> from the rphy phy_identifier value.
 
-Applied to 5.0/scsi-fixes, thanks!
+Applied to 5.0/scsi-fixes, thank you!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
-
--- 
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-Visit this group at https://groups.google.com/group/open-iscsi.
-For more options, visit https://groups.google.com/d/optout.
