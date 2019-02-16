@@ -1,65 +1,35 @@
-From: Himanshu Madhani <hmadhani@marvell.com>
-Subject: Re: [PATCH][V2] scsi: qla2xxx: remove redundant null check on pointer
- sess
-Date: Fri, 15 Feb 2019 22:38:59 +0000
-Message-ID: <80C50389-AFD5-474C-8737-F13B7E4E0B9D@marvell.com>
-References: <20190215095232.28852-1-colin.king@canonical.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH v2 3/3] scsi: ufs: Add HI3670 SoC UFS driver support
+Date: Fri, 15 Feb 2019 21:59:15 -0500
+Message-ID: <yq1lg2go2v0.fsf@oracle.com>
+References: <20190105072859.9134-1-manivannan.sadhasivam@linaro.org>
+ <20190105072859.9134-4-manivannan.sadhasivam@linaro.org>
+ <20190126144711.GA14260@Mani-XPS-13-9360>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190215095232.28852-1-colin.king@canonical.com>
-Content-Language: en-US
-Content-ID: <9A58593F4715614CA732316808287C87@namprd18.prod.outlook.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Colin King <colin.king@canonical.com>, "qla2xxx-upstream@qlogic.com" <qla2xxx-upstream@qlogic.com>, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <20190126144711.GA14260@Mani-XPS-13-9360> (Manivannan
+ Sadhasivam's message of "Sat, 26 Jan 2019 20:17:11 +0530")
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Cc: devicetree@vger.kernel.org, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, martin.petersen@oracle.com, guodong.xu@linaro.org, linux-kernel@vger.kernel.org, amit.kucheria@linaro.org, robh+dt@kernel.org, john.stultz@linaro.org, liwei213@huawei.com, vinholikatti@gmail.com, linux-arm-kernel@lists.infradead.org
 List-Id: linux-scsi@vger.kernel.org
 
-SGkgQ29saW4sDQoNCu+7v09uIDIvMTUvMTksIDE6NTIgQU0sICJDb2xpbiBLaW5nIiA8Y29saW4u
-a2luZ0BjYW5vbmljYWwuY29tPiB3cm90ZToNCg0KICAgIEV4dGVybmFsIEVtYWlsDQogICAgDQog
-ICAgRnJvbTogQ29saW4gSWFuIEtpbmcgPGNvbGluLmtpbmdAY2Fub25pY2FsLmNvbT4NCiAgICAN
-CiAgICBUaGUgbnVsbCBjaGVjayBvbiBwb2ludGVyIHNlc3MgYW5kIHRoZSBzdWJzZXF1ZW50IGNh
-bGwgaXMgcmVkdW5kYW50DQogICAgYXMgc2VzcyBpcyBudWxsIG9uIGFsbCB0aGUgdGhlIHBhdGhz
-IHRoYXQgbGVhZCB0byB0aGUgb3V0X3Rlcm0yIGxhYmVsLg0KICAgIEhlbmNlIHRoZSBudWxsIGNo
-ZWNrIGFuZCB0aGUgY2FsbCBjYW4gYmUgcmVtb3ZlZC4gIEFsc28gcmVtb3ZlIHRoZQ0KICAgIHJl
-ZHVuZGFudCBzZXR0aW5nIG9mIHNlc3MgdG8gTlVMTCBhcyB0aGlzIGlzIG5vdCByZXF1aXJlZCBu
-b3cuDQogICAgDQogICAgRGV0ZWN0ZWQgYnkgQ292ZXJpdHlTY2FuLCBDSUQjMTQyMDY2MyAoIkxv
-Z2ljYWxseSBkZWFkIGNvZGUiKQ0KICAgIA0KICAgIFNpZ25lZC1vZmYtYnk6IENvbGluIElhbiBL
-aW5nIDxjb2xpbi5raW5nQGNhbm9uaWNhbC5jb20+DQogICAgLS0tDQogICAgDQogICAgVjI6IFJl
-bW92ZSB0aGUgcmVkdW5kYW50IHNldHRpbmdzIG9mIHNlc3MgdG8gTlVMTCwgdGhhbmtzIHRvDQog
-ICAgRGFuIENhcnBlbnRlciBmb3Igc3BvdHRpbmcgdGhpcy4NCiAgICANCiAgICAtLS0NCiAgICAg
-ZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX3RhcmdldC5jIHwgNiArLS0tLS0NCiAgICAgMSBmaWxl
-IGNoYW5nZWQsIDEgaW5zZXJ0aW9uKCspLCA1IGRlbGV0aW9ucygtKQ0KICAgIA0KICAgIGRpZmYg
-LS1naXQgYS9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfdGFyZ2V0LmMgYi9kcml2ZXJzL3Njc2kv
-cWxhMnh4eC9xbGFfdGFyZ2V0LmMNCiAgICBpbmRleCA2YjhjNjU1ZDllYjQuLjMzMTMxNDQ2YjMy
-NyAxMDA2NDQNCiAgICAtLS0gYS9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfdGFyZ2V0LmMNCiAg
-ICArKysgYi9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfdGFyZ2V0LmMNCiAgICBAQCAtNjM0Myw3
-ICs2MzQzLDcgQEAgc3RhdGljIHZvaWQgcWx0X3Rtcl93b3JrKHN0cnVjdCBxbGFfdGd0ICp0Z3Qs
-DQogICAgICAgICAgICBzdHJ1Y3QgYXRpb19mcm9tX2lzcCAqYSA9ICZwcm0tPnRtX2lvY2IyOw0K
-ICAgICAgICAgICAgc3RydWN0IHNjc2lfcWxhX2hvc3QgKnZoYSA9IHRndC0+dmhhOw0KICAgICAg
-ICAgICAgc3RydWN0IHFsYV9od19kYXRhICpoYSA9IHZoYS0+aHc7DQogICAgLSAgICAgICBzdHJ1
-Y3QgZmNfcG9ydCAqc2VzcyA9IE5VTEw7DQogICAgKyAgICAgICBzdHJ1Y3QgZmNfcG9ydCAqc2Vz
-czsNCiAgICAgICAgICAgIHVuc2lnbmVkIGxvbmcgZmxhZ3M7DQogICAgICAgICAgICB1aW50OF90
-ICpzX2lkID0gTlVMTDsgLyogdG8gaGlkZSBjb21waWxlciB3YXJuaW5ncyAqLw0KICAgICAgICAg
-ICAgaW50IHJjOw0KICAgIEBAIC02MzY5LDcgKzYzNjksNiBAQCBzdGF0aWMgdm9pZCBxbHRfdG1y
-X3dvcmsoc3RydWN0IHFsYV90Z3QgKnRndCwNCiAgICAgICAgICAgICAgICAgICAgICAgICAgICBn
-b3RvIG91dF90ZXJtMjsNCiAgICAgICAgICAgIH0gZWxzZSB7DQogICAgICAgICAgICAgICAgICAg
-IGlmIChzZXNzLT5kZWxldGVkKSB7DQogICAgLSAgICAgICAgICAgICAgICAgICAgICAgc2VzcyA9
-IE5VTEw7DQogICAgICAgICAgICAgICAgICAgICAgICAgICAgZ290byBvdXRfdGVybTI7DQogICAg
-ICAgICAgICAgICAgICAgIH0NCiAgICANCiAgICBAQCAtNjM3Nyw3ICs2Mzc2LDYgQEAgc3RhdGlj
-IHZvaWQgcWx0X3Rtcl93b3JrKHN0cnVjdCBxbGFfdGd0ICp0Z3QsDQogICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgcWxfZGJnKHFsX2RiZ190Z3RfdG1yLCB2aGEsIDB4ZjAyMCwNCiAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgIiVzOiBrcmVmX2dldCBmYWlsICU4cGhDXG4iLA0KICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgX19mdW5jX18sIHNlc3MtPnBvcnRfbmFtZSk7
-DQogICAgLSAgICAgICAgICAgICAgICAgICAgICAgc2VzcyA9IE5VTEw7DQogICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgZ290byBvdXRfdGVybTI7DQogICAgICAgICAgICAgICAgICAgIH0NCiAg
-ICAgICAgICAgIH0NCiAgICBAQCAtNjM5Niw4ICs2Mzk0LDYgQEAgc3RhdGljIHZvaWQgcWx0X3Rt
-cl93b3JrKHN0cnVjdCBxbGFfdGd0ICp0Z3QsDQogICAgICAgICAgICByZXR1cm47DQogICAgDQog
-ICAgIG91dF90ZXJtMjoNCiAgICAtICAgICAgIGlmIChzZXNzKQ0KICAgIC0gICAgICAgICAgICAg
-ICBoYS0+dGd0LnRndF9vcHMtPnB1dF9zZXNzKHNlc3MpOw0KICAgICAgICAgICAgc3Bpbl91bmxv
-Y2tfaXJxcmVzdG9yZSgmaGEtPnRndC5zZXNzX2xvY2ssIGZsYWdzKTsNCiAgICAgb3V0X3Rlcm06
-DQogICAgICAgICAgICBxbHRfc2VuZF90ZXJtX2V4Y2hhbmdlKGhhLT5iYXNlX3FwYWlyLCBOVUxM
-LCAmcHJtLT50bV9pb2NiMiwgMSwgMCk7DQogICAgLS0NCiAgICAyLjIwLjENCiAgICANClRoYW5r
-cyBmb3IgdGhlIFBhdGNoLiBMb29rcyBnb29kDQoNCkFja2VkLWJ5OiBIaW1hbnNodSBNYWRoYW5p
-IDxobWFkaGFuaUBtYXJ2ZWxsLmNvbT4NCiAgICANCg0K
+
+Manivannan,
+
+> Ping on this patch!
+
+Applied to 5.1/scsi-queue, thanks!
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
