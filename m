@@ -1,53 +1,37 @@
-From: Walter Harms <wharms@bfs.de>
-Subject: Re: [PATCH] scsi: mvumi: fix 32 bit shift of a 32 bit unsigned int
-Date: Sat, 16 Feb 2019 17:27:16 +0100 (CET)
-Message-ID: <1596625925.142066.1550334436646@ox-groupware.bfs.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+From: Avri Altman <avri.altman@wdc.com>
+Subject: [PATCH] scsi: clean obsolete return values of eh_timed_out
+Date: Sun, 17 Feb 2019 08:30:27 +0200
+Message-ID: <1550385027-6217-1-git-send-email-avri.altman@wdc.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Colin King <colin.king@canonical.com>
-Cc: Jianyun Li <jyli@marvell.com>, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Avi Shchislowski <avi.shchislowski@wdc.com>, Alex Lemberg <alex.lemberg@wdc.com>, Avri Altman <avri.altman@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Am 16.02.2019 15:44, schrieb Colin King:
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> Currently m_sg->baseaddr_h (a 32 bit unsigned int) is being shifted by a
-> total of 32 bits; this always produces a 0 result.  Fix this by casting
-> it to a dma_addr_t (a 64 bit unsigned int) before performing the shift.
-> 
-> Detected by CoverityScan, CID#147270 ("Operands don't affect result")
-> 
-> Fixes: f0c568a478f0 ("[SCSI] mvumi: Add Marvell UMI driver")
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> ---
->  drivers/scsi/mvumi.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/mvumi.c b/drivers/scsi/mvumi.c
-> index 36f64205ecfa..d3582accfd09 100644
-> --- a/drivers/scsi/mvumi.c
-> +++ b/drivers/scsi/mvumi.c
-> @@ -313,7 +313,7 @@ static void mvumi_delete_internal_cmd(struct mvumi_hba
-> *mhba,
->  			sgd_getsz(mhba, m_sg, size);
->  
->  			phy_addr = (dma_addr_t) m_sg->baseaddr_l |
-> -				(dma_addr_t) ((m_sg->baseaddr_h << 16) << 16);
-> +				(((dma_addr_t) m_sg->baseaddr_h << 16) << 16);
->  
->  			dma_free_coherent(&mhba->pdev->dev, size, cmd->data_buf,
->  								phy_addr);
+Those are no longer in use since commit 242f9dcb8ba6
+("block: unify request timeout handling").
 
-i would suggest to try a version with less casts to make it more readable
-like this untested suggestion:
+Signed-off-by: Avri Altman <avri.altman@wdc.com>
+---
+ include/scsi/scsi_host.h | 6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
 
-phy_addr =(m_sg->baseaddr_h << 16)| m_sg->baseaddr_l;
-phy_addr <<= 16;
-
-
-just my 2 cents,
-re,
- wh
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index 4047d68..dbbdfbd 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -300,11 +300,7 @@ struct scsi_host_template {
+ 	/*
+ 	 * This is an optional routine that allows the transport to become
+ 	 * involved when a scsi io timer fires. The return value tells the
+-	 * timer routine how to finish the io timeout handling:
+-	 * EH_HANDLED:		I fixed the error, please complete the command
+-	 * EH_RESET_TIMER:	I need more time, reset the timer and
+-	 *			begin counting again
+-	 * EH_DONE:		Begin normal error recovery
++	 * timer routine how to finish the io timeout handling.
+ 	 *
+ 	 * Status: OPTIONAL
+ 	 */
+-- 
+1.9.1
