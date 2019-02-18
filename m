@@ -1,23 +1,24 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 6/8] csiostor: fix calls to dma_set_mask_and_coherent()
-Date: Mon, 18 Feb 2019 10:25:38 +0100
-Message-ID: <20190218092538.GF5241@lst.de>
-References: <20190218073426.111853-1-hare@suse.de> <20190218073426.111853-7-hare@suse.de>
+Subject: Re: [PATCH 7/8] hisi_sas: fix calls to dma_set_mask_and_coherent()
+Date: Mon, 18 Feb 2019 10:26:27 +0100
+Message-ID: <20190218092627.GG5241@lst.de>
+References: <20190218073426.111853-1-hare@suse.de> <20190218073426.111853-8-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <stable-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20190218073426.111853-7-hare@suse.de>
+In-Reply-To: <20190218073426.111853-8-hare@suse.de>
 Sender: stable-owner@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, stable@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Feb 18, 2019 at 08:34:24AM +0100, Hannes Reinecke wrote:
+On Mon, Feb 18, 2019 at 08:34:25AM +0100, Hannes Reinecke wrote:
 > The change to use dma_set_mask_and_coherent() incorrectly made a second
 > call with the 32 bit DMA mask value when the call with the 64 bit DMA
-> mask value succeeded.
+> mask value succeeded.  This resulted in FC connections failing due
+> to corrupted data buffers, and various other SCSI/FCP I/O errors.
 
-Looks good,
+Looks good (modulo the FCP copy and paste noticed by John):
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
