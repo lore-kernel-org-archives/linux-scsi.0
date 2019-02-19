@@ -1,95 +1,50 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: Re: [PATCH] scsi: mvumi: fix 32 bit shift of a 32 bit unsigned int
-Date: Mon, 18 Feb 2019 18:47:03 +0300
-Message-ID: <20190218154703.GR2304@kadam>
-References: <1596625925.142066.1550334436646@ox-groupware.bfs.de>
- <20190218093710.GB17104@kadam>
- <1550503925.2834.3.camel@linux.ibm.com>
+From: Ming Lei <tom.leiming@gmail.com>
+Subject: Re: [PATCH v2] scsi: sd: block: Fix regressions in read-only block
+ device handling
+Date: Tue, 19 Feb 2019 09:36:54 +0800
+Message-ID: <CACVXFVN9LXodRP8+T_Vd8+5g9K=+hke7ik7N21=heb3csFhh=w@mail.gmail.com>
+References: <yq1d0nxuf73.fsf@oracle.com> <20190213025717.20057-1-martin.petersen@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1550503925.2834.3.camel@linux.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <jejb@linux.ibm.com>
-Cc: Walter Harms <wharms@bfs.de>, Colin King <colin.king@canonical.com>, Jianyun Li <jyli@marvell.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20190213025717.20057-1-martin.petersen@oracle.com>
+Sender: stable-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, Alan Stern <stern@rowland.harvard.edu>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Linux SCSI List <linux-scsi@vger.kernel.org>, linux-block <linux-block@vger.kernel.org>, Jeremy Cline <jeremy@jcline.org>, Oleksii Kurochko <olkuroch@cisco.com>, stable <stable@vger.kernel.org>, linux-usb <linux-usb@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Feb 18, 2019 at 07:32:05AM -0800, James Bottomley wrote:
-> On Mon, 2019-02-18 at 12:37 +0300, Dan Carpenter wrote:
-> > On Sat, Feb 16, 2019 at 05:27:16PM +0100, Walter Harms wrote:
-> > > Am 16.02.2019 15:44, schrieb Colin King:
-> > > > From: Colin Ian King <colin.king@canonical.com>
-> > > > 
-> > > > Currently m_sg->baseaddr_h (a 32 bit unsigned int) is being
-> > > > shifted by a
-> > > > total of 32 bits; this always produces a 0 result.  Fix this by
-> > > > casting
-> > > > it to a dma_addr_t (a 64 bit unsigned int) before performing the
-> > > > shift.
-> > > > 
-> > > > Detected by CoverityScan, CID#147270 ("Operands don't affect
-> > > > result")
-> > > > 
-> > > > Fixes: f0c568a478f0 ("[SCSI] mvumi: Add Marvell UMI driver")
-> > > > Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> > > > ---
-> > > >  drivers/scsi/mvumi.c | 2 +-
-> > > >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > > > 
-> > > > diff --git a/drivers/scsi/mvumi.c b/drivers/scsi/mvumi.c
-> > > > index 36f64205ecfa..d3582accfd09 100644
-> > > > --- a/drivers/scsi/mvumi.c
-> > > > +++ b/drivers/scsi/mvumi.c
-> > > > @@ -313,7 +313,7 @@ static void mvumi_delete_internal_cmd(struct
-> > > > mvumi_hba
-> > > > *mhba,
-> > > >  			sgd_getsz(mhba, m_sg, size);
-> > > >  
-> > > >  			phy_addr = (dma_addr_t) m_sg->baseaddr_l 
-> > > > |
-> > > > -				(dma_addr_t) ((m_sg->baseaddr_h
-> > > > << 16) << 16);
-> > > > +				(((dma_addr_t) m_sg->baseaddr_h
-> > > > << 16) << 16);
-> > > >  
-> > > >  			dma_free_coherent(&mhba->pdev->dev,
-> > > > size, cmd->data_buf,
-> > > >  								
-> > > > phy_addr);
-> > > 
-> > > i would suggest to try a version with less casts to make it more
-> > > readable
-> > > like this untested suggestion:
-> > > 
-> > > phy_addr =(m_sg->baseaddr_h << 16)| m_sg->baseaddr_l;
-> > > phy_addr <<= 16;
-> > > 
-> > 
-> > That would be a behavior change but it also might be a bugfix?  Why
-> > doesn't the code just do:
-> > 
-> > 	phy_addr = ((dma_addr_t)m_sg->baseaddr_h << 32) | m_sg-
-> > >baseaddr_l;
-> > 
-> > (Probably they broke it up into two shifts to silence a GCC warning
-> > that the shift was wrong because of the missing cast?)
-> 
-> No because dma_addr_t can be 32 bits and the warning would then always
-> appear on some builds.  The << 16 << 16 makes sure it doesn't.
-> 
+On Wed, Feb 13, 2019 at 5:01 PM Martin K. Petersen
+<martin.petersen@oracle.com> wrote:
+>
+> Some devices come online in write protected state and switch to
+> read-write once they are ready to process I/O requests. These devices
+> broke with commit 20bd1d026aac ("scsi: sd: Keep disk read-only when
+> re-reading partition") because we had no way to distinguish between a
+> user decision to set a block_device read-only and the actual hardware
+> device being write-protected.
+>
+> Because partitions are dropped and recreated on revalidate we are
+> unable to persist any user-provided policy in hd_struct. Introduce a
+> bitmap in struct gendisk to track the user configuration. This bitmap
+> is updated when BLKROSET is called on a given disk or partition.
+>
+> A helper function, get_user_ro(), is provided to determine whether the
+> ioctl has forced read-only state for a given block device. This helper
+> is used by set_disk_ro() and add_partition() to ensure that both
+> existing and newly created partitions will get the correct state.
 
-Yeah.  You're right.  Thanks.
+Hi Martin & Oleksii,
 
-The original patch is the right fix.  Although it sort of feels like the
-double shift should be a macro.
+>From the Bugzilla, looks it is only reported on the "Kingston DT Ultimate G3"
+USB flash drive.
 
-/*
- * The dma_addr_t type can be either 32 or 64 bit.  Left shifting a 32
- * bit number is undefined so this do two 16 bit left shifts.
- *
- */
-#define DMA_LSHIFT_32(val) (((dma_addr_t)(val) << 16) << 16)
+If it is true, this particular issue might be addressed simply by applying one
+quirk on this drive, such as, by adding one delay before calling
+sd_spinup_disk()
+in the 1st sd_revalidate_disk() to wait until it is ready to process
+I/O requests.
 
-regards,
-dan carpenter
+Otherwise if there are many such devices, I think your approach is good.
+
+Thanks,
+Ming Lei
