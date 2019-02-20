@@ -1,30 +1,34 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2] scsi: sd: block: Fix regressions in read-only block device handling
-Date: Tue, 19 Feb 2019 18:26:20 -0500
-Message-ID: <yq1h8czl5r7.fsf@oracle.com>
-References: <yq1d0nxuf73.fsf@oracle.com>
-        <20190213025717.20057-1-martin.petersen@oracle.com>
-        <CACVXFVN9LXodRP8+T_Vd8+5g9K=+hke7ik7N21=heb3csFhh=w@mail.gmail.com>
+Subject: Re: [PATCH v4 3/3] scsi: ufs-bsg: Allow reading descriptors
+Date: Tue, 19 Feb 2019 19:30:31 -0500
+Message-ID: <yq1pnrnjo7s.fsf@oracle.com>
+References: <1548572868-12589-1-git-send-email-avri.altman@wdc.com>
+        <1548572868-12589-4-git-send-email-avri.altman@wdc.com>
+        <CAE=gft6mLsW-iEBZ9pFRWWyDQz_gCs20_4JBoBzxL1tYv0rbYg@mail.gmail.com>
+        <SN6PR04MB49259233067FBEC4AFA35963FC680@SN6PR04MB4925.namprd04.prod.outlook.com>
+        <yq1bm3nzmmu.fsf@oracle.com>
+        <SN6PR04MB4925FBBBAC3356886A02F46FFC7C0@SN6PR04MB4925.namprd04.prod.outlook.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <CACVXFVN9LXodRP8+T_Vd8+5g9K=+hke7ik7N21=heb3csFhh=w@mail.gmail.com>
-        (Ming Lei's message of "Tue, 19 Feb 2019 09:36:54 +0800")
-Sender: stable-owner@vger.kernel.org
-To: Ming Lei <tom.leiming@gmail.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Alan Stern <stern@rowland.harvard.edu>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, linux-block <linux-block@vger.kernel.org>, Jeremy Cline <jeremy@jcline.org>, Oleksii Kurochko <olkuroch@cisco.com>, stable <stable@vger.kernel.org>, linux-usb <linux-usb@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <SN6PR04MB4925FBBBAC3356886A02F46FFC7C0@SN6PR04MB4925.namprd04.prod.outlook.com>
+        (Avri Altman's message of "Tue, 19 Feb 2019 11:44:27 +0000")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Avri Altman <Avri.Altman@wdc.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, SCSI <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Avi Shchislowski <Avi.Shchislowski@wdc.com>, Alex Lemberg <Alex.Lemberg@wdc.com>, Evan Green <evgreen@chromium.org>
 List-Id: linux-scsi@vger.kernel.org
 
 
-Hi Ming,
+Hi Avri,
 
-> From the Bugzilla, looks it is only reported on the "Kingston DT
-> Ultimate G3" USB flash drive.
+> A kind reminder.
 
-There are several bug reports as a result of the change. It's not at all
-uncommon for a device to switch at runtime. Before Jeremy's change we
-just didn't see it because the device setting always took precedence and
-voided any user setting.
+It's expired from patchwork so now is an excellent time to repost.
+
+Generally speaking, resubmitting patches is superior to pinging. While I
+personally dig through the archives to revisit older patches, I can
+almost guarantee that no other potential reviewers will do the same. The
+best way to get a patch back on people's radar is to repost it.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
