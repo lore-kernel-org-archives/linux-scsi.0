@@ -1,95 +1,108 @@
-From: Avri Altman <avri.altman@wdc.com>
-Subject: [REPOST PATCH v4 3/3] scsi: ufs-bsg: Allow reading descriptors
-Date: Wed, 20 Feb 2019 09:11:14 +0200
-Message-ID: <1550646674-15258-4-git-send-email-avri.altman@wdc.com>
-References: <1550646674-15258-1-git-send-email-avri.altman@wdc.com>
+From: Thierry Reding <thierry.reding@gmail.com>
+Subject: Re: [PATCH v2 2/3] arm64: dts: hisilicon: hi3670: Add UFS controller
+ support
+Date: Wed, 20 Feb 2019 12:35:08 +0100
+Message-ID: <20190220113508.GB7498@ulmo>
+References: <20190105072859.9134-1-manivannan.sadhasivam@linaro.org>
+ <20190105072859.9134-3-manivannan.sadhasivam@linaro.org>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="s2ZSL+KKDSLx8OML"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1550646674-15258-1-git-send-email-avri.altman@wdc.com>
+Content-Disposition: inline
+In-Reply-To: <20190105072859.9134-3-manivannan.sadhasivam@linaro.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Evan Green <evgreen@chromium.org>, Bean Huo <beanhuo@micron.com>, Pedro Sousa <pedrom.sousa@synopsys.com>, Alim Akhtar <alim.akhtar@samsung.com>
-Cc: Avi Shchislowski <avi.shchislowski@wdc.com>, Alex Lemberg <alex.lemberg@wdc.com>, Avri Altman <avri.altman@wdc.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, liwei213@huawei.com, robh+dt@kernel.org, devicetree@vger.kernel.org, guodong.xu@linaro.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, amit.kucheria@linaro.org, john.stultz@linaro.org, linux-arm-kernel@lists.infradead.org, Wei Xu <xuwei5@hisilicon.com>, linux-next@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Add this functionality, placing the descriptor being read in the actual
-data buffer in the bio.
 
-That is, for both read and write descriptors query upiu, we are using
-the job's request_payload.  This in turn, is mapped back in user land to
-the applicable sg_io_v4 xferp: dout_xferp for write descriptor,
-and din_xferp for read descriptor.
+--s2ZSL+KKDSLx8OML
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Avri Altman <avri.altman@wdc.com>
-Reviewed-by: Evan Green <evgreen@chromium.org>
-Reviewed-by: Bean Huo <beanhuo@micron.com>
----
- Documentation/scsi/ufs.txt |  7 ++++++-
- drivers/scsi/ufs/ufs_bsg.c | 20 ++++++++++++--------
- 2 files changed, 18 insertions(+), 9 deletions(-)
+On Sat, Jan 05, 2019 at 12:58:58PM +0530, Manivannan Sadhasivam wrote:
+> Add UFS controller support for HiSilicon HI3670 SoC.
+>=20
+> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+> ---
+>  arch/arm64/boot/dts/hisilicon/hi3670.dtsi | 18 ++++++++++++++++++
+>  1 file changed, 18 insertions(+)
 
-diff --git a/Documentation/scsi/ufs.txt b/Documentation/scsi/ufs.txt
-index 78fe7cb..1769f71 100644
---- a/Documentation/scsi/ufs.txt
-+++ b/Documentation/scsi/ufs.txt
-@@ -150,9 +150,14 @@ send SG_IO with the applicable sg_io_v4:
- 	if (dir == SG_DXFER_TO_DEV) {
- 		io_hdr_v4.dout_xfer_len = (uint32_t)byte_cnt;
- 		io_hdr_v4.dout_xferp = (uintptr_t)(__u64)buff;
-+	} else {
-+		io_hdr_v4.din_xfer_len = (uint32_t)byte_cnt;
-+		io_hdr_v4.din_xferp = (uintptr_t)(__u64)buff;
- 	}
- 
--If you wish to write a descriptor, use the dout_xferp sg_io_v4.
-+If you wish to read or write a descriptor, use the appropriate xferp of
-+sg_io_v4.
-+
- 
- UFS Specifications can be found at,
- UFS - http://www.jedec.org/sites/default/files/docs/JESD220.pdf
-diff --git a/drivers/scsi/ufs/ufs_bsg.c b/drivers/scsi/ufs/ufs_bsg.c
-index 2fd0769..869e71f 100644
---- a/drivers/scsi/ufs/ufs_bsg.c
-+++ b/drivers/scsi/ufs/ufs_bsg.c
-@@ -48,12 +48,8 @@ static int ufs_bsg_alloc_desc_buffer(struct ufs_hba *hba, struct bsg_job *job,
- 	struct utp_upiu_query *qr;
- 	u8 *descp;
- 
--	if (desc_op == UPIU_QUERY_OPCODE_READ_DESC) {
--		dev_err(hba->dev, "unsupported opcode %d\n", desc_op);
--		return -ENOTSUPP;
--	}
--
--	if (desc_op != UPIU_QUERY_OPCODE_WRITE_DESC)
-+	if (desc_op != UPIU_QUERY_OPCODE_WRITE_DESC &&
-+	    desc_op != UPIU_QUERY_OPCODE_READ_DESC)
- 		goto out;
- 
- 	qr = &bsg_request->upiu_req.qr;
-@@ -71,8 +67,10 @@ static int ufs_bsg_alloc_desc_buffer(struct ufs_hba *hba, struct bsg_job *job,
- 	if (!descp)
- 		return -ENOMEM;
- 
--	sg_copy_to_buffer(job->request_payload.sg_list,
--			  job->request_payload.sg_cnt, descp, *desc_len);
-+	if (desc_op == UPIU_QUERY_OPCODE_WRITE_DESC)
-+		sg_copy_to_buffer(job->request_payload.sg_list,
-+				  job->request_payload.sg_cnt, descp,
-+				  *desc_len);
- 
- 	*desc_buff = descp;
- 
-@@ -140,6 +138,12 @@ static int ufs_bsg_request(struct bsg_job *job)
- 	if (!desc_buff)
- 		goto out;
- 
-+	if (desc_op == UPIU_QUERY_OPCODE_READ_DESC && desc_len)
-+		bsg_reply->reply_payload_rcv_len =
-+			sg_copy_from_buffer(job->request_payload.sg_list,
-+					    job->request_payload.sg_cnt,
-+					    desc_buff, desc_len);
-+
- 	kfree(desc_buff);
- 
- out:
--- 
-1.9.1
+Hi Martin,
+
+it looks like you picked this up into the SCSI tree (perhaps
+inadvertently). It's been causing linux-next to fail to build since
+Monday (next-20190218) because it references a phandle (&crg_rst)
+that's not available.
+
+There's a patch on the mailing lists to add that, but I think at this
+point it'd be better if you could drop this from the SCSI tree and we
+let the HiSilicon maintainers deal with the dependency in their tree.
+
+Cc'ing Wei and linux-next.
+
+Thierry
+
+>=20
+> diff --git a/arch/arm64/boot/dts/hisilicon/hi3670.dtsi b/arch/arm64/boot/=
+dts/hisilicon/hi3670.dtsi
+> index 6ccdf5040ffd..285219dd657f 100644
+> --- a/arch/arm64/boot/dts/hisilicon/hi3670.dtsi
+> +++ b/arch/arm64/boot/dts/hisilicon/hi3670.dtsi
+> @@ -654,6 +654,24 @@
+>  			clock-names =3D "apb_pclk";
+>  		};
+> =20
+> +		/* UFS */
+> +		ufs: ufs@ff3c0000 {
+> +			compatible =3D "hisilicon,hi3670-ufs", "jedec,ufs-2.1";
+> +			/* 0: HCI standard */
+> +			/* 1: UFS SYS CTRL */
+> +			reg =3D <0x0 0xff3c0000 0x0 0x1000>,
+> +				<0x0 0xff3e0000 0x0 0x1000>;
+> +			interrupt-parent =3D <&gic>;
+> +			interrupts =3D <GIC_SPI 278 IRQ_TYPE_LEVEL_HIGH>;
+> +			clocks =3D <&crg_ctrl HI3670_CLK_GATE_UFSIO_REF>,
+> +				<&crg_ctrl HI3670_CLK_GATE_UFS_SUBSYS>;
+> +			clock-names =3D "ref_clk", "phy_clk";
+> +			freq-table-hz =3D <0 0>, <0 0>;
+> +			/* offset: 0x84; bit: 12 */
+> +			resets =3D <&crg_rst 0x84 12>;
+> +			reset-names =3D "rst";
+> +		};
+> +
+>  		/* SD */
+>  		dwmmc1: dwmmc1@ff37f000 {
+>  			compatible =3D "hisilicon,hi3670-dw-mshc";
+> --=20
+> 2.17.1
+>=20
+>=20
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+
+--s2ZSL+KKDSLx8OML
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAlxtO2gACgkQ3SOs138+
+s6EQ4A/+IUN1SE3WaCK5xyaflGB+s9Z2NlJHtFZjA849/vp6tdyveL7I9ngv1n7i
++zwaR089y/jpfWvnbRl50/RTyyxHbyayXeG3PqU8zyE56TYdCcpmwPBxELOzkyQr
+GERB7gcYZgl8r0g69Fc2I6bS0El9NLWBD6uhuvbBFV8Emy1+M2fF0JNvUmQTrmHL
+q/IwCUDkr17jSH/dYan1rGMKmyPQ5v3uRC/nVqgnc8jYKBTMKkZ3M9oEqbK7Wr2r
+Fgri+YPa0PkJ0A0hhBxP2nEslmStWuJ6EQfUYI2veFxMGS/xnTjlWg1qnWuiyh5+
+/UYcSGiYYfmoAOPOyrJez9Gn70Phnk4GVujIKrWtY7LjWbQbZE6tpQwjeMhfesMm
+IBE40J0OIPifoM9ve8sKwL5jHKI8nUvGS80wCFaC00/MzNIkL8V13uZgkLhZwV/M
+9r4JHJs1XHbrBXNdiYnJGW/i9Ct9tFiIGi92rnuR/yAhlXUhkFEPqxEb1ZmupTwY
+xB6BagYolo44WWdPm0MgNn7WEFjSu7dhWcAHRalV9MQYMhYuSYD6Sdej1PktvhdR
+uYK9U32xsnsDVH/ZLwkDL/SkdMfUeVX4/0HZG70jJv8Tzji0BsBioHRpPomy5Rsn
+FJmf52KkS3RWgw9MCwXU5Jqh98cbQqZBE6ooTY2f+h8aOarTY/c=
+=JXaV
+-----END PGP SIGNATURE-----
+
+--s2ZSL+KKDSLx8OML--
