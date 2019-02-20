@@ -1,47 +1,72 @@
-From: John Garry <john.garry@huawei.com>
-Subject: Re: [PATCH] scsi: csiostor: fix incorrect if condition for setting
- dma mask
-Date: Wed, 20 Feb 2019 15:55:30 +0000
-Message-ID: <3385a58e-41be-4fbd-5f19-6613ec6df297@huawei.com>
-References: <1550676921-5764-1-git-send-email-varun@chelsio.com>
+From: Ira Weiny <ira.weiny@intel.com>
+Subject: Re: [RESEND PATCH 0/7] Add FOLL_LONGTERM to GUP fast and use it
+Date: Wed, 20 Feb 2019 10:02:56 -0800
+Message-ID: <20190220180255.GA12020@iweiny-DESK2.sc.intel.com>
+References: <20190220053040.10831-1-ira.weiny@intel.com>
+ <20190220151930.GB11695@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <1550676921-5764-1-git-send-email-varun@chelsio.com>
-Sender: stable-owner@vger.kernel.org
-To: Varun Prakash <varun@chelsio.com>, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, dt@chelsio.com, indranil@chelsio.com, stable@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+Content-Disposition: inline
+In-Reply-To: <20190220151930.GB11695@infradead.org>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-fbdev@vger.kernel.org, Michal Hocko <mhocko@suse.com>, kvm@vger.kernel.org, linux-sh@vger.kernel.org, Peter Zijlstra <peterz@infradead.org>, James Hogan <jhogan@kernel.org>, linux-fpga@vger.kernel.org, Heiko Carstens <heiko.carstens@de.ibm.com>, dri-devel@lists.freedesktop.org, linux-mips@vger.kernel.org, linux-mm@kvack.org, Rich Felker <dalias@libc.org>, Paul Mackerras <paulus@samba.org>, sparclinux@vger.kernel.org, ceph-devel@vger.kernel.org, devel@driverdev.osuosl.org, linux-s390@vger.kernel.org, rds-devel@oss.oracle.com, Yoshinori Sato <ysato@users.sourceforge.jp>, linux-rdma@vger.kernel.org, Jason Gunthorpe <jgg@ziepe.ca>, Ingo Molnar <mingo@redhat.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, xen-devel@lists.xenproject.org, devel@lists.orangefs.org, linux-media@vger.kernel.org, John Hubbard <jhubbard@nvidia.com>, kvm-ppc@vger.kernel.org, Borislav
 List-Id: linux-scsi@vger.kernel.org
 
-On 20/02/2019 15:35, Varun Prakash wrote:
-> Use && instead of || in if condition as
-> dma_set_mask_and_coherent() returns 0 on success.
->
-> Fixes: c22b332d811b ("scsi: csiostor: switch to generic DMA API")
-> Cc: stable@vger.kernel.org
-> Cc: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: Varun Prakash <varun@chelsio.com>
-> ---
->  drivers/scsi/csiostor/csio_init.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/scsi/csiostor/csio_init.c b/drivers/scsi/csiostor/csio_init.c
-> index cf629380a981..e7ad7b1a0440 100644
-> --- a/drivers/scsi/csiostor/csio_init.c
-> +++ b/drivers/scsi/csiostor/csio_init.c
-> @@ -210,7 +210,7 @@ csio_pci_init(struct pci_dev *pdev, int *bars)
->  	pci_set_master(pdev);
->  	pci_try_set_mwi(pdev);
->
-> -	if (dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64)) ||
-> +	if (dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64)) &&
->  	    dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32))) {
->  		dev_err(&pdev->dev, "No suitable DMA available.\n");
->  		goto err_release_regions;
->
+On Wed, Feb 20, 2019 at 07:19:30AM -0800, Christoph Hellwig wrote:
+> On Tue, Feb 19, 2019 at 09:30:33PM -0800, ira.weiny@intel.com wrote:
+> > From: Ira Weiny <ira.weiny@intel.com>
+> > 
+> > Resending these as I had only 1 minor comment which I believe we have covered
+> > in this series.  I was anticipating these going through the mm tree as they
+> > depend on a cleanup patch there and the IB changes are very minor.  But they
+> > could just as well go through the IB tree.
+> > 
+> > NOTE: This series depends on my clean up patch to remove the write parameter
+> > from gup_fast_permitted()[1]
+> > 
+> > HFI1, qib, and mthca, use get_user_pages_fast() due to it performance
+> > advantages.  These pages can be held for a significant time.  But
+> > get_user_pages_fast() does not protect against mapping of FS DAX pages.
+> 
+> This I don't get - if you do lock down long term mappings performance
+> of the actual get_user_pages call shouldn't matter to start with.
+> 
+> What do I miss?
 
-I think Hannes already sent a fix for this:
-https://marc.info/?l=linux-scsi&m=155047528202096&w=2
+A couple of points.
 
-Thanks
+First "longterm" is a relative thing and at this point is probably a misnomer.
+This is really flagging a pin which is going to be given to hardware and can't
+move.  I've thought of a couple of alternative names but I think we have to
+settle on if we are going to use FL_LAYOUT or something else to solve the
+"longterm" problem.  Then I think we can change the flag to a better name.
+
+Second, It depends on how often you are registering memory.  I have spoken with
+some RDMA users who consider MR in the performance path...  For the overall
+application performance.  I don't have the numbers as the tests for HFI1 were
+done a long time ago.  But there was a significant advantage.  Some of which is
+probably due to the fact that you don't have to hold mmap_sem.
+
+Finally, architecturally I think it would be good for everyone to use *_fast.
+There are patches submitted to the RDMA list which would allow the use of
+*_fast (they reworking the use of mmap_sem) and as soon as they are accepted
+I'll submit a patch to convert the RDMA core as well.  Also to this point
+others are looking to use *_fast.[2]
+
+As an asside, Jasons pointed out in my previous submission that *_fast and
+*_unlocked look very much the same.  I agree and I think further cleanup will
+be coming.  But I'm focused on getting the final solution for DAX at the
+moment.
+
+Ira
