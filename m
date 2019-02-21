@@ -1,117 +1,72 @@
 From: Benjamin Block <bblock@linux.ibm.com>
-Subject: [PATCH v2 1/2] scsi: replace GFP_ATOMIC with GFP_KERNEL for allocations in scsi_scan.c
-Date: Thu, 21 Feb 2019 10:18:00 +0100
-Message-ID: <c5bd5a82d1250471822cbf5891ea1866166cd9e6.1550740533.git.bblock@linux.ibm.com>
-References: <20190220184847.24640-1-bblock@linux.ibm.com>
+Subject: [PATCH v2 2/2] scsi: whitespace cleanup in scsi_scan.c
+Date: Thu, 21 Feb 2019 10:18:01 +0100
+Message-ID: <b6078c66923536b3086a8b9ca528ac0711ae8139.1550740533.git.bblock@linux.ibm.com>
+References: <20190220184847.24640-1-bblock@linux.ibm.com> <c5bd5a82d1250471822cbf5891ea1866166cd9e6.1550740533.git.bblock@linux.ibm.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190220184847.24640-1-bblock@linux.ibm.com>
+In-Reply-To: <c5bd5a82d1250471822cbf5891ea1866166cd9e6.1550740533.git.bblock@linux.ibm.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: Benjamin Block <bblock@linux.ibm.com>, Steffen Maier <maier@linux.ibm.com>, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, linux-kernel@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>
 List-Id: linux-scsi@vger.kernel.org
 
-We had a test-report where, under memory pressure, adding LUNs to the
-systems would fail (the tests add LUNs strictly in sequence):
-
-[ 5525.853432] scsi 0:0:1:1088045124: Direct-Access     IBM      2107900          .148 PQ: 0 ANSI: 5
-[ 5525.853826] scsi 0:0:1:1088045124: alua: supports implicit TPGS
-[ 5525.853830] scsi 0:0:1:1088045124: alua: device naa.6005076303ffd32700000000000044da port group 0 rel port 43
-[ 5525.853931] sd 0:0:1:1088045124: Attached scsi generic sg10 type 0
-[ 5525.854075] sd 0:0:1:1088045124: [sdk] Disabling DIF Type 1 protection
-[ 5525.855495] sd 0:0:1:1088045124: [sdk] 2097152 512-byte logical blocks: (1.07 GB/1.00 GiB)
-[ 5525.855606] sd 0:0:1:1088045124: [sdk] Write Protect is off
-[ 5525.855609] sd 0:0:1:1088045124: [sdk] Mode Sense: ed 00 00 08
-[ 5525.855795] sd 0:0:1:1088045124: [sdk] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-[ 5525.857838]  sdk: sdk1
-[ 5525.859468] sd 0:0:1:1088045124: [sdk] Attached SCSI disk
-[ 5525.865073] sd 0:0:1:1088045124: alua: transition timeout set to 60 seconds
-[ 5525.865078] sd 0:0:1:1088045124: alua: port group 00 state A preferred supports tolusnA
-[ 5526.015070] sd 0:0:1:1088045124: alua: port group 00 state A preferred supports tolusnA
-[ 5526.015213] sd 0:0:1:1088045124: alua: port group 00 state A preferred supports tolusnA
-[ 5526.587439] scsi_alloc_sdev: Allocation failure during SCSI scanning, some SCSI devices might not be configured
-[ 5526.588562] scsi_alloc_sdev: Allocation failure during SCSI scanning, some SCSI devices might not be configured
-
-Looking at the code of scsi_alloc_sdev(), and all the calling contexts,
-there seems to be no reason to use GFP_ATMOIC here. All the different
-call-contexts use a mutex at some point, and nothing in between that
-requires no sleeping, as far as I could see. Additionally, the code that
-later allocates the block queue for the device (scsi_mq_alloc_queue())
-already uses GFP_KERNEL.
-
-There are similar allocations in two other functions:
-scsi_probe_and_add_lun(), and scsi_add_lun(),; that can also be done
-with GFP_KERNEL.
-
-Here is the contexts for the three functions so far:
-
-    scsi_alloc_sdev()
-        scsi_probe_and_add_lun()
-            scsi_sequential_lun_scan()
-                __scsi_scan_target()
-                    scsi_scan_target()
-                        mutex_lock()
-                    scsi_scan_channel()
-                        scsi_scan_host_selected()
-                            mutex_lock()
-            scsi_report_lun_scan()
-                __scsi_scan_target()
-    	            ...
-            __scsi_add_device()
-                mutex_lock()
-            __scsi_scan_target()
-                ...
-        scsi_report_lun_scan()
-            ...
-        scsi_get_host_dev()
-            mutex_lock()
-
-    scsi_probe_and_add_lun()
-        ...
-
-    scsi_add_lun()
-        scsi_probe_and_add_lun()
-            ...
-
-So replace all these, and give them a bit of a better chance to succeed,
-with more chances of reclaim.
+Noticed during editing that vim would remove some trailing spaces.
 
 Signed-off-by: Benjamin Block <bblock@linux.ibm.com>
 ---
- drivers/scsi/scsi_scan.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/scsi_scan.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index dd0d516f65e2..53380e07b40e 100644
+index 53380e07b40e..7e1a6c3dd42c 100644
 --- a/drivers/scsi/scsi_scan.c
 +++ b/drivers/scsi/scsi_scan.c
-@@ -220,7 +220,7 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
- 	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
+@@ -108,7 +108,7 @@ MODULE_PARM_DESC(scan, "sync, async, manual, or none. "
+ static unsigned int scsi_inq_timeout = SCSI_TIMEOUT/HZ + 18;
  
- 	sdev = kzalloc(sizeof(*sdev) + shost->transportt->device_size,
--		       GFP_ATOMIC);
-+		       GFP_KERNEL);
- 	if (!sdev)
- 		goto out;
+ module_param_named(inq_timeout, scsi_inq_timeout, uint, S_IRUGO|S_IWUSR);
+-MODULE_PARM_DESC(inq_timeout, 
++MODULE_PARM_DESC(inq_timeout,
+ 		 "Timeout (in seconds) waiting for devices to answer INQUIRY."
+ 		 " Default is 20. Some devices may need more; most need less.");
  
-@@ -788,7 +788,7 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
- 	 */
- 	sdev->inquiry = kmemdup(inq_result,
- 				max_t(size_t, sdev->inquiry_len, 36),
--				GFP_ATOMIC);
-+				GFP_KERNEL);
- 	if (sdev->inquiry == NULL)
- 		return SCSI_SCAN_NO_RESPONSE;
+@@ -604,7 +604,7 @@ static int scsi_probe_lun(struct scsi_device *sdev, unsigned char *inq_result,
+ 			 * not-ready to ready transition [asc/ascq=0x28/0x0]
+ 			 * or power-on, reset [asc/ascq=0x29/0x0], continue.
+ 			 * INQUIRY should not yield UNIT_ATTENTION
+-			 * but many buggy devices do so anyway. 
++			 * but many buggy devices do so anyway.
+ 			 */
+ 			if (driver_byte(result) == DRIVER_SENSE &&
+ 			    scsi_sense_valid(&sshdr)) {
+@@ -850,7 +850,7 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
+ 	 * Don't set the device offline here; rather let the upper
+ 	 * level drivers eval the PQ to decide whether they should
+ 	 * attach. So remove ((inq_result[0] >> 5) & 7) == 1 check.
+-	 */ 
++	 */
  
-@@ -1079,7 +1079,7 @@ static int scsi_probe_and_add_lun(struct scsi_target *starget,
- 	if (!sdev)
- 		goto out;
+ 	sdev->inq_periph_qual = (inq_result[0] >> 5) & 7;
+ 	sdev->lockable = sdev->removable;
+@@ -994,7 +994,7 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
+ }
  
--	result = kmalloc(result_len, GFP_ATOMIC |
-+	result = kmalloc(result_len, GFP_KERNEL |
- 			((shost->unchecked_isa_dma) ? __GFP_DMA : 0));
- 	if (!result)
- 		goto out_free_sdev;
+ #ifdef CONFIG_SCSI_LOGGING
+-/** 
++/**
+  * scsi_inq_str - print INQUIRY data from min to max index, strip trailing whitespace
+  * @buf:   Output buffer with at least end-first+1 bytes of space
+  * @inq:   Inquiry buffer (input)
+@@ -1495,7 +1495,7 @@ EXPORT_SYMBOL(__scsi_add_device);
+ int scsi_add_device(struct Scsi_Host *host, uint channel,
+ 		    uint target, u64 lun)
+ {
+-	struct scsi_device *sdev = 
++	struct scsi_device *sdev =
+ 		__scsi_add_device(host, channel, target, lun, NULL);
+ 	if (IS_ERR(sdev))
+ 		return PTR_ERR(sdev);
 -- 
 2.20.1
