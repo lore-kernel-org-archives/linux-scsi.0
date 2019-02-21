@@ -1,28 +1,66 @@
-From: Sasha Levin <sashal@kernel.org>
-Subject: Re: [PATCH] mpt3sas: Use driver scsi lookup to track outstanding IOs
-Date: Wed, 20 Feb 2019 23:07:19 -0500
-Message-ID: <20190221040719.GB10616@sasha-vm>
-References: <1550577766-40425-1-git-send-email-sreekanth.reddy@broadcom.com>
- <20190219121415.GA23831@kroah.com>
- <159855771db2192a00c3c248f0e3cab9@mail.gmail.com>
+From: Jason Yan <yanaijie@huawei.com>
+Subject: Re: [RFC PATCH] scsi: fix oops in scsi_uninit_cmd()
+Date: Thu, 21 Feb 2019 16:53:54 +0800
+Message-ID: <10ea95ec-e259-3511-44c4-58e4d255eb9f@huawei.com>
+References: <20190219072743.13606-1-yanaijie@huawei.com>
+ <1550595388.31902.133.camel@acm.org> <20190220151836.GA11695@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Return-path: <stable-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <159855771db2192a00c3c248f0e3cab9@mail.gmail.com>
-Sender: stable-owner@vger.kernel.org
-To: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Cc: Greg KH <gregkh@linuxfoundation.org>, linux-scsi@vger.kernel.org, Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, stable@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190220151836.GA11695@infradead.org>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, Bart Van Assche <bvanassche@acm.org>
+Cc: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, hare@suse.com, dan.j.williams@intel.com, jthumshirn@suse.de, Steffen Maier <maier@linux.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Feb 19, 2019 at 07:14:17PM +0530, Sreekanth Reddy wrote:
->Greg,
->
->This patch will fix the issue discussed in below email thread,
->https://patchwork.kernel.org/patch/10734933/
->
->Yesterday same issue is been reported by Michal Soltys in below thread,
->https://marc.info/?l=linux-scsi&m=155057830803859&w=2
+Hi, Christoph
 
-The log message on the patch really needs reworking: it describes what a
-patch does rather than why it does it.
+On 2019/2/20 23:18, Christoph Hellwig wrote:
+> [fullquote removed, please follow proper mail etiquette]
+> 
+> On Tue, Feb 19, 2019 at 08:56:28AM -0800, Bart Van Assche wrote:
+>> regression in the SCSI sd driver due to the switch from the legacy block
+>> layer to scsi-mq. The above patch introduces two atomic operations in the
+>> hot path and hence would introduce a performance regression. I think this
+>> can be avoided by making sure that sd_uninit_command() gets called before
+>> the request tag is freed. What changes would be required to make the block
+>> layer core call sd_uninit_command() before the request tag is freed? Would
+>> introducing prep_rq_fn and unprep_rq_fn callbacks in struct blk_mq_ops and
+>> making sure that the SCSI core sets these callback function pointers
+>> appropriately be sufficient? Would such a change allow to simplify the NVMe
+>> initiator driver? Are there any alternatives to this approach that are more
+>> elegant?
+> 
+> Additional indirect calls in the I/O fast path is something I'd rather
+> avoid.  But I don't fully understand the problem yet - where do
+> we release a disk reference from blk_update_request?  
+
+When userspace close the fd after blk_update_request() and before
+scsi_mq_uninit_cmd(), a disk reference will be released. It is not the
+blk_update_request() directly released it.
+
+close
+    ->sd_release
+       ->scsi_disk_put
+         ->scsi_disk_release
+           ->disk->private_data = NULL;
+
+The userspace can close the fd because blk_update_request() returned the
+last IO , the userspace application does not have to stuck on read() or
+write(). The window is very small, but it can be reproduce every day
+in our testcases. So I'm very curious why. One possible explanation is
+that we enabled kernel preempt(CONFIG_PREEMPT).
+
+And why can't
+> we move that release to __blk_mq_end_request?
+> 
+>>
+>> Thanks,
+>>
+>> Bart.
+> ---end quoted text---
+> 
+> .
+> 
