@@ -1,88 +1,95 @@
-From: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-Subject: RE: [PATCH v1 2/2] scsi: ufs-mediatek: Add UFS support for Mediatek
- SoC chips
-Date: Fri, 22 Feb 2019 22:13:51 +0800
-Message-ID: <1550844831.30977.21.camel@mtkswgap22>
-References: <1550742637-12385-1-git-send-email-stanley.chu@mediatek.com>
- <1550742637-12385-4-git-send-email-stanley.chu@mediatek.com>
- <SN6PR04MB4925CDAF80047DBCED9E2836FC7F0@SN6PR04MB4925.namprd04.prod.outlook.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v2] scsi: sd: block: Fix regressions in read-only block
+ device handling
+Date: Fri, 22 Feb 2019 06:29:57 -0800
+Message-ID: <20190222142957.GA17324@infradead.org>
+References: <yq1d0nxuf73.fsf@oracle.com>
+ <20190213025717.20057-1-martin.petersen@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-In-Reply-To: <SN6PR04MB4925CDAF80047DBCED9E2836FC7F0-UKdxhu0+N/VnT3GYGerMaFM8qxBPnqtHvxpqHgZTriW3zl9H0oFU5g@public.gmane.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-mediatek>,
- <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-mediatek/>
-List-Post: <mailto:linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-List-Help: <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-mediatek>,
- <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=subscribe>
-Sender: "Linux-mediatek" <linux-mediatek-bounces-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-Errors-To: linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
-To: Avri Altman <Avri.Altman-Sjgp3cTcYWE@public.gmane.org>
-Cc: "devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "chun-hung.wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org" <chun-hung.wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, "kuohong.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org" <kuohong.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, "wsd_upstream-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org" <wsd_upstream-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, "robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, "peter.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org" <peter.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, "matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <stable-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20190213025717.20057-1-martin.petersen@oracle.com>
+Sender: stable-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Jeremy Cline <jeremy@jcline.org>, Oleksii Kurochko <olkuroch@cisco.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Avri,
-
-On Fri, 2019-02-22 at 10:29 +0000, Avri Altman wrote:
-> Hi,
+On Tue, Feb 12, 2019 at 09:57:17PM -0500, Martin K. Petersen wrote:
+> Some devices come online in write protected state and switch to
+> read-write once they are ready to process I/O requests. These devices
+> broke with commit 20bd1d026aac ("scsi: sd: Keep disk read-only when
+> re-reading partition") because we had no way to distinguish between a
+> user decision to set a block_device read-only and the actual hardware
+> device being write-protected.
 > 
-> > +
-> > +struct ufs_mtk_dev_params {
-> > +	u32 pwm_rx_gear;        /* pwm rx gear to work in */
-> > +	u32 pwm_tx_gear;        /* pwm tx gear to work in */
-> > +	u32 hs_rx_gear;         /* hs rx gear to work in */
-> > +	u32 hs_tx_gear;         /* hs tx gear to work in */
-> > +	u32 rx_lanes;           /* number of rx lanes */
-> > +	u32 tx_lanes;           /* number of tx lanes */
-> > +	u32 rx_pwr_pwm;         /* rx pwm working pwr */
-> > +	u32 tx_pwr_pwm;         /* tx pwm working pwr */
-> > +	u32 rx_pwr_hs;          /* rx hs working pwr */
-> > +	u32 tx_pwr_hs;          /* tx hs working pwr */
-> > +	u32 hs_rate;            /* rate A/B to work in HS */
-> > +	u32 desired_working_mode;
-> > +};
-> As this is essentially identical to ufs_qcom_dev_params and ufs_hisi_dev_params etc.,
-> Maybe move it to ufshcd-platform.h in a short preparatory patch, so it can be reused?
+> Because partitions are dropped and recreated on revalidate we are
+> unable to persist any user-provided policy in hd_struct. Introduce a
+> bitmap in struct gendisk to track the user configuration. This bitmap
+> is updated when BLKROSET is called on a given disk or partition.
 > 
-
-Good suggestion. This is currently also our preferred way to define host
-limitation. I can help re-factor this in next patch.
-
-> Also, the vast majority of the code in these platform-dependent modules is pretty much the same.
-> I wonder if it can be shape to fit some standard form?
-> But this is out of scope of your series.
+> A helper function, get_user_ro(), is provided to determine whether the
+> ioctl has forced read-only state for a given block device. This helper
+> is used by set_disk_ro() and add_partition() to ensure that both
+> existing and newly created partitions will get the correct state.
 > 
-
-Currently ufs-mediatek driver is a "shell" only for basic UFS operations
-in Mediatek SoC chips. We are planning to try to add more rich features
-in the near future and thus more and more different platform-dependent
-codes will be uploaded.
-
-However, as you mentioned, there may be still lots of similar codes and
-flows in these platform-dependent drivers. And we can think how to
-simplify or standardize them later.
-
+>  - If BLKROSET sets a whole disk device read-only, all partitions will
+>    now end up in a read-only state.
 > 
-> > +/*
-> > + * PHY Adpater attributes
-> > + */
-> > +#define PA_LOCALTXLCCENABLE         0x155E
-> Already in unipro.h
-
-Will remove this.
-
+>  - If BLKROSET sets a given partition read-only, that partition will
+>    remain read-only post revalidate.
 > 
-> Thanks,
-> Avri
-
-Thanks,
-Stanley
-
+>  - Otherwise both the whole disk device and any partitions will
+>    reflect the write protect state of the underlying device.
 > 
-> _______________________________________________
-> Linux-mediatek mailing list
-> Linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
-> http://lists.infradead.org/mailman/listinfo/linux-mediatek
+> Cc: Jeremy Cline <jeremy@jcline.org>
+> Cc: Oleksii Kurochko <olkuroch@cisco.com>
+> Cc: stable@vger.kernel.org # v4.16+
+> Reported-by: Oleksii Kurochko <olkuroch@cisco.com>
+> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=201221
+> Fixes: 20bd1d026aac ("scsi: sd: Keep disk read-only when re-reading partition")
+> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+> 
+> ---
+> 
+> v2:
+> 	- Track user read-only state in a bitmap
+> 
+> 	- Work around the regression that caused us to drop user
+> 	  preferences on revalidate
+> ---
+>  block/genhd.c             | 22 +++++++++++++++++-----
+>  block/ioctl.c             |  4 ++++
+>  block/partition-generic.c |  2 +-
+>  drivers/scsi/sd.c         |  4 +---
+>  include/linux/genhd.h     |  2 ++
+>  5 files changed, 25 insertions(+), 9 deletions(-)
+> 
+> diff --git a/block/genhd.c b/block/genhd.c
+> index 1dd8fd6613b8..34667eb1d3cc 100644
+> --- a/block/genhd.c
+> +++ b/block/genhd.c
+> @@ -1544,19 +1544,31 @@ void set_device_ro(struct block_device *bdev, int flag)
+>  
+>  EXPORT_SYMBOL(set_device_ro);
+>  
+> +bool get_user_ro(struct gendisk *disk, unsigned int partno)
+> +{
+> +	/* Is the user read-only bit set for the whole disk device? */
+> +	if (test_bit(0, disk->user_ro_bitmap))
+> +		return true;
+> +
+> +	/* Is the user read-only bit set for this particular partition? */
+> +	if (test_bit(partno, disk->user_ro_bitmap))
+> +		return true;
+> +
+> +	return false;
+> +}
+> +EXPORT_SYMBOL(get_user_ro);
+
+No need to export this function.
+
+> +	p->policy = get_user_ro(disk, partno) ?: get_disk_ro(disk);
+
+Can we avoid the obsfucating non-standard (GNU extension) use of ?: here?
+Just use a local variable and a good old if.
