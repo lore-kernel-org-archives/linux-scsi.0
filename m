@@ -1,210 +1,117 @@
 From: Yue Haibing <yuehaibing@huawei.com>
-Subject: [PATCH -next] scsi: megaraid_sas: Remove a bunch of set but not used variables
-Date: Fri, 22 Feb 2019 09:58:58 +0800
-Message-ID: <20190222015858.9744-1-yuehaibing@huawei.com>
+Subject: [PATCH] scsi: qedi: Fix global-out-of-bounds bug in qedi dbg function
+Date: Fri, 22 Feb 2019 11:39:13 +0800
+Message-ID: <20190222033913.12480-1-yuehaibing@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: shivasharan.srikanteshwara@broadcom.com, jejb@linux.ibm.com, martin.petersen@oracle.com, sumit.saxena@broadcom.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, megaraidlinux.pdl@broadcom.com, YueHaibing <yuehaibing@huawei.com>
+To: QLogic-Storage-Upstream@cavium.com, jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, YueHaibing <yuehaibing@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
 From: YueHaibing <yuehaibing@huawei.com>
 
-Fixes gcc '-Wunused-but-set-variable' warning:
+KASAN report this:
 
-drivers/scsi/megaraid/megaraid_sas_fusion.c: In function 'wait_and_poll':
-drivers/scsi/megaraid/megaraid_sas_fusion.c:936:25: warning:
- variable 'fusion' set but not used [-Wunused-but-set-variable]
+BUG: KASAN: global-out-of-bounds in qedi_dbg_err+0xda/0x330 [qedi]
+Read of size 31 at addr ffffffffc12b0ae0 by task syz-executor.0/2429
 
-drivers/scsi/megaraid/megaraid_sas_fusion.c: In function 'megasas_sync_map_info':
-drivers/scsi/megaraid/megaraid_sas_fusion.c:1329:6: warning:
- variable 'size_sync_info' set but not used [-Wunused-but-set-variable]
+CPU: 0 PID: 2429 Comm: syz-executor.0 Not tainted 5.0.0-rc7+ #45
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.10.2-1ubuntu1 04/01/2014
+Call Trace:
+ __dump_stack lib/dump_stack.c:77 [inline]
+ dump_stack+0xfa/0x1ce lib/dump_stack.c:113
+ print_address_description+0x1c4/0x270 mm/kasan/report.c:187
+ kasan_report+0x149/0x18d mm/kasan/report.c:317
+ memcpy+0x1f/0x50 mm/kasan/common.c:130
+ qedi_dbg_err+0xda/0x330 [qedi]
+ ? 0xffffffffc12d0000
+ qedi_init+0x118/0x1000 [qedi]
+ ? 0xffffffffc12d0000
+ ? 0xffffffffc12d0000
+ ? 0xffffffffc12d0000
+ do_one_initcall+0xfa/0x5ca init/main.c:887
+ do_init_module+0x204/0x5f6 kernel/module.c:3460
+ load_module+0x66b2/0x8570 kernel/module.c:3808
+ __do_sys_finit_module+0x238/0x2a0 kernel/module.c:3902
+ do_syscall_64+0x147/0x600 arch/x86/entry/common.c:290
+ entry_SYSCALL_64_after_hwframe+0x49/0xbe
+RIP: 0033:0x462e99
+Code: f7 d8 64 89 02 b8 ff ff ff ff c3 66 0f 1f 44 00 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 bc ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007f2d57e55c58 EFLAGS: 00000246 ORIG_RAX: 0000000000000139
+RAX: ffffffffffffffda RBX: 000000000073bfa0 RCX: 0000000000462e99
+RDX: 0000000000000000 RSI: 00000000200003c0 RDI: 0000000000000003
+RBP: 00007f2d57e55c70 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 00007f2d57e566bc
+R13: 00000000004bcefb R14: 00000000006f7030 R15: 0000000000000004
 
-drivers/scsi/megaraid/megaraid_sas_fusion.c: In function 'megasas_init_adapter_fusion':
-drivers/scsi/megaraid/megaraid_sas_fusion.c:1639:39: warning:
- variable 'reg_set' set but not used [-Wunused-but-set-variable]
+The buggy address belongs to the variable:
+ __func__.67584+0x0/0xffffffffffffd520 [qedi]
 
-drivers/scsi/megaraid/megaraid_sas_fusion.c: In function 'megasas_is_prp_possible':
-drivers/scsi/megaraid/megaraid_sas_fusion.c:1925:25: warning:
- variable 'fusion' set but not used [-Wunused-but-set-variable]
+Memory state around the buggy address:
+ ffffffffc12b0980: fa fa fa fa 00 04 fa fa fa fa fa fa 00 00 05 fa
+ ffffffffc12b0a00: fa fa fa fa 00 00 04 fa fa fa fa fa 00 05 fa fa
+>ffffffffc12b0a80: fa fa fa fa 00 06 fa fa fa fa fa fa 00 02 fa fa
+                                                          ^
+ ffffffffc12b0b00: fa fa fa fa 00 00 04 fa fa fa fa fa 00 00 03 fa
+ ffffffffc12b0b80: fa fa fa fa 00 00 02 fa fa fa fa fa 00 00 04 fa
 
-drivers/scsi/megaraid/megaraid_sas_fusion.c: In function 'megasas_make_prp_nvme':
-drivers/scsi/megaraid/megaraid_sas_fusion.c:2047:25: warning:
- variable 'fusion' set but not used [-Wunused-but-set-variable]
+qedi_dbg_err function does not check the length of caller's name,
+blindly copy 31 characters to array 'nfunc', then print it to log,
+which trigger global-out-of-bounds bug and may leak kernel info.
+Also other qedi dbg function may have the same issue, this patch
+fix this.
 
-drivers/scsi/megaraid/megaraid_sas_fusion.c: In function 'megasas_build_ldio_fusion':
-drivers/scsi/megaraid/megaraid_sas_fusion.c:2620:42: warning:
- variable 'req_desc' set but not used [-Wunused-but-set-variable]
-
-drivers/scsi/megaraid/megaraid_sas_fusion.c: In function 'megasas_build_and_issue_cmd_fusion':
-drivers/scsi/megaraid/megaraid_sas_fusion.c:3245:25: warning:
- variable 'fusion' set but not used [-Wunused-but-set-variable]
-
-drivers/scsi/megaraid/megaraid_sas_fusion.c: In function 'megasas_task_abort_fusion':
-drivers/scsi/megaraid/megaraid_sas_fusion.c:4398:25: warning:
- variable 'fusion' set but not used [-Wunused-but-set-variable]
-
-drivers/scsi/megaraid/megaraid_sas_fusion.c: In function 'megasas_reset_target_fusion':
-drivers/scsi/megaraid/megaraid_sas_fusion.c:4484:25: warning:
- variable 'fusion' set but not used [-Wunused-but-set-variable]
-
-They're not used anymore and can be removed.
-
+Fixes: ace7f46ba5fd ("scsi: qedi: Add QLogic FastLinQ offload iSCSI driver framework.")
 Signed-off-by: YueHaibing <yuehaibing@huawei.com>
 ---
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 26 --------------------------
- 1 file changed, 26 deletions(-)
+ drivers/scsi/qedi/qedi_dbg.c | 12 ++++--------
+ 1 file changed, 4 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index fd44e00..1d17128 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -937,11 +937,9 @@ wait_and_poll(struct megasas_instance *instance, struct megasas_cmd *cmd,
- {
- 	int i;
- 	struct megasas_header *frame_hdr = &cmd->frame->hdr;
--	struct fusion_context *fusion;
+diff --git a/drivers/scsi/qedi/qedi_dbg.c b/drivers/scsi/qedi/qedi_dbg.c
+index 8fd28b0..cce44b9 100644
+--- a/drivers/scsi/qedi/qedi_dbg.c
++++ b/drivers/scsi/qedi/qedi_dbg.c
+@@ -18,8 +18,7 @@ qedi_dbg_err(struct qedi_dbg_ctx *qedi, const char *func, u32 line,
+ 	struct va_format vaf;
+ 	char nfunc[32];
  
- 	u32 msecs = seconds * 1000;
+-	memset(nfunc, 0, sizeof(nfunc));
+-	memcpy(nfunc, func, sizeof(nfunc) - 1);
++	snprintf(nfunc, sizeof(nfunc), "%s", func);
  
--	fusion = instance->ctrl_context;
- 	/*
- 	 * Wait for cmd_status to change
- 	 */
-@@ -1331,7 +1329,6 @@ megasas_sync_map_info(struct megasas_instance *instance)
- 	struct megasas_cmd *cmd;
- 	struct megasas_dcmd_frame *dcmd;
- 	u16 num_lds;
--	u32 size_sync_info;
- 	struct fusion_context *fusion;
- 	struct MR_LD_TARGET_SYNC *ci = NULL;
- 	struct MR_DRV_RAID_MAP_ALL *map;
-@@ -1360,8 +1357,6 @@ megasas_sync_map_info(struct megasas_instance *instance)
+ 	va_start(va, fmt);
  
- 	dcmd = &cmd->frame->dcmd;
+@@ -43,8 +42,7 @@ qedi_dbg_warn(struct qedi_dbg_ctx *qedi, const char *func, u32 line,
+ 	struct va_format vaf;
+ 	char nfunc[32];
  
--	size_sync_info = sizeof(struct MR_LD_TARGET_SYNC) *num_lds;
--
- 	memset(dcmd->mbox.b, 0, MFI_MBOX_SIZE);
+-	memset(nfunc, 0, sizeof(nfunc));
+-	memcpy(nfunc, func, sizeof(nfunc) - 1);
++	snprintf(nfunc, sizeof(nfunc), "%s", func);
  
- 	ci = (struct MR_LD_TARGET_SYNC *)
-@@ -1640,15 +1635,12 @@ static inline void megasas_free_ioc_init_cmd(struct megasas_instance *instance)
- u32
- megasas_init_adapter_fusion(struct megasas_instance *instance)
- {
--	struct megasas_register_set __iomem *reg_set;
- 	struct fusion_context *fusion;
- 	u32 scratch_pad_1;
- 	int i = 0, count;
+ 	va_start(va, fmt);
  
- 	fusion = instance->ctrl_context;
+@@ -72,8 +70,7 @@ qedi_dbg_notice(struct qedi_dbg_ctx *qedi, const char *func, u32 line,
+ 	struct va_format vaf;
+ 	char nfunc[32];
  
--	reg_set = instance->reg_set;
--
- 	megasas_fusion_update_can_queue(instance, PROBE_CONTEXT);
+-	memset(nfunc, 0, sizeof(nfunc));
+-	memcpy(nfunc, func, sizeof(nfunc) - 1);
++	snprintf(nfunc, sizeof(nfunc), "%s", func);
  
- 	/*
-@@ -1927,7 +1919,6 @@ static bool
- megasas_is_prp_possible(struct megasas_instance *instance,
- 			struct scsi_cmnd *scmd, int sge_count)
- {
--	struct fusion_context *fusion;
- 	int i;
- 	u32 data_length = 0;
- 	struct scatterlist *sg_scmd;
-@@ -1936,7 +1927,6 @@ megasas_is_prp_possible(struct megasas_instance *instance,
+ 	va_start(va, fmt);
  
- 	mr_nvme_pg_size = max_t(u32, instance->nvme_page_size,
- 				MR_DEFAULT_NVME_PAGE_SIZE);
--	fusion = instance->ctrl_context;
- 	data_length = scsi_bufflen(scmd);
- 	sg_scmd = scsi_sglist(scmd);
+@@ -102,8 +99,7 @@ qedi_dbg_info(struct qedi_dbg_ctx *qedi, const char *func, u32 line,
+ 	struct va_format vaf;
+ 	char nfunc[32];
  
-@@ -2049,12 +2039,9 @@ megasas_make_prp_nvme(struct megasas_instance *instance, struct scsi_cmnd *scmd,
- 	u32 first_prp_len;
- 	bool build_prp = false;
- 	int data_len = scsi_bufflen(scmd);
--	struct fusion_context *fusion;
- 	u32 mr_nvme_pg_size = max_t(u32, instance->nvme_page_size,
- 					MR_DEFAULT_NVME_PAGE_SIZE);
+-	memset(nfunc, 0, sizeof(nfunc));
+-	memcpy(nfunc, func, sizeof(nfunc) - 1);
++	snprintf(nfunc, sizeof(nfunc), "%s", func);
  
--	fusion = instance->ctrl_context;
--
- 	build_prp = megasas_is_prp_possible(instance, scmd, sge_count);
+ 	va_start(va, fmt);
  
- 	if (!build_prp)
-@@ -2622,7 +2609,6 @@ megasas_build_ldio_fusion(struct megasas_instance *instance,
- 	u32 start_lba_lo, start_lba_hi, device_id, datalength = 0;
- 	u32 scsi_buff_len;
- 	struct MPI2_RAID_SCSI_IO_REQUEST *io_request;
--	union MEGASAS_REQUEST_DESCRIPTOR_UNION *req_desc;
- 	struct IO_REQUEST_INFO io_info;
- 	struct fusion_context *fusion;
- 	struct MR_DRV_RAID_MAP_ALL *local_map_ptr;
-@@ -2645,8 +2631,6 @@ megasas_build_ldio_fusion(struct megasas_instance *instance,
- 	rctx->status = 0;
- 	rctx->ex_status = 0;
- 
--	req_desc = (union MEGASAS_REQUEST_DESCRIPTOR_UNION *)cmd->request_desc;
--
- 	start_lba_lo = 0;
- 	start_lba_hi = 0;
- 	fp_possible = false;
-@@ -3247,9 +3231,6 @@ megasas_build_and_issue_cmd_fusion(struct megasas_instance *instance,
- 	struct megasas_cmd_fusion *cmd, *r1_cmd = NULL;
- 	union MEGASAS_REQUEST_DESCRIPTOR_UNION *req_desc;
- 	u32 index;
--	struct fusion_context *fusion;
--
--	fusion = instance->ctrl_context;
- 
- 	if ((megasas_cmd_type(scmd) == READ_WRITE_LDIO) &&
- 		instance->ldio_threshold &&
-@@ -4402,14 +4383,11 @@ int megasas_task_abort_fusion(struct scsi_cmnd *scmd)
- {
- 	struct megasas_instance *instance;
- 	u16 smid, devhandle;
--	struct fusion_context *fusion;
- 	int ret;
- 	struct MR_PRIV_DEVICE *mr_device_priv_data;
- 	mr_device_priv_data = scmd->device->hostdata;
- 
--
- 	instance = (struct megasas_instance *)scmd->device->host->hostdata;
--	fusion = instance->ctrl_context;
- 
- 	scmd_printk(KERN_INFO, scmd, "task abort called for scmd(%p)\n", scmd);
- 	scsi_print_command(scmd);
-@@ -4429,7 +4407,6 @@ int megasas_task_abort_fusion(struct scsi_cmnd *scmd)
- 		goto out;
- 	}
- 
--
- 	if (!mr_device_priv_data->is_tm_capable) {
- 		ret = FAILED;
- 		goto out;
-@@ -4488,12 +4465,10 @@ int megasas_reset_target_fusion(struct scsi_cmnd *scmd)
- 	struct megasas_instance *instance;
- 	int ret = FAILED;
- 	u16 devhandle;
--	struct fusion_context *fusion;
- 	struct MR_PRIV_DEVICE *mr_device_priv_data;
- 	mr_device_priv_data = scmd->device->hostdata;
- 
- 	instance = (struct megasas_instance *)scmd->device->host->hostdata;
--	fusion = instance->ctrl_context;
- 
- 	sdev_printk(KERN_INFO, scmd->device,
- 		    "target reset called for scmd(%p)\n", scmd);
-@@ -4513,7 +4488,6 @@ int megasas_reset_target_fusion(struct scsi_cmnd *scmd)
- 		goto out;
- 	}
- 
--
- 	if (!mr_device_priv_data->is_tm_capable) {
- 		ret = FAILED;
- 		goto out;
 -- 
 2.7.0
