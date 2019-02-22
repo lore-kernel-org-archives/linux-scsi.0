@@ -1,37 +1,100 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2] scsi: sd: Optimal I/O size should be a multiple of
- physical block size
-Date: Fri, 22 Feb 2019 06:30:44 -0800
-Message-ID: <20190222143044.GB17324@infradead.org>
-References: <20190212080409.GB10547@infradead.org>
- <20190212212105.17522-1-martin.petersen@oracle.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <stable-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20190212212105.17522-1-martin.petersen@oracle.com>
-Sender: stable-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, stable@vger.kernel.org
+From: Lee Duncan <leeman.duncan@gmail.com>
+Subject: [RESEND] [PATCH] Hold back_lock when calling iscsi_complete_task
+Date: Fri, 22 Feb 2019 08:29:47 -0800
+Message-ID: <20190222162947.25178-1-leeman.duncan@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, cleech@redhat.com
+Cc: hare@suse.de, Lee Duncan <lduncan@suse.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Feb 12, 2019 at 04:21:05PM -0500, Martin K. Petersen wrote:
-> It was reported that some devices report an OPTIMAL TRANSFER LENGTH of
-> 0xFFFF blocks. That looks bogus, especially for a device with a
-> 4096-byte physical block size.
-> 
-> Ignore OPTIMAL TRANSFER LENGTH if it is not a multiple of the device's
-> reported physical block size.
-> 
-> To make the sanity checking conditionals more readable--and to
-> facilitate printing warnings--relocate the checking to a helper
-> function. No functional change aside from the printks.
-> 
-> Cc: <stable@vger.kernel.org>
-> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=199759
-> Reported-by: Christoph Anton Mitterer <calestyo@scientia.net>
-> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+From: Lee Duncan <lduncan@suse.com>
 
-Looks good,
+If there is an error queueing an iscsi command in
+iscsi_queuecommand(), for example if the transport fails
+to take the command in sessuin->tt->xmit_task(), then
+the error path can call iscsi_complete_task() without
+first aquiring the back_lock as required. This can
+lead to things like ITT pool can get corrupt, resulting
+in duplicate ITTs being sent out.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+The solution is to hold the back_lock around
+iscsi_complete_task() calls, and to add a little commenting
+to help others understand when back_lock must be held.
+---
+ drivers/scsi/libiscsi.c | 22 ++++++++++++++++++++--
+ 1 file changed, 20 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index b8d325ce8754..ef7871e8c6bd 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -838,7 +838,7 @@ EXPORT_SYMBOL_GPL(iscsi_conn_send_pdu);
+  * @datalen: len of buffer
+  *
+  * iscsi_cmd_rsp sets up the scsi_cmnd fields based on the PDU and
+- * then completes the command and task.
++ * then completes the command and task. called under back_lock
+  **/
+ static void iscsi_scsi_cmd_rsp(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+ 			       struct iscsi_task *task, char *data,
+@@ -941,6 +941,9 @@ static void iscsi_scsi_cmd_rsp(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+  * @conn: iscsi connection
+  * @hdr:  iscsi pdu
+  * @task: scsi command task
++ *
++ * iscsi_data_in_rsp sets up the scsi_cmnd fields based on the data received
++ * then completes the command and task. called under back_lock
+  **/
+ static void
+ iscsi_data_in_rsp(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+@@ -1025,6 +1028,16 @@ static int iscsi_send_nopout(struct iscsi_conn *conn, struct iscsi_nopin *rhdr)
+ 	return 0;
+ }
+ 
++/**
++ * iscsi_nop_out_rsp - SCSI NOP Response processing
++ * @task: scsi command task
++ * @nop: the nop structure
++ * @data: where to put the data
++ * @datalen: length of data
++ *
++ * iscsi_nop_out_rsp handles nop response from use or
++ * from user space. called under back_lock
++ **/
+ static int iscsi_nop_out_rsp(struct iscsi_task *task,
+ 			     struct iscsi_nopin *nop, char *data, int datalen)
+ {
+@@ -1791,7 +1804,9 @@ int iscsi_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *sc)
+ 	return 0;
+ 
+ prepd_reject:
++	spin_lock_bh(&session->back_lock);
+ 	iscsi_complete_task(task, ISCSI_TASK_REQUEUE_SCSIQ);
++	spin_unlock_bh(&session->back_lock);
+ reject:
+ 	spin_unlock_bh(&session->frwd_lock);
+ 	ISCSI_DBG_SESSION(session, "cmd 0x%x rejected (%d)\n",
+@@ -1799,7 +1814,9 @@ int iscsi_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *sc)
+ 	return SCSI_MLQUEUE_TARGET_BUSY;
+ 
+ prepd_fault:
++	spin_lock_bh(&session->back_lock);
+ 	iscsi_complete_task(task, ISCSI_TASK_REQUEUE_SCSIQ);
++	spin_unlock_bh(&session->back_lock);
+ fault:
+ 	spin_unlock_bh(&session->frwd_lock);
+ 	ISCSI_DBG_SESSION(session, "iscsi: cmd 0x%x is not queued (%d)\n",
+@@ -3121,8 +3138,9 @@ fail_mgmt_tasks(struct iscsi_session *session, struct iscsi_conn *conn)
+ 		state = ISCSI_TASK_ABRT_SESS_RECOV;
+ 		if (task->state == ISCSI_TASK_PENDING)
+ 			state = ISCSI_TASK_COMPLETED;
++		spin_lock_bh(&session->back_lock);
+ 		iscsi_complete_task(task, state);
+-
++		spin_unlock_bh(&session->back_lock);
+ 	}
+ }
+ 
+-- 
+2.16.4
