@@ -1,12 +1,12 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 3.18 12/18] scsi: libfc: free skb when receiving invalid flogi resp
-Date: Sat, 23 Feb 2019 16:11:29 -0500
-Message-ID: <20190223211135.203082-12-sashal@kernel.org>
-References: <20190223211135.203082-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 22/32] scsi: libfc: free skb when receiving invalid flogi resp
+Date: Sat, 23 Feb 2019 16:09:41 -0500
+Message-ID: <20190223210951.202268-22-sashal@kernel.org>
+References: <20190223210951.202268-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190223211135.203082-1-sashal@kernel.org>
+In-Reply-To: <20190223210951.202268-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc: Ming Lu <ming.lu@citrix.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
@@ -33,10 +33,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
-index e01a29863c384..867fc036d6ef5 100644
+index 50c71678a156e..ae93f45f9cd8d 100644
 --- a/drivers/scsi/libfc/fc_lport.c
 +++ b/drivers/scsi/libfc/fc_lport.c
-@@ -1739,14 +1739,14 @@ void fc_lport_flogi_resp(struct fc_seq *sp, struct fc_frame *fp,
+@@ -1736,14 +1736,14 @@ void fc_lport_flogi_resp(struct fc_seq *sp, struct fc_frame *fp,
  	    fc_frame_payload_op(fp) != ELS_LS_ACC) {
  		FC_LPORT_DBG(lport, "FLOGI not accepted or bad response\n");
  		fc_lport_error(lport, fp);
@@ -53,7 +53,7 @@ index e01a29863c384..867fc036d6ef5 100644
  	}
  
  	mfs = ntohs(flp->fl_csp.sp_bb_data) &
-@@ -1756,7 +1756,7 @@ void fc_lport_flogi_resp(struct fc_seq *sp, struct fc_frame *fp,
+@@ -1753,7 +1753,7 @@ void fc_lport_flogi_resp(struct fc_seq *sp, struct fc_frame *fp,
  		FC_LPORT_DBG(lport, "FLOGI bad mfs:%hu response, "
  			     "lport->mfs:%hu\n", mfs, lport->mfs);
  		fc_lport_error(lport, fp);
