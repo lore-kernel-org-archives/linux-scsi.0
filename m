@@ -1,121 +1,43 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 5.0-rc7
-Date: Fri, 22 Feb 2019 19:08:00 -0800
-Message-ID: <1550891280.3577.36.camel@HansenPartnership.com>
+From: Marc Gonzalez <marc.w.gonzalez@free.fr>
+Subject: Re: [PATCH v5 0/2] Clean up UFSHC driver
+Date: Sat, 23 Feb 2019 10:39:02 +0100
+Message-ID: <60e5da74-da0d-4ba7-6d29-2ca6008b6ceb@free.fr>
+References: <494cd639-89a7-8868-b63a-ea7cdcba9777@free.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-15
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <494cd639-89a7-8868-b63a-ea7cdcba9777@free.fr>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: Martin Petersen <martin.petersen@oracle.com>
+Cc: SCSI <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Jeffrey Hugo <jhugo@codeaurora.org>, Bjorn Andersson <bjorn.andersson@linaro.org>, Evan Green <evgreen@chromium.org>, Douglas Anderson <dianders@chromium.org>, Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, Pedro Sousa <pedrom.sousa@synopsys.com>, Joao Pinto <jpinto@synopsys.com>, Mark Brown <broonie@kernel.org>, Liam Girdwood <lgirdwood@gmail.com>, Rob Herring <robh+dt@kernel.org>, Bart Van Assche <bart.vanassche@wdc.com>, Stanislav Nijnikov <stanislav.nijnikov@wdc.com>, Alex Lemberg <alex.lemberg@wdc.com>, Ohad Sharabi <ohad.sharabi@wdc.com>, Venkat Gopalakrishnan <venkatg@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, Ya
 List-Id: linux-scsi@vger.kernel.org
 
-Four small fixes: three in drivers and one in the core.  The core fix
-is also minor in scope since the bug it fixes is only known to affect
-systems using SCSI reservations.  Of the driver bugs, the libsas one is
- the most major because it can lead to multiple disks on the same
-expander not being exposed.
+Martin,
 
-The patch is available here:
+Could you send this series to -next so that it gets some exposure
+and testing during the 5.1 RC cycle?
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+Regards.
 
-The short changelog is:
+On 11/02/2019 14:31, Marc Gonzalez wrote:
 
-Anoob Soman (1):
-      scsi: libiscsi: Fix race between iscsi_xmit_task and iscsi_complete_task
-
-John Garry (1):
-      scsi: libsas: Fix rphy phy_identifier for PHYs with end devices attached
-
-Martin Wilck (1):
-      scsi: core: reset host byte in DID_NEXUS_FAILURE case
-
-Masato Suzuki (1):
-      scsi: sd_zbc: Fix sd_zbc_report_zones() buffer allocation
-
-And the diffstat:
-
- drivers/scsi/libiscsi.c            | 6 ++++++
- drivers/scsi/libsas/sas_expander.c | 2 ++
- drivers/scsi/scsi_lib.c            | 1 +
- drivers/scsi/sd_zbc.c              | 8 +++++---
- 4 files changed, 14 insertions(+), 3 deletions(-)
-
-With full diff below.
-
-James
-
----
-
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index b8d325ce8754..120fc520f27a 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -1459,7 +1459,13 @@ static int iscsi_xmit_task(struct iscsi_conn *conn)
- 	if (test_bit(ISCSI_SUSPEND_BIT, &conn->suspend_tx))
- 		return -ENODATA;
- 
-+	spin_lock_bh(&conn->session->back_lock);
-+	if (conn->task == NULL) {
-+		spin_unlock_bh(&conn->session->back_lock);
-+		return -ENODATA;
-+	}
- 	__iscsi_get_task(task);
-+	spin_unlock_bh(&conn->session->back_lock);
- 	spin_unlock_bh(&conn->session->frwd_lock);
- 	rc = conn->session->tt->xmit_task(task);
- 	spin_lock_bh(&conn->session->frwd_lock);
-diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-index 17eb4185f29d..f21c93bbb35c 100644
---- a/drivers/scsi/libsas/sas_expander.c
-+++ b/drivers/scsi/libsas/sas_expander.c
-@@ -828,6 +828,7 @@ static struct domain_device *sas_ex_discover_end_dev(
- 		rphy = sas_end_device_alloc(phy->port);
- 		if (!rphy)
- 			goto out_free;
-+		rphy->identify.phy_identifier = phy_id;
- 
- 		child->rphy = rphy;
- 		get_device(&rphy->dev);
-@@ -854,6 +855,7 @@ static struct domain_device *sas_ex_discover_end_dev(
- 
- 		child->rphy = rphy;
- 		get_device(&rphy->dev);
-+		rphy->identify.phy_identifier = phy_id;
- 		sas_fill_in_rphy(child, rphy);
- 
- 		list_add_tail(&child->disco_list_node, &parent->port->disco_list);
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 6d65ac584eba..f8d51c3d5582 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -655,6 +655,7 @@ static blk_status_t scsi_result_to_blk_status(struct scsi_cmnd *cmd, int result)
- 		set_host_byte(cmd, DID_OK);
- 		return BLK_STS_TARGET;
- 	case DID_NEXUS_FAILURE:
-+		set_host_byte(cmd, DID_OK);
- 		return BLK_STS_NEXUS;
- 	case DID_ALLOC_FAILURE:
- 		set_host_byte(cmd, DID_OK);
-diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
-index fff86940388b..a340af797a85 100644
---- a/drivers/scsi/sd_zbc.c
-+++ b/drivers/scsi/sd_zbc.c
-@@ -142,10 +142,12 @@ int sd_zbc_report_zones(struct gendisk *disk, sector_t sector,
- 		return -EOPNOTSUPP;
- 
- 	/*
--	 * Get a reply buffer for the number of requested zones plus a header.
--	 * For ATA, buffers must be aligned to 512B.
-+	 * Get a reply buffer for the number of requested zones plus a header,
-+	 * without exceeding the device maximum command size. For ATA disks,
-+	 * buffers must be aligned to 512B.
- 	 */
--	buflen = roundup((nrz + 1) * 64, 512);
-+	buflen = min(queue_max_hw_sectors(disk->queue) << 9,
-+		     roundup((nrz + 1) * 64, 512));
- 	buf = kmalloc(buflen, gfp_mask);
- 	if (!buf)
- 		return -ENOMEM;
+> Casting a wide net to get as many eyeballs on the subject as possible.
+> 
+> I'm splitting this mini series off from the main "UFS on APQ8098/MSM8998"
+> as it's 1) ufs/scsi specific 2) controversial (to my surprise)
+> 
+> Please send all your Reviewed-by: tags if you agree with the patch,
+> and/or voice your concerns ASAP.
+> 
+> This series removes the "disable-VCCQ-power-rail-for-some-Flash-chips" quirk,
+> and cleans up after the dust settles.
+> 
+> Marc Gonzalez (2):
+>   scsi: ufs: Do not disable vccq in UFSHC driver
+>   scsi: ufs: Remove unused device quirks
+> 
+>  drivers/scsi/ufs/ufs.h        |  1 -
+>  drivers/scsi/ufs/ufs_quirks.h | 29 ----------------
+>  drivers/scsi/ufs/ufshcd.c     | 63 +++--------------------------------
+>  3 files changed, 4 insertions(+), 89 deletions(-)
