@@ -1,24 +1,61 @@
-From: pr-tracker-bot@kernel.org
-Subject: Re: [GIT PULL] SCSI fixes for 5.0-rc7
-Date: Sat, 23 Feb 2019 19:35:03 +0000
-Message-ID: <155095050312.13236.6480512437158522820.pr-tracker-bot@kernel.org>
-References: <1550891280.3577.36.camel@HansenPartnership.com>
+From: Sasha Levin <sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.20 50/72] scsi: bnx2fc: Fix error handling in probe()
+Date: Sat, 23 Feb 2019 16:04:00 -0500
+Message-ID: <20190223210422.199966-50-sashal@kernel.org>
+References: <20190223210422.199966-1-sashal@kernel.org>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1550891280.3577.36.camel@HansenPartnership.com>
+In-Reply-To: <20190223210422.199966-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc: Dan Carpenter <dan.carpenter@oracle.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-The pull request you sent on Fri, 22 Feb 2019 19:08:00 -0800:
+From: Dan Carpenter <dan.carpenter@oracle.com>
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+[ Upstream commit b2d3492fc591b1fb46b81d79ca1fc44cac6ae0ae ]
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/6089a91fc02e0a4f8962f0df1be236c44248d7ea
+There are two issues here.  First if cmgr->hba is not set early enough then
+it leads to a NULL dereference.  Second if we don't completely initialize
+cmgr->io_bdt_pool[] then we end up dereferencing uninitialized pointers.
 
-Thank you!
+Fixes: 853e2bd2103a ("[SCSI] bnx2fc: Broadcom FCoE offload driver")
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/scsi/bnx2fc/bnx2fc_io.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_io.c
+index 350257c13a5ba..bc9f2a2365f4d 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_io.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
+@@ -240,6 +240,7 @@ struct bnx2fc_cmd_mgr *bnx2fc_cmd_mgr_alloc(struct bnx2fc_hba *hba)
+ 		return NULL;
+ 	}
+ 
++	cmgr->hba = hba;
+ 	cmgr->free_list = kcalloc(arr_sz, sizeof(*cmgr->free_list),
+ 				  GFP_KERNEL);
+ 	if (!cmgr->free_list) {
+@@ -256,7 +257,6 @@ struct bnx2fc_cmd_mgr *bnx2fc_cmd_mgr_alloc(struct bnx2fc_hba *hba)
+ 		goto mem_err;
+ 	}
+ 
+-	cmgr->hba = hba;
+ 	cmgr->cmds = (struct bnx2fc_cmd **)(cmgr + 1);
+ 
+ 	for (i = 0; i < arr_sz; i++)  {
+@@ -295,7 +295,7 @@ struct bnx2fc_cmd_mgr *bnx2fc_cmd_mgr_alloc(struct bnx2fc_hba *hba)
+ 
+ 	/* Allocate pool of io_bdts - one for each bnx2fc_cmd */
+ 	mem_size = num_ios * sizeof(struct io_bdt *);
+-	cmgr->io_bdt_pool = kmalloc(mem_size, GFP_KERNEL);
++	cmgr->io_bdt_pool = kzalloc(mem_size, GFP_KERNEL);
+ 	if (!cmgr->io_bdt_pool) {
+ 		printk(KERN_ERR PFX "failed to alloc io_bdt_pool\n");
+ 		goto mem_err;
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.wiki.kernel.org/userdoc/prtracker
+2.19.1
