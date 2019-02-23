@@ -1,7 +1,7 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.19 47/65] scsi: 53c700: pass correct "dev" to dma_alloc_attrs()
-Date: Sat, 23 Feb 2019 16:06:22 -0500
-Message-ID: <20190223210640.200911-47-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 46/65] scsi: bnx2fc: Fix error handling in probe()
+Date: Sat, 23 Feb 2019 16:06:21 -0500
+Message-ID: <20190223210640.200911-46-sashal@kernel.org>
 References: <20190223210640.200911-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -14,33 +14,48 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Dan Carpenter <dan.carpenter@oracle.com>
 
-[ Upstream commit 8437fcf14deed67e5ad90b5e8abf62fb20f30881 ]
+[ Upstream commit b2d3492fc591b1fb46b81d79ca1fc44cac6ae0ae ]
 
-The "hostdata->dev" pointer is NULL here.  We set "hostdata->dev = dev;"
-later in the function and we also use "hostdata->dev" when we call
-dma_free_attrs() in NCR_700_release().
+There are two issues here.  First if cmgr->hba is not set early enough then
+it leads to a NULL dereference.  Second if we don't completely initialize
+cmgr->io_bdt_pool[] then we end up dereferencing uninitialized pointers.
 
-This bug predates git version control.
-
+Fixes: 853e2bd2103a ("[SCSI] bnx2fc: Broadcom FCoE offload driver")
 Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/53c700.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/bnx2fc/bnx2fc_io.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/53c700.c b/drivers/scsi/53c700.c
-index 6be77b3aa8a5f..ac79f2088b316 100644
---- a/drivers/scsi/53c700.c
-+++ b/drivers/scsi/53c700.c
-@@ -295,7 +295,7 @@ NCR_700_detect(struct scsi_host_template *tpnt,
- 	if(tpnt->sdev_attrs == NULL)
- 		tpnt->sdev_attrs = NCR_700_dev_attrs;
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_io.c
+index 350257c13a5ba..bc9f2a2365f4d 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_io.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
+@@ -240,6 +240,7 @@ struct bnx2fc_cmd_mgr *bnx2fc_cmd_mgr_alloc(struct bnx2fc_hba *hba)
+ 		return NULL;
+ 	}
  
--	memory = dma_alloc_attrs(hostdata->dev, TOTAL_MEM_SIZE, &pScript,
-+	memory = dma_alloc_attrs(dev, TOTAL_MEM_SIZE, &pScript,
- 				 GFP_KERNEL, DMA_ATTR_NON_CONSISTENT);
- 	if(memory == NULL) {
- 		printk(KERN_ERR "53c700: Failed to allocate memory for driver, detaching\n");
++	cmgr->hba = hba;
+ 	cmgr->free_list = kcalloc(arr_sz, sizeof(*cmgr->free_list),
+ 				  GFP_KERNEL);
+ 	if (!cmgr->free_list) {
+@@ -256,7 +257,6 @@ struct bnx2fc_cmd_mgr *bnx2fc_cmd_mgr_alloc(struct bnx2fc_hba *hba)
+ 		goto mem_err;
+ 	}
+ 
+-	cmgr->hba = hba;
+ 	cmgr->cmds = (struct bnx2fc_cmd **)(cmgr + 1);
+ 
+ 	for (i = 0; i < arr_sz; i++)  {
+@@ -295,7 +295,7 @@ struct bnx2fc_cmd_mgr *bnx2fc_cmd_mgr_alloc(struct bnx2fc_hba *hba)
+ 
+ 	/* Allocate pool of io_bdts - one for each bnx2fc_cmd */
+ 	mem_size = num_ios * sizeof(struct io_bdt *);
+-	cmgr->io_bdt_pool = kmalloc(mem_size, GFP_KERNEL);
++	cmgr->io_bdt_pool = kzalloc(mem_size, GFP_KERNEL);
+ 	if (!cmgr->io_bdt_pool) {
+ 		printk(KERN_ERR PFX "failed to alloc io_bdt_pool\n");
+ 		goto mem_err;
 -- 
 2.19.1
