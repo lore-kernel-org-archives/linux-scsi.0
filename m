@@ -1,43 +1,24 @@
-From: Marc Gonzalez <marc.w.gonzalez@free.fr>
-Subject: Re: [PATCH v5 0/2] Clean up UFSHC driver
-Date: Sat, 23 Feb 2019 10:39:02 +0100
-Message-ID: <60e5da74-da0d-4ba7-6d29-2ca6008b6ceb@free.fr>
-References: <494cd639-89a7-8868-b63a-ea7cdcba9777@free.fr>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: 7bit
+From: pr-tracker-bot@kernel.org
+Subject: Re: [GIT PULL] SCSI fixes for 5.0-rc7
+Date: Sat, 23 Feb 2019 19:35:03 +0000
+Message-ID: <155095050312.13236.6480512437158522820.pr-tracker-bot@kernel.org>
+References: <1550891280.3577.36.camel@HansenPartnership.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <494cd639-89a7-8868-b63a-ea7cdcba9777@free.fr>
+In-Reply-To: <1550891280.3577.36.camel@HansenPartnership.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Martin Petersen <martin.petersen@oracle.com>
-Cc: SCSI <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Jeffrey Hugo <jhugo@codeaurora.org>, Bjorn Andersson <bjorn.andersson@linaro.org>, Evan Green <evgreen@chromium.org>, Douglas Anderson <dianders@chromium.org>, Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, Pedro Sousa <pedrom.sousa@synopsys.com>, Joao Pinto <jpinto@synopsys.com>, Mark Brown <broonie@kernel.org>, Liam Girdwood <lgirdwood@gmail.com>, Rob Herring <robh+dt@kernel.org>, Bart Van Assche <bart.vanassche@wdc.com>, Stanislav Nijnikov <stanislav.nijnikov@wdc.com>, Alex Lemberg <alex.lemberg@wdc.com>, Ohad Sharabi <ohad.sharabi@wdc.com>, Venkat Gopalakrishnan <venkatg@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, Ya
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Martin,
+The pull request you sent on Fri, 22 Feb 2019 19:08:00 -0800:
 
-Could you send this series to -next so that it gets some exposure
-and testing during the 5.1 RC cycle?
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-Regards.
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/6089a91fc02e0a4f8962f0df1be236c44248d7ea
 
-On 11/02/2019 14:31, Marc Gonzalez wrote:
+Thank you!
 
-> Casting a wide net to get as many eyeballs on the subject as possible.
-> 
-> I'm splitting this mini series off from the main "UFS on APQ8098/MSM8998"
-> as it's 1) ufs/scsi specific 2) controversial (to my surprise)
-> 
-> Please send all your Reviewed-by: tags if you agree with the patch,
-> and/or voice your concerns ASAP.
-> 
-> This series removes the "disable-VCCQ-power-rail-for-some-Flash-chips" quirk,
-> and cleans up after the dust settles.
-> 
-> Marc Gonzalez (2):
->   scsi: ufs: Do not disable vccq in UFSHC driver
->   scsi: ufs: Remove unused device quirks
-> 
->  drivers/scsi/ufs/ufs.h        |  1 -
->  drivers/scsi/ufs/ufs_quirks.h | 29 ----------------
->  drivers/scsi/ufs/ufshcd.c     | 63 +++--------------------------------
->  3 files changed, 4 insertions(+), 89 deletions(-)
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.wiki.kernel.org/userdoc/prtracker
