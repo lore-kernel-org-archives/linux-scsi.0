@@ -1,12 +1,12 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.20 49/72] scsi: scsi_debug: fix write_same with virtual_gb problem
-Date: Sat, 23 Feb 2019 16:03:59 -0500
-Message-ID: <20190223210422.199966-49-sashal@kernel.org>
-References: <20190223210422.199966-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 45/65] scsi: scsi_debug: fix write_same with virtual_gb problem
+Date: Sat, 23 Feb 2019 16:06:20 -0500
+Message-ID: <20190223210640.200911-45-sashal@kernel.org>
+References: <20190223210640.200911-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190223210422.199966-1-sashal@kernel.org>
+In-Reply-To: <20190223210640.200911-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc: Douglas Gilbert <dgilbert@interlog.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
