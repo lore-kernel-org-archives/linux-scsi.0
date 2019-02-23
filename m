@@ -1,13 +1,13 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.4 17/26] scsi: libfc: free skb when receiving invalid flogi resp
-Date: Sat, 23 Feb 2019 16:10:38 -0500
-Message-ID: <20190223211047.202725-17-sashal@kernel.org>
-References: <20190223211047.202725-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 3.18 12/18] scsi: libfc: free skb when receiving invalid flogi resp
+Date: Sat, 23 Feb 2019 16:11:29 -0500
+Message-ID: <20190223211135.203082-12-sashal@kernel.org>
+References: <20190223211135.203082-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20190223211047.202725-1-sashal@kernel.org>
-Sender: stable-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190223211135.203082-1-sashal@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc: Ming Lu <ming.lu@citrix.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
