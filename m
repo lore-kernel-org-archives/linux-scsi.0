@@ -1,8 +1,7 @@
 From: <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH v2 6/6] scsi: ufs-mediatek: Add UFS support for Mediatek SoC
- chips
-Date: Mon, 25 Feb 2019 17:24:15 +0800
-Message-ID: <1551086655-5029-8-git-send-email-stanley.chu@mediatek.com>
+Subject: [PATCH v2 5/6] phy: mediatek: Add UFS M-PHY driver
+Date: Mon, 25 Feb 2019 17:24:14 +0800
+Message-ID: <1551086655-5029-7-git-send-email-stanley.chu@mediatek.com>
 References: <1551086655-5029-1-git-send-email-stanley.chu@mediatek.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -24,64 +23,86 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
 
-This patch adds UFS support for Mediatek SoC chips.
+Add UFS M-PHY driver on Mediatek chipsets.
 
 Signed-off-by: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
 ---
- drivers/scsi/ufs/Kconfig        |  14 ++
- drivers/scsi/ufs/Makefile       |   1 +
- drivers/scsi/ufs/ufs-mediatek.c | 377 ++++++++++++++++++++++++++++++++
- drivers/scsi/ufs/ufs-mediatek.h |  61 ++++++
- 4 files changed, 453 insertions(+)
- create mode 100644 drivers/scsi/ufs/ufs-mediatek.c
- create mode 100644 drivers/scsi/ufs/ufs-mediatek.h
+ drivers/phy/mediatek/Kconfig            |  29 ++--
+ drivers/phy/mediatek/Makefile           |   2 +
+ drivers/phy/mediatek/phy-mtk-ufs-12nm.c | 151 +++++++++++++++++++
+ drivers/phy/mediatek/phy-mtk-ufs-12nm.h |  52 +++++++
+ drivers/phy/mediatek/phy-mtk-ufs.c      | 189 ++++++++++++++++++++++++
+ drivers/phy/mediatek/phy-mtk-ufs.h      |  76 ++++++++++
+ 6 files changed, 489 insertions(+), 10 deletions(-)
+ create mode 100644 drivers/phy/mediatek/phy-mtk-ufs-12nm.c
+ create mode 100644 drivers/phy/mediatek/phy-mtk-ufs-12nm.h
+ create mode 100644 drivers/phy/mediatek/phy-mtk-ufs.c
+ create mode 100644 drivers/phy/mediatek/phy-mtk-ufs.h
 
-diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
-index 2ddbb26d9c26..58e5a9c8eb5d 100644
---- a/drivers/scsi/ufs/Kconfig
-+++ b/drivers/scsi/ufs/Kconfig
-@@ -109,6 +109,20 @@ config SCSI_UFS_QCOM
- 	  Select this if you have UFS controller on QCOM chipset.
- 	  If unsure, say N.
- 
-+config SCSI_UFS_MEDIATEK
-+	tristate "Mediatek specific hooks to UFS controller platform driver"
-+	depends on SCSI_UFSHCD_PLATFORM && ARCH_MEDIATEK
-+	select PHY_MTK_UFS
+diff --git a/drivers/phy/mediatek/Kconfig b/drivers/phy/mediatek/Kconfig
+index 8857d00b3c65..38c41836ef46 100644
+--- a/drivers/phy/mediatek/Kconfig
++++ b/drivers/phy/mediatek/Kconfig
+@@ -2,22 +2,31 @@
+ # Phy drivers for Mediatek devices
+ #
+ config PHY_MTK_TPHY
+-    tristate "MediaTek T-PHY Driver"
+-    depends on ARCH_MEDIATEK && OF
+-    select GENERIC_PHY
+-    help
+-      Say 'Y' here to add support for MediaTek T-PHY driver,
+-      it supports multiple usb2.0, usb3.0 ports, PCIe and
++	tristate "MediaTek T-PHY Driver"
++	depends on ARCH_MEDIATEK && OF
++	select GENERIC_PHY
 +	help
-+	  This selects the Mediatek specific additions to UFSHCD platform driver.
-+	  UFS host on Mediatek needs some vendor specific configuration before
-+	  accessing the hardware which includes PHY configuration and vendor
-+	  specific registers.
++	  Say 'Y' here to add support for MediaTek T-PHY driver,
++	  it supports multiple usb2.0, usb3.0 ports, PCIe and
+ 	  SATA, and meanwhile supports two version T-PHY which have
+ 	  different banks layout, the T-PHY with shared banks between
+ 	  multi-ports is first version, otherwise is second veriosn,
+ 	  so you can easily distinguish them by banks layout.
+ 
+ config PHY_MTK_XSPHY
+-    tristate "MediaTek XS-PHY Driver"
+-    depends on ARCH_MEDIATEK && OF
+-    select GENERIC_PHY
+-    help
++	tristate "MediaTek XS-PHY Driver"
++	depends on ARCH_MEDIATEK && OF
++	select GENERIC_PHY
++	help
+ 	  Enable this to support the SuperSpeedPlus XS-PHY transceiver for
+ 	  USB3.1 GEN2 controllers on MediaTek chips. The driver supports
+ 	  multiple USB2.0, USB3.1 GEN2 ports.
 +
-+	  Select this if you have UFS controller on Mediatek chipset.
-+
-+	  If unsure, say N.
-+
- config SCSI_UFS_HISI
- 	tristate "Hisilicon specific hooks to UFS controller platform driver"
- 	depends on (ARCH_HISI || COMPILE_TEST) && SCSI_UFSHCD_PLATFORM
-diff --git a/drivers/scsi/ufs/Makefile b/drivers/scsi/ufs/Makefile
-index a3bd70c3652c..2a9097939bcb 100644
---- a/drivers/scsi/ufs/Makefile
-+++ b/drivers/scsi/ufs/Makefile
-@@ -10,3 +10,4 @@ ufshcd-core-$(CONFIG_SCSI_UFS_BSG)	+= ufs_bsg.o
- obj-$(CONFIG_SCSI_UFSHCD_PCI) += ufshcd-pci.o
- obj-$(CONFIG_SCSI_UFSHCD_PLATFORM) += ufshcd-pltfrm.o
- obj-$(CONFIG_SCSI_UFS_HISI) += ufs-hisi.o
-+obj-$(CONFIG_SCSI_UFS_MEDIATEK) += ufs-mediatek.o
-diff --git a/drivers/scsi/ufs/ufs-mediatek.c b/drivers/scsi/ufs/ufs-mediatek.c
++config PHY_MTK_UFS
++	tristate "Mediatek UFS M-PHY driver"
++	depends on ARCH_MEDIATEK && OF
++	select GENERIC_PHY
++	help
++	  Support for UFS M-PHY on MediaTek chipsets. Enable this to provide
++	  vendor-specific initialization, power on and off flow of specified
++	  M-PHYs.
+diff --git a/drivers/phy/mediatek/Makefile b/drivers/phy/mediatek/Makefile
+index ee49edc97ee9..e29b56b29d21 100644
+--- a/drivers/phy/mediatek/Makefile
++++ b/drivers/phy/mediatek/Makefile
+@@ -5,3 +5,5 @@
+ 
+ obj-$(CONFIG_PHY_MTK_TPHY)		+= phy-mtk-tphy.o
+ obj-$(CONFIG_PHY_MTK_XSPHY)		+= phy-mtk-xsphy.o
++obj-$(CONFIG_PHY_MTK_UFS)		+= phy-mtk-ufs.o
++obj-$(CONFIG_PHY_MTK_UFS) 		+= phy-mtk-ufs-12nm.o
+diff --git a/drivers/phy/mediatek/phy-mtk-ufs-12nm.c b/drivers/phy/mediatek/phy-mtk-ufs-12nm.c
 new file mode 100644
-index 000000000000..ce633dff5888
+index 000000000000..7ddcaaceafbd
 --- /dev/null
-+++ b/drivers/scsi/ufs/ufs-mediatek.c
-@@ -0,0 +1,377 @@
++++ b/drivers/phy/mediatek/phy-mtk-ufs-12nm.c
+@@ -0,0 +1,151 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
-+ * Authors:
-+ *	Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-+ *	Peter Wang <peter.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-+ *
 + * Copyright (C) 2019 MediaTek Inc.
 + * This program is free software; you can redistribute it and/or modify
 + * it under the terms of the GNU General Public License version 2 as
@@ -92,373 +113,151 @@ index 000000000000..ce633dff5888
 + * See http://www.gnu.org/licenses/gpl-2.0.html for more details.
 + */
 +
-+#include <linux/of.h>
-+#include <linux/of_address.h>
++#include <linux/clk.h>
++#include <linux/delay.h>
++#include <linux/io.h>
++#include <linux/module.h>
 +#include <linux/phy/phy.h>
 +#include <linux/platform_device.h>
++#include "phy-mtk-ufs.h"
++#include "phy-mtk-ufs-12nm.h"
 +
-+#include "ufshcd.h"
-+#include "ufshcd-pltfrm.h"
-+#include "unipro.h"
-+#include "ufs-mediatek.h"
++#define MPHY_NAME "ufs_phy_mtk_12nm"
 +
-+void ufs_mtk_cfg_unipro_cg(struct ufs_hba *hba, bool enable)
++static void ufs_mtk_phy_12nm_power_on(struct ufs_mtk_phy *phy)
 +{
-+	u32 tmp;
++	/* release DA_MP_PLL_PWR_ON */
++	mphy_set_bit(phy, MP_GLB_DIG_8C, PLL_PWR_ON);
++	mphy_clr_bit(phy, MP_GLB_DIG_8C, FRC_FRC_PWR_ON);
 +
-+	if (enable) {
-+		ufshcd_dme_get(hba,
-+			       UIC_ARG_MIB(VS_SAVEPOWERCONTROL), &tmp);
-+		tmp = tmp |
-+		      (1 << RX_SYMBOL_CLK_GATE_EN) |
-+		      (1 << SYS_CLK_GATE_EN) |
-+		      (1 << TX_CLK_GATE_EN);
-+		ufshcd_dme_set(hba,
-+			       UIC_ARG_MIB(VS_SAVEPOWERCONTROL), tmp);
++	/* release DA_MP_PLL_ISO_EN */
++	mphy_clr_bit(phy, MP_GLB_DIG_8C, PLL_ISO_EN);
++	mphy_clr_bit(phy, MP_GLB_DIG_8C, FRC_PLL_ISO_EN);
 +
-+		ufshcd_dme_get(hba,
-+			       UIC_ARG_MIB(VS_DEBUGCLOCKENABLE), &tmp);
-+		tmp = tmp & ~(1 << TX_SYMBOL_CLK_REQ_FORCE);
-+		ufshcd_dme_set(hba,
-+			       UIC_ARG_MIB(VS_DEBUGCLOCKENABLE), tmp);
-+	} else {
-+		ufshcd_dme_get(hba,
-+			       UIC_ARG_MIB(VS_SAVEPOWERCONTROL), &tmp);
-+		tmp = tmp & ~((1 << RX_SYMBOL_CLK_GATE_EN) |
-+			      (1 << SYS_CLK_GATE_EN) |
-+			      (1 << TX_CLK_GATE_EN));
-+		ufshcd_dme_set(hba,
-+			       UIC_ARG_MIB(VS_SAVEPOWERCONTROL), tmp);
++	/* release DA_MP_CDR_PWR_ON */
++	mphy_set_bit(phy, MP_LN_RX_44, CDR_PWR_ON);
++	mphy_clr_bit(phy, MP_LN_RX_44, FRC_CDR_PWR_ON);
 +
-+		ufshcd_dme_get(hba,
-+			       UIC_ARG_MIB(VS_DEBUGCLOCKENABLE), &tmp);
-+		tmp = tmp | (1 << TX_SYMBOL_CLK_REQ_FORCE);
-+		ufshcd_dme_set(hba,
-+			       UIC_ARG_MIB(VS_DEBUGCLOCKENABLE), tmp);
-+	}
++	/* release DA_MP_CDR_ISO_EN */
++	mphy_clr_bit(phy, MP_LN_RX_44, CDR_ISO_EN);
++	mphy_clr_bit(phy, MP_LN_RX_44, FRC_CDR_ISO_EN);
++
++	/* release DA_MP_RX0_SQ_EN */
++	mphy_set_bit(phy, MP_LN_DIG_RX_AC, RX_SQ_EN);
++	mphy_clr_bit(phy, MP_LN_DIG_RX_AC, FRC_RX_SQ_EN);
++
++	/* delay 1us to wait DIFZ stable */
++	udelay(1);
++
++	/* release DIFZ */
++	mphy_clr_bit(phy, MP_LN_DIG_RX_9C, FSM_DIFZ_FRC);
 +}
 +
-+int ufs_mtk_bind_mphy(struct ufs_hba *hba)
++static void ufs_mtk_phy_12nm_power_off(struct ufs_mtk_phy *phy)
 +{
-+	struct ufs_mtk_host *host = ufshcd_get_variant(hba);
-+	struct device *dev = hba->dev;
++	/* force DIFZ */
++	mphy_set_bit(phy, MP_LN_DIG_RX_9C, FSM_DIFZ_FRC);
++
++	/* force DA_MP_RX0_SQ_EN */
++	mphy_set_bit(phy, MP_LN_DIG_RX_AC, FRC_RX_SQ_EN);
++	mphy_clr_bit(phy, MP_LN_DIG_RX_AC, RX_SQ_EN);
++
++	/* force DA_MP_CDR_ISO_EN */
++	mphy_set_bit(phy, MP_LN_RX_44, FRC_CDR_ISO_EN);
++	mphy_set_bit(phy, MP_LN_RX_44, CDR_ISO_EN);
++
++	/* force DA_MP_CDR_PWR_ON */
++	mphy_set_bit(phy, MP_LN_RX_44, FRC_CDR_PWR_ON);
++	mphy_clr_bit(phy, MP_LN_RX_44, CDR_PWR_ON);
++
++	/* force DA_MP_PLL_ISO_EN */
++	mphy_set_bit(phy, MP_GLB_DIG_8C, FRC_PLL_ISO_EN);
++	mphy_set_bit(phy, MP_GLB_DIG_8C, PLL_ISO_EN);
++
++	/* force DA_MP_PLL_PWR_ON */
++	mphy_set_bit(phy, MP_GLB_DIG_8C, FRC_FRC_PWR_ON);
++	mphy_clr_bit(phy, MP_GLB_DIG_8C, PLL_PWR_ON);
++}
++
++static void ufs_mtk_phy_12nm_power_control(struct ufs_mtk_phy *phy, bool on)
++{
++	if (on)
++		ufs_mtk_phy_12nm_power_on(phy);
++	else
++		ufs_mtk_phy_12nm_power_off(phy);
++}
++
++static const struct phy_ops ufs_mtk_phy_12nm_phy_ops = {
++	.power_on       = ufs_mtk_phy_power_on,
++	.power_off      = ufs_mtk_phy_power_off,
++	.owner          = THIS_MODULE,
++};
++
++static struct ufs_mtk_phy_specific_ops phy_12nm_ops = {
++	.power_control  = ufs_mtk_phy_12nm_power_control,
++};
++
++static int ufs_mtk_phy_12nm_probe(struct platform_device *pdev)
++{
++	struct device *dev = &pdev->dev;
++	struct phy *generic_phy;
++	struct ufs_mtk_phy_12nm *phy;
 +	int err = 0;
 +
-+	host->mphy = devm_phy_get(dev, "ufsphy");
-+
-+	if (host->mphy == ERR_PTR(-EPROBE_DEFER)) {
-+		/*
-+		 * UFS driver might be probed before the phy driver does.
-+		 * In that case we would like to return EPROBE_DEFER code.
-+		 */
-+		err = -EPROBE_DEFER;
-+		dev_info(dev,
-+			 "%s: required phy hasn't probed yet. err = %d\n",
-+			__func__, err);
-+	} else if (IS_ERR(host->mphy)) {
-+		err = PTR_ERR(host->mphy);
-+		dev_info(dev, "%s: PHY get failed %d\n", __func__, err);
-+	}
-+
-+	if (err)
-+		host->mphy = NULL;
-+
-+	return err;
-+}
-+
-+/**
-+ * ufs_mtk_setup_clocks - enables/disable clocks
-+ * @hba: host controller instance
-+ * @on: If true, enable clocks else disable them.
-+ * @status: PRE_CHANGE or POST_CHANGE notify
-+ *
-+ * Returns 0 on success, non-zero on failure.
-+ */
-+static int ufs_mtk_setup_clocks(struct ufs_hba *hba, bool on,
-+				enum ufs_notify_change_status status)
-+{
-+	struct ufs_mtk_host *host = ufshcd_get_variant(hba);
-+	int ret;
-+
-+	/*
-+	 * In case ufs_mtk_init() is not yet done, simply ignore.
-+	 * This ufs_mtk_setup_clocks() shall be called from
-+	 * ufs_mtk_init() after init is done.
-+	 */
-+	if (!host)
-+		return 0;
-+
-+	switch (status) {
-+	case PRE_CHANGE:
-+		if (!on)
-+			ret = phy_power_off(host->mphy);
-+		break;
-+	case POST_CHANGE:
-+		if (on) {
-+			pr_info("%s: phy_power_on\n", __func__);
-+			ret = phy_power_on(host->mphy);
-+		}
-+		break;
-+	default:
-+		ret = -EINVAL;
-+		break;
-+	}
-+
-+	return ret;
-+}
-+
-+/**
-+ * ufs_mtk_init - find other essential mmio bases
-+ * @hba: host controller instance
-+ *
-+ * Binds PHY with controller and powers up PHY enabling clocks
-+ * and regulators.
-+ *
-+ * Returns -EPROBE_DEFER if binding fails, returns negative error
-+ * on phy power up failure and returns zero on success.
-+ */
-+static int ufs_mtk_init(struct ufs_hba *hba)
-+{
-+	struct ufs_mtk_host *host;
-+	struct device *dev = hba->dev;
-+	int err = 0;
-+
-+	host = devm_kzalloc(dev, sizeof(*host), GFP_KERNEL);
-+	if (!host) {
++	phy = devm_kzalloc(dev, sizeof(*phy), GFP_KERNEL);
++	if (!phy) {
 +		err = -ENOMEM;
-+		dev_info(dev, "%s: no memory for mtk ufs host\n", __func__);
 +		goto out;
 +	}
 +
-+	host->hba = hba;
-+	ufshcd_set_variant(hba, host);
++	generic_phy = ufs_mtk_phy_generic_probe(pdev, &phy->common_cfg,
++						&ufs_mtk_phy_12nm_phy_ops,
++						&phy_12nm_ops);
 +
-+	err = ufs_mtk_bind_mphy(hba);
-+	if (err)
-+		goto out_variant_clear;
++	if (!generic_phy) {
++		dev_info(dev, "%s: ufs_mtk_phy_generic_probe() failed\n",
++			 __func__);
++		err = -EIO;
++		goto out;
++	}
 +
-+	/*
-+	 * ufshcd_vops_init() is invoked after
-+	 * ufshcd_setup_clock(true) in ufshcd_hba_init() thus
-+	 * phy clock setup is skipped.
-+	 *
-+	 * Enable phy clocks specifically here.
-+	 */
-+	ufs_mtk_setup_clocks(hba, true, POST_CHANGE);
++	phy_set_drvdata(generic_phy, phy);
 +
-+	goto out;
++	strlcpy(phy->common_cfg.name, MPHY_NAME,
++		sizeof(phy->common_cfg.name));
 +
-+out_variant_clear:
-+	ufshcd_set_variant(hba, NULL);
++	err = ufs_mtk_phy_init_clks(generic_phy, &phy->common_cfg);
++	if (err) {
++		dev_info(dev,
++			 "%s: ufs_mtk_phy_init_clks() failed %d\n",
++			 __func__, err);
++	}
 +out:
 +	return err;
 +}
 +
-+static int ufs_mtk_pre_pwr_change(struct ufs_hba *hba,
-+				  struct ufs_pa_layer_attr *dev_max_params,
-+				  struct ufs_pa_layer_attr *dev_req_params)
-+{
-+	struct ufs_dev_params host_cap;
-+	int ret;
-+
-+	host_cap.tx_lanes = UFS_MTK_LIMIT_NUM_LANES_TX;
-+	host_cap.rx_lanes = UFS_MTK_LIMIT_NUM_LANES_RX;
-+	host_cap.hs_rx_gear = UFS_MTK_LIMIT_HSGEAR_RX;
-+	host_cap.hs_tx_gear = UFS_MTK_LIMIT_HSGEAR_TX;
-+	host_cap.pwm_rx_gear = UFS_MTK_LIMIT_PWMGEAR_RX;
-+	host_cap.pwm_tx_gear = UFS_MTK_LIMIT_PWMGEAR_TX;
-+	host_cap.rx_pwr_pwm = UFS_MTK_LIMIT_RX_PWR_PWM;
-+	host_cap.tx_pwr_pwm = UFS_MTK_LIMIT_TX_PWR_PWM;
-+	host_cap.rx_pwr_hs = UFS_MTK_LIMIT_RX_PWR_HS;
-+	host_cap.tx_pwr_hs = UFS_MTK_LIMIT_TX_PWR_HS;
-+	host_cap.hs_rate = UFS_MTK_LIMIT_HS_RATE;
-+	host_cap.desired_working_mode =
-+				UFS_MTK_LIMIT_DESIRED_MODE;
-+
-+	ret = ufshcd_get_pwr_dev_param(&host_cap,
-+				       dev_max_params,
-+				       dev_req_params);
-+	if (ret) {
-+		pr_info("%s: failed to determine capabilities\n",
-+			__func__);
-+	}
-+
-+	return ret;
-+}
-+
-+static int ufs_mtk_pwr_change_notify(struct ufs_hba *hba,
-+				     enum ufs_notify_change_status stage,
-+				     struct ufs_pa_layer_attr *dev_max_params,
-+				     struct ufs_pa_layer_attr *dev_req_params)
-+{
-+	int ret = 0;
-+
-+	switch (stage) {
-+	case PRE_CHANGE:
-+		ret = ufs_mtk_pre_pwr_change(hba, dev_max_params,
-+					     dev_req_params);
-+		break;
-+	case POST_CHANGE:
-+		break;
-+	default:
-+		ret = -EINVAL;
-+		break;
-+	}
-+
-+	return ret;
-+}
-+
-+static int ufs_mtk_pre_link(struct ufs_hba *hba)
-+{
-+	int ret;
-+	u32 tmp;
-+
-+	/* disable deep stall */
-+	ret = ufshcd_dme_get(hba, UIC_ARG_MIB(VS_SAVEPOWERCONTROL), &tmp);
-+	if (ret)
-+		return ret;
-+
-+	tmp &= ~(1 << 6);
-+
-+	ret = ufshcd_dme_set(hba, UIC_ARG_MIB(VS_SAVEPOWERCONTROL), tmp);
-+
-+	return ret;
-+}
-+
-+static int ufs_mtk_post_link(struct ufs_hba *hba)
-+{
-+	/* disable device LCC */
-+	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_LOCAL_TX_LCC_ENABLE), 0);
-+
-+	/* enable unipro clock gating feature */
-+	ufs_mtk_cfg_unipro_cg(hba, true);
-+
-+	return 0;
-+}
-+
-+static int ufs_mtk_link_startup_notify(struct ufs_hba *hba,
-+				       enum ufs_notify_change_status stage)
-+{
-+	int ret = 0;
-+
-+	switch (stage) {
-+	case PRE_CHANGE:
-+		ret = ufs_mtk_pre_link(hba);
-+		break;
-+	case POST_CHANGE:
-+		ret = ufs_mtk_post_link(hba);
-+		break;
-+	default:
-+		ret = -EINVAL;
-+		break;
-+	}
-+
-+	return ret;
-+}
-+
-+static int ufs_mtk_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
-+{
-+	struct ufs_mtk_host *host = ufshcd_get_variant(hba);
-+
-+	if (ufshcd_is_link_hibern8(hba))
-+		phy_power_off(host->mphy);
-+
-+	return 0;
-+}
-+
-+static int ufs_mtk_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
-+{
-+	struct ufs_mtk_host *host = ufshcd_get_variant(hba);
-+
-+	if (ufshcd_is_link_hibern8(hba))
-+		phy_power_on(host->mphy);
-+
-+	return 0;
-+}
-+
-+/**
-+ * struct ufs_hba_mtk_vops - UFS MTK specific variant operations
-+ *
-+ * The variant operations configure the necessary controller and PHY
-+ * handshake during initialization.
-+ */
-+static struct ufs_hba_variant_ops ufs_hba_mtk_vops = {
-+	.name                = "mediatek.ufshci",
-+	.init                = ufs_mtk_init,
-+	.setup_clocks        = ufs_mtk_setup_clocks,
-+	.link_startup_notify = ufs_mtk_link_startup_notify,
-+	.pwr_change_notify   = ufs_mtk_pwr_change_notify,
-+	.suspend             = ufs_mtk_suspend,
-+	.resume              = ufs_mtk_resume,
-+};
-+
-+/**
-+ * ufs_mtk_probe - probe routine of the driver
-+ * @pdev: pointer to Platform device handle
-+ *
-+ * Return zero for success and non-zero for failure
-+ */
-+static int ufs_mtk_probe(struct platform_device *pdev)
-+{
-+	int err;
-+	struct device *dev = &pdev->dev;
-+
-+	/* perform generic probe */
-+	err = ufshcd_pltfrm_init(pdev, &ufs_hba_mtk_vops);
-+	if (err)
-+		dev_info(dev, "probe failed %d\n", err);
-+
-+	return err;
-+}
-+
-+/**
-+ * ufs_mtk_remove - set driver_data of the device to NULL
-+ * @pdev: pointer to platform device handle
-+ *
-+ * Always return 0
-+ */
-+static int ufs_mtk_remove(struct platform_device *pdev)
-+{
-+	struct ufs_hba *hba =  platform_get_drvdata(pdev);
-+
-+	pm_runtime_get_sync(&(pdev)->dev);
-+	ufshcd_remove(hba);
-+	return 0;
-+}
-+
-+const struct of_device_id ufs_mtk_of_match[] = {
-+	{ .compatible = "mediatek,ufshci"},
++static const struct of_device_id ufs_mtk_phy_12nm_of_match[] = {
++	{.compatible = "mediatek,ufs-mphy-12nm"},
 +	{},
 +};
++MODULE_DEVICE_TABLE(of, ufs_mtk_phy_12nm_of_match);
 +
-+static const struct dev_pm_ops ufs_mtk_pm_ops = {
-+	.suspend         = ufshcd_pltfrm_suspend,
-+	.resume          = ufshcd_pltfrm_resume,
-+	.runtime_suspend = ufshcd_pltfrm_runtime_suspend,
-+	.runtime_resume  = ufshcd_pltfrm_runtime_resume,
-+	.runtime_idle    = ufshcd_pltfrm_runtime_idle,
-+};
-+
-+static struct platform_driver ufs_mtk_pltform = {
-+	.probe      = ufs_mtk_probe,
-+	.remove     = ufs_mtk_remove,
-+	.shutdown   = ufshcd_pltfrm_shutdown,
++static struct platform_driver ufs_mtk_phy_12nm_driver = {
++	.probe = ufs_mtk_phy_12nm_probe,
 +	.driver = {
-+		.name   = "ufshcd-mtk",
-+		.owner  = THIS_MODULE,
-+		.pm     = &ufs_mtk_pm_ops,
-+		.of_match_table = ufs_mtk_of_match,
++		.of_match_table = ufs_mtk_phy_12nm_of_match,
++		.name = "ufs_mtk_phy_12nm",
 +	},
 +};
++module_platform_driver(ufs_mtk_phy_12nm_driver);
 +
-+module_platform_driver(ufs_mtk_pltform);
-+
-diff --git a/drivers/scsi/ufs/ufs-mediatek.h b/drivers/scsi/ufs/ufs-mediatek.h
++MODULE_DESCRIPTION("Universal Flash Storage (UFS) Mediatek MPHY 12nm");
+diff --git a/drivers/phy/mediatek/phy-mtk-ufs-12nm.h b/drivers/phy/mediatek/phy-mtk-ufs-12nm.h
 new file mode 100644
-index 000000000000..3c964e5d9077
+index 000000000000..5ebcdbd8ec4d
 --- /dev/null
-+++ b/drivers/scsi/ufs/ufs-mediatek.h
-@@ -0,0 +1,61 @@
++++ b/drivers/phy/mediatek/phy-mtk-ufs-12nm.h
+@@ -0,0 +1,52 @@
 +/* SPDX-License-Identifier: GPL-2.0 */
 +/*
 + * Copyright (C) 2019 MediaTek Inc.
@@ -471,54 +270,322 @@ index 000000000000..3c964e5d9077
 + * See http://www.gnu.org/licenses/gpl-2.0.html for more details.
 + */
 +
-+#ifndef _UFS_MEDIATEK_H
-+#define _UFS_MEDIATEK_H
++#ifndef UFS_MTK_PHY_12NM_H_
++#define UFS_MTK_PHY_12NM_H_
++
++#include "phy-mtk-ufs.h"
 +
 +/*
-+ * Vendor specific pre-defined parameters
++ * MPHY register and offsets
 + */
-+#define UFS_MTK_LIMIT_NUM_LANES_RX  1
-+#define UFS_MTK_LIMIT_NUM_LANES_TX  1
-+#define UFS_MTK_LIMIT_HSGEAR_RX     UFS_HS_G3
-+#define UFS_MTK_LIMIT_HSGEAR_TX     UFS_HS_G3
-+#define UFS_MTK_LIMIT_PWMGEAR_RX    UFS_PWM_G4
-+#define UFS_MTK_LIMIT_PWMGEAR_TX    UFS_PWM_G4
-+#define UFS_MTK_LIMIT_RX_PWR_PWM    SLOW_MODE
-+#define UFS_MTK_LIMIT_TX_PWR_PWM    SLOW_MODE
-+#define UFS_MTK_LIMIT_RX_PWR_HS     FAST_MODE
-+#define UFS_MTK_LIMIT_TX_PWR_HS     FAST_MODE
-+#define UFS_MTK_LIMIT_HS_RATE       PA_HS_MODE_B
-+#define UFS_MTK_LIMIT_DESIRED_MODE  UFS_HS_MODE
++#define MP_GLB_DIG_8C               0x008C
++#define FRC_PLL_ISO_EN              0x00000100
++#define PLL_ISO_EN                  0x00000200
++#define FRC_FRC_PWR_ON              0x00000400
++#define PLL_PWR_ON                  0x00000800
++
++#define MP_LN_DIG_RX_9C             0xA09C
++#define FSM_DIFZ_FRC                0x00040000
++
++#define MP_LN_DIG_RX_AC             0xA0AC
++#define FRC_RX_SQ_EN                0x00000001
++#define RX_SQ_EN                    0x00000002
++
++#define MP_LN_RX_44                 0xB044
++#define FRC_CDR_PWR_ON              0x00020000
++#define CDR_PWR_ON                  0x00040000
++#define FRC_CDR_ISO_EN              0x00080000
++#define CDR_ISO_EN                  0x00100000
 +
 +/*
-+ * Other attributes
++ * This structure represents the 12nm specific phy.
++ * common_cfg MUST remain the first field in this structure
++ * in case extra fields are added. This way, when calling
++ * get_ufs_mtk_phy() of generic phy, we can extract the
++ * common phy structure (struct ufs_mtk_phy) out of it
++ * regardless of the relevant specific phy.
 + */
-+#define VS_DEBUGCLOCKENABLE         0xD0A1
-+#define VS_SAVEPOWERCONTROL         0xD0A6
-+#define VS_UNIPROPOWERDOWNCONTROL   0xD0A8
-+
-+/*
-+ * VS_DEBUGCLOCKENABLE
-+ */
-+enum {
-+	TX_SYMBOL_CLK_REQ_FORCE = 5,
++struct ufs_mtk_phy_12nm {
++	struct ufs_mtk_phy common_cfg;
 +};
 +
++#endif
+diff --git a/drivers/phy/mediatek/phy-mtk-ufs.c b/drivers/phy/mediatek/phy-mtk-ufs.c
+new file mode 100644
+index 000000000000..68ed27eaf195
+--- /dev/null
++++ b/drivers/phy/mediatek/phy-mtk-ufs.c
+@@ -0,0 +1,189 @@
++// SPDX-License-Identifier: GPL-2.0
 +/*
-+ * VS_SAVEPOWERCONTROL
++ * Copyright (C) 2019 MediaTek Inc.
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
++ * See http://www.gnu.org/licenses/gpl-2.0.html for more details.
 + */
-+enum {
-+	RX_SYMBOL_CLK_GATE_EN   = 0,
-+	SYS_CLK_GATE_EN         = 2,
-+	TX_CLK_GATE_EN          = 3,
++
++#include <linux/clk.h>
++#include <linux/io.h>
++#include <linux/module.h>
++#include <linux/phy/phy.h>
++#include <linux/platform_device.h>
++#include "phy-mtk-ufs.h"
++
++static int ufs_mtk_phy_base_init(struct platform_device *pdev,
++				 struct ufs_mtk_phy *phy);
++
++struct phy
++*ufs_mtk_phy_generic_probe(struct platform_device *pdev,
++			   struct ufs_mtk_phy *common_cfg,
++			   const struct phy_ops *ufs_mtk_phy_gen_ops,
++			   struct ufs_mtk_phy_specific_ops *phy_spec_ops)
++{
++	int err;
++	struct device *dev = &pdev->dev;
++	struct phy *generic_phy = NULL;
++	struct phy_provider *phy_provider;
++
++	err = ufs_mtk_phy_base_init(pdev, common_cfg);
++	if (err) {
++		dev_info(dev, "%s: phy base init failed %d\n", __func__, err);
++		goto out;
++	}
++
++	phy_provider = devm_of_phy_provider_register(dev, of_phy_simple_xlate);
++	if (IS_ERR(phy_provider)) {
++		err = PTR_ERR(phy_provider);
++		dev_info(dev, "%s: failed to register phy %d\n", __func__, err);
++		goto out;
++	}
++
++	generic_phy = devm_phy_create(dev, NULL, ufs_mtk_phy_gen_ops);
++	if (IS_ERR(generic_phy)) {
++		err =  PTR_ERR(generic_phy);
++		dev_info(dev, "%s: failed to create phy %d\n", __func__, err);
++		generic_phy = NULL;
++		goto out;
++	}
++
++	common_cfg->phy_spec_ops = phy_spec_ops;
++	common_cfg->dev = dev;
++
++out:
++	return generic_phy;
++}
++EXPORT_SYMBOL_GPL(ufs_mtk_phy_generic_probe);
++
++/*
++ * This assumes the embedded phy structure inside generic_phy is of type
++ * struct ufs_mtk_phy. In order to function properly it's crucial
++ * to keep the embedded struct "struct ufs_mtk_phy common_cfg"
++ * as the first inside generic_phy.
++ */
++struct ufs_mtk_phy *get_ufs_mtk_phy(struct phy *generic_phy)
++{
++	return (struct ufs_mtk_phy *)phy_get_drvdata(generic_phy);
++}
++EXPORT_SYMBOL_GPL(get_ufs_mtk_phy);
++
++static int ufs_mtk_phy_ctl_clk(struct ufs_mtk_phy *phy,
++			       struct clk *clk,
++			       bool on)
++{
++	int ret = 0;
++
++	if (on) {
++		ret = clk_prepare_enable(clk);
++		if (ret) {
++			dev_info(phy->dev,
++				 "%s: mp_clk enable failed %d\n",
++				 __func__, ret);
++			goto out;
++		}
++	} else {
++		clk_disable_unprepare(clk);
++	}
++out:
++	return ret;
++}
++
++static int ufs_mtk_phy_ctl_clks(struct phy *generic_phy, bool on)
++{
++	struct ufs_mtk_phy *phy = get_ufs_mtk_phy(generic_phy);
++	int ret;
++
++	ret = ufs_mtk_phy_ctl_clk(phy, phy->unipro_clk, on);
++	if (ret)
++		goto out;
++
++	ret = ufs_mtk_phy_ctl_clk(phy, phy->mp_clk, on);
++out:
++	return ret;
++}
++EXPORT_SYMBOL_GPL(ufs_mtk_phy_ctl_clks);
++
++static int ufs_mtk_phy_base_init(struct platform_device *pdev,
++				 struct ufs_mtk_phy *phy)
++{
++	struct device *dev = &pdev->dev;
++	struct resource *res;
++	int err = 0;
++
++	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ufs_mphy");
++	phy->mmio = devm_ioremap_resource(dev, res);
++	if (IS_ERR((void const *)phy->mmio)) {
++		err = PTR_ERR((void const *)phy->mmio);
++		phy->mmio = NULL;
++		dev_info(dev, "%s: ioremap for ufs_mphy resource failed %d\n",
++			 __func__, err);
++		return err;
++	}
++
++	return 0;
++}
++
++static
++int ufs_mtk_phy_clk_get(struct phy *phy,
++			const char *name, struct clk **clk_out)
++{
++	struct clk *clk;
++	int err = 0;
++	struct ufs_mtk_phy *ufs_mtk_phy = get_ufs_mtk_phy(phy);
++	struct device *dev = ufs_mtk_phy->dev;
++
++	clk = devm_clk_get(dev, name);
++	if (IS_ERR(clk)) {
++		err = PTR_ERR(clk);
++		dev_info(dev, "failed to get %s err %d", name, err);
++	} else {
++		*clk_out = clk;
++	}
++
++	return err;
++}
++
++int ufs_mtk_phy_init_clks(struct phy *generic_phy,
++			  struct ufs_mtk_phy *phy)
++{
++	int err;
++
++	err = ufs_mtk_phy_clk_get(generic_phy, "ufs0-unipro-clk",
++				  &phy->unipro_clk);
++	if (err)
++		goto out;
++
++	err = ufs_mtk_phy_clk_get(generic_phy, "ufs0-mp-clk",
++				  &phy->mp_clk);
++out:
++	return err;
++}
++EXPORT_SYMBOL_GPL(ufs_mtk_phy_init_clks);
++
++int ufs_mtk_phy_power_on(struct phy *generic_phy)
++{
++	struct ufs_mtk_phy *phy = get_ufs_mtk_phy(generic_phy);
++
++	ufs_mtk_phy_ctl_clks(generic_phy, true);
++	phy->phy_spec_ops->power_control(phy, true);
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(ufs_mtk_phy_power_on);
++
++int ufs_mtk_phy_power_off(struct phy *generic_phy)
++{
++	struct ufs_mtk_phy *phy = get_ufs_mtk_phy(generic_phy);
++
++	phy->phy_spec_ops->power_control(phy, false);
++	ufs_mtk_phy_ctl_clks(generic_phy, false);
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(ufs_mtk_phy_power_off);
++
+diff --git a/drivers/phy/mediatek/phy-mtk-ufs.h b/drivers/phy/mediatek/phy-mtk-ufs.h
+new file mode 100644
+index 000000000000..7163aae2b56b
+--- /dev/null
++++ b/drivers/phy/mediatek/phy-mtk-ufs.h
+@@ -0,0 +1,76 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/*
++ * Copyright (C) 2019 MediaTek Inc.
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
++ * See http://www.gnu.org/licenses/gpl-2.0.html for more details.
++ */
++
++#ifndef UFS_MTK_PHY_H_
++#define UFS_MTK_PHY_H_
++
++#include <linux/clk.h>
++#include <linux/io.h>
++#include <linux/module.h>
++#include <linux/phy/phy.h>
++#include <linux/platform_device.h>
++
++#define UFS_MTK_PHY_NAME_LEN       30
++
++#define mphy_readl(phy, ofs) readl((phy)->mmio + (ofs))
++#define mphy_writel(phy, val, ofs) writel((val), (phy)->mmio + (ofs))
++
++#define mphy_set_bit(phy, reg, ofs) \
++do { \
++	u32 val; \
++	u32 _reg = (reg); \
++	struct ufs_mtk_phy *_phy = (phy); \
++	val = mphy_readl(_phy, _reg); \
++	val = val | (ofs); \
++	mphy_writel(_phy, val, _reg); \
++} while (0)
++
++#define mphy_clr_bit(phy, reg, ofs) \
++do { \
++	u32 val; \
++	u32 _reg = (reg); \
++	struct ufs_mtk_phy *_phy = (phy); \
++	val = mphy_readl(_phy, _reg); \
++	val = val & ~(ofs); \
++	mphy_writel(_phy, val, _reg); \
++} while (0)
++
++struct ufs_mtk_phy {
++	struct device *dev;
++	void __iomem *mmio;
++	struct clk *mp_clk;
++	struct clk *unipro_clk;
++	char name[UFS_MTK_PHY_NAME_LEN];
++	struct ufs_mtk_phy_specific_ops *phy_spec_ops;
 +};
 +
-+struct ufs_mtk_host {
-+	struct ufs_hba *hba;
-+	struct phy *mphy;
++/**
++ * struct ufs_mtk_phy_specific_ops - set of pointers to functions which have a
++ * specific implementation per phy. Each UFS phy, should implement
++ * those functions according to its spec and requirements
++ * @power_control: Control power on/off flow of phy.
++ */
++struct ufs_mtk_phy_specific_ops {
++	void (*power_control)(struct ufs_mtk_phy *phy, bool on);
 +};
 +
-+#endif /* !_UFS_MEDIATEK_H */
-+
++struct ufs_mtk_phy *get_ufs_mtk_phy(struct phy *generic_phy);
++int ufs_mtk_phy_power_on(struct phy *generic_phy);
++int ufs_mtk_phy_power_off(struct phy *generic_phy);
++int ufs_mtk_phy_init_clks(struct phy *generic_phy,
++			  struct ufs_mtk_phy *phy_common);
++struct phy
++*ufs_mtk_phy_generic_probe(struct platform_device *pdev,
++			   struct ufs_mtk_phy *common_cfg,
++			   const struct phy_ops *ufs_mtk_phy_gen_ops,
++			   struct ufs_mtk_phy_specific_ops *phy_spec_ops);
++#endif
 -- 
 2.18.0
