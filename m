@@ -1,7 +1,8 @@
 From: <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH v2 3/6] scsi: ufs-hisi: Re-factor ufshcd_get_pwr_dev_param
-Date: Mon, 25 Feb 2019 17:24:12 +0800
-Message-ID: <1551086655-5029-5-git-send-email-stanley.chu@mediatek.com>
+Subject: [PATCH v2 6/6] scsi: ufs-mediatek: Add UFS support for Mediatek SoC
+ chips
+Date: Mon, 25 Feb 2019 17:24:15 +0800
+Message-ID: <1551086655-5029-8-git-send-email-stanley.chu@mediatek.com>
 References: <1551086655-5029-1-git-send-email-stanley.chu@mediatek.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -23,148 +24,501 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
 
-ufshcd_get_pwr_dev_param function and ufs_dev_params struct
-are re-factored to ufs common driver thus change the way this
-driver used.
+This patch adds UFS support for Mediatek SoC chips.
 
 Signed-off-by: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
 ---
- drivers/scsi/ufs/ufs-hisi.c | 109 ++----------------------------------
- 1 file changed, 4 insertions(+), 105 deletions(-)
+ drivers/scsi/ufs/Kconfig        |  14 ++
+ drivers/scsi/ufs/Makefile       |   1 +
+ drivers/scsi/ufs/ufs-mediatek.c | 377 ++++++++++++++++++++++++++++++++
+ drivers/scsi/ufs/ufs-mediatek.h |  61 ++++++
+ 4 files changed, 453 insertions(+)
+ create mode 100644 drivers/scsi/ufs/ufs-mediatek.c
+ create mode 100644 drivers/scsi/ufs/ufs-mediatek.h
 
-diff --git a/drivers/scsi/ufs/ufs-hisi.c b/drivers/scsi/ufs/ufs-hisi.c
-index 452e19f8fb47..01faad26ec26 100644
---- a/drivers/scsi/ufs/ufs-hisi.c
-+++ b/drivers/scsi/ufs/ufs-hisi.c
-@@ -272,108 +272,7 @@ static int ufs_hi3660_link_startup_notify(struct ufs_hba *hba,
- 	return err;
- }
+diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
+index 2ddbb26d9c26..58e5a9c8eb5d 100644
+--- a/drivers/scsi/ufs/Kconfig
++++ b/drivers/scsi/ufs/Kconfig
+@@ -109,6 +109,20 @@ config SCSI_UFS_QCOM
+ 	  Select this if you have UFS controller on QCOM chipset.
+ 	  If unsure, say N.
  
--struct ufs_hisi_dev_params {
--	u32 pwm_rx_gear; /* pwm rx gear to work in */
--	u32 pwm_tx_gear; /* pwm tx gear to work in */
--	u32 hs_rx_gear;  /* hs rx gear to work in */
--	u32 hs_tx_gear;  /* hs tx gear to work in */
--	u32 rx_lanes;    /* number of rx lanes */
--	u32 tx_lanes;    /* number of tx lanes */
--	u32 rx_pwr_pwm;  /* rx pwm working pwr */
--	u32 tx_pwr_pwm;  /* tx pwm working pwr */
--	u32 rx_pwr_hs;   /* rx hs working pwr */
--	u32 tx_pwr_hs;   /* tx hs working pwr */
--	u32 hs_rate;     /* rate A/B to work in HS */
--	u32 desired_working_mode;
--};
--
--static int ufs_hisi_get_pwr_dev_param(
--				    struct ufs_hisi_dev_params *hisi_param,
--				    struct ufs_pa_layer_attr *dev_max,
--				    struct ufs_pa_layer_attr *agreed_pwr)
--{
--	int min_hisi_gear;
--	int min_dev_gear;
--	bool is_dev_sup_hs = false;
--	bool is_hisi_max_hs = false;
--
--	if (dev_max->pwr_rx == FASTAUTO_MODE || dev_max->pwr_rx == FAST_MODE)
--		is_dev_sup_hs = true;
--
--	if (hisi_param->desired_working_mode == FAST) {
--		is_hisi_max_hs = true;
--		min_hisi_gear = min_t(u32, hisi_param->hs_rx_gear,
--				       hisi_param->hs_tx_gear);
--	} else {
--		min_hisi_gear = min_t(u32, hisi_param->pwm_rx_gear,
--				       hisi_param->pwm_tx_gear);
--	}
--
--	/*
--	 * device doesn't support HS but
--	 * hisi_param->desired_working_mode is HS,
--	 * thus device and hisi_param don't agree
--	 */
--	if (!is_dev_sup_hs && is_hisi_max_hs) {
--		pr_err("%s: device not support HS\n", __func__);
--		return -ENOTSUPP;
--	} else if (is_dev_sup_hs && is_hisi_max_hs) {
--		/*
--		 * since device supports HS, it supports FAST_MODE.
--		 * since hisi_param->desired_working_mode is also HS
--		 * then final decision (FAST/FASTAUTO) is done according
--		 * to hisi_params as it is the restricting factor
--		 */
--		agreed_pwr->pwr_rx = agreed_pwr->pwr_tx =
--			hisi_param->rx_pwr_hs;
--	} else {
--		/*
--		 * here hisi_param->desired_working_mode is PWM.
--		 * it doesn't matter whether device supports HS or PWM,
--		 * in both cases hisi_param->desired_working_mode will
--		 * determine the mode
--		 */
--		agreed_pwr->pwr_rx = agreed_pwr->pwr_tx =
--			hisi_param->rx_pwr_pwm;
--	}
--
--	/*
--	 * we would like tx to work in the minimum number of lanes
--	 * between device capability and vendor preferences.
--	 * the same decision will be made for rx
--	 */
--	agreed_pwr->lane_tx =
--		min_t(u32, dev_max->lane_tx, hisi_param->tx_lanes);
--	agreed_pwr->lane_rx =
--		min_t(u32, dev_max->lane_rx, hisi_param->rx_lanes);
--
--	/* device maximum gear is the minimum between device rx and tx gears */
--	min_dev_gear = min_t(u32, dev_max->gear_rx, dev_max->gear_tx);
--
--	/*
--	 * if both device capabilities and vendor pre-defined preferences are
--	 * both HS or both PWM then set the minimum gear to be the chosen
--	 * working gear.
--	 * if one is PWM and one is HS then the one that is PWM get to decide
--	 * what is the gear, as it is the one that also decided previously what
--	 * pwr the device will be configured to.
--	 */
--	if ((is_dev_sup_hs && is_hisi_max_hs) ||
--	    (!is_dev_sup_hs && !is_hisi_max_hs))
--		agreed_pwr->gear_rx = agreed_pwr->gear_tx =
--			min_t(u32, min_dev_gear, min_hisi_gear);
--	else
--		agreed_pwr->gear_rx = agreed_pwr->gear_tx = min_hisi_gear;
--
--	agreed_pwr->hs_rate = hisi_param->hs_rate;
--
--	pr_info("ufs final power mode: gear = %d, lane = %d, pwr = %d, rate = %d\n",
--		agreed_pwr->gear_rx, agreed_pwr->lane_rx, agreed_pwr->pwr_rx,
--		agreed_pwr->hs_rate);
--	return 0;
--}
--
--static void ufs_hisi_set_dev_cap(struct ufs_hisi_dev_params *hisi_param)
-+static void ufs_hisi_set_dev_cap(struct ufs_dev_params *hisi_param)
- {
- 	hisi_param->rx_lanes = UFS_HISI_LIMIT_NUM_LANES_RX;
- 	hisi_param->tx_lanes = UFS_HISI_LIMIT_NUM_LANES_TX;
-@@ -434,7 +333,7 @@ static int ufs_hi3660_pwr_change_notify(struct ufs_hba *hba,
- 				       struct ufs_pa_layer_attr *dev_max_params,
- 				       struct ufs_pa_layer_attr *dev_req_params)
- {
--	struct ufs_hisi_dev_params ufs_hisi_cap;
-+	struct ufs_dev_params ufs_hisi_cap;
- 	int ret = 0;
- 
- 	if (!dev_req_params) {
-@@ -447,8 +346,8 @@ static int ufs_hi3660_pwr_change_notify(struct ufs_hba *hba,
- 	switch (status) {
- 	case PRE_CHANGE:
- 		ufs_hisi_set_dev_cap(&ufs_hisi_cap);
--		ret = ufs_hisi_get_pwr_dev_param(
--			&ufs_hisi_cap, dev_max_params, dev_req_params);
-+		ret = ufshcd_get_pwr_dev_param(&ufs_hisi_cap,
-+					       dev_max_params, dev_req_params);
- 		if (ret) {
- 			dev_err(hba->dev,
- 			    "%s: failed to determine capabilities\n", __func__);
++config SCSI_UFS_MEDIATEK
++	tristate "Mediatek specific hooks to UFS controller platform driver"
++	depends on SCSI_UFSHCD_PLATFORM && ARCH_MEDIATEK
++	select PHY_MTK_UFS
++	help
++	  This selects the Mediatek specific additions to UFSHCD platform driver.
++	  UFS host on Mediatek needs some vendor specific configuration before
++	  accessing the hardware which includes PHY configuration and vendor
++	  specific registers.
++
++	  Select this if you have UFS controller on Mediatek chipset.
++
++	  If unsure, say N.
++
+ config SCSI_UFS_HISI
+ 	tristate "Hisilicon specific hooks to UFS controller platform driver"
+ 	depends on (ARCH_HISI || COMPILE_TEST) && SCSI_UFSHCD_PLATFORM
+diff --git a/drivers/scsi/ufs/Makefile b/drivers/scsi/ufs/Makefile
+index a3bd70c3652c..2a9097939bcb 100644
+--- a/drivers/scsi/ufs/Makefile
++++ b/drivers/scsi/ufs/Makefile
+@@ -10,3 +10,4 @@ ufshcd-core-$(CONFIG_SCSI_UFS_BSG)	+= ufs_bsg.o
+ obj-$(CONFIG_SCSI_UFSHCD_PCI) += ufshcd-pci.o
+ obj-$(CONFIG_SCSI_UFSHCD_PLATFORM) += ufshcd-pltfrm.o
+ obj-$(CONFIG_SCSI_UFS_HISI) += ufs-hisi.o
++obj-$(CONFIG_SCSI_UFS_MEDIATEK) += ufs-mediatek.o
+diff --git a/drivers/scsi/ufs/ufs-mediatek.c b/drivers/scsi/ufs/ufs-mediatek.c
+new file mode 100644
+index 000000000000..ce633dff5888
+--- /dev/null
++++ b/drivers/scsi/ufs/ufs-mediatek.c
+@@ -0,0 +1,377 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Authors:
++ *	Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
++ *	Peter Wang <peter.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
++ *
++ * Copyright (C) 2019 MediaTek Inc.
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
++ * See http://www.gnu.org/licenses/gpl-2.0.html for more details.
++ */
++
++#include <linux/of.h>
++#include <linux/of_address.h>
++#include <linux/phy/phy.h>
++#include <linux/platform_device.h>
++
++#include "ufshcd.h"
++#include "ufshcd-pltfrm.h"
++#include "unipro.h"
++#include "ufs-mediatek.h"
++
++void ufs_mtk_cfg_unipro_cg(struct ufs_hba *hba, bool enable)
++{
++	u32 tmp;
++
++	if (enable) {
++		ufshcd_dme_get(hba,
++			       UIC_ARG_MIB(VS_SAVEPOWERCONTROL), &tmp);
++		tmp = tmp |
++		      (1 << RX_SYMBOL_CLK_GATE_EN) |
++		      (1 << SYS_CLK_GATE_EN) |
++		      (1 << TX_CLK_GATE_EN);
++		ufshcd_dme_set(hba,
++			       UIC_ARG_MIB(VS_SAVEPOWERCONTROL), tmp);
++
++		ufshcd_dme_get(hba,
++			       UIC_ARG_MIB(VS_DEBUGCLOCKENABLE), &tmp);
++		tmp = tmp & ~(1 << TX_SYMBOL_CLK_REQ_FORCE);
++		ufshcd_dme_set(hba,
++			       UIC_ARG_MIB(VS_DEBUGCLOCKENABLE), tmp);
++	} else {
++		ufshcd_dme_get(hba,
++			       UIC_ARG_MIB(VS_SAVEPOWERCONTROL), &tmp);
++		tmp = tmp & ~((1 << RX_SYMBOL_CLK_GATE_EN) |
++			      (1 << SYS_CLK_GATE_EN) |
++			      (1 << TX_CLK_GATE_EN));
++		ufshcd_dme_set(hba,
++			       UIC_ARG_MIB(VS_SAVEPOWERCONTROL), tmp);
++
++		ufshcd_dme_get(hba,
++			       UIC_ARG_MIB(VS_DEBUGCLOCKENABLE), &tmp);
++		tmp = tmp | (1 << TX_SYMBOL_CLK_REQ_FORCE);
++		ufshcd_dme_set(hba,
++			       UIC_ARG_MIB(VS_DEBUGCLOCKENABLE), tmp);
++	}
++}
++
++int ufs_mtk_bind_mphy(struct ufs_hba *hba)
++{
++	struct ufs_mtk_host *host = ufshcd_get_variant(hba);
++	struct device *dev = hba->dev;
++	int err = 0;
++
++	host->mphy = devm_phy_get(dev, "ufsphy");
++
++	if (host->mphy == ERR_PTR(-EPROBE_DEFER)) {
++		/*
++		 * UFS driver might be probed before the phy driver does.
++		 * In that case we would like to return EPROBE_DEFER code.
++		 */
++		err = -EPROBE_DEFER;
++		dev_info(dev,
++			 "%s: required phy hasn't probed yet. err = %d\n",
++			__func__, err);
++	} else if (IS_ERR(host->mphy)) {
++		err = PTR_ERR(host->mphy);
++		dev_info(dev, "%s: PHY get failed %d\n", __func__, err);
++	}
++
++	if (err)
++		host->mphy = NULL;
++
++	return err;
++}
++
++/**
++ * ufs_mtk_setup_clocks - enables/disable clocks
++ * @hba: host controller instance
++ * @on: If true, enable clocks else disable them.
++ * @status: PRE_CHANGE or POST_CHANGE notify
++ *
++ * Returns 0 on success, non-zero on failure.
++ */
++static int ufs_mtk_setup_clocks(struct ufs_hba *hba, bool on,
++				enum ufs_notify_change_status status)
++{
++	struct ufs_mtk_host *host = ufshcd_get_variant(hba);
++	int ret;
++
++	/*
++	 * In case ufs_mtk_init() is not yet done, simply ignore.
++	 * This ufs_mtk_setup_clocks() shall be called from
++	 * ufs_mtk_init() after init is done.
++	 */
++	if (!host)
++		return 0;
++
++	switch (status) {
++	case PRE_CHANGE:
++		if (!on)
++			ret = phy_power_off(host->mphy);
++		break;
++	case POST_CHANGE:
++		if (on) {
++			pr_info("%s: phy_power_on\n", __func__);
++			ret = phy_power_on(host->mphy);
++		}
++		break;
++	default:
++		ret = -EINVAL;
++		break;
++	}
++
++	return ret;
++}
++
++/**
++ * ufs_mtk_init - find other essential mmio bases
++ * @hba: host controller instance
++ *
++ * Binds PHY with controller and powers up PHY enabling clocks
++ * and regulators.
++ *
++ * Returns -EPROBE_DEFER if binding fails, returns negative error
++ * on phy power up failure and returns zero on success.
++ */
++static int ufs_mtk_init(struct ufs_hba *hba)
++{
++	struct ufs_mtk_host *host;
++	struct device *dev = hba->dev;
++	int err = 0;
++
++	host = devm_kzalloc(dev, sizeof(*host), GFP_KERNEL);
++	if (!host) {
++		err = -ENOMEM;
++		dev_info(dev, "%s: no memory for mtk ufs host\n", __func__);
++		goto out;
++	}
++
++	host->hba = hba;
++	ufshcd_set_variant(hba, host);
++
++	err = ufs_mtk_bind_mphy(hba);
++	if (err)
++		goto out_variant_clear;
++
++	/*
++	 * ufshcd_vops_init() is invoked after
++	 * ufshcd_setup_clock(true) in ufshcd_hba_init() thus
++	 * phy clock setup is skipped.
++	 *
++	 * Enable phy clocks specifically here.
++	 */
++	ufs_mtk_setup_clocks(hba, true, POST_CHANGE);
++
++	goto out;
++
++out_variant_clear:
++	ufshcd_set_variant(hba, NULL);
++out:
++	return err;
++}
++
++static int ufs_mtk_pre_pwr_change(struct ufs_hba *hba,
++				  struct ufs_pa_layer_attr *dev_max_params,
++				  struct ufs_pa_layer_attr *dev_req_params)
++{
++	struct ufs_dev_params host_cap;
++	int ret;
++
++	host_cap.tx_lanes = UFS_MTK_LIMIT_NUM_LANES_TX;
++	host_cap.rx_lanes = UFS_MTK_LIMIT_NUM_LANES_RX;
++	host_cap.hs_rx_gear = UFS_MTK_LIMIT_HSGEAR_RX;
++	host_cap.hs_tx_gear = UFS_MTK_LIMIT_HSGEAR_TX;
++	host_cap.pwm_rx_gear = UFS_MTK_LIMIT_PWMGEAR_RX;
++	host_cap.pwm_tx_gear = UFS_MTK_LIMIT_PWMGEAR_TX;
++	host_cap.rx_pwr_pwm = UFS_MTK_LIMIT_RX_PWR_PWM;
++	host_cap.tx_pwr_pwm = UFS_MTK_LIMIT_TX_PWR_PWM;
++	host_cap.rx_pwr_hs = UFS_MTK_LIMIT_RX_PWR_HS;
++	host_cap.tx_pwr_hs = UFS_MTK_LIMIT_TX_PWR_HS;
++	host_cap.hs_rate = UFS_MTK_LIMIT_HS_RATE;
++	host_cap.desired_working_mode =
++				UFS_MTK_LIMIT_DESIRED_MODE;
++
++	ret = ufshcd_get_pwr_dev_param(&host_cap,
++				       dev_max_params,
++				       dev_req_params);
++	if (ret) {
++		pr_info("%s: failed to determine capabilities\n",
++			__func__);
++	}
++
++	return ret;
++}
++
++static int ufs_mtk_pwr_change_notify(struct ufs_hba *hba,
++				     enum ufs_notify_change_status stage,
++				     struct ufs_pa_layer_attr *dev_max_params,
++				     struct ufs_pa_layer_attr *dev_req_params)
++{
++	int ret = 0;
++
++	switch (stage) {
++	case PRE_CHANGE:
++		ret = ufs_mtk_pre_pwr_change(hba, dev_max_params,
++					     dev_req_params);
++		break;
++	case POST_CHANGE:
++		break;
++	default:
++		ret = -EINVAL;
++		break;
++	}
++
++	return ret;
++}
++
++static int ufs_mtk_pre_link(struct ufs_hba *hba)
++{
++	int ret;
++	u32 tmp;
++
++	/* disable deep stall */
++	ret = ufshcd_dme_get(hba, UIC_ARG_MIB(VS_SAVEPOWERCONTROL), &tmp);
++	if (ret)
++		return ret;
++
++	tmp &= ~(1 << 6);
++
++	ret = ufshcd_dme_set(hba, UIC_ARG_MIB(VS_SAVEPOWERCONTROL), tmp);
++
++	return ret;
++}
++
++static int ufs_mtk_post_link(struct ufs_hba *hba)
++{
++	/* disable device LCC */
++	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_LOCAL_TX_LCC_ENABLE), 0);
++
++	/* enable unipro clock gating feature */
++	ufs_mtk_cfg_unipro_cg(hba, true);
++
++	return 0;
++}
++
++static int ufs_mtk_link_startup_notify(struct ufs_hba *hba,
++				       enum ufs_notify_change_status stage)
++{
++	int ret = 0;
++
++	switch (stage) {
++	case PRE_CHANGE:
++		ret = ufs_mtk_pre_link(hba);
++		break;
++	case POST_CHANGE:
++		ret = ufs_mtk_post_link(hba);
++		break;
++	default:
++		ret = -EINVAL;
++		break;
++	}
++
++	return ret;
++}
++
++static int ufs_mtk_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
++{
++	struct ufs_mtk_host *host = ufshcd_get_variant(hba);
++
++	if (ufshcd_is_link_hibern8(hba))
++		phy_power_off(host->mphy);
++
++	return 0;
++}
++
++static int ufs_mtk_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
++{
++	struct ufs_mtk_host *host = ufshcd_get_variant(hba);
++
++	if (ufshcd_is_link_hibern8(hba))
++		phy_power_on(host->mphy);
++
++	return 0;
++}
++
++/**
++ * struct ufs_hba_mtk_vops - UFS MTK specific variant operations
++ *
++ * The variant operations configure the necessary controller and PHY
++ * handshake during initialization.
++ */
++static struct ufs_hba_variant_ops ufs_hba_mtk_vops = {
++	.name                = "mediatek.ufshci",
++	.init                = ufs_mtk_init,
++	.setup_clocks        = ufs_mtk_setup_clocks,
++	.link_startup_notify = ufs_mtk_link_startup_notify,
++	.pwr_change_notify   = ufs_mtk_pwr_change_notify,
++	.suspend             = ufs_mtk_suspend,
++	.resume              = ufs_mtk_resume,
++};
++
++/**
++ * ufs_mtk_probe - probe routine of the driver
++ * @pdev: pointer to Platform device handle
++ *
++ * Return zero for success and non-zero for failure
++ */
++static int ufs_mtk_probe(struct platform_device *pdev)
++{
++	int err;
++	struct device *dev = &pdev->dev;
++
++	/* perform generic probe */
++	err = ufshcd_pltfrm_init(pdev, &ufs_hba_mtk_vops);
++	if (err)
++		dev_info(dev, "probe failed %d\n", err);
++
++	return err;
++}
++
++/**
++ * ufs_mtk_remove - set driver_data of the device to NULL
++ * @pdev: pointer to platform device handle
++ *
++ * Always return 0
++ */
++static int ufs_mtk_remove(struct platform_device *pdev)
++{
++	struct ufs_hba *hba =  platform_get_drvdata(pdev);
++
++	pm_runtime_get_sync(&(pdev)->dev);
++	ufshcd_remove(hba);
++	return 0;
++}
++
++const struct of_device_id ufs_mtk_of_match[] = {
++	{ .compatible = "mediatek,ufshci"},
++	{},
++};
++
++static const struct dev_pm_ops ufs_mtk_pm_ops = {
++	.suspend         = ufshcd_pltfrm_suspend,
++	.resume          = ufshcd_pltfrm_resume,
++	.runtime_suspend = ufshcd_pltfrm_runtime_suspend,
++	.runtime_resume  = ufshcd_pltfrm_runtime_resume,
++	.runtime_idle    = ufshcd_pltfrm_runtime_idle,
++};
++
++static struct platform_driver ufs_mtk_pltform = {
++	.probe      = ufs_mtk_probe,
++	.remove     = ufs_mtk_remove,
++	.shutdown   = ufshcd_pltfrm_shutdown,
++	.driver = {
++		.name   = "ufshcd-mtk",
++		.owner  = THIS_MODULE,
++		.pm     = &ufs_mtk_pm_ops,
++		.of_match_table = ufs_mtk_of_match,
++	},
++};
++
++module_platform_driver(ufs_mtk_pltform);
++
+diff --git a/drivers/scsi/ufs/ufs-mediatek.h b/drivers/scsi/ufs/ufs-mediatek.h
+new file mode 100644
+index 000000000000..3c964e5d9077
+--- /dev/null
++++ b/drivers/scsi/ufs/ufs-mediatek.h
+@@ -0,0 +1,61 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/*
++ * Copyright (C) 2019 MediaTek Inc.
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
++ * See http://www.gnu.org/licenses/gpl-2.0.html for more details.
++ */
++
++#ifndef _UFS_MEDIATEK_H
++#define _UFS_MEDIATEK_H
++
++/*
++ * Vendor specific pre-defined parameters
++ */
++#define UFS_MTK_LIMIT_NUM_LANES_RX  1
++#define UFS_MTK_LIMIT_NUM_LANES_TX  1
++#define UFS_MTK_LIMIT_HSGEAR_RX     UFS_HS_G3
++#define UFS_MTK_LIMIT_HSGEAR_TX     UFS_HS_G3
++#define UFS_MTK_LIMIT_PWMGEAR_RX    UFS_PWM_G4
++#define UFS_MTK_LIMIT_PWMGEAR_TX    UFS_PWM_G4
++#define UFS_MTK_LIMIT_RX_PWR_PWM    SLOW_MODE
++#define UFS_MTK_LIMIT_TX_PWR_PWM    SLOW_MODE
++#define UFS_MTK_LIMIT_RX_PWR_HS     FAST_MODE
++#define UFS_MTK_LIMIT_TX_PWR_HS     FAST_MODE
++#define UFS_MTK_LIMIT_HS_RATE       PA_HS_MODE_B
++#define UFS_MTK_LIMIT_DESIRED_MODE  UFS_HS_MODE
++
++/*
++ * Other attributes
++ */
++#define VS_DEBUGCLOCKENABLE         0xD0A1
++#define VS_SAVEPOWERCONTROL         0xD0A6
++#define VS_UNIPROPOWERDOWNCONTROL   0xD0A8
++
++/*
++ * VS_DEBUGCLOCKENABLE
++ */
++enum {
++	TX_SYMBOL_CLK_REQ_FORCE = 5,
++};
++
++/*
++ * VS_SAVEPOWERCONTROL
++ */
++enum {
++	RX_SYMBOL_CLK_GATE_EN   = 0,
++	SYS_CLK_GATE_EN         = 2,
++	TX_CLK_GATE_EN          = 3,
++};
++
++struct ufs_mtk_host {
++	struct ufs_hba *hba;
++	struct phy *mphy;
++};
++
++#endif /* !_UFS_MEDIATEK_H */
++
 -- 
 2.18.0
