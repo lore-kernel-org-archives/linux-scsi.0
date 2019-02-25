@@ -1,7 +1,7 @@
 From: <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH v2 4/6] dt-bindings: scsi: ufs: Add document for ufs-mediatek
-Date: Mon, 25 Feb 2019 17:24:13 +0800
-Message-ID: <1551086655-5029-6-git-send-email-stanley.chu@mediatek.com>
+Subject: [PATCH v2 2/6] scsi: ufs-qcom: Re-factor ufshcd_get_pwr_dev_param
+Date: Mon, 25 Feb 2019 17:24:11 +0800
+Message-ID: <1551086655-5029-4-git-send-email-stanley.chu@mediatek.com>
 References: <1551086655-5029-1-git-send-email-stanley.chu@mediatek.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -23,94 +23,145 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
 
-Add UFS and UFS PHY node document for Mediatek SoC chips.
+ufshcd_get_pwr_dev_param function and ufs_dev_params struct
+are re-factored to ufs common driver thus change the way this
+driver used.
 
 Signed-off-by: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
 ---
- .../devicetree/bindings/ufs/ufs-mediatek.txt  | 75 +++++++++++++++++++
- 1 file changed, 75 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/ufs/ufs-mediatek.txt
+ drivers/scsi/ufs/ufs-qcom.c | 106 ++----------------------------------
+ 1 file changed, 4 insertions(+), 102 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/ufs/ufs-mediatek.txt b/Documentation/devicetree/bindings/ufs/ufs-mediatek.txt
-new file mode 100644
-index 000000000000..d73804687095
---- /dev/null
-+++ b/Documentation/devicetree/bindings/ufs/ufs-mediatek.txt
-@@ -0,0 +1,75 @@
-+* Mediatek Universal Flash Storage (UFS) Host Controller
-+
-+UFS nodes are defined to describe on-chip UFS hardware macro.
-+Each UFS Host Controller should have its own node.
-+
-+UFS PHY nodes are defined to describe on-chip UFS PHY hardware macro.
-+Each UFS PHY node should have its own node.
-+
-+Required properties for UFS PHY nodes:
-+- compatible         : Compatible list, contains the following controller:
-+                       "mediatek,ufs-mphy-12nm"
-+- reg                : Address and length of the UFS PHY register set.
-+- reg-names          : indicates various resources passed to driver (via reg proptery) by name.
-+                       Required "reg-names" is "ufs_mphy".
-+- #phy-cells         : This property shall be set to 0
-+- clocks             : List of phandle and clock specifier pairs.
-+- clock-names        : List of clock input name strings sorted in the same
-+                       order as the clocks property. "ufs0-unipro-clk" and
-+                       "ufs0-mp-clk" are mandatory.
-+
-+Required properties for UFS nodes:
-+- compatible         : Compatible list, contains the following controller:
-+                       "mediatek,ufshci"
-+- reg                : Address and length of the UFS register set.
-+- interrupt-parent   : interrupt device.
-+- phys               : PHandle to phy.
-+- phy-names          : Name of phy.
-+                       Required "phy-name" is "ufsphy".
-+- clocks             : List of phandle and clock specifier pairs.
-+- clock-names        : List of clock input name strings sorted in the same
-+                       order as the clocks property. "ufs0-clock" is mandatory.
-+- freq-table-hz      : Array of <min max> operating frequencies stored in the same
-+                       order as the clocks property. If this property is not
-+                       defined or a value in the array is "0" then it is assumed
-+                       that the frequency is set by the parent clock or a
-+                       fixed rate clock source.
-+- vcc-supply         : Power to the UFS device.
-+- vcc-fixed-regulator: Specify that vcc-supply is a fixed regulator.
-+- lanes-per-direction: Number of lanes available per direction. Shall be 1.
-+
-+Example:
-+
-+	ufs_mphy: ufs_mphy@11fa0000 {
-+		compatible = "mediatek,ufs-mphy-12nm";
-+		reg = <0 0x11fa0000 0 0xc000>;
-+		reg-names = "ufs_mphy";
-+		#phy-cells = <0>;
-+
-+		clocks =
-+			<&infracfg_ao INFRACFG_AO_UNIPRO_SCK_CG>,
-+			<&infracfg_ao INFRACFG_AO_UFS_MP_SAP_BCLK_CG>;
-+		clock-names =
-+			"ufs0-unipro-clk",
-+			"ufs0-mp-clk";
-+	};
-+
-+	ufshci:ufshci@11270000 {
-+		compatible = "mediatek,ufshci";
-+		reg = <0 0x11270000 0 0x2300>;
-+		interrupts = <GIC_SPI 104 IRQ_TYPE_LEVEL_LOW>;
-+		phys = <&ufs_mphy>;
-+		phy-names = "ufsphy";
-+
-+		clocks =
-+			<&infracfg_ao INFRACFG_AO_UFS_CG>;
-+		clock-names =
-+			"ufs0-clock";
-+		freq-table-hz =
-+			<0 0>;
-+
-+		vcc-supply = <&mt_pmic_vemc_ldo_reg>;
-+		vcc-fixed-regulator;
-+
-+		lanes-per-direction = <1>;
-+	};
+diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+index 3aeadb14aae1..a6b6f6eb9061 100644
+--- a/drivers/scsi/ufs/ufs-qcom.c
++++ b/drivers/scsi/ufs/ufs-qcom.c
+@@ -595,104 +595,6 @@ static int ufs_qcom_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ 	return err;
+ }
+ 
+-struct ufs_qcom_dev_params {
+-	u32 pwm_rx_gear;	/* pwm rx gear to work in */
+-	u32 pwm_tx_gear;	/* pwm tx gear to work in */
+-	u32 hs_rx_gear;		/* hs rx gear to work in */
+-	u32 hs_tx_gear;		/* hs tx gear to work in */
+-	u32 rx_lanes;		/* number of rx lanes */
+-	u32 tx_lanes;		/* number of tx lanes */
+-	u32 rx_pwr_pwm;		/* rx pwm working pwr */
+-	u32 tx_pwr_pwm;		/* tx pwm working pwr */
+-	u32 rx_pwr_hs;		/* rx hs working pwr */
+-	u32 tx_pwr_hs;		/* tx hs working pwr */
+-	u32 hs_rate;		/* rate A/B to work in HS */
+-	u32 desired_working_mode;
+-};
+-
+-static int ufs_qcom_get_pwr_dev_param(struct ufs_qcom_dev_params *qcom_param,
+-				      struct ufs_pa_layer_attr *dev_max,
+-				      struct ufs_pa_layer_attr *agreed_pwr)
+-{
+-	int min_qcom_gear;
+-	int min_dev_gear;
+-	bool is_dev_sup_hs = false;
+-	bool is_qcom_max_hs = false;
+-
+-	if (dev_max->pwr_rx == FAST_MODE)
+-		is_dev_sup_hs = true;
+-
+-	if (qcom_param->desired_working_mode == FAST) {
+-		is_qcom_max_hs = true;
+-		min_qcom_gear = min_t(u32, qcom_param->hs_rx_gear,
+-				      qcom_param->hs_tx_gear);
+-	} else {
+-		min_qcom_gear = min_t(u32, qcom_param->pwm_rx_gear,
+-				      qcom_param->pwm_tx_gear);
+-	}
+-
+-	/*
+-	 * device doesn't support HS but qcom_param->desired_working_mode is
+-	 * HS, thus device and qcom_param don't agree
+-	 */
+-	if (!is_dev_sup_hs && is_qcom_max_hs) {
+-		pr_err("%s: failed to agree on power mode (device doesn't support HS but requested power is HS)\n",
+-			__func__);
+-		return -ENOTSUPP;
+-	} else if (is_dev_sup_hs && is_qcom_max_hs) {
+-		/*
+-		 * since device supports HS, it supports FAST_MODE.
+-		 * since qcom_param->desired_working_mode is also HS
+-		 * then final decision (FAST/FASTAUTO) is done according
+-		 * to qcom_params as it is the restricting factor
+-		 */
+-		agreed_pwr->pwr_rx = agreed_pwr->pwr_tx =
+-						qcom_param->rx_pwr_hs;
+-	} else {
+-		/*
+-		 * here qcom_param->desired_working_mode is PWM.
+-		 * it doesn't matter whether device supports HS or PWM,
+-		 * in both cases qcom_param->desired_working_mode will
+-		 * determine the mode
+-		 */
+-		 agreed_pwr->pwr_rx = agreed_pwr->pwr_tx =
+-						qcom_param->rx_pwr_pwm;
+-	}
+-
+-	/*
+-	 * we would like tx to work in the minimum number of lanes
+-	 * between device capability and vendor preferences.
+-	 * the same decision will be made for rx
+-	 */
+-	agreed_pwr->lane_tx = min_t(u32, dev_max->lane_tx,
+-						qcom_param->tx_lanes);
+-	agreed_pwr->lane_rx = min_t(u32, dev_max->lane_rx,
+-						qcom_param->rx_lanes);
+-
+-	/* device maximum gear is the minimum between device rx and tx gears */
+-	min_dev_gear = min_t(u32, dev_max->gear_rx, dev_max->gear_tx);
+-
+-	/*
+-	 * if both device capabilities and vendor pre-defined preferences are
+-	 * both HS or both PWM then set the minimum gear to be the chosen
+-	 * working gear.
+-	 * if one is PWM and one is HS then the one that is PWM get to decide
+-	 * what is the gear, as it is the one that also decided previously what
+-	 * pwr the device will be configured to.
+-	 */
+-	if ((is_dev_sup_hs && is_qcom_max_hs) ||
+-	    (!is_dev_sup_hs && !is_qcom_max_hs))
+-		agreed_pwr->gear_rx = agreed_pwr->gear_tx =
+-			min_t(u32, min_dev_gear, min_qcom_gear);
+-	else if (!is_dev_sup_hs)
+-		agreed_pwr->gear_rx = agreed_pwr->gear_tx = min_dev_gear;
+-	else
+-		agreed_pwr->gear_rx = agreed_pwr->gear_tx = min_qcom_gear;
+-
+-	agreed_pwr->hs_rate = qcom_param->hs_rate;
+-	return 0;
+-}
+-
+ #ifdef CONFIG_MSM_BUS_SCALING
+ static int ufs_qcom_get_bus_vote(struct ufs_qcom_host *host,
+ 		const char *speed_mode)
+@@ -920,7 +822,7 @@ static int ufs_qcom_pwr_change_notify(struct ufs_hba *hba,
+ {
+ 	u32 val;
+ 	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+-	struct ufs_qcom_dev_params ufs_qcom_cap;
++	struct ufs_dev_params ufs_qcom_cap;
+ 	int ret = 0;
+ 
+ 	if (!dev_req_params) {
+@@ -959,9 +861,9 @@ static int ufs_qcom_pwr_change_notify(struct ufs_hba *hba,
+ 				ufs_qcom_cap.hs_rx_gear = UFS_HS_G2;
+ 		}
+ 
+-		ret = ufs_qcom_get_pwr_dev_param(&ufs_qcom_cap,
+-						 dev_max_params,
+-						 dev_req_params);
++		ret = ufshcd_get_pwr_dev_param(&ufs_qcom_cap,
++					       dev_max_params,
++					       dev_req_params);
+ 		if (ret) {
+ 			pr_err("%s: failed to determine capabilities\n",
+ 					__func__);
 -- 
 2.18.0
