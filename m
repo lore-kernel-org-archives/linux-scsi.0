@@ -1,7 +1,7 @@
 From: <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH v2 2/6] scsi: ufs-qcom: Re-factor ufshcd_get_pwr_dev_param
-Date: Mon, 25 Feb 2019 17:24:11 +0800
-Message-ID: <1551086655-5029-4-git-send-email-stanley.chu@mediatek.com>
+Subject: [PATCH v2 3/6] scsi: ufs-hisi: Re-factor ufshcd_get_pwr_dev_param
+Date: Mon, 25 Feb 2019 17:24:12 +0800
+Message-ID: <1551086655-5029-5-git-send-email-stanley.chu@mediatek.com>
 References: <1551086655-5029-1-git-send-email-stanley.chu@mediatek.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -29,79 +29,80 @@ driver used.
 
 Signed-off-by: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
 ---
- drivers/scsi/ufs/ufs-qcom.c | 106 ++----------------------------------
- 1 file changed, 4 insertions(+), 102 deletions(-)
+ drivers/scsi/ufs/ufs-hisi.c | 109 ++----------------------------------
+ 1 file changed, 4 insertions(+), 105 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-index 3aeadb14aae1..a6b6f6eb9061 100644
---- a/drivers/scsi/ufs/ufs-qcom.c
-+++ b/drivers/scsi/ufs/ufs-qcom.c
-@@ -595,104 +595,6 @@ static int ufs_qcom_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+diff --git a/drivers/scsi/ufs/ufs-hisi.c b/drivers/scsi/ufs/ufs-hisi.c
+index 452e19f8fb47..01faad26ec26 100644
+--- a/drivers/scsi/ufs/ufs-hisi.c
++++ b/drivers/scsi/ufs/ufs-hisi.c
+@@ -272,108 +272,7 @@ static int ufs_hi3660_link_startup_notify(struct ufs_hba *hba,
  	return err;
  }
  
--struct ufs_qcom_dev_params {
--	u32 pwm_rx_gear;	/* pwm rx gear to work in */
--	u32 pwm_tx_gear;	/* pwm tx gear to work in */
--	u32 hs_rx_gear;		/* hs rx gear to work in */
--	u32 hs_tx_gear;		/* hs tx gear to work in */
--	u32 rx_lanes;		/* number of rx lanes */
--	u32 tx_lanes;		/* number of tx lanes */
--	u32 rx_pwr_pwm;		/* rx pwm working pwr */
--	u32 tx_pwr_pwm;		/* tx pwm working pwr */
--	u32 rx_pwr_hs;		/* rx hs working pwr */
--	u32 tx_pwr_hs;		/* tx hs working pwr */
--	u32 hs_rate;		/* rate A/B to work in HS */
+-struct ufs_hisi_dev_params {
+-	u32 pwm_rx_gear; /* pwm rx gear to work in */
+-	u32 pwm_tx_gear; /* pwm tx gear to work in */
+-	u32 hs_rx_gear;  /* hs rx gear to work in */
+-	u32 hs_tx_gear;  /* hs tx gear to work in */
+-	u32 rx_lanes;    /* number of rx lanes */
+-	u32 tx_lanes;    /* number of tx lanes */
+-	u32 rx_pwr_pwm;  /* rx pwm working pwr */
+-	u32 tx_pwr_pwm;  /* tx pwm working pwr */
+-	u32 rx_pwr_hs;   /* rx hs working pwr */
+-	u32 tx_pwr_hs;   /* tx hs working pwr */
+-	u32 hs_rate;     /* rate A/B to work in HS */
 -	u32 desired_working_mode;
 -};
 -
--static int ufs_qcom_get_pwr_dev_param(struct ufs_qcom_dev_params *qcom_param,
--				      struct ufs_pa_layer_attr *dev_max,
--				      struct ufs_pa_layer_attr *agreed_pwr)
+-static int ufs_hisi_get_pwr_dev_param(
+-				    struct ufs_hisi_dev_params *hisi_param,
+-				    struct ufs_pa_layer_attr *dev_max,
+-				    struct ufs_pa_layer_attr *agreed_pwr)
 -{
--	int min_qcom_gear;
+-	int min_hisi_gear;
 -	int min_dev_gear;
 -	bool is_dev_sup_hs = false;
--	bool is_qcom_max_hs = false;
+-	bool is_hisi_max_hs = false;
 -
--	if (dev_max->pwr_rx == FAST_MODE)
+-	if (dev_max->pwr_rx == FASTAUTO_MODE || dev_max->pwr_rx == FAST_MODE)
 -		is_dev_sup_hs = true;
 -
--	if (qcom_param->desired_working_mode == FAST) {
--		is_qcom_max_hs = true;
--		min_qcom_gear = min_t(u32, qcom_param->hs_rx_gear,
--				      qcom_param->hs_tx_gear);
+-	if (hisi_param->desired_working_mode == FAST) {
+-		is_hisi_max_hs = true;
+-		min_hisi_gear = min_t(u32, hisi_param->hs_rx_gear,
+-				       hisi_param->hs_tx_gear);
 -	} else {
--		min_qcom_gear = min_t(u32, qcom_param->pwm_rx_gear,
--				      qcom_param->pwm_tx_gear);
+-		min_hisi_gear = min_t(u32, hisi_param->pwm_rx_gear,
+-				       hisi_param->pwm_tx_gear);
 -	}
 -
 -	/*
--	 * device doesn't support HS but qcom_param->desired_working_mode is
--	 * HS, thus device and qcom_param don't agree
+-	 * device doesn't support HS but
+-	 * hisi_param->desired_working_mode is HS,
+-	 * thus device and hisi_param don't agree
 -	 */
--	if (!is_dev_sup_hs && is_qcom_max_hs) {
--		pr_err("%s: failed to agree on power mode (device doesn't support HS but requested power is HS)\n",
--			__func__);
+-	if (!is_dev_sup_hs && is_hisi_max_hs) {
+-		pr_err("%s: device not support HS\n", __func__);
 -		return -ENOTSUPP;
--	} else if (is_dev_sup_hs && is_qcom_max_hs) {
+-	} else if (is_dev_sup_hs && is_hisi_max_hs) {
 -		/*
 -		 * since device supports HS, it supports FAST_MODE.
--		 * since qcom_param->desired_working_mode is also HS
+-		 * since hisi_param->desired_working_mode is also HS
 -		 * then final decision (FAST/FASTAUTO) is done according
--		 * to qcom_params as it is the restricting factor
+-		 * to hisi_params as it is the restricting factor
 -		 */
 -		agreed_pwr->pwr_rx = agreed_pwr->pwr_tx =
--						qcom_param->rx_pwr_hs;
+-			hisi_param->rx_pwr_hs;
 -	} else {
 -		/*
--		 * here qcom_param->desired_working_mode is PWM.
+-		 * here hisi_param->desired_working_mode is PWM.
 -		 * it doesn't matter whether device supports HS or PWM,
--		 * in both cases qcom_param->desired_working_mode will
+-		 * in both cases hisi_param->desired_working_mode will
 -		 * determine the mode
 -		 */
--		 agreed_pwr->pwr_rx = agreed_pwr->pwr_tx =
--						qcom_param->rx_pwr_pwm;
+-		agreed_pwr->pwr_rx = agreed_pwr->pwr_tx =
+-			hisi_param->rx_pwr_pwm;
 -	}
 -
 -	/*
@@ -109,10 +110,10 @@ index 3aeadb14aae1..a6b6f6eb9061 100644
 -	 * between device capability and vendor preferences.
 -	 * the same decision will be made for rx
 -	 */
--	agreed_pwr->lane_tx = min_t(u32, dev_max->lane_tx,
--						qcom_param->tx_lanes);
--	agreed_pwr->lane_rx = min_t(u32, dev_max->lane_rx,
--						qcom_param->rx_lanes);
+-	agreed_pwr->lane_tx =
+-		min_t(u32, dev_max->lane_tx, hisi_param->tx_lanes);
+-	agreed_pwr->lane_rx =
+-		min_t(u32, dev_max->lane_rx, hisi_param->rx_lanes);
 -
 -	/* device maximum gear is the minimum between device rx and tx gears */
 -	min_dev_gear = min_t(u32, dev_max->gear_rx, dev_max->gear_tx);
@@ -125,43 +126,45 @@ index 3aeadb14aae1..a6b6f6eb9061 100644
 -	 * what is the gear, as it is the one that also decided previously what
 -	 * pwr the device will be configured to.
 -	 */
--	if ((is_dev_sup_hs && is_qcom_max_hs) ||
--	    (!is_dev_sup_hs && !is_qcom_max_hs))
+-	if ((is_dev_sup_hs && is_hisi_max_hs) ||
+-	    (!is_dev_sup_hs && !is_hisi_max_hs))
 -		agreed_pwr->gear_rx = agreed_pwr->gear_tx =
--			min_t(u32, min_dev_gear, min_qcom_gear);
--	else if (!is_dev_sup_hs)
--		agreed_pwr->gear_rx = agreed_pwr->gear_tx = min_dev_gear;
+-			min_t(u32, min_dev_gear, min_hisi_gear);
 -	else
--		agreed_pwr->gear_rx = agreed_pwr->gear_tx = min_qcom_gear;
+-		agreed_pwr->gear_rx = agreed_pwr->gear_tx = min_hisi_gear;
 -
--	agreed_pwr->hs_rate = qcom_param->hs_rate;
+-	agreed_pwr->hs_rate = hisi_param->hs_rate;
+-
+-	pr_info("ufs final power mode: gear = %d, lane = %d, pwr = %d, rate = %d\n",
+-		agreed_pwr->gear_rx, agreed_pwr->lane_rx, agreed_pwr->pwr_rx,
+-		agreed_pwr->hs_rate);
 -	return 0;
 -}
 -
- #ifdef CONFIG_MSM_BUS_SCALING
- static int ufs_qcom_get_bus_vote(struct ufs_qcom_host *host,
- 		const char *speed_mode)
-@@ -920,7 +822,7 @@ static int ufs_qcom_pwr_change_notify(struct ufs_hba *hba,
+-static void ufs_hisi_set_dev_cap(struct ufs_hisi_dev_params *hisi_param)
++static void ufs_hisi_set_dev_cap(struct ufs_dev_params *hisi_param)
  {
- 	u32 val;
- 	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
--	struct ufs_qcom_dev_params ufs_qcom_cap;
-+	struct ufs_dev_params ufs_qcom_cap;
+ 	hisi_param->rx_lanes = UFS_HISI_LIMIT_NUM_LANES_RX;
+ 	hisi_param->tx_lanes = UFS_HISI_LIMIT_NUM_LANES_TX;
+@@ -434,7 +333,7 @@ static int ufs_hi3660_pwr_change_notify(struct ufs_hba *hba,
+ 				       struct ufs_pa_layer_attr *dev_max_params,
+ 				       struct ufs_pa_layer_attr *dev_req_params)
+ {
+-	struct ufs_hisi_dev_params ufs_hisi_cap;
++	struct ufs_dev_params ufs_hisi_cap;
  	int ret = 0;
  
  	if (!dev_req_params) {
-@@ -959,9 +861,9 @@ static int ufs_qcom_pwr_change_notify(struct ufs_hba *hba,
- 				ufs_qcom_cap.hs_rx_gear = UFS_HS_G2;
- 		}
- 
--		ret = ufs_qcom_get_pwr_dev_param(&ufs_qcom_cap,
--						 dev_max_params,
--						 dev_req_params);
-+		ret = ufshcd_get_pwr_dev_param(&ufs_qcom_cap,
-+					       dev_max_params,
-+					       dev_req_params);
+@@ -447,8 +346,8 @@ static int ufs_hi3660_pwr_change_notify(struct ufs_hba *hba,
+ 	switch (status) {
+ 	case PRE_CHANGE:
+ 		ufs_hisi_set_dev_cap(&ufs_hisi_cap);
+-		ret = ufs_hisi_get_pwr_dev_param(
+-			&ufs_hisi_cap, dev_max_params, dev_req_params);
++		ret = ufshcd_get_pwr_dev_param(&ufs_hisi_cap,
++					       dev_max_params, dev_req_params);
  		if (ret) {
- 			pr_err("%s: failed to determine capabilities\n",
- 					__func__);
+ 			dev_err(hba->dev,
+ 			    "%s: failed to determine capabilities\n", __func__);
 -- 
 2.18.0
