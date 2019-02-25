@@ -1,14 +1,14 @@
 From: Avri Altman <Avri.Altman-Sjgp3cTcYWE@public.gmane.org>
-Subject: RE: [PATCH v2 1/6] scsi: ufs: Introduce ufshcd_get_pwr_dev_param
-Date: Mon, 25 Feb 2019 09:34:31 +0000
-Message-ID: <SN6PR04MB4925B876232BBDD169CD6A9FFC7A0@SN6PR04MB4925.namprd04.prod.outlook.com>
+Subject: RE: [PATCH v2 2/6] scsi: ufs-qcom: Re-factor ufshcd_get_pwr_dev_param
+Date: Mon, 25 Feb 2019 09:35:00 +0000
+Message-ID: <SN6PR04MB49253805B11A08ABEC94D22AFC7A0@SN6PR04MB4925.namprd04.prod.outlook.com>
 References: <1551086655-5029-1-git-send-email-stanley.chu@mediatek.com>
- <1551086655-5029-3-git-send-email-stanley.chu@mediatek.com>
+ <1551086655-5029-4-git-send-email-stanley.chu@mediatek.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-In-Reply-To: <1551086655-5029-3-git-send-email-stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
+In-Reply-To: <1551086655-5029-4-git-send-email-stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
 Content-Language: en-US
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-mediatek>,
  <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=unsubscribe>
@@ -24,14 +24,9 @@ Cc: "chun-hung.wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org" <chun-hung.wu-NuS5LvN
 List-Id: linux-scsi@vger.kernel.org
 
 > 
-> From: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-> 
-> ufshcd_get_pwr_dev_param is for vendors to decide finally
-> agreed attributes for power mode change if vendors define
-> their host capability in struct ufs_dev_params.
-> 
-> This api is using by both ufs-qcom and ufs-hisi now. Simply
-> re-factor it and then every vendors can reuse it.
+> ufshcd_get_pwr_dev_param function and ufs_dev_params struct
+> are re-factored to ufs common driver thus change the way this
+> driver used.
 > 
 > Signed-off-by: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
 Reviewed-by: Avri Altman <avri.altman-Sjgp3cTcYWE@public.gmane.org>
