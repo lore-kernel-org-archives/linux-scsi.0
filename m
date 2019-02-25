@@ -1,132 +1,50 @@
-From: Marc Gonzalez <marc.w.gonzalez@free.fr>
-Subject: [PATCH v5 3/3] arm64: dts: qcom: msm8998: Add UFS nodes
-Date: Mon, 25 Feb 2019 13:18:43 +0100
-Message-ID: <c5043595-badf-0d3a-4a86-4e609a8d74ce@free.fr>
-References: <43768d77-80b7-9cdc-b6e0-08ec4a026c21@free.fr>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] mpt3sas: Use driver scsi lookup to track outstanding IOs
+Date: Mon, 25 Feb 2019 18:25:01 +0100
+Message-ID: <8fa0a2ac-dcf7-d4fb-fbfe-0e858fc3c453@suse.de>
+References: <1550577766-40425-1-git-send-email-sreekanth.reddy@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <43768d77-80b7-9cdc-b6e0-08ec4a026c21@free.fr>
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <1550577766-40425-1-git-send-email-sreekanth.reddy@broadcom.com>
 Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: MSM <linux-arm-msm@vger.kernel.org>, SCSI <linux-scsi@vger.kernel.org>
-Cc: Jeffrey Hugo <jhugo@codeaurora.org>, Bjorn Andersson <bjorn.andersson@linaro.org>, Andy Gross <andy.gross@linaro.org>, David Brown <david.brown@linaro.org>, Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, Pedro Sousa <pedrom.sousa@synopsys.com>, LKML <linux-kernel@vger.kernel.org>, Lee Jones <lee.jones@linaro.org>
+Sender: stable-owner@vger.kernel.org
+To: Sreekanth Reddy <sreekanth.reddy@broadcom.com>, linux-scsi@vger.kernel.org
+Cc: Sathya.Prakash@broadcom.com, suganath-prabu.subramani@broadcom.com, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Add host controller and PHY DT nodes.
+On 2/19/19 1:02 PM, Sreekanth Reddy wrote:
+> Use driver's scsiio lookup table to track outstanding IOs at driver level,
+> 
+> Have done following changes in this patch,
+> * Allocated & initialized scsi_lookup table of type
+>    (struct scsiio_tracker) and of depth host's can_queue at driver load time
+>    and it will be deallocated at driver unload time.
+> 
+> * Once scmd is receieved, driver will take scsiio_tracker at entry
+>    corresponding to scmd's tag value from scsi_lookup table. Then this
+>    scsiio_tracker entry is initialized with proper smid, scmd, cb_idx etc.
+>    And this scsiio_tracker entry contents are cleared before driver
+>    calling scsi_done callback function.
+> 
+> * scmd's host_scribble variable is used to save the corresponding
+>    scsiio_tracker address, later at any time driver can easily retrieve the
+>    scmd's corresponding scsiio_tacker using this host_scribble variable.
+> 
+> * Whenever driver wants to get the outstanding IOs at the driver level
+>    then driver can go through this scsi_lookup table and if it observe
+>    any entry with non-null scmd then it means that scmd is outstanding
+>    at the driver level.
+> 
+> Cc: <stable@vger.kernel.org>
+> Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+> ---
 
-Signed-off-by: Marc Gonzalez <marc.w.gonzalez@free.fr>
----
- arch/arm64/boot/dts/qcom/msm8998-mtp.dtsi | 19 +++++++
- arch/arm64/boot/dts/qcom/msm8998.dtsi     | 65 +++++++++++++++++++++++
- 2 files changed, 84 insertions(+)
+What is the reason for this change?
+The description only states _what_ you are doing, not why.
+Care to elaborate?
 
-diff --git a/arch/arm64/boot/dts/qcom/msm8998-mtp.dtsi b/arch/arm64/boot/dts/qcom/msm8998-mtp.dtsi
-index 19775cae1381..6329ba4777cc 100644
---- a/arch/arm64/boot/dts/qcom/msm8998-mtp.dtsi
-+++ b/arch/arm64/boot/dts/qcom/msm8998-mtp.dtsi
-@@ -270,6 +270,25 @@
- 	pinctrl-1 = <&sdc2_clk_off &sdc2_cmd_off &sdc2_data_off &sdc2_cd_off>;
- };
- 
-+&ufshc {
-+	vcc-supply = <&vreg_l20a_2p95>;
-+	vccq-supply = <&vreg_l26a_1p2>;
-+	vccq2-supply = <&vreg_s4a_1p8>;
-+	vcc-max-microamp = <750000>;
-+	vccq-max-microamp = <560000>;
-+	vccq2-max-microamp = <750000>;
-+};
-+
-+&ufsphy {
-+	vdda-phy-supply = <&vreg_l1a_0p875>;
-+	vdda-pll-supply = <&vreg_l2a_1p2>;
-+	vddp-ref-clk-supply = <&vreg_l26a_1p2>;
-+	vdda-phy-max-microamp = <51400>;
-+	vdda-pll-max-microamp = <14600>;
-+	vddp-ref-clk-max-microamp = <100>;
-+	vddp-ref-clk-always-on;
-+};
-+
- &usb3 {
- 	status = "okay";
- };
-diff --git a/arch/arm64/boot/dts/qcom/msm8998.dtsi b/arch/arm64/boot/dts/qcom/msm8998.dtsi
-index 043ff2d2643c..23e2b2f360d1 100644
---- a/arch/arm64/boot/dts/qcom/msm8998.dtsi
-+++ b/arch/arm64/boot/dts/qcom/msm8998.dtsi
-@@ -983,6 +983,71 @@
- 			redistributor-stride = <0x0 0x20000>;
- 			interrupts = <GIC_PPI 9 IRQ_TYPE_LEVEL_HIGH>;
- 		};
-+
-+		ufshc: ufshc@1da4000 {
-+			compatible = "qcom,msm8998-ufshc", "qcom,ufshc", "jedec,ufs-2.0";
-+			reg = <0x01da4000 0x2500>;
-+			interrupts = <GIC_SPI 265 IRQ_TYPE_LEVEL_HIGH>;
-+			phys = <&ufsphy_lanes>;
-+			phy-names = "ufsphy";
-+			lanes-per-direction = <2>;
-+			power-domains = <&gcc UFS_GDSC>;
-+
-+			clock-names =
-+				"core_clk",
-+				"bus_aggr_clk",
-+				"iface_clk",
-+				"core_clk_unipro",
-+				"ref_clk",
-+				"tx_lane0_sync_clk",
-+				"rx_lane0_sync_clk",
-+				"rx_lane1_sync_clk";
-+			clocks =
-+				<&gcc GCC_UFS_AXI_CLK>,
-+				<&gcc GCC_AGGRE1_UFS_AXI_CLK>,
-+				<&gcc GCC_UFS_AHB_CLK>,
-+				<&gcc GCC_UFS_UNIPRO_CORE_CLK>,
-+				<&rpmcc RPM_SMD_LN_BB_CLK1>,
-+				<&gcc GCC_UFS_TX_SYMBOL_0_CLK>,
-+				<&gcc GCC_UFS_RX_SYMBOL_0_CLK>,
-+				<&gcc GCC_UFS_RX_SYMBOL_1_CLK>;
-+			freq-table-hz =
-+				<50000000 200000000>,
-+				<0 0>,
-+				<0 0>,
-+				<37500000 150000000>,
-+				<0 0>,
-+				<0 0>,
-+				<0 0>,
-+				<0 0>;
-+
-+			resets = <&gcc GCC_UFS_BCR>;
-+			reset-names = "rst";
-+		};
-+
-+		ufsphy: phy@1da7000 {
-+			compatible = "qcom,msm8998-qmp-ufs-phy";
-+			reg = <0x01da7000 0x18c>;
-+			#address-cells = <1>;
-+			#size-cells = <1>;
-+			ranges;
-+
-+			clock-names =
-+				"ref",
-+				"ref_aux";
-+			clocks =
-+				<&gcc GCC_UFS_CLKREF_CLK>,
-+				<&gcc GCC_UFS_PHY_AUX_CLK>;
-+
-+			ufsphy_lanes: lanes@1da7400 {
-+				reg = <0x01da7400 0x128>,
-+				      <0x01da7600 0x1fc>,
-+				      <0x01da7c00 0x1dc>,
-+				      <0x01da7800 0x128>,
-+				      <0x01da7a00 0x1fc>;
-+				#phy-cells = <0>;
-+			};
-+		};
- 	};
- };
- 
--- 
-2.17.1
+Cheers,
+
+Hannes
