@@ -1,50 +1,45 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] mpt3sas: Use driver scsi lookup to track outstanding IOs
-Date: Mon, 25 Feb 2019 18:25:01 +0100
-Message-ID: <8fa0a2ac-dcf7-d4fb-fbfe-0e858fc3c453@suse.de>
-References: <1550577766-40425-1-git-send-email-sreekanth.reddy@broadcom.com>
+From: Lee Duncan <lduncan@suse.com>
+Subject: Re: [RESEND] [PATCH] Hold back_lock when calling iscsi_complete_task
+Date: Mon, 25 Feb 2019 09:39:04 -0800
+Message-ID: <977e50ae-7623-65ce-8851-154026f63f2d@suse.com>
+References: <20190222162947.25178-1-leeman.duncan@gmail.com>
+ <594d8ad8-78d1-e012-d782-39abb746032b@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <1550577766-40425-1-git-send-email-sreekanth.reddy@broadcom.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <594d8ad8-78d1-e012-d782-39abb746032b@suse.de>
 Content-Language: en-US
-Sender: stable-owner@vger.kernel.org
-To: Sreekanth Reddy <sreekanth.reddy@broadcom.com>, linux-scsi@vger.kernel.org
-Cc: Sathya.Prakash@broadcom.com, suganath-prabu.subramani@broadcom.com, stable@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>, Lee Duncan <leeman.duncan@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, cleech@redhat.com
+Cc: hare@suse.de
 List-Id: linux-scsi@vger.kernel.org
 
-On 2/19/19 1:02 PM, Sreekanth Reddy wrote:
-> Use driver's scsiio lookup table to track outstanding IOs at driver level,
+On 2/25/19 2:02 AM, Johannes Thumshirn wrote:
+> On 22/02/2019 17:29, Lee Duncan wrote:
+>> From: Lee Duncan <lduncan@suse.com>
+>>
+>> If there is an error queueing an iscsi command in
+>> iscsi_queuecommand(), for example if the transport fails
+>> to take the command in sessuin->tt->xmit_task(), then
+>> the error path can call iscsi_complete_task() without
+>> first aquiring the back_lock as required. This can
+>> lead to things like ITT pool can get corrupt, resulting
+>> in duplicate ITTs being sent out.
+>>
+>> The solution is to hold the back_lock around
+>> iscsi_complete_task() calls, and to add a little commenting
+>> to help others understand when back_lock must be held.
 > 
-> Have done following changes in this patch,
-> * Allocated & initialized scsi_lookup table of type
->    (struct scsiio_tracker) and of depth host's can_queue at driver load time
->    and it will be deallocated at driver unload time.
+> You're missing a S-o-b here.
 > 
-> * Once scmd is receieved, driver will take scsiio_tracker at entry
->    corresponding to scmd's tag value from scsi_lookup table. Then this
->    scsiio_tracker entry is initialized with proper smid, scmd, cb_idx etc.
->    And this scsiio_tracker entry contents are cleared before driver
->    calling scsi_done callback function.
+> Byte,
+> 	Johannes
 > 
-> * scmd's host_scribble variable is used to save the corresponding
->    scsiio_tracker address, later at any time driver can easily retrieve the
->    scmd's corresponding scsiio_tacker using this host_scribble variable.
-> 
-> * Whenever driver wants to get the outstanding IOs at the driver level
->    then driver can go through this scsi_lookup table and if it observe
->    any entry with non-null scmd then it means that scmd is outstanding
->    at the driver level.
-> 
-> Cc: <stable@vger.kernel.org>
-> Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-> ---
 
-What is the reason for this change?
-The description only states _what_ you are doing, not why.
-Care to elaborate?
+Doh!
 
-Cheers,
+I will resend.
 
-Hannes
+-- 
+The Lee-Man
