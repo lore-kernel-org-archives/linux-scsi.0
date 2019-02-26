@@ -1,25 +1,26 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: clean obsolete return values of eh_timed_out
-Date: Tue, 26 Feb 2019 10:10:33 -0500
-Message-ID: <yq17edmd1qu.fsf@oracle.com>
-References: <1550385027-6217-1-git-send-email-avri.altman@wdc.com>
+Subject: Re: [PATCH -next] scsi: megaraid_sas: Remove a bunch of set but not used variables
+Date: Tue, 26 Feb 2019 10:13:42 -0500
+Message-ID: <yq136oad1ll.fsf@oracle.com>
+References: <20190222015858.9744-1-yuehaibing@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1550385027-6217-1-git-send-email-avri.altman@wdc.com> (Avri
-        Altman's message of "Sun, 17 Feb 2019 08:30:27 +0200")
+In-Reply-To: <20190222015858.9744-1-yuehaibing@huawei.com> (Yue Haibing's
+        message of "Fri, 22 Feb 2019 09:58:58 +0800")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Avri Altman <avri.altman@wdc.com>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Avi Shchislowski <avi.shchislowski@wdc.com>, Alex Lemberg <alex.lemberg@wdc.com>
+To: Yue Haibing <yuehaibing@huawei.com>
+Cc: shivasharan.srikanteshwara@broadcom.com, jejb@linux.ibm.com, martin.petersen@oracle.com, sumit.saxena@broadcom.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, megaraidlinux.pdl@broadcom.com
 List-Id: linux-scsi@vger.kernel.org
 
 
-Avri,
+Yue,
 
-> Those are no longer in use since commit 242f9dcb8ba6
-> ("block: unify request timeout handling").
+> From: YueHaibing <yuehaibing@huawei.com>
+>
+> Fixes gcc '-Wunused-but-set-variable' warning:
 
-Applied to 5.1/scsi-queue. Thanks!
+Applied to 5.1/scsi-queue, thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
