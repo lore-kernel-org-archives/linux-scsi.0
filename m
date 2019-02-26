@@ -1,23 +1,68 @@
 From: Avri Altman <Avri.Altman@wdc.com>
-Subject: RE: [PATCH v5 2/2] scsi: ufs: Remove unused device quirks
-Date: Tue, 26 Feb 2019 09:05:58 +0000
-Message-ID: <SN6PR04MB4925B3D87401E8052621F4A8FC7B0@SN6PR04MB4925.namprd04.prod.outlook.com>
-References: <494cd639-89a7-8868-b63a-ea7cdcba9777@free.fr>
- <43265449-30e1-d514-3ffd-fc38530dac67@free.fr>
+Subject: RE: [REPOST PATCH v4 0/3] scsi: ufs-bsg: Add read descriptor
+Date: Tue, 26 Feb 2019 10:59:11 +0000
+Message-ID: <SN6PR04MB4925DC77A8727791B07EA648FC7B0@SN6PR04MB4925.namprd04.prod.outlook.com>
+References: <1550646674-15258-1-git-send-email-avri.altman@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <43265449-30e1-d514-3ffd-fc38530dac67@free.fr>
+In-Reply-To: <1550646674-15258-1-git-send-email-avri.altman@wdc.com>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Marc Gonzalez <marc.w.gonzalez@free.fr>, SCSI <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
-Cc: Jeffrey Hugo <jhugo@codeaurora.org>, Bjorn Andersson <bjorn.andersson@linaro.org>, Evan Green <evgreen@chromium.org>, Douglas Anderson <dianders@chromium.org>, Alim Akhtar <alim.akhtar@samsung.com>, Pedro Sousa <pedrom.sousa@synopsys.com>, Joao Pinto <jpinto@synopsys.com>, Mark Brown <broonie@kernel.org>, Liam Girdwood <lgirdwood@gmail.com>, Rob Herring <robh+dt@kernel.org>, Bart Van Assche <bart.vanassche@wdc.com>, Stanislav Nijnikov <Stanislav.Nijnikov@wdc.com>, Alex Lemberg <Alex.Lemberg@wdc.com>, Ohad Sharabi <ohad.sharabi@wdc.com>, Venkat Gopalakrishnan <venkatg@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, Yaniv Gardi <ygardi@codeaurora.org>, Gilad Broner <gbroner@codeaurora.org>, Raviv Shvili <rshvili@codeaurora.org>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Avi Shchislowski <Avi.Shchislowski@wdc.com>, Alex Lemberg <Alex.Lemberg@wdc.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Evan Green <evgreen@chromium.org>, Bean Huo <beanhuo@micron.com>, Pedro Sousa <pedrom.sousa@synopsys.com>, Alim Akhtar <alim.akhtar@samsung.com>
 List-Id: linux-scsi@vger.kernel.org
 
-DQo+IA0KPiBUaGUgVUZTSEMgZHJpdmVyIGRlZmluZXMgYSBmZXcgcXVpcmtzIHRoYXQgYXJlIG5v
-dCB1c2VkIGFueXdoZXJlOg0KPiANCj4gVUZTX0RFVklDRV9RVUlSS19CUk9LRU5fTENDDQo+IFVG
-U19ERVZJQ0VfTk9fVkNDUQ0KPiBVRlNfREVWSUNFX1FVSVJLX05PX0xJTktfT0ZGDQo+IFVGU19E
-RVZJQ0VfTk9fRkFTVEFVVE8NCj4gDQo+IExldCdzIHJlbW92ZSB0aGVtLg0KPiANCj4gU2lnbmVk
-LW9mZi1ieTogTWFyYyBHb256YWxleiA8bWFyYy53LmdvbnphbGV6QGZyZWUuZnI+DQpBY2tlZC1i
-eTogQXZyaSBBbHRtYW4gPGF2cmkuYWx0bWFuQHdkYy5jb20+DQo=
+Martin,
+Any further comments concerning this series?
+
+Thanks,
+Avri
+
+>=20
+> UFS Protocol Information Units (UPIU) are UFS packets that travel
+> between the host and the device on the UniPro bus. Our previous series
+> added the capability to send UPIUs to the ufs driver. It does not cover
+> all the possible UPIU types - we are mainly focused on device management,
+> provisioning, testing and validation, so it covers UPIUs that falls in
+> that box.
+>=20
+> Our intension is to publish ufs-utils soon - an open source user space
+> utility that relies on that infrastructure to perform those tasks.
+> This short series is adding one last functionality needed by ufs-utils
+> that was somehow left behind - allowing reading descriptors as well.
+>=20
+> Repost of v4 and adds tags already received.
+> While at it, it turns out that quite a few people are waiting for
+> ufs-utils, e.g. https://www.spinics.net/lists/linux-scsi/msg127807.html.
+> So I expect that the small, but vibrant community of ufs users, will try
+> to expand this infrastructure even further.
+>=20
+> V3->v4:
+> Improve code readability in ufs-bsg: Allow reading descriptors
+> Update Reviewed-by tag.
+>=20
+> V2->v3:
+> Add a prep patch with write descriptor calling convention changes.
+> Elaborate the commit log of ufs-bsg: Allow reading descriptors
+> Add Reviewed-by tag.
+>=20
+> v1->v2:
+> Withdraw from the attempt to change the reply buffer, instead place the
+> descriptor being read in the actual data buffer in the bio.
+>=20
+> Avri Altman (3):
+>   scsi: ufs-bsg: Change the calling convention for write descriptor
+>   scsi: ufs: Allow reading descriptor via raw upiu
+>   scsi: ufs-bsg: Allow reading descriptors
+>=20
+>  Documentation/scsi/ufs.txt | 11 ++++++++
+>  drivers/scsi/ufs/ufs_bsg.c | 63 ++++++++++++++++++++++++++--------------=
+----
+> --
+>  drivers/scsi/ufs/ufshcd.c  | 20 ++++++++++-----
+>  3 files changed, 61 insertions(+), 33 deletions(-)
+>=20
+> --
+> 1.9.1
