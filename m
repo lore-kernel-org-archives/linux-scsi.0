@@ -1,31 +1,32 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v1] mpt3sas: Use driver scsi lookup to track outstanding IOs
-Date: Tue, 26 Feb 2019 09:40:24 -0500
-Message-ID: <yq1k1hmd353.fsf@oracle.com>
-References: <1550751105-46065-1-git-send-email-sreekanth.reddy@broadcom.com>
-        <d0672a75-2900-5f6b-368f-5808914322a8@suse.de>
-        <CAK=zhgpuB9Y+Z1e64D1Dm4fJtJ2rjZPf5g_TLNwnKbauRpqrJQ@mail.gmail.com>
-        <61a8f703-3f20-b777-08b9-54ae34dffa59@suse.de>
-        <CAK=zhgrWWtCf+N7EmbhK69PEc2L0hfc8ybOyFddUed8yufhvJQ@mail.gmail.com>
-        <0dfb09ca-8723-3a3c-a6a8-c643856c57e3@suse.de>
-        <20190226143313.GA23865@infradead.org>
+Subject: Re: [PATCH v5 1/2] scsi: ufs: Do not disable vccq in UFSHC driver
+Date: Tue, 26 Feb 2019 09:44:21 -0500
+Message-ID: <yq1ftsad2yi.fsf@oracle.com>
+References: <494cd639-89a7-8868-b63a-ea7cdcba9777@free.fr>
+        <be3ef9bf-438b-4e8a-62c4-f75458e8ecc0@free.fr>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20190226143313.GA23865@infradead.org> (Christoph Hellwig's
-        message of "Tue, 26 Feb 2019 06:33:13 -0800")
-Sender: stable-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Hannes Reinecke <hare@suse.de>, Sreekanth Reddy <sreekanth.reddy@broadcom.com>, linux-scsi <linux-scsi@vger.kernel.org>, Sathya Prakash <Sathya.Prakash@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, stable@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <be3ef9bf-438b-4e8a-62c4-f75458e8ecc0@free.fr> (Marc Gonzalez's
+        message of "Mon, 11 Feb 2019 14:32:15 +0100")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Marc Gonzalez <marc.w.gonzalez@free.fr>
+Cc: SCSI <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Jeffrey Hugo <jhugo@codeaurora.org>, Bjorn Andersson <bjorn.andersson@linaro.org>, Evan Green <evgreen@chromium.org>, Douglas Anderson <dianders@chromium.org>, Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, Pedro Sousa <pedrom.sousa@synopsys.com>, Joao Pinto <jpinto@synopsys.com>, Mark Brown <broonie@kernel.org>, Liam Girdwood <lgirdwood@gmail.com>, Rob Herring <robh+dt@kernel.org>, Bart Van Assche <bart.vanassche@wdc.com>, Stanislav Nijnikov <stanislav.nijnikov@wdc.com>, Alex Lemberg <alex.lemberg@wdc.com>, Ohad Sharabi <ohad.sharabi@wdc.com>, Venkat Gopalakrishnan <venkatg@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, Ya
 List-Id: linux-scsi@vger.kernel.org
 
 
-> While this is better than the driver private tracking we really should
-> not have to iterate all outstanding command, because if we have any
-> there is a bug we need to fix in the higher layers instead of working
-> around it in the drivers.
+Hi Marc,
 
-I agree completely.
+> Commit 60f0187031c0 ("disable vccq if it's not needed by UFS device")
+> introduced a small power optimization as a driver quirk: ignore the
+> vccq load specified in the UFSHC DT node when said host controller
+> is connected to specific Flash chips (Samsung and Hynix currently).
+
+[...]
+
+> Revert the original patch, and clean up loose ends in the next patch.
+
+This commit isn't a revert. Why not?
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
