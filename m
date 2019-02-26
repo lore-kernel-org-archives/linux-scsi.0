@@ -1,13 +1,13 @@
 From: Ewan Milne <emilne@redhat.com>
-Subject: Re: [PATCH 1/8] lpfc: fix calls to dma_set_mask_and_coherent()
-Date: Mon, 25 Feb 2019 19:29:34 -0500 (EST)
-Message-ID: <155957995.3869368.1551140974078.JavaMail.zimbra@redhat.com>
-References: <20190218073426.111853-1-hare@suse.de> <20190218073426.111853-2-hare@suse.de>
+Subject: Re: [PATCH 2/8] 3w-9xxx: fix calls to dma_set_mask_and_coherent()
+Date: Mon, 25 Feb 2019 19:30:13 -0500 (EST)
+Message-ID: <2002695973.3869389.1551141013288.JavaMail.zimbra@redhat.com>
+References: <20190218073426.111853-1-hare@suse.de> <20190218073426.111853-3-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20190218073426.111853-2-hare@suse.de>
+In-Reply-To: <20190218073426.111853-3-hare@suse.de>
 Sender: stable-owner@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, stable@vger.kernel.org
@@ -15,62 +15,54 @@ List-Id: linux-scsi@vger.kernel.org
 
 The change to use dma_set_mask_and_coherent() incorrectly made a second
 call with the 32 bit DMA mask value when the call with the 64 bit DMA
-mask value succeeded.  This resulted in NVMe/FC connections failing due
-to corrupted data buffers, and various other SCSI/FCP I/O errors.
+mask value succeeded.
 
-Fixes: f30e1bfd6154 ("scsi: lpfc: use dma_set_mask_and_coherent")
+Fixes: b000bced5739 ("scsi: 3w-9xxx: fully convert to the generic DMA API")
 Cc: <stable@vger.kernel.org>
-Suggested-by: Don Dutile <ddutile@redhat.com>
-Signed-off-by: Ewan D. Milne <emilne@redhat.com>
 Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/lpfc/lpfc_init.c | 19 ++++++++++++-------
- 1 file changed, 12 insertions(+), 7 deletions(-)
+ drivers/scsi/3w-9xxx.c | 14 +++++++++-----
+ 1 file changed, 9 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index eef6b929c327..59b098cb5787 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -7693,15 +7693,18 @@ lpfc_sli_pci_mem_setup(struct lpfc_hba *phba)
- 	unsigned long bar0map_len, bar2map_len;
- 	int i, hbq_count;
- 	void *ptr;
--	int error = -ENODEV;
-+	int error;
+diff --git a/drivers/scsi/3w-9xxx.c b/drivers/scsi/3w-9xxx.c
+index a3c20e3a8b7c..3337b1e80412 100644
+--- a/drivers/scsi/3w-9xxx.c
++++ b/drivers/scsi/3w-9xxx.c
+@@ -2009,7 +2009,7 @@ static int twa_probe(struct pci_dev *pdev, const struct pci_device_id *dev_id)
+ 	struct Scsi_Host *host = NULL;
+ 	TW_Device_Extension *tw_dev;
+ 	unsigned long mem_addr, mem_len;
+-	int retval = -ENODEV;
++	int retval;
  
- 	if (!pdev)
--		return error;
-+		return -ENODEV;
+ 	retval = pci_enable_device(pdev);
+ 	if (retval) {
+@@ -2020,8 +2020,10 @@ static int twa_probe(struct pci_dev *pdev, const struct pci_device_id *dev_id)
+ 	pci_set_master(pdev);
+ 	pci_try_set_mwi(pdev);
  
- 	/* Set the device DMA mask size */
 -	if (dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64)) ||
--	    dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32)))
-+	error = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64));
-+	if (error)
-+		error = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32));
-+	if (error)
- 		return error;
-+	error = -ENODEV;
+-	    dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32))) {
++	retval = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64));
++	if (retval)
++		retval = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32));
++	if (retval) {
+ 		TW_PRINTK(host, TW_DRIVER, 0x23, "Failed to set dma mask");
+ 		retval = -ENODEV;
+ 		goto out_disable_device;
+@@ -2240,8 +2242,10 @@ static int twa_resume(struct pci_dev *pdev)
+ 	pci_set_master(pdev);
+ 	pci_try_set_mwi(pdev);
  
- 	/* Get the bus address of Bar0 and Bar2 and the number of bytes
- 	 * required by each mapping.
-@@ -10053,11 +10056,13 @@ lpfc_sli4_pci_mem_setup(struct lpfc_hba *phba)
- 	uint32_t if_type;
- 
- 	if (!pdev)
--		return error;
-+		return -ENODEV;
- 
- 	/* Set the device DMA mask size */
 -	if (dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64)) ||
--	    dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32)))
-+	error = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64));
-+	if (error)
-+		error = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32));
-+	if (error)
- 		return error;
- 
- 	/*
+-	    dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32))) {
++	retval = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64));
++	if (retval)
++		retval = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32));
++	if (retval) {
+ 		TW_PRINTK(host, TW_DRIVER, 0x40, "Failed to set dma mask during resume");
+ 		retval = -ENODEV;
+ 		goto out_disable_device;
 -- 
 2.16.4
 
