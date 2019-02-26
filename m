@@ -1,58 +1,71 @@
-From: Ewan Milne <emilne@redhat.com>
-Subject: Re: [PATCH 8/8] hptiop: fix calls to dma_set_mask()
-Date: Mon, 25 Feb 2019 19:38:33 -0500 (EST)
-Message-ID: <1105853901.3870452.1551141513239.JavaMail.zimbra@redhat.com>
-References: <20190218073426.111853-1-hare@suse.de> <20190218073426.111853-9-hare@suse.de>
+From: Lee Jones <lee.jones@linaro.org>
+Subject: Re: [PATCH v5 0/3] UFS on APQ8098/MSM8998t
+Date: Tue, 26 Feb 2019 08:22:51 +0000
+Message-ID: <20190226082251.GI4118@dell>
+References: <43768d77-80b7-9cdc-b6e0-08ec4a026c21@free.fr>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20190218073426.111853-9-hare@suse.de>
-Sender: stable-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, stable@vger.kernel.org
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <43768d77-80b7-9cdc-b6e0-08ec4a026c21@free.fr>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Marc Gonzalez <marc.w.gonzalez@free.fr>
+Cc: MSM <linux-arm-msm@vger.kernel.org>, SCSI <linux-scsi@vger.kernel.org>, Jeffrey Hugo <jhugo@codeaurora.org>, Bjorn Andersson <bjorn.andersson@linaro.org>, Andy Gross <andy.gross@linaro.org>, David Brown <david.brown@linaro.org>, Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, Pedro Sousa <pedrom.sousa@synopsys.com>, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-The change to use dma_set_mask() incorrectly made a second call with the
-32 bit DMA mask value when the call with the 64 bit DMA mask value succeeded.
+On Mon, 25 Feb 2019, Marc Gonzalez wrote:
 
-Fixes: 453cd3700ca3 ("scsi: hptiop: use dma_set_mask")
-Cc: <stable@vger.kernel.org>
-Suggested-by: Ewan D. Milne <emilne@redhat.com>
-Signed-off-by: Hannes Reinecke <hare@suse.com>
----
- drivers/scsi/hptiop.c | 10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
+> Hello,
+> 
+> This series adds support for the UFS host controller on APQ8098/MSM8998-based boards.
+> 
+> This should be the final rev ;-)
+> 
+> Differences between v4 and v5:
+> - Drop patches that have already been accepted or spun off
+> 
+> Differences between v3 and v4:
+> - Rebase on top of -next
+> - Pick up Douglas Anderson's UFSHC doc fix
+> - Document 8998 UFSHC binding
+> - Improve UFS PHY binding doc
+> - Put the UFS DT patch at the end of the series
+> 
+> Difference between v2 and v3:
+> - Add qcom,msm8998-qmp-ufs-phy compat string and match it in the PHY driver
+> - Drop vdd-hba-fixed-regulator
+> - Write the reg addresses with full 32-bit width
+> - Set regulator-allow-set-load only on the 3 rails used by UFS.
+> - Revert the patch introducing ufshcd_set_vccq_rail_unused
+> 
+> Difference between v1 and v2:
+> - New patch to add 'regulator-allow-set-load' prop to all vreg nodes
+> - Rename rpmcc node to 'clock-controller' + Add Review tags
+> - Drop UFS pinctrl gymnastics (not required, probably left enabled in bootloader)
+> - Delete GCC_UFS_ICE_CORE_CLK (ICE not used upstream, I think)
+> - Fix sizes of ufsphy register areas based on Jeffrey's feedback
+> - Hack ufshcd_set_vccq_rail_unused into a NOP to work around lock up + reboot
+> 
+> 
+> Marc Gonzalez (3):
+>   dt-bindings: ufs: Add msm8998 compatible string
+>   arm64: dts: qcom: msm8998: Allow UFSHC driver to set-load
+>   arm64: dts: qcom: msm8998: Add UFS nodes
+> 
+>  .../devicetree/bindings/ufs/ufshcd-pltfrm.txt |  1 +
+>  arch/arm64/boot/dts/qcom/msm8998-mtp.dtsi     | 22 +++++++
+>  arch/arm64/boot/dts/qcom/msm8998.dtsi         | 65 +++++++++++++++++++
+>  3 files changed, 88 insertions(+)
 
-diff --git a/drivers/scsi/hptiop.c b/drivers/scsi/hptiop.c
-index 3eedfd4f8f57..251c084a6ff0 100644
---- a/drivers/scsi/hptiop.c
-+++ b/drivers/scsi/hptiop.c
-@@ -1292,6 +1292,7 @@ static int hptiop_probe(struct pci_dev *pcidev, const struct pci_device_id *id)
- 	dma_addr_t start_phy;
- 	void *start_virt;
- 	u32 offset, i, req_size;
-+	int rc;
- 
- 	dprintk("hptiop_probe(%p)\n", pcidev);
- 
-@@ -1308,9 +1309,12 @@ static int hptiop_probe(struct pci_dev *pcidev, const struct pci_device_id *id)
- 
- 	/* Enable 64bit DMA if possible */
- 	iop_ops = (struct hptiop_adapter_ops *)id->driver_data;
--	if (dma_set_mask(&pcidev->dev,
--			 DMA_BIT_MASK(iop_ops->hw_dma_bit_mask)) ||
--	    dma_set_mask(&pcidev->dev, DMA_BIT_MASK(32))) {
-+	rc = dma_set_mask(&pcidev->dev,
-+			  DMA_BIT_MASK(iop_ops->hw_dma_bit_mask));
-+	if (rc)
-+		rc = dma_set_mask(&pcidev->dev, DMA_BIT_MASK(32));
-+
-+	if (rc) {
- 		printk(KERN_ERR "hptiop: fail to set dma_mask\n");
- 		goto disable_pci_device;
- 	}
+I assume these are the same patches we've been using in our tree.
+
+If so:
+
+  Tested-by: Lee Jones <lee.jones@linaro.org>
+
 -- 
-2.16.4
-
-Reviewed-by: Ewan D. Milne <emilne@redhat.com>
+Lee Jones [李琼斯]
+Linaro Services Technical Lead
+Linaro.org │ Open source software for ARM SoCs
+Follow Linaro: Facebook | Twitter | Blog
