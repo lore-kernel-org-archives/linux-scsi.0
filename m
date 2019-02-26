@@ -1,72 +1,53 @@
-From: Kashyap Desai <kashyap.desai@broadcom.com>
-Subject: Re: [PATCH v1] mpt3sas: Use driver scsi lookup to track outstanding IOs
-Date: Tue, 26 Feb 2019 21:35:10 +0530
-Message-ID: <CAHsXFKGbNfJ32EE_Gyz9yC0k+yNB=rgMQZc+jAQr2nFPDC+oFg@mail.gmail.com>
-References: <1550751105-46065-1-git-send-email-sreekanth.reddy@broadcom.com>
- <d0672a75-2900-5f6b-368f-5808914322a8@suse.de> <CAK=zhgpuB9Y+Z1e64D1Dm4fJtJ2rjZPf5g_TLNwnKbauRpqrJQ@mail.gmail.com>
- <61a8f703-3f20-b777-08b9-54ae34dffa59@suse.de> <CAK=zhgrWWtCf+N7EmbhK69PEc2L0hfc8ybOyFddUed8yufhvJQ@mail.gmail.com>
- <0dfb09ca-8723-3a3c-a6a8-c643856c57e3@suse.de> <20190226143313.GA23865@infradead.org>
- <6f94a905-45c9-4a77-bbb6-9669197e8d8f@suse.de>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH v5 1/2] scsi: ufs: Do not disable vccq in UFSHC driver
+Date: Tue, 26 Feb 2019 11:26:27 -0500
+Message-ID: <yq1y362bjnw.fsf@oracle.com>
+References: <494cd639-89a7-8868-b63a-ea7cdcba9777@free.fr>
+        <be3ef9bf-438b-4e8a-62c4-f75458e8ecc0@free.fr>
+        <yq1ftsad2yi.fsf@oracle.com>
+        <b7f37c2d-27c7-9b58-20c8-52624783a6fa@free.fr>
+        <yq1bm2yd2kr.fsf@oracle.com>
+        <026c10b1-48e8-ab9f-fda8-6e3557b841a7@free.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <6f94a905-45c9-4a77-bbb6-9669197e8d8f@suse.de>
-Sender: stable-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Christoph Hellwig <hch@infradead.org>, Sreekanth Reddy <sreekanth.reddy@broadcom.com>, linux-scsi <linux-scsi@vger.kernel.org>, Sathya Prakash <Sathya.Prakash@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, stable@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <026c10b1-48e8-ab9f-fda8-6e3557b841a7@free.fr> (Marc Gonzalez's
+        message of "Tue, 26 Feb 2019 16:30:09 +0100")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Marc Gonzalez <marc.w.gonzalez@free.fr>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, SCSI <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Jeffrey Hugo <jhugo@codeaurora.org>, Bjorn Andersson <bjorn.andersson@linaro.org>, Evan Green <evgreen@chromium.org>, Douglas Anderson <dianders@chromium.org>, Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, Pedro Sousa <pedrom.sousa@synopsys.com>, Joao Pinto <jpinto@synopsys.com>, Mark Brown <broonie@kernel.org>, Liam Girdwood <lgirdwood@gmail.com>, Rob Herring <robh+dt@kernel.org>, Bart Van Assche <bart.vanassche@wdc.com>, Stanislav Nijnikov <stanislav.nijnikov@wdc.com>, Alex Lemberg <alex.lemberg@wdc.com>, Ohad Sharabi <ohad.sharabi@wdc.com>, Hannes Reinecke <hare@suse.de>, Kyuho Choi <kyuho.c>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Feb 26, 2019 at 8:23 PM Hannes Reinecke <hare@suse.de> wrote:
+
+Hi Marc,
+
+> I indeed started off from 'git revert'
 >
-> On 2/26/19 3:33 PM, Christoph Hellwig wrote:
-> > On Tue, Feb 26, 2019 at 02:49:30PM +0100, Hannes Reinecke wrote:
-> >> Attached is a patch to demonstrate my approach.
-> >> I am aware that it'll only be useful for latest upstream where the legacy
-> >> I/O path has been dropped completely, so we wouldn't need to worry about it.
-> >> For older releases indeed you would need to with something like your
-> >> proposed patch, but for upstream I really would like to switch to
-> >> blk_mq_tagset_busy() iter.
-> >
-> > While this is better than the driver private tracking we really should
-> > not have to iterate all outstanding command, because if we have any
-> > there is a bug we need to fix in the higher layers instead of working
-> > around it in the drivers.
-
-Hi Chris, Looking at other driver's code, I think similar issue is
-impacted to many scsi hbas (like fnic, qla4xxx, snic etc..). They also
-need similar logic to traverse outstanding scsi commands.
-One of the example is - At the time of HBA reset driver would like to
-release scsi command back to SML to retry and for that driver requires
-to loop all possible smid to figure out outstanding scsi command
-@Firmware/SML level.
-
-> >
-> Ah-ha.
+> $ git revert 60f0187031c0
+> warning: inexact rename detection was skipped due to too many files.
+> warning: you may want to set your merge.renamelimit variable to at
+> least 18258 and retry the command.
+> error: could not revert 60f0187031c0... scsi: ufs: disable vccq if
+> it's not needed by UFS device
+> hint: after resolving the conflicts, mark the corrected paths
+> hint: with 'git add <paths>' or 'git rm <paths>'
+> hint: and commit the result with 'git commit'
 >
-> But what else should we be doing here?
-> The driver needs to abort all outstanding commands; I somewhat fail to
-> see how we could be doing it otherwise ...
-
-Hannes, Primary drawback of using "blk_mq_tagset_busy_iter" is API is
-only for blk-mq and it is not available for all the kernel with blk-mq
-support. We have seen multiple failures from customer and those
-kernels does not support blk_mq_tagset_busy_iter. In fact, blk-mq and
-non-mq stack is alive in many Linux distribution and customer is using
-those. If we just scope to fix current kernel 5.x (which does not have
-non-mq support), we can opt blk_mq_tagset_busy_iter(). Earlier I
-requested upstream to accept driver changes without
-blk_mq_tagset_busy_iter() because it is hitting many customers so we
-are looking for generic fix which can server both blk-mq as well as
-non-mq.
-
-We will certainly enhance and optimize working this area (driver
-trying to find outstanding scsi command) with scsi mailing list as
-incremental approach.
-
-Kashyap
-
+> So I had to resolve the conflict in ufshcd_probe_hba()
 >
-> Cheers,
+> The line:
 >
-> Hannes
+> 	ufs_advertise_fixup_device(hba);
 >
+> was modified by commit 93fdd5ac64bbe80dac6416f048405362d7ef0945
+
+If it's a resolvable delta, a proper git revert is preferred. Please
+document any conflicts in the commit message and list the relevant
+commits that introduced them.
+
+If you find yourself in a situation where reverting simply isn't
+feasible, I'd expect the commit to state "This should have been a revert
+but I'd have to boil the oceans to resolve the conflicts because XYZ..."
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
