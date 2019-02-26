@@ -1,67 +1,77 @@
-From: Lee Jones <lee.jones@linaro.org>
-Subject: Re: [PATCH v5 0/2] Clean up UFSHC driver
-Date: Tue, 26 Feb 2019 08:57:30 +0000
-Message-ID: <20190226085730.GK4118@dell>
+From: Avri Altman <Avri.Altman@wdc.com>
+Subject: RE: [PATCH v5 1/2] scsi: ufs: Do not disable vccq in UFSHC driver
+Date: Tue, 26 Feb 2019 09:05:22 +0000
+Message-ID: <SN6PR04MB4925E5C25FA0E4BDC05D3660FC7B0@SN6PR04MB4925.namprd04.prod.outlook.com>
 References: <494cd639-89a7-8868-b63a-ea7cdcba9777@free.fr>
- <60e5da74-da0d-4ba7-6d29-2ca6008b6ceb@free.fr>
+ <be3ef9bf-438b-4e8a-62c4-f75458e8ecc0@free.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <60e5da74-da0d-4ba7-6d29-2ca6008b6ceb@free.fr>
+In-Reply-To: <be3ef9bf-438b-4e8a-62c4-f75458e8ecc0@free.fr>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Marc Gonzalez <marc.w.gonzalez@free.fr>
-Cc: Martin Petersen <martin.petersen@oracle.com>, SCSI <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Jeffrey Hugo <jhugo@codeaurora.org>, Bjorn Andersson <bjorn.andersson@linaro.org>, Evan Green <evgreen@chromium.org>, Douglas Anderson <dianders@chromium.org>, Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, Pedro Sousa <pedrom.sousa@synopsys.com>, Joao Pinto <jpinto@synopsys.com>, Mark Brown <broonie@kernel.org>, Liam Girdwood <lgirdwood@gmail.com>, Rob Herring <robh+dt@kernel.org>, Bart Van Assche <bart.vanassche@wdc.com>, Stanislav Nijnikov <stanislav.nijnikov@wdc.com>, Alex Lemberg <alex.lemberg@wdc.com>, Ohad Sharabi <ohad.sharabi@wdc.com>, Venkat Gopalakrishnan <venkatg@codeaurora.org>
+To: Marc Gonzalez <marc.w.gonzalez@free.fr>, SCSI <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+Cc: Jeffrey Hugo <jhugo@codeaurora.org>, Bjorn Andersson <bjorn.andersson@linaro.org>, Evan Green <evgreen@chromium.org>, Douglas Anderson <dianders@chromium.org>, Alim Akhtar <alim.akhtar@samsung.com>, Pedro Sousa <pedrom.sousa@synopsys.com>, Joao Pinto <jpinto@synopsys.com>, Mark Brown <broonie@kernel.org>, Liam Girdwood <lgirdwood@gmail.com>, Rob Herring <robh+dt@kernel.org>, Bart Van Assche <bart.vanassche@wdc.com>, Stanislav Nijnikov <Stanislav.Nijnikov@wdc.com>, Alex Lemberg <Alex.Lemberg@wdc.com>, Ohad Sharabi <ohad.sharabi@wdc.com>, Venkat Gopalakrishnan <venkatg@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, Yaniv Gardi <ygardi@codeaurora.org>, Gilad Broner <gbroner@codeaurora.org>, Raviv Shvili <rshvili@codeaurora.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, 23 Feb 2019, Marc Gonzalez wrote:
-
-> Martin,
-> 
-> Could you send this series to -next so that it gets some exposure
-> and testing during the 5.1 RC cycle?
-
-Replying for the purpose of providing some gravitas to this set.
-
-These patches are required to support some exciting consumer hardware
-which has been recently released [0][1][2][3][4].  If they do not
-find their way into Mainline very soon, it would mean that supporting
-these devices in the most popular Linux distos will be difficult to
-impossible.
-
-Please consider them for the v5.1 merge window which opens in a week.
-
-[0] https://joindiaspora.com/posts/4714199011120137995e0218b7b935a5
-[1] https://liliputing.com/2019/02/now-you-can-run-linux-on-some-arm-laptops-designed-for-windows-10-on-arm.html
-[2] https://www.phoronix.com/scan.php?page=news_item&px=Linux-On-The-Win-Arm-Laptops
-[3] https://fossbytes.com/linux-on-windows-10-arm-laptops-project/
-[4] https://www.techrepublic.com/article/open-source-project-aims-to-make-ubuntu-usable-on-arm-powered-windows-laptops/
-
-> On 11/02/2019 14:31, Marc Gonzalez wrote:
-> 
-> > Casting a wide net to get as many eyeballs on the subject as possible.
-> > 
-> > I'm splitting this mini series off from the main "UFS on APQ8098/MSM8998"
-> > as it's 1) ufs/scsi specific 2) controversial (to my surprise)
-> > 
-> > Please send all your Reviewed-by: tags if you agree with the patch,
-> > and/or voice your concerns ASAP.
-> > 
-> > This series removes the "disable-VCCQ-power-rail-for-some-Flash-chips" quirk,
-> > and cleans up after the dust settles.
-> > 
-> > Marc Gonzalez (2):
-> >   scsi: ufs: Do not disable vccq in UFSHC driver
-> >   scsi: ufs: Remove unused device quirks
-> > 
-> >  drivers/scsi/ufs/ufs.h        |  1 -
-> >  drivers/scsi/ufs/ufs_quirks.h | 29 ----------------
-> >  drivers/scsi/ufs/ufshcd.c     | 63 +++--------------------------------
-> >  3 files changed, 4 insertions(+), 89 deletions(-)
-
--- 
-Lee Jones [李琼斯]
-Linaro Services Technical Lead
-Linaro.org │ Open source software for ARM SoCs
-Follow Linaro: Facebook | Twitter | Blog
+PiANCj4gQ29tbWl0IDYwZjAxODcwMzFjMCAoImRpc2FibGUgdmNjcSBpZiBpdCdzIG5vdCBuZWVk
+ZWQgYnkgVUZTIGRldmljZSIpDQo+IGludHJvZHVjZWQgYSBzbWFsbCBwb3dlciBvcHRpbWl6YXRp
+b24gYXMgYSBkcml2ZXIgcXVpcms6IGlnbm9yZSB0aGUNCj4gdmNjcSBsb2FkIHNwZWNpZmllZCBp
+biB0aGUgVUZTSEMgRFQgbm9kZSB3aGVuIHNhaWQgaG9zdCBjb250cm9sbGVyDQo+IGlzIGNvbm5l
+Y3RlZCB0byBzcGVjaWZpYyBGbGFzaCBjaGlwcyAoU2Ftc3VuZyBhbmQgSHluaXggY3VycmVudGx5
+KS4NCj4gDQo+IFVuZm9ydHVuYXRlbHksIHRoaXMgb3B0aW1pemF0aW9uIGJyZWFrcyBVRlMgb24g
+c3lzdGVtcyB3aGVyZSB2Y2NxDQo+IHBvd2VycyBub3Qgb25seSB0aGUgRmxhc2ggY2hpcCwgYnV0
+IHRoZSBob3N0IGNvbnRyb2xsZXIgYXMgd2VsbCwNCj4gc3VjaCBhcyBBUFE4MDk4IE1FRElBQk9Y
+IG9yIE1UUDg5OTg6DQo+IA0KPiBbICAgIDMuOTI5ODc3XSB1ZnNoY2QtcWNvbSAxZGE0MDAwLnVm
+c2hjOiB1ZnNoY2RfcXVlcnlfYXR0cjogb3Bjb2RlIDB4MDQNCj4gZm9yIGlkbiAxMyBmYWlsZWQs
+IGluZGV4IDAsIGVyciA9IC0xMQ0KPiBbICAgIDUuNDMzODE1XSB1ZnNoY2QtcWNvbSAxZGE0MDAw
+LnVmc2hjOiB1ZnNoY2RfcXVlcnlfYXR0cjogb3Bjb2RlIDB4MDQNCj4gZm9yIGlkbiAxMyBmYWls
+ZWQsIGluZGV4IDAsIGVyciA9IC0xMQ0KPiBbICAgIDYuOTM3NzcxXSB1ZnNoY2QtcWNvbSAxZGE0
+MDAwLnVmc2hjOiB1ZnNoY2RfcXVlcnlfYXR0cjogb3Bjb2RlIDB4MDQNCj4gZm9yIGlkbiAxMyBm
+YWlsZWQsIGluZGV4IDAsIGVyciA9IC0xMQ0KPiBbICAgIDYuOTM3ODY2XSB1ZnNoY2QtcWNvbSAx
+ZGE0MDAwLnVmc2hjOiB1ZnNoY2RfcXVlcnlfYXR0cl9yZXRyeTogcXVlcnkNCj4gYXR0cmlidXRl
+LCBpZG4gMTMsIGZhaWxlZCB3aXRoIGVycm9yIC0xMSBhZnRlciAzIHJldGlyZXMNCj4gWyAgICA2
+Ljk0NjQxMl0gdWZzaGNkLXFjb20gMWRhNDAwMC51ZnNoYzogdWZzaGNkX2Rpc2FibGVfYXV0b19i
+a29wczoNCj4gZmFpbGVkIHRvIGVuYWJsZSBleGNlcHRpb24gZXZlbnQgLTExDQo+IFsgICAgNi45
+NTc5NzJdIHVmc2hjZC1xY29tIDFkYTQwMDAudWZzaGM6IGRtZS1wZWVyLWdldDogYXR0ci1pZCAw
+eDE1ODcNCj4gZmFpbGVkIDMgcmV0cmllcw0KPiBbICAgIDYuOTY3MTgxXSB1ZnNoY2QtcWNvbSAx
+ZGE0MDAwLnVmc2hjOiBkbWUtcGVlci1nZXQ6IGF0dHItaWQgMHgxNTg2DQo+IGZhaWxlZCAzIHJl
+dHJpZXMNCj4gWyAgICA2Ljk3NTAyNV0gdWZzaGNkLXFjb20gMWRhNDAwMC51ZnNoYzogdWZzaGNk
+X2dldF9tYXhfcHdyX21vZGU6DQo+IGludmFsaWQgbWF4IHB3bSB0eCBnZWFyIHJlYWQgPSAwDQo+
+IFsgICAgNi45ODI3NTVdIHVmc2hjZC1xY29tIDFkYTQwMDAudWZzaGM6IHVmc2hjZF9wcm9iZV9o
+YmE6IEZhaWxlZCBnZXR0aW5nDQo+IG1heCBzdXBwb3J0ZWQgcG93ZXIgbW9kZQ0KPiBbICAgIDgu
+NTA1NzcwXSB1ZnNoY2QtcWNvbSAxZGE0MDAwLnVmc2hjOiB1ZnNoY2RfcXVlcnlfZmxhZzogU2Vu
+ZGluZyBmbGFnDQo+IHF1ZXJ5IGZvciBpZG4gMyBmYWlsZWQsIGVyciA9IC0xMQ0KPiBbICAgMTAu
+MDA5ODA3XSB1ZnNoY2QtcWNvbSAxZGE0MDAwLnVmc2hjOiB1ZnNoY2RfcXVlcnlfZmxhZzogU2Vu
+ZGluZyBmbGFnDQo+IHF1ZXJ5IGZvciBpZG4gMyBmYWlsZWQsIGVyciA9IC0xMQ0KPiBbICAgMTEu
+NTEzNzY2XSB1ZnNoY2QtcWNvbSAxZGE0MDAwLnVmc2hjOiB1ZnNoY2RfcXVlcnlfZmxhZzogU2Vu
+ZGluZyBmbGFnDQo+IHF1ZXJ5IGZvciBpZG4gMyBmYWlsZWQsIGVyciA9IC0xMQ0KPiBbICAgMTEu
+NTEzODYxXSB1ZnNoY2QtcWNvbSAxZGE0MDAwLnVmc2hjOiB1ZnNoY2RfcXVlcnlfZmxhZ19yZXRy
+eTogcXVlcnkNCj4gYXR0cmlidXRlLCBvcGNvZGUgNSwgaWRuIDMsIGZhaWxlZCB3aXRoIGVycm9y
+IC0xMSBhZnRlciAzIHJldGlyZXMNCj4gWyAgIDEzLjA0OTgwN10gdWZzaGNkLXFjb20gMWRhNDAw
+MC51ZnNoYzogX191ZnNoY2RfcXVlcnlfZGVzY3JpcHRvcjoNCj4gb3Bjb2RlIDB4MDEgZm9yIGlk
+biA4IGZhaWxlZCwgaW5kZXggMCwgZXJyID0gLTExDQo+IFsgICAxNC41NTM3NjhdIHVmc2hjZC1x
+Y29tIDFkYTQwMDAudWZzaGM6IF9fdWZzaGNkX3F1ZXJ5X2Rlc2NyaXB0b3I6DQo+IG9wY29kZSAw
+eDAxIGZvciBpZG4gOCBmYWlsZWQsIGluZGV4IDAsIGVyciA9IC0xMQ0KPiBbICAgMTYuMDU3NzY3
+XSB1ZnNoY2QtcWNvbSAxZGE0MDAwLnVmc2hjOiBfX3Vmc2hjZF9xdWVyeV9kZXNjcmlwdG9yOg0K
+PiBvcGNvZGUgMHgwMSBmb3IgaWRuIDggZmFpbGVkLCBpbmRleCAwLCBlcnIgPSAtMTENCj4gWyAg
+IDE2LjA1Nzg3Ml0gdWZzaGNkLXFjb20gMWRhNDAwMC51ZnNoYzogdWZzaGNkX3JlYWRfZGVzY19w
+YXJhbTogRmFpbGVkDQo+IHJlYWRpbmcgZGVzY3JpcHRvci4gZGVzY19pZCA4LCBkZXNjX2luZGV4
+IDAsIHBhcmFtX29mZnNldCAwLCByZXQgLTExDQo+IFsgICAxNi4wNjcxMDldIHVmc2hjZC1xY29t
+IDFkYTQwMDAudWZzaGM6IHVmc2hjZF9pbml0X2ljY19sZXZlbHM6IEZhaWxlZA0KPiByZWFkaW5n
+IHBvd2VyIGRlc2NyaXB0b3IubGVuID0gOTggcmV0ID0gLTExDQo+IFsgICAzNy4wNzM3ODddIHVm
+c2hjZC1xY29tIDFkYTQwMDAudWZzaGM6IGxpbmsgc3RhcnR1cCBmYWlsZWQgMQ0KPiANCj4gSW4g
+bXkgb3BpbmlvbiwgdGhlIHJhdGlvbmFsZSBmb3IgdGhlIG9yaWdpbmFsIHBhdGNoIGlzIHF1ZXN0
+aW9uYWJsZS4NCj4gSWYgbmVpdGhlciB0aGUgVUZTSEMsIG5vciB0aGUgRmxhc2ggY2hpcCwgcmVx
+dWlyZSBhbnkgbG9hZCBmcm9tIHZjY3EsDQo+IHRoZW4gdGhhdCBwb3dlciByYWlsIHNob3VsZCBz
+aW1wbHkgbm90IGJlIHNwZWNpZmllZCBhdCBhbGwgaW4gdGhlIERULg0KPiANCj4gV29ya2luZyBh
+cm91bmQgdGhhdCBmYWN0IGluIHRoZSBkcml2ZXIgaXMgZGV0cmltZW50YWwsIGFzIGV2aWRlbmNl
+ZA0KPiBieSB0aGUgZmFpbHVyZSB0byBpbml0aWFsaXplIHRoZSBob3N0IGNvbnRyb2xsZXIgb24g
+TVNNODk5OC4NCj4gDQo+IFJldmVydCB0aGUgb3JpZ2luYWwgcGF0Y2gsIGFuZCBjbGVhbiB1cCBs
+b29zZSBlbmRzIGluIHRoZSBuZXh0IHBhdGNoLg0KPiANCj4gUmVsZXZhbnQgcGF0Y2hlczoNCj4g
+DQo+IDYwZjAxODcwMzFjMDVlMDRjYmFkZmZiNjJmNTU3ZDBmZjM1NjQ0OTANCj4gYzU4YWI3YWFi
+NzFlMmM3ODMwODcxMTVmMGNlMTYyM2MyZmRjZjBiMg0KPiA0NmMxY2Y3MDYwNzY1MDBjZGNkZTM0
+NDViZTk3MjMzNzkzZWVjN2YxDQo+IA0KPiBTaWduZWQtb2ZmLWJ5OiBNYXJjIEdvbnphbGV6IDxt
+YXJjLncuZ29uemFsZXpAZnJlZS5mcj4NCkFja2VkLWJ5OiBBdnJpIEFsdG1hbiA8YXZyaS5hbHRt
+YW5Ad2RjLmNvbT4gDQo=
