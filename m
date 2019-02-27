@@ -1,76 +1,44 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH] scsi: virtio_scsi: don't send sc payload with tmfs
-Date: Wed, 27 Feb 2019 17:28:17 +0100
-Message-ID: <a4ff6218-40c9-d232-0852-5a30e2c2eaab@redhat.com>
-References: <1550403730-27876-1-git-send-email-felipe@nutanix.com>
+From: Erwan Velu <erwanaliasr1@gmail.com>
+Subject: [PATCH] scsi: smartpqi_init: Reporting 'logical unit failure'
+Date: Wed, 27 Feb 2019 17:31:33 +0100
+Message-ID: <20190227163133.26283-1-e.velu@criteo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <1550403730-27876-1-git-send-email-felipe@nutanix.com>
-Content-Language: en-US
-Sender: stable-owner@vger.kernel.org
-To: Felipe Franciosi <felipe@nutanix.com>, Stefan Hajnoczi <stefanha@redhat.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, stable <stable@vger.kernel.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+Cc: Erwan Velu <e.velu@criteo.com>, Don Brace <don.brace@microsemi.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "open list:MICROSEMI SMART ARRAY SMARTPQI
+        DRIVER smartpqi" <esc.storagedev@microsemi.com>, "open list:MICROSEMI SMART ARRAY SMARTPQI
+        DRIVER smartpqi" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 27/02/19 17:10, Felipe Franciosi wrote:
-> The virtio scsi spec defines struct virtio_scsi_ctrl_tmf as a set of
-> device-readable records and a single device-writable response entry:
-> 
->     struct virtio_scsi_ctrl_tmf
->     {
->         // Device-readable part
->         le32 type;
->         le32 subtype;
->         u8 lun[8];
->         le64 id;
->         // Device-writable part
->         u8 response;
->     }
-> 
-> The above should be organised as two descriptor entries (or potentially
-> more if using VIRTIO_F_ANY_LAYOUT), but without any extra data after
-> "le64 id" or after "u8 response".
-> 
-> The Linux driver doesn't respect that, with virtscsi_abort() and
-> virtscsi_device_reset() setting cmd->sc before calling virtscsi_tmf().
-> It results in the original scsi command payload (or writable buffers)
-> added to the tmf.
-> 
-> This fixes the problem by leaving cmd->sc zeroed out, which makes
-> virtscsi_kick_cmd() add the tmf to the control vq without any payload.
+When this HARDWARE_ERROR/0x3e/0x1 case is triggered, the logical volume is offlined.
+When reading the kernel log, the cause why the device got offlined isn't reported to the user.
+This situation makes difficult for admins to estimate _why_ the volume got offlined.
+Reading this part of the code makes clear this is because driver received a HARDWARE_ERROR/0x3e/0x1 which is a 'logical unit failure'.
 
-Indeed, all that the completion routine needs is cmd->comp, which is set
-directly in virtscsi_tmf.
+This patch is just about reporting that fact to help admins making a relationship between this event and the offlining.
 
-Reviewed-by: Paolo Bonzini <pbonzini@redhat.com>
-Cc: stable@vger.kernel.org
+Signed-off-by: Erwan Velu <e.velu@criteo.com>
+---
+ drivers/scsi/smartpqi/smartpqi_init.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-> 
-> Signed-off-by: Felipe Franciosi <felipe@nutanix.com>
-> ---
->  drivers/scsi/virtio_scsi.c | 2 --
->  1 file changed, 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-> index 772b976..464cba5 100644
-> --- a/drivers/scsi/virtio_scsi.c
-> +++ b/drivers/scsi/virtio_scsi.c
-> @@ -594,7 +594,6 @@ static int virtscsi_device_reset(struct scsi_cmnd *sc)
->  		return FAILED;
->  
->  	memset(cmd, 0, sizeof(*cmd));
-> -	cmd->sc = sc;
->  	cmd->req.tmf = (struct virtio_scsi_ctrl_tmf_req){
->  		.type = VIRTIO_SCSI_T_TMF,
->  		.subtype = cpu_to_virtio32(vscsi->vdev,
-> @@ -653,7 +652,6 @@ static int virtscsi_abort(struct scsi_cmnd *sc)
->  		return FAILED;
->  
->  	memset(cmd, 0, sizeof(*cmd));
-> -	cmd->sc = sc;
->  	cmd->req.tmf = (struct virtio_scsi_ctrl_tmf_req){
->  		.type = VIRTIO_SCSI_T_TMF,
->  		.subtype = VIRTIO_SCSI_T_TMF_ABORT_TASK,
-> 
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+index f564af8949e8..89f37d76735c 100644
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -2764,6 +2764,12 @@ static void pqi_process_raid_io_error(struct pqi_io_request *io_request)
+ 				sshdr.sense_key == HARDWARE_ERROR &&
+ 				sshdr.asc == 0x3e &&
+ 				sshdr.ascq == 0x1) {
++			struct pqi_ctrl_info *ctrl_info = shost_to_hba(scmd->device->host);
++			struct pqi_scsi_dev *device = scmd->device->hostdata;
++
++			dev_err(&ctrl_info->pci_dev->dev, "received 'logical unit failure' from controller for scsi %d:%d:%d:%d\n",
++							ctrl_info->scsi_host->host_no, device->bus,
++							device->target, device->lun);
+ 			pqi_take_device_offline(scmd->device, "RAID");
+ 			host_byte = DID_NO_CONNECT;
+ 		}
+-- 
+2.20.1
