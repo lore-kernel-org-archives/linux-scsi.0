@@ -1,28 +1,30 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: aacraid: Fix missing break in switch statement
-Date: Wed, 27 Feb 2019 09:33:47 -0500
-Message-ID: <yq1pnrd9u7o.fsf@oracle.com>
-References: <20190215214242.GA8393@embeddedor>
+Subject: Re: [PATCH] scsi: mpt3sas: Add missing breaks in switch statements
+Date: Wed, 27 Feb 2019 09:37:29 -0500
+Message-ID: <yq1lg219u1i.fsf@oracle.com>
+References: <20190215215414.GA10944@embeddedor>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190215214242.GA8393@embeddedor> (Gustavo A. R. Silva's message
-        of "Fri, 15 Feb 2019 15:42:42 -0600")
+In-Reply-To: <20190215215414.GA10944@embeddedor> (Gustavo A. R. Silva's
+        message of "Fri, 15 Feb 2019 15:54:14 -0600")
 Sender: linux-kernel-owner@vger.kernel.org
 To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Cc: Adaptec OEM Raid Solutions <aacraid@microsemi.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Kees Cook <keescook@chromium.org>
+Cc: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Kees Cook <keescook@chromium.org>
 List-Id: linux-scsi@vger.kernel.org
 
 
 Gustavo,
 
-> Add missing break statement and fix identation issue.
+> Fix the following warnings by adding the proper missing breaks:
+>
+> drivers/scsi/mpt3sas/mpt3sas_base.c: In function =E2=80=98_base_display_O=
+EMs_branding=E2=80=99:
+> drivers/scsi/mpt3sas/mpt3sas_base.c:3548:4: warning: this statement may f=
+all thr
 
-So much bad indentation in this driver. Tried various tab widths and it
-is still all over the place.
+Applied to 5.1/scsi-queue, thanks.
 
-Anyway. After staring at the firmware header I have convinced myself
-that your fix is correct. Applied to 5.1/scsi-queue.
-
--- 
+--=20
 Martin K. Petersen	Oracle Linux Engineering
