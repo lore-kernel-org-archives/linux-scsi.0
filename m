@@ -1,29 +1,28 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [REPOST PATCH v4 0/3] scsi: ufs-bsg: Add read descriptor
-Date: Wed, 27 Feb 2019 09:00:38 -0500
-Message-ID: <yq136o9babd.fsf@oracle.com>
-References: <1550646674-15258-1-git-send-email-avri.altman@wdc.com>
+Subject: Re: [PATCH] scsi: aacraid: Fix missing break in switch statement
+Date: Wed, 27 Feb 2019 09:33:47 -0500
+Message-ID: <yq1pnrd9u7o.fsf@oracle.com>
+References: <20190215214242.GA8393@embeddedor>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1550646674-15258-1-git-send-email-avri.altman@wdc.com> (Avri
-        Altman's message of "Wed, 20 Feb 2019 09:11:11 +0200")
+In-Reply-To: <20190215214242.GA8393@embeddedor> (Gustavo A. R. Silva's message
+        of "Fri, 15 Feb 2019 15:42:42 -0600")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Avri Altman <avri.altman@wdc.com>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Evan Green <evgreen@chromium.org>, Bean Huo <beanhuo@micron.com>, Pedro Sousa <pedrom.sousa@synopsys.com>, Alim Akhtar <alim.akhtar@samsung.com>, Avi Shchislowski <avi.shchislowski@wdc.com>, Alex Lemberg <alex.lemberg@wdc.com>
+To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Cc: Adaptec OEM Raid Solutions <aacraid@microsemi.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Kees Cook <keescook@chromium.org>
 List-Id: linux-scsi@vger.kernel.org
 
 
-Avri,
+Gustavo,
 
-> UFS Protocol Information Units (UPIU) are UFS packets that travel
-> between the host and the device on the UniPro bus. Our previous series
-> added the capability to send UPIUs to the ufs driver. It does not
-> cover all the possible UPIU types - we are mainly focused on device
-> management, provisioning, testing and validation, so it covers UPIUs
-> that falls in that box.
+> Add missing break statement and fix identation issue.
 
-Applied to 5.1/scsi-queue, thanks!
+So much bad indentation in this driver. Tried various tab widths and it
+is still all over the place.
+
+Anyway. After staring at the firmware header I have convinced myself
+that your fix is correct. Applied to 5.1/scsi-queue.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
