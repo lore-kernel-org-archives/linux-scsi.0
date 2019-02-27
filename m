@@ -1,42 +1,76 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v1] mpt3sas: Use driver scsi lookup to track outstanding IOs
-Date: Wed, 27 Feb 2019 09:50:08 -0500
-Message-ID: <yq14l8p9tgf.fsf@oracle.com>
-References: <1550751105-46065-1-git-send-email-sreekanth.reddy@broadcom.com>
-        <d0672a75-2900-5f6b-368f-5808914322a8@suse.de>
-        <CAK=zhgpuB9Y+Z1e64D1Dm4fJtJ2rjZPf5g_TLNwnKbauRpqrJQ@mail.gmail.com>
-        <61a8f703-3f20-b777-08b9-54ae34dffa59@suse.de>
-        <CAK=zhgrWWtCf+N7EmbhK69PEc2L0hfc8ybOyFddUed8yufhvJQ@mail.gmail.com>
-        <0dfb09ca-8723-3a3c-a6a8-c643856c57e3@suse.de>
-        <20190226143313.GA23865@infradead.org>
-        <6f94a905-45c9-4a77-bbb6-9669197e8d8f@suse.de>
-        <CAHsXFKGbNfJ32EE_Gyz9yC0k+yNB=rgMQZc+jAQr2nFPDC+oFg@mail.gmail.com>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: [PATCH] scsi: virtio_scsi: don't send sc payload with tmfs
+Date: Wed, 27 Feb 2019 17:28:17 +0100
+Message-ID: <a4ff6218-40c9-d232-0852-5a30e2c2eaab@redhat.com>
+References: <1550403730-27876-1-git-send-email-felipe@nutanix.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <CAHsXFKGbNfJ32EE_Gyz9yC0k+yNB=rgMQZc+jAQr2nFPDC+oFg@mail.gmail.com>
-        (Kashyap Desai's message of "Tue, 26 Feb 2019 21:35:10 +0530")
+In-Reply-To: <1550403730-27876-1-git-send-email-felipe@nutanix.com>
+Content-Language: en-US
 Sender: stable-owner@vger.kernel.org
-To: Kashyap Desai <kashyap.desai@broadcom.com>
-Cc: Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@infradead.org>, Sreekanth Reddy <sreekanth.reddy@broadcom.com>, linux-scsi <linux-scsi@vger.kernel.org>, Sathya Prakash <Sathya.Prakash@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, stable@vger.kernel.org
+To: Felipe Franciosi <felipe@nutanix.com>, Stefan Hajnoczi <stefanha@redhat.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, stable <stable@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
+On 27/02/19 17:10, Felipe Franciosi wrote:
+> The virtio scsi spec defines struct virtio_scsi_ctrl_tmf as a set of
+> device-readable records and a single device-writable response entry:
+> 
+>     struct virtio_scsi_ctrl_tmf
+>     {
+>         // Device-readable part
+>         le32 type;
+>         le32 subtype;
+>         u8 lun[8];
+>         le64 id;
+>         // Device-writable part
+>         u8 response;
+>     }
+> 
+> The above should be organised as two descriptor entries (or potentially
+> more if using VIRTIO_F_ANY_LAYOUT), but without any extra data after
+> "le64 id" or after "u8 response".
+> 
+> The Linux driver doesn't respect that, with virtscsi_abort() and
+> virtscsi_device_reset() setting cmd->sc before calling virtscsi_tmf().
+> It results in the original scsi command payload (or writable buffers)
+> added to the tmf.
+> 
+> This fixes the problem by leaving cmd->sc zeroed out, which makes
+> virtscsi_kick_cmd() add the tmf to the control vq without any payload.
 
-Kashyap,
+Indeed, all that the completion routine needs is cmd->comp, which is set
+directly in virtscsi_tmf.
 
-> Primary drawback of using "blk_mq_tagset_busy_iter" is API is only for
-> blk-mq and it is not available for all the kernel with blk-mq
-> support. We have seen multiple failures from customer and those
-> kernels does not support blk_mq_tagset_busy_iter. In fact, blk-mq and
-> non-mq stack is alive in many Linux distribution and customer is using
-> those.
+Reviewed-by: Paolo Bonzini <pbonzini@redhat.com>
+Cc: stable@vger.kernel.org
 
-I'm afraid the burden falls upon Broadcom to manage enablement patches
-for older kernels. So the non-MQ/non-tagset-busy-iter cases are not
-particularly relevant for the discussion here.
-
-Let's focus on getting some usable plumbing that drivers can use to
-abort oustanding tags.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+> 
+> Signed-off-by: Felipe Franciosi <felipe@nutanix.com>
+> ---
+>  drivers/scsi/virtio_scsi.c | 2 --
+>  1 file changed, 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+> index 772b976..464cba5 100644
+> --- a/drivers/scsi/virtio_scsi.c
+> +++ b/drivers/scsi/virtio_scsi.c
+> @@ -594,7 +594,6 @@ static int virtscsi_device_reset(struct scsi_cmnd *sc)
+>  		return FAILED;
+>  
+>  	memset(cmd, 0, sizeof(*cmd));
+> -	cmd->sc = sc;
+>  	cmd->req.tmf = (struct virtio_scsi_ctrl_tmf_req){
+>  		.type = VIRTIO_SCSI_T_TMF,
+>  		.subtype = cpu_to_virtio32(vscsi->vdev,
+> @@ -653,7 +652,6 @@ static int virtscsi_abort(struct scsi_cmnd *sc)
+>  		return FAILED;
+>  
+>  	memset(cmd, 0, sizeof(*cmd));
+> -	cmd->sc = sc;
+>  	cmd->req.tmf = (struct virtio_scsi_ctrl_tmf_req){
+>  		.type = VIRTIO_SCSI_T_TMF,
+>  		.subtype = VIRTIO_SCSI_T_TMF_ABORT_TASK,
+> 
