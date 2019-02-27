@@ -1,44 +1,46 @@
-From: Erwan Velu <erwanaliasr1@gmail.com>
-Subject: [PATCH] scsi: smartpqi_init: Reporting 'logical unit failure'
-Date: Wed, 27 Feb 2019 17:31:33 +0100
-Message-ID: <20190227163133.26283-1-e.velu@criteo.com>
+From: Felipe Franciosi <felipe@nutanix.com>
+Subject: [PATCH] scsi: virtio_scsi: don't send sc payload with tmfs
+Date: Wed, 27 Feb 2019 16:10:34 +0000
+Message-ID: <1550403730-27876-1-git-send-email-felipe@nutanix.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-Cc: Erwan Velu <e.velu@criteo.com>, Don Brace <don.brace@microsemi.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "open list:MICROSEMI SMART ARRAY SMARTPQI
-        DRIVER smartpqi" <esc.storagedev@microsemi.com>, "open list:MICROSEMI SMART ARRAY SMARTPQI
-        DRIVER smartpqi" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+To: Paolo Bonzini <pbonzini@redhat.com>, Stefan Hajnoczi <stefanha@redhat.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Felipe Franciosi <felipe@nutanix.com>
 List-Id: linux-scsi@vger.kernel.org
 
-When this HARDWARE_ERROR/0x3e/0x1 case is triggered, the logical volume is offlined.
-When reading the kernel log, the cause why the device got offlined isn't reported to the user.
-This situation makes difficult for admins to estimate _why_ the volume got offlined.
-Reading this part of the code makes clear this is because driver received a HARDWARE_ERROR/0x3e/0x1 which is a 'logical unit failure'.
-
-This patch is just about reporting that fact to help admins making a relationship between this event and the offlining.
-
-Signed-off-by: Erwan Velu <e.velu@criteo.com>
----
- drivers/scsi/smartpqi/smartpqi_init.c | 5 +++++
- 1 file changed, 5 insertions(+)
-
-diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index f564af8949e8..89f37d76735c 100644
---- a/drivers/scsi/smartpqi/smartpqi_init.c
-+++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -2764,6 +2764,12 @@ static void pqi_process_raid_io_error(struct pqi_io_request *io_request)
- 				sshdr.sense_key == HARDWARE_ERROR &&
- 				sshdr.asc == 0x3e &&
- 				sshdr.ascq == 0x1) {
-+			struct pqi_ctrl_info *ctrl_info = shost_to_hba(scmd->device->host);
-+			struct pqi_scsi_dev *device = scmd->device->hostdata;
-+
-+			dev_err(&ctrl_info->pci_dev->dev, "received 'logical unit failure' from controller for scsi %d:%d:%d:%d\n",
-+							ctrl_info->scsi_host->host_no, device->bus,
-+							device->target, device->lun);
- 			pqi_take_device_offline(scmd->device, "RAID");
- 			host_byte = DID_NO_CONNECT;
- 		}
--- 
-2.20.1
+VGhlIHZpcnRpbyBzY3NpIHNwZWMgZGVmaW5lcyBzdHJ1Y3QgdmlydGlvX3Njc2lfY3RybF90bWYg
+YXMgYSBzZXQgb2YNCmRldmljZS1yZWFkYWJsZSByZWNvcmRzIGFuZCBhIHNpbmdsZSBkZXZpY2Ut
+d3JpdGFibGUgcmVzcG9uc2UgZW50cnk6DQoNCiAgICBzdHJ1Y3QgdmlydGlvX3Njc2lfY3RybF90
+bWYNCiAgICB7DQogICAgICAgIC8vIERldmljZS1yZWFkYWJsZSBwYXJ0DQogICAgICAgIGxlMzIg
+dHlwZTsNCiAgICAgICAgbGUzMiBzdWJ0eXBlOw0KICAgICAgICB1OCBsdW5bOF07DQogICAgICAg
+IGxlNjQgaWQ7DQogICAgICAgIC8vIERldmljZS13cml0YWJsZSBwYXJ0DQogICAgICAgIHU4IHJl
+c3BvbnNlOw0KICAgIH0NCg0KVGhlIGFib3ZlIHNob3VsZCBiZSBvcmdhbmlzZWQgYXMgdHdvIGRl
+c2NyaXB0b3IgZW50cmllcyAob3IgcG90ZW50aWFsbHkNCm1vcmUgaWYgdXNpbmcgVklSVElPX0Zf
+QU5ZX0xBWU9VVCksIGJ1dCB3aXRob3V0IGFueSBleHRyYSBkYXRhIGFmdGVyDQoibGU2NCBpZCIg
+b3IgYWZ0ZXIgInU4IHJlc3BvbnNlIi4NCg0KVGhlIExpbnV4IGRyaXZlciBkb2Vzbid0IHJlc3Bl
+Y3QgdGhhdCwgd2l0aCB2aXJ0c2NzaV9hYm9ydCgpIGFuZA0KdmlydHNjc2lfZGV2aWNlX3Jlc2V0
+KCkgc2V0dGluZyBjbWQtPnNjIGJlZm9yZSBjYWxsaW5nIHZpcnRzY3NpX3RtZigpLg0KSXQgcmVz
+dWx0cyBpbiB0aGUgb3JpZ2luYWwgc2NzaSBjb21tYW5kIHBheWxvYWQgKG9yIHdyaXRhYmxlIGJ1
+ZmZlcnMpDQphZGRlZCB0byB0aGUgdG1mLg0KDQpUaGlzIGZpeGVzIHRoZSBwcm9ibGVtIGJ5IGxl
+YXZpbmcgY21kLT5zYyB6ZXJvZWQgb3V0LCB3aGljaCBtYWtlcw0KdmlydHNjc2lfa2lja19jbWQo
+KSBhZGQgdGhlIHRtZiB0byB0aGUgY29udHJvbCB2cSB3aXRob3V0IGFueSBwYXlsb2FkLg0KDQpT
+aWduZWQtb2ZmLWJ5OiBGZWxpcGUgRnJhbmNpb3NpIDxmZWxpcGVAbnV0YW5peC5jb20+DQotLS0N
+CiBkcml2ZXJzL3Njc2kvdmlydGlvX3Njc2kuYyB8IDIgLS0NCiAxIGZpbGUgY2hhbmdlZCwgMiBk
+ZWxldGlvbnMoLSkNCg0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS92aXJ0aW9fc2NzaS5jIGIv
+ZHJpdmVycy9zY3NpL3ZpcnRpb19zY3NpLmMNCmluZGV4IDc3MmI5NzYuLjQ2NGNiYTUgMTAwNjQ0
+DQotLS0gYS9kcml2ZXJzL3Njc2kvdmlydGlvX3Njc2kuYw0KKysrIGIvZHJpdmVycy9zY3NpL3Zp
+cnRpb19zY3NpLmMNCkBAIC01OTQsNyArNTk0LDYgQEAgc3RhdGljIGludCB2aXJ0c2NzaV9kZXZp
+Y2VfcmVzZXQoc3RydWN0IHNjc2lfY21uZCAqc2MpDQogCQlyZXR1cm4gRkFJTEVEOw0KIA0KIAlt
+ZW1zZXQoY21kLCAwLCBzaXplb2YoKmNtZCkpOw0KLQljbWQtPnNjID0gc2M7DQogCWNtZC0+cmVx
+LnRtZiA9IChzdHJ1Y3QgdmlydGlvX3Njc2lfY3RybF90bWZfcmVxKXsNCiAJCS50eXBlID0gVklS
+VElPX1NDU0lfVF9UTUYsDQogCQkuc3VidHlwZSA9IGNwdV90b192aXJ0aW8zMih2c2NzaS0+dmRl
+diwNCkBAIC02NTMsNyArNjUyLDYgQEAgc3RhdGljIGludCB2aXJ0c2NzaV9hYm9ydChzdHJ1Y3Qg
+c2NzaV9jbW5kICpzYykNCiAJCXJldHVybiBGQUlMRUQ7DQogDQogCW1lbXNldChjbWQsIDAsIHNp
+emVvZigqY21kKSk7DQotCWNtZC0+c2MgPSBzYzsNCiAJY21kLT5yZXEudG1mID0gKHN0cnVjdCB2
+aXJ0aW9fc2NzaV9jdHJsX3RtZl9yZXEpew0KIAkJLnR5cGUgPSBWSVJUSU9fU0NTSV9UX1RNRiwN
+CiAJCS5zdWJ0eXBlID0gVklSVElPX1NDU0lfVF9UTUZfQUJPUlRfVEFTSywNCi0tIA0KMS45LjUN
+Cg0K
