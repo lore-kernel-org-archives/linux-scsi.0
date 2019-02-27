@@ -1,7 +1,8 @@
 From: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH v3 1/7] scsi: ufs: Introduce ufshcd_get_pwr_dev_param
-Date: Wed, 27 Feb 2019 15:23:06 +0800
-Message-ID: <1551252192-535-3-git-send-email-stanley.chu@mediatek.com>
+Subject: [PATCH v3 0/7] scsi: ufs-mediatek: Add UFS support for Mediatek SoC
+ chips
+Date: Wed, 27 Feb 2019 15:23:05 +0800
+Message-ID: <1551252192-535-2-git-send-email-stanley.chu@mediatek.com>
 References: <1551252192-535-1-git-send-email-stanley.chu@mediatek.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,167 +22,53 @@ To: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76
 Cc: chun-hung.wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, kuohong.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, liwei213-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, vivek.gautam-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, peter.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-ufshcd_get_pwr_dev_param is for vendors to decide finally
-agreed attributes for power mode change if vendors define
-their host capability in struct ufs_dev_params.
+Hello,
 
-This api is using by both ufs-qcom and ufs-hisi now. Simply
-re-factor it and then every vendors can reuse it.
+This patch series adds UFS M-PHY and UFS host driver support in MediaTek chipsets.
 
-Signed-off-by: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-Reviewed-by: Avri Altman <avri.altman-Sjgp3cTcYWE@public.gmane.org>
----
- drivers/scsi/ufs/ufshcd-pltfrm.c | 98 ++++++++++++++++++++++++++++++++
- drivers/scsi/ufs/ufshcd-pltfrm.h | 21 +++++++
- 2 files changed, 119 insertions(+)
+In the meantime, re-factors ufshcd_get_pwr_dev_param in vendors' drivers. This function is for vendors to decide finally agreed attributes for power mode change if vendors define
+their host capability in struct ufs_dev_params. Because it is using by both ufs-qcom and ufs-hisi and also used in ufs-mediatek in this serious, simply re-factor it and then every vendors can reuse it.
 
-diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
-index 895a9b5ac989..508c561c9a62 100644
---- a/drivers/scsi/ufs/ufshcd-pltfrm.c
-+++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
-@@ -39,6 +39,7 @@
- 
- #include "ufshcd.h"
- #include "ufshcd-pltfrm.h"
-+#include "unipro.h"
- 
- #define UFSHCD_DEFAULT_LANES_PER_DIRECTION		2
- 
-@@ -289,6 +290,103 @@ static void ufshcd_init_lanes_per_dir(struct ufs_hba *hba)
- 	}
- }
- 
-+/**
-+ * ufshcd_get_pwr_dev_param - get finally agreed attributes for
-+ *                            power mode change
-+ * @pltfrm_param: pointer to platform parameters
-+ * @dev_max: pointer to device attributes
-+ * @agreed_pwr: returned agreed attributes
-+ *
-+ * Returns 0 on success, non-zero value on failure
-+ */
-+int ufshcd_get_pwr_dev_param(struct ufs_dev_params *pltfrm_param,
-+			     struct ufs_pa_layer_attr *dev_max,
-+			     struct ufs_pa_layer_attr *agreed_pwr)
-+{
-+	int min_pltfrm_gear;
-+	int min_dev_gear;
-+	bool is_dev_sup_hs = false;
-+	bool is_pltfrm_max_hs = false;
-+
-+	if (dev_max->pwr_rx == FAST_MODE)
-+		is_dev_sup_hs = true;
-+
-+	if (pltfrm_param->desired_working_mode == UFS_HS_MODE) {
-+		is_pltfrm_max_hs = true;
-+		min_pltfrm_gear = min_t(u32, pltfrm_param->hs_rx_gear,
-+					pltfrm_param->hs_tx_gear);
-+	} else {
-+		min_pltfrm_gear = min_t(u32, pltfrm_param->pwm_rx_gear,
-+					pltfrm_param->pwm_tx_gear);
-+	}
-+
-+	/*
-+	 * device doesn't support HS but
-+	 * pltfrm_param->desired_working_mode is HS,
-+	 * thus device and pltfrm_param don't agree
-+	 */
-+	if (!is_dev_sup_hs && is_pltfrm_max_hs) {
-+		pr_info("%s: device doesn't support HS\n",
-+			__func__);
-+		return -ENOTSUPP;
-+	} else if (is_dev_sup_hs && is_pltfrm_max_hs) {
-+		/*
-+		 * since device supports HS, it supports FAST_MODE.
-+		 * since pltfrm_param->desired_working_mode is also HS
-+		 * then final decision (FAST/FASTAUTO) is done according
-+		 * to pltfrm_params as it is the restricting factor
-+		 */
-+		agreed_pwr->pwr_rx = pltfrm_param->rx_pwr_hs;
-+		agreed_pwr->pwr_tx = agreed_pwr->pwr_rx;
-+	} else {
-+		/*
-+		 * here pltfrm_param->desired_working_mode is PWM.
-+		 * it doesn't matter whether device supports HS or PWM,
-+		 * in both cases pltfrm_param->desired_working_mode will
-+		 * determine the mode
-+		 */
-+		agreed_pwr->pwr_rx = pltfrm_param->rx_pwr_pwm;
-+		agreed_pwr->pwr_tx = agreed_pwr->pwr_rx;
-+	}
-+
-+	/*
-+	 * we would like tx to work in the minimum number of lanes
-+	 * between device capability and vendor preferences.
-+	 * the same decision will be made for rx
-+	 */
-+	agreed_pwr->lane_tx = min_t(u32, dev_max->lane_tx,
-+				    pltfrm_param->tx_lanes);
-+	agreed_pwr->lane_rx = min_t(u32, dev_max->lane_rx,
-+				    pltfrm_param->rx_lanes);
-+
-+	/* device maximum gear is the minimum between device rx and tx gears */
-+	min_dev_gear = min_t(u32, dev_max->gear_rx, dev_max->gear_tx);
-+
-+	/*
-+	 * if both device capabilities and vendor pre-defined preferences are
-+	 * both HS or both PWM then set the minimum gear to be the chosen
-+	 * working gear.
-+	 * if one is PWM and one is HS then the one that is PWM get to decide
-+	 * what is the gear, as it is the one that also decided previously what
-+	 * pwr the device will be configured to.
-+	 */
-+	if ((is_dev_sup_hs && is_pltfrm_max_hs) ||
-+	    (!is_dev_sup_hs && !is_pltfrm_max_hs)) {
-+		agreed_pwr->gear_rx =
-+			min_t(u32, min_dev_gear, min_pltfrm_gear);
-+	} else if (!is_dev_sup_hs) {
-+		agreed_pwr->gear_rx = min_dev_gear;
-+	} else {
-+		agreed_pwr->gear_rx = min_pltfrm_gear;
-+	}
-+	agreed_pwr->gear_tx = agreed_pwr->gear_rx;
-+
-+	agreed_pwr->hs_rate = pltfrm_param->hs_rate;
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(ufshcd_get_pwr_dev_param);
-+
- /**
-  * ufshcd_pltfrm_init - probe routine of the driver
-  * @pdev: pointer to Platform device handle
-diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.h b/drivers/scsi/ufs/ufshcd-pltfrm.h
-index df64c4180340..d3ba62269be6 100644
---- a/drivers/scsi/ufs/ufshcd-pltfrm.h
-+++ b/drivers/scsi/ufs/ufshcd-pltfrm.h
-@@ -16,6 +16,27 @@
- 
- #include "ufshcd.h"
- 
-+#define UFS_PWM_MODE 1
-+#define UFS_HS_MODE  2
-+
-+struct ufs_dev_params {
-+	u32 pwm_rx_gear;        /* pwm rx gear to work in */
-+	u32 pwm_tx_gear;        /* pwm tx gear to work in */
-+	u32 hs_rx_gear;         /* hs rx gear to work in */
-+	u32 hs_tx_gear;         /* hs tx gear to work in */
-+	u32 rx_lanes;           /* number of rx lanes */
-+	u32 tx_lanes;           /* number of tx lanes */
-+	u32 rx_pwr_pwm;         /* rx pwm working pwr */
-+	u32 tx_pwr_pwm;         /* tx pwm working pwr */
-+	u32 rx_pwr_hs;          /* rx hs working pwr */
-+	u32 tx_pwr_hs;          /* tx hs working pwr */
-+	u32 hs_rate;            /* rate A/B to work in HS */
-+	u32 desired_working_mode;
-+};
-+
-+int ufshcd_get_pwr_dev_param(struct ufs_dev_params *dev_param,
-+			     struct ufs_pa_layer_attr *dev_max,
-+			     struct ufs_pa_layer_attr *agreed_pwr);
- int ufshcd_pltfrm_init(struct platform_device *pdev,
- 		       struct ufs_hba_variant_ops *vops);
- void ufshcd_pltfrm_shutdown(struct platform_device *pdev);
+Changes since v2:
+-	Fix header style with SPDX-License-Identifier declaration used.
+-	Simplify ufs-phy-mtk to single source file since we has one MPHY version now, and do fixes according to Chunfeng Yun's comments.
+-	Add dt-bindings of ufs-phy-mtk.
+
+Changes since v1:
+-	Re-factor ufshcd_get_pwr_dev_param in mediatek/qcom/hisi vendor drivers.
+-	Introduce ufs-phy-mtk to have a good extension capability for different power control flows in future different MPHY versions.
+-	Bind ufs-phy-mtk and hook suitable callbacks in ufs-mediatek driver.
+-	Use PA_LOCAL_TX_LCC_ENABLE attribute defined in unipro.h instead.
+-	Do some minor format fixes.
+
+Stanley Chu (7):
+  scsi: ufs: Introduce ufshcd_get_pwr_dev_param
+  scsi: ufs-qcom: Re-factor ufshcd_get_pwr_dev_param
+  scsi: ufs-hisi: Re-factor ufshcd_get_pwr_dev_param
+  dt-bindings: phy: Add document for phy-mtk-ufs
+  dt-bindings: scsi: ufs: Add document for ufs-mediatek
+  phy: mediatek: Add UFS M-PHY driver
+  scsi: ufs-mediatek: Add UFS support for Mediatek SoC chips
+
+ .../devicetree/bindings/phy/phy-mtk-ufs.txt   |  35 ++
+ .../devicetree/bindings/ufs/ufs-mediatek.txt  |  47 +++
+ drivers/phy/mediatek/Kconfig                  |   9 +
+ drivers/phy/mediatek/Makefile                 |   1 +
+ drivers/phy/mediatek/phy-mtk-ufs.c            | 239 ++++++++++++
+ drivers/scsi/ufs/Kconfig                      |  14 +
+ drivers/scsi/ufs/Makefile                     |   1 +
+ drivers/scsi/ufs/ufs-hisi.c                   | 109 +-----
+ drivers/scsi/ufs/ufs-mediatek.c               | 368 ++++++++++++++++++
+ drivers/scsi/ufs/ufs-mediatek.h               |  54 +++
+ drivers/scsi/ufs/ufs-qcom.c                   | 106 +----
+ drivers/scsi/ufs/ufshcd-pltfrm.c              |  98 +++++
+ drivers/scsi/ufs/ufshcd-pltfrm.h              |  21 +
+ 13 files changed, 895 insertions(+), 207 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/phy/phy-mtk-ufs.txt
+ create mode 100644 Documentation/devicetree/bindings/ufs/ufs-mediatek.txt
+ create mode 100644 drivers/phy/mediatek/phy-mtk-ufs.c
+ create mode 100644 drivers/scsi/ufs/ufs-mediatek.c
+ create mode 100644 drivers/scsi/ufs/ufs-mediatek.h
+
 -- 
 2.18.0
