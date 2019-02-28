@@ -1,50 +1,122 @@
-From: Erwan Velu <e.velu@criteo.com>
-Subject: Re: [PATCH] scsi: smartpqi_init: Reporting 'logical unit failure'
-Date: Thu, 28 Feb 2019 13:09:18 +0000
-Message-ID: <7ef24085-2cc1-6271-1b16-cbfa4b0d80f5@criteo.com>
-References: <20190227163133.26283-1-e.velu@criteo.com>
+From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Subject: Re: [PATCH v1] mpt3sas: Use driver scsi lookup to track outstanding IOs
+Date: Thu, 28 Feb 2019 18:55:38 +0530
+Message-ID: <CAK=zhgqXecz0bSXYiNiQn7WXbQq1eC2pWuhkYw53RirkukPC5g@mail.gmail.com>
+References: <1550751105-46065-1-git-send-email-sreekanth.reddy@broadcom.com>
+ <d0672a75-2900-5f6b-368f-5808914322a8@suse.de> <CAK=zhgpuB9Y+Z1e64D1Dm4fJtJ2rjZPf5g_TLNwnKbauRpqrJQ@mail.gmail.com>
+ <61a8f703-3f20-b777-08b9-54ae34dffa59@suse.de> <CAK=zhgrWWtCf+N7EmbhK69PEc2L0hfc8ybOyFddUed8yufhvJQ@mail.gmail.com>
+ <0dfb09ca-8723-3a3c-a6a8-c643856c57e3@suse.de> <20190226143313.GA23865@infradead.org>
+ <6f94a905-45c9-4a77-bbb6-9669197e8d8f@suse.de> <CAHsXFKGbNfJ32EE_Gyz9yC0k+yNB=rgMQZc+jAQr2nFPDC+oFg@mail.gmail.com>
+ <yq14l8p9tgf.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190227163133.26283-1-e.velu@criteo.com>
-Content-Language: en-US
-Content-ID: <909447F61EE9B64F9E2A79900F90B9A6@eurprd04.prod.outlook.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Erwan Velu <erwanaliasr1@gmail.com>
-Cc: Don Brace <don.brace@microsemi.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "open list:MICROSEMI SMART ARRAY SMARTPQI DRIVER (smartpqi)" <esc.storagedev@microsemi.com>, "open list:MICROSEMI SMART ARRAY SMARTPQI DRIVER (smartpqi)" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <yq14l8p9tgf.fsf@oracle.com>
+Sender: stable-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Kashyap Desai <kashyap.desai@broadcom.com>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@infradead.org>, linux-scsi <linux-scsi@vger.kernel.org>, Sathya Prakash <Sathya.Prakash@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-SGV5LA0KDQpUaGF0IG1ha2VzIG1lIHdvbmRlciB3aHkgdGhlIDB4M2UgLyAweDIgaXNuJ3QgaGFu
-ZGxlZCBoZXJlIGFrYQ0KDQozRS8wMiBEWlRQUk9NQUVCS1ZGIFRJTUVPVVQgT04gTE9HSUNBTCBV
-TklUIElzIGl0IHBvc3NpYmxlIHRoZSANCmNvbnRyb2xsZXIgc2VuZCB0byB0aGUga2VybmVsIHRo
-aXMga2luZCBvZiBtZXNzYWdlLCBpZiBzbyBzaG91bGRuJ3Qgd2UgDQpoYW5kbGUgaXQgaGVyZSA/
-IEVyd2FuLA0KDQpMZSAyNy8wMi8yMDE5IMOgIDE3OjMxLCBFcndhbiBWZWx1IGEgw6ljcml0wqA6
-DQoNCj4gV2hlbiB0aGlzIEhBUkRXQVJFX0VSUk9SLzB4M2UvMHgxIGNhc2UgaXMgdHJpZ2dlcmVk
-LCB0aGUgbG9naWNhbCB2b2x1bWUgaXMgb2ZmbGluZWQuDQo+IFdoZW4gcmVhZGluZyB0aGUga2Vy
-bmVsIGxvZywgdGhlIGNhdXNlIHdoeSB0aGUgZGV2aWNlIGdvdCBvZmZsaW5lZCBpc24ndCByZXBv
-cnRlZCB0byB0aGUgdXNlci4NCj4gVGhpcyBzaXR1YXRpb24gbWFrZXMgZGlmZmljdWx0IGZvciBh
-ZG1pbnMgdG8gZXN0aW1hdGUgX3doeV8gdGhlIHZvbHVtZSBnb3Qgb2ZmbGluZWQuDQo+IFJlYWRp
-bmcgdGhpcyBwYXJ0IG9mIHRoZSBjb2RlIG1ha2VzIGNsZWFyIHRoaXMgaXMgYmVjYXVzZSBkcml2
-ZXIgcmVjZWl2ZWQgYSBIQVJEV0FSRV9FUlJPUi8weDNlLzB4MSB3aGljaCBpcyBhICdsb2dpY2Fs
-IHVuaXQgZmFpbHVyZScuDQo+DQo+IFRoaXMgcGF0Y2ggaXMganVzdCBhYm91dCByZXBvcnRpbmcg
-dGhhdCBmYWN0IHRvIGhlbHAgYWRtaW5zIG1ha2luZyBhIHJlbGF0aW9uc2hpcCBiZXR3ZWVuIHRo
-aXMgZXZlbnQgYW5kIHRoZSBvZmZsaW5pbmcuDQo+DQo+IFNpZ25lZC1vZmYtYnk6IEVyd2FuIFZl
-bHUgPGUudmVsdUBjcml0ZW8uY29tPg0KPiAtLS0NCj4gICBkcml2ZXJzL3Njc2kvc21hcnRwcWkv
-c21hcnRwcWlfaW5pdC5jIHwgNSArKysrKw0KPiAgIDEgZmlsZSBjaGFuZ2VkLCA1IGluc2VydGlv
-bnMoKykNCj4NCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9zbWFydHBxaS9zbWFydHBxaV9p
-bml0LmMgYi9kcml2ZXJzL3Njc2kvc21hcnRwcWkvc21hcnRwcWlfaW5pdC5jDQo+IGluZGV4IGY1
-NjRhZjg5NDllOC4uODlmMzdkNzY3MzVjIDEwMDY0NA0KPiAtLS0gYS9kcml2ZXJzL3Njc2kvc21h
-cnRwcWkvc21hcnRwcWlfaW5pdC5jDQo+ICsrKyBiL2RyaXZlcnMvc2NzaS9zbWFydHBxaS9zbWFy
-dHBxaV9pbml0LmMNCj4gQEAgLTI3NjQsNiArMjc2NCwxMiBAQCBzdGF0aWMgdm9pZCBwcWlfcHJv
-Y2Vzc19yYWlkX2lvX2Vycm9yKHN0cnVjdCBwcWlfaW9fcmVxdWVzdCAqaW9fcmVxdWVzdCkNCj4g
-ICAJCQkJc3NoZHIuc2Vuc2Vfa2V5ID09IEhBUkRXQVJFX0VSUk9SICYmDQo+ICAgCQkJCXNzaGRy
-LmFzYyA9PSAweDNlICYmDQo+ICAgCQkJCXNzaGRyLmFzY3EgPT0gMHgxKSB7DQo+ICsJCQlzdHJ1
-Y3QgcHFpX2N0cmxfaW5mbyAqY3RybF9pbmZvID0gc2hvc3RfdG9faGJhKHNjbWQtPmRldmljZS0+
-aG9zdCk7DQo+ICsJCQlzdHJ1Y3QgcHFpX3Njc2lfZGV2ICpkZXZpY2UgPSBzY21kLT5kZXZpY2Ut
-Pmhvc3RkYXRhOw0KPiArDQo+ICsJCQlkZXZfZXJyKCZjdHJsX2luZm8tPnBjaV9kZXYtPmRldiwg
-InJlY2VpdmVkICdsb2dpY2FsIHVuaXQgZmFpbHVyZScgZnJvbSBjb250cm9sbGVyIGZvciBzY3Np
-ICVkOiVkOiVkOiVkXG4iLA0KPiArCQkJCQkJCWN0cmxfaW5mby0+c2NzaV9ob3N0LT5ob3N0X25v
-LCBkZXZpY2UtPmJ1cywNCj4gKwkJCQkJCQlkZXZpY2UtPnRhcmdldCwgZGV2aWNlLT5sdW4pOw0K
-PiAgIAkJCXBxaV90YWtlX2RldmljZV9vZmZsaW5lKHNjbWQtPmRldmljZSwgIlJBSUQiKTsNCj4g
-ICAJCQlob3N0X2J5dGUgPSBESURfTk9fQ09OTkVDVDsNCj4gICAJCX0NCg==
+On Wed, Feb 27, 2019 at 8:20 PM Martin K. Petersen
+<martin.petersen@oracle.com> wrote:
+>
+>
+> Kashyap,
+>
+> > Primary drawback of using "blk_mq_tagset_busy_iter" is API is only for
+> > blk-mq and it is not available for all the kernel with blk-mq
+> > support. We have seen multiple failures from customer and those
+> > kernels does not support blk_mq_tagset_busy_iter. In fact, blk-mq and
+> > non-mq stack is alive in many Linux distribution and customer is using
+> > those.
+>
+> I'm afraid the burden falls upon Broadcom to manage enablement patches
+> for older kernels. So the non-MQ/non-tagset-busy-iter cases are not
+> particularly relevant for the discussion here.
+>
+> Let's focus on getting some usable plumbing that drivers can use to
+> abort oustanding tags.
+
+Today I have discussed with Kashyap internally and found below solution,
+
+Solution:
+Instead of calling scsi_host_find_tag() API for each and every smid
+from one to shost->can_queue, now driver will call this API only for
+those smid's which are outstanding at the driver level. Driver will
+determine whether this smid is outstanding at driver level by looking
+into it's corresponding MPI request frame, if it's MPI request frame
+is empty then it means that this smid is free and no need to call
+scsi_host_find_tag() API for this smid. By doing this driver will
+invoke scsi_host_find_tag() for only those tags which are outstanding
+at the driver level.
+
+Driver will check whether particular MPI request frame is empty or not
+by looking into the "DevHandle" field. if this field is zero then it
+means that this MPI request is empty. Also driver will memset the MPI
+request frame once the corresponding scmd is processed (i.e. just
+before calling scmd->done function).
+
+Here is the code change. currently I am testing this code and will
+post this patch once the testing completes. Please let us known your
+thoughts on this.
+
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c
+b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index e577744..1d8c584 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -3281,12 +3281,18 @@ void mpt3sas_base_clear_st(struct MPT3SAS_ADAPTER *ioc,
+
+        if (smid < ioc->hi_priority_smid) {
+                struct scsiio_tracker *st;
++               void *request;
+
+                st = _get_st_from_smid(ioc, smid);
+                if (!st) {
+                        _base_recovery_check(ioc);
+                        return;
+                }
++
++               /* Clear MPI request frame */
++               request = mpt3sas_base_get_msg_frame(ioc, smid);
++               memset(request, 0, ioc->request_sz);
++
+                mpt3sas_base_clear_st(ioc, st);
+                _base_recovery_check(ioc);
+                return;
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 8bb5b8f..55bec88 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -1462,11 +1462,20 @@ struct scsi_cmnd *
+ {
+        struct scsi_cmnd *scmd = NULL;
+        struct scsiio_tracker *st;
++       Mpi25SCSIIORequest_t *mpi_request;
+
+        if (smid > 0  &&
+            smid <= ioc->scsiio_depth - INTERNAL_SCSIIO_CMDS_COUNT) {
+                u32 unique_tag = smid - 1;
+
++               mpi_request = mpt3sas_base_get_msg_frame(ioc, smid);
++
++               /* DevHandle zero means that this smid is free
++                * at driver level, So return NULL.
++                */
++               if (!mpi_request->DevHandle)
++                       return scmd;
++
+                scmd = scsi_host_find_tag(ioc->shost, unique_tag);
+                if (scmd) {
+                        st = scsi_cmd_priv(scmd);
+---
+
+Thanks,
+Sreekanth
+
+
+
+>
+> --
+> Martin K. Petersen      Oracle Linux Engineering
