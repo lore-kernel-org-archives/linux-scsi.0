@@ -1,37 +1,50 @@
-From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: Re: [PATCH] scsi: aacraid: Fix missing break in switch statement
-Date: Wed, 27 Feb 2019 14:07:21 -0600
-Message-ID: <3c201ff6-fdcf-f04d-c5dd-0f826fab555b@embeddedor.com>
-References: <20190215214242.GA8393@embeddedor> <yq1pnrd9u7o.fsf@oracle.com>
+From: Erwan Velu <e.velu@criteo.com>
+Subject: Re: [PATCH] scsi: smartpqi_init: Reporting 'logical unit failure'
+Date: Thu, 28 Feb 2019 13:09:18 +0000
+Message-ID: <7ef24085-2cc1-6271-1b16-cbfa4b0d80f5@criteo.com>
+References: <20190227163133.26283-1-e.velu@criteo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <yq1pnrd9u7o.fsf@oracle.com>
+In-Reply-To: <20190227163133.26283-1-e.velu@criteo.com>
 Content-Language: en-US
+Content-ID: <909447F61EE9B64F9E2A79900F90B9A6@eurprd04.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Adaptec OEM Raid Solutions <aacraid@microsemi.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Kees Cook <keescook@chromium.org>
+To: Erwan Velu <erwanaliasr1@gmail.com>
+Cc: Don Brace <don.brace@microsemi.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "open list:MICROSEMI SMART ARRAY SMARTPQI DRIVER (smartpqi)" <esc.storagedev@microsemi.com>, "open list:MICROSEMI SMART ARRAY SMARTPQI DRIVER (smartpqi)" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-
-
-On 2/27/19 8:33 AM, Martin K. Petersen wrote:
-> 
-> Gustavo,
-> 
->> Add missing break statement and fix identation issue.
-> 
-> So much bad indentation in this driver. Tried various tab widths and it
-> is still all over the place.
-> 
-> Anyway. After staring at the firmware header I have convinced myself
-> that your fix is correct. Applied to 5.1/scsi-queue.
-> 
-
-That's great.
-
-Thanks, Martin.
-
---
-Gustavo
+SGV5LA0KDQpUaGF0IG1ha2VzIG1lIHdvbmRlciB3aHkgdGhlIDB4M2UgLyAweDIgaXNuJ3QgaGFu
+ZGxlZCBoZXJlIGFrYQ0KDQozRS8wMiBEWlRQUk9NQUVCS1ZGIFRJTUVPVVQgT04gTE9HSUNBTCBV
+TklUIElzIGl0IHBvc3NpYmxlIHRoZSANCmNvbnRyb2xsZXIgc2VuZCB0byB0aGUga2VybmVsIHRo
+aXMga2luZCBvZiBtZXNzYWdlLCBpZiBzbyBzaG91bGRuJ3Qgd2UgDQpoYW5kbGUgaXQgaGVyZSA/
+IEVyd2FuLA0KDQpMZSAyNy8wMi8yMDE5IMOgIDE3OjMxLCBFcndhbiBWZWx1IGEgw6ljcml0wqA6
+DQoNCj4gV2hlbiB0aGlzIEhBUkRXQVJFX0VSUk9SLzB4M2UvMHgxIGNhc2UgaXMgdHJpZ2dlcmVk
+LCB0aGUgbG9naWNhbCB2b2x1bWUgaXMgb2ZmbGluZWQuDQo+IFdoZW4gcmVhZGluZyB0aGUga2Vy
+bmVsIGxvZywgdGhlIGNhdXNlIHdoeSB0aGUgZGV2aWNlIGdvdCBvZmZsaW5lZCBpc24ndCByZXBv
+cnRlZCB0byB0aGUgdXNlci4NCj4gVGhpcyBzaXR1YXRpb24gbWFrZXMgZGlmZmljdWx0IGZvciBh
+ZG1pbnMgdG8gZXN0aW1hdGUgX3doeV8gdGhlIHZvbHVtZSBnb3Qgb2ZmbGluZWQuDQo+IFJlYWRp
+bmcgdGhpcyBwYXJ0IG9mIHRoZSBjb2RlIG1ha2VzIGNsZWFyIHRoaXMgaXMgYmVjYXVzZSBkcml2
+ZXIgcmVjZWl2ZWQgYSBIQVJEV0FSRV9FUlJPUi8weDNlLzB4MSB3aGljaCBpcyBhICdsb2dpY2Fs
+IHVuaXQgZmFpbHVyZScuDQo+DQo+IFRoaXMgcGF0Y2ggaXMganVzdCBhYm91dCByZXBvcnRpbmcg
+dGhhdCBmYWN0IHRvIGhlbHAgYWRtaW5zIG1ha2luZyBhIHJlbGF0aW9uc2hpcCBiZXR3ZWVuIHRo
+aXMgZXZlbnQgYW5kIHRoZSBvZmZsaW5pbmcuDQo+DQo+IFNpZ25lZC1vZmYtYnk6IEVyd2FuIFZl
+bHUgPGUudmVsdUBjcml0ZW8uY29tPg0KPiAtLS0NCj4gICBkcml2ZXJzL3Njc2kvc21hcnRwcWkv
+c21hcnRwcWlfaW5pdC5jIHwgNSArKysrKw0KPiAgIDEgZmlsZSBjaGFuZ2VkLCA1IGluc2VydGlv
+bnMoKykNCj4NCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9zbWFydHBxaS9zbWFydHBxaV9p
+bml0LmMgYi9kcml2ZXJzL3Njc2kvc21hcnRwcWkvc21hcnRwcWlfaW5pdC5jDQo+IGluZGV4IGY1
+NjRhZjg5NDllOC4uODlmMzdkNzY3MzVjIDEwMDY0NA0KPiAtLS0gYS9kcml2ZXJzL3Njc2kvc21h
+cnRwcWkvc21hcnRwcWlfaW5pdC5jDQo+ICsrKyBiL2RyaXZlcnMvc2NzaS9zbWFydHBxaS9zbWFy
+dHBxaV9pbml0LmMNCj4gQEAgLTI3NjQsNiArMjc2NCwxMiBAQCBzdGF0aWMgdm9pZCBwcWlfcHJv
+Y2Vzc19yYWlkX2lvX2Vycm9yKHN0cnVjdCBwcWlfaW9fcmVxdWVzdCAqaW9fcmVxdWVzdCkNCj4g
+ICAJCQkJc3NoZHIuc2Vuc2Vfa2V5ID09IEhBUkRXQVJFX0VSUk9SICYmDQo+ICAgCQkJCXNzaGRy
+LmFzYyA9PSAweDNlICYmDQo+ICAgCQkJCXNzaGRyLmFzY3EgPT0gMHgxKSB7DQo+ICsJCQlzdHJ1
+Y3QgcHFpX2N0cmxfaW5mbyAqY3RybF9pbmZvID0gc2hvc3RfdG9faGJhKHNjbWQtPmRldmljZS0+
+aG9zdCk7DQo+ICsJCQlzdHJ1Y3QgcHFpX3Njc2lfZGV2ICpkZXZpY2UgPSBzY21kLT5kZXZpY2Ut
+Pmhvc3RkYXRhOw0KPiArDQo+ICsJCQlkZXZfZXJyKCZjdHJsX2luZm8tPnBjaV9kZXYtPmRldiwg
+InJlY2VpdmVkICdsb2dpY2FsIHVuaXQgZmFpbHVyZScgZnJvbSBjb250cm9sbGVyIGZvciBzY3Np
+ICVkOiVkOiVkOiVkXG4iLA0KPiArCQkJCQkJCWN0cmxfaW5mby0+c2NzaV9ob3N0LT5ob3N0X25v
+LCBkZXZpY2UtPmJ1cywNCj4gKwkJCQkJCQlkZXZpY2UtPnRhcmdldCwgZGV2aWNlLT5sdW4pOw0K
+PiAgIAkJCXBxaV90YWtlX2RldmljZV9vZmZsaW5lKHNjbWQtPmRldmljZSwgIlJBSUQiKTsNCj4g
+ICAJCQlob3N0X2J5dGUgPSBESURfTk9fQ09OTkVDVDsNCj4gICAJCX0NCg==
