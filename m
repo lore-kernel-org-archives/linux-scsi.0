@@ -1,12 +1,12 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.20 69/81] Revert "scsi: libfc: Add WARN_ON() when deleting rports"
-Date: Thu, 28 Feb 2019 10:08:01 -0500
-Message-ID: <20190228150813.10256-69-sashal@kernel.org>
-References: <20190228150813.10256-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 55/64] Revert "scsi: libfc: Add WARN_ON() when deleting rports"
+Date: Thu, 28 Feb 2019 10:10:56 -0500
+Message-ID: <20190228151105.11277-55-sashal@kernel.org>
+References: <20190228151105.11277-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190228150813.10256-1-sashal@kernel.org>
+In-Reply-To: <20190228151105.11277-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc: Ross Lagerwall <ross.lagerwall@citrix.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
@@ -37,7 +37,7 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 deletion(-)
 
 diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
-index 1e1c0f1b9e69d..8ed2113f5a1e2 100644
+index 372387a450dff..1797e47fab386 100644
 --- a/drivers/scsi/libfc/fc_rport.c
 +++ b/drivers/scsi/libfc/fc_rport.c
 @@ -184,7 +184,6 @@ void fc_rport_destroy(struct kref *kref)
