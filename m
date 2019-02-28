@@ -1,44 +1,66 @@
-From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: Re: [PATCH] scsi: mpt3sas: Add missing breaks in switch statements
-Date: Thu, 28 Feb 2019 14:03:42 -0600
-Message-ID: <0e5dded0-6219-5a4d-e99c-d3eedcb0afae@embeddedor.com>
-References: <20190215215414.GA10944@embeddedor> <yq1lg219u1i.fsf@oracle.com>
+From: "Elliott, Robert (Persistent Memory)" <elliott@hpe.com>
+Subject: RE: [PATCH] scsi: smartpqi_init: Reporting 'logical unit failure'
+Date: Thu, 28 Feb 2019 20:03:20 +0000
+Message-ID: <AT5PR8401MB11696B5DDB2DA774A0E584F4AB750@AT5PR8401MB1169.NAMPRD84.PROD.OUTLOOK.COM>
+References: <20190227163133.26283-1-e.velu@criteo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <yq1lg219u1i.fsf@oracle.com>
+In-Reply-To: <20190227163133.26283-1-e.velu@criteo.com>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Kees Cook <keescook@chromium.org>
+To: Erwan Velu <erwanaliasr1@gmail.com>
+Cc: Erwan Velu <e.velu@criteo.com>, Don Brace <don.brace@microsemi.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "open list:MICROSEMI SMART ARRAY SMARTPQI DRIVER (smartpqi)" <esc.storagedev@microsemi.com>, "open list:MICROSEMI SMART ARRAY SMARTPQI DRIVER (smartpqi)" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
 
 
-On 2/27/19 8:37 AM, Martin K. Petersen wrote:
+> -----Original Message-----
+> From: linux-kernel-owner@vger.kernel.org [mailto:linux-kernel-owner@vger.kernel.org] On Behalf Of
+> Erwan Velu
+> Sent: Wednesday, February 27, 2019 10:32 AM
+> Subject: [PATCH] scsi: smartpqi_init: Reporting 'logical unit failure'
 > 
-> Gustavo,
+> When this HARDWARE_ERROR/0x3e/0x1 case is triggered, the logical volume is offlined.
+> When reading the kernel log, the cause why the device got offlined isn't reported to the user.
+> This situation makes difficult for admins to estimate _why_ the volume got offlined.
+> Reading this part of the code makes clear this is because driver received a HARDWARE_ERROR/0x3e/0x1
+> which is a 'logical unit failure'.
 > 
->> Fix the following warnings by adding the proper missing breaks:
->>
->> drivers/scsi/mpt3sas/mpt3sas_base.c: In function ‘_base_display_OEMs_branding’:
->> drivers/scsi/mpt3sas/mpt3sas_base.c:3548:4: warning: this statement may fall thr
+> This patch is just about reporting that fact to help admins making a relationship between this event
+> and the offlining.
 > 
-> Applied to 5.1/scsi-queue, thanks.
+> Signed-off-by: Erwan Velu <e.velu@criteo.com>
+> ---
+>  drivers/scsi/smartpqi/smartpqi_init.c | 5 +++++
+>  1 file changed, 5 insertions(+)
 > 
+> diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+> index f564af8949e8..89f37d76735c 100644
+> --- a/drivers/scsi/smartpqi/smartpqi_init.c
+> +++ b/drivers/scsi/smartpqi/smartpqi_init.c
+> @@ -2764,6 +2764,12 @@ static void pqi_process_raid_io_error(struct pqi_io_request *io_request)
+>  				sshdr.sense_key == HARDWARE_ERROR &&
+>  				sshdr.asc == 0x3e &&
+>  				sshdr.ascq == 0x1) {
+> +			struct pqi_ctrl_info *ctrl_info = shost_to_hba(scmd->device->host);
+> +			struct pqi_scsi_dev *device = scmd->device->hostdata;
+> +
+> +			dev_err(&ctrl_info->pci_dev->dev, "received 'logical unit failure' from controller
+> for scsi %d:%d:%d:%d\n",
+> +							ctrl_info->scsi_host->host_no, device->bus,
+> +							device->target, device->lun);
+>  			pqi_take_device_offline(scmd->device, "RAID");
+>  			host_byte = DID_NO_CONNECT;
+>  		}
 
-Thank you, Martin.
+Be careful printing errors per-IO; you could get thousands of them if things go bad.
+The block layer print_req_error() uses printk_ratelimited(KERN_ERR) for that reason,
+and the SCSI layer scsi_io_completion_action() maintains a ratelimit on its own.
 
-There many patches in this series:
+The dev_err_ratelimited() macro might be a good fit here.
 
-https://lore.kernel.org/patchwork/project/lkml/list/?series=374317
 
-that never were acked/reviewed even after I have
-pinged twice.
-
-I wonder if you could apply them.
-
-Thanks
---
-Gustavo
+---
+Robert Elliott, HPE Persistent Memory
