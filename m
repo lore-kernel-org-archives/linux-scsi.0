@@ -1,52 +1,44 @@
-From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.19 55/64] Revert "scsi: libfc: Add WARN_ON() when deleting rports"
-Date: Thu, 28 Feb 2019 10:10:56 -0500
-Message-ID: <20190228151105.11277-55-sashal@kernel.org>
-References: <20190228151105.11277-1-sashal@kernel.org>
+From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Subject: Re: [PATCH] scsi: mpt3sas: Add missing breaks in switch statements
+Date: Thu, 28 Feb 2019 14:03:42 -0600
+Message-ID: <0e5dded0-6219-5a4d-e99c-d3eedcb0afae@embeddedor.com>
+References: <20190215215414.GA10944@embeddedor> <yq1lg219u1i.fsf@oracle.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190228151105.11277-1-sashal@kernel.org>
+In-Reply-To: <yq1lg219u1i.fsf@oracle.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Ross Lagerwall <ross.lagerwall@citrix.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Kees Cook <keescook@chromium.org>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Ross Lagerwall <ross.lagerwall@citrix.com>
 
-[ Upstream commit d8f6382a7d026989029e2e50c515df954488459b ]
 
-This reverts commit bbc0f8bd88abefb0f27998f40a073634a3a2db89.
+On 2/27/19 8:37 AM, Martin K. Petersen wrote:
+> 
+> Gustavo,
+> 
+>> Fix the following warnings by adding the proper missing breaks:
+>>
+>> drivers/scsi/mpt3sas/mpt3sas_base.c: In function ‘_base_display_OEMs_branding’:
+>> drivers/scsi/mpt3sas/mpt3sas_base.c:3548:4: warning: this statement may fall thr
+> 
+> Applied to 5.1/scsi-queue, thanks.
+> 
 
-It added a warning whose intent was to check whether the rport was still
-linked into the peer list. It doesn't work as intended and gives false
-positive warnings for two reasons:
+Thank you, Martin.
 
-1) If the rport is never linked into the peer list it will not be
-considered empty since the list_head is never initialized.
+There many patches in this series:
 
-2) If the rport is deleted from the peer list using list_del_rcu(), then
-the list_head is in an undefined state and it is not considered empty.
+https://lore.kernel.org/patchwork/project/lkml/list/?series=374317
 
-Signed-off-by: Ross Lagerwall <ross.lagerwall@citrix.com>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/scsi/libfc/fc_rport.c | 1 -
- 1 file changed, 1 deletion(-)
+that never were acked/reviewed even after I have
+pinged twice.
 
-diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
-index 372387a450dff..1797e47fab386 100644
---- a/drivers/scsi/libfc/fc_rport.c
-+++ b/drivers/scsi/libfc/fc_rport.c
-@@ -184,7 +184,6 @@ void fc_rport_destroy(struct kref *kref)
- 	struct fc_rport_priv *rdata;
- 
- 	rdata = container_of(kref, struct fc_rport_priv, kref);
--	WARN_ON(!list_empty(&rdata->peers));
- 	kfree_rcu(rdata, rcu);
- }
- EXPORT_SYMBOL(fc_rport_destroy);
--- 
-2.19.1
+I wonder if you could apply them.
+
+Thanks
+--
+Gustavo
