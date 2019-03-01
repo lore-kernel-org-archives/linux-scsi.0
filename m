@@ -1,29 +1,46 @@
-From: Erwan Velu <e.velu@criteo.com>
-Subject: Re: [PATCH v2] scsi: smartpqi_init: Reporting 'logical unit failure'
-Date: Fri, 1 Mar 2019 16:00:20 +0000
-Message-ID: <a34de194-1602-08fc-9c67-27a1585b4d2c@criteo.com>
-References: <20190227163133.26283-1-e.velu@criteo.com>
- <20190301145832.12735-1-e.velu@criteo.com>
- <1551453987.3334.2.camel@linux.ibm.com>
- <c858605b-7283-7882-64a8-8d1584274b95@criteo.com>
- <1551455797.3334.6.camel@linux.ibm.com>
+From: Erwan Velu <erwanaliasr1@gmail.com>
+Subject: [PATCH v3] scsi: smartpqi_init: Reporting 'logical unit failure'
+Date: Fri,  1 Mar 2019 17:08:06 +0100
+Message-ID: <20190301160806.16099-1-e.velu@criteo.com>
+References: <1551455797.3334.6.camel@linux.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1551455797.3334.6.camel@linux.ibm.com>
-Content-Language: en-US
-Content-ID: <E985F7DEA1A37548B830DD81173DBECE@eurprd04.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <jejb@linux.ibm.com>, Erwan Velu <erwanaliasr1@gmail.com>, "elliott@hpe.com" <elliott@hpe.com>
-Cc: Don Brace <don.brace@microsemi.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "open list:MICROSEMI SMART ARRAY SMARTPQI DRIVER (smartpqi)" <esc.storagedev@microsemi.com>, "open list:MICROSEMI SMART ARRAY SMARTPQI DRIVER (smartpqi)" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+Cc: Erwan Velu <e.velu@criteo.com>, Don Brace <don.brace@microsemi.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "open list:MICROSEMI SMART ARRAY SMARTPQI
+        DRIVER smartpqi" <esc.storagedev@microsemi.com>, "open list:MICROSEMI SMART ARRAY SMARTPQI
+        DRIVER smartpqi" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-DQpMZSAwMS8wMy8yMDE5IMOgIDE2OjU2LCBKYW1lcyBCb3R0b21sZXkgYSDDqWNyaXTCoDoNCj4g
-Wy4uLl0NCj4gSSB3YXMgdGhpbmtpbmcganVzdA0KPg0KPiBpZiAocHJpbnRrX3JhdGVsaW1pdCgp
-KQ0KPiAJc2NtZF9wcmludGsoS0VSTl9FUlIsIHNjbWQsICJyZWNlaXZlZCAnbG9naWNhbCB1bml0
-IGZhaWx1cmUnIGZyb20gY29udHJvbGxlciBmb3Igc2NzaSAlZDolZDolZDolZFxuIiwgLi4uDQo+
-DQo+IFRoYXQgd2lsbCBnaXZlIGFsbCB0aGUgbmVjZXNzYXJ5IGluZm9ybWF0aW9uDQoNCkknbSBw
-cmV0dHkgbmV3IHRvIHRoaXMgYXJlYSwgbGVhcm5pbmcgZnJvbSB5b3XCoCA7bykNCg0KSSdsbCB1
-cGRhdGUgdGhlIHYzIHRoaXMgd2F5Lg0KDQpUaGFua3MgZm9yIHRoZSByZXZpZXcuDQoNCkVyd2Fu
-LA0KDQo=
+When the HARDWARE_ERROR/0x3e/0x1 case is triggered, the logical volume is offlined.
+When reading the kernel log, the reason why the device got offlined isn't reported to the user.
+This situation makes difficult for admins to estimate the root cause of the issue they analize.
+
+Reading this part of the code makes clear this is because driver received a HARDWARE_ERROR/0x3e/0x1 which is a 'logical unit failure'.
+This patch is just about reporting the reason behind the offlining to ease the analyse.
+
+Signed-off-by: Erwan Velu <e.velu@criteo.com>
+---
+ drivers/scsi/smartpqi/smartpqi_init.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+index f564af8949e8..adebafe56b5b 100644
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -2764,6 +2764,12 @@ static void pqi_process_raid_io_error(struct pqi_io_request *io_request)
+ 				sshdr.sense_key == HARDWARE_ERROR &&
+ 				sshdr.asc == 0x3e &&
+ 				sshdr.ascq == 0x1) {
++			struct pqi_ctrl_info *ctrl_info = shost_to_hba(scmd->device->host);
++			struct pqi_scsi_dev *device = scmd->device->hostdata;
++
++			if (printk_ratelimit())
++				scmd_printk(KERN_ERR, scmd, "received 'logical unit failure' from controller for scsi %d:%d:%d:%d\n",
++					ctrl_info->scsi_host->host_no, device->bus, device->target, device->lun);
+ 			pqi_take_device_offline(scmd->device, "RAID");
+ 			host_byte = DID_NO_CONNECT;
+ 		}
+-- 
+2.20.1
