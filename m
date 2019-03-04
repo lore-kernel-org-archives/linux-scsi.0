@@ -1,48 +1,50 @@
-From: <Jacky.Cao@sony.com>
-Subject: RE: [PATCH] usb: uas: fix usb subsystem hang after power off hub
- port
-Date: Mon, 4 Mar 2019 07:19:29 +0000
-Message-ID: <16EA1F625E922C43B00B9D82250220500869697D@APYOKXMS108.ap.sony.com>
-References: <16EA1F625E922C43B00B9D8225022050086961B5@APYOKXMS108.ap.sony.com>
- <20190304062325.GA2686@kroah.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH 1/4] scsi: lpfc: fix unused variable warning
+Date: Mon,  4 Mar 2019 20:39:08 +0100
+Message-ID: <20190304193917.702601-1-arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190304062325.GA2686@kroah.com>
-Content-Language: zh-CN
 Sender: linux-kernel-owner@vger.kernel.org
-To: gregkh@linuxfoundation.org
-Cc: oneukum@suse.com, stern@rowland.harvard.edu, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, usb-storage@lists.one-eyed-alien.net, linux-kernel@vger.kernel.org, Jacky.Cao@sony.com
+To: James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Hannes Reinecke <hare@suse.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Dear Greg-san:
+The newly introduced 'cpu' variable is only used inside of an optional
+block, so we get a warning without CONFIG_SCSI_LPFC_DEBUG_FS:
 
-I confirmed our company email related counter person that below footer is added automatically
-after we send email to who doesn't work in our company.
-I am very sorry that I didn't notice this issue and make you confuse.
-Now I am confirming with our counter person whether there is solution to not add below footer.
-After that, I will re-send patch mail to you.
+drivers/scsi/lpfc/lpfc_nvme.c: In function 'lpfc_nvme_io_cmd_wqe_cmpl':
+drivers/scsi/lpfc/lpfc_nvme.c:968:30: error: unused variable 'cpu' [-Werror=unused-variable]
+  uint32_t code, status, idx, cpu;
 
-Best Regards
-Jacky
+Move the declaration into the same block to avoid the warning.
 
------Original Message-----
-From: Greg KH [mailto:gregkh@linuxfoundation.org]
-Sent: Monday, March 04, 2019 2:23 PM
-To: Cao, Jacky
-Cc: oneukum@suse.com; stern@rowland.harvard.edu; linux-usb@vger.kernel.org; linux-scsi@vger.kernel.org; usb-storage@lists.one-eyed-alien.net; linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] usb: uas: fix usb subsystem hang after power off hub port
+Fixes: 63df6d637e33 ("scsi: lpfc: Adapt cpucheck debugfs logic to Hardware Queues")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/scsi/lpfc/lpfc_nvme.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-On Mon, Mar 04, 2019 at 02:08:54AM +0000, Jacky.Cao@sony.com wrote:
-> ________________________________
->
-> This email is confidential and intended only for the use of the individual or entity named above and may contain information that is privileged. If you are not the intended recipient, you are notified that any dissemination, distribution or copying of this email is strictly prohibited. If you have received this email in error, please notify us immediately by return email or telephone and destroy the original message. - This mail is sent via Sony Asia Pacific Mail Gateway..
-
-This footer requires me to delete this email as it is not compatible
-with doing Linux kernel development.
-
-greg k-h
-
-________________________________
-
-This email is confidential and intended only for the use of the individual or entity named above and may contain information that is privileged. If you are not the intended recipient, you are notified that any dissemination, distribution or copying of this email is strictly prohibited. If you have received this email in error, please notify us immediately by return email or telephone and destroy the original message. - This mail is sent via Sony Asia Pacific Mail Gateway..
+diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
+index 72cb8ad9027b..d16ca413110d 100644
+--- a/drivers/scsi/lpfc/lpfc_nvme.c
++++ b/drivers/scsi/lpfc/lpfc_nvme.c
+@@ -965,7 +965,7 @@ lpfc_nvme_io_cmd_wqe_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pwqeIn,
+ 	struct lpfc_nodelist *ndlp;
+ 	struct lpfc_nvme_fcpreq_priv *freqpriv;
+ 	struct lpfc_nvme_lport *lport;
+-	uint32_t code, status, idx, cpu;
++	uint32_t code, status, idx;
+ 	uint16_t cid, sqhd, data;
+ 	uint32_t *ptr;
+ 
+@@ -1139,6 +1139,7 @@ lpfc_nvme_io_cmd_wqe_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pwqeIn,
+ 		lpfc_nvme_ktime(phba, lpfc_ncmd);
+ 	}
+ 	if (phba->cpucheck_on & LPFC_CHECK_NVME_IO) {
++		uint32_t cpu;
+ 		idx = lpfc_ncmd->cur_iocbq.hba_wqidx;
+ 		cpu = smp_processor_id();
+ 		if (cpu < LPFC_CHECK_CPU_CNT) {
+-- 
+2.20.0
