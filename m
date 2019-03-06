@@ -1,27 +1,83 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 3/4] scsi: qla2xxx: avoid printf format warning
-Date: Wed, 06 Mar 2019 12:54:00 -0500
-Message-ID: <yq1k1hbyjlz.fsf@oracle.com>
-References: <20190304193917.702601-1-arnd@arndb.de>
-        <20190304193917.702601-3-arnd@arndb.de>
+From: Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] iscsi: fall back to sendmsg for slab pages
+Date: Wed, 6 Mar 2019 10:16:37 -0800
+Message-ID: <20190306181637.GA68002@straylight.hirudinean.org>
+References: <09491a85-077a-e8c7-bae0-c951cbf15c95@virtuozzo.com>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190304193917.702601-3-arnd@arndb.de> (Arnd Bergmann's message
-        of "Mon, 4 Mar 2019 20:39:10 +0100")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: qla2xxx-upstream@qlogic.com, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Himanshu Madhani <himanshu.madhani@cavium.com>, Quinn Tran <qtran@marvell.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <open-iscsi+bncBCYMVIPVXQMBBCU5QDSAKGQEHL62C2I-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+Content-Disposition: inline
+In-Reply-To: <09491a85-077a-e8c7-bae0-c951cbf15c95-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <https://groups.google.com/group/open-iscsi
+List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
+ <https://groups.google.com/group/open-iscsi/subscribe>
+To: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Cc: Lee Duncan <lduncan-IBi9RG/b67k@public.gmane.org>, "James E.J. Bottomley" <jejb-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
+On Thu, Feb 21, 2019 at 06:23:17PM +0300, Vasily Averin wrote:
+> In "XFS over network block device" scenario XFS can create IO requests
+> with slab-based XFS metadata. During processing such requests
+> tcp_sendpage() can merge skb fragments with neighbour slab objects.
+> 
+> If receiving side is located on the same host tcp_recvmsg() can trigger
+> BUG_ON in hardening check and crash the host with following message:
+> 
+> usercopy: kernel memory exposure attempt detected
+> 		from XXXXXXXX (kmalloc-512) (1024 bytes)
+> 
+> This patch redirect such requests from sednpage to sendmsg path.
+> The problem is similar to one described in recent commit 7e241f647dc7
+> ("libceph: fall back to sendmsg for slab pages")
+> 
+> Signed-off-by: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 
-Arnd,
+This seems reasonable to me, I'm relying on Vasily's testing for now but
+it seems right.
 
-> Depending on the target architecture and configuration, both
-> phys_addr_t and dma_addr_t may be smaller than 'long long', so we get
-> a warning when printing either of them using the %llx format string:
+Acked-by: Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-Applied to 5.1/scsi-queue, thanks!
+> ---
+>  drivers/scsi/libiscsi_tcp.c | 11 ++++++++---
+>  1 file changed, 8 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/scsi/libiscsi_tcp.c b/drivers/scsi/libiscsi_tcp.c
+> index 8a6b1b3f8277..66d97d3bef5a 100644
+> --- a/drivers/scsi/libiscsi_tcp.c
+> +++ b/drivers/scsi/libiscsi_tcp.c
+> @@ -129,12 +129,17 @@ static void iscsi_tcp_segment_map(struct iscsi_segment *segment, int recv)
+>  	BUG_ON(sg->length == 0);
+>  
+>  	/*
+> +	 * We always map for the recv path.
+> +	 *
+>  	 * If the page count is greater than one it is ok to send
+>  	 * to the network layer's zero copy send path. If not we
+> -	 * have to go the slow sendmsg path. We always map for the
+> -	 * recv path.
+> +	 * have to go the slow sendmsg path.
+> +	 *
+> +	 * Same goes for slab pages: skb_can_coalesce() allows
+> +	 * coalescing neighboring slab objects into a single frag which
+> +	 * triggers one of hardened usercopy checks.
+>  	 */
+> -	if (page_count(sg_page(sg)) >= 1 && !recv)
+> +	if (!recv && page_count(sg_page(sg)) >= 1 && !PageSlab(sg_page(sg)))
+>  		return;
+>  
+>  	if (recv) {
+> -- 
+> 2.17.1
+
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+You received this message because you are subscribed to the Google Groups "open-iscsi" group.
+To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+Visit this group at https://groups.google.com/group/open-iscsi.
+For more options, visit https://groups.google.com/d/optout.
