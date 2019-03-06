@@ -1,41 +1,75 @@
-From: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] iscsi: fall back to sendmsg for slab pages
-Date: Wed, 06 Mar 2019 12:27:38 -0500
-Message-ID: <yq15zsv29rp.fsf@oracle.com>
-References: <09491a85-077a-e8c7-bae0-c951cbf15c95@virtuozzo.com>
-	<a6814c98-ea98-11b9-5b0f-ea6cc74c5de2@virtuozzo.com>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: Himanshu Madhani <hmadhani@marvell.com>
+Subject: Re: [PATCH 3/4] scsi: qla2xxx: avoid printf format warning
+Date: Wed, 6 Mar 2019 17:29:31 +0000
+Message-ID: <2FB12FC2-6B14-4AD4-BFAC-548720D676A6@marvell.com>
+References: <20190304193917.702601-1-arnd@arndb.de>
+ <20190304193917.702601-3-arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <open-iscsi+bncBDVIJONZ3YDRBFEGQDSAKGQEDK3PVVA-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-In-Reply-To: <a6814c98-ea98-11b9-5b0f-ea6cc74c5de2-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org> (Vasily
-	Averin's message of "Wed, 6 Mar 2019 14:33:25 +0300")
-List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <https://groups.google.com/group/open-iscsi
-List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
- <https://groups.google.com/group/open-iscsi/subscribe>
-To: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Cc: Lee Duncan <lduncan-IBi9RG/b67k@public.gmane.org>, Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "James E.J. Bottomley" <jejb-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Alexey Kuznetsov <kuznet-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190304193917.702601-3-arnd@arndb.de>
+Content-Language: en-US
+Content-ID: <157354F546D00242807DAC87661DC53A@namprd18.prod.outlook.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>, "qla2xxx-upstream@qlogic.com" <qla2xxx-upstream@qlogic.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Himanshu Madhani <himanshu.madhani@cavium.com>, Quoc Tran <qtran@marvell.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-
-Vasily,
-
-> James, Martin, noone replied 2 weeks, could you please pick up this
-> patch?
-
-No objections from me wrt. to the change. However, I am awaiting a
-review from the iSCSI maintainers Lee and Chris.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
-
--- 
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-Visit this group at https://groups.google.com/group/open-iscsi.
-For more options, visit https://groups.google.com/d/optout.
+DQoNCu+7v09uIDMvNC8xOSwgMTE6MzkgQU0sICJBcm5kIEJlcmdtYW5uIiA8YXJuZEBhcm5kYi5k
+ZT4gd3JvdGU6DQoNCiAgICBEZXBlbmRpbmcgb24gdGhlIHRhcmdldCBhcmNoaXRlY3R1cmUgYW5k
+IGNvbmZpZ3VyYXRpb24sIGJvdGggcGh5c19hZGRyX3QNCiAgICBhbmQgZG1hX2FkZHJfdCBtYXkg
+YmUgc21hbGxlciB0aGFuICdsb25nIGxvbmcnLCBzbyB3ZSBnZXQgYSB3YXJuaW5nIHdoZW4NCiAg
+ICBwcmludGluZyBlaXRoZXIgb2YgdGhlbSB1c2luZyB0aGUgJWxseCBmb3JtYXQgc3RyaW5nOg0K
+ICAgIA0KICAgIGRyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9pb2NiLmM6IEluIGZ1bmN0aW9uICdx
+bGEyNHh4X3dhbGtfYW5kX2J1aWxkX3Byb3Rfc2dsaXN0JzoNCiAgICBkcml2ZXJzL3Njc2kvcWxh
+Mnh4eC9xbGFfaW9jYi5jOjExNDA6NDY6IGVycm9yOiBmb3JtYXQgJyVsbHgnIGV4cGVjdHMgYXJn
+dW1lbnQgb2YgdHlwZSAnbG9uZyBsb25nIHVuc2lnbmVkIGludCcsIGJ1dCBhcmd1bWVudCA2IGhh
+cyB0eXBlICdkbWFfYWRkcl90JyB7YWthICd1bnNpZ25lZCBpbnQnfSBbLVdlcnJvcj1mb3JtYXQ9
+XQ0KICAgICAgICAgICAgICIlczogcGFnZSBib3VuZGFyeSBjcm9zc2luZyAocGh5cz0lbGx4IGxl
+bj0leClcbiIsDQogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+IH5+fl4NCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgJXgN
+CiAgICAgICAgICAgICBfX2Z1bmNfXywgc2xlX3BoeXMsIHNnLT5sZW5ndGgpOw0KICAgICAgICAg
+ICAgICAgICAgICAgICB+fn5+fn5+fg0KICAgIGRyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9pb2Ni
+LmM6MTE4MDoyOTogZXJyb3I6IGZvcm1hdCAnJWxseCcgZXhwZWN0cyBhcmd1bWVudCBvZiB0eXBl
+ICdsb25nIGxvbmcgdW5zaWduZWQgaW50JywgYnV0IGFyZ3VtZW50IDcgaGFzIHR5cGUgJ2RtYV9h
+ZGRyX3QnIHtha2EgJ3Vuc2lnbmVkIGludCd9IFstV2Vycm9yPWZvcm1hdD1dDQogICAgICAgICAg
+ICAiJXM6IHNnWyV4XSAocGh5cz0lbGx4IHNnbGVuPSV4KSBsZG1hX3NnX2xlbjogJXggZGlmX2J1
+bmRsX2xlbjogJXggbGRtYV9uZWVkZWQ6ICV4XG4iLA0KICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgfn5+Xg0KICAgIA0KICAgIFRoZXJlIGFyZSBzcGVjaWFsICVwYWQgYW5kICVwYXAgZm9y
+bWF0IHN0cmluZ3MgaW4gTGludXggdGhhdCB3ZSBjb3VsZCB1c2UgaGVyZSwNCiAgICBidXQgc2lu
+Y2UgdGhlIGRyaXZlciBhbHJlYWR5IGRvZXMgNjQtYml0IGFyaXRobWV0aWMgb24gdGhlIHZhbHVl
+cywgdXNpbmcgYQ0KICAgIHBsYWluICd1NjQnIHNlZW1zIG1vcmUgY29uc2lzdGVudCBoZXJlLg0K
+ICAgIA0KICAgIE5vdGU6IEEgcG9zc2libGUgcmVsYXRlZCBpc3N1ZSBtYXkgYmUgdGhhdCB0aGUg
+ZHJpdmVyIHBvc3NpYmx5IGNoZWNrcyB0aGUNCiAgICB3cm9uZyBraW5kIG9mIG92ZXJmbG93OiB3
+aGVuIGFuIElPTU1VIGlzIGluIHVzZSwgYnVmZmVycyB0aGF0IGNyb3NzIGEgMzItYml0DQogICAg
+Ym91bmRhcnkgaW4gcGh5c2ljYWwgYWRkcmVzc2VzIHdvdWxkIHN0aWxsIGJlIG1hcHBlZCBpbnRv
+IGRtYSBhZGRyZXNzZXMNCiAgICB3aXRoaW4gdGhlIGxvdyA0R0Igc3BhY2UsIHNvIEkgc3VzcGVj
+dCB0aGF0IHdlIGFjdHVhbGx5IHdhbnQgdG8gY2hlY2sNCiAgICBzZ19kbWFfYWRkcmVzcygpIGlu
+c3RlYWQgb2Ygc2dfcGh5cygpIGhlcmUuDQogICAgDQogICAgRml4ZXM6IDUwYjgxMjc1NWU5NyAo
+InNjc2k6IHFsYTJ4eHg6IEZpeCBETUEgZXJyb3Igd2hlbiB0aGUgRElGIHNnIGJ1ZmZlciBjcm9z
+c2VzIDRHQiBib3VuZGFyeSIpDQogICAgU2lnbmVkLW9mZi1ieTogQXJuZCBCZXJnbWFubiA8YXJu
+ZEBhcm5kYi5kZT4NCiAgICAtLS0NCiAgICAgZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX2lvY2Iu
+YyB8IDQgKystLQ0KICAgICAxIGZpbGUgY2hhbmdlZCwgMiBpbnNlcnRpb25zKCspLCAyIGRlbGV0
+aW9ucygtKQ0KICAgIA0KICAgIGRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFf
+aW9jYi5jIGIvZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX2lvY2IuYw0KICAgIGluZGV4IDYzZjhl
+M2MxOTg0MS4uNDU2YTQxZDJlMmM2IDEwMDY0NA0KICAgIC0tLSBhL2RyaXZlcnMvc2NzaS9xbGEy
+eHh4L3FsYV9pb2NiLmMNCiAgICArKysgYi9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfaW9jYi5j
+DQogICAgQEAgLTExMzIsNyArMTEzMiw3IEBAIHFsYTI0eHhfd2Fsa19hbmRfYnVpbGRfcHJvdF9z
+Z2xpc3Qoc3RydWN0IHFsYV9od19kYXRhICpoYSwgc3JiX3QgKnNwLA0KICAgICAJLyogaWYgaW5p
+dGlhdG9yIGRvaW5nIHdyaXRlIG9yIHRhcmdldCBkb2luZyByZWFkICovDQogICAgIAlpZiAoZGly
+ZWN0aW9uX3RvX2RldmljZSkgew0KICAgICAJCWZvcl9lYWNoX3NnKHNnbCwgc2csIHRvdF9kc2Rz
+LCBpKSB7DQogICAgLQkJCWRtYV9hZGRyX3Qgc2xlX3BoeXMgPSBzZ19waHlzKHNnKTsNCiAgICAr
+CQkJdTY0IHNsZV9waHlzID0gc2dfcGh5cyhzZyk7DQogICAgIA0KICAgICAJCQkvKiBJZiBTR0Ug
+YWRkciArIGxlbiBmbGlwcyBiaXRzIGluIHVwcGVyIDMyLWJpdHMgKi8NCiAgICAgCQkJaWYgKE1T
+RChzbGVfcGh5cyArIHNnLT5sZW5ndGgpIF4gTVNEKHNsZV9waHlzKSkgew0KICAgIEBAIC0xMTc4
+LDcgKzExNzgsNyBAQCBxbGEyNHh4X3dhbGtfYW5kX2J1aWxkX3Byb3Rfc2dsaXN0KHN0cnVjdCBx
+bGFfaHdfZGF0YSAqaGEsIHNyYl90ICpzcCwNCiAgICAgDQogICAgIAkJCXFsX2RiZyhxbF9kYmdf
+dGd0ICsgcWxfZGJnX3ZlcmJvc2UsIHZoYSwgMHhlMDIzLA0KICAgICAJCQkgICAgIiVzOiBzZ1sl
+eF0gKHBoeXM9JWxseCBzZ2xlbj0leCkgbGRtYV9zZ19sZW46ICV4IGRpZl9idW5kbF9sZW46ICV4
+IGxkbWFfbmVlZGVkOiAleFxuIiwNCiAgICAtCQkJICAgIF9fZnVuY19fLCBpLCBzZ19waHlzKHNn
+KSwgc2dsZW4sIGxkbWFfc2dfbGVuLA0KICAgICsJCQkgICAgX19mdW5jX18sIGksICh1NjQpc2df
+cGh5cyhzZyksIHNnbGVuLCBsZG1hX3NnX2xlbiwNCiAgICAgCQkJICAgIGRpZmN0eC0+ZGlmX2J1
+bmRsX2xlbiwgbGRtYV9uZWVkZWQpOw0KICAgICANCiAgICAgCQkJd2hpbGUgKHNnbGVuKSB7DQog
+ICAgLS0gDQogICAgMi4yMC4wDQogICAgDQpMb29rcyBnb29kDQoNCkFja2VkLWJ5OiBIaW1hbnNo
+dSBNYWRoYW5pIDxobWFkaGFuaUBtYXJ2ZWxsLmNvbT4NCiAgICANCg0K
