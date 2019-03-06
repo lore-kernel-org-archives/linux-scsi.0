@@ -1,75 +1,29 @@
-From: Himanshu Madhani <hmadhani@marvell.com>
-Subject: Re: [PATCH 3/4] scsi: qla2xxx: avoid printf format warning
-Date: Wed, 6 Mar 2019 17:29:31 +0000
-Message-ID: <2FB12FC2-6B14-4AD4-BFAC-548720D676A6@marvell.com>
-References: <20190304193917.702601-1-arnd@arndb.de>
- <20190304193917.702601-3-arnd@arndb.de>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH v3] scsi: smartpqi_init: Reporting 'logical unit failure'
+Date: Wed, 06 Mar 2019 12:34:26 -0500
+Message-ID: <yq1y35rzz31.fsf@oracle.com>
+References: <1551455797.3334.6.camel@linux.ibm.com>
+        <20190301160806.16099-1-e.velu@criteo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190304193917.702601-3-arnd@arndb.de>
-Content-Language: en-US
-Content-ID: <157354F546D00242807DAC87661DC53A@namprd18.prod.outlook.com>
+In-Reply-To: <20190301160806.16099-1-e.velu@criteo.com> (Erwan Velu's message
+        of "Fri, 1 Mar 2019 17:08:06 +0100")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>, "qla2xxx-upstream@qlogic.com" <qla2xxx-upstream@qlogic.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Himanshu Madhani <himanshu.madhani@cavium.com>, Quoc Tran <qtran@marvell.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: Erwan Velu <erwanaliasr1@gmail.com>
+Cc: Erwan Velu <e.velu@criteo.com>, Don Brace <don.brace@microsemi.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-DQoNCu+7v09uIDMvNC8xOSwgMTE6MzkgQU0sICJBcm5kIEJlcmdtYW5uIiA8YXJuZEBhcm5kYi5k
-ZT4gd3JvdGU6DQoNCiAgICBEZXBlbmRpbmcgb24gdGhlIHRhcmdldCBhcmNoaXRlY3R1cmUgYW5k
-IGNvbmZpZ3VyYXRpb24sIGJvdGggcGh5c19hZGRyX3QNCiAgICBhbmQgZG1hX2FkZHJfdCBtYXkg
-YmUgc21hbGxlciB0aGFuICdsb25nIGxvbmcnLCBzbyB3ZSBnZXQgYSB3YXJuaW5nIHdoZW4NCiAg
-ICBwcmludGluZyBlaXRoZXIgb2YgdGhlbSB1c2luZyB0aGUgJWxseCBmb3JtYXQgc3RyaW5nOg0K
-ICAgIA0KICAgIGRyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9pb2NiLmM6IEluIGZ1bmN0aW9uICdx
-bGEyNHh4X3dhbGtfYW5kX2J1aWxkX3Byb3Rfc2dsaXN0JzoNCiAgICBkcml2ZXJzL3Njc2kvcWxh
-Mnh4eC9xbGFfaW9jYi5jOjExNDA6NDY6IGVycm9yOiBmb3JtYXQgJyVsbHgnIGV4cGVjdHMgYXJn
-dW1lbnQgb2YgdHlwZSAnbG9uZyBsb25nIHVuc2lnbmVkIGludCcsIGJ1dCBhcmd1bWVudCA2IGhh
-cyB0eXBlICdkbWFfYWRkcl90JyB7YWthICd1bnNpZ25lZCBpbnQnfSBbLVdlcnJvcj1mb3JtYXQ9
-XQ0KICAgICAgICAgICAgICIlczogcGFnZSBib3VuZGFyeSBjcm9zc2luZyAocGh5cz0lbGx4IGxl
-bj0leClcbiIsDQogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-IH5+fl4NCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgJXgN
-CiAgICAgICAgICAgICBfX2Z1bmNfXywgc2xlX3BoeXMsIHNnLT5sZW5ndGgpOw0KICAgICAgICAg
-ICAgICAgICAgICAgICB+fn5+fn5+fg0KICAgIGRyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9pb2Ni
-LmM6MTE4MDoyOTogZXJyb3I6IGZvcm1hdCAnJWxseCcgZXhwZWN0cyBhcmd1bWVudCBvZiB0eXBl
-ICdsb25nIGxvbmcgdW5zaWduZWQgaW50JywgYnV0IGFyZ3VtZW50IDcgaGFzIHR5cGUgJ2RtYV9h
-ZGRyX3QnIHtha2EgJ3Vuc2lnbmVkIGludCd9IFstV2Vycm9yPWZvcm1hdD1dDQogICAgICAgICAg
-ICAiJXM6IHNnWyV4XSAocGh5cz0lbGx4IHNnbGVuPSV4KSBsZG1hX3NnX2xlbjogJXggZGlmX2J1
-bmRsX2xlbjogJXggbGRtYV9uZWVkZWQ6ICV4XG4iLA0KICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgfn5+Xg0KICAgIA0KICAgIFRoZXJlIGFyZSBzcGVjaWFsICVwYWQgYW5kICVwYXAgZm9y
-bWF0IHN0cmluZ3MgaW4gTGludXggdGhhdCB3ZSBjb3VsZCB1c2UgaGVyZSwNCiAgICBidXQgc2lu
-Y2UgdGhlIGRyaXZlciBhbHJlYWR5IGRvZXMgNjQtYml0IGFyaXRobWV0aWMgb24gdGhlIHZhbHVl
-cywgdXNpbmcgYQ0KICAgIHBsYWluICd1NjQnIHNlZW1zIG1vcmUgY29uc2lzdGVudCBoZXJlLg0K
-ICAgIA0KICAgIE5vdGU6IEEgcG9zc2libGUgcmVsYXRlZCBpc3N1ZSBtYXkgYmUgdGhhdCB0aGUg
-ZHJpdmVyIHBvc3NpYmx5IGNoZWNrcyB0aGUNCiAgICB3cm9uZyBraW5kIG9mIG92ZXJmbG93OiB3
-aGVuIGFuIElPTU1VIGlzIGluIHVzZSwgYnVmZmVycyB0aGF0IGNyb3NzIGEgMzItYml0DQogICAg
-Ym91bmRhcnkgaW4gcGh5c2ljYWwgYWRkcmVzc2VzIHdvdWxkIHN0aWxsIGJlIG1hcHBlZCBpbnRv
-IGRtYSBhZGRyZXNzZXMNCiAgICB3aXRoaW4gdGhlIGxvdyA0R0Igc3BhY2UsIHNvIEkgc3VzcGVj
-dCB0aGF0IHdlIGFjdHVhbGx5IHdhbnQgdG8gY2hlY2sNCiAgICBzZ19kbWFfYWRkcmVzcygpIGlu
-c3RlYWQgb2Ygc2dfcGh5cygpIGhlcmUuDQogICAgDQogICAgRml4ZXM6IDUwYjgxMjc1NWU5NyAo
-InNjc2k6IHFsYTJ4eHg6IEZpeCBETUEgZXJyb3Igd2hlbiB0aGUgRElGIHNnIGJ1ZmZlciBjcm9z
-c2VzIDRHQiBib3VuZGFyeSIpDQogICAgU2lnbmVkLW9mZi1ieTogQXJuZCBCZXJnbWFubiA8YXJu
-ZEBhcm5kYi5kZT4NCiAgICAtLS0NCiAgICAgZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX2lvY2Iu
-YyB8IDQgKystLQ0KICAgICAxIGZpbGUgY2hhbmdlZCwgMiBpbnNlcnRpb25zKCspLCAyIGRlbGV0
-aW9ucygtKQ0KICAgIA0KICAgIGRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFf
-aW9jYi5jIGIvZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX2lvY2IuYw0KICAgIGluZGV4IDYzZjhl
-M2MxOTg0MS4uNDU2YTQxZDJlMmM2IDEwMDY0NA0KICAgIC0tLSBhL2RyaXZlcnMvc2NzaS9xbGEy
-eHh4L3FsYV9pb2NiLmMNCiAgICArKysgYi9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfaW9jYi5j
-DQogICAgQEAgLTExMzIsNyArMTEzMiw3IEBAIHFsYTI0eHhfd2Fsa19hbmRfYnVpbGRfcHJvdF9z
-Z2xpc3Qoc3RydWN0IHFsYV9od19kYXRhICpoYSwgc3JiX3QgKnNwLA0KICAgICAJLyogaWYgaW5p
-dGlhdG9yIGRvaW5nIHdyaXRlIG9yIHRhcmdldCBkb2luZyByZWFkICovDQogICAgIAlpZiAoZGly
-ZWN0aW9uX3RvX2RldmljZSkgew0KICAgICAJCWZvcl9lYWNoX3NnKHNnbCwgc2csIHRvdF9kc2Rz
-LCBpKSB7DQogICAgLQkJCWRtYV9hZGRyX3Qgc2xlX3BoeXMgPSBzZ19waHlzKHNnKTsNCiAgICAr
-CQkJdTY0IHNsZV9waHlzID0gc2dfcGh5cyhzZyk7DQogICAgIA0KICAgICAJCQkvKiBJZiBTR0Ug
-YWRkciArIGxlbiBmbGlwcyBiaXRzIGluIHVwcGVyIDMyLWJpdHMgKi8NCiAgICAgCQkJaWYgKE1T
-RChzbGVfcGh5cyArIHNnLT5sZW5ndGgpIF4gTVNEKHNsZV9waHlzKSkgew0KICAgIEBAIC0xMTc4
-LDcgKzExNzgsNyBAQCBxbGEyNHh4X3dhbGtfYW5kX2J1aWxkX3Byb3Rfc2dsaXN0KHN0cnVjdCBx
-bGFfaHdfZGF0YSAqaGEsIHNyYl90ICpzcCwNCiAgICAgDQogICAgIAkJCXFsX2RiZyhxbF9kYmdf
-dGd0ICsgcWxfZGJnX3ZlcmJvc2UsIHZoYSwgMHhlMDIzLA0KICAgICAJCQkgICAgIiVzOiBzZ1sl
-eF0gKHBoeXM9JWxseCBzZ2xlbj0leCkgbGRtYV9zZ19sZW46ICV4IGRpZl9idW5kbF9sZW46ICV4
-IGxkbWFfbmVlZGVkOiAleFxuIiwNCiAgICAtCQkJICAgIF9fZnVuY19fLCBpLCBzZ19waHlzKHNn
-KSwgc2dsZW4sIGxkbWFfc2dfbGVuLA0KICAgICsJCQkgICAgX19mdW5jX18sIGksICh1NjQpc2df
-cGh5cyhzZyksIHNnbGVuLCBsZG1hX3NnX2xlbiwNCiAgICAgCQkJICAgIGRpZmN0eC0+ZGlmX2J1
-bmRsX2xlbiwgbGRtYV9uZWVkZWQpOw0KICAgICANCiAgICAgCQkJd2hpbGUgKHNnbGVuKSB7DQog
-ICAgLS0gDQogICAgMi4yMC4wDQogICAgDQpMb29rcyBnb29kDQoNCkFja2VkLWJ5OiBIaW1hbnNo
-dSBNYWRoYW5pIDxobWFkaGFuaUBtYXJ2ZWxsLmNvbT4NCiAgICANCg0K
+
+Erwan,
+
+> When the HARDWARE_ERROR/0x3e/0x1 case is triggered, the logical volume
+> is offlined.  When reading the kernel log, the reason why the device
+> got offlined isn't reported to the user.  This situation makes
+> difficult for admins to estimate the root cause of the issue they
+> analize.
+
+Applied to 5.1/scsi-queue, thanks.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
