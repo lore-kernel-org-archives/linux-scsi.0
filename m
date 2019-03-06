@@ -1,72 +1,81 @@
-From: <Don.Brace@microchip.com>
-Subject: RE: [PATCH v3] scsi: smartpqi_init: Reporting 'logical unit failure'
-Date: Tue, 5 Mar 2019 22:30:04 +0000
-Message-ID: <SN6PR11MB27675810361CE0D169CAF97CE1720@SN6PR11MB2767.namprd11.prod.outlook.com>
-References: <1551455797.3334.6.camel@linux.ibm.com>
- <20190301160806.16099-1-e.velu@criteo.com>
+From: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
+Subject: Re: [PATCH v3 0/7] scsi: ufs-mediatek: Add UFS support for Mediatek
+ SoC chips
+Date: Wed, 6 Mar 2019 09:32:00 +0800
+Message-ID: <1551835920.30977.29.camel@mtkswgap22>
+References: <1551252192-535-1-git-send-email-stanley.chu@mediatek.com>
+ <1551252192-535-2-git-send-email-stanley.chu@mediatek.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190301160806.16099-1-e.velu@criteo.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: erwanaliasr1@gmail.com
-Cc: e.velu@criteo.com, don.brace@microsemi.com, jejb@linux.ibm.com, martin.petersen@oracle.com, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+In-Reply-To: <1551252192-535-2-git-send-email-stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-mediatek>,
+ <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-mediatek/>
+List-Post: <mailto:linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+List-Help: <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-mediatek>,
+ <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=subscribe>
+Sender: "Linux-mediatek" <linux-mediatek-bounces-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+Errors-To: linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
+To: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: mark.rutland-5wv7dgnIgG8@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vivek.gautam-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, robh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, chun-hung.wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, kuohong.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, peter.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, kishon-l0cyMroinI0@public.gmane.org, avri.altman-Sjgp3cTcYWE@public.gmane.org, robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, liwei213-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, alim.akhtar-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org, chunfeng.yun-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, pedrom.sousa-HKixBCOQz3hWk0Htik3J/w@public.gmane.org, matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-owner@vger.kernel=
-.org] On Behalf Of Erwan Velu
-Sent: Friday, March 1, 2019 10:08 AM
-Cc: Erwan Velu <e.velu@criteo.com>; Don Brace <don.brace@microsemi.com>; Ja=
-mes E.J. Bottomley <jejb@linux.ibm.com>; Martin K. Petersen <martin.peterse=
-n@oracle.com>; open list:MICROSEMI SMART ARRAY SMARTPQI DRIVER (smartpqi) <=
-esc.storagedev@microsemi.com>; open list:MICROSEMI SMART ARRAY SMARTPQI DRI=
-VER (smartpqi) <linux-scsi@vger.kernel.org>; open list <linux-kernel@vger.k=
-ernel.org>
-Subject: [PATCH v3] scsi: smartpqi_init: Reporting 'logical unit failure'
+Hi Rob,
 
-When the HARDWARE_ERROR/0x3e/0x1 case is triggered, the logical volume is o=
-fflined.
-When reading the kernel log, the reason why the device got offlined isn't r=
-eported to the user.
-This situation makes difficult for admins to estimate the root cause of the=
- issue they analize.
+Gentle ping for 2 dt-bindings documents patch in this series.
 
-Reading this part of the code makes clear this is because driver received a=
- HARDWARE_ERROR/0x3e/0x1 which is a 'logical unit failure'.
-This patch is just about reporting the reason behind the offlining to ease =
-the analyse.
+On Wed, 2019-02-27 at 15:23 +0800, Stanley Chu wrote:
+> Hello,
+> 
+> This patch series adds UFS M-PHY and UFS host driver support in MediaTek chipsets.
+> 
+> In the meantime, re-factors ufshcd_get_pwr_dev_param in vendors' drivers. This function is for vendors to decide finally agreed attributes for power mode change if vendors define
+> their host capability in struct ufs_dev_params. Because it is using by both ufs-qcom and ufs-hisi and also used in ufs-mediatek in this serious, simply re-factor it and then every vendors can reuse it.
+> 
+> Changes since v2:
+> -	Fix header style with SPDX-License-Identifier declaration used.
+> -	Simplify ufs-phy-mtk to single source file since we has one MPHY version now, and do fixes according to Chunfeng Yun's comments.
+> -	Add dt-bindings of ufs-phy-mtk.
+> 
+> Changes since v1:
+> -	Re-factor ufshcd_get_pwr_dev_param in mediatek/qcom/hisi vendor drivers.
+> -	Introduce ufs-phy-mtk to have a good extension capability for different power control flows in future different MPHY versions.
+> -	Bind ufs-phy-mtk and hook suitable callbacks in ufs-mediatek driver.
+> -	Use PA_LOCAL_TX_LCC_ENABLE attribute defined in unipro.h instead.
+> -	Do some minor format fixes.
+> 
+> Stanley Chu (7):
+>   scsi: ufs: Introduce ufshcd_get_pwr_dev_param
+>   scsi: ufs-qcom: Re-factor ufshcd_get_pwr_dev_param
+>   scsi: ufs-hisi: Re-factor ufshcd_get_pwr_dev_param
+>   dt-bindings: phy: Add document for phy-mtk-ufs
+>   dt-bindings: scsi: ufs: Add document for ufs-mediatek
+>   phy: mediatek: Add UFS M-PHY driver
+>   scsi: ufs-mediatek: Add UFS support for Mediatek SoC chips
+> 
+>  .../devicetree/bindings/phy/phy-mtk-ufs.txt   |  35 ++
+>  .../devicetree/bindings/ufs/ufs-mediatek.txt  |  47 +++
+>  drivers/phy/mediatek/Kconfig                  |   9 +
+>  drivers/phy/mediatek/Makefile                 |   1 +
+>  drivers/phy/mediatek/phy-mtk-ufs.c            | 239 ++++++++++++
+>  drivers/scsi/ufs/Kconfig                      |  14 +
+>  drivers/scsi/ufs/Makefile                     |   1 +
+>  drivers/scsi/ufs/ufs-hisi.c                   | 109 +-----
+>  drivers/scsi/ufs/ufs-mediatek.c               | 368 ++++++++++++++++++
+>  drivers/scsi/ufs/ufs-mediatek.h               |  54 +++
+>  drivers/scsi/ufs/ufs-qcom.c                   | 106 +----
+>  drivers/scsi/ufs/ufshcd-pltfrm.c              |  98 +++++
+>  drivers/scsi/ufs/ufshcd-pltfrm.h              |  21 +
+>  13 files changed, 895 insertions(+), 207 deletions(-)
+>  create mode 100644 Documentation/devicetree/bindings/phy/phy-mtk-ufs.txt
+>  create mode 100644 Documentation/devicetree/bindings/ufs/ufs-mediatek.txt
+>  create mode 100644 drivers/phy/mediatek/phy-mtk-ufs.c
+>  create mode 100644 drivers/scsi/ufs/ufs-mediatek.c
+>  create mode 100644 drivers/scsi/ufs/ufs-mediatek.h
+> 
 
-Signed-off-by: Erwan Velu <e.velu@criteo.com>
-
-Acked-by: Don Brace <don.brace@microsemi.com>
-
----
- drivers/scsi/smartpqi/smartpqi_init.c | 6 ++++++
- 1 file changed, 6 insertions(+)
-
-diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/=
-smartpqi_init.c
-index f564af8949e8..adebafe56b5b 100644
---- a/drivers/scsi/smartpqi/smartpqi_init.c
-+++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -2764,6 +2764,12 @@ static void pqi_process_raid_io_error(struct pqi_io_=
-request *io_request)
- 				sshdr.sense_key =3D=3D HARDWARE_ERROR &&
- 				sshdr.asc =3D=3D 0x3e &&
- 				sshdr.ascq =3D=3D 0x1) {
-+			struct pqi_ctrl_info *ctrl_info =3D shost_to_hba(scmd->device->host);
-+			struct pqi_scsi_dev *device =3D scmd->device->hostdata;
-+
-+			if (printk_ratelimit())
-+				scmd_printk(KERN_ERR, scmd, "received 'logical unit failure' from cont=
-roller for scsi %d:%d:%d:%d\n",
-+					ctrl_info->scsi_host->host_no, device->bus, device->target, device->l=
-un);
- 			pqi_take_device_offline(scmd->device, "RAID");
- 			host_byte =3D DID_NO_CONNECT;
- 		}
---=20
-2.20.1
+Thanks,
+Stanley
