@@ -1,83 +1,120 @@
-From: Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] iscsi: fall back to sendmsg for slab pages
-Date: Wed, 6 Mar 2019 10:16:37 -0800
-Message-ID: <20190306181637.GA68002@straylight.hirudinean.org>
-References: <09491a85-077a-e8c7-bae0-c951cbf15c95@virtuozzo.com>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: Chris Leech <cleech@redhat.com>
+Subject: Re: [PATCH v2] scsi:libiscsi: Hold back_lock when calling
+ iscsi_complete_task
+Date: Wed, 6 Mar 2019 10:23:49 -0800
+Message-ID: <20190306182349.GB68002@straylight.hirudinean.org>
+References: <20190225174130.29496-1-leeman.duncan@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <open-iscsi+bncBCYMVIPVXQMBBCU5QDSAKGQEHL62C2I-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <09491a85-077a-e8c7-bae0-c951cbf15c95-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <https://groups.google.com/group/open-iscsi
-List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
- <https://groups.google.com/group/open-iscsi/subscribe>
-To: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Cc: Lee Duncan <lduncan-IBi9RG/b67k@public.gmane.org>, "James E.J. Bottomley" <jejb-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20190225174130.29496-1-leeman.duncan@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Lee Duncan <leeman.duncan@gmail.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, hare@suse.de, Lee Duncan <lduncan@suse.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Feb 21, 2019 at 06:23:17PM +0300, Vasily Averin wrote:
-> In "XFS over network block device" scenario XFS can create IO requests
-> with slab-based XFS metadata. During processing such requests
-> tcp_sendpage() can merge skb fragments with neighbour slab objects.
+On Mon, Feb 25, 2019 at 09:41:30AM -0800, Lee Duncan wrote:
+> From: Lee Duncan <lduncan@suse.com>
 > 
-> If receiving side is located on the same host tcp_recvmsg() can trigger
-> BUG_ON in hardening check and crash the host with following message:
+> If there is an error queueing an iscsi command in
+> iscsi_queuecommand(), for example if the transport fails
+> to take the command in sessuin->tt->xmit_task(), then
+> the error path can call iscsi_complete_task() without
+> first aquiring the back_lock as required. This can
+> lead to things like ITT pool can get corrupt, resulting
+> in duplicate ITTs being sent out.
 > 
-> usercopy: kernel memory exposure attempt detected
-> 		from XXXXXXXX (kmalloc-512) (1024 bytes)
+> The solution is to hold the back_lock around
+> iscsi_complete_task() calls, and to add a little commenting
+> to help others understand when back_lock must be held.
 > 
-> This patch redirect such requests from sednpage to sendmsg path.
-> The problem is similar to one described in recent commit 7e241f647dc7
-> ("libceph: fall back to sendmsg for slab pages")
-> 
-> Signed-off-by: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-
-This seems reasonable to me, I'm relying on Vasily's testing for now but
-it seems right.
-
-Acked-by: Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-
+> Signed-off-by: Lee Duncan <lduncan@suse.com>
 > ---
->  drivers/scsi/libiscsi_tcp.c | 11 ++++++++---
->  1 file changed, 8 insertions(+), 3 deletions(-)
+
+Lee,
+
+Quick question, can you confirm that you tested this with lockdep?
+
+It seems right to me, it's just that we've been hit with lockdep
+problems dealing with these locks before.
+
+- Chris
+
+>  drivers/scsi/libiscsi.c | 22 ++++++++++++++++++++--
+>  1 file changed, 20 insertions(+), 2 deletions(-)
 > 
-> diff --git a/drivers/scsi/libiscsi_tcp.c b/drivers/scsi/libiscsi_tcp.c
-> index 8a6b1b3f8277..66d97d3bef5a 100644
-> --- a/drivers/scsi/libiscsi_tcp.c
-> +++ b/drivers/scsi/libiscsi_tcp.c
-> @@ -129,12 +129,17 @@ static void iscsi_tcp_segment_map(struct iscsi_segment *segment, int recv)
->  	BUG_ON(sg->length == 0);
+> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+> index b8d325ce8754..ef7871e8c6bd 100644
+> --- a/drivers/scsi/libiscsi.c
+> +++ b/drivers/scsi/libiscsi.c
+> @@ -838,7 +838,7 @@ EXPORT_SYMBOL_GPL(iscsi_conn_send_pdu);
+>   * @datalen: len of buffer
+>   *
+>   * iscsi_cmd_rsp sets up the scsi_cmnd fields based on the PDU and
+> - * then completes the command and task.
+> + * then completes the command and task. called under back_lock
+>   **/
+>  static void iscsi_scsi_cmd_rsp(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+>  			       struct iscsi_task *task, char *data,
+> @@ -941,6 +941,9 @@ static void iscsi_scsi_cmd_rsp(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+>   * @conn: iscsi connection
+>   * @hdr:  iscsi pdu
+>   * @task: scsi command task
+> + *
+> + * iscsi_data_in_rsp sets up the scsi_cmnd fields based on the data received
+> + * then completes the command and task. called under back_lock
+>   **/
+>  static void
+>  iscsi_data_in_rsp(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+> @@ -1025,6 +1028,16 @@ static int iscsi_send_nopout(struct iscsi_conn *conn, struct iscsi_nopin *rhdr)
+>  	return 0;
+>  }
 >  
->  	/*
-> +	 * We always map for the recv path.
-> +	 *
->  	 * If the page count is greater than one it is ok to send
->  	 * to the network layer's zero copy send path. If not we
-> -	 * have to go the slow sendmsg path. We always map for the
-> -	 * recv path.
-> +	 * have to go the slow sendmsg path.
-> +	 *
-> +	 * Same goes for slab pages: skb_can_coalesce() allows
-> +	 * coalescing neighboring slab objects into a single frag which
-> +	 * triggers one of hardened usercopy checks.
->  	 */
-> -	if (page_count(sg_page(sg)) >= 1 && !recv)
-> +	if (!recv && page_count(sg_page(sg)) >= 1 && !PageSlab(sg_page(sg)))
->  		return;
+> +/**
+> + * iscsi_nop_out_rsp - SCSI NOP Response processing
+> + * @task: scsi command task
+> + * @nop: the nop structure
+> + * @data: where to put the data
+> + * @datalen: length of data
+> + *
+> + * iscsi_nop_out_rsp handles nop response from use or
+> + * from user space. called under back_lock
+> + **/
+>  static int iscsi_nop_out_rsp(struct iscsi_task *task,
+>  			     struct iscsi_nopin *nop, char *data, int datalen)
+>  {
+> @@ -1791,7 +1804,9 @@ int iscsi_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *sc)
+>  	return 0;
 >  
->  	if (recv) {
+>  prepd_reject:
+> +	spin_lock_bh(&session->back_lock);
+>  	iscsi_complete_task(task, ISCSI_TASK_REQUEUE_SCSIQ);
+> +	spin_unlock_bh(&session->back_lock);
+>  reject:
+>  	spin_unlock_bh(&session->frwd_lock);
+>  	ISCSI_DBG_SESSION(session, "cmd 0x%x rejected (%d)\n",
+> @@ -1799,7 +1814,9 @@ int iscsi_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *sc)
+>  	return SCSI_MLQUEUE_TARGET_BUSY;
+>  
+>  prepd_fault:
+> +	spin_lock_bh(&session->back_lock);
+>  	iscsi_complete_task(task, ISCSI_TASK_REQUEUE_SCSIQ);
+> +	spin_unlock_bh(&session->back_lock);
+>  fault:
+>  	spin_unlock_bh(&session->frwd_lock);
+>  	ISCSI_DBG_SESSION(session, "iscsi: cmd 0x%x is not queued (%d)\n",
+> @@ -3121,8 +3138,9 @@ fail_mgmt_tasks(struct iscsi_session *session, struct iscsi_conn *conn)
+>  		state = ISCSI_TASK_ABRT_SESS_RECOV;
+>  		if (task->state == ISCSI_TASK_PENDING)
+>  			state = ISCSI_TASK_COMPLETED;
+> +		spin_lock_bh(&session->back_lock);
+>  		iscsi_complete_task(task, state);
+> -
+> +		spin_unlock_bh(&session->back_lock);
+>  	}
+>  }
+>  
 > -- 
-> 2.17.1
-
-
--- 
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-Visit this group at https://groups.google.com/group/open-iscsi.
-For more options, visit https://groups.google.com/d/optout.
+> 2.16.4
+> 
