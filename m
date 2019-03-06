@@ -1,81 +1,35 @@
-From: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-Subject: Re: [PATCH v3 0/7] scsi: ufs-mediatek: Add UFS support for Mediatek
- SoC chips
-Date: Wed, 6 Mar 2019 09:32:00 +0800
-Message-ID: <1551835920.30977.29.camel@mtkswgap22>
-References: <1551252192-535-1-git-send-email-stanley.chu@mediatek.com>
- <1551252192-535-2-git-send-email-stanley.chu@mediatek.com>
+From: Avri Altman <Avri.Altman@wdc.com>
+Subject: RE: [PATCH 4/4] scsi: ufs: hisi: fix ufs_hba_variant_ops passing
+Date: Wed, 6 Mar 2019 11:43:24 +0000
+Message-ID: <DM6PR04MB49231ACAA50E4D8FF5BCE469FC730@DM6PR04MB4923.namprd04.prod.outlook.com>
+References: <20190304193917.702601-1-arnd@arndb.de>
+ <20190304193917.702601-4-arnd@arndb.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-In-Reply-To: <1551252192-535-2-git-send-email-stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-mediatek>,
- <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-mediatek/>
-List-Post: <mailto:linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-List-Help: <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-mediatek>,
- <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=subscribe>
-Sender: "Linux-mediatek" <linux-mediatek-bounces-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-Errors-To: linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
-To: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: mark.rutland-5wv7dgnIgG8@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vivek.gautam-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, robh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, chun-hung.wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, kuohong.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, peter.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, kishon-l0cyMroinI0@public.gmane.org, avri.altman-Sjgp3cTcYWE@public.gmane.org, robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, liwei213-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, alim.akhtar-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org, chunfeng.yun-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, pedrom.sousa-HKixBCOQz3hWk0Htik3J/w@public.gmane.org, matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190304193917.702601-4-arnd@arndb.de>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Alim Akhtar <alim.akhtar@samsung.com>, Pedro Sousa <pedrom.sousa@synopsys.com>, Wei Li <liwei213@huawei.com>, Subhash Jadavani <subhashj@codeaurora.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Rob,
+>=20
+> Without CONFIG_OF, the of_match_node() helper does not evaluate
+> its argument, and the compiler warns about the unused variable:
+>=20
+> drivers/scsi/ufs/ufs-hisi.c: In function 'ufs_hisi_probe':
+> drivers/scsi/ufs/ufs-hisi.c:673:17: error: unused variable 'dev' [-
+> Werror=3Dunused-variable]
+>=20
+> Rework this code to pass the data directly, and while we're
+> at it, correctly handle the const pointers.
+>=20
+> Fixes: 653fcb07d95e ("scsi: ufs: Add HI3670 SoC UFS driver support")
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Reviewed-by: Avri Altman <avri.altman@wdc.com>
 
-Gentle ping for 2 dt-bindings documents patch in this series.
-
-On Wed, 2019-02-27 at 15:23 +0800, Stanley Chu wrote:
-> Hello,
-> 
-> This patch series adds UFS M-PHY and UFS host driver support in MediaTek chipsets.
-> 
-> In the meantime, re-factors ufshcd_get_pwr_dev_param in vendors' drivers. This function is for vendors to decide finally agreed attributes for power mode change if vendors define
-> their host capability in struct ufs_dev_params. Because it is using by both ufs-qcom and ufs-hisi and also used in ufs-mediatek in this serious, simply re-factor it and then every vendors can reuse it.
-> 
-> Changes since v2:
-> -	Fix header style with SPDX-License-Identifier declaration used.
-> -	Simplify ufs-phy-mtk to single source file since we has one MPHY version now, and do fixes according to Chunfeng Yun's comments.
-> -	Add dt-bindings of ufs-phy-mtk.
-> 
-> Changes since v1:
-> -	Re-factor ufshcd_get_pwr_dev_param in mediatek/qcom/hisi vendor drivers.
-> -	Introduce ufs-phy-mtk to have a good extension capability for different power control flows in future different MPHY versions.
-> -	Bind ufs-phy-mtk and hook suitable callbacks in ufs-mediatek driver.
-> -	Use PA_LOCAL_TX_LCC_ENABLE attribute defined in unipro.h instead.
-> -	Do some minor format fixes.
-> 
-> Stanley Chu (7):
->   scsi: ufs: Introduce ufshcd_get_pwr_dev_param
->   scsi: ufs-qcom: Re-factor ufshcd_get_pwr_dev_param
->   scsi: ufs-hisi: Re-factor ufshcd_get_pwr_dev_param
->   dt-bindings: phy: Add document for phy-mtk-ufs
->   dt-bindings: scsi: ufs: Add document for ufs-mediatek
->   phy: mediatek: Add UFS M-PHY driver
->   scsi: ufs-mediatek: Add UFS support for Mediatek SoC chips
-> 
->  .../devicetree/bindings/phy/phy-mtk-ufs.txt   |  35 ++
->  .../devicetree/bindings/ufs/ufs-mediatek.txt  |  47 +++
->  drivers/phy/mediatek/Kconfig                  |   9 +
->  drivers/phy/mediatek/Makefile                 |   1 +
->  drivers/phy/mediatek/phy-mtk-ufs.c            | 239 ++++++++++++
->  drivers/scsi/ufs/Kconfig                      |  14 +
->  drivers/scsi/ufs/Makefile                     |   1 +
->  drivers/scsi/ufs/ufs-hisi.c                   | 109 +-----
->  drivers/scsi/ufs/ufs-mediatek.c               | 368 ++++++++++++++++++
->  drivers/scsi/ufs/ufs-mediatek.h               |  54 +++
->  drivers/scsi/ufs/ufs-qcom.c                   | 106 +----
->  drivers/scsi/ufs/ufshcd-pltfrm.c              |  98 +++++
->  drivers/scsi/ufs/ufshcd-pltfrm.h              |  21 +
->  13 files changed, 895 insertions(+), 207 deletions(-)
->  create mode 100644 Documentation/devicetree/bindings/phy/phy-mtk-ufs.txt
->  create mode 100644 Documentation/devicetree/bindings/ufs/ufs-mediatek.txt
->  create mode 100644 drivers/phy/mediatek/phy-mtk-ufs.c
->  create mode 100644 drivers/scsi/ufs/ufs-mediatek.c
->  create mode 100644 drivers/scsi/ufs/ufs-mediatek.h
-> 
-
-Thanks,
-Stanley
+Arnd, Thank you for your comments.
+Regards,
+Avri
