@@ -1,33 +1,52 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH] scsi/NCR5380: Remove set but unused variable
-Date: Fri, 08 Mar 2019 08:49:02 +1100
-Message-ID: <dd8814ad55ee7d86b1c7f5f47cd68ff0ff33f8d9.1551995342.git.fthain@telegraphics.com.au>
+From: Nathan Chancellor <natechancellor@gmail.com>
+Subject: [PATCH v2] scsi: qla4xxx: Don't call dma_free_coherent when buf is NULL
+Date: Thu,  7 Mar 2019 16:15:35 -0700
+Message-ID: <20190307231534.2640-1-natechancellor@gmail.com>
+References: <20190307184125.21419-1-natechancellor@gmail.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190307184125.21419-1-natechancellor@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Michael Schmitz <schmitzmic@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: QLogic-Storage-Upstream@qlogic.com, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, clang-built-linux@googlegroups.com, Nick Desaulniers <ndesaulniers@google.com>, Nathan Chancellor <natechancellor@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Cc: Michael Schmitz <schmitzmic@gmail.com>
-Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
----
- drivers/scsi/NCR5380.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+When building with -Wsometimes-uninitialized, Clang warns:
 
-diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
-index 01c23d27f290..7fed9bb72784 100644
---- a/drivers/scsi/NCR5380.c
-+++ b/drivers/scsi/NCR5380.c
-@@ -272,9 +272,8 @@ mrs[] = {
- static void NCR5380_print(struct Scsi_Host *instance)
- {
- 	struct NCR5380_hostdata *hostdata = shost_priv(instance);
--	unsigned char status, data, basr, mr, icr, i;
-+	unsigned char status, basr, mr, icr, i;
+drivers/scsi/qla4xxx/ql4_os.c:5915:7: warning: variable 'buf_dma' is
+used uninitialized whenever 'if' condition is false
+[-Wsometimes-uninitialized]
+
+Don't call dma_free_coherent when buf is NULL, meaning that we never
+called dma_alloc_coherent and initialized buf_dma.
+
+Fixes: 2a991c215978 ("[SCSI] qla4xxx: Boot from SAN support for open-iscsi")
+Link: https://github.com/ClangBuiltLinux/linux/issues/391
+Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
+---
+
+v1 -> v2:
+
+* Check that buf is not NULL, which matches how dma_free_coherent is
+  called in the rest of the tree. This still fixes the warning.
+
+ drivers/scsi/qla4xxx/ql4_os.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index 16a18d5d856f..9f56dafc3cda 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -5982,7 +5982,8 @@ static int get_fw_boot_info(struct scsi_qla_host *ha, uint16_t ddb_index[])
+ 			  ddb_index[1]));
  
--	data = NCR5380_read(CURRENT_SCSI_DATA_REG);
- 	status = NCR5380_read(STATUS_REG);
- 	mr = NCR5380_read(MODE_REG);
- 	icr = NCR5380_read(INITIATOR_COMMAND_REG);
+ exit_boot_info_free:
+-	dma_free_coherent(&ha->pdev->dev, size, buf, buf_dma);
++	if (buf)
++		dma_free_coherent(&ha->pdev->dev, size, buf, buf_dma);
+ exit_boot_info:
+ 	ha->pri_ddb_idx = ddb_index[0];
+ 	ha->sec_ddb_idx = ddb_index[1];
 -- 
-2.19.2
+2.21.0
