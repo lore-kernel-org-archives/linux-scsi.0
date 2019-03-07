@@ -1,44 +1,33 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH] scsi/NCR5380: Avoid compiler warning when
- -Wimplicit-fallthrough is enabled
+Subject: [PATCH] scsi/NCR5380: Remove set but unused variable
 Date: Fri, 08 Mar 2019 08:49:02 +1100
-Message-ID: <4e853f171366e040818346def7fb043347670662.1551995342.git.fthain@telegraphics.com.au>
+Message-ID: <dd8814ad55ee7d86b1c7f5f47cd68ff0ff33f8d9.1551995342.git.fthain@telegraphics.com.au>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: "Gustavo A. R. Silva" <gustavo@embeddedor.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Michael Schmitz <schmitzmic@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Adjust comments accordingly.
-
-Cc: Gustavo A. R. Silva <gustavo@embeddedor.com>
 Cc: Michael Schmitz <schmitzmic@gmail.com>
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 ---
- drivers/scsi/NCR5380.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/NCR5380.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
-index 7fed9bb72784..fe0535affc14 100644
+index 01c23d27f290..7fed9bb72784 100644
 --- a/drivers/scsi/NCR5380.c
 +++ b/drivers/scsi/NCR5380.c
-@@ -1932,13 +1932,13 @@ static void NCR5380_information_transfer(struct Scsi_Host *instance)
- 					if (!hostdata->connected)
- 						return;
+@@ -272,9 +272,8 @@ mrs[] = {
+ static void NCR5380_print(struct Scsi_Host *instance)
+ {
+ 	struct NCR5380_hostdata *hostdata = shost_priv(instance);
+-	unsigned char status, data, basr, mr, icr, i;
++	unsigned char status, basr, mr, icr, i;
  
--					/* Fall through to reject message */
--
-+					/* Reject message */
-+					/* Fall through */
-+				default:
- 					/*
- 					 * If we get something weird that we aren't expecting,
--					 * reject it.
-+					 * log it.
- 					 */
--				default:
- 					if (tmp == EXTENDED_MESSAGE)
- 						scmd_printk(KERN_INFO, cmd,
- 						            "rejecting unknown extended message code %02x, length %d\n",
+-	data = NCR5380_read(CURRENT_SCSI_DATA_REG);
+ 	status = NCR5380_read(STATUS_REG);
+ 	mr = NCR5380_read(MODE_REG);
+ 	icr = NCR5380_read(INITIATOR_COMMAND_REG);
 -- 
 2.19.2
