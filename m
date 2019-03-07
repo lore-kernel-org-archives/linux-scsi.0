@@ -1,63 +1,45 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH -next] scsi: libfc: Fix potential NULL pointer dereference
-Date: Thu, 7 Mar 2019 13:11:06 +0100
-Message-ID: <c2ae320a-e7ab-94e6-7562-a82e2aad0966@suse.de>
-References: <20190130101141.20132-1-yuehaibing@huawei.com>
- <09c3242f-9a41-65f4-7dc6-f1c8aa6425f1@huawei.com>
+From: Nathan Chancellor <natechancellor@gmail.com>
+Subject: [PATCH] scsi: qla4xxx: Don't call dma_free_coherent without dma_alloc_coherent
+Date: Thu,  7 Mar 2019 11:41:25 -0700
+Message-ID: <20190307184125.21419-1-natechancellor@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <09c3242f-9a41-65f4-7dc6-f1c8aa6425f1@huawei.com>
-Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: YueHaibing <yuehaibing@huawei.com>, jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: QLogic-Storage-Upstream@qlogic.com, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, clang-built-linux@googlegroups.com, Nick Desaulniers <ndesaulniers@google.com>, Nathan Chancellor <natechancellor@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 2/27/19 7:09 AM, YueHaibing wrote:
-> 
-> Friendly ping:
-> 
-> Who can review or take this, please?
-> 
-> Thanks
-> 
-> On 2019/1/30 18:11, YueHaibing wrote:
->> There is a potential NULL pointer dereference in case
->> fc_rport_create() fails and returns NULL.
->>
->> Fixes: 2580064b5ec6 ("scsi: libfc: Replace ->rport_create callback with function call")
->> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
->> ---
->>   drivers/scsi/libfc/fc_lport.c | 4 ++++
->>   1 file changed, 4 insertions(+)
->>
->> diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
->> index ff943f4..e2a3551 100644
->> --- a/drivers/scsi/libfc/fc_lport.c
->> +++ b/drivers/scsi/libfc/fc_lport.c
->> @@ -250,6 +250,10 @@ static void fc_lport_ptp_setup(struct fc_lport *lport,
->>   	}
->>   	mutex_lock(&lport->disc.disc_mutex);
->>   	lport->ptp_rdata = fc_rport_create(lport, remote_fid);
->> +	if (!lport->ptp_rdata) {
->> +		mutex_unlock(&lport->disc.disc_mutex);
->> +		return;
->> +	}
->>   	kref_get(&lport->ptp_rdata->kref);
->>   	lport->ptp_rdata->ids.port_name = remote_wwpn;
->>   	lport->ptp_rdata->ids.node_name = remote_wwnn;
->>
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+When building with -Wsometimes-uninitialized, Clang warns:
 
-Cheers,
+drivers/scsi/qla4xxx/ql4_os.c:5915:7: warning: variable 'buf_dma' is
+used uninitialized whenever 'if' condition is false
+[-Wsometimes-uninitialized]
 
-Hannes
+buf_dma is initialized by dma_alloc_coherent, which is only called in
+the middle conditional statement. Use that same conditional to call
+dma_free_coherent so that buf_dma is always initialized when used.
+
+Fixes: 2a991c215978 ("[SCSI] qla4xxx: Boot from SAN support for open-iscsi")
+Link: https://github.com/ClangBuiltLinux/linux/issues/391
+Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
+---
+ drivers/scsi/qla4xxx/ql4_os.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index 16a18d5d856f..88bb52456efd 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -5982,7 +5982,8 @@ static int get_fw_boot_info(struct scsi_qla_host *ha, uint16_t ddb_index[])
+ 			  ddb_index[1]));
+ 
+ exit_boot_info_free:
+-	dma_free_coherent(&ha->pdev->dev, size, buf, buf_dma);
++	if (is_qla80XX(ha))
++		dma_free_coherent(&ha->pdev->dev, size, buf, buf_dma);
+ exit_boot_info:
+ 	ha->pri_ddb_idx = ddb_index[0];
+ 	ha->sec_ddb_idx = ddb_index[1];
 -- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+2.21.0
