@@ -1,7 +1,7 @@
 From: Rajendra Nayak <rnayak@codeaurora.org>
-Subject: [PATCH 2/3] scsi: ufs: Add error checks for pm_runtime_get_sync()
-Date: Fri,  8 Mar 2019 14:00:52 +0530
-Message-ID: <20190308083053.30631-3-rnayak@codeaurora.org>
+Subject: [PATCH 3/3] scsi: ufs: qcom: Remove unnecessary runtime pm calls
+Date: Fri,  8 Mar 2019 14:00:53 +0530
+Message-ID: <20190308083053.30631-4-rnayak@codeaurora.org>
 References: <20190308083053.30631-1-rnayak@codeaurora.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -12,30 +12,36 @@ To: vinholikatti@gmail.com, alim.akhtar@samsung.com, pedrom.Sousa@synopsys.com
 Cc: subhashj@codeaurora.org, asutoshd@codeaurora.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org, Rajendra Nayak <rnayak@codeaurora.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Add an error check for pm_runtime_get_sync(), ignoring this can
-hide issues with the runtime pm handling in the driver.
+Doing a runtime pm get/put as part of ufs_qcom_testbus_config()
+seems completely unnecessary, since this is called only early
+during ufs_qcom_init() when the runtime operations are not
+completely setup for ufs runtime suspend/resume to even work.
 
 Signed-off-by: Rajendra Nayak <rnayak@codeaurora.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/scsi/ufs/ufs-qcom.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 2ddf24466a62..060dc38cc582 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -8357,7 +8357,10 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+index 3aeadb14aae1..3590741eea2f 100644
+--- a/drivers/scsi/ufs/ufs-qcom.c
++++ b/drivers/scsi/ufs/ufs-qcom.c
+@@ -1558,7 +1558,6 @@ int ufs_qcom_testbus_config(struct ufs_qcom_host *host)
  	}
+ 	mask <<= offset;
  
- 	/* Hold auto suspend until async scan completes */
--	pm_runtime_get_sync(dev);
-+	err = pm_runtime_get_sync(dev);
-+	if (err < 0)
-+		goto out_remove_scsi_host;
-+
- 	atomic_set(&hba->scsi_block_reqs_cnt, 0);
- 	/*
- 	 * We are assuming that device wasn't put in sleep/power-down
+-	pm_runtime_get_sync(host->hba->dev);
+ 	ufshcd_hold(host->hba, false);
+ 	ufshcd_rmwl(host->hba, TEST_BUS_SEL,
+ 		    (u32)host->testbus.select_major << 19,
+@@ -1573,7 +1572,6 @@ int ufs_qcom_testbus_config(struct ufs_qcom_host *host)
+ 	 */
+ 	mb();
+ 	ufshcd_release(host->hba);
+-	pm_runtime_put_sync(host->hba->dev);
+ 
+ 	return 0;
+ }
 -- 
 QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member
 of Code Aurora Forum, hosted by The Linux Foundation
