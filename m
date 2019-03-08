@@ -1,33 +1,62 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2] scsi:libiscsi: Hold back_lock when calling iscsi_complete_task
-Date: Thu, 07 Mar 2019 21:38:04 -0500
-Message-ID: <yq14l8et7jn.fsf@oracle.com>
-References: <20190225174130.29496-1-leeman.duncan@gmail.com>
+From: <sagar.biradar@microchip.com>
+Subject: [PATCH] scsi: aacraid: Fix performance issue(QD) on logical drives
+Date: Thu, 7 Mar 2019 23:26:41 -0800
+Message-ID: <1552030001-10658-1-git-send-email-sagar.biradar@microchip.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190225174130.29496-1-leeman.duncan@gmail.com> (Lee Duncan's
-        message of "Mon, 25 Feb 2019 09:41:30 -0800")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Lee Duncan <leeman.duncan@gmail.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, cleech@redhat.com, hare@suse.de, Lee Duncan <lduncan@suse.com>
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
+Cc: linux-scsi@vger.kernel.org, aacraid@microsemi.com, dave.carroll@microchip.com, scott.benesh@microchip.com, stable@vger.kernel.org, sagar.biradar@microchip.com
 List-Id: linux-scsi@vger.kernel.org
 
+From: Sagar Biradar <sagar.biradar@microchip.com>
 
-Lee,
+To: Martin K. Petersen <martin.petersen@oracle.com>
+To: James Bottomley <jejb@linux.vnet.ibm.com>
+cc: linux-scsi <linux-scsi@vger.kernel.org>
+cc: aacraid@microsemi.com
+cc: Dave Carroll <dave.carroll@microchip.com>
+cc: Scott Benesh <scott.benesh@microchip.com>
+cc: stable@vger.kernel.org
 
-> If there is an error queueing an iscsi command in
-> iscsi_queuecommand(), for example if the transport fails to take the
-> command in sessuin->tt->xmit_task(), then the error path can call
-> iscsi_complete_task() without first aquiring the back_lock as
-> required. This can lead to things like ITT pool can get corrupt,
-> resulting in duplicate ITTs being sent out.
->
-> The solution is to hold the back_lock around iscsi_complete_task()
-> calls, and to add a little commenting to help others understand when
-> back_lock must be held.
+Fix performance issue where the queue depth for SmartIOC logical
+volumes is set to 1, and allow the usual logical volume code
+to be executed
 
-Applied to 5.1/scsi-queue, thanks!
+Fixes: a052865fe2871a3888 (aacraid: Set correct Queue Depth for HBA1000
+RAW disks)
 
+Signed-off-by: Sagar Biradar <Sagar.Biradar@microchip.com>
+---
+ drivers/scsi/aacraid/linit.c | 13 ++++++++-----
+ 1 file changed, 8 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+index 7e56a11..cceffac 100644
+--- a/drivers/scsi/aacraid/linit.c
++++ b/drivers/scsi/aacraid/linit.c
+@@ -413,13 +413,16 @@ static int aac_slave_configure(struct scsi_device *sdev)
+ 	if (chn < AAC_MAX_BUSES && tid < AAC_MAX_TARGETS && aac->sa_firmware) {
+ 		devtype = aac->hba_map[chn][tid].devtype;
+ 
+-		if (devtype == AAC_DEVTYPE_NATIVE_RAW)
++		if (devtype == AAC_DEVTYPE_NATIVE_RAW) {
+ 			depth = aac->hba_map[chn][tid].qd_limit;
+-		else if (devtype == AAC_DEVTYPE_ARC_RAW)
++			set_timeout = 1;
++			goto common_config;
++		}
++		if (devtype == AAC_DEVTYPE_ARC_RAW) {
+ 			set_qd_dev_type = true;
+-
+-		set_timeout = 1;
+-		goto common_config;
++			set_timeout = 1;
++			goto common_config;
++		}
+ 	}
+ 
+ 	if (aac->jbod && (sdev->type == TYPE_DISK))
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+1.8.3.1
