@@ -1,62 +1,30 @@
-From: <sagar.biradar@microchip.com>
-Subject: [PATCH] scsi: aacraid: Fix performance issue(QD) on logical drives
-Date: Thu, 7 Mar 2019 23:26:41 -0800
-Message-ID: <1552030001-10658-1-git-send-email-sagar.biradar@microchip.com>
+From: Rajendra Nayak <rnayak@codeaurora.org>
+Subject: [PATCH 0/3] scsi: ufs: runtime pm fixes
+Date: Fri,  8 Mar 2019 14:00:50 +0530
+Message-ID: <20190308083053.30631-1-rnayak@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <stable-owner@vger.kernel.org>
-Sender: stable-owner@vger.kernel.org
-To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
-Cc: linux-scsi@vger.kernel.org, aacraid@microsemi.com, dave.carroll@microchip.com, scott.benesh@microchip.com, stable@vger.kernel.org, sagar.biradar@microchip.com
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: vinholikatti@gmail.com, alim.akhtar@samsung.com, pedrom.Sousa@synopsys.com
+Cc: subhashj@codeaurora.org, asutoshd@codeaurora.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org, Rajendra Nayak <rnayak@codeaurora.org>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Sagar Biradar <sagar.biradar@microchip.com>
+These are some runtime pm fixes I stumbled upon while
+working on adding support for controlling multiple
+power domains (needed on qualcomm sdm845 platforms)
+in the ufshcd-pltfrm driver.
 
-To: Martin K. Petersen <martin.petersen@oracle.com>
-To: James Bottomley <jejb@linux.vnet.ibm.com>
-cc: linux-scsi <linux-scsi@vger.kernel.org>
-cc: aacraid@microsemi.com
-cc: Dave Carroll <dave.carroll@microchip.com>
-cc: Scott Benesh <scott.benesh@microchip.com>
-cc: stable@vger.kernel.org
+Rajendra Nayak (3):
+  scsi: ufs: Fix runtime pm handling in ufshcd-pltfrm
+  scsi: ufs: Add error checks for pm_runtime_get_sync()
+  scsi: ufs: qcom: Remove unnecessary runtime pm calls
 
-Fix performance issue where the queue depth for SmartIOC logical
-volumes is set to 1, and allow the usual logical volume code
-to be executed
+ drivers/scsi/ufs/ufs-qcom.c      | 2 --
+ drivers/scsi/ufs/ufshcd-pltfrm.c | 3 +++
+ drivers/scsi/ufs/ufshcd.c        | 5 ++++-
+ 3 files changed, 7 insertions(+), 3 deletions(-)
 
-Fixes: a052865fe2871a3888 (aacraid: Set correct Queue Depth for HBA1000
-RAW disks)
-
-Signed-off-by: Sagar Biradar <Sagar.Biradar@microchip.com>
----
- drivers/scsi/aacraid/linit.c | 13 ++++++++-----
- 1 file changed, 8 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index 7e56a11..cceffac 100644
---- a/drivers/scsi/aacraid/linit.c
-+++ b/drivers/scsi/aacraid/linit.c
-@@ -413,13 +413,16 @@ static int aac_slave_configure(struct scsi_device *sdev)
- 	if (chn < AAC_MAX_BUSES && tid < AAC_MAX_TARGETS && aac->sa_firmware) {
- 		devtype = aac->hba_map[chn][tid].devtype;
- 
--		if (devtype == AAC_DEVTYPE_NATIVE_RAW)
-+		if (devtype == AAC_DEVTYPE_NATIVE_RAW) {
- 			depth = aac->hba_map[chn][tid].qd_limit;
--		else if (devtype == AAC_DEVTYPE_ARC_RAW)
-+			set_timeout = 1;
-+			goto common_config;
-+		}
-+		if (devtype == AAC_DEVTYPE_ARC_RAW) {
- 			set_qd_dev_type = true;
--
--		set_timeout = 1;
--		goto common_config;
-+			set_timeout = 1;
-+			goto common_config;
-+		}
- 	}
- 
- 	if (aac->jbod && (sdev->type == TYPE_DISK))
 -- 
-1.8.3.1
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member
+of Code Aurora Forum, hosted by The Linux Foundation
