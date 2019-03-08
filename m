@@ -1,46 +1,130 @@
-From: Nathan Chancellor <natechancellor@gmail.com>
-Subject: [PATCH] scsi: gdth: Only call dma_free_coherent when buf is not NULL in ioc_general
-Date: Thu,  7 Mar 2019 16:18:39 -0700
-Message-ID: <20190307231839.3330-1-natechancellor@gmail.com>
+From: Lee Duncan <lduncan@suse.com>
+Subject: Re: [PATCH v2] scsi:libiscsi: Hold back_lock when calling
+ iscsi_complete_task
+Date: Thu, 7 Mar 2019 17:37:50 -0800
+Message-ID: <88c1457c-7831-3341-1c63-11eb82244c4b@suse.com>
+References: <20190225174130.29496-1-leeman.duncan@gmail.com>
+ <20190306182349.GB68002@straylight.hirudinean.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190306182349.GB68002@straylight.hirudinean.org>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Achim Leubner <achim_leubner@adaptec.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, clang-built-linux@googlegroups.com, Nick Desaulniers <ndesaulniers@google.com>, Nathan Chancellor <natechancellor@gmail.com>
+To: Chris Leech <cleech@redhat.com>, Lee Duncan <leeman.duncan@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, hare@suse.de
 List-Id: linux-scsi@vger.kernel.org
 
-When building with -Wsometimes-uninitialized, Clang warns:
+On 3/6/19 10:23 AM, Chris Leech wrote:
+> On Mon, Feb 25, 2019 at 09:41:30AM -0800, Lee Duncan wrote:
+>> From: Lee Duncan <lduncan@suse.com>
+>>
+>> If there is an error queueing an iscsi command in
+>> iscsi_queuecommand(), for example if the transport fails
+>> to take the command in sessuin->tt->xmit_task(), then
+>> the error path can call iscsi_complete_task() without
+>> first aquiring the back_lock as required. This can
+>> lead to things like ITT pool can get corrupt, resulting
+>> in duplicate ITTs being sent out.
+>>
+>> The solution is to hold the back_lock around
+>> iscsi_complete_task() calls, and to add a little commenting
+>> to help others understand when back_lock must be held.
+>>
+>> Signed-off-by: Lee Duncan <lduncan@suse.com>
+>> ---
+> 
+> Lee,
+> 
+> Quick question, can you confirm that you tested this with lockdep?
+> 
+> It seems right to me, it's just that we've been hit with lockdep
+> problems dealing with these locks before.
+> 
+> - Chris
 
-drivers/scsi/gdth.c:3662:6: warning: variable 'paddr' is used
-uninitialized whenever 'if' condition is false
-[-Wsometimes-uninitialized]
+I'm glad you asked, to keep me honest -- I had not done it yet, because
+it seemed obvious to me.
 
-Don't attempt to call dma_free_coherent when buf is NULL (meaning that
-we never called dma_alloc_coherent and initialized paddr), which avoids
-this warning.
+But I did check today, and did not find any deadlock nor leaks. I was
+testing on a 5.0.0-1 kernel.
 
-Link: https://github.com/ClangBuiltLinux/linux/issues/402
-Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
----
- drivers/scsi/gdth.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
-index e7f1dd4f3b66..0ca9b4393770 100644
---- a/drivers/scsi/gdth.c
-+++ b/drivers/scsi/gdth.c
-@@ -3697,8 +3697,9 @@ static int ioc_general(void __user *arg, char *cmnd)
- 
- 	rval = 0;
- out_free_buf:
--	dma_free_coherent(&ha->pdev->dev, gen.data_len + gen.sense_len, buf,
--			paddr);
-+	if (buf)
-+		dma_free_coherent(&ha->pdev->dev, gen.data_len + gen.sense_len,
-+				  buf, paddr);
- 	return rval;
- }
-  
--- 
-2.21.0
+> 
+>>  drivers/scsi/libiscsi.c | 22 ++++++++++++++++++++--
+>>  1 file changed, 20 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+>> index b8d325ce8754..ef7871e8c6bd 100644
+>> --- a/drivers/scsi/libiscsi.c
+>> +++ b/drivers/scsi/libiscsi.c
+>> @@ -838,7 +838,7 @@ EXPORT_SYMBOL_GPL(iscsi_conn_send_pdu);
+>>   * @datalen: len of buffer
+>>   *
+>>   * iscsi_cmd_rsp sets up the scsi_cmnd fields based on the PDU and
+>> - * then completes the command and task.
+>> + * then completes the command and task. called under back_lock
+>>   **/
+>>  static void iscsi_scsi_cmd_rsp(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+>>  			       struct iscsi_task *task, char *data,
+>> @@ -941,6 +941,9 @@ static void iscsi_scsi_cmd_rsp(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+>>   * @conn: iscsi connection
+>>   * @hdr:  iscsi pdu
+>>   * @task: scsi command task
+>> + *
+>> + * iscsi_data_in_rsp sets up the scsi_cmnd fields based on the data received
+>> + * then completes the command and task. called under back_lock
+>>   **/
+>>  static void
+>>  iscsi_data_in_rsp(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+>> @@ -1025,6 +1028,16 @@ static int iscsi_send_nopout(struct iscsi_conn *conn, struct iscsi_nopin *rhdr)
+>>  	return 0;
+>>  }
+>>  
+>> +/**
+>> + * iscsi_nop_out_rsp - SCSI NOP Response processing
+>> + * @task: scsi command task
+>> + * @nop: the nop structure
+>> + * @data: where to put the data
+>> + * @datalen: length of data
+>> + *
+>> + * iscsi_nop_out_rsp handles nop response from use or
+>> + * from user space. called under back_lock
+>> + **/
+>>  static int iscsi_nop_out_rsp(struct iscsi_task *task,
+>>  			     struct iscsi_nopin *nop, char *data, int datalen)
+>>  {
+>> @@ -1791,7 +1804,9 @@ int iscsi_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *sc)
+>>  	return 0;
+>>  
+>>  prepd_reject:
+>> +	spin_lock_bh(&session->back_lock);
+>>  	iscsi_complete_task(task, ISCSI_TASK_REQUEUE_SCSIQ);
+>> +	spin_unlock_bh(&session->back_lock);
+>>  reject:
+>>  	spin_unlock_bh(&session->frwd_lock);
+>>  	ISCSI_DBG_SESSION(session, "cmd 0x%x rejected (%d)\n",
+>> @@ -1799,7 +1814,9 @@ int iscsi_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *sc)
+>>  	return SCSI_MLQUEUE_TARGET_BUSY;
+>>  
+>>  prepd_fault:
+>> +	spin_lock_bh(&session->back_lock);
+>>  	iscsi_complete_task(task, ISCSI_TASK_REQUEUE_SCSIQ);
+>> +	spin_unlock_bh(&session->back_lock);
+>>  fault:
+>>  	spin_unlock_bh(&session->frwd_lock);
+>>  	ISCSI_DBG_SESSION(session, "iscsi: cmd 0x%x is not queued (%d)\n",
+>> @@ -3121,8 +3138,9 @@ fail_mgmt_tasks(struct iscsi_session *session, struct iscsi_conn *conn)
+>>  		state = ISCSI_TASK_ABRT_SESS_RECOV;
+>>  		if (task->state == ISCSI_TASK_PENDING)
+>>  			state = ISCSI_TASK_COMPLETED;
+>> +		spin_lock_bh(&session->back_lock);
+>>  		iscsi_complete_task(task, state);
+>> -
+>> +		spin_unlock_bh(&session->back_lock);
+>>  	}
+>>  }
+>>  
+>> -- 
+>> 2.16.4
+>>
+> 
