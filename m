@@ -1,97 +1,55 @@
-From: Lee Duncan <lduncan-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH] iscsi: fall back to sendmsg for slab pages
-Date: Sun, 10 Mar 2019 12:06:51 -0700
-Message-ID: <d7fa73bc-eec9-3aa3-d74d-9d9fc5a85ced@suse.com>
-References: <09491a85-077a-e8c7-bae0-c951cbf15c95@virtuozzo.com>
- <a6814c98-ea98-11b9-5b0f-ea6cc74c5de2@virtuozzo.com>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: <Kento.A.Kobayashi@sony.com>
+Subject: RE: [PATCH] usb: uas: fix usb subsystem hang after power off hub
+ port
+Date: Mon, 11 Mar 2019 08:36:44 +0000
+Message-ID: <AE5419EAB4965843B3C0C1FE29F1FFE587268B@JPYOKXMS103.jp.sony.com>
+References: <AE5419EAB4965843B3C0C1FE29F1FFE5872241@JPYOKXMS103.jp.sony.com>
+ <1552063928.29776.2.camel@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <open-iscsi+bncBD54HHNYIIINDQEV4QCRUBG3TFSQ6-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-In-Reply-To: <a6814c98-ea98-11b9-5b0f-ea6cc74c5de2-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Content-Language: en-US
-List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <https://groups.google.com/group/open-iscsi
-List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
- <https://groups.google.com/group/open-iscsi/subscribe>
-To: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "James E.J. Bottomley" <jejb-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Alexey Kuznetsov <kuznet-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1552063928.29776.2.camel@suse.com>
+Content-Language: ja-JP
+Sender: linux-kernel-owner@vger.kernel.org
+To: oneukum@suse.com, gregkh@linuxfoundation.org, stern@rowland.harvard.edu
+Cc: usb-storage@lists.one-eyed-alien.net, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org, Jacky.Cao@sony.com, No.Tanaka@sony.com, Kan.Iibuchi@sony.com
 List-Id: linux-scsi@vger.kernel.org
 
-On 3/6/19 3:33 AM, Vasily Averin wrote:
-> James, Martin,
-> noone replied 2 weeks,
-> could you please pick up this patch?
-> 
-> According to Network guru sendpage must not be called for Slab objects.
-> Unfortunately this happen in real life, for example when XFS send metadata via network block device.
-> Some of such cases -- drbd and ceph -- already have PageSlab() check, however iscsi still lacks it.
-> 
-> It was triggered host to crash during internal OpenVZ tests,
-> fixed kernel passed this test successfully.
-> 
-> This patch forces iscsi_tcp_segment_map() to set up segment->data for Slab pages
-> and it switches iscsi_sw_tcp_xmit_segment() to use sendmsg instead of sendpage. 
-> 
-> Thank you,
-> 	Vasily Averin
-> 
-> On 2/21/19 6:23 PM, Vasily Averin wrote:
->> In "XFS over network block device" scenario XFS can create IO requests
->> with slab-based XFS metadata. During processing such requests
->> tcp_sendpage() can merge skb fragments with neighbour slab objects.
->>
->> If receiving side is located on the same host tcp_recvmsg() can trigger
->> BUG_ON in hardening check and crash the host with following message:
->>
->> usercopy: kernel memory exposure attempt detected
->> 		from XXXXXXXX (kmalloc-512) (1024 bytes)
->>
->> This patch redirect such requests from sednpage to sendmsg path.
->> The problem is similar to one described in recent commit 7e241f647dc7
->> ("libceph: fall back to sendmsg for slab pages")
->>
->> Signed-off-by: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
->> ---
->>  drivers/scsi/libiscsi_tcp.c | 11 ++++++++---
->>  1 file changed, 8 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/scsi/libiscsi_tcp.c b/drivers/scsi/libiscsi_tcp.c
->> index 8a6b1b3f8277..66d97d3bef5a 100644
->> --- a/drivers/scsi/libiscsi_tcp.c
->> +++ b/drivers/scsi/libiscsi_tcp.c
->> @@ -129,12 +129,17 @@ static void iscsi_tcp_segment_map(struct iscsi_segment *segment, int recv)
->>  	BUG_ON(sg->length == 0);
->>  
->>  	/*
->> +	 * We always map for the recv path.
->> +	 *
->>  	 * If the page count is greater than one it is ok to send
->>  	 * to the network layer's zero copy send path. If not we
->> -	 * have to go the slow sendmsg path. We always map for the
->> -	 * recv path.
->> +	 * have to go the slow sendmsg path.
->> +	 *
->> +	 * Same goes for slab pages: skb_can_coalesce() allows
->> +	 * coalescing neighboring slab objects into a single frag which
->> +	 * triggers one of hardened usercopy checks.
->>  	 */
->> -	if (page_count(sg_page(sg)) >= 1 && !recv)
->> +	if (!recv && page_count(sg_page(sg)) >= 1 && !PageSlab(sg_page(sg)))
->>  		return;
->>  
->>  	if (recv) {
->>
-> 
-
-Reviewed-by: Lee Duncan <lduncan-IBi9RG/b67k@public.gmane.org>
-
--- 
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-Visit this group at https://groups.google.com/group/open-iscsi.
-For more options, visit https://groups.google.com/d/optout.
+SGksDQoNCj5ubyBJIGFtIHNvcnJ5LCB0aGF0IGlzIGFuIGFzc3VtcHRpb24geW91IGp1c3QgY2Fu
+bm90IG1ha2UuDQo+QW55dGhpbmcgY2FuIHRyaWdnZXIgYSByZXNldC4gVGhhdCBiZWluZyBTQ1NJ
+IGlzIHRoZSBjb21tb24gY2FzZSBjZXJ0YWlubHksIGJ1dCBub3QgdGhlIG9ubHkgY2FzZS4gQW5k
+IGluIHRob3NlIGNhc2VzIHdlIGNhbm5vdCBkZXBlbmQgb24gdXBwZXIgbGF5ZXJzIGRvaW5nIHRo
+ZSByaWdodCB0aGluZywgaWYgd2UganVzdCBpZ25vcmUgYW4gZXJyb3IuDQpXaGlsZSB3ZSBpbnZl
+c3RpZ2F0ZSB0aGlzIGlzc3VlLCB3ZSBkZWJ1Z2dlZCBhbmQgZm91bmQgdXNiX3Jlc2V0X2FuZF92
+ZXJpZnlfZGV2aWNlIHdpbGwgcmV0dXJuIC1OT0RFViBiZWZvcmUgZW50ZXIgcG9zdF9yZXNldCBv
+cGVyYXRpb24uDQpBbmQgdGhlIHJldHVybiB2YWx1ZSgtRU5PREVWKSB3aWxsIGJlIHJldHVybmVk
+IHRvIGVycm9yIGhhbmRsZXIuDQp1YXNfZWhfZGV2aWNlX3Jlc2V0X2hhbmRsZXItPnVzYl9yZXNl
+dF9kZXZpY2UgLT4gdXNiX3Jlc2V0X2FuZF92ZXJpZnlfZGV2aWNlIChyZXR1cm4gLUVOT0RFVikg
+VGhlbiBJIHdyb3RlIHRoYXQgY29tbWl0IG1lc3NhZ2UgdGhhdCB3ZSB0aGluayBldmVuIGlmIHdl
+IGlnbm9yZSAiRU5PREVWIiBpbiBwb3N0IHJlc2V0IHRvIGF2b2lkIGhhbmcgaXNzdWUgYnV0IHRo
+ZSBlcnJvciB3aWxsIGFsc28gYmUgcmVwb3J0ZWQgdG8gZXJyb3IgaGFuZGxlci4NCiNJZiBpZ25v
+cmUgYW4gZXJyb3IgYW5kIHRoZSBlcnJvciB3aWxsIG5vdCBiZSByZXBvcnRlZCB0aGVuIGl0IGlz
+IG5vdCBnb29kLg0KDQpBZGRpdGlvbmFsIGluZm9ybWF0aW9uIGFib3V0IHVzYi1zdG9yYWdlIGRy
+aXZlcih1c2Ivc3RvcmFnZS91c2IuYykgaW4gdXNiX3N0b3JfcG9zdF9yZXNldCgpIGZ1bmN0aW9u
+LCBpdCBhbHdheXMgcmV0dXJuIDAgdGhhdCBtZWFucyByZWJpbmQgd2lsbCBub3QgYmUgZXhlY3V0
+ZSBhbmQgdGhpcyBpc3N1ZSBkb2Vzbid0IGhhcHBlbi4NCg0KUmVnYXJkcywNCktlbnRvIEtvYmF5
+YXNoaQ0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogT2xpdmVyIE5ldWt1bSA8
+b25ldWt1bUBzdXNlLmNvbT4gDQpTZW50OiBTYXR1cmRheSwgTWFyY2ggOSwgMjAxOSAxOjUyIEFN
+DQpUbzogS29iYXlhc2hpLCBLZW50byAoU29ueSkgPEtlbnRvLkEuS29iYXlhc2hpQHNvbnkuY29t
+PjsgZ3JlZ2toQGxpbnV4Zm91bmRhdGlvbi5vcmc7IHN0ZXJuQHJvd2xhbmQuaGFydmFyZC5lZHUN
+CkNjOiB1c2Itc3RvcmFnZUBsaXN0cy5vbmUtZXllZC1hbGllbi5uZXQ7IGxpbnV4LWtlcm5lbEB2
+Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnOyBsaW51eC11c2JAdmdl
+ci5rZXJuZWwub3JnDQpTdWJqZWN0OiBSZTogW1BBVENIXSB1c2I6IHVhczogZml4IHVzYiBzdWJz
+eXN0ZW0gaGFuZyBhZnRlciBwb3dlciBvZmYgaHViIHBvcnQNCg0KT24gRnIsIDIwMTktMDMtMDgg
+YXQgMDk6MTMgKzAwMDAsIEtlbnRvLkEuS29iYXlhc2hpQHNvbnkuY29tIHdyb3RlOg0KPiBUaGUg
+dXNiX3Jlc2V0X2FuZF92ZXJpZnlfZGV2aWNlIGluY2x1ZGVkIGluIHVzYl9yZXNldF9kZXZpY2Ug
+ZmFpbHMgDQo+IHdpdGggLUVOT0RFViBhZnRlciBwb3dlciBvZmYgaHViIHBvcnQsIGFuZCB0aGUg
+LUVOT0RFViBlcnJvciB3aWxsIGJlIA0KPiByZXBvcnRlZCB0byB1YXNfZWhfYnVzX3Jlc2V0X2hh
+bmRsZXIgYW5kIHVwcGVyIGxheWVyLCBzbyBpdCBkb2Vzbid0IA0KPiBuZWVkIHRvIGRvIHJlYmlu
+ZCBpZiAtRU5PREVWIGhhcHBlbnMuDQoNCkhpLA0KDQpubyBJIGFtIHNvcnJ5LCB0aGF0IGlzIGFu
+IGFzc3VtcHRpb24geW91IGp1c3QgY2Fubm90IG1ha2UuDQpBbnl0aGluZyBjYW4gdHJpZ2dlciBh
+IHJlc2V0LiBUaGF0IGJlaW5nIFNDU0kgaXMgdGhlIGNvbW1vbiBjYXNlIGNlcnRhaW5seSwgYnV0
+IG5vdCB0aGUgb25seSBjYXNlLiBBbmQgaW4gdGhvc2UgY2FzZXMgd2UgY2Fubm90IGRlcGVuZCBv
+biB1cHBlciBsYXllcnMgZG9pbmcgdGhlIHJpZ2h0IHRoaW5nLCBpZiB3ZSBqdXN0IGlnbm9yZSBh
+biBlcnJvci4NCg0KTkFDSw0KDQoJU29ycnkNCgkJT2xpdmVyDQoNCg==
