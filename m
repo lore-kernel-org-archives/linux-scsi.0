@@ -1,23 +1,26 @@
-From: James Bottomley <jejb@linux.vnet.ibm.com>
-Subject: Re: [PATCH] scsi/dpt_i2o.c: Use dma_zalloc_coherent
-Date: Mon, 11 Mar 2019 09:13:49 -0700
-Message-ID: <1552320829.2889.11.camel@linux.vnet.ibm.com>
-References: <5c8683f7.1c69fb81.e37f9.75a0@mx.google.com>
+From: Erwan Velu <e.velu@criteo.com>
+Subject: Re: [PATCH v3] scsi: smartpqi_init: Reporting 'logical unit failure'
+Date: Mon, 11 Mar 2019 16:36:36 +0000
+Message-ID: <8ce82168-0108-1a9d-1fbb-471b6da0200d@criteo.com>
+References: <1551455797.3334.6.camel@linux.ibm.com>
+ <20190301160806.16099-1-e.velu@criteo.com> <yq1y35rzz31.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <5c8683f7.1c69fb81.e37f9.75a0@mx.google.com>
+In-Reply-To: <yq1y35rzz31.fsf@oracle.com>
+Content-Language: en-US
+Content-ID: <734C1720F0E7C244B53232326B87896D@eurprd04.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Sabyasachi Gupta <sabyasachi.linux@gmail.com>, akpm@linux-foundation.org
-Cc: aacraid@microsemi.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jrdr.linux@gmail.com
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, Erwan Velu <erwanaliasr1@gmail.com>
+Cc: Don Brace <don.brace@microsemi.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "esc.storagedev@microsemi.com" <esc.storagedev@microsemi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 2019-03-11 at 21:21 +0530, Sabyasachi Gupta wrote:
-> Replaced dma_alloc_coherent + memset with dma_zalloc_coherent
-
-I really don't think so.  This API is going away:
-
-https://lkml.org/lkml/2019/1/8/394
-
-James
+DQpMZSAwNi8wMy8yMDE5IMOgIDE4OjM0LCBNYXJ0aW4gSy4gUGV0ZXJzZW4gYSDDqWNyaXTCoDoN
+Cj4gRXJ3YW4sDQo+DQo+PiBXaGVuIHRoZSBIQVJEV0FSRV9FUlJPUi8weDNlLzB4MSBjYXNlIGlz
+IHRyaWdnZXJlZCwgdGhlIGxvZ2ljYWwgdm9sdW1lDQo+PiBpcyBvZmZsaW5lZC4gIFdoZW4gcmVh
+ZGluZyB0aGUga2VybmVsIGxvZywgdGhlIHJlYXNvbiB3aHkgdGhlIGRldmljZQ0KPj4gZ290IG9m
+ZmxpbmVkIGlzbid0IHJlcG9ydGVkIHRvIHRoZSB1c2VyLiAgVGhpcyBzaXR1YXRpb24gbWFrZXMN
+Cj4+IGRpZmZpY3VsdCBmb3IgYWRtaW5zIHRvIGVzdGltYXRlIHRoZSByb290IGNhdXNlIG9mIHRo
+ZSBpc3N1ZSB0aGV5DQo+PiBhbmFsaXplLg0KPiBBcHBsaWVkIHRvIDUuMS9zY3NpLXF1ZXVlLCB0
+aGFua3MuDQo+DQpUaGFua3MgTWFydGluICENCg==
