@@ -1,55 +1,88 @@
-From: <Kento.A.Kobayashi@sony.com>
-Subject: RE: [PATCH] usb: uas: fix usb subsystem hang after power off hub
- port
-Date: Mon, 11 Mar 2019 08:36:44 +0000
-Message-ID: <AE5419EAB4965843B3C0C1FE29F1FFE587268B@JPYOKXMS103.jp.sony.com>
-References: <AE5419EAB4965843B3C0C1FE29F1FFE5872241@JPYOKXMS103.jp.sony.com>
- <1552063928.29776.2.camel@suse.com>
+From: Sabyasachi Gupta <sabyasachi.linux@gmail.com>
+Subject: [PATCH] scsi/dpt_i2o.c: Use dma_zalloc_coherent
+Date: Mon, 11 Mar 2019 21:21:11 +0530
+Message-ID: <5c8683f7.1c69fb81.e37f9.75a0@mx.google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1552063928.29776.2.camel@suse.com>
-Content-Language: ja-JP
+Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
-To: oneukum@suse.com, gregkh@linuxfoundation.org, stern@rowland.harvard.edu
-Cc: usb-storage@lists.one-eyed-alien.net, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org, Jacky.Cao@sony.com, No.Tanaka@sony.com, Kan.Iibuchi@sony.com
+To: akpm@linux-foundation.org
+Cc: aacraid@microsemi.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jrdr.linux@gmail.com
 List-Id: linux-scsi@vger.kernel.org
 
-SGksDQoNCj5ubyBJIGFtIHNvcnJ5LCB0aGF0IGlzIGFuIGFzc3VtcHRpb24geW91IGp1c3QgY2Fu
-bm90IG1ha2UuDQo+QW55dGhpbmcgY2FuIHRyaWdnZXIgYSByZXNldC4gVGhhdCBiZWluZyBTQ1NJ
-IGlzIHRoZSBjb21tb24gY2FzZSBjZXJ0YWlubHksIGJ1dCBub3QgdGhlIG9ubHkgY2FzZS4gQW5k
-IGluIHRob3NlIGNhc2VzIHdlIGNhbm5vdCBkZXBlbmQgb24gdXBwZXIgbGF5ZXJzIGRvaW5nIHRo
-ZSByaWdodCB0aGluZywgaWYgd2UganVzdCBpZ25vcmUgYW4gZXJyb3IuDQpXaGlsZSB3ZSBpbnZl
-c3RpZ2F0ZSB0aGlzIGlzc3VlLCB3ZSBkZWJ1Z2dlZCBhbmQgZm91bmQgdXNiX3Jlc2V0X2FuZF92
-ZXJpZnlfZGV2aWNlIHdpbGwgcmV0dXJuIC1OT0RFViBiZWZvcmUgZW50ZXIgcG9zdF9yZXNldCBv
-cGVyYXRpb24uDQpBbmQgdGhlIHJldHVybiB2YWx1ZSgtRU5PREVWKSB3aWxsIGJlIHJldHVybmVk
-IHRvIGVycm9yIGhhbmRsZXIuDQp1YXNfZWhfZGV2aWNlX3Jlc2V0X2hhbmRsZXItPnVzYl9yZXNl
-dF9kZXZpY2UgLT4gdXNiX3Jlc2V0X2FuZF92ZXJpZnlfZGV2aWNlIChyZXR1cm4gLUVOT0RFVikg
-VGhlbiBJIHdyb3RlIHRoYXQgY29tbWl0IG1lc3NhZ2UgdGhhdCB3ZSB0aGluayBldmVuIGlmIHdl
-IGlnbm9yZSAiRU5PREVWIiBpbiBwb3N0IHJlc2V0IHRvIGF2b2lkIGhhbmcgaXNzdWUgYnV0IHRo
-ZSBlcnJvciB3aWxsIGFsc28gYmUgcmVwb3J0ZWQgdG8gZXJyb3IgaGFuZGxlci4NCiNJZiBpZ25v
-cmUgYW4gZXJyb3IgYW5kIHRoZSBlcnJvciB3aWxsIG5vdCBiZSByZXBvcnRlZCB0aGVuIGl0IGlz
-IG5vdCBnb29kLg0KDQpBZGRpdGlvbmFsIGluZm9ybWF0aW9uIGFib3V0IHVzYi1zdG9yYWdlIGRy
-aXZlcih1c2Ivc3RvcmFnZS91c2IuYykgaW4gdXNiX3N0b3JfcG9zdF9yZXNldCgpIGZ1bmN0aW9u
-LCBpdCBhbHdheXMgcmV0dXJuIDAgdGhhdCBtZWFucyByZWJpbmQgd2lsbCBub3QgYmUgZXhlY3V0
-ZSBhbmQgdGhpcyBpc3N1ZSBkb2Vzbid0IGhhcHBlbi4NCg0KUmVnYXJkcywNCktlbnRvIEtvYmF5
-YXNoaQ0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogT2xpdmVyIE5ldWt1bSA8
-b25ldWt1bUBzdXNlLmNvbT4gDQpTZW50OiBTYXR1cmRheSwgTWFyY2ggOSwgMjAxOSAxOjUyIEFN
-DQpUbzogS29iYXlhc2hpLCBLZW50byAoU29ueSkgPEtlbnRvLkEuS29iYXlhc2hpQHNvbnkuY29t
-PjsgZ3JlZ2toQGxpbnV4Zm91bmRhdGlvbi5vcmc7IHN0ZXJuQHJvd2xhbmQuaGFydmFyZC5lZHUN
-CkNjOiB1c2Itc3RvcmFnZUBsaXN0cy5vbmUtZXllZC1hbGllbi5uZXQ7IGxpbnV4LWtlcm5lbEB2
-Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnOyBsaW51eC11c2JAdmdl
-ci5rZXJuZWwub3JnDQpTdWJqZWN0OiBSZTogW1BBVENIXSB1c2I6IHVhczogZml4IHVzYiBzdWJz
-eXN0ZW0gaGFuZyBhZnRlciBwb3dlciBvZmYgaHViIHBvcnQNCg0KT24gRnIsIDIwMTktMDMtMDgg
-YXQgMDk6MTMgKzAwMDAsIEtlbnRvLkEuS29iYXlhc2hpQHNvbnkuY29tIHdyb3RlOg0KPiBUaGUg
-dXNiX3Jlc2V0X2FuZF92ZXJpZnlfZGV2aWNlIGluY2x1ZGVkIGluIHVzYl9yZXNldF9kZXZpY2Ug
-ZmFpbHMgDQo+IHdpdGggLUVOT0RFViBhZnRlciBwb3dlciBvZmYgaHViIHBvcnQsIGFuZCB0aGUg
-LUVOT0RFViBlcnJvciB3aWxsIGJlIA0KPiByZXBvcnRlZCB0byB1YXNfZWhfYnVzX3Jlc2V0X2hh
-bmRsZXIgYW5kIHVwcGVyIGxheWVyLCBzbyBpdCBkb2Vzbid0IA0KPiBuZWVkIHRvIGRvIHJlYmlu
-ZCBpZiAtRU5PREVWIGhhcHBlbnMuDQoNCkhpLA0KDQpubyBJIGFtIHNvcnJ5LCB0aGF0IGlzIGFu
-IGFzc3VtcHRpb24geW91IGp1c3QgY2Fubm90IG1ha2UuDQpBbnl0aGluZyBjYW4gdHJpZ2dlciBh
-IHJlc2V0LiBUaGF0IGJlaW5nIFNDU0kgaXMgdGhlIGNvbW1vbiBjYXNlIGNlcnRhaW5seSwgYnV0
-IG5vdCB0aGUgb25seSBjYXNlLiBBbmQgaW4gdGhvc2UgY2FzZXMgd2UgY2Fubm90IGRlcGVuZCBv
-biB1cHBlciBsYXllcnMgZG9pbmcgdGhlIHJpZ2h0IHRoaW5nLCBpZiB3ZSBqdXN0IGlnbm9yZSBh
-biBlcnJvci4NCg0KTkFDSw0KDQoJU29ycnkNCgkJT2xpdmVyDQoNCg==
+Replaced dma_alloc_coherent + memset with dma_zalloc_coherent
+
+Signed-off-by: Sabyasachi Gupta <sabyasachi.linux@gmail.com>
+---
+ drivers/scsi/dpt_i2o.c | 12 ++++--------
+ 1 file changed, 4 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/scsi/dpt_i2o.c b/drivers/scsi/dpt_i2o.c
+index 37de8fb..056383a 100644
+--- a/drivers/scsi/dpt_i2o.c
++++ b/drivers/scsi/dpt_i2o.c
+@@ -1370,13 +1370,12 @@ static s32 adpt_i2o_reset_hba(adpt_hba* pHba)
+ 		schedule_timeout_uninterruptible(1);
+ 	} while (m == EMPTY_QUEUE);
+ 
+-	status = dma_alloc_coherent(&pHba->pDev->dev, 4, &addr, GFP_KERNEL);
++	status = dma_zalloc_coherent(&pHba->pDev->dev, 4, &addr, GFP_KERNEL);
+ 	if(status == NULL) {
+ 		adpt_send_nop(pHba, m);
+ 		printk(KERN_ERR"IOP reset failed - no free memory.\n");
+ 		return -ENOMEM;
+ 	}
+-	memset(status,0,4);
+ 
+ 	msg[0]=EIGHT_WORD_MSG_SIZE|SGL_OFFSET_0;
+ 	msg[1]=I2O_CMD_ADAPTER_RESET<<24|HOST_TID<<12|ADAPTER_TID;
+@@ -2836,14 +2835,13 @@ static s32 adpt_i2o_init_outbound_q(adpt_hba* pHba)
+ 
+ 	msg=(u32 __iomem *)(pHba->msg_addr_virt+m);
+ 
+-	status = dma_alloc_coherent(&pHba->pDev->dev, 4, &addr, GFP_KERNEL);
++	status = dma_zalloc_coherent(&pHba->pDev->dev, 4, &addr, GFP_KERNEL);
+ 	if (!status) {
+ 		adpt_send_nop(pHba, m);
+ 		printk(KERN_WARNING"%s: IOP reset failed - no free memory.\n",
+ 			pHba->name);
+ 		return -ENOMEM;
+ 	}
+-	memset(status, 0, 4);
+ 
+ 	writel(EIGHT_WORD_MSG_SIZE| SGL_OFFSET_6, &msg[0]);
+ 	writel(I2O_CMD_OUTBOUND_INIT<<24 | HOST_TID<<12 | ADAPTER_TID, &msg[1]);
+@@ -2890,14 +2888,13 @@ static s32 adpt_i2o_init_outbound_q(adpt_hba* pHba)
+ 			pHba->reply_pool, pHba->reply_pool_pa);
+ 	}
+ 
+-	pHba->reply_pool = dma_alloc_coherent(&pHba->pDev->dev,
++	pHba->reply_pool = dma_zalloc_coherent(&pHba->pDev->dev,
+ 				pHba->reply_fifo_size * REPLY_FRAME_SIZE * 4,
+ 				&pHba->reply_pool_pa, GFP_KERNEL);
+ 	if (!pHba->reply_pool) {
+ 		printk(KERN_ERR "%s: Could not allocate reply pool\n", pHba->name);
+ 		return -ENOMEM;
+ 	}
+-	memset(pHba->reply_pool, 0 , pHba->reply_fifo_size * REPLY_FRAME_SIZE * 4);
+ 
+ 	for(i = 0; i < pHba->reply_fifo_size; i++) {
+ 		writel(pHba->reply_pool_pa + (i * REPLY_FRAME_SIZE * 4),
+@@ -3126,13 +3123,12 @@ static int adpt_i2o_build_sys_table(void)
+ 	sys_tbl_len = sizeof(struct i2o_sys_tbl) +	// Header + IOPs
+ 				(hba_count) * sizeof(struct i2o_sys_tbl_entry);
+ 
+-	sys_tbl = dma_alloc_coherent(&pHba->pDev->dev,
++	sys_tbl = dma_zalloc_coherent(&pHba->pDev->dev,
+ 				sys_tbl_len, &sys_tbl_pa, GFP_KERNEL);
+ 	if (!sys_tbl) {
+ 		printk(KERN_WARNING "SysTab Set failed. Out of memory.\n");	
+ 		return -ENOMEM;
+ 	}
+-	memset(sys_tbl, 0, sys_tbl_len);
+ 
+ 	sys_tbl->num_entries = hba_count;
+ 	sys_tbl->version = I2OVERSION;
+-- 
+2.7.4
