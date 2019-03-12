@@ -1,53 +1,21 @@
-From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.19 36/44] scsi: qla2xxx: Fix panic from use after free in qla2x00_async_tm_cmd
-Date: Mon, 11 Mar 2019 15:56:52 -0400
-Message-ID: <20190311195700.138462-36-sashal@kernel.org>
-References: <20190311195700.138462-1-sashal@kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20190311195700.138462-1-sashal@kernel.org>
-Sender: stable-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Bill Kuzeja <William.Kuzeja@stratus.com>, Bill Kuzeja <william.kuzeja@stratus.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+From: Dongli Zhang <dongli.zhang@oracle.com>
+Subject: [PATCH 0/4] scsi: cleanup hardcoding by replacing 0 by HCTX_TYPE_DEFAULT
+Date: Tue, 12 Mar 2019 09:00:27 +0800
+Message-ID: <1552352431-18821-1-git-send-email-dongli.zhang@oracle.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, qla2xxx-upstream@qlogic.com, linux-kernel@vger.kernel.org
+Cc: jejb@linux.ibm.com, martin.petersen@oracle.com, don.brace@microsemi.com, esc.storagedev@microsemi.com, dongli.zhang@oracle.com
 List-Id: linux-scsi@vger.kernel.org
 
-From: Bill Kuzeja <William.Kuzeja@stratus.com>
+As in commit 7d76f8562f4c ("blk-mq: use HCTX_TYPE_DEFAULT but not 0 to
+index blk_mq_tag_set->map"), this patch set cleanup driver/scsi/* to index
+blk_mq_tag_set->map[] with HCTX_TYPE_DEFAULT, but not 0.
 
-[ Upstream commit 388a49959ee4e4e99f160241d9599efa62cd4299 ]
+ drivers/scsi/qla2xxx/qla_os.c         | 2 +-
+ drivers/scsi/scsi_lib.c               | 2 +-
+ drivers/scsi/smartpqi/smartpqi_init.c | 2 +-
+ drivers/scsi/virtio_scsi.c            | 2 +-
+ 4 files changed, 4 insertions(+), 4 deletions(-)
 
-In qla2x00_async_tm_cmd, we reference off sp after it has been freed.  This
-caused a panic on a system running a slub debug kernel. Since fcport is
-passed in anyways, just use that instead.
-
-Signed-off-by: Bill Kuzeja <william.kuzeja@stratus.com>
-Acked-by: Giridhar Malavali <gmalavali@marvell.com>
-Acked-by: Himanshu Madhani <hmadhani@marvell.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/scsi/qla2xxx/qla_init.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 5352c9bbcaf7..2271a2cd29d2 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -1719,13 +1719,13 @@ qla2x00_async_tm_cmd(fc_port_t *fcport, uint32_t flags, uint32_t lun,
- 
- 		/* Issue Marker IOCB */
- 		qla2x00_marker(vha, vha->hw->req_q_map[0],
--		    vha->hw->rsp_q_map[0], sp->fcport->loop_id, lun,
-+		    vha->hw->rsp_q_map[0], fcport->loop_id, lun,
- 		    flags == TCF_LUN_RESET ? MK_SYNC_ID_LUN : MK_SYNC_ID);
- 	}
- 
- done_free_sp:
- 	sp->free(sp);
--	sp->fcport->flags &= ~FCF_ASYNC_SENT;
-+	fcport->flags &= ~FCF_ASYNC_SENT;
- done:
- 	return rval;
- }
--- 
-2.19.1
+Dongli Zhang
