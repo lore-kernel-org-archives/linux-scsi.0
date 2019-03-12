@@ -1,7 +1,7 @@
 From: "Milan P. Gandhi" <mgandhi@redhat.com>
-Subject: [PATCH 1/2] scsi: qla2xxx: Fix comment alignment in qla_bsg.c
-Date: Tue, 12 Mar 2019 18:21:11 +0530
-Message-ID: <20190312125111.GA13943@machine1>
+Subject: [PATCH 2/2] scsi: qla2xxx: Fix a small typo in qla_bsg.c
+Date: Tue, 12 Mar 2019 18:23:15 +0530
+Message-ID: <20190312125315.GA13975@machine1>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
@@ -11,7 +11,7 @@ To: kernel-janitors@vger.kernel.org
 Cc: qla2xxx-upstream@qlogic.com, jejb@linux.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, julia.lawall@lip6.fr, dan.carpenter@oracle.com
 List-Id: linux-scsi@vger.kernel.org
 
-Fixed a minor formatting issue with comment section in qla_bsg.c
+Fixed a typo for 'iiDMA' cmd in qla_bsg.c
 
 Signed-off-by: Milan P. Gandhi <mgandhi@redhat.com>
 ---
@@ -19,12 +19,15 @@ Signed-off-by: Milan P. Gandhi <mgandhi@redhat.com>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bsg.c
-index 17d42658ad9a..9bd41b5fc279 100644
+index 17d42658ad9a..f2b95f11a71c 100644
 --- a/drivers/scsi/qla2xxx/qla_bsg.c
 +++ b/drivers/scsi/qla2xxx/qla_bsg.c
-@@ -1,4 +1,4 @@
--	/*
-+/*
-  * QLogic Fibre Channel HBA Driver
-  * Copyright (c)  2003-2014 QLogic Corporation
-  *
+@@ -1354,7 +1354,7 @@ qla24xx_iidma(struct bsg_job *bsg_job)
+ 
+ 	if (rval) {
+ 		ql_log(ql_log_warn, vha, 0x704c,
+-		    "iIDMA cmd failed for %8phN -- "
++		    "iiDMA cmd failed for %8phN -- "
+ 		    "%04x %x %04x %04x.\n", fcport->port_name,
+ 		    rval, fcport->fp_speed, mb[0], mb[1]);
+ 		rval = (DID_ERROR << 16);
