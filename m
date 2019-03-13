@@ -1,85 +1,133 @@
-From: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-Subject: Re: [SPAM][PATCH v3 4/7] dt-bindings: phy: Add document for
- phy-mtk-ufs
-Date: Wed, 13 Mar 2019 22:05:18 +0800
-Message-ID: <1552485918.30977.56.camel@mtkswgap22>
-References: <1551252192-535-1-git-send-email-stanley.chu@mediatek.com>
- <1551252192-535-6-git-send-email-stanley.chu@mediatek.com>
- <1552472519.500.1.camel@mtksdaap41>
+From: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH AUTOSEL 4.20 14/60] scsi: libiscsi: Fix race between iscsi_xmit_task and iscsi_complete_task
+Date: Wed, 13 Mar 2019 15:09:35 -0400
+Message-ID: <20190313191021.158171-14-sashal@kernel.org>
+References: <20190313191021.158171-1-sashal@kernel.org>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-In-Reply-To: <1552472519.500.1.camel@mtksdaap41>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-mediatek>,
- <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-mediatek/>
-List-Post: <mailto:linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-List-Help: <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-mediatek>,
- <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=subscribe>
-Sender: "Linux-mediatek" <linux-mediatek-bounces-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-Errors-To: linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
-To: Yingjoe Chen <yingjoe.chen-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-Cc: "mark.rutland-5wv7dgnIgG8@public.gmane.org" <mark.rutland-5wv7dgnIgG8@public.gmane.org>, "devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "robh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <robh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org" <subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Chun-Hung Wu =?UTF-8?Q?=28=E5=B7=AB=E9=A7=BF=E5=AE=8F=29?= <Chun-hung.Wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, Kuohong Wang =?UTF-8?Q?=28=E7=8E=8B=E5=9C=8B=E9=B4=BB=29?= <kuohong.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, "kishon-l0cyMroinI0@public.gmane.org" <kishon-l0cyMroinI0@public.gmane.org>, "avri.altman-Sjgp3cTcYWE@public.gmane.org" <avri.altman-Sjgp3cTcYWE@public.gmane.org>, "robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "liwei213-hv44wF8Li93QT0dZR+AlfA@public.gmane.org" <liwei213-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, "alim.akhtar-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org" <alim.akhtar-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, Chunfeng Yun =?UTF-8?Q?=28=E4=BA=91=E6=98=A5=E5=B3=B0=29?= <Chunfeng.Yun-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, linux-mediatek-IAPFreCvJWM7uuMidbF8XQ@public.gmane.org
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <open-iscsi+bncBDTZTRGMXIFBBP5LUXSAKGQEXKLDKKI-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+In-Reply-To: <20190313191021.158171-1-sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <https://groups.google.com/group/open-iscsi
+List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
+ <https://groups.google.com/group/open-iscsi/subscribe>
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Anoob Soman <anoob.soman-Sxgqhf6Nn4DQT0dZR+AlfA@public.gmane.org>, Bob Liu <bob.liu-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "Martin K . Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Yingjoe,
+From: Anoob Soman <anoob.soman-Sxgqhf6Nn4DQT0dZR+AlfA@public.gmane.org>
 
-On Wed, 2019-03-13 at 18:21 +0800, Yingjoe Chen wrote:
-> On Wed, 2019-02-27 at 15:23 +0800, Stanley Chu wrote:
-> > Add UFS M-PHY node document for MediaTek SoC chips.
-> > 
-> > Signed-off-by: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-> > ---
-> >  .../devicetree/bindings/phy/phy-mtk-ufs.txt   | 35 +++++++++++++++++++
-> >  1 file changed, 35 insertions(+)
-> >  create mode 100644 Documentation/devicetree/bindings/phy/phy-mtk-ufs.txt
-> > 
-> > diff --git a/Documentation/devicetree/bindings/phy/phy-mtk-ufs.txt b/Documentation/devicetree/bindings/phy/phy-mtk-ufs.txt
-> > new file mode 100644
-> > index 000000000000..5fc22c7fe0bc
-> > --- /dev/null
-> > +++ b/Documentation/devicetree/bindings/phy/phy-mtk-ufs.txt
-> > @@ -0,0 +1,35 @@
-> > +MediaTek Universal Flash Storage (UFS) M-PHY binding
-> > +--------------------------------------------------------
-> > +
-> > +UFS M-PHY nodes are defined to describe on-chip UFS M-PHY hardware macro.
-> > +Each UFS M-PHY node should have its own node.
-> > +
-> > +To bind UFS M-PHY with UFS host controller, the controller node should
-> > +contain a phandle reference to UFS M-PHY node.
-> > +
-> > +Required properties for UFS M-PHY nodes:
-> > +- compatible         : Compatible list, contains the following controller:
-> > +                       "mediatek,ufs-mphy"
-> > +- reg                : Address and length of the UFS M-PHY register set.
-> > +- #phy-cells         : This property shall be set to 0
-> > +- clocks             : List of phandle and clock specifier pairs.
-> > +- clock-names        : List of clock input name strings sorted in the same
-> > +                       order as the clocks property. "unipro-clk" and
-> > +                       "mp-clk" are mandatory.
-> 
-> All names in clock-names are clock, don't need to add -clk again.
-> Please describe shortly what these clock are used.
-> 
+[ Upstream commit 79edd00dc6a96644d76b4a1cb97d94d49e026768 ]
 
-Sorry this mail is marked as [SPAM] so I did not notice this before
-sending the same question to Rob.
+When a target sends Check Condition, whilst initiator is busy xmiting
+re-queued data, could lead to race between iscsi_complete_task() and
+iscsi_xmit_task() and eventually crashing with the following kernel
+backtrace.
 
-This style seems suitable in phy documents but existed ufs documents
-already have lots of "_clk" so I am confused.
+[3326150.987523] ALERT: BUG: unable to handle kernel NULL pointer dereference at 0000000000000078
+[3326150.987549] ALERT: IP: [<ffffffffa05ce70d>] iscsi_xmit_task+0x2d/0xc0 [libiscsi]
+[3326150.987571] WARN: PGD 569c8067 PUD 569c9067 PMD 0
+[3326150.987582] WARN: Oops: 0002 [#1] SMP
+[3326150.987593] WARN: Modules linked in: tun nfsv3 nfs fscache dm_round_robin
+[3326150.987762] WARN: CPU: 2 PID: 8399 Comm: kworker/u32:1 Tainted: G O 4.4.0+2 #1
+[3326150.987774] WARN: Hardware name: Dell Inc. PowerEdge R720/0W7JN5, BIOS 2.5.4 01/22/2016
+[3326150.987790] WARN: Workqueue: iscsi_q_13 iscsi_xmitworker [libiscsi]
+[3326150.987799] WARN: task: ffff8801d50f3800 ti: ffff8801f5458000 task.ti: ffff8801f5458000
+[3326150.987810] WARN: RIP: e030:[<ffffffffa05ce70d>] [<ffffffffa05ce70d>] iscsi_xmit_task+0x2d/0xc0 [libiscsi]
+[3326150.987825] WARN: RSP: e02b:ffff8801f545bdb0 EFLAGS: 00010246
+[3326150.987831] WARN: RAX: 00000000ffffffc3 RBX: ffff880282d2ab20 RCX: ffff88026b6ac480
+[3326150.987842] WARN: RDX: 0000000000000000 RSI: 00000000fffffe01 RDI: ffff880282d2ab20
+[3326150.987852] WARN: RBP: ffff8801f545bdc8 R08: 0000000000000000 R09: 0000000000000008
+[3326150.987862] WARN: R10: 0000000000000000 R11: 000000000000fe88 R12: 0000000000000000
+[3326150.987872] WARN: R13: ffff880282d2abe8 R14: ffff880282d2abd8 R15: ffff880282d2ac08
+[3326150.987890] WARN: FS: 00007f5a866b4840(0000) GS:ffff88028a640000(0000) knlGS:0000000000000000
+[3326150.987900] WARN: CS: e033 DS: 0000 ES: 0000 CR0: 0000000080050033
+[3326150.987907] WARN: CR2: 0000000000000078 CR3: 0000000070244000 CR4: 0000000000042660
+[3326150.987918] WARN: Stack:
+[3326150.987924] WARN: ffff880282d2ad58 ffff880282d2ab20 ffff880282d2abe8 ffff8801f545be18
+[3326150.987938] WARN: ffffffffa05cea90 ffff880282d2abf8 ffff88026b59cc80 ffff88026b59cc00
+[3326150.987951] WARN: ffff88022acf32c0 ffff880289491800 ffff880255a80800 0000000000000400
+[3326150.987964] WARN: Call Trace:
+[3326150.987975] WARN: [<ffffffffa05cea90>] iscsi_xmitworker+0x2f0/0x360 [libiscsi]
+[3326150.987988] WARN: [<ffffffff8108862c>] process_one_work+0x1fc/0x3b0
+[3326150.987997] WARN: [<ffffffff81088f95>] worker_thread+0x2a5/0x470
+[3326150.988006] WARN: [<ffffffff8159cad8>] ? __schedule+0x648/0x870
+[3326150.988015] WARN: [<ffffffff81088cf0>] ? rescuer_thread+0x300/0x300
+[3326150.988023] WARN: [<ffffffff8108ddf5>] kthread+0xd5/0xe0
+[3326150.988031] WARN: [<ffffffff8108dd20>] ? kthread_stop+0x110/0x110
+[3326150.988040] WARN: [<ffffffff815a0bcf>] ret_from_fork+0x3f/0x70
+[3326150.988048] WARN: [<ffffffff8108dd20>] ? kthread_stop+0x110/0x110
+[3326150.988127] ALERT: RIP [<ffffffffa05ce70d>] iscsi_xmit_task+0x2d/0xc0 [libiscsi]
+[3326150.988138] WARN: RSP <ffff8801f545bdb0>
+[3326150.988144] WARN: CR2: 0000000000000078
+[3326151.020366] WARN: ---[ end trace 1c60974d4678d81b ]---
 
-Maybe I need to drop "-clk" in phy documents and use "_clk" in ufs
-documents?
+Commit 6f8830f5bbab ("scsi: libiscsi: add lock around task lists to fix
+list corruption regression") introduced "taskqueuelock" to fix list
+corruption during the race, but this wasn't enough.
 
-Or wait for Rob's feedback in another mail?
+Re-setting of conn->task to NULL, could race with iscsi_xmit_task().
+iscsi_complete_task()
+{
+    ....
+    if (conn->task == task)
+        conn->task = NULL;
+}
 
-> Joe.C
-> 
-> 
-> 
+conn->task in iscsi_xmit_task() could be NULL and so will be task.
+__iscsi_get_task(task) will crash (NullPtr de-ref), trying to access
+refcount.
 
-Thanks.
-Stanley.
+iscsi_xmit_task()
+{
+    struct iscsi_task *task = conn->task;
+
+    __iscsi_get_task(task);
+}
+
+This commit will take extra conn->session->back_lock in iscsi_xmit_task()
+to ensure iscsi_xmit_task() waits for iscsi_complete_task(), if
+iscsi_complete_task() wins the race.  If iscsi_xmit_task() wins the race,
+iscsi_xmit_task() increments task->refcount
+(__iscsi_get_task) ensuring iscsi_complete_task() will not iscsi_free_task().
+
+Signed-off-by: Anoob Soman <anoob.soman-Sxgqhf6Nn4DQT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Bob Liu <bob.liu-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Acked-by: Lee Duncan <lduncan-IBi9RG/b67k@public.gmane.org>
+Signed-off-by: Martin K. Petersen <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+---
+ drivers/scsi/libiscsi.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index f78d2e5c1471..4ad61cfa69c0 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -1449,7 +1449,13 @@ static int iscsi_xmit_task(struct iscsi_conn *conn)
+ 	if (test_bit(ISCSI_SUSPEND_BIT, &conn->suspend_tx))
+ 		return -ENODATA;
+ 
++	spin_lock_bh(&conn->session->back_lock);
++	if (conn->task == NULL) {
++		spin_unlock_bh(&conn->session->back_lock);
++		return -ENODATA;
++	}
+ 	__iscsi_get_task(task);
++	spin_unlock_bh(&conn->session->back_lock);
+ 	spin_unlock_bh(&conn->session->frwd_lock);
+ 	rc = conn->session->tt->xmit_task(task);
+ 	spin_lock_bh(&conn->session->frwd_lock);
+-- 
+2.19.1
+
+-- 
+You received this message because you are subscribed to the Google Groups "open-iscsi" group.
+To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+Visit this group at https://groups.google.com/group/open-iscsi.
+For more options, visit https://groups.google.com/d/optout.
