@@ -1,97 +1,100 @@
-From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 3.18 03/10] scsi: libsas: Fix rphy phy_identifier for PHYs with end devices attached
-Date: Wed, 13 Mar 2019 15:18:39 -0400
-Message-ID: <20190313191847.160801-3-sashal@kernel.org>
-References: <20190313191847.160801-1-sashal@kernel.org>
+From: Rob Herring <robh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v3 5/7] dt-bindings: scsi: ufs: Add document for
+ ufs-mediatek
+Date: Wed, 13 Mar 2019 14:48:31 -0500
+Message-ID: <CAL_JsqJ8EkM5EsQCCsyY0M1SuDar2qQi6QjA=91+Svv79-8rAg@mail.gmail.com>
+References: <1551252192-535-1-git-send-email-stanley.chu@mediatek.com>
+ <1551252192-535-7-git-send-email-stanley.chu@mediatek.com>
+ <20190312133113.GA8956@bogus> <1552444909.30977.39.camel@mtkswgap22>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20190313191847.160801-1-sashal@kernel.org>
-Sender: stable-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: John Garry <john.garry@huawei.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+In-Reply-To: <1552444909.30977.39.camel@mtkswgap22>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-mediatek>,
+ <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-mediatek/>
+List-Post: <mailto:linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+List-Help: <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-mediatek>,
+ <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=subscribe>
+Sender: "Linux-mediatek" <linux-mediatek-bounces-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+Errors-To: linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
+To: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
+Cc: "mark.rutland-5wv7dgnIgG8@public.gmane.org" <mark.rutland-5wv7dgnIgG8@public.gmane.org>, "devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org" <subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, =?UTF-8?B?Q2h1bi1IdW5nIFd1ICjlt6vpp7/lro8p?= <Chun-hung.Wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, =?UTF-8?B?S3VvaG9uZyBXYW5nICjnjovlnIvptLsp?= <kuohong.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, "kishon-l0cyMroinI0@public.gmane.org" <kishon-l0cyMroinI0@public.gmane.org>, "avri.altman-Sjgp3cTcYWE@public.gmane.org" <avri.altman-Sjgp3cTcYWE@public.gmane.org>, "linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, "liwei213-hv44wF8Li93QT0dZR+AlfA@public.gmane.org" <liwei213-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, "alim.akhtar-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org" <alim.akhtar-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, =?UTF-8?B?Q2h1bmZlbmcgWXVuICjkupHmmKXls7Ap?= <Chunfeng.Yun-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, "pedrom.sousa-HKixBCOQz3hWk0Htik3J/w@public.gmane.org" <pedrom.sousa-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>vi
 List-Id: linux-scsi@vger.kernel.org
 
-From: John Garry <john.garry@huawei.com>
+On Tue, Mar 12, 2019 at 9:41 PM Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org> wrote:
+>
+> Hi Rob,
+>
+> On Tue, 2019-03-12 at 21:31 +0800, Rob Herring wrote:
+> > On Wed, Feb 27, 2019 at 03:23:10PM +0800, Stanley Chu wrote:
+> > > Add UFS and UFS PHY node document for Mediatek SoC chips.
+> > >
+> > > Signed-off-by: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
+> > > ---
+> > >  .../devicetree/bindings/ufs/ufs-mediatek.txt  | 47 +++++++++++++++++++
+> > >  1 file changed, 47 insertions(+)
+> > >  create mode 100644 Documentation/devicetree/bindings/ufs/ufs-mediatek.txt
+> > >
+> > > diff --git a/Documentation/devicetree/bindings/ufs/ufs-mediatek.txt b/Documentation/devicetree/bindings/ufs/ufs-mediatek.txt
+> > > new file mode 100644
+> > > index 000000000000..5fc985928b3e
+> > > --- /dev/null
+> > > +++ b/Documentation/devicetree/bindings/ufs/ufs-mediatek.txt
+> > > @@ -0,0 +1,47 @@
+> > > +* Mediatek Universal Flash Storage (UFS) Host Controller
+> > > +
+> > > +UFS nodes are defined to describe on-chip UFS hardware macro.
+> > > +Each UFS Host Controller should have its own node.
+> > > +
+> > > +To bind UFS PHY with UFS host controller, the controller node should
+> > > +contain a phandle reference to UFS M-PHY node.
+> > > +
+> > > +Required properties for UFS nodes:
+> > > +- compatible         : Compatible list, contains the following controller:
+> > > +                       "mediatek,ufshci"
+> >
+> > Needs an SoC specific compatible string.
+>
+> Will add.
+>
+> >
+> > > +- reg                : Address and length of the UFS register set.
+> > > +- interrupt-parent   : Interrupt device.
+> >
+> > Drop this. It is implied or may be in a parent node.
+>
+> Will remove it.
+>
+> >
+> > > +- phys               : phandle to m-phy.
+> > > +- clocks             : List of phandle and clock specifier pairs.
+> > > +- clock-names        : List of clock input name strings sorted in the same
+> > > +                       order as the clocks property. "ufs-clk" is mandatory.
+> > > +- freq-table-hz      : Array of <min max> operating frequencies stored in the same
+> > > +                       order as the clocks property. If this property is not
+> > > +                       defined or a value in the array is "0" then it is assumed
+> > > +                       that the frequency is set by the parent clock or a
+> > > +                       fixed rate clock source.
+> > > +- vcc-supply         : Power to the UFS device.
+> > > +- vcc-fixed-regulator: Specify that vcc-supply is a fixed regulator.
+> >
+> > Why is this needed? The driver could query the voltage range of the
+> > regulator or you could check the regulator node.
+>
+> Both ufshcd-pltfrm.txt and ufshcd-pltfrm.c driver allow
+>
+> - <name>-fixed-regulator : boolean property specifying that
+> <name>-supply is a fixed regulator.
+>
+> Our vcc does not require further initializatio, so is it OK here or
+> shall we also modify both ufshcd-pltfrm dt-bindings document and ufs
+> driver to avoid using it ?
 
-[ Upstream commit ffeafdd2bf0b280d67ec1a47ea6287910d271f3f ]
+There are no users of that property in tree and doesn't look like
+adding it was ever reviewed. We have standard ways to handle this and
+don't need a custom property.
 
-The sysfs phy_identifier attribute for a sas_end_device comes from the rphy
-phy_identifier value.
-
-Currently this is not being set for rphys with an end device attached, so
-we see incorrect symlinks from systemd disk/by-path:
-
-root@localhost:~# ls -l /dev/disk/by-path/
-total 0
-lrwxrwxrwx 1 root root  9 Feb 13 12:26 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy0-lun-0 -> ../../sdb
-lrwxrwxrwx 1 root root 10 Feb 13 12:26 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy0-lun-0-part1 -> ../../sdb1
-lrwxrwxrwx 1 root root 10 Feb 13 12:26 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy0-lun-0-part2 -> ../../sdb2
-lrwxrwxrwx 1 root root 10 Feb 13 12:26 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy0-lun-0-part3 -> ../../sdc3
-
-Indeed, each sas_end_device phy_identifier value is 0:
-
-root@localhost:/# more sys/class/sas_device/end_device-0\:0\:2/phy_identifier
-0
-root@localhost:/# more sys/class/sas_device/end_device-0\:0\:10/phy_identifier
-0
-
-This patch fixes the discovery code to set the phy_identifier.  With this,
-we now get proper symlinks:
-
-root@localhost:~# ls -l /dev/disk/by-path/
-total 0
-lrwxrwxrwx 1 root root  9 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy10-lun-0 -> ../../sdg
-lrwxrwxrwx 1 root root  9 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy11-lun-0 -> ../../sdh
-lrwxrwxrwx 1 root root  9 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy2-lun-0 -> ../../sda
-lrwxrwxrwx 1 root root 10 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy2-lun-0-part1 -> ../../sda1
-lrwxrwxrwx 1 root root  9 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy3-lun-0 -> ../../sdb
-lrwxrwxrwx 1 root root 10 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy3-lun-0-part1 -> ../../sdb1
-lrwxrwxrwx 1 root root 10 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy3-lun-0-part2 -> ../../sdb2
-lrwxrwxrwx 1 root root  9 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy4-lun-0 -> ../../sdc
-lrwxrwxrwx 1 root root 10 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy4-lun-0-part1 -> ../../sdc1
-lrwxrwxrwx 1 root root 10 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy4-lun-0-part2 -> ../../sdc2
-lrwxrwxrwx 1 root root 10 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy4-lun-0-part3 -> ../../sdc3
-lrwxrwxrwx 1 root root  9 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy5-lun-0 -> ../../sdd
-lrwxrwxrwx 1 root root  9 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy7-lun-0 -> ../../sde
-lrwxrwxrwx 1 root root 10 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy7-lun-0-part1 -> ../../sde1
-lrwxrwxrwx 1 root root 10 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy7-lun-0-part2 -> ../../sde2
-lrwxrwxrwx 1 root root 10 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy7-lun-0-part3 -> ../../sde3
-lrwxrwxrwx 1 root root  9 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy8-lun-0 -> ../../sdf
-lrwxrwxrwx 1 root root 10 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy8-lun-0-part1 -> ../../sdf1
-lrwxrwxrwx 1 root root 10 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy8-lun-0-part2 -> ../../sdf2
-lrwxrwxrwx 1 root root 10 Feb 13 11:53 platform-HISI0162:01-sas-exp0x500e004aaaaaaa1f-phy8-lun-0-part3 -> ../../sdf3
-
-Fixes: 2908d778ab3e ("[SCSI] aic94xx: new driver")
-Reported-by: dann frazier <dann.frazier@canonical.com>
-Signed-off-by: John Garry <john.garry@huawei.com>
-Reviewed-by: Jason Yan <yanaijie@huawei.com>
-Tested-by: dann frazier <dann.frazier@canonical.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/scsi/libsas/sas_expander.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-index e2630aea4e9f..22450abf0a03 100644
---- a/drivers/scsi/libsas/sas_expander.c
-+++ b/drivers/scsi/libsas/sas_expander.c
-@@ -818,6 +818,7 @@ static struct domain_device *sas_ex_discover_end_dev(
- 		rphy = sas_end_device_alloc(phy->port);
- 		if (!rphy)
- 			goto out_free;
-+		rphy->identify.phy_identifier = phy_id;
- 
- 		child->rphy = rphy;
- 		get_device(&rphy->dev);
-@@ -845,6 +846,7 @@ static struct domain_device *sas_ex_discover_end_dev(
- 
- 		child->rphy = rphy;
- 		get_device(&rphy->dev);
-+		rphy->identify.phy_identifier = phy_id;
- 		sas_fill_in_rphy(child, rphy);
- 
- 		list_add_tail(&child->disco_list_node, &parent->port->disco_list);
--- 
-2.19.1
+Rob
