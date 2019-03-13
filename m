@@ -1,14 +1,14 @@
 From: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH AUTOSEL 4.20 14/60] scsi: libiscsi: Fix race between iscsi_xmit_task and iscsi_complete_task
-Date: Wed, 13 Mar 2019 15:09:35 -0400
-Message-ID: <20190313191021.158171-14-sashal@kernel.org>
-References: <20190313191021.158171-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 12/48] scsi: libiscsi: Fix race between iscsi_xmit_task and iscsi_complete_task
+Date: Wed, 13 Mar 2019 15:12:14 -0400
+Message-ID: <20190313191250.158955-12-sashal@kernel.org>
+References: <20190313191250.158955-1-sashal@kernel.org>
 Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Return-path: <open-iscsi+bncBDTZTRGMXIFBBP5LUXSAKGQEXKLDKKI-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Return-path: <open-iscsi+bncBDTZTRGMXIFBBWVMUXSAKGQERR3POBQ-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-In-Reply-To: <20190313191021.158171-1-sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+In-Reply-To: <20190313191250.158955-1-sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 List-Archive: <https://groups.google.com/group/open-iscsi
