@@ -1,7 +1,7 @@
 From: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
 Subject: Re: [PATCH v3 4/7] dt-bindings: phy: Add document for phy-mtk-ufs
-Date: Wed, 13 Mar 2019 18:27:32 +0800
-Message-ID: <1552472852.30977.43.camel@mtkswgap22>
+Date: Wed, 13 Mar 2019 10:42:54 +0800
+Message-ID: <1552444974.30977.40.camel@mtkswgap22>
 References: <1551252192-535-1-git-send-email-stanley.chu@mediatek.com>
  <1551252192-535-6-git-send-email-stanley.chu@mediatek.com>
  <20190312132524.GA27601@bogus>
@@ -55,6 +55,9 @@ On Tue, 2019-03-12 at 21:25 +0800, Rob Herring wrote:
 > > +                       "mediatek,ufs-mphy"
 > 
 > Needs a more specific compatible string.
+
+Will add it.
+
 > 
 > > +- reg                : Address and length of the UFS M-PHY register set.
 > > +- #phy-cells         : This property shall be set to 0
@@ -68,6 +71,9 @@ On Tue, 2019-03-12 at 21:25 +0800, Rob Herring wrote:
 > > +	ufs_mphy: ufs_mphy@11fa0000 {
 > 
 > phy@...
+
+Will fix it.
+
 > 
 > > +		compatible = "mediatek,ufs-mphy";
 > > +		reg = <0 0x11fa0000 0 0xc000>;
@@ -76,16 +82,6 @@ On Tue, 2019-03-12 at 21:25 +0800, Rob Herring wrote:
 > > +		clocks = <&infracfg_ao INFRACFG_AO_UNIPRO_SCK_CG>,
 > > +			 <&infracfg_ao INFRACFG_AO_UFS_MP_SAP_BCLK_CG>;
 > > +		clock-names = "unipro-clk", "mp-clk";
-
-Question about clock name:
-
-Shall we drop "-clk" in clock names?
-
-For example,
-clock-names = "unipro-clk", "mp-clk";
-becomes 
-clock-names = "unipro", "mp"; ?
-
 > > +	};
 > > +
 > > +	ufshci:ufshci@11270000 {
