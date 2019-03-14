@@ -1,48 +1,36 @@
-From: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>
-Subject: [PATCH 2/2] scsi: qla2xxx: do not use __constant_cpu_to_leXX
-Date: Thu, 14 Mar 2019 15:36:56 +0900
-Message-ID: <20190314063656.25561-2-sergey.senozhatsky@gmail.com>
-References: <20190314063656.25561-1-sergey.senozhatsky@gmail.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+From: Kangjie Lu <kjlu@umn.edu>
+Subject: [PATCH] scsi: ufs: fix a missing check of devm_reset_control_get
+Date: Thu, 14 Mar 2019 01:37:49 -0500
+Message-ID: <20190314063749.13907-1-kjlu@umn.edu>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190314063656.25561-1-sergey.senozhatsky@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <jejb@linux.ibm.com>, Martin Petersen <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, QLogic-Storage-Upstream@qlogic.com, Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
+To: kjlu@umn.edu
+Cc: pakki001@umn.edu, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-A trivial patch.
+devm_reset_control_get could fail, so the fix checks its
+return value and pass the error code upstream in case it fails.
 
-cpu_to_le32() and cpu_to_le16() are capable enough to detect
-__builtin_constant_p() and to use an appropriate compile time
-___constant_swahbXX() functions.
-
-So we can use cpu_to_leXX() instead of __constant_cpu_to_leXX().
-
-Signed-off-by: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
+Signed-off-by: Kangjie Lu <kjlu@umn.edu>
 ---
- drivers/scsi/qla2xxx/qla_target.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/ufs/ufs-hisi.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 582d1663f971..e839c80fb9a9 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -3623,12 +3623,12 @@ static int __qlt_send_term_imm_notif(struct scsi_qla_host *vha,
- 	nack->u.isp24.nport_handle = ntfy->u.isp24.nport_handle;
- 	if (le16_to_cpu(ntfy->u.isp24.status) == IMM_NTFY_ELS) {
- 		nack->u.isp24.flags = ntfy->u.isp24.flags &
--			__constant_cpu_to_le32(NOTIFY24XX_FLAGS_PUREX_IOCB);
-+			cpu_to_le32(NOTIFY24XX_FLAGS_PUREX_IOCB);
- 	}
+diff --git a/drivers/scsi/ufs/ufs-hisi.c b/drivers/scsi/ufs/ufs-hisi.c
+index 452e19f8fb47..ce9d7c40909f 100644
+--- a/drivers/scsi/ufs/ufs-hisi.c
++++ b/drivers/scsi/ufs/ufs-hisi.c
+@@ -544,6 +544,11 @@ static int ufs_hisi_init_common(struct ufs_hba *hba)
+ 	ufshcd_set_variant(hba, host);
  
- 	/* terminate */
- 	nack->u.isp24.flags |=
--		__constant_cpu_to_le16(NOTIFY_ACK_FLAGS_TERMINATE);
-+		cpu_to_le16(NOTIFY_ACK_FLAGS_TERMINATE);
+ 	host->rst  = devm_reset_control_get(dev, "rst");
++	if (IS_ERR(host->rst)) {
++		dev_err(dev, "%s: failed to get reset control\n",
++			__func__);
++		return PTR_ERR(host->rst);
++	}
  
- 	nack->u.isp24.srr_rx_id = ntfy->u.isp24.srr_rx_id;
- 	nack->u.isp24.status = ntfy->u.isp24.status;
+ 	ufs_hisi_set_pm_lvl(hba);
+ 
 -- 
-2.21.0
+2.17.1
