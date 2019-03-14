@@ -1,50 +1,42 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH -next] scsi: libfc: Fix potential NULL pointer dereference
-Date: Thu, 14 Mar 2019 07:06:59 -0400
-Message-ID: <yq1y35hn298.fsf@oracle.com>
-References: <20190130101141.20132-1-yuehaibing@huawei.com>
-        <09c3242f-9a41-65f4-7dc6-f1c8aa6425f1@huawei.com>
-        <c2ae320a-e7ab-94e6-7562-a82e2aad0966@suse.de>
+Subject: Re: [PATCH] scsi: aacraid: Fix performance issue(QD) on logical drives
+Date: Thu, 14 Mar 2019 07:12:31 -0400
+Message-ID: <yq1tvg5n200.fsf@oracle.com>
+References: <1552030001-10658-1-git-send-email-sagar.biradar@microchip.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <c2ae320a-e7ab-94e6-7562-a82e2aad0966@suse.de> (Hannes Reinecke's
-        message of "Thu, 7 Mar 2019 13:11:06 +0100")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: YueHaibing <yuehaibing@huawei.com>, jejb@linux.ibm.com, martin.petersen@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <1552030001-10658-1-git-send-email-sagar.biradar@microchip.com>
+        (sagar biradar's message of "Thu, 7 Mar 2019 23:26:41 -0800")
+Sender: stable-owner@vger.kernel.org
+To: sagar.biradar@microchip.com
+Cc: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, aacraid@microsemi.com, dave.carroll@microchip.com, scott.benesh@microchip.com, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Hi Hannes,
+Hi Sagar,
 
->>> There is a potential NULL pointer dereference in case
->>> fc_rport_create() fails and returns NULL.
+> From: Sagar Biradar <sagar.biradar@microchip.com>
+>
+> To: Martin K. Petersen <martin.petersen@oracle.com>
+> To: James Bottomley <jejb@linux.vnet.ibm.com>
+> cc: linux-scsi <linux-scsi@vger.kernel.org>
+> cc: aacraid@microsemi.com
+> cc: Dave Carroll <dave.carroll@microchip.com>
+> cc: Scott Benesh <scott.benesh@microchip.com>
+> cc: stable@vger.kernel.org
+>
+> Fix performance issue where the queue depth for SmartIOC logical
+> volumes is set to 1, and allow the usual logical volume code
+> to be executed
 
->>> diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
->>> index ff943f4..e2a3551 100644
->>> --- a/drivers/scsi/libfc/fc_lport.c
->>> +++ b/drivers/scsi/libfc/fc_lport.c
->>> @@ -250,6 +250,10 @@ static void fc_lport_ptp_setup(struct fc_lport *lport,
->>>   	}
->>>   	mutex_lock(&lport->disc.disc_mutex);
->>>   	lport->ptp_rdata = fc_rport_create(lport, remote_fid);
->>> +	if (!lport->ptp_rdata) {
->>> +		mutex_unlock(&lport->disc.disc_mutex);
->>> +		return;
->>> +	}
->>>   	kref_get(&lport->ptp_rdata->kref);
->>>   	lport->ptp_rdata->ids.port_name = remote_wwpn;
->>>   	lport->ptp_rdata->ids.node_name = remote_wwnn;
->>>
+This wasn't a correctly formatted patch. Please see:
 
-> Reviewed-by: Hannes Reinecke <hare@suse.com>
+	Documentation/process/submitting-patches.rst
 
-A bit confused. You had originally replied that the patch was not
-correct so I closed it in patchwork. And now there's a Reviewed-by:
-without any explanation as to why you have changed your mind.
+and remember to run checkpatch prior to submission.
 
-Please clarify, thanks!
+I fixed it up. Applied to 5.1/scsi-queue. Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
