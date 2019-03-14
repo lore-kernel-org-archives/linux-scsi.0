@@ -1,86 +1,33 @@
-From: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH v5 0/7] scsi: ufs-mediatek: Add UFS support for Mediatek SoC
- chips
-Date: Thu, 14 Mar 2019 12:08:29 +0800
-Message-ID: <1552536516-12723-2-git-send-email-stanley.chu@mediatek.com>
-References: <1552536516-12723-1-git-send-email-stanley.chu@mediatek.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-In-Reply-To: <1552536516-12723-1-git-send-email-stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-mediatek>,
- <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-mediatek/>
-List-Post: <mailto:linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-List-Help: <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-mediatek>,
- <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=subscribe>
-Sender: "Linux-mediatek" <linux-mediatek-bounces-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-Errors-To: linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
-To: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, robh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, mark.rutland-5wv7dgnIgG8@public.gmane.org, chunfeng.yun-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, yingjoe.chen-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, kishon-l0cyMroinI0@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, avri.altman-Sjgp3cTcYWE@public.gmane.org, alim.akhtar-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org, pedrom.sousa-HKixBCOQz3hWk0Htik3J/w@public.gmane.org
-Cc: chun-hung.wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, kuohong.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, liwei213-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, vivek.gautam-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, peter.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org
+From: Kangjie Lu <kjlu@umn.edu>
+Subject: [PATCH] scsi: qla4xxx: fix a potential NULL pointer dereference
+Date: Thu, 14 Mar 2019 01:30:59 -0500
+Message-ID: <20190314063100.12805-1-kjlu@umn.edu>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: kjlu@umn.edu
+Cc: pakki001@umn.edu, QLogic-Storage-Upstream@qlogic.com, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hello,
+In case iscsi_lookup_endpoint fails, the fix returns -EINVAL to
+avoid NULL pointer dereference.
 
-This patch series adds UFS M-PHY and UFS host driver support in MediaTek chipsets.
+Signed-off-by: Kangjie Lu <kjlu@umn.edu>
+---
+ drivers/scsi/qla4xxx/ql4_os.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-In the meantime, re-factors ufshcd_get_pwr_dev_param in vendors' drivers. This function is for vendors to decide finally agreed attributes for power mode change if vendors define
-their host capability in struct ufs_dev_params. Because it is using by both ufs-qcom and ufs-hisi and also used in ufs-mediatek in this serious, simply re-factor it and then every vendors can reuse it.
-
-Changes since v4:
--	phy-mtk-ufs:
-	  * Sort name in Kconfig and Makefile
-	  * Drop "inline" and fix symbol name for mphy_set_bit()/mphy_clr_bit().
--	dt-bindings: phy-mtk-ufs: Drop "-clk" in clock names.
--	dt-bindings: ufs-mediatek:
-	  * Change clock name "ufs-clk" to "ufs".
-	  * Drop vcc related first. VCC control is planned to be added back by another patch accompanied with VCC/ICC logic fix in ufs common driver.
-
-Changes since v3:
--	dt-bindings: Use specific compatible name for both ufs-mediatek and phy-mtk-ufs, remove interrupt-parent and lanes-per-direction in ufs-mediatek, and fix descriptions.
-
-Changes since v2:
--	Fix header style with SPDX-License-Identifier declaration used.
--	Simplify ufs-phy-mtk to single source file since we has one MPHY version now, and do fixes according to Chunfeng Yun's comments.
--	Add dt-bindings of ufs-phy-mtk.
-
-Changes since v1:
--	Re-factor ufshcd_get_pwr_dev_param in mediatek/qcom/hisi vendor drivers.
--	Introduce ufs-phy-mtk to have a good extension capability for different power control flows in future different MPHY versions.
--	Bind ufs-phy-mtk and hook suitable callbacks in ufs-mediatek driver.
--	Use PA_LOCAL_TX_LCC_ENABLE attribute defined in unipro.h instead.
--	Do some minor format fixes.
-
-Stanley Chu (7):
-  scsi: ufs: Introduce ufshcd_get_pwr_dev_param
-  scsi: ufs-qcom: Re-factor ufshcd_get_pwr_dev_param
-  scsi: ufs-hisi: Re-factor ufshcd_get_pwr_dev_param
-  dt-bindings: phy: Add document for phy-mtk-ufs
-  dt-bindings: scsi: ufs: Add document for ufs-mediatek
-  phy: mediatek: Add UFS M-PHY driver
-  scsi: ufs-mediatek: Add UFS support for Mediatek SoC chips
-
- .../devicetree/bindings/phy/phy-mtk-ufs.txt   |  38 ++
- .../devicetree/bindings/ufs/ufs-mediatek.txt  |  40 ++
- drivers/phy/mediatek/Kconfig                  |  11 +
- drivers/phy/mediatek/Makefile                 |   1 +
- drivers/phy/mediatek/phy-mtk-ufs.c            | 239 ++++++++++++
- drivers/scsi/ufs/Kconfig                      |  14 +
- drivers/scsi/ufs/Makefile                     |   1 +
- drivers/scsi/ufs/ufs-hisi.c                   | 109 +-----
- drivers/scsi/ufs/ufs-mediatek.c               | 368 ++++++++++++++++++
- drivers/scsi/ufs/ufs-mediatek.h               |  54 +++
- drivers/scsi/ufs/ufs-qcom.c                   | 106 +----
- drivers/scsi/ufs/ufshcd-pltfrm.c              |  98 +++++
- drivers/scsi/ufs/ufshcd-pltfrm.h              |  21 +
- 13 files changed, 893 insertions(+), 207 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/phy/phy-mtk-ufs.txt
- create mode 100644 Documentation/devicetree/bindings/ufs/ufs-mediatek.txt
- create mode 100644 drivers/phy/mediatek/phy-mtk-ufs.c
- create mode 100644 drivers/scsi/ufs/ufs-mediatek.c
- create mode 100644 drivers/scsi/ufs/ufs-mediatek.h
-
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index a77bfb224248..80289c885c07 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -3203,6 +3203,8 @@ static int qla4xxx_conn_bind(struct iscsi_cls_session *cls_session,
+ 	if (iscsi_conn_bind(cls_session, cls_conn, is_leading))
+ 		return -EINVAL;
+ 	ep = iscsi_lookup_endpoint(transport_fd);
++	if (!ep)
++		return -EINVAL;
+ 	conn = cls_conn->dd_data;
+ 	qla_conn = conn->dd_data;
+ 	qla_conn->qla_ep = ep->dd_data;
 -- 
-2.18.0
+2.17.1
