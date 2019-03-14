@@ -1,7 +1,7 @@
 From: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH v5 5/7] dt-bindings: scsi: ufs: Add document for ufs-mediatek
-Date: Thu, 14 Mar 2019 12:08:34 +0800
-Message-ID: <1552536516-12723-7-git-send-email-stanley.chu@mediatek.com>
+Subject: [PATCH v5 4/7] dt-bindings: phy: Add document for phy-mtk-ufs
+Date: Thu, 14 Mar 2019 12:08:33 +0800
+Message-ID: <1552536516-12723-6-git-send-email-stanley.chu@mediatek.com>
 References: <1552536516-12723-1-git-send-email-stanley.chu@mediatek.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,59 +21,57 @@ To: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76
 Cc: chun-hung.wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, kuohong.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, liwei213-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, vivek.gautam-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, peter.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-Add UFS and UFS PHY node document for Mediatek SoC chips.
+Add UFS M-PHY node document for MediaTek SoC chips.
 
 Signed-off-by: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
 ---
- .../devicetree/bindings/ufs/ufs-mediatek.txt  | 40 +++++++++++++++++++
- 1 file changed, 40 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/ufs/ufs-mediatek.txt
+ .../devicetree/bindings/phy/phy-mtk-ufs.txt   | 38 +++++++++++++++++++
+ 1 file changed, 38 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/phy/phy-mtk-ufs.txt
 
-diff --git a/Documentation/devicetree/bindings/ufs/ufs-mediatek.txt b/Documentation/devicetree/bindings/ufs/ufs-mediatek.txt
+diff --git a/Documentation/devicetree/bindings/phy/phy-mtk-ufs.txt b/Documentation/devicetree/bindings/phy/phy-mtk-ufs.txt
 new file mode 100644
-index 000000000000..fe4cf72ca8b3
+index 000000000000..74b5e6baa605
 --- /dev/null
-+++ b/Documentation/devicetree/bindings/ufs/ufs-mediatek.txt
-@@ -0,0 +1,40 @@
-+* Mediatek Universal Flash Storage (UFS) Host Controller
++++ b/Documentation/devicetree/bindings/phy/phy-mtk-ufs.txt
+@@ -0,0 +1,38 @@
++MediaTek Universal Flash Storage (UFS) M-PHY binding
++--------------------------------------------------------
 +
-+UFS nodes are defined to describe on-chip UFS hardware macro.
-+Each UFS Host Controller should have its own node.
++UFS M-PHY nodes are defined to describe on-chip UFS M-PHY hardware macro.
++Each UFS M-PHY node should have its own node.
 +
-+To bind UFS PHY with UFS host controller, the controller node should
++To bind UFS M-PHY with UFS host controller, the controller node should
 +contain a phandle reference to UFS M-PHY node.
 +
-+Required properties for UFS nodes:
++Required properties for UFS M-PHY nodes:
 +- compatible         : Compatible list, contains the following controller:
-+                       "mediatek,mt8183-ufshci" for MediaTek UFS host controller
-+                       present on MT81xx chipsets.
-+- reg                : Address and length of the UFS register set.
-+- phys               : phandle to m-phy.
++                       "mediatek,mt8183-ufsphy" for ufs phy
++                       persent on MT81xx chipsets.
++- reg                : Address and length of the UFS M-PHY register set.
++- #phy-cells         : This property shall be set to 0.
 +- clocks             : List of phandle and clock specifier pairs.
 +- clock-names        : List of clock input name strings sorted in the same
-+                       order as the clocks property. "ufs" is mandatory.
-+                       "ufs": ufshci core control clock.
-+- freq-table-hz      : Array of <min max> operating frequencies stored in the same
-+                       order as the clocks property. If this property is not
-+                       defined or a value in the array is "0" then it is assumed
-+                       that the frequency is set by the parent clock or a
-+                       fixed rate clock source.
++                       order as the clocks property. Following clocks are
++                       mandatory.
++                       "unipro": Unipro core control clock.
++                       "mp": M-PHY core control clock.
 +
 +Example:
 +
 +	ufsphy: phy@11fa0000 {
-+		...
++		compatible = "mediatek,mt8183-ufsphy";
++		reg = <0 0x11fa0000 0 0xc000>;
++		#phy-cells = <0>;
++
++		clocks = <&infracfg_ao INFRACFG_AO_UNIPRO_SCK_CG>,
++			 <&infracfg_ao INFRACFG_AO_UFS_MP_SAP_BCLK_CG>;
++		clock-names = "unipro", "mp";
 +	};
 +
 +	ufshci@11270000 {
-+		compatible = "mediatek,mt8183-ufshci";
-+		reg = <0 0x11270000 0 0x2300>;
-+		interrupts = <GIC_SPI 104 IRQ_TYPE_LEVEL_LOW>;
++		...
 +		phys = <&ufsphy>;
-+
-+		clocks = <&infracfg_ao INFRACFG_AO_UFS_CG>;
-+		clock-names = "ufs";
-+		freq-table-hz = <0 0>;
 +	};
 -- 
 2.18.0
