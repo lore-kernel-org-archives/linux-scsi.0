@@ -1,7 +1,7 @@
 From: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH v1 1/2] scsi: ufs: cleanup unused min_uA in struct ufs_vreg
-Date: Thu, 14 Mar 2019 18:40:04 +0800
-Message-ID: <1552560005-31001-3-git-send-email-stanley.chu@mediatek.com>
+Subject: [PATCH v1 0/2] scsi: ufs: fix up regulator operations
+Date: Thu, 14 Mar 2019 18:40:03 +0800
+Message-ID: <1552560005-31001-2-git-send-email-stanley.chu@mediatek.com>
 References: <1552560005-31001-1-git-send-email-stanley.chu@mediatek.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,38 +21,23 @@ To: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, martin.petersen-QHcLZuEG
 Cc: marc.w.gonzalez-GANU6spQydw@public.gmane.org, chun-hung.wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, kuohong.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, peter.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-min_uA in strcut ufs_vreg is not used by any ufs
-drivers thus remove it.
+Hi,
 
-Signed-off-by: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
----
- drivers/scsi/ufs/ufs.h           | 1 -
- drivers/scsi/ufs/ufshcd-pltfrm.c | 1 -
- 2 files changed, 2 deletions(-)
+This patch series tries to clean-up and fix-up regulator operations in ufs driver.
 
-diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
-index 7da7318eb6a6..0f23ac80bacd 100644
---- a/drivers/scsi/ufs/ufs.h
-+++ b/drivers/scsi/ufs/ufs.h
-@@ -516,7 +516,6 @@ struct ufs_vreg {
- 	bool enabled;
- 	int min_uV;
- 	int max_uV;
--	int min_uA;
- 	int max_uA;
- };
- 
-diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
-index 895a9b5ac989..588079286e8a 100644
---- a/drivers/scsi/ufs/ufshcd-pltfrm.c
-+++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
-@@ -164,7 +164,6 @@ static int ufshcd_populate_vreg(struct device *dev, const char *name,
- 		goto out;
- 	}
- 
--	vreg->min_uA = 0;
- 	if (!strcmp(name, "vcc")) {
- 		if (of_property_read_bool(np, "vcc-supply-1p8")) {
- 			vreg->min_uV = UFS_VREG_VCC_1P8_MIN_UV;
+[PATCH 1/2] scsi: ufs: cleanup unused min_uA in struct ufs_vreg
+	- min_uA in strcut ufs_vreg is not used by any ufs drivers thus remove it.
+[PATCH 2/2] scsi: ufs: fix regulator set load and icc-level re-configuration
+	- Fix up "regulator_set_load" condition and icc_level value during icc_level configuration flow.
+
+Stanley Chu (2):
+  scsi: ufs: cleanup unused min_uA in struct ufs_vreg
+  scsi: ufs: fix regulator set load and icc-level configuration
+
+ drivers/scsi/ufs/ufs.h           |  1 -
+ drivers/scsi/ufs/ufshcd-pltfrm.c |  1 -
+ drivers/scsi/ufs/ufshcd.c        | 15 ++++++++++++---
+ 3 files changed, 12 insertions(+), 5 deletions(-)
+
 -- 
 2.18.0
