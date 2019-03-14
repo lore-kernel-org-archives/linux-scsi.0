@@ -1,72 +1,35 @@
-From: David Howells <dhowells@redhat.com>
-Subject: [PATCH 14/38] vfs: Convert ocxlflash to fs_context
-Date: Thu, 14 Mar 2019 16:10:47 +0000
-Message-ID: <155257984771.13720.11148732281013314260.stgit@warthog.procyon.org.uk>
-References: <155257972443.13720.11743171471060355965.stgit@warthog.procyon.org.uk>
+From: Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v5 4/7] dt-bindings: phy: Add document for phy-mtk-ufs
+Date: Thu, 14 Mar 2019 11:38:25 -0500
+Message-ID: <CAL_JsqKXxgYTqHrND+M7=8+aUe4pSo5b=UtukcuG6BH05e2+rw@mail.gmail.com>
+References: <1552536516-12723-1-git-send-email-stanley.chu@mediatek.com>
+ <1552536516-12723-6-git-send-email-stanley.chu@mediatek.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <155257972443.13720.11743171471060355965.stgit@warthog.procyon.org.uk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: viro@zeniv.linux.org.uk
-Cc: "Manoj N. Kumar" <manoj@linux.ibm.com>, "Matthew R. Ochs" <mrochs@linux.ibm.com>, Uma Krishnan <ukrishn@linux.ibm.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, dhowells@redhat.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+In-Reply-To: <1552536516-12723-6-git-send-email-stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-mediatek>,
+ <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-mediatek/>
+List-Post: <mailto:linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+List-Help: <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-mediatek>,
+ <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=subscribe>
+Sender: "Linux-mediatek" <linux-mediatek-bounces-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+Errors-To: linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
+To: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
+Cc: Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Subhash Jadavani <subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, =?UTF-8?B?Q2h1bi1IdW5nIFd1ICjlt6vpp7/lro8p?= <chun-hung.wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, =?UTF-8?B?S3VvaG9uZyBXYW5nICjnjovlnIvptLsp?= <kuohong.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, Kishon Vijay Abraham I <kishon-l0cyMroinI0@public.gmane.org>, avri.altman-Sjgp3cTcYWE@public.gmane.org, "moderated list:ARM/Mediatek SoC support" <linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, Li Wei <liwei213-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Alim Akhtar <alim.akhtar-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, Chunfeng Yun <chunfeng.yun-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, Yingjoe Chen <yingjoe.chen-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, pedrom.sousa-HKixBCOQz3hWk0Htik3J/w@public.gmane.org, Vivek Gautam <vivek.gautam-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Matthias Brugger <matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Signed-off-by: David Howells <dhowells@redhat.com>
-cc: "Manoj N. Kumar" <manoj@linux.ibm.com>
-cc: "Matthew R. Ochs" <mrochs@linux.ibm.com>
-cc: Uma Krishnan <ukrishn@linux.ibm.com>
-cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-cc: linux-scsi@vger.kernel.org
----
+On Wed, Mar 13, 2019 at 11:09 PM Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org> wrote:
+>
+> Add UFS M-PHY node document for MediaTek SoC chips.
+>
+> Signed-off-by: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
+> ---
+>  .../devicetree/bindings/phy/phy-mtk-ufs.txt   | 38 +++++++++++++++++++
+>  1 file changed, 38 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/phy/phy-mtk-ufs.txt
 
- drivers/scsi/cxlflash/ocxl_hw.c |   21 ++++++---------------
- 1 file changed, 6 insertions(+), 15 deletions(-)
-
-diff --git a/drivers/scsi/cxlflash/ocxl_hw.c b/drivers/scsi/cxlflash/ocxl_hw.c
-index 37b8dc60f5f6..a8d2cc6390c7 100644
---- a/drivers/scsi/cxlflash/ocxl_hw.c
-+++ b/drivers/scsi/cxlflash/ocxl_hw.c
-@@ -16,6 +16,7 @@
- #include <linux/idr.h>
- #include <linux/module.h>
- #include <linux/mount.h>
-+#include <linux/fs_context.h>
- #include <linux/poll.h>
- #include <linux/sched/signal.h>
- 
-@@ -39,27 +40,17 @@ static const struct dentry_operations ocxlflash_fs_dops = {
- 	.d_dname	= simple_dname,
- };
- 
--/*
-- * ocxlflash_fs_mount() - mount the pseudo-filesystem
-- * @fs_type:	File system type.
-- * @flags:	Flags for the filesystem.
-- * @dev_name:	Device name associated with the filesystem.
-- * @data:	Data pointer.
-- *
-- * Return: pointer to the directory entry structure
-- */
--static struct dentry *ocxlflash_fs_mount(struct file_system_type *fs_type,
--					 int flags, const char *dev_name,
--					 void *data)
-+static int ocxlflash_fs_init_fs_context(struct fs_context *fc)
- {
--	return mount_pseudo(fs_type, "ocxlflash:", NULL, &ocxlflash_fs_dops,
--			    OCXLFLASH_FS_MAGIC);
-+	return vfs_init_pseudo_fs_context(fc, "ocxlflash:",
-+					  NULL, NULL,
-+					  &ocxlflash_fs_dops, OCXLFLASH_FS_MAGIC);
- }
- 
- static struct file_system_type ocxlflash_fs_type = {
- 	.name		= "ocxlflash",
- 	.owner		= THIS_MODULE,
--	.mount		= ocxlflash_fs_mount,
-+	.init_fs_context = ocxlflash_fs_init_fs_context,
- 	.kill_sb	= kill_anon_super,
- };
- 
+Reviewed-by: Rob Herring <robh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
