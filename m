@@ -1,43 +1,50 @@
-From: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH v1 0/2] scsi: ufs: fix up regulator operations
-Date: Thu, 14 Mar 2019 18:40:03 +0800
-Message-ID: <1552560005-31001-2-git-send-email-stanley.chu@mediatek.com>
-References: <1552560005-31001-1-git-send-email-stanley.chu@mediatek.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH -next] scsi: libfc: Fix potential NULL pointer dereference
+Date: Thu, 14 Mar 2019 07:06:59 -0400
+Message-ID: <yq1y35hn298.fsf@oracle.com>
+References: <20190130101141.20132-1-yuehaibing@huawei.com>
+        <09c3242f-9a41-65f4-7dc6-f1c8aa6425f1@huawei.com>
+        <c2ae320a-e7ab-94e6-7562-a82e2aad0966@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-In-Reply-To: <1552560005-31001-1-git-send-email-stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-mediatek>,
- <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-mediatek/>
-List-Post: <mailto:linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-List-Help: <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-mediatek>,
- <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=subscribe>
-Sender: "Linux-mediatek" <linux-mediatek-bounces-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-Errors-To: linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
-To: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, avri.altman-Sjgp3cTcYWE@public.gmane.org, alim.akhtar-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org, pedrom.sousa-HKixBCOQz3hWk0Htik3J/w@public.gmane.org
-Cc: marc.w.gonzalez-GANU6spQydw@public.gmane.org, chun-hung.wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, kuohong.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, peter.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <c2ae320a-e7ab-94e6-7562-a82e2aad0966@suse.de> (Hannes Reinecke's
+        message of "Thu, 7 Mar 2019 13:11:06 +0100")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: YueHaibing <yuehaibing@huawei.com>, jejb@linux.ibm.com, martin.petersen@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi,
 
-This patch series tries to clean-up and fix-up regulator operations in ufs driver.
+Hi Hannes,
 
-[PATCH 1/2] scsi: ufs: cleanup unused min_uA in struct ufs_vreg
-	- min_uA in strcut ufs_vreg is not used by any ufs drivers thus remove it.
-[PATCH 2/2] scsi: ufs: fix regulator set load and icc-level re-configuration
-	- Fix up "regulator_set_load" condition and icc_level value during icc_level configuration flow.
+>>> There is a potential NULL pointer dereference in case
+>>> fc_rport_create() fails and returns NULL.
 
-Stanley Chu (2):
-  scsi: ufs: cleanup unused min_uA in struct ufs_vreg
-  scsi: ufs: fix regulator set load and icc-level configuration
+>>> diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
+>>> index ff943f4..e2a3551 100644
+>>> --- a/drivers/scsi/libfc/fc_lport.c
+>>> +++ b/drivers/scsi/libfc/fc_lport.c
+>>> @@ -250,6 +250,10 @@ static void fc_lport_ptp_setup(struct fc_lport *lport,
+>>>   	}
+>>>   	mutex_lock(&lport->disc.disc_mutex);
+>>>   	lport->ptp_rdata = fc_rport_create(lport, remote_fid);
+>>> +	if (!lport->ptp_rdata) {
+>>> +		mutex_unlock(&lport->disc.disc_mutex);
+>>> +		return;
+>>> +	}
+>>>   	kref_get(&lport->ptp_rdata->kref);
+>>>   	lport->ptp_rdata->ids.port_name = remote_wwpn;
+>>>   	lport->ptp_rdata->ids.node_name = remote_wwnn;
+>>>
 
- drivers/scsi/ufs/ufs.h           |  1 -
- drivers/scsi/ufs/ufshcd-pltfrm.c |  1 -
- drivers/scsi/ufs/ufshcd.c        | 15 ++++++++++++---
- 3 files changed, 12 insertions(+), 5 deletions(-)
+> Reviewed-by: Hannes Reinecke <hare@suse.com>
+
+A bit confused. You had originally replied that the patch was not
+correct so I closed it in patchwork. And now there's a Reviewed-by:
+without any explanation as to why you have changed your mind.
+
+Please clarify, thanks!
 
 -- 
-2.18.0
+Martin K. Petersen	Oracle Linux Engineering
