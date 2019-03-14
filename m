@@ -1,76 +1,123 @@
-From: Jason Yan <yanaijie@huawei.com>
-Subject: Re: [RFC PATCH] scsi: fix oops in scsi_uninit_cmd()
-Date: Thu, 14 Mar 2019 09:57:19 +0800
-Message-ID: <0043eef5-0be1-a86b-d438-252e4ef274af@huawei.com>
-References: <20190219072743.13606-1-yanaijie@huawei.com>
- <1550595388.31902.133.camel@acm.org> <20190220151836.GA11695@infradead.org>
- <10ea95ec-e259-3511-44c4-58e4d255eb9f@huawei.com>
- <1552521077.45180.119.camel@acm.org>
+From: Jisheng Zhang <Jisheng.Zhang@synaptics.com>
+Subject: Re: kernel 5.0 blk_clear_pm_only triggers a warning during resume
+Date: Thu, 14 Mar 2019 02:21:25 +0000
+Message-ID: <20190314101355.1df7c014@xhacker.debian>
+References: <20190312132826.12c5f166@xhacker.debian>
+        <1552402699.45180.106.camel@acm.org>    <20190313101841.6d9e952b@xhacker.debian>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1552521077.45180.119.camel@acm.org>
+In-Reply-To: <20190313101841.6d9e952b@xhacker.debian>
 Content-Language: en-US
+Content-ID: <EB4972A7A56C5645BE7A4A1CE432D2A4@namprd03.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>, Christoph Hellwig <hch@infradead.org>
-Cc: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, hare@suse.com, dan.j.williams@intel.com, jthumshirn@suse.de, Steffen Maier <maier@linux.ibm.com>
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
+On Wed, 13 Mar 2019 10:18:41 +0800 Jisheng Zhang wrote:
 
-On 2019/3/14 7:51, Bart Van Assche wrote:
-> On Thu, 2019-02-21 at 16:53 +0800, Jason Yan wrote:
->> On 2019/2/20 23:18, Christoph Hellwig wrote:
->>> [fullquote removed, please follow proper mail etiquette]
->>>
->>> On Tue, Feb 19, 2019 at 08:56:28AM -0800, Bart Van Assche wrote:
->>>> regression in the SCSI sd driver due to the switch from the legacy block
->>>> layer to scsi-mq. The above patch introduces two atomic operations in the
->>>> hot path and hence would introduce a performance regression. I think this
->>>> can be avoided by making sure that sd_uninit_command() gets called before
->>>> the request tag is freed. What changes would be required to make the block
->>>> layer core call sd_uninit_command() before the request tag is freed? Would
->>>> introducing prep_rq_fn and unprep_rq_fn callbacks in struct blk_mq_ops and
->>>> making sure that the SCSI core sets these callback function pointers
->>>> appropriately be sufficient? Would such a change allow to simplify the NVMe
->>>> initiator driver? Are there any alternatives to this approach that are more
->>>> elegant?
->>>
->>> Additional indirect calls in the I/O fast path is something I'd rather
->>> avoid.  But I don't fully understand the problem yet - where do
->>> we release a disk reference from blk_update_request?
->>
->> When userspace close the fd after blk_update_request() and before
->> scsi_mq_uninit_cmd(), a disk reference will be released. It is not the
->> blk_update_request() directly released it.
->>
->> close
->>      ->sd_release
->>         ->scsi_disk_put
->>           ->scsi_disk_release
->>             ->disk->private_data = NULL;
->>
->> The userspace can close the fd because blk_update_request() returned the
->> last IO , the userspace application does not have to stuck on read() or
->> write(). The window is very small, but it can be reproduce every day
->> in our testcases. So I'm very curious why. One possible explanation is
->> that we enabled kernel preempt(CONFIG_PREEMPT).
->>
->> And why can't we move that release to __blk_mq_end_request?
-> 
-> Hi Jason,
-> 
-> What is the current status of this issue?
-> 
+> On Tue, 12 Mar 2019 07:58:19 -0700 Bart Van Assche wrote:
+>=20
+> > CAUTION: Email originated externally, do not click links or open attach=
+ments unless you recognize the sender and know the content is safe.
+> >=20
+> >=20
+> > On Tue, 2019-03-12 at 05:35 +0000, Jisheng Zhang wrote: =20
+> > > I got below warning during resume:
+> > >
+> > > [  673.658888] sd 0:0:0:0: [sda] Starting disk
+> > > [  673.658899] WARNING: CPU: 3 PID: 1039 at blk_clear_pm_only+0x2a/0x=
+30
+> > > [  673.658902] CPU: 3 PID: 1039 Comm: kworker/u8:49 Not tainted 5.0.0=
++ #1
+> > > [  673.658902] sd 2:0:0:0: [sdb] Starting disk
+> > > [  673.658903] Hardware name: LENOVO 4180F42/4180F42, BIOS 83ET75WW (=
+1.45 ) 05/10/2013
+> > > [  673.658906] Workqueue: events_unbound async_run_entry_fn
+> > > [  673.658909] RIP: 0010:blk_clear_pm_only+0x2a/0x30
+> > > [  673.658911] Code: b8 ff ff ff ff f0 0f c1 87 80 00 00 00 83 e8 01 =
+78 18 74 01 c3 48 81 c7 58 05 00 00 31 c9 31 d2 be 03 00 00 00 e9 36 97 e2 =
+ff <0f> 0b c3 0f 1f 00 48 81 c7 90 00 00 00 e9 04 01
+> > > 3a 00 0f 1f 40 00
+> > > [  673.658911] RSP: 0000:ffff8881115a7e48 EFLAGS: 00010297
+> > > [  673.658913] RAX: 00000000ffffffff RBX: ffff888118d42800 RCX: ffff8=
+881194c9a00
+> > > [  673.658914] RDX: ffff888118ab1a00 RSI: 0000000000000000 RDI: ffff8=
+88117e70000
+> > > [  673.658915] RBP: ffff888118d42f90 R08: 0000000000000004 R09: 00000=
+0000001f900
+> > > [  673.658915] R10: 0000000045698a8e R11: 0000000000000010 R12: ffff8=
+88119421000
+> > > [  673.658916] R13: 0000000000000000 R14: ffff88800030ea80 R15: 0ffff=
+88811942100
+> > > [  673.658918] FS:  0000000000000000(0000) GS:ffff88811a180000(0000) =
+knlGS:0000000000000000
+> > > [  673.658918] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> > > [  673.658919] CR2: 0000000000000000 CR3: 000000000200c001 CR4: 00000=
+000000606e0
+> > > [  673.658920] Call Trace:
+> > > [  673.658924]  ? scsi_device_resume+0x28/0x50
+> > > [  673.658926]  ? scsi_dev_type_resume+0x2b/0x80
+> > > [  673.658927]  ? async_run_entry_fn+0x2c/0xd0
+> > > [  673.658930]  ? process_one_work+0x1f0/0x3f0
+> > > [  673.658932]  ? worker_thread+0x28/0x3c0
+> > > [  673.658933]  ? process_one_work+0x3f0/0x3f0
+> > > [  673.658935]  ? kthread+0x10c/0x130
+> > > [  673.658936]  ? __kthread_create_on_node+0x150/0x150
+> > > [  673.658938]  ? ret_from_fork+0x1f/0x30
+> > > [  673.658940] ---[ end trace ce18772de33e283e ]---   =20
+> >=20
+> > Hi Jisheng, =20
+>=20
+> Hi Bart,
+>=20
+> >=20
+> > Is this something that occurred once or is this something that you can =
+reproduce =20
+>=20
+> It's 100% reproduced on my home's laptop PC.
+>=20
+> > easily? In the latter case, can you verify whether the patch below is s=
+ufficient
+> > to make this warning disappear? =20
+>=20
+> Thanks for the patch. I will test it this night.
 
-Hi Bart,
+Good news. The patch fix the warning. So=20
 
-I did not find any other approach that will not affect the hot path. I 
-don't know if you guys have other suggestions?
+Tested-by: Jisheng Zhang <Jisheng.Zhang@synaptics.com>
 
-> Thanks,
-> 
-> Bart.
-> 
-> .
-> 
+Thanks
+
+>=20
+> >=20
+> > Thanks,
+> >=20
+> > Bart.
+> >=20
+> > ---
+> >  drivers/scsi/scsi_lib.c | 6 ++++--
+> >  1 file changed, 4 insertions(+), 2 deletions(-)
+> >=20
+> > diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> > index f3f24dfd8fd5..33e1a72d47fa 100644
+> > --- a/drivers/scsi/scsi_lib.c
+> > +++ b/drivers/scsi/scsi_lib.c
+> > @@ -2540,8 +2540,10 @@ void scsi_device_resume(struct scsi_device *sdev=
+)
+> >          * device deleted during suspend)
+> >          */
+> >         mutex_lock(&sdev->state_mutex);
+> > -       sdev->quiesced_by =3D NULL;
+> > -       blk_clear_pm_only(sdev->request_queue);
+> > +       if (sdev->quiesced_by) {
+> > +               sdev->quiesced_by =3D NULL;
+> > +               blk_clear_pm_only(sdev->request_queue);
+> > +       }
+> >         if (sdev->sdev_state =3D=3D SDEV_QUIESCE)
+> >                 scsi_device_set_state(sdev, SDEV_RUNNING);
+> >         mutex_unlock(&sdev->state_mutex);
+> >  =20
+>=20
