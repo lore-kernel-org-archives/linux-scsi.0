@@ -1,36 +1,67 @@
-From: Rob Herring <robh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v5 5/7] dt-bindings: scsi: ufs: Add document for
- ufs-mediatek
-Date: Fri, 15 Mar 2019 18:27:04 -0500
-Message-ID: <20190315232643.GA25681@bogus>
-References: <1552536516-12723-1-git-send-email-stanley.chu@mediatek.com>
- <1552536516-12723-7-git-send-email-stanley.chu@mediatek.com>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH] Avoid that a kernel warning appears during system resume
+Date: Fri, 15 Mar 2019 16:27:58 -0700
+Message-ID: <20190315232758.221199-1-bvanassche@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1552536516-12723-7-git-send-email-stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-mediatek>,
- <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-mediatek/>
-List-Post: <mailto:linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-List-Help: <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-mediatek>,
- <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=subscribe>
-Sender: "Linux-mediatek" <linux-mediatek-bounces-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-Errors-To: linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
-Cc: mark.rutland-5wv7dgnIgG8@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, robh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, chun-hung.wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, kuohong.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, peter.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, kishon-l0cyMroinI0@public.gmane.org, avri.altman-Sjgp3cTcYWE@public.gmane.org, robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, liwei213-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, alim.akhtar-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org, chunfeng.yun-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, yingjoe.chen-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, pedrom.sousa-HKixBCOQz3hWk0Htik3J/w@public.gmane.org, vivek.gautam-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Content-Transfer-Encoding: 8bit
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Bart Van Assche <bvanassche@acm.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, Ming Lei <ming.lei@redhat.com>, Johannes Thumshirn <jthumshirn@suse.de>, Oleksandr Natalenko <oleksandr@natalenko.name>, Martin Steigerwald <martin@lichtvoll.de>, stable@vger.kernel.org, Jisheng Zhang <Jisheng.Zhang@synaptics.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 14 Mar 2019 12:08:34 +0800, Stanley Chu wrote:
-> Add UFS and UFS PHY node document for Mediatek SoC chips.
-> 
-> Signed-off-by: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-> ---
->  .../devicetree/bindings/ufs/ufs-mediatek.txt  | 40 +++++++++++++++++++
->  1 file changed, 40 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/ufs/ufs-mediatek.txt
-> 
+Since scsi_device_quiesce() skips SCSI devices that have another state
+than RUNNING, OFFLINE or TRANSPORT_OFFLINE, scsi_device_resume() should
+not complain about SCSI devices that have been skipped. Hence this patch.
+This patch avoids that the following warning appears during resume:
 
-Reviewed-by: Rob Herring <robh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+WARNING: CPU: 3 PID: 1039 at blk_clear_pm_only+0x2a/0x30
+CPU: 3 PID: 1039 Comm: kworker/u8:49 Not tainted 5.0.0+ #1
+Hardware name: LENOVO 4180F42/4180F42, BIOS 83ET75WW (1.45 ) 05/10/2013
+Workqueue: events_unbound async_run_entry_fn
+RIP: 0010:blk_clear_pm_only+0x2a/0x30
+Call Trace:
+ ? scsi_device_resume+0x28/0x50
+ ? scsi_dev_type_resume+0x2b/0x80
+ ? async_run_entry_fn+0x2c/0xd0
+ ? process_one_work+0x1f0/0x3f0
+ ? worker_thread+0x28/0x3c0
+ ? process_one_work+0x3f0/0x3f0
+ ? kthread+0x10c/0x130
+ ? __kthread_create_on_node+0x150/0x150
+ ? ret_from_fork+0x1f/0x30
+
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Hannes Reinecke <hare@suse.com>
+Cc: Ming Lei <ming.lei@redhat.com>
+Cc: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: Oleksandr Natalenko <oleksandr@natalenko.name>
+Cc: Martin Steigerwald <martin@lichtvoll.de>
+Cc: <stable@vger.kernel.org>
+Reported-by: Jisheng Zhang <Jisheng.Zhang@synaptics.com>
+Tested-by: Jisheng Zhang <Jisheng.Zhang@synaptics.com>
+Fixes: 3a0a529971ec ("block, scsi: Make SCSI quiesce and resume work reliably") # v4.15
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+---
+ drivers/scsi/scsi_lib.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 324f830ee9fa..54ad751b42b8 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -2541,8 +2541,10 @@ void scsi_device_resume(struct scsi_device *sdev)
+ 	 * device deleted during suspend)
+ 	 */
+ 	mutex_lock(&sdev->state_mutex);
+-	sdev->quiesced_by = NULL;
+-	blk_clear_pm_only(sdev->request_queue);
++	if (sdev->quiesced_by) {
++		sdev->quiesced_by = NULL;
++		blk_clear_pm_only(sdev->request_queue);
++	}
+ 	if (sdev->sdev_state == SDEV_QUIESCE)
+ 		scsi_device_set_state(sdev, SDEV_RUNNING);
+ 	mutex_unlock(&sdev->state_mutex);
+-- 
+2.21.0.155.ge902e9bcae20
