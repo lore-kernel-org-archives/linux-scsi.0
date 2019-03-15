@@ -1,35 +1,33 @@
-From: Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v5 4/7] dt-bindings: phy: Add document for phy-mtk-ufs
-Date: Thu, 14 Mar 2019 11:38:25 -0500
-Message-ID: <CAL_JsqKXxgYTqHrND+M7=8+aUe4pSo5b=UtukcuG6BH05e2+rw@mail.gmail.com>
-References: <1552536516-12723-1-git-send-email-stanley.chu@mediatek.com>
- <1552536516-12723-6-git-send-email-stanley.chu@mediatek.com>
+From: <Kento.A.Kobayashi@sony.com>
+Subject: RE: [PATCH] usb: uas: fix usb subsystem hang after power off hub
+ port
+Date: Fri, 15 Mar 2019 02:28:13 +0000
+Message-ID: <AE5419EAB4965843B3C0C1FE29F1FFE5873FFB@JPYOKXMS103.jp.sony.com>
+References: <AE5419EAB4965843B3C0C1FE29F1FFE5872241@JPYOKXMS103.jp.sony.com>
+         <1552063928.29776.2.camel@suse.com>
+         <AE5419EAB4965843B3C0C1FE29F1FFE587268B@JPYOKXMS103.jp.sony.com>
+ <1552405047.21557.7.camel@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-In-Reply-To: <1552536516-12723-6-git-send-email-stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-mediatek>,
- <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-mediatek/>
-List-Post: <mailto:linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-List-Help: <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-mediatek>,
- <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=subscribe>
-Sender: "Linux-mediatek" <linux-mediatek-bounces-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-Errors-To: linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
-To: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-Cc: Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Subhash Jadavani <subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, =?UTF-8?B?Q2h1bi1IdW5nIFd1ICjlt6vpp7/lro8p?= <chun-hung.wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, =?UTF-8?B?S3VvaG9uZyBXYW5nICjnjovlnIvptLsp?= <kuohong.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, Kishon Vijay Abraham I <kishon-l0cyMroinI0@public.gmane.org>, avri.altman-Sjgp3cTcYWE@public.gmane.org, "moderated list:ARM/Mediatek SoC support" <linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, Li Wei <liwei213-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Alim Akhtar <alim.akhtar-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, Chunfeng Yun <chunfeng.yun-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, Yingjoe Chen <yingjoe.chen-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, pedrom.sousa-HKixBCOQz3hWk0Htik3J/w@public.gmane.org, Vivek Gautam <vivek.gautam-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Matthias Brugger <matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1552405047.21557.7.camel@suse.com>
+Content-Language: ja-JP
+Sender: linux-kernel-owner@vger.kernel.org
+To: oneukum@suse.com, gregkh@linuxfoundation.org, stern@rowland.harvard.edu
+Cc: usb-storage@lists.one-eyed-alien.net, Jacky.Cao@sony.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Mar 13, 2019 at 11:09 PM Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org> wrote:
->
-> Add UFS M-PHY node document for MediaTek SoC chips.
->
-> Signed-off-by: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-> ---
->  .../devicetree/bindings/phy/phy-mtk-ufs.txt   | 38 +++++++++++++++++++
->  1 file changed, 38 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/phy/phy-mtk-ufs.txt
-
-Reviewed-by: Rob Herring <robh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+SGksDQoNCj4+IEFuZCB0aGUgcmV0dXJuIHZhbHVlKC1FTk9ERVYpIHdpbGwgYmUgcmV0dXJuZWQg
+dG8gZXJyb3IgaGFuZGxlci4NCj4+IHVhc19laF9kZXZpY2VfcmVzZXRfaGFuZGxlci0+dXNiX3Jl
+c2V0X2RldmljZSAtPiB1c2JfcmVzZXRfYW5kX3ZlcmlmeV9kZXZpY2UgKHJldHVybiAtRU5PREVW
+KSBUaGVuIEkgd3JvdGUgdGhhdCBjb21taXQgbWVzc2FnZSB0aGF0IHdlIHRoaW5rIGV2ZW4gaWYg
+d2UgaWdub3JlICJFTk9ERVYiIGluIHBvc3QgcmVzZXQgdG8gYXZvaWQgaGFuZyBpc3N1ZSBidXQg
+dGhlIGVycm9yIHdpbGwgYWxzbyBiZSByZXBvcnRlZCB0byBlcnJvciBoYW5kbGVyLg0KPj4gI0lm
+IGlnbm9yZSBhbiBlcnJvciBhbmQgdGhlIGVycm9yIHdpbGwgbm90IGJlIHJlcG9ydGVkIHRoZW4g
+aXQgaXMgbm90IGdvb2QuDQo+DQo+V2VsbCwgd2hhdCBkbyB3ZSBkbyBub3c/IEFyZSB5b3Ugc2F5
+aW5nIHRoYXQgdGhlIHN0YXRlIG1vZGVsIFNDU0kgaXMgdXNpbmcgaXMgd3Jvbmc/DQoNCk5vLCBp
+dCBpcyBub3Qgd3JvbmcuDQpCdXQgSSB0aGluayB3ZSBtYXkgd2FudCB0byBwcmV2ZW5kIGhhbmcg
+Ynkgc2xlZXAgcGVvY2VzcyB3aXRoIGNvbnRpbnVpbmcgdG8gdGFrZSBhIGxvY2sgYXQgYmxrX2V4
+ZWN1dGVfcnEoKSBmcm9tIHVzYl91bmJpbmRfYW5kX3JlYmluZF9tYXJkZWRfaW50ZXJmYWNlcygp
+Lg0KDQpSZWdhcmRzLA0KS2VudG8gS29iYXlhc2hpDQo=
