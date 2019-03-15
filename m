@@ -1,33 +1,42 @@
-From: <Kento.A.Kobayashi@sony.com>
-Subject: RE: [PATCH] usb: uas: fix usb subsystem hang after power off hub
- port
-Date: Fri, 15 Mar 2019 02:28:13 +0000
-Message-ID: <AE5419EAB4965843B3C0C1FE29F1FFE5873FFB@JPYOKXMS103.jp.sony.com>
-References: <AE5419EAB4965843B3C0C1FE29F1FFE5872241@JPYOKXMS103.jp.sony.com>
-         <1552063928.29776.2.camel@suse.com>
-         <AE5419EAB4965843B3C0C1FE29F1FFE587268B@JPYOKXMS103.jp.sony.com>
- <1552405047.21557.7.camel@suse.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+From: Kangjie Lu <kjlu@umn.edu>
+Subject: [PATCH v2] scsi: ufs: fix a missing check of devm_reset_control_get
+Date: Fri, 15 Mar 2019 02:11:56 -0500
+Message-ID: <20190315071156.21588-1-kjlu@umn.edu>
+References: <SN6PR04MB4925DB2652FAED5F3AED27CCFC4B0@SN6PR04MB4925.namprd04.prod.outlook.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1552405047.21557.7.camel@suse.com>
-Content-Language: ja-JP
+In-Reply-To: <SN6PR04MB4925DB2652FAED5F3AED27CCFC4B0@SN6PR04MB4925.namprd04.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: oneukum@suse.com, gregkh@linuxfoundation.org, stern@rowland.harvard.edu
-Cc: usb-storage@lists.one-eyed-alien.net, Jacky.Cao@sony.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
+To: kjlu@umn.edu
+Cc: pakki001@umn.edu, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-SGksDQoNCj4+IEFuZCB0aGUgcmV0dXJuIHZhbHVlKC1FTk9ERVYpIHdpbGwgYmUgcmV0dXJuZWQg
-dG8gZXJyb3IgaGFuZGxlci4NCj4+IHVhc19laF9kZXZpY2VfcmVzZXRfaGFuZGxlci0+dXNiX3Jl
-c2V0X2RldmljZSAtPiB1c2JfcmVzZXRfYW5kX3ZlcmlmeV9kZXZpY2UgKHJldHVybiAtRU5PREVW
-KSBUaGVuIEkgd3JvdGUgdGhhdCBjb21taXQgbWVzc2FnZSB0aGF0IHdlIHRoaW5rIGV2ZW4gaWYg
-d2UgaWdub3JlICJFTk9ERVYiIGluIHBvc3QgcmVzZXQgdG8gYXZvaWQgaGFuZyBpc3N1ZSBidXQg
-dGhlIGVycm9yIHdpbGwgYWxzbyBiZSByZXBvcnRlZCB0byBlcnJvciBoYW5kbGVyLg0KPj4gI0lm
-IGlnbm9yZSBhbiBlcnJvciBhbmQgdGhlIGVycm9yIHdpbGwgbm90IGJlIHJlcG9ydGVkIHRoZW4g
-aXQgaXMgbm90IGdvb2QuDQo+DQo+V2VsbCwgd2hhdCBkbyB3ZSBkbyBub3c/IEFyZSB5b3Ugc2F5
-aW5nIHRoYXQgdGhlIHN0YXRlIG1vZGVsIFNDU0kgaXMgdXNpbmcgaXMgd3Jvbmc/DQoNCk5vLCBp
-dCBpcyBub3Qgd3JvbmcuDQpCdXQgSSB0aGluayB3ZSBtYXkgd2FudCB0byBwcmV2ZW5kIGhhbmcg
-Ynkgc2xlZXAgcGVvY2VzcyB3aXRoIGNvbnRpbnVpbmcgdG8gdGFrZSBhIGxvY2sgYXQgYmxrX2V4
-ZWN1dGVfcnEoKSBmcm9tIHVzYl91bmJpbmRfYW5kX3JlYmluZF9tYXJkZWRfaW50ZXJmYWNlcygp
-Lg0KDQpSZWdhcmRzLA0KS2VudG8gS29iYXlhc2hpDQo=
+devm_reset_control_get could fail, so the fix checks its
+return value and passes the error code upstream in case it fails.
+
+Signed-off-by: Kangjie Lu <kjlu@umn.edu>
+
+Acked-by: Avri Altman <avri.altman@wdc.com>
+
+---
+V2: Use full line please
+---
+ drivers/scsi/ufs/ufs-hisi.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/scsi/ufs/ufs-hisi.c b/drivers/scsi/ufs/ufs-hisi.c
+index 452e19f8fb47..c2cee73a8560 100644
+--- a/drivers/scsi/ufs/ufs-hisi.c
++++ b/drivers/scsi/ufs/ufs-hisi.c
+@@ -544,6 +544,10 @@ static int ufs_hisi_init_common(struct ufs_hba *hba)
+ 	ufshcd_set_variant(hba, host);
+ 
+ 	host->rst  = devm_reset_control_get(dev, "rst");
++	if (IS_ERR(host->rst)) {
++		dev_err(dev, "%s: failed to get reset control\n", __func__);
++		return PTR_ERR(host->rst);
++	}
+ 
+ 	ufs_hisi_set_pm_lvl(hba);
+ 
+-- 
+2.17.1
