@@ -1,8 +1,8 @@
 From: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH v2 3/4] scsi: ufs: change "<name>-max-microamp" to
- non-mandatory property
-Date: Fri, 15 Mar 2019 17:26:13 +0800
-Message-ID: <1552641974-30672-5-git-send-email-stanley.chu@mediatek.com>
+Subject: [PATCH v2 1/4] scsi: ufs: remove unused min_uA field in struct
+ ufs_vreg
+Date: Fri, 15 Mar 2019 17:26:11 +0800
+Message-ID: <1552641974-30672-3-git-send-email-stanley.chu@mediatek.com>
 References: <1552641974-30672-1-git-send-email-stanley.chu@mediatek.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -22,40 +22,47 @@ To: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, martin.petersen-QHcLZuEG
 Cc: marc.w.gonzalez-GANU6spQydw@public.gmane.org, chun-hung.wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, kuohong.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, peter.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-In some platforms, vcc, vccq and vccq2 regulators may not need
-to define their current limit but need to define their voltage
-range for correct regulator_set_voltage behaviors.
+There are two fields related to regulator current limit in struct
+ufs_vreg: "min_uA" and "max_uA".
 
-However, missing "<name>-max-microamp" property in device tree
-will lead to initialization fail. This limitation shall be
-resolved to tolerate such kind of regulators.
+"max_uA" is probed by "<name>-max-microamp" property from device
+tree and used for
 
-Because we do bypass regulator_set_load operations in case
-current limit is undefined, so this change shall be safe.
+- regulator_set_load operations, and
+- icc_level configuration in device.
+
+However "min_uA" field is not used anywhere, thus we can remove it.
 
 Signed-off-by: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
+Reviewed-by: Marc Gonzalez <marc.w.gonzalez-GANU6spQydw@public.gmane.org>
 ---
- drivers/scsi/ufs/ufshcd-pltfrm.c | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
+ drivers/scsi/ufs/ufs.h           | 1 -
+ drivers/scsi/ufs/ufshcd-pltfrm.c | 1 -
+ 2 files changed, 2 deletions(-)
 
+diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+index 7da7318eb6a6..0f23ac80bacd 100644
+--- a/drivers/scsi/ufs/ufs.h
++++ b/drivers/scsi/ufs/ufs.h
+@@ -516,7 +516,6 @@ struct ufs_vreg {
+ 	bool enabled;
+ 	int min_uV;
+ 	int max_uV;
+-	int min_uA;
+ 	int max_uA;
+ };
+ 
 diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
-index 588079286e8a..2f244d388ca8 100644
+index 895a9b5ac989..588079286e8a 100644
 --- a/drivers/scsi/ufs/ufshcd-pltfrm.c
 +++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
-@@ -157,11 +157,9 @@ static int ufshcd_populate_vreg(struct device *dev, const char *name,
+@@ -164,7 +164,6 @@ static int ufshcd_populate_vreg(struct device *dev, const char *name,
  		goto out;
- 
- 	snprintf(prop_name, MAX_PROP_SIZE, "%s-max-microamp", name);
--	ret = of_property_read_u32(np, prop_name, &vreg->max_uA);
--	if (ret) {
--		dev_err(dev, "%s: unable to find %s err %d\n",
--				__func__, prop_name, ret);
--		goto out;
-+	if (of_property_read_u32(np, prop_name, &vreg->max_uA)) {
-+		dev_info(dev, "%s: unable to find %s\n", __func__, prop_name);
-+		vreg->max_uA = 0;
  	}
  
+-	vreg->min_uA = 0;
  	if (!strcmp(name, "vcc")) {
+ 		if (of_property_read_bool(np, "vcc-supply-1p8")) {
+ 			vreg->min_uV = UFS_VREG_VCC_1P8_MIN_UV;
 -- 
 2.18.0
