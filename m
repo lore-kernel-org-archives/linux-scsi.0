@@ -1,41 +1,26 @@
-From: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH v2 0/4] scsi: ufs: fix regulator operations and remove
- "<name>-fixed-regulator" device tree property
-Date: Fri, 15 Mar 2019 17:26:10 +0800
-Message-ID: <1552641974-30672-2-git-send-email-stanley.chu@mediatek.com>
-References: <1552641974-30672-1-git-send-email-stanley.chu@mediatek.com>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: kernel 5.0 blk_clear_pm_only triggers a warning during resume
+Date: Fri, 15 Mar 2019 16:07:02 -0700
+Message-ID: <1552691222.152266.5.camel@acm.org>
+References: <20190312132826.12c5f166@xhacker.debian>
+         <1552402699.45180.106.camel@acm.org>
+                <20190313101841.6d9e952b@xhacker.debian>
+         <20190314101355.1df7c014@xhacker.debian>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="UTF-7"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-In-Reply-To: <1552641974-30672-1-git-send-email-stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-mediatek>,
- <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-mediatek/>
-List-Post: <mailto:linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-List-Help: <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-mediatek>,
- <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=subscribe>
-Sender: "Linux-mediatek" <linux-mediatek-bounces-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-Errors-To: linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
-To: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, avri.altman-Sjgp3cTcYWE@public.gmane.org, alim.akhtar-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org, pedrom.sousa-HKixBCOQz3hWk0Htik3J/w@public.gmane.org
-Cc: marc.w.gonzalez-GANU6spQydw@public.gmane.org, chun-hung.wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, kuohong.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, peter.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190314101355.1df7c014@xhacker.debian>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jisheng Zhang <Jisheng.Zhang@synaptics.com>
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi,
+On Thu, 2019-03-14 at 02:21 +-0000, Jisheng Zhang wrote:
++AD4 Good news. The patch fix the warning. So 
++AD4 
++AD4 Tested-by: Jisheng Zhang +ADw-Jisheng.Zhang+AEA-synaptics.com+AD4
 
-This patch series fixes UFS regulator operations and removes "<name>-fixed-regulator" device tree property.
+Thank you for having tested my patch+ACE
 
-Stanley Chu (4):
-  scsi: ufs: remove unused min_uA field in struct ufs_vreg
-  scsi: ufs: fix regulator set load and icc-level configuration
-  scsi: ufs: change "<name>-max-microamp" to non-mandatory property
-  scsi: ufs: remove "<name>-fixed-regulator" device tree property
-
- drivers/scsi/ufs/ufs.h           |  1 -
- drivers/scsi/ufs/ufshcd-pltfrm.c | 14 +++-----------
- drivers/scsi/ufs/ufshcd.c        | 15 ++++++++++++---
- 3 files changed, 15 insertions(+), 15 deletions(-)
-
--- 
-2.18.0
+Bart.
