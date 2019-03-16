@@ -1,11 +1,13 @@
 From: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-Subject: scsi: ufs-mediatek: Add UFS support for Mediatek SoC chips
-Date: Sat, 16 Mar 2019 13:04:39 +0800
-Message-ID: <1552712687-20186-1-git-send-email-stanley.chu@mediatek.com>
+Subject: [PATCH v6 5/7] dt-bindings: scsi: ufs: Add document for ufs-mediatek
+Date: Sat, 16 Mar 2019 13:04:45 +0800
+Message-ID: <1552712687-20186-7-git-send-email-stanley.chu@mediatek.com>
+References: <1552712687-20186-1-git-send-email-stanley.chu@mediatek.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+In-Reply-To: <1552712687-20186-1-git-send-email-stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-mediatek>,
  <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-mediatek/>
@@ -16,40 +18,63 @@ List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-mediatek>,
 Sender: "Linux-mediatek" <linux-mediatek-bounces-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
 Errors-To: linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
 To: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, robh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, mark.rutland-5wv7dgnIgG8@public.gmane.org, chunfeng.yun-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, yingjoe.chen-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, kishon-l0cyMroinI0@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, avri.altman-Sjgp3cTcYWE@public.gmane.org, alim.akhtar-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org, pedrom.sousa-HKixBCOQz3hWk0Htik3J/w@public.gmane.org
-Cc: chun-hung.wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, kuohong.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, liwei213-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, vivek.gautam-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, peter.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org
+Cc: chun-hung.wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, kuohong.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, liwei213-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, vivek.gautam-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, peter.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hello,
+Add UFS and UFS PHY node document for Mediatek SoC chips.
 
-This patch series adds UFS M-PHY and UFS host driver support in MediaTek chipsets.
+Signed-off-by: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
+Reviewed-by: Rob Herring <robh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+---
+ .../devicetree/bindings/ufs/ufs-mediatek.txt  | 40 +++++++++++++++++++
+ 1 file changed, 40 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/ufs/ufs-mediatek.txt
 
-In the meantime, re-factors ufshcd_get_pwr_dev_param in vendors' drivers. This function is for vendors to decide finally agreed attributes for power mode change if vendors define
-their host capability in struct ufs_dev_params. Because it is using by both ufs-qcom and ufs-hisi and also used in ufs-mediatek in this series, simply re-factor it and then every vendors can reuse it.
-
-Changes since v5:
--	phy-mtk-ufs: Change mphy_readl/mphy_writel() to inline functions.
--	Fix typo in cover letter.
-
-Changes since v4:
--	phy-mtk-ufs:
-	  * Sort name in Kconfig and Makefile
-	  * Drop "inline" and fix symbol name for mphy_set_bit()/mphy_clr_bit().
--	dt-bindings: phy-mtk-ufs: Drop "-clk" in clock names.
--	dt-bindings: ufs-mediatek:
-	  * Change clock name "ufs-clk" to "ufs".
-	  * Drop vcc related first. VCC control is planned to be added back by another patch accompanied with VCC/ICC logic fix in ufs common driver.
-
-Changes since v3:
--	dt-bindings: Use specific compatible name for both ufs-mediatek and phy-mtk-ufs, remove interrupt-parent and lanes-per-direction in ufs-mediatek, and fix descriptions.
-
-Changes since v2:
--	Fix header style with SPDX-License-Identifier declaration used.
--	Simplify ufs-phy-mtk to single source file since we has one MPHY version now, and do fixes according to Chunfeng Yun's comments.
--	Add dt-bindings of ufs-phy-mtk.
-
-Changes since v1:
--	Re-factor ufshcd_get_pwr_dev_param in mediatek/qcom/hisi vendor drivers.
--	Introduce ufs-phy-mtk to have a good extension capability for different power control flows in future different MPHY versions.
--	Bind ufs-phy-mtk and hook suitable callbacks in ufs-mediatek driver.
--	Use PA_LOCAL_TX_LCC_ENABLE attribute defined in unipro.h instead.
--	Do some minor format fixes.
+diff --git a/Documentation/devicetree/bindings/ufs/ufs-mediatek.txt b/Documentation/devicetree/bindings/ufs/ufs-mediatek.txt
+new file mode 100644
+index 000000000000..e25c007b95d7
+--- /dev/null
++++ b/Documentation/devicetree/bindings/ufs/ufs-mediatek.txt
+@@ -0,0 +1,40 @@
++* Mediatek Universal Flash Storage (UFS) Host Controller
++
++UFS nodes are defined to describe on-chip UFS hardware macro.
++Each UFS Host Controller should have its own node.
++
++To bind UFS PHY with UFS host controller, the controller node should
++contain a phandle reference to UFS M-PHY node.
++
++Required properties for UFS nodes:
++- compatible         : Compatible list, contains the following controller:
++                       "mediatek,mt8183-ufshci" for MediaTek UFS host controller
++                       present on MT81xx chipsets.
++- reg                : Address and length of the UFS register set.
++- phys               : phandle to m-phy.
++- clocks             : List of phandle and clock specifier pairs.
++- clock-names        : List of clock input name strings sorted in the same
++                       order as the clocks property. "ufs" is mandatory.
++                       "ufs": ufshci core control clock.
++- freq-table-hz      : Array of <min max> operating frequencies stored in the same
++                       order as the clocks property. If this property is not
++                       defined or a value in the array is "0" then it is assumed
++                       that the frequency is set by the parent clock or a
++                       fixed rate clock source.
++
++Example:
++
++	ufsphy: phy@11fa0000 {
++		...
++	};
++
++	ufshci@11270000 {
++		compatible = "mediatek,mt8183-ufshci";
++		reg = <0 0x11270000 0 0x2300>;
++		interrupts = <GIC_SPI 104 IRQ_TYPE_LEVEL_LOW>;
++		phys = <&ufsphy>;
++
++		clocks = <&infracfg_ao INFRACFG_AO_UFS_CG>;
++		clock-names = "ufs";
++		freq-table-hz = <0 0>;
++	};
+-- 
+2.18.0
