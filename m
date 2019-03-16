@@ -1,114 +1,152 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [GIT PULL] final round of SCSI updates for the 5.0+ merge window
-Date: Fri, 15 Mar 2019 17:23:19 -0700
-Message-ID: <1552695799.24933.24.camel@HansenPartnership.com>
+From: Jason Yan <yanaijie@huawei.com>
+Subject: [RFC PATCH v2] scsi: fix oops in scsi_uninit_cmd()
+Date: Sat, 16 Mar 2019 10:09:05 +0800
+Message-ID: <20190316020905.14962-1-yanaijie@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, hare@suse.com, hch@lst.de, bvanassche@acm.org, tom.leiming@gmail.com, Jason Yan <yanaijie@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-This is the final round of mostly small fixes and performance
-improvements to our initial submit.  The main regression fix is the
-ia64 simscsi build failure which was missed in the serial number
-elimination conversion.
+If we remove the scsi disk when running io with fio, oops occured with
+the following condition.
 
-You will find the topmost patch has been rebased.  Apparently one of
-our number can't spell scsi: and, since it is the oneliner of the
-patch, I felt it had to be fixed.  There are no code changes from what
-was in linux-next.  The original commit is here for you to verify:
+[scsi_eh_0]                              [fio]
+scsi_end_request
+  ->blk_update_request
+    ->end_bio(io returned to userspace)
+                                         close
+                                           ->sd_release
+                                              ->scsi_disk_put
+                                                 ->scsi_disk_release
+                                                     ->disk->private_data = NULL;
 
-https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git/log/?h=cockup
+  ->scsi_mq_uninit_cmd
+    ->scsi_uninit_cmd
+      ->scsi_cmd_to_driver
+    ->drv is NULL, Oops
 
-The patch is available here:
+There is a small window between blk_update_request() and
+scsi_mq_uninit_cmd() that scsi disk may have been released. This will
+cause a oops like below:
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
+Unable to handle kernel NULL pointer dereference at virtual address
+0000000000000000
+s/sync.c:67, func=xfer, error=In[11347.116050] Mem abort info:
+put/output error
+[11347.121598]   ESR = 0x96000006
+[11347.126200]   Exception class = DABT (current EL), IL = 32 bits
+[11347.132117]   SET = 0, FnV = 0
+[11347.135170]   EA = 0, S1PTW = 0
+[11347.138308] Data abort info:
+[11347.141186]   ISV = 0, ISS = 0x00000006
+[11347.145019]   CM = 0, WnR = 0
+[11347.147977] user pgtable: 4k pages, 48-bit VAs, pgdp =
+00000000a67aece2
+[11347.154591] [0000000000000000] pgd=0000002f90774003,
+pud=0000002fab098003, pmd=0000000000000000
+[11347.163304] Internal error: Oops: 96000006 [#1] PREEMPT SMP
+[11347.168870] Modules linked in: hisi_sas_v3_hw hisi_sas_main libsas
+[11347.175044] CPU: 56 PID: 4294 Comm: scsi_eh_2 Not tainted
+4.19.0-g8052059-dirty #2
+[11347.182600] Hardware name: Huawei D06/D06, BIOS Hisilicon D06 UEFI
+RC0 - B601 (V6.01) 11/08/2018
+[11347.191370] pstate: a0c00009 (NzCv daif +PAN +UAO)
+[11347.196155] pc : scsi_uninit_cmd+0x24/0x3c
+[11347.200240] lr : scsi_mq_uninit_cmd+0x1c/0x30
+[11347.204583] sp : ffff000024dabb60
+[11347.207884] x29: ffff000024dabb60 x28: ffff000024dabd38
+[11347.213184] x27: ffff000000f5b3a8 x26: ffff7df3b0181600
+[11347.218484] x25: 0000000000000000 x24: ffff803bc5d36778
+[11347.223783] x23: 000000000000000a x22: 0000000000000000
+[11347.229082] x21: ffff803bc7397000 x20: ffff802f9148e530
+[11347.234381] x19: ffff802f9148e530 x18: ffff7e0000000000
+[11347.239679] x17: 0000000000000000 x16: 0000002f9e37d000
+[11347.244979] x15: ffff7e0000000000 x14: 3863206336203839
+[11347.250278] x13: 2036302030302038 x12: a46fac3d0d363d00
+[11347.255578] x11: ffffffffffffffff x10: a46fac3d0d363d00
+[11347.260877] x9 : 0000000040040000 x8 : 000000000000eb4b
+[11347.266177] x7 : ffff000009771000 x6 : 0000000000210d00
+[11347.271476] x5 : ffff803bc9f50000 x4 : 0000000000000000
+[11347.276775] x3 : ffff802fb02b4380 x2 : ffff802f9148e400
+[11347.282075] x1 : 0000000000000000 x0 : ffff802f9148e530
+[11347.287375] Process scsi_eh_2 (pid: 4294, stack limit =
+0x000000007d2257f8)
+[11347.294323] Call trace:
+Jobs: 6 (f=6): [R[RRR1XXX1XRR3] 47.296758]  scsi_uninit_cmd+0x24/0x3c
+[22.7% done] [1516MB/0KB/0KB /s] [754/0/0 iops] [eta 08m:39s]
+[11347.308390]  scsi_mq_uninit_cmd+0x1c/0x30
+[11347.312387]  scsi_end_request+0x7c/0x1b8
+[11347.316297]  scsi_io_completion+0x464/0x668
+[11347.320467]  scsi_finish_command+0xbc/0x160
+[11347.324636]  scsi_eh_flush_done_q+0x10c/0x170
+[11347.328990]  sas_scsi_recover_host+0x84c/0xa98 [libsas]
+[11347.334202]  scsi_error_handler+0x140/0x5b0
+[11347.338374]  kthread+0x100/0x12c
+[11347.341590]  ret_from_fork+0x10/0x18
+[11347.345153] Code: 71000c3f 540000e9 f9404c41 f941f421 (f9400021)
+[11347.351234] ---[ end trace f496aacdaa1dcc51 ]---
 
-The short changelog is:
+To fix this, move the bio_endio() action from blk_update_request() to
+__blk_mq_end_request().
 
-Andy Shevchenko (1):
-      scsi: target: tcmu: Switch to bitmap_zalloc()
+Signed-off-by: Jason Yan <yanaijie@huawei.com>
+---
+ block/blk-core.c       | 6 ++++--
+ block/blk-mq.c         | 7 +++++++
+ include/linux/blkdev.h | 1 +
+ 3 files changed, 12 insertions(+), 2 deletions(-)
 
-Arnd Bergmann (4):
-      scsi: lpfc: fix 32-bit format string warning
-      scsi: lpfc: fix unused variable warning
-      scsi: qla2xxx: avoid printf format warning
-      scsi: ufs: hisi: fix ufs_hba_variant_ops passing
-
-Bill Kuzeja (1):
-      scsi: qla2xxx: Fix panic in qla_dfs_tgt_counters_show
-
-Cathy Avery (1):
-      scsi: target: tcmu: wait for nl reply only if there are listeners or during an add
-
-Dan Carpenter (2):
-      scsi: lpfc: Fix error codes in lpfc_sli4_pci_mem_setup()
-      scsi: qla2xxx: check for kstrtol() failure
-
-Erwan Velu (1):
-      scsi: smartpqi: Reporting 'logical unit failure'
-
-Felipe Franciosi (1):
-      scsi: virtio_scsi: don't send sc payload with tmfs
-
-Hannes Reinecke (1):
-      scsi: ia64: simscsi: use request tag instead of serial_number
-
-James Smart (2):
-      scsi: lpfc: resolve static checker warning in lpfc_sli4_hba_unset
-      scsi: lpfc: Correct __lpfc_sli_issue_iocb_s4 lockdep check
-
-John Garry (1):
-      scsi: hisi_sas: Set PHY linkrate when disconnected
-
-Lee Duncan (1):
-      scsi: libiscsi: Hold back_lock when calling iscsi_complete_task
-
-Sagar Biradar (1):
-      scsi: aacraid: Fix performance issue on logical drives
-
-Steve Sistare (1):
-      scsi: megaraid_sas: reduce module load time
-
-Vasily Averin (1):
-      scsi: libiscsi: fall back to sendmsg for slab pages
-
-Xiang Chen (4):
-      scsi: hisi_sas: Change SERDES_CFG init value to increase reliability of HiLink
-      scsi: hisi_sas: Send HARD RESET to clear the previous affiliation of STP target port
-      scsi: hisi_sas: Fix a timeout race of driver internal and SMP IO
-      scsi: hisi_sas: Change return variable type in phy_up_v3_hw()
-
-Xiaofei Tan (1):
-      scsi: hisi_sas: print PHY RX errors count for later revision of v3 hw
-
-And the diffstat:
-
- arch/ia64/hp/sim/simscsi.c                |  7 +--
- drivers/scsi/aacraid/linit.c              | 13 +++--
- drivers/scsi/hisi_sas/hisi_sas.h          |  8 +++
- drivers/scsi/hisi_sas/hisi_sas_main.c     | 57 ++++++++++++++++++--
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c    |  1 +
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c    | 89 ++++++++++++++++++++++---------
- drivers/scsi/libiscsi.c                   | 22 +++++++-
- drivers/scsi/libiscsi_tcp.c               | 11 ++--
- drivers/scsi/lpfc/lpfc_init.c             | 21 ++++----
- drivers/scsi/lpfc/lpfc_nvme.c             |  3 +-
- drivers/scsi/lpfc/lpfc_sli.c              |  2 +-
- drivers/scsi/megaraid/megaraid_sas_base.c |  4 +-
- drivers/scsi/qla2xxx/qla_attr.c           |  2 +
- drivers/scsi/qla2xxx/qla_dfs.c            |  2 +
- drivers/scsi/qla2xxx/qla_iocb.c           |  4 +-
- drivers/scsi/smartpqi/smartpqi_init.c     |  6 +++
- drivers/scsi/ufs/ufs-hisi.c               | 11 ++--
- drivers/scsi/ufs/ufshcd-pltfrm.c          |  2 +-
- drivers/scsi/ufs/ufshcd-pltfrm.h          |  2 +-
- drivers/scsi/ufs/ufshcd.h                 |  2 +-
- drivers/scsi/virtio_scsi.c                |  2 -
- drivers/target/target_core_user.c         | 19 ++++---
- 22 files changed, 210 insertions(+), 80 deletions(-)
-
-James
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 4673ebe42255..f39ea78c0535 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -192,8 +192,10 @@ static void req_bio_endio(struct request *rq, struct bio *bio,
+ 	bio_advance(bio, nbytes);
+ 
+ 	/* don't actually finish bio if it's part of flush sequence */
+-	if (bio->bi_iter.bi_size == 0 && !(rq->rq_flags & RQF_FLUSH_SEQ))
+-		bio_endio(bio);
++	if (bio->bi_iter.bi_size == 0 && !(rq->rq_flags & RQF_FLUSH_SEQ)) {
++		bio->bi_next = rq->bio_to_release;
++		rq->bio_to_release = bio;
++	}
+ }
+ 
+ void blk_dump_rq_flags(struct request *rq, char *msg)
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index a9c181603cbd..5ad595ebc198 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -529,8 +529,15 @@ EXPORT_SYMBOL_GPL(blk_mq_free_request);
+ 
+ inline void __blk_mq_end_request(struct request *rq, blk_status_t error)
+ {
++	struct bio *bio;
+ 	u64 now = 0;
+ 
++	while (rq->bio_to_release) {
++		bio = rq->bio_to_release->bi_next;
++		bio_endio(rq->bio_to_release);
++		rq->bio_to_release = bio;
++	}
++
+ 	if (blk_mq_need_time_stamp(rq))
+ 		now = ktime_get_ns();
+ 
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 0de92b29f589..74fe561d5a49 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -143,6 +143,7 @@ struct request {
+ 
+ 	struct bio *bio;
+ 	struct bio *biotail;
++	struct bio *bio_to_release;
+ 
+ 	struct list_head queuelist;
+ 
+-- 
+2.14.5
