@@ -1,152 +1,169 @@
-From: Jason Yan <yanaijie@huawei.com>
-Subject: [RFC PATCH v2] scsi: fix oops in scsi_uninit_cmd()
-Date: Sat, 16 Mar 2019 10:09:05 +0800
-Message-ID: <20190316020905.14962-1-yanaijie@huawei.com>
+From: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
+Subject: [PATCH v6 3/7] scsi: ufs-hisi: Re-factor ufshcd_get_pwr_dev_param
+Date: Sat, 16 Mar 2019 13:04:43 +0800
+Message-ID: <1552712687-20186-5-git-send-email-stanley.chu@mediatek.com>
+References: <1552712687-20186-1-git-send-email-stanley.chu@mediatek.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, hare@suse.com, hch@lst.de, bvanassche@acm.org, tom.leiming@gmail.com, Jason Yan <yanaijie@huawei.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+In-Reply-To: <1552712687-20186-1-git-send-email-stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-mediatek>,
+ <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-mediatek/>
+List-Post: <mailto:linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+List-Help: <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-mediatek>,
+ <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=subscribe>
+Sender: "Linux-mediatek" <linux-mediatek-bounces-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+Errors-To: linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
+To: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, robh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, mark.rutland-5wv7dgnIgG8@public.gmane.org, chunfeng.yun-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, yingjoe.chen-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, kishon-l0cyMroinI0@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, avri.altman-Sjgp3cTcYWE@public.gmane.org, alim.akhtar-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org, pedrom.sousa-HKixBCOQz3hWk0Htik3J/w@public.gmane.org
+Cc: chun-hung.wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, kuohong.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, liwei213-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, vivek.gautam-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, peter.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-If we remove the scsi disk when running io with fio, oops occured with
-the following condition.
+ufshcd_get_pwr_dev_param function and ufs_dev_params struct
+are re-factored to ufs common driver thus change the way this
+driver used.
 
-[scsi_eh_0]                              [fio]
-scsi_end_request
-  ->blk_update_request
-    ->end_bio(io returned to userspace)
-                                         close
-                                           ->sd_release
-                                              ->scsi_disk_put
-                                                 ->scsi_disk_release
-                                                     ->disk->private_data = NULL;
-
-  ->scsi_mq_uninit_cmd
-    ->scsi_uninit_cmd
-      ->scsi_cmd_to_driver
-    ->drv is NULL, Oops
-
-There is a small window between blk_update_request() and
-scsi_mq_uninit_cmd() that scsi disk may have been released. This will
-cause a oops like below:
-
-Unable to handle kernel NULL pointer dereference at virtual address
-0000000000000000
-s/sync.c:67, func=xfer, error=In[11347.116050] Mem abort info:
-put/output error
-[11347.121598]   ESR = 0x96000006
-[11347.126200]   Exception class = DABT (current EL), IL = 32 bits
-[11347.132117]   SET = 0, FnV = 0
-[11347.135170]   EA = 0, S1PTW = 0
-[11347.138308] Data abort info:
-[11347.141186]   ISV = 0, ISS = 0x00000006
-[11347.145019]   CM = 0, WnR = 0
-[11347.147977] user pgtable: 4k pages, 48-bit VAs, pgdp =
-00000000a67aece2
-[11347.154591] [0000000000000000] pgd=0000002f90774003,
-pud=0000002fab098003, pmd=0000000000000000
-[11347.163304] Internal error: Oops: 96000006 [#1] PREEMPT SMP
-[11347.168870] Modules linked in: hisi_sas_v3_hw hisi_sas_main libsas
-[11347.175044] CPU: 56 PID: 4294 Comm: scsi_eh_2 Not tainted
-4.19.0-g8052059-dirty #2
-[11347.182600] Hardware name: Huawei D06/D06, BIOS Hisilicon D06 UEFI
-RC0 - B601 (V6.01) 11/08/2018
-[11347.191370] pstate: a0c00009 (NzCv daif +PAN +UAO)
-[11347.196155] pc : scsi_uninit_cmd+0x24/0x3c
-[11347.200240] lr : scsi_mq_uninit_cmd+0x1c/0x30
-[11347.204583] sp : ffff000024dabb60
-[11347.207884] x29: ffff000024dabb60 x28: ffff000024dabd38
-[11347.213184] x27: ffff000000f5b3a8 x26: ffff7df3b0181600
-[11347.218484] x25: 0000000000000000 x24: ffff803bc5d36778
-[11347.223783] x23: 000000000000000a x22: 0000000000000000
-[11347.229082] x21: ffff803bc7397000 x20: ffff802f9148e530
-[11347.234381] x19: ffff802f9148e530 x18: ffff7e0000000000
-[11347.239679] x17: 0000000000000000 x16: 0000002f9e37d000
-[11347.244979] x15: ffff7e0000000000 x14: 3863206336203839
-[11347.250278] x13: 2036302030302038 x12: a46fac3d0d363d00
-[11347.255578] x11: ffffffffffffffff x10: a46fac3d0d363d00
-[11347.260877] x9 : 0000000040040000 x8 : 000000000000eb4b
-[11347.266177] x7 : ffff000009771000 x6 : 0000000000210d00
-[11347.271476] x5 : ffff803bc9f50000 x4 : 0000000000000000
-[11347.276775] x3 : ffff802fb02b4380 x2 : ffff802f9148e400
-[11347.282075] x1 : 0000000000000000 x0 : ffff802f9148e530
-[11347.287375] Process scsi_eh_2 (pid: 4294, stack limit =
-0x000000007d2257f8)
-[11347.294323] Call trace:
-Jobs: 6 (f=6): [R[RRR1XXX1XRR3] 47.296758]  scsi_uninit_cmd+0x24/0x3c
-[22.7% done] [1516MB/0KB/0KB /s] [754/0/0 iops] [eta 08m:39s]
-[11347.308390]  scsi_mq_uninit_cmd+0x1c/0x30
-[11347.312387]  scsi_end_request+0x7c/0x1b8
-[11347.316297]  scsi_io_completion+0x464/0x668
-[11347.320467]  scsi_finish_command+0xbc/0x160
-[11347.324636]  scsi_eh_flush_done_q+0x10c/0x170
-[11347.328990]  sas_scsi_recover_host+0x84c/0xa98 [libsas]
-[11347.334202]  scsi_error_handler+0x140/0x5b0
-[11347.338374]  kthread+0x100/0x12c
-[11347.341590]  ret_from_fork+0x10/0x18
-[11347.345153] Code: 71000c3f 540000e9 f9404c41 f941f421 (f9400021)
-[11347.351234] ---[ end trace f496aacdaa1dcc51 ]---
-
-To fix this, move the bio_endio() action from blk_update_request() to
-__blk_mq_end_request().
-
-Signed-off-by: Jason Yan <yanaijie@huawei.com>
+Signed-off-by: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
+Reviewed-by: Avri Altman <avri.altman-Sjgp3cTcYWE@public.gmane.org>
 ---
- block/blk-core.c       | 6 ++++--
- block/blk-mq.c         | 7 +++++++
- include/linux/blkdev.h | 1 +
- 3 files changed, 12 insertions(+), 2 deletions(-)
+ drivers/scsi/ufs/ufs-hisi.c | 109 ++----------------------------------
+ 1 file changed, 4 insertions(+), 105 deletions(-)
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 4673ebe42255..f39ea78c0535 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -192,8 +192,10 @@ static void req_bio_endio(struct request *rq, struct bio *bio,
- 	bio_advance(bio, nbytes);
- 
- 	/* don't actually finish bio if it's part of flush sequence */
--	if (bio->bi_iter.bi_size == 0 && !(rq->rq_flags & RQF_FLUSH_SEQ))
--		bio_endio(bio);
-+	if (bio->bi_iter.bi_size == 0 && !(rq->rq_flags & RQF_FLUSH_SEQ)) {
-+		bio->bi_next = rq->bio_to_release;
-+		rq->bio_to_release = bio;
-+	}
+diff --git a/drivers/scsi/ufs/ufs-hisi.c b/drivers/scsi/ufs/ufs-hisi.c
+index 452e19f8fb47..01faad26ec26 100644
+--- a/drivers/scsi/ufs/ufs-hisi.c
++++ b/drivers/scsi/ufs/ufs-hisi.c
+@@ -272,108 +272,7 @@ static int ufs_hi3660_link_startup_notify(struct ufs_hba *hba,
+ 	return err;
  }
  
- void blk_dump_rq_flags(struct request *rq, char *msg)
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index a9c181603cbd..5ad595ebc198 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -529,8 +529,15 @@ EXPORT_SYMBOL_GPL(blk_mq_free_request);
- 
- inline void __blk_mq_end_request(struct request *rq, blk_status_t error)
+-struct ufs_hisi_dev_params {
+-	u32 pwm_rx_gear; /* pwm rx gear to work in */
+-	u32 pwm_tx_gear; /* pwm tx gear to work in */
+-	u32 hs_rx_gear;  /* hs rx gear to work in */
+-	u32 hs_tx_gear;  /* hs tx gear to work in */
+-	u32 rx_lanes;    /* number of rx lanes */
+-	u32 tx_lanes;    /* number of tx lanes */
+-	u32 rx_pwr_pwm;  /* rx pwm working pwr */
+-	u32 tx_pwr_pwm;  /* tx pwm working pwr */
+-	u32 rx_pwr_hs;   /* rx hs working pwr */
+-	u32 tx_pwr_hs;   /* tx hs working pwr */
+-	u32 hs_rate;     /* rate A/B to work in HS */
+-	u32 desired_working_mode;
+-};
+-
+-static int ufs_hisi_get_pwr_dev_param(
+-				    struct ufs_hisi_dev_params *hisi_param,
+-				    struct ufs_pa_layer_attr *dev_max,
+-				    struct ufs_pa_layer_attr *agreed_pwr)
+-{
+-	int min_hisi_gear;
+-	int min_dev_gear;
+-	bool is_dev_sup_hs = false;
+-	bool is_hisi_max_hs = false;
+-
+-	if (dev_max->pwr_rx == FASTAUTO_MODE || dev_max->pwr_rx == FAST_MODE)
+-		is_dev_sup_hs = true;
+-
+-	if (hisi_param->desired_working_mode == FAST) {
+-		is_hisi_max_hs = true;
+-		min_hisi_gear = min_t(u32, hisi_param->hs_rx_gear,
+-				       hisi_param->hs_tx_gear);
+-	} else {
+-		min_hisi_gear = min_t(u32, hisi_param->pwm_rx_gear,
+-				       hisi_param->pwm_tx_gear);
+-	}
+-
+-	/*
+-	 * device doesn't support HS but
+-	 * hisi_param->desired_working_mode is HS,
+-	 * thus device and hisi_param don't agree
+-	 */
+-	if (!is_dev_sup_hs && is_hisi_max_hs) {
+-		pr_err("%s: device not support HS\n", __func__);
+-		return -ENOTSUPP;
+-	} else if (is_dev_sup_hs && is_hisi_max_hs) {
+-		/*
+-		 * since device supports HS, it supports FAST_MODE.
+-		 * since hisi_param->desired_working_mode is also HS
+-		 * then final decision (FAST/FASTAUTO) is done according
+-		 * to hisi_params as it is the restricting factor
+-		 */
+-		agreed_pwr->pwr_rx = agreed_pwr->pwr_tx =
+-			hisi_param->rx_pwr_hs;
+-	} else {
+-		/*
+-		 * here hisi_param->desired_working_mode is PWM.
+-		 * it doesn't matter whether device supports HS or PWM,
+-		 * in both cases hisi_param->desired_working_mode will
+-		 * determine the mode
+-		 */
+-		agreed_pwr->pwr_rx = agreed_pwr->pwr_tx =
+-			hisi_param->rx_pwr_pwm;
+-	}
+-
+-	/*
+-	 * we would like tx to work in the minimum number of lanes
+-	 * between device capability and vendor preferences.
+-	 * the same decision will be made for rx
+-	 */
+-	agreed_pwr->lane_tx =
+-		min_t(u32, dev_max->lane_tx, hisi_param->tx_lanes);
+-	agreed_pwr->lane_rx =
+-		min_t(u32, dev_max->lane_rx, hisi_param->rx_lanes);
+-
+-	/* device maximum gear is the minimum between device rx and tx gears */
+-	min_dev_gear = min_t(u32, dev_max->gear_rx, dev_max->gear_tx);
+-
+-	/*
+-	 * if both device capabilities and vendor pre-defined preferences are
+-	 * both HS or both PWM then set the minimum gear to be the chosen
+-	 * working gear.
+-	 * if one is PWM and one is HS then the one that is PWM get to decide
+-	 * what is the gear, as it is the one that also decided previously what
+-	 * pwr the device will be configured to.
+-	 */
+-	if ((is_dev_sup_hs && is_hisi_max_hs) ||
+-	    (!is_dev_sup_hs && !is_hisi_max_hs))
+-		agreed_pwr->gear_rx = agreed_pwr->gear_tx =
+-			min_t(u32, min_dev_gear, min_hisi_gear);
+-	else
+-		agreed_pwr->gear_rx = agreed_pwr->gear_tx = min_hisi_gear;
+-
+-	agreed_pwr->hs_rate = hisi_param->hs_rate;
+-
+-	pr_info("ufs final power mode: gear = %d, lane = %d, pwr = %d, rate = %d\n",
+-		agreed_pwr->gear_rx, agreed_pwr->lane_rx, agreed_pwr->pwr_rx,
+-		agreed_pwr->hs_rate);
+-	return 0;
+-}
+-
+-static void ufs_hisi_set_dev_cap(struct ufs_hisi_dev_params *hisi_param)
++static void ufs_hisi_set_dev_cap(struct ufs_dev_params *hisi_param)
  {
-+	struct bio *bio;
- 	u64 now = 0;
+ 	hisi_param->rx_lanes = UFS_HISI_LIMIT_NUM_LANES_RX;
+ 	hisi_param->tx_lanes = UFS_HISI_LIMIT_NUM_LANES_TX;
+@@ -434,7 +333,7 @@ static int ufs_hi3660_pwr_change_notify(struct ufs_hba *hba,
+ 				       struct ufs_pa_layer_attr *dev_max_params,
+ 				       struct ufs_pa_layer_attr *dev_req_params)
+ {
+-	struct ufs_hisi_dev_params ufs_hisi_cap;
++	struct ufs_dev_params ufs_hisi_cap;
+ 	int ret = 0;
  
-+	while (rq->bio_to_release) {
-+		bio = rq->bio_to_release->bi_next;
-+		bio_endio(rq->bio_to_release);
-+		rq->bio_to_release = bio;
-+	}
-+
- 	if (blk_mq_need_time_stamp(rq))
- 		now = ktime_get_ns();
- 
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 0de92b29f589..74fe561d5a49 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -143,6 +143,7 @@ struct request {
- 
- 	struct bio *bio;
- 	struct bio *biotail;
-+	struct bio *bio_to_release;
- 
- 	struct list_head queuelist;
- 
+ 	if (!dev_req_params) {
+@@ -447,8 +346,8 @@ static int ufs_hi3660_pwr_change_notify(struct ufs_hba *hba,
+ 	switch (status) {
+ 	case PRE_CHANGE:
+ 		ufs_hisi_set_dev_cap(&ufs_hisi_cap);
+-		ret = ufs_hisi_get_pwr_dev_param(
+-			&ufs_hisi_cap, dev_max_params, dev_req_params);
++		ret = ufshcd_get_pwr_dev_param(&ufs_hisi_cap,
++					       dev_max_params, dev_req_params);
+ 		if (ret) {
+ 			dev_err(hba->dev,
+ 			    "%s: failed to determine capabilities\n", __func__);
 -- 
-2.14.5
+2.18.0
