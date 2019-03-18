@@ -1,8 +1,8 @@
 From: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH v3 3/5] scsi: ufs: Fix regulator load and icc-level
- configuration
-Date: Mon, 18 Mar 2019 10:14:38 +0800
-Message-ID: <1552875280-16196-5-git-send-email-stanley.chu@mediatek.com>
+Subject: [PATCH v3 0/5] scsi: ufs: Fix regulator operations and remove
+ "<name>-fixed-regulator" device tree property
+Date: Mon, 18 Mar 2019 10:14:35 +0800
+Message-ID: <1552875280-16196-2-git-send-email-stanley.chu@mediatek.com>
 References: <1552875280-16196-1-git-send-email-stanley.chu@mediatek.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -22,67 +22,34 @@ To: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, martin.petersen-QHcLZuEG
 Cc: marc.w.gonzalez-GANU6spQydw@public.gmane.org, chun-hung.wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, kuohong.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, peter.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Currently if a regulator has "<name>-fixed-regulator"
-property in device tree, it will skip current limit configuration.
-This lead to a zero "max_uA" value in struct ufs_vreg.
+Hi,
 
-However, "regulator_set_load" operation shall be required
-on those regulators which specifically configured current
-limit, otherwise a zero max_uA value may cause unexpected behavior
-when this regulator is enabled or set as high power mode.
+Sorry please help review V3 instead of previous versions.
+In this version I fix and add more details in commit messages, and add one patch to fix "undefined voltage range" issue as well.
 
-Similarly, in icc_level configuration flow, icc_level shall be
-updated if specified regulator has also configured current limit,
-otherwise a zero max_uA will lead to wrong icc_level which may
-cause unexpected results after written to device.
+This patch series fixes UFS regulator operations, including voltage and current (re-)configuration flow during initialization or different power modes.
 
-Signed-off-by: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
----
- drivers/scsi/ufs/ufshcd.c | 15 ++++++++++++---
- 1 file changed, 12 insertions(+), 3 deletions(-)
+Besides, remove "<name>-fixed-regulator" device tree property because it is not necessary anymore after fixes.
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 4e41fdfd0e53..9ae3256a705b 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -6279,19 +6279,19 @@ static u32 ufshcd_find_max_sup_active_icc_level(struct ufs_hba *hba,
- 		goto out;
- 	}
- 
--	if (hba->vreg_info.vcc)
-+	if (hba->vreg_info.vcc && hba->vreg_info.vcc->max_uA)
- 		icc_level = ufshcd_get_max_icc_level(
- 				hba->vreg_info.vcc->max_uA,
- 				POWER_DESC_MAX_ACTV_ICC_LVLS - 1,
- 				&desc_buf[PWR_DESC_ACTIVE_LVLS_VCC_0]);
- 
--	if (hba->vreg_info.vccq)
-+	if (hba->vreg_info.vccq && hba->vreg_info.vccq->max_uA)
- 		icc_level = ufshcd_get_max_icc_level(
- 				hba->vreg_info.vccq->max_uA,
- 				icc_level,
- 				&desc_buf[PWR_DESC_ACTIVE_LVLS_VCCQ_0]);
- 
--	if (hba->vreg_info.vccq2)
-+	if (hba->vreg_info.vccq2 && hba->vreg_info.vccq2->max_uA)
- 		icc_level = ufshcd_get_max_icc_level(
- 				hba->vreg_info.vccq2->max_uA,
- 				icc_level,
-@@ -6989,6 +6989,15 @@ static int ufshcd_config_vreg_load(struct device *dev, struct ufs_vreg *vreg,
- 	if (!vreg)
- 		return 0;
- 
-+	/*
-+	 * "set_load" operation shall be required on those regulators
-+	 * which specifically configured current limitation. Otherwise
-+	 * zero max_uA may cause unexpected behavior when regulator is
-+	 * enabled or set as high power mode.
-+	 */
-+	if (!vreg->max_uA)
-+		return 0;
-+
- 	ret = regulator_set_load(vreg->reg, ua);
- 	if (ret < 0) {
- 		dev_err(dev, "%s: %s set load (ua=%d) failed, err=%d\n",
+V3:
+- Fix and add more details in commit messages.
+- Add one patch "scsi: ufs: Avoid configuring undefined voltage range on a regulator".
+
+V2:
+- Add two patches to prepare to and remove "<name>-fixed-regulator" device tree property.
+- Add more details on patch "scsi: ufs: remove unused min_uA field in struct ufs_vreg" (Marc Gonzalez).
+
+Stanley Chu (5):
+  scsi: ufs: Remove unused min_uA field in struct ufs_vreg
+  scsi: ufs: Avoid configuring undefined voltage range on a regulator
+  scsi: ufs: Fix regulator load and icc-level configuration
+  scsi: ufs: Change "<name>-max-microamp" to non-mandatory property
+  scsi: ufs: Remove "<name>-fixed-regulator" device tree property
+
+ drivers/scsi/ufs/ufs.h           |  1 -
+ drivers/scsi/ufs/ufshcd-pltfrm.c | 14 +++-----------
+ drivers/scsi/ufs/ufshcd.c        | 28 ++++++++++++++++++++--------
+ 3 files changed, 23 insertions(+), 20 deletions(-)
+
 -- 
 2.18.0
