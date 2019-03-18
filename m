@@ -1,8 +1,8 @@
 From: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH v3 2/5] scsi: ufs: Avoid configuring undefined voltage range
- on a regulator
-Date: Mon, 18 Mar 2019 10:14:37 +0800
-Message-ID: <1552875280-16196-4-git-send-email-stanley.chu@mediatek.com>
+Subject: [PATCH v3 4/5] scsi: ufs: Change "<name>-max-microamp" to
+ non-mandatory property
+Date: Mon, 18 Mar 2019 10:14:39 +0800
+Message-ID: <1552875280-16196-6-git-send-email-stanley.chu@mediatek.com>
 References: <1552875280-16196-1-git-send-email-stanley.chu@mediatek.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -22,51 +22,48 @@ To: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, martin.petersen-QHcLZuEG
 Cc: marc.w.gonzalez-GANU6spQydw@public.gmane.org, chun-hung.wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, kuohong.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, peter.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-For regulators used by UFS, vcc, vccq and vccq2 will have voltage range
-initialized by ufshcd_populate_vreg(), however other regulators may
-not have voltage range settings if undefined in dt-bindings.
+In dt-bindings for ufs, "<name>-max-microamp" property indicates
+current limit and is mandatory if "<name>-fixed-regulator" is not
+defined on a specified regulator.
 
-In this case, both "min_uV" and "max_uV" fields in ufs_vreg struct
-will be zero values and used as new voltage range for voltage
-configuration in different power modes.
+However, in some platforms, regulators without "<name>-fixed-regulator"
+deifned may not need to define their current limit. They may only
+want to define voltage range for proper voltage switching in
+different power modes, especially for vcc, vccq or vccq2.
 
-Currently this may have no harm because if both "min_uV" and "max_uV"
-always keep "zero value", regulator_set_voltage() will always bypass
-such invalid values and return "good" results.
+However, missing "<name>-max-microamp" property in device tree
+will lead to initialization fail, thus above limitation shall be
+resolved to tolerate such kind of regulators.
 
-However improper values shall be fixed to avoid future potential
-bug. Simply bypass voltage configuration if voltage range is not
-defined.
+After resolving this, these regulators without "<name>-max-microamp"
+will have undefined "max current" value, i.e., zero value in "max_uA"
+field in struct ufs_vreg. Because we do bypass current switching
+operation (by regulator_set_load) in case of undefined current limit,
+this patch shall be safe.
 
 Signed-off-by: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 13 ++++++++-----
- 1 file changed, 8 insertions(+), 5 deletions(-)
+ drivers/scsi/ufs/ufshcd-pltfrm.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 8b9a01073d62..4e41fdfd0e53 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -7024,12 +7024,15 @@ static int ufshcd_config_vreg(struct device *dev,
- 	name = vreg->name;
+diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
+index 588079286e8a..2f244d388ca8 100644
+--- a/drivers/scsi/ufs/ufshcd-pltfrm.c
++++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
+@@ -157,11 +157,9 @@ static int ufshcd_populate_vreg(struct device *dev, const char *name,
+ 		goto out;
  
- 	if (regulator_count_voltages(reg) > 0) {
--		min_uV = on ? vreg->min_uV : 0;
--		ret = regulator_set_voltage(reg, min_uV, vreg->max_uV);
--		if (ret) {
--			dev_err(dev, "%s: %s set voltage failed, err=%d\n",
-+		if (vreg->min_uV && vreg->max_uV) {
-+			min_uV = on ? vreg->min_uV : 0;
-+			ret = regulator_set_voltage(reg, min_uV, vreg->max_uV);
-+			if (ret) {
-+				dev_err(dev,
-+					"%s: %s set voltage failed, err=%d\n",
- 					__func__, name, ret);
--			goto out;
-+				goto out;
-+			}
- 		}
+ 	snprintf(prop_name, MAX_PROP_SIZE, "%s-max-microamp", name);
+-	ret = of_property_read_u32(np, prop_name, &vreg->max_uA);
+-	if (ret) {
+-		dev_err(dev, "%s: unable to find %s err %d\n",
+-				__func__, prop_name, ret);
+-		goto out;
++	if (of_property_read_u32(np, prop_name, &vreg->max_uA)) {
++		dev_info(dev, "%s: unable to find %s\n", __func__, prop_name);
++		vreg->max_uA = 0;
+ 	}
  
- 		uA_load = on ? vreg->max_uA : 0;
+ 	if (!strcmp(name, "vcc")) {
 -- 
 2.18.0
