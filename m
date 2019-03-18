@@ -1,69 +1,54 @@
-From: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH v3 4/5] scsi: ufs: Change "<name>-max-microamp" to
- non-mandatory property
-Date: Mon, 18 Mar 2019 10:14:39 +0800
-Message-ID: <1552875280-16196-6-git-send-email-stanley.chu@mediatek.com>
-References: <1552875280-16196-1-git-send-email-stanley.chu@mediatek.com>
+From: "jianchao.wang" <jianchao.w.wang@oracle.com>
+Subject: Re: [BUG] scsi: ses: out of bound accessing in
+ ses_enclosure_data_process
+Date: Mon, 18 Mar 2019 11:13:18 +0800
+Message-ID: <40646609-8298-2d76-2f0c-e732404a23d4@oracle.com>
+References: <78dd3eca-7e8a-72f9-07f9-e2c7cc4569b0@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-In-Reply-To: <1552875280-16196-1-git-send-email-stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-mediatek>,
- <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-mediatek/>
-List-Post: <mailto:linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-List-Help: <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-mediatek>,
- <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=subscribe>
-Sender: "Linux-mediatek" <linux-mediatek-bounces-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-Errors-To: linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
-To: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, avri.altman-Sjgp3cTcYWE@public.gmane.org, alim.akhtar-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org, pedrom.sousa-HKixBCOQz3hWk0Htik3J/w@public.gmane.org
-Cc: marc.w.gonzalez-GANU6spQydw@public.gmane.org, chun-hung.wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, kuohong.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, peter.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <78dd3eca-7e8a-72f9-07f9-e2c7cc4569b0@oracle.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Junxiao Bi <junxiao.bi@oracle.com>, diego.gonzalez@oracle.com
 List-Id: linux-scsi@vger.kernel.org
 
-In dt-bindings for ufs, "<name>-max-microamp" property indicates
-current limit and is mandatory if "<name>-fixed-regulator" is not
-defined on a specified regulator.
+Would anyone please give some suggestions ?
 
-However, in some platforms, regulators without "<name>-fixed-regulator"
-deifned may not need to define their current limit. They may only
-want to define voltage range for proper voltage switching in
-different power modes, especially for vcc, vccq or vccq2.
+It looks like there somethings wrong in the read-in data, 
 
-However, missing "<name>-max-microamp" property in device tree
-will lead to initialization fail, thus above limitation shall be
-resolved to tolerate such kind of regulators.
+	/* skip all the enclosure descriptors */
+	for (i = 0; i < num_enclosures && type_ptr < buf + len; i++) {
+		types += type_ptr[2];
+		type_ptr += type_ptr[3] + 4; ----> here
+	}
+Then the typr_ptr got out of bound of the buffer.
 
-After resolving this, these regulators without "<name>-max-microamp"
-will have undefined "max current" value, i.e., zero value in "max_uA"
-field in struct ufs_vreg. Because we do bypass current switching
-operation (by regulator_set_load) in case of undefined current limit,
-this patch shall be safe.
 
-Signed-off-by: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
----
- drivers/scsi/ufs/ufshcd-pltfrm.c | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
+Thanks
+Jianchao
 
-diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
-index 588079286e8a..2f244d388ca8 100644
---- a/drivers/scsi/ufs/ufshcd-pltfrm.c
-+++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
-@@ -157,11 +157,9 @@ static int ufshcd_populate_vreg(struct device *dev, const char *name,
- 		goto out;
- 
- 	snprintf(prop_name, MAX_PROP_SIZE, "%s-max-microamp", name);
--	ret = of_property_read_u32(np, prop_name, &vreg->max_uA);
--	if (ret) {
--		dev_err(dev, "%s: unable to find %s err %d\n",
--				__func__, prop_name, ret);
--		goto out;
-+	if (of_property_read_u32(np, prop_name, &vreg->max_uA)) {
-+		dev_info(dev, "%s: unable to find %s\n", __func__, prop_name);
-+		vreg->max_uA = 0;
- 	}
- 
- 	if (!strcmp(name, "vcc")) {
--- 
-2.18.0
+On 3/14/19 11:19 AM, jianchao.wang wrote:
+> Dear all
+> 
+> When our customer probe the lpfc devices, they encountered odd memory corruption issues,
+> and we get 'out of bound' access warning at following position after open KASAN
+> 
+> ses_enclosure_data_process
+> 
+> for (i = 0; i < types; i++, type_ptr += 4) {
+>   for (j = 0; j < type_ptr[1]; j++) {
+>                    ^^^^^^^^^^^
+>                    out of bound
+> 
+> With some debug log, I got following,
+> 
+> page1 ffff88042d1aad20 len 32 types 5 type_ptr ffff88042d1aad64
+> 
+> Would anyone please give some suggestions on this ?
+> 
+> Thanks
+> Jianchao
+> 
