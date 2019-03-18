@@ -1,130 +1,88 @@
-From: Colin King <colin.king@canonical.com>
-Subject: [PATCH] scsi: pm8001: clean up various indentation issues
-Date: Sun, 17 Mar 2019 18:15:32 +0000
-Message-ID: <20190317181532.27477-1-colin.king@canonical.com>
+From: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
+Subject: [PATCH v3 3/5] scsi: ufs: Fix regulator load and icc-level
+ configuration
+Date: Mon, 18 Mar 2019 10:14:38 +0800
+Message-ID: <1552875280-16196-5-git-send-email-stanley.chu@mediatek.com>
+References: <1552875280-16196-1-git-send-email-stanley.chu@mediatek.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jack Wang <jinpu.wang@profitbricks.com>, lindar_liu@usish.com, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+In-Reply-To: <1552875280-16196-1-git-send-email-stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-mediatek>,
+ <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-mediatek/>
+List-Post: <mailto:linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+List-Help: <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-mediatek>,
+ <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=subscribe>
+Sender: "Linux-mediatek" <linux-mediatek-bounces-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+Errors-To: linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
+To: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, avri.altman-Sjgp3cTcYWE@public.gmane.org, alim.akhtar-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org, pedrom.sousa-HKixBCOQz3hWk0Htik3J/w@public.gmane.org
+Cc: marc.w.gonzalez-GANU6spQydw@public.gmane.org, chun-hung.wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, kuohong.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, peter.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Colin Ian King <colin.king@canonical.com>
+Currently if a regulator has "<name>-fixed-regulator"
+property in device tree, it will skip current limit configuration.
+This lead to a zero "max_uA" value in struct ufs_vreg.
 
-There are several lines of code where the indentation is
-at an incorrect level; fix these.
+However, "regulator_set_load" operation shall be required
+on those regulators which specifically configured current
+limit, otherwise a zero max_uA value may cause unexpected behavior
+when this regulator is enabled or set as high power mode.
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Similarly, in icc_level configuration flow, icc_level shall be
+updated if specified regulator has also configured current limit,
+otherwise a zero max_uA will lead to wrong icc_level which may
+cause unexpected results after written to device.
+
+Signed-off-by: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
 ---
- drivers/scsi/pm8001/pm8001_hwi.c |  8 +++---
- drivers/scsi/pm8001/pm8001_sas.c |  4 +--
- drivers/scsi/pm8001/pm80xx_hwi.c | 44 ++++++++++++++++----------------
- 3 files changed, 28 insertions(+), 28 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 15 ++++++++++++---
+ 1 file changed, 12 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-index d0bb357034d8..e0fee3d91d23 100644
---- a/drivers/scsi/pm8001/pm8001_hwi.c
-+++ b/drivers/scsi/pm8001/pm8001_hwi.c
-@@ -960,9 +960,9 @@ pm8001_chip_soft_rst(struct pm8001_hba_info *pm8001_ha)
- 		return -1;
- 	}
- 	regVal = pm8001_cr32(pm8001_ha, 2, GPIO_GPIO_0_0UTPUT_CTL_OFFSET);
--		PM8001_INIT_DBG(pm8001_ha,
--				pm8001_printk("GPIO Output Control Register:"
--				" = 0x%x\n", regVal));
-+	PM8001_INIT_DBG(pm8001_ha,
-+			pm8001_printk("GPIO Output Control Register:"
-+			" = 0x%x\n", regVal));
- 	/* set GPIO-0 output control to tri-state */
- 	regVal &= 0xFFFFFFFC;
- 	pm8001_cw32(pm8001_ha, 2, GPIO_GPIO_0_0UTPUT_CTL_OFFSET, regVal);
-@@ -2928,7 +2928,7 @@ mpi_smp_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 		PM8001_IO_DBG(pm8001_ha, pm8001_printk("IO_SUCCESS\n"));
- 		ts->resp = SAS_TASK_COMPLETE;
- 		ts->stat = SAM_STAT_GOOD;
--	if (pm8001_dev)
-+		if (pm8001_dev)
- 			pm8001_dev->running_req--;
- 		break;
- 	case IO_ABORTED:
-diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
-index 084f2fcced0a..88eef3b18e41 100644
---- a/drivers/scsi/pm8001/pm8001_sas.c
-+++ b/drivers/scsi/pm8001/pm8001_sas.c
-@@ -740,8 +740,8 @@ static int pm8001_exec_internal_tmf_task(struct domain_device *dev,
- 		wait_for_completion(&task->slow_task->completion);
- 		if (pm8001_ha->chip_id != chip_8001) {
- 			pm8001_dev->setds_completion = &completion_setstate;
--				PM8001_CHIP_DISP->set_dev_state_req(pm8001_ha,
--					pm8001_dev, 0x01);
-+			PM8001_CHIP_DISP->set_dev_state_req(pm8001_ha,
-+				pm8001_dev, 0x01);
- 			wait_for_completion(&completion_setstate);
- 		}
- 		res = -TMF_RESP_FUNC_FAILED;
-diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-index 63e4f7d34d6c..536d2b4384f8 100644
---- a/drivers/scsi/pm8001/pm80xx_hwi.c
-+++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-@@ -1316,7 +1316,7 @@ pm80xx_chip_soft_rst(struct pm8001_hba_info *pm8001_ha)
- 
- static void pm80xx_hw_chip_rst(struct pm8001_hba_info *pm8001_ha)
- {
--	 u32 i;
-+	u32 i;
- 
- 	PM8001_INIT_DBG(pm8001_ha,
- 		pm8001_printk("chip reset start\n"));
-@@ -4381,27 +4381,27 @@ static int pm80xx_chip_sata_req(struct pm8001_hba_info *pm8001_ha,
- 			sata_cmd.len = cpu_to_le32(task->total_xfer_len);
- 			sata_cmd.esgl = 0;
- 		}
--			/* scsi cdb */
--			sata_cmd.atapi_scsi_cdb[0] =
--				cpu_to_le32(((task->ata_task.atapi_packet[0]) |
--				(task->ata_task.atapi_packet[1] << 8) |
--				(task->ata_task.atapi_packet[2] << 16) |
--				(task->ata_task.atapi_packet[3] << 24)));
--			sata_cmd.atapi_scsi_cdb[1] =
--				cpu_to_le32(((task->ata_task.atapi_packet[4]) |
--				(task->ata_task.atapi_packet[5] << 8) |
--				(task->ata_task.atapi_packet[6] << 16) |
--				(task->ata_task.atapi_packet[7] << 24)));
--			sata_cmd.atapi_scsi_cdb[2] =
--				cpu_to_le32(((task->ata_task.atapi_packet[8]) |
--				(task->ata_task.atapi_packet[9] << 8) |
--				(task->ata_task.atapi_packet[10] << 16) |
--				(task->ata_task.atapi_packet[11] << 24)));
--			sata_cmd.atapi_scsi_cdb[3] =
--				cpu_to_le32(((task->ata_task.atapi_packet[12]) |
--				(task->ata_task.atapi_packet[13] << 8) |
--				(task->ata_task.atapi_packet[14] << 16) |
--				(task->ata_task.atapi_packet[15] << 24)));
-+		/* scsi cdb */
-+		sata_cmd.atapi_scsi_cdb[0] =
-+			cpu_to_le32(((task->ata_task.atapi_packet[0]) |
-+			(task->ata_task.atapi_packet[1] << 8) |
-+			(task->ata_task.atapi_packet[2] << 16) |
-+			(task->ata_task.atapi_packet[3] << 24)));
-+		sata_cmd.atapi_scsi_cdb[1] =
-+			cpu_to_le32(((task->ata_task.atapi_packet[4]) |
-+			(task->ata_task.atapi_packet[5] << 8) |
-+			(task->ata_task.atapi_packet[6] << 16) |
-+			(task->ata_task.atapi_packet[7] << 24)));
-+		sata_cmd.atapi_scsi_cdb[2] =
-+			cpu_to_le32(((task->ata_task.atapi_packet[8]) |
-+			(task->ata_task.atapi_packet[9] << 8) |
-+			(task->ata_task.atapi_packet[10] << 16) |
-+			(task->ata_task.atapi_packet[11] << 24)));
-+		sata_cmd.atapi_scsi_cdb[3] =
-+			cpu_to_le32(((task->ata_task.atapi_packet[12]) |
-+			(task->ata_task.atapi_packet[13] << 8) |
-+			(task->ata_task.atapi_packet[14] << 16) |
-+			(task->ata_task.atapi_packet[15] << 24)));
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 4e41fdfd0e53..9ae3256a705b 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -6279,19 +6279,19 @@ static u32 ufshcd_find_max_sup_active_icc_level(struct ufs_hba *hba,
+ 		goto out;
  	}
  
- 	/* Check for read log for failed drive and return */
+-	if (hba->vreg_info.vcc)
++	if (hba->vreg_info.vcc && hba->vreg_info.vcc->max_uA)
+ 		icc_level = ufshcd_get_max_icc_level(
+ 				hba->vreg_info.vcc->max_uA,
+ 				POWER_DESC_MAX_ACTV_ICC_LVLS - 1,
+ 				&desc_buf[PWR_DESC_ACTIVE_LVLS_VCC_0]);
+ 
+-	if (hba->vreg_info.vccq)
++	if (hba->vreg_info.vccq && hba->vreg_info.vccq->max_uA)
+ 		icc_level = ufshcd_get_max_icc_level(
+ 				hba->vreg_info.vccq->max_uA,
+ 				icc_level,
+ 				&desc_buf[PWR_DESC_ACTIVE_LVLS_VCCQ_0]);
+ 
+-	if (hba->vreg_info.vccq2)
++	if (hba->vreg_info.vccq2 && hba->vreg_info.vccq2->max_uA)
+ 		icc_level = ufshcd_get_max_icc_level(
+ 				hba->vreg_info.vccq2->max_uA,
+ 				icc_level,
+@@ -6989,6 +6989,15 @@ static int ufshcd_config_vreg_load(struct device *dev, struct ufs_vreg *vreg,
+ 	if (!vreg)
+ 		return 0;
+ 
++	/*
++	 * "set_load" operation shall be required on those regulators
++	 * which specifically configured current limitation. Otherwise
++	 * zero max_uA may cause unexpected behavior when regulator is
++	 * enabled or set as high power mode.
++	 */
++	if (!vreg->max_uA)
++		return 0;
++
+ 	ret = regulator_set_load(vreg->reg, ua);
+ 	if (ret < 0) {
+ 		dev_err(dev, "%s: %s set load (ua=%d) failed, err=%d\n",
 -- 
-2.20.1
+2.18.0
