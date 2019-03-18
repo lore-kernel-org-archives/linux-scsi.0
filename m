@@ -1,12 +1,14 @@
 From: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-Subject: scsi: ufs: Fix regulator operations and remove
- "<name>-fixed-regulator" device tree property
-Date: Mon, 18 Mar 2019 10:14:34 +0800
-Message-ID: <1552875280-16196-1-git-send-email-stanley.chu@mediatek.com>
+Subject: [PATCH v3 2/5] scsi: ufs: Avoid configuring undefined voltage range
+ on a regulator
+Date: Mon, 18 Mar 2019 10:14:37 +0800
+Message-ID: <1552875280-16196-4-git-send-email-stanley.chu@mediatek.com>
+References: <1552875280-16196-1-git-send-email-stanley.chu@mediatek.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+In-Reply-To: <1552875280-16196-1-git-send-email-stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-mediatek>,
  <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-mediatek/>
@@ -17,34 +19,54 @@ List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-mediatek>,
 Sender: "Linux-mediatek" <linux-mediatek-bounces-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
 Errors-To: linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
 To: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, avri.altman-Sjgp3cTcYWE@public.gmane.org, alim.akhtar-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org, pedrom.sousa-HKixBCOQz3hWk0Htik3J/w@public.gmane.org
-Cc: marc.w.gonzalez-GANU6spQydw@public.gmane.org, chun-hung.wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, kuohong.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, peter.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Cc: marc.w.gonzalez-GANU6spQydw@public.gmane.org, chun-hung.wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, kuohong.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, peter.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi,
+For regulators used by UFS, vcc, vccq and vccq2 will have voltage range
+initialized by ufshcd_populate_vreg(), however other regulators may
+not have voltage range settings if undefined in dt-bindings.
 
-Sorry please help review V3 instead of previous versions.
-In this version I fix and add more details in commit messages, and add one patch to fix "undefined voltage range" issue as well.
+In this case, both "min_uV" and "max_uV" fields in ufs_vreg struct
+will be zero values and used as new voltage range for voltage
+configuration in different power modes.
 
-This patch series fixes UFS regulator operations, including voltage and current (re-)configuration flow during initialization or different power modes.
+Currently this may have no harm because if both "min_uV" and "max_uV"
+always keep "zero value", regulator_set_voltage() will always bypass
+such invalid values and return "good" results.
 
-Besides, remove "<name>-fixed-regulator" device tree property because it is not necessary anymore after fixes.
+However improper values shall be fixed to avoid future potential
+bug. Simply bypass voltage configuration if voltage range is not
+defined.
 
-V3:
-- Fix and add more details in commit messages.
-- Add one patch "scsi: ufs: Avoid configuring undefined voltage range on a regulator".
+Signed-off-by: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
+---
+ drivers/scsi/ufs/ufshcd.c | 13 ++++++++-----
+ 1 file changed, 8 insertions(+), 5 deletions(-)
 
-V2:
-- Add two patches to prepare to and remove "<name>-fixed-regulator" device tree property.
-- Add more details on patch "scsi: ufs: remove unused min_uA field in struct ufs_vreg" (Marc Gonzalez).
-
-Stanley Chu (5):
-  scsi: ufs: Remove unused min_uA field in struct ufs_vreg
-  scsi: ufs: Avoid configuring undefined voltage range on a regulator
-  scsi: ufs: Fix regulator load and icc-level configuration
-  scsi: ufs: Change "<name>-max-microamp" to non-mandatory property
-  scsi: ufs: Remove "<name>-fixed-regulator" device tree property
-
- drivers/scsi/ufs/ufs.h           |  1 -
- drivers/scsi/ufs/ufshcd-pltfrm.c | 14 +++-----------
- drivers/scsi/ufs/ufshcd.c        | 28 ++++++++++++++++++++--------
- 3 files changed, 23 insertions(+), 20 deletions(-)
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 8b9a01073d62..4e41fdfd0e53 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -7024,12 +7024,15 @@ static int ufshcd_config_vreg(struct device *dev,
+ 	name = vreg->name;
+ 
+ 	if (regulator_count_voltages(reg) > 0) {
+-		min_uV = on ? vreg->min_uV : 0;
+-		ret = regulator_set_voltage(reg, min_uV, vreg->max_uV);
+-		if (ret) {
+-			dev_err(dev, "%s: %s set voltage failed, err=%d\n",
++		if (vreg->min_uV && vreg->max_uV) {
++			min_uV = on ? vreg->min_uV : 0;
++			ret = regulator_set_voltage(reg, min_uV, vreg->max_uV);
++			if (ret) {
++				dev_err(dev,
++					"%s: %s set voltage failed, err=%d\n",
+ 					__func__, name, ret);
+-			goto out;
++				goto out;
++			}
+ 		}
+ 
+ 		uA_load = on ? vreg->max_uA : 0;
+-- 
+2.18.0
