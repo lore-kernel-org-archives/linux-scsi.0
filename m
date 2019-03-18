@@ -1,50 +1,43 @@
-From: "Ewan D. Milne" <emilne@redhat.com>
-Subject: Re: [BUG] scsi: ses: out of bound accessing in
- ses_enclosure_data_process
-Date: Mon, 18 Mar 2019 11:22:35 -0400
-Message-ID: <3b2542225e519a8cf8e329745b0ee2e2464787c7.camel@redhat.com>
-References: <78dd3eca-7e8a-72f9-07f9-e2c7cc4569b0@oracle.com>
-         <yq1k1gwkc6x.fsf@oracle.com>
+From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Subject: [PATCH] scsi: lpfc_nvme: Fix wrong sizeof argument
+Date: Mon, 18 Mar 2019 12:15:05 -0500
+Message-ID: <20190318171505.GA8748@embeddedor>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <yq1k1gwkc6x.fsf@oracle.com>
+Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, "jianchao.wang" <jianchao.w.wang@oracle.com>
-Cc: jejb@linux.ibm.com, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Junxiao Bi <junxiao.bi@oracle.com>, diego.gonzalez@oracle.com
+To: James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Gustavo A. R. Silva" <gustavo@embeddedor.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 2019-03-18 at 01:01 -0400, Martin K. Petersen wrote:
-> Jianchao,
-> 
-> > When our customer probe the lpfc devices, they encountered odd memory
-> > corruption issues, and we get 'out of bound' access warning at
-> > following position after open KASAN
-> 
-> Please provide the output of:
-> 
-> # sg_ses -p 1 /dev/sgN
-> # sg_ses -p 7 /dev/sgN
-> 
-> for the enclosure device in question.
-> 
+sizeof() is currently using the wrong argument when used in a call to
+memset().  Notice that wqe is a pointer to union lpfc_wqe128, not to
+union lpfc_wqe.
 
-The ses driver is allocating kernel buffers based upon the size
-reported by RECEIVE DIAGNOSTIC commands, and is iterating through
-them based on sizes in the individual descriptors.  It appears to
-be vulnerable to incorrect data from the device causing out-of-bounds
-memory access, because the for() test does not prevent the use of
-the pointer in subsequent code, e.g.:
+Fix this by using union lpfc_wqe128 instead of lpfc_wqe as argument
+of sizeof().
 
-        for (i = 0; i < num_enclosures && type_ptr < buf + len; i++) {
-                types += type_ptr[2];
-                type_ptr += type_ptr[3] + 4;
-        }
+Addresses-Coverity-ID: 1443938 ("Wrong sizeof argument")
+Fixes: 5fd1108517d9 ("scsi: lpfc: Streamline NVME Initiator WQE setup")
+Cc: stable@vger.kernel.org
+Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+---
+ drivers/scsi/lpfc/lpfc_nvme.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-        ses_dev->page1_types = type_ptr;
-        ses_dev->page1_num_types = types;
-
-Whether or not this is the current problem, it's wrong.
-
--Ewan
+diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
+index d16ca413110d..3dc0c85c7d50 100644
+--- a/drivers/scsi/lpfc/lpfc_nvme.c
++++ b/drivers/scsi/lpfc/lpfc_nvme.c
+@@ -1981,7 +1981,7 @@ lpfc_get_nvme_buf(struct lpfc_hba *phba, struct lpfc_nodelist *ndlp,
+ 		/* Fill in word 3 / sgl_len during cmd submission */
+ 
+ 		/* Initialize WQE */
+-		memset(wqe, 0, sizeof(union lpfc_wqe));
++		memset(wqe, 0, sizeof(union lpfc_wqe128));
+ 
+ 		if (lpfc_ndlp_check_qdepth(phba, ndlp)) {
+ 			atomic_inc(&ndlp->cmd_pending);
+-- 
+2.21.0
