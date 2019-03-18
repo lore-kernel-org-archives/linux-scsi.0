@@ -1,8 +1,8 @@
 From: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH v3 0/5] scsi: ufs: Fix regulator operations and remove
- "<name>-fixed-regulator" device tree property
-Date: Mon, 18 Mar 2019 10:14:35 +0800
-Message-ID: <1552875280-16196-2-git-send-email-stanley.chu@mediatek.com>
+Subject: [PATCH v3 5/5] scsi: ufs: Remove "<name>-fixed-regulator" device tree
+ property
+Date: Mon, 18 Mar 2019 10:14:40 +0800
+Message-ID: <1552875280-16196-7-git-send-email-stanley.chu@mediatek.com>
 References: <1552875280-16196-1-git-send-email-stanley.chu@mediatek.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -22,34 +22,63 @@ To: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, martin.petersen-QHcLZuEG
 Cc: marc.w.gonzalez-GANU6spQydw@public.gmane.org, chun-hung.wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, kuohong.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, peter.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi,
+"<name>-fixed-regulator" device tree property can be
+safely removed because below things are fixed or resolved,
 
-Sorry please help review V3 instead of previous versions.
-In this version I fix and add more details in commit messages, and add one patch to fix "undefined voltage range" issue as well.
+1. "<name>-max-microamp" becomes optional property: Undefined
+   "<name>-max-microamp" will not cause initialization fail if
+   "<name>-fixed-regulator" is not defined.
 
-This patch series fixes UFS regulator operations, including voltage and current (re-)configuration flow during initialization or different power modes.
+2. Current switching operation (by regulator_set_load) now has rules:
+   Regulators will have undefined current limit if
+   "<name>-fixed-regulator" is not defined. But this is safe because
+   only regulator which has configured current limit from
+   "<name>-max-microamp" property is allowed to change its load.
 
-Besides, remove "<name>-fixed-regulator" device tree property because it is not necessary anymore after fixes.
+Although "<name>-fixed-regulator" is not used in any dt-bindings
+in tree, this patch is still safe for regulators already defined
+"<name>-fixed-regulator", the reason is described as below.
 
-V3:
-- Fix and add more details in commit messages.
-- Add one patch "scsi: ufs: Avoid configuring undefined voltage range on a regulator".
+If a regulator defined "<name>-fixed-regulator" before, the behavior
+after this patch is described as below,
 
-V2:
-- Add two patches to prepare to and remove "<name>-fixed-regulator" device tree property.
-- Add more details on patch "scsi: ufs: remove unused min_uA field in struct ufs_vreg" (Marc Gonzalez).
+1. "<name>-max-microamp":
+   If a regulator defined "<name>-fixed-regulator", it is not necessary
+   to define "<name>-max-microamp" property in device tree and it is
+   expected to have an undefined current limit, i.e., "max_uA" field
+   is zero in struct ufs_vreg. This is exactly the same as patched.
 
-Stanley Chu (5):
-  scsi: ufs: Remove unused min_uA field in struct ufs_vreg
-  scsi: ufs: Avoid configuring undefined voltage range on a regulator
-  scsi: ufs: Fix regulator load and icc-level configuration
-  scsi: ufs: Change "<name>-max-microamp" to non-mandatory property
-  scsi: ufs: Remove "<name>-fixed-regulator" device tree property
+2. "vcc-supply-1p8" or volatge range settings:
+   * For vcc, vccq or vccq2, these three regulators shall not define
+     "<name>-fixed-regulator" because defining it will lead to
+     undefined voltage range and thus voltage switching will be
+     unexpected.
+   * For other regulators with undefined voltage range, voltage range
+     will be still undefined after patched.
 
- drivers/scsi/ufs/ufs.h           |  1 -
- drivers/scsi/ufs/ufshcd-pltfrm.c | 14 +++-----------
- drivers/scsi/ufs/ufshcd.c        | 28 ++++++++++++++++++++--------
- 3 files changed, 23 insertions(+), 20 deletions(-)
+Therefore this patch is safe for all existed regulators with
+"<name>-fixed-regulator" property already defined.
 
+Signed-off-by: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
+---
+ drivers/scsi/ufs/ufshcd-pltfrm.c | 5 -----
+ 1 file changed, 5 deletions(-)
+
+diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
+index 2f244d388ca8..a667e7ba1c8b 100644
+--- a/drivers/scsi/ufs/ufshcd-pltfrm.c
++++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
+@@ -151,11 +151,6 @@ static int ufshcd_populate_vreg(struct device *dev, const char *name,
+ 
+ 	vreg->name = kstrdup(name, GFP_KERNEL);
+ 
+-	/* if fixed regulator no need further initialization */
+-	snprintf(prop_name, MAX_PROP_SIZE, "%s-fixed-regulator", name);
+-	if (of_property_read_bool(np, prop_name))
+-		goto out;
+-
+ 	snprintf(prop_name, MAX_PROP_SIZE, "%s-max-microamp", name);
+ 	if (of_property_read_u32(np, prop_name, &vreg->max_uA)) {
+ 		dev_info(dev, "%s: unable to find %s\n", __func__, prop_name);
 -- 
 2.18.0
