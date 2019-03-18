@@ -1,14 +1,12 @@
 From: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH v3 1/5] scsi: ufs: Remove unused min_uA field in struct
- ufs_vreg
-Date: Mon, 18 Mar 2019 10:14:36 +0800
-Message-ID: <1552875280-16196-3-git-send-email-stanley.chu@mediatek.com>
-References: <1552875280-16196-1-git-send-email-stanley.chu@mediatek.com>
+Subject: scsi: ufs: Fix regulator operations and remove
+ "<name>-fixed-regulator" device tree property
+Date: Mon, 18 Mar 2019 10:14:34 +0800
+Message-ID: <1552875280-16196-1-git-send-email-stanley.chu@mediatek.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-In-Reply-To: <1552875280-16196-1-git-send-email-stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-mediatek>,
  <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-mediatek/>
@@ -19,50 +17,34 @@ List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-mediatek>,
 Sender: "Linux-mediatek" <linux-mediatek-bounces-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
 Errors-To: linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
 To: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, avri.altman-Sjgp3cTcYWE@public.gmane.org, alim.akhtar-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org, pedrom.sousa-HKixBCOQz3hWk0Htik3J/w@public.gmane.org
-Cc: marc.w.gonzalez-GANU6spQydw@public.gmane.org, chun-hung.wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, kuohong.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, peter.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
+Cc: marc.w.gonzalez-GANU6spQydw@public.gmane.org, chun-hung.wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, kuohong.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, peter.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-There are two fields related to regulator current limit in struct
-ufs_vreg: "min_uA" and "max_uA".
+Hi,
 
-"max_uA" is probed by "<name>-max-microamp" property from device
-tree and used for
+Sorry please help review V3 instead of previous versions.
+In this version I fix and add more details in commit messages, and add one patch to fix "undefined voltage range" issue as well.
 
-- regulator_set_load operations, and
-- icc_level configuration in device.
+This patch series fixes UFS regulator operations, including voltage and current (re-)configuration flow during initialization or different power modes.
 
-However "min_uA" field is not used anywhere, thus we can remove it.
+Besides, remove "<name>-fixed-regulator" device tree property because it is not necessary anymore after fixes.
 
-Signed-off-by: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-Reviewed-by: Marc Gonzalez <marc.w.gonzalez-GANU6spQydw@public.gmane.org>
----
- drivers/scsi/ufs/ufs.h           | 1 -
- drivers/scsi/ufs/ufshcd-pltfrm.c | 1 -
- 2 files changed, 2 deletions(-)
+V3:
+- Fix and add more details in commit messages.
+- Add one patch "scsi: ufs: Avoid configuring undefined voltage range on a regulator".
 
-diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
-index 7da7318eb6a6..0f23ac80bacd 100644
---- a/drivers/scsi/ufs/ufs.h
-+++ b/drivers/scsi/ufs/ufs.h
-@@ -516,7 +516,6 @@ struct ufs_vreg {
- 	bool enabled;
- 	int min_uV;
- 	int max_uV;
--	int min_uA;
- 	int max_uA;
- };
- 
-diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
-index 895a9b5ac989..588079286e8a 100644
---- a/drivers/scsi/ufs/ufshcd-pltfrm.c
-+++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
-@@ -164,7 +164,6 @@ static int ufshcd_populate_vreg(struct device *dev, const char *name,
- 		goto out;
- 	}
- 
--	vreg->min_uA = 0;
- 	if (!strcmp(name, "vcc")) {
- 		if (of_property_read_bool(np, "vcc-supply-1p8")) {
- 			vreg->min_uV = UFS_VREG_VCC_1P8_MIN_UV;
--- 
-2.18.0
+V2:
+- Add two patches to prepare to and remove "<name>-fixed-regulator" device tree property.
+- Add more details on patch "scsi: ufs: remove unused min_uA field in struct ufs_vreg" (Marc Gonzalez).
+
+Stanley Chu (5):
+  scsi: ufs: Remove unused min_uA field in struct ufs_vreg
+  scsi: ufs: Avoid configuring undefined voltage range on a regulator
+  scsi: ufs: Fix regulator load and icc-level configuration
+  scsi: ufs: Change "<name>-max-microamp" to non-mandatory property
+  scsi: ufs: Remove "<name>-fixed-regulator" device tree property
+
+ drivers/scsi/ufs/ufs.h           |  1 -
+ drivers/scsi/ufs/ufshcd-pltfrm.c | 14 +++-----------
+ drivers/scsi/ufs/ufshcd.c        | 28 ++++++++++++++++++++--------
+ 3 files changed, 23 insertions(+), 20 deletions(-)
