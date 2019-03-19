@@ -1,48 +1,43 @@
-From: Evan Green <evgreen@chromium.org>
-Subject: Re: [PATCH v3 0/8] phy: qcom-ufs: Enable regulators to be off in suspend
-Date: Tue, 19 Mar 2019 13:04:22 -0700
-Message-ID: <CAE=gft4YPmqd35ySmZw2UG876Lvt8rcz+nNwELXK98PDvHuVeA@mail.gmail.com>
-References: <20190205185902.106085-1-evgreen@chromium.org>
+From: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v6 0/7] scsi: ufs-mediatek: Add UFS support for Mediatek
+ SoC chips
+Date: Tue, 19 Mar 2019 16:57:09 -0400
+Message-ID: <yq1a7hqd1lm.fsf@oracle.com>
+References: <1552712687-20186-1-git-send-email-stanley.chu@mediatek.com>
+ <1552712687-20186-2-git-send-email-stanley.chu@mediatek.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190205185902.106085-1-evgreen@chromium.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andy Gross <andy.gross@linaro.org>, Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Stephen Boyd <swboyd@chromium.org>, Marc Gonzalez <marc.w.gonzalez@free.fr>, Can Guo <cang@codeaurora.org>, Vivek Gautam <vivek.gautam@codeaurora.org>, Douglas Anderson <dianders@chromium.org>, Asutosh Das <asutoshd@codeaurora.org>, Bjorn Andersson <bjorn.andersson@linaro.org>, Arnd Bergmann <arnd@arndb.de>, Grygorii Strashko <grygorii.strashko@ti.com>, Rob Herring <robh+dt@kernel.org>, Vinayak Holikatti <vinholikatti@gmail.com>, Jeffrey Hugo <jhugo@codeaurora.org>, SCSI <linux-scsi@vger.kernel.org>, David Brown <david.brown@linaro.org>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" <devicetree@vger.kernel.org>, liwei <liwei213@huawei.com>, linux-arm-msm <linux-arm-msm@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+In-Reply-To: <1552712687-20186-2-git-send-email-stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
+ (Stanley Chu's message of "Sat, 16 Mar 2019 13:04:40 +0800")
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-mediatek>,
+ <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-mediatek/>
+List-Post: <mailto:linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+List-Help: <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-mediatek>,
+ <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=subscribe>
+Sender: "Linux-mediatek" <linux-mediatek-bounces-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+Errors-To: linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
+To: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
+Cc: mark.rutland-5wv7dgnIgG8@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, robh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, chun-hung.wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, kuohong.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, peter.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, kishon-l0cyMroinI0@public.gmane.org, avri.altman-Sjgp3cTcYWE@public.gmane.org, robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, liwei213-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, alim.akhtar-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org, chunfeng.yun-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, yingjoe.chen-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, pedrom.sousa-HKixBCOQz3hWk0Htik3J/w@public.gmane.org, vivek.gautam-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Feb 5, 2019 at 10:59 AM Evan Green <evgreen@chromium.org> wrote:
->
-...
-> Evan Green (8):
->   dt-bindings: ufs: Add #reset-cells for Qualcomm controllers
->   dt-bindings: phy-qcom-qmp: Add UFS PHY reset
->   dt-bindings: phy: qcom-ufs: Add resets property
->   arm64: dts: sdm845: Add UFS PHY reset
->   arm64: dts: msm8996: Add UFS PHY reset controller
->   scsi: ufs: qcom: Expose the reset controller for PHY
->   phy: qcom: Utilize UFS reset controller
->   phy: ufs-qcom: Refactor all init steps into phy_poweron
->
->  .../devicetree/bindings/phy/qcom-qmp-phy.txt  |   6 +-
->  .../devicetree/bindings/ufs/ufs-qcom.txt      |   5 +-
->  .../devicetree/bindings/ufs/ufshcd-pltfrm.txt |   3 +
->  arch/arm64/boot/dts/qcom/msm8996.dtsi         |   4 +-
->  arch/arm64/boot/dts/qcom/sdm845.dtsi          |   3 +
->  drivers/phy/qualcomm/phy-qcom-qmp.c           | 117 +++++++++---------
->  drivers/phy/qualcomm/phy-qcom-ufs-i.h         |   5 +-
->  drivers/phy/qualcomm/phy-qcom-ufs-qmp-14nm.c  |  25 +---
->  drivers/phy/qualcomm/phy-qcom-ufs-qmp-20nm.c  |  25 +---
->  drivers/phy/qualcomm/phy-qcom-ufs.c           |  57 +++++++--
->  drivers/scsi/ufs/Kconfig                      |   1 +
->  drivers/scsi/ufs/ufs-qcom.c                   | 114 ++++++++++-------
->  drivers/scsi/ufs/ufs-qcom.h                   |   4 +
->  13 files changed, 202 insertions(+), 167 deletions(-)
->
-> --
 
-Hi Kishon,
-A gentle ping here now that rc1 is out. Are you able to take these? I
-can also repost if needed.
--Evan
+Stanley,
+
+> This patch series adds UFS M-PHY and UFS host driver support in
+> MediaTek chipsets.
+>
+> In the meantime, re-factors ufshcd_get_pwr_dev_param in vendors'
+> drivers. This function is for vendors to decide finally agreed
+> attributes for power mode change if vendors define their host
+> capability in struct ufs_dev_params. Because it is using by both
+> ufs-qcom and ufs-hisi and also used in ufs-mediatek in this series,
+> simply re-factor it and then every vendors can reuse it.
+
+Applied to 5.2/scsi-queue, thanks!
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
