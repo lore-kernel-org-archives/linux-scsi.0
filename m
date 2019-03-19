@@ -1,26 +1,28 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 0/2] scsi: qla2xxx: Fix for a formatting issue and typo in qla_bsg.c
-Date: Tue, 19 Mar 2019 17:34:44 -0400
-Message-ID: <yq1ftriblaj.fsf@oracle.com>
-References: <20190312124937.GA13922@machine1>
+Subject: Re: [PATCH -next] scsi: mvumi: Using plain integer as NULL pointer
+Date: Tue, 19 Mar 2019 17:46:48 -0400
+Message-ID: <yq136nibkqf.fsf@oracle.com>
+References: <20190216100130.19396-1-yuehaibing@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190312124937.GA13922@machine1> (Milan P. Gandhi's message of
-        "Tue, 12 Mar 2019 18:19:37 +0530")
+In-Reply-To: <20190216100130.19396-1-yuehaibing@huawei.com> (YueHaibing's
+        message of "Sat, 16 Feb 2019 18:01:30 +0800")
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Milan P. Gandhi" <mgandhi@redhat.com>
-Cc: kernel-janitors@vger.kernel.org, qla2xxx-upstream@qlogic.com, jejb@linux.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, julia.lawall@lip6.fr, dan.carpenter@oracle.com
+To: YueHaibing <yuehaibing@huawei.com>
+Cc: jejb@linux.ibm.com, martin.petersen@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Milan,
+YueHaibing,
 
-> This patch series fixes below two formatting/typos in qla_bsg.c:
-> 1. Corrected alignment at the start of comment section
-> 2. Fixed 'iiDMA' cmd spelling
+> Fix following sparse warning:
+>
+> drivers/scsi/mvumi.c:1797:48: warning: Using plain integer as NULL pointer
+> drivers/scsi/mvumi.c:2143:50: warning: Using plain integer as NULL pointer
+> drivers/scsi/mvumi.c:755:58: warning: Using plain integer as NULL pointer
 
-Applied to 5.2/scsi-queue, thanks.
+Applied to 5.2/scsi-queue.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
