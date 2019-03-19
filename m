@@ -1,34 +1,24 @@
-From: Aditya Pakki <pakki001@umn.edu>
-Subject: [PATCH] scsi: ufs: Fix to check the return value of alloc_ordered_workqueue
-Date: Tue, 19 Mar 2019 12:54:22 -0500
-Message-ID: <20190319175423.13724-1-pakki001@umn.edu>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] scsi/NCR5380: Avoid compiler warning when -Wimplicit-fallthrough is enabled
+Date: Tue, 19 Mar 2019 14:19:16 -0400
+Message-ID: <yq1o966enh7.fsf@oracle.com>
+References: <4e853f171366e040818346def7fb043347670662.1551995342.git.fthain@telegraphics.com.au>
+Mime-Version: 1.0
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4e853f171366e040818346def7fb043347670662.1551995342.git.fthain@telegraphics.com.au>
+        (Finn Thain's message of "Fri, 08 Mar 2019 08:49:02 +1100")
 Sender: linux-kernel-owner@vger.kernel.org
-To: pakki001@umn.edu
-Cc: kjlu@umn.edu, Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, Pedro Sousa <pedrom.sousa@synopsys.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Subhash Jadavani <subhashj@codeaurora.org>, Asutosh Das <asutoshd@codeaurora.org>, Marc Gonzalez <marc.w.gonzalez@free.fr>, Bjorn Andersson <bjorn.andersson@linaro.org>, Ohad Sharabi <ohad.sharabi@wdc.com>, Vivek Gautam <vivek.gautam@codeaurora.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Finn Thain <fthain@telegraphics.com.au>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Gustavo A. R. Silva" <gustavo@embeddedor.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-In ufshcd_init_clk_gating, alloc_ordered_workqueue may fail and return
-NULL. The patch handles error consistent with other invocations in this
-module.
 
-Signed-off-by: Aditya Pakki <pakki001@umn.edu>
----
- drivers/scsi/ufs/ufshcd.c | 2 ++
- 1 file changed, 2 insertions(+)
+Finn,
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index e040f9dd9ff3..701b2da25f09 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -1791,6 +1791,8 @@ static void ufshcd_init_clk_gating(struct ufs_hba *hba)
- 		 hba->host->host_no);
- 	hba->clk_gating.clk_gating_workq = alloc_ordered_workqueue(wq_name,
- 							   WQ_MEM_RECLAIM);
-+	if (!hba->clk_gating.clk_gating_workq)
-+		dev_err(hba->dev, "Failed to allocate work queue\n");
- 
- 	hba->clk_gating.is_enabled = true;
- 
+> Adjust comments accordingly.
+
+Applied to 5.2/scsi-queue.
+
 -- 
-2.17.1
+Martin K. Petersen	Oracle Linux Engineering
