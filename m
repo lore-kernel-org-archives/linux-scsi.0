@@ -1,59 +1,77 @@
-From: Nathan Chancellor <natechancellor@gmail.com>
-Subject: Re: [PATCH] scsi: gdth: Only call dma_free_coherent when buf is not
- NULL in ioc_general
-Date: Wed, 20 Mar 2019 12:12:38 -0700
-Message-ID: <20190320191238.GF28744@archlinux-ryzen>
-References: <20190307231839.3330-1-natechancellor@gmail.com>
+From: Mukesh Ojha <mojha@codeaurora.org>
+Subject: Re: [PATCH -next] scsi: ufs-mediatek: Make some symbols static
+Date: Thu, 21 Mar 2019 01:00:52 +0530
+Message-ID: <d0536ff3-c6aa-ae3d-49cd-1a54a8dce5b5@codeaurora.org>
+References: <20190320142458.20052-1-yuehaibing@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20190307231839.3330-1-natechancellor@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Achim Leubner <achim_leubner@adaptec.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, clang-built-linux@googlegroups.com, Nick Desaulniers <ndesaulniers@google.com>, Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <20190320142458.20052-1-yuehaibing@huawei.com>
+Content-Language: en-US
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Yue Haibing <yuehaibing@huawei.com>, alim.akhtar@samsung.com, avri.altman@wdc.com, pedrom.sousa@synopsys.com, jejb@linux.ibm.com, martin.petersen@oracle.com, matthias.bgg@gmail.com, stanley.chu@mediatek.com
+Cc: linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Mar 07, 2019 at 04:18:39PM -0700, Nathan Chancellor wrote:
-> When building with -Wsometimes-uninitialized, Clang warns:
-> 
-> drivers/scsi/gdth.c:3662:6: warning: variable 'paddr' is used
-> uninitialized whenever 'if' condition is false
-> [-Wsometimes-uninitialized]
-> 
-> Don't attempt to call dma_free_coherent when buf is NULL (meaning that
-> we never called dma_alloc_coherent and initialized paddr), which avoids
-> this warning.
-> 
-> Link: https://github.com/ClangBuiltLinux/linux/issues/402
-> Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
+
+On 3/20/2019 7:54 PM, Yue Haibing wrote:
+> From: YueHaibing <yuehaibing@huawei.com>
+>
+> Fix sparse warnings:
+>
+> drivers/scsi/ufs/ufs-mediatek.c:19:6: warning: symbol 'ufs_mtk_cfg_unipro_cg' was not declared. Should it be static?
+> drivers/scsi/ufs/ufs-mediatek.c:55:5: warning: symbol 'ufs_mtk_bind_mphy' was not declared. Should it be static?
+> drivers/scsi/ufs/ufs-mediatek.c:342:27: warning: symbol 'ufs_mtk_of_match' was not declared. Should it be static?
+>
+> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
 > ---
->  drivers/scsi/gdth.c | 5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
-> index e7f1dd4f3b66..0ca9b4393770 100644
-> --- a/drivers/scsi/gdth.c
-> +++ b/drivers/scsi/gdth.c
-> @@ -3697,8 +3697,9 @@ static int ioc_general(void __user *arg, char *cmnd)
->  
->  	rval = 0;
->  out_free_buf:
-> -	dma_free_coherent(&ha->pdev->dev, gen.data_len + gen.sense_len, buf,
-> -			paddr);
-> +	if (buf)
-> +		dma_free_coherent(&ha->pdev->dev, gen.data_len + gen.sense_len,
-> +				  buf, paddr);
->  	return rval;
->  }
+>   drivers/scsi/ufs/ufs-mediatek.c | 6 +++---
+>   1 file changed, 3 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/scsi/ufs/ufs-mediatek.c b/drivers/scsi/ufs/ufs-mediatek.c
+> index c3b78fc..2fbb450 100644
+> --- a/drivers/scsi/ufs/ufs-mediatek.c
+> +++ b/drivers/scsi/ufs/ufs-mediatek.c
+> @@ -16,7 +16,7 @@
+>   #include "unipro.h"
+>   #include "ufs-mediatek.h"
 >   
-> -- 
-> 2.21.0
-> 
+> -void ufs_mtk_cfg_unipro_cg(struct ufs_hba *hba, bool enable)
+> +static void ufs_mtk_cfg_unipro_cg(struct ufs_hba *hba, bool enable)
+>   {
+>   	u32 tmp;
+>   
+> @@ -52,7 +52,7 @@ void ufs_mtk_cfg_unipro_cg(struct ufs_hba *hba, bool enable)
+>   	}
+>   }
+>   
+> -int ufs_mtk_bind_mphy(struct ufs_hba *hba)
+> +static int ufs_mtk_bind_mphy(struct ufs_hba *hba)
+>   {
+>   	struct ufs_mtk_host *host = ufshcd_get_variant(hba);
+>   	struct device *dev = hba->dev;
+> @@ -339,7 +339,7 @@ static int ufs_mtk_remove(struct platform_device *pdev)
+>   	return 0;
+>   }
+>   
+> -const struct of_device_id ufs_mtk_of_match[] = {
+> +static const struct of_device_id ufs_mtk_of_match[] = {
+>   	{ .compatible = "mediatek,mt8183-ufshci"},
+>   	{},
+>   };
 
-Gentle ping (if there was a response to this, I didn't receive it). I
-know I sent it in the middle of a merge window so I get if it slipped
-through the cracks.
 
-Thanks,
-Nathan
+Reviewed-by: Mukesh Ojha <mojha@codeaurora.org>
+
+
+Cheers,
+Mukesh
