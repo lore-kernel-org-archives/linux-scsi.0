@@ -1,77 +1,65 @@
-From: Mukesh Ojha <mojha@codeaurora.org>
-Subject: Re: [PATCH -next] scsi: ufs-mediatek: Make some symbols static
-Date: Thu, 21 Mar 2019 01:00:52 +0530
-Message-ID: <d0536ff3-c6aa-ae3d-49cd-1a54a8dce5b5@codeaurora.org>
-References: <20190320142458.20052-1-yuehaibing@huawei.com>
+From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Subject: [PATCH] scsi: mptscsih: Mark expected switch fall-throughs
+Date: Wed, 20 Mar 2019 15:31:39 -0500
+Message-ID: <20190320203139.GA18369@embeddedor>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <20190320142458.20052-1-yuehaibing@huawei.com>
-Content-Language: en-US
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Yue Haibing <yuehaibing@huawei.com>, alim.akhtar@samsung.com, avri.altman@wdc.com, pedrom.sousa@synopsys.com, jejb@linux.ibm.com, martin.petersen@oracle.com, matthias.bgg@gmail.com, stanley.chu@mediatek.com
-Cc: linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
+Cc: MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Gustavo A. R. Silva" <gustavo@embeddedor.com>, Kees Cook <keescook@chromium.org>
 List-Id: linux-scsi@vger.kernel.org
 
+In preparation to enabling -Wimplicit-fallthrough, mark switch
+cases where we are expecting to fall through.
 
-On 3/20/2019 7:54 PM, Yue Haibing wrote:
-> From: YueHaibing <yuehaibing@huawei.com>
->
-> Fix sparse warnings:
->
-> drivers/scsi/ufs/ufs-mediatek.c:19:6: warning: symbol 'ufs_mtk_cfg_unipro_cg' was not declared. Should it be static?
-> drivers/scsi/ufs/ufs-mediatek.c:55:5: warning: symbol 'ufs_mtk_bind_mphy' was not declared. Should it be static?
-> drivers/scsi/ufs/ufs-mediatek.c:342:27: warning: symbol 'ufs_mtk_of_match' was not declared. Should it be static?
->
-> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
-> ---
->   drivers/scsi/ufs/ufs-mediatek.c | 6 +++---
->   1 file changed, 3 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/scsi/ufs/ufs-mediatek.c b/drivers/scsi/ufs/ufs-mediatek.c
-> index c3b78fc..2fbb450 100644
-> --- a/drivers/scsi/ufs/ufs-mediatek.c
-> +++ b/drivers/scsi/ufs/ufs-mediatek.c
-> @@ -16,7 +16,7 @@
->   #include "unipro.h"
->   #include "ufs-mediatek.h"
->   
-> -void ufs_mtk_cfg_unipro_cg(struct ufs_hba *hba, bool enable)
-> +static void ufs_mtk_cfg_unipro_cg(struct ufs_hba *hba, bool enable)
->   {
->   	u32 tmp;
->   
-> @@ -52,7 +52,7 @@ void ufs_mtk_cfg_unipro_cg(struct ufs_hba *hba, bool enable)
->   	}
->   }
->   
-> -int ufs_mtk_bind_mphy(struct ufs_hba *hba)
-> +static int ufs_mtk_bind_mphy(struct ufs_hba *hba)
->   {
->   	struct ufs_mtk_host *host = ufshcd_get_variant(hba);
->   	struct device *dev = hba->dev;
-> @@ -339,7 +339,7 @@ static int ufs_mtk_remove(struct platform_device *pdev)
->   	return 0;
->   }
->   
-> -const struct of_device_id ufs_mtk_of_match[] = {
-> +static const struct of_device_id ufs_mtk_of_match[] = {
->   	{ .compatible = "mediatek,mt8183-ufshci"},
->   	{},
->   };
+This patch fixes the following warnings:
 
+drivers/message/fusion/mptscsih.c: In function ‘mptscsih_io_done’:
+drivers/message/fusion/mptscsih.c:741:7: warning: this statement may fall through [-Wimplicit-fallthrough=]
+    if ( ioc->bus_type == SAS ) {
+       ^
+drivers/message/fusion/mptscsih.c:790:3: note: here
+   case MPI_IOCSTATUS_SCSI_TASK_TERMINATED: /* 0x0048 */
+   ^~~~
+drivers/message/fusion/mptscsih.c:884:4: warning: this statement may fall through [-Wimplicit-fallthrough=]
+    scsi_set_resid(sc, 0);
+    ^~~~~~~~~~~~~~~~~~~~~
+drivers/message/fusion/mptscsih.c:885:3: note: here
+   case MPI_IOCSTATUS_SCSI_RECOVERED_ERROR: /* 0x0040 */
+   ^~~~
 
-Reviewed-by: Mukesh Ojha <mojha@codeaurora.org>
+Warning level 3 was used: -Wimplicit-fallthrough=3
 
+This patch is part of the ongoing efforts to enable
+-Wimplicit-fallthrough.
 
-Cheers,
-Mukesh
+Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+---
+ drivers/message/fusion/mptscsih.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/message/fusion/mptscsih.c b/drivers/message/fusion/mptscsih.c
+index 587b5daf74b4..f0737c57ed5f 100644
+--- a/drivers/message/fusion/mptscsih.c
++++ b/drivers/message/fusion/mptscsih.c
+@@ -786,6 +786,7 @@ mptscsih_io_done(MPT_ADAPTER *ioc, MPT_FRAME_HDR *mf, MPT_FRAME_HDR *mr)
+ 			/*
+ 			 * Allow non-SAS & non-NEXUS_LOSS to drop into below code
+ 			 */
++			/* Fall through */
+ 
+ 		case MPI_IOCSTATUS_SCSI_TASK_TERMINATED:	/* 0x0048 */
+ 			/* Linux handles an unsolicited DID_RESET better
+@@ -882,6 +883,7 @@ mptscsih_io_done(MPT_ADAPTER *ioc, MPT_FRAME_HDR *mf, MPT_FRAME_HDR *mr)
+ 
+ 		case MPI_IOCSTATUS_SCSI_DATA_OVERRUN:		/* 0x0044 */
+ 			scsi_set_resid(sc, 0);
++			/* Fall through */
+ 		case MPI_IOCSTATUS_SCSI_RECOVERED_ERROR:	/* 0x0040 */
+ 		case MPI_IOCSTATUS_SUCCESS:			/* 0x0000 */
+ 			sc->result = (DID_OK << 16) | scsi_status;
+-- 
+2.21.0
