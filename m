@@ -1,59 +1,98 @@
 From: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
-Subject: [PATCH 1/2] ibmvscsi: Protect ibmvscsi_head from concurrent modificaiton
-Date: Wed, 20 Mar 2019 13:41:50 -0500
-Message-ID: <20190320184151.31321-1-tyreld@linux.vnet.ibm.com>
+Subject: [PATCH 2/2] ibmvscsi: Fix empty event pool access during host removal
+Date: Wed, 20 Mar 2019 13:41:51 -0500
+Message-ID: <20190320184151.31321-2-tyreld@linux.vnet.ibm.com>
+References: <20190320184151.31321-1-tyreld@linux.vnet.ibm.com>
 Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20190320184151.31321-1-tyreld@linux.vnet.ibm.com>
 Sender: stable-owner@vger.kernel.org
 To: james.bottomley@hansenpartnership.com
 Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, brking@linux.vnet.ibm.com, Tyrel Datwyler <tyreld@linux.vnet.ibm.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-For each ibmvscsi host created during a probe or destroyed during a
-remove we either add or remove that host to/from the global ibmvscsi_head
-list. This runs the risk of concurrent modification.
+The event pool used for queueing commands is destroyed fairly early in
+the ibmvscsi_remove() code path. Since, this happens prior to the call
+so scsi_remove_host() it is possible for further calls to queuecommand
+to be processed which manifest as a panic due to a NULL pointer
+dereference as seen here:
 
-This patch adds a simple spinlock around the list modification calls to
-prevent concurrent updates as is done similarly in the ibmvfc driver and
-ipr driver.
+PANIC: "Unable to handle kernel paging request for data at address
+0x00000000"
 
-Fixes: 32d6e4b6e4ea ("scsi: ibmvscsi: add vscsi hosts to global list_head")
-Cc: <stable@vger.kernel.org> # v4.10+
+Context process backtrace:
+
+DSISR: 0000000042000000 ????Syscall Result: 0000000000000000
+4 [c000000002cb3820] memcpy_power7 at c000000000064204
+[Link Register] [c000000002cb3820] ibmvscsi_send_srp_event at d000000003ed14a4
+5 [c000000002cb3920] ibmvscsi_send_srp_event at d000000003ed14a4 [ibmvscsi] ?(unreliable)
+6 [c000000002cb39c0] ibmvscsi_queuecommand at d000000003ed2388 [ibmvscsi]
+7 [c000000002cb3a70] scsi_dispatch_cmd at d00000000395c2d8 [scsi_mod]
+8 [c000000002cb3af0] scsi_request_fn at d00000000395ef88 [scsi_mod]
+9 [c000000002cb3be0] __blk_run_queue at c000000000429860
+10 [c000000002cb3c10] blk_delay_work at c00000000042a0ec
+11 [c000000002cb3c40] process_one_work at c0000000000dac30
+12 [c000000002cb3cd0] worker_thread at c0000000000db110
+13 [c000000002cb3d80] kthread at c0000000000e3378
+14 [c000000002cb3e30] ret_from_kernel_thread at c00000000000982c
+
+The kernel buffer log is overfilled with this log:
+
+[11261.952732] ibmvscsi: found no event struct in pool!
+
+This patch reorders the operations during host teardown. Start by
+calling the SRP transport and Scsi_Host remove functions to flush any
+outstanding work and set the host offline. LLDD teardown follows
+including destruction of the event pool, freeing the Command Response
+Queue (CRQ), and unmapping any persistent buffers. The event pool
+destruction is protected by the scsi_host lock, and the pool is purged
+prior of any requests for which we never received a response. Finally,
+move the removal of the scsi host from our global list to the end so
+that the host is easily locatable for debugging purposes during
+teardown.
+
+Cc: <stable@vger.kernel.org> # v2.6.12+
 Signed-off-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
 ---
- drivers/scsi/ibmvscsi/ibmvscsi.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/scsi/ibmvscsi/ibmvscsi.c | 22 ++++++++++++++++------
+ 1 file changed, 16 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
-index 1135e74646e2..2b22969f3f63 100644
+index 2b22969f3f63..8cec5230fe31 100644
 --- a/drivers/scsi/ibmvscsi/ibmvscsi.c
 +++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
-@@ -96,6 +96,7 @@ static int client_reserve = 1;
- static char partition_name[96] = "UNKNOWN";
- static unsigned int partition_number = -1;
- static LIST_HEAD(ibmvscsi_head);
-+static DEFINE_SPINLOCK(ibmvscsi_driver_lock);
- 
- static struct scsi_transport_template *ibmvscsi_transport_template;
- 
-@@ -2270,7 +2271,9 @@ static int ibmvscsi_probe(struct vio_dev *vdev, const struct vio_device_id *id)
- 	}
- 
- 	dev_set_drvdata(&vdev->dev, hostdata);
-+	spin_lock(&ibmvscsi_driver_lock);
- 	list_add_tail(&hostdata->host_list, &ibmvscsi_head);
-+	spin_unlock(&ibmvscsi_driver_lock);
- 	return 0;
- 
-       add_srp_port_failed:
-@@ -2292,7 +2295,9 @@ static int ibmvscsi_probe(struct vio_dev *vdev, const struct vio_device_id *id)
+@@ -2295,17 +2295,27 @@ static int ibmvscsi_probe(struct vio_dev *vdev, const struct vio_device_id *id)
  static int ibmvscsi_remove(struct vio_dev *vdev)
  {
  	struct ibmvscsi_host_data *hostdata = dev_get_drvdata(&vdev->dev);
-+	spin_lock(&ibmvscsi_driver_lock);
- 	list_del(&hostdata->host_list);
-+	spin_unlock(&ibmvscsi_driver_lock);
- 	unmap_persist_bufs(hostdata);
+-	spin_lock(&ibmvscsi_driver_lock);
+-	list_del(&hostdata->host_list);
+-	spin_unlock(&ibmvscsi_driver_lock);
+-	unmap_persist_bufs(hostdata);
++	unsigned long flags;
++
++	srp_remove_host(hostdata->host);
++	scsi_remove_host(hostdata->host);
++
++	purge_requests(hostdata, DID_ERROR);
++
++	spin_lock_irqsave(hostdata->host->host_lock, flags);
  	release_event_pool(&hostdata->pool, hostdata);
++	spin_unlock_irqrestore(hostdata->host->host_lock, flags);
++
  	ibmvscsi_release_crq_queue(&hostdata->queue, hostdata,
+ 					max_events);
+ 
+ 	kthread_stop(hostdata->work_thread);
+-	srp_remove_host(hostdata->host);
+-	scsi_remove_host(hostdata->host);
++	unmap_persist_bufs(hostdata);
++
++	spin_lock(&ibmvscsi_driver_lock);
++	list_del(&hostdata->host_list);
++	spin_unlock(&ibmvscsi_driver_lock);
++
+ 	scsi_host_put(hostdata->host);
+ 
+ 	return 0;
 -- 
 2.12.3
