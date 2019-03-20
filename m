@@ -1,7 +1,7 @@
 From: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
-Subject: [PATCH 2/4] ibmvfc: Add failed PRLI to cmd_status lookup array
-Date: Wed, 20 Mar 2019 14:56:52 -0500
-Message-ID: <20190320195654.4364-2-tyreld@linux.vnet.ibm.com>
+Subject: [PATCH 3/4] ibmvfc: Byte swap status and error codes when logging
+Date: Wed, 20 Mar 2019 14:56:53 -0500
+Message-ID: <20190320195654.4364-3-tyreld@linux.vnet.ibm.com>
 References: <20190320195654.4364-1-tyreld@linux.vnet.ibm.com>
 Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
 In-Reply-To: <20190320195654.4364-1-tyreld@linux.vnet.ibm.com>
@@ -19,27 +19,110 @@ To: james.bottomley@hansenpartnership.com
 Cc: brking@linux.vnet.ibm.com, linuxppc-dev@lists.ozlabs.org, linux-scsi@vger.kernel.org, martin.petersen@oracle.com, Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-The VIOS uses the SCSI_ERROR class to report PRLI failures. These
-errors are indicated with the combination of a IBMVFC_FC_SCSI_ERROR
-return status and 0x8000 error code. Add these codes to cmd_status[]
-with appropriate human readable error message.
+Status and error codes are returned in big endian from the VIOS. The
+values are translated into a human readable format when logged, but
+the values are also logged. This patch byte swaps those values so
+that they are consistent between BE and LE platforms.
 
 Signed-off-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
 ---
- drivers/scsi/ibmvscsi/ibmvfc.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/scsi/ibmvscsi/ibmvfc.c | 28 +++++++++++++++-------------
+ 1 file changed, 15 insertions(+), 13 deletions(-)
 
 diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
-index c3ce27039552..18ee2a8ec3d5 100644
+index 18ee2a8ec3d5..33dda4d32f65 100644
 --- a/drivers/scsi/ibmvscsi/ibmvfc.c
 +++ b/drivers/scsi/ibmvscsi/ibmvfc.c
-@@ -139,6 +139,7 @@ static const struct {
- 	{ IBMVFC_FC_FAILURE, IBMVFC_VENDOR_SPECIFIC, DID_ERROR, 1, 1, "vendor specific" },
+@@ -1497,7 +1497,7 @@ static void ibmvfc_log_error(struct ibmvfc_event *evt)
  
- 	{ IBMVFC_FC_SCSI_ERROR, 0, DID_OK, 1, 0, "SCSI error" },
-+	{ IBMVFC_FC_SCSI_ERROR, IBMVFC_COMMAND_FAILED, DID_ERROR, 0, 1, "PRLI to device failed." },
- };
+ 	scmd_printk(KERN_ERR, cmnd, "Command (%02X) : %s (%x:%x) "
+ 		    "flags: %x fcp_rsp: %x, resid=%d, scsi_status: %x\n",
+-		    cmnd->cmnd[0], err, vfc_cmd->status, vfc_cmd->error,
++		    cmnd->cmnd[0], err, be16_to_cpu(vfc_cmd->status), be16_to_cpu(vfc_cmd->error),
+ 		    rsp->flags, rsp_code, scsi_get_resid(cmnd), rsp->scsi_status);
+ }
  
- static void ibmvfc_npiv_login(struct ibmvfc_host *);
+@@ -2023,7 +2023,7 @@ static int ibmvfc_reset_device(struct scsi_device *sdev, int type, char *desc)
+ 		sdev_printk(KERN_ERR, sdev, "%s reset failed: %s (%x:%x) "
+ 			    "flags: %x fcp_rsp: %x, scsi_status: %x\n", desc,
+ 			    ibmvfc_get_cmd_error(be16_to_cpu(rsp_iu.cmd.status), be16_to_cpu(rsp_iu.cmd.error)),
+-			    rsp_iu.cmd.status, rsp_iu.cmd.error, fc_rsp->flags, rsp_code,
++			    be16_to_cpu(rsp_iu.cmd.status), be16_to_cpu(rsp_iu.cmd.error), fc_rsp->flags, rsp_code,
+ 			    fc_rsp->scsi_status);
+ 		rsp_rc = -EIO;
+ 	} else
+@@ -2382,7 +2382,7 @@ static int ibmvfc_abort_task_set(struct scsi_device *sdev)
+ 		sdev_printk(KERN_ERR, sdev, "Abort failed: %s (%x:%x) "
+ 			    "flags: %x fcp_rsp: %x, scsi_status: %x\n",
+ 			    ibmvfc_get_cmd_error(be16_to_cpu(rsp_iu.cmd.status), be16_to_cpu(rsp_iu.cmd.error)),
+-			    rsp_iu.cmd.status, rsp_iu.cmd.error, fc_rsp->flags, rsp_code,
++			    be16_to_cpu(rsp_iu.cmd.status), be16_to_cpu(rsp_iu.cmd.error), fc_rsp->flags, rsp_code,
+ 			    fc_rsp->scsi_status);
+ 		rsp_rc = -EIO;
+ 	} else
+@@ -3349,7 +3349,7 @@ static void ibmvfc_tgt_prli_done(struct ibmvfc_event *evt)
+ 
+ 		tgt_log(tgt, level, "Process Login failed: %s (%x:%x) rc=0x%02X\n",
+ 			ibmvfc_get_cmd_error(be16_to_cpu(rsp->status), be16_to_cpu(rsp->error)),
+-			rsp->status, rsp->error, status);
++			be16_to_cpu(rsp->status), be16_to_cpu(rsp->error), status);
+ 		break;
+ 	}
+ 
+@@ -3447,9 +3447,10 @@ static void ibmvfc_tgt_plogi_done(struct ibmvfc_event *evt)
+ 			ibmvfc_set_tgt_action(tgt, IBMVFC_TGT_ACTION_DEL_RPORT);
+ 
+ 		tgt_log(tgt, level, "Port Login failed: %s (%x:%x) %s (%x) %s (%x) rc=0x%02X\n",
+-			ibmvfc_get_cmd_error(be16_to_cpu(rsp->status), be16_to_cpu(rsp->error)), rsp->status, rsp->error,
+-			ibmvfc_get_fc_type(be16_to_cpu(rsp->fc_type)), rsp->fc_type,
+-			ibmvfc_get_ls_explain(be16_to_cpu(rsp->fc_explain)), rsp->fc_explain, status);
++			ibmvfc_get_cmd_error(be16_to_cpu(rsp->status), be16_to_cpu(rsp->error)),
++					     be16_to_cpu(rsp->status), be16_to_cpu(rsp->error),
++			ibmvfc_get_fc_type(be16_to_cpu(rsp->fc_type)), be16_to_cpu(rsp->fc_type),
++			ibmvfc_get_ls_explain(be16_to_cpu(rsp->fc_explain)), be16_to_cpu(rsp->fc_explain), status);
+ 		break;
+ 	}
+ 
+@@ -3620,7 +3621,7 @@ static void ibmvfc_tgt_adisc_done(struct ibmvfc_event *evt)
+ 		fc_explain = (be32_to_cpu(mad->fc_iu.response[1]) & 0x0000ff00) >> 8;
+ 		tgt_info(tgt, "ADISC failed: %s (%x:%x) %s (%x) %s (%x) rc=0x%02X\n",
+ 			 ibmvfc_get_cmd_error(be16_to_cpu(mad->iu.status), be16_to_cpu(mad->iu.error)),
+-			 mad->iu.status, mad->iu.error,
++			 be16_to_cpu(mad->iu.status), be16_to_cpu(mad->iu.error),
+ 			 ibmvfc_get_fc_type(fc_reason), fc_reason,
+ 			 ibmvfc_get_ls_explain(fc_explain), fc_explain, status);
+ 		break;
+@@ -3832,9 +3833,10 @@ static void ibmvfc_tgt_query_target_done(struct ibmvfc_event *evt)
+ 
+ 		tgt_log(tgt, level, "Query Target failed: %s (%x:%x) %s (%x) %s (%x) rc=0x%02X\n",
+ 			ibmvfc_get_cmd_error(be16_to_cpu(rsp->status), be16_to_cpu(rsp->error)),
+-			rsp->status, rsp->error, ibmvfc_get_fc_type(be16_to_cpu(rsp->fc_type)),
+-			rsp->fc_type, ibmvfc_get_gs_explain(be16_to_cpu(rsp->fc_explain)),
+-			rsp->fc_explain, status);
++			be16_to_cpu(rsp->status), be16_to_cpu(rsp->error),
++			ibmvfc_get_fc_type(be16_to_cpu(rsp->fc_type)), be16_to_cpu(rsp->fc_type),
++			ibmvfc_get_gs_explain(be16_to_cpu(rsp->fc_explain)), be16_to_cpu(rsp->fc_explain),
++			status);
+ 		break;
+ 	}
+ 
+@@ -3960,7 +3962,7 @@ static void ibmvfc_discover_targets_done(struct ibmvfc_event *evt)
+ 		level += ibmvfc_retry_host_init(vhost);
+ 		ibmvfc_log(vhost, level, "Discover Targets failed: %s (%x:%x)\n",
+ 			   ibmvfc_get_cmd_error(be16_to_cpu(rsp->status), be16_to_cpu(rsp->error)),
+-			   rsp->status, rsp->error);
++			   be16_to_cpu(rsp->status), be16_to_cpu(rsp->error));
+ 		break;
+ 	case IBMVFC_MAD_DRIVER_FAILED:
+ 		break;
+@@ -4025,7 +4027,7 @@ static void ibmvfc_npiv_login_done(struct ibmvfc_event *evt)
+ 			ibmvfc_link_down(vhost, IBMVFC_LINK_DEAD);
+ 		ibmvfc_log(vhost, level, "NPIV Login failed: %s (%x:%x)\n",
+ 			   ibmvfc_get_cmd_error(be16_to_cpu(rsp->status), be16_to_cpu(rsp->error)),
+-						rsp->status, rsp->error);
++						be16_to_cpu(rsp->status), be16_to_cpu(rsp->error));
+ 		ibmvfc_free_event(evt);
+ 		return;
+ 	case IBMVFC_MAD_CRQ_ERROR:
 -- 
 2.12.3
