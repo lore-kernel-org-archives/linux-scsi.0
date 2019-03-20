@@ -1,74 +1,58 @@
-From: Rajendra Nayak <rnayak@codeaurora.org>
-Subject: [RFC v2 11/11] arm64: dts: sdm845: Add DSI and MDP OPP tables and
- power-domains
-Date: Wed, 20 Mar 2019 15:19:18 +0530
-Message-ID: <20190320094918.20234-12-rnayak@codeaurora.org>
-References: <20190320094918.20234-1-rnayak@codeaurora.org>
+From: John Garry <john.garry@huawei.com>
+Subject: [PATCH] scsi: hisi_sas: Add softreset in hisi_sas_I_T_nexus_reset()
+Date: Wed, 20 Mar 2019 18:21:34 +0800
+Message-ID: <1553077294-129863-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <dri-devel-bounces@lists.freedesktop.org>
-In-Reply-To: <20190320094918.20234-1-rnayak@codeaurora.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
-List-Post: <mailto:dri-devel@lists.freedesktop.org>
-List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: dri-devel-bounces@lists.freedesktop.org
-Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
-To: linux-kernel@vger.kernel.org
-Cc: ulf.hansson@linaro.org, Rajendra Nayak <rnayak@codeaurora.org>, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, linux-arm-msm@vger.kernel.org, rafael@kernel.org, dianders@chromium.org, dri-devel@lists.freedesktop.org, linux-spi@vger.kernel.org, linux-serial@vger.kernel.org, viresh.kumar@linaro.org, swboyd@chromium.org
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linuxarm@huawei.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Luo Jiaxing <luojiaxing@huawei.com>, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-QWRkIHRoZSBPUFAgdGFibGVzIGZvciBEU0kgYW5kIE1EUCBiYXNlZCBvbiB0aGUgcGVyZiBzdGF0
-ZS9jbGsKcmVxdWlyZW1lbnRzLCBhbmQgYWRkIHRoZSBwb3dlci1kb21haW5zIHByb3BlcnR5IHRv
-IHNwZWNpZnkgdGhlCnNjYWxhYmxlIHBvd2VyIGRvbWFpbi4KClNpZ25lZC1vZmYtYnk6IFJhamVu
-ZHJhIE5heWFrIDxybmF5YWtAY29kZWF1cm9yYS5vcmc+Ci0tLQogYXJjaC9hcm02NC9ib290L2R0
-cy9xY29tL3NkbTg0NS5kdHNpIHwgNTkgKysrKysrKysrKysrKysrKysrKysrKysrKysrKwogMSBm
-aWxlIGNoYW5nZWQsIDU5IGluc2VydGlvbnMoKykKCmRpZmYgLS1naXQgYS9hcmNoL2FybTY0L2Jv
-b3QvZHRzL3Fjb20vc2RtODQ1LmR0c2kgYi9hcmNoL2FybTY0L2Jvb3QvZHRzL3Fjb20vc2RtODQ1
-LmR0c2kKaW5kZXggYTNhZjRhMTc1N2I0Li42NzU5NTRmZGUzOTEgMTAwNjQ0Ci0tLSBhL2FyY2gv
-YXJtNjQvYm9vdC9kdHMvcWNvbS9zZG04NDUuZHRzaQorKysgYi9hcmNoL2FybTY0L2Jvb3QvZHRz
-L3Fjb20vc2RtODQ1LmR0c2kKQEAgLTE4NTcsNiArMTg1Nyw1OSBAQAogCQkJI3Jlc2V0LWNlbGxz
-ID0gPDE+OwogCQl9OwogCisJCW1kcF9vcHBfdGFibGU6IG1kcC1vcHAtdGFibGUgeworCQkJY29t
-cGF0aWJsZSA9ICJvcGVyYXRpbmctcG9pbnRzLXYyIjsKKworCQkJb3BwLTE5MjAwMDAwIHsKKwkJ
-CQlvcHAtaHogPSAvYml0cy8gNjQgPDE5MjAwMDAwPjsKKwkJCQlyZXF1aXJlZC1vcHBzID0gPCZy
-cG1ocGRfb3BwX21pbl9zdnM+OworCQkJfTsKKworCQkJb3BwLTE3MTQyODU3MSB7CisJCQkJb3Bw
-LWh6ID0gL2JpdHMvIDY0IDwxNzE0Mjg1NzE+OworCQkJCXJlcXVpcmVkLW9wcHMgPSA8JnJwbWhw
-ZF9vcHBfbG93X3N2cz47CisJCQl9OworCisJCQlvcHAtMzQ0MDAwMDAwIHsKKwkJCQlvcHAtaHog
-PSAvYml0cy8gNjQgPDM0NDAwMDAwMD47CisJCQkJcmVxdWlyZWQtb3BwcyA9IDwmcnBtaHBkX29w
-cF9zdnNfbDE+OworCQkJfTsKKworCQkJb3BwLTQzMDAwMDAwMCB7CisJCQkJb3BwLWh6ID0gL2Jp
-dHMvIDY0IDw0MzAwMDAwMDA+OworCQkJCXJlcXVpcmVkLW9wcHMgPSA8JnJwbWhwZF9vcHBfbm9t
-PjsKKwkJCX07CisJCX07CisKKwkJZHNpX29wcF90YWJsZTogZHNpLW9wcC10YWJsZSB7CisJCQlj
-b21wYXRpYmxlID0gIm9wZXJhdGluZy1wb2ludHMtdjIiOworCisJCQlvcHAtMTkyMDAwMDAgewor
-CQkJCW9wcC1oeiA9IC9iaXRzLyA2NCA8MTkyMDAwMDA+OworCQkJCXJlcXVpcmVkLW9wcHMgPSA8
-JnJwbWhwZF9vcHBfbWluX3N2cz47CisJCQl9OworCisJCQlvcHAtMTgwMDAwMDAwIHsKKwkJCQlv
-cHAtaHogPSAvYml0cy8gNjQgPDE4MDAwMDAwMD47CisJCQkJcmVxdWlyZWQtb3BwcyA9IDwmcnBt
-aHBkX29wcF9sb3dfc3ZzPjsKKwkJCX07CisKKwkJCW9wcC0yNzUwMDAwMDAgeworCQkJCW9wcC1o
-eiA9IC9iaXRzLyA2NCA8Mjc1MDAwMDAwPjsKKwkJCQlyZXF1aXJlZC1vcHBzID0gPCZycG1ocGRf
-b3BwX3N2cz47CisJCQl9OworCisJCQlvcHAtMzI4NTgwMDAwIHsKKwkJCQlvcHAtaHogPSAvYml0
-cy8gNjQgPDMyODU4MDAwMD47CisJCQkJcmVxdWlyZWQtb3BwcyA9IDwmcnBtaHBkX29wcF9zdnNf
-bDE+OworCQkJfTsKKworCQkJb3BwLTM1ODAwMDAwMCB7CisJCQkJb3BwLWh6ID0gL2JpdHMvIDY0
-IDwzNTgwMDAwMDA+OworCQkJCXJlcXVpcmVkLW9wcHMgPSA8JnJwbWhwZF9vcHBfbm9tPjsKKwkJ
-CX07CisJCX07CisKIAkJbWRzczogbWRzc0BhZTAwMDAwIHsKIAkJCWNvbXBhdGlibGUgPSAicWNv
-bSxzZG04NDUtbWRzcyI7CiAJCQlyZWcgPSA8MCAweDBhZTAwMDAwIDAgMHgxMDAwPjsKQEAgLTE5
-MDEsNiArMTk1NCw4IEBACiAJCQkJCQkgIDwmZGlzcGNjIERJU1BfQ0NfTURTU19WU1lOQ19DTEs+
-OwogCQkJCWFzc2lnbmVkLWNsb2NrLXJhdGVzID0gPDMwMDAwMDAwMD4sCiAJCQkJCQkgICAgICAg
-PDE5MjAwMDAwPjsKKwkJCQlvcGVyYXRpbmctcG9pbnRzLXYyID0gPCZtZHBfb3BwX3RhYmxlPjsK
-KwkJCQlwb3dlci1kb21haW5zID0gPCZycG1ocGQgU0RNODQ1X0NYPjsKIAogCQkJCWludGVycnVw
-dC1wYXJlbnQgPSA8Jm1kc3M+OwogCQkJCWludGVycnVwdHMgPSA8MCBJUlFfVFlQRV9MRVZFTF9I
-SUdIPjsKQEAgLTE5NDcsNiArMjAwMiw4IEBACiAJCQkJCSAgICAgICJjb3JlIiwKIAkJCQkJICAg
-ICAgImlmYWNlIiwKIAkJCQkJICAgICAgImJ1cyI7CisJCQkJb3BlcmF0aW5nLXBvaW50cy12MiA9
-IDwmZHNpX29wcF90YWJsZT47CisJCQkJcG93ZXItZG9tYWlucyA9IDwmcnBtaHBkIFNETTg0NV9D
-WD47CiAKIAkJCQlwaHlzID0gPCZkc2kwX3BoeT47CiAJCQkJcGh5LW5hbWVzID0gImRzaSI7CkBA
-IC0yMDEzLDYgKzIwNzAsOCBAQAogCQkJCQkgICAgICAiY29yZSIsCiAJCQkJCSAgICAgICJpZmFj
-ZSIsCiAJCQkJCSAgICAgICJidXMiOworCQkJCW9wZXJhdGluZy1wb2ludHMtdjIgPSA8JmRzaV9v
-cHBfdGFibGU+OworCQkJCXBvd2VyLWRvbWFpbnMgPSA8JnJwbWhwZCBTRE04NDVfQ1g+OwogCiAJ
-CQkJcGh5cyA9IDwmZHNpMV9waHk+OwogCQkJCXBoeS1uYW1lcyA9ICJkc2kiOwotLSAKUVVBTENP
-TU0gSU5ESUEsIG9uIGJlaGFsZiBvZiBRdWFsY29tbSBJbm5vdmF0aW9uIENlbnRlciwgSW5jLiBp
-cyBhIG1lbWJlcgpvZiBDb2RlIEF1cm9yYSBGb3J1bSwgaG9zdGVkIGJ5IFRoZSBMaW51eCBGb3Vu
-ZGF0aW9uCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpk
-cmktZGV2ZWwgbWFpbGluZyBsaXN0CmRyaS1kZXZlbEBsaXN0cy5mcmVlZGVza3RvcC5vcmcKaHR0
-cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0aW5mby9kcmktZGV2ZWw=
+From: Luo Jiaxing <luojiaxing@huawei.com>
+
+We found out that for v2 hw, a SATA disk can not be written to after
+the system comes up.
+
+In commit ffb1c820b8b6 ("scsi: hisi_sas: remove the check of sas_dev
+status in hisi_sas_I_T_nexus_reset()"), we introduced a path where we may
+issue an internal abort for a SATA device, but without following it with a
+softreset.
+
+We need to always follow an internal abort with a software reset, as per HW
+programming flow, so add this.
+
+Fixes: ffb1c820b8b6 ("scsi: hisi_sas: remove the check of sas_dev status in hisi_sas_I_T_nexus_reset()")
+Signed-off-by: Luo Jiaxing <luojiaxing@huawei.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
+---
+
+Hi James, Martin,
+
+Please consider this patch for 5.1 fixes. It's fixes a big regression,
+where we can no longer access SATA disks, like here:
+https://storage.kernelci.org/next/master/next-20190213/arm64/defconfig/gcc-7/lab-collabora/boot-hip07-d05.html
+
+Thanks,
+John
+
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index 3c3cf89f713f..14bac4966c87 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -1801,6 +1801,12 @@ static int hisi_sas_I_T_nexus_reset(struct domain_device *device)
+ 	}
+ 	hisi_sas_dereg_device(hisi_hba, device);
+ 
++	if (dev_is_sata(device)) {
++		rc = hisi_sas_softreset_ata_disk(device);
++		if (rc)
++			return TMF_RESP_FUNC_FAILED;
++	}
++
+ 	rc = hisi_sas_debug_I_T_nexus_reset(device);
+ 
+ 	if ((rc == TMF_RESP_FUNC_COMPLETE) || (rc == -ENODEV))
+-- 
+2.17.1
