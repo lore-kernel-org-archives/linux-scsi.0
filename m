@@ -1,65 +1,96 @@
-From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: [PATCH] scsi: mptscsih: Mark expected switch fall-throughs
-Date: Wed, 20 Mar 2019 15:31:39 -0500
-Message-ID: <20190320203139.GA18369@embeddedor>
+From: Nick Desaulniers <ndesaulniers@google.com>
+Subject: Re: [PATCH] scsi: ufs-mediatek: Avoid using ret uninitialized in ufs_mtk_setup_clocks
+Date: Wed, 20 Mar 2019 15:23:44 -0700
+Message-ID: <CAKwvOdn0fcGSsX7XQD2v9iV=FMM6z5shqN4=Zjkkyyrd+y8rWw@mail.gmail.com>
+References: <20190320180340.25795-1-natechancellor@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <20190320180340.25795-1-natechancellor@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
-Cc: MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Gustavo A. R. Silva" <gustavo@embeddedor.com>, Kees Cook <keescook@chromium.org>
+To: Nathan Chancellor <natechancellor@gmail.com>
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Stanley Chu <stanley.chu@mediatek.com>, Matthias Brugger <matthias.bgg@gmail.com>, Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, Pedro Sousa <pedrom.sousa@synopsys.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Linux ARM <linux-arm-kernel@lists.infradead.org>, linux-mediatek@lists.infradead.org, clang-built-linux@googlegroups.com
 List-Id: linux-scsi@vger.kernel.org
 
-In preparation to enabling -Wimplicit-fallthrough, mark switch
-cases where we are expecting to fall through.
+On Wed, Mar 20, 2019 at 11:06 AM Nathan Chancellor
+<natechancellor@gmail.com> wrote:
+>
+> When building with -Wsometimes-uninitialized, Clang warns:
+>
+> drivers/scsi/ufs/ufs-mediatek.c:112:7: warning: variable 'ret' is used
+> uninitialized whenever 'if' condition is false
+> [-Wsometimes-uninitialized]
+>                 if (on)
+>                     ^~
+> drivers/scsi/ufs/ufs-mediatek.c:120:9: note: uninitialized use occurs
+> here
+>         return ret;
+>                ^~~
+> drivers/scsi/ufs/ufs-mediatek.c:112:3: note: remove the 'if' if its
+> condition is always true
+>                 if (on)
+>                 ^~~~~~~
+> drivers/scsi/ufs/ufs-mediatek.c:108:7: warning: variable 'ret' is used
+> uninitialized whenever 'if' condition is false
+> [-Wsometimes-uninitialized]
+>                 if (!on)
+>                     ^~~
+> drivers/scsi/ufs/ufs-mediatek.c:120:9: note: uninitialized use occurs
+> here
+>         return ret;
+>                ^~~
+> drivers/scsi/ufs/ufs-mediatek.c:108:3: note: remove the 'if' if its
+> condition is always true
+>                 if (!on)
+>                 ^~~~~~~~
+> drivers/scsi/ufs/ufs-mediatek.c:96:9: note: initialize the variable
+> 'ret' to silence this warning
+>         int ret;
+>                ^
+>                 = 0
+> 2 warnings generated.
+>
+> Remove the default case and initialize ret to -EINVAL to properly fix
+> this warning.
+>
+> Fixes: ddd90623ce26 ("scsi: ufs-mediatek: Add UFS support for Mediatek SoC chips")
+> Link: https://github.com/ClangBuiltLinux/linux/issues/426
+> Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
+> ---
+>  drivers/scsi/ufs/ufs-mediatek.c | 5 +----
+>  1 file changed, 1 insertion(+), 4 deletions(-)
+>
+> diff --git a/drivers/scsi/ufs/ufs-mediatek.c b/drivers/scsi/ufs/ufs-mediatek.c
+> index c3b78fc83d3f..34aecad04468 100644
+> --- a/drivers/scsi/ufs/ufs-mediatek.c
+> +++ b/drivers/scsi/ufs/ufs-mediatek.c
+> @@ -93,7 +93,7 @@ static int ufs_mtk_setup_clocks(struct ufs_hba *hba, bool on,
+>                                 enum ufs_notify_change_status status)
+>  {
+>         struct ufs_mtk_host *host = ufshcd_get_variant(hba);
+> -       int ret;
+> +       int ret = -EINVAL;
+>
+>         /*
+>          * In case ufs_mtk_init() is not yet done, simply ignore.
+> @@ -112,9 +112,6 @@ static int ufs_mtk_setup_clocks(struct ufs_hba *hba, bool on,
+>                 if (on)
+>                         ret = phy_power_on(host->mphy);
+>                 break;
+> -       default:
+> -               ret = -EINVAL;
+> -               break;
+>         }
+>
+>         return ret;
+> --
+> 2.21.0
+>
 
-This patch fixes the following warnings:
-
-drivers/message/fusion/mptscsih.c: In function ‘mptscsih_io_done’:
-drivers/message/fusion/mptscsih.c:741:7: warning: this statement may fall through [-Wimplicit-fallthrough=]
-    if ( ioc->bus_type == SAS ) {
-       ^
-drivers/message/fusion/mptscsih.c:790:3: note: here
-   case MPI_IOCSTATUS_SCSI_TASK_TERMINATED: /* 0x0048 */
-   ^~~~
-drivers/message/fusion/mptscsih.c:884:4: warning: this statement may fall through [-Wimplicit-fallthrough=]
-    scsi_set_resid(sc, 0);
-    ^~~~~~~~~~~~~~~~~~~~~
-drivers/message/fusion/mptscsih.c:885:3: note: here
-   case MPI_IOCSTATUS_SCSI_RECOVERED_ERROR: /* 0x0040 */
-   ^~~~
-
-Warning level 3 was used: -Wimplicit-fallthrough=3
-
-This patch is part of the ongoing efforts to enable
--Wimplicit-fallthrough.
-
-Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
----
- drivers/message/fusion/mptscsih.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/message/fusion/mptscsih.c b/drivers/message/fusion/mptscsih.c
-index 587b5daf74b4..f0737c57ed5f 100644
---- a/drivers/message/fusion/mptscsih.c
-+++ b/drivers/message/fusion/mptscsih.c
-@@ -786,6 +786,7 @@ mptscsih_io_done(MPT_ADAPTER *ioc, MPT_FRAME_HDR *mf, MPT_FRAME_HDR *mr)
- 			/*
- 			 * Allow non-SAS & non-NEXUS_LOSS to drop into below code
- 			 */
-+			/* Fall through */
- 
- 		case MPI_IOCSTATUS_SCSI_TASK_TERMINATED:	/* 0x0048 */
- 			/* Linux handles an unsolicited DID_RESET better
-@@ -882,6 +883,7 @@ mptscsih_io_done(MPT_ADAPTER *ioc, MPT_FRAME_HDR *mf, MPT_FRAME_HDR *mr)
- 
- 		case MPI_IOCSTATUS_SCSI_DATA_OVERRUN:		/* 0x0044 */
- 			scsi_set_resid(sc, 0);
-+			/* Fall through */
- 		case MPI_IOCSTATUS_SCSI_RECOVERED_ERROR:	/* 0x0040 */
- 		case MPI_IOCSTATUS_SUCCESS:			/* 0x0000 */
- 			sc->result = (DID_OK << 16) | scsi_status;
+The enum being switched on (enum ufs_notify_change_status) only has 2
+values; so the default case is impossible.  A switch is probably
+overkill, but this change is fine as is.  Thanks for sending it.
+Reviewed-by: Nick Desaulniers <ndesaulniers@google.com>
 -- 
-2.21.0
+Thanks,
+~Nick Desaulniers
