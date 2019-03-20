@@ -1,7 +1,7 @@
 From: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
-Subject: [PATCH 3/4] ibmvfc: Byte swap status and error codes when logging
-Date: Wed, 20 Mar 2019 14:56:53 -0500
-Message-ID: <20190320195654.4364-3-tyreld@linux.vnet.ibm.com>
+Subject: [PATCH 4/4] ibmvfc: Clean up transport events
+Date: Wed, 20 Mar 2019 14:56:54 -0500
+Message-ID: <20190320195654.4364-4-tyreld@linux.vnet.ibm.com>
 References: <20190320195654.4364-1-tyreld@linux.vnet.ibm.com>
 Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
 In-Reply-To: <20190320195654.4364-1-tyreld@linux.vnet.ibm.com>
@@ -19,110 +19,61 @@ To: james.bottomley@hansenpartnership.com
 Cc: brking@linux.vnet.ibm.com, linuxppc-dev@lists.ozlabs.org, linux-scsi@vger.kernel.org, martin.petersen@oracle.com, Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Status and error codes are returned in big endian from the VIOS. The
-values are translated into a human readable format when logged, but
-the values are also logged. This patch byte swaps those values so
-that they are consistent between BE and LE platforms.
+No change to functionality. Simply make transport event messages a litle
+clearer, and rework CRQ format enums such that we have separate enums
+for INIT messages and XPORT events.
 
 Signed-off-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
 ---
- drivers/scsi/ibmvscsi/ibmvfc.c | 28 +++++++++++++++-------------
- 1 file changed, 15 insertions(+), 13 deletions(-)
+ drivers/scsi/ibmvscsi/ibmvfc.c | 8 +++++---
+ drivers/scsi/ibmvscsi/ibmvfc.h | 7 ++++++-
+ 2 files changed, 11 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
-index 18ee2a8ec3d5..33dda4d32f65 100644
+index 33dda4d32f65..3ad997ac3510 100644
 --- a/drivers/scsi/ibmvscsi/ibmvfc.c
 +++ b/drivers/scsi/ibmvscsi/ibmvfc.c
-@@ -1497,7 +1497,7 @@ static void ibmvfc_log_error(struct ibmvfc_event *evt)
- 
- 	scmd_printk(KERN_ERR, cmnd, "Command (%02X) : %s (%x:%x) "
- 		    "flags: %x fcp_rsp: %x, resid=%d, scsi_status: %x\n",
--		    cmnd->cmnd[0], err, vfc_cmd->status, vfc_cmd->error,
-+		    cmnd->cmnd[0], err, be16_to_cpu(vfc_cmd->status), be16_to_cpu(vfc_cmd->error),
- 		    rsp->flags, rsp_code, scsi_get_resid(cmnd), rsp->scsi_status);
- }
- 
-@@ -2023,7 +2023,7 @@ static int ibmvfc_reset_device(struct scsi_device *sdev, int type, char *desc)
- 		sdev_printk(KERN_ERR, sdev, "%s reset failed: %s (%x:%x) "
- 			    "flags: %x fcp_rsp: %x, scsi_status: %x\n", desc,
- 			    ibmvfc_get_cmd_error(be16_to_cpu(rsp_iu.cmd.status), be16_to_cpu(rsp_iu.cmd.error)),
--			    rsp_iu.cmd.status, rsp_iu.cmd.error, fc_rsp->flags, rsp_code,
-+			    be16_to_cpu(rsp_iu.cmd.status), be16_to_cpu(rsp_iu.cmd.error), fc_rsp->flags, rsp_code,
- 			    fc_rsp->scsi_status);
- 		rsp_rc = -EIO;
- 	} else
-@@ -2382,7 +2382,7 @@ static int ibmvfc_abort_task_set(struct scsi_device *sdev)
- 		sdev_printk(KERN_ERR, sdev, "Abort failed: %s (%x:%x) "
- 			    "flags: %x fcp_rsp: %x, scsi_status: %x\n",
- 			    ibmvfc_get_cmd_error(be16_to_cpu(rsp_iu.cmd.status), be16_to_cpu(rsp_iu.cmd.error)),
--			    rsp_iu.cmd.status, rsp_iu.cmd.error, fc_rsp->flags, rsp_code,
-+			    be16_to_cpu(rsp_iu.cmd.status), be16_to_cpu(rsp_iu.cmd.error), fc_rsp->flags, rsp_code,
- 			    fc_rsp->scsi_status);
- 		rsp_rc = -EIO;
- 	} else
-@@ -3349,7 +3349,7 @@ static void ibmvfc_tgt_prli_done(struct ibmvfc_event *evt)
- 
- 		tgt_log(tgt, level, "Process Login failed: %s (%x:%x) rc=0x%02X\n",
- 			ibmvfc_get_cmd_error(be16_to_cpu(rsp->status), be16_to_cpu(rsp->error)),
--			rsp->status, rsp->error, status);
-+			be16_to_cpu(rsp->status), be16_to_cpu(rsp->error), status);
- 		break;
- 	}
- 
-@@ -3447,9 +3447,10 @@ static void ibmvfc_tgt_plogi_done(struct ibmvfc_event *evt)
- 			ibmvfc_set_tgt_action(tgt, IBMVFC_TGT_ACTION_DEL_RPORT);
- 
- 		tgt_log(tgt, level, "Port Login failed: %s (%x:%x) %s (%x) %s (%x) rc=0x%02X\n",
--			ibmvfc_get_cmd_error(be16_to_cpu(rsp->status), be16_to_cpu(rsp->error)), rsp->status, rsp->error,
--			ibmvfc_get_fc_type(be16_to_cpu(rsp->fc_type)), rsp->fc_type,
--			ibmvfc_get_ls_explain(be16_to_cpu(rsp->fc_explain)), rsp->fc_explain, status);
-+			ibmvfc_get_cmd_error(be16_to_cpu(rsp->status), be16_to_cpu(rsp->error)),
-+					     be16_to_cpu(rsp->status), be16_to_cpu(rsp->error),
-+			ibmvfc_get_fc_type(be16_to_cpu(rsp->fc_type)), be16_to_cpu(rsp->fc_type),
-+			ibmvfc_get_ls_explain(be16_to_cpu(rsp->fc_explain)), be16_to_cpu(rsp->fc_explain), status);
- 		break;
- 	}
- 
-@@ -3620,7 +3621,7 @@ static void ibmvfc_tgt_adisc_done(struct ibmvfc_event *evt)
- 		fc_explain = (be32_to_cpu(mad->fc_iu.response[1]) & 0x0000ff00) >> 8;
- 		tgt_info(tgt, "ADISC failed: %s (%x:%x) %s (%x) %s (%x) rc=0x%02X\n",
- 			 ibmvfc_get_cmd_error(be16_to_cpu(mad->iu.status), be16_to_cpu(mad->iu.error)),
--			 mad->iu.status, mad->iu.error,
-+			 be16_to_cpu(mad->iu.status), be16_to_cpu(mad->iu.error),
- 			 ibmvfc_get_fc_type(fc_reason), fc_reason,
- 			 ibmvfc_get_ls_explain(fc_explain), fc_explain, status);
- 		break;
-@@ -3832,9 +3833,10 @@ static void ibmvfc_tgt_query_target_done(struct ibmvfc_event *evt)
- 
- 		tgt_log(tgt, level, "Query Target failed: %s (%x:%x) %s (%x) %s (%x) rc=0x%02X\n",
- 			ibmvfc_get_cmd_error(be16_to_cpu(rsp->status), be16_to_cpu(rsp->error)),
--			rsp->status, rsp->error, ibmvfc_get_fc_type(be16_to_cpu(rsp->fc_type)),
--			rsp->fc_type, ibmvfc_get_gs_explain(be16_to_cpu(rsp->fc_explain)),
--			rsp->fc_explain, status);
-+			be16_to_cpu(rsp->status), be16_to_cpu(rsp->error),
-+			ibmvfc_get_fc_type(be16_to_cpu(rsp->fc_type)), be16_to_cpu(rsp->fc_type),
-+			ibmvfc_get_gs_explain(be16_to_cpu(rsp->fc_explain)), be16_to_cpu(rsp->fc_explain),
-+			status);
- 		break;
- 	}
- 
-@@ -3960,7 +3962,7 @@ static void ibmvfc_discover_targets_done(struct ibmvfc_event *evt)
- 		level += ibmvfc_retry_host_init(vhost);
- 		ibmvfc_log(vhost, level, "Discover Targets failed: %s (%x:%x)\n",
- 			   ibmvfc_get_cmd_error(be16_to_cpu(rsp->status), be16_to_cpu(rsp->error)),
--			   rsp->status, rsp->error);
-+			   be16_to_cpu(rsp->status), be16_to_cpu(rsp->error));
- 		break;
- 	case IBMVFC_MAD_DRIVER_FAILED:
- 		break;
-@@ -4025,7 +4027,7 @@ static void ibmvfc_npiv_login_done(struct ibmvfc_event *evt)
- 			ibmvfc_link_down(vhost, IBMVFC_LINK_DEAD);
- 		ibmvfc_log(vhost, level, "NPIV Login failed: %s (%x:%x)\n",
- 			   ibmvfc_get_cmd_error(be16_to_cpu(rsp->status), be16_to_cpu(rsp->error)),
--						rsp->status, rsp->error);
-+						be16_to_cpu(rsp->status), be16_to_cpu(rsp->error));
- 		ibmvfc_free_event(evt);
+@@ -2756,16 +2756,18 @@ static void ibmvfc_handle_crq(struct ibmvfc_crq *crq, struct ibmvfc_host *vhost)
+ 		ibmvfc_set_host_action(vhost, IBMVFC_HOST_ACTION_NONE);
+ 		if (crq->format == IBMVFC_PARTITION_MIGRATED) {
+ 			/* We need to re-setup the interpartition connection */
+-			dev_info(vhost->dev, "Re-enabling adapter\n");
++			dev_info(vhost->dev, "Partition migrated, Re-enabling adapter\n");
+ 			vhost->client_migrated = 1;
+ 			ibmvfc_purge_requests(vhost, DID_REQUEUE);
+ 			ibmvfc_link_down(vhost, IBMVFC_LINK_DOWN);
+ 			ibmvfc_set_host_action(vhost, IBMVFC_HOST_ACTION_REENABLE);
+-		} else {
+-			dev_err(vhost->dev, "Virtual adapter failed (rc=%d)\n", crq->format);
++		} else if (crq->format == IBMVFC_PARTNER_FAILED || crq->format == IBMVFC_PARTNER_DEREGISTER) {
++			dev_err(vhost->dev, "Host partner adapter deregistered or failed (rc=%d)\n", crq->format);
+ 			ibmvfc_purge_requests(vhost, DID_ERROR);
+ 			ibmvfc_link_down(vhost, IBMVFC_LINK_DOWN);
+ 			ibmvfc_set_host_action(vhost, IBMVFC_HOST_ACTION_RESET);
++		} else {
++			dev_err(vhost->dev, "Received unknown transport event from partner (rc=%d)\n", crq->format);
+ 		}
  		return;
- 	case IBMVFC_MAD_CRQ_ERROR:
+ 	case IBMVFC_CRQ_CMD_RSP:
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc.h b/drivers/scsi/ibmvscsi/ibmvfc.h
+index b81a53c4a9a8..459cc288ba1d 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc.h
++++ b/drivers/scsi/ibmvscsi/ibmvfc.h
+@@ -78,9 +78,14 @@ enum ibmvfc_crq_valid {
+ 	IBMVFC_CRQ_XPORT_EVENT		= 0xFF,
+ };
+ 
+-enum ibmvfc_crq_format {
++enum ibmvfc_crq_init_msg {
+ 	IBMVFC_CRQ_INIT			= 0x01,
+ 	IBMVFC_CRQ_INIT_COMPLETE	= 0x02,
++};
++
++enum ibmvfc_crq_xport_evts {
++	IBMVFC_PARTNER_FAILED		= 0x01,
++	IBMVFC_PARTNER_DEREGISTER	= 0x02,
+ 	IBMVFC_PARTITION_MIGRATED	= 0x06,
+ };
+ 
 -- 
 2.12.3
