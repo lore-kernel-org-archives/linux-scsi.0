@@ -1,58 +1,81 @@
-From: Yue Haibing <yuehaibing@huawei.com>
-Subject: [PATCH -next] scsi: ufs-mediatek: Make some symbols static
-Date: Wed, 20 Mar 2019 22:24:58 +0800
-Message-ID: <20190320142458.20052-1-yuehaibing@huawei.com>
+From: Nathan Chancellor <natechancellor@gmail.com>
+Subject: [PATCH] scsi: qla2xxx: Simplify conditional check
+Date: Wed, 20 Mar 2019 09:33:16 -0700
+Message-ID: <20190320163315.12740-1-natechancellor@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: alim.akhtar@samsung.com, avri.altman@wdc.com, pedrom.sousa@synopsys.com, jejb@linux.ibm.com, martin.petersen@oracle.com, matthias.bgg@gmail.com, stanley.chu@mediatek.com
-Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-mediatek@lists.infradead.org, linux-scsi@vger.kernel.org, YueHaibing <yuehaibing@huawei.com>
+To: qla2xxx-upstream@qlogic.com, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, clang-built-linux@googlegroups.com, Nathan Chancellor <natechancellor@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: YueHaibing <yuehaibing@huawei.com>
+Clang generates a warning when it sees a logical not followed by a
+conditional operator like ==, >, or < because it thinks that the logical
+not should be applied to the whole statement:
 
-Fix sparse warnings:
+drivers/scsi/qla2xxx/qla_nx.c:3702:7: warning: logical not is only
+applied to the left hand side of this comparison
+[-Wlogical-not-parentheses]
+                if (!qla2x00_eh_wait_for_pending_commands(vha, 0, 0,
+                    ^
+drivers/scsi/qla2xxx/qla_nx.c:3702:7: note: add parentheses after the
+'!' to evaluate the comparison first
+                if (!qla2x00_eh_wait_for_pending_commands(vha, 0, 0,
+                    ^
+                     (
+drivers/scsi/qla2xxx/qla_nx.c:3702:7: note: add parentheses around left
+hand side expression to silence this warning
+                if (!qla2x00_eh_wait_for_pending_commands(vha, 0, 0,
+                    ^
+                    (
+1 warning generated.
 
-drivers/scsi/ufs/ufs-mediatek.c:19:6: warning: symbol 'ufs_mtk_cfg_unipro_cg' was not declared. Should it be static?
-drivers/scsi/ufs/ufs-mediatek.c:55:5: warning: symbol 'ufs_mtk_bind_mphy' was not declared. Should it be static?
-drivers/scsi/ufs/ufs-mediatek.c:342:27: warning: symbol 'ufs_mtk_of_match' was not declared. Should it be static?
+It assumes the author might have made a mistake in their logic:
 
-Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+if (!a == b) -> if (!(a == b))
+
+Sometimes that is the case; other times, it's just a super convoluted
+way of saying 'if (a)' when b = 0:
+
+if (!1 == 0) -> if (0 == 0) -> if (true)
+
+Alternatively:
+
+if (!1 == 0) -> if (!!1) -> if (1)
+
+Simplify this comparison so that Clang doesn't complain.
+
+Link: https://github.com/ClangBuiltLinux/linux/issues/80
+Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
 ---
- drivers/scsi/ufs/ufs-mediatek.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufs-mediatek.c b/drivers/scsi/ufs/ufs-mediatek.c
-index c3b78fc..2fbb450 100644
---- a/drivers/scsi/ufs/ufs-mediatek.c
-+++ b/drivers/scsi/ufs/ufs-mediatek.c
-@@ -16,7 +16,7 @@
- #include "unipro.h"
- #include "ufs-mediatek.h"
+This is commit 0bfe7d3cae58 ("scsi: qla2xxx: Simplify conditional check")
+upstream but commit 3695310e37b4 ("scsi: qla2xxx: Update flash
+read/write routine") in the 5.2/scsi-queue branch silently reverted it.
+I don't care if it is squashed or not, I just want the warning to stay
+fixed.
+
+Thanks,
+Nathan
+
+ drivers/scsi/qla2xxx/qla_nx.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/qla2xxx/qla_nx.c b/drivers/scsi/qla2xxx/qla_nx.c
+index de2bc78449e7..121e18b3b9f8 100644
+--- a/drivers/scsi/qla2xxx/qla_nx.c
++++ b/drivers/scsi/qla2xxx/qla_nx.c
+@@ -3699,8 +3699,8 @@ qla82xx_chip_reset_cleanup(scsi_qla_host_t *vha)
+ 		spin_unlock_irqrestore(&ha->hardware_lock, flags);
  
--void ufs_mtk_cfg_unipro_cg(struct ufs_hba *hba, bool enable)
-+static void ufs_mtk_cfg_unipro_cg(struct ufs_hba *hba, bool enable)
- {
- 	u32 tmp;
- 
-@@ -52,7 +52,7 @@ void ufs_mtk_cfg_unipro_cg(struct ufs_hba *hba, bool enable)
- 	}
- }
- 
--int ufs_mtk_bind_mphy(struct ufs_hba *hba)
-+static int ufs_mtk_bind_mphy(struct ufs_hba *hba)
- {
- 	struct ufs_mtk_host *host = ufshcd_get_variant(hba);
- 	struct device *dev = hba->dev;
-@@ -339,7 +339,7 @@ static int ufs_mtk_remove(struct platform_device *pdev)
- 	return 0;
- }
- 
--const struct of_device_id ufs_mtk_of_match[] = {
-+static const struct of_device_id ufs_mtk_of_match[] = {
- 	{ .compatible = "mediatek,mt8183-ufshci"},
- 	{},
- };
+ 		/* Wait for pending cmds (physical and virtual) to complete */
+-		if (!qla2x00_eh_wait_for_pending_commands(vha, 0, 0,
+-		    WAIT_HOST) == QLA_SUCCESS) {
++		if (qla2x00_eh_wait_for_pending_commands(vha, 0, 0,
++		    WAIT_HOST)) {
+ 			ql_dbg(ql_dbg_init, vha, 0x00b3,
+ 			    "Done wait for "
+ 			    "pending commands.\n");
 -- 
-2.7.0
+2.21.0
