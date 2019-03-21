@@ -1,30 +1,26 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 1/2] ibmvscsi: Protect ibmvscsi_head from concurrent modificaiton
-Date: Wed, 20 Mar 2019 20:13:56 -0400
-Message-ID: <yq15zsd6q4b.fsf@oracle.com>
-References: <20190320184151.31321-1-tyreld@linux.vnet.ibm.com>
+Subject: Re: [PATCH][next] scsi: target: fix unsigned comparision with less than zero
+Date: Wed, 20 Mar 2019 20:33:42 -0400
+Message-ID: <yq1sgvh5amx.fsf@oracle.com>
+References: <20190320163709.28767-1-colin.king@canonical.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20190320184151.31321-1-tyreld@linux.vnet.ibm.com> (Tyrel
-        Datwyler's message of "Wed, 20 Mar 2019 13:41:50 -0500")
-Sender: stable-owner@vger.kernel.org
-To: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
-Cc: james.bottomley@hansenpartnership.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, brking@linux.vnet.ibm.com, stable@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190320163709.28767-1-colin.king@canonical.com> (Colin King's
+        message of "Wed, 20 Mar 2019 16:37:09 +0000")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Colin King <colin.king@canonical.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Tyrel,
+Colin,
 
-> For each ibmvscsi host created during a probe or destroyed during a
-> remove we either add or remove that host to/from the global
-> ibmvscsi_head list. This runs the risk of concurrent modification.
->
-> This patch adds a simple spinlock around the list modification calls
-> to prevent concurrent updates as is done similarly in the ibmvfc
-> driver and ipr driver.
+> Currently an error return is being assigned to an unsigned size_t
+> varianle and then checked if the result is less than zero which will
+> always be false.  Fix this by making ret ssize_t rather than a size_t.
 
-Applied to 5.1/scsi-fixes.
+Applied to 5.2/scsi-queue, thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
