@@ -1,66 +1,61 @@
 From: Anders Roxell <anders.roxell@linaro.org>
-Subject: [PATCH] scsi: ufs-mediatek: fix uninitialized variable
-Date: Thu, 21 Mar 2019 14:19:25 +0100
-Message-ID: <20190321131925.27421-1-anders.roxell@linaro.org>
+Subject: Re: [PATCH] drivers: ufs: Add missing MODULE_* information
+Date: Thu, 21 Mar 2019 14:21:06 +0100
+Message-ID: <CADYN=9LX9opLm9_zJ-NMkRqTW4H=waQCkq-te5CGkLgri3fgog@mail.gmail.com>
+References: <20190321125034.22697-1-anders.roxell@linaro.org> <1553174301.30977.85.camel@mtkswgap22>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1553174301.30977.85.camel@mtkswgap22>
 Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.ibm.com, martin.petersen@oracle.com, matthias.bgg@gmail.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-mediatek@lists.infradead.org, Anders Roxell <anders.roxell@linaro.org>
+To: Stanley Chu <stanley.chu@mediatek.com>
+Cc: jejb@linux.ibm.com, martin.petersen@oracle.com, Matthias Brugger <matthias.bgg@gmail.com>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux ARM <linux-arm-kernel@lists.infradead.org>, linux-mediatek@lists.infradead.org, peter.wang@mediatek.com
 List-Id: linux-scsi@vger.kernel.org
 
-When building the ufs-mediatek driver variable 'ret' may be used
-uninitialized.
+On Thu, 21 Mar 2019 at 14:18, Stanley Chu <stanley.chu@mediatek.com> wrote:
+>
+> Hi Anders,
+>
+> On Thu, 2019-03-21 at 13:50 +0100, Anders Roxell wrote:
+> > When building the ufs-mediatek module the following warning shows up:
+> >
+> > WARNING: modpost: missing MODULE_LICENSE() in
+> >   drivers/scsi/ufs/ufs-mediatek.o
+> >
+> > Rework to add MODULE_LICENSE,MODULE_AUTHOR and MODULE_DESCRIPTION.
+> >
+> > Fixes: ddd90623ce26 ("scsi: ufs-mediatek: Add UFS support for Mediatek SoC chips")
+> > Signed-off-by: Anders Roxell <anders.roxell@linaro.org>
+> > ---
+> >  drivers/scsi/ufs/ufs-mediatek.c | 5 +++++
+> >  1 file changed, 5 insertions(+)
+> >
+> > diff --git a/drivers/scsi/ufs/ufs-mediatek.c b/drivers/scsi/ufs/ufs-mediatek.c
+> > index c3b78fc83d3f..ce4767784937 100644
+> > --- a/drivers/scsi/ufs/ufs-mediatek.c
+> > +++ b/drivers/scsi/ufs/ufs-mediatek.c
+> > @@ -364,4 +364,9 @@ static struct platform_driver ufs_mtk_pltform = {
+> >       },
+> >  };
+> >
+> > +MODULE_AUTHOR("Stanley Chu <stanley.chu@mediatek.com>");
+> > +MODULE_AUTHOR("Peter Wang <peter.wang@mediatek.com>");
+> > +MODULE_DESCRIPTION("Mediatek UFS Driver");
+>
+> Thanks for sending this.
+>
+> Could you fix it as "MediaTek UFS Host Driver" ?
 
-../drivers/scsi/ufs/ufs-mediatek.c: In function ‘ufs_mtk_setup_clocks’:
-../drivers/scsi/ufs/ufs-mediatek.c:96:6: warning: ‘ret’ may be used uninitialized in this function [-Wmaybe-uninitialized]
-  int ret;
-      ^~~
+Yes, I'll update it and sending out a v2 shortly.
 
-Rework to return directly instead of using a local variable 'ret'.
+Cheers,
+Anders
 
-Fixes: ddd90623ce26 ("scsi: ufs-mediatek: Add UFS support for Mediatek SoC chips")
-Signed-off-by: Anders Roxell <anders.roxell@linaro.org>
----
- drivers/scsi/ufs/ufs-mediatek.c | 9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/scsi/ufs/ufs-mediatek.c b/drivers/scsi/ufs/ufs-mediatek.c
-index ce4767784937..330d68871b06 100644
---- a/drivers/scsi/ufs/ufs-mediatek.c
-+++ b/drivers/scsi/ufs/ufs-mediatek.c
-@@ -93,7 +93,6 @@ static int ufs_mtk_setup_clocks(struct ufs_hba *hba, bool on,
- 				enum ufs_notify_change_status status)
- {
- 	struct ufs_mtk_host *host = ufshcd_get_variant(hba);
--	int ret;
- 
- 	/*
- 	 * In case ufs_mtk_init() is not yet done, simply ignore.
-@@ -106,18 +105,18 @@ static int ufs_mtk_setup_clocks(struct ufs_hba *hba, bool on,
- 	switch (status) {
- 	case PRE_CHANGE:
- 		if (!on)
--			ret = phy_power_off(host->mphy);
-+			return phy_power_off(host->mphy);
- 		break;
- 	case POST_CHANGE:
- 		if (on)
--			ret = phy_power_on(host->mphy);
-+			return phy_power_on(host->mphy);
- 		break;
- 	default:
--		ret = -EINVAL;
-+		return -EINVAL;
- 		break;
- 	}
- 
--	return ret;
-+	return 0;
- }
- 
- /**
--- 
-2.20.1
+>
+> > +MODULE_LICENSE("GPL v2");
+> > +
+> >  module_platform_driver(ufs_mtk_pltform);
+>
+> Thanks,
+> Stanley
+>
