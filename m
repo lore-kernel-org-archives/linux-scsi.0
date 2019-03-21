@@ -1,52 +1,76 @@
 From: Stanley Chu <stanley.chu@mediatek.com>
-Subject: Re: [PATCH v2] drivers: ufs: Add missing MODULE_* information
-Date: Thu, 21 Mar 2019 21:28:39 +0800
-Message-ID: <1553174919.30977.86.camel@mtkswgap22>
-References: <20190321132444.28659-1-anders.roxell@linaro.org>
+Subject: Re: [PATCH] scsi: ufs-mediatek: fix uninitialized variable
+Date: Thu, 21 Mar 2019 21:34:14 +0800
+Message-ID: <1553175254.30977.88.camel@mtkswgap22>
+References: <20190321131925.27421-1-anders.roxell@linaro.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190321132444.28659-1-anders.roxell@linaro.org>
+In-Reply-To: <20190321131925.27421-1-anders.roxell@linaro.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Anders Roxell <anders.roxell@linaro.org>
-Cc: jejb@linux.ibm.com, martin.petersen@oracle.com, matthias.bgg@gmail.com, linux-arm-kernel@lists.infradead.org, linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: jejb@linux.ibm.com, martin.petersen@oracle.com, matthias.bgg@gmail.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-mediatek@lists.infradead.org
 List-Id: linux-scsi@vger.kernel.org
 
 Hi Anders,
 
-On Thu, 2019-03-21 at 14:24 +0100, Anders Roxell wrote:
-> When building the ufs-mediatek module the following warning shows up:
+On Thu, 2019-03-21 at 14:19 +0100, Anders Roxell wrote:
+> When building the ufs-mediatek driver variable 'ret' may be used
+> uninitialized.
 > 
-> WARNING: modpost: missing MODULE_LICENSE() in
->   drivers/scsi/ufs/ufs-mediatek.o
+> ../drivers/scsi/ufs/ufs-mediatek.c: In function ‘ufs_mtk_setup_clocks’:
+> ../drivers/scsi/ufs/ufs-mediatek.c:96:6: warning: ‘ret’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+>   int ret;
+>       ^~~
 > 
-> Rework to add MODULE_LICENSE,MODULE_AUTHOR and MODULE_DESCRIPTION.
+> Rework to return directly instead of using a local variable 'ret'.
 > 
 > Fixes: ddd90623ce26 ("scsi: ufs-mediatek: Add UFS support for Mediatek SoC chips")
 > Signed-off-by: Anders Roxell <anders.roxell@linaro.org>
 > ---
->  drivers/scsi/ufs/ufs-mediatek.c | 5 +++++
->  1 file changed, 5 insertions(+)
+>  drivers/scsi/ufs/ufs-mediatek.c | 9 ++++-----
+>  1 file changed, 4 insertions(+), 5 deletions(-)
 > 
 > diff --git a/drivers/scsi/ufs/ufs-mediatek.c b/drivers/scsi/ufs/ufs-mediatek.c
-> index c3b78fc83d3f..5e3bda42ac3b 100644
+> index ce4767784937..330d68871b06 100644
 > --- a/drivers/scsi/ufs/ufs-mediatek.c
 > +++ b/drivers/scsi/ufs/ufs-mediatek.c
-> @@ -364,4 +364,9 @@ static struct platform_driver ufs_mtk_pltform = {
->  	},
->  };
+> @@ -93,7 +93,6 @@ static int ufs_mtk_setup_clocks(struct ufs_hba *hba, bool on,
+>  				enum ufs_notify_change_status status)
+>  {
+>  	struct ufs_mtk_host *host = ufshcd_get_variant(hba);
+> -	int ret;
 >  
-> +MODULE_AUTHOR("Stanley Chu <stanley.chu@mediatek.com>");
-> +MODULE_AUTHOR("Peter Wang <peter.wang@mediatek.com>");
-> +MODULE_DESCRIPTION("MediaTek UFS Host Driver");
-> +MODULE_LICENSE("GPL v2");
-> +
->  module_platform_driver(ufs_mtk_pltform);
+>  	/*
+>  	 * In case ufs_mtk_init() is not yet done, simply ignore.
+> @@ -106,18 +105,18 @@ static int ufs_mtk_setup_clocks(struct ufs_hba *hba, bool on,
+>  	switch (status) {
+>  	case PRE_CHANGE:
+>  		if (!on)
+> -			ret = phy_power_off(host->mphy);
+> +			return phy_power_off(host->mphy);
+>  		break;
+>  	case POST_CHANGE:
+>  		if (on)
+> -			ret = phy_power_on(host->mphy);
+> +			return phy_power_on(host->mphy);
+>  		break;
+>  	default:
+> -		ret = -EINVAL;
+> +		return -EINVAL;
+>  		break;
+>  	}
+>  
+> -	return ret;
+> +	return 0;
+>  }
+>  
+>  /**
 
+This was already fixed by Nathan Chancellor in below patch,
+https://lkml.org/lkml/2019/3/20/784
 
-Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
+Anyway thanks for sending this fix.
 
-
-Thanks,
-Stanley
+Stanley.
