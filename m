@@ -1,98 +1,35 @@
-From: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
-Subject: [PATCH 2/2] ibmvscsi: Fix empty event pool access during host removal
-Date: Wed, 20 Mar 2019 13:41:51 -0500
-Message-ID: <20190320184151.31321-2-tyreld@linux.vnet.ibm.com>
-References: <20190320184151.31321-1-tyreld@linux.vnet.ibm.com>
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20190320184151.31321-1-tyreld@linux.vnet.ibm.com>
-Sender: stable-owner@vger.kernel.org
-To: james.bottomley@hansenpartnership.com
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, brking@linux.vnet.ibm.com, Tyrel Datwyler <tyreld@linux.vnet.ibm.com>, stable@vger.kernel.org
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] scsi: ufs-mediatek: Avoid using ret uninitialized in
+ ufs_mtk_setup_clocks
+Date: Wed, 20 Mar 2019 20:10:38 -0400
+Message-ID: <yq1a7hp6q9t.fsf@oracle.com>
+References: <20190320180340.25795-1-natechancellor@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <20190320180340.25795-1-natechancellor@gmail.com> (Nathan
+ Chancellor's message of "Wed, 20 Mar 2019 11:03:40 -0700")
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Nathan Chancellor <natechancellor@gmail.com>
+Cc: linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, clang-built-linux@googlegroups.com, "James E.J. Bottomley" <jejb@linux.ibm.com>, Nick Desaulniers <ndesaulniers@google.com>, linux-kernel@vger.kernel.org, Avri Altman <avri.altman@wdc.com>, linux-mediatek@lists.infradead.org, Alim Akhtar <alim.akhtar@samsung.com>, Matthias Brugger <matthias.bgg@gmail.com>, Stanley Chu <stanley.chu@mediatek.com>, Pedro Sousa <pedrom.sousa@synopsys.com>, linux-arm-kernel@lists.infradead.org
 List-Id: linux-scsi@vger.kernel.org
 
-The event pool used for queueing commands is destroyed fairly early in
-the ibmvscsi_remove() code path. Since, this happens prior to the call
-so scsi_remove_host() it is possible for further calls to queuecommand
-to be processed which manifest as a panic due to a NULL pointer
-dereference as seen here:
 
-PANIC: "Unable to handle kernel paging request for data at address
-0x00000000"
+Nathan,
 
-Context process backtrace:
+> Remove the default case and initialize ret to -EINVAL to properly fix
+> this warning.
 
-DSISR: 0000000042000000 ????Syscall Result: 0000000000000000
-4 [c000000002cb3820] memcpy_power7 at c000000000064204
-[Link Register] [c000000002cb3820] ibmvscsi_send_srp_event at d000000003ed14a4
-5 [c000000002cb3920] ibmvscsi_send_srp_event at d000000003ed14a4 [ibmvscsi] ?(unreliable)
-6 [c000000002cb39c0] ibmvscsi_queuecommand at d000000003ed2388 [ibmvscsi]
-7 [c000000002cb3a70] scsi_dispatch_cmd at d00000000395c2d8 [scsi_mod]
-8 [c000000002cb3af0] scsi_request_fn at d00000000395ef88 [scsi_mod]
-9 [c000000002cb3be0] __blk_run_queue at c000000000429860
-10 [c000000002cb3c10] blk_delay_work at c00000000042a0ec
-11 [c000000002cb3c40] process_one_work at c0000000000dac30
-12 [c000000002cb3cd0] worker_thread at c0000000000db110
-13 [c000000002cb3d80] kthread at c0000000000e3378
-14 [c000000002cb3e30] ret_from_kernel_thread at c00000000000982c
+Applied to 5.2/scsi-queue, thanks!
 
-The kernel buffer log is overfilled with this log:
-
-[11261.952732] ibmvscsi: found no event struct in pool!
-
-This patch reorders the operations during host teardown. Start by
-calling the SRP transport and Scsi_Host remove functions to flush any
-outstanding work and set the host offline. LLDD teardown follows
-including destruction of the event pool, freeing the Command Response
-Queue (CRQ), and unmapping any persistent buffers. The event pool
-destruction is protected by the scsi_host lock, and the pool is purged
-prior of any requests for which we never received a response. Finally,
-move the removal of the scsi host from our global list to the end so
-that the host is easily locatable for debugging purposes during
-teardown.
-
-Cc: <stable@vger.kernel.org> # v2.6.12+
-Signed-off-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
----
- drivers/scsi/ibmvscsi/ibmvscsi.c | 22 ++++++++++++++++------
- 1 file changed, 16 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
-index 2b22969f3f63..8cec5230fe31 100644
---- a/drivers/scsi/ibmvscsi/ibmvscsi.c
-+++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
-@@ -2295,17 +2295,27 @@ static int ibmvscsi_probe(struct vio_dev *vdev, const struct vio_device_id *id)
- static int ibmvscsi_remove(struct vio_dev *vdev)
- {
- 	struct ibmvscsi_host_data *hostdata = dev_get_drvdata(&vdev->dev);
--	spin_lock(&ibmvscsi_driver_lock);
--	list_del(&hostdata->host_list);
--	spin_unlock(&ibmvscsi_driver_lock);
--	unmap_persist_bufs(hostdata);
-+	unsigned long flags;
-+
-+	srp_remove_host(hostdata->host);
-+	scsi_remove_host(hostdata->host);
-+
-+	purge_requests(hostdata, DID_ERROR);
-+
-+	spin_lock_irqsave(hostdata->host->host_lock, flags);
- 	release_event_pool(&hostdata->pool, hostdata);
-+	spin_unlock_irqrestore(hostdata->host->host_lock, flags);
-+
- 	ibmvscsi_release_crq_queue(&hostdata->queue, hostdata,
- 					max_events);
- 
- 	kthread_stop(hostdata->work_thread);
--	srp_remove_host(hostdata->host);
--	scsi_remove_host(hostdata->host);
-+	unmap_persist_bufs(hostdata);
-+
-+	spin_lock(&ibmvscsi_driver_lock);
-+	list_del(&hostdata->host_list);
-+	spin_unlock(&ibmvscsi_driver_lock);
-+
- 	scsi_host_put(hostdata->host);
- 
- 	return 0;
 -- 
-2.12.3
+Martin K. Petersen	Oracle Linux Engineering
