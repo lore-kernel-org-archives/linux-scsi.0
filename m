@@ -1,59 +1,94 @@
-From: Evan Green <evgreen@chromium.org>
-Subject: Re: [PATCH v3 0/8] phy: qcom-ufs: Enable regulators to be off in suspend
-Date: Thu, 21 Mar 2019 10:19:48 -0700
-Message-ID: <CAE=gft63ejm3hEt783FXA+jkG3BSaX2s8CL8+KjFTVLVUwTprg@mail.gmail.com>
-References: <20190205185902.106085-1-evgreen@chromium.org> <CAE=gft4YPmqd35ySmZw2UG876Lvt8rcz+nNwELXK98PDvHuVeA@mail.gmail.com>
- <405b80c6-2624-cc7d-24fa-670b7e8cb3a9@ti.com>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [RFC PATCH v2] scsi: fix oops in scsi_uninit_cmd()
+Date: Thu, 21 Mar 2019 11:39:02 -0700
+Message-ID: <1553193542.65329.119.camel@acm.org>
+References: <20190316020905.14962-1-yanaijie@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="UTF-7"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <405b80c6-2624-cc7d-24fa-670b7e8cb3a9@ti.com>
+In-Reply-To: <20190316020905.14962-1-yanaijie@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Andy Gross <andy.gross@linaro.org>, Stephen Boyd <swboyd@chromium.org>, Marc Gonzalez <marc.w.gonzalez@free.fr>, Can Guo <cang@codeaurora.org>, Vivek Gautam <vivek.gautam@codeaurora.org>, Douglas Anderson <dianders@chromium.org>, Asutosh Das <asutoshd@codeaurora.org>, Bjorn Andersson <bjorn.andersson@linaro.org>, Arnd Bergmann <arnd@arndb.de>, Grygorii Strashko <grygorii.strashko@ti.com>, Rob Herring <robh+dt@kernel.org>, Vinayak Holikatti <vinholikatti@gmail.com>, Jeffrey Hugo <jhugo@codeaurora.org>, SCSI <linux-scsi@vger.kernel.org>, David Brown <david.brown@linaro.org>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" <devicetree@vger.kernel.org>, liwei <liwei213@huawei.com>linux-
+To: Jason Yan <yanaijie@huawei.com>, martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, hare@suse.com, hch@lst.de, tom.leiming@gmail.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Mar 20, 2019 at 2:07 AM Kishon Vijay Abraham I <kishon@ti.com> wrote:
->
-> Hi Evan,
->
-> On 20/03/19 1:34 AM, Evan Green wrote:
-> > On Tue, Feb 5, 2019 at 10:59 AM Evan Green <evgreen@chromium.org> wrote:
-> >>
-> > ...
-> >> Evan Green (8):
-> >>   dt-bindings: ufs: Add #reset-cells for Qualcomm controllers
-> >>   dt-bindings: phy-qcom-qmp: Add UFS PHY reset
-> >>   dt-bindings: phy: qcom-ufs: Add resets property
-> >>   arm64: dts: sdm845: Add UFS PHY reset
-> >>   arm64: dts: msm8996: Add UFS PHY reset controller
-> >>   scsi: ufs: qcom: Expose the reset controller for PHY
-> >>   phy: qcom: Utilize UFS reset controller
-> >>   phy: ufs-qcom: Refactor all init steps into phy_poweron
-> >>
-> >>  .../devicetree/bindings/phy/qcom-qmp-phy.txt  |   6 +-
-> >>  .../devicetree/bindings/ufs/ufs-qcom.txt      |   5 +-
-> >>  .../devicetree/bindings/ufs/ufshcd-pltfrm.txt |   3 +
-> >>  arch/arm64/boot/dts/qcom/msm8996.dtsi         |   4 +-
-> >>  arch/arm64/boot/dts/qcom/sdm845.dtsi          |   3 +
-> >>  drivers/phy/qualcomm/phy-qcom-qmp.c           | 117 +++++++++---------
-> >>  drivers/phy/qualcomm/phy-qcom-ufs-i.h         |   5 +-
-> >>  drivers/phy/qualcomm/phy-qcom-ufs-qmp-14nm.c  |  25 +---
-> >>  drivers/phy/qualcomm/phy-qcom-ufs-qmp-20nm.c  |  25 +---
-> >>  drivers/phy/qualcomm/phy-qcom-ufs.c           |  57 +++++++--
-> >>  drivers/scsi/ufs/Kconfig                      |   1 +
-> >>  drivers/scsi/ufs/ufs-qcom.c                   | 114 ++++++++++-------
-> >>  drivers/scsi/ufs/ufs-qcom.h                   |   4 +
-> >>  13 files changed, 202 insertions(+), 167 deletions(-)
-> >>
-> >> --
-> >
-> > Hi Kishon,
-> > A gentle ping here now that rc1 is out. Are you able to take these? I
-> > can also repost if needed.
->
-> Can you repost with the updated tags please?
->
+On Sat, 2019-03-16 at 10:09 +-0800, Jason Yan wrote:
++AD4 If we remove the scsi disk when running io with fio, oops occured with
++AD4 the following condition.
++AD4 
++AD4 +AFs-scsi+AF8-eh+AF8-0+AF0                              +AFs-fio+AF0
++AD4 scsi+AF8-end+AF8-request
++AD4   -+AD4-blk+AF8-update+AF8-request
++AD4     -+AD4-end+AF8-bio(io returned to userspace)
++AD4                                          close
++AD4                                            -+AD4-sd+AF8-release
++AD4                                               -+AD4-scsi+AF8-disk+AF8-put
++AD4                                                  -+AD4-scsi+AF8-disk+AF8-release
++AD4                                                      -+AD4-disk-+AD4-private+AF8-data +AD0 NULL+ADs
++AD4 
++AD4   -+AD4-scsi+AF8-mq+AF8-uninit+AF8-cmd
++AD4     -+AD4-scsi+AF8-uninit+AF8-cmd
++AD4       -+AD4-scsi+AF8-cmd+AF8-to+AF8-driver
++AD4     -+AD4-drv is NULL, Oops
++AD4 
++AD4 There is a small window between blk+AF8-update+AF8-request() and
++AD4 scsi+AF8-mq+AF8-uninit+AF8-cmd() that scsi disk may have been released. This will
++AD4 cause a oops like below:
++AD4 
++AD4 Unable to handle kernel NULL pointer dereference at virtual address
++AD4 0000000000000000
++AD4 s/sync.c:67, func+AD0-xfer, error+AD0-In+AFs-11347.116050+AF0 Mem abort info:
++AD4 put/output error
++AD4 +AFs-11347.121598+AF0   ESR +AD0 0x96000006
++AD4 +AFs-11347.126200+AF0   Exception class +AD0 DABT (current EL), IL +AD0 32 bits
++AD4 +AFs-11347.132117+AF0   SET +AD0 0, FnV +AD0 0
++AD4 +AFs-11347.135170+AF0   EA +AD0 0, S1PTW +AD0 0
++AD4 +AFs-11347.138308+AF0 Data abort info:
++AD4 +AFs-11347.141186+AF0   ISV +AD0 0, ISS +AD0 0x00000006
++AD4 +AFs-11347.145019+AF0   CM +AD0 0, WnR +AD0 0
++AD4 +AFs-11347.147977+AF0 user pgtable: 4k pages, 48-bit VAs, pgdp +AD0
++AD4 00000000a67aece2
++AD4 +AFs-11347.154591+AF0 +AFs-0000000000000000+AF0 pgd+AD0-0000002f90774003,
++AD4 pud+AD0-0000002fab098003, pmd+AD0-0000000000000000
++AD4 +AFs-11347.163304+AF0 Internal error: Oops: 96000006 +AFsAIw-1+AF0 PREEMPT SMP
++AD4 +AFs-11347.168870+AF0 Modules linked in: hisi+AF8-sas+AF8-v3+AF8-hw hisi+AF8-sas+AF8-main libsas
++AD4 +AFs-11347.175044+AF0 CPU: 56 PID: 4294 Comm: scsi+AF8-eh+AF8-2 Not tainted
++AD4 4.19.0-g8052059-dirty +ACM-2
++AD4 +AFs-11347.182600+AF0 Hardware name: Huawei D06/D06, BIOS Hisilicon D06 UEFI
++AD4 RC0 - B601 (V6.01) 11/08/2018
++AD4 +AFs-11347.191370+AF0 pstate: a0c00009 (NzCv daif +PAN+UAO113471w
 
-Sure, done!
-https://lore.kernel.org/lkml/20190321171800.104681-1-evgreen@chromium.org/T/#t
+Please verify whether the following patch is a valid alternative for your patch:
+
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index ed34bfbc3844..745ffdda1bc1 100644
+--- a/drivers/scsi/sd.c
++-+-+- b/drivers/scsi/sd.c
++AEAAQA -1408,6 +-1408,7 +AEAAQA static void sd+AF8-release(struct gendisk +ACo-disk, fmode+AF8-t mode)
+ +AHs
+ 	struct scsi+AF8-disk +ACo-sdkp +AD0 scsi+AF8-disk(disk)+ADs
+ 	struct scsi+AF8-device +ACo-sdev +AD0 sdkp-+AD4-device+ADs
++-	struct request+AF8-queue +ACo-q +AD0 sdkp-+AD4-disk-+AD4-queue+ADs
+ 
+ 	SCSI+AF8-LOG+AF8-HLQUEUE(3, sd+AF8-printk(KERN+AF8-INFO, sdkp, +ACI-sd+AF8-release+AFw-n+ACI))+ADs
+ 
++AEAAQA -1417,9 +-1418,12 +AEAAQA static void sd+AF8-release(struct gendisk +ACo-disk, fmode+AF8-t mode)
+ 	+AH0
+ 
+ 	/+ACo
+-	 +ACo XXX and what if there are packets in flight and this close()
+-	 +ACo XXX is followed by a +ACI-rmmod sd+AF8-mod+ACI?
++-	 +ACo Wait until any requests that are in progress have completed.
++-	 +ACo This is necessary to avoid that e.g. scsi+AF8-end+AF8-request() crashes
++-	 +ACo due to scsi+AF8-disk+AF8-relase() clearing the disk-+AD4-private+AF8-data pointer.
+ 	 +ACo-/
++-	blk+AF8-mq+AF8-freeze+AF8-queue(q)+ADs
++-	blk+AF8-mq+AF8-unfreeze+AF8-queue(q)+ADs
+ 
+ 	scsi+AF8-disk+AF8-put(sdkp)+ADs
+ +AH0
+
+Thanks,
+
+Bart.
