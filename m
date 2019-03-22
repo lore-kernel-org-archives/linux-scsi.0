@@ -1,64 +1,105 @@
 From: Nathan Chancellor <natechancellor@gmail.com>
-Subject: Re: [PATCH] scsi: qla4xxx: avoid freeing unallocated dma memory
-Date: Fri, 22 Mar 2019 08:25:04 -0700
-Message-ID: <20190322152504.GA21978@archlinux-ryzen>
-References: <20190322142530.904080-1-arnd@arndb.de>
+Subject: Re: [PATCH] scsi: gdth: Only call dma_free_coherent when buf is not
+ NULL in ioc_general
+Date: Fri, 22 Mar 2019 08:26:53 -0700
+Message-ID: <20190322152653.GB21978@archlinux-ryzen>
+References: <20190307231839.3330-1-natechancellor@gmail.com>
+ <CAKwvOd=PZUW1U0KiBgn8z8ReHeRX=s8xEtS7Gebf9-AXxguNNQ@mail.gmail.com>
+ <CAK8P3a0w=6kk8bkyKi0rU-8Fxmh0XqjqACadUJviMzkp67myOw@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20190322142530.904080-1-arnd@arndb.de>
+In-Reply-To: <CAK8P3a0w=6kk8bkyKi0rU-8Fxmh0XqjqACadUJviMzkp67myOw@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Arnd Bergmann <arnd@arndb.de>
-Cc: QLogic-Storage-Upstream@qlogic.com, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, clang-built-linux@googlegroups.com, Nick Desaulniers <ndesaulniers@google.com>, Manish Rangankar <mrangankar@marvell.com>, Chengguang Xu <cgxu519@gmx.com>, Johannes Thumshirn <jthumshirn@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Nick Desaulniers <ndesaulniers@google.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Achim Leubner <achim_leubner@adaptec.com>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, clang-built-linux@googlegroups.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Mar 22, 2019 at 03:25:03PM +0100, Arnd Bergmann wrote:
-> Clang -Wuninitialized notices that on is_qla40XX we never allocate
-> any DMA memory in get_fw_boot_info() but attempt to free it anyway:
+On Fri, Mar 22, 2019 at 03:30:08PM +0100, Arnd Bergmann wrote:
+> On Fri, Mar 8, 2019 at 10:14 PM 'Nick Desaulniers' via Clang Built
+> Linux <clang-built-linux@googlegroups.com> wrote:
+> >
+> > On Thu, Mar 7, 2019 at 3:19 PM Nathan Chancellor
+> > <natechancellor@gmail.com> wrote:
+> > >
+> > > When building with -Wsometimes-uninitialized, Clang warns:
+> > >
+> > > drivers/scsi/gdth.c:3662:6: warning: variable 'paddr' is used
+> > > uninitialized whenever 'if' condition is false
+> > > [-Wsometimes-uninitialized]
+> > >
+> > > Don't attempt to call dma_free_coherent when buf is NULL (meaning that
+> > > we never called dma_alloc_coherent and initialized paddr), which avoids
+> > > this warning.
+> > >
+> > > Link: https://github.com/ClangBuiltLinux/linux/issues/402
+> > > Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
+> > > ---
+> > >  drivers/scsi/gdth.c | 5 +++--
+> > >  1 file changed, 3 insertions(+), 2 deletions(-)
+> > >
+> > > diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
+> > > index e7f1dd4f3b66..0ca9b4393770 100644
+> > > --- a/drivers/scsi/gdth.c
+> > > +++ b/drivers/scsi/gdth.c
+> > > @@ -3697,8 +3697,9 @@ static int ioc_general(void __user *arg, char *cmnd)
+> > >
+> > >         rval = 0;
+> > >  out_free_buf:
+> > > -       dma_free_coherent(&ha->pdev->dev, gen.data_len + gen.sense_len, buf,
+> > > -                       paddr);
+> > > +       if (buf)
+> > > +               dma_free_coherent(&ha->pdev->dev, gen.data_len + gen.sense_len,
+> > > +                                 buf, paddr);
+> > >         return rval;
+> > >  }
 > 
-> drivers/scsi/qla4xxx/ql4_os.c:5915:7: error: variable 'buf_dma' is used uninitialized whenever 'if' condition is false
->       [-Werror,-Wsometimes-uninitialized]
->                 if (!(val & 0x07)) {
->                     ^~~~~~~~~~~~~
-> drivers/scsi/qla4xxx/ql4_os.c:5985:47: note: uninitialized use occurs here
->         dma_free_coherent(&ha->pdev->dev, size, buf, buf_dma);
->                                                      ^~~~~~~
-> drivers/scsi/qla4xxx/ql4_os.c:5915:3: note: remove the 'if' if its condition is always true
->                 if (!(val & 0x07)) {
->                 ^~~~~~~~~~~~~~~~~~~
-> drivers/scsi/qla4xxx/ql4_os.c:5885:20: note: initialize the variable 'buf_dma' to silence this warning
->         dma_addr_t buf_dma;
->                           ^
->                            = 0
+> I came up with a different fix for this, but I think yours is better
 > 
-> Skip the call to dma_free_coherent() here.
+> Reviewed-by: Arnd Bergmann <arnd@arndb.de>
 > 
-> Fixes: 2a991c215978 ("[SCSI] qla4xxx: Boot from SAN support for open-iscsi")
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> For reference, this was my version:
 
-This is what I initially had but I guess I cared too much about that
-debug print firing properly :) I like this better personally.
+This is also what I had initially but I felt this was more future proof
+and matches how the rest of the tree handles calls to dma_free_coherent.
 
-Reviewed-by: Nathan Chancellor <natechancellor@gmail.com>
+Thanks for the review!
+Nathan
 
-> ---
->  drivers/scsi/qla4xxx/ql4_os.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-> index 16a18d5d856f..daa884fa43f4 100644
-> --- a/drivers/scsi/qla4xxx/ql4_os.c
-> +++ b/drivers/scsi/qla4xxx/ql4_os.c
-> @@ -5928,7 +5928,7 @@ static int get_fw_boot_info(struct scsi_qla_host *ha, uint16_t ddb_index[])
->  		val = rd_nvram_byte(ha, sec_addr);
->  		if (val & BIT_7)
->  			ddb_index[1] = (val & 0x7f);
-> -
-> +		goto exit_boot_info;
->  	} else if (is_qla80XX(ha)) {
->  		buf = dma_alloc_coherent(&ha->pdev->dev, size,
->  					 &buf_dma, GFP_KERNEL);
-> -- 
-> 2.20.0
+> diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
+> index e7f1dd4f3b66..c01f243902e1 100644
+> --- a/drivers/scsi/gdth.c
+> +++ b/drivers/scsi/gdth.c
+> @@ -3697,8 +3697,9 @@ static int ioc_general(void __user *arg, char *cmnd)
 > 
+>         rval = 0;
+>  out_free_buf:
+> -       dma_free_coherent(&ha->pdev->dev, gen.data_len + gen.sense_len, buf,
+> -                       paddr);
+> +       if (gen.data_len + gen.sense_len > 0)
+> +               dma_free_coherent(&ha->pdev->dev, gen.data_len +
+> gen.sense_len, buf,
+> +                               paddr);
+>         return rval;
+>  }
+> 
+> 
+> > Alternatively, paddr is a dma_addr_t defined in include/linux/types.h:
+> >
+> > #ifdef CONFIG_ARCH_DMA_ADDR_T_64BIT
+> > typedef u64 dma_addr_t;
+> > #else
+> > typedef u32 dma_addr_t;
+> > #endif
+> >
+> > Just initializing it to zero might be simpler than complicating the
+> > control flow of this function further. Thoughts?
+> 
+> No, blindly shutting up warnings is almost never the
+> right solution, even when they are false positives. The code
+> might change in the future and the bogus initialization would
+> then prevent the compiler from warning about a new bug.
+> 
+>       Arnd
