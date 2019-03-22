@@ -1,48 +1,94 @@
-From: David Sterba <dsterba-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH 1/2] treewide: Switch printk users from %pf and %pF to
- %ps and %pS, respectively
-Date: Fri, 22 Mar 2019 15:30:28 +0100
-Message-ID: <20190322143028.GD28481@twin.jikos.cz>
-References: <20190322132108.25501-1-sakari.ailus@linux.intel.com>
- <20190322132108.25501-2-sakari.ailus@linux.intel.com>
-Reply-To: dsterba-AlSwsSmVLrQ@public.gmane.org
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH] scsi: gdth: Only call dma_free_coherent when buf is not
+ NULL in ioc_general
+Date: Fri, 22 Mar 2019 15:30:08 +0100
+Message-ID: <CAK8P3a0w=6kk8bkyKi0rU-8Fxmh0XqjqACadUJviMzkp67myOw@mail.gmail.com>
+References: <20190307231839.3330-1-natechancellor@gmail.com> <CAKwvOd=PZUW1U0KiBgn8z8ReHeRX=s8xEtS7Gebf9-AXxguNNQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20190322132108.25501-2-sakari.ailus-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
-List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
-Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
-Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-To: Sakari Ailus <sakari.ailus-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Cc: Petr Mladek <pmladek-IBi9RG/b67k@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mmc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-um-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-f2fs-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-btrfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, sparclinux-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, xen-devel-GuqFBffKawtpuQazS67q72D2FQJk+8+b@public.gmane.org, ceph-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAKwvOd=PZUW1U0KiBgn8z8ReHeRX=s8xEtS7Gebf9-AXxguNNQ@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Nick Desaulniers <ndesaulniers@google.com>
+Cc: Nathan Chancellor <natechancellor@gmail.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Achim Leubner <achim_leubner@adaptec.com>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, clang-built-linux@googlegroups.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Mar 22, 2019 at 03:21:07PM +0200, Sakari Ailus wrote:
-> %pF and %pf are functionally equivalent to %pS and %ps conversion
-> specifiers. The former are deprecated, therefore switch the current users
-> to use the preferred variant.
-> 
-> The changes have been produced by the following command:
-> 
-> 	git grep -l '%p[fF]' | grep -v '^\(tools\|Documentation\)/' | \
-> 	while read i; do perl -i -pe 's/%pf/%ps/g; s/%pF/%pS/g;' $i; done
-> 
-> And verifying the result.
-> 
-> Signed-off-by: Sakari Ailus <sakari.ailus-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-> ---
+On Fri, Mar 8, 2019 at 10:14 PM 'Nick Desaulniers' via Clang Built
+Linux <clang-built-linux@googlegroups.com> wrote:
+>
+> On Thu, Mar 7, 2019 at 3:19 PM Nathan Chancellor
+> <natechancellor@gmail.com> wrote:
+> >
+> > When building with -Wsometimes-uninitialized, Clang warns:
+> >
+> > drivers/scsi/gdth.c:3662:6: warning: variable 'paddr' is used
+> > uninitialized whenever 'if' condition is false
+> > [-Wsometimes-uninitialized]
+> >
+> > Don't attempt to call dma_free_coherent when buf is NULL (meaning that
+> > we never called dma_alloc_coherent and initialized paddr), which avoids
+> > this warning.
+> >
+> > Link: https://github.com/ClangBuiltLinux/linux/issues/402
+> > Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
+> > ---
+> >  drivers/scsi/gdth.c | 5 +++--
+> >  1 file changed, 3 insertions(+), 2 deletions(-)
+> >
+> > diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
+> > index e7f1dd4f3b66..0ca9b4393770 100644
+> > --- a/drivers/scsi/gdth.c
+> > +++ b/drivers/scsi/gdth.c
+> > @@ -3697,8 +3697,9 @@ static int ioc_general(void __user *arg, char *cmnd)
+> >
+> >         rval = 0;
+> >  out_free_buf:
+> > -       dma_free_coherent(&ha->pdev->dev, gen.data_len + gen.sense_len, buf,
+> > -                       paddr);
+> > +       if (buf)
+> > +               dma_free_coherent(&ha->pdev->dev, gen.data_len + gen.sense_len,
+> > +                                 buf, paddr);
+> >         return rval;
+> >  }
 
-For 
+I came up with a different fix for this, but I think yours is better
 
->  fs/btrfs/tests/free-space-tree-tests.c  |  4 ++--
->  include/trace/events/btrfs.h            |  2 +-
+Reviewed-by: Arnd Bergmann <arnd@arndb.de>
 
-Acked-by: David Sterba <dsterba-IBi9RG/b67k@public.gmane.org>
+For reference, this was my version:
+
+diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
+index e7f1dd4f3b66..c01f243902e1 100644
+--- a/drivers/scsi/gdth.c
++++ b/drivers/scsi/gdth.c
+@@ -3697,8 +3697,9 @@ static int ioc_general(void __user *arg, char *cmnd)
+
+        rval = 0;
+ out_free_buf:
+-       dma_free_coherent(&ha->pdev->dev, gen.data_len + gen.sense_len, buf,
+-                       paddr);
++       if (gen.data_len + gen.sense_len > 0)
++               dma_free_coherent(&ha->pdev->dev, gen.data_len +
+gen.sense_len, buf,
++                               paddr);
+        return rval;
+ }
+
+
+> Alternatively, paddr is a dma_addr_t defined in include/linux/types.h:
+>
+> #ifdef CONFIG_ARCH_DMA_ADDR_T_64BIT
+> typedef u64 dma_addr_t;
+> #else
+> typedef u32 dma_addr_t;
+> #endif
+>
+> Just initializing it to zero might be simpler than complicating the
+> control flow of this function further. Thoughts?
+
+No, blindly shutting up warnings is almost never the
+right solution, even when they are false positives. The code
+might change in the future and the bogus initialization would
+then prevent the compiler from warning about a new bug.
+
+      Arnd
