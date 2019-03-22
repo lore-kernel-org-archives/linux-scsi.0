@@ -1,113 +1,104 @@
-From: Ming Lei <tom.leiming@gmail.com>
-Subject: Re: [RFC PATCH v2] scsi: fix oops in scsi_uninit_cmd()
-Date: Fri, 22 Mar 2019 09:55:57 +0800
-Message-ID: <CACVXFVPatx7RV9OzfX2yTEb68t57o6UbsOpzq6igEgU7k4-W4A@mail.gmail.com>
-References: <20190316020905.14962-1-yanaijie@huawei.com> <1553193542.65329.119.camel@acm.org>
- <CACVXFVOeh_H9R8G0W=WHT9aaOm2K60HhEPbg9Okd58dhQ4Pm8Q@mail.gmail.com>
+From: Sakari Ailus <sakari.ailus-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Subject: [PATCH 0/2] Remove support for deprecated %pf and %pF in vsprintf
+Date: Fri, 22 Mar 2019 15:21:06 +0200
+Message-ID: <20190322132108.25501-1-sakari.ailus@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CACVXFVOeh_H9R8G0W=WHT9aaOm2K60HhEPbg9Okd58dhQ4Pm8Q@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Jason Yan <yanaijie@huawei.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <jejb@linux.vnet.ibm.com>, Linux SCSI List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Hannes Reinecke <hare@suse.com>, Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
+List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
+Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+To: Petr Mladek <pmladek-IBi9RG/b67k@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mmc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-um-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-f2fs-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-btrfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, sparclinux-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, xen-devel-GuqFBffKawtpuQazS67q72D2FQJk+8+b@public.gmane.org, ceph-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Mar 22, 2019 at 9:36 AM Ming Lei <tom.leiming@gmail.com> wrote:
->
-> On Fri, Mar 22, 2019 at 2:39 AM Bart Van Assche <bvanassche@acm.org> wrot=
-e:
-> >
-> > On Sat, 2019-03-16 at 10:09 +0800, Jason Yan wrote:
-> > > If we remove the scsi disk when running io with fio, oops occured wit=
-h
-> > > the following condition.
-> > >
-> > > [scsi_eh_0]                              [fio]
-> > > scsi_end_request
-> > >   ->blk_update_request
-> > >     ->end_bio(io returned to userspace)
-> > >                                          close
-> > >                                            ->sd_release
-> > >                                               ->scsi_disk_put
-> > >                                                  ->scsi_disk_release
-> > >                                                      ->disk->private_=
-data =3D NULL;
-> > >
-> > >   ->scsi_mq_uninit_cmd
-> > >     ->scsi_uninit_cmd
-> > >       ->scsi_cmd_to_driver
-> > >     ->drv is NULL, Oops
-> > >
-> > > There is a small window between blk_update_request() and
-> > > scsi_mq_uninit_cmd() that scsi disk may have been released. This will
-> > > cause a oops like below:
-> > >
-> > > Unable to handle kernel NULL pointer dereference at virtual address
-> > > 0000000000000000
-> > > s/sync.c:67, func=3Dxfer, error=3DIn[11347.116050] Mem abort info:
-> > > put/output error
-> > > [11347.121598]   ESR =3D 0x96000006
-> > > [11347.126200]   Exception class =3D DABT (current EL), IL =3D 32 bit=
-s
-> > > [11347.132117]   SET =3D 0, FnV =3D 0
-> > > [11347.135170]   EA =3D 0, S1PTW =3D 0
-> > > [11347.138308] Data abort info:
-> > > [11347.141186]   ISV =3D 0, ISS =3D 0x00000006
-> > > [11347.145019]   CM =3D 0, WnR =3D 0
-> > > [11347.147977] user pgtable: 4k pages, 48-bit VAs, pgdp =3D
-> > > 00000000a67aece2
-> > > [11347.154591] [0000000000000000] pgd=3D0000002f90774003,
-> > > pud=3D0000002fab098003, pmd=3D0000000000000000
-> > > [11347.163304] Internal error: Oops: 96000006 [#1] PREEMPT SMP
-> > > [11347.168870] Modules linked in: hisi_sas_v3_hw hisi_sas_main libsas
-> > > [11347.175044] CPU: 56 PID: 4294 Comm: scsi_eh_2 Not tainted
-> > > 4.19.0-g8052059-dirty #2
-> > > [11347.182600] Hardware name: Huawei D06/D06, BIOS Hisilicon D06 UEFI
-> > > RC0 - B601 (V6.01) 11/08/2018
-> > > [11347.191370] pstate: a0c00009 (NzCv daif =E3=B0=83=E7=B9=90=CE=B5=
-=ED=9D=BE=E3=AF=97
-> >
-> > Please verify whether the following patch is a valid alternative for yo=
-ur patch:
-> >
-> > diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> > index ed34bfbc3844..745ffdda1bc1 100644
-> > --- a/drivers/scsi/sd.c
-> > +++ b/drivers/scsi/sd.c
-> > @@ -1408,6 +1408,7 @@ static void sd_release(struct gendisk *disk, fmod=
-e_t mode)
-> >  {
-> >         struct scsi_disk *sdkp =3D scsi_disk(disk);
-> >         struct scsi_device *sdev =3D sdkp->device;
-> > +       struct request_queue *q =3D sdkp->disk->queue;
-> >
-> >         SCSI_LOG_HLQUEUE(3, sd_printk(KERN_INFO, sdkp, "sd_release\n"))=
-;
-> >
-> > @@ -1417,9 +1418,12 @@ static void sd_release(struct gendisk *disk, fmo=
-de_t mode)
-> >         }
-> >
-> >         /*
-> > -        * XXX and what if there are packets in flight and this close()
-> > -        * XXX is followed by a "rmmod sd_mod"?
-> > +        * Wait until any requests that are in progress have completed.
-> > +        * This is necessary to avoid that e.g. scsi_end_request() cras=
-hes
-> > +        * due to scsi_disk_relase() clearing the disk->private_data po=
-inter.
-> >          */
-> > +       blk_mq_freeze_queue(q);
-> > +       blk_mq_unfreeze_queue(q);
->
-> It is over-kill to drain any requests here, what we want is to just
-> drain any in-flight
-> IO requests.
+Hi all,
 
-Not only over-kill, actually it can cause big performance issue, since any
-block/scsi utility may trigger the freeze/unfreeze.
+The printk family of functions supports %ps and %pS conversion specifiers
+to print function names. Yet the deprecated %pf and %pF conversion
+specifiers with equivalent functionality remain supported. A number of
+users of %pf and %pF remain.
 
-Thanks,
-Ming Lei
+This patchsets converts the existing users of %pf and %pF to %ps and %pS,
+respectively, and removes support for the deprecated %pf and %pF.
+
+The patches apply cleanly both on 5.1-rc1 as well as on Linux-next. No new
+%pf or %pF users have been added in the meantime so the patch is
+sufficient as itself on linux-next, too.
+
+Sakari Ailus (2):
+  treewide: Switch printk users from %pf and %pF to %ps and %pS,
+    respectively
+  vsprintf: Remove support for %pF and %pf in favour of %pS and %ps
+
+ Documentation/core-api/printk-formats.rst | 10 ----------
+ arch/alpha/kernel/pci_iommu.c             | 20 ++++++++++----------
+ arch/arm/mach-imx/pm-imx6.c               |  2 +-
+ arch/arm/mm/alignment.c                   |  2 +-
+ arch/arm/nwfpe/fpmodule.c                 |  2 +-
+ arch/microblaze/mm/pgtable.c              |  2 +-
+ arch/sparc/kernel/ds.c                    |  2 +-
+ arch/um/kernel/sysrq.c                    |  2 +-
+ arch/x86/include/asm/trace/exceptions.h   |  2 +-
+ arch/x86/kernel/irq_64.c                  |  2 +-
+ arch/x86/mm/extable.c                     |  4 ++--
+ arch/x86/xen/multicalls.c                 |  2 +-
+ drivers/acpi/device_pm.c                  |  2 +-
+ drivers/base/power/main.c                 |  6 +++---
+ drivers/base/syscore.c                    | 12 ++++++------
+ drivers/block/drbd/drbd_receiver.c        |  2 +-
+ drivers/block/floppy.c                    | 10 +++++-----
+ drivers/cpufreq/cpufreq.c                 |  2 +-
+ drivers/mmc/core/quirks.h                 |  2 +-
+ drivers/nvdimm/bus.c                      |  2 +-
+ drivers/nvdimm/dimm_devs.c                |  2 +-
+ drivers/pci/pci-driver.c                  | 14 +++++++-------
+ drivers/pci/quirks.c                      |  4 ++--
+ drivers/pnp/quirks.c                      |  2 +-
+ drivers/scsi/esp_scsi.c                   |  2 +-
+ fs/btrfs/tests/free-space-tree-tests.c    |  4 ++--
+ fs/f2fs/f2fs.h                            |  2 +-
+ fs/pstore/inode.c                         |  2 +-
+ include/trace/events/btrfs.h              |  2 +-
+ include/trace/events/cpuhp.h              |  4 ++--
+ include/trace/events/preemptirq.h         |  2 +-
+ include/trace/events/rcu.h                |  4 ++--
+ include/trace/events/sunrpc.h             |  2 +-
+ include/trace/events/timer.h              |  8 ++++----
+ include/trace/events/vmscan.h             |  4 ++--
+ include/trace/events/workqueue.h          |  4 ++--
+ include/trace/events/xen.h                |  2 +-
+ init/main.c                               |  6 +++---
+ kernel/async.c                            |  4 ++--
+ kernel/events/uprobes.c                   |  2 +-
+ kernel/fail_function.c                    |  2 +-
+ kernel/irq/debugfs.c                      |  2 +-
+ kernel/irq/handle.c                       |  2 +-
+ kernel/irq/manage.c                       |  2 +-
+ kernel/irq/spurious.c                     |  4 ++--
+ kernel/rcu/tree.c                         |  2 +-
+ kernel/stop_machine.c                     |  2 +-
+ kernel/time/sched_clock.c                 |  2 +-
+ kernel/time/timer.c                       |  2 +-
+ kernel/workqueue.c                        | 12 ++++++------
+ lib/error-inject.c                        |  2 +-
+ lib/percpu-refcount.c                     |  4 ++--
+ lib/vsprintf.c                            |  8 ++------
+ mm/memblock.c                             | 12 ++++++------
+ mm/memory.c                               |  2 +-
+ mm/vmscan.c                               |  2 +-
+ net/ceph/osd_client.c                     |  2 +-
+ net/core/net-procfs.c                     |  2 +-
+ net/core/netpoll.c                        |  4 ++--
+ scripts/checkpatch.pl                     |  5 -----
+ 60 files changed, 111 insertions(+), 130 deletions(-)
+
+-- 
+2.11.0
