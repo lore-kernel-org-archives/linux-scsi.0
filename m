@@ -1,63 +1,70 @@
-From: Sakari Ailus <sakari.ailus-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Subject: Re: [PATCH 0/2] Remove support for deprecated %pf and %pF in vsprintf
-Date: Fri, 22 Mar 2019 15:53:50 +0200
-Message-ID: <20190322135350.2btpno7vspvewxvk@paasikivi.fi.intel.com>
-References: <20190322132108.25501-1-sakari.ailus@linux.intel.com>
- <CAMuHMdVmqqjVx7As9AAywYxYXG=grijF5rF77OBn6TUjM9+xKw@mail.gmail.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH v2] scsi: qla4xxx: Don't call dma_free_coherent when buf
+ is NULL
+Date: Fri, 22 Mar 2019 15:25:05 +0100
+Message-ID: <CAK8P3a27E7w804RcNNX1OOfgqwkbcxf42XiyUORFaG_wkSUXqw@mail.gmail.com>
+References: <20190307184125.21419-1-natechancellor@gmail.com>
+ <20190307231534.2640-1-natechancellor@gmail.com> <CAKwvOdmFnnGOnbQ-0fAeOpAMDjnYnN1mkiNjbcW8uNss9cSrVg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <CAMuHMdVmqqjVx7As9AAywYxYXG=grijF5rF77OBn6TUjM9+xKw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
-List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
-Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
-Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-To: Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
-Cc: Petr Mladek <pmladek-IBi9RG/b67k@public.gmane.org>, scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org" <linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>, linux-pci <linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-um-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, Linux PM list <linux-pm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MMC List <linux-mmc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-f2fs-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, ACPI Devel Maling List <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux ARM <linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, netdev <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, sparclinux <sparclinux-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, xen-devel-GuqFBffKawtpuQazS67q72D2FQJk+8+b@public.gmane.org, ceph-devel <ceph-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, linux-btrfs <linux-btrfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Lars Ellenberg <drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAKwvOdmFnnGOnbQ-0fAeOpAMDjnYnN1mkiNjbcW8uNss9cSrVg@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Nick Desaulniers <ndesaulniers@google.com>
+Cc: Nathan Chancellor <natechancellor@gmail.com>, QLogic-Storage-Upstream@qlogic.com, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, clang-built-linux@googlegroups.com
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Geert,
-
-On Fri, Mar 22, 2019 at 02:37:18PM +0100, Geert Uytterhoeven wrote:
-> Hi Sakari,
-> 
-> On Fri, Mar 22, 2019 at 2:25 PM Sakari Ailus
-> <sakari.ailus-VuQAYsv1563Yd54FQh9/CA@public.gmane.org> wrote:
-> > The printk family of functions supports %ps and %pS conversion specifiers
-> > to print function names. Yet the deprecated %pf and %pF conversion
-> > specifiers with equivalent functionality remain supported. A number of
-> > users of %pf and %pF remain.
+On Fri, Mar 8, 2019 at 10:17 PM 'Nick Desaulniers' via Clang Built
+Linux <clang-built-linux@googlegroups.com> wrote:
+>
+> On Thu, Mar 7, 2019 at 3:17 PM Nathan Chancellor
+> <natechancellor@gmail.com> wrote:
 > >
-> > This patchsets converts the existing users of %pf and %pF to %ps and %pS,
-> > respectively, and removes support for the deprecated %pf and %pF.
+> > When building with -Wsometimes-uninitialized, Clang warns:
 > >
-> > The patches apply cleanly both on 5.1-rc1 as well as on Linux-next. No new
-> > %pf or %pF users have been added in the meantime so the patch is
-> > sufficient as itself on linux-next, too.
-> 
-> Do you know in which commit they became deprecated, so the backporters
-> know how far this can be backported safely?
+> > drivers/scsi/qla4xxx/ql4_os.c:5915:7: warning: variable 'buf_dma' is
+> > used uninitialized whenever 'if' condition is false
+> > [-Wsometimes-uninitialized]
+> >
+> > Don't call dma_free_coherent when buf is NULL, meaning that we never
+> > called dma_alloc_coherent and initialized buf_dma.
+> >
+> > Fixes: 2a991c215978 ("[SCSI] qla4xxx: Boot from SAN support for open-iscsi")
+> > Link: https://github.com/ClangBuiltLinux/linux/issues/391
+> > Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
 
-That appears to be 04b8eb7a4ccd
-("symbol lookup: introduce dereference_symbol_descriptor()"), the same
-patch that made %p[fF] and %p[sS] functionally equivalent.
+> > diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+> > index 16a18d5d856f..9f56dafc3cda 100644
+> > --- a/drivers/scsi/qla4xxx/ql4_os.c
+> > +++ b/drivers/scsi/qla4xxx/ql4_os.c
+> > @@ -5982,7 +5982,8 @@ static int get_fw_boot_info(struct scsi_qla_host *ha, uint16_t ddb_index[])
+> >                           ddb_index[1]));
+> >
+> >  exit_boot_info_free:
+> > -       dma_free_coherent(&ha->pdev->dev, size, buf, buf_dma);
+> > +       if (buf)
+> > +               dma_free_coherent(&ha->pdev->dev, size, buf, buf_dma);
+>
+> Same thoughts as: https://lkml.org/lkml/2019/3/8/786
+> WDYT?
 
-But my personal opinion would be not to backport the patch for two reasons:
-the sheer number of files it touches (those format strings change for
-various reasons) and the meager benefits it has on older kernels as any
-backported patch using %s or %S still works as such. Porting a patch
-forward should have no issues either as checkpatch.pl has been complaining
-of the use of %pf and %pF for a while now.
+Initializing the variable is definitely worse here, don't listen to
+clang's bad suggestions ;-)
 
--- 
-Kind regards,
+This was my fix, I'll send that as a proper patch as well:
 
-Sakari Ailus
-sakari.ailus-VuQAYsv1563Yd54FQh9/CA@public.gmane.org
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -5928,7 +5928,7 @@ static int get_fw_boot_info(struct scsi_qla_host
+*ha, uint16_t ddb_index[])
+                val = rd_nvram_byte(ha, sec_addr);
+                if (val & BIT_7)
+                        ddb_index[1] = (val & 0x7f);
+-
++               goto exit_boot_info;
+        } else if (is_qla80XX(ha)) {
+                buf = dma_alloc_coherent(&ha->pdev->dev, size,
+                                         &buf_dma, GFP_KERNEL);
+
+
+      Arnd
