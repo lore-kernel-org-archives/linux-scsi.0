@@ -1,55 +1,35 @@
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: Re: [PATCH 0/2] Remove support for deprecated %pf and %pF in vsprintf
-Date: Sun, 24 Mar 2019 23:19:32 +0200
-Message-ID: <20190324211932.GK9224@smile.fi.intel.com>
-References: <20190322132108.25501-1-sakari.ailus@linux.intel.com>
- <CAMuHMdVmqqjVx7As9AAywYxYXG=grijF5rF77OBn6TUjM9+xKw@mail.gmail.com>
- <20190322135350.2btpno7vspvewxvk@paasikivi.fi.intel.com>
- <20190322170550.GX9224@smile.fi.intel.com>
- <20190324211008.lypghym3gqcp62th@mara.localdomain>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: Debug scsi message in linux 4.19.31
+Date: Sun, 24 Mar 2019 20:04:07 -0400
+Message-ID: <yq15zs73jm0.fsf@oracle.com>
+References: <624bbdbb24ad7db69be29956cbf14689fd003cdb.camel@gmx.com>
+        <25d0ddcb-b603-6e0d-d512-b188813837bf@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20190324211008.lypghym3gqcp62th@mara.localdomain>
+In-Reply-To: <25d0ddcb-b603-6e0d-d512-b188813837bf@infradead.org> (Randy
+        Dunlap's message of "Sun, 24 Mar 2019 09:18:58 -0700")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Sakari Ailus <sakari.ailus@linux.intel.com>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>, Petr Mladek <pmladek@suse.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>, Linux PM list <linux-pm@vger.kernel.org>, Linux MMC List <linux-mmc@vger.kernel.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, linux-um@lists.infradead.org, linux-f2fs-devel@lists.sourceforge.net, linux-block@vger.kernel.org, ACPI Devel Maling List <linux-acpi@vger.kernel.org>, netdev <netdev@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>, linux-pci <linux-pci@vger.kernel.org>, sparclinux <sparclinux@vger.kernel.org>, xen-devel@lists.xenproject.org, ceph-devel <ceph-devel@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Linux ARM <linux-arm-kernel@l>
+To: Randy Dunlap <rdunlap@infradead.org>
+Cc: Hussam Al-Tayeb <ht990332@gmx.com>, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sun, Mar 24, 2019 at 11:10:08PM +0200, Sakari Ailus wrote:
-> On Fri, Mar 22, 2019 at 07:05:50PM +0200, Andy Shevchenko wrote:
-> > On Fri, Mar 22, 2019 at 03:53:50PM +0200, Sakari Ailus wrote:
-> > 
-> > > Porting a patch
-> > > forward should have no issues either as checkpatch.pl has been complaining
-> > > of the use of %pf and %pF for a while now.
-> > 
-> > And that's exactly the reason why I think instead of removing warning on
-> > checkpatch, it makes sense to convert to an error for a while. People are
-> > tending read documentation on internet and thus might have outdated one. And
-> > yes, the compiler doesn't tell a thing about it.
-> > 
-> > P.S. Though, if majority of people will tell that I'm wrong, then it's okay to
-> > remove.
-> 
-> I wonder if you wrote this before seeing my other patchset.
 
-Yes, I wrote it before seeing another series.
+Randy,
 
-> What I think could be done is to warn of plain %pf (without following "w")
-> in checkpatch.pl, and %pf that is not followed by "w" in the kernel.
-> Although we didn't have such checks to begin with. The case is still a
-> little bit different as %pf used to be a valid conversion specifier whereas
-> %pO likely has never existed.
-> 
-> So, how about adding such checks in the other set? I can retain %p[fF] check
-> here, too, if you like.
+>> Mar 23 17:40:10 hades kernel: sd 0:0:0:0: [sda] Optimal transfer size 0
+>> bytes < PAGE_SIZE (4096 bytes)
 
-Consistency tells me that the warning->error transformation in checkpatch.pl
-belongs this series.
+We're just trying to weed out the devices that report garbage in this
+field. But of course none of the devices I tested with put 0 in there.
 
+>> Does it really belong in an LTS kernel?
+
+The patch does fix problems for devices that report a nonsensical
+value. But it is a regression that it now prints a warning for devices
+that don't report an optimal I/O size at all.
+
+Sorry about that. Will fix tomorrow!
 
 -- 
-With Best Regards,
-Andy Shevchenko
+Martin K. Petersen	Oracle Linux Engineering
