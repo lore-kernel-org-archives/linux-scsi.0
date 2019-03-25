@@ -1,43 +1,37 @@
-From: "Rafael J. Wysocki" <rafael-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 2/2] vsprintf: Remove support for %pF and %pf in favour of
- %pS and %ps
-Date: Mon, 25 Mar 2019 10:49:01 +0100
-Message-ID: <CAJZ5v0ixukjWzSUqNCOpYuQci=7+ctdEhdZwOh=afz1b2zFVaw@mail.gmail.com>
-References: <20190322132108.25501-1-sakari.ailus@linux.intel.com>
- <20190322132108.25501-3-sakari.ailus@linux.intel.com>
- <CAJZ5v0i8JiQGk25yZKQqTzCCY+nrfoKXOH8nM6eNPhkN-i+y9w@mail.gmail.com>
+From: <Kento.A.Kobayashi@sony.com>
+Subject: RE: [PATCH] usb: uas: fix usb subsystem hang after power off hub
+ port
+Date: Mon, 25 Mar 2019 10:21:45 +0000
+Message-ID: <AE5419EAB4965843B3C0C1FE29F1FFE588EA40@JPYOKXMS103.jp.sony.com>
+References: <AE5419EAB4965843B3C0C1FE29F1FFE5872241@JPYOKXMS103.jp.sony.com>
+         <1552063928.29776.2.camel@suse.com>
+         <AE5419EAB4965843B3C0C1FE29F1FFE587268B@JPYOKXMS103.jp.sony.com>
+ <1552405047.21557.7.camel@suse.com>
+ <AE5419EAB4965843B3C0C1FE29F1FFE5873FFB@JPYOKXMS103.jp.sony.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-In-Reply-To: <CAJZ5v0i8JiQGk25yZKQqTzCCY+nrfoKXOH8nM6eNPhkN-i+y9w-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
-List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
-Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
-Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-To: Sakari Ailus <sakari.ailus-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Cc: Petr Mladek <pmladek-IBi9RG/b67k@public.gmane.org>, "open list:TARGET SUBSYSTEM" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux PM <linux-pm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-mmc <linux-mmc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org" <linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>, linux-um-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-f2fs-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, ACPI Devel Maling List <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, netdev <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-btrfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux PCI <linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, sparclinux-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, xen-devel-GuqFBffKawtpuQazS67q72D2FQJk+8+b@public.gmane.org, ceph-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Linux Memory Management List <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Linux ARM <linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <AE5419EAB4965843B3C0C1FE29F1FFE5873FFB@JPYOKXMS103.jp.sony.com>
+Content-Language: ja-JP
+Sender: linux-kernel-owner@vger.kernel.org
+To: oneukum@suse.com, gregkh@linuxfoundation.org, stern@rowland.harvard.edu
+Cc: usb-storage@lists.one-eyed-alien.net, Jacky.Cao@sony.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Mar 25, 2019 at 10:30 AM Rafael J. Wysocki <rafael-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
->
-> On Fri, Mar 22, 2019 at 2:21 PM Sakari Ailus
-> <sakari.ailus-VuQAYsv1563Yd54FQh9/CA@public.gmane.org> wrote:
-> >
-> > %pS and %ps are now the preferred conversion specifiers to print function
-> > %names. The functionality is equivalent; remove the old, deprecated %pF
-> > %and %pf support.
->
-> Are %pF and %pf really not used any more in the kernel?
->
-> If that is not the case, you need to convert the remaining users of
-> them to using %ps or %pS before making support for them go away
-> completely.
-
-Well, this is a [2/2] in a series, sorry for the noise (/me blames
-gmail for the confusion).
+SGksDQoNCj4+PiBBbmQgdGhlIHJldHVybiB2YWx1ZSgtRU5PREVWKSB3aWxsIGJlIHJldHVybmVk
+IHRvIGVycm9yIGhhbmRsZXIuDQo+Pj4gdWFzX2VoX2RldmljZV9yZXNldF9oYW5kbGVyLT51c2Jf
+cmVzZXRfZGV2aWNlIC0+IHVzYl9yZXNldF9hbmRfdmVyaWZ5X2RldmljZSAocmV0dXJuIC1FTk9E
+RVYpIFRoZW4gSSB3cm90ZSB0aGF0IGNvbW1pdCBtZXNzYWdlIHRoYXQgd2UgdGhpbmsgZXZlbiBp
+ZiB3ZSBpZ25vcmUgIkVOT0RFViIgaW4gcG9zdCByZXNldCB0byBhdm9pZCBoYW5nIGlzc3VlIGJ1
+dCB0aGUgZXJyb3Igd2lsbCBhbHNvIGJlIHJlcG9ydGVkIHRvIGVycm9yIGhhbmRsZXIuDQo+Pj4g
+I0lmIGlnbm9yZSBhbiBlcnJvciBhbmQgdGhlIGVycm9yIHdpbGwgbm90IGJlIHJlcG9ydGVkIHRo
+ZW4gaXQgaXMgbm90IGdvb2QuDQo+Pg0KPj5XZWxsLCB3aGF0IGRvIHdlIGRvIG5vdz8gQXJlIHlv
+dSBzYXlpbmcgdGhhdCB0aGUgc3RhdGUgbW9kZWwgU0NTSSBpcyB1c2luZyBpcyB3cm9uZz8NCg0K
+Pk5vLCBpdCBpcyBub3Qgd3JvbmcuDQo+QnV0IEkgdGhpbmsgd2UgbWF5IHdhbnQgdG8gcHJldmVu
+ZCBoYW5nIGJ5IHNsZWVwIHBlb2Nlc3Mgd2l0aCBjb250aW51aW5nIHRvIHRha2UgYSBsb2NrIGF0
+IGJsa19leGVjdXRlX3JxKCkgZnJvbSA+dXNiX3VuYmluZF9hbmRfcmViaW5kX21hcmRlZF9pbnRl
+cmZhY2VzKCkuDQoNCkNvdWxkIHlvdSBwbGVhc2UgeW91IGNhbiBhcHBseSB0aGlzIHBhdGNoIGZv
+ciBtYWlubGluZSBvciBub3Q/DQpJZiBub3QsIGNvdWxkIHlvdSBwbGVhc2UgdGVsbCBtZSB3aHkg
+eW91IGNhbid0IGFsbG93IHRvIGFwcGx5IHRoaXMgcGF0Y2g/DQoNClJlZ2FyZHMsDQpLZW50byBL
+b2JheWFzaGkNCg==
