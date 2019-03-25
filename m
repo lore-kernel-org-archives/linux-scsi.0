@@ -1,62 +1,124 @@
-From: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-Subject: Re: [PATCH v3 0/5] scsi: ufs: Fix regulator operations and remove
- "<name>-fixed-regulator" device tree property
-Date: Mon, 25 Mar 2019 09:16:20 +0800
-Message-ID: <1553476580.30977.91.camel@mtkswgap22>
-References: <1552875280-16196-1-git-send-email-stanley.chu@mediatek.com>
- <1552875280-16196-2-git-send-email-stanley.chu@mediatek.com>
+From: YueHaibing <yuehaibing@huawei.com>
+Subject: Re: [PATCH] scsi: qedi: Fix global-out-of-bounds bug in qedi dbg
+ function
+Date: Mon, 25 Mar 2019 11:15:12 +0800
+Message-ID: <01c65070-b96b-db7c-6da2-25c9b7037b90@huawei.com>
+References: <20190222033913.12480-1-yuehaibing@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-In-Reply-To: <1552875280-16196-2-git-send-email-stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-mediatek>,
- <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-mediatek/>
-List-Post: <mailto:linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-List-Help: <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-mediatek>,
- <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=subscribe>
-Sender: "Linux-mediatek" <linux-mediatek-bounces-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-Errors-To: linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
-To: "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, avri.altman-Sjgp3cTcYWE@public.gmane.org, alim.akhtar-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org, pedrom.sousa-HKixBCOQz3hWk0Htik3J/w@public.gmane.org
-Cc: "martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "marc.w.gonzalez-GANU6spQydw@public.gmane.org" <marc.w.gonzalez-GANU6spQydw@public.gmane.org>, Chun-Hung Wu =?UTF-8?Q?=28=E5=B7=AB=E9=A7=BF=E5=AE=8F=29?= <Chun-hung.Wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, Kuohong Wang =?UTF-8?Q?=28=E7=8E=8B=E5=9C=8B=E9=B4=BB=29?= <kuohong.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, "linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, Peter Wang =?UTF-8?Q?=28=E7=8E=8B=E4=BF=A1=E5=8F=8B=29?= <peter.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, "matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190222033913.12480-1-yuehaibing@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: QLogic-Storage-Upstream@cavium.com, jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, mrangankar@marvell.com, nilesh.javali@cavium.com
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Avri, Alim, Pedrom,
 
-Gentle ping for this series.
+Friendly ping, could someone review this patch ?
 
-On Mon, 2019-03-18 at 10:14 +0800, Stanley Chu wrote:
-> Hi,
+On 2019/2/22 11:39, Yue Haibing wrote:
+> From: YueHaibing <yuehaibing@huawei.com>
 > 
-> Sorry please help review V3 instead of previous versions.
-> In this version I fix and add more details in commit messages, and add one patch to fix "undefined voltage range" issue as well.
+> KASAN report this:
 > 
-> This patch series fixes UFS regulator operations, including voltage and current (re-)configuration flow during initialization or different power modes.
+> BUG: KASAN: global-out-of-bounds in qedi_dbg_err+0xda/0x330 [qedi]
+> Read of size 31 at addr ffffffffc12b0ae0 by task syz-executor.0/2429
 > 
-> Besides, remove "<name>-fixed-regulator" device tree property because it is not necessary anymore after fixes.
+> CPU: 0 PID: 2429 Comm: syz-executor.0 Not tainted 5.0.0-rc7+ #45
+> Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.10.2-1ubuntu1 04/01/2014
+> Call Trace:
+>  __dump_stack lib/dump_stack.c:77 [inline]
+>  dump_stack+0xfa/0x1ce lib/dump_stack.c:113
+>  print_address_description+0x1c4/0x270 mm/kasan/report.c:187
+>  kasan_report+0x149/0x18d mm/kasan/report.c:317
+>  memcpy+0x1f/0x50 mm/kasan/common.c:130
+>  qedi_dbg_err+0xda/0x330 [qedi]
+>  ? 0xffffffffc12d0000
+>  qedi_init+0x118/0x1000 [qedi]
+>  ? 0xffffffffc12d0000
+>  ? 0xffffffffc12d0000
+>  ? 0xffffffffc12d0000
+>  do_one_initcall+0xfa/0x5ca init/main.c:887
+>  do_init_module+0x204/0x5f6 kernel/module.c:3460
+>  load_module+0x66b2/0x8570 kernel/module.c:3808
+>  __do_sys_finit_module+0x238/0x2a0 kernel/module.c:3902
+>  do_syscall_64+0x147/0x600 arch/x86/entry/common.c:290
+>  entry_SYSCALL_64_after_hwframe+0x49/0xbe
+> RIP: 0033:0x462e99
+> Code: f7 d8 64 89 02 b8 ff ff ff ff c3 66 0f 1f 44 00 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 bc ff ff ff f7 d8 64 89 01 48
+> RSP: 002b:00007f2d57e55c58 EFLAGS: 00000246 ORIG_RAX: 0000000000000139
+> RAX: ffffffffffffffda RBX: 000000000073bfa0 RCX: 0000000000462e99
+> RDX: 0000000000000000 RSI: 00000000200003c0 RDI: 0000000000000003
+> RBP: 00007f2d57e55c70 R08: 0000000000000000 R09: 0000000000000000
+> R10: 0000000000000000 R11: 0000000000000246 R12: 00007f2d57e566bc
+> R13: 00000000004bcefb R14: 00000000006f7030 R15: 0000000000000004
 > 
-> V3:
-> - Fix and add more details in commit messages.
-> - Add one patch "scsi: ufs: Avoid configuring undefined voltage range on a regulator".
+> The buggy address belongs to the variable:
+>  __func__.67584+0x0/0xffffffffffffd520 [qedi]
 > 
-> V2:
-> - Add two patches to prepare to and remove "<name>-fixed-regulator" device tree property.
-> - Add more details on patch "scsi: ufs: remove unused min_uA field in struct ufs_vreg" (Marc Gonzalez).
+> Memory state around the buggy address:
+>  ffffffffc12b0980: fa fa fa fa 00 04 fa fa fa fa fa fa 00 00 05 fa
+>  ffffffffc12b0a00: fa fa fa fa 00 00 04 fa fa fa fa fa 00 05 fa fa
+>> ffffffffc12b0a80: fa fa fa fa 00 06 fa fa fa fa fa fa 00 02 fa fa
+>                                                           ^
+>  ffffffffc12b0b00: fa fa fa fa 00 00 04 fa fa fa fa fa 00 00 03 fa
+>  ffffffffc12b0b80: fa fa fa fa 00 00 02 fa fa fa fa fa 00 00 04 fa
 > 
-> Stanley Chu (5):
->   scsi: ufs: Remove unused min_uA field in struct ufs_vreg
->   scsi: ufs: Avoid configuring undefined voltage range on a regulator
->   scsi: ufs: Fix regulator load and icc-level configuration
->   scsi: ufs: Change "<name>-max-microamp" to non-mandatory property
->   scsi: ufs: Remove "<name>-fixed-regulator" device tree property
+> qedi_dbg_err function does not check the length of caller's name,
+> blindly copy 31 characters to array 'nfunc', then print it to log,
+> which trigger global-out-of-bounds bug and may leak kernel info.
+> Also other qedi dbg function may have the same issue, this patch
+> fix this.
 > 
->  drivers/scsi/ufs/ufs.h           |  1 -
->  drivers/scsi/ufs/ufshcd-pltfrm.c | 14 +++-----------
->  drivers/scsi/ufs/ufshcd.c        | 28 ++++++++++++++++++++--------
->  3 files changed, 23 insertions(+), 20 deletions(-)
+> Fixes: ace7f46ba5fd ("scsi: qedi: Add QLogic FastLinQ offload iSCSI driver framework.")
+> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+> ---
+>  drivers/scsi/qedi/qedi_dbg.c | 12 ++++--------
+>  1 file changed, 4 insertions(+), 8 deletions(-)
 > 
-
-Thanks,
-Stanley
+> diff --git a/drivers/scsi/qedi/qedi_dbg.c b/drivers/scsi/qedi/qedi_dbg.c
+> index 8fd28b0..cce44b9 100644
+> --- a/drivers/scsi/qedi/qedi_dbg.c
+> +++ b/drivers/scsi/qedi/qedi_dbg.c
+> @@ -18,8 +18,7 @@ qedi_dbg_err(struct qedi_dbg_ctx *qedi, const char *func, u32 line,
+>  	struct va_format vaf;
+>  	char nfunc[32];
+>  
+> -	memset(nfunc, 0, sizeof(nfunc));
+> -	memcpy(nfunc, func, sizeof(nfunc) - 1);
+> +	snprintf(nfunc, sizeof(nfunc), "%s", func);
+>  
+>  	va_start(va, fmt);
+>  
+> @@ -43,8 +42,7 @@ qedi_dbg_warn(struct qedi_dbg_ctx *qedi, const char *func, u32 line,
+>  	struct va_format vaf;
+>  	char nfunc[32];
+>  
+> -	memset(nfunc, 0, sizeof(nfunc));
+> -	memcpy(nfunc, func, sizeof(nfunc) - 1);
+> +	snprintf(nfunc, sizeof(nfunc), "%s", func);
+>  
+>  	va_start(va, fmt);
+>  
+> @@ -72,8 +70,7 @@ qedi_dbg_notice(struct qedi_dbg_ctx *qedi, const char *func, u32 line,
+>  	struct va_format vaf;
+>  	char nfunc[32];
+>  
+> -	memset(nfunc, 0, sizeof(nfunc));
+> -	memcpy(nfunc, func, sizeof(nfunc) - 1);
+> +	snprintf(nfunc, sizeof(nfunc), "%s", func);
+>  
+>  	va_start(va, fmt);
+>  
+> @@ -102,8 +99,7 @@ qedi_dbg_info(struct qedi_dbg_ctx *qedi, const char *func, u32 line,
+>  	struct va_format vaf;
+>  	char nfunc[32];
+>  
+> -	memset(nfunc, 0, sizeof(nfunc));
+> -	memcpy(nfunc, func, sizeof(nfunc) - 1);
+> +	snprintf(nfunc, sizeof(nfunc), "%s", func);
+>  
+>  	va_start(va, fmt);
+>  
+> 
