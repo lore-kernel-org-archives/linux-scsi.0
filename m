@@ -1,66 +1,74 @@
-From: Marc Gonzalez <marc.w.gonzalez@free.fr>
-Subject: Re: [PATCH v5 0/3] UFS on APQ8098/MSM8998
-Date: Mon, 25 Mar 2019 13:05:37 +0100
-Message-ID: <56e3d3d8-700d-867b-b23c-06da2248ebdc@free.fr>
-References: <43768d77-80b7-9cdc-b6e0-08ec4a026c21@free.fr>
+From: Sakari Ailus <sakari.ailus-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Subject: Re: [PATCH 0/2] Remove support for deprecated %pf and %pF in vsprintf
+Date: Mon, 25 Mar 2019 17:13:00 +0200
+Message-ID: <20190325151259.2w22y4ijqilrbaxj@kekkonen.localdomain>
+References: <20190322132108.25501-1-sakari.ailus@linux.intel.com>
+ <CAMuHMdVmqqjVx7As9AAywYxYXG=grijF5rF77OBn6TUjM9+xKw@mail.gmail.com>
+ <20190322135350.2btpno7vspvewxvk@paasikivi.fi.intel.com>
+ <20190322170550.GX9224@smile.fi.intel.com>
+ <20190324211008.lypghym3gqcp62th@mara.localdomain>
+ <20190324211932.GK9224@smile.fi.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <43768d77-80b7-9cdc-b6e0-08ec4a026c21@free.fr>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bjorn Andersson <bjorn.andersson@linaro.org>, Andy Gross <andy.gross@linaro.org>
-Cc: MSM <linux-arm-msm@vger.kernel.org>, SCSI <linux-scsi@vger.kernel.org>, Jeffrey Hugo <jhugo@codeaurora.org>, David Brown <david.brown@linaro.org>, Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, Pedro Sousa <pedrom.sousa@synopsys.com>, LKML <linux-kernel@vger.kernel.org>, Lee Jones <lee.jones@linaro.org>
+Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20190324211932.GK9224-XvqNBM/wLWRrdx17CPfAsdBPR1lH4CV8@public.gmane.org>
+List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
+List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
+Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+To: Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Cc: Petr Mladek <pmladek-IBi9RG/b67k@public.gmane.org>, scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux PM list <linux-pm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-pci <linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-um-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, "linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org" <linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>, Linux MMC List <linux-mmc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-f2fs-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, ACPI Devel Maling List <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>, Linux ARM <linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, netdev <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, sparclinux <sparclinux-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, xen-devel-GuqFBffKawtpuQazS67q72D2FQJk+8+b@public.gmane.org, ceph-devel <ceph-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, linux-btrfs <linux-btrfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Lars Ellenberg <drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hello,
+Hi Andy,
 
-What is the status for this series?
-https://patchwork.kernel.org/project/linux-arm-msm/list/?series=84611
+On Sun, Mar 24, 2019 at 11:19:32PM +0200, Andy Shevchenko wrote:
+> On Sun, Mar 24, 2019 at 11:10:08PM +0200, Sakari Ailus wrote:
+> > On Fri, Mar 22, 2019 at 07:05:50PM +0200, Andy Shevchenko wrote:
+> > > On Fri, Mar 22, 2019 at 03:53:50PM +0200, Sakari Ailus wrote:
+> > > 
+> > > > Porting a patch
+> > > > forward should have no issues either as checkpatch.pl has been complaining
+> > > > of the use of %pf and %pF for a while now.
+> > > 
+> > > And that's exactly the reason why I think instead of removing warning on
+> > > checkpatch, it makes sense to convert to an error for a while. People are
+> > > tending read documentation on internet and thus might have outdated one. And
+> > > yes, the compiler doesn't tell a thing about it.
+> > > 
+> > > P.S. Though, if majority of people will tell that I'm wrong, then it's okay to
+> > > remove.
+> > 
+> > I wonder if you wrote this before seeing my other patchset.
+> 
+> Yes, I wrote it before seeing another series.
+> 
+> > What I think could be done is to warn of plain %pf (without following "w")
+> > in checkpatch.pl, and %pf that is not followed by "w" in the kernel.
+> > Although we didn't have such checks to begin with. The case is still a
+> > little bit different as %pf used to be a valid conversion specifier whereas
+> > %pO likely has never existed.
+> > 
+> > So, how about adding such checks in the other set? I can retain %p[fF] check
+> > here, too, if you like.
+> 
+> Consistency tells me that the warning->error transformation in checkpatch.pl
+> belongs this series.
 
-Regards.
+All other invalid pointer conversion specifiers currently result into a
+warning only. I see that as an orthogonal change to this set. I found
+another issue in checkpatch.pl that may require some discussion; would you
+be ok with addressing this in another set?
 
-On 25/02/2019 13:16, Marc Gonzalez wrote:
+-- 
+Regards,
 
-> Hello,
-> 
-> This series adds support for the UFS host controller on APQ8098/MSM8998-based boards.
-> 
-> This should be the final rev ;-)
-> 
-> Differences between v4 and v5:
-> - Drop patches that have already been accepted or spun off
-> 
-> Differences between v3 and v4:
-> - Rebase on top of -next
-> - Pick up Douglas Anderson's UFSHC doc fix
-> - Document 8998 UFSHC binding
-> - Improve UFS PHY binding doc
-> - Put the UFS DT patch at the end of the series
-> 
-> Difference between v2 and v3:
-> - Add qcom,msm8998-qmp-ufs-phy compat string and match it in the PHY driver
-> - Drop vdd-hba-fixed-regulator
-> - Write the reg addresses with full 32-bit width
-> - Set regulator-allow-set-load only on the 3 rails used by UFS.
-> - Revert the patch introducing ufshcd_set_vccq_rail_unused
-> 
-> Difference between v1 and v2:
-> - New patch to add 'regulator-allow-set-load' prop to all vreg nodes
-> - Rename rpmcc node to 'clock-controller' + Add Review tags
-> - Drop UFS pinctrl gymnastics (not required, probably left enabled in bootloader)
-> - Delete GCC_UFS_ICE_CORE_CLK (ICE not used upstream, I think)
-> - Fix sizes of ufsphy register areas based on Jeffrey's feedback
-> - Hack ufshcd_set_vccq_rail_unused into a NOP to work around lock up + reboot
-> 
-> 
-> Marc Gonzalez (3):
->   dt-bindings: ufs: Add msm8998 compatible string
->   arm64: dts: qcom: msm8998: Allow UFSHC driver to set-load
->   arm64: dts: qcom: msm8998: Add UFS nodes
-> 
->  .../devicetree/bindings/ufs/ufshcd-pltfrm.txt |  1 +
->  arch/arm64/boot/dts/qcom/msm8998-mtp.dtsi     | 22 +++++++
->  arch/arm64/boot/dts/qcom/msm8998.dtsi         | 65 +++++++++++++++++++
->  3 files changed, 88 insertions(+)
+Sakari Ailus
+sakari.ailus-VuQAYsv1563Yd54FQh9/CA@public.gmane.org
