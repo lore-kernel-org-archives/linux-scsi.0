@@ -1,79 +1,29 @@
-From: Jianchao Wang <jianchao.w.wang@oracle.com>
-Subject: [PATCH] scsi: ses: fix some risks of out of bound access
-Date: Mon, 25 Mar 2019 15:40:02 +0800
-Message-ID: <1553499602-27810-1-git-send-email-jianchao.w.wang@oracle.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Subject: Re: [PATCH 2/2] vsprintf: Remove support for %pF and %pf in favour of
+ %pS and %ps
+Date: Mon, 25 Mar 2019 10:30:01 +0100
+Message-ID: <CAJZ5v0i8JiQGk25yZKQqTzCCY+nrfoKXOH8nM6eNPhkN-i+y9w@mail.gmail.com>
+References: <20190322132108.25501-1-sakari.ailus@linux.intel.com> <20190322132108.25501-3-sakari.ailus@linux.intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190322132108.25501-3-sakari.ailus@linux.intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Sakari Ailus <sakari.ailus@linux.intel.com>
+Cc: Petr Mladek <pmladek@suse.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Linux ARM <linux-arm-kernel@lists.infradead.org>, sparclinux@vger.kernel.org, linux-um@lists.infradead.org, xen-devel@lists.xenproject.org, ACPI Devel Maling List <linux-acpi@vger.kernel.org>, Linux PM <linux-pm@vger.kernel.org>, drbd-dev@lists.linbit.com, linux-block@vger.kernel.org, linux-mmc <linux-mmc@vger.kernel.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Linux PCI <linux-pci@vger.kernel.org>, "open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>, linux-btrfs@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, Linux Memory Management List <linux-mm@kvack.org>, ceph-devel@vger.kernel.org, netde
 List-Id: linux-scsi@vger.kernel.org
 
-We have some places with risk of accessing out of bound of the
-buffer allocated from slab, even it could corrupt the memory.
+On Fri, Mar 22, 2019 at 2:21 PM Sakari Ailus
+<sakari.ailus@linux.intel.com> wrote:
+>
+> %pS and %ps are now the preferred conversion specifiers to print function
+> %names. The functionality is equivalent; remove the old, deprecated %pF
+> %and %pf support.
 
-Signed-off-by: Jianchao Wang <jianchao.w.wang@oracle.com>
----
- drivers/scsi/ses.c | 27 ++++++++++++++++++++++-----
- 1 file changed, 22 insertions(+), 5 deletions(-)
+Are %pF and %pf really not used any more in the kernel?
 
-diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
-index 0fc3922..42e6a1f 100644
---- a/drivers/scsi/ses.c
-+++ b/drivers/scsi/ses.c
-@@ -520,6 +520,7 @@ static void ses_enclosure_data_process(struct enclosure_device *edev,
- 	struct ses_device *ses_dev = edev->scratch;
- 	int types = ses_dev->page1_num_types;
- 	unsigned char *hdr_buf = kzalloc(INIT_ALLOC_SIZE, GFP_KERNEL);
-+	unsigned char *page1_end = ses_dev->page1 + ses_dev->page1_len;
- 
- 	if (!hdr_buf)
- 		goto simple_populate;
-@@ -556,6 +557,11 @@ static void ses_enclosure_data_process(struct enclosure_device *edev,
- 	type_ptr = ses_dev->page1_types;
- 	components = 0;
- 	for (i = 0; i < types; i++, type_ptr += 4) {
-+		if (type_ptr > page1_end - 2) {
-+			sdev_printk(KERN_ERR, sdev, "Access out of bound of page1"
-+					"%p page1_end %p\n", page1_end, type_ptr);
-+			break;
-+		}
- 		for (j = 0; j < type_ptr[1]; j++) {
- 			char *name = NULL;
- 			struct enclosure_component *ecomp;
-@@ -566,10 +572,15 @@ static void ses_enclosure_data_process(struct enclosure_device *edev,
- 				} else {
- 					len = (desc_ptr[2] << 8) + desc_ptr[3];
- 					desc_ptr += 4;
--					/* Add trailing zero - pushes into
--					 * reserved space */
--					desc_ptr[len] = '\0';
--					name = desc_ptr;
-+					if (desc_ptr + len >= buf + page7_len) {
-+						desc_ptr = NULL;
-+					} else {
-+
-+						/* Add trailing zero - pushes into
-+						 * reserved space */
-+						desc_ptr[len] = '\0';
-+						name = desc_ptr;
-+					}
- 				}
- 			}
- 			if (type_ptr[0] == ENCLOSURE_COMPONENT_DEVICE ||
-@@ -693,7 +704,13 @@ static int ses_intf_add(struct device *cdev,
- 	/* begin at the enclosure descriptor */
- 	type_ptr = buf + 8;
- 	/* skip all the enclosure descriptors */
--	for (i = 0; i < num_enclosures && type_ptr < buf + len; i++) {
-+	for (i = 0; i < num_enclosures; i++) {
-+		if (type_ptr >= buf + len) {
-+			sdev_printk(KERN_ERR, sdev, "Overflow the buf len = %d\n", len);
-+			err = -EINVAL;
-+			goto err_free;
-+		}
-+
- 		types += type_ptr[2];
- 		type_ptr += type_ptr[3] + 4;
- 	}
--- 
-2.7.4
+If that is not the case, you need to convert the remaining users of
+them to using %ps or %pS before making support for them go away
+completely.
+
+That said, checkpatch can be made treat %pf/F as invalid format right away IMO.
