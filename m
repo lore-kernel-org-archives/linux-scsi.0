@@ -1,37 +1,56 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH] Avoid that a kernel warning appears during system resume
-Date: Sun, 24 Mar 2019 21:47:04 -0700
-Message-ID: <bab5e39f-205f-3b53-d3e5-e28f1e41b3af@acm.org>
-References: <20190315232758.221199-1-bvanassche@acm.org>
- <20190325003830.8BA272147C@mail.kernel.org>
+From: Manish Rangankar <mrangankar@marvell.com>
+Subject: RE: [PATCH] scsi: qla4xxx: fix a potential NULL pointer dereference
+Date: Mon, 25 Mar 2019 06:18:30 +0000
+Message-ID: <BYAPR18MB24857ABD5DDE4D62E35F9C6DD85E0@BYAPR18MB2485.namprd18.prod.outlook.com>
+References: <20190314063100.12805-1-kjlu@umn.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20190325003830.8BA272147C@mail.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190314063100.12805-1-kjlu@umn.edu>
 Content-Language: en-US
-Sender: stable-owner@vger.kernel.org
-To: Sasha Levin <sashal@kernel.org>, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, Ming Lei <ming.lei@redhat.com>, Johannes Thumshirn <jthumshirn@suse.de>, Oleksandr Natalenko <oleksandr@natalenko.name>, Martin Steigerwald <martin@lichtvoll.de>, stable@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: Kangjie Lu <kjlu@umn.edu>
+Cc: "pakki001@umn.edu" <pakki001@umn.edu>, "QLogic-Storage-Upstream@qlogic.com" <QLogic-Storage-Upstream@qlogic.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 3/24/19 5:38 PM, Sasha Levin wrote:
-> [This is an automated email]
-> 
-> This commit has been processed because it contains a "Fixes:" tag,
-> fixing commit: 3a0a529971ec block, scsi: Make SCSI quiesce and resume work reliably.
-> 
-> The bot has tested the following trees: v5.0.3, v4.19.30.
-> 
-> v5.0.3: Build OK!
-> v4.19.30: Failed to apply! Possible dependencies:
->      cd84a62e0078 ("block, scsi: Change the preempt-only flag into a counter")
-> 
-> 
-> How should we proceed with this patch?
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org <linux-scsi-
+> owner@vger.kernel.org> On Behalf Of Kangjie Lu
+> Sent: Thursday, March 14, 2019 12:01 PM
+> To: kjlu@umn.edu
+> Cc: pakki001@umn.edu; QLogic-Storage-Upstream@qlogic.com; James E.J.
+> Bottomley <jejb@linux.ibm.com>; Martin K. Petersen
+> <martin.petersen@oracle.com>; linux-scsi@vger.kernel.org; linux-
+> kernel@vger.kernel.org
+> Subject: [PATCH] scsi: qla4xxx: fix a potential NULL pointer dereference
+>=20
+> In case iscsi_lookup_endpoint fails, the fix returns -EINVAL to avoid NUL=
+L
+> pointer dereference.
+>=20
+> Signed-off-by: Kangjie Lu <kjlu@umn.edu>
+> ---
+>  drivers/scsi/qla4xxx/ql4_os.c | 2 ++
+>  1 file changed, 2 insertions(+)
+>=20
+> diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.=
+c
+> index a77bfb224248..80289c885c07 100644
+> --- a/drivers/scsi/qla4xxx/ql4_os.c
+> +++ b/drivers/scsi/qla4xxx/ql4_os.c
+> @@ -3203,6 +3203,8 @@ static int qla4xxx_conn_bind(struct
+> iscsi_cls_session *cls_session,
+>  	if (iscsi_conn_bind(cls_session, cls_conn, is_leading))
+>  		return -EINVAL;
+>  	ep =3D iscsi_lookup_endpoint(transport_fd);
+> +	if (!ep)
+> +		return -EINVAL;
+>  	conn =3D cls_conn->dd_data;
+>  	qla_conn =3D conn->dd_data;
+>  	qla_conn->qla_ep =3D ep->dd_data;
+> --
+> 2.17.1
 
-I think if you want to backport that patch that you will also have to 
-backport commit cd84a62e0078 ("block, scsi: Change the preempt-only flag 
-into a counter") (kernel v4.20).
-
-Bart.
+Thanks
+Acked-by: Manish Rangankar <mrangankar@marvell.com>
