@@ -1,81 +1,54 @@
-From: Evan Green <evgreen@chromium.org>
-Subject: Re: [PATCH v5 0/8] phy: qcom-ufs: Enable regulators to be off in suspend
-Date: Tue, 26 Mar 2019 09:17:48 -0700
-Message-ID: <CAE=gft5c3pS2ksH_oW_+F52gr4r0KnkoUHJXZ7u9vChSAZEovg@mail.gmail.com>
-References: <20190321171800.104681-1-evgreen@chromium.org> <d90e86b9-a330-677c-a70a-d66139473f48@ti.com>
+From: Dongli Zhang <dongli.zhang@oracle.com>
+Subject: megasas: Unexpected response from lun 1 while scanning, scan aborted
+Date: Tue, 26 Mar 2019 09:47:50 -0700 (PDT)
+Message-ID: <9c3849cf-86c6-4568-bff5-1050b445322d@default>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <d90e86b9-a330-677c-a70a-d66139473f48@ti.com>
+Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
-To: Kishon Vijay Abraham I <kishon@ti.com>, Andy Gross <andy.gross@linaro.org>, Bjorn Andersson <bjorn.andersson@linaro.org>
-Cc: Stephen Boyd <swboyd@chromium.org>, Marc Gonzalez <marc.w.gonzalez@free.fr>, Can Guo <cang@codeaurora.org>, Vivek Gautam <vivek.gautam@codeaurora.org>, Douglas Anderson <dianders@chromium.org>, Asutosh Das <asutoshd@codeaurora.org>, "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" <devicetree@vger.kernel.org>, Pedro Sousa <pedrom.sousa@synopsys.com>, liwei <liwei213@huawei.com>, SCSI <linux-scsi@vger.kernel.org>, linux-arm-msm <linux-arm-msm@vger.kernel.org>, Bart Van Assche <Bart.VanAssche@wdc.com>, LKML <linux-kernel@vger.kernel.org>, Subhash Jadavani <subhashj@codeaurora.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Alim Akhtar <alim.akhtar@samsung.com>, Rob Herring <robh+dt@kernel.org>, Avri Altman <avri.altman@wdc.com>
+To: qemu-block@nongnu.org, linux-scsi@vger.kernel.org, megaraidlinux.pdl@broadcom.com
+Cc: linux-kernel@vger.kernel.org, qemu-devel@nongnu.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Mar 26, 2019 at 12:49 AM Kishon Vijay Abraham I <kishon@ti.com> wrote:
->
-> Hi,
->
-> On 21/03/19 10:47 PM, Evan Green wrote:
-> > The goal with this series is to enable shutting off regulators that power
-> > UFS during system suspend.
-> >
-> > In "the good life" version of this, we'd just disable the regulators
-> > in phy_poweroff() and be done with it. Unfortunately, that's not symmetric,
-> > as regulators are not enabled during phy_poweron(). Ok, so you might think
-> > we could just move the regulator enable and anything else that needs to
-> > come along into phy_poweron(), so that we can then undo it all in
-> > phy_poweroff(). That's where things get tricky.
-> >
-> > The qcom-qmp-phy overloaded the phy_init() and phy_poweron() callbacks,
-> > basically to mean "init phase 1" and "init phase 2". There are two phases
-> > because they have this phy_reset bit outside of the phy (in the UFS
-> > controller registers), and they need to make sure this bit is toggled at
-> > specific points in the phy init sequence. So there's this implicit
-> > sequence in the init dance between ufs-qcom.c and phy-qcom-qmp.c:
-> > 1) ufs-qcom asserts the PHY reset bit.
-> > 2) phy-qcom-qmp phy_init() does most of its initialization, but exits early.
-> > 3) ufs-qcom deasserts the PHY reset bit.
-> > 4) phy-qcom-qmp phy_poweron() finishes its initialization.
-> >
-> > This init dance is very difficult to follow in the code (since it's split
-> > between two drivers and not spelled out well), and arguably represents a
-> > deficiency in the hardware description of these devices.
-> >
-> > In this series I'm proposing tweaking the bindings for the Qualcomm
-> > UFS controller and PHY. In it we expose a reset controller from the
-> > UFS controller, that is then picked up and used from the PHY code.
-> > With this, the phy code can be reorganized to complete its initialization
-> > in a single function, removing the implicit two-phase overloading.
-> >
-> > Then I can move most of the phy initialization, including enabling
-> > the regulators, into phy_poweron(). Now, when phy_poweroff() is called,
-> > the phy actually powers off. This finally disables the regulators
-> > and allows me to save power in system suspend.
-> >
-> > Because the UFS PHY reset bit is now toggled in the PHY, rather
-> > than in ufs-qcom, this also percolated to all other PHYs using
-> > ufs-qcom, which from what I can see is just 8996.
-> >
-> > I removed the calls to phy_poweroff() during clock gating. This
-> > was originally dialing down a clock or two, while leaving the phy powered.
-> > I've now changed the semantics of phy_poweroff() to, well, actually power off.
-> > This works great for userlands that have set UFS's spm_lvl to 5 (off) like
-> > I have, but maybe changes power consumption for devices that have spm_lvl
-> > set to 3. I could try to use phy_init() and phy_poweron() as the two
-> > different possible transitions (fully off, and clocks off respectively),
-> > but I'm not sure if it actually matters, and I like the idea that
-> > phy_poweroff() really does power the thing off.
-> >
-> > Also, I don't have an 8996 device to test. If someone is able to test this
-> > out and perhaps point out any (hopefully obvious) bugs in the 8996 portion,
-> > I'd be grateful.
-> >
-> > This patch is based atop phy-next.
->
-> Merged the series except the dts patches.
+I am reporting an error that the scsi lun cannot initialize successfully wh=
+en I
+am emulating megasas scsi controller with qemu.
 
-Yay, thanks Kishon.
+I am not sure if this is issue in qemu or linux kernel.
 
-Andy, Bjorn, are you able to take the DT patches?
--Evan
+When 'lun=3D1' is specified, there is "Unexpected response from lun 1 while
+scanning, scan aborted".
+
+Everything works well if 'lun=3D0' is specified.
+
+
+Below is the qemu cmdline involved:
+
+-device megasas,id=3Dscsi0 \
+-device scsi-hd,drive=3Ddrive0,bus=3Dscsi0.0,lun=3D1 \
+-drive file=3D/home/zhang/img/test.img,if=3Dnone,id=3Ddrive0,format=3Draw
+
+
+Below is the syslog related to 'scsi|SCSI'
+
+# dmesg | grep SCSI
+[    0.392494] SCSI subsystem initialized
+[    0.460666] Block layer SCSI generic (bsg) driver version 0.4 loaded (ma=
+jor 251)
+[    0.706788] sd 1:0:0:0: [sda] Attached SCSI disk
+# dmesg | grep scsi
+[    0.511643] scsi host0: Avago SAS based MegaRAID driver
+[    0.523302] scsi 0:2:0:0: Unexpected response from lun 1 while scanning,=
+ scan aborted
+[    0.540364] scsi host1: ata_piix
+[    0.540780] scsi host2: ata_piix
+[    0.702396] scsi 1:0:0:0: Direct-Access     ATA      QEMU HARDDISK    2.=
+5+ PQ: 0 ANSI: 5
+
+When 'lun=3D1' is changed to 'lun=3D0', there is no issue.
+
+Thank you very much!
+
+Dongli Zhang
