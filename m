@@ -1,54 +1,59 @@
-From: Dongli Zhang <dongli.zhang@oracle.com>
-Subject: megasas: Unexpected response from lun 1 while scanning, scan aborted
-Date: Tue, 26 Mar 2019 09:47:50 -0700 (PDT)
-Message-ID: <9c3849cf-86c6-4568-bff5-1050b445322d@default>
+From: Nathan Chancellor <natechancellor@gmail.com>
+Subject: [PATCH v2] scsi: qla2xxx: Simplify conditional check again
+Date: Tue, 26 Mar 2019 15:04:46 -0700
+Message-ID: <20190326220444.10040-1-natechancellor@gmail.com>
+References: <20190320163315.12740-1-natechancellor@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <20190320163315.12740-1-natechancellor@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: qemu-block@nongnu.org, linux-scsi@vger.kernel.org, megaraidlinux.pdl@broadcom.com
-Cc: linux-kernel@vger.kernel.org, qemu-devel@nongnu.org
+To: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Joe Carnuccio <joe.carnuccio@cavium.com>, Himanshu Madhani <hmadhani@marvell.com>, qla2xxx-upstream@qlogic.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Nick Desaulniers <ndesaulniers@google.com>, clang-built-linux@googlegroups.com, Nathan Chancellor <natechancellor@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-I am reporting an error that the scsi lun cannot initialize successfully wh=
-en I
-am emulating megasas scsi controller with qemu.
+Clang warns when it sees a logical not on the left side of a
+conditional statement because it thinks the logical not should
+be applied to the whole statement, not just the left side:
 
-I am not sure if this is issue in qemu or linux kernel.
+drivers/scsi/qla2xxx/qla_nx.c:3703:7: warning: logical not is only
+applied to the left hand side of this comparison
+[-Wlogical-not-parentheses]
 
-When 'lun=3D1' is specified, there is "Unexpected response from lun 1 while
-scanning, scan aborted".
+This particular instance was already fixed by commit 0bfe7d3cae58 ("scsi:
+qla2xxx: Simplify conditional check") upstream but it was reintroduced
+by commit 3695310e37b4 ("scsi: qla2xxx: Update flash read/write
+routine") in the 5.2/scsi-queue.
 
-Everything works well if 'lun=3D0' is specified.
+Fixes: 3695310e37b4 ("scsi: qla2xxx: Update flash read/write routine")
+Link: https://github.com/ClangBuiltLinux/linux/issues/80
+Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
+---
 
+v1 -> v2:
 
-Below is the qemu cmdline involved:
+* Reword commit message so make it clear this is just a reapplication of
+  a commit that is already in mainline, as suggested by Nick.
 
--device megasas,id=3Dscsi0 \
--device scsi-hd,drive=3Ddrive0,bus=3Dscsi0.0,lun=3D1 \
--drive file=3D/home/zhang/img/test.img,if=3Dnone,id=3Ddrive0,format=3Draw
+* Include the authors who reintroduced this warning.
 
+ drivers/scsi/qla2xxx/qla_nx.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Below is the syslog related to 'scsi|SCSI'
-
-# dmesg | grep SCSI
-[    0.392494] SCSI subsystem initialized
-[    0.460666] Block layer SCSI generic (bsg) driver version 0.4 loaded (ma=
-jor 251)
-[    0.706788] sd 1:0:0:0: [sda] Attached SCSI disk
-# dmesg | grep scsi
-[    0.511643] scsi host0: Avago SAS based MegaRAID driver
-[    0.523302] scsi 0:2:0:0: Unexpected response from lun 1 while scanning,=
- scan aborted
-[    0.540364] scsi host1: ata_piix
-[    0.540780] scsi host2: ata_piix
-[    0.702396] scsi 1:0:0:0: Direct-Access     ATA      QEMU HARDDISK    2.=
-5+ PQ: 0 ANSI: 5
-
-When 'lun=3D1' is changed to 'lun=3D0', there is no issue.
-
-Thank you very much!
-
-Dongli Zhang
+diff --git a/drivers/scsi/qla2xxx/qla_nx.c b/drivers/scsi/qla2xxx/qla_nx.c
+index e0b4387fd6ba..359ebb634d96 100644
+--- a/drivers/scsi/qla2xxx/qla_nx.c
++++ b/drivers/scsi/qla2xxx/qla_nx.c
+@@ -3700,8 +3700,8 @@ qla82xx_chip_reset_cleanup(scsi_qla_host_t *vha)
+ 		spin_unlock_irqrestore(&ha->hardware_lock, flags);
+ 
+ 		/* Wait for pending cmds (physical and virtual) to complete */
+-		if (!qla2x00_eh_wait_for_pending_commands(vha, 0, 0,
+-		    WAIT_HOST) == QLA_SUCCESS) {
++		if (qla2x00_eh_wait_for_pending_commands(vha, 0, 0,
++		    WAIT_HOST)) {
+ 			ql_dbg(ql_dbg_init, vha, 0x00b3,
+ 			    "Done wait for "
+ 			    "pending commands.\n");
+-- 
+2.21.0
