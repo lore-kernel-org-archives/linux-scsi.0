@@ -1,35 +1,32 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: lpfc: avoid uninitialized variable warning
-Date: Mon, 25 Mar 2019 22:17:52 -0400
-Message-ID: <yq1tvfqz8dr.fsf@oracle.com>
-References: <20190322142557.929966-1-arnd@arndb.de>
+Subject: Re: [PATCH] scsi: gdth: Only call dma_free_coherent when buf is not NULL in ioc_general
+Date: Mon, 25 Mar 2019 22:23:16 -0400
+Message-ID: <yq1h8bqz84r.fsf@oracle.com>
+References: <20190307231839.3330-1-natechancellor@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190322142557.929966-1-arnd@arndb.de> (Arnd Bergmann's message
-        of "Fri, 22 Mar 2019 15:25:49 +0100")
+In-Reply-To: <20190307231839.3330-1-natechancellor@gmail.com> (Nathan
+        Chancellor's message of "Thu, 7 Mar 2019 16:18:39 -0700")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Nathan Chancellor <natechancellor@gmail.com>
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Achim Leubner <achim_leubner@adaptec.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, clang-built-linux@googlegroups.com, Nick Desaulniers <ndesaulniers@google.com>
 List-Id: linux-scsi@vger.kernel.org
 
 
-Arnd,
+Nathan,
 
-> clang -Wuninitialized incorrectly sees a variable being used without
-> initialization:
+> When building with -Wsometimes-uninitialized, Clang warns:
 >
-> drivers/scsi/lpfc/lpfc_nvme.c:2102:37: error: variable 'localport' is uninitialized when used here
->       [-Werror,-Wuninitialized]
->                 lport = (struct lpfc_nvme_lport *)localport->private;
->                                                   ^~~~~~~~~
-> drivers/scsi/lpfc/lpfc_nvme.c:2059:38: note: initialize the variable 'localport' to silence this warning
->         struct nvme_fc_local_port *localport;
->                                             ^
->                                              = NULL
-> 1 error generated.
+> drivers/scsi/gdth.c:3662:6: warning: variable 'paddr' is used
+> uninitialized whenever 'if' condition is false
+> [-Wsometimes-uninitialized]
+>
+> Don't attempt to call dma_free_coherent when buf is NULL (meaning that
+> we never called dma_alloc_coherent and initialized paddr), which avoids
+> this warning.
 
-Applied to 5.2/scsi-queue, thanks!
+Applied to 5.2/scsi-queue, thanks.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
