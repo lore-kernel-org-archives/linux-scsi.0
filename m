@@ -1,102 +1,53 @@
-From: Steffen Maier <maier@linux.ibm.com>
-Subject: [PATCH 2/3] zfcp: fix scsi_eh host reset with port_forced ERP for non-NPIV FCP devices
-Date: Tue, 26 Mar 2019 14:36:59 +0100
-Message-ID: <20190326133700.88655-3-maier@linux.ibm.com>
-References: <20190326133700.88655-1-maier@linux.ibm.com>
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20190326133700.88655-1-maier@linux.ibm.com>
-Sender: stable-owner@vger.kernel.org
-To: "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Benjamin Block <bblock@linux.ibm.com>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, Steffen Maier <maier@linux.ibm.com>, stable@vger.kernel.org
+From: Avri Altman <Avri.Altman@wdc.com>
+Subject: RE: [PATCH] scsi: ufs: Fix to check the return value of
+ alloc_ordered_workqueue
+Date: Tue, 26 Mar 2019 14:17:35 +0000
+Message-ID: <SN6PR04MB49251FBA9EFB10A277FD8C5EFC5F0@SN6PR04MB4925.namprd04.prod.outlook.com>
+References: <20190319175423.13724-1-pakki001@umn.edu>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190319175423.13724-1-pakki001@umn.edu>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Aditya Pakki <pakki001@umn.edu>
+Cc: "kjlu@umn.edu" <kjlu@umn.edu>, Alim Akhtar <alim.akhtar@samsung.com>, Pedro Sousa <pedrom.sousa@synopsys.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Subhash Jadavani <subhashj@codeaurora.org>, Asutosh Das <asutoshd@codeaurora.org>, Marc Gonzalez <marc.w.gonzalez@free.fr>, Bjorn Andersson <bjorn.andersson@linaro.org>, Ohad Sharabi <ohad.sharabi@wdc.com>, Vivek Gautam <vivek.gautam@codeaurora.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Suppose more than one non-NPIV FCP device is active on the same channel.
-Send I/O to storage and have some of the pending I/O run into a SCSI
-command timeout, e.g. due to bit errors on the fibre. Now the error
-situation stops. However, we saw FCP requests continue to timeout in the
-channel. The abort will be successful, but the subsequent TUR fails.
-Scsi_eh starts. The LUN reset fails. The target reset fails.
-The host reset only did an FCP device recovery. However, for non-NPIV
-FCP devices, this does not close and reopen ports on the SAN-side
-if other non-NPIV FCP device(s) share the same open ports.
+Hi,
+>=20
+> In ufshcd_init_clk_gating, alloc_ordered_workqueue may fail and return
+> NULL. The patch handles error consistent with other invocations in this
+> module.
+Not sure that's good enough, as later on we will try to queue work to that =
+workqueue.
 
-In order to resolve the continuing FCP request timeouts, we need to
-explicitly close and reopen ports on the SAN-side.
+Thanks,
+Avri
 
-This was missing since the beginning of zfcp in v2.6.0 history commit
-ea127f975424 ("[PATCH] s390 (7/7): zfcp host adapter.").
 
-Note: The FSF requests for forced port reopen could run into FSF request
-timeouts due to other reasons. This would trigger an internal FCP device
-recovery. Pending forced port reopen recoveries would get dismissed. So
-some ports might not get fully reopened during this host reset handler.
-However, subsequent I/O would trigger the above described escalation
-and eventually all ports would be forced reopen to resolve any
-continuing FCP request timeouts due to earlier bit errors.
-
-Signed-off-by: Steffen Maier <maier@linux.ibm.com>
-Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
-Cc: <stable@vger.kernel.org> #3.0+
-Reviewed-by: Jens Remus <jremus@linux.ibm.com>
-Reviewed-by: Benjamin Block <bblock@linux.ibm.com>
----
- drivers/s390/scsi/zfcp_erp.c  | 14 ++++++++++++++
- drivers/s390/scsi/zfcp_ext.h  |  2 ++
- drivers/s390/scsi/zfcp_scsi.c |  4 ++++
- 3 files changed, 20 insertions(+)
-
-diff --git a/drivers/s390/scsi/zfcp_erp.c b/drivers/s390/scsi/zfcp_erp.c
-index c0b2348d7ce6..e8fc28dba8df 100644
---- a/drivers/s390/scsi/zfcp_erp.c
-+++ b/drivers/s390/scsi/zfcp_erp.c
-@@ -624,6 +624,20 @@ static void zfcp_erp_strategy_memwait(struct zfcp_erp_action *erp_action)
- 	add_timer(&erp_action->timer);
- }
- 
-+void zfcp_erp_port_forced_reopen_all(struct zfcp_adapter *adapter,
-+				     int clear, char *dbftag)
-+{
-+	unsigned long flags;
-+	struct zfcp_port *port;
-+
-+	write_lock_irqsave(&adapter->erp_lock, flags);
-+	read_lock(&adapter->port_list_lock);
-+	list_for_each_entry(port, &adapter->port_list, list)
-+		_zfcp_erp_port_forced_reopen(port, clear, dbftag);
-+	read_unlock(&adapter->port_list_lock);
-+	write_unlock_irqrestore(&adapter->erp_lock, flags);
-+}
-+
- static void _zfcp_erp_port_reopen_all(struct zfcp_adapter *adapter,
- 				      int clear, char *dbftag)
- {
-diff --git a/drivers/s390/scsi/zfcp_ext.h b/drivers/s390/scsi/zfcp_ext.h
-index 3fce47b0b21b..c6acca521ffe 100644
---- a/drivers/s390/scsi/zfcp_ext.h
-+++ b/drivers/s390/scsi/zfcp_ext.h
-@@ -70,6 +70,8 @@ extern void zfcp_erp_port_reopen(struct zfcp_port *port, int clear,
- 				 char *dbftag);
- extern void zfcp_erp_port_shutdown(struct zfcp_port *, int, char *);
- extern void zfcp_erp_port_forced_reopen(struct zfcp_port *, int, char *);
-+extern void zfcp_erp_port_forced_reopen_all(struct zfcp_adapter *adapter,
-+					    int clear, char *dbftag);
- extern void zfcp_erp_set_lun_status(struct scsi_device *, u32);
- extern void zfcp_erp_clear_lun_status(struct scsi_device *, u32);
- extern void zfcp_erp_lun_reopen(struct scsi_device *, int, char *);
-diff --git a/drivers/s390/scsi/zfcp_scsi.c b/drivers/s390/scsi/zfcp_scsi.c
-index f4f6a07c5222..221d0dfb8493 100644
---- a/drivers/s390/scsi/zfcp_scsi.c
-+++ b/drivers/s390/scsi/zfcp_scsi.c
-@@ -368,6 +368,10 @@ static int zfcp_scsi_eh_host_reset_handler(struct scsi_cmnd *scpnt)
- 	struct zfcp_adapter *adapter = zfcp_sdev->port->adapter;
- 	int ret = SUCCESS, fc_ret;
- 
-+	if (!(adapter->connection_features & FSF_FEATURE_NPIV_MODE)) {
-+		zfcp_erp_port_forced_reopen_all(adapter, 0, "schrh_p");
-+		zfcp_erp_wait(adapter);
-+	}
- 	zfcp_erp_adapter_reopen(adapter, 0, "schrh_1");
- 	zfcp_erp_wait(adapter);
- 	fc_ret = fc_block_scsi_eh(scpnt);
--- 
-2.16.4
+>=20
+> Signed-off-by: Aditya Pakki <pakki001@umn.edu>
+> ---
+>  drivers/scsi/ufs/ufshcd.c | 2 ++
+>  1 file changed, 2 insertions(+)
+>=20
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index e040f9dd9ff3..701b2da25f09 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -1791,6 +1791,8 @@ static void ufshcd_init_clk_gating(struct ufs_hba
+> *hba)
+>  		 hba->host->host_no);
+>  	hba->clk_gating.clk_gating_workq =3D
+> alloc_ordered_workqueue(wq_name,
+>=20
+> WQ_MEM_RECLAIM);
+> +	if (!hba->clk_gating.clk_gating_workq)
+> +		dev_err(hba->dev, "Failed to allocate work queue\n");
+>=20
+>  	hba->clk_gating.is_enabled =3D true;
+>=20
+> --
+> 2.17.1
