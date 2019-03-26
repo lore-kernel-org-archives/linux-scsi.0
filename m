@@ -1,91 +1,92 @@
-From: "jianchao.wang" <jianchao.w.wang@oracle.com>
-Subject: Re: [PATCH] scsi: ses: fix some risks of out of bound access
-Date: Tue, 26 Mar 2019 09:19:20 +0800
-Message-ID: <4ce7e311-e1c8-9914-fb01-9ac3778f793c@oracle.com>
-References: <1553499602-27810-1-git-send-email-jianchao.w.wang@oracle.com>
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [PATCH] sd: Fix a race between closing an sd device and sd I/O
+Date: Tue, 26 Mar 2019 09:44:03 +0800
+Message-ID: <20190326014402.GD30669@ming.t460p>
+References: <20190325170146.184414-1-bvanassche@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1553499602-27810-1-git-send-email-jianchao.w.wang@oracle.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <stable-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20190325170146.184414-1-bvanassche@acm.org>
+Sender: stable-owner@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, Jason Yan <yanaijie@huawei.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Would anyone please take a look at this.
-Our customer encounter terrible memory corruption and panic due to this.
-
-Thanks
-Jianchao
-
-On 3/25/19 3:40 PM, Jianchao Wang wrote:
-> We have some places with risk of accessing out of bound of the
-> buffer allocated from slab, even it could corrupt the memory.
+On Mon, Mar 25, 2019 at 10:01:46AM -0700, Bart Van Assche wrote:
+> The scsi_end_request() function calls scsi_cmd_to_driver() indirectly
+> and hence needs the disk->private_data pointer. Avoid that that pointer
+> is cleared before all affected I/O requests have finished. This patch
+> avoids that the following crash occurs:
 > 
-> Signed-off-by: Jianchao Wang <jianchao.w.wang@oracle.com>
+> Unable to handle kernel NULL pointer dereference at virtual address 0000000000000000
+> Call trace:
+>  scsi_mq_uninit_cmd+0x1c/0x30
+>  scsi_end_request+0x7c/0x1b8
+>  scsi_io_completion+0x464/0x668
+>  scsi_finish_command+0xbc/0x160
+>  scsi_eh_flush_done_q+0x10c/0x170
+>  sas_scsi_recover_host+0x84c/0xa98 [libsas]
+>  scsi_error_handler+0x140/0x5b0
+>  kthread+0x100/0x12c
+>  ret_from_fork+0x10/0x18
+> 
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Ming Lei <ming.lei@redhat.com>
+> Cc: Hannes Reinecke <hare@suse.com>
+> Cc: Johannes Thumshirn <jthumshirn@suse.de>
+> Cc: Jason Yan <yanaijie@huawei.com>
+> Cc: <stable@vger.kernel.org>
+> Reported-by: Jason Yan <yanaijie@huawei.com>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 > ---
->  drivers/scsi/ses.c | 27 ++++++++++++++++++++++-----
->  1 file changed, 22 insertions(+), 5 deletions(-)
+>  drivers/scsi/sd.c | 19 +++++++++++++------
+>  1 file changed, 13 insertions(+), 6 deletions(-)
 > 
-> diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
-> index 0fc3922..42e6a1f 100644
-> --- a/drivers/scsi/ses.c
-> +++ b/drivers/scsi/ses.c
-> @@ -520,6 +520,7 @@ static void ses_enclosure_data_process(struct enclosure_device *edev,
->  	struct ses_device *ses_dev = edev->scratch;
->  	int types = ses_dev->page1_num_types;
->  	unsigned char *hdr_buf = kzalloc(INIT_ALLOC_SIZE, GFP_KERNEL);
-> +	unsigned char *page1_end = ses_dev->page1 + ses_dev->page1_len;
->  
->  	if (!hdr_buf)
->  		goto simple_populate;
-> @@ -556,6 +557,11 @@ static void ses_enclosure_data_process(struct enclosure_device *edev,
->  	type_ptr = ses_dev->page1_types;
->  	components = 0;
->  	for (i = 0; i < types; i++, type_ptr += 4) {
-> +		if (type_ptr > page1_end - 2) {
-> +			sdev_printk(KERN_ERR, sdev, "Access out of bound of page1"
-> +					"%p page1_end %p\n", page1_end, type_ptr);
-> +			break;
-> +		}
->  		for (j = 0; j < type_ptr[1]; j++) {
->  			char *name = NULL;
->  			struct enclosure_component *ecomp;
-> @@ -566,10 +572,15 @@ static void ses_enclosure_data_process(struct enclosure_device *edev,
->  				} else {
->  					len = (desc_ptr[2] << 8) + desc_ptr[3];
->  					desc_ptr += 4;
-> -					/* Add trailing zero - pushes into
-> -					 * reserved space */
-> -					desc_ptr[len] = '\0';
-> -					name = desc_ptr;
-> +					if (desc_ptr + len >= buf + page7_len) {
-> +						desc_ptr = NULL;
-> +					} else {
-> +
-> +						/* Add trailing zero - pushes into
-> +						 * reserved space */
-> +						desc_ptr[len] = '\0';
-> +						name = desc_ptr;
-> +					}
->  				}
->  			}
->  			if (type_ptr[0] == ENCLOSURE_COMPONENT_DEVICE ||
-> @@ -693,7 +704,13 @@ static int ses_intf_add(struct device *cdev,
->  	/* begin at the enclosure descriptor */
->  	type_ptr = buf + 8;
->  	/* skip all the enclosure descriptors */
-> -	for (i = 0; i < num_enclosures && type_ptr < buf + len; i++) {
-> +	for (i = 0; i < num_enclosures; i++) {
-> +		if (type_ptr >= buf + len) {
-> +			sdev_printk(KERN_ERR, sdev, "Overflow the buf len = %d\n", len);
-> +			err = -EINVAL;
-> +			goto err_free;
-> +		}
-> +
->  		types += type_ptr[2];
->  		type_ptr += type_ptr[3] + 4;
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index ed34bfbc3844..0077880c0cc8 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -1416,11 +1416,6 @@ static void sd_release(struct gendisk *disk, fmode_t mode)
+>  			scsi_set_medium_removal(sdev, SCSI_REMOVAL_ALLOW);
 >  	}
-> 
+>  
+> -	/*
+> -	 * XXX and what if there are packets in flight and this close()
+> -	 * XXX is followed by a "rmmod sd_mod"?
+> -	 */
+> -
+>  	scsi_disk_put(sdkp);
+>  }
+>  
+> @@ -3483,9 +3478,21 @@ static void scsi_disk_release(struct device *dev)
+>  {
+>  	struct scsi_disk *sdkp = to_scsi_disk(dev);
+>  	struct gendisk *disk = sdkp->disk;
+> -	
+> +	struct request_queue *q = disk->queue;
+> +
+>  	ida_free(&sd_index_ida, sdkp->index);
+>  
+> +	/*
+> +	 * Wait until all requests that are in progress have completed.
+> +	 * This is necessary to avoid that e.g. scsi_end_request() crashes
+> +	 * due to clearing the disk->private_data pointer. Wait from inside
+> +	 * scsi_disk_release() instead of from sd_release() to avoid that
+> +	 * freezing and unfreezing the request queue affects user space I/O
+> +	 * in case multiple processes open a /dev/sd... node concurrently.
+> +	 */
+> +	blk_mq_freeze_queue(q);
+> +	blk_mq_unfreeze_queue(q);
+> +
+>  	disk->private_data = NULL;
+>  	put_disk(disk);
+>  	put_device(&sdkp->device->sdev_gendev);
+
+No, this way may cause big performance issue, see my previous comment:
+
+https://marc.info/?l=linux-scsi&m=155321977714715&w=2
+
+
+Thanks,
+Ming
