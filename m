@@ -1,38 +1,25 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2] drivers: ufs: Add missing MODULE_* information
-Date: Mon, 25 Mar 2019 22:10:32 -0400
-Message-ID: <yq17ecm1j3b.fsf@oracle.com>
-References: <20190321132444.28659-1-anders.roxell@linaro.org>
+Subject: Re: [PATCH] scsi: qla4xxx: avoid freeing unallocated dma memory
+Date: Mon, 25 Mar 2019 22:16:28 -0400
+Message-ID: <yq1y352z8g3.fsf@oracle.com>
+References: <20190322142530.904080-1-arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <20190321132444.28659-1-anders.roxell@linaro.org> (Anders
- Roxell's message of "Thu, 21 Mar 2019 14:24:44 +0100")
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Anders Roxell <anders.roxell@linaro.org>
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, jejb@linux.ibm.com, linux-kernel@vger.kernel.org, linux-mediatek@lists.infradead.org, matthias.bgg@gmail.com, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190322142530.904080-1-arnd@arndb.de> (Arnd Bergmann's message
+        of "Fri, 22 Mar 2019 15:25:03 +0100")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: QLogic-Storage-Upstream@qlogic.com, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, clang-built-linux@googlegroups.com, Nick Desaulniers <ndesaulniers@google.com>, Nathan Chancellor <natechancellor@gmail.com>, Manish Rangankar <mrangankar@marvell.com>, Chengguang Xu <cgxu519@gmx.com>, Johannes Thumshirn <jthumshirn@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Anders,
+Arnd,
 
-> When building the ufs-mediatek module the following warning shows up:
->
-> WARNING: modpost: missing MODULE_LICENSE() in
->   drivers/scsi/ufs/ufs-mediatek.o
->
-> Rework to add MODULE_LICENSE,MODULE_AUTHOR and MODULE_DESCRIPTION.
+> Clang -Wuninitialized notices that on is_qla40XX we never allocate any
+> DMA memory in get_fw_boot_info() but attempt to free it anyway:
 
-Applied to 5.2/scsi-queue, thanks.
+Applied to 5.2/scsi-queue, thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
