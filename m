@@ -1,7 +1,7 @@
 From: Steffen Maier <maier@linux.ibm.com>
-Subject: [PATCH 1/3] zfcp: fix rport unblock if deleted SCSI devices on Scsi_Host
-Date: Tue, 26 Mar 2019 14:36:58 +0100
-Message-ID: <20190326133700.88655-2-maier@linux.ibm.com>
+Subject: [PATCH 2/3] zfcp: fix scsi_eh host reset with port_forced ERP for non-NPIV FCP devices
+Date: Tue, 26 Mar 2019 14:36:59 +0100
+Message-ID: <20190326133700.88655-3-maier@linux.ibm.com>
 References: <20190326133700.88655-1-maier@linux.ibm.com>
 Return-path: <stable-owner@vger.kernel.org>
 In-Reply-To: <20190326133700.88655-1-maier@linux.ibm.com>
@@ -10,79 +10,93 @@ To: "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <marti
 Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Benjamin Block <bblock@linux.ibm.com>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, Steffen Maier <maier@linux.ibm.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-An already deleted SCSI device can exist on the Scsi_Host and remain
-there because something still holds a reference.
-A new SCSI device with the same H:C:T:L and FCP device, target port WWPN,
-and FCP LUN can be created.
-When we try to unblock an rport, we still find the deleted SCSI device
-and return early because the zfcp_scsi_dev of that SCSI device is
-not ZFCP_STATUS_COMMON_UNBLOCKED. Hence we miss to unblock the rport,
-even if the new proper SCSI device would be in good state.
+Suppose more than one non-NPIV FCP device is active on the same channel.
+Send I/O to storage and have some of the pending I/O run into a SCSI
+command timeout, e.g. due to bit errors on the fibre. Now the error
+situation stops. However, we saw FCP requests continue to timeout in the
+channel. The abort will be successful, but the subsequent TUR fails.
+Scsi_eh starts. The LUN reset fails. The target reset fails.
+The host reset only did an FCP device recovery. However, for non-NPIV
+FCP devices, this does not close and reopen ports on the SAN-side
+if other non-NPIV FCP device(s) share the same open ports.
 
-Therefore, skip deleted SCSI devices when iterating the sdevs of the shost.
-[cf. __scsi_device_lookup{_by_target}() or scsi_device_get()]
+In order to resolve the continuing FCP request timeouts, we need to
+explicitly close and reopen ports on the SAN-side.
 
-The following abbreviated trace sequence can indicate such problem:
+This was missing since the beginning of zfcp in v2.6.0 history commit
+ea127f975424 ("[PATCH] s390 (7/7): zfcp host adapter.").
 
-Area           : REC
-Tag            : ersfs_3
-LUN            : 0x4045400300000000
-WWPN           : 0x50050763031bd327
-LUN status     : 0x40000000     not ZFCP_STATUS_COMMON_UNBLOCKED
-Ready count    : n		not incremented yet
-Running count  : 0x00000000
-ERP want       : 0x01
-ERP need       : 0xc1		ZFCP_ERP_ACTION_NONE
-
-Area           : REC
-Tag            : ersfs_3
-LUN            : 0x4045400300000000
-WWPN           : 0x50050763031bd327
-LUN status     : 0x41000000
-Ready count    : n+1
-Running count  : 0x00000000
-ERP want       : 0x01
-ERP need       : 0x01
-
-...
-
-Area           : REC
-Level          : 4		only with increased trace level
-Tag            : ertru_l
-LUN            : 0x4045400300000000
-WWPN           : 0x50050763031bd327
-LUN status     : 0x40000000
-Request ID     : 0x0000000000000000
-ERP status     : 0x01800000
-ERP step       : 0x1000
-ERP action     : 0x01
-ERP count      : 0x00
-
-NOT followed by a trace record with tag "scpaddy"
-for WWPN 0x50050763031bd327.
+Note: The FSF requests for forced port reopen could run into FSF request
+timeouts due to other reasons. This would trigger an internal FCP device
+recovery. Pending forced port reopen recoveries would get dismissed. So
+some ports might not get fully reopened during this host reset handler.
+However, subsequent I/O would trigger the above described escalation
+and eventually all ports would be forced reopen to resolve any
+continuing FCP request timeouts due to earlier bit errors.
 
 Signed-off-by: Steffen Maier <maier@linux.ibm.com>
-Fixes: 6f2ce1c6af37 ("scsi: zfcp: fix rport unblock race with LUN recovery")
-Cc: <stable@vger.kernel.org> #2.6.32+
+Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+Cc: <stable@vger.kernel.org> #3.0+
 Reviewed-by: Jens Remus <jremus@linux.ibm.com>
 Reviewed-by: Benjamin Block <bblock@linux.ibm.com>
 ---
- drivers/s390/scsi/zfcp_erp.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/s390/scsi/zfcp_erp.c  | 14 ++++++++++++++
+ drivers/s390/scsi/zfcp_ext.h  |  2 ++
+ drivers/s390/scsi/zfcp_scsi.c |  4 ++++
+ 3 files changed, 20 insertions(+)
 
 diff --git a/drivers/s390/scsi/zfcp_erp.c b/drivers/s390/scsi/zfcp_erp.c
-index 744a64680d5b..c0b2348d7ce6 100644
+index c0b2348d7ce6..e8fc28dba8df 100644
 --- a/drivers/s390/scsi/zfcp_erp.c
 +++ b/drivers/s390/scsi/zfcp_erp.c
-@@ -1341,6 +1341,9 @@ static void zfcp_erp_try_rport_unblock(struct zfcp_port *port)
- 		struct zfcp_scsi_dev *zsdev = sdev_to_zfcp(sdev);
- 		int lun_status;
+@@ -624,6 +624,20 @@ static void zfcp_erp_strategy_memwait(struct zfcp_erp_action *erp_action)
+ 	add_timer(&erp_action->timer);
+ }
  
-+		if (sdev->sdev_state == SDEV_DEL ||
-+		    sdev->sdev_state == SDEV_CANCEL)
-+			continue;
- 		if (zsdev->port != port)
- 			continue;
- 		/* LUN under port of interest */
++void zfcp_erp_port_forced_reopen_all(struct zfcp_adapter *adapter,
++				     int clear, char *dbftag)
++{
++	unsigned long flags;
++	struct zfcp_port *port;
++
++	write_lock_irqsave(&adapter->erp_lock, flags);
++	read_lock(&adapter->port_list_lock);
++	list_for_each_entry(port, &adapter->port_list, list)
++		_zfcp_erp_port_forced_reopen(port, clear, dbftag);
++	read_unlock(&adapter->port_list_lock);
++	write_unlock_irqrestore(&adapter->erp_lock, flags);
++}
++
+ static void _zfcp_erp_port_reopen_all(struct zfcp_adapter *adapter,
+ 				      int clear, char *dbftag)
+ {
+diff --git a/drivers/s390/scsi/zfcp_ext.h b/drivers/s390/scsi/zfcp_ext.h
+index 3fce47b0b21b..c6acca521ffe 100644
+--- a/drivers/s390/scsi/zfcp_ext.h
++++ b/drivers/s390/scsi/zfcp_ext.h
+@@ -70,6 +70,8 @@ extern void zfcp_erp_port_reopen(struct zfcp_port *port, int clear,
+ 				 char *dbftag);
+ extern void zfcp_erp_port_shutdown(struct zfcp_port *, int, char *);
+ extern void zfcp_erp_port_forced_reopen(struct zfcp_port *, int, char *);
++extern void zfcp_erp_port_forced_reopen_all(struct zfcp_adapter *adapter,
++					    int clear, char *dbftag);
+ extern void zfcp_erp_set_lun_status(struct scsi_device *, u32);
+ extern void zfcp_erp_clear_lun_status(struct scsi_device *, u32);
+ extern void zfcp_erp_lun_reopen(struct scsi_device *, int, char *);
+diff --git a/drivers/s390/scsi/zfcp_scsi.c b/drivers/s390/scsi/zfcp_scsi.c
+index f4f6a07c5222..221d0dfb8493 100644
+--- a/drivers/s390/scsi/zfcp_scsi.c
++++ b/drivers/s390/scsi/zfcp_scsi.c
+@@ -368,6 +368,10 @@ static int zfcp_scsi_eh_host_reset_handler(struct scsi_cmnd *scpnt)
+ 	struct zfcp_adapter *adapter = zfcp_sdev->port->adapter;
+ 	int ret = SUCCESS, fc_ret;
+ 
++	if (!(adapter->connection_features & FSF_FEATURE_NPIV_MODE)) {
++		zfcp_erp_port_forced_reopen_all(adapter, 0, "schrh_p");
++		zfcp_erp_wait(adapter);
++	}
+ 	zfcp_erp_adapter_reopen(adapter, 0, "schrh_1");
+ 	zfcp_erp_wait(adapter);
+ 	fc_ret = fc_block_scsi_eh(scpnt);
 -- 
 2.16.4
