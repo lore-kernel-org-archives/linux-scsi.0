@@ -1,7 +1,7 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 5.0 073/262] scsi: core: replace GFP_ATOMIC with GFP_KERNEL in scsi_scan.c
-Date: Wed, 27 Mar 2019 13:58:48 -0400
-Message-ID: <20190327180158.10245-73-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.0 112/262] scsi: megaraid_sas: return error when create DMA pool failed
+Date: Wed, 27 Mar 2019 13:59:27 -0400
+Message-ID: <20190327180158.10245-112-sashal@kernel.org>
 References: <20190327180158.10245-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -9,116 +9,81 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20190327180158.10245-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Benjamin Block <bblock@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Cc: Jason Yan <yanaijie@huawei.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Benjamin Block <bblock@linux.ibm.com>
+From: Jason Yan <yanaijie@huawei.com>
 
-[ Upstream commit 1749ef00f7312679f76d5e9104c5d1e22a829038 ]
+[ Upstream commit bcf3b67d16a4c8ffae0aa79de5853435e683945c ]
 
-We had a test-report where, under memory pressure, adding LUNs to the
-systems would fail (the tests add LUNs strictly in sequence):
+when create DMA pool for cmd frames failed, we should return -ENOMEM,
+instead of 0.
+In some case in:
 
-[ 5525.853432] scsi 0:0:1:1088045124: Direct-Access     IBM      2107900          .148 PQ: 0 ANSI: 5
-[ 5525.853826] scsi 0:0:1:1088045124: alua: supports implicit TPGS
-[ 5525.853830] scsi 0:0:1:1088045124: alua: device naa.6005076303ffd32700000000000044da port group 0 rel port 43
-[ 5525.853931] sd 0:0:1:1088045124: Attached scsi generic sg10 type 0
-[ 5525.854075] sd 0:0:1:1088045124: [sdk] Disabling DIF Type 1 protection
-[ 5525.855495] sd 0:0:1:1088045124: [sdk] 2097152 512-byte logical blocks: (1.07 GB/1.00 GiB)
-[ 5525.855606] sd 0:0:1:1088045124: [sdk] Write Protect is off
-[ 5525.855609] sd 0:0:1:1088045124: [sdk] Mode Sense: ed 00 00 08
-[ 5525.855795] sd 0:0:1:1088045124: [sdk] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-[ 5525.857838]  sdk: sdk1
-[ 5525.859468] sd 0:0:1:1088045124: [sdk] Attached SCSI disk
-[ 5525.865073] sd 0:0:1:1088045124: alua: transition timeout set to 60 seconds
-[ 5525.865078] sd 0:0:1:1088045124: alua: port group 00 state A preferred supports tolusnA
-[ 5526.015070] sd 0:0:1:1088045124: alua: port group 00 state A preferred supports tolusnA
-[ 5526.015213] sd 0:0:1:1088045124: alua: port group 00 state A preferred supports tolusnA
-[ 5526.587439] scsi_alloc_sdev: Allocation failure during SCSI scanning, some SCSI devices might not be configured
-[ 5526.588562] scsi_alloc_sdev: Allocation failure during SCSI scanning, some SCSI devices might not be configured
+    megasas_init_adapter_fusion()
 
-Looking at the code of scsi_alloc_sdev(), and all the calling contexts,
-there seems to be no reason to use GFP_ATMOIC here. All the different
-call-contexts use a mutex at some point, and nothing in between that
-requires no sleeping, as far as I could see. Additionally, the code that
-later allocates the block queue for the device (scsi_mq_alloc_queue())
-already uses GFP_KERNEL.
+    -->megasas_alloc_cmds()
+       -->megasas_create_frame_pool
+          create DMA pool failed,
+        --> megasas_free_cmds() [1]
 
-There are similar allocations in two other functions:
-scsi_probe_and_add_lun(), and scsi_add_lun(),; that can also be done with
-GFP_KERNEL.
+    -->megasas_alloc_cmds_fusion()
+       failed, then goto fail_alloc_cmds.
+    -->megasas_free_cmds() [2]
 
-Here is the contexts for the three functions so far:
+we will call megasas_free_cmds twice, [1] will kfree cmd_list,
+[2] will use cmd_list.it will cause a problem:
 
-    scsi_alloc_sdev()
-        scsi_probe_and_add_lun()
-            scsi_sequential_lun_scan()
-                __scsi_scan_target()
-                    scsi_scan_target()
-                        mutex_lock()
-                    scsi_scan_channel()
-                        scsi_scan_host_selected()
-                            mutex_lock()
-            scsi_report_lun_scan()
-                __scsi_scan_target()
-    	            ...
-            __scsi_add_device()
-                mutex_lock()
-            __scsi_scan_target()
-                ...
-        scsi_report_lun_scan()
-            ...
-        scsi_get_host_dev()
-            mutex_lock()
+Unable to handle kernel NULL pointer dereference at virtual address
+00000000
+pgd = ffffffc000f70000
+[00000000] *pgd=0000001fbf893003, *pud=0000001fbf893003,
+*pmd=0000001fbf894003, *pte=006000006d000707
+Internal error: Oops: 96000005 [#1] SMP
+ Modules linked in:
+ CPU: 18 PID: 1 Comm: swapper/0 Not tainted
+ task: ffffffdfb9290000 ti: ffffffdfb923c000 task.ti: ffffffdfb923c000
+ PC is at megasas_free_cmds+0x30/0x70
+ LR is at megasas_free_cmds+0x24/0x70
+ ...
+ Call trace:
+ [<ffffffc0005b779c>] megasas_free_cmds+0x30/0x70
+ [<ffffffc0005bca74>] megasas_init_adapter_fusion+0x2f4/0x4d8
+ [<ffffffc0005b926c>] megasas_init_fw+0x2dc/0x760
+ [<ffffffc0005b9ab0>] megasas_probe_one+0x3c0/0xcd8
+ [<ffffffc0004a5abc>] local_pci_probe+0x4c/0xb4
+ [<ffffffc0004a5c40>] pci_device_probe+0x11c/0x14c
+ [<ffffffc00053a5e4>] driver_probe_device+0x1ec/0x430
+ [<ffffffc00053a92c>] __driver_attach+0xa8/0xb0
+ [<ffffffc000538178>] bus_for_each_dev+0x74/0xc8
+  [<ffffffc000539e88>] driver_attach+0x28/0x34
+ [<ffffffc000539a18>] bus_add_driver+0x16c/0x248
+ [<ffffffc00053b234>] driver_register+0x6c/0x138
+ [<ffffffc0004a5350>] __pci_register_driver+0x5c/0x6c
+ [<ffffffc000ce3868>] megasas_init+0xc0/0x1a8
+ [<ffffffc000082a58>] do_one_initcall+0xe8/0x1ec
+ [<ffffffc000ca7be8>] kernel_init_freeable+0x1c8/0x284
+ [<ffffffc0008d90b8>] kernel_init+0x1c/0xe4
 
-    scsi_probe_and_add_lun()
-        ...
-
-    scsi_add_lun()
-        scsi_probe_and_add_lun()
-            ...
-
-So replace all these, and give them a bit of a better chance to succeed,
-with more chances of reclaim.
-
-Signed-off-by: Benjamin Block <bblock@linux.ibm.com>
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Signed-off-by: Jason Yan <yanaijie@huawei.com>
+Acked-by: Sumit Saxena <sumit.saxena@broadcom.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/scsi_scan.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas_base.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index dd0d516f65e2..53380e07b40e 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -220,7 +220,7 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
- 	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index fcbff83c0097..c9811d1aa007 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -4188,6 +4188,7 @@ int megasas_alloc_cmds(struct megasas_instance *instance)
+ 	if (megasas_create_frame_pool(instance)) {
+ 		dev_printk(KERN_DEBUG, &instance->pdev->dev, "Error creating frame DMA pool\n");
+ 		megasas_free_cmds(instance);
++		return -ENOMEM;
+ 	}
  
- 	sdev = kzalloc(sizeof(*sdev) + shost->transportt->device_size,
--		       GFP_ATOMIC);
-+		       GFP_KERNEL);
- 	if (!sdev)
- 		goto out;
- 
-@@ -788,7 +788,7 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
- 	 */
- 	sdev->inquiry = kmemdup(inq_result,
- 				max_t(size_t, sdev->inquiry_len, 36),
--				GFP_ATOMIC);
-+				GFP_KERNEL);
- 	if (sdev->inquiry == NULL)
- 		return SCSI_SCAN_NO_RESPONSE;
- 
-@@ -1079,7 +1079,7 @@ static int scsi_probe_and_add_lun(struct scsi_target *starget,
- 	if (!sdev)
- 		goto out;
- 
--	result = kmalloc(result_len, GFP_ATOMIC |
-+	result = kmalloc(result_len, GFP_KERNEL |
- 			((shost->unchecked_isa_dma) ? __GFP_DMA : 0));
- 	if (!result)
- 		goto out_free_sdev;
+ 	return 0;
 -- 
 2.19.1
