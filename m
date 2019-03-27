@@ -1,72 +1,40 @@
-From: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-Subject: RE: [PATCH RESEND v3 0/5] scsi: ufs: Fix regulator operations and
- remove "<name>-fixed-regulator" device tree property
-Date: Wed, 27 Mar 2019 21:24:37 +0800
-Message-ID: <1553693077.30977.94.camel@mtkswgap22>
-References: <1553680707-28579-1-git-send-email-stanley.chu@mediatek.com>
- <SN6PR04MB49250E97111EB8975E0ED7EFFC580@SN6PR04MB4925.namprd04.prod.outlook.com>
+From: Jan Kotas <jank@cadence.com>
+Subject: [PATCH 1/2] dt-bindings: scsi: ufs-cdns: Update Cadence UFS compatibility list
+Date: Wed, 27 Mar 2019 14:44:04 +0000
+Message-ID: <20190327144405.5716-2-jank@cadence.com>
+References: <20190327144405.5716-1-jank@cadence.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-In-Reply-To: <SN6PR04MB49250E97111EB8975E0ED7EFFC580-UKdxhu0+N/VnT3GYGerMaFM8qxBPnqtHvxpqHgZTriW3zl9H0oFU5g@public.gmane.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-mediatek>,
- <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-mediatek/>
-List-Post: <mailto:linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-List-Help: <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-mediatek>,
- <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=subscribe>
-Sender: "Linux-mediatek" <linux-mediatek-bounces-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-Errors-To: linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
-To: Avri Altman <Avri.Altman-Sjgp3cTcYWE@public.gmane.org>
-Cc: "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "marc.w.gonzalez-GANU6spQydw@public.gmane.org" <marc.w.gonzalez-GANU6spQydw@public.gmane.org>, "chun-hung.wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org" <chun-hung.wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, "kuohong.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org" <kuohong.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, "linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, "peter.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org" <peter.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, "alim.akhtar-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org" <alim.akhtar-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, "matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "pedrom.sousa-HKixBCOQz3hWk0Htik3J/w@public.gmane.org" <pedrom.sousa-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190327144405.5716-1-jank@cadence.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: robh+dt@kernel.org, mark.rutland@arm.com, alim.akhtar@samsung.com, avri.altman@wdc.com, pedrom.sousa@synopsys.com, jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Jan Kotas <jank@cadence.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Avri,
+This patch adds a new compatible string description for
+CDNS UFS HCD + M31 16nm PHY.
 
-On Wed, 2019-03-27 at 10:57 +0000, Avri Altman wrote:
-> > Hi,
-> > 
-> > Resend this patch series for review.
-> > 
-> > This version (v3) fixed and added more details in commit messages, and added
-> > one patch to fix "undefined voltage range" issue as well.
-> > 
-> > This patch series fixes UFS regulator operations, including voltage and current
-> > (re-)configuration flow during UFS initialization and power mode switching.
-> > 
-> > In the end, remove "<name>-fixed-regulator" device tree property because it is
-> > not necessary anymore after these fixes.
-> > 
-> > V3:
-> > - Fix and add more details in commit messages.
-> > - Add one patch "scsi: ufs: Avoid configuring undefined voltage range on a
-> > regulator".
-> > 
-> > V2:
-> > - Add two patches to prepare to and remove "<name>-fixed-regulator" device
-> > tree property.
-> > - Add more details on patch "scsi: ufs: remove unused min_uA field in struct
-> > ufs_vreg" (Marc Gonzalez).
-> > 
-> > Stanley Chu (5):
-> >   scsi: ufs: Remove unused min_uA field in struct ufs_vreg
-> >   scsi: ufs: Avoid configuring regulator with undefined voltage range
-> >   scsi: ufs: Fix regulator load and icc-level configuration
-> >   scsi: ufs: Change "<name>-max-microamp" to non-mandatory property
-> >   scsi: ufs: Remove "<name>-fixed-regulator" device tree property
-> > 
-> This series looks good to me, but better get acked-by from couple of platform guys as well.
+Signed-off-by: Jan Kotas <jank@cadence.com>
+---
+ Documentation/devicetree/bindings/ufs/cdns,ufshc.txt | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-Thanks so much for review.
-
-I'll fix commit message and invite more reviewers in next version.
-
-> 
-> Thanks,
-> Avri
-> 
-
-Thanks,
-Stanley
+diff --git a/Documentation/devicetree/bindings/ufs/cdns,ufshc.txt b/Documentation/devicetree/bindings/ufs/cdns,ufshc.txt
+index a04a4989e..02347b017 100644
+--- a/Documentation/devicetree/bindings/ufs/cdns,ufshc.txt
++++ b/Documentation/devicetree/bindings/ufs/cdns,ufshc.txt
+@@ -5,8 +5,9 @@ Each UFS controller instance should have its own node.
+ Please see the ufshcd-pltfrm.txt for a list of all available properties.
+ 
+ Required properties:
+-- compatible	: Compatible list, contains the following controller:
+-			"cdns,ufshc"
++- compatible	: Compatible list, contains one of the following controllers:
++			"cdns,ufshc" - Generic CDNS HCI,
++			"cdns,ufshc-m31-16nm" - CDNS UFS HC + M31 16nm PHY
+ 		  complemented with the JEDEC version:
+ 			"jedec,ufs-2.0"
+ 
+-- 
+2.15.0
