@@ -1,8 +1,8 @@
 From: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH RESEND v3 1/5] scsi: ufs: Remove unused min_uA field in struct
- ufs_vreg
-Date: Wed, 27 Mar 2019 17:58:23 +0800
-Message-ID: <1553680707-28579-2-git-send-email-stanley.chu@mediatek.com>
+Subject: [PATCH RESEND v3 5/5] scsi: ufs: Remove "<name>-fixed-regulator"
+ device tree property
+Date: Wed, 27 Mar 2019 17:58:27 +0800
+Message-ID: <1553680707-28579-6-git-send-email-stanley.chu@mediatek.com>
 References: <1553680707-28579-1-git-send-email-stanley.chu@mediatek.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -22,47 +22,62 @@ To: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, martin.petersen-QHcLZuEG
 Cc: marc.w.gonzalez-GANU6spQydw@public.gmane.org, chun-hung.wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, kuohong.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, peter.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-There are two fields related to regulator current limit in struct
-ufs_vreg: "min_uA" and "max_uA".
+"<name>-fixed-regulator" device tree property can be
+safely removed because below things are fixed or resolved,
 
-"max_uA" is probed by "<name>-max-microamp" property from device
-tree and used for
+1. "<name>-max-microamp" becomes optional property: Undefined
+   "<name>-max-microamp" will not cause initialization fail if
+   "<name>-fixed-regulator" is not defined.
 
-- regulator_set_load operations, and
-- icc_level configuration in device.
+2. Current switching operation (by regulator_set_load) now has rules:
+   Regulators will have undefined current limit if
+   "<name>-fixed-regulator" is not defined. But this is safe because
+   only regulator which has configured current limit from
+   "<name>-max-microamp" property is allowed to change its load.
 
-However "min_uA" field is not used anywhere, thus we can remove it.
+Although "<name>-fixed-regulator" is not used in any dt-bindings
+in tree, this patch is still safe for regulators already defined
+"<name>-fixed-regulator". To be more clear, if a regulator defined
+"<name>-fixed-regulator" before, the behavior difference after
+this patch is,
+
+1. "<name>-max-microamp":
+   If a regulator defined "<name>-fixed-regulator", it is not necessary
+   to define "<name>-max-microamp" property in device tree and it is
+   expected to have an undefined current limit, i.e., "max_uA" field
+   is zero in struct ufs_vreg. This is exactly the same as patched.
+
+2. "vcc-supply-1p8" or volatge range settings:
+   * For vcc, vccq or vccq2, these three regulators shall not define
+     "<name>-fixed-regulator" because defining it will lead to
+     undefined voltage range and thus voltage switching will be
+     unexpected.
+   * For other regulators with undefined voltage range, voltage range
+     will be still undefined after patched.
+
+Therefore this patch is safe for all existed regulators with
+"<name>-fixed-regulator" property already defined.
 
 Signed-off-by: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-Reviewed-by: Marc Gonzalez <marc.w.gonzalez-GANU6spQydw@public.gmane.org>
 ---
- drivers/scsi/ufs/ufs.h           | 1 -
- drivers/scsi/ufs/ufshcd-pltfrm.c | 1 -
- 2 files changed, 2 deletions(-)
+ drivers/scsi/ufs/ufshcd-pltfrm.c | 5 -----
+ 1 file changed, 5 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
-index 21e4ccb5ba6e..99a9c4d16f6b 100644
---- a/drivers/scsi/ufs/ufs.h
-+++ b/drivers/scsi/ufs/ufs.h
-@@ -516,7 +516,6 @@ struct ufs_vreg {
- 	bool enabled;
- 	int min_uV;
- 	int max_uV;
--	int min_uA;
- 	int max_uA;
- };
- 
 diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
-index 27213676329c..32cf8c56f029 100644
+index 2420e6962219..7b404df965b2 100644
 --- a/drivers/scsi/ufs/ufshcd-pltfrm.c
 +++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
-@@ -164,7 +164,6 @@ static int ufshcd_populate_vreg(struct device *dev, const char *name,
- 		goto out;
- 	}
+@@ -151,11 +151,6 @@ static int ufshcd_populate_vreg(struct device *dev, const char *name,
  
--	vreg->min_uA = 0;
- 	if (!strcmp(name, "vcc")) {
- 		if (of_property_read_bool(np, "vcc-supply-1p8")) {
- 			vreg->min_uV = UFS_VREG_VCC_1P8_MIN_UV;
+ 	vreg->name = kstrdup(name, GFP_KERNEL);
+ 
+-	/* if fixed regulator no need further initialization */
+-	snprintf(prop_name, MAX_PROP_SIZE, "%s-fixed-regulator", name);
+-	if (of_property_read_bool(np, prop_name))
+-		goto out;
+-
+ 	snprintf(prop_name, MAX_PROP_SIZE, "%s-max-microamp", name);
+ 	if (of_property_read_u32(np, prop_name, &vreg->max_uA)) {
+ 		dev_info(dev, "%s: unable to find %s\n", __func__, prop_name);
 -- 
 2.18.0
