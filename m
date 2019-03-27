@@ -1,15 +1,15 @@
 From: Avri Altman <Avri.Altman-Sjgp3cTcYWE@public.gmane.org>
-Subject: RE: [PATCH RESEND v3 4/5] scsi: ufs: Change "<name>-max-microamp" to
- non-mandatory property
-Date: Wed, 27 Mar 2019 10:48:01 +0000
-Message-ID: <SN6PR04MB4925933E233D694751321EADFC580@SN6PR04MB4925.namprd04.prod.outlook.com>
+Subject: RE: [PATCH RESEND v3 3/5] scsi: ufs: Fix regulator load and icc-level
+ configuration
+Date: Wed, 27 Mar 2019 10:55:20 +0000
+Message-ID: <SN6PR04MB4925CC5A4C838226E73D8C06FC580@SN6PR04MB4925.namprd04.prod.outlook.com>
 References: <1553680707-28579-1-git-send-email-stanley.chu@mediatek.com>
- <1553680707-28579-5-git-send-email-stanley.chu@mediatek.com>
+ <1553680707-28579-4-git-send-email-stanley.chu@mediatek.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-In-Reply-To: <1553680707-28579-5-git-send-email-stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
+In-Reply-To: <1553680707-28579-4-git-send-email-stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
 Content-Language: en-US
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-mediatek>,
  <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=unsubscribe>
@@ -25,32 +25,19 @@ Cc: "marc.w.gonzalez-GANU6spQydw@public.gmane.org" <marc.w.gonzalez-GANU6spQydw@
 List-Id: linux-scsi@vger.kernel.org
 
 > 
-> In dt-bindings for ufs, "<name>-max-microamp" property indicates
-> current limit and is mandatory if "<name>-fixed-regulator" is not
-> defined on a specified regulator.
+> Currently if a regulator has "<name>-fixed-regulator"
+> property in device tree, it will skip current limit initialization.
+> This lead to a zero "max_uA" value in struct ufs_vreg.
 > 
-> However, in some platforms, regulators without "<name>-fixed-regulator"
-> property may not need to define their current limit because they may
-> want to define voltage range only for proper voltage switching in
-> different power modes, especially for vcc, vccq or vccq2.
+> However, "regulator_set_load" operation shall be required
+> on regulators which have valid current limits, otherwise a zero
+> "max_uA" set by "regulator_set_load" may cause unexpected behavior
+> when this regulator is enabled or set as high power mode.
 > 
-> Currently missing "<name>-max-microamp" property in device tree will
-> lead to initialization fail currently, thus such limitation shall be
-lead initialization to fail, thus ...
-
-> resolved to tolerate this kind of regulators.
-> 
-> After resolving this, regulators without "<name>-max-microamp"
-> property will have undefined "max current" value, i.e., zero value
-> in "max_uA" field in struct ufs_vreg. Because we do bypass current
-> switching operation (by regulator_set_load) in case of undefined
-> current limit, this patch shall be safe.
+> Similarly, in device's icc_level configuration flow, the target
+> icc_level shall be updated if regulator also has valid current limit,
+> otherwise a wrong icc_level will be calculated by zero "max_uA" and
+> thus causes unexpected results after it is written to device.
 > 
 > Signed-off-by: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
 Reviewed-by: Avri Altman <avri.altman-Sjgp3cTcYWE@public.gmane.org>
-
-You might want to cc some platform guys, e.g. Evan Green and/or Codeaurora guys,
-To take a look.
-
-Thanks,
-Avri
