@@ -1,8 +1,8 @@
 From: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH RESEND v3 3/5] scsi: ufs: Fix regulator load and icc-level
- configuration
-Date: Wed, 27 Mar 2019 17:58:25 +0800
-Message-ID: <1553680707-28579-4-git-send-email-stanley.chu@mediatek.com>
+Subject: [PATCH RESEND v3 1/5] scsi: ufs: Remove unused min_uA field in struct
+ ufs_vreg
+Date: Wed, 27 Mar 2019 17:58:23 +0800
+Message-ID: <1553680707-28579-2-git-send-email-stanley.chu@mediatek.com>
 References: <1553680707-28579-1-git-send-email-stanley.chu@mediatek.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -22,67 +22,47 @@ To: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, martin.petersen-QHcLZuEG
 Cc: marc.w.gonzalez-GANU6spQydw@public.gmane.org, chun-hung.wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, kuohong.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, peter.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Currently if a regulator has "<name>-fixed-regulator"
-property in device tree, it will skip current limit initialization.
-This lead to a zero "max_uA" value in struct ufs_vreg.
+There are two fields related to regulator current limit in struct
+ufs_vreg: "min_uA" and "max_uA".
 
-However, "regulator_set_load" operation shall be required
-on regulators which have valid current limits, otherwise a zero
-"max_uA" set by "regulator_set_load" may cause unexpected behavior
-when this regulator is enabled or set as high power mode.
+"max_uA" is probed by "<name>-max-microamp" property from device
+tree and used for
 
-Similarly, in device's icc_level configuration flow, the target
-icc_level shall be updated if regulator also has valid current limit,
-otherwise a wrong icc_level will be calculated by zero "max_uA" and
-thus causes unexpected results after it is written to device.
+- regulator_set_load operations, and
+- icc_level configuration in device.
+
+However "min_uA" field is not used anywhere, thus we can remove it.
 
 Signed-off-by: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
+Reviewed-by: Marc Gonzalez <marc.w.gonzalez-GANU6spQydw@public.gmane.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 15 ++++++++++++---
- 1 file changed, 12 insertions(+), 3 deletions(-)
+ drivers/scsi/ufs/ufs.h           | 1 -
+ drivers/scsi/ufs/ufshcd-pltfrm.c | 1 -
+ 2 files changed, 2 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 81d99aebb867..5ba49c8cd2a3 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -6294,19 +6294,19 @@ static u32 ufshcd_find_max_sup_active_icc_level(struct ufs_hba *hba,
+diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+index 21e4ccb5ba6e..99a9c4d16f6b 100644
+--- a/drivers/scsi/ufs/ufs.h
++++ b/drivers/scsi/ufs/ufs.h
+@@ -516,7 +516,6 @@ struct ufs_vreg {
+ 	bool enabled;
+ 	int min_uV;
+ 	int max_uV;
+-	int min_uA;
+ 	int max_uA;
+ };
+ 
+diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
+index 27213676329c..32cf8c56f029 100644
+--- a/drivers/scsi/ufs/ufshcd-pltfrm.c
++++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
+@@ -164,7 +164,6 @@ static int ufshcd_populate_vreg(struct device *dev, const char *name,
  		goto out;
  	}
  
--	if (hba->vreg_info.vcc)
-+	if (hba->vreg_info.vcc && hba->vreg_info.vcc->max_uA)
- 		icc_level = ufshcd_get_max_icc_level(
- 				hba->vreg_info.vcc->max_uA,
- 				POWER_DESC_MAX_ACTV_ICC_LVLS - 1,
- 				&desc_buf[PWR_DESC_ACTIVE_LVLS_VCC_0]);
- 
--	if (hba->vreg_info.vccq)
-+	if (hba->vreg_info.vccq && hba->vreg_info.vccq->max_uA)
- 		icc_level = ufshcd_get_max_icc_level(
- 				hba->vreg_info.vccq->max_uA,
- 				icc_level,
- 				&desc_buf[PWR_DESC_ACTIVE_LVLS_VCCQ_0]);
- 
--	if (hba->vreg_info.vccq2)
-+	if (hba->vreg_info.vccq2 && hba->vreg_info.vccq2->max_uA)
- 		icc_level = ufshcd_get_max_icc_level(
- 				hba->vreg_info.vccq2->max_uA,
- 				icc_level,
-@@ -7004,6 +7004,15 @@ static int ufshcd_config_vreg_load(struct device *dev, struct ufs_vreg *vreg,
- 	if (!vreg)
- 		return 0;
- 
-+	/*
-+	 * "set_load" operation shall be required on those regulators
-+	 * which specifically configured current limitation. Otherwise
-+	 * zero max_uA may cause unexpected behavior when regulator is
-+	 * enabled or set as high power mode.
-+	 */
-+	if (!vreg->max_uA)
-+		return 0;
-+
- 	ret = regulator_set_load(vreg->reg, ua);
- 	if (ret < 0) {
- 		dev_err(dev, "%s: %s set load (ua=%d) failed, err=%d\n",
+-	vreg->min_uA = 0;
+ 	if (!strcmp(name, "vcc")) {
+ 		if (of_property_read_bool(np, "vcc-supply-1p8")) {
+ 			vreg->min_uV = UFS_VREG_VCC_1P8_MIN_UV;
 -- 
 2.18.0
