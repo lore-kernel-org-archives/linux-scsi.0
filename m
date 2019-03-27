@@ -1,130 +1,67 @@
-From: "jianchao.wang" <jianchao.w.wang@oracle.com>
-Subject: Re: [PATCH] scsi: ses: fix some risks of out of bound access
-Date: Wed, 27 Mar 2019 10:21:09 +0800
-Message-ID: <6bcda517-6a53-c355-7c25-ed1aa98247b9@oracle.com>
-References: <1553499602-27810-1-git-send-email-jianchao.w.wang@oracle.com>
- <bc247133bb00ef1f00dd0757c6d84d315cab1bbc.camel@redhat.com>
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+Subject: Re: [PATCH v5 0/3] UFS on APQ8098/MSM8998
+Date: Tue, 26 Mar 2019 23:16:56 -0700
+Message-ID: <20190327061656.GL27005@builder>
+References: <43768d77-80b7-9cdc-b6e0-08ec4a026c21@free.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <bc247133bb00ef1f00dd0757c6d84d315cab1bbc.camel@redhat.com>
-Content-Language: en-US
+Content-Disposition: inline
+In-Reply-To: <43768d77-80b7-9cdc-b6e0-08ec4a026c21@free.fr>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Ewan D. Milne" <emilne@redhat.com>, jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Marc Gonzalez <marc.w.gonzalez@free.fr>
+Cc: MSM <linux-arm-msm@vger.kernel.org>, SCSI <linux-scsi@vger.kernel.org>, Jeffrey Hugo <jhugo@codeaurora.org>, Andy Gross <andy.gross@linaro.org>, David Brown <david.brown@linaro.org>, Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, Pedro Sousa <pedrom.sousa@synopsys.com>, LKML <linux-kernel@vger.kernel.org>, Lee Jones <lee.jones@linaro.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Ewan
+On Mon 25 Feb 04:16 PST 2019, Marc Gonzalez wrote:
 
-Thanks for your kindly response.
-
-On 3/26/19 9:06 PM, Ewan D. Milne wrote:
-> See below.
+> Hello,
 > 
-> On Mon, 2019-03-25 at 15:40 +0800, Jianchao Wang wrote:
->> We have some places with risk of accessing out of bound of the
->> buffer allocated from slab, even it could corrupt the memory.
->>
->> Signed-off-by: Jianchao Wang <jianchao.w.wang@oracle.com>
->> ---
->>  drivers/scsi/ses.c | 27 ++++++++++++++++++++++-----
->>  1 file changed, 22 insertions(+), 5 deletions(-)
->>
->> diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
->> index 0fc3922..42e6a1f 100644
->> --- a/drivers/scsi/ses.c
->> +++ b/drivers/scsi/ses.c
->> @@ -520,6 +520,7 @@ static void ses_enclosure_data_process(struct enclosure_device *edev,
->>  	struct ses_device *ses_dev = edev->scratch;
->>  	int types = ses_dev->page1_num_types;
->>  	unsigned char *hdr_buf = kzalloc(INIT_ALLOC_SIZE, GFP_KERNEL);
->> +	unsigned char *page1_end = ses_dev->page1 + ses_dev->page1_len;
->>  
->>  	if (!hdr_buf)
->>  		goto simple_populate;
->> @@ -556,6 +557,11 @@ static void ses_enclosure_data_process(struct enclosure_device *edev,
->>  	type_ptr = ses_dev->page1_types;
->>  	components = 0;
->>  	for (i = 0; i < types; i++, type_ptr += 4) {
->> +		if (type_ptr > page1_end - 2) {
+> This series adds support for the UFS host controller on APQ8098/MSM8998-based boards.
 > 
-> I think "if (type_ptr + 1 >= page1_end)" would be more consistent.
-
-Yes, indeed.
-
+> This should be the final rev ;-)
 > 
->> +			sdev_printk(KERN_ERR, sdev, "Access out of bound of page1"
->> +					"%p page1_end %p\n", page1_end, type_ptr);
+> Differences between v4 and v5:
+> - Drop patches that have already been accepted or spun off
 > 
-> This message is not helpful for someone with a device reporting
-> invalid enclosure data.  It should be more generic, like
-> "Enclosure data too short" or "invalid" or something.  And, the
-> actual pointer values are irrelevant, it all depends upon the
-> contents of the buffer.
+> Differences between v3 and v4:
+> - Rebase on top of -next
+> - Pick up Douglas Anderson's UFSHC doc fix
+> - Document 8998 UFSHC binding
+> - Improve UFS PHY binding doc
+> - Put the UFS DT patch at the end of the series
 > 
->> +			break;
->> +		}
->>  		for (j = 0; j < type_ptr[1]; j++) {
->>  			char *name = NULL;
->>  			struct enclosure_component *ecomp;
->> @@ -566,10 +572,15 @@ static void ses_enclosure_data_process(struct enclosure_device *edev,
->>  				} else {
->>  					len = (desc_ptr[2] << 8) + desc_ptr[3];
->>  					desc_ptr += 4;
->> -					/* Add trailing zero - pushes into
->> -					 * reserved space */
->> -					desc_ptr[len] = '\0';
->> -					name = desc_ptr;
->> +					if (desc_ptr + len >= buf + page7_len) {
->> +						desc_ptr = NULL;
->> +					} else {
->> +
->> +						/* Add trailing zero - pushes into
->> +						 * reserved space */
->> +						desc_ptr[len] = '\0';
->> +						name = desc_ptr;
->> +					}
->>  				}
->>  			}
->>  			if (type_ptr[0] == ENCLOSURE_COMPONENT_DEVICE ||
->> @@ -693,7 +704,13 @@ static int ses_intf_add(struct device *cdev,
->>  	/* begin at the enclosure descriptor */
->>  	type_ptr = buf + 8;
->>  	/* skip all the enclosure descriptors */
->> -	for (i = 0; i < num_enclosures && type_ptr < buf + len; i++) {
->> +	for (i = 0; i < num_enclosures; i++) {
->> +		if (type_ptr >= buf + len) {
->> +			sdev_printk(KERN_ERR, sdev, "Overflow the buf len = %d\n", len);
+> Difference between v2 and v3:
+> - Add qcom,msm8998-qmp-ufs-phy compat string and match it in the PHY driver
+> - Drop vdd-hba-fixed-regulator
+> - Write the reg addresses with full 32-bit width
+> - Set regulator-allow-set-load only on the 3 rails used by UFS.
+> - Revert the patch introducing ufshcd_set_vccq_rail_unused
 > 
-> See above, the message is unhelpful.  The actual problem is that
-> the Enclosure data is too short or invalid.
-
-Yes, maybe we should dump all of the information of the page1 here.
-
+> Difference between v1 and v2:
+> - New patch to add 'regulator-allow-set-load' prop to all vreg nodes
+> - Rename rpmcc node to 'clock-controller' + Add Review tags
+> - Drop UFS pinctrl gymnastics (not required, probably left enabled in bootloader)
+> - Delete GCC_UFS_ICE_CORE_CLK (ICE not used upstream, I think)
+> - Fix sizes of ufsphy register areas based on Jeffrey's feedback
+> - Hack ufshcd_set_vccq_rail_unused into a NOP to work around lock up + reboot
 > 
->> +			err = -EINVAL;
->> +			goto err_free;
->> +		}
->> +
->>  		types += type_ptr[2];
->>  		type_ptr += type_ptr[3] + 4;
->>  	}
 > 
-> This will still potentially leave type_ptr past the end of the
-> buffer in the subsequent code, though, right?
-
-Yes, type_ptr[3] is accessing type_ptr + 3 which has be beyond our checking point.
-
-> 
-> This might fix the problem for your malfunctioning device, but
-> does not look like it would handle the general case.
+> Marc Gonzalez (3):
+>   dt-bindings: ufs: Add msm8998 compatible string
+>   arm64: dts: qcom: msm8998: Allow UFSHC driver to set-load
+>   arm64: dts: qcom: msm8998: Add UFS nodes
 > 
 
-Actually, I really don't know much about this ses driver. I sent out this bad patch
-because I want to push things forward as there is a serious issue on our customer
-side. 
+Picked up with Lee's tested-by.
 
-Thanks
-Jianchao
- 
+Thanks,
+Bjorn
+
+>  .../devicetree/bindings/ufs/ufshcd-pltfrm.txt |  1 +
+>  arch/arm64/boot/dts/qcom/msm8998-mtp.dtsi     | 22 +++++++
+>  arch/arm64/boot/dts/qcom/msm8998.dtsi         | 65 +++++++++++++++++++
+>  3 files changed, 88 insertions(+)
+> 
+> -- 
+> 2.17.1
