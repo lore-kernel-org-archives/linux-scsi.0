@@ -1,71 +1,91 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.19 017/192] scsi: hisi_sas: Fix a timeout race of driver internal and SMP IO
-Date: Wed, 27 Mar 2019 14:07:29 -0400
-Message-ID: <20190327181025.13507-17-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 016/192] scsi: hisi_sas: Set PHY linkrate when disconnected
+Date: Wed, 27 Mar 2019 14:07:28 -0400
+Message-ID: <20190327181025.13507-16-sashal@kernel.org>
 References: <20190327181025.13507-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20190327181025.13507-1-sashal@kernel.org>
-Sender: stable-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Cc: John Garry <john.garry@huawei.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Xiang Chen <chenxiang66@hisilicon.com>
+From: John Garry <john.garry@huawei.com>
 
-[ Upstream commit 4790595723d4b833b18c994973d39f9efb842887 ]
+[ Upstream commit efdcad62e7b8a02fcccc5ccca57806dce1482ac8 ]
 
-For internal IO and SMP IO, there is a time-out timer for them. In the
-timer handler, it checks whether IO is done according to the flag
-task->task_state_lock.
+When the PHY comes down, we currently do not set the negotiated linkrate:
 
-There is an issue which may cause system suspended: internal IO or SMP IO
-is sent, but at that time because of hardware exception (such as inject
-2Bit ECC error), so IO is not completed and also not timeout. But, at that
-time, the SAS controller reset occurs to recover system. It will release
-the resource and set the status of IO to be SAS_TASK_STATE_DONE, so when IO
-timeout, it will never complete the completion of IO and wait for ever.
+root@(none)$ pwd
+/sys/class/sas_phy/phy-0:0
+root@(none)$ more enable
+1
+root@(none)$ more negotiated_linkrate
+12.0 Gbit
+root@(none)$ echo 0 > enable
+root@(none)$ more negotiated_linkrate
+12.0 Gbit
+root@(none)$
 
-[  729.123632] Call trace:
-[  729.126791] [<ffff00000808655c>] __switch_to+0x94/0xa8
-[  729.133106] [<ffff000008d96e98>] __schedule+0x1e8/0x7fc
-[  729.138975] [<ffff000008d974e0>] schedule+0x34/0x8c
-[  729.144401] [<ffff000008d9b000>] schedule_timeout+0x1d8/0x3cc
-[  729.150690] [<ffff000008d98218>] wait_for_common+0xdc/0x1a0
-[  729.157101] [<ffff000008d98304>] wait_for_completion+0x28/0x34
-[  729.165973] [<ffff000000dcefb4>] hisi_sas_internal_task_abort+0x2a0/0x424 [hisi_sas_test_main]
-[  729.176447] [<ffff000000dd18f4>] hisi_sas_abort_task+0x244/0x2d8 [hisi_sas_test_main]
-[  729.185258] [<ffff000008971714>] sas_eh_handle_sas_errors+0x1c8/0x7b8
-[  729.192391] [<ffff000008972774>] sas_scsi_recover_host+0x130/0x398
-[  729.199237] [<ffff00000894d8a8>] scsi_error_handler+0x148/0x5c0
-[  729.206009] [<ffff0000080f4118>] kthread+0x10c/0x138
-[  729.211563] [<ffff0000080855dc>] ret_from_fork+0x10/0x18
+This patch fixes the driver code to set it properly when the PHY comes
+down.
 
-To solve the issue, callback function task_done of those IOs need to be
-called when on SAS controller reset.
+If the PHY had been enabled, then set unknown; otherwise, flag as disabled.
 
-Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+The logical place to set the negotiated linkrate for this scenario is PHY
+down routine, which is called from the PHY down ISR.
+
+However, it is not possible to know if the PHY comes down due to PHY
+disable or loss of link, as sas_phy.enabled member is not set until after
+the transport disable routine is complete, which races with the PHY down
+ISR.
+
+As an imperfect solution, use sas_phy_data.enable as the flag to know if
+the PHY is down due to disable. It's imperfect, as sas_phy_data is internal
+to libsas.
+
+I can't see another way without adding a new field to hisi_sas_phy and
+managing it, or changing SCSI SAS transport.
+
 Signed-off-by: John Garry <john.garry@huawei.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/hisi_sas/hisi_sas_main.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index c25f3a9b0b9f..fd9d82c9033d 100644
+index a4e2e6aa9a6b..c25f3a9b0b9f 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -810,7 +810,8 @@ static void hisi_sas_do_release_task(struct hisi_hba *hisi_hba, struct sas_task
- 		spin_lock_irqsave(&task->task_state_lock, flags);
- 		task->task_state_flags &=
- 			~(SAS_TASK_STATE_PENDING | SAS_TASK_AT_INITIATOR);
--		task->task_state_flags |= SAS_TASK_STATE_DONE;
-+		if (!slot->is_internal && task->task_proto != SAS_PROTOCOL_SMP)
-+			task->task_state_flags |= SAS_TASK_STATE_DONE;
- 		spin_unlock_irqrestore(&task->task_state_lock, flags);
- 	}
+@@ -10,6 +10,7 @@
+  */
  
+ #include "hisi_sas.h"
++#include "../libsas/sas_internal.h"
+ #define DRV_NAME "hisi_sas"
+ 
+ #define DEV_IS_GONE(dev) \
+@@ -1879,9 +1880,18 @@ static int hisi_sas_write_gpio(struct sas_ha_struct *sha, u8 reg_type,
+ 
+ static void hisi_sas_phy_disconnected(struct hisi_sas_phy *phy)
+ {
++	struct asd_sas_phy *sas_phy = &phy->sas_phy;
++	struct sas_phy *sphy = sas_phy->phy;
++	struct sas_phy_data *d = sphy->hostdata;
++
+ 	phy->phy_attached = 0;
+ 	phy->phy_type = 0;
+ 	phy->port = NULL;
++
++	if (d->enable)
++		sphy->negotiated_linkrate = SAS_LINK_RATE_UNKNOWN;
++	else
++		sphy->negotiated_linkrate = SAS_PHY_DISABLED;
+ }
+ 
+ void hisi_sas_phy_down(struct hisi_hba *hisi_hba, int phy_no, int rdy)
 -- 
 2.19.1
