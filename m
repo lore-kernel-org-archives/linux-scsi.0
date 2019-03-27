@@ -1,72 +1,91 @@
-From: Alim Akhtar <alim.akhtar-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH RESEND v3 0/5] scsi: ufs: Fix regulator operations and
- remove "<name>-fixed-regulator" device tree property
-Date: Wed, 27 Mar 2019 22:48:54 +0530
-Message-ID: <CAGOxZ51zdtoLz=E_vmpwt+2wTJq32yUQa=h_OiV7qO1N-c=NUA@mail.gmail.com>
-References: <1553680707-28579-1-git-send-email-stanley.chu@mediatek.com>
+From: Sasha Levin <sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.0 025/262] scsi: hisi_sas: Set PHY linkrate when disconnected
+Date: Wed, 27 Mar 2019 13:58:00 -0400
+Message-ID: <20190327180158.10245-25-sashal@kernel.org>
+References: <20190327180158.10245-1-sashal@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-In-Reply-To: <1553680707-28579-1-git-send-email-stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-mediatek>,
- <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-mediatek/>
-List-Post: <mailto:linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-List-Help: <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-mediatek>,
- <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=subscribe>
-Sender: "Linux-mediatek" <linux-mediatek-bounces-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-Errors-To: linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
-To: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, marc.w.gonzalez-GANU6spQydw@public.gmane.org, chun-hung.wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, Kuohong Wang <kuohong.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, Avri Altman <avri.altman-Sjgp3cTcYWE@public.gmane.org>, linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, peter.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, Alim Akhtar <alim.akhtar-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, Matthias Brugger <matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Pedro Sousa <pedrom.sousa-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190327180158.10245-1-sashal@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc: John Garry <john.garry@huawei.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Stanley,
-Please collect all the {review/acked}-by tags when reposting so that
-people are aware which all patches need to review.
-https://www.spinics.net/lists/linux-scsi/msg128818.html
-This series looks good, it will be if we get a Tested-by as well.
-For this series
-Acked-by: Alim Akhtar <alim.akhtar-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+From: John Garry <john.garry@huawei.com>
 
-On Wed, Mar 27, 2019 at 3:29 PM Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org> wrote:
->
-> Hi,
->
-> Resend this patch series for review.
->
-> This version (v3) fixed and added more details in commit messages, and added one patch to fix "undefined voltage range" issue as well.
->
-> This patch series fixes UFS regulator operations, including voltage and current (re-)configuration flow during UFS initialization and power mode switching.
->
-> In the end, remove "<name>-fixed-regulator" device tree property because it is not necessary anymore after these fixes.
->
-> V3:
-> - Fix and add more details in commit messages.
-> - Add one patch "scsi: ufs: Avoid configuring undefined voltage range on a regulator".
->
-> V2:
-> - Add two patches to prepare to and remove "<name>-fixed-regulator" device tree property.
-> - Add more details on patch "scsi: ufs: remove unused min_uA field in struct ufs_vreg" (Marc Gonzalez).
->
-> Stanley Chu (5):
->   scsi: ufs: Remove unused min_uA field in struct ufs_vreg
->   scsi: ufs: Avoid configuring regulator with undefined voltage range
->   scsi: ufs: Fix regulator load and icc-level configuration
->   scsi: ufs: Change "<name>-max-microamp" to non-mandatory property
->   scsi: ufs: Remove "<name>-fixed-regulator" device tree property
->
->  drivers/scsi/ufs/ufs.h           |  1 -
->  drivers/scsi/ufs/ufshcd-pltfrm.c | 14 +++-----------
->  drivers/scsi/ufs/ufshcd.c        | 28 ++++++++++++++++++++--------
->  3 files changed, 23 insertions(+), 20 deletions(-)
->
-> --
-> 2.18.0
->
+[ Upstream commit efdcad62e7b8a02fcccc5ccca57806dce1482ac8 ]
 
+When the PHY comes down, we currently do not set the negotiated linkrate:
 
+root@(none)$ pwd
+/sys/class/sas_phy/phy-0:0
+root@(none)$ more enable
+1
+root@(none)$ more negotiated_linkrate
+12.0 Gbit
+root@(none)$ echo 0 > enable
+root@(none)$ more negotiated_linkrate
+12.0 Gbit
+root@(none)$
+
+This patch fixes the driver code to set it properly when the PHY comes
+down.
+
+If the PHY had been enabled, then set unknown; otherwise, flag as disabled.
+
+The logical place to set the negotiated linkrate for this scenario is PHY
+down routine, which is called from the PHY down ISR.
+
+However, it is not possible to know if the PHY comes down due to PHY
+disable or loss of link, as sas_phy.enabled member is not set until after
+the transport disable routine is complete, which races with the PHY down
+ISR.
+
+As an imperfect solution, use sas_phy_data.enable as the flag to know if
+the PHY is down due to disable. It's imperfect, as sas_phy_data is internal
+to libsas.
+
+I can't see another way without adding a new field to hisi_sas_phy and
+managing it, or changing SCSI SAS transport.
+
+Signed-off-by: John Garry <john.garry@huawei.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index bc17fa0d8375..88ae415e907a 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -10,6 +10,7 @@
+  */
+ 
+ #include "hisi_sas.h"
++#include "../libsas/sas_internal.h"
+ #define DRV_NAME "hisi_sas"
+ 
+ #define DEV_IS_GONE(dev) \
+@@ -1972,9 +1973,18 @@ static int hisi_sas_write_gpio(struct sas_ha_struct *sha, u8 reg_type,
+ 
+ static void hisi_sas_phy_disconnected(struct hisi_sas_phy *phy)
+ {
++	struct asd_sas_phy *sas_phy = &phy->sas_phy;
++	struct sas_phy *sphy = sas_phy->phy;
++	struct sas_phy_data *d = sphy->hostdata;
++
+ 	phy->phy_attached = 0;
+ 	phy->phy_type = 0;
+ 	phy->port = NULL;
++
++	if (d->enable)
++		sphy->negotiated_linkrate = SAS_LINK_RATE_UNKNOWN;
++	else
++		sphy->negotiated_linkrate = SAS_PHY_DISABLED;
+ }
+ 
+ void hisi_sas_phy_down(struct hisi_hba *hisi_hba, int phy_no, int rdy)
 -- 
-Regards,
-Alim
+2.19.1
