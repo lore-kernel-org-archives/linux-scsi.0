@@ -1,67 +1,59 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: megasas: Unexpected response from lun 1 while scanning, scan
- aborted
-Date: Wed, 27 Mar 2019 12:31:37 +0100
-Message-ID: <c3a8f877-82bc-44ab-72e8-51f62c0a65ed@suse.de>
-References: <9c3849cf-86c6-4568-bff5-1050b445322d@default>
+From: Mukesh Ojha <mojha@codeaurora.org>
+Subject: Re: [PATCH] scsi: sun_esp: : Fix object reference leaks in
+ esp_sbus_probe
+Date: Wed, 27 Mar 2019 18:17:34 +0530
+Message-ID: <8560b226-1f0b-e9c6-6a18-800e10111f65@codeaurora.org>
+References: <1553644557-35817-1-git-send-email-huang.zijiang@zte.com.cn>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <9c3849cf-86c6-4568-bff5-1050b445322d@default>
+In-Reply-To: <1553644557-35817-1-git-send-email-huang.zijiang@zte.com.cn>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Dongli Zhang <dongli.zhang@oracle.com>, qemu-block@nongnu.org, linux-scsi@vger.kernel.org, megaraidlinux.pdl@broadcom.com
-Cc: linux-kernel@vger.kernel.org, qemu-devel@nongnu.org
+To: Huang Zijiang <huang.zijiang@zte.com.cn>, jejb@linux.ibm.com
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, wang.yi59@zte.com.cn
 List-Id: linux-scsi@vger.kernel.org
 
-On 3/26/19 5:47 PM, Dongli Zhang wrote:
-> I am reporting an error that the scsi lun cannot initialize successfully when I
-> am emulating megasas scsi controller with qemu.
-> 
-> I am not sure if this is issue in qemu or linux kernel.
-> 
-> When 'lun=1' is specified, there is "Unexpected response from lun 1 while
-> scanning, scan aborted".
-> 
-> Everything works well if 'lun=0' is specified.
-> 
-> 
-> Below is the qemu cmdline involved:
-> 
-> -device megasas,id=scsi0 \
-> -device scsi-hd,drive=drive0,bus=scsi0.0,lun=1 \
-> -drive file=/home/zhang/img/test.img,if=none,id=drive0,format=raw
-> 
-> 
-> Below is the syslog related to 'scsi|SCSI'
-> 
-> # dmesg | grep SCSI
-> [    0.392494] SCSI subsystem initialized
-> [    0.460666] Block layer SCSI generic (bsg) driver version 0.4 loaded (major 251)
-> [    0.706788] sd 1:0:0:0: [sda] Attached SCSI disk
-> # dmesg | grep scsi
-> [    0.511643] scsi host0: Avago SAS based MegaRAID driver
-> [    0.523302] scsi 0:2:0:0: Unexpected response from lun 1 while scanning, scan aborted
-> [    0.540364] scsi host1: ata_piix
-> [    0.540780] scsi host2: ata_piix
-> [    0.702396] scsi 1:0:0:0: Direct-Access     ATA      QEMU HARDDISK    2.5+ PQ: 0 ANSI: 5
-> 
-> When 'lun=1' is changed to 'lun=0', there is no issue.
-> 
-> Thank you very much!
-> 
-That's an artifact from the megasas emulation in quemu.
-Megasas (internally) can't handle LUN numbers (the RAID part only knows 
-about 'disks'), so I took the decision to not expose devices with LUN != 0.
-Please use a different SCSI target number, not a non-zero LUN number.
 
-Cheers,
+Sorry for the spam whosoever has got the last mail, as the last did not 
+get to
+the mailing list, and it bounced, so sending it again.
 
-Hannes
--- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Mary Higgins, Sri Rasiah
-HRB 21284 (AG Nürnberg)
+On 3/27/2019 5:25 AM, Huang Zijiang wrote:
+> The of_find_device_by_node() takes a reference to the underlying device
+> structure, we should release that reference whatever of_find_device_by_node
+> reutrns.
+s/reutrns/returns
+>
+> Signed-off-by: Huang Zijiang <huang.zijiang@zte.com.cn>
+
+
+
+Take mine review tag once you make above change.
+
+Reviewed-by: Mukesh Ojha <mojha@codeaurora.org>
+
+-Mukesh
+
+
+
+> ---
+>   drivers/scsi/sun_esp.c | 3 +--
+>   1 file changed, 1 insertion(+), 2 deletions(-)
+>
+> diff --git a/drivers/scsi/sun_esp.c b/drivers/scsi/sun_esp.c
+> index a11efbc..a74605a 100644
+> --- a/drivers/scsi/sun_esp.c
+> +++ b/drivers/scsi/sun_esp.c
+> @@ -543,9 +543,8 @@ static int esp_sbus_probe(struct platform_device *op)
+>   		return -ENODEV;
+>   
+>   	ret = esp_sbus_probe_one(op, dma_of, hme);
+> -	if (ret)
+> -		put_device(&dma_of->dev);
+>   
+> +	put_device(&dma_of->dev);
+>   	return ret;
+>   }
+>   
