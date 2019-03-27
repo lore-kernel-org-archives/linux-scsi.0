@@ -1,73 +1,72 @@
-From: Nick Desaulniers <ndesaulniers@google.com>
-Subject: Re: [PATCH v2] scsi: qla2xxx: Simplify conditional check again
-Date: Wed, 27 Mar 2019 10:01:42 -0700
-Message-ID: <CAKwvOdkLJaO3H25JU19qPtMe=LTJmxUicPvE=vWOKw7nqDC=-Q@mail.gmail.com>
-References: <20190320163315.12740-1-natechancellor@gmail.com> <20190326220444.10040-1-natechancellor@gmail.com>
+From: Alim Akhtar <alim.akhtar-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH RESEND v3 0/5] scsi: ufs: Fix regulator operations and
+ remove "<name>-fixed-regulator" device tree property
+Date: Wed, 27 Mar 2019 22:48:54 +0530
+Message-ID: <CAGOxZ51zdtoLz=E_vmpwt+2wTJq32yUQa=h_OiV7qO1N-c=NUA@mail.gmail.com>
+References: <1553680707-28579-1-git-send-email-stanley.chu@mediatek.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190326220444.10040-1-natechancellor@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Nathan Chancellor <natechancellor@gmail.com>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Joe Carnuccio <joe.carnuccio@cavium.com>, Himanshu Madhani <hmadhani@marvell.com>, qla2xxx-upstream@qlogic.com, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, clang-built-linux@googlegroups.com
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+In-Reply-To: <1553680707-28579-1-git-send-email-stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-mediatek>,
+ <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-mediatek/>
+List-Post: <mailto:linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+List-Help: <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-mediatek>,
+ <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=subscribe>
+Sender: "Linux-mediatek" <linux-mediatek-bounces-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+Errors-To: linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
+To: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
+Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, marc.w.gonzalez-GANU6spQydw@public.gmane.org, chun-hung.wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, Kuohong Wang <kuohong.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, Avri Altman <avri.altman-Sjgp3cTcYWE@public.gmane.org>, linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, peter.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, Alim Akhtar <alim.akhtar-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, Matthias Brugger <matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Pedro Sousa <pedrom.sousa-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Mar 26, 2019 at 3:06 PM Nathan Chancellor
-<natechancellor@gmail.com> wrote:
->
-> Clang warns when it sees a logical not on the left side of a
-> conditional statement because it thinks the logical not should
-> be applied to the whole statement, not just the left side:
->
-> drivers/scsi/qla2xxx/qla_nx.c:3703:7: warning: logical not is only
-> applied to the left hand side of this comparison
-> [-Wlogical-not-parentheses]
->
-> This particular instance was already fixed by commit 0bfe7d3cae58 ("scsi:
-> qla2xxx: Simplify conditional check") upstream but it was reintroduced
-> by commit 3695310e37b4 ("scsi: qla2xxx: Update flash read/write
-> routine") in the 5.2/scsi-queue.
+Hi Stanley,
+Please collect all the {review/acked}-by tags when reposting so that
+people are aware which all patches need to review.
+https://www.spinics.net/lists/linux-scsi/msg128818.html
+This series looks good, it will be if we get a Tested-by as well.
+For this series
+Acked-by: Alim Akhtar <alim.akhtar-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
 
-Nathan, thanks for following up and rewording the commit message to
-clearly state how we got here.
-Reviewed-by: Nick Desaulniers <ndesaulniers@google.com>
-
+On Wed, Mar 27, 2019 at 3:29 PM Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org> wrote:
 >
-> Fixes: 3695310e37b4 ("scsi: qla2xxx: Update flash read/write routine")
-> Link: https://github.com/ClangBuiltLinux/linux/issues/80
-> Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
-> ---
+> Hi,
 >
-> v1 -> v2:
+> Resend this patch series for review.
 >
-> * Reword commit message so make it clear this is just a reapplication of
->   a commit that is already in mainline, as suggested by Nick.
+> This version (v3) fixed and added more details in commit messages, and added one patch to fix "undefined voltage range" issue as well.
 >
-> * Include the authors who reintroduced this warning.
+> This patch series fixes UFS regulator operations, including voltage and current (re-)configuration flow during UFS initialization and power mode switching.
 >
->  drivers/scsi/qla2xxx/qla_nx.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+> In the end, remove "<name>-fixed-regulator" device tree property because it is not necessary anymore after these fixes.
 >
-> diff --git a/drivers/scsi/qla2xxx/qla_nx.c b/drivers/scsi/qla2xxx/qla_nx.c
-> index e0b4387fd6ba..359ebb634d96 100644
-> --- a/drivers/scsi/qla2xxx/qla_nx.c
-> +++ b/drivers/scsi/qla2xxx/qla_nx.c
-> @@ -3700,8 +3700,8 @@ qla82xx_chip_reset_cleanup(scsi_qla_host_t *vha)
->                 spin_unlock_irqrestore(&ha->hardware_lock, flags);
+> V3:
+> - Fix and add more details in commit messages.
+> - Add one patch "scsi: ufs: Avoid configuring undefined voltage range on a regulator".
 >
->                 /* Wait for pending cmds (physical and virtual) to complete */
-> -               if (!qla2x00_eh_wait_for_pending_commands(vha, 0, 0,
-> -                   WAIT_HOST) == QLA_SUCCESS) {
-> +               if (qla2x00_eh_wait_for_pending_commands(vha, 0, 0,
-> +                   WAIT_HOST)) {
->                         ql_dbg(ql_dbg_init, vha, 0x00b3,
->                             "Done wait for "
->                             "pending commands.\n");
+> V2:
+> - Add two patches to prepare to and remove "<name>-fixed-regulator" device tree property.
+> - Add more details on patch "scsi: ufs: remove unused min_uA field in struct ufs_vreg" (Marc Gonzalez).
+>
+> Stanley Chu (5):
+>   scsi: ufs: Remove unused min_uA field in struct ufs_vreg
+>   scsi: ufs: Avoid configuring regulator with undefined voltage range
+>   scsi: ufs: Fix regulator load and icc-level configuration
+>   scsi: ufs: Change "<name>-max-microamp" to non-mandatory property
+>   scsi: ufs: Remove "<name>-fixed-regulator" device tree property
+>
+>  drivers/scsi/ufs/ufs.h           |  1 -
+>  drivers/scsi/ufs/ufshcd-pltfrm.c | 14 +++-----------
+>  drivers/scsi/ufs/ufshcd.c        | 28 ++++++++++++++++++++--------
+>  3 files changed, 23 insertions(+), 20 deletions(-)
+>
 > --
-> 2.21.0
+> 2.18.0
 >
 
 
 -- 
-Thanks,
-~Nick Desaulniers
+Regards,
+Alim
