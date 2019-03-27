@@ -1,7 +1,7 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.19 077/192] scsi: megaraid_sas: return error when create DMA pool failed
-Date: Wed, 27 Mar 2019 14:08:29 -0400
-Message-ID: <20190327181025.13507-77-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 017/192] scsi: hisi_sas: Fix a timeout race of driver internal and SMP IO
+Date: Wed, 27 Mar 2019 14:07:29 -0400
+Message-ID: <20190327181025.13507-17-sashal@kernel.org>
 References: <20190327181025.13507-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -9,81 +9,63 @@ Return-path: <stable-owner@vger.kernel.org>
 In-Reply-To: <20190327181025.13507-1-sashal@kernel.org>
 Sender: stable-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Jason Yan <yanaijie@huawei.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
+Cc: Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Jason Yan <yanaijie@huawei.com>
+From: Xiang Chen <chenxiang66@hisilicon.com>
 
-[ Upstream commit bcf3b67d16a4c8ffae0aa79de5853435e683945c ]
+[ Upstream commit 4790595723d4b833b18c994973d39f9efb842887 ]
 
-when create DMA pool for cmd frames failed, we should return -ENOMEM,
-instead of 0.
-In some case in:
+For internal IO and SMP IO, there is a time-out timer for them. In the
+timer handler, it checks whether IO is done according to the flag
+task->task_state_lock.
 
-    megasas_init_adapter_fusion()
+There is an issue which may cause system suspended: internal IO or SMP IO
+is sent, but at that time because of hardware exception (such as inject
+2Bit ECC error), so IO is not completed and also not timeout. But, at that
+time, the SAS controller reset occurs to recover system. It will release
+the resource and set the status of IO to be SAS_TASK_STATE_DONE, so when IO
+timeout, it will never complete the completion of IO and wait for ever.
 
-    -->megasas_alloc_cmds()
-       -->megasas_create_frame_pool
-          create DMA pool failed,
-        --> megasas_free_cmds() [1]
+[  729.123632] Call trace:
+[  729.126791] [<ffff00000808655c>] __switch_to+0x94/0xa8
+[  729.133106] [<ffff000008d96e98>] __schedule+0x1e8/0x7fc
+[  729.138975] [<ffff000008d974e0>] schedule+0x34/0x8c
+[  729.144401] [<ffff000008d9b000>] schedule_timeout+0x1d8/0x3cc
+[  729.150690] [<ffff000008d98218>] wait_for_common+0xdc/0x1a0
+[  729.157101] [<ffff000008d98304>] wait_for_completion+0x28/0x34
+[  729.165973] [<ffff000000dcefb4>] hisi_sas_internal_task_abort+0x2a0/0x424 [hisi_sas_test_main]
+[  729.176447] [<ffff000000dd18f4>] hisi_sas_abort_task+0x244/0x2d8 [hisi_sas_test_main]
+[  729.185258] [<ffff000008971714>] sas_eh_handle_sas_errors+0x1c8/0x7b8
+[  729.192391] [<ffff000008972774>] sas_scsi_recover_host+0x130/0x398
+[  729.199237] [<ffff00000894d8a8>] scsi_error_handler+0x148/0x5c0
+[  729.206009] [<ffff0000080f4118>] kthread+0x10c/0x138
+[  729.211563] [<ffff0000080855dc>] ret_from_fork+0x10/0x18
 
-    -->megasas_alloc_cmds_fusion()
-       failed, then goto fail_alloc_cmds.
-    -->megasas_free_cmds() [2]
+To solve the issue, callback function task_done of those IOs need to be
+called when on SAS controller reset.
 
-we will call megasas_free_cmds twice, [1] will kfree cmd_list,
-[2] will use cmd_list.it will cause a problem:
-
-Unable to handle kernel NULL pointer dereference at virtual address
-00000000
-pgd = ffffffc000f70000
-[00000000] *pgd=0000001fbf893003, *pud=0000001fbf893003,
-*pmd=0000001fbf894003, *pte=006000006d000707
-Internal error: Oops: 96000005 [#1] SMP
- Modules linked in:
- CPU: 18 PID: 1 Comm: swapper/0 Not tainted
- task: ffffffdfb9290000 ti: ffffffdfb923c000 task.ti: ffffffdfb923c000
- PC is at megasas_free_cmds+0x30/0x70
- LR is at megasas_free_cmds+0x24/0x70
- ...
- Call trace:
- [<ffffffc0005b779c>] megasas_free_cmds+0x30/0x70
- [<ffffffc0005bca74>] megasas_init_adapter_fusion+0x2f4/0x4d8
- [<ffffffc0005b926c>] megasas_init_fw+0x2dc/0x760
- [<ffffffc0005b9ab0>] megasas_probe_one+0x3c0/0xcd8
- [<ffffffc0004a5abc>] local_pci_probe+0x4c/0xb4
- [<ffffffc0004a5c40>] pci_device_probe+0x11c/0x14c
- [<ffffffc00053a5e4>] driver_probe_device+0x1ec/0x430
- [<ffffffc00053a92c>] __driver_attach+0xa8/0xb0
- [<ffffffc000538178>] bus_for_each_dev+0x74/0xc8
-  [<ffffffc000539e88>] driver_attach+0x28/0x34
- [<ffffffc000539a18>] bus_add_driver+0x16c/0x248
- [<ffffffc00053b234>] driver_register+0x6c/0x138
- [<ffffffc0004a5350>] __pci_register_driver+0x5c/0x6c
- [<ffffffc000ce3868>] megasas_init+0xc0/0x1a8
- [<ffffffc000082a58>] do_one_initcall+0xe8/0x1ec
- [<ffffffc000ca7be8>] kernel_init_freeable+0x1c8/0x284
- [<ffffffc0008d90b8>] kernel_init+0x1c/0xe4
-
-Signed-off-by: Jason Yan <yanaijie@huawei.com>
-Acked-by: Sumit Saxena <sumit.saxena@broadcom.com>
+Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/megaraid/megaraid_sas_base.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index f6de7526ded5..acb503ea8f0c 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -4155,6 +4155,7 @@ int megasas_alloc_cmds(struct megasas_instance *instance)
- 	if (megasas_create_frame_pool(instance)) {
- 		dev_printk(KERN_DEBUG, &instance->pdev->dev, "Error creating frame DMA pool\n");
- 		megasas_free_cmds(instance);
-+		return -ENOMEM;
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index c25f3a9b0b9f..fd9d82c9033d 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -810,7 +810,8 @@ static void hisi_sas_do_release_task(struct hisi_hba *hisi_hba, struct sas_task
+ 		spin_lock_irqsave(&task->task_state_lock, flags);
+ 		task->task_state_flags &=
+ 			~(SAS_TASK_STATE_PENDING | SAS_TASK_AT_INITIATOR);
+-		task->task_state_flags |= SAS_TASK_STATE_DONE;
++		if (!slot->is_internal && task->task_proto != SAS_PROTOCOL_SMP)
++			task->task_state_flags |= SAS_TASK_STATE_DONE;
+ 		spin_unlock_irqrestore(&task->task_state_lock, flags);
  	}
  
- 	return 0;
 -- 
 2.19.1
