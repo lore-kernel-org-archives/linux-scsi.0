@@ -1,13 +1,13 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.4 28/63] scsi: megaraid_sas: return error when create DMA pool failed
-Date: Wed, 27 Mar 2019 14:22:48 -0400
-Message-ID: <20190327182323.18577-28-sashal@kernel.org>
-References: <20190327182323.18577-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 3.18 18/41] scsi: megaraid_sas: return error when create DMA pool failed
+Date: Wed, 27 Mar 2019 14:24:55 -0400
+Message-ID: <20190327182518.19394-18-sashal@kernel.org>
+References: <20190327182518.19394-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20190327182323.18577-1-sashal@kernel.org>
-Sender: stable-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190327182518.19394-1-sashal@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc: Jason Yan <yanaijie@huawei.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -74,12 +74,12 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+)
 
 diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index ac7acd257c99..2422094f1f15 100644
+index 1ff0ece87644..24cc8786ff06 100644
 --- a/drivers/scsi/megaraid/megaraid_sas_base.c
 +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -3847,6 +3847,7 @@ int megasas_alloc_cmds(struct megasas_instance *instance)
+@@ -3743,6 +3743,7 @@ int megasas_alloc_cmds(struct megasas_instance *instance)
  	if (megasas_create_frame_pool(instance)) {
- 		dev_printk(KERN_DEBUG, &instance->pdev->dev, "Error creating frame DMA pool\n");
+ 		printk(KERN_DEBUG "megasas: Error creating frame DMA pool\n");
  		megasas_free_cmds(instance);
 +		return -ENOMEM;
  	}
