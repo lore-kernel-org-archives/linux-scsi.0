@@ -1,91 +1,89 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.14 012/123] scsi: hisi_sas: Set PHY linkrate when disconnected
-Date: Wed, 27 Mar 2019 14:14:36 -0400
-Message-ID: <20190327181628.15899-12-sashal@kernel.org>
-References: <20190327181628.15899-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 077/192] scsi: megaraid_sas: return error when create DMA pool failed
+Date: Wed, 27 Mar 2019 14:08:29 -0400
+Message-ID: <20190327181025.13507-77-sashal@kernel.org>
+References: <20190327181025.13507-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190327181628.15899-1-sashal@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20190327181025.13507-1-sashal@kernel.org>
+Sender: stable-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: John Garry <john.garry@huawei.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Cc: Jason Yan <yanaijie@huawei.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: John Garry <john.garry@huawei.com>
+From: Jason Yan <yanaijie@huawei.com>
 
-[ Upstream commit efdcad62e7b8a02fcccc5ccca57806dce1482ac8 ]
+[ Upstream commit bcf3b67d16a4c8ffae0aa79de5853435e683945c ]
 
-When the PHY comes down, we currently do not set the negotiated linkrate:
+when create DMA pool for cmd frames failed, we should return -ENOMEM,
+instead of 0.
+In some case in:
 
-root@(none)$ pwd
-/sys/class/sas_phy/phy-0:0
-root@(none)$ more enable
-1
-root@(none)$ more negotiated_linkrate
-12.0 Gbit
-root@(none)$ echo 0 > enable
-root@(none)$ more negotiated_linkrate
-12.0 Gbit
-root@(none)$
+    megasas_init_adapter_fusion()
 
-This patch fixes the driver code to set it properly when the PHY comes
-down.
+    -->megasas_alloc_cmds()
+       -->megasas_create_frame_pool
+          create DMA pool failed,
+        --> megasas_free_cmds() [1]
 
-If the PHY had been enabled, then set unknown; otherwise, flag as disabled.
+    -->megasas_alloc_cmds_fusion()
+       failed, then goto fail_alloc_cmds.
+    -->megasas_free_cmds() [2]
 
-The logical place to set the negotiated linkrate for this scenario is PHY
-down routine, which is called from the PHY down ISR.
+we will call megasas_free_cmds twice, [1] will kfree cmd_list,
+[2] will use cmd_list.it will cause a problem:
 
-However, it is not possible to know if the PHY comes down due to PHY
-disable or loss of link, as sas_phy.enabled member is not set until after
-the transport disable routine is complete, which races with the PHY down
-ISR.
+Unable to handle kernel NULL pointer dereference at virtual address
+00000000
+pgd = ffffffc000f70000
+[00000000] *pgd=0000001fbf893003, *pud=0000001fbf893003,
+*pmd=0000001fbf894003, *pte=006000006d000707
+Internal error: Oops: 96000005 [#1] SMP
+ Modules linked in:
+ CPU: 18 PID: 1 Comm: swapper/0 Not tainted
+ task: ffffffdfb9290000 ti: ffffffdfb923c000 task.ti: ffffffdfb923c000
+ PC is at megasas_free_cmds+0x30/0x70
+ LR is at megasas_free_cmds+0x24/0x70
+ ...
+ Call trace:
+ [<ffffffc0005b779c>] megasas_free_cmds+0x30/0x70
+ [<ffffffc0005bca74>] megasas_init_adapter_fusion+0x2f4/0x4d8
+ [<ffffffc0005b926c>] megasas_init_fw+0x2dc/0x760
+ [<ffffffc0005b9ab0>] megasas_probe_one+0x3c0/0xcd8
+ [<ffffffc0004a5abc>] local_pci_probe+0x4c/0xb4
+ [<ffffffc0004a5c40>] pci_device_probe+0x11c/0x14c
+ [<ffffffc00053a5e4>] driver_probe_device+0x1ec/0x430
+ [<ffffffc00053a92c>] __driver_attach+0xa8/0xb0
+ [<ffffffc000538178>] bus_for_each_dev+0x74/0xc8
+  [<ffffffc000539e88>] driver_attach+0x28/0x34
+ [<ffffffc000539a18>] bus_add_driver+0x16c/0x248
+ [<ffffffc00053b234>] driver_register+0x6c/0x138
+ [<ffffffc0004a5350>] __pci_register_driver+0x5c/0x6c
+ [<ffffffc000ce3868>] megasas_init+0xc0/0x1a8
+ [<ffffffc000082a58>] do_one_initcall+0xe8/0x1ec
+ [<ffffffc000ca7be8>] kernel_init_freeable+0x1c8/0x284
+ [<ffffffc0008d90b8>] kernel_init+0x1c/0xe4
 
-As an imperfect solution, use sas_phy_data.enable as the flag to know if
-the PHY is down due to disable. It's imperfect, as sas_phy_data is internal
-to libsas.
-
-I can't see another way without adding a new field to hisi_sas_phy and
-managing it, or changing SCSI SAS transport.
-
-Signed-off-by: John Garry <john.garry@huawei.com>
+Signed-off-by: Jason Yan <yanaijie@huawei.com>
+Acked-by: Sumit Saxena <sumit.saxena@broadcom.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/hisi_sas/hisi_sas_main.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+ drivers/scsi/megaraid/megaraid_sas_base.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 8fa9bb336ad4..b167411580ba 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -10,6 +10,7 @@
-  */
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index f6de7526ded5..acb503ea8f0c 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -4155,6 +4155,7 @@ int megasas_alloc_cmds(struct megasas_instance *instance)
+ 	if (megasas_create_frame_pool(instance)) {
+ 		dev_printk(KERN_DEBUG, &instance->pdev->dev, "Error creating frame DMA pool\n");
+ 		megasas_free_cmds(instance);
++		return -ENOMEM;
+ 	}
  
- #include "hisi_sas.h"
-+#include "../libsas/sas_internal.h"
- #define DRV_NAME "hisi_sas"
- 
- #define DEV_IS_GONE(dev) \
-@@ -1508,9 +1509,18 @@ static void hisi_sas_port_formed(struct asd_sas_phy *sas_phy)
- 
- static void hisi_sas_phy_disconnected(struct hisi_sas_phy *phy)
- {
-+	struct asd_sas_phy *sas_phy = &phy->sas_phy;
-+	struct sas_phy *sphy = sas_phy->phy;
-+	struct sas_phy_data *d = sphy->hostdata;
-+
- 	phy->phy_attached = 0;
- 	phy->phy_type = 0;
- 	phy->port = NULL;
-+
-+	if (d->enable)
-+		sphy->negotiated_linkrate = SAS_LINK_RATE_UNKNOWN;
-+	else
-+		sphy->negotiated_linkrate = SAS_PHY_DISABLED;
- }
- 
- void hisi_sas_phy_down(struct hisi_hba *hisi_hba, int phy_no, int rdy)
+ 	return 0;
 -- 
 2.19.1
