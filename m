@@ -1,47 +1,159 @@
-From: Hussam Al-Tayeb <ht990332@gmx.com>
-Subject: Re: [PATCH] scsi: sd: Quiesce warning if device does not report
- optimal I/O size
-Date: Wed, 27 Mar 2019 20:05:34 +0200
-Message-ID: <b2dc0705a922019283ae7a2a514400163418febc.camel@gmx.com>
-References: <25d0ddcb-b603-6e0d-d512-b188813837bf@infradead.org>
-         <20190327161152.23401-1-martin.petersen@oracle.com>
-         <1553705173.118779.98.camel@acm.org>
+From: Sasha Levin <sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.0 113/262] scsi: fcoe: make use of fip_mode enum complete
+Date: Wed, 27 Mar 2019 13:59:28 -0400
+Message-ID: <20190327180158.10245-113-sashal@kernel.org>
+References: <20190327180158.10245-1-sashal@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <1553705173.118779.98.camel@acm.org>
+In-Reply-To: <20190327180158.10245-1-sashal@kernel.org>
 Sender: stable-owner@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Cc: Randy Dunlap <rdunlap@infradead.org>, stable@vger.kernel.org
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc: Sedat Dilek <sedat.dilek@gmail.com>, Lukas Bulwahn <lukas.bulwahn@gmail.com>, Nick Desaulniers <ndesaulniers@google.com>, Nathan Chancellor <natechancellor@gmail.com>, Hannes Reinecke <hare@suse.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2019-03-27 at 09:46 -0700, Bart Van Assche wrote:
-> On Wed, 2019-03-27 at 12:11 -0400, Martin K. Petersen wrote:
-> > Commit a83da8a4509d ("scsi: sd: Optimal I/O size should be a
-> > multiple
-> > of physical block size") split one conditional into several
-> > separate
-> > statements in an effort to provide more accurate warning messages
-> > when
-> > a device reports a nonsensical value. However, this reorganization
-> > accidentally dropped the precondition of the reported value being
-> > larger than zero. This lead to a warning getting emitted on devices
-> > that do not report an optimal I/O size at all.
-> >
-> > Remain silent if a device does not report an optimal I/O size.
-> >
-> > Fixes: a83da8a4509d ("scsi: sd: Optimal I/O size should be a
-> > multiple of physical block size")
-> > Reported-by: Hussam Al-Tayeb <ht990332@gmx.com>
-> > Cc: Randy Dunlap <rdunlap@infradead.org>
-> > Cc: <stable@vger.kernel.org>
-> > Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
->
-> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
->
->
+From: Sedat Dilek <sedat.dilek@gmail.com>
 
-I tested two SATA disks and three usb flash drives on two machines. The
-warnings are gone.
-Thank you very much for the patch.
+[ Upstream commit 8beb90aaf334a6efa3e924339926b5f93a234dbb ]
+
+commit 1917d42d14b7 ("fcoe: use enum for fip_mode") introduces a separate
+enum for the fip_mode that shall be used during initialisation handling
+until it is passed to fcoe_ctrl_link_up to set the initial fip_state.  That
+change was incomplete and gcc quietly converted in various places between
+the fip_mode and the fip_state enum values with implicit enum conversions,
+which fortunately cannot cause any issues in the actual code's execution.
+
+clang however warns about these implicit enum conversions in the scsi
+drivers. This commit consolidates the use of the two enums, guided by
+clang's enum-conversion warnings.
+
+This commit now completes the use of the fip_mode: It expects and uses
+fip_mode in {bnx2fc,fcoe}_interface_create and fcoe_ctlr_init, and it calls
+fcoe_ctrl_set_set() with the correct values in fcoe_ctlr_link_up().  It
+also breaks the association between FIP_MODE_AUTO and FIP_ST_AUTO to
+indicate these two enums are distinct.
+
+Link: https://github.com/ClangBuiltLinux/linux/issues/151
+Fixes: 1917d42d14b7 ("fcoe: use enum for fip_mode")
+Reported-by: Dmitry Golovin <dima@golovin.in>
+Original-by: Lukas Bulwahn <lukas.bulwahn@gmail.com>
+CC: Lukas Bulwahn <lukas.bulwahn@gmail.com>
+CC: Nick Desaulniers <ndesaulniers@google.com>
+CC: Nathan Chancellor <natechancellor@gmail.com>
+Reviewed-by: Nathan Chancellor <natechancellor@gmail.com>
+Tested-by: Nathan Chancellor <natechancellor@gmail.com>
+Suggested-by: Johannes Thumshirn <jthumshirn@suse.de>
+Signed-off-by: Sedat Dilek <sedat.dilek@gmail.com>
+Signed-off-by: Hannes Reinecke <hare@suse.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c  | 2 +-
+ drivers/scsi/fcoe/fcoe.c           | 2 +-
+ drivers/scsi/fcoe/fcoe_ctlr.c      | 7 +++++--
+ drivers/scsi/fcoe/fcoe_transport.c | 2 +-
+ drivers/scsi/qedf/qedf_main.c      | 2 +-
+ include/scsi/libfcoe.h             | 4 ++--
+ 6 files changed, 11 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+index 2e4e7159ebf9..a75e74ad1698 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+@@ -1438,7 +1438,7 @@ static struct bnx2fc_hba *bnx2fc_hba_create(struct cnic_dev *cnic)
+ static struct bnx2fc_interface *
+ bnx2fc_interface_create(struct bnx2fc_hba *hba,
+ 			struct net_device *netdev,
+-			enum fip_state fip_mode)
++			enum fip_mode fip_mode)
+ {
+ 	struct fcoe_ctlr_device *ctlr_dev;
+ 	struct bnx2fc_interface *interface;
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index cd19be3f3405..8ba8862d3292 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -389,7 +389,7 @@ static int fcoe_interface_setup(struct fcoe_interface *fcoe,
+  * Returns: pointer to a struct fcoe_interface or NULL on error
+  */
+ static struct fcoe_interface *fcoe_interface_create(struct net_device *netdev,
+-						    enum fip_state fip_mode)
++						    enum fip_mode fip_mode)
+ {
+ 	struct fcoe_ctlr_device *ctlr_dev;
+ 	struct fcoe_ctlr *ctlr;
+diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
+index 54da3166da8d..7dc4ffa24430 100644
+--- a/drivers/scsi/fcoe/fcoe_ctlr.c
++++ b/drivers/scsi/fcoe/fcoe_ctlr.c
+@@ -147,7 +147,7 @@ static void fcoe_ctlr_map_dest(struct fcoe_ctlr *fip)
+  * fcoe_ctlr_init() - Initialize the FCoE Controller instance
+  * @fip: The FCoE controller to initialize
+  */
+-void fcoe_ctlr_init(struct fcoe_ctlr *fip, enum fip_state mode)
++void fcoe_ctlr_init(struct fcoe_ctlr *fip, enum fip_mode mode)
+ {
+ 	fcoe_ctlr_set_state(fip, FIP_ST_LINK_WAIT);
+ 	fip->mode = mode;
+@@ -454,7 +454,10 @@ void fcoe_ctlr_link_up(struct fcoe_ctlr *fip)
+ 		mutex_unlock(&fip->ctlr_mutex);
+ 		fc_linkup(fip->lp);
+ 	} else if (fip->state == FIP_ST_LINK_WAIT) {
+-		fcoe_ctlr_set_state(fip, fip->mode);
++		if (fip->mode == FIP_MODE_NON_FIP)
++			fcoe_ctlr_set_state(fip, FIP_ST_NON_FIP);
++		else
++			fcoe_ctlr_set_state(fip, FIP_ST_AUTO);
+ 		switch (fip->mode) {
+ 		default:
+ 			LIBFCOE_FIP_DBG(fip, "invalid mode %d\n", fip->mode);
+diff --git a/drivers/scsi/fcoe/fcoe_transport.c b/drivers/scsi/fcoe/fcoe_transport.c
+index f4909cd206d3..f15d5e1d56b1 100644
+--- a/drivers/scsi/fcoe/fcoe_transport.c
++++ b/drivers/scsi/fcoe/fcoe_transport.c
+@@ -873,7 +873,7 @@ static int fcoe_transport_create(const char *buffer,
+ 	int rc = -ENODEV;
+ 	struct net_device *netdev = NULL;
+ 	struct fcoe_transport *ft = NULL;
+-	enum fip_state fip_mode = (enum fip_state)(long)kp->arg;
++	enum fip_mode fip_mode = (enum fip_mode)kp->arg;
+ 
+ 	mutex_lock(&ft_mutex);
+ 
+diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
+index 9bbc19fc190b..9f9431a4cc0e 100644
+--- a/drivers/scsi/qedf/qedf_main.c
++++ b/drivers/scsi/qedf/qedf_main.c
+@@ -1418,7 +1418,7 @@ static struct libfc_function_template qedf_lport_template = {
+ 
+ static void qedf_fcoe_ctlr_setup(struct qedf_ctx *qedf)
+ {
+-	fcoe_ctlr_init(&qedf->ctlr, FIP_ST_AUTO);
++	fcoe_ctlr_init(&qedf->ctlr, FIP_MODE_AUTO);
+ 
+ 	qedf->ctlr.send = qedf_fip_send;
+ 	qedf->ctlr.get_src_addr = qedf_get_src_mac;
+diff --git a/include/scsi/libfcoe.h b/include/scsi/libfcoe.h
+index cb8a273732cf..bb8092fa1e36 100644
+--- a/include/scsi/libfcoe.h
++++ b/include/scsi/libfcoe.h
+@@ -79,7 +79,7 @@ enum fip_state {
+  * It must not change after fcoe_ctlr_init() sets it.
+  */
+ enum fip_mode {
+-	FIP_MODE_AUTO = FIP_ST_AUTO,
++	FIP_MODE_AUTO,
+ 	FIP_MODE_NON_FIP,
+ 	FIP_MODE_FABRIC,
+ 	FIP_MODE_VN2VN,
+@@ -250,7 +250,7 @@ struct fcoe_rport {
+ };
+ 
+ /* FIP API functions */
+-void fcoe_ctlr_init(struct fcoe_ctlr *, enum fip_state);
++void fcoe_ctlr_init(struct fcoe_ctlr *, enum fip_mode);
+ void fcoe_ctlr_destroy(struct fcoe_ctlr *);
+ void fcoe_ctlr_link_up(struct fcoe_ctlr *);
+ int fcoe_ctlr_link_down(struct fcoe_ctlr *);
+-- 
+2.19.1
