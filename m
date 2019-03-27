@@ -1,12 +1,12 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 3.18 13/41] scsi: core: replace GFP_ATOMIC with GFP_KERNEL in scsi_scan.c
-Date: Wed, 27 Mar 2019 14:24:50 -0400
-Message-ID: <20190327182518.19394-13-sashal@kernel.org>
-References: <20190327182518.19394-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.4 21/63] scsi: core: replace GFP_ATOMIC with GFP_KERNEL in scsi_scan.c
+Date: Wed, 27 Mar 2019 14:22:41 -0400
+Message-ID: <20190327182323.18577-21-sashal@kernel.org>
+References: <20190327182323.18577-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190327182518.19394-1-sashal@kernel.org>
+In-Reply-To: <20190327182323.18577-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc: Benjamin Block <bblock@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
@@ -90,10 +90,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 3386e72ba7e4..156ee22462e6 100644
+index 850ddc5fac04..3e2288af56bc 100644
 --- a/drivers/scsi/scsi_scan.c
 +++ b/drivers/scsi/scsi_scan.c
-@@ -229,7 +229,7 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
+@@ -217,7 +217,7 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
  	extern void scsi_requeue_run_queue(struct work_struct *work);
  
  	sdev = kzalloc(sizeof(*sdev) + shost->transportt->device_size,
@@ -111,7 +111,7 @@ index 3386e72ba7e4..156ee22462e6 100644
  	if (sdev->inquiry == NULL)
  		return SCSI_SCAN_NO_RESPONSE;
  
-@@ -1083,7 +1083,7 @@ static int scsi_probe_and_add_lun(struct scsi_target *starget,
+@@ -1085,7 +1085,7 @@ static int scsi_probe_and_add_lun(struct scsi_target *starget,
  	if (!sdev)
  		goto out;
  
