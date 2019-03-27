@@ -1,91 +1,124 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.9 09/87] scsi: hisi_sas: Set PHY linkrate when disconnected
-Date: Wed, 27 Mar 2019 14:19:22 -0400
-Message-ID: <20190327182040.17444-9-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 27/87] scsi: core: replace GFP_ATOMIC with GFP_KERNEL in scsi_scan.c
+Date: Wed, 27 Mar 2019 14:19:40 -0400
+Message-ID: <20190327182040.17444-27-sashal@kernel.org>
 References: <20190327182040.17444-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20190327182040.17444-1-sashal@kernel.org>
-Sender: stable-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: John Garry <john.garry@huawei.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Cc: Benjamin Block <bblock@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: John Garry <john.garry@huawei.com>
+From: Benjamin Block <bblock@linux.ibm.com>
 
-[ Upstream commit efdcad62e7b8a02fcccc5ccca57806dce1482ac8 ]
+[ Upstream commit 1749ef00f7312679f76d5e9104c5d1e22a829038 ]
 
-When the PHY comes down, we currently do not set the negotiated linkrate:
+We had a test-report where, under memory pressure, adding LUNs to the
+systems would fail (the tests add LUNs strictly in sequence):
 
-root@(none)$ pwd
-/sys/class/sas_phy/phy-0:0
-root@(none)$ more enable
-1
-root@(none)$ more negotiated_linkrate
-12.0 Gbit
-root@(none)$ echo 0 > enable
-root@(none)$ more negotiated_linkrate
-12.0 Gbit
-root@(none)$
+[ 5525.853432] scsi 0:0:1:1088045124: Direct-Access     IBM      2107900          .148 PQ: 0 ANSI: 5
+[ 5525.853826] scsi 0:0:1:1088045124: alua: supports implicit TPGS
+[ 5525.853830] scsi 0:0:1:1088045124: alua: device naa.6005076303ffd32700000000000044da port group 0 rel port 43
+[ 5525.853931] sd 0:0:1:1088045124: Attached scsi generic sg10 type 0
+[ 5525.854075] sd 0:0:1:1088045124: [sdk] Disabling DIF Type 1 protection
+[ 5525.855495] sd 0:0:1:1088045124: [sdk] 2097152 512-byte logical blocks: (1.07 GB/1.00 GiB)
+[ 5525.855606] sd 0:0:1:1088045124: [sdk] Write Protect is off
+[ 5525.855609] sd 0:0:1:1088045124: [sdk] Mode Sense: ed 00 00 08
+[ 5525.855795] sd 0:0:1:1088045124: [sdk] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[ 5525.857838]  sdk: sdk1
+[ 5525.859468] sd 0:0:1:1088045124: [sdk] Attached SCSI disk
+[ 5525.865073] sd 0:0:1:1088045124: alua: transition timeout set to 60 seconds
+[ 5525.865078] sd 0:0:1:1088045124: alua: port group 00 state A preferred supports tolusnA
+[ 5526.015070] sd 0:0:1:1088045124: alua: port group 00 state A preferred supports tolusnA
+[ 5526.015213] sd 0:0:1:1088045124: alua: port group 00 state A preferred supports tolusnA
+[ 5526.587439] scsi_alloc_sdev: Allocation failure during SCSI scanning, some SCSI devices might not be configured
+[ 5526.588562] scsi_alloc_sdev: Allocation failure during SCSI scanning, some SCSI devices might not be configured
 
-This patch fixes the driver code to set it properly when the PHY comes
-down.
+Looking at the code of scsi_alloc_sdev(), and all the calling contexts,
+there seems to be no reason to use GFP_ATMOIC here. All the different
+call-contexts use a mutex at some point, and nothing in between that
+requires no sleeping, as far as I could see. Additionally, the code that
+later allocates the block queue for the device (scsi_mq_alloc_queue())
+already uses GFP_KERNEL.
 
-If the PHY had been enabled, then set unknown; otherwise, flag as disabled.
+There are similar allocations in two other functions:
+scsi_probe_and_add_lun(), and scsi_add_lun(),; that can also be done with
+GFP_KERNEL.
 
-The logical place to set the negotiated linkrate for this scenario is PHY
-down routine, which is called from the PHY down ISR.
+Here is the contexts for the three functions so far:
 
-However, it is not possible to know if the PHY comes down due to PHY
-disable or loss of link, as sas_phy.enabled member is not set until after
-the transport disable routine is complete, which races with the PHY down
-ISR.
+    scsi_alloc_sdev()
+        scsi_probe_and_add_lun()
+            scsi_sequential_lun_scan()
+                __scsi_scan_target()
+                    scsi_scan_target()
+                        mutex_lock()
+                    scsi_scan_channel()
+                        scsi_scan_host_selected()
+                            mutex_lock()
+            scsi_report_lun_scan()
+                __scsi_scan_target()
+    	            ...
+            __scsi_add_device()
+                mutex_lock()
+            __scsi_scan_target()
+                ...
+        scsi_report_lun_scan()
+            ...
+        scsi_get_host_dev()
+            mutex_lock()
 
-As an imperfect solution, use sas_phy_data.enable as the flag to know if
-the PHY is down due to disable. It's imperfect, as sas_phy_data is internal
-to libsas.
+    scsi_probe_and_add_lun()
+        ...
 
-I can't see another way without adding a new field to hisi_sas_phy and
-managing it, or changing SCSI SAS transport.
+    scsi_add_lun()
+        scsi_probe_and_add_lun()
+            ...
 
-Signed-off-by: John Garry <john.garry@huawei.com>
+So replace all these, and give them a bit of a better chance to succeed,
+with more chances of reclaim.
+
+Signed-off-by: Benjamin Block <bblock@linux.ibm.com>
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/hisi_sas/hisi_sas_main.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+ drivers/scsi/scsi_scan.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 2f872f784e10..5252dd5d3f4b 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -10,6 +10,7 @@
-  */
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 27a6d3c6cb7c..67f6f134abc4 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -219,7 +219,7 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
+ 	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
  
- #include "hisi_sas.h"
-+#include "../libsas/sas_internal.h"
- #define DRV_NAME "hisi_sas"
+ 	sdev = kzalloc(sizeof(*sdev) + shost->transportt->device_size,
+-		       GFP_ATOMIC);
++		       GFP_KERNEL);
+ 	if (!sdev)
+ 		goto out;
  
- #define DEV_IS_GONE(dev) \
-@@ -1128,9 +1129,18 @@ static void hisi_sas_port_deformed(struct asd_sas_phy *sas_phy)
+@@ -796,7 +796,7 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
+ 	 */
+ 	sdev->inquiry = kmemdup(inq_result,
+ 				max_t(size_t, sdev->inquiry_len, 36),
+-				GFP_ATOMIC);
++				GFP_KERNEL);
+ 	if (sdev->inquiry == NULL)
+ 		return SCSI_SCAN_NO_RESPONSE;
  
- static void hisi_sas_phy_disconnected(struct hisi_sas_phy *phy)
- {
-+	struct asd_sas_phy *sas_phy = &phy->sas_phy;
-+	struct sas_phy *sphy = sas_phy->phy;
-+	struct sas_phy_data *d = sphy->hostdata;
-+
- 	phy->phy_attached = 0;
- 	phy->phy_type = 0;
- 	phy->port = NULL;
-+
-+	if (d->enable)
-+		sphy->negotiated_linkrate = SAS_LINK_RATE_UNKNOWN;
-+	else
-+		sphy->negotiated_linkrate = SAS_PHY_DISABLED;
- }
+@@ -1095,7 +1095,7 @@ static int scsi_probe_and_add_lun(struct scsi_target *starget,
+ 	if (!sdev)
+ 		goto out;
  
- void hisi_sas_phy_down(struct hisi_hba *hisi_hba, int phy_no, int rdy)
+-	result = kmalloc(result_len, GFP_ATOMIC |
++	result = kmalloc(result_len, GFP_KERNEL |
+ 			((shost->unchecked_isa_dma) ? __GFP_DMA : 0));
+ 	if (!result)
+ 		goto out_free_sdev;
 -- 
 2.19.1
