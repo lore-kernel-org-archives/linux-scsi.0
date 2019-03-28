@@ -1,52 +1,82 @@
-From: Oliver Neukum <oneukum@suse.com>
-Subject: Re: [PATCH] usb: uas: fix usb subsystem hang after power off hub
- port
-Date: Thu, 28 Mar 2019 17:49:12 +0100
-Message-ID: <1553791752.6310.2.camel@suse.com>
-References: <Pine.LNX.4.44L0.1903281157070.1291-100000@iolanthe.rowland.org>
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] scsi: pm8001: clean up structurally dead code when PM8001_USE_MSIX is defined
+Date: Thu, 28 Mar 2019 23:43:28 +0000
+Message-ID: <20190328234328.15860-1-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44L0.1903281157070.1291-100000@iolanthe.rowland.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: gregkh@linuxfoundation.org, usb-storage@lists.one-eyed-alien.net, Jacky.Cao@sony.com, Kento.A.Kobayashi@sony.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
+To: Jack Wang <jinpu.wang@profitbricks.com>, lindar_liu@usish.com, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Do, 2019-03-28 at 11:57 -0400, Alan Stern wrote:
-> On Thu, 28 Mar 2019, Oliver Neukum wrote:
-> 
-> > On Do, 2019-03-28 at 07:53 +0000, Kento.A.Kobayashi@sony.com wrote:
-> > > Hi,
-> > > 
-> > > > Sorry,
-> > > > 
-> > > > I thought this was clear. Your patch is making the assumption that the reset is triggered by the SCSI layer. You cannot make that assumption, as there is an ioctl for resetting a USB device.
-> > > > In case we are getting an error during the reset (our endpoints vanish), the device driver must report that to the USB layer, so the driver will always be disconnected.
-> > > > We cannot drop errors.
-> > > > 
-> > > >   Regards
-> > > >           Oliver
-> > > 
-> > > This patch modified uas_post_reset to skip rebind operation to avoid exception while -ENODEV happens not drop error.
-> > > If uas_post_reset happens -ENODEV, usb_reset_and_verify_device must happen error.
-> > > So,when we use ioctl(USBDEVFS_RESET) to reset device, if usb_reset_and_verify_device happens error, the error will be reported through ioctl return value. 
-> > 
-> > OK, It is possible that I am stupid. We must rebind if uas_post_reset()
-> > fails. The driver will crash without the endpoints. Can you please
-> > explain again in greater detail, what you are trying to achieve?
-> 
-> Actually no, the driver doesn't have to do anything if the post-reset 
-> method fails.  usbcore will take care of rebinding automatically.
+From: Colin Ian King <colin.king@canonical.com>
 
-Yes, but the rebinding is not optional. Hence, either the post_reset()
-must fail to trigger it, or it will be triggered anyway.
-So if the rebinding hangs the machine, I cannot see how alter
-changing the return value of uas_post_reset() would help.
+When macro PM8001_USE_MSIX is defined there are redundant dead code
+calls to pm8001_chip_intx_interrupt_{enable|disable}. Clean this up
+by compiling in the appropriate enable/disable handlers for the
+defined PM8001_USE_MSIX and undefined PM8001_USE_MSIX cases.
 
-It looks to me like the state transitions of SCSI are too
-restrictive.
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/scsi/pm8001/pm8001_hwi.c | 14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
 
-	Regards
-		Oliver
+diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
+index e4209091c1da..7d81246a432b 100644
+--- a/drivers/scsi/pm8001/pm8001_hwi.c
++++ b/drivers/scsi/pm8001/pm8001_hwi.c
+@@ -1204,6 +1204,7 @@ void pm8001_chip_iounmap(struct pm8001_hba_info *pm8001_ha)
+ 	}
+ }
+ 
++#ifndef PM8001_USE_MSIX
+ /**
+  * pm8001_chip_interrupt_enable - enable PM8001 chip interrupt
+  * @pm8001_ha: our hba card information
+@@ -1225,6 +1226,8 @@ pm8001_chip_intx_interrupt_disable(struct pm8001_hba_info *pm8001_ha)
+ 	pm8001_cw32(pm8001_ha, 0, MSGU_ODMR, ODMR_MASK_ALL);
+ }
+ 
++#else
++
+ /**
+  * pm8001_chip_msix_interrupt_enable - enable PM8001 chip interrupt
+  * @pm8001_ha: our hba card information
+@@ -1256,6 +1259,7 @@ pm8001_chip_msix_interrupt_disable(struct pm8001_hba_info *pm8001_ha,
+ 	msi_index += MSIX_TABLE_BASE;
+ 	pm8001_cw32(pm8001_ha, 0,  msi_index, MSIX_INTERRUPT_DISABLE);
+ }
++#endif
+ 
+ /**
+  * pm8001_chip_interrupt_enable - enable PM8001 chip interrupt
+@@ -1266,10 +1270,9 @@ pm8001_chip_interrupt_enable(struct pm8001_hba_info *pm8001_ha, u8 vec)
+ {
+ #ifdef PM8001_USE_MSIX
+ 	pm8001_chip_msix_interrupt_enable(pm8001_ha, 0);
+-	return;
+-#endif
++#else
+ 	pm8001_chip_intx_interrupt_enable(pm8001_ha);
+-
++#endif
+ }
+ 
+ /**
+@@ -1281,10 +1284,9 @@ pm8001_chip_interrupt_disable(struct pm8001_hba_info *pm8001_ha, u8 vec)
+ {
+ #ifdef PM8001_USE_MSIX
+ 	pm8001_chip_msix_interrupt_disable(pm8001_ha, 0);
+-	return;
+-#endif
++#else
+ 	pm8001_chip_intx_interrupt_disable(pm8001_ha);
+-
++#endif
+ }
+ 
+ /**
+-- 
+2.20.1
