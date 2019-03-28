@@ -1,117 +1,90 @@
-From: Yue Haibing <yuehaibing@huawei.com>
-Subject: [RESEND PATCH] scsi: qedi: Fix global-out-of-bounds bug in qedi dbg function
-Date: Thu, 28 Mar 2019 15:54:28 +0800
-Message-ID: <20190328075428.25432-1-yuehaibing@huawei.com>
+From: Stanley Chu <stanley.chu@mediatek.com>
+Subject: [PATCH v4 3/5] scsi: ufs: Fix regulator load and icc-level
+ configuration
+Date: Thu, 28 Mar 2019 17:16:25 +0800
+Message-ID: <1553764587-26357-4-git-send-email-stanley.chu@mediatek.com>
+References: <1553764587-26357-1-git-send-email-stanley.chu@mediatek.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: qla2xxx-upstream@qlogic.com, jejb@linux.ibm.com, martin.petersen@oracle.com, mrangankar@marvell.com, nilesh.javali@cavium.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, YueHaibing <yuehaibing@huawei.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <1553764587-26357-1-git-send-email-stanley.chu@mediatek.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: linux-scsi@vger.kernel.org, martin.petersen@oracle.com, avri.altman@wdc.com, alim.akhtar@samsung.com, pedrom.sousa@synopsys.com
+Cc: marc.w.gonzalez@free.fr, chun-hung.wu@mediatek.com, kuohong.wang@mediatek.com, evgreen@chromium.org, subhashj@codeaurora.org, linux-mediatek@lists.infradead.org, peter.wang@mediatek.com, vivek.gautam@codeaurora.org, matthias.bgg@gmail.com, sayalil@codeaurora.org, Stanley Chu <stanley.chu@mediatek.com>, linux-arm-kernel@lists.infradead.org, beanhuo@micron.com
 List-Id: linux-scsi@vger.kernel.org
 
-From: YueHaibing <yuehaibing@huawei.com>
+Currently if a regulator has "<name>-fixed-regulator"
+property in device tree, it will skip current limit initialization.
+This lead to a zero "max_uA" value in struct ufs_vreg.
 
-KASAN report this:
+However, "regulator_set_load" operation shall be required
+on regulators which have valid current limits, otherwise a zero
+"max_uA" set by "regulator_set_load" may cause unexpected behavior
+when this regulator is enabled or set as high power mode.
 
-BUG: KASAN: global-out-of-bounds in qedi_dbg_err+0xda/0x330 [qedi]
-Read of size 31 at addr ffffffffc12b0ae0 by task syz-executor.0/2429
+Similarly, in device's icc_level configuration flow, the target
+icc_level shall be updated if regulator also has valid current limit,
+otherwise a wrong icc_level will be calculated by zero "max_uA" and
+thus causes unexpected results after it is written to device.
 
-CPU: 0 PID: 2429 Comm: syz-executor.0 Not tainted 5.0.0-rc7+ #45
-Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.10.2-1ubuntu1 04/01/2014
-Call Trace:
- __dump_stack lib/dump_stack.c:77 [inline]
- dump_stack+0xfa/0x1ce lib/dump_stack.c:113
- print_address_description+0x1c4/0x270 mm/kasan/report.c:187
- kasan_report+0x149/0x18d mm/kasan/report.c:317
- memcpy+0x1f/0x50 mm/kasan/common.c:130
- qedi_dbg_err+0xda/0x330 [qedi]
- ? 0xffffffffc12d0000
- qedi_init+0x118/0x1000 [qedi]
- ? 0xffffffffc12d0000
- ? 0xffffffffc12d0000
- ? 0xffffffffc12d0000
- do_one_initcall+0xfa/0x5ca init/main.c:887
- do_init_module+0x204/0x5f6 kernel/module.c:3460
- load_module+0x66b2/0x8570 kernel/module.c:3808
- __do_sys_finit_module+0x238/0x2a0 kernel/module.c:3902
- do_syscall_64+0x147/0x600 arch/x86/entry/common.c:290
- entry_SYSCALL_64_after_hwframe+0x49/0xbe
-RIP: 0033:0x462e99
-Code: f7 d8 64 89 02 b8 ff ff ff ff c3 66 0f 1f 44 00 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 bc ff ff ff f7 d8 64 89 01 48
-RSP: 002b:00007f2d57e55c58 EFLAGS: 00000246 ORIG_RAX: 0000000000000139
-RAX: ffffffffffffffda RBX: 000000000073bfa0 RCX: 0000000000462e99
-RDX: 0000000000000000 RSI: 00000000200003c0 RDI: 0000000000000003
-RBP: 00007f2d57e55c70 R08: 0000000000000000 R09: 0000000000000000
-R10: 0000000000000000 R11: 0000000000000246 R12: 00007f2d57e566bc
-R13: 00000000004bcefb R14: 00000000006f7030 R15: 0000000000000004
-
-The buggy address belongs to the variable:
- __func__.67584+0x0/0xffffffffffffd520 [qedi]
-
-Memory state around the buggy address:
- ffffffffc12b0980: fa fa fa fa 00 04 fa fa fa fa fa fa 00 00 05 fa
- ffffffffc12b0a00: fa fa fa fa 00 00 04 fa fa fa fa fa 00 05 fa fa
->ffffffffc12b0a80: fa fa fa fa 00 06 fa fa fa fa fa fa 00 02 fa fa
-                                                          ^
- ffffffffc12b0b00: fa fa fa fa 00 00 04 fa fa fa fa fa 00 00 03 fa
- ffffffffc12b0b80: fa fa fa fa 00 00 02 fa fa fa fa fa 00 00 04 fa
-
-qedi_dbg_err function does not check the length of caller's name,
-blindly copy 31 characters to array 'nfunc', then print it to log,
-which trigger global-out-of-bounds bug and may leak kernel info.
-Also other qedi dbg function may have the same issue, this patch
-fix this.
-
-Fixes: ace7f46ba5fd ("scsi: qedi: Add QLogic FastLinQ offload iSCSI driver framework.")
-Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
+Reviewed-by: Avri Altman <avri.altman@wdc.com>
+Acked-by: Alim Akhtar <alim.akhtar@samsung.com>
 ---
- drivers/scsi/qedi/qedi_dbg.c | 12 ++++--------
- 1 file changed, 4 insertions(+), 8 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 15 ++++++++++++---
+ 1 file changed, 12 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/qedi/qedi_dbg.c b/drivers/scsi/qedi/qedi_dbg.c
-index 8fd28b0..cce44b9 100644
---- a/drivers/scsi/qedi/qedi_dbg.c
-+++ b/drivers/scsi/qedi/qedi_dbg.c
-@@ -18,8 +18,7 @@ qedi_dbg_err(struct qedi_dbg_ctx *qedi, const char *func, u32 line,
- 	struct va_format vaf;
- 	char nfunc[32];
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 81d99aebb867..5ba49c8cd2a3 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -6294,19 +6294,19 @@ static u32 ufshcd_find_max_sup_active_icc_level(struct ufs_hba *hba,
+ 		goto out;
+ 	}
  
--	memset(nfunc, 0, sizeof(nfunc));
--	memcpy(nfunc, func, sizeof(nfunc) - 1);
-+	snprintf(nfunc, sizeof(nfunc), "%s", func);
+-	if (hba->vreg_info.vcc)
++	if (hba->vreg_info.vcc && hba->vreg_info.vcc->max_uA)
+ 		icc_level = ufshcd_get_max_icc_level(
+ 				hba->vreg_info.vcc->max_uA,
+ 				POWER_DESC_MAX_ACTV_ICC_LVLS - 1,
+ 				&desc_buf[PWR_DESC_ACTIVE_LVLS_VCC_0]);
  
- 	va_start(va, fmt);
+-	if (hba->vreg_info.vccq)
++	if (hba->vreg_info.vccq && hba->vreg_info.vccq->max_uA)
+ 		icc_level = ufshcd_get_max_icc_level(
+ 				hba->vreg_info.vccq->max_uA,
+ 				icc_level,
+ 				&desc_buf[PWR_DESC_ACTIVE_LVLS_VCCQ_0]);
  
-@@ -43,8 +42,7 @@ qedi_dbg_warn(struct qedi_dbg_ctx *qedi, const char *func, u32 line,
- 	struct va_format vaf;
- 	char nfunc[32];
+-	if (hba->vreg_info.vccq2)
++	if (hba->vreg_info.vccq2 && hba->vreg_info.vccq2->max_uA)
+ 		icc_level = ufshcd_get_max_icc_level(
+ 				hba->vreg_info.vccq2->max_uA,
+ 				icc_level,
+@@ -7004,6 +7004,15 @@ static int ufshcd_config_vreg_load(struct device *dev, struct ufs_vreg *vreg,
+ 	if (!vreg)
+ 		return 0;
  
--	memset(nfunc, 0, sizeof(nfunc));
--	memcpy(nfunc, func, sizeof(nfunc) - 1);
-+	snprintf(nfunc, sizeof(nfunc), "%s", func);
- 
- 	va_start(va, fmt);
- 
-@@ -72,8 +70,7 @@ qedi_dbg_notice(struct qedi_dbg_ctx *qedi, const char *func, u32 line,
- 	struct va_format vaf;
- 	char nfunc[32];
- 
--	memset(nfunc, 0, sizeof(nfunc));
--	memcpy(nfunc, func, sizeof(nfunc) - 1);
-+	snprintf(nfunc, sizeof(nfunc), "%s", func);
- 
- 	va_start(va, fmt);
- 
-@@ -102,8 +99,7 @@ qedi_dbg_info(struct qedi_dbg_ctx *qedi, const char *func, u32 line,
- 	struct va_format vaf;
- 	char nfunc[32];
- 
--	memset(nfunc, 0, sizeof(nfunc));
--	memcpy(nfunc, func, sizeof(nfunc) - 1);
-+	snprintf(nfunc, sizeof(nfunc), "%s", func);
- 
- 	va_start(va, fmt);
- 
++	/*
++	 * "set_load" operation shall be required on those regulators
++	 * which specifically configured current limitation. Otherwise
++	 * zero max_uA may cause unexpected behavior when regulator is
++	 * enabled or set as high power mode.
++	 */
++	if (!vreg->max_uA)
++		return 0;
++
+ 	ret = regulator_set_load(vreg->reg, ua);
+ 	if (ret < 0) {
+ 		dev_err(dev, "%s: %s set load (ua=%d) failed, err=%d\n",
 -- 
-2.7.0
+2.18.0
