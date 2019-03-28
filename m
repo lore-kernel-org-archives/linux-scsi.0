@@ -1,27 +1,38 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2] scsi: qla2xxx: Simplify conditional check again
-Date: Wed, 27 Mar 2019 21:28:47 -0400
-Message-ID: <yq1ftr7vlbk.fsf@oracle.com>
-References: <20190320163315.12740-1-natechancellor@gmail.com>
-        <20190326220444.10040-1-natechancellor@gmail.com>
+Subject: Re: [PATCH 1/4] ibmvfc: Remove "failed" from logged errors
+Date: Wed, 27 Mar 2019 21:35:11 -0400
+Message-ID: <yq1bm1vvl0w.fsf@oracle.com>
+References: <20190320195654.4364-1-tyreld@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190326220444.10040-1-natechancellor@gmail.com> (Nathan
-        Chancellor's message of "Tue, 26 Mar 2019 15:04:46 -0700")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Nathan Chancellor <natechancellor@gmail.com>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Joe Carnuccio <joe.carnuccio@cavium.com>, Himanshu Madhani <hmadhani@marvell.com>, qla2xxx-upstream@qlogic.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Nick Desaulniers <ndesaulniers@google.com>, clang-built-linux@googlegroups.com
+Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+In-Reply-To: <20190320195654.4364-1-tyreld@linux.vnet.ibm.com> (Tyrel
+ Datwyler's message of "Wed, 20 Mar 2019 14:56:51 -0500")
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+Sender: "Linuxppc-dev"
+ <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+To: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+Cc: james.bottomley@hansenpartnership.com, brking@linux.vnet.ibm.com, linuxppc-dev@lists.ozlabs.org, linux-scsi@vger.kernel.org, martin.petersen@oracle.com
 List-Id: linux-scsi@vger.kernel.org
 
 
-Nathan,
+Tyrel,
 
-> Clang warns when it sees a logical not on the left side of a
-> conditional statement because it thinks the logical not should be
-> applied to the whole statement, not just the left side:
+> The text of messages logged with ibmvfc_log_error() always contain the
+> term "failed". In the case of cancelled commands during EH they are
+> reported back by the VIOS using error codes. This can be confusing to
+> somebody looking at these log messages as to whether a command was
+> successfully cancelled. The following real log message for example it
+> is unclear if the transaction was actaully cancelled.
 
-Applied to 5.2/scsi-queue, thanks.
+Applied to 5.1/scsi-fixes. Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
