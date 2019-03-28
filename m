@@ -1,70 +1,82 @@
-From: Sibi Sankar <sibis@codeaurora.org>
-Subject: Re: [PATCH v5 0/3] UFS on APQ8098/MSM8998
-Date: Thu, 28 Mar 2019 15:07:52 +0530
-Message-ID: <4a01550bb22799aa803be2cd674f3a74@codeaurora.org>
-References: <43768d77-80b7-9cdc-b6e0-08ec4a026c21@free.fr>
+From: Quentin Deslandes <quentin.deslandes@itdev.co.uk>
+Subject: [PATCH] scsi: aic79xx: NULL check before some freeing functions is
+ not needed.
+Date: Thu, 28 Mar 2019 13:11:04 +0000
+Message-ID: <20190328131101.GA21866@qd-ubuntu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <43768d77-80b7-9cdc-b6e0-08ec4a026c21@free.fr>
+Content-Language: en-US
+Content-ID: <3F4A414268EA46479089CFBFC4E9A5A0@eurprd08.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Marc Gonzalez <marc.w.gonzalez@free.fr>
-Cc: MSM <linux-arm-msm@vger.kernel.org>, SCSI <linux-scsi@vger.kernel.org>, Jeffrey Hugo <jhugo@codeaurora.org>, Bjorn Andersson <bjorn.andersson@linaro.org>, Andy Gross <andy.gross@linaro.org>, David Brown <david.brown@linaro.org>, Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, Pedro Sousa <pedrom.sousa@synopsys.com>, LKML <linux-kernel@vger.kernel.org>, Lee Jones <lee.jones@linaro.org>, linux-arm-msm-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 2019-02-25 17:46, Marc Gonzalez wrote:
-> Hello,
-> 
-> This series adds support for the UFS host controller on
-> APQ8098/MSM8998-based boards.
-> 
-> This should be the final rev ;-)
+Fix the following coccinelle warning by removing NULL check before
+calling kfree:
 
-Tested-by: Sibi Sankar <sibis@codeaurora.org>
+NULL check before some freeing functions is not needed.
 
-> 
-> Differences between v4 and v5:
-> - Drop patches that have already been accepted or spun off
-> 
-> Differences between v3 and v4:
-> - Rebase on top of -next
-> - Pick up Douglas Anderson's UFSHC doc fix
-> - Document 8998 UFSHC binding
-> - Improve UFS PHY binding doc
-> - Put the UFS DT patch at the end of the series
-> 
-> Difference between v2 and v3:
-> - Add qcom,msm8998-qmp-ufs-phy compat string and match it in the PHY 
-> driver
-> - Drop vdd-hba-fixed-regulator
-> - Write the reg addresses with full 32-bit width
-> - Set regulator-allow-set-load only on the 3 rails used by UFS.
-> - Revert the patch introducing ufshcd_set_vccq_rail_unused
-> 
-> Difference between v1 and v2:
-> - New patch to add 'regulator-allow-set-load' prop to all vreg nodes
-> - Rename rpmcc node to 'clock-controller' + Add Review tags
-> - Drop UFS pinctrl gymnastics (not required, probably left enabled in
-> bootloader)
-> - Delete GCC_UFS_ICE_CORE_CLK (ICE not used upstream, I think)
-> - Fix sizes of ufsphy register areas based on Jeffrey's feedback
-> - Hack ufshcd_set_vccq_rail_unused into a NOP to work around lock up + 
-> reboot
-> 
-> 
-> Marc Gonzalez (3):
->   dt-bindings: ufs: Add msm8998 compatible string
->   arm64: dts: qcom: msm8998: Allow UFSHC driver to set-load
->   arm64: dts: qcom: msm8998: Add UFS nodes
-> 
->  .../devicetree/bindings/ufs/ufshcd-pltfrm.txt |  1 +
->  arch/arm64/boot/dts/qcom/msm8998-mtp.dtsi     | 22 +++++++
->  arch/arm64/boot/dts/qcom/msm8998.dtsi         | 65 +++++++++++++++++++
->  3 files changed, 88 insertions(+)
+Signed-off-by: Quentin Deslandes <quentin.deslandes@itdev.co.uk>
+---
+ drivers/scsi/aic7xxx/aic79xx_core.c | 18 +++++-------------
+ 1 file changed, 5 insertions(+), 13 deletions(-)
 
--- 
--- Sibi Sankar --
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
-a Linux Foundation Collaborative Project.
+diff --git a/drivers/scsi/aic7xxx/aic79xx_core.c b/drivers/scsi/aic7xxx/aic=
+79xx_core.c
+index 7e5044bf05c0..a61022db43ee 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_core.c
++++ b/drivers/scsi/aic7xxx/aic79xx_core.c
+@@ -3664,8 +3664,6 @@ ahd_alloc_tstate(struct ahd_softc *ahd, u_int scsi_id=
+, char channel)
+ static void
+ ahd_free_tstate(struct ahd_softc *ahd, u_int scsi_id, char channel, int fo=
+rce)
+ {
+-	struct ahd_tmode_tstate *tstate;
+-
+ 	/*
+ 	 * Don't clean up our "master" tstate.
+ 	 * It has our default user settings.
+@@ -3674,9 +3672,7 @@ ahd_free_tstate(struct ahd_softc *ahd, u_int scsi_id,=
+ char channel, int force)
+ 	 && force =3D=3D FALSE)
+ 		return;
+=20
+-	tstate =3D ahd->enabled_targets[scsi_id];
+-	if (tstate !=3D NULL)
+-		kfree(tstate);
++	kfree(ahd->enabled_targets[scsi_id]);
+ 	ahd->enabled_targets[scsi_id] =3D NULL;
+ }
+ #endif
+@@ -6138,8 +6134,7 @@ ahd_set_unit(struct ahd_softc *ahd, int unit)
+ void
+ ahd_set_name(struct ahd_softc *ahd, char *name)
+ {
+-	if (ahd->name !=3D NULL)
+-		kfree(ahd->name);
++	kfree(ahd->name);
+ 	ahd->name =3D name;
+ }
+=20
+@@ -6200,12 +6195,9 @@ ahd_free(struct ahd_softc *ahd)
+ 		kfree(ahd->black_hole);
+ 	}
+ #endif
+-	if (ahd->name !=3D NULL)
+-		kfree(ahd->name);
+-	if (ahd->seep_config !=3D NULL)
+-		kfree(ahd->seep_config);
+-	if (ahd->saved_stack !=3D NULL)
+-		kfree(ahd->saved_stack);
++	kfree(ahd->name);
++	kfree(ahd->seep_config);
++	kfree(ahd->saved_stack);
+ #ifndef __FreeBSD__
+ 	kfree(ahd);
+ #endif
+--=20
+2.17.1
