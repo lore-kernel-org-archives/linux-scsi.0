@@ -1,125 +1,128 @@
-From: Mukesh Ojha <mojha@codeaurora.org>
-Subject: Re: [RESEND PATCH] scsi: qedi: Fix global-out-of-bounds bug in qedi
- dbg function
-Date: Thu, 28 Mar 2019 19:20:15 +0530
-Message-ID: <de12f110-48c1-8d31-4001-5e3e95858d21@codeaurora.org>
-References: <20190328075428.25432-1-yuehaibing@huawei.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [Qemu-devel] megasas: Unexpected response from lun 1 while
+ scanning, scan aborted
+Date: Thu, 28 Mar 2019 15:24:44 +0100
+Message-ID: <78e04dbb-de4f-3d1b-973d-6cb906a13e42@suse.de>
+References: <9c3849cf-86c6-4568-bff5-1050b445322d@default>
+ <c3a8f877-82bc-44ab-72e8-51f62c0a65ed@suse.de>
+ <442316ee-8800-275c-85e9-a5d054a28e63@oracle.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190328075428.25432-1-yuehaibing@huawei.com>
+In-Reply-To: <442316ee-8800-275c-85e9-a5d054a28e63@oracle.com>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Yue Haibing <yuehaibing@huawei.com>, qla2xxx-upstream@qlogic.com, jejb@linux.ibm.com, martin.petersen@oracle.com, mrangankar@marvell.com, nilesh.javali@cavium.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Dongli Zhang <dongli.zhang@oracle.com>
+Cc: qemu-block@nongnu.org, linux-scsi@vger.kernel.org, megaraidlinux.pdl@broadcom.com, linux-kernel@vger.kernel.org, qemu-devel@nongnu.org
 List-Id: linux-scsi@vger.kernel.org
 
+On 3/28/19 1:47 AM, Dongli Zhang wrote:
+> 
+> 
+> On 3/27/19 7:31 PM, Hannes Reinecke wrote:
+>> On 3/26/19 5:47 PM, Dongli Zhang wrote:
+>>> I am reporting an error that the scsi lun cannot initialize successfully when I
+>>> am emulating megasas scsi controller with qemu.
+>>>
+>>> I am not sure if this is issue in qemu or linux kernel.
+>>>
+>>> When 'lun=1' is specified, there is "Unexpected response from lun 1 while
+>>> scanning, scan aborted".
+>>>
+>>> Everything works well if 'lun=0' is specified.
+>>>
+>>>
+>>> Below is the qemu cmdline involved:
+>>>
+>>> -device megasas,id=scsi0 \
+>>> -device scsi-hd,drive=drive0,bus=scsi0.0,lun=1 \
+>>> -drive file=/home/zhang/img/test.img,if=none,id=drive0,format=raw
+>>>
+>>>
+>>> Below is the syslog related to 'scsi|SCSI'
+>>>
+>>> # dmesg | grep SCSI
+>>> [    0.392494] SCSI subsystem initialized
+>>> [    0.460666] Block layer SCSI generic (bsg) driver version 0.4 loaded (major
+>>> 251)
+>>> [    0.706788] sd 1:0:0:0: [sda] Attached SCSI disk
+>>> # dmesg | grep scsi
+>>> [    0.511643] scsi host0: Avago SAS based MegaRAID driver
+>>> [    0.523302] scsi 0:2:0:0: Unexpected response from lun 1 while scanning,
+>>> scan aborted
+>>> [    0.540364] scsi host1: ata_piix
+>>> [    0.540780] scsi host2: ata_piix
+>>> [    0.702396] scsi 1:0:0:0: Direct-Access     ATA      QEMU HARDDISK    2.5+
+>>> PQ: 0 ANSI: 5
+>>>
+>>> When 'lun=1' is changed to 'lun=0', there is no issue.
+>>>
+>>> Thank you very much!
+>>>
+>> That's an artifact from the megasas emulation in quemu.
+>> Megasas (internally) can't handle LUN numbers (the RAID part only knows about
+>> 'disks'), so I took the decision to not expose devices with LUN != 0.
+>> Please use a different SCSI target number, not a non-zero LUN number.
+> 
+> The guest kernel is able to detect the disk if lun is always 0, while target
+> number is changed:
+> 
+> -device scsi-hd,drive=drive0,bus=scsi0.0,channel=0,scsi-id=0,lun=0
+> -device scsi-hd,drive=drive1,bus=scsi0.0,channel=0,scsi-id=1,lun=0
+> 
+> # dmesg | grep scsi
+> [    0.935999] scsi host0: ata_piix
+> [    0.936401] scsi host1: ata_piix
+> [    1.100945] scsi 0:0:0:0: Direct-Access     ATA      QEMU HARDDISK    2.5+
+> PQ: 0 ANSI: 5
+> [    1.102409] sd 0:0:0:0: Attached scsi generic sg0 type 0
+> [    1.672952] scsi host2: Avago SAS based MegaRAID driver
+> [    1.683886] scsi 2:2:0:0: Direct-Access     QEMU     QEMU HARDDISK    2.5+
+> PQ: 0 ANSI: 5
+> [    1.684915] scsi 2:2:1:0: Direct-Access     QEMU     QEMU HARDDISK    2.5+
+> PQ: 0 ANSI: 5
+> [    1.701529] sd 2:2:0:0: Attached scsi generic sg1 type 0
+> [    1.704795] sd 2:2:1:0: Attached scsi generic sg2 type 0
+> # dmesg | grep SCSI
+> [    0.111015] SCSI subsystem initialized
+> [    0.904712] Block layer SCSI generic (bsg) driver version 0.4 loaded (major 246)
+> [    1.121174] sd 0:0:0:0: [sda] Attached SCSI disk
+> [    1.703739] sd 2:2:0:0: [sdb] Attached SCSI disk
+> [    1.706964] sd 2:2:1:0: [sdc] Attached SCSI disk
+> 
+> 
+> 
+> If device with LUN != 0 will not be exposed, why not set max_lun = 0 as what
+> qemu lsi is doing?
+> 
+> diff --git a/hw/scsi/megasas.c b/hw/scsi/megasas.c
+> index a56317e..c966ee0 100644
+> --- a/hw/scsi/megasas.c
+> +++ b/hw/scsi/megasas.c
+> @@ -2298,7 +2298,7 @@ static void megasas_scsi_uninit(PCIDevice *d)
+>   static const struct SCSIBusInfo megasas_scsi_info = {
+>       .tcq = true,
+>       .max_target = MFI_MAX_LD,
+> -    .max_lun = 255,
+> +    .max_lun = 0,
+> 
+>       .transfer_data = megasas_xfer_complete,
+>       .get_sg_list = megasas_get_sg_list,
+> 
+Hmm. Good point.
 
-On 3/28/2019 1:24 PM, Yue Haibing wrote:
-> From: YueHaibing <yuehaibing@huawei.com>
->
-> KASAN report this:
->
-> BUG: KASAN: global-out-of-bounds in qedi_dbg_err+0xda/0x330 [qedi]
-> Read of size 31 at addr ffffffffc12b0ae0 by task syz-executor.0/2429
->
-> CPU: 0 PID: 2429 Comm: syz-executor.0 Not tainted 5.0.0-rc7+ #45
-> Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.10.2-1ubuntu1 04/01/2014
-> Call Trace:
->   __dump_stack lib/dump_stack.c:77 [inline]
->   dump_stack+0xfa/0x1ce lib/dump_stack.c:113
->   print_address_description+0x1c4/0x270 mm/kasan/report.c:187
->   kasan_report+0x149/0x18d mm/kasan/report.c:317
->   memcpy+0x1f/0x50 mm/kasan/common.c:130
->   qedi_dbg_err+0xda/0x330 [qedi]
->   ? 0xffffffffc12d0000
->   qedi_init+0x118/0x1000 [qedi]
->   ? 0xffffffffc12d0000
->   ? 0xffffffffc12d0000
->   ? 0xffffffffc12d0000
->   do_one_initcall+0xfa/0x5ca init/main.c:887
->   do_init_module+0x204/0x5f6 kernel/module.c:3460
->   load_module+0x66b2/0x8570 kernel/module.c:3808
->   __do_sys_finit_module+0x238/0x2a0 kernel/module.c:3902
->   do_syscall_64+0x147/0x600 arch/x86/entry/common.c:290
->   entry_SYSCALL_64_after_hwframe+0x49/0xbe
-> RIP: 0033:0x462e99
-> Code: f7 d8 64 89 02 b8 ff ff ff ff c3 66 0f 1f 44 00 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 bc ff ff ff f7 d8 64 89 01 48
-> RSP: 002b:00007f2d57e55c58 EFLAGS: 00000246 ORIG_RAX: 0000000000000139
-> RAX: ffffffffffffffda RBX: 000000000073bfa0 RCX: 0000000000462e99
-> RDX: 0000000000000000 RSI: 00000000200003c0 RDI: 0000000000000003
-> RBP: 00007f2d57e55c70 R08: 0000000000000000 R09: 0000000000000000
-> R10: 0000000000000000 R11: 0000000000000246 R12: 00007f2d57e566bc
-> R13: 00000000004bcefb R14: 00000000006f7030 R15: 0000000000000004
->
-> The buggy address belongs to the variable:
->   __func__.67584+0x0/0xffffffffffffd520 [qedi]
->
-> Memory state around the buggy address:
->   ffffffffc12b0980: fa fa fa fa 00 04 fa fa fa fa fa fa 00 00 05 fa
->   ffffffffc12b0a00: fa fa fa fa 00 00 04 fa fa fa fa fa 00 05 fa fa
->> ffffffffc12b0a80: fa fa fa fa 00 06 fa fa fa fa fa fa 00 02 fa fa
->                                                            ^
->   ffffffffc12b0b00: fa fa fa fa 00 00 04 fa fa fa fa fa 00 00 03 fa
->   ffffffffc12b0b80: fa fa fa fa 00 00 02 fa fa fa fa fa 00 00 04 fa
->
-> qedi_dbg_err function does not check the length of caller's name,
-> blindly copy 31 characters to array 'nfunc', then print it to log,
-> which trigger global-out-of-bounds bug and may leak kernel info.
-> Also other qedi dbg function may have the same issue, this patch
-> fix this.
->
-> Fixes: ace7f46ba5fd ("scsi: qedi: Add QLogic FastLinQ offload iSCSI driver framework.")
-> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
-Reviewed-by: Mukesh Ojha <mojha@codeaurora.org>
+In _theory_ one could just jbod mode, in which case _all_ LUNs are 
+exposed. But then we could probably adjust it, based on which mode is 
+selected.
+I'll check.
 
--Mukesh
-> ---
->   drivers/scsi/qedi/qedi_dbg.c | 12 ++++--------
->   1 file changed, 4 insertions(+), 8 deletions(-)
->
-> diff --git a/drivers/scsi/qedi/qedi_dbg.c b/drivers/scsi/qedi/qedi_dbg.c
-> index 8fd28b0..cce44b9 100644
-> --- a/drivers/scsi/qedi/qedi_dbg.c
-> +++ b/drivers/scsi/qedi/qedi_dbg.c
-> @@ -18,8 +18,7 @@ qedi_dbg_err(struct qedi_dbg_ctx *qedi, const char *func, u32 line,
->   	struct va_format vaf;
->   	char nfunc[32];
->   
-> -	memset(nfunc, 0, sizeof(nfunc));
-> -	memcpy(nfunc, func, sizeof(nfunc) - 1);
-> +	snprintf(nfunc, sizeof(nfunc), "%s", func);
->   
->   	va_start(va, fmt);
->   
-> @@ -43,8 +42,7 @@ qedi_dbg_warn(struct qedi_dbg_ctx *qedi, const char *func, u32 line,
->   	struct va_format vaf;
->   	char nfunc[32];
->   
-> -	memset(nfunc, 0, sizeof(nfunc));
-> -	memcpy(nfunc, func, sizeof(nfunc) - 1);
-> +	snprintf(nfunc, sizeof(nfunc), "%s", func);
->   
->   	va_start(va, fmt);
->   
-> @@ -72,8 +70,7 @@ qedi_dbg_notice(struct qedi_dbg_ctx *qedi, const char *func, u32 line,
->   	struct va_format vaf;
->   	char nfunc[32];
->   
-> -	memset(nfunc, 0, sizeof(nfunc));
-> -	memcpy(nfunc, func, sizeof(nfunc) - 1);
-> +	snprintf(nfunc, sizeof(nfunc), "%s", func);
->   
->   	va_start(va, fmt);
->   
-> @@ -102,8 +99,7 @@ qedi_dbg_info(struct qedi_dbg_ctx *qedi, const char *func, u32 line,
->   	struct va_format vaf;
->   	char nfunc[32];
->   
-> -	memset(nfunc, 0, sizeof(nfunc));
-> -	memcpy(nfunc, func, sizeof(nfunc) - 1);
-> +	snprintf(nfunc, sizeof(nfunc), "%s", func);
->   
->   	va_start(va, fmt);
->   
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Mary Higgins, Sri Rasiah
+HRB 21284 (AG Nürnberg)
