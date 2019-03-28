@@ -1,82 +1,125 @@
-From: Quentin Deslandes <quentin.deslandes@itdev.co.uk>
-Subject: [PATCH] scsi: aic79xx: NULL check before some freeing functions is
- not needed.
-Date: Thu, 28 Mar 2019 13:11:04 +0000
-Message-ID: <20190328131101.GA21866@qd-ubuntu>
+From: Mukesh Ojha <mojha@codeaurora.org>
+Subject: Re: [RESEND PATCH] scsi: qedi: Fix global-out-of-bounds bug in qedi
+ dbg function
+Date: Thu, 28 Mar 2019 19:20:15 +0530
+Message-ID: <de12f110-48c1-8d31-4001-5e3e95858d21@codeaurora.org>
+References: <20190328075428.25432-1-yuehaibing@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190328075428.25432-1-yuehaibing@huawei.com>
 Content-Language: en-US
-Content-ID: <3F4A414268EA46479089CFBFC4E9A5A0@eurprd08.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
+To: Yue Haibing <yuehaibing@huawei.com>, qla2xxx-upstream@qlogic.com, jejb@linux.ibm.com, martin.petersen@oracle.com, mrangankar@marvell.com, nilesh.javali@cavium.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Fix the following coccinelle warning by removing NULL check before
-calling kfree:
 
-NULL check before some freeing functions is not needed.
+On 3/28/2019 1:24 PM, Yue Haibing wrote:
+> From: YueHaibing <yuehaibing@huawei.com>
+>
+> KASAN report this:
+>
+> BUG: KASAN: global-out-of-bounds in qedi_dbg_err+0xda/0x330 [qedi]
+> Read of size 31 at addr ffffffffc12b0ae0 by task syz-executor.0/2429
+>
+> CPU: 0 PID: 2429 Comm: syz-executor.0 Not tainted 5.0.0-rc7+ #45
+> Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.10.2-1ubuntu1 04/01/2014
+> Call Trace:
+>   __dump_stack lib/dump_stack.c:77 [inline]
+>   dump_stack+0xfa/0x1ce lib/dump_stack.c:113
+>   print_address_description+0x1c4/0x270 mm/kasan/report.c:187
+>   kasan_report+0x149/0x18d mm/kasan/report.c:317
+>   memcpy+0x1f/0x50 mm/kasan/common.c:130
+>   qedi_dbg_err+0xda/0x330 [qedi]
+>   ? 0xffffffffc12d0000
+>   qedi_init+0x118/0x1000 [qedi]
+>   ? 0xffffffffc12d0000
+>   ? 0xffffffffc12d0000
+>   ? 0xffffffffc12d0000
+>   do_one_initcall+0xfa/0x5ca init/main.c:887
+>   do_init_module+0x204/0x5f6 kernel/module.c:3460
+>   load_module+0x66b2/0x8570 kernel/module.c:3808
+>   __do_sys_finit_module+0x238/0x2a0 kernel/module.c:3902
+>   do_syscall_64+0x147/0x600 arch/x86/entry/common.c:290
+>   entry_SYSCALL_64_after_hwframe+0x49/0xbe
+> RIP: 0033:0x462e99
+> Code: f7 d8 64 89 02 b8 ff ff ff ff c3 66 0f 1f 44 00 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 bc ff ff ff f7 d8 64 89 01 48
+> RSP: 002b:00007f2d57e55c58 EFLAGS: 00000246 ORIG_RAX: 0000000000000139
+> RAX: ffffffffffffffda RBX: 000000000073bfa0 RCX: 0000000000462e99
+> RDX: 0000000000000000 RSI: 00000000200003c0 RDI: 0000000000000003
+> RBP: 00007f2d57e55c70 R08: 0000000000000000 R09: 0000000000000000
+> R10: 0000000000000000 R11: 0000000000000246 R12: 00007f2d57e566bc
+> R13: 00000000004bcefb R14: 00000000006f7030 R15: 0000000000000004
+>
+> The buggy address belongs to the variable:
+>   __func__.67584+0x0/0xffffffffffffd520 [qedi]
+>
+> Memory state around the buggy address:
+>   ffffffffc12b0980: fa fa fa fa 00 04 fa fa fa fa fa fa 00 00 05 fa
+>   ffffffffc12b0a00: fa fa fa fa 00 00 04 fa fa fa fa fa 00 05 fa fa
+>> ffffffffc12b0a80: fa fa fa fa 00 06 fa fa fa fa fa fa 00 02 fa fa
+>                                                            ^
+>   ffffffffc12b0b00: fa fa fa fa 00 00 04 fa fa fa fa fa 00 00 03 fa
+>   ffffffffc12b0b80: fa fa fa fa 00 00 02 fa fa fa fa fa 00 00 04 fa
+>
+> qedi_dbg_err function does not check the length of caller's name,
+> blindly copy 31 characters to array 'nfunc', then print it to log,
+> which trigger global-out-of-bounds bug and may leak kernel info.
+> Also other qedi dbg function may have the same issue, this patch
+> fix this.
+>
+> Fixes: ace7f46ba5fd ("scsi: qedi: Add QLogic FastLinQ offload iSCSI driver framework.")
+> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+Reviewed-by: Mukesh Ojha <mojha@codeaurora.org>
 
-Signed-off-by: Quentin Deslandes <quentin.deslandes@itdev.co.uk>
----
- drivers/scsi/aic7xxx/aic79xx_core.c | 18 +++++-------------
- 1 file changed, 5 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/scsi/aic7xxx/aic79xx_core.c b/drivers/scsi/aic7xxx/aic=
-79xx_core.c
-index 7e5044bf05c0..a61022db43ee 100644
---- a/drivers/scsi/aic7xxx/aic79xx_core.c
-+++ b/drivers/scsi/aic7xxx/aic79xx_core.c
-@@ -3664,8 +3664,6 @@ ahd_alloc_tstate(struct ahd_softc *ahd, u_int scsi_id=
-, char channel)
- static void
- ahd_free_tstate(struct ahd_softc *ahd, u_int scsi_id, char channel, int fo=
-rce)
- {
--	struct ahd_tmode_tstate *tstate;
--
- 	/*
- 	 * Don't clean up our "master" tstate.
- 	 * It has our default user settings.
-@@ -3674,9 +3672,7 @@ ahd_free_tstate(struct ahd_softc *ahd, u_int scsi_id,=
- char channel, int force)
- 	 && force =3D=3D FALSE)
- 		return;
-=20
--	tstate =3D ahd->enabled_targets[scsi_id];
--	if (tstate !=3D NULL)
--		kfree(tstate);
-+	kfree(ahd->enabled_targets[scsi_id]);
- 	ahd->enabled_targets[scsi_id] =3D NULL;
- }
- #endif
-@@ -6138,8 +6134,7 @@ ahd_set_unit(struct ahd_softc *ahd, int unit)
- void
- ahd_set_name(struct ahd_softc *ahd, char *name)
- {
--	if (ahd->name !=3D NULL)
--		kfree(ahd->name);
-+	kfree(ahd->name);
- 	ahd->name =3D name;
- }
-=20
-@@ -6200,12 +6195,9 @@ ahd_free(struct ahd_softc *ahd)
- 		kfree(ahd->black_hole);
- 	}
- #endif
--	if (ahd->name !=3D NULL)
--		kfree(ahd->name);
--	if (ahd->seep_config !=3D NULL)
--		kfree(ahd->seep_config);
--	if (ahd->saved_stack !=3D NULL)
--		kfree(ahd->saved_stack);
-+	kfree(ahd->name);
-+	kfree(ahd->seep_config);
-+	kfree(ahd->saved_stack);
- #ifndef __FreeBSD__
- 	kfree(ahd);
- #endif
---=20
-2.17.1
+-Mukesh
+> ---
+>   drivers/scsi/qedi/qedi_dbg.c | 12 ++++--------
+>   1 file changed, 4 insertions(+), 8 deletions(-)
+>
+> diff --git a/drivers/scsi/qedi/qedi_dbg.c b/drivers/scsi/qedi/qedi_dbg.c
+> index 8fd28b0..cce44b9 100644
+> --- a/drivers/scsi/qedi/qedi_dbg.c
+> +++ b/drivers/scsi/qedi/qedi_dbg.c
+> @@ -18,8 +18,7 @@ qedi_dbg_err(struct qedi_dbg_ctx *qedi, const char *func, u32 line,
+>   	struct va_format vaf;
+>   	char nfunc[32];
+>   
+> -	memset(nfunc, 0, sizeof(nfunc));
+> -	memcpy(nfunc, func, sizeof(nfunc) - 1);
+> +	snprintf(nfunc, sizeof(nfunc), "%s", func);
+>   
+>   	va_start(va, fmt);
+>   
+> @@ -43,8 +42,7 @@ qedi_dbg_warn(struct qedi_dbg_ctx *qedi, const char *func, u32 line,
+>   	struct va_format vaf;
+>   	char nfunc[32];
+>   
+> -	memset(nfunc, 0, sizeof(nfunc));
+> -	memcpy(nfunc, func, sizeof(nfunc) - 1);
+> +	snprintf(nfunc, sizeof(nfunc), "%s", func);
+>   
+>   	va_start(va, fmt);
+>   
+> @@ -72,8 +70,7 @@ qedi_dbg_notice(struct qedi_dbg_ctx *qedi, const char *func, u32 line,
+>   	struct va_format vaf;
+>   	char nfunc[32];
+>   
+> -	memset(nfunc, 0, sizeof(nfunc));
+> -	memcpy(nfunc, func, sizeof(nfunc) - 1);
+> +	snprintf(nfunc, sizeof(nfunc), "%s", func);
+>   
+>   	va_start(va, fmt);
+>   
+> @@ -102,8 +99,7 @@ qedi_dbg_info(struct qedi_dbg_ctx *qedi, const char *func, u32 line,
+>   	struct va_format vaf;
+>   	char nfunc[32];
+>   
+> -	memset(nfunc, 0, sizeof(nfunc));
+> -	memcpy(nfunc, func, sizeof(nfunc) - 1);
+> +	snprintf(nfunc, sizeof(nfunc), "%s", func);
+>   
+>   	va_start(va, fmt);
+>   
