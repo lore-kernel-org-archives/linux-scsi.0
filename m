@@ -1,70 +1,70 @@
-From: Stanley Chu <stanley.chu@mediatek.com>
-Subject: [PATCH v4 1/5] scsi: ufs: Remove unused min_uA field in struct
- ufs_vreg
-Date: Thu, 28 Mar 2019 17:16:23 +0800
-Message-ID: <1553764587-26357-2-git-send-email-stanley.chu@mediatek.com>
-References: <1553764587-26357-1-git-send-email-stanley.chu@mediatek.com>
+From: Sibi Sankar <sibis@codeaurora.org>
+Subject: Re: [PATCH v5 0/3] UFS on APQ8098/MSM8998
+Date: Thu, 28 Mar 2019 15:07:52 +0530
+Message-ID: <4a01550bb22799aa803be2cd674f3a74@codeaurora.org>
+References: <43768d77-80b7-9cdc-b6e0-08ec4a026c21@free.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <1553764587-26357-1-git-send-email-stanley.chu@mediatek.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: linux-scsi@vger.kernel.org, martin.petersen@oracle.com, avri.altman@wdc.com, alim.akhtar@samsung.com, pedrom.sousa@synopsys.com
-Cc: marc.w.gonzalez@free.fr, chun-hung.wu@mediatek.com, kuohong.wang@mediatek.com, evgreen@chromium.org, subhashj@codeaurora.org, linux-mediatek@lists.infradead.org, peter.wang@mediatek.com, vivek.gautam@codeaurora.org, matthias.bgg@gmail.com, sayalil@codeaurora.org, Stanley Chu <stanley.chu@mediatek.com>, linux-arm-kernel@lists.infradead.org, beanhuo@micron.com
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <43768d77-80b7-9cdc-b6e0-08ec4a026c21@free.fr>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Marc Gonzalez <marc.w.gonzalez@free.fr>
+Cc: MSM <linux-arm-msm@vger.kernel.org>, SCSI <linux-scsi@vger.kernel.org>, Jeffrey Hugo <jhugo@codeaurora.org>, Bjorn Andersson <bjorn.andersson@linaro.org>, Andy Gross <andy.gross@linaro.org>, David Brown <david.brown@linaro.org>, Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, Pedro Sousa <pedrom.sousa@synopsys.com>, LKML <linux-kernel@vger.kernel.org>, Lee Jones <lee.jones@linaro.org>, linux-arm-msm-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-There are two fields related to regulator current limit in struct
-ufs_vreg: "min_uA" and "max_uA".
+On 2019-02-25 17:46, Marc Gonzalez wrote:
+> Hello,
+> 
+> This series adds support for the UFS host controller on
+> APQ8098/MSM8998-based boards.
+> 
+> This should be the final rev ;-)
 
-"max_uA" is probed by "<name>-max-microamp" property from device
-tree and used for
+Tested-by: Sibi Sankar <sibis@codeaurora.org>
 
-- regulator_set_load operations, and
-- icc_level configuration in device.
+> 
+> Differences between v4 and v5:
+> - Drop patches that have already been accepted or spun off
+> 
+> Differences between v3 and v4:
+> - Rebase on top of -next
+> - Pick up Douglas Anderson's UFSHC doc fix
+> - Document 8998 UFSHC binding
+> - Improve UFS PHY binding doc
+> - Put the UFS DT patch at the end of the series
+> 
+> Difference between v2 and v3:
+> - Add qcom,msm8998-qmp-ufs-phy compat string and match it in the PHY 
+> driver
+> - Drop vdd-hba-fixed-regulator
+> - Write the reg addresses with full 32-bit width
+> - Set regulator-allow-set-load only on the 3 rails used by UFS.
+> - Revert the patch introducing ufshcd_set_vccq_rail_unused
+> 
+> Difference between v1 and v2:
+> - New patch to add 'regulator-allow-set-load' prop to all vreg nodes
+> - Rename rpmcc node to 'clock-controller' + Add Review tags
+> - Drop UFS pinctrl gymnastics (not required, probably left enabled in
+> bootloader)
+> - Delete GCC_UFS_ICE_CORE_CLK (ICE not used upstream, I think)
+> - Fix sizes of ufsphy register areas based on Jeffrey's feedback
+> - Hack ufshcd_set_vccq_rail_unused into a NOP to work around lock up + 
+> reboot
+> 
+> 
+> Marc Gonzalez (3):
+>   dt-bindings: ufs: Add msm8998 compatible string
+>   arm64: dts: qcom: msm8998: Allow UFSHC driver to set-load
+>   arm64: dts: qcom: msm8998: Add UFS nodes
+> 
+>  .../devicetree/bindings/ufs/ufshcd-pltfrm.txt |  1 +
+>  arch/arm64/boot/dts/qcom/msm8998-mtp.dtsi     | 22 +++++++
+>  arch/arm64/boot/dts/qcom/msm8998.dtsi         | 65 +++++++++++++++++++
+>  3 files changed, 88 insertions(+)
 
-However "min_uA" field is not used anywhere, thus we can remove it.
-
-Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
-Reviewed-by: Marc Gonzalez <marc.w.gonzalez@free.fr>
-Reviewed-by: Avri Altman <avri.altman@wdc.com>
-Acked-by: Alim Akhtar <alim.akhtar@samsung.com>
----
- drivers/scsi/ufs/ufs.h           | 1 -
- drivers/scsi/ufs/ufshcd-pltfrm.c | 1 -
- 2 files changed, 2 deletions(-)
-
-diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
-index 21e4ccb5ba6e..99a9c4d16f6b 100644
---- a/drivers/scsi/ufs/ufs.h
-+++ b/drivers/scsi/ufs/ufs.h
-@@ -516,7 +516,6 @@ struct ufs_vreg {
- 	bool enabled;
- 	int min_uV;
- 	int max_uV;
--	int min_uA;
- 	int max_uA;
- };
- 
-diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
-index 27213676329c..32cf8c56f029 100644
---- a/drivers/scsi/ufs/ufshcd-pltfrm.c
-+++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
-@@ -164,7 +164,6 @@ static int ufshcd_populate_vreg(struct device *dev, const char *name,
- 		goto out;
- 	}
- 
--	vreg->min_uA = 0;
- 	if (!strcmp(name, "vcc")) {
- 		if (of_property_read_bool(np, "vcc-supply-1p8")) {
- 			vreg->min_uV = UFS_VREG_VCC_1P8_MIN_UV;
 -- 
-2.18.0
+-- Sibi Sankar --
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
+a Linux Foundation Collaborative Project.
