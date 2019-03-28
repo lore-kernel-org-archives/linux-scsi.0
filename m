@@ -1,58 +1,38 @@
-From: Manish Rangankar <mrangankar@marvell.com>
-Subject: RE: [PATCH] scsi: qedi: remove declaration of nvm_image from stack
-Date: Thu, 28 Mar 2019 05:53:15 +0000
-Message-ID: <BYAPR18MB2485E6EE1193DE82178C05A3D8590@BYAPR18MB2485.namprd18.prod.outlook.com>
-References: <20190327181103.15677-1-colin.king@canonical.com>
+From: <Kento.A.Kobayashi@sony.com>
+Subject: RE: [PATCH] usb: uas: fix usb subsystem hang after power off hub
+ port
+Date: Thu, 28 Mar 2019 07:53:14 +0000
+Message-ID: <AE5419EAB4965843B3C0C1FE29F1FFE588FCC9@JPYOKXMS103.jp.sony.com>
+References: <AE5419EAB4965843B3C0C1FE29F1FFE5872241@JPYOKXMS103.jp.sony.com>
+         <1552063928.29776.2.camel@suse.com>
+         <AE5419EAB4965843B3C0C1FE29F1FFE587268B@JPYOKXMS103.jp.sony.com>
+         <1552405047.21557.7.camel@suse.com>
+         <AE5419EAB4965843B3C0C1FE29F1FFE5873FFB@JPYOKXMS103.jp.sony.com>
+         <AE5419EAB4965843B3C0C1FE29F1FFE588EA40@JPYOKXMS103.jp.sony.com>
+ <1553510086.2668.2.camel@suse.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190327181103.15677-1-colin.king@canonical.com>
-Content-Language: en-US
+In-Reply-To: <1553510086.2668.2.camel@suse.com>
+Content-Language: ja-JP
 Sender: linux-kernel-owner@vger.kernel.org
-To: Colin King <colin.king@canonical.com>, "QLogic-Storage-Upstream@cavium.com" <QLogic-Storage-Upstream@cavium.com>, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: oneukum@suse.com, gregkh@linuxfoundation.org, stern@rowland.harvard.edu
+Cc: usb-storage@lists.one-eyed-alien.net, Jacky.Cao@sony.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org, Kento.A.Kobayashi@sony.com
 List-Id: linux-scsi@vger.kernel.org
 
-DQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IENvbGluIEtpbmcgPGNvbGlu
-LmtpbmdAY2Fub25pY2FsLmNvbT4NCj4gU2VudDogV2VkbmVzZGF5LCBNYXJjaCAyNywgMjAxOSAx
-MTo0MSBQTQ0KPiBUbzogUUxvZ2ljLVN0b3JhZ2UtVXBzdHJlYW1AY2F2aXVtLmNvbTsgSmFtZXMg
-RSAuIEogLiBCb3R0b21sZXkNCj4gPGplamJAbGludXguaWJtLmNvbT47IE1hcnRpbiBLIC4gUGV0
-ZXJzZW4gPG1hcnRpbi5wZXRlcnNlbkBvcmFjbGUuY29tPjsNCj4gbGludXgtc2NzaUB2Z2VyLmtl
-cm5lbC5vcmcNCj4gQ2M6IGtlcm5lbC1qYW5pdG9yc0B2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWtl
-cm5lbEB2Z2VyLmtlcm5lbC5vcmcNCj4gU3ViamVjdDogW1BBVENIXSBzY3NpOiBxZWRpOiByZW1v
-dmUgZGVjbGFyYXRpb24gb2YgbnZtX2ltYWdlIGZyb20gc3RhY2sNCj4gDQo+IEZyb206IENvbGlu
-IElhbiBLaW5nIDxjb2xpbi5raW5nQGNhbm9uaWNhbC5jb20+DQo+IA0KPiBUaGUgbnZtX2ltYWdl
-IGlzIGEgbGFyZ2Ugc3RydWN0IHFlZGlfbnZtX2lzY3NpX2ltYWdlIG9iamVjdCBvZiBvdmVyIDI0
-Sw0KPiBzbyBkb24ndCBkZWNsYXJlIGl0IG9uIHRoZSBzdGFjayBqdXN0IGZvciBhIHNpemVvZiBy
-ZXF1aXJlbWVudDsgdXNlIHNpemVvZiBvbg0KPiBzdHJ1Y3QgcWVkaV9udm1faXNjc2lfaW1hZ2Ug
-aW5zdGVhZC4NCj4gDQo+IEZpeGVzOiBjNzdhMmZhM2ZmOGYgKCJzY3NpOiBxZWRpOiBBZGQgdGhl
-IENSQyBzaXplIHdpdGhpbiBpU0NTSSBOVk0gaW1hZ2UiKQ0KPiBTaWduZWQtb2ZmLWJ5OiBDb2xp
-biBJYW4gS2luZyA8Y29saW4ua2luZ0BjYW5vbmljYWwuY29tPg0KPiAtLS0NCj4gIGRyaXZlcnMv
-c2NzaS9xZWRpL3FlZGlfbWFpbi5jIHwgNyArKy0tLS0tDQo+ICAxIGZpbGUgY2hhbmdlZCwgMiBp
-bnNlcnRpb25zKCspLCA1IGRlbGV0aW9ucygtKQ0KPiANCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMv
-c2NzaS9xZWRpL3FlZGlfbWFpbi5jIGIvZHJpdmVycy9zY3NpL3FlZGkvcWVkaV9tYWluLmMNCj4g
-aW5kZXggZTc0YTYyNDQ4YmE0Li5lNWRiOWE5OTU0ZGMgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMv
-c2NzaS9xZWRpL3FlZGlfbWFpbi5jDQo+ICsrKyBiL2RyaXZlcnMvc2NzaS9xZWRpL3FlZGlfbWFp
-bi5jDQo+IEBAIC0xMzkyLDEwICsxMzkyLDggQEAgc3RhdGljIHZvaWQgcWVkaV9mcmVlX252bV9p
-c2NzaV9jZmcoc3RydWN0DQo+IHFlZGlfY3R4ICpxZWRpKQ0KPiANCj4gIHN0YXRpYyBpbnQgcWVk
-aV9hbGxvY19udm1faXNjc2lfY2ZnKHN0cnVjdCBxZWRpX2N0eCAqcWVkaSkgIHsNCj4gLQlzdHJ1
-Y3QgcWVkaV9udm1faXNjc2lfaW1hZ2UgbnZtX2ltYWdlOw0KPiAtDQo+ICAJcWVkaS0+aXNjc2lf
-aW1hZ2UgPSBkbWFfYWxsb2NfY29oZXJlbnQoJnFlZGktPnBkZXYtPmRldiwNCj4gLQkJCQkJICAg
-ICAgIHNpemVvZihudm1faW1hZ2UpLA0KPiArCQkJCQkgICAgICAgc2l6ZW9mKHN0cnVjdA0KPiBx
-ZWRpX252bV9pc2NzaV9pbWFnZSksDQo+ICAJCQkJCSAgICAgICAmcWVkaS0+bnZtX2J1Zl9kbWEs
-DQo+IEdGUF9LRVJORUwpOw0KPiAgCWlmICghcWVkaS0+aXNjc2lfaW1hZ2UpIHsNCj4gIAkJUUVE
-SV9FUlIoJnFlZGktPmRiZ19jdHgsICJDb3VsZCBub3QgYWxsb2NhdGUgTlZNDQo+IEJVRi5cbiIp
-OyBAQCAtMjIzNiwxNCArMjIzNCwxMyBAQCBzdGF0aWMgdm9pZCBxZWRpX2Jvb3RfcmVsZWFzZSh2
-b2lkDQo+ICpkYXRhKSAgc3RhdGljIGludCBxZWRpX2dldF9ib290X2luZm8oc3RydWN0IHFlZGlf
-Y3R4ICpxZWRpKSAgew0KPiAgCWludCByZXQgPSAxOw0KPiAtCXN0cnVjdCBxZWRpX252bV9pc2Nz
-aV9pbWFnZSBudm1faW1hZ2U7DQo+IA0KPiAgCVFFRElfSU5GTygmcWVkaS0+ZGJnX2N0eCwgUUVE
-SV9MT0dfSU5GTywNCj4gIAkJICAiR2V0IE5WTSBpU0NTSSBDRkcgaW1hZ2VcbiIpOw0KPiAgCXJl
-dCA9IHFlZGlfb3BzLT5jb21tb24tPm52bV9nZXRfaW1hZ2UocWVkaS0+Y2RldiwNCj4gIAkJCQkJ
-ICAgICAgUUVEX05WTV9JTUFHRV9JU0NTSV9DRkcsDQo+ICAJCQkJCSAgICAgIChjaGFyICopcWVk
-aS0+aXNjc2lfaW1hZ2UsDQo+IC0JCQkJCSAgICAgIHNpemVvZihudm1faW1hZ2UpKTsNCj4gKwkJ
-CQkJICAgICAgc2l6ZW9mKHN0cnVjdA0KPiBxZWRpX252bV9pc2NzaV9pbWFnZSkpOw0KPiAgCWlm
-IChyZXQpDQo+ICAJCVFFRElfRVJSKCZxZWRpLT5kYmdfY3R4LA0KPiAgCQkJICJDb3VsZCBub3Qg
-Z2V0IE5WTSBpbWFnZS4gcmV0ID0gJWRcbiIsIHJldCk7DQo+IC0tDQo+IDIuMjAuMQ0KDQpUaGFu
-a3MsDQpBY2tlZC1ieTogTWFuaXNoIFJhbmdhbmthciA8bXJhbmdhbmthckBtYXJ2ZWxsLmNvbT4N
-Cg==
+SGksDQoNCj5Tb3JyeSwNCj4NCj5JIHRob3VnaHQgdGhpcyB3YXMgY2xlYXIuIFlvdXIgcGF0Y2gg
+aXMgbWFraW5nIHRoZSBhc3N1bXB0aW9uIHRoYXQgdGhlIHJlc2V0IGlzIHRyaWdnZXJlZCBieSB0
+aGUgU0NTSSBsYXllci4gWW91IGNhbm5vdCBtYWtlIHRoYXQgYXNzdW1wdGlvbiwgYXMgdGhlcmUg
+aXMgYW4gaW9jdGwgZm9yIHJlc2V0dGluZyBhIFVTQiBkZXZpY2UuDQo+SW4gY2FzZSB3ZSBhcmUg
+Z2V0dGluZyBhbiBlcnJvciBkdXJpbmcgdGhlIHJlc2V0IChvdXIgZW5kcG9pbnRzIHZhbmlzaCks
+IHRoZSBkZXZpY2UgZHJpdmVyIG11c3QgcmVwb3J0IHRoYXQgdG8gdGhlIFVTQiBsYXllciwgc28g
+dGhlIGRyaXZlciB3aWxsIGFsd2F5cyBiZSBkaXNjb25uZWN0ZWQuDQo+V2UgY2Fubm90IGRyb3Ag
+ZXJyb3JzLg0KPg0KPglSZWdhcmRzDQo+CQlPbGl2ZXINCg0KVGhpcyBwYXRjaCBtb2RpZmllZCB1
+YXNfcG9zdF9yZXNldCB0byBza2lwIHJlYmluZCBvcGVyYXRpb24gdG8gYXZvaWQgZXhjZXB0aW9u
+IHdoaWxlIC1FTk9ERVYgaGFwcGVucyBub3QgZHJvcCBlcnJvci4NCklmIHVhc19wb3N0X3Jlc2V0
+IGhhcHBlbnMgLUVOT0RFViwgdXNiX3Jlc2V0X2FuZF92ZXJpZnlfZGV2aWNlIG11c3QgaGFwcGVu
+IGVycm9yLg0KU28sd2hlbiB3ZSB1c2UgaW9jdGwoVVNCREVWRlNfUkVTRVQpIHRvIHJlc2V0IGRl
+dmljZSwgaWYgdXNiX3Jlc2V0X2FuZF92ZXJpZnlfZGV2aWNlIGhhcHBlbnMgZXJyb3IsIHRoZSBl
+cnJvciB3aWxsIGJlIHJlcG9ydGVkIHRocm91Z2ggaW9jdGwgcmV0dXJuIHZhbHVlLiANCg0KUmVn
+YXJkcywNCktlbnRvIEtvYmF5YXNoaQ0K
