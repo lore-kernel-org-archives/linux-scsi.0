@@ -1,101 +1,63 @@
-From: Walter Harms <wharms@bfs.de>
-Subject: Re: [PATCH 1/2] scsi: pm8001: clean up structurally dead code
- when PM8001_USE_MSIX is defined
-Date: Sat, 30 Mar 2019 12:07:51 +0100 (CET)
-Message-ID: <822122908.274859.1553944071609@ox-groupware.bfs.de>
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Subject: [PATCH] scsi: add new RDAC LENOVO/DE_Series device
+Date: Sat, 30 Mar 2019 15:43:31 +0100
+Message-ID: <20190330144331.20276-1-xose.vazquez@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Colin King <colin.king@canonical.com>
-Cc: Jack Wang <jinpu.wang@profitbricks.com>, lindar_liu@usish.com, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <dm-devel-bounces@redhat.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+Cc: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, SCSI ML <linux-scsi@vger.kernel.org>, "Martin K . Petersen" <martin.petersen@oracle.com>, NetApp RDAC team <ng-eseries-upstream-maintainers@netapp.com>, DM ML <dm-devel@redhat.com>, Xose Vazquez Perez <xose.vazquez@gmail.com>, Martin Wilck <mwilck@suse.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Am 30.03.2019 00:44, schrieb Colin King:
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> When macro PM8001_USE_MSIX is defined there is redundant dead code
-> call to pm8001_cr32.  Clean this up for the defined PM8001_USE_MSIX and
-> undefined PM8001_USE_MSIX cases.
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> ---
->  drivers/scsi/pm8001/pm8001_hwi.c | 7 ++++---
->  drivers/scsi/pm8001/pm80xx_hwi.c | 7 ++++---
->  2 files changed, 8 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/scsi/pm8001/pm8001_hwi.c
-> b/drivers/scsi/pm8001/pm8001_hwi.c
-> index e4209091c1da..434498a78946 100644
-> --- a/drivers/scsi/pm8001/pm8001_hwi.c
-> +++ b/drivers/scsi/pm8001/pm8001_hwi.c
-> @@ -4625,15 +4625,16 @@ static int pm8001_chip_phy_ctl_req(struct
-> pm8001_hba_info *pm8001_ha,
->  
->  static u32 pm8001_chip_is_our_interupt(struct pm8001_hba_info *pm8001_ha)
->  {
-> -	u32 value;
->  #ifdef PM8001_USE_MSIX
->  	return 1;
-> -#endif
-> +#else
-> +	u32 value;
-> +
->  	value = pm8001_cr32(pm8001_ha, 0, MSGU_ODR);
->  	if (value)
->  		return 1;
->  	return 0;
-> -
-> +#endif
->  }
->  
->  /**
-> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c
-> b/drivers/scsi/pm8001/pm80xx_hwi.c
-> index 536d2b4384f8..4a176e60307f 100644
-> --- a/drivers/scsi/pm8001/pm80xx_hwi.c
-> +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-> @@ -4619,15 +4619,16 @@ static int pm80xx_chip_phy_ctl_req(struct
-> pm8001_hba_info *pm8001_ha,
->  
->  static u32 pm80xx_chip_is_our_interupt(struct pm8001_hba_info *pm8001_ha)
->  {
-> -	u32 value;
->  #ifdef PM8001_USE_MSIX
->  	return 1;
-> -#endif
-> +#else
-> +	u32 value;
-> +
->  	value = pm8001_cr32(pm8001_ha, 0, MSGU_ODR);
->  	if (value)
->  		return 1;
->  	return 0;
-> -
-> +#endif
->  }
->  
->  /**
+Blacklist "Universal Xport" LUN, it's used for in-band storage array management.
+And add it to the rdac dh family.
 
-the ifdef jungle does not make thinks more readable. I am aware that
-using neg is also not good but in this special case it seems helpful
-to have only one branch, like:
+Cc: Martin Wilck <mwilck@suse.com>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: NetApp RDAC team <ng-eseries-upstream-maintainers@netapp.com>
+Cc: Christophe Varoqui <christophe.varoqui@opensvc.com>
+Cc: James E.J. Bottomley <jejb@linux.vnet.ibm.com>
+Cc: Martin K. Petersen <martin.petersen@oracle.com>
+Cc: SCSI ML <linux-scsi@vger.kernel.org>
+Cc: DM ML <dm-devel@redhat.com>
+Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+---
+ drivers/scsi/scsi_devinfo.c | 1 +
+ drivers/scsi/scsi_dh.c      | 1 +
+ 2 files changed, 2 insertions(+)
 
-static u32 pm80xx_chip_is_our_interupt(struct pm8001_hba_info *pm8001_ha)
-{
-#ifndef PM8001_USE_MSIX
- 	u32 value;
+diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+index c4cbfd07b916..a08ff3bd6310 100644
+--- a/drivers/scsi/scsi_devinfo.c
++++ b/drivers/scsi/scsi_devinfo.c
+@@ -238,6 +238,7 @@ static struct {
+ 	{"NETAPP", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
+ 	{"LSI", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
+ 	{"ENGENIO", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
++	{"LENOVO", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
+ 	{"SMSC", "USB 2 HS-CF", NULL, BLIST_SPARSELUN | BLIST_INQUIRY_36},
+ 	{"SONY", "CD-ROM CDU-8001", NULL, BLIST_BORKEN},
+ 	{"SONY", "TSL", NULL, BLIST_FORCELUN},		/* DDS3 & DDS4 autoloaders */
+diff --git a/drivers/scsi/scsi_dh.c b/drivers/scsi/scsi_dh.c
+index 5a58cbf3a75d..c14006ac98f9 100644
+--- a/drivers/scsi/scsi_dh.c
++++ b/drivers/scsi/scsi_dh.c
+@@ -75,6 +75,7 @@ static const struct scsi_dh_blist scsi_dh_blist[] = {
+ 	{"NETAPP", "INF-01-00",		"rdac", },
+ 	{"LSI", "INF-01-00",		"rdac", },
+ 	{"ENGENIO", "INF-01-00",	"rdac", },
++	{"LENOVO", "DE_Series",		"rdac", },
+ 	{NULL, NULL,			NULL },
+ };
  
-  	value = pm8001_cr32(pm8001_ha, 0, MSGU_ODR);
-  	if (!value)
-  		return 0;
-#endif
-  	return 1;
-
-  }
-
-just my 2 cents,
-
-re,
- wh
+-- 
+2.21.0
