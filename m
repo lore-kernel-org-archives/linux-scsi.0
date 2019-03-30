@@ -1,61 +1,101 @@
-From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.19 39/57] scsi: core: Avoid that system resume triggers a kernel warning
-Date: Fri, 29 Mar 2019 21:28:32 -0400
-Message-ID: <20190330012854.32212-39-sashal@kernel.org>
-References: <20190330012854.32212-1-sashal@kernel.org>
+From: Walter Harms <wharms@bfs.de>
+Subject: Re: [PATCH 1/2] scsi: pm8001: clean up structurally dead code
+ when PM8001_USE_MSIX is defined
+Date: Sat, 30 Mar 2019 12:07:51 +0100 (CET)
+Message-ID: <822122908.274859.1553944071609@ox-groupware.bfs.de>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190330012854.32212-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Bart Van Assche <bvanassche@acm.org>, Przemek Socha <soprwa@gmail.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+To: Colin King <colin.king@canonical.com>
+Cc: Jack Wang <jinpu.wang@profitbricks.com>, lindar_liu@usish.com, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Bart Van Assche <bvanassche@acm.org>
+Am 30.03.2019 00:44, schrieb Colin King:
+> From: Colin Ian King <colin.king@canonical.com>
+> 
+> When macro PM8001_USE_MSIX is defined there is redundant dead code
+> call to pm8001_cr32.  Clean this up for the defined PM8001_USE_MSIX and
+> undefined PM8001_USE_MSIX cases.
+> 
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> ---
+>  drivers/scsi/pm8001/pm8001_hwi.c | 7 ++++---
+>  drivers/scsi/pm8001/pm80xx_hwi.c | 7 ++++---
+>  2 files changed, 8 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/scsi/pm8001/pm8001_hwi.c
+> b/drivers/scsi/pm8001/pm8001_hwi.c
+> index e4209091c1da..434498a78946 100644
+> --- a/drivers/scsi/pm8001/pm8001_hwi.c
+> +++ b/drivers/scsi/pm8001/pm8001_hwi.c
+> @@ -4625,15 +4625,16 @@ static int pm8001_chip_phy_ctl_req(struct
+> pm8001_hba_info *pm8001_ha,
+>  
+>  static u32 pm8001_chip_is_our_interupt(struct pm8001_hba_info *pm8001_ha)
+>  {
+> -	u32 value;
+>  #ifdef PM8001_USE_MSIX
+>  	return 1;
+> -#endif
+> +#else
+> +	u32 value;
+> +
+>  	value = pm8001_cr32(pm8001_ha, 0, MSGU_ODR);
+>  	if (value)
+>  		return 1;
+>  	return 0;
+> -
+> +#endif
+>  }
+>  
+>  /**
+> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c
+> b/drivers/scsi/pm8001/pm80xx_hwi.c
+> index 536d2b4384f8..4a176e60307f 100644
+> --- a/drivers/scsi/pm8001/pm80xx_hwi.c
+> +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+> @@ -4619,15 +4619,16 @@ static int pm80xx_chip_phy_ctl_req(struct
+> pm8001_hba_info *pm8001_ha,
+>  
+>  static u32 pm80xx_chip_is_our_interupt(struct pm8001_hba_info *pm8001_ha)
+>  {
+> -	u32 value;
+>  #ifdef PM8001_USE_MSIX
+>  	return 1;
+> -#endif
+> +#else
+> +	u32 value;
+> +
+>  	value = pm8001_cr32(pm8001_ha, 0, MSGU_ODR);
+>  	if (value)
+>  		return 1;
+>  	return 0;
+> -
+> +#endif
+>  }
+>  
+>  /**
 
-[ Upstream commit 388b4e6a00bb3097278ed1648ac5a1cb48c894e6 ]
+the ifdef jungle does not make thinks more readable. I am aware that
+using neg is also not good but in this special case it seems helpful
+to have only one branch, like:
 
-scsi_device_quiesce() and scsi_device_resume() are called during
-system-wide suspend and resume. scsi_device_quiesce() only succeeds for
-SCSI devices that are in one of the RUNNING, OFFLINE or TRANSPORT_OFFLINE
-states (see also scsi_set_device_state()).  This patch avoids that the
-following warning is triggered when resuming a system for which quiescing a
-SCSI device failed:
+static u32 pm80xx_chip_is_our_interupt(struct pm8001_hba_info *pm8001_ha)
+{
+#ifndef PM8001_USE_MSIX
+ 	u32 value;
+ 
+  	value = pm8001_cr32(pm8001_ha, 0, MSGU_ODR);
+  	if (!value)
+  		return 0;
+#endif
+  	return 1;
 
-WARNING: CPU: 2 PID: 11303 at drivers/scsi/scsi_lib.c:2600 scsi_device_resume+0x4f/0x58
-CPU: 2 PID: 11303 Comm: kworker/u8:70 Not tainted 5.0.0-rc1+ #50
-Hardware name: LENOVO 80E3/Lancer 5B2, BIOS A2CN45WW(V2.13) 08/04/2016
-Workqueue: events_unbound async_run_entry_fn
-Call Trace:
- scsi_dev_type_resume+0x2e/0x60
- async_run_entry_fn+0x32/0xd8
- process_one_work+0x1f4/0x420
- worker_thread+0x28/0x3c0
- kthread+0x118/0x130
- ret_from_fork+0x22/0x40
+  }
 
-Cc: Przemek Socha <soprwa@gmail.com>
-Reported-by: Przemek Socha <soprwa@gmail.com>
-Fixes: 3a0a529971ec ("block, scsi: Make SCSI quiesce and resume work reliably") # v4.15
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/scsi/scsi_lib.c | 1 -
- 1 file changed, 1 deletion(-)
+just my 2 cents,
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 18e4289baf99..655790f30434 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -3095,7 +3095,6 @@ void scsi_device_resume(struct scsi_device *sdev)
- 	 * device deleted during suspend)
- 	 */
- 	mutex_lock(&sdev->state_mutex);
--	WARN_ON_ONCE(!sdev->quiesced_by);
- 	sdev->quiesced_by = NULL;
- 	blk_clear_preempt_only(sdev->request_queue);
- 	if (sdev->sdev_state == SDEV_QUIESCE)
--- 
-2.19.1
+re,
+ wh
