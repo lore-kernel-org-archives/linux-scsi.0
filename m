@@ -1,15 +1,15 @@
 From: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH AUTOSEL 4.19 23/52] scsi: iscsi: flush running unbind operations when removing a session
-Date: Fri, 29 Mar 2019 20:52:30 -0400
-Message-ID: <20190330005301.26868-23-sashal@kernel.org>
-References: <20190330005301.26868-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 17/37] scsi: iscsi: flush running unbind operations when removing a session
+Date: Fri, 29 Mar 2019 20:54:18 -0400
+Message-ID: <20190330005441.27540-17-sashal@kernel.org>
+References: <20190330005441.27540-1-sashal@kernel.org>
 Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
-Return-path: <open-iscsi+bncBDTZTRGMXIFBBFH47LSAKGQEJK6KU6A-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Return-path: <open-iscsi+bncBDTZTRGMXIFBB3747LSAKGQE3AZJL6A-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-In-Reply-To: <20190330005301.26868-1-sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+In-Reply-To: <20190330005441.27540-1-sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 List-Archive: <https://groups.google.com/group/open-iscsi
@@ -98,7 +98,7 @@ Signed-off-by: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
 diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transp=
 ort_iscsi.c
-index 6fd2fe210fc3..4d0fc6b01fa0 100644
+index f6542c159ed6..b4d06bd9ed51 100644
 --- a/drivers/scsi/scsi_transport_iscsi.c
 +++ b/drivers/scsi/scsi_transport_iscsi.c
 @@ -2185,6 +2185,8 @@ void iscsi_remove_session(struct iscsi_cls_session *s=
