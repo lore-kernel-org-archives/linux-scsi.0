@@ -1,124 +1,99 @@
-From: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH AUTOSEL 4.14 17/37] scsi: iscsi: flush running unbind operations when removing a session
-Date: Fri, 29 Mar 2019 20:54:18 -0400
-Message-ID: <20190330005441.27540-17-sashal@kernel.org>
-References: <20190330005441.27540-1-sashal@kernel.org>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: Sasha Levin <sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.0 32/67] scsi: qla2xxx: Fix NULL pointer crash due to stale CPUID
+Date: Fri, 29 Mar 2019 20:50:12 -0400
+Message-ID: <20190330005047.25998-32-sashal@kernel.org>
+References: <20190330005047.25998-1-sashal@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <open-iscsi+bncBDTZTRGMXIFBB3747LSAKGQE3AZJL6A-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-In-Reply-To: <20190330005441.27540-1-sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <https://groups.google.com/group/open-iscsi
-List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
- <https://groups.google.com/group/open-iscsi/subscribe>
-To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Maurizio Lombardi <mlombard-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Martin K . Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190330005047.25998-1-sashal@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc: Himanshu Madhani <hmadhani@marvell.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Maurizio Lombardi <mlombard-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+From: Himanshu Madhani <hmadhani@marvell.com>
 
-[ Upstream commit 165aa2bfb42904b1bec4bf2fa257c8c603c14a06 ]
+[ Upstream commit ac444b4f0ace05d7c4c99f6b1e5b0cae0852f025 ]
 
-In some cases, the iscsi_remove_session() function is called while an
-unbind_work operation is still running.  This may cause a situation where
-sysfs objects are removed in an incorrect order, triggering a kernel
-warning.
+This patch fixes crash due to NULL pointer derefrence because CPU pointer
+is not set and used by driver.  Instead, driver is passes CPU as tag via
+ha->isp_ops->{lun_reset|target_reset}
 
-[  605.249442] ------------[ cut here ]------------
-[  605.259180] sysfs group 'power' not found for kobject 'target2:0:0'
-[  605.321371] WARNING: CPU: 1 PID: 26794 at fs/sysfs/group.c:235 sysfs_rem=
-ove_group+0x76/0x80
-[  605.341266] Modules linked in: dm_service_time target_core_user target_c=
-ore_pscsi target_core_file target_core_iblock iscsi_target_mod target_core_=
-mod nls_utf8 isofs ppdev bochs_drm nfit ttm libnvdimm drm_kms_helper syscop=
-yarea sysfillrect sysimgblt joydev pcspkr fb_sys_fops drm i2c_piix4 sg parp=
-ort_pc parport xfs libcrc32c dm_multipath sr_mod sd_mod cdrom ata_generic 8=
-021q garp mrp ata_piix stp crct10dif_pclmul crc32_pclmul llc libata crc32c_=
-intel virtio_net net_failover ghash_clmulni_intel serio_raw failover sunrpc=
- dm_mirror dm_region_hash dm_log dm_mod be2iscsi bnx2i cnic uio cxgb4i cxgb=
-4 libcxgbi libcxgb qla4xxx iscsi_boot_sysfs iscsi_tcp libiscsi_tcp libiscsi=
- scsi_transport_iscsi
-[  605.627479] CPU: 1 PID: 26794 Comm: kworker/u32:2 Not tainted 4.18.0-60.=
-el8.x86_64 #1
-[  605.721401] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS =
-?-20180724_192412-buildhw-07.phx2.fedoraproject.org-1.fc29 04/01/2014
-[  605.823651] Workqueue: scsi_wq_2 __iscsi_unbind_session [scsi_transport_=
-iscsi]
-[  605.830940] RIP: 0010:sysfs_remove_group+0x76/0x80
-[  605.922907] Code: 48 89 df 5b 5d 41 5c e9 38 c4 ff ff 48 89 df e8 e0 bf =
-ff ff eb cb 49 8b 14 24 48 8b 75 00 48 c7 c7 38 73 cb a7 e8 24 77 d7 ff <0f=
-> 0b 5b 5d 41 5c c3 0f 1f 00 0f 1f 44 00 00 41 56 41 55 41 54 55
-[  606.122304] RSP: 0018:ffffbadcc8d1bda8 EFLAGS: 00010286
-[  606.218492] RAX: 0000000000000000 RBX: 0000000000000000 RCX: 00000000000=
-00000
-[  606.326381] RDX: ffff98bdfe85eb40 RSI: ffff98bdfe856818 RDI: ffff98bdfe8=
-56818
-[  606.514498] RBP: ffffffffa7ab73e0 R08: 0000000000000268 R09: 00000000000=
-00007
-[  606.529469] R10: 0000000000000000 R11: ffffffffa860d9ad R12: ffff98bdf97=
-8e838
-[  606.630535] R13: ffff98bdc2cd4010 R14: ffff98bdc2cd3ff0 R15: ffff98bdc2c=
-d4000
-[  606.824707] FS:  0000000000000000(0000) GS:ffff98bdfe840000(0000) knlGS:=
-0000000000000000
-[  607.018333] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[  607.117844] CR2: 00007f84b78ac024 CR3: 000000002c00a003 CR4: 00000000003=
-606e0
-[  607.117844] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 00000000000=
-00000
-[  607.420926] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 00000000000=
-00400
-[  607.524236] Call Trace:
-[  607.530591]  device_del+0x56/0x350
-[  607.624393]  ? ata_tlink_match+0x30/0x30 [libata]
-[  607.727805]  ? attribute_container_device_trigger+0xb4/0xf0
-[  607.829911]  scsi_target_reap_ref_release+0x39/0x50
-[  607.928572]  scsi_remove_target+0x1a2/0x1d0
-[  608.017350]  __iscsi_unbind_session+0xb3/0x160 [scsi_transport_iscsi]
-[  608.117435]  process_one_work+0x1a7/0x360
-[  608.132917]  worker_thread+0x30/0x390
-[  608.222900]  ? pwq_unbound_release_workfn+0xd0/0xd0
-[  608.323989]  kthread+0x112/0x130
-[  608.418318]  ? kthread_bind+0x30/0x30
-[  608.513821]  ret_from_fork+0x35/0x40
-[  608.613909] ---[ end trace 0b98c310c8a6138c ]---
+[   30.160780] qla2xxx [0000:a0:00.1]-8038:9: Cable is unplugged...
+[   69.984045] qla2xxx [0000:a0:00.0]-8009:8: DEVICE RESET ISSUED nexus=8:0:0 cmd=00000000b0d62f46.
+[   69.992849] BUG: unable to handle kernel NULL pointer dereference at 0000000000000040
+[   70.000680] PGD 0 P4D 0
+[   70.003232] Oops: 0000 [#1] SMP PTI
+[   70.006727] CPU: 2 PID: 6714 Comm: sg_reset Kdump: loaded Not tainted 4.18.0-67.el8.x86_64 #1
+[   70.015258] Hardware name: NEC Express5800/T110j [N8100-2758Y]/MX32-PH0-NJ, BIOS F11 02/13/2019
+[   70.024016] RIP: 0010:blk_mq_rq_cpu+0x9/0x10
+[   70.028315] Code: 01 58 01 00 00 48 83 c0 28 48 3d 80 02 00 00 75 ab c3 0f 1f 44 00 00 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 48
+ 8b 47 08 <8b> 40 40 c3 0f 1f 00 0f 1f 44 00 00 48 83 ec 10 48 c7 c6 20 6e 7c
+[   70.047087] RSP: 0018:ffff99a481487d58 EFLAGS: 00010246
+[   70.052322] RAX: 0000000000000000 RBX: ffffffffc041b08b RCX: 0000000000000000
+[   70.059466] RDX: 0000000000000000 RSI: ffff8d10b6b16898 RDI: ffff8d10b341e400
+[   70.066615] RBP: ffffffffc03a6bd0 R08: 0000000000000415 R09: 0000000000aaaaaa
+[   70.073765] R10: 0000000000000001 R11: 0000000000000001 R12: ffff8d10b341e528
+[   70.080914] R13: ffff8d10aadefc00 R14: ffff8d0f64efa998 R15: ffff8d0f64efa000
+[   70.088083] FS:  00007f90a201e540(0000) GS:ffff8d10b6b00000(0000) knlGS:0000000000000000
+[   70.096188] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   70.101959] CR2: 0000000000000040 CR3: 0000000268886005 CR4: 00000000003606e0
+[   70.109127] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[   70.116277] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+[   70.123425] Call Trace:
+[   70.125896]  __qla2xxx_eh_generic_reset+0xb1/0x220 [qla2xxx]
+[   70.131572]  scsi_ioctl_reset+0x1f5/0x2a0
+[   70.135600]  scsi_ioctl+0x18e/0x397
+[   70.139099]  ? sd_ioctl+0x7c/0x100 [sd_mod]
+[   70.143287]  blkdev_ioctl+0x32b/0x9f0
+[   70.146954]  ? __check_object_size+0xa3/0x181
+[   70.151323]  block_ioctl+0x39/0x40
+[   70.154735]  do_vfs_ioctl+0xa4/0x630
+[   70.158322]  ? syscall_trace_enter+0x1d3/0x2c0
+[   70.162769]  ksys_ioctl+0x60/0x90
+[   70.166104]  __x64_sys_ioctl+0x16/0x20
+[   70.169859]  do_syscall_64+0x5b/0x1b0
+[   70.173532]  entry_SYSCALL_64_after_hwframe+0x65/0xca
+[   70.178587] RIP: 0033:0x7f90a1b3445b
+[   70.182183] Code: 0f 1e fa 48 8b 05 2d aa 2c 00 64 c7 00 26 00 00 00 48 c7 c0 ff ff ff ff c3 66 0f 1f 44 00 00 f3 0f 1e fa b8 10 00 00
+ 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 8b 0d fd a9 2c 00 f7 d8 64 89 01 48
+[   70.200956] RSP: 002b:00007fffdca88b68 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
+[   70.208535] RAX: ffffffffffffffda RBX: 0000000000000003 RCX: 00007f90a1b3445b
+[   70.215684] RDX: 00007fffdca88b84 RSI: 0000000000002284 RDI: 0000000000000003
+[   70.222833] RBP: 00007fffdca88ca8 R08: 00007fffdca88b84 R09: 0000000000000000
+[   70.229981] R10: 0000000000000000 R11: 0000000000000246 R12: 00007fffdca88b84
+[   70.237131] R13: 0000000000000000 R14: 000055ab09b0bd28 R15: 0000000000000000
+[   70.244284] Modules linked in: nft_chain_route_ipv4 xt_CHECKSUM nft_chain_nat_ipv4 ipt_MASQUERADE nf_nat_ipv4 nf_nat nf_conntrack_ipv4
+ nf_defrag_ipv4 xt_conntrack nf_conntrack libcrc32c ipt_REJECT nf_reject_ipv4 nft_counter nft_compat tun bridge stp llc nf_tables nfnetli
+nk devlink sunrpc vfat fat intel_rapl intel_pmc_core x86_pkg_temp_thermal intel_powerclamp coretemp kvm_intel kvm wmi_bmof iTCO_wdt iTCO_
+vendor_support irqbypass crct10dif_pclmul crc32_pclmul ghash_clmulni_intel ipmi_ssif intel_cstate intel_uncore intel_rapl_perf ipmi_si jo
+ydev pcspkr ipmi_devintf sg wmi ipmi_msghandler video acpi_power_meter acpi_pad mei_me i2c_i801 mei ip_tables ext4 mbcache jbd2 sr_mod cd
+rom sd_mod qla2xxx ast i2c_algo_bit drm_kms_helper nvme_fc syscopyarea sysfillrect uas sysimgblt fb_sys_fops nvme_fabrics ttm
+[   70.314805]  usb_storage nvme_core crc32c_intel scsi_transport_fc ahci drm libahci tg3 libata megaraid_sas pinctrl_cannonlake pinctrl_
+intel
+[   70.327335] CR2: 0000000000000040
 
-Signed-off-by: Maurizio Lombardi <mlombard-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Acked-by: Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Signed-off-by: Martin K. Petersen <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Signed-off-by: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Fixes: 9cf2bab630765 ("block: kill request ->cpu member")
+Signed-off-by: Himanshu Madhani <hmadhani@marvell.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/scsi_transport_iscsi.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/scsi/qla2xxx/qla_os.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transp=
-ort_iscsi.c
-index f6542c159ed6..b4d06bd9ed51 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -2185,6 +2185,8 @@ void iscsi_remove_session(struct iscsi_cls_session *s=
-ession)
- 	scsi_target_unblock(&session->dev, SDEV_TRANSPORT_OFFLINE);
- 	/* flush running scans then delete devices */
- 	flush_work(&session->scan_work);
-+	/* flush running unbind operations */
-+	flush_work(&session->unbind_work);
- 	__iscsi_unbind_session(&session->unbind_work);
-=20
- 	/* hw iscsi may not have removed all connections from session */
---=20
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 7e35ce2162d0..503fda4e7e8e 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -1459,7 +1459,7 @@ __qla2xxx_eh_generic_reset(char *name, enum nexus_wait_type type,
+ 		goto eh_reset_failed;
+ 	}
+ 	err = 2;
+-	if (do_reset(fcport, cmd->device->lun, blk_mq_rq_cpu(cmd->request) + 1)
++	if (do_reset(fcport, cmd->device->lun, 1)
+ 		!= QLA_SUCCESS) {
+ 		ql_log(ql_log_warn, vha, 0x800c,
+ 		    "do_reset failed for cmd=%p.\n", cmd);
+-- 
 2.19.1
-
---=20
-You received this message because you are subscribed to the Google Groups "=
-open-iscsi" group.
-To unsubscribe from this group and stop receiving emails from it, send an e=
-mail to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-Visit this group at https://groups.google.com/group/open-iscsi.
-For more options, visit https://groups.google.com/d/optout.
