@@ -1,48 +1,46 @@
-From: Rob Herring <robh@kernel.org>
-Subject: Re: [PATCH 1/2] dt-bindings: scsi: ufs-cdns: Update Cadence UFS
- compatibility list
-Date: Sun, 31 Mar 2019 01:42:48 -0500
-Message-ID: <20190331025745.GA28612@bogus>
-References: <20190327144405.5716-1-jank@cadence.com>
- <20190327144405.5716-2-jank@cadence.com>
+From: Jinpu Wang <jinpu.wang@cloud.ionos.com>
+Subject: Re: [PATCH 2/2] scsi: pm8001: fix spelling mistake, interupt -> interrupt
+Date: Sun, 31 Mar 2019 19:43:49 +0200
+Message-ID: <CAMGffEmMjSc-juQcO9eQ6AVc9OTh8POd4Xi0SbVYtt5Fk=NyQw@mail.gmail.com>
+References: <20190329234423.5611-1-colin.king@canonical.com> <20190329234423.5611-3-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20190327144405.5716-2-jank@cadence.com>
+In-Reply-To: <20190329234423.5611-3-colin.king@canonical.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jan Kotas <jank@cadence.com>
-Cc: mark.rutland@arm.com, alim.akhtar@samsung.com, avri.altman@wdc.com, pedrom.sousa@synopsys.com, jejb@linux.ibm.com, martin.petersen@oracle.com, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Colin King <colin.king@canonical.com>
+Cc: Jack Wang <jinpu.wang@profitbricks.com>, lindar_liu <lindar_liu@usish.com>, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Mar 27, 2019 at 02:44:04PM +0000, Jan Kotas wrote:
-> This patch adds a new compatible string description for
-> CDNS UFS HCD + M31 16nm PHY.
+On Sat, Mar 30, 2019 at 12:44 AM Colin King <colin.king@canonical.com> wrote:
+>
+> From: Colin Ian King <colin.king@canonical.com>
+>
+> Rename the functions pm8001_chip_is_our_interupt,
+> pm80xx_chip_is_our_interupt and function pointer is_our_interrupt
+> to fix spelling mistakes.
+>
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Thanks, Colin,
+Acked-by: Jack Wang <jinpu.wang@cloud.ionos.com>
 
-The phy is not a separate block? 
+-- 
+Jack Wang
+Linux Kernel Developer
 
-> 
-> Signed-off-by: Jan Kotas <jank@cadence.com>
-> ---
->  Documentation/devicetree/bindings/ufs/cdns,ufshc.txt | 5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/ufs/cdns,ufshc.txt b/Documentation/devicetree/bindings/ufs/cdns,ufshc.txt
-> index a04a4989e..02347b017 100644
-> --- a/Documentation/devicetree/bindings/ufs/cdns,ufshc.txt
-> +++ b/Documentation/devicetree/bindings/ufs/cdns,ufshc.txt
-> @@ -5,8 +5,9 @@ Each UFS controller instance should have its own node.
->  Please see the ufshcd-pltfrm.txt for a list of all available properties.
->  
->  Required properties:
-> -- compatible	: Compatible list, contains the following controller:
-> -			"cdns,ufshc"
-> +- compatible	: Compatible list, contains one of the following controllers:
-> +			"cdns,ufshc" - Generic CDNS HCI,
-> +			"cdns,ufshc-m31-16nm" - CDNS UFS HC + M31 16nm PHY
->  		  complemented with the JEDEC version:
->  			"jedec,ufs-2.0"
->  
-> -- 
-> 2.15.0
-> 
+1&1 IONOS Cloud GmbH | Greifswalder Str. 207 | 10405 Berlin | Germany
+Phone: +49 30 57700-8042 | Fax: +49 30 57700-8598
+E-mail: jinpu.wang@cloud.ionos.com | Web: www.ionos.de
+
+
+Head Office: Berlin, Germany
+District Court Berlin Charlottenburg, Registration number: HRB 125506 B
+Executive Management: Christoph Steffens, Matthias Steinberg, Achim Weiss
+
+Member of United Internet
+
+This e-mail may contain confidential and/or privileged information. If
+you are not the intended recipient of this e-mail, you are hereby
+notified that saving, distribution or use of the content of this
+e-mail in any way is prohibited. If you have received this e-mail in
+error, please notify the sender and delete the e-mail.
