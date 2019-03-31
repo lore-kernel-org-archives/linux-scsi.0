@@ -1,63 +1,42 @@
-From: Jinpu Wang <jinpu.wang@cloud.ionos.com>
-Subject: Re: [PATCH 1/2] scsi: pm8001: clean up structurally dead code when
- PM8001_USE_MSIX is defined
-Date: Sun, 31 Mar 2019 19:49:18 +0200
-Message-ID: <CAMGffE=byzyhREomahYv9-VfiTYd2K3NoKPJc0p9K3f5fwUKPA@mail.gmail.com>
-References: <822122908.274859.1553944071609@ox-groupware.bfs.de>
+From: Michael Kelley <mikelley@microsoft.com>
+Subject: [PATCH 1/1] scsi: storvsc: Fix calculation of sub-channel count
+Date: Sun, 31 Mar 2019 23:57:28 +0000
+Message-ID: <1554076559-14873-1-git-send-email-mikelley@microsoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <822122908.274859.1553944071609@ox-groupware.bfs.de>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Walter Harms <wharms@bfs.de>
-Cc: Colin King <colin.king@canonical.com>, Jack Wang <jinpu.wang@profitbricks.com>, lindar_liu <lindar_liu@usish.com>, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+To: KY Srinivasan <kys@microsoft.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, Long Li <longli@microsoft.com>, "James.Bottomley@hansenpartnership.com" <James.Bottomley@hansenpartnership.com>, "emilne@redhat.com" <emilne@redhat.com>, "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: Michael Kelley <mikelley@microsoft.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, Mar 30, 2019 at 12:07 PM Walter Harms <wharms@bfs.de> wrote:
->
-> the ifdef jungle does not make thinks more readable. I am aware that
-> using neg is also not good but in this special case it seems helpful
-> to have only one branch, like:
->
-> static u32 pm80xx_chip_is_our_interupt(struct pm8001_hba_info *pm8001_ha)
-> {
-> #ifndef PM8001_USE_MSIX
->         u32 value;
->
->         value = pm8001_cr32(pm8001_ha, 0, MSGU_ODR);
->         if (!value)
->                 return 0;
-> #endif
->         return 1;
->
->   }
->
-> just my 2 cents,
->
-> re,
->  wh
-
-Both version looks good to me, I've acked Colin's version.
-
-Thanks!
-
--- 
-Jack Wang
-Linux Kernel Developer
-
-1&1 IONOS Cloud GmbH | Greifswalder Str. 207 | 10405 Berlin | Germany
-Phone: +49 30 57700-8042 | Fax: +49 30 57700-8598
-E-mail: jinpu.wang@cloud.ionos.com | Web: www.ionos.de
-
-
-Head Office: Berlin, Germany
-District Court Berlin Charlottenburg, Registration number: HRB 125506 B
-Executive Management: Christoph Steffens, Matthias Steinberg, Achim Weiss
-
-Member of United Internet
-
-This e-mail may contain confidential and/or privileged information. If
-you are not the intended recipient of this e-mail, you are hereby
-notified that saving, distribution or use of the content of this
-e-mail in any way is prohibited. If you have received this e-mail in
-error, please notify the sender and delete the e-mail.
+V2hlbiB0aGUgbnVtYmVyIG9mIHN1Yi1jaGFubmVscyBvZmZlcmVkIGJ5IEh5cGVyLVYgaXMgPj0g
+dGhlIG51bWJlcg0Kb2YgQ1BVcyBpbiB0aGUgVk0sIGNhbGN1bGF0ZSB0aGUgY29ycmVjdCBudW1i
+ZXIgb2Ygc3ViLWNoYW5uZWxzLg0KVGhlIGN1cnJlbnQgY29kZSBwcm9kdWNlcyBvbmUgdG9vIG1h
+bnkuDQoNClRoaXMgc2NlbmFyaW8gYXJpc2VzIG9ubHkgd2hlbiB0aGUgbnVtYmVyIG9mIENQVXMg
+aXMgYXJ0aWZpY2lhbGx5DQpyZXN0cmljdGVkIChmb3IgZXhhbXBsZSwgd2l0aCBtYXhjcHVzPTxu
+PiBvbiB0aGUga2VybmVsIGJvb3QgbGluZSksDQpiZWNhdXNlIEh5cGVyLVYgbm9ybWFsbHkgb2Zm
+ZXJzIGEgc3ViLWNoYW5uZWwgY291bnQgPCBudW1iZXIgb2YgQ1BVcy4NCldoaWxlIHRoZSBjdXJy
+ZW50IGNvZGUgZG9lc24ndCBicmVhaywgdGhlIGV4dHJhIHN1Yi1jaGFubmVsIGlzDQp1bmJhbGFu
+Y2VkIGFjcm9zcyB0aGUgQ1BVcyAoZm9yIGV4YW1wbGUsIGEgdG90YWwgb2YgNSBjaGFubmVscyBv
+bg0KYSBWTSB3aXRoIDQgQ1BVcykuDQoNClNpZ25lZC1vZmYtYnk6IE1pY2hhZWwgS2VsbGV5IDxt
+aWtlbGxleUBtaWNyb3NvZnQuY29tPg0KLS0tDQogZHJpdmVycy9zY3NpL3N0b3J2c2NfZHJ2LmMg
+fCAxMiArKysrKysrKysrKy0NCiAxIGZpbGUgY2hhbmdlZCwgMTEgaW5zZXJ0aW9ucygrKSwgMSBk
+ZWxldGlvbigtKQ0KDQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3N0b3J2c2NfZHJ2LmMgYi9k
+cml2ZXJzL3Njc2kvc3RvcnZzY19kcnYuYw0KaW5kZXggODQzODBiYS4uZmJhYTExYSAxMDA2NDQN
+Ci0tLSBhL2RyaXZlcnMvc2NzaS9zdG9ydnNjX2Rydi5jDQorKysgYi9kcml2ZXJzL3Njc2kvc3Rv
+cnZzY19kcnYuYw0KQEAgLTY3NCw3ICs2NzQsMTcgQEAgc3RhdGljIHZvaWQgIGhhbmRsZV9tdWx0
+aWNoYW5uZWxfc3RvcmFnZShzdHJ1Y3QgaHZfZGV2aWNlICpkZXZpY2UsIGludCBtYXhfY2hucykN
+CiAJc3RydWN0IHZzdG9yX3BhY2tldCAqdnN0b3JfcGFja2V0Ow0KIAlpbnQgcmV0LCB0Ow0KIA0K
+LQludW1fc2MgPSAoKG1heF9jaG5zID4gbnVtX2NwdXMpID8gbnVtX2NwdXMgOiBtYXhfY2hucyk7
+DQorCS8qDQorCSAqIElmIHRoZSBudW1iZXIgb2YgQ1BVcyBpcyBhcnRpZmljaWFsbHkgcmVzdHJp
+Y3RlZCwgc3VjaCBhcw0KKwkgKiB3aXRoIG1heGNwdXM9MSBvbiB0aGUga2VybmVsIGJvb3QgbGlu
+ZSwgSHlwZXItViBjb3VsZCBvZmZlcg0KKwkgKiBzdWItY2hhbm5lbHMgPj0gdGhlIG51bWJlciBv
+ZiBDUFVzLiBUaGVzZSBzdWItY2hhbm5lbHMNCisJICogc2hvdWxkIG5vdCBiZSBjcmVhdGVkLiBU
+aGUgcHJpbWFyeSBjaGFubmVsIGlzIGFscmVhZHkgY3JlYXRlZA0KKwkgKiBhbmQgYXNzaWduZWQg
+dG8gb25lIENQVSwgc28gY2hlY2sgYWdhaW5zdCAjIENQVXMgLSAxLg0KKwkgKi8NCisJbnVtX3Nj
+ID0gbWluKChudW1fY3B1cyAtIDEpLCBtYXhfY2hucyk7DQorCWlmICghbnVtX3NjKQ0KKwkJcmV0
+dXJuOw0KKw0KIAlzdG9yX2RldmljZSA9IGdldF9vdXRfc3Rvcl9kZXZpY2UoZGV2aWNlKTsNCiAJ
+aWYgKCFzdG9yX2RldmljZSkNCiAJCXJldHVybjsNCi0tIA0KMS44LjMuMQ0KDQo=
