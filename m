@@ -1,86 +1,45 @@
 From: Jinpu Wang <jinpu.wang@cloud.ionos.com>
 Subject: Re: [PATCH 1/2] scsi: pm8001: clean up structurally dead code when
  PM8001_USE_MSIX is defined
-Date: Sun, 31 Mar 2019 19:47:53 +0200
-Message-ID: <CAMGffE=2Gzx_LGjv9znERm0W38A3XpGF4r7nVgTvHrf+3Pg6-A@mail.gmail.com>
-References: <20190329234423.5611-1-colin.king@canonical.com> <20190329234423.5611-2-colin.king@canonical.com>
+Date: Sun, 31 Mar 2019 19:49:18 +0200
+Message-ID: <CAMGffE=byzyhREomahYv9-VfiTYd2K3NoKPJc0p9K3f5fwUKPA@mail.gmail.com>
+References: <822122908.274859.1553944071609@ox-groupware.bfs.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190329234423.5611-2-colin.king@canonical.com>
+In-Reply-To: <822122908.274859.1553944071609@ox-groupware.bfs.de>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Colin King <colin.king@canonical.com>
-Cc: Jack Wang <jinpu.wang@profitbricks.com>, lindar_liu <lindar_liu@usish.com>, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Walter Harms <wharms@bfs.de>
+Cc: Colin King <colin.king@canonical.com>, Jack Wang <jinpu.wang@profitbricks.com>, lindar_liu <lindar_liu@usish.com>, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, Mar 30, 2019 at 12:44 AM Colin King <colin.king@canonical.com> wrote:
+On Sat, Mar 30, 2019 at 12:07 PM Walter Harms <wharms@bfs.de> wrote:
 >
-> From: Colin Ian King <colin.king@canonical.com>
+> the ifdef jungle does not make thinks more readable. I am aware that
+> using neg is also not good but in this special case it seems helpful
+> to have only one branch, like:
 >
-> When macro PM8001_USE_MSIX is defined there is redundant dead code
-> call to pm8001_cr32.  Clean this up for the defined PM8001_USE_MSIX and
-> undefined PM8001_USE_MSIX cases.
+> static u32 pm80xx_chip_is_our_interupt(struct pm8001_hba_info *pm8001_ha)
+> {
+> #ifndef PM8001_USE_MSIX
+>         u32 value;
 >
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-Thanks, Colin,
-Acked-by: Jack Wang <jinpu.wang@cloud.ionos.com>
-> ---
->  drivers/scsi/pm8001/pm8001_hwi.c | 7 ++++---
->  drivers/scsi/pm8001/pm80xx_hwi.c | 7 ++++---
->  2 files changed, 8 insertions(+), 6 deletions(-)
->
-> diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-> index e4209091c1da..434498a78946 100644
-> --- a/drivers/scsi/pm8001/pm8001_hwi.c
-> +++ b/drivers/scsi/pm8001/pm8001_hwi.c
-> @@ -4625,15 +4625,16 @@ static int pm8001_chip_phy_ctl_req(struct pm8001_hba_info *pm8001_ha,
->
->  static u32 pm8001_chip_is_our_interupt(struct pm8001_hba_info *pm8001_ha)
->  {
-> -       u32 value;
->  #ifdef PM8001_USE_MSIX
->         return 1;
-> -#endif
-> +#else
-> +       u32 value;
-> +
 >         value = pm8001_cr32(pm8001_ha, 0, MSGU_ODR);
->         if (value)
->                 return 1;
->         return 0;
-> -
-> +#endif
->  }
->
->  /**
-> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-> index 536d2b4384f8..4a176e60307f 100644
-> --- a/drivers/scsi/pm8001/pm80xx_hwi.c
-> +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-> @@ -4619,15 +4619,16 @@ static int pm80xx_chip_phy_ctl_req(struct pm8001_hba_info *pm8001_ha,
->
->  static u32 pm80xx_chip_is_our_interupt(struct pm8001_hba_info *pm8001_ha)
->  {
-> -       u32 value;
->  #ifdef PM8001_USE_MSIX
+>         if (!value)
+>                 return 0;
+> #endif
 >         return 1;
-> -#endif
-> +#else
-> +       u32 value;
-> +
->         value = pm8001_cr32(pm8001_ha, 0, MSGU_ODR);
->         if (value)
->                 return 1;
->         return 0;
-> -
-> +#endif
->  }
 >
->  /**
-> --
-> 2.20.1
+>   }
 >
+> just my 2 cents,
+>
+> re,
+>  wh
 
+Both version looks good to me, I've acked Colin's version.
+
+Thanks!
 
 -- 
 Jack Wang
