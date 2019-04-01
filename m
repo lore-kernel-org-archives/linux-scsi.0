@@ -1,49 +1,86 @@
-From: Michael Kelley <mikelley@microsoft.com>
-Subject: [PATCH v2 1/1] scsi: storvsc: Fix calculation of sub-channel count
-Date: Mon, 1 Apr 2019 16:10:52 +0000
-Message-ID: <1554134985-8671-1-git-send-email-mikelley@microsoft.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: RE: scsi_set_medium_removal timeout issue
+Date: Mon, 1 Apr 2019 16:27:49 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1904011627120.1506-100000@iolanthe.rowland.org>
+References: <Pine.LNX.4.44L0.1812041135300.1537-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Language: en-US
+In-Reply-To: <Pine.LNX.4.44L0.1812041135300.1537-100000@iolanthe.rowland.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: KY Srinivasan <kys@microsoft.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, Long Li <longli@microsoft.com>, "James.Bottomley@hansenpartnership.com" <James.Bottomley@hansenpartnership.com>, "emilne@redhat.com" <emilne@redhat.com>, "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: Michael Kelley <mikelley@microsoft.com>
+To: "Zengtao (B)" <prime.zeng@hisilicon.com>
+Cc: Martin Petersen <martin.petersen@oracle.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>, "usb-storage@lists.one-eyed-alien.net" <usb-storage@lists.one-eyed-alien.net>
 List-Id: linux-scsi@vger.kernel.org
 
-V2hlbiB0aGUgbnVtYmVyIG9mIHN1Yi1jaGFubmVscyBvZmZlcmVkIGJ5IEh5cGVyLVYgaXMgPj0g
-dGhlIG51bWJlcg0Kb2YgQ1BVcyBpbiB0aGUgVk0sIGNhbGN1bGF0ZSB0aGUgY29ycmVjdCBudW1i
-ZXIgb2Ygc3ViLWNoYW5uZWxzLg0KVGhlIGN1cnJlbnQgY29kZSBwcm9kdWNlcyBvbmUgdG9vIG1h
-bnkuDQoNClRoaXMgc2NlbmFyaW8gYXJpc2VzIG9ubHkgd2hlbiB0aGUgbnVtYmVyIG9mIENQVXMg
-aXMgYXJ0aWZpY2lhbGx5DQpyZXN0cmljdGVkIChmb3IgZXhhbXBsZSwgd2l0aCBtYXhjcHVzPTxu
-PiBvbiB0aGUga2VybmVsIGJvb3QgbGluZSksDQpiZWNhdXNlIEh5cGVyLVYgbm9ybWFsbHkgb2Zm
-ZXJzIGEgc3ViLWNoYW5uZWwgY291bnQgPCBudW1iZXIgb2YgQ1BVcy4NCldoaWxlIHRoZSBjdXJy
-ZW50IGNvZGUgZG9lc24ndCBicmVhaywgdGhlIGV4dHJhIHN1Yi1jaGFubmVsIGlzDQp1bmJhbGFu
-Y2VkIGFjcm9zcyB0aGUgQ1BVcyAoZm9yIGV4YW1wbGUsIGEgdG90YWwgb2YgNSBjaGFubmVscyBv
-bg0KYSBWTSB3aXRoIDQgQ1BVcykuDQoNClNpZ25lZC1vZmYtYnk6IE1pY2hhZWwgS2VsbGV5IDxt
-aWtlbGxleUBtaWNyb3NvZnQuY29tPg0KUmV2aWV3ZWQtYnk6IFZpdGFseSBLdXpuZXRzb3YgPHZr
-dXpuZXRzQHJlZGhhdC5jb20+DQotLS0NCkNoYW5nZXMgaW4gdjI6DQoqIFB1dCBudW1fb25saW5l
-X2NwdXMoKSBpbmxpbmUgYW5kIGVsaW1pbmF0ZSBudW1fY3B1cyBsb2NhbA0KICB2YXJpYWJsZSBb
-Vml0YWx5IEt1em5ldHNvdl0NCg0KLS0tDQogZHJpdmVycy9zY3NpL3N0b3J2c2NfZHJ2LmMgfCAx
-MyArKysrKysrKysrKy0tDQogMSBmaWxlIGNoYW5nZWQsIDExIGluc2VydGlvbnMoKyksIDIgZGVs
-ZXRpb25zKC0pDQoNCmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvc3RvcnZzY19kcnYuYyBiL2Ry
-aXZlcnMvc2NzaS9zdG9ydnNjX2Rydi5jDQppbmRleCA4NDM4MGJhLi5lMTg2NzQzIDEwMDY0NA0K
-LS0tIGEvZHJpdmVycy9zY3NpL3N0b3J2c2NfZHJ2LmMNCisrKyBiL2RyaXZlcnMvc2NzaS9zdG9y
-dnNjX2Rydi5jDQpAQCAtNjY4LDEzICs2NjgsMjIgQEAgc3RhdGljIHZvaWQgIGhhbmRsZV9tdWx0
-aWNoYW5uZWxfc3RvcmFnZShzdHJ1Y3QgaHZfZGV2aWNlICpkZXZpY2UsIGludCBtYXhfY2hucykN
-CiB7DQogCXN0cnVjdCBkZXZpY2UgKmRldiA9ICZkZXZpY2UtPmRldmljZTsNCiAJc3RydWN0IHN0
-b3J2c2NfZGV2aWNlICpzdG9yX2RldmljZTsNCi0JaW50IG51bV9jcHVzID0gbnVtX29ubGluZV9j
-cHVzKCk7DQogCWludCBudW1fc2M7DQogCXN0cnVjdCBzdG9ydnNjX2NtZF9yZXF1ZXN0ICpyZXF1
-ZXN0Ow0KIAlzdHJ1Y3QgdnN0b3JfcGFja2V0ICp2c3Rvcl9wYWNrZXQ7DQogCWludCByZXQsIHQ7
-DQogDQotCW51bV9zYyA9ICgobWF4X2NobnMgPiBudW1fY3B1cykgPyBudW1fY3B1cyA6IG1heF9j
-aG5zKTsNCisJLyoNCisJICogSWYgdGhlIG51bWJlciBvZiBDUFVzIGlzIGFydGlmaWNpYWxseSBy
-ZXN0cmljdGVkLCBzdWNoIGFzDQorCSAqIHdpdGggbWF4Y3B1cz0xIG9uIHRoZSBrZXJuZWwgYm9v
-dCBsaW5lLCBIeXBlci1WIGNvdWxkIG9mZmVyDQorCSAqIHN1Yi1jaGFubmVscyA+PSB0aGUgbnVt
-YmVyIG9mIENQVXMuIFRoZXNlIHN1Yi1jaGFubmVscw0KKwkgKiBzaG91bGQgbm90IGJlIGNyZWF0
-ZWQuIFRoZSBwcmltYXJ5IGNoYW5uZWwgaXMgYWxyZWFkeSBjcmVhdGVkDQorCSAqIGFuZCBhc3Np
-Z25lZCB0byBvbmUgQ1BVLCBzbyBjaGVjayBhZ2FpbnN0ICMgQ1BVcyAtIDEuDQorCSAqLw0KKwlu
-dW1fc2MgPSBtaW4oKGludCkobnVtX29ubGluZV9jcHVzKCkgLSAxKSwgbWF4X2NobnMpOw0KKwlp
-ZiAoIW51bV9zYykNCisJCXJldHVybjsNCisNCiAJc3Rvcl9kZXZpY2UgPSBnZXRfb3V0X3N0b3Jf
-ZGV2aWNlKGRldmljZSk7DQogCWlmICghc3Rvcl9kZXZpY2UpDQogCQlyZXR1cm47DQotLSANCjEu
-OC4zLjENCg0K
+On Tue, 4 Dec 2018, Alan Stern wrote:
+
+> On Thu, 29 Nov 2018, Zengtao (B) wrote:
+> 
+> > Ping?
+> > 
+> > >-----Original Message-----
+> > >From: Alan Stern [mailto:stern@rowland.harvard.edu]
+> > >Sent: Wednesday, November 14, 2018 11:35 PM
+> > >To: Martin Petersen <martin.petersen@oracle.com>; Zengtao (B)
+> > ><prime.zeng@hisilicon.com>
+> > >Cc: jejb@linux.vnet.ibm.com; gregkh@linuxfoundation.org;
+> > >linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org;
+> > >linux-usb@vger.kernel.org; usb-storage@lists.one-eyed-alien.net
+> > >Subject: RE: scsi_set_medium_removal timeout issue
+> > >
+> > >On Wed, 14 Nov 2018, Zengtao (B) wrote:
+> > >
+> > >> I just enabled the scsi log in the middle of the umount operation,
+> > >> otherwise I can't reproduce the issue when the scsi log is enabled.
+> > >>
+> > >> >from the beginning.  In any case, it wasn't what I wanted.  I asked
+> > >> >you to post the dmesg log, not the SCSI log.
+> > >>
+> > >> Please refer to the new attachment for dmesg log.
+> > >
+> > >Heh, yes, I see now.
+> > >
+> > >Martin, shouldn't sd_release() call sd_sync_cache() in the same way that
+> > >sd_shutdown() does, before it calls scsi_set_medium_removal()?
+> > >
+> > >Alan Stern
+> 
+> I don't know if this is the right thing to do, but you can try out the 
+> following patch to see if it helps.
+> 
+> Alan Stern
+> 
+> 
+> 
+> Index: usb-4.x/drivers/scsi/sd.c
+> ===================================================================
+> --- usb-4.x.orig/drivers/scsi/sd.c
+> +++ usb-4.x/drivers/scsi/sd.c
+> @@ -113,6 +113,7 @@ static void sd_shutdown(struct device *)
+>  static int sd_suspend_system(struct device *);
+>  static int sd_suspend_runtime(struct device *);
+>  static int sd_resume(struct device *);
+> +static int sd_sync_cache(struct scsi_disk *sdkp, struct scsi_sense_hdr *sshdr);
+>  static void sd_rescan(struct device *);
+>  static int sd_init_command(struct scsi_cmnd *SCpnt);
+>  static void sd_uninit_command(struct scsi_cmnd *SCpnt);
+> @@ -1393,8 +1394,14 @@ static void sd_release(struct gendisk *d
+>  	SCSI_LOG_HLQUEUE(3, sd_printk(KERN_INFO, sdkp, "sd_release\n"));
+>  
+>  	if (atomic_dec_return(&sdkp->openers) == 0 && sdev->removable) {
+> -		if (scsi_block_when_processing_errors(sdev))
+> +		if (scsi_block_when_processing_errors(sdev)) {
+> +			if (sdkp->WCE && sdkp->media_present) {
+> +				sd_printk(KERN_NOTICE, sdkp,
+> +						"Synchronizing SCSI cache\n");
+> +				sd_sync_cache(sdkp, NULL);
+> +			}
+>  			scsi_set_medium_removal(sdev, SCSI_REMOVAL_ALLOW);
+> +		}
+>  	}
+>  
+>  	/*
+
+Zengtao, did you ever try out this patch?  Did it fix your problem?
+
+Alan Stern
