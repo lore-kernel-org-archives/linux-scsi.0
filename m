@@ -1,70 +1,135 @@
-From: Vitaly Kuznetsov <vkuznets@redhat.com>
-Subject: Re: [PATCH 1/1] scsi: storvsc: Fix calculation of sub-channel count
-Date: Mon, 01 Apr 2019 15:45:13 +0200
-Message-ID: <87imvx261i.fsf@vitty.brq.redhat.com>
-References: <1554076559-14873-1-git-send-email-mikelley@microsoft.com>
+From: Meelis Roos <mroos-Y27EyoLml9s@public.gmane.org>
+Subject: Re: 5.1-rc1: mpt init crash in scsi_map_dma, dma_4v_map_sg on sparc64
+Date: Mon, 1 Apr 2019 17:21:47 +0300
+Message-ID: <2a840704-215f-a271-a324-28a7b55f7f97@linux.ee>
+References: <dbed1f7e-cf7b-0e87-841e-e4dd1eb1ed23@linux.ee>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1554076559-14873-1-git-send-email-mikelley@microsoft.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Michael Kelley <mikelley@microsoft.com>
-Cc: KY Srinivasan <kys@microsoft.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, Long Li <longli@microsoft.com>, "James.Bottomley@hansenpartnership.com" <James.Bottomley@hansenpartnership.com>, "emilne@redhat.com" <emilne@redhat.com>, "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Content-Transfer-Encoding: base64
+Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <dbed1f7e-cf7b-0e87-841e-e4dd1eb1ed23-Y27EyoLml9s@public.gmane.org>
+Content-Language: et-EE
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
+List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: sparclinux-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, MPT-FusionLinux.pdl-dY08KVG/lbpWk0Htik3J/w@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-Michael Kelley <mikelley@microsoft.com> writes:
-
-> When the number of sub-channels offered by Hyper-V is >= the number
-> of CPUs in the VM, calculate the correct number of sub-channels.
-> The current code produces one too many.
->
-> This scenario arises only when the number of CPUs is artificially
-> restricted (for example, with maxcpus=<n> on the kernel boot line),
-> because Hyper-V normally offers a sub-channel count < number of CPUs.
-> While the current code doesn't break, the extra sub-channel is
-> unbalanced across the CPUs (for example, a total of 5 channels on
-> a VM with 4 CPUs).
->
-> Signed-off-by: Michael Kelley <mikelley@microsoft.com>
-> ---
->  drivers/scsi/storvsc_drv.c | 12 +++++++++++-
->  1 file changed, 11 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-> index 84380ba..fbaa11a 100644
-> --- a/drivers/scsi/storvsc_drv.c
-> +++ b/drivers/scsi/storvsc_drv.c
-> @@ -674,7 +674,17 @@ static void  handle_multichannel_storage(struct hv_device *device, int max_chns)
->  	struct vstor_packet *vstor_packet;
->  	int ret, t;
->  
-> -	num_sc = ((max_chns > num_cpus) ? num_cpus : max_chns);
-> +	/*
-> +	 * If the number of CPUs is artificially restricted, such as
-> +	 * with maxcpus=1 on the kernel boot line, Hyper-V could offer
-> +	 * sub-channels >= the number of CPUs. These sub-channels
-> +	 * should not be created. The primary channel is already created
-> +	 * and assigned to one CPU, so check against # CPUs - 1.
-> +	 */
-
-Indeed.
-
-> +	num_sc = min((num_cpus - 1), max_chns);
-
-Reviewed-by: Vitaly Kuznetsov <vkuznets@redhat.com>
-
-(nit: you could've written
-
-num_sc = min((num_online_cpus() - 1), max_chns);
-
-and got rid of the now-unneeded num_cpus variable).
-
-> +	if (!num_sc)
-> +		return;
-> +
->  	stor_device = get_out_stor_device(device);
->  	if (!stor_device)
->  		return;
-
--- 
-Vitaly
+U3RpbGwgYnJva2VuIGluIDUuMS1yYzMuCgo+IFRyaWVkIDUuMS1yYzEgb24gYSBidW5jaCBvZiBz
+cGFyY3MsIHRoaXMgaGl0cyBhbGwgbXkgc3BhcmNzIHdpdGggc3VuNHYgYW5kIG1wdCBzY3NpLgo+
+IAo+IFvCoMKgwqAgMi43MzMyNjNdIEZ1c2lvbiBNUFQgYmFzZSBkcml2ZXIgMy4wNC4yMAo+IFvC
+oMKgwqAgMi43NDI5OTVdIENvcHlyaWdodCAoYykgMTk5OS0yMDA4IExTSSBDb3Jwb3JhdGlvbgo+
+IFvCoMKgwqAgMi43NDMwNTJdIEZ1c2lvbiBNUFQgU0FTIEhvc3QgZHJpdmVyIDMuMDQuMjAKPiBb
+wqDCoMKgIDIuNzQzODgxXSBtcHRiYXNlOiBpb2MwOiBJbml0aWF0aW5nIGJyaW5ndXAKPiBbwqDC
+oMKgIDMuNzM3ODIyXSBpb2MwOiBMU0lTQVMxMDY0IEEzOiBDYXBhYmlsaXRpZXM9e0luaXRpYXRv
+cn0KPiBbwqDCoCAxNy41NjY1ODRdIHNjc2kgaG9zdDA6IGlvYzA6IExTSVNBUzEwNjQgQTMsIEZ3
+UmV2PTAxMGEwMDAwaCwgUG9ydHM9MSwgTWF4UT01MTEsIElSUT0yNwo+IFvCoMKgIDE3LjU5NTg5
+N10gbXB0c2FzOiBpb2MwOiBhdHRhY2hpbmcgc3NwIGRldmljZTogZndfY2hhbm5lbCAwLCBmd19p
+ZCAwLCBwaHkgMCwgc2FzX2FkZHIgMHg1MDAwYzUwMDE3OTlhNDVkCj4gW8KgwqAgMTcuNTk4NDY1
+XSBVbmFibGUgdG8gaGFuZGxlIGtlcm5lbCBOVUxMIHBvaW50ZXIgZGVyZWZlcmVuY2UKPiBbwqDC
+oCAxNy41OTg2MjNdIHRzay0+e21tLGFjdGl2ZV9tbX0tPmNvbnRleHQgPSAwMDAwMDAwMDAwMDAw
+MDAwCj4gW8KgwqAgMTcuNTk4NzIzXSB0c2stPnttbSxhY3RpdmVfbW19LT5wZ2QgPSBmZmZmODAw
+MDA4ODAyMDAwCj4gW8KgwqAgMTcuNTk4Nzc0XcKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAg
+XHwvIF9fX18gXHwvCj4gW8KgwqAgMTcuNTk4Nzc0XcKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqAgIkAnLyAuLiBcYEAiCj4gW8KgwqAgMTcuNTk4Nzc0XcKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqAgL198IFxfXy8gfF9cCj4gW8KgwqAgMTcuNTk4Nzc0XcKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqAgXF9fVV8vCj4gW8KgwqAgMTcuNTk4ODk0XSBzd2FwcGVyLzAoMSk6IE9v
+cHMgWyMxXQo+IFvCoMKgIDE3LjU5ODkzN10gQ1BVOiAxMiBQSUQ6IDEgQ29tbTogc3dhcHBlci8w
+IE5vdCB0YWludGVkIDUuMS4wLXJjMSAjMTE4Cj4gW8KgwqAgMTcuNTk4OTk0XSBUU1RBVEU6IDAw
+MDAwMDAwODBlMDE2MDEgVFBDOiAwMDAwMDAwMDAwNDQ4M2E4IFROUEM6IDAwMDAwMDAwMDA0NDgz
+YWMgWTogMDAwMDAwMDDCoMKgwqAgTm90IHRhaW50ZWQKPiBbwqDCoCAxNy41OTkwODZdIFRQQzog
+PGRtYV80dl9tYXBfc2crMHhlOC8weDVjMD4KPiBbwqDCoCAxNy41OTkxMjddIGcwOiBmZmZmODAw
+MDA4NmQxZDUxIGcxOiAwMDAwMDAwMGZmZmZmZmZmIGcyOiAwMDAwMDAwMDAwMDEwMDAwIGczOiBm
+ZmZmODAwMDA4NmI4MDAwCj4gW8KgwqAgMTcuNTk5MTk3XSBnNDogZmZmZjgwMDAwODZjMDAwMCBn
+NTogZmZmZjgwMDFmZWY3ODAwMCBnNjogZmZmZjgwMDAwODZkMDAwMCBnNzogZmZmZmZmZmZmZmZm
+ZmZmZgo+IFvCoMKgIDE3LjU5OTI2N10gbzA6IGZmZmY4MDAxZjUyNmJjOTAgbzE6IDAwMDAwMDAw
+MDAwMDAxZTIgbzI6IGZmZmY4MDAxZjRmYzIwMDAgbzM6IGZmZmY4MDAxZjRmYzIwMDAKPiBbwqDC
+oCAxNy41OTkzMzddIG80OiBmZmZmODAwMWY0ZmMxMTQ0IG81OiBmZmZmODAwMWY1MDAyODAwIHNw
+OiBmZmZmODAwMDA4NmQxZGIxIHJldF9wYzogMDAwMDAwMDAwMDc0MDcyMAo+IFvCoMKgIDE3LjU5
+OTQxNV0gUlBDOiA8bXB0c2NzaWhfcWNtZCsweDI4MC8weDY2MD4KPiBbwqDCoCAxNy41OTk0NTZd
+IGwwOiAwMDAwMDAwMDI0MDAwMDAwIGwxOiAwMDAwMDAwMDAwMDBmZjAwIGwyOiAwMDAwMDAwMDAw
+MDgwMDAwIGwzOiAwMDAwMDAwMDAwMDEwMDAwCj4gW8KgwqAgMTcuNTk5NTI2XSBsNDogZmZmZjgw
+MDFmNTAwMjgzMCBsNTogMDAwMDAwMDAwMGZmMDAwMCBsNjogZmZmZjgwMDFmNDZjN2UxMCBsNzog
+ZmZmZjgwMDFmNGZjMTAwMAo+IFvCoMKgIDE3LjU5OTU5Nl0gaTA6IGZmZmY4MDAxZjRiMzUwYjAg
+aTE6IGZmZmY4MDAxZjUyNmJlMjggaTI6IDAwMDAwMDAwMDAwMDAwMDEgaTM6IDAwMDAwMDAwMDAw
+MDAwMDIKPiBbwqDCoCAxNy41OTk2NjVdIGk0OiAwMDAwMDAwMDAwMDAwMDEwIGk1OiAwMDAwMDAw
+MDAwMDAwMDAwIGk2OiBmZmZmODAwMDA4NmQxZjAxIGk3OiAwMDAwMDAwMDAwNzI1NTcwCj4gW8Kg
+wqAgMTcuNTk5NzQ1XSBJNzogPHNjc2lfZG1hX21hcCsweDUwLzB4YzA+Cj4gW8KgwqAgMTcuNTk5
+NzgxXSBDYWxsIFRyYWNlOgo+IFvCoMKgIDE3LjU5OTgyNF3CoCBbMDAwMDAwMDAwMDcyNTU3MF0g
+c2NzaV9kbWFfbWFwKzB4NTAvMHhjMAo+IFvCoMKgIDE3LjU5OTg4MV3CoCBbMDAwMDAwMDAwMDc0
+MDcyMF0gbXB0c2NzaWhfcWNtZCsweDI4MC8weDY2MAo+IFvCoMKgIDE3LjU5OTk0MF3CoCBbMDAw
+MDAwMDAwMDcyM2RlY10gc2NzaV9xdWV1ZV9ycSsweDZhYy8weDg4MAo+IFvCoMKgIDE3LjYwMDAw
+NV3CoCBbMDAwMDAwMDAwMDY4MDE5OF0gYmxrX21xX2Rpc3BhdGNoX3JxX2xpc3QrMHgxMzgvMHg1
+NDAKPiBbwqDCoCAxNy42MDAwNjVdwqAgWzAwMDAwMDAwMDA2ODUxNTRdIGJsa19tcV9kb19kaXNw
+YXRjaF9zY2hlZCsweDU0LzB4MTAwCj4gW8KgwqAgMTcuNjAwMTI0XcKgIFswMDAwMDAwMDAwNjg1
+NjBjXSBibGtfbXFfc2NoZWRfZGlzcGF0Y2hfcmVxdWVzdHMrMHhlYy8weDE2MAo+IFvCoMKgIDE3
+LjYwMDE4Nl3CoCBbMDAwMDAwMDAwMDY3ZTgzY10gX19ibGtfbXFfcnVuX2h3X3F1ZXVlKzB4OWMv
+MHgxODAKPiBbwqDCoCAxNy42MDAyNDZdwqAgWzAwMDAwMDAwMDA2N2VhYThdIF9fYmxrX21xX2Rl
+bGF5X3J1bl9od19xdWV1ZSsweDE4OC8weDFlMAo+IFvCoMKgIDE3LjYwMDMwN13CoCBbMDAwMDAw
+MDAwMDY3ZmY3NF0gYmxrX21xX3J1bl9od19xdWV1ZSsweDU0LzB4MTQwCj4gW8KgwqAgMTcuNjAw
+MzY1XcKgIFswMDAwMDAwMDAwNjg1YmUwXSBibGtfbXFfc2NoZWRfaW5zZXJ0X3JlcXVlc3QrMHgx
+MjAvMHgxODAKPiBbwqDCoCAxNy42MDA0MjRdwqAgWzAwMDAwMDAwMDA2N2EzOTRdIGJsa19leGVj
+dXRlX3JxKzB4MzQvMHg2MAo+IFvCoMKgIDE3LjYwMDQ4M13CoCBbMDAwMDAwMDAwMDcyMThjY10g
+X19zY3NpX2V4ZWN1dGUrMHhjYy8weDFhMAo+IFvCoMKgIDE3LjYwMDU0M13CoCBbMDAwMDAwMDAw
+MDcyNWY0MF0gc2NzaV9wcm9iZV9hbmRfYWRkX2x1bisweDFlMC8weGVjMAo+IFvCoMKgIDE3LjYw
+MDYwM13CoCBbMDAwMDAwMDAwMDcyNmU5OF0gX19zY3NpX3NjYW5fdGFyZ2V0KzB4YjgvMHg2ODAK
+PiBbwqDCoCAxNy42MDA2NjNdwqAgWzAwMDAwMDAwMDA3Mjc1N2NdIHNjc2lfc2Nhbl90YXJnZXQr
+MHgxMWMvMHgxNDAKPiBbwqDCoCAxNy42MDA3MjddwqAgWzAwMDAwMDAwMDA3MmU5YjhdIHNhc19y
+cGh5X2FkZCsweDEzOC8weDFjMAo+IFvCoMKgIDE3LjYwMDc3N10gRGlzYWJsaW5nIGxvY2sgZGVi
+dWdnaW5nIGR1ZSB0byBrZXJuZWwgdGFpbnQKPiBbwqDCoCAxNy42MDA4MzddIENhbGxlclswMDAw
+MDAwMDAwNzI1NTcwXTogc2NzaV9kbWFfbWFwKzB4NTAvMHhjMAo+IFvCoMKgIDE3LjYwMDg5Nl0g
+Q2FsbGVyWzAwMDAwMDAwMDA3NDA3MjBdOiBtcHRzY3NpaF9xY21kKzB4MjgwLzB4NjYwCj4gW8Kg
+wqAgMTcuNjAwOTU2XSBDYWxsZXJbMDAwMDAwMDAwMDcyM2RlY106IHNjc2lfcXVldWVfcnErMHg2
+YWMvMHg4ODAKPiBbwqDCoCAxNy42MDEwMThdIENhbGxlclswMDAwMDAwMDAwNjgwMTk4XTogYmxr
+X21xX2Rpc3BhdGNoX3JxX2xpc3QrMHgxMzgvMHg1NDAKPiBbwqDCoCAxNy42MDEwNzhdIENhbGxl
+clswMDAwMDAwMDAwNjg1MTU0XTogYmxrX21xX2RvX2Rpc3BhdGNoX3NjaGVkKzB4NTQvMHgxMDAK
+PiBbwqDCoCAxNy42MDExMzhdIENhbGxlclswMDAwMDAwMDAwNjg1NjBjXTogYmxrX21xX3NjaGVk
+X2Rpc3BhdGNoX3JlcXVlc3RzKzB4ZWMvMHgxNjAKPiBbwqDCoCAxNy42MDEyMTBdIENhbGxlclsw
+MDAwMDAwMDAwNjdlODNjXTogX19ibGtfbXFfcnVuX2h3X3F1ZXVlKzB4OWMvMHgxODAKPiBbwqDC
+oCAxNy42MDEyNzFdIENhbGxlclswMDAwMDAwMDAwNjdlYWE4XTogX19ibGtfbXFfZGVsYXlfcnVu
+X2h3X3F1ZXVlKzB4MTg4LzB4MWUwCj4gW8KgwqAgMTcuNjAxMzMzXSBDYWxsZXJbMDAwMDAwMDAw
+MDY3ZmY3NF06IGJsa19tcV9ydW5faHdfcXVldWUrMHg1NC8weDE0MAo+IFvCoMKgIDE3LjYwMTM5
+Ml0gQ2FsbGVyWzAwMDAwMDAwMDA2ODViZTBdOiBibGtfbXFfc2NoZWRfaW5zZXJ0X3JlcXVlc3Qr
+MHgxMjAvMHgxODAKPiBbwqDCoCAxNy42MDE0NTNdIENhbGxlclswMDAwMDAwMDAwNjdhMzk0XTog
+YmxrX2V4ZWN1dGVfcnErMHgzNC8weDYwCj4gW8KgwqAgMTcuNjAxNTEzXSBDYWxsZXJbMDAwMDAw
+MDAwMDcyMThjY106IF9fc2NzaV9leGVjdXRlKzB4Y2MvMHgxYTAKPiBbwqDCoCAxNy42MDE1NzRd
+IENhbGxlclswMDAwMDAwMDAwNzI1ZjQwXTogc2NzaV9wcm9iZV9hbmRfYWRkX2x1bisweDFlMC8w
+eGVjMAo+IFvCoMKgIDE3LjYwMTYzNV0gQ2FsbGVyWzAwMDAwMDAwMDA3MjZlOThdOiBfX3Njc2lf
+c2Nhbl90YXJnZXQrMHhiOC8weDY4MAo+IFvCoMKgIDE3LjYwMTY5Nl0gQ2FsbGVyWzAwMDAwMDAw
+MDA3Mjc1N2NdOiBzY3NpX3NjYW5fdGFyZ2V0KzB4MTFjLzB4MTQwCj4gW8KgwqAgMTcuNjAxNzU4
+XSBDYWxsZXJbMDAwMDAwMDAwMDcyZTliOF06IHNhc19ycGh5X2FkZCsweDEzOC8weDFjMAo+IFvC
+oMKgIDE3LjYwMTgxOV0gQ2FsbGVyWzAwMDAwMDAwMDA3NDNiNjRdOiBtcHRzYXNfYWRkX2VuZF9k
+ZXZpY2UrMHhjNC8weDEwMAo+IFvCoMKgIDE3LjYwMTg4Ml0gQ2FsbGVyWzAwMDAwMDAwMDA3NDY5
+NjRdOiBtcHRzYXNfc2Nhbl9zYXNfdG9wb2xvZ3krMHgxNjQvMHgzMDAKPiBbwqDCoCAxNy42MDE5
+NDNdIENhbGxlclswMDAwMDAwMDAwNzQ5MDk0XTogbXB0c2FzX3Byb2JlKzB4MmQ0LzB4NDQwCj4g
+W8KgwqAgMTcuNjAyMDA0XSBDYWxsZXJbMDAwMDAwMDAwMDZiZjk0OF06IHBjaV9kZXZpY2VfcHJv
+YmUrMHhjOC8weDE2MAo+IFvCoMKgIDE3LjYwMjA2Nl0gQ2FsbGVyWzAwMDAwMDAwMDA3MGRhYjBd
+OiByZWFsbHlfcHJvYmUrMHgxYjAvMHgyZTAKPiBbwqDCoCAxNy42MDIxMjZdIENhbGxlclswMDAw
+MDAwMDAwNzBkZTEwXTogZHJpdmVyX3Byb2JlX2RldmljZSsweDUwLzB4MTAwCj4gW8KgwqAgMTcu
+NjAyMTg2XSBDYWxsZXJbMDAwMDAwMDAwMDcwZTBhOF06IGRldmljZV9kcml2ZXJfYXR0YWNoKzB4
+NDgvMHg2MAo+IFvCoMKgIDE3LjYwMjI0NV0gQ2FsbGVyWzAwMDAwMDAwMDA3MGUxNDBdOiBfX2Ry
+aXZlcl9hdHRhY2grMHg4MC8weGUwCj4gW8KgwqAgMTcuNjAyMzAyXSBDYWxsZXJbMDAwMDAwMDAw
+MDcwYzQ4NF06IGJ1c19mb3JfZWFjaF9kZXYrMHg0NC8weDgwCj4gW8KgwqAgMTcuNjAyMzYwXSBD
+YWxsZXJbMDAwMDAwMDAwMDcwY2E3NF06IGJ1c19hZGRfZHJpdmVyKzB4MTM0LzB4MjAwCj4gW8Kg
+wqAgMTcuNjAyNDE5XSBDYWxsZXJbMDAwMDAwMDAwMDcwZTc5MF06IGRyaXZlcl9yZWdpc3Rlcisw
+eDcwLzB4MTIwCj4gW8KgwqAgMTcuNjAyNDc4XSBDYWxsZXJbMDAwMDAwMDAwMDlmMmU0Y106IG1w
+dHNhc19pbml0KzB4MTEwLzB4MTM4Cj4gW8KgwqAgMTcuNjAyNTM2XSBDYWxsZXJbMDAwMDAwMDAw
+MDQyNzQ5MF06IGRvX29uZV9pbml0Y2FsbCsweDMwLzB4MTgwCj4gW8KgwqAgMTcuNjAyNTkzXSBD
+YWxsZXJbMDAwMDAwMDAwMDlkYWI5Y106IGtlcm5lbF9pbml0X2ZyZWVhYmxlKzB4MTQ0LzB4MWU0
+Cj4gW8KgwqAgMTcuNjAyNjQ0XSBJbnN0cnVjdGlvbiBEVU1QOgo+IFvCoMKgIDE3LjYwMjY0OF3C
+oCA4MGExYzAwMQo+IFvCoMKgIDE3LjYxMTY5NV3CoCBiOTY1MTAwMwo+IFvCoMKgIDE3LjYxMTcy
+OF3CoCA4MGE2YTAwMAo+IFvCoMKgIDE3LjYxMTc2Ml0gPGMyNWYwMDAwPgo+IFvCoMKgIDE3LjYy
+NTQ5Nl3CoCA4MzMwNzAwZAo+IFvCoMKgIDE3LjYyNTUyOV3CoCAwNDQwMDEyNgo+IFvCoMKgIDE3
+LjYyNTU2Ml3CoCBjMjc3YTc5Zgo+IFvCoMKgIDE3LjY0OTEyN13CoCBjMjVmYTdkZgo+IFvCoMKg
+IDE3LjY0OTE2MV3CoCA4NDEwM2ZmZgo+IFvCoMKgIDE3LjY0OTE5M10KPiBbwqDCoCAxNy42NjQ3
+MjldIEtlcm5lbCBwYW5pYyAtIG5vdCBzeW5jaW5nOiBBdHRlbXB0ZWQgdG8ga2lsbCBpbml0ISBl
+eGl0Y29kZT0weDAwMDAwMDA5Cj4gCgotLSAKTWVlbGlzIFJvb3MgPG1yb29zQGxpbnV4LmVlPgpf
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwppb21tdSBtYWls
+aW5nIGxpc3QKaW9tbXVAbGlzdHMubGludXgtZm91bmRhdGlvbi5vcmcKaHR0cHM6Ly9saXN0cy5s
+aW51eGZvdW5kYXRpb24ub3JnL21haWxtYW4vbGlzdGluZm8vaW9tbXU=
