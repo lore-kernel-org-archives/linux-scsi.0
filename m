@@ -1,86 +1,63 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: RE: scsi_set_medium_removal timeout issue
-Date: Mon, 1 Apr 2019 16:27:49 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1904011627120.1506-100000@iolanthe.rowland.org>
-References: <Pine.LNX.4.44L0.1812041135300.1537-100000@iolanthe.rowland.org>
+From: Long Li <longli@microsoft.com>
+Subject: RE: [PATCH v2 1/1] scsi: storvsc: Fix calculation of sub-channel
+ count
+Date: Mon, 1 Apr 2019 21:38:43 +0000
+Message-ID: <DM5PR21MB06352133A72ED856E43ED396CE550@DM5PR21MB0635.namprd21.prod.outlook.com>
+References: <1554134985-8671-1-git-send-email-mikelley@microsoft.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44L0.1812041135300.1537-100000@iolanthe.rowland.org>
+In-Reply-To: <1554134985-8671-1-git-send-email-mikelley@microsoft.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Zengtao (B)" <prime.zeng@hisilicon.com>
-Cc: Martin Petersen <martin.petersen@oracle.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>, "usb-storage@lists.one-eyed-alien.net" <usb-storage@lists.one-eyed-alien.net>
+To: Michael Kelley <mikelley@microsoft.com>, KY Srinivasan <kys@microsoft.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "James.Bottomley@hansenpartnership.com" <James.Bottomley@hansenpartnership.com>, "emilne@redhat.com" <emilne@redhat.com>, "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 4 Dec 2018, Alan Stern wrote:
-
-> On Thu, 29 Nov 2018, Zengtao (B) wrote:
-> 
-> > Ping?
-> > 
-> > >-----Original Message-----
-> > >From: Alan Stern [mailto:stern@rowland.harvard.edu]
-> > >Sent: Wednesday, November 14, 2018 11:35 PM
-> > >To: Martin Petersen <martin.petersen@oracle.com>; Zengtao (B)
-> > ><prime.zeng@hisilicon.com>
-> > >Cc: jejb@linux.vnet.ibm.com; gregkh@linuxfoundation.org;
-> > >linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org;
-> > >linux-usb@vger.kernel.org; usb-storage@lists.one-eyed-alien.net
-> > >Subject: RE: scsi_set_medium_removal timeout issue
-> > >
-> > >On Wed, 14 Nov 2018, Zengtao (B) wrote:
-> > >
-> > >> I just enabled the scsi log in the middle of the umount operation,
-> > >> otherwise I can't reproduce the issue when the scsi log is enabled.
-> > >>
-> > >> >from the beginning.  In any case, it wasn't what I wanted.  I asked
-> > >> >you to post the dmesg log, not the SCSI log.
-> > >>
-> > >> Please refer to the new attachment for dmesg log.
-> > >
-> > >Heh, yes, I see now.
-> > >
-> > >Martin, shouldn't sd_release() call sd_sync_cache() in the same way that
-> > >sd_shutdown() does, before it calls scsi_set_medium_removal()?
-> > >
-> > >Alan Stern
-> 
-> I don't know if this is the right thing to do, but you can try out the 
-> following patch to see if it helps.
-> 
-> Alan Stern
-> 
-> 
-> 
-> Index: usb-4.x/drivers/scsi/sd.c
-> ===================================================================
-> --- usb-4.x.orig/drivers/scsi/sd.c
-> +++ usb-4.x/drivers/scsi/sd.c
-> @@ -113,6 +113,7 @@ static void sd_shutdown(struct device *)
->  static int sd_suspend_system(struct device *);
->  static int sd_suspend_runtime(struct device *);
->  static int sd_resume(struct device *);
-> +static int sd_sync_cache(struct scsi_disk *sdkp, struct scsi_sense_hdr *sshdr);
->  static void sd_rescan(struct device *);
->  static int sd_init_command(struct scsi_cmnd *SCpnt);
->  static void sd_uninit_command(struct scsi_cmnd *SCpnt);
-> @@ -1393,8 +1394,14 @@ static void sd_release(struct gendisk *d
->  	SCSI_LOG_HLQUEUE(3, sd_printk(KERN_INFO, sdkp, "sd_release\n"));
->  
->  	if (atomic_dec_return(&sdkp->openers) == 0 && sdev->removable) {
-> -		if (scsi_block_when_processing_errors(sdev))
-> +		if (scsi_block_when_processing_errors(sdev)) {
-> +			if (sdkp->WCE && sdkp->media_present) {
-> +				sd_printk(KERN_NOTICE, sdkp,
-> +						"Synchronizing SCSI cache\n");
-> +				sd_sync_cache(sdkp, NULL);
-> +			}
->  			scsi_set_medium_removal(sdev, SCSI_REMOVAL_ALLOW);
-> +		}
->  	}
->  
->  	/*
-
-Zengtao, did you ever try out this patch?  Did it fix your problem?
-
-Alan Stern
+Pj4+LS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4+PkZyb206IE1pY2hhZWwgS2VsbGV5IDxt
+aWtlbGxleUBtaWNyb3NvZnQuY29tPg0KPj4+U2VudDogTW9uZGF5LCBBcHJpbCAxLCAyMDE5IDk6
+MTEgQU0NCj4+PlRvOiBLWSBTcmluaXZhc2FuIDxreXNAbWljcm9zb2Z0LmNvbT47IG1hcnRpbi5w
+ZXRlcnNlbkBvcmFjbGUuY29tOyBMb25nDQo+Pj5MaSA8bG9uZ2xpQG1pY3Jvc29mdC5jb20+OyBK
+YW1lcy5Cb3R0b21sZXlAaGFuc2VucGFydG5lcnNoaXAuY29tOw0KPj4+ZW1pbG5lQHJlZGhhdC5j
+b207IGxpbnV4LWh5cGVydkB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LQ0KPj4+a2VybmVsQHZnZXIu
+a2VybmVsLm9yZzsgbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmcNCj4+PkNjOiBNaWNoYWVsIEtl
+bGxleSA8bWlrZWxsZXlAbWljcm9zb2Z0LmNvbT4NCj4+PlN1YmplY3Q6IFtQQVRDSCB2MiAxLzFd
+IHNjc2k6IHN0b3J2c2M6IEZpeCBjYWxjdWxhdGlvbiBvZiBzdWItY2hhbm5lbCBjb3VudA0KPj4+
+DQo+Pj5XaGVuIHRoZSBudW1iZXIgb2Ygc3ViLWNoYW5uZWxzIG9mZmVyZWQgYnkgSHlwZXItViBp
+cyA+PSB0aGUgbnVtYmVyIG9mDQo+Pj5DUFVzIGluIHRoZSBWTSwgY2FsY3VsYXRlIHRoZSBjb3Jy
+ZWN0IG51bWJlciBvZiBzdWItY2hhbm5lbHMuDQo+Pj5UaGUgY3VycmVudCBjb2RlIHByb2R1Y2Vz
+IG9uZSB0b28gbWFueS4NCj4+Pg0KPj4+VGhpcyBzY2VuYXJpbyBhcmlzZXMgb25seSB3aGVuIHRo
+ZSBudW1iZXIgb2YgQ1BVcyBpcyBhcnRpZmljaWFsbHkgcmVzdHJpY3RlZA0KPj4+KGZvciBleGFt
+cGxlLCB3aXRoIG1heGNwdXM9PG4+IG9uIHRoZSBrZXJuZWwgYm9vdCBsaW5lKSwgYmVjYXVzZSBI
+eXBlci1WDQo+Pj5ub3JtYWxseSBvZmZlcnMgYSBzdWItY2hhbm5lbCBjb3VudCA8IG51bWJlciBv
+ZiBDUFVzLg0KPj4+V2hpbGUgdGhlIGN1cnJlbnQgY29kZSBkb2Vzbid0IGJyZWFrLCB0aGUgZXh0
+cmEgc3ViLWNoYW5uZWwgaXMgdW5iYWxhbmNlZA0KPj4+YWNyb3NzIHRoZSBDUFVzIChmb3IgZXhh
+bXBsZSwgYSB0b3RhbCBvZiA1IGNoYW5uZWxzIG9uIGEgVk0gd2l0aCA0IENQVXMpLg0KPj4+DQo+
+Pj5TaWduZWQtb2ZmLWJ5OiBNaWNoYWVsIEtlbGxleSA8bWlrZWxsZXlAbWljcm9zb2Z0LmNvbT4N
+Cj4+PlJldmlld2VkLWJ5OiBWaXRhbHkgS3V6bmV0c292IDx2a3V6bmV0c0ByZWRoYXQuY29tPg0K
+Pj4+LS0tDQo+Pj5DaGFuZ2VzIGluIHYyOg0KPj4+KiBQdXQgbnVtX29ubGluZV9jcHVzKCkgaW5s
+aW5lIGFuZCBlbGltaW5hdGUgbnVtX2NwdXMgbG9jYWwNCj4+PiAgdmFyaWFibGUgW1ZpdGFseSBL
+dXpuZXRzb3ZdDQo+Pj4NCg0KUmV2aWV3ZWQtYnk6IExvbmcgTGkgPGxvbmdsaUBtaWNyb3NvZnQu
+Y29tPg0KDQo+Pj4tLS0NCj4+PiBkcml2ZXJzL3Njc2kvc3RvcnZzY19kcnYuYyB8IDEzICsrKysr
+KysrKysrLS0NCj4+PiAxIGZpbGUgY2hhbmdlZCwgMTEgaW5zZXJ0aW9ucygrKSwgMiBkZWxldGlv
+bnMoLSkNCj4+Pg0KPj4+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9zdG9ydnNjX2Rydi5jIGIv
+ZHJpdmVycy9zY3NpL3N0b3J2c2NfZHJ2LmMgaW5kZXgNCj4+Pjg0MzgwYmEuLmUxODY3NDMgMTAw
+NjQ0DQo+Pj4tLS0gYS9kcml2ZXJzL3Njc2kvc3RvcnZzY19kcnYuYw0KPj4+KysrIGIvZHJpdmVy
+cy9zY3NpL3N0b3J2c2NfZHJ2LmMNCj4+PkBAIC02NjgsMTMgKzY2OCwyMiBAQCBzdGF0aWMgdm9p
+ZCAgaGFuZGxlX211bHRpY2hhbm5lbF9zdG9yYWdlKHN0cnVjdA0KPj4+aHZfZGV2aWNlICpkZXZp
+Y2UsIGludCBtYXhfY2hucykgIHsNCj4+PiAJc3RydWN0IGRldmljZSAqZGV2ID0gJmRldmljZS0+
+ZGV2aWNlOw0KPj4+IAlzdHJ1Y3Qgc3RvcnZzY19kZXZpY2UgKnN0b3JfZGV2aWNlOw0KPj4+LQlp
+bnQgbnVtX2NwdXMgPSBudW1fb25saW5lX2NwdXMoKTsNCj4+PiAJaW50IG51bV9zYzsNCj4+PiAJ
+c3RydWN0IHN0b3J2c2NfY21kX3JlcXVlc3QgKnJlcXVlc3Q7DQo+Pj4gCXN0cnVjdCB2c3Rvcl9w
+YWNrZXQgKnZzdG9yX3BhY2tldDsNCj4+PiAJaW50IHJldCwgdDsNCj4+Pg0KPj4+LQludW1fc2Mg
+PSAoKG1heF9jaG5zID4gbnVtX2NwdXMpID8gbnVtX2NwdXMgOiBtYXhfY2hucyk7DQo+Pj4rCS8q
+DQo+Pj4rCSAqIElmIHRoZSBudW1iZXIgb2YgQ1BVcyBpcyBhcnRpZmljaWFsbHkgcmVzdHJpY3Rl
+ZCwgc3VjaCBhcw0KPj4+KwkgKiB3aXRoIG1heGNwdXM9MSBvbiB0aGUga2VybmVsIGJvb3QgbGlu
+ZSwgSHlwZXItViBjb3VsZCBvZmZlcg0KPj4+KwkgKiBzdWItY2hhbm5lbHMgPj0gdGhlIG51bWJl
+ciBvZiBDUFVzLiBUaGVzZSBzdWItY2hhbm5lbHMNCj4+PisJICogc2hvdWxkIG5vdCBiZSBjcmVh
+dGVkLiBUaGUgcHJpbWFyeSBjaGFubmVsIGlzIGFscmVhZHkgY3JlYXRlZA0KPj4+KwkgKiBhbmQg
+YXNzaWduZWQgdG8gb25lIENQVSwgc28gY2hlY2sgYWdhaW5zdCAjIENQVXMgLSAxLg0KPj4+Kwkg
+Ki8NCj4+PisJbnVtX3NjID0gbWluKChpbnQpKG51bV9vbmxpbmVfY3B1cygpIC0gMSksIG1heF9j
+aG5zKTsNCj4+PisJaWYgKCFudW1fc2MpDQo+Pj4rCQlyZXR1cm47DQo+Pj4rDQo+Pj4gCXN0b3Jf
+ZGV2aWNlID0gZ2V0X291dF9zdG9yX2RldmljZShkZXZpY2UpOw0KPj4+IAlpZiAoIXN0b3JfZGV2
+aWNlKQ0KPj4+IAkJcmV0dXJuOw0KPj4+LS0NCj4+PjEuOC4zLjENCg0K
