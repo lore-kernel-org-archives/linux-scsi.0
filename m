@@ -1,29 +1,41 @@
-From: Marc Gonzalez <marc.w.gonzalez@free.fr>
-Subject: correcting incorrect peripheral device type 0x0
-Date: Tue, 2 Apr 2019 17:05:05 +0200
-Message-ID: <ab8d589f-db76-9a95-1b55-3e906ad89487@free.fr>
+From: Avri Altman <Avri.Altman@wdc.com>
+Subject: RE: correcting incorrect peripheral device type 0x0
+Date: Tue, 2 Apr 2019 15:40:34 +0000
+Message-ID: <SN6PR04MB4925C5CD48062BA0DE8DEFF3FC560@SN6PR04MB4925.namprd04.prod.outlook.com>
+References: <ab8d589f-db76-9a95-1b55-3e906ad89487@free.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <ab8d589f-db76-9a95-1b55-3e906ad89487@free.fr>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Martin Petersen <martin.petersen@oracle.com>, Avri Altman <avri.altman@wdc.com>, Alim Akhtar <alim.akhtar@samsung.com>
+To: Marc Gonzalez <marc.w.gonzalez@free.fr>, Martin Petersen <martin.petersen@oracle.com>, Alim Akhtar <alim.akhtar@samsung.com>
 Cc: SCSI <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hello,
-
-In my boot log, when UFS is enabled, I get the following warnings:
-
-scsi 0:0:0:49488: scsi_add_lun: correcting incorrect peripheral device type 0x0 for W-LUN 0x            c150hN
-scsi 0:0:0:49488: Well-known LUN    SAMSUNG  KLUCG4J1EB-B0B1  0200 PQ: 0 ANSI: 6
-scsi 0:0:0:49476: scsi_add_lun: correcting incorrect peripheral device type 0x0 for W-LUN 0x            c144hN
-scsi 0:0:0:49476: Well-known LUN    SAMSUNG  KLUCG4J1EB-B0B1  0200 PQ: 0 ANSI: 6
-scsi 0:0:0:49456: scsi_add_lun: correcting incorrect peripheral device type 0x0 for W-LUN 0x            c130hN
-scsi 0:0:0:49456: Well-known LUN    SAMSUNG  KLUCG4J1EB-B0B1  0200 PQ: 0 ANSI: 6
-
-Is there something I can/should do to fix these issues?
-Or may they be safely ignored?
-
-Regards.
+SGksDQpMb29raW5nIHdoZXJlIHRoaXMgd2FybmluZyBpcyBjb21pbmcgZnJvbSwNClNjc2kgaXMg
+anVzdCBmb3JjaW5nIHNkZXYtPnR5cGUgPSBUWVBFX1dMVU4gZm9yIHdsdW5zLg0KQXMgbm8gb3Ro
+ZXIgZHJpdmVyIHNldHMgaXQgYnkgaXRzZWxmIC0gSSB3b3VsZG4ndCBsb3NlIHNsZWVwIG92ZXIg
+aXQuDQpUaGFua3MsDQpBdnJpDQoNCg0KPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBG
+cm9tOiBNYXJjIEdvbnphbGV6IDxtYXJjLncuZ29uemFsZXpAZnJlZS5mcj4NCj4gU2VudDogVHVl
+c2RheSwgQXByaWwgMDIsIDIwMTkgNjowNSBQTQ0KPiBUbzogTWFydGluIFBldGVyc2VuIDxtYXJ0
+aW4ucGV0ZXJzZW5Ab3JhY2xlLmNvbT47IEF2cmkgQWx0bWFuDQo+IDxBdnJpLkFsdG1hbkB3ZGMu
+Y29tPjsgQWxpbSBBa2h0YXIgPGFsaW0uYWtodGFyQHNhbXN1bmcuY29tPg0KPiBDYzogU0NTSSA8
+bGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmc+OyBMS01MIDxsaW51eC1rZXJuZWxAdmdlci5rZXJu
+ZWwub3JnPg0KPiBTdWJqZWN0OiBjb3JyZWN0aW5nIGluY29ycmVjdCBwZXJpcGhlcmFsIGRldmlj
+ZSB0eXBlIDB4MA0KPiANCj4gSGVsbG8sDQo+IA0KPiBJbiBteSBib290IGxvZywgd2hlbiBVRlMg
+aXMgZW5hYmxlZCwgSSBnZXQgdGhlIGZvbGxvd2luZyB3YXJuaW5nczoNCj4gDQo+IHNjc2kgMDow
+OjA6NDk0ODg6IHNjc2lfYWRkX2x1bjogY29ycmVjdGluZyBpbmNvcnJlY3QgcGVyaXBoZXJhbCBk
+ZXZpY2UgdHlwZQ0KPiAweDAgZm9yIFctTFVOIDB4ICAgICAgICAgICAgYzE1MGhODQo+IHNjc2kg
+MDowOjA6NDk0ODg6IFdlbGwta25vd24gTFVOICAgIFNBTVNVTkcgIEtMVUNHNEoxRUItQjBCMSAg
+MDIwMCBQUToNCj4gMCBBTlNJOiA2DQo+IHNjc2kgMDowOjA6NDk0NzY6IHNjc2lfYWRkX2x1bjog
+Y29ycmVjdGluZyBpbmNvcnJlY3QgcGVyaXBoZXJhbCBkZXZpY2UgdHlwZQ0KPiAweDAgZm9yIFct
+TFVOIDB4ICAgICAgICAgICAgYzE0NGhODQo+IHNjc2kgMDowOjA6NDk0NzY6IFdlbGwta25vd24g
+TFVOICAgIFNBTVNVTkcgIEtMVUNHNEoxRUItQjBCMSAgMDIwMCBQUToNCj4gMCBBTlNJOiA2DQo+
+IHNjc2kgMDowOjA6NDk0NTY6IHNjc2lfYWRkX2x1bjogY29ycmVjdGluZyBpbmNvcnJlY3QgcGVy
+aXBoZXJhbCBkZXZpY2UgdHlwZQ0KPiAweDAgZm9yIFctTFVOIDB4ICAgICAgICAgICAgYzEzMGhO
+DQo+IHNjc2kgMDowOjA6NDk0NTY6IFdlbGwta25vd24gTFVOICAgIFNBTVNVTkcgIEtMVUNHNEox
+RUItQjBCMSAgMDIwMCBQUToNCj4gMCBBTlNJOiA2DQo+IA0KPiBJcyB0aGVyZSBzb21ldGhpbmcg
+SSBjYW4vc2hvdWxkIGRvIHRvIGZpeCB0aGVzZSBpc3N1ZXM/DQo+IE9yIG1heSB0aGV5IGJlIHNh
+ZmVseSBpZ25vcmVkPw0KPiANCj4gUmVnYXJkcy4NCg==
