@@ -1,87 +1,54 @@
-From: <Kento.A.Kobayashi@sony.com>
-Subject: RE: [PATCH] usb: uas: fix usb subsystem hang after power off hub
- port
-Date: Tue, 2 Apr 2019 00:28:04 +0000
-Message-ID: <AE5419EAB4965843B3C0C1FE29F1FFE58914EB@JPYOKXMS103.jp.sony.com>
-References: <AE5419EAB4965843B3C0C1FE29F1FFE5872241@JPYOKXMS103.jp.sony.com>
-         <1552063928.29776.2.camel@suse.com>
-         <AE5419EAB4965843B3C0C1FE29F1FFE587268B@JPYOKXMS103.jp.sony.com>
-         <1552405047.21557.7.camel@suse.com>
-         <AE5419EAB4965843B3C0C1FE29F1FFE5873FFB@JPYOKXMS103.jp.sony.com>
-         <AE5419EAB4965843B3C0C1FE29F1FFE588EA40@JPYOKXMS103.jp.sony.com>
-         <1553510086.2668.2.camel@suse.com>
-         <AE5419EAB4965843B3C0C1FE29F1FFE588FCC9@JPYOKXMS103.jp.sony.com>
- <1553786139.14990.6.camel@suse.com>
+From: Ming Lei <tom.leiming-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: 5.1-rc1: mpt init crash in scsi_map_dma, dma_4v_map_sg on sparc64
+Date: Tue, 2 Apr 2019 17:40:55 +0800
+Message-ID: <CACVXFVPBj3N=tWEaj-yKK-2K_uaMUdYPp7zC4L1eCZG3_eXsvw@mail.gmail.com>
+References: <dbed1f7e-cf7b-0e87-841e-e4dd1eb1ed23@linux.ee>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1553786139.14990.6.camel@suse.com>
-Content-Language: ja-JP
-Sender: linux-kernel-owner@vger.kernel.org
-To: oneukum@suse.com, gregkh@linuxfoundation.org, stern@rowland.harvard.edu
-Cc: usb-storage@lists.one-eyed-alien.net, Jacky.Cao@sony.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org, Kento.A.Kobayashi@sony.com
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <dbed1f7e-cf7b-0e87-841e-e4dd1eb1ed23-Y27EyoLml9s@public.gmane.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
+List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Meelis Roos <mroos-Y27EyoLml9s@public.gmane.org>
+Cc: sparclinux-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, MPT-FusionLinux.pdl-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-SGksDQoNCj4+IEhpLA0KPj4gDQo+PiA+IFNvcnJ5LA0KPj4gPiANCj4+ID4gSSB0aG91Z2h0IHRo
-aXMgd2FzIGNsZWFyLiBZb3VyIHBhdGNoIGlzIG1ha2luZyB0aGUgYXNzdW1wdGlvbiB0aGF0IHRo
-ZSByZXNldCBpcyB0cmlnZ2VyZWQgYnkgdGhlIFNDU0kgbGF5ZXIuIFlvdSBjYW5ub3QgbWFrZSB0
-aGF0IGFzc3VtcHRpb24sIGFzIHRoZXJlIGlzIGFuIGlvY3RsIGZvciByZXNldHRpbmcgYSBVU0Ig
-ZGV2aWNlLg0KPj4gPiBJbiBjYXNlIHdlIGFyZSBnZXR0aW5nIGFuIGVycm9yIGR1cmluZyB0aGUg
-cmVzZXQgKG91ciBlbmRwb2ludHMgdmFuaXNoKSwgdGhlIGRldmljZSBkcml2ZXIgbXVzdCByZXBv
-cnQgdGhhdCB0byB0aGUgVVNCIGxheWVyLCBzbyB0aGUgZHJpdmVyIHdpbGwgYWx3YXlzIGJlIGRp
-c2Nvbm5lY3RlZC4NCj4+ID4gV2UgY2Fubm90IGRyb3AgZXJyb3JzLg0KPj4gPiANCj4+ID4gCVJl
-Z2FyZHMNCj4+ID4gCQlPbGl2ZXINCj4+IA0KPj4gVGhpcyBwYXRjaCBtb2RpZmllZCB1YXNfcG9z
-dF9yZXNldCB0byBza2lwIHJlYmluZCBvcGVyYXRpb24gdG8gYXZvaWQgZXhjZXB0aW9uIHdoaWxl
-IC1FTk9ERVYgaGFwcGVucyBub3QgZHJvcCBlcnJvci4NCj4+IElmIHVhc19wb3N0X3Jlc2V0IGhh
-cHBlbnMgLUVOT0RFViwgdXNiX3Jlc2V0X2FuZF92ZXJpZnlfZGV2aWNlIG11c3QgaGFwcGVuIGVy
-cm9yLg0KPj4gU28sd2hlbiB3ZSB1c2UgaW9jdGwoVVNCREVWRlNfUkVTRVQpIHRvIHJlc2V0IGRl
-dmljZSwgaWYgdXNiX3Jlc2V0X2FuZF92ZXJpZnlfZGV2aWNlIGhhcHBlbnMgZXJyb3IsIHRoZSBl
-cnJvciB3aWxsIGJlIHJlcG9ydGVkIHRocm91Z2ggaW9jdGwgcmV0dXJuIHZhbHVlLiANCj4NCj5P
-SywgSXQgaXMgcG9zc2libGUgdGhhdCBJIGFtIHN0dXBpZC4gV2UgbXVzdCByZWJpbmQgaWYgdWFz
-X3Bvc3RfcmVzZXQoKSBmYWlscy4gVGhlIGRyaXZlciB3aWxsIGNyYXNoIHdpdGhvdXQgdGhlIGVu
-ZHBvaW50cy4gQ2FuIHlvdSBwbGVhc2UgZXhwbGFpbiBhZ2FpbiBpbiBncmVhdGVyIGRldGFpbCwg
-d2hhdCB5b3UgYXJlIHRyeWluZyB0byBhY2hpZXZlPw0KDQpGb2xsb3cgaXMgZGV0YWlscyBmb3Ig
-dGhpcyBwYXRjaC4NCg0KSXNzdWUNCi0gVVNCIHN1YnN5c3RlbSBoYW5ncyBpZiBwb3dlciBvZmYg
-dGhlIGh1YiBwb3J0IGNvbm5lY3RpbmcgVUFTIFVTQjMuMC8zLjEgZGV2aWNlIGJ5IGNhbGxpbmcg
-aW9jdGwoVVNCREVWRlNfQ09OVFJPTCkgdG8gZG8gSHViIENsYXNzIFJlcXVlc3QoQ0xFQVJfRkVB
-VFVSRTpQT1JUX1BPV0VSKSB3aGlsZSB0aGUgZGV2aWNlIGlzIGJlaW5nIGFjY2Vzc2VkLiANCi0g
-U3RhdHVzIG9mIHRoZSBwcm9jZXNzIHRoYXQgaXMgYWNjZXNzaW5nIHRoZSBkZXZpY2UgYmVjb21l
-cyBERUFEIGFuZCBjYW5ub3QgYmUga2lsbGVkLg0KDQpSb290IENhdXNlDQotIEJsb2NrIGxheWVy
-IHRpbWVvdXQgaGFwcGVucyBhZnRlciBwb3dlciBvZmYgVUFTIFVTQiBkZXZpY2Ugd2hpY2ggaXMg
-YWNjZXNzZWQgYXMgcmVwcm9kdWNlIHN0ZXAuIER1cmluZyB0aW1lb3V0IGVycm9yIGhhbmRsZXIg
-cHJvY2Vzcywgc2NzaSBob3N0IHN0YXRlIGJlY29tZXMgU0hPU1RfQ0FOQ0VMX1JFQ09WRVJZIHRo
-YXQgY2F1c2VzIElPIGhhbmdzIHVwIGFuZCBsb2NrIGNhbm5vdCBiZSByZWxlYXNlZC4gQW5kIGlu
-IGZpbmFsLCB1c2Igc3Vic3lzdGVtIGhhbmdzIHVwLg0KRm9sbG93IGlzIGZ1bmN0aW9uIGNhbGw6
-DQpibGtfbXFfdGltZW91dF93b3JrIA0KICDigKYtPnNjc2lfdGltZXNfb3V0ICAo4oCmIG1lYW5z
-IHNvbWUgZnVuY3Rpb25zIGFyZSBub3QgbGlzdGVkIGJlZm9yZSB0aGlzIGZ1bmN0aW9uLikNCiAg
-ICDigKYtPiBzY3NpX2VoX3NjbWRfYWRkKHNjc2lfaG9zdF9zZXRfc3RhdGUgdG8gU0hPU1RfUkVD
-T1ZFUlkpIA0KICAgICAg4oCmIC0+IHNjc2lfZXJyb3JfaGFuZGxlcg0KICAgICAgICDigKYtPiB1
-YXNfZWhfZGV2aWNlX3Jlc2V0X2hhbmRsZXINCiAgICAgICAgICAgIC0+IHVzYl9sb2NrX2Rldmlj
-ZV9mb3JfcmVzZXQgIDwtIHRha2UgbG9jaw0KICAgICAgICAgICAgICAtPiB1c2JfcmVzZXRfZGV2
-aWNlDQogICAgICAgICAgICAgICAg4oCmLT4gcmViaW5kID0gdWFzX3Bvc3RfcmVzZXQgKHJldHVy
-biAxIHNpbmNlIEVOT0RFVikgDQogICAgICAgICAgICAgICAg4oCmLT4gdXNiX3VuYmluZF9hbmRf
-cmViaW5kX21hcmtlZF9pbnRlcmZhY2VzIChyZWJpbmQ9MSkNCiAgICAgICAgICAgICAgICAgICDi
-gKYtPiB1YXNfZGlzY29ubmVjdCAgKHNjc2lfaG9zdF9zZXRfc3RhdGUgdG8gU0hPU1RfQ0FOQ0VM
-X1JFQ09WRVJZKQ0KICAgICAgICAgICAgICAgICAgICAgICAg4oCmIC0+IHNjc2lfcXVldWVfcnEN
-CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgLT4gc2NzaV9ob3N0X3F1ZXVlX3JlYWR5KHJl
-dHVybiAwIGNhdXNlcyBJTyBoYW5ncyB1cC4pDQogICAgICAgICAgICAtPiB1c2JfdW5sb2NrX2Rl
-dmljZSAgICAgICAgICA8LSBsb2NrIGNhbm5vdCBiZSByZWxlYXNlIHNpbmNlIHVzYl9yZXNldF9k
-ZXZpY2Ugbm90IGZpbmlzaC4NCg0KDQpDb3VudGVybWVhc3VyZQ0KLSBNYWtlIHVhc19wb3N0X3Jl
-c2V0IGRvZXNu4oCZdCByZXR1cm4gMSB3aGVuIEVOT0RFViByZXR1cm5zIGZyb20gdWFzX2NvbmZp
-Z3VyZV9lbmRwb2ludHMgc2luY2UgdXNiX3VuYmluZF9hbmRfcmViaW5kX21hcmRlZF9pbnRlcmZh
-Y2VzIGRvZXNu4oCZdCBuZWVkIHRvIGRvIHVuYmluZC9yZWJpbmQgb3BlcmF0aW9ucyBpbiB0aGlz
-IHNpdHVhdGlvbi4NCmJsa19tcV90aW1lb3V0X3dvcmsNCiAg4oCmLT5zY3NpX3RpbWVzX291dCAg
-KOKApiBtZWFucyBzb21lIGZ1bmN0aW9ucyBhcmUgbm90IGxpc3RlZCBiZWZvcmUgdGhpcyBmdW5j
-dGlvbi4pDQogICAg4oCmLT4gc2NzaV9laF9zY21kX2FkZChzY3NpX2hvc3Rfc2V0X3N0YXRlIHRv
-IFNIT1NUX1JFQ09WRVJZKSANCiAgICAgIOKApiAtPiBzY3NpX2Vycm9yX2hhbmRsZXINCiAgICAg
-ICDigKYtPiB1YXNfZWhfZGV2aWNlX3Jlc2V0X2hhbmRsZXIgKCoxKQ0KICAgICAgICAgICAtPiB1
-c2JfbG9ja19kZXZpY2VfZm9yX3Jlc2V0ICA8LSB0YWtlIGxvY2sNCiAgICAgICAgICAgICAtPiB1
-c2JfcmVzZXRfZGV2aWNlDQogICAgICAgICAgICAgICAtPiB1c2JfcmVzZXRfYW5kX3ZlcmlmeV9k
-ZXZpY2UgKHJldHVybiBFTk9ERVYgYW5kIEZBSUxFRCB3aWxsIGJlIHJlcG9ydGVkIHRvICoxKQ0K
-ICAgICAgICAgICAgICAgLT4gdWFzX3Bvc3RfcmVzZXQgcmV0dXJucyAwIHdoZW4gRU5PREVWID0+
-IHJlYmluZD0wIA0KICAgICAgICAgICAgICAgLT4gdXNiX3VuYmluZF9hbmRfcmViaW5kX21hcmtl
-ZF9pbnRlcmZhY2VzIChyZWJpbmQ9MCkNCiAgICAgICAgICAgLT4gdXNiX3VubG9ja19kZXZpY2Ug
-ICAgICAgICAgPC0gcmVsZWFzZSBsb2NrDQoNCg0KV2UgY2FuIGdldCBlcnJvcigtRU5PREVWKSBh
-dCB1YXNfZWhfZGV2aWNlX3Jlc2V0X2hhbmRsZXIgZnJvbSB1c2JfcmVzZXRfYW5kX3ZlcmlmeV9k
-ZXZpY2UuDQoNClJlZ2FyZHMsDQpLZW50byBLb2JheWFzaGkNCg==
+On Tue, Mar 19, 2019 at 7:20 PM Meelis Roos <mroos-Y27EyoLml9s@public.gmane.org> wrote:
+>
+> Tried 5.1-rc1 on a bunch of sparcs, this hits all my sparcs with sun4v and mpt scsi.
+>
+> [    2.733263] Fusion MPT base driver 3.04.20
+> [    2.742995] Copyright (c) 1999-2008 LSI Corporation
+> [    2.743052] Fusion MPT SAS Host driver 3.04.20
+> [    2.743881] mptbase: ioc0: Initiating bringup
+> [    3.737822] ioc0: LSISAS1064 A3: Capabilities={Initiator}
+> [   17.566584] scsi host0: ioc0: LSISAS1064 A3, FwRev=010a0000h, Ports=1, MaxQ=511, IRQ=27
+> [   17.595897] mptsas: ioc0: attaching ssp device: fw_channel 0, fw_id 0, phy 0, sas_addr 0x5000c5001799a45d
+> [   17.598465] Unable to handle kernel NULL pointer dereference
+> [   17.598623] tsk->{mm,active_mm}->context = 0000000000000000
+> [   17.598723] tsk->{mm,active_mm}->pgd = ffff800008802000
+> [   17.598774]               \|/ ____ \|/
+> [   17.598774]               "@'/ .. \`@"
+> [   17.598774]               /_| \__/ |_\
+> [   17.598774]                  \__U_/
+> [   17.598894] swapper/0(1): Oops [#1]
+> [   17.598937] CPU: 12 PID: 1 Comm: swapper/0 Not tainted 5.1.0-rc1 #118
+> [   17.598994] TSTATE: 0000000080e01601 TPC: 00000000004483a8 TNPC: 00000000004483ac Y: 00000000    Not tainted
+> [   17.599086] TPC: <dma_4v_map_sg+0xe8/0x5c0>
+
+You may use gdb to figure out what the NULL pointer points to:
+
+gdb vmlinux
+> l *(dma_4v_map_sg+0xe8)
+
+
+Thanks,
+Ming Lei
