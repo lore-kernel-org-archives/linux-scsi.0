@@ -1,38 +1,34 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 0/2] scsi: dt-bindings: ufs: Remove
- "<name>-fixed-regulator" property and add VCC capability on MediaTek UFS
- driver
-Date: Wed, 03 Apr 2019 23:26:40 -0400
-Message-ID: <yq1imvutpqn.fsf@oracle.com>
-References: <1553873568-9177-1-git-send-email-stanley.chu@mediatek.com>
+Subject: Re: [PATCH] scsi: add new RDAC LENOVO/DE_Series device
+Date: Wed, 03 Apr 2019 23:29:07 -0400
+Message-ID: <yq1d0m2tpmk.fsf@oracle.com>
+References: <20190330144331.20276-1-xose.vazquez@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <1553873568-9177-1-git-send-email-stanley.chu@mediatek.com>
- (Stanley Chu's message of "Fri, 29 Mar 2019 23:32:46 +0800")
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Stanley Chu <stanley.chu@mediatek.com>
-Cc: devicetree@vger.kernel.org, linux-scsi@vger.kernel.org, martin.petersen@oracle.com, robh@kernel.org, vivek.gautam@codeaurora.org, subhashj@codeaurora.org, chun-hung.wu@mediatek.com, kuohong.wang@mediatek.com, evgreen@chromium.org, avri.altman@wdc.com, robh+dt@kernel.org, linux-mediatek@lists.infradead.org, peter.wang@mediatek.com, alim.akhtar@samsung.com, matthias.bgg@gmail.com, sayalil@codeaurora.org, pedrom.sousa@synopsys.com, linux-arm-kernel@lists.infradead.org, beanhuo@micron.com
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <20190330144331.20276-1-xose.vazquez@gmail.com> (Xose Vazquez
+	Perez's message of "Sat, 30 Mar 2019 15:43:31 +0100")
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Cc: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, SCSI ML <linux-scsi@vger.kernel.org>, "Martin K . Petersen" <martin.petersen@oracle.com>, NetApp RDAC team <ng-eseries-upstream-maintainers@netapp.com>, DM ML <dm-devel@redhat.com>, Martin Wilck <mwilck@suse.com>
 List-Id: linux-scsi@vger.kernel.org
 
 
-Stanley,
+Xose,
 
-> Now we can remove custom device tree property "<name>-fixed-regulator" for
-> UFS because,
+> Blacklist "Universal Xport" LUN, it's used for in-band storage array
+> management.  And add it to the rdac dh family.
 
-> Besides, add VCC supply capability on MediaTek UFS driver.
-
-Applied to 5.2/scsi-queue, thanks!
+Applied to 5.1/scsi-fixes, thanks.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
