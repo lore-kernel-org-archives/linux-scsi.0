@@ -1,32 +1,24 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: add new RDAC LENOVO/DE_Series device
-Date: Wed, 03 Apr 2019 23:29:07 -0400
-Message-ID: <yq1d0m2tpmk.fsf@oracle.com>
-References: <20190330144331.20276-1-xose.vazquez@gmail.com>
+Subject: Re: [PATCH v2 1/1] scsi: storvsc: Fix calculation of sub-channel count
+Date: Wed, 03 Apr 2019 23:30:35 -0400
+Message-ID: <yq18swqtpk4.fsf@oracle.com>
+References: <1554134985-8671-1-git-send-email-mikelley@microsoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20190330144331.20276-1-xose.vazquez@gmail.com> (Xose Vazquez
-	Perez's message of "Sat, 30 Mar 2019 15:43:31 +0100")
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Cc: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, SCSI ML <linux-scsi@vger.kernel.org>, "Martin K . Petersen" <martin.petersen@oracle.com>, NetApp RDAC team <ng-eseries-upstream-maintainers@netapp.com>, DM ML <dm-devel@redhat.com>, Martin Wilck <mwilck@suse.com>
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1554134985-8671-1-git-send-email-mikelley@microsoft.com>
+        (Michael Kelley's message of "Mon, 1 Apr 2019 16:10:52 +0000")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Michael Kelley <mikelley@microsoft.com>
+Cc: KY Srinivasan <kys@microsoft.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, Long Li <longli@microsoft.com>, "James.Bottomley@hansenpartnership.com" <James.Bottomley@hansenpartnership.com>, "emilne@redhat.com" <emilne@redhat.com>, "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
 
-Xose,
+Michael,
 
-> Blacklist "Universal Xport" LUN, it's used for in-band storage array
-> management.  And add it to the rdac dh family.
+> When the number of sub-channels offered by Hyper-V is >= the number of
+> CPUs in the VM, calculate the correct number of sub-channels.  The
+> current code produces one too many.
 
 Applied to 5.1/scsi-fixes, thanks.
 
