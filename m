@@ -1,29 +1,25 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 1/1] scsi: storvsc: Reduce default ring buffer size to 128 Kbytes
-Date: Wed, 03 Apr 2019 23:31:39 -0400
-Message-ID: <yq14l7etpic.fsf@oracle.com>
-References: <1554154871-10305-1-git-send-email-mikelley@microsoft.com>
+Subject: Re: correcting incorrect peripheral device type 0x0
+Date: Wed, 03 Apr 2019 23:34:09 -0400
+Message-ID: <yq1zhp6satq.fsf@oracle.com>
+References: <ab8d589f-db76-9a95-1b55-3e906ad89487@free.fr>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1554154871-10305-1-git-send-email-mikelley@microsoft.com>
-        (Michael Kelley's message of "Mon, 1 Apr 2019 21:42:06 +0000")
+In-Reply-To: <ab8d589f-db76-9a95-1b55-3e906ad89487@free.fr> (Marc Gonzalez's
+        message of "Tue, 2 Apr 2019 17:05:05 +0200")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Michael Kelley <mikelley@microsoft.com>
-Cc: KY Srinivasan <kys@microsoft.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, Long Li <longli@microsoft.com>, "James.Bottomley@hansenpartnership.com" <James.Bottomley@hansenpartnership.com>, "emilne@redhat.com" <emilne@redhat.com>, "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Marc Gonzalez <marc.w.gonzalez@free.fr>
+Cc: Martin Petersen <martin.petersen@oracle.com>, Avri Altman <avri.altman@wdc.com>, Alim Akhtar <alim.akhtar@samsung.com>, SCSI <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
 
-Michael,
+Marc,
 
-> Reduce the default VMbus channel ring buffer size for storvsc SCSI
-> devices from 1 Mbyte to 128 Kbytes. Measurements show that ring buffer
-> sizes above 128 Kbytes do not increase performance even at very high
-> IOPS rates, so don't waste the memory. Also remove the dependence on
-> PAGE_SIZE, since the ring buffer size should not change on
-> architectures where PAGE_SIZE is not 4 Kbytes.
+> scsi 0:0:0:49488: scsi_add_lun: correcting incorrect peripheral device type 0x0 for W-LUN 0x            c150hN
 
-Applied to 5.1/scsi-fixes, thanks.
+             ^^^^^ Where do these crazy LUN numbers come from? That
+             looks like something which needs fixing...
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
