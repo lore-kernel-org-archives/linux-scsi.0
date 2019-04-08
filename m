@@ -1,58 +1,58 @@
-From: Jin Cai <caijin.laurence-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [RFC PATCH 1/1] scsi: sd: associate sd_probe_domain with scsi_disk
-Date: Mon, 8 Apr 2019 19:58:08 +0800
-Message-ID: <CAGRcXKYeDHYMP-KWfWmws3jnPr2AYMgCBpYhX0RcseNVVD=UBw@mail.gmail.com>
-References: <1554419045-20873-1-git-send-email-minggr@gmail.com>
- <1554419045-20873-2-git-send-email-minggr@gmail.com> <c30820a9-5d35-c42f-b0a5-8d4ecdac36dd@acm.org>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Subject: Re: [PATCH] scsi/NCR5380: Avoid compiler warning when
+ -Wimplicit-fallthrough is enabled
+Date: Mon, 8 Apr 2019 18:44:47 -0500
+Message-ID: <fd71e91a-92e4-9e96-7d5a-4d9a58f7128f@embeddedor.com>
+References: <4e853f171366e040818346def7fb043347670662.1551995342.git.fthain@telegraphics.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <open-iscsi+bncBDG73N5U6QNBBP62V3SQKGQEQUT3AJY-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-In-Reply-To: <c30820a9-5d35-c42f-b0a5-8d4ecdac36dd-HInyCGIudOg@public.gmane.org>
-List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <https://groups.google.com/group/open-iscsi
-List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
- <https://groups.google.com/group/open-iscsi/subscribe>
-To: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-Cc: Ming Lin <minggr-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, wangqiang62-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, Lee Duncan <lduncan-IBi9RG/b67k@public.gmane.org>, "James E.J. Bottomley" <jejb-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4e853f171366e040818346def7fb043347670662.1551995342.git.fthain@telegraphics.com.au>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Finn Thain <fthain@telegraphics.com.au>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Michael Schmitz <schmitzmic@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi, Bart
+Hi all,
 
-    It seems that the commit 21e6ba3 in branch 5.2/scsi-queue has
-addressed the deadlock issue we encountered.
+Friendly ping:
 
-    We will backport that patch to our kernel version and verify it
-with our test cases.
+Who can take this?
 
-    Thanks
+Thanks
 
-Best regards
-
-
-
-
-On Sun, Apr 7, 2019 at 12:00 PM Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org> wrote:
->
-> On 4/4/19 4:04 PM, Ming Lin wrote:
-> >       async_synchronize_full_domain(&scsi_sd_pm_domain);
-> > -     async_synchronize_full_domain(&scsi_sd_probe_domain);
-> > +     async_synchronize_full_domain(&sdkp->sd_probe_domain);
-> >       device_del(&sdkp->dev);
-> >       del_gendisk(sdkp->disk);
->
-> SCSI patches should be prepared against Martin's most recent scsi-queue
-> branch. If you have a look at that branch you will see that
-> scsi_sd_pm_domain and scsi_sd_probe_domain are gone.
->
-> Bart.
-
--- 
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-Visit this group at https://groups.google.com/group/open-iscsi.
-For more options, visit https://groups.google.com/d/optout.
+On 3/7/19 3:49 PM, Finn Thain wrote:
+> Adjust comments accordingly.
+> 
+> Cc: Gustavo A. R. Silva <gustavo@embeddedor.com>
+> Cc: Michael Schmitz <schmitzmic@gmail.com>
+> Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
+> ---
+>  drivers/scsi/NCR5380.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
+> index 7fed9bb72784..fe0535affc14 100644
+> --- a/drivers/scsi/NCR5380.c
+> +++ b/drivers/scsi/NCR5380.c
+> @@ -1932,13 +1932,13 @@ static void NCR5380_information_transfer(struct Scsi_Host *instance)
+>  					if (!hostdata->connected)
+>  						return;
+>  
+> -					/* Fall through to reject message */
+> -
+> +					/* Reject message */
+> +					/* Fall through */
+> +				default:
+>  					/*
+>  					 * If we get something weird that we aren't expecting,
+> -					 * reject it.
+> +					 * log it.
+>  					 */
+> -				default:
+>  					if (tmp == EXTENDED_MESSAGE)
+>  						scmd_printk(KERN_INFO, cmd,
+>  						            "rejecting unknown extended message code %02x, length %d\n",
+> 
