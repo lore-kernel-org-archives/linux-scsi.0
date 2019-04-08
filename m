@@ -1,128 +1,54 @@
-From: "'Jaesoo Lee' via open-iscsi" <open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Subject: [bug report][scsi blk_mq] data corruption due to a bug in SCSI LLD
- error handling
-Date: Wed, 3 Apr 2019 13:18:56 -0700
-Message-ID: <CAJX3CtjkBYRa21OetDfCZ0W5UZyjzCwBw8C9ZnBKnDOcrKJP3A@mail.gmail.com>
+From: Jin Cai <caijin.laurence-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [RFC PATCH 1/1] scsi: sd: associate sd_probe_domain with scsi_disk
+Date: Mon, 8 Apr 2019 19:58:08 +0800
+Message-ID: <CAGRcXKYeDHYMP-KWfWmws3jnPr2AYMgCBpYhX0RcseNVVD=UBw@mail.gmail.com>
+References: <1554419045-20873-1-git-send-email-minggr@gmail.com>
+ <1554419045-20873-2-git-send-email-minggr@gmail.com> <c30820a9-5d35-c42f-b0a5-8d4ecdac36dd@acm.org>
 Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Return-path: <open-iscsi+bncBDT53WV544ORBP62V3SQKGQEN55ZUPY-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Return-path: <open-iscsi+bncBDG73N5U6QNBBP62V3SQKGQEQUT3AJY-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+In-Reply-To: <c30820a9-5d35-c42f-b0a5-8d4ecdac36dd-HInyCGIudOg@public.gmane.org>
 List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 List-Archive: <https://groups.google.com/group/open-iscsi
 List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
  <https://groups.google.com/group/open-iscsi/subscribe>
-To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Lee Duncan <lduncan-IBi9RG/b67k@public.gmane.org>, Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+Cc: Ming Lin <minggr-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, wangqiang62-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, Lee Duncan <lduncan-IBi9RG/b67k@public.gmane.org>, "James E.J. Bottomley" <jejb-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hello All,
+Hi, Bart
 
-I encountered this bug while trying to enable dm_blk_mq for our
-iSCSI/FCP targets.
+    It seems that the commit 21e6ba3 in branch 5.2/scsi-queue has
+addressed the deadlock issue we encountered.
 
-The bug is that the sg_io issued to scsi_blk_mq would succeed even if
-LLD wants to error out those requests.
+    We will backport that patch to our kernel version and verify it
+with our test cases.
 
-Let me explain the scenario in more details.
+    Thanks
 
-Setup:
-0. Host kernel configuration
-- 4.19.9, 4.20.16
-- boot parameter: dm_mod.use_blk_mq=Y scsi_mod.use_blk_mq=Y
-scsi_transport_iscsi.debug_session=1 scsi_transport_iscsi.debug_conn=1
+Best regards
 
-Scenario:
-1. Connect the host to iSCSI target via four paths
-: A dm device is created for those target devices
-2. Start an application in the host which generates sg_io ioctl for
-XCOPY and WSAME to the dm device with the ratio of around 50%
-(pread/pwrite for the rest).
-3. Perform system crash (sysrq-trigger) in the iSCSI target
 
-Expected result:
-- Any outstanding IOs should get failed with errors
 
-Actual results:
-- Normal read/write IOs get failed as expected
-- SG_IO ioctls SUCCEEDED!!
-- log message:
-[Tue Apr  2 11:26:34 2019]  session3: session recovery timed out after 11 secs
-[Tue Apr  2 11:26:34 2019]  session3: session_recovery_timedout:
-Unblocking SCSI target
-..
-[Tue Apr  2 11:26:34 2019] sd 8:0:0:8: scsi_prep_state_check:
-rejecting I/O to offline device
-[Tue Apr  2 11:26:34 2019] sd 8:0:0:8: scsi_prep_state_check:
-rejecting I/O to offline device
-[Tue Apr  2 11:26:34 2019] sd 8:0:0:8: scsi_prep_state_check:
-rejecting I/O to offline device
-[Tue Apr  2 11:26:34 2019] print_req_error: I/O error, dev sdi, sector 30677580
-[Tue Apr  2 11:26:34 2019] device-mapper: multipath: Failing path 8:128.
-[Tue Apr  2 11:26:34 2019] SG_IO disk=sdi, result=0x0
 
-- This causes the DATA corruption for the application
-
-Relavant call stacks: (SG_IO issue path)
-[Tue Apr  2 11:26:33 2019] sd 8:0:0:8: [sdi] sd_ioctl: disk=sdi, cmd=0x2285
-[Tue Apr  2 11:26:33 2019] SG_IO disk=sdi, retried 1 cmd 93
-[Tue Apr  2 11:26:33 2019] CPU: 30 PID: 16080 Comm: iostress Not
-tainted 4.19.9-purekernel_dbg.x86_64+ #30
-[Tue Apr  2 11:26:33 2019] Hardware name:  /0JP31P, BIOS 2.0.19 08/29/2013
-[Tue Apr  2 11:26:33 2019] Call Trace:
-[Tue Apr  2 11:26:33 2019]  dump_stack+0x63/0x85
-[Tue Apr  2 11:26:33 2019]  sg_io+0x41e/0x480
-[Tue Apr  2 11:26:33 2019]  scsi_cmd_ioctl+0x297/0x420
-[Tue Apr  2 11:26:33 2019]  ? sdev_prefix_printk+0xe9/0x120
-[Tue Apr  2 11:26:33 2019]  ? _cond_resched+0x1a/0x50
-[Tue Apr  2 11:26:33 2019]  scsi_cmd_blk_ioctl+0x51/0x70
-[Tue Apr  2 11:26:33 2019]  sd_ioctl+0x95/0x1a0 [sd_mod]
-[Tue Apr  2 11:26:33 2019]  __blkdev_driver_ioctl+0x25/0x30
-[Tue Apr  2 11:26:33 2019]  dm_blk_ioctl+0x79/0x100 [dm_mod]
-[Tue Apr  2 11:26:33 2019]  blkdev_ioctl+0x89a/0x940
-[Tue Apr  2 11:26:33 2019]  ? do_nanosleep+0xae/0x180
-[Tue Apr  2 11:26:33 2019]  block_ioctl+0x3d/0x50
-[Tue Apr  2 11:26:33 2019]  do_vfs_ioctl+0xa6/0x600
-[Tue Apr  2 11:26:33 2019]  ? __audit_syscall_entry+0xe9/0x130
-[Tue Apr  2 11:26:33 2019]  ksys_ioctl+0x6d/0x80
-).[Tue Apr  2 11:26:33 2019]  __x64_sys_ioctl+0x1a/0x20
-[Tue Apr  2 11:26:33 2019]  do_syscall_64+0x60/0x180
-[Tue Apr  2 11:26:33 2019]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
-
-According to the analysis, it seems that there is a bug in propagating
-errors for iSCSI session timeout (i.e., session_recovery_timedout).
-Compared to this, legacy SCSI queue handles the errors in
-scsi_request_fn by killing the request as can be seen below.
-
-1872 static void scsi_request_fn(struct request_queue *q)
-1873         __releases(q->queue_lock)
-1874         __acquires(q->queue_lock)
-1875 {
-..
-1886         for (;;) {
-..
-1893                 req = blk_peek_request(q);
-1894                 if (!req)
-1895                         break;
-1896
-1897                 if (unlikely(!scsi_device_online(sdev))) {
-1898                         sdev_printk(KERN_ERR, sdev,
-1899                                     "scsi_request_fn: rejecting
-I/O to offline device\n");
-1900                         scsi_kill_request(req, q);
-1901                         continue;
-1902                 }
-1903
-
-I am not sure in which layer we have to fix this, LLD or scsi_queue_rq().
-
-Could someone please take a look? Or, could someone guide me on how to
-fix this bug?
-
-Thanks,
-
-Jaesoo Lee.
+On Sun, Apr 7, 2019 at 12:00 PM Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org> wrote:
+>
+> On 4/4/19 4:04 PM, Ming Lin wrote:
+> >       async_synchronize_full_domain(&scsi_sd_pm_domain);
+> > -     async_synchronize_full_domain(&scsi_sd_probe_domain);
+> > +     async_synchronize_full_domain(&sdkp->sd_probe_domain);
+> >       device_del(&sdkp->dev);
+> >       del_gendisk(sdkp->disk);
+>
+> SCSI patches should be prepared against Martin's most recent scsi-queue
+> branch. If you have a look at that branch you will see that
+> scsi_sd_pm_domain and scsi_sd_probe_domain are gone.
+>
+> Bart.
 
 -- 
 You received this message because you are subscribed to the Google Groups "open-iscsi" group.
