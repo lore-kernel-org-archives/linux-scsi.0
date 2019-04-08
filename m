@@ -1,125 +1,39 @@
-From: Dongli Zhang <dongli.zhang@oracle.com>
-Subject: Re: [PATCH 0/2] Limit number of hw queues by nr_cpu_ids for
-	virtio-blk and virtio-scsi
-Date: Mon, 8 Apr 2019 21:57:46 +0800
-Message-ID: <8ee49e44-a52c-0596-e18e-7d92da8cef8f@oracle.com>
-References: <1553682995-5682-1-git-send-email-dongli.zhang@oracle.com>
+From: Himanshu Madhani <hmadhani@marvell.com>
+Subject: Re: [PATCH][next] scsi: qla2xxx: fix spelling mistake "alredy" ->
+ "already"
+Date: Mon, 8 Apr 2019 15:48:07 +0000
+Message-ID: <C4F6CCA0-D11F-4436-85F6-F1538682B28A@marvell.com>
+References: <20190408082014.1354-1-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-In-Reply-To: <1553682995-5682-1-git-send-email-dongli.zhang@oracle.com>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: linux-scsi@vger.kernel.org, virtualization@lists.linux-foundation.org, linux-block@vger.kernel.org
-Cc: axboe@kernel.dk, martin.petersen@oracle.com, mst@redhat.com, cohuck@redhat.com, linux-kernel@vger.kernel.org, jejb@linux.ibm.com
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190408082014.1354-1-colin.king@canonical.com>
+Content-Language: en-US
+Content-ID: <EF8C31E1E4B39D4EAF46EFA07955C2B7@namprd18.prod.outlook.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Colin King <colin.king@canonical.com>, "qla2xxx-upstream@qlogic.com" <qla2xxx-upstream@qlogic.com>, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-ping?
-
-Thank you very much!
-
-Dongli Zhang
-
-On 03/27/2019 06:36 PM, Dongli Zhang wrote:
-> When tag_set->nr_maps is 1, the block layer limits the number of hw queues
-> by nr_cpu_ids. No matter how many hw queues are use by
-> virtio-blk/virtio-scsi, as they both have (tag_set->nr_maps == 1), they
-> can use at most nr_cpu_ids hw queues.
-> 
-> In addition, specifically for pci scenario, when the 'num-queues' specified
-> by qemu is more than maxcpus, virtio-blk/virtio-scsi would not be able to
-> allocate more than maxcpus vectors in order to have a vector for each
-> queue. As a result, they fall back into MSI-X with one vector for config
-> and one shared for queues.
-> 
-> Considering above reasons, this patch set limits the number of hw queues
-> used by nr_cpu_ids for both virtio-blk and virtio-scsi.
-> 
-> -------------------------------------------------------------
-> 
-> Here is test result of virtio-scsi:
-> 
-> qemu cmdline:
-> 
-> -smp 2,maxcpus=4, \
-> -device virtio-scsi-pci,id=scsi0,num_queues=8, \
-> -device scsi-hd,drive=drive0,bus=scsi0.0,channel=0,scsi-id=0,lun=0, \
-> -drive file=test.img,if=none,id=drive0
-> 
-> Although maxcpus=4 and num_queues=8, 4 queues are used while 2 interrupts
-> are allocated.
-> 
-> # cat /proc/interrupts
-> ... ...
->  24:          0          0   PCI-MSI 65536-edge      virtio0-config
->  25:          0        369   PCI-MSI 65537-edge      virtio0-virtqueues
-> ... ...
-> 
-> # /sys/block/sda/mq/
-> 0  1  2  3   ------> 4 queues although qemu sets num_queues=8
-> 
-> 
-> With the patch set, there is per-queue interrupt.
-> 
-> # cat /proc/interrupts
->  24:          0          0   PCI-MSI 65536-edge      virtio0-config
->  25:          0          0   PCI-MSI 65537-edge      virtio0-control
->  26:          0          0   PCI-MSI 65538-edge      virtio0-event
->  27:        296          0   PCI-MSI 65539-edge      virtio0-request
->  28:          0        139   PCI-MSI 65540-edge      virtio0-request
->  29:          0          0   PCI-MSI 65541-edge      virtio0-request
->  30:          0          0   PCI-MSI 65542-edge      virtio0-request
-> 
-> # ls /sys/block/sda/mq
-> 0  1  2  3
-> 
-> -------------------------------------------------------------
-> 
-> Here is test result of virtio-blk:
-> 
-> qemu cmdline:
-> 
-> -smp 2,maxcpus=4,
-> -device virtio-blk-pci,drive=drive-virtio-disk0,id=virtio-disk0,num-queues=8
-> -drive test.img,format=raw,if=none,id=drive-virtio-disk0
-> 
-> Although maxcpus=4 and num-queues=8, 4 queues are used while 2 interrupts
-> are allocated.
-> 
-> # cat /proc/interrupts
-> ... ...
->  24:          0          0   PCI-MSI 65536-edge      virtio0-config
->  25:          0         65   PCI-MSI 65537-edge      virtio0-virtqueues
-> ... ...
-> 
-> # ls /sys/block/vda/mq
-> 0  1  2  3    -------> 4 queues although qemu sets num_queues=8
-> 
-> 
-> With the patch set, there is per-queue interrupt.
-> 
-> # cat /proc/interrupts
->  24:          0          0   PCI-MSI 65536-edge      virtio0-config
->  25:         64          0   PCI-MSI 65537-edge      virtio0-req.0
->  26:          0      10290   PCI-MSI 65538-edge      virtio0-req.1
->  27:          0          0   PCI-MSI 65539-edge      virtio0-req.2
->  28:          0          0   PCI-MSI 65540-edge      virtio0-req.3
-> 
-> # ls /sys/block/vda/mq/
-> 0  1  2  3
-> 
-> 
-> Reference: https://lore.kernel.org/lkml/e4afe4c5-0262-4500-aeec-60f30734b4fc@default/
-> 
-> Thank you very much!
-> 
-> Dongli Zhang
-> 
+SGkgQ29saW4sDQoNCu+7v09uIDQvOC8xOSwgMToyMCBBTSwgImxpbnV4LXNjc2ktb3duZXJAdmdl
+ci5rZXJuZWwub3JnIG9uIGJlaGFsZiBvZiBDb2xpbiBLaW5nIiA8bGludXgtc2NzaS1vd25lckB2
+Z2VyLmtlcm5lbC5vcmcgb24gYmVoYWxmIG9mIGNvbGluLmtpbmdAY2Fub25pY2FsLmNvbT4gd3Jv
+dGU6DQoNCiAgICBGcm9tOiBDb2xpbiBJYW4gS2luZyA8Y29saW4ua2luZ0BjYW5vbmljYWwuY29t
+Pg0KICAgIA0KICAgIFRoZXJlIGlzIGEgc3BlbGxpbmcgbWlzdGFrZSBpbiBhIHFsX2xvZyBtZXNz
+YWdlLiBGaXggaXQuDQogICAgDQogICAgU2lnbmVkLW9mZi1ieTogQ29saW4gSWFuIEtpbmcgPGNv
+bGluLmtpbmdAY2Fub25pY2FsLmNvbT4NCiAgICAtLS0NCiAgICAgZHJpdmVycy9zY3NpL3FsYTJ4
+eHgvcWxhX252bWUuYyB8IDIgKy0NCiAgICAgMSBmaWxlIGNoYW5nZWQsIDEgaW5zZXJ0aW9uKCsp
+LCAxIGRlbGV0aW9uKC0pDQogICAgDQogICAgZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9xbGEy
+eHh4L3FsYV9udm1lLmMgYi9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfbnZtZS5jDQogICAgaW5k
+ZXggMWNhNjNlODBhN2ZlLi4zYTYxNjBjYTliNGEgMTAwNjQ0DQogICAgLS0tIGEvZHJpdmVycy9z
+Y3NpL3FsYTJ4eHgvcWxhX252bWUuYw0KICAgICsrKyBiL2RyaXZlcnMvc2NzaS9xbGEyeHh4L3Fs
+YV9udm1lLmMNCiAgICBAQCAtMjA1LDcgKzIwNSw3IEBAIHN0YXRpYyB2b2lkIHFsYV9udm1lX2Fi
+b3J0X3dvcmsoc3RydWN0IHdvcmtfc3RydWN0ICp3b3JrKQ0KICAgICAJaWYgKGF0b21pY19yZWFk
+KCZzcC0+cmVmX2NvdW50KSA9PSAwKSB7DQogICAgIAkJV0FSTl9PTigxKTsNCiAgICAgCQlxbF9s
+b2cocWxfbG9nX2luZm8sIGZjcG9ydC0+dmhhLCAweGZmZmYsDQogICAgLQkJCSIlczogY29tbWFu
+ZCBhbHJlZHkgYWJvcnRlZCBvbiBzcDogJXBcbiIsDQogICAgKwkJCSIlczogY29tbWFuZCBhbHJl
+YWR5IGFib3J0ZWQgb24gc3A6ICVwXG4iLA0KICAgICAJCQlfX2Z1bmNfXywgc3ApOw0KICAgICAJ
+CXJldHVybjsNCiAgICAgCX0NCiAgICAtLSANCiAgICAyLjIwLjENCiAgICANCiBUaGFua3MgZm9y
+IHRoZSBwYXRjaC4NCg0KQWNrZWQtYnk6IEhpbWFuc2h1IE1hZGhhbmkgPGhtYWRoYW5pQG1hcnZl
+bGwuY29tPg0KDQo=
