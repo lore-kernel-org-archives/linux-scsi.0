@@ -1,50 +1,64 @@
-From: Petr Mladek <pmladek@suse.com>
-Subject: Re: [PATCH v2 1/1] treewide: Switch printk users from %pf and %pF to
- %ps and %pS, respectively
-Date: Tue, 9 Apr 2019 15:02:23 +0200
-Message-ID: <20190409130223.qylyzna7syu5cdc4@pathway.suse.cz>
-References: <20190325193229.23390-1-sakari.ailus@linux.intel.com>
- <20190326133510.cylhvyvc7l77bqdg@pathway.suse.cz>
- <20190403112814.7frkxkwmitzugzmt@paasikivi.fi.intel.com>
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] scsi: cxgbi: remove redundant __kfree_skb call on skb
+Date: Tue,  9 Apr 2019 14:38:19 +0100
+Message-ID: <20190409133819.21127-1-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <netdev-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20190403112814.7frkxkwmitzugzmt@paasikivi.fi.intel.com>
-Sender: netdev-owner@vger.kernel.org
-To: Sakari Ailus <sakari.ailus@linux.intel.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel@vger.kernel.org, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, linux-arm-kernel@lists.infradead.org, sparclinux@vger.kernel.org, linux-um@lists.infradead.org, xen-devel@lists.xenproject.org, linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org, drbd-dev@lists.linbit.com, linux-block@vger.kernel.org, linux-mmc@vger.kernel.org, linux-nvdimm@lists.01.org, linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org, ceph-devel@vger.kernel.org, netdev@vger.kernel.org, Anna-Maria Gleixner <anna-maria@linutronix.de>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Karen Xie <kxie@chelsio.com>, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed 2019-04-03 14:28:14, Sakari Ailus wrote:
-> Ping.
-> 
-> On Tue, Mar 26, 2019 at 02:35:10PM +0100, Petr Mladek wrote:
-> > Linus,
-> > 
-> > On Mon 2019-03-25 21:32:28, Sakari Ailus wrote:
-> > > %pF and %pf are functionally equivalent to %pS and %ps conversion
-> > > specifiers. The former are deprecated, therefore switch the current users
-> > > to use the preferred variant.
-> > > 
-> > > The changes have been produced by the following command:
-> > > 
-> > > 	git grep -l '%p[fF]' | grep -v '^\(tools\|Documentation\)/' | \
-> > > 	while read i; do perl -i -pe 's/%pf/%ps/g; s/%pF/%pS/g;' $i; done
-> > > 
-> > > And verifying the result.
-> > 
-> > I guess that the best timing for such tree-wide clean up is the end
-> > of the merge window. Should we wait for 5.2 or is it still acceptable
-> > to push this for 5.1-rc3?
-> 
-> The patch still cleanly applies to linux-next as wells as Linus's tree.
-> Some %pf bits have appeared and fixed since (include/trace/events/timer.h);
-> the fix is in linux-next so once that and this patch are merged, there are
-> no remaining %pf (or %pF) users left.
+From: Colin Ian King <colin.king@canonical.com>
 
-I have pushed the patch into printk.git, branch for-5.2-pf-removal.
-It is v2 without the include/trace/events/timer.h stuff.
+The error return path via label rel_resource checks for a non-null
+skb before free'ing it.  However, skb is always null at this exit
+path, so the null check and the free are redundant and can be removed.
+Removing this allows the original goto's to rel_resource to be cleaned
+up; the first can be replaced by a return of -EINVAL, the second can
+be replaced by a more appropriate -ENOMEM return since allow_wr has
+failed go allocate some memory.
 
-Best Regards,
-Petr
+Addresses-Coverity: ("Logically Dead Code")
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/scsi/cxgbi/cxgb3i/cxgb3i.c | 9 ++-------
+ 1 file changed, 2 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
+index 75e1273a44b3..5a4387f437d5 100644
+--- a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
++++ b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
+@@ -979,14 +979,14 @@ static int init_act_open(struct cxgbi_sock *csk)
+ 	csk->atid = cxgb3_alloc_atid(t3dev, &t3_client, csk);
+ 	if (csk->atid < 0) {
+ 		pr_err("NO atid available.\n");
+-		goto rel_resource;
++		return -EINVAL;
+ 	}
+ 	cxgbi_sock_set_flag(csk, CTPF_HAS_ATID);
+ 	cxgbi_sock_get(csk);
+ 
+ 	skb = alloc_wr(sizeof(struct cpl_act_open_req), 0, GFP_KERNEL);
+ 	if (!skb)
+-		goto rel_resource;
++		return -ENOMEM;
+ 	skb->sk = (struct sock *)csk;
+ 	set_arp_failure_handler(skb, act_open_arp_failure);
+ 	csk->snd_win = cxgb3i_snd_win;
+@@ -1007,11 +1007,6 @@ static int init_act_open(struct cxgbi_sock *csk)
+ 	cxgbi_sock_set_state(csk, CTP_ACTIVE_OPEN);
+ 	send_act_open_req(csk, skb, csk->l2t);
+ 	return 0;
+-
+-rel_resource:
+-	if (skb)
+-		__kfree_skb(skb);
+-	return -EINVAL;
+ }
+ 
+ cxgb3_cpl_handler_func cxgb3i_cpl_handlers[NUM_CPL_CMDS] = {
+-- 
+2.20.1
