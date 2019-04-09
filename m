@@ -1,75 +1,59 @@
-From: walter harms <wharms@bfs.de>
-Subject: Re: [PATCH] scsi: cxgbi: remove redundant __kfree_skb call on skb
-Date: Tue, 09 Apr 2019 16:33:59 +0200
-Message-ID: <5CACAD57.1030703@bfs.de>
-References: <20190409133819.21127-1-colin.king@canonical.com>
-Reply-To: wharms@bfs.de
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH] usb: uas: fix usb subsystem hang after power off hub
+ port
+Date: Tue, 9 Apr 2019 10:44:04 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1904091014570.1599-100000@iolanthe.rowland.org>
+References: <yq1a7h0orn8.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190409133819.21127-1-colin.king@canonical.com>
+In-Reply-To: <yq1a7h0orn8.fsf@oracle.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Colin King <colin.king@canonical.com>
-Cc: Karen Xie <kxie@chelsio.com>, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Kento.A.Kobayashi@sony.com, "James E.J. Bottomley" <jejb@linux.ibm.com>, Oliver Neukum <oneukum@suse.com>, gregkh@linuxfoundation.org, USB Storage list <usb-storage@lists.one-eyed-alien.net>, Jacky.Cao@sony.com, Kernel development list <linux-kernel@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>, USB list <linux-usb@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
+On Mon, 8 Apr 2019, Martin K. Petersen wrote:
 
-
-Am 09.04.2019 15:38, schrieb Colin King:
-> From: Colin Ian King <colin.king@canonical.com>
 > 
-> The error return path via label rel_resource checks for a non-null
-> skb before free'ing it.  However, skb is always null at this exit
-> path, so the null check and the free are redundant and can be removed.
-> Removing this allows the original goto's to rel_resource to be cleaned
-> up; the first can be replaced by a return of -EINVAL, the second can
-> be replaced by a more appropriate -ENOMEM return since allow_wr has
-> failed go allocate some memory.
+> Alan,
 > 
-> Addresses-Coverity: ("Logically Dead Code")
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> ---
->  drivers/scsi/cxgbi/cxgb3i/cxgb3i.c | 9 ++-------
->  1 file changed, 2 insertions(+), 7 deletions(-)
+> > So it looks as though the SCSI subsystem doesn't like to have a reset 
+> > handler call scsi_remove_host.
 > 
-> diff --git a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
-> index 75e1273a44b3..5a4387f437d5 100644
-> --- a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
-> +++ b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
-> @@ -979,14 +979,14 @@ static int init_act_open(struct cxgbi_sock *csk)
->  	csk->atid = cxgb3_alloc_atid(t3dev, &t3_client, csk);
->  	if (csk->atid < 0) {
->  		pr_err("NO atid available.\n");
-> -		goto rel_resource;
-> +		return -EINVAL;
->  	}
->  	cxgbi_sock_set_flag(csk, CTPF_HAS_ATID);
->  	cxgbi_sock_get(csk);
->  
->  	skb = alloc_wr(sizeof(struct cpl_act_open_req), 0, GFP_KERNEL);
->  	if (!skb)
-> -		goto rel_resource;
-> +		return -ENOMEM;
+> Are you talking about a PCI device removal handler or a SCSI error
+> handler?
 
-I would expect a cxgb3_free_atid(csk->atid) here. Did i miss something ?
+The context of this discussion is a USB mass-storage device where the
+device's port on its upstream hub has been powered off.  The
+powered-off port causes an executing command to time out.  As a result
+the SCSI error handler runs and calls the USB reset routine, but the
+reset fails because the kernel is unable to communicate with the device
+through the powered-off port.  This causes the USB reset routine to
+unbind the device from its USB driver, which in turn calls
+scsi_remove_host -- while the error handler is still running.
 
-re,
- wh
+> > Commands dispatched by the removal routines are forced to wait for the
+> > reset recovery to finish, which won't happen until those commands have
+> > been completed.
+> >
+> > Is this a bug in the SCSI core?  If not, we need to know what is the
+> > right way to do things when a reset handler detects that the SCSI host
+> > has been hot-unplugged.
+> 
+> PCI surprise removal should generally work. But it's somewhat unusual
+> for a SCSI host to evaporate in the middle of error handling. After all,
+> the main purpose of eh is to leverage the interfaces provided by the
+> host to try to reconnect to a target that tripped and fell off the
+> bus...
 
+Still, it's not impossible for a SCSI host to evaporate in the middle
+of error handling, given an appropriately mistimed hot-unplug event.  
+How does the SCSI layer expect this to be handled?  Should the
+low-level driver wait to call scsi_remove_host until after the error
+handling is finished?
 
->  	skb->sk = (struct sock *)csk;
->  	set_arp_failure_handler(skb, act_open_arp_failure);
->  	csk->snd_win = cxgb3i_snd_win;
-> @@ -1007,11 +1007,6 @@ static int init_act_open(struct cxgbi_sock *csk)
->  	cxgbi_sock_set_state(csk, CTP_ACTIVE_OPEN);
->  	send_act_open_req(csk, skb, csk->l2t);
->  	return 0;
-> -
-> -rel_resource:
-> -	if (skb)
-> -		__kfree_skb(skb);
-> -	return -EINVAL;
->  }
->  
->  cxgb3_cpl_handler_func cxgb3i_cpl_handlers[NUM_CPL_CMDS] = {
+What about races?  In theory, scsi_remove_host could be called just as 
+the error handler is starting up.
+
+Alan Stern
