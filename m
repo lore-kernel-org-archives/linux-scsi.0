@@ -1,68 +1,46 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH] usb: uas: fix usb subsystem hang after power off hub
- port
-Date: Tue, 9 Apr 2019 12:45:53 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1904091232370.1599-100000@iolanthe.rowland.org>
-References: <1554823007.161891.6.camel@acm.org>
+From: Mukesh Ojha <mojha@codeaurora.org>
+Subject: Re: [PATCH][next] scsi: qla2xxx: fix spelling mistake "alredy" ->
+ "already"
+Date: Tue, 9 Apr 2019 23:26:29 +0530
+Message-ID: <f03ae123-abef-9e3d-95df-fec1cb81b6c0@codeaurora.org>
+References: <20190408082014.1354-1-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1554823007.161891.6.camel@acm.org>
+In-Reply-To: <20190408082014.1354-1-colin.king@canonical.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Kento.A.Kobayashi@sony.com, "James E.J. Bottomley" <jejb@linux.ibm.com>, Oliver Neukum <oneukum@suse.com>, gregkh@linuxfoundation.org, USB Storage list <usb-storage@lists.one-eyed-alien.net>, Jacky.Cao@sony.com, Kernel development list <linux-kernel@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>, USB list <linux-usb@vger.kernel.org>
+To: Colin King <colin.king@canonical.com>, qla2xxx-upstream@qlogic.com, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 9 Apr 2019, Bart Van Assche wrote:
 
-> On Tue, 2019-04-09 at 10:44 -0400, Alan Stern wrote:
-> +AD4 On Mon, 8 Apr 2019, Martin K. Petersen wrote:
-> +AD4 
-> +AD4 +AD4 
-> +AD4 +AD4 Alan,
-> +AD4 +AD4 
-> +AD4 +AD4 +AD4 So it looks as though the SCSI subsystem doesn't like to have a reset 
-> +AD4 +AD4 +AD4 handler call scsi+AF8-remove+AF8-host.
-> +AD4 +AD4 
-> +AD4 +AD4 Are you talking about a PCI device removal handler or a SCSI error
-> +AD4 +AD4 handler?
-> +AD4 
-> +AD4 The context of this discussion is a USB mass-storage device where the
-> +AD4 device's port on its upstream hub has been powered off.  The
-> +AD4 powered-off port causes an executing command to time out.  As a result
-> +AD4 the SCSI error handler runs and calls the USB reset routine, but the
-> +AD4 reset fails because the kernel is unable to communicate with the device
-> +AD4 through the powered-off port.  This causes the USB reset routine to
-> +AD4 unbind the device from its USB driver, which in turn calls
-> +AD4 scsi+AF8-remove+AF8-host -- while the error handler is still running.
-> 
-> From which context does that unbind happen? From inside a SCSI EH callback
-> or from the context of a workqueue? I think the former is not allowed but
-> that the latter is allowed. The SRP initiator driver (ib+AF8-srp.c) follows the
-> latter approach. See also srp+AF8-queue+AF8-remove+AF8-work().
+On 4/8/2019 1:50 PM, Colin King wrote:
+> From: Colin Ian King <colin.king@canonical.com>
+>
+> There is a spelling mistake in a ql_log message. Fix it.
+>
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Reviewed-by: Mukesh Ojha <mojha@codeaurora.org>
 
-The unbind happens from inside the SCSI EH callback.  If that really is
-not allowed, we'll need to change it.  Or we can just change it
-regardless, since the effort required is pretty small.
+Cheers,
+-Mukesh
 
-Kento, please try the patch below.  Does it help with your problem?
-
-Alan Stern
-
-
-
-Index: usb-4.x/drivers/usb/core/hub.c
-===================================================================
---- usb-4.x.orig/drivers/usb/core/hub.c
-+++ usb-4.x/drivers/usb/core/hub.c
-@@ -5902,7 +5902,9 @@ int usb_reset_device(struct usb_device *
- 					cintf->needs_binding = 1;
- 			}
- 		}
--		usb_unbind_and_rebind_marked_interfaces(udev);
-+		/* If the reset failed, hub_wq will unbind drivers later */
-+		if (ret == 0)
-+			usb_unbind_and_rebind_marked_interfaces(udev);
- 	}
- 
- 	usb_autosuspend_device(udev);
+> ---
+>   drivers/scsi/qla2xxx/qla_nvme.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_nvme.c
+> index 1ca63e80a7fe..3a6160ca9b4a 100644
+> --- a/drivers/scsi/qla2xxx/qla_nvme.c
+> +++ b/drivers/scsi/qla2xxx/qla_nvme.c
+> @@ -205,7 +205,7 @@ static void qla_nvme_abort_work(struct work_struct *work)
+>   	if (atomic_read(&sp->ref_count) == 0) {
+>   		WARN_ON(1);
+>   		ql_log(ql_log_info, fcport->vha, 0xffff,
+> -			"%s: command alredy aborted on sp: %p\n",
+> +			"%s: command already aborted on sp: %p\n",
+>   			__func__, sp);
+>   		return;
+>   	}
