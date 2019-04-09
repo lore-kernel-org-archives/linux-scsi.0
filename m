@@ -1,31 +1,24 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [RFC PATCH 1/2] fdomain: Resurrect fdomain and fdomain_cs drivers
-Date: Mon, 08 Apr 2019 21:39:14 -0400
-Message-ID: <yq1imvoot31.fsf@oracle.com>
-References: <20190407185617.8467-1-linux@zary.sk>
-        <20190407185617.8467-2-linux@zary.sk>
+Subject: Re: [PATCH][next] scsi: qla2xxx: fix spelling mistake "alredy" -> "already"
+Date: Mon, 08 Apr 2019 21:46:24 -0400
+Message-ID: <yq1ef6cosr3.fsf@oracle.com>
+References: <20190408082014.1354-1-colin.king@canonical.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190407185617.8467-2-linux@zary.sk> (Ondrej Zary's message of
-        "Sun, 7 Apr 2019 20:56:16 +0200")
+In-Reply-To: <20190408082014.1354-1-colin.king@canonical.com> (Colin King's
+        message of "Mon, 8 Apr 2019 09:20:14 +0100")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Ondrej Zary <linux@zary.sk>
-Cc: Rik Faith <faith@cs.unc.edu>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Colin King <colin.king@canonical.com>
+Cc: qla2xxx-upstream@qlogic.com, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Hi Ondrej,
+Colin,
 
-> This reverts commit e184f2bf4d9f1a3c612a8c1d67e73e9cf8ab5ab9.
-> It does not compile but following patches will fix that.
+> There is a spelling mistake in a ql_log message. Fix it.
 
-I don't have any particular objections to reviving this driver if people
-are actually using it. However, breaking bisection is going to be a
-problem. So you'll have to squash the revert and the fixup patch and
-carefully annotate the resolutions in the commit description.
-
-Thanks!
+Applied to 5.2/scsi-queue, thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
