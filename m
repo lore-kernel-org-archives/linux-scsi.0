@@ -1,33 +1,34 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: RE: [PATCH] usb: uas: fix usb subsystem hang after power off hub
- port
-Date: Mon, 8 Apr 2019 21:21:07 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1904082118490.1490-100000@netrider.rowland.org>
-References: <AE5419EAB4965843B3C0C1FE29F1FFE5892A0D@JPYOKXMS103.jp.sony.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] scsi: mvumi: fix warning Using plain integer as NULL pointer
+Date: Mon, 08 Apr 2019 21:34:05 -0400
+Message-ID: <yq1mul0otbm.fsf@oracle.com>
+References: <20190406175331.GA22504@hari-Inspiron-1545>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <AE5419EAB4965843B3C0C1FE29F1FFE5892A0D@JPYOKXMS103.jp.sony.com>
+In-Reply-To: <20190406175331.GA22504@hari-Inspiron-1545> (Hariprasad Kelam's
+        message of "Sat, 6 Apr 2019 23:23:31 +0530")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Kento.A.Kobayashi@sony.com
-Cc: jejb@linux.ibm.com, martin.petersen@oracle.com, oneukum@suse.com, gregkh@linuxfoundation.org, usb-storage@lists.one-eyed-alien.net, Jacky.Cao@sony.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
+To: Hariprasad Kelam <hariprasad.kelam@gmail.com>
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 9 Apr 2019 Kento.A.Kobayashi@sony.com wrote:
 
-> Hi,
-> 
-> >So it looks as though the SCSI subsystem doesn't like to have a reset handler call scsi_remove_host.  Commands dispatched by the removal routines are forced to wait for the reset recovery to finish, which won't happen until those commands have been completed.
-> 
-> You mean reset handeler should not call scsi_remove_host, right?
-> But actually, scsi_remove_host is called from reset handler in this case.
-> 
-> >Is this a bug in the SCSI core? 
-> No, I think this is a bug in uas driver.
+Hi Hariprasad,
 
-Actually I was asking James and Martin, not you.
+> Changed "0 to NULL" to avoid below sparse warnings
+>
+> drivers/scsi/mvumi.c:755:58: warning: Using plain integer as NULL
+> pointer
+> drivers/scsi/mvumi.c:1797:48: warning: Using plain integer as NULL
+> pointer
+> drivers/scsi/mvumi.c:2142:50: warning: Using plain integer as NULL
+> pointer
 
-In any case, even assuming the cause of the problem is on the USB side, 
-it's not clear whether the bug is in uas or in usbcore.
+This has already been fixed up in 7512ddef6307. In the future, please
+make sure to submit patches against my for-next branch.
 
-Alan Stern
+Thanks!
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
