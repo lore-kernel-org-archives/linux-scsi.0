@@ -1,91 +1,93 @@
-From: "Alastair D'Silva" <alastair@d-silva.org>
-Subject: RE: [PATCH 4/4] lib/hexdump.c: Allow multiple groups to be separated by lines '|'
-Date: Wed, 10 Apr 2019 19:52:58 +1000
-Message-ID: <051301d4ef83$34d2c710$9e785530$@d-silva.org>
-References: <20190410031720.11067-1-alastair@au1.ibm.com> <20190410031720.11067-5-alastair@au1.ibm.com> <1cd09186c67b4fa4bceb84faf835ff10@AcuMS.aculab.com>
+From: Erwan Velu <erwanaliasr1@gmail.com>
+Subject: Re: [PATCH] scsi: smartpqi: Reporting unhandled SCSI errors
+Date: Wed, 10 Apr 2019 13:02:51 +0200
+Message-ID: <CAL2JzuyHb_gfu5Suf3yaMF1883JN1667yhEwpdmoiqYrUTO2YA@mail.gmail.com>
+References: <20190321094928.4198-1-e.velu@criteo.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="UTF-8"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <1cd09186c67b4fa4bceb84faf835ff10@AcuMS.aculab.com>
-Content-Language: en-au
-Sender: netdev-owner@vger.kernel.org
-To: 'David Laight' <David.Laight@ACULAB.COM>, 'Alastair D'Silva' <alastair@au1.ibm.com>
-Cc: 'Jani Nikula' <jani.nikula@linux.intel.com>, 'Joonas Lahtinen' <joonas.lahtinen@linux.intel.com>, 'Rodrigo Vivi' <rodrigo.vivi@intel.com>, 'David Airlie' <airlied@linux.ie>, 'Daniel Vetter' <daniel@ffwll.ch>, 'Karsten Keil' <isdn@linux-pingi.de>, 'Jassi Brar' <jassisinghbrar@gmail.com>, 'Tom Lendacky' <thomas.lendacky@amd.com>, "'David S. Miller'" <davem@davemloft.net>, 'Jose Abreu' <Jose.Abreu@synopsys.com>, 'Kalle Valo' <kvalo@codeaurora.org>, 'Stanislaw Gruszka' <sgruszka@redhat.com>, 'Benson Leung' <bleung@chromium.org>, 'Enric Balletbo i Serra' <enric.balletbo@collabora.com>, "'James E.J. Bottomley'" <jejb@linux.ibm.com>, "'Martin K. Petersen'" <martin.petersen@oracle.com>, 'Greg Kroah-Hartman' <gregkh@linuxfoundation.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190321094928.4198-1-e.velu@criteo.com>
+Sender: linux-kernel-owner@vger.kernel.org
+Cc: Erwan Velu <e.velu@criteo.com>, Don Brace <don.brace@microsemi.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "open list:MICROSEMI SMART ARRAY SMARTPQI DRIVER (smartpqi)" <esc.storagedev@microsemi.com>, "open list:MICROSEMI SMART ARRAY SMARTPQI DRIVER (smartpqi)" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-> -----Original Message-----
-> From: David Laight <David.Laight@ACULAB.COM>
-> Sent: Wednesday, 10 April 2019 6:45 PM
-> To: 'Alastair D'Silva' <alastair@au1.ibm.com>; alastair@d-silva.org
-> Cc: Jani Nikula <jani.nikula@linux.intel.com>; Joonas Lahtinen
-> <joonas.lahtinen@linux.intel.com>; Rodrigo Vivi =
-<rodrigo.vivi@intel.com>;
-> David Airlie <airlied@linux.ie>; Daniel Vetter <daniel@ffwll.ch>; =
-Karsten Keil
-> <isdn@linux-pingi.de>; Jassi Brar <jassisinghbrar@gmail.com>; Tom =
-Lendacky
-> <thomas.lendacky@amd.com>; David S. Miller <davem@davemloft.net>;
-> Jose Abreu <Jose.Abreu@synopsys.com>; Kalle Valo
-> <kvalo@codeaurora.org>; Stanislaw Gruszka <sgruszka@redhat.com>;
-> Benson Leung <bleung@chromium.org>; Enric Balletbo i Serra
-> <enric.balletbo@collabora.com>; James E.J. Bottomley
-> <jejb@linux.ibm.com>; Martin K. Petersen <martin.petersen@oracle.com>;
-> Greg Kroah-Hartman <gregkh@linuxfoundation.org>; Alexander Viro
-> <viro@zeniv.linux.org.uk>; Petr Mladek <pmladek@suse.com>; Sergey
-> Senozhatsky <sergey.senozhatsky@gmail.com>; Steven Rostedt
-> <rostedt@goodmis.org>; Andrew Morton <akpm@linux-foundation.org>;
-> intel-gfx@lists.freedesktop.org; dri-devel@lists.freedesktop.org; =
-linux-
-> kernel@vger.kernel.org; netdev@vger.kernel.org;
-> ath10k@lists.infradead.org; linux-wireless@vger.kernel.org; linux-
-> scsi@vger.kernel.org; linux-fbdev@vger.kernel.org;
-> devel@driverdev.osuosl.org; linux-fsdevel@vger.kernel.org
-> Subject: RE: [PATCH 4/4] lib/hexdump.c: Allow multiple groups to be
-> separated by lines '|'
->=20
-> From: Alastair D'Silva
-> > Sent: 10 April 2019 04:17
-> > With the wider display format, it can become hard to identify how =
-many
-> > bytes into the line you are looking at.
-> >
-> > The patch adds new flags to hex_dump_to_buffer() and
-> print_hex_dump()
-> > to print vertical lines to separate every N groups of bytes.
-> >
-> > eg.
-> > buf:00000000: 454d414e 43415053|4e495f45 00584544
-> NAMESPAC|E_INDEX.
-> > buf:00000010: 00000000 00000002|00000000 00000000  ........|........
->=20
-> Ugg, that is just horrid.
-> It is enough to add an extra space if you really need the columns to =
-be more
-> easily counted.
->
+Hi there !
+Any reactions to this one ? I didn't got a single comment.
+Cheers,
+Erwan,
 
-I did consider that, but it would be a more invasive change, as the =
-buffer length required would differ based on the flags.
-=20
-> I'm not even sure that is needed if you are printing 32bit words.
-> OTOH 32bit words makes 64bit values really stupid on LE systems.
-> Bytes with extra spaces every 4 bytes is the format I prefer even for =
-long
-> lines.
->=20
-> Oh, and if you are using hexdump() a lot you want a version that never =
-uses
-> snprintf().
->=20
-> 	David
->=20
-> -
-> Registered Address Lakeside, Bramley Road, Mount Farm, Milton Keynes,
-> MK1 1PT, UK Registration No: 1397386 (Wales)
->=20
->=20
+Le jeu. 21 mars 2019 =C3=A0 10:49, Erwan Velu <erwanaliasr1@gmail.com> a =
+=C3=A9crit :
+>
+> When a HARDWARE_ERROR is triggered for asc=3D0x3e, the actual code is onl=
+y considering the case where ascq=3D0x1.
+>
+> Following the http://www.t10.org/lists/asc-num.htm#ASC_3E specification, =
+other values may occur like a timeout (ascq=3D0x2).
+>
+> This patch is about printing an error message when a non-handled message =
+is received.
+> This could help diagnose a possible miss-behavior of the controller and/o=
+r a missing implementation in the Linux Kernel.
+>
+> This patch keeps the exact same error handling but prints a message if an=
+ ascq !=3D 1 income.
+>
+> Signed-off-by: Erwan Velu <e.velu@criteo.com>
 > ---
-> This email has been checked for viruses by AVG.
-> https://www.avg.com
+>  drivers/scsi/smartpqi/smartpqi_init.c | 23 ++++++++++++++++-------
+>  1 file changed, 16 insertions(+), 7 deletions(-)
+>
+> diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpq=
+i/smartpqi_init.c
+> index 75ec43aa8df3..baf16c138800 100644
+> --- a/drivers/scsi/smartpqi/smartpqi_init.c
+> +++ b/drivers/scsi/smartpqi/smartpqi_init.c
+> @@ -2762,16 +2762,25 @@ static void pqi_process_raid_io_error(struct pqi_=
+io_request *io_request)
+>                         scsi_normalize_sense(error_info->data,
+>                                 sense_data_length, &sshdr) &&
+>                                 sshdr.sense_key =3D=3D HARDWARE_ERROR &&
+> -                               sshdr.asc =3D=3D 0x3e &&
+> -                               sshdr.ascq =3D=3D 0x1) {
+> +                               sshdr.asc =3D=3D 0x3e) {
+>                         struct pqi_ctrl_info *ctrl_info =3D shost_to_hba(=
+scmd->device->host);
+>                         struct pqi_scsi_dev *device =3D scmd->device->hos=
+tdata;
+>
+> -                       if (printk_ratelimit())
+> -                               scmd_printk(KERN_ERR, scmd, "received 'lo=
+gical unit failure' from controller for scsi %d:%d:%d:%d\n",
+> -                                       ctrl_info->scsi_host->host_no, de=
+vice->bus, device->target, device->lun);
+> -                       pqi_take_device_offline(scmd->device, "RAID");
+> -                       host_byte =3D DID_NO_CONNECT;
+> +                       switch (sshdr.ascq) {
+> +                       case 0x1: /*LOGICAL UNIT FAILURE */
+> +                               if (printk_ratelimit())
+> +                                       scmd_printk(KERN_ERR, scmd, "rece=
+ived 'logical unit failure' from controller for scsi %d:%d:%d:%d\n",
+> +                                               ctrl_info->scsi_host->hos=
+t_no, device->bus, device->target, device->lun);
+> +                               pqi_take_device_offline(scmd->device, "RA=
+ID");
+> +                               host_byte =3D DID_NO_CONNECT;
+> +                               break;
+> +
+> +                       default: /* See http://www.t10.org/lists/asc-num.=
+htm#ASC_3E */
+> +                               if (printk_ratelimit())
+> +                                       scmd_printk(KERN_ERR, scmd, "rece=
+ived unhandled error %d from controller for scsi %d:%d:%d:%d\n",
+> +                                               sshdr.ascq, ctrl_info->sc=
+si_host->host_no, device->bus, device->target, device->lun);
+> +                               break;
+> +                       }
+>                 }
+>
+>                 if (sense_data_length > SCSI_SENSE_BUFFERSIZE)
+> --
+> 2.20.1
+>
