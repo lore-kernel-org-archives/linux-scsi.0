@@ -1,63 +1,51 @@
 From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: Re: [PATCH] scsi: cxgbi: remove redundant __kfree_skb call on skb
-Date: Wed, 10 Apr 2019 09:46:15 +0300
-Message-ID: <20190410064615.GD6095@kadam>
-References: <20190409133819.21127-1-colin.king@canonical.com>
- <5CACAD57.1030703@bfs.de>
+Subject: Re: [PATCH 3/4] lib/hexdump.c: Replace ascii bool in
+ hex_dump_to_buffer with flags
+Date: Wed, 10 Apr 2019 09:56:27 +0300
+Message-ID: <20190410065627.GF6095@kadam>
+References: <20190410031720.11067-1-alastair@au1.ibm.com>
+ <20190410031720.11067-4-alastair@au1.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
 Content-Disposition: inline
-In-Reply-To: <5CACAD57.1030703@bfs.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: walter harms <wharms@bfs.de>
-Cc: Colin King <colin.king@canonical.com>, Karen Xie <kxie@chelsio.com>, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <20190410031720.11067-4-alastair@au1.ibm.com>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: Alastair D'Silva <alastair@au1.ibm.com>
+Cc: linux-fbdev@vger.kernel.org, Stanislaw Gruszka <sgruszka@redhat.com>, Tom Lendacky <thomas.lendacky@amd.com>, David Airlie <airlied@linux.ie>, Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, dri-devel@lists.freedesktop.org, devel@driverdev.osuosl.org, linux-scsi@vger.kernel.org, Jassi Brar <jassisinghbrar@gmail.com>, ath10k@lists.infradead.org, alastair@d-silva.org, "James E.J. Bottomley" <jejb@linux.ibm.com>, Jose Abreu <Jose.Abreu@synopsys.com>, Petr Mladek <pmladek@suse.com>, intel-gfx@lists.freedesktop.org, Jani Nikula <jani.nikula@linux.intel.com>, Enric Balletbo i Serra <enric.balletbo@collabora.com>, Steven Rostedt <rostedt@goodmis.org>, Rodrigo Vivi <rodrigo.vivi@intel.com>, Benson Leung <bleung@chromium.org>, Kalle Valo <kvalo@codeaurora.org>, Karsten Keil <isdn@linux-pingi.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Greg Kroah-Hartman <gregkh@li>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Apr 09, 2019 at 04:33:59PM +0200, walter harms wrote:
-> 
-> 
-> Am 09.04.2019 15:38, schrieb Colin King:
-> > From: Colin Ian King <colin.king@canonical.com>
-> > 
-> > The error return path via label rel_resource checks for a non-null
-> > skb before free'ing it.  However, skb is always null at this exit
-> > path, so the null check and the free are redundant and can be removed.
-> > Removing this allows the original goto's to rel_resource to be cleaned
-> > up; the first can be replaced by a return of -EINVAL, the second can
-> > be replaced by a more appropriate -ENOMEM return since allow_wr has
-> > failed go allocate some memory.
-> > 
-> > Addresses-Coverity: ("Logically Dead Code")
-> > Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> > ---
-> >  drivers/scsi/cxgbi/cxgb3i/cxgb3i.c | 9 ++-------
-> >  1 file changed, 2 insertions(+), 7 deletions(-)
-> > 
-> > diff --git a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
-> > index 75e1273a44b3..5a4387f437d5 100644
-> > --- a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
-> > +++ b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
-> > @@ -979,14 +979,14 @@ static int init_act_open(struct cxgbi_sock *csk)
-> >  	csk->atid = cxgb3_alloc_atid(t3dev, &t3_client, csk);
-> >  	if (csk->atid < 0) {
-> >  		pr_err("NO atid available.\n");
-> > -		goto rel_resource;
-> > +		return -EINVAL;
-> >  	}
-> >  	cxgbi_sock_set_flag(csk, CTPF_HAS_ATID);
-> >  	cxgbi_sock_get(csk);
-> >  
-> >  	skb = alloc_wr(sizeof(struct cpl_act_open_req), 0, GFP_KERNEL);
-> >  	if (!skb)
-> > -		goto rel_resource;
-> > +		return -ENOMEM;
-> 
-> I would expect a cxgb3_free_atid(csk->atid) here. Did i miss something ?
-> 
+On Wed, Apr 10, 2019 at 01:17:19PM +1000, Alastair D'Silva wrote:
+> @@ -107,7 +108,7 @@ EXPORT_SYMBOL(bin2hex);
+>   * string if enough space had been available.
+>   */
+>  int hex_dump_to_buffer(const void *buf, size_t len, int rowsize, int groupsize,
+> -		       char *linebuf, size_t linebuflen, bool ascii)
+> +		       char *linebuf, size_t linebuflen, u64 flags)
+>  {
+>  	const u8 *ptr = buf;
+>  	int ngroups;
+> @@ -184,7 +185,7 @@ int hex_dump_to_buffer(const void *buf, size_t len, int rowsize, int groupsize,
+>  		if (j)
+>  			lx--;
+>  	}
+> -	if (!ascii)
+> +	if (!flags & HEXDUMP_ASCII)
+            ^^^^^^^^^^^^^^^^^^^^^^
+This is a precedence bug.  It should be if (!(flags & HEXDUMP_ASCII)).
 
-Yeah.  I don't see that cxgb3_free_atid() drops the cxgbi_sock_get()
-reference so we would want to do a put for that as well I think.
+
+>  		goto nil;
+>  
 
 regards,
 dan carpenter
