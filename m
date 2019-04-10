@@ -1,93 +1,62 @@
-From: Erwan Velu <erwanaliasr1@gmail.com>
-Subject: Re: [PATCH] scsi: smartpqi: Reporting unhandled SCSI errors
-Date: Wed, 10 Apr 2019 13:02:51 +0200
-Message-ID: <CAL2JzuyHb_gfu5Suf3yaMF1883JN1667yhEwpdmoiqYrUTO2YA@mail.gmail.com>
-References: <20190321094928.4198-1-e.velu@criteo.com>
+From: Stefan Hajnoczi <stefanha@redhat.com>
+Subject: Re: [PATCH 1/2] virtio-blk: limit number of hw queues by nr_cpu_ids
+Date: Wed, 10 Apr 2019 14:12:25 +0100
+Message-ID: <20190410131225.GA8210@stefanha-x1.localdomain>
+References: <1553682995-5682-1-git-send-email-dongli.zhang@oracle.com>
+ <1553682995-5682-2-git-send-email-dongli.zhang@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="LQksG6bCIzRHxTLp"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190321094928.4198-1-e.velu@criteo.com>
+Content-Disposition: inline
+In-Reply-To: <1553682995-5682-2-git-send-email-dongli.zhang@oracle.com>
 Sender: linux-kernel-owner@vger.kernel.org
-Cc: Erwan Velu <e.velu@criteo.com>, Don Brace <don.brace@microsemi.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "open list:MICROSEMI SMART ARRAY SMARTPQI DRIVER (smartpqi)" <esc.storagedev@microsemi.com>, "open list:MICROSEMI SMART ARRAY SMARTPQI DRIVER (smartpqi)" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+To: Dongli Zhang <dongli.zhang@oracle.com>
+Cc: linux-scsi@vger.kernel.org, virtualization@lists.linux-foundation.org, linux-block@vger.kernel.org, mst@redhat.com, jasowang@redhat.com, axboe@kernel.dk, jejb@linux.ibm.com, martin.petersen@oracle.com, cohuck@redhat.com, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi there !
-Any reactions to this one ? I didn't got a single comment.
-Cheers,
-Erwan,
 
-Le jeu. 21 mars 2019 =C3=A0 10:49, Erwan Velu <erwanaliasr1@gmail.com> a =
-=C3=A9crit :
->
-> When a HARDWARE_ERROR is triggered for asc=3D0x3e, the actual code is onl=
-y considering the case where ascq=3D0x1.
->
-> Following the http://www.t10.org/lists/asc-num.htm#ASC_3E specification, =
-other values may occur like a timeout (ascq=3D0x2).
->
-> This patch is about printing an error message when a non-handled message =
-is received.
-> This could help diagnose a possible miss-behavior of the controller and/o=
-r a missing implementation in the Linux Kernel.
->
-> This patch keeps the exact same error handling but prints a message if an=
- ascq !=3D 1 income.
->
-> Signed-off-by: Erwan Velu <e.velu@criteo.com>
+--LQksG6bCIzRHxTLp
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+On Wed, Mar 27, 2019 at 06:36:34PM +0800, Dongli Zhang wrote:
+> When tag_set->nr_maps is 1, the block layer limits the number of hw queues
+> by nr_cpu_ids. No matter how many hw queues are used by virtio-blk, as it
+> has (tag_set->nr_maps =3D=3D 1), it can use at most nr_cpu_ids hw queues.
+>=20
+> In addition, specifically for pci scenario, when the 'num-queues' specifi=
+ed
+> by qemu is more than maxcpus, virtio-blk would not be able to allocate mo=
+re
+> than maxcpus vectors in order to have a vector for each queue. As a resul=
+t,
+> it falls back into MSI-X with one vector for config and one shared for
+> queues.
+>=20
+> Considering above reasons, this patch limits the number of hw queues used
+> by virtio-blk by nr_cpu_ids.
+>=20
+> Signed-off-by: Dongli Zhang <dongli.zhang@oracle.com>
 > ---
->  drivers/scsi/smartpqi/smartpqi_init.c | 23 ++++++++++++++++-------
->  1 file changed, 16 insertions(+), 7 deletions(-)
->
-> diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpq=
-i/smartpqi_init.c
-> index 75ec43aa8df3..baf16c138800 100644
-> --- a/drivers/scsi/smartpqi/smartpqi_init.c
-> +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-> @@ -2762,16 +2762,25 @@ static void pqi_process_raid_io_error(struct pqi_=
-io_request *io_request)
->                         scsi_normalize_sense(error_info->data,
->                                 sense_data_length, &sshdr) &&
->                                 sshdr.sense_key =3D=3D HARDWARE_ERROR &&
-> -                               sshdr.asc =3D=3D 0x3e &&
-> -                               sshdr.ascq =3D=3D 0x1) {
-> +                               sshdr.asc =3D=3D 0x3e) {
->                         struct pqi_ctrl_info *ctrl_info =3D shost_to_hba(=
-scmd->device->host);
->                         struct pqi_scsi_dev *device =3D scmd->device->hos=
-tdata;
->
-> -                       if (printk_ratelimit())
-> -                               scmd_printk(KERN_ERR, scmd, "received 'lo=
-gical unit failure' from controller for scsi %d:%d:%d:%d\n",
-> -                                       ctrl_info->scsi_host->host_no, de=
-vice->bus, device->target, device->lun);
-> -                       pqi_take_device_offline(scmd->device, "RAID");
-> -                       host_byte =3D DID_NO_CONNECT;
-> +                       switch (sshdr.ascq) {
-> +                       case 0x1: /*LOGICAL UNIT FAILURE */
-> +                               if (printk_ratelimit())
-> +                                       scmd_printk(KERN_ERR, scmd, "rece=
-ived 'logical unit failure' from controller for scsi %d:%d:%d:%d\n",
-> +                                               ctrl_info->scsi_host->hos=
-t_no, device->bus, device->target, device->lun);
-> +                               pqi_take_device_offline(scmd->device, "RA=
-ID");
-> +                               host_byte =3D DID_NO_CONNECT;
-> +                               break;
-> +
-> +                       default: /* See http://www.t10.org/lists/asc-num.=
-htm#ASC_3E */
-> +                               if (printk_ratelimit())
-> +                                       scmd_printk(KERN_ERR, scmd, "rece=
-ived unhandled error %d from controller for scsi %d:%d:%d:%d\n",
-> +                                               sshdr.ascq, ctrl_info->sc=
-si_host->host_no, device->bus, device->target, device->lun);
-> +                               break;
-> +                       }
->                 }
->
->                 if (sense_data_length > SCSI_SENSE_BUFFERSIZE)
-> --
-> 2.20.1
->
+>  drivers/block/virtio_blk.c | 2 ++
+>  1 file changed, 2 insertions(+)
+
+Reviewed-by: Stefan Hajnoczi <stefanha@redhat.com>
+
+--LQksG6bCIzRHxTLp
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEcBAEBAgAGBQJcreu5AAoJEJykq7OBq3PIv1QH/3Xfhaaouf6EN6cUvjc1C8S5
+zptX9W26vBX9yhTbAcJTDQ8ETXOri7HIE0e6fGMPUPc5TQQlShnC74b7d8aUqFS2
+lxl08VctShlE+vB3YVP5K6FOZ82sHszI+uZde/rTt+2+wZqcOqNz0rzi5H+GwZRQ
+QwC3c/Juo/wdG48aWliZrQDApazeKf/2YY+LBqj43Wk7F+X5X65SEiuQkY2xzp0t
+VFLrAGxycRpiL0JBTnXf4VtmP+vox26KmLtccRVZktcgckHuexe05nMGFVhy30aB
+PkQCu7gUEV9AC6kNT4fO6GML6EPHNWnrGRg4qbgZ0htLuQpDTUYonrOR3q3cDkc=
+=TWiv
+-----END PGP SIGNATURE-----
+
+--LQksG6bCIzRHxTLp--
