@@ -1,32 +1,28 @@
-From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: Re: [PATCH] scsi/NCR5380: Avoid compiler warning when
- -Wimplicit-fallthrough is enabled
-Date: Tue, 9 Apr 2019 17:28:01 -0500
-Message-ID: <b67dbd39-d470-2c30-1147-5e8be12bb7f6@embeddedor.com>
-References: <4e853f171366e040818346def7fb043347670662.1551995342.git.fthain@telegraphics.com.au>
- <fd71e91a-92e4-9e96-7d5a-4d9a58f7128f@embeddedor.com>
- <alpine.LNX.2.21.1904091018590.25@nippy.intranet>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] usb: uas: fix usb subsystem hang after power off hub port
+Date: Tue, 09 Apr 2019 22:11:06 -0400
+Message-ID: <yq1lg0imwxx.fsf@oracle.com>
+References: <Pine.LNX.4.44L0.1904091014570.1599-100000@iolanthe.rowland.org>
+        <1554823007.161891.6.camel@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <alpine.LNX.2.21.1904091018590.25@nippy.intranet>
-Content-Language: en-US
+In-Reply-To: <1554823007.161891.6.camel@acm.org> (Bart Van Assche's message of
+        "Tue, 09 Apr 2019 08:16:47 -0700")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: Alan Stern <stern@rowland.harvard.edu>, "Martin K. Petersen" <martin.petersen@oracle.com>, Kento.A.Kobayashi@sony.com, "James E.J. Bottomley" <jejb@linux.ibm.com>, Oliver Neukum <oneukum@suse.com>, gregkh@linuxfoundation.org, USB Storage list <usb-storage@lists.one-eyed-alien.net>, Jacky.Cao@sony.com, Kernel development list <linux-kernel@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>, USB list <linux-usb@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
 
+Bart,
 
-On 4/8/19 7:22 PM, Finn Thain wrote:
-> 
-> It has been queued up by Martin and James on git.kernel.org. Apparently it 
-> is to be pushed in the v5.2 merge window.
-> 
+> From which context does that unbind happen? From inside a SCSI EH
+> callback or from the context of a workqueue? I think the former is not
+> allowed but that the latter is allowed. The SRP initiator driver
+> (ib_srp.c) follows the latter approach.
 
-Awesome.
+Yeah. It's better to punt the actual tear down.
 
-Thanks
---
-Gustavo
+-- 
+Martin K. Petersen	Oracle Linux Engineering
