@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 8/9] scsi: hisi_sas: Don't fail IT nexus reset for Open Reject timeout
-Date: Thu, 11 Apr 2019 20:46:43 +0800
-Message-ID: <1554986804-233706-9-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 5/9] scsi: hisi_sas: allocate different SAS address for directly attached situation
+Date: Thu, 11 Apr 2019 20:46:40 +0800
+Message-ID: <1554986804-233706-6-git-send-email-john.garry@huawei.com>
 References: <1554986804-233706-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -9,81 +9,42 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1554986804-233706-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linuxarm@huawei.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Luo Jiaxing <luojiaxing@huawei.com>, John Garry <john.garry@huawei.com>
+Cc: linuxarm@huawei.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Luo Jiaxing <luojiaxing@huawei.com>
+From: Xiang Chen <chenxiang66@hisilicon.com>
 
-Currently we call hisi_sas_softreset_ata_disk() in
-hisi_sas_I_T_nexus_reset().
+In commit 8b8d66531555 ("scsi: hisi_sas: make SAS address of SATA
+disks unique"), we ensured that each SATA disk in the system has a
+unique SAS address, even if it is fake. That was for v2 hw.
 
-If this fails for open reject reason, there is no reason to
-fail the IT nexus reset, so only fail for TMF_RESP_FUNC_FAILED.
+Add this for v3 hw.
 
-Some other strings spilled over multiple lines are reunited.
-
-Signed-off-by: Luo Jiaxing <luojiaxing@huawei.com>
+Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_main.c | 25 ++++++++++++++-----------
- 1 file changed, 14 insertions(+), 11 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index c02cf78a20c7..ebeec7a52ddc 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -1287,8 +1287,7 @@ static int hisi_sas_exec_internal_tmf_task(struct domain_device *device,
- 			/* no error, but return the number of bytes of
- 			 * underrun
- 			 */
--			dev_warn(dev, "abort tmf: task to dev %016llx "
--				 "resp: 0x%x sts 0x%x underrun\n",
-+			dev_warn(dev, "abort tmf: task to dev %016llx resp: 0x%x sts 0x%x underrun\n",
- 				 SAS_ADDR(device->sas_addr),
- 				 task->task_status.resp,
- 				 task->task_status.stat);
-@@ -1303,10 +1302,16 @@ static int hisi_sas_exec_internal_tmf_task(struct domain_device *device,
- 			break;
- 		}
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index 3b33816ea6e6..89551b772cd4 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -1380,6 +1380,7 @@ static irqreturn_t phy_up_v3_hw(int phy_no, struct hisi_hba *hisi_hba)
+ 		struct hisi_sas_initial_fis *initial_fis;
+ 		struct dev_to_host_fis *fis;
+ 		u8 attached_sas_addr[SAS_ADDR_SIZE] = {0};
++		struct Scsi_Host *shost = hisi_hba->shost;
  
--		dev_warn(dev, "abort tmf: task to dev "
--			 "%016llx resp: 0x%x status 0x%x\n",
--			 SAS_ADDR(device->sas_addr), task->task_status.resp,
--			 task->task_status.stat);
-+		if (task->task_status.resp == SAS_TASK_COMPLETE &&
-+		    task->task_status.stat == SAS_OPEN_REJECT) {
-+			dev_warn(dev, "abort tmf: open reject failed\n");
-+			res = -EIO;
-+		} else {
-+			dev_warn(dev, "abort tmf: task to dev %016llx resp: 0x%x status 0x%x\n",
-+				 SAS_ADDR(device->sas_addr),
-+				 task->task_status.resp,
-+				 task->task_status.stat);
-+		}
- 		sas_free_task(task);
- 		task = NULL;
- 	}
-@@ -1826,7 +1831,7 @@ static int hisi_sas_I_T_nexus_reset(struct domain_device *device)
+ 		dev_info(dev, "phyup: phy%d link_rate=%d(sata)\n", phy_no, link_rate);
+ 		initial_fis = &hisi_hba->initial_fis[phy_no];
+@@ -1396,6 +1397,7 @@ static irqreturn_t phy_up_v3_hw(int phy_no, struct hisi_hba *hisi_hba)
  
- 	if (dev_is_sata(device)) {
- 		rc = hisi_sas_softreset_ata_disk(device);
--		if (rc)
-+		if (rc == TMF_RESP_FUNC_FAILED)
- 			return TMF_RESP_FUNC_FAILED;
- 	}
- 
-@@ -2123,10 +2128,8 @@ _hisi_sas_internal_task_abort(struct hisi_hba *hisi_hba,
- 	}
- 
- exit:
--	dev_dbg(dev, "internal task abort: task to dev %016llx task=%p "
--		"resp: 0x%x sts 0x%x\n",
--		SAS_ADDR(device->sas_addr),
--		task,
-+	dev_dbg(dev, "internal task abort: task to dev %016llx task=%p resp: 0x%x sts 0x%x\n",
-+		SAS_ADDR(device->sas_addr), task,
- 		task->task_status.resp, /* 0 is complete, -1 is undelivered */
- 		task->task_status.stat);
- 	sas_free_task(task);
+ 		sas_phy->oob_mode = SATA_OOB_MODE;
+ 		attached_sas_addr[0] = 0x50;
++		attached_sas_addr[6] = shost->host_no;
+ 		attached_sas_addr[7] = phy_no;
+ 		memcpy(sas_phy->attached_sas_addr,
+ 		       attached_sas_addr,
 -- 
 2.17.1
