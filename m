@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 7/9] scsi: hisi_sas: Don't hard reset disk during controller reset
-Date: Thu, 11 Apr 2019 20:46:42 +0800
-Message-ID: <1554986804-233706-8-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 2/9] scsi: hisi_sas: Remedy inconsistent PHY down state in software
+Date: Thu, 11 Apr 2019 20:46:37 +0800
+Message-ID: <1554986804-233706-3-git-send-email-john.garry@huawei.com>
 References: <1554986804-233706-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -9,38 +9,44 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1554986804-233706-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linuxarm@huawei.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Luo Jiaxing <luojiaxing@huawei.com>, John Garry <john.garry@huawei.com>
+Cc: linuxarm@huawei.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Luo Jiaxing <luojiaxing@huawei.com>
+From: Xiang Chen <chenxiang66@hisilicon.com>
 
-In the function of hisi_sas_init_device(), we added ops->hardreset() to
-clear affiliation of STP target port or handle [STP pending] state.
+Currently there are two scenarioes which may cause PHY state of hardware
+(which is 0) is inconsistent with the state held in software:
+- Unplug SAS wire before get_phys_state when SAS controller reset, then the interrupts
+of phy down are ignored, phy state is 0 before reset, and it also gets 0 after
+reset, so phy down doesn't occur even if unpluged SAS wire;
+- For v3 hw later version, it will close bus when 2 bit ECC error occur.
+So if unplug SAS wire at that time, interrupts of phy down also not occur.
+So at last it will cause host reset. It also get phy state 0 before and
+after reset, the same issue occurs.
 
-Function hisi_sas_init_device() will be called when a device is found or
-during controller reset. At controller reset, we call
-hisi_sas_init_device() to re-init the disks, so calling hardreset() is
-unnecessary and it also will cause some delay at controller reset.
+To solve it, use hisi_sas_phy_down() directly in rescan topology function.
 
-Signed-off-by: Luo Jiaxing <luojiaxing@huawei.com>
+Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_main.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index ede812759991..c02cf78a20c7 100644
+index a1eaddcf740d..e7401e2bea27 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -754,7 +754,8 @@ static int hisi_sas_init_device(struct domain_device *device)
- 		 * STP target port
- 		 */
- 		local_phy = sas_get_local_phy(device);
--		if (!scsi_is_sas_phy_local(local_phy)) {
-+		if (!scsi_is_sas_phy_local(local_phy) &&
-+		    !test_bit(HISI_SAS_RESET_BIT, &hisi_hba->flags)) {
- 			unsigned long deadline = ata_deadline(jiffies, 20000);
- 			struct sata_device *sata_dev = &device->sata_dev;
- 			struct ata_host *ata_host = sata_dev->ata_host;
+@@ -1427,9 +1427,9 @@ static void hisi_sas_rescan_topology(struct hisi_hba *hisi_hba, u32 old_state,
+ 					sas_ha->notify_port_event(sas_phy,
+ 							PORTE_BROADCAST_RCVD);
+ 			}
+-		} else if (old_state & (1 << phy_no))
+-			/* PHY down but was up before */
++		} else {
+ 			hisi_sas_phy_down(hisi_hba, phy_no, 0);
++		}
+ 
+ 	}
+ }
 -- 
 2.17.1
