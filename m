@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 5/9] scsi: hisi_sas: allocate different SAS address for directly attached situation
-Date: Thu, 11 Apr 2019 20:46:40 +0800
-Message-ID: <1554986804-233706-6-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 7/9] scsi: hisi_sas: Don't hard reset disk during controller reset
+Date: Thu, 11 Apr 2019 20:46:42 +0800
+Message-ID: <1554986804-233706-8-git-send-email-john.garry@huawei.com>
 References: <1554986804-233706-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -9,42 +9,38 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1554986804-233706-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linuxarm@huawei.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
+Cc: linuxarm@huawei.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Luo Jiaxing <luojiaxing@huawei.com>, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Xiang Chen <chenxiang66@hisilicon.com>
+From: Luo Jiaxing <luojiaxing@huawei.com>
 
-In commit 8b8d66531555 ("scsi: hisi_sas: make SAS address of SATA
-disks unique"), we ensured that each SATA disk in the system has a
-unique SAS address, even if it is fake. That was for v2 hw.
+In the function of hisi_sas_init_device(), we added ops->hardreset() to
+clear affiliation of STP target port or handle [STP pending] state.
 
-Add this for v3 hw.
+Function hisi_sas_init_device() will be called when a device is found or
+during controller reset. At controller reset, we call
+hisi_sas_init_device() to re-init the disks, so calling hardreset() is
+unnecessary and it also will cause some delay at controller reset.
 
-Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+Signed-off-by: Luo Jiaxing <luojiaxing@huawei.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 3b33816ea6e6..89551b772cd4 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -1380,6 +1380,7 @@ static irqreturn_t phy_up_v3_hw(int phy_no, struct hisi_hba *hisi_hba)
- 		struct hisi_sas_initial_fis *initial_fis;
- 		struct dev_to_host_fis *fis;
- 		u8 attached_sas_addr[SAS_ADDR_SIZE] = {0};
-+		struct Scsi_Host *shost = hisi_hba->shost;
- 
- 		dev_info(dev, "phyup: phy%d link_rate=%d(sata)\n", phy_no, link_rate);
- 		initial_fis = &hisi_hba->initial_fis[phy_no];
-@@ -1396,6 +1397,7 @@ static irqreturn_t phy_up_v3_hw(int phy_no, struct hisi_hba *hisi_hba)
- 
- 		sas_phy->oob_mode = SATA_OOB_MODE;
- 		attached_sas_addr[0] = 0x50;
-+		attached_sas_addr[6] = shost->host_no;
- 		attached_sas_addr[7] = phy_no;
- 		memcpy(sas_phy->attached_sas_addr,
- 		       attached_sas_addr,
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index ede812759991..c02cf78a20c7 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -754,7 +754,8 @@ static int hisi_sas_init_device(struct domain_device *device)
+ 		 * STP target port
+ 		 */
+ 		local_phy = sas_get_local_phy(device);
+-		if (!scsi_is_sas_phy_local(local_phy)) {
++		if (!scsi_is_sas_phy_local(local_phy) &&
++		    !test_bit(HISI_SAS_RESET_BIT, &hisi_hba->flags)) {
+ 			unsigned long deadline = ata_deadline(jiffies, 20000);
+ 			struct sata_device *sata_dev = &device->sata_dev;
+ 			struct ata_host *ata_host = sata_dev->ata_host;
 -- 
 2.17.1
