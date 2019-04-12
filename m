@@ -1,76 +1,81 @@
-From: Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>
-Subject: Re: [PATCH 3/4] lib/hexdump.c: Replace ascii bool in
- hex_dump_to_buffer with flags
-Date: Fri, 12 Apr 2019 15:47:14 +0100
-Message-ID: <929244ed-cc7f-b0f3-b5ac-50e798e83188@linux.intel.com>
-References: <20190410031720.11067-1-alastair@au1.ibm.com>
- <20190410031720.11067-4-alastair@au1.ibm.com>
+From: "Alastair D'Silva" <alastair@d-silva.org>
+Subject: RE: [PATCH 1/4] lib/hexdump.c: Allow 64 bytes per line
+Date: Sat, 13 Apr 2019 09:22:05 +1000
+Message-ID: <092f01d4f186$8e9e7cd0$abdb7670$@d-silva.org>
+References: <20190410031720.11067-1-alastair@au1.ibm.com> <20190410031720.11067-2-alastair@au1.ibm.com> <20190412134802.kprel2c2iqijd4ai@pathway.suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <intel-gfx-bounces@lists.freedesktop.org>
-In-Reply-To: <20190410031720.11067-4-alastair@au1.ibm.com>
-Content-Language: en-US
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
-List-Post: <mailto:intel-gfx@lists.freedesktop.org>
-List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: intel-gfx-bounces@lists.freedesktop.org
-Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
-To: Alastair D'Silva <alastair@au1.ibm.com>, alastair@d-silva.org
-Cc: linux-fbdev@vger.kernel.org, Stanislaw Gruszka <sgruszka@redhat.com>, Tom Lendacky <thomas.lendacky@amd.com>, David Airlie <airlied@linux.ie>, dri-devel@lists.freedesktop.org, devel@driverdev.osuosl.org, linux-scsi@vger.kernel.org, Jassi Brar <jassisinghbrar@gmail.com>, ath10k@lists.infradead.org, "James E.J. Bottomley" <jejb@linux.ibm.com>, Jose Abreu <Jose.Abreu@synopsys.com>, Petr Mladek <pmladek@suse.com>, intel-gfx@lists.freedesktop.org, Steven Rostedt <rostedt@goodmis.org>, Enric Balletbo i Serra <enric.balletbo@collabora.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Kalle Valo <kvalo@codeaurora.org>, Karsten Keil <isdn@linux-pingi.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, Sergey Senozhatsky <sergey.senozhatsky@gmail.com>, netdev@vger.kerne
+Content-Type: text/plain;
+        charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190412134802.kprel2c2iqijd4ai@pathway.suse.cz>
+Content-Language: en-au
+Sender: linux-kernel-owner@vger.kernel.org
+To: 'Petr Mladek' <pmladek@suse.com>
+Cc: 'Jani Nikula' <jani.nikula@linux.intel.com>, 'Joonas Lahtinen' <joonas.lahtinen@linux.intel.com>, 'Rodrigo Vivi' <rodrigo.vivi@intel.com>, 'David Airlie' <airlied@linux.ie>, 'Daniel Vetter' <daniel@ffwll.ch>, 'Karsten Keil' <isdn@linux-pingi.de>, 'Jassi Brar' <jassisinghbrar@gmail.com>, 'Tom Lendacky' <thomas.lendacky@amd.com>, "'David S. Miller'" <davem@davemloft.net>, 'Jose Abreu' <Jose.Abreu@synopsys.com>, 'Kalle Valo' <kvalo@codeaurora.org>, 'Stanislaw Gruszka' <sgruszka@redhat.com>, 'Benson Leung' <bleung@chromium.org>, 'Enric Balletbo i Serra' <enric.balletbo@collabora.com>, "'James E.J. Bottomley'" <jejb@linux.ibm.com>, "'Martin K. Petersen'" <martin.petersen@oracle.com>, 'Greg Kroah-Hartman' <gregkh@linuxfoundation.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Ck9uIDEwLzA0LzIwMTkgMDQ6MTcsIEFsYXN0YWlyIEQnU2lsdmEgd3JvdGU6Cj4gRnJvbTogQWxh
-c3RhaXIgRCdTaWx2YSA8YWxhc3RhaXJAZC1zaWx2YS5vcmc+Cj4gCj4gSW4gb3JkZXIgdG8gc3Vw
-cG9ydCBhZGRpdGlvbmFsIGZlYXR1cmVzIGluIGhleF9kdW1wX3RvX2J1ZmZlciwgcmVwbGFjZQo+
-IHRoZSBhc2NpaSBib29sIHBhcmFtZXRlciB3aXRoIGZsYWdzLgo+IAo+IFNpZ25lZC1vZmYtYnk6
-IEFsYXN0YWlyIEQnU2lsdmEgPGFsYXN0YWlyQGQtc2lsdmEub3JnPgo+IC0tLQo+ICAgZHJpdmVy
-cy9ncHUvZHJtL2k5MTUvaW50ZWxfZW5naW5lX2NzLmMgICAgICAgICAgICB8ICAyICstCj4gICBk
-cml2ZXJzL2lzZG4vaGFyZHdhcmUvbUlTRE4vbUlTRE5pc2FyLmMgICAgICAgICAgIHwgIDYgKysr
-Ky0tCj4gICBkcml2ZXJzL21haWxib3gvbWFpbGJveC10ZXN0LmMgICAgICAgICAgICAgICAgICAg
-IHwgIDIgKy0KPiAgIGRyaXZlcnMvbmV0L2V0aGVybmV0L2FtZC94Z2JlL3hnYmUtZHJ2LmMgICAg
-ICAgICAgfCAgMiArLQo+ICAgZHJpdmVycy9uZXQvZXRoZXJuZXQvc3lub3BzeXMvZHdjLXhsZ21h
-Yy1jb21tb24uYyB8ICAyICstCj4gICBkcml2ZXJzL25ldC93aXJlbGVzcy9hdGgvYXRoMTBrL2Rl
-YnVnLmMgICAgICAgICAgIHwgIDMgKystCj4gICBkcml2ZXJzL25ldC93aXJlbGVzcy9pbnRlbC9p
-d2xlZ2FjeS8zOTQ1LW1hYy5jICAgIHwgIDIgKy0KPiAgIGRyaXZlcnMvcGxhdGZvcm0vY2hyb21l
-L3dpbGNvX2VjL2RlYnVnZnMuYyAgICAgICAgfCAgMyArKy0KPiAgIGRyaXZlcnMvc2NzaS9zY3Np
-X2xvZ2dpbmcuYyAgICAgICAgICAgICAgICAgICAgICAgfCAgOCArKystLS0tLQo+ICAgZHJpdmVy
-cy9zdGFnaW5nL2ZidGZ0L2ZidGZ0LWNvcmUuYyAgICAgICAgICAgICAgICB8ICAyICstCj4gICBm
-cy9zZXFfZmlsZS5jICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwgIDMgKyst
-Cj4gICBpbmNsdWRlL2xpbnV4L3ByaW50ay5oICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwg
-IDIgKy0KPiAgIGxpYi9oZXhkdW1wLmMgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgfCAxNSArKysrKysrKy0tLS0tLS0KPiAgIGxpYi90ZXN0X2hleGR1bXAuYyAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgfCAgNSArKystLQo+ICAgMTQgZmlsZXMgY2hhbmdlZCwgMzEg
-aW5zZXJ0aW9ucygrKSwgMjYgZGVsZXRpb25zKC0pCj4gCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMv
-Z3B1L2RybS9pOTE1L2ludGVsX2VuZ2luZV9jcy5jIGIvZHJpdmVycy9ncHUvZHJtL2k5MTUvaW50
-ZWxfZW5naW5lX2NzLmMKPiBpbmRleCA0OWZhNDNmZjAyYmEuLmZiMTMzZTcyOWY5YSAxMDA2NDQK
-PiAtLS0gYS9kcml2ZXJzL2dwdS9kcm0vaTkxNS9pbnRlbF9lbmdpbmVfY3MuYwo+ICsrKyBiL2Ry
-aXZlcnMvZ3B1L2RybS9pOTE1L2ludGVsX2VuZ2luZV9jcy5jCj4gQEAgLTEzMTgsNyArMTMxOCw3
-IEBAIHN0YXRpYyB2b2lkIGhleGR1bXAoc3RydWN0IGRybV9wcmludGVyICptLCBjb25zdCB2b2lk
-ICpidWYsIHNpemVfdCBsZW4pCj4gICAJCVdBUk5fT05fT05DRShoZXhfZHVtcF90b19idWZmZXIo
-YnVmICsgcG9zLCBsZW4gLSBwb3MsCj4gICAJCQkJCQlyb3dzaXplLCBzaXplb2YodTMyKSwKPiAg
-IAkJCQkJCWxpbmUsIHNpemVvZihsaW5lKSwKPiAtCQkJCQkJZmFsc2UpID49IHNpemVvZihsaW5l
-KSk7Cj4gKwkJCQkJCTApID49IHNpemVvZihsaW5lKSk7Cj4gICAJCWRybV9wcmludGYobSwgIlsl
-MDR6eF0gJXNcbiIsIHBvcywgbGluZSk7Cj4gICAKPiAgIAkJcHJldiA9IGJ1ZiArIHBvczsKCmk5
-MTUgY29kZSBoZXJlIGFjdHVhbGx5IGRvZXMgc29tZXRoaW5nIEkgdGhpbmsgaXMgbW9yZSBpbnRl
-cmVzdGluZyB0aGFuCkhFWERVTVBfU1VQUFJFU1NfMFgqKi4gSXQgcmVwbGFjZXMgYW55IE4gcmVw
-ZWF0aW5nIGxpbmVzIHdpdGggYSBzaW5nbGUgc3RhcgptYXJrZXIuIEZvciBleGFtcGxlOgoKICAg
-IDAwMDAwMDAwIDAwMDAwMDAwIDAwMDAwMDAwIDAwMDAwMDAwIDAwMDAwMDAwIDAwMDAwMDAwIDAw
-MDAwMDAwIDAwMDAwMDAwIDAwMDAwMDAwCiAgICAqCiAgICAwMDAwMDA0MCAwMDAwMDAwMSAwMDAw
-MDAwMCAwMDAwMDAxOCAwMDAwMDAwMiAwMDAwMDAwMSAwMDAwMDAwMCAwMDAwMDAxOCAwMDAwMDAw
-MAogICAgMDAwMDAwNjAgMDAwMDAwMDAgMDAwMDAwMDAgMDAwMDAwMDAgMDAwMDAwMDAgMDAwMDAw
-MDAgMDAwMDAwMDAgMDAwMDAwMDAgMDAwMDAwMDMKICAgIDAwMDAwMDgwIDAwMDAwMDAwIDAwMDAw
-MDAwIDAwMDAwMDAwIDAwMDAwMDAwIDAwMDAwMDAwIDAwMDAwMDAwIDAwMDAwMDAwIDAwMDAwMDAw
-CiAgICAqCiAgICAwMDAwMDBjMCAwMDAwMDAwMiAwMDAwMDAwMCAwMDAwMDAwMCAwMDAwMDAwMCAw
-MDAwMDAwMCAwMDAwMDAwMCAwMDAwMDAwMCAwMDAwMDAwMAogICAgMDAwMDAwZTAgMDAwMDAwMDAg
-MDAwMDAwMDAgMDAwMDAwMDAgMDAwMDAwMDAgMDAwMDAwMDAgMDAwMDAwMDAgMDAwMDAwMDAgMDAw
-MDAwMDAKICAgICoKCklmIG9yIHdoZW4geW91IGVuZCB1cCB3aXRoIHRoaXMgZmVhdHVyZSBpbiB5
-b3VyIHNlcmllcyB5b3UgY2FuIHRoZXJlZm9yZQpyZXBsYWNlIHRoZSB3aG9sZSBpbXBsZW1lbnRh
-dGlvbiBvZiBoZXhkdW1wIGluIHRoZSBhYm92ZSBmaWxlLgoKUmVnYXJkcywKClR2cnRrbwpfX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpJbnRlbC1nZnggbWFp
-bGluZyBsaXN0CkludGVsLWdmeEBsaXN0cy5mcmVlZGVza3RvcC5vcmcKaHR0cHM6Ly9saXN0cy5m
-cmVlZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0aW5mby9pbnRlbC1nZng=
+> -----Original Message-----
+> From: Petr Mladek <pmladek@suse.com>
+> Sent: Friday, 12 April 2019 11:48 PM
+> To: Alastair D'Silva <alastair@au1.ibm.com>
+> Cc: alastair@d-silva.org; Jani Nikula <jani.nikula@linux.intel.com>;
+Joonas
+> Lahtinen <joonas.lahtinen@linux.intel.com>; Rodrigo Vivi
+> <rodrigo.vivi@intel.com>; David Airlie <airlied@linux.ie>; Daniel Vetter
+> <daniel@ffwll.ch>; Karsten Keil <isdn@linux-pingi.de>; Jassi Brar
+> <jassisinghbrar@gmail.com>; Tom Lendacky <thomas.lendacky@amd.com>;
+> David S. Miller <davem@davemloft.net>; Jose Abreu
+> <Jose.Abreu@synopsys.com>; Kalle Valo <kvalo@codeaurora.org>;
+> Stanislaw Gruszka <sgruszka@redhat.com>; Benson Leung
+> <bleung@chromium.org>; Enric Balletbo i Serra
+> <enric.balletbo@collabora.com>; James E.J. Bottomley
+> <jejb@linux.ibm.com>; Martin K. Petersen <martin.petersen@oracle.com>;
+> Greg Kroah-Hartman <gregkh@linuxfoundation.org>; Alexander Viro
+> <viro@zeniv.linux.org.uk>; Sergey Senozhatsky
+> <sergey.senozhatsky@gmail.com>; Steven Rostedt <rostedt@goodmis.org>;
+> Andrew Morton <akpm@linux-foundation.org>; intel-
+> gfx@lists.freedesktop.org; dri-devel@lists.freedesktop.org; linux-
+> kernel@vger.kernel.org; netdev@vger.kernel.org;
+> ath10k@lists.infradead.org; linux-wireless@vger.kernel.org; linux-
+> scsi@vger.kernel.org; linux-fbdev@vger.kernel.org;
+> devel@driverdev.osuosl.org; linux-fsdevel@vger.kernel.org
+> Subject: Re: [PATCH 1/4] lib/hexdump.c: Allow 64 bytes per line
+> 
+> On Wed 2019-04-10 13:17:17, Alastair D'Silva wrote:
+> > From: Alastair D'Silva <alastair@d-silva.org>
+> >
+> > With modern high resolution screens, we can display more data, which
+> > makes life a bit easier when debugging.
+> 
+> I have quite some doubts about this feature.
+> 
+> We are talking about more than 256 characters per-line. I wonder if such a
+> long line is really easier to read for a human.
+
+It's basically 2 separate panes of information side by side, the hexdump and
+the ASCII version.
+
+I'm using this myself when dealing with the pmem labels, and it works quite
+nicely.
+
+> 
+> I am not expert but there is a reason why the standard is 80 characters
+per-
+> line. I guess that anything above 100 characters is questionable.
+> https://en.wikipedia.org/wiki/Line_length
+> somehow confirms that.
+> 
+> Second, if we take 8 pixels per-character. Then we need
+> 2048 to show the 256 characters. It is more than HD.
+> IMHO, there is still huge number of people that even do not have HD
+display,
+> especially on a notebook.
+
+The intent is to make debugging easier when dealing with large chunks of
+binary data. I don't expect end users to see this output.
+
+-- 
+Alastair D'Silva           mob: 0423 762 819
+skype: alastair_dsilva     msn: alastair@d-silva.org
+blog: http://alastair.d-silva.org    Twitter: @EvilDeece
