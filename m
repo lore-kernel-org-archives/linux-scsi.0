@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 6/6] scsi: libsas: Print expander PHY indexes in decimal
-Date: Fri, 12 Apr 2019 16:57:57 +0800
-Message-ID: <1555059478-36224-7-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 2/6] scsi: libsas: Try to retain programmed min linkrate for SATA min pathway unmatch fixing
+Date: Fri, 12 Apr 2019 16:57:53 +0800
+Message-ID: <1555059478-36224-3-git-send-email-john.garry@huawei.com>
 References: <1555059478-36224-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,250 +12,44 @@ To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
 Cc: linuxarm@huawei.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, yanaijie@huawei.com, chenxiang66@hisilicon.com, luojiaxing@huawei.com, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Currently we print expander PHY indexes in a mix of decimal and hex.
+Currently for fixing the linkrate matching during discovery such that
+the linkrate of a SATA PHY does not exceed min pathway to initiator,
+we set the SATA PHY programmed min linkrate to the same value as the
+programmed max linkrate.
 
-It is more consistent and also more convenient to read decimal, so
-make this change.
+This is unnecessary, and we should be able to keep the same programmed
+min linkrate if it is already lower than this new max programmed linkrate.
 
-We use width of 2 for expander and 1 for root PHYs prints.
+This patch makes that change.
 
-Some lines which were needlessly spilling multiple lines are unified.
+In effect, this will not make much difference since we generally will
+negotiate a linkrate at the programmed max linkrate, and the programmed
+min linkrate will have no impact.
 
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/libsas/sas_ata.c      |  2 +-
- drivers/scsi/libsas/sas_expander.c | 44 +++++++++++++++---------------
- drivers/scsi/libsas/sas_init.c     |  2 +-
- drivers/scsi/libsas/sas_phy.c      |  7 ++---
- 4 files changed, 27 insertions(+), 28 deletions(-)
+ drivers/scsi/libsas/sas_expander.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index 6f93fee2b21b..1ecca71df8b5 100644
---- a/drivers/scsi/libsas/sas_ata.c
-+++ b/drivers/scsi/libsas/sas_ata.c
-@@ -281,7 +281,7 @@ int sas_get_ata_info(struct domain_device *dev, struct ex_phy *phy)
- 		res = sas_get_report_phy_sata(dev->parent, phy->phy_id,
- 					      &dev->sata_dev.rps_resp);
- 		if (res) {
--			pr_debug("report phy sata to %016llx:0x%x returned 0x%x\n",
-+			pr_debug("report phy sata to %016llx:%02d returned 0x%x\n",
- 				 SAS_ADDR(dev->parent->sas_addr),
- 				 phy->phy_id, res);
- 			return res;
 diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-index ad96bc843acc..83f2fd70ce76 100644
+index 93f297199d4c..dfdf3c94d326 100644
 --- a/drivers/scsi/libsas/sas_expander.c
 +++ b/drivers/scsi/libsas/sas_expander.c
-@@ -870,7 +870,7 @@ static struct domain_device *sas_ex_discover_end_dev(
+@@ -826,9 +826,14 @@ static struct domain_device *sas_ex_discover_end_dev(
+ #ifdef CONFIG_SCSI_SAS_ATA
+ 	if ((phy->attached_tproto & SAS_PROTOCOL_STP) || phy->attached_sata_dev) {
+ 		if (child->linkrate > parent->min_linkrate) {
++			struct sas_phy *cphy = child->phy;
++			enum sas_linkrate min_prate = cphy->minimum_linkrate,
++				parent_min_lrate = parent->min_linkrate,
++				min_linkrate = (min_prate > parent_min_lrate) ?
++					       parent_min_lrate : 0;
+ 			struct sas_phy_linkrates rates = {
+ 				.maximum_linkrate = parent->min_linkrate,
+-				.minimum_linkrate = parent->min_linkrate,
++				.minimum_linkrate = min_linkrate,
+ 			};
+ 			int ret;
  
- 		res = sas_discover_sata(child);
- 		if (res) {
--			pr_notice("sas_discover_sata() for device %16llx at %016llx:0x%x returned 0x%x\n",
-+			pr_notice("sas_discover_sata() for device %16llx at %016llx:%02d returned 0x%x\n",
- 				  SAS_ADDR(child->sas_addr),
- 				  SAS_ADDR(parent->sas_addr), phy_id, res);
- 			goto out_list_del;
-@@ -895,7 +895,7 @@ static struct domain_device *sas_ex_discover_end_dev(
- 
- 		res = sas_discover_end_dev(child);
- 		if (res) {
--			pr_notice("sas_discover_end_dev() for device %16llx at %016llx:0x%x returned 0x%x\n",
-+			pr_notice("sas_discover_end_dev() for device %16llx at %016llx:%02d returned 0x%x\n",
- 				  SAS_ADDR(child->sas_addr),
- 				  SAS_ADDR(parent->sas_addr), phy_id, res);
- 			goto out_list_del;
-@@ -960,7 +960,7 @@ static struct domain_device *sas_ex_discover_expander(
- 	int res;
- 
- 	if (phy->routing_attr == DIRECT_ROUTING) {
--		pr_warn("ex %016llx:0x%x:D <--> ex %016llx:0x%x is not allowed\n",
-+		pr_warn("ex %016llx:%02d:D <--> ex %016llx:0x%x is not allowed\n",
- 			SAS_ADDR(parent->sas_addr), phy_id,
- 			SAS_ADDR(phy->attached_sas_addr),
- 			phy->attached_phy_id);
-@@ -1070,7 +1070,7 @@ static int sas_ex_discover_dev(struct domain_device *dev, int phy_id)
- 	    ex_phy->attached_dev_type != SAS_FANOUT_EXPANDER_DEVICE &&
- 	    ex_phy->attached_dev_type != SAS_EDGE_EXPANDER_DEVICE &&
- 	    ex_phy->attached_dev_type != SAS_SATA_PENDING) {
--		pr_warn("unknown device type(0x%x) attached to ex %016llx phy 0x%x\n",
-+		pr_warn("unknown device type(0x%x) attached to ex %016llx phy%02d\n",
- 			ex_phy->attached_dev_type,
- 			SAS_ADDR(dev->sas_addr),
- 			phy_id);
-@@ -1086,7 +1086,7 @@ static int sas_ex_discover_dev(struct domain_device *dev, int phy_id)
- 	}
- 
- 	if (sas_ex_join_wide_port(dev, phy_id)) {
--		pr_debug("Attaching ex phy%d to wide port %016llx\n",
-+		pr_debug("Attaching ex phy%02d to wide port %016llx\n",
- 			 phy_id, SAS_ADDR(ex_phy->attached_sas_addr));
- 		return res;
- 	}
-@@ -1098,7 +1098,7 @@ static int sas_ex_discover_dev(struct domain_device *dev, int phy_id)
- 		break;
- 	case SAS_FANOUT_EXPANDER_DEVICE:
- 		if (SAS_ADDR(dev->port->disc.fanout_sas_addr)) {
--			pr_debug("second fanout expander %016llx phy 0x%x attached to ex %016llx phy 0x%x\n",
-+			pr_debug("second fanout expander %016llx phy%02d attached to ex %016llx phy%02d\n",
- 				 SAS_ADDR(ex_phy->attached_sas_addr),
- 				 ex_phy->attached_phy_id,
- 				 SAS_ADDR(dev->sas_addr),
-@@ -1131,7 +1131,7 @@ static int sas_ex_discover_dev(struct domain_device *dev, int phy_id)
- 			    SAS_ADDR(child->sas_addr)) {
- 				ex->ex_phy[i].phy_state= PHY_DEVICE_DISCOVERED;
- 				if (sas_ex_join_wide_port(dev, i))
--					pr_debug("Attaching ex phy%d to wide port %016llx\n",
-+					pr_debug("Attaching ex phy%02d to wide port %016llx\n",
- 						 i, SAS_ADDR(ex->ex_phy[i].attached_sas_addr));
- 			}
- 		}
-@@ -1266,7 +1266,7 @@ static int sas_check_ex_subtractive_boundary(struct domain_device *dev)
- 			else if (SAS_ADDR(sub_sas_addr) !=
- 				 SAS_ADDR(phy->attached_sas_addr)) {
- 
--				pr_notice("ex %016llx phy 0x%x diverges(%016llx) on subtractive boundary(%016llx). Disabled\n",
-+				pr_notice("ex %016llx phy%02d diverges(%016llx) on subtractive boundary(%016llx). Disabled\n",
- 					  SAS_ADDR(dev->sas_addr), i,
- 					  SAS_ADDR(phy->attached_sas_addr),
- 					  SAS_ADDR(sub_sas_addr));
-@@ -1287,7 +1287,7 @@ static void sas_print_parent_topology_bug(struct domain_device *child,
- 	};
- 	struct domain_device *parent = child->parent;
- 
--	pr_notice("%s ex %016llx phy 0x%x <--> %s ex %016llx phy 0x%x has %c:%c routing link!\n",
-+	pr_notice("%s ex %016llx phy%02d <--> %s ex %016llx phy%02d has %c:%c routing link!\n",
- 		  ex_type[parent->dev_type],
- 		  SAS_ADDR(parent->sas_addr),
- 		  parent_phy->phy_id,
-@@ -1309,7 +1309,7 @@ static int sas_check_eeds(struct domain_device *child,
- 
- 	if (SAS_ADDR(parent->port->disc.fanout_sas_addr) != 0) {
- 		res = -ENODEV;
--		pr_warn("edge ex %016llx phy S:0x%x <--> edge ex %016llx phy S:0x%x, while there is a fanout ex %016llx\n",
-+		pr_warn("edge ex %016llx phy S:%02d <--> edge ex %016llx phy S:%02d, while there is a fanout ex %016llx\n",
- 			SAS_ADDR(parent->sas_addr),
- 			parent_phy->phy_id,
- 			SAS_ADDR(child->sas_addr),
-@@ -1332,7 +1332,7 @@ static int sas_check_eeds(struct domain_device *child,
- 		;
- 	else {
- 		res = -ENODEV;
--		pr_warn("edge ex %016llx phy 0x%x <--> edge ex %016llx phy 0x%x link forms a third EEDS!\n",
-+		pr_warn("edge ex %016llx phy%02d <--> edge ex %016llx phy%02d link forms a third EEDS!\n",
- 			SAS_ADDR(parent->sas_addr),
- 			parent_phy->phy_id,
- 			SAS_ADDR(child->sas_addr),
-@@ -1450,11 +1450,11 @@ static int sas_configure_present(struct domain_device *dev, int phy_id,
- 			goto out;
- 		res = rri_resp[2];
- 		if (res == SMP_RESP_NO_INDEX) {
--			pr_warn("overflow of indexes: dev %016llx phy 0x%x index 0x%x\n",
-+			pr_warn("overflow of indexes: dev %016llx phy%02d index 0x%x\n",
- 				SAS_ADDR(dev->sas_addr), phy_id, i);
- 			goto out;
- 		} else if (res != SMP_RESP_FUNC_ACC) {
--			pr_notice("%s: dev %016llx phy 0x%x index 0x%x result 0x%x\n",
-+			pr_notice("%s: dev %016llx phy%02d index 0x%x result 0x%x\n",
- 				  __func__, SAS_ADDR(dev->sas_addr), phy_id,
- 				  i, res);
- 			goto out;
-@@ -1520,7 +1520,7 @@ static int sas_configure_set(struct domain_device *dev, int phy_id,
- 		goto out;
- 	res = cri_resp[2];
- 	if (res == SMP_RESP_NO_INDEX) {
--		pr_warn("overflow of indexes: dev %016llx phy 0x%x index 0x%x\n",
-+		pr_warn("overflow of indexes: dev %016llx phy%02d index 0x%x\n",
- 			SAS_ADDR(dev->sas_addr), phy_id, index);
- 	}
- out:
-@@ -1876,7 +1876,7 @@ static int sas_find_bcast_dev(struct domain_device *dev,
- 		if (phy_id != -1) {
- 			*src_dev = dev;
- 			ex->ex_change_count = ex_change_count;
--			pr_info("ex %016llx phy%d change count has changed\n",
-+			pr_info("ex %016llx phy%02d change count has changed\n",
- 				SAS_ADDR(dev->sas_addr), phy_id);
- 			return res;
- 		} else
-@@ -1991,7 +1991,7 @@ static int sas_discover_new(struct domain_device *dev, int phy_id)
- 	struct domain_device *child;
- 	int res;
- 
--	pr_debug("ex %016llx phy%d new device attached\n",
-+	pr_debug("ex %016llx phy%02d new device attached\n",
- 		 SAS_ADDR(dev->sas_addr), phy_id);
- 	res = sas_ex_phy_discover(dev, phy_id);
- 	if (res)
-@@ -2041,10 +2041,10 @@ static int sas_rediscover_dev(struct domain_device *dev, int phy_id,
- 	int res;
- 
- 	if (!last)
--		sprintf(msg, ", part of a wide port with phy%d", sibling);
-+		sprintf(msg, ", part of a wide port with phy%02d", sibling);
- 
--	pr_debug("ex %016llx rediscovering phy%d%s\n", SAS_ADDR(dev->sas_addr),
--		 phy_id, msg);
-+	pr_debug("ex %016llx rediscovering phy%02d%s\n",
-+		 SAS_ADDR(dev->sas_addr), phy_id, msg);
- 
- 	memset(sas_addr, 0, SAS_ADDR_SIZE);
- 	res = sas_get_phy_attached_dev(dev, phy_id, sas_addr, &type);
-@@ -2083,13 +2083,13 @@ static int sas_rediscover_dev(struct domain_device *dev, int phy_id,
- 
- 		if (ata_dev && phy->attached_dev_type == SAS_SATA_PENDING)
- 			action = ", needs recovery";
--		pr_debug("ex %016llx phy 0x%x broadcast flutter%s\n",
-+		pr_debug("ex %016llx phy%02d broadcast flutter%s\n",
- 			 SAS_ADDR(dev->sas_addr), phy_id, action);
- 		return res;
- 	}
- 
- 	/* we always have to delete the old device when we went here */
--	pr_info("ex %016llx phy 0x%x replace %016llx\n",
-+	pr_info("ex %016llx phy%02d replace %016llx\n",
- 		SAS_ADDR(dev->sas_addr), phy_id,
- 		SAS_ADDR(phy->attached_sas_addr));
- 	sas_unregister_devs_sas_addr(dev, phy_id, last);
-@@ -2119,7 +2119,7 @@ static int sas_rediscover(struct domain_device *dev, const int phy_id)
- 	int i;
- 	bool last = true;	/* is this the last phy of the port */
- 
--	pr_debug("ex %016llx phy%d originated BROADCAST(CHANGE)\n",
-+	pr_debug("ex %016llx phy%02d originated BROADCAST(CHANGE)\n",
- 		 SAS_ADDR(dev->sas_addr), phy_id);
- 
- 	if (SAS_ADDR(changed_phy->attached_sas_addr) != 0) {
-diff --git a/drivers/scsi/libsas/sas_init.c b/drivers/scsi/libsas/sas_init.c
-index 213c85557bf9..28a460c36c0b 100644
---- a/drivers/scsi/libsas/sas_init.c
-+++ b/drivers/scsi/libsas/sas_init.c
-@@ -625,7 +625,7 @@ struct asd_sas_event *sas_alloc_event(struct asd_sas_phy *phy)
- 	if (atomic_read(&phy->event_nr) > phy->ha->event_thres) {
- 		if (i->dft->lldd_control_phy) {
- 			if (cmpxchg(&phy->in_shutdown, 0, 1) == 0) {
--				pr_notice("The phy%02d bursting events, shut it down.\n",
-+				pr_notice("The phy%d bursting events, shut it down.\n",
- 					  phy->id);
- 				sas_notify_phy_event(phy, PHYE_SHUTDOWN);
- 			}
-diff --git a/drivers/scsi/libsas/sas_phy.c b/drivers/scsi/libsas/sas_phy.c
-index 0374243c85d0..e030e1452136 100644
---- a/drivers/scsi/libsas/sas_phy.c
-+++ b/drivers/scsi/libsas/sas_phy.c
-@@ -122,11 +122,10 @@ static void sas_phye_shutdown(struct work_struct *work)
- 		phy->enabled = 0;
- 		ret = i->dft->lldd_control_phy(phy, PHY_FUNC_DISABLE, NULL);
- 		if (ret)
--			pr_notice("lldd disable phy%02d returned %d\n",
--				  phy->id, ret);
-+			pr_notice("lldd disable phy%d returned %d\n", phy->id,
-+				  ret);
- 	} else
--		pr_notice("phy%02d is not enabled, cannot shutdown\n",
--			  phy->id);
-+		pr_notice("phy%d is not enabled, cannot shutdown\n", phy->id);
- }
- 
- /* ---------- Phy class registration ---------- */
 -- 
 2.17.1
