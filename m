@@ -1,159 +1,75 @@
-From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 1/6] scsi: libsas: Stop hardcoding SAS address length
-Date: Fri, 12 Apr 2019 16:57:52 +0800
-Message-ID: <1555059478-36224-2-git-send-email-john.garry@huawei.com>
-References: <1555059478-36224-1-git-send-email-john.garry@huawei.com>
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] scsi: qedf: replace memset/memcpy with safer strscpy
+Date: Fri, 12 Apr 2019 10:05:52 +0100
+Message-ID: <20190412090552.26925-1-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1555059478-36224-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linuxarm@huawei.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, yanaijie@huawei.com, chenxiang66@hisilicon.com, luojiaxing@huawei.com, John Garry <john.garry@huawei.com>
+To: QLogic-Storage-Upstream@cavium.com, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Many times we use 8 for SAS address length, while we already have a macro
-for this - SAS_ADDR_SIZE.
+From: Colin Ian King <colin.king@canonical.com>
 
-Replace instances of this with the macro. However, don't touch the
-SAS address array sizes sas.h, as these are defined according to the
-SAS spec.
+Currently the qedf_dbg_* family of functions can overrun the end
+of the source string if it is less than the destination buffer
+length because of the use of a fixed sized memcpy. Replace the
+memset/memcpy calls with the safer strscpy as this won't overrun
+the end of the source string and it ensures the destination
+string is always terminated with NUL.
 
-Some missing whitespaces are also added, and whitespace indentation
-in sas_hash_addr() is also fixed (see sas_hash_addr()).
-
-Signed-off-by: John Garry <john.garry@huawei.com>
+Addresses-Coverity: ("Out-of-bounds access")
+Fixes: 61d8658b4a43 ("scsi: qedf: Add QLogic FastLinQ offload FCoE driver framework.")
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
 ---
- drivers/scsi/libsas/sas_expander.c | 15 +++++------
- drivers/scsi/libsas/sas_init.c     | 40 ++++++++++++++++--------------
- include/scsi/libsas.h              |  6 ++---
- 3 files changed, 32 insertions(+), 29 deletions(-)
+ drivers/scsi/qedf/qedf_dbg.c | 12 ++++--------
+ 1 file changed, 4 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-index 17b45a0c7bc3..93f297199d4c 100644
---- a/drivers/scsi/libsas/sas_expander.c
-+++ b/drivers/scsi/libsas/sas_expander.c
-@@ -1151,7 +1151,7 @@ static int sas_find_sub_addr(struct domain_device *dev, u8 *sub_addr)
- 		     phy->attached_dev_type == SAS_FANOUT_EXPANDER_DEVICE) &&
- 		    phy->routing_attr == SUBTRACTIVE_ROUTING) {
+diff --git a/drivers/scsi/qedf/qedf_dbg.c b/drivers/scsi/qedf/qedf_dbg.c
+index f2397ee9ba69..b491bebeaca9 100644
+--- a/drivers/scsi/qedf/qedf_dbg.c
++++ b/drivers/scsi/qedf/qedf_dbg.c
+@@ -17,8 +17,7 @@ qedf_dbg_err(struct qedf_dbg_ctx *qedf, const char *func, u32 line,
+ 	struct va_format vaf;
+ 	char nfunc[32];
  
--			memcpy(sub_addr, phy->attached_sas_addr,SAS_ADDR_SIZE);
-+			memcpy(sub_addr, phy->attached_sas_addr, SAS_ADDR_SIZE);
+-	memset(nfunc, 0, sizeof(nfunc));
+-	memcpy(nfunc, func, sizeof(nfunc) - 1);
++	strscpy(nfunc, func, sizeof(nfunc));
  
- 			return 1;
- 		}
-@@ -1163,7 +1163,7 @@ static int sas_check_level_subtractive_boundary(struct domain_device *dev)
- {
- 	struct expander_device *ex = &dev->ex_dev;
- 	struct domain_device *child;
--	u8 sub_addr[8] = {0, };
-+	u8 sub_addr[SAS_ADDR_SIZE] = {0, };
+ 	va_start(va, fmt);
  
- 	list_for_each_entry(child, &ex->children, siblings) {
- 		if (child->dev_type != SAS_EDGE_EXPANDER_DEVICE &&
-@@ -1173,7 +1173,7 @@ static int sas_check_level_subtractive_boundary(struct domain_device *dev)
- 			sas_find_sub_addr(child, sub_addr);
- 			continue;
- 		} else {
--			u8 s2[8];
-+			u8 s2[SAS_ADDR_SIZE];
+@@ -42,8 +41,7 @@ qedf_dbg_warn(struct qedf_dbg_ctx *qedf, const char *func, u32 line,
+ 	struct va_format vaf;
+ 	char nfunc[32];
  
- 			if (sas_find_sub_addr(child, s2) &&
- 			    (SAS_ADDR(sub_addr) != SAS_ADDR(s2))) {
-@@ -1760,10 +1760,11 @@ static int sas_get_phy_attached_dev(struct domain_device *dev, int phy_id,
+-	memset(nfunc, 0, sizeof(nfunc));
+-	memcpy(nfunc, func, sizeof(nfunc) - 1);
++	strscpy(nfunc, func, sizeof(nfunc));
  
- 	res = sas_get_phy_discover(dev, phy_id, disc_resp);
- 	if (res == 0) {
--		memcpy(sas_addr, disc_resp->disc.attached_sas_addr, 8);
-+		memcpy(sas_addr, disc_resp->disc.attached_sas_addr,
-+		       SAS_ADDR_SIZE);
- 		*type = to_dev_type(dr);
- 		if (*type == 0)
--			memset(sas_addr, 0, 8);
-+			memset(sas_addr, 0, SAS_ADDR_SIZE);
- 	}
- 	kfree(disc_resp);
- 	return res;
-@@ -2027,10 +2028,10 @@ static int sas_rediscover_dev(struct domain_device *dev, int phy_id, bool last)
- 	struct expander_device *ex = &dev->ex_dev;
- 	struct ex_phy *phy = &ex->ex_phy[phy_id];
- 	enum sas_device_type type = SAS_PHY_UNUSED;
--	u8 sas_addr[8];
-+	u8 sas_addr[SAS_ADDR_SIZE];
- 	int res;
+ 	va_start(va, fmt);
  
--	memset(sas_addr, 0, 8);
-+	memset(sas_addr, 0, SAS_ADDR_SIZE);
- 	res = sas_get_phy_attached_dev(dev, phy_id, sas_addr, &type);
- 	switch (res) {
- 	case SMP_RESP_NO_PHY:
-diff --git a/drivers/scsi/libsas/sas_init.c b/drivers/scsi/libsas/sas_init.c
-index 221340ee8651..213c85557bf9 100644
---- a/drivers/scsi/libsas/sas_init.c
-+++ b/drivers/scsi/libsas/sas_init.c
-@@ -87,25 +87,27 @@ EXPORT_SYMBOL_GPL(sas_free_task);
- /*------------ SAS addr hash -----------*/
- void sas_hash_addr(u8 *hashed, const u8 *sas_addr)
- {
--        const u32 poly = 0x00DB2777;
--        u32     r = 0;
--        int     i;
--
--        for (i = 0; i < 8; i++) {
--                int b;
--                for (b = 7; b >= 0; b--) {
--                        r <<= 1;
--                        if ((1 << b) & sas_addr[i]) {
--                                if (!(r & 0x01000000))
--                                        r ^= poly;
--                        } else if (r & 0x01000000)
--                                r ^= poly;
--                }
--        }
--
--        hashed[0] = (r >> 16) & 0xFF;
--        hashed[1] = (r >> 8) & 0xFF ;
--        hashed[2] = r & 0xFF;
-+	const u32 poly = 0x00DB2777;
-+	u32 r = 0;
-+	int i;
-+
-+	for (i = 0; i < SAS_ADDR_SIZE; i++) {
-+		int b;
-+
-+		for (b = (SAS_ADDR_SIZE - 1); b >= 0; b--) {
-+			r <<= 1;
-+			if ((1 << b) & sas_addr[i]) {
-+				if (!(r & 0x01000000))
-+					r ^= poly;
-+			} else if (r & 0x01000000) {
-+				r ^= poly;
-+			}
-+		}
-+	}
-+
-+	hashed[0] = (r >> 16) & 0xFF;
-+	hashed[1] = (r >> 8) & 0xFF;
-+	hashed[2] = r & 0xFF;
- }
+@@ -71,8 +69,7 @@ qedf_dbg_notice(struct qedf_dbg_ctx *qedf, const char *func, u32 line,
+ 	struct va_format vaf;
+ 	char nfunc[32];
  
- int sas_register_ha(struct sas_ha_struct *sas_ha)
-diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index 56b2dba7d911..cfaaf1254211 100644
---- a/include/scsi/libsas.h
-+++ b/include/scsi/libsas.h
-@@ -245,9 +245,9 @@ static inline struct sas_discovery_event *to_sas_discovery_event(struct work_str
- struct sas_discovery {
- 	struct sas_discovery_event disc_work[DISC_NUM_EVENTS];
- 	unsigned long    pending;
--	u8     fanout_sas_addr[8];
--	u8     eeds_a[8];
--	u8     eeds_b[8];
-+	u8     fanout_sas_addr[SAS_ADDR_SIZE];
-+	u8     eeds_a[SAS_ADDR_SIZE];
-+	u8     eeds_b[SAS_ADDR_SIZE];
- 	int    max_level;
- };
+-	memset(nfunc, 0, sizeof(nfunc));
+-	memcpy(nfunc, func, sizeof(nfunc) - 1);
++	strscpy(nfunc, func, sizeof(nfunc));
+ 
+ 	va_start(va, fmt);
+ 
+@@ -101,8 +98,7 @@ qedf_dbg_info(struct qedf_dbg_ctx *qedf, const char *func, u32 line,
+ 	struct va_format vaf;
+ 	char nfunc[32];
+ 
+-	memset(nfunc, 0, sizeof(nfunc));
+-	memcpy(nfunc, func, sizeof(nfunc) - 1);
++	strscpy(nfunc, func, sizeof(nfunc));
+ 
+ 	va_start(va, fmt);
  
 -- 
-2.17.1
+2.20.1
