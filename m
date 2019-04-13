@@ -1,52 +1,39 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 5.1-rc4
-Date: Sat, 13 Apr 2019 11:59:02 +0200
-Message-ID: <1555149542.2995.15.camel@HansenPartnership.com>
+From: Yue Haibing <yuehaibing@huawei.com>
+Subject: [PATCH -next] scsi: megaraid_sas: Make megasas_host_device_list_query() static
+Date: Sat, 13 Apr 2019 22:21:38 +0800
+Message-ID: <20190413142138.33336-1-yuehaibing@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com, jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, megaraidlinux.pdl@broadcom.com, YueHaibing <yuehaibing@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-One obvious fix for a ciostor data corruption on error bug.
+From: YueHaibing <yuehaibing@huawei.com>
 
-The patch is available here:
+Fix sparse warning:
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+drivers/scsi/megaraid/megaraid_sas_base.c:4652:1: warning:
+ symbol 'megasas_host_device_list_query' was not declared. Should it be static?
 
-The short changelog is:
-
-Varun Prakash (1):
-      scsi: csiostor: fix missing data copy in csio_scsi_err_handler()
-
-And the diffstat:
-
- drivers/scsi/csiostor/csio_scsi.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
-
-With full diff below.
-
-James
-
+Signed-off-by: YueHaibing <yuehaibing@huawei.com>
 ---
+ drivers/scsi/megaraid/megaraid_sas_base.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/csiostor/csio_scsi.c b/drivers/scsi/csiostor/csio_scsi.c
-index 462560b2855e..469d0bc9f5fe 100644
---- a/drivers/scsi/csiostor/csio_scsi.c
-+++ b/drivers/scsi/csiostor/csio_scsi.c
-@@ -1713,8 +1713,11 @@ csio_scsi_err_handler(struct csio_hw *hw, struct csio_ioreq *req)
- 	}
- 
- out:
--	if (req->nsge > 0)
-+	if (req->nsge > 0) {
- 		scsi_dma_unmap(cmnd);
-+		if (req->dcopy && (host_status == DID_OK))
-+			host_status = csio_scsi_copy_to_sgl(hw, req);
-+	}
- 
- 	cmnd->result = (((host_status) << 16) | scsi_status);
- 	cmnd->scsi_done(cmnd);
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index 59a6546..1ec55ef 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -4647,7 +4647,7 @@ megasas_ld_list_query(struct megasas_instance *instance, u8 query_type)
+  * Return:			0 if DCMD succeeded
+  *				 non-zero if failed
+  */
+-int
++static int
+ megasas_host_device_list_query(struct megasas_instance *instance,
+ 			       bool is_probe)
+ {
+-- 
+2.7.4
