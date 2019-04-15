@@ -1,86 +1,112 @@
 From: Petr Mladek <pmladek@suse.com>
-Subject: Re: [PATCH 1/4] lib/hexdump.c: Allow 64 bytes per line
-Date: Mon, 15 Apr 2019 11:02:32 +0200
-Message-ID: <20190415090232.3ualhrt5ssrb2ixq@pathway.suse.cz>
+Subject: Re: [PATCH 2/4] lib/hexdump.c: Optionally suppress
+ lines of filler bytes
+Date: Mon, 15 Apr 2019 11:18:12 +0200
+Message-ID: <20190415091812.s4e5zlwldbe62ego@pathway.suse.cz>
 References: <20190410031720.11067-1-alastair@au1.ibm.com>
- <20190410031720.11067-2-alastair@au1.ibm.com>
- <20190412134802.kprel2c2iqijd4ai@pathway.suse.cz>
- <092f01d4f186$8e9e7cd0$abdb7670$@d-silva.org>
+ <20190410031720.11067-3-alastair@au1.ibm.com>
+ <20190412140353.mgvksn3yk6n65hbk@pathway.suse.cz>
+ <093101d4f187$612f0f20$238d2d60$@d-silva.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <intel-gfx-bounces@lists.freedesktop.org>
 Content-Disposition: inline
-In-Reply-To: <092f01d4f186$8e9e7cd0$abdb7670$@d-silva.org>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <093101d4f187$612f0f20$238d2d60$@d-silva.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
+List-Post: <mailto:intel-gfx@lists.freedesktop.org>
+List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: intel-gfx-bounces@lists.freedesktop.org
+Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
 To: Alastair D'Silva <alastair@d-silva.org>
-Cc: 'Jani Nikula' <jani.nikula@linux.intel.com>, 'Joonas Lahtinen' <joonas.lahtinen@linux.intel.com>, 'Rodrigo Vivi' <rodrigo.vivi@intel.com>, 'David Airlie' <airlied@linux.ie>, 'Daniel Vetter' <daniel@ffwll.ch>, 'Karsten Keil' <isdn@linux-pingi.de>, 'Jassi Brar' <jassisinghbrar@gmail.com>, 'Tom Lendacky' <thomas.lendacky@amd.com>, "'David S. Miller'" <davem@davemloft.net>, 'Jose Abreu' <Jose.Abreu@synopsys.com>, 'Kalle Valo' <kvalo@codeaurora.org>, 'Stanislaw Gruszka' <sgruszka@redhat.com>, 'Benson Leung' <bleung@chromium.org>, 'Enric Balletbo i Serra' <enric.balletbo@collabora.com>, "'James E.J. Bottomley'" <jejb@linux.ibm.com>, "'Martin K. Petersen'" <martin.petersen@oracle.com>, 'Greg Kroah-Hartman' <gregkh@linuxfoundation.org>, 'Alexander Viro' <vir>
+Cc: linux-fbdev@vger.kernel.org, 'Stanislaw Gruszka' <sgruszka@redhat.com>, 'David Airlie' <airlied@linux.ie>, dri-devel@lists.freedesktop.org, devel@driverdev.osuosl.org, linux-scsi@vger.kernel.org, 'Jassi Brar' <jassisinghbrar@gmail.com>, ath10k@lists.infradead.org, intel-gfx@lists.freedesktop.org, 'Jose Abreu' <Jose.Abreu@synopsys.com>, 'Tom Lendacky' <thomas.lendacky@amd.com>, "'James E.J. Bottomley'" <jejb@linux.ibm.com>, linux-fsdevel@vger.kernel.org, 'Steven Rostedt' <rostedt@goodmis.org>, 'Kalle Valo' <kvalo@codeaurora.org>, 'Karsten Keil' <isdn@linux-pingi.de>, 'Alastair D'Silva' <alastair@au1.ibm.com>, "'Martin K. Petersen'" <martin.petersen@oracle.com>, 'Greg Kroah-Hartman' <gregkh@linuxfoundation.org>, linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, 'Sergey Senozhatsky' <sergey.senozhatsky@gmail.com>, netdev@vger.kernel.org, 'Enric
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat 2019-04-13 09:22:05, Alastair D'Silva wrote:
-> > -----Original Message-----
-> > From: Petr Mladek <pmladek@suse.com>
-> > Sent: Friday, 12 April 2019 11:48 PM
-> > To: Alastair D'Silva <alastair@au1.ibm.com>
-> > Cc: alastair@d-silva.org; Jani Nikula <jani.nikula@linux.intel.com>;
-> Joonas
-> > Lahtinen <joonas.lahtinen@linux.intel.com>; Rodrigo Vivi
-> > <rodrigo.vivi@intel.com>; David Airlie <airlied@linux.ie>; Daniel Vetter
-> > <daniel@ffwll.ch>; Karsten Keil <isdn@linux-pingi.de>; Jassi Brar
-> > <jassisinghbrar@gmail.com>; Tom Lendacky <thomas.lendacky@amd.com>;
-> > David S. Miller <davem@davemloft.net>; Jose Abreu
-> > <Jose.Abreu@synopsys.com>; Kalle Valo <kvalo@codeaurora.org>;
-> > Stanislaw Gruszka <sgruszka@redhat.com>; Benson Leung
-> > <bleung@chromium.org>; Enric Balletbo i Serra
-> > <enric.balletbo@collabora.com>; James E.J. Bottomley
-> > <jejb@linux.ibm.com>; Martin K. Petersen <martin.petersen@oracle.com>;
-> > Greg Kroah-Hartman <gregkh@linuxfoundation.org>; Alexander Viro
-> > <viro@zeniv.linux.org.uk>; Sergey Senozhatsky
-> > <sergey.senozhatsky@gmail.com>; Steven Rostedt <rostedt@goodmis.org>;
-> > Andrew Morton <akpm@linux-foundation.org>; intel-
-> > gfx@lists.freedesktop.org; dri-devel@lists.freedesktop.org; linux-
-> > kernel@vger.kernel.org; netdev@vger.kernel.org;
-> > ath10k@lists.infradead.org; linux-wireless@vger.kernel.org; linux-
-> > scsi@vger.kernel.org; linux-fbdev@vger.kernel.org;
-> > devel@driverdev.osuosl.org; linux-fsdevel@vger.kernel.org
-> > Subject: Re: [PATCH 1/4] lib/hexdump.c: Allow 64 bytes per line
-> > 
-> > On Wed 2019-04-10 13:17:17, Alastair D'Silva wrote:
-> > > From: Alastair D'Silva <alastair@d-silva.org>
-> > >
-> > > With modern high resolution screens, we can display more data, which
-> > > makes life a bit easier when debugging.
-> > 
-> > I have quite some doubts about this feature.
-> > 
-> > We are talking about more than 256 characters per-line. I wonder if such a
-> > long line is really easier to read for a human.
-> 
-> It's basically 2 separate panes of information side by side, the hexdump and
-> the ASCII version.
-> 
-> I'm using this myself when dealing with the pmem labels, and it works quite
-> nicely.
-
-I am sure that it works for you. But I do not believe that it
-would be useful in general.
-
-
-> > I am not expert but there is a reason why the standard is 80 characters
-> per-
-> > line. I guess that anything above 100 characters is questionable.
-> > https://en.wikipedia.org/wiki/Line_length
-> > somehow confirms that.
-> > 
-> > Second, if we take 8 pixels per-character. Then we need
-> > 2048 to show the 256 characters. It is more than HD.
-> > IMHO, there is still huge number of people that even do not have HD
-> display,
-> > especially on a notebook.
-> 
-> The intent is to make debugging easier when dealing with large chunks of
-> binary data. I don't expect end users to see this output.
-
-How is it supposed to be used then? Only by your temporary patches?
-
-Best Regards,
-Petr
+T24gU2F0IDIwMTktMDQtMTMgMDk6Mjg6MDMsIEFsYXN0YWlyIEQnU2lsdmEgd3JvdGU6Cj4gPiAt
+LS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQo+ID4gRnJvbTogUGV0ciBNbGFkZWsgPHBtbGFkZWtA
+c3VzZS5jb20+Cj4gPiBTZW50OiBTYXR1cmRheSwgMTMgQXByaWwgMjAxOSAxMjowNCBBTQo+ID4g
+VG86IEFsYXN0YWlyIEQnU2lsdmEgPGFsYXN0YWlyQGF1MS5pYm0uY29tPgo+ID4gQ2M6IGFsYXN0
+YWlyQGQtc2lsdmEub3JnOyBKYW5pIE5pa3VsYSA8amFuaS5uaWt1bGFAbGludXguaW50ZWwuY29t
+PjsKPiBKb29uYXMKPiA+IExhaHRpbmVuIDxqb29uYXMubGFodGluZW5AbGludXguaW50ZWwuY29t
+PjsgUm9kcmlnbyBWaXZpCj4gPiA8cm9kcmlnby52aXZpQGludGVsLmNvbT47IERhdmlkIEFpcmxp
+ZSA8YWlybGllZEBsaW51eC5pZT47IERhbmllbCBWZXR0ZXIKPiA+IDxkYW5pZWxAZmZ3bGwuY2g+
+OyBLYXJzdGVuIEtlaWwgPGlzZG5AbGludXgtcGluZ2kuZGU+OyBKYXNzaSBCcmFyCj4gPiA8amFz
+c2lzaW5naGJyYXJAZ21haWwuY29tPjsgVG9tIExlbmRhY2t5IDx0aG9tYXMubGVuZGFja3lAYW1k
+LmNvbT47Cj4gPiBEYXZpZCBTLiBNaWxsZXIgPGRhdmVtQGRhdmVtbG9mdC5uZXQ+OyBKb3NlIEFi
+cmV1Cj4gPiA8Sm9zZS5BYnJldUBzeW5vcHN5cy5jb20+OyBLYWxsZSBWYWxvIDxrdmFsb0Bjb2Rl
+YXVyb3JhLm9yZz47Cj4gPiBTdGFuaXNsYXcgR3J1c3prYSA8c2dydXN6a2FAcmVkaGF0LmNvbT47
+IEJlbnNvbiBMZXVuZwo+ID4gPGJsZXVuZ0BjaHJvbWl1bS5vcmc+OyBFbnJpYyBCYWxsZXRibyBp
+IFNlcnJhCj4gPiA8ZW5yaWMuYmFsbGV0Ym9AY29sbGFib3JhLmNvbT47IEphbWVzIEUuSi4gQm90
+dG9tbGV5Cj4gPiA8amVqYkBsaW51eC5pYm0uY29tPjsgTWFydGluIEsuIFBldGVyc2VuIDxtYXJ0
+aW4ucGV0ZXJzZW5Ab3JhY2xlLmNvbT47Cj4gPiBHcmVnIEtyb2FoLUhhcnRtYW4gPGdyZWdraEBs
+aW51eGZvdW5kYXRpb24ub3JnPjsgQWxleGFuZGVyIFZpcm8KPiA+IDx2aXJvQHplbml2LmxpbnV4
+Lm9yZy51az47IFNlcmdleSBTZW5vemhhdHNreQo+ID4gPHNlcmdleS5zZW5vemhhdHNreUBnbWFp
+bC5jb20+OyBTdGV2ZW4gUm9zdGVkdCA8cm9zdGVkdEBnb29kbWlzLm9yZz47Cj4gPiBBbmRyZXcg
+TW9ydG9uIDxha3BtQGxpbnV4LWZvdW5kYXRpb24ub3JnPjsgaW50ZWwtCj4gPiBnZnhAbGlzdHMu
+ZnJlZWRlc2t0b3Aub3JnOyBkcmktZGV2ZWxAbGlzdHMuZnJlZWRlc2t0b3Aub3JnOyBsaW51eC0K
+PiA+IGtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IG5ldGRldkB2Z2VyLmtlcm5lbC5vcmc7Cj4gPiBh
+dGgxMGtAbGlzdHMuaW5mcmFkZWFkLm9yZzsgbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3Jn
+OyBsaW51eC0KPiA+IHNjc2lAdmdlci5rZXJuZWwub3JnOyBsaW51eC1mYmRldkB2Z2VyLmtlcm5l
+bC5vcmc7Cj4gPiBkZXZlbEBkcml2ZXJkZXYub3N1b3NsLm9yZzsgbGludXgtZnNkZXZlbEB2Z2Vy
+Lmtlcm5lbC5vcmcKPiA+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggMi80XSBsaWIvaGV4ZHVtcC5jOiBP
+cHRpb25hbGx5IHN1cHByZXNzIGxpbmVzIG9mCj4gZmlsbGVyCj4gPiBieXRlcwo+ID4gCj4gPiBP
+biBXZWQgMjAxOS0wNC0xMCAxMzoxNzoxOCwgQWxhc3RhaXIgRCdTaWx2YSB3cm90ZToKPiA+ID4g
+RnJvbTogQWxhc3RhaXIgRCdTaWx2YSA8YWxhc3RhaXJAZC1zaWx2YS5vcmc+Cj4gPiA+Cj4gPiA+
+IFNvbWUgYnVmZmVycyBtYXkgb25seSBiZSBwYXJ0aWFsbHkgZmlsbGVkIHdpdGggdXNlZnVsIGRh
+dGEsIHdoaWxlIHRoZQo+ID4gPiByZXN0IGlzIHBhZGRlZCAodHlwaWNhbGx5IHdpdGggMHgwMCBv
+ciAweGZmKS4KPiA+ID4KPiA+ID4gVGhpcyBwYXRjaCBpbnRyb2R1Y2VzIGZsYWdzIHdoaWNoIGFs
+bG93IGxpbmVzIG9mIHBhZGRpbmcgYnl0ZXMgdG8gYmUKPiA+ID4gc3VwcHJlc3NlZCwgbWFraW5n
+IHRoZSBvdXRwdXQgZWFzaWVyIHRvIGludGVycHJldDoKPiA+ID4gSEVYRFVNUF9TVVBQUkVTU18w
+WDAwLCBIRVhEVU1QX1NVUFBSRVNTXzBYRkYKPiA+ID4KPiA+ID4gVGhlIGZpcnN0IGFuZCBsYXN0
+IGxpbmVzIGFyZSBub3Qgc3VwcHJlc3NlZCBieSBkZWZhdWx0LCBzbyB0aGUKPiA+ID4gZnVuY3Rp
+b24gYWx3YXlzIG91dHB1dHMgc29tZXRoaW5nLiBUaGlzIGJlaGF2aW91ciBjYW4gYmUgZnVydGhl
+cgo+ID4gPiBjb250cm9sbGVkIHdpdGggdGhlIEhFWERVTVBfU1VQUFJFU1NfRklSU1QgJgo+ID4g
+SEVYRFVNUF9TVVBQUkVTU19MQVNUIGZsYWdzLgo+ID4gPgo+ID4gPiBBbiBpbmxpbmUgd3JhcHBl
+ciBmdW5jdGlvbiBpcyBwcm92aWRlZCBmb3IgYmFja3dhcmRzIGNvbXBhdGliaWxpdHkKPiA+ID4g
+d2l0aCBleGlzdGluZyBjb2RlLCB3aGljaCBtYWludGFpbnMgdGhlIG9yaWdpbmFsIGJlaGF2aW91
+ci4KPiA+ID4KPiA+IAo+ID4gPiBkaWZmIC0tZ2l0IGEvbGliL2hleGR1bXAuYyBiL2xpYi9oZXhk
+dW1wLmMgaW5kZXgKPiA+ID4gYjhhMTY0ODE0NzQ0Li4yZjNiYWZiNTVhNDQgMTAwNjQ0Cj4gPiA+
+IC0tLSBhL2xpYi9oZXhkdW1wLmMKPiA+ID4gKysrIGIvbGliL2hleGR1bXAuYwo+ID4gPiArdm9p
+ZCBwcmludF9oZXhfZHVtcF9leHQoY29uc3QgY2hhciAqbGV2ZWwsIGNvbnN0IGNoYXIgKnByZWZp
+eF9zdHIsCj4gPiA+ICsJCQlpbnQgcHJlZml4X3R5cGUsIGludCByb3dzaXplLCBpbnQgZ3JvdXBz
+aXplLAo+ID4gPiArCQkJY29uc3Qgdm9pZCAqYnVmLCBzaXplX3QgbGVuLCB1NjQgZmxhZ3MpCj4g
+PiA+ICB7Cj4gPiA+ICAJY29uc3QgdTggKnB0ciA9IGJ1ZjsKPiA+ID4gLQlpbnQgaSwgbGluZWxl
+biwgcmVtYWluaW5nID0gbGVuOwo+ID4gPiArCWludCBpLCByZW1haW5pbmcgPSBsZW47Cj4gPiA+
+ICAJdW5zaWduZWQgY2hhciBsaW5lYnVmWzY0ICogMyArIDIgKyA2NCArIDFdOwo+ID4gPiArCWJv
+b2wgZmlyc3RfbGluZSA9IHRydWU7Cj4gPiA+Cj4gPiA+ICAJaWYgKHJvd3NpemUgIT0gMTYgJiYg
+cm93c2l6ZSAhPSAzMiAmJiByb3dzaXplICE9IDY0KQo+ID4gPiAgCQlyb3dzaXplID0gMTY7Cj4g
+PiA+Cj4gPiA+ICAJZm9yIChpID0gMDsgaSA8IGxlbjsgaSArPSByb3dzaXplKSB7Cj4gPiA+IC0J
+CWxpbmVsZW4gPSBtaW4ocmVtYWluaW5nLCByb3dzaXplKTsKPiA+ID4gKwkJYm9vbCBza2lwID0g
+ZmFsc2U7Cj4gPiA+ICsJCWludCBsaW5lbGVuID0gbWluKHJlbWFpbmluZywgcm93c2l6ZSk7Cj4g
+PiA+ICsKPiA+ID4gIAkJcmVtYWluaW5nIC09IHJvd3NpemU7Cj4gPiA+Cj4gPiA+ICsJCWlmIChm
+bGFncyAmIEhFWERVTVBfU1VQUFJFU1NfMFgwMCkKPiA+ID4gKwkJCXNraXAgPSBidWZfaXNfYWxs
+KHB0ciArIGksIGxpbmVsZW4sIDB4MDApOwo+ID4gPiArCj4gPiA+ICsJCWlmICghc2tpcCAmJiAo
+ZmxhZ3MgJiBIRVhEVU1QX1NVUFBSRVNTXzBYRkYpKQo+ID4gPiArCQkJc2tpcCA9IGJ1Zl9pc19h
+bGwocHRyICsgaSwgbGluZWxlbiwgMHhmZik7Cj4gPiA+ICsKPiA+ID4gKwkJaWYgKGZpcnN0X2xp
+bmUgJiYgIShmbGFncyAmIEhFWERVTVBfU1VQUFJFU1NfRklSU1QpKQo+ID4gPiArCQkJc2tpcCA9
+IGZhbHNlOwo+ID4gPiArCj4gPiA+ICsJCWlmIChyZW1haW5pbmcgPD0gMCAmJiAhKGZsYWdzICYg
+SEVYRFVNUF9TVVBQUkVTU19MQVNUKSkKPiA+ID4gKwkJCXNraXAgPSBmYWxzZTsKPiA+ID4gKwo+
+ID4gPiArCQlpZiAoc2tpcCkKPiA+ID4gKwkJCWNvbnRpbnVlOwo+ID4gCj4gPiBJTUhPLCBxdWll
+dGx5IHNraXBwaW5nIGxpbmVzIGNvdWxkIGNhdXNlIGEgbG90IG9mIGNvbmZ1c2lvbiwgZXNwY2lh
+bGx5Cj4gd2hlbiB0aGUgYWRkcmVzcyBpcyBub3QgcHJpbnRlZC4KPiA+Cj4gSXQncyB1cCB0byB0
+aGUgY2FsbGVyIHRvIGRlY2lkZSBob3cgdGhleSB3YW50IGl0IGRpc3BsYXllZC4KCkkgd29uZGVy
+IHdobyB3b3VsZCB3YW50IHRvIHF1aWV0bHkgc2tpcCBzb21lIGRhdGEgdmFsdWVzLgpBcmUgeW91
+IHVzaW5nIGl0IHlvdXJzZWxmPyBDb3VsZCB5b3UgcGxlYXNlIHByb3ZpZGUgYW4KZXhhbXBsZT8K
+CkkgZG8gbm90IHNlZSB3aHkgd2Ugd291bGQgbmVlZCB0byBjb21wbGljYXRlIHRoZSBBUEkgYW5k
+IGNvZGUKYnkgdGhpcy4KClRoZSBiZWhhdmlvciBwcm9wb3NlZCBieSBUdnJ0a28gVXJzdWxpbiBt
+YWtlcyBtdWNoIG1vcmUKc2Vuc2UuIEkgbWVhbgpodHRwczovL2xrbWwua2VybmVsLm9yZy9yLzky
+OTI0NGVkLWNjN2YtYjBmMy1iNWFjLTUwZTc5OGU4MzE4OEBsaW51eC5pbnRlbC5jb20KCgo+ID4g
+SSB3b25kZXIgaG93IGl0IHdvdWxkIGxvb2sgbGlrZSB3aGVuIHdlIHByaW50IHNvbWV0aGluZyBs
+aWtlOgo+ID4gCj4gPiAgICAgLS0tIHNraXBwZWQgWFggbGluZXMgZnVsbCBvZiAweDAwIC0tLQo+
+IAo+IFRoaXMgY291bGQgYmUgYWRkZWQgYXMgYSBsYXRlciBlbmhhbmNlbWVudCwgd2l0aCBhIG5l
+dyBmbGFnIChlZy4KPiBIRVhEVU1QX1NVUFBSRVNTX1ZFUkJPU0UpLgoKV2hvIHdpbGwgYWRkIHRo
+aXMgbGF0ZXI/IEZyYW5rbHksIHRoaXMgbG9va3MgbGlrZSBhIGhhbGYgYmFrZWQKZmVhdHVyZSB0
+aGF0IGl0IGdvb2QgZW5vdWdoIGZvciB5b3UuIElmIHlvdSB3YW50IGl0IHVwc3RyZWFtLAppdCBt
+dXN0IGJlaGF2ZSByZWFzb25hYmx5IGFuZCBpdCBtdXN0IGJlIHdvcnRoIGl0LgoKQmVzdCBSZWdh
+cmRzLApQZXRyCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+CkludGVsLWdmeCBtYWlsaW5nIGxpc3QKSW50ZWwtZ2Z4QGxpc3RzLmZyZWVkZXNrdG9wLm9yZwpo
+dHRwczovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2ludGVsLWdmeA==
