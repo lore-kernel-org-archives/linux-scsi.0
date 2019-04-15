@@ -1,91 +1,51 @@
-From: "Alastair D'Silva" <alastair@d-silva.org>
-Subject: RE: [PATCH 3/4] lib/hexdump.c: Replace ascii bool in hex_dump_to_buffer with flags
-Date: Mon, 15 Apr 2019 21:12:15 +1000
-Message-ID: <0dcb01d4f37c$17b948a0$472bd9e0$@d-silva.org>
-References: <20190410031720.11067-1-alastair@au1.ibm.com> <20190410031720.11067-4-alastair@au1.ibm.com> <20190412141211.lvnz6wb7mwkykmxf@pathway.suse.cz> <093301d4f187$da0756a0$8e1603e0$@d-silva.org> <20190415092424.qos7d54nbyr5hphu@pathway.suse.cz> <0da301d4f373$01d5bb80$05813280$@d-silva.org> <10c791893f034c26b4fee1a4659133e5@AcuMS.aculab.com> <0db501d4f378$3bd50bb0$b37f2310$@d-silva.org> <42fb90eb9c8f4ede8a56a09be90218e3@AcuMS.aculab.com>
+From: Stanley Chu <stanley.chu@mediatek.com>
+Subject: [PATCH 1/1] scsi: ufs: Print real incorrect request response code
+Date: Mon, 15 Apr 2019 20:23:38 +0800
+Message-ID: <1555331018-32734-1-git-send-email-stanley.chu@mediatek.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <42fb90eb9c8f4ede8a56a09be90218e3@AcuMS.aculab.com>
-Content-Language: en-au
-Sender: netdev-owner@vger.kernel.org
-To: 'David Laight' <David.Laight@ACULAB.COM>, 'Petr Mladek' <pmladek@suse.com>
-Cc: 'Alastair D'Silva' <alastair@au1.ibm.com>, 'Jani Nikula' <jani.nikula@linux.intel.com>, 'Joonas Lahtinen' <joonas.lahtinen@linux.intel.com>, 'Rodrigo Vivi' <rodrigo.vivi@intel.com>, 'David Airlie' <airlied@linux.ie>, 'Daniel Vetter' <daniel@ffwll.ch>, 'Karsten Keil' <isdn@linux-pingi.de>, 'Jassi Brar' <jassisinghbrar@gmail.com>, 'Tom Lendacky' <thomas.lendacky@amd.com>, "'David S. Miller'" <davem@davemloft.net>, 'Jose Abreu' <Jose.Abreu@synopsys.com>, 'Kalle Valo' <kvalo@codeaurora.org>, 'Stanislaw Gruszka' <sgruszka@redhat.com>, 'Benson Leung' <bleung@chromium.org>, 'Enric Balletbo i Serra' <enric.balletbo@collabora.com>, "'James E.J. Bottomley'" <jejb@linux.ibm.com>, "'Martin K. Petersen'" <martin.petersen@oracle.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: linux-scsi@vger.kernel.org, martin.petersen@oracle.com, avri.altman@wdc.com, alim.akhtar@samsung.com, pedrom.sousa@synopsys.com
+Cc: marc.w.gonzalez@free.fr, andy.teng@mediatek.com, chun-hung.wu@mediatek.com, kuohong.wang@mediatek.com, evgreen@chromium.org, linux-mediatek@lists.infradead.org, peter.wang@mediatek.com, matthias.bgg@gmail.com, Stanley Chu <stanley.chu@mediatek.com>, linux-arm-kernel@lists.infradead.org, beanhuo@micron.com
 List-Id: linux-scsi@vger.kernel.org
 
-> -----Original Message-----
-> From: David Laight <David.Laight@ACULAB.COM>
-> Sent: Monday, 15 April 2019 9:04 PM
-> To: 'Alastair D'Silva' <alastair@d-silva.org>; 'Petr Mladek'
-> <pmladek@suse.com>
-> Cc: 'Alastair D'Silva' <alastair@au1.ibm.com>; 'Jani Nikula'
-> <jani.nikula@linux.intel.com>; 'Joonas Lahtinen'
-> <joonas.lahtinen@linux.intel.com>; 'Rodrigo Vivi' =
-<rodrigo.vivi@intel.com>;
-> 'David Airlie' <airlied@linux.ie>; 'Daniel Vetter' <daniel@ffwll.ch>; =
-'Karsten
-> Keil' <isdn@linux-pingi.de>; 'Jassi Brar' <jassisinghbrar@gmail.com>; =
-'Tom
-> Lendacky' <thomas.lendacky@amd.com>; 'David S. Miller'
-> <davem@davemloft.net>; 'Jose Abreu' <Jose.Abreu@synopsys.com>; 'Kalle
-> Valo' <kvalo@codeaurora.org>; 'Stanislaw Gruszka' =
-<sgruszka@redhat.com>;
-> 'Benson Leung' <bleung@chromium.org>; 'Enric Balletbo i Serra'
-> <enric.balletbo@collabora.com>; 'James E.J. Bottomley'
-> <jejb@linux.ibm.com>; 'Martin K. Petersen' =
-<martin.petersen@oracle.com>;
-> 'Greg Kroah-Hartman' <gregkh@linuxfoundation.org>; 'Alexander Viro'
-> <viro@zeniv.linux.org.uk>; 'Sergey Senozhatsky'
-> <sergey.senozhatsky@gmail.com>; 'Steven Rostedt'
-> <rostedt@goodmis.org>; 'Andrew Morton' <akpm@linux-foundation.org>;
-> intel-gfx@lists.freedesktop.org; dri-devel@lists.freedesktop.org; =
-linux-
-> kernel@vger.kernel.org; netdev@vger.kernel.org;
-> ath10k@lists.infradead.org; linux-wireless@vger.kernel.org; linux-
-> scsi@vger.kernel.org; linux-fbdev@vger.kernel.org;
-> devel@driverdev.osuosl.org; linux-fsdevel@vger.kernel.org
-> Subject: RE: [PATCH 3/4] lib/hexdump.c: Replace ascii bool in
-> hex_dump_to_buffer with flags
->=20
-> From: Alastair D'Silva
-> > Sent: 15 April 2019 11:45
-> ...
-> > > Although I think you'd want a 'no hex' flag to suppress the hex.
-> > >
-> > > Probably more useful flags are ones to suppress the address =
-column.
-> >
-> > This is already supported by the prefix_type parameter - are you
-> > proposing that we eliminate the parameter & combine it with flags?
->=20
-> I was looking at the flags on one of my hexdump() functions...
->=20
-> > > I've also used flags to enable (or disable) suppression of =
-multiple
-> > > lines of zeros of constant bytes.
-> > > In that case you may want hexdump to return the flags for the next
-> > > call when a large buffer is being dumped in fragments.
-> >
-> > I'm afraid I don't quite follow here, hex_dump_to_buffer doesn't =
-alter
-> > the flags, so the caller already knows it.
->=20
-> If you are suppressing lines of zeros and dumping a buffer in several =
-blocks
-> then subsequent calls need to know that the last line of the previous =
-call was
-> suppressed zeros - and carry on with the same suppressed block.
+If UFS device responds an unknown request response code,
+we can not know what it was via logs because the code
+is replaced by "DID_ERROR << 16" before log printing.
 
-Why wouldn't you do this with a single call to print_hex_dump? (that is =
-where the repeated lines are suppressed)
+Fix this to provide precise request response code information
+for easier issue breakdown.
 
-That will already take chunks of the buffer until the whole thing is =
-output, in what situation do you see a caller chunking the access =
-themselves?
+Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
+---
+ drivers/scsi/ufs/ufshcd.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
---=20
-Alastair D'Silva           mob: 0423 762 819
-skype: alastair_dsilva     msn: alastair@d-silva.org
-blog: http://alastair.d-silva.org    Twitter: @EvilDeece
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index e040f9dd9ff3..fbe1e88eec55 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -4704,10 +4704,10 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
+ 				"Reject UPIU not fully implemented\n");
+ 			break;
+ 		default:
+-			result = DID_ERROR << 16;
+ 			dev_err(hba->dev,
+ 				"Unexpected request response code = %x\n",
+ 				result);
++			result = DID_ERROR << 16;
+ 			break;
+ 		}
+ 		break;
+-- 
+2.18.0
