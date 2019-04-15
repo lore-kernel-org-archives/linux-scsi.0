@@ -1,37 +1,39 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: RE: [PATCH] usb: uas: fix usb subsystem hang after power off hub
- port
-Date: Mon, 15 Apr 2019 11:32:33 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1904151129550.1575-100000@iolanthe.rowland.org>
-References: <Pine.LNX.4.44L0.1904151107350.1575-100000@iolanthe.rowland.org>
+From: Wei Xu <xuwei5@hisilicon.com>
+Subject: Re: [PATCH v2 2/3] arm64: dts: hisilicon: hi3670: Add UFS controller
+ support
+Date: Mon, 15 Apr 2019 17:00:20 +0100
+Message-ID: <fc511f16-d04f-a376-7173-6d1b26b591b5@hisilicon.com>
+References: <20190105072859.9134-1-manivannan.sadhasivam@linaro.org>
+ <20190105072859.9134-3-manivannan.sadhasivam@linaro.org>
+ <20190220113508.GB7498@ulmo> <yq18syak0c2.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44L0.1904151107350.1575-100000@iolanthe.rowland.org>
+In-Reply-To: <yq18syak0c2.fsf@oracle.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Kento.A.Kobayashi@sony.com
-Cc: bvanassche@acm.org, martin.petersen@oracle.com, jejb@linux.ibm.com, oneukum@suse.com, gregkh@linuxfoundation.org, usb-storage@lists.one-eyed-alien.net, Jacky.Cao@sony.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, Thierry Reding <thierry.reding@gmail.com>
+Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, liwei213@huawei.com, robh+dt@kernel.org, devicetree@vger.kernel.org, guodong.xu@linaro.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, amit.kucheria@linaro.org, john.stultz@linaro.org, linux-arm-kernel@lists.infradead.org, linux-next@vger.kernel.org, xuwei5@hisilicon.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 15 Apr 2019, Alan Stern wrote:
+Hi Manivannan,
 
-> On Mon, 15 Apr 2019 Kento.A.Kobayashi@sony.com wrote:
+On 2/20/2019 2:21 PM, Martin K. Petersen wrote:
 > 
-> > Hi
-> > 
-> > >The unbind happens from inside the SCSI EH callback.  If that really is not allowed, we'll need to change it.  Or we can just change it regardless, since the effort required is pretty small.
-> > >
-> > >Kento, please try the patch below.  Does it help with your problem?
-> > 
-> > Thank you for suggestion about this problem.
-> > I confirmed your patch fixes this problem.
+> Hi Thierry,
 > 
-> Good; I will submit it.
+>> it looks like you picked this up into the SCSI tree (perhaps
+>> inadvertently). It's been causing linux-next to fail to build since
+>> Monday (next-20190218) because it references a phandle (&crg_rst)
+>> that's not available.
+> 
+> I dropped the offending patch from the SCSI tree yesterday. When Stephen
+> updates -next, things should be fine.
+> 
 
-I forgot to ask: Is it okay to add
+Thanks!
+Applied the dts patch to the hisilicon dts tree.
 
-	Tested-by: Kento Kobayashi <Kento.A.Kobayashi@sony.com>
-
-along with the patch?
-
-Alan Stern
+Best Regards,
+Wei
