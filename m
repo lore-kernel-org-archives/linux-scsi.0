@@ -1,100 +1,144 @@
-From: Petr Mladek <pmladek@suse.com>
-Subject: Re: [PATCH 3/4] lib/hexdump.c: Replace ascii bool in
- hex_dump_to_buffer with flags
-Date: Mon, 15 Apr 2019 11:24:24 +0200
-Message-ID: <20190415092424.qos7d54nbyr5hphu@pathway.suse.cz>
-References: <20190410031720.11067-1-alastair@au1.ibm.com>
- <20190410031720.11067-4-alastair@au1.ibm.com>
- <20190412141211.lvnz6wb7mwkykmxf@pathway.suse.cz>
- <093301d4f187$da0756a0$8e1603e0$@d-silva.org>
+From: "Alastair D'Silva" <alastair@d-silva.org>
+Subject: RE: [PATCH 3/4] lib/hexdump.c: Replace ascii bool in hex_dump_to_buffer with flags
+Date: Mon, 15 Apr 2019 20:07:10 +1000
+Message-ID: <0da301d4f373$01d5bb80$05813280$@d-silva.org>
+References: <20190410031720.11067-1-alastair@au1.ibm.com> <20190410031720.11067-4-alastair@au1.ibm.com> <20190412141211.lvnz6wb7mwkykmxf@pathway.suse.cz> <093301d4f187$da0756a0$8e1603e0$@d-silva.org> <20190415092424.qos7d54nbyr5hphu@pathway.suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <intel-gfx-bounces@lists.freedesktop.org>
-Content-Disposition: inline
-In-Reply-To: <093301d4f187$da0756a0$8e1603e0$@d-silva.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
-List-Post: <mailto:intel-gfx@lists.freedesktop.org>
-List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: intel-gfx-bounces@lists.freedesktop.org
-Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
-To: Alastair D'Silva <alastair@d-silva.org>
-Cc: linux-fbdev@vger.kernel.org, 'Stanislaw Gruszka' <sgruszka@redhat.com>, 'David Airlie' <airlied@linux.ie>, dri-devel@lists.freedesktop.org, devel@driverdev.osuosl.org, linux-scsi@vger.kernel.org, 'Jassi Brar' <jassisinghbrar@gmail.com>, ath10k@lists.infradead.org, intel-gfx@lists.freedesktop.org, 'Jose Abreu' <Jose.Abreu@synopsys.com>, 'Tom Lendacky' <thomas.lendacky@amd.com>, "'James E.J. Bottomley'" <jejb@linux.ibm.com>, linux-fsdevel@vger.kernel.org, 'Steven Rostedt' <rostedt@goodmis.org>, 'Kalle Valo' <kvalo@codeaurora.org>, 'Karsten Keil' <isdn@linux-pingi.de>, 'Alastair D'Silva' <alastair@au1.ibm.com>, "'Martin K. Petersen'" <martin.petersen@oracle.com>, 'Greg Kroah-Hartman' <gregkh@linuxfoundation.org>, linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, 'Sergey Senozhatsky' <sergey.senozhatsky@gmail.com>, netdev@vger.kernel.org, 'Enric
+Content-Type: text/plain;
+        charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190415092424.qos7d54nbyr5hphu@pathway.suse.cz>
+Content-Language: en-au
+Sender: linux-kernel-owner@vger.kernel.org
+To: 'Petr Mladek' <pmladek@suse.com>
+Cc: 'Alastair D'Silva' <alastair@au1.ibm.com>, 'Jani Nikula' <jani.nikula@linux.intel.com>, 'Joonas Lahtinen' <joonas.lahtinen@linux.intel.com>, 'Rodrigo Vivi' <rodrigo.vivi@intel.com>, 'David Airlie' <airlied@linux.ie>, 'Daniel Vetter' <daniel@ffwll.ch>, 'Karsten Keil' <isdn@linux-pingi.de>, 'Jassi Brar' <jassisinghbrar@gmail.com>, 'Tom Lendacky' <thomas.lendacky@amd.com>, "'David S. Miller'" <davem@davemloft.net>, 'Jose Abreu' <Jose.Abreu@synopsys.com>, 'Kalle Valo' <kvalo@codeaurora.org>, 'Stanislaw Gruszka' <sgruszka@redhat.com>, 'Benson Leung' <bleung@chromium.org>, 'Enric Balletbo i Serra' <enric.balletbo@collabora.com>, "'James E.J. Bottomley'" <jejb@linux.ibm.com>, "'Martin K. Petersen'" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gU2F0IDIwMTktMDQtMTMgMDk6MzE6MjcsIEFsYXN0YWlyIEQnU2lsdmEgd3JvdGU6Cj4gPiAt
-LS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQo+ID4gRnJvbTogUGV0ciBNbGFkZWsgPHBtbGFkZWtA
-c3VzZS5jb20+Cj4gPiBTZW50OiBTYXR1cmRheSwgMTMgQXByaWwgMjAxOSAxMjoxMiBBTQo+ID4g
-VG86IEFsYXN0YWlyIEQnU2lsdmEgPGFsYXN0YWlyQGF1MS5pYm0uY29tPgo+ID4gQ2M6IGFsYXN0
-YWlyQGQtc2lsdmEub3JnOyBKYW5pIE5pa3VsYSA8amFuaS5uaWt1bGFAbGludXguaW50ZWwuY29t
-PjsKPiBKb29uYXMKPiA+IExhaHRpbmVuIDxqb29uYXMubGFodGluZW5AbGludXguaW50ZWwuY29t
-PjsgUm9kcmlnbyBWaXZpCj4gPiA8cm9kcmlnby52aXZpQGludGVsLmNvbT47IERhdmlkIEFpcmxp
-ZSA8YWlybGllZEBsaW51eC5pZT47IERhbmllbCBWZXR0ZXIKPiA+IDxkYW5pZWxAZmZ3bGwuY2g+
-OyBLYXJzdGVuIEtlaWwgPGlzZG5AbGludXgtcGluZ2kuZGU+OyBKYXNzaSBCcmFyCj4gPiA8amFz
-c2lzaW5naGJyYXJAZ21haWwuY29tPjsgVG9tIExlbmRhY2t5IDx0aG9tYXMubGVuZGFja3lAYW1k
-LmNvbT47Cj4gPiBEYXZpZCBTLiBNaWxsZXIgPGRhdmVtQGRhdmVtbG9mdC5uZXQ+OyBKb3NlIEFi
-cmV1Cj4gPiA8Sm9zZS5BYnJldUBzeW5vcHN5cy5jb20+OyBLYWxsZSBWYWxvIDxrdmFsb0Bjb2Rl
-YXVyb3JhLm9yZz47Cj4gPiBTdGFuaXNsYXcgR3J1c3prYSA8c2dydXN6a2FAcmVkaGF0LmNvbT47
-IEJlbnNvbiBMZXVuZwo+ID4gPGJsZXVuZ0BjaHJvbWl1bS5vcmc+OyBFbnJpYyBCYWxsZXRibyBp
-IFNlcnJhCj4gPiA8ZW5yaWMuYmFsbGV0Ym9AY29sbGFib3JhLmNvbT47IEphbWVzIEUuSi4gQm90
-dG9tbGV5Cj4gPiA8amVqYkBsaW51eC5pYm0uY29tPjsgTWFydGluIEsuIFBldGVyc2VuIDxtYXJ0
-aW4ucGV0ZXJzZW5Ab3JhY2xlLmNvbT47Cj4gPiBHcmVnIEtyb2FoLUhhcnRtYW4gPGdyZWdraEBs
-aW51eGZvdW5kYXRpb24ub3JnPjsgQWxleGFuZGVyIFZpcm8KPiA+IDx2aXJvQHplbml2LmxpbnV4
-Lm9yZy51az47IFNlcmdleSBTZW5vemhhdHNreQo+ID4gPHNlcmdleS5zZW5vemhhdHNreUBnbWFp
-bC5jb20+OyBTdGV2ZW4gUm9zdGVkdCA8cm9zdGVkdEBnb29kbWlzLm9yZz47Cj4gPiBBbmRyZXcg
-TW9ydG9uIDxha3BtQGxpbnV4LWZvdW5kYXRpb24ub3JnPjsgaW50ZWwtCj4gPiBnZnhAbGlzdHMu
-ZnJlZWRlc2t0b3Aub3JnOyBkcmktZGV2ZWxAbGlzdHMuZnJlZWRlc2t0b3Aub3JnOyBsaW51eC0K
-PiA+IGtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IG5ldGRldkB2Z2VyLmtlcm5lbC5vcmc7Cj4gPiBh
-dGgxMGtAbGlzdHMuaW5mcmFkZWFkLm9yZzsgbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3Jn
-OyBsaW51eC0KPiA+IHNjc2lAdmdlci5rZXJuZWwub3JnOyBsaW51eC1mYmRldkB2Z2VyLmtlcm5l
-bC5vcmc7Cj4gPiBkZXZlbEBkcml2ZXJkZXYub3N1b3NsLm9yZzsgbGludXgtZnNkZXZlbEB2Z2Vy
-Lmtlcm5lbC5vcmcKPiA+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggMy80XSBsaWIvaGV4ZHVtcC5jOiBS
-ZXBsYWNlIGFzY2lpIGJvb2wgaW4KPiA+IGhleF9kdW1wX3RvX2J1ZmZlciB3aXRoIGZsYWdzCj4g
-PiAKPiA+IE9uIFdlZCAyMDE5LTA0LTEwIDEzOjE3OjE5LCBBbGFzdGFpciBEJ1NpbHZhIHdyb3Rl
-Ogo+ID4gPiBGcm9tOiBBbGFzdGFpciBEJ1NpbHZhIDxhbGFzdGFpckBkLXNpbHZhLm9yZz4KPiA+
-ID4KPiA+ID4gSW4gb3JkZXIgdG8gc3VwcG9ydCBhZGRpdGlvbmFsIGZlYXR1cmVzIGluIGhleF9k
-dW1wX3RvX2J1ZmZlciwgcmVwbGFjZQo+ID4gPiB0aGUgYXNjaWkgYm9vbCBwYXJhbWV0ZXIgd2l0
-aCBmbGFncy4KPiA+ID4KPiA+ID4gU2lnbmVkLW9mZi1ieTogQWxhc3RhaXIgRCdTaWx2YSA8YWxh
-c3RhaXJAZC1zaWx2YS5vcmc+Cj4gPiA+IC0tLQo+ID4gPiAgZHJpdmVycy9ncHUvZHJtL2k5MTUv
-aW50ZWxfZW5naW5lX2NzLmMgICAgICAgICAgICB8ICAyICstCj4gPiA+ICBkcml2ZXJzL2lzZG4v
-aGFyZHdhcmUvbUlTRE4vbUlTRE5pc2FyLmMgICAgICAgICAgIHwgIDYgKysrKy0tCj4gPiA+ICBk
-cml2ZXJzL21haWxib3gvbWFpbGJveC10ZXN0LmMgICAgICAgICAgICAgICAgICAgIHwgIDIgKy0K
-PiA+ID4gIGRyaXZlcnMvbmV0L2V0aGVybmV0L2FtZC94Z2JlL3hnYmUtZHJ2LmMgICAgICAgICAg
-fCAgMiArLQo+ID4gPiAgZHJpdmVycy9uZXQvZXRoZXJuZXQvc3lub3BzeXMvZHdjLXhsZ21hYy1j
-b21tb24uYyB8ICAyICstCj4gPiA+ICBkcml2ZXJzL25ldC93aXJlbGVzcy9hdGgvYXRoMTBrL2Rl
-YnVnLmMgICAgICAgICAgIHwgIDMgKystCj4gPiA+ICBkcml2ZXJzL25ldC93aXJlbGVzcy9pbnRl
-bC9pd2xlZ2FjeS8zOTQ1LW1hYy5jICAgIHwgIDIgKy0KPiA+ID4gIGRyaXZlcnMvcGxhdGZvcm0v
-Y2hyb21lL3dpbGNvX2VjL2RlYnVnZnMuYyAgICAgICAgfCAgMyArKy0KPiA+ID4gIGRyaXZlcnMv
-c2NzaS9zY3NpX2xvZ2dpbmcuYyAgICAgICAgICAgICAgICAgICAgICAgfCAgOCArKystLS0tLQo+
-ID4gPiAgZHJpdmVycy9zdGFnaW5nL2ZidGZ0L2ZidGZ0LWNvcmUuYyAgICAgICAgICAgICAgICB8
-ICAyICstCj4gPiA+ICBmcy9zZXFfZmlsZS5jICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgIHwgIDMgKystCj4gPiA+ICBpbmNsdWRlL2xpbnV4L3ByaW50ay5oICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgIHwgIDIgKy0KPiA+ID4gIGxpYi9oZXhkdW1wLmMgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgfCAxNSArKysrKysrKy0tLS0tLS0KPiA+ID4gIGxpYi90
-ZXN0X2hleGR1bXAuYyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfCAgNSArKystLQo+
-ID4gPiAgMTQgZmlsZXMgY2hhbmdlZCwgMzEgaW5zZXJ0aW9ucygrKSwgMjYgZGVsZXRpb25zKC0p
-Cj4gPiA+Cj4gPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL2dwdS9kcm0vaTkxNS9pbnRlbF9lbmdp
-bmVfY3MuYwo+ID4gPiBiL2RyaXZlcnMvZ3B1L2RybS9pOTE1L2ludGVsX2VuZ2luZV9jcy5jCj4g
-PiA+IGluZGV4IDQ5ZmE0M2ZmMDJiYS4uZmIxMzNlNzI5ZjlhIDEwMDY0NAo+ID4gPiAtLS0gYS9k
-cml2ZXJzL2dwdS9kcm0vaTkxNS9pbnRlbF9lbmdpbmVfY3MuYwo+ID4gPiArKysgYi9kcml2ZXJz
-L2dwdS9kcm0vaTkxNS9pbnRlbF9lbmdpbmVfY3MuYwo+ID4gPiBAQCAtMTMxOCw3ICsxMzE4LDcg
-QEAgc3RhdGljIHZvaWQgaGV4ZHVtcChzdHJ1Y3QgZHJtX3ByaW50ZXIgKm0sIGNvbnN0Cj4gPiB2
-b2lkICpidWYsIHNpemVfdCBsZW4pCj4gPiA+ICAJCVdBUk5fT05fT05DRShoZXhfZHVtcF90b19i
-dWZmZXIoYnVmICsgcG9zLCBsZW4gLQo+ID4gcG9zLAo+ID4gPiAgCQkJCQkJcm93c2l6ZSwgc2l6
-ZW9mKHUzMiksCj4gPiA+ICAJCQkJCQlsaW5lLCBzaXplb2YobGluZSksCj4gPiA+IC0JCQkJCQlm
-YWxzZSkgPj0gc2l6ZW9mKGxpbmUpKTsKPiA+ID4gKwkJCQkJCTApID49IHNpemVvZihsaW5lKSk7
-Cj4gPiAKPiA+IEl0IG1pZ2h0IGJlIG1vcmUgY2xlYXIgd2hlbiB3ZSBkZWZpbmU6Cj4gPiAKPiA+
-ICNkZWZpbmUgSEVYRFVNUF9CSU5BUlkgMAo+IAo+IFRoaXMgZmVlbHMgdW5uZWNlc3NhcnksIGFu
-ZCB3ZWlyZC4gT21pdHRpbmcgdGhlIGZsYWcgd29uJ3QgZGlzYWJsZSB0aGUgaGV4Cj4gb3V0cHV0
-IChhcyBleHBlY3RlZCksIGFuZCBpZiB5b3UgZG9uJ3Qgd2FudCBoZXggb3V0cHV0IHdoeSBjYWxs
-IGhleGR1bXAgaW4KPiB0aGUgZmlyc3QgcGxhY2U/CgpXaHkgZG8gd2UgaGF2ZSBIRVhEVU1QX0FT
-Q0lJIHRoZW4/CldoeSBpcyB0aGUgYWJvdmUgZnVudGlvbiBub3QgdXNpbmcgSEVYRFVNUF9BU0NJ
-ST8KV2hvIHdvdWxkIGNhbGwgaXQgd2l0aCAoSEVYRFVNUF9BU0NJSSB8IEhFWERVTVBfQklOQVJZ
-KT8KCkJlc3QgUmVnYXJkcywKUGV0cgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fXwpJbnRlbC1nZnggbWFpbGluZyBsaXN0CkludGVsLWdmeEBsaXN0cy5mcmVl
-ZGVza3RvcC5vcmcKaHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0aW5m
-by9pbnRlbC1nZng=
+> -----Original Message-----
+> From: Petr Mladek <pmladek@suse.com>
+> Sent: Monday, 15 April 2019 7:24 PM
+> To: Alastair D'Silva <alastair@d-silva.org>
+> Cc: 'Alastair D'Silva' <alastair@au1.ibm.com>; 'Jani Nikula'
+> <jani.nikula@linux.intel.com>; 'Joonas Lahtinen'
+> <joonas.lahtinen@linux.intel.com>; 'Rodrigo Vivi'
+<rodrigo.vivi@intel.com>;
+> 'David Airlie' <airlied@linux.ie>; 'Daniel Vetter' <daniel@ffwll.ch>;
+'Karsten
+> Keil' <isdn@linux-pingi.de>; 'Jassi Brar' <jassisinghbrar@gmail.com>; 'Tom
+> Lendacky' <thomas.lendacky@amd.com>; 'David S. Miller'
+> <davem@davemloft.net>; 'Jose Abreu' <Jose.Abreu@synopsys.com>; 'Kalle
+> Valo' <kvalo@codeaurora.org>; 'Stanislaw Gruszka' <sgruszka@redhat.com>;
+> 'Benson Leung' <bleung@chromium.org>; 'Enric Balletbo i Serra'
+> <enric.balletbo@collabora.com>; 'James E.J. Bottomley'
+> <jejb@linux.ibm.com>; 'Martin K. Petersen' <martin.petersen@oracle.com>;
+> 'Greg Kroah-Hartman' <gregkh@linuxfoundation.org>; 'Alexander Viro'
+> <viro@zeniv.linux.org.uk>; 'Sergey Senozhatsky'
+> <sergey.senozhatsky@gmail.com>; 'Steven Rostedt'
+> <rostedt@goodmis.org>; 'Andrew Morton' <akpm@linux-foundation.org>;
+> intel-gfx@lists.freedesktop.org; dri-devel@lists.freedesktop.org; linux-
+> kernel@vger.kernel.org; netdev@vger.kernel.org;
+> ath10k@lists.infradead.org; linux-wireless@vger.kernel.org; linux-
+> scsi@vger.kernel.org; linux-fbdev@vger.kernel.org;
+> devel@driverdev.osuosl.org; linux-fsdevel@vger.kernel.org
+> Subject: Re: [PATCH 3/4] lib/hexdump.c: Replace ascii bool in
+> hex_dump_to_buffer with flags
+> 
+> On Sat 2019-04-13 09:31:27, Alastair D'Silva wrote:
+> > > -----Original Message-----
+> > > From: Petr Mladek <pmladek@suse.com>
+> > > Sent: Saturday, 13 April 2019 12:12 AM
+> > > To: Alastair D'Silva <alastair@au1.ibm.com>
+> > > Cc: alastair@d-silva.org; Jani Nikula <jani.nikula@linux.intel.com>;
+> > Joonas
+> > > Lahtinen <joonas.lahtinen@linux.intel.com>; Rodrigo Vivi
+> > > <rodrigo.vivi@intel.com>; David Airlie <airlied@linux.ie>; Daniel
+> > > Vetter <daniel@ffwll.ch>; Karsten Keil <isdn@linux-pingi.de>; Jassi
+> > > Brar <jassisinghbrar@gmail.com>; Tom Lendacky
+> > > <thomas.lendacky@amd.com>; David S. Miller
+> <davem@davemloft.net>;
+> > > Jose Abreu <Jose.Abreu@synopsys.com>; Kalle Valo
+> > > <kvalo@codeaurora.org>; Stanislaw Gruszka <sgruszka@redhat.com>;
+> > > Benson Leung <bleung@chromium.org>; Enric Balletbo i Serra
+> > > <enric.balletbo@collabora.com>; James E.J. Bottomley
+> > > <jejb@linux.ibm.com>; Martin K. Petersen
+> > > <martin.petersen@oracle.com>; Greg Kroah-Hartman
+> > > <gregkh@linuxfoundation.org>; Alexander Viro
+> > > <viro@zeniv.linux.org.uk>; Sergey Senozhatsky
+> > > <sergey.senozhatsky@gmail.com>; Steven Rostedt
+> > > <rostedt@goodmis.org>; Andrew Morton <akpm@linux-
+> foundation.org>;
+> > > intel- gfx@lists.freedesktop.org; dri-devel@lists.freedesktop.org;
+> > > linux- kernel@vger.kernel.org; netdev@vger.kernel.org;
+> > > ath10k@lists.infradead.org; linux-wireless@vger.kernel.org; linux-
+> > > scsi@vger.kernel.org; linux-fbdev@vger.kernel.org;
+> > > devel@driverdev.osuosl.org; linux-fsdevel@vger.kernel.org
+> > > Subject: Re: [PATCH 3/4] lib/hexdump.c: Replace ascii bool in
+> > > hex_dump_to_buffer with flags
+> > >
+> > > On Wed 2019-04-10 13:17:19, Alastair D'Silva wrote:
+> > > > From: Alastair D'Silva <alastair@d-silva.org>
+> > > >
+> > > > In order to support additional features in hex_dump_to_buffer,
+> > > > replace the ascii bool parameter with flags.
+> > > >
+> > > > Signed-off-by: Alastair D'Silva <alastair@d-silva.org>
+> > > > ---
+> > > >  drivers/gpu/drm/i915/intel_engine_cs.c            |  2 +-
+> > > >  drivers/isdn/hardware/mISDN/mISDNisar.c           |  6 ++++--
+> > > >  drivers/mailbox/mailbox-test.c                    |  2 +-
+> > > >  drivers/net/ethernet/amd/xgbe/xgbe-drv.c          |  2 +-
+> > > >  drivers/net/ethernet/synopsys/dwc-xlgmac-common.c |  2 +-
+> > > >  drivers/net/wireless/ath/ath10k/debug.c           |  3 ++-
+> > > >  drivers/net/wireless/intel/iwlegacy/3945-mac.c    |  2 +-
+> > > >  drivers/platform/chrome/wilco_ec/debugfs.c        |  3 ++-
+> > > >  drivers/scsi/scsi_logging.c                       |  8 +++-----
+> > > >  drivers/staging/fbtft/fbtft-core.c                |  2 +-
+> > > >  fs/seq_file.c                                     |  3 ++-
+> > > >  include/linux/printk.h                            |  2 +-
+> > > >  lib/hexdump.c                                     | 15
+++++++++-------
+> > > >  lib/test_hexdump.c                                |  5 +++--
+> > > >  14 files changed, 31 insertions(+), 26 deletions(-)
+> > > >
+> > > > diff --git a/drivers/gpu/drm/i915/intel_engine_cs.c
+> > > > b/drivers/gpu/drm/i915/intel_engine_cs.c
+> > > > index 49fa43ff02ba..fb133e729f9a 100644
+> > > > --- a/drivers/gpu/drm/i915/intel_engine_cs.c
+> > > > +++ b/drivers/gpu/drm/i915/intel_engine_cs.c
+> > > > @@ -1318,7 +1318,7 @@ static void hexdump(struct drm_printer *m,
+> > > > const
+> > > void *buf, size_t len)
+> > > >  		WARN_ON_ONCE(hex_dump_to_buffer(buf + pos, len -
+> > > pos,
+> > > >  						rowsize,
+sizeof(u32),
+> > > >  						line, sizeof(line),
+> > > > -						false) >=
+sizeof(line));
+> > > > +						0) >= sizeof(line));
+> > >
+> > > It might be more clear when we define:
+> > >
+> > > #define HEXDUMP_BINARY 0
+> >
+> > This feels unnecessary, and weird. Omitting the flag won't disable the
+> > hex output (as expected), and if you don't want hex output why call
+> > hexdump in the first place?
+> 
+> Why do we have HEXDUMP_ASCII then?
+> Why is the above funtion not using HEXDUMP_ASCII?
+> Who would call it with (HEXDUMP_ASCII | HEXDUMP_BINARY)?
+
+The ASCII flag controls the optional ASCII output, and replaces the boolean
+that existed prior. A user would enable it in the same situations where they
+currently pass true for the ascii parameter.
+
+In the above example the author only wants the hex output, while in other
+situations, both hex & ASCII output is desirable. If you just want ASCII
+output, the caller should just use a printk or one of it's wrappers.
+
+-- 
+Alastair D'Silva           mob: 0423 762 819
+skype: alastair_dsilva     msn: alastair@d-silva.org
+blog: http://alastair.d-silva.org    Twitter: @EvilDeece
