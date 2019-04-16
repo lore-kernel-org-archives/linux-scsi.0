@@ -1,38 +1,27 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 1/1] scsi: ufs: Print real incorrect request response code
-Date: Mon, 15 Apr 2019 22:18:03 -0400
-Message-ID: <yq11s22hew4.fsf@oracle.com>
-References: <1555331018-32734-1-git-send-email-stanley.chu@mediatek.com>
+Subject: Re: [PATCH -next] scsi: megaraid_sas: Make megasas_host_device_list_query() static
+Date: Mon, 15 Apr 2019 22:20:48 -0400
+Message-ID: <yq1wojug073.fsf@oracle.com>
+References: <20190413142138.33336-1-yuehaibing@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <1555331018-32734-1-git-send-email-stanley.chu@mediatek.com>
- (Stanley Chu's message of "Mon, 15 Apr 2019 20:23:38 +0800")
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Stanley Chu <stanley.chu@mediatek.com>
-Cc: linux-scsi@vger.kernel.org, martin.petersen@oracle.com, marc.w.gonzalez@free.fr, andy.teng@mediatek.com, chun-hung.wu@mediatek.com, kuohong.wang@mediatek.com, evgreen@chromium.org, avri.altman@wdc.com, linux-mediatek@lists.infradead.org, peter.wang@mediatek.com, alim.akhtar@samsung.com, matthias.bgg@gmail.com, pedrom.sousa@synopsys.com, linux-arm-kernel@lists.infradead.org, beanhuo@micron.com
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190413142138.33336-1-yuehaibing@huawei.com> (Yue Haibing's
+        message of "Sat, 13 Apr 2019 22:21:38 +0800")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Yue Haibing <yuehaibing@huawei.com>
+Cc: kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com, jejb@linux.ibm.com, martin.petersen@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, megaraidlinux.pdl@broadcom.com
 List-Id: linux-scsi@vger.kernel.org
 
 
-Stanley,
+Yue,
 
-> If UFS device responds an unknown request response code, we can not
-> know what it was via logs because the code is replaced by "DID_ERROR
-> << 16" before log printing.
+> Fix sparse warning:
 >
-> Fix this to provide precise request response code information for
-> easier issue breakdown.
+> drivers/scsi/megaraid/megaraid_sas_base.c:4652:1: warning:
+>  symbol 'megasas_host_device_list_query' was not declared. Should it be static?
 
-Applied to 5.2/scsi-queue, thank you!
+Applied to 5.2/scsi-queue. Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
