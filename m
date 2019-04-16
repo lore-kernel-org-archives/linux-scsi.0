@@ -1,35 +1,38 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 0/6] libsas: Some minor improvements and tidy-up
-Date: Mon, 15 Apr 2019 19:33:24 -0400
-Message-ID: <yq1v9zehmij.fsf@oracle.com>
-References: <1555059478-36224-1-git-send-email-john.garry@huawei.com>
+Subject: Re: [PATCH 1/1] scsi: ufs: Print real incorrect request response code
+Date: Mon, 15 Apr 2019 22:18:03 -0400
+Message-ID: <yq11s22hew4.fsf@oracle.com>
+References: <1555331018-32734-1-git-send-email-stanley.chu@mediatek.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1555059478-36224-1-git-send-email-john.garry@huawei.com> (John
-        Garry's message of "Fri, 12 Apr 2019 16:57:51 +0800")
-Sender: linux-kernel-owner@vger.kernel.org
-To: John Garry <john.garry@huawei.com>
-Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linuxarm@huawei.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, yanaijie@huawei.com, chenxiang66@hisilicon.com, luojiaxing@huawei.com
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <1555331018-32734-1-git-send-email-stanley.chu@mediatek.com>
+ (Stanley Chu's message of "Mon, 15 Apr 2019 20:23:38 +0800")
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Stanley Chu <stanley.chu@mediatek.com>
+Cc: linux-scsi@vger.kernel.org, martin.petersen@oracle.com, marc.w.gonzalez@free.fr, andy.teng@mediatek.com, chun-hung.wu@mediatek.com, kuohong.wang@mediatek.com, evgreen@chromium.org, avri.altman@wdc.com, linux-mediatek@lists.infradead.org, peter.wang@mediatek.com, alim.akhtar@samsung.com, matthias.bgg@gmail.com, pedrom.sousa@synopsys.com, linux-arm-kernel@lists.infradead.org, beanhuo@micron.com
 List-Id: linux-scsi@vger.kernel.org
 
 
-John,
+Stanley,
 
-> This patchset introduces some minor improvements and tidy-up, including:
-> - fix PHY info in sysfs for PHY events
-> - min pathway rate programming improvement
-> - some other tidy-up and neatening
+> If UFS device responds an unknown request response code, we can not
+> know what it was via logs because the code is replaced by "DID_ERROR
+> << 16" before log printing.
+>
+> Fix this to provide precise request response code information for
+> easier issue breakdown.
 
-Applied to 5.2/scsi-queue, thanks!
-
-One thing that always bugged me is the ambiguous "ex" prefix for many
-libsas log messages. And in a way, your patch #3 makes things worse by
-replacing the more descriptive "Expander" with "ex". It does make things
-more consistent, though.
-
-I'd really like to see all the libsas messages be cleaned up with a
-sensible prefix and a consistent format where possible.
+Applied to 5.2/scsi-queue, thank you!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
