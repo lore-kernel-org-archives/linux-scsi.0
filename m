@@ -1,561 +1,595 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH v3 13/26] compat_ioctl: move tape handling into drivers
-Date: Tue, 16 Apr 2019 22:25:34 +0200
-Message-ID: <20190416202701.127745-2-arnd@arndb.de>
+From: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
+Subject: [PATCH v3 12/26] compat_ioctl: move more drivers to compat_ptr_ioctl
+Date: Tue, 16 Apr 2019 22:25:33 +0200
+Message-ID: <20190416202701.127745-1-arnd@arndb.de>
 References: <20190416202013.4034148-1-arnd@arndb.de>
- <20190416202701.127745-1-arnd@arndb.de>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190416202701.127745-1-arnd@arndb.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: linux-fsdevel@vger.kernel.org, y2038@lists.linaro.org, linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, "David S. Miller" <davem@davemloft.net>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, Willem Riede <osst@riede.org>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, =?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>, linux-ide@vger.kernel.org, linux-s390@vger.kernel.org, osst-users@lists.sourceforge.net, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+In-Reply-To: <20190416202013.4034148-1-arnd-r2nGTMty4D4@public.gmane.org>
+List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
+List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
+Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+To: Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>
+Cc: linux-iio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Daniel Vetter <daniel.vetter-/w4YWyX8dFk@public.gmane.org>, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, Bjorn Andersson <bjorn.andersson-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, sparclinux-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mauro Carvalho Chehab <mchehab+samsung-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, y2038-cunTk1MwBs8s++Sfvej+rw@public.gmane.org, qat-linux-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, Jason Gunthorpe <jgg-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, linux-input-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Darren Hart <dvhart-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, linux-remoteproc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linaro-mm-sig-cunTk1MwBs8s++Sfvej+rw@public.gmane.org, linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, Jonathan Cameron <Jonathan.Cameron-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, David Sterba <dsterba-IBi9RG/b67k@public.gmane.org>, ceph-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, platform-driver-x86-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, linux-usb-fy+rA21nqHI@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-MTIOCPOS and MTIOCGET are incompatible between 32-bit and 64-bit user
-space, and traditionally have been translated in fs/compat_ioctl.c.
+The .ioctl and .compat_ioctl file operations have the same prototype so
+they can both point to the same function, which works great almost all
+the time when all the commands are compatible.
 
-To get rid of that translation handler, move a corresponding
-implementation into each of the four drivers implementing those commands.
+One exception is the s390 architecture, where a compat pointer is only
+31 bit wide, and converting it into a 64-bit pointer requires calling
+compat_ptr(). Most drivers here will ever run in s390, but since we now
+have a generic helper for it, it's easy enough to use it consistently.
 
-The interesting part of that is now in a new linux/mtio.h header that
-wraps the existing uapi/linux/mtio.h header and provides an abstraction
-to let drivers handle both cases easily.
+I double-checked all these drivers to ensure that all ioctl arguments
+are used as pointers or are ignored, but are not interpreted as integer
+values.
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Acked-by: Jason Gunthorpe <jgg-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+Acked-by: Daniel Vetter <daniel.vetter-/w4YWyX8dFk@public.gmane.org>
+Acked-by: Mauro Carvalho Chehab <mchehab+samsung-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Acked-by: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+Acked-by: David Sterba <dsterba-IBi9RG/b67k@public.gmane.org>
+Acked-by: Darren Hart (VMware) <dvhart-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Acked-by: Jonathan Cameron <Jonathan.Cameron-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Acked-by: Bjorn Andersson <bjorn.andersson-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Signed-off-by: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
 ---
- drivers/ide/ide-tape.c        | 31 ++++++++++++----
- drivers/s390/char/tape_char.c | 41 ++++++++------------
- drivers/scsi/osst.c           | 34 ++++++++++-------
- drivers/scsi/st.c             | 35 +++++++++++-------
- fs/compat_ioctl.c             | 70 -----------------------------------
- include/linux/mtio.h          | 58 +++++++++++++++++++++++++++++
- 6 files changed, 137 insertions(+), 132 deletions(-)
- create mode 100644 include/linux/mtio.h
+ drivers/android/binder.c                    | 2 +-
+ drivers/crypto/qat/qat_common/adf_ctl_drv.c | 2 +-
+ drivers/dma-buf/dma-buf.c                   | 4 +---
+ drivers/dma-buf/sw_sync.c                   | 2 +-
+ drivers/dma-buf/sync_file.c                 | 2 +-
+ drivers/gpu/drm/amd/amdkfd/kfd_chardev.c    | 2 +-
+ drivers/hid/hidraw.c                        | 4 +---
+ drivers/iio/industrialio-core.c             | 2 +-
+ drivers/infiniband/core/uverbs_main.c       | 4 ++--
+ drivers/media/rc/lirc_dev.c                 | 4 +---
+ drivers/mfd/cros_ec_dev.c                   | 4 +---
+ drivers/misc/vmw_vmci/vmci_host.c           | 2 +-
+ drivers/nvdimm/bus.c                        | 4 ++--
+ drivers/nvme/host/core.c                    | 2 +-
+ drivers/pci/switch/switchtec.c              | 2 +-
+ drivers/platform/x86/wmi.c                  | 2 +-
+ drivers/rpmsg/rpmsg_char.c                  | 4 ++--
+ drivers/sbus/char/display7seg.c             | 2 +-
+ drivers/sbus/char/envctrl.c                 | 4 +---
+ drivers/scsi/3w-xxxx.c                      | 4 +---
+ drivers/scsi/cxlflash/main.c                | 2 +-
+ drivers/scsi/esas2r/esas2r_main.c           | 2 +-
+ drivers/scsi/pmcraid.c                      | 4 +---
+ drivers/staging/android/ion/ion.c           | 4 +---
+ drivers/staging/vme/devices/vme_user.c      | 2 +-
+ drivers/tee/tee_core.c                      | 2 +-
+ drivers/usb/class/cdc-wdm.c                 | 2 +-
+ drivers/usb/class/usbtmc.c                  | 4 +---
+ drivers/virt/fsl_hypervisor.c               | 2 +-
+ fs/btrfs/super.c                            | 2 +-
+ fs/ceph/dir.c                               | 2 +-
+ fs/ceph/file.c                              | 2 +-
+ fs/fuse/dev.c                               | 2 +-
+ fs/notify/fanotify/fanotify_user.c          | 2 +-
+ fs/userfaultfd.c                            | 2 +-
+ net/rfkill/core.c                           | 2 +-
+ 36 files changed, 39 insertions(+), 57 deletions(-)
 
-diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
-index db1a65f4b490..54560ae5c054 100644
---- a/drivers/ide/ide-tape.c
-+++ b/drivers/ide/ide-tape.c
-@@ -19,6 +19,7 @@
+diff --git a/drivers/android/binder.c b/drivers/android/binder.c
+index 4b9c7ca492e6..48109ade7234 100644
+--- a/drivers/android/binder.c
++++ b/drivers/android/binder.c
+@@ -5998,7 +5998,7 @@ const struct file_operations binder_fops = {
+ 	.owner = THIS_MODULE,
+ 	.poll = binder_poll,
+ 	.unlocked_ioctl = binder_ioctl,
+-	.compat_ioctl = binder_ioctl,
++	.compat_ioctl = compat_ptr_ioctl,
+ 	.mmap = binder_mmap,
+ 	.open = binder_open,
+ 	.flush = binder_flush,
+diff --git a/drivers/crypto/qat/qat_common/adf_ctl_drv.c b/drivers/crypto/qat/qat_common/adf_ctl_drv.c
+index abc7a7f64d64..ef0e482ee04f 100644
+--- a/drivers/crypto/qat/qat_common/adf_ctl_drv.c
++++ b/drivers/crypto/qat/qat_common/adf_ctl_drv.c
+@@ -68,7 +68,7 @@ static long adf_ctl_ioctl(struct file *fp, unsigned int cmd, unsigned long arg);
+ static const struct file_operations adf_ctl_ops = {
+ 	.owner = THIS_MODULE,
+ 	.unlocked_ioctl = adf_ctl_ioctl,
+-	.compat_ioctl = adf_ctl_ioctl,
++	.compat_ioctl = compat_ptr_ioctl,
+ };
  
- #define IDETAPE_VERSION "1.20"
+ struct adf_ctl_drv_info {
+diff --git a/drivers/dma-buf/dma-buf.c b/drivers/dma-buf/dma-buf.c
+index 7c858020d14b..0cb336fe6324 100644
+--- a/drivers/dma-buf/dma-buf.c
++++ b/drivers/dma-buf/dma-buf.c
+@@ -325,9 +325,7 @@ static const struct file_operations dma_buf_fops = {
+ 	.llseek		= dma_buf_llseek,
+ 	.poll		= dma_buf_poll,
+ 	.unlocked_ioctl	= dma_buf_ioctl,
+-#ifdef CONFIG_COMPAT
+-	.compat_ioctl	= dma_buf_ioctl,
+-#endif
++	.compat_ioctl	= compat_ptr_ioctl,
+ };
  
-+#include <linux/compat.h>
- #include <linux/module.h>
- #include <linux/types.h>
- #include <linux/string.h>
-@@ -1368,7 +1369,7 @@ static int idetape_mtioctop(ide_drive_t *drive, short mt_op, int mt_count)
-  * ide-tape ioctls are supported on both interfaces.
-  */
- static long do_idetape_chrdev_ioctl(struct file *file,
--				unsigned int cmd, unsigned long arg)
-+				unsigned int cmd, unsigned long arg, bool compat)
- {
- 	struct ide_tape_obj *tape = file->private_data;
- 	ide_drive_t *drive = tape->drive;
-@@ -1407,14 +1408,10 @@ static long do_idetape_chrdev_ioctl(struct file *file,
- 		if (tape->drv_write_prot)
- 			mtget.mt_gstat |= GMT_WR_PROT(0xffffffff);
+ /*
+diff --git a/drivers/dma-buf/sw_sync.c b/drivers/dma-buf/sw_sync.c
+index 32dcf7b4c935..411de6a8a0ad 100644
+--- a/drivers/dma-buf/sw_sync.c
++++ b/drivers/dma-buf/sw_sync.c
+@@ -419,5 +419,5 @@ const struct file_operations sw_sync_debugfs_fops = {
+ 	.open           = sw_sync_debugfs_open,
+ 	.release        = sw_sync_debugfs_release,
+ 	.unlocked_ioctl = sw_sync_ioctl,
+-	.compat_ioctl	= sw_sync_ioctl,
++	.compat_ioctl	= compat_ptr_ioctl,
+ };
+diff --git a/drivers/dma-buf/sync_file.c b/drivers/dma-buf/sync_file.c
+index 4f6305ca52c8..0949f91eb85f 100644
+--- a/drivers/dma-buf/sync_file.c
++++ b/drivers/dma-buf/sync_file.c
+@@ -488,5 +488,5 @@ static const struct file_operations sync_file_fops = {
+ 	.release = sync_file_release,
+ 	.poll = sync_file_poll,
+ 	.unlocked_ioctl = sync_file_ioctl,
+-	.compat_ioctl = sync_file_ioctl,
++	.compat_ioctl = compat_ptr_ioctl,
+ };
+diff --git a/drivers/gpu/drm/amd/amdkfd/kfd_chardev.c b/drivers/gpu/drm/amd/amdkfd/kfd_chardev.c
+index 083bd8114db1..5d6ac7885aa7 100644
+--- a/drivers/gpu/drm/amd/amdkfd/kfd_chardev.c
++++ b/drivers/gpu/drm/amd/amdkfd/kfd_chardev.c
+@@ -49,7 +49,7 @@ static const char kfd_dev_name[] = "kfd";
+ static const struct file_operations kfd_fops = {
+ 	.owner = THIS_MODULE,
+ 	.unlocked_ioctl = kfd_ioctl,
+-	.compat_ioctl = kfd_ioctl,
++	.compat_ioctl = compat_ptr_ioctl,
+ 	.open = kfd_open,
+ 	.mmap = kfd_mmap,
+ };
+diff --git a/drivers/hid/hidraw.c b/drivers/hid/hidraw.c
+index 9fc51eff1079..e7284d38b66d 100644
+--- a/drivers/hid/hidraw.c
++++ b/drivers/hid/hidraw.c
+@@ -476,9 +476,7 @@ static const struct file_operations hidraw_ops = {
+ 	.release =      hidraw_release,
+ 	.unlocked_ioctl = hidraw_ioctl,
+ 	.fasync =	hidraw_fasync,
+-#ifdef CONFIG_COMPAT
+-	.compat_ioctl   = hidraw_ioctl,
+-#endif
++	.compat_ioctl   = compat_ptr_ioctl,
+ 	.llseek =	noop_llseek,
+ };
  
--		if (copy_to_user(argp, &mtget, sizeof(struct mtget)))
--			return -EFAULT;
--		return 0;
-+		return put_user_mtget(argp, &mtget, compat);
- 	case MTIOCPOS:
- 		mtpos.mt_blkno = position / tape->user_bs_factor - block_offset;
--		if (copy_to_user(argp, &mtpos, sizeof(struct mtpos)))
--			return -EFAULT;
--		return 0;
-+		return put_user_mtpos(argp, &mtpos, compat);
- 	default:
- 		if (tape->chrdev_dir == IDETAPE_DIR_READ)
- 			ide_tape_discard_merge_buffer(drive, 1);
-@@ -1427,7 +1424,23 @@ static long idetape_chrdev_ioctl(struct file *file,
- {
- 	long ret;
- 	mutex_lock(&ide_tape_mutex);
--	ret = do_idetape_chrdev_ioctl(file, cmd, arg);
-+	ret = do_idetape_chrdev_ioctl(file, cmd, arg, false);
-+	mutex_unlock(&ide_tape_mutex);
-+	return ret;
-+}
-+
-+static long idetape_chrdev_compat_ioctl(struct file *file,
-+				unsigned int cmd, unsigned long arg)
-+{
-+	long ret;
-+
-+	if (cmd == MTIOCPOS32)
-+		cmd = MTIOCPOS;
-+	else if (cmd == MTIOCGET32)
-+		cmd = MTIOCGET;
-+
-+	mutex_lock(&ide_tape_mutex);
-+	ret = do_idetape_chrdev_ioctl(file, cmd, arg, true);
- 	mutex_unlock(&ide_tape_mutex);
- 	return ret;
- }
-@@ -1886,6 +1899,8 @@ static const struct file_operations idetape_fops = {
- 	.read		= idetape_chrdev_read,
- 	.write		= idetape_chrdev_write,
- 	.unlocked_ioctl	= idetape_chrdev_ioctl,
-+	.compat_ioctl	= IS_ENABLED(CONFIG_COMPAT) ?
-+			  idetape_chrdev_compat_ioctl : NULL,
- 	.open		= idetape_chrdev_open,
- 	.release	= idetape_chrdev_release,
+diff --git a/drivers/iio/industrialio-core.c b/drivers/iio/industrialio-core.c
+index 4700fd5d8c90..eed1bea257b4 100644
+--- a/drivers/iio/industrialio-core.c
++++ b/drivers/iio/industrialio-core.c
+@@ -1635,7 +1635,7 @@ static const struct file_operations iio_buffer_fileops = {
+ 	.owner = THIS_MODULE,
+ 	.llseek = noop_llseek,
+ 	.unlocked_ioctl = iio_ioctl,
+-	.compat_ioctl = iio_ioctl,
++	.compat_ioctl = compat_ptr_ioctl,
+ };
+ 
+ static int iio_check_unique_scan_index(struct iio_dev *indio_dev)
+diff --git a/drivers/infiniband/core/uverbs_main.c b/drivers/infiniband/core/uverbs_main.c
+index 70b7d80431a9..ac4321d7c800 100644
+--- a/drivers/infiniband/core/uverbs_main.c
++++ b/drivers/infiniband/core/uverbs_main.c
+@@ -1120,7 +1120,7 @@ static const struct file_operations uverbs_fops = {
+ 	.release = ib_uverbs_close,
+ 	.llseek	 = no_llseek,
+ 	.unlocked_ioctl = ib_uverbs_ioctl,
+-	.compat_ioctl = ib_uverbs_ioctl,
++	.compat_ioctl = compat_ptr_ioctl,
+ };
+ 
+ static const struct file_operations uverbs_mmap_fops = {
+@@ -1131,7 +1131,7 @@ static const struct file_operations uverbs_mmap_fops = {
+ 	.release = ib_uverbs_close,
+ 	.llseek	 = no_llseek,
+ 	.unlocked_ioctl = ib_uverbs_ioctl,
+-	.compat_ioctl = ib_uverbs_ioctl,
++	.compat_ioctl = compat_ptr_ioctl,
+ };
+ 
+ static struct ib_client uverbs_client = {
+diff --git a/drivers/media/rc/lirc_dev.c b/drivers/media/rc/lirc_dev.c
+index f862f1b7f996..9ccc7e9cbc8e 100644
+--- a/drivers/media/rc/lirc_dev.c
++++ b/drivers/media/rc/lirc_dev.c
+@@ -730,9 +730,7 @@ static const struct file_operations lirc_fops = {
+ 	.owner		= THIS_MODULE,
+ 	.write		= ir_lirc_transmit_ir,
+ 	.unlocked_ioctl	= ir_lirc_ioctl,
+-#ifdef CONFIG_COMPAT
+-	.compat_ioctl	= ir_lirc_ioctl,
+-#endif
++	.compat_ioctl	= compat_ptr_ioctl,
+ 	.read		= ir_lirc_read,
+ 	.poll		= ir_lirc_poll,
+ 	.open		= ir_lirc_open,
+diff --git a/drivers/mfd/cros_ec_dev.c b/drivers/mfd/cros_ec_dev.c
+index d275deaecb12..4a602a40d75c 100644
+--- a/drivers/mfd/cros_ec_dev.c
++++ b/drivers/mfd/cros_ec_dev.c
+@@ -251,9 +251,7 @@ static const struct file_operations fops = {
+ 	.release = ec_device_release,
+ 	.read = ec_device_read,
+ 	.unlocked_ioctl = ec_device_ioctl,
+-#ifdef CONFIG_COMPAT
+-	.compat_ioctl = ec_device_ioctl,
+-#endif
++	.compat_ioctl = compat_ptr_ioctl,
+ };
+ 
+ static void cros_ec_class_release(struct device *dev)
+diff --git a/drivers/misc/vmw_vmci/vmci_host.c b/drivers/misc/vmw_vmci/vmci_host.c
+index 997f92543dd4..5bb406dabe85 100644
+--- a/drivers/misc/vmw_vmci/vmci_host.c
++++ b/drivers/misc/vmw_vmci/vmci_host.c
+@@ -969,7 +969,7 @@ static const struct file_operations vmuser_fops = {
+ 	.release	= vmci_host_close,
+ 	.poll		= vmci_host_poll,
+ 	.unlocked_ioctl	= vmci_host_unlocked_ioctl,
+-	.compat_ioctl	= vmci_host_unlocked_ioctl,
++	.compat_ioctl	= compat_ptr_ioctl,
+ };
+ 
+ static struct miscdevice vmci_host_miscdev = {
+diff --git a/drivers/nvdimm/bus.c b/drivers/nvdimm/bus.c
+index 7bbff0af29b2..065ebd584482 100644
+--- a/drivers/nvdimm/bus.c
++++ b/drivers/nvdimm/bus.c
+@@ -1167,7 +1167,7 @@ static const struct file_operations nvdimm_bus_fops = {
+ 	.owner = THIS_MODULE,
+ 	.open = nd_open,
+ 	.unlocked_ioctl = nd_ioctl,
+-	.compat_ioctl = nd_ioctl,
++	.compat_ioctl = compat_ptr_ioctl,
+ 	.llseek = noop_llseek,
+ };
+ 
+@@ -1175,7 +1175,7 @@ static const struct file_operations nvdimm_fops = {
+ 	.owner = THIS_MODULE,
+ 	.open = nd_open,
+ 	.unlocked_ioctl = nvdimm_ioctl,
+-	.compat_ioctl = nvdimm_ioctl,
++	.compat_ioctl = compat_ptr_ioctl,
+ 	.llseek = noop_llseek,
+ };
+ 
+diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
+index 2c43e12b70af..560929bee5ce 100644
+--- a/drivers/nvme/host/core.c
++++ b/drivers/nvme/host/core.c
+@@ -2739,7 +2739,7 @@ static const struct file_operations nvme_dev_fops = {
+ 	.owner		= THIS_MODULE,
+ 	.open		= nvme_dev_open,
+ 	.unlocked_ioctl	= nvme_dev_ioctl,
+-	.compat_ioctl	= nvme_dev_ioctl,
++	.compat_ioctl	= compat_ptr_ioctl,
+ };
+ 
+ static ssize_t nvme_sysfs_reset(struct device *dev,
+diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
+index e22766c79fe9..3a54b4b616e2 100644
+--- a/drivers/pci/switch/switchtec.c
++++ b/drivers/pci/switch/switchtec.c
+@@ -1006,7 +1006,7 @@ static const struct file_operations switchtec_fops = {
+ 	.read = switchtec_dev_read,
+ 	.poll = switchtec_dev_poll,
+ 	.unlocked_ioctl = switchtec_dev_ioctl,
+-	.compat_ioctl = switchtec_dev_ioctl,
++	.compat_ioctl = compat_ptr_ioctl,
+ };
+ 
+ static void link_event_work(struct work_struct *work)
+diff --git a/drivers/platform/x86/wmi.c b/drivers/platform/x86/wmi.c
+index 7b26b6ccf1a0..dded9cef42f4 100644
+--- a/drivers/platform/x86/wmi.c
++++ b/drivers/platform/x86/wmi.c
+@@ -889,7 +889,7 @@ static const struct file_operations wmi_fops = {
+ 	.read		= wmi_char_read,
+ 	.open		= wmi_char_open,
+ 	.unlocked_ioctl	= wmi_ioctl,
+-	.compat_ioctl	= wmi_ioctl,
++	.compat_ioctl	= compat_ptr_ioctl,
+ };
+ 
+ static int wmi_dev_probe(struct device *dev)
+diff --git a/drivers/rpmsg/rpmsg_char.c b/drivers/rpmsg/rpmsg_char.c
+index eea5ebbb5119..507bfe163883 100644
+--- a/drivers/rpmsg/rpmsg_char.c
++++ b/drivers/rpmsg/rpmsg_char.c
+@@ -290,7 +290,7 @@ static const struct file_operations rpmsg_eptdev_fops = {
+ 	.write_iter = rpmsg_eptdev_write_iter,
+ 	.poll = rpmsg_eptdev_poll,
+ 	.unlocked_ioctl = rpmsg_eptdev_ioctl,
+-	.compat_ioctl = rpmsg_eptdev_ioctl,
++	.compat_ioctl = compat_ptr_ioctl,
+ };
+ 
+ static ssize_t name_show(struct device *dev, struct device_attribute *attr,
+@@ -451,7 +451,7 @@ static const struct file_operations rpmsg_ctrldev_fops = {
+ 	.open = rpmsg_ctrldev_open,
+ 	.release = rpmsg_ctrldev_release,
+ 	.unlocked_ioctl = rpmsg_ctrldev_ioctl,
+-	.compat_ioctl = rpmsg_ctrldev_ioctl,
++	.compat_ioctl = compat_ptr_ioctl,
+ };
+ 
+ static void rpmsg_ctrldev_release_device(struct device *dev)
+diff --git a/drivers/sbus/char/display7seg.c b/drivers/sbus/char/display7seg.c
+index a36e4cf1841d..c9f60656f54d 100644
+--- a/drivers/sbus/char/display7seg.c
++++ b/drivers/sbus/char/display7seg.c
+@@ -155,7 +155,7 @@ static long d7s_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+ static const struct file_operations d7s_fops = {
+ 	.owner =		THIS_MODULE,
+ 	.unlocked_ioctl =	d7s_ioctl,
+-	.compat_ioctl =		d7s_ioctl,
++	.compat_ioctl =		compat_ptr_ioctl,
+ 	.open =			d7s_open,
+ 	.release =		d7s_release,
+ 	.llseek = noop_llseek,
+diff --git a/drivers/sbus/char/envctrl.c b/drivers/sbus/char/envctrl.c
+index 1a6e7224017c..dd2dfa85fc68 100644
+--- a/drivers/sbus/char/envctrl.c
++++ b/drivers/sbus/char/envctrl.c
+@@ -714,9 +714,7 @@ static const struct file_operations envctrl_fops = {
+ 	.owner =		THIS_MODULE,
+ 	.read =			envctrl_read,
+ 	.unlocked_ioctl =	envctrl_ioctl,
+-#ifdef CONFIG_COMPAT
+-	.compat_ioctl =		envctrl_ioctl,
+-#endif
++	.compat_ioctl =		compat_ptr_ioctl,
+ 	.open =			envctrl_open,
+ 	.release =		envctrl_release,
+ 	.llseek =		noop_llseek,
+diff --git a/drivers/scsi/3w-xxxx.c b/drivers/scsi/3w-xxxx.c
+index 2b1e0d503020..fb6444d0409c 100644
+--- a/drivers/scsi/3w-xxxx.c
++++ b/drivers/scsi/3w-xxxx.c
+@@ -1049,9 +1049,7 @@ static int tw_chrdev_open(struct inode *inode, struct file *file)
+ static const struct file_operations tw_fops = {
+ 	.owner		= THIS_MODULE,
+ 	.unlocked_ioctl	= tw_chrdev_ioctl,
+-#ifdef CONFIG_COMPAT
+-	.compat_ioctl   = tw_chrdev_ioctl,
+-#endif
++	.compat_ioctl   = compat_ptr_ioctl,
+ 	.open		= tw_chrdev_open,
+ 	.release	= NULL,
  	.llseek		= noop_llseek,
-diff --git a/drivers/s390/char/tape_char.c b/drivers/s390/char/tape_char.c
-index fc206c9d1c56..522ca9b836e3 100644
---- a/drivers/s390/char/tape_char.c
-+++ b/drivers/s390/char/tape_char.c
-@@ -341,14 +341,14 @@ tapechar_release(struct inode *inode, struct file *filp)
-  */
- static int
- __tapechar_ioctl(struct tape_device *device,
--		 unsigned int no, unsigned long data)
-+		 unsigned int no, void __user *data, bool compat)
- {
- 	int rc;
+diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
+index 7096810fd222..e13d5de1d76e 100644
+--- a/drivers/scsi/cxlflash/main.c
++++ b/drivers/scsi/cxlflash/main.c
+@@ -3589,7 +3589,7 @@ static const struct file_operations cxlflash_chr_fops = {
+ 	.owner          = THIS_MODULE,
+ 	.open           = cxlflash_chr_open,
+ 	.unlocked_ioctl	= cxlflash_chr_ioctl,
+-	.compat_ioctl	= cxlflash_chr_ioctl,
++	.compat_ioctl	= compat_ptr_ioctl,
+ };
  
- 	if (no == MTIOCTOP) {
- 		struct mtop op;
+ /**
+diff --git a/drivers/scsi/esas2r/esas2r_main.c b/drivers/scsi/esas2r/esas2r_main.c
+index fdbda5c05aa0..80c5a235d193 100644
+--- a/drivers/scsi/esas2r/esas2r_main.c
++++ b/drivers/scsi/esas2r/esas2r_main.c
+@@ -613,7 +613,7 @@ static int __init esas2r_init(void)
  
--		if (copy_from_user(&op, (char __user *) data, sizeof(op)) != 0)
-+		if (copy_from_user(&op, data, sizeof(op)) != 0)
- 			return -EFAULT;
- 		if (op.mt_count < 0)
- 			return -EINVAL;
-@@ -392,9 +392,7 @@ __tapechar_ioctl(struct tape_device *device,
- 		if (rc < 0)
- 			return rc;
- 		pos.mt_blkno = rc;
--		if (copy_to_user((char __user *) data, &pos, sizeof(pos)) != 0)
--			return -EFAULT;
--		return 0;
-+		return put_user_mtpos(data, &pos, compat);
- 	}
- 	if (no == MTIOCGET) {
- 		/* MTIOCGET: query the tape drive status. */
-@@ -424,15 +422,12 @@ __tapechar_ioctl(struct tape_device *device,
- 			get.mt_blkno = rc;
- 		}
+ /* Handle ioctl calls to "/proc/scsi/esas2r/ATTOnode" */
+ static const struct file_operations esas2r_proc_fops = {
+-	.compat_ioctl	= esas2r_proc_ioctl,
++	.compat_ioctl	= compat_ptr_ioctl,
+ 	.unlocked_ioctl = esas2r_proc_ioctl,
+ };
  
--		if (copy_to_user((char __user *) data, &get, sizeof(get)) != 0)
--			return -EFAULT;
--
--		return 0;
-+		return put_user_mtget(data, &get, compat);
- 	}
- 	/* Try the discipline ioctl function. */
- 	if (device->discipline->ioctl_fn == NULL)
- 		return -EINVAL;
--	return device->discipline->ioctl_fn(device, no, data);
-+	return device->discipline->ioctl_fn(device, no, (unsigned long)data);
- }
+diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
+index e338d7a4f571..c0a1a1218c56 100644
+--- a/drivers/scsi/pmcraid.c
++++ b/drivers/scsi/pmcraid.c
+@@ -3988,9 +3988,7 @@ static const struct file_operations pmcraid_fops = {
+ 	.open = pmcraid_chr_open,
+ 	.fasync = pmcraid_chr_fasync,
+ 	.unlocked_ioctl = pmcraid_chr_ioctl,
+-#ifdef CONFIG_COMPAT
+-	.compat_ioctl = pmcraid_chr_ioctl,
+-#endif
++	.compat_ioctl = compat_ptr_ioctl,
+ 	.llseek = noop_llseek,
+ };
  
- static long
-@@ -445,7 +440,7 @@ tapechar_ioctl(struct file *filp, unsigned int no, unsigned long data)
+diff --git a/drivers/staging/android/ion/ion.c b/drivers/staging/android/ion/ion.c
+index 92c2914239e3..1663c163edca 100644
+--- a/drivers/staging/android/ion/ion.c
++++ b/drivers/staging/android/ion/ion.c
+@@ -567,9 +567,7 @@ static long ion_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
+ static const struct file_operations ion_fops = {
+ 	.owner          = THIS_MODULE,
+ 	.unlocked_ioctl = ion_ioctl,
+-#ifdef CONFIG_COMPAT
+-	.compat_ioctl	= ion_ioctl,
+-#endif
++	.compat_ioctl	= compat_ptr_ioctl,
+ };
  
- 	device = (struct tape_device *) filp->private_data;
- 	mutex_lock(&device->mutex);
--	rc = __tapechar_ioctl(device, no, data);
-+	rc = __tapechar_ioctl(device, no, (void __user *)data, false);
- 	mutex_unlock(&device->mutex);
- 	return rc;
- }
-@@ -455,23 +450,17 @@ static long
- tapechar_compat_ioctl(struct file *filp, unsigned int no, unsigned long data)
- {
- 	struct tape_device *device = filp->private_data;
--	int rval = -ENOIOCTLCMD;
--	unsigned long argp;
-+	long rc;
+ static int debug_shrink_set(void *data, u64 val)
+diff --git a/drivers/staging/vme/devices/vme_user.c b/drivers/staging/vme/devices/vme_user.c
+index 6a33aaa1a49f..fd0ea4dbcb91 100644
+--- a/drivers/staging/vme/devices/vme_user.c
++++ b/drivers/staging/vme/devices/vme_user.c
+@@ -494,7 +494,7 @@ static const struct file_operations vme_user_fops = {
+ 	.write = vme_user_write,
+ 	.llseek = vme_user_llseek,
+ 	.unlocked_ioctl = vme_user_unlocked_ioctl,
+-	.compat_ioctl = vme_user_unlocked_ioctl,
++	.compat_ioctl = compat_ptr_ioctl,
+ 	.mmap = vme_user_mmap,
+ };
  
--	/* The 'arg' argument of any ioctl function may only be used for
--	 * pointers because of the compat pointer conversion.
--	 * Consider this when adding new ioctls.
--	 */
--	argp = (unsigned long) compat_ptr(data);
--	if (device->discipline->ioctl_fn) {
--		mutex_lock(&device->mutex);
--		rval = device->discipline->ioctl_fn(device, no, argp);
--		mutex_unlock(&device->mutex);
--		if (rval == -EINVAL)
--			rval = -ENOIOCTLCMD;
--	}
-+	if (no == MTIOCPOS32)
-+		no = MTIOCPOS;
-+	else if (no == MTIOCGET32)
-+		no = MTIOCGET;
+diff --git a/drivers/tee/tee_core.c b/drivers/tee/tee_core.c
+index 17c64fccbb10..eb97acf09868 100644
+--- a/drivers/tee/tee_core.c
++++ b/drivers/tee/tee_core.c
+@@ -684,7 +684,7 @@ static const struct file_operations tee_fops = {
+ 	.open = tee_open,
+ 	.release = tee_release,
+ 	.unlocked_ioctl = tee_ioctl,
+-	.compat_ioctl = tee_ioctl,
++	.compat_ioctl = compat_ptr_ioctl,
+ };
  
--	return rval;
-+	mutex_lock(&device->mutex);
-+	rc = __tapechar_ioctl(device, no, compat_ptr(data), false);
-+	mutex_unlock(&device->mutex);
-+	return rc;
- }
- #endif /* CONFIG_COMPAT */
+ static void tee_release_device(struct device *dev)
+diff --git a/drivers/usb/class/cdc-wdm.c b/drivers/usb/class/cdc-wdm.c
+index 9e9caff905d5..d48c032580d0 100644
+--- a/drivers/usb/class/cdc-wdm.c
++++ b/drivers/usb/class/cdc-wdm.c
+@@ -724,7 +724,7 @@ static const struct file_operations wdm_fops = {
+ 	.release =	wdm_release,
+ 	.poll =		wdm_poll,
+ 	.unlocked_ioctl = wdm_ioctl,
+-	.compat_ioctl = wdm_ioctl,
++	.compat_ioctl = compat_ptr_ioctl,
+ 	.llseek =	noop_llseek,
+ };
  
-diff --git a/drivers/scsi/osst.c b/drivers/scsi/osst.c
-index be3c73ebbfde..edfde6edfc18 100644
---- a/drivers/scsi/osst.c
-+++ b/drivers/scsi/osst.c
-@@ -33,6 +33,7 @@ static const char * osst_version = "0.99.4";
+diff --git a/drivers/usb/class/usbtmc.c b/drivers/usb/class/usbtmc.c
+index 4942122b2346..bbd0308b13f5 100644
+--- a/drivers/usb/class/usbtmc.c
++++ b/drivers/usb/class/usbtmc.c
+@@ -2220,9 +2220,7 @@ static const struct file_operations fops = {
+ 	.release	= usbtmc_release,
+ 	.flush		= usbtmc_flush,
+ 	.unlocked_ioctl	= usbtmc_ioctl,
+-#ifdef CONFIG_COMPAT
+-	.compat_ioctl	= usbtmc_ioctl,
+-#endif
++	.compat_ioctl	= compat_ptr_ioctl,
+ 	.fasync         = usbtmc_fasync,
+ 	.poll           = usbtmc_poll,
+ 	.llseek		= default_llseek,
+diff --git a/drivers/virt/fsl_hypervisor.c b/drivers/virt/fsl_hypervisor.c
+index 8ba726e600e9..fbf02bf60f62 100644
+--- a/drivers/virt/fsl_hypervisor.c
++++ b/drivers/virt/fsl_hypervisor.c
+@@ -703,7 +703,7 @@ static const struct file_operations fsl_hv_fops = {
+ 	.poll = fsl_hv_poll,
+ 	.read = fsl_hv_read,
+ 	.unlocked_ioctl = fsl_hv_ioctl,
+-	.compat_ioctl = fsl_hv_ioctl,
++	.compat_ioctl = compat_ptr_ioctl,
+ };
  
- #include <linux/module.h>
+ static struct miscdevice fsl_hv_misc_dev = {
+diff --git a/fs/btrfs/super.c b/fs/btrfs/super.c
+index 120e4340792a..162ea4b6b417 100644
+--- a/fs/btrfs/super.c
++++ b/fs/btrfs/super.c
+@@ -2307,7 +2307,7 @@ static const struct super_operations btrfs_super_ops = {
+ static const struct file_operations btrfs_ctl_fops = {
+ 	.open = btrfs_control_open,
+ 	.unlocked_ioctl	 = btrfs_control_ioctl,
+-	.compat_ioctl = btrfs_control_ioctl,
++	.compat_ioctl = compat_ptr_ioctl,
+ 	.owner	 = THIS_MODULE,
+ 	.llseek = noop_llseek,
+ };
+diff --git a/fs/ceph/dir.c b/fs/ceph/dir.c
+index 7c060cb22aa3..a493b957713f 100644
+--- a/fs/ceph/dir.c
++++ b/fs/ceph/dir.c
+@@ -1785,7 +1785,7 @@ const struct file_operations ceph_dir_fops = {
+ 	.open = ceph_open,
+ 	.release = ceph_release,
+ 	.unlocked_ioctl = ceph_ioctl,
+-	.compat_ioctl = ceph_ioctl,
++	.compat_ioctl = compat_ptr_ioctl,
+ 	.fsync = ceph_fsync,
+ 	.lock = ceph_lock,
+ 	.flock = ceph_flock,
+diff --git a/fs/ceph/file.c b/fs/ceph/file.c
+index 9f53c3d99304..9b5fe7eee3c1 100644
+--- a/fs/ceph/file.c
++++ b/fs/ceph/file.c
+@@ -2112,7 +2112,7 @@ const struct file_operations ceph_file_fops = {
+ 	.splice_read = generic_file_splice_read,
+ 	.splice_write = iter_file_splice_write,
+ 	.unlocked_ioctl = ceph_ioctl,
+-	.compat_ioctl	= ceph_ioctl,
++	.compat_ioctl	= compat_ptr_ioctl,
+ 	.fallocate	= ceph_fallocate,
+ 	.copy_file_range = ceph_copy_file_range,
+ };
+diff --git a/fs/fuse/dev.c b/fs/fuse/dev.c
+index 9971a35cf1ef..dcdb26068b71 100644
+--- a/fs/fuse/dev.c
++++ b/fs/fuse/dev.c
+@@ -2354,7 +2354,7 @@ const struct file_operations fuse_dev_operations = {
+ 	.release	= fuse_dev_release,
+ 	.fasync		= fuse_dev_fasync,
+ 	.unlocked_ioctl = fuse_dev_ioctl,
+-	.compat_ioctl   = fuse_dev_ioctl,
++	.compat_ioctl   = compat_ptr_ioctl,
+ };
+ EXPORT_SYMBOL_GPL(fuse_dev_operations);
  
-+#include <linux/compat.h>
- #include <linux/fs.h>
- #include <linux/kernel.h>
- #include <linux/sched/signal.h>
-@@ -4941,7 +4942,7 @@ static int os_scsi_tape_close(struct inode * inode, struct file * filp)
- static long osst_ioctl(struct file * file,
- 	 unsigned int cmd_in, unsigned long arg)
- {
--	int		      i, cmd_nr, cmd_type, blk, retval = 0;
-+	int		      i, cmd_nr, cmd_type, cmd_size, blk, retval = 0;
- 	struct st_modedef   * STm;
- 	struct st_partstat  * STps;
- 	struct osst_request * SRpnt = NULL;
-@@ -4978,6 +4979,7 @@ static long osst_ioctl(struct file * file,
+diff --git a/fs/notify/fanotify/fanotify_user.c b/fs/notify/fanotify/fanotify_user.c
+index a90bb19dcfa2..a55aa029a308 100644
+--- a/fs/notify/fanotify/fanotify_user.c
++++ b/fs/notify/fanotify/fanotify_user.c
+@@ -523,7 +523,7 @@ static const struct file_operations fanotify_fops = {
+ 	.fasync		= NULL,
+ 	.release	= fanotify_release,
+ 	.unlocked_ioctl	= fanotify_ioctl,
+-	.compat_ioctl	= fanotify_ioctl,
++	.compat_ioctl	= compat_ptr_ioctl,
+ 	.llseek		= noop_llseek,
+ };
  
- 	cmd_type = _IOC_TYPE(cmd_in);
- 	cmd_nr   = _IOC_NR(cmd_in);
-+	cmd_size = _IOC_SIZE(cmd_in);
- #if DEBUG
- 	printk(OSST_DEB_MSG "%s:D: Ioctl %d,%d in %s mode\n", name,
- 			    cmd_type, cmd_nr, STp->raw?"raw":"normal");
-@@ -5179,7 +5181,8 @@ static long osst_ioctl(struct file * file,
- 	if (cmd_type == _IOC_TYPE(MTIOCGET) && cmd_nr == _IOC_NR(MTIOCGET)) {
- 		struct mtget mt_status;
+diff --git a/fs/userfaultfd.c b/fs/userfaultfd.c
+index 89800fc7dc9d..f93dcf8c996f 100644
+--- a/fs/userfaultfd.c
++++ b/fs/userfaultfd.c
+@@ -1901,7 +1901,7 @@ static const struct file_operations userfaultfd_fops = {
+ 	.poll		= userfaultfd_poll,
+ 	.read		= userfaultfd_read,
+ 	.unlocked_ioctl = userfaultfd_ioctl,
+-	.compat_ioctl	= userfaultfd_ioctl,
++	.compat_ioctl	= compat_ptr_ioctl,
+ 	.llseek		= noop_llseek,
+ };
  
--		if (_IOC_SIZE(cmd_in) != sizeof(struct mtget)) {
-+		if (cmd_size != sizeof(struct mtget) &&
-+		    cmd_size != sizeof(struct mtget32)) {
- 			 retval = (-EINVAL);
- 			 goto out;
- 		}
-@@ -5229,21 +5232,18 @@ static long osst_ioctl(struct file * file,
- 		    STp->drv_buffer != 0)
- 			mt_status.mt_gstat |= GMT_IM_REP_EN(0xffffffff);
- 
--		i = copy_to_user(p, &mt_status, sizeof(struct mtget));
--		if (i) {
--			retval = (-EFAULT);
--			goto out;
--		}
--
--		STp->recover_erreg = 0;  /* Clear after read */
--		retval = 0;
-+		retval = put_user_mtget(p, &mt_status,
-+					cmd_size == sizeof(struct mtget32));
-+		if (!retval)
-+			STp->recover_erreg = 0;  /* Clear after read */
- 		goto out;
- 	} /* End of MTIOCGET */
- 
- 	if (cmd_type == _IOC_TYPE(MTIOCPOS) && cmd_nr == _IOC_NR(MTIOCPOS)) {
- 		struct mtpos mt_pos;
- 
--		if (_IOC_SIZE(cmd_in) != sizeof(struct mtpos)) {
-+		if (cmd_size != sizeof(struct mtpos) &&
-+		    cmd_size != sizeof(struct mtpos32)) {
- 			retval = (-EINVAL);
- 			goto out;
- 		}
-@@ -5256,9 +5256,7 @@ static long osst_ioctl(struct file * file,
- 			goto out;
- 		}
- 		mt_pos.mt_blkno = blk;
--		i = copy_to_user(p, &mt_pos, sizeof(struct mtpos));
--		if (i)
--			retval = -EFAULT;
-+		retval = put_user_mtpos(p, &mt_pos, cmd_size == sizeof(struct mtpos32));
- 		goto out;
- 	}
- 	if (SRpnt) osst_release_request(SRpnt);
-@@ -5284,6 +5282,14 @@ static long osst_compat_ioctl(struct file * file, unsigned int cmd_in, unsigned
- 	struct osst_tape *STp = file->private_data;
- 	struct scsi_device *sdev = STp->device;
- 	int ret = -ENOIOCTLCMD;
-+
-+	switch (cmd_in) {
-+	case MTIOCTOP:
-+	case MTIOCPOS32:
-+	case MTIOCGET32:
-+		return osst_ioctl(file, cmd_in, (unsigned long)compat_ptr(arg));
-+	}
-+
- 	if (sdev->host->hostt->compat_ioctl) {
- 
- 		ret = sdev->host->hostt->compat_ioctl(sdev, cmd_in, (void __user *)arg);
-diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index 19c022e66d63..f0cb35964a30 100644
---- a/drivers/scsi/st.c
-+++ b/drivers/scsi/st.c
-@@ -21,6 +21,7 @@ static const char *verstr = "20160209";
- 
- #include <linux/module.h>
- 
-+#include <linux/compat.h>
- #include <linux/fs.h>
- #include <linux/kernel.h>
- #include <linux/sched/signal.h>
-@@ -3502,7 +3503,7 @@ static int partition_tape(struct scsi_tape *STp, int size)
- /* The ioctl command */
- static long st_ioctl(struct file *file, unsigned int cmd_in, unsigned long arg)
- {
--	int i, cmd_nr, cmd_type, bt;
-+	int i, cmd_nr, cmd_type, cmd_size, bt;
- 	int retval = 0;
- 	unsigned int blk;
- 	struct scsi_tape *STp = file->private_data;
-@@ -3536,6 +3537,7 @@ static long st_ioctl(struct file *file, unsigned int cmd_in, unsigned long arg)
- 
- 	cmd_type = _IOC_TYPE(cmd_in);
- 	cmd_nr = _IOC_NR(cmd_in);
-+	cmd_size = _IOC_SIZE(cmd_in);
- 
- 	if (cmd_type == _IOC_TYPE(MTIOCTOP) && cmd_nr == _IOC_NR(MTIOCTOP)) {
- 		struct mtop mtc;
-@@ -3745,7 +3747,8 @@ static long st_ioctl(struct file *file, unsigned int cmd_in, unsigned long arg)
- 	if (cmd_type == _IOC_TYPE(MTIOCGET) && cmd_nr == _IOC_NR(MTIOCGET)) {
- 		struct mtget mt_status;
- 
--		if (_IOC_SIZE(cmd_in) != sizeof(struct mtget)) {
-+		if (cmd_size != sizeof(struct mtget) &&
-+		    cmd_size != sizeof(struct mtget32)) {
- 			 retval = (-EINVAL);
- 			 goto out;
- 		}
-@@ -3800,19 +3803,16 @@ static long st_ioctl(struct file *file, unsigned int cmd_in, unsigned long arg)
- 		if (STp->cleaning_req)
- 			mt_status.mt_gstat |= GMT_CLN(0xffffffff);
- 
--		i = copy_to_user(p, &mt_status, sizeof(struct mtget));
--		if (i) {
--			retval = (-EFAULT);
--			goto out;
--		}
-+		retval = put_user_mtget(p, &mt_status,
-+					cmd_size == sizeof(struct mtget32));
- 
- 		STp->recover_reg = 0;		/* Clear after read */
--		retval = 0;
- 		goto out;
- 	}			/* End of MTIOCGET */
- 	if (cmd_type == _IOC_TYPE(MTIOCPOS) && cmd_nr == _IOC_NR(MTIOCPOS)) {
- 		struct mtpos mt_pos;
--		if (_IOC_SIZE(cmd_in) != sizeof(struct mtpos)) {
-+		if (cmd_size != sizeof(struct mtpos) &&
-+		    cmd_size != sizeof(struct mtpos32)) {
- 			 retval = (-EINVAL);
- 			 goto out;
- 		}
-@@ -3821,9 +3821,8 @@ static long st_ioctl(struct file *file, unsigned int cmd_in, unsigned long arg)
- 			goto out;
- 		}
- 		mt_pos.mt_blkno = blk;
--		i = copy_to_user(p, &mt_pos, sizeof(struct mtpos));
--		if (i)
--			retval = (-EFAULT);
-+		retval = put_user_mtpos(p, &mt_pos,
-+					cmd_size == sizeof(struct mtpos32));
- 		goto out;
- 	}
- 	mutex_unlock(&STp->lock);
-@@ -3857,14 +3856,22 @@ static long st_ioctl(struct file *file, unsigned int cmd_in, unsigned long arg)
- }
- 
- #ifdef CONFIG_COMPAT
--static long st_compat_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
-+static long st_compat_ioctl(struct file *file, unsigned int cmd_in, unsigned long arg)
- {
- 	struct scsi_tape *STp = file->private_data;
- 	struct scsi_device *sdev = STp->device;
- 	int ret = -ENOIOCTLCMD;
-+
-+	switch (cmd_in) {
-+	case MTIOCTOP:
-+	case MTIOCPOS32:
-+	case MTIOCGET32:
-+		return st_ioctl(file, cmd_in, (unsigned long)compat_ptr(arg));
-+	}
-+
- 	if (sdev->host->hostt->compat_ioctl) { 
- 
--		ret = sdev->host->hostt->compat_ioctl(sdev, cmd, (void __user *)arg);
-+		ret = sdev->host->hostt->compat_ioctl(sdev, cmd_in, (void __user *)arg);
- 
- 	}
- 	return ret;
-diff --git a/fs/compat_ioctl.c b/fs/compat_ioctl.c
-index ab2ff530313b..6eb7a3f51702 100644
---- a/fs/compat_ioctl.c
-+++ b/fs/compat_ioctl.c
-@@ -27,7 +27,6 @@
- #include <linux/file.h>
- #include <linux/ppp-ioctl.h>
- #include <linux/if_pppox.h>
--#include <linux/mtio.h>
- #include <linux/tty.h>
- #include <linux/vt_kern.h>
- #include <linux/raw.h>
-@@ -279,70 +278,6 @@ static int sg_grt_trans(struct file *file,
- 	return err;
- }
- 
--struct mtget32 {
--	compat_long_t	mt_type;
--	compat_long_t	mt_resid;
--	compat_long_t	mt_dsreg;
--	compat_long_t	mt_gstat;
--	compat_long_t	mt_erreg;
--	compat_daddr_t	mt_fileno;
--	compat_daddr_t	mt_blkno;
--};
--#define MTIOCGET32	_IOR('m', 2, struct mtget32)
--
--struct mtpos32 {
--	compat_long_t	mt_blkno;
--};
--#define MTIOCPOS32	_IOR('m', 3, struct mtpos32)
--
--static int mt_ioctl_trans(struct file *file,
--		unsigned int cmd, void __user *argp)
--{
--	/* NULL initialization to make gcc shut up */
--	struct mtget __user *get = NULL;
--	struct mtget32 __user *umget32;
--	struct mtpos __user *pos = NULL;
--	struct mtpos32 __user *upos32;
--	unsigned long kcmd;
--	void *karg;
--	int err = 0;
--
--	switch(cmd) {
--	case MTIOCPOS32:
--		kcmd = MTIOCPOS;
--		pos = compat_alloc_user_space(sizeof(*pos));
--		karg = pos;
--		break;
--	default:	/* MTIOCGET32 */
--		kcmd = MTIOCGET;
--		get = compat_alloc_user_space(sizeof(*get));
--		karg = get;
--		break;
--	}
--	if (karg == NULL)
--		return -EFAULT;
--	err = do_ioctl(file, kcmd, (unsigned long)karg);
--	if (err)
--		return err;
--	switch (cmd) {
--	case MTIOCPOS32:
--		upos32 = argp;
--		err = convert_in_user(&pos->mt_blkno, &upos32->mt_blkno);
--		break;
--	case MTIOCGET32:
--		umget32 = argp;
--		err = convert_in_user(&get->mt_type, &umget32->mt_type);
--		err |= convert_in_user(&get->mt_resid, &umget32->mt_resid);
--		err |= convert_in_user(&get->mt_dsreg, &umget32->mt_dsreg);
--		err |= convert_in_user(&get->mt_gstat, &umget32->mt_gstat);
--		err |= convert_in_user(&get->mt_erreg, &umget32->mt_erreg);
--		err |= convert_in_user(&get->mt_fileno, &umget32->mt_fileno);
--		err |= convert_in_user(&get->mt_blkno, &umget32->mt_blkno);
--		break;
--	}
--	return err ? -EFAULT: 0;
--}
--
- #endif /* CONFIG_BLOCK */
- 
- /* Bluetooth ioctls */
-@@ -443,8 +378,6 @@ IGNORE_IOCTL(VT_GETMODE)
-  */
- COMPATIBLE_IOCTL(_IOR('p', 20, int[7])) /* RTCGET */
- COMPATIBLE_IOCTL(_IOW('p', 21, int[7])) /* RTCSET */
--/* Little m */
--COMPATIBLE_IOCTL(MTIOCTOP)
- /* Socket level stuff */
- COMPATIBLE_IOCTL(FIOQSIZE)
- #ifdef CONFIG_BLOCK
-@@ -775,9 +708,6 @@ static long do_ioctl_trans(unsigned int cmd,
- 		return sg_ioctl_trans(file, cmd, compat_ptr(arg));
- 	case SG_GET_REQUEST_TABLE:
- 		return sg_grt_trans(file, cmd, compat_ptr(arg));
--	case MTIOCGET32:
--	case MTIOCPOS32:
--		return mt_ioctl_trans(file, cmd, compat_ptr(arg));
+diff --git a/net/rfkill/core.c b/net/rfkill/core.c
+index abca57040f37..3b2f6ea44397 100644
+--- a/net/rfkill/core.c
++++ b/net/rfkill/core.c
+@@ -1323,7 +1323,7 @@ static const struct file_operations rfkill_fops = {
+ 	.release	= rfkill_fop_release,
+ #ifdef CONFIG_RFKILL_INPUT
+ 	.unlocked_ioctl	= rfkill_fop_ioctl,
+-	.compat_ioctl	= rfkill_fop_ioctl,
++	.compat_ioctl	= compat_ptr_ioctl,
  #endif
- 	}
- 
-diff --git a/include/linux/mtio.h b/include/linux/mtio.h
-new file mode 100644
-index 000000000000..02640756a40d
---- /dev/null
-+++ b/include/linux/mtio.h
-@@ -0,0 +1,58 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+#ifndef _LINUX_MTIO_COMPAT_H
-+#define _LINUX_MTIO_COMPAT_H
-+
-+#include <uapi/linux/mtio.h>
-+#include <linux/uaccess.h>
-+
-+/*
-+ * helper functions for implementing compat ioctls on the four tape
-+ * drivers: we define the 32-bit layout of each incompatible strucucture,
-+ * plus a wrapper function to copy it to user space in either format.
-+ */
-+
-+struct	mtget32 {
-+	s32	mt_type;
-+	s32	mt_resid;
-+	s32	mt_dsreg;
-+	s32	mt_gstat;
-+	s32	mt_erreg;
-+	s32	mt_fileno;
-+	s32	mt_blkno;
-+};
-+#define	MTIOCGET32	_IOR('m', 2, struct mtget32)
-+
-+struct	mtpos32 {
-+	s32 	mt_blkno;
-+};
-+#define	MTIOCPOS32	_IOR('m', 3, struct mtpos32)
-+
-+static inline int put_user_mtget(void __user *u, struct mtget *k, bool compat)
-+{
-+	struct mtget32 k32 = {
-+		.mt_type   = k->mt_type,
-+		.mt_resid  = k->mt_resid,
-+		.mt_dsreg  = k->mt_dsreg,
-+		.mt_gstat  = k->mt_gstat,
-+		.mt_fileno = k->mt_fileno,
-+		.mt_blkno  = k->mt_blkno,
-+	};
-+	int ret;
-+
-+	if (IS_ENABLED(CONFIG_COMPAT) && compat)
-+		ret = copy_to_user(u, &k32, sizeof(k32));
-+	else
-+		ret = copy_to_user(u, k, sizeof(*k));
-+
-+	return ret ? -EFAULT : 0;
-+}
-+
-+static inline int put_user_mtpos(void __user *u, struct mtpos *k, bool compat)
-+{
-+	if (IS_ENABLED(CONFIG_COMPAT) && compat)
-+		return put_user(k->mt_blkno, (u32 __user *)u);
-+	else
-+		return put_user(k->mt_blkno, (long __user *)u);
-+}
-+
-+#endif
+ 	.llseek		= no_llseek,
+ };
 -- 
 2.20.0
