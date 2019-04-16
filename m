@@ -1,27 +1,49 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH -next] scsi: megaraid_sas: Make megasas_host_device_list_query() static
-Date: Mon, 15 Apr 2019 22:20:48 -0400
-Message-ID: <yq1wojug073.fsf@oracle.com>
-References: <20190413142138.33336-1-yuehaibing@huawei.com>
+From: <Kento.A.Kobayashi@sony.com>
+Subject: RE: [PATCH] usb: uas: fix usb subsystem hang after power off hub
+ port
+Date: Tue, 16 Apr 2019 02:31:57 +0000
+Message-ID: <AE5419EAB4965843B3C0C1FE29F1FFE58A9BEA@JPYOKXMS103.jp.sony.com>
+References: <Pine.LNX.4.44L0.1904151107350.1575-100000@iolanthe.rowland.org>
+ <Pine.LNX.4.44L0.1904151129550.1575-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190413142138.33336-1-yuehaibing@huawei.com> (Yue Haibing's
-        message of "Sat, 13 Apr 2019 22:21:38 +0800")
+In-Reply-To: <Pine.LNX.4.44L0.1904151129550.1575-100000@iolanthe.rowland.org>
+Content-Language: ja-JP
 Sender: linux-kernel-owner@vger.kernel.org
-To: Yue Haibing <yuehaibing@huawei.com>
-Cc: kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com, jejb@linux.ibm.com, martin.petersen@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, megaraidlinux.pdl@broadcom.com
+To: stern@rowland.harvard.edu
+Cc: bvanassche@acm.org, martin.petersen@oracle.com, jejb@linux.ibm.com, oneukum@suse.com, gregkh@linuxfoundation.org, usb-storage@lists.one-eyed-alien.net, Jacky.Cao@sony.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+Hi,
 
-Yue,
-
-> Fix sparse warning:
+>On Mon, 15 Apr 2019, Alan Stern wrote:
 >
-> drivers/scsi/megaraid/megaraid_sas_base.c:4652:1: warning:
->  symbol 'megasas_host_device_list_query' was not declared. Should it be static?
+>> On Mon, 15 Apr 2019 Kento.A.Kobayashi@sony.com wrote:
+>> 
+>> > Hi
+>> > 
+>> > >The unbind happens from inside the SCSI EH callback.  If that really is not allowed, we'll need to change it.  Or we can just change it regardless, since the effort required is pretty small.
+>> > >
+>> > >Kento, please try the patch below.  Does it help with your problem?
+>> > 
+>> > Thank you for suggestion about this problem.
+>> > I confirmed your patch fixes this problem.
+>> 
+>> Good; I will submit it.
 
-Applied to 5.2/scsi-queue. Thanks!
+Thank you for allowing submit about fixing this problem.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+>
+>I forgot to ask: Is it okay to add
+>
+>	Tested-by: Kento Kobayashi <Kento.A.Kobayashi@sony.com>
+>
+>along with the patch?
+
+Sure.
+In addition, if you can, could you please add member who contribute to this problem fixing?
+Cao, Jacky <Jacky.Cao@sony.com>
+
+Regards,
+Kento Kobayashi
