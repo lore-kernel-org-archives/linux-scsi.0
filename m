@@ -1,189 +1,138 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH v3 00/26] compat_ioctl: cleanups
-Date: Tue, 16 Apr 2019 18:33:35 -0400
-Message-ID: <c379ed8d-1f33-e391-a1b5-810da77605f2@interlog.com>
-References: <20190416202013.4034148-1-arnd@arndb.de>
-Reply-To: dgilbert@interlog.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190416202013.4034148-1-arnd@arndb.de>
-Content-Language: en-CA
-Sender: linux-kernel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>, Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: linux-fsdevel@vger.kernel.org, y2038@lists.linaro.org, linux-kernel@vger.kernel.org, "David S. Miller" <davem@davemloft.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Karsten Keil <isdn@linux-pingi.de>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Marcel Holtmann <marcel@holtmann.org>, netdev@vger.kernel.org, devel@driverdev.osuosl.org, linux-integrity@vger.kernel.org, qat-linux@intel.com, linux-crypto@vger.kernel.org, linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org, linux1394-devel@lists.sourceforge.net, amd-gfx@lists.freedesktop.org, linux-input@vger.kernel.org, linux-usb@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, linux-iio@vger.kernel.org, linux-rdma@vge
+From: Ming Lei <ming.lei@redhat.com>
+Subject: [PATCH V6 3/9] blk-mq: free hw queue's resource in hctx's release handler
+Date: Wed, 17 Apr 2019 11:44:04 +0800
+Message-ID: <20190417034410.31957-4-ming.lei@redhat.com>
+References: <20190417034410.31957-1-ming.lei@redhat.com>
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20190417034410.31957-1-ming.lei@redhat.com>
+Sender: stable-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, Hannes Reinecke <hare@suse.com>, Keith Busch <keith.busch@intel.com>, linux-nvme@lists.infradead.org, Sagi Grimberg <sagi@grimberg.me>, Ming Lei <ming.lei@redhat.com>, Dongli Zhang <dongli.zhang@oracle.com>, James Smart <james.smart@broadcom.com>, Bart Van Assche <bart.vanassche@wdc.com>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, jianchao wang <jianchao.w.wang@oracle.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 2019-04-16 4:19 p.m., Arnd Bergmann wrote:
-> Hi Al,
-> 
-> It took me way longer than I had hoped to revisit this series, see
-> https://lore.kernel.org/lkml/20180912150142.157913-1-arnd@arndb.de/
-> for the previously posted version.
-> 
-> I've come to the point where all conversion handlers and most
-> COMPATIBLE_IOCTL() entries are gone from this file, but for
-> now, this series only has the parts that have either been reviewed
-> previously, or that are simple enough to include.
-> 
-> The main missing piece is the SG_IO/SG_GET_REQUEST_TABLE conversion.
-> I'll post the patches I made for that later, as they need more
-> testing and review from the scsi maintainers.
+Once blk_cleanup_queue() returns, tags shouldn't be used any more,
+because blk_mq_free_tag_set() may be called. Commit 45a9c9d909b2
+("blk-mq: Fix a use-after-free") fixes this issue exactly.
 
-Perhaps you could look at the document in this url:
-     http://sg.danny.cz/sg/sg_v40.html
+However, that commit introduces another issue. Before 45a9c9d909b2,
+we are allowed to run queue during cleaning up queue if the queue's
+kobj refcount is held. After that commit, queue can't be run during
+queue cleaning up, otherwise oops can be triggered easily because
+some fields of hctx are freed by blk_mq_free_queue() in blk_cleanup_queue().
 
-It is work-in-progress to modernize the SCSI generic driver. It
-extends ioctl(sg_fd, SG_IO, &pt_obj) to additionally accept the sg v4
-interface as defined in include/uapi/linux/bsg.h . Currently only the
-bsg driver uses the sg v4 interface. Since struct sg_io_v4 is all
-explicitly sized integers, I'm guessing it is immune "compat" problems.
-[I can see no reference to bsg nor struct sg_io_v4 in the current
-fs/compat_ioctl.c file.]
+We have invented ways for addressing this kind of issue before, such as:
 
-Other additions described in the that document are these new ioctls:
-   - SG_IOSUBMIT    ultimately to replace write(sg_fd, ...)
-   - SG_IORECEIVE              to replace read(sg_fd, ...)
-   - SG_IOABORT     abort SCSI cmd in progress; new functionality
-   - SG_SET_GET_EXTENDED   has associated struct sg_extended_info
+	8dc765d438f1 ("SCSI: fix queue cleanup race before queue initialization is done")
+	c2856ae2f315 ("blk-mq: quiesce queue before freeing queue")
 
-The first three take a pointer to a struct sg_io_hdr (v3 interface) or
-a struct sg_io_v4 object. Both objects start with a 32 bit integer:
-'S' identifies the v3 interface while 'Q' identifies the v4 interface.
+But still can't cover all cases, recently James reports another such
+kind of issue:
 
-The SG_SET_GET_EXTENDED ioctl takes a pointer to a struct
-sg_extended_info object which contains explicitly sized integers so it
-may also be immune from "compat" problems. The ioctls section (13) of
-that document referenced above has a table showing how many "sets and
-gets" are hiding in the SG_SET_GET_EXTENDED ioctl.
+	https://marc.info/?l=linux-scsi&m=155389088124782&w=2
 
-BTW No change is proposed for this case:
-     ioctl(normal_block_device, SG_IO, &sg_v3_obj)
-which is handled by block/scsi_ioctl.c
+This issue can be quite hard to address by previous way, given
+scsi_run_queue() may run requeues for other LUNs.
 
+Fixes the above issue by freeing hctx's resources in its release handler, and this
+way is safe becasue tags isn't needed for freeing such hctx resource.
 
-This would be a good time for me to address any "compat" concerns in the
-proposed sg driver update.
+This approach follows typical design pattern wrt. kobject's release handler.
 
-Doug Gilbert
+Cc: Dongli Zhang <dongli.zhang@oracle.com>
+Cc: James Smart <james.smart@broadcom.com>
+Cc: Bart Van Assche <bart.vanassche@wdc.com>
+Cc: linux-scsi@vger.kernel.org,
+Cc: Martin K . Petersen <martin.petersen@oracle.com>,
+Cc: Christoph Hellwig <hch@lst.de>,
+Cc: James E . J . Bottomley <jejb@linux.vnet.ibm.com>,
+Cc: jianchao wang <jianchao.w.wang@oracle.com>
+Reported-by: James Smart <james.smart@broadcom.com>
+Fixes: 45a9c9d909b2 ("blk-mq: Fix a use-after-free")
+Cc: stable@vger.kernel.org
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
+---
+ block/blk-core.c     | 2 +-
+ block/blk-mq-sysfs.c | 6 ++++++
+ block/blk-mq.c       | 8 ++------
+ block/blk-mq.h       | 2 +-
+ 4 files changed, 10 insertions(+), 8 deletions(-)
 
-
-> I hope you can still take these for the coming merge window, unless
-> new problems come up.
-> 
->        Arnd
-> 
-> Arnd Bergmann (26):
->    compat_ioctl: pppoe: fix PPPOEIOCSFWD handling
->    compat_ioctl: move simple ppp command handling into driver
->    compat_ioctl: avoid unused function warning for do_ioctl
->    compat_ioctl: move PPPIOCSCOMPRESS32 to ppp-generic.c
->    compat_ioctl: move PPPIOCSPASS32/PPPIOCSACTIVE32 to ppp_generic.c
->    compat_ioctl: handle PPPIOCGIDLE for 64-bit time_t
->    compat_ioctl: move rtc handling into rtc-dev.c
->    compat_ioctl: add compat_ptr_ioctl()
->    compat_ioctl: move drivers to compat_ptr_ioctl
->    compat_ioctl: use correct compat_ptr() translation in drivers
->    ceph: fix compat_ioctl for ceph_dir_operations
->    compat_ioctl: move more drivers to compat_ptr_ioctl
->    compat_ioctl: move tape handling into drivers
->    compat_ioctl: move ATYFB_CLK handling to atyfb driver
->    compat_ioctl: move isdn/capi ioctl translation into driver
->    compat_ioctl: move rfcomm handlers into driver
->    compat_ioctl: move hci_sock handlers into driver
->    compat_ioctl: remove HCIUART handling
->    compat_ioctl: remove HIDIO translation
->    compat_ioctl: remove translation for sound ioctls
->    compat_ioctl: remove IGNORE_IOCTL()
->    compat_ioctl: remove /dev/random commands
->    compat_ioctl: remove joystick ioctl translation
->    compat_ioctl: remove PCI ioctl translation
->    compat_ioctl: remove /dev/raw ioctl translation
->    compat_ioctl: remove last RAID handling code
-> 
->   Documentation/networking/ppp_generic.txt    |   2 +
->   arch/um/drivers/hostaudio_kern.c            |   1 +
->   drivers/android/binder.c                    |   2 +-
->   drivers/char/ppdev.c                        |  12 +-
->   drivers/char/random.c                       |   1 +
->   drivers/char/tpm/tpm_vtpm_proxy.c           |  12 +-
->   drivers/crypto/qat/qat_common/adf_ctl_drv.c |   2 +-
->   drivers/dma-buf/dma-buf.c                   |   4 +-
->   drivers/dma-buf/sw_sync.c                   |   2 +-
->   drivers/dma-buf/sync_file.c                 |   2 +-
->   drivers/firewire/core-cdev.c                |  12 +-
->   drivers/gpu/drm/amd/amdkfd/kfd_chardev.c    |   2 +-
->   drivers/hid/hidraw.c                        |   4 +-
->   drivers/hid/usbhid/hiddev.c                 |  11 +-
->   drivers/hwtracing/stm/core.c                |  12 +-
->   drivers/ide/ide-tape.c                      |  31 +-
->   drivers/iio/industrialio-core.c             |   2 +-
->   drivers/infiniband/core/uverbs_main.c       |   4 +-
->   drivers/isdn/capi/capi.c                    |  31 +
->   drivers/isdn/i4l/isdn_ppp.c                 |  14 +-
->   drivers/media/rc/lirc_dev.c                 |   4 +-
->   drivers/mfd/cros_ec_dev.c                   |   4 +-
->   drivers/misc/cxl/flash.c                    |   8 +-
->   drivers/misc/genwqe/card_dev.c              |  23 +-
->   drivers/misc/mei/main.c                     |  22 +-
->   drivers/misc/vmw_vmci/vmci_host.c           |   2 +-
->   drivers/mtd/ubi/cdev.c                      |  36 +-
->   drivers/net/ppp/ppp_generic.c               |  99 +++-
->   drivers/net/ppp/pppoe.c                     |   7 +
->   drivers/net/ppp/pptp.c                      |   3 +
->   drivers/net/tap.c                           |  12 +-
->   drivers/nvdimm/bus.c                        |   4 +-
->   drivers/nvme/host/core.c                    |   2 +-
->   drivers/pci/switch/switchtec.c              |   2 +-
->   drivers/platform/x86/wmi.c                  |   2 +-
->   drivers/rpmsg/rpmsg_char.c                  |   4 +-
->   drivers/rtc/dev.c                           |  13 +-
->   drivers/rtc/rtc-vr41xx.c                    |  10 +
->   drivers/s390/char/tape_char.c               |  41 +-
->   drivers/sbus/char/display7seg.c             |   2 +-
->   drivers/sbus/char/envctrl.c                 |   4 +-
->   drivers/scsi/3w-xxxx.c                      |   4 +-
->   drivers/scsi/cxlflash/main.c                |   2 +-
->   drivers/scsi/esas2r/esas2r_main.c           |   2 +-
->   drivers/scsi/megaraid/megaraid_mm.c         |  28 +-
->   drivers/scsi/osst.c                         |  34 +-
->   drivers/scsi/pmcraid.c                      |   4 +-
->   drivers/scsi/st.c                           |  35 +-
->   drivers/staging/android/ion/ion.c           |   4 +-
->   drivers/staging/pi433/pi433_if.c            |  12 +-
->   drivers/staging/vme/devices/vme_user.c      |   2 +-
->   drivers/tee/tee_core.c                      |   2 +-
->   drivers/usb/class/cdc-wdm.c                 |   2 +-
->   drivers/usb/class/usbtmc.c                  |   4 +-
->   drivers/usb/core/devio.c                    |  16 +-
->   drivers/usb/gadget/function/f_fs.c          |  12 +-
->   drivers/vfio/vfio.c                         |  39 +-
->   drivers/vhost/net.c                         |  12 +-
->   drivers/vhost/scsi.c                        |  12 +-
->   drivers/vhost/test.c                        |  12 +-
->   drivers/vhost/vsock.c                       |  12 +-
->   drivers/video/fbdev/aty/atyfb_base.c        |  12 +-
->   drivers/virt/fsl_hypervisor.c               |   2 +-
->   fs/btrfs/super.c                            |   2 +-
->   fs/ceph/dir.c                               |   1 +
->   fs/ceph/file.c                              |   2 +-
->   fs/compat_ioctl.c                           | 602 +-------------------
->   fs/fat/file.c                               |  13 +-
->   fs/fuse/dev.c                               |   2 +-
->   fs/notify/fanotify/fanotify_user.c          |   2 +-
->   fs/userfaultfd.c                            |   2 +-
->   include/linux/fs.h                          |   7 +
->   include/linux/if_pppox.h                    |   2 +
->   include/linux/mtio.h                        |  58 ++
->   include/uapi/linux/ppp-ioctl.h              |   2 +
->   include/uapi/linux/ppp_defs.h               |  14 +
->   net/bluetooth/hci_sock.c                    |  21 +-
->   net/bluetooth/rfcomm/sock.c                 |  14 +-
->   net/l2tp/l2tp_ppp.c                         |   3 +
->   net/rfkill/core.c                           |   2 +-
->   sound/core/oss/pcm_oss.c                    |   4 +
->   sound/oss/dmasound/dmasound_core.c          |   2 +
->   82 files changed, 452 insertions(+), 1034 deletions(-)
->   create mode 100644 include/linux/mtio.h
-> 
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 93dc588fabe2..2dd94b3e9ece 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -374,7 +374,7 @@ void blk_cleanup_queue(struct request_queue *q)
+ 	blk_exit_queue(q);
+ 
+ 	if (queue_is_mq(q))
+-		blk_mq_free_queue(q);
++		blk_mq_exit_queue(q);
+ 
+ 	percpu_ref_exit(&q->q_usage_counter);
+ 
+diff --git a/block/blk-mq-sysfs.c b/block/blk-mq-sysfs.c
+index 3f9c3f4ac44c..4040e62c3737 100644
+--- a/block/blk-mq-sysfs.c
++++ b/block/blk-mq-sysfs.c
+@@ -10,6 +10,7 @@
+ #include <linux/smp.h>
+ 
+ #include <linux/blk-mq.h>
++#include "blk.h"
+ #include "blk-mq.h"
+ #include "blk-mq-tag.h"
+ 
+@@ -33,6 +34,11 @@ static void blk_mq_hw_sysfs_release(struct kobject *kobj)
+ {
+ 	struct blk_mq_hw_ctx *hctx = container_of(kobj, struct blk_mq_hw_ctx,
+ 						  kobj);
++
++	if (hctx->flags & BLK_MQ_F_BLOCKING)
++		cleanup_srcu_struct(hctx->srcu);
++	blk_free_flush_queue(hctx->fq);
++	sbitmap_free(&hctx->ctx_map);
+ 	free_cpumask_var(hctx->cpumask);
+ 	kfree(hctx->ctxs);
+ 	kfree(hctx);
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 55776a6e2586..239b404b9e6c 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -2273,12 +2273,7 @@ static void blk_mq_exit_hctx(struct request_queue *q,
+ 	if (set->ops->exit_hctx)
+ 		set->ops->exit_hctx(hctx, hctx_idx);
+ 
+-	if (hctx->flags & BLK_MQ_F_BLOCKING)
+-		cleanup_srcu_struct(hctx->srcu);
+-
+ 	blk_mq_remove_cpuhp(hctx);
+-	blk_free_flush_queue(hctx->fq);
+-	sbitmap_free(&hctx->ctx_map);
+ }
+ 
+ static void blk_mq_exit_hw_queues(struct request_queue *q,
+@@ -2913,7 +2908,8 @@ struct request_queue *blk_mq_init_allocated_queue(struct blk_mq_tag_set *set,
+ }
+ EXPORT_SYMBOL(blk_mq_init_allocated_queue);
+ 
+-void blk_mq_free_queue(struct request_queue *q)
++/* tags can _not_ be used after returning from blk_mq_exit_queue */
++void blk_mq_exit_queue(struct request_queue *q)
+ {
+ 	struct blk_mq_tag_set	*set = q->tag_set;
+ 
+diff --git a/block/blk-mq.h b/block/blk-mq.h
+index 423ea88ab6fb..633a5a77ee8b 100644
+--- a/block/blk-mq.h
++++ b/block/blk-mq.h
+@@ -37,7 +37,7 @@ struct blk_mq_ctx {
+ 	struct kobject		kobj;
+ } ____cacheline_aligned_in_smp;
+ 
+-void blk_mq_free_queue(struct request_queue *q);
++void blk_mq_exit_queue(struct request_queue *q);
+ int blk_mq_update_nr_requests(struct request_queue *q, unsigned int nr);
+ void blk_mq_wake_waiters(struct request_queue *q);
+ bool blk_mq_dispatch_rq_list(struct request_queue *, struct list_head *, bool);
+-- 
+2.9.5
