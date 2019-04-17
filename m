@@ -1,138 +1,36 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V6 3/9] blk-mq: free hw queue's resource in hctx's release handler
-Date: Wed, 17 Apr 2019 11:44:04 +0800
-Message-ID: <20190417034410.31957-4-ming.lei@redhat.com>
-References: <20190417034410.31957-1-ming.lei@redhat.com>
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20190417034410.31957-1-ming.lei@redhat.com>
-Sender: stable-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, Hannes Reinecke <hare@suse.com>, Keith Busch <keith.busch@intel.com>, linux-nvme@lists.infradead.org, Sagi Grimberg <sagi@grimberg.me>, Ming Lei <ming.lei@redhat.com>, Dongli Zhang <dongli.zhang@oracle.com>, James Smart <james.smart@broadcom.com>, Bart Van Assche <bart.vanassche@wdc.com>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, jianchao wang <jianchao.w.wang@oracle.com>, stable@vger.kernel.org
+From: Pan Bian <bianpan2016@163.com>
+Subject: scsi: osst: drop SCSI devie reference taken before
+Date: Wed, 17 Apr 2019 15:40:00 +0800
+Message-ID: <1555486800-107606-1-git-send-email-bianpan2016@163.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Willem Riede <osst@riede.org>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: osst-users@lists.sourceforge.net, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Pan Bian <bianpan2016@163.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Once blk_cleanup_queue() returns, tags shouldn't be used any more,
-because blk_mq_free_tag_set() may be called. Commit 45a9c9d909b2
-("blk-mq: Fix a use-after-free") fixes this issue exactly.
+In the function __os_scsi_tape_open, scsi_device_get is called to take a
+reference of the device. The reference should be dropped when it is no
+longer used. However, when scsi_block_when_processing_errors returns a
+false value, the reference is not dropped. This patch fixes the bug.
 
-However, that commit introduces another issue. Before 45a9c9d909b2,
-we are allowed to run queue during cleaning up queue if the queue's
-kobj refcount is held. After that commit, queue can't be run during
-queue cleaning up, otherwise oops can be triggered easily because
-some fields of hctx are freed by blk_mq_free_queue() in blk_cleanup_queue().
-
-We have invented ways for addressing this kind of issue before, such as:
-
-	8dc765d438f1 ("SCSI: fix queue cleanup race before queue initialization is done")
-	c2856ae2f315 ("blk-mq: quiesce queue before freeing queue")
-
-But still can't cover all cases, recently James reports another such
-kind of issue:
-
-	https://marc.info/?l=linux-scsi&m=155389088124782&w=2
-
-This issue can be quite hard to address by previous way, given
-scsi_run_queue() may run requeues for other LUNs.
-
-Fixes the above issue by freeing hctx's resources in its release handler, and this
-way is safe becasue tags isn't needed for freeing such hctx resource.
-
-This approach follows typical design pattern wrt. kobject's release handler.
-
-Cc: Dongli Zhang <dongli.zhang@oracle.com>
-Cc: James Smart <james.smart@broadcom.com>
-Cc: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: linux-scsi@vger.kernel.org,
-Cc: Martin K . Petersen <martin.petersen@oracle.com>,
-Cc: Christoph Hellwig <hch@lst.de>,
-Cc: James E . J . Bottomley <jejb@linux.vnet.ibm.com>,
-Cc: jianchao wang <jianchao.w.wang@oracle.com>
-Reported-by: James Smart <james.smart@broadcom.com>
-Fixes: 45a9c9d909b2 ("blk-mq: Fix a use-after-free")
-Cc: stable@vger.kernel.org
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
+Signed-off-by: Pan Bian <bianpan2016@163.com>
 ---
- block/blk-core.c     | 2 +-
- block/blk-mq-sysfs.c | 6 ++++++
- block/blk-mq.c       | 8 ++------
- block/blk-mq.h       | 2 +-
- 4 files changed, 10 insertions(+), 8 deletions(-)
+ drivers/scsi/osst.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 93dc588fabe2..2dd94b3e9ece 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -374,7 +374,7 @@ void blk_cleanup_queue(struct request_queue *q)
- 	blk_exit_queue(q);
+diff --git a/drivers/scsi/osst.c b/drivers/scsi/osst.c
+index be3c73e..f2b2b86 100644
+--- a/drivers/scsi/osst.c
++++ b/drivers/scsi/osst.c
+@@ -4489,7 +4489,8 @@ static int __os_scsi_tape_open(struct inode * inode, struct file * filp)
+ 	STp->rew_at_close = TAPE_REWIND(inode);
  
- 	if (queue_is_mq(q))
--		blk_mq_free_queue(q);
-+		blk_mq_exit_queue(q);
+ 	if( !scsi_block_when_processing_errors(STp->device) ) {
+-		return -ENXIO;
++		retval = -ENXIO;
++		goto err_out;
+ 	}
  
- 	percpu_ref_exit(&q->q_usage_counter);
- 
-diff --git a/block/blk-mq-sysfs.c b/block/blk-mq-sysfs.c
-index 3f9c3f4ac44c..4040e62c3737 100644
---- a/block/blk-mq-sysfs.c
-+++ b/block/blk-mq-sysfs.c
-@@ -10,6 +10,7 @@
- #include <linux/smp.h>
- 
- #include <linux/blk-mq.h>
-+#include "blk.h"
- #include "blk-mq.h"
- #include "blk-mq-tag.h"
- 
-@@ -33,6 +34,11 @@ static void blk_mq_hw_sysfs_release(struct kobject *kobj)
- {
- 	struct blk_mq_hw_ctx *hctx = container_of(kobj, struct blk_mq_hw_ctx,
- 						  kobj);
-+
-+	if (hctx->flags & BLK_MQ_F_BLOCKING)
-+		cleanup_srcu_struct(hctx->srcu);
-+	blk_free_flush_queue(hctx->fq);
-+	sbitmap_free(&hctx->ctx_map);
- 	free_cpumask_var(hctx->cpumask);
- 	kfree(hctx->ctxs);
- 	kfree(hctx);
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 55776a6e2586..239b404b9e6c 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -2273,12 +2273,7 @@ static void blk_mq_exit_hctx(struct request_queue *q,
- 	if (set->ops->exit_hctx)
- 		set->ops->exit_hctx(hctx, hctx_idx);
- 
--	if (hctx->flags & BLK_MQ_F_BLOCKING)
--		cleanup_srcu_struct(hctx->srcu);
--
- 	blk_mq_remove_cpuhp(hctx);
--	blk_free_flush_queue(hctx->fq);
--	sbitmap_free(&hctx->ctx_map);
- }
- 
- static void blk_mq_exit_hw_queues(struct request_queue *q,
-@@ -2913,7 +2908,8 @@ struct request_queue *blk_mq_init_allocated_queue(struct blk_mq_tag_set *set,
- }
- EXPORT_SYMBOL(blk_mq_init_allocated_queue);
- 
--void blk_mq_free_queue(struct request_queue *q)
-+/* tags can _not_ be used after returning from blk_mq_exit_queue */
-+void blk_mq_exit_queue(struct request_queue *q)
- {
- 	struct blk_mq_tag_set	*set = q->tag_set;
- 
-diff --git a/block/blk-mq.h b/block/blk-mq.h
-index 423ea88ab6fb..633a5a77ee8b 100644
---- a/block/blk-mq.h
-+++ b/block/blk-mq.h
-@@ -37,7 +37,7 @@ struct blk_mq_ctx {
- 	struct kobject		kobj;
- } ____cacheline_aligned_in_smp;
- 
--void blk_mq_free_queue(struct request_queue *q);
-+void blk_mq_exit_queue(struct request_queue *q);
- int blk_mq_update_nr_requests(struct request_queue *q, unsigned int nr);
- void blk_mq_wake_waiters(struct request_queue *q);
- bool blk_mq_dispatch_rq_list(struct request_queue *, struct list_head *, bool);
+ 	if (mode != STp->current_mode) {
 -- 
-2.9.5
+2.7.4
