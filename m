@@ -1,37 +1,47 @@
-From: Al Viro <viro@zeniv.linux.org.uk>
-Subject: Re: [PATCH v3 10/26] compat_ioctl: use correct compat_ptr()
- translation in drivers
-Date: Wed, 17 Apr 2019 22:21:11 +0100
-Message-ID: <20190417212111.GX2217@ZenIV.linux.org.uk>
-References: <20190416202013.4034148-1-arnd@arndb.de>
- <20190416202013.4034148-11-arnd@arndb.de>
+From: Manish Rangankar <mrangankar@marvell.com>
+Subject: RE: [PATCH] scsi: qedi: fix spelling mistake "oflload" -> "offload"
+Date: Thu, 18 Apr 2019 04:24:44 +0000
+Message-ID: <BYAPR18MB248594819C8CBA9EEA021EA1D8260@BYAPR18MB2485.namprd18.prod.outlook.com>
+References: <20190417134304.10979-1-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20190416202013.4034148-11-arnd@arndb.de>
+In-Reply-To: <20190417134304.10979-1-colin.king@canonical.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-fsdevel@vger.kernel.org, y2038@lists.linaro.org, linux-kernel@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Felipe Balbi <felipe.balbi@linux.intel.com>, Frederic Barrat <fbarrat@linux.ibm.com>, Frank Haverkamp <haver@linux.ibm.com>, Kashyap Desai <kashyap.desai@broadcom.com>, Sumit Saxena <sumit.saxena@broadcom.com>, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Felipe Balbi <balbi@kernel.org>, Jerry Zhang <zhangjerry@google.com>, Vincent Pelletier <plr.vincent@gmail.com>, Andrzej Pietrasiewicz <andrzej.p@collabora.com>, Shen Jing <jingx.shen@intel.com>, linuxppc-dev@list
+To: Colin King <colin.king@canonical.com>, "QLogic-Storage-Upstream@cavium.com" <QLogic-Storage-Upstream@cavium.com>, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Apr 16, 2019 at 10:19:48PM +0200, Arnd Bergmann wrote:
-> A handful of drivers all have a trivial wrapper around their ioctl
-> handler, but don't call the compat_ptr() conversion function at the
-> moment. In practice this does not matter, since none of them are used
-> on the s390 architecture and for all other architectures, compat_ptr()
-> does not do anything, but using the new compat_ptr_ioctl()
-> helper makes it more correct in theory, and simplifies the code.
-> 
-> Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> Acked-by: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
-> Acked-by: Felipe Balbi <felipe.balbi@linux.intel.com>
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> ---
->  drivers/misc/cxl/flash.c            |  8 +-------
->  drivers/misc/genwqe/card_dev.c      | 23 +----------------------
->  drivers/scsi/megaraid/megaraid_mm.c | 28 +---------------------------
->  drivers/usb/gadget/function/f_fs.c  | 12 +-----------
-
-ACK, provided that all their ioctls are taking pointers (which is
-worth mentioning in commit message, assuming it's true)
+DQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IENvbGluIEtpbmcgPGNvbGlu
+LmtpbmdAY2Fub25pY2FsLmNvbT4NCj4gU2VudDogV2VkbmVzZGF5LCBBcHJpbCAxNywgMjAxOSA3
+OjEzIFBNDQo+IFRvOiBRTG9naWMtU3RvcmFnZS1VcHN0cmVhbUBjYXZpdW0uY29tOyBKYW1lcyBF
+IC4gSiAuIEJvdHRvbWxleQ0KPiA8amVqYkBsaW51eC5pYm0uY29tPjsgTWFydGluIEsgLiBQZXRl
+cnNlbiA8bWFydGluLnBldGVyc2VuQG9yYWNsZS5jb20+Ow0KPiBsaW51eC1zY3NpQHZnZXIua2Vy
+bmVsLm9yZw0KPiBDYzoga2VybmVsLWphbml0b3JzQHZnZXIua2VybmVsLm9yZzsgbGludXgta2Vy
+bmVsQHZnZXIua2VybmVsLm9yZw0KPiBTdWJqZWN0OiBbUEFUQ0hdIHNjc2k6IHFlZGk6IGZpeCBz
+cGVsbGluZyBtaXN0YWtlICJvZmxsb2FkIiAtPiAib2ZmbG9hZCINCj4gDQo+IEZyb206IENvbGlu
+IElhbiBLaW5nIDxjb2xpbi5raW5nQGNhbm9uaWNhbC5jb20+DQo+IA0KPiBUaGVyZSBhcmUgYSBj
+b3VwbGUgb2Ygc3BlbGxpbmcgbWlzdGFrZXMgaW4gc29tZSBrZXJuZWwgYWxlcnQgbWVzc2FnZXMu
+DQo+IEZpeCB0aGVzZS4NCj4gDQo+IFNpZ25lZC1vZmYtYnk6IENvbGluIElhbiBLaW5nIDxjb2xp
+bi5raW5nQGNhbm9uaWNhbC5jb20+DQo+IC0tLQ0KPiAgZHJpdmVycy9zY3NpL3FlZGkvcWVkaV9p
+c2NzaS5jIHwgNCArKy0tDQo+ICAxIGZpbGUgY2hhbmdlZCwgMiBpbnNlcnRpb25zKCspLCAyIGRl
+bGV0aW9ucygtKQ0KPiANCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9xZWRpL3FlZGlfaXNj
+c2kuYyBiL2RyaXZlcnMvc2NzaS9xZWRpL3FlZGlfaXNjc2kuYw0KPiBpbmRleCA2ZDZkNjAxM2Uz
+NWIuLmU0MzkxZWUyYzI3YSAxMDA2NDQNCj4gLS0tIGEvZHJpdmVycy9zY3NpL3FlZGkvcWVkaV9p
+c2NzaS5jDQo+ICsrKyBiL2RyaXZlcnMvc2NzaS9xZWRpL3FlZGlfaXNjc2kuYw0KPiBAQCAtNTc5
+LDcgKzU3OSw3IEBAIHN0YXRpYyBpbnQgcWVkaV9jb25uX3N0YXJ0KHN0cnVjdCBpc2NzaV9jbHNf
+Y29ubg0KPiAqY2xzX2Nvbm4pDQo+ICAJcnZhbCA9IHFlZGlfaXNjc2lfdXBkYXRlX2Nvbm4ocWVk
+aSwgcWVkaV9jb25uKTsNCj4gIAlpZiAocnZhbCkgew0KPiAgCQlpc2NzaV9jb25uX3ByaW50ayhL
+RVJOX0FMRVJULCBjb25uLA0KPiAtCQkJCSAgImNvbm5fc3RhcnQ6IEZXIG9mbGxvYWQgY29ubiBm
+YWlsZWQuXG4iKTsNCj4gKwkJCQkgICJjb25uX3N0YXJ0OiBGVyBvZmZsb2FkIGNvbm4gZmFpbGVk
+LlxuIik7DQo+ICAJCXJ2YWwgPSAtRUlOVkFMOw0KPiAgCQlnb3RvIHN0YXJ0X2VycjsNCj4gIAl9
+DQo+IEBAIC01OTAsNyArNTkwLDcgQEAgc3RhdGljIGludCBxZWRpX2Nvbm5fc3RhcnQoc3RydWN0
+IGlzY3NpX2Nsc19jb25uDQo+ICpjbHNfY29ubikNCj4gIAlydmFsID0gaXNjc2lfY29ubl9zdGFy
+dChjbHNfY29ubik7DQo+ICAJaWYgKHJ2YWwpIHsNCj4gIAkJaXNjc2lfY29ubl9wcmludGsoS0VS
+Tl9BTEVSVCwgY29ubiwNCj4gLQkJCQkgICJpc2NzaV9jb25uX3N0YXJ0OiBGVyBvZmxsb2FkIGNv
+bm4NCj4gZmFpbGVkISFcbiIpOw0KPiArCQkJCSAgImlzY3NpX2Nvbm5fc3RhcnQ6IEZXIG9mZmxv
+YWQgY29ubg0KPiBmYWlsZWQhIVxuIik7DQo+ICAJfQ0KPiANCj4gIHN0YXJ0X2VycjoNCj4gLS0N
+Cj4gMi4yMC4xDQoNClRoYW5rcywNCkFja2VkLWJ5OiBNYW5pc2ggUmFuZ2Fua2FyIDxtcmFuZ2Fu
+a2FyQG1hcnZlbGwuY29tPg0KDQo=
