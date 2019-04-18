@@ -1,47 +1,54 @@
-From: Manish Rangankar <mrangankar@marvell.com>
-Subject: RE: [PATCH] scsi: qedi: fix spelling mistake "oflload" -> "offload"
-Date: Thu, 18 Apr 2019 04:24:44 +0000
-Message-ID: <BYAPR18MB248594819C8CBA9EEA021EA1D8260@BYAPR18MB2485.namprd18.prod.outlook.com>
+From: Mukesh Ojha <mojha@codeaurora.org>
+Subject: Re: [PATCH] scsi: qedi: fix spelling mistake "oflload" -> "offload"
+Date: Thu, 18 Apr 2019 11:29:31 +0530
+Message-ID: <071b73b2-424d-0bb0-a663-c63ee0a94425@codeaurora.org>
 References: <20190417134304.10979-1-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20190417134304.10979-1-colin.king@canonical.com>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Colin King <colin.king@canonical.com>, "QLogic-Storage-Upstream@cavium.com" <QLogic-Storage-Upstream@cavium.com>, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: Colin King <colin.king@canonical.com>, QLogic-Storage-Upstream@cavium.com, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-DQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IENvbGluIEtpbmcgPGNvbGlu
-LmtpbmdAY2Fub25pY2FsLmNvbT4NCj4gU2VudDogV2VkbmVzZGF5LCBBcHJpbCAxNywgMjAxOSA3
-OjEzIFBNDQo+IFRvOiBRTG9naWMtU3RvcmFnZS1VcHN0cmVhbUBjYXZpdW0uY29tOyBKYW1lcyBF
-IC4gSiAuIEJvdHRvbWxleQ0KPiA8amVqYkBsaW51eC5pYm0uY29tPjsgTWFydGluIEsgLiBQZXRl
-cnNlbiA8bWFydGluLnBldGVyc2VuQG9yYWNsZS5jb20+Ow0KPiBsaW51eC1zY3NpQHZnZXIua2Vy
-bmVsLm9yZw0KPiBDYzoga2VybmVsLWphbml0b3JzQHZnZXIua2VybmVsLm9yZzsgbGludXgta2Vy
-bmVsQHZnZXIua2VybmVsLm9yZw0KPiBTdWJqZWN0OiBbUEFUQ0hdIHNjc2k6IHFlZGk6IGZpeCBz
-cGVsbGluZyBtaXN0YWtlICJvZmxsb2FkIiAtPiAib2ZmbG9hZCINCj4gDQo+IEZyb206IENvbGlu
-IElhbiBLaW5nIDxjb2xpbi5raW5nQGNhbm9uaWNhbC5jb20+DQo+IA0KPiBUaGVyZSBhcmUgYSBj
-b3VwbGUgb2Ygc3BlbGxpbmcgbWlzdGFrZXMgaW4gc29tZSBrZXJuZWwgYWxlcnQgbWVzc2FnZXMu
-DQo+IEZpeCB0aGVzZS4NCj4gDQo+IFNpZ25lZC1vZmYtYnk6IENvbGluIElhbiBLaW5nIDxjb2xp
-bi5raW5nQGNhbm9uaWNhbC5jb20+DQo+IC0tLQ0KPiAgZHJpdmVycy9zY3NpL3FlZGkvcWVkaV9p
-c2NzaS5jIHwgNCArKy0tDQo+ICAxIGZpbGUgY2hhbmdlZCwgMiBpbnNlcnRpb25zKCspLCAyIGRl
-bGV0aW9ucygtKQ0KPiANCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9xZWRpL3FlZGlfaXNj
-c2kuYyBiL2RyaXZlcnMvc2NzaS9xZWRpL3FlZGlfaXNjc2kuYw0KPiBpbmRleCA2ZDZkNjAxM2Uz
-NWIuLmU0MzkxZWUyYzI3YSAxMDA2NDQNCj4gLS0tIGEvZHJpdmVycy9zY3NpL3FlZGkvcWVkaV9p
-c2NzaS5jDQo+ICsrKyBiL2RyaXZlcnMvc2NzaS9xZWRpL3FlZGlfaXNjc2kuYw0KPiBAQCAtNTc5
-LDcgKzU3OSw3IEBAIHN0YXRpYyBpbnQgcWVkaV9jb25uX3N0YXJ0KHN0cnVjdCBpc2NzaV9jbHNf
-Y29ubg0KPiAqY2xzX2Nvbm4pDQo+ICAJcnZhbCA9IHFlZGlfaXNjc2lfdXBkYXRlX2Nvbm4ocWVk
-aSwgcWVkaV9jb25uKTsNCj4gIAlpZiAocnZhbCkgew0KPiAgCQlpc2NzaV9jb25uX3ByaW50ayhL
-RVJOX0FMRVJULCBjb25uLA0KPiAtCQkJCSAgImNvbm5fc3RhcnQ6IEZXIG9mbGxvYWQgY29ubiBm
-YWlsZWQuXG4iKTsNCj4gKwkJCQkgICJjb25uX3N0YXJ0OiBGVyBvZmZsb2FkIGNvbm4gZmFpbGVk
-LlxuIik7DQo+ICAJCXJ2YWwgPSAtRUlOVkFMOw0KPiAgCQlnb3RvIHN0YXJ0X2VycjsNCj4gIAl9
-DQo+IEBAIC01OTAsNyArNTkwLDcgQEAgc3RhdGljIGludCBxZWRpX2Nvbm5fc3RhcnQoc3RydWN0
-IGlzY3NpX2Nsc19jb25uDQo+ICpjbHNfY29ubikNCj4gIAlydmFsID0gaXNjc2lfY29ubl9zdGFy
-dChjbHNfY29ubik7DQo+ICAJaWYgKHJ2YWwpIHsNCj4gIAkJaXNjc2lfY29ubl9wcmludGsoS0VS
-Tl9BTEVSVCwgY29ubiwNCj4gLQkJCQkgICJpc2NzaV9jb25uX3N0YXJ0OiBGVyBvZmxsb2FkIGNv
-bm4NCj4gZmFpbGVkISFcbiIpOw0KPiArCQkJCSAgImlzY3NpX2Nvbm5fc3RhcnQ6IEZXIG9mZmxv
-YWQgY29ubg0KPiBmYWlsZWQhIVxuIik7DQo+ICAJfQ0KPiANCj4gIHN0YXJ0X2VycjoNCj4gLS0N
-Cj4gMi4yMC4xDQoNClRoYW5rcywNCkFja2VkLWJ5OiBNYW5pc2ggUmFuZ2Fua2FyIDxtcmFuZ2Fu
-a2FyQG1hcnZlbGwuY29tPg0KDQo=
+
+On 4/17/2019 7:13 PM, Colin King wrote:
+> From: Colin Ian King <colin.king@canonical.com>
+>
+> There are a couple of spelling mistakes in some kernel alert messages.
+> Fix these.
+>
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Reviewed-by: Mukesh Ojha <mojha@codeaurora.org>
+
+Cheers,
+-Mukesh
+> ---
+>   drivers/scsi/qedi/qedi_iscsi.c | 4 ++--
+>   1 file changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/scsi/qedi/qedi_iscsi.c b/drivers/scsi/qedi/qedi_iscsi.c
+> index 6d6d6013e35b..e4391ee2c27a 100644
+> --- a/drivers/scsi/qedi/qedi_iscsi.c
+> +++ b/drivers/scsi/qedi/qedi_iscsi.c
+> @@ -579,7 +579,7 @@ static int qedi_conn_start(struct iscsi_cls_conn *cls_conn)
+>   	rval = qedi_iscsi_update_conn(qedi, qedi_conn);
+>   	if (rval) {
+>   		iscsi_conn_printk(KERN_ALERT, conn,
+> -				  "conn_start: FW oflload conn failed.\n");
+> +				  "conn_start: FW offload conn failed.\n");
+>   		rval = -EINVAL;
+>   		goto start_err;
+>   	}
+> @@ -590,7 +590,7 @@ static int qedi_conn_start(struct iscsi_cls_conn *cls_conn)
+>   	rval = iscsi_conn_start(cls_conn);
+>   	if (rval) {
+>   		iscsi_conn_printk(KERN_ALERT, conn,
+> -				  "iscsi_conn_start: FW oflload conn failed!!\n");
+> +				  "iscsi_conn_start: FW offload conn failed!!\n");
+>   	}
+>   
+>   start_err:
