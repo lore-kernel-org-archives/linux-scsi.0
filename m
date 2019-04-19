@@ -1,25 +1,27 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: megaraid_sas: fix spelling mistake "oustanding" -> "outstanding"
-Date: Thu, 18 Apr 2019 20:35:18 -0400
-Message-ID: <yq1sguebznd.fsf@oracle.com>
-References: <20190417135109.12872-1-colin.king@canonical.com>
+Subject: Re: [PATCH -next] scsi: lpfc: Make lpfc_sli4_oas_verify static
+Date: Thu, 18 Apr 2019 20:37:16 -0400
+Message-ID: <yq1o952bzk3.fsf@oracle.com>
+References: <20190417150554.34844-1-yuehaibing@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190417135109.12872-1-colin.king@canonical.com> (Colin King's
-        message of "Wed, 17 Apr 2019 14:51:09 +0100")
+In-Reply-To: <20190417150554.34844-1-yuehaibing@huawei.com> (Yue Haibing's
+        message of "Wed, 17 Apr 2019 23:05:54 +0800")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Colin King <colin.king@canonical.com>
-Cc: Kashyap Desai <kashyap.desai@broadcom.com>, Sumit Saxena <sumit.saxena@broadcom.com>, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Yue Haibing <yuehaibing@huawei.com>
+Cc: james.smart@broadcom.com, dick.kennedy@broadcom.com, jejb@linux.ibm.com, martin.petersen@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Colin,
+Yue,
 
-> There are a couple of spelling mistakes in some kernel info and notice
-> messages. Fix these.
+> Fix sparse warning:
+>
+> drivers/scsi/lpfc/lpfc_init.c:13091:1: warning:
+>  symbol 'lpfc_sli4_oas_verify' was not declared. Should it be static?
 
-Applied to 5.2/scsi-queue, thanks!
+Applied to 5.2/scsi-queue, thanks.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
