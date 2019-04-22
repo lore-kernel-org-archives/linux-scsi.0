@@ -1,45 +1,75 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 5.0 64/98] scsi: qla4xxx: fix a potential NULL pointer dereference
-Date: Mon, 22 Apr 2019 15:41:31 -0400
-Message-ID: <20190422194205.10404-64-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.0 63/98] scsi: aacraid: Insure we don't access PCIe space during AER/EEH
+Date: Mon, 22 Apr 2019 15:41:30 -0400
+Message-ID: <20190422194205.10404-63-sashal@kernel.org>
 References: <20190422194205.10404-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20190422194205.10404-1-sashal@kernel.org>
-Sender: stable-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Kangjie Lu <kjlu@umn.edu>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Cc: Dave Carroll <david.carroll@microsemi.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Kangjie Lu <kjlu@umn.edu>
+From: Dave Carroll <david.carroll@microsemi.com>
 
-[ Upstream commit fba1bdd2a9a93f3e2181ec1936a3c2f6b37e7ed6 ]
+[ Upstream commit b6554cfe09e1f610aed7d57164ab7760be57acd9 ]
 
-In case iscsi_lookup_endpoint fails, the fix returns -EINVAL to avoid NULL
-pointer dereference.
+There are a few windows during AER/EEH when we can access PCIe I/O mapped
+registers. This will harden the access to insure we do not allow PCIe
+access during errors
 
-Signed-off-by: Kangjie Lu <kjlu@umn.edu>
-Acked-by: Manish Rangankar <mrangankar@marvell.com>
-Reviewed-by: Mukesh Ojha <mojha@codeaurora.org>
+Signed-off-by: Dave Carroll <david.carroll@microsemi.com>
+Reviewed-by: Sagar Biradar <sagar.biradar@microchip.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin (Microsoft) <sashal@kernel.org>
 ---
- drivers/scsi/qla4xxx/ql4_os.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/scsi/aacraid/aacraid.h | 7 ++++++-
+ drivers/scsi/aacraid/commsup.c | 4 ++--
+ 2 files changed, 8 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index a77bfb224248..80289c885c07 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -3203,6 +3203,8 @@ static int qla4xxx_conn_bind(struct iscsi_cls_session *cls_session,
- 	if (iscsi_conn_bind(cls_session, cls_conn, is_leading))
- 		return -EINVAL;
- 	ep = iscsi_lookup_endpoint(transport_fd);
-+	if (!ep)
-+		return -EINVAL;
- 	conn = cls_conn->dd_data;
- 	qla_conn = conn->dd_data;
- 	qla_conn->qla_ep = ep->dd_data;
+diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
+index 3291d1c16864..8bd09b96ea18 100644
+--- a/drivers/scsi/aacraid/aacraid.h
++++ b/drivers/scsi/aacraid/aacraid.h
+@@ -2640,9 +2640,14 @@ static inline unsigned int cap_to_cyls(sector_t capacity, unsigned divisor)
+ 	return capacity;
+ }
+ 
++static inline int aac_pci_offline(struct aac_dev *dev)
++{
++	return pci_channel_offline(dev->pdev) || dev->handle_pci_error;
++}
++
+ static inline int aac_adapter_check_health(struct aac_dev *dev)
+ {
+-	if (unlikely(pci_channel_offline(dev->pdev)))
++	if (unlikely(aac_pci_offline(dev)))
+ 		return -1;
+ 
+ 	return (dev)->a_ops.adapter_check_health(dev);
+diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
+index a3adc954f40f..09367b8a3885 100644
+--- a/drivers/scsi/aacraid/commsup.c
++++ b/drivers/scsi/aacraid/commsup.c
+@@ -672,7 +672,7 @@ int aac_fib_send(u16 command, struct fib *fibptr, unsigned long size,
+ 					return -ETIMEDOUT;
+ 				}
+ 
+-				if (unlikely(pci_channel_offline(dev->pdev)))
++				if (unlikely(aac_pci_offline(dev)))
+ 					return -EFAULT;
+ 
+ 				if ((blink = aac_adapter_check_health(dev)) > 0) {
+@@ -772,7 +772,7 @@ int aac_hba_send(u8 command, struct fib *fibptr, fib_callback callback,
+ 
+ 		spin_unlock_irqrestore(&fibptr->event_lock, flags);
+ 
+-		if (unlikely(pci_channel_offline(dev->pdev)))
++		if (unlikely(aac_pci_offline(dev)))
+ 			return -EFAULT;
+ 
+ 		fibptr->flags |= FIB_CONTEXT_FLAG_WAIT;
 -- 
 2.19.1
