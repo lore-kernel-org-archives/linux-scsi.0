@@ -1,112 +1,45 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 5.0 62/98] scsi: mpt3sas: Fix kernel panic during expander reset
-Date: Mon, 22 Apr 2019 15:41:29 -0400
-Message-ID: <20190422194205.10404-62-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.0 64/98] scsi: qla4xxx: fix a potential NULL pointer dereference
+Date: Mon, 22 Apr 2019 15:41:31 -0400
+Message-ID: <20190422194205.10404-64-sashal@kernel.org>
 References: <20190422194205.10404-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <stable-owner@vger.kernel.org>
 In-Reply-To: <20190422194205.10404-1-sashal@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: stable-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Sreekanth Reddy <sreekanth.reddy@broadcom.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
+Cc: Kangjie Lu <kjlu@umn.edu>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+From: Kangjie Lu <kjlu@umn.edu>
 
-[ Upstream commit c2fe742ff6e77c5b4fe4ad273191ddf28fdea25e ]
+[ Upstream commit fba1bdd2a9a93f3e2181ec1936a3c2f6b37e7ed6 ]
 
-During expander reset handling, the driver invokes kernel function
-scsi_host_find_tag() to obtain outstanding requests associated with the
-scsi host managed by the driver. Driver loops from tag value zero to hba
-queue depth to obtain the outstanding scmds. But when blk-mq is enabled,
-the block layer may return stale entry for one or more requests. This may
-lead to kernel panic if the returned value is inaccessible or the memory
-pointed by the returned value is reused.
+In case iscsi_lookup_endpoint fails, the fix returns -EINVAL to avoid NULL
+pointer dereference.
 
-Reference of upstream discussion:
-
-	https://patchwork.kernel.org/patch/10734933/
-
-Instead of calling scsi_host_find_tag() API for each and every smid (smid
-is tag +1) from one to shost->can_queue, now driver will call this API (to
-obtain the outstanding scmd) only for those smid's which are outstanding at
-the driver level.
-
-Driver will determine whether this smid is outstanding at driver level by
-looking into it's corresponding MPI request frame, if its MPI request frame
-is empty, then it means that this smid is free and does not need to call
-scsi_host_find_tag() for it.  By doing this, driver will invoke
-scsi_host_find_tag() for only those tags which are outstanding at the
-driver level.
-
-Driver will check whether particular MPI request frame is empty or not by
-looking into the "DevHandle" field. If this field is zero then it means
-that this MPI request is empty. For active MPI request DevHandle must be
-non-zero.
-
-Also driver will memset the MPI request frame once the corresponding scmd
-is processed (i.e. just before calling
-scmd->done function).
-
-Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Signed-off-by: Kangjie Lu <kjlu@umn.edu>
+Acked-by: Manish Rangankar <mrangankar@marvell.com>
+Reviewed-by: Mukesh Ojha <mojha@codeaurora.org>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin (Microsoft) <sashal@kernel.org>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.c  |  6 ++++++
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 12 ++++++++++++
- 2 files changed, 18 insertions(+)
+ drivers/scsi/qla4xxx/ql4_os.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 0a6cb8f0680c..c39f88100f31 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -3281,12 +3281,18 @@ mpt3sas_base_free_smid(struct MPT3SAS_ADAPTER *ioc, u16 smid)
- 
- 	if (smid < ioc->hi_priority_smid) {
- 		struct scsiio_tracker *st;
-+		void *request;
- 
- 		st = _get_st_from_smid(ioc, smid);
- 		if (!st) {
- 			_base_recovery_check(ioc);
- 			return;
- 		}
-+
-+		/* Clear MPI request frame */
-+		request = mpt3sas_base_get_msg_frame(ioc, smid);
-+		memset(request, 0, ioc->request_sz);
-+
- 		mpt3sas_base_clear_st(ioc, st);
- 		_base_recovery_check(ioc);
- 		return;
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 6be39dc27103..6173c211a5e5 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -1462,11 +1462,23 @@ mpt3sas_scsih_scsi_lookup_get(struct MPT3SAS_ADAPTER *ioc, u16 smid)
- {
- 	struct scsi_cmnd *scmd = NULL;
- 	struct scsiio_tracker *st;
-+	Mpi25SCSIIORequest_t *mpi_request;
- 
- 	if (smid > 0  &&
- 	    smid <= ioc->scsiio_depth - INTERNAL_SCSIIO_CMDS_COUNT) {
- 		u32 unique_tag = smid - 1;
- 
-+		mpi_request = mpt3sas_base_get_msg_frame(ioc, smid);
-+
-+		/*
-+		 * If SCSI IO request is outstanding at driver level then
-+		 * DevHandle filed must be non-zero. If DevHandle is zero
-+		 * then it means that this smid is free at driver level,
-+		 * so return NULL.
-+		 */
-+		if (!mpi_request->DevHandle)
-+			return scmd;
-+
- 		scmd = scsi_host_find_tag(ioc->shost, unique_tag);
- 		if (scmd) {
- 			st = scsi_cmd_priv(scmd);
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index a77bfb224248..80289c885c07 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -3203,6 +3203,8 @@ static int qla4xxx_conn_bind(struct iscsi_cls_session *cls_session,
+ 	if (iscsi_conn_bind(cls_session, cls_conn, is_leading))
+ 		return -EINVAL;
+ 	ep = iscsi_lookup_endpoint(transport_fd);
++	if (!ep)
++		return -EINVAL;
+ 	conn = cls_conn->dd_data;
+ 	qla_conn = conn->dd_data;
+ 	qla_conn->qla_ep = ep->dd_data;
 -- 
 2.19.1
