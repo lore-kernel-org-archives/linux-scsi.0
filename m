@@ -1,75 +1,112 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.19 50/68] scsi: aacraid: Insure we don't access PCIe space during AER/EEH
-Date: Mon, 22 Apr 2019 15:44:58 -0400
-Message-ID: <20190422194516.11634-50-sashal@kernel.org>
-References: <20190422194516.11634-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.0 62/98] scsi: mpt3sas: Fix kernel panic during expander reset
+Date: Mon, 22 Apr 2019 15:41:29 -0400
+Message-ID: <20190422194205.10404-62-sashal@kernel.org>
+References: <20190422194205.10404-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190422194516.11634-1-sashal@kernel.org>
+In-Reply-To: <20190422194205.10404-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Dave Carroll <david.carroll@microsemi.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Cc: Sreekanth Reddy <sreekanth.reddy@broadcom.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Dave Carroll <david.carroll@microsemi.com>
+From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 
-[ Upstream commit b6554cfe09e1f610aed7d57164ab7760be57acd9 ]
+[ Upstream commit c2fe742ff6e77c5b4fe4ad273191ddf28fdea25e ]
 
-There are a few windows during AER/EEH when we can access PCIe I/O mapped
-registers. This will harden the access to insure we do not allow PCIe
-access during errors
+During expander reset handling, the driver invokes kernel function
+scsi_host_find_tag() to obtain outstanding requests associated with the
+scsi host managed by the driver. Driver loops from tag value zero to hba
+queue depth to obtain the outstanding scmds. But when blk-mq is enabled,
+the block layer may return stale entry for one or more requests. This may
+lead to kernel panic if the returned value is inaccessible or the memory
+pointed by the returned value is reused.
 
-Signed-off-by: Dave Carroll <david.carroll@microsemi.com>
-Reviewed-by: Sagar Biradar <sagar.biradar@microchip.com>
+Reference of upstream discussion:
+
+	https://patchwork.kernel.org/patch/10734933/
+
+Instead of calling scsi_host_find_tag() API for each and every smid (smid
+is tag +1) from one to shost->can_queue, now driver will call this API (to
+obtain the outstanding scmd) only for those smid's which are outstanding at
+the driver level.
+
+Driver will determine whether this smid is outstanding at driver level by
+looking into it's corresponding MPI request frame, if its MPI request frame
+is empty, then it means that this smid is free and does not need to call
+scsi_host_find_tag() for it.  By doing this, driver will invoke
+scsi_host_find_tag() for only those tags which are outstanding at the
+driver level.
+
+Driver will check whether particular MPI request frame is empty or not by
+looking into the "DevHandle" field. If this field is zero then it means
+that this MPI request is empty. For active MPI request DevHandle must be
+non-zero.
+
+Also driver will memset the MPI request frame once the corresponding scmd
+is processed (i.e. just before calling
+scmd->done function).
+
+Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin (Microsoft) <sashal@kernel.org>
 ---
- drivers/scsi/aacraid/aacraid.h | 7 ++++++-
- drivers/scsi/aacraid/commsup.c | 4 ++--
- 2 files changed, 8 insertions(+), 3 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.c  |  6 ++++++
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 12 ++++++++++++
+ 2 files changed, 18 insertions(+)
 
-diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-index 39eb415987fc..074760f21014 100644
---- a/drivers/scsi/aacraid/aacraid.h
-+++ b/drivers/scsi/aacraid/aacraid.h
-@@ -2639,9 +2639,14 @@ static inline unsigned int cap_to_cyls(sector_t capacity, unsigned divisor)
- 	return capacity;
- }
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 0a6cb8f0680c..c39f88100f31 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -3281,12 +3281,18 @@ mpt3sas_base_free_smid(struct MPT3SAS_ADAPTER *ioc, u16 smid)
  
-+static inline int aac_pci_offline(struct aac_dev *dev)
-+{
-+	return pci_channel_offline(dev->pdev) || dev->handle_pci_error;
-+}
+ 	if (smid < ioc->hi_priority_smid) {
+ 		struct scsiio_tracker *st;
++		void *request;
+ 
+ 		st = _get_st_from_smid(ioc, smid);
+ 		if (!st) {
+ 			_base_recovery_check(ioc);
+ 			return;
+ 		}
 +
- static inline int aac_adapter_check_health(struct aac_dev *dev)
++		/* Clear MPI request frame */
++		request = mpt3sas_base_get_msg_frame(ioc, smid);
++		memset(request, 0, ioc->request_sz);
++
+ 		mpt3sas_base_clear_st(ioc, st);
+ 		_base_recovery_check(ioc);
+ 		return;
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 6be39dc27103..6173c211a5e5 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -1462,11 +1462,23 @@ mpt3sas_scsih_scsi_lookup_get(struct MPT3SAS_ADAPTER *ioc, u16 smid)
  {
--	if (unlikely(pci_channel_offline(dev->pdev)))
-+	if (unlikely(aac_pci_offline(dev)))
- 		return -1;
+ 	struct scsi_cmnd *scmd = NULL;
+ 	struct scsiio_tracker *st;
++	Mpi25SCSIIORequest_t *mpi_request;
  
- 	return (dev)->a_ops.adapter_check_health(dev);
-diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
-index 3236240a4edd..b7588de4484e 100644
---- a/drivers/scsi/aacraid/commsup.c
-+++ b/drivers/scsi/aacraid/commsup.c
-@@ -673,7 +673,7 @@ int aac_fib_send(u16 command, struct fib *fibptr, unsigned long size,
- 					return -ETIMEDOUT;
- 				}
+ 	if (smid > 0  &&
+ 	    smid <= ioc->scsiio_depth - INTERNAL_SCSIIO_CMDS_COUNT) {
+ 		u32 unique_tag = smid - 1;
  
--				if (unlikely(pci_channel_offline(dev->pdev)))
-+				if (unlikely(aac_pci_offline(dev)))
- 					return -EFAULT;
- 
- 				if ((blink = aac_adapter_check_health(dev)) > 0) {
-@@ -773,7 +773,7 @@ int aac_hba_send(u8 command, struct fib *fibptr, fib_callback callback,
- 
- 		spin_unlock_irqrestore(&fibptr->event_lock, flags);
- 
--		if (unlikely(pci_channel_offline(dev->pdev)))
-+		if (unlikely(aac_pci_offline(dev)))
- 			return -EFAULT;
- 
- 		fibptr->flags |= FIB_CONTEXT_FLAG_WAIT;
++		mpi_request = mpt3sas_base_get_msg_frame(ioc, smid);
++
++		/*
++		 * If SCSI IO request is outstanding at driver level then
++		 * DevHandle filed must be non-zero. If DevHandle is zero
++		 * then it means that this smid is free at driver level,
++		 * so return NULL.
++		 */
++		if (!mpi_request->DevHandle)
++			return scmd;
++
+ 		scmd = scsi_host_find_tag(ioc->shost, unique_tag);
+ 		if (scmd) {
+ 			st = scsi_cmd_priv(scmd);
 -- 
 2.19.1
