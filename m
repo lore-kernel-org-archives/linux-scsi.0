@@ -1,12 +1,12 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.4 15/21] scsi: qla4xxx: fix a potential NULL pointer dereference
-Date: Mon, 22 Apr 2019 15:49:35 -0400
-Message-ID: <20190422194941.13433-15-sashal@kernel.org>
-References: <20190422194941.13433-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 21/29] scsi: qla4xxx: fix a potential NULL pointer dereference
+Date: Mon, 22 Apr 2019 15:48:40 -0400
+Message-ID: <20190422194848.13049-21-sashal@kernel.org>
+References: <20190422194848.13049-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190422194941.13433-1-sashal@kernel.org>
+In-Reply-To: <20190422194848.13049-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc: Kangjie Lu <kjlu@umn.edu>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
