@@ -1,13 +1,13 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.19 51/68] scsi: qla4xxx: fix a potential NULL pointer dereference
-Date: Mon, 22 Apr 2019 15:44:59 -0400
-Message-ID: <20190422194516.11634-51-sashal@kernel.org>
-References: <20190422194516.11634-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 32/43] scsi: qla4xxx: fix a potential NULL pointer dereference
+Date: Mon, 22 Apr 2019 15:47:16 -0400
+Message-ID: <20190422194727.12495-32-sashal@kernel.org>
+References: <20190422194727.12495-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190422194516.11634-1-sashal@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20190422194727.12495-1-sashal@kernel.org>
+Sender: stable-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc: Kangjie Lu <kjlu@umn.edu>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -29,10 +29,10 @@ Signed-off-by: Sasha Levin (Microsoft) <sashal@kernel.org>
  1 file changed, 2 insertions(+)
 
 diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index 575445c761b4..5dd3e4e01b10 100644
+index 22dc70a2138e..630b7404843d 100644
 --- a/drivers/scsi/qla4xxx/ql4_os.c
 +++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -3204,6 +3204,8 @@ static int qla4xxx_conn_bind(struct iscsi_cls_session *cls_session,
+@@ -3207,6 +3207,8 @@ static int qla4xxx_conn_bind(struct iscsi_cls_session *cls_session,
  	if (iscsi_conn_bind(cls_session, cls_conn, is_leading))
  		return -EINVAL;
  	ep = iscsi_lookup_endpoint(transport_fd);
