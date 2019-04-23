@@ -1,75 +1,73 @@
-From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 5.0 63/98] scsi: aacraid: Insure we don't access PCIe space during AER/EEH
-Date: Mon, 22 Apr 2019 15:41:30 -0400
-Message-ID: <20190422194205.10404-63-sashal@kernel.org>
-References: <20190422194205.10404-1-sashal@kernel.org>
+From: Yue Haibing <yuehaibing@huawei.com>
+Subject: [PATCH -next] scsi: qedf: remove set but not used variables
+Date: Tue, 23 Apr 2019 22:41:38 +0800
+Message-ID: <20190423144138.20428-1-yuehaibing@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190422194205.10404-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Dave Carroll <david.carroll@microsemi.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+To: QLogic-Storage-Upstream@cavium.com, jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, YueHaibing <yuehaibing@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Dave Carroll <david.carroll@microsemi.com>
+From: YueHaibing <yuehaibing@huawei.com>
 
-[ Upstream commit b6554cfe09e1f610aed7d57164ab7760be57acd9 ]
+Fixes gcc '-Wunused-but-set-variable' warnings:
 
-There are a few windows during AER/EEH when we can access PCIe I/O mapped
-registers. This will harden the access to insure we do not allow PCIe
-access during errors
+drivers/scsi/qedf/qedf_els.c: In function 'qedf_process_els_compl':
+drivers/scsi/qedf/qedf_els.c:149:20: warning: variable 'sc_cmd' set but not used [-Wunused-but-set-variable]
+drivers/scsi/qedf/qedf_els.c:148:28: warning: variable 'task_ctx' set but not used [-Wunused-but-set-variable]
+drivers/scsi/qedf/qedf_els.c: In function 'qedf_send_srr':
+drivers/scsi/qedf/qedf_els.c:612:6: warning: variable 'sid' set but not used [-Wunused-but-set-variable]
 
-Signed-off-by: Dave Carroll <david.carroll@microsemi.com>
-Reviewed-by: Sagar Biradar <sagar.biradar@microchip.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin (Microsoft) <sashal@kernel.org>
+They are never used since introduction.
+
+Signed-off-by: YueHaibing <yuehaibing@huawei.com>
 ---
- drivers/scsi/aacraid/aacraid.h | 7 ++++++-
- drivers/scsi/aacraid/commsup.c | 4 ++--
- 2 files changed, 8 insertions(+), 3 deletions(-)
+ drivers/scsi/qedf/qedf_els.c | 10 +---------
+ 1 file changed, 1 insertion(+), 9 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-index 3291d1c16864..8bd09b96ea18 100644
---- a/drivers/scsi/aacraid/aacraid.h
-+++ b/drivers/scsi/aacraid/aacraid.h
-@@ -2640,9 +2640,14 @@ static inline unsigned int cap_to_cyls(sector_t capacity, unsigned divisor)
- 	return capacity;
- }
- 
-+static inline int aac_pci_offline(struct aac_dev *dev)
-+{
-+	return pci_channel_offline(dev->pdev) || dev->handle_pci_error;
-+}
-+
- static inline int aac_adapter_check_health(struct aac_dev *dev)
+diff --git a/drivers/scsi/qedf/qedf_els.c b/drivers/scsi/qedf/qedf_els.c
+index 1781e73..d900c89e 100644
+--- a/drivers/scsi/qedf/qedf_els.c
++++ b/drivers/scsi/qedf/qedf_els.c
+@@ -145,9 +145,6 @@ static int qedf_initiate_els(struct qedf_rport *fcport, unsigned int op,
+ void qedf_process_els_compl(struct qedf_ctx *qedf, struct fcoe_cqe *cqe,
+ 	struct qedf_ioreq *els_req)
  {
--	if (unlikely(pci_channel_offline(dev->pdev)))
-+	if (unlikely(aac_pci_offline(dev)))
- 		return -1;
+-	struct fcoe_task_context *task_ctx;
+-	struct scsi_cmnd *sc_cmd;
+-	uint16_t xid;
+ 	struct fcoe_cqe_midpath_info *mp_info;
  
- 	return (dev)->a_ops.adapter_check_health(dev);
-diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
-index a3adc954f40f..09367b8a3885 100644
---- a/drivers/scsi/aacraid/commsup.c
-+++ b/drivers/scsi/aacraid/commsup.c
-@@ -672,7 +672,7 @@ int aac_fib_send(u16 command, struct fib *fibptr, unsigned long size,
- 					return -ETIMEDOUT;
- 				}
+ 	QEDF_INFO(&(qedf->dbg_ctx), QEDF_LOG_ELS, "Entered with xid = 0x%x"
+@@ -158,10 +155,6 @@ void qedf_process_els_compl(struct qedf_ctx *qedf, struct fcoe_cqe *cqe,
+ 	/* Kill the ELS timer */
+ 	cancel_delayed_work(&els_req->timeout_work);
  
--				if (unlikely(pci_channel_offline(dev->pdev)))
-+				if (unlikely(aac_pci_offline(dev)))
- 					return -EFAULT;
+-	xid = els_req->xid;
+-	task_ctx = qedf_get_task_mem(&qedf->tasks, xid);
+-	sc_cmd = els_req->sc_cmd;
+-
+ 	/* Get ELS response length from CQE */
+ 	mp_info = &cqe->cqe_info.midpath_info;
+ 	els_req->mp_req.resp_len = mp_info->data_placement_size;
+@@ -609,7 +602,7 @@ static int qedf_send_srr(struct qedf_ioreq *orig_io_req, u32 offset, u8 r_ctl)
+ 	struct qedf_rport *fcport;
+ 	struct fc_lport *lport;
+ 	struct qedf_els_cb_arg *cb_arg = NULL;
+-	u32 sid, r_a_tov;
++	u32 r_a_tov;
+ 	int rc;
  
- 				if ((blink = aac_adapter_check_health(dev)) > 0) {
-@@ -772,7 +772,7 @@ int aac_hba_send(u8 command, struct fib *fibptr, fib_callback callback,
+ 	if (!orig_io_req) {
+@@ -635,7 +628,6 @@ static int qedf_send_srr(struct qedf_ioreq *orig_io_req, u32 offset, u8 r_ctl)
  
- 		spin_unlock_irqrestore(&fibptr->event_lock, flags);
+ 	qedf = fcport->qedf;
+ 	lport = qedf->lport;
+-	sid = fcport->sid;
+ 	r_a_tov = lport->r_a_tov;
  
--		if (unlikely(pci_channel_offline(dev->pdev)))
-+		if (unlikely(aac_pci_offline(dev)))
- 			return -EFAULT;
- 
- 		fibptr->flags |= FIB_CONTEXT_FLAG_WAIT;
+ 	QEDF_INFO(&(qedf->dbg_ctx), QEDF_LOG_ELS, "Sending SRR orig_io=%p, "
 -- 
-2.19.1
+2.7.0
