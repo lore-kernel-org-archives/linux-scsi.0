@@ -1,13 +1,13 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 3.18 06/10] scsi: storvsc: Fix calculation of sub-channel count
-Date: Wed, 24 Apr 2019 10:52:55 -0400
-Message-ID: <20190424145259.31639-6-sashal@kernel.org>
-References: <20190424145259.31639-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.4 09/15] scsi: storvsc: Fix calculation of sub-channel count
+Date: Wed, 24 Apr 2019 10:51:46 -0400
+Message-ID: <20190424145152.31351-9-sashal@kernel.org>
+References: <20190424145152.31351-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20190424145259.31639-1-sashal@kernel.org>
-Sender: stable-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190424145152.31351-1-sashal@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc: Michael Kelley <mikelley@microsoft.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-hyperv@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -36,10 +36,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 11 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 96c6e75bbfe6..bc29b571e3fb 100644
+index 44b7a69d022a..45cd4cf93af3 100644
 --- a/drivers/scsi/storvsc_drv.c
 +++ b/drivers/scsi/storvsc_drv.c
-@@ -788,13 +788,22 @@ static void handle_sc_creation(struct vmbus_channel *new_sc)
+@@ -613,13 +613,22 @@ static void handle_sc_creation(struct vmbus_channel *new_sc)
  static void  handle_multichannel_storage(struct hv_device *device, int max_chns)
  {
  	struct storvsc_device *stor_device;
