@@ -1,7 +1,7 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.19 34/52] scsi: storvsc: Fix calculation of sub-channel count
-Date: Wed, 24 Apr 2019 10:38:52 -0400
-Message-ID: <20190424143911.28890-34-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 33/52] scsi: core: add new RDAC LENOVO/DE_Series device
+Date: Wed, 24 Apr 2019 10:38:51 -0400
+Message-ID: <20190424143911.28890-33-sashal@kernel.org>
 References: <20190424143911.28890-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -9,60 +9,56 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20190424143911.28890-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Michael Kelley <mikelley@microsoft.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-hyperv@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>, Martin Wilck <mwilck@suse.com>, Hannes Reinecke <hare@suse.de>, NetApp RDAC team <ng-eseries-upstream-maintainers@netapp.com>, Christophe Varoqui <christophe.varoqui@opensvc.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, SCSI ML <linux-scsi@vger.kernel.org>, DM ML <dm-devel@redhat.com>, Sasha Levin <sashal@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Michael Kelley <mikelley@microsoft.com>
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
 
-[ Upstream commit 382e06d11e075a40b4094b6ef809f8d4bcc7ab2a ]
+[ Upstream commit 1cb1d2c64e812928fe0a40b8f7e74523d0283dbe ]
 
-When the number of sub-channels offered by Hyper-V is >= the number of CPUs
-in the VM, calculate the correct number of sub-channels.  The current code
-produces one too many.
+Blacklist "Universal Xport" LUN. It's used for in-band storage array
+management.  Also add model to the rdac dh family.
 
-This scenario arises only when the number of CPUs is artificially
-restricted (for example, with maxcpus=<n> on the kernel boot line), because
-Hyper-V normally offers a sub-channel count < number of CPUs.  While the
-current code doesn't break, the extra sub-channel is unbalanced across the
-CPUs (for example, a total of 5 channels on a VM with 4 CPUs).
-
-Signed-off-by: Michael Kelley <mikelley@microsoft.com>
-Reviewed-by: Vitaly Kuznetsov <vkuznets@redhat.com>
-Reviewed-by: Long Li <longli@microsoft.com>
+Cc: Martin Wilck <mwilck@suse.com>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: NetApp RDAC team <ng-eseries-upstream-maintainers@netapp.com>
+Cc: Christophe Varoqui <christophe.varoqui@opensvc.com>
+Cc: James E.J. Bottomley <jejb@linux.vnet.ibm.com>
+Cc: Martin K. Petersen <martin.petersen@oracle.com>
+Cc: SCSI ML <linux-scsi@vger.kernel.org>
+Cc: DM ML <dm-devel@redhat.com>
+Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Reviewed-by: Martin Wilck <mwilck@suse.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/storvsc_drv.c | 13 +++++++++++--
- 1 file changed, 11 insertions(+), 2 deletions(-)
+ drivers/scsi/scsi_devinfo.c | 1 +
+ drivers/scsi/scsi_dh.c      | 1 +
+ 2 files changed, 2 insertions(+)
 
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index f03dc03a42c3..0c2ba075bc71 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -664,13 +664,22 @@ static void handle_sc_creation(struct vmbus_channel *new_sc)
- static void  handle_multichannel_storage(struct hv_device *device, int max_chns)
- {
- 	struct storvsc_device *stor_device;
--	int num_cpus = num_online_cpus();
- 	int num_sc;
- 	struct storvsc_cmd_request *request;
- 	struct vstor_packet *vstor_packet;
- 	int ret, t;
+diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+index c4cbfd07b916..a08ff3bd6310 100644
+--- a/drivers/scsi/scsi_devinfo.c
++++ b/drivers/scsi/scsi_devinfo.c
+@@ -238,6 +238,7 @@ static struct {
+ 	{"NETAPP", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
+ 	{"LSI", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
+ 	{"ENGENIO", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
++	{"LENOVO", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
+ 	{"SMSC", "USB 2 HS-CF", NULL, BLIST_SPARSELUN | BLIST_INQUIRY_36},
+ 	{"SONY", "CD-ROM CDU-8001", NULL, BLIST_BORKEN},
+ 	{"SONY", "TSL", NULL, BLIST_FORCELUN},		/* DDS3 & DDS4 autoloaders */
+diff --git a/drivers/scsi/scsi_dh.c b/drivers/scsi/scsi_dh.c
+index 5a58cbf3a75d..c14006ac98f9 100644
+--- a/drivers/scsi/scsi_dh.c
++++ b/drivers/scsi/scsi_dh.c
+@@ -75,6 +75,7 @@ static const struct scsi_dh_blist scsi_dh_blist[] = {
+ 	{"NETAPP", "INF-01-00",		"rdac", },
+ 	{"LSI", "INF-01-00",		"rdac", },
+ 	{"ENGENIO", "INF-01-00",	"rdac", },
++	{"LENOVO", "DE_Series",		"rdac", },
+ 	{NULL, NULL,			NULL },
+ };
  
--	num_sc = ((max_chns > num_cpus) ? num_cpus : max_chns);
-+	/*
-+	 * If the number of CPUs is artificially restricted, such as
-+	 * with maxcpus=1 on the kernel boot line, Hyper-V could offer
-+	 * sub-channels >= the number of CPUs. These sub-channels
-+	 * should not be created. The primary channel is already created
-+	 * and assigned to one CPU, so check against # CPUs - 1.
-+	 */
-+	num_sc = min((int)(num_online_cpus() - 1), max_chns);
-+	if (!num_sc)
-+		return;
-+
- 	stor_device = get_out_stor_device(device);
- 	if (!stor_device)
- 		return;
 -- 
 2.19.1
