@@ -1,12 +1,12 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 5.0 42/66] scsi: storvsc: Fix calculation of sub-channel count
-Date: Wed, 24 Apr 2019 10:33:16 -0400
-Message-ID: <20190424143341.27665-42-sashal@kernel.org>
-References: <20190424143341.27665-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 34/52] scsi: storvsc: Fix calculation of sub-channel count
+Date: Wed, 24 Apr 2019 10:38:52 -0400
+Message-ID: <20190424143911.28890-34-sashal@kernel.org>
+References: <20190424143911.28890-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190424143341.27665-1-sashal@kernel.org>
+In-Reply-To: <20190424143911.28890-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc: Michael Kelley <mikelley@microsoft.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-hyperv@vger.kernel.org, linux-scsi@vger.kernel.org
@@ -30,18 +30,18 @@ Signed-off-by: Michael Kelley <mikelley@microsoft.com>
 Reviewed-by: Vitaly Kuznetsov <vkuznets@redhat.com>
 Reviewed-by: Long Li <longli@microsoft.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin (Microsoft) <sashal@kernel.org>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
  drivers/scsi/storvsc_drv.c | 13 +++++++++++--
  1 file changed, 11 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 84380bae20f1..e186743033f4 100644
+index f03dc03a42c3..0c2ba075bc71 100644
 --- a/drivers/scsi/storvsc_drv.c
 +++ b/drivers/scsi/storvsc_drv.c
-@@ -668,13 +668,22 @@ static void  handle_multichannel_storage(struct hv_device *device, int max_chns)
+@@ -664,13 +664,22 @@ static void handle_sc_creation(struct vmbus_channel *new_sc)
+ static void  handle_multichannel_storage(struct hv_device *device, int max_chns)
  {
- 	struct device *dev = &device->device;
  	struct storvsc_device *stor_device;
 -	int num_cpus = num_online_cpus();
  	int num_sc;
