@@ -1,13 +1,13 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.14 22/35] scsi: core: add new RDAC LENOVO/DE_Series device
-Date: Wed, 24 Apr 2019 10:46:56 -0400
-Message-ID: <20190424144709.30215-22-sashal@kernel.org>
-References: <20190424144709.30215-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 18/28] scsi: core: add new RDAC LENOVO/DE_Series device
+Date: Wed, 24 Apr 2019 10:50:02 -0400
+Message-ID: <20190424145012.30886-18-sashal@kernel.org>
+References: <20190424145012.30886-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190424144709.30215-1-sashal@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20190424145012.30886-1-sashal@kernel.org>
+Sender: stable-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>, Martin Wilck <mwilck@suse.com>, Hannes Reinecke <hare@suse.de>, NetApp RDAC team <ng-eseries-upstream-maintainers@netapp.com>, Christophe Varoqui <christophe.varoqui@opensvc.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, SCSI ML <linux-scsi@vger.kernel.org>, DM ML <dm-devel@redhat.com>, Sasha Levin <sashal@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
@@ -37,10 +37,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  2 files changed, 2 insertions(+)
 
 diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
-index 6b594bc7d94a..022fcd2e4702 100644
+index 282ea00d0f87..9d555b63d2e2 100644
 --- a/drivers/scsi/scsi_devinfo.c
 +++ b/drivers/scsi/scsi_devinfo.c
-@@ -248,6 +248,7 @@ static struct {
+@@ -249,6 +249,7 @@ static struct {
  	{"NETAPP", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
  	{"LSI", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
  	{"ENGENIO", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
