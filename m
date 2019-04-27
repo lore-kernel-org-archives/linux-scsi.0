@@ -1,12 +1,12 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.4 7/9] scsi: csiostor: fix missing data copy in csio_scsi_err_handler()
-Date: Fri, 26 Apr 2019 21:43:52 -0400
-Message-ID: <20190427014356.8940-7-sashal@kernel.org>
-References: <20190427014356.8940-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 22/32] scsi: csiostor: fix missing data copy in csio_scsi_err_handler()
+Date: Fri, 26 Apr 2019 21:42:13 -0400
+Message-ID: <20190427014224.8274-22-sashal@kernel.org>
+References: <20190427014224.8274-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190427014356.8940-1-sashal@kernel.org>
+In-Reply-To: <20190427014224.8274-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc: Varun Prakash <varun@chelsio.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
@@ -28,7 +28,7 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 4 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/csiostor/csio_scsi.c b/drivers/scsi/csiostor/csio_scsi.c
-index c2a6f9f29427..ddbdaade654d 100644
+index dab0d3f9bee1..e09c7f360dbd 100644
 --- a/drivers/scsi/csiostor/csio_scsi.c
 +++ b/drivers/scsi/csiostor/csio_scsi.c
 @@ -1713,8 +1713,11 @@ csio_scsi_err_handler(struct csio_hw *hw, struct csio_ioreq *req)
