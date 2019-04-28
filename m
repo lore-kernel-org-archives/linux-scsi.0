@@ -1,19 +1,30 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH V4 1/3] lib/sg_pool.c: improve APIs for allocating sg
- pool
-Date: Sun, 28 Apr 2019 14:04:05 +0200
-Message-ID: <20190428120405.GA4281@lst.de>
-References: <20190428073932.9898-1-ming.lei@redhat.com> <20190428073932.9898-2-ming.lei@redhat.com>
+From: Ondrej Zary <linux@zary.sk>
+Subject: Re: [RFC PATCH 1/4] fdomain: Resurrect driver (core)
+Date: Sun, 28 Apr 2019 21:52:31 +0200
+Message-ID: <201904282152.32077.linux@zary.sk>
+References: <20190422173323.15365-1-linux@zary.sk> <20190422173323.15365-2-linux@zary.sk> <20190424060212.GA5506@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <netdev-owner@vger.kernel.org>
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190424060212.GA5506@infradead.org>
 Content-Disposition: inline
-In-Reply-To: <20190428073932.9898-2-ming.lei@redhat.com>
-Sender: netdev-owner@vger.kernel.org
-To: Ming Lei <ming.lei@redhat.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Bart Van Assche <bvanassche@acm.org>, "Ewan D . Milne" <emilne@redhat.com>, Hannes Reinecke <hare@suse.com>, Sagi Grimberg <sagi@grimberg.me>, Chuck Lever <chuck.lever@oracle.com>, netdev@vger.kernel.org, linux-nvme@lists.infradead.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Rik Faith <faith@cs.unc.edu>, "David A . Hinds" <dahinds@users.sourceforge.net>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Looks good:
+On Wednesday 24 April 2019 08:02:12 Christoph Hellwig wrote:
+> > +static void fdomain_work(struct work_struct *work)
+> > +{
+> > +	struct fdomain *fd = container_of(work, struct fdomain, work);
+> > +	struct Scsi_Host *sh = container_of((void *)fd, struct Scsi_Host,
+> > +					    hostdata);
+> 
+> This looks odd.  We should never need a void cast for container_of.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+This cast is present in all drivers involving container_of, struct Scsi_Host and hostdata. hostdata in struct Scsi_Host is defined as "unsigned long hostdata[0]"...
+
+-- 
+Ondrej Zary
