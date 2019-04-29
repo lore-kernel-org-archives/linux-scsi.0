@@ -1,31 +1,32 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [RFC PATCH 1/4] fdomain: Resurrect driver (core)
-Date: Mon, 29 Apr 2019 04:51:02 -0700
-Message-ID: <20190429115102.GB25365@infradead.org>
-References: <20190422173323.15365-1-linux@zary.sk>
- <20190422173323.15365-2-linux@zary.sk>
- <20190424060212.GA5506@infradead.org>
- <201904282152.32077.linux@zary.sk>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH -next] scsi: qedf: remove set but not used variables
+Date: Mon, 29 Apr 2019 08:02:26 -0400
+Message-ID: <yq1muk910kt.fsf@oracle.com>
+References: <20190423144138.20428-1-yuehaibing@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <201904282152.32077.linux@zary.sk>
+In-Reply-To: <20190423144138.20428-1-yuehaibing@huawei.com> (Yue Haibing's
+        message of "Tue, 23 Apr 2019 22:41:38 +0800")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Ondrej Zary <linux@zary.sk>
-Cc: Christoph Hellwig <hch@infradead.org>, Rik Faith <faith@cs.unc.edu>, "David A . Hinds" <dahinds@users.sourceforge.net>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Yue Haibing <yuehaibing@huawei.com>
+Cc: QLogic-Storage-Upstream@cavium.com, jejb@linux.ibm.com, martin.petersen@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Sun, Apr 28, 2019 at 09:52:31PM +0200, Ondrej Zary wrote:
-> On Wednesday 24 April 2019 08:02:12 Christoph Hellwig wrote:
-> > > +static void fdomain_work(struct work_struct *work)
-> > > +{
-> > > +	struct fdomain *fd = container_of(work, struct fdomain, work);
-> > > +	struct Scsi_Host *sh = container_of((void *)fd, struct Scsi_Host,
-> > > +					    hostdata);
-> > 
-> > This looks odd.  We should never need a void cast for container_of.
-> 
-> This cast is present in all drivers involving container_of, struct Scsi_Host and hostdata. hostdata in struct Scsi_Host is defined as "unsigned long hostdata[0]"...
 
-Oh, right - it is the hostdata mess.  Sorry for the noise!
+Yue,
+
+> From: YueHaibing <yuehaibing@huawei.com>
+>
+> Fixes gcc '-Wunused-but-set-variable' warnings:
+>
+> drivers/scsi/qedf/qedf_els.c: In function 'qedf_process_els_compl':
+> drivers/scsi/qedf/qedf_els.c:149:20: warning: variable 'sc_cmd' set but not used [-Wunused-but-set-variable]
+> drivers/scsi/qedf/qedf_els.c:148:28: warning: variable 'task_ctx' set but not used [-Wunused-but-set-variable]
+> drivers/scsi/qedf/qedf_els.c: In function 'qedf_send_srr':
+> drivers/scsi/qedf/qedf_els.c:612:6: warning: variable 'sid' set but not used [-Wunused-but-set-variable]
+
+Applied to 5.2/scsi-queue, thanks.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
