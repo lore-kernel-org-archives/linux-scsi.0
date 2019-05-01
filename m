@@ -1,7 +1,7 @@
 From: Michal Kalderon <michal.kalderon@marvell.com>
-Subject: [PATCH net-next 03/10] qed: Change hwfn used for sb initialization
-Date: Wed, 1 May 2019 12:57:15 +0300
-Message-ID: <20190501095722.6902-4-michal.kalderon@marvell.com>
+Subject: [PATCH net-next 05/10] qedr: Change the MSI-X vectors selection to be based on affined engine
+Date: Wed, 1 May 2019 12:57:17 +0300
+Message-ID: <20190501095722.6902-6-michal.kalderon@marvell.com>
 References: <20190501095722.6902-1-michal.kalderon@marvell.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,166 +12,89 @@ To: michal.kalderon@marvell.com, ariel.elior@marvell.com, davem@davemloft.net
 Cc: jgg@ziepe.ca, dledford@redhat.com, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-When initializing status blocks use the affined hwfn
-instead of the leading one for RDMA / Storage
+Use the msix vectors of the affined hwfn and not the
+leading one.
 
 Signed-off-by: Ariel Elior <ariel.elior@marvell.com>
 Signed-off-by: Michal Kalderon <michal.kalderon@marvell.com>
 ---
- drivers/infiniband/hw/qedr/main.c            |  3 +-
- drivers/net/ethernet/qlogic/qed/qed_main.c   | 47 ++++++++++++++++------------
- drivers/net/ethernet/qlogic/qede/qede_main.c |  3 +-
- include/linux/qed/qed_if.h                   | 10 +++++-
- 4 files changed, 40 insertions(+), 23 deletions(-)
+ drivers/infiniband/hw/qedr/main.c         | 9 +++++++--
+ drivers/infiniband/hw/qedr/qedr.h         | 2 ++
+ drivers/net/ethernet/qlogic/qed/qed_ll2.c | 4 ++--
+ 3 files changed, 11 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/infiniband/hw/qedr/main.c b/drivers/infiniband/hw/qedr/main.c
-index 996d9ecd93e0..fd94100ee03a 100644
+index fd94100ee03a..d93c8a893a89 100644
 --- a/drivers/infiniband/hw/qedr/main.c
 +++ b/drivers/infiniband/hw/qedr/main.c
-@@ -326,7 +326,8 @@ static void qedr_free_mem_sb(struct qedr_dev *dev,
- 			     struct qed_sb_info *sb_info, int sb_id)
+@@ -520,11 +520,13 @@ static irqreturn_t qedr_irq_handler(int irq, void *handle)
+ static void qedr_sync_free_irqs(struct qedr_dev *dev)
  {
- 	if (sb_info->sb_virt) {
--		dev->ops->common->sb_release(dev->cdev, sb_info, sb_id);
-+		dev->ops->common->sb_release(dev->cdev, sb_info, sb_id,
-+					     QED_SB_TYPE_CNQ);
- 		dma_free_coherent(&dev->pdev->dev, sizeof(*sb_info->sb_virt),
- 				  (void *)sb_info->sb_virt, sb_info->sb_phys);
+ 	u32 vector;
++	u16 idx;
+ 	int i;
+ 
+ 	for (i = 0; i < dev->int_info.used_cnt; i++) {
+ 		if (dev->int_info.msix_cnt) {
+-			vector = dev->int_info.msix[i * dev->num_hwfns].vector;
++			idx = i * dev->num_hwfns + dev->affin_hwfn_idx;
++			vector = dev->int_info.msix[idx].vector;
+ 			synchronize_irq(vector);
+ 			free_irq(vector, &dev->cnq_array[i]);
+ 		}
+@@ -536,6 +538,7 @@ static void qedr_sync_free_irqs(struct qedr_dev *dev)
+ static int qedr_req_msix_irqs(struct qedr_dev *dev)
+ {
+ 	int i, rc = 0;
++	u16 idx;
+ 
+ 	if (dev->num_cnq > dev->int_info.msix_cnt) {
+ 		DP_ERR(dev,
+@@ -545,7 +548,8 @@ static int qedr_req_msix_irqs(struct qedr_dev *dev)
  	}
-diff --git a/drivers/net/ethernet/qlogic/qed/qed_main.c b/drivers/net/ethernet/qlogic/qed/qed_main.c
-index 6de23b56b294..7f19fefe0d79 100644
---- a/drivers/net/ethernet/qlogic/qed/qed_main.c
-+++ b/drivers/net/ethernet/qlogic/qed/qed_main.c
-@@ -1301,26 +1301,21 @@ static u32 qed_sb_init(struct qed_dev *cdev,
- {
- 	struct qed_hwfn *p_hwfn;
- 	struct qed_ptt *p_ptt;
--	int hwfn_index;
- 	u16 rel_sb_id;
--	u8 n_hwfns;
- 	u32 rc;
  
--	/* RoCE uses single engine and CMT uses two engines. When using both
--	 * we force only a single engine. Storage uses only engine 0 too.
--	 */
--	if (type == QED_SB_TYPE_L2_QUEUE)
--		n_hwfns = cdev->num_hwfns;
--	else
--		n_hwfns = 1;
--
--	hwfn_index = sb_id % n_hwfns;
--	p_hwfn = &cdev->hwfns[hwfn_index];
--	rel_sb_id = sb_id / n_hwfns;
-+	/* RoCE/Storage use a single engine in CMT mode while L2 uses both */
-+	if (type == QED_SB_TYPE_L2_QUEUE) {
-+		p_hwfn = &cdev->hwfns[sb_id % cdev->num_hwfns];
-+		rel_sb_id = sb_id / cdev->num_hwfns;
-+	} else {
-+		p_hwfn = QED_AFFIN_HWFN(cdev);
-+		rel_sb_id = sb_id;
-+	}
+ 	for (i = 0; i < dev->num_cnq; i++) {
+-		rc = request_irq(dev->int_info.msix[i * dev->num_hwfns].vector,
++		idx = i * dev->num_hwfns + dev->affin_hwfn_idx;
++		rc = request_irq(dev->int_info.msix[idx].vector,
+ 				 qedr_irq_handler, 0, dev->cnq_array[i].name,
+ 				 &dev->cnq_array[i]);
+ 		if (rc) {
+@@ -882,6 +886,7 @@ static struct qedr_dev *qedr_add(struct qed_dev *cdev, struct pci_dev *pdev,
+ 	dev->user_dpm_enabled = dev_info.user_dpm_enabled;
+ 	dev->rdma_type = dev_info.rdma_type;
+ 	dev->num_hwfns = dev_info.common.num_hwfns;
++	dev->affin_hwfn_idx = dev->ops->common->get_affin_hwfn_idx(cdev);
+ 	dev->rdma_ctx = dev->ops->rdma_get_rdma_ctx(cdev);
  
- 	DP_VERBOSE(cdev, NETIF_MSG_INTR,
- 		   "hwfn [%d] <--[init]-- SB %04x [0x%04x upper]\n",
--		   hwfn_index, rel_sb_id, sb_id);
-+		   IS_LEAD_HWFN(p_hwfn) ? 0 : 1, rel_sb_id, sb_id);
+ 	dev->num_cnq = dev->ops->rdma_get_min_cnq_msix(cdev);
+diff --git a/drivers/infiniband/hw/qedr/qedr.h b/drivers/infiniband/hw/qedr/qedr.h
+index 53bbe6b4e6e6..18778694f652 100644
+--- a/drivers/infiniband/hw/qedr/qedr.h
++++ b/drivers/infiniband/hw/qedr/qedr.h
+@@ -162,6 +162,8 @@ struct qedr_dev {
+ 	u32			dp_module;
+ 	u8			dp_level;
+ 	u8			num_hwfns;
++#define QEDR_IS_CMT(dev)        ((dev)->num_hwfns > 1)
++	u8			affin_hwfn_idx;
+ 	u8			gsi_ll2_handle;
  
- 	if (IS_PF(p_hwfn->cdev)) {
- 		p_ptt = qed_ptt_acquire(p_hwfn);
-@@ -1339,20 +1334,26 @@ static u32 qed_sb_init(struct qed_dev *cdev,
+ 	uint			wq_multiplier;
+diff --git a/drivers/net/ethernet/qlogic/qed/qed_ll2.c b/drivers/net/ethernet/qlogic/qed/qed_ll2.c
+index dcff69aa8613..19a1a58d60f8 100644
+--- a/drivers/net/ethernet/qlogic/qed/qed_ll2.c
++++ b/drivers/net/ethernet/qlogic/qed/qed_ll2.c
+@@ -2156,8 +2156,8 @@ static void _qed_ll2_get_pstats(struct qed_hwfn *p_hwfn,
+ 	p_stats->sent_bcast_pkts += HILO_64_REGPAIR(pstats.sent_bcast_pkts);
  }
  
- static u32 qed_sb_release(struct qed_dev *cdev,
--			  struct qed_sb_info *sb_info, u16 sb_id)
-+			  struct qed_sb_info *sb_info,
-+			  u16 sb_id,
-+			  enum qed_sb_type type)
+-int __qed_ll2_get_stats(void *cxt,
+-			u8 connection_handle, struct qed_ll2_stats *p_stats)
++static int __qed_ll2_get_stats(void *cxt, u8 connection_handle,
++			       struct qed_ll2_stats *p_stats)
  {
- 	struct qed_hwfn *p_hwfn;
--	int hwfn_index;
- 	u16 rel_sb_id;
- 	u32 rc;
- 
--	hwfn_index = sb_id % cdev->num_hwfns;
--	p_hwfn = &cdev->hwfns[hwfn_index];
--	rel_sb_id = sb_id / cdev->num_hwfns;
-+	/* RoCE/Storage use a single engine in CMT mode while L2 uses both */
-+	if (type == QED_SB_TYPE_L2_QUEUE) {
-+		p_hwfn = &cdev->hwfns[sb_id % cdev->num_hwfns];
-+		rel_sb_id = sb_id / cdev->num_hwfns;
-+	} else {
-+		p_hwfn = QED_AFFIN_HWFN(cdev);
-+		rel_sb_id = sb_id;
-+	}
- 
- 	DP_VERBOSE(cdev, NETIF_MSG_INTR,
- 		   "hwfn [%d] <--[init]-- SB %04x [0x%04x upper]\n",
--		   hwfn_index, rel_sb_id, sb_id);
-+		   IS_LEAD_HWFN(p_hwfn) ? 0 : 1, rel_sb_id, sb_id);
- 
- 	rc = qed_int_sb_release(p_hwfn, sb_info, rel_sb_id);
- 
-@@ -2372,6 +2373,11 @@ static int qed_read_module_eeprom(struct qed_dev *cdev, char *buf,
- 	return rc;
- }
- 
-+static u8 qed_get_affin_hwfn_idx(struct qed_dev *cdev)
-+{
-+	return QED_AFFIN_HWFN_IDX(cdev);
-+}
-+
- static struct qed_selftest_ops qed_selftest_ops_pass = {
- 	.selftest_memory = &qed_selftest_memory,
- 	.selftest_interrupt = &qed_selftest_interrupt,
-@@ -2419,6 +2425,7 @@ const struct qed_common_ops qed_common_ops_pass = {
- 	.db_recovery_add = &qed_db_recovery_add,
- 	.db_recovery_del = &qed_db_recovery_del,
- 	.read_module_eeprom = &qed_read_module_eeprom,
-+	.get_affin_hwfn_idx = &qed_get_affin_hwfn_idx,
- };
- 
- void qed_get_protocol_stats(struct qed_dev *cdev,
-diff --git a/drivers/net/ethernet/qlogic/qede/qede_main.c b/drivers/net/ethernet/qlogic/qede/qede_main.c
-index 02a97c659e29..a9684a881f2a 100644
---- a/drivers/net/ethernet/qlogic/qede/qede_main.c
-+++ b/drivers/net/ethernet/qlogic/qede/qede_main.c
-@@ -1306,7 +1306,8 @@ static void qede_free_mem_sb(struct qede_dev *edev, struct qed_sb_info *sb_info,
- 			     u16 sb_id)
- {
- 	if (sb_info->sb_virt) {
--		edev->ops->common->sb_release(edev->cdev, sb_info, sb_id);
-+		edev->ops->common->sb_release(edev->cdev, sb_info, sb_id,
-+					      QED_SB_TYPE_L2_QUEUE);
- 		dma_free_coherent(&edev->pdev->dev, sizeof(*sb_info->sb_virt),
- 				  (void *)sb_info->sb_virt, sb_info->sb_phys);
- 		memset(sb_info, 0, sizeof(*sb_info));
-diff --git a/include/linux/qed/qed_if.h b/include/linux/qed/qed_if.h
-index f6165d304b4d..8fd11aaa3172 100644
---- a/include/linux/qed/qed_if.h
-+++ b/include/linux/qed/qed_if.h
-@@ -907,7 +907,8 @@ struct qed_common_ops {
- 
- 	u32		(*sb_release)(struct qed_dev *cdev,
- 				      struct qed_sb_info *sb_info,
--				      u16 sb_id);
-+				      u16 sb_id,
-+				      enum qed_sb_type type);
- 
- 	void		(*simd_handler_config)(struct qed_dev *cdev,
- 					       void *token,
-@@ -1123,6 +1124,13 @@ struct qed_common_ops {
-  */
- 	int (*read_module_eeprom)(struct qed_dev *cdev,
- 				  char *buf, u8 dev_addr, u32 offset, u32 len);
-+
-+/**
-+ * @brief get_affin_hwfn_idx
-+ *
-+ * @param cdev
-+ */
-+	u8 (*get_affin_hwfn_idx)(struct qed_dev *cdev);
- };
- 
- #define MASK_FIELD(_name, _value) \
+ 	struct qed_hwfn *p_hwfn = cxt;
+ 	struct qed_ll2_info *p_ll2_conn = NULL;
 -- 
 2.14.5
