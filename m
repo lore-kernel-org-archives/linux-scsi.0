@@ -1,12 +1,12 @@
 From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: [PATCH 21/24] sg: switch to SPDX tags
-Date: Wed,  1 May 2019 12:14:14 -0400
-Message-ID: <20190501161417.32592-22-hch@lst.de>
+Subject: [PATCH 23/24] st: add a SPDX tag to st.c
+Date: Wed,  1 May 2019 12:14:16 -0400
+Message-ID: <20190501161417.32592-24-hch@lst.de>
 References: <20190501161417.32592-1-hch@lst.de>
 Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Return-path: <open-iscsi+bncBDUNBGN3R4KRBKUMU7TAKGQEBONSU7Y-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Return-path: <open-iscsi+bncBDUNBGN3R4KRBLEMU7TAKGQESSEO56I-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 In-Reply-To: <20190501161417.32592-1-hch-jcswGhMUV9g@public.gmane.org>
 List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
@@ -19,35 +19,23 @@ To: "James E . J . Bottomley" <jejb-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, "M
 Cc: Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>, Lee Duncan <lduncan-IBi9RG/b67k@public.gmane.org>, Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Willem Riede <osst-BKTAy3DeTVvYtjvyW6yDsg@public.gmane.org>, Doug Gilbert <dgilbert-qazKcTl6WRFWk0Htik3J/w@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, =?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara-9Aww8k/80nUxHbG02/KK1g@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, osst-users-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-Use the the GPLv2+ SPDX tag instead of verbose boilerplate text.
+st.c is the only st file missing licensing information.  Add a
+GPLv2 tag for the default kernel license.
 
 Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 ---
- drivers/scsi/sg.c | 7 +------
- 1 file changed, 1 insertion(+), 6 deletions(-)
+ drivers/scsi/st.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index d3f15319b9b3..bcdc28e5ede7 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
+diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
+index 19c022e66d63..b814906af0a3 100644
+--- a/drivers/scsi/st.c
++++ b/drivers/scsi/st.c
 @@ -1,3 +1,4 @@
-+// SPDX-License-Identifier: GPL-2.0+
++// SPDX-License-Identifier: GPL-2.0
  /*
-  *  History:
-  *  Started: Aug 9 by Lawrence Foard (entropy-Jk6FQSss4Zz2eFz/2MeuCQ@public.gmane.org),
-@@ -8,12 +9,6 @@
-  *        Copyright (C) 1992 Lawrence Foard
-  * Version 2 and 3 extensions to driver:
-  *        Copyright (C) 1998 - 2014 Douglas Gilbert
-- *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License as published by
-- * the Free Software Foundation; either version 2, or (at your option)
-- * any later version.
-- *
-  */
- 
- static int sg_version_num = 30536;	/* 2 digits for each component */
+    SCSI Tape Driver for Linux version 1.1 and newer. See the accompanying
+    file Documentation/scsi/st.txt for more information.
 -- 
 2.20.1
 
