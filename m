@@ -1,12 +1,12 @@
 From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: [PATCH 06/24] scsi_transport_fc: switch to SPDX tags
-Date: Wed,  1 May 2019 12:13:59 -0400
-Message-ID: <20190501161417.32592-7-hch@lst.de>
+Subject: [PATCH 09/24] scsi_transport_spi: switch to SPDX tags
+Date: Wed,  1 May 2019 12:14:02 -0400
+Message-ID: <20190501161417.32592-10-hch@lst.de>
 References: <20190501161417.32592-1-hch@lst.de>
 Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Return-path: <open-iscsi+bncBDUNBGN3R4KRBEEMU7TAKGQECAYGELI-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Return-path: <open-iscsi+bncBDUNBGN3R4KRBF4MU7TAKGQE3ZK5MZQ-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 In-Reply-To: <20190501161417.32592-1-hch-jcswGhMUV9g@public.gmane.org>
 List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
@@ -23,20 +23,21 @@ Use the the GPLv2+ SPDX tag instead of verbose boilerplate text.
 
 Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 ---
- drivers/scsi/scsi_transport_fc.c | 18 +-----------------
- include/scsi/scsi_transport_fc.h | 18 +-----------------
- 2 files changed, 2 insertions(+), 34 deletions(-)
+ drivers/scsi/scsi_transport_spi.c | 15 +--------------
+ include/scsi/scsi_transport_spi.h | 15 +--------------
+ 2 files changed, 2 insertions(+), 28 deletions(-)
 
-diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-index d9e3cf3721f6..8be503da7edb 100644
---- a/drivers/scsi/scsi_transport_fc.c
-+++ b/drivers/scsi/scsi_transport_fc.c
-@@ -1,24 +1,8 @@
+diff --git a/drivers/scsi/scsi_transport_spi.c b/drivers/scsi/scsi_transport_spi.c
+index 40b85b752b79..474d2ffad9d8 100644
+--- a/drivers/scsi/scsi_transport_spi.c
++++ b/drivers/scsi/scsi_transport_spi.c
+@@ -1,22 +1,9 @@
 +// SPDX-License-Identifier: GPL-2.0+
- /*
-  *  FiberChannel transport specific attributes exported to sysfs.
+ /* 
+  *  Parallel SCSI (SPI) transport specific attributes exported to sysfs.
   *
   *  Copyright (c) 2003 Silicon Graphics, Inc.  All rights reserved.
+  *  Copyright (c) 2004, 2005 James Bottomley <James.Bottomley-lYEaACU144FWk0Htik3J/w@public.gmane.org>
 - *
 - *  This program is free software; you can redistribute it and/or modify
 - *  it under the terms of the GNU General Public License as published by
@@ -51,20 +52,17 @@ index d9e3cf3721f6..8be503da7edb 100644
 - *  You should have received a copy of the GNU General Public License
 - *  along with this program; if not, write to the Free Software
 - *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-- *
-- *  ========
-- *
-  *  Copyright (C) 2004-2007   James Smart, Emulex Corporation
-  *    Rewrite for host, target, device, and remote port attributes,
-  *    statistics, and service functions...
-diff --git a/include/scsi/scsi_transport_fc.h b/include/scsi/scsi_transport_fc.h
-index b375c3303fe2..b990091d5c20 100644
---- a/include/scsi/scsi_transport_fc.h
-+++ b/include/scsi/scsi_transport_fc.h
-@@ -1,24 +1,8 @@
+  */
+ #include <linux/ctype.h>
+ #include <linux/init.h>
+diff --git a/include/scsi/scsi_transport_spi.h b/include/scsi/scsi_transport_spi.h
+index a4fa52b4d5c5..12516d16933d 100644
+--- a/include/scsi/scsi_transport_spi.h
++++ b/include/scsi/scsi_transport_spi.h
+@@ -1,21 +1,8 @@
 +/* SPDX-License-Identifier: GPL-2.0+ */
- /*
-  *  FiberChannel transport specific attributes exported to sysfs.
+ /* 
+  *  Parallel SCSI (SPI) transport specific attributes exported to sysfs.
   *
   *  Copyright (c) 2003 Silicon Graphics, Inc.  All rights reserved.
 - *
@@ -81,12 +79,9 @@ index b375c3303fe2..b990091d5c20 100644
 - *  You should have received a copy of the GNU General Public License
 - *  along with this program; if not, write to the Free Software
 - *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-- *
-- *  ========
-- *
-  *  Copyright (C) 2004-2007   James Smart, Emulex Corporation
-  *    Rewrite for host, target, device, and remote port attributes,
-  *    statistics, and service functions...
+  */
+ #ifndef SCSI_TRANSPORT_SPI_H
+ #define SCSI_TRANSPORT_SPI_H
 -- 
 2.20.1
 
