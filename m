@@ -1,43 +1,50 @@
-From: <Don.Brace@microchip.com>
-Subject: RE: [PATCH] scsi: smartpqi: Reporting unhandled SCSI errors
-Date: Wed, 1 May 2019 14:22:11 +0000
-Message-ID: <SN6PR11MB2767E3FB513853E9666779B9E13B0@SN6PR11MB2767.namprd11.prod.outlook.com>
-References: <20190321094928.4198-1-e.velu@criteo.com>
- <CAL2JzuyHb_gfu5Suf3yaMF1883JN1667yhEwpdmoiqYrUTO2YA@mail.gmail.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 03/24] scsi_netlink: remove duplicate GPL boilerplate text
+Date: Wed,  1 May 2019 12:13:56 -0400
+Message-ID: <20190501161417.32592-4-hch@lst.de>
+References: <20190501161417.32592-1-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAL2JzuyHb_gfu5Suf3yaMF1883JN1667yhEwpdmoiqYrUTO2YA@mail.gmail.com>
-Content-Language: en-US
+In-Reply-To: <20190501161417.32592-1-hch@lst.de>
 Sender: linux-kernel-owner@vger.kernel.org
-To: erwanaliasr1@gmail.com
-Cc: e.velu@criteo.com, don.brace@microsemi.com, jejb@linux.ibm.com, martin.petersen@oracle.com, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Hannes Reinecke <hare@suse.de>, Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>, Willem Riede <osst@riede.org>, Doug Gilbert <dgilbert@interlog.com>, Jens Axboe <axboe@kernel.dk>, =?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>, linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com, osst-users@lists.sourceforge.net, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-LS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IGxpbnV4LXNjc2ktb3duZXJAdmdlci5r
-ZXJuZWwub3JnIFttYWlsdG86bGludXgtc2NzaS1vd25lckB2Z2VyLmtlcm5lbC5vcmddIE9uIEJl
-aGFsZiBPZiBFcndhbiBWZWx1DQpTZW50OiBXZWRuZXNkYXksIEFwcmlsIDEwLCAyMDE5IDY6MDMg
-QU0NCkNjOiBFcndhbiBWZWx1IDxlLnZlbHVAY3JpdGVvLmNvbT47IERvbiBCcmFjZSA8ZG9uLmJy
-YWNlQG1pY3Jvc2VtaS5jb20+OyBKYW1lcyBFLkouIEJvdHRvbWxleSA8amVqYkBsaW51eC5pYm0u
-Y29tPjsgTWFydGluIEsuIFBldGVyc2VuIDxtYXJ0aW4ucGV0ZXJzZW5Ab3JhY2xlLmNvbT47IG9w
-ZW4gbGlzdDpNSUNST1NFTUkgU01BUlQgQVJSQVkgU01BUlRQUUkgRFJJVkVSIChzbWFydHBxaSkg
-PGVzYy5zdG9yYWdlZGV2QG1pY3Jvc2VtaS5jb20+OyBvcGVuIGxpc3Q6TUlDUk9TRU1JIFNNQVJU
-IEFSUkFZIFNNQVJUUFFJIERSSVZFUiAoc21hcnRwcWkpIDxsaW51eC1zY3NpQHZnZXIua2VybmVs
-Lm9yZz47IG9wZW4gbGlzdCA8bGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZz4NClN1YmplY3Q6
-IFJlOiBbUEFUQ0hdIHNjc2k6IHNtYXJ0cHFpOiBSZXBvcnRpbmcgdW5oYW5kbGVkIFNDU0kgZXJy
-b3JzDQoNCkhpIHRoZXJlICENCkFueSByZWFjdGlvbnMgdG8gdGhpcyBvbmUgPyBJIGRpZG4ndCBn
-b3QgYSBzaW5nbGUgY29tbWVudC4NCkNoZWVycywNCkVyd2FuLA0KDQpMZSBqZXUuIDIxIG1hcnMg
-MjAxOSDDoCAxMDo0OSwgRXJ3YW4gVmVsdSA8ZXJ3YW5hbGlhc3IxQGdtYWlsLmNvbT4gYSDDqWNy
-aXQgOg0KPg0KPiBXaGVuIGEgSEFSRFdBUkVfRVJST1IgaXMgdHJpZ2dlcmVkIGZvciBhc2M9MHgz
-ZSwgdGhlIGFjdHVhbCBjb2RlIGlzIG9ubHkgY29uc2lkZXJpbmcgdGhlIGNhc2Ugd2hlcmUgYXNj
-cT0weDEuDQo+DQo+IEZvbGxvd2luZyB0aGUgaHR0cDovL3d3dy50MTAub3JnL2xpc3RzL2FzYy1u
-dW0uaHRtI0FTQ18zRSBzcGVjaWZpY2F0aW9uLCBvdGhlciB2YWx1ZXMgbWF5IG9jY3VyIGxpa2Ug
-YSB0aW1lb3V0IChhc2NxPTB4MikuDQo+DQo+IFRoaXMgcGF0Y2ggaXMgYWJvdXQgcHJpbnRpbmcg
-YW4gZXJyb3IgbWVzc2FnZSB3aGVuIGEgbm9uLWhhbmRsZWQgbWVzc2FnZSBpcyByZWNlaXZlZC4N
-Cj4gVGhpcyBjb3VsZCBoZWxwIGRpYWdub3NlIGEgcG9zc2libGUgbWlzcy1iZWhhdmlvciBvZiB0
-aGUgY29udHJvbGxlciBhbmQvb3IgYSBtaXNzaW5nIGltcGxlbWVudGF0aW9uIGluIHRoZSBMaW51
-eCBLZXJuZWwuDQo+DQo+IFRoaXMgcGF0Y2gga2VlcHMgdGhlIGV4YWN0IHNhbWUgZXJyb3IgaGFu
-ZGxpbmcgYnV0IHByaW50cyBhIG1lc3NhZ2UgaWYgYW4gYXNjcSAhPSAxIGluY29tZS4NCj4NCj4g
-U2lnbmVkLW9mZi1ieTogRXJ3YW4gVmVsdSA8ZS52ZWx1QGNyaXRlby5jb20+DQpBY2tlZC1ieTog
-RG9uIEJyYWNlIDxkb24uYnJhY2VAbWljcm9zZW1pLmNvbT4NCg0K
+The SCSI netlink uapi header already has a proper SPDX tag, remove the
+duplicate boilerplate text.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ include/uapi/scsi/scsi_netlink.h | 15 ---------------
+ 1 file changed, 15 deletions(-)
+
+diff --git a/include/uapi/scsi/scsi_netlink.h b/include/uapi/scsi/scsi_netlink.h
+index 5ccc2333acab..5dd382054e45 100644
+--- a/include/uapi/scsi/scsi_netlink.h
++++ b/include/uapi/scsi/scsi_netlink.h
+@@ -4,21 +4,6 @@
+  *    Used for the posting of outbound SCSI transport events
+  *
+  *  Copyright (C) 2006   James Smart, Emulex Corporation
+- *
+- *  This program is free software; you can redistribute it and/or modify
+- *  it under the terms of the GNU General Public License as published by
+- *  the Free Software Foundation; either version 2 of the License, or
+- *  (at your option) any later version.
+- *
+- *  This program is distributed in the hope that it will be useful,
+- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- *  GNU General Public License for more details.
+- *
+- *  You should have received a copy of the GNU General Public License
+- *  along with this program; if not, write to the Free Software
+- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+- *
+  */
+ #ifndef SCSI_NETLINK_H
+ #define SCSI_NETLINK_H
+-- 
+2.20.1
