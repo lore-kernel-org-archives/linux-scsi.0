@@ -1,140 +1,76 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V9 3/7] blk-mq: free hw queue's resource in hctx's release handler
-Date: Tue, 30 Apr 2019 09:52:25 +0800
-Message-ID: <20190430015229.23141-4-ming.lei@redhat.com>
-References: <20190430015229.23141-1-ming.lei@redhat.com>
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20190430015229.23141-1-ming.lei@redhat.com>
-Sender: stable-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, Hannes Reinecke <hare@suse.com>, James Smart <james.smart@broadcom.com>, Ming Lei <ming.lei@redhat.com>, Dongli Zhang <dongli.zhang@oracle.com>, Bart Van Assche <bart.vanassche@wdc.com>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, stable@vger.kernel.org
+From: Michal Kalderon <michal.kalderon@marvell.com>
+Subject: [PATCH net-next 00/10] qed*: Improve performance on 100G link for offload protocols
+Date: Wed, 1 May 2019 12:57:12 +0300
+Message-ID: <20190501095722.6902-1-michal.kalderon@marvell.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Return-path: <netdev-owner@vger.kernel.org>
+Sender: netdev-owner@vger.kernel.org
+To: michal.kalderon@marvell.com, ariel.elior@marvell.com, davem@davemloft.net
+Cc: jgg@ziepe.ca, dledford@redhat.com, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Once blk_cleanup_queue() returns, tags shouldn't be used any more,
-because blk_mq_free_tag_set() may be called. Commit 45a9c9d909b2
-("blk-mq: Fix a use-after-free") fixes this issue exactly.
+This patch series modifies the current implementation of PF selection.
+The refactoring of the llh code enables setting additional filters
+(mac / protocol) per PF, and improves performance for offload protocols
+(RoCE, iWARP, iSCSI, fcoe) on 100G link (was capped at 90G per single
+PF).
 
-However, that commit introduces another issue. Before 45a9c9d909b2,
-we are allowed to run queue during cleaning up queue if the queue's
-kobj refcount is held. After that commit, queue can't be run during
-queue cleaning up, otherwise oops can be triggered easily because
-some fields of hctx are freed by blk_mq_free_queue() in blk_cleanup_queue().
+Improved performance on 100G link is achieved by configuring engine
+affinty to each PF.
+The engine affinity is read from the Management FW and hw is configured accordingly.
+A new hw resource called PPFID is exposed and an API is introduced to utilize
+it. This additional resource enables setting the affinity of a PF and providing
+more classification rules per PF.
+qedr,qedi,qedf are also modified as part of the series. Without the
+changes functionality is broken.
 
-We have invented ways for addressing this kind of issue before, such as:
 
-	8dc765d438f1 ("SCSI: fix queue cleanup race before queue initialization is done")
-	c2856ae2f315 ("blk-mq: quiesce queue before freeing queue")
+Chad Dupuis (1):
+  qedf: Use hwfns and affin_hwfn_idx to get MSI-X vector index to use
 
-But still can't cover all cases, recently James reports another such
-kind of issue:
+Manish Rangankar (2):
+  Revert "scsi: qedi: Allocate IRQs based on msix_cnt"
+  qedi: Use hwfns and affin_hwfn_idx to get MSI-X vector index
 
-	https://marc.info/?l=linux-scsi&m=155389088124782&w=2
+Michal Kalderon (7):
+  qed: Modify api for performing a dmae to another PF
+  qed: Add llh ppfid interface and 100g support for offload protocols
+  qed: Change hwfn used for sb initialization
+  qed: Modify offload protocols to use the affined engine
+  qedr: Change the MSI-X vectors selection to be based on affined engine
+  qed: Set the doorbell address correctly
+  qed*: Add iWARP 100g support
 
-This issue can be quite hard to address by previous way, given
-scsi_run_queue() may run requeues for other LUNs.
+ drivers/infiniband/hw/qedr/main.c              |   34 +-
+ drivers/infiniband/hw/qedr/qedr.h              |    2 +
+ drivers/net/ethernet/qlogic/qed/qed.h          |   21 +-
+ drivers/net/ethernet/qlogic/qed/qed_cxt.c      |    5 +-
+ drivers/net/ethernet/qlogic/qed/qed_debug.c    |    2 +-
+ drivers/net/ethernet/qlogic/qed/qed_dev.c      | 1275 +++++++++++++++++++-----
+ drivers/net/ethernet/qlogic/qed/qed_dev_api.h  |  113 ++-
+ drivers/net/ethernet/qlogic/qed/qed_fcoe.c     |   26 +-
+ drivers/net/ethernet/qlogic/qed/qed_hsi.h      |   16 +-
+ drivers/net/ethernet/qlogic/qed/qed_hw.c       |   45 +-
+ drivers/net/ethernet/qlogic/qed/qed_init_ops.c |   11 +-
+ drivers/net/ethernet/qlogic/qed/qed_int.c      |   12 +-
+ drivers/net/ethernet/qlogic/qed/qed_iscsi.c    |   35 +-
+ drivers/net/ethernet/qlogic/qed/qed_iwarp.c    |   24 +-
+ drivers/net/ethernet/qlogic/qed/qed_iwarp.h    |    4 +-
+ drivers/net/ethernet/qlogic/qed/qed_l2.c       |    6 +-
+ drivers/net/ethernet/qlogic/qed/qed_ll2.c      |  406 +++++---
+ drivers/net/ethernet/qlogic/qed/qed_main.c     |   47 +-
+ drivers/net/ethernet/qlogic/qed/qed_mcp.c      |   65 ++
+ drivers/net/ethernet/qlogic/qed/qed_mcp.h      |   16 +
+ drivers/net/ethernet/qlogic/qed/qed_rdma.c     |   71 +-
+ drivers/net/ethernet/qlogic/qed/qed_reg_addr.h |    6 +
+ drivers/net/ethernet/qlogic/qed/qed_sriov.c    |    4 +-
+ drivers/net/ethernet/qlogic/qede/qede_main.c   |    3 +-
+ drivers/scsi/qedf/qedf_main.c                  |   39 +-
+ drivers/scsi/qedi/qedi_main.c                  |   34 +-
+ include/linux/qed/qed_if.h                     |   10 +-
+ include/linux/qed/qed_rdma_if.h                |    2 +
+ 28 files changed, 1712 insertions(+), 622 deletions(-)
 
-Fixes the above issue by freeing hctx's resources in its release handler, and this
-way is safe becasue tags isn't needed for freeing such hctx resource.
-
-This approach follows typical design pattern wrt. kobject's release handler.
-
-Cc: Dongli Zhang <dongli.zhang@oracle.com>
-Cc: James Smart <james.smart@broadcom.com>
-Cc: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: linux-scsi@vger.kernel.org,
-Cc: Martin K . Petersen <martin.petersen@oracle.com>,
-Cc: Christoph Hellwig <hch@lst.de>,
-Cc: James E . J . Bottomley <jejb@linux.vnet.ibm.com>,
-Reported-by: James Smart <james.smart@broadcom.com>
-Fixes: 45a9c9d909b2 ("blk-mq: Fix a use-after-free")
-Cc: stable@vger.kernel.org
-Reviewed-by: Hannes Reinecke <hare@suse.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Tested-by: James Smart <james.smart@broadcom.com>
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
----
- block/blk-core.c     | 2 +-
- block/blk-mq-sysfs.c | 6 ++++++
- block/blk-mq.c       | 8 ++------
- block/blk-mq.h       | 2 +-
- 4 files changed, 10 insertions(+), 8 deletions(-)
-
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 93dc588fabe2..2dd94b3e9ece 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -374,7 +374,7 @@ void blk_cleanup_queue(struct request_queue *q)
- 	blk_exit_queue(q);
- 
- 	if (queue_is_mq(q))
--		blk_mq_free_queue(q);
-+		blk_mq_exit_queue(q);
- 
- 	percpu_ref_exit(&q->q_usage_counter);
- 
-diff --git a/block/blk-mq-sysfs.c b/block/blk-mq-sysfs.c
-index 3f9c3f4ac44c..4040e62c3737 100644
---- a/block/blk-mq-sysfs.c
-+++ b/block/blk-mq-sysfs.c
-@@ -10,6 +10,7 @@
- #include <linux/smp.h>
- 
- #include <linux/blk-mq.h>
-+#include "blk.h"
- #include "blk-mq.h"
- #include "blk-mq-tag.h"
- 
-@@ -33,6 +34,11 @@ static void blk_mq_hw_sysfs_release(struct kobject *kobj)
- {
- 	struct blk_mq_hw_ctx *hctx = container_of(kobj, struct blk_mq_hw_ctx,
- 						  kobj);
-+
-+	if (hctx->flags & BLK_MQ_F_BLOCKING)
-+		cleanup_srcu_struct(hctx->srcu);
-+	blk_free_flush_queue(hctx->fq);
-+	sbitmap_free(&hctx->ctx_map);
- 	free_cpumask_var(hctx->cpumask);
- 	kfree(hctx->ctxs);
- 	kfree(hctx);
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 89781309a108..d98cb9614dfa 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -2267,12 +2267,7 @@ static void blk_mq_exit_hctx(struct request_queue *q,
- 	if (set->ops->exit_hctx)
- 		set->ops->exit_hctx(hctx, hctx_idx);
- 
--	if (hctx->flags & BLK_MQ_F_BLOCKING)
--		cleanup_srcu_struct(hctx->srcu);
--
- 	blk_mq_remove_cpuhp(hctx);
--	blk_free_flush_queue(hctx->fq);
--	sbitmap_free(&hctx->ctx_map);
- }
- 
- static void blk_mq_exit_hw_queues(struct request_queue *q,
-@@ -2907,7 +2902,8 @@ struct request_queue *blk_mq_init_allocated_queue(struct blk_mq_tag_set *set,
- }
- EXPORT_SYMBOL(blk_mq_init_allocated_queue);
- 
--void blk_mq_free_queue(struct request_queue *q)
-+/* tags can _not_ be used after returning from blk_mq_exit_queue */
-+void blk_mq_exit_queue(struct request_queue *q)
- {
- 	struct blk_mq_tag_set	*set = q->tag_set;
- 
-diff --git a/block/blk-mq.h b/block/blk-mq.h
-index 423ea88ab6fb..633a5a77ee8b 100644
---- a/block/blk-mq.h
-+++ b/block/blk-mq.h
-@@ -37,7 +37,7 @@ struct blk_mq_ctx {
- 	struct kobject		kobj;
- } ____cacheline_aligned_in_smp;
- 
--void blk_mq_free_queue(struct request_queue *q);
-+void blk_mq_exit_queue(struct request_queue *q);
- int blk_mq_update_nr_requests(struct request_queue *q, unsigned int nr);
- void blk_mq_wake_waiters(struct request_queue *q);
- bool blk_mq_dispatch_rq_list(struct request_queue *, struct list_head *, bool);
 -- 
-2.9.5
+2.14.5
