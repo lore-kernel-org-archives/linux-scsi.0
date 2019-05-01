@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: [PATCH 14/24] libiscsi: switch to SPDX tags
-Date: Wed,  1 May 2019 12:14:07 -0400
-Message-ID: <20190501161417.32592-15-hch@lst.de>
+Subject: [PATCH 13/24] libfcoe: switch to SPDX tags
+Date: Wed,  1 May 2019 12:14:06 -0400
+Message-ID: <20190501161417.32592-14-hch@lst.de>
 References: <20190501161417.32592-1-hch@lst.de>
 Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
@@ -19,216 +19,170 @@ To: "James E . J . Bottomley" <jejb-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, "M
 Cc: Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>, Lee Duncan <lduncan-IBi9RG/b67k@public.gmane.org>, Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Willem Riede <osst-BKTAy3DeTVvYtjvyW6yDsg@public.gmane.org>, Doug Gilbert <dgilbert-qazKcTl6WRFWk0Htik3J/w@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, =?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara-9Aww8k/80nUxHbG02/KK1g@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, osst-users-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-Use the the GPLv2+ SPDX tag instead of verbose boilerplate text.
+Use the the GPLv2 SPDX tag instead of verbose boilerplate text.
 
 Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 ---
- drivers/scsi/libiscsi.c       | 15 +--------------
- drivers/scsi/libiscsi_tcp.c   | 13 +------------
- include/scsi/iscsi_if.h       | 13 +------------
- include/scsi/iscsi_proto.h    | 13 +------------
- include/scsi/libiscsi.h       | 15 +--------------
- include/scsi/libiscsi_tcp.h   | 13 +------------
- include/scsi/scsi_bsg_iscsi.h | 16 +---------------
- 7 files changed, 7 insertions(+), 91 deletions(-)
+ drivers/scsi/fcoe/fcoe.c           | 14 +-------------
+ drivers/scsi/fcoe/fcoe.h           | 14 +-------------
+ drivers/scsi/fcoe/fcoe_ctlr.c      | 14 +-------------
+ drivers/scsi/fcoe/fcoe_sysfs.c     | 14 +-------------
+ drivers/scsi/fcoe/fcoe_transport.c | 14 +-------------
+ include/scsi/libfcoe.h             | 14 +-------------
+ 6 files changed, 6 insertions(+), 78 deletions(-)
 
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index e893949a3d11..040b58a3d7d3 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -1,3 +1,4 @@
-+// SPDX-License-Identifier: GPL-2.0+
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index 8ba8862d3292..4ee69560cc8c 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -1,19 +1,7 @@
++/* SPDX-License-Identifier: GPL-2.0 */
  /*
-  * iSCSI lib functions
+  * Copyright(c) 2007 - 2009 Intel Corporation. All rights reserved.
   *
-@@ -6,20 +7,6 @@
-  * Copyright (C) 2004 - 2005 Dmitry Yusupov
-  * Copyright (C) 2004 - 2005 Alex Aizman
-  * maintained by open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms and conditions of the GNU General Public License,
+- * version 2, as published by the Free Software Foundation.
 - *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License as published by
-- * the Free Software Foundation; either version 2 of the License, or
-- * (at your option) any later version.
+- * This program is distributed in the hope it will be useful, but WITHOUT
+- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+- * more details.
 - *
-- * This program is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
+- * You should have received a copy of the GNU General Public License along with
+- * this program; if not, write to the Free Software Foundation, Inc.,
+- * 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
 - *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the Free Software
-- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-  */
- #include <linux/types.h>
- #include <linux/kfifo.h>
-diff --git a/drivers/scsi/libiscsi_tcp.c b/drivers/scsi/libiscsi_tcp.c
-index c3fe3f3a78f5..e0255bb2748f 100644
---- a/drivers/scsi/libiscsi_tcp.c
-+++ b/drivers/scsi/libiscsi_tcp.c
-@@ -1,3 +1,4 @@
-+// SPDX-License-Identifier: GPL-2.0+
- /*
-  * iSCSI over TCP/IP Data-Path lib
-  *
-@@ -7,18 +8,6 @@
-  * Copyright (C) 2006 Red Hat, Inc.  All rights reserved.
-  * maintained by open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-  *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License as published
-- * by the Free Software Foundation; either version 2 of the License, or
-- * (at your option) any later version.
-- *
-- * This program is distributed in the hope that it will be useful, but
-- * WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-- * General Public License for more details.
-- *
-- * See the file COPYING included with this distribution for more details.
-- *
-  * Credits:
-  *	Christoph Hellwig
-  *	FUJITA Tomonori
-diff --git a/include/scsi/iscsi_if.h b/include/scsi/iscsi_if.h
-index d66c07077d68..5b8af179b7ac 100644
---- a/include/scsi/iscsi_if.h
-+++ b/include/scsi/iscsi_if.h
-@@ -1,21 +1,10 @@
-+/* SPDX-License-Identifier: GPL-2.0+ */
- /*
-  * iSCSI User/Kernel Shares (Defines, Constants, Protocol definitions, etc)
-  *
-  * Copyright (C) 2005 Dmitry Yusupov
-  * Copyright (C) 2005 Alex Aizman
-  * maintained by open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-- *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License as published
-- * by the Free Software Foundation; either version 2 of the License, or
-- * (at your option) any later version.
-- *
-- * This program is distributed in the hope that it will be useful, but
-- * WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-- * General Public License for more details.
-- *
-- * See the file COPYING included with this distribution for more details.
+  * Maintained at www.Open-FCoE.org
   */
  
- #ifndef ISCSI_IF_H
-diff --git a/include/scsi/iscsi_proto.h b/include/scsi/iscsi_proto.h
-index df156f1d50b2..3e930ab9b859 100644
---- a/include/scsi/iscsi_proto.h
-+++ b/include/scsi/iscsi_proto.h
-@@ -1,21 +1,10 @@
-+/* SPDX-License-Identifier: GPL-2.0+ */
+diff --git a/drivers/scsi/fcoe/fcoe.h b/drivers/scsi/fcoe/fcoe.h
+index 6aa4820f6cc0..15ee5a83ec04 100644
+--- a/drivers/scsi/fcoe/fcoe.h
++++ b/drivers/scsi/fcoe/fcoe.h
+@@ -1,19 +1,7 @@
++/* SPDX-License-Identifier: GPL-2.0 */
  /*
-  * RFC 3720 (iSCSI) protocol data types
+  * Copyright(c) 2009 Intel Corporation. All rights reserved.
   *
-  * Copyright (C) 2005 Dmitry Yusupov
-  * Copyright (C) 2005 Alex Aizman
-  * maintained by open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms and conditions of the GNU General Public License,
+- * version 2, as published by the Free Software Foundation.
 - *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License as published
-- * by the Free Software Foundation; either version 2 of the License, or
-- * (at your option) any later version.
+- * This program is distributed in the hope it will be useful, but WITHOUT
+- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+- * more details.
 - *
-- * This program is distributed in the hope that it will be useful, but
-- * WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-- * General Public License for more details.
+- * You should have received a copy of the GNU General Public License along with
+- * this program; if not, write to the Free Software Foundation, Inc.,
+- * 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
 - *
-- * See the file COPYING included with this distribution for more details.
+  * Maintained at www.Open-FCoE.org
   */
  
- #ifndef ISCSI_PROTO_H
-diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h
-index c9bd935f4fd1..7992f6bb2ebc 100644
---- a/include/scsi/libiscsi.h
-+++ b/include/scsi/libiscsi.h
-@@ -1,3 +1,4 @@
-+/* SPDX-License-Identifier: GPL-2.0+ */
+diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
+index 7dc4ffa24430..d2d17ed113ed 100644
+--- a/drivers/scsi/fcoe/fcoe_ctlr.c
++++ b/drivers/scsi/fcoe/fcoe_ctlr.c
+@@ -1,20 +1,8 @@
++/* SPDX-License-Identifier: GPL-2.0 */
  /*
-  * iSCSI lib definitions
+  * Copyright (c) 2008-2009 Cisco Systems, Inc.  All rights reserved.
+  * Copyright (c) 2009 Intel Corporation.  All rights reserved.
   *
-@@ -5,20 +6,6 @@
-  * Copyright (C) 2004 - 2006 Mike Christie
-  * Copyright (C) 2004 - 2005 Dmitry Yusupov
-  * Copyright (C) 2004 - 2005 Alex Aizman
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms and conditions of the GNU General Public License,
+- * version 2, as published by the Free Software Foundation.
 - *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License as published by
-- * the Free Software Foundation; either version 2 of the License, or
-- * (at your option) any later version.
+- * This program is distributed in the hope it will be useful, but WITHOUT
+- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+- * more details.
 - *
-- * This program is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
+- * You should have received a copy of the GNU General Public License along with
+- * this program; if not, write to the Free Software Foundation, Inc.,
+- * 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
 - *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the Free Software
-- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-  */
- #ifndef LIBISCSI_H
- #define LIBISCSI_H
-diff --git a/include/scsi/libiscsi_tcp.h b/include/scsi/libiscsi_tcp.h
-index 30520d5ee3d1..b7ce80422215 100644
---- a/include/scsi/libiscsi_tcp.h
-+++ b/include/scsi/libiscsi_tcp.h
-@@ -1,21 +1,10 @@
-+/* SPDX-License-Identifier: GPL-2.0+ */
- /*
-  * iSCSI over TCP/IP Data-Path lib
-  *
-  * Copyright (C) 2008 Mike Christie
-  * Copyright (C) 2008 Red Hat, Inc.  All rights reserved.
-  * maintained by open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-- *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License as published
-- * by the Free Software Foundation; either version 2 of the License, or
-- * (at your option) any later version.
-- *
-- * This program is distributed in the hope that it will be useful, but
-- * WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-- * General Public License for more details.
-- *
-- * See the file COPYING included with this distribution for more details.
+  * Maintained at www.Open-FCoE.org
   */
  
- #ifndef LIBISCSI_TCP_H
-diff --git a/include/scsi/scsi_bsg_iscsi.h b/include/scsi/scsi_bsg_iscsi.h
-index fd5689d4c052..aa76c1e5b36f 100644
---- a/include/scsi/scsi_bsg_iscsi.h
-+++ b/include/scsi/scsi_bsg_iscsi.h
-@@ -1,22 +1,8 @@
-+/* SPDX-License-Identifier: GPL-2.0+ */
+diff --git a/drivers/scsi/fcoe/fcoe_sysfs.c b/drivers/scsi/fcoe/fcoe_sysfs.c
+index c3dcbdc3aa64..b6a3bbe9ee2b 100644
+--- a/drivers/scsi/fcoe/fcoe_sysfs.c
++++ b/drivers/scsi/fcoe/fcoe_sysfs.c
+@@ -1,19 +1,7 @@
++/* SPDX-License-Identifier: GPL-2.0 */
  /*
-  *  iSCSI Transport BSG Interface
+  * Copyright(c) 2011 - 2012 Intel Corporation. All rights reserved.
   *
-  *  Copyright (C) 2009   James Smart, Emulex Corporation
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms and conditions of the GNU General Public License,
+- * version 2, as published by the Free Software Foundation.
 - *
-- *  This program is free software; you can redistribute it and/or modify
-- *  it under the terms of the GNU General Public License as published by
-- *  the Free Software Foundation; either version 2 of the License, or
-- *  (at your option) any later version.
+- * This program is distributed in the hope it will be useful, but WITHOUT
+- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+- * more details.
 - *
-- *  This program is distributed in the hope that it will be useful,
-- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
-- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- *  GNU General Public License for more details.
+- * You should have received a copy of the GNU General Public License along with
+- * this program; if not, write to the Free Software Foundation, Inc.,
+- * 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
 - *
-- *  You should have received a copy of the GNU General Public License
-- *  along with this program; if not, write to the Free Software
-- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-- *
+  * Maintained at www.Open-FCoE.org
   */
  
- #ifndef SCSI_BSG_ISCSI_H
+diff --git a/drivers/scsi/fcoe/fcoe_transport.c b/drivers/scsi/fcoe/fcoe_transport.c
+index 29fe3426f9f2..0d5363ee8ecb 100644
+--- a/drivers/scsi/fcoe/fcoe_transport.c
++++ b/drivers/scsi/fcoe/fcoe_transport.c
+@@ -1,19 +1,7 @@
++/* SPDX-License-Identifier: GPL-2.0 */
+ /*
+  * Copyright(c) 2008 - 2011 Intel Corporation. All rights reserved.
+  *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms and conditions of the GNU General Public License,
+- * version 2, as published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope it will be useful, but WITHOUT
+- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+- * more details.
+- *
+- * You should have received a copy of the GNU General Public License along with
+- * this program; if not, write to the Free Software Foundation, Inc.,
+- * 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
+- *
+  * Maintained at www.Open-FCoE.org
+  */
+ 
+diff --git a/include/scsi/libfcoe.h b/include/scsi/libfcoe.h
+index bb8092fa1e36..ecf3e5978166 100644
+--- a/include/scsi/libfcoe.h
++++ b/include/scsi/libfcoe.h
+@@ -1,20 +1,8 @@
++/* SPDX-License-Identifier: GPL-2.0 */
+ /*
+  * Copyright (c) 2008-2009 Cisco Systems, Inc.  All rights reserved.
+  * Copyright (c) 2007-2008 Intel Corporation.  All rights reserved.
+  *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms and conditions of the GNU General Public License,
+- * version 2, as published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope it will be useful, but WITHOUT
+- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+- * more details.
+- *
+- * You should have received a copy of the GNU General Public License along with
+- * this program; if not, write to the Free Software Foundation, Inc.,
+- * 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
+- *
+  * Maintained at www.Open-FCoE.org
+  */
+ 
 -- 
 2.20.1
 
