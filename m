@@ -1,77 +1,40 @@
-From: Leon Romanovsky <leon@kernel.org>
-Subject: Re: [EXT] Re: [PATCH net-next 07/10] qed*: Add iWARP 100g support
-Date: Thu, 2 May 2019 15:31:18 +0300
-Message-ID: <20190502123118.GR7676@mtr-leonro.mtl.com>
-References: <20190501095722.6902-1-michal.kalderon@marvell.com>
- <20190501095722.6902-8-michal.kalderon@marvell.com>
- <20190501.203522.1577716429222042609.davem@davemloft.net>
- <20190502051320.GF7676@mtr-leonro.mtl.com>
- <BLUPR18MB0130AF99D6AB674A85E075D9A1340@BLUPR18MB0130.namprd18.prod.outlook.com>
+From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Subject: Re: [PATCH 24/24] osst: add a SPDX tag to osst.c
+Date: Thu, 2 May 2019 14:53:12 +0200
+Message-ID: <20190502125312.GA2560@lst.de>
+References: <20190501161417.32592-1-hch@lst.de> <20190501161417.32592-25-hch@lst.de> <70277444-5b5b-6e3c-5af3-c658a841b144@suse.de>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <netdev-owner@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <open-iscsi+bncBDUNBGN3R4KRBSWQVPTAKGQE5PMLMXQ-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Content-Disposition: inline
-In-Reply-To: <BLUPR18MB0130AF99D6AB674A85E075D9A1340@BLUPR18MB0130.namprd18.prod.outlook.com>
-Sender: netdev-owner@vger.kernel.org
-To: Michal Kalderon <mkalderon@marvell.com>
-Cc: David Miller <davem@davemloft.net>, Ariel Elior <aelior@marvell.com>, "jgg@ziepe.ca" <jgg@ziepe.ca>, "dledford@redhat.com" <dledford@redhat.com>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+In-Reply-To: <70277444-5b5b-6e3c-5af3-c658a841b144-l3A5Bk7waGM@public.gmane.org>
+List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <https://groups.google.com/group/open-iscsi
+List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
+ <https://groups.google.com/group/open-iscsi/subscribe>
+To: Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>
+Cc: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, "James E . J . Bottomley" <jejb-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, "Martin K . Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Lee Duncan <lduncan-IBi9RG/b67k@public.gmane.org>, Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Willem Riede <osst-BKTAy3DeTVvYtjvyW6yDsg@public.gmane.org>, Doug Gilbert <dgilbert-qazKcTl6WRFWk0Htik3J/w@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Kai =?iso-8859-1?Q?M=E4kisara?= <Kai.Makisara-9Aww8k/80nUxHbG02/KK1g@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, osst-users-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Chriosstoph Hellwig <hch-+XEJSKglMEw@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, May 02, 2019 at 12:10:39PM +0000, Michal Kalderon wrote:
-> > From: Leon Romanovsky <leon@kernel.org>
-> > Sent: Thursday, May 2, 2019 8:13 AM
-> > On Wed, May 01, 2019 at 08:35:22PM -0400, David Miller wrote:
-> > > From: Michal Kalderon <michal.kalderon@marvell.com>
-> > > Date: Wed, 1 May 2019 12:57:19 +0300
-> > >
-> > > > diff --git a/drivers/infiniband/hw/qedr/main.c
-> > > > b/drivers/infiniband/hw/qedr/main.c
-> > > > index d93c8a893a89..8bc6775abb79 100644
-> > > > --- a/drivers/infiniband/hw/qedr/main.c
-> > > > +++ b/drivers/infiniband/hw/qedr/main.c
-> > > > @@ -52,6 +52,10 @@ MODULE_DESCRIPTION("QLogic 40G/100G ROCE
-> > > > Driver");  MODULE_AUTHOR("QLogic Corporation");
-> > > > MODULE_LICENSE("Dual BSD/GPL");
-> > > >
-> > > > +static uint iwarp_cmt;
-> > > > +module_param(iwarp_cmt, uint, 0444);
-> > MODULE_PARM_DESC(iwarp_cmt, "
-> > > > +iWARP: Support CMT mode. 0 - Disabled, 1 - Enabled. Default:
-> > > > +Disabled");
-> > > > +
-> > >
-> > > Sorry no, this is totally beneath us.
-> >
-> > It is not acceptable for RDMA too.
->
-> Dave and Leon,
->
-> This is a bit of a special case related specifically to our hardware.
-> Enabling iWARP on this kind of configuration impacts L2 performance.
-> We don't want this to happen implicitly once the rdma driver is loaded since
-> that can happen automatically and could lead to unexpected behavior from user perspective.
-> Therefore we need a way of giving the user control to decide whether they want iWARP at the cost
-> of L2 performance degradation.
-> We also need this information as soon as the iWARP device registers, so using the rdma-tool would be too late.
->
-> If module parameter is not an option, could you please advise what would be ok ?
-> ethtool private flags ?
-> devlink ?
+On Thu, May 02, 2019 at 08:06:38AM +0200, Hannes Reinecke wrote:
+> On 5/1/19 6:14 PM, Christoph Hellwig wrote:
+>> osst.c is the only osst file missing licensing information.  Add a
+>> GPLv2 tag for the default kernel license.
+>>
+>> Signed-off-by: Chriosstoph Hellwig <hch-+XEJSKglMEw@public.gmane.org>
 
-Yes, devlink params are modern way to have same functionality as module
-parameters.
+FYI, my s/st/osst/ on the commit message message up my signoff, this
+should be:
 
-This patch can help you in order to get a sense of how to do it.
-https://lore.kernel.org/patchwork/patch/959195/
+Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 
-Thanks
-
->
-> thanks,
-> Michal
->
-> >
-> > Also please don't use comments inside function calls, it complicates various
-> > checkers without real need.
-> > dev->ops->iwarp_set_engine_affin(dev->cdev, true /* reset */);
-> >                                                 ^^^^^^^^^^^^^^ Thanks
+-- 
+You received this message because you are subscribed to the Google Groups "open-iscsi" group.
+To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+Visit this group at https://groups.google.com/group/open-iscsi.
+For more options, visit https://groups.google.com/d/optout.
