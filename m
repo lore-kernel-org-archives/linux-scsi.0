@@ -1,9 +1,11 @@
 From: Tyrel Datwyler <tyreld@linux.ibm.com>
-Subject: [PATCH 1/3] ibmvscsi: Wire up host_reset() in the drivers
- scsi_host_template
-Date: Wed,  1 May 2019 19:47:27 -0500
-Message-ID: <20190502004729.19962-1-tyreld@linux.ibm.com>
+Subject: [PATCH 2/3] ibmvscsi: redo driver work thread to use enum action
+ states
+Date: Wed,  1 May 2019 19:47:28 -0500
+Message-ID: <20190502004729.19962-2-tyreld@linux.ibm.com>
+References: <20190502004729.19962-1-tyreld@linux.ibm.com>
 Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+In-Reply-To: <20190502004729.19962-1-tyreld@linux.ibm.com>
 List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
  <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
 List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
@@ -20,48 +22,147 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
 
-Wire up the host_reset function in our driver_template to allow a user
-requested adpater reset via the host_reset sysfs attribute.
-
-Example:
-
-echo "adapter" > /sys/class/scsi_host/host0/host_reset
+The current implemenation relies on two flags in the drivers private host
+structure to signal the need for a host reset or to reenable the CRQ after a
+LPAR migration. This patch does away with those flags and introduces a single
+action flag and defined enums for the supported kthread work actions. Lastly,
+the if/else logic is replaced with a switch statement.
 
 Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
 ---
- drivers/scsi/ibmvscsi/ibmvscsi.c | 13 +++++++++++++
- 1 file changed, 13 insertions(+)
+ drivers/scsi/ibmvscsi/ibmvscsi.c | 57 +++++++++++++++++++++-----------
+ drivers/scsi/ibmvscsi/ibmvscsi.h |  9 +++--
+ 2 files changed, 45 insertions(+), 21 deletions(-)
 
 diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
-index 8cec5230fe31..1c37244f16a0 100644
+index 1c37244f16a0..683139e6c63f 100644
 --- a/drivers/scsi/ibmvscsi/ibmvscsi.c
 +++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
-@@ -2050,6 +2050,18 @@ static struct device_attribute ibmvscsi_host_config = {
- 	.show = show_host_config,
- };
+@@ -828,7 +828,7 @@ static void ibmvscsi_reset_host(struct ibmvscsi_host_data *hostdata)
+ 	atomic_set(&hostdata->request_limit, 0);
  
-+static int ibmvscsi_host_reset(struct Scsi_Host *shost, int reset_type)
-+{
-+	struct ibmvscsi_host_data *hostdata = shost_priv(shost);
+ 	purge_requests(hostdata, DID_ERROR);
+-	hostdata->reset_crq = 1;
++	hostdata->action = IBMVSCSI_HOST_ACTION_RESET;
+ 	wake_up(&hostdata->work_wait_q);
+ }
+ 
+@@ -1797,7 +1797,7 @@ static void ibmvscsi_handle_crq(struct viosrp_crq *crq,
+ 			/* We need to re-setup the interpartition connection */
+ 			dev_info(hostdata->dev, "Re-enabling adapter!\n");
+ 			hostdata->client_migrated = 1;
+-			hostdata->reenable_crq = 1;
++			hostdata->action = IBMVSCSI_HOST_ACTION_REENABLE;
+ 			purge_requests(hostdata, DID_REQUEUE);
+ 			wake_up(&hostdata->work_wait_q);
+ 		} else {
+@@ -2118,26 +2118,32 @@ static unsigned long ibmvscsi_get_desired_dma(struct vio_dev *vdev)
+ 
+ static void ibmvscsi_do_work(struct ibmvscsi_host_data *hostdata)
+ {
++	unsigned long flags;
+ 	int rc;
+ 	char *action = "reset";
+ 
+-	if (hostdata->reset_crq) {
+-		smp_rmb();
+-		hostdata->reset_crq = 0;
+-
++	spin_lock_irqsave(hostdata->host->host_lock, flags);
++	switch (hostdata->action) {
++	case IBMVSCSI_HOST_ACTION_NONE:
++		break;
++	case IBMVSCSI_HOST_ACTION_RESET:
+ 		rc = ibmvscsi_reset_crq_queue(&hostdata->queue, hostdata);
+ 		if (!rc)
+ 			rc = ibmvscsi_send_crq(hostdata, 0xC001000000000000LL, 0);
+ 		vio_enable_interrupts(to_vio_dev(hostdata->dev));
+-	} else if (hostdata->reenable_crq) {
+-		smp_rmb();
++		break;
++	case IBMVSCSI_HOST_ACTION_REENABLE:
+ 		action = "enable";
+ 		rc = ibmvscsi_reenable_crq_queue(&hostdata->queue, hostdata);
+-		hostdata->reenable_crq = 0;
+ 		if (!rc)
+ 			rc = ibmvscsi_send_crq(hostdata, 0xC001000000000000LL, 0);
+-	} else
+-		return;
++		break;
++	default:
++		break;
++	}
 +
-+	vio_disable_interrupts(to_vio_dev(hostdata->dev));
-+	dev_info(hostdata->dev, "Initiating adapter reset!\n");
-+	ibmvscsi_reset_host(hostdata);
-+	vio_enable_interrupts(to_vio_dev(hostdata->dev));
-+
-+	return 0;
++	hostdata->action = IBMVSCSI_HOST_ACTION_NONE;
++	spin_unlock_irqrestore(hostdata->host->host_lock, flags);
+ 
+ 	if (rc) {
+ 		atomic_set(&hostdata->request_limit, -1);
+@@ -2147,19 +2153,32 @@ static void ibmvscsi_do_work(struct ibmvscsi_host_data *hostdata)
+ 	scsi_unblock_requests(hostdata->host);
+ }
+ 
+-static int ibmvscsi_work_to_do(struct ibmvscsi_host_data *hostdata)
++static int __ibmvscsi_work_to_do(struct ibmvscsi_host_data *hostdata)
+ {
+ 	if (kthread_should_stop())
+ 		return 1;
+-	else if (hostdata->reset_crq) {
+-		smp_rmb();
+-		return 1;
+-	} else if (hostdata->reenable_crq) {
+-		smp_rmb();
+-		return 1;
++	switch (hostdata->action) {
++	case IBMVSCSI_HOST_ACTION_NONE:
++		return 0;
++	case IBMVSCSI_HOST_ACTION_RESET:
++	case IBMVSCSI_HOST_ACTION_REENABLE:
++	default:
++		break;
+ 	}
+ 
+-	return 0;
++	return 1;
 +}
 +
- static struct device_attribute *ibmvscsi_attrs[] = {
- 	&ibmvscsi_host_vhost_loc,
- 	&ibmvscsi_host_vhost_name,
-@@ -2076,6 +2088,7 @@ static struct scsi_host_template driver_template = {
- 	.eh_host_reset_handler = ibmvscsi_eh_host_reset_handler,
- 	.slave_configure = ibmvscsi_slave_configure,
- 	.change_queue_depth = ibmvscsi_change_queue_depth,
-+	.host_reset = ibmvscsi_host_reset,
- 	.cmd_per_lun = IBMVSCSI_CMDS_PER_LUN_DEFAULT,
- 	.can_queue = IBMVSCSI_MAX_REQUESTS_DEFAULT,
- 	.this_id = -1,
++static int ibmvscsi_work_to_do(struct ibmvscsi_host_data *hostdata)
++{
++	unsigned long flags;
++	int rc;
++
++	spin_lock_irqsave(hostdata->host->host_lock, flags);
++	rc = __ibmvscsi_work_to_do(hostdata);
++	spin_unlock_irqrestore(hostdata->host->host_lock, flags);
++
++	return rc;
+ }
+ 
+ static int ibmvscsi_work(void *data)
+diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.h b/drivers/scsi/ibmvscsi/ibmvscsi.h
+index 3a7875575616..04bcbc832dc9 100644
+--- a/drivers/scsi/ibmvscsi/ibmvscsi.h
++++ b/drivers/scsi/ibmvscsi/ibmvscsi.h
+@@ -88,13 +88,18 @@ struct event_pool {
+ 	dma_addr_t iu_token;
+ };
+ 
++enum ibmvscsi_host_action {
++	IBMVSCSI_HOST_ACTION_NONE = 0,
++	IBMVSCSI_HOST_ACTION_RESET,
++	IBMVSCSI_HOST_ACTION_REENABLE,
++};
++
+ /* all driver data associated with a host adapter */
+ struct ibmvscsi_host_data {
+ 	struct list_head host_list;
+ 	atomic_t request_limit;
+ 	int client_migrated;
+-	int reset_crq;
+-	int reenable_crq;
++	enum ibmvscsi_host_action action;
+ 	struct device *dev;
+ 	struct event_pool pool;
+ 	struct crq_queue queue;
 -- 
 2.18.1
