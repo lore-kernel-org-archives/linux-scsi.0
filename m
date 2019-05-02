@@ -1,16 +1,16 @@
 From: Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>
-Subject: Re: [PATCH 19/24] sd: switch remaining files to SPDX tags
-Date: Thu, 2 May 2019 08:05:19 +0200
-Message-ID: <cef71462-6123-f002-cca0-e2381dc02c58@suse.de>
+Subject: Re: [PATCH 20/24] ses: switch to SPDX tags
+Date: Thu, 2 May 2019 08:05:36 +0200
+Message-ID: <84efdea2-1dec-41f6-717a-97415b2c8822@suse.de>
 References: <20190501161417.32592-1-hch@lst.de>
- <20190501161417.32592-20-hch@lst.de>
+ <20190501161417.32592-21-hch@lst.de>
 Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: quoted-printable
-Return-path: <open-iscsi+bncBCHZVHVFVMARBIERVLTAKGQEPYQOU4Y-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Return-path: <open-iscsi+bncBCHZVHVFVMARBMURVLTAKGQEZ57NQGQ-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-In-Reply-To: <20190501161417.32592-20-hch-jcswGhMUV9g@public.gmane.org>
+In-Reply-To: <20190501161417.32592-21-hch-jcswGhMUV9g@public.gmane.org>
 Content-Language: en-US
 List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
@@ -27,9 +27,44 @@ On 5/1/19 6:14 PM, Christoph Hellwig wrote:
 >=20
 > Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 > ---
->   drivers/scsi/sd_dif.c | 16 +---------------
->   drivers/scsi/sd_zbc.c | 16 +---------------
->   2 files changed, 2 insertions(+), 30 deletions(-)
+>   drivers/scsi/ses.c | 20 ++------------------
+>   1 file changed, 2 insertions(+), 18 deletions(-)
+>=20
+> diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
+> index 0fc39224ce1e..8afea5a1d3f0 100644
+> --- a/drivers/scsi/ses.c
+> +++ b/drivers/scsi/ses.c
+> @@ -1,25 +1,9 @@
+> +// SPDX-License-Identifier: GPL-2.0
+>   /*
+>    * SCSI Enclosure Services
+>    *
+>    * Copyright (C) 2008 James Bottomley <James.Bottomley@HansenPartnershi=
+p.com>
+> - *
+> -**----------------------------------------------------------------------=
+-------
+> -**
+> -**  This program is free software; you can redistribute it and/or
+> -**  modify it under the terms of the GNU General Public License
+> -**  version 2 as published by the Free Software Foundation.
+> -**
+> -**  This program is distributed in the hope that it will be useful,
+> -**  but WITHOUT ANY WARRANTY; without even the implied warranty of
+> -**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> -**  GNU General Public License for more details.
+> -**
+> -**  You should have received a copy of the GNU General Public License
+> -**  along with this program; if not, write to the Free Software
+> -**  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+> -**
+> -**----------------------------------------------------------------------=
+-------
+> -*/
+> + */
+>  =20
+>   #include <linux/slab.h>
+>   #include <linux/module.h>
 >=20
 Reviewed-by: Hannes Reinecke <hare-IBi9RG/b67k@public.gmane.org>
 
