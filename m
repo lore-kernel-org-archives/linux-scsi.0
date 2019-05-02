@@ -1,16 +1,17 @@
 From: Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>
-Subject: Re: [PATCH 04/24] scsi_transport.h: switch to SPDX tags
-Date: Thu, 2 May 2019 07:59:49 +0200
-Message-ID: <90aa5954-1f69-5fd1-1884-a781ff23fcc6@suse.de>
+Subject: Re: [PATCH 05/24] scsi_transport_fc: remove duplicate GPL boilerplate
+ text
+Date: Thu, 2 May 2019 08:00:12 +0200
+Message-ID: <0d16d8ef-7236-6d42-769e-b8a53605e198@suse.de>
 References: <20190501161417.32592-1-hch@lst.de>
- <20190501161417.32592-5-hch@lst.de>
+ <20190501161417.32592-6-hch@lst.de>
 Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: quoted-printable
-Return-path: <open-iscsi+bncBCHZVHVFVMARBVUOVLTAKGQE6VZ2GSA-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Return-path: <open-iscsi+bncBCHZVHVFVMARB3MOVLTAKGQEGJ6ANIY-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-In-Reply-To: <20190501161417.32592-5-hch-jcswGhMUV9g@public.gmane.org>
+In-Reply-To: <20190501161417.32592-6-hch-jcswGhMUV9g@public.gmane.org>
 Content-Language: en-US
 List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
@@ -23,12 +24,14 @@ Cc: Lee Duncan <lduncan-IBi9RG/b67k@public.gmane.org>, Chris Leech <cleech-H+wXa
 List-Id: linux-scsi@vger.kernel.org
 
 On 5/1/19 6:13 PM, Christoph Hellwig wrote:
-> Use the the GPLv2+ SPDX tag instead of verbose boilerplate text.
+> The FC transport class uapi headers already have proper SPDX tags,
+> remove the duplicate boilerplate text.
 >=20
 > Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 > ---
->   include/scsi/scsi_transport.h | 15 +--------------
->   1 file changed, 1 insertion(+), 14 deletions(-)
+>   include/uapi/scsi/scsi_bsg_fc.h     | 15 ---------------
+>   include/uapi/scsi/scsi_netlink_fc.h | 15 ---------------
+>   2 files changed, 30 deletions(-)
 >=20
 Reviewed-by: Hannes Reinecke <hare-IBi9RG/b67k@public.gmane.org>
 
