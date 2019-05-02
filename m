@@ -1,8 +1,7 @@
 From: Tyrel Datwyler <tyreld@linux.ibm.com>
-Subject: [PATCH 2/3] ibmvscsi: redo driver work thread to use enum action
- states
-Date: Wed,  1 May 2019 19:47:28 -0500
-Message-ID: <20190502004729.19962-2-tyreld@linux.ibm.com>
+Subject: [PATCH 3/3] ibmvscsi: fix tripping of blk_mq_run_hw_queue WARN_ON
+Date: Wed,  1 May 2019 19:47:29 -0500
+Message-ID: <20190502004729.19962-3-tyreld@linux.ibm.com>
 References: <20190502004729.19962-1-tyreld@linux.ibm.com>
 Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
 In-Reply-To: <20190502004729.19962-1-tyreld@linux.ibm.com>
@@ -22,147 +21,87 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
 
-The current implemenation relies on two flags in the drivers private host
-structure to signal the need for a host reset or to reenable the CRQ after a
-LPAR migration. This patch does away with those flags and introduces a single
-action flag and defined enums for the supported kthread work actions. Lastly,
-the if/else logic is replaced with a switch statement.
+After a successful SRP login response we call scsi_unblock_requests() to
+kick any pending IO's. The callback to process this SRP response happens in
+a tasklet and therefore is in softirq context. The result of such is
+that when blk-mq is enabled it is no longer safe to call
+scsi_unblock_requests() from this context. The result of duing so
+triggers the following WARN_ON splat in dmesg after a host reset or CRQ
+reenablement.
+
+WARNING: CPU: 0 PID: 0 at block/blk-mq.c:1375 __blk_mq_run_hw_queue+0x120/0x180
+Modules linked in:
+CPU: 0 PID: 0 Comm: swapper/0 Not tainted 5.0.0-rc8 #4
+NIP [c0000000009771e0] __blk_mq_run_hw_queue+0x120/0x180
+LR [c000000000977484] __blk_mq_delay_run_hw_queue+0x244/0x250
+Call Trace:
+
+__blk_mq_delay_run_hw_queue+0x244/0x250
+blk_mq_run_hw_queue+0x8c/0x1c0
+blk_mq_run_hw_queues+0x60/0x90
+scsi_run_queue+0x1e4/0x3b0
+scsi_run_host_queues+0x48/0x80
+login_rsp+0xb0/0x100
+ibmvscsi_handle_crq+0x30c/0x3e0
+ibmvscsi_task+0x54/0xe0
+tasklet_action_common.isra.3+0xc4/0x1a0
+__do_softirq+0x174/0x3f4
+irq_exit+0xf0/0x120
+__do_irq+0xb0/0x210
+call_do_irq+0x14/0x24
+do_IRQ+0x9c/0x130
+hardware_interrupt_common+0x14c/0x150
+
+This patch fixes the issue by introducing a new host action for
+unblocking the scsi requests in our seperate work thread.
 
 Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
 ---
- drivers/scsi/ibmvscsi/ibmvscsi.c | 57 +++++++++++++++++++++-----------
- drivers/scsi/ibmvscsi/ibmvscsi.h |  9 +++--
- 2 files changed, 45 insertions(+), 21 deletions(-)
+ drivers/scsi/ibmvscsi/ibmvscsi.c | 5 ++++-
+ drivers/scsi/ibmvscsi/ibmvscsi.h | 1 +
+ 2 files changed, 5 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
-index 1c37244f16a0..683139e6c63f 100644
+index 683139e6c63f..c1d83eb5c5f7 100644
 --- a/drivers/scsi/ibmvscsi/ibmvscsi.c
 +++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
-@@ -828,7 +828,7 @@ static void ibmvscsi_reset_host(struct ibmvscsi_host_data *hostdata)
- 	atomic_set(&hostdata->request_limit, 0);
+@@ -1179,7 +1179,8 @@ static void login_rsp(struct srp_event_struct *evt_struct)
+ 		   be32_to_cpu(evt_struct->xfer_iu->srp.login_rsp.req_lim_delta));
  
- 	purge_requests(hostdata, DID_ERROR);
--	hostdata->reset_crq = 1;
-+	hostdata->action = IBMVSCSI_HOST_ACTION_RESET;
- 	wake_up(&hostdata->work_wait_q);
+ 	/* If we had any pending I/Os, kick them */
+-	scsi_unblock_requests(hostdata->host);
++	hostdata->action = IBMVSCSI_HOST_ACTION_UNBLOCK;
++	wake_up(&hostdata->work_wait_q);
  }
  
-@@ -1797,7 +1797,7 @@ static void ibmvscsi_handle_crq(struct viosrp_crq *crq,
- 			/* We need to re-setup the interpartition connection */
- 			dev_info(hostdata->dev, "Re-enabling adapter!\n");
- 			hostdata->client_migrated = 1;
--			hostdata->reenable_crq = 1;
-+			hostdata->action = IBMVSCSI_HOST_ACTION_REENABLE;
- 			purge_requests(hostdata, DID_REQUEUE);
- 			wake_up(&hostdata->work_wait_q);
- 		} else {
-@@ -2118,26 +2118,32 @@ static unsigned long ibmvscsi_get_desired_dma(struct vio_dev *vdev)
- 
- static void ibmvscsi_do_work(struct ibmvscsi_host_data *hostdata)
- {
-+	unsigned long flags;
- 	int rc;
- 	char *action = "reset";
- 
--	if (hostdata->reset_crq) {
--		smp_rmb();
--		hostdata->reset_crq = 0;
--
-+	spin_lock_irqsave(hostdata->host->host_lock, flags);
-+	switch (hostdata->action) {
-+	case IBMVSCSI_HOST_ACTION_NONE:
-+		break;
-+	case IBMVSCSI_HOST_ACTION_RESET:
+ /**
+@@ -2125,6 +2126,7 @@ static void ibmvscsi_do_work(struct ibmvscsi_host_data *hostdata)
+ 	spin_lock_irqsave(hostdata->host->host_lock, flags);
+ 	switch (hostdata->action) {
+ 	case IBMVSCSI_HOST_ACTION_NONE:
++	case IBMVSCSI_HOST_ACTION_UNBLOCK:
+ 		break;
+ 	case IBMVSCSI_HOST_ACTION_RESET:
  		rc = ibmvscsi_reset_crq_queue(&hostdata->queue, hostdata);
- 		if (!rc)
- 			rc = ibmvscsi_send_crq(hostdata, 0xC001000000000000LL, 0);
- 		vio_enable_interrupts(to_vio_dev(hostdata->dev));
--	} else if (hostdata->reenable_crq) {
--		smp_rmb();
-+		break;
-+	case IBMVSCSI_HOST_ACTION_REENABLE:
- 		action = "enable";
- 		rc = ibmvscsi_reenable_crq_queue(&hostdata->queue, hostdata);
--		hostdata->reenable_crq = 0;
- 		if (!rc)
- 			rc = ibmvscsi_send_crq(hostdata, 0xC001000000000000LL, 0);
--	} else
--		return;
-+		break;
-+	default:
-+		break;
-+	}
-+
-+	hostdata->action = IBMVSCSI_HOST_ACTION_NONE;
-+	spin_unlock_irqrestore(hostdata->host->host_lock, flags);
- 
- 	if (rc) {
- 		atomic_set(&hostdata->request_limit, -1);
-@@ -2147,19 +2153,32 @@ static void ibmvscsi_do_work(struct ibmvscsi_host_data *hostdata)
- 	scsi_unblock_requests(hostdata->host);
- }
- 
--static int ibmvscsi_work_to_do(struct ibmvscsi_host_data *hostdata)
-+static int __ibmvscsi_work_to_do(struct ibmvscsi_host_data *hostdata)
- {
- 	if (kthread_should_stop())
- 		return 1;
--	else if (hostdata->reset_crq) {
--		smp_rmb();
--		return 1;
--	} else if (hostdata->reenable_crq) {
--		smp_rmb();
--		return 1;
-+	switch (hostdata->action) {
-+	case IBMVSCSI_HOST_ACTION_NONE:
-+		return 0;
-+	case IBMVSCSI_HOST_ACTION_RESET:
-+	case IBMVSCSI_HOST_ACTION_REENABLE:
-+	default:
-+		break;
+@@ -2162,6 +2164,7 @@ static int __ibmvscsi_work_to_do(struct ibmvscsi_host_data *hostdata)
+ 		return 0;
+ 	case IBMVSCSI_HOST_ACTION_RESET:
+ 	case IBMVSCSI_HOST_ACTION_REENABLE:
++	case IBMVSCSI_HOST_ACTION_UNBLOCK:
+ 	default:
+ 		break;
  	}
- 
--	return 0;
-+	return 1;
-+}
-+
-+static int ibmvscsi_work_to_do(struct ibmvscsi_host_data *hostdata)
-+{
-+	unsigned long flags;
-+	int rc;
-+
-+	spin_lock_irqsave(hostdata->host->host_lock, flags);
-+	rc = __ibmvscsi_work_to_do(hostdata);
-+	spin_unlock_irqrestore(hostdata->host->host_lock, flags);
-+
-+	return rc;
- }
- 
- static int ibmvscsi_work(void *data)
 diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.h b/drivers/scsi/ibmvscsi/ibmvscsi.h
-index 3a7875575616..04bcbc832dc9 100644
+index 04bcbc832dc9..d9bf502334ba 100644
 --- a/drivers/scsi/ibmvscsi/ibmvscsi.h
 +++ b/drivers/scsi/ibmvscsi/ibmvscsi.h
-@@ -88,13 +88,18 @@ struct event_pool {
- 	dma_addr_t iu_token;
+@@ -92,6 +92,7 @@ enum ibmvscsi_host_action {
+ 	IBMVSCSI_HOST_ACTION_NONE = 0,
+ 	IBMVSCSI_HOST_ACTION_RESET,
+ 	IBMVSCSI_HOST_ACTION_REENABLE,
++	IBMVSCSI_HOST_ACTION_UNBLOCK,
  };
  
-+enum ibmvscsi_host_action {
-+	IBMVSCSI_HOST_ACTION_NONE = 0,
-+	IBMVSCSI_HOST_ACTION_RESET,
-+	IBMVSCSI_HOST_ACTION_REENABLE,
-+};
-+
  /* all driver data associated with a host adapter */
- struct ibmvscsi_host_data {
- 	struct list_head host_list;
- 	atomic_t request_limit;
- 	int client_migrated;
--	int reset_crq;
--	int reenable_crq;
-+	enum ibmvscsi_host_action action;
- 	struct device *dev;
- 	struct event_pool pool;
- 	struct crq_queue queue;
 -- 
 2.18.1
