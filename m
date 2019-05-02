@@ -1,53 +1,36 @@
-From: Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>
-Subject: Re: [PATCH 07/24] scsi_transport_iscsi: switch to SPDX tags
-Date: Thu, 2 May 2019 08:01:10 +0200
-Message-ID: <51cb076d-40b0-ce14-08e8-19ed5f3877cb@suse.de>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 08/24] scsi_transport_sas: switch to SPDX tags
+Date: Thu, 2 May 2019 08:01:33 +0200
+Message-ID: <19cdf793-57e5-5114-499e-39f8d2eea665@suse.de>
 References: <20190501161417.32592-1-hch@lst.de>
- <20190501161417.32592-8-hch@lst.de>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+ <20190501161417.32592-9-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: quoted-printable
-Return-path: <open-iscsi+bncBCHZVHVFVMARBJ4PVLTAKGQEHYYYX5I-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-In-Reply-To: <20190501161417.32592-8-hch-jcswGhMUV9g@public.gmane.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190501161417.32592-9-hch@lst.de>
 Content-Language: en-US
-List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <https://groups.google.com/group/open-iscsi
-List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
- <https://groups.google.com/group/open-iscsi/subscribe>
-To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, "James E . J . Bottomley" <jejb-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, "Martin K . Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Cc: Lee Duncan <lduncan-IBi9RG/b67k@public.gmane.org>, Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Willem Riede <osst-BKTAy3DeTVvYtjvyW6yDsg@public.gmane.org>, Doug Gilbert <dgilbert-qazKcTl6WRFWk0Htik3J/w@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, =?UTF-8?Q?Kai_M=c3=a4kisara?= <Kai.Makisara-9Aww8k/80nUxHbG02/KK1g@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, osst-users-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>, Willem Riede <osst@riede.org>, Doug Gilbert <dgilbert@interlog.com>, Jens Axboe <axboe@kernel.dk>, =?UTF-8?Q?Kai_M=c3=a4kisara?= <Kai.Makisara@kolumbus.fi>, linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com, osst-users@lists.sourceforge.net, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 On 5/1/19 6:14 PM, Christoph Hellwig wrote:
-> Use the the GPLv2+ SPDX tag instead of verbose boilerplate text.
->=20
-> Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+> Use the the GPLv2 SPDX tag instead of a free form blurb.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->   drivers/scsi/scsi_transport_iscsi.c | 15 +--------------
->   include/scsi/scsi_transport_iscsi.h | 15 +--------------
->   2 files changed, 2 insertions(+), 28 deletions(-)
->=20
-Reviewed-by: Hannes Reinecke <hare-IBi9RG/b67k@public.gmane.org>
+>   drivers/scsi/scsi_transport_sas.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
 Cheers,
 
 Hannes
---=20
+-- 
 Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare-l3A5Bk7waGM@public.gmane.org			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: Felix Imend=C3=B6rffer, Mary Higgins, Sri Rasiah
-HRB 21284 (AG N=C3=BCrnberg)
-
---=20
-You received this message because you are subscribed to the Google Groups "=
-open-iscsi" group.
-To unsubscribe from this group and stop receiving emails from it, send an e=
-mail to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-Visit this group at https://groups.google.com/group/open-iscsi.
-For more options, visit https://groups.google.com/d/optout.
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Mary Higgins, Sri Rasiah
+HRB 21284 (AG Nürnberg)
