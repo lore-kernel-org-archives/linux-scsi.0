@@ -1,67 +1,92 @@
-From: Douglas Gilbert <dgilbert-qazKcTl6WRFWk0Htik3J/w@public.gmane.org>
-Subject: Re: [PATCH 21/24] sg: switch to SPDX tags
-Date: Thu, 2 May 2019 17:28:23 +0200
-Message-ID: <c69c06d1-7bdf-b130-ee3e-3b3e4879f832@interlog.com>
-References: <20190501161417.32592-1-hch@lst.de>
- <20190501161417.32592-22-hch@lst.de>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: Michal Kalderon <mkalderon@marvell.com>
+Subject: RE: [EXT] Re: [PATCH net-next 07/10] qed*: Add iWARP 100g support
+Date: Thu, 2 May 2019 20:38:56 +0000
+Message-ID: <BLUPR18MB013088A1CA1A8C618B0D4443A1340@BLUPR18MB0130.namprd18.prod.outlook.com>
+References: <20190501095722.6902-1-michal.kalderon@marvell.com>
+ <20190501095722.6902-8-michal.kalderon@marvell.com>
+ <20190501.203522.1577716429222042609.davem@davemloft.net>
+ <20190502051320.GF7676@mtr-leonro.mtl.com>
+ <BLUPR18MB0130AF99D6AB674A85E075D9A1340@BLUPR18MB0130.namprd18.prod.outlook.com>
+ <20190502123118.GR7676@mtr-leonro.mtl.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Return-path: <open-iscsi+bncBDGIZD433YCRBGMZVTTAKGQEJNXMPAY-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-In-Reply-To: <20190501161417.32592-22-hch-jcswGhMUV9g@public.gmane.org>
-Content-Language: en-CA
-List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <https://groups.google.com/group/open-iscsi
-List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
- <https://groups.google.com/group/open-iscsi/subscribe>
-To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, "James E . J . Bottomley" <jejb-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, "Martin K . Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Cc: Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>, Lee Duncan <lduncan-IBi9RG/b67k@public.gmane.org>, Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Willem Riede <osst-BKTAy3DeTVvYtjvyW6yDsg@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, =?UTF-8?Q?Kai_M=c3=a4kisara?= <Kai.Makisara-9Aww8k/80nUxHbG02/KK1g@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, osst-users-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <20190502123118.GR7676@mtr-leonro.mtl.com>
+Content-Language: en-US
+Sender: netdev-owner@vger.kernel.org
+To: Leon Romanovsky <leon@kernel.org>
+Cc: David Miller <davem@davemloft.net>, Ariel Elior <aelior@marvell.com>, "jgg@ziepe.ca" <jgg@ziepe.ca>, "dledford@redhat.com" <dledford@redhat.com>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 2019-05-01 6:14 p.m., Christoph Hellwig wrote:
-> Use the the GPLv2+ SPDX tag instead of verbose boilerplate text.
+> From: Leon Romanovsky <leon@kernel.org>
+> Sent: Thursday, May 2, 2019 3:31 PM
+>=20
+> On Thu, May 02, 2019 at 12:10:39PM +0000, Michal Kalderon wrote:
+> > > From: Leon Romanovsky <leon@kernel.org>
+> > > Sent: Thursday, May 2, 2019 8:13 AM
+> > > On Wed, May 01, 2019 at 08:35:22PM -0400, David Miller wrote:
+> > > > From: Michal Kalderon <michal.kalderon@marvell.com>
+> > > > Date: Wed, 1 May 2019 12:57:19 +0300
+> > > >
+> > > > > diff --git a/drivers/infiniband/hw/qedr/main.c
+> > > > > b/drivers/infiniband/hw/qedr/main.c
+> > > > > index d93c8a893a89..8bc6775abb79 100644
+> > > > > --- a/drivers/infiniband/hw/qedr/main.c
+> > > > > +++ b/drivers/infiniband/hw/qedr/main.c
+> > > > > @@ -52,6 +52,10 @@ MODULE_DESCRIPTION("QLogic 40G/100G
+> ROCE
+> > > > > Driver");  MODULE_AUTHOR("QLogic Corporation");
+> > > > > MODULE_LICENSE("Dual BSD/GPL");
+> > > > >
+> > > > > +static uint iwarp_cmt;
+> > > > > +module_param(iwarp_cmt, uint, 0444);
+> > > MODULE_PARM_DESC(iwarp_cmt, "
+> > > > > +iWARP: Support CMT mode. 0 - Disabled, 1 - Enabled. Default:
+> > > > > +Disabled");
+> > > > > +
+> > > >
+> > > > Sorry no, this is totally beneath us.
+> > >
+> > > It is not acceptable for RDMA too.
+> >
+> > Dave and Leon,
+> >
+> > This is a bit of a special case related specifically to our hardware.
+> > Enabling iWARP on this kind of configuration impacts L2 performance.
+> > We don't want this to happen implicitly once the rdma driver is loaded
+> > since that can happen automatically and could lead to unexpected behavi=
+or
+> from user perspective.
+> > Therefore we need a way of giving the user control to decide whether
+> > they want iWARP at the cost of L2 performance degradation.
+> > We also need this information as soon as the iWARP device registers, so
+> using the rdma-tool would be too late.
+> >
+> > If module parameter is not an option, could you please advise what woul=
+d
+> be ok ?
+> > ethtool private flags ?
+> > devlink ?
+>=20
+> Yes, devlink params are modern way to have same functionality as module
+> parameters.
+>=20
+> This patch can help you in order to get a sense of how to do it.
+> https://lore.kernel.org/patchwork/patch/959195/
+>=20
+Thanks Leon,=20
+Michal
 
-IOWs replace 3.5 lines with 1.
-
-> 
-> Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-
-Acked-by: Douglas Gilbert <dgilbert-qazKcTl6WRFWk0Htik3J/w@public.gmane.org>
-
-> ---
->   drivers/scsi/sg.c | 7 +------
->   1 file changed, 1 insertion(+), 6 deletions(-)
-> 
-> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-> index d3f15319b9b3..bcdc28e5ede7 100644
-> --- a/drivers/scsi/sg.c
-> +++ b/drivers/scsi/sg.c
-> @@ -1,3 +1,4 @@
-> +// SPDX-License-Identifier: GPL-2.0+
->   /*
->    *  History:
->    *  Started: Aug 9 by Lawrence Foard (entropy-Jk6FQSss4Zz2eFz/2MeuCQ@public.gmane.org),
-> @@ -8,12 +9,6 @@
->    *        Copyright (C) 1992 Lawrence Foard
->    * Version 2 and 3 extensions to driver:
->    *        Copyright (C) 1998 - 2014 Douglas Gilbert
-> - *
-> - * This program is free software; you can redistribute it and/or modify
-> - * it under the terms of the GNU General Public License as published by
-> - * the Free Software Foundation; either version 2, or (at your option)
-> - * any later version.
-> - *
->    */
->   
->   static int sg_version_num = 30536;	/* 2 digits for each component */
-> 
-
--- 
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-Visit this group at https://groups.google.com/group/open-iscsi.
-For more options, visit https://groups.google.com/d/optout.
+> Thanks
+>=20
+> >
+> > thanks,
+> > Michal
+> >
+> > >
+> > > Also please don't use comments inside function calls, it complicates
+> > > various checkers without real need.
+> > > dev->ops->iwarp_set_engine_affin(dev->cdev, true /* reset */);
+> > >                                                 ^^^^^^^^^^^^^^
+> > > Thanks
