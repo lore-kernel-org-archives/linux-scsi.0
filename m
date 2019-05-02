@@ -1,16 +1,16 @@
 From: Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>
-Subject: Re: [PATCH 06/24] scsi_transport_fc: switch to SPDX tags
-Date: Thu, 2 May 2019 08:00:42 +0200
-Message-ID: <00c89243-be3b-f5f2-1b1a-6caca8213c28@suse.de>
+Subject: Re: [PATCH 07/24] scsi_transport_iscsi: switch to SPDX tags
+Date: Thu, 2 May 2019 08:01:10 +0200
+Message-ID: <51cb076d-40b0-ce14-08e8-19ed5f3877cb@suse.de>
 References: <20190501161417.32592-1-hch@lst.de>
- <20190501161417.32592-7-hch@lst.de>
+ <20190501161417.32592-8-hch@lst.de>
 Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: quoted-printable
-Return-path: <open-iscsi+bncBCHZVHVFVMARBDUPVLTAKGQE24KE4XY-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Return-path: <open-iscsi+bncBCHZVHVFVMARBJ4PVLTAKGQEHYYYX5I-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-In-Reply-To: <20190501161417.32592-7-hch-jcswGhMUV9g@public.gmane.org>
+In-Reply-To: <20190501161417.32592-8-hch-jcswGhMUV9g@public.gmane.org>
 Content-Language: en-US
 List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
@@ -22,14 +22,14 @@ To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, "James E . J . Bottoml
 Cc: Lee Duncan <lduncan-IBi9RG/b67k@public.gmane.org>, Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Willem Riede <osst-BKTAy3DeTVvYtjvyW6yDsg@public.gmane.org>, Doug Gilbert <dgilbert-qazKcTl6WRFWk0Htik3J/w@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, =?UTF-8?Q?Kai_M=c3=a4kisara?= <Kai.Makisara-9Aww8k/80nUxHbG02/KK1g@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, osst-users-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 5/1/19 6:13 PM, Christoph Hellwig wrote:
+On 5/1/19 6:14 PM, Christoph Hellwig wrote:
 > Use the the GPLv2+ SPDX tag instead of verbose boilerplate text.
 >=20
 > Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 > ---
->   drivers/scsi/scsi_transport_fc.c | 18 +-----------------
->   include/scsi/scsi_transport_fc.h | 18 +-----------------
->   2 files changed, 2 insertions(+), 34 deletions(-)
+>   drivers/scsi/scsi_transport_iscsi.c | 15 +--------------
+>   include/scsi/scsi_transport_iscsi.h | 15 +--------------
+>   2 files changed, 2 insertions(+), 28 deletions(-)
 >=20
 Reviewed-by: Hannes Reinecke <hare-IBi9RG/b67k@public.gmane.org>
 
