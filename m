@@ -1,14 +1,14 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 11/24] libfc: remove duplicate GPL boilerplate text
-Date: Thu, 2 May 2019 08:02:36 +0200
-Message-ID: <453a0b4d-d152-d2fc-4a2c-51c27ce83c71@suse.de>
+Subject: Re: [PATCH 12/24] libfc: switch to SPDX tags
+Date: Thu, 2 May 2019 08:03:01 +0200
+Message-ID: <3ae164d9-f1b0-c1b9-e867-f592b0fef4c2@suse.de>
 References: <20190501161417.32592-1-hch@lst.de>
- <20190501161417.32592-12-hch@lst.de>
+ <20190501161417.32592-13-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190501161417.32592-12-hch@lst.de>
+In-Reply-To: <20190501161417.32592-13-hch@lst.de>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 To: Christoph Hellwig <hch@lst.de>, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
@@ -16,16 +16,28 @@ Cc: Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>, Willem Riede
 List-Id: linux-scsi@vger.kernel.org
 
 On 5/1/19 6:14 PM, Christoph Hellwig wrote:
-> The libfc uapi headers already have proper SPDX tags, remove the
-> duplicate boilerplate text.
+> Use the the GPLv2 SPDX tag instead of verbose boilerplate text.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->   include/uapi/scsi/fc/fc_els.h | 13 -------------
->   include/uapi/scsi/fc/fc_fs.h  | 13 -------------
->   include/uapi/scsi/fc/fc_gs.h  | 13 -------------
->   include/uapi/scsi/fc/fc_ns.h  | 13 -------------
->   4 files changed, 52 deletions(-)
+>   drivers/scsi/libfc/fc_disc.c  | 14 +-------------
+>   drivers/scsi/libfc/fc_elsct.c | 14 +-------------
+>   drivers/scsi/libfc/fc_exch.c  | 14 +-------------
+>   drivers/scsi/libfc/fc_fcp.c   | 14 +-------------
+>   drivers/scsi/libfc/fc_frame.c | 14 +-------------
+>   drivers/scsi/libfc/fc_libfc.c | 14 +-------------
+>   drivers/scsi/libfc/fc_libfc.h | 14 +-------------
+>   drivers/scsi/libfc/fc_lport.c | 14 +-------------
+>   drivers/scsi/libfc/fc_npiv.c  | 14 +-------------
+>   drivers/scsi/libfc/fc_rport.c | 14 +-------------
+>   include/scsi/fc/fc_encaps.h   | 14 +-------------
+>   include/scsi/fc/fc_fc2.h      | 14 +-------------
+>   include/scsi/fc/fc_fcoe.h     | 14 +-------------
+>   include/scsi/fc/fc_fcp.h      | 14 +-------------
+>   include/scsi/fc/fc_fip.h      | 14 +-------------
+>   include/scsi/fc/fc_ms.h       | 17 +++--------------
+>   include/scsi/libfc.h          | 14 +-------------
+>   17 files changed, 19 insertions(+), 222 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
