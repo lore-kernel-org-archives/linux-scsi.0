@@ -1,107 +1,43 @@
-From: Tyrel Datwyler <tyreld@linux.ibm.com>
-Subject: [PATCH 3/3] ibmvscsi: fix tripping of blk_mq_run_hw_queue WARN_ON
-Date: Wed,  1 May 2019 19:47:29 -0500
-Message-ID: <20190502004729.19962-3-tyreld@linux.ibm.com>
-References: <20190502004729.19962-1-tyreld@linux.ibm.com>
-Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-In-Reply-To: <20190502004729.19962-1-tyreld@linux.ibm.com>
-List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
-List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
-Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
-Sender: "Linuxppc-dev"
- <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-To: james.bottomley@hansenpartnership.com
-Cc: Tyrel Datwyler <tyreld@linux.ibm.com>, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Tyrel Datwyler <tyreld@linux.vnet.ibm.com>, brking@linux.ibm.com, linuxppc-dev@lists.ozlabs.org
+From: Leon Romanovsky <leon@kernel.org>
+Subject: Re: [PATCH net-next 07/10] qed*: Add iWARP 100g support
+Date: Thu, 2 May 2019 08:13:20 +0300
+Message-ID: <20190502051320.GF7676@mtr-leonro.mtl.com>
+References: <20190501095722.6902-1-michal.kalderon@marvell.com>
+ <20190501095722.6902-8-michal.kalderon@marvell.com>
+ <20190501.203522.1577716429222042609.davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <netdev-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20190501.203522.1577716429222042609.davem@davemloft.net>
+Sender: netdev-owner@vger.kernel.org
+To: michal.kalderon@marvell.com, David Miller <davem@davemloft.net>
+Cc: ariel.elior@marvell.com, jgg@ziepe.ca, dledford@redhat.com, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+On Wed, May 01, 2019 at 08:35:22PM -0400, David Miller wrote:
+> From: Michal Kalderon <michal.kalderon@marvell.com>
+> Date: Wed, 1 May 2019 12:57:19 +0300
+>
+> > diff --git a/drivers/infiniband/hw/qedr/main.c b/drivers/infiniband/hw/qedr/main.c
+> > index d93c8a893a89..8bc6775abb79 100644
+> > --- a/drivers/infiniband/hw/qedr/main.c
+> > +++ b/drivers/infiniband/hw/qedr/main.c
+> > @@ -52,6 +52,10 @@ MODULE_DESCRIPTION("QLogic 40G/100G ROCE Driver");
+> >  MODULE_AUTHOR("QLogic Corporation");
+> >  MODULE_LICENSE("Dual BSD/GPL");
+> >
+> > +static uint iwarp_cmt;
+> > +module_param(iwarp_cmt, uint, 0444);
+> > +MODULE_PARM_DESC(iwarp_cmt, " iWARP: Support CMT mode. 0 - Disabled, 1 - Enabled. Default: Disabled");
+> > +
+>
+> Sorry no, this is totally beneath us.
 
-After a successful SRP login response we call scsi_unblock_requests() to
-kick any pending IO's. The callback to process this SRP response happens in
-a tasklet and therefore is in softirq context. The result of such is
-that when blk-mq is enabled it is no longer safe to call
-scsi_unblock_requests() from this context. The result of duing so
-triggers the following WARN_ON splat in dmesg after a host reset or CRQ
-reenablement.
+It is not acceptable for RDMA too.
 
-WARNING: CPU: 0 PID: 0 at block/blk-mq.c:1375 __blk_mq_run_hw_queue+0x120/0x180
-Modules linked in:
-CPU: 0 PID: 0 Comm: swapper/0 Not tainted 5.0.0-rc8 #4
-NIP [c0000000009771e0] __blk_mq_run_hw_queue+0x120/0x180
-LR [c000000000977484] __blk_mq_delay_run_hw_queue+0x244/0x250
-Call Trace:
-
-__blk_mq_delay_run_hw_queue+0x244/0x250
-blk_mq_run_hw_queue+0x8c/0x1c0
-blk_mq_run_hw_queues+0x60/0x90
-scsi_run_queue+0x1e4/0x3b0
-scsi_run_host_queues+0x48/0x80
-login_rsp+0xb0/0x100
-ibmvscsi_handle_crq+0x30c/0x3e0
-ibmvscsi_task+0x54/0xe0
-tasklet_action_common.isra.3+0xc4/0x1a0
-__do_softirq+0x174/0x3f4
-irq_exit+0xf0/0x120
-__do_irq+0xb0/0x210
-call_do_irq+0x14/0x24
-do_IRQ+0x9c/0x130
-hardware_interrupt_common+0x14c/0x150
-
-This patch fixes the issue by introducing a new host action for
-unblocking the scsi requests in our seperate work thread.
-
-Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
----
- drivers/scsi/ibmvscsi/ibmvscsi.c | 5 ++++-
- drivers/scsi/ibmvscsi/ibmvscsi.h | 1 +
- 2 files changed, 5 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
-index 683139e6c63f..c1d83eb5c5f7 100644
---- a/drivers/scsi/ibmvscsi/ibmvscsi.c
-+++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
-@@ -1179,7 +1179,8 @@ static void login_rsp(struct srp_event_struct *evt_struct)
- 		   be32_to_cpu(evt_struct->xfer_iu->srp.login_rsp.req_lim_delta));
- 
- 	/* If we had any pending I/Os, kick them */
--	scsi_unblock_requests(hostdata->host);
-+	hostdata->action = IBMVSCSI_HOST_ACTION_UNBLOCK;
-+	wake_up(&hostdata->work_wait_q);
- }
- 
- /**
-@@ -2125,6 +2126,7 @@ static void ibmvscsi_do_work(struct ibmvscsi_host_data *hostdata)
- 	spin_lock_irqsave(hostdata->host->host_lock, flags);
- 	switch (hostdata->action) {
- 	case IBMVSCSI_HOST_ACTION_NONE:
-+	case IBMVSCSI_HOST_ACTION_UNBLOCK:
- 		break;
- 	case IBMVSCSI_HOST_ACTION_RESET:
- 		rc = ibmvscsi_reset_crq_queue(&hostdata->queue, hostdata);
-@@ -2162,6 +2164,7 @@ static int __ibmvscsi_work_to_do(struct ibmvscsi_host_data *hostdata)
- 		return 0;
- 	case IBMVSCSI_HOST_ACTION_RESET:
- 	case IBMVSCSI_HOST_ACTION_REENABLE:
-+	case IBMVSCSI_HOST_ACTION_UNBLOCK:
- 	default:
- 		break;
- 	}
-diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.h b/drivers/scsi/ibmvscsi/ibmvscsi.h
-index 04bcbc832dc9..d9bf502334ba 100644
---- a/drivers/scsi/ibmvscsi/ibmvscsi.h
-+++ b/drivers/scsi/ibmvscsi/ibmvscsi.h
-@@ -92,6 +92,7 @@ enum ibmvscsi_host_action {
- 	IBMVSCSI_HOST_ACTION_NONE = 0,
- 	IBMVSCSI_HOST_ACTION_RESET,
- 	IBMVSCSI_HOST_ACTION_REENABLE,
-+	IBMVSCSI_HOST_ACTION_UNBLOCK,
- };
- 
- /* all driver data associated with a host adapter */
--- 
-2.18.1
+Also please don't use comments inside function calls, it complicates
+various checkers without real need.
+dev->ops->iwarp_set_engine_affin(dev->cdev, true /* reset */);
+                                                ^^^^^^^^^^^^^^
+Thanks
