@@ -1,17 +1,16 @@
 From: Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>
-Subject: Re: [PATCH 02/24] scsi: switch the remaining scsi midlayer files to
- use SPDX tags
-Date: Thu, 2 May 2019 07:59:08 +0200
-Message-ID: <7c02b3f0-f53e-ec56-bbab-1eebaa904a71@suse.de>
+Subject: Re: [PATCH 03/24] scsi_netlink: remove duplicate GPL boilerplate text
+Date: Thu, 2 May 2019 07:59:28 +0200
+Message-ID: <dd20309a-9fe2-ae63-c49e-a6645980e352@suse.de>
 References: <20190501161417.32592-1-hch@lst.de>
- <20190501161417.32592-3-hch@lst.de>
+ <20190501161417.32592-4-hch@lst.de>
 Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: quoted-printable
-Return-path: <open-iscsi+bncBCHZVHVFVMARBLUOVLTAKGQE7E7Y2MY-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Return-path: <open-iscsi+bncBCHZVHVFVMARBQUOVLTAKGQEXZNVXZI-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-In-Reply-To: <20190501161417.32592-3-hch-jcswGhMUV9g@public.gmane.org>
+In-Reply-To: <20190501161417.32592-4-hch-jcswGhMUV9g@public.gmane.org>
 Content-Language: en-US
 List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
@@ -24,14 +23,13 @@ Cc: Lee Duncan <lduncan-IBi9RG/b67k@public.gmane.org>, Chris Leech <cleech-H+wXa
 List-Id: linux-scsi@vger.kernel.org
 
 On 5/1/19 6:13 PM, Christoph Hellwig wrote:
-> Use the GPLv2 SPDX tag instead of verbose boilerplate text.
+> The SCSI netlink uapi header already has a proper SPDX tag, remove the
+> duplicate boilerplate text.
 >=20
 > Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 > ---
->   drivers/scsi/scsi_logging.c |  3 +--
->   drivers/scsi/scsi_sysctl.c  |  2 +-
->   drivers/scsi/scsi_trace.c   | 14 +-------------
->   3 files changed, 3 insertions(+), 16 deletions(-)
+>   include/uapi/scsi/scsi_netlink.h | 15 ---------------
+>   1 file changed, 15 deletions(-)
 >=20
 Reviewed-by: Hannes Reinecke <hare-IBi9RG/b67k@public.gmane.org>
 
