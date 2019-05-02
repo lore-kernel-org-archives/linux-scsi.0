@@ -1,16 +1,16 @@
 From: Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>
-Subject: Re: [PATCH 18/24] sd: add a SPDX tag to sd.c
-Date: Thu, 2 May 2019 08:05:01 +0200
-Message-ID: <e5753ac3-43a8-b4b7-4ce4-ed05e413b5e1@suse.de>
+Subject: Re: [PATCH 19/24] sd: switch remaining files to SPDX tags
+Date: Thu, 2 May 2019 08:05:19 +0200
+Message-ID: <cef71462-6123-f002-cca0-e2381dc02c58@suse.de>
 References: <20190501161417.32592-1-hch@lst.de>
- <20190501161417.32592-19-hch@lst.de>
+ <20190501161417.32592-20-hch@lst.de>
 Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: quoted-printable
-Return-path: <open-iscsi+bncBCHZVHVFVMARBDURVLTAKGQEBX6XLGI-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Return-path: <open-iscsi+bncBCHZVHVFVMARBIERVLTAKGQEPYQOU4Y-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-In-Reply-To: <20190501161417.32592-19-hch-jcswGhMUV9g@public.gmane.org>
+In-Reply-To: <20190501161417.32592-20-hch-jcswGhMUV9g@public.gmane.org>
 Content-Language: en-US
 List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
@@ -23,23 +23,13 @@ Cc: Lee Duncan <lduncan-IBi9RG/b67k@public.gmane.org>, Chris Leech <cleech-H+wXa
 List-Id: linux-scsi@vger.kernel.org
 
 On 5/1/19 6:14 PM, Christoph Hellwig wrote:
-> sd.c is the only sd file missing licensing information.  Add a
-> GPLv2 tag for the default kernel license.
+> Use the the GPLv2 SPDX tag instead of verbose boilerplate text.
 >=20
 > Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 > ---
->   drivers/scsi/sd.c | 1 +
->   1 file changed, 1 insertion(+)
->=20
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index 2b2bc4b49d78..4852c2223359 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -1,3 +1,4 @@
-> +// SPDX-License-Identifier: GPL-2.0
->   /*
->    *      sd.c Copyright (C) 1992 Drew Eckhardt
->    *           Copyright (C) 1993, 1994, 1995, 1999 Eric Youngdale
+>   drivers/scsi/sd_dif.c | 16 +---------------
+>   drivers/scsi/sd_zbc.c | 16 +---------------
+>   2 files changed, 2 insertions(+), 30 deletions(-)
 >=20
 Reviewed-by: Hannes Reinecke <hare-IBi9RG/b67k@public.gmane.org>
 
