@@ -1,14 +1,14 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 09/24] scsi_transport_spi: switch to SPDX tags
-Date: Thu, 2 May 2019 08:01:56 +0200
-Message-ID: <b275d6cc-ae18-e57a-5a29-3eafd2938233@suse.de>
+Subject: Re: [PATCH 10/24] scsi_transport_srp: switch to SPDX tags
+Date: Thu, 2 May 2019 08:02:15 +0200
+Message-ID: <0e03c324-af1f-fb39-6896-7c2fa516fc60@suse.de>
 References: <20190501161417.32592-1-hch@lst.de>
- <20190501161417.32592-10-hch@lst.de>
+ <20190501161417.32592-11-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190501161417.32592-10-hch@lst.de>
+In-Reply-To: <20190501161417.32592-11-hch@lst.de>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 To: Christoph Hellwig <hch@lst.de>, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
@@ -20,9 +20,8 @@ On 5/1/19 6:14 PM, Christoph Hellwig wrote:
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->   drivers/scsi/scsi_transport_spi.c | 15 +--------------
->   include/scsi/scsi_transport_spi.h | 15 +--------------
->   2 files changed, 2 insertions(+), 28 deletions(-)
+>   drivers/scsi/scsi_transport_srp.c | 16 +---------------
+>   1 file changed, 1 insertion(+), 15 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
