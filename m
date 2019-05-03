@@ -1,177 +1,64 @@
-From: Tyrel Datwyler <tyreld@linux.ibm.com>
-Subject: [PATCH v2 2/3] ibmvscsi: redo driver work thread to use enum action
- states
-Date: Thu,  2 May 2019 19:50:57 -0500
-Message-ID: <20190503005058.8768-2-tyreld@linux.ibm.com>
-References: <20190503005058.8768-1-tyreld@linux.ibm.com>
-Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-In-Reply-To: <20190503005058.8768-1-tyreld@linux.ibm.com>
-List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
-List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
-Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
-Sender: "Linuxppc-dev"
- <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-To: james.bottomley@hansenpartnership.com
-Cc: Tyrel Datwyler <tyreld@linux.ibm.com>, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Tyrel Datwyler <tyreld@linux.vnet.ibm.com>, brking@linux.ibm.com, linuxppc-dev@lists.ozlabs.org
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 24/24] osst: add a SPDX tag to osst.c
+Date: Fri, 3 May 2019 10:05:03 +0200
+Message-ID: <c9a58611-13e2-8e13-b573-b504032c017c@suse.de>
+References: <20190501161417.32592-1-hch@lst.de>
+ <20190501161417.32592-25-hch@lst.de>
+ <70277444-5b5b-6e3c-5af3-c658a841b144@suse.de> <20190502125312.GA2560@lst.de>
+ <10a8c8f5-879c-685f-f43c-d5af678b2187@suse.de>
+ <CAKnBiiaSyW27tCqU4i6zStF3AoLPcndSL2gjz1b17LdoFddiiw@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAKnBiiaSyW27tCqU4i6zStF3AoLPcndSL2gjz1b17LdoFddiiw@mail.gmail.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Willem Riede <osst@riede.org>
+Cc: Christoph Hellwig <hch@lst.de>, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>, Doug Gilbert <dgilbert@interlog.com>, Jens Axboe <axboe@kernel.dk>, =?UTF-8?Q?Kai_M=c3=a4kisara?= <Kai.Makisara@kolumbus.fi>, linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com, osst-users@lists.sourceforge.net, linux-kernel@vger.kernel.org, Chriosstoph Hellwig <hch@losst.de>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+On 5/2/19 9:55 PM, Willem Riede wrote:
+> On Thu, May 2, 2019 at 7:19 AM Hannes Reinecke <hare@suse.de 
+> <mailto:hare@suse.de>> wrote:
+> 
+>     On 5/2/19 2:53 PM, Christoph Hellwig wrote:
+>      > On Thu, May 02, 2019 at 08:06:38AM +0200, Hannes Reinecke wrote:
+>      >> On 5/1/19 6:14 PM, Christoph Hellwig wrote:
+>      >>> osst.c is the only osst file missing licensing information.  Add a
+>      >>> GPLv2 tag for the default kernel license.
+>      >>>
+>      >>> Signed-off-by: Chriosstoph Hellwig <hch@losst.de
+>     <mailto:hch@losst.de>>
+>      >
+>      > FYI, my s/st/osst/ on the commit message message up my signoff, this
+>      > should be:
+>      >
+>      > Signed-off-by: Christoph Hellwig <hch@lst.de <mailto:hch@lst.de>>
+>      >
+>     Maybe it's time to kill osst.c for good ...
+> 
+> 
+> Yes. I've been thinking about doing just that. The devices it supports 
+> are now thoroughly obsolete. The manufacturer has gone out of business. 
+> All my test drives have broken down over time, so I can't even test any 
+> changes any more.
+> 
+Just when I thought to reach out to you :-)
 
-The current implemenation relies on two flags in the drivers private host
-structure to signal the need for a host reset or to reenable the CRQ after a
-LPAR migration. This patch does away with those flags and introduces a single
-action flag and defined enums for the supported kthread work actions. Lastly,
-the if/else logic is replaced with a switch statement.
+Thing is, we've done numerous changes to the 'st' driver in the course 
+of the years, most of which seem to have avoided osst :-(
 
-Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
----
-Changes in v2:
-	release/grab host_lock around reset/reenable calls
+So what's your suggestion here?
+Just drop it completely?
+Or can we somehow fold the OnStream-specific things back into st.c?
 
- drivers/scsi/ibmvscsi/ibmvscsi.c | 61 ++++++++++++++++++++++----------
- drivers/scsi/ibmvscsi/ibmvscsi.h |  9 +++--
- 2 files changed, 49 insertions(+), 21 deletions(-)
+Cheers,
 
-diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
-index 65fc8ca962c5..8df82c58e7b9 100644
---- a/drivers/scsi/ibmvscsi/ibmvscsi.c
-+++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
-@@ -828,7 +828,7 @@ static void ibmvscsi_reset_host(struct ibmvscsi_host_data *hostdata)
- 	atomic_set(&hostdata->request_limit, 0);
- 
- 	purge_requests(hostdata, DID_ERROR);
--	hostdata->reset_crq = 1;
-+	hostdata->action = IBMVSCSI_HOST_ACTION_RESET;
- 	wake_up(&hostdata->work_wait_q);
- }
- 
-@@ -1797,7 +1797,7 @@ static void ibmvscsi_handle_crq(struct viosrp_crq *crq,
- 			/* We need to re-setup the interpartition connection */
- 			dev_info(hostdata->dev, "Re-enabling adapter!\n");
- 			hostdata->client_migrated = 1;
--			hostdata->reenable_crq = 1;
-+			hostdata->action = IBMVSCSI_HOST_ACTION_REENABLE;
- 			purge_requests(hostdata, DID_REQUEUE);
- 			wake_up(&hostdata->work_wait_q);
- 		} else {
-@@ -2116,48 +2116,71 @@ static unsigned long ibmvscsi_get_desired_dma(struct vio_dev *vdev)
- 
- static void ibmvscsi_do_work(struct ibmvscsi_host_data *hostdata)
- {
-+	unsigned long flags;
- 	int rc;
- 	char *action = "reset";
- 
--	if (hostdata->reset_crq) {
--		smp_rmb();
--		hostdata->reset_crq = 0;
--
-+	spin_lock_irqsave(hostdata->host->host_lock, flags);
-+	switch (hostdata->action) {
-+	case IBMVSCSI_HOST_ACTION_NONE:
-+		break;
-+	case IBMVSCSI_HOST_ACTION_RESET:
-+		spin_unlock_irqrestore(hostdata->host->host_lock, flags);
- 		rc = ibmvscsi_reset_crq_queue(&hostdata->queue, hostdata);
-+		spin_lock_irqsave(hostdata->host->host_lock, flags);
- 		if (!rc)
- 			rc = ibmvscsi_send_crq(hostdata, 0xC001000000000000LL, 0);
- 		vio_enable_interrupts(to_vio_dev(hostdata->dev));
--	} else if (hostdata->reenable_crq) {
--		smp_rmb();
-+		break;
-+	case IBMVSCSI_HOST_ACTION_REENABLE:
- 		action = "enable";
-+		spin_unlock_irqrestore(hostdata->host->host_lock, flags);
- 		rc = ibmvscsi_reenable_crq_queue(&hostdata->queue, hostdata);
--		hostdata->reenable_crq = 0;
-+		spin_lock_irqsave(hostdata->host->host_lock, flags);
- 		if (!rc)
- 			rc = ibmvscsi_send_crq(hostdata, 0xC001000000000000LL, 0);
--	} else
--		return;
-+		break;
-+	default:
-+		break;
-+	}
-+
-+	hostdata->action = IBMVSCSI_HOST_ACTION_NONE;
- 
- 	if (rc) {
- 		atomic_set(&hostdata->request_limit, -1);
- 		dev_err(hostdata->dev, "error after %s\n", action);
- 	}
-+	spin_unlock_irqrestore(hostdata->host->host_lock, flags);
- 
- 	scsi_unblock_requests(hostdata->host);
- }
- 
--static int ibmvscsi_work_to_do(struct ibmvscsi_host_data *hostdata)
-+static int __ibmvscsi_work_to_do(struct ibmvscsi_host_data *hostdata)
- {
- 	if (kthread_should_stop())
- 		return 1;
--	else if (hostdata->reset_crq) {
--		smp_rmb();
--		return 1;
--	} else if (hostdata->reenable_crq) {
--		smp_rmb();
--		return 1;
-+	switch (hostdata->action) {
-+	case IBMVSCSI_HOST_ACTION_NONE:
-+		return 0;
-+	case IBMVSCSI_HOST_ACTION_RESET:
-+	case IBMVSCSI_HOST_ACTION_REENABLE:
-+	default:
-+		break;
- 	}
- 
--	return 0;
-+	return 1;
-+}
-+
-+static int ibmvscsi_work_to_do(struct ibmvscsi_host_data *hostdata)
-+{
-+	unsigned long flags;
-+	int rc;
-+
-+	spin_lock_irqsave(hostdata->host->host_lock, flags);
-+	rc = __ibmvscsi_work_to_do(hostdata);
-+	spin_unlock_irqrestore(hostdata->host->host_lock, flags);
-+
-+	return rc;
- }
- 
- static int ibmvscsi_work(void *data)
-diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.h b/drivers/scsi/ibmvscsi/ibmvscsi.h
-index 3a7875575616..04bcbc832dc9 100644
---- a/drivers/scsi/ibmvscsi/ibmvscsi.h
-+++ b/drivers/scsi/ibmvscsi/ibmvscsi.h
-@@ -88,13 +88,18 @@ struct event_pool {
- 	dma_addr_t iu_token;
- };
- 
-+enum ibmvscsi_host_action {
-+	IBMVSCSI_HOST_ACTION_NONE = 0,
-+	IBMVSCSI_HOST_ACTION_RESET,
-+	IBMVSCSI_HOST_ACTION_REENABLE,
-+};
-+
- /* all driver data associated with a host adapter */
- struct ibmvscsi_host_data {
- 	struct list_head host_list;
- 	atomic_t request_limit;
- 	int client_migrated;
--	int reset_crq;
--	int reenable_crq;
-+	enum ibmvscsi_host_action action;
- 	struct device *dev;
- 	struct event_pool pool;
- 	struct crq_queue queue;
+Hannes
 -- 
-2.18.1
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Mary Higgins, Sri Rasiah
+HRB 21284 (AG Nürnberg)
