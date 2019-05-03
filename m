@@ -1,9 +1,10 @@
 From: Tyrel Datwyler <tyreld@linux.ibm.com>
-Subject: [PATCH v2 1/3] ibmvscsi: Wire up host_reset() in the drivers
- scsi_host_template
-Date: Thu,  2 May 2019 19:50:56 -0500
-Message-ID: <20190503005058.8768-1-tyreld@linux.ibm.com>
+Subject: [PATCH v2 3/3] ibmvscsi: fix tripping of blk_mq_run_hw_queue WARN_ON
+Date: Thu,  2 May 2019 19:50:58 -0500
+Message-ID: <20190503005058.8768-3-tyreld@linux.ibm.com>
+References: <20190503005058.8768-1-tyreld@linux.ibm.com>
 Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+In-Reply-To: <20190503005058.8768-1-tyreld@linux.ibm.com>
 List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
  <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
 List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
@@ -20,49 +21,90 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
 
-Wire up the host_reset function in our driver_template to allow a user
-requested adpater reset via the host_reset sysfs attribute.
+After a successful SRP login response we call scsi_unblock_requests() to
+kick any pending IO's. The callback to process this SRP response happens in
+a tasklet and therefore is in softirq context. The result of such is
+that when blk-mq is enabled it is no longer safe to call
+scsi_unblock_requests() from this context. The result of duing so
+triggers the following WARN_ON splat in dmesg after a host reset or CRQ
+reenablement.
 
-Example:
+WARNING: CPU: 0 PID: 0 at block/blk-mq.c:1375 __blk_mq_run_hw_queue+0x120/0x180
+Modules linked in:
+CPU: 0 PID: 0 Comm: swapper/0 Not tainted 5.0.0-rc8 #4
+NIP [c0000000009771e0] __blk_mq_run_hw_queue+0x120/0x180
+LR [c000000000977484] __blk_mq_delay_run_hw_queue+0x244/0x250
+Call Trace:
 
-echo "adapter" > /sys/class/scsi_host/host0/host_reset
+__blk_mq_delay_run_hw_queue+0x244/0x250
+blk_mq_run_hw_queue+0x8c/0x1c0
+blk_mq_run_hw_queues+0x60/0x90
+scsi_run_queue+0x1e4/0x3b0
+scsi_run_host_queues+0x48/0x80
+login_rsp+0xb0/0x100
+ibmvscsi_handle_crq+0x30c/0x3e0
+ibmvscsi_task+0x54/0xe0
+tasklet_action_common.isra.3+0xc4/0x1a0
+__do_softirq+0x174/0x3f4
+irq_exit+0xf0/0x120
+__do_irq+0xb0/0x210
+call_do_irq+0x14/0x24
+do_IRQ+0x9c/0x130
+hardware_interrupt_common+0x14c/0x150
+
+This patch fixes the issue by introducing a new host action for
+unblocking the scsi requests in our seperate work thread.
 
 Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
 ---
 Changes in v2:
-	removed interrupt disabe/enable around reset
+	no change
 
- drivers/scsi/ibmvscsi/ibmvscsi.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+ drivers/scsi/ibmvscsi/ibmvscsi.c | 5 ++++-
+ drivers/scsi/ibmvscsi/ibmvscsi.h | 1 +
+ 2 files changed, 5 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
-index 8cec5230fe31..65fc8ca962c5 100644
+index 8df82c58e7b9..727c31dc11a0 100644
 --- a/drivers/scsi/ibmvscsi/ibmvscsi.c
 +++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
-@@ -2050,6 +2050,16 @@ static struct device_attribute ibmvscsi_host_config = {
- 	.show = show_host_config,
+@@ -1179,7 +1179,8 @@ static void login_rsp(struct srp_event_struct *evt_struct)
+ 		   be32_to_cpu(evt_struct->xfer_iu->srp.login_rsp.req_lim_delta));
+ 
+ 	/* If we had any pending I/Os, kick them */
+-	scsi_unblock_requests(hostdata->host);
++	hostdata->action = IBMVSCSI_HOST_ACTION_UNBLOCK;
++	wake_up(&hostdata->work_wait_q);
+ }
+ 
+ /**
+@@ -2123,6 +2124,7 @@ static void ibmvscsi_do_work(struct ibmvscsi_host_data *hostdata)
+ 	spin_lock_irqsave(hostdata->host->host_lock, flags);
+ 	switch (hostdata->action) {
+ 	case IBMVSCSI_HOST_ACTION_NONE:
++	case IBMVSCSI_HOST_ACTION_UNBLOCK:
+ 		break;
+ 	case IBMVSCSI_HOST_ACTION_RESET:
+ 		spin_unlock_irqrestore(hostdata->host->host_lock, flags);
+@@ -2164,6 +2166,7 @@ static int __ibmvscsi_work_to_do(struct ibmvscsi_host_data *hostdata)
+ 		return 0;
+ 	case IBMVSCSI_HOST_ACTION_RESET:
+ 	case IBMVSCSI_HOST_ACTION_REENABLE:
++	case IBMVSCSI_HOST_ACTION_UNBLOCK:
+ 	default:
+ 		break;
+ 	}
+diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.h b/drivers/scsi/ibmvscsi/ibmvscsi.h
+index 04bcbc832dc9..d9bf502334ba 100644
+--- a/drivers/scsi/ibmvscsi/ibmvscsi.h
++++ b/drivers/scsi/ibmvscsi/ibmvscsi.h
+@@ -92,6 +92,7 @@ enum ibmvscsi_host_action {
+ 	IBMVSCSI_HOST_ACTION_NONE = 0,
+ 	IBMVSCSI_HOST_ACTION_RESET,
+ 	IBMVSCSI_HOST_ACTION_REENABLE,
++	IBMVSCSI_HOST_ACTION_UNBLOCK,
  };
  
-+static int ibmvscsi_host_reset(struct Scsi_Host *shost, int reset_type)
-+{
-+	struct ibmvscsi_host_data *hostdata = shost_priv(shost);
-+
-+	dev_info(hostdata->dev, "Initiating adapter reset!\n");
-+	ibmvscsi_reset_host(hostdata);
-+
-+	return 0;
-+}
-+
- static struct device_attribute *ibmvscsi_attrs[] = {
- 	&ibmvscsi_host_vhost_loc,
- 	&ibmvscsi_host_vhost_name,
-@@ -2076,6 +2086,7 @@ static struct scsi_host_template driver_template = {
- 	.eh_host_reset_handler = ibmvscsi_eh_host_reset_handler,
- 	.slave_configure = ibmvscsi_slave_configure,
- 	.change_queue_depth = ibmvscsi_change_queue_depth,
-+	.host_reset = ibmvscsi_host_reset,
- 	.cmd_per_lun = IBMVSCSI_CMDS_PER_LUN_DEFAULT,
- 	.can_queue = IBMVSCSI_MAX_REQUESTS_DEFAULT,
- 	.this_id = -1,
+ /* all driver data associated with a host adapter */
 -- 
 2.18.1
