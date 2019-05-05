@@ -1,41 +1,81 @@
-From: Colin King <colin.king@canonical.com>
-Subject: [PATCH] scsi: bnx2fc: fix incorrect cast to u64 on shift operation
-Date: Sat,  4 May 2019 17:48:29 +0100
-Message-ID: <20190504164829.26631-1-colin.king@canonical.com>
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [PATCH V4 0/3] scsi: core: avoid big pre-allocation for sg list
+Date: Sun, 5 May 2019 09:10:18 +0800
+Message-ID: <20190505011017.GD655@ming.t460p>
+References: <20190428073932.9898-1-ming.lei@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: QLogic-Storage-Upstream@qlogic.com, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <netdev-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20190428073932.9898-1-ming.lei@redhat.com>
+Sender: netdev-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-block@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Bart Van Assche <bvanassche@acm.org>, "Ewan D . Milne" <emilne@redhat.com>, Hannes Reinecke <hare@suse.com>, Sagi Grimberg <sagi@grimberg.me>, Chuck Lever <chuck.lever@oracle.com>, netdev@vger.kernel.org, linux-nvme@lists.infradead.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Colin Ian King <colin.king@canonical.com>
+On Sun, Apr 28, 2019 at 03:39:29PM +0800, Ming Lei wrote:
+> Hi,
+> 
+> Since supporting to blk-mq, big pre-allocation for sg list is introduced,
+> this way is very unfriendly wrt. memory consumption.
+> 
+> There were Red Hat internal reports that some scsi_debug based tests
+> can't be run any more because of too big pre-allocation.
+> 
+> Also lpfc users commplained that 1GB+ ram is pre-allocatd for single
+> HBA.
+> 
+> sg_alloc_table_chained() is improved to support variant size of 1st
+> pre-allocated SGL in the 1st patch as suggested by Christoph.
+> 
+> The other two patches try to address this issue by allocating sg list runtime,
+> meantime pre-allocating one or two inline sg entries for small IO. This
+> ways follows NVMe's approach wrt. sg list allocation.
+> 
+> V4:
+> 	- add parameter to sg_alloc_table_chained()/sg_free_table_chained()
+> 	directly, and update current callers
+> 
+> V3:
+> 	- improve sg_alloc_table_chained() to accept variant size of
+> 	the 1st pre-allocated SGL
+> 	- applies the improved sg API to address the big pre-allocation
+> 	issue
+> 
+> V2:
+> 	- move inline sg table initializetion into one helper
+> 	- introduce new helper for getting inline sg
+> 	- comment log fix
+> 
+> 
+> Ming Lei (3):
+>   lib/sg_pool.c: improve APIs for allocating sg pool
+>   scsi: core: avoid to pre-allocate big chunk for protection meta data
+>   scsi: core: avoid to pre-allocate big chunk for sg list
+> 
+>  drivers/nvme/host/fc.c            |  7 ++++---
+>  drivers/nvme/host/rdma.c          |  7 ++++---
+>  drivers/nvme/target/loop.c        |  4 ++--
+>  drivers/scsi/scsi_lib.c           | 31 ++++++++++++++++++++++---------
+>  include/linux/scatterlist.h       | 11 +++++++----
+>  lib/scatterlist.c                 | 36 +++++++++++++++++++++++-------------
+>  lib/sg_pool.c                     | 37 +++++++++++++++++++++++++++----------
+>  net/sunrpc/xprtrdma/svc_rdma_rw.c |  5 +++--
+>  8 files changed, 92 insertions(+), 46 deletions(-)
+> 
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Bart Van Assche <bvanassche@acm.org>
+> Cc: Ewan D. Milne <emilne@redhat.com>
+> Cc: Hannes Reinecke <hare@suse.com>
+> Cc: Sagi Grimberg <sagi@grimberg.me>
+> Cc: Chuck Lever <chuck.lever@oracle.com>
+> Cc: netdev@vger.kernel.org
+> Cc: linux-nvme@lists.infradead.org
 
-Currently an int is being shifted and the result is being cast to a u64
-which leads to undefined behaviour if the shift is more than 31 bits. Fix
-this by casting the integer value 1 to u64 before the shift operation.
+Hi Martin,
 
-Addresses-Coverity: ("Bad shift operation")
-Fixes: 7b594769120b ("[SCSI] bnx2fc: Handle REC_TOV error code from firmware")
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/scsi/bnx2fc/bnx2fc_hwi.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Could you consider to merge this patchset to 5.2 if you are fine?
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_hwi.c b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-index 19734ec7f42e..747f019fb393 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-@@ -830,7 +830,7 @@ static void bnx2fc_process_unsol_compl(struct bnx2fc_rport *tgt, u16 wqe)
- 			((u64)err_entry->data.err_warn_bitmap_hi << 32) |
- 			(u64)err_entry->data.err_warn_bitmap_lo;
- 		for (i = 0; i < BNX2FC_NUM_ERR_BITS; i++) {
--			if (err_warn_bit_map & (u64) (1 << i)) {
-+			if (err_warn_bit_map & ((u64)1 << i)) {
- 				err_warn = i;
- 				break;
- 			}
--- 
-2.20.1
+
+Thanks,
+Ming
