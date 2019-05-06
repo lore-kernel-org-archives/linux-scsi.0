@@ -1,13 +1,13 @@
 From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 4.19 51/99] scsi: core: add new RDAC LENOVO/DE_Series device
-Date: Mon,  6 May 2019 16:32:24 +0200
-Message-ID: <20190506143058.699453486@linuxfoundation.org>
-References: <20190506143053.899356316@linuxfoundation.org>
+Subject: [PATCH 4.14 45/75] scsi: core: add new RDAC LENOVO/DE_Series device
+Date: Mon,  6 May 2019 16:32:53 +0200
+Message-ID: <20190506143057.279889325@linuxfoundation.org>
+References: <20190506143053.287515952@linuxfoundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190506143053.899356316@linuxfoundation.org>
+In-Reply-To: <20190506143053.287515952@linuxfoundation.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
 Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, stable@vger.kernel.org, Martin Wilck <mwilck@suse.com>, Hannes Reinecke <hare@suse.de>, NetApp RDAC team <ng-eseries-upstream-maintainers@netapp.com>, Christophe Varoqui <christophe.varoqui@opensvc.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, SCSI ML <linux-scsi@vger.kernel.org>, DM ML <dm-devel@redhat.com>, Xose Vazquez Perez <xose.vazquez@gmail.com>, Sasha Levin <sashal@kernel.org>
@@ -36,10 +36,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  2 files changed, 2 insertions(+)
 
 diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
-index c4cbfd07b916..a08ff3bd6310 100644
+index 6b594bc7d94a..022fcd2e4702 100644
 --- a/drivers/scsi/scsi_devinfo.c
 +++ b/drivers/scsi/scsi_devinfo.c
-@@ -238,6 +238,7 @@ static struct {
+@@ -248,6 +248,7 @@ static struct {
  	{"NETAPP", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
  	{"LSI", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
  	{"ENGENIO", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
@@ -48,7 +48,7 @@ index c4cbfd07b916..a08ff3bd6310 100644
  	{"SONY", "CD-ROM CDU-8001", NULL, BLIST_BORKEN},
  	{"SONY", "TSL", NULL, BLIST_FORCELUN},		/* DDS3 & DDS4 autoloaders */
 diff --git a/drivers/scsi/scsi_dh.c b/drivers/scsi/scsi_dh.c
-index 5a58cbf3a75d..c14006ac98f9 100644
+index 375cede0c534..c9bc6f058424 100644
 --- a/drivers/scsi/scsi_dh.c
 +++ b/drivers/scsi/scsi_dh.c
 @@ -75,6 +75,7 @@ static const struct scsi_dh_blist scsi_dh_blist[] = {
