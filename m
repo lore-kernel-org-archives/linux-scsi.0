@@ -1,25 +1,16 @@
 From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 5.0 063/122] scsi: core: add new RDAC
-	LENOVO/DE_Series device
-Date: Mon,  6 May 2019 16:32:01 +0200
-Message-ID: <20190506143100.615679234@linuxfoundation.org>
-References: <20190506143054.670334917@linuxfoundation.org>
+Subject: [PATCH 4.19 51/99] scsi: core: add new RDAC LENOVO/DE_Series device
+Date: Mon,  6 May 2019 16:32:24 +0200
+Message-ID: <20190506143058.699453486@linuxfoundation.org>
+References: <20190506143053.899356316@linuxfoundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20190506143054.670334917@linuxfoundation.org>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190506143053.899356316@linuxfoundation.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
-Cc: "Sasha Levin (Microsoft)" <sashal@kernel.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, SCSI ML <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Xose Vazquez Perez <xose.vazquez@gmail.com>, stable@vger.kernel.org, NetApp RDAC team <ng-eseries-upstream-maintainers@netapp.com>, DM ML <dm-devel@redhat.com>, Martin Wilck <mwilck@suse.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, stable@vger.kernel.org, Martin Wilck <mwilck@suse.com>, Hannes Reinecke <hare@suse.de>, NetApp RDAC team <ng-eseries-upstream-maintainers@netapp.com>, Christophe Varoqui <christophe.varoqui@opensvc.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, SCSI ML <linux-scsi@vger.kernel.org>, DM ML <dm-devel@redhat.com>, Xose Vazquez Perez <xose.vazquez@gmail.com>, Sasha Levin <sashal@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
 [ Upstream commit 1cb1d2c64e812928fe0a40b8f7e74523d0283dbe ]
@@ -38,7 +29,7 @@ Cc: DM ML <dm-devel@redhat.com>
 Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
 Reviewed-by: Martin Wilck <mwilck@suse.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin (Microsoft) <sashal@kernel.org>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
  drivers/scsi/scsi_devinfo.c | 1 +
  drivers/scsi/scsi_dh.c      | 1 +
