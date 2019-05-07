@@ -1,63 +1,108 @@
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 4.9 44/62] scsi: core: add new RDAC LENOVO/DE_Series device
-Date: Mon,  6 May 2019 16:33:15 +0200
-Message-ID: <20190506143055.010173706@linuxfoundation.org>
-References: <20190506143051.102535767@linuxfoundation.org>
+From: Sasha Levin <sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.0 55/99] scsi: aic7xxx: fix EISA support
+Date: Tue,  7 May 2019 01:31:49 -0400
+Message-ID: <20190507053235.29900-55-sashal@kernel.org>
+References: <20190507053235.29900-1-sashal@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190506143051.102535767@linuxfoundation.org>
+In-Reply-To: <20190507053235.29900-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, stable@vger.kernel.org, Martin Wilck <mwilck@suse.com>, Hannes Reinecke <hare@suse.de>, NetApp RDAC team <ng-eseries-upstream-maintainers@netapp.com>, Christophe Varoqui <christophe.varoqui@opensvc.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, SCSI ML <linux-scsi@vger.kernel.org>, DM ML <dm-devel@redhat.com>, Xose Vazquez Perez <xose.vazquez@gmail.com>, Sasha Levin <sashal@kernel.org>
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc: Christoph Hellwig <hch@lst.de>, Matthew Whitehead <tedheadster@gmail.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-[ Upstream commit 1cb1d2c64e812928fe0a40b8f7e74523d0283dbe ]
+From: Christoph Hellwig <hch@lst.de>
 
-Blacklist "Universal Xport" LUN. It's used for in-band storage array
-management.  Also add model to the rdac dh family.
+[ Upstream commit 144ec97493af34efdb77c5aba146e9c7de8d0a06 ]
 
-Cc: Martin Wilck <mwilck@suse.com>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: NetApp RDAC team <ng-eseries-upstream-maintainers@netapp.com>
-Cc: Christophe Varoqui <christophe.varoqui@opensvc.com>
-Cc: James E.J. Bottomley <jejb@linux.vnet.ibm.com>
-Cc: Martin K. Petersen <martin.petersen@oracle.com>
-Cc: SCSI ML <linux-scsi@vger.kernel.org>
-Cc: DM ML <dm-devel@redhat.com>
-Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Reviewed-by: Martin Wilck <mwilck@suse.com>
+Instead of relying on the now removed NULL argument to
+pci_alloc_consistent, switch to the generic DMA API, and store the struct
+device so that we can pass it.
+
+Fixes: 4167b2ad5182 ("PCI: Remove NULL device handling from PCI DMA API")
+Reported-by: Matthew Whitehead <tedheadster@gmail.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Tested-by: Matthew Whitehead <tedheadster@gmail.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/scsi_devinfo.c | 1 +
- drivers/scsi/scsi_dh.c      | 1 +
- 2 files changed, 2 insertions(+)
+ drivers/scsi/aic7xxx/aic7770_osm.c     |  1 +
+ drivers/scsi/aic7xxx/aic7xxx.h         |  1 +
+ drivers/scsi/aic7xxx/aic7xxx_osm.c     | 10 ++++------
+ drivers/scsi/aic7xxx/aic7xxx_osm_pci.c |  1 +
+ 4 files changed, 7 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
-index 282ea00d0f87..9d555b63d2e2 100644
---- a/drivers/scsi/scsi_devinfo.c
-+++ b/drivers/scsi/scsi_devinfo.c
-@@ -249,6 +249,7 @@ static struct {
- 	{"NETAPP", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
- 	{"LSI", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
- 	{"ENGENIO", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
-+	{"LENOVO", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
- 	{"SMSC", "USB 2 HS-CF", NULL, BLIST_SPARSELUN | BLIST_INQUIRY_36},
- 	{"SONY", "CD-ROM CDU-8001", NULL, BLIST_BORKEN},
- 	{"SONY", "TSL", NULL, BLIST_FORCELUN},		/* DDS3 & DDS4 autoloaders */
-diff --git a/drivers/scsi/scsi_dh.c b/drivers/scsi/scsi_dh.c
-index 375cede0c534..c9bc6f058424 100644
---- a/drivers/scsi/scsi_dh.c
-+++ b/drivers/scsi/scsi_dh.c
-@@ -75,6 +75,7 @@ static const struct scsi_dh_blist scsi_dh_blist[] = {
- 	{"NETAPP", "INF-01-00",		"rdac", },
- 	{"LSI", "INF-01-00",		"rdac", },
- 	{"ENGENIO", "INF-01-00",	"rdac", },
-+	{"LENOVO", "DE_Series",		"rdac", },
- 	{NULL, NULL,			NULL },
- };
+diff --git a/drivers/scsi/aic7xxx/aic7770_osm.c b/drivers/scsi/aic7xxx/aic7770_osm.c
+index 3d401d02c019..bdd177e3d762 100644
+--- a/drivers/scsi/aic7xxx/aic7770_osm.c
++++ b/drivers/scsi/aic7xxx/aic7770_osm.c
+@@ -91,6 +91,7 @@ aic7770_probe(struct device *dev)
+ 	ahc = ahc_alloc(&aic7xxx_driver_template, name);
+ 	if (ahc == NULL)
+ 		return (ENOMEM);
++	ahc->dev = dev;
+ 	error = aic7770_config(ahc, aic7770_ident_table + edev->id.driver_data,
+ 			       eisaBase);
+ 	if (error != 0) {
+diff --git a/drivers/scsi/aic7xxx/aic7xxx.h b/drivers/scsi/aic7xxx/aic7xxx.h
+index 5614921b4041..88b90f9806c9 100644
+--- a/drivers/scsi/aic7xxx/aic7xxx.h
++++ b/drivers/scsi/aic7xxx/aic7xxx.h
+@@ -943,6 +943,7 @@ struct ahc_softc {
+ 	 * Platform specific device information.
+ 	 */
+ 	ahc_dev_softc_t		  dev_softc;
++	struct device		  *dev;
  
+ 	/*
+ 	 * Bus specific device information.
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.c b/drivers/scsi/aic7xxx/aic7xxx_osm.c
+index 3c9c17450bb3..d5c4a0d23706 100644
+--- a/drivers/scsi/aic7xxx/aic7xxx_osm.c
++++ b/drivers/scsi/aic7xxx/aic7xxx_osm.c
+@@ -860,8 +860,8 @@ int
+ ahc_dmamem_alloc(struct ahc_softc *ahc, bus_dma_tag_t dmat, void** vaddr,
+ 		 int flags, bus_dmamap_t *mapp)
+ {
+-	*vaddr = pci_alloc_consistent(ahc->dev_softc,
+-				      dmat->maxsize, mapp);
++	/* XXX: check if we really need the GFP_ATOMIC and unwind this mess! */
++	*vaddr = dma_alloc_coherent(ahc->dev, dmat->maxsize, mapp, GFP_ATOMIC);
+ 	if (*vaddr == NULL)
+ 		return ENOMEM;
+ 	return 0;
+@@ -871,8 +871,7 @@ void
+ ahc_dmamem_free(struct ahc_softc *ahc, bus_dma_tag_t dmat,
+ 		void* vaddr, bus_dmamap_t map)
+ {
+-	pci_free_consistent(ahc->dev_softc, dmat->maxsize,
+-			    vaddr, map);
++	dma_free_coherent(ahc->dev, dmat->maxsize, vaddr, map);
+ }
+ 
+ int
+@@ -1123,8 +1122,7 @@ ahc_linux_register_host(struct ahc_softc *ahc, struct scsi_host_template *templa
+ 
+ 	host->transportt = ahc_linux_transport_template;
+ 
+-	retval = scsi_add_host(host,
+-			(ahc->dev_softc ? &ahc->dev_softc->dev : NULL));
++	retval = scsi_add_host(host, ahc->dev);
+ 	if (retval) {
+ 		printk(KERN_WARNING "aic7xxx: scsi_add_host failed\n");
+ 		scsi_host_put(host);
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c b/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c
+index 0fc14dac7070..717d8d1082ce 100644
+--- a/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c
++++ b/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c
+@@ -250,6 +250,7 @@ ahc_linux_pci_dev_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		}
+ 	}
+ 	ahc->dev_softc = pci;
++	ahc->dev = &pci->dev;
+ 	error = ahc_pci_config(ahc, entry);
+ 	if (error != 0) {
+ 		ahc_free(ahc);
 -- 
 2.20.1
