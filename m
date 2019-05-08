@@ -1,67 +1,107 @@
-From: Alexandru Ardelean <alexandru.ardelean@analog.com>
-Subject: [PATCH 3/3][V3] iio: Handle enumerated properties with gaps
-Date: Wed, 8 May 2019 14:19:13 +0300
-Message-ID: <20190508111913.7276-3-alexandru.ardelean@analog.com>
-References: <20190508111913.7276-1-alexandru.ardelean@analog.com>
+From: "Alastair D'Silva" <alastair@d-silva.org>
+Subject: RE: [PATCH v2 4/7] lib/hexdump.c: Replace ascii bool in hex_dump_to_buffer with flags
+Date: Wed, 8 May 2019 21:41:15 +1000
+Message-ID: <0a1c01d50592$f90f6f00$eb2e4d00$@d-silva.org>
+References: <20190508070148.23130-1-alastair@au1.ibm.com> <20190508070148.23130-5-alastair@au1.ibm.com> <c98a499a4e824bcd824d5ad53d037c67@AcuMS.aculab.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+        charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190508111913.7276-1-alexandru.ardelean@analog.com>
+In-Reply-To: <c98a499a4e824bcd824d5ad53d037c67@AcuMS.aculab.com>
+Content-Language: en-au
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-iio@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: gregkh@linuxfoundation.org, andriy.shevchenko@linux.intel.com, jic23@kernel.org, lars@metafoo.de, Alexandru Ardelean <alexandru.ardelean@analog.com>
+To: 'David Laight' <David.Laight@ACULAB.COM>, 'Alastair D'Silva' <alastair@au1.ibm.com>
+Cc: 'Jani Nikula' <jani.nikula@linux.intel.com>, 'Joonas Lahtinen' <joonas.lahtinen@linux.intel.com>, 'Rodrigo Vivi' <rodrigo.vivi@intel.com>, 'David Airlie' <airlied@linux.ie>, 'Daniel Vetter' <daniel@ffwll.ch>, 'Dan Carpenter' <dan.carpenter@oracle.com>, 'Karsten Keil' <isdn@linux-pingi.de>, 'Jassi Brar' <jassisinghbrar@gmail.com>, 'Tom Lendacky' <thomas.lendacky@amd.com>, "'David S. Miller'" <davem@davemloft.net>, 'Jose Abreu' <Jose.Abreu@synopsys.com>, 'Kalle Valo' <kvalo@codeaurora.org>, 'Stanislaw Gruszka' <sgruszka@redhat.com>, 'Benson Leung' <bleung@chromium.org>, 'Enric Balletbo i Serra' <enric.balletbo@collabora.com>, "'James E.J. Bottomley'" <jejb@linux.ibm.com>, "'Martin K. Petersen'" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Lars-Peter Clausen <lars@metafoo.de>
+> -----Original Message-----
+> From: David Laight <David.Laight@ACULAB.COM>
+> Sent: Wednesday, 8 May 2019 7:20 PM
+> To: 'Alastair D'Silva' <alastair@au1.ibm.com>; alastair@d-silva.org
+> Cc: Jani Nikula <jani.nikula@linux.intel.com>; Joonas Lahtinen
+> <joonas.lahtinen@linux.intel.com>; Rodrigo Vivi =
+<rodrigo.vivi@intel.com>;
+> David Airlie <airlied@linux.ie>; Daniel Vetter <daniel@ffwll.ch>; Dan
+> Carpenter <dan.carpenter@oracle.com>; Karsten Keil <isdn@linux-
+> pingi.de>; Jassi Brar <jassisinghbrar@gmail.com>; Tom Lendacky
+> <thomas.lendacky@amd.com>; David S. Miller <davem@davemloft.net>;
+> Jose Abreu <Jose.Abreu@synopsys.com>; Kalle Valo
+> <kvalo@codeaurora.org>; Stanislaw Gruszka <sgruszka@redhat.com>;
+> Benson Leung <bleung@chromium.org>; Enric Balletbo i Serra
+> <enric.balletbo@collabora.com>; James E.J. Bottomley
+> <jejb@linux.ibm.com>; Martin K. Petersen <martin.petersen@oracle.com>;
+> Greg Kroah-Hartman <gregkh@linuxfoundation.org>; Alexander Viro
+> <viro@zeniv.linux.org.uk>; Petr Mladek <pmladek@suse.com>; Sergey
+> Senozhatsky <sergey.senozhatsky@gmail.com>; Steven Rostedt
+> <rostedt@goodmis.org>; Andrew Morton <akpm@linux-foundation.org>;
+> intel-gfx@lists.freedesktop.org; dri-devel@lists.freedesktop.org; =
+linux-
+> kernel@vger.kernel.org; netdev@vger.kernel.org;
+> ath10k@lists.infradead.org; linux-wireless@vger.kernel.org; linux-
+> scsi@vger.kernel.org; linux-fbdev@vger.kernel.org;
+> devel@driverdev.osuosl.org; linux-fsdevel@vger.kernel.org
+> Subject: RE: [PATCH v2 4/7] lib/hexdump.c: Replace ascii bool in
+> hex_dump_to_buffer with flags
+>=20
+> From: Alastair D'Silva
+> > Sent: 08 May 2019 08:02
+> > To: alastair@d-silva.org
+> ...
+> > --- a/include/linux/printk.h
+> > +++ b/include/linux/printk.h
+> > @@ -480,13 +480,13 @@ enum {
+> >  	DUMP_PREFIX_OFFSET
+> >  };
+> >
+> > -extern int hex_dump_to_buffer(const void *buf, size_t len, int =
+rowsize,
+> > -			      int groupsize, char *linebuf, size_t linebuflen,
+> > -			      bool ascii);
+> > -
+> >  #define HEXDUMP_ASCII			(1 << 0)
+> >  #define HEXDUMP_SUPPRESS_REPEATED	(1 << 1)
+>=20
+> These ought to be BIT(0) and BIT(1)
 
-Some enums might have gaps or reserved values in the middle of their value
-range. E.g. consider a 2-bit enum where the values 0, 1 and 3 have a
-meaning, but 2 is a reserved value and can not be used.
+Thanks, I'll address that.
 
-Add support for such enums to the IIO enum helper functions. A reserved
-values is marked by setting its entry in the items array to NULL rather
-than the normal descriptive string value.
+>=20
+> > +extern int hex_dump_to_buffer(const void *buf, size_t len, int =
+rowsize,
+> > +			      int groupsize, char *linebuf, size_t linebuflen,
+> > +			      u64 flags);
+>=20
+> Why 'u64 flags' ?
+> How many flags do you envisage ??
+> Your HEXDUMP_ASCII (etc) flags are currently signed values and might =
+get
+> sign extended causing grief.
+> 'unsigned int flags' is probably sufficient.
 
-Also, `__sysfs_match_string()` now supports NULL gaps, so that doesn't
-require any changes.
+I was trying to avoid having to change the prototype again in the =
+future, but it's not a big deal, if enough work goes in to require more =
+than 32 bits, it can be updated at that point.
 
-Signed-off-by: Lars-Peter Clausen <lars@metafoo.de>
-Signed-off-by: Alexandru Ardelean <alexandru.ardelean@analog.com>
----
+>=20
+> I've not really looked at the code, it seems OTT in places though.
 
-Changelog v2 -> v3:
-* after fixing __sysfs_match_string(), this change only requires that NULL
-  be handled in the iio_enum_{available_}read functions
-  __sysfs_match_string() handles the NULL gaps
+I'll wait for more concrete criticisms here, this it a bit too vague to =
+take any action on.
 
- drivers/iio/industrialio-core.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+> If someone copies it somewhere where the performance matters (I've =
+user
+> space code which is dominated by its tracing!) then you don't want all =
+the
+> function calls and conditionals even if you want some of the =
+functionality.
 
-diff --git a/drivers/iio/industrialio-core.c b/drivers/iio/industrialio-core.c
-index 9c4d92115504..8b4ff3c8f547 100644
---- a/drivers/iio/industrialio-core.c
-+++ b/drivers/iio/industrialio-core.c
-@@ -446,8 +446,11 @@ ssize_t iio_enum_available_read(struct iio_dev *indio_dev,
- 	if (!e->num_items)
- 		return 0;
- 
--	for (i = 0; i < e->num_items; ++i)
-+	for (i = 0; i < e->num_items; ++i) {
-+		if (!e->items[i])
-+			continue;
- 		len += scnprintf(buf + len, PAGE_SIZE - len, "%s ", e->items[i]);
-+	}
- 
- 	/* replace last space with a newline */
- 	buf[len - 1] = '\n';
-@@ -468,7 +471,7 @@ ssize_t iio_enum_read(struct iio_dev *indio_dev,
- 	i = e->get(indio_dev, chan);
- 	if (i < 0)
- 		return i;
--	else if (i >= e->num_items)
-+	else if (i >= e->num_items || !e->items[i])
- 		return -EINVAL;
- 
- 	return snprintf(buf, PAGE_SIZE, "%s\n", e->items[i]);
--- 
-2.17.1
+Calling hexdump (even in it's unaltered form) in performance critical =
+code is always going to suck. As you mentioned before, it's all based =
+around printf. A performance conscious user would be better off building =
+their code around hex_asc_hi/lo instead (see lib/vsprintf.c:hex_string).
+
+--=20
+Alastair D'Silva           mob: 0423 762 819
+skype: alastair_dsilva     msn: alastair@d-silva.org
+blog: http://alastair.d-silva.org    Twitter: @EvilDeece
