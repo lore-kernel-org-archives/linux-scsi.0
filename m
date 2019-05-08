@@ -1,258 +1,214 @@
-From: "Ewan D. Milne" <emilne@redhat.com>
-Subject: Re: [REPOST, PATCH] scsi: sd: block: Fix regressions in read-only
- block device handling
-Date: Tue, 07 May 2019 09:11:25 -0400
-Message-ID: <ad48a69bb946c5d244755ddbd1af8111c1f90770.camel@redhat.com>
-References: <20190327162141.23882-1-martin.petersen@oracle.com>
+From: Chao Yu <yuchao0@huawei.com>
+Subject: Re: [RFC PATCH 4/4] f2fs: Wire up f2fs to use inline
+ encryption via fscrypt
+Date: Wed, 8 May 2019 11:02:20 +0800
+Message-ID: <18ff678e-81eb-c883-eeb0-500c886f3580@huawei.com>
+References: <20190506223544.195371-1-satyat@google.com>
+ <20190506223544.195371-5-satyat@google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20190327162141.23882-1-martin.petersen@oracle.com>
-Sender: stable-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Cc: Jeremy Cline <jeremy@jcline.org>, Oleksii Kurochko <olkuroch@cisco.com>, stable@vger.kernel.org
+Return-path: <linux-f2fs-devel-bounces@lists.sourceforge.net>
+In-Reply-To: <20190506223544.195371-5-satyat@google.com>
+Content-Language: en-US
+List-Unsubscribe: <https://lists.sourceforge.net/lists/options/linux-f2fs-devel>,
+ <mailto:linux-f2fs-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux-f2fs-devel>
+List-Post: <mailto:linux-f2fs-devel@lists.sourceforge.net>
+List-Help: <mailto:linux-f2fs-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-f2fs-devel>,
+ <mailto:linux-f2fs-devel-request@lists.sourceforge.net?subject=subscribe>
+Errors-To: linux-f2fs-devel-bounces@lists.sourceforge.net
+To: Satya Tangirala <satyat@google.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Cc: Kuohong Wang <kuohong.wang@mediatek.com>, Ladvine D Almeida <ladvine.dalmeida@synopsys.com>, "linux-f2fs-devel@lists.sourceforge.net" <linux-f2fs-devel@lists.sourceforge.net>, Barani Muthukumaran <bmuthuku@qti.qualcomm.com>, Parshuram Raju Thombare <pthombar@cadence.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2019-03-27 at 12:21 -0400, Martin K. Petersen wrote:
-> Some devices come online in write protected state and switch to
-> read-write once they are ready to process I/O requests. These devices
-> broke with commit 20bd1d026aac ("scsi: sd: Keep disk read-only when
-> re-reading partition") because we had no way to distinguish between a
-> user decision to set a block_device read-only and the actual hardware
-> device being write-protected.
-> 
-> Because partitions are dropped and recreated on revalidate we are
-> unable to persist any user-provided policy in hd_struct. Introduce a
-> bitmap in struct gendisk to track the user configuration. This bitmap
-> is updated when BLKROSET is called on a given disk or partition.
-> 
-> A helper function, get_user_ro(), is provided to determine whether the
-> ioctl has forced read-only state for a given block device. This helper
-> is used by set_disk_ro() and add_partition() to ensure that both
-> existing and newly created partitions will get the correct state.
-> 
->  - If BLKROSET sets a whole disk device read-only, all partitions will
->    now end up in a read-only state.
-> 
->  - If BLKROSET sets a given partition read-only, that partition will
->    remain read-only post revalidate.
-> 
->  - Otherwise both the whole disk device and any partitions will
->    reflect the write protect state of the underlying device.
-> 
-> Since nobody knows what "policy" means, rename the field to
-> "read_only" for clarity.
-> 
-> Cc: Jeremy Cline <jeremy@jcline.org>
-> Cc: Oleksii Kurochko <olkuroch@cisco.com>
-> Cc: stable@vger.kernel.org # v4.16+
-> Reported-by: Oleksii Kurochko <olkuroch@cisco.com>
-> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=201221
-> Fixes: 20bd1d026aac ("scsi: sd: Keep disk read-only when re-reading partition")
-> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-> 
+Hi Satya,
+
++Cc f2fs mailing list.
+
+On 2019/5/7 6:35, Satya Tangirala wrote:
+> Signed-off-by: Satya Tangirala <satyat@google.com>
 > ---
+>  fs/f2fs/data.c  | 69 ++++++++++++++++++++++++++++++++++++++++++++++---
+>  fs/f2fs/super.c |  1 +
+>  2 files changed, 67 insertions(+), 3 deletions(-)
 > 
-> v3:
-> 	- Drop ?: since gcc complains about mixing int and bool (zeroday)
-> 	- Drop EXPORT_SYMBOL (hch)
-> 	- s/policy/read_only/ and make it a boolean
-> 
-> v2:
-> 	- Track user read-only state in a bitmap
-> 
-> 	- Work around the regression that caused us to drop user
-> 	  preferences on revalidate
-> ---
->  block/blk-core.c          |  2 +-
->  block/genhd.c             | 34 ++++++++++++++++++++++++----------
->  block/ioctl.c             |  4 ++++
->  block/partition-generic.c |  7 +++++--
->  drivers/scsi/sd.c         |  4 +---
->  include/linux/genhd.h     | 11 +++++++----
->  6 files changed, 42 insertions(+), 20 deletions(-)
-> 
-> diff --git a/block/blk-core.c b/block/blk-core.c
-> index 4673ebe42255..932f179a9095 100644
-> --- a/block/blk-core.c
-> +++ b/block/blk-core.c
-> @@ -792,7 +792,7 @@ static inline bool bio_check_ro(struct bio *bio, struct hd_struct *part)
->  {
->  	const int op = bio_op(bio);
->  
-> -	if (part->policy && op_is_write(op)) {
-> +	if (part->read_only && op_is_write(op)) {
->  		char b[BDEVNAME_SIZE];
->  
->  		if (op_is_flush(bio->bi_opf) && !bio_sectors(bio))
-> diff --git a/block/genhd.c b/block/genhd.c
-> index 703267865f14..9f3a93ca1851 100644
-> --- a/block/genhd.c
-> +++ b/block/genhd.c
-> @@ -1539,26 +1539,40 @@ static void set_disk_ro_uevent(struct gendisk *gd, int ro)
->  	kobject_uevent_env(&disk_to_dev(gd)->kobj, KOBJ_CHANGE, envp);
+> diff --git a/fs/f2fs/data.c b/fs/f2fs/data.c
+> index 9727944139f2..7ac6768a52a5 100644
+> --- a/fs/f2fs/data.c
+> +++ b/fs/f2fs/data.c
+> @@ -279,9 +279,18 @@ static struct bio *__bio_alloc(struct f2fs_sb_info *sbi, block_t blk_addr,
+>  	return bio;
 >  }
 >  
-> -void set_device_ro(struct block_device *bdev, int flag)
-> +void set_device_ro(struct block_device *bdev, bool state)
->  {
-> -	bdev->bd_part->policy = flag;
-> +	bdev->bd_part->read_only = state;
->  }
->  
->  EXPORT_SYMBOL(set_device_ro);
->  
-> -void set_disk_ro(struct gendisk *disk, int flag)
-> +bool get_user_ro(struct gendisk *disk, unsigned int partno)
+> +static inline u64 hw_crypt_dun(struct inode *inode, struct page *page)
 > +{
-> +	/* Is the user read-only bit set for the whole disk device? */
-> +	if (test_bit(0, disk->user_ro_bitmap))
-> +		return true;
-> +
-> +	/* Is the user read-only bit set for this particular partition? */
-> +	if (test_bit(partno, disk->user_ro_bitmap))
-> +		return true;
-> +
-> +	return false;
+> +	return (((u64)inode->i_ino) << 32) | (page->index & 0xFFFFFFFF);
 > +}
 > +
-> +void set_disk_ro(struct gendisk *disk, bool state)
+>  static inline void __submit_bio(struct f2fs_sb_info *sbi,
+>  				struct bio *bio, enum page_type type)
 >  {
->  	struct disk_part_iter piter;
->  	struct hd_struct *part;
+> +	struct page *page;
+> +	struct inode *inode;
+> +	int err = 0;
+> +
+>  	if (!is_read_io(bio_op(bio))) {
+>  		unsigned int start;
 >  
-> -	if (disk->part0.policy != flag) {
-> -		set_disk_ro_uevent(disk, flag);
-> -		disk->part0.policy = flag;
-> -	}
-> +	if (disk->part0.read_only != state)
-> +		set_disk_ro_uevent(disk, state);
->  
-> -	disk_part_iter_init(&piter, disk, DISK_PITER_INCL_EMPTY);
-> +	disk_part_iter_init(&piter, disk, DISK_PITER_INCL_EMPTY_PART0);
->  	while ((part = disk_part_iter_next(&piter)))
-> -		part->policy = flag;
-> +		if (get_user_ro(disk, part->partno))
-> +			part->read_only = true;
-> +		else
-> +			part->read_only = state;
->  	disk_part_iter_exit(&piter);
->  }
->  
-> @@ -1568,7 +1582,7 @@ int bdev_read_only(struct block_device *bdev)
->  {
->  	if (!bdev)
->  		return 0;
-> -	return bdev->bd_part->policy;
-> +	return bdev->bd_part->read_only;
->  }
->  
->  EXPORT_SYMBOL(bdev_read_only);
-> diff --git a/block/ioctl.c b/block/ioctl.c
-> index 4825c78a6baa..41206df89485 100644
-> --- a/block/ioctl.c
-> +++ b/block/ioctl.c
-> @@ -451,6 +451,10 @@ static int blkdev_roset(struct block_device *bdev, fmode_t mode,
->  		return ret;
->  	if (get_user(n, (int __user *)arg))
->  		return -EFAULT;
-> +	if (n)
-> +		set_bit(bdev->bd_partno, bdev->bd_disk->user_ro_bitmap);
-> +	else
-> +		clear_bit(bdev->bd_partno, bdev->bd_disk->user_ro_bitmap);
->  	set_device_ro(bdev, n);
->  	return 0;
->  }
-> diff --git a/block/partition-generic.c b/block/partition-generic.c
-> index 8e596a8dff32..2bade849cc5c 100644
-> --- a/block/partition-generic.c
-> +++ b/block/partition-generic.c
-> @@ -98,7 +98,7 @@ static ssize_t part_ro_show(struct device *dev,
->  			    struct device_attribute *attr, char *buf)
->  {
->  	struct hd_struct *p = dev_to_part(dev);
-> -	return sprintf(buf, "%d\n", p->policy ? 1 : 0);
-> +	return sprintf(buf, "%u\n", p->read_only ? 1 : 0);
->  }
->  
->  static ssize_t part_alignment_offset_show(struct device *dev,
-> @@ -338,7 +338,10 @@ struct hd_struct *add_partition(struct gendisk *disk, int partno,
->  		queue_limit_discard_alignment(&disk->queue->limits, start);
->  	p->nr_sects = len;
->  	p->partno = partno;
-> -	p->policy = get_disk_ro(disk);
-> +	if (get_user_ro(disk, partno))
-> +		p->read_only = true;
-> +	else
-> +		p->read_only = get_disk_ro(disk);
->  
->  	if (info) {
->  		struct partition_meta_info *pinfo = alloc_part_info(disk);
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index 251db30d0882..9d8e15d03d2b 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -2608,10 +2608,8 @@ sd_read_write_protect_flag(struct scsi_disk *sdkp, unsigned char *buffer)
->  	int res;
->  	struct scsi_device *sdp = sdkp->device;
->  	struct scsi_mode_data data;
-> -	int disk_ro = get_disk_ro(sdkp->disk);
->  	int old_wp = sdkp->write_prot;
->  
-> -	set_disk_ro(sdkp->disk, 0);
->  	if (sdp->skip_ms_page_3f) {
->  		sd_first_printk(KERN_NOTICE, sdkp, "Assuming Write Enabled\n");
->  		return;
-> @@ -2649,7 +2647,7 @@ sd_read_write_protect_flag(struct scsi_disk *sdkp, unsigned char *buffer)
->  			  "Test WP failed, assume Write Enabled\n");
->  	} else {
->  		sdkp->write_prot = ((data.device_specific & 0x80) != 0);
-> -		set_disk_ro(sdkp->disk, sdkp->write_prot || disk_ro);
-> +		set_disk_ro(sdkp->disk, sdkp->write_prot);
->  		if (sdkp->first_scan || old_wp != sdkp->write_prot) {
->  			sd_printk(KERN_NOTICE, sdkp, "Write Protect is %s\n",
->  				  sdkp->write_prot ? "on" : "off");
-> diff --git a/include/linux/genhd.h b/include/linux/genhd.h
-> index 06c0fd594097..1abde0e88ccb 100644
-> --- a/include/linux/genhd.h
-> +++ b/include/linux/genhd.h
-> @@ -118,7 +118,8 @@ struct hd_struct {
->  	unsigned int discard_alignment;
->  	struct device __dev;
->  	struct kobject *holder_dir;
-> -	int policy, partno;
-> +	bool read_only;
-> +	int partno;
->  	struct partition_meta_info *info;
->  #ifdef CONFIG_FAIL_MAKE_REQUEST
->  	int make_it_fail;
-> @@ -194,6 +195,7 @@ struct gendisk {
->  	 */
->  	struct disk_part_tbl __rcu *part_tbl;
->  	struct hd_struct part0;
-> +	DECLARE_BITMAP(user_ro_bitmap, DISK_MAX_PARTS);
->  
->  	const struct block_device_operations *fops;
->  	struct request_queue *queue;
-> @@ -431,12 +433,13 @@ extern void del_gendisk(struct gendisk *gp);
->  extern struct gendisk *get_gendisk(dev_t dev, int *partno);
->  extern struct block_device *bdget_disk(struct gendisk *disk, int partno);
->  
-> -extern void set_device_ro(struct block_device *bdev, int flag);
-> -extern void set_disk_ro(struct gendisk *disk, int flag);
-> +extern void set_device_ro(struct block_device *bdev, bool state);
-> +extern void set_disk_ro(struct gendisk *disk, bool state);
-> +extern bool get_user_ro(struct gendisk *disk, unsigned int partno);
->  
->  static inline int get_disk_ro(struct gendisk *disk)
->  {
-> -	return disk->part0.policy;
-> +	return disk->part0.read_only;
->  }
->  
->  extern void disk_block_events(struct gendisk *disk);
+> @@ -323,7 +332,21 @@ static inline void __submit_bio(struct f2fs_sb_info *sbi,
+>  		trace_f2fs_submit_read_bio(sbi->sb, type, bio);
+>  	else
+>  		trace_f2fs_submit_write_bio(sbi->sb, type, bio);
+> -	submit_bio(bio);
+> +
+> +	if (bio_has_data(bio)) {
+> +		page = bio_page(bio);
+> +		if (page && page->mapping && page->mapping->host) {
+> +			inode = page->mapping->host;
+> +			err = fscrypt_set_bio_crypt_ctx(inode, bio,
 
-Looks good.
+Should sanity check in fscrypt_set_bio_crypt_ctx() be necessary? as we have
+already did the check in fscrypt_get_encryption_info().
 
-Reviewed-by: Ewan D. Milne <emilne@redhat.com>
+If it's not necessary, we can relax to not care about the error handling.
+
+> +						hw_crypt_dun(inode, page));
+> +		}
+> +	}
+> +	if (err) {
+> +		bio->bi_status = BLK_STS_IOERR;
+> +		bio_endio(bio);
+> +	} else {
+> +		submit_bio(bio);
+> +	}
+>  }
+>  
+>  static void __submit_merged_bio(struct f2fs_bio_info *io)
+> @@ -484,6 +507,9 @@ void f2fs_submit_page_write(struct f2fs_io_info *fio)
+>  	enum page_type btype = PAGE_TYPE_OF_BIO(fio->type);
+>  	struct f2fs_bio_info *io = sbi->write_io[btype] + fio->temp;
+>  	struct page *bio_page;
+> +	struct inode *fio_inode, *bio_inode;
+> +	struct page *first_page;
+> +	u64 next_dun = 0;
+>  
+>  	f2fs_bug_on(sbi, is_read_io(fio->op));
+>  
+> @@ -512,10 +538,29 @@ void f2fs_submit_page_write(struct f2fs_io_info *fio)
+>  
+>  	inc_page_count(sbi, WB_DATA_TYPE(bio_page));
+>  
+> +	fio_inode = fio->page->mapping->host;
+> +	bio_inode = NULL;
+> +	first_page = NULL;
+> +	next_dun = 0;
+> +	if (io->bio) {
+> +		first_page = bio_page(io->bio);
+> +		if (first_page->mapping) {
+> +			bio_inode = first_page->mapping->host;
+> +			if (fscrypt_inode_is_hw_encrypted(bio_inode)) {
+> +				next_dun =
+> +					hw_crypt_dun(bio_inode, first_page) +
+> +				    (io->bio->bi_iter.bi_size >> PAGE_SHIFT);
+> +			}
+> +		}
+> +	}
+>  	if (io->bio && (io->last_block_in_bio != fio->new_blkaddr - 1 ||
+>  	    (io->fio.op != fio->op || io->fio.op_flags != fio->op_flags) ||
+> -			!__same_bdev(sbi, fio->new_blkaddr, io->bio)))
+> +			!__same_bdev(sbi, fio->new_blkaddr, io->bio) ||
+> +			!fscrypt_inode_crypt_mergeable(bio_inode, fio_inode) ||
+> +			(fscrypt_inode_is_hw_encrypted(bio_inode) &&
+> +			 next_dun != hw_crypt_dun(fio_inode, fio->page))))
+
+The merge condition becomes so complicated and looks not so clean, I just
+suggest we can introduce single static inline function to wrap all inline
+encryption condition, which can help to make codes more clean.
+
+>  		__submit_merged_bio(io);
+> +
+>  alloc_new:
+>  	if (io->bio == NULL) {
+>  		if ((fio->type == DATA || fio->type == NODE) &&
+> @@ -570,7 +615,7 @@ static struct bio *f2fs_grab_read_bio(struct inode *inode, block_t blkaddr,
+>  	bio->bi_end_io = f2fs_read_end_io;
+>  	bio_set_op_attrs(bio, REQ_OP_READ, op_flag);
+>  
+> -	if (f2fs_encrypted_file(inode))
+> +	if (f2fs_encrypted_file(inode) && !fscrypt_inode_is_hw_encrypted(inode))
+>  		post_read_steps |= 1 << STEP_DECRYPT;
+>  	if (post_read_steps) {
+>  		ctx = mempool_alloc(bio_post_read_ctx_pool, GFP_NOFS);
+> @@ -1525,6 +1570,7 @@ static int f2fs_mpage_readpages(struct address_space *mapping,
+>  	sector_t last_block_in_file;
+>  	sector_t block_nr;
+>  	struct f2fs_map_blocks map;
+> +	u64 next_dun = 0;
+>  
+>  	map.m_pblk = 0;
+>  	map.m_lblk = 0;
+> @@ -1606,6 +1652,13 @@ static int f2fs_mpage_readpages(struct address_space *mapping,
+>  			__submit_bio(F2FS_I_SB(inode), bio, DATA);
+>  			bio = NULL;
+>  		}
+> +
+> +		if (bio && fscrypt_inode_is_hw_encrypted(inode) &&
+> +		    next_dun != hw_crypt_dun(inode, page)) {
+> +			__submit_bio(F2FS_I_SB(inode), bio, DATA);
+> +			bio = NULL;
+> +		}
+> +
+>  		if (bio == NULL) {
+>  			bio = f2fs_grab_read_bio(inode, block_nr, nr_pages,
+>  					is_readahead ? REQ_RAHEAD : 0);
+> @@ -1624,6 +1677,9 @@ static int f2fs_mpage_readpages(struct address_space *mapping,
+>  		if (bio_add_page(bio, page, blocksize, 0) < blocksize)
+>  			goto submit_and_realloc;
+>  
+> +		if (fscrypt_inode_is_hw_encrypted(inode))
+> +			next_dun = hw_crypt_dun(inode, page) + 1;
+> +
+>  		inc_page_count(F2FS_I_SB(inode), F2FS_RD_DATA);
+>  		ClearPageError(page);
+>  		last_block_in_bio = block_nr;
+> @@ -2591,12 +2647,19 @@ static void f2fs_dio_submit_bio(struct bio *bio, struct inode *inode,
+>  {
+>  	struct f2fs_private_dio *dio;
+>  	bool write = (bio_op(bio) == REQ_OP_WRITE);
+> +	u64 data_unit_num = (((u64)inode->i_ino) << 32) |
+> +			    ((file_offset >> PAGE_SHIFT) & 0xFFFFFFFF);
+
+Can we allow hw_crypt_dun() to accept @offset as parameter instead of @page? so
+we can use hw_crypt_dun() here to replace raw codes.
+
+Thanks,
+
+>  
+>  	dio = f2fs_kzalloc(F2FS_I_SB(inode),
+>  			sizeof(struct f2fs_private_dio), GFP_NOFS);
+>  	if (!dio)
+>  		goto out;
+>  
+> +	if (fscrypt_set_bio_crypt_ctx(inode, bio, data_unit_num) != 0) {
+> +		kvfree(dio);
+> +		goto out;
+> +	}
+> +
+>  	dio->inode = inode;
+>  	dio->orig_end_io = bio->bi_end_io;
+>  	dio->orig_private = bio->bi_private;
+> diff --git a/fs/f2fs/super.c b/fs/f2fs/super.c
+> index f2aaa2cc6b3e..e98c85d42e8d 100644
+> --- a/fs/f2fs/super.c
+> +++ b/fs/f2fs/super.c
+> @@ -2225,6 +2225,7 @@ static const struct fscrypt_operations f2fs_cryptops = {
+>  	.dummy_context	= f2fs_dummy_context,
+>  	.empty_dir	= f2fs_empty_dir,
+>  	.max_namelen	= F2FS_NAME_LEN,
+> +	.hw_crypt_supp	= true,
+>  };
+>  #endif
+>  
+> 
