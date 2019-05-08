@@ -1,59 +1,53 @@
-From: David Laight <David.Laight@ACULAB.COM>
-Subject: RE: [PATCH v2 4/7] lib/hexdump.c: Replace ascii bool in
- hex_dump_to_buffer with flags
-Date: Wed, 8 May 2019 09:19:51 +0000
-Message-ID: <c98a499a4e824bcd824d5ad53d037c67@AcuMS.aculab.com>
-References: <20190508070148.23130-1-alastair@au1.ibm.com>
- <20190508070148.23130-5-alastair@au1.ibm.com>
+From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Subject: Re: [PATCH] scsi: bnx2fc: fix incorrect cast to u64 on shift
+ operation
+Date: Wed, 8 May 2019 11:35:55 +0200
+Message-ID: <718d3ec2-c3e6-bdfa-bbd2-7988f7783bde@wanadoo.fr>
+References: <20190504164829.26631-1-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190508070148.23130-5-alastair@au1.ibm.com>
+In-Reply-To: <20190504164829.26631-1-colin.king@canonical.com>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: 'Alastair D'Silva' <alastair@au1.ibm.com>, "alastair@d-silva.org" <alastair@d-silva.org>
-Cc: Jani Nikula <jani.nikula@linux.intel.com>, Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, Rodrigo Vivi <rodrigo.vivi@intel.com>, David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>, Dan Carpenter <dan.carpenter@oracle.com>, Karsten Keil <isdn@linux-pingi.de>, Jassi Brar <jassisinghbrar@gmail.com>, Tom Lendacky <thomas.lendacky@amd.com>, "David S. Miller" <davem@davemloft.net>, Jose Abreu <Jose.Abreu@synopsys.com>, Kalle Valo <kvalo@codeaurora.org>, Stanislaw Gruszka <sgruszka@redhat.com>, Benson Leung <bleung@chromium.org>, Enric Balletbo i Serra <enric.balletbo@collabora.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Colin King <colin.king@canonical.com>, QLogic-Storage-Upstream@qlogic.com, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Alastair D'Silva
-> Sent: 08 May 2019 08:02
-> To: alastair@d-silva.org
-...
-> --- a/include/linux/printk.h
-> +++ b/include/linux/printk.h
-> @@ -480,13 +480,13 @@ enum {
->  	DUMP_PREFIX_OFFSET
->  };
-> 
-> -extern int hex_dump_to_buffer(const void *buf, size_t len, int rowsize,
-> -			      int groupsize, char *linebuf, size_t linebuflen,
-> -			      bool ascii);
-> -
->  #define HEXDUMP_ASCII			(1 << 0)
->  #define HEXDUMP_SUPPRESS_REPEATED	(1 << 1)
+Le 04/05/2019 à 18:48, Colin King a écrit :
+> From: Colin Ian King <colin.king@canonical.com>
+>
+> Currently an int is being shifted and the result is being cast to a u64
+> which leads to undefined behaviour if the shift is more than 31 bits. Fix
+> this by casting the integer value 1 to u64 before the shift operation.
+>
+> Addresses-Coverity: ("Bad shift operation")
+> Fixes: 7b594769120b ("[SCSI] bnx2fc: Handle REC_TOV error code from firmware")
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> ---
+>   drivers/scsi/bnx2fc/bnx2fc_hwi.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/scsi/bnx2fc/bnx2fc_hwi.c b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
+> index 19734ec7f42e..747f019fb393 100644
+> --- a/drivers/scsi/bnx2fc/bnx2fc_hwi.c
+> +++ b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
+> @@ -830,7 +830,7 @@ static void bnx2fc_process_unsol_compl(struct bnx2fc_rport *tgt, u16 wqe)
+>   			((u64)err_entry->data.err_warn_bitmap_hi << 32) |
+>   			(u64)err_entry->data.err_warn_bitmap_lo;
+>   		for (i = 0; i < BNX2FC_NUM_ERR_BITS; i++) {
+> -			if (err_warn_bit_map & (u64) (1 << i)) {
+> +			if (err_warn_bit_map & ((u64)1 << i)) {
+>   				err_warn = i;
+>   				break;
+>   			}
 
-These ought to be BIT(0) and BIT(1)
 
-> +extern int hex_dump_to_buffer(const void *buf, size_t len, int rowsize,
-> +			      int groupsize, char *linebuf, size_t linebuflen,
-> +			      u64 flags);
+Hi, just for the records and if you need additional ack, see
 
-Why 'u64 flags' ?
-How many flags do you envisage ??
-Your HEXDUMP_ASCII (etc) flags are currently signed values and might
-get sign extended causing grief.
-'unsigned int flags' is probably sufficient.
+    https://lkml.org/lkml/2016/11/26/172
 
-I've not really looked at the code, it seems OTT in places though.
+just my 2c :-)
 
-If someone copies it somewhere where the performance matters
-(I've user space code which is dominated by its tracing!)
-then you don't want all the function calls and conditionals
-even if you want some of the functionality.
-
-	David
-
--
-Registered Address Lakeside, Bramley Road, Mount Farm, Milton Keynes, MK1 1PT, UK
-Registration No: 1397386 (Wales)
+CJ
