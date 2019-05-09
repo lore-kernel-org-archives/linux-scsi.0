@@ -1,81 +1,61 @@
-From: Randy Dunlap <rdunlap@infradead.org>
-Subject: Re: [PATCH v2 3/7] lib/hexdump.c: Optionally suppress lines of
- repeated bytes
-Date: Wed, 8 May 2019 17:58:46 -0700
-Message-ID: <dc093079-43a0-0a45-f5dd-88b20702fd93@infradead.org>
-References: <20190508070148.23130-1-alastair@au1.ibm.com>
- <20190508070148.23130-4-alastair@au1.ibm.com>
+From: "Ardelean, Alexandru" <alexandru.Ardelean@analog.com>
+Subject: Re: [PATCH 3/3][V3] iio: Handle enumerated properties with gaps
+Date: Thu, 9 May 2019 07:31:27 +0000
+Message-ID: <780a4bcbf2e8a2d816efe2ed9613ac2b1594282e.camel@analog.com>
+References: <20190508111913.7276-1-alexandru.ardelean@analog.com>
+         <20190508111913.7276-3-alexandru.ardelean@analog.com>
+         <20190508131749.GM9224@smile.fi.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190508070148.23130-4-alastair@au1.ibm.com>
+In-Reply-To: <20190508131749.GM9224@smile.fi.intel.com>
 Content-Language: en-US
+Content-ID: <15E851FD6999254CAA0FC0D7B0F4C8D0@analog.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Alastair D'Silva <alastair@au1.ibm.com>, alastair@d-silva.org
-Cc: linux-fbdev@vger.kernel.org, Stanislaw Gruszka <sgruszka@redhat.com>, Petr Mladek <pmladek@suse.com>, David Airlie <airlied@linux.ie>, Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, dri-devel@lists.freedesktop.org, devel@driverdev.osuosl.org, linux-scsi@vger.kernel.org, Jassi Brar <jassisinghbrar@gmail.com>, ath10k@lists.infradead.org, intel-gfx@lists.freedesktop.org, Dan Carpenter <dan.carpenter@oracle.com>, Jose Abreu <Jose.Abreu@synopsys.com>, Tom Lendacky <thomas.lendacky@amd.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, Jani Nikula <jani.nikula@linux.intel.com>, linux-fsdevel@vger.kernel.org, Steven Rostedt <rostedt@goodmis.org>, Rodrigo Vivi <rodrigo.vivi@intel.com>, Benson Leung <bleung@chromium.org>, Kalle Valo <kvalo@codeaurora.org>
+To: "andriy.shevchenko@linux.intel.com" <andriy.shevchenko@linux.intel.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "lars@metafoo.de" <lars@metafoo.de>, "linux-iio@vger.kernel.org" <linux-iio@vger.kernel.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "jic23@kernel.org" <jic23@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 5/8/19 12:01 AM, Alastair D'Silva wrote:
-> From: Alastair D'Silva <alastair@d-silva.org>
-> 
-> Some buffers may only be partially filled with useful data, while the rest
-> is padded (typically with 0x00 or 0xff).
-> 
-> This patch introduces a flag to allow the supression of lines of repeated
-> bytes, which are replaced with '** Skipped %u bytes of value 0x%x **'
-> 
-> An inline wrapper function is provided for backwards compatibility with
-> existing code, which maintains the original behaviour.
-> 
-> Signed-off-by: Alastair D'Silva <alastair@d-silva.org>
-> ---
->  include/linux/printk.h | 25 +++++++++---
->  lib/hexdump.c          | 91 ++++++++++++++++++++++++++++++++++++------
->  2 files changed, 99 insertions(+), 17 deletions(-)
-> 
-
-Hi,
-Did you do "make htmldocs" or something similar on this?
-
-> diff --git a/lib/hexdump.c b/lib/hexdump.c
-> index 3943507bc0e9..d61a1e4f19fa 100644
-> --- a/lib/hexdump.c
-> +++ b/lib/hexdump.c
-> @@ -212,8 +212,44 @@ int hex_dump_to_buffer(const void *buf, size_t len, int rowsize, int groupsize,
->  EXPORT_SYMBOL(hex_dump_to_buffer);
->  
->  #ifdef CONFIG_PRINTK
-> +
-> +/**
-> + * Check if a buffer contains only a single byte value
-> + * @buf: pointer to the buffer
-> + * @len: the size of the buffer in bytes
-> + * @val: outputs the value if if the bytes are identical
-
-Does this work without a function name?
-Documentation/doc-guide/kernel-doc.rst says the general format is:
-
-  /**
-   * function_name() - Brief description of function.
-   * @arg1: Describe the first argument.
-   * @arg2: Describe the second argument.
-   *        One can provide multiple line descriptions
-   *        for arguments.
-   *
-
-> + */
-
->  /**
-> - * print_hex_dump - print a text hex dump to syslog for a binary blob of data
-> + * print_hex_dump_ext: dump a binary blob of data to syslog in hexadecimal
-
-Also not in the general documented format.
-
->   * @level: kernel log level (e.g. KERN_DEBUG)
->   * @prefix_str: string to prefix each line with;
->   *  caller supplies trailing spaces for alignment if desired
-
-
--- 
-~Randy
+T24gV2VkLCAyMDE5LTA1LTA4IGF0IDE2OjE3ICswMzAwLCBBbmR5IFNoZXZjaGVua28gd3JvdGU6
+DQo+IFtFeHRlcm5hbF0NCj4gDQo+IA0KPiBPbiBXZWQsIE1heSAwOCwgMjAxOSBhdCAwMjoxOTox
+M1BNICswMzAwLCBBbGV4YW5kcnUgQXJkZWxlYW4gd3JvdGU6DQo+ID4gRnJvbTogTGFycy1QZXRl
+ciBDbGF1c2VuIDxsYXJzQG1ldGFmb28uZGU+DQo+ID4gDQo+ID4gU29tZSBlbnVtcyBtaWdodCBo
+YXZlIGdhcHMgb3IgcmVzZXJ2ZWQgdmFsdWVzIGluIHRoZSBtaWRkbGUgb2YgdGhlaXINCj4gPiB2
+YWx1ZQ0KPiA+IHJhbmdlLiBFLmcuIGNvbnNpZGVyIGEgMi1iaXQgZW51bSB3aGVyZSB0aGUgdmFs
+dWVzIDAsIDEgYW5kIDMgaGF2ZSBhDQo+ID4gbWVhbmluZywgYnV0IDIgaXMgYSByZXNlcnZlZCB2
+YWx1ZSBhbmQgY2FuIG5vdCBiZSB1c2VkLg0KPiA+IA0KPiA+IEFkZCBzdXBwb3J0IGZvciBzdWNo
+IGVudW1zIHRvIHRoZSBJSU8gZW51bSBoZWxwZXIgZnVuY3Rpb25zLiBBIHJlc2VydmVkDQo+ID4g
+dmFsdWVzIGlzIG1hcmtlZCBieSBzZXR0aW5nIGl0cyBlbnRyeSBpbiB0aGUgaXRlbXMgYXJyYXkg
+dG8gTlVMTCByYXRoZXINCj4gPiB0aGFuIHRoZSBub3JtYWwgZGVzY3JpcHRpdmUgc3RyaW5nIHZh
+bHVlLg0KPiA+IA0KPiA+IEFsc28sIGBfX3N5c2ZzX21hdGNoX3N0cmluZygpYCBub3cgc3VwcG9y
+dHMgTlVMTCBnYXBzLCBzbyB0aGF0IGRvZXNuJ3QNCj4gPiByZXF1aXJlIGFueSBjaGFuZ2VzLg0K
+PiA+IC0gICAgIGZvciAoaSA9IDA7IGkgPCBlLT5udW1faXRlbXM7ICsraSkNCj4gPiArICAgICBm
+b3IgKGkgPSAwOyBpIDwgZS0+bnVtX2l0ZW1zOyArK2kpIHsNCj4gPiArICAgICAgICAgICAgIGlm
+ICghZS0+aXRlbXNbaV0pDQo+ID4gKyAgICAgICAgICAgICAgICAgICAgIGNvbnRpbnVlOw0KPiA+
+ICAgICAgICAgICAgICAgbGVuICs9IHNjbnByaW50ZihidWYgKyBsZW4sIFBBR0VfU0laRSAtIGxl
+biwgIiVzICIsIGUtDQo+ID4gPml0ZW1zW2ldKTsNCj4gPiArICAgICB9DQo+IA0KPiBUaGUgcHJv
+YmxlbSBoZXJlIHRoYXQgdGhlIHVzZXIgd2lsbCBoYXZlIG5vIGNsdWUgd2hlcmUgdGhlIGdhcCBp
+cw0KPiBoYXBwZW5lZCwgdG8NCj4gc29sdmUgdGhpcyB3ZSBuZWVkIGVpdGhlciBiaXRtYXAgb2Yg
+YXJyYXksIHdoZXJlIHNldCBiaXRzIHNob3dzIGRlZmluZWQNCj4gaXRlbXMsDQo+IG9yIHVzZSBj
+b21tYS1zZXBhcmF0ZWQgbGlzdCBvZiB2YWx1ZXMuIFRoZSBsYXR0ZXIgd291bGQgbmVlZCBhbm90
+aGVyIG5vZGUNCj4gc2luY2UNCj4gd2UgZG9uJ3QgYnJlYWsgdXNlciBzcGFjZS4NCg0KSG1tbS4N
+CkkgYW0gd29uZGVyaW5nIGlmIHRoZXJlIGFyZSBjYXNlcyB3aGVyZSB1c2Vyc3BhY2Ugd291bGQg
+Y2FyZSBhYm91dCByZXNlcnZlZA0KdmFsdWVzIGFuZC9vciBwb3NpdGlvbnMgb2YgcmVzZXJ2ZWQg
+Yml0LWZpZWxkcy4NCk1heWJlIHlvdSBjb3VsZCBvZmZlciBleGFtcGxlcy91c2UtY2FzZXMgd2hl
+cmUgdGhpcyBpcyBuZWVkZWQuDQoNClRvIHNvbWUgZXh0ZW50IHRoZSBrZXJuZWwgW2RyaXZlcnMg
+JiBmcmFtZXdvcmtzXSBzaG91bGQgcHJvYmFibHkgbm90IG5lZWQNCnRvIGV4cG9zZSB0aGF0ICJz
+dHJpbmctZW51bS1YIiAgPT0gYGJpdGZpZWxkXzJgIG1hdGNoaW5nOyBvdGhlcndpc2UgaXQNCmRv
+ZXNuJ3QgcmVhbGx5IGFkZCBtdWNoIHZhbHVlIDsgdGhlIHdob2xlIHBvaW50IG9mIGZyYW1ld29y
+a3MgW2luIGdlbmVyYWxdDQppcyB0byBvZmZlciBzb21lIGxldmVsIG9mIGFic3RyYWN0aW9uIHRv
+IEhXLg0KDQpUaGUgb25seSBleGFtcGxlIEkgY2FuIHRoaW5rIG9mIFthdG1dLCBpcyB3aGVuIGEg
+cmVzZXJ2ZWQgYml0LWZpZWxkIHdpbGwgYmUNCnVzZWQgaW4gdGhlIGZ1dHVyZS4gQnV0IHRoZW4s
+IHRoZSBkcml2ZXIgc2hvdWxkIGNhcmUgYWJvdXQgdGhpcywgYW5kIG5vdA0KdGhlIGZyYW1ld29y
+ay4gVGhlIGRyaXZlciBzaG91bGQgZGVjaWRlIHRoYXQgImJpdGZpZWxkXzIiIHdpbGwNCmVuYWJs
+ZS9kaXNhYmxlIHNvbWV0aGluZyBbaW4gdGhlIGZ1dHVyZV0sIGFuZCBzaG91bGQgYmUgY29uc2lk
+ZXJlZCBpbiBhDQpzdWNoIGEgd2F5ICh3aGVuIGJlaW5nIHdyaXR0ZW4pLiBJZiB0aGUgZHJpdmVy
+IGNhbid0IG1ha2UgdGhpcyBwcmVkaWN0aW9uIFsNCmFib3V0ICJiaXRmaWVsZF8yIl0gdGhlbiBh
+IG5ldyBkcml2ZXIgbXVzdCBiZSB3cml0dGVuIGFueXdheS4NCg0KQnV0IEkgd2lsbCBhZ3JlZSB0
+aGF0IEkgbWF5IG5vdCBoYXZlIGFsbCBhcmd1bWVudHMgaW4gbWluZCB0byBiZSAxMDAlIHN1cmUN
+Cm9mIGFsbCB0aGlzLg0KDQpUaGFua3MNCkFsZXgNCg0KPiANCj4gLS0NCj4gV2l0aCBCZXN0IFJl
+Z2FyZHMsDQo+IEFuZHkgU2hldmNoZW5rbw0KPiANCj4gDQo=
