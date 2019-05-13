@@ -1,11 +1,14 @@
-From: Stanley Chu <stanley.chu@mediatek.com>
-Subject: [PATCH v1 0/3] scsi: ufs: add error handlings of auto-hibern8
-Date: Mon, 13 May 2019 22:36:23 +0800
-Message-ID: <1557758186-18706-1-git-send-email-stanley.chu@mediatek.com>
+From: Marc Gonzalez <marc.w.gonzalez@free.fr>
+Subject: Re: [PATCH v1 0/3] scsi: ufs: add error handlings of auto-hibern8
+Date: Mon, 13 May 2019 16:51:04 +0200
+Message-ID: <55818bc4-d464-bb35-25bb-9ef87af8224e@free.fr>
+References: <1557758186-18706-1-git-send-email-stanley.chu@mediatek.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <1557758186-18706-1-git-send-email-stanley.chu@mediatek.com>
+Content-Language: en-US
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -15,37 +18,46 @@ List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: linux-scsi@vger.kernel.org, martin.petersen@oracle.com, avri.altman@wdc.com, alim.akhtar@samsung.com, pedrom.sousa@synopsys.com
-Cc: marc.w.gonzalez@free.fr, andy.teng@mediatek.com, chun-hung.wu@mediatek.com, kuohong.wang@mediatek.com, evgreen@chromium.org, subhashj@codeaurora.org, linux-mediatek@lists.infradead.org, peter.wang@mediatek.com, vivek.gautam@codeaurora.org, matthias.bgg@gmail.com, sayalil@codeaurora.org, Stanley Chu <stanley.chu@mediatek.com>, linux-arm-kernel@lists.infradead.org, beanhuo@micron.com
+To: Stanley Chu <stanley.chu@mediatek.com>, linux-scsi@vger.kernel.org, martin.petersen@oracle.com, avri.altman@wdc.com, alim.akhtar@samsung.com, pedrom.sousa@synopsys.com
+Cc: andy.teng@mediatek.com, chun-hung.wu@mediatek.com, kuohong.wang@mediatek.com, evgreen@chromium.org, subhashj@codeaurora.org, linux-mediatek@lists.infradead.org, peter.wang@mediatek.com, vivek.gautam@codeaurora.org, matthias.bgg@gmail.com, sayalil@codeaurora.org, linux-arm-kernel@lists.infradead.org, beanhuo@micron.com
 List-Id: linux-scsi@vger.kernel.org
 
-Currently auto-hibern8 is activated if host supports
-auto-hibern8 capability. However no error handlings are existed thus
-this feature is kind of risky.
+On 13/05/2019 16:36, Stanley Chu wrote:
 
-If "Hibernate Enter" or "Hibernate Exit" fail happens
-during auto-hibern8 flow, the corresponding interrupt
-"UIC_HIBERNATE_ENTER" or "UIC_HIBERNATE_EXIT" shall be raised
-according to UFS specification.
+> Currently auto-hibern8 is activated if host supports
+> auto-hibern8 capability. However no error handlings are existed thus
+> this feature is kind of risky.
 
-This patch adds auto-hibern8 error handlings:
+This last sentence is not very idiomatic.
 
-- Monitor "Hibernate Enter" and "Hibernate Exit" interrupts after
-  auto-hibern8 feature is activated.
-- If fail happens, trigger error handlings just like "manual-hibernate"
-  fail and use the same flow: Identify errors and schedule UFS error
-  handler in ufshcd_check_errors(), and then do host reset and restore
-  in UFS error handler.
+I would suggest:
+"However, error-handling is not implemented, which makes the feature
+somewhat risky."
 
-Stanley Chu (3):
-  scsi: ufs: do not overwrite auto-hibern8 timer
-  scsi: ufs: add error handling of auto-hibern8
-  scsi: ufs: use re-factored auto_hibern8 function
+> If "Hibernate Enter" or "Hibernate Exit" fail happens
 
- drivers/scsi/ufs/ufshcd.c | 16 +++++++++++++++-
- drivers/scsi/ufs/ufshcd.h | 13 +++++++++++++
- drivers/scsi/ufs/ufshci.h |  3 +++
- 3 files changed, 31 insertions(+), 1 deletion(-)
+I would suggest:
+If either "Hibernate Enter" or "Hibernate Exit" fail during ...
 
--- 
-2.18.0
+> during auto-hibern8 flow, the corresponding interrupt
+> "UIC_HIBERNATE_ENTER" or "UIC_HIBERNATE_EXIT" shall be raised
+> according to UFS specification.
+> 
+> This patch adds auto-hibern8 error handlings:
+
+error-handling
+
+> - Monitor "Hibernate Enter" and "Hibernate Exit" interrupts after
+>   auto-hibern8 feature is activated.
+
+I just want to take this opportunity to ask a rhetorical question.
+
+Who in the Great Heavens thought it would be a good idea to call the
+feature "auto-hibern8" ?
+
+Was it really worth it to save 2 characters by writing "8" instead
+of "ate" ?
+
+This bugs me so much that I just might send a patch to fix it up.
+
+Regards.
