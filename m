@@ -1,30 +1,25 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH -next] scsi: qedi: remove set but not used variables 'cdev' and 'udev'
-Date: Mon, 13 May 2019 18:33:02 -0400
-Message-ID: <yq18svagf35.fsf@oracle.com>
-References: <20190424080256.30012-1-yuehaibing@huawei.com>
+Subject: Re: [PATCH] scsi: myrs: Fix uninitialized variable
+Date: Mon, 13 May 2019 18:42:11 -0400
+Message-ID: <yq1v9yef03g.fsf@oracle.com>
+References: <20190509152247.26164-1-yuehaibing@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190424080256.30012-1-yuehaibing@huawei.com> (Yue Haibing's
-        message of "Wed, 24 Apr 2019 16:02:56 +0800")
+In-Reply-To: <20190509152247.26164-1-yuehaibing@huawei.com>
+        (yuehaibing@huawei.com's message of "Thu, 9 May 2019 23:22:47 +0800")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Yue Haibing <yuehaibing@huawei.com>
-Cc: QLogic-Storage-Upstream@cavium.com, jejb@linux.ibm.com, martin.petersen@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: YueHaibing <yuehaibing@huawei.com>
+Cc: hare@kernel.org, jejb@linux.ibm.com, martin.petersen@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Yue,
+YueHaibing,
 
-> From: YueHaibing <yuehaibing@huawei.com>
->
-> Fixes gcc '-Wunused-but-set-variable' warning:
->
-> drivers/scsi/qedi/qedi_iscsi.c: In function 'qedi_ep_connect':
-> drivers/scsi/qedi/qedi_iscsi.c:813:23: warning: variable 'udev' set but not used [-Wunused-but-set-variable]
-> drivers/scsi/qedi/qedi_iscsi.c:812:18: warning: variable 'cdev' set but not used [-Wunused-but-set-variable]
+> If ev->ev_code is not 0x1C, sshdr.sense_key may be used
+> uninitialized. Fix this by initializing variable 'sshdr' to 0.
 
-Applied to 5.2/scsi-queue. Thanks!
+Applied to 5.2/scsi-queue, thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
