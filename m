@@ -1,43 +1,27 @@
-From: Quentin Deslandes <quentin.deslandes@itdev.co.uk>
-Subject: [PATCH] scsi: aic7xxx: Remove NULL check before kfree()
-Date: Tue, 14 May 2019 13:00:44 +0000
-Message-ID: <20190514130036.7629-1-quentin.deslandes@itdev.co.uk>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] scsi: bnx2fc: fix incorrect cast to u64 on shift operation
+Date: Tue, 14 May 2019 13:12:30 -0400
+Message-ID: <yq18sv9dkox.fsf@oracle.com>
+References: <20190504164829.26631-1-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Language: en-US
+In-Reply-To: <20190504164829.26631-1-colin.king@canonical.com> (Colin King's
+        message of "Sat, 4 May 2019 17:48:29 +0100")
 Sender: linux-kernel-owner@vger.kernel.org
-To: "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
-Cc: Quentin Deslandes <quentin.deslandes@itdev.co.uk>, Hannes Reinecke <hare@suse.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: Colin King <colin.king@canonical.com>
+Cc: QLogic-Storage-Upstream@qlogic.com, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Rml4IHRoZSBmb2xsb3dpbmcgY29jY2luZWxsZSB3YXJuaW5nIGJ5IHJlbW92aW5nIE5VTEwgY2hl
-Y2sgYmVmb3JlDQpjYWxsaW5nIGtmcmVlKCk6DQoNCk5VTEwgY2hlY2sgYmVmb3JlIHNvbWUgZnJl
-ZWluZyBmdW5jdGlvbnMgaW4gbm90IG5lZWRlZC4NCg0KU2lnbmVkLW9mZi1ieTogUXVlbnRpbiBE
-ZXNsYW5kZXMgPHF1ZW50aW4uZGVzbGFuZGVzQGl0ZGV2LmNvLnVrPg0KLS0tDQogZHJpdmVycy9z
-Y3NpL2FpYzd4eHgvYWljN3h4eF9jb3JlLmMgfCAxNiArKysrKy0tLS0tLS0tLS0tDQogMSBmaWxl
-IGNoYW5nZWQsIDUgaW5zZXJ0aW9ucygrKSwgMTEgZGVsZXRpb25zKC0pDQoNCmRpZmYgLS1naXQg
-YS9kcml2ZXJzL3Njc2kvYWljN3h4eC9haWM3eHh4X2NvcmUuYyBiL2RyaXZlcnMvc2NzaS9haWM3
-eHh4L2FpYzd4eHhfY29yZS5jDQppbmRleCAzOTkzZjE1ZTdmZjYuLmZhZTQ0MjRkNDQ0MiAxMDA2
-NDQNCi0tLSBhL2RyaXZlcnMvc2NzaS9haWM3eHh4L2FpYzd4eHhfY29yZS5jDQorKysgYi9kcml2
-ZXJzL3Njc2kvYWljN3h4eC9haWM3eHh4X2NvcmUuYw0KQEAgLTIxOTIsOSArMjE5Miw3IEBAIGFo
-Y19mcmVlX3RzdGF0ZShzdHJ1Y3QgYWhjX3NvZnRjICphaGMsIHVfaW50IHNjc2lfaWQsIGNoYXIg
-Y2hhbm5lbCwgaW50IGZvcmNlKQ0KIA0KIAlpZiAoY2hhbm5lbCA9PSAnQicpDQogCQlzY3NpX2lk
-ICs9IDg7DQotCXRzdGF0ZSA9IGFoYy0+ZW5hYmxlZF90YXJnZXRzW3Njc2lfaWRdOw0KLQlpZiAo
-dHN0YXRlICE9IE5VTEwpDQotCQlrZnJlZSh0c3RhdGUpOw0KKwlrZnJlZShhaGMtPmVuYWJsZWRf
-dGFyZ2V0c1tzY3NpX2lkXSk7DQogCWFoYy0+ZW5hYmxlZF90YXJnZXRzW3Njc2lfaWRdID0gTlVM
-TDsNCiB9DQogI2VuZGlmDQpAQCAtNDQ3NCw4ICs0NDcyLDcgQEAgYWhjX3NldF91bml0KHN0cnVj
-dCBhaGNfc29mdGMgKmFoYywgaW50IHVuaXQpDQogdm9pZA0KIGFoY19zZXRfbmFtZShzdHJ1Y3Qg
-YWhjX3NvZnRjICphaGMsIGNoYXIgKm5hbWUpDQogew0KLQlpZiAoYWhjLT5uYW1lICE9IE5VTEwp
-DQotCQlrZnJlZShhaGMtPm5hbWUpOw0KKwlrZnJlZShhaGMtPm5hbWUpOw0KIAlhaGMtPm5hbWUg
-PSBuYW1lOw0KIH0NCiANCkBAIC00NTM2LDEwICs0NTMzLDggQEAgYWhjX2ZyZWUoc3RydWN0IGFo
-Y19zb2Z0YyAqYWhjKQ0KIAkJa2ZyZWUoYWhjLT5ibGFja19ob2xlKTsNCiAJfQ0KICNlbmRpZg0K
-LQlpZiAoYWhjLT5uYW1lICE9IE5VTEwpDQotCQlrZnJlZShhaGMtPm5hbWUpOw0KLQlpZiAoYWhj
-LT5zZWVwX2NvbmZpZyAhPSBOVUxMKQ0KLQkJa2ZyZWUoYWhjLT5zZWVwX2NvbmZpZyk7DQorCWtm
-cmVlKGFoYy0+bmFtZSk7DQorCWtmcmVlKGFoYy0+c2VlcF9jb25maWcpOw0KICNpZm5kZWYgX19G
-cmVlQlNEX18NCiAJa2ZyZWUoYWhjKTsNCiAjZW5kaWYNCkBAIC00OTQ0LDggKzQ5MzksNyBAQCBh
-aGNfZmluaV9zY2JkYXRhKHN0cnVjdCBhaGNfc29mdGMgKmFoYykNCiAJY2FzZSAwOg0KIAkJYnJl
-YWs7DQogCX0NCi0JaWYgKHNjYl9kYXRhLT5zY2JhcnJheSAhPSBOVUxMKQ0KLQkJa2ZyZWUoc2Ni
-X2RhdGEtPnNjYmFycmF5KTsNCisJa2ZyZWUoc2NiX2RhdGEtPnNjYmFycmF5KTsNCiB9DQogDQog
-c3RhdGljIHZvaWQNCi0tIA0KMi4xNy4xDQoNCg==
+
+Colin,
+
+> Currently an int is being shifted and the result is being cast to a
+> u64 which leads to undefined behaviour if the shift is more than 31
+> bits. Fix this by casting the integer value 1 to u64 before the shift
+> operation.
+
+Applied to 5.2/scsi-fixes, thanks!
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
