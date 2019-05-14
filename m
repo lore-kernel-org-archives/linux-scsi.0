@@ -1,78 +1,69 @@
-From: Stanley Chu <stanley.chu@mediatek.com>
-Subject: Re: [PATCH v1 0/3] scsi: ufs: add error handlings of auto-hibern8
-Date: Tue, 14 May 2019 14:25:01 +0800
-Message-ID: <1557815101.24427.7.camel@mtkswgap22>
+From: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
+Subject: RE: [EXT] [PATCH v1 2/3] scsi: ufs: add error handling of auto-hibern8
+Date: Tue, 14 May 2019 14:58:22 +0800
+Message-ID: <1557817102.24427.20.camel@mtkswgap22>
 References: <1557758186-18706-1-git-send-email-stanley.chu@mediatek.com>
- <55818bc4-d464-bb35-25bb-9ef87af8224e@free.fr>
+ <1557758186-18706-3-git-send-email-stanley.chu@mediatek.com>
+ <BN7PR08MB568438668FC7C90A1284F53DDB0F0@BN7PR08MB5684.namprd08.prod.outlook.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <55818bc4-d464-bb35-25bb-9ef87af8224e@free.fr>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Marc Gonzalez <marc.w.gonzalez@free.fr>
-Cc: linux-scsi@vger.kernel.org, martin.petersen@oracle.com, vivek.gautam@codeaurora.org, andy.teng@mediatek.com, chun-hung.wu@mediatek.com, kuohong.wang@mediatek.com, subhashj@codeaurora.org, evgreen@chromium.org, avri.altman@wdc.com, linux-mediatek@lists.infradead.org, peter.wang@mediatek.com, alim.akhtar@samsung.com, matthias.bgg@gmail.com, sayalil@codeaurora.org, pedrom.sousa@synopsys.com, linux-arm-kernel@lists.infradead.org, beanhuo@micron.com
+Return-path: <linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+In-Reply-To: <BN7PR08MB568438668FC7C90A1284F53DDB0F0-7KdolmqvL8eEpBUohhTomJNArRD3w/9+vxpqHgZTriW3zl9H0oFU5g@public.gmane.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-mediatek>,
+ <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-mediatek/>
+List-Post: <mailto:linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+List-Help: <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-mediatek>,
+ <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=subscribe>
+Sender: "Linux-mediatek" <linux-mediatek-bounces-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+Errors-To: linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
+To: "Bean Huo (beanhuo)" <beanhuo-AL4WhLSQfzjQT0dZR+AlfA@public.gmane.org>
+Cc: "linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "marc.w.gonzalez-GANU6spQydw@public.gmane.org" <marc.w.gonzalez-GANU6spQydw@public.gmane.org>, "andy.teng-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org" <andy.teng-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, "chun-hung.wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org" <chun-hung.wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, "kuohong.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org" <kuohong.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, "evgreen-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org" <evgreen-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, "avri.altman-Sjgp3cTcYWE@public.gmane.org" <avri.altman-Sjgp3cTcYWE@public.gmane.org>, "linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, "peter.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org" <peter.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, "alim.akhtar-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org" <alim.akhtar-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, "subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org" <subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, "sayalil-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org" <sayalil-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, "pedrom.sousa-HKixBCOQz3hWk0Htik3J/w@public.gmane.org" <pedrom.sousa-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Marc,
+Hi Bean,
 
-Thank you so much for below suggestions. I will fix them all in next
-version.
+Thanks so much for review.
 
-On Mon, 2019-05-13 at 16:51 +0200, Marc Gonzalez wrote:
-> On 13/05/2019 16:36, Stanley Chu wrote:
+On Mon, 2019-05-13 at 18:21 +0000, Bean Huo (beanhuo) wrote:
+> Hi, Stanley
 > 
-> > Currently auto-hibern8 is activated if host supports
-> > auto-hibern8 capability. However no error handlings are existed thus
-> > this feature is kind of risky.
+> >+
+> >+static inline bool ufshcd_is_auto_hibern8_error(struct ufs_hba *hba,
+> >+						u32 intr_mask)
+> >+{
+> >+	return (ufshcd_is_auto_hibern8_supported(hba) &&
+> >+		!hba->uic_async_done &&
 > 
-> This last sentence is not very idiomatic.
-> 
-> I would suggest:
-> "However, error-handling is not implemented, which makes the feature
-> somewhat risky."
-> 
-> > If "Hibernate Enter" or "Hibernate Exit" fail happens
-> 
-> I would suggest:
-> If either "Hibernate Enter" or "Hibernate Exit" fail during ...
-> 
-> > during auto-hibern8 flow, the corresponding interrupt
-> > "UIC_HIBERNATE_ENTER" or "UIC_HIBERNATE_EXIT" shall be raised
-> > according to UFS specification.
-> > 
-> > This patch adds auto-hibern8 error handlings:
-> 
-> error-handling
-> 
-> > - Monitor "Hibernate Enter" and "Hibernate Exit" interrupts after
-> >   auto-hibern8 feature is activated.
-> 
-> I just want to take this opportunity to ask a rhetorical question.
-> 
-> Who in the Great Heavens thought it would be a good idea to call the
-> feature "auto-hibern8" ?
-> 
-> Was it really worth it to save 2 characters by writing "8" instead
-> of "ate" ?
-> 
-> This bugs me so much that I just might send a patch to fix it up.
-
-As far as I know, the term "HIBERN8" is mentioned in all UFS related
-specifications, like UFS, UFSHCI, UniPro and M-PHY. So probably this
-abbreviation has existed for a long time.
+> Here check if uic_async_done is NULL, no big problem so far, but not safe enough.
+> How about setting a flag in ufshcd_auto_hibern8_enable(),
 
 > 
-> Regards.
+> I concern about how to compatible with auto_hibern8 disabled condition.
+
+Currently auto-hibern8 disabling method is not implemented in
+mainstream, so an "enabling" flag may looks redundant unless disabling
+path is really existed.
+
+I agree that checking hba->uic_async_done here does not look so
+intuitive. However even if auto-hibern8 is disabled, these checks could
+be safe enough because both "UIC_HIBERNATE_ENTER" and
+"UIC_HIBERNATE_EXIT" are raised only if "manual-hibernate" is performed,
+and in this case hba->uic_async_done shall be true.
+
+Anything else or corner case I missed?
+
+> 
+> 
+> //Bean
 
 Thanks,
-
 Stanley
+
+> 
+> _______________________________________________
+> Linux-mediatek mailing list
+> Linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
+> http://lists.infradead.org/mailman/listinfo/linux-mediatek
