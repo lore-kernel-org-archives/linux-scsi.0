@@ -1,17 +1,11 @@
 From: Stanley Chu <stanley.chu@mediatek.com>
-Subject: RE: [EXT] [PATCH v1 2/3] scsi: ufs: add error handling of auto-hibern8
-Date: Wed, 15 May 2019 10:52:12 +0800
-Message-ID: <1557888732.24427.37.camel@mtkswgap22>
-References: <1557758186-18706-1-git-send-email-stanley.chu@mediatek.com>
- <1557758186-18706-3-git-send-email-stanley.chu@mediatek.com>
- <BN7PR08MB568438668FC7C90A1284F53DDB0F0@BN7PR08MB5684.namprd08.prod.outlook.com>
- <1557817102.24427.20.camel@mtkswgap22>
- <BN7PR08MB56840A3CD3BA7C107D0230CADB080@BN7PR08MB5684.namprd08.prod.outlook.com>
+Subject: [PATCH v2 0/3] scsi: ufs: Add error handling of Auto-Hibernate
+Date: Wed, 15 May 2019 17:36:25 +0800
+Message-ID: <1557912988-26758-1-git-send-email-stanley.chu@mediatek.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <BN7PR08MB56840A3CD3BA7C107D0230CADB080@BN7PR08MB5684.namprd08.prod.outlook.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -21,62 +15,42 @@ List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: "Bean Huo (beanhuo)" <beanhuo@micron.com>
-Cc: "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "marc.w.gonzalez@free.fr" <marc.w.gonzalez@free.fr>, "andy.teng@mediatek.com" <andy.teng@mediatek.com>, "chun-hung.wu@mediatek.com" <chun-hung.wu@mediatek.com>, "kuohong.wang@mediatek.com" <kuohong.wang@mediatek.com>, "evgreen@chromium.org" <evgreen@chromium.org>, "avri.altman@wdc.com" <avri.altman@wdc.com>, "linux-mediatek@lists.infradead.org" <linux-mediatek@lists.infradead.org>, "peter.wang@mediatek.com" <peter.wang@mediatek.com>, "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>, "subhashj@codeaurora.org" <subhashj@codeaurora.org>, "sayalil@codeaurora.org" <sayalil@codeaurora.org>, "pedrom.sousa@synopsys.com" <pedrom.sousa@synopsys.com>
+To: linux-scsi@vger.kernel.org, martin.petersen@oracle.com, avri.altman@wdc.com, alim.akhtar@samsung.com, pedrom.sousa@synopsys.com
+Cc: marc.w.gonzalez@free.fr, andy.teng@mediatek.com, chun-hung.wu@mediatek.com, kuohong.wang@mediatek.com, evgreen@chromium.org, linux-mediatek@lists.infradead.org, peter.wang@mediatek.com, matthias.bgg@gmail.com, Stanley Chu <stanley.chu@mediatek.com>, linux-arm-kernel@lists.infradead.org, beanhuo@micron.com
 List-Id: linux-scsi@vger.kernel.org
 
-SGkgQmVhbiwKCk9uIFR1ZSwgMjAxOS0wNS0xNCBhdCAxMToxNCArMDAwMCwgQmVhbiBIdW8gKGJl
-YW5odW8pIHdyb3RlOgo+IEhpLCBTdGFubGV5Cj4gVGhhbmtzIGZvciByZXBseS4KPiAKPiA+Cj4g
-Pk9uIE1vbiwgMjAxOS0wNS0xMyBhdCAxODoyMSArMDAwMCwgQmVhbiBIdW8gKGJlYW5odW8pIHdy
-b3RlOgo+ID4+IEhpLCBTdGFubGV5Cj4gPj4KPiA+PiA+Kwo+ID4+ID4rc3RhdGljIGlubGluZSBi
-b29sIHVmc2hjZF9pc19hdXRvX2hpYmVybjhfZXJyb3Ioc3RydWN0IHVmc19oYmEgKmhiYSwKPiA+
-PiA+KwkJCQkJCXUzMiBpbnRyX21hc2spCj4gPj4gPit7Cj4gPj4gPisJcmV0dXJuICh1ZnNoY2Rf
-aXNfYXV0b19oaWJlcm44X3N1cHBvcnRlZChoYmEpICYmCj4gPj4gPisJCSFoYmEtPnVpY19hc3lu
-Y19kb25lICYmCj4gPj4KPiA+PiBIZXJlIGNoZWNrIGlmIHVpY19hc3luY19kb25lIGlzIE5VTEws
-IG5vIGJpZyBwcm9ibGVtIHNvIGZhciwgYnV0IG5vdCBzYWZlCj4gPmVub3VnaC4KPiA+PiBIb3cg
-YWJvdXQgc2V0dGluZyBhIGZsYWcgaW4gdWZzaGNkX2F1dG9faGliZXJuOF9lbmFibGUoKSwKPiA+
-Cj4gPj4KPiA+PiBJIGNvbmNlcm4gYWJvdXQgaG93IHRvIGNvbXBhdGlibGUgd2l0aCBhdXRvX2hp
-YmVybjggZGlzYWJsZWQgY29uZGl0aW9uLgo+ID4KPiA+Q3VycmVudGx5IGF1dG8taGliZXJuOCBk
-aXNhYmxpbmcgbWV0aG9kIGlzIG5vdCBpbXBsZW1lbnRlZCBpbiBtYWluc3RyZWFtLAo+ID5zbyBh
-biAiZW5hYmxpbmciIGZsYWcgbWF5IGxvb2tzIHJlZHVuZGFudCB1bmxlc3MgZGlzYWJsaW5nIHBh
-dGggaXMgcmVhbGx5Cj4gPmV4aXN0ZWQuCj4gPgo+IERpZCB5b3UgdHJ5IHRvIHVwZGF0ZSBBdXRv
-LUhpYmVybmF0ZSBJZGxlIFRpbWVyIHdpdGggMCB0aHJvdWdoICcvc3lzJyAgKHNjc2k6IHVmczog
-QWRkIHN1cHBvcnQgZm9yIEF1dG8tSGliZXJuYXRlIElkbGUgVGltZXIpPyAKPiBJIGRvbid0IGtu
-b3cgaWYgdGhpcyB3aWxsIGRpc2FibGUgeW91ciBVRlMgY29udHJvbGxlciBBdXRvLUhpYmVybmF0
-ZS4KPiBJZiBoYXZpbmcgYSBsb29rIGF0IFVGUyBob3N0IFNwZWMsIHNvZnR3YXJlIHdyaXRlcyDi
-gJww4oCdIHRvIGRpc2FibGUgQXV0by1IaWJlcm5hdGUgSWRsZSBUaW1lci4KPiBTb3JyeSBJIGNh
-bm5vdCB2ZXJpZnkgdGhpcyBvbiBteSBwbGF0Zm9ybSBzaW5jZSBpdCBkb2Vzbid0IHN1cHBvcnQg
-YXV0by1oaWJlcm5hdGUuCj4gCgpTb3JyeSBJIG1pc3NlZCB0aGlzIC9zeXMgaW50ZXJmYWNlIGZv
-ciBBdXRvLUhpYmVybmF0ZSBjb250cm9sLgoKWWVzLCBJIGhhdmUgdGVzdGVkICJBdXRvLUhpYmVy
-bmF0ZSBkaXNhYmxlZCIgY2FzZSwgaW4gdGhpcyBjYXNlLApVSUNfSElCRVJOQVRFX0VOVEVSIGFu
-ZCBVSUNfSElCRVJOQVRFX0VYSVQgaW50ZXJydXB0cyBjb21lcyBvbmx5IGlmCk1hbnVhbC1IaWJl
-cm5hdGUgaXMgcGVyZm9ybWVkIGFuZCB3YWl0aW5nIGZvciBjb21wbGV0aW9uLiBCb3RoCmludGVy
-cnVwdHMgd2lsbCBub3QgYmUgaWRlbnRpZmllZCBhcyBBdXRvLUhpYmVybmF0ZSBlcnJvcnMgYnkg
-Y2hlY2tpbmcKaGJhLT51aWNfYXN5bmNfZG9uZS4KCkFzIGZvciB5b3VyIGNvbmNlcm5pbmcsIEkg
-d291bGQgbGlrZSB0byBtYWtlICJBdXRvLUhpYmVybmF0ZSBlcnJvcgpkZXRlY3Rpb24iIG1vcmUg
-cHJlY2lzZSBpbiBuZXh0IHZlcnNpb246IFVzZSBiZWxvdyBjb25kaXRpb25zIGluc3RlYWQgb2YK
-Y2hlY2tpbmcgaGJhLT51aWNfYXN5bmNfZG9uZToKCkFzLWlzOgoKc3RhdGljIGlubGluZSBib29s
-IHVmc2hjZF9pc19hdXRvX2hpYmVybjhfZXJyb3Ioc3RydWN0IHVmc19oYmEgKmhiYSwKCQkJCQkJ
-dTMyIGludHJfbWFzaykKewoJcmV0dXJuICh1ZnNoY2RfaXNfYXV0b19oaWJlcm44X3N1cHBvcnRl
-ZChoYmEpICYmCgkJIWhiYS0+dWljX2FzeW5jX2RvbmUgJiYKCQkoaW50cl9tYXNrICYgVUZTSENE
-X1VJQ19BSDhfRVJST1JfTUFTSykpOwp9CgpUby1iZToKCnN0YXRpYyBib29sIHVmc2hjZF9pc19h
-dXRvX2hpYmVybjhfZXJyb3Ioc3RydWN0IHVmc19oYmEgKmhiYSwKCQkJCQkJdTMyIGludHJfbWFz
-aykKewoJaWYgKCF1ZnNoY2RfaXNfYXV0b19oaWJlcm44X3N1cHBvcnRlZChoYmEpKQoJCXJldHVy
-biBmYWxzZTsKCglpZiAoIShpbnRyX21hc2sgJiBVRlNIQ0RfVUlDX0FIOF9FUlJPUl9NQVNLKSkK
-CQlyZXR1cm4gZmFsc2U7CgoJaWYgKGhiYS0+YWN0aXZlX3VpY19jbWQgJiYKCSAgICAoKGhiYS0+
-YWN0aXZlX3VpY19jbWQtPmNvbW1hbmQgPT0gVUlDX0NNRF9ETUVfSElCRVJfRU5URVIpIHx8Cgkg
-ICAgKGhiYS0+YWN0aXZlX3VpY19jbWQtPmNvbW1hbmQgPT0gVUlDX0NNRF9ETUVfSElCRVJfRVhJ
-VCkpKQoJCXJldHVybiBmYWxzZTsKCglyZXR1cm4gdHJ1ZTsKfQoKV2hhdCB3b3VsZCB5b3UgdGhp
-bmsgYWJvdXQgdGhpcyBjaGFuZ2U/Cgo+IAo+ID5JIGFncmVlIHRoYXQgY2hlY2tpbmcgaGJhLT51
-aWNfYXN5bmNfZG9uZSBoZXJlIGRvZXMgbm90IGxvb2sgc28gaW50dWl0aXZlLgo+ID5Ib3dldmVy
-IGV2ZW4gaWYgYXV0by1oaWJlcm44IGlzIGRpc2FibGVkLCB0aGVzZSBjaGVja3MgY291bGQgYmUg
-c2FmZSBlbm91Z2gKPiA+YmVjYXVzZSBib3RoICJVSUNfSElCRVJOQVRFX0VOVEVSIiBhbmQgIlVJ
-Q19ISUJFUk5BVEVfRVhJVCIgYXJlCj4gPnJhaXNlZCBvbmx5IGlmICJtYW51YWwtaGliZXJuYXRl
-IiBpcyBwZXJmb3JtZWQsIGFuZCBpbiB0aGlzIGNhc2UgaGJhLQo+ID4+dWljX2FzeW5jX2RvbmUg
-c2hhbGwgYmUgdHJ1ZS4KPiA+Cj4gWWVzLCBtb3N0IG9mIGNhc2VzICx0aGlzIGlzIG5vIHByb2Js
-ZW0uCj4gCj4gPkFueXRoaW5nIGVsc2Ugb3IgY29ybmVyIGNhc2UgSSBtaXNzZWQ/Cj4gPgo+IFRo
-ZSBvdGhlcnMgYXJlIGZpbmUuIEkgb25seSBjb25jZXJuIGNoZWNraW5nIGhiYS0+dWljX2FzeW5j
-X2RvbmUuCj4gCj4gLy9CZWFuCgpNYW55IHRoYW5rcywKU3RhbmxleQoKCgoKX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KbGludXgtYXJtLWtlcm5lbCBtYWls
-aW5nIGxpc3QKbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnCmh0dHA6Ly9saXN0
-cy5pbmZyYWRlYWQub3JnL21haWxtYW4vbGlzdGluZm8vbGludXgtYXJtLWtlcm5lbAo=
+Currently auto-hibernate is activated if host supports
+auto-hibern8 capability. However error-handling is not implemented,
+which makes the feature somewhat risky.
+
+If either "Hibernate Enter" or "Hibernate Exit" fail during
+auto-hibernate flow, the corresponding interrupt
+"UIC_HIBERNATE_ENTER" or "UIC_HIBERNATE_EXIT" shall be raised
+according to UFS specification.
+
+This patch adds auto-hibernate error-handling:
+
+- Monitor "Hibernate Enter" and "Hibernate Exit" interrupts after
+  auto-hibernate feature is activated.
+
+- If fail happens, trigger error-handling just like "manual-hibernate"
+  fail and apply the same recovery flow: schedule UFS error handler in
+  ufshcd_check_errors(), and then do host reset and restore
+  in UFS error handler.
+
+v2:
+ - Fix sentences in commit message (Marc Gonzalez)
+ - Make "Auto-Hibernate" error detection more precise (Bean Huo)
+
+Stanley Chu (3):
+  scsi: ufs: Do not overwrite Auto-Hibernate timer
+  scsi: ufs: Add error-handling of Auto-Hibernate
+  scsi: ufs: Use re-factored Auto-Hibernate function
+
+ drivers/scsi/ufs/ufshcd.c | 33 ++++++++++++++++++++++++++++++++-
+ drivers/scsi/ufs/ufshcd.h |  5 +++++
+ drivers/scsi/ufs/ufshci.h |  3 +++
+ 3 files changed, 40 insertions(+), 1 deletion(-)
+
+-- 
+2.18.0
