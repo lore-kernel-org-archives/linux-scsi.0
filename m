@@ -1,31 +1,82 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2 0/3] fdomain: Resurrect driver
-Date: Tue, 14 May 2019 13:37:09 -0400
-Message-ID: <yq1r291c4ze.fsf@oracle.com>
-References: <20190514172309.12874-1-linux@zary.sk>
+From: Stanley Chu <stanley.chu@mediatek.com>
+Subject: RE: [EXT] [PATCH v1 2/3] scsi: ufs: add error handling of auto-hibern8
+Date: Wed, 15 May 2019 10:52:12 +0800
+Message-ID: <1557888732.24427.37.camel@mtkswgap22>
+References: <1557758186-18706-1-git-send-email-stanley.chu@mediatek.com>
+ <1557758186-18706-3-git-send-email-stanley.chu@mediatek.com>
+ <BN7PR08MB568438668FC7C90A1284F53DDB0F0@BN7PR08MB5684.namprd08.prod.outlook.com>
+ <1557817102.24427.20.camel@mtkswgap22>
+ <BN7PR08MB56840A3CD3BA7C107D0230CADB080@BN7PR08MB5684.namprd08.prod.outlook.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190514172309.12874-1-linux@zary.sk> (Ondrej Zary's message of
-        "Tue, 14 May 2019 19:23:06 +0200")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Ondrej Zary <linux@zary.sk>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <BN7PR08MB56840A3CD3BA7C107D0230CADB080@BN7PR08MB5684.namprd08.prod.outlook.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: "Bean Huo (beanhuo)" <beanhuo@micron.com>
+Cc: "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "marc.w.gonzalez@free.fr" <marc.w.gonzalez@free.fr>, "andy.teng@mediatek.com" <andy.teng@mediatek.com>, "chun-hung.wu@mediatek.com" <chun-hung.wu@mediatek.com>, "kuohong.wang@mediatek.com" <kuohong.wang@mediatek.com>, "evgreen@chromium.org" <evgreen@chromium.org>, "avri.altman@wdc.com" <avri.altman@wdc.com>, "linux-mediatek@lists.infradead.org" <linux-mediatek@lists.infradead.org>, "peter.wang@mediatek.com" <peter.wang@mediatek.com>, "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>, "subhashj@codeaurora.org" <subhashj@codeaurora.org>, "sayalil@codeaurora.org" <sayalil@codeaurora.org>, "pedrom.sousa@synopsys.com" <pedrom.sousa@synopsys.com>
 List-Id: linux-scsi@vger.kernel.org
 
-
-Ondrej,
-
-> Resurrect previously removed fdomain driver, in modern style.
-> Initialization is rewritten completely, with support for multiple
-> cards, no more global state variables.  Most of the code from
-> interrupt handler is moved to a workqueue.
->
-> This is a modularized version with core separated from bus-specific
-> drivers (PCI, ISA and PCMCIA). Only PCI and ISA drivers are submitted
-> for now.
-
-Applied to 5.3/scsi-queue. Thanks!
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+SGkgQmVhbiwKCk9uIFR1ZSwgMjAxOS0wNS0xNCBhdCAxMToxNCArMDAwMCwgQmVhbiBIdW8gKGJl
+YW5odW8pIHdyb3RlOgo+IEhpLCBTdGFubGV5Cj4gVGhhbmtzIGZvciByZXBseS4KPiAKPiA+Cj4g
+Pk9uIE1vbiwgMjAxOS0wNS0xMyBhdCAxODoyMSArMDAwMCwgQmVhbiBIdW8gKGJlYW5odW8pIHdy
+b3RlOgo+ID4+IEhpLCBTdGFubGV5Cj4gPj4KPiA+PiA+Kwo+ID4+ID4rc3RhdGljIGlubGluZSBi
+b29sIHVmc2hjZF9pc19hdXRvX2hpYmVybjhfZXJyb3Ioc3RydWN0IHVmc19oYmEgKmhiYSwKPiA+
+PiA+KwkJCQkJCXUzMiBpbnRyX21hc2spCj4gPj4gPit7Cj4gPj4gPisJcmV0dXJuICh1ZnNoY2Rf
+aXNfYXV0b19oaWJlcm44X3N1cHBvcnRlZChoYmEpICYmCj4gPj4gPisJCSFoYmEtPnVpY19hc3lu
+Y19kb25lICYmCj4gPj4KPiA+PiBIZXJlIGNoZWNrIGlmIHVpY19hc3luY19kb25lIGlzIE5VTEws
+IG5vIGJpZyBwcm9ibGVtIHNvIGZhciwgYnV0IG5vdCBzYWZlCj4gPmVub3VnaC4KPiA+PiBIb3cg
+YWJvdXQgc2V0dGluZyBhIGZsYWcgaW4gdWZzaGNkX2F1dG9faGliZXJuOF9lbmFibGUoKSwKPiA+
+Cj4gPj4KPiA+PiBJIGNvbmNlcm4gYWJvdXQgaG93IHRvIGNvbXBhdGlibGUgd2l0aCBhdXRvX2hp
+YmVybjggZGlzYWJsZWQgY29uZGl0aW9uLgo+ID4KPiA+Q3VycmVudGx5IGF1dG8taGliZXJuOCBk
+aXNhYmxpbmcgbWV0aG9kIGlzIG5vdCBpbXBsZW1lbnRlZCBpbiBtYWluc3RyZWFtLAo+ID5zbyBh
+biAiZW5hYmxpbmciIGZsYWcgbWF5IGxvb2tzIHJlZHVuZGFudCB1bmxlc3MgZGlzYWJsaW5nIHBh
+dGggaXMgcmVhbGx5Cj4gPmV4aXN0ZWQuCj4gPgo+IERpZCB5b3UgdHJ5IHRvIHVwZGF0ZSBBdXRv
+LUhpYmVybmF0ZSBJZGxlIFRpbWVyIHdpdGggMCB0aHJvdWdoICcvc3lzJyAgKHNjc2k6IHVmczog
+QWRkIHN1cHBvcnQgZm9yIEF1dG8tSGliZXJuYXRlIElkbGUgVGltZXIpPyAKPiBJIGRvbid0IGtu
+b3cgaWYgdGhpcyB3aWxsIGRpc2FibGUgeW91ciBVRlMgY29udHJvbGxlciBBdXRvLUhpYmVybmF0
+ZS4KPiBJZiBoYXZpbmcgYSBsb29rIGF0IFVGUyBob3N0IFNwZWMsIHNvZnR3YXJlIHdyaXRlcyDi
+gJww4oCdIHRvIGRpc2FibGUgQXV0by1IaWJlcm5hdGUgSWRsZSBUaW1lci4KPiBTb3JyeSBJIGNh
+bm5vdCB2ZXJpZnkgdGhpcyBvbiBteSBwbGF0Zm9ybSBzaW5jZSBpdCBkb2Vzbid0IHN1cHBvcnQg
+YXV0by1oaWJlcm5hdGUuCj4gCgpTb3JyeSBJIG1pc3NlZCB0aGlzIC9zeXMgaW50ZXJmYWNlIGZv
+ciBBdXRvLUhpYmVybmF0ZSBjb250cm9sLgoKWWVzLCBJIGhhdmUgdGVzdGVkICJBdXRvLUhpYmVy
+bmF0ZSBkaXNhYmxlZCIgY2FzZSwgaW4gdGhpcyBjYXNlLApVSUNfSElCRVJOQVRFX0VOVEVSIGFu
+ZCBVSUNfSElCRVJOQVRFX0VYSVQgaW50ZXJydXB0cyBjb21lcyBvbmx5IGlmCk1hbnVhbC1IaWJl
+cm5hdGUgaXMgcGVyZm9ybWVkIGFuZCB3YWl0aW5nIGZvciBjb21wbGV0aW9uLiBCb3RoCmludGVy
+cnVwdHMgd2lsbCBub3QgYmUgaWRlbnRpZmllZCBhcyBBdXRvLUhpYmVybmF0ZSBlcnJvcnMgYnkg
+Y2hlY2tpbmcKaGJhLT51aWNfYXN5bmNfZG9uZS4KCkFzIGZvciB5b3VyIGNvbmNlcm5pbmcsIEkg
+d291bGQgbGlrZSB0byBtYWtlICJBdXRvLUhpYmVybmF0ZSBlcnJvcgpkZXRlY3Rpb24iIG1vcmUg
+cHJlY2lzZSBpbiBuZXh0IHZlcnNpb246IFVzZSBiZWxvdyBjb25kaXRpb25zIGluc3RlYWQgb2YK
+Y2hlY2tpbmcgaGJhLT51aWNfYXN5bmNfZG9uZToKCkFzLWlzOgoKc3RhdGljIGlubGluZSBib29s
+IHVmc2hjZF9pc19hdXRvX2hpYmVybjhfZXJyb3Ioc3RydWN0IHVmc19oYmEgKmhiYSwKCQkJCQkJ
+dTMyIGludHJfbWFzaykKewoJcmV0dXJuICh1ZnNoY2RfaXNfYXV0b19oaWJlcm44X3N1cHBvcnRl
+ZChoYmEpICYmCgkJIWhiYS0+dWljX2FzeW5jX2RvbmUgJiYKCQkoaW50cl9tYXNrICYgVUZTSENE
+X1VJQ19BSDhfRVJST1JfTUFTSykpOwp9CgpUby1iZToKCnN0YXRpYyBib29sIHVmc2hjZF9pc19h
+dXRvX2hpYmVybjhfZXJyb3Ioc3RydWN0IHVmc19oYmEgKmhiYSwKCQkJCQkJdTMyIGludHJfbWFz
+aykKewoJaWYgKCF1ZnNoY2RfaXNfYXV0b19oaWJlcm44X3N1cHBvcnRlZChoYmEpKQoJCXJldHVy
+biBmYWxzZTsKCglpZiAoIShpbnRyX21hc2sgJiBVRlNIQ0RfVUlDX0FIOF9FUlJPUl9NQVNLKSkK
+CQlyZXR1cm4gZmFsc2U7CgoJaWYgKGhiYS0+YWN0aXZlX3VpY19jbWQgJiYKCSAgICAoKGhiYS0+
+YWN0aXZlX3VpY19jbWQtPmNvbW1hbmQgPT0gVUlDX0NNRF9ETUVfSElCRVJfRU5URVIpIHx8Cgkg
+ICAgKGhiYS0+YWN0aXZlX3VpY19jbWQtPmNvbW1hbmQgPT0gVUlDX0NNRF9ETUVfSElCRVJfRVhJ
+VCkpKQoJCXJldHVybiBmYWxzZTsKCglyZXR1cm4gdHJ1ZTsKfQoKV2hhdCB3b3VsZCB5b3UgdGhp
+bmsgYWJvdXQgdGhpcyBjaGFuZ2U/Cgo+IAo+ID5JIGFncmVlIHRoYXQgY2hlY2tpbmcgaGJhLT51
+aWNfYXN5bmNfZG9uZSBoZXJlIGRvZXMgbm90IGxvb2sgc28gaW50dWl0aXZlLgo+ID5Ib3dldmVy
+IGV2ZW4gaWYgYXV0by1oaWJlcm44IGlzIGRpc2FibGVkLCB0aGVzZSBjaGVja3MgY291bGQgYmUg
+c2FmZSBlbm91Z2gKPiA+YmVjYXVzZSBib3RoICJVSUNfSElCRVJOQVRFX0VOVEVSIiBhbmQgIlVJ
+Q19ISUJFUk5BVEVfRVhJVCIgYXJlCj4gPnJhaXNlZCBvbmx5IGlmICJtYW51YWwtaGliZXJuYXRl
+IiBpcyBwZXJmb3JtZWQsIGFuZCBpbiB0aGlzIGNhc2UgaGJhLQo+ID4+dWljX2FzeW5jX2RvbmUg
+c2hhbGwgYmUgdHJ1ZS4KPiA+Cj4gWWVzLCBtb3N0IG9mIGNhc2VzICx0aGlzIGlzIG5vIHByb2Js
+ZW0uCj4gCj4gPkFueXRoaW5nIGVsc2Ugb3IgY29ybmVyIGNhc2UgSSBtaXNzZWQ/Cj4gPgo+IFRo
+ZSBvdGhlcnMgYXJlIGZpbmUuIEkgb25seSBjb25jZXJuIGNoZWNraW5nIGhiYS0+dWljX2FzeW5j
+X2RvbmUuCj4gCj4gLy9CZWFuCgpNYW55IHRoYW5rcywKU3RhbmxleQoKCgoKX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KbGludXgtYXJtLWtlcm5lbCBtYWls
+aW5nIGxpc3QKbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnCmh0dHA6Ly9saXN0
+cy5pbmZyYWRlYWQub3JnL21haWxtYW4vbGlzdGluZm8vbGludXgtYXJtLWtlcm5lbAo=
