@@ -1,38 +1,45 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
 Subject: Re: [GIT PULL] final round of SCSI updates for the 5.1+ merge window
-Date: Fri, 17 May 2019 14:20:14 -0700
-Message-ID: <CAHk-=wiAdmRv-Piq6LKvgLDgQC+AV-RYK2O-RC09SRRGq3v1cw@mail.gmail.com>
+Date: Sat, 18 May 2019 03:21:04 -0400
+Message-ID: <yq1bm009qjj.fsf@oracle.com>
 References: <1558104285.3050.8.camel@HansenPartnership.com>
+        <CAHk-=wiAdmRv-Piq6LKvgLDgQC+AV-RYK2O-RC09SRRGq3v1cw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1558104285.3050.8.camel@HansenPartnership.com>
+In-Reply-To: <CAHk-=wiAdmRv-Piq6LKvgLDgQC+AV-RYK2O-RC09SRRGq3v1cw@mail.gmail.com>
+        (Linus Torvalds's message of "Fri, 17 May 2019 14:20:14 -0700")
 Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, May 17, 2019 at 7:44 AM James Bottomley
-<James.Bottomley@hansenpartnership.com> wrote:
->
-> This is the final round of mostly small fixes in our initial
-> submit.  The fix for the read only regressions is the most extensive
-> change and also intrudes outside of SCSI because the partition and read
-> only handling is mostly in block.
 
-No. That code is insane. It looks very fishy indeed to me, and I'm not
-pulling it this late in the game.
+Linus,
 
-If the partition table gets re-read, the old read-only state should go
-away - for all ew know, the partition numbers may have changed, for
-chrissake! So you can't just say "oh, partition number 1 used to be
-read-only, so now we need to keep it read-only". That partition might
-be something completely different after the parition table has been
-invalidated.
+> No. That code is insane. It looks very fishy indeed to me, and I'm not
+> pulling it this late in the game.
 
-So the new model that code uses looks completely bogus to me, and is
-not anything we've ever done before.
+Yeah, my mess. Sorry.
 
-Just revert the oneliner SCSI change that caused the regression.
+A couple of people poked me about this issue last week. I merged the
+patch without much scrutiny since several people had commented and
+tested when it was originally posted a few months back. In looking over
+the changes again, however, I agree with your assertion that it is
+fishy.
 
-             Linus
+> Just revert the oneliner SCSI change that caused the regression.
+
+My patch wasn't exclusively trying to address the regression wrt. drives
+that temporarily come up read-only. Device or fabric events can also
+trigger revalidate and there's a whole can of worms in that department
+thanks to the intersection between device characteristics changing and
+the partition table potentially being updated. This was my feeble
+attempt at fixing several long-standing issues in the read-only device
+handling which we occasionally hit.
+
+I'll drop the offending patch and revert Jeremy's change for now. And
+then revisit the gorge of eternal peril that is revalidate...
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
