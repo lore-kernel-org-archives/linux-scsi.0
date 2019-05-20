@@ -1,58 +1,82 @@
-From: Avri Altman <Avri.Altman@wdc.com>
-Subject: RE: [PATCH v3 2/3] scsi: ufs: Add error-handling of Auto-Hibernate
-Date: Mon, 20 May 2019 09:51:20 +0000
-Message-ID: <SN6PR04MB4925DE7B66A63ED81EDD9444FC060@SN6PR04MB4925.namprd04.prod.outlook.com>
-References: <1558341138-18043-1-git-send-email-stanley.chu@mediatek.com>
- <1558341138-18043-3-git-send-email-stanley.chu@mediatek.com>
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH] scsi: libsas: no need to join wide port again in
+ sas_ex_discover_dev()
+Date: Mon, 20 May 2019 11:54:51 +0100
+Message-ID: <1860c624-1216-bb84-7091-d41a4d43f244@huawei.com>
+References: <20190518094057.18046-1-yanaijie@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <1558341138-18043-3-git-send-email-stanley.chu@mediatek.com>
-Content-Language: en-US
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Stanley Chu <stanley.chu@mediatek.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>, "pedrom.sousa@synopsys.com" <pedrom.sousa@synopsys.com>
-Cc: "marc.w.gonzalez@free.fr" <marc.w.gonzalez@free.fr>, "andy.teng@mediatek.com" <andy.teng@mediatek.com>, "chun-hung.wu@mediatek.com" <chun-hung.wu@mediatek.com>, "kuohong.wang@mediatek.com" <kuohong.wang@mediatek.com>, "evgreen@chromium.org" <evgreen@chromium.org>, "linux-mediatek@lists.infradead.org" <linux-mediatek@lists.infradead.org>, "peter.wang@mediatek.com" <peter.wang@mediatek.com>, "matthias.bgg@gmail.com" <matthias.bgg@gmail.com>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "beanhuo@micron.com" <beanhuo@micron.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190518094057.18046-1-yanaijie@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jason Yan <yanaijie@huawei.com>, martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, hare@suse.com, dan.j.williams@intel.com, jthumshirn@suse.de, hch@lst.de, huangdaode@hisilicon.com, chenxiang66@hisilicon.com, miaoxie@huawei.com, zhaohongjiang@huawei.com
 List-Id: linux-scsi@vger.kernel.org
 
-Aside from some nits - see below, looks fine.
+On 18/05/2019 10:40, Jason Yan wrote:
+> Since we are processing events synchronously now, the second call of
+> sas_ex_join_wide_port() in sas_ex_discover_dev() is not needed. There
+> will be no races with other works in disco workqueue. So remove the
+> second sas_ex_join_wide_port().
+>
+> I did not change the return value of 'res' to error when discover failed
+> because we need to continue to discover other phys if one phy discover
+> failed. So let's keep that logic as before and just add a debug log to
+> detect the failure.
+>
+> Signed-off-by: Jason Yan <yanaijie@huawei.com>
+> ---
+>  drivers/scsi/libsas/sas_expander.c | 24 +++---------------------
+>  1 file changed, 3 insertions(+), 21 deletions(-)
+>
+> diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
+> index 83f2fd70ce76..8f90dd497dfe 100644
+> --- a/drivers/scsi/libsas/sas_expander.c
+> +++ b/drivers/scsi/libsas/sas_expander.c
+> @@ -1116,27 +1116,9 @@ static int sas_ex_discover_dev(struct domain_device *dev, int phy_id)
+>  		break;
+>  	}
+>
+> -	if (child) {
+> -		int i;
+> -
+> -		for (i = 0; i < ex->num_phys; i++) {
+> -			if (ex->ex_phy[i].phy_state == PHY_VACANT ||
+> -			    ex->ex_phy[i].phy_state == PHY_NOT_PRESENT)
+> -				continue;
+> -			/*
+> -			 * Due to races, the phy might not get added to the
+> -			 * wide port, so we add the phy to the wide port here.
+> -			 */
+> -			if (SAS_ADDR(ex->ex_phy[i].attached_sas_addr) ==
+> -			    SAS_ADDR(child->sas_addr)) {
+> -				ex->ex_phy[i].phy_state= PHY_DEVICE_DISCOVERED;
+> -				if (sas_ex_join_wide_port(dev, i))
+> -					pr_debug("Attaching ex phy%02d to wide port %016llx\n",
+> -						 i, SAS_ADDR(ex->ex_phy[i].attached_sas_addr));
+> -			}
+> -		}
+> -	}
 
-Thanks,
-Avri
+This change looks ok.
 
-> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> index ecfa898b9ccc..994d73d03207 100644
-> --- a/drivers/scsi/ufs/ufshcd.h
-> +++ b/drivers/scsi/ufs/ufshcd.h
-> @@ -740,6 +740,11 @@ return true;
->  #endif
+> -
+> +	if (!child)
+> +		pr_debug("Ex %016llx phy%02d failed to discover\n",
+> +			 SAS_ADDR(dev->sas_addr), phy_id);
+
+nit:
+/s/Ex/ex/
+
+In case of "second fanout expander...", before this, we don't attempt to 
+discover, and just disable the PHY. In that case, is the log proper?
+
+And, if indeed proper, it would seem to merit a higher log level than 
+debug, maybe notice is better.
+
+
+>  	return res;
 >  }
-> 
-> +static inline bool ufshcd_is_auto_hibern8_supported(struct ufs_hba *hba)
-> +{
-> +	return (hba->capabilities & MASK_AUTO_HIBERN8_SUPPORT);
-> +}
-Maybe use it elsewhere in the driver, preferable in a preparatory patch,
-Instead of patch #3.
-
-
-
-> diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
-> index 6fa889de5ee5..4bcb205f2077 100644
-> --- a/drivers/scsi/ufs/ufshci.h
-> +++ b/drivers/scsi/ufs/ufshci.h
-> @@ -148,6 +148,9 @@ enum {
->  				UIC_HIBERNATE_EXIT |\
->  				UIC_POWER_MODE)
-> 
-> +#define UFSHCD_UIC_AH8_ERROR_MASK	(UIC_HIBERNATE_ENTER |\
-> +					UIC_HIBERNATE_EXIT)
-So maybe update UFSHCD_UIC_PWR_MASK above
+>
+>
