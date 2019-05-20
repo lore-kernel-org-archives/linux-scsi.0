@@ -1,7 +1,7 @@
 From: Stanley Chu <stanley.chu@mediatek.com>
-Subject: [PATCH v4 3/3] scsi: ufs: Add error-handling of Auto-Hibernate
-Date: Mon, 20 May 2019 22:10:45 +0800
-Message-ID: <1558361445-30994-4-git-send-email-stanley.chu@mediatek.com>
+Subject: [PATCH v4 2/3] scsi: ufs: Introduce ufshcd_is_auto_hibern8_supported()
+Date: Mon, 20 May 2019 22:10:44 +0800
+Message-ID: <1558361445-30994-3-git-send-email-stanley.chu@mediatek.com>
 References: <1558361445-30994-1-git-send-email-stanley.chu@mediatek.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,112 +21,45 @@ To: linux-scsi@vger.kernel.org, martin.petersen@oracle.com, avri.altman@wdc.com,
 Cc: marc.w.gonzalez@free.fr, andy.teng@mediatek.com, chun-hung.wu@mediatek.com, kuohong.wang@mediatek.com, evgreen@chromium.org, linux-mediatek@lists.infradead.org, peter.wang@mediatek.com, matthias.bgg@gmail.com, Stanley Chu <stanley.chu@mediatek.com>, linux-arm-kernel@lists.infradead.org, beanhuo@micron.com
 List-Id: linux-scsi@vger.kernel.org
 
-Currently auto-hibernate is activated if host supports
-auto-hibern8 capability. However error-handling is not implemented,
-which makes the feature somewhat risky.
-
-If either "Hibernate Enter" or "Hibernate Exit" fail during
-auto-hibernate flow, the corresponding interrupt
-"UIC_HIBERNATE_ENTER" or "UIC_HIBERNATE_EXIT" shall be raised
-according to UFS specification.
-
-This patch adds auto-hibernate error-handling:
-
-- Monitor "Hibernate Enter" and "Hibernate Exit" interrupts after
-  auto-hibernate feature is activated.
-
-- If fail happens, trigger error-handling just like "manual-hibernate"
-  fail and apply the same recovery flow: schedule UFS error handler in
-  ufshcd_check_errors(), and then do host reset and restore
-  in UFS error handler.
+ufshcd_is_auto_hibern8_supported() will be used elsewhere
+in the driver, thus refactor it for preparation.
 
 Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
 Reviewed-by: Bean Huo <beanhuo@micron.com>
 Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
 ---
- drivers/scsi/ufs/ufshcd.c | 31 +++++++++++++++++++++++++++++++
- drivers/scsi/ufs/ufshci.h |  6 ++++--
- 2 files changed, 35 insertions(+), 2 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 2 +-
+ drivers/scsi/ufs/ufshcd.h | 5 +++++
+ 2 files changed, 6 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index c904625d9905..da304cbf9b0b 100644
+index ba04d07df279..c904625d9905 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -5254,6 +5254,7 @@ static void ufshcd_err_handler(struct work_struct *work)
- 			goto skip_err_handling;
+@@ -8312,7 +8312,7 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+ 						UIC_LINK_HIBERN8_STATE);
+ 
+ 	/* Set the default auto-hiberate idle timer value to 150 ms */
+-	if ((hba->capabilities & MASK_AUTO_HIBERN8_SUPPORT) && !hba->ahit) {
++	if (ufshcd_is_auto_hibern8_supported(hba) && !hba->ahit) {
+ 		hba->ahit = FIELD_PREP(UFSHCI_AHIBERN8_TIMER_MASK, 150) |
+ 			    FIELD_PREP(UFSHCI_AHIBERN8_SCALE_MASK, 3);
  	}
- 	if ((hba->saved_err & INT_FATAL_ERRORS) ||
-+	    (hba->saved_err & UFSHCD_UIC_HIBERN8_MASK) ||
- 	    ((hba->saved_err & UIC_ERROR) &&
- 	    (hba->saved_uic_err & (UFSHCD_UIC_DL_PA_INIT_ERROR |
- 				   UFSHCD_UIC_DL_NAC_RECEIVED_ERROR |
-@@ -5413,6 +5414,23 @@ static void ufshcd_update_uic_error(struct ufs_hba *hba)
- 			__func__, hba->uic_error);
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index ecfa898b9ccc..994d73d03207 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -740,6 +740,11 @@ return true;
+ #endif
  }
  
-+static bool ufshcd_is_auto_hibern8_error(struct ufs_hba *hba,
-+					 u32 intr_mask)
++static inline bool ufshcd_is_auto_hibern8_supported(struct ufs_hba *hba)
 +{
-+	if (!ufshcd_is_auto_hibern8_supported(hba))
-+		return false;
-+
-+	if (!(intr_mask & UFSHCD_UIC_HIBERN8_MASK))
-+		return false;
-+
-+	if (hba->active_uic_cmd &&
-+	    (hba->active_uic_cmd->command == UIC_CMD_DME_HIBER_ENTER ||
-+	    hba->active_uic_cmd->command == UIC_CMD_DME_HIBER_EXIT))
-+		return false;
-+
-+	return true;
++	return (hba->capabilities & MASK_AUTO_HIBERN8_SUPPORT);
 +}
 +
- /**
-  * ufshcd_check_errors - Check for errors that need s/w attention
-  * @hba: per-adapter instance
-@@ -5431,6 +5449,15 @@ static void ufshcd_check_errors(struct ufs_hba *hba)
- 			queue_eh_work = true;
- 	}
- 
-+	if (hba->errors & UFSHCD_UIC_HIBERN8_MASK) {
-+		dev_err(hba->dev,
-+			"%s: Auto Hibern8 %s failed - status: 0x%08x, upmcrs: 0x%08x\n",
-+			__func__, (hba->errors & UIC_HIBERNATE_ENTER) ?
-+			"Enter" : "Exit",
-+			hba->errors, ufshcd_get_upmcrs(hba));
-+		queue_eh_work = true;
-+	}
-+
- 	if (queue_eh_work) {
- 		/*
- 		 * update the transfer error masks to sticky bits, let's do this
-@@ -5493,6 +5520,10 @@ static void ufshcd_tmc_handler(struct ufs_hba *hba)
- static void ufshcd_sl_intr(struct ufs_hba *hba, u32 intr_status)
- {
- 	hba->errors = UFSHCD_ERROR_MASK & intr_status;
-+
-+	if (ufshcd_is_auto_hibern8_error(hba, intr_status))
-+		hba->errors |= (UFSHCD_UIC_HIBERN8_MASK & intr_status);
-+
- 	if (hba->errors)
- 		ufshcd_check_errors(hba);
- 
-diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
-index 6fa889de5ee5..dbb75cd28dc8 100644
---- a/drivers/scsi/ufs/ufshci.h
-+++ b/drivers/scsi/ufs/ufshci.h
-@@ -144,8 +144,10 @@ enum {
- #define CONTROLLER_FATAL_ERROR			0x10000
- #define SYSTEM_BUS_FATAL_ERROR			0x20000
- 
--#define UFSHCD_UIC_PWR_MASK	(UIC_HIBERNATE_ENTER |\
--				UIC_HIBERNATE_EXIT |\
-+#define UFSHCD_UIC_HIBERN8_MASK	(UIC_HIBERNATE_ENTER |\
-+				UIC_HIBERNATE_EXIT)
-+
-+#define UFSHCD_UIC_PWR_MASK	(UFSHCD_UIC_HIBERN8_MASK |\
- 				UIC_POWER_MODE)
- 
- #define UFSHCD_UIC_MASK		(UIC_COMMAND_COMPL | UFSHCD_UIC_PWR_MASK)
+ #define ufshcd_writel(hba, val, reg)	\
+ 	writel((val), (hba)->mmio_base + (reg))
+ #define ufshcd_readl(hba, reg)	\
 -- 
 2.18.0
