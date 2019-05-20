@@ -1,32 +1,54 @@
-From: Weitao Hou <houweitaoo@gmail.com>
-Subject: [PATCH] scsi: fix typos in code comments
-Date: Mon, 20 May 2019 11:24:03 +0800
-Message-ID: <20190520032403.12513-1-houweitaoo@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: jinpu.wang@profitbricks.com, lindar_liu@usish.com, jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Weitao Hou <houweitaoo@gmail.com>
+From: Alim Akhtar <alim.akhtar@samsung.com>
+Subject: Re: [PATCH v2 1/3] scsi: ufs: Do not overwrite Auto-Hibernate timer
+Date: Mon, 20 May 2019 10:35:37 +0530
+Message-ID: <15a271c6-88c8-b9d5-68a8-dc142afdf224@samsung.com>
+References: <1557912988-26758-1-git-send-email-stanley.chu@mediatek.com>
+ <CGME20190515093640epcas2p17e4c3e4545ce5e4e4b59ed7b9a954741@epcas2p1.samsung.com>
+ <1557912988-26758-2-git-send-email-stanley.chu@mediatek.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <1557912988-26758-2-git-send-email-stanley.chu@mediatek.com>
+Content-Language: en-US
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Stanley Chu <stanley.chu@mediatek.com>, linux-scsi@vger.kernel.org, martin.petersen@oracle.com, avri.altman@wdc.com, pedrom.sousa@synopsys.com
+Cc: marc.w.gonzalez@free.fr, andy.teng@mediatek.com, chun-hung.wu@mediatek.com, kuohong.wang@mediatek.com, evgreen@chromium.org, linux-mediatek@lists.infradead.org, peter.wang@mediatek.com, matthias.bgg@gmail.com, linux-arm-kernel@lists.infradead.org, beanhuo@micron.com
 List-Id: linux-scsi@vger.kernel.org
 
-fix abord to abort
+Hello Stanley,
 
-Signed-off-by: Weitao Hou <houweitaoo@gmail.com>
----
- drivers/scsi/pm8001/pm8001_sas.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
-index 88eef3b18e41..3de57c5a3299 100644
---- a/drivers/scsi/pm8001/pm8001_sas.c
-+++ b/drivers/scsi/pm8001/pm8001_sas.c
-@@ -1181,7 +1181,7 @@ int pm8001_query_task(struct sas_task *task)
- 	return rc;
- }
- 
--/*  mandatory SAM-3, still need free task/ccb info, abord the specified task */
-+/*  mandatory SAM-3, still need free task/ccb info, abort the specified task */
- int pm8001_abort_task(struct sas_task *task)
- {
- 	unsigned long flags;
--- 
-2.18.0
+On 5/15/19 3:06 PM, Stanley Chu wrote:
+> Some vendor-specific initialization flow may set its own
+> auto-hibernate timer. In this case, do not overwrite timer value
+> as "default value" in ufshcd_init().
+> 
+> Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
+> ---
+>   drivers/scsi/ufs/ufshcd.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index e040f9dd9ff3..1665820c22fd 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -8309,7 +8309,7 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+>   						UIC_LINK_HIBERN8_STATE);
+>   
+>   	/* Set the default auto-hiberate idle timer value to 150 ms */
+> -	if (hba->capabilities & MASK_AUTO_HIBERN8_SUPPORT) {
+> +	if (hba->capabilities & MASK_AUTO_HIBERN8_SUPPORT & !hba->ahit) {
+>   		hba->ahit = FIELD_PREP(UFSHCI_AHIBERN8_TIMER_MASK, 150) |
+>   			    FIELD_PREP(UFSHCI_AHIBERN8_SCALE_MASK, 3);
+>   	}
+> 
+Looks good to me,
+Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
