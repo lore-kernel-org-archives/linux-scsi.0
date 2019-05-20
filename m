@@ -1,13 +1,11 @@
 From: Stanley Chu <stanley.chu@mediatek.com>
-Subject: [PATCH v4 1/3] scsi: ufs: Do not overwrite Auto-Hibernate timer
-Date: Mon, 20 May 2019 22:10:43 +0800
-Message-ID: <1558361445-30994-2-git-send-email-stanley.chu@mediatek.com>
-References: <1558361445-30994-1-git-send-email-stanley.chu@mediatek.com>
+Subject: [PATCH v4 0/3] scsi: ufs: Add error handling of Auto-Hibernate
+Date: Mon, 20 May 2019 22:10:42 +0800
+Message-ID: <1558361445-30994-1-git-send-email-stanley.chu@mediatek.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <1558361445-30994-1-git-send-email-stanley.chu@mediatek.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -21,28 +19,46 @@ To: linux-scsi@vger.kernel.org, martin.petersen@oracle.com, avri.altman@wdc.com,
 Cc: marc.w.gonzalez@free.fr, andy.teng@mediatek.com, chun-hung.wu@mediatek.com, kuohong.wang@mediatek.com, evgreen@chromium.org, linux-mediatek@lists.infradead.org, peter.wang@mediatek.com, matthias.bgg@gmail.com, Stanley Chu <stanley.chu@mediatek.com>, linux-arm-kernel@lists.infradead.org, beanhuo@micron.com
 List-Id: linux-scsi@vger.kernel.org
 
-Some vendor-specific initialization flow may set its own
-auto-hibernate timer. In this case, do not overwrite timer value
-as "default value" in ufshcd_init().
+Currently auto-hibernate is activated if host supports
+auto-hibern8 capability. However error-handling is not implemented,
+which makes the feature somewhat risky.
 
-Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
-Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
----
- drivers/scsi/ufs/ufshcd.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+If either "Hibernate Enter" or "Hibernate Exit" fail during
+auto-hibernate flow, the corresponding interrupt
+"UIC_HIBERNATE_ENTER" or "UIC_HIBERNATE_EXIT" shall be raised
+according to UFS specification.
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 8c1c551f2b42..ba04d07df279 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -8312,7 +8312,7 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
- 						UIC_LINK_HIBERN8_STATE);
- 
- 	/* Set the default auto-hiberate idle timer value to 150 ms */
--	if (hba->capabilities & MASK_AUTO_HIBERN8_SUPPORT) {
-+	if ((hba->capabilities & MASK_AUTO_HIBERN8_SUPPORT) && !hba->ahit) {
- 		hba->ahit = FIELD_PREP(UFSHCI_AHIBERN8_TIMER_MASK, 150) |
- 			    FIELD_PREP(UFSHCI_AHIBERN8_SCALE_MASK, 3);
- 	}
+This patch adds auto-hibernate error-handling:
+
+- Monitor "Hibernate Enter" and "Hibernate Exit" interrupts after
+  auto-hibernate feature is activated.
+
+- If fail happens, trigger error-handling just like "manual-hibernate"
+  fail and apply the same recovery flow: schedule UFS error handler in
+  ufshcd_check_errors(), and then do host reset and restore
+  in UFS error handler.
+
+v4:
+ - Replace original patch "[3/3] scsi: ufs: Use re-factored Auto-Hibernate function" by a new preparation patch "[2/3] scsi: ufs: Introduce ufshcd_is_auto_hibern8_supported()" for re-factoring ufshcd_is_auto_hibern8_supported (Avri Altman)
+ - Refine UIC mask definitions (Avri Altman)
+
+v3:
+ - Fix typo in patch "scsi: ufs: Do not overwrite Auto-Hibernate timer" (Avri Altman)
+ - Rebase to Linux 5.2-rc1
+
+v2:
+ - Fix sentences in commit message (Marc Gonzalez)
+ - Make "Auto-Hibernate" error detection more precise (Bean Huo)
+
+Stanley Chu (3):
+  scsi: ufs: Do not overwrite Auto-Hibernate timer
+  scsi: ufs: Introduce ufshcd_is_auto_hibern8_supported()
+  scsi: ufs: Add error-handling of Auto-Hibernate
+
+ drivers/scsi/ufs/ufshcd.c | 33 ++++++++++++++++++++++++++++++++-
+ drivers/scsi/ufs/ufshcd.h |  5 +++++
+ drivers/scsi/ufs/ufshci.h |  6 ++++--
+ 3 files changed, 41 insertions(+), 3 deletions(-)
+
 -- 
 2.18.0
