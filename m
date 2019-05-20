@@ -1,65 +1,111 @@
-From: Stanley Chu <stanley.chu@mediatek.com>
-Subject: [PATCH v4 2/3] scsi: ufs: Introduce ufshcd_is_auto_hibern8_supported()
-Date: Mon, 20 May 2019 22:10:44 +0800
-Message-ID: <1558361445-30994-3-git-send-email-stanley.chu@mediatek.com>
-References: <1558361445-30994-1-git-send-email-stanley.chu@mediatek.com>
+From: Waiman Long <longman@redhat.com>
+Subject: Re: [PATCH] scsi: ses: Fix out-of-bounds memory access in
+ ses_enclosure_data_process()
+Date: Mon, 20 May 2019 10:41:43 -0400
+Message-ID: <1fd39969-4413-2f11-86b2-729787680efa@redhat.com>
+References: <20190501180535.26718-1-longman@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <1558361445-30994-1-git-send-email-stanley.chu@mediatek.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: linux-scsi@vger.kernel.org, martin.petersen@oracle.com, avri.altman@wdc.com, alim.akhtar@samsung.com, pedrom.sousa@synopsys.com
-Cc: marc.w.gonzalez@free.fr, andy.teng@mediatek.com, chun-hung.wu@mediatek.com, kuohong.wang@mediatek.com, evgreen@chromium.org, linux-mediatek@lists.infradead.org, peter.wang@mediatek.com, matthias.bgg@gmail.com, Stanley Chu <stanley.chu@mediatek.com>, linux-arm-kernel@lists.infradead.org, beanhuo@micron.com
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190501180535.26718-1-longman@redhat.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-ufshcd_is_auto_hibern8_supported() will be used elsewhere
-in the driver, thus refactor it for preparation.
+On 5/1/19 2:05 PM, Waiman Long wrote:
+> KASAN has found a slab-out-of-bounds error in ses_enclosure_data_process().
+>
+> [   27.298092] BUG: KASAN: slab-out-of-bounds in ses_enclosure_data_process+0x919/0xe80 [ses]
+> [   27.306407] Read of size 1 at addr ffff8807c99048b1 by task systemd-udevd/1563
+> [   27.315173] CPU: 18 PID: 1563 Comm: systemd-udevd Not tainted 4.18.0-80.23.el8.x86_64+debug #1
+> [   27.323835] Hardware name: HPE ProLiant XL450 Gen10/ProLiant XL450 Gen10, BIOS U40 10/02/2018
+> [   27.332410] Call Trace:
+>   :
+> [   27.348557]  kasan_report.cold.6+0x92/0x1a6
+> [   27.352771]  ses_enclosure_data_process+0x919/0xe80 [ses]
+> [   27.358211]  ? kfree+0xd6/0x2e0
+> [   27.361376]  ses_intf_add+0xa23/0xef1 [ses]
+> [   27.365590]  ? class_dev_iter_next+0x6c/0xc0
+> [   27.370034]  class_interface_register+0x298/0x400
+> [   27.374769]  ? tsc_cs_mark_unstable+0x60/0x60
+> [   27.379163]  ? class_dev_iter_exit+0x10/0x10
+> [   27.384857]  ? 0xffffffffc0838000
+> [   27.389580]  ses_init+0x12/0x1000 [ses]
+> [   27.394832]  do_one_initcall+0xe9/0x5fd
+>   :
+> [   27.562322] Allocated by task 1563:
+> [   27.562330]  kasan_kmalloc+0xbf/0xe0
+> [   27.569433]  __kmalloc+0x150/0x360
+> [   27.572858]  ses_intf_add+0x76a/0xef1 [ses]
+> [   27.577068]  class_interface_register+0x298/0x400
+> [   27.581803]  ses_init+0x12/0x1000 [ses]
+> [   27.587053]  do_one_initcall+0xe9/0x5fd
+> [   27.592309]  do_init_module+0x1f2/0x710
+> [   27.597564]  load_module+0x3e19/0x5910
+> [   27.601336]  __do_sys_init_module+0x1dd/0x260
+> [   27.606673]  do_syscall_64+0xa5/0x4a0
+> [   27.610359]  entry_SYSCALL_64_after_hwframe+0x6a/0xdf
+>   :
+> [   27.624932] The buggy address belongs to the object at ffff8807c9904400
+>                 which belongs to the cache kmalloc-2048 of size 2048
+> [   27.637701] The buggy address is located 1201 bytes inside of
+>                 2048-byte region [ffff8807c9904400, ffff8807c9904c00)
+> [   27.649683] The buggy address belongs to the page:
+> [   27.654503] page:ffffea001f264000 count:1 mapcount:0 mapping:ffff880107c15d80 index:0x0 compound_mapcount: 0
+> [   27.664393] flags: 0x17ffffc0008100(slab|head)
+> [   27.668865] raw: 0017ffffc0008100 dead000000000100 dead000000000200 ffff880107c15d80
+> [   27.676656] raw: 0000000000000000 00000000800f000f 00000001ffffffff 0000000000000000
+> [   27.684444] page dumped because: kasan: bad access detected
+>
+> The out-of-bounds memory access happens to ses_dev->page10 which has a
+> size of 1200 bytes in this case. The invalid memory access happens in:
+>
+>  600 if (addl_desc_ptr &&
+>  601     /* only find additional descriptions for specific devices */
+>  602     (type_ptr[0] == ENCLOSURE_COMPONENT_DEVICE ||
+>  603      type_ptr[0] == ENCLOSURE_COMPONENT_ARRAY_DEVICE ||
+>  604      type_ptr[0] == ENCLOSURE_COMPONENT_SAS_EXPANDER ||
+>  605      /* these elements are optional */
+>  606      type_ptr[0] == ENCLOSURE_COMPONENT_SCSI_TARGET_PORT ||
+>  607      type_ptr[0] == ENCLOSURE_COMPONENT_SCSI_INITIATOR_PORT ||
+>  608      type_ptr[0] == ENCLOSURE_COMPONENT_CONTROLLER_ELECTRONICS))
+>  609         addl_desc_ptr += addl_desc_ptr[1] + 2; <-- here
+>
+> To fix the out-of-bounds memory access, code is now added to make sure
+> that addl_desc_ptr will never point to an address outside of its bounds.
+>
+> With this patch, the KASAN warning is gone.
+>
+> Signed-off-by: Waiman Long <longman@redhat.com>
+> ---
+>  drivers/scsi/ses.c | 7 ++++++-
+>  1 file changed, 6 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
+> index 0fc39224ce1e..dbc9acc2df2f 100644
+> --- a/drivers/scsi/ses.c
+> +++ b/drivers/scsi/ses.c
+> @@ -605,9 +605,14 @@ static void ses_enclosure_data_process(struct enclosure_device *edev,
+>  			     /* these elements are optional */
+>  			     type_ptr[0] == ENCLOSURE_COMPONENT_SCSI_TARGET_PORT ||
+>  			     type_ptr[0] == ENCLOSURE_COMPONENT_SCSI_INITIATOR_PORT ||
+> -			     type_ptr[0] == ENCLOSURE_COMPONENT_CONTROLLER_ELECTRONICS))
+> +			     type_ptr[0] == ENCLOSURE_COMPONENT_CONTROLLER_ELECTRONICS)) {
+>  				addl_desc_ptr += addl_desc_ptr[1] + 2;
+>  
+> +				/* Ensure no out-of-bounds memory access */
+> +				if (addl_desc_ptr >= ses_dev->page10 +
+> +						     ses_dev->page10_len)
+> +					addl_desc_ptr = NULL;
+> +			}
+>  		}
+>  	}
+>  	kfree(buf);
 
-Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
-Reviewed-by: Bean Huo <beanhuo@micron.com>
-Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
----
- drivers/scsi/ufs/ufshcd.c | 2 +-
- drivers/scsi/ufs/ufshcd.h | 5 +++++
- 2 files changed, 6 insertions(+), 1 deletion(-)
+Ping! Any comment on this patch.
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index ba04d07df279..c904625d9905 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -8312,7 +8312,7 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
- 						UIC_LINK_HIBERN8_STATE);
- 
- 	/* Set the default auto-hiberate idle timer value to 150 ms */
--	if ((hba->capabilities & MASK_AUTO_HIBERN8_SUPPORT) && !hba->ahit) {
-+	if (ufshcd_is_auto_hibern8_supported(hba) && !hba->ahit) {
- 		hba->ahit = FIELD_PREP(UFSHCI_AHIBERN8_TIMER_MASK, 150) |
- 			    FIELD_PREP(UFSHCI_AHIBERN8_SCALE_MASK, 3);
- 	}
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index ecfa898b9ccc..994d73d03207 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -740,6 +740,11 @@ return true;
- #endif
- }
- 
-+static inline bool ufshcd_is_auto_hibern8_supported(struct ufs_hba *hba)
-+{
-+	return (hba->capabilities & MASK_AUTO_HIBERN8_SUPPORT);
-+}
-+
- #define ufshcd_writel(hba, val, reg)	\
- 	writel((val), (hba)->mmio_base + (reg))
- #define ufshcd_readl(hba, reg)	\
--- 
-2.18.0
+Cheers,
+Longman
