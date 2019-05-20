@@ -1,11 +1,13 @@
 From: Stanley Chu <stanley.chu@mediatek.com>
-Subject: [PATCH v4 0/3] scsi: ufs: Add error handling of Auto-Hibernate
-Date: Mon, 20 May 2019 22:10:42 +0800
-Message-ID: <1558361445-30994-1-git-send-email-stanley.chu@mediatek.com>
+Subject: [PATCH v4 3/3] scsi: ufs: Add error-handling of Auto-Hibernate
+Date: Mon, 20 May 2019 22:10:45 +0800
+Message-ID: <1558361445-30994-4-git-send-email-stanley.chu@mediatek.com>
+References: <1558361445-30994-1-git-send-email-stanley.chu@mediatek.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <1558361445-30994-1-git-send-email-stanley.chu@mediatek.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -38,27 +40,93 @@ This patch adds auto-hibernate error-handling:
   ufshcd_check_errors(), and then do host reset and restore
   in UFS error handler.
 
-v4:
- - Replace original patch "[3/3] scsi: ufs: Use re-factored Auto-Hibernate function" by a new preparation patch "[2/3] scsi: ufs: Introduce ufshcd_is_auto_hibern8_supported()" for re-factoring ufshcd_is_auto_hibern8_supported (Avri Altman)
- - Refine UIC mask definitions (Avri Altman)
-
-v3:
- - Fix typo in patch "scsi: ufs: Do not overwrite Auto-Hibernate timer" (Avri Altman)
- - Rebase to Linux 5.2-rc1
-
-v2:
- - Fix sentences in commit message (Marc Gonzalez)
- - Make "Auto-Hibernate" error detection more precise (Bean Huo)
-
-Stanley Chu (3):
-  scsi: ufs: Do not overwrite Auto-Hibernate timer
-  scsi: ufs: Introduce ufshcd_is_auto_hibern8_supported()
-  scsi: ufs: Add error-handling of Auto-Hibernate
-
- drivers/scsi/ufs/ufshcd.c | 33 ++++++++++++++++++++++++++++++++-
- drivers/scsi/ufs/ufshcd.h |  5 +++++
+Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
+Reviewed-by: Bean Huo <beanhuo@micron.com>
+Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
+---
+ drivers/scsi/ufs/ufshcd.c | 31 +++++++++++++++++++++++++++++++
  drivers/scsi/ufs/ufshci.h |  6 ++++--
- 3 files changed, 41 insertions(+), 3 deletions(-)
+ 2 files changed, 35 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index c904625d9905..da304cbf9b0b 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -5254,6 +5254,7 @@ static void ufshcd_err_handler(struct work_struct *work)
+ 			goto skip_err_handling;
+ 	}
+ 	if ((hba->saved_err & INT_FATAL_ERRORS) ||
++	    (hba->saved_err & UFSHCD_UIC_HIBERN8_MASK) ||
+ 	    ((hba->saved_err & UIC_ERROR) &&
+ 	    (hba->saved_uic_err & (UFSHCD_UIC_DL_PA_INIT_ERROR |
+ 				   UFSHCD_UIC_DL_NAC_RECEIVED_ERROR |
+@@ -5413,6 +5414,23 @@ static void ufshcd_update_uic_error(struct ufs_hba *hba)
+ 			__func__, hba->uic_error);
+ }
+ 
++static bool ufshcd_is_auto_hibern8_error(struct ufs_hba *hba,
++					 u32 intr_mask)
++{
++	if (!ufshcd_is_auto_hibern8_supported(hba))
++		return false;
++
++	if (!(intr_mask & UFSHCD_UIC_HIBERN8_MASK))
++		return false;
++
++	if (hba->active_uic_cmd &&
++	    (hba->active_uic_cmd->command == UIC_CMD_DME_HIBER_ENTER ||
++	    hba->active_uic_cmd->command == UIC_CMD_DME_HIBER_EXIT))
++		return false;
++
++	return true;
++}
++
+ /**
+  * ufshcd_check_errors - Check for errors that need s/w attention
+  * @hba: per-adapter instance
+@@ -5431,6 +5449,15 @@ static void ufshcd_check_errors(struct ufs_hba *hba)
+ 			queue_eh_work = true;
+ 	}
+ 
++	if (hba->errors & UFSHCD_UIC_HIBERN8_MASK) {
++		dev_err(hba->dev,
++			"%s: Auto Hibern8 %s failed - status: 0x%08x, upmcrs: 0x%08x\n",
++			__func__, (hba->errors & UIC_HIBERNATE_ENTER) ?
++			"Enter" : "Exit",
++			hba->errors, ufshcd_get_upmcrs(hba));
++		queue_eh_work = true;
++	}
++
+ 	if (queue_eh_work) {
+ 		/*
+ 		 * update the transfer error masks to sticky bits, let's do this
+@@ -5493,6 +5520,10 @@ static void ufshcd_tmc_handler(struct ufs_hba *hba)
+ static void ufshcd_sl_intr(struct ufs_hba *hba, u32 intr_status)
+ {
+ 	hba->errors = UFSHCD_ERROR_MASK & intr_status;
++
++	if (ufshcd_is_auto_hibern8_error(hba, intr_status))
++		hba->errors |= (UFSHCD_UIC_HIBERN8_MASK & intr_status);
++
+ 	if (hba->errors)
+ 		ufshcd_check_errors(hba);
+ 
+diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
+index 6fa889de5ee5..dbb75cd28dc8 100644
+--- a/drivers/scsi/ufs/ufshci.h
++++ b/drivers/scsi/ufs/ufshci.h
+@@ -144,8 +144,10 @@ enum {
+ #define CONTROLLER_FATAL_ERROR			0x10000
+ #define SYSTEM_BUS_FATAL_ERROR			0x20000
+ 
+-#define UFSHCD_UIC_PWR_MASK	(UIC_HIBERNATE_ENTER |\
+-				UIC_HIBERNATE_EXIT |\
++#define UFSHCD_UIC_HIBERN8_MASK	(UIC_HIBERNATE_ENTER |\
++				UIC_HIBERNATE_EXIT)
++
++#define UFSHCD_UIC_PWR_MASK	(UFSHCD_UIC_HIBERN8_MASK |\
+ 				UIC_POWER_MODE)
+ 
+ #define UFSHCD_UIC_MASK		(UIC_COMMAND_COMPL | UFSHCD_UIC_PWR_MASK)
 -- 
 2.18.0
