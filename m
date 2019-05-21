@@ -1,33 +1,40 @@
-From: Avri Altman <Avri.Altman@wdc.com>
-Subject: RE: [PATCH v4 2/3] scsi: ufs: Introduce
- ufshcd_is_auto_hibern8_supported()
-Date: Tue, 21 May 2019 06:18:11 +0000
-Message-ID: <SN6PR04MB4925EAB455D857AEB055258FFC070@SN6PR04MB4925.namprd04.prod.outlook.com>
-References: <1558361445-30994-1-git-send-email-stanley.chu@mediatek.com>
- <1558361445-30994-3-git-send-email-stanley.chu@mediatek.com>
+From: Viresh Kumar <viresh.kumar@linaro.org>
+Subject: Re: [RFC v2 00/11] DVFS in the OPP core
+Date: Tue, 21 May 2019 11:52:48 +0530
+Message-ID: <20190521062248.ogjetb2rwtqekflx@vireshk-i7>
+References: <20190320094918.20234-1-rnayak@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <1558361445-30994-3-git-send-email-stanley.chu@mediatek.com>
-Content-Language: en-US
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Stanley Chu <stanley.chu@mediatek.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>, "pedrom.sousa@synopsys.com" <pedrom.sousa@synopsys.com>
-Cc: "marc.w.gonzalez@free.fr" <marc.w.gonzalez@free.fr>, "andy.teng@mediatek.com" <andy.teng@mediatek.com>, "chun-hung.wu@mediatek.com" <chun-hung.wu@mediatek.com>, "kuohong.wang@mediatek.com" <kuohong.wang@mediatek.com>, "evgreen@chromium.org" <evgreen@chromium.org>, "linux-mediatek@lists.infradead.org" <linux-mediatek@lists.infradead.org>, "peter.wang@mediatek.com" <peter.wang@mediatek.com>, "matthias.bgg@gmail.com" <matthias.bgg@gmail.com>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "beanhuo@micron.com" <beanhuo@micron.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20190320094918.20234-1-rnayak@codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Rajendra Nayak <rnayak@codeaurora.org>
+Cc: linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-pm@vger.kernel.org, linux-serial@vger.kernel.org, linux-spi@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-scsi@vger.kernel.org, swboyd@chromium.org, ulf.hansson@linaro.org, dianders@chromium.org, rafael@kernel.org, vincent.guittot@linaro.org
 List-Id: linux-scsi@vger.kernel.org
 
+On 20-03-19, 15:19, Rajendra Nayak wrote:
+> This is a v2 of the RFC posted earlier by Stephen Boyd [1]
 > 
-> ufshcd_is_auto_hibern8_supported() will be used elsewhere
-> in the driver, thus refactor it for preparation.
-You missed a couple of spots, e.g. in ufshcd_auto_hibern8_enable and in ufs-sysfs.
+> As part of v2 I still follow the same approach of dev_pm_opp_set_rate()
+> API using clk framework to round the frequency passed and making it
+> accept 0 as a valid frequency indicating the frequency isn't required
+> anymore. It just has a few more drivers converted to use this approach
+> like dsi/dpu and ufs.
+> ufs demonstrates the case of having to handle multiple power domains, one
+> of which is scalable.
+> 
+> The patches are based on 5.1-rc1 and depend on some ufs fixes I posted
+> earlier [2] and a DT patch to include the rpmpd header [3]
+> 
+> [1] https://lkml.org/lkml/2019/1/28/2086
+> [2] https://lkml.org/lkml/2019/3/8/70
+> [3] https://lkml.org/lkml/2019/3/20/120
 
-Thanks,
-Avri
+Hi Rajendra,
+
+I am inclined to apply/push this series for 5.3-rc1, will it be
+possible for you to spend some time on this at priority ?
+
+-- 
+viresh
