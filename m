@@ -1,16 +1,13 @@
 From: Stanley Chu <stanley.chu@mediatek.com>
-Subject: RE: [PATCH v4 2/3] scsi: ufs: Introduce
- ufshcd_is_auto_hibern8_supported()
-Date: Tue, 21 May 2019 14:29:45 +0800
-Message-ID: <1558420185.660.9.camel@mtkswgap22>
-References: <1558361445-30994-1-git-send-email-stanley.chu@mediatek.com>
- <1558361445-30994-3-git-send-email-stanley.chu@mediatek.com>
- <SN6PR04MB4925EAB455D857AEB055258FFC070@SN6PR04MB4925.namprd04.prod.outlook.com>
+Subject: [PATCH v5 2/3] scsi: ufs: Do not overwrite Auto-Hibernate timer
+Date: Tue, 21 May 2019 14:44:53 +0800
+Message-ID: <1558421094-3182-3-git-send-email-stanley.chu@mediatek.com>
+References: <1558421094-3182-1-git-send-email-stanley.chu@mediatek.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <SN6PR04MB4925EAB455D857AEB055258FFC070@SN6PR04MB4925.namprd04.prod.outlook.com>
+In-Reply-To: <1558421094-3182-1-git-send-email-stanley.chu@mediatek.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -20,24 +17,32 @@ List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Avri Altman <Avri.Altman@wdc.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "marc.w.gonzalez@free.fr" <marc.w.gonzalez@free.fr>, "andy.teng@mediatek.com" <andy.teng@mediatek.com>, "chun-hung.wu@mediatek.com" <chun-hung.wu@mediatek.com>, "kuohong.wang@mediatek.com" <kuohong.wang@mediatek.com>, "evgreen@chromium.org" <evgreen@chromium.org>, "linux-mediatek@lists.infradead.org" <linux-mediatek@lists.infradead.org>, "peter.wang@mediatek.com" <peter.wang@mediatek.com>, "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>, "matthias.bgg@gmail.com" <matthias.bgg@gmail.com>, "pedrom.sousa@synopsys.com" <pedrom.sousa@synopsys.com>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "beanhuo@micron.com" <beanhuo@micron.com>
+To: linux-scsi@vger.kernel.org, martin.petersen@oracle.com, avri.altman@wdc.com, alim.akhtar@samsung.com, pedrom.sousa@synopsys.com
+Cc: marc.w.gonzalez@free.fr, andy.teng@mediatek.com, chun-hung.wu@mediatek.com, kuohong.wang@mediatek.com, evgreen@chromium.org, linux-mediatek@lists.infradead.org, peter.wang@mediatek.com, matthias.bgg@gmail.com, Stanley Chu <stanley.chu@mediatek.com>, linux-arm-kernel@lists.infradead.org, beanhuo@micron.com
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Avri,
+Some vendor-specific initialization flow may set its own
+auto-hibernate timer. In this case, do not overwrite timer value
+as "default value" in ufshcd_init().
 
-On Tue, 2019-05-21 at 06:18 +0000, Avri Altman wrote:
-> > 
-> > ufshcd_is_auto_hibern8_supported() will be used elsewhere
-> > in the driver, thus refactor it for preparation.
-> You missed a couple of spots, e.g. in ufshcd_auto_hibern8_enable and in ufs-sysfs.
+Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
+Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
+---
+ drivers/scsi/ufs/ufshcd.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Yes...
-Will re-factor them as well in next version.
-
-> 
-> Thanks,
-> Avri
-
-Thanks,
-Stanley
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 0cf698d05426..7cd757558203 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -8312,7 +8312,7 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+ 						UIC_LINK_HIBERN8_STATE);
+ 
+ 	/* Set the default auto-hiberate idle timer value to 150 ms */
+-	if (ufshcd_is_auto_hibern8_supported(hba)) {
++	if (ufshcd_is_auto_hibern8_supported(hba) && !hba->ahit) {
+ 		hba->ahit = FIELD_PREP(UFSHCI_AHIBERN8_TIMER_MASK, 150) |
+ 			    FIELD_PREP(UFSHCI_AHIBERN8_SCALE_MASK, 3);
+ 	}
+-- 
+2.18.0
