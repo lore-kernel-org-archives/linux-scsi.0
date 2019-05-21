@@ -1,85 +1,135 @@
-From: Avri Altman <Avri.Altman-Sjgp3cTcYWE@public.gmane.org>
-Subject: RE: [PATCH v5 0/3] scsi: ufs: Add error handling of Auto-Hibernate
-Date: Tue, 21 May 2019 08:41:32 +0000
-Message-ID: <SN6PR04MB4925604BFAF0A66D54F65E3EFC070@SN6PR04MB4925.namprd04.prod.outlook.com>
-References: <1558421094-3182-1-git-send-email-stanley.chu@mediatek.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] scsi: ses: Fix out-of-bounds memory access in ses_enclosure_data_process()
+Date: Tue, 21 May 2019 08:02:48 -0400
+Message-ID: <yq1h89o6mmv.fsf@oracle.com>
+References: <20190501180535.26718-1-longman@redhat.com>
+        <1fd39969-4413-2f11-86b2-729787680efa@redhat.com>
+        <1558363938.3742.1.camel@linux.ibm.com>
+        <3385cf54-7b6c-3f28-e037-f0d4037368eb@redhat.com>
+        <1558367212.3742.10.camel@linux.ibm.com> <yq1zhnh8625.fsf@oracle.com>
+        <c14d427c-1d17-fc8f-672d-d612851abcc1@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-In-Reply-To: <1558421094-3182-1-git-send-email-stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-Content-Language: en-US
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-mediatek>,
- <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-mediatek/>
-List-Post: <mailto:linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-List-Help: <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-mediatek>,
- <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=subscribe>
-Sender: "Linux-mediatek" <linux-mediatek-bounces-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-Errors-To: linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
-To: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "alim.akhtar-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org" <alim.akhtar-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, "pedrom.sousa-HKixBCOQz3hWk0Htik3J/w@public.gmane.org" <pedrom.sousa-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>
-Cc: "marc.w.gonzalez-GANU6spQydw@public.gmane.org" <marc.w.gonzalez-GANU6spQydw@public.gmane.org>, "andy.teng-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org" <andy.teng-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, "chun-hung.wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org" <chun-hung.wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, "kuohong.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org" <kuohong.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, "evgreen-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org" <evgreen-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, "linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, "peter.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org" <peter.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, "matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, "beanhuo-AL4WhLSQfzjQT0dZR+AlfA@public.gmane.org" <beanhuo-AL4WhLSQfzjQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <c14d427c-1d17-fc8f-672d-d612851abcc1@interlog.com> (Douglas
+        Gilbert's message of "Mon, 20 May 2019 17:53:08 -0400")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Douglas Gilbert <dgilbert@interlog.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <jejb@linux.ibm.com>, Waiman Long <longman@redhat.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-This series looks fine to me.
 
-Thanks,
-Avri
+Doug,
 
-> 
-> Currently auto-hibernate is activated if host supports
-> auto-hibern8 capability. However error-handling is not implemented,
-> which makes the feature somewhat risky.
-> 
-> If either "Hibernate Enter" or "Hibernate Exit" fail during
-> auto-hibernate flow, the corresponding interrupt
-> "UIC_HIBERNATE_ENTER" or "UIC_HIBERNATE_EXIT" shall be raised
-> according to UFS specification.
-> 
-> This patch adds auto-hibernate error-handling:
-> 
-> - Monitor "Hibernate Enter" and "Hibernate Exit" interrupts after
->   auto-hibernate feature is activated.
-> 
-> - If fail happens, trigger error-handling just like "manual-hibernate"
->   fail and apply the same recovery flow: schedule UFS error handler in
->   ufshcd_check_errors(), and then do host reset and restore
->   in UFS error handler.
-> 
-> v5:
->  - Also re-factor checking of Auto-Hibernation support in other places, e.g., in
-> ufshcd_auto_hibern8_enable() and in ufs-sysfs (Avri Altman)
->  - Change order of patch "scsi: ufs: Introduce
-> ufshcd_is_auto_hibern8_supported()" to #1 as a preparation patch of whole
-> series
-> 
-> v4:
->  - Replace original patch "[3/3] scsi: ufs: Use re-factored Auto-Hibernate
-> function" by a new preparation patch "[2/3] scsi: ufs: Introduce
-> ufshcd_is_auto_hibern8_supported()" for re-factoring
-> ufshcd_is_auto_hibern8_supported (Avri Altman)
->  - Refine UIC mask definitions (Avri Altman)
-> 
-> v3:
->  - Fix typo in patch "scsi: ufs: Do not overwrite Auto-Hibernate timer" (Avri
-> Altman)
->  - Rebase to Linux 5.2-rc1
-> 
-> v2:
->  - Fix sentences in commit message (Marc Gonzalez)
->  - Make "Auto-Hibernate" error detection more precise (Bean Huo)
-> 
-> Stanley Chu (3):
->   scsi: ufs: Introduce ufshcd_is_auto_hibern8_supported()
->   scsi: ufs: Do not overwrite Auto-Hibernate timer
->   scsi: ufs: Add error-handling of Auto-Hibernate
-> 
->  drivers/scsi/ufs/ufs-sysfs.c |  6 +++---
->  drivers/scsi/ufs/ufshcd.c    | 35 +++++++++++++++++++++++++++++++++--
->  drivers/scsi/ufs/ufshcd.h    |  5 +++++
->  drivers/scsi/ufs/ufshci.h    |  6 ++++--
->  4 files changed, 45 insertions(+), 7 deletions(-)
-> 
-> --
-> 2.18.0
+>> I am collecting "bad" SES pages from these devices. I have added
+>> support for RECEIVE DIAGNOSTICS to scsi_debug and added a bunch of
+>> deliberately broken SES pages so we could debug this
+>
+> Patches ??
+
+I have included the plumbing below. However, I need to synthesize the
+contents of the pages with problems. I can't share the ones I have
+received from customers so I removed the arrays from the patch.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
+
+>From 968dfc5cd498d2ea6e77801cc9b9183a1a28b35d Mon Sep 17 00:00:00 2001
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Date: Thu, 28 Mar 2019 22:29:13 -0400
+Subject: [PATCH] scsi: scsi_debug: Implement support for Receive Diagnostics
+ command
+
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 2740a90501a0..db8745a7000e 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -356,7 +356,8 @@ enum sdeb_opcode_index {
+ 	SDEB_I_WRITE_SAME = 26,		/* 10, 16 */
+ 	SDEB_I_SYNC_CACHE = 27,		/* 10, 16 */
+ 	SDEB_I_COMP_WRITE = 28,
+-	SDEB_I_LAST_ELEMENT = 29,	/* keep this last (previous + 1) */
++	SDEB_I_RECV_DIAG = 29,
++	SDEB_I_LAST_ELEMENT = 30,	/* keep this last (previous + 1) */
+ };
+ 
+ 
+@@ -367,8 +368,8 @@ static const unsigned char opcode_ind_arr[256] = {
+ 	SDEB_I_READ, 0, SDEB_I_WRITE, 0, 0, 0, 0, 0,
+ 	0, 0, SDEB_I_INQUIRY, 0, 0, SDEB_I_MODE_SELECT, SDEB_I_RESERVE,
+ 	    SDEB_I_RELEASE,
+-	0, 0, SDEB_I_MODE_SENSE, SDEB_I_START_STOP, 0, SDEB_I_SEND_DIAG,
+-	    SDEB_I_ALLOW_REMOVAL, 0,
++	0, 0, SDEB_I_MODE_SENSE, SDEB_I_START_STOP, SDEB_I_RECV_DIAG,
++	SDEB_I_SEND_DIAG, SDEB_I_ALLOW_REMOVAL, 0,
+ /* 0x20; 0x20->0x3f: 10 byte cdbs */
+ 	0, 0, 0, 0, 0, SDEB_I_READ_CAPACITY, 0, 0,
+ 	SDEB_I_READ, 0, SDEB_I_WRITE, 0, 0, 0, 0, SDEB_I_VERIFY,
+@@ -433,6 +434,7 @@ static int resp_write_same_16(struct scsi_cmnd *, struct sdebug_dev_info *);
+ static int resp_comp_write(struct scsi_cmnd *, struct sdebug_dev_info *);
+ static int resp_write_buffer(struct scsi_cmnd *, struct sdebug_dev_info *);
+ static int resp_sync_cache(struct scsi_cmnd *, struct sdebug_dev_info *);
++static int resp_recv_diag(struct scsi_cmnd *, struct sdebug_dev_info *);
+ 
+ /*
+  * The following are overflow arrays for cdbs that "hit" the same index in
+@@ -613,8 +615,9 @@ static const struct opcode_info_t opcode_info_arr[SDEB_I_LAST_ELEMENT + 1] = {
+ 	{0, 0x89, 0, F_D_OUT | FF_MEDIA_IO, resp_comp_write, NULL,
+ 	    {16,  0xf8, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0, 0,
+ 	     0, 0xff, 0x3f, 0xc7} },		/* COMPARE AND WRITE */
+-
+-/* 29 */
++	{0, 0x1c, 0, FF_RESPOND | F_D_IN, resp_recv_diag, NULL, /* RECV DIAG */
++	    {6,  0x1, 0xff, 0xff, 0xff, 0xc7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} },
++/* 30 */
+ 	{0xff, 0, 0, 0, NULL, NULL,		/* terminating element */
+ 	    {0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} },
+ };
+@@ -1516,7 +1519,7 @@ static int resp_inquiry(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 	arr[5] = (int)have_dif_prot;	/* PROTECT bit */
+ 	if (sdebug_vpd_use_hostno == 0)
+ 		arr[5] |= 0x10; /* claim: implicit TPGS */
+-	arr[6] = 0x10; /* claim: MultiP */
++	arr[6] = 0x10 | 0x40; /* claim: MultiP */
+ 	/* arr[6] |= 0x40; ... claim: EncServ (enclosure services) */
+ 	arr[7] = 0xa; /* claim: LINKED + CMDQUE */
+ 	memcpy(&arr[8], sdebug_inq_vendor_id, 8);
+@@ -3597,6 +3600,36 @@ static int resp_sync_cache(struct scsi_cmnd *scp,
+ 	return res;
+ }
+ 
++static unsigned char diag0[] = {
++	0x00, 0x00, 0x00, 0x07, 0x00, 0x01, 0x02, 0x06, 0x07, 0x0a, 0xa0, 0x00,
++};
++#define DIAG0_LEN 12
++
++
++static int resp_recv_diag(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
++{
++	unsigned char *cmd = scp->cmnd;
++
++	switch(cmd[2]) {
++	case 0:
++		return fill_from_dev_buffer(scp, diag0, DIAG0_LEN);
++	case 1:
++		return fill_from_dev_buffer(scp, diag1, DIAG1_LEN);
++	case 2:
++		return fill_from_dev_buffer(scp, diag2, DIAG2_LEN);
++	case 6:
++		return fill_from_dev_buffer(scp, diag6, DIAG6_LEN);
++	case 7:
++		return fill_from_dev_buffer(scp, diag7, DIAG7_LEN);
++	case 0xa:
++		return fill_from_dev_buffer(scp, diaga, DIAGA_LEN);
++	case 0xa0:
++		return fill_from_dev_buffer(scp, diaga0, DIAGA0_LEN);
++	}
++
++	return DID_ERROR << 16;
++}
++
+ #define RL_BUCKET_ELEMS 8
+ 
+ /* Even though each pseudo target has a REPORT LUNS "well known logical unit"
