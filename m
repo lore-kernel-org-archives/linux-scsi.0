@@ -1,12 +1,12 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.19 038/244] scsi: qla2xxx: Fix hardirq-unsafe locking
-Date: Wed, 22 May 2019 15:23:04 -0400
-Message-ID: <20190522192630.24917-38-sashal@kernel.org>
-References: <20190522192630.24917-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.0 046/317] scsi: qla2xxx: Avoid that lockdep complains about unsafe locking in tcm_qla2xxx_close_session()
+Date: Wed, 22 May 2019 15:19:07 -0400
+Message-ID: <20190522192338.23715-46-sashal@kernel.org>
+References: <20190522192338.23715-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190522192630.24917-1-sashal@kernel.org>
+In-Reply-To: <20190522192338.23715-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc: Bart Van Assche <bvanassche@acm.org>, Himanshu Madhani <hmadhani@marvell.com>, Giridhar Malavali <gmalavali@marvell.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
@@ -14,20 +14,19 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Bart Van Assche <bvanassche@acm.org>
 
-[ Upstream commit 300ec7415c1fed5c73660f50c8e14a67e236dc0a ]
+[ Upstream commit d4023db71108375e4194e92730ba0d32d7f07813 ]
 
-Since fc_remote_port_delete() must be called with interrupts enabled, do
-not disable interrupts when calling that function. Remove the lockin calls
-from around the put_sess() call. This is safe because the function that is
-called when the final reference is dropped, qlt_unreg_sess(), grabs the
-proper locks. This patch avoids that lockdep reports the following:
+This patch avoids that lockdep reports the following warning:
 
+=====================================================
 WARNING: HARDIRQ-safe -> HARDIRQ-unsafe lock order detected
-kworker/2:1/62 [HC0[0]:SC0[0]:HE0:SE1] is trying to acquire:
-0000000009e679b3 (&(&k->k_lock)->rlock){+.+.}, at: klist_next+0x43/0x1d0
+5.1.0-rc1-dbg+ #11 Tainted: G        W
+-----------------------------------------------------
+rmdir/1478 [HC0[0]:SC0[0]:HE0:SE1] is trying to acquire:
+00000000e7ac4607 (&(&k->k_lock)->rlock){+.+.}, at: klist_next+0x43/0x1d0
 
 and this task is already holding:
-00000000a033b71c (&(&ha->tgt.sess_lock)->rlock){-...}, at: qla24xx_delete_sess_fn+0x55/0xf0 [qla2xxx_scst]
+00000000cf0baf5e (&(&ha->tgt.sess_lock)->rlock){-...}, at: tcm_qla2xxx_close_session+0x57/0xb0 [tcm_qla2xxx]
 which would create a new lock dependency:
  (&(&ha->tgt.sess_lock)->rlock){-...} -> (&(&k->k_lock)->rlock){+.+.}
 
@@ -37,9 +36,10 @@ but this new dependency connects a HARDIRQ-irq-safe lock:
 ... which became HARDIRQ-irq-safe at:
   lock_acquire+0xe3/0x200
   _raw_spin_lock_irqsave+0x3d/0x60
-  qla24xx_report_id_acquisition+0xa69/0xe30 [qla2xxx_scst]
-  qla24xx_process_response_queue+0x69e/0x1270 [qla2xxx_scst]
-  qla24xx_msix_rsp_q+0x79/0xf0 [qla2xxx_scst]
+  qla2x00_fcport_event_handler+0x1f3d/0x22b0 [qla2xxx]
+  qla2x00_async_login_sp_done+0x1dc/0x1f0 [qla2xxx]
+  qla24xx_process_response_queue+0xa37/0x10e0 [qla2xxx]
+  qla24xx_msix_rsp_q+0x79/0xf0 [qla2xxx]
   __handle_irq_event_percpu+0x79/0x3c0
   handle_irq_event_percpu+0x70/0xf0
   handle_irq_event+0x5a/0x8b
@@ -52,7 +52,7 @@ but this new dependency connects a HARDIRQ-irq-safe lock:
   default_idle_call+0x35/0x40
   do_idle+0x2bb/0x2e0
   cpu_startup_entry+0x1d/0x20
-  start_secondary+0x2a8/0x320
+  start_secondary+0x24d/0x2d0
   secondary_startup_64+0xa4/0xb0
 
 to a HARDIRQ-irq-unsafe lock:
@@ -63,7 +63,7 @@ to a HARDIRQ-irq-unsafe lock:
   lock_acquire+0xe3/0x200
   _raw_spin_lock+0x32/0x50
   klist_add_tail+0x33/0xb0
-  device_add+0x7e1/0xb50
+  device_add+0x7f4/0xb60
   device_create_groups_vargs+0x11c/0x150
   device_create_with_groups+0x89/0xb0
   vtconsole_class_init+0xb2/0x124
@@ -87,19 +87,21 @@ other info that might help us debug this:
 
  *** DEADLOCK ***
 
-3 locks held by kworker/2:1/62:
- #0: 00000000a4319c16 ((wq_completion)"qla2xxx_wq"){+.+.}, at: process_one_work+0x437/0xa80
- #1: 00000000ffa34c42 ((work_completion)(&sess->del_work)){+.+.}, at: process_one_work+0x437/0xa80
- #2: 00000000a033b71c (&(&ha->tgt.sess_lock)->rlock){-...}, at: qla24xx_delete_sess_fn+0x55/0xf0 [qla2xxx_scst]
+4 locks held by rmdir/1478:
+ #0: 000000002c7f1ba4 (sb_writers#10){.+.+}, at: mnt_want_write+0x32/0x70
+ #1: 00000000c85eb147 (&default_group_class[depth - 1]#2/1){+.+.}, at: do_rmdir+0x217/0x2d0
+ #2: 000000002b164d6f (&sb->s_type->i_mutex_key#13){++++}, at: vfs_rmdir+0x7e/0x1d0
+ #3: 00000000cf0baf5e (&(&ha->tgt.sess_lock)->rlock){-...}, at: tcm_qla2xxx_close_session+0x57/0xb0 [tcm_qla2xxx]
 
 the dependencies between HARDIRQ-irq-safe lock and the holding lock:
--> (&(&ha->tgt.sess_lock)->rlock){-...} ops: 8 {
+-> (&(&ha->tgt.sess_lock)->rlock){-...} ops: 127 {
    IN-HARDIRQ-W at:
                     lock_acquire+0xe3/0x200
                     _raw_spin_lock_irqsave+0x3d/0x60
-                    qla24xx_report_id_acquisition+0xa69/0xe30 [qla2xxx_scst]
-                    qla24xx_process_response_queue+0x69e/0x1270 [qla2xxx_scst]
-                    qla24xx_msix_rsp_q+0x79/0xf0 [qla2xxx_scst]
+                    qla2x00_fcport_event_handler+0x1f3d/0x22b0 [qla2xxx]
+                    qla2x00_async_login_sp_done+0x1dc/0x1f0 [qla2xxx]
+                    qla24xx_process_response_queue+0xa37/0x10e0 [qla2xxx]
+                    qla24xx_msix_rsp_q+0x79/0xf0 [qla2xxx]
                     __handle_irq_event_percpu+0x79/0x3c0
                     handle_irq_event_percpu+0x70/0xf0
                     handle_irq_event+0x5a/0x8b
@@ -112,53 +114,48 @@ the dependencies between HARDIRQ-irq-safe lock and the holding lock:
                     default_idle_call+0x35/0x40
                     do_idle+0x2bb/0x2e0
                     cpu_startup_entry+0x1d/0x20
-                    start_secondary+0x2a8/0x320
+                    start_secondary+0x24d/0x2d0
                     secondary_startup_64+0xa4/0xb0
    INITIAL USE at:
                    lock_acquire+0xe3/0x200
                    _raw_spin_lock_irqsave+0x3d/0x60
-                   qla24xx_report_id_acquisition+0xa69/0xe30 [qla2xxx_scst]
-                   qla24xx_process_response_queue+0x69e/0x1270 [qla2xxx_scst]
-                   qla24xx_msix_rsp_q+0x79/0xf0 [qla2xxx_scst]
-                   __handle_irq_event_percpu+0x79/0x3c0
-                   handle_irq_event_percpu+0x70/0xf0
-                   handle_irq_event+0x5a/0x8b
-                   handle_edge_irq+0x12c/0x310
-                   handle_irq+0x192/0x20a
-                   do_IRQ+0x73/0x160
-                   ret_from_intr+0x0/0x1d
-                   default_idle+0x23/0x1f0
-                   arch_cpu_idle+0x15/0x20
-                   default_idle_call+0x35/0x40
-                   do_idle+0x2bb/0x2e0
-                   cpu_startup_entry+0x1d/0x20
-                   start_secondary+0x2a8/0x320
-                   secondary_startup_64+0xa4/0xb0
+                   qla2x00_loop_resync+0xb3d/0x2690 [qla2xxx]
+                   qla2x00_do_dpc+0xcee/0xf30 [qla2xxx]
+                   kthread+0x1d2/0x1f0
+                   ret_from_fork+0x3a/0x50
  }
- ... key      at: [<ffffffffa0c0d080>] __key.85462+0x0/0xfffffffffff7df80 [qla2xxx_scst]
+ ... key      at: [<ffffffffa125f700>] __key.62804+0x0/0xfffffffffff7e900 [qla2xxx]
  ... acquired at:
+   __lock_acquire+0x11ed/0x1b60
    lock_acquire+0xe3/0x200
    _raw_spin_lock_irqsave+0x3d/0x60
    klist_next+0x43/0x1d0
    device_for_each_child+0x96/0x110
    scsi_target_block+0x3c/0x40 [scsi_mod]
    fc_remote_port_delete+0xe7/0x1c0 [scsi_transport_fc]
-   qla2x00_mark_device_lost+0xa0b/0xa30 [qla2xxx_scst]
-   qlt_unreg_sess+0x1c6/0x380 [qla2xxx_scst]
-   qla24xx_delete_sess_fn+0xe6/0xf0 [qla2xxx_scst]
-   process_one_work+0x511/0xa80
-   worker_thread+0x67/0x5b0
-   kthread+0x1d2/0x1f0
-   ret_from_fork+0x3a/0x50
+   qla2x00_mark_device_lost+0x4d3/0x500 [qla2xxx]
+   qlt_unreg_sess+0x104/0x2c0 [qla2xxx]
+   tcm_qla2xxx_close_session+0xa2/0xb0 [tcm_qla2xxx]
+   target_shutdown_sessions+0x17b/0x190 [target_core_mod]
+   core_tpg_del_initiator_node_acl+0xf3/0x1f0 [target_core_mod]
+   target_fabric_nacl_base_release+0x25/0x30 [target_core_mod]
+   config_item_release+0x9f/0x120 [configfs]
+   config_item_put+0x29/0x2b [configfs]
+   configfs_rmdir+0x3d2/0x520 [configfs]
+   vfs_rmdir+0xb3/0x1d0
+   do_rmdir+0x25c/0x2d0
+   __x64_sys_rmdir+0x24/0x30
+   do_syscall_64+0x77/0x220
+   entry_SYSCALL_64_after_hwframe+0x49/0xbe
 
 the dependencies between the lock to be acquired
  and HARDIRQ-irq-unsafe lock:
--> (&(&k->k_lock)->rlock){+.+.} ops: 13831 {
+-> (&(&k->k_lock)->rlock){+.+.} ops: 14568 {
    HARDIRQ-ON-W at:
                     lock_acquire+0xe3/0x200
                     _raw_spin_lock+0x32/0x50
                     klist_add_tail+0x33/0xb0
-                    device_add+0x7e1/0xb50
+                    device_add+0x7f4/0xb60
                     device_create_groups_vargs+0x11c/0x150
                     device_create_with_groups+0x89/0xb0
                     vtconsole_class_init+0xb2/0x124
@@ -170,7 +167,7 @@ the dependencies between the lock to be acquired
                     lock_acquire+0xe3/0x200
                     _raw_spin_lock+0x32/0x50
                     klist_add_tail+0x33/0xb0
-                    device_add+0x7e1/0xb50
+                    device_add+0x7f4/0xb60
                     device_create_groups_vargs+0x11c/0x150
                     device_create_with_groups+0x89/0xb0
                     vtconsole_class_init+0xb2/0x124
@@ -182,7 +179,7 @@ the dependencies between the lock to be acquired
                    lock_acquire+0xe3/0x200
                    _raw_spin_lock+0x32/0x50
                    klist_add_tail+0x33/0xb0
-                   device_add+0x7e1/0xb50
+                   device_add+0x7f4/0xb60
                    device_create_groups_vargs+0x11c/0x150
                    device_create_with_groups+0x89/0xb0
                    vtconsole_class_init+0xb2/0x124
@@ -191,43 +188,58 @@ the dependencies between the lock to be acquired
                    kernel_init+0x11/0x11b
                    ret_from_fork+0x3a/0x50
  }
- ... key      at: [<ffffffff83ed8780>] __key.15491+0x0/0x40
+ ... key      at: [<ffffffff83f3d900>] __key.15805+0x0/0x40
  ... acquired at:
+   __lock_acquire+0x11ed/0x1b60
    lock_acquire+0xe3/0x200
    _raw_spin_lock_irqsave+0x3d/0x60
    klist_next+0x43/0x1d0
    device_for_each_child+0x96/0x110
    scsi_target_block+0x3c/0x40 [scsi_mod]
    fc_remote_port_delete+0xe7/0x1c0 [scsi_transport_fc]
-   qla2x00_mark_device_lost+0xa0b/0xa30 [qla2xxx_scst]
-   qlt_unreg_sess+0x1c6/0x380 [qla2xxx_scst]
-   qla24xx_delete_sess_fn+0xe6/0xf0 [qla2xxx_scst]
-   process_one_work+0x511/0xa80
-   worker_thread+0x67/0x5b0
-   kthread+0x1d2/0x1f0
-   ret_from_fork+0x3a/0x50
+   qla2x00_mark_device_lost+0x4d3/0x500 [qla2xxx]
+   qlt_unreg_sess+0x104/0x2c0 [qla2xxx]
+   tcm_qla2xxx_close_session+0xa2/0xb0 [tcm_qla2xxx]
+   target_shutdown_sessions+0x17b/0x190 [target_core_mod]
+   core_tpg_del_initiator_node_acl+0xf3/0x1f0 [target_core_mod]
+   target_fabric_nacl_base_release+0x25/0x30 [target_core_mod]
+   config_item_release+0x9f/0x120 [configfs]
+   config_item_put+0x29/0x2b [configfs]
+   configfs_rmdir+0x3d2/0x520 [configfs]
+   vfs_rmdir+0xb3/0x1d0
+   do_rmdir+0x25c/0x2d0
+   __x64_sys_rmdir+0x24/0x30
+   do_syscall_64+0x77/0x220
+   entry_SYSCALL_64_after_hwframe+0x49/0xbe
 
 stack backtrace:
-CPU: 2 PID: 62 Comm: kworker/2:1 Tainted: G           O      5.0.7-dbg+ #8
+CPU: 7 PID: 1478 Comm: rmdir Tainted: G        W         5.1.0-rc1-dbg+ #11
 Hardware name: Bochs Bochs, BIOS Bochs 01/01/2011
-Workqueue: qla2xxx_wq qla24xx_delete_sess_fn [qla2xxx_scst]
 Call Trace:
  dump_stack+0x86/0xca
- check_usage.cold.52+0x473/0x563
- __lock_acquire+0x11c0/0x23e0
+ check_usage.cold.59+0x473/0x563
+ check_prev_add.constprop.43+0x1f1/0x1170
+ __lock_acquire+0x11ed/0x1b60
  lock_acquire+0xe3/0x200
  _raw_spin_lock_irqsave+0x3d/0x60
  klist_next+0x43/0x1d0
  device_for_each_child+0x96/0x110
  scsi_target_block+0x3c/0x40 [scsi_mod]
  fc_remote_port_delete+0xe7/0x1c0 [scsi_transport_fc]
- qla2x00_mark_device_lost+0xa0b/0xa30 [qla2xxx_scst]
- qlt_unreg_sess+0x1c6/0x380 [qla2xxx_scst]
- qla24xx_delete_sess_fn+0xe6/0xf0 [qla2xxx_scst]
- process_one_work+0x511/0xa80
- worker_thread+0x67/0x5b0
- kthread+0x1d2/0x1f0
- ret_from_fork+0x3a/0x50
+ qla2x00_mark_device_lost+0x4d3/0x500 [qla2xxx]
+ qlt_unreg_sess+0x104/0x2c0 [qla2xxx]
+ tcm_qla2xxx_close_session+0xa2/0xb0 [tcm_qla2xxx]
+ target_shutdown_sessions+0x17b/0x190 [target_core_mod]
+ core_tpg_del_initiator_node_acl+0xf3/0x1f0 [target_core_mod]
+ target_fabric_nacl_base_release+0x25/0x30 [target_core_mod]
+ config_item_release+0x9f/0x120 [configfs]
+ config_item_put+0x29/0x2b [configfs]
+ configfs_rmdir+0x3d2/0x520 [configfs]
+ vfs_rmdir+0xb3/0x1d0
+ do_rmdir+0x25c/0x2d0
+ __x64_sys_rmdir+0x24/0x30
+ do_syscall_64+0x77/0x220
+ entry_SYSCALL_64_after_hwframe+0x49/0xbe
 
 Cc: Himanshu Madhani <hmadhani@marvell.com>
 Cc: Giridhar Malavali <gmalavali@marvell.com>
@@ -236,145 +248,23 @@ Acked-by: Himanshu Madhani <hmadhani@marvell.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qla2xxx/qla_target.c  | 25 ++++++++-----------------
- drivers/scsi/qla2xxx/tcm_qla2xxx.c |  2 --
- 2 files changed, 8 insertions(+), 19 deletions(-)
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index a8c67cd176256..9d7feb005acfd 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -684,7 +684,6 @@ int qla24xx_async_notify_ack(scsi_qla_host_t *vha, fc_port_t *fcport,
- void qla24xx_do_nack_work(struct scsi_qla_host *vha, struct qla_work_evt *e)
- {
- 	fc_port_t *t;
--	unsigned long flags;
- 
- 	switch (e->u.nack.type) {
- 	case SRB_NACK_PRLI:
-@@ -694,10 +693,8 @@ void qla24xx_do_nack_work(struct scsi_qla_host *vha, struct qla_work_evt *e)
- 		if (t) {
- 			ql_log(ql_log_info, vha, 0xd034,
- 			    "%s create sess success %p", __func__, t);
--			spin_lock_irqsave(&vha->hw->tgt.sess_lock, flags);
- 			/* create sess has an extra kref */
- 			vha->hw->tgt.tgt_ops->put_sess(e->u.nack.fcport);
--			spin_unlock_irqrestore(&vha->hw->tgt.sess_lock, flags);
- 		}
- 		break;
- 	}
-@@ -709,9 +706,6 @@ void qla24xx_delete_sess_fn(struct work_struct *work)
- {
- 	fc_port_t *fcport = container_of(work, struct fc_port, del_work);
- 	struct qla_hw_data *ha = fcport->vha->hw;
--	unsigned long flags;
--
--	spin_lock_irqsave(&ha->tgt.sess_lock, flags);
- 
- 	if (fcport->se_sess) {
- 		ha->tgt.tgt_ops->shutdown_sess(fcport);
-@@ -719,7 +713,6 @@ void qla24xx_delete_sess_fn(struct work_struct *work)
- 	} else {
- 		qlt_unreg_sess(fcport);
- 	}
--	spin_unlock_irqrestore(&ha->tgt.sess_lock, flags);
- }
- 
- /*
-@@ -788,8 +781,9 @@ void qlt_fc_port_added(struct scsi_qla_host *vha, fc_port_t *fcport)
- 		    fcport->port_name, sess->loop_id);
- 		sess->local = 0;
- 	}
--	ha->tgt.tgt_ops->put_sess(sess);
- 	spin_unlock_irqrestore(&ha->tgt.sess_lock, flags);
-+
-+	ha->tgt.tgt_ops->put_sess(sess);
- }
- 
- /*
-@@ -4135,9 +4129,7 @@ static void __qlt_do_work(struct qla_tgt_cmd *cmd)
- 	/*
- 	 * Drop extra session reference from qla_tgt_handle_cmd_for_atio*(
- 	 */
--	spin_lock_irqsave(&ha->tgt.sess_lock, flags);
- 	ha->tgt.tgt_ops->put_sess(sess);
--	spin_unlock_irqrestore(&ha->tgt.sess_lock, flags);
- 	return;
- 
- out_term:
-@@ -4154,9 +4146,7 @@ static void __qlt_do_work(struct qla_tgt_cmd *cmd)
- 	target_free_tag(sess->se_sess, &cmd->se_cmd);
- 	spin_unlock_irqrestore(qpair->qp_lock_ptr, flags);
- 
--	spin_lock_irqsave(&ha->tgt.sess_lock, flags);
- 	ha->tgt.tgt_ops->put_sess(sess);
--	spin_unlock_irqrestore(&ha->tgt.sess_lock, flags);
- }
- 
- static void qlt_do_work(struct work_struct *work)
-@@ -4365,9 +4355,7 @@ static int qlt_handle_cmd_for_atio(struct scsi_qla_host *vha,
- 	if (!cmd) {
- 		ql_dbg(ql_dbg_io, vha, 0x3062,
- 		    "qla_target(%d): Allocation of cmd failed\n", vha->vp_idx);
--		spin_lock_irqsave(&ha->tgt.sess_lock, flags);
- 		ha->tgt.tgt_ops->put_sess(sess);
--		spin_unlock_irqrestore(&ha->tgt.sess_lock, flags);
- 		return -EBUSY;
- 	}
- 
-@@ -6105,17 +6093,19 @@ static void qlt_abort_work(struct qla_tgt *tgt,
- 	}
- 
- 	rc = __qlt_24xx_handle_abts(vha, &prm->abts, sess);
--	ha->tgt.tgt_ops->put_sess(sess);
- 	spin_unlock_irqrestore(&ha->tgt.sess_lock, flags2);
- 
-+	ha->tgt.tgt_ops->put_sess(sess);
-+
- 	if (rc != 0)
- 		goto out_term;
- 	return;
- 
- out_term2:
-+	spin_unlock_irqrestore(&ha->tgt.sess_lock, flags2);
-+
- 	if (sess)
- 		ha->tgt.tgt_ops->put_sess(sess);
--	spin_unlock_irqrestore(&ha->tgt.sess_lock, flags2);
- 
- out_term:
- 	spin_lock_irqsave(&ha->hardware_lock, flags);
-@@ -6175,9 +6165,10 @@ static void qlt_tmr_work(struct qla_tgt *tgt,
- 	    scsilun_to_int((struct scsi_lun *)&a->u.isp24.fcp_cmnd.lun);
- 
- 	rc = qlt_issue_task_mgmt(sess, unpacked_lun, fn, iocb, 0);
--	ha->tgt.tgt_ops->put_sess(sess);
- 	spin_unlock_irqrestore(&ha->tgt.sess_lock, flags);
- 
-+	ha->tgt.tgt_ops->put_sess(sess);
-+
- 	if (rc != 0)
- 		goto out_term;
- 	return;
 diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-index f425a9e5056bf..b8c1a739dfbd1 100644
+index 708151b72ee9f..72d5b678e85d2 100644
 --- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
 +++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-@@ -350,7 +350,6 @@ static void tcm_qla2xxx_put_sess(struct fc_port *sess)
- 	if (!sess)
- 		return;
+@@ -374,8 +374,9 @@ static void tcm_qla2xxx_close_session(struct se_session *se_sess)
  
--	assert_spin_locked(&sess->vha->hw->tgt.sess_lock);
- 	kref_put(&sess->sess_kref, tcm_qla2xxx_release_session);
+ 	spin_lock_irqsave(&vha->hw->tgt.sess_lock, flags);
+ 	target_sess_cmd_list_set_waiting(se_sess);
+-	tcm_qla2xxx_put_sess(sess);
+ 	spin_unlock_irqrestore(&vha->hw->tgt.sess_lock, flags);
++
++	tcm_qla2xxx_put_sess(sess);
  }
  
-@@ -832,7 +831,6 @@ static void tcm_qla2xxx_clear_nacl_from_fcport_map(struct fc_port *sess)
- 
- static void tcm_qla2xxx_shutdown_sess(struct fc_port *sess)
- {
--	assert_spin_locked(&sess->vha->hw->tgt.sess_lock);
- 	target_sess_cmd_list_set_waiting(sess->se_sess);
- }
- 
+ static u32 tcm_qla2xxx_sess_get_index(struct se_session *se_sess)
 -- 
 2.20.1
