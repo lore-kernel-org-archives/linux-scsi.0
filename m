@@ -1,248 +1,52 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 5.1 019/375] blk-mq: split blk_mq_alloc_and_init_hctx into two parts
-Date: Wed, 22 May 2019 15:15:19 -0400
-Message-ID: <20190522192115.22666-19-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.1 052/375] scsi: qla2xxx: Fix abort handling in tcm_qla2xxx_write_pending()
+Date: Wed, 22 May 2019 15:15:52 -0400
+Message-ID: <20190522192115.22666-52-sashal@kernel.org>
 References: <20190522192115.22666-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20190522192115.22666-1-sashal@kernel.org>
-Sender: stable-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Ming Lei <ming.lei@redhat.com>, Dongli Zhang <dongli.zhang@oracle.com>, James Smart <james.smart@broadcom.com>, Bart Van Assche <bart.vanassche@wdc.com>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, Hannes Reinecke <hare@suse.com>, Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>, linux-block@vger.kernel.org
+Cc: Bart Van Assche <bvanassche@acm.org>, Himanshu Madhani <hmadhani@marvell.com>, Giridhar Malavali <gmalavali@marvell.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Ming Lei <ming.lei@redhat.com>
+From: Bart Van Assche <bvanassche@acm.org>
 
-[ Upstream commit 7c6c5b7c9186e3fb5b10afb8e5f710ae661144c6 ]
+[ Upstream commit e209783d66bca04b5fce4429e59338517ffc1a0b ]
 
-Split blk_mq_alloc_and_init_hctx into two parts, and one is
-blk_mq_alloc_hctx() for allocating all hctx resources, another
-is blk_mq_init_hctx() for initializing hctx, which serves as
-counter-part of blk_mq_exit_hctx().
+Implementations of the .write_pending() callback functions must guarantee
+that an appropriate LIO core callback function will be called immediately or
+at a later time.  Make sure that this guarantee is met for aborted SCSI
+commands.
 
-Cc: Dongli Zhang <dongli.zhang@oracle.com>
-Cc: James Smart <james.smart@broadcom.com>
-Cc: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: Martin K . Petersen <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: James E . J . Bottomley <jejb@linux.vnet.ibm.com>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Tested-by: James Smart <james.smart@broadcom.com>
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
-Signed-off-by: Jens Axboe <axboe@kernel.dk>
+[mkp: typo]
+
+Cc: Himanshu Madhani <hmadhani@marvell.com>
+Cc: Giridhar Malavali <gmalavali@marvell.com>
+Fixes: 694833ee00c4 ("scsi: tcm_qla2xxx: Do not allow aborted cmd to advance.") # v4.13.
+Fixes: a07100e00ac4 ("qla2xxx: Fix TMR ABORT interaction issue between qla2xxx and TCM") # v4.5.
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+Acked-by: Himanshu Madhani <hmadhani@marvell.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- block/blk-mq.c | 139 ++++++++++++++++++++++++++-----------------------
- 1 file changed, 75 insertions(+), 64 deletions(-)
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index fc60ed7e940ea..24e3ae3bd710e 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -2289,15 +2289,65 @@ static void blk_mq_exit_hw_queues(struct request_queue *q,
+diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+index 8a3075d17c63c..bddb573c88dd2 100644
+--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
++++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+@@ -399,6 +399,8 @@ static int tcm_qla2xxx_write_pending(struct se_cmd *se_cmd)
+ 			cmd->se_cmd.transport_state,
+ 			cmd->se_cmd.t_state,
+ 			cmd->se_cmd.se_cmd_flags);
++		transport_generic_request_failure(&cmd->se_cmd,
++			TCM_CHECK_CONDITION_ABORT_CMD);
+ 		return 0;
  	}
- }
- 
-+static int blk_mq_hw_ctx_size(struct blk_mq_tag_set *tag_set)
-+{
-+	int hw_ctx_size = sizeof(struct blk_mq_hw_ctx);
-+
-+	BUILD_BUG_ON(ALIGN(offsetof(struct blk_mq_hw_ctx, srcu),
-+			   __alignof__(struct blk_mq_hw_ctx)) !=
-+		     sizeof(struct blk_mq_hw_ctx));
-+
-+	if (tag_set->flags & BLK_MQ_F_BLOCKING)
-+		hw_ctx_size += sizeof(struct srcu_struct);
-+
-+	return hw_ctx_size;
-+}
-+
- static int blk_mq_init_hctx(struct request_queue *q,
- 		struct blk_mq_tag_set *set,
- 		struct blk_mq_hw_ctx *hctx, unsigned hctx_idx)
- {
--	int node;
-+	hctx->queue_num = hctx_idx;
-+
-+	cpuhp_state_add_instance_nocalls(CPUHP_BLK_MQ_DEAD, &hctx->cpuhp_dead);
-+
-+	hctx->tags = set->tags[hctx_idx];
-+
-+	if (set->ops->init_hctx &&
-+	    set->ops->init_hctx(hctx, set->driver_data, hctx_idx))
-+		goto unregister_cpu_notifier;
- 
--	node = hctx->numa_node;
-+	if (blk_mq_init_request(set, hctx->fq->flush_rq, hctx_idx,
-+				hctx->numa_node))
-+		goto exit_hctx;
-+	return 0;
-+
-+ exit_hctx:
-+	if (set->ops->exit_hctx)
-+		set->ops->exit_hctx(hctx, hctx_idx);
-+ unregister_cpu_notifier:
-+	blk_mq_remove_cpuhp(hctx);
-+	return -1;
-+}
-+
-+static struct blk_mq_hw_ctx *
-+blk_mq_alloc_hctx(struct request_queue *q, struct blk_mq_tag_set *set,
-+		int node)
-+{
-+	struct blk_mq_hw_ctx *hctx;
-+	gfp_t gfp = GFP_NOIO | __GFP_NOWARN | __GFP_NORETRY;
-+
-+	hctx = kzalloc_node(blk_mq_hw_ctx_size(set), gfp, node);
-+	if (!hctx)
-+		goto fail_alloc_hctx;
-+
-+	if (!zalloc_cpumask_var_node(&hctx->cpumask, gfp, node))
-+		goto free_hctx;
-+
-+	atomic_set(&hctx->nr_active, 0);
- 	if (node == NUMA_NO_NODE)
--		node = hctx->numa_node = set->numa_node;
-+		node = set->numa_node;
-+	hctx->numa_node = node;
- 
- 	INIT_DELAYED_WORK(&hctx->run_work, blk_mq_run_work_fn);
- 	spin_lock_init(&hctx->lock);
-@@ -2305,58 +2355,45 @@ static int blk_mq_init_hctx(struct request_queue *q,
- 	hctx->queue = q;
- 	hctx->flags = set->flags & ~BLK_MQ_F_TAG_SHARED;
- 
--	cpuhp_state_add_instance_nocalls(CPUHP_BLK_MQ_DEAD, &hctx->cpuhp_dead);
--
--	hctx->tags = set->tags[hctx_idx];
--
- 	/*
- 	 * Allocate space for all possible cpus to avoid allocation at
- 	 * runtime
- 	 */
- 	hctx->ctxs = kmalloc_array_node(nr_cpu_ids, sizeof(void *),
--			GFP_NOIO | __GFP_NOWARN | __GFP_NORETRY, node);
-+			gfp, node);
- 	if (!hctx->ctxs)
--		goto unregister_cpu_notifier;
-+		goto free_cpumask;
- 
- 	if (sbitmap_init_node(&hctx->ctx_map, nr_cpu_ids, ilog2(8),
--				GFP_NOIO | __GFP_NOWARN | __GFP_NORETRY, node))
-+				gfp, node))
- 		goto free_ctxs;
--
- 	hctx->nr_ctx = 0;
- 
- 	spin_lock_init(&hctx->dispatch_wait_lock);
- 	init_waitqueue_func_entry(&hctx->dispatch_wait, blk_mq_dispatch_wake);
- 	INIT_LIST_HEAD(&hctx->dispatch_wait.entry);
- 
--	if (set->ops->init_hctx &&
--	    set->ops->init_hctx(hctx, set->driver_data, hctx_idx))
--		goto free_bitmap;
--
- 	hctx->fq = blk_alloc_flush_queue(q, hctx->numa_node, set->cmd_size,
--			GFP_NOIO | __GFP_NOWARN | __GFP_NORETRY);
-+			gfp);
- 	if (!hctx->fq)
--		goto exit_hctx;
--
--	if (blk_mq_init_request(set, hctx->fq->flush_rq, hctx_idx, node))
--		goto free_fq;
-+		goto free_bitmap;
- 
- 	if (hctx->flags & BLK_MQ_F_BLOCKING)
- 		init_srcu_struct(hctx->srcu);
-+	blk_mq_hctx_kobj_init(hctx);
- 
--	return 0;
-+	return hctx;
- 
-- free_fq:
--	blk_free_flush_queue(hctx->fq);
-- exit_hctx:
--	if (set->ops->exit_hctx)
--		set->ops->exit_hctx(hctx, hctx_idx);
-  free_bitmap:
- 	sbitmap_free(&hctx->ctx_map);
-  free_ctxs:
- 	kfree(hctx->ctxs);
-- unregister_cpu_notifier:
--	blk_mq_remove_cpuhp(hctx);
--	return -1;
-+ free_cpumask:
-+	free_cpumask_var(hctx->cpumask);
-+ free_hctx:
-+	kfree(hctx);
-+ fail_alloc_hctx:
-+	return NULL;
- }
- 
- static void blk_mq_init_cpu_queues(struct request_queue *q,
-@@ -2700,51 +2737,25 @@ struct request_queue *blk_mq_init_sq_queue(struct blk_mq_tag_set *set,
- }
- EXPORT_SYMBOL(blk_mq_init_sq_queue);
- 
--static int blk_mq_hw_ctx_size(struct blk_mq_tag_set *tag_set)
--{
--	int hw_ctx_size = sizeof(struct blk_mq_hw_ctx);
--
--	BUILD_BUG_ON(ALIGN(offsetof(struct blk_mq_hw_ctx, srcu),
--			   __alignof__(struct blk_mq_hw_ctx)) !=
--		     sizeof(struct blk_mq_hw_ctx));
--
--	if (tag_set->flags & BLK_MQ_F_BLOCKING)
--		hw_ctx_size += sizeof(struct srcu_struct);
--
--	return hw_ctx_size;
--}
--
- static struct blk_mq_hw_ctx *blk_mq_alloc_and_init_hctx(
- 		struct blk_mq_tag_set *set, struct request_queue *q,
- 		int hctx_idx, int node)
- {
- 	struct blk_mq_hw_ctx *hctx;
- 
--	hctx = kzalloc_node(blk_mq_hw_ctx_size(set),
--			GFP_NOIO | __GFP_NOWARN | __GFP_NORETRY,
--			node);
-+	hctx = blk_mq_alloc_hctx(q, set, node);
- 	if (!hctx)
--		return NULL;
--
--	if (!zalloc_cpumask_var_node(&hctx->cpumask,
--				GFP_NOIO | __GFP_NOWARN | __GFP_NORETRY,
--				node)) {
--		kfree(hctx);
--		return NULL;
--	}
--
--	atomic_set(&hctx->nr_active, 0);
--	hctx->numa_node = node;
--	hctx->queue_num = hctx_idx;
-+		goto fail;
- 
--	if (blk_mq_init_hctx(q, set, hctx, hctx_idx)) {
--		free_cpumask_var(hctx->cpumask);
--		kfree(hctx);
--		return NULL;
--	}
--	blk_mq_hctx_kobj_init(hctx);
-+	if (blk_mq_init_hctx(q, set, hctx, hctx_idx))
-+		goto free_hctx;
- 
- 	return hctx;
-+
-+ free_hctx:
-+	kobject_put(&hctx->kobj);
-+ fail:
-+	return NULL;
- }
- 
- static void blk_mq_realloc_hw_ctxs(struct blk_mq_tag_set *set,
+ 	cmd->trc_flags |= TRC_XFR_RDY;
 -- 
 2.20.1
