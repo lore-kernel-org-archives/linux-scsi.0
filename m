@@ -1,57 +1,101 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 5.1 051/375] scsi: qla2xxx: Fix a qla24xx_enable_msix() error path
-Date: Wed, 22 May 2019 15:15:51 -0400
-Message-ID: <20190522192115.22666-51-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.1 020/375] blk-mq: grab .q_usage_counter when queuing request from plug code path
+Date: Wed, 22 May 2019 15:15:20 -0400
+Message-ID: <20190522192115.22666-20-sashal@kernel.org>
 References: <20190522192115.22666-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <stable-owner@vger.kernel.org>
 In-Reply-To: <20190522192115.22666-1-sashal@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: stable-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Bart Van Assche <bvanassche@acm.org>, Himanshu Madhani <hmadhani@marvell.com>, Giridhar Malavali <gmalavali@marvell.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Cc: Ming Lei <ming.lei@redhat.com>, Dongli Zhang <dongli.zhang@oracle.com>, James Smart <james.smart@broadcom.com>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, Bart Van Assche <bvanassche@acm.org>, Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>, linux-block@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Bart Van Assche <bvanassche@acm.org>
+From: Ming Lei <ming.lei@redhat.com>
 
-[ Upstream commit 24afabdbd0b3553963a2bbf465895492b14d1107 ]
+[ Upstream commit e87eb301bee183d82bb3d04bd71b6660889a2588 ]
 
-Make sure that the allocated interrupts are freed if allocating memory for
-the msix_entries array fails.
+Just like aio/io_uring, we need to grab 2 refcount for queuing one
+request, one is for submission, another is for completion.
 
-Cc: Himanshu Madhani <hmadhani@marvell.com>
-Cc: Giridhar Malavali <gmalavali@marvell.com>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-Acked-by: Himanshu Madhani <hmadhani@marvell.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+If the request isn't queued from plug code path, the refcount grabbed
+in generic_make_request() serves for submission. In theroy, this
+refcount should have been released after the sumission(async run queue)
+is done. blk_freeze_queue() works with blk_sync_queue() together
+for avoiding race between cleanup queue and IO submission, given async
+run queue activities are canceled because hctx->run_work is scheduled with
+the refcount held, so it is fine to not hold the refcount when
+running the run queue work function for dispatch IO.
+
+However, if request is staggered into plug list, and finally queued
+from plug code path, the refcount in submission side is actually missed.
+And we may start to run queue after queue is removed because the queue's
+kobject refcount isn't guaranteed to be grabbed in flushing plug list
+context, then kernel oops is triggered, see the following race:
+
+blk_mq_flush_plug_list():
+        blk_mq_sched_insert_requests()
+                insert requests to sw queue or scheduler queue
+                blk_mq_run_hw_queue
+
+Because of concurrent run queue, all requests inserted above may be
+completed before calling the above blk_mq_run_hw_queue. Then queue can
+be freed during the above blk_mq_run_hw_queue().
+
+Fixes the issue by grab .q_usage_counter before calling
+blk_mq_sched_insert_requests() in blk_mq_flush_plug_list(). This way is
+safe because the queue is absolutely alive before inserting request.
+
+Cc: Dongli Zhang <dongli.zhang@oracle.com>
+Cc: James Smart <james.smart@broadcom.com>
+Cc: linux-scsi@vger.kernel.org,
+Cc: Martin K . Petersen <martin.petersen@oracle.com>,
+Cc: Christoph Hellwig <hch@lst.de>,
+Cc: James E . J . Bottomley <jejb@linux.vnet.ibm.com>,
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Tested-by: James Smart <james.smart@broadcom.com>
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
+Signed-off-by: Jens Axboe <axboe@kernel.dk>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qla2xxx/qla_isr.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ block/blk-mq-sched.c | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index 69bbea9239cc8..add17843148dd 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -3475,7 +3475,7 @@ qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
- 		ql_log(ql_log_fatal, vha, 0x00c8,
- 		    "Failed to allocate memory for ha->msix_entries.\n");
- 		ret = -ENOMEM;
--		goto msix_out;
-+		goto free_irqs;
- 	}
- 	ha->flags.msix_enabled = 1;
- 
-@@ -3558,6 +3558,10 @@ qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
- 
- msix_out:
- 	return ret;
+diff --git a/block/blk-mq-sched.c b/block/blk-mq-sched.c
+index aa6bc5c026438..c59babca6857a 100644
+--- a/block/blk-mq-sched.c
++++ b/block/blk-mq-sched.c
+@@ -413,6 +413,14 @@ void blk_mq_sched_insert_requests(struct blk_mq_hw_ctx *hctx,
+ 				  struct list_head *list, bool run_queue_async)
+ {
+ 	struct elevator_queue *e;
++	struct request_queue *q = hctx->queue;
 +
-+free_irqs:
-+	pci_free_irq_vectors(ha->pdev);
-+	goto msix_out;
++	/*
++	 * blk_mq_sched_insert_requests() is called from flush plug
++	 * context only, and hold one usage counter to prevent queue
++	 * from being released.
++	 */
++	percpu_ref_get(&q->q_usage_counter);
+ 
+ 	e = hctx->queue->elevator;
+ 	if (e && e->type->ops.insert_requests)
+@@ -426,12 +434,14 @@ void blk_mq_sched_insert_requests(struct blk_mq_hw_ctx *hctx,
+ 		if (!hctx->dispatch_busy && !e && !run_queue_async) {
+ 			blk_mq_try_issue_list_directly(hctx, list);
+ 			if (list_empty(list))
+-				return;
++				goto out;
+ 		}
+ 		blk_mq_insert_requests(hctx, ctx, list);
+ 	}
+ 
+ 	blk_mq_run_hw_queue(hctx, run_queue_async);
++ out:
++	percpu_ref_put(&q->q_usage_counter);
  }
  
- int
+ static void blk_mq_sched_free_tags(struct blk_mq_tag_set *set,
 -- 
 2.20.1
