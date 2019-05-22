@@ -1,7 +1,7 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.19 046/244] scsi: qedi: Abort ep termination if offload not scheduled
-Date: Wed, 22 May 2019 15:23:12 -0400
-Message-ID: <20190522192630.24917-46-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 036/244] scsi: qla2xxx: Fix abort handling in tcm_qla2xxx_write_pending()
+Date: Wed, 22 May 2019 15:23:02 -0400
+Message-ID: <20190522192630.24917-36-sashal@kernel.org>
 References: <20190522192630.24917-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -9,76 +9,44 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20190522192630.24917-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Manish Rangankar <mrangankar@marvell.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Cc: Bart Van Assche <bvanassche@acm.org>, Himanshu Madhani <hmadhani@marvell.com>, Giridhar Malavali <gmalavali@marvell.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Manish Rangankar <mrangankar@marvell.com>
+From: Bart Van Assche <bvanassche@acm.org>
 
-[ Upstream commit f848bfd8e167210a29374e8a678892bed591684f ]
+[ Upstream commit e209783d66bca04b5fce4429e59338517ffc1a0b ]
 
-Sometimes during connection recovery when there is a failure to resolve
-ARP, and offload connection was not issued, driver tries to flush pending
-offload connection work which was not queued up.
+Implementations of the .write_pending() callback functions must guarantee
+that an appropriate LIO core callback function will be called immediately or
+at a later time.  Make sure that this guarantee is met for aborted SCSI
+commands.
 
-kernel: WARNING: CPU: 19 PID: 10110 at kernel/workqueue.c:3030 __flush_work.isra.34+0x19c/0x1b0
-kernel: CPU: 19 PID: 10110 Comm: iscsid Tainted: G W 5.1.0-rc4 #11
-kernel: Hardware name: Dell Inc. PowerEdge R730/0599V5, BIOS 2.9.1 12/04/2018
-kernel: RIP: 0010:__flush_work.isra.34+0x19c/0x1b0
-kernel: Code: 8b fb 66 0f 1f 44 00 00 31 c0 eb ab 48 89 ef c6 07 00 0f 1f 40 00 fb 66 0f 1f 44 00 00 31 c0 eb 96 e8 08 16 fe ff 0f 0b eb 8d <0f> 0b 31 c0 eb 87 0f 1f 40 00 66 2e 0f 1
-f 84 00 00 00 00 00 0f 1f
-kernel: RSP: 0018:ffffa6b4054dba68 EFLAGS: 00010246
-kernel: RAX: 0000000000000000 RBX: ffff91df21c36fc0 RCX: 0000000000000000
-kernel: RDX: 0000000000000001 RSI: 0000000000000000 RDI: ffff91df21c36fc0
-kernel: RBP: ffff91df21c36ef0 R08: 0000000000000000 R09: 0000000000000000
-kernel: R10: 0000000000000038 R11: ffffa6b4054dbd60 R12: ffffffffc05e72c0
-kernel: R13: ffff91db10280820 R14: 0000000000000048 R15: 0000000000000000
-kernel: FS:  00007f5d83cc1740(0000) GS:ffff91df2f840000(0000) knlGS:0000000000000000
-kernel: CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-kernel: CR2: 0000000001cc5000 CR3: 0000000465450002 CR4: 00000000001606e0
-kernel: Call Trace:
-kernel: ? try_to_del_timer_sync+0x4d/0x80
-kernel: qedi_ep_disconnect+0x3b/0x410 [qedi]
-kernel: ? 0xffffffffc083c000
-kernel: ? klist_iter_exit+0x14/0x20
-kernel: ? class_find_device+0x93/0xf0
-kernel: iscsi_if_ep_disconnect.isra.18+0x58/0x70 [scsi_transport_iscsi]
-kernel: iscsi_if_recv_msg+0x10e2/0x1510 [scsi_transport_iscsi]
-kernel: ? copyout+0x22/0x30
-kernel: ? _copy_to_iter+0xa0/0x430
-kernel: ? _cond_resched+0x15/0x30
-kernel: ? __kmalloc_node_track_caller+0x1f9/0x270
-kernel: iscsi_if_rx+0xa5/0x1e0 [scsi_transport_iscsi]
-kernel: netlink_unicast+0x17f/0x230
-kernel: netlink_sendmsg+0x2d2/0x3d0
-kernel: sock_sendmsg+0x36/0x50
-kernel: ___sys_sendmsg+0x280/0x2a0
-kernel: ? timerqueue_add+0x54/0x80
-kernel: ? enqueue_hrtimer+0x38/0x90
-kernel: ? hrtimer_start_range_ns+0x19f/0x2c0
-kernel: __sys_sendmsg+0x58/0xa0
-kernel: do_syscall_64+0x5b/0x180
-kernel: entry_SYSCALL_64_after_hwframe+0x44/0xa9
+[mkp: typo]
 
-Signed-off-by: Manish Rangankar <mrangankar@marvell.com>
+Cc: Himanshu Madhani <hmadhani@marvell.com>
+Cc: Giridhar Malavali <gmalavali@marvell.com>
+Fixes: 694833ee00c4 ("scsi: tcm_qla2xxx: Do not allow aborted cmd to advance.") # v4.13.
+Fixes: a07100e00ac4 ("qla2xxx: Fix TMR ABORT interaction issue between qla2xxx and TCM") # v4.5.
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+Acked-by: Himanshu Madhani <hmadhani@marvell.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qedi/qedi_iscsi.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/scsi/qedi/qedi_iscsi.c b/drivers/scsi/qedi/qedi_iscsi.c
-index d4821b9dea45d..4130b9117055f 100644
---- a/drivers/scsi/qedi/qedi_iscsi.c
-+++ b/drivers/scsi/qedi/qedi_iscsi.c
-@@ -1001,6 +1001,9 @@ static void qedi_ep_disconnect(struct iscsi_endpoint *ep)
- 	qedi_ep = ep->dd_data;
- 	qedi = qedi_ep->qedi;
- 
-+	if (qedi_ep->state == EP_STATE_OFLDCONN_START)
-+		goto ep_exit_recover;
-+
- 	flush_work(&qedi_ep->offload_work);
- 
- 	if (qedi_ep->conn) {
+diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+index 64e2d859f6332..7ef549903124d 100644
+--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
++++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+@@ -390,6 +390,8 @@ static int tcm_qla2xxx_write_pending(struct se_cmd *se_cmd)
+ 			cmd->se_cmd.transport_state,
+ 			cmd->se_cmd.t_state,
+ 			cmd->se_cmd.se_cmd_flags);
++		transport_generic_request_failure(&cmd->se_cmd,
++			TCM_CHECK_CONDITION_ABORT_CMD);
+ 		return 0;
+ 	}
+ 	cmd->trc_flags |= TRC_XFR_RDY;
 -- 
 2.20.1
