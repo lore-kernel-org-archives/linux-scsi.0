@@ -1,7 +1,7 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 5.0 044/317] scsi: qla2xxx: Fix a qla24xx_enable_msix() error path
-Date: Wed, 22 May 2019 15:19:05 -0400
-Message-ID: <20190522192338.23715-44-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.0 045/317] scsi: qla2xxx: Fix abort handling in tcm_qla2xxx_write_pending()
+Date: Wed, 22 May 2019 15:19:06 -0400
+Message-ID: <20190522192338.23715-45-sashal@kernel.org>
 References: <20190522192338.23715-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -14,44 +14,39 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Bart Van Assche <bvanassche@acm.org>
 
-[ Upstream commit 24afabdbd0b3553963a2bbf465895492b14d1107 ]
+[ Upstream commit e209783d66bca04b5fce4429e59338517ffc1a0b ]
 
-Make sure that the allocated interrupts are freed if allocating memory for
-the msix_entries array fails.
+Implementations of the .write_pending() callback functions must guarantee
+that an appropriate LIO core callback function will be called immediately or
+at a later time.  Make sure that this guarantee is met for aborted SCSI
+commands.
+
+[mkp: typo]
 
 Cc: Himanshu Madhani <hmadhani@marvell.com>
 Cc: Giridhar Malavali <gmalavali@marvell.com>
+Fixes: 694833ee00c4 ("scsi: tcm_qla2xxx: Do not allow aborted cmd to advance.") # v4.13.
+Fixes: a07100e00ac4 ("qla2xxx: Fix TMR ABORT interaction issue between qla2xxx and TCM") # v4.5.
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 Acked-by: Himanshu Madhani <hmadhani@marvell.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qla2xxx/qla_isr.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index 1a20e5d8f0575..51df171b32ed3 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -3454,7 +3454,7 @@ qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
- 		ql_log(ql_log_fatal, vha, 0x00c8,
- 		    "Failed to allocate memory for ha->msix_entries.\n");
- 		ret = -ENOMEM;
--		goto msix_out;
-+		goto free_irqs;
+diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+index 283e6b80abb5a..708151b72ee9f 100644
+--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
++++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+@@ -399,6 +399,8 @@ static int tcm_qla2xxx_write_pending(struct se_cmd *se_cmd)
+ 			cmd->se_cmd.transport_state,
+ 			cmd->se_cmd.t_state,
+ 			cmd->se_cmd.se_cmd_flags);
++		transport_generic_request_failure(&cmd->se_cmd,
++			TCM_CHECK_CONDITION_ABORT_CMD);
+ 		return 0;
  	}
- 	ha->flags.msix_enabled = 1;
- 
-@@ -3537,6 +3537,10 @@ qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
- 
- msix_out:
- 	return ret;
-+
-+free_irqs:
-+	pci_free_irq_vectors(ha->pdev);
-+	goto msix_out;
- }
- 
- int
+ 	cmd->trc_flags |= TRC_XFR_RDY;
 -- 
 2.20.1
