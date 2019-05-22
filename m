@@ -1,30 +1,44 @@
-From: Joe Perches <joe@perches.com>
-Subject: Re: [PATCH] message/fusion/mptbase.c: Use kmemdup instead of memcpy
- and kmalloc
-Date: Wed, 22 May 2019 04:48:33 -0700
-Message-ID: <7e2a727333d1d764ae3c0099e050a0521e87d9d8.camel@perches.com>
-References: <20190522095335.GA3212@bharath12345-Inspiron-5559>
+From: Gen Zhang <blackgod016574@gmail.com>
+Subject: [PATCH] mpt3sas_ctl: Fix a double-fetch bug in
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c
+Date: Wed, 22 May 2019 22:15:09 +0800
+Message-ID: <20190522141509.GA9625@zhanggen-UX430UQ>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190522095335.GA3212@bharath12345-Inspiron-5559>
+Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
-To: Bharath Vedartham <linux.bhar@gmail.com>, sathya.prakash@broadcom.com, chaitra.basappa@broadcom.com
-Cc: MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: sathya.prakash@broadcom.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2019-05-22 at 15:23 +0530, Bharath Vedartham wrote:
-> Replace kmalloc + memcpy with kmemdup.
-> This was reported by coccinelle.
-[]
-> diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-[]
-> @@ -6001,13 +6001,12 @@ mpt_findImVolumes(MPT_ADAPTER *ioc)
->  	if (mpt_config(ioc, &cfg) != 0)
->  		goto out;
->  
-> -	mem = kmalloc(iocpage2sz, GFP_KERNEL);
-> +	mem = kmemdup((u8 *)pIoc2, iocpage2sz, GFP_KERNEL);
+In _ctl_ioctl_main(), 'ioctl_header' is fetched the first time from 
+userspace. 'ioctl_header.ioc_number' is then checked. The legal result 
+is saved to 'ioc'. Then, in condition MPT3COMMAND, the whole struct is
+fetched again from the userspace. Then _ctl_do_mpt_command() is called,
+'ioc' and 'karg' as inputs.
 
-You should remove the unnecessary cast here.
+However, a malicious user can change the 'ioc_number' between the two 
+fetches, which will cause a potential security issues.  Moreover, a 
+malicious user can provide a valid 'ioc_number' to pass the check in 
+first fetch, and then modify it in the second fetch.
+
+To fix this, we need to recheck the 'ioc_number' in the second fetch.
+
+Signed-off-by: Gen Zhang <blackgod016574@gmail.com>
+---
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+index b2bb47c..5181c03 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+@@ -2319,6 +2319,10 @@ _ctl_ioctl_main(struct file *file, unsigned int cmd, void __user *arg,
+ 			break;
+ 		}
+ 
++		if (karg.hdr.ioc_number != ioctl_header.ioc_number) {
++			ret = -EINVAL;
++			break;
++		}
+ 		if (_IOC_SIZE(cmd) == sizeof(struct mpt3_ioctl_command)) {
+ 			uarg = arg;
+ 			ret = _ctl_do_mpt_command(ioc, karg, &uarg->mf);
