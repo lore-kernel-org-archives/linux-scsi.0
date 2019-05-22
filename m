@@ -1,7 +1,7 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 5.1 063/375] scsi: qedi: Abort ep termination if offload not scheduled
-Date: Wed, 22 May 2019 15:16:03 -0400
-Message-ID: <20190522192115.22666-63-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.1 051/375] scsi: qla2xxx: Fix a qla24xx_enable_msix() error path
+Date: Wed, 22 May 2019 15:15:51 -0400
+Message-ID: <20190522192115.22666-51-sashal@kernel.org>
 References: <20190522192115.22666-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -9,76 +9,49 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20190522192115.22666-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Manish Rangankar <mrangankar@marvell.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Cc: Bart Van Assche <bvanassche@acm.org>, Himanshu Madhani <hmadhani@marvell.com>, Giridhar Malavali <gmalavali@marvell.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Manish Rangankar <mrangankar@marvell.com>
+From: Bart Van Assche <bvanassche@acm.org>
 
-[ Upstream commit f848bfd8e167210a29374e8a678892bed591684f ]
+[ Upstream commit 24afabdbd0b3553963a2bbf465895492b14d1107 ]
 
-Sometimes during connection recovery when there is a failure to resolve
-ARP, and offload connection was not issued, driver tries to flush pending
-offload connection work which was not queued up.
+Make sure that the allocated interrupts are freed if allocating memory for
+the msix_entries array fails.
 
-kernel: WARNING: CPU: 19 PID: 10110 at kernel/workqueue.c:3030 __flush_work.isra.34+0x19c/0x1b0
-kernel: CPU: 19 PID: 10110 Comm: iscsid Tainted: G W 5.1.0-rc4 #11
-kernel: Hardware name: Dell Inc. PowerEdge R730/0599V5, BIOS 2.9.1 12/04/2018
-kernel: RIP: 0010:__flush_work.isra.34+0x19c/0x1b0
-kernel: Code: 8b fb 66 0f 1f 44 00 00 31 c0 eb ab 48 89 ef c6 07 00 0f 1f 40 00 fb 66 0f 1f 44 00 00 31 c0 eb 96 e8 08 16 fe ff 0f 0b eb 8d <0f> 0b 31 c0 eb 87 0f 1f 40 00 66 2e 0f 1
-f 84 00 00 00 00 00 0f 1f
-kernel: RSP: 0018:ffffa6b4054dba68 EFLAGS: 00010246
-kernel: RAX: 0000000000000000 RBX: ffff91df21c36fc0 RCX: 0000000000000000
-kernel: RDX: 0000000000000001 RSI: 0000000000000000 RDI: ffff91df21c36fc0
-kernel: RBP: ffff91df21c36ef0 R08: 0000000000000000 R09: 0000000000000000
-kernel: R10: 0000000000000038 R11: ffffa6b4054dbd60 R12: ffffffffc05e72c0
-kernel: R13: ffff91db10280820 R14: 0000000000000048 R15: 0000000000000000
-kernel: FS:  00007f5d83cc1740(0000) GS:ffff91df2f840000(0000) knlGS:0000000000000000
-kernel: CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-kernel: CR2: 0000000001cc5000 CR3: 0000000465450002 CR4: 00000000001606e0
-kernel: Call Trace:
-kernel: ? try_to_del_timer_sync+0x4d/0x80
-kernel: qedi_ep_disconnect+0x3b/0x410 [qedi]
-kernel: ? 0xffffffffc083c000
-kernel: ? klist_iter_exit+0x14/0x20
-kernel: ? class_find_device+0x93/0xf0
-kernel: iscsi_if_ep_disconnect.isra.18+0x58/0x70 [scsi_transport_iscsi]
-kernel: iscsi_if_recv_msg+0x10e2/0x1510 [scsi_transport_iscsi]
-kernel: ? copyout+0x22/0x30
-kernel: ? _copy_to_iter+0xa0/0x430
-kernel: ? _cond_resched+0x15/0x30
-kernel: ? __kmalloc_node_track_caller+0x1f9/0x270
-kernel: iscsi_if_rx+0xa5/0x1e0 [scsi_transport_iscsi]
-kernel: netlink_unicast+0x17f/0x230
-kernel: netlink_sendmsg+0x2d2/0x3d0
-kernel: sock_sendmsg+0x36/0x50
-kernel: ___sys_sendmsg+0x280/0x2a0
-kernel: ? timerqueue_add+0x54/0x80
-kernel: ? enqueue_hrtimer+0x38/0x90
-kernel: ? hrtimer_start_range_ns+0x19f/0x2c0
-kernel: __sys_sendmsg+0x58/0xa0
-kernel: do_syscall_64+0x5b/0x180
-kernel: entry_SYSCALL_64_after_hwframe+0x44/0xa9
-
-Signed-off-by: Manish Rangankar <mrangankar@marvell.com>
+Cc: Himanshu Madhani <hmadhani@marvell.com>
+Cc: Giridhar Malavali <gmalavali@marvell.com>
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+Acked-by: Himanshu Madhani <hmadhani@marvell.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qedi/qedi_iscsi.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/scsi/qla2xxx/qla_isr.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/qedi/qedi_iscsi.c b/drivers/scsi/qedi/qedi_iscsi.c
-index 6d6d6013e35b8..bf371e7b957d0 100644
---- a/drivers/scsi/qedi/qedi_iscsi.c
-+++ b/drivers/scsi/qedi/qedi_iscsi.c
-@@ -1000,6 +1000,9 @@ static void qedi_ep_disconnect(struct iscsi_endpoint *ep)
- 	qedi_ep = ep->dd_data;
- 	qedi = qedi_ep->qedi;
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 69bbea9239cc8..add17843148dd 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -3475,7 +3475,7 @@ qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
+ 		ql_log(ql_log_fatal, vha, 0x00c8,
+ 		    "Failed to allocate memory for ha->msix_entries.\n");
+ 		ret = -ENOMEM;
+-		goto msix_out;
++		goto free_irqs;
+ 	}
+ 	ha->flags.msix_enabled = 1;
  
-+	if (qedi_ep->state == EP_STATE_OFLDCONN_START)
-+		goto ep_exit_recover;
+@@ -3558,6 +3558,10 @@ qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
+ 
+ msix_out:
+ 	return ret;
 +
- 	flush_work(&qedi_ep->offload_work);
++free_irqs:
++	pci_free_irq_vectors(ha->pdev);
++	goto msix_out;
+ }
  
- 	if (qedi_ep->conn) {
+ int
 -- 
 2.20.1
