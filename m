@@ -1,61 +1,38 @@
-From: Nathan Chancellor <natechancellor@gmail.com>
-Subject: [PATCH] scsi: hpsa: Avoid using dev uninitialized in hpsa_eh_device_reset_handler
-Date: Wed, 22 May 2019 18:38:59 -0700
-Message-ID: <20190523013859.14778-1-natechancellor@gmail.com>
+From: Gen Zhang <blackgod016574@gmail.com>
+Subject: [PATCH] sg: Fix a double-fetch bug in drivers/scsi/sg.c
+Date: Thu, 23 May 2019 10:38:55 +0800
+Message-ID: <20190523023855.GA17852@zhanggen-UX430UQ>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
-To: Don Brace <don.brace@microsemi.com>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Nick Desaulniers <ndesaulniers@google.com>, clang-built-linux@googlegroups.com, Nathan Chancellor <natechancellor@gmail.com>
+To: martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Clang warns:
+In sg_write(), the opcode of the command is fetched the first time from 
+the userspace by __get_user(). Then the whole command, the opcode 
+included, is fetched again from userspace by __copy_from_user(). 
+However, a malicious user can change the opcode between the two fetches.
+This can cause inconsistent data and potential errors as cmnd is used in
+the following codes.
 
-drivers/scsi/hpsa.c:5964:6: warning: variable 'dev' is used
-uninitialized whenever 'if' condition is true
-[-Wsometimes-uninitialized]
-        if (lockup_detected(h)) {
-            ^~~~~~~~~~~~~~~~~~
-drivers/scsi/hpsa.c:6042:6: note: uninitialized use occurs here
-        if (dev)
-            ^~~
-drivers/scsi/hpsa.c:5964:2: note: remove the 'if' if its condition is
-always false
-        if (lockup_detected(h)) {
-        ^~~~~~~~~~~~~~~~~~~~~~~~~
-drivers/scsi/hpsa.c:5950:29: note: initialize the variable 'dev' to
-silence this warning
-        struct hpsa_scsi_dev_t *dev;
-                                   ^
-                                    = NULL
-1 warning generated.
+Thus we should check opcode between the two fetches to prevent this.
 
-dev is potentially used uninitialized in the return_reset_status block
-for a NULL check if the first 'if (lockup_detected(h))' is taken, as
-dev is initialized right after that block. Initialize dev to NULL in
-its declaration so that it can be safely checked within the
-return_reset_status block.
-
-Fixes: 14991a5bade5 ("scsi: hpsa: correct device resets")
-Link: https://github.com/ClangBuiltLinux/linux/issues/492
-Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
+Signed-off-by: Gen Zhang <blackgod016574@gmail.com>
 ---
- drivers/scsi/hpsa.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index c560a4532733..ac8338b0571b 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -5947,7 +5947,7 @@ static int hpsa_eh_device_reset_handler(struct scsi_cmnd *scsicmd)
- 	int rc = SUCCESS;
- 	int i;
- 	struct ctlr_info *h;
--	struct hpsa_scsi_dev_t *dev;
-+	struct hpsa_scsi_dev_t *dev = NULL;
- 	u8 reset_type;
- 	char msg[48];
- 	unsigned long flags;
--- 
-2.22.0.rc1
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index d3f1531..a2971b8 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -694,6 +694,8 @@ sg_write(struct file *filp, const char __user *buf, size_t count, loff_t * ppos)
+ 	hp->flags = input_size;	/* structure abuse ... */
+ 	hp->pack_id = old_hdr.pack_id;
+ 	hp->usr_ptr = NULL;
++	if (opcode != cmnd[0])
++		return -EINVAL;
+ 	if (__copy_from_user(cmnd, buf, cmd_size))
+ 		return -EFAULT;
+ 	/*
+---
