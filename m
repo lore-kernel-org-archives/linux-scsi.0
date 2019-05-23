@@ -1,13 +1,13 @@
 From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 5.0 020/139] blk-mq: free hw queues resource in hctxs release handler
-Date: Thu, 23 May 2019 21:05:08 +0200
-Message-ID: <20190523181723.307122649@linuxfoundation.org>
-References: <20190523181720.120897565@linuxfoundation.org>
+Subject: [PATCH 5.1 024/122] blk-mq: free hw queues resource in hctxs release handler
+Date: Thu, 23 May 2019 21:05:46 +0200
+Message-ID: <20190523181707.943993176@linuxfoundation.org>
+References: <20190523181705.091418060@linuxfoundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190523181720.120897565@linuxfoundation.org>
+In-Reply-To: <20190523181705.091418060@linuxfoundation.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
 Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, stable@vger.kernel.org, Dongli Zhang <dongli.zhang@oracle.com>, James Smart <james.smart@broadcom.com>, Bart Van Assche <bart.vanassche@wdc.com>, Hannes Reinecke <hare@suse.com>, Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
@@ -104,7 +104,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
  	kfree(hctx);
 --- a/block/blk-mq.c
 +++ b/block/blk-mq.c
-@@ -2270,12 +2270,7 @@ static void blk_mq_exit_hctx(struct requ
+@@ -2267,12 +2267,7 @@ static void blk_mq_exit_hctx(struct requ
  	if (set->ops->exit_hctx)
  		set->ops->exit_hctx(hctx, hctx_idx);
  
@@ -117,7 +117,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
  }
  
  static void blk_mq_exit_hw_queues(struct request_queue *q,
-@@ -2904,7 +2899,8 @@ err_exit:
+@@ -2905,7 +2900,8 @@ err_exit:
  }
  EXPORT_SYMBOL(blk_mq_init_allocated_queue);
  
@@ -129,7 +129,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
  
 --- a/block/blk-mq.h
 +++ b/block/blk-mq.h
-@@ -36,7 +36,7 @@ struct blk_mq_ctx {
+@@ -37,7 +37,7 @@ struct blk_mq_ctx {
  	struct kobject		kobj;
  } ____cacheline_aligned_in_smp;
  
