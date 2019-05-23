@@ -1,46 +1,52 @@
-From: <Don.Brace@microchip.com>
-Subject: RE: [PATCH][next] scsi: hpsa: fix an uninitialized read and
+From: Nathan Chancellor <natechancellor@gmail.com>
+Subject: Re: [PATCH][next] scsi: hpsa: fix an uninitialized read and
  dereference of pointer dev
-Date: Thu, 23 May 2019 15:25:48 +0000
-Message-ID: <SN6PR11MB27672A7C88FE3EB111B4FF64E1010@SN6PR11MB2767.namprd11.prod.outlook.com>
+Date: Thu, 23 May 2019 08:35:48 -0700
+Message-ID: <20190523153548.GA112363@archlinux-epyc>
 References: <20190522083903.18849-1-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
 In-Reply-To: <20190522083903.18849-1-colin.king@canonical.com>
-Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: colin.king@canonical.com, don.brace@microsemi.com, jejb@linux.ibm.com, martin.petersen@oracle.com, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Colin King <colin.king@canonical.com>
+Cc: Don Brace <don.brace@microsemi.com>, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-LS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogbGludXgtc2NzaS1vd25lckB2Z2VyLmtl
-cm5lbC5vcmcgW21haWx0bzpsaW51eC1zY3NpLW93bmVyQHZnZXIua2VybmVsLm9yZ10gT24gQmVo
-YWxmIE9mIENvbGluIEtpbmcNClNlbnQ6IFdlZG5lc2RheSwgTWF5IDIyLCAyMDE5IDM6MzkgQU0N
-ClRvOiBEb24gQnJhY2UgPGRvbi5icmFjZUBtaWNyb3NlbWkuY29tPjsgSmFtZXMgRSAuIEogLiBC
-b3R0b21sZXkgPGplamJAbGludXguaWJtLmNvbT47IE1hcnRpbiBLIC4gUGV0ZXJzZW4gPG1hcnRp
-bi5wZXRlcnNlbkBvcmFjbGUuY29tPjsgZXNjLnN0b3JhZ2VkZXZAbWljcm9zZW1pLmNvbTsgbGlu
-dXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmcNCkNjOiBrZXJuZWwtamFuaXRvcnNAdmdlci5rZXJuZWwu
-b3JnOyBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnDQpTdWJqZWN0OiBbUEFUQ0hdW25leHRd
-IHNjc2k6IGhwc2E6IGZpeCBhbiB1bmluaXRpYWxpemVkIHJlYWQgYW5kIGRlcmVmZXJlbmNlIG9m
-IHBvaW50ZXIgZGV2DQoNCkZyb206IENvbGluIElhbiBLaW5nIDxjb2xpbi5raW5nQGNhbm9uaWNh
-bC5jb20+DQoNCkN1cnJlbnRseSB0aGUgY2hlY2sgZm9yIGEgbG9ja3VwX2RldGVjdGVkIGZhaWx1
-cmUgZXhpdHMgdmlhIHRoZSBsYWJlbCByZXR1cm5fcmVzZXRfc3RhdHVzIHRoYXQgcmVhZHMgYW5k
-IGRlcmVmZXJlbmNlcyBhbiB1bmluaXRpYWxpemVkIHBvaW50ZXIgZGV2LiAgRml4IHRoaXMgYnkg
-ZW5zdXJpbmcgZGV2IGlzIGluaW50aWFsaXplZCB0byBudWxsLg0KDQpBZGRyZXNzZXMtQ292ZXJp
-dHk6ICgiVW5pbml0aWFsaXplZCBwb2ludGVyIHJlYWQiKQ0KRml4ZXM6IDE0OTkxYTViYWRlNSAo
-InNjc2k6IGhwc2E6IGNvcnJlY3QgZGV2aWNlIHJlc2V0cyIpDQpTaWduZWQtb2ZmLWJ5OiBDb2xp
-biBJYW4gS2luZyA8Y29saW4ua2luZ0BjYW5vbmljYWwuY29tPg0KDQpJIHNlbnQgdXAgYSBzaW1p
-bGFyIHBhdGNoIG9uIDUvMTYsIGJ1dCB0aGlzIGlzIGp1c3QgYXMgZ29vZC4NCkFja2VkLWJ5OiBE
-b24gQnJhY2UgPGRvbi5icmFjZUBtaWNyb3NlbWkuY29tPg0KDQpUaGFua3MgZm9yIHlvdXIgcGF0
-Y2guDQoNCi0tLQ0KIGRyaXZlcnMvc2NzaS9ocHNhLmMgfCAyICstDQogMSBmaWxlIGNoYW5nZWQs
-IDEgaW5zZXJ0aW9uKCspLCAxIGRlbGV0aW9uKC0pDQoNCmRpZmYgLS1naXQgYS9kcml2ZXJzL3Nj
-c2kvaHBzYS5jIGIvZHJpdmVycy9zY3NpL2hwc2EuYyBpbmRleCBjNTYwYTQ1MzI3MzMuLmFjODMz
-OGIwNTcxYiAxMDA2NDQNCi0tLSBhL2RyaXZlcnMvc2NzaS9ocHNhLmMNCisrKyBiL2RyaXZlcnMv
-c2NzaS9ocHNhLmMNCkBAIC01OTQ3LDcgKzU5NDcsNyBAQCBzdGF0aWMgaW50IGhwc2FfZWhfZGV2
-aWNlX3Jlc2V0X2hhbmRsZXIoc3RydWN0IHNjc2lfY21uZCAqc2NzaWNtZCkNCiAJaW50IHJjID0g
-U1VDQ0VTUzsNCiAJaW50IGk7DQogCXN0cnVjdCBjdGxyX2luZm8gKmg7DQotCXN0cnVjdCBocHNh
-X3Njc2lfZGV2X3QgKmRldjsNCisJc3RydWN0IGhwc2Ffc2NzaV9kZXZfdCAqZGV2ID0gTlVMTDsN
-CiAJdTggcmVzZXRfdHlwZTsNCiAJY2hhciBtc2dbNDhdOw0KIAl1bnNpZ25lZCBsb25nIGZsYWdz
-Ow0KLS0NCjIuMjAuMQ0KDQo=
+On Wed, May 22, 2019 at 09:39:03AM +0100, Colin King wrote:
+> From: Colin Ian King <colin.king@canonical.com>
+> 
+> Currently the check for a lockup_detected failure exits via the
+> label return_reset_status that reads and dereferences an uninitialized
+> pointer dev.  Fix this by ensuring dev is inintialized to null.
+> 
+> Addresses-Coverity: ("Uninitialized pointer read")
+> Fixes: 14991a5bade5 ("scsi: hpsa: correct device resets")
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+
+Reviewed-by: Nathan Chancellor <natechancellor@gmail.com>
+
+Clang similarly warns about this, hence my identical submission after
+this, sorry for the noise.
+
+> ---
+>  drivers/scsi/hpsa.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+> index c560a4532733..ac8338b0571b 100644
+> --- a/drivers/scsi/hpsa.c
+> +++ b/drivers/scsi/hpsa.c
+> @@ -5947,7 +5947,7 @@ static int hpsa_eh_device_reset_handler(struct scsi_cmnd *scsicmd)
+>  	int rc = SUCCESS;
+>  	int i;
+>  	struct ctlr_info *h;
+> -	struct hpsa_scsi_dev_t *dev;
+> +	struct hpsa_scsi_dev_t *dev = NULL;
+>  	u8 reset_type;
+>  	char msg[48];
+>  	unsigned long flags;
+> -- 
+> 2.20.1
+> 
