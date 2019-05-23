@@ -1,140 +1,74 @@
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 5.1 024/122] blk-mq: free hw queues resource in hctxs release handler
-Date: Thu, 23 May 2019 21:05:46 +0200
-Message-ID: <20190523181707.943993176@linuxfoundation.org>
-References: <20190523181705.091418060@linuxfoundation.org>
+From: <Don.Brace@microchip.com>
+Subject: RE: [PATCH] scsi: smartpqi: properly set both the DMA mask and the
+ coherent DMA mask in pqi_pci_init()
+Date: Thu, 23 May 2019 22:55:55 +0000
+Message-ID: <SN6PR11MB2767D4410415F0B03BFE900DE1010@SN6PR11MB2767.namprd11.prod.outlook.com>
+References: <20190523055212.23568-1-lijiang@redhat.com>
+ <c5d45523-43f5-d2fd-01ac-85f285146ecd@amd.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190523181705.091418060@linuxfoundation.org>
+In-Reply-To: <c5d45523-43f5-d2fd-01ac-85f285146ecd@amd.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, stable@vger.kernel.org, Dongli Zhang <dongli.zhang@oracle.com>, James Smart <james.smart@broadcom.com>, Bart Van Assche <bart.vanassche@wdc.com>, Hannes Reinecke <hare@suse.com>, Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
+To: Thomas.Lendacky@amd.com, lijiang@redhat.com, linux-kernel@vger.kernel.org
+Cc: don.brace@microsemi.com, jejb@linux.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, esc.storagedev@microsemi.com, dyoung@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-From: Ming Lei <ming.lei@redhat.com>
-
-commit c7e2d94b3d1634988a95ac4d77a72dc7487ece06 upstream.
-
-Once blk_cleanup_queue() returns, tags shouldn't be used any more,
-because blk_mq_free_tag_set() may be called. Commit 45a9c9d909b2
-("blk-mq: Fix a use-after-free") fixes this issue exactly.
-
-However, that commit introduces another issue. Before 45a9c9d909b2,
-we are allowed to run queue during cleaning up queue if the queue's
-kobj refcount is held. After that commit, queue can't be run during
-queue cleaning up, otherwise oops can be triggered easily because
-some fields of hctx are freed by blk_mq_free_queue() in blk_cleanup_queue().
-
-We have invented ways for addressing this kind of issue before, such as:
-
-	8dc765d438f1 ("SCSI: fix queue cleanup race before queue initialization is done")
-	c2856ae2f315 ("blk-mq: quiesce queue before freeing queue")
-
-But still can't cover all cases, recently James reports another such
-kind of issue:
-
-	https://marc.info/?l=linux-scsi&m=155389088124782&w=2
-
-This issue can be quite hard to address by previous way, given
-scsi_run_queue() may run requeues for other LUNs.
-
-Fixes the above issue by freeing hctx's resources in its release handler, and this
-way is safe becasue tags isn't needed for freeing such hctx resource.
-
-This approach follows typical design pattern wrt. kobject's release handler.
-
-Cc: Dongli Zhang <dongli.zhang@oracle.com>
-Cc: James Smart <james.smart@broadcom.com>
-Cc: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: linux-scsi@vger.kernel.org,
-Cc: Martin K . Petersen <martin.petersen@oracle.com>,
-Cc: Christoph Hellwig <hch@lst.de>,
-Cc: James E . J . Bottomley <jejb@linux.vnet.ibm.com>,
-Reported-by: James Smart <james.smart@broadcom.com>
-Fixes: 45a9c9d909b2 ("blk-mq: Fix a use-after-free")
-Cc: stable@vger.kernel.org
-Reviewed-by: Hannes Reinecke <hare@suse.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Tested-by: James Smart <james.smart@broadcom.com>
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
-Signed-off-by: Jens Axboe <axboe@kernel.dk>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-
----
- block/blk-core.c     |    2 +-
- block/blk-mq-sysfs.c |    6 ++++++
- block/blk-mq.c       |    8 ++------
- block/blk-mq.h       |    2 +-
- 4 files changed, 10 insertions(+), 8 deletions(-)
-
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -375,7 +375,7 @@ void blk_cleanup_queue(struct request_qu
- 	blk_exit_queue(q);
- 
- 	if (queue_is_mq(q))
--		blk_mq_free_queue(q);
-+		blk_mq_exit_queue(q);
- 
- 	percpu_ref_exit(&q->q_usage_counter);
- 
---- a/block/blk-mq-sysfs.c
-+++ b/block/blk-mq-sysfs.c
-@@ -10,6 +10,7 @@
- #include <linux/smp.h>
- 
- #include <linux/blk-mq.h>
-+#include "blk.h"
- #include "blk-mq.h"
- #include "blk-mq-tag.h"
- 
-@@ -33,6 +34,11 @@ static void blk_mq_hw_sysfs_release(stru
- {
- 	struct blk_mq_hw_ctx *hctx = container_of(kobj, struct blk_mq_hw_ctx,
- 						  kobj);
-+
-+	if (hctx->flags & BLK_MQ_F_BLOCKING)
-+		cleanup_srcu_struct(hctx->srcu);
-+	blk_free_flush_queue(hctx->fq);
-+	sbitmap_free(&hctx->ctx_map);
- 	free_cpumask_var(hctx->cpumask);
- 	kfree(hctx->ctxs);
- 	kfree(hctx);
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -2267,12 +2267,7 @@ static void blk_mq_exit_hctx(struct requ
- 	if (set->ops->exit_hctx)
- 		set->ops->exit_hctx(hctx, hctx_idx);
- 
--	if (hctx->flags & BLK_MQ_F_BLOCKING)
--		cleanup_srcu_struct(hctx->srcu);
--
- 	blk_mq_remove_cpuhp(hctx);
--	blk_free_flush_queue(hctx->fq);
--	sbitmap_free(&hctx->ctx_map);
- }
- 
- static void blk_mq_exit_hw_queues(struct request_queue *q,
-@@ -2905,7 +2900,8 @@ err_exit:
- }
- EXPORT_SYMBOL(blk_mq_init_allocated_queue);
- 
--void blk_mq_free_queue(struct request_queue *q)
-+/* tags can _not_ be used after returning from blk_mq_exit_queue */
-+void blk_mq_exit_queue(struct request_queue *q)
- {
- 	struct blk_mq_tag_set	*set = q->tag_set;
- 
---- a/block/blk-mq.h
-+++ b/block/blk-mq.h
-@@ -37,7 +37,7 @@ struct blk_mq_ctx {
- 	struct kobject		kobj;
- } ____cacheline_aligned_in_smp;
- 
--void blk_mq_free_queue(struct request_queue *q);
-+void blk_mq_exit_queue(struct request_queue *q);
- int blk_mq_update_nr_requests(struct request_queue *q, unsigned int nr);
- void blk_mq_wake_waiters(struct request_queue *q);
- bool blk_mq_dispatch_rq_list(struct request_queue *, struct list_head *, bool);
+LS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IGxpbnV4LXNjc2ktb3duZXJAdmdlci5r
+ZXJuZWwub3JnIFttYWlsdG86bGludXgtc2NzaS1vd25lckB2Z2VyLmtlcm5lbC5vcmddIE9uIEJl
+aGFsZiBPZiBMZW5kYWNreSwgVGhvbWFzDQpTZW50OiBUaHVyc2RheSwgTWF5IDIzLCAyMDE5IDk6
+NDUgQU0NClRvOiBMaWFuYm8gSmlhbmcgPGxpamlhbmdAcmVkaGF0LmNvbT47IGxpbnV4LWtlcm5l
+bEB2Z2VyLmtlcm5lbC5vcmcNCkNjOiBkb24uYnJhY2VAbWljcm9zZW1pLmNvbTsgamVqYkBsaW51
+eC5pYm0uY29tOyBtYXJ0aW4ucGV0ZXJzZW5Ab3JhY2xlLmNvbTsgbGludXgtc2NzaUB2Z2VyLmtl
+cm5lbC5vcmc7IGVzYy5zdG9yYWdlZGV2QG1pY3Jvc2VtaS5jb207IGR5b3VuZ0ByZWRoYXQuY29t
+DQpTdWJqZWN0OiBSZTogW1BBVENIXSBzY3NpOiBzbWFydHBxaTogcHJvcGVybHkgc2V0IGJvdGgg
+dGhlIERNQSBtYXNrIGFuZCB0aGUgY29oZXJlbnQgRE1BIG1hc2sgaW4gcHFpX3BjaV9pbml0KCkN
+Cg0KT24gNS8yMy8xOSAxMjo1MiBBTSwgTGlhbmJvIEppYW5nIHdyb3RlOg0KPiBXaGVuIFNNRSBp
+cyBlbmFibGVkLCB0aGUgc21hcnRwcWkgZHJpdmVyIHdvbid0IHdvcmsgb24gdGhlIEhQIERMMzg1
+DQo+IEcxMCBtYWNoaW5lLCB3aGljaCBjYXVzZXMgdGhlIGZhaWx1cmUgb2Yga2VybmVsIGJvb3Qg
+YmVjYXVzZSBpdCBmYWlscyANCj4gdG8gYWxsb2NhdGUgcHFpIGVycm9yIGJ1ZmZlci4gUGxlYXNl
+IHJlZmVyIHRvIHRoZSBrZXJuZWwgbG9nOg0KPiAuLi4uDQo+IFsgICAgOS40MzE3NDldIHVzYmNv
+cmU6IHJlZ2lzdGVyZWQgbmV3IGludGVyZmFjZSBkcml2ZXIgdWFzDQo+IFsgICAgOS40NDE1MjRd
+IE1pY3Jvc2VtaSBQUUkgRHJpdmVyICh2MS4xLjQtMTMwKQ0KPiBbICAgIDkuNDQyOTU2XSBpNDBl
+IDAwMDA6MDQ6MDAuMDogZncgNi43MC40ODc2OCBhcGkgMS43IG52bSAxMC4yLjUNCj4gWyAgICA5
+LjQ0NzIzN10gc21hcnRwcWkgMDAwMDoyMzowMC4wOiBNaWNyb3NlbWkgU21hcnQgRmFtaWx5IENv
+bnRyb2xsZXIgZm91bmQNCj4gICAgICAgICAgU3RhcnRpbmcgZHJhY3V0IGluaXRxdWV1ZSBob29r
+Li4uDQo+IFsgIE9LICBdIFN0YXJ0ZWQgU2hvdyBQbHltb3V0aCBCb290IFNjcmVbICAgIDkuNDcx
+NjU0XSBCcm9hZGNvbSBOZXRYdHJlbWUtQy9FIGRyaXZlciBibnh0X2VuIHYxLjkuMQ0KPiBlbi4N
+Cj4gWyAgT0sgIF0gU3RhcnRlZCBGb3J3YXJkIFBhc3N3b3JkIFJlcXVlc3RzIHRvIFBseW1vdXRo
+IERpcmVjdG9yeSBXYXRjaC4NCj4gW1swO1sgICAgOS40ODcxMDhdIHNtYXJ0cHFpIDAwMDA6MjM6
+MDAuMDogZmFpbGVkIHRvIGFsbG9jYXRlIFBRSSBlcnJvciBidWZmZXINCj4gLi4uLg0KPiBbICAx
+MzkuMDUwNTQ0XSBkcmFjdXQtaW5pdHF1ZXVlWzk0OV06IFdhcm5pbmc6IGRyYWN1dC1pbml0cXVl
+dWUgDQo+IHRpbWVvdXQgLSBzdGFydGluZyB0aW1lb3V0IHNjcmlwdHMgWyAgMTM5LjU4OTc3OV0g
+DQo+IGRyYWN1dC1pbml0cXVldWVbOTQ5XTogV2FybmluZzogZHJhY3V0LWluaXRxdWV1ZSB0aW1l
+b3V0IC0gc3RhcnRpbmcgDQo+IHRpbWVvdXQgc2NyaXB0cw0KPiANCj4gRm9yIGNvcnJlY3Qgb3Bl
+cmF0aW9uLCBsZXRzIGNhbGwgdGhlIGRtYV9zZXRfbWFza19hbmRfY29oZXJlbnQoKSB0byANCj4g
+cHJvcGVybHkgc2V0IHRoZSBtYXNrIGZvciBib3RoIHN0cmVhbWluZyBhbmQgY29oZXJlbnQsIGlu
+IG9yZGVyIHRvIA0KPiBpbmZvcm0gdGhlIGtlcm5lbCBhYm91dCB0aGUgZGV2aWNlcyBETUEgYWRk
+cmVzc2luZyBjYXBhYmlsaXRpZXMuDQoNCllvdSBzaG91bGQgcHJvYmFibHkgZXhwYW5kIG9uIHRo
+aXMgYSBiaXQuLi4gIEJhc2ljYWxseSwgdGhlIGZhY3QgdGhhdCB0aGUgY29oZXJlbnQgRE1BIG1h
+c2sgdmFsdWUgd2Fzbid0IHNldCBjYXVzZWQgdGhlIGRyaXZlciB0byBmYWxsIGJhY2sgdG8gU1dJ
+T1RMQiB3aGVuIFNNRSBpcyBhY3RpdmUuIEknbSBub3Qgc3VyZSBpZiB0aGUgZmFpbHVyZSB3YXMg
+ZnJvbSBydW5uaW5nIG91dCBvZiBTV0lPVExCIG9yIGV4Y2VlZGluZyB0aGUgbWF4aW11bSBhbGxv
+Y2F0aW9uIHNpemUgZm9yIFNXSU9UTEIuDQoNCkkgYmVsaWV2ZSB0aGUgZml4IGlzIHByb3Blciwg
+YnV0IEknbGwgbGV0IHRoZSBkcml2ZXIgb3duZXIgY29tbWVudCBvbiB0aGF0Lg0KDQpUaGFua3Ms
+DQpUb20NCg0KQWNrZWQtYnk6IERvbiBCcmFjZSA8ZG9uLmJyYWNlQG1pY3Jvc2VtaS5jb20+DQpU
+ZXN0ZWQtYnk6IERvbiBCcmFjZSA8ZG9uLmJyYWNlQG1pY3Jvc2VtaS5jb20+DQoNClBsZWFzZSBh
+ZGQgdGhlIGV4dHJhIGRlc2NyaXB0aW9uIHN1Z2dlc3RlZCBieSBUaG9tYXMuDQoNCg0KPiANCj4g
+U2lnbmVkLW9mZi1ieTogTGlhbmJvIEppYW5nIDxsaWppYW5nQHJlZGhhdC5jb20+DQo+IC0tLQ0K
+PiAgZHJpdmVycy9zY3NpL3NtYXJ0cHFpL3NtYXJ0cHFpX2luaXQuYyB8IDIgKy0NCj4gIDEgZmls
+ZSBjaGFuZ2VkLCAxIGluc2VydGlvbigrKSwgMSBkZWxldGlvbigtKQ0KPiANCj4gZGlmZiAtLWdp
+dCBhL2RyaXZlcnMvc2NzaS9zbWFydHBxaS9zbWFydHBxaV9pbml0LmMgDQo+IGIvZHJpdmVycy9z
+Y3NpL3NtYXJ0cHFpL3NtYXJ0cHFpX2luaXQuYw0KPiBpbmRleCBjMjZjYWM4MTlmOWUuLjhiMWZk
+ZTZjN2RhYiAxMDA2NDQNCj4gLS0tIGEvZHJpdmVycy9zY3NpL3NtYXJ0cHFpL3NtYXJ0cHFpX2lu
+aXQuYw0KPiArKysgYi9kcml2ZXJzL3Njc2kvc21hcnRwcWkvc21hcnRwcWlfaW5pdC5jDQo+IEBA
+IC03MjgyLDcgKzcyODIsNyBAQCBzdGF0aWMgaW50IHBxaV9wY2lfaW5pdChzdHJ1Y3QgcHFpX2N0
+cmxfaW5mbyAqY3RybF9pbmZvKQ0KPiAgICAgICAgIGVsc2UNCj4gICAgICAgICAgICAgICAgIG1h
+c2sgPSBETUFfQklUX01BU0soMzIpOw0KPiANCj4gLSAgICAgICByYyA9IGRtYV9zZXRfbWFzaygm
+Y3RybF9pbmZvLT5wY2lfZGV2LT5kZXYsIG1hc2spOw0KPiArICAgICAgIHJjID0gZG1hX3NldF9t
+YXNrX2FuZF9jb2hlcmVudCgmY3RybF9pbmZvLT5wY2lfZGV2LT5kZXYsIA0KPiArIG1hc2spOw0K
+PiAgICAgICAgIGlmIChyYykgew0KPiAgICAgICAgICAgICAgICAgZGV2X2VycigmY3RybF9pbmZv
+LT5wY2lfZGV2LT5kZXYsICJmYWlsZWQgdG8gc2V0IERNQSBtYXNrXG4iKTsNCj4gICAgICAgICAg
+ICAgICAgIGdvdG8gZGlzYWJsZV9kZXZpY2U7DQo+IC0tDQo+IDIuMTcuMQ0KPiANCg==
