@@ -1,194 +1,62 @@
-From: Steffen Maier <maier@linux.ibm.com>
-Subject: [PATCH 2/2] zfcp: fix to prevent port_remove with pure auto scan LUNs (only sdevs)
-Date: Thu, 23 May 2019 15:23:46 +0200
-Message-ID: <1558617826-30129-3-git-send-email-maier@linux.ibm.com>
-References: <1558617826-30129-1-git-send-email-maier@linux.ibm.com>
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <1558617826-30129-1-git-send-email-maier@linux.ibm.com>
-Sender: stable-owner@vger.kernel.org
-To: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Benjamin Block <bblock@linux.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, Steffen Maier <maier@linux.ibm.com>, stable@vger.kernel.org
+From: "Lendacky, Thomas" <Thomas.Lendacky@amd.com>
+Subject: Re: [PATCH] scsi: smartpqi: properly set both the DMA mask and the
+ coherent DMA mask in pqi_pci_init()
+Date: Thu, 23 May 2019 14:45:12 +0000
+Message-ID: <c5d45523-43f5-d2fd-01ac-85f285146ecd@amd.com>
+References: <20190523055212.23568-1-lijiang@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190523055212.23568-1-lijiang@redhat.com>
+Content-Language: en-US
+Content-ID: <6BA16298E5669743908BA574047E8C3B@namprd12.prod.outlook.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Lianbo Jiang <lijiang@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Cc: "don.brace@microsemi.com" <don.brace@microsemi.com>, "jejb@linux.ibm.com" <jejb@linux.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "esc.storagedev@microsemi.com" <esc.storagedev@microsemi.com>, "dyoung@redhat.com" <dyoung@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-When the user tries to remove a zfcp port via sysfs, we only rejected it
-if there are zfcp unit children under the port. With purely automatically
-scanned LUNs there are no zfcp units but only SCSI devices. In such cases,
-the port_remove erroneously continued. We close the port and this
-implicitly closes all LUNs under the port. The SCSI devices survive
-with their private zfcp_scsi_dev still holding a reference to the
-"removed" zfcp_port (still allocated but invisible in sysfs)
-[zfcp_get_port_by_wwpn in zfcp_scsi_slave_alloc]. This
-is not a problem as long as the fc_rport stays blocked. Once (auto) port
-scan brings back the removed port, we unblock its fc_rport again by design.
-However, there is no mechanism that would recover (open) the LUNs under the
-port (no "ersfs_3" without zfcp_unit [zfcp_erp_strategy_followup_success]).
-Any pending or new I/O to such LUN leads to repeated:
-  Done: NEEDS_RETRY Result: hostbyte=DID_IMM_RETRY driverbyte=DRIVER_OK
-See also v4.10 commit 6f2ce1c6af37 ("scsi: zfcp: fix rport unblock race
-with LUN recovery"). Even a manual LUN recovery
-(echo 0 > /sys/bus/scsi/devices/H:C:T:L/zfcp_failed)
-does not help, as the LUN links to the old "removed" port which remains
-to lack ZFCP_STATUS_COMMON_RUNNING [zfcp_erp_required_act].
-The only workaround is to first ensure that the fc_rport is blocked
-(e.g. port_remove again in case it was re-discovered by (auto) port scan),
-then delete the SCSI devices, and finally re-discover by (auto) port scan.
-The port scan includes an fc_rport unblock, which in turn triggers
-a new scan on the scsi target to freshly get new pure auto scan LUNs.
-
-Fix this by rejecting port_remove also if there are SCSI devices
-(even without any zfcp_unit) under this port. Re-use mechanics from v3.7
-commit d99b601b6338 ("[SCSI] zfcp: restore refcount check on port_remove").
-However, we have to give up zfcp_sysfs_port_units_mutex earlier in unit_add
-to prevent a deadlock with scsi_host scan taking shost->scan_mutex first
-and then zfcp_sysfs_port_units_mutex now in our zfcp_scsi_slave_alloc().
-
-Signed-off-by: Steffen Maier <maier@linux.ibm.com>
-Fixes: b62a8d9b45b9 ("[SCSI] zfcp: Use SCSI device data zfcp scsi dev instead of zfcp unit")
-Fixes: f8210e34887e ("[SCSI] zfcp: Allow midlayer to scan for LUNs when running in NPIV mode")
-Cc: <stable@vger.kernel.org> #2.6.37+
-Reviewed-by: Benjamin Block <bblock@linux.ibm.com>
----
- drivers/s390/scsi/zfcp_ext.h   |  1 +
- drivers/s390/scsi/zfcp_scsi.c  |  9 ++++++
- drivers/s390/scsi/zfcp_sysfs.c | 54 ++++++++++++++++++++++++++++++----
- drivers/s390/scsi/zfcp_unit.c  |  8 ++++-
- 4 files changed, 65 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/s390/scsi/zfcp_ext.h b/drivers/s390/scsi/zfcp_ext.h
-index c6acca521ffe..31e8a7240fd7 100644
---- a/drivers/s390/scsi/zfcp_ext.h
-+++ b/drivers/s390/scsi/zfcp_ext.h
-@@ -167,6 +167,7 @@ extern const struct attribute_group *zfcp_port_attr_groups[];
- extern struct mutex zfcp_sysfs_port_units_mutex;
- extern struct device_attribute *zfcp_sysfs_sdev_attrs[];
- extern struct device_attribute *zfcp_sysfs_shost_attrs[];
-+bool zfcp_sysfs_port_is_removing(const struct zfcp_port *const port);
- 
- /* zfcp_unit.c */
- extern int zfcp_unit_add(struct zfcp_port *, u64);
-diff --git a/drivers/s390/scsi/zfcp_scsi.c b/drivers/s390/scsi/zfcp_scsi.c
-index 221d0dfb8493..e9ded2befa0d 100644
---- a/drivers/s390/scsi/zfcp_scsi.c
-+++ b/drivers/s390/scsi/zfcp_scsi.c
-@@ -129,6 +129,15 @@ static int zfcp_scsi_slave_alloc(struct scsi_device *sdev)
- 
- 	zfcp_sdev->erp_action.port = port;
- 
-+	mutex_lock(&zfcp_sysfs_port_units_mutex);
-+	if (zfcp_sysfs_port_is_removing(port)) {
-+		/* port is already gone */
-+		mutex_unlock(&zfcp_sysfs_port_units_mutex);
-+		put_device(&port->dev); /* undo zfcp_get_port_by_wwpn() */
-+		return -ENXIO;
-+	}
-+	mutex_unlock(&zfcp_sysfs_port_units_mutex);
-+
- 	unit = zfcp_unit_find(port, zfcp_scsi_dev_lun(sdev));
- 	if (unit)
- 		put_device(&unit->dev);
-diff --git a/drivers/s390/scsi/zfcp_sysfs.c b/drivers/s390/scsi/zfcp_sysfs.c
-index 2d78732b270b..af197e2b3e69 100644
---- a/drivers/s390/scsi/zfcp_sysfs.c
-+++ b/drivers/s390/scsi/zfcp_sysfs.c
-@@ -235,6 +235,53 @@ static ZFCP_DEV_ATTR(adapter, port_rescan, S_IWUSR, NULL,
- 
- DEFINE_MUTEX(zfcp_sysfs_port_units_mutex);
- 
-+static void zfcp_sysfs_port_set_removing(struct zfcp_port *const port)
-+{
-+	lockdep_assert_held(&zfcp_sysfs_port_units_mutex);
-+	atomic_set(&port->units, -1);
-+}
-+
-+bool zfcp_sysfs_port_is_removing(const struct zfcp_port *const port)
-+{
-+	lockdep_assert_held(&zfcp_sysfs_port_units_mutex);
-+	return atomic_read(&port->units) == -1;
-+}
-+
-+static bool zfcp_sysfs_port_in_use(struct zfcp_port *const port)
-+{
-+	struct zfcp_adapter *const adapter = port->adapter;
-+	unsigned long flags;
-+	struct scsi_device *sdev;
-+	bool in_use = true;
-+
-+	mutex_lock(&zfcp_sysfs_port_units_mutex);
-+	if (atomic_read(&port->units) > 0)
-+		goto unlock_port_units_mutex; /* zfcp_unit(s) under port */
-+
-+	spin_lock_irqsave(adapter->scsi_host->host_lock, flags);
-+	__shost_for_each_device(sdev, adapter->scsi_host) {
-+		const struct zfcp_scsi_dev *zsdev = sdev_to_zfcp(sdev);
-+
-+		if (sdev->sdev_state == SDEV_DEL ||
-+		    sdev->sdev_state == SDEV_CANCEL)
-+			continue;
-+		if (zsdev->port != port)
-+			continue;
-+		/* alive scsi_device under port of interest */
-+		goto unlock_host_lock;
-+	}
-+
-+	/* port is about to be removed, so no more unit_add or slave_alloc */
-+	zfcp_sysfs_port_set_removing(port);
-+	in_use = false;
-+
-+unlock_host_lock:
-+	spin_unlock_irqrestore(adapter->scsi_host->host_lock, flags);
-+unlock_port_units_mutex:
-+	mutex_unlock(&zfcp_sysfs_port_units_mutex);
-+	return in_use;
-+}
-+
- static ssize_t zfcp_sysfs_port_remove_store(struct device *dev,
- 					    struct device_attribute *attr,
- 					    const char *buf, size_t count)
-@@ -257,16 +304,11 @@ static ssize_t zfcp_sysfs_port_remove_store(struct device *dev,
- 	else
- 		retval = 0;
- 
--	mutex_lock(&zfcp_sysfs_port_units_mutex);
--	if (atomic_read(&port->units) > 0) {
-+	if (zfcp_sysfs_port_in_use(port)) {
- 		retval = -EBUSY;
--		mutex_unlock(&zfcp_sysfs_port_units_mutex);
- 		put_device(&port->dev); /* undo zfcp_get_port_by_wwpn() */
- 		goto out;
- 	}
--	/* port is about to be removed, so no more unit_add */
--	atomic_set(&port->units, -1);
--	mutex_unlock(&zfcp_sysfs_port_units_mutex);
- 
- 	write_lock_irq(&adapter->port_list_lock);
- 	list_del(&port->list);
-diff --git a/drivers/s390/scsi/zfcp_unit.c b/drivers/s390/scsi/zfcp_unit.c
-index 1bf0a0984a09..e67bf7388cae 100644
---- a/drivers/s390/scsi/zfcp_unit.c
-+++ b/drivers/s390/scsi/zfcp_unit.c
-@@ -124,7 +124,7 @@ int zfcp_unit_add(struct zfcp_port *port, u64 fcp_lun)
- 	int retval = 0;
- 
- 	mutex_lock(&zfcp_sysfs_port_units_mutex);
--	if (atomic_read(&port->units) == -1) {
-+	if (zfcp_sysfs_port_is_removing(port)) {
- 		/* port is already gone */
- 		retval = -ENODEV;
- 		goto out;
-@@ -168,8 +168,14 @@ int zfcp_unit_add(struct zfcp_port *port, u64 fcp_lun)
- 	write_lock_irq(&port->unit_list_lock);
- 	list_add_tail(&unit->list, &port->unit_list);
- 	write_unlock_irq(&port->unit_list_lock);
-+	/*
-+	 * lock order: shost->scan_mutex before zfcp_sysfs_port_units_mutex
-+	 * due to      zfcp_unit_scsi_scan() => zfcp_scsi_slave_alloc()
-+	 */
-+	mutex_unlock(&zfcp_sysfs_port_units_mutex);
- 
- 	zfcp_unit_scsi_scan(unit);
-+	return retval;
- 
- out:
- 	mutex_unlock(&zfcp_sysfs_port_units_mutex);
--- 
-2.17.1
+T24gNS8yMy8xOSAxMjo1MiBBTSwgTGlhbmJvIEppYW5nIHdyb3RlOg0KPiBXaGVuIFNNRSBpcyBl
+bmFibGVkLCB0aGUgc21hcnRwcWkgZHJpdmVyIHdvbid0IHdvcmsgb24gdGhlIEhQIERMMzg1DQo+
+IEcxMCBtYWNoaW5lLCB3aGljaCBjYXVzZXMgdGhlIGZhaWx1cmUgb2Yga2VybmVsIGJvb3QgYmVj
+YXVzZSBpdCBmYWlscw0KPiB0byBhbGxvY2F0ZSBwcWkgZXJyb3IgYnVmZmVyLiBQbGVhc2UgcmVm
+ZXIgdG8gdGhlIGtlcm5lbCBsb2c6DQo+IC4uLi4NCj4gWyAgICA5LjQzMTc0OV0gdXNiY29yZTog
+cmVnaXN0ZXJlZCBuZXcgaW50ZXJmYWNlIGRyaXZlciB1YXMNCj4gWyAgICA5LjQ0MTUyNF0gTWlj
+cm9zZW1pIFBRSSBEcml2ZXIgKHYxLjEuNC0xMzApDQo+IFsgICAgOS40NDI5NTZdIGk0MGUgMDAw
+MDowNDowMC4wOiBmdyA2LjcwLjQ4NzY4IGFwaSAxLjcgbnZtIDEwLjIuNQ0KPiBbICAgIDkuNDQ3
+MjM3XSBzbWFydHBxaSAwMDAwOjIzOjAwLjA6IE1pY3Jvc2VtaSBTbWFydCBGYW1pbHkgQ29udHJv
+bGxlciBmb3VuZA0KPiAgICAgICAgICBTdGFydGluZyBkcmFjdXQgaW5pdHF1ZXVlIGhvb2suLi4N
+Cj4gWyAgT0sgIF0gU3RhcnRlZCBTaG93IFBseW1vdXRoIEJvb3QgU2NyZVsgICAgOS40NzE2NTRd
+IEJyb2FkY29tIE5ldFh0cmVtZS1DL0UgZHJpdmVyIGJueHRfZW4gdjEuOS4xDQo+IGVuLg0KPiBb
+ICBPSyAgXSBTdGFydGVkIEZvcndhcmQgUGFzc3dvcmQgUmVxdWVzdHMgdG8gUGx5bW91dGggRGly
+ZWN0b3J5IFdhdGNoLg0KPiBbWzA7WyAgICA5LjQ4NzEwOF0gc21hcnRwcWkgMDAwMDoyMzowMC4w
+OiBmYWlsZWQgdG8gYWxsb2NhdGUgUFFJIGVycm9yIGJ1ZmZlcg0KPiAuLi4uDQo+IFsgIDEzOS4w
+NTA1NDRdIGRyYWN1dC1pbml0cXVldWVbOTQ5XTogV2FybmluZzogZHJhY3V0LWluaXRxdWV1ZSB0
+aW1lb3V0IC0gc3RhcnRpbmcgdGltZW91dCBzY3JpcHRzDQo+IFsgIDEzOS41ODk3NzldIGRyYWN1
+dC1pbml0cXVldWVbOTQ5XTogV2FybmluZzogZHJhY3V0LWluaXRxdWV1ZSB0aW1lb3V0IC0gc3Rh
+cnRpbmcgdGltZW91dCBzY3JpcHRzDQo+IA0KPiBGb3IgY29ycmVjdCBvcGVyYXRpb24sIGxldHMg
+Y2FsbCB0aGUgZG1hX3NldF9tYXNrX2FuZF9jb2hlcmVudCgpIHRvDQo+IHByb3Blcmx5IHNldCB0
+aGUgbWFzayBmb3IgYm90aCBzdHJlYW1pbmcgYW5kIGNvaGVyZW50LCBpbiBvcmRlciB0bw0KPiBp
+bmZvcm0gdGhlIGtlcm5lbCBhYm91dCB0aGUgZGV2aWNlcyBETUEgYWRkcmVzc2luZyBjYXBhYmls
+aXRpZXMuDQoNCllvdSBzaG91bGQgcHJvYmFibHkgZXhwYW5kIG9uIHRoaXMgYSBiaXQuLi4gIEJh
+c2ljYWxseSwgdGhlIGZhY3QgdGhhdA0KdGhlIGNvaGVyZW50IERNQSBtYXNrIHZhbHVlIHdhc24n
+dCBzZXQgY2F1c2VkIHRoZSBkcml2ZXIgdG8gZmFsbCBiYWNrDQp0byBTV0lPVExCIHdoZW4gU01F
+IGlzIGFjdGl2ZS4gSSdtIG5vdCBzdXJlIGlmIHRoZSBmYWlsdXJlIHdhcyBmcm9tDQpydW5uaW5n
+IG91dCBvZiBTV0lPVExCIG9yIGV4Y2VlZGluZyB0aGUgbWF4aW11bSBhbGxvY2F0aW9uIHNpemUg
+Zm9yDQpTV0lPVExCLg0KDQpJIGJlbGlldmUgdGhlIGZpeCBpcyBwcm9wZXIsIGJ1dCBJJ2xsIGxl
+dCB0aGUgZHJpdmVyIG93bmVyIGNvbW1lbnQgb24NCnRoYXQuDQoNClRoYW5rcywNClRvbQ0KDQo+
+IA0KPiBTaWduZWQtb2ZmLWJ5OiBMaWFuYm8gSmlhbmcgPGxpamlhbmdAcmVkaGF0LmNvbT4NCj4g
+LS0tDQo+ICBkcml2ZXJzL3Njc2kvc21hcnRwcWkvc21hcnRwcWlfaW5pdC5jIHwgMiArLQ0KPiAg
+MSBmaWxlIGNoYW5nZWQsIDEgaW5zZXJ0aW9uKCspLCAxIGRlbGV0aW9uKC0pDQo+IA0KPiBkaWZm
+IC0tZ2l0IGEvZHJpdmVycy9zY3NpL3NtYXJ0cHFpL3NtYXJ0cHFpX2luaXQuYyBiL2RyaXZlcnMv
+c2NzaS9zbWFydHBxaS9zbWFydHBxaV9pbml0LmMNCj4gaW5kZXggYzI2Y2FjODE5ZjllLi44YjFm
+ZGU2YzdkYWIgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvc2NzaS9zbWFydHBxaS9zbWFydHBxaV9p
+bml0LmMNCj4gKysrIGIvZHJpdmVycy9zY3NpL3NtYXJ0cHFpL3NtYXJ0cHFpX2luaXQuYw0KPiBA
+QCAtNzI4Miw3ICs3MjgyLDcgQEAgc3RhdGljIGludCBwcWlfcGNpX2luaXQoc3RydWN0IHBxaV9j
+dHJsX2luZm8gKmN0cmxfaW5mbykNCj4gICAgICAgICBlbHNlDQo+ICAgICAgICAgICAgICAgICBt
+YXNrID0gRE1BX0JJVF9NQVNLKDMyKTsNCj4gDQo+IC0gICAgICAgcmMgPSBkbWFfc2V0X21hc2so
+JmN0cmxfaW5mby0+cGNpX2Rldi0+ZGV2LCBtYXNrKTsNCj4gKyAgICAgICByYyA9IGRtYV9zZXRf
+bWFza19hbmRfY29oZXJlbnQoJmN0cmxfaW5mby0+cGNpX2Rldi0+ZGV2LCBtYXNrKTsNCj4gICAg
+ICAgICBpZiAocmMpIHsNCj4gICAgICAgICAgICAgICAgIGRldl9lcnIoJmN0cmxfaW5mby0+cGNp
+X2Rldi0+ZGV2LCAiZmFpbGVkIHRvIHNldCBETUEgbWFza1xuIik7DQo+ICAgICAgICAgICAgICAg
+ICBnb3RvIGRpc2FibGVfZGV2aWNlOw0KPiAtLQ0KPiAyLjE3LjENCj4gDQo=
