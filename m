@@ -1,68 +1,43 @@
-From: YueHaibing <yuehaibing@huawei.com>
-Subject: [PATCH -next] scsi: megaraid_sas: remove set but not used variables 'host' and 'wait_time'
-Date: Sat, 25 May 2019 20:42:02 +0800
-Message-ID: <20190525124202.8120-1-yuehaibing@huawei.com>
+From: Hariprasad Kelam <hariprasad.kelam@gmail.com>
+Subject: [PATCH] target/iscsi: fix possible condition with no effect (if ==
+ else)
+Date: Sat, 25 May 2019 23:14:16 +0530
+Message-ID: <20190525174416.GA21510@hari-Inspiron-1545>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
-To: kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com, jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, megaraidlinux.pdl@broadcom.com, YueHaibing <yuehaibing@huawei.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, Hariprasad Kelam <hariprasad.kelam@gmail.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Fixes gcc '-Wunused-but-set-variable' warnings:
+fix below warning reported by coccicheck
 
-drivers/scsi/megaraid/megaraid_sas_base.c: In function megasas_suspend:
-drivers/scsi/megaraid/megaraid_sas_base.c:7269:20: warning: variable host set but not used [-Wunused-but-set-variable]
-drivers/scsi/megaraid/megaraid_sas_base.c: In function megasas_aen_polling:
-drivers/scsi/megaraid/megaraid_sas_base.c:8397:15: warning: variable wait_time set but not used [-Wunused-but-set-variable]
+drivers/target/iscsi/iscsi_target_nego.c:175:6-8: WARNING: possible
+condition with no effect (if == else)
 
-'host' is never used since introduction in
-commit 31ea7088974c ("[SCSI] megaraid_sas: add hibernation support")
-
-'wait_time' is not used since commit
-11c71cb4ab7c ("megaraid_sas: Do not allow PCI access during OCR")
-
-Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+Signed-off-by: Hariprasad Kelam <hariprasad.kelam@gmail.com>
 ---
- drivers/scsi/megaraid/megaraid_sas_base.c | 8 +-------
- 1 file changed, 1 insertion(+), 7 deletions(-)
+ drivers/target/iscsi/iscsi_target_nego.c | 7 +------
+ 1 file changed, 1 insertion(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 92e576228d5f..ed0f6ca578e5 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -7239,11 +7239,9 @@ static void megasas_shutdown_controller(struct megasas_instance *instance,
- static int
- megasas_suspend(struct pci_dev *pdev, pm_message_t state)
- {
--	struct Scsi_Host *host;
- 	struct megasas_instance *instance;
- 
- 	instance = pci_get_drvdata(pdev);
--	host = instance->host;
- 	instance->unload = 1;
- 
- 	dev_info(&pdev->dev, "%s is called\n", __func__);
-@@ -8367,7 +8365,7 @@ megasas_aen_polling(struct work_struct *work)
- 	struct megasas_instance *instance = ev->instance;
- 	union megasas_evt_class_locale class_locale;
- 	int event_type = 0;
--	u32 seq_num, wait_time = MEGASAS_RESET_WAIT_TIME;
-+	u32 seq_num;
- 	int error;
- 	u8  dcmd_ret = DCMD_SUCCESS;
- 
-@@ -8377,10 +8375,6 @@ megasas_aen_polling(struct work_struct *work)
- 		return;
- 	}
- 
--	/* Adjust event workqueue thread wait time for VF mode */
--	if (instance->requestorId)
--		wait_time = MEGASAS_ROUTINE_WAIT_TIME_VF;
--
- 	/* Don't run the event workqueue thread if OCR is running */
- 	mutex_lock(&instance->reset_mutex);
- 
+diff --git a/drivers/target/iscsi/iscsi_target_nego.c b/drivers/target/iscsi/iscsi_target_nego.c
+index 8a5e8d1..b6fb70a 100644
+--- a/drivers/target/iscsi/iscsi_target_nego.c
++++ b/drivers/target/iscsi/iscsi_target_nego.c
+@@ -168,12 +168,7 @@ static u32 iscsi_handle_authentication(
+ 	else if (strstr("CHAP", authtype))
+ 		return chap_main_loop(conn, auth, in_buf, out_buf,
+ 				&in_length, out_length);
+-	else if (strstr("SPKM1", authtype))
+-		return 2;
+-	else if (strstr("SPKM2", authtype))
+-		return 2;
+-	else if (strstr("KRB5", authtype))
+-		return 2;
++	/* ret 2 in  SPKM1,SPKM2,KRB5 cases */
+ 	else
+ 		return 2;
+ }
 -- 
-2.17.1
+2.7.4
