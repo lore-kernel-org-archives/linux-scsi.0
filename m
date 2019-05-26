@@ -1,105 +1,63 @@
-From: Michal Kalderon <michal.kalderon@marvell.com>
-Subject: [PATCH v2 net-next 11/11] qedf: Use hwfns and affin_hwfn_idx to get MSI-X vector index to use
-Date: Sun, 26 May 2019 15:22:30 +0300
-Message-ID: <20190526122230.30039-12-michal.kalderon@marvell.com>
-References: <20190526122230.30039-1-michal.kalderon@marvell.com>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH] drivers/scsi: fix warning PTR_ERR_OR_ZERO can be used
+Date: Sun, 26 May 2019 08:37:16 -0700
+Message-ID: <2f7f51f7-e2a1-6667-3fed-642157437ea2@acm.org>
+References: <20190525094205.GA21778@hari-Inspiron-1545>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <20190526122230.30039-1-michal.kalderon@marvell.com>
-Sender: netdev-owner@vger.kernel.org
-To: michal.kalderon@marvell.com, ariel.elior@marvell.com, davem@davemloft.net
-Cc: dledford@redhat.com, jgg@ziepe.ca, leon@kernel.org, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, linux-scsi@vger.kernel.org, Chad Dupuis <cdupuis@marvell.com>, Saurav Kashyap <skashyap@marvell.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190525094205.GA21778@hari-Inspiron-1545>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Hariprasad Kelam <hariprasad.kelam@gmail.com>, qla2xxx-upstream@qlogic.com, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, Pedro Sousa <pedrom.sousa@synopsys.com>, Wei Li <liwei213@huawei.com>, Geng Jianfeng <gengjianfeng@hisilicon.com>, Zang Leigang <zangleigang@hisilicon.com>, Stanley Chu <stanley.chu@mediatek.com>, Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, Kangjie Lu <kjlu@umn.edu>, Arnd Bergmann <arnd@arndb.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Chad Dupuis <cdupuis@marvell.com>
+On 5/25/19 2:42 AM, Hariprasad Kelam wrote:
+> fix below warnig reported by coccicheck
+> 
+> /drivers/scsi/ufs/ufs-hisi.c:459:1-3: WARNING: PTR_ERR_OR_ZERO can be
+> used
+> ./drivers/scsi/qla2xxx/tcm_qla2xxx.c:1477:1-3: WARNING: PTR_ERR_OR_ZERO
+> can be used
+> 
+> Signed-off-by: Hariprasad Kelam <hariprasad.kelam@gmail.com>
+> ---
+>  drivers/scsi/qla2xxx/tcm_qla2xxx.c | 4 +---
+>  drivers/scsi/ufs/ufs-hisi.c        | 4 +---
+>  2 files changed, 2 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+> index ec9f199..4357b34 100644
+> --- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+> +++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+> @@ -1474,10 +1474,8 @@ static int tcm_qla2xxx_check_initiator_node_acl(
+>  				       sizeof(struct qla_tgt_cmd),
+>  				       TARGET_PROT_ALL, port_name,
+>  				       qlat_sess, tcm_qla2xxx_session_cb);
+> -	if (IS_ERR(se_sess))
+> -		return PTR_ERR(se_sess);
+>  
+> -	return 0;
+> +	return PTR_ERR_OR_ZERO(se_sess);
+>  }
+>  
+>  static void tcm_qla2xxx_update_sess(struct fc_port *sess, port_id_t s_id,
+> diff --git a/drivers/scsi/ufs/ufs-hisi.c b/drivers/scsi/ufs/ufs-hisi.c
+> index 7aed0a1..f506044 100644
+> --- a/drivers/scsi/ufs/ufs-hisi.c
+> +++ b/drivers/scsi/ufs/ufs-hisi.c
+> @@ -456,10 +456,8 @@ static int ufs_hisi_get_resource(struct ufs_hisi_host *host)
+>  	/* get resource of ufs sys ctrl */
+>  	mem_res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
+>  	host->ufs_sys_ctrl = devm_ioremap_resource(dev, mem_res);
+> -	if (IS_ERR(host->ufs_sys_ctrl))
+> -		return PTR_ERR(host->ufs_sys_ctrl);
+>  
+> -	return 0;
+> +	return PTR_ERR_OR_ZERO(host->ufs_sys_ctrl);
+>  }
 
-MSI-X vector index is determined using qed device information and
-affinity to use.
+Although I'm not sure this patch improves readability of the source code:
 
-Signed-off-by: Chad Dupuis <cdupuis@marvell.com>
-Signed-off-by: Saurav Kashyap <skashyap@marvell.com>
-Signed-off-by: Michal Kalderon <michal.kalderon@marvell.com>
----
- drivers/scsi/qedf/qedf_main.c | 39 ++++++++++++++++++++++++++++-----------
- 1 file changed, 28 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
-index 9f9431a4cc0e..dc4cad1d5dcc 100644
---- a/drivers/scsi/qedf/qedf_main.c
-+++ b/drivers/scsi/qedf/qedf_main.c
-@@ -2086,16 +2086,21 @@ static void qedf_simd_int_handler(void *cookie)
- static void qedf_sync_free_irqs(struct qedf_ctx *qedf)
- {
- 	int i;
-+	u16 vector_idx = 0;
-+	u32 vector;
- 
- 	if (qedf->int_info.msix_cnt) {
- 		for (i = 0; i < qedf->int_info.used_cnt; i++) {
--			synchronize_irq(qedf->int_info.msix[i].vector);
--			irq_set_affinity_hint(qedf->int_info.msix[i].vector,
--			    NULL);
--			irq_set_affinity_notifier(qedf->int_info.msix[i].vector,
--			    NULL);
--			free_irq(qedf->int_info.msix[i].vector,
--			    &qedf->fp_array[i]);
-+			vector_idx = i * qedf->dev_info.common.num_hwfns +
-+				qed_ops->common->get_affin_hwfn_idx(qedf->cdev);
-+			QEDF_INFO(&qedf->dbg_ctx, QEDF_LOG_DISC,
-+				  "Freeing IRQ #%d vector_idx=%d.\n",
-+				  i, vector_idx);
-+			vector = qedf->int_info.msix[vector_idx].vector;
-+			synchronize_irq(vector);
-+			irq_set_affinity_hint(vector, NULL);
-+			irq_set_affinity_notifier(vector, NULL);
-+			free_irq(vector, &qedf->fp_array[i]);
- 		}
- 	} else
- 		qed_ops->common->simd_handler_clean(qedf->cdev,
-@@ -2108,11 +2113,19 @@ static void qedf_sync_free_irqs(struct qedf_ctx *qedf)
- static int qedf_request_msix_irq(struct qedf_ctx *qedf)
- {
- 	int i, rc, cpu;
-+	u16 vector_idx = 0;
-+	u32 vector;
- 
- 	cpu = cpumask_first(cpu_online_mask);
- 	for (i = 0; i < qedf->num_queues; i++) {
--		rc = request_irq(qedf->int_info.msix[i].vector,
--		    qedf_msix_handler, 0, "qedf", &qedf->fp_array[i]);
-+		vector_idx = i * qedf->dev_info.common.num_hwfns +
-+			qed_ops->common->get_affin_hwfn_idx(qedf->cdev);
-+		QEDF_INFO(&qedf->dbg_ctx, QEDF_LOG_DISC,
-+			  "Requesting IRQ #%d vector_idx=%d.\n",
-+			  i, vector_idx);
-+		vector = qedf->int_info.msix[vector_idx].vector;
-+		rc = request_irq(vector, qedf_msix_handler, 0, "qedf",
-+				 &qedf->fp_array[i]);
- 
- 		if (rc) {
- 			QEDF_WARN(&(qedf->dbg_ctx), "request_irq failed.\n");
-@@ -2121,8 +2134,7 @@ static int qedf_request_msix_irq(struct qedf_ctx *qedf)
- 		}
- 
- 		qedf->int_info.used_cnt++;
--		rc = irq_set_affinity_hint(qedf->int_info.msix[i].vector,
--		    get_cpu_mask(cpu));
-+		rc = irq_set_affinity_hint(vector, get_cpu_mask(cpu));
- 		cpu = cpumask_next(cpu, cpu_online_mask);
- 	}
- 
-@@ -3068,6 +3080,11 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
- 		goto err1;
- 	}
- 
-+	QEDF_INFO(&qedf->dbg_ctx, QEDF_LOG_DISC,
-+		  "dev_info: num_hwfns=%d affin_hwfn_idx=%d.\n",
-+		  qedf->dev_info.common.num_hwfns,
-+		  qed_ops->common->get_affin_hwfn_idx(qedf->cdev));
-+
- 	/* queue allocation code should come here
- 	 * order should be
- 	 * 	slowpath_start
--- 
-2.14.5
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
