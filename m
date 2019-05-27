@@ -1,77 +1,81 @@
-From: Sumit Saxena <sumit.saxena@broadcom.com>
-Subject: Re: [PATCH -next] scsi: megaraid_sas: remove set but not used
- variables 'host' and 'wait_time'
-Date: Mon, 27 May 2019 13:30:59 +0530
-Message-ID: <CAL2rwxrmVuTsR=JY4h5agyTPMdsZA1xgvdC09O9XV3gDMTm2BQ@mail.gmail.com>
-References: <20190525124202.8120-1-yuehaibing@huawei.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: Re: [PATCH 13/19] sg: sgat_elem_sz and sum_fd_dlens
+Date: Mon, 27 May 2019 11:28:52 +0300
+Message-ID: <20190527082852.GF24680@kadam>
+References: <20190524184809.25121-14-dgilbert@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190525124202.8120-1-yuehaibing@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: YueHaibing <yuehaibing@huawei.com>
-Cc: Kashyap Desai <kashyap.desai@broadcom.com>, Shivasharan Srikanteshwara <shivasharan.srikanteshwara@broadcom.com>, jejb@linux.ibm.com, "Martin K. Petersen" <martin.petersen@oracle.com>, LKML <linux-kernel@vger.kernel.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@broadcom.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <kbuild-bounces@lists.01.org>
+Content-Disposition: inline
+In-Reply-To: <20190524184809.25121-14-dgilbert@interlog.com>
+List-Unsubscribe: <https://lists.01.org/mailman/options/kbuild>,
+ <mailto:kbuild-request@lists.01.org?subject=unsubscribe>
+List-Archive: <http://lists.01.org/pipermail/kbuild/>
+List-Post: <mailto:kbuild@lists.01.org>
+List-Help: <mailto:kbuild-request@lists.01.org?subject=help>
+List-Subscribe: <https://lists.01.org/mailman/listinfo/kbuild>,
+ <mailto:kbuild-request@lists.01.org?subject=subscribe>
+Errors-To: kbuild-bounces@lists.01.org
+Sender: "kbuild" <kbuild-bounces@lists.01.org>
+To: kbuild@01.org, Douglas Gilbert <dgilbert@interlog.com>
+Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, hare@suse.de, bart.vanassche@wdc.com, kbuild-all@01.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, May 25, 2019 at 6:14 PM YueHaibing <yuehaibing@huawei.com> wrote:
->
-> Fixes gcc '-Wunused-but-set-variable' warnings:
->
-> drivers/scsi/megaraid/megaraid_sas_base.c: In function megasas_suspend:
-> drivers/scsi/megaraid/megaraid_sas_base.c:7269:20: warning: variable host set but not used [-Wunused-but-set-variable]
-> drivers/scsi/megaraid/megaraid_sas_base.c: In function megasas_aen_polling:
-> drivers/scsi/megaraid/megaraid_sas_base.c:8397:15: warning: variable wait_time set but not used [-Wunused-but-set-variable]
->
-> 'host' is never used since introduction in
-> commit 31ea7088974c ("[SCSI] megaraid_sas: add hibernation support")
->
-> 'wait_time' is not used since commit
-> 11c71cb4ab7c ("megaraid_sas: Do not allow PCI access during OCR")
->
-> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
-Acked-by: Sumit Saxena <sumit.saxena@broadcom.com>
+Hi Douglas,
 
-> ---
->  drivers/scsi/megaraid/megaraid_sas_base.c | 8 +-------
->  1 file changed, 1 insertion(+), 7 deletions(-)
->
-> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-> index 92e576228d5f..ed0f6ca578e5 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
-> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-> @@ -7239,11 +7239,9 @@ static void megasas_shutdown_controller(struct megasas_instance *instance,
->  static int
->  megasas_suspend(struct pci_dev *pdev, pm_message_t state)
->  {
-> -       struct Scsi_Host *host;
->         struct megasas_instance *instance;
->
->         instance = pci_get_drvdata(pdev);
-> -       host = instance->host;
->         instance->unload = 1;
->
->         dev_info(&pdev->dev, "%s is called\n", __func__);
-> @@ -8367,7 +8365,7 @@ megasas_aen_polling(struct work_struct *work)
->         struct megasas_instance *instance = ev->instance;
->         union megasas_evt_class_locale class_locale;
->         int event_type = 0;
-> -       u32 seq_num, wait_time = MEGASAS_RESET_WAIT_TIME;
-> +       u32 seq_num;
->         int error;
->         u8  dcmd_ret = DCMD_SUCCESS;
->
-> @@ -8377,10 +8375,6 @@ megasas_aen_polling(struct work_struct *work)
->                 return;
->         }
->
-> -       /* Adjust event workqueue thread wait time for VF mode */
-> -       if (instance->requestorId)
-> -               wait_time = MEGASAS_ROUTINE_WAIT_TIME_VF;
-> -
->         /* Don't run the event workqueue thread if OCR is running */
->         mutex_lock(&instance->reset_mutex);
->
-> --
-> 2.17.1
->
->
+Thank you for the patch! Perhaps something to improve:
+
+url:    https://github.com/0day-ci/linux/commits/Douglas-Gilbert/sg-v4-interface-rq-sharing-multiple-rqs/20190525-161346
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
+
+If you fix the issue, kindly add following tag
+Reported-by: kbuild test robot <lkp@intel.com>
+Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+
+New smatch warnings:
+drivers/scsi/sg.c:3374 sg_remove_sgat() error: we previously assumed 'sfp' could be null (see line 3367)
+
+Old smatch warnings:
+drivers/scsi/sg.c:4383 sg_proc_seq_show_dbg() warn: returning -1 instead of -ENOMEM is sloppy
+
+# https://github.com/0day-ci/linux/commit/ecbddf3329c05a33a780f39084acb2f104067d6a
+git remote add linux-review https://github.com/0day-ci/linux
+git remote update linux-review
+git checkout ecbddf3329c05a33a780f39084acb2f104067d6a
+vim +/sfp +3374 drivers/scsi/sg.c
+
+c5ad643d Douglas Gilbert 2019-05-24  3358  
+c5ad643d Douglas Gilbert 2019-05-24  3359  /* Remove the data (possibly a sgat list) held by srp, not srp itself */
+c5ad643d Douglas Gilbert 2019-05-24  3360  static void
+c5ad643d Douglas Gilbert 2019-05-24  3361  sg_remove_sgat(struct sg_request *srp)
+c5ad643d Douglas Gilbert 2019-05-24  3362  {
+c5ad643d Douglas Gilbert 2019-05-24  3363  	struct sg_scatter_hold *schp = &srp->sgat_h; /* care: remove own data */
+c5ad643d Douglas Gilbert 2019-05-24  3364  	struct sg_fd *sfp = srp->parentfp;
+c5ad643d Douglas Gilbert 2019-05-24  3365  	struct sg_device *sdp;
+c5ad643d Douglas Gilbert 2019-05-24  3366  
+c5ad643d Douglas Gilbert 2019-05-24 @3367  	sdp = (sfp ? sfp->parentdp : NULL);
+                                                       ^^^
+Null heck
+
+c5ad643d Douglas Gilbert 2019-05-24  3368  	SG_LOG(4, sdp, "%s: num_sgat=%d%s\n", __func__, schp->num_sgat,
+c5ad643d Douglas Gilbert 2019-05-24  3369  	       ((srp->parentfp ? (sfp->rsv_srp == srp) : false) ?
+c5ad643d Douglas Gilbert 2019-05-24  3370  		" [rsv]" : ""));
+c5ad643d Douglas Gilbert 2019-05-24  3371  	if (!test_bit(SG_FRQ_DIO_IN_USE, srp->frq_bm))
+c5ad643d Douglas Gilbert 2019-05-24  3372  		sg_remove_sgat_helper(sdp, schp);
+c5ad643d Douglas Gilbert 2019-05-24  3373  
+ecbddf33 Douglas Gilbert 2019-05-24 @3374  	if (sfp->tot_fd_thresh > 0) {
+                                                    ^^^^^^^^^^^^^^^^^^
+Unchecked dereference.
+
+ecbddf33 Douglas Gilbert 2019-05-24  3375  		/* this is a subtraction, error if it goes negative */
+ecbddf33 Douglas Gilbert 2019-05-24  3376  		if (atomic_add_negative(-schp->buflen, &sfp->sum_fd_dlens)) {
+ecbddf33 Douglas Gilbert 2019-05-24  3377  			SG_LOG(2, sfp->parentdp,
+ecbddf33 Douglas Gilbert 2019-05-24  3378  			       "%s: logic error: this dlen > %s\n",
+ecbddf33 Douglas Gilbert 2019-05-24  3379  			       __func__, "sum_fd_dlens");
+ecbddf33 Douglas Gilbert 2019-05-24  3380  			atomic_set(&sfp->sum_fd_dlens, 0);
+ecbddf33 Douglas Gilbert 2019-05-24  3381  		}
+ecbddf33 Douglas Gilbert 2019-05-24  3382  	}
+c5ad643d Douglas Gilbert 2019-05-24  3383  	memset(schp, 0, sizeof(*schp));         /* zeros buflen and dlen */
+^1da177e Linus Torvalds  2005-04-16  3384  }
+^1da177e Linus Torvalds  2005-04-16  3385  
