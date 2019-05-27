@@ -1,60 +1,38 @@
-From: Lianbo Jiang <lijiang@redhat.com>
-Subject: [PATCH v2] scsi: smartpqi: properly set both the DMA mask and the coherent DMA mask in pqi_pci_init()
-Date: Mon, 27 May 2019 08:59:34 +0800
-Message-ID: <20190527005934.1493-1-lijiang@redhat.com>
+From: Gen Zhang <blackgod016574@gmail.com>
+Subject: [PATCH] sg: fix a double-fetch bug in sg_write()
+Date: Mon, 27 May 2019 09:03:38 +0800
+Message-ID: <20190527010338.GA17170@zhanggen-UX430UQ>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: don.brace@microsemi.com, jejb@linux.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, esc.storagedev@microsemi.com, Thomas.Lendacky@amd.com, dyoung@redhat.com
+To: dgilbert@interlog.com, jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-When SME is enabled, the smartpqi driver won't work on the HP DL385
-G10 machine, which causes the failure of kernel boot because it fails
-to allocate pqi error buffer. Please refer to the kernel log:
-....
-[    9.431749] usbcore: registered new interface driver uas
-[    9.441524] Microsemi PQI Driver (v1.1.4-130)
-[    9.442956] i40e 0000:04:00.0: fw 6.70.48768 api 1.7 nvm 10.2.5
-[    9.447237] smartpqi 0000:23:00.0: Microsemi Smart Family Controller found
-         Starting dracut initqueue hook...
-[  OK  ] Started Show Plymouth Boot Scre[    9.471654] Broadcom NetXtreme-C/E driver bnxt_en v1.9.1
-en.
-[  OK  ] Started Forward Password Requests to Plymouth Directory Watch.
-[[0;[    9.487108] smartpqi 0000:23:00.0: failed to allocate PQI error buffer
-....
-[  139.050544] dracut-initqueue[949]: Warning: dracut-initqueue timeout - starting timeout scripts
-[  139.589779] dracut-initqueue[949]: Warning: dracut-initqueue timeout - starting timeout scripts
+In sg_write(), the opcode of the command is fetched the first time from 
+the userspace by __get_user(). Then the whole command, the opcode 
+included, is fetched again from userspace by __copy_from_user(). 
+However, a malicious user can change the opcode between the two fetches.
+This can cause inconsistent data and potential errors as cmnd is used in
+the following codes.
 
-Basically, the fact that the coherent DMA mask value wasn't set caused
-the driver to fall back to SWIOTLB when SME is active.
+Thus we should check opcode between the two fetches to prevent this.
 
-For correct operation, lets call the dma_set_mask_and_coherent() to
-properly set the mask for both streaming and coherent, in order to
-inform the kernel about the devices DMA addressing capabilities.
-
-Signed-off-by: Lianbo Jiang <lijiang@redhat.com>
-Acked-by: Don Brace <don.brace@microsemi.com>
-Tested-by: Don Brace <don.brace@microsemi.com>
+Signed-off-by: Gen Zhang <blackgod016574@gmail.com>
 ---
-Changes since v1:
-1. Add the extra description suggested by Tom to patch log.
-2. Add Don's Acked-by and Tested-by to the commit. 
-
- drivers/scsi/smartpqi/smartpqi_init.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index c26cac819f9e..8b1fde6c7dab 100644
---- a/drivers/scsi/smartpqi/smartpqi_init.c
-+++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -7282,7 +7282,7 @@ static int pqi_pci_init(struct pqi_ctrl_info *ctrl_info)
- 	else
- 		mask = DMA_BIT_MASK(32);
- 
--	rc = dma_set_mask(&ctrl_info->pci_dev->dev, mask);
-+	rc = dma_set_mask_and_coherent(&ctrl_info->pci_dev->dev, mask);
- 	if (rc) {
- 		dev_err(&ctrl_info->pci_dev->dev, "failed to set DMA mask\n");
- 		goto disable_device;
--- 
-2.17.1
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index d3f1531..a2971b8 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -694,6 +694,8 @@ sg_write(struct file *filp, const char __user *buf, size_t count, loff_t * ppos)
+ 	hp->flags = input_size;	/* structure abuse ... */
+ 	hp->pack_id = old_hdr.pack_id;
+ 	hp->usr_ptr = NULL;
++	if (opcode != cmnd[0])
++		return -EINVAL;
+ 	if (__copy_from_user(cmnd, buf, cmd_size))
+ 		return -EFAULT;
+ 	/*
+---
