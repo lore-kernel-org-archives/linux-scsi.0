@@ -1,45 +1,43 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH v2 net-next 00/11] qed*: Improve performance on 100G
- link for offload protocols
-Date: Sun, 26 May 2019 13:04:32 -0700 (PDT)
-Message-ID: <20190526.130432.605011257219662109.davem@davemloft.net>
-References: <20190526122230.30039-1-michal.kalderon@marvell.com>
+From: Gen Zhang <blackgod016574@gmail.com>
+Subject: [PATCH] mpt3sas_ctl: fix double-fetch bug in _ctl_ioctl_main()
+Date: Mon, 27 May 2019 08:57:16 +0800
+Message-ID: <20190527005716.GA17015@zhanggen-UX430UQ>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <20190526122230.30039-1-michal.kalderon@marvell.com>
-Sender: netdev-owner@vger.kernel.org
-To: michal.kalderon@marvell.com
-Cc: ariel.elior@marvell.com, dledford@redhat.com, jgg@ziepe.ca, leon@kernel.org, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: sathya.prakash@broadcom.com, chaitra.basappa@broadcom.com, suganath-prabu.subramani@broadcom.com, jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc: MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Michal Kalderon <michal.kalderon@marvell.com>
-Date: Sun, 26 May 2019 15:22:19 +0300
+In _ctl_ioctl_main(), 'ioctl_header' is fetched the first time from 
+userspace. 'ioctl_header.ioc_number' is then checked. The legal result 
+is saved to 'ioc'. Then, in condition MPT3COMMAND, the whole struct is
+fetched again from the userspace. Then _ctl_do_mpt_command() is called,
+'ioc' and 'karg' as inputs.
 
-> This patch series modifies the current implementation of PF selection.
-> The refactoring of the llh code enables setting additional filters
-> (mac / protocol) per PF, and improves performance for offload protocols
-> (RoCE, iWARP, iSCSI, fcoe) on 100G link (was capped at 90G per single
-> PF).
-> 
-> Improved performance on 100G link is achieved by configuring engine
-> affinty to each PF.
-> The engine affinity is read from the Management FW and hw is configured accordingly.
-> A new hw resource called PPFID is exposed and an API is introduced to utilize
-> it. This additional resource enables setting the affinity of a PF and providing
-> more classification rules per PF.
-> qedr,qedi,qedf are also modified as part of the series. Without the
-> changes functionality is broken.
-> 
-> v1 --> v2
-> ---------
-> - Remove iWARP module parameter. Instead use devlink param infrastructure
->   for setting the iwarp_cmt mode. Additional patch added to the series for
->   adding the devlink support.
-> 
-> - Fix kbuild test robot warning on qed_llh_filter initialization.
-> 
-> - Remove comments inside function calls
+However, a malicious user can change the 'ioc_number' between the two 
+fetches, which will cause a potential security issues.  Moreover, a 
+malicious user can provide a valid 'ioc_number' to pass the check in 
+first fetch, and then modify it in the second fetch.
 
-Series applied, thanks.
+To fix this, we need to recheck the 'ioc_number' in the second fetch.
+
+Signed-off-by: Gen Zhang <blackgod016574@gmail.com>
+---
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+index b2bb47c..5181c03 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+@@ -2319,6 +2319,10 @@ _ctl_ioctl_main(struct file *file, unsigned int cmd, void __user *arg,
+ 			break;
+ 		}
+ 
++		if (karg.hdr.ioc_number != ioctl_header.ioc_number) {
++			ret = -EINVAL;
++			break;
++		}
+ 		if (_IOC_SIZE(cmd) == sizeof(struct mpt3_ioctl_command)) {
+ 			uarg = arg;
+ 			ret = _ctl_do_mpt_command(ioc, karg, &uarg->mf);
