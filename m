@@ -1,60 +1,51 @@
-From: Gen Zhang <blackgod016574@gmail.com>
-Subject: Re: [PATCH] mpt3sas_ctl: fix double-fetch bug in _ctl_ioctl_main()
-Date: Tue, 28 May 2019 15:05:08 +0800
-Message-ID: <20190528070508.GA18498@zhanggen-UX430UQ>
-References: <20190527005716.GA17015@zhanggen-UX430UQ>
- <CA+RiK64ddLM1Uhp_neqaX3HeaGqn-b=MgK3fGzXnee-o3SAVdg@mail.gmail.com>
+From: "Ardelean, Alexandru" <alexandru.Ardelean@analog.com>
+Subject: Re: [PATCH 1/3][V3] lib: fix __sysfs_match_string() helper when n
+ != -1
+Date: Tue, 28 May 2019 07:18:29 +0000
+Message-ID: <42488b7ffb951ecd43f9c889eec1664cf2f57a8b.camel@analog.com>
+References: <20190508111913.7276-1-alexandru.ardelean@analog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CA+RiK64ddLM1Uhp_neqaX3HeaGqn-b=MgK3fGzXnee-o3SAVdg@mail.gmail.com>
+In-Reply-To: <20190508111913.7276-1-alexandru.ardelean@analog.com>
+Content-Language: en-US
+Content-ID: <7CDC7867EBCD204A89B22A6F63CBA720@analog.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Sathya Prakash <sathya.prakash@broadcom.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, PDL-MPT-FUSIONLINUX <MPT-FusionLinux.pdl@broadcom.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel@vger.kernel.org
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-iio@vger.kernel.org" <linux-iio@vger.kernel.org>
+Cc: "andriy.shevchenko@linux.intel.com" <andriy.shevchenko@linux.intel.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "jic23@kernel.org" <jic23@kernel.org>, "lars@metafoo.de" <lars@metafoo.de>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, May 28, 2019 at 11:44:35AM +0530, Suganath Prabu Subramani wrote:
-> Please consider this patch as Ack-by: Suganath Prabu S
-> <suganath-prabu.subramani@broadcom.com>
-> 
-> Thanks,
-> Suganath.
-> 
-> 
-> On Mon, May 27, 2019 at 6:27 AM Gen Zhang <blackgod016574@gmail.com> wrote:
-> >
-> > In _ctl_ioctl_main(), 'ioctl_header' is fetched the first time from
-> > userspace. 'ioctl_header.ioc_number' is then checked. The legal result
-> > is saved to 'ioc'. Then, in condition MPT3COMMAND, the whole struct is
-> > fetched again from the userspace. Then _ctl_do_mpt_command() is called,
-> > 'ioc' and 'karg' as inputs.
-> >
-> > However, a malicious user can change the 'ioc_number' between the two
-> > fetches, which will cause a potential security issues.  Moreover, a
-> > malicious user can provide a valid 'ioc_number' to pass the check in
-> > first fetch, and then modify it in the second fetch.
-> >
-> > To fix this, we need to recheck the 'ioc_number' in the second fetch.
-> >
-> > Signed-off-by: Gen Zhang <blackgod016574@gmail.com>
-> > ---
-> > diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-> > index b2bb47c..5181c03 100644
-> > --- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-> > +++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-> > @@ -2319,6 +2319,10 @@ _ctl_ioctl_main(struct file *file, unsigned int cmd, void __user *arg,
-> >                         break;
-> >                 }
-> >
-> > +               if (karg.hdr.ioc_number != ioctl_header.ioc_number) {
-> > +                       ret = -EINVAL;
-> > +                       break;
-> > +               }
-> >                 if (_IOC_SIZE(cmd) == sizeof(struct mpt3_ioctl_command)) {
-> >                         uarg = arg;
-> >                         ret = _ctl_do_mpt_command(ioc, karg, &uarg->mf);
-Thanks for your reply, Suganath.
-
-Thanks
-Gen
+T24gV2VkLCAyMDE5LTA1LTA4IGF0IDE0OjE5ICswMzAwLCBBbGV4YW5kcnUgQXJkZWxlYW4gd3Jv
+dGU6DQo+IFRoZSBkb2N1bWVudGF0aW9uIHRoZSBgX19zeXNmc19tYXRjaF9zdHJpbmcoKWAgaGVs
+cGVyIG1lbnRpb25zIHRoYXQgYG5gDQo+ICh0aGUgc2l6ZSBvZiB0aGUgZ2l2ZW4gYXJyYXkpIHNo
+b3VsZCBiZToNCj4gICogQG46IG51bWJlciBvZiBzdHJpbmdzIGluIHRoZSBhcnJheSBvciAtMSBm
+b3IgTlVMTCB0ZXJtaW5hdGVkIGFycmF5cw0KPiANCj4gVGhlIGJlaGF2aW9yIG9mIHRoZSBmdW5j
+dGlvbiBpcyBkaWZmZXJlbnQsIGluIHRoZSBzZW5zZSB0aGF0IGl0IGV4aXRzIG9uDQo+IHRoZSBm
+aXJzdCBOVUxMIGVsZW1lbnQgaW4gdGhlIGFycmF5Lg0KPiANCj4gVGhpcyBwYXRjaCBjaGFuZ2Vz
+IHRoZSBiZWhhdmlvciwgdG8gZXhpdCB0aGUgbG9vcCB3aGVuIGEgTlVMTCBlbGVtZW50IGlzDQo+
+IGZvdW5kLCBhbmQgdGhlIHNpemUgb2YgdGhlIGFycmF5IGlzIHByb3ZpZGVkIGFzIC0xLg0KPiAN
+Cj4gQWxsIGN1cnJlbnQgdXNlcnMgb2YgX19zeXNmc19tYXRjaF9zdHJpbmcoKSAmIHN5c2ZzX21h
+dGNoX3N0cmluZygpIHByb3ZpZGUNCj4gY29udGlndW91cyBhcnJheXMgb2Ygc3RyaW5ncywgc28g
+dGhpcyBiZWhhdmlvciBjaGFuZ2UgZG9lc24ndCBpbmZsdWVuY2UNCj4gYW55dGhpbmcgKGF0IHRo
+aXMgcG9pbnQgaW4gdGltZSkuDQo+IA0KPiBUaGlzIGJlaGF2aW9yIGNoYW5nZSBhbGxvd3MgZm9y
+IGFuIGFycmF5IG9mIHN0cmluZ3MgdG8gaGF2ZSBOVUxMIGVsZW1lbnRzDQo+IHdpdGhpbiB0aGUg
+YXJyYXksIHdoaWNoIHdpbGwgYmUgaWdub3JlZC4gVGhpcyBpcyBwYXJ0aWN1bGFybHkgdXNlZnVs
+IHdoZW4NCj4gY3JlYXRpbmcgbWFwcGluZyBvZiBzdHJpbmdzIGFuZCBpbnRlZ2VycyAoYXMgYml0
+ZmllbGRzIG9yIG90aGVyIEhXDQo+IGRlc2NyaXB0aW9uKS4NCj4gDQoNCkhleSwNCg0KSSBkaWQg
+bm90IHNlZSBhbnkgcmVhY3Rpb24gb24gdGhpcy4NCkRvIEkgbmVlZCB0byBkbyBzb21ldGhpbmcg
+b24gdGhpcyAocmUtc3BpbiwgYWRkIG90aGVyIHBlb3BsZSwgcmUtc2VuZCBhcyBzdGFuZGFsb25l
+IHBhdGNoLCBldGMpID8NCg0KVGhhbmtzDQpBbGV4DQoNCg0KPiBTaWduZWQtb2ZmLWJ5OiBBbGV4
+YW5kcnUgQXJkZWxlYW4gPGFsZXhhbmRydS5hcmRlbGVhbkBhbmFsb2cuY29tPg0KPiAtLS0NCj4g
+DQo+IENoYW5nZWxvZyB2MiAtPiB2MzoNCj4gKiBmaXggX19zeXNmc19tYXRjaF9zdHJpbmcoKSB2
+cyBhZGRpbmcgYSBuZXcNCj4gICBfX3N5c2ZzX21hdGNoX3N0cmluZ193aXRoX2dhcHMoKSBoZWxw
+ZXINCj4gDQo+ICBsaWIvc3RyaW5nLmMgfCA1ICsrKystDQo+ICAxIGZpbGUgY2hhbmdlZCwgNCBp
+bnNlcnRpb25zKCspLCAxIGRlbGV0aW9uKC0pDQo+IA0KPiBkaWZmIC0tZ2l0IGEvbGliL3N0cmlu
+Zy5jIGIvbGliL3N0cmluZy5jDQo+IGluZGV4IDNhYjg2MWMxYTg1Ny4uNWJlYTNmOTg0NzhhIDEw
+MDY0NA0KPiAtLS0gYS9saWIvc3RyaW5nLmMNCj4gKysrIGIvbGliL3N0cmluZy5jDQo+IEBAIC02
+NzQsOCArNjc0LDExIEBAIGludCBfX3N5c2ZzX21hdGNoX3N0cmluZyhjb25zdCBjaGFyICogY29u
+c3QgKmFycmF5LCBzaXplX3QgbiwgY29uc3QgY2hhciAqc3RyKQ0KPiAgDQo+ICAJZm9yIChpbmRl
+eCA9IDA7IGluZGV4IDwgbjsgaW5kZXgrKykgew0KPiAgCQlpdGVtID0gYXJyYXlbaW5kZXhdOw0K
+PiAtCQlpZiAoIWl0ZW0pDQo+ICsJCWlmICghaXRlbSkgew0KPiArCQkJaWYgKG4gIT0gKHNpemVf
+dCktMSkNCj4gKwkJCQljb250aW51ZTsNCj4gIAkJCWJyZWFrOw0KPiArCQl9DQo+ICAJCWlmIChz
+eXNmc19zdHJlcShpdGVtLCBzdHIpKQ0KPiAgCQkJcmV0dXJuIGluZGV4Ow0KPiAgCX0NCg==
