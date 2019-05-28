@@ -1,60 +1,54 @@
-From: Hariprasad Kelam <hariprasad.kelam@gmail.com>
-Subject: [Patch v2] target/iscsi: fix possible condition with no effect (if
- == else)
-Date: Tue, 28 May 2019 06:51:52 +0530
-Message-ID: <20190528012151.GA4845@hari-Inspiron-1545>
+From: Alim Akhtar <alim.akhtar@samsung.com>
+Subject: Re: [PATCH] scsi: ufs: Check that space was properly alloced in
+ copy_query_response
+Date: Tue, 28 May 2019 09:37:38 +0530
+Message-ID: <cd9f0d7b-8ce6-e432-e1df-c4316b191156@samsung.com>
+References: <CGME20190521082527epcas1p44fe0c4659549ae265c9d59ef7844e57e@epcas1p4.samsung.com>
+        <1558427062-5084-1-git-send-email-avri.altman@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <1558427062-5084-1-git-send-email-avri.altman@wdc.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: ddiss@suse.de, "Martin K. Petersen" <martin.petersen@oracle.com>, Hariprasad Kelam <hariprasad.kelam@gmail.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Avri Altman <avri.altman@wdc.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Evan Green <evgreen@chromium.org>, Bean Huo <beanhuo@micron.com>, Pedro Sousa <pedrom.sousa@synopsys.com>
+Cc: Avi Shchislowski <avi.shchislowski@wdc.com>, Alex Lemberg <alex.lemberg@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-fix below warning reported by coccicheck
+Hi Avri
 
-drivers/target/iscsi/iscsi_target_nego.c:175:6-8: WARNING: possible
-condition with no effect (if == else)
-
-Signed-off-by: Hariprasad Kelam <hariprasad.kelam@gmail.com>
----
-Changes in v2: treat SRP as unsupported authtype.
-               Remove unnecessary else
-               return 2 in all unsupported cases
-
----
----
- drivers/target/iscsi/iscsi_target_nego.c | 15 ++-------------
- 1 file changed, 2 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/target/iscsi/iscsi_target_nego.c b/drivers/target/iscsi/iscsi_target_nego.c
-index 8a5e8d1..92ce2fd 100644
---- a/drivers/target/iscsi/iscsi_target_nego.c
-+++ b/drivers/target/iscsi/iscsi_target_nego.c
-@@ -160,22 +160,11 @@ static u32 iscsi_handle_authentication(
- 
- 	if (strstr("None", authtype))
- 		return 1;
--#ifdef CANSRP
--	else if (strstr("SRP", authtype))
--		return srp_main_loop(conn, auth, in_buf, out_buf,
--				&in_length, out_length);
--#endif
- 	else if (strstr("CHAP", authtype))
- 		return chap_main_loop(conn, auth, in_buf, out_buf,
- 				&in_length, out_length);
--	else if (strstr("SPKM1", authtype))
--		return 2;
--	else if (strstr("SPKM2", authtype))
--		return 2;
--	else if (strstr("KRB5", authtype))
--		return 2;
--	else
--		return 2;
-+	/* SRP, SPKM1, SPKM2 and KRB5 are unsupported */
-+	return 2;
- }
- 
- static void iscsi_remove_failed_auth_entry(struct iscsi_conn *conn)
--- 
-2.7.4
+On 5/21/19 1:54 PM, Avri Altman wrote:
+> struct ufs_dev_cmd is the main container that supports device management
+> commands. In the case of a read descriptor request, we assume that the
+> proper space was allocated in dev_cmd to hold the returning descriptor.
+> 
+> This is no longer true, as there are flows that doesn't use dev_cmd
+> for device management requests, and was wrong in the first place.
+> 
+Can you please put some light on those flows? Are those platform 
+specific? Just curious.
+> fixes: d44a5f98bb49 (ufs: query descriptor API)
+> 
+> Signed-off-by: Avri Altman <avri.altman@wdc.com>
+> ---
+>   drivers/scsi/ufs/ufshcd.c | 3 ++-
+>   1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index 8c1c551..3fe3029 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -1917,7 +1917,8 @@ int ufshcd_copy_query_response(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
+>   	memcpy(&query_res->upiu_res, &lrbp->ucd_rsp_ptr->qr, QUERY_OSF_SIZE);
+>   
+>   	/* Get the descriptor */
+> -	if (lrbp->ucd_rsp_ptr->qr.opcode == UPIU_QUERY_OPCODE_READ_DESC) {
+> +	if (hba->dev_cmd.query.descriptor &&
+> +	    lrbp->ucd_rsp_ptr->qr.opcode == UPIU_QUERY_OPCODE_READ_DESC) {
+>   		u8 *descp = (u8 *)lrbp->ucd_rsp_ptr +
+>   				GENERAL_UPIU_REQUEST_SIZE;
+>   		u16 resp_len;
+> 
+This change looks ok to me. I hope you have tested this patch.
+Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
