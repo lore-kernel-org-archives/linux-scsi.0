@@ -1,51 +1,24 @@
-From: "Ardelean, Alexandru" <alexandru.Ardelean@analog.com>
-Subject: Re: [PATCH 1/3][V3] lib: fix __sysfs_match_string() helper when n
- != -1
-Date: Tue, 28 May 2019 07:18:29 +0000
-Message-ID: <42488b7ffb951ecd43f9c889eec1664cf2f57a8b.camel@analog.com>
-References: <20190508111913.7276-1-alexandru.ardelean@analog.com>
+From: "Bean Huo (beanhuo)" <beanhuo@micron.com>
+Subject: RE: [EXT] [PATCH] scsi: ufs: Check that space was properly alloced in
+ copy_query_response
+Date: Tue, 28 May 2019 07:51:22 +0000
+Message-ID: <BN7PR08MB5684B0A4DB8BC0A00D9D6877DB1E0@BN7PR08MB5684.namprd08.prod.outlook.com>
+References: <1558427062-5084-1-git-send-email-avri.altman@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190508111913.7276-1-alexandru.ardelean@analog.com>
+In-Reply-To: <1558427062-5084-1-git-send-email-avri.altman@wdc.com>
 Content-Language: en-US
-Content-ID: <7CDC7867EBCD204A89B22A6F63CBA720@analog.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-iio@vger.kernel.org" <linux-iio@vger.kernel.org>
-Cc: "andriy.shevchenko@linux.intel.com" <andriy.shevchenko@linux.intel.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "jic23@kernel.org" <jic23@kernel.org>, "lars@metafoo.de" <lars@metafoo.de>
+To: Avri Altman <avri.altman@wdc.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Evan Green <evgreen@chromium.org>, Pedro Sousa <pedrom.sousa@synopsys.com>, Alim Akhtar <alim.akhtar@samsung.com>
+Cc: Avi Shchislowski <avi.shchislowski@wdc.com>, Alex Lemberg <alex.lemberg@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gV2VkLCAyMDE5LTA1LTA4IGF0IDE0OjE5ICswMzAwLCBBbGV4YW5kcnUgQXJkZWxlYW4gd3Jv
-dGU6DQo+IFRoZSBkb2N1bWVudGF0aW9uIHRoZSBgX19zeXNmc19tYXRjaF9zdHJpbmcoKWAgaGVs
-cGVyIG1lbnRpb25zIHRoYXQgYG5gDQo+ICh0aGUgc2l6ZSBvZiB0aGUgZ2l2ZW4gYXJyYXkpIHNo
-b3VsZCBiZToNCj4gICogQG46IG51bWJlciBvZiBzdHJpbmdzIGluIHRoZSBhcnJheSBvciAtMSBm
-b3IgTlVMTCB0ZXJtaW5hdGVkIGFycmF5cw0KPiANCj4gVGhlIGJlaGF2aW9yIG9mIHRoZSBmdW5j
-dGlvbiBpcyBkaWZmZXJlbnQsIGluIHRoZSBzZW5zZSB0aGF0IGl0IGV4aXRzIG9uDQo+IHRoZSBm
-aXJzdCBOVUxMIGVsZW1lbnQgaW4gdGhlIGFycmF5Lg0KPiANCj4gVGhpcyBwYXRjaCBjaGFuZ2Vz
-IHRoZSBiZWhhdmlvciwgdG8gZXhpdCB0aGUgbG9vcCB3aGVuIGEgTlVMTCBlbGVtZW50IGlzDQo+
-IGZvdW5kLCBhbmQgdGhlIHNpemUgb2YgdGhlIGFycmF5IGlzIHByb3ZpZGVkIGFzIC0xLg0KPiAN
-Cj4gQWxsIGN1cnJlbnQgdXNlcnMgb2YgX19zeXNmc19tYXRjaF9zdHJpbmcoKSAmIHN5c2ZzX21h
-dGNoX3N0cmluZygpIHByb3ZpZGUNCj4gY29udGlndW91cyBhcnJheXMgb2Ygc3RyaW5ncywgc28g
-dGhpcyBiZWhhdmlvciBjaGFuZ2UgZG9lc24ndCBpbmZsdWVuY2UNCj4gYW55dGhpbmcgKGF0IHRo
-aXMgcG9pbnQgaW4gdGltZSkuDQo+IA0KPiBUaGlzIGJlaGF2aW9yIGNoYW5nZSBhbGxvd3MgZm9y
-IGFuIGFycmF5IG9mIHN0cmluZ3MgdG8gaGF2ZSBOVUxMIGVsZW1lbnRzDQo+IHdpdGhpbiB0aGUg
-YXJyYXksIHdoaWNoIHdpbGwgYmUgaWdub3JlZC4gVGhpcyBpcyBwYXJ0aWN1bGFybHkgdXNlZnVs
-IHdoZW4NCj4gY3JlYXRpbmcgbWFwcGluZyBvZiBzdHJpbmdzIGFuZCBpbnRlZ2VycyAoYXMgYml0
-ZmllbGRzIG9yIG90aGVyIEhXDQo+IGRlc2NyaXB0aW9uKS4NCj4gDQoNCkhleSwNCg0KSSBkaWQg
-bm90IHNlZSBhbnkgcmVhY3Rpb24gb24gdGhpcy4NCkRvIEkgbmVlZCB0byBkbyBzb21ldGhpbmcg
-b24gdGhpcyAocmUtc3BpbiwgYWRkIG90aGVyIHBlb3BsZSwgcmUtc2VuZCBhcyBzdGFuZGFsb25l
-IHBhdGNoLCBldGMpID8NCg0KVGhhbmtzDQpBbGV4DQoNCg0KPiBTaWduZWQtb2ZmLWJ5OiBBbGV4
-YW5kcnUgQXJkZWxlYW4gPGFsZXhhbmRydS5hcmRlbGVhbkBhbmFsb2cuY29tPg0KPiAtLS0NCj4g
-DQo+IENoYW5nZWxvZyB2MiAtPiB2MzoNCj4gKiBmaXggX19zeXNmc19tYXRjaF9zdHJpbmcoKSB2
-cyBhZGRpbmcgYSBuZXcNCj4gICBfX3N5c2ZzX21hdGNoX3N0cmluZ193aXRoX2dhcHMoKSBoZWxw
-ZXINCj4gDQo+ICBsaWIvc3RyaW5nLmMgfCA1ICsrKystDQo+ICAxIGZpbGUgY2hhbmdlZCwgNCBp
-bnNlcnRpb25zKCspLCAxIGRlbGV0aW9uKC0pDQo+IA0KPiBkaWZmIC0tZ2l0IGEvbGliL3N0cmlu
-Zy5jIGIvbGliL3N0cmluZy5jDQo+IGluZGV4IDNhYjg2MWMxYTg1Ny4uNWJlYTNmOTg0NzhhIDEw
-MDY0NA0KPiAtLS0gYS9saWIvc3RyaW5nLmMNCj4gKysrIGIvbGliL3N0cmluZy5jDQo+IEBAIC02
-NzQsOCArNjc0LDExIEBAIGludCBfX3N5c2ZzX21hdGNoX3N0cmluZyhjb25zdCBjaGFyICogY29u
-c3QgKmFycmF5LCBzaXplX3QgbiwgY29uc3QgY2hhciAqc3RyKQ0KPiAgDQo+ICAJZm9yIChpbmRl
-eCA9IDA7IGluZGV4IDwgbjsgaW5kZXgrKykgew0KPiAgCQlpdGVtID0gYXJyYXlbaW5kZXhdOw0K
-PiAtCQlpZiAoIWl0ZW0pDQo+ICsJCWlmICghaXRlbSkgew0KPiArCQkJaWYgKG4gIT0gKHNpemVf
-dCktMSkNCj4gKwkJCQljb250aW51ZTsNCj4gIAkJCWJyZWFrOw0KPiArCQl9DQo+ICAJCWlmIChz
-eXNmc19zdHJlcShpdGVtLCBzdHIpKQ0KPiAgCQkJcmV0dXJuIGluZGV4Ow0KPiAgCX0NCg==
+Hi, Avri
+>
+>Signed-off-by: Avri Altman <avri.altman@wdc.com>
+Acked-by: Bean Huo <beanhuo@micron.com>
+
+Thanks,
+//Bean
