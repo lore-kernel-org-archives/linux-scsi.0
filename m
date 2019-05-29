@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 1/6] scsi: hisi_sas: Delete PHYs' timer when rmmod or probe failed
-Date: Wed, 29 May 2019 17:58:42 +0800
-Message-ID: <1559123927-160502-2-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 4/6] scsi: hisi_sas: Change the type of some numbers to unsigned
+Date: Wed, 29 May 2019 17:58:45 +0800
+Message-ID: <1559123927-160502-5-git-send-email-john.garry@huawei.com>
 References: <1559123927-160502-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -14,33 +14,38 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Xiang Chen <chenxiang66@hisilicon.com>
 
-When removing the driver or for when probe fails, we need to delete PHY's
-timer.
+It reports a error as follows from some tools at two places in our code:
+runtime error: left shift of 4 by 29 places cannot be represented in type
+'int'
+So change the type of the two number to unsigned to avoid the error.
 
 Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_main.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 8a7feb8ed8d6..256f93e6f89f 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -2480,6 +2480,14 @@ EXPORT_SYMBOL_GPL(hisi_sas_alloc);
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index 3efb1e72bdab..492ada65d41a 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -1344,7 +1344,7 @@ static void prep_ata_v3_hw(struct hisi_hba *hisi_hba,
+ 	if (parent_dev && DEV_IS_EXPANDER(parent_dev->dev_type))
+ 		hdr->dw0 |= cpu_to_le32(3 << CMD_HDR_CMD_OFF);
+ 	else
+-		hdr->dw0 |= cpu_to_le32(4 << CMD_HDR_CMD_OFF);
++		hdr->dw0 |= cpu_to_le32(4U << CMD_HDR_CMD_OFF);
  
- void hisi_sas_free(struct hisi_hba *hisi_hba)
- {
-+	int i;
-+
-+	for (i = 0; i < hisi_hba->n_phy; i++) {
-+		struct hisi_sas_phy *phy = &hisi_hba->phy[i];
-+
-+		del_timer_sync(&phy->timer);
-+	}
-+
- 	if (hisi_hba->wq)
- 		destroy_workqueue(hisi_hba->wq);
- }
+ 	switch (task->data_dir) {
+ 	case DMA_TO_DEVICE:
+@@ -1412,7 +1412,7 @@ static void prep_abort_v3_hw(struct hisi_hba *hisi_hba,
+ 	struct hisi_sas_port *port = slot->port;
+ 
+ 	/* dw0 */
+-	hdr->dw0 = cpu_to_le32((5 << CMD_HDR_CMD_OFF) | /*abort*/
++	hdr->dw0 = cpu_to_le32((5U << CMD_HDR_CMD_OFF) | /*abort*/
+ 			       (port->id << CMD_HDR_PORT_OFF) |
+ 				   (dev_is_sata(dev)
+ 					<< CMD_HDR_ABORT_DEVICE_TYPE_OFF) |
 -- 
 2.17.1
