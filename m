@@ -1,39 +1,50 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 0/6] hisi_sas: Some misc patches
-Date: Wed, 29 May 2019 17:58:41 +0800
-Message-ID: <1559123927-160502-1-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 3/6] scsi: hisi_sas: Reduce HISI_SAS_SGE_PAGE_CNT in size
+Date: Wed, 29 May 2019 17:58:44 +0800
+Message-ID: <1559123927-160502-4-git-send-email-john.garry@huawei.com>
+References: <1559123927-160502-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1559123927-160502-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linuxarm@huawei.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, John Garry <john.garry@huawei.com>
+Cc: linuxarm@huawei.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, John Garry <john.garry@huawei.com>, dann frazier <dann.frazier@canonical.com>
 List-Id: linux-scsi@vger.kernel.org
 
-This patchset introduces some misc patches for the driver. Nothing
-particularly stands out, maybe apart from a patch to delete a PHY's
-timer when necessary.
+Macro HISI_SAS_SGE_PAGE_CNT is defined to SG_CHUNK_SIZE, which is
+128.
 
-John Garry (1):
-  scsi: hisi_sas: Reduce HISI_SAS_SGE_PAGE_CNT in size
+This means that sizeof(struct hisi_sas_slot_buf_table) is 4192. This is
+just over a 4K, which can mean inefficient DMA memory usage (for no PI).
 
-Luo Jiaxing (1):
-  scsi: hisi_sas: Ignore the error code between phy down to phy up
+Reduce the size of HISI_SAS_SGE_PAGE_CNT to 124 to fit in a 4K page. With
+this change, we experience no performance hit.
 
-Xiang Chen (3):
-  scsi: hisi_sas: Delete PHYs' timer when rmmod or probe failed
-  scsi: hisi_sas: Change the type of some numbers to unsigned
-  scsi: hisi_sas: Disable stash for v3 hw
+Cc: dann frazier <dann.frazier@canonical.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
+---
+ drivers/scsi/hisi_sas/hisi_sas.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Xiaofei Tan (1):
-  scsi: hisi_sas: Fix the issue of argument mismatch of printing ecc
-    errors
-
- drivers/scsi/hisi_sas/hisi_sas.h       |  4 +--
- drivers/scsi/hisi_sas/hisi_sas_main.c  |  8 +++++
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 46 ++++++++++++++------------
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 46 ++++++++++++++++++--------
- 4 files changed, 66 insertions(+), 38 deletions(-)
-
+diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
+index fc87994b5d73..06f22fb372b1 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas.h
++++ b/drivers/scsi/hisi_sas/hisi_sas.h
+@@ -484,12 +484,12 @@ struct hisi_sas_command_table_stp {
+ 	u8	atapi_cdb[ATAPI_CDB_LEN];
+ };
+ 
+-#define HISI_SAS_SGE_PAGE_CNT SG_CHUNK_SIZE
++#define HISI_SAS_SGE_PAGE_CNT (124)
+ struct hisi_sas_sge_page {
+ 	struct hisi_sas_sge sge[HISI_SAS_SGE_PAGE_CNT];
+ }  __aligned(16);
+ 
+-#define HISI_SAS_SGE_DIF_PAGE_CNT   SG_CHUNK_SIZE
++#define HISI_SAS_SGE_DIF_PAGE_CNT   HISI_SAS_SGE_PAGE_CNT
+ struct hisi_sas_sge_dif_page {
+ 	struct hisi_sas_sge sge[HISI_SAS_SGE_DIF_PAGE_CNT];
+ }  __aligned(16);
 -- 
 2.17.1
