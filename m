@@ -1,44 +1,29 @@
-From: "Thomas Meyer" <thomas@m3y3r.de>
-Subject: [PATCH] scsi: pmcraid: Use *_pool_zalloc rather than *_pool_alloc
-Date: Wed, 29 May 2019 22:21:40 +0200
-Message-ID: <1559161113902-328168114-2-diffsplit-thomas@m3y3r.de>
-References: <1559161113889-196429735-0-diffsplit-thomas@m3y3r.de>
+From: David Rientjes <rientjes@google.com>
+Subject: Re: [PATCH] wd719x: pass GFP_ATOMIC instead of GFP_KERNEL
+Date: Wed, 29 May 2019 14:11:46 -0700 (PDT)
+Message-ID: <alpine.DEB.2.21.1905291410300.242480@chino.kir.corp.google.com>
+References: <20190529013540.GA20273@hari-Inspiron-1545> <20190529062316.GA3997@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1559161113889-196429735-0-diffsplit-thomas@m3y3r.de>
+In-Reply-To: <20190529062316.GA3997@infradead.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Hariprasad Kelam <hariprasad.kelam@gmail.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Use *_pool_zalloc rather than *_pool_alloc followed by memset with 0.
+On Tue, 28 May 2019, Christoph Hellwig wrote:
 
-Signed-off-by: Thomas Meyer <thomas@m3y3r.de>
----
+> > wd719x_chip_init is getting called in interrupt disabled
+> > mode(spin_lock_irqsave) , so we need to GFP_ATOMIC instead
+> > of GFP_KERNEL.
+> > 
+> > Issue identified by coccicheck
+> 
+> I don't think request_firmware is any more happy being called under
+> a spinlock.  The right fix is to not hold a spinlock over the board
+> initialization.
+> 
 
-diff -u -p a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
---- a/drivers/scsi/pmcraid.c
-+++ b/drivers/scsi/pmcraid.c
-@@ -4668,18 +4668,14 @@ static int pmcraid_allocate_control_bloc
- 		return -ENOMEM;
- 
- 	for (i = 0; i < PMCRAID_MAX_CMD; i++) {
--		pinstance->cmd_list[i]->ioa_cb =
--			dma_pool_alloc(
--				pinstance->control_pool,
--				GFP_KERNEL,
--				&(pinstance->cmd_list[i]->ioa_cb_bus_addr));
-+		pinstance->cmd_list[i]->ioa_cb = dma_pool_zalloc(pinstance->control_pool,
-+								 GFP_KERNEL,
-+								 &(pinstance->cmd_list[i]->ioa_cb_bus_addr));
- 
- 		if (!pinstance->cmd_list[i]->ioa_cb) {
- 			pmcraid_release_control_blocks(pinstance, i);
- 			return -ENOMEM;
- 		}
--		memset(pinstance->cmd_list[i]->ioa_cb, 0,
--			sizeof(struct pmcraid_control_block));
- 	}
- 	return 0;
- }
+Right, and not even wd719x_chip_init() is always called in this context 
+otherwise wd719x_board_found() would also need the same change.
