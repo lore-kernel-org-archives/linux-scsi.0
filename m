@@ -1,34 +1,39 @@
-From: Xidong Wang <wangxidong_97@163.com>
-Subject: [PATCH 1/1] scsi: esas2r: esas2r_init: check return value
-Date: Wed, 29 May 2019 14:09:00 +0800
-Message-ID: <1559110140-3544-1-git-send-email-wangxidong_97@163.com>
+From: John Garry <john.garry@huawei.com>
+Subject: [PATCH 0/6] hisi_sas: Some misc patches
+Date: Wed, 29 May 2019 17:58:41 +0800
+Message-ID: <1559123927-160502-1-git-send-email-john.garry@huawei.com>
+Mime-Version: 1.0
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Xidong Wang <wangxidong_97@163.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linuxarm@huawei.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-In esas2r_resume(), the return value of pci_enable_device() is not
-checked before pdev is used.
+This patchset introduces some misc patches for the driver. Nothing
+particularly stands out, maybe apart from a patch to delete a PHY's
+timer when necessary.
 
-Signed-off-by: Xidong Wang <wangxidong_97@163.com>
----
- drivers/scsi/esas2r/esas2r_init.c | 3 +++
- 1 file changed, 3 insertions(+)
+John Garry (1):
+  scsi: hisi_sas: Reduce HISI_SAS_SGE_PAGE_CNT in size
 
-diff --git a/drivers/scsi/esas2r/esas2r_init.c b/drivers/scsi/esas2r/esas2r_init.c
-index 950cd92..883d35f 100644
---- a/drivers/scsi/esas2r/esas2r_init.c
-+++ b/drivers/scsi/esas2r/esas2r_init.c
-@@ -686,6 +686,9 @@ int esas2r_resume(struct pci_dev *pdev)
- 	esas2r_log_dev(ESAS2R_LOG_INFO, &(pdev->dev),
- 		       "pci_enable_device() called");
- 	rez = pci_enable_device(pdev);
-+	if (rez < 0) {
-+		goto error_exit;
-+	}
- 	pci_set_master(pdev);
- 
- 	if (!a) {
+Luo Jiaxing (1):
+  scsi: hisi_sas: Ignore the error code between phy down to phy up
+
+Xiang Chen (3):
+  scsi: hisi_sas: Delete PHYs' timer when rmmod or probe failed
+  scsi: hisi_sas: Change the type of some numbers to unsigned
+  scsi: hisi_sas: Disable stash for v3 hw
+
+Xiaofei Tan (1):
+  scsi: hisi_sas: Fix the issue of argument mismatch of printing ecc
+    errors
+
+ drivers/scsi/hisi_sas/hisi_sas.h       |  4 +--
+ drivers/scsi/hisi_sas/hisi_sas_main.c  |  8 +++++
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 46 ++++++++++++++------------
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 46 ++++++++++++++++++--------
+ 4 files changed, 66 insertions(+), 38 deletions(-)
+
 -- 
-2.7.4
+2.17.1
