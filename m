@@ -1,51 +1,52 @@
-From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 4/6] scsi: hisi_sas: Change the type of some numbers to unsigned
-Date: Wed, 29 May 2019 17:58:45 +0800
-Message-ID: <1559123927-160502-5-git-send-email-john.garry@huawei.com>
-References: <1559123927-160502-1-git-send-email-john.garry@huawei.com>
+From: Hariprasad Kelam <hariprasad.kelam@gmail.com>
+Subject: [Patch v2] wd719x: pass GFP_ATOMIC instead of GFP_KERNEL
+Date: Wed, 29 May 2019 23:28:51 +0530
+Message-ID: <20190529175851.GA10760@hari-Inspiron-1545>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1559123927-160502-1-git-send-email-john.garry@huawei.com>
+Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linuxarm@huawei.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
+To: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Xiang Chen <chenxiang66@hisilicon.com>
+dont acquire lock before calling wd719x_chip_init.
 
-It reports a error as follows from some tools at two places in our code:
-runtime error: left shift of 4 by 29 places cannot be represented in type
-'int'
-So change the type of the two number to unsigned to avoid the error.
+Issue identified by coccicheck
 
-Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
-Signed-off-by: John Garry <john.garry@huawei.com>
+Signed-off-by: Hariprasad Kelam <hariprasad.kelam@gmail.com>
+-----
+changes in v1: Replace GFP_KERNEL with GFP_ATOMIC.
+changes in v2: Call wd719x_chip_init  without lock as suggested
+		in review
+----
 ---
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/wd719x.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 3efb1e72bdab..492ada65d41a 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -1344,7 +1344,7 @@ static void prep_ata_v3_hw(struct hisi_hba *hisi_hba,
- 	if (parent_dev && DEV_IS_EXPANDER(parent_dev->dev_type))
- 		hdr->dw0 |= cpu_to_le32(3 << CMD_HDR_CMD_OFF);
- 	else
--		hdr->dw0 |= cpu_to_le32(4 << CMD_HDR_CMD_OFF);
-+		hdr->dw0 |= cpu_to_le32(4U << CMD_HDR_CMD_OFF);
+diff --git a/drivers/scsi/wd719x.c b/drivers/scsi/wd719x.c
+index c2f4006..340ec92 100644
+--- a/drivers/scsi/wd719x.c
++++ b/drivers/scsi/wd719x.c
+@@ -505,11 +505,9 @@ static int wd719x_host_reset(struct scsi_cmnd *cmd)
+ {
+ 	struct wd719x *wd = shost_priv(cmd->device->host);
+ 	struct wd719x_scb *scb, *tmp;
+-	unsigned long flags;
+ 	int result;
  
- 	switch (task->data_dir) {
- 	case DMA_TO_DEVICE:
-@@ -1412,7 +1412,7 @@ static void prep_abort_v3_hw(struct hisi_hba *hisi_hba,
- 	struct hisi_sas_port *port = slot->port;
+ 	dev_info(&wd->pdev->dev, "host reset requested\n");
+-	spin_lock_irqsave(wd->sh->host_lock, flags);
+ 	/* Try to reinit the RISC */
+ 	if (wd719x_chip_init(wd) == 0)
+ 		result = SUCCESS;
+@@ -519,7 +517,6 @@ static int wd719x_host_reset(struct scsi_cmnd *cmd)
+ 	/* flush all SCBs */
+ 	list_for_each_entry_safe(scb, tmp, &wd->active_scbs, list)
+ 		wd719x_finish_cmd(scb, result);
+-	spin_unlock_irqrestore(wd->sh->host_lock, flags);
  
- 	/* dw0 */
--	hdr->dw0 = cpu_to_le32((5 << CMD_HDR_CMD_OFF) | /*abort*/
-+	hdr->dw0 = cpu_to_le32((5U << CMD_HDR_CMD_OFF) | /*abort*/
- 			       (port->id << CMD_HDR_PORT_OFF) |
- 				   (dev_is_sata(dev)
- 					<< CMD_HDR_ABORT_DEVICE_TYPE_OFF) |
+ 	return result;
+ }
 -- 
-2.17.1
+2.7.4
