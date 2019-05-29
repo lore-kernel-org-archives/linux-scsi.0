@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 3/6] scsi: hisi_sas: Reduce HISI_SAS_SGE_PAGE_CNT in size
-Date: Wed, 29 May 2019 17:58:44 +0800
-Message-ID: <1559123927-160502-4-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 5/6] scsi: hisi_sas: Ignore the error code between phy down to phy up
+Date: Wed, 29 May 2019 17:58:46 +0800
+Message-ID: <1559123927-160502-6-git-send-email-john.garry@huawei.com>
 References: <1559123927-160502-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -9,42 +9,56 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1559123927-160502-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linuxarm@huawei.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, John Garry <john.garry@huawei.com>, dann frazier <dann.frazier@canonical.com>
+Cc: linuxarm@huawei.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Luo Jiaxing <luojiaxing@huawei.com>, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Macro HISI_SAS_SGE_PAGE_CNT is defined to SG_CHUNK_SIZE, which is
-128.
+From: Luo Jiaxing <luojiaxing@huawei.com>
 
-This means that sizeof(struct hisi_sas_slot_buf_table) is 4192. This is
-just over a 4K, which can mean inefficient DMA memory usage (for no PI).
+Several error code will be generated between PHY down to up.
 
-Reduce the size of HISI_SAS_SGE_PAGE_CNT to 124 to fit in a 4K page. With
-this change, we experience no performance hit.
+This issue was introduced by HW design, so the designers come to
+a conclusion that we should ignore these several error code.
 
-Cc: dann frazier <dann.frazier@canonical.com>
+Signed-off-by: Jiaxing Luo <luojiaxing@huawei.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index fc87994b5d73..06f22fb372b1 100644
---- a/drivers/scsi/hisi_sas/hisi_sas.h
-+++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -484,12 +484,12 @@ struct hisi_sas_command_table_stp {
- 	u8	atapi_cdb[ATAPI_CDB_LEN];
- };
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index 492ada65d41a..fbf0a1e9c8c2 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -911,8 +911,14 @@ static void enable_phy_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
+ static void disable_phy_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
+ {
+ 	u32 cfg = hisi_sas_phy_read32(hisi_hba, phy_no, PHY_CFG);
++	u32 irq_msk = hisi_sas_phy_read32(hisi_hba, phy_no, CHL_INT2_MSK);
++	static const u32 msk = BIT(CHL_INT2_RX_DISP_ERR_OFF) |
++			       BIT(CHL_INT2_RX_CODE_ERR_OFF) |
++			       BIT(CHL_INT2_RX_INVLD_DW_OFF);
+ 	u32 state;
  
--#define HISI_SAS_SGE_PAGE_CNT SG_CHUNK_SIZE
-+#define HISI_SAS_SGE_PAGE_CNT (124)
- struct hisi_sas_sge_page {
- 	struct hisi_sas_sge sge[HISI_SAS_SGE_PAGE_CNT];
- }  __aligned(16);
++	hisi_sas_phy_write32(hisi_hba, phy_no, CHL_INT2_MSK, msk | irq_msk);
++
+ 	cfg &= ~PHY_CFG_ENA_MSK;
+ 	hisi_sas_phy_write32(hisi_hba, phy_no, PHY_CFG, cfg);
  
--#define HISI_SAS_SGE_DIF_PAGE_CNT   SG_CHUNK_SIZE
-+#define HISI_SAS_SGE_DIF_PAGE_CNT   HISI_SAS_SGE_PAGE_CNT
- struct hisi_sas_sge_dif_page {
- 	struct hisi_sas_sge sge[HISI_SAS_SGE_DIF_PAGE_CNT];
- }  __aligned(16);
+@@ -923,6 +929,15 @@ static void disable_phy_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
+ 		cfg |= PHY_CFG_PHY_RST_MSK;
+ 		hisi_sas_phy_write32(hisi_hba, phy_no, PHY_CFG, cfg);
+ 	}
++
++	udelay(1);
++
++	hisi_sas_phy_read32(hisi_hba, phy_no, ERR_CNT_INVLD_DW);
++	hisi_sas_phy_read32(hisi_hba, phy_no, ERR_CNT_DISP_ERR);
++	hisi_sas_phy_read32(hisi_hba, phy_no, ERR_CNT_CODE_ERR);
++
++	hisi_sas_phy_write32(hisi_hba, phy_no, CHL_INT2, msk);
++	hisi_sas_phy_write32(hisi_hba, phy_no, CHL_INT2_MSK, irq_msk);
+ }
+ 
+ static void start_phy_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
 -- 
 2.17.1
