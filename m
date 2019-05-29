@@ -1,25 +1,34 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] wd719x: pass GFP_ATOMIC instead of GFP_KERNEL
-Date: Tue, 28 May 2019 23:23:16 -0700
-Message-ID: <20190529062316.GA3997@infradead.org>
-References: <20190529013540.GA20273@hari-Inspiron-1545>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Xidong Wang <wangxidong_97@163.com>
+Subject: [PATCH 1/1] scsi: esas2r: esas2r_init: check return value
+Date: Wed, 29 May 2019 14:09:00 +0800
+Message-ID: <1559110140-3544-1-git-send-email-wangxidong_97@163.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20190529013540.GA20273@hari-Inspiron-1545>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Hariprasad Kelam <hariprasad.kelam@gmail.com>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Xidong Wang <wangxidong_97@163.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, May 29, 2019 at 07:05:40AM +0530, Hariprasad Kelam wrote:
-> wd719x_chip_init is getting called in interrupt disabled
-> mode(spin_lock_irqsave) , so we need to GFP_ATOMIC instead
-> of GFP_KERNEL.
-> 
-> Issue identified by coccicheck
+In esas2r_resume(), the return value of pci_enable_device() is not
+checked before pdev is used.
 
-I don't think request_firmware is any more happy being called under
-a spinlock.  The right fix is to not hold a spinlock over the board
-initialization.
+Signed-off-by: Xidong Wang <wangxidong_97@163.com>
+---
+ drivers/scsi/esas2r/esas2r_init.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/scsi/esas2r/esas2r_init.c b/drivers/scsi/esas2r/esas2r_init.c
+index 950cd92..883d35f 100644
+--- a/drivers/scsi/esas2r/esas2r_init.c
++++ b/drivers/scsi/esas2r/esas2r_init.c
+@@ -686,6 +686,9 @@ int esas2r_resume(struct pci_dev *pdev)
+ 	esas2r_log_dev(ESAS2R_LOG_INFO, &(pdev->dev),
+ 		       "pci_enable_device() called");
+ 	rez = pci_enable_device(pdev);
++	if (rez < 0) {
++		goto error_exit;
++	}
+ 	pci_set_master(pdev);
+ 
+ 	if (!a) {
+-- 
+2.7.4
