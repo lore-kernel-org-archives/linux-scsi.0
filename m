@@ -1,33 +1,27 @@
-From: lijiang <lijiang@redhat.com>
-Subject: Re: [PATCH v2] scsi: smartpqi: properly set both the DMA mask and the
- coherent DMA mask in pqi_pci_init()
-Date: Thu, 30 May 2019 10:22:17 +0800
-Message-ID: <63f06e98-df6f-35dc-da41-dc039f04511d@redhat.com>
-References: <20190527005934.1493-1-lijiang@redhat.com>
- <yq14l5czopg.fsf@oracle.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH -next] scsi: megaraid_sas: remove set but not used variable 'cur_state'
+Date: Wed, 29 May 2019 22:24:32 -0400
+Message-ID: <yq1a7f4y90f.fsf@oracle.com>
+References: <20190525123821.16528-1-yuehaibing@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <yq14l5czopg.fsf@oracle.com>
-Content-Language: en-US
+In-Reply-To: <20190525123821.16528-1-yuehaibing@huawei.com>
+        (yuehaibing@huawei.com's message of "Sat, 25 May 2019 20:38:21 +0800")
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-kernel@vger.kernel.org, don.brace@microsemi.com, jejb@linux.ibm.com, linux-scsi@vger.kernel.org, esc.storagedev@microsemi.com, Thomas.Lendacky@amd.com, dyoung@redhat.com
+To: YueHaibing <yuehaibing@huawei.com>
+Cc: kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com, jejb@linux.ibm.com, martin.petersen@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, megaraidlinux.pdl@broadcom.com
 List-Id: linux-scsi@vger.kernel.org
 
-在 2019年05月30日 10:00, Martin K. Petersen 写道:
-> 
-> Lianbo,
-> 
->> When SME is enabled, the smartpqi driver won't work on the HP DL385
->> G10 machine, which causes the failure of kernel boot because it fails
->> to allocate pqi error buffer. Please refer to the kernel log:
-> 
-> Applied to 5.2/scsi-fixes, thanks!
-> 
-OK, thank you, Martin K.
 
-And also thanks to Tom and Don for helping review this patch.
+YueHaibing,
 
-Lianbo
+> Fixes gcc '-Wunused-but-set-variable' warning:
+>
+> drivers/scsi/megaraid/megaraid_sas_base.c: In function megasas_transition_to_ready:
+> drivers/scsi/megaraid/megaraid_sas_base.c:3900:6: warning: variable cur_state set but not used [-Wunused-but-set-variable]
+
+Applied to 5.3/scsi-queue. Thanks.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
