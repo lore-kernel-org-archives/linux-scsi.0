@@ -1,35 +1,33 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] mpt3sas_ctl: fix double-fetch bug in _ctl_ioctl_main()
-Date: Wed, 29 May 2019 22:22:03 -0400
-Message-ID: <yq1ef4gy94k.fsf@oracle.com>
-References: <20190530011030.GA6314@zhanggen-UX430UQ>
+From: lijiang <lijiang@redhat.com>
+Subject: Re: [PATCH v2] scsi: smartpqi: properly set both the DMA mask and the
+ coherent DMA mask in pqi_pci_init()
+Date: Thu, 30 May 2019 10:22:17 +0800
+Message-ID: <63f06e98-df6f-35dc-da41-dc039f04511d@redhat.com>
+References: <20190527005934.1493-1-lijiang@redhat.com>
+ <yq14l5czopg.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190530011030.GA6314@zhanggen-UX430UQ> (Gen Zhang's message of
-        "Thu, 30 May 2019 09:10:30 +0800")
+In-Reply-To: <yq14l5czopg.fsf@oracle.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Gen Zhang <blackgod016574@gmail.com>
-Cc: sathya.prakash@broadcom.com, chaitra.basappa@broadcom.com, jejb@linux.ibm.com, martin.petersen@oracle.com, suganath-prabu.subramani@broadcom.com, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-kernel@vger.kernel.org, don.brace@microsemi.com, jejb@linux.ibm.com, linux-scsi@vger.kernel.org, esc.storagedev@microsemi.com, Thomas.Lendacky@amd.com, dyoung@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
+在 2019年05月30日 10:00, Martin K. Petersen 写道:
+> 
+> Lianbo,
+> 
+>> When SME is enabled, the smartpqi driver won't work on the HP DL385
+>> G10 machine, which causes the failure of kernel boot because it fails
+>> to allocate pqi error buffer. Please refer to the kernel log:
+> 
+> Applied to 5.2/scsi-fixes, thanks!
+> 
+OK, thank you, Martin K.
 
-Gen,
+And also thanks to Tom and Don for helping review this patch.
 
-> In _ctl_ioctl_main(), 'ioctl_header' is fetched the first time from 
-> userspace. 'ioctl_header.ioc_number' is then checked. The legal result 
-> is saved to 'ioc'. Then, in condition MPT3COMMAND, the whole struct is
-> fetched again from the userspace. Then _ctl_do_mpt_command() is called,
-> 'ioc' and 'karg' as inputs.
->
-> However, a malicious user can change the 'ioc_number' between the two 
-> fetches, which will cause a potential security issues.  Moreover, a 
-> malicious user can provide a valid 'ioc_number' to pass the check in 
-> first fetch, and then modify it in the second fetch.
->
-> To fix this, we need to recheck the 'ioc_number' in the second fetch.
-
-Applied to 5.3/scsi-queue, thanks.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Lianbo
