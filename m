@@ -1,25 +1,33 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2] scsi: libsas: no need to join wide port again in sas_ex_discover_dev()
-Date: Wed, 29 May 2019 22:11:38 -0400
-Message-ID: <yq1muj4y9lx.fsf@oracle.com>
-References: <20190520140600.22861-1-yanaijie@huawei.com>
+Subject: Re: [PATCH v5 0/3] scsi: ufs: Add error handling of Auto-Hibernate
+Date: Wed, 29 May 2019 22:19:03 -0400
+Message-ID: <yq1imtsy99k.fsf@oracle.com>
+References: <1558421094-3182-1-git-send-email-stanley.chu@mediatek.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190520140600.22861-1-yanaijie@huawei.com> (Jason Yan's message
-        of "Mon, 20 May 2019 22:06:00 +0800")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jason Yan <yanaijie@huawei.com>
-Cc: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, hare@suse.com, dan.j.williams@intel.com, jthumshirn@suse.de, hch@lst.de, huangdaode@hisilicon.com, chenxiang66@hisilicon.com, miaoxie@huawei.com, john.garry@huawei.com, zhaohongjiang@huawei.com
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <1558421094-3182-1-git-send-email-stanley.chu@mediatek.com>
+ (Stanley Chu's message of "Tue, 21 May 2019 14:44:51 +0800")
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Stanley Chu <stanley.chu@mediatek.com>
+Cc: linux-scsi@vger.kernel.org, martin.petersen@oracle.com, marc.w.gonzalez@free.fr, andy.teng@mediatek.com, chun-hung.wu@mediatek.com, kuohong.wang@mediatek.com, evgreen@chromium.org, avri.altman@wdc.com, linux-mediatek@lists.infradead.org, peter.wang@mediatek.com, alim.akhtar@samsung.com, matthias.bgg@gmail.com, pedrom.sousa@synopsys.com, linux-arm-kernel@lists.infradead.org, beanhuo@micron.com
 List-Id: linux-scsi@vger.kernel.org
 
 
-Jason,
+Stanley,
 
-> Since we are processing events synchronously now, the second call of
-> sas_ex_join_wide_port() in sas_ex_discover_dev() is not needed. There
-> will be no races with other works in disco workqueue. So remove the
-> second sas_ex_join_wide_port().
+> Currently auto-hibernate is activated if host supports auto-hibern8
+> capability. However error-handling is not implemented, which makes the
+> feature somewhat risky.
 
 Applied to 5.3/scsi-queue, thanks!
 
