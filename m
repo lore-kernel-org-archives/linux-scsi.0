@@ -1,35 +1,35 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v5 0/3] scsi: ufs: Add error handling of Auto-Hibernate
-Date: Wed, 29 May 2019 22:19:03 -0400
-Message-ID: <yq1imtsy99k.fsf@oracle.com>
-References: <1558421094-3182-1-git-send-email-stanley.chu@mediatek.com>
+Subject: Re: [PATCH] mpt3sas_ctl: fix double-fetch bug in _ctl_ioctl_main()
+Date: Wed, 29 May 2019 22:22:03 -0400
+Message-ID: <yq1ef4gy94k.fsf@oracle.com>
+References: <20190530011030.GA6314@zhanggen-UX430UQ>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <1558421094-3182-1-git-send-email-stanley.chu@mediatek.com>
- (Stanley Chu's message of "Tue, 21 May 2019 14:44:51 +0800")
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Stanley Chu <stanley.chu@mediatek.com>
-Cc: linux-scsi@vger.kernel.org, martin.petersen@oracle.com, marc.w.gonzalez@free.fr, andy.teng@mediatek.com, chun-hung.wu@mediatek.com, kuohong.wang@mediatek.com, evgreen@chromium.org, avri.altman@wdc.com, linux-mediatek@lists.infradead.org, peter.wang@mediatek.com, alim.akhtar@samsung.com, matthias.bgg@gmail.com, pedrom.sousa@synopsys.com, linux-arm-kernel@lists.infradead.org, beanhuo@micron.com
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190530011030.GA6314@zhanggen-UX430UQ> (Gen Zhang's message of
+        "Thu, 30 May 2019 09:10:30 +0800")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Gen Zhang <blackgod016574@gmail.com>
+Cc: sathya.prakash@broadcom.com, chaitra.basappa@broadcom.com, jejb@linux.ibm.com, martin.petersen@oracle.com, suganath-prabu.subramani@broadcom.com, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Stanley,
+Gen,
 
-> Currently auto-hibernate is activated if host supports auto-hibern8
-> capability. However error-handling is not implemented, which makes the
-> feature somewhat risky.
+> In _ctl_ioctl_main(), 'ioctl_header' is fetched the first time from 
+> userspace. 'ioctl_header.ioc_number' is then checked. The legal result 
+> is saved to 'ioc'. Then, in condition MPT3COMMAND, the whole struct is
+> fetched again from the userspace. Then _ctl_do_mpt_command() is called,
+> 'ioc' and 'karg' as inputs.
+>
+> However, a malicious user can change the 'ioc_number' between the two 
+> fetches, which will cause a potential security issues.  Moreover, a 
+> malicious user can provide a valid 'ioc_number' to pass the check in 
+> first fetch, and then modify it in the second fetch.
+>
+> To fix this, we need to recheck the 'ioc_number' in the second fetch.
 
-Applied to 5.3/scsi-queue, thanks!
+Applied to 5.3/scsi-queue, thanks.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
