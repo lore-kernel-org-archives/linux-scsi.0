@@ -1,28 +1,31 @@
-From: David Rientjes <rientjes@google.com>
-Subject: Re: [Patch v2] wd719x: pass GFP_ATOMIC instead of GFP_KERNEL
-Date: Wed, 29 May 2019 14:13:18 -0700 (PDT)
-Message-ID: <alpine.DEB.2.21.1905291412360.242480@chino.kir.corp.google.com>
-References: <20190529175851.GA10760@hari-Inspiron-1545>
+From: James Smart <james.smart@broadcom.com>
+Subject: Re: [PATCH] scsi: lpfc: Use *_pool_zalloc rather than *_pool_alloc
+Date: Wed, 29 May 2019 17:23:40 -0700
+Message-ID: <8e9198f2-1247-f7bc-7856-721664b64316@broadcom.com>
+References: <1559161113889-196429735-0-diffsplit-thomas@m3y3r.de>
+ <1559161113901-1017843021-1-diffsplit-thomas@m3y3r.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190529175851.GA10760@hari-Inspiron-1545>
+In-Reply-To: <1559161113901-1017843021-1-diffsplit-thomas@m3y3r.de>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Hariprasad Kelam <hariprasad.kelam@gmail.com>, Ondrej Zary <linux@rainbow-software.org>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Thomas Meyer <thomas@m3y3r.de>, dick.kennedy@broadcom.com, jejb@linux.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 29 May 2019, Hariprasad Kelam wrote:
 
-> dont acquire lock before calling wd719x_chip_init.
-> 
-> Issue identified by coccicheck
-> 
-> Signed-off-by: Hariprasad Kelam <hariprasad.kelam@gmail.com>
-> -----
-> changes in v1: Replace GFP_KERNEL with GFP_ATOMIC.
-> changes in v2: Call wd719x_chip_init  without lock as suggested
-> 		in review
 
-Why was host_lock taken here initially?  I assume it's to protect some 
-race in init that leads to an undefined state.
+On 5/29/2019 1:21 PM, Thomas Meyer wrote:
+> Use *_pool_zalloc rather than *_pool_alloc followed by memset with 0.
+>
+> Signed-off-by: Thomas Meyer <thomas@m3y3r.de>
+> ---
+>
+>
+
+looks good
+
+Reviewed-by: James Smart <james.smart@broadcom.com>
+
+-- james
