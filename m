@@ -1,82 +1,66 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH 1/2] scsi_host: add support for request batching
-Date: Thu, 30 May 2019 10:54:12 -0700
-Message-ID: <740d2f33-004e-7a37-1f6e-cf29480439b1@acm.org>
-References: <20190530112811.3066-1-pbonzini@redhat.com>
- <20190530112811.3066-2-pbonzini@redhat.com>
- <ad0578b0-ce73-85ed-b67d-70c5d8176a23@acm.org>
- <461fe0cd-c5bc-a612-6013-7c002b92dcdc@redhat.com>
+From: Hariprasad Kelam <hariprasad.kelam@gmail.com>
+Subject: [PATCH] scsi: dpt_i2o: Remove call memset after dma_alloc_coherent
+Date: Thu, 30 May 2019 23:51:02 +0530
+Message-ID: <20190530182102.GA8140@hari-Inspiron-1545>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <461fe0cd-c5bc-a612-6013-7c002b92dcdc@redhat.com>
-Content-Language: en-US
+Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
-To: Paolo Bonzini <pbonzini@redhat.com>, linux-kernel@vger.kernel.org, kvm@vger.kernel.org
-Cc: jejb@linux.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, stefanha@redhat.com
+To: Adaptec OEM Raid Solutions <aacraid@microsemi.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 5/30/19 8:54 AM, Paolo Bonzini wrote:
-> On 30/05/19 17:36, Bart Van Assche wrote:
->> On 5/30/19 4:28 AM, Paolo Bonzini wrote:
->>> +static const struct blk_mq_ops scsi_mq_ops_no_commit = {
->>> +    .get_budget    = scsi_mq_get_budget,
->>> +    .put_budget    = scsi_mq_put_budget,
->>> +    .queue_rq    = scsi_queue_rq,
->>> +    .complete    = scsi_softirq_done,
->>> +    .timeout    = scsi_timeout,
->>> +#ifdef CONFIG_BLK_DEBUG_FS
->>> +    .show_rq    = scsi_show_rq,
->>> +#endif
->>> +    .init_request    = scsi_mq_init_request,
->>> +    .exit_request    = scsi_mq_exit_request,
->>> +    .initialize_rq_fn = scsi_initialize_rq,
->>> +    .busy        = scsi_mq_lld_busy,
->>> +    .map_queues    = scsi_map_queues,
->>> +};
->>> +
->>> +static void scsi_commit_rqs(struct blk_mq_hw_ctx *hctx)
->>> +{
->>> +    struct request_queue *q = hctx->queue;
->>> +    struct scsi_device *sdev = q->queuedata;
->>> +    struct Scsi_Host *shost = sdev->host;
->>> +
->>> +    shost->hostt->commit_rqs(shost, hctx->queue_num);
->>> +}
->>> +
->>>   static const struct blk_mq_ops scsi_mq_ops = {
->>>       .get_budget    = scsi_mq_get_budget,
->>>       .put_budget    = scsi_mq_put_budget,
->>>       .queue_rq    = scsi_queue_rq,
->>> +    .commit_rqs    = scsi_commit_rqs,
->>>       .complete    = scsi_softirq_done,
->>>       .timeout    = scsi_timeout,
->>>   #ifdef CONFIG_BLK_DEBUG_FS
->>
->> Hi Paolo,
->>
->> Have you considered to modify the block layer such that a single
->> scsi_mq_ops structure can be used for all SCSI LLD types?
-> 
-> Yes, but I don't think it's possible to do it in a nice way.
-> Any adjustment we make to the block layer to fit the SCSI subsystem's
-> desires would make all other block drivers uglier, so I chose to confine
-> the ugliness here.
-> 
-> The root issue is that the SCSI subsystem is unique in how it sits on
-> top of the block layer; this is the famous "adapter" (or "midlayer",
-> though that is confusing when talking about SCSI) design that Linux
-> usually tries to avoid.
+This patch fixes below warning reported by coccicheck
 
-As far as I can see the only impact of defining an empty commit_rqs
-callback on the queueing behavior is that blk_mq_make_request() will
-queue requests for multiple hwqs on the plug list instead of requests
-for a single hwq. The plug list is sorted by hwq before it is submitted
-to a block driver. If that helps NVMe performance it should also help
-SCSI performance. How about always setting commit_rqs = scsi_commit_rqs
-in scsi_mq_ops?
+/drivers/scsi/dpt_i2o.c:3092:11-29: WARNING: dma_alloc_coherent use in
+sys_tbl already zeroes out memory,  so memset is not needed
+./drivers/scsi/dpt_i2o.c:2802:10-28: WARNING: dma_alloc_coherent use in
+status already zeroes out memory,  so memset is not needed
+./drivers/scsi/dpt_i2o.c:2856:20-38: WARNING: dma_alloc_coherent use in
+pHba -> reply_pool already zeroes out memory,  so memset is not needed
+./drivers/scsi/dpt_i2o.c:1331:10-28: WARNING: dma_alloc_coherent use in
+status already zeroes out memory,  so memset is not needed
 
-Thanks,
+Signed-off-by: Hariprasad Kelam <hariprasad.kelam@gmail.com>
+---
+ drivers/scsi/dpt_i2o.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-Bart.
+diff --git a/drivers/scsi/dpt_i2o.c b/drivers/scsi/dpt_i2o.c
+index a3afd14..128d4f9 100644
+--- a/drivers/scsi/dpt_i2o.c
++++ b/drivers/scsi/dpt_i2o.c
+@@ -1334,7 +1334,6 @@ static s32 adpt_i2o_reset_hba(adpt_hba* pHba)
+ 		printk(KERN_ERR"IOP reset failed - no free memory.\n");
+ 		return -ENOMEM;
+ 	}
+-	memset(status,0,4);
+ 
+ 	msg[0]=EIGHT_WORD_MSG_SIZE|SGL_OFFSET_0;
+ 	msg[1]=I2O_CMD_ADAPTER_RESET<<24|HOST_TID<<12|ADAPTER_TID;
+@@ -2806,7 +2805,6 @@ static s32 adpt_i2o_init_outbound_q(adpt_hba* pHba)
+ 			pHba->name);
+ 		return -ENOMEM;
+ 	}
+-	memset(status, 0, 4);
+ 
+ 	writel(EIGHT_WORD_MSG_SIZE| SGL_OFFSET_6, &msg[0]);
+ 	writel(I2O_CMD_OUTBOUND_INIT<<24 | HOST_TID<<12 | ADAPTER_TID, &msg[1]);
+@@ -2860,7 +2858,6 @@ static s32 adpt_i2o_init_outbound_q(adpt_hba* pHba)
+ 		printk(KERN_ERR "%s: Could not allocate reply pool\n", pHba->name);
+ 		return -ENOMEM;
+ 	}
+-	memset(pHba->reply_pool, 0 , pHba->reply_fifo_size * REPLY_FRAME_SIZE * 4);
+ 
+ 	for(i = 0; i < pHba->reply_fifo_size; i++) {
+ 		writel(pHba->reply_pool_pa + (i * REPLY_FRAME_SIZE * 4),
+@@ -3095,7 +3092,6 @@ static int adpt_i2o_build_sys_table(void)
+ 		printk(KERN_WARNING "SysTab Set failed. Out of memory.\n");	
+ 		return -ENOMEM;
+ 	}
+-	memset(sys_tbl, 0, sys_tbl_len);
+ 
+ 	sys_tbl->num_entries = hba_count;
+ 	sys_tbl->version = I2OVERSION;
+-- 
+2.7.4
