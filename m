@@ -1,26 +1,26 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH][next] scsi: hpsa: fix an uninitialized read and dereference of pointer dev
-Date: Wed, 29 May 2019 21:55:42 -0400
-Message-ID: <yq18suozowx.fsf@oracle.com>
-References: <20190522083903.18849-1-colin.king@canonical.com>
+Subject: Re: [PATCH v2] scsi: smartpqi: properly set both the DMA mask and the coherent DMA mask in pqi_pci_init()
+Date: Wed, 29 May 2019 22:00:11 -0400
+Message-ID: <yq14l5czopg.fsf@oracle.com>
+References: <20190527005934.1493-1-lijiang@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190522083903.18849-1-colin.king@canonical.com> (Colin King's
-        message of "Wed, 22 May 2019 09:39:03 +0100")
+In-Reply-To: <20190527005934.1493-1-lijiang@redhat.com> (Lianbo Jiang's
+        message of "Mon, 27 May 2019 08:59:34 +0800")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Colin King <colin.king@canonical.com>
-Cc: Don Brace <don.brace@microsemi.com>, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Lianbo Jiang <lijiang@redhat.com>
+Cc: linux-kernel@vger.kernel.org, don.brace@microsemi.com, jejb@linux.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, esc.storagedev@microsemi.com, Thomas.Lendacky@amd.com, dyoung@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
 
-Colin,
+Lianbo,
 
-> Currently the check for a lockup_detected failure exits via the label
-> return_reset_status that reads and dereferences an uninitialized
-> pointer dev.  Fix this by ensuring dev is inintialized to null.
+> When SME is enabled, the smartpqi driver won't work on the HP DL385
+> G10 machine, which causes the failure of kernel boot because it fails
+> to allocate pqi error buffer. Please refer to the kernel log:
 
-Applied to 5.3/scsi-queue, thanks!
+Applied to 5.2/scsi-fixes, thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
