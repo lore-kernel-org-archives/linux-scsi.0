@@ -1,27 +1,40 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [Patch v2] target/iscsi: fix possible condition with no effect (if == else)
-Date: Wed, 29 May 2019 21:41:52 -0400
-Message-ID: <yq1pno0zpjz.fsf@oracle.com>
-References: <20190528012151.GA4845@hari-Inspiron-1545>
+Subject: Re: [PATCH net-next] cxgb4/libcxgb/cxgb4i/cxgbit: enable eDRAM page pods for iSCSI
+Date: Wed, 29 May 2019 21:48:27 -0400
+Message-ID: <yq1lfyozp90.fsf@oracle.com>
+References: <1559061660-4963-1-git-send-email-varun@chelsio.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190528012151.GA4845@hari-Inspiron-1545> (Hariprasad Kelam's
-        message of "Tue, 28 May 2019 06:51:52 +0530")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Hariprasad Kelam <hariprasad.kelam@gmail.com>
-Cc: ddiss@suse.de, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <1559061660-4963-1-git-send-email-varun@chelsio.com> (Varun
+        Prakash's message of "Tue, 28 May 2019 22:11:00 +0530")
+Sender: netdev-owner@vger.kernel.org
+To: Varun Prakash <varun@chelsio.com>
+Cc: davem@davemloft.net, netdev@vger.kernel.org, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, dt@chelsio.com, indranil@chelsio.com, ganji.aravind@chelsio.com
 List-Id: linux-scsi@vger.kernel.org
 
 
-Hariprasad,
+Varun,
 
-> fix below warning reported by coccicheck
->
-> drivers/target/iscsi/iscsi_target_nego.c:175:6-8: WARNING: possible
-> condition with no effect (if == else)
+> Page pods are used for direct data placement, this patch enables eDRAM
+> page pods if firmware supports this feature.
 
-Applied to 5.3/scsi-queue, thanks!
+No objections to the SCSI bits.
+
+> @@ -394,6 +398,26 @@ int cxgbi_ppm_init(void **ppm_pp, struct net_device *ndev,
+>  	unsigned int pool_index_max = 0;
+>  	unsigned int alloc_sz;
+>  	unsigned int ppod_bmap_size;
+> +	unsigned int ppmax;
+> +
+> +	if (!iscsi_edram_start)
+> +		iscsi_edram_size = 0;
+> +
+> +	if (iscsi_edram_size &&
+> +	    ((iscsi_edram_start + iscsi_edram_size) != start)) {
+> +		pr_err("iscsi ppod region not contigious: EDRAM start 0x%x "
+
+contiguous
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
