@@ -1,7 +1,7 @@
 From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: [PATCH 1/2] scsi_host: add support for request batching
-Date: Thu, 30 May 2019 13:28:10 +0200
-Message-ID: <20190530112811.3066-2-pbonzini@redhat.com>
+Subject: [PATCH 2/2] virtio_scsi: implement request batching
+Date: Thu, 30 May 2019 13:28:11 +0200
+Message-ID: <20190530112811.3066-3-pbonzini@redhat.com>
 References: <20190530112811.3066-1-pbonzini@redhat.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -12,145 +12,131 @@ To: linux-kernel@vger.kernel.org, kvm@vger.kernel.org
 Cc: jejb@linux.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, stefanha@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-This allows a list of requests to be issued, with the LLD only writing
-the hardware doorbell when necessary, after the last request was prepared.
-This is more efficient if we have lists of requests to issue, particularly
-on virtualized hardware, where writing the doorbell is more expensive than
-on real hardware.
+Adding the command and kicking the virtqueue so far was done one after
+another.  Make the kick optional, so that we can take into account SCMD_LAST.
+We also need a commit_rqs callback to kick the device if blk-mq aborts
+the submission before the last request is reached.
 
-The use case for this is plugged IO, where blk-mq flushes a batch of
-requests all at once.
-
-The API is the same as for blk-mq, just with blk-mq concepts tweaked to
-fit the SCSI subsystem API: the "last" flag in blk_mq_queue_data becomes
-a flag in scsi_cmnd, while the queue_num in the commit_rqs callback is
-extracted from the hctx and passed as a parameter.
-
-The only complication is that blk-mq uses different plugging heuristics
-depending on whether commit_rqs is present or not.  So we have two
-different sets of blk_mq_ops and pick one depending on whether the
-scsi_host template uses commit_rqs or not.
-
+Suggested-by: Stefan Hajnoczi <stefanha@redhat.com>
 Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
 ---
- drivers/scsi/scsi_lib.c  | 37 ++++++++++++++++++++++++++++++++++---
- include/scsi/scsi_cmnd.h |  1 +
- include/scsi/scsi_host.h | 16 ++++++++++++++--
- 3 files changed, 49 insertions(+), 5 deletions(-)
+ drivers/scsi/virtio_scsi.c | 55 +++++++++++++++++++++++++++-----------
+ 1 file changed, 40 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 601b9f1de267..eb4e67d02bfe 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1673,10 +1673,11 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
- 		blk_mq_start_request(req);
- 	}
+diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+index 8af01777d09c..918c811cea95 100644
+--- a/drivers/scsi/virtio_scsi.c
++++ b/drivers/scsi/virtio_scsi.c
+@@ -375,14 +375,7 @@ static void virtscsi_event_done(struct virtqueue *vq)
+ 	virtscsi_vq_done(vscsi, &vscsi->event_vq, virtscsi_complete_event);
+ };
  
-+	cmd->flags &= SCMD_PRESERVED_FLAGS;
- 	if (sdev->simple_tags)
- 		cmd->flags |= SCMD_TAGGED;
--	else
--		cmd->flags &= ~SCMD_TAGGED;
-+	if (bd->last)
-+		cmd->flags |= SCMD_LAST;
- 
- 	scsi_init_cmd_errh(cmd);
- 	cmd->scsi_done = scsi_mq_done;
-@@ -1807,10 +1808,37 @@ void __scsi_init_queue(struct Scsi_Host *shost, struct request_queue *q)
+-/**
+- * virtscsi_add_cmd - add a virtio_scsi_cmd to a virtqueue
+- * @vq		: the struct virtqueue we're talking about
+- * @cmd		: command structure
+- * @req_size	: size of the request buffer
+- * @resp_size	: size of the response buffer
+- */
+-static int virtscsi_add_cmd(struct virtqueue *vq,
++static int __virtscsi_add_cmd(struct virtqueue *vq,
+ 			    struct virtio_scsi_cmd *cmd,
+ 			    size_t req_size, size_t resp_size)
+ {
+@@ -427,17 +420,39 @@ static int virtscsi_add_cmd(struct virtqueue *vq,
+ 	return virtqueue_add_sgs(vq, sgs, out_num, in_num, cmd, GFP_ATOMIC);
  }
- EXPORT_SYMBOL_GPL(__scsi_init_queue);
  
-+static const struct blk_mq_ops scsi_mq_ops_no_commit = {
-+	.get_budget	= scsi_mq_get_budget,
-+	.put_budget	= scsi_mq_put_budget,
-+	.queue_rq	= scsi_queue_rq,
-+	.complete	= scsi_softirq_done,
-+	.timeout	= scsi_timeout,
-+#ifdef CONFIG_BLK_DEBUG_FS
-+	.show_rq	= scsi_show_rq,
-+#endif
-+	.init_request	= scsi_mq_init_request,
-+	.exit_request	= scsi_mq_exit_request,
-+	.initialize_rq_fn = scsi_initialize_rq,
-+	.busy		= scsi_mq_lld_busy,
-+	.map_queues	= scsi_map_queues,
-+};
-+
-+
-+static void scsi_commit_rqs(struct blk_mq_hw_ctx *hctx)
+-static int virtscsi_kick_cmd(struct virtio_scsi_vq *vq,
++static void virtscsi_kick_vq(struct virtio_scsi_vq *vq)
 +{
-+	struct request_queue *q = hctx->queue;
-+	struct scsi_device *sdev = q->queuedata;
-+	struct Scsi_Host *shost = sdev->host;
++	bool needs_kick;
++	unsigned long flags;
 +
-+	shost->hostt->commit_rqs(shost, hctx->queue_num);
++	spin_lock_irqsave(&vq->vq_lock, flags);
++	needs_kick = virtqueue_kick_prepare(vq->vq);
++	spin_unlock_irqrestore(&vq->vq_lock, flags);
++
++	if (needs_kick)
++		virtqueue_notify(vq->vq);
 +}
 +
- static const struct blk_mq_ops scsi_mq_ops = {
- 	.get_budget	= scsi_mq_get_budget,
- 	.put_budget	= scsi_mq_put_budget,
- 	.queue_rq	= scsi_queue_rq,
-+	.commit_rqs	= scsi_commit_rqs,
- 	.complete	= scsi_softirq_done,
- 	.timeout	= scsi_timeout,
- #ifdef CONFIG_BLK_DEBUG_FS
-@@ -1845,7 +1873,10 @@ int scsi_mq_setup_tags(struct Scsi_Host *shost)
- 		cmd_size += sizeof(struct scsi_data_buffer) + sgl_size;
++/**
++ * virtscsi_add_cmd - add a virtio_scsi_cmd to a virtqueue, optionally kick it
++ * @vq		: the struct virtqueue we're talking about
++ * @cmd		: command structure
++ * @req_size	: size of the request buffer
++ * @resp_size	: size of the response buffer
++ * @kick	: whether to kick the virtqueue immediately
++ */
++static int virtscsi_add_cmd(struct virtio_scsi_vq *vq,
+ 			     struct virtio_scsi_cmd *cmd,
+-			     size_t req_size, size_t resp_size)
++			     size_t req_size, size_t resp_size,
++			     bool kick)
+ {
+ 	unsigned long flags;
+ 	int err;
+ 	bool needs_kick = false;
  
- 	memset(&shost->tag_set, 0, sizeof(shost->tag_set));
--	shost->tag_set.ops = &scsi_mq_ops;
-+	if (shost->hostt->commit_rqs)
-+		shost->tag_set.ops = &scsi_mq_ops;
-+	else
-+		shost->tag_set.ops = &scsi_mq_ops_no_commit;
- 	shost->tag_set.nr_hw_queues = shost->nr_hw_queues ? : 1;
- 	shost->tag_set.queue_depth = shost->can_queue;
- 	shost->tag_set.cmd_size = cmd_size;
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-index 76ed5e4acd38..91bd749a02f7 100644
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -57,6 +57,7 @@ struct scsi_pointer {
- #define SCMD_TAGGED		(1 << 0)
- #define SCMD_UNCHECKED_ISA_DMA	(1 << 1)
- #define SCMD_INITIALIZED	(1 << 2)
-+#define SCMD_LAST		(1 << 3)
- /* flags preserved across unprep / reprep */
- #define SCMD_PRESERVED_FLAGS	(SCMD_UNCHECKED_ISA_DMA | SCMD_INITIALIZED)
+ 	spin_lock_irqsave(&vq->vq_lock, flags);
+-	err = virtscsi_add_cmd(vq->vq, cmd, req_size, resp_size);
+-	if (!err)
++	err = __virtscsi_add_cmd(vq->vq, cmd, req_size, resp_size);
++	if (!err && kick)
+ 		needs_kick = virtqueue_kick_prepare(vq->vq);
  
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index 2b539a1b3f62..28f1c9177cd2 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -80,8 +80,10 @@ struct scsi_host_template {
- 	 * command block to the LLDD.  When the driver finished
- 	 * processing the command the done callback is invoked.
- 	 *
--	 * If queuecommand returns 0, then the HBA has accepted the
--	 * command.  The done() function must be called on the command
-+	 * If queuecommand returns 0, then the driver has accepted the
-+	 * command.  It must also push it to the HBA if the scsi_cmnd
-+	 * flag SCMD_LAST is set, or if the driver does not implement
-+	 * commit_rqs.  The done() function must be called on the command
- 	 * when the driver has finished with it. (you may call done on the
- 	 * command before queuecommand returns, but in this case you
- 	 * *must* return 0 from queuecommand).
-@@ -109,6 +111,16 @@ struct scsi_host_template {
- 	 */
- 	int (* queuecommand)(struct Scsi_Host *, struct scsi_cmnd *);
+ 	spin_unlock_irqrestore(&vq->vq_lock, flags);
+@@ -502,6 +517,7 @@ static int virtscsi_queuecommand(struct Scsi_Host *shost,
+ 	struct virtio_scsi *vscsi = shost_priv(shost);
+ 	struct virtio_scsi_vq *req_vq = virtscsi_pick_vq_mq(vscsi, sc);
+ 	struct virtio_scsi_cmd *cmd = scsi_cmd_priv(sc);
++	bool kick;
+ 	unsigned long flags;
+ 	int req_size;
+ 	int ret;
+@@ -531,7 +547,8 @@ static int virtscsi_queuecommand(struct Scsi_Host *shost,
+ 		req_size = sizeof(cmd->req.cmd);
+ 	}
  
-+	/*
-+	 * The commit_rqs function is used to trigger a hardware
-+	 * doorbell after some requests have been queued with
-+	 * queuecommand, when an error is encountered before sending
-+	 * the request with SCMD_LAST set.
-+	 *
-+	 * STATUS: OPTIONAL
-+	 */
-+	void (*commit_rqs)(struct Scsi_Host *, u16);
+-	ret = virtscsi_kick_cmd(req_vq, cmd, req_size, sizeof(cmd->resp.cmd));
++	kick = (sc->flags & SCMD_LAST) != 0;
++	ret = virtscsi_add_cmd(req_vq, cmd, req_size, sizeof(cmd->resp.cmd), kick);
+ 	if (ret == -EIO) {
+ 		cmd->resp.cmd.response = VIRTIO_SCSI_S_BAD_TARGET;
+ 		spin_lock_irqsave(&req_vq->vq_lock, flags);
+@@ -549,8 +566,8 @@ static int virtscsi_tmf(struct virtio_scsi *vscsi, struct virtio_scsi_cmd *cmd)
+ 	int ret = FAILED;
+ 
+ 	cmd->comp = &comp;
+-	if (virtscsi_kick_cmd(&vscsi->ctrl_vq, cmd,
+-			      sizeof cmd->req.tmf, sizeof cmd->resp.tmf) < 0)
++	if (virtscsi_add_cmd(&vscsi->ctrl_vq, cmd,
++			      sizeof cmd->req.tmf, sizeof cmd->resp.tmf, true) < 0)
+ 		goto out;
+ 
+ 	wait_for_completion(&comp);
+@@ -664,6 +681,13 @@ static int virtscsi_map_queues(struct Scsi_Host *shost)
+ 	return blk_mq_virtio_map_queues(qmap, vscsi->vdev, 2);
+ }
+ 
++static void virtscsi_commit_rqs(struct Scsi_Host *shost, u16 hwq)
++{
++	struct virtio_scsi *vscsi = shost_priv(shost);
 +
- 	/*
- 	 * This is an error handling strategy routine.  You don't need to
- 	 * define one of these if you don't want to - there is a default
++	virtscsi_kick_vq(&vscsi->req_vqs[hwq]);
++}
++
+ /*
+  * The host guarantees to respond to each command, although I/O
+  * latencies might be higher than on bare metal.  Reset the timer
+@@ -681,6 +705,7 @@ static struct scsi_host_template virtscsi_host_template = {
+ 	.this_id = -1,
+ 	.cmd_size = sizeof(struct virtio_scsi_cmd),
+ 	.queuecommand = virtscsi_queuecommand,
++	.commit_rqs = virtscsi_commit_rqs,
+ 	.change_queue_depth = virtscsi_change_queue_depth,
+ 	.eh_abort_handler = virtscsi_abort,
+ 	.eh_device_reset_handler = virtscsi_device_reset,
 -- 
 2.21.0
