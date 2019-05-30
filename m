@@ -1,25 +1,32 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: lpfc: Use *_pool_zalloc rather than *_pool_alloc
-Date: Wed, 29 May 2019 22:06:28 -0400
-Message-ID: <yq1v9xsy9uj.fsf@oracle.com>
-References: <1559161113889-196429735-0-diffsplit-thomas@m3y3r.de>
-        <1559161113901-1017843021-1-diffsplit-thomas@m3y3r.de>
+Subject: Re: [PATCH 1/2] scsi: libsas: only clear phy->in_shutdown after shutdown event done
+Date: Wed, 29 May 2019 22:09:58 -0400
+Message-ID: <yq1r28gy9op.fsf@oracle.com>
+References: <20190514024239.47313-1-yanaijie@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1559161113901-1017843021-1-diffsplit-thomas@m3y3r.de> (Thomas
-        Meyer's message of "Wed, 29 May 2019 22:21:36 +0200")
+In-Reply-To: <20190514024239.47313-1-yanaijie@huawei.com> (Jason Yan's message
+        of "Tue, 14 May 2019 10:42:38 +0800")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Thomas Meyer <thomas@m3y3r.de>
-Cc: james.smart@broadcom.com, dick.kennedy@broadcom.com, jejb@linux.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jason Yan <yanaijie@huawei.com>
+Cc: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, hare@suse.com, dan.j.williams@intel.com, jthumshirn@suse.de, hch@lst.de, huangdaode@hisilicon.com, chenxiang66@hisilicon.com, miaoxie@huawei.com, john.garry@huawei.com, zhaohongjiang@huawei.com, Ewan Milne <emilne@redhat.com>, Tomas Henzl <thenzl@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
 
-Thomas,
+Jason,
 
-> Use *_pool_zalloc rather than *_pool_alloc followed by memset with 0.
+> When the event queue is full of phy up and down events and reached the
+> threshold, we will queue a shutdown-event, and set phy->in_shutdown so
+> that we will not queue a shutdown-event again. But before the
+> shutdown-event can be executed, every phy-down event will clear
+> phy->in_shutdown and a new shutdown-event will be queued. The queue will
+> be full of these shutdown-events.
+>
+> Fix this by only clear phy->in_shutdown in sas_phye_shutdown(), that is
+> after the first shutdown-event has been executed.
 
-Applied to 5.3/scsi-queue. Thanks!
+Applied 1+2 to 5.2/scsi-fixes. Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
