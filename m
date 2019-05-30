@@ -1,25 +1,25 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] fdomain: Add register definitions
-Date: Wed, 29 May 2019 21:34:10 -0400
-Message-ID: <yq136kw20a5.fsf@oracle.com>
-References: <20190518194724.30711-1-linux@zary.sk>
+Subject: Re: [PATCH] scsi: fix typos in code comments
+Date: Wed, 29 May 2019 21:36:07 -0400
+Message-ID: <yq1y32ozptk.fsf@oracle.com>
+References: <20190520032403.12513-1-houweitaoo@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190518194724.30711-1-linux@zary.sk> (Ondrej Zary's message of
-        "Sat, 18 May 2019 21:47:24 +0200")
+In-Reply-To: <20190520032403.12513-1-houweitaoo@gmail.com> (Weitao Hou's
+        message of "Mon, 20 May 2019 11:24:03 +0800")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Ondrej Zary <linux@zary.sk>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Weitao Hou <houweitaoo@gmail.com>
+Cc: jinpu.wang@profitbricks.com, lindar_liu@usish.com, jejb@linux.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Ondrej,
+Weitao,
 
-> Add register bit definitions from documentation to header file and use
-> them instead of magic constants. No changes to generated binary.
+> fix abord to abort
 
-Applied to 5.3/scsi-queue, thanks!
+Updated patch header to reflect the pm8001 driver and applied to
+5.3/scsi-queue. Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
