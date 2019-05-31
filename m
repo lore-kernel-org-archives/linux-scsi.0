@@ -1,52 +1,40 @@
-From: Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>
-Subject: Re: FICON target support
-Date: Fri, 31 May 2019 10:08:06 +0200
-Message-ID: <9612602b-29c0-04d7-b76e-5593d0936eba@suse.de>
-References: <CADiuDASOCJbnwLs-LEp0aCX+T4dMvFfKQv_zsypHW-iSF8wW=Q@mail.gmail.com>
- <5c5609d8-e4b4-3561-ece9-93746fd46206@acm.org>
- <69308786-81d8-a9df-2d7b-df37c3f93026@suse.de>
- <CADiuDATRN_85Tu3uw1WBtY=m8KrqKV5zpYrsggYdAOH23dwU=Q@mail.gmail.com>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: [PATCH 2/2] virtio_scsi: implement request batching
+Date: Fri, 31 May 2019 11:03:16 +0200
+Message-ID: <ff7aaa01-022b-f55a-4bb2-c293cfd86bdd@redhat.com>
+References: <20190530112811.3066-1-pbonzini@redhat.com>
+ <20190530112811.3066-3-pbonzini@redhat.com>
+ <79490df1-0145-5b40-027a-7e8fb96854d4@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-In-Reply-To: <CADiuDATRN_85Tu3uw1WBtY=m8KrqKV5zpYrsggYdAOH23dwU=Q@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <79490df1-0145-5b40-027a-7e8fb96854d4@acm.org>
 Content-Language: en-US
-List-Unsubscribe: <http://lists.open-fcoe.org/mailman/options/fcoe-devel>,
- <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.open-fcoe.org/pipermail/fcoe-devel/>
-List-Post: <mailto:fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-List-Help: <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.open-fcoe.org/mailman/listinfo/fcoe-devel>,
- <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
-Errors-To: fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
-Sender: "fcoe-devel" <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-To: Christian Svensson <christian-IHD7e6/dsE0@public.gmane.org>
-Cc: fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>, linux-kernel@vger.kernel.org, kvm@vger.kernel.org
+Cc: jejb@linux.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, stefanha@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-T24gNS8zMS8xOSA5OjEzIEFNLCBDaHJpc3RpYW4gU3ZlbnNzb24gd3JvdGU6Cj4gSGkgSGFubmVz
-LAo+IAo+IE9uIEZyaSwgTWF5IDMxLCAyMDE5IGF0IDg6MDYgQU0gSGFubmVzIFJlaW5lY2tlIDxo
-YXJlQHN1c2UuZGU+IHdyb3RlOgo+PiBIbW0uIEkgd29uZGVyOiBkbyB5b3UgX2tub3dfIHdoYXQg
-eW91IGFyZSBhc2tpbmc/Cj4+IEhhdmUgeW91IGV2ZXIgd29ya2VkIHdpdGggYSBtYWluZnJhbWU/
-Cj4gCj4gSSBjYW4gYXNzdXJlIHlvdSBJIGhhdmUgbm8gaWRlYSB3aGF0IEkgYW0gZG9pbmcgOi0p
-LiBJIGFtIGRvaW5nIHRoaXMgYXMgYQo+IGxlYXJuaW5nIHByb2plY3Qgd2hlcmUgbXkgYWltIGlz
-IHRvIGltcGxlbWVudCBhIHZpcnR1YWwgY2FyZCByZWFkZXIgaW4KPiB1c2VyIHNwYWNlLgo+IApU
-aGVyZSBhcmUgZWFzaWVyIHdheXMgZm9yIHRoaXMgLi4uIEknZCBzdGFydCB3aXRoIHZpcnRpby1j
-Y3cgYW5kCmltcGxlbWVudCBhIHZpcnR1YWwgUFVOQ0hFUiB0aGVyZSAuLi4KCj4+ICB1bmxlc3Mg
-eW91J3JlIGhhdmluZyBhY2Nlc3MgdG8gYSBmaWJyZWNoYW5uZWwgYW5hbHlzZXIgaG9va2VkIHVw
-IHRvIGEgbWFpbmZyYW1lLgo+IAo+IEZ1bm5pbHkgZW5vdWdoLCBJIGhhcHBlbiB0byBvd24gYm90
-aC4KPiAKT2guIE5vdyBfdGhhdF8gaXMgdW5leHBlY3RlZC4KVGhlbiBJIHdvdWxkIG5vdCBzdGFu
-ZCBpbiB5b3VyIHdheS4KClN0aWxsLCBhbiB1cGhpbGwgc3RydWdnbGU7IElCTSBpcyBub3Rvcmlv
-dXMgZm9yIG5vdCBnaXZpbmcgb3V0IGRldGFpbHMKYWJvdXQgdGhlIGludGVybmFscywgYW5kIHNp
-bXVsYXRpbmcgYSBwdW5jaGVyIGlzIG9uZSBvZiB0aGVzZSB0aGluZ3MuCihBbmQgc2xpZ2h0bHkg
-cG9pbnRsZXNzLCBidXQgd2hvIGFtIEkgdG8ganVkZ2UgLi4uKQoKSG93ZXZlciwgSSBkbyB3b25k
-ZXIgaG93IHlvdSBjYW1lIGJ5IGFuIEZDIGFuYWx5c2VyIC4uLiBhbnkgY2hhbmNlIG9mIG1lCmJv
-cnJvd2luZyBpdCBvY2Nhc2lvbmFsbHk/CgpDaGVlcnMsCgpIYW5uZXMKLS0gCkRyLiBIYW5uZXMg
-UmVpbmVja2UJCSAgIFRlYW1sZWFkIFN0b3JhZ2UgJiBOZXR3b3JraW5nCmhhcmVAc3VzZS5kZQkJ
-CSAgICAgICAgICAgICAgICs0OSA5MTEgNzQwNTMgNjg4ClNVU0UgTElOVVggR21iSCwgTWF4ZmVs
-ZHN0ci4gNSwgOTA0MDkgTsO8cm5iZXJnCkdGOiBGZWxpeCBJbWVuZMO2cmZmZXIsIE1hcnkgSGln
-Z2lucywgU3JpIFJhc2lhaApIUkIgMjEyODQgKEFHIE7DvHJuYmVyZykKX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KZmNvZS1kZXZlbCBtYWlsaW5nIGxpc3QK
-ZmNvZS1kZXZlbEBvcGVuLWZjb2Uub3JnCmh0dHA6Ly9saXN0cy5vcGVuLWZjb2Uub3JnL21haWxt
-YW4vbGlzdGluZm8vZmNvZS1kZXZlbAo=
+On 30/05/19 19:28, Bart Van Assche wrote:
+> On 5/30/19 4:28 AM, Paolo Bonzini wrote:
+>> @@ -531,7 +547,8 @@ static int virtscsi_queuecommand(struct Scsi_Host
+>> *shost,
+>>           req_size = sizeof(cmd->req.cmd);
+>>       }
+>>   -    ret = virtscsi_kick_cmd(req_vq, cmd, req_size,
+>> sizeof(cmd->resp.cmd));
+>> +    kick = (sc->flags & SCMD_LAST) != 0;
+>> +    ret = virtscsi_add_cmd(req_vq, cmd, req_size,
+>> sizeof(cmd->resp.cmd), kick);
+> 
+> Have you considered to have the SCSI core call commit_rqs() if bd->last
+> is true? I think that would avoid that we need to introduce the
+> SCMD_LAST flag and that would also avoid that every SCSI LLD that
+> supports a commit_rqs callback has to introduce code to test the
+> SCMD_LAST flag.
+
+That is slightly worse for performance, as it unlocks and re-locks the
+spinlock.
+
+Paolo
