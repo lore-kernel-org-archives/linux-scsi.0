@@ -1,107 +1,77 @@
-From: Ming Lei <tom.leiming@gmail.com>
-Subject: Re: [PATCH 1/2] scsi_host: add support for request batching
-Date: Fri, 31 May 2019 11:27:54 +0800
-Message-ID: <CACVXFVP-B7uKUGn75rZdu0e4QxUOsSqv8FL0vY2ubmuucvxqjQ@mail.gmail.com>
-References: <20190530112811.3066-1-pbonzini@redhat.com> <20190530112811.3066-2-pbonzini@redhat.com>
+From: Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>
+Subject: Re: FICON target support
+Date: Fri, 31 May 2019 08:06:29 +0200
+Message-ID: <69308786-81d8-a9df-2d7b-df37c3f93026@suse.de>
+References: <CADiuDASOCJbnwLs-LEp0aCX+T4dMvFfKQv_zsypHW-iSF8wW=Q@mail.gmail.com>
+ <5c5609d8-e4b4-3561-ece9-93746fd46206@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190530112811.3066-2-pbonzini@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Paolo Bonzini <pbonzini@redhat.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, KVM General <kvm@vger.kernel.org>, jejb@linux.ibm.com, "Martin K. Petersen" <martin.petersen@oracle.com>, Linux SCSI List <linux-scsi@vger.kernel.org>, Stefan Hajnoczi <stefanha@redhat.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+In-Reply-To: <5c5609d8-e4b4-3561-ece9-93746fd46206-HInyCGIudOg@public.gmane.org>
+Content-Language: en-US
+List-Unsubscribe: <http://lists.open-fcoe.org/mailman/options/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.open-fcoe.org/pipermail/fcoe-devel/>
+List-Post: <mailto:fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+List-Help: <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.open-fcoe.org/mailman/listinfo/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
+Errors-To: fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+Sender: "fcoe-devel" <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+To: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>, Christian Svensson <christian-IHD7e6/dsE0@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, May 30, 2019 at 7:28 PM Paolo Bonzini <pbonzini@redhat.com> wrote:
->
-> This allows a list of requests to be issued, with the LLD only writing
-> the hardware doorbell when necessary, after the last request was prepared.
-> This is more efficient if we have lists of requests to issue, particularly
-> on virtualized hardware, where writing the doorbell is more expensive than
-> on real hardware.
->
-> The use case for this is plugged IO, where blk-mq flushes a batch of
-> requests all at once.
->
-> The API is the same as for blk-mq, just with blk-mq concepts tweaked to
-> fit the SCSI subsystem API: the "last" flag in blk_mq_queue_data becomes
-> a flag in scsi_cmnd, while the queue_num in the commit_rqs callback is
-> extracted from the hctx and passed as a parameter.
->
-> The only complication is that blk-mq uses different plugging heuristics
-> depending on whether commit_rqs is present or not.  So we have two
-> different sets of blk_mq_ops and pick one depending on whether the
-> scsi_host template uses commit_rqs or not.
->
-> Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
-> ---
->  drivers/scsi/scsi_lib.c  | 37 ++++++++++++++++++++++++++++++++++---
->  include/scsi/scsi_cmnd.h |  1 +
->  include/scsi/scsi_host.h | 16 ++++++++++++++--
->  3 files changed, 49 insertions(+), 5 deletions(-)
->
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 601b9f1de267..eb4e67d02bfe 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -1673,10 +1673,11 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
->                 blk_mq_start_request(req);
->         }
->
-> +       cmd->flags &= SCMD_PRESERVED_FLAGS;
->         if (sdev->simple_tags)
->                 cmd->flags |= SCMD_TAGGED;
-> -       else
-> -               cmd->flags &= ~SCMD_TAGGED;
-> +       if (bd->last)
-> +               cmd->flags |= SCMD_LAST;
->
->         scsi_init_cmd_errh(cmd);
->         cmd->scsi_done = scsi_mq_done;
-> @@ -1807,10 +1808,37 @@ void __scsi_init_queue(struct Scsi_Host *shost, struct request_queue *q)
->  }
->  EXPORT_SYMBOL_GPL(__scsi_init_queue);
->
-> +static const struct blk_mq_ops scsi_mq_ops_no_commit = {
-> +       .get_budget     = scsi_mq_get_budget,
-> +       .put_budget     = scsi_mq_put_budget,
-> +       .queue_rq       = scsi_queue_rq,
-> +       .complete       = scsi_softirq_done,
-> +       .timeout        = scsi_timeout,
-> +#ifdef CONFIG_BLK_DEBUG_FS
-> +       .show_rq        = scsi_show_rq,
-> +#endif
-> +       .init_request   = scsi_mq_init_request,
-> +       .exit_request   = scsi_mq_exit_request,
-> +       .initialize_rq_fn = scsi_initialize_rq,
-> +       .busy           = scsi_mq_lld_busy,
-> +       .map_queues     = scsi_map_queues,
-> +};
-> +
-> +
-> +static void scsi_commit_rqs(struct blk_mq_hw_ctx *hctx)
-> +{
-> +       struct request_queue *q = hctx->queue;
-> +       struct scsi_device *sdev = q->queuedata;
-> +       struct Scsi_Host *shost = sdev->host;
-> +
-> +       shost->hostt->commit_rqs(shost, hctx->queue_num);
-> +}
-
-It should be fine to implement scsi_commit_rqs() as:
-
- if (shost->hostt->commit_rqs)
-       shost->hostt->commit_rqs(shost, hctx->queue_num);
-
-then scsi_mq_ops_no_commit can be saved.
-
-Because .commit_rqs() is only called when BLK_STS_*_RESOURCE is
-returned from scsi_queue_rq(), at that time shost->hostt->commit_rqs should
-have been hit from cache given .queuecommand is called via
-host->hostt->queuecommand.
-
-Not mention BLK_STS_*_RESOURCE is just often returned for small queue depth
-device.
-
-Thanks,
-Ming Lei
+T24gNS8zMS8xOSAxOjEwIEFNLCBCYXJ0IFZhbiBBc3NjaGUgd3JvdGU6Cj4gT24gNS8yNi8xOSA4
+OjUxIEFNLCBDaHJpc3RpYW4gU3ZlbnNzb24gd3JvdGU6Cj4+IEkgYW0gZG9pbmcgc29tZSBwcmVs
+aW1pbmFyeSBzY291dGluZyBvZiBob3cgb25lIGNvdWxkIGFkZCBzdXBwb3J0IGZvcgo+PiBGSUNP
+TiAoRkMtU0ItMyBzcGVjaWZpY2FsbHkpLiBJIGFtIG1vc3RseSBpbnRlcmVzdGVkIGluIExpbnV4
+IGJlaW5nCj4+IGFibGUgdG8gYWN0IGFzIGEgRklDT04gdGFyZ2V0IGZvciBub3cuCj4+Cj4+IFRo
+ZSBUTDtEUiBzdW1tYXJ5IGZvciBGSUNPTiBpcyB0aGF0IGl0IHVzZXMgRmlicmUgQ2hhbm5lbCBq
+dXN0IGxpa2UKPj4gRkNQL1NDU0kKPj4gdXAgdG8gYnV0IG5vdCBpbmNsdWRpbmcgdGhlIEZDLTQg
+KEZDUCkgbGF5ZXIuIEF0IHRoYXQgcG9pbnQgaXQgdXNlcwo+PiBpdHMgb3duIFNCQ0NTIGxheWVy
+Lgo+Pgo+PiBGSUNPTiBpcyB1c2VkIGJ5IElCTSBtYWluZnJhbWVzIHRvIGludGVyZmFjZSBwZXJp
+cGhlcmFscyBsaWtlIHRhcGUsIGRpc2ssCj4+IHByaW50ZXJzLCBjYXJkIHB1bmNoZXJzL3JlYWRl
+cnMsIGV0Yy4gSXQgaXMgbW9yZSBsaWtlIGEgbWFpbmZyYW1lCj4+IFVTQi9GaXJld2lyZSB0aGFu
+IFNDU0kgaW4gdGhhdCByZWdhcmQuCj4+Cj4+IEkgd291bGQgcHJlZmVyIHRvIGltcGxlbWVudCBt
+eSBwZXJpcGhlcmFscyBpbiB1c2VyLXNwYWNlLCBJIGRvbid0IHNlZSBhbnkKPj4gY29udmluY2lu
+ZyBjYXNlIGZvciBoYXZpbmcgZS5nLiBhIHZpcnR1YWwgdGFwZSBkcml2ZSBydW5uaW5nIGluIGtl
+cm5lbAo+PiBzcGFjZS4KPj4gVGhlIEkvTyBoZWF2eSBkaXNrcyB3b3VsZCBwcm9iYWJseSBiZW5l
+Zml0IGZyb20gYmVpbmcgaW4ga2VybmVsIHNwYWNlLAo+PiBidXQgSSBhbSBPSyBsaW1pdGluZyB0
+aGUgaW5pdGlhbCBzY29wZS4KPj4KPj4gSSBhbSAxMDAlIG5ldyB0byB0aGUgU0NTSSBhbmQgRmli
+cmUgQ2hhbm5lbCBzdWJzeXN0ZW0gaW4gTGludXgsIGFuZCBJCj4+IGRvIG5vdCBldmVuIGtub3cg
+aWYgdGhlIGN1cnJlbnQgSEJBcyBzdXBwb3J0IHNlbmRpbmcgZnJhbWVzIHdpdGhvdXQgRkNQCj4+
+IGJ1dCBhZnRlciBzY291dGluZyB0aGUgY29kZSBpdCBkb2VzIHNlZW0gdGhhdCBpdCBtaWdodCB3
+b3JrIG91dCAtIEZDUAo+PiBzZWVtcyBkZWNvdXBsZWQgZW5vdWdoLgo+Pgo+PiBJZiB5b3Ugd2Fu
+dCB0byBsZWFybiBtb3JlIHRoZSBzdGFuZGFyZCBkb2N1bWVudCBXaXJlc2hhcmsgaGFzIGFuCj4+
+IGltcGxlbWVudGF0aW9uIG9mIHRoZSBwcm90b2NvbCAocGFja2V0LWZjc2IzLmMvaCkuIElmIHlv
+dSB3YW50IGFsbCB0aGUKPj4gZGV0YWlscwo+PiB5b3Ugd2lsbCBzYWRseSBoYXZlIHRvIHBheSAk
+NjAgYW5kIGJ1eSBpdCBmcm9tIElOQ0lUUyBhdAo+PiBodHRwczovL3dlYnN0b3JlLmFuc2kub3Jn
+L1N0YW5kYXJkcy9JTkNJVFMvSU5DSVRTMzc0MjAwM1MyMDEzLgo+PiBGd2l3LCBGSUNPTiB1c2Vz
+IEZDIHR5cGUgMHgxQiBhbmQgMHgxQy4KPj4KPj4gQW55IHRob3VnaHRzIG9yIGlkZWFzIHdoZXJl
+IHlvdSB3b3VsZCBzdGFydD8gRG8geW91IHNlZSBhbnkgZnV0dXJlIGZvcgo+PiB0aGlzIGFkZGl0
+aW9uIHRvIHRoZSBrZXJuZWw/Cj4gCj4gSGkgQ2hyaXMsCj4gCj4gSSdtIG5vdCBzdXJlIHdoYXQg
+dGhlIGJlc3QgYXBwcm9hY2ggaXMgZm9yIHRoZSBpbml0aWF0b3IgZnVuY3Rpb25hbGl0eS4KPiBG
+b3IgdGhlIHRhcmdldCBmdW5jdGlvbmFsaXR5IHlvdSBtYXkgd2FudCB0byBoYXZlIGEgbG9vayBh
+dCB0Y211Cj4gKERvY3VtZW50YXRpb24vdGFyZ2V0L3RjbXUtZGVzaWduLnR4dCBhbmQKPiBkcml2
+ZXJzL3RhcmdldC90YXJnZXRfY29yZV91c2VyLmMpLiBBbiBleGlzdGluZyBGQyB0YXJnZXQgZHJp
+dmVyIGlzCj4gYXZhaWxhYmxlIGluIGRyaXZlcnMvc2NzaS9xbGEyeHh4L3RjbV9xbGEyeHh4LmMu
+IEEgZGlhZ3JhbSB0aGF0IHNob3dzCj4gdGhlIGRpZmZlcmVudCBmdW5jdGlvbmFsIGJsb2NrcyBp
+biBUQ00gaXMgYXZhaWxhYmxlIGF0Cj4gaHR0cHM6Ly9lbi53aWtpcGVkaWEub3JnL3dpa2kvTElP
+XyhTQ1NJX3RhcmdldCkgKExJTyBpcyBhbm90aGVyIG5hbWUgZm9yCj4gVENNKS4KPiAKSG1tLiBJ
+IHdvbmRlcjogZG8geW91IF9rbm93XyB3aGF0IHlvdSBhcmUgYXNraW5nPwpIYXZlIHlvdSBldmVy
+IHdvcmtlZCB3aXRoIGEgbWFpbmZyYW1lPwpUaGluZyBpcywgZnJvbSBhbiBpbml0aWF0b3Igc2lk
+ZSB5b3UgZG9uJ3QgZXZlbiBfc2VlXyB0aGUgRklDT04gZnJhbWVzOwpldmVyeXRoaW5nIGlzIGFi
+c3RyYWN0ZWQgYXdheSB0byBzb21lIGhpZ2hlciBsZXZlbC4KSUUgeW91IGhhdmUgbm8gaWRlYSBo
+b3cgdGhlIGluaXRpYXRvciBmb3JtYXRzIGZyYW1lcyBhbmQgd2hhdCBpdCBleHBlY3RzCmluIHJl
+dHVybi4gV2hpY2ggbWFrZXMgZGVidWdnaW5nIHByZXR0eSBtdWNoIGltcG9zc2libGUgdW5sZXNz
+IHlvdSdyZQpoYXZpbmcgYWNjZXNzIHRvIGEgZmlicmVjaGFubmVsIGFuYWx5c2VyIGhvb2tlZCB1
+cCB0byBhIG1haW5mcmFtZS4KCkhtbT8KCkNoZWVycywKCkhhbm5lcwotLSAKRHIuIEhhbm5lcyBS
+ZWluZWNrZQkJICAgVGVhbWxlYWQgU3RvcmFnZSAmIE5ldHdvcmtpbmcKaGFyZUBzdXNlLmRlCQkJ
+ICAgICAgICAgICAgICAgKzQ5IDkxMSA3NDA1MyA2ODgKU1VTRSBMSU5VWCBHbWJILCBNYXhmZWxk
+c3RyLiA1LCA5MDQwOSBOw7xybmJlcmcKR0Y6IEZlbGl4IEltZW5kw7ZyZmZlciwgTWFyeSBIaWdn
+aW5zLCBTcmkgUmFzaWFoCkhSQiAyMTI4NCAoQUcgTsO8cm5iZXJnKQpfX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpmY29lLWRldmVsIG1haWxpbmcgbGlzdApm
+Y29lLWRldmVsQG9wZW4tZmNvZS5vcmcKaHR0cDovL2xpc3RzLm9wZW4tZmNvZS5vcmcvbWFpbG1h
+bi9saXN0aW5mby9mY29lLWRldmVsCg==
