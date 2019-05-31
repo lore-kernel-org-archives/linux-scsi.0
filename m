@@ -1,29 +1,42 @@
-From: James Bottomley <jejb@linux.ibm.com>
-Subject: Re: clean some unneeded #ifdef MODULE
-Date: Fri, 31 May 2019 18:15:24 +0300
-Message-ID: <1559315724.2878.7.camel@linux.ibm.com>
-References: <1559315344-10384-1-git-send-email-info@metux.net>
+From: YueHaibing <yuehaibing@huawei.com>
+Subject: [PATCH -next] scsi: lpfc: Remove set but not used variables 'qp'
+Date: Fri, 31 May 2019 23:27:45 +0800
+Message-ID: <20190531152745.7928-1-yuehaibing@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1559315344-10384-1-git-send-email-info@metux.net>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Enrico Weigelt, metux IT consult" <info@metux.net>, linux-kernel@vger.kernel.org
-Cc: rjw@rjwysocki.net, viresh.kumar@linaro.org, jdelvare@suse.com, linux@roeck-us.net, khalid@gonehiking.org, martin.petersen@oracle.com, aacraid@microsemi.com, linux-pm@vger.kernel.org, linux-hwmon@vger.kernel.org, linux-scsi@vger.kernel.org
+To: james.smart@broadcom.com, dick.kennedy@broadcom.com, jejb@linux.ibm.com, martin.petersen@oracle.com, jsmart2021@gmail.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, YueHaibing <yuehaibing@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, 2019-05-31 at 17:09 +0200, Enrico Weigelt, metux IT consult
-wrote:
-> Hi folks,
-> 
-> here're some patches that clean up uncessary cases of #ifdef MODULE.
-> These ifdef's just exlude MODULE_DEVICE_TABLE's when the kernel is
-> built w/o module support. As MODULE_DEVICE_TABLE() macro already
-> checks for that, these extra #ifdef's shouldn't be necessary.
+Fixes gcc '-Wunused-but-set-variable' warnings:
 
-Isn't the problem the #ifdefs are trying to solve a complaint about an
-unused variable in the non-module case? if so, is that fixed some other
-way?
+drivers/scsi/lpfc/lpfc_init.c: In function lpfc_setup_cq_lookup:
+drivers/scsi/lpfc/lpfc_init.c:9359:30: warning: variable qp set but not used [-Wunused-but-set-variable]
 
-James
+It's not used since commit e70596a60f88 ("scsi: lpfc: Fix
+poor use of hardware queues if fewer irq vectors")
+
+Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+---
+ drivers/scsi/lpfc/lpfc_init.c | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 24965a06f55d..cd8e47544d07 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -9356,10 +9356,8 @@ static void
+ lpfc_setup_cq_lookup(struct lpfc_hba *phba)
+ {
+ 	struct lpfc_queue *eq, *childq;
+-	struct lpfc_sli4_hdw_queue *qp;
+ 	int qidx;
+ 
+-	qp = phba->sli4_hba.hdwq;
+ 	memset(phba->sli4_hba.cq_lookup, 0,
+ 	       (sizeof(struct lpfc_queue *) * (phba->sli4_hba.cq_max + 1)));
+ 	/* Loop thru all IRQ vectors */
+-- 
+2.17.1
