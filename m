@@ -1,40 +1,48 @@
 From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH 2/2] virtio_scsi: implement request batching
-Date: Fri, 31 May 2019 11:03:16 +0200
-Message-ID: <ff7aaa01-022b-f55a-4bb2-c293cfd86bdd@redhat.com>
+Subject: Re: [PATCH 1/2] scsi_host: add support for request batching
+Date: Fri, 31 May 2019 11:12:20 +0200
+Message-ID: <dd00ef94-1d28-1401-2375-7603e9543e2d@redhat.com>
 References: <20190530112811.3066-1-pbonzini@redhat.com>
- <20190530112811.3066-3-pbonzini@redhat.com>
- <79490df1-0145-5b40-027a-7e8fb96854d4@acm.org>
+ <20190530112811.3066-2-pbonzini@redhat.com>
+ <ad0578b0-ce73-85ed-b67d-70c5d8176a23@acm.org>
+ <461fe0cd-c5bc-a612-6013-7c002b92dcdc@redhat.com>
+ <740d2f33-004e-7a37-1f6e-cf29480439b1@acm.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <79490df1-0145-5b40-027a-7e8fb96854d4@acm.org>
+In-Reply-To: <740d2f33-004e-7a37-1f6e-cf29480439b1@acm.org>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 To: Bart Van Assche <bvanassche@acm.org>, linux-kernel@vger.kernel.org, kvm@vger.kernel.org
 Cc: jejb@linux.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, stefanha@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-On 30/05/19 19:28, Bart Van Assche wrote:
-> On 5/30/19 4:28 AM, Paolo Bonzini wrote:
->> @@ -531,7 +547,8 @@ static int virtscsi_queuecommand(struct Scsi_Host
->> *shost,
->>           req_size = sizeof(cmd->req.cmd);
->>       }
->>   -    ret = virtscsi_kick_cmd(req_vq, cmd, req_size,
->> sizeof(cmd->resp.cmd));
->> +    kick = (sc->flags & SCMD_LAST) != 0;
->> +    ret = virtscsi_add_cmd(req_vq, cmd, req_size,
->> sizeof(cmd->resp.cmd), kick);
-> 
-> Have you considered to have the SCSI core call commit_rqs() if bd->last
-> is true? I think that would avoid that we need to introduce the
-> SCMD_LAST flag and that would also avoid that every SCSI LLD that
-> supports a commit_rqs callback has to introduce code to test the
-> SCMD_LAST flag.
+On 30/05/19 19:54, Bart Van Assche wrote:
+> As far as I can see the only impact of defining an empty commit_rqs
+> callback on the queueing behavior is that blk_mq_make_request() will
+> queue requests for multiple hwqs on the plug list instead of requests
+> for a single hwq. The plug list is sorted by hwq before it is submitted
+> to a block driver. If that helps NVMe performance it should also help
+> SCSI performance.
 
-That is slightly worse for performance, as it unlocks and re-locks the
-spinlock.
+See the comment in blk_mq_make_request(): sorting by hwq helps NVMe
+because it uses bd->last, and blk_mq_make_request() uses the presence of
+the ->commit_rqs() as a sign that the driver uses bd->last.  The
+heuristic basically trades latency (with plugging, the driver rings the
+doorbell a bit later) for throughput (ringing the doorbell is slow, so
+we want to do it less).  If the driver doesn't use bd->last and the
+doorbell is always rung, plugging adds to the latency without the
+throughput benefit.
+
+All that the duplicate blk_mq_ops do is letting blk_mq_make_request()
+use the same heuristic for SCSI.  This should be beneficial exactly for
+the reason that you mention: if the heuristic helps non-SCSI block
+driver performance, it should also help performance of SCSI drivers that
+have nr_hw_queues > 1 but no commit_rqs (lpfc, qedi, qla2xxx, smartpqi,
+storvsc).
 
 Paolo
+
+> How about always setting commit_rqs = scsi_commit_rqs
+> in scsi_mq_ops?
