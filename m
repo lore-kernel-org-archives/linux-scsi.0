@@ -1,48 +1,71 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH 1/2] scsi_host: add support for request batching
-Date: Fri, 31 May 2019 11:12:20 +0200
-Message-ID: <dd00ef94-1d28-1401-2375-7603e9543e2d@redhat.com>
-References: <20190530112811.3066-1-pbonzini@redhat.com>
- <20190530112811.3066-2-pbonzini@redhat.com>
- <ad0578b0-ce73-85ed-b67d-70c5d8176a23@acm.org>
- <461fe0cd-c5bc-a612-6013-7c002b92dcdc@redhat.com>
- <740d2f33-004e-7a37-1f6e-cf29480439b1@acm.org>
+From: Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>
+Subject: Re: FICON target support
+Date: Fri, 31 May 2019 12:17:47 +0200
+Message-ID: <17f0639d-bd44-c193-af29-df539be722fe@suse.de>
+References: <CADiuDASOCJbnwLs-LEp0aCX+T4dMvFfKQv_zsypHW-iSF8wW=Q@mail.gmail.com>
+ <5c5609d8-e4b4-3561-ece9-93746fd46206@acm.org>
+ <69308786-81d8-a9df-2d7b-df37c3f93026@suse.de>
+ <CADiuDATRN_85Tu3uw1WBtY=m8KrqKV5zpYrsggYdAOH23dwU=Q@mail.gmail.com>
+ <9612602b-29c0-04d7-b76e-5593d0936eba@suse.de>
+ <CADiuDARPit+kKtQe-UGktUuxEXRMvoq7PGVPKo9DrLRkSTwNAA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <740d2f33-004e-7a37-1f6e-cf29480439b1@acm.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+In-Reply-To: <CADiuDARPit+kKtQe-UGktUuxEXRMvoq7PGVPKo9DrLRkSTwNAA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>, linux-kernel@vger.kernel.org, kvm@vger.kernel.org
-Cc: jejb@linux.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, stefanha@redhat.com
+List-Unsubscribe: <http://lists.open-fcoe.org/mailman/options/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.open-fcoe.org/pipermail/fcoe-devel/>
+List-Post: <mailto:fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+List-Help: <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.open-fcoe.org/mailman/listinfo/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
+Errors-To: fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+Sender: "fcoe-devel" <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+To: Christian Svensson <christian-IHD7e6/dsE0@public.gmane.org>
+Cc: fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 30/05/19 19:54, Bart Van Assche wrote:
-> As far as I can see the only impact of defining an empty commit_rqs
-> callback on the queueing behavior is that blk_mq_make_request() will
-> queue requests for multiple hwqs on the plug list instead of requests
-> for a single hwq. The plug list is sorted by hwq before it is submitted
-> to a block driver. If that helps NVMe performance it should also help
-> SCSI performance.
-
-See the comment in blk_mq_make_request(): sorting by hwq helps NVMe
-because it uses bd->last, and blk_mq_make_request() uses the presence of
-the ->commit_rqs() as a sign that the driver uses bd->last.  The
-heuristic basically trades latency (with plugging, the driver rings the
-doorbell a bit later) for throughput (ringing the doorbell is slow, so
-we want to do it less).  If the driver doesn't use bd->last and the
-doorbell is always rung, plugging adds to the latency without the
-throughput benefit.
-
-All that the duplicate blk_mq_ops do is letting blk_mq_make_request()
-use the same heuristic for SCSI.  This should be beneficial exactly for
-the reason that you mention: if the heuristic helps non-SCSI block
-driver performance, it should also help performance of SCSI drivers that
-have nr_hw_queues > 1 but no commit_rqs (lpfc, qedi, qla2xxx, smartpqi,
-storvsc).
-
-Paolo
-
-> How about always setting commit_rqs = scsi_commit_rqs
-> in scsi_mq_ops?
+T24gNS8zMS8xOSAxMDo1MiBBTSwgQ2hyaXN0aWFuIFN2ZW5zc29uIHdyb3RlOgo+IEhpLAo+IAo+
+IE9uIEZyaSwgTWF5IDMxLCAyMDE5IGF0IDEwOjA4IEFNIEhhbm5lcyBSZWluZWNrZSA8aGFyZUBz
+dXNlLmRlPiB3cm90ZToKPj4gVGhlcmUgYXJlIGVhc2llciB3YXlzIGZvciB0aGlzIC4uLiBJJ2Qg
+c3RhcnQgd2l0aCB2aXJ0aW8tY2N3IGFuZAo+PiBpbXBsZW1lbnQgYSB2aXJ0dWFsIFBVTkNIRVIg
+dGhlcmUgLi4uCj4gCj4gVGhlIGxhcmdlciBwcm9qZWN0IHNjb3BlIGlzIG1ha2luZyBGSUNPTiBh
+Y2Nlc3NvcmllcyBtb3JlIGF2YWlsYWJsZQo+IGZvciBwZW9wbGUgYXMgY3JhenkgYXMgSSwgdGhh
+dCBpcyB3YW50aW5nIHRvIHJ1biBhIG1haW5mcmFtZSBhcyBhCj4gaG9iYnlpc3QsIGJ1dCBtYXli
+ZSBub3Qgd2FudCB0byBidXkgYSBtZXRyaWMgdG9uIHdvcnRoIG9mIGRpc2tzIG9yCj4gdGFwZSBy
+b2JvdHMgKGEgNzAwIGtnIG1haW5mcmFtZSBpcyBoYXJkIGVub3VnaCBieSBpdHNlbGYgdG8gaG91
+c2UpLgo+IAo+IEkgd2lsbCB0YWtlIGEgbG9vaywgYnV0IGZyb20gdGhlIG5hbWUgb2YgaXQgaXQg
+c291bmRzIGxpa2UgaXQgd2lsbCBub3QKPiBoZWxwIG1lIG11Y2ggZ2V0dGluZyBGSUNPTiB0YXJn
+ZXRzIHN1cHBvcnRlZC4KPiBNYXliZSBpdCB3aWxsIGhlbHAgaWYgSSBldmVyIHdhbnQgRklDT04g
+aW5pdGlhdG9yLgo+IApSaWdodC4KCj4+IFN0aWxsLCBhbiB1cGhpbGwgc3RydWdnbGU7IElCTSBp
+cyBub3RvcmlvdXMgZm9yIG5vdCBnaXZpbmcgb3V0IGRldGFpbHMKPj4gYWJvdXQgdGhlIGludGVy
+bmFscywgYW5kIHNpbXVsYXRpbmcgYSBwdW5jaGVyIGlzIG9uZSBvZiB0aGVzZSB0aGluZ3MuCj4+
+IChBbmQgc2xpZ2h0bHkgcG9pbnRsZXNzLCBidXQgd2hvIGFtIEkgdG8ganVkZ2UgLi4uKQo+IAo+
+IEl0J3MgYSBsb3ctc3BlZWQgcGVyaXBoZXJhbCB0aGF0IGhhcyBiZWVuIGVtdWxhdGVkIHN1Y2Nl
+c3NmdWxseSBpbgo+IEhlcmN1bGVzLCBhbmQgdGhlcmUgYXJlIHNvbWUgcGV0dHkgZGV0YWlsZWQg
+ZG9jdW1lbnRzIGFyb3VuZCB0aGUgQ0NXcwo+IGZvciAzNTA1IGFyb3VuZC4gSSBmaWd1cmVkIGl0
+IHdvdWxkCj4gYmUgYSBnb29kIHN0YXJ0IGdldHRpbmcgYSBGSUNPTiB1c2VyLXNwYWNlIHRoaW5n
+IGltcGxlbWVudGVkLCBiZWZvcmUgSQo+IHRyeSB0byB0YWNrbGUgZS5nLiBFQ0tEcyBvciB0YXBl
+cy4KPiAKT2guIFN1cmUuIFlvdSBtaWdodCB3YW50IHRvIGFzayBvbiB0aGUgczM5MCBtYWlsaW5n
+IGxpc3RzLCB0b287IHRoZXkKdHlwaWNhbGx5IGhhdmUgYSBxdWl0ZSBnb29kIGlkZWEgb24gd2hh
+dCdzIGdvaW5nIG9uLgpUaGUgYmlnZ2VzdCBwcm9ibGVtLCBob3dldmVyLCB3aWxsIGJlIHRvIGdl
+dCB0aGUgZG9jdW1lbnRhdGlvbiBmcm9tIHRoZQpIQkFzIHRoZW1zZWx2ZXMuCkFsbCBGQyBIQkFz
+IHdpbGwgcHJlc2VudCB5b3Ugd2l0aCBzb21lIHZlcnNpb24gb2YgY29va2VkIGZyYW1lcywgYW5k
+IG5vdAphbGxvdyB5b3UgdG8gYWNjZXNzIHRoZSBmcmFtZXMgdGhlbXNlbHZlcy4gU28gaW4gdGhl
+IGVuZCB5b3UnZCBoYXZlIHRvCnNlZSB0byBnZXQgaG9sZCBvZiB0aGUgSEJBIGRvY3VtZW50YXRp
+b24gaXRzZWxmLCBhcyB5b3UgbmVlZCB0byBmaWd1cmUKb3V0IGhvdyB0byBwYXNzIEZJQ09OIGZy
+YW1lcyBpbnRvIHRoZSBIQkEuCgpJdCBtaWdodCBiZSBlYXNpZXIgd2hlbiB5b3UnZCBiZSB3b3Jr
+aW5nIHdpdGggRkNvRSBjYXJkcywgYXMgdGhlcmUgeW91Cl9kb18gaGF2ZSBhY2Nlc3MgdG8gdGhl
+IGZ1bGwgZnJhbWUsIGFuZCBkbyB3aGF0ZXZlciB5b3UgbGlrZSB3aXRoIHRoZW1zLgpTYWRseSB5
+b3UnZCBuZWVkIGFuIEZDb0UgYnJpZGdlIHRoZW4gdG8gaG9vayB1cCB0aGUgbWFpbmZyYW1lLgoK
+QnV0IGFzIHlvdSBoYXZlIGdvdHRlbiBob2xkIG9mIGFuIEZDIGFuYWx5c2VyLCBnZXR0aW5nIGFu
+IEZDb0UgYnJpZGdlCnNob3VsZG4ndCBiZSB0b28gaGFyZCwgdG9vIDotKQoKQ2hlZXJzLAoKSGFu
+bmVzCi0tIApEci4gSGFubmVzIFJlaW5lY2tlCQkgICBUZWFtbGVhZCBTdG9yYWdlICYgTmV0d29y
+a2luZwpoYXJlQHN1c2UuZGUJCQkgICAgICAgICAgICAgICArNDkgOTExIDc0MDUzIDY4OApTVVNF
+IExJTlVYIEdtYkgsIE1heGZlbGRzdHIuIDUsIDkwNDA5IE7DvHJuYmVyZwpHRjogRmVsaXggSW1l
+bmTDtnJmZmVyLCBNYXJ5IEhpZ2dpbnMsIFNyaSBSYXNpYWgKSFJCIDIxMjg0IChBRyBOw7xybmJl
+cmcpCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmZjb2Ut
+ZGV2ZWwgbWFpbGluZyBsaXN0CmZjb2UtZGV2ZWxAb3Blbi1mY29lLm9yZwpodHRwOi8vbGlzdHMu
+b3Blbi1mY29lLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2Zjb2UtZGV2ZWwK
