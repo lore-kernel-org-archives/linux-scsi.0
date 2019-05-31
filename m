@@ -1,71 +1,62 @@
-From: Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>
-Subject: Re: FICON target support
-Date: Fri, 31 May 2019 12:17:47 +0200
-Message-ID: <17f0639d-bd44-c193-af29-df539be722fe@suse.de>
-References: <CADiuDASOCJbnwLs-LEp0aCX+T4dMvFfKQv_zsypHW-iSF8wW=Q@mail.gmail.com>
- <5c5609d8-e4b4-3561-ece9-93746fd46206@acm.org>
- <69308786-81d8-a9df-2d7b-df37c3f93026@suse.de>
- <CADiuDATRN_85Tu3uw1WBtY=m8KrqKV5zpYrsggYdAOH23dwU=Q@mail.gmail.com>
- <9612602b-29c0-04d7-b76e-5593d0936eba@suse.de>
- <CADiuDARPit+kKtQe-UGktUuxEXRMvoq7PGVPKo9DrLRkSTwNAA@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-In-Reply-To: <CADiuDARPit+kKtQe-UGktUuxEXRMvoq7PGVPKo9DrLRkSTwNAA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Content-Language: en-US
-List-Unsubscribe: <http://lists.open-fcoe.org/mailman/options/fcoe-devel>,
- <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.open-fcoe.org/pipermail/fcoe-devel/>
-List-Post: <mailto:fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-List-Help: <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.open-fcoe.org/mailman/listinfo/fcoe-devel>,
- <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
-Errors-To: fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
-Sender: "fcoe-devel" <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-To: Christian Svensson <christian-IHD7e6/dsE0@public.gmane.org>
-Cc: fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: "Enrico Weigelt, metux IT consult" <info@metux.net>
+Subject: [PATCH 2/3] drivers: scsci: remove unnecessary #ifdef MODULE
+Date: Fri, 31 May 2019 17:09:03 +0200
+Message-ID: <1559315344-10384-3-git-send-email-info@metux.net>
+References: <1559315344-10384-1-git-send-email-info@metux.net>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1559315344-10384-1-git-send-email-info@metux.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: rjw@rjwysocki.net, viresh.kumar@linaro.org, jdelvare@suse.com, linux@roeck-us.net, khalid@gonehiking.org, jejb@linux.ibm.com, martin.petersen@oracle.com, aacraid@microsemi.com, linux-pm@vger.kernel.org, linux-hwmon@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-T24gNS8zMS8xOSAxMDo1MiBBTSwgQ2hyaXN0aWFuIFN2ZW5zc29uIHdyb3RlOgo+IEhpLAo+IAo+
-IE9uIEZyaSwgTWF5IDMxLCAyMDE5IGF0IDEwOjA4IEFNIEhhbm5lcyBSZWluZWNrZSA8aGFyZUBz
-dXNlLmRlPiB3cm90ZToKPj4gVGhlcmUgYXJlIGVhc2llciB3YXlzIGZvciB0aGlzIC4uLiBJJ2Qg
-c3RhcnQgd2l0aCB2aXJ0aW8tY2N3IGFuZAo+PiBpbXBsZW1lbnQgYSB2aXJ0dWFsIFBVTkNIRVIg
-dGhlcmUgLi4uCj4gCj4gVGhlIGxhcmdlciBwcm9qZWN0IHNjb3BlIGlzIG1ha2luZyBGSUNPTiBh
-Y2Nlc3NvcmllcyBtb3JlIGF2YWlsYWJsZQo+IGZvciBwZW9wbGUgYXMgY3JhenkgYXMgSSwgdGhh
-dCBpcyB3YW50aW5nIHRvIHJ1biBhIG1haW5mcmFtZSBhcyBhCj4gaG9iYnlpc3QsIGJ1dCBtYXli
-ZSBub3Qgd2FudCB0byBidXkgYSBtZXRyaWMgdG9uIHdvcnRoIG9mIGRpc2tzIG9yCj4gdGFwZSBy
-b2JvdHMgKGEgNzAwIGtnIG1haW5mcmFtZSBpcyBoYXJkIGVub3VnaCBieSBpdHNlbGYgdG8gaG91
-c2UpLgo+IAo+IEkgd2lsbCB0YWtlIGEgbG9vaywgYnV0IGZyb20gdGhlIG5hbWUgb2YgaXQgaXQg
-c291bmRzIGxpa2UgaXQgd2lsbCBub3QKPiBoZWxwIG1lIG11Y2ggZ2V0dGluZyBGSUNPTiB0YXJn
-ZXRzIHN1cHBvcnRlZC4KPiBNYXliZSBpdCB3aWxsIGhlbHAgaWYgSSBldmVyIHdhbnQgRklDT04g
-aW5pdGlhdG9yLgo+IApSaWdodC4KCj4+IFN0aWxsLCBhbiB1cGhpbGwgc3RydWdnbGU7IElCTSBp
-cyBub3RvcmlvdXMgZm9yIG5vdCBnaXZpbmcgb3V0IGRldGFpbHMKPj4gYWJvdXQgdGhlIGludGVy
-bmFscywgYW5kIHNpbXVsYXRpbmcgYSBwdW5jaGVyIGlzIG9uZSBvZiB0aGVzZSB0aGluZ3MuCj4+
-IChBbmQgc2xpZ2h0bHkgcG9pbnRsZXNzLCBidXQgd2hvIGFtIEkgdG8ganVkZ2UgLi4uKQo+IAo+
-IEl0J3MgYSBsb3ctc3BlZWQgcGVyaXBoZXJhbCB0aGF0IGhhcyBiZWVuIGVtdWxhdGVkIHN1Y2Nl
-c3NmdWxseSBpbgo+IEhlcmN1bGVzLCBhbmQgdGhlcmUgYXJlIHNvbWUgcGV0dHkgZGV0YWlsZWQg
-ZG9jdW1lbnRzIGFyb3VuZCB0aGUgQ0NXcwo+IGZvciAzNTA1IGFyb3VuZC4gSSBmaWd1cmVkIGl0
-IHdvdWxkCj4gYmUgYSBnb29kIHN0YXJ0IGdldHRpbmcgYSBGSUNPTiB1c2VyLXNwYWNlIHRoaW5n
-IGltcGxlbWVudGVkLCBiZWZvcmUgSQo+IHRyeSB0byB0YWNrbGUgZS5nLiBFQ0tEcyBvciB0YXBl
-cy4KPiAKT2guIFN1cmUuIFlvdSBtaWdodCB3YW50IHRvIGFzayBvbiB0aGUgczM5MCBtYWlsaW5n
-IGxpc3RzLCB0b287IHRoZXkKdHlwaWNhbGx5IGhhdmUgYSBxdWl0ZSBnb29kIGlkZWEgb24gd2hh
-dCdzIGdvaW5nIG9uLgpUaGUgYmlnZ2VzdCBwcm9ibGVtLCBob3dldmVyLCB3aWxsIGJlIHRvIGdl
-dCB0aGUgZG9jdW1lbnRhdGlvbiBmcm9tIHRoZQpIQkFzIHRoZW1zZWx2ZXMuCkFsbCBGQyBIQkFz
-IHdpbGwgcHJlc2VudCB5b3Ugd2l0aCBzb21lIHZlcnNpb24gb2YgY29va2VkIGZyYW1lcywgYW5k
-IG5vdAphbGxvdyB5b3UgdG8gYWNjZXNzIHRoZSBmcmFtZXMgdGhlbXNlbHZlcy4gU28gaW4gdGhl
-IGVuZCB5b3UnZCBoYXZlIHRvCnNlZSB0byBnZXQgaG9sZCBvZiB0aGUgSEJBIGRvY3VtZW50YXRp
-b24gaXRzZWxmLCBhcyB5b3UgbmVlZCB0byBmaWd1cmUKb3V0IGhvdyB0byBwYXNzIEZJQ09OIGZy
-YW1lcyBpbnRvIHRoZSBIQkEuCgpJdCBtaWdodCBiZSBlYXNpZXIgd2hlbiB5b3UnZCBiZSB3b3Jr
-aW5nIHdpdGggRkNvRSBjYXJkcywgYXMgdGhlcmUgeW91Cl9kb18gaGF2ZSBhY2Nlc3MgdG8gdGhl
-IGZ1bGwgZnJhbWUsIGFuZCBkbyB3aGF0ZXZlciB5b3UgbGlrZSB3aXRoIHRoZW1zLgpTYWRseSB5
-b3UnZCBuZWVkIGFuIEZDb0UgYnJpZGdlIHRoZW4gdG8gaG9vayB1cCB0aGUgbWFpbmZyYW1lLgoK
-QnV0IGFzIHlvdSBoYXZlIGdvdHRlbiBob2xkIG9mIGFuIEZDIGFuYWx5c2VyLCBnZXR0aW5nIGFu
-IEZDb0UgYnJpZGdlCnNob3VsZG4ndCBiZSB0b28gaGFyZCwgdG9vIDotKQoKQ2hlZXJzLAoKSGFu
-bmVzCi0tIApEci4gSGFubmVzIFJlaW5lY2tlCQkgICBUZWFtbGVhZCBTdG9yYWdlICYgTmV0d29y
-a2luZwpoYXJlQHN1c2UuZGUJCQkgICAgICAgICAgICAgICArNDkgOTExIDc0MDUzIDY4OApTVVNF
-IExJTlVYIEdtYkgsIE1heGZlbGRzdHIuIDUsIDkwNDA5IE7DvHJuYmVyZwpHRjogRmVsaXggSW1l
-bmTDtnJmZmVyLCBNYXJ5IEhpZ2dpbnMsIFNyaSBSYXNpYWgKSFJCIDIxMjg0IChBRyBOw7xybmJl
-cmcpCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmZjb2Ut
-ZGV2ZWwgbWFpbGluZyBsaXN0CmZjb2UtZGV2ZWxAb3Blbi1mY29lLm9yZwpodHRwOi8vbGlzdHMu
-b3Blbi1mY29lLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2Zjb2UtZGV2ZWwK
+The MODULE_DEVICE_TABLE() macro already checks for MODULE defined,
+so the extra check here is not necessary.
+
+Signed-off-by: Enrico Weigelt <info@metux.net>
+---
+ drivers/scsi/BusLogic.c | 2 --
+ drivers/scsi/dpt_i2o.c  | 3 ---
+ 2 files changed, 5 deletions(-)
+
+diff --git a/drivers/scsi/BusLogic.c b/drivers/scsi/BusLogic.c
+index e41e51f..68cc68b 100644
+--- a/drivers/scsi/BusLogic.c
++++ b/drivers/scsi/BusLogic.c
+@@ -3893,7 +3893,6 @@ static void __exit blogic_exit(void)
+ 
+ __setup("BusLogic=", blogic_setup);
+ 
+-#ifdef MODULE
+ /*static struct pci_device_id blogic_pci_tbl[] = {
+ 	{ PCI_VENDOR_ID_BUSLOGIC, PCI_DEVICE_ID_BUSLOGIC_MULTIMASTER,
+ 	  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+@@ -3909,7 +3908,6 @@ static void __exit blogic_exit(void)
+ 	{PCI_DEVICE(PCI_VENDOR_ID_BUSLOGIC, PCI_DEVICE_ID_BUSLOGIC_FLASHPOINT)},
+ 	{0, },
+ };
+-#endif
+ MODULE_DEVICE_TABLE(pci, blogic_pci_tbl);
+ 
+ module_init(blogic_init);
+diff --git a/drivers/scsi/dpt_i2o.c b/drivers/scsi/dpt_i2o.c
+index a3afd14..eb5cfe8 100644
+--- a/drivers/scsi/dpt_i2o.c
++++ b/drivers/scsi/dpt_i2o.c
+@@ -180,14 +180,11 @@ static u8 adpt_read_blink_led(adpt_hba* host)
+  *============================================================================
+  */
+ 
+-#ifdef MODULE
+ static struct pci_device_id dptids[] = {
+ 	{ PCI_DPT_VENDOR_ID, PCI_DPT_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID,},
+ 	{ PCI_DPT_VENDOR_ID, PCI_DPT_RAPTOR_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID,},
+ 	{ 0, }
+ };
+-#endif
+-
+ MODULE_DEVICE_TABLE(pci,dptids);
+ 
+ static int adpt_detect(struct scsi_host_template* sht)
+-- 
+1.9.1
