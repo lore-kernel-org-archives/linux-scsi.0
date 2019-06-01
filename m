@@ -1,7 +1,7 @@
 From: "Enrico Weigelt, metux IT consult" <info@metux.net>
-Subject: [PATCH 3/3] drivers: hwmon: i5k_amb: remove unnecessary #ifdef MODULE
-Date: Sat,  1 Jun 2019 16:01:40 +0200
-Message-ID: <1559397700-15585-4-git-send-email-info@metux.net>
+Subject: [PATCH 2/3] drivers: scsi: remove unnecessary #ifdef MODULE
+Date: Sat,  1 Jun 2019 16:01:39 +0200
+Message-ID: <1559397700-15585-3-git-send-email-info@metux.net>
 References: <1559397700-15585-1-git-send-email-info@metux.net>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1559397700-15585-1-git-send-email-info@metux.net>
@@ -15,27 +15,48 @@ so the extra check here is not necessary.
 
 Signed-off-by: Enrico Weigelt <info@metux.net>
 ---
- drivers/hwmon/i5k_amb.c | 2 --
- 1 file changed, 2 deletions(-)
+ drivers/scsi/BusLogic.c | 2 --
+ drivers/scsi/dpt_i2o.c  | 3 ---
+ 2 files changed, 5 deletions(-)
 
-diff --git a/drivers/hwmon/i5k_amb.c b/drivers/hwmon/i5k_amb.c
-index b09c39a..b674c2f 100644
---- a/drivers/hwmon/i5k_amb.c
-+++ b/drivers/hwmon/i5k_amb.c
-@@ -482,14 +482,12 @@ static int i5k_channel_probe(u16 *amb_present, unsigned long dev_id)
- 	{ 0, 0 }
- };
+diff --git a/drivers/scsi/BusLogic.c b/drivers/scsi/BusLogic.c
+index e41e51f..68cc68b 100644
+--- a/drivers/scsi/BusLogic.c
++++ b/drivers/scsi/BusLogic.c
+@@ -3893,7 +3893,6 @@ static void __exit blogic_exit(void)
+ 
+ __setup("BusLogic=", blogic_setup);
  
 -#ifdef MODULE
- static const struct pci_device_id i5k_amb_ids[] = {
- 	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_5000_ERR) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_5400_ERR) },
+ /*static struct pci_device_id blogic_pci_tbl[] = {
+ 	{ PCI_VENDOR_ID_BUSLOGIC, PCI_DEVICE_ID_BUSLOGIC_MULTIMASTER,
+ 	  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+@@ -3909,7 +3908,6 @@ static void __exit blogic_exit(void)
+ 	{PCI_DEVICE(PCI_VENDOR_ID_BUSLOGIC, PCI_DEVICE_ID_BUSLOGIC_FLASHPOINT)},
+ 	{0, },
+ };
+-#endif
+ MODULE_DEVICE_TABLE(pci, blogic_pci_tbl);
+ 
+ module_init(blogic_init);
+diff --git a/drivers/scsi/dpt_i2o.c b/drivers/scsi/dpt_i2o.c
+index abc74fd..9b28f9f 100644
+--- a/drivers/scsi/dpt_i2o.c
++++ b/drivers/scsi/dpt_i2o.c
+@@ -177,14 +177,11 @@ static u8 adpt_read_blink_led(adpt_hba* host)
+  *============================================================================
+  */
+ 
+-#ifdef MODULE
+ static struct pci_device_id dptids[] = {
+ 	{ PCI_DPT_VENDOR_ID, PCI_DPT_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID,},
+ 	{ PCI_DPT_VENDOR_ID, PCI_DPT_RAPTOR_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID,},
  	{ 0, }
  };
- MODULE_DEVICE_TABLE(pci, i5k_amb_ids);
 -#endif
+-
+ MODULE_DEVICE_TABLE(pci,dptids);
  
- static int i5k_amb_probe(struct platform_device *pdev)
- {
+ static int adpt_detect(struct scsi_host_template* sht)
 -- 
 1.9.1
