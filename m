@@ -1,7 +1,7 @@
 From: "Enrico Weigelt, metux IT consult" <info@metux.net>
-Subject: [PATCH 1/3] drivers: cpufreq: cpufreq-nforce2: remove unnecessary #ifdef MODULE
-Date: Sat,  1 Jun 2019 16:01:38 +0200
-Message-ID: <1559397700-15585-2-git-send-email-info@metux.net>
+Subject: [PATCH 3/3] drivers: hwmon: i5k_amb: remove unnecessary #ifdef MODULE
+Date: Sat,  1 Jun 2019 16:01:40 +0200
+Message-ID: <1559397700-15585-4-git-send-email-info@metux.net>
 References: <1559397700-15585-1-git-send-email-info@metux.net>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1559397700-15585-1-git-send-email-info@metux.net>
@@ -15,26 +15,27 @@ so the extra check here is not necessary.
 
 Signed-off-by: Enrico Weigelt <info@metux.net>
 ---
- drivers/cpufreq/cpufreq-nforce2.c | 2 --
+ drivers/hwmon/i5k_amb.c | 2 --
  1 file changed, 2 deletions(-)
 
-diff --git a/drivers/cpufreq/cpufreq-nforce2.c b/drivers/cpufreq/cpufreq-nforce2.c
-index cd53272..6dd1827 100644
---- a/drivers/cpufreq/cpufreq-nforce2.c
-+++ b/drivers/cpufreq/cpufreq-nforce2.c
-@@ -374,13 +374,11 @@ static int nforce2_cpu_exit(struct cpufreq_policy *policy)
- 	.exit = nforce2_cpu_exit,
+diff --git a/drivers/hwmon/i5k_amb.c b/drivers/hwmon/i5k_amb.c
+index b09c39a..b674c2f 100644
+--- a/drivers/hwmon/i5k_amb.c
++++ b/drivers/hwmon/i5k_amb.c
+@@ -482,14 +482,12 @@ static int i5k_channel_probe(u16 *amb_present, unsigned long dev_id)
+ 	{ 0, 0 }
  };
  
 -#ifdef MODULE
- static const struct pci_device_id nforce2_ids[] = {
- 	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE2 },
- 	{}
+ static const struct pci_device_id i5k_amb_ids[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_5000_ERR) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_5400_ERR) },
+ 	{ 0, }
  };
- MODULE_DEVICE_TABLE(pci, nforce2_ids);
+ MODULE_DEVICE_TABLE(pci, i5k_amb_ids);
 -#endif
  
- /**
-  * nforce2_detect_chipset - detect the Southbridge which contains FSB PLL logic
+ static int i5k_amb_probe(struct platform_device *pdev)
+ {
 -- 
 1.9.1
