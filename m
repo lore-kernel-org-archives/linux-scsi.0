@@ -1,48 +1,53 @@
-From: "Elliott, Robert (Servers)" <elliott@hpe.com>
-Subject: RE: [PATCH 2/3] drivers: scsi: remove unnecessary #ifdef MODULE
-Date: Sat, 1 Jun 2019 15:40:07 +0000
-Message-ID: <AT5PR8401MB1169E817136F8B8587C7A716AB1A0@AT5PR8401MB1169.NAMPRD84.PROD.OUTLOOK.COM>
+From: Guenter Roeck <linux@roeck-us.net>
+Subject: Re: [PATCH 3/3] drivers: hwmon: i5k_amb: remove unnecessary #ifdef
+ MODULE
+Date: Sat, 1 Jun 2019 15:49:46 -0700
+Message-ID: <20190601224946.GA6483@roeck-us.net>
 References: <1559397700-15585-1-git-send-email-info@metux.net>
- <1559397700-15585-3-git-send-email-info@metux.net>
+ <1559397700-15585-4-git-send-email-info@metux.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1559397700-15585-3-git-send-email-info@metux.net>
-Content-Language: en-US
+Content-Disposition: inline
+In-Reply-To: <1559397700-15585-4-git-send-email-info@metux.net>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Enrico Weigelt, metux IT consult" <info@metux.net>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Cc: "rjw@rjwysocki.net" <rjw@rjwysocki.net>, "viresh.kumar@linaro.org" <viresh.kumar@linaro.org>, "jdelvare@suse.com" <jdelvare@suse.com>, "linux@roeck-us.net" <linux@roeck-us.net>, "khalid@gonehiking.org" <khalid@gonehiking.org>, "jejb@linux.ibm.com" <jejb@linux.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "aacraid@microsemi.com" <aacraid@microsemi.com>, "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>, "linux-hwmon@vger.kernel.org" <linux-hwmon@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: "Enrico Weigelt, metux IT consult" <info@metux.net>
+Cc: linux-kernel@vger.kernel.org, rjw@rjwysocki.net, viresh.kumar@linaro.org, jdelvare@suse.com, khalid@gonehiking.org, jejb@linux.ibm.com, martin.petersen@oracle.com, aacraid@microsemi.com, linux-pm@vger.kernel.org, linux-hwmon@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-
-
-> -----Original Message-----
-> From: linux-kernel-owner@vger.kernel.org <linux-kernel-
-> owner@vger.kernel.org> On Behalf Of Enrico Weigelt, metux IT consult
-> Sent: Saturday, June 01, 2019 9:02 AM
-> Subject: [PATCH 2/3] drivers: scsi: remove unnecessary #ifdef MODULE
-> 
+On Sat, Jun 01, 2019 at 04:01:40PM +0200, Enrico Weigelt, metux IT consult wrote:
 > The MODULE_DEVICE_TABLE() macro already checks for MODULE defined,
 > so the extra check here is not necessary.
 > 
-...
-> diff --git a/drivers/scsi/BusLogic.c b/drivers/scsi/BusLogic.c
-...
+> Signed-off-by: Enrico Weigelt <info@metux.net>
+> ---
+>  drivers/hwmon/i5k_amb.c | 2 --
+>  1 file changed, 2 deletions(-)
 > 
+> diff --git a/drivers/hwmon/i5k_amb.c b/drivers/hwmon/i5k_amb.c
+> index b09c39a..b674c2f 100644
+> --- a/drivers/hwmon/i5k_amb.c
+> +++ b/drivers/hwmon/i5k_amb.c
+> @@ -482,14 +482,12 @@ static int i5k_channel_probe(u16 *amb_present, unsigned long dev_id)
+>  	{ 0, 0 }
+>  };
+>  
 > -#ifdef MODULE
->  static struct pci_device_id dptids[] = {
->  	{ PCI_DPT_VENDOR_ID, PCI_DPT_DEVICE_ID, PCI_ANY_ID,
-> PCI_ANY_ID,},
->  	{ PCI_DPT_VENDOR_ID, PCI_DPT_RAPTOR_DEVICE_ID, PCI_ANY_ID,
-> PCI_ANY_ID,},
+>  static const struct pci_device_id i5k_amb_ids[] = {
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_5000_ERR) },
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_5400_ERR) },
 >  	{ 0, }
 >  };
+>  MODULE_DEVICE_TABLE(pci, i5k_amb_ids);
 > -#endif
-> -
->  MODULE_DEVICE_TABLE(pci,dptids);
+>  
 
-I don't see any reply to James' comment that these changes result in
-static struct definitions that are unused, which should result in
-complaints by the compiler like:
-    warning: 'dptids' defined by not used [-Wunused-variable]
+I'd rather know what this table is used for in the first place.
+
+Guenter
+
+>  static int i5k_amb_probe(struct platform_device *pdev)
+>  {
+> -- 
+> 1.9.1
+> 
