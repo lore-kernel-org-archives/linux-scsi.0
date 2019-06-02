@@ -1,62 +1,89 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH 5/7] scsi: mac_scsi: Fix pseudo DMA implementation, take 2
-Date: Sun, 2 Jun 2019 11:07:08 +0200
-Message-ID: <CAMuHMdWxRtJU2aRQQjXzR2mvpfpDezCVu42Eo1eXDsQaPb+j6Q@mail.gmail.com>
-References: <cover.1559438652.git.fthain@telegraphics.com.au> <c56deeb735545c7942607a93f017bb536f581ae5.1559438652.git.fthain@telegraphics.com.au>
+From: Michael Ellerman <mpe@ellerman.id.au>
+Subject: Re: [PATCH] scsi: ibmvscsi: Don't use rc uninitialized in ibmvscsi_do_work
+Date: Sun, 02 Jun 2019 20:15:38 +1000
+Message-ID: <87blzgnvhx.fsf@concordia.ellerman.id.au>
+References: <20190531185306.41290-1-natechancellor@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <c56deeb735545c7942607a93f017bb536f581ae5.1559438652.git.fthain@telegraphics.com.au>
-Sender: stable-owner@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, stable <stable@vger.kernel.org>, linux-m68k <linux-m68k@lists.linux-m68k.org>
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190531185306.41290-1-natechancellor@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tyrel Datwyler <tyreld@linux.ibm.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: clang-built-linux@googlegroups.com, Nathan Chancellor <natechancellor@gmail.com>, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Finn,
+Hi Nathan,
 
-On Sun, Jun 2, 2019 at 3:29 AM Finn Thain <fthain@telegraphics.com.au> wrote:
-> A system bus error during a PDMA transfer can mess up the calculation of
-> the transfer residual (the PDMA handshaking hardware lacks a byte
-> counter). This results in data corruption.
+Nathan Chancellor <natechancellor@gmail.com> writes:
+> clang warns:
 >
-> The algorithm in this patch anticipates a bus error by starting each
-> transfer with a MOVE.B instruction. If a bus error is caught the transfer
-> will be retried. If a bus error is caught later in the transfer (for a
-> MOVE.W instruction) the transfer gets failed and subsequent requests for
-> that target will use PIO instead of PDMA.
+> drivers/scsi/ibmvscsi/ibmvscsi.c:2126:7: warning: variable 'rc' is used
+> uninitialized whenever switch case is taken [-Wsometimes-uninitialized]
+>         case IBMVSCSI_HOST_ACTION_NONE:
+>              ^~~~~~~~~~~~~~~~~~~~~~~~~
+> drivers/scsi/ibmvscsi/ibmvscsi.c:2151:6: note: uninitialized use occurs
+> here
+>         if (rc) {
+>             ^~
 >
-> This avoids the "!REQ and !ACK" error so the severity level of that
-> message is reduced to KERN_DEBUG.
+> Initialize rc to zero so that the atomic_set and dev_err statement don't
+> trigger for the cases that just break.
 >
-> Cc: Michael Schmitz <schmitzmic@gmail.com>
-> Cc: Geert Uytterhoeven <geert@linux-m68k.org>
-> Cc: stable@vger.kernel.org # v4.14+
-> Fixes: 3a0f64bfa907 ("mac_scsi: Fix pseudo DMA implementation")
-> Reported-by: Chris Jones <chris@martin-jones.com>
-> Tested-by: Stan Johnson <userm57@yahoo.com>
-> Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
-
-Thanks for your patch!
-
+> Fixes: 035a3c4046b5 ("scsi: ibmvscsi: redo driver work thread to use enum action states")
+> Link: https://github.com/ClangBuiltLinux/linux/issues/502
+> Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
 > ---
->  arch/m68k/include/asm/mac_pdma.h | 179 +++++++++++++++++++++++++++
->  drivers/scsi/mac_scsi.c          | 201 ++++++++-----------------------
+>  drivers/scsi/ibmvscsi/ibmvscsi.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
+> index 727c31dc11a0..6714d8043e62 100644
+> --- a/drivers/scsi/ibmvscsi/ibmvscsi.c
+> +++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
+> @@ -2118,7 +2118,7 @@ static unsigned long ibmvscsi_get_desired_dma(struct vio_dev *vdev)
+>  static void ibmvscsi_do_work(struct ibmvscsi_host_data *hostdata)
+>  {
+>  	unsigned long flags;
+> -	int rc;
+> +	int rc = 0;
+>  	char *action = "reset";
+>  
+>  	spin_lock_irqsave(hostdata->host->host_lock, flags);
 
-Why have you moved the PDMA implementation to a header file under
-arch/m68k/? Do you intend to reuse it by other drivers?
+It's always preferable IMHO to keep any initialisation as localised as
+possible, so that the compiler can continue to warn about uninitialised
+usages elsewhere. In this case that would mean doing the rc = 0 in the
+switch, something like:
 
-If not, please keep it in the driver, so (a) you don't need an ack from
-me ;-), and (b) your change may be easier to review.
+diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
+index 727c31dc11a0..7ee5755cf636 100644
+--- a/drivers/scsi/ibmvscsi/ibmvscsi.c
++++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
+@@ -2123,9 +2123,6 @@ static void ibmvscsi_do_work(struct ibmvscsi_host_data *hostdata)
+ 
+        spin_lock_irqsave(hostdata->host->host_lock, flags);
+        switch (hostdata->action) {
+-       case IBMVSCSI_HOST_ACTION_NONE:
+-       case IBMVSCSI_HOST_ACTION_UNBLOCK:
+-               break;
+        case IBMVSCSI_HOST_ACTION_RESET:
+                spin_unlock_irqrestore(hostdata->host->host_lock, flags);
+                rc = ibmvscsi_reset_crq_queue(&hostdata->queue, hostdata);
+@@ -2142,7 +2139,10 @@ static void ibmvscsi_do_work(struct ibmvscsi_host_data *hostdata)
+                if (!rc)
+                        rc = ibmvscsi_send_crq(hostdata, 0xC001000000000000LL, 0);
+                break;
++       case IBMVSCSI_HOST_ACTION_NONE:
++       case IBMVSCSI_HOST_ACTION_UNBLOCK:
+        default:
++               rc = 0;
+                break;
+        }
 
-Thanks!
 
-Gr{oetje,eeting}s,
+But then that makes me wonder if that's actually correct?
 
-                        Geert
+If we get an action that we don't recognise should we just throw it away
+like that? (by doing hostdata->action = IBMVSCSI_HOST_ACTION_NONE). Tyrel?
 
--- 
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+cheers
