@@ -1,41 +1,46 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH 0/7] NCR5380 drivers: fixes and improvements
+Subject: [PATCH 1/7] Revert "scsi: ncr5380: Increase register polling limit"
 Date: Sun, 02 Jun 2019 11:24:12 +1000
-Message-ID: <cover.1559438652.git.fthain@telegraphics.com.au>
-Return-path: <stable-owner@vger.kernel.org>
-Sender: stable-owner@vger.kernel.org
+Message-ID: <f9bf71b0bf7c96bbab1d97bf3cb416260b4172f0.1559438652.git.fthain@telegraphics.com.au>
+References: <cover.1559438652.git.fthain@telegraphics.com.au>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <cover.1559438652.git.fthain@telegraphics.com.au>
+Sender: linux-kernel-owner@vger.kernel.org
 To: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Michael Schmitz <schmitzmic@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, stable@vger.kernel.org, Geert Uytterhoeven <geert@linux-m68k.org>, linux-m68k@lists.linux-m68k.org, Joshua Thompson <funaho@jurai.org>
+Cc: Michael Schmitz <schmitzmic@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Among other improvements, this patch series fixes a data corruption bug
-in the mac_scsi driver and a bug in the EH abort routine in the core
-5380 driver.
+This reverts commit 4822827a69d7cd3bc5a07b7637484ebd2cf88db6.
 
-For consistency I have ignored certain checkpatch.pl complaints about
-the indentation in mac_scsi.c. The remaining complaints seem to be
-false positives.
+The purpose of that commit was to suppress a timeout warning message
+which appeared to be caused by target latency. But suppressing the warning
+is undesirable as the warning may indicate a messed up transfer count.
 
-Some of these patches are not trivial to backport. Those patches have
-been nominated for recent -stable branches only.
+Another problem with that commit is that 15 ms is too long to keep
+interrupts disabled as interrupt latency can cause system clock drift
+and other problems.
 
+Cc: Michael Schmitz <schmitzmic@gmail.com>
+Cc: stable@vger.kernel.org
+Fixes: 4822827a69d7 ("scsi: ncr5380: Increase register polling limit")
+Tested-by: Stan Johnson <userm57@yahoo.com>
+Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
+---
+ drivers/scsi/NCR5380.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Finn Thain (7):
-  Revert "scsi: ncr5380: Increase register polling limit"
-  scsi: NCR5380: Always re-enable reselection interrupt
-  scsi: NCR5380: Handle PDMA failure reliably
-  scsi: mac_scsi: Increase PIO/PDMA transfer length threshold
-  scsi: mac_scsi: Fix pseudo DMA implementation, take 2
-  scsi: mac_scsi: Enable PDMA on Mac IIfx
-  scsi: mac_scsi: Treat Last Byte Sent time-out as failure
-
- arch/m68k/include/asm/mac_pdma.h | 179 ++++++++++++++++++++++
- arch/m68k/mac/config.c           |  10 +-
- drivers/scsi/NCR5380.c           |  18 +--
- drivers/scsi/NCR5380.h           |   2 +-
- drivers/scsi/mac_scsi.c          | 249 +++++++++++--------------------
- 5 files changed, 280 insertions(+), 178 deletions(-)
- create mode 100644 arch/m68k/include/asm/mac_pdma.h
-
+diff --git a/drivers/scsi/NCR5380.h b/drivers/scsi/NCR5380.h
+index efca509b92b0..5935fd6d1a05 100644
+--- a/drivers/scsi/NCR5380.h
++++ b/drivers/scsi/NCR5380.h
+@@ -235,7 +235,7 @@ struct NCR5380_cmd {
+ #define NCR5380_PIO_CHUNK_SIZE		256
+ 
+ /* Time limit (ms) to poll registers when IRQs are disabled, e.g. during PDMA */
+-#define NCR5380_REG_POLL_TIME		15
++#define NCR5380_REG_POLL_TIME		10
+ 
+ static inline struct scsi_cmnd *NCR5380_to_scmd(struct NCR5380_cmd *ncmd_ptr)
+ {
 -- 
 2.21.0
