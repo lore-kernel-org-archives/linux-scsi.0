@@ -1,46 +1,45 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH 1/7] Revert "scsi: ncr5380: Increase register polling limit"
-Date: Sun, 02 Jun 2019 11:24:12 +1000
-Message-ID: <f9bf71b0bf7c96bbab1d97bf3cb416260b4172f0.1559438652.git.fthain@telegraphics.com.au>
-References: <cover.1559438652.git.fthain@telegraphics.com.au>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH 6/7] scsi: mac_scsi: Enable PDMA on Mac IIfx
+Date: Sun, 2 Jun 2019 11:04:22 +0200
+Message-ID: <CAMuHMdXbJ5kuPxLKOR6v=-98vzJxoiduVkYfK0EeWze7tm5uVw@mail.gmail.com>
+References: <cover.1559438652.git.fthain@telegraphics.com.au> <a69c9e248f46f02a2cdef95e2ff3d3b08531c6fa.1559438652.git.fthain@telegraphics.com.au>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <cover.1559438652.git.fthain@telegraphics.com.au>
+In-Reply-To: <a69c9e248f46f02a2cdef95e2ff3d3b08531c6fa.1559438652.git.fthain@telegraphics.com.au>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Michael Schmitz <schmitzmic@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, stable@vger.kernel.org
+To: Finn Thain <fthain@telegraphics.com.au>
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Joshua Thompson <funaho@jurai.org>, linux-m68k <linux-m68k@lists.linux-m68k.org>
 List-Id: linux-scsi@vger.kernel.org
 
-This reverts commit 4822827a69d7cd3bc5a07b7637484ebd2cf88db6.
+Hi Finn,
 
-The purpose of that commit was to suppress a timeout warning message
-which appeared to be caused by target latency. But suppressing the warning
-is undesirable as the warning may indicate a messed up transfer count.
+On Sun, Jun 2, 2019 at 3:29 AM Finn Thain <fthain@telegraphics.com.au> wrote:
+> Add support for Apple's custom "SCSI DMA" chip. This patch doesn't make
+> use of its DMA capability. Just the PDMA capability is sufficient to
+> improve sequential read throughput by a factor of 5.
+>
+> Cc: Michael Schmitz <schmitzmic@gmail.com>
+> Cc: Joshua Thompson <funaho@jurai.org>
+> Cc: Geert Uytterhoeven <geert@linux-m68k.org>
+> Tested-by: Stan Johnson <userm57@yahoo.com>
+> Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 
-Another problem with that commit is that 15 ms is too long to keep
-interrupts disabled as interrupt latency can cause system clock drift
-and other problems.
+Thanks for your patch!
 
-Cc: Michael Schmitz <schmitzmic@gmail.com>
-Cc: stable@vger.kernel.org
-Fixes: 4822827a69d7 ("scsi: ncr5380: Increase register polling limit")
-Tested-by: Stan Johnson <userm57@yahoo.com>
-Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
----
- drivers/scsi/NCR5380.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> ---
+>  arch/m68k/mac/config.c  | 10 +++++++--
 
-diff --git a/drivers/scsi/NCR5380.h b/drivers/scsi/NCR5380.h
-index efca509b92b0..5935fd6d1a05 100644
---- a/drivers/scsi/NCR5380.h
-+++ b/drivers/scsi/NCR5380.h
-@@ -235,7 +235,7 @@ struct NCR5380_cmd {
- #define NCR5380_PIO_CHUNK_SIZE		256
- 
- /* Time limit (ms) to poll registers when IRQs are disabled, e.g. during PDMA */
--#define NCR5380_REG_POLL_TIME		15
-+#define NCR5380_REG_POLL_TIME		10
- 
- static inline struct scsi_cmnd *NCR5380_to_scmd(struct NCR5380_cmd *ncmd_ptr)
- {
+For the  m68k change to go in through the SCSI tree:
+Acked-by: Geert Uytterhoeven <geert@linux-m68k.org>
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
 -- 
-2.21.0
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
