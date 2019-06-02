@@ -1,45 +1,45 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH 7/7] scsi: mac_scsi: Treat Last Byte Sent time-out as failure
+Subject: [PATCH 3/7] scsi: NCR5380: Handle PDMA failure reliably
 Date: Sun, 02 Jun 2019 11:24:12 +1000
-Message-ID: <6249ead35826f734592db83d7073c6247d6af793.1559438652.git.fthain@telegraphics.com.au>
+Message-ID: <19811f876a9427adacc8f19606f21b754fd0b5bc.1559438652.git.fthain@telegraphics.com.au>
 References: <cover.1559438652.git.fthain@telegraphics.com.au>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1559438652.git.fthain@telegraphics.com.au>
 Sender: linux-kernel-owner@vger.kernel.org
 To: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Michael Schmitz <schmitzmic@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Michael Schmitz <schmitzmic@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-A system bus error during a PDMA send operation can result in bytes being
-lost. Theoretically that could cause the target to remain in DATA OUT
-phase and the initiator (expecting a phase change) would time-out waiting
-for the Last Byte Sent flag. Should that happen, fail the transfer so the
-core driver will stop using PDMA with this target.
+A PDMA error is handled in the core driver by setting the device's
+'borken' flag and aborting the command. Unfortunately, do_abort() is not
+dependable. Perform a SCSI bus reset instead, to make sure that the
+command fails and gets retried.
 
 Cc: Michael Schmitz <schmitzmic@gmail.com>
+Cc: stable@vger.kernel.org # v4.20+
+Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
 Tested-by: Stan Johnson <userm57@yahoo.com>
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 ---
- drivers/scsi/mac_scsi.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/scsi/NCR5380.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/mac_scsi.c b/drivers/scsi/mac_scsi.c
-index 2e503f06ac99..68d4665112b5 100644
---- a/drivers/scsi/mac_scsi.c
-+++ b/drivers/scsi/mac_scsi.c
-@@ -188,9 +188,12 @@ static inline int macscsi_pwrite(struct NCR5380_hostdata *hostdata,
- 		if (hostdata->pdma_residual == 0) {
- 			if (NCR5380_poll_politely(hostdata, TARGET_COMMAND_REG,
- 			                          TCR_LAST_BYTE_SENT,
--			                          TCR_LAST_BYTE_SENT, HZ / 64) < 0)
-+			                          TCR_LAST_BYTE_SENT,
-+			                          HZ / 64) < 0) {
- 				scmd_printk(KERN_ERR, hostdata->connected,
- 				            "%s: Last Byte Sent timeout\n", __func__);
-+				result = -1;
-+			}
- 			goto out;
- 		}
- 
+diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
+index 08e3ea8159b3..d9fa9cf2fd8b 100644
+--- a/drivers/scsi/NCR5380.c
++++ b/drivers/scsi/NCR5380.c
+@@ -1761,10 +1761,8 @@ static void NCR5380_information_transfer(struct Scsi_Host *instance)
+ 						scmd_printk(KERN_INFO, cmd,
+ 							"switching to slow handshake\n");
+ 						cmd->device->borken = 1;
+-						sink = 1;
+-						do_abort(instance);
+-						cmd->result = DID_ERROR << 16;
+-						/* XXX - need to source or sink data here, as appropriate */
++						do_reset(instance);
++						bus_reset_cleanup(instance);
+ 					}
+ 				} else {
+ 					/* Transfer a small chunk so that the
 -- 
 2.21.0
