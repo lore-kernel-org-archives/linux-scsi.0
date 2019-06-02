@@ -1,24 +1,77 @@
-From: pr-tracker-bot@kernel.org
-Subject: Re: [GIT PULL] SCSI fixes for 5.2-rc1
-Date: Sun, 02 Jun 2019 16:30:13 +0000
-Message-ID: <155949301355.9110.2753867128424458270.pr-tracker-bot@kernel.org>
-References: <1559389512.2947.33.camel@HansenPartnership.com>
+From: Finn Thain <fthain@telegraphics.com.au>
+Subject: Re: [PATCH 5/7] scsi: mac_scsi: Fix pseudo DMA implementation, take
+ 2
+Date: Mon, 3 Jun 2019 09:32:36 +1000 (AEST)
+Message-ID: <alpine.LNX.2.21.1906030903510.20@nippy.intranet>
+References: <cover.1559438652.git.fthain@telegraphics.com.au> <c56deeb735545c7942607a93f017bb536f581ae5.1559438652.git.fthain@telegraphics.com.au> <CAMuHMdWxRtJU2aRQQjXzR2mvpfpDezCVu42Eo1eXDsQaPb+j6Q@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1559389512.2947.33.camel@HansenPartnership.com>
+In-Reply-To: <CAMuHMdWxRtJU2aRQQjXzR2mvpfpDezCVu42Eo1eXDsQaPb+j6Q@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, stable <stable@vger.kernel.org>, linux-m68k <linux-m68k@lists.linux-m68k.org>
 List-Id: linux-scsi@vger.kernel.org
 
-The pull request you sent on Sat, 01 Jun 2019 14:45:12 +0300:
+On Sun, 2 Jun 2019, Geert Uytterhoeven wrote:
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+> Hi Finn,
+> 
+> On Sun, Jun 2, 2019 at 3:29 AM Finn Thain <fthain@telegraphics.com.au> 
+> wrote:
+> > A system bus error during a PDMA transfer can mess up the calculation 
+> > of the transfer residual (the PDMA handshaking hardware lacks a byte 
+> > counter). This results in data corruption.
+> >
+> > The algorithm in this patch anticipates a bus error by starting each 
+> > transfer with a MOVE.B instruction. If a bus error is caught the 
+> > transfer will be retried. If a bus error is caught later in the 
+> > transfer (for a MOVE.W instruction) the transfer gets failed and 
+> > subsequent requests for that target will use PIO instead of PDMA.
+> >
+> > This avoids the "!REQ and !ACK" error so the severity level of that 
+> > message is reduced to KERN_DEBUG.
+> >
+> > Cc: Michael Schmitz <schmitzmic@gmail.com>
+> > Cc: Geert Uytterhoeven <geert@linux-m68k.org>
+> > Cc: stable@vger.kernel.org # v4.14+
+> > Fixes: 3a0f64bfa907 ("mac_scsi: Fix pseudo DMA implementation")
+> > Reported-by: Chris Jones <chris@martin-jones.com>
+> > Tested-by: Stan Johnson <userm57@yahoo.com>
+> > Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
+> 
+> Thanks for your patch!
+> 
+> > ---
+> >  arch/m68k/include/asm/mac_pdma.h | 179 +++++++++++++++++++++++++++
+> >  drivers/scsi/mac_scsi.c          | 201 ++++++++-----------------------
+> 
+> Why have you moved the PDMA implementation to a header file under 
+> arch/m68k/? Do you intend to reuse it by other drivers?
+> 
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/1975b337ce26b53814f1b5c55b260649a7115393
+There are a couple of reasons: the mac_esp driver also uses PDMA and the 
+NuBus PowerMac port also uses mac_scsi.c. OTOH, the NuBus PowerMac port is 
+still out-of-tree, and it is unclear whether the mac_esp driver will ever 
+benefit from this code.
 
-Thank you!
+> If not, please keep it in the driver, so (a) you don't need an ack from 
+> me ;-), and (b) your change may be easier to review.
+> 
+
+I take your wink to mean that you don't want to ask the SCSI maintainers 
+to review m68k asm. Putting aside the code review process for a moment, do 
+you have an opinion on the most logical way to organise this sort of code, 
+from the point-of-view of maintainability, re-usability, readability etc.?
+
+Thanks.
 
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.wiki.kernel.org/userdoc/prtracker
+
+> Thanks!
+> 
+> Gr{oetje,eeting}s,
+> 
+>                         Geert
+> 
+> 
