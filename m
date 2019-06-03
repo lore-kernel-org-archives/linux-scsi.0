@@ -1,77 +1,68 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: Re: [PATCH 5/7] scsi: mac_scsi: Fix pseudo DMA implementation, take
- 2
-Date: Mon, 3 Jun 2019 09:32:36 +1000 (AEST)
-Message-ID: <alpine.LNX.2.21.1906030903510.20@nippy.intranet>
-References: <cover.1559438652.git.fthain@telegraphics.com.au> <c56deeb735545c7942607a93f017bb536f581ae5.1559438652.git.fthain@telegraphics.com.au> <CAMuHMdWxRtJU2aRQQjXzR2mvpfpDezCVu42Eo1eXDsQaPb+j6Q@mail.gmail.com>
+From: Nathan Chancellor <natechancellor@gmail.com>
+Subject: Re: [PATCH] scsi: ibmvscsi: Don't use rc uninitialized in
+ ibmvscsi_do_work
+Date: Sun, 2 Jun 2019 20:23:44 -0700
+Message-ID: <20190603032344.GA26021@archlinux-epyc>
+References: <20190531185306.41290-1-natechancellor@gmail.com>
+ <87blzgnvhx.fsf@concordia.ellerman.id.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAMuHMdWxRtJU2aRQQjXzR2mvpfpDezCVu42Eo1eXDsQaPb+j6Q@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <87blzgnvhx.fsf@concordia.ellerman.id.au>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, stable <stable@vger.kernel.org>, linux-m68k <linux-m68k@lists.linux-m68k.org>
+To: Michael Ellerman <mpe@ellerman.id.au>
+Cc: Tyrel Datwyler <tyreld@linux.ibm.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, clang-built-linux@googlegroups.com, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Sun, 2 Jun 2019, Geert Uytterhoeven wrote:
+Hi Michael,
 
-> Hi Finn,
+On Sun, Jun 02, 2019 at 08:15:38PM +1000, Michael Ellerman wrote:
+> Hi Nathan,
 > 
-> On Sun, Jun 2, 2019 at 3:29 AM Finn Thain <fthain@telegraphics.com.au> 
-> wrote:
-> > A system bus error during a PDMA transfer can mess up the calculation 
-> > of the transfer residual (the PDMA handshaking hardware lacks a byte 
-> > counter). This results in data corruption.
-> >
-> > The algorithm in this patch anticipates a bus error by starting each 
-> > transfer with a MOVE.B instruction. If a bus error is caught the 
-> > transfer will be retried. If a bus error is caught later in the 
-> > transfer (for a MOVE.W instruction) the transfer gets failed and 
-> > subsequent requests for that target will use PIO instead of PDMA.
-> >
-> > This avoids the "!REQ and !ACK" error so the severity level of that 
-> > message is reduced to KERN_DEBUG.
-> >
-> > Cc: Michael Schmitz <schmitzmic@gmail.com>
-> > Cc: Geert Uytterhoeven <geert@linux-m68k.org>
-> > Cc: stable@vger.kernel.org # v4.14+
-> > Fixes: 3a0f64bfa907 ("mac_scsi: Fix pseudo DMA implementation")
-> > Reported-by: Chris Jones <chris@martin-jones.com>
-> > Tested-by: Stan Johnson <userm57@yahoo.com>
-> > Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
-> 
-> Thanks for your patch!
-> 
-> > ---
-> >  arch/m68k/include/asm/mac_pdma.h | 179 +++++++++++++++++++++++++++
-> >  drivers/scsi/mac_scsi.c          | 201 ++++++++-----------------------
-> 
-> Why have you moved the PDMA implementation to a header file under 
-> arch/m68k/? Do you intend to reuse it by other drivers?
-> 
+> It's always preferable IMHO to keep any initialisation as localised as
+> possible, so that the compiler can continue to warn about uninitialised
+> usages elsewhere. In this case that would mean doing the rc = 0 in the
+> switch, something like:
 
-There are a couple of reasons: the mac_esp driver also uses PDMA and the 
-NuBus PowerMac port also uses mac_scsi.c. OTOH, the NuBus PowerMac port is 
-still out-of-tree, and it is unclear whether the mac_esp driver will ever 
-benefit from this code.
+I am certainly okay with implementing this in a v2. I mulled over which
+would be preferred, I suppose I guessed wrong :) Thank you for the
+review and input.
 
-> If not, please keep it in the driver, so (a) you don't need an ack from 
-> me ;-), and (b) your change may be easier to review.
 > 
+> diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
+> index 727c31dc11a0..7ee5755cf636 100644
+> --- a/drivers/scsi/ibmvscsi/ibmvscsi.c
+> +++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
+> @@ -2123,9 +2123,6 @@ static void ibmvscsi_do_work(struct ibmvscsi_host_data *hostdata)
+>  
+>         spin_lock_irqsave(hostdata->host->host_lock, flags);
+>         switch (hostdata->action) {
+> -       case IBMVSCSI_HOST_ACTION_NONE:
+> -       case IBMVSCSI_HOST_ACTION_UNBLOCK:
+> -               break;
+>         case IBMVSCSI_HOST_ACTION_RESET:
+>                 spin_unlock_irqrestore(hostdata->host->host_lock, flags);
+>                 rc = ibmvscsi_reset_crq_queue(&hostdata->queue, hostdata);
+> @@ -2142,7 +2139,10 @@ static void ibmvscsi_do_work(struct ibmvscsi_host_data *hostdata)
+>                 if (!rc)
+>                         rc = ibmvscsi_send_crq(hostdata, 0xC001000000000000LL, 0);
+>                 break;
+> +       case IBMVSCSI_HOST_ACTION_NONE:
+> +       case IBMVSCSI_HOST_ACTION_UNBLOCK:
+>         default:
+> +               rc = 0;
+>                 break;
+>         }
+> 
+> 
+> But then that makes me wonder if that's actually correct?
+> 
+> If we get an action that we don't recognise should we just throw it away
+> like that? (by doing hostdata->action = IBMVSCSI_HOST_ACTION_NONE). Tyrel?
 
-I take your wink to mean that you don't want to ask the SCSI maintainers 
-to review m68k asm. Putting aside the code review process for a moment, do 
-you have an opinion on the most logical way to organise this sort of code, 
-from the point-of-view of maintainability, re-usability, readability etc.?
+However, because of this, I will hold off on v2 until Tyrel can give
+some feedback.
 
-Thanks.
-
--- 
-
-> Thanks!
-> 
-> Gr{oetje,eeting}s,
-> 
->                         Geert
-> 
-> 
+Thanks,
+Nathan
