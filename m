@@ -1,108 +1,103 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: Re: [PATCH 5/7] scsi: mac_scsi: Fix pseudo DMA implementation, take
- 2
-Date: Mon, 3 Jun 2019 17:40:21 +1000 (AEST)
-Message-ID: <alpine.LNX.2.21.1906031702220.37@nippy.intranet>
-References: <cover.1559438652.git.fthain@telegraphics.com.au> <c56deeb735545c7942607a93f017bb536f581ae5.1559438652.git.fthain@telegraphics.com.au> <CAMuHMdWxRtJU2aRQQjXzR2mvpfpDezCVu42Eo1eXDsQaPb+j6Q@mail.gmail.com> <alpine.LNX.2.21.1906030903510.20@nippy.intranet>
- <CAMuHMdUFxQnmJmkr2qm4waTfFA5yfCHAFngyD37cFH6gbbD-Pg@mail.gmail.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH 5/7] scsi: mac_scsi: Fix pseudo DMA implementation, take 2
+Date: Mon, 3 Jun 2019 09:53:24 +0200
+Message-ID: <CAMuHMdXDvrTe09PVFxoDGj6xg-x+99iAhWoM8xXG-7WPKJBZOw@mail.gmail.com>
+References: <cover.1559438652.git.fthain@telegraphics.com.au>
+ <c56deeb735545c7942607a93f017bb536f581ae5.1559438652.git.fthain@telegraphics.com.au>
+ <CAMuHMdWxRtJU2aRQQjXzR2mvpfpDezCVu42Eo1eXDsQaPb+j6Q@mail.gmail.com>
+ <alpine.LNX.2.21.1906030903510.20@nippy.intranet> <CAMuHMdUFxQnmJmkr2qm4waTfFA5yfCHAFngyD37cFH6gbbD-Pg@mail.gmail.com>
+ <alpine.LNX.2.21.1906031702220.37@nippy.intranet>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <CAMuHMdUFxQnmJmkr2qm4waTfFA5yfCHAFngyD37cFH6gbbD-Pg@mail.gmail.com>
+In-Reply-To: <alpine.LNX.2.21.1906031702220.37@nippy.intranet>
 Sender: stable-owner@vger.kernel.org
-To: Geert Uytterhoeven <geert@linux-m68k.org>
+To: Finn Thain <fthain@telegraphics.com.au>
 Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, stable <stable@vger.kernel.org>, linux-m68k <linux-m68k@lists.linux-m68k.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 3 Jun 2019, Geert Uytterhoeven wrote:
+Hi Finn,
 
-> Hi Finn,
-> 
-> On Mon, Jun 3, 2019 at 1:32 AM Finn Thain <fthain@telegraphics.com.au> wrote:
-> > On Sun, 2 Jun 2019, Geert Uytterhoeven wrote:
-> > > On Sun, Jun 2, 2019 at 3:29 AM Finn Thain <fthain@telegraphics.com.au>
-> > > wrote:
-> > > > A system bus error during a PDMA transfer can mess up the calculation
-> > > > of the transfer residual (the PDMA handshaking hardware lacks a byte
-> > > > counter). This results in data corruption.
+On Mon, Jun 3, 2019 at 9:40 AM Finn Thain <fthain@telegraphics.com.au> wrote:
+> On Mon, 3 Jun 2019, Geert Uytterhoeven wrote:
+> > On Mon, Jun 3, 2019 at 1:32 AM Finn Thain <fthain@telegraphics.com.au> wrote:
+> > > On Sun, 2 Jun 2019, Geert Uytterhoeven wrote:
+> > > > On Sun, Jun 2, 2019 at 3:29 AM Finn Thain <fthain@telegraphics.com.au>
+> > > > wrote:
+> > > > > A system bus error during a PDMA transfer can mess up the calculation
+> > > > > of the transfer residual (the PDMA handshaking hardware lacks a byte
+> > > > > counter). This results in data corruption.
+> > > > >
+> > > > > The algorithm in this patch anticipates a bus error by starting each
+> > > > > transfer with a MOVE.B instruction. If a bus error is caught the
+> > > > > transfer will be retried. If a bus error is caught later in the
+> > > > > transfer (for a MOVE.W instruction) the transfer gets failed and
+> > > > > subsequent requests for that target will use PIO instead of PDMA.
+> > > > >
+> > > > > This avoids the "!REQ and !ACK" error so the severity level of that
+> > > > > message is reduced to KERN_DEBUG.
+> > > > >
+> > > > > Cc: Michael Schmitz <schmitzmic@gmail.com>
+> > > > > Cc: Geert Uytterhoeven <geert@linux-m68k.org>
+> > > > > Cc: stable@vger.kernel.org # v4.14+
+> > > > > Fixes: 3a0f64bfa907 ("mac_scsi: Fix pseudo DMA implementation")
+> > > > > Reported-by: Chris Jones <chris@martin-jones.com>
+> > > > > Tested-by: Stan Johnson <userm57@yahoo.com>
+> > > > > Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 > > > >
-> > > > The algorithm in this patch anticipates a bus error by starting each
-> > > > transfer with a MOVE.B instruction. If a bus error is caught the
-> > > > transfer will be retried. If a bus error is caught later in the
-> > > > transfer (for a MOVE.W instruction) the transfer gets failed and
-> > > > subsequent requests for that target will use PIO instead of PDMA.
+> > > > Thanks for your patch!
 > > > >
-> > > > This avoids the "!REQ and !ACK" error so the severity level of that
-> > > > message is reduced to KERN_DEBUG.
+> > > > > ---
+> > > > >  arch/m68k/include/asm/mac_pdma.h | 179 +++++++++++++++++++++++++++
+> > > > >  drivers/scsi/mac_scsi.c          | 201 ++++++++-----------------------
 > > > >
-> > > > Cc: Michael Schmitz <schmitzmic@gmail.com>
-> > > > Cc: Geert Uytterhoeven <geert@linux-m68k.org>
-> > > > Cc: stable@vger.kernel.org # v4.14+
-> > > > Fixes: 3a0f64bfa907 ("mac_scsi: Fix pseudo DMA implementation")
-> > > > Reported-by: Chris Jones <chris@martin-jones.com>
-> > > > Tested-by: Stan Johnson <userm57@yahoo.com>
-> > > > Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
+> > > > Why have you moved the PDMA implementation to a header file under
+> > > > arch/m68k/? Do you intend to reuse it by other drivers?
+> > > >
 > > >
-> > > Thanks for your patch!
-> > >
-> > > > ---
-> > > >  arch/m68k/include/asm/mac_pdma.h | 179 +++++++++++++++++++++++++++
-> > > >  drivers/scsi/mac_scsi.c          | 201 ++++++++-----------------------
-> > >
-> > > Why have you moved the PDMA implementation to a header file under
-> > > arch/m68k/? Do you intend to reuse it by other drivers?
-> > >
+> > > There are a couple of reasons: the mac_esp driver also uses PDMA and the
+> > > NuBus PowerMac port also uses mac_scsi.c. OTOH, the NuBus PowerMac port is
+> > > still out-of-tree, and it is unclear whether the mac_esp driver will ever
+> > > benefit from this code.
 > >
-> > There are a couple of reasons: the mac_esp driver also uses PDMA and the
-> > NuBus PowerMac port also uses mac_scsi.c. OTOH, the NuBus PowerMac port is
-> > still out-of-tree, and it is unclear whether the mac_esp driver will ever
-> > benefit from this code.
-> 
-> So you do have future sharing in mind...
-> 
-> > > If not, please keep it in the driver, so (a) you don't need an ack from
-> > > me ;-), and (b) your change may be easier to review.
+> > So you do have future sharing in mind...
 > >
-> > I take your wink to mean that you don't want to ask the SCSI maintainers
-> > to review m68k asm. Putting aside the code review process for a moment, do
-> 
-> I meant that apart from the code containing m68k assembler source, it is 
-> not related to arch/m68k/, and thus belongs to the driver.
+> > > > If not, please keep it in the driver, so (a) you don't need an ack from
+> > > > me ;-), and (b) your change may be easier to review.
+> > >
+> > > I take your wink to mean that you don't want to ask the SCSI maintainers
+> > > to review m68k asm. Putting aside the code review process for a moment, do
+> >
+> > I meant that apart from the code containing m68k assembler source, it is
+> > not related to arch/m68k/, and thus belongs to the driver.
+>
+> That criterion seems insufficient. It could describe most of arch/m68k/mac
+> (which has headers in arch/m68k/include).
+>
+> > There are several other drivers that contain pieces of assembler code.
+> >
+>
+> Does any driver contain assembler code for multiple architectures? I was
+> trying to avoid that -- though admittedly I don't yet have actual code for
+> the PDMA implementation for mac_scsi for Nubus PowerMacs.
+>
+> However, the existence of that out-of-tree port suggests to me that
+> arch/powerpc/include/mac_scsi.h and arch/m68k/include/mac_scsi.h would be
+> an appropriate layout.
+>
+> But if there's no clear policy then perhaps we should ignore the whole
+> question until the driver code actually becomes shared code. I don't mind
+> re-working the patch to combine the two files.
 
-That criterion seems insufficient. It could describe most of arch/m68k/mac 
-(which has headers in arch/m68k/include).
+Yep, can be handled when the need arises.
 
-> There are several other drivers that contain pieces of assembler code.
-> 
+Gr{oetje,eeting}s,
 
-Does any driver contain assembler code for multiple architectures? I was 
-trying to avoid that -- though admittedly I don't yet have actual code for 
-the PDMA implementation for mac_scsi for Nubus PowerMacs.
-
-However, the existence of that out-of-tree port suggests to me that 
-arch/powerpc/include/mac_scsi.h and arch/m68k/include/mac_scsi.h would be 
-an appropriate layout.
-
-But if there's no clear policy then perhaps we should ignore the whole 
-question until the driver code actually becomes shared code. I don't mind 
-re-working the patch to combine the two files.
+                        Geert
 
 -- 
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
 
-> > you have an opinion on the most logical way to organise this sort of 
-> > code, from the point-of-view of maintainability, re-usability, 
-> > readability etc.?
-> 
-> If the code is used by multiple SCSI drivers, you can move it to a header
-> file under drivers/scsi/.
-> If the code is shared by drivers belonging to multiple subsystems, you can
-> move it to a header file under include/linux/.
-> 
-> Anyone who has a better solution?
-> Thanks!
-> 
-> Gr{oetje,eeting}s,
-> 
->                         Geert
-> 
-> 
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
