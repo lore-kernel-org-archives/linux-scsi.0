@@ -1,41 +1,69 @@
-From: Michael Schmitz <schmitzmic@gmail.com>
-Subject: Re: [PATCH 5/7] scsi: mac_scsi: Fix pseudo DMA implementation, take 2
-Date: Tue, 4 Jun 2019 09:25:49 +1200
-Message-ID: <247ed79a-75c7-41fd-0932-0b7701ee5d4e@gmail.com>
-References: <cover.1559438652.git.fthain@telegraphics.com.au>
- <c56deeb735545c7942607a93f017bb536f581ae5.1559438652.git.fthain@telegraphics.com.au>
- <CAMuHMdWxRtJU2aRQQjXzR2mvpfpDezCVu42Eo1eXDsQaPb+j6Q@mail.gmail.com>
- <alpine.LNX.2.21.1906030903510.20@nippy.intranet>
- <CAMuHMdUFxQnmJmkr2qm4waTfFA5yfCHAFngyD37cFH6gbbD-Pg@mail.gmail.com>
- <alpine.LNX.2.21.1906031702220.37@nippy.intranet>
+From: Nathan Chancellor <natechancellor@gmail.com>
+Subject: [PATCH v2] scsi: ibmvscsi: Don't use rc uninitialized in ibmvscsi_do_work
+Date: Mon,  3 Jun 2019 15:19:42 -0700
+Message-ID: <20190603221941.65432-1-natechancellor@gmail.com>
+References: <20190531185306.41290-1-natechancellor@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <alpine.LNX.2.21.1906031702220.37@nippy.intranet>
-Content-Language: en-US
+In-Reply-To: <20190531185306.41290-1-natechancellor@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>, Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, stable <stable@vger.kernel.org>, linux-m68k <linux-m68k@lists.linux-m68k.org>
+To: Tyrel Datwyler <tyreld@linux.ibm.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, clang-built-linux@googlegroups.com, Nathan Chancellor <natechancellor@gmail.com>, Michael Ellerman <mpe@ellerman.id.au>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Finn,
+clang warns:
 
-On 3/06/19 7:40 PM, Finn Thain wrote:
->
->> There are several other drivers that contain pieces of assembler code.
->>
-> Does any driver contain assembler code for multiple architectures? I was
-> trying to avoid that -- though admittedly I don't yet have actual code for
-> the PDMA implementation for mac_scsi for Nubus PowerMacs.
->
-I've seen that once, for one of the ESP drivers that were supported on 
-both m68k and ppc (APUS, PPC upgrade to Amiga computers). But that 
-driver was removed long ago (after 2.6?).
+drivers/scsi/ibmvscsi/ibmvscsi.c:2126:7: warning: variable 'rc' is used
+uninitialized whenever switch case is taken [-Wsometimes-uninitialized]
+        case IBMVSCSI_HOST_ACTION_NONE:
+             ^~~~~~~~~~~~~~~~~~~~~~~~~
+drivers/scsi/ibmvscsi/ibmvscsi.c:2151:6: note: uninitialized use occurs
+here
+        if (rc) {
+            ^~
 
-In that case, the assembly file did reside in drivers/scsi/. That still 
-appears to be current practice (see drivers/scsi/arm/acornscsi-io.S).
+Initialize rc to zero in the case statements that clang mentions so that
+the atomic_set and dev_err statement don't trigger for them.
 
-Cheers,
+Fixes: 035a3c4046b5 ("scsi: ibmvscsi: redo driver work thread to use enum action states")
+Link: https://github.com/ClangBuiltLinux/linux/issues/502
+Suggested-by: Michael Ellerman <mpe@ellerman.id.au>
+Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
+---
 
-     Michael
+v1 -> v2:
+
+* Initialize rc in the case statements, rather than at the top of the
+  function, as suggested by Michael.
+
+ drivers/scsi/ibmvscsi/ibmvscsi.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
+index 65053daef5f7..3b5647d622d9 100644
+--- a/drivers/scsi/ibmvscsi/ibmvscsi.c
++++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
+@@ -2109,9 +2109,6 @@ static void ibmvscsi_do_work(struct ibmvscsi_host_data *hostdata)
+ 
+ 	spin_lock_irqsave(hostdata->host->host_lock, flags);
+ 	switch (hostdata->action) {
+-	case IBMVSCSI_HOST_ACTION_NONE:
+-	case IBMVSCSI_HOST_ACTION_UNBLOCK:
+-		break;
+ 	case IBMVSCSI_HOST_ACTION_RESET:
+ 		spin_unlock_irqrestore(hostdata->host->host_lock, flags);
+ 		rc = ibmvscsi_reset_crq_queue(&hostdata->queue, hostdata);
+@@ -2128,7 +2125,10 @@ static void ibmvscsi_do_work(struct ibmvscsi_host_data *hostdata)
+ 		if (!rc)
+ 			rc = ibmvscsi_send_crq(hostdata, 0xC001000000000000LL, 0);
+ 		break;
++	case IBMVSCSI_HOST_ACTION_NONE:
++	case IBMVSCSI_HOST_ACTION_UNBLOCK:
+ 	default:
++		rc = 0;
+ 		break;
+ 	}
+ 
+-- 
+2.22.0.rc3
