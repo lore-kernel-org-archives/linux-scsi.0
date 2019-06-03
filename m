@@ -1,67 +1,49 @@
-From: Christophe Leroy <christophe.leroy@c-s.fr>
-Subject: Re: [PATCH] scsi: ibmvscsi: Don't use rc uninitialized in
- ibmvscsi_do_work
-Date: Mon, 3 Jun 2019 10:45:24 +0200
-Message-ID: <d932b755-606e-6847-a460-da463411c562@c-s.fr>
-References: <20190531185306.41290-1-natechancellor@gmail.com>
+From: YueHaibing <yuehaibing@huawei.com>
+Subject: [PATCH] scsi: fcoe: Fix possible memleak in fcoe_if_init
+Date: Mon, 3 Jun 2019 17:22:18 +0800
+Message-ID: <20190603092218.15064-1-yuehaibing@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190531185306.41290-1-natechancellor@gmail.com>
-Content-Language: fr
 Sender: linux-kernel-owner@vger.kernel.org
-To: Nathan Chancellor <natechancellor@gmail.com>, Tyrel Datwyler <tyreld@linux.ibm.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: clang-built-linux@googlegroups.com, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: martin.petersen@oracle.com, jejb@linux.ibm.com, hare@suse.de, sedat.dilek@gmail.com, jth@kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, YueHaibing <yuehaibing@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
+If it fails to alloc fcoe_vport_scsi_transport in fcoe_if_init,
+we should check the err and free allocted fcoe_nport_scsi_transport.
+Also return ENOMEM instead of ENODEV.
 
+Fixes: 8ca86f84dd5f ("[SCSI] fcoe: prepare fcoe for using fcoe transport")
+Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+---
+ drivers/scsi/fcoe/fcoe.c | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
 
-Le 31/05/2019 à 20:53, Nathan Chancellor a écrit :
-> clang warns:
-> 
-> drivers/scsi/ibmvscsi/ibmvscsi.c:2126:7: warning: variable 'rc' is used
-> uninitialized whenever switch case is taken [-Wsometimes-uninitialized]
->          case IBMVSCSI_HOST_ACTION_NONE:
->               ^~~~~~~~~~~~~~~~~~~~~~~~~
-> drivers/scsi/ibmvscsi/ibmvscsi.c:2151:6: note: uninitialized use occurs
-> here
->          if (rc) {
->              ^~
-> 
-> Initialize rc to zero so that the atomic_set and dev_err statement don't
-> trigger for the cases that just break.
-> 
-> Fixes: 035a3c4046b5 ("scsi: ibmvscsi: redo driver work thread to use enum action states")
-> Link: https://github.com/ClangBuiltLinux/linux/issues/502
-> Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
-> ---
->   drivers/scsi/ibmvscsi/ibmvscsi.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
-> index 727c31dc11a0..6714d8043e62 100644
-> --- a/drivers/scsi/ibmvscsi/ibmvscsi.c
-> +++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
-> @@ -2118,7 +2118,7 @@ static unsigned long ibmvscsi_get_desired_dma(struct vio_dev *vdev)
->   static void ibmvscsi_do_work(struct ibmvscsi_host_data *hostdata)
->   {
->   	unsigned long flags;
-> -	int rc;
-> +	int rc = 0;
-
-I don't think the above is the best solution, as it hides the warning 
-instead of really fixing it.
-
-Your problem is that some legs of the switch are missing setting the 
-value of rc, it would therefore be better to fix the legs instead of 
-setting a default value which may not be correct for every case, 
-allthough it may be at the time being.
-
-Christophe
-
-
->   	char *action = "reset";
->   
->   	spin_lock_irqsave(hostdata->host->host_lock, flags);
-> 
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index 8ba8862..12ca0b7 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -1262,12 +1262,17 @@ static int __init fcoe_if_init(void)
+ 	/* attach to scsi transport */
+ 	fcoe_nport_scsi_transport =
+ 		fc_attach_transport(&fcoe_nport_fc_functions);
++	if (!fcoe_nport_scsi_transport)
++		return -ENOMEM;
++
+ 	fcoe_vport_scsi_transport =
+ 		fc_attach_transport(&fcoe_vport_fc_functions);
+ 
+-	if (!fcoe_nport_scsi_transport) {
+-		printk(KERN_ERR "fcoe: Failed to attach to the FC transport\n");
+-		return -ENODEV;
++	if (!fcoe_vport_scsi_transport) {
++		pr_err("fcoe: Failed to attach to the FC transport\n");
++		fc_release_transport(fcoe_nport_scsi_transport);
++		fcoe_nport_scsi_transport = NULL;
++		return -ENOMEM;
+ 	}
+ 
+ 	return 0;
+-- 
+1.8.3.1
