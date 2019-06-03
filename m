@@ -1,72 +1,41 @@
-From: Khalid Aziz <khalid@gonehiking.org>
-Subject: Re: [PATCH 2/3] drivers: scsi: remove unnecessary #ifdef MODULE
-Date: Mon, 3 Jun 2019 10:46:56 -0600
-Message-ID: <ae7d15b0-f513-ab1f-6101-201099df7eef@gonehiking.org>
-References: <1559397700-15585-1-git-send-email-info@metux.net>
- <1559397700-15585-3-git-send-email-info@metux.net>
+From: Michael Schmitz <schmitzmic@gmail.com>
+Subject: Re: [PATCH 5/7] scsi: mac_scsi: Fix pseudo DMA implementation, take 2
+Date: Tue, 4 Jun 2019 09:25:49 +1200
+Message-ID: <247ed79a-75c7-41fd-0932-0b7701ee5d4e@gmail.com>
+References: <cover.1559438652.git.fthain@telegraphics.com.au>
+ <c56deeb735545c7942607a93f017bb536f581ae5.1559438652.git.fthain@telegraphics.com.au>
+ <CAMuHMdWxRtJU2aRQQjXzR2mvpfpDezCVu42Eo1eXDsQaPb+j6Q@mail.gmail.com>
+ <alpine.LNX.2.21.1906030903510.20@nippy.intranet>
+ <CAMuHMdUFxQnmJmkr2qm4waTfFA5yfCHAFngyD37cFH6gbbD-Pg@mail.gmail.com>
+ <alpine.LNX.2.21.1906031702220.37@nippy.intranet>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1559397700-15585-3-git-send-email-info@metux.net>
+In-Reply-To: <alpine.LNX.2.21.1906031702220.37@nippy.intranet>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Enrico Weigelt, metux IT consult" <info@metux.net>, linux-kernel@vger.kernel.org
-Cc: rjw@rjwysocki.net, viresh.kumar@linaro.org, jdelvare@suse.com, linux@roeck-us.net, jejb@linux.ibm.com, martin.petersen@oracle.com, aacraid@microsemi.com, linux-pm@vger.kernel.org, linux-hwmon@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Finn Thain <fthain@telegraphics.com.au>, Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, stable <stable@vger.kernel.org>, linux-m68k <linux-m68k@lists.linux-m68k.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 6/1/19 8:01 AM, Enrico Weigelt, metux IT consult wrote:
-> The MODULE_DEVICE_TABLE() macro already checks for MODULE defined,
-> so the extra check here is not necessary.
-> 
-> Signed-off-by: Enrico Weigelt <info@metux.net>
-> ---
->  drivers/scsi/BusLogic.c | 2 --
->  drivers/scsi/dpt_i2o.c  | 3 ---
->  2 files changed, 5 deletions(-)
-> 
-> diff --git a/drivers/scsi/BusLogic.c b/drivers/scsi/BusLogic.c
-> index e41e51f..68cc68b 100644
-> --- a/drivers/scsi/BusLogic.c
-> +++ b/drivers/scsi/BusLogic.c
-> @@ -3893,7 +3893,6 @@ static void __exit blogic_exit(void)
->  
->  __setup("BusLogic=", blogic_setup);
->  
-> -#ifdef MODULE
->  /*static struct pci_device_id blogic_pci_tbl[] = {
->  	{ PCI_VENDOR_ID_BUSLOGIC, PCI_DEVICE_ID_BUSLOGIC_MULTIMASTER,
->  	  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
-> @@ -3909,7 +3908,6 @@ static void __exit blogic_exit(void)
->  	{PCI_DEVICE(PCI_VENDOR_ID_BUSLOGIC, PCI_DEVICE_ID_BUSLOGIC_FLASHPOINT)},
->  	{0, },
->  };
-> -#endif
->  MODULE_DEVICE_TABLE(pci, blogic_pci_tbl);
->  
->  module_init(blogic_init);> diff --git a/drivers/scsi/dpt_i2o.c b/drivers/scsi/dpt_i2o.c
-> index abc74fd..9b28f9f 100644
-> --- a/drivers/scsi/dpt_i2o.c
-> +++ b/drivers/scsi/dpt_i2o.c
-> @@ -177,14 +177,11 @@ static u8 adpt_read_blink_led(adpt_hba* host)
->   *============================================================================
->   */
->  
-> -#ifdef MODULE
->  static struct pci_device_id dptids[] = {
->  	{ PCI_DPT_VENDOR_ID, PCI_DPT_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID,},
->  	{ PCI_DPT_VENDOR_ID, PCI_DPT_RAPTOR_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID,},
->  	{ 0, }
->  };
-> -#endif
-> -
->  MODULE_DEVICE_TABLE(pci,dptids);
->  
->  static int adpt_detect(struct scsi_host_template* sht)
-> 
+Hi Finn,
 
-As James pointed out, this will result in warning from compiler about
-unused variable. Please address that first.
+On 3/06/19 7:40 PM, Finn Thain wrote:
+>
+>> There are several other drivers that contain pieces of assembler code.
+>>
+> Does any driver contain assembler code for multiple architectures? I was
+> trying to avoid that -- though admittedly I don't yet have actual code for
+> the PDMA implementation for mac_scsi for Nubus PowerMacs.
+>
+I've seen that once, for one of the ESP drivers that were supported on 
+both m68k and ppc (APUS, PPC upgrade to Amiga computers). But that 
+driver was removed long ago (after 2.6?).
 
---
-Khalid
+In that case, the assembly file did reside in drivers/scsi/. That still 
+appears to be current practice (see drivers/scsi/arm/acornscsi-io.S).
+
+Cheers,
+
+     Michael
