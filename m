@@ -1,132 +1,177 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.19 14/36] scsi: lpfc: correct rcu unlock issue in lpfc_nvme_info_show
-Date: Tue,  4 Jun 2019 19:23:09 -0400
-Message-ID: <20190604232333.7185-14-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 12/36] scsi: qedi: remove memset/memcpy to nfunc and use func instead
+Date: Tue,  4 Jun 2019 19:23:07 -0400
+Message-ID: <20190604232333.7185-12-sashal@kernel.org>
 References: <20190604232333.7185-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20190604232333.7185-1-sashal@kernel.org>
-Sender: stable-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, Bart Van Assche <bvanassche@acm.org>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Cc: YueHaibing <yuehaibing@huawei.com>, Hulk Robot <hulkci@huawei.com>, Dan Carpenter <dan.carpenter@oracle.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: James Smart <jsmart2021@gmail.com>
+From: YueHaibing <yuehaibing@huawei.com>
 
-[ Upstream commit 79080d349f7f58a2e86c56043a3d04184d5f294a ]
+[ Upstream commit c09581a52765a85f19fc35340127396d5e3379cc ]
 
-Many of the exit cases were not releasing the rcu read lock.  Corrected the
-exit paths.
+KASAN reports this:
 
-Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-Signed-off-by: James Smart <jsmart2021@gmail.com>
-Tested-by: Bart Van Assche <bvanassche@acm.org>
+BUG: KASAN: global-out-of-bounds in qedi_dbg_err+0xda/0x330 [qedi]
+Read of size 31 at addr ffffffffc12b0ae0 by task syz-executor.0/2429
+
+CPU: 0 PID: 2429 Comm: syz-executor.0 Not tainted 5.0.0-rc7+ #45
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.10.2-1ubuntu1 04/01/2014
+Call Trace:
+ __dump_stack lib/dump_stack.c:77 [inline]
+ dump_stack+0xfa/0x1ce lib/dump_stack.c:113
+ print_address_description+0x1c4/0x270 mm/kasan/report.c:187
+ kasan_report+0x149/0x18d mm/kasan/report.c:317
+ memcpy+0x1f/0x50 mm/kasan/common.c:130
+ qedi_dbg_err+0xda/0x330 [qedi]
+ ? 0xffffffffc12d0000
+ qedi_init+0x118/0x1000 [qedi]
+ ? 0xffffffffc12d0000
+ ? 0xffffffffc12d0000
+ ? 0xffffffffc12d0000
+ do_one_initcall+0xfa/0x5ca init/main.c:887
+ do_init_module+0x204/0x5f6 kernel/module.c:3460
+ load_module+0x66b2/0x8570 kernel/module.c:3808
+ __do_sys_finit_module+0x238/0x2a0 kernel/module.c:3902
+ do_syscall_64+0x147/0x600 arch/x86/entry/common.c:290
+ entry_SYSCALL_64_after_hwframe+0x49/0xbe
+RIP: 0033:0x462e99
+Code: f7 d8 64 89 02 b8 ff ff ff ff c3 66 0f 1f 44 00 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 bc ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007f2d57e55c58 EFLAGS: 00000246 ORIG_RAX: 0000000000000139
+RAX: ffffffffffffffda RBX: 000000000073bfa0 RCX: 0000000000462e99
+RDX: 0000000000000000 RSI: 00000000200003c0 RDI: 0000000000000003
+RBP: 00007f2d57e55c70 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 00007f2d57e566bc
+R13: 00000000004bcefb R14: 00000000006f7030 R15: 0000000000000004
+
+The buggy address belongs to the variable:
+ __func__.67584+0x0/0xffffffffffffd520 [qedi]
+
+Memory state around the buggy address:
+ ffffffffc12b0980: fa fa fa fa 00 04 fa fa fa fa fa fa 00 00 05 fa
+ ffffffffc12b0a00: fa fa fa fa 00 00 04 fa fa fa fa fa 00 05 fa fa
+> ffffffffc12b0a80: fa fa fa fa 00 06 fa fa fa fa fa fa 00 02 fa fa
+                                                          ^
+ ffffffffc12b0b00: fa fa fa fa 00 00 04 fa fa fa fa fa 00 00 03 fa
+ ffffffffc12b0b80: fa fa fa fa 00 00 02 fa fa fa fa fa 00 00 04 fa
+
+Currently the qedi_dbg_* family of functions can overrun the end of the
+source string if it is less than the destination buffer length because of
+the use of a fixed sized memcpy. Remove the memset/memcpy calls to nfunc
+and just use func instead as it is always a null terminated string.
+
+Reported-by: Hulk Robot <hulkci@huawei.com>
+Fixes: ace7f46ba5fd ("scsi: qedi: Add QLogic FastLinQ offload iSCSI driver framework.")
+Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+Reviewed-by: Dan Carpenter <dan.carpenter@oracle.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_attr.c | 32 +++++++++++++++++++-------------
- 1 file changed, 19 insertions(+), 13 deletions(-)
+ drivers/scsi/qedi/qedi_dbg.c | 32 ++++++++------------------------
+ 1 file changed, 8 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-index cb19b12e7211..55cd96e2469c 100644
---- a/drivers/scsi/lpfc/lpfc_attr.c
-+++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -341,7 +341,7 @@ lpfc_nvme_info_show(struct device *dev, struct device_attribute *attr,
- 		  phba->sli4_hba.scsi_xri_max,
- 		  lpfc_sli4_get_els_iocb_cnt(phba));
- 	if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
--		goto buffer_done;
-+		goto rcu_unlock_buf_done;
+diff --git a/drivers/scsi/qedi/qedi_dbg.c b/drivers/scsi/qedi/qedi_dbg.c
+index 8fd28b056f73..3383314a3882 100644
+--- a/drivers/scsi/qedi/qedi_dbg.c
++++ b/drivers/scsi/qedi/qedi_dbg.c
+@@ -16,10 +16,6 @@ qedi_dbg_err(struct qedi_dbg_ctx *qedi, const char *func, u32 line,
+ {
+ 	va_list va;
+ 	struct va_format vaf;
+-	char nfunc[32];
+-
+-	memset(nfunc, 0, sizeof(nfunc));
+-	memcpy(nfunc, func, sizeof(nfunc) - 1);
  
- 	/* Port state is only one of two values for now. */
- 	if (localport->port_id)
-@@ -357,7 +357,7 @@ lpfc_nvme_info_show(struct device *dev, struct device_attribute *attr,
- 		  wwn_to_u64(vport->fc_nodename.u.wwn),
- 		  localport->port_id, statep);
- 	if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
--		goto buffer_done;
-+		goto rcu_unlock_buf_done;
+ 	va_start(va, fmt);
  
- 	list_for_each_entry(ndlp, &vport->fc_nodes, nlp_listp) {
- 		nrport = NULL;
-@@ -384,39 +384,39 @@ lpfc_nvme_info_show(struct device *dev, struct device_attribute *attr,
+@@ -28,9 +24,9 @@ qedi_dbg_err(struct qedi_dbg_ctx *qedi, const char *func, u32 line,
  
- 		/* Tab in to show lport ownership. */
- 		if (strlcat(buf, "NVME RPORT       ", PAGE_SIZE) >= PAGE_SIZE)
--			goto buffer_done;
-+			goto rcu_unlock_buf_done;
- 		if (phba->brd_no >= 10) {
- 			if (strlcat(buf, " ", PAGE_SIZE) >= PAGE_SIZE)
--				goto buffer_done;
-+				goto rcu_unlock_buf_done;
- 		}
+ 	if (likely(qedi) && likely(qedi->pdev))
+ 		pr_err("[%s]:[%s:%d]:%d: %pV", dev_name(&qedi->pdev->dev),
+-		       nfunc, line, qedi->host_no, &vaf);
++		       func, line, qedi->host_no, &vaf);
+ 	else
+-		pr_err("[0000:00:00.0]:[%s:%d]: %pV", nfunc, line, &vaf);
++		pr_err("[0000:00:00.0]:[%s:%d]: %pV", func, line, &vaf);
  
- 		scnprintf(tmp, sizeof(tmp), "WWPN x%llx ",
- 			  nrport->port_name);
- 		if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
--			goto buffer_done;
-+			goto rcu_unlock_buf_done;
+ 	va_end(va);
+ }
+@@ -41,10 +37,6 @@ qedi_dbg_warn(struct qedi_dbg_ctx *qedi, const char *func, u32 line,
+ {
+ 	va_list va;
+ 	struct va_format vaf;
+-	char nfunc[32];
+-
+-	memset(nfunc, 0, sizeof(nfunc));
+-	memcpy(nfunc, func, sizeof(nfunc) - 1);
  
- 		scnprintf(tmp, sizeof(tmp), "WWNN x%llx ",
- 			  nrport->node_name);
- 		if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
--			goto buffer_done;
-+			goto rcu_unlock_buf_done;
+ 	va_start(va, fmt);
  
- 		scnprintf(tmp, sizeof(tmp), "DID x%06x ",
- 			  nrport->port_id);
- 		if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
--			goto buffer_done;
-+			goto rcu_unlock_buf_done;
+@@ -56,9 +48,9 @@ qedi_dbg_warn(struct qedi_dbg_ctx *qedi, const char *func, u32 line,
  
- 		/* An NVME rport can have multiple roles. */
- 		if (nrport->port_role & FC_PORT_ROLE_NVME_INITIATOR) {
- 			if (strlcat(buf, "INITIATOR ", PAGE_SIZE) >= PAGE_SIZE)
--				goto buffer_done;
-+				goto rcu_unlock_buf_done;
- 		}
- 		if (nrport->port_role & FC_PORT_ROLE_NVME_TARGET) {
- 			if (strlcat(buf, "TARGET ", PAGE_SIZE) >= PAGE_SIZE)
--				goto buffer_done;
-+				goto rcu_unlock_buf_done;
- 		}
- 		if (nrport->port_role & FC_PORT_ROLE_NVME_DISCOVERY) {
- 			if (strlcat(buf, "DISCSRVC ", PAGE_SIZE) >= PAGE_SIZE)
--				goto buffer_done;
-+				goto rcu_unlock_buf_done;
- 		}
- 		if (nrport->port_role & ~(FC_PORT_ROLE_NVME_INITIATOR |
- 					  FC_PORT_ROLE_NVME_TARGET |
-@@ -424,12 +424,12 @@ lpfc_nvme_info_show(struct device *dev, struct device_attribute *attr,
- 			scnprintf(tmp, sizeof(tmp), "UNKNOWN ROLE x%x",
- 				  nrport->port_role);
- 			if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
--				goto buffer_done;
-+				goto rcu_unlock_buf_done;
- 		}
+ 	if (likely(qedi) && likely(qedi->pdev))
+ 		pr_warn("[%s]:[%s:%d]:%d: %pV", dev_name(&qedi->pdev->dev),
+-			nfunc, line, qedi->host_no, &vaf);
++			func, line, qedi->host_no, &vaf);
+ 	else
+-		pr_warn("[0000:00:00.0]:[%s:%d]: %pV", nfunc, line, &vaf);
++		pr_warn("[0000:00:00.0]:[%s:%d]: %pV", func, line, &vaf);
  
- 		scnprintf(tmp, sizeof(tmp), "%s\n", statep);
- 		if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
--			goto buffer_done;
-+			goto rcu_unlock_buf_done;
- 	}
- 	rcu_read_unlock();
+ ret:
+ 	va_end(va);
+@@ -70,10 +62,6 @@ qedi_dbg_notice(struct qedi_dbg_ctx *qedi, const char *func, u32 line,
+ {
+ 	va_list va;
+ 	struct va_format vaf;
+-	char nfunc[32];
+-
+-	memset(nfunc, 0, sizeof(nfunc));
+-	memcpy(nfunc, func, sizeof(nfunc) - 1);
  
-@@ -491,7 +491,13 @@ lpfc_nvme_info_show(struct device *dev, struct device_attribute *attr,
- 		  atomic_read(&lport->cmpl_fcp_err));
- 	strlcat(buf, tmp, PAGE_SIZE);
+ 	va_start(va, fmt);
  
--buffer_done:
-+	/* RCU is already unlocked. */
-+	goto buffer_done;
-+
-+ rcu_unlock_buf_done:
-+	rcu_read_unlock();
-+
-+ buffer_done:
- 	len = strnlen(buf, PAGE_SIZE);
+@@ -85,10 +73,10 @@ qedi_dbg_notice(struct qedi_dbg_ctx *qedi, const char *func, u32 line,
  
- 	if (unlikely(len >= (PAGE_SIZE - 1))) {
+ 	if (likely(qedi) && likely(qedi->pdev))
+ 		pr_notice("[%s]:[%s:%d]:%d: %pV",
+-			  dev_name(&qedi->pdev->dev), nfunc, line,
++			  dev_name(&qedi->pdev->dev), func, line,
+ 			  qedi->host_no, &vaf);
+ 	else
+-		pr_notice("[0000:00:00.0]:[%s:%d]: %pV", nfunc, line, &vaf);
++		pr_notice("[0000:00:00.0]:[%s:%d]: %pV", func, line, &vaf);
+ 
+ ret:
+ 	va_end(va);
+@@ -100,10 +88,6 @@ qedi_dbg_info(struct qedi_dbg_ctx *qedi, const char *func, u32 line,
+ {
+ 	va_list va;
+ 	struct va_format vaf;
+-	char nfunc[32];
+-
+-	memset(nfunc, 0, sizeof(nfunc));
+-	memcpy(nfunc, func, sizeof(nfunc) - 1);
+ 
+ 	va_start(va, fmt);
+ 
+@@ -115,9 +99,9 @@ qedi_dbg_info(struct qedi_dbg_ctx *qedi, const char *func, u32 line,
+ 
+ 	if (likely(qedi) && likely(qedi->pdev))
+ 		pr_info("[%s]:[%s:%d]:%d: %pV", dev_name(&qedi->pdev->dev),
+-			nfunc, line, qedi->host_no, &vaf);
++			func, line, qedi->host_no, &vaf);
+ 	else
+-		pr_info("[0000:00:00.0]:[%s:%d]: %pV", nfunc, line, &vaf);
++		pr_info("[0000:00:00.0]:[%s:%d]: %pV", func, line, &vaf);
+ 
+ ret:
+ 	va_end(va);
 -- 
 2.20.1
