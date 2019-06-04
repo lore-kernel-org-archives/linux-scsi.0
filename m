@@ -1,7 +1,7 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 5.1 20/60] scsi: lpfc: add check for loss of ndlp when sending RRQ
-Date: Tue,  4 Jun 2019 19:21:30 -0400
-Message-ID: <20190604232212.6753-20-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.1 17/60] scsi: qedi: remove set but not used variables 'cdev' and 'udev'
+Date: Tue,  4 Jun 2019 19:21:27 -0400
+Message-ID: <20190604232212.6753-17-sashal@kernel.org>
 References: <20190604232212.6753-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -9,40 +9,50 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20190604232212.6753-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, Bart Van Assche <bvanassche@acm.org>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Cc: YueHaibing <yuehaibing@huawei.com>, Manish Rangankar <mrangankar@marvell.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: James Smart <jsmart2021@gmail.com>
+From: YueHaibing <yuehaibing@huawei.com>
 
-[ Upstream commit c8cb261a072c88ca1aff0e804a30db4c7606521b ]
+[ Upstream commit d0adee5d12752256ff0c87ad7f002f21fe49d618 ]
 
-There was a missing qualification of a valid ndlp structure when calling to
-send an RRQ for an abort.  Add the check.
+Fixes gcc '-Wunused-but-set-variable' warning:
 
-Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-Signed-off-by: James Smart <jsmart2021@gmail.com>
-Tested-by: Bart Van Assche <bvanassche@acm.org>
+drivers/scsi/qedi/qedi_iscsi.c: In function 'qedi_ep_connect':
+drivers/scsi/qedi/qedi_iscsi.c:813:23: warning: variable 'udev' set but not used [-Wunused-but-set-variable]
+drivers/scsi/qedi/qedi_iscsi.c:812:18: warning: variable 'cdev' set but not used [-Wunused-but-set-variable]
+
+These have never been used since introduction.
+
+Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+Acked-by: Manish Rangankar <mrangankar@marvell.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_els.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/scsi/qedi/qedi_iscsi.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index fc077cb87900..965f8a1a8f67 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -7338,7 +7338,10 @@ int
- lpfc_send_rrq(struct lpfc_hba *phba, struct lpfc_node_rrq *rrq)
- {
- 	struct lpfc_nodelist *ndlp = lpfc_findnode_did(rrq->vport,
--							rrq->nlp_DID);
-+						       rrq->nlp_DID);
-+	if (!ndlp)
-+		return 1;
-+
- 	if (lpfc_test_rrq_active(phba, ndlp, rrq->xritag))
- 		return lpfc_issue_els_rrq(rrq->vport, ndlp,
- 					 rrq->nlp_DID, rrq);
+diff --git a/drivers/scsi/qedi/qedi_iscsi.c b/drivers/scsi/qedi/qedi_iscsi.c
+index bf371e7b957d..c3d0d246df14 100644
+--- a/drivers/scsi/qedi/qedi_iscsi.c
++++ b/drivers/scsi/qedi/qedi_iscsi.c
+@@ -809,8 +809,6 @@ qedi_ep_connect(struct Scsi_Host *shost, struct sockaddr *dst_addr,
+ 	struct qedi_endpoint *qedi_ep;
+ 	struct sockaddr_in *addr;
+ 	struct sockaddr_in6 *addr6;
+-	struct qed_dev *cdev  =  NULL;
+-	struct qedi_uio_dev *udev = NULL;
+ 	struct iscsi_path path_req;
+ 	u32 msg_type = ISCSI_KEVENT_IF_DOWN;
+ 	u32 iscsi_cid = QEDI_CID_RESERVED;
+@@ -830,8 +828,6 @@ qedi_ep_connect(struct Scsi_Host *shost, struct sockaddr *dst_addr,
+ 	}
+ 
+ 	qedi = iscsi_host_priv(shost);
+-	cdev = qedi->cdev;
+-	udev = qedi->udev;
+ 
+ 	if (test_bit(QEDI_IN_OFFLINE, &qedi->flags) ||
+ 	    test_bit(QEDI_IN_RECOVERY, &qedi->flags)) {
 -- 
 2.20.1
