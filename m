@@ -1,58 +1,49 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.19 13/36] scsi: qedi: remove set but not used variables 'cdev' and 'udev'
-Date: Tue,  4 Jun 2019 19:23:08 -0400
-Message-ID: <20190604232333.7185-13-sashal@kernel.org>
-References: <20190604232333.7185-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.1 36/60] scsi: myrs: Fix uninitialized variable
+Date: Tue,  4 Jun 2019 19:21:46 -0400
+Message-ID: <20190604232212.6753-36-sashal@kernel.org>
+References: <20190604232212.6753-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190604232333.7185-1-sashal@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20190604232212.6753-1-sashal@kernel.org>
+Sender: stable-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: YueHaibing <yuehaibing@huawei.com>, Manish Rangankar <mrangankar@marvell.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Cc: YueHaibing <yuehaibing@huawei.com>, Hannes Reinecke <hare@suse.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 From: YueHaibing <yuehaibing@huawei.com>
 
-[ Upstream commit d0adee5d12752256ff0c87ad7f002f21fe49d618 ]
+[ Upstream commit 41552199b5518fe26bee0829a28dd1880441b430 ]
 
-Fixes gcc '-Wunused-but-set-variable' warning:
+drivers/scsi/myrs.c: In function 'myrs_log_event':
+drivers/scsi/myrs.c:821:24: warning: 'sshdr.sense_key' may be used uninitialized in this function [-Wmaybe-uninitialized]
+  struct scsi_sense_hdr sshdr;
 
-drivers/scsi/qedi/qedi_iscsi.c: In function 'qedi_ep_connect':
-drivers/scsi/qedi/qedi_iscsi.c:813:23: warning: variable 'udev' set but not used [-Wunused-but-set-variable]
-drivers/scsi/qedi/qedi_iscsi.c:812:18: warning: variable 'cdev' set but not used [-Wunused-but-set-variable]
+If ev->ev_code is not 0x1C, sshdr.sense_key may be used uninitialized. Fix
+this by initializing variable 'sshdr' to 0.
 
-These have never been used since introduction.
-
+Fixes: 77266186397c ("scsi: myrs: Add Mylex RAID controller (SCSI interface)")
 Signed-off-by: YueHaibing <yuehaibing@huawei.com>
-Acked-by: Manish Rangankar <mrangankar@marvell.com>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qedi/qedi_iscsi.c | 4 ----
- 1 file changed, 4 deletions(-)
+ drivers/scsi/myrs.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/qedi/qedi_iscsi.c b/drivers/scsi/qedi/qedi_iscsi.c
-index 4130b9117055..1b7049dce169 100644
---- a/drivers/scsi/qedi/qedi_iscsi.c
-+++ b/drivers/scsi/qedi/qedi_iscsi.c
-@@ -810,8 +810,6 @@ qedi_ep_connect(struct Scsi_Host *shost, struct sockaddr *dst_addr,
- 	struct qedi_endpoint *qedi_ep;
- 	struct sockaddr_in *addr;
- 	struct sockaddr_in6 *addr6;
--	struct qed_dev *cdev  =  NULL;
--	struct qedi_uio_dev *udev = NULL;
- 	struct iscsi_path path_req;
- 	u32 msg_type = ISCSI_KEVENT_IF_DOWN;
- 	u32 iscsi_cid = QEDI_CID_RESERVED;
-@@ -831,8 +829,6 @@ qedi_ep_connect(struct Scsi_Host *shost, struct sockaddr *dst_addr,
- 	}
+diff --git a/drivers/scsi/myrs.c b/drivers/scsi/myrs.c
+index b8d54ef8cf6d..eb0dd566330a 100644
+--- a/drivers/scsi/myrs.c
++++ b/drivers/scsi/myrs.c
+@@ -818,7 +818,7 @@ static void myrs_log_event(struct myrs_hba *cs, struct myrs_event *ev)
+ 	unsigned char ev_type, *ev_msg;
+ 	struct Scsi_Host *shost = cs->host;
+ 	struct scsi_device *sdev;
+-	struct scsi_sense_hdr sshdr;
++	struct scsi_sense_hdr sshdr = {0};
+ 	unsigned char sense_info[4];
+ 	unsigned char cmd_specific[4];
  
- 	qedi = iscsi_host_priv(shost);
--	cdev = qedi->cdev;
--	udev = qedi->udev;
- 
- 	if (test_bit(QEDI_IN_OFFLINE, &qedi->flags) ||
- 	    test_bit(QEDI_IN_RECOVERY, &qedi->flags)) {
 -- 
 2.20.1
