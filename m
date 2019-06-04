@@ -1,38 +1,132 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH 1/2] scsi_host: add support for request batching
-Date: Tue, 4 Jun 2019 15:40:18 -0700
-Message-ID: <c175c8ae-2cec-6423-5cda-b1abcc4b42e5@acm.org>
-References: <20190530112811.3066-1-pbonzini@redhat.com>
- <20190530112811.3066-2-pbonzini@redhat.com>
+From: Sasha Levin <sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.1 19/60] scsi: lpfc: correct rcu unlock issue in lpfc_nvme_info_show
+Date: Tue,  4 Jun 2019 19:21:29 -0400
+Message-ID: <20190604232212.6753-19-sashal@kernel.org>
+References: <20190604232212.6753-1-sashal@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190530112811.3066-2-pbonzini@redhat.com>
-Content-Language: en-US
+In-Reply-To: <20190604232212.6753-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Paolo Bonzini <pbonzini@redhat.com>, linux-kernel@vger.kernel.org, kvm@vger.kernel.org
-Cc: jejb@linux.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, stefanha@redhat.com
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, Bart Van Assche <bvanassche@acm.org>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 5/30/19 4:28 AM, Paolo Bonzini wrote:
-> This allows a list of requests to be issued, with the LLD only writing
-> the hardware doorbell when necessary, after the last request was prepared.
-> This is more efficient if we have lists of requests to issue, particularly
-> on virtualized hardware, where writing the doorbell is more expensive than
-> on real hardware.
-> 
-> The use case for this is plugged IO, where blk-mq flushes a batch of
-> requests all at once.
-> 
-> The API is the same as for blk-mq, just with blk-mq concepts tweaked to
-> fit the SCSI subsystem API: the "last" flag in blk_mq_queue_data becomes
-> a flag in scsi_cmnd, while the queue_num in the commit_rqs callback is
-> extracted from the hctx and passed as a parameter.
-> 
-> The only complication is that blk-mq uses different plugging heuristics
-> depending on whether commit_rqs is present or not.  So we have two
-> different sets of blk_mq_ops and pick one depending on whether the
-> scsi_host template uses commit_rqs or not.
+From: James Smart <jsmart2021@gmail.com>
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+[ Upstream commit 79080d349f7f58a2e86c56043a3d04184d5f294a ]
+
+Many of the exit cases were not releasing the rcu read lock.  Corrected the
+exit paths.
+
+Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
+Signed-off-by: James Smart <jsmart2021@gmail.com>
+Tested-by: Bart Van Assche <bvanassche@acm.org>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/scsi/lpfc/lpfc_attr.c | 32 +++++++++++++++++++-------------
+ 1 file changed, 19 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+index f30cb0fb9a82..26a22e41204e 100644
+--- a/drivers/scsi/lpfc/lpfc_attr.c
++++ b/drivers/scsi/lpfc/lpfc_attr.c
+@@ -338,7 +338,7 @@ lpfc_nvme_info_show(struct device *dev, struct device_attribute *attr,
+ 		  phba->sli4_hba.io_xri_max,
+ 		  lpfc_sli4_get_els_iocb_cnt(phba));
+ 	if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
+-		goto buffer_done;
++		goto rcu_unlock_buf_done;
+ 
+ 	/* Port state is only one of two values for now. */
+ 	if (localport->port_id)
+@@ -354,7 +354,7 @@ lpfc_nvme_info_show(struct device *dev, struct device_attribute *attr,
+ 		  wwn_to_u64(vport->fc_nodename.u.wwn),
+ 		  localport->port_id, statep);
+ 	if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
+-		goto buffer_done;
++		goto rcu_unlock_buf_done;
+ 
+ 	list_for_each_entry(ndlp, &vport->fc_nodes, nlp_listp) {
+ 		nrport = NULL;
+@@ -381,39 +381,39 @@ lpfc_nvme_info_show(struct device *dev, struct device_attribute *attr,
+ 
+ 		/* Tab in to show lport ownership. */
+ 		if (strlcat(buf, "NVME RPORT       ", PAGE_SIZE) >= PAGE_SIZE)
+-			goto buffer_done;
++			goto rcu_unlock_buf_done;
+ 		if (phba->brd_no >= 10) {
+ 			if (strlcat(buf, " ", PAGE_SIZE) >= PAGE_SIZE)
+-				goto buffer_done;
++				goto rcu_unlock_buf_done;
+ 		}
+ 
+ 		scnprintf(tmp, sizeof(tmp), "WWPN x%llx ",
+ 			  nrport->port_name);
+ 		if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
+-			goto buffer_done;
++			goto rcu_unlock_buf_done;
+ 
+ 		scnprintf(tmp, sizeof(tmp), "WWNN x%llx ",
+ 			  nrport->node_name);
+ 		if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
+-			goto buffer_done;
++			goto rcu_unlock_buf_done;
+ 
+ 		scnprintf(tmp, sizeof(tmp), "DID x%06x ",
+ 			  nrport->port_id);
+ 		if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
+-			goto buffer_done;
++			goto rcu_unlock_buf_done;
+ 
+ 		/* An NVME rport can have multiple roles. */
+ 		if (nrport->port_role & FC_PORT_ROLE_NVME_INITIATOR) {
+ 			if (strlcat(buf, "INITIATOR ", PAGE_SIZE) >= PAGE_SIZE)
+-				goto buffer_done;
++				goto rcu_unlock_buf_done;
+ 		}
+ 		if (nrport->port_role & FC_PORT_ROLE_NVME_TARGET) {
+ 			if (strlcat(buf, "TARGET ", PAGE_SIZE) >= PAGE_SIZE)
+-				goto buffer_done;
++				goto rcu_unlock_buf_done;
+ 		}
+ 		if (nrport->port_role & FC_PORT_ROLE_NVME_DISCOVERY) {
+ 			if (strlcat(buf, "DISCSRVC ", PAGE_SIZE) >= PAGE_SIZE)
+-				goto buffer_done;
++				goto rcu_unlock_buf_done;
+ 		}
+ 		if (nrport->port_role & ~(FC_PORT_ROLE_NVME_INITIATOR |
+ 					  FC_PORT_ROLE_NVME_TARGET |
+@@ -421,12 +421,12 @@ lpfc_nvme_info_show(struct device *dev, struct device_attribute *attr,
+ 			scnprintf(tmp, sizeof(tmp), "UNKNOWN ROLE x%x",
+ 				  nrport->port_role);
+ 			if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
+-				goto buffer_done;
++				goto rcu_unlock_buf_done;
+ 		}
+ 
+ 		scnprintf(tmp, sizeof(tmp), "%s\n", statep);
+ 		if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
+-			goto buffer_done;
++			goto rcu_unlock_buf_done;
+ 	}
+ 	rcu_read_unlock();
+ 
+@@ -488,7 +488,13 @@ lpfc_nvme_info_show(struct device *dev, struct device_attribute *attr,
+ 		  atomic_read(&lport->cmpl_fcp_err));
+ 	strlcat(buf, tmp, PAGE_SIZE);
+ 
+-buffer_done:
++	/* RCU is already unlocked. */
++	goto buffer_done;
++
++ rcu_unlock_buf_done:
++	rcu_read_unlock();
++
++ buffer_done:
+ 	len = strnlen(buf, PAGE_SIZE);
+ 
+ 	if (unlikely(len >= (PAGE_SIZE - 1))) {
+-- 
+2.20.1
