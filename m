@@ -1,40 +1,65 @@
-From: James Smart <james.smart@broadcom.com>
-Subject: Re: [PATCH -next] scsi: lpfc: Make some symbols static
-Date: Tue, 4 Jun 2019 10:36:55 -0700
-Message-ID: <e9a78d2a-a756-c42e-0c8d-af8ebf262615@broadcom.com>
-References: <20190531152841.13684-1-yuehaibing@huawei.com>
+From: John Stultz <john.stultz@linaro.org>
+Subject: Re: [EXT] [PATCH 2/3] scsi: ufs: Allow resetting the UFS device
+Date: Tue, 4 Jun 2019 11:10:01 -0700
+Message-ID: <CANcMJZB+bg9LWzo=EaL-QnWiL49=MzyBJy8qsBiSMu8HZeWRxw@mail.gmail.com>
+References: <20190604072001.9288-1-bjorn.andersson@linaro.org>
+ <20190604072001.9288-3-bjorn.andersson@linaro.org> <BN7PR08MB568450B1EC51ABAA2E426AC0DB150@BN7PR08MB5684.namprd08.prod.outlook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190531152841.13684-1-yuehaibing@huawei.com>
-Content-Language: en-US
+In-Reply-To: <BN7PR08MB568450B1EC51ABAA2E426AC0DB150@BN7PR08MB5684.namprd08.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: YueHaibing <yuehaibing@huawei.com>, dick.kennedy@broadcom.com, jejb@linux.ibm.com, martin.petersen@oracle.com, jsmart2021@gmail.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: "Bean Huo (beanhuo)" <beanhuo@micron.com>
+Cc: Bjorn Andersson <bjorn.andersson@linaro.org>, Pedro Sousa <pedrom.sousa@synopsys.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Andy Gross <agross@kernel.org>, Linus Walleij <linus.walleij@linaro.org>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>, "linux-gpio@vger.kernel.org" <linux-gpio@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Subhash Jadavani <subhashj@codeaurora.org>
 List-Id: linux-scsi@vger.kernel.org
 
-
-
-On 5/31/2019 8:28 AM, YueHaibing wrote:
-> Fix sparse warnings:
+On Tue, Jun 4, 2019 at 1:14 AM Bean Huo (beanhuo) <beanhuo@micron.com> wrote:
 >
-> drivers/scsi/lpfc/lpfc_sli.c:115:1: warning: symbol 'lpfc_sli4_pcimem_bcopy' was not declared. Should it be static?
-> drivers/scsi/lpfc/lpfc_sli.c:7854:1: warning: symbol 'lpfc_sli4_process_missed_mbox_completions' was not declared. Should it be static?
-> drivers/scsi/lpfc/lpfc_nvmet.c:223:27: warning: symbol 'lpfc_nvmet_get_ctx_for_xri' was not declared. Should it be static?
-> drivers/scsi/lpfc/lpfc_nvmet.c:245:27: warning: symbol 'lpfc_nvmet_get_ctx_for_oxid' was not declared. Should it be static?
-> drivers/scsi/lpfc/lpfc_init.c:75:10: warning: symbol 'lpfc_present_cpu' was not declared. Should it be static?
+> Hi, Bjorn
 >
-> Reported-by: Hulk Robot <hulkci@huawei.com>
-> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
-> ---
->   drivers/scsi/lpfc/lpfc_init.c  | 2 +-
->   drivers/scsi/lpfc/lpfc_nvmet.c | 4 ++--
->   drivers/scsi/lpfc/lpfc_sli.c   | 4 ++--
->   3 files changed, 5 insertions(+), 5 deletions(-)
+> >Acquire the device-reset GPIO and toggle this to reset the UFS device during
+> >initialization and host reset.
+> >
+> >+/**
+> >+ ufshcd_device_reset() - toggle the (optional) device reset line
+> >+ * @hba: per-adapter instance
+> >+ *
+> >+ * Toggles the (optional) reset line to reset the attached device.
+> >+ */
+> >+static void ufshcd_device_reset(struct ufs_hba *hba) {
+> >+      /*
+> >+       * The USB device shall detect reset pulses of 1us, sleep for 10us to
+> >+       * be on the safe side.
+> >+       */
+> >+      gpiod_set_value_cansleep(hba->device_reset, 1);
+> >+      usleep_range(10, 15);
+> >+
+> >+      gpiod_set_value_cansleep(hba->device_reset, 0);
+> >+      usleep_range(10, 15);
+> >+}
+> >+
+> > /**
+> >  * ufshcd_host_reset_and_restore - reset and restore host controller
+> >  * @hba: per-adapter instance
+> >@@ -6159,6 +6179,9 @@ static int ufshcd_reset_and_restore(struct ufs_hba
+> >*hba)
+> >       int retries = MAX_HOST_RESET_RETRIES;
+> >
+> >       do {
+> >+              /* Reset the attached device */
+> >+              ufshcd_device_reset(hba);
+> >+
 >
->
+> what's problem you met, and you should reset UFS device here? could you give more info?
 
-Looks good - thank You
+On the pixel3, devices with micron UFS chips won't boot upstream
+kernels without this patch, which is a rewrite of an earlier patch:
+  https://git.linaro.org/people/john.stultz/android-dev.git/commit/?h=dev/p3&id=99f3dd8519a848b752679584451c45f42c326a17
 
-Reviewed-by: James Smart  <james.smart@broadcom.com>
+Which was pulled from the downstream tree from here:
+  https://android.googlesource.com/kernel/msm.git/+/9c8077087e818017%5E%21/
+
+CCing Subhash as he may have additional context.
+
+thanks
+-john
