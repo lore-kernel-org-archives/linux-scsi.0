@@ -1,13 +1,13 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.9 12/17] scsi: bnx2fc: fix incorrect cast to u64 on shift operation
-Date: Tue,  4 Jun 2019 19:24:53 -0400
-Message-ID: <20190604232459.7745-12-sashal@kernel.org>
-References: <20190604232459.7745-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 18/24] scsi: bnx2fc: fix incorrect cast to u64 on shift operation
+Date: Tue,  4 Jun 2019 19:24:09 -0400
+Message-ID: <20190604232416.7479-18-sashal@kernel.org>
+References: <20190604232416.7479-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190604232459.7745-1-sashal@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20190604232416.7479-1-sashal@kernel.org>
+Sender: stable-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc: Colin Ian King <colin.king@canonical.com>, Saurav Kashyap <skashyap@marvell.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -31,10 +31,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/bnx2fc/bnx2fc_hwi.c b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-index 5ff9f89c17c7..39b2f60149d9 100644
+index 26de61d65a4d..1bdff75ae903 100644
 --- a/drivers/scsi/bnx2fc/bnx2fc_hwi.c
 +++ b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-@@ -829,7 +829,7 @@ static void bnx2fc_process_unsol_compl(struct bnx2fc_rport *tgt, u16 wqe)
+@@ -830,7 +830,7 @@ static void bnx2fc_process_unsol_compl(struct bnx2fc_rport *tgt, u16 wqe)
  			((u64)err_entry->data.err_warn_bitmap_hi << 32) |
  			(u64)err_entry->data.err_warn_bitmap_lo;
  		for (i = 0; i < BNX2FC_NUM_ERR_BITS; i++) {
