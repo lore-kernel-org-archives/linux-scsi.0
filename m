@@ -1,419 +1,85 @@
-From: John Garry <john.garry@huawei.com>
-Subject: [PATCH] scsi: libsas, lldds: Use dev_is_expander()
-Date: Thu, 6 Jun 2019 00:12:23 +0800
-Message-ID: <1559751143-168560-1-git-send-email-john.garry@huawei.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH] sg: Fix a double-fetch bug in drivers/scsi/sg.c
+Date: Wed, 5 Jun 2019 13:07:25 -0400
+Message-ID: <da6f10b8-3b9a-f8d6-33c4-0d8f5711bb23@interlog.com>
+References: <20190523023855.GA17852@zhanggen-UX430UQ>
+ <d7cb94f3-f136-62ff-3067-b3e5f6ac63ce@suse.cz>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=iso-8859-2; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <d7cb94f3-f136-62ff-3067-b3e5f6ac63ce@suse.cz>
+Content-Language: en-CA
 Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.ibm.com, martin.petersen@oracle.com, intel-linux-scu@intel.com, artur.paszkiewicz@intel.com, jinpu.wang@profitbricks.com, lindar_liu@usish.com
-Cc: john.garry@huawei.com, yanaijie@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, hare@suse.de
+To: Jiri Slaby <jslaby@suse.cz>, Gen Zhang <blackgod016574@gmail.com>, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Many times in libsas, and in LLDDs which use libsas, the check for an
-expander device is re-implemented or open coded.
+On 2019-06-05 2:00 a.m., Jiri Slaby wrote:
+> On 23. 05. 19, 4:38, Gen Zhang wrote:
+>> In sg_write(), the opcode of the command is fetched the first time from
+>> the userspace by __get_user(). Then the whole command, the opcode
+>> included, is fetched again from userspace by __copy_from_user().
+>> However, a malicious user can change the opcode between the two fetches.
+>> This can cause inconsistent data and potential errors as cmnd is used in
+>> the following codes.
+>>
+>> Thus we should check opcode between the two fetches to prevent this.
+>>
+>> Signed-off-by: Gen Zhang <blackgod016574@gmail.com>
+>> ---
+>> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+>> index d3f1531..a2971b8 100644
+>> --- a/drivers/scsi/sg.c
+>> +++ b/drivers/scsi/sg.c
+>> @@ -694,6 +694,8 @@ sg_write(struct file *filp, const char __user *buf, size_t count, loff_t * ppos)
+>>   	hp->flags = input_size;	/* structure abuse ... */
+>>   	hp->pack_id = old_hdr.pack_id;
+>>   	hp->usr_ptr = NULL;
+>> +	if (opcode != cmnd[0])
+>> +		return -EINVAL;
+> 
+> Isn't it too early to check cmnd which is copied only here:
+> 
+>>   	if (__copy_from_user(cmnd, buf, cmd_size))
+>>   		return -EFAULT;
+>>   	/*
+>> ---
+>>
 
-Use dev_is_expander() instead. We rename this from
-sas_dev_type_is_expander() to not spill so many lines in referencing.
+Hi,
+Yes, it is too early. It needs to be after that __copy_from_user(cmnd,
+buf, cmd_size) call.
 
-Signed-off-by: John Garry <john.garry@huawei.com>
+To put this in context, this is a very old interface; dating from 1992
+and deprecated for almost 20 years. The fact that the first byte of
+the SCSI cdb needs to be read first to work out that size of the
+following SCSI command and optionally the offset of a data-out
+buffer that may follow the command; is one reason why that interface
+was replaced. Also the implementation did not handle SCSI variable
+length cdb_s.
 
-diff --git a/drivers/scsi/aic94xx/aic94xx_dev.c b/drivers/scsi/aic94xx/aic94xx_dev.c
-index 33072388ea16..e528a2ce9602 100644
---- a/drivers/scsi/aic94xx/aic94xx_dev.c
-+++ b/drivers/scsi/aic94xx/aic94xx_dev.c
-@@ -187,9 +187,7 @@ static int asd_init_target_ddb(struct domain_device *dev)
- 			}
- 		} else {
- 			flags |= CONCURRENT_CONN_SUPP;
--			if (!dev->parent &&
--			    (dev->dev_type == SAS_EDGE_EXPANDER_DEVICE ||
--			     dev->dev_type == SAS_FANOUT_EXPANDER_DEVICE))
-+			if (!dev->parent && dev_is_expander(dev->dev_type))
- 				asd_ddbsite_write_byte(asd_ha, ddb, MAX_CCONN,
- 						       4);
- 			else
-diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index fc87994b5d73..c48a8826a0a3 100644
---- a/drivers/scsi/hisi_sas/hisi_sas.h
-+++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -66,10 +66,6 @@
- #define HISI_SAS_MAX_SMP_RESP_SZ 1028
- #define HISI_SAS_MAX_STP_RESP_SZ 28
- 
--#define DEV_IS_EXPANDER(type) \
--	((type == SAS_EDGE_EXPANDER_DEVICE) || \
--	(type == SAS_FANOUT_EXPANDER_DEVICE))
--
- #define HISI_SAS_SATA_PROTOCOL_NONDATA		0x1
- #define HISI_SAS_SATA_PROTOCOL_PIO			0x2
- #define HISI_SAS_SATA_PROTOCOL_DMA			0x4
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 8a7feb8ed8d6..75ecb62c0fcf 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -808,7 +808,7 @@ static int hisi_sas_dev_found(struct domain_device *device)
- 	device->lldd_dev = sas_dev;
- 	hisi_hba->hw->setup_itct(hisi_hba, sas_dev);
- 
--	if (parent_dev && DEV_IS_EXPANDER(parent_dev->dev_type)) {
-+	if (parent_dev && dev_is_expander(parent_dev->dev_type)) {
- 		int phy_no;
- 		u8 phy_num = parent_dev->ex_dev.num_phys;
- 		struct ex_phy *phy;
-@@ -1451,7 +1451,7 @@ static void hisi_sas_rescan_topology(struct hisi_hba *hisi_hba, u32 old_state,
- 
- 				_sas_port = sas_port;
- 
--				if (DEV_IS_EXPANDER(dev->dev_type))
-+				if (dev_is_expander(dev->dev_type))
- 					sas_ha->notify_port_event(sas_phy,
- 							PORTE_BROADCAST_RCVD);
- 			}
-@@ -1538,7 +1538,7 @@ static void hisi_sas_terminate_stp_reject(struct hisi_hba *hisi_hba)
- 		struct domain_device *port_dev = sas_port->port_dev;
- 		struct domain_device *device;
- 
--		if (!port_dev || !DEV_IS_EXPANDER(port_dev->dev_type))
-+		if (!port_dev || !dev_is_expander(port_dev->dev_type))
- 			continue;
- 
- 		/* Try to find a SATA device */
-@@ -1908,7 +1908,7 @@ static int hisi_sas_clear_nexus_ha(struct sas_ha_struct *sas_ha)
- 		struct domain_device *device = sas_dev->sas_device;
- 
- 		if ((sas_dev->dev_type == SAS_PHY_UNUSED) || !device ||
--		    DEV_IS_EXPANDER(device->dev_type))
-+		    dev_is_expander(device->dev_type))
- 			continue;
- 
- 		rc = hisi_sas_debug_I_T_nexus_reset(device);
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index d4650bed8274..d201f5f8b4ce 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -949,7 +949,7 @@ static void setup_itct_v2_hw(struct hisi_hba *hisi_hba,
- 		break;
- 	case SAS_SATA_DEV:
- 	case SAS_SATA_PENDING:
--		if (parent_dev && DEV_IS_EXPANDER(parent_dev->dev_type))
-+		if (parent_dev && dev_is_expander(parent_dev->dev_type))
- 			qw0 = HISI_SAS_DEV_TYPE_STP << ITCT_HDR_DEV_TYPE_OFF;
- 		else
- 			qw0 = HISI_SAS_DEV_TYPE_SATA << ITCT_HDR_DEV_TYPE_OFF;
-@@ -2531,7 +2531,7 @@ static void prep_ata_v2_hw(struct hisi_hba *hisi_hba,
- 	/* create header */
- 	/* dw0 */
- 	dw0 = port->id << CMD_HDR_PORT_OFF;
--	if (parent_dev && DEV_IS_EXPANDER(parent_dev->dev_type))
-+	if (parent_dev && dev_is_expander(parent_dev->dev_type))
- 		dw0 |= 3 << CMD_HDR_CMD_OFF;
- 	else
- 		dw0 |= 4 << CMD_HDR_CMD_OFF;
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 49620c2411df..5044c5c9eb8e 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -757,7 +757,7 @@ static void setup_itct_v3_hw(struct hisi_hba *hisi_hba,
- 		break;
- 	case SAS_SATA_DEV:
- 	case SAS_SATA_PENDING:
--		if (parent_dev && DEV_IS_EXPANDER(parent_dev->dev_type))
-+		if (parent_dev && dev_is_expander(parent_dev->dev_type))
- 			qw0 = HISI_SAS_DEV_TYPE_STP << ITCT_HDR_DEV_TYPE_OFF;
- 		else
- 			qw0 = HISI_SAS_DEV_TYPE_SATA << ITCT_HDR_DEV_TYPE_OFF;
-@@ -1341,7 +1341,7 @@ static void prep_ata_v3_hw(struct hisi_hba *hisi_hba,
- 	u32 dw1 = 0, dw2 = 0;
- 
- 	hdr->dw0 = cpu_to_le32(port->id << CMD_HDR_PORT_OFF);
--	if (parent_dev && DEV_IS_EXPANDER(parent_dev->dev_type))
-+	if (parent_dev && dev_is_expander(parent_dev->dev_type))
- 		hdr->dw0 |= cpu_to_le32(3 << CMD_HDR_CMD_OFF);
- 	else
- 		hdr->dw0 |= cpu_to_le32(4 << CMD_HDR_CMD_OFF);
-diff --git a/drivers/scsi/isci/remote_device.h b/drivers/scsi/isci/remote_device.h
-index 47a013fffae7..3ad681c4c20a 100644
---- a/drivers/scsi/isci/remote_device.h
-+++ b/drivers/scsi/isci/remote_device.h
-@@ -295,11 +295,6 @@ static inline struct isci_remote_device *rnc_to_dev(struct sci_remote_node_conte
- 	return idev;
- }
- 
--static inline bool dev_is_expander(struct domain_device *dev)
--{
--	return dev->dev_type == SAS_EDGE_EXPANDER_DEVICE || dev->dev_type == SAS_FANOUT_EXPANDER_DEVICE;
--}
--
- static inline void sci_remote_device_decrement_request_count(struct isci_remote_device *idev)
- {
- 	/* XXX delete this voodoo when converting to the top-level device
-diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
-index 2518cecb7edf..abcad097ff2f 100644
---- a/drivers/scsi/libsas/sas_discover.c
-+++ b/drivers/scsi/libsas/sas_discover.c
-@@ -293,7 +293,7 @@ void sas_free_device(struct kref *kref)
- 	dev->phy = NULL;
- 
- 	/* remove the phys and ports, everything else should be gone */
--	if (dev->dev_type == SAS_EDGE_EXPANDER_DEVICE || dev->dev_type == SAS_FANOUT_EXPANDER_DEVICE)
-+	if (dev_is_expander(dev->dev_type))
- 		kfree(dev->ex_dev.ex_phy);
- 
- 	if (dev_is_sata(dev) && dev->sata_dev.ap) {
-@@ -503,8 +503,7 @@ static void sas_revalidate_domain(struct work_struct *work)
- 	pr_debug("REVALIDATING DOMAIN on port %d, pid:%d\n", port->id,
- 		 task_pid_nr(current));
- 
--	if (ddev && (ddev->dev_type == SAS_FANOUT_EXPANDER_DEVICE ||
--		     ddev->dev_type == SAS_EDGE_EXPANDER_DEVICE))
-+	if (ddev && dev_is_expander(ddev->dev_type))
- 		res = sas_ex_revalidate_domain(ddev);
- 
- 	pr_debug("done REVALIDATING DOMAIN on port %d, pid:%d, res 0x%x\n",
-diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-index fd16a3debef4..ecae55f117a3 100644
---- a/drivers/scsi/libsas/sas_expander.c
-+++ b/drivers/scsi/libsas/sas_expander.c
-@@ -1120,8 +1120,7 @@ static int sas_find_sub_addr(struct domain_device *dev, u8 *sub_addr)
- 		    phy->phy_state == PHY_NOT_PRESENT)
- 			continue;
- 
--		if ((phy->attached_dev_type == SAS_EDGE_EXPANDER_DEVICE ||
--		     phy->attached_dev_type == SAS_FANOUT_EXPANDER_DEVICE) &&
-+		if (dev_is_expander(phy->attached_dev_type) &&
- 		    phy->routing_attr == SUBTRACTIVE_ROUTING) {
- 
- 			memcpy(sub_addr, phy->attached_sas_addr, SAS_ADDR_SIZE);
-@@ -1139,8 +1138,7 @@ static int sas_check_level_subtractive_boundary(struct domain_device *dev)
- 	u8 sub_addr[SAS_ADDR_SIZE] = {0, };
- 
- 	list_for_each_entry(child, &ex->children, siblings) {
--		if (child->dev_type != SAS_EDGE_EXPANDER_DEVICE &&
--		    child->dev_type != SAS_FANOUT_EXPANDER_DEVICE)
-+		if (!dev_is_expander(child->dev_type))
- 			continue;
- 		if (sub_addr[0] == 0) {
- 			sas_find_sub_addr(child, sub_addr);
-@@ -1225,8 +1223,7 @@ static int sas_check_ex_subtractive_boundary(struct domain_device *dev)
- 		    phy->phy_state == PHY_NOT_PRESENT)
- 			continue;
- 
--		if ((phy->attached_dev_type == SAS_FANOUT_EXPANDER_DEVICE ||
--		     phy->attached_dev_type == SAS_EDGE_EXPANDER_DEVICE) &&
-+		if (dev_is_expander(phy->attached_dev_type) &&
- 		    phy->routing_attr == SUBTRACTIVE_ROUTING) {
- 
- 			if (!sub_sas_addr)
-@@ -1322,8 +1319,7 @@ static int sas_check_parent_topology(struct domain_device *child)
- 	if (!child->parent)
- 		return 0;
- 
--	if (child->parent->dev_type != SAS_EDGE_EXPANDER_DEVICE &&
--	    child->parent->dev_type != SAS_FANOUT_EXPANDER_DEVICE)
-+	if (!dev_is_expander(child->parent->dev_type))
- 		return 0;
- 
- 	parent_ex = &child->parent->ex_dev;
-@@ -1619,8 +1615,7 @@ static int sas_ex_level_discovery(struct asd_sas_port *port, const int level)
- 	struct domain_device *dev;
- 
- 	list_for_each_entry(dev, &port->dev_list, dev_list_node) {
--		if (dev->dev_type == SAS_EDGE_EXPANDER_DEVICE ||
--		    dev->dev_type == SAS_FANOUT_EXPANDER_DEVICE) {
-+		if (dev_is_expander(dev->dev_type)) {
- 			struct sas_expander_device *ex =
- 				rphy_to_expander_device(dev->rphy);
- 
-@@ -1852,7 +1847,7 @@ static int sas_find_bcast_dev(struct domain_device *dev,
- 				SAS_ADDR(dev->sas_addr));
- 	}
- 	list_for_each_entry(ch, &ex->children, siblings) {
--		if (ch->dev_type == SAS_EDGE_EXPANDER_DEVICE || ch->dev_type == SAS_FANOUT_EXPANDER_DEVICE) {
-+		if (dev_is_expander(ch->dev_type)) {
- 			res = sas_find_bcast_dev(ch, src_dev);
- 			if (*src_dev)
- 				return res;
-@@ -1869,8 +1864,7 @@ static void sas_unregister_ex_tree(struct asd_sas_port *port, struct domain_devi
- 
- 	list_for_each_entry_safe(child, n, &ex->children, siblings) {
- 		set_bit(SAS_DEV_GONE, &child->state);
--		if (child->dev_type == SAS_EDGE_EXPANDER_DEVICE ||
--		    child->dev_type == SAS_FANOUT_EXPANDER_DEVICE)
-+		if (dev_is_expander(child->dev_type))
- 			sas_unregister_ex_tree(port, child);
- 		else
- 			sas_unregister_dev(port, child);
-@@ -1890,8 +1884,7 @@ static void sas_unregister_devs_sas_addr(struct domain_device *parent,
- 			if (SAS_ADDR(child->sas_addr) ==
- 			    SAS_ADDR(phy->attached_sas_addr)) {
- 				set_bit(SAS_DEV_GONE, &child->state);
--				if (child->dev_type == SAS_EDGE_EXPANDER_DEVICE ||
--				    child->dev_type == SAS_FANOUT_EXPANDER_DEVICE)
-+				if (dev_is_expander(child->dev_type))
- 					sas_unregister_ex_tree(parent->port, child);
- 				else
- 					sas_unregister_dev(parent->port, child);
-@@ -1920,8 +1913,7 @@ static int sas_discover_bfs_by_root_level(struct domain_device *root,
- 	int res = 0;
- 
- 	list_for_each_entry(child, &ex_root->children, siblings) {
--		if (child->dev_type == SAS_EDGE_EXPANDER_DEVICE ||
--		    child->dev_type == SAS_FANOUT_EXPANDER_DEVICE) {
-+		if (dev_is_expander(child->dev_type)) {
- 			struct sas_expander_device *ex =
- 				rphy_to_expander_device(child->rphy);
- 
-@@ -1974,8 +1966,7 @@ static int sas_discover_new(struct domain_device *dev, int phy_id)
- 	list_for_each_entry(child, &dev->ex_dev.children, siblings) {
- 		if (SAS_ADDR(child->sas_addr) ==
- 		    SAS_ADDR(ex_phy->attached_sas_addr)) {
--			if (child->dev_type == SAS_EDGE_EXPANDER_DEVICE ||
--			    child->dev_type == SAS_FANOUT_EXPANDER_DEVICE)
-+			if (dev_is_expander(child->dev_type))
- 				res = sas_discover_bfs_by_root(child);
- 			break;
- 		}
-diff --git a/drivers/scsi/libsas/sas_port.c b/drivers/scsi/libsas/sas_port.c
-index 11f028a441dd..7c86fd248129 100644
---- a/drivers/scsi/libsas/sas_port.c
-+++ b/drivers/scsi/libsas/sas_port.c
-@@ -54,7 +54,7 @@ static void sas_resume_port(struct asd_sas_phy *phy)
- 			continue;
- 		}
- 
--		if (dev->dev_type == SAS_EDGE_EXPANDER_DEVICE || dev->dev_type == SAS_FANOUT_EXPANDER_DEVICE) {
-+		if (dev_is_expander(dev->dev_type)) {
- 			dev->ex_dev.ex_change_count = -1;
- 			for (i = 0; i < dev->ex_dev.num_phys; i++) {
- 				struct ex_phy *phy = &dev->ex_dev.ex_phy[i];
-@@ -179,7 +179,7 @@ static void sas_form_port(struct asd_sas_phy *phy)
- 
- 	sas_discover_event(phy->port, DISCE_DISCOVER_DOMAIN);
- 	/* Only insert a revalidate event after initial discovery */
--	if (port_dev && sas_dev_type_is_expander(port_dev->dev_type)) {
-+	if (port_dev && dev_is_expander(port_dev->dev_type)) {
- 		struct expander_device *ex_dev = &port_dev->ex_dev;
- 
- 		ex_dev->ex_change_count = -1;
-@@ -248,7 +248,7 @@ void sas_deform_port(struct asd_sas_phy *phy, int gone)
- 	spin_unlock_irqrestore(&sas_ha->phy_port_lock, flags);
- 
- 	/* Only insert revalidate event if the port still has members */
--	if (port->port && dev && sas_dev_type_is_expander(dev->dev_type)) {
-+	if (port->port && dev && dev_is_expander(dev->dev_type)) {
- 		struct expander_device *ex_dev = &dev->ex_dev;
- 
- 		ex_dev->ex_change_count = -1;
-diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
-index e933c65d8e0b..0ee688f52990 100644
---- a/drivers/scsi/mvsas/mv_sas.c
-+++ b/drivers/scsi/mvsas/mv_sas.c
-@@ -1209,7 +1209,7 @@ static int mvs_dev_found_notify(struct domain_device *dev, int lock)
- 	mvi_device->dev_type = dev->dev_type;
- 	mvi_device->mvi_info = mvi;
- 	mvi_device->sas_device = dev;
--	if (parent_dev && DEV_IS_EXPANDER(parent_dev->dev_type)) {
-+	if (parent_dev && dev_is_expander(parent_dev->dev_type)) {
- 		int phy_id;
- 		u8 phy_num = parent_dev->ex_dev.num_phys;
- 		struct ex_phy *phy;
-diff --git a/drivers/scsi/mvsas/mv_sas.h b/drivers/scsi/mvsas/mv_sas.h
-index 080676c1c9e5..b391c03fe5f5 100644
---- a/drivers/scsi/mvsas/mv_sas.h
-+++ b/drivers/scsi/mvsas/mv_sas.h
-@@ -66,9 +66,6 @@ extern struct mvs_info *tgt_mvi;
- extern const struct mvs_dispatch mvs_64xx_dispatch;
- extern const struct mvs_dispatch mvs_94xx_dispatch;
- 
--#define DEV_IS_EXPANDER(type)	\
--	((type == SAS_EDGE_EXPANDER_DEVICE) || (type == SAS_FANOUT_EXPANDER_DEVICE))
--
- #define bit(n) ((u64)1 << n)
- 
- #define for_each_phy(__lseq_mask, __mc, __lseq)			\
-diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-index 109effd3557d..68a8217032d0 100644
---- a/drivers/scsi/pm8001/pm8001_hwi.c
-+++ b/drivers/scsi/pm8001/pm8001_hwi.c
-@@ -2356,7 +2356,7 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 	if ((status != IO_SUCCESS) && (status != IO_OVERFLOW) &&
- 		(status != IO_UNDERFLOW)) {
- 		if (!((t->dev->parent) &&
--			(DEV_IS_EXPANDER(t->dev->parent->dev_type)))) {
-+			(dev_is_expander(t->dev->parent->dev_type)))) {
- 			for (i = 0 , j = 4; j <= 7 && i <= 3; i++ , j++)
- 				sata_addr_low[i] = pm8001_ha->sas_addr[j];
- 			for (i = 0 , j = 0; j <= 3 && i <= 3; i++ , j++)
-@@ -4560,7 +4560,7 @@ static int pm8001_chip_reg_dev_req(struct pm8001_hba_info *pm8001_ha,
- 			pm8001_dev->dev_type == SAS_FANOUT_EXPANDER_DEVICE)
- 			stp_sspsmp_sata = 0x01; /*ssp or smp*/
- 	}
--	if (parent_dev && DEV_IS_EXPANDER(parent_dev->dev_type))
-+	if (parent_dev && dev_is_expander(parent_dev->dev_type))
- 		phy_id = parent_dev->ex_dev.ex_phy->phy_id;
- 	else
- 		phy_id = pm8001_dev->attached_phy;
-diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
-index 3de57c5a3299..dd38c356a1a4 100644
---- a/drivers/scsi/pm8001/pm8001_sas.c
-+++ b/drivers/scsi/pm8001/pm8001_sas.c
-@@ -634,7 +634,7 @@ static int pm8001_dev_found_notify(struct domain_device *dev)
- 	dev->lldd_dev = pm8001_device;
- 	pm8001_device->dev_type = dev->dev_type;
- 	pm8001_device->dcompletion = &completion;
--	if (parent_dev && DEV_IS_EXPANDER(parent_dev->dev_type)) {
-+	if (parent_dev && dev_is_expander(parent_dev->dev_type)) {
- 		int phy_id;
- 		struct ex_phy *phy;
- 		for (phy_id = 0; phy_id < parent_dev->ex_dev.num_phys;
-diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
-index ac6d8e3f22de..ff17c6aff63d 100644
---- a/drivers/scsi/pm8001/pm8001_sas.h
-+++ b/drivers/scsi/pm8001/pm8001_sas.h
-@@ -103,7 +103,6 @@ do {						\
- #define PM8001_READ_VPD
- 
- 
--#define DEV_IS_EXPANDER(type)	((type == SAS_EDGE_EXPANDER_DEVICE) || (type == SAS_FANOUT_EXPANDER_DEVICE))
- #define IS_SPCV_12G(dev)	((dev->device == 0X8074)		\
- 				|| (dev->device == 0X8076)		\
- 				|| (dev->device == 0X8077)		\
-diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-index 301de40eb708..1128d86d241a 100644
---- a/drivers/scsi/pm8001/pm80xx_hwi.c
-+++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-@@ -2066,7 +2066,7 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 	if ((status != IO_SUCCESS) && (status != IO_OVERFLOW) &&
- 		(status != IO_UNDERFLOW)) {
- 		if (!((t->dev->parent) &&
--			(DEV_IS_EXPANDER(t->dev->parent->dev_type)))) {
-+			(dev_is_expander(t->dev->parent->dev_type)))) {
- 			for (i = 0 , j = 4; i <= 3 && j <= 7; i++ , j++)
- 				sata_addr_low[i] = pm8001_ha->sas_addr[j];
- 			for (i = 0 , j = 0; i <= 3 && j <= 3; i++ , j++)
-@@ -4561,7 +4561,7 @@ static int pm80xx_chip_reg_dev_req(struct pm8001_hba_info *pm8001_ha,
- 			pm8001_dev->dev_type == SAS_FANOUT_EXPANDER_DEVICE)
- 			stp_sspsmp_sata = 0x01; /*ssp or smp*/
- 	}
--	if (parent_dev && DEV_IS_EXPANDER(parent_dev->dev_type))
-+	if (parent_dev && dev_is_expander(parent_dev->dev_type))
- 		phy_id = parent_dev->ex_dev.ex_phy->phy_id;
- 	else
- 		phy_id = pm8001_dev->attached_phy;
-diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index 901355a1bc53..a8565a87291d 100644
---- a/include/scsi/libsas.h
-+++ b/include/scsi/libsas.h
-@@ -207,8 +207,7 @@ struct sas_work {
- 	struct work_struct work;
- };
- 
--/* Lots of code duplicates this in the SCSI tree, which can be factored out */
--static inline bool sas_dev_type_is_expander(enum sas_device_type type)
-+static inline bool dev_is_expander(enum sas_device_type type)
- {
- 	return type == SAS_EDGE_EXPANDER_DEVICE ||
- 	       type == SAS_FANOUT_EXPANDER_DEVICE;
--- 
-2.17.1
+Then there is the question of whether this double-fetch is exploitable?
+I cannot think of an example, but there might be (e.g. turning a READ
+command into a WRITE). But the "double-fetch" issue may be more wide
+spread. The replacement interface passes the command and data-in/-out as
+pointers while their corresponding lengths are placed in the newer
+interface structure. This assumes that the cdb and data-out won't
+change in the user space between when the write(2) is called and
+before or while the driver, using those pointers, reads the data.
+All drivers that use pointers to pass data have this "feature".
+
+Also I'm looking at this particular double-fetch from the point of view
+of the driver rewrite I have done and is currently in the early stages
+of review [linux-scsi list: "[PATCH 00/19] sg: v4 interface, rq sharing
++ multiple rqs"] and this problem is more difficult to fix since the
+full cdb read is delayed to a common point further along the submit
+processing path. To detect a change in cbd[0] my current code would
+need to be altered to carry cdb[0] through to that common point. So
+is it worth it for such an old, deprecated and replaced interface??
+What cdb/user_permissions checking that is done, is done _after_
+the full cdb is read. So trying to get around a user exclusion of
+say WRITE(10) by first using the first byte of READ(10), won't succeed.
+
+Doug Gilbert
