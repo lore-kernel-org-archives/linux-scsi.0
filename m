@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 10/13] megaraid_sas: set virt_boundary_mask in the scsi host
-Date: Wed,  5 Jun 2019 21:08:33 +0200
-Message-ID: <20190605190836.32354-11-hch@lst.de>
+Subject: [PATCH 13/13] uas: set virt_boundary_mask in the scsi host
+Date: Wed,  5 Jun 2019 21:08:36 +0200
+Message-ID: <20190605190836.32354-14-hch@lst.de>
 References: <20190605190836.32354-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -13,114 +13,69 @@ Cc: Sebastian Ott <sebott@linux.ibm.com>, Sagi Grimberg <sagi@grimberg.me>, Max 
 List-Id: linux-scsi@vger.kernel.org
 
 This ensures all proper DMA layer handling is taken care of by the
-SCSI midlayer.  Note that the effect is global, as the IOMMU merging
-is based off a paramters in struct device.  We could still turn if off
-if no PCIe devices are present, but I don't know how to find that out.
-
-Also remove the bogus nomerges flag, merges do take the virt_boundary
-into account.
+SCSI midlayer.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/megaraid/megaraid_sas_base.c   | 46 +++++----------------
- drivers/scsi/megaraid/megaraid_sas_fusion.c |  7 ++++
- 2 files changed, 18 insertions(+), 35 deletions(-)
+ drivers/usb/storage/uas.c | 36 ++++++++++++++++--------------------
+ 1 file changed, 16 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 3dd1df472dc6..20b3b3f8bc16 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -1870,39 +1870,6 @@ void megasas_set_dynamic_target_properties(struct scsi_device *sdev,
- 	}
- }
- 
--/*
-- * megasas_set_nvme_device_properties -
-- * set nomerges=2
-- * set virtual page boundary = 4K (current mr_nvme_pg_size is 4K).
-- * set maximum io transfer = MDTS of NVME device provided by MR firmware.
-- *
-- * MR firmware provides value in KB. Caller of this function converts
-- * kb into bytes.
-- *
-- * e.a MDTS=5 means 2^5 * nvme page size. (In case of 4K page size,
-- * MR firmware provides value 128 as (32 * 4K) = 128K.
-- *
-- * @sdev:				scsi device
-- * @max_io_size:				maximum io transfer size
-- *
-- */
--static inline void
--megasas_set_nvme_device_properties(struct scsi_device *sdev, u32 max_io_size)
--{
--	struct megasas_instance *instance;
--	u32 mr_nvme_pg_size;
--
--	instance = (struct megasas_instance *)sdev->host->hostdata;
--	mr_nvme_pg_size = max_t(u32, instance->nvme_page_size,
--				MR_DEFAULT_NVME_PAGE_SIZE);
--
--	blk_queue_max_hw_sectors(sdev->request_queue, (max_io_size / 512));
--
--	blk_queue_flag_set(QUEUE_FLAG_NOMERGES, sdev->request_queue);
--	blk_queue_virt_boundary(sdev->request_queue, mr_nvme_pg_size - 1);
--}
--
--
- /*
-  * megasas_set_static_target_properties -
-  * Device property set by driver are static and it is not required to be
-@@ -1961,8 +1928,10 @@ static void megasas_set_static_target_properties(struct scsi_device *sdev,
- 		max_io_size_kb = le32_to_cpu(instance->tgt_prop->max_io_size_kb);
- 	}
- 
--	if (instance->nvme_page_size && max_io_size_kb)
--		megasas_set_nvme_device_properties(sdev, (max_io_size_kb << 10));
-+	if (instance->nvme_page_size && max_io_size_kb) {
-+		blk_queue_max_hw_sectors(sdev->request_queue,
-+				(max_io_size_kb << 10) / 512);
-+	}
- 
- 	scsi_change_queue_depth(sdev, device_qd);
- 
-@@ -6258,6 +6227,7 @@ static int megasas_start_aen(struct megasas_instance *instance)
- static int megasas_io_attach(struct megasas_instance *instance)
+diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
+index 047c5922618f..d20919e7bbf4 100644
+--- a/drivers/usb/storage/uas.c
++++ b/drivers/usb/storage/uas.c
+@@ -789,29 +789,9 @@ static int uas_slave_alloc(struct scsi_device *sdev)
  {
- 	struct Scsi_Host *host = instance->host;
-+	u32 nvme_page_size = instance->nvme_page_size;
+ 	struct uas_dev_info *devinfo =
+ 		(struct uas_dev_info *)sdev->host->hostdata;
+-	int maxp;
  
- 	/*
- 	 * Export parameters required by SCSI mid-layer
-@@ -6298,6 +6268,12 @@ static int megasas_io_attach(struct megasas_instance *instance)
- 	host->max_lun = MEGASAS_MAX_LUN;
- 	host->max_cmd_len = 16;
+ 	sdev->hostdata = devinfo;
  
-+	if (nvme_page_size) {
-+		if (nvme_page_size > MR_DEFAULT_NVME_PAGE_SIZE)
-+			nvme_page_size = MR_DEFAULT_NVME_PAGE_SIZE;
-+		host->virt_boundary_mask = nvme_page_size - 1;
-+	}
-+
+-	/*
+-	 * We have two requirements here. We must satisfy the requirements
+-	 * of the physical HC and the demands of the protocol, as we
+-	 * definitely want no additional memory allocation in this path
+-	 * ruling out using bounce buffers.
+-	 *
+-	 * For a transmission on USB to continue we must never send
+-	 * a package that is smaller than maxpacket. Hence the length of each
+-         * scatterlist element except the last must be divisible by the
+-         * Bulk maxpacket value.
+-	 * If the HC does not ensure that through SG,
+-	 * the upper layer must do that. We must assume nothing
+-	 * about the capabilities off the HC, so we use the most
+-	 * pessimistic requirement.
+-	 */
+-
+-	maxp = usb_maxpacket(devinfo->udev, devinfo->data_in_pipe, 0);
+-	blk_queue_virt_boundary(sdev->request_queue, maxp - 1);
+-
  	/*
- 	 * Notify the mid-layer about the new controller
+ 	 * The protocol has no requirements on alignment in the strict sense.
+ 	 * Controllers may or may not have alignment restrictions.
+@@ -1004,6 +984,22 @@ static int uas_probe(struct usb_interface *intf, const struct usb_device_id *id)
  	 */
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index 4dfa0685a86c..a9ff3a648e7b 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -1935,6 +1935,13 @@ megasas_is_prp_possible(struct megasas_instance *instance,
- 			build_prp = true;
- 	}
+ 	shost->can_queue = devinfo->qdepth - 2;
  
-+/*
-+ * XXX: All the code following should go away.  The block layer guarantees
-+ * merging according to the virt boundary.  And while we might have had some
-+ * issues with that in the past we fixed them, and any new bug should be fixed
-+ * in the core code as well.
-+ */
++	/*
++	 * We have two requirements here. We must satisfy the requirements of
++	 * the physical HC and the demands of the protocol, as we definitely
++	 * want no additional memory allocation in this path ruling out using
++	 * bounce buffers.
++	 *
++	 * For a transmission on USB to continue we must never send a package
++	 * that is smaller than maxpacket.  Hence the length of each scatterlist
++	 * element except the last must be divisible by the Bulk maxpacket
++	 * value.  If the HC does not ensure that through SG, the upper layer
++	 * must do that.  We must assume nothing about the capabilities off the
++	 * HC, so we use the most pessimistic requirement.
++	 */
++	shost->virt_boundary_mask =
++		usb_maxpacket(udev, devinfo->data_in_pipe, 0) - 1;
 +
- /*
-  * Below code detects gaps/holes in IO data buffers.
-  * What does holes/gaps mean?
+ 	usb_set_intfdata(intf, shost);
+ 	result = scsi_add_host(shost, &intf->dev);
+ 	if (result)
 -- 
 2.20.1
