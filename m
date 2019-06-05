@@ -1,87 +1,39 @@
-From: "Bean Huo (beanhuo)" <beanhuo@micron.com>
-Subject: RE: [EXT] [PATCH 2/3] scsi: ufs: Allow resetting the UFS device
-Date: Wed, 5 Jun 2019 21:17:48 +0000
-Message-ID: <BN7PR08MB5684B63CABF148C279FD64C1DB160@BN7PR08MB5684.namprd08.prod.outlook.com>
-References: <20190604072001.9288-1-bjorn.andersson@linaro.org>
- <20190604072001.9288-3-bjorn.andersson@linaro.org>
- <BN7PR08MB568450B1EC51ABAA2E426AC0DB150@BN7PR08MB5684.namprd08.prod.outlook.com>
- <20190604223025.GD4814@minitux>
+From: "Enrico Weigelt, metux IT consult" <lkml@metux.net>
+Subject: Re: [PATCH 2/3] drivers: scsi: remove unnecessary #ifdef MODULE
+Date: Wed, 5 Jun 2019 23:22:34 +0000
+Message-ID: <d377a82b-4269-e25d-2329-573db355877c@metux.net>
+References: <1559397700-15585-1-git-send-email-info@metux.net>
+ <1559397700-15585-3-git-send-email-info@metux.net>
+ <AT5PR8401MB1169E817136F8B8587C7A716AB1A0@AT5PR8401MB1169.NAMPRD84.PROD.OUTLOOK.COM>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190604223025.GD4814@minitux>
+In-Reply-To: <AT5PR8401MB1169E817136F8B8587C7A716AB1A0@AT5PR8401MB1169.NAMPRD84.PROD.OUTLOOK.COM>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Bjorn Andersson <bjorn.andersson@linaro.org>
-Cc: Pedro Sousa <pedrom.sousa@synopsys.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Andy Gross <agross@kernel.org>, Linus Walleij <linus.walleij@linaro.org>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>, "linux-gpio@vger.kernel.org" <linux-gpio@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: "Elliott, Robert (Servers)" <elliott@hpe.com>, "Enrico Weigelt, metux IT consult" <info@metux.net>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Cc: "rjw@rjwysocki.net" <rjw@rjwysocki.net>, "viresh.kumar@linaro.org" <viresh.kumar@linaro.org>, "jdelvare@suse.com" <jdelvare@suse.com>, "linux@roeck-us.net" <linux@roeck-us.net>, "khalid@gonehiking.org" <khalid@gonehiking.org>, "jejb@linux.ibm.com" <jejb@linux.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "aacraid@microsemi.com" <aacraid@microsemi.com>, "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>, "linux-hwmon@vger.kernel.org" <linux-hwmon@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi, Bjorn
-I think I should give up my preview suggestion DME_ENDPOINTRESET.req softwa=
-re reset,  go back to your HW reset.
-Although SW reset can cover most of the requirement, and compatible with di=
-fferent vendor UFS device, for some device
-fatal error cases, UFS internal stuck and would not accept SW Reset. An HW =
-reset is expected. =20
-Please go on your reset way.
+On 01.06.19 15:40, Elliott, Robert (Servers) wrote:
 
-Thanks,
-//Bean
+<snip>
 
->Andy Gross <agross@kernel.org>; Linus Walleij <linus.walleij@linaro.org>;
->Rob Herring <robh+dt@kernel.org>; Mark Rutland <mark.rutland@arm.com>;
->linux-arm-msm@vger.kernel.org; linux-gpio@vger.kernel.org;
->devicetree@vger.kernel.org; linux-kernel@vger.kernel.org; linux-
->scsi@vger.kernel.org
->Subject: Re: [EXT] [PATCH 2/3] scsi: ufs: Allow resetting the UFS device
->
->On Tue 04 Jun 01:13 PDT 2019, Bean Huo (beanhuo) wrote:
->> >@@ -6159,6 +6179,9 @@ static int ufshcd_reset_and_restore(struct
->> >ufs_hba
->> >*hba)
->> > 	int retries =3D MAX_HOST_RESET_RETRIES;
->> >
->> > 	do {
->> >+		/* Reset the attached device */
->> >+		ufshcd_device_reset(hba);
->> >+
->>
->> what's problem you met, and you should reset UFS device here? could you
->give more info?
->>
->> It is true that we don't reset UFS device in case of device fatal
->> error. According to UFS host spec, Host should be device reset except
->> that in addition to resetting UIC. But as so far, We didn't experience a=
-ny
->problems result from this missing reset.
->>
->> We have three UFS device reset ways.  Comparing to this hardware
->> reset, I prefer to use DME_ENDPOINTRESET.req software reset.
->>
->
->Hi Bean,
->
->Thanks for your questions. With some memories we see issues establishing
->the link during bootup, so that's the purpose of issuing this reset.
->
->Unfortunately the downstream Qualcomm patch [1] (which I should have
->remembered to attribute), does not mention why the reset during host
->controller reset is needed - but I'm fairly certain that this scenario wou=
-ld be
->similar to the handover from bootloader to kernel that we do see an issue
->with.
->
->
->[1]
->https://nam01.safelinks.protection.outlook.com/?url=3Dhttps%3A%2F%2Fsource
->.codeaurora.org%2Fquic%2Fla%2Fkernel%2Fmsm-
->4.4%2Fcommit%2F%3Fh%3Dmsm-
->4.4%26id%3D0c82737188e2d63a08196e078e411032dbbc3b89&amp;data=3D02%
->7C01%7Cbeanhuo%40micron.com%7Cf72404eb906440e1f9c408d6e93c401d%7
->Cf38a5ecd28134862b11bac1d563c806f%7C0%7C0%7C636952842324926509&a
->mp;sdata=3DI%2FH7km6b34jyoUa1RVEPApfYt5uSFtHqL3%2BvV1bvryM%3D&amp
->;reserved=3D0
->
->Regards,
->Bjorn
+> I don't see any reply to James' comment that these changes result in
+
+I've missed that mail :(
+
+> static struct definitions that are unused, which should result in
+> complaints by the compiler like:
+>      warning: 'dptids' defined by not used [-Wunused-variable]
+
+hmm, seems that const is missing on dptids ... I'll test that and
+repost fixed vrsion.
+
+--mtx
+
+-- 
+Enrico Weigelt, metux IT consult
+Free software and Linux embedded engineering
+info@metux.net -- +49-151-27565287
