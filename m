@@ -1,9 +1,9 @@
 From: Satya Tangirala via Linux-f2fs-devel
  <linux-f2fs-devel@lists.sourceforge.net>
-Subject: [RFC PATCH v2 8/8] f2fs: Wire up f2fs to use inline
- encryption via fscrypt
-Date: Wed,  5 Jun 2019 16:28:37 -0700
-Message-ID: <20190605232837.31545-9-satyat@google.com>
+Subject: [RFC PATCH v2 6/8] scsi: ufs: Add inline encryption
+ support to UFS
+Date: Wed,  5 Jun 2019 16:28:35 -0700
+Message-ID: <20190605232837.31545-7-satyat@google.com>
 References: <20190605232837.31545-1-satyat@google.com>
 Reply-To: Satya Tangirala <satyat@google.com>
 Mime-Version: 1.0
@@ -23,214 +23,248 @@ To: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-fscrypt@vger.
 Cc: Kuohong Wang <kuohong.wang@mediatek.com>, Ladvine D Almeida <ladvine.dalmeida@synopsys.com>, Satya Tangirala <satyat@google.com>, Barani Muthukumaran <bmuthuku@qti.qualcomm.com>, Parshuram Raju Thombare <pthombar@cadence.com>
 List-Id: linux-scsi@vger.kernel.org
 
+Wire up ufshcd.c with the UFS Crypto API, the block layer inline
+encryption additions and the keyslot manager.
+
 Signed-off-by: Satya Tangirala <satyat@google.com>
 ---
- fs/f2fs/data.c  | 77 ++++++++++++++++++++++++++++++++++++++++++++++---
- fs/f2fs/super.c |  1 +
- 2 files changed, 74 insertions(+), 4 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 84 ++++++++++++++++++++++++++++++++++++---
+ drivers/scsi/ufs/ufshcd.h | 18 +++++++++
+ 2 files changed, 97 insertions(+), 5 deletions(-)
 
-diff --git a/fs/f2fs/data.c b/fs/f2fs/data.c
-index eda4181d2092..25e691947fb4 100644
---- a/fs/f2fs/data.c
-+++ b/fs/f2fs/data.c
-@@ -142,6 +142,8 @@ static bool f2fs_bio_post_read_required(struct bio *bio)
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 8c1c551f2b42..c5ba141ce0cf 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -47,6 +47,7 @@
+ #include "unipro.h"
+ #include "ufs-sysfs.h"
+ #include "ufs_bsg.h"
++#include "ufshcd-crypto.h"
  
- static void f2fs_read_end_io(struct bio *bio)
+ #define CREATE_TRACE_POINTS
+ #include <trace/events/ufs.h>
+@@ -855,7 +856,14 @@ static void ufshcd_enable_run_stop_reg(struct ufs_hba *hba)
+  */
+ static inline void ufshcd_hba_start(struct ufs_hba *hba)
  {
-+	fscrypt_unset_bio_crypt_ctx(bio);
+-	ufshcd_writel(hba, CONTROLLER_ENABLE, REG_CONTROLLER_ENABLE);
++	u32 val = CONTROLLER_ENABLE;
 +
- 	if (time_to_inject(F2FS_P_SB(bio_first_page_all(bio)),
- 						FAULT_READ_IO)) {
- 		f2fs_show_injection_info(FAULT_READ_IO);
-@@ -165,6 +167,8 @@ static void f2fs_write_end_io(struct bio *bio)
- 	struct bio_vec *bvec;
- 	struct bvec_iter_all iter_all;
- 
-+	fscrypt_unset_bio_crypt_ctx(bio);
++	if (ufshcd_hba_is_crypto_supported(hba)) {
++		ufshcd_crypto_enable(hba);
++		val |= CRYPTO_GENERAL_ENABLE;
++	}
 +
- 	if (time_to_inject(sbi, FAULT_WRITE_IO)) {
- 		f2fs_show_injection_info(FAULT_WRITE_IO);
- 		bio->bi_status = BLK_STS_IOERR;
-@@ -282,9 +286,18 @@ static struct bio *__bio_alloc(struct f2fs_sb_info *sbi, block_t blk_addr,
- 	return bio;
++	ufshcd_writel(hba, val, REG_CONTROLLER_ENABLE);
  }
  
-+static inline u64 hw_crypt_dun(struct inode *inode, pgoff_t offset)
+ /**
+@@ -2208,9 +2216,21 @@ static void ufshcd_prepare_req_desc_hdr(struct ufshcd_lrb *lrbp,
+ 		dword_0 |= UTP_REQ_DESC_INT_CMD;
+ 
+ 	/* Transfer request descriptor header fields */
++	if (lrbp->crypto_enable) {
++		dword_0 |= UTP_REQ_DESC_CRYPTO_ENABLE_CMD;
++		dword_0 |= lrbp->crypto_key_slot;
++		req_desc->header.dword_1 =
++			cpu_to_le32((u32)lrbp->data_unit_num);
++		req_desc->header.dword_3 =
++			cpu_to_le32((u32)(lrbp->data_unit_num >> 32));
++	} else {
++		/* dword_1 and dword_3 are reserved, hence they are set to 0 */
++		req_desc->header.dword_1 = 0;
++		req_desc->header.dword_3 = 0;
++	}
++
+ 	req_desc->header.dword_0 = cpu_to_le32(dword_0);
+-	/* dword_1 is reserved, hence it is set to 0 */
+-	req_desc->header.dword_1 = 0;
++
+ 	/*
+ 	 * assigning invalid value for command status. Controller
+ 	 * updates OCS on command completion, with the command
+@@ -2218,8 +2238,6 @@ static void ufshcd_prepare_req_desc_hdr(struct ufshcd_lrb *lrbp,
+ 	 */
+ 	req_desc->header.dword_2 =
+ 		cpu_to_le32(OCS_INVALID_COMMAND_STATUS);
+-	/* dword_3 is reserved, hence it is set to 0 */
+-	req_desc->header.dword_3 = 0;
+ 
+ 	req_desc->prd_table_length = 0;
+ }
+@@ -2379,6 +2397,37 @@ static inline u16 ufshcd_upiu_wlun_to_scsi_wlun(u8 upiu_wlun_id)
+ 	return (upiu_wlun_id & ~UFS_UPIU_WLUN_ID) | SCSI_W_LUN_BASE;
+ }
+ 
++static inline int ufshcd_prepare_lrbp_crypto(struct ufs_hba *hba,
++					     struct scsi_cmnd *cmd,
++					     struct ufshcd_lrb *lrbp)
 +{
-+	return (((u64)inode->i_ino) << 32) | lower_32_bits(offset);
++	int key_slot;
++
++	if (!bio_crypt_should_process(cmd->request->bio,
++					cmd->request->q)) {
++		lrbp->crypto_enable = false;
++		return 0;
++	}
++
++	if (WARN_ON(!ufshcd_is_crypto_enabled(hba))) {
++		/*
++		 * Upper layer asked us to do inline encryption
++		 * but that isn't enabled, so we fail this request.
++		 */
++		return -EINVAL;
++	}
++	key_slot = bio_crypt_get_slot(cmd->request->bio);
++	if (!ufshcd_keyslot_valid(hba, key_slot))
++		return -EINVAL;
++
++	lrbp->crypto_enable = true;
++	lrbp->crypto_key_slot = key_slot;
++	lrbp->data_unit_num = bio_crypt_data_unit_num(cmd->request->bio);
++
++	return 0;
 +}
 +
- static inline void __submit_bio(struct f2fs_sb_info *sbi,
- 				struct bio *bio, enum page_type type)
- {
-+	struct page *page;
-+	struct inode *inode;
-+	int err = 0;
 +
- 	if (!is_read_io(bio_op(bio))) {
- 		unsigned int start;
- 
-@@ -326,7 +339,22 @@ static inline void __submit_bio(struct f2fs_sb_info *sbi,
- 		trace_f2fs_submit_read_bio(sbi->sb, type, bio);
- 	else
- 		trace_f2fs_submit_write_bio(sbi->sb, type, bio);
--	submit_bio(bio);
+ /**
+  * ufshcd_queuecommand - main entry point for SCSI requests
+  * @host: SCSI host pointer
+@@ -2466,6 +2515,13 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ 	lrbp->task_tag = tag;
+ 	lrbp->lun = ufshcd_scsi_to_upiu_lun(cmd->device->lun);
+ 	lrbp->intr_cmd = !ufshcd_is_intr_aggr_allowed(hba) ? true : false;
 +
-+	if (bio_has_data(bio)) {
-+		page = bio_page(bio);
-+		if (page && page->mapping && page->mapping->host) {
-+			inode = page->mapping->host;
-+			err = fscrypt_set_bio_crypt_ctx(inode, bio,
-+						hw_crypt_dun(inode,
-+							     page->index));
-+		}
-+	}
++	err = ufshcd_prepare_lrbp_crypto(hba, cmd, lrbp);
 +	if (err) {
-+		bio->bi_status = BLK_STS_IOERR;
-+		bio_endio(bio);
-+	} else {
-+		submit_bio(bio);
-+	}
- }
- 
- static void __submit_merged_bio(struct f2fs_bio_info *io)
-@@ -487,6 +515,9 @@ void f2fs_submit_page_write(struct f2fs_io_info *fio)
- 	enum page_type btype = PAGE_TYPE_OF_BIO(fio->type);
- 	struct f2fs_bio_info *io = sbi->write_io[btype] + fio->temp;
- 	struct page *bio_page;
-+	struct inode *fio_inode, *bio_inode;
-+	struct page *first_page;
-+	u64 next_dun = 0;
- 
- 	f2fs_bug_on(sbi, is_read_io(fio->op));
- 
-@@ -513,10 +544,27 @@ void f2fs_submit_page_write(struct f2fs_io_info *fio)
- 
- 	inc_page_count(sbi, WB_DATA_TYPE(bio_page));
- 
-+	fio_inode = fio->page->mapping->host;
-+	bio_inode = NULL;
-+	first_page = NULL;
-+	next_dun = 0;
-+	if (io->bio && bio_page(io->bio)->mapping) {
-+		first_page = bio_page(io->bio);
-+		bio_inode = first_page->mapping->host;
-+		if (fscrypt_inode_is_hw_encrypted(bio_inode)) {
-+			next_dun = hw_crypt_dun(bio_inode, first_page->index) +
-+				   (io->bio->bi_iter.bi_size >> PAGE_SHIFT);
-+		}
-+	}
- 	if (io->bio && (io->last_block_in_bio != fio->new_blkaddr - 1 ||
- 	    (io->fio.op != fio->op || io->fio.op_flags != fio->op_flags) ||
--			!__same_bdev(sbi, fio->new_blkaddr, io->bio)))
-+			!__same_bdev(sbi, fio->new_blkaddr, io->bio) ||
-+			!fscrypt_inode_crypt_mergeable(bio_inode, fio_inode) ||
-+			(fscrypt_inode_is_hw_encrypted(bio_inode) &&
-+			 next_dun != hw_crypt_dun(fio_inode,
-+						  fio->page->index))))
- 		__submit_merged_bio(io);
-+
- alloc_new:
- 	if (io->bio == NULL) {
- 		if ((fio->type == DATA || fio->type == NODE) &&
-@@ -568,7 +616,7 @@ static struct bio *f2fs_grab_read_bio(struct inode *inode, block_t blkaddr,
- 	bio->bi_end_io = f2fs_read_end_io;
- 	bio_set_op_attrs(bio, REQ_OP_READ, op_flag);
- 
--	if (f2fs_encrypted_file(inode))
-+	if (f2fs_encrypted_file(inode) && !fscrypt_inode_is_hw_encrypted(inode))
- 		post_read_steps |= 1 << STEP_DECRYPT;
- 	if (post_read_steps) {
- 		ctx = mempool_alloc(bio_post_read_ctx_pool, GFP_NOFS);
-@@ -1519,6 +1567,7 @@ static int f2fs_read_single_page(struct inode *inode, struct page *page,
- 					struct f2fs_map_blocks *map,
- 					struct bio **bio_ret,
- 					sector_t *last_block_in_bio,
-+					u64 *next_dun,
- 					bool is_readahead)
- {
- 	struct bio *bio = *bio_ret;
-@@ -1592,6 +1641,13 @@ static int f2fs_read_single_page(struct inode *inode, struct page *page,
- 		__submit_bio(F2FS_I_SB(inode), bio, DATA);
- 		bio = NULL;
- 	}
-+
-+	if (bio && fscrypt_inode_is_hw_encrypted(inode) &&
-+	    *next_dun != hw_crypt_dun(inode, page->index)) {
-+		__submit_bio(F2FS_I_SB(inode), bio, DATA);
-+		bio = NULL;
-+	}
-+
- 	if (bio == NULL) {
- 		bio = f2fs_grab_read_bio(inode, block_nr, nr_pages,
- 				is_readahead ? REQ_RAHEAD : 0);
-@@ -1611,6 +1667,9 @@ static int f2fs_read_single_page(struct inode *inode, struct page *page,
- 	if (bio_add_page(bio, page, blocksize, 0) < blocksize)
- 		goto submit_and_realloc;
- 
-+	if (fscrypt_inode_is_hw_encrypted(inode))
-+		*next_dun = hw_crypt_dun(inode, page->index) + 1;
-+
- 	inc_page_count(F2FS_I_SB(inode), F2FS_RD_DATA);
- 	ClearPageError(page);
- 	*last_block_in_bio = block_nr;
-@@ -1644,6 +1703,7 @@ static int f2fs_mpage_readpages(struct address_space *mapping,
- 	struct inode *inode = mapping->host;
- 	struct f2fs_map_blocks map;
- 	int ret = 0;
-+	u64 next_dun = 0;
- 
- 	map.m_pblk = 0;
- 	map.m_lblk = 0;
-@@ -1667,7 +1727,8 @@ static int f2fs_mpage_readpages(struct address_space *mapping,
- 		}
- 
- 		ret = f2fs_read_single_page(inode, page, nr_pages, &map, &bio,
--					&last_block_in_bio, is_readahead);
-+					&last_block_in_bio, &next_dun,
-+					is_readahead);
- 		if (ret) {
- 			SetPageError(page);
- 			zero_user_segment(page, 0, PAGE_SIZE);
-@@ -2617,6 +2678,8 @@ static void f2fs_dio_end_io(struct bio *bio)
- {
- 	struct f2fs_private_dio *dio = bio->bi_private;
- 
-+	fscrypt_unset_bio_crypt_ctx(bio);
-+
- 	dec_page_count(F2FS_I_SB(dio->inode),
- 			dio->write ? F2FS_DIO_WRITE : F2FS_DIO_READ);
- 
-@@ -2633,12 +2696,18 @@ static void f2fs_dio_submit_bio(struct bio *bio, struct inode *inode,
- {
- 	struct f2fs_private_dio *dio;
- 	bool write = (bio_op(bio) == REQ_OP_WRITE);
-+	u64 data_unit_num = hw_crypt_dun(inode, file_offset >> PAGE_SHIFT);
- 
- 	dio = f2fs_kzalloc(F2FS_I_SB(inode),
- 			sizeof(struct f2fs_private_dio), GFP_NOFS);
- 	if (!dio)
- 		goto out;
- 
-+	if (fscrypt_set_bio_crypt_ctx(inode, bio, data_unit_num) != 0) {
-+		kvfree(dio);
++		lrbp->cmd = NULL;
++		clear_bit_unlock(tag, &hba->lrb_in_use);
 +		goto out;
 +	}
-+
- 	dio->inode = inode;
- 	dio->orig_end_io = bio->bi_end_io;
- 	dio->orig_private = bio->bi_private;
-diff --git a/fs/f2fs/super.c b/fs/f2fs/super.c
-index 6b959bbb336a..6399373777ce 100644
---- a/fs/f2fs/super.c
-+++ b/fs/f2fs/super.c
-@@ -2229,6 +2229,7 @@ static const struct fscrypt_operations f2fs_cryptops = {
- 	.dummy_context	= f2fs_dummy_context,
- 	.empty_dir	= f2fs_empty_dir,
- 	.max_namelen	= F2FS_NAME_LEN,
-+	.hw_crypt_supp	= true,
- };
- #endif
+ 	lrbp->req_abort_skip = false;
  
+ 	ufshcd_comp_scsi_upiu(hba, lrbp);
+@@ -2499,6 +2555,7 @@ static int ufshcd_compose_dev_cmd(struct ufs_hba *hba,
+ 	lrbp->task_tag = tag;
+ 	lrbp->lun = 0; /* device management cmd is not specific to any LUN */
+ 	lrbp->intr_cmd = true; /* No interrupt aggregation */
++	lrbp->crypto_enable = false; /* No crypto operations */
+ 	hba->dev_cmd.type = cmd_type;
+ 
+ 	return ufshcd_comp_devman_upiu(hba, lrbp);
+@@ -4191,6 +4248,8 @@ static inline void ufshcd_hba_stop(struct ufs_hba *hba, bool can_sleep)
+ {
+ 	int err;
+ 
++	ufshcd_crypto_disable(hba);
++
+ 	ufshcd_writel(hba, CONTROLLER_DISABLE,  REG_CONTROLLER_ENABLE);
+ 	err = ufshcd_wait_for_register(hba, REG_CONTROLLER_ENABLE,
+ 					CONTROLLER_ENABLE, CONTROLLER_DISABLE,
+@@ -4584,10 +4643,13 @@ static int ufshcd_change_queue_depth(struct scsi_device *sdev, int depth)
+ static int ufshcd_slave_configure(struct scsi_device *sdev)
+ {
+ 	struct request_queue *q = sdev->request_queue;
++	struct ufs_hba *hba = shost_priv(sdev->host);
+ 
+ 	blk_queue_update_dma_pad(q, PRDT_DATA_BYTE_COUNT_PAD - 1);
+ 	blk_queue_max_segment_size(q, PRDT_DATA_BYTE_COUNT_MAX);
+ 
++	ufshcd_crypto_setup_rq_keyslot_manager(hba, q);
++
+ 	return 0;
+ }
+ 
+@@ -4598,6 +4660,7 @@ static int ufshcd_slave_configure(struct scsi_device *sdev)
+ static void ufshcd_slave_destroy(struct scsi_device *sdev)
+ {
+ 	struct ufs_hba *hba;
++	struct request_queue *q = sdev->request_queue;
+ 
+ 	hba = shost_priv(sdev->host);
+ 	/* Drop the reference as it won't be needed anymore */
+@@ -4608,6 +4671,8 @@ static void ufshcd_slave_destroy(struct scsi_device *sdev)
+ 		hba->sdev_ufs_device = NULL;
+ 		spin_unlock_irqrestore(hba->host->host_lock, flags);
+ 	}
++
++	ufshcd_crypto_destroy_rq_keyslot_manager(q);
+ }
+ 
+ /**
+@@ -4723,6 +4788,8 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
+ 	case OCS_MISMATCH_RESP_UPIU_SIZE:
+ 	case OCS_PEER_COMM_FAILURE:
+ 	case OCS_FATAL_ERROR:
++	case OCS_INVALID_CRYPTO_CONFIG:
++	case OCS_GENERAL_CRYPTO_ERROR:
+ 	default:
+ 		result |= DID_ERROR << 16;
+ 		dev_err(hba->dev,
+@@ -8290,6 +8357,13 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+ 		goto exit_gating;
+ 	}
+ 
++	/* Init crypto */
++	err = ufshcd_hba_init_crypto(hba);
++	if (err) {
++		dev_err(hba->dev, "crypto setup failed\n");
++		goto out_remove_scsi_host;
++	}
++
+ 	/* Host controller enable */
+ 	err = ufshcd_hba_enable(hba);
+ 	if (err) {
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index d3b6a6b57a37..283014e0924f 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -167,6 +167,9 @@ struct ufs_pm_lvl_states {
+  * @intr_cmd: Interrupt command (doesn't participate in interrupt aggregation)
+  * @issue_time_stamp: time stamp for debug purposes
+  * @compl_time_stamp: time stamp for statistics
++ * @crypto_enable: whether or not the request needs inline crypto operations
++ * @crypto_key_slot: the key slot to use for inline crypto
++ * @data_unit_num: the data unit number for the first block for inline crypto
+  * @req_abort_skip: skip request abort task flag
+  */
+ struct ufshcd_lrb {
+@@ -191,6 +194,9 @@ struct ufshcd_lrb {
+ 	bool intr_cmd;
+ 	ktime_t issue_time_stamp;
+ 	ktime_t compl_time_stamp;
++	bool crypto_enable;
++	u8 crypto_key_slot;
++	u64 data_unit_num;
+ 
+ 	bool req_abort_skip;
+ };
+@@ -501,6 +507,10 @@ struct ufs_stats {
+  * @is_urgent_bkops_lvl_checked: keeps track if the urgent bkops level for
+  *  device is known or not.
+  * @scsi_block_reqs_cnt: reference counting for scsi block requests
++ * @crypto_capabilities: Content of crypto capabilities register (0x100)
++ * @crypto_cap_array: Array of crypto capabilities
++ * @crypto_cfg_register: Start of the crypto cfg array
++ * @crypto_cfgs: Array of crypto configurations (i.e. config for each slot)
+  */
+ struct ufs_hba {
+ 	void __iomem *mmio_base;
+@@ -711,6 +721,14 @@ struct ufs_hba {
+ 
+ 	struct device		bsg_dev;
+ 	struct request_queue	*bsg_queue;
++
++#ifdef CONFIG_SCSI_UFS_CRYPTO
++	/* crypto */
++	union ufs_crypto_capabilities crypto_capabilities;
++	union ufs_crypto_cap_entry *crypto_cap_array;
++	u32 crypto_cfg_register;
++	union ufs_crypto_cfg_entry *crypto_cfgs;
++#endif /* CONFIG_SCSI_UFS_CRYPTO */
+ };
+ 
+ /* Returns true if clocks can be gated. Otherwise false */
 -- 
 2.22.0.rc1.311.g5d7573a151-goog
