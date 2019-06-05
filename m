@@ -1,31 +1,51 @@
-From: Avri Altman <Avri.Altman@wdc.com>
-Subject: RE: [PATCH 0/3] (Qualcomm) UFS device reset support
-Date: Wed, 5 Jun 2019 05:50:36 +0000
-Message-ID: <SN6PR04MB4925530F216E86F6404FE14CFC160@SN6PR04MB4925.namprd04.prod.outlook.com>
-References: <20190604072001.9288-1-bjorn.andersson@linaro.org>
- <CANcMJZBmgWMZu7Y53Lnx_x3L2UpCmEbFRHVW0SFCXfW=Yw9uYg@mail.gmail.com>
+From: Jiri Slaby <jslaby@suse.cz>
+Subject: Re: [PATCH] sg: Fix a double-fetch bug in drivers/scsi/sg.c
+Date: Wed, 5 Jun 2019 08:00:49 +0200
+Message-ID: <d7cb94f3-f136-62ff-3067-b3e5f6ac63ce@suse.cz>
+References: <20190523023855.GA17852@zhanggen-UX430UQ>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=iso-8859-2
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CANcMJZBmgWMZu7Y53Lnx_x3L2UpCmEbFRHVW0SFCXfW=Yw9uYg@mail.gmail.com>
-Content-Language: en-US
+In-Reply-To: <20190523023855.GA17852@zhanggen-UX430UQ>
+Content-Language: en-GB
 Sender: linux-kernel-owner@vger.kernel.org
-To: John Stultz <john.stultz@linaro.org>, Bjorn Andersson <bjorn.andersson@linaro.org>
-Cc: Andy Gross <agross@kernel.org>, Linus Walleij <linus.walleij@linaro.org>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Pedro Sousa <pedrom.sousa@synopsys.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>, "linux-gpio@vger.kernel.org" <linux-gpio@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Gen Zhang <blackgod016574@gmail.com>, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-SGksDQoNCj4gDQo+IE9uIFR1ZSwgSnVuIDQsIDIwMTkgYXQgMTI6MjIgQU0gQmpvcm4gQW5kZXJz
-c29uDQo+IDxiam9ybi5hbmRlcnNzb25AbGluYXJvLm9yZz4gd3JvdGU6DQo+ID4NCj4gPiBUaGlz
-IHNlcmllcyBleHBvc2VzIHRoZSB1ZnNfcmVzZXQgbGluZSBhcyBhIGdwaW8sIGFkZHMgc3VwcG9y
-dCBmb3IgdWZzaGNkIHRvDQo+ID4gYWNxdWlyZSBhbmQgdG9nZ2xlIHRoaXMgYW5kIHRoZW4gYWRk
-cyB0aGlzIHRvIFNETTg0NSBNVFAuDQo+ID4NCj4gPiBCam9ybiBBbmRlcnNzb24gKDMpOg0KPiA+
-ICAgcGluY3RybDogcWNvbTogc2RtODQ1OiBFeHBvc2UgdWZzX3Jlc2V0IGFzIGdwaW8NCj4gPiAg
-IHNjc2k6IHVmczogQWxsb3cgcmVzZXR0aW5nIHRoZSBVRlMgZGV2aWNlDQo+ID4gICBhcm02NDog
-ZHRzOiBxY29tOiBzZG04NDUtbXRwOiBTcGVjaWZ5IFVGUyBkZXZpY2UtcmVzZXQgR1BJTw0KPiAN
-Cj4gQWRkaW5nIHNpbWlsYXIgY2hhbmdlIGFzIGluIHNkbTg0NS1tdHAgdG8gdGhlIG5vdCB5ZXQg
-dXBzdHJlYW0NCj4gYmx1ZWxpbmUgZHRzLCBJIHZhbGlkYXRlZCB0aGlzIGFsbG93cyBteSBtaWNy
-b24gVUZTIHBpeGVsMyB0byBib290Lg0KPiANCj4gVGVzdGVkLWJ5OiBKb2huIFN0dWx0eiA8am9o
-bi5zdHVsdHpAbGluYXJvLm9yZz4NCk1heWJlIHVmc19oYmFfdmFyaWFudF9vcHMgd291bGQgYmUg
-dGhlIHByb3BlciBwbGFjZSB0byBhZGQgdGhpcz8NCg0KVGhhbmtzLA0KQXZyaQ0KDQoNCg0KPiAN
-Cj4gdGhhbmtzDQo+IC1qb2huDQo=
+On 23. 05. 19, 4:38, Gen Zhang wrote:
+> In sg_write(), the opcode of the command is fetched the first time from 
+> the userspace by __get_user(). Then the whole command, the opcode 
+> included, is fetched again from userspace by __copy_from_user(). 
+> However, a malicious user can change the opcode between the two fetches.
+> This can cause inconsistent data and potential errors as cmnd is used in
+> the following codes.
+> 
+> Thus we should check opcode between the two fetches to prevent this.
+> 
+> Signed-off-by: Gen Zhang <blackgod016574@gmail.com>
+> ---
+> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+> index d3f1531..a2971b8 100644
+> --- a/drivers/scsi/sg.c
+> +++ b/drivers/scsi/sg.c
+> @@ -694,6 +694,8 @@ sg_write(struct file *filp, const char __user *buf, size_t count, loff_t * ppos)
+>  	hp->flags = input_size;	/* structure abuse ... */
+>  	hp->pack_id = old_hdr.pack_id;
+>  	hp->usr_ptr = NULL;
+> +	if (opcode != cmnd[0])
+> +		return -EINVAL;
+
+Isn't it too early to check cmnd which is copied only here:
+
+>  	if (__copy_from_user(cmnd, buf, cmd_size))
+>  		return -EFAULT;
+>  	/*
+> ---
+> 
+
+thanks,
+-- 
+js
+suse labs
