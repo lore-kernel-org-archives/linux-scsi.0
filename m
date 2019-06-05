@@ -1,30 +1,25 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v3] scsi: ibmvscsi: Don't use rc uninitialized in ibmvscsi_do_work
-Date: Tue, 04 Jun 2019 22:39:19 -0400
-Message-ID: <yq1ef48rc14.fsf@oracle.com>
-References: <20190603221941.65432-1-natechancellor@gmail.com>
-        <20190603234405.29600-1-natechancellor@gmail.com>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH v2 net-next] cxgb4/libcxgb/cxgb4i/cxgbit: enable eDRAM
+ page pods for iSCSI
+Date: Tue, 04 Jun 2019 20:17:41 -0700 (PDT)
+Message-ID: <20190604.201741.2198584533127418560.davem@davemloft.net>
+References: <1559643109-3397-1-git-send-email-varun@chelsio.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190603234405.29600-1-natechancellor@gmail.com> (Nathan
-        Chancellor's message of "Mon, 3 Jun 2019 16:44:06 -0700")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Nathan Chancellor <natechancellor@gmail.com>
-Cc: Tyrel Datwyler <tyreld@linux.ibm.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, clang-built-linux@googlegroups.com, Michael Ellerman <mpe@ellerman.id.au>
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <1559643109-3397-1-git-send-email-varun@chelsio.com>
+Sender: netdev-owner@vger.kernel.org
+To: varun@chelsio.com
+Cc: netdev@vger.kernel.org, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, dt@chelsio.com, indranil@chelsio.com, ganji.aravind@chelsio.com
 List-Id: linux-scsi@vger.kernel.org
 
+From: Varun Prakash <varun@chelsio.com>
+Date: Tue,  4 Jun 2019 15:41:49 +0530
 
-Nathan,
+> +static int setup_ppod_edram(struct adapter *adap)
+> +{
+> +	int ret;
+> +	unsigned int param, val;
 
-> clang warns:
->
-> drivers/scsi/ibmvscsi/ibmvscsi.c:2126:7: warning: variable 'rc' is used
-> uninitialized whenever switch case is taken [-Wsometimes-uninitialized]
->         case IBMVSCSI_HOST_ACTION_NONE:
->              ^~~~~~~~~~~~~~~~~~~~~~~~~
-
-Applied to 5.3/scsi-queue, thanks!
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Reverse christmas tree please.
