@@ -1,13 +1,16 @@
 From: Satya Tangirala via Linux-f2fs-devel
  <linux-f2fs-devel@lists.sourceforge.net>
-Subject: [RFC PATCH v2 0/8] Inline Encryption Support
-Date: Wed,  5 Jun 2019 16:28:29 -0700
-Message-ID: <20190605232837.31545-1-satyat@google.com>
+Subject: [RFC PATCH v2 8/8] f2fs: Wire up f2fs to use inline
+ encryption via fscrypt
+Date: Wed,  5 Jun 2019 16:28:37 -0700
+Message-ID: <20190605232837.31545-9-satyat@google.com>
+References: <20190605232837.31545-1-satyat@google.com>
 Reply-To: Satya Tangirala <satyat@google.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-f2fs-devel-bounces@lists.sourceforge.net>
+In-Reply-To: <20190605232837.31545-1-satyat@google.com>
 List-Unsubscribe: <https://lists.sourceforge.net/lists/options/linux-f2fs-devel>,
  <mailto:linux-f2fs-devel-request@lists.sourceforge.net?subject=unsubscribe>
 List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux-f2fs-devel>
@@ -20,132 +23,214 @@ To: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-fscrypt@vger.
 Cc: Kuohong Wang <kuohong.wang@mediatek.com>, Ladvine D Almeida <ladvine.dalmeida@synopsys.com>, Satya Tangirala <satyat@google.com>, Barani Muthukumaran <bmuthuku@qti.qualcomm.com>, Parshuram Raju Thombare <pthombar@cadence.com>
 List-Id: linux-scsi@vger.kernel.org
 
-This patch series adds support for Inline Encryption to the block layer,
-UFS, fscrypt and f2fs.
+Signed-off-by: Satya Tangirala <satyat@google.com>
+---
+ fs/f2fs/data.c  | 77 ++++++++++++++++++++++++++++++++++++++++++++++---
+ fs/f2fs/super.c |  1 +
+ 2 files changed, 74 insertions(+), 4 deletions(-)
 
-Inline Encryption hardware allows software to specify an encryption context
-(an encryption key, crypto algorithm, data unit num, data unit size, etc.)
-along with a data transfer request to a storage device, and the inline
-encryption hardware will use that context to en/decrypt the data. The
-inline encryption hardware is part of the storage device, and it
-conceptually sits on the data path between system memory and the storage
-device. Inline Encryption hardware has become increasingly common, and we
-want to support it in the kernel.
-
-Inline Encryption hardware implementations often function around the
-concept of a limited number of "keyslots", which can hold an encryption
-context each. The storage device can be directed to en/decrypt any
-particular request with the encryption context stored in any particular
-keyslot.
-
-Patch 1 introduces a Keyslot Manager to efficiently manage keyslots.
-The keyslot manager also functions as the interface that blk-crypto
-(introduced in Path 3), will use to program keys into inline encryption
-hardware. For more information on the Keyslot Manager, refer to
-documentation found in block/keyslot-manager.c and linux/keyslot-manager.h.
-
-Patch 2 introduces struct bio_crypt_ctx, and a ptr to one in struct bio,
-which allows struct bio to represent an encryption context that can be
-passed down the storage stack from the filesystem layer to the storage
-driver.
-
-Patch 3 introduces blk-crypto. Blk-crypto delegates crypto operations to
-inline encryption hardware when available, and also contains a software
-fallback to the kernel crypto API. Blk-crypto also makes it possible for
-layered devices like device mapper to make use of inline encryption
-hardware. Given that blk-crypto works as a software fallback, we are
-considering removing file content en/decryption from fscrypt and simply
-using blk-crypto in a future patch. For more details on blk-crypto, refer
-to Documentation/block/blk-crypto.txt.
-
-Patches 4-6 add support for inline encryption into the UFS driver according
-to the JEDEC UFS HCI v2.1 specification. Inline encryption support for
-other drivers (like eMMC) may be added in the same way - the device driver
-should set up a Keyslot Manager in the device's request_queue (refer to
-the UFS crypto additions in ufshcd-crypto.c and ufshcd.c for an example).
-
-Patches 7 and 8 add support to fscrypt and f2fs, so that we have
-a complete stack that can make use of inline encryption.
-
-There have been a few patch sets addressing Inline Encryption Support in
-the past. Briefly, this patch set differs from those as follows:
-
-1) "crypto: qce: ice: Add support for Inline Crypto Engine"
-is specific to certain hardware, while our patch set's Inline
-Encryption support for UFS is implemented according to the JEDEC UFS
-specification.
-
-2) "scsi: ufs: UFS Host Controller crypto changes" registers inline
-encryption support as a kernel crypto algorithm. Our patch views inline
-encryption as being fundamentally different from a generic crypto
-provider (in that inline encryption is tied to a device), and so does
-not use the kernel crypto API to represent inline encryption hardware.
-
-3) "scsi: ufs: add real time/inline crypto support to UFS HCD" requires
-the device mapper to work - our patch does not.
-
-Changes v1 => v2:
- - Block layer and UFS changes are split into 3 patches each.
- - We now only have a ptr to a struct bio_crypt_ctx in struct bio, instead
-   of the struct itself.
- - struct bio_crypt_ctx no longer has flags.
- - blk-crypto now correctly handles the case when it fails to init
-   (because of insufficient memory), but kernel continues to boot.
- - ufshcd-crypto now works on big endian cpus.
- - Many cleanups.
-
-Satya Tangirala (8):
-  block: Keyslot Manager for Inline Encryption
-  block: Add encryption context to struct bio
-  block: blk-crypto for Inline Encryption
-  scsi: ufs: UFS driver v2.1 spec crypto additions
-  scsi: ufs: UFS crypto API
-  scsi: ufs: Add inline encryption support to UFS
-  fscrypt: wire up fscrypt to use blk-crypto
-  f2fs: Wire up f2fs to use inline encryption via fscrypt
-
- Documentation/block/blk-crypto.txt | 185 ++++++++++
- block/Kconfig                      |   8 +
- block/Makefile                     |   2 +
- block/bio.c                        |  17 +-
- block/blk-core.c                   |  11 +-
- block/blk-crypt-ctx.c              |  90 +++++
- block/blk-crypto.c                 | 557 +++++++++++++++++++++++++++++
- block/blk-merge.c                  |  34 +-
- block/bounce.c                     |   9 +-
- block/keyslot-manager.c            | 315 ++++++++++++++++
- drivers/md/dm.c                    |  15 +-
- drivers/scsi/ufs/Kconfig           |  10 +
- drivers/scsi/ufs/Makefile          |   1 +
- drivers/scsi/ufs/ufshcd-crypto.c   | 438 +++++++++++++++++++++++
- drivers/scsi/ufs/ufshcd-crypto.h   |  69 ++++
- drivers/scsi/ufs/ufshcd.c          |  84 ++++-
- drivers/scsi/ufs/ufshcd.h          |  23 ++
- drivers/scsi/ufs/ufshci.h          |  67 +++-
- fs/crypto/Kconfig                  |   7 +
- fs/crypto/bio.c                    | 159 ++++++--
- fs/crypto/crypto.c                 |   9 +
- fs/crypto/fscrypt_private.h        |  10 +
- fs/crypto/keyinfo.c                |  69 ++--
- fs/crypto/policy.c                 |  10 +
- fs/f2fs/data.c                     |  77 +++-
- fs/f2fs/super.c                    |   1 +
- include/linux/bio.h                | 180 ++++++++++
- include/linux/blk-crypto.h         |  40 +++
- include/linux/blk_types.h          |  39 ++
- include/linux/blkdev.h             |   9 +
- include/linux/fscrypt.h            |  64 ++++
- include/linux/keyslot-manager.h    | 116 ++++++
- include/uapi/linux/fs.h            |  12 +-
- 33 files changed, 2668 insertions(+), 69 deletions(-)
- create mode 100644 Documentation/block/blk-crypto.txt
- create mode 100644 block/blk-crypt-ctx.c
- create mode 100644 block/blk-crypto.c
- create mode 100644 block/keyslot-manager.c
- create mode 100644 drivers/scsi/ufs/ufshcd-crypto.c
- create mode 100644 drivers/scsi/ufs/ufshcd-crypto.h
- create mode 100644 include/linux/blk-crypto.h
- create mode 100644 include/linux/keyslot-manager.h
-
+diff --git a/fs/f2fs/data.c b/fs/f2fs/data.c
+index eda4181d2092..25e691947fb4 100644
+--- a/fs/f2fs/data.c
++++ b/fs/f2fs/data.c
+@@ -142,6 +142,8 @@ static bool f2fs_bio_post_read_required(struct bio *bio)
+ 
+ static void f2fs_read_end_io(struct bio *bio)
+ {
++	fscrypt_unset_bio_crypt_ctx(bio);
++
+ 	if (time_to_inject(F2FS_P_SB(bio_first_page_all(bio)),
+ 						FAULT_READ_IO)) {
+ 		f2fs_show_injection_info(FAULT_READ_IO);
+@@ -165,6 +167,8 @@ static void f2fs_write_end_io(struct bio *bio)
+ 	struct bio_vec *bvec;
+ 	struct bvec_iter_all iter_all;
+ 
++	fscrypt_unset_bio_crypt_ctx(bio);
++
+ 	if (time_to_inject(sbi, FAULT_WRITE_IO)) {
+ 		f2fs_show_injection_info(FAULT_WRITE_IO);
+ 		bio->bi_status = BLK_STS_IOERR;
+@@ -282,9 +286,18 @@ static struct bio *__bio_alloc(struct f2fs_sb_info *sbi, block_t blk_addr,
+ 	return bio;
+ }
+ 
++static inline u64 hw_crypt_dun(struct inode *inode, pgoff_t offset)
++{
++	return (((u64)inode->i_ino) << 32) | lower_32_bits(offset);
++}
++
+ static inline void __submit_bio(struct f2fs_sb_info *sbi,
+ 				struct bio *bio, enum page_type type)
+ {
++	struct page *page;
++	struct inode *inode;
++	int err = 0;
++
+ 	if (!is_read_io(bio_op(bio))) {
+ 		unsigned int start;
+ 
+@@ -326,7 +339,22 @@ static inline void __submit_bio(struct f2fs_sb_info *sbi,
+ 		trace_f2fs_submit_read_bio(sbi->sb, type, bio);
+ 	else
+ 		trace_f2fs_submit_write_bio(sbi->sb, type, bio);
+-	submit_bio(bio);
++
++	if (bio_has_data(bio)) {
++		page = bio_page(bio);
++		if (page && page->mapping && page->mapping->host) {
++			inode = page->mapping->host;
++			err = fscrypt_set_bio_crypt_ctx(inode, bio,
++						hw_crypt_dun(inode,
++							     page->index));
++		}
++	}
++	if (err) {
++		bio->bi_status = BLK_STS_IOERR;
++		bio_endio(bio);
++	} else {
++		submit_bio(bio);
++	}
+ }
+ 
+ static void __submit_merged_bio(struct f2fs_bio_info *io)
+@@ -487,6 +515,9 @@ void f2fs_submit_page_write(struct f2fs_io_info *fio)
+ 	enum page_type btype = PAGE_TYPE_OF_BIO(fio->type);
+ 	struct f2fs_bio_info *io = sbi->write_io[btype] + fio->temp;
+ 	struct page *bio_page;
++	struct inode *fio_inode, *bio_inode;
++	struct page *first_page;
++	u64 next_dun = 0;
+ 
+ 	f2fs_bug_on(sbi, is_read_io(fio->op));
+ 
+@@ -513,10 +544,27 @@ void f2fs_submit_page_write(struct f2fs_io_info *fio)
+ 
+ 	inc_page_count(sbi, WB_DATA_TYPE(bio_page));
+ 
++	fio_inode = fio->page->mapping->host;
++	bio_inode = NULL;
++	first_page = NULL;
++	next_dun = 0;
++	if (io->bio && bio_page(io->bio)->mapping) {
++		first_page = bio_page(io->bio);
++		bio_inode = first_page->mapping->host;
++		if (fscrypt_inode_is_hw_encrypted(bio_inode)) {
++			next_dun = hw_crypt_dun(bio_inode, first_page->index) +
++				   (io->bio->bi_iter.bi_size >> PAGE_SHIFT);
++		}
++	}
+ 	if (io->bio && (io->last_block_in_bio != fio->new_blkaddr - 1 ||
+ 	    (io->fio.op != fio->op || io->fio.op_flags != fio->op_flags) ||
+-			!__same_bdev(sbi, fio->new_blkaddr, io->bio)))
++			!__same_bdev(sbi, fio->new_blkaddr, io->bio) ||
++			!fscrypt_inode_crypt_mergeable(bio_inode, fio_inode) ||
++			(fscrypt_inode_is_hw_encrypted(bio_inode) &&
++			 next_dun != hw_crypt_dun(fio_inode,
++						  fio->page->index))))
+ 		__submit_merged_bio(io);
++
+ alloc_new:
+ 	if (io->bio == NULL) {
+ 		if ((fio->type == DATA || fio->type == NODE) &&
+@@ -568,7 +616,7 @@ static struct bio *f2fs_grab_read_bio(struct inode *inode, block_t blkaddr,
+ 	bio->bi_end_io = f2fs_read_end_io;
+ 	bio_set_op_attrs(bio, REQ_OP_READ, op_flag);
+ 
+-	if (f2fs_encrypted_file(inode))
++	if (f2fs_encrypted_file(inode) && !fscrypt_inode_is_hw_encrypted(inode))
+ 		post_read_steps |= 1 << STEP_DECRYPT;
+ 	if (post_read_steps) {
+ 		ctx = mempool_alloc(bio_post_read_ctx_pool, GFP_NOFS);
+@@ -1519,6 +1567,7 @@ static int f2fs_read_single_page(struct inode *inode, struct page *page,
+ 					struct f2fs_map_blocks *map,
+ 					struct bio **bio_ret,
+ 					sector_t *last_block_in_bio,
++					u64 *next_dun,
+ 					bool is_readahead)
+ {
+ 	struct bio *bio = *bio_ret;
+@@ -1592,6 +1641,13 @@ static int f2fs_read_single_page(struct inode *inode, struct page *page,
+ 		__submit_bio(F2FS_I_SB(inode), bio, DATA);
+ 		bio = NULL;
+ 	}
++
++	if (bio && fscrypt_inode_is_hw_encrypted(inode) &&
++	    *next_dun != hw_crypt_dun(inode, page->index)) {
++		__submit_bio(F2FS_I_SB(inode), bio, DATA);
++		bio = NULL;
++	}
++
+ 	if (bio == NULL) {
+ 		bio = f2fs_grab_read_bio(inode, block_nr, nr_pages,
+ 				is_readahead ? REQ_RAHEAD : 0);
+@@ -1611,6 +1667,9 @@ static int f2fs_read_single_page(struct inode *inode, struct page *page,
+ 	if (bio_add_page(bio, page, blocksize, 0) < blocksize)
+ 		goto submit_and_realloc;
+ 
++	if (fscrypt_inode_is_hw_encrypted(inode))
++		*next_dun = hw_crypt_dun(inode, page->index) + 1;
++
+ 	inc_page_count(F2FS_I_SB(inode), F2FS_RD_DATA);
+ 	ClearPageError(page);
+ 	*last_block_in_bio = block_nr;
+@@ -1644,6 +1703,7 @@ static int f2fs_mpage_readpages(struct address_space *mapping,
+ 	struct inode *inode = mapping->host;
+ 	struct f2fs_map_blocks map;
+ 	int ret = 0;
++	u64 next_dun = 0;
+ 
+ 	map.m_pblk = 0;
+ 	map.m_lblk = 0;
+@@ -1667,7 +1727,8 @@ static int f2fs_mpage_readpages(struct address_space *mapping,
+ 		}
+ 
+ 		ret = f2fs_read_single_page(inode, page, nr_pages, &map, &bio,
+-					&last_block_in_bio, is_readahead);
++					&last_block_in_bio, &next_dun,
++					is_readahead);
+ 		if (ret) {
+ 			SetPageError(page);
+ 			zero_user_segment(page, 0, PAGE_SIZE);
+@@ -2617,6 +2678,8 @@ static void f2fs_dio_end_io(struct bio *bio)
+ {
+ 	struct f2fs_private_dio *dio = bio->bi_private;
+ 
++	fscrypt_unset_bio_crypt_ctx(bio);
++
+ 	dec_page_count(F2FS_I_SB(dio->inode),
+ 			dio->write ? F2FS_DIO_WRITE : F2FS_DIO_READ);
+ 
+@@ -2633,12 +2696,18 @@ static void f2fs_dio_submit_bio(struct bio *bio, struct inode *inode,
+ {
+ 	struct f2fs_private_dio *dio;
+ 	bool write = (bio_op(bio) == REQ_OP_WRITE);
++	u64 data_unit_num = hw_crypt_dun(inode, file_offset >> PAGE_SHIFT);
+ 
+ 	dio = f2fs_kzalloc(F2FS_I_SB(inode),
+ 			sizeof(struct f2fs_private_dio), GFP_NOFS);
+ 	if (!dio)
+ 		goto out;
+ 
++	if (fscrypt_set_bio_crypt_ctx(inode, bio, data_unit_num) != 0) {
++		kvfree(dio);
++		goto out;
++	}
++
+ 	dio->inode = inode;
+ 	dio->orig_end_io = bio->bi_end_io;
+ 	dio->orig_private = bio->bi_private;
+diff --git a/fs/f2fs/super.c b/fs/f2fs/super.c
+index 6b959bbb336a..6399373777ce 100644
+--- a/fs/f2fs/super.c
++++ b/fs/f2fs/super.c
+@@ -2229,6 +2229,7 @@ static const struct fscrypt_operations f2fs_cryptops = {
+ 	.dummy_context	= f2fs_dummy_context,
+ 	.empty_dir	= f2fs_empty_dir,
+ 	.max_namelen	= F2FS_NAME_LEN,
++	.hw_crypt_supp	= true,
+ };
+ #endif
+ 
 -- 
 2.22.0.rc1.311.g5d7573a151-goog
