@@ -1,29 +1,64 @@
-From: Michael Ellerman <mpe@ellerman.id.au>
-Subject: Re: [PATCH v3] scsi: ibmvscsi: Don't use rc uninitialized in ibmvscsi_do_work
-Date: Wed, 05 Jun 2019 21:08:14 +1000
-Message-ID: <87woi0mgrl.fsf@concordia.ellerman.id.au>
-References: <20190603221941.65432-1-natechancellor@gmail.com> <20190603234405.29600-1-natechancellor@gmail.com> <yq1ef48rc14.fsf@oracle.com>
+From: Gen Zhang <blackgod016574@gmail.com>
+Subject: Re: [PATCH] sg: fix a double-fetch bug in sg_write()
+Date: Wed, 5 Jun 2019 23:35:32 +0800
+Message-ID: <20190605153532.GA4051@zhanggen-UX430UQ>
+References: <20190531012704.GA4541@zhanggen-UX430UQ>
+ <38bbd54f-d85b-e529-36ad-5c1809bb435f@suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <yq1ef48rc14.fsf@oracle.com>
+Content-Disposition: inline
+In-Reply-To: <38bbd54f-d85b-e529-36ad-5c1809bb435f@suse.cz>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Nathan Chancellor <natechancellor@gmail.com>
-Cc: Tyrel Datwyler <tyreld@linux.ibm.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, clang-built-linux@googlegroups.com
+To: Jiri Slaby <jslaby@suse.cz>
+Cc: dgilbert@interlog.com, jejb@linux.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-"Martin K. Petersen" <martin.petersen@oracle.com> writes:
-> Nathan,
->
->> clang warns:
->>
->> drivers/scsi/ibmvscsi/ibmvscsi.c:2126:7: warning: variable 'rc' is used
->> uninitialized whenever switch case is taken [-Wsometimes-uninitialized]
->>         case IBMVSCSI_HOST_ACTION_NONE:
->>              ^~~~~~~~~~~~~~~~~~~~~~~~~
->
-> Applied to 5.3/scsi-queue, thanks!
+On Wed, Jun 05, 2019 at 08:41:11AM +0200, Jiri Slaby wrote:
+> On 31. 05. 19, 3:27, Gen Zhang wrote:
+> > In sg_write(), the opcode of the command is fetched the first time from 
+> > the userspace by __get_user(). Then the whole command, the opcode 
+> > included, is fetched again from userspace by __copy_from_user(). 
+> > However, a malicious user can change the opcode between the two fetches.
+> > This can cause inconsistent data and potential errors as cmnd is used in
+> > the following codes.
+> > 
+> > Thus we should check opcode between the two fetches to prevent this.
+> > 
+> > Signed-off-by: Gen Zhang <blackgod016574@gmail.com>
+> > ---
+> > diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+> > index d3f1531..a2971b8 100644
+> > --- a/drivers/scsi/sg.c
+> > +++ b/drivers/scsi/sg.c
+> > @@ -694,6 +694,8 @@ sg_write(struct file *filp, const char __user *buf, size_t count, loff_t * ppos)
+> >  	hp->flags = input_size;	/* structure abuse ... */
+> >  	hp->pack_id = old_hdr.pack_id;
+> >  	hp->usr_ptr = NULL;
+> > +	if (opcode != cmnd[0])
+> > +		return -EINVAL;
+> >  	if (__copy_from_user(cmnd, buf, cmd_size))
+> >  		return -EFAULT;
+> 
+> You are sending the same patches like a broken machine. Please STOP this
+> and give people some time to actually review your patches! (Don't expect
+> replies in days.)
+> 
+Thanks for your reply. I resubmitted this one after 8-day-no-reply. I 
+don't judge whether this is a short time period or not. I politely hope
+that you can reply more kindly.
 
-Thanks all.
+I am just a PhD candidate. All I did is submitting patches, discussing 
+with maintainers in accordance with linux community rules for academic papers.
 
-cheers
+I guess that you might be busy person and hope that submitting patches 
+didn't bother you.
+
+Thanks
+Gen
+> I already commented on this apparently broken one earlier...
+> 
+> thanks,
+> -- 
+> js
+> suse labs
