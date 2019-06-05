@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 12/13] usb-storage: set virt_boundary_mask in the scsi host
-Date: Wed,  5 Jun 2019 21:08:35 +0200
-Message-ID: <20190605190836.32354-13-hch@lst.de>
+Subject: [PATCH 08/13] IB/iser: set virt_boundary_mask in the scsi host
+Date: Wed,  5 Jun 2019 21:08:31 +0200
+Message-ID: <20190605190836.32354-9-hch@lst.de>
 References: <20190605190836.32354-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -17,58 +17,82 @@ SCSI midlayer.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/usb/storage/scsiglue.c | 10 ----------
- drivers/usb/storage/usb.c      | 10 ++++++++++
- 2 files changed, 10 insertions(+), 10 deletions(-)
+ drivers/infiniband/ulp/iser/iscsi_iser.c | 35 +++++-------------------
+ 1 file changed, 7 insertions(+), 28 deletions(-)
 
-diff --git a/drivers/usb/storage/scsiglue.c b/drivers/usb/storage/scsiglue.c
-index 59190d88fa9f..02c3b66b3f78 100644
---- a/drivers/usb/storage/scsiglue.c
-+++ b/drivers/usb/storage/scsiglue.c
-@@ -65,7 +65,6 @@ static const char* host_info(struct Scsi_Host *host)
- static int slave_alloc (struct scsi_device *sdev)
- {
- 	struct us_data *us = host_to_us(sdev->host);
--	int maxp;
+diff --git a/drivers/infiniband/ulp/iser/iscsi_iser.c b/drivers/infiniband/ulp/iser/iscsi_iser.c
+index 9c185a8dabd3..841b66397a57 100644
+--- a/drivers/infiniband/ulp/iser/iscsi_iser.c
++++ b/drivers/infiniband/ulp/iser/iscsi_iser.c
+@@ -613,6 +613,7 @@ iscsi_iser_session_create(struct iscsi_endpoint *ep,
+ 	struct Scsi_Host *shost;
+ 	struct iser_conn *iser_conn = NULL;
+ 	struct ib_conn *ib_conn;
++	struct ib_device *ib_dev;
+ 	u32 max_fr_sectors;
  
- 	/*
- 	 * Set the INQUIRY transfer length to 36.  We don't use any of
-@@ -74,15 +73,6 @@ static int slave_alloc (struct scsi_device *sdev)
- 	 */
- 	sdev->inquiry_len = 36;
+ 	shost = iscsi_host_alloc(&iscsi_iser_sht, 0, 0);
+@@ -643,16 +644,19 @@ iscsi_iser_session_create(struct iscsi_endpoint *ep,
+ 		}
  
--	/*
--	 * USB has unusual scatter-gather requirements: the length of each
--	 * scatterlist element except the last must be divisible by the
--	 * Bulk maxpacket value.  Fortunately this value is always a
--	 * power of 2.  Inform the block layer about this requirement.
--	 */
--	maxp = usb_maxpacket(us->pusb_dev, us->recv_bulk_pipe, 0);
--	blk_queue_virt_boundary(sdev->request_queue, maxp - 1);
+ 		ib_conn = &iser_conn->ib_conn;
++		ib_dev = ib_conn->device->ib_device;
+ 		if (ib_conn->pi_support) {
+-			u32 sig_caps = ib_conn->device->ib_device->attrs.sig_prot_cap;
++			u32 sig_caps = ib_dev->attrs.sig_prot_cap;
+ 
+ 			scsi_host_set_prot(shost, iser_dif_prot_caps(sig_caps));
+ 			scsi_host_set_guard(shost, SHOST_DIX_GUARD_IP |
+ 						   SHOST_DIX_GUARD_CRC);
+ 		}
+ 
+-		if (iscsi_host_add(shost,
+-				   ib_conn->device->ib_device->dev.parent)) {
++		if (!(ib_dev->attrs.device_cap_flags & IB_DEVICE_SG_GAPS_REG))
++			shost->virt_boundary_mask = ~MASK_4K;
++
++		if (iscsi_host_add(shost, ib_dev->dev.parent)) {
+ 			mutex_unlock(&iser_conn->state_mutex);
+ 			goto free_host;
+ 		}
+@@ -958,30 +962,6 @@ static umode_t iser_attr_is_visible(int param_type, int param)
+ 	return 0;
+ }
+ 
+-static int iscsi_iser_slave_alloc(struct scsi_device *sdev)
+-{
+-	struct iscsi_session *session;
+-	struct iser_conn *iser_conn;
+-	struct ib_device *ib_dev;
 -
- 	/*
- 	 * Some host controllers may have alignment requirements.
- 	 * We'll play it safe by requiring 512-byte alignment always.
-diff --git a/drivers/usb/storage/usb.c b/drivers/usb/storage/usb.c
-index 9a79cd9762f3..b0f23f4f58e3 100644
---- a/drivers/usb/storage/usb.c
-+++ b/drivers/usb/storage/usb.c
-@@ -1050,6 +1050,16 @@ int usb_stor_probe2(struct us_data *us)
- 	usb_autopm_get_interface_no_resume(us->pusb_intf);
- 	snprintf(us->scsi_name, sizeof(us->scsi_name), "usb-storage %s",
- 					dev_name(&us->pusb_intf->dev));
-+
-+	/*
-+	 * USB has unusual scatter-gather requirements: the length of each
-+	 * scatterlist element except the last must be divisible by the
-+	 * Bulk maxpacket value.  Fortunately this value is always a
-+	 * power of 2.  Inform the block layer about this requirement.
-+	 */
-+	us_to_host(us)->virt_boundary_mask =
-+		usb_maxpacket(us->pusb_dev, us->recv_bulk_pipe, 0) - 1;
-+
- 	result = scsi_add_host(us_to_host(us), dev);
- 	if (result) {
- 		dev_warn(dev,
+-	mutex_lock(&unbind_iser_conn_mutex);
+-
+-	session = starget_to_session(scsi_target(sdev))->dd_data;
+-	iser_conn = session->leadconn->dd_data;
+-	if (!iser_conn) {
+-		mutex_unlock(&unbind_iser_conn_mutex);
+-		return -ENOTCONN;
+-	}
+-	ib_dev = iser_conn->ib_conn.device->ib_device;
+-
+-	if (!(ib_dev->attrs.device_cap_flags & IB_DEVICE_SG_GAPS_REG))
+-		blk_queue_virt_boundary(sdev->request_queue, ~MASK_4K);
+-
+-	mutex_unlock(&unbind_iser_conn_mutex);
+-
+-	return 0;
+-}
+-
+ static struct scsi_host_template iscsi_iser_sht = {
+ 	.module                 = THIS_MODULE,
+ 	.name                   = "iSCSI Initiator over iSER",
+@@ -994,7 +974,6 @@ static struct scsi_host_template iscsi_iser_sht = {
+ 	.eh_device_reset_handler= iscsi_eh_device_reset,
+ 	.eh_target_reset_handler = iscsi_eh_recover_target,
+ 	.target_alloc		= iscsi_target_alloc,
+-	.slave_alloc            = iscsi_iser_slave_alloc,
+ 	.proc_name              = "iscsi_iser",
+ 	.this_id                = -1,
+ 	.track_queue_depth	= 1,
 -- 
 2.20.1
