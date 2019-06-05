@@ -1,9 +1,9 @@
 From: Satya Tangirala via Linux-f2fs-devel
  <linux-f2fs-devel@lists.sourceforge.net>
-Subject: [RFC PATCH v2 7/8] fscrypt: wire up fscrypt to use
- blk-crypto
-Date: Wed,  5 Jun 2019 16:28:36 -0700
-Message-ID: <20190605232837.31545-8-satyat@google.com>
+Subject: [RFC PATCH v2 4/8] scsi: ufs: UFS driver v2.1 spec
+ crypto additions
+Date: Wed,  5 Jun 2019 16:28:33 -0700
+Message-ID: <20190605232837.31545-5-satyat@google.com>
 References: <20190605232837.31545-1-satyat@google.com>
 Reply-To: Satya Tangirala <satyat@google.com>
 Mime-Version: 1.0
@@ -23,658 +23,147 @@ To: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-fscrypt@vger.
 Cc: Kuohong Wang <kuohong.wang@mediatek.com>, Ladvine D Almeida <ladvine.dalmeida@synopsys.com>, Satya Tangirala <satyat@google.com>, Barani Muthukumaran <bmuthuku@qti.qualcomm.com>, Parshuram Raju Thombare <pthombar@cadence.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Introduce fscrypt_set_bio_crypt_ctx for filesystems to call to set up
-encryption contexts in bios, and fscrypt_evict_crypt_key to evict
-the encryption context associated with an inode.
-
-Inline encryption is controlled by a policy flag in the fscrypt_info
-in the inode, and filesystems may check if an inode should use inline
-encryption by calling fscrypt_inode_is_hw_encrypted. Files can be marked
-as inline encrypted from userspace by appropriately modifying the flags
-(OR-ing FS_POLICY_FLAGS_HW_ENCRYPTION to it) in the fscrypt_policy
-passed to fscrypt_ioctl_set_policy.
-
-To test inline encryption with the fscrypt dummy context, add
-ctx.flags |= FS_POLICY_FLAGS_HW_ENCRYPTION
-when setting up the dummy context in fs/crypto/keyinfo.c.
-
-Note that blk-crypto will fall back to software en/decryption in the
-absence of inline crypto hardware, so setting up the ctx.flags in the
-dummy context without inline crypto hardware serves as a test for
-the software fallback in blk-crypto.
+Add the crypto registers and structs defined in v2.1 of the JEDEC UFSHCI
+specification in preparation to add support for inline encryption to
+UFS.
 
 Signed-off-by: Satya Tangirala <satyat@google.com>
 ---
- block/blk-crypto.c          |   1 -
- fs/crypto/Kconfig           |   7 ++
- fs/crypto/bio.c             | 159 +++++++++++++++++++++++++++++++-----
- fs/crypto/crypto.c          |   9 ++
- fs/crypto/fscrypt_private.h |  10 +++
- fs/crypto/keyinfo.c         |  69 +++++++++++-----
- fs/crypto/policy.c          |  10 +++
- include/linux/fscrypt.h     |  64 +++++++++++++++
- include/uapi/linux/fs.h     |  12 ++-
- 9 files changed, 296 insertions(+), 45 deletions(-)
+ drivers/scsi/ufs/ufshcd.h |  5 +++
+ drivers/scsi/ufs/ufshci.h | 67 +++++++++++++++++++++++++++++++++++++--
+ 2 files changed, 70 insertions(+), 2 deletions(-)
 
-diff --git a/block/blk-crypto.c b/block/blk-crypto.c
-index 5adb5251ae7e..7e98acd2b963 100644
---- a/block/blk-crypto.c
-+++ b/block/blk-crypto.c
-@@ -82,7 +82,6 @@ static int blk_crypto_keyslot_program(void *priv, const u8 *key,
- 		slotp->tfm = tfm;
- 	}
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index ecfa898b9ccc..d3b6a6b57a37 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -692,6 +692,11 @@ struct ufs_hba {
+ 	 * the performance of ongoing read/write operations.
+ 	 */
+ #define UFSHCD_CAP_KEEP_AUTO_BKOPS_ENABLED_EXCEPT_SUSPEND (1 << 5)
++	/*
++	 * This capability allows the host controller driver to use the
++	 * inline crypto engine, if it is present
++	 */
++#define UFSHCD_CAP_CRYPTO (1 << 6)
  
--
- 	err = crypto_skcipher_setkey(tfm, key, keysize);
+ 	struct devfreq *devfreq;
+ 	struct ufs_clk_scaling clk_scaling;
+diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
+index 6fa889de5ee5..a757eaf99a19 100644
+--- a/drivers/scsi/ufs/ufshci.h
++++ b/drivers/scsi/ufs/ufshci.h
+@@ -90,6 +90,7 @@ enum {
+ 	MASK_64_ADDRESSING_SUPPORT		= 0x01000000,
+ 	MASK_OUT_OF_ORDER_DATA_DELIVERY_SUPPORT	= 0x02000000,
+ 	MASK_UIC_DME_TEST_MODE_SUPPORT		= 0x04000000,
++	MASK_CRYPTO_SUPPORT			= 0x10000000,
+ };
  
- 	if (err) {
-diff --git a/fs/crypto/Kconfig b/fs/crypto/Kconfig
-index 24ed99e2eca0..aa5b2bc6c8dd 100644
---- a/fs/crypto/Kconfig
-+++ b/fs/crypto/Kconfig
-@@ -15,3 +15,10 @@ config FS_ENCRYPTION
- 	  efficient since it avoids caching the encrypted and
- 	  decrypted pages in the page cache.  Currently Ext4,
- 	  F2FS and UBIFS make use of this feature.
-+
-+config FS_ENCRYPTION_HW_CRYPT
-+	tristate "Enable fscrypt to use inline crypto"
-+	default n
-+	depends on FS_ENCRYPTION && BLK_INLINE_ENCRYPTION
-+	help
-+	  Enables fscrypt to use inline crypto hardware if available.
-diff --git a/fs/crypto/bio.c b/fs/crypto/bio.c
-index b46021ebde85..b06b1a2be99b 100644
---- a/fs/crypto/bio.c
-+++ b/fs/crypto/bio.c
-@@ -24,17 +24,24 @@
- #include <linux/module.h>
- #include <linux/bio.h>
- #include <linux/namei.h>
-+#include <linux/keyslot-manager.h>
-+#include <linux/blkdev.h>
-+#include <crypto/algapi.h>
- #include "fscrypt_private.h"
+ #define UFS_MASK(mask, offset)		((mask) << (offset))
+@@ -143,6 +144,7 @@ enum {
+ #define DEVICE_FATAL_ERROR			0x800
+ #define CONTROLLER_FATAL_ERROR			0x10000
+ #define SYSTEM_BUS_FATAL_ERROR			0x20000
++#define CRYPTO_ENGINE_FATAL_ERROR		0x40000
  
--static void __fscrypt_decrypt_bio(struct bio *bio, bool done)
-+static void __fscrypt_decrypt_bio(struct bio *bio, bool done, bool decrypt)
- {
- 	struct bio_vec *bv;
- 	struct bvec_iter_all iter_all;
+ #define UFSHCD_UIC_PWR_MASK	(UIC_HIBERNATE_ENTER |\
+ 				UIC_HIBERNATE_EXIT |\
+@@ -153,11 +155,13 @@ enum {
+ #define UFSHCD_ERROR_MASK	(UIC_ERROR |\
+ 				DEVICE_FATAL_ERROR |\
+ 				CONTROLLER_FATAL_ERROR |\
+-				SYSTEM_BUS_FATAL_ERROR)
++				SYSTEM_BUS_FATAL_ERROR |\
++				CRYPTO_ENGINE_FATAL_ERROR)
  
- 	bio_for_each_segment_all(bv, bio, iter_all) {
- 		struct page *page = bv->bv_page;
--		int ret = fscrypt_decrypt_page(page->mapping->host, page,
--				PAGE_SIZE, 0, page->index);
-+		int ret = 0;
-+
-+		if (decrypt) {
-+			ret = fscrypt_decrypt_page(page->mapping->host, page,
-+						   PAGE_SIZE, 0, page->index);
-+		}
+ #define INT_FATAL_ERRORS	(DEVICE_FATAL_ERROR |\
+ 				CONTROLLER_FATAL_ERROR |\
+-				SYSTEM_BUS_FATAL_ERROR)
++				SYSTEM_BUS_FATAL_ERROR |\
++				CRYPTO_ENGINE_FATAL_ERROR)
  
- 		if (ret)
- 			SetPageError(page);
-@@ -47,7 +54,7 @@ static void __fscrypt_decrypt_bio(struct bio *bio, bool done)
+ /* HCS - Host Controller Status 30h */
+ #define DEVICE_PRESENT				0x1
+@@ -316,6 +320,61 @@ enum {
+ 	INTERRUPT_MASK_ALL_VER_21	= 0x71FFF,
+ };
  
- void fscrypt_decrypt_bio(struct bio *bio)
- {
--	__fscrypt_decrypt_bio(bio, false);
-+	__fscrypt_decrypt_bio(bio, false, true);
- }
- EXPORT_SYMBOL(fscrypt_decrypt_bio);
- 
-@@ -57,16 +64,27 @@ static void completion_pages(struct work_struct *work)
- 		container_of(work, struct fscrypt_ctx, r.work);
- 	struct bio *bio = ctx->r.bio;
- 
--	__fscrypt_decrypt_bio(bio, true);
-+	__fscrypt_decrypt_bio(bio, true, true);
-+	fscrypt_release_ctx(ctx);
-+	bio_put(bio);
-+}
++/* CCAP - Crypto Capability 100h */
++union ufs_crypto_capabilities {
++	__le32 reg_val;
++	struct {
++		u8 num_crypto_cap;
++		u8 config_count;
++		u8 reserved;
++		u8 config_array_ptr;
++	};
++};
 +
-+static void decrypt_bio_hwcrypt(struct fscrypt_ctx *ctx, struct bio *bio)
-+{
-+	__fscrypt_decrypt_bio(bio, true, false);
- 	fscrypt_release_ctx(ctx);
- 	bio_put(bio);
- }
- 
- void fscrypt_enqueue_decrypt_bio(struct fscrypt_ctx *ctx, struct bio *bio)
- {
--	INIT_WORK(&ctx->r.work, completion_pages);
--	ctx->r.bio = bio;
--	fscrypt_enqueue_decrypt_work(&ctx->r.work);
-+	if (bio_is_encrypted(bio)) {
-+		decrypt_bio_hwcrypt(ctx, bio);
-+	} else {
-+		INIT_WORK(&ctx->r.work, completion_pages);
-+		ctx->r.bio = bio;
-+		fscrypt_enqueue_decrypt_work(&ctx->r.work);
-+	}
- }
- EXPORT_SYMBOL(fscrypt_enqueue_decrypt_bio);
- 
-@@ -94,29 +112,33 @@ EXPORT_SYMBOL(fscrypt_pullback_bio_page);
- int fscrypt_zeroout_range(const struct inode *inode, pgoff_t lblk,
- 				sector_t pblk, unsigned int len)
- {
--	struct fscrypt_ctx *ctx;
-+	struct fscrypt_ctx *ctx = NULL;
- 	struct page *ciphertext_page = NULL;
- 	struct bio *bio;
- 	int ret, err = 0;
- 
- 	BUG_ON(inode->i_sb->s_blocksize != PAGE_SIZE);
- 
--	ctx = fscrypt_get_ctx(GFP_NOFS);
--	if (IS_ERR(ctx))
--		return PTR_ERR(ctx);
-+	if (!fscrypt_inode_is_hw_encrypted(inode)) {
-+		ctx = fscrypt_get_ctx(GFP_NOFS);
-+		if (IS_ERR(ctx))
-+			return PTR_ERR(ctx);
- 
--	ciphertext_page = fscrypt_alloc_bounce_page(ctx, GFP_NOWAIT);
--	if (IS_ERR(ciphertext_page)) {
--		err = PTR_ERR(ciphertext_page);
--		goto errout;
-+		ciphertext_page = fscrypt_alloc_bounce_page(ctx, GFP_NOWAIT);
-+		if (IS_ERR(ciphertext_page)) {
-+			err = PTR_ERR(ciphertext_page);
-+			goto errout;
-+		}
- 	}
- 
- 	while (len--) {
--		err = fscrypt_do_page_crypto(inode, FS_ENCRYPT, lblk,
-+		if (!fscrypt_inode_is_hw_encrypted(inode)) {
-+			err = fscrypt_do_page_crypto(inode, FS_ENCRYPT, lblk,
- 					     ZERO_PAGE(0), ciphertext_page,
- 					     PAGE_SIZE, 0, GFP_NOFS);
--		if (err)
--			goto errout;
-+			if (err)
-+				goto errout;
-+		}
- 
- 		bio = bio_alloc(GFP_NOWAIT, 1);
- 		if (!bio) {
-@@ -127,8 +149,14 @@ int fscrypt_zeroout_range(const struct inode *inode, pgoff_t lblk,
- 		bio->bi_iter.bi_sector =
- 			pblk << (inode->i_sb->s_blocksize_bits - 9);
- 		bio_set_op_attrs(bio, REQ_OP_WRITE, 0);
--		ret = bio_add_page(bio, ciphertext_page,
--					inode->i_sb->s_blocksize, 0);
-+		if (!fscrypt_inode_is_hw_encrypted(inode)) {
-+			ret = bio_add_page(bio, ciphertext_page,
-+						inode->i_sb->s_blocksize, 0);
-+		} else {
-+			ret = bio_add_page(bio, ZERO_PAGE(0),
-+						inode->i_sb->s_blocksize, 0);
-+		}
++enum ufs_crypto_key_size {
++	UFS_CRYPTO_KEY_SIZE_INVALID	= 0x0,
++	UFS_CRYPTO_KEY_SIZE_128		= 0x1,
++	UFS_CRYPTO_KEY_SIZE_192		= 0x2,
++	UFS_CRYPTO_KEY_SIZE_256		= 0x3,
++	UFS_CRYPTO_KEY_SIZE_512		= 0x4,
++};
 +
- 		if (ret != inode->i_sb->s_blocksize) {
- 			/* should never happen! */
- 			WARN_ON(1);
-@@ -136,6 +164,7 @@ int fscrypt_zeroout_range(const struct inode *inode, pgoff_t lblk,
- 			err = -EIO;
- 			goto errout;
- 		}
-+		fscrypt_set_bio_crypt_ctx(inode, bio, pblk);
- 		err = submit_bio_wait(bio);
- 		if (err == 0 && bio->bi_status)
- 			err = -EIO;
-@@ -147,7 +176,93 @@ int fscrypt_zeroout_range(const struct inode *inode, pgoff_t lblk,
- 	}
- 	err = 0;
- errout:
--	fscrypt_release_ctx(ctx);
-+	if (!fscrypt_inode_is_hw_encrypted(inode))
-+		fscrypt_release_ctx(ctx);
- 	return err;
- }
- EXPORT_SYMBOL(fscrypt_zeroout_range);
++enum ufs_crypto_alg {
++	UFS_CRYPTO_ALG_AES_XTS			= 0x0,
++	UFS_CRYPTO_ALG_BITLOCKER_AES_CBC	= 0x1,
++	UFS_CRYPTO_ALG_AES_ECB			= 0x2,
++	UFS_CRYPTO_ALG_ESSIV_AES_CBC		= 0x3,
++};
 +
-+#if IS_ENABLED(CONFIG_FS_ENCRYPTION_HW_CRYPT)
-+static enum blk_crypt_mode_num
-+get_blk_crypto_alg_for_fscryptalg(u8 fscrypt_alg)
-+{
-+	switch (fscrypt_alg) {
-+	case FS_ENCRYPTION_MODE_AES_256_XTS:
-+		return BLK_ENCRYPTION_MODE_AES_256_XTS;
-+	default: return -EINVAL;
-+	}
-+}
++/* x-CRYPTOCAP - Crypto Capability X */
++union ufs_crypto_cap_entry {
++	__le32 reg_val;
++	struct {
++		u8 algorithm_id;
++		u8 sdus_mask; /* Supported data unit size mask */
++		u8 key_size;
++		u8 reserved;
++	};
++};
 +
-+int fscrypt_set_bio_crypt_ctx(const struct inode *inode,
-+				 struct bio *bio, u64 data_unit_num)
-+{
-+	struct fscrypt_info *ci = inode->i_crypt_info;
-+
-+	/* If inode is not hw encrypted, nothing to do. */
-+	if (!fscrypt_inode_is_hw_encrypted(inode))
-+		return 0;
-+
-+	return bio_crypt_set_ctx(bio, ci->ci_master_key->mk_raw,
-+			get_blk_crypto_alg_for_fscryptalg(ci->ci_data_mode),
-+			data_unit_num,
-+			PAGE_SHIFT);
-+}
-+EXPORT_SYMBOL(fscrypt_set_bio_crypt_ctx);
-+
-+void fscrypt_unset_bio_crypt_ctx(struct bio *bio)
-+{
-+	bio_crypt_free_ctx(bio);
-+}
-+EXPORT_SYMBOL(fscrypt_unset_bio_crypt_ctx);
-+
-+int fscrypt_evict_crypt_key(struct inode *inode)
-+{
-+	struct request_queue *q;
-+	struct fscrypt_info *ci;
-+
-+	if (!inode)
-+		return 0;
-+
-+	q = inode->i_sb->s_bdev->bd_queue;
-+	ci = inode->i_crypt_info;
-+
-+	if (!q || !q->ksm || !ci ||
-+	    !fscrypt_inode_is_hw_encrypted(inode)) {
-+		return 0;
-+	}
-+
-+	return keyslot_manager_evict_key(q->ksm,
-+					 ci->ci_master_key->mk_raw,
-+					 get_blk_crypto_alg_for_fscryptalg(
-+						ci->ci_data_mode),
-+					 PAGE_SIZE);
-+}
-+EXPORT_SYMBOL(fscrypt_evict_crypt_key);
-+
-+bool fscrypt_inode_crypt_mergeable(const struct inode *inode_1,
-+				   const struct inode *inode_2)
-+{
-+	struct fscrypt_info *ci_1, *ci_2;
-+	bool enc_1 = fscrypt_inode_is_hw_encrypted(inode_1);
-+	bool enc_2 = fscrypt_inode_is_hw_encrypted(inode_2);
-+
-+	if (enc_1 != enc_2)
-+		return false;
-+
-+	if (!enc_1)
-+		return true;
-+
-+	if (inode_1 == inode_2)
-+		return true;
-+
-+	ci_1 = inode_1->i_crypt_info;
-+	ci_2 = inode_2->i_crypt_info;
-+
-+	return ci_1->ci_data_mode == ci_2->ci_data_mode &&
-+	       crypto_memneq(ci_1->ci_master_key->mk_raw,
-+			     ci_2->ci_master_key->mk_raw,
-+			     ci_1->ci_master_key->mk_mode->keysize) == 0;
-+}
-+EXPORT_SYMBOL(fscrypt_inode_crypt_mergeable);
-+
-+#endif /* FS_ENCRYPTION_HW_CRYPT */
-diff --git a/fs/crypto/crypto.c b/fs/crypto/crypto.c
-index 335a362ee446..1bf195ef82c8 100644
---- a/fs/crypto/crypto.c
-+++ b/fs/crypto/crypto.c
-@@ -240,6 +240,11 @@ struct page *fscrypt_encrypt_page(const struct inode *inode,
- 
- 	BUG_ON(len % FS_CRYPTO_BLOCK_SIZE != 0);
- 
-+	/* If HW encryption, then pretend we did in place encryption */
-+	if (fscrypt_inode_is_hw_encrypted(inode)) {
-+		return ciphertext_page;
-+	}
-+
- 	if (inode->i_sb->s_cop->flags & FS_CFLG_OWN_PAGES) {
- 		/* with inplace-encryption we just encrypt the page */
- 		err = fscrypt_do_page_crypto(inode, FS_ENCRYPT, lblk_num, page,
-@@ -302,6 +307,10 @@ int fscrypt_decrypt_page(const struct inode *inode, struct page *page,
- 	if (!(inode->i_sb->s_cop->flags & FS_CFLG_OWN_PAGES))
- 		BUG_ON(!PageLocked(page));
- 
-+	/* If we have HW encryption, then this page is already decrypted */
-+	if (fscrypt_inode_is_hw_encrypted(inode))
-+		return 0;
-+
- 	return fscrypt_do_page_crypto(inode, FS_DECRYPT, lblk_num, page, page,
- 				      len, offs, GFP_NOFS);
- }
-diff --git a/fs/crypto/fscrypt_private.h b/fs/crypto/fscrypt_private.h
-index 7da276159593..d6d65c88a629 100644
---- a/fs/crypto/fscrypt_private.h
-+++ b/fs/crypto/fscrypt_private.h
-@@ -49,6 +49,16 @@ struct fscrypt_symlink_data {
- 	char encrypted_path[1];
- } __packed;
- 
-+/* Master key referenced by FS_POLICY_FLAG_DIRECT_KEY policy */
-+struct fscrypt_master_key {
-+	struct hlist_node mk_node;
-+	refcount_t mk_refcount;
-+	const struct fscrypt_mode *mk_mode;
-+	struct crypto_skcipher *mk_ctfm;
-+	u8 mk_descriptor[FS_KEY_DESCRIPTOR_SIZE];
-+	u8 mk_raw[FS_MAX_KEY_SIZE];
++#define UFS_CRYPTO_CONFIGURATION_ENABLE (1 << 7)
++#define UFS_CRYPTO_KEY_MAX_SIZE 64
++/* x-CRYPTOCFG - Crypto Configuration X */
++union ufs_crypto_cfg_entry {
++	__le32 reg_val[32];
++	struct {
++		u8 crypto_key[UFS_CRYPTO_KEY_MAX_SIZE];
++		u8 data_unit_size;
++		u8 crypto_cap_idx;
++		u8 reserved_1;
++		u8 config_enable;
++		u8 reserved_multi_host;
++		u8 reserved_2;
++		u8 vsb[2];
++		u8 reserved_3[56];
++	};
 +};
 +
  /*
-  * fscrypt_info - the "encryption key" for an inode
-  *
-diff --git a/fs/crypto/keyinfo.c b/fs/crypto/keyinfo.c
-index dcd91a3fbe49..c00d986799d5 100644
---- a/fs/crypto/keyinfo.c
-+++ b/fs/crypto/keyinfo.c
-@@ -25,6 +25,21 @@ static struct crypto_shash *essiv_hash_tfm;
- static DEFINE_HASHTABLE(fscrypt_master_keys, 6); /* 6 bits = 64 buckets */
- static DEFINE_SPINLOCK(fscrypt_master_keys_lock);
- 
-+#if IS_ENABLED(CONFIG_FS_ENCRYPTION_HW_CRYPT)
-+static inline bool __flags_hw_encrypted(u8 flags,
-+					const struct inode *inode)
-+{
-+	return inode && (flags & FS_POLICY_FLAGS_HW_ENCRYPTION) &&
-+	       S_ISREG(inode->i_mode);
-+}
-+#else
-+static inline bool __flags_hw_encrypted(u8 flags,
-+					const struct inode *inode)
-+{
-+	return false;
-+}
-+#endif /* CONFIG_FS_ENCRYPTION_HW_CRYPT */
-+
- /*
-  * Key derivation function.  This generates the derived key by encrypting the
-  * master key with AES-128-ECB using the inode's nonce as the AES key.
-@@ -220,6 +235,9 @@ static int find_and_derive_key(const struct inode *inode,
- 			memcpy(derived_key, payload->raw, mode->keysize);
- 			err = 0;
- 		}
-+	} else if (__flags_hw_encrypted(ctx->flags, inode)) {
-+		memcpy(derived_key, payload->raw, mode->keysize);
-+		err = 0;
- 	} else {
- 		err = derive_key_aes(payload->raw, ctx, derived_key,
- 				     mode->keysize);
-@@ -269,16 +287,6 @@ allocate_skcipher_for_mode(struct fscrypt_mode *mode, const u8 *raw_key,
- 	return ERR_PTR(err);
- }
- 
--/* Master key referenced by FS_POLICY_FLAG_DIRECT_KEY policy */
--struct fscrypt_master_key {
--	struct hlist_node mk_node;
--	refcount_t mk_refcount;
--	const struct fscrypt_mode *mk_mode;
--	struct crypto_skcipher *mk_ctfm;
--	u8 mk_descriptor[FS_KEY_DESCRIPTOR_SIZE];
--	u8 mk_raw[FS_MAX_KEY_SIZE];
--};
--
- static void free_master_key(struct fscrypt_master_key *mk)
- {
- 	if (mk) {
-@@ -287,13 +295,15 @@ static void free_master_key(struct fscrypt_master_key *mk)
- 	}
- }
- 
--static void put_master_key(struct fscrypt_master_key *mk)
-+static void put_master_key(struct fscrypt_master_key *mk,
-+			   struct inode *inode)
- {
- 	if (!refcount_dec_and_lock(&mk->mk_refcount, &fscrypt_master_keys_lock))
- 		return;
- 	hash_del(&mk->mk_node);
- 	spin_unlock(&fscrypt_master_keys_lock);
- 
-+	fscrypt_evict_crypt_key(inode);
- 	free_master_key(mk);
- }
- 
-@@ -360,11 +370,13 @@ fscrypt_get_master_key(const struct fscrypt_info *ci, struct fscrypt_mode *mode,
- 		return ERR_PTR(-ENOMEM);
- 	refcount_set(&mk->mk_refcount, 1);
- 	mk->mk_mode = mode;
--	mk->mk_ctfm = allocate_skcipher_for_mode(mode, raw_key, inode);
--	if (IS_ERR(mk->mk_ctfm)) {
--		err = PTR_ERR(mk->mk_ctfm);
--		mk->mk_ctfm = NULL;
--		goto err_free_mk;
-+	if (!__flags_hw_encrypted(ci->ci_flags, inode)) {
-+		mk->mk_ctfm = allocate_skcipher_for_mode(mode, raw_key, inode);
-+		if (IS_ERR(mk->mk_ctfm)) {
-+			err = PTR_ERR(mk->mk_ctfm);
-+			mk->mk_ctfm = NULL;
-+			goto err_free_mk;
-+		}
- 	}
- 	memcpy(mk->mk_descriptor, ci->ci_master_key_descriptor,
- 	       FS_KEY_DESCRIPTOR_SIZE);
-@@ -456,7 +468,8 @@ static int setup_crypto_transform(struct fscrypt_info *ci,
- 	struct crypto_skcipher *ctfm;
- 	int err;
- 
--	if (ci->ci_flags & FS_POLICY_FLAG_DIRECT_KEY) {
-+	if ((ci->ci_flags & FS_POLICY_FLAG_DIRECT_KEY) ||
-+	    __flags_hw_encrypted(ci->ci_flags, inode)) {
- 		mk = fscrypt_get_master_key(ci, mode, raw_key, inode);
- 		if (IS_ERR(mk))
- 			return PTR_ERR(mk);
-@@ -486,13 +499,13 @@ static int setup_crypto_transform(struct fscrypt_info *ci,
- 	return 0;
- }
- 
--static void put_crypt_info(struct fscrypt_info *ci)
-+static void put_crypt_info(struct fscrypt_info *ci, struct inode *inode)
- {
- 	if (!ci)
- 		return;
- 
- 	if (ci->ci_master_key) {
--		put_master_key(ci->ci_master_key);
-+		put_master_key(ci->ci_master_key, inode);
- 	} else {
- 		crypto_free_skcipher(ci->ci_ctfm);
- 		crypto_free_cipher(ci->ci_essiv_tfm);
-@@ -577,7 +590,7 @@ int fscrypt_get_encryption_info(struct inode *inode)
- out:
- 	if (res == -ENOKEY)
- 		res = 0;
--	put_crypt_info(crypt_info);
-+	put_crypt_info(crypt_info, NULL);
- 	kzfree(raw_key);
- 	return res;
- }
-@@ -591,7 +604,7 @@ EXPORT_SYMBOL(fscrypt_get_encryption_info);
+  * Request Descriptor Definitions
   */
- void fscrypt_put_encryption_info(struct inode *inode)
- {
--	put_crypt_info(inode->i_crypt_info);
-+	put_crypt_info(inode->i_crypt_info, inode);
- 	inode->i_crypt_info = NULL;
- }
- EXPORT_SYMBOL(fscrypt_put_encryption_info);
-@@ -610,3 +623,17 @@ void fscrypt_free_inode(struct inode *inode)
- 	}
- }
- EXPORT_SYMBOL(fscrypt_free_inode);
-+
-+#if IS_ENABLED(CONFIG_FS_ENCRYPTION_HW_CRYPT)
-+bool fscrypt_inode_is_hw_encrypted(const struct inode *inode)
-+{
-+	struct fscrypt_info *ci;
-+
-+	if (!inode)
-+		return false;
-+	ci = inode->i_crypt_info;
-+
-+	return ci && __flags_hw_encrypted(ci->ci_flags, inode);
-+}
-+EXPORT_SYMBOL(fscrypt_inode_is_hw_encrypted);
-+#endif /* CONFIG_FS_ENCRYPTION_HW_CRYPT */
-diff --git a/fs/crypto/policy.c b/fs/crypto/policy.c
-index d536889ac31b..556e9da7a427 100644
---- a/fs/crypto/policy.c
-+++ b/fs/crypto/policy.c
-@@ -36,6 +36,7 @@ static int create_encryption_context_from_policy(struct inode *inode,
- 	struct fscrypt_context ctx;
- 
- 	ctx.format = FS_ENCRYPTION_CONTEXT_FORMAT_V1;
-+
- 	memcpy(ctx.master_key_descriptor, policy->master_key_descriptor,
- 					FS_KEY_DESCRIPTOR_SIZE);
- 
-@@ -46,8 +47,17 @@ static int create_encryption_context_from_policy(struct inode *inode,
- 	if (policy->flags & ~FS_POLICY_FLAGS_VALID)
- 		return -EINVAL;
- 
-+	/*
-+	 * TODO: expose HW encryption via some toggleable knob
-+	 * instead of as a policy?
-+	 */
-+	if (!inode->i_sb->s_cop->hw_crypt_supp &&
-+	    (policy->flags & FS_POLICY_FLAGS_HW_ENCRYPTION))
-+		return -EINVAL;
-+
- 	ctx.contents_encryption_mode = policy->contents_encryption_mode;
- 	ctx.filenames_encryption_mode = policy->filenames_encryption_mode;
-+
- 	ctx.flags = policy->flags;
- 	BUILD_BUG_ON(sizeof(ctx.nonce) != FS_KEY_DERIVATION_NONCE_SIZE);
- 	get_random_bytes(ctx.nonce, FS_KEY_DERIVATION_NONCE_SIZE);
-diff --git a/include/linux/fscrypt.h b/include/linux/fscrypt.h
-index f7680ef1abd2..f0e1589f32bd 100644
---- a/include/linux/fscrypt.h
-+++ b/include/linux/fscrypt.h
-@@ -61,6 +61,7 @@ struct fscrypt_operations {
- 	bool (*dummy_context)(struct inode *);
- 	bool (*empty_dir)(struct inode *);
- 	unsigned int max_namelen;
-+	bool hw_crypt_supp;
+@@ -337,6 +396,7 @@ enum {
+ 	UTP_NATIVE_UFS_COMMAND		= 0x10000000,
+ 	UTP_DEVICE_MANAGEMENT_FUNCTION	= 0x20000000,
+ 	UTP_REQ_DESC_INT_CMD		= 0x01000000,
++	UTP_REQ_DESC_CRYPTO_ENABLE_CMD	= 0x00800000,
  };
  
- struct fscrypt_ctx {
-@@ -130,6 +131,22 @@ extern int fscrypt_get_encryption_info(struct inode *);
- extern void fscrypt_put_encryption_info(struct inode *);
- extern void fscrypt_free_inode(struct inode *);
- 
-+#if IS_ENABLED(CONFIG_FS_ENCRYPTION_HW_CRYPT)
-+extern bool fscrypt_inode_is_hw_encrypted(const struct inode *inode);
-+extern bool fscrypt_inode_crypt_mergeable(const struct inode *inode_1,
-+					  const struct inode *inode_2);
-+#else
-+static inline bool fscrypt_inode_is_hw_encrypted(const struct inode *inode)
-+{
-+	return false;
-+}
-+static inline bool fscrypt_inode_crypt_mergeable(const struct inode *inode_1,
-+						 const struct inode *inode_2)
-+{
-+	return true;
-+}
-+#endif /* CONFIG_FS_ENCRYPTION_HW_CRYPT */
-+
- /* fname.c */
- extern int fscrypt_setup_filename(struct inode *, const struct qstr *,
- 				int lookup, struct fscrypt_name *);
-@@ -226,6 +243,25 @@ extern void fscrypt_enqueue_decrypt_bio(struct fscrypt_ctx *ctx,
- extern void fscrypt_pullback_bio_page(struct page **, bool);
- extern int fscrypt_zeroout_range(const struct inode *, pgoff_t, sector_t,
- 				 unsigned int);
-+#if IS_ENABLED(CONFIG_FS_ENCRYPTION_HW_CRYPT)
-+extern int fscrypt_set_bio_crypt_ctx(const struct inode *inode,
-+				     struct bio *bio, u64 data_unit_num);
-+extern void fscrypt_unset_bio_crypt_ctx(struct bio *bio);
-+extern int fscrypt_evict_crypt_key(struct inode *inode);
-+#else
-+static inline int fscrypt_set_bio_crypt_ctx(const struct inode *inode,
-+					    struct bio *bio, u64 data_unit_num)
-+{
-+	return 0;
-+}
-+
-+static inline void fscrypt_unset_bio_crypt_ctx(struct bio *bio) { }
-+
-+static inline int fscrypt_evict_crypt_key(struct inode *inode)
-+{
-+	return 0;
-+}
-+#endif
- 
- /* hooks.c */
- extern int fscrypt_file_open(struct inode *inode, struct file *filp);
-@@ -351,6 +387,17 @@ static inline void fscrypt_free_inode(struct inode *inode)
- {
- }
- 
-+static inline bool fscrypt_inode_is_hw_encrypted(const struct inode *inode)
-+{
-+	return false;
-+}
-+
-+static inline bool fscrypt_inode_crypt_mergeable(const struct inode *inode_1,
-+						 const struct inode *inode_2)
-+{
-+	return true;
-+}
-+
-  /* fname.c */
- static inline int fscrypt_setup_filename(struct inode *dir,
- 					 const struct qstr *iname,
-@@ -421,6 +468,23 @@ static inline int fscrypt_zeroout_range(const struct inode *inode, pgoff_t lblk,
- 	return -EOPNOTSUPP;
- }
- 
-+static inline int fscrypt_set_bio_crypt_ctx(const struct inode *inode,
-+					    struct bio *bio,
-+					    u64 data_unit_num)
-+{
-+	return -EOPNOTSUPP;
-+}
-+
-+static inline void fscrypt_unset_bio_crypt_ctx(struct bio *bio)
-+{
-+	return -EOPNOTSUPP;
-+}
-+
-+static inline int fscrypt_evict_crypt_key(struct inode *inode)
-+{
-+	return 0;
-+}
-+
- /* hooks.c */
- 
- static inline int fscrypt_file_open(struct inode *inode, struct file *filp)
-diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
-index 59c71fa8c553..e8bbdaea4a49 100644
---- a/include/uapi/linux/fs.h
-+++ b/include/uapi/linux/fs.h
-@@ -224,7 +224,17 @@ struct fsxattr {
- #define FS_POLICY_FLAGS_PAD_32		0x03
- #define FS_POLICY_FLAGS_PAD_MASK	0x03
- #define FS_POLICY_FLAG_DIRECT_KEY	0x04	/* use master key directly */
--#define FS_POLICY_FLAGS_VALID		0x07
-+#define FS_POLICY_FLAGS_VALID_BASE	0x07
-+
-+#if IS_ENABLED(CONFIG_FS_ENCRYPTION_HW_CRYPT)
-+#define FS_POLICY_FLAGS_HW_ENCRYPTION	0x08
-+#else
-+#define FS_POLICY_FLAGS_HW_ENCRYPTION	0x00
-+#endif
-+
-+
-+#define FS_POLICY_FLAGS_VALID (FS_POLICY_FLAGS_VALID_BASE | \
-+			       FS_POLICY_FLAGS_HW_ENCRYPTION)
- 
- /* Encryption algorithms */
- #define FS_ENCRYPTION_MODE_INVALID		0
+ /* UTP Transfer Request Data Direction (DD) */
+@@ -356,6 +416,9 @@ enum {
+ 	OCS_PEER_COMM_FAILURE		= 0x5,
+ 	OCS_ABORTED			= 0x6,
+ 	OCS_FATAL_ERROR			= 0x7,
++	OCS_DEVICE_FATAL_ERROR		= 0x8,
++	OCS_INVALID_CRYPTO_CONFIG	= 0x9,
++	OCS_GENERAL_CRYPTO_ERROR	= 0xA,
+ 	OCS_INVALID_COMMAND_STATUS	= 0x0F,
+ 	MASK_OCS			= 0x0F,
+ };
 -- 
 2.22.0.rc1.311.g5d7573a151-goog
