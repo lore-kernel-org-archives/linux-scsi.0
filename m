@@ -1,8 +1,9 @@
 From: Satya Tangirala via Linux-f2fs-devel
  <linux-f2fs-devel@lists.sourceforge.net>
-Subject: [RFC PATCH v2 5/8] scsi: ufs: UFS crypto API
-Date: Wed,  5 Jun 2019 16:28:34 -0700
-Message-ID: <20190605232837.31545-6-satyat@google.com>
+Subject: [RFC PATCH v2 1/8] block: Keyslot Manager for Inline
+ Encryption
+Date: Wed,  5 Jun 2019 16:28:30 -0700
+Message-ID: <20190605232837.31545-2-satyat@google.com>
 References: <20190605232837.31545-1-satyat@google.com>
 Reply-To: Satya Tangirala <satyat@google.com>
 Mime-Version: 1.0
@@ -22,565 +23,535 @@ To: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-fscrypt@vger.
 Cc: Kuohong Wang <kuohong.wang@mediatek.com>, Ladvine D Almeida <ladvine.dalmeida@synopsys.com>, Satya Tangirala <satyat@google.com>, Barani Muthukumaran <bmuthuku@qti.qualcomm.com>, Parshuram Raju Thombare <pthombar@cadence.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Introduce functions to manipulate UFS inline encryption hardware
-in line with the JEDEC UFSHCI v2.1 specification and to work with the
-block keyslot manager.
+Inline Encryption hardware allows software to specify an encryption context
+(an encryption key, crypto algorithm, data unit num, data unit size, etc.)
+along with a data transfer request to a storage device, and the inline
+encryption hardware will use that context to en/decrypt the data. The
+inline encryption hardware is part of the storage device, and it
+conceptually sits on the data path between system memory and the storage
+device.
+
+Inline Encryption hardware implementations often function around the
+concept of "keyslots". These implementations often have a limited number
+of "keyslots", each of which can hold an encryption context (we say that
+an encryption context can be "programmed" into a keyslot). Requests made
+to the storage device may have a keyslot associated with them, and the
+inline encryption hardware will en/decrypt the data in the requests using
+the encryption context programmed into that associated keyslot. As
+keyslots are limited, and programming keys may be expensive in many
+implementations, and multiple requests may use exactly the same encryption
+contexts, we introduce a Keyslot Manager to efficiently manage keyslots.
+The keyslot manager also functions as the interface that upper layers will
+use to program keys into inline encryption hardware. For more information
+on the Keyslot Manager, refer to documentation found in
+block/keyslot-manager.c and linux/keyslot-manager.h.
+
+Known issues:
+1) Keyslot Manager has a performance bug where the same encryption
+   context may be programmed into multiple keyslots at the same time in
+   certain situations when all keyslots are being used.
 
 Signed-off-by: Satya Tangirala <satyat@google.com>
 ---
- drivers/scsi/ufs/Kconfig         |  10 +
- drivers/scsi/ufs/Makefile        |   1 +
- drivers/scsi/ufs/ufshcd-crypto.c | 438 +++++++++++++++++++++++++++++++
- drivers/scsi/ufs/ufshcd-crypto.h |  69 +++++
- 4 files changed, 518 insertions(+)
- create mode 100644 drivers/scsi/ufs/ufshcd-crypto.c
- create mode 100644 drivers/scsi/ufs/ufshcd-crypto.h
+ block/keyslot-manager.c         | 315 ++++++++++++++++++++++++++++++++
+ include/linux/blk_types.h       |  11 ++
+ include/linux/blkdev.h          |   9 +
+ include/linux/keyslot-manager.h | 116 ++++++++++++
+ 4 files changed, 451 insertions(+)
+ create mode 100644 block/keyslot-manager.c
+ create mode 100644 include/linux/keyslot-manager.h
 
-diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
-index 0b845ab7c3bf..861aabfe791b 100644
---- a/drivers/scsi/ufs/Kconfig
-+++ b/drivers/scsi/ufs/Kconfig
-@@ -150,3 +150,13 @@ config SCSI_UFS_BSG
- 
- 	  Select this if you need a bsg device node for your UFS controller.
- 	  If unsure, say N.
-+
-+config SCSI_UFS_CRYPTO
-+	bool "UFS Crypto Engine Support"
-+	depends on SCSI_UFSHCD && BLK_INLINE_ENCRYPTION
-+	help
-+	  Enable Crypto Engine Support in UFS.
-+	  Enabling this makes it possible for the kernel to use the crypto
-+	  capabilities of the UFS device (if present) to perform crypto
-+	  operations on data being transferred to/from the device.
-+
-diff --git a/drivers/scsi/ufs/Makefile b/drivers/scsi/ufs/Makefile
-index 2a9097939bcb..094c39989a37 100644
---- a/drivers/scsi/ufs/Makefile
-+++ b/drivers/scsi/ufs/Makefile
-@@ -11,3 +11,4 @@ obj-$(CONFIG_SCSI_UFSHCD_PCI) += ufshcd-pci.o
- obj-$(CONFIG_SCSI_UFSHCD_PLATFORM) += ufshcd-pltfrm.o
- obj-$(CONFIG_SCSI_UFS_HISI) += ufs-hisi.o
- obj-$(CONFIG_SCSI_UFS_MEDIATEK) += ufs-mediatek.o
-+ufshcd-core-$(CONFIG_SCSI_UFS_CRYPTO) += ufshcd-crypto.o
-diff --git a/drivers/scsi/ufs/ufshcd-crypto.c b/drivers/scsi/ufs/ufshcd-crypto.c
+diff --git a/block/keyslot-manager.c b/block/keyslot-manager.c
 new file mode 100644
-index 000000000000..678866d15b8e
+index 000000000000..d4a5d6d78d2c
 --- /dev/null
-+++ b/drivers/scsi/ufs/ufshcd-crypto.c
-@@ -0,0 +1,438 @@
++++ b/block/keyslot-manager.c
+@@ -0,0 +1,315 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
++ * keyslot-manager.c
++ *
 + * Copyright 2019 Google LLC
 + */
 +
-+#include <crypto/algapi.h>
++/**
++ * DOC: The Keyslot Manager
++ *
++ * Many devices with inline encryption support have a limited number of "slots"
++ * into which encryption contexts may be programmed, and requests can be tagged
++ * with a slot number to specify the key to use for en/decryption.
++ *
++ * As the number of slots are limited, and programming keys is expensive on
++ * many inline encryption hardware, we don't want to program the same key into
++ * multiple slots - if multiple requests are using the same key, we want to
++ * program just one slot with that key and use that slot for all requests.
++ *
++ * The keyslot manager manages these keyslots appropriately, and also acts as
++ * an abstraction between the inline encryption hardware and the upper layers.
++ *
++ * Lower layer devices will set up a keyslot manager in their request queue
++ * and tell it how to perform device specific operations like programming/
++ * evicting keys from keyslots.
++ *
++ * Upper layers will call keyslot_manager_get_slot_for_key() to program a
++ * key into some slot in the inline encryption hardware.
++ */
++#include <linux/slab.h>
++#include <linux/keyslot-manager.h>
++#include <linux/atomic.h>
++#include <linux/mutex.h>
++#include <linux/sched.h>
++#include <linux/wait.h>
 +
-+#include "ufshcd.h"
-+#include "ufshcd-crypto.h"
-+
-+bool ufshcd_hba_is_crypto_supported(struct ufs_hba *hba)
-+{
-+	return hba->crypto_capabilities.reg_val != 0;
-+}
-+
-+bool ufshcd_is_crypto_enabled(struct ufs_hba *hba)
-+{
-+	return hba->caps & UFSHCD_CAP_CRYPTO;
-+}
-+
-+static bool ufshcd_cap_idx_valid(struct ufs_hba *hba, unsigned int cap_idx)
-+{
-+	return cap_idx < hba->crypto_capabilities.num_crypto_cap;
-+}
-+
-+#define NUM_KEYSLOTS(hba) (hba->crypto_capabilities.config_count + 1)
-+
-+bool ufshcd_keyslot_valid(struct ufs_hba *hba, unsigned int slot)
-+{
-+	/*
-+	 * The actual number of configurations supported is (CFGC+1), so slot
-+	 * numbers range from 0 to config_count inclusive.
-+	 */
-+	return slot < NUM_KEYSLOTS(hba);
-+}
-+
-+static u8 get_data_unit_size_mask(unsigned int data_unit_size)
-+{
-+	if (data_unit_size < 512 || data_unit_size > 65536 ||
-+	    !is_power_of_2(data_unit_size))
-+		return 0;
-+
-+	return data_unit_size / 512;
-+}
-+
-+static size_t get_keysize_bytes(enum ufs_crypto_key_size size)
-+{
-+	switch (size) {
-+	case UFS_CRYPTO_KEY_SIZE_128: return 16;
-+	case UFS_CRYPTO_KEY_SIZE_192: return 24;
-+	case UFS_CRYPTO_KEY_SIZE_256: return 32;
-+	case UFS_CRYPTO_KEY_SIZE_512: return 64;
-+	default: return 0;
-+	}
-+}
-+
-+static int ufshcd_crypto_alg_find(void *hba_p,
-+			   enum blk_crypt_mode_num crypt_mode,
-+			   unsigned int data_unit_size)
-+{
-+	struct ufs_hba *hba = hba_p;
-+	enum ufs_crypto_alg ufs_alg;
-+	u8 data_unit_mask;
-+	int cap_idx;
-+	enum ufs_crypto_key_size ufs_key_size;
-+	union ufs_crypto_cap_entry *ccap_array = hba->crypto_cap_array;
-+
-+	if (!ufshcd_hba_is_crypto_supported(hba))
-+		return -EINVAL;
-+
-+	switch (crypt_mode) {
-+	case BLK_ENCRYPTION_MODE_AES_256_XTS:
-+		ufs_alg = UFS_CRYPTO_ALG_AES_XTS;
-+		ufs_key_size = UFS_CRYPTO_KEY_SIZE_256;
-+		break;
-+	/*
-+	 * case BLK_CRYPTO_ALG_BITLOCKER_AES_CBC:
-+	 *	ufs_alg = UFS_CRYPTO_ALG_BITLOCKER_AES_CBC;
-+	 *	break;
-+	 * case INLINECRYPT_ALG_AES_ECB:
-+	 *	ufs_alg = UFS_CRYPTO_ALG_AES_ECB;
-+	 *	break;
-+	 * case INLINECRYPT_ALG_ESSIV_AES_CBC:
-+	 *	ufs_alg = UFS_CRYPTO_ALG_ESSIV_AES_CBC;
-+	 *	break;
-+	 */
-+	default: return -EINVAL;
-+	}
-+
-+	data_unit_mask = get_data_unit_size_mask(data_unit_size);
-+
-+	/*
-+	 * TODO: We can replace this for loop entirely by constructing
-+	 * a table on init that translates blk_crypt_mode to
-+	 * ufs crypt alg numbers. (By assuming that each alg/keysize combo
-+	 * appears only once in the ufs crypto caps array.)
-+	 */
-+	for (cap_idx = 0; cap_idx < hba->crypto_capabilities.num_crypto_cap;
-+	     cap_idx++) {
-+		if (ccap_array[cap_idx].algorithm_id == ufs_alg &&
-+		    (ccap_array[cap_idx].sdus_mask & data_unit_mask) &&
-+		    ccap_array[cap_idx].key_size == ufs_key_size)
-+			return cap_idx;
-+	}
-+
-+	return -EINVAL;
-+}
++struct keyslot_manager {
++	unsigned int num_slots;
++	atomic_t num_idle_slots;
++	struct keyslot_mgmt_ll_ops ksm_ll_ops;
++	void *ll_priv_data;
++	struct mutex lock;
++	wait_queue_head_t wait_queue;
++	u64 seq_num;
++	u64 *last_used_seq_nums;
++	atomic_t slot_refs[];
++};
 +
 +/**
-+ * ufshcd_crypto_cfg_entry_write_key - Write a key into a crypto_cfg_entry
++ * keyslot_manager_create() - Create a keyslot manager
++ * @num_slots: The number of key slots to manage.
++ * @ksm_ll_ops: The struct keyslot_mgmt_ll_ops for the device that this keyslot
++ *		manager will use to perform operations like programming and
++ *		evicting keys.
++ * @ll_priv_data: Private data passed as is to the functions in ksm_ll_ops.
 + *
-+ *	Writes the key with the appropriate format - for AES_XTS,
-+ *	the first half of the key is copied as is, the second half is
-+ *	copied with an offset halfway into the cfg->crypto_key array.
-+ *	For the other supported crypto algs, the key is just copied.
++ * Allocate memory for and initialize a keyslot manager. Called by for e.g.
++ * storage drivers to set up a keyslot manager in their request_queue.
 + *
-+ * @cfg: The crypto config to write to
-+ * @key: The key to write
-+ * @cap: The crypto capability (which specifies the crypto alg and key size)
-+ *
-+ * Returns 0 on success, or -EINVAL
++ * Context: May sleep
++ * Return: Pointer to constructed keyslot manager or NULL on error.
 + */
-+static int ufshcd_crypto_cfg_entry_write_key(union ufs_crypto_cfg_entry *cfg,
-+					     const u8 *key,
-+					     union ufs_crypto_cap_entry cap)
++struct keyslot_manager *keyslot_manager_create(unsigned int num_slots,
++				const struct keyslot_mgmt_ll_ops *ksm_ll_ops,
++				void *ll_priv_data)
 +{
-+	size_t key_size_bytes = get_keysize_bytes(cap.key_size);
++	struct keyslot_manager *ksm;
 +
-+	if (key_size_bytes == 0)
-+		return -EINVAL;
++	if (num_slots == 0)
++		return NULL;
 +
-+	switch (cap.algorithm_id) {
-+	case UFS_CRYPTO_ALG_AES_XTS:
-+		key_size_bytes *= 2;
-+		if (key_size_bytes > UFS_CRYPTO_KEY_MAX_SIZE)
-+			return -EINVAL;
++	/* Check that all ops are specified */
++	if (ksm_ll_ops->keyslot_program == NULL ||
++	    ksm_ll_ops->keyslot_evict == NULL ||
++	    ksm_ll_ops->crypt_mode_supported == NULL ||
++	    ksm_ll_ops->keyslot_find == NULL)
++		return NULL;
 +
-+		memcpy(cfg->crypto_key, key, key_size_bytes/2);
-+		memcpy(cfg->crypto_key + UFS_CRYPTO_KEY_MAX_SIZE/2,
-+		       key + key_size_bytes/2, key_size_bytes/2);
-+		return 0;
-+	case UFS_CRYPTO_ALG_BITLOCKER_AES_CBC: // fallthrough
-+	case UFS_CRYPTO_ALG_AES_ECB: // fallthrough
-+	case UFS_CRYPTO_ALG_ESSIV_AES_CBC:
-+		memcpy(cfg->crypto_key, key, key_size_bytes);
-+		return 0;
++	ksm = kzalloc(struct_size(ksm, slot_refs, num_slots), GFP_KERNEL);
++	if (!ksm)
++		return NULL;
++
++	ksm->num_slots = num_slots;
++	atomic_set(&ksm->num_idle_slots, num_slots);
++	ksm->ksm_ll_ops = *ksm_ll_ops;
++	ksm->ll_priv_data = ll_priv_data;
++
++	mutex_init(&ksm->lock);
++	init_waitqueue_head(&ksm->wait_queue);
++
++	ksm->last_used_seq_nums = kcalloc(num_slots, sizeof(u64), GFP_KERNEL);
++	if (!ksm->last_used_seq_nums) {
++		kzfree(ksm);
++		ksm = NULL;
 +	}
 +
-+	return -EINVAL;
++	return ksm;
 +}
++EXPORT_SYMBOL(keyslot_manager_create);
 +
-+static void program_key(struct ufs_hba *hba,
-+			const union ufs_crypto_cfg_entry *cfg,
-+			int slot)
++/**
++ * keyslot_manager_get_slot_for_key() - Program a key into a keyslot.
++ * @ksm: The keyslot manager to program the key into.
++ * @key: Pointer to the bytes of the key to program. Must be the correct length
++ *      for the chosen @crypt_mode; see blk_crypt_modes in blk-crypto.c.
++ * @crypt_mode: Identifier for the encryption algorithm to use.
++ * @data_unit_size: The data unit size to use for en/decryption.
++ *
++ * Get a keyslot that's been programmed with the specified key, crypt_mode, and
++ * data_unit_size.  If one already exists, return it with incremented refcount.
++ * Otherwise, wait for a keyslot to become idle and program it.
++ *
++ * Context: Process context. Takes and releases ksm->lock.
++ * Return: The keyslot on success, else a -errno value.
++ */
++int keyslot_manager_get_slot_for_key(struct keyslot_manager *ksm,
++				     const u8 *key,
++				     enum blk_crypt_mode_num crypt_mode,
++				     unsigned int data_unit_size)
 +{
-+	int i;
-+	u32 slot_offset = hba->crypto_cfg_register + slot * sizeof(*cfg);
-+
-+	/* Clear the dword 16 */
-+	ufshcd_writel(hba, 0, slot_offset + 16 * sizeof(cfg->reg_val[0]));
-+	/* Ensure that CFGE is cleared before programming the key */
-+	wmb();
-+	for (i = 0; i < 16; i++) {
-+		ufshcd_writel(hba, le32_to_cpu(cfg->reg_val[i]),
-+			      slot_offset + i * sizeof(cfg->reg_val[0]));
-+		/* Spec says each dword in key must be written sequentially */
-+		wmb();
-+	}
-+	/* Write dword 17 */
-+	ufshcd_writel(hba, le32_to_cpu(cfg->reg_val[17]),
-+		      slot_offset + 17 * sizeof(cfg->reg_val[0]));
-+	/* Dword 16 must be written last */
-+	wmb();
-+	/* Write dword 16 */
-+	ufshcd_writel(hba, le32_to_cpu(cfg->reg_val[16]),
-+		      slot_offset + 16 * sizeof(cfg->reg_val[0]));
-+	wmb();
-+}
-+
-+static int ufshcd_crypto_keyslot_program(void *hba_p, const u8 *key,
-+					 enum blk_crypt_mode_num crypt_mode,
-+					 unsigned int data_unit_size,
-+					 unsigned int slot)
-+{
-+	struct ufs_hba *hba = hba_p;
-+	int err = 0;
-+	u8 data_unit_mask;
-+	union ufs_crypto_cfg_entry cfg;
-+	union ufs_crypto_cfg_entry *cfg_arr = hba->crypto_cfgs;
-+	int crypto_alg_id;
-+
-+	crypto_alg_id = ufshcd_crypto_alg_find(hba_p, crypt_mode,
-+					       data_unit_size);
-+
-+	if (!ufshcd_is_crypto_enabled(hba) ||
-+	    !ufshcd_keyslot_valid(hba, slot) ||
-+	    !ufshcd_cap_idx_valid(hba, crypto_alg_id))
-+		return -EINVAL;
-+
-+	data_unit_mask = get_data_unit_size_mask(data_unit_size);
-+
-+	if (!(data_unit_mask &
-+	      hba->crypto_cap_array[crypto_alg_id].sdus_mask))
-+		return -EINVAL;
-+
-+	memset(&cfg, 0, sizeof(cfg));
-+	cfg.data_unit_size = data_unit_mask;
-+	cfg.crypto_cap_idx = crypto_alg_id;
-+	cfg.config_enable |= UFS_CRYPTO_CONFIGURATION_ENABLE;
-+
-+	err = ufshcd_crypto_cfg_entry_write_key(&cfg, key,
-+				hba->crypto_cap_array[crypto_alg_id]);
-+	if (err)
-+		return err;
-+
-+	program_key(hba, &cfg, slot);
-+
-+	memcpy(&cfg_arr[slot], &cfg, sizeof(cfg));
-+	memzero_explicit(&cfg, sizeof(cfg));
-+
-+	return 0;
-+}
-+
-+static int ufshcd_crypto_keyslot_find(void *hba_p,
-+				      const u8 *key,
-+				      enum blk_crypt_mode_num crypt_mode,
-+				      unsigned int data_unit_size)
-+{
-+	struct ufs_hba *hba = hba_p;
-+	int err = 0;
 +	int slot;
-+	u8 data_unit_mask;
-+	union ufs_crypto_cfg_entry cfg;
-+	union ufs_crypto_cfg_entry *cfg_arr = hba->crypto_cfgs;
-+	int crypto_alg_id;
++	int err;
++	int c;
++	int lru_idle_slot;
++	u64 min_seq_num;
 +
-+	crypto_alg_id = ufshcd_crypto_alg_find(hba_p, crypt_mode,
-+					       data_unit_size);
++	mutex_lock(&ksm->lock);
++	slot = ksm->ksm_ll_ops.keyslot_find(ksm->ll_priv_data, key,
++					    crypt_mode,
++					    data_unit_size);
 +
-+	if (!ufshcd_is_crypto_enabled(hba) ||
-+	    !ufshcd_cap_idx_valid(hba, crypto_alg_id))
++	if (slot < 0 && slot != -ENOKEY) {
++		mutex_unlock(&ksm->lock);
++		return slot;
++	}
++
++	if (WARN_ON(slot >= (int)ksm->num_slots)) {
++		mutex_unlock(&ksm->lock);
 +		return -EINVAL;
++	}
 +
-+	data_unit_mask = get_data_unit_size_mask(data_unit_size);
++	/* Try to use the returned slot */
++	if (slot != -ENOKEY) {
++		/*
++		 * NOTE: We may fail to get a slot if the number of refs
++		 * overflows UINT_MAX. I don't think we care enough about
++		 * that possibility to make the refcounts u64, considering
++		 * the only way for that to happen is for at least UINT_MAX
++		 * requests to be in flight at the same time.
++		 */
++		if ((unsigned int)atomic_read(&ksm->slot_refs[slot]) ==
++		    UINT_MAX) {
++			mutex_unlock(&ksm->lock);
++			return -EBUSY;
++		}
 +
-+	if (!(data_unit_mask &
-+	      hba->crypto_cap_array[crypto_alg_id].sdus_mask))
-+		return -EINVAL;
++		if (atomic_fetch_inc(&ksm->slot_refs[slot]) == 0)
++			atomic_dec(&ksm->num_idle_slots);
 +
-+	memset(&cfg, 0, sizeof(cfg));
-+	err = ufshcd_crypto_cfg_entry_write_key(&cfg, key,
-+					hba->crypto_cap_array[crypto_alg_id]);
++		ksm->last_used_seq_nums[slot] = ++ksm->seq_num;
 +
-+	if (err)
-+		return -EINVAL;
++		mutex_unlock(&ksm->lock);
++		return slot;
++	}
 +
-+	for (slot = 0; slot < NUM_KEYSLOTS(hba); slot++) {
-+		if ((cfg_arr[slot].config_enable &
-+		     UFS_CRYPTO_CONFIGURATION_ENABLE) &&
-+		    data_unit_mask == cfg_arr[slot].data_unit_size &&
-+		    crypto_alg_id == cfg_arr[slot].crypto_cap_idx &&
-+		    crypto_memneq(&cfg.crypto_key, cfg_arr[slot].crypto_key,
-+				  UFS_CRYPTO_KEY_MAX_SIZE) == 0) {
-+			memzero_explicit(&cfg, sizeof(cfg));
-+			return slot;
++	/*
++	 * If we're here, that means there wasn't a slot that
++	 * was already programmed with the key
++	 */
++
++	/* Wait till there is a free slot available */
++	while (atomic_read(&ksm->num_idle_slots) == 0) {
++		mutex_unlock(&ksm->lock);
++		wait_event(ksm->wait_queue,
++			   (atomic_read(&ksm->num_idle_slots) > 0));
++		mutex_lock(&ksm->lock);
++	}
++
++	/* Todo: fix linear scan? */
++	/* Find least recently used idle slot (i.e. slot with minimum number) */
++	lru_idle_slot  = -1;
++	min_seq_num = 0;
++	for (c = 0; c < ksm->num_slots; c++) {
++		if (atomic_read(&ksm->slot_refs[c]) != 0)
++			continue;
++
++		if (lru_idle_slot == -1 ||
++		    ksm->last_used_seq_nums[c] < min_seq_num) {
++			lru_idle_slot = c;
++			min_seq_num = ksm->last_used_seq_nums[c];
 +		}
 +	}
 +
-+	memzero_explicit(&cfg, sizeof(cfg));
-+	return -ENOKEY;
++	if (WARN_ON(lru_idle_slot == -1)) {
++		mutex_unlock(&ksm->lock);
++		return -EBUSY;
++	}
++
++	atomic_dec(&ksm->num_idle_slots);
++	atomic_inc(&ksm->slot_refs[lru_idle_slot]);
++	err = ksm->ksm_ll_ops.keyslot_program(ksm->ll_priv_data, key,
++					      crypt_mode,
++					      data_unit_size,
++					      lru_idle_slot);
++
++	if (err) {
++		atomic_dec(&ksm->slot_refs[lru_idle_slot]);
++		atomic_inc(&ksm->num_idle_slots);
++		wake_up(&ksm->wait_queue);
++		mutex_unlock(&ksm->lock);
++		return err;
++	}
++
++	ksm->seq_num++;
++	ksm->last_used_seq_nums[lru_idle_slot] = ksm->seq_num;
++
++	mutex_unlock(&ksm->lock);
++	return lru_idle_slot;
 +}
-+
-+static int ufshcd_crypto_keyslot_evict(void *hba_p, const u8 *key,
-+				       enum blk_crypt_mode_num crypt_mode,
-+				       unsigned int data_unit_size,
-+				       unsigned int slot)
-+{
-+	struct ufs_hba *hba = hba_p;
-+	int i = 0;
-+	u32 reg_base;
-+	union ufs_crypto_cfg_entry *cfg_arr = hba->crypto_cfgs;
-+
-+	if (!ufshcd_is_crypto_enabled(hba) ||
-+	    !ufshcd_keyslot_valid(hba, slot))
-+		return -EINVAL;
-+
-+	memset(&cfg_arr[slot], 0, sizeof(cfg_arr[slot]));
-+	reg_base = hba->crypto_cfg_register + slot * sizeof(cfg_arr[0]);
-+
-+	/*
-+	 * Clear the crypto cfg on the device. Clearing CFGE
-+	 * might not be sufficient, so just clear the entire cfg.
-+	 */
-+	for (i = 0; i < sizeof(cfg_arr[0]); i += sizeof(__le32))
-+		ufshcd_writel(hba, 0, reg_base + i);
-+	wmb();
-+
-+	return 0;
-+}
-+
-+static bool ufshcd_crypt_mode_supported(void *hba_p,
-+					 enum blk_crypt_mode_num crypt_mode,
-+					 unsigned int data_unit_size)
-+{
-+	return ufshcd_crypto_alg_find(hba_p, crypt_mode, data_unit_size) >= 0;
-+}
-+
-+void ufshcd_crypto_enable(struct ufs_hba *hba)
-+{
-+	union ufs_crypto_cfg_entry *cfg_arr = hba->crypto_cfgs;
-+	int slot;
-+
-+	if (!ufshcd_hba_is_crypto_supported(hba))
-+		return;
-+
-+	hba->caps |= UFSHCD_CAP_CRYPTO;
-+	/*
-+	 * Reset might clear all keys, so reprogram all the keys.
-+	 * Also serves to clear keys on driver init.
-+	 */
-+	for (slot = 0; slot < NUM_KEYSLOTS(hba); slot++)
-+		program_key(hba, &cfg_arr[slot], slot);
-+}
-+
-+void ufshcd_crypto_disable(struct ufs_hba *hba)
-+{
-+	hba->caps &= ~UFSHCD_CAP_CRYPTO;
-+}
-+
++EXPORT_SYMBOL(keyslot_manager_get_slot_for_key);
 +
 +/**
-+ * ufshcd_hba_init_crypto - Read crypto capabilities, init crypto fields in hba
-+ * @hba: Per adapter instance
++ * keyslot_manager_get_slot() - Increment the refcount on the specified slot.
++ * @ksm - The keyslot manager that we want to modify.
++ * @slot - The slot to increment the refcount of.
 + *
-+ * Returns 0 on success. Returns -ENODEV if such capabilties don't exist, and
-+ * -ENOMEM upon OOM.
++ * This function assumes that there is already an active reference to that slot
++ * and simply increments the refcount. This is useful when cloning a bio that
++ * already has a reference to a keyslot, and we want the cloned bio to also have
++ * its own reference.
++ *
++ * Context: Any context.
 + */
-+int ufshcd_hba_init_crypto(struct ufs_hba *hba)
++void keyslot_manager_get_slot(struct keyslot_manager *ksm, unsigned int slot)
 +{
-+	int cap_idx = 0;
-+	int err = 0;
-+
-+	/* Default to disabling crypto */
-+	hba->caps &= ~UFSHCD_CAP_CRYPTO;
-+
-+	if (!(hba->capabilities & MASK_CRYPTO_SUPPORT)) {
-+		err = -ENODEV;
-+		goto out;
-+	}
-+
-+	/*
-+	 * Crypto Capabilities should never be 0, because the
-+	 * config_array_ptr > 04h. So we use a 0 value to indicate that
-+	 * crypto init failed, and can't be enabled.
-+	 */
-+	hba->crypto_capabilities.reg_val =
-+			cpu_to_le32(ufshcd_readl(hba, REG_UFS_CCAP));
-+	hba->crypto_cfg_register =
-+		(u32)hba->crypto_capabilities.config_array_ptr * 0x100;
-+	hba->crypto_cap_array =
-+		devm_kcalloc(hba->dev,
-+			     hba->crypto_capabilities.num_crypto_cap,
-+			     sizeof(hba->crypto_cap_array[0]),
-+			     GFP_KERNEL);
-+	if (!hba->crypto_cap_array) {
-+		err = -ENOMEM;
-+		goto out;
-+	}
-+
-+	hba->crypto_cfgs =
-+		devm_kcalloc(hba->dev,
-+			     hba->crypto_capabilities.config_count + 1,
-+			     sizeof(union ufs_crypto_cfg_entry),
-+			     GFP_KERNEL);
-+	if (!hba->crypto_cfgs) {
-+		err = -ENOMEM;
-+		goto out_cfg_mem;
-+	}
-+
-+	/*
-+	 * Store all the capabilities now so that we don't need to repeatedly
-+	 * access the device each time we want to know its capabilities
-+	 */
-+	for (cap_idx = 0; cap_idx < hba->crypto_capabilities.num_crypto_cap;
-+	     cap_idx++) {
-+		hba->crypto_cap_array[cap_idx].reg_val =
-+			cpu_to_le32(ufshcd_readl(hba,
-+						 REG_UFS_CRYPTOCAP +
-+						 cap_idx * sizeof(__le32)));
-+	}
-+
-+	return 0;
-+out_cfg_mem:
-+	devm_kfree(hba->dev, hba->crypto_cap_array);
-+out:
-+	// TODO: print error?
-+	/* Indicate that init failed by setting crypto_capabilities to 0 */
-+	hba->crypto_capabilities.reg_val = 0;
-+	return err;
-+}
-+
-+static const struct keyslot_mgmt_ll_ops ufshcd_ksm_ops = {
-+	.keyslot_program	= ufshcd_crypto_keyslot_program,
-+	.keyslot_evict		= ufshcd_crypto_keyslot_evict,
-+	.keyslot_find		= ufshcd_crypto_keyslot_find,
-+	.crypt_mode_supported	= ufshcd_crypt_mode_supported,
-+};
-+
-+void ufshcd_crypto_setup_rq_keyslot_manager(struct ufs_hba *hba,
-+					    struct request_queue *q)
-+{
-+	if (!ufshcd_hba_is_crypto_supported(hba))
++	if (WARN_ON(slot >= ksm->num_slots))
 +		return;
 +
-+	if (q) {
-+		q->ksm = keyslot_manager_create(
-+				hba->crypto_capabilities.config_count + 1,
-+				&ufshcd_ksm_ops, hba);
-+	}
-+	/*
-+	 * If we fail we make it look like
-+	 * crypto is not supported, which will avoid issues
-+	 * with reset
-+	 */
-+	if (!q || !q->ksm) {
-+		ufshcd_crypto_disable(hba);
-+		hba->crypto_capabilities.reg_val = 0;
-+		devm_kfree(hba->dev, hba->crypto_cap_array);
-+		devm_kfree(hba->dev, hba->crypto_cfgs);
-+	}
++	WARN_ON(atomic_inc_return(&ksm->slot_refs[slot]) < 2);
 +}
++EXPORT_SYMBOL(keyslot_manager_get_slot);
 +
-+void ufshcd_crypto_destroy_rq_keyslot_manager(struct request_queue *q)
++/**
++ * keyslot_manager_put_slot() - Release a reference to a slot
++ * @ksm: The keyslot manager to release the reference from.
++ * @slot: The slot to release the reference from.
++ *
++ * Context: Any context.
++ */
++void keyslot_manager_put_slot(struct keyslot_manager *ksm, unsigned int slot)
 +{
-+	if (q && q->ksm)
-+		keyslot_manager_destroy(q->ksm);
-+}
++	if (WARN_ON(slot >= ksm->num_slots))
++		return;
 +
-diff --git a/drivers/scsi/ufs/ufshcd-crypto.h b/drivers/scsi/ufs/ufshcd-crypto.h
++	if (atomic_dec_and_test(&ksm->slot_refs[slot])) {
++		atomic_inc(&ksm->num_idle_slots);
++		wake_up(&ksm->wait_queue);
++	}
++}
++EXPORT_SYMBOL(keyslot_manager_put_slot);
++
++/**
++ * keyslot_manager_evict_key() - Evict a key from the lower layer device.
++ * @ksm - The keyslot manager to evict from
++ * @key - The key to evict
++ * @crypt_mode - The crypto algorithm the key was programmed with.
++ * @data_unit_size - The data_unit_size the key was programmed with.
++ *
++ * Finds the slot that the specified key, crypt_mode, data_unit_size combo
++ * was programmed into, and evicts that slot from the lower layer device if
++ * the refcount on the slot is 0. Returns -EBUSY if the refcount is not 0, and
++ * -errno on error.
++ *
++ * Context: Process context. Takes and releases ksm->lock.
++ */
++int keyslot_manager_evict_key(struct keyslot_manager *ksm,
++			      const u8 *key,
++			      enum blk_crypt_mode_num crypt_mode,
++			      unsigned int data_unit_size)
++{
++	int slot;
++	int err = 0;
++
++	mutex_lock(&ksm->lock);
++	slot = ksm->ksm_ll_ops.keyslot_find(ksm->ll_priv_data, key,
++					    crypt_mode,
++					    data_unit_size);
++
++	if (slot < 0) {
++		mutex_unlock(&ksm->lock);
++		return slot;
++	}
++
++	if (atomic_read(&ksm->slot_refs[slot]) == 0) {
++		err = ksm->ksm_ll_ops.keyslot_evict(ksm->ll_priv_data, key,
++						    crypt_mode,
++						    data_unit_size,
++						    slot);
++	} else {
++		err = -EBUSY;
++	}
++
++	mutex_unlock(&ksm->lock);
++	return err;
++}
++EXPORT_SYMBOL(keyslot_manager_evict_key);
++
++void keyslot_manager_destroy(struct keyslot_manager *ksm)
++{
++	if (!ksm)
++		return;
++	kzfree(ksm->last_used_seq_nums);
++	kzfree(ksm);
++}
++EXPORT_SYMBOL(keyslot_manager_destroy);
+diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+index 95202f80676c..aafa96839f95 100644
+--- a/include/linux/blk_types.h
++++ b/include/linux/blk_types.h
+@@ -137,6 +137,17 @@ static inline void bio_issue_init(struct bio_issue *issue,
+ 			((u64)size << BIO_ISSUE_SIZE_SHIFT));
+ }
+ 
++enum blk_crypt_mode_num {
++	BLK_ENCRYPTION_MODE_AES_256_XTS	= 0,
++	/*
++	 * TODO: Support these too
++	 * BLK_ENCRYPTION_MODE_AES_256_CTS	= 1,
++	 * BLK_ENCRYPTION_MODE_AES_128_CBC	= 2,
++	 * BLK_ENCRYPTION_MODE_AES_128_CTS	= 3,
++	 * BLK_ENCRYPTION_MODE_ADIANTUM		= 4,
++	 */
++};
++
+ /*
+  * main unit of I/O for the block layer and lower layers (ie drivers and
+  * stacking drivers)
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 592669bcc536..f76d5dff27fe 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -385,6 +385,10 @@ static inline int blkdev_reset_zones_ioctl(struct block_device *bdev,
+ 
+ #endif /* CONFIG_BLK_DEV_ZONED */
+ 
++#ifdef CONFIG_BLK_INLINE_ENCRYPTION
++struct keyslot_manager;
++#endif
++
+ struct request_queue {
+ 	/*
+ 	 * Together with queue_head for cacheline sharing
+@@ -473,6 +477,11 @@ struct request_queue {
+ 	unsigned int		dma_pad_mask;
+ 	unsigned int		dma_alignment;
+ 
++#ifdef CONFIG_BLK_INLINE_ENCRYPTION
++	/* Inline crypto capabilities */
++	struct keyslot_manager *ksm;
++#endif
++
+ 	unsigned int		rq_timeout;
+ 	int			poll_nsec;
+ 
+diff --git a/include/linux/keyslot-manager.h b/include/linux/keyslot-manager.h
 new file mode 100644
-index 000000000000..7790e99477b9
+index 000000000000..76a9c255cb7e
 --- /dev/null
-+++ b/drivers/scsi/ufs/ufshcd-crypto.h
-@@ -0,0 +1,69 @@
++++ b/include/linux/keyslot-manager.h
+@@ -0,0 +1,116 @@
 +/* SPDX-License-Identifier: GPL-2.0 */
 +/*
 + * Copyright 2019 Google LLC
 + */
 +
-+#ifndef _UFSHCD_CRYPTO_H
-+#define _UFSHCD_CRYPTO_H
++#include <linux/types.h>
++#include <linux/blk_types.h>
 +
-+struct ufs_hba;
++#ifndef __LINUX_KEYSLOT_MANAGER_H
++#define __LINUX_KEYSLOT_MANAGER_H
 +
-+#ifdef CONFIG_SCSI_UFS_CRYPTO
-+#include <linux/keyslot-manager.h>
++/**
++ * struct keyslot_mgmt_ll_ops - functions to manage keyslots in hardware
++ * @keyslot_program:	Program the specified key and algorithm into the
++ *			specified slot in the inline encryption hardware.
++ * @keyslot_evict:	Evict key from the specified keyslot in the hardware.
++ *			The key, crypt_mode and data_unit_size are also passed
++ *			down so that for e.g. dm layers can evict keys from
++ *			the devices that they map over.
++ *			Returns 0 on success, -errno otherwise.
++ * @crypt_mode_supported:	Check whether a crypt_mode and data_unit_size
++ *				combo is supported.
++ * @keyslot_find:	Returns the slot number that matches the key,
++ *			or -ENOKEY if no match found, or -errno on
++ *			error.
++ *
++ * This structure should be provided by storage device drivers when they set up
++ * a keyslot manager - this structure holds the function ptrs that the keyslot
++ * manager will use to manipulate keyslots in the hardware.
++ */
++struct keyslot_mgmt_ll_ops {
++	int (*keyslot_program)(void *ll_priv_data, const u8 *key,
++			       enum blk_crypt_mode_num crypt_mode,
++			       unsigned int data_unit_size,
++			       unsigned int slot);
++	int (*keyslot_evict)(void *ll_priv_data, const u8 *key,
++			     enum blk_crypt_mode_num crypt_mode,
++			     unsigned int data_unit_size,
++			     unsigned int slot);
++	bool (*crypt_mode_supported)(void *ll_priv_data,
++				      enum blk_crypt_mode_num crypt_mode,
++				      unsigned int data_unit_size);
++	int (*keyslot_find)(void *ll_priv_data, const u8 *key,
++			    enum blk_crypt_mode_num crypt_mode,
++			    unsigned int data_unit_size);
++};
 +
-+#include "ufshci.h"
++#ifdef CONFIG_BLK_INLINE_ENCRYPTION
++struct keyslot_manager;
 +
-+bool ufshcd_keyslot_valid(struct ufs_hba *hba, unsigned int slot);
++extern struct keyslot_manager *keyslot_manager_create(unsigned int num_slots,
++				const struct keyslot_mgmt_ll_ops *ksm_ops,
++				void *ll_priv_data);
 +
-+bool ufshcd_hba_is_crypto_supported(struct ufs_hba *hba);
++extern int
++keyslot_manager_get_slot_for_key(struct keyslot_manager *ksm,
++				 const u8 *key,
++				 enum blk_crypt_mode_num crypt_mode,
++				 unsigned int data_unit_size);
 +
-+bool ufshcd_is_crypto_enabled(struct ufs_hba *hba);
++extern void keyslot_manager_get_slot(struct keyslot_manager *ksm,
++				     unsigned int slot);
 +
-+void ufshcd_crypto_enable(struct ufs_hba *hba);
++extern void keyslot_manager_put_slot(struct keyslot_manager *ksm,
++				     unsigned int slot);
 +
-+void ufshcd_crypto_disable(struct ufs_hba *hba);
++extern int keyslot_manager_evict_key(struct keyslot_manager *ksm,
++				     const u8 *key,
++				     enum blk_crypt_mode_num crypt_mode,
++				     unsigned int data_unit_size);
 +
-+int ufshcd_hba_init_crypto(struct ufs_hba *hba);
++extern void keyslot_manager_destroy(struct keyslot_manager *ksm);
 +
-+void ufshcd_crypto_setup_rq_keyslot_manager(struct ufs_hba *hba,
-+					    struct request_queue *q);
++#else /* CONFIG_BLK_INLINE_ENCRYPTION */
++struct keyslot_manager {};
 +
-+void ufshcd_crypto_destroy_rq_keyslot_manager(struct request_queue *q);
-+
-+#else /* CONFIG_SCSI_UFS_CRYPTO */
-+
-+static inline bool ufshcd_keyslot_valid(struct ufs_hba *hba,
-+					unsigned int slot)
++static inline struct keyslot_manager *
++keyslot_manager_create(unsigned int num_slots,
++		       const struct keyslot_mgmt_ll_ops *ksm_ops,
++		       void *ll_priv_data)
 +{
-+	return false;
++	return NULL;
 +}
 +
-+static inline bool ufshcd_hba_is_crypto_supported(struct ufs_hba *hba)
++static inline int
++keyslot_manager_get_slot_for_key(struct keyslot_manager *ksm,
++				 const u8 *key,
++				 enum blk_crypt_mode_num crypt_mode,
++				 unsigned int data_unit_size)
 +{
-+	return false;
++	return -EOPNOTSUPP;
 +}
 +
-+static inline bool ufshcd_is_crypto_enabled(struct ufs_hba *hba)
++static inline void keyslot_manager_get_slot(struct keyslot_manager *ksm,
++					    unsigned int slot) { }
++
++static inline int keyslot_manager_put_slot(struct keyslot_manager *ksm,
++					   unsigned int slot)
 +{
-+	return false;
++	return -EOPNOTSUPP;
 +}
 +
-+static inline void ufshcd_crypto_enable(struct ufs_hba *hba) { }
-+
-+static inline void ufshcd_crypto_disable(struct ufs_hba *hba) { }
-+
-+static inline int ufshcd_hba_init_crypto(struct ufs_hba *hba)
++static inline int keyslot_manager_evict_key(struct keyslot_manager *ksm,
++				     const u8 *key,
++				     enum blk_crypt_mode_num crypt_mode,
++				     unsigned int data_unit_size)
 +{
-+	return 0;
++	return -EOPNOTSUPP;
 +}
 +
-+static inline void ufshcd_crypto_setup_rq_keyslot_manager(
-+					struct ufs_hba *hba,
-+					struct request_queue *q) { }
++static inline void keyslot_manager_destroy(struct keyslot_manager *ksm)
++{ }
 +
-+static inline void ufshcd_crypto_destroy_rq_keyslot_manager(
-+				struct request_queue *q) { }
++#endif /* CONFIG_BLK_INLINE_ENCRYPTION */
 +
-+#endif /* CONFIG_SCSI_UFS_CRYPTO */
-+
-+#endif /* _UFSHCD_CRYPTO_H */
++#endif /* __LINUX_KEYSLOT_MANAGER_H */
 -- 
 2.22.0.rc1.311.g5d7573a151-goog
