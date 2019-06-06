@@ -1,27 +1,40 @@
 From: Bjorn Andersson <bjorn.andersson@linaro.org>
-Subject: [PATCH v2 0/3] (Qualcomm) UFS device reset support
-Date: Wed,  5 Jun 2019 18:02:46 -0700
-Message-ID: <20190606010249.3538-1-bjorn.andersson@linaro.org>
+Subject: [PATCH v2 3/3] arm64: dts: qcom: sdm845-mtp: Specify UFS device-reset GPIO
+Date: Wed,  5 Jun 2019 18:02:49 -0700
+Message-ID: <20190606010249.3538-4-bjorn.andersson@linaro.org>
+References: <20190606010249.3538-1-bjorn.andersson@linaro.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190606010249.3538-1-bjorn.andersson@linaro.org>
 Sender: linux-kernel-owner@vger.kernel.org
-Cc: Andy Gross <agross@kernel.org>, Linus Walleij <linus.walleij@linaro.org>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, Pedro Sousa <pedrom.sousa@synopsys.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Evan Green <evgreen@chromium.org>, linux-arm-msm@vger.kernel.org, linux-gpio@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Andy Gross <agross@kernel.org>
+Cc: Linus Walleij <linus.walleij@linaro.org>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, Pedro Sousa <pedrom.sousa@synopsys.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Evan Green <evgreen@chromium.org>, linux-arm-msm@vger.kernel.org, linux-gpio@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-This series exposes the ufs_reset line as a gpio, adds support for ufshcd to
-acquire and toggle this and then adds this to SDM845 MTP.
+Specify the UFS device-reset gpio, so that the controller will issue a
+reset of the UFS device.
 
-Bjorn Andersson (3):
-  pinctrl: qcom: sdm845: Expose ufs_reset as gpio
-  scsi: ufs: Allow resetting the UFS device
-  arm64: dts: qcom: sdm845-mtp: Specify UFS device-reset GPIO
+Tested-by: John Stultz <john.stultz@linaro.org>
+Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+---
 
- .../bindings/pinctrl/qcom,sdm845-pinctrl.txt  |  2 +-
- .../devicetree/bindings/ufs/ufshcd-pltfrm.txt |  2 +
- arch/arm64/boot/dts/qcom/sdm845-mtp.dts       |  2 +
- drivers/pinctrl/qcom/pinctrl-sdm845.c         | 12 ++---
- drivers/scsi/ufs/ufshcd.c                     | 44 +++++++++++++++++++
- drivers/scsi/ufs/ufshcd.h                     |  4 ++
- 6 files changed, 59 insertions(+), 7 deletions(-)
+Changes since v1:
+- None
 
+ arch/arm64/boot/dts/qcom/sdm845-mtp.dts | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/sdm845-mtp.dts b/arch/arm64/boot/dts/qcom/sdm845-mtp.dts
+index 2e78638eb73b..d116a0956a9c 100644
+--- a/arch/arm64/boot/dts/qcom/sdm845-mtp.dts
++++ b/arch/arm64/boot/dts/qcom/sdm845-mtp.dts
+@@ -388,6 +388,8 @@
+ &ufs_mem_hc {
+ 	status = "okay";
+ 
++	device-reset-gpios = <&tlmm 150 GPIO_ACTIVE_LOW>;
++
+ 	vcc-supply = <&vreg_l20a_2p95>;
+ 	vcc-max-microamp = <600000>;
+ };
 -- 
 2.18.0
