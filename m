@@ -1,51 +1,86 @@
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
-Subject: Re: [PATCH v2 2/3] scsi: ufs: Allow resetting the UFS device
-Date: Thu, 6 Jun 2019 00:18:28 -0700
-Message-ID: <20190606071828.GS22737@tuxbook-pro>
-References: <20190606010249.3538-1-bjorn.andersson@linaro.org>
- <20190606010249.3538-3-bjorn.andersson@linaro.org>
- <SN6PR04MB4925FC3F1001326AA218DF21FC170@SN6PR04MB4925.namprd04.prod.outlook.com>
+From: Gen Zhang <blackgod016574@gmail.com>
+Subject: Re: [PATCH] sg: fix a double-fetch bug in sg_write()
+Date: Thu, 6 Jun 2019 15:43:33 +0800
+Message-ID: <20190606074333.GA7078@zhanggen-UX430UQ>
+References: <20190531012704.GA4541@zhanggen-UX430UQ>
+ <38bbd54f-d85b-e529-36ad-5c1809bb435f@suse.cz>
+ <20190605153532.GA4051@zhanggen-UX430UQ>
+ <2d322852-4861-929a-28ed-c4b41bea5ba6@suse.cz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <SN6PR04MB4925FC3F1001326AA218DF21FC170@SN6PR04MB4925.namprd04.prod.outlook.com>
+In-Reply-To: <2d322852-4861-929a-28ed-c4b41bea5ba6@suse.cz>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Avri Altman <Avri.Altman@wdc.com>
-Cc: Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Alim Akhtar <alim.akhtar@samsung.com>, Pedro Sousa <pedrom.sousa@synopsys.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Andy Gross <agross@kernel.org>, Linus Walleij <linus.walleij@linaro.org>, Evan Green <evgreen@chromium.org>, "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>, "linux-gpio@vger.kernel.org" <linux-gpio@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Jiri Slaby <jslaby@suse.cz>
+Cc: dgilbert@interlog.com, jejb@linux.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed 05 Jun 23:36 PDT 2019, Avri Altman wrote:
-
+On Thu, Jun 06, 2019 at 07:01:26AM +0200, Jiri Slaby wrote:
+> On 05. 06. 19, 17:35, Gen Zhang wrote:
+> > On Wed, Jun 05, 2019 at 08:41:11AM +0200, Jiri Slaby wrote:
+> >> On 31. 05. 19, 3:27, Gen Zhang wrote:
+> >>> In sg_write(), the opcode of the command is fetched the first time from 
+> >>> the userspace by __get_user(). Then the whole command, the opcode 
+> >>> included, is fetched again from userspace by __copy_from_user(). 
+> >>> However, a malicious user can change the opcode between the two fetches.
+> >>> This can cause inconsistent data and potential errors as cmnd is used in
+> >>> the following codes.
+> >>>
+> >>> Thus we should check opcode between the two fetches to prevent this.
+> >>>
+> >>> Signed-off-by: Gen Zhang <blackgod016574@gmail.com>
+> >>> ---
+> >>> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+> >>> index d3f1531..a2971b8 100644
+> >>> --- a/drivers/scsi/sg.c
+> >>> +++ b/drivers/scsi/sg.c
+> >>> @@ -694,6 +694,8 @@ sg_write(struct file *filp, const char __user *buf, size_t count, loff_t * ppos)
+> >>>  	hp->flags = input_size;	/* structure abuse ... */
+> >>>  	hp->pack_id = old_hdr.pack_id;
+> >>>  	hp->usr_ptr = NULL;
+> >>> +	if (opcode != cmnd[0])
+> >>> +		return -EINVAL;
+> >>>  	if (__copy_from_user(cmnd, buf, cmd_size))
+> >>>  		return -EFAULT;
+> >>
+> >> You are sending the same patches like a broken machine. Please STOP this
+> >> and give people some time to actually review your patches! (Don't expect
+> >> replies in days.)
+> >>
+> > Thanks for your reply. I resubmitted this one after 8-day-no-reply. I 
+> > don't judge whether this is a short time period or not. I politely hope
+> > that you can reply more kindly.
 > 
-> >  static int ufshcd_hba_init(struct ufs_hba *hba)
-> >  {
-> >  	int err;
-> > @@ -7425,9 +7460,15 @@ static int ufshcd_hba_init(struct ufs_hba *hba)
-> >  	if (err)
-> >  		goto out_disable_vreg;
-> > 
-> > +	err = ufshcd_init_device_reset(hba);
-> > +	if (err)
-> > +		goto out_disable_variant;
-> > +
-> >  	hba->is_powered = true;
-> >  	goto out;
-> > 
-> > +out_disable_variant:
-> > +	ufshcd_vops_setup_regulators(hba, false);
-> Is this necessary?
-> ufshcd_vops_setup_regulators() was just called as part of ufshcd_variant_hba_init
+> There is no reason to be offended. I am just asking you to wait a bit
+> more before reposting. 8 days is too few. My personal experience says to
+> give patches like these something close to a month, esp. during the
+> merge window. The issues are present for a long time, nobody hit them
+> during that timeframe, so there is no reason to haste.
+Thanks for your reply, and I will keep this in mind.
 > 
+> > I am just a PhD candidate. All I did is submitting patches, discussing 
+> > with maintainers in accordance with linux community rules for academic papers.
+> 
+> Yes, despite I have no idea what "linux community rules for academic
+> papers" are.
 
-Yes, so my attempt here is to reverse the enablement of the vops
-regulators (hence passing false). But looking at it again I see that we
-should also do ufshcd_vops_exit(), so the right thing to call here is
-ufshcd_variant_hba_exit().
+I mean, these patches come from a research project prototype. Submitting
+patches, and getting it applied can be demonstrated in the experiment 
+part of research paper.
 
-PS. This initialization sequence should really be rewritten to first
-acquire all resources and then turn them on. This mixes init/setup
-sequence is really hard to reason about.
-
-Regards,
-Bjorn
+Thanks
+Gen
+> 
+> > I guess that you might be busy person and hope that submitting patches 
+> > didn't bother you.
+> 
+> It does not bother me at all. Patches are welcome, but newcomers tend to
+> send new versions of patches (or reposts) too quickly. It then leads to
+> wasting time of people where one person comments on one version and the
+> others don't see it and reply to some other.
+> 
+> thanks,
+> -- 
+> js
+> suse labs
