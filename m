@@ -1,40 +1,25 @@
-From: Avri Altman <Avri.Altman@wdc.com>
-Subject: RE: [PATCH v2 2/3] scsi: ufs: Allow resetting the UFS device
-Date: Thu, 6 Jun 2019 06:36:22 +0000
-Message-ID: <SN6PR04MB4925FC3F1001326AA218DF21FC170@SN6PR04MB4925.namprd04.prod.outlook.com>
-References: <20190606010249.3538-1-bjorn.andersson@linaro.org>
- <20190606010249.3538-3-bjorn.andersson@linaro.org>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 10/13] megaraid_sas: set virt_boundary_mask in the scsi
+ host
+Date: Thu, 6 Jun 2019 08:41:53 +0200
+Message-ID: <20190606064153.GD27033@lst.de>
+References: <20190605190836.32354-1-hch@lst.de> <20190605190836.32354-11-hch@lst.de> <345c3931-0940-7d59-ebc6-fa1ea56c60ac@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190606010249.3538-3-bjorn.andersson@linaro.org>
-Content-Language: en-US
+Content-Disposition: inline
+In-Reply-To: <345c3931-0940-7d59-ebc6-fa1ea56c60ac@suse.de>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Bjorn Andersson <bjorn.andersson@linaro.org>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Alim Akhtar <alim.akhtar@samsung.com>, Pedro Sousa <pedrom.sousa@synopsys.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Andy Gross <agross@kernel.org>, Linus Walleij <linus.walleij@linaro.org>, Evan Green <evgreen@chromium.org>, "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>, "linux-gpio@vger.kernel.org" <linux-gpio@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Hannes Reinecke <hare@suse.de>
+Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Sebastian Ott <sebott@linux.ibm.com>, Sagi Grimberg <sagi@grimberg.me>, Max Gurtovoy <maxg@mellanox.com>, Bart Van Assche <bvanassche@acm.org>, Ulf Hansson <ulf.hansson@linaro.org>, Alan Stern <stern@rowland.harvard.edu>, Oliver Neukum <oneukum@suse.com>, linux-block@vger.kernel.org, linux-rdma@vger.kernel.org, linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org, megaraidlinux.pdl@broadcom.com, MPT-FusionLinux.pdl@broadcom.com, linux-hyperv@vger.kernel.org, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+On Thu, Jun 06, 2019 at 08:02:07AM +0200, Hannes Reinecke wrote:
+> >  	scsi_change_queue_depth(sdev, device_qd);
+> >  
+> What happened to the NOMERGES queue flag?
 
->  static int ufshcd_hba_init(struct ufs_hba *hba)
->  {
->  	int err;
-> @@ -7425,9 +7460,15 @@ static int ufshcd_hba_init(struct ufs_hba *hba)
->  	if (err)
->  		goto out_disable_vreg;
->=20
-> +	err =3D ufshcd_init_device_reset(hba);
-> +	if (err)
-> +		goto out_disable_variant;
-> +
->  	hba->is_powered =3D true;
->  	goto out;
->=20
-> +out_disable_variant:
-> +	ufshcd_vops_setup_regulators(hba, false);
-Is this necessary?
-ufshcd_vops_setup_regulators() was just called as part of ufshcd_variant_hb=
-a_init
+Quote from the patch description:
 
-Thanks,
-Avri
+"Also remove the bogus nomerges flag, merges do take the virt_boundary
+ into account."
