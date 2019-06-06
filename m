@@ -1,31 +1,41 @@
-From: Kashyap Desai <kashyap.desai@broadcom.com>
-Subject: RE: [PATCH 10/13] megaraid_sas: set virt_boundary_mask in the scsi host
-Date: Thu, 6 Jun 2019 21:07:27 +0530
-Message-ID: <cd713506efb9579d1f69a719d831c28d@mail.gmail.com>
-References: <20190605190836.32354-1-hch@lst.de> <20190605190836.32354-11-hch@lst.de>
+From: James Smart <james.smart@broadcom.com>
+Subject: Re: [PATCH] scsi: lpfc: Avoid unused function warnings
+Date: Thu, 6 Jun 2019 10:08:03 -0700
+Message-ID: <27ccc327-3a4b-f489-2b21-b68479e45519@broadcom.com>
+References: <20190606052421.103469-1-natechancellor@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190605190836.32354-11-hch@lst.de>
+In-Reply-To: <20190606052421.103469-1-natechancellor@gmail.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
-Cc: Sebastian Ott <sebott@linux.ibm.com>, Sagi Grimberg <sagi@grimberg.me>, Max Gurtovoy <maxg@mellanox.com>, Bart Van Assche <bvanassche@acm.org>, Ulf Hansson <ulf.hansson@linaro.org>, Alan Stern <stern@rowland.harvard.edu>, Oliver Neukum <oneukum@suse.com>, linux-block@vger.kernel.org, linux-rdma@vger.kernel.org, linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org, "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@broadcom.com>, PDL-MPT-FUSIONLINUX <mpt-fusionlinux.pdl@broadcom.com>, linux-hyperv@vger.kernel.org, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net, linux-kernel@vger.kernel.org
+To: Nathan Chancellor <natechancellor@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, YueHaibing <yuehaibing@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
->
-> This ensures all proper DMA layer handling is taken care of by the SCSI
-> midlayer.  Note that the effect is global, as the IOMMU merging is based
-> off a
-> paramters in struct device.  We could still turn if off if no PCIe devices
-> are
-> present, but I don't know how to find that out.
->
-> Also remove the bogus nomerges flag, merges do take the virt_boundary into
-> account.
 
-Hi Christoph, Changes for <megaraid_sas> and <mpt3sas> looks good. We want
-to confirm few sanity before ACK. BTW, what benefit we will see moving
-virt_boundry setting to SCSI mid layer ? Is it just modular approach OR any
-functional fix ?
 
-Kashyap
+On 6/5/2019 10:24 PM, Nathan Chancellor wrote:
+> When building powerpc pseries_defconfig or powernv_defconfig:
+>
+> drivers/scsi/lpfc/lpfc_nvmet.c:224:1: error: unused function
+> 'lpfc_nvmet_get_ctx_for_xri' [-Werror,-Wunused-function]
+> drivers/scsi/lpfc/lpfc_nvmet.c:246:1: error: unused function
+> 'lpfc_nvmet_get_ctx_for_oxid' [-Werror,-Wunused-function]
+>
+> These functions are only compiled when CONFIG_NVME_TARGET_FC is enabled.
+> Use that same condition so there is no more warning. While the fixes
+> commit did not introduce these functions, it caused these warnings.
+>
+> Fixes: 4064b27417a7 ("scsi: lpfc: Make some symbols static")
+> Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
+> ---
+>   drivers/scsi/lpfc/lpfc_nvmet.c | 2 ++
+>   1 file changed, 2 insertions(+)
+>
+>
+
+Looks fine.
+
+Reviewed-by:  James Smart  <james.smart@broadcom.com>
