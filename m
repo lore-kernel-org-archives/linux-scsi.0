@@ -1,92 +1,35 @@
-From: Gen Zhang <blackgod016574@gmail.com>
-Subject: Re: [PATCH] sg: Fix a double-fetch bug in drivers/scsi/sg.c
-Date: Thu, 6 Jun 2019 16:00:59 +0800
-Message-ID: <20190606080059.GA7919@zhanggen-UX430UQ>
-References: <20190523023855.GA17852@zhanggen-UX430UQ>
- <d7cb94f3-f136-62ff-3067-b3e5f6ac63ce@suse.cz>
- <da6f10b8-3b9a-f8d6-33c4-0d8f5711bb23@interlog.com>
+From: Jinpu Wang <jinpu.wang@cloud.ionos.com>
+Subject: Re: [PATCH] scsi: libsas, lldds: Use dev_is_expander()
+Date: Thu, 6 Jun 2019 13:57:18 +0200
+Message-ID: <CAMGffEnFWGdAYEr4mvTKfeDR4xRQwQneeDjaDSaj3gmGHY=i3Q@mail.gmail.com>
+References: <1559751143-168560-1-git-send-email-john.garry@huawei.com> <e8ad370e-6528-2ab1-5001-ab3fa4dc5ae8@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <da6f10b8-3b9a-f8d6-33c4-0d8f5711bb23@interlog.com>
+In-Reply-To: <e8ad370e-6528-2ab1-5001-ab3fa4dc5ae8@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Douglas Gilbert <dgilbert@interlog.com>
-Cc: Jiri Slaby <jslaby@suse.cz>, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jason Yan <yanaijie@huawei.com>
+Cc: John Garry <john.garry@huawei.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, intel-linux-scu@intel.com, artur.paszkiewicz@intel.com, Jack Wang <jinpu.wang@profitbricks.com>, lindar_liu <lindar_liu@usish.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Jun 05, 2019 at 01:07:25PM -0400, Douglas Gilbert wrote:
-> On 2019-06-05 2:00 a.m., Jiri Slaby wrote:
-> >On 23. 05. 19, 4:38, Gen Zhang wrote:
-> >>In sg_write(), the opcode of the command is fetched the first time from
-> >>the userspace by __get_user(). Then the whole command, the opcode
-> >>included, is fetched again from userspace by __copy_from_user().
-> >>However, a malicious user can change the opcode between the two fetches.
-> >>This can cause inconsistent data and potential errors as cmnd is used in
-> >>the following codes.
-> >>
-> >>Thus we should check opcode between the two fetches to prevent this.
-> >>
-> >>Signed-off-by: Gen Zhang <blackgod016574@gmail.com>
-> >>---
-> >>diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-> >>index d3f1531..a2971b8 100644
-> >>--- a/drivers/scsi/sg.c
-> >>+++ b/drivers/scsi/sg.c
-> >>@@ -694,6 +694,8 @@ sg_write(struct file *filp, const char __user *buf, size_t count, loff_t * ppos)
-> >>  	hp->flags = input_size;	/* structure abuse ... */
-> >>  	hp->pack_id = old_hdr.pack_id;
-> >>  	hp->usr_ptr = NULL;
-> >>+	if (opcode != cmnd[0])
-> >>+		return -EINVAL;
+On Thu, Jun 6, 2019 at 3:35 AM Jason Yan <yanaijie@huawei.com> wrote:
+>
+>
+>
+> On 2019/6/6 0:12, John Garry wrote:
+> > Many times in libsas, and in LLDDs which use libsas, the check for an
+> > expander device is re-implemented or open coded.
 > >
-> >Isn't it too early to check cmnd which is copied only here:
+> > Use dev_is_expander() instead. We rename this from
+> > sas_dev_type_is_expander() to not spill so many lines in referencing.
 > >
-> >>  	if (__copy_from_user(cmnd, buf, cmd_size))
-> >>  		return -EFAULT;
-> >>  	/*
-> >>---
-> >>
-> 
-> Hi,
-> Yes, it is too early. It needs to be after that __copy_from_user(cmnd,
-> buf, cmd_size) call.
-Yes, it is.
-> 
-> To put this in context, this is a very old interface; dating from 1992
-> and deprecated for almost 20 years. The fact that the first byte of
-> the SCSI cdb needs to be read first to work out that size of the
-> following SCSI command and optionally the offset of a data-out
-> buffer that may follow the command; is one reason why that interface
-> was replaced. Also the implementation did not handle SCSI variable
-> length cdb_s.
-> 
-> Then there is the question of whether this double-fetch is exploitable?
-> I cannot think of an example, but there might be (e.g. turning a READ
-> command into a WRITE). But the "double-fetch" issue may be more wide
-> spread. The replacement interface passes the command and data-in/-out as
-> pointers while their corresponding lengths are placed in the newer
-> interface structure. This assumes that the cdb and data-out won't
-> change in the user space between when the write(2) is called and
-> before or while the driver, using those pointers, reads the data.
-> All drivers that use pointers to pass data have this "feature".
-> 
-> Also I'm looking at this particular double-fetch from the point of view
-> of the driver rewrite I have done and is currently in the early stages
-> of review [linux-scsi list: "[PATCH 00/19] sg: v4 interface, rq sharing
-> + multiple rqs"] and this problem is more difficult to fix since the
-> full cdb read is delayed to a common point further along the submit
-> processing path. To detect a change in cbd[0] my current code would
-> need to be altered to carry cdb[0] through to that common point. So
-> is it worth it for such an old, deprecated and replaced interface??
-> What cdb/user_permissions checking that is done, is done _after_
-> the full cdb is read. So trying to get around a user exclusion of
-> say WRITE(10) by first using the first byte of READ(10), won't succeed.
-> 
-> Doug Gilbert
-> 
-Thanks for your explaination. I guess this patch should be dropped for
-the above reasons.
+> > Signed-off-by: John Garry<john.garry@huawei.com>
+>
+> Cannot agree more=EF=BC=8C
+>
+> Reviewed-by: Jason Yan <yanaijie@huawei.com>
+>
+Looks good, thanks Jason!
 
-Thanks
-Gen
+Reviewed-by: Jack Wang <jinpu.wang@cloud.ionos.com>
