@@ -1,62 +1,27 @@
 From: Bjorn Andersson <bjorn.andersson@linaro.org>
-Subject: Re: [PATCH 0/3] (Qualcomm) UFS device reset support
-Date: Wed, 5 Jun 2019 17:39:59 -0700
-Message-ID: <20190606003959.GM4814@minitux>
-References: <20190604072001.9288-1-bjorn.andersson@linaro.org>
- <CANcMJZBmgWMZu7Y53Lnx_x3L2UpCmEbFRHVW0SFCXfW=Yw9uYg@mail.gmail.com>
- <SN6PR04MB4925530F216E86F6404FE14CFC160@SN6PR04MB4925.namprd04.prod.outlook.com>
- <20190605060154.GJ22737@tuxbook-pro>
- <SN6PR04MB492521B7D2DB6F3462EDB7D9FC160@SN6PR04MB4925.namprd04.prod.outlook.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: [PATCH v2 0/3] (Qualcomm) UFS device reset support
+Date: Wed,  5 Jun 2019 18:02:46 -0700
+Message-ID: <20190606010249.3538-1-bjorn.andersson@linaro.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <SN6PR04MB492521B7D2DB6F3462EDB7D9FC160@SN6PR04MB4925.namprd04.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Avri Altman <Avri.Altman@wdc.com>
-Cc: John Stultz <john.stultz@linaro.org>, Andy Gross <agross@kernel.org>, Linus Walleij <linus.walleij@linaro.org>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Pedro Sousa <pedrom.sousa@synopsys.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>, "linux-gpio@vger.kernel.org" <linux-gpio@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: Andy Gross <agross@kernel.org>, Linus Walleij <linus.walleij@linaro.org>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, Pedro Sousa <pedrom.sousa@synopsys.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Evan Green <evgreen@chromium.org>, linux-arm-msm@vger.kernel.org, linux-gpio@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed 05 Jun 02:32 PDT 2019, Avri Altman wrote:
+This series exposes the ufs_reset line as a gpio, adds support for ufshcd to
+acquire and toggle this and then adds this to SDM845 MTP.
 
-> > 
-> > On Tue 04 Jun 22:50 PDT 2019, Avri Altman wrote:
-> > 
-> > > Hi,
-> > >
-> > > >
-> > > > On Tue, Jun 4, 2019 at 12:22 AM Bjorn Andersson
-> > > > <bjorn.andersson@linaro.org> wrote:
-> > > > >
-> > > > > This series exposes the ufs_reset line as a gpio, adds support for ufshcd to
-> > > > > acquire and toggle this and then adds this to SDM845 MTP.
-> > > > >
-> > > > > Bjorn Andersson (3):
-> > > > >   pinctrl: qcom: sdm845: Expose ufs_reset as gpio
-> > > > >   scsi: ufs: Allow resetting the UFS device
-> > > > >   arm64: dts: qcom: sdm845-mtp: Specify UFS device-reset GPIO
-> > > >
-> > > > Adding similar change as in sdm845-mtp to the not yet upstream
-> > > > blueline dts, I validated this allows my micron UFS pixel3 to boot.
-> > > >
-> > > > Tested-by: John Stultz <john.stultz@linaro.org>
-> > > Maybe ufs_hba_variant_ops would be the proper place to add this?
-> > >
-> > 
-> > Are you saying that these memories only need a reset when they are
-> > paired with the Qualcomm host controller?
-> ufs_hba_variant_ops is for vendors to implement their own vops,
-> and as you can see, many of them do.
-> Adding hw_reset to that template seems like the proper way
-> to do what you are doing.
-> 
+Bjorn Andersson (3):
+  pinctrl: qcom: sdm845: Expose ufs_reset as gpio
+  scsi: ufs: Allow resetting the UFS device
+  arm64: dts: qcom: sdm845-mtp: Specify UFS device-reset GPIO
 
-Right, but the vops is operations related to the UFS controller, this
-property relates to the memory connected.
+ .../bindings/pinctrl/qcom,sdm845-pinctrl.txt  |  2 +-
+ .../devicetree/bindings/ufs/ufshcd-pltfrm.txt |  2 +
+ arch/arm64/boot/dts/qcom/sdm845-mtp.dts       |  2 +
+ drivers/pinctrl/qcom/pinctrl-sdm845.c         | 12 ++---
+ drivers/scsi/ufs/ufshcd.c                     | 44 +++++++++++++++++++
+ drivers/scsi/ufs/ufshcd.h                     |  4 ++
+ 6 files changed, 59 insertions(+), 7 deletions(-)
 
-E.g I have a Hynix memory and John have a Micron memory that needs this
-reset and my assumption is that these memories will need their RESET pin
-toggled regardless of which controller they are connected to.
-
-Regards,
-Bjorn
+-- 
+2.18.0
