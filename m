@@ -1,32 +1,63 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: properly communicate queue limits to the DMA layer
-Date: Thu, 6 Jun 2019 23:52:35 -0600
-Message-ID: <f07d0abf-b3eb-f530-37b9-e66454740b3f@kernel.dk>
-References: <20190605190836.32354-1-hch@lst.de>
- <591cfa1e-fecb-7d00-c855-3b9eb8eb8a2a@kernel.dk>
- <20190605192405.GA18243@lst.de>
+From: Sumit Saxena <sumit.saxena@broadcom.com>
+Subject: Re: [PATCH -next] scsi: megaraid_sas: remove set but not used
+ variable 'sge_sz'
+Date: Fri, 7 Jun 2019 12:06:01 +0530
+Message-ID: <CAL2rwxroDkKSRCN9inYZTGD79h+8AWn6LO3+=ND316=BVm40ug@mail.gmail.com>
+References: <20190525123705.8588-1-yuehaibing@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190605192405.GA18243@lst.de>
-Content-Language: en-US
+In-Reply-To: <20190525123705.8588-1-yuehaibing@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Sebastian Ott <sebott@linux.ibm.com>, Sagi Grimberg <sagi@grimberg.me>, Max Gurtovoy <maxg@mellanox.com>, Bart Van Assche <bvanassche@acm.org>, Ulf Hansson <ulf.hansson@linaro.org>, Alan Stern <stern@rowland.harvard.edu>, Oliver Neukum <oneukum@suse.com>, linux-block@vger.kernel.org, linux-rdma@vger.kernel.org, linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org, megaraidlinux.pdl@broadcom.com, MPT-FusionLinux.pdl@broadcom.com, linux-hyperv@vger.kernel.org, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net, linux-kernel@vger.kernel.org
+To: YueHaibing <yuehaibing@huawei.com>
+Cc: Kashyap Desai <kashyap.desai@broadcom.com>, Shivasharan Srikanteshwara <shivasharan.srikanteshwara@broadcom.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, LKML <linux-kernel@vger.kernel.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@broadcom.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 6/5/19 1:24 PM, Christoph Hellwig wrote:
-> On Wed, Jun 05, 2019 at 01:17:15PM -0600, Jens Axboe wrote:
->> Since I'm heading out shortly and since I think this should make
->> the next -rc, I'll tentatively queue this up.
-> 
-> The SCSI bits will need a bit more review, and possibly tweaking
-> fo megaraid and mpt3sas.  But they are really independent of the
-> other patches, so maybe skip them for now and leave them for Martin
-> to deal with.
+On Sat, May 25, 2019 at 6:07 PM YueHaibing <yuehaibing@huawei.com> wrote:
+>
+> Fixes gcc '-Wunused-but-set-variable' warning:
+>
+> drivers/scsi/megaraid/megaraid_sas_base.c: In function megasas_create_frame_pool:
+> drivers/scsi/megaraid/megaraid_sas_base.c:4124:6: warning: variable sge_sz set but not used [-Wunused-but-set-variable]
+>
+> It's not used any more since
+> commit 200aed582d61 ("megaraid_sas: endianness related bug fixes and code optimization")
+>
+> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+Acked-by: Sumit Saxena <sumit.saxena@broadcom.com>
 
-I dropped the SCSI bits.
-
--- 
-Jens Axboe
+> ---
+>  drivers/scsi/megaraid/megaraid_sas_base.c | 11 -----------
+>  1 file changed, 11 deletions(-)
+>
+> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+> index b26991dcf137..25281a2eb424 100644
+> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
+> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+> @@ -4121,22 +4121,11 @@ static int megasas_create_frame_pool(struct megasas_instance *instance)
+>  {
+>         int i;
+>         u16 max_cmd;
+> -       u32 sge_sz;
+>         u32 frame_count;
+>         struct megasas_cmd *cmd;
+>
+>         max_cmd = instance->max_mfi_cmds;
+>
+> -       /*
+> -        * Size of our frame is 64 bytes for MFI frame, followed by max SG
+> -        * elements and finally SCSI_SENSE_BUFFERSIZE bytes for sense buffer
+> -        */
+> -       sge_sz = (IS_DMA64) ? sizeof(struct megasas_sge64) :
+> -           sizeof(struct megasas_sge32);
+> -
+> -       if (instance->flag_ieee)
+> -               sge_sz = sizeof(struct megasas_sge_skinny);
+> -
+>         /*
+>          * For MFI controllers.
+>          * max_num_sge = 60
+> --
+> 2.17.1
+>
+>
