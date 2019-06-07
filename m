@@ -1,32 +1,66 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: properly communicate queue limits to the DMA layer
-Date: Fri, 07 Jun 2019 13:30:30 -0400
-Message-ID: <yq1o939i9qh.fsf@oracle.com>
-References: <20190605190836.32354-1-hch@lst.de>
-        <591cfa1e-fecb-7d00-c855-3b9eb8eb8a2a@kernel.dk>
-        <20190605192405.GA18243@lst.de>
-        <f07d0abf-b3eb-f530-37b9-e66454740b3f@kernel.dk>
+From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Subject: [PATCH] scsi: megaraid_sas: Use struct_size() helper
+Date: Fri, 7 Jun 2019 13:40:53 -0500
+Message-ID: <20190607184053.GA11513@embeddedor>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <f07d0abf-b3eb-f530-37b9-e66454740b3f@kernel.dk> (Jens Axboe's
-        message of "Thu, 6 Jun 2019 23:52:35 -0600")
+Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Christoph Hellwig <hch@lst.de>, Sebastian Ott <sebott@linux.ibm.com>, Sagi Grimberg <sagi@grimberg.me>, Max Gurtovoy <maxg@mellanox.com>, Bart Van Assche <bvanassche@acm.org>, Ulf Hansson <ulf.hansson@linaro.org>, Alan Stern <stern@rowland.harvard.edu>, Oliver Neukum <oneukum@suse.com>, linux-block@vger.kernel.org, linux-rdma@vger.kernel.org, linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org, megaraidlinux.pdl@broadcom.com, MPT-FusionLinux.pdl@broadcom.com, linux-hyperv@vger.kernel.org, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net, linux-kernel@vger.kernel.org
+To: Kashyap Desai <kashyap.desai@broadcom.com>, Sumit Saxena <sumit.saxena@broadcom.com>, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Gustavo A. R. Silva" <gustavo@embeddedor.com>
 List-Id: linux-scsi@vger.kernel.org
 
+One of the more common cases of allocation size calculations is finding
+the size of a structure that has a zero-sized array at the end, along
+with memory for some number of elements for that array. For example:
 
-Jens,
+struct MR_PD_CFG_SEQ_NUM_SYNC {
+	...
+        struct MR_PD_CFG_SEQ seq[1];
+} __packed;
 
->> The SCSI bits will need a bit more review, and possibly tweaking
->> fo megaraid and mpt3sas.  But they are really independent of the
->> other patches, so maybe skip them for now and leave them for Martin
->> to deal with.
->
-> I dropped the SCSI bits.
+Make use of the struct_size() helper instead of an open-coded version
+in order to avoid any potential type mistakes.
 
-I'll monitor and merge them.
+So, replace the following form:
 
+sizeof(struct MR_PD_CFG_SEQ_NUM_SYNC) + (sizeof(struct MR_PD_CFG_SEQ) * (MAX_PHYSICAL_DEVICES - 1))
+
+with:
+
+struct_size(pd_sync, seq, MAX_PHYSICAL_DEVICES - 1)
+
+This code was detected with the help of Coccinelle.
+
+Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+---
+ drivers/scsi/megaraid/megaraid_sas_fusion.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+index a25b6b4b6548..56bd524dddbf 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+@@ -1191,7 +1191,7 @@ megasas_ioc_init_fusion(struct megasas_instance *instance)
+ int
+ megasas_sync_pd_seq_num(struct megasas_instance *instance, bool pend) {
+ 	int ret = 0;
+-	u32 pd_seq_map_sz;
++	size_t pd_seq_map_sz;
+ 	struct megasas_cmd *cmd;
+ 	struct megasas_dcmd_frame *dcmd;
+ 	struct fusion_context *fusion = instance->ctrl_context;
+@@ -1200,9 +1200,7 @@ megasas_sync_pd_seq_num(struct megasas_instance *instance, bool pend) {
+ 
+ 	pd_sync = (void *)fusion->pd_seq_sync[(instance->pd_seq_map_id & 1)];
+ 	pd_seq_h = fusion->pd_seq_phys[(instance->pd_seq_map_id & 1)];
+-	pd_seq_map_sz = sizeof(struct MR_PD_CFG_SEQ_NUM_SYNC) +
+-			(sizeof(struct MR_PD_CFG_SEQ) *
+-			(MAX_PHYSICAL_DEVICES - 1));
++	pd_seq_map_sz = struct_size(pd_sync, seq, MAX_PHYSICAL_DEVICES - 1);
+ 
+ 	cmd = megasas_get_cmd(instance);
+ 	if (!cmd) {
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+2.21.0
