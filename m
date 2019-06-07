@@ -1,48 +1,50 @@
-From: Geert Uytterhoeven <geert+renesas@glider.be>
-Subject: [PATCH trivial] scsi: isci: Grammar s/the its/its/
-Date: Fri,  7 Jun 2019 13:34:26 +0200
-Message-ID: <20190607113426.14937-1-geert+renesas@glider.be>
+From: Hannes Reinecke <hare@suse.com>
+Subject: Re: [PATCH trivial] [SCSI] aic7xxx: Spelling
+ s/configuraion/configuration/
+Date: Fri, 7 Jun 2019 14:25:40 +0200
+Message-ID: <032a117c-3698-a803-a340-6df720d61795@suse.com>
+References: <20190607112736.14004-1-geert+renesas@glider.be>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190607112736.14004-1-geert+renesas@glider.be>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Intel SCU Linux support <intel-linux-scu@intel.com>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Jiri Kosina <trivial@kernel.org>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Geert Uytterhoeven <geert+renesas@glider.be>
+To: Geert Uytterhoeven <geert+renesas@glider.be>, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Jiri Kosina <trivial@kernel.org>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
----
- drivers/scsi/isci/request.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+On 6/7/19 1:27 PM, Geert Uytterhoeven wrote:
+> Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+> ---
+>  drivers/scsi/aic7xxx/aic7xxx.reg | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/aic7xxx/aic7xxx.reg b/drivers/scsi/aic7xxx/aic7xxx.reg
+> index ba0b411d03e2e1fa..00fde2243e486cbd 100644
+> --- a/drivers/scsi/aic7xxx/aic7xxx.reg
+> +++ b/drivers/scsi/aic7xxx/aic7xxx.reg
+> @@ -1666,7 +1666,7 @@ scratch_ram {
+>  	size		6
+>  	/*
+>  	 * These are reserved registers in the card's scratch ram on the 2742.
+> -	 * The EISA configuraiton chip is mapped here.  On Rev E. of the
+> +	 * The EISA configuration chip is mapped here.  On Rev E. of the
+>  	 * aic7770, the sequencer can use this area for scratch, but the
+>  	 * host cannot directly access these registers.  On later chips, this
+>  	 * area can be read and written by both the host and the sequencer.
+> 
+Indeed trivial.
 
-diff --git a/drivers/scsi/isci/request.c b/drivers/scsi/isci/request.c
-index 1b18cf55167e0a2e..c552b4b59717ae9b 100644
---- a/drivers/scsi/isci/request.c
-+++ b/drivers/scsi/isci/request.c
-@@ -224,7 +224,7 @@ static void scu_ssp_request_construct_task_context(
- 	idev = ireq->target_device;
- 	iport = idev->owning_port;
- 
--	/* Fill in the TC with the its required data */
-+	/* Fill in the TC with its required data */
- 	task_context->abort = 0;
- 	task_context->priority = 0;
- 	task_context->initiator_request = 1;
-@@ -506,7 +506,7 @@ static void scu_sata_request_construct_task_context(
- 	idev = ireq->target_device;
- 	iport = idev->owning_port;
- 
--	/* Fill in the TC with the its required data */
-+	/* Fill in the TC with its required data */
- 	task_context->abort = 0;
- 	task_context->priority = SCU_TASK_PRIORITY_NORMAL;
- 	task_context->initiator_request = 1;
-@@ -3235,7 +3235,7 @@ sci_io_request_construct_smp(struct device *dev,
- 	iport = idev->owning_port;
- 
- 	/*
--	 * Fill in the TC with the its required data
-+	 * Fill in the TC with its required data
- 	 * 00h
- 	 */
- 	task_context->priority = 0;
+Reviewed-by: Hannes Reinecke <hare@suse.com>
+
+Cheers,
+
+Hannes
 -- 
-2.17.1
+Dr. Hannes Reinecke		               zSeries & Storage
+hare@suse.com			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
