@@ -1,34 +1,32 @@
-From: James Bottomley <jejb@linux.ibm.com>
-Subject: Re: [PATCH v2] drivers: scsi: remove unnecessary #ifdef MODULE
-Date: Fri, 07 Jun 2019 03:41:29 +0300
-Message-ID: <1559868089.3233.1.camel@linux.ibm.com>
-References: <1559833471-30534-1-git-send-email-info@metux.net>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: properly communicate queue limits to the DMA layer
+Date: Thu, 6 Jun 2019 23:52:35 -0600
+Message-ID: <f07d0abf-b3eb-f530-37b9-e66454740b3f@kernel.dk>
+References: <20190605190836.32354-1-hch@lst.de>
+ <591cfa1e-fecb-7d00-c855-3b9eb8eb8a2a@kernel.dk>
+ <20190605192405.GA18243@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1559833471-30534-1-git-send-email-info@metux.net>
+In-Reply-To: <20190605192405.GA18243@lst.de>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Enrico Weigelt, metux IT consult" <info@metux.net>, linux-kernel@vger.kernel.org
-Cc: khalid@gonehiking.org, martin.petersen@oracle.com, aacraid@microsemi.com, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Sebastian Ott <sebott@linux.ibm.com>, Sagi Grimberg <sagi@grimberg.me>, Max Gurtovoy <maxg@mellanox.com>, Bart Van Assche <bvanassche@acm.org>, Ulf Hansson <ulf.hansson@linaro.org>, Alan Stern <stern@rowland.harvard.edu>, Oliver Neukum <oneukum@suse.com>, linux-block@vger.kernel.org, linux-rdma@vger.kernel.org, linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org, megaraidlinux.pdl@broadcom.com, MPT-FusionLinux.pdl@broadcom.com, linux-hyperv@vger.kernel.org, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 2019-06-06 at 17:04 +0200, Enrico Weigelt, metux IT consult
-wrote:
-> From: Enrico Weigelt <info@metux.net>
+On 6/5/19 1:24 PM, Christoph Hellwig wrote:
+> On Wed, Jun 05, 2019 at 01:17:15PM -0600, Jens Axboe wrote:
+>> Since I'm heading out shortly and since I think this should make
+>> the next -rc, I'll tentatively queue this up.
 > 
-> The MODULE_DEVICE_TABLE() macro already checks for MODULE defined,
-> so the extra check here is not necessary.
-> 
-> Changes v2:
->     * make dptids const to fix warning on unused variable
+> The SCSI bits will need a bit more review, and possibly tweaking
+> fo megaraid and mpt3sas.  But they are really independent of the
+> other patches, so maybe skip them for now and leave them for Martin
+> to deal with.
 
-I don't think this works; in my version of gcc, const does not defeat
-the unused variable warning if I try with a test programme:
+I dropped the SCSI bits.
 
-jejb@jarvis:~> gcc -Wunused-variable -c test1.c
-test1.c:3:18: warning: ‘i’ defined but not used [-Wunused-cons
-t-variable=]
- static const int i[] = { 1, 2, 3};
-
-James
+-- 
+Jens Axboe
