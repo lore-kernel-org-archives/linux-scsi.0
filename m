@@ -1,50 +1,30 @@
-From: Hannes Reinecke <hare@suse.com>
-Subject: Re: [PATCH trivial] [SCSI] aic7xxx: Spelling
- s/configuraion/configuration/
-Date: Fri, 7 Jun 2019 14:25:40 +0200
-Message-ID: <032a117c-3698-a803-a340-6df720d61795@suse.com>
-References: <20190607112736.14004-1-geert+renesas@glider.be>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH -next] scsi: megaraid_sas: remove set but not used variable 'sge_sz'
+Date: Fri, 07 Jun 2019 09:14:14 -0400
+Message-ID: <yq1pnnpleqh.fsf@oracle.com>
+References: <20190525123705.8588-1-yuehaibing@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190607112736.14004-1-geert+renesas@glider.be>
-Content-Language: en-US
+In-Reply-To: <20190525123705.8588-1-yuehaibing@huawei.com>
+        (yuehaibing@huawei.com's message of "Sat, 25 May 2019 20:37:05 +0800")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Geert Uytterhoeven <geert+renesas@glider.be>, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Jiri Kosina <trivial@kernel.org>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: YueHaibing <yuehaibing@huawei.com>
+Cc: kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com, jejb@linux.ibm.com, martin.petersen@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, megaraidlinux.pdl@broadcom.com
 List-Id: linux-scsi@vger.kernel.org
 
-On 6/7/19 1:27 PM, Geert Uytterhoeven wrote:
-> Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
-> ---
->  drivers/scsi/aic7xxx/aic7xxx.reg | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/aic7xxx/aic7xxx.reg b/drivers/scsi/aic7xxx/aic7xxx.reg
-> index ba0b411d03e2e1fa..00fde2243e486cbd 100644
-> --- a/drivers/scsi/aic7xxx/aic7xxx.reg
-> +++ b/drivers/scsi/aic7xxx/aic7xxx.reg
-> @@ -1666,7 +1666,7 @@ scratch_ram {
->  	size		6
->  	/*
->  	 * These are reserved registers in the card's scratch ram on the 2742.
-> -	 * The EISA configuraiton chip is mapped here.  On Rev E. of the
-> +	 * The EISA configuration chip is mapped here.  On Rev E. of the
->  	 * aic7770, the sequencer can use this area for scratch, but the
->  	 * host cannot directly access these registers.  On later chips, this
->  	 * area can be read and written by both the host and the sequencer.
-> 
-Indeed trivial.
 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+YueHaibing,
 
-Cheers,
+> Fixes gcc '-Wunused-but-set-variable' warning:
+>
+> drivers/scsi/megaraid/megaraid_sas_base.c: In function megasas_create_frame_pool:
+> drivers/scsi/megaraid/megaraid_sas_base.c:4124:6: warning: variable sge_sz set but not used [-Wunused-but-set-variable]
+>
+> It's not used any more since
+> commit 200aed582d61 ("megaraid_sas: endianness related bug fixes and code optimization")
 
-Hannes
+Applied to 5.3/scsi-queue. Thanks.
+
 -- 
-Dr. Hannes Reinecke		               zSeries & Storage
-hare@suse.com			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+Martin K. Petersen	Oracle Linux Engineering
