@@ -1,25 +1,34 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: libsas, lldds: Use dev_is_expander()
-Date: Thu, 06 Jun 2019 18:02:14 -0400
-Message-ID: <yq1k1dymkyh.fsf@oracle.com>
-References: <1559751143-168560-1-git-send-email-john.garry@huawei.com>
+From: James Bottomley <jejb@linux.ibm.com>
+Subject: Re: [PATCH v2] drivers: scsi: remove unnecessary #ifdef MODULE
+Date: Fri, 07 Jun 2019 03:41:29 +0300
+Message-ID: <1559868089.3233.1.camel@linux.ibm.com>
+References: <1559833471-30534-1-git-send-email-info@metux.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1559751143-168560-1-git-send-email-john.garry@huawei.com> (John
-        Garry's message of "Thu, 6 Jun 2019 00:12:23 +0800")
+In-Reply-To: <1559833471-30534-1-git-send-email-info@metux.net>
 Sender: linux-kernel-owner@vger.kernel.org
-To: John Garry <john.garry@huawei.com>
-Cc: jejb@linux.ibm.com, martin.petersen@oracle.com, intel-linux-scu@intel.com, artur.paszkiewicz@intel.com, jinpu.wang@profitbricks.com, lindar_liu@usish.com, yanaijie@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, hare@suse.de
+To: "Enrico Weigelt, metux IT consult" <info@metux.net>, linux-kernel@vger.kernel.org
+Cc: khalid@gonehiking.org, martin.petersen@oracle.com, aacraid@microsemi.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+On Thu, 2019-06-06 at 17:04 +0200, Enrico Weigelt, metux IT consult
+wrote:
+> From: Enrico Weigelt <info@metux.net>
+> 
+> The MODULE_DEVICE_TABLE() macro already checks for MODULE defined,
+> so the extra check here is not necessary.
+> 
+> Changes v2:
+>     * make dptids const to fix warning on unused variable
 
-John,
+I don't think this works; in my version of gcc, const does not defeat
+the unused variable warning if I try with a test programme:
 
-> Many times in libsas, and in LLDDs which use libsas, the check for an
-> expander device is re-implemented or open coded.
+jejb@jarvis:~> gcc -Wunused-variable -c test1.c
+test1.c:3:18: warning: ‘i’ defined but not used [-Wunused-cons
+t-variable=]
+ static const int i[] = { 1, 2, 3};
 
-Applied to 5.3/scsi-queue, thanks.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+James
