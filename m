@@ -1,48 +1,27 @@
-From: "Enrico Weigelt, metux IT consult" <lkml@metux.net>
-Subject: Re: [PATCH v2] drivers: scsi: remove unnecessary #ifdef MODULE
-Date: Fri, 7 Jun 2019 23:50:55 +0200
-Message-ID: <da4cea67-7651-7284-51e6-5313b1241a8a@metux.net>
-References: <1559833471-30534-1-git-send-email-info@metux.net>
- <1559868089.3233.1.camel@linux.ibm.com>
+From: Linus Walleij <linus.walleij@linaro.org>
+Subject: Re: [PATCH 3/3] arm64: dts: qcom: sdm845-mtp: Specify UFS
+ device-reset GPIO
+Date: Sat, 8 Jun 2019 00:20:12 +0200
+Message-ID: <CACRpkdZETzjw2hOz7y15sUFa+s2Ki3UaMh-Qcor4cEopZrf03Q@mail.gmail.com>
+References: <20190604072001.9288-1-bjorn.andersson@linaro.org> <20190604072001.9288-4-bjorn.andersson@linaro.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1559868089.3233.1.camel@linux.ibm.com>
-Content-Language: en-US
+In-Reply-To: <20190604072001.9288-4-bjorn.andersson@linaro.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <jejb@linux.ibm.com>, "Enrico Weigelt, metux IT consult" <info@metux.net>, linux-kernel@vger.kernel.org
-Cc: khalid@gonehiking.org, martin.petersen@oracle.com, aacraid@microsemi.com, linux-scsi@vger.kernel.org
+To: Bjorn Andersson <bjorn.andersson@linaro.org>
+Cc: Andy Gross <agross@kernel.org>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Pedro Sousa <pedrom.sousa@synopsys.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, MSM <linux-arm-msm@vger.kernel.org>, "open list:GPIO SUBSYSTEM" <linux-gpio@vger.kernel.org>, "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" <devicetree@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 07.06.19 02:41, James Bottomley wrote:
-> On Thu, 2019-06-06 at 17:04 +0200, Enrico Weigelt, metux IT consult
-> wrote:
->> From: Enrico Weigelt <info@metux.net>
->>
->> The MODULE_DEVICE_TABLE() macro already checks for MODULE defined,
->> so the extra check here is not necessary.
->>
->> Changes v2:
->>     * make dptids const to fix warning on unused variable
-> 
-> I don't think this works; in my version of gcc, const does not defeat
-> the unused variable warning if I try with a test programme:
-> 
-> jejb@jarvis:~> gcc -Wunused-variable -c test1.c
-> test1.c:3:18: warning: ‘i’ defined but not used [-Wunused-cons
-> t-variable=]
->  static const int i[] = { 1, 2, 3};
+On Tue, Jun 4, 2019 at 9:20 AM Bjorn Andersson
+<bjorn.andersson@linaro.org> wrote:
 
-Which gcc version are you using ?
-Could you please have a try w/ the kernel (plus my patch) ?
+> Specify the UFS device-reset gpio, so that the controller will issue a
+> reset of the UFS device.
+>
+> Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
 
-Tested w/ 6.3.0-18+deb9u1 (stretch-amd64), got no warnings.
+Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
 
-
---mtx
-
--- 
-Enrico Weigelt, metux IT consult
-Free software and Linux embedded engineering
-info@metux.net -- +49-151-27565287
+Yours,
+Linus Walleij
