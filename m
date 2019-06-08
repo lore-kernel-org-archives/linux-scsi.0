@@ -1,40 +1,74 @@
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
-Subject: [PATCH v3 3/3] arm64: dts: qcom: sdm845-mtp: Specify UFS device-reset GPIO
-Date: Fri,  7 Jun 2019 22:04:50 -0700
-Message-ID: <20190608050450.12056-4-bjorn.andersson@linaro.org>
-References: <20190608050450.12056-1-bjorn.andersson@linaro.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 5.2-rc3
+Date: Fri, 07 Jun 2019 23:05:26 -0700
+Message-ID: <1559973926.2787.5.camel@HansenPartnership.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190608050450.12056-1-bjorn.andersson@linaro.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Andy Gross <agross@kernel.org>
-Cc: Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, Pedro Sousa <pedrom.sousa@synopsys.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Specify the UFS device-reset gpio, so that the controller will issue a
-reset of the UFS device.
+Two bug fixes, both for fairly serious problems; the UFS one looks like
+it could be used to exfiltrate data from the kernel, although probably
+only a privileged user has access to the command management interface
+and the missing unlock in smartpqi is long standing and probably a
+little used error path.
 
-Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
-Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+The patch is available here:
+
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+
+The short changelog is:
+
+Avri Altman (1):
+      scsi: ufs: Check that space was properly alloced in copy_query_response
+
+Dan Carpenter (1):
+      scsi: smartpqi: unlock on error in pqi_submit_raid_request_synchronous()
+
+And the diffstat:
+
+ drivers/scsi/smartpqi/smartpqi_init.c | 6 ++++--
+ drivers/scsi/ufs/ufshcd.c             | 3 ++-
+ 2 files changed, 6 insertions(+), 3 deletions(-)
+
+With full diff below.
+
+James
+
 ---
 
-Changes since v2:
-- None
-
- arch/arm64/boot/dts/qcom/sdm845-mtp.dts | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/arch/arm64/boot/dts/qcom/sdm845-mtp.dts b/arch/arm64/boot/dts/qcom/sdm845-mtp.dts
-index 80189807b4e5..441045847e9f 100644
---- a/arch/arm64/boot/dts/qcom/sdm845-mtp.dts
-+++ b/arch/arm64/boot/dts/qcom/sdm845-mtp.dts
-@@ -467,6 +467,8 @@
- &ufs_mem_hc {
- 	status = "okay";
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+index d6be4e8f4a8f..8fd5ffc55792 100644
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -4046,8 +4046,10 @@ static int pqi_submit_raid_request_synchronous(struct pqi_ctrl_info *ctrl_info,
+ 				return -ETIMEDOUT;
+ 			msecs_blocked =
+ 				jiffies_to_msecs(jiffies - start_jiffies);
+-			if (msecs_blocked >= timeout_msecs)
+-				return -ETIMEDOUT;
++			if (msecs_blocked >= timeout_msecs) {
++				rc = -ETIMEDOUT;
++				goto out;
++			}
+ 			timeout_msecs -= msecs_blocked;
+ 		}
+ 	}
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 8c1c551f2b42..3fe3029617a8 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -1917,7 +1917,8 @@ int ufshcd_copy_query_response(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
+ 	memcpy(&query_res->upiu_res, &lrbp->ucd_rsp_ptr->qr, QUERY_OSF_SIZE);
  
-+	device-reset-gpios = <&tlmm 150 GPIO_ACTIVE_LOW>;
-+
- 	vcc-supply = <&vreg_l20a_2p95>;
- 	vcc-max-microamp = <600000>;
- };
--- 
-2.18.0
+ 	/* Get the descriptor */
+-	if (lrbp->ucd_rsp_ptr->qr.opcode == UPIU_QUERY_OPCODE_READ_DESC) {
++	if (hba->dev_cmd.query.descriptor &&
++	    lrbp->ucd_rsp_ptr->qr.opcode == UPIU_QUERY_OPCODE_READ_DESC) {
+ 		u8 *descp = (u8 *)lrbp->ucd_rsp_ptr +
+ 				GENERAL_UPIU_REQUEST_SIZE;
+ 		u16 resp_len;
