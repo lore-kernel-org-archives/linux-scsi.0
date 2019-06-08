@@ -1,7 +1,7 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.14 27/31] scsi: libcxgbi: add a check for NULL pointer in cxgbi_check_route()
-Date: Sat,  8 Jun 2019 07:46:38 -0400
-Message-ID: <20190608114646.9415-27-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 29/31] scsi: scsi_dh_alua: Fix possible null-ptr-deref
+Date: Sat,  8 Jun 2019 07:46:40 -0400
+Message-ID: <20190608114646.9415-29-sashal@kernel.org>
 References: <20190608114646.9415-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -9,36 +9,63 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20190608114646.9415-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Varun Prakash <varun@chelsio.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Cc: YueHaibing <yuehaibing@huawei.com>, Hulk Robot <hulkci@huawei.com>, Bart Van Assche <bvanassche@acm.org>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Varun Prakash <varun@chelsio.com>
+From: YueHaibing <yuehaibing@huawei.com>
 
-[ Upstream commit cc555759117e8349088e0c5d19f2f2a500bafdbd ]
+[ Upstream commit 12e750bc62044de096ab9a95201213fd912b9994 ]
 
-ip_dev_find() can return NULL so add a check for NULL pointer.
+If alloc_workqueue fails in alua_init, it should return -ENOMEM, otherwise
+it will trigger null-ptr-deref while unloading module which calls
+destroy_workqueue dereference
+wq->lock like this:
 
-Signed-off-by: Varun Prakash <varun@chelsio.com>
+BUG: KASAN: null-ptr-deref in __lock_acquire+0x6b4/0x1ee0
+Read of size 8 at addr 0000000000000080 by task syz-executor.0/7045
+
+CPU: 0 PID: 7045 Comm: syz-executor.0 Tainted: G         C        5.1.0+ #28
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.10.2-1ubuntu1
+Call Trace:
+ dump_stack+0xa9/0x10e
+ __kasan_report+0x171/0x18d
+ ? __lock_acquire+0x6b4/0x1ee0
+ kasan_report+0xe/0x20
+ __lock_acquire+0x6b4/0x1ee0
+ lock_acquire+0xb4/0x1b0
+ __mutex_lock+0xd8/0xb90
+ drain_workqueue+0x25/0x290
+ destroy_workqueue+0x1f/0x3f0
+ __x64_sys_delete_module+0x244/0x330
+ do_syscall_64+0x72/0x2a0
+ entry_SYSCALL_64_after_hwframe+0x49/0xbe
+
+Reported-by: Hulk Robot <hulkci@huawei.com>
+Fixes: 03197b61c5ec ("scsi_dh_alua: Use workqueue for RTPG")
+Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/cxgbi/libcxgbi.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/scsi/device_handler/scsi_dh_alua.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/cxgbi/libcxgbi.c b/drivers/scsi/cxgbi/libcxgbi.c
-index 512c8f1ea5b0..902f5e03ec94 100644
---- a/drivers/scsi/cxgbi/libcxgbi.c
-+++ b/drivers/scsi/cxgbi/libcxgbi.c
-@@ -640,6 +640,10 @@ cxgbi_check_route(struct sockaddr *dst_addr, int ifindex)
+diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+index 0962fd544401..09c6a16fab93 100644
+--- a/drivers/scsi/device_handler/scsi_dh_alua.c
++++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+@@ -1151,10 +1151,8 @@ static int __init alua_init(void)
+ 	int r;
  
- 	if (ndev->flags & IFF_LOOPBACK) {
- 		ndev = ip_dev_find(&init_net, daddr->sin_addr.s_addr);
-+		if (!ndev) {
-+			err = -ENETUNREACH;
-+			goto rel_neigh;
-+		}
- 		mtu = ndev->mtu;
- 		pr_info("rt dev %s, loopback -> %s, mtu %u.\n",
- 			n->dev->name, ndev->name, mtu);
+ 	kaluad_wq = alloc_workqueue("kaluad", WQ_MEM_RECLAIM, 0);
+-	if (!kaluad_wq) {
+-		/* Temporary failure, bypass */
+-		return SCSI_DH_DEV_TEMP_BUSY;
+-	}
++	if (!kaluad_wq)
++		return -ENOMEM;
+ 
+ 	r = scsi_register_device_handler(&alua_dh);
+ 	if (r != 0) {
 -- 
 2.20.1
