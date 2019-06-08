@@ -1,25 +1,71 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 10/13] megaraid_sas: set virt_boundary_mask in the scsi
- host
-Date: Sat, 8 Jun 2019 10:14:00 +0200
-Message-ID: <20190608081400.GA19573@lst.de>
-References: <20190605190836.32354-1-hch@lst.de> <20190605190836.32354-11-hch@lst.de> <cd713506efb9579d1f69a719d831c28d@mail.gmail.com>
+From: Sasha Levin <sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.1 67/70] scsi: scsi_dh_alua: Fix possible null-ptr-deref
+Date: Sat,  8 Jun 2019 07:39:46 -0400
+Message-ID: <20190608113950.8033-67-sashal@kernel.org>
+References: <20190608113950.8033-1-sashal@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <cd713506efb9579d1f69a719d831c28d@mail.gmail.com>
+In-Reply-To: <20190608113950.8033-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Kashyap Desai <kashyap.desai@broadcom.com>
-Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Sebastian Ott <sebott@linux.ibm.com>, Sagi Grimberg <sagi@grimberg.me>, Max Gurtovoy <maxg@mellanox.com>, Bart Van Assche <bvanassche@acm.org>, Ulf Hansson <ulf.hansson@linaro.org>, Alan Stern <stern@rowland.harvard.edu>, Oliver Neukum <oneukum@suse.com>, linux-block@vger.kernel.org, linux-rdma@vger.kernel.org, linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org, "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@broadcom.com>, PDL-MPT-FUSIONLINUX <mpt-fusionlinux.pdl@broadcom.com>, linux-hyperv@vger.kernel.org, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net, linux-kernel@vger.kernel.org
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc: YueHaibing <yuehaibing@huawei.com>, Hulk Robot <hulkci@huawei.com>, Bart Van Assche <bvanassche@acm.org>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Jun 06, 2019 at 09:07:27PM +0530, Kashyap Desai wrote:
-> Hi Christoph, Changes for <megaraid_sas> and <mpt3sas> looks good. We want
-> to confirm few sanity before ACK. BTW, what benefit we will see moving
-> virt_boundry setting to SCSI mid layer ? Is it just modular approach OR any
-> functional fix ?
+From: YueHaibing <yuehaibing@huawei.com>
 
-The big difference is that virt_boundary now also changes the
-max_segment_size, and this ensures that this limit is also communicated
-to the DMA mapping layer.
+[ Upstream commit 12e750bc62044de096ab9a95201213fd912b9994 ]
+
+If alloc_workqueue fails in alua_init, it should return -ENOMEM, otherwise
+it will trigger null-ptr-deref while unloading module which calls
+destroy_workqueue dereference
+wq->lock like this:
+
+BUG: KASAN: null-ptr-deref in __lock_acquire+0x6b4/0x1ee0
+Read of size 8 at addr 0000000000000080 by task syz-executor.0/7045
+
+CPU: 0 PID: 7045 Comm: syz-executor.0 Tainted: G         C        5.1.0+ #28
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.10.2-1ubuntu1
+Call Trace:
+ dump_stack+0xa9/0x10e
+ __kasan_report+0x171/0x18d
+ ? __lock_acquire+0x6b4/0x1ee0
+ kasan_report+0xe/0x20
+ __lock_acquire+0x6b4/0x1ee0
+ lock_acquire+0xb4/0x1b0
+ __mutex_lock+0xd8/0xb90
+ drain_workqueue+0x25/0x290
+ destroy_workqueue+0x1f/0x3f0
+ __x64_sys_delete_module+0x244/0x330
+ do_syscall_64+0x72/0x2a0
+ entry_SYSCALL_64_after_hwframe+0x49/0xbe
+
+Reported-by: Hulk Robot <hulkci@huawei.com>
+Fixes: 03197b61c5ec ("scsi_dh_alua: Use workqueue for RTPG")
+Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/scsi/device_handler/scsi_dh_alua.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+index d7ac498ba35a..2a9dcb8973b7 100644
+--- a/drivers/scsi/device_handler/scsi_dh_alua.c
++++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+@@ -1174,10 +1174,8 @@ static int __init alua_init(void)
+ 	int r;
+ 
+ 	kaluad_wq = alloc_workqueue("kaluad", WQ_MEM_RECLAIM, 0);
+-	if (!kaluad_wq) {
+-		/* Temporary failure, bypass */
+-		return SCSI_DH_DEV_TEMP_BUSY;
+-	}
++	if (!kaluad_wq)
++		return -ENOMEM;
+ 
+ 	r = scsi_register_device_handler(&alua_dh);
+ 	if (r != 0) {
+-- 
+2.20.1
