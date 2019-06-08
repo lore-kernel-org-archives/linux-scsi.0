@@ -1,12 +1,12 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.9 18/20] scsi: smartpqi: properly set both the DMA mask and the coherent DMA mask
-Date: Sat,  8 Jun 2019 07:47:54 -0400
-Message-ID: <20190608114756.9742-18-sashal@kernel.org>
-References: <20190608114756.9742-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 28/31] scsi: smartpqi: properly set both the DMA mask and the coherent DMA mask
+Date: Sat,  8 Jun 2019 07:46:39 -0400
+Message-ID: <20190608114646.9415-28-sashal@kernel.org>
+References: <20190608114646.9415-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190608114756.9742-1-sashal@kernel.org>
+In-Reply-To: <20190608114646.9415-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc: Lianbo Jiang <lijiang@redhat.com>, Don Brace <don.brace@microsemi.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org
@@ -50,10 +50,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index 06a062455404..b12f7f952b70 100644
+index 5ec2898d21cd..d34351c6b9af 100644
 --- a/drivers/scsi/smartpqi/smartpqi_init.c
 +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -5478,7 +5478,7 @@ static int pqi_pci_init(struct pqi_ctrl_info *ctrl_info)
+@@ -6392,7 +6392,7 @@ static int pqi_pci_init(struct pqi_ctrl_info *ctrl_info)
  	else
  		mask = DMA_BIT_MASK(32);
  
