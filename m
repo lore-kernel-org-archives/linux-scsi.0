@@ -1,99 +1,66 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.4 13/13] scsi: libsas: delete sas port if expander discover failed
-Date: Sat,  8 Jun 2019 07:48:45 -0400
-Message-ID: <20190608114847.9973-13-sashal@kernel.org>
-References: <20190608114847.9973-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 18/20] scsi: smartpqi: properly set both the DMA mask and the coherent DMA mask
+Date: Sat,  8 Jun 2019 07:47:54 -0400
+Message-ID: <20190608114756.9742-18-sashal@kernel.org>
+References: <20190608114756.9742-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20190608114847.9973-1-sashal@kernel.org>
-Sender: stable-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190608114756.9742-1-sashal@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Jason Yan <yanaijie@huawei.com>, Jian Luo <luojian5@huawei.com>, John Garry <john.garry@huawei.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Cc: Lianbo Jiang <lijiang@redhat.com>, Don Brace <don.brace@microsemi.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Jason Yan <yanaijie@huawei.com>
+From: Lianbo Jiang <lijiang@redhat.com>
 
-[ Upstream commit 3b0541791453fbe7f42867e310e0c9eb6295364d ]
+[ Upstream commit 1d94f06e7f5df4064ef336b7b710f50143b64a53 ]
 
-The sas_port(phy->port) allocated in sas_ex_discover_expander() will not be
-deleted when the expander failed to discover. This will cause resource leak
-and a further issue of kernel BUG like below:
+When SME is enabled, the smartpqi driver won't work on the HP DL385 G10
+machine, which causes the failure of kernel boot because it fails to
+allocate pqi error buffer. Please refer to the kernel log:
+....
+[    9.431749] usbcore: registered new interface driver uas
+[    9.441524] Microsemi PQI Driver (v1.1.4-130)
+[    9.442956] i40e 0000:04:00.0: fw 6.70.48768 api 1.7 nvm 10.2.5
+[    9.447237] smartpqi 0000:23:00.0: Microsemi Smart Family Controller found
+         Starting dracut initqueue hook...
+[  OK  ] Started Show Plymouth Boot Scre[    9.471654] Broadcom NetXtreme-C/E driver bnxt_en v1.9.1
+en.
+[  OK  ] Started Forward Password Requests to Plymouth Directory Watch.
+[[0;[    9.487108] smartpqi 0000:23:00.0: failed to allocate PQI error buffer
+....
+[  139.050544] dracut-initqueue[949]: Warning: dracut-initqueue timeout - starting timeout scripts
+[  139.589779] dracut-initqueue[949]: Warning: dracut-initqueue timeout - starting timeout scripts
 
-[159785.843156]  port-2:17:29: trying to add phy phy-2:17:29 fails: it's
-already part of another port
-[159785.852144] ------------[ cut here  ]------------
-[159785.856833] kernel BUG at drivers/scsi/scsi_transport_sas.c:1086!
-[159785.863000] Internal error: Oops - BUG: 0 [#1] SMP
-[159785.867866] CPU: 39 PID: 16993 Comm: kworker/u96:2 Tainted: G
-W  OE     4.19.25-vhulk1901.1.0.h111.aarch64 #1
-[159785.878458] Hardware name: Huawei Technologies Co., Ltd.
-Hi1620EVBCS/Hi1620EVBCS, BIOS Hi1620 CS B070 1P TA 03/21/2019
-[159785.889231] Workqueue: 0000:74:02.0_disco_q sas_discover_domain
-[159785.895224] pstate: 40c00009 (nZcv daif +PAN +UAO)
-[159785.900094] pc : sas_port_add_phy+0x188/0x1b8
-[159785.904524] lr : sas_port_add_phy+0x188/0x1b8
-[159785.908952] sp : ffff0001120e3b80
-[159785.912341] x29: ffff0001120e3b80 x28: 0000000000000000
-[159785.917727] x27: ffff802ade8f5400 x26: ffff0000681b7560
-[159785.923111] x25: ffff802adf11a800 x24: ffff0000680e8000
-[159785.928496] x23: ffff802ade8f5728 x22: ffff802ade8f5708
-[159785.933880] x21: ffff802adea2db40 x20: ffff802ade8f5400
-[159785.939264] x19: ffff802adea2d800 x18: 0000000000000010
-[159785.944649] x17: 00000000821bf734 x16: ffff00006714faa0
-[159785.950033] x15: ffff0000e8ab4ecf x14: 7261702079646165
-[159785.955417] x13: 726c612073277469 x12: ffff00006887b830
-[159785.960802] x11: ffff00006773eaa0 x10: 7968702079687020
-[159785.966186] x9 : 0000000000002453 x8 : 726f702072656874
-[159785.971570] x7 : 6f6e6120666f2074 x6 : ffff802bcfb21290
-[159785.976955] x5 : ffff802bcfb21290 x4 : 0000000000000000
-[159785.982339] x3 : ffff802bcfb298c8 x2 : 337752b234c2ab00
-[159785.987723] x1 : 337752b234c2ab00 x0 : 0000000000000000
-[159785.993108] Process kworker/u96:2 (pid: 16993, stack limit =
-0x0000000072dae094)
-[159786.000576] Call trace:
-[159786.003097]  sas_port_add_phy+0x188/0x1b8
-[159786.007179]  sas_ex_get_linkrate.isra.5+0x134/0x140
-[159786.012130]  sas_ex_discover_expander+0x128/0x408
-[159786.016906]  sas_ex_discover_dev+0x218/0x4c8
-[159786.021249]  sas_ex_discover_devices+0x9c/0x1a8
-[159786.025852]  sas_discover_root_expander+0x134/0x160
-[159786.030802]  sas_discover_domain+0x1b8/0x1e8
-[159786.035148]  process_one_work+0x1b4/0x3f8
-[159786.039230]  worker_thread+0x54/0x470
-[159786.042967]  kthread+0x134/0x138
-[159786.046269]  ret_from_fork+0x10/0x18
-[159786.049918] Code: 91322300 f0004402 91178042 97fe4c9b (d4210000)
-[159786.056083] Modules linked in: hns3_enet_ut(OE) hclge(OE) hnae3(OE)
-hisi_sas_test_hw(OE) hisi_sas_test_main(OE) serdes(OE)
-[159786.067202] ---[ end trace 03622b9e2d99e196  ]---
-[159786.071893] Kernel panic - not syncing: Fatal exception
-[159786.077190] SMP: stopping secondary CPUs
-[159786.081192] Kernel Offset: disabled
-[159786.084753] CPU features: 0x2,a2a00a38
+Basically, the fact that the coherent DMA mask value wasn't set caused the
+driver to fall back to SWIOTLB when SME is active.
 
-Fixes: 2908d778ab3e ("[SCSI] aic94xx: new driver")
-Reported-by: Jian Luo <luojian5@huawei.com>
-Signed-off-by: Jason Yan <yanaijie@huawei.com>
-CC: John Garry <john.garry@huawei.com>
+For correct operation, lets call the dma_set_mask_and_coherent() to
+properly set the mask for both streaming and coherent, in order to inform
+the kernel about the devices DMA addressing capabilities.
+
+Signed-off-by: Lianbo Jiang <lijiang@redhat.com>
+Acked-by: Don Brace <don.brace@microsemi.com>
+Tested-by: Don Brace <don.brace@microsemi.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/libsas/sas_expander.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/scsi/smartpqi/smartpqi_init.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-index 1a6f65db615e..978a01ab6979 100644
---- a/drivers/scsi/libsas/sas_expander.c
-+++ b/drivers/scsi/libsas/sas_expander.c
-@@ -978,6 +978,8 @@ static struct domain_device *sas_ex_discover_expander(
- 		list_del(&child->dev_list_node);
- 		spin_unlock_irq(&parent->port->dev_list_lock);
- 		sas_put_device(child);
-+		sas_port_delete(phy->port);
-+		phy->port = NULL;
- 		return NULL;
- 	}
- 	list_add_tail(&child->siblings, &parent->ex_dev.children);
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+index 06a062455404..b12f7f952b70 100644
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -5478,7 +5478,7 @@ static int pqi_pci_init(struct pqi_ctrl_info *ctrl_info)
+ 	else
+ 		mask = DMA_BIT_MASK(32);
+ 
+-	rc = dma_set_mask(&ctrl_info->pci_dev->dev, mask);
++	rc = dma_set_mask_and_coherent(&ctrl_info->pci_dev->dev, mask);
+ 	if (rc) {
+ 		dev_err(&ctrl_info->pci_dev->dev, "failed to set DMA mask\n");
+ 		goto disable_device;
 -- 
 2.20.1
