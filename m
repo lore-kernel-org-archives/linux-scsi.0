@@ -1,7 +1,7 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 5.1 65/70] scsi: libcxgbi: add a check for NULL pointer in cxgbi_check_route()
-Date: Sat,  8 Jun 2019 07:39:44 -0400
-Message-ID: <20190608113950.8033-65-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.1 66/70] scsi: smartpqi: properly set both the DMA mask and the coherent DMA mask
+Date: Sat,  8 Jun 2019 07:39:45 -0400
+Message-ID: <20190608113950.8033-66-sashal@kernel.org>
 References: <20190608113950.8033-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -9,36 +9,58 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20190608113950.8033-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Varun Prakash <varun@chelsio.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Cc: Lianbo Jiang <lijiang@redhat.com>, Don Brace <don.brace@microsemi.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Varun Prakash <varun@chelsio.com>
+From: Lianbo Jiang <lijiang@redhat.com>
 
-[ Upstream commit cc555759117e8349088e0c5d19f2f2a500bafdbd ]
+[ Upstream commit 1d94f06e7f5df4064ef336b7b710f50143b64a53 ]
 
-ip_dev_find() can return NULL so add a check for NULL pointer.
+When SME is enabled, the smartpqi driver won't work on the HP DL385 G10
+machine, which causes the failure of kernel boot because it fails to
+allocate pqi error buffer. Please refer to the kernel log:
+....
+[    9.431749] usbcore: registered new interface driver uas
+[    9.441524] Microsemi PQI Driver (v1.1.4-130)
+[    9.442956] i40e 0000:04:00.0: fw 6.70.48768 api 1.7 nvm 10.2.5
+[    9.447237] smartpqi 0000:23:00.0: Microsemi Smart Family Controller found
+         Starting dracut initqueue hook...
+[  OK  ] Started Show Plymouth Boot Scre[    9.471654] Broadcom NetXtreme-C/E driver bnxt_en v1.9.1
+en.
+[  OK  ] Started Forward Password Requests to Plymouth Directory Watch.
+[[0;[    9.487108] smartpqi 0000:23:00.0: failed to allocate PQI error buffer
+....
+[  139.050544] dracut-initqueue[949]: Warning: dracut-initqueue timeout - starting timeout scripts
+[  139.589779] dracut-initqueue[949]: Warning: dracut-initqueue timeout - starting timeout scripts
 
-Signed-off-by: Varun Prakash <varun@chelsio.com>
+Basically, the fact that the coherent DMA mask value wasn't set caused the
+driver to fall back to SWIOTLB when SME is active.
+
+For correct operation, lets call the dma_set_mask_and_coherent() to
+properly set the mask for both streaming and coherent, in order to inform
+the kernel about the devices DMA addressing capabilities.
+
+Signed-off-by: Lianbo Jiang <lijiang@redhat.com>
+Acked-by: Don Brace <don.brace@microsemi.com>
+Tested-by: Don Brace <don.brace@microsemi.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/cxgbi/libcxgbi.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/scsi/smartpqi/smartpqi_init.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/cxgbi/libcxgbi.c b/drivers/scsi/cxgbi/libcxgbi.c
-index 006372b3fba2..a50734f3c486 100644
---- a/drivers/scsi/cxgbi/libcxgbi.c
-+++ b/drivers/scsi/cxgbi/libcxgbi.c
-@@ -641,6 +641,10 @@ cxgbi_check_route(struct sockaddr *dst_addr, int ifindex)
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+index 75ec43aa8df3..531824afba5f 100644
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -7285,7 +7285,7 @@ static int pqi_pci_init(struct pqi_ctrl_info *ctrl_info)
+ 	else
+ 		mask = DMA_BIT_MASK(32);
  
- 	if (ndev->flags & IFF_LOOPBACK) {
- 		ndev = ip_dev_find(&init_net, daddr->sin_addr.s_addr);
-+		if (!ndev) {
-+			err = -ENETUNREACH;
-+			goto rel_neigh;
-+		}
- 		mtu = ndev->mtu;
- 		pr_info("rt dev %s, loopback -> %s, mtu %u.\n",
- 			n->dev->name, ndev->name, mtu);
+-	rc = dma_set_mask(&ctrl_info->pci_dev->dev, mask);
++	rc = dma_set_mask_and_coherent(&ctrl_info->pci_dev->dev, mask);
+ 	if (rc) {
+ 		dev_err(&ctrl_info->pci_dev->dev, "failed to set DMA mask\n");
+ 		goto disable_device;
 -- 
 2.20.1
