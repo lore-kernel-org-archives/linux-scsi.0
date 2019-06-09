@@ -1,202 +1,96 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v2 6/7] scsi: mac_scsi: Enable PDMA on Mac IIfx
+Subject: [PATCH v2 2/7] scsi: NCR5380: Always re-enable reselection interrupt
 Date: Sun, 09 Jun 2019 11:19:11 +1000
-Message-ID: <a0adfc4244ace4e4356a75346f50459a4b0a9b76.1560043151.git.fthain@telegraphics.com.au>
+Message-ID: <61f0c0f6aaf8fa96bf3dade5475615b2cfbc8846.1560043151.git.fthain@telegraphics.com.au>
 References: <cover.1560043151.git.fthain@telegraphics.com.au>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <stable-owner@vger.kernel.org>
 In-Reply-To: <cover.1560043151.git.fthain@telegraphics.com.au>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: stable-owner@vger.kernel.org
 To: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Michael Schmitz <schmitzmic@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Joshua Thompson <funaho@jurai.org>, Geert Uytterhoeven <geert@linux-m68k.org>, linux-m68k@lists.linux-m68k.org
+Cc: Michael Schmitz <schmitzmic@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Add support for Apple's custom "SCSI DMA" chip. This patch doesn't make
-use of its DMA capability. Just the PDMA capability is sufficient to
-improve sequential read throughput by a factor of 5.
+The reselection interrupt gets disabled during selection and must be
+re-enabled when hostdata->connected becomes NULL. If it isn't re-enabled
+a disconnected command may time-out or the target may wedge the bus while
+trying to reselect the host. This can happen after a command is aborted.
+
+Fix this by enabling the reselection interrupt in NCR5380_main() after
+calls to NCR5380_select() and NCR5380_information_transfer() return.
 
 Cc: Michael Schmitz <schmitzmic@gmail.com>
-Cc: Joshua Thompson <funaho@jurai.org>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: stable@vger.kernel.org # v4.9+
+Fixes: 8b00c3d5d40d ("ncr5380: Implement new eh_abort_handler")
 Tested-by: Stan Johnson <userm57@yahoo.com>
-Acked-by: Geert Uytterhoeven <geert@linux-m68k.org>
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 ---
- arch/m68k/mac/config.c  | 10 +++++++--
- drivers/scsi/mac_scsi.c | 47 ++++++++++++++++++++++++++++++++++-------
- 2 files changed, 47 insertions(+), 10 deletions(-)
+ drivers/scsi/NCR5380.c | 12 ++----------
+ 1 file changed, 2 insertions(+), 10 deletions(-)
 
-diff --git a/arch/m68k/mac/config.c b/arch/m68k/mac/config.c
-index 39835ca5a474..611f73bfc87c 100644
---- a/arch/m68k/mac/config.c
-+++ b/arch/m68k/mac/config.c
-@@ -911,6 +911,10 @@ static const struct resource mac_scsi_iifx_rsrc[] __initconst = {
- 		.flags = IORESOURCE_MEM,
- 		.start = 0x50008000,
- 		.end   = 0x50009FFF,
-+	}, {
-+		.flags = IORESOURCE_MEM,
-+		.start = 0x50008000,
-+		.end   = 0x50009FFF,
- 	},
- };
- 
-@@ -1012,10 +1016,12 @@ int __init mac_platform_init(void)
- 	case MAC_SCSI_IIFX:
- 		/* Addresses from The Guide to Mac Family Hardware.
- 		 * $5000 8000 - $5000 9FFF: SCSI DMA
-+		 * $5000 A000 - $5000 BFFF: Alternate SCSI
- 		 * $5000 C000 - $5000 DFFF: Alternate SCSI (DMA)
- 		 * $5000 E000 - $5000 FFFF: Alternate SCSI (Hsk)
--		 * The SCSI DMA custom IC embeds the 53C80 core. mac_scsi does
--		 * not make use of its DMA or hardware handshaking logic.
-+		 * The A/UX header file sys/uconfig.h says $50F0 8000.
-+		 * The "SCSI DMA" custom IC embeds the 53C80 core and
-+		 * supports Programmed IO, DMA and PDMA (hardware handshake).
- 		 */
- 		platform_device_register_simple("mac_scsi", 0,
- 			mac_scsi_iifx_rsrc, ARRAY_SIZE(mac_scsi_iifx_rsrc));
-diff --git a/drivers/scsi/mac_scsi.c b/drivers/scsi/mac_scsi.c
-index 27364b71e833..8fbec1768bbf 100644
---- a/drivers/scsi/mac_scsi.c
-+++ b/drivers/scsi/mac_scsi.c
-@@ -24,6 +24,7 @@
- 
- #include <asm/hwtest.h>
- #include <asm/io.h>
-+#include <asm/macintosh.h>
- #include <asm/macints.h>
- #include <asm/setup.h>
- 
-@@ -262,11 +263,22 @@ static inline int mac_pdma_send(unsigned char *start, void __iomem *io, int n)
- 	return addr - start;
- }
- 
-+/* The "SCSI DMA" chip on the IIfx implements this register. */
-+#define CTRL_REG                0x8
-+#define CTRL_INTERRUPTS_ENABLE  BIT(1)
-+#define CTRL_HANDSHAKE_MODE     BIT(3)
-+
-+static inline void write_ctrl_reg(struct NCR5380_hostdata *hostdata, u32 value)
-+{
-+	out_be32(hostdata->io + (CTRL_REG << 4), value);
-+}
-+
- static inline int macscsi_pread(struct NCR5380_hostdata *hostdata,
-                                 unsigned char *dst, int len)
- {
- 	u8 __iomem *s = hostdata->pdma_io + (INPUT_DATA_REG << 4);
- 	unsigned char *d = dst;
-+	int result = 0;
- 
- 	hostdata->pdma_residual = len;
- 
-@@ -275,6 +287,10 @@ static inline int macscsi_pread(struct NCR5380_hostdata *hostdata,
- 	                              BASR_DRQ | BASR_PHASE_MATCH, HZ / 64)) {
- 		int bytes;
- 
-+		if (macintosh_config->ident == MAC_MODEL_IIFX)
-+			write_ctrl_reg(hostdata, CTRL_HANDSHAKE_MODE |
-+			                         CTRL_INTERRUPTS_ENABLE);
-+
- 		bytes = mac_pdma_recv(s, d, min(hostdata->pdma_residual, 512));
- 
- 		if (bytes > 0) {
-@@ -283,7 +299,7 @@ static inline int macscsi_pread(struct NCR5380_hostdata *hostdata,
+diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
+index fe0535affc14..08e3ea8159b3 100644
+--- a/drivers/scsi/NCR5380.c
++++ b/drivers/scsi/NCR5380.c
+@@ -709,6 +709,8 @@ static void NCR5380_main(struct work_struct *work)
+ 			NCR5380_information_transfer(instance);
+ 			done = 0;
  		}
- 
- 		if (hostdata->pdma_residual == 0)
--			return 0;
-+			goto out;
- 
- 		if (NCR5380_poll_politely2(hostdata, STATUS_REG, SR_REQ, SR_REQ,
- 		                           BUS_AND_STATUS_REG, BASR_ACK,
-@@ -291,7 +307,7 @@ static inline int macscsi_pread(struct NCR5380_hostdata *hostdata,
- 			scmd_printk(KERN_DEBUG, hostdata->connected,
- 			            "%s: !REQ and !ACK\n", __func__);
- 		if (!(NCR5380_read(BUS_AND_STATUS_REG) & BASR_PHASE_MATCH))
--			return 0;
-+			goto out;
- 
- 		if (bytes == 0)
- 			udelay(MAC_PDMA_DELAY);
-@@ -302,13 +318,18 @@ static inline int macscsi_pread(struct NCR5380_hostdata *hostdata,
- 		dsprintk(NDEBUG_PSEUDO_DMA, hostdata->host,
- 		         "%s: bus error (%d/%d)\n", __func__, d - dst, len);
- 		NCR5380_dprint(NDEBUG_PSEUDO_DMA, hostdata->host);
--		return -1;
-+		result = -1;
-+		goto out;
++		if (!hostdata->connected)
++			NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
+ 		spin_unlock_irq(&hostdata->lock);
+ 		if (!done)
+ 			cond_resched();
+@@ -1110,8 +1112,6 @@ static bool NCR5380_select(struct Scsi_Host *instance, struct scsi_cmnd *cmd)
+ 		spin_lock_irq(&hostdata->lock);
+ 		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
+ 		NCR5380_reselect(instance);
+-		if (!hostdata->connected)
+-			NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
+ 		shost_printk(KERN_ERR, instance, "reselection after won arbitration?\n");
+ 		goto out;
  	}
+@@ -1119,7 +1119,6 @@ static bool NCR5380_select(struct Scsi_Host *instance, struct scsi_cmnd *cmd)
+ 	if (err < 0) {
+ 		spin_lock_irq(&hostdata->lock);
+ 		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
+-		NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
  
- 	scmd_printk(KERN_ERR, hostdata->connected,
- 	            "%s: phase mismatch or !DRQ\n", __func__);
- 	NCR5380_dprint(NDEBUG_PSEUDO_DMA, hostdata->host);
--	return -1;
-+	result = -1;
-+out:
-+	if (macintosh_config->ident == MAC_MODEL_IIFX)
-+		write_ctrl_reg(hostdata, CTRL_INTERRUPTS_ENABLE);
-+	return result;
- }
- 
- static inline int macscsi_pwrite(struct NCR5380_hostdata *hostdata,
-@@ -316,6 +337,7 @@ static inline int macscsi_pwrite(struct NCR5380_hostdata *hostdata,
- {
- 	unsigned char *s = src;
- 	u8 __iomem *d = hostdata->pdma_io + (OUTPUT_DATA_REG << 4);
-+	int result = 0;
- 
- 	hostdata->pdma_residual = len;
- 
-@@ -324,6 +346,10 @@ static inline int macscsi_pwrite(struct NCR5380_hostdata *hostdata,
- 	                              BASR_DRQ | BASR_PHASE_MATCH, HZ / 64)) {
- 		int bytes;
- 
-+		if (macintosh_config->ident == MAC_MODEL_IIFX)
-+			write_ctrl_reg(hostdata, CTRL_HANDSHAKE_MODE |
-+			                         CTRL_INTERRUPTS_ENABLE);
-+
- 		bytes = mac_pdma_send(s, d, min(hostdata->pdma_residual, 512));
- 
- 		if (bytes > 0) {
-@@ -337,7 +363,7 @@ static inline int macscsi_pwrite(struct NCR5380_hostdata *hostdata,
- 			                          TCR_LAST_BYTE_SENT, HZ / 64) < 0)
- 				scmd_printk(KERN_ERR, hostdata->connected,
- 				            "%s: Last Byte Sent timeout\n", __func__);
--			return 0;
-+			goto out;
- 		}
- 
- 		if (NCR5380_poll_politely2(hostdata, STATUS_REG, SR_REQ, SR_REQ,
-@@ -346,7 +372,7 @@ static inline int macscsi_pwrite(struct NCR5380_hostdata *hostdata,
- 			scmd_printk(KERN_DEBUG, hostdata->connected,
- 			            "%s: !REQ and !ACK\n", __func__);
- 		if (!(NCR5380_read(BUS_AND_STATUS_REG) & BASR_PHASE_MATCH))
--			return 0;
-+			goto out;
- 
- 		if (bytes == 0)
- 			udelay(MAC_PDMA_DELAY);
-@@ -357,13 +383,18 @@ static inline int macscsi_pwrite(struct NCR5380_hostdata *hostdata,
- 		dsprintk(NDEBUG_PSEUDO_DMA, hostdata->host,
- 		         "%s: bus error (%d/%d)\n", __func__, s - src, len);
- 		NCR5380_dprint(NDEBUG_PSEUDO_DMA, hostdata->host);
--		return -1;
-+		result = -1;
-+		goto out;
+ 		/* Can't touch cmd if it has been reclaimed by the scsi ML */
+ 		if (!hostdata->selecting)
+@@ -1157,7 +1156,6 @@ static bool NCR5380_select(struct Scsi_Host *instance, struct scsi_cmnd *cmd)
+ 	if (err < 0) {
+ 		shost_printk(KERN_ERR, instance, "select: REQ timeout\n");
+ 		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
+-		NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
+ 		goto out;
  	}
+ 	if (!hostdata->selecting) {
+@@ -1826,9 +1824,6 @@ static void NCR5380_information_transfer(struct Scsi_Host *instance)
+ 					 */
+ 					NCR5380_write(TARGET_COMMAND_REG, 0);
  
- 	scmd_printk(KERN_ERR, hostdata->connected,
- 	            "%s: phase mismatch or !DRQ\n", __func__);
- 	NCR5380_dprint(NDEBUG_PSEUDO_DMA, hostdata->host);
--	return -1;
-+	result = -1;
-+out:
-+	if (macintosh_config->ident == MAC_MODEL_IIFX)
-+		write_ctrl_reg(hostdata, CTRL_INTERRUPTS_ENABLE);
-+	return result;
- }
+-					/* Enable reselect interrupts */
+-					NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
+-
+ 					maybe_release_dma_irq(instance);
+ 					return;
+ 				case MESSAGE_REJECT:
+@@ -1860,8 +1855,6 @@ static void NCR5380_information_transfer(struct Scsi_Host *instance)
+ 					 */
+ 					NCR5380_write(TARGET_COMMAND_REG, 0);
  
- static int macscsi_dma_xfer_len(struct NCR5380_hostdata *hostdata,
+-					/* Enable reselect interrupts */
+-					NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
+ #ifdef SUN3_SCSI_VME
+ 					dregs->csr |= CSR_DMA_ENABLE;
+ #endif
+@@ -1964,7 +1957,6 @@ static void NCR5380_information_transfer(struct Scsi_Host *instance)
+ 					cmd->result = DID_ERROR << 16;
+ 					complete_cmd(instance, cmd);
+ 					maybe_release_dma_irq(instance);
+-					NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
+ 					return;
+ 				}
+ 				msgout = NOP;
 -- 
 2.21.0
