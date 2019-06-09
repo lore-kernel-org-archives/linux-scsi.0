@@ -1,24 +1,47 @@
-From: pr-tracker-bot@kernel.org
-Subject: Re: [GIT PULL] SCSI fixes for 5.2-rc3
-Date: Sat, 08 Jun 2019 19:30:09 +0000
-Message-ID: <156002220983.30045.16302787382855794612.pr-tracker-bot@kernel.org>
-References: <1559973926.2787.5.camel@HansenPartnership.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1559973926.2787.5.camel@HansenPartnership.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+From: Finn Thain <fthain@telegraphics.com.au>
+Subject: [PATCH v2 1/7] Revert "scsi: ncr5380: Increase register polling
+ limit"
+Date: Sun, 09 Jun 2019 11:19:11 +1000
+Message-ID: <6cf0ec0a917ddfcf39ea8c697c8d8f7d663e9db3.1560043151.git.fthain@telegraphics.com.au>
+References: <cover.1560043151.git.fthain@telegraphics.com.au>
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <cover.1560043151.git.fthain@telegraphics.com.au>
+Sender: stable-owner@vger.kernel.org
+To: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Michael Schmitz <schmitzmic@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-The pull request you sent on Fri, 07 Jun 2019 23:05:26 -0700:
+This reverts commit 4822827a69d7cd3bc5a07b7637484ebd2cf88db6.
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+The purpose of that commit was to suppress a timeout warning message
+which appeared to be caused by target latency. But suppressing the warning
+is undesirable as the warning may indicate a messed up transfer count.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/1b02caa319cf73ae89aced8714066a3a5bbe648b
+Another problem with that commit is that 15 ms is too long to keep
+interrupts disabled as interrupt latency can cause system clock drift
+and other problems.
 
-Thank you!
+Cc: Michael Schmitz <schmitzmic@gmail.com>
+Cc: stable@vger.kernel.org
+Fixes: 4822827a69d7 ("scsi: ncr5380: Increase register polling limit")
+Tested-by: Stan Johnson <userm57@yahoo.com>
+Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
+---
+ drivers/scsi/NCR5380.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/drivers/scsi/NCR5380.h b/drivers/scsi/NCR5380.h
+index efca509b92b0..5935fd6d1a05 100644
+--- a/drivers/scsi/NCR5380.h
++++ b/drivers/scsi/NCR5380.h
+@@ -235,7 +235,7 @@ struct NCR5380_cmd {
+ #define NCR5380_PIO_CHUNK_SIZE		256
+ 
+ /* Time limit (ms) to poll registers when IRQs are disabled, e.g. during PDMA */
+-#define NCR5380_REG_POLL_TIME		15
++#define NCR5380_REG_POLL_TIME		10
+ 
+ static inline struct scsi_cmnd *NCR5380_to_scmd(struct NCR5380_cmd *ncmd_ptr)
+ {
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.wiki.kernel.org/userdoc/prtracker
+2.21.0
