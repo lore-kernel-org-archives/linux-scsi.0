@@ -1,473 +1,396 @@
-From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v2] scsi: libsas, lldds: Use dev_is_expander()
-Date: Mon, 10 Jun 2019 20:41:41 +0800
-Message-ID: <1560170501-220025-1-git-send-email-john.garry@huawei.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc: intel-linux-scu@intel.com, artur.paszkiewicz@intel.com, jinpu.wang@profitbricks.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, hare@suse.de, John Garry <john.garry@huawei.com>
+From: Varun Prakash <varun@chelsio.com>
+Subject: [PATCH v3 net-next] cxgb4/libcxgb/cxgb4i/cxgbit: enable eDRAM page pods for iSCSI
+Date: Mon, 10 Jun 2019 18:36:34 +0530
+Message-ID: <1560171994-9505-1-git-send-email-varun@chelsio.com>
+Return-path: <netdev-owner@vger.kernel.org>
+Sender: netdev-owner@vger.kernel.org
+To: davem@davemloft.net
+Cc: netdev@vger.kernel.org, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, dt@chelsio.com, indranil@chelsio.com, ganji.aravind@chelsio.com, varun@chelsio.com
 List-Id: linux-scsi@vger.kernel.org
 
-Many times in libsas, and in LLDDs which use libsas, the check for an
-expander device is re-implemented or open coded.
+Page pods are used for direct data placement, this patch
+enables eDRAM page pods if firmware supports this feature.
 
-Use dev_is_expander() instead. We rename this from
-sas_dev_type_is_expander() to not spill so many lines in referencing.
-
-Signed-off-by: John Garry <john.garry@huawei.com>
-Reviewed-by: Jason Yan <yanaijie@huawei.com>
-Reviewed-by: Jack Wang <jinpu.wang@cloud.ionos.com>
+Signed-off-by: Varun Prakash <varun@chelsio.com>
 ---
-Differences to v1:
-- Fix isci build
-- add review tags
+ v3: reordered local variable declarations in reverse christmas tree format
+ v2: fixed incorrect spelling of "contiguous"
 
-diff --git a/drivers/scsi/aic94xx/aic94xx_dev.c b/drivers/scsi/aic94xx/aic94xx_dev.c
-index 33072388ea16..e528a2ce9602 100644
---- a/drivers/scsi/aic94xx/aic94xx_dev.c
-+++ b/drivers/scsi/aic94xx/aic94xx_dev.c
-@@ -187,9 +187,7 @@ static int asd_init_target_ddb(struct domain_device *dev)
- 			}
- 		} else {
- 			flags |= CONCURRENT_CONN_SUPP;
--			if (!dev->parent &&
--			    (dev->dev_type == SAS_EDGE_EXPANDER_DEVICE ||
--			     dev->dev_type == SAS_FANOUT_EXPANDER_DEVICE))
-+			if (!dev->parent && dev_is_expander(dev->dev_type))
- 				asd_ddbsite_write_byte(asd_ha, ddb, MAX_CCONN,
- 						       4);
- 			else
-diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index 06f22fb372b1..8657977a2dd4 100644
---- a/drivers/scsi/hisi_sas/hisi_sas.h
-+++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -66,10 +66,6 @@
- #define HISI_SAS_MAX_SMP_RESP_SZ 1028
- #define HISI_SAS_MAX_STP_RESP_SZ 28
- 
--#define DEV_IS_EXPANDER(type) \
--	((type == SAS_EDGE_EXPANDER_DEVICE) || \
--	(type == SAS_FANOUT_EXPANDER_DEVICE))
--
- #define HISI_SAS_SATA_PROTOCOL_NONDATA		0x1
- #define HISI_SAS_SATA_PROTOCOL_PIO			0x2
- #define HISI_SAS_SATA_PROTOCOL_DMA			0x4
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 256f93e6f89f..90e5d947d8e4 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -808,7 +808,7 @@ static int hisi_sas_dev_found(struct domain_device *device)
- 	device->lldd_dev = sas_dev;
- 	hisi_hba->hw->setup_itct(hisi_hba, sas_dev);
- 
--	if (parent_dev && DEV_IS_EXPANDER(parent_dev->dev_type)) {
-+	if (parent_dev && dev_is_expander(parent_dev->dev_type)) {
- 		int phy_no;
- 		u8 phy_num = parent_dev->ex_dev.num_phys;
- 		struct ex_phy *phy;
-@@ -1451,7 +1451,7 @@ static void hisi_sas_rescan_topology(struct hisi_hba *hisi_hba, u32 old_state,
- 
- 				_sas_port = sas_port;
- 
--				if (DEV_IS_EXPANDER(dev->dev_type))
-+				if (dev_is_expander(dev->dev_type))
- 					sas_ha->notify_port_event(sas_phy,
- 							PORTE_BROADCAST_RCVD);
- 			}
-@@ -1538,7 +1538,7 @@ static void hisi_sas_terminate_stp_reject(struct hisi_hba *hisi_hba)
- 		struct domain_device *port_dev = sas_port->port_dev;
- 		struct domain_device *device;
- 
--		if (!port_dev || !DEV_IS_EXPANDER(port_dev->dev_type))
-+		if (!port_dev || !dev_is_expander(port_dev->dev_type))
- 			continue;
- 
- 		/* Try to find a SATA device */
-@@ -1908,7 +1908,7 @@ static int hisi_sas_clear_nexus_ha(struct sas_ha_struct *sas_ha)
- 		struct domain_device *device = sas_dev->sas_device;
- 
- 		if ((sas_dev->dev_type == SAS_PHY_UNUSED) || !device ||
--		    DEV_IS_EXPANDER(device->dev_type))
-+		    dev_is_expander(device->dev_type))
- 			continue;
- 
- 		rc = hisi_sas_debug_I_T_nexus_reset(device);
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index b8c0ba778293..7ebd62d2462e 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -949,7 +949,7 @@ static void setup_itct_v2_hw(struct hisi_hba *hisi_hba,
- 		break;
- 	case SAS_SATA_DEV:
- 	case SAS_SATA_PENDING:
--		if (parent_dev && DEV_IS_EXPANDER(parent_dev->dev_type))
-+		if (parent_dev && dev_is_expander(parent_dev->dev_type))
- 			qw0 = HISI_SAS_DEV_TYPE_STP << ITCT_HDR_DEV_TYPE_OFF;
- 		else
- 			qw0 = HISI_SAS_DEV_TYPE_SATA << ITCT_HDR_DEV_TYPE_OFF;
-@@ -2531,7 +2531,7 @@ static void prep_ata_v2_hw(struct hisi_hba *hisi_hba,
- 	/* create header */
- 	/* dw0 */
- 	dw0 = port->id << CMD_HDR_PORT_OFF;
--	if (parent_dev && DEV_IS_EXPANDER(parent_dev->dev_type))
-+	if (parent_dev && dev_is_expander(parent_dev->dev_type))
- 		dw0 |= 3 << CMD_HDR_CMD_OFF;
- 	else
- 		dw0 |= 4 << CMD_HDR_CMD_OFF;
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index b92aa6b37e1d..b75bf92066a9 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -759,7 +759,7 @@ static void setup_itct_v3_hw(struct hisi_hba *hisi_hba,
- 		break;
- 	case SAS_SATA_DEV:
- 	case SAS_SATA_PENDING:
--		if (parent_dev && DEV_IS_EXPANDER(parent_dev->dev_type))
-+		if (parent_dev && dev_is_expander(parent_dev->dev_type))
- 			qw0 = HISI_SAS_DEV_TYPE_STP << ITCT_HDR_DEV_TYPE_OFF;
- 		else
- 			qw0 = HISI_SAS_DEV_TYPE_SATA << ITCT_HDR_DEV_TYPE_OFF;
-@@ -1358,7 +1358,7 @@ static void prep_ata_v3_hw(struct hisi_hba *hisi_hba,
- 	u32 dw1 = 0, dw2 = 0;
- 
- 	hdr->dw0 = cpu_to_le32(port->id << CMD_HDR_PORT_OFF);
--	if (parent_dev && DEV_IS_EXPANDER(parent_dev->dev_type))
-+	if (parent_dev && dev_is_expander(parent_dev->dev_type))
- 		hdr->dw0 |= cpu_to_le32(3 << CMD_HDR_CMD_OFF);
- 	else
- 		hdr->dw0 |= cpu_to_le32(4U << CMD_HDR_CMD_OFF);
-diff --git a/drivers/scsi/isci/remote_device.c b/drivers/scsi/isci/remote_device.c
-index 9d29edb9f590..49aa4e657c44 100644
---- a/drivers/scsi/isci/remote_device.c
-+++ b/drivers/scsi/isci/remote_device.c
-@@ -1087,7 +1087,7 @@ static void sci_remote_device_ready_state_enter(struct sci_base_state_machine *s
- 
- 	if (dev->dev_type == SAS_SATA_DEV || (dev->tproto & SAS_PROTOCOL_SATA)) {
- 		sci_change_state(&idev->sm, SCI_STP_DEV_IDLE);
--	} else if (dev_is_expander(dev)) {
-+	} else if (dev_is_expander(dev->dev_type)) {
- 		sci_change_state(&idev->sm, SCI_SMP_DEV_IDLE);
- 	} else
- 		isci_remote_device_ready(ihost, idev);
-@@ -1478,7 +1478,7 @@ static enum sci_status isci_remote_device_construct(struct isci_port *iport,
- 	struct domain_device *dev = idev->domain_dev;
- 	enum sci_status status;
- 
--	if (dev->parent && dev_is_expander(dev->parent))
-+	if (dev->parent && dev_is_expander(dev->parent->dev_type))
- 		status = sci_remote_device_ea_construct(iport, idev);
- 	else
- 		status = sci_remote_device_da_construct(iport, idev);
-diff --git a/drivers/scsi/isci/remote_device.h b/drivers/scsi/isci/remote_device.h
-index 47a013fffae7..3ad681c4c20a 100644
---- a/drivers/scsi/isci/remote_device.h
-+++ b/drivers/scsi/isci/remote_device.h
-@@ -295,11 +295,6 @@ static inline struct isci_remote_device *rnc_to_dev(struct sci_remote_node_conte
- 	return idev;
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c    | 57 ++++++++++++++++++++++
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4_uld.h     |  1 +
+ drivers/net/ethernet/chelsio/cxgb4/t4fw_api.h      |  3 ++
+ drivers/net/ethernet/chelsio/libcxgb/libcxgb_ppm.c | 47 +++++++++++++++---
+ drivers/net/ethernet/chelsio/libcxgb/libcxgb_ppm.h |  7 +--
+ drivers/scsi/cxgbi/cxgb3i/cxgb3i.c                 | 10 ++--
+ drivers/scsi/cxgbi/cxgb4i/cxgb4i.c                 | 17 +++++--
+ drivers/scsi/cxgbi/libcxgbi.c                      | 15 +++---
+ drivers/scsi/cxgbi/libcxgbi.h                      |  9 ++--
+ drivers/target/iscsi/cxgbit/cxgbit_ddp.c           |  6 ++-
+ 10 files changed, 142 insertions(+), 30 deletions(-)
+
+diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
+index cd957a1..5490800 100644
+--- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
++++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
+@@ -782,6 +782,40 @@ static void free_msix_queue_irqs(struct adapter *adap)
+ 	}
  }
  
--static inline bool dev_is_expander(struct domain_device *dev)
--{
--	return dev->dev_type == SAS_EDGE_EXPANDER_DEVICE || dev->dev_type == SAS_FANOUT_EXPANDER_DEVICE;
--}
--
- static inline void sci_remote_device_decrement_request_count(struct isci_remote_device *idev)
- {
- 	/* XXX delete this voodoo when converting to the top-level device
-diff --git a/drivers/scsi/isci/request.c b/drivers/scsi/isci/request.c
-index c552b4b59717..343d24c7e788 100644
---- a/drivers/scsi/isci/request.c
-+++ b/drivers/scsi/isci/request.c
-@@ -3101,7 +3101,7 @@ sci_io_request_construct(struct isci_host *ihost,
- 		/* pass */;
- 	else if (dev_is_sata(dev))
- 		memset(&ireq->stp.cmd, 0, sizeof(ireq->stp.cmd));
--	else if (dev_is_expander(dev))
-+	else if (dev_is_expander(dev->dev_type))
- 		/* pass */;
- 	else
- 		return SCI_FAILURE_UNSUPPORTED_PROTOCOL;
-diff --git a/drivers/scsi/isci/task.c b/drivers/scsi/isci/task.c
-index fb6eba331ac6..26fa1a4d1e6b 100644
---- a/drivers/scsi/isci/task.c
-+++ b/drivers/scsi/isci/task.c
-@@ -511,7 +511,7 @@ int isci_task_abort_task(struct sas_task *task)
- 		 "%s: dev = %p (%s%s), task = %p, old_request == %p\n",
- 		 __func__, idev,
- 		 (dev_is_sata(task->dev) ? "STP/SATA"
--					 : ((dev_is_expander(task->dev))
-+					 : ((dev_is_expander(task->dev->dev_type))
- 						? "SMP"
- 						: "SSP")),
- 		 ((idev) ? ((test_bit(IDEV_GONE, &idev->flags))
-diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
-index 2518cecb7edf..abcad097ff2f 100644
---- a/drivers/scsi/libsas/sas_discover.c
-+++ b/drivers/scsi/libsas/sas_discover.c
-@@ -293,7 +293,7 @@ void sas_free_device(struct kref *kref)
- 	dev->phy = NULL;
++static int setup_ppod_edram(struct adapter *adap)
++{
++	unsigned int param, val;
++	int ret;
++
++	/* Driver sends FW_PARAMS_PARAM_DEV_PPOD_EDRAM read command to check
++	 * if firmware supports ppod edram feature or not. If firmware
++	 * returns 1, then driver can enable this feature by sending
++	 * FW_PARAMS_PARAM_DEV_PPOD_EDRAM write command with value 1 to
++	 * enable ppod edram feature.
++	 */
++	param = (FW_PARAMS_MNEM_V(FW_PARAMS_MNEM_DEV) |
++		FW_PARAMS_PARAM_X_V(FW_PARAMS_PARAM_DEV_PPOD_EDRAM));
++
++	ret = t4_query_params(adap, adap->mbox, adap->pf, 0, 1, &param, &val);
++	if (ret < 0) {
++		dev_warn(adap->pdev_dev,
++			 "querying PPOD_EDRAM support failed: %d\n",
++			 ret);
++		return -1;
++	}
++
++	if (val != 1)
++		return -1;
++
++	ret = t4_set_params(adap, adap->mbox, adap->pf, 0, 1, &param, &val);
++	if (ret < 0) {
++		dev_err(adap->pdev_dev,
++			"setting PPOD_EDRAM failed: %d\n", ret);
++		return -1;
++	}
++	return 0;
++}
++
+ /**
+  *	cxgb4_write_rss - write the RSS table for a given port
+  *	@pi: the port
+@@ -4166,6 +4200,13 @@ static int adap_init0_config(struct adapter *adapter, int reset)
+ 		dev_err(adapter->pdev_dev,
+ 			"HMA configuration failed with error %d\n", ret);
  
- 	/* remove the phys and ports, everything else should be gone */
--	if (dev->dev_type == SAS_EDGE_EXPANDER_DEVICE || dev->dev_type == SAS_FANOUT_EXPANDER_DEVICE)
-+	if (dev_is_expander(dev->dev_type))
- 		kfree(dev->ex_dev.ex_phy);
- 
- 	if (dev_is_sata(dev) && dev->sata_dev.ap) {
-@@ -503,8 +503,7 @@ static void sas_revalidate_domain(struct work_struct *work)
- 	pr_debug("REVALIDATING DOMAIN on port %d, pid:%d\n", port->id,
- 		 task_pid_nr(current));
- 
--	if (ddev && (ddev->dev_type == SAS_FANOUT_EXPANDER_DEVICE ||
--		     ddev->dev_type == SAS_EDGE_EXPANDER_DEVICE))
-+	if (ddev && dev_is_expander(ddev->dev_type))
- 		res = sas_ex_revalidate_domain(ddev);
- 
- 	pr_debug("done REVALIDATING DOMAIN on port %d, pid:%d, res 0x%x\n",
-diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-index fd16a3debef4..ecae55f117a3 100644
---- a/drivers/scsi/libsas/sas_expander.c
-+++ b/drivers/scsi/libsas/sas_expander.c
-@@ -1120,8 +1120,7 @@ static int sas_find_sub_addr(struct domain_device *dev, u8 *sub_addr)
- 		    phy->phy_state == PHY_NOT_PRESENT)
- 			continue;
- 
--		if ((phy->attached_dev_type == SAS_EDGE_EXPANDER_DEVICE ||
--		     phy->attached_dev_type == SAS_FANOUT_EXPANDER_DEVICE) &&
-+		if (dev_is_expander(phy->attached_dev_type) &&
- 		    phy->routing_attr == SUBTRACTIVE_ROUTING) {
- 
- 			memcpy(sub_addr, phy->attached_sas_addr, SAS_ADDR_SIZE);
-@@ -1139,8 +1138,7 @@ static int sas_check_level_subtractive_boundary(struct domain_device *dev)
- 	u8 sub_addr[SAS_ADDR_SIZE] = {0, };
- 
- 	list_for_each_entry(child, &ex->children, siblings) {
--		if (child->dev_type != SAS_EDGE_EXPANDER_DEVICE &&
--		    child->dev_type != SAS_FANOUT_EXPANDER_DEVICE)
-+		if (!dev_is_expander(child->dev_type))
- 			continue;
- 		if (sub_addr[0] == 0) {
- 			sas_find_sub_addr(child, sub_addr);
-@@ -1225,8 +1223,7 @@ static int sas_check_ex_subtractive_boundary(struct domain_device *dev)
- 		    phy->phy_state == PHY_NOT_PRESENT)
- 			continue;
- 
--		if ((phy->attached_dev_type == SAS_FANOUT_EXPANDER_DEVICE ||
--		     phy->attached_dev_type == SAS_EDGE_EXPANDER_DEVICE) &&
-+		if (dev_is_expander(phy->attached_dev_type) &&
- 		    phy->routing_attr == SUBTRACTIVE_ROUTING) {
- 
- 			if (!sub_sas_addr)
-@@ -1322,8 +1319,7 @@ static int sas_check_parent_topology(struct domain_device *child)
- 	if (!child->parent)
- 		return 0;
- 
--	if (child->parent->dev_type != SAS_EDGE_EXPANDER_DEVICE &&
--	    child->parent->dev_type != SAS_FANOUT_EXPANDER_DEVICE)
-+	if (!dev_is_expander(child->parent->dev_type))
- 		return 0;
- 
- 	parent_ex = &child->parent->ex_dev;
-@@ -1619,8 +1615,7 @@ static int sas_ex_level_discovery(struct asd_sas_port *port, const int level)
- 	struct domain_device *dev;
- 
- 	list_for_each_entry(dev, &port->dev_list, dev_list_node) {
--		if (dev->dev_type == SAS_EDGE_EXPANDER_DEVICE ||
--		    dev->dev_type == SAS_FANOUT_EXPANDER_DEVICE) {
-+		if (dev_is_expander(dev->dev_type)) {
- 			struct sas_expander_device *ex =
- 				rphy_to_expander_device(dev->rphy);
- 
-@@ -1852,7 +1847,7 @@ static int sas_find_bcast_dev(struct domain_device *dev,
- 				SAS_ADDR(dev->sas_addr));
++	if (is_t6(adapter->params.chip)) {
++		ret = setup_ppod_edram(adapter);
++		if (!ret)
++			dev_info(adapter->pdev_dev, "Successfully enabled "
++				 "ppod edram feature\n");
++	}
++
+ 	/*
+ 	 * And finally tell the firmware to initialize itself using the
+ 	 * parameters from the Configuration File.
+@@ -4789,6 +4830,22 @@ static int adap_init0(struct adapter *adap)
+ 			goto bye;
+ 		adap->vres.iscsi.start = val[0];
+ 		adap->vres.iscsi.size = val[1] - val[0] + 1;
++		if (is_t6(adap->params.chip)) {
++			params[0] = FW_PARAM_PFVF(PPOD_EDRAM_START);
++			params[1] = FW_PARAM_PFVF(PPOD_EDRAM_END);
++			ret = t4_query_params(adap, adap->mbox, adap->pf, 0, 2,
++					      params, val);
++			if (!ret) {
++				adap->vres.ppod_edram.start = val[0];
++				adap->vres.ppod_edram.size =
++					val[1] - val[0] + 1;
++
++				dev_info(adap->pdev_dev,
++					 "ppod edram start 0x%x end 0x%x size 0x%x\n",
++					 val[0], val[1],
++					 adap->vres.ppod_edram.size);
++			}
++		}
+ 		/* LIO target and cxgb4i initiaitor */
+ 		adap->num_ofld_uld += 2;
  	}
- 	list_for_each_entry(ch, &ex->children, siblings) {
--		if (ch->dev_type == SAS_EDGE_EXPANDER_DEVICE || ch->dev_type == SAS_FANOUT_EXPANDER_DEVICE) {
-+		if (dev_is_expander(ch->dev_type)) {
- 			res = sas_find_bcast_dev(ch, src_dev);
- 			if (*src_dev)
- 				return res;
-@@ -1869,8 +1864,7 @@ static void sas_unregister_ex_tree(struct asd_sas_port *port, struct domain_devi
- 
- 	list_for_each_entry_safe(child, n, &ex->children, siblings) {
- 		set_bit(SAS_DEV_GONE, &child->state);
--		if (child->dev_type == SAS_EDGE_EXPANDER_DEVICE ||
--		    child->dev_type == SAS_FANOUT_EXPANDER_DEVICE)
-+		if (dev_is_expander(child->dev_type))
- 			sas_unregister_ex_tree(port, child);
- 		else
- 			sas_unregister_dev(port, child);
-@@ -1890,8 +1884,7 @@ static void sas_unregister_devs_sas_addr(struct domain_device *parent,
- 			if (SAS_ADDR(child->sas_addr) ==
- 			    SAS_ADDR(phy->attached_sas_addr)) {
- 				set_bit(SAS_DEV_GONE, &child->state);
--				if (child->dev_type == SAS_EDGE_EXPANDER_DEVICE ||
--				    child->dev_type == SAS_FANOUT_EXPANDER_DEVICE)
-+				if (dev_is_expander(child->dev_type))
- 					sas_unregister_ex_tree(parent->port, child);
- 				else
- 					sas_unregister_dev(parent->port, child);
-@@ -1920,8 +1913,7 @@ static int sas_discover_bfs_by_root_level(struct domain_device *root,
- 	int res = 0;
- 
- 	list_for_each_entry(child, &ex_root->children, siblings) {
--		if (child->dev_type == SAS_EDGE_EXPANDER_DEVICE ||
--		    child->dev_type == SAS_FANOUT_EXPANDER_DEVICE) {
-+		if (dev_is_expander(child->dev_type)) {
- 			struct sas_expander_device *ex =
- 				rphy_to_expander_device(child->rphy);
- 
-@@ -1974,8 +1966,7 @@ static int sas_discover_new(struct domain_device *dev, int phy_id)
- 	list_for_each_entry(child, &dev->ex_dev.children, siblings) {
- 		if (SAS_ADDR(child->sas_addr) ==
- 		    SAS_ADDR(ex_phy->attached_sas_addr)) {
--			if (child->dev_type == SAS_EDGE_EXPANDER_DEVICE ||
--			    child->dev_type == SAS_FANOUT_EXPANDER_DEVICE)
-+			if (dev_is_expander(child->dev_type))
- 				res = sas_discover_bfs_by_root(child);
- 			break;
- 		}
-diff --git a/drivers/scsi/libsas/sas_port.c b/drivers/scsi/libsas/sas_port.c
-index 11f028a441dd..7c86fd248129 100644
---- a/drivers/scsi/libsas/sas_port.c
-+++ b/drivers/scsi/libsas/sas_port.c
-@@ -54,7 +54,7 @@ static void sas_resume_port(struct asd_sas_phy *phy)
- 			continue;
- 		}
- 
--		if (dev->dev_type == SAS_EDGE_EXPANDER_DEVICE || dev->dev_type == SAS_FANOUT_EXPANDER_DEVICE) {
-+		if (dev_is_expander(dev->dev_type)) {
- 			dev->ex_dev.ex_change_count = -1;
- 			for (i = 0; i < dev->ex_dev.num_phys; i++) {
- 				struct ex_phy *phy = &dev->ex_dev.ex_phy[i];
-@@ -179,7 +179,7 @@ static void sas_form_port(struct asd_sas_phy *phy)
- 
- 	sas_discover_event(phy->port, DISCE_DISCOVER_DOMAIN);
- 	/* Only insert a revalidate event after initial discovery */
--	if (port_dev && sas_dev_type_is_expander(port_dev->dev_type)) {
-+	if (port_dev && dev_is_expander(port_dev->dev_type)) {
- 		struct expander_device *ex_dev = &port_dev->ex_dev;
- 
- 		ex_dev->ex_change_count = -1;
-@@ -248,7 +248,7 @@ void sas_deform_port(struct asd_sas_phy *phy, int gone)
- 	spin_unlock_irqrestore(&sas_ha->phy_port_lock, flags);
- 
- 	/* Only insert revalidate event if the port still has members */
--	if (port->port && dev && sas_dev_type_is_expander(dev->dev_type)) {
-+	if (port->port && dev && dev_is_expander(dev->dev_type)) {
- 		struct expander_device *ex_dev = &dev->ex_dev;
- 
- 		ex_dev->ex_change_count = -1;
-diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
-index e933c65d8e0b..0ee688f52990 100644
---- a/drivers/scsi/mvsas/mv_sas.c
-+++ b/drivers/scsi/mvsas/mv_sas.c
-@@ -1209,7 +1209,7 @@ static int mvs_dev_found_notify(struct domain_device *dev, int lock)
- 	mvi_device->dev_type = dev->dev_type;
- 	mvi_device->mvi_info = mvi;
- 	mvi_device->sas_device = dev;
--	if (parent_dev && DEV_IS_EXPANDER(parent_dev->dev_type)) {
-+	if (parent_dev && dev_is_expander(parent_dev->dev_type)) {
- 		int phy_id;
- 		u8 phy_num = parent_dev->ex_dev.num_phys;
- 		struct ex_phy *phy;
-diff --git a/drivers/scsi/mvsas/mv_sas.h b/drivers/scsi/mvsas/mv_sas.h
-index 080676c1c9e5..b391c03fe5f5 100644
---- a/drivers/scsi/mvsas/mv_sas.h
-+++ b/drivers/scsi/mvsas/mv_sas.h
-@@ -66,9 +66,6 @@ extern struct mvs_info *tgt_mvi;
- extern const struct mvs_dispatch mvs_64xx_dispatch;
- extern const struct mvs_dispatch mvs_94xx_dispatch;
- 
--#define DEV_IS_EXPANDER(type)	\
--	((type == SAS_EDGE_EXPANDER_DEVICE) || (type == SAS_FANOUT_EXPANDER_DEVICE))
--
- #define bit(n) ((u64)1 << n)
- 
- #define for_each_phy(__lseq_mask, __mc, __lseq)			\
-diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-index 109effd3557d..68a8217032d0 100644
---- a/drivers/scsi/pm8001/pm8001_hwi.c
-+++ b/drivers/scsi/pm8001/pm8001_hwi.c
-@@ -2356,7 +2356,7 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 	if ((status != IO_SUCCESS) && (status != IO_OVERFLOW) &&
- 		(status != IO_UNDERFLOW)) {
- 		if (!((t->dev->parent) &&
--			(DEV_IS_EXPANDER(t->dev->parent->dev_type)))) {
-+			(dev_is_expander(t->dev->parent->dev_type)))) {
- 			for (i = 0 , j = 4; j <= 7 && i <= 3; i++ , j++)
- 				sata_addr_low[i] = pm8001_ha->sas_addr[j];
- 			for (i = 0 , j = 0; j <= 3 && i <= 3; i++ , j++)
-@@ -4560,7 +4560,7 @@ static int pm8001_chip_reg_dev_req(struct pm8001_hba_info *pm8001_ha,
- 			pm8001_dev->dev_type == SAS_FANOUT_EXPANDER_DEVICE)
- 			stp_sspsmp_sata = 0x01; /*ssp or smp*/
- 	}
--	if (parent_dev && DEV_IS_EXPANDER(parent_dev->dev_type))
-+	if (parent_dev && dev_is_expander(parent_dev->dev_type))
- 		phy_id = parent_dev->ex_dev.ex_phy->phy_id;
- 	else
- 		phy_id = pm8001_dev->attached_phy;
-diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
-index 3de57c5a3299..dd38c356a1a4 100644
---- a/drivers/scsi/pm8001/pm8001_sas.c
-+++ b/drivers/scsi/pm8001/pm8001_sas.c
-@@ -634,7 +634,7 @@ static int pm8001_dev_found_notify(struct domain_device *dev)
- 	dev->lldd_dev = pm8001_device;
- 	pm8001_device->dev_type = dev->dev_type;
- 	pm8001_device->dcompletion = &completion;
--	if (parent_dev && DEV_IS_EXPANDER(parent_dev->dev_type)) {
-+	if (parent_dev && dev_is_expander(parent_dev->dev_type)) {
- 		int phy_id;
- 		struct ex_phy *phy;
- 		for (phy_id = 0; phy_id < parent_dev->ex_dev.num_phys;
-diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
-index ac6d8e3f22de..ff17c6aff63d 100644
---- a/drivers/scsi/pm8001/pm8001_sas.h
-+++ b/drivers/scsi/pm8001/pm8001_sas.h
-@@ -103,7 +103,6 @@ do {						\
- #define PM8001_READ_VPD
- 
- 
--#define DEV_IS_EXPANDER(type)	((type == SAS_EDGE_EXPANDER_DEVICE) || (type == SAS_FANOUT_EXPANDER_DEVICE))
- #define IS_SPCV_12G(dev)	((dev->device == 0X8074)		\
- 				|| (dev->device == 0X8076)		\
- 				|| (dev->device == 0X8077)		\
-diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-index 301de40eb708..1128d86d241a 100644
---- a/drivers/scsi/pm8001/pm80xx_hwi.c
-+++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-@@ -2066,7 +2066,7 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 	if ((status != IO_SUCCESS) && (status != IO_OVERFLOW) &&
- 		(status != IO_UNDERFLOW)) {
- 		if (!((t->dev->parent) &&
--			(DEV_IS_EXPANDER(t->dev->parent->dev_type)))) {
-+			(dev_is_expander(t->dev->parent->dev_type)))) {
- 			for (i = 0 , j = 4; i <= 3 && j <= 7; i++ , j++)
- 				sata_addr_low[i] = pm8001_ha->sas_addr[j];
- 			for (i = 0 , j = 0; i <= 3 && j <= 3; i++ , j++)
-@@ -4561,7 +4561,7 @@ static int pm80xx_chip_reg_dev_req(struct pm8001_hba_info *pm8001_ha,
- 			pm8001_dev->dev_type == SAS_FANOUT_EXPANDER_DEVICE)
- 			stp_sspsmp_sata = 0x01; /*ssp or smp*/
- 	}
--	if (parent_dev && DEV_IS_EXPANDER(parent_dev->dev_type))
-+	if (parent_dev && dev_is_expander(parent_dev->dev_type))
- 		phy_id = parent_dev->ex_dev.ex_phy->phy_id;
- 	else
- 		phy_id = pm8001_dev->attached_phy;
-diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index 901355a1bc53..a8565a87291d 100644
---- a/include/scsi/libsas.h
-+++ b/include/scsi/libsas.h
-@@ -207,8 +207,7 @@ struct sas_work {
- 	struct work_struct work;
+diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_uld.h b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_uld.h
+index 42ae28d..cee582e 100644
+--- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_uld.h
++++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_uld.h
+@@ -292,6 +292,7 @@ struct cxgb4_virt_res {                      /* virtualized HW resources */
+ 	struct cxgb4_range ocq;
+ 	struct cxgb4_range key;
+ 	unsigned int ncrypto_fc;
++	struct cxgb4_range ppod_edram;
  };
  
--/* Lots of code duplicates this in the SCSI tree, which can be factored out */
--static inline bool sas_dev_type_is_expander(enum sas_device_type type)
-+static inline bool dev_is_expander(enum sas_device_type type)
+ struct chcr_stats_debug {
+diff --git a/drivers/net/ethernet/chelsio/cxgb4/t4fw_api.h b/drivers/net/ethernet/chelsio/cxgb4/t4fw_api.h
+index 0be4ce5..65313f6 100644
+--- a/drivers/net/ethernet/chelsio/cxgb4/t4fw_api.h
++++ b/drivers/net/ethernet/chelsio/cxgb4/t4fw_api.h
+@@ -1270,6 +1270,7 @@ enum fw_params_param_dev {
+ 	FW_PARAMS_PARAM_DEV_TPCHMAP     = 0x1F,
+ 	FW_PARAMS_PARAM_DEV_HMA_SIZE	= 0x20,
+ 	FW_PARAMS_PARAM_DEV_RDMA_WRITE_WITH_IMM = 0x21,
++	FW_PARAMS_PARAM_DEV_PPOD_EDRAM  = 0x23,
+ 	FW_PARAMS_PARAM_DEV_RI_WRITE_CMPL_WR    = 0x24,
+ 	FW_PARAMS_PARAM_DEV_OPAQUE_VIID_SMT_EXTN = 0x27,
+ 	FW_PARAMS_PARAM_DEV_HASHFILTER_WITH_OFLD = 0x28,
+@@ -1332,6 +1333,8 @@ enum fw_params_param_pfvf {
+ 	FW_PARAMS_PARAM_PFVF_RAWF_END = 0x37,
+ 	FW_PARAMS_PARAM_PFVF_NCRYPTO_LOOKASIDE = 0x39,
+ 	FW_PARAMS_PARAM_PFVF_PORT_CAPS32 = 0x3A,
++	FW_PARAMS_PARAM_PFVF_PPOD_EDRAM_START = 0x3B,
++	FW_PARAMS_PARAM_PFVF_PPOD_EDRAM_END = 0x3C,
+ 	FW_PARAMS_PARAM_PFVF_LINK_STATE = 0x40,
+ };
+ 
+diff --git a/drivers/net/ethernet/chelsio/libcxgb/libcxgb_ppm.c b/drivers/net/ethernet/chelsio/libcxgb/libcxgb_ppm.c
+index e291900..2103453 100644
+--- a/drivers/net/ethernet/chelsio/libcxgb/libcxgb_ppm.c
++++ b/drivers/net/ethernet/chelsio/libcxgb/libcxgb_ppm.c
+@@ -123,6 +123,9 @@ static int ppm_get_cpu_entries(struct cxgbi_ppm *ppm, unsigned int count,
+ 	unsigned int cpu;
+ 	int i;
+ 
++	if (!ppm->pool)
++		return -EINVAL;
++
+ 	cpu = get_cpu();
+ 	pool = per_cpu_ptr(ppm->pool, cpu);
+ 	spin_lock_bh(&pool->lock);
+@@ -169,7 +172,9 @@ static int ppm_get_entries(struct cxgbi_ppm *ppm, unsigned int count,
+ 	}
+ 
+ 	ppm->next = i + count;
+-	if (ppm->next >= ppm->bmap_index_max)
++	if (ppm->max_index_in_edram && (ppm->next >= ppm->max_index_in_edram))
++		ppm->next = 0;
++	else if (ppm->next >= ppm->bmap_index_max)
+ 		ppm->next = 0;
+ 
+ 	spin_unlock_bh(&ppm->map_lock);
+@@ -382,18 +387,36 @@ static struct cxgbi_ppm_pool *ppm_alloc_cpu_pool(unsigned int *total,
+ 
+ int cxgbi_ppm_init(void **ppm_pp, struct net_device *ndev,
+ 		   struct pci_dev *pdev, void *lldev,
+-		   struct cxgbi_tag_format *tformat,
+-		   unsigned int ppmax,
+-		   unsigned int llimit,
+-		   unsigned int start,
+-		   unsigned int reserve_factor)
++		   struct cxgbi_tag_format *tformat, unsigned int iscsi_size,
++		   unsigned int llimit, unsigned int start,
++		   unsigned int reserve_factor, unsigned int iscsi_edram_start,
++		   unsigned int iscsi_edram_size)
  {
- 	return type == SAS_EDGE_EXPANDER_DEVICE ||
- 	       type == SAS_FANOUT_EXPANDER_DEVICE;
+ 	struct cxgbi_ppm *ppm = (struct cxgbi_ppm *)(*ppm_pp);
+ 	struct cxgbi_ppm_pool *pool = NULL;
+-	unsigned int ppmax_pool = 0;
+ 	unsigned int pool_index_max = 0;
+-	unsigned int alloc_sz;
++	unsigned int ppmax_pool = 0;
+ 	unsigned int ppod_bmap_size;
++	unsigned int alloc_sz;
++	unsigned int ppmax;
++
++	if (!iscsi_edram_start)
++		iscsi_edram_size = 0;
++
++	if (iscsi_edram_size &&
++	    ((iscsi_edram_start + iscsi_edram_size) != start)) {
++		pr_err("iscsi ppod region not contiguous: EDRAM start 0x%x "
++			"size 0x%x DDR start 0x%x\n",
++			iscsi_edram_start, iscsi_edram_size, start);
++		return -EINVAL;
++	}
++
++	if (iscsi_edram_size) {
++		reserve_factor = 0;
++		start = iscsi_edram_start;
++	}
++
++	ppmax = (iscsi_edram_size + iscsi_size) >> PPOD_SIZE_SHIFT;
+ 
+ 	if (ppm) {
+ 		pr_info("ippm: %s, ppm 0x%p,0x%p already initialized, %u/%u.\n",
+@@ -434,6 +457,14 @@ int cxgbi_ppm_init(void **ppm_pp, struct net_device *ndev,
+ 			__func__, ppmax, ppmax_pool, ppod_bmap_size, start,
+ 			end);
+ 	}
++	if (iscsi_edram_size) {
++		unsigned int first_ddr_idx =
++				iscsi_edram_size >> PPOD_SIZE_SHIFT;
++
++		ppm->max_index_in_edram = first_ddr_idx - 1;
++		bitmap_set(ppm->ppod_bmap, first_ddr_idx, 1);
++		pr_debug("reserved %u ppod in bitmap\n", first_ddr_idx);
++	}
+ 
+ 	spin_lock_init(&ppm->map_lock);
+ 	kref_init(&ppm->refcnt);
+diff --git a/drivers/net/ethernet/chelsio/libcxgb/libcxgb_ppm.h b/drivers/net/ethernet/chelsio/libcxgb/libcxgb_ppm.h
+index a91ad76..7b02c20 100644
+--- a/drivers/net/ethernet/chelsio/libcxgb/libcxgb_ppm.h
++++ b/drivers/net/ethernet/chelsio/libcxgb/libcxgb_ppm.h
+@@ -143,6 +143,7 @@ struct cxgbi_ppm {
+ 	spinlock_t map_lock;		/* ppm map lock */
+ 	unsigned int bmap_index_max;
+ 	unsigned int next;
++	unsigned int max_index_in_edram;
+ 	unsigned long *ppod_bmap;
+ 	struct cxgbi_ppod_data ppod_data[0];
+ };
+@@ -324,9 +325,9 @@ int cxgbi_ppm_ppods_reserve(struct cxgbi_ppm *, unsigned short nr_pages,
+ 			    unsigned long caller_data);
+ int cxgbi_ppm_init(void **ppm_pp, struct net_device *, struct pci_dev *,
+ 		   void *lldev, struct cxgbi_tag_format *,
+-		   unsigned int ppmax, unsigned int llimit,
+-		   unsigned int start,
+-		   unsigned int reserve_factor);
++		   unsigned int iscsi_size, unsigned int llimit,
++		   unsigned int start, unsigned int reserve_factor,
++		   unsigned int edram_start, unsigned int edram_size);
+ int cxgbi_ppm_release(struct cxgbi_ppm *ppm);
+ void cxgbi_tagmask_check(unsigned int tagmask, struct cxgbi_tag_format *);
+ unsigned int cxgbi_tagmask_set(unsigned int ppmax);
+diff --git a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
+index b8dd9e6..524cdbc 100644
+--- a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
++++ b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
+@@ -1243,8 +1243,12 @@ static int cxgb3i_ddp_init(struct cxgbi_device *cdev)
+ 		tformat.pgsz_order[i] = uinfo.pgsz_factor[i];
+ 	cxgbi_tagmask_check(tagmask, &tformat);
+ 
+-	cxgbi_ddp_ppm_setup(&tdev->ulp_iscsi, cdev, &tformat, ppmax,
+-			    uinfo.llimit, uinfo.llimit, 0);
++	err = cxgbi_ddp_ppm_setup(&tdev->ulp_iscsi, cdev, &tformat,
++				  (uinfo.ulimit - uinfo.llimit + 1),
++				  uinfo.llimit, uinfo.llimit, 0, 0, 0);
++	if (err)
++		return err;
++
+ 	if (!(cdev->flags & CXGBI_FLAG_DDP_OFF)) {
+ 		uinfo.tagmask = tagmask;
+ 		uinfo.ulimit = uinfo.llimit + (ppmax << PPOD_SIZE_SHIFT);
+@@ -1318,7 +1322,7 @@ static void cxgb3i_dev_open(struct t3cdev *t3dev)
+ 
+ 	err = cxgb3i_ddp_init(cdev);
+ 	if (err) {
+-		pr_info("0x%p ddp init failed\n", cdev);
++		pr_info("0x%p ddp init failed %d\n", cdev, err);
+ 		goto err_out;
+ 	}
+ 
+diff --git a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
+index 124f334..66d6e1f 100644
+--- a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
++++ b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
+@@ -2070,7 +2070,7 @@ static int cxgb4i_ddp_init(struct cxgbi_device *cdev)
+ 	struct net_device *ndev = cdev->ports[0];
+ 	struct cxgbi_tag_format tformat;
+ 	unsigned int ppmax;
+-	int i;
++	int i, err;
+ 
+ 	if (!lldi->vr->iscsi.size) {
+ 		pr_warn("%s, iscsi NOT enabled, check config!\n", ndev->name);
+@@ -2086,8 +2086,17 @@ static int cxgb4i_ddp_init(struct cxgbi_device *cdev)
+ 					 & 0xF;
+ 	cxgbi_tagmask_check(lldi->iscsi_tagmask, &tformat);
+ 
+-	cxgbi_ddp_ppm_setup(lldi->iscsi_ppm, cdev, &tformat, ppmax,
+-			    lldi->iscsi_llimit, lldi->vr->iscsi.start, 2);
++	pr_info("iscsi_edram.start 0x%x iscsi_edram.size 0x%x",
++		lldi->vr->ppod_edram.start, lldi->vr->ppod_edram.size);
++
++	err = cxgbi_ddp_ppm_setup(lldi->iscsi_ppm, cdev, &tformat,
++				  lldi->vr->iscsi.size, lldi->iscsi_llimit,
++				  lldi->vr->iscsi.start, 2,
++				  lldi->vr->ppod_edram.start,
++				  lldi->vr->ppod_edram.size);
++
++	if (err < 0)
++		return err;
+ 
+ 	cdev->csk_ddp_setup_digest = ddp_setup_conn_digest;
+ 	cdev->csk_ddp_setup_pgidx = ddp_setup_conn_pgidx;
+@@ -2141,7 +2150,7 @@ static void *t4_uld_add(const struct cxgb4_lld_info *lldi)
+ 
+ 	rc = cxgb4i_ddp_init(cdev);
+ 	if (rc) {
+-		pr_info("t4 0x%p ddp init failed.\n", cdev);
++		pr_info("t4 0x%p ddp init failed %d.\n", cdev, rc);
+ 		goto err_out;
+ 	}
+ 	rc = cxgb4i_ofld_init(cdev);
+diff --git a/drivers/scsi/cxgbi/libcxgbi.c b/drivers/scsi/cxgbi/libcxgbi.c
+index 7d43e01..3e17af8 100644
+--- a/drivers/scsi/cxgbi/libcxgbi.c
++++ b/drivers/scsi/cxgbi/libcxgbi.c
+@@ -1285,14 +1285,15 @@ EXPORT_SYMBOL_GPL(cxgbi_ddp_set_one_ppod);
+ 
+ static unsigned char padding[4];
+ 
+-void cxgbi_ddp_ppm_setup(void **ppm_pp, struct cxgbi_device *cdev,
+-			 struct cxgbi_tag_format *tformat, unsigned int ppmax,
+-			 unsigned int llimit, unsigned int start,
+-			 unsigned int rsvd_factor)
++int cxgbi_ddp_ppm_setup(void **ppm_pp, struct cxgbi_device *cdev,
++			struct cxgbi_tag_format *tformat,
++			unsigned int iscsi_size, unsigned int llimit,
++			unsigned int start, unsigned int rsvd_factor,
++			unsigned int edram_start, unsigned int edram_size)
+ {
+ 	int err = cxgbi_ppm_init(ppm_pp, cdev->ports[0], cdev->pdev,
+-				cdev->lldev, tformat, ppmax, llimit, start,
+-				rsvd_factor);
++				cdev->lldev, tformat, iscsi_size, llimit, start,
++				rsvd_factor, edram_start, edram_size);
+ 
+ 	if (err >= 0) {
+ 		struct cxgbi_ppm *ppm = (struct cxgbi_ppm *)(*ppm_pp);
+@@ -1304,6 +1305,8 @@ void cxgbi_ddp_ppm_setup(void **ppm_pp, struct cxgbi_device *cdev,
+ 	} else {
+ 		cdev->flags |= CXGBI_FLAG_DDP_OFF;
+ 	}
++
++	return err;
+ }
+ EXPORT_SYMBOL_GPL(cxgbi_ddp_ppm_setup);
+ 
+diff --git a/drivers/scsi/cxgbi/libcxgbi.h b/drivers/scsi/cxgbi/libcxgbi.h
+index 1917ff5..84b96af 100644
+--- a/drivers/scsi/cxgbi/libcxgbi.h
++++ b/drivers/scsi/cxgbi/libcxgbi.h
+@@ -617,8 +617,9 @@ void cxgbi_ddp_page_size_factor(int *);
+ void cxgbi_ddp_set_one_ppod(struct cxgbi_pagepod *,
+ 			    struct cxgbi_task_tag_info *,
+ 			    struct scatterlist **sg_pp, unsigned int *sg_off);
+-void cxgbi_ddp_ppm_setup(void **ppm_pp, struct cxgbi_device *,
+-			 struct cxgbi_tag_format *, unsigned int ppmax,
+-			 unsigned int llimit, unsigned int start,
+-			 unsigned int rsvd_factor);
++int cxgbi_ddp_ppm_setup(void **ppm_pp, struct cxgbi_device *cdev,
++			struct cxgbi_tag_format *tformat,
++			unsigned int iscsi_size, unsigned int llimit,
++			unsigned int start, unsigned int rsvd_factor,
++			unsigned int edram_start, unsigned int edram_size);
+ #endif	/*__LIBCXGBI_H__*/
+diff --git a/drivers/target/iscsi/cxgbit/cxgbit_ddp.c b/drivers/target/iscsi/cxgbit/cxgbit_ddp.c
+index d57fd3e..1443ef0 100644
+--- a/drivers/target/iscsi/cxgbit/cxgbit_ddp.c
++++ b/drivers/target/iscsi/cxgbit/cxgbit_ddp.c
+@@ -318,8 +318,10 @@ int cxgbit_ddp_init(struct cxgbit_device *cdev)
+ 
+ 	ret = cxgbi_ppm_init(lldi->iscsi_ppm, cdev->lldi.ports[0],
+ 			     cdev->lldi.pdev, &cdev->lldi, &tformat,
+-			     ppmax, lldi->iscsi_llimit,
+-			     lldi->vr->iscsi.start, 2);
++			     lldi->vr->iscsi.size, lldi->iscsi_llimit,
++			     lldi->vr->iscsi.start, 2,
++			     lldi->vr->ppod_edram.start,
++			     lldi->vr->ppod_edram.size);
+ 	if (ret >= 0) {
+ 		struct cxgbi_ppm *ppm = (struct cxgbi_ppm *)(*lldi->iscsi_ppm);
+ 
 -- 
-2.17.1
+2.0.2
