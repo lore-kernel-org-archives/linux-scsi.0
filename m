@@ -1,26 +1,26 @@
 From: Federico Vaga <federico.vaga@vaga.pv.it>
-Subject: Re: [PATCH v3 14/33] docs: kbuild: convert docs to ReST and rename to
- *.rst
-Date: Mon, 10 Jun 2019 18:25:36 +0200
-Message-ID: <6349042.qd6NX4z2Zd@harkonnen>
+Subject: Re: [PATCH v3 14/33] docs: kbuild: convert docs to ReST
+	and rename to *.rst
+Date: Mon, 10 Jun 2019 18:48:26 +0200
+Message-ID: <15154261.vasc4R9psd@harkonnen>
 References: <cover.1560045490.git.mchehab+samsung@kernel.org>
- <3d40d111d0512d785b6a67573772f532f88d2359.1560045490.git.mchehab+samsung@kernel.org>
+	<3d40d111d0512d785b6a67573772f532f88d2359.1560045490.git.mchehab+samsung@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+Content-Transfer-Encoding: 7Bit
+Return-path: <bridge-bounces@lists.linux-foundation.org>
 In-Reply-To: <3d40d111d0512d785b6a67573772f532f88d2359.1560045490.git.mchehab+samsung@kernel.org>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/bridge>,
+	<mailto:bridge-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/bridge/>
+List-Post: <mailto:bridge@lists.linux-foundation.org>
+List-Help: <mailto:bridge-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/bridge>,
+	<mailto:bridge-request@lists.linux-foundation.org?subject=subscribe>
+Sender: bridge-bounces@lists.linux-foundation.org
+Errors-To: bridge-bounces@lists.linux-foundation.org
 To: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
-Cc: linux-wireless@vger.kernel.org, linux-fbdev@vger.kernel.org, Emmanuel Grumbach <emmanuel.grumbach@intel.com>, Stanislaw Gruszka <sgruszka@redhat.com>, Vignesh Raghavendra <vigneshr@ti.com>, Linux Doc Mailing List <linux-doc@vger.kernel.org>, bridge@lists.linux-foundation.org, Benjamin Herrenschmidt <benh@kernel.crashing.org>, David Woodhouse <dwmw2@infr.osuosl.org>, Palmer Dabbelt <palmer@sifive.com>, alsa-devel@alsa-project.org, dri-devel@lists.freedesktop.org, Ofer Levi <oferle@mellanox.com>, Masahiro Yamada <yamada.masahiro@socionext.com>, Harry Wei <harryxiyou@gmail.com>, Paul Mackerras <paulus@samba.org>, Miquel Raynal <miquel.raynal@bootlin.com>, linux-riscv@lists.infradead.org, Vincent Chen <deanbo422@gmail.com>, Aurelien Jacquiot <jacquiot.aurelien@gmail.com>, Jonas Bonn <jonas@southpole.se>, Alex Shi <alex.shi@linux.alibaba.com>, linux-c6x-dev@linux-c6x.org
+Cc: linux-wireless@vger.kernel.org, linux-fbdev@vger.kernel.org, Emmanuel Grumbach <emmanuel.grumbach@intel.com>, Stanislaw Gruszka <sgruszka@redhat.com>, Vignesh Raghavendra <vigneshr@ti.com>, Linux Doc Mailing List <linux-doc@vger.kernel.org>, bridge@lists.linux-foundation.org, Benjamin Herrenschmidt <benh@kernel.crashing.org>, David Woodhouse <dwmw2@infr.linuxfoundation.org>, Palmer Dabbelt <palmer@sifive.com>, alsa-devel@alsa-project.org, dri-devel@lists.freedesktop.org, Ofer Levi <oferle@mellanox.com>, Masahiro Yamada <yamada.masahiro@socionext.com>, Harry Wei <harryxiyou@gmail.com>, Paul Mackerras <paulus@samba.org>, Miquel Raynal <miquel.raynal@bootlin.com>, linux-riscv@lists.infradead.org, Vincent Chen <deanbo422@gmail.com>, Aurelien Jacquiot <jacquiot.aurelien@gmail.com>, Jonas Bonn <jonas@southpole.se>, Alex Shi <alex.shi@linux.alibaba.com>, linux-c6x-dev@linu
 List-Id: linux-scsi@vger.kernel.org
 
 In data Sunday, June 9, 2019 4:27:04 AM CEST, Mauro Carvalho Chehab ha 
