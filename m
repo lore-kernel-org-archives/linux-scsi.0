@@ -1,64 +1,43 @@
-From: Kees Cook <keescook@chromium.org>
-Subject: Re: [PATCH] scsi: mpt3sas: Mark expected switch fall-through
-Date: Tue, 11 Jun 2019 11:55:11 -0700
-Message-ID: <201906111153.4413672DE8@keescook>
-References: <20190611150219.GA19152@embeddedor>
+From: Michael Schmitz <schmitzmic@gmail.com>
+Subject: Re: [PATCH v2 2/7] scsi: NCR5380: Always re-enable reselection
+ interrupt
+Date: Wed, 12 Jun 2019 11:46:59 +1200
+Message-ID: <9c61076b-81f7-dc7b-0103-1e2e56072453@gmail.com>
+References: <cover.1560043151.git.fthain@telegraphics.com.au>
+ <61f0c0f6aaf8fa96bf3dade5475615b2cfbc8846.1560043151.git.fthain@telegraphics.com.au>
+ <58081aba-4e77-3c8e-847e-0698cf80e426@gmail.com>
+ <alpine.LNX.2.21.1906111926330.25@nippy.intranet>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20190611150219.GA19152@embeddedor>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Cc: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <alpine.LNX.2.21.1906111926330.25@nippy.intranet>
+Content-Language: en-US
+Sender: stable-owner@vger.kernel.org
+To: Finn Thain <fthain@telegraphics.com.au>
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Jun 11, 2019 at 10:02:19AM -0500, Gustavo A. R. Silva wrote:
-> In preparation to enabling -Wimplicit-fallthrough, mark switch cases
-> where we are expecting to fall through.
-> 
-> This patch fixes the following warning:
-> 
-> drivers/scsi/mpt3sas/mpt3sas_base.c: In function ‘_base_update_ioc_page1_inlinewith_perf_mode’:
-> drivers/scsi/mpt3sas/mpt3sas_base.c:4510:6: warning: this statement may fall through [-Wimplicit-fallthrough=]
->    if (ioc->high_iops_queues) {
->       ^
-> drivers/scsi/mpt3sas/mpt3sas_base.c:4530:2: note: here
->   case MPT_PERF_MODE_LATENCY:
->   ^~~~
-> 
-> Warning level 3 was used: -Wimplicit-fallthrough=3
-> 
-> This patch is part of the ongoing efforts to enable
-> -Wimplicit-fallthrough.
-> 
-> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+Hi Finn,
 
-Fixes: 30cb97023f38 ("scsi: mpt3sas: Introduce perf_mode module parameter")
-Reviewed-by: Kees Cook <keescook@chromium.org>
+On 11/06/19 9:33 PM, Finn Thain wrote:
+> On Tue, 11 Jun 2019, Michael Schmitz wrote:
+>
+>> Hi Finn,
+>>
+>> IIRC I'd tested that change as well - didn't change broken target
+>> behaviour but no regressions in other respects. Add my tested-by if
+>> needed.
+>>
+> Unfortunately I can't confirm that this is the same patch as the one you
+> tested as I no longer have that commit. But Stan did test a wide variety
+> of targets and I'm confident that the reselection code path was covered.
+>
+No matter - patch applied cleanly to what I'm running on my Falcon, and 
+works just fine for now (stresstest will take a few hours to complete). 
+And that'll thoroughly exercise the reselection code path, from what 
+we've seen before.
 
--Kees
+Cheers,
 
-> ---
->  drivers/scsi/mpt3sas/mpt3sas_base.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-> index e6377ec07f6c..9fefcd1e9c97 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-> @@ -4527,6 +4527,7 @@ _base_update_ioc_page1_inlinewith_perf_mode(struct MPT3SAS_ADAPTER *ioc)
->  			ioc_info(ioc, "performance mode: balanced\n");
->  			return;
->  		}
-> +		/* Fall through */
->  	case MPT_PERF_MODE_LATENCY:
->  		/*
->  		 * Enable interrupt coalescing on all reply queues
-> -- 
-> 2.21.0
-> 
-
--- 
-Kees Cook
+     Michael
