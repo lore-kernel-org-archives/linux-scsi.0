@@ -1,118 +1,111 @@
 From: Michael Schmitz <schmitzmic@gmail.com>
-Subject: Re: [PATCH] NCR5380: Support chained sg lists
-Date: Tue, 11 Jun 2019 17:02:36 +1200
-Message-ID: <a1fe2d99-fc2f-c12d-41fe-025ee1f66c0b@gmail.com>
-References: <739c214bafcb9af3f6d5037cc03f57f692966675.1560223509.git.fthain@telegraphics.com.au>
+Subject: Re: [PATCH v2 2/7] scsi: NCR5380: Always re-enable reselection
+ interrupt
+Date: Tue, 11 Jun 2019 17:07:16 +1200
+Message-ID: <58081aba-4e77-3c8e-847e-0698cf80e426@gmail.com>
+References: <cover.1560043151.git.fthain@telegraphics.com.au>
+ <61f0c0f6aaf8fa96bf3dade5475615b2cfbc8846.1560043151.git.fthain@telegraphics.com.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-15; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <739c214bafcb9af3f6d5037cc03f57f692966675.1560223509.git.fthain@telegraphics.com.au>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <61f0c0f6aaf8fa96bf3dade5475615b2cfbc8846.1560043151.git.fthain@telegraphics.com.au>
+Sender: stable-owner@vger.kernel.org
 To: Finn Thain <fthain@telegraphics.com.au>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 Hi Finn,
 
-Thanks - can't test this on my hardware but looks good to me.
+IIRC I'd tested that change as well - didn't change broken target 
+behaviour but no regressions in other respects. Add my tested-by if needed.
 
 Cheers,
 
 	Michael
 
-Am 11.06.2019 um 15:25 schrieb Finn Thain:
-> My understanding is that support for chained scatterlists is to
-> become mandatory for LLDs.
+
+Am 09.06.2019 um 13:19 schrieb Finn Thain:
+> The reselection interrupt gets disabled during selection and must be
+> re-enabled when hostdata->connected becomes NULL. If it isn't re-enabled
+> a disconnected command may time-out or the target may wedge the bus while
+> trying to reselect the host. This can happen after a command is aborted.
+>
+> Fix this by enabling the reselection interrupt in NCR5380_main() after
+> calls to NCR5380_select() and NCR5380_information_transfer() return.
 >
 > Cc: Michael Schmitz <schmitzmic@gmail.com>
+> Cc: stable@vger.kernel.org # v4.9+
+> Fixes: 8b00c3d5d40d ("ncr5380: Implement new eh_abort_handler")
+> Tested-by: Stan Johnson <userm57@yahoo.com>
 > Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 > ---
->  drivers/scsi/NCR5380.c | 41 ++++++++++++++++++-----------------------
->  1 file changed, 18 insertions(+), 23 deletions(-)
+>  drivers/scsi/NCR5380.c | 12 ++----------
+>  1 file changed, 2 insertions(+), 10 deletions(-)
 >
 > diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
-> index d9fa9cf2fd8b..536426f25e86 100644
+> index fe0535affc14..08e3ea8159b3 100644
 > --- a/drivers/scsi/NCR5380.c
 > +++ b/drivers/scsi/NCR5380.c
-> @@ -149,12 +149,10 @@ static inline void initialize_SCp(struct scsi_cmnd *cmd)
->
->  	if (scsi_bufflen(cmd)) {
->  		cmd->SCp.buffer = scsi_sglist(cmd);
-> -		cmd->SCp.buffers_residual = scsi_sg_count(cmd) - 1;
->  		cmd->SCp.ptr = sg_virt(cmd->SCp.buffer);
->  		cmd->SCp.this_residual = cmd->SCp.buffer->length;
->  	} else {
->  		cmd->SCp.buffer = NULL;
-> -		cmd->SCp.buffers_residual = 0;
->  		cmd->SCp.ptr = NULL;
->  		cmd->SCp.this_residual = 0;
+> @@ -709,6 +709,8 @@ static void NCR5380_main(struct work_struct *work)
+>  			NCR5380_information_transfer(instance);
+>  			done = 0;
+>  		}
+> +		if (!hostdata->connected)
+> +			NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
+>  		spin_unlock_irq(&hostdata->lock);
+>  		if (!done)
+>  			cond_resched();
+> @@ -1110,8 +1112,6 @@ static bool NCR5380_select(struct Scsi_Host *instance, struct scsi_cmnd *cmd)
+>  		spin_lock_irq(&hostdata->lock);
+>  		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
+>  		NCR5380_reselect(instance);
+> -		if (!hostdata->connected)
+> -			NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
+>  		shost_printk(KERN_ERR, instance, "reselection after won arbitration?\n");
+>  		goto out;
 >  	}
-> @@ -163,6 +161,17 @@ static inline void initialize_SCp(struct scsi_cmnd *cmd)
->  	cmd->SCp.Message = 0;
->  }
+> @@ -1119,7 +1119,6 @@ static bool NCR5380_select(struct Scsi_Host *instance, struct scsi_cmnd *cmd)
+>  	if (err < 0) {
+>  		spin_lock_irq(&hostdata->lock);
+>  		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
+> -		NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
 >
-> +static inline void advance_sg_buffer(struct scsi_cmnd *cmd)
-> +{
-> +	struct scatterlist *s = cmd->SCp.buffer;
-> +
-> +	if (!cmd->SCp.this_residual && s && !sg_is_last(s)) {
-> +		cmd->SCp.buffer = sg_next(s);
-> +		cmd->SCp.ptr = sg_virt(cmd->SCp.buffer);
-> +		cmd->SCp.this_residual = cmd->SCp.buffer->length;
-> +	}
-> +}
-> +
->  /**
->   * NCR5380_poll_politely2 - wait for two chip register values
->   * @hostdata: host private data
-> @@ -1670,12 +1679,7 @@ static void NCR5380_information_transfer(struct Scsi_Host *instance)
->  			    sun3_dma_setup_done != cmd) {
->  				int count;
+>  		/* Can't touch cmd if it has been reclaimed by the scsi ML */
+>  		if (!hostdata->selecting)
+> @@ -1157,7 +1156,6 @@ static bool NCR5380_select(struct Scsi_Host *instance, struct scsi_cmnd *cmd)
+>  	if (err < 0) {
+>  		shost_printk(KERN_ERR, instance, "select: REQ timeout\n");
+>  		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
+> -		NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
+>  		goto out;
+>  	}
+>  	if (!hostdata->selecting) {
+> @@ -1826,9 +1824,6 @@ static void NCR5380_information_transfer(struct Scsi_Host *instance)
+>  					 */
+>  					NCR5380_write(TARGET_COMMAND_REG, 0);
 >
-> -				if (!cmd->SCp.this_residual && cmd->SCp.buffers_residual) {
-> -					++cmd->SCp.buffer;
-> -					--cmd->SCp.buffers_residual;
-> -					cmd->SCp.this_residual = cmd->SCp.buffer->length;
-> -					cmd->SCp.ptr = sg_virt(cmd->SCp.buffer);
-> -				}
-> +				advance_sg_buffer(cmd);
+> -					/* Enable reselect interrupts */
+> -					NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
+> -
+>  					maybe_release_dma_irq(instance);
+>  					return;
+>  				case MESSAGE_REJECT:
+> @@ -1860,8 +1855,6 @@ static void NCR5380_information_transfer(struct Scsi_Host *instance)
+>  					 */
+>  					NCR5380_write(TARGET_COMMAND_REG, 0);
 >
->  				count = sun3scsi_dma_xfer_len(hostdata, cmd);
->
-> @@ -1725,15 +1729,11 @@ static void NCR5380_information_transfer(struct Scsi_Host *instance)
->  				 * scatter-gather list, move onto the next one.
->  				 */
->
-> -				if (!cmd->SCp.this_residual && cmd->SCp.buffers_residual) {
-> -					++cmd->SCp.buffer;
-> -					--cmd->SCp.buffers_residual;
-> -					cmd->SCp.this_residual = cmd->SCp.buffer->length;
-> -					cmd->SCp.ptr = sg_virt(cmd->SCp.buffer);
-> -					dsprintk(NDEBUG_INFORMATION, instance, "%d bytes and %d buffers left\n",
-> -					         cmd->SCp.this_residual,
-> -					         cmd->SCp.buffers_residual);
-> -				}
-> +				advance_sg_buffer(cmd);
-> +				dsprintk(NDEBUG_INFORMATION, instance,
-> +					"this residual %d, sg ents %d\n",
-> +					cmd->SCp.this_residual,
-> +					sg_nents(cmd->SCp.buffer));
->
->  				/*
->  				 * The preferred transfer method is going to be
-> @@ -2126,12 +2126,7 @@ static void NCR5380_reselect(struct Scsi_Host *instance)
->  	if (sun3_dma_setup_done != tmp) {
->  		int count;
->
-> -		if (!tmp->SCp.this_residual && tmp->SCp.buffers_residual) {
-> -			++tmp->SCp.buffer;
-> -			--tmp->SCp.buffers_residual;
-> -			tmp->SCp.this_residual = tmp->SCp.buffer->length;
-> -			tmp->SCp.ptr = sg_virt(tmp->SCp.buffer);
-> -		}
-> +		advance_sg_buffer(tmp);
->
->  		count = sun3scsi_dma_xfer_len(hostdata, tmp);
->
+> -					/* Enable reselect interrupts */
+> -					NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
+>  #ifdef SUN3_SCSI_VME
+>  					dregs->csr |= CSR_DMA_ENABLE;
+>  #endif
+> @@ -1964,7 +1957,6 @@ static void NCR5380_information_transfer(struct Scsi_Host *instance)
+>  					cmd->result = DID_ERROR << 16;
+>  					complete_cmd(instance, cmd);
+>  					maybe_release_dma_irq(instance);
+> -					NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
+>  					return;
+>  				}
+>  				msgout = NOP;
 >
