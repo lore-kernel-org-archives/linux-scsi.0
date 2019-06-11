@@ -1,110 +1,105 @@
-From: Federico Vaga <federico.vaga@vaga.pv.it>
-Subject: Re: [PATCH v3 14/33] docs: kbuild: convert docs to ReST
-	and rename to *.rst
-Date: Mon, 10 Jun 2019 18:48:26 +0200
-Message-ID: <15154261.vasc4R9psd@harkonnen>
-References: <cover.1560045490.git.mchehab+samsung@kernel.org>
-	<3d40d111d0512d785b6a67573772f532f88d2359.1560045490.git.mchehab+samsung@kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
-Return-path: <bridge-bounces@lists.linux-foundation.org>
-In-Reply-To: <3d40d111d0512d785b6a67573772f532f88d2359.1560045490.git.mchehab+samsung@kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/bridge>,
-	<mailto:bridge-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/bridge/>
-List-Post: <mailto:bridge@lists.linux-foundation.org>
-List-Help: <mailto:bridge-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/bridge>,
-	<mailto:bridge-request@lists.linux-foundation.org?subject=subscribe>
-Sender: bridge-bounces@lists.linux-foundation.org
-Errors-To: bridge-bounces@lists.linux-foundation.org
-To: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
-Cc: linux-wireless@vger.kernel.org, linux-fbdev@vger.kernel.org, Emmanuel Grumbach <emmanuel.grumbach@intel.com>, Stanislaw Gruszka <sgruszka@redhat.com>, Vignesh Raghavendra <vigneshr@ti.com>, Linux Doc Mailing List <linux-doc@vger.kernel.org>, bridge@lists.linux-foundation.org, Benjamin Herrenschmidt <benh@kernel.crashing.org>, David Woodhouse <dwmw2@infr.linuxfoundation.org>, Palmer Dabbelt <palmer@sifive.com>, alsa-devel@alsa-project.org, dri-devel@lists.freedesktop.org, Ofer Levi <oferle@mellanox.com>, Masahiro Yamada <yamada.masahiro@socionext.com>, Harry Wei <harryxiyou@gmail.com>, Paul Mackerras <paulus@samba.org>, Miquel Raynal <miquel.raynal@bootlin.com>, linux-riscv@lists.infradead.org, Vincent Chen <deanbo422@gmail.com>, Aurelien Jacquiot <jacquiot.aurelien@gmail.com>, Jonas Bonn <jonas@southpole.se>, Alex Shi <alex.shi@linux.alibaba.com>, linux-c6x-dev@linu
+From: Finn Thain <fthain@telegraphics.com.au>
+Subject: [PATCH] NCR5380: Support chained sg lists
+Date: Tue, 11 Jun 2019 13:25:09 +1000
+Message-ID: <739c214bafcb9af3f6d5037cc03f57f692966675.1560223509.git.fthain@telegraphics.com.au>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Michael Schmitz <schmitzmic@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-In data Sunday, June 9, 2019 4:27:04 AM CEST, Mauro Carvalho Chehab ha 
-scritto:
-> The kbuild documentation clearly shows that the documents
-> there are written at different times: some use markdown,
-> some use their own peculiar logic to split sections.
-> 
-> Convert everything to ReST without affecting too much
-> the author's style and avoiding adding uneeded markups.
-> 
-> The conversion is actually:
->   - add blank lines and identation in order to identify paragraphs;
->   - fix tables markups;
->   - add some lists markups;
->   - mark literal blocks;
->   - adjust title markups.
-> 
-> At its new index.rst, let's add a :orphan: while this is not linked to
-> the main index.rst file, in order to avoid build warnings.
-> 
-> Signed-off-by: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
-> ---
->  Documentation/admin-guide/README.rst          |   2 +-
->  ...eaders_install.txt => headers_install.rst} |   5 +-
->  Documentation/kbuild/index.rst                |  27 +
->  Documentation/kbuild/issues.rst               |  11 +
->  .../kbuild/{kbuild.txt => kbuild.rst}         | 119 ++--
->  ...nfig-language.txt => kconfig-language.rst} | 232 ++++----
->  ...anguage.txt => kconfig-macro-language.rst} |  37 +-
->  .../kbuild/{kconfig.txt => kconfig.rst}       | 136 +++--
->  .../kbuild/{makefiles.txt => makefiles.rst}   | 530 +++++++++++-------
->  .../kbuild/{modules.txt => modules.rst}       | 168 +++---
->  Documentation/kernel-hacking/hacking.rst      |   4 +-
->  Documentation/process/coding-style.rst        |   2 +-
->  Documentation/process/submit-checklist.rst    |   2 +-
->  .../it_IT/kernel-hacking/hacking.rst          |   4 +-
->  .../it_IT/process/coding-style.rst            |   2 +-
->  .../it_IT/process/submit-checklist.rst        |   2 +-
+My understanding is that support for chained scatterlists is to
+become mandatory for LLDs.
 
-Limited to translations/it_IT
+Cc: Michael Schmitz <schmitzmic@gmail.com>
+Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
+---
+ drivers/scsi/NCR5380.c | 41 ++++++++++++++++++-----------------------
+ 1 file changed, 18 insertions(+), 23 deletions(-)
 
-Acked-by: Federico Vaga <federico.vaga@vaga.pv.it>
-
->  .../zh_CN/process/coding-style.rst            |   2 +-
->  .../zh_CN/process/submit-checklist.rst        |   2 +-
->  Kconfig                                       |   2 +-
->  arch/arc/plat-eznps/Kconfig                   |   2 +-
->  arch/c6x/Kconfig                              |   2 +-
->  arch/microblaze/Kconfig.debug                 |   2 +-
->  arch/microblaze/Kconfig.platform              |   2 +-
->  arch/nds32/Kconfig                            |   2 +-
->  arch/openrisc/Kconfig                         |   2 +-
->  arch/powerpc/sysdev/Kconfig                   |   2 +-
->  arch/riscv/Kconfig                            |   2 +-
->  drivers/auxdisplay/Kconfig                    |   2 +-
->  drivers/firmware/Kconfig                      |   2 +-
->  drivers/mtd/devices/Kconfig                   |   2 +-
->  drivers/net/ethernet/smsc/Kconfig             |   6 +-
->  drivers/net/wireless/intel/iwlegacy/Kconfig   |   4 +-
->  drivers/net/wireless/intel/iwlwifi/Kconfig    |   2 +-
->  drivers/parport/Kconfig                       |   2 +-
->  drivers/scsi/Kconfig                          |   4 +-
->  drivers/staging/sm750fb/Kconfig               |   2 +-
->  drivers/usb/misc/Kconfig                      |   4 +-
->  drivers/video/fbdev/Kconfig                   |  14 +-
->  net/bridge/netfilter/Kconfig                  |   2 +-
->  net/ipv4/netfilter/Kconfig                    |   2 +-
->  net/ipv6/netfilter/Kconfig                    |   2 +-
->  net/netfilter/Kconfig                         |  16 +-
->  net/tipc/Kconfig                              |   2 +-
->  scripts/Kbuild.include                        |   4 +-
->  scripts/Makefile.host                         |   2 +-
->  scripts/kconfig/symbol.c                      |   2 +-
->  .../tests/err_recursive_dep/expected_stderr   |  14 +-
->  sound/oss/dmasound/Kconfig                    |   6 +-
->  48 files changed, 840 insertions(+), 561 deletions(-)
->  rename Documentation/kbuild/{headers_install.txt => headers_install.rst}
-> (96%) create mode 100644 Documentation/kbuild/index.rst
->  create mode 100644 Documentation/kbuild/issues.rst
->  rename Documentation/kbuild/{kbuild.txt => kbuild.rst} (72%)
->  rename Documentation/kbuild/{kconfig-language.txt => kconfig-language.rst}
-> (85%) rename Documentation/kbuild/{kconfig-macro-language.txt =>
-> kconfig-macro-language.rst} (94%) rename Documentation/kbuild/{kconfig.txt
-> => kconfig.rst} (80%)
->  rename Documentation/kbuild/{makefiles.txt => makefiles.rst} (83%)
->  rename Documentation/kbuild/{modules.txt => modules.rst} (84%)
+diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
+index d9fa9cf2fd8b..536426f25e86 100644
+--- a/drivers/scsi/NCR5380.c
++++ b/drivers/scsi/NCR5380.c
+@@ -149,12 +149,10 @@ static inline void initialize_SCp(struct scsi_cmnd *cmd)
+ 
+ 	if (scsi_bufflen(cmd)) {
+ 		cmd->SCp.buffer = scsi_sglist(cmd);
+-		cmd->SCp.buffers_residual = scsi_sg_count(cmd) - 1;
+ 		cmd->SCp.ptr = sg_virt(cmd->SCp.buffer);
+ 		cmd->SCp.this_residual = cmd->SCp.buffer->length;
+ 	} else {
+ 		cmd->SCp.buffer = NULL;
+-		cmd->SCp.buffers_residual = 0;
+ 		cmd->SCp.ptr = NULL;
+ 		cmd->SCp.this_residual = 0;
+ 	}
+@@ -163,6 +161,17 @@ static inline void initialize_SCp(struct scsi_cmnd *cmd)
+ 	cmd->SCp.Message = 0;
+ }
+ 
++static inline void advance_sg_buffer(struct scsi_cmnd *cmd)
++{
++	struct scatterlist *s = cmd->SCp.buffer;
++
++	if (!cmd->SCp.this_residual && s && !sg_is_last(s)) {
++		cmd->SCp.buffer = sg_next(s);
++		cmd->SCp.ptr = sg_virt(cmd->SCp.buffer);
++		cmd->SCp.this_residual = cmd->SCp.buffer->length;
++	}
++}
++
+ /**
+  * NCR5380_poll_politely2 - wait for two chip register values
+  * @hostdata: host private data
+@@ -1670,12 +1679,7 @@ static void NCR5380_information_transfer(struct Scsi_Host *instance)
+ 			    sun3_dma_setup_done != cmd) {
+ 				int count;
+ 
+-				if (!cmd->SCp.this_residual && cmd->SCp.buffers_residual) {
+-					++cmd->SCp.buffer;
+-					--cmd->SCp.buffers_residual;
+-					cmd->SCp.this_residual = cmd->SCp.buffer->length;
+-					cmd->SCp.ptr = sg_virt(cmd->SCp.buffer);
+-				}
++				advance_sg_buffer(cmd);
+ 
+ 				count = sun3scsi_dma_xfer_len(hostdata, cmd);
+ 
+@@ -1725,15 +1729,11 @@ static void NCR5380_information_transfer(struct Scsi_Host *instance)
+ 				 * scatter-gather list, move onto the next one.
+ 				 */
+ 
+-				if (!cmd->SCp.this_residual && cmd->SCp.buffers_residual) {
+-					++cmd->SCp.buffer;
+-					--cmd->SCp.buffers_residual;
+-					cmd->SCp.this_residual = cmd->SCp.buffer->length;
+-					cmd->SCp.ptr = sg_virt(cmd->SCp.buffer);
+-					dsprintk(NDEBUG_INFORMATION, instance, "%d bytes and %d buffers left\n",
+-					         cmd->SCp.this_residual,
+-					         cmd->SCp.buffers_residual);
+-				}
++				advance_sg_buffer(cmd);
++				dsprintk(NDEBUG_INFORMATION, instance,
++					"this residual %d, sg ents %d\n",
++					cmd->SCp.this_residual,
++					sg_nents(cmd->SCp.buffer));
+ 
+ 				/*
+ 				 * The preferred transfer method is going to be
+@@ -2126,12 +2126,7 @@ static void NCR5380_reselect(struct Scsi_Host *instance)
+ 	if (sun3_dma_setup_done != tmp) {
+ 		int count;
+ 
+-		if (!tmp->SCp.this_residual && tmp->SCp.buffers_residual) {
+-			++tmp->SCp.buffer;
+-			--tmp->SCp.buffers_residual;
+-			tmp->SCp.this_residual = tmp->SCp.buffer->length;
+-			tmp->SCp.ptr = sg_virt(tmp->SCp.buffer);
+-		}
++		advance_sg_buffer(tmp);
+ 
+ 		count = sun3scsi_dma_xfer_len(hostdata, tmp);
+ 
+-- 
+2.21.0
