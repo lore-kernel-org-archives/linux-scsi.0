@@ -1,130 +1,94 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: Re: [PATCH v2 2/7] scsi: NCR5380: Always re-enable reselection
- interrupt
-Date: Tue, 11 Jun 2019 19:33:38 +1000 (AEST)
-Message-ID: <alpine.LNX.2.21.1906111926330.25@nippy.intranet>
-References: <cover.1560043151.git.fthain@telegraphics.com.au> <61f0c0f6aaf8fa96bf3dade5475615b2cfbc8846.1560043151.git.fthain@telegraphics.com.au> <58081aba-4e77-3c8e-847e-0698cf80e426@gmail.com>
+From: Viresh Kumar <viresh.kumar@linaro.org>
+Subject: Re: [RFC v2 01/11] OPP: Don't overwrite rounded clk rate
+Date: Tue, 11 Jun 2019 16:24:32 +0530
+Message-ID: <20190611105432.x3nzqiib35t6mvyg@vireshk-i7>
+References: <20190320094918.20234-1-rnayak@codeaurora.org>
+ <20190320094918.20234-2-rnayak@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <58081aba-4e77-3c8e-847e-0698cf80e426@gmail.com>
-Sender: stable-owner@vger.kernel.org
-To: Michael Schmitz <schmitzmic@gmail.com>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20190320094918.20234-2-rnayak@codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: swboyd@chromium.org, Rajendra Nayak <rnayak@codeaurora.org>
+Cc: linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-pm@vger.kernel.org, linux-serial@vger.kernel.org, linux-spi@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-scsi@vger.kernel.org, ulf.hansson@linaro.org, dianders@chromium.org, rafael@kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 11 Jun 2019, Michael Schmitz wrote:
-
-> Hi Finn,
+On 20-03-19, 15:19, Rajendra Nayak wrote:
+> From: Stephen Boyd <swboyd@chromium.org>
 > 
-> IIRC I'd tested that change as well - didn't change broken target 
-> behaviour but no regressions in other respects. Add my tested-by if 
-> needed.
+> Doing this allows us to call this API with any rate requested and have
+> it not need to match in the OPP table. Instead, we'll round the rate up
+> to the nearest OPP that we see so that we can get the voltage or level
+> that's required for that OPP. This supports users of OPP that want to
+> specify the 'fmax' tables of a device instead of every single frequency
+> that they need. And for devices that required the exact frequency, we
+> can rely on the clk framework to round the rate to the nearest supported
+> frequency instead of the OPP framework to do so.
 > 
+> Note that this may affect drivers that don't want the clk framework to
+> do rounding, but instead want the OPP table to do the rounding for them.
+> Do we have that case? Should we add some flag to the OPP table to
+> indicate this and then not have that flag set when there isn't an OPP
+> table for the device and also introduce a property like 'opp-use-clk' to
+> tell the table that it should use the clk APIs to round rates instead of
+> OPP?
+> 
+> Signed-off-by: Stephen Boyd <swboyd@chromium.org>
+> Signed-off-by: Rajendra Nayak <rnayak@codeaurora.org>
+> ---
+>  drivers/opp/core.c | 8 +++++---
+>  1 file changed, 5 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/opp/core.c b/drivers/opp/core.c
+> index 0420f7e8ad5b..bc9a7762dd4c 100644
+> --- a/drivers/opp/core.c
+> +++ b/drivers/opp/core.c
+> @@ -703,7 +703,7 @@ static int _set_required_opps(struct device *dev,
+>  int dev_pm_opp_set_rate(struct device *dev, unsigned long target_freq)
+>  {
+>  	struct opp_table *opp_table;
+> -	unsigned long freq, old_freq;
+> +	unsigned long freq, opp_freq, old_freq, old_opp_freq;
+>  	struct dev_pm_opp *old_opp, *opp;
+>  	struct clk *clk;
+>  	int ret;
+> @@ -742,13 +742,15 @@ int dev_pm_opp_set_rate(struct device *dev, unsigned long target_freq)
+>  		goto put_opp_table;
+>  	}
+>  
+> -	old_opp = _find_freq_ceil(opp_table, &old_freq);
+> +	old_opp_freq = old_freq;
+> +	old_opp = _find_freq_ceil(opp_table, &old_opp_freq);
+>  	if (IS_ERR(old_opp)) {
+>  		dev_err(dev, "%s: failed to find current OPP for freq %lu (%ld)\n",
+>  			__func__, old_freq, PTR_ERR(old_opp));
+>  	}
+>  
+> -	opp = _find_freq_ceil(opp_table, &freq);
+> +	opp_freq = freq;
+> +	opp = _find_freq_ceil(opp_table, &opp_freq);
+>  	if (IS_ERR(opp)) {
+>  		ret = PTR_ERR(opp);
+>  		dev_err(dev, "%s: failed to find OPP for freq %lu (%d)\n",
 
-Unfortunately I can't confirm that this is the same patch as the one you 
-tested as I no longer have that commit. But Stan did test a wide variety 
-of targets and I'm confident that the reselection code path was covered.
+I see a logical problem with this patch.
+
+Suppose the clock driver supports following frequencies: 500M, 800M,
+1G, 1.2G and the OPP table contains following list: 500M, 1G, 1.2G
+(i.e. missing 800M).
+
+Now 800M should never get programmed as it isn't part of the OPP
+table. But if you pass 600M to opp-set-rate, then it will end up
+selecting 800M as clock driver will round up to the closest value.
+
+Even if no one is doing this right now, it is a sensible usecase,
+specially during testing of patches and I don't think we should avoid
+it.
+
+What exactly is the use case for which we need this patch ? What kind
+of driver ? Some detail can be helpful to find another solution that
+fixes this problem.
 
 -- 
-
-> Cheers,
-> 
-> 	Michael
-> 
-> 
-> Am 09.06.2019 um 13:19 schrieb Finn Thain:
-> > The reselection interrupt gets disabled during selection and must be
-> > re-enabled when hostdata->connected becomes NULL. If it isn't re-enabled
-> > a disconnected command may time-out or the target may wedge the bus while
-> > trying to reselect the host. This can happen after a command is aborted.
-> > 
-> > Fix this by enabling the reselection interrupt in NCR5380_main() after
-> > calls to NCR5380_select() and NCR5380_information_transfer() return.
-> > 
-> > Cc: Michael Schmitz <schmitzmic@gmail.com>
-> > Cc: stable@vger.kernel.org # v4.9+
-> > Fixes: 8b00c3d5d40d ("ncr5380: Implement new eh_abort_handler")
-> > Tested-by: Stan Johnson <userm57@yahoo.com>
-> > Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
-> > ---
-> >  drivers/scsi/NCR5380.c | 12 ++----------
-> >  1 file changed, 2 insertions(+), 10 deletions(-)
-> > 
-> > diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
-> > index fe0535affc14..08e3ea8159b3 100644
-> > --- a/drivers/scsi/NCR5380.c
-> > +++ b/drivers/scsi/NCR5380.c
-> > @@ -709,6 +709,8 @@ static void NCR5380_main(struct work_struct *work)
-> >  			NCR5380_information_transfer(instance);
-> >  			done = 0;
-> >  		}
-> > +		if (!hostdata->connected)
-> > +			NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
-> >  		spin_unlock_irq(&hostdata->lock);
-> >  		if (!done)
-> >  			cond_resched();
-> > @@ -1110,8 +1112,6 @@ static bool NCR5380_select(struct Scsi_Host *instance,
-> > struct scsi_cmnd *cmd)
-> >  		spin_lock_irq(&hostdata->lock);
-> >  		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
-> >  		NCR5380_reselect(instance);
-> > -		if (!hostdata->connected)
-> > -			NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
-> >  		shost_printk(KERN_ERR, instance, "reselection after won
-> > arbitration?\n");
-> >  		goto out;
-> >  	}
-> > @@ -1119,7 +1119,6 @@ static bool NCR5380_select(struct Scsi_Host *instance,
-> > struct scsi_cmnd *cmd)
-> >  	if (err < 0) {
-> >  		spin_lock_irq(&hostdata->lock);
-> >  		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
-> > -		NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
-> > 
-> >  		/* Can't touch cmd if it has been reclaimed by the scsi ML */
-> >  		if (!hostdata->selecting)
-> > @@ -1157,7 +1156,6 @@ static bool NCR5380_select(struct Scsi_Host *instance,
-> > struct scsi_cmnd *cmd)
-> >  	if (err < 0) {
-> >  		shost_printk(KERN_ERR, instance, "select: REQ timeout\n");
-> >  		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
-> > -		NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
-> >  		goto out;
-> >  	}
-> >  	if (!hostdata->selecting) {
-> > @@ -1826,9 +1824,6 @@ static void NCR5380_information_transfer(struct
-> > Scsi_Host *instance)
-> >  					 */
-> >  					NCR5380_write(TARGET_COMMAND_REG, 0);
-> > 
-> > -					/* Enable reselect interrupts */
-> > -					NCR5380_write(SELECT_ENABLE_REG,
-> > hostdata->id_mask);
-> > -
-> >  					maybe_release_dma_irq(instance);
-> >  					return;
-> >  				case MESSAGE_REJECT:
-> > @@ -1860,8 +1855,6 @@ static void NCR5380_information_transfer(struct
-> > Scsi_Host *instance)
-> >  					 */
-> >  					NCR5380_write(TARGET_COMMAND_REG, 0);
-> > 
-> > -					/* Enable reselect interrupts */
-> > -					NCR5380_write(SELECT_ENABLE_REG,
-> > hostdata->id_mask);
-> >  #ifdef SUN3_SCSI_VME
-> >  					dregs->csr |= CSR_DMA_ENABLE;
-> >  #endif
-> > @@ -1964,7 +1957,6 @@ static void NCR5380_information_transfer(struct
-> > Scsi_Host *instance)
-> >  					cmd->result = DID_ERROR << 16;
-> >  					complete_cmd(instance, cmd);
-> >  					maybe_release_dma_irq(instance);
-> > -					NCR5380_write(SELECT_ENABLE_REG,
-> > hostdata->id_mask);
-> >  					return;
-> >  				}
-> >  				msgout = NOP;
-> > 
-> 
+viresh
