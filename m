@@ -1,820 +1,340 @@
-From: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
-Subject: [PATCH v4 23/28] docs: target: convert docs to ReST and rename to *.rst
-Date: Wed, 12 Jun 2019 14:52:59 -0300
-Message-ID: <9c58d2f3478126736e69b688a7dbf0da26ba2285.1560361364.git.mchehab+samsung@kernel.org>
-References: <cover.1560361364.git.mchehab+samsung@kernel.org>
+From: Eric Biggers <ebiggers@kernel.org>
+Subject: Re: [RFC PATCH v2 2/8] block: Add encryption context to
+ struct bio
+Date: Wed, 12 Jun 2019 11:10:46 -0700
+Message-ID: <20190612181044.GA18795@gmail.com>
+References: <20190605232837.31545-1-satyat@google.com>
+ <20190605232837.31545-3-satyat@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <cover.1560361364.git.mchehab+samsung@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linux Doc Mailing List <linux-doc@vger.kernel.org>
-Cc: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>, Mauro Carvalho Chehab <mchehab@infradead.org>, linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-f2fs-devel-bounces@lists.sourceforge.net>
+Content-Disposition: inline
+In-Reply-To: <20190605232837.31545-3-satyat@google.com>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/options/linux-f2fs-devel>,
+ <mailto:linux-f2fs-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux-f2fs-devel>
+List-Post: <mailto:linux-f2fs-devel@lists.sourceforge.net>
+List-Help: <mailto:linux-f2fs-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-f2fs-devel>,
+ <mailto:linux-f2fs-devel-request@lists.sourceforge.net?subject=subscribe>
+Errors-To: linux-f2fs-devel-bounces@lists.sourceforge.net
+To: Satya Tangirala <satyat@google.com>
+Cc: Ladvine D Almeida <ladvine.dalmeida@synopsys.com>, linux-scsi@vger.kernel.org, Parshuram Raju Thombare <pthombar@cadence.com>, Kuohong Wang <kuohong.wang@mediatek.com>, Barani Muthukumaran <bmuthuku@qti.qualcomm.com>, linux-f2fs-devel@lists.sourceforge.net, linux-block@vger.kernel.org, linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Convert the TCM docs to ReST format and add them to the
-bookset.
+Hi Satya,
 
-This has a mix of userspace-faced and Kernelspace faced
-docs. Still, it sounds a better candidate to be added at
-the kernel API set of docs.
+On Wed, Jun 05, 2019 at 04:28:31PM -0700, Satya Tangirala wrote:
+> We must have some way of letting a storage device driver know what
+> encryption context it should use for en/decrypting a request. However,
+> it's the filesystem/fscrypt that knows about and manages encryption
+> contexts. As such, when the filesystem layer submits a bio to the block
+> layer, and this bio eventually reaches a device driver with support for
+> inline encryption, the device driver will need to have been told the
+> encryption context for that bio.
+> 
+> We want to communicate the encryption context from the filesystem layer
+> to the storage device along with the bio, when the bio is submitted to the
+> block layer. To do this, we add a struct bio_crypt_ctx to struct bio, which
+> can represent an encryption context (note that we can't use the bi_private
+> field in struct bio to do this because that field does not function to pass
+> information across layers in the storage stack). We also introduce various
+> functions to manipulate the bio_crypt_ctx and make the bio/request merging
+> logic aware of the bio_crypt_ctx.
+> 
+> Signed-off-by: Satya Tangirala <satyat@google.com>
+> ---
+>  block/bio.c               |  12 ++-
+>  block/blk-crypt-ctx.c     |  90 +++++++++++++++++++
+>  block/blk-merge.c         |  34 ++++++-
+>  block/bounce.c            |   9 +-
+>  drivers/md/dm.c           |  15 ++--
+>  include/linux/bio.h       | 180 ++++++++++++++++++++++++++++++++++++++
+>  include/linux/blk_types.h |  28 ++++++
+>  7 files changed, 355 insertions(+), 13 deletions(-)
+>  create mode 100644 block/blk-crypt-ctx.c
+> 
+> diff --git a/block/bio.c b/block/bio.c
+> index 683cbb40f051..87aa87288b39 100644
+> --- a/block/bio.c
+> +++ b/block/bio.c
+> @@ -16,6 +16,7 @@
+>  #include <linux/workqueue.h>
+>  #include <linux/cgroup.h>
+>  #include <linux/blk-cgroup.h>
+> +#include <linux/keyslot-manager.h>
 
-The conversion is actually:
-  - add blank lines and identation in order to identify paragraphs;
-  - fix tables markups;
-  - add some lists markups;
-  - mark literal blocks;
-  - adjust title markups.
+No need to include keyslot-manager.h here.
 
-At its new index.rst, let's add a :orphan: while this is not linked to
-the main index.rst file, in order to avoid build warnings.
+> @@ -1019,6 +1026,7 @@ void bio_advance(struct bio *bio, unsigned bytes)
+>  		bio_integrity_advance(bio, bytes);
+>  
+>  	bio_advance_iter(bio, &bio->bi_iter, bytes);
+> +	bio_crypt_advance(bio, bytes);
+>  }
+>  EXPORT_SYMBOL(bio_advance);
 
-Signed-off-by: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
----
- Documentation/target/index.rst                |  19 ++
- Documentation/target/scripts.rst              |  11 +
- Documentation/target/tcm_mod_builder.rst      | 149 ++++++++++
- Documentation/target/tcm_mod_builder.txt      | 145 ----------
- .../{tcmu-design.txt => tcmu-design.rst}      | 268 ++++++++++--------
- scripts/documentation-file-ref-check          |   2 +-
- 6 files changed, 326 insertions(+), 268 deletions(-)
- create mode 100644 Documentation/target/index.rst
- create mode 100644 Documentation/target/scripts.rst
- create mode 100644 Documentation/target/tcm_mod_builder.rst
- delete mode 100644 Documentation/target/tcm_mod_builder.txt
- rename Documentation/target/{tcmu-design.txt => tcmu-design.rst} (69%)
+It would be more logical to do bio_crypt_advance() before bio_advance_iter(), so
+that the special features (encryption and integrity) are grouped together.
 
-diff --git a/Documentation/target/index.rst b/Documentation/target/index.rst
-new file mode 100644
-index 000000000000..b68f48982392
---- /dev/null
-+++ b/Documentation/target/index.rst
-@@ -0,0 +1,19 @@
-+:orphan:
-+
-+==================
-+TCM Virtual Device
-+==================
-+
-+.. toctree::
-+    :maxdepth: 1
-+
-+    tcmu-design
-+    tcm_mod_builder
-+    scripts
-+
-+.. only::  subproject and html
-+
-+   Indices
-+   =======
-+
-+   * :ref:`genindex`
-diff --git a/Documentation/target/scripts.rst b/Documentation/target/scripts.rst
-new file mode 100644
-index 000000000000..172d42b522e4
---- /dev/null
-+++ b/Documentation/target/scripts.rst
-@@ -0,0 +1,11 @@
-+TCM mod builder script
-+----------------------
-+
-+.. literalinclude:: tcm_mod_builder.py
-+    :language: perl
-+
-+Target export device script
-+---------------------------
-+
-+.. literalinclude:: target-export-device
-+    :language: shell
-diff --git a/Documentation/target/tcm_mod_builder.rst b/Documentation/target/tcm_mod_builder.rst
-new file mode 100644
-index 000000000000..9bfc9822e2bd
---- /dev/null
-+++ b/Documentation/target/tcm_mod_builder.rst
-@@ -0,0 +1,149 @@
-+=========================================
-+The TCM v4 fabric module script generator
-+=========================================
-+
-+Greetings all,
-+
-+This document is intended to be a mini-HOWTO for using the tcm_mod_builder.py
-+script to generate a brand new functional TCM v4 fabric .ko module of your very own,
-+that once built can be immediately be loaded to start access the new TCM/ConfigFS
-+fabric skeleton, by simply using::
-+
-+	modprobe $TCM_NEW_MOD
-+	mkdir -p /sys/kernel/config/target/$TCM_NEW_MOD
-+
-+This script will create a new drivers/target/$TCM_NEW_MOD/, and will do the following
-+
-+	1) Generate new API callers for drivers/target/target_core_fabric_configs.c logic
-+	   ->make_tpg(), ->drop_tpg(), ->make_wwn(), ->drop_wwn().  These are created
-+	   into $TCM_NEW_MOD/$TCM_NEW_MOD_configfs.c
-+	2) Generate basic infrastructure for loading/unloading LKMs and TCM/ConfigFS fabric module
-+	   using a skeleton struct target_core_fabric_ops API template.
-+	3) Based on user defined T10 Proto_Ident for the new fabric module being built,
-+	   the TransportID / Initiator and Target WWPN related handlers for
-+	   SPC-3 persistent reservation are automatically generated in $TCM_NEW_MOD/$TCM_NEW_MOD_fabric.c
-+	   using drivers/target/target_core_fabric_lib.c logic.
-+	4) NOP API calls for all other Data I/O path and fabric dependent attribute logic
-+	   in $TCM_NEW_MOD/$TCM_NEW_MOD_fabric.c
-+
-+tcm_mod_builder.py depends upon the mandatory '-p $PROTO_IDENT' and '-m
-+$FABRIC_MOD_name' parameters, and actually running the script looks like::
-+
-+  target:/mnt/sdb/lio-core-2.6.git/Documentation/target# python tcm_mod_builder.py -p iSCSI -m tcm_nab5000
-+  tcm_dir: /mnt/sdb/lio-core-2.6.git/Documentation/target/../../
-+  Set fabric_mod_name: tcm_nab5000
-+  Set fabric_mod_dir:
-+  /mnt/sdb/lio-core-2.6.git/Documentation/target/../../drivers/target/tcm_nab5000
-+  Using proto_ident: iSCSI
-+  Creating fabric_mod_dir:
-+  /mnt/sdb/lio-core-2.6.git/Documentation/target/../../drivers/target/tcm_nab5000
-+  Writing file:
-+  /mnt/sdb/lio-core-2.6.git/Documentation/target/../../drivers/target/tcm_nab5000/tcm_nab5000_base.h
-+  Using tcm_mod_scan_fabric_ops:
-+  /mnt/sdb/lio-core-2.6.git/Documentation/target/../../include/target/target_core_fabric_ops.h
-+  Writing file:
-+  /mnt/sdb/lio-core-2.6.git/Documentation/target/../../drivers/target/tcm_nab5000/tcm_nab5000_fabric.c
-+  Writing file:
-+  /mnt/sdb/lio-core-2.6.git/Documentation/target/../../drivers/target/tcm_nab5000/tcm_nab5000_fabric.h
-+  Writing file:
-+  /mnt/sdb/lio-core-2.6.git/Documentation/target/../../drivers/target/tcm_nab5000/tcm_nab5000_configfs.c
-+  Writing file:
-+  /mnt/sdb/lio-core-2.6.git/Documentation/target/../../drivers/target/tcm_nab5000/Kbuild
-+  Writing file:
-+  /mnt/sdb/lio-core-2.6.git/Documentation/target/../../drivers/target/tcm_nab5000/Kconfig
-+  Would you like to add tcm_nab5000to drivers/target/Kbuild..? [yes,no]: yes
-+  Would you like to add tcm_nab5000to drivers/target/Kconfig..? [yes,no]: yes
-+
-+At the end of tcm_mod_builder.py. the script will ask to add the following
-+line to drivers/target/Kbuild::
-+
-+	obj-$(CONFIG_TCM_NAB5000)       += tcm_nab5000/
-+
-+and the same for drivers/target/Kconfig::
-+
-+	source "drivers/target/tcm_nab5000/Kconfig"
-+
-+#) Run 'make menuconfig' and select the new CONFIG_TCM_NAB5000 item::
-+
-+	<M>   TCM_NAB5000 fabric module
-+
-+#) Build using 'make modules', once completed you will have::
-+
-+    target:/mnt/sdb/lio-core-2.6.git# ls -la drivers/target/tcm_nab5000/
-+    total 1348
-+    drwxr-xr-x 2 root root   4096 2010-10-05 03:23 .
-+    drwxr-xr-x 9 root root   4096 2010-10-05 03:22 ..
-+    -rw-r--r-- 1 root root    282 2010-10-05 03:22 Kbuild
-+    -rw-r--r-- 1 root root    171 2010-10-05 03:22 Kconfig
-+    -rw-r--r-- 1 root root     49 2010-10-05 03:23 modules.order
-+    -rw-r--r-- 1 root root    738 2010-10-05 03:22 tcm_nab5000_base.h
-+    -rw-r--r-- 1 root root   9096 2010-10-05 03:22 tcm_nab5000_configfs.c
-+    -rw-r--r-- 1 root root 191200 2010-10-05 03:23 tcm_nab5000_configfs.o
-+    -rw-r--r-- 1 root root  40504 2010-10-05 03:23 .tcm_nab5000_configfs.o.cmd
-+    -rw-r--r-- 1 root root   5414 2010-10-05 03:22 tcm_nab5000_fabric.c
-+    -rw-r--r-- 1 root root   2016 2010-10-05 03:22 tcm_nab5000_fabric.h
-+    -rw-r--r-- 1 root root 190932 2010-10-05 03:23 tcm_nab5000_fabric.o
-+    -rw-r--r-- 1 root root  40713 2010-10-05 03:23 .tcm_nab5000_fabric.o.cmd
-+    -rw-r--r-- 1 root root 401861 2010-10-05 03:23 tcm_nab5000.ko
-+    -rw-r--r-- 1 root root    265 2010-10-05 03:23 .tcm_nab5000.ko.cmd
-+    -rw-r--r-- 1 root root    459 2010-10-05 03:23 tcm_nab5000.mod.c
-+    -rw-r--r-- 1 root root  23896 2010-10-05 03:23 tcm_nab5000.mod.o
-+    -rw-r--r-- 1 root root  22655 2010-10-05 03:23 .tcm_nab5000.mod.o.cmd
-+    -rw-r--r-- 1 root root 379022 2010-10-05 03:23 tcm_nab5000.o
-+    -rw-r--r-- 1 root root    211 2010-10-05 03:23 .tcm_nab5000.o.cmd
-+
-+#) Load the new module, create a lun_0 configfs group, and add new TCM Core
-+   IBLOCK backstore symlink to port::
-+
-+    target:/mnt/sdb/lio-core-2.6.git# insmod drivers/target/tcm_nab5000.ko
-+    target:/mnt/sdb/lio-core-2.6.git# mkdir -p /sys/kernel/config/target/nab5000/iqn.foo/tpgt_1/lun/lun_0
-+    target:/mnt/sdb/lio-core-2.6.git# cd /sys/kernel/config/target/nab5000/iqn.foo/tpgt_1/lun/lun_0/
-+    target:/sys/kernel/config/target/nab5000/iqn.foo/tpgt_1/lun/lun_0# ln -s /sys/kernel/config/target/core/iblock_0/lvm_test0 nab5000_port
-+
-+    target:/sys/kernel/config/target/nab5000/iqn.foo/tpgt_1/lun/lun_0# cd -
-+    target:/mnt/sdb/lio-core-2.6.git# tree /sys/kernel/config/target/nab5000/
-+    /sys/kernel/config/target/nab5000/
-+    |-- discovery_auth
-+    |-- iqn.foo
-+    |   `-- tpgt_1
-+    |       |-- acls
-+    |       |-- attrib
-+    |       |-- lun
-+    |       |   `-- lun_0
-+    |       |       |-- alua_tg_pt_gp
-+    |       |       |-- alua_tg_pt_offline
-+    |       |       |-- alua_tg_pt_status
-+    |       |       |-- alua_tg_pt_write_md
-+    |	|	`-- nab5000_port -> ../../../../../../target/core/iblock_0/lvm_test0
-+    |       |-- np
-+    |       `-- param
-+    `-- version
-+
-+    target:/mnt/sdb/lio-core-2.6.git# lsmod
-+    Module                  Size  Used by
-+    tcm_nab5000             3935  4
-+    iscsi_target_mod      193211  0
-+    target_core_stgt        8090  0
-+    target_core_pscsi      11122  1
-+    target_core_file        9172  2
-+    target_core_iblock      9280  1
-+    target_core_mod       228575  31
-+    tcm_nab5000,iscsi_target_mod,target_core_stgt,target_core_pscsi,target_core_file,target_core_iblock
-+    libfc                  73681  0
-+    scsi_debug             56265  0
-+    scsi_tgt                8666  1 target_core_stgt
-+    configfs               20644  2 target_core_mod
-+
-+----------------------------------------------------------------------
-+
-+Future TODO items
-+=================
-+
-+	1) Add more T10 proto_idents
-+	2) Make tcm_mod_dump_fabric_ops() smarter and generate function pointer
-+	   defs directly from include/target/target_core_fabric_ops.h:struct target_core_fabric_ops
-+	   structure members.
-+
-+October 5th, 2010
-+
-+Nicholas A. Bellinger <nab@linux-iscsi.org>
-diff --git a/Documentation/target/tcm_mod_builder.txt b/Documentation/target/tcm_mod_builder.txt
-deleted file mode 100644
-index ae22f7005540..000000000000
---- a/Documentation/target/tcm_mod_builder.txt
-+++ /dev/null
-@@ -1,145 +0,0 @@
-->>>>>>>>>> The TCM v4 fabric module script generator <<<<<<<<<<
--
--Greetings all,
--
--This document is intended to be a mini-HOWTO for using the tcm_mod_builder.py
--script to generate a brand new functional TCM v4 fabric .ko module of your very own,
--that once built can be immediately be loaded to start access the new TCM/ConfigFS
--fabric skeleton, by simply using:
--
--	modprobe $TCM_NEW_MOD
--	mkdir -p /sys/kernel/config/target/$TCM_NEW_MOD
--
--This script will create a new drivers/target/$TCM_NEW_MOD/, and will do the following
--
--	*) Generate new API callers for drivers/target/target_core_fabric_configs.c logic
--	   ->make_tpg(), ->drop_tpg(), ->make_wwn(), ->drop_wwn().  These are created
--	   into $TCM_NEW_MOD/$TCM_NEW_MOD_configfs.c
--	*) Generate basic infrastructure for loading/unloading LKMs and TCM/ConfigFS fabric module
--	   using a skeleton struct target_core_fabric_ops API template.
--	*) Based on user defined T10 Proto_Ident for the new fabric module being built,
--	   the TransportID / Initiator and Target WWPN related handlers for
--	   SPC-3 persistent reservation are automatically generated in $TCM_NEW_MOD/$TCM_NEW_MOD_fabric.c
--	   using drivers/target/target_core_fabric_lib.c logic.
--	*) NOP API calls for all other Data I/O path and fabric dependent attribute logic
--	   in $TCM_NEW_MOD/$TCM_NEW_MOD_fabric.c
--
--tcm_mod_builder.py depends upon the mandatory '-p $PROTO_IDENT' and '-m
--$FABRIC_MOD_name' parameters, and actually running the script looks like:
--
--target:/mnt/sdb/lio-core-2.6.git/Documentation/target# python tcm_mod_builder.py -p iSCSI -m tcm_nab5000
--tcm_dir: /mnt/sdb/lio-core-2.6.git/Documentation/target/../../
--Set fabric_mod_name: tcm_nab5000
--Set fabric_mod_dir:
--/mnt/sdb/lio-core-2.6.git/Documentation/target/../../drivers/target/tcm_nab5000
--Using proto_ident: iSCSI
--Creating fabric_mod_dir:
--/mnt/sdb/lio-core-2.6.git/Documentation/target/../../drivers/target/tcm_nab5000
--Writing file:
--/mnt/sdb/lio-core-2.6.git/Documentation/target/../../drivers/target/tcm_nab5000/tcm_nab5000_base.h
--Using tcm_mod_scan_fabric_ops:
--/mnt/sdb/lio-core-2.6.git/Documentation/target/../../include/target/target_core_fabric_ops.h
--Writing file:
--/mnt/sdb/lio-core-2.6.git/Documentation/target/../../drivers/target/tcm_nab5000/tcm_nab5000_fabric.c
--Writing file:
--/mnt/sdb/lio-core-2.6.git/Documentation/target/../../drivers/target/tcm_nab5000/tcm_nab5000_fabric.h
--Writing file:
--/mnt/sdb/lio-core-2.6.git/Documentation/target/../../drivers/target/tcm_nab5000/tcm_nab5000_configfs.c
--Writing file:
--/mnt/sdb/lio-core-2.6.git/Documentation/target/../../drivers/target/tcm_nab5000/Kbuild
--Writing file:
--/mnt/sdb/lio-core-2.6.git/Documentation/target/../../drivers/target/tcm_nab5000/Kconfig
--Would you like to add tcm_nab5000to drivers/target/Kbuild..? [yes,no]: yes
--Would you like to add tcm_nab5000to drivers/target/Kconfig..? [yes,no]: yes
--
--At the end of tcm_mod_builder.py. the script will ask to add the following
--line to drivers/target/Kbuild:
--
--	obj-$(CONFIG_TCM_NAB5000)       += tcm_nab5000/
--
--and the same for drivers/target/Kconfig:
--
--	source "drivers/target/tcm_nab5000/Kconfig"
--
--*) Run 'make menuconfig' and select the new CONFIG_TCM_NAB5000 item:
--
--	<M>   TCM_NAB5000 fabric module
--
--*) Build using 'make modules', once completed you will have:
--
--target:/mnt/sdb/lio-core-2.6.git# ls -la drivers/target/tcm_nab5000/
--total 1348
--drwxr-xr-x 2 root root   4096 2010-10-05 03:23 .
--drwxr-xr-x 9 root root   4096 2010-10-05 03:22 ..
---rw-r--r-- 1 root root    282 2010-10-05 03:22 Kbuild
---rw-r--r-- 1 root root    171 2010-10-05 03:22 Kconfig
---rw-r--r-- 1 root root     49 2010-10-05 03:23 modules.order
---rw-r--r-- 1 root root    738 2010-10-05 03:22 tcm_nab5000_base.h
---rw-r--r-- 1 root root   9096 2010-10-05 03:22 tcm_nab5000_configfs.c
---rw-r--r-- 1 root root 191200 2010-10-05 03:23 tcm_nab5000_configfs.o
---rw-r--r-- 1 root root  40504 2010-10-05 03:23 .tcm_nab5000_configfs.o.cmd
---rw-r--r-- 1 root root   5414 2010-10-05 03:22 tcm_nab5000_fabric.c
---rw-r--r-- 1 root root   2016 2010-10-05 03:22 tcm_nab5000_fabric.h
---rw-r--r-- 1 root root 190932 2010-10-05 03:23 tcm_nab5000_fabric.o
---rw-r--r-- 1 root root  40713 2010-10-05 03:23 .tcm_nab5000_fabric.o.cmd
---rw-r--r-- 1 root root 401861 2010-10-05 03:23 tcm_nab5000.ko
---rw-r--r-- 1 root root    265 2010-10-05 03:23 .tcm_nab5000.ko.cmd
---rw-r--r-- 1 root root    459 2010-10-05 03:23 tcm_nab5000.mod.c
---rw-r--r-- 1 root root  23896 2010-10-05 03:23 tcm_nab5000.mod.o
---rw-r--r-- 1 root root  22655 2010-10-05 03:23 .tcm_nab5000.mod.o.cmd
---rw-r--r-- 1 root root 379022 2010-10-05 03:23 tcm_nab5000.o
---rw-r--r-- 1 root root    211 2010-10-05 03:23 .tcm_nab5000.o.cmd
--
--*) Load the new module, create a lun_0 configfs group, and add new TCM Core
--   IBLOCK backstore symlink to port:
--
--target:/mnt/sdb/lio-core-2.6.git# insmod drivers/target/tcm_nab5000.ko
--target:/mnt/sdb/lio-core-2.6.git# mkdir -p /sys/kernel/config/target/nab5000/iqn.foo/tpgt_1/lun/lun_0
--target:/mnt/sdb/lio-core-2.6.git# cd /sys/kernel/config/target/nab5000/iqn.foo/tpgt_1/lun/lun_0/
--target:/sys/kernel/config/target/nab5000/iqn.foo/tpgt_1/lun/lun_0# ln -s /sys/kernel/config/target/core/iblock_0/lvm_test0 nab5000_port
--
--target:/sys/kernel/config/target/nab5000/iqn.foo/tpgt_1/lun/lun_0# cd -
--target:/mnt/sdb/lio-core-2.6.git# tree /sys/kernel/config/target/nab5000/
--/sys/kernel/config/target/nab5000/
--|-- discovery_auth
--|-- iqn.foo
--|   `-- tpgt_1
--|       |-- acls
--|       |-- attrib
--|       |-- lun
--|       |   `-- lun_0
--|       |       |-- alua_tg_pt_gp
--|       |       |-- alua_tg_pt_offline
--|       |       |-- alua_tg_pt_status
--|       |       |-- alua_tg_pt_write_md
--|	|	`-- nab5000_port -> ../../../../../../target/core/iblock_0/lvm_test0
--|       |-- np
--|       `-- param
--`-- version
--
--target:/mnt/sdb/lio-core-2.6.git# lsmod
--Module                  Size  Used by
--tcm_nab5000             3935  4
--iscsi_target_mod      193211  0
--target_core_stgt        8090  0
--target_core_pscsi      11122  1
--target_core_file        9172  2
--target_core_iblock      9280  1
--target_core_mod       228575  31
--tcm_nab5000,iscsi_target_mod,target_core_stgt,target_core_pscsi,target_core_file,target_core_iblock
--libfc                  73681  0
--scsi_debug             56265  0
--scsi_tgt                8666  1 target_core_stgt
--configfs               20644  2 target_core_mod
--
------------------------------------------------------------------------
--
--Future TODO items:
--
--	*) Add more T10 proto_idents
--	*) Make tcm_mod_dump_fabric_ops() smarter and generate function pointer
--	   defs directly from include/target/target_core_fabric_ops.h:struct target_core_fabric_ops
--	   structure members.
--
--October 5th, 2010
--Nicholas A. Bellinger <nab@linux-iscsi.org>
-diff --git a/Documentation/target/tcmu-design.txt b/Documentation/target/tcmu-design.rst
-similarity index 69%
-rename from Documentation/target/tcmu-design.txt
-rename to Documentation/target/tcmu-design.rst
-index 4cebc1ebf99a..a7b426707bf6 100644
---- a/Documentation/target/tcmu-design.txt
-+++ b/Documentation/target/tcmu-design.rst
-@@ -1,25 +1,30 @@
--Contents:
-+====================
-+TCM Userspace Design
-+====================
-+
-+
-+.. Contents:
- 
--1) TCM Userspace Design
--  a) Background
--  b) Benefits
--  c) Design constraints
--  d) Implementation overview
--     i. Mailbox
--     ii. Command ring
--     iii. Data Area
--  e) Device discovery
--  f) Device events
--  g) Other contingencies
--2) Writing a user pass-through handler
--  a) Discovering and configuring TCMU uio devices
--  b) Waiting for events on the device(s)
--  c) Managing the command ring
--3) A final note
-+   1) TCM Userspace Design
-+     a) Background
-+     b) Benefits
-+     c) Design constraints
-+     d) Implementation overview
-+        i. Mailbox
-+        ii. Command ring
-+        iii. Data Area
-+     e) Device discovery
-+     f) Device events
-+     g) Other contingencies
-+   2) Writing a user pass-through handler
-+     a) Discovering and configuring TCMU uio devices
-+     b) Waiting for events on the device(s)
-+     c) Managing the command ring
-+   3) A final note
- 
- 
- TCM Userspace Design
----------------------
-+====================
- 
- TCM is another name for LIO, an in-kernel iSCSI target (server).
- Existing TCM targets run in the kernel.  TCMU (TCM in Userspace)
-@@ -32,7 +37,8 @@ modules for file, block device, RAM or using another SCSI device as
- storage.  These are called "backstores" or "storage engines".  These
- built-in modules are implemented entirely as kernel code.
- 
--Background:
-+Background
-+----------
- 
- In addition to modularizing the transport protocol used for carrying
- SCSI commands ("fabrics"), the Linux kernel target, LIO, also modularizes
-@@ -60,7 +66,8 @@ kernel, another approach is to create a userspace pass-through
- backstore for LIO, "TCMU".
- 
- 
--Benefits:
-+Benefits
-+--------
- 
- In addition to allowing relatively easy support for RBD and GLFS, TCMU
- will also allow easier development of new backstores. TCMU combines
-@@ -72,21 +79,25 @@ The disadvantage is there are more distinct components to configure, and
- potentially to malfunction. This is unavoidable, but hopefully not
- fatal if we're careful to keep things as simple as possible.
- 
--Design constraints:
-+Design constraints
-+------------------
- 
- - Good performance: high throughput, low latency
- - Cleanly handle if userspace:
-+
-    1) never attaches
-    2) hangs
-    3) dies
-    4) misbehaves
-+
- - Allow future flexibility in user & kernel implementations
- - Be reasonably memory-efficient
- - Simple to configure & run
- - Simple to write a userspace backend
- 
- 
--Implementation overview:
-+Implementation overview
-+-----------------------
- 
- The core of the TCMU interface is a memory region that is shared
- between kernel and userspace. Within this region is: a control area
-@@ -108,7 +119,8 @@ the region mapped at a different virtual address.
- 
- See target_core_user.h for the struct definitions.
- 
--The Mailbox:
-+The Mailbox
-+-----------
- 
- The mailbox is always at the start of the shared memory region, and
- contains a version, details about the starting offset and size of the
-@@ -117,19 +129,27 @@ userspace (respectively) to put commands on the ring, and indicate
- when the commands are completed.
- 
- version - 1 (userspace should abort if otherwise)
-+
- flags:
--- TCMU_MAILBOX_FLAG_CAP_OOOC: indicates out-of-order completion is
--  supported.  See "The Command Ring" for details.
--cmdr_off - The offset of the start of the command ring from the start
--of the memory region, to account for the mailbox size.
--cmdr_size - The size of the command ring. This does *not* need to be a
--power of two.
--cmd_head - Modified by the kernel to indicate when a command has been
--placed on the ring.
--cmd_tail - Modified by userspace to indicate when it has completed
--processing of a command.
-+    - TCMU_MAILBOX_FLAG_CAP_OOOC:
-+	indicates out-of-order completion is supported.
-+	See "The Command Ring" for details.
- 
--The Command Ring:
-+cmdr_off
-+	The offset of the start of the command ring from the start
-+	of the memory region, to account for the mailbox size.
-+cmdr_size
-+	The size of the command ring. This does *not* need to be a
-+	power of two.
-+cmd_head
-+	Modified by the kernel to indicate when a command has been
-+	placed on the ring.
-+cmd_tail
-+	Modified by userspace to indicate when it has completed
-+	processing of a command.
-+
-+The Command Ring
-+----------------
- 
- Commands are placed on the ring by the kernel incrementing
- mailbox.cmd_head by the size of the command, modulo cmdr_size, and
-@@ -180,29 +200,31 @@ opcode it does not handle, it must set UNKNOWN_OP bit (bit 0) in
- hdr.uflags, update cmd_tail, and proceed with processing additional
- commands, if any.
- 
--The Data Area:
-+The Data Area
-+-------------
- 
- This is shared-memory space after the command ring. The organization
- of this area is not defined in the TCMU interface, and userspace
- should access only the parts referenced by pending iovs.
- 
- 
--Device Discovery:
-+Device Discovery
-+----------------
- 
- Other devices may be using UIO besides TCMU. Unrelated user processes
- may also be handling different sets of TCMU devices. TCMU userspace
- processes must find their devices by scanning sysfs
- class/uio/uio*/name. For TCMU devices, these names will be of the
--format:
-+format::
- 
--tcm-user/<hba_num>/<device_name>/<subtype>/<path>
-+	tcm-user/<hba_num>/<device_name>/<subtype>/<path>
- 
- where "tcm-user" is common for all TCMU-backed UIO devices. <hba_num>
- and <device_name> allow userspace to find the device's path in the
- kernel target's configfs tree. Assuming the usual mount point, it is
--found at:
-+found at::
- 
--/sys/kernel/config/target/core/user_<hba_num>/<device_name>
-+	/sys/kernel/config/target/core/user_<hba_num>/<device_name>
- 
- This location contains attributes such as "hw_block_size", that
- userspace needs to know for correct operation.
-@@ -214,15 +236,16 @@ configure the device, if needed. The name cannot contain ':', due to
- LIO limitations.
- 
- For all devices so discovered, the user handler opens /dev/uioX and
--calls mmap():
-+calls mmap()::
- 
--mmap(NULL, size, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0)
-+	mmap(NULL, size, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0)
- 
- where size must be equal to the value read from
- /sys/class/uio/uioX/maps/map0/size.
- 
- 
--Device Events:
-+Device Events
-+-------------
- 
- If a new device is added or removed, a notification will be broadcast
- over netlink, using a generic netlink family name of "TCM-USER" and a
-@@ -233,7 +256,8 @@ the LIO device, so that after determining the device is supported
- (based on subtype) it can take the appropriate action.
- 
- 
--Other contingencies:
-+Other contingencies
-+-------------------
- 
- Userspace handler process never attaches:
- 
-@@ -258,7 +282,7 @@ Userspace handler process is malicious:
- 
- 
- Writing a user pass-through handler (with example code)
---------------------------------------------------------
-+=======================================================
- 
- A user process handing a TCMU device must support the following:
- 
-@@ -277,103 +301,103 @@ TCMU is designed so that multiple unrelated processes can manage TCMU
- devices separately. All handlers should make sure to only open their
- devices, based opon a known subtype string.
- 
--a) Discovering and configuring TCMU UIO devices:
-+a) Discovering and configuring TCMU UIO devices::
- 
--(error checking omitted for brevity)
-+      /* error checking omitted for brevity */
- 
--int fd, dev_fd;
--char buf[256];
--unsigned long long map_len;
--void *map;
-+      int fd, dev_fd;
-+      char buf[256];
-+      unsigned long long map_len;
-+      void *map;
- 
--fd = open("/sys/class/uio/uio0/name", O_RDONLY);
--ret = read(fd, buf, sizeof(buf));
--close(fd);
--buf[ret-1] = '\0'; /* null-terminate and chop off the \n */
-+      fd = open("/sys/class/uio/uio0/name", O_RDONLY);
-+      ret = read(fd, buf, sizeof(buf));
-+      close(fd);
-+      buf[ret-1] = '\0'; /* null-terminate and chop off the \n */
- 
--/* we only want uio devices whose name is a format we expect */
--if (strncmp(buf, "tcm-user", 8))
-+      /* we only want uio devices whose name is a format we expect */
-+      if (strncmp(buf, "tcm-user", 8))
- 	exit(-1);
- 
--/* Further checking for subtype also needed here */
-+      /* Further checking for subtype also needed here */
- 
--fd = open(/sys/class/uio/%s/maps/map0/size, O_RDONLY);
--ret = read(fd, buf, sizeof(buf));
--close(fd);
--str_buf[ret-1] = '\0'; /* null-terminate and chop off the \n */
-+      fd = open(/sys/class/uio/%s/maps/map0/size, O_RDONLY);
-+      ret = read(fd, buf, sizeof(buf));
-+      close(fd);
-+      str_buf[ret-1] = '\0'; /* null-terminate and chop off the \n */
- 
--map_len = strtoull(buf, NULL, 0);
-+      map_len = strtoull(buf, NULL, 0);
- 
--dev_fd = open("/dev/uio0", O_RDWR);
--map = mmap(NULL, map_len, PROT_READ|PROT_WRITE, MAP_SHARED, dev_fd, 0);
-+      dev_fd = open("/dev/uio0", O_RDWR);
-+      map = mmap(NULL, map_len, PROT_READ|PROT_WRITE, MAP_SHARED, dev_fd, 0);
- 
- 
--b) Waiting for events on the device(s)
-+      b) Waiting for events on the device(s)
- 
--while (1) {
--  char buf[4];
-+      while (1) {
-+        char buf[4];
- 
--  int ret = read(dev_fd, buf, 4); /* will block */
-+        int ret = read(dev_fd, buf, 4); /* will block */
- 
--  handle_device_events(dev_fd, map);
--}
--
--
--c) Managing the command ring
--
--#include <linux/target_core_user.h>
--
--int handle_device_events(int fd, void *map)
--{
--  struct tcmu_mailbox *mb = map;
--  struct tcmu_cmd_entry *ent = (void *) mb + mb->cmdr_off + mb->cmd_tail;
--  int did_some_work = 0;
--
--  /* Process events from cmd ring until we catch up with cmd_head */
--  while (ent != (void *)mb + mb->cmdr_off + mb->cmd_head) {
--
--    if (tcmu_hdr_get_op(ent->hdr.len_op) == TCMU_OP_CMD) {
--      uint8_t *cdb = (void *)mb + ent->req.cdb_off;
--      bool success = true;
-+        handle_device_events(dev_fd, map);
-+      }
- 
--      /* Handle command here. */
--      printf("SCSI opcode: 0x%x\n", cdb[0]);
- 
--      /* Set response fields */
--      if (success)
--        ent->rsp.scsi_status = SCSI_NO_SENSE;
--      else {
--        /* Also fill in rsp->sense_buffer here */
--        ent->rsp.scsi_status = SCSI_CHECK_CONDITION;
-+c) Managing the command ring::
-+
-+      #include <linux/target_core_user.h>
-+
-+      int handle_device_events(int fd, void *map)
-+      {
-+        struct tcmu_mailbox *mb = map;
-+        struct tcmu_cmd_entry *ent = (void *) mb + mb->cmdr_off + mb->cmd_tail;
-+        int did_some_work = 0;
-+
-+        /* Process events from cmd ring until we catch up with cmd_head */
-+        while (ent != (void *)mb + mb->cmdr_off + mb->cmd_head) {
-+
-+          if (tcmu_hdr_get_op(ent->hdr.len_op) == TCMU_OP_CMD) {
-+            uint8_t *cdb = (void *)mb + ent->req.cdb_off;
-+            bool success = true;
-+
-+            /* Handle command here. */
-+            printf("SCSI opcode: 0x%x\n", cdb[0]);
-+
-+            /* Set response fields */
-+            if (success)
-+              ent->rsp.scsi_status = SCSI_NO_SENSE;
-+            else {
-+              /* Also fill in rsp->sense_buffer here */
-+              ent->rsp.scsi_status = SCSI_CHECK_CONDITION;
-+            }
-+          }
-+          else if (tcmu_hdr_get_op(ent->hdr.len_op) != TCMU_OP_PAD) {
-+            /* Tell the kernel we didn't handle unknown opcodes */
-+            ent->hdr.uflags |= TCMU_UFLAG_UNKNOWN_OP;
-+          }
-+          else {
-+            /* Do nothing for PAD entries except update cmd_tail */
-+          }
-+
-+          /* update cmd_tail */
-+          mb->cmd_tail = (mb->cmd_tail + tcmu_hdr_get_len(&ent->hdr)) % mb->cmdr_size;
-+          ent = (void *) mb + mb->cmdr_off + mb->cmd_tail;
-+          did_some_work = 1;
-+        }
-+
-+        /* Notify the kernel that work has been finished */
-+        if (did_some_work) {
-+          uint32_t buf = 0;
-+
-+          write(fd, &buf, 4);
-+        }
-+
-+        return 0;
-       }
--    }
--    else if (tcmu_hdr_get_op(ent->hdr.len_op) != TCMU_OP_PAD) {
--      /* Tell the kernel we didn't handle unknown opcodes */
--      ent->hdr.uflags |= TCMU_UFLAG_UNKNOWN_OP;
--    }
--    else {
--      /* Do nothing for PAD entries except update cmd_tail */
--    }
--
--    /* update cmd_tail */
--    mb->cmd_tail = (mb->cmd_tail + tcmu_hdr_get_len(&ent->hdr)) % mb->cmdr_size;
--    ent = (void *) mb + mb->cmdr_off + mb->cmd_tail;
--    did_some_work = 1;
--  }
--
--  /* Notify the kernel that work has been finished */
--  if (did_some_work) {
--    uint32_t buf = 0;
--
--    write(fd, &buf, 4);
--  }
--
--  return 0;
--}
- 
- 
- A final note
--------------
-+============
- 
- Please be careful to return codes as defined by the SCSI
- specifications. These are different than some values defined in the
-diff --git a/scripts/documentation-file-ref-check b/scripts/documentation-file-ref-check
-index 440227bb55a9..a4139a576726 100755
---- a/scripts/documentation-file-ref-check
-+++ b/scripts/documentation-file-ref-check
-@@ -124,7 +124,7 @@ while (<IN>) {
- 		# Remove sched-pelt false-positive
- 		next if ($fulref =~ m,^Documentation/scheduler/sched-pelt$,);
- 
--		# Discard some build examples from Documentation/target/tcm_mod_builder.txt
-+		# Discard some build examples from Documentation/target/tcm_mod_builder.rst
- 		next if ($fulref =~ m,mnt/sdb/lio-core-2.6.git/Documentation/target,);
- 
- 		# Check if exists, evaluating wildcards
--- 
-2.21.0
+>  
+> diff --git a/block/blk-crypt-ctx.c b/block/blk-crypt-ctx.c
+> new file mode 100644
+> index 000000000000..174c058ab0c6
+> --- /dev/null
+> +++ b/block/blk-crypt-ctx.c
+
+It would be more logical for this file to be named "bio-crypt-ctx.c", as that
+would match 'struct bio_crypt_ctx' and help distinguish it from "blk-crypto".
+
+> @@ -0,0 +1,90 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +/*
+> + * Copyright 2019 Google LLC
+> + */
+> +
+> +#include <linux/bio.h>
+> +#include <linux/blkdev.h>
+> +#include <linux/slab.h>
+> +#include <linux/keyslot-manager.h>
+> +
+> +struct bio_crypt_ctx *bio_crypt_alloc_ctx(gfp_t gfp_mask)
+> +{
+> +	return kzalloc(sizeof(struct bio_crypt_ctx), gfp_mask);
+> +}
+
+This needs EXPORT_SYMBOL(), since it's called by bio_crypt_set_ctx() which is an
+inline function that will be called by places that submit bios.
+
+> +
+> +void bio_crypt_free_ctx(struct bio *bio)
+> +{
+> +	kzfree(bio->bi_crypt_context);
+> +	bio->bi_crypt_context = NULL;
+> +}
+> +
+> +int bio_clone_crypt_context(struct bio *dst, struct bio *src, gfp_t gfp_mask)
+> +{
+
+How about naming this function bio_crypt_clone(), for consistency with
+bio_integrity_clone()?
+
+> +	if (!bio_is_encrypted(src) || bio_crypt_swhandled(src))
+> +		return 0;
+
+Why isn't cloning needed when bio_crypt_swhandled(src)?
+
+> +
+> +	dst->bi_crypt_context = bio_crypt_alloc_ctx(gfp_mask);
+> +	if (!dst->bi_crypt_context)
+> +		return -ENOMEM;
+> +
+> +	*dst->bi_crypt_context = *src->bi_crypt_context;
+> +
+> +	if (!bio_crypt_has_keyslot(src))
+> +		return 0;
+> +
+> +	keyslot_manager_get_slot(src->bi_crypt_context->processing_ksm,
+> +				 src->bi_crypt_context->keyslot);
+> +
+> +	return 0;
+> +}
+
+Nit: a conditional get would be cleaner than an early return here.
+
+	if (bio_crypt_has_keyslot(src))
+		keyslot_manager_get_slot(src->bi_crypt_context->processing_ksm,
+					 src->bi_crypt_context->keyslot);
+
+Also, this function needs EXPORT_SYMBOL(), since it's called by drivers/md/dm.c,
+which can be a loadable module.
+
+> +/*
+> + * Checks that two bio crypt contexts are compatible - i.e. that
+> + * they are mergeable except for data_unit_num continuity.
+> + */
+> +bool bio_crypt_ctx_compatible(struct bio *b_1, struct bio *b_2)
+> +{
+> +	struct bio_crypt_ctx *bc1 = b_1->bi_crypt_context;
+> +	struct bio_crypt_ctx *bc2 = b_2->bi_crypt_context;
+> +
+> +	if (bio_is_encrypted(b_1) != bio_is_encrypted(b_2))
+> +		return false;
+> +
+> +	if (!bio_is_encrypted(b_1))
+> +		return true;
+> +
+> +	return bc1->keyslot != bc2->keyslot &&
+> +	       bc1->data_unit_size_bits == bc2->data_unit_size_bits;
+> +}
+
+It needs to be 'bc1->keyslot == bc2->keyslot'.
+
+> +
+> +/*
+> + * Checks that two bio crypt contexts are compatible, and also
+> + * that their data_unit_nums are continuous (and can hence be merged)
+> + */
+> +bool bio_crypt_ctx_back_mergeable(struct bio *b_1,
+> +				  unsigned int b1_sectors,
+> +				  struct bio *b_2)
+> +{
+> +	struct bio_crypt_ctx *bc1 = b_1->bi_crypt_context;
+> +	struct bio_crypt_ctx *bc2 = b_2->bi_crypt_context;
+> +
+> +	if (!bio_crypt_ctx_compatible(b_1, b_2))
+> +		return false;
+> +
+> +	return !bio_is_encrypted(b_1) ||
+> +		(bc1->data_unit_num +
+> +		(b1_sectors >> (bc1->data_unit_size_bits - 9)) ==
+> +		bc2->data_unit_num);
+> +}
+> +
+
+Unnecessary blank line at end of file.
+
+> diff --git a/include/linux/bio.h b/include/linux/bio.h
+> index 0f23b5682640..ba9552932571 100644
+> --- a/include/linux/bio.h
+> +++ b/include/linux/bio.h
+> @@ -561,6 +561,186 @@ static inline void bvec_kunmap_irq(char *buffer, unsigned long *flags)
+>  }
+>  #endif
+>  
+> +#ifdef CONFIG_BLK_INLINE_ENCRYPTION
+> +extern int bio_clone_crypt_context(struct bio *dst, struct bio *src,
+> +				   gfp_t gfp_mask);
+> +
+> +static inline bool bio_is_encrypted(struct bio *bio)
+> +{
+> +	return bio && bio->bi_crypt_context;
+> +}
+
+Is the 'bio != NULL' check actually needed?  Most bio helper functions don't
+check for NULL, as it's not a meaningful case.
+
+> +
+> +static inline bool bio_crypt_has_keyslot(struct bio *bio)
+> +{
+> +	return bio_is_encrypted(bio) &&
+> +	       bio->bi_crypt_context->keyslot >= 0;
+> +}
+> +
+
+I think the bio_is_encrypted() check here should be dropped, since all callers
+check it beforehand anyway.  It doesn't really make sense for someone to call
+functions that are meant to access fields of the bio_crypt_ctx, before verifying
+that there actually is a bio_crypt_ctx.  Other bio_crypt_* functions don't check
+for NULL, so it seems inconsistent that this one does.
+
+> +
+> +static inline int bio_crypt_get_slot(struct bio *bio)
+> +{
+> +	return bio->bi_crypt_context->keyslot;
+> +}
+
+For consistency this should be named *_get_keyslot(), not *_get_slot().
+
+> +
+> +static inline void bio_crypt_set_keyslot(struct bio *bio,
+> +					 unsigned int keyslot,
+> +					 struct keyslot_manager *ksm)
+> +{
+> +	bio->bi_crypt_context->keyslot = keyslot;
+> +	bio->bi_crypt_context->processing_ksm = ksm;
+> +
+> +	bio->bi_crypt_context->crypt_iter = bio->bi_iter;
+> +	bio->bi_crypt_context->sw_data_unit_num =
+> +		bio->bi_crypt_context->data_unit_num;
+> +}
+> +
+> +static inline void bio_crypt_unset_keyslot(struct bio *bio)
+> +{
+> +	bio->bi_crypt_context->processing_ksm = NULL;
+> +	bio->bi_crypt_context->keyslot = -1;
+> +}
+> +
+> +static inline u8 *bio_crypt_raw_key(struct bio *bio)
+> +{
+> +	return bio->bi_crypt_context->raw_key;
+> +}
+> +
+> +static inline enum blk_crypt_mode_num bio_crypt_mode(struct bio *bio)
+> +{
+> +	return bio->bi_crypt_context->crypt_mode;
+> +}
+
+bio_crypt_unset_keyslot(), bio_crypt_raw_key(), and bio_crypt_mode() are only
+used in blk-crypto.c.  Is there any reason for block users or drivers to need to
+call them?  If not, these fields should really just be accessed directly in
+blk-crypto.c.  It's not needed to provide these functions in bio.h where they
+are available to everyone.
+
+> diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+> index aafa96839f95..c111b1ce8d24 100644
+> --- a/include/linux/blk_types.h
+> +++ b/include/linux/blk_types.h
+> @@ -148,6 +148,29 @@ enum blk_crypt_mode_num {
+>  	 */
+>  };
+>  
+> +struct bio_crypt_ctx {
+> +	int keyslot;
+> +	u8 *raw_key;
+> +	enum blk_crypt_mode_num crypt_mode;
+> +	u64 data_unit_num;
+> +	unsigned int data_unit_size_bits;
+> +
+> +	/*
+> +	 * The keyslot manager where the key has been programmed
+> +	 * with keyslot.
+> +	 */
+> +	struct keyslot_manager *processing_ksm;
+> +
+> +	/*
+> +	 * Copy of the bvec_iter when this bio was submitted.
+> +	 * We only want to en/decrypt the part of the bio
+> +	 * as described by the bvec_iter upon submission because
+> +	 * bio might be split before being resubmitted
+> +	 */
+> +	struct bvec_iter crypt_iter;
+> +	u64 sw_data_unit_num;
+> +};
+> +
+
+How about making this struct definition conditional on
+CONFIG_BLK_INLINE_ENCRYPTION?  When !CONFIG_BLK_INLINE_ENCRYPTION, no code is
+compiled that dereferences any pointer to this struct.
+
+For consistency with bio_integrity_payload and to avoid an extra #ifdef, I think
+this should also be moved to bio.h.
+
+blk_crypt_mode_num can be moved to bio.h too, but it will need to be
+unconditional since it's used as a parameter to bio_crypt_set_ctx().
+
+>  /*
+>   * main unit of I/O for the block layer and lower layers (ie drivers and
+>   * stacking drivers)
+> @@ -186,6 +209,11 @@ struct bio {
+>  	struct blkcg_gq		*bi_blkg;
+>  	struct bio_issue	bi_issue;
+>  #endif
+> +
+> +#ifdef CONFIG_BLK_INLINE_ENCRYPTION
+> +	struct bio_crypt_ctx	*bi_crypt_context;
+> +#endif
+> +
+>  	union {
+>  #if defined(CONFIG_BLK_DEV_INTEGRITY)
+>  		struct bio_integrity_payload *bi_integrity; /* data integrity */
+> -- 
+> 2.22.0.rc1.311.g5d7573a151-goog
+> 
+
+Is it actually meaningful to use the blk_integrity feature in combination with
+inline encryption?  How might this be tested?  If the features actually conflict
+anyway, bi_crypt_context and bi_integrity could share the same union.
+
+- Eric
