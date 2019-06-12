@@ -1,73 +1,80 @@
-From: Stanley Chu <stanley.chu@mediatek.com>
-Subject: [PATCH v1] scsi: ufs: Avoid runtime suspend possibly being blocked forever
-Date: Wed, 12 Jun 2019 15:42:06 +0800
-Message-ID: <1560325326-1598-1-git-send-email-stanley.chu@mediatek.com>
+From: Rajendra Nayak <rnayak@codeaurora.org>
+Subject: Re: [RFC v2 01/11] OPP: Don't overwrite rounded clk rate
+Date: Wed, 12 Jun 2019 13:12:51 +0530
+Message-ID: <c173a57d-a4de-99f7-e8d8-28a7612f4ca3@codeaurora.org>
+References: <20190320094918.20234-1-rnayak@codeaurora.org>
+ <20190320094918.20234-2-rnayak@codeaurora.org>
+ <20190611105432.x3nzqiib35t6mvyg@vireshk-i7>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <stable-owner@vger.kernel.org>
-Sender: stable-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, martin.petersen@oracle.com, avri.altman@wdc.com, alim.akhtar@samsung.com, pedrom.sousa@synopsys.com
-Cc: linux-mediatek@lists.infradead.org, linux-arm-kernel@lists.infradead.org, matthias.bgg@gmail.com, evgreen@chromium.org, beanhuo@micron.com, marc.w.gonzalez@free.fr, ygardi@codeaurora.org, subhashj@codeaurora.org, kuohong.wang@mediatek.com, peter.wang@mediatek.com, chun-hung.wu@mediatek.com, andy.teng@mediatek.com, Stanley Chu <stanley.chu@mediatek.com>, stable@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Content-Transfer-Encoding: base64
+Return-path: <dri-devel-bounces@lists.freedesktop.org>
+In-Reply-To: <20190611105432.x3nzqiib35t6mvyg@vireshk-i7>
+Content-Language: en-US
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
+List-Post: <mailto:dri-devel@lists.freedesktop.org>
+List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: dri-devel-bounces@lists.freedesktop.org
+Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
+To: Viresh Kumar <viresh.kumar@linaro.org>, swboyd@chromium.org
+Cc: ulf.hansson@linaro.org, dianders@chromium.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, linux-arm-msm@vger.kernel.org, rafael@kernel.org, linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-spi@vger.kernel.org, linux-serial@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-UFS runtime suspend can be triggered after pm_runtime_enable()
-is invoked in ufshcd_pltfrm_init(). However if the first runtime
-suspend is triggered before binding ufs_hba structure to ufs
-device structure via platform_set_drvdata(), then UFS runtime
-suspend will be no longer triggered in the future because its
-dev->power.runtime_error was set in the first triggering and does
-not have any chance to be cleared.
-
-To be more clear, dev->power.runtime_error is set if hba is NULL
-in ufshcd_runtime_suspend() which returns -EINVAL to rpm_callback()
-where dev->power.runtime_error is set as -EINVAL. In this case, any
-future rpm_suspend() for UFS device fails because
-rpm_check_suspend_allowed() fails due to non-zero
-dev->power.runtime_error.
-
-To resolve this issue, make sure the first UFS runtime suspend
-get valid "hba" in ufshcd_runtime_suspend(): Enable UFS runtime PM
-only after hba is successfully bound to UFS device structure.
-
-Fixes: e3ce73d (scsi: ufs: fix bugs related to null pointer access and array size)
-Cc: stable@vger.kernel.org
-Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
----
- drivers/scsi/ufs/ufshcd-pltfrm.c | 11 ++++-------
- 1 file changed, 4 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
-index 8a74ec30c3d2..d7d521b394c3 100644
---- a/drivers/scsi/ufs/ufshcd-pltfrm.c
-+++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
-@@ -430,24 +430,21 @@ int ufshcd_pltfrm_init(struct platform_device *pdev,
- 		goto dealloc_host;
- 	}
- 
--	pm_runtime_set_active(&pdev->dev);
--	pm_runtime_enable(&pdev->dev);
--
- 	ufshcd_init_lanes_per_dir(hba);
- 
- 	err = ufshcd_init(hba, mmio_base, irq);
- 	if (err) {
- 		dev_err(dev, "Initialization failed\n");
--		goto out_disable_rpm;
-+		goto dealloc_host;
- 	}
- 
- 	platform_set_drvdata(pdev, hba);
- 
-+	pm_runtime_set_active(&pdev->dev);
-+	pm_runtime_enable(&pdev->dev);
-+
- 	return 0;
- 
--out_disable_rpm:
--	pm_runtime_disable(&pdev->dev);
--	pm_runtime_set_suspended(&pdev->dev);
- dealloc_host:
- 	ufshcd_dealloc_host(hba);
- out:
--- 
-2.18.0
+Ck9uIDYvMTEvMjAxOSA0OjI0IFBNLCBWaXJlc2ggS3VtYXIgd3JvdGU6Cj4gT24gMjAtMDMtMTks
+IDE1OjE5LCBSYWplbmRyYSBOYXlhayB3cm90ZToKPj4gRnJvbTogU3RlcGhlbiBCb3lkIDxzd2Jv
+eWRAY2hyb21pdW0ub3JnPgo+Pgo+PiBEb2luZyB0aGlzIGFsbG93cyB1cyB0byBjYWxsIHRoaXMg
+QVBJIHdpdGggYW55IHJhdGUgcmVxdWVzdGVkIGFuZCBoYXZlCj4+IGl0IG5vdCBuZWVkIHRvIG1h
+dGNoIGluIHRoZSBPUFAgdGFibGUuIEluc3RlYWQsIHdlJ2xsIHJvdW5kIHRoZSByYXRlIHVwCj4+
+IHRvIHRoZSBuZWFyZXN0IE9QUCB0aGF0IHdlIHNlZSBzbyB0aGF0IHdlIGNhbiBnZXQgdGhlIHZv
+bHRhZ2Ugb3IgbGV2ZWwKPj4gdGhhdCdzIHJlcXVpcmVkIGZvciB0aGF0IE9QUC4gVGhpcyBzdXBw
+b3J0cyB1c2VycyBvZiBPUFAgdGhhdCB3YW50IHRvCj4+IHNwZWNpZnkgdGhlICdmbWF4JyB0YWJs
+ZXMgb2YgYSBkZXZpY2UgaW5zdGVhZCBvZiBldmVyeSBzaW5nbGUgZnJlcXVlbmN5Cj4+IHRoYXQg
+dGhleSBuZWVkLiBBbmQgZm9yIGRldmljZXMgdGhhdCByZXF1aXJlZCB0aGUgZXhhY3QgZnJlcXVl
+bmN5LCB3ZQo+PiBjYW4gcmVseSBvbiB0aGUgY2xrIGZyYW1ld29yayB0byByb3VuZCB0aGUgcmF0
+ZSB0byB0aGUgbmVhcmVzdCBzdXBwb3J0ZWQKPj4gZnJlcXVlbmN5IGluc3RlYWQgb2YgdGhlIE9Q
+UCBmcmFtZXdvcmsgdG8gZG8gc28uCj4+Cj4+IE5vdGUgdGhhdCB0aGlzIG1heSBhZmZlY3QgZHJp
+dmVycyB0aGF0IGRvbid0IHdhbnQgdGhlIGNsayBmcmFtZXdvcmsgdG8KPj4gZG8gcm91bmRpbmcs
+IGJ1dCBpbnN0ZWFkIHdhbnQgdGhlIE9QUCB0YWJsZSB0byBkbyB0aGUgcm91bmRpbmcgZm9yIHRo
+ZW0uCj4+IERvIHdlIGhhdmUgdGhhdCBjYXNlPyBTaG91bGQgd2UgYWRkIHNvbWUgZmxhZyB0byB0
+aGUgT1BQIHRhYmxlIHRvCj4+IGluZGljYXRlIHRoaXMgYW5kIHRoZW4gbm90IGhhdmUgdGhhdCBm
+bGFnIHNldCB3aGVuIHRoZXJlIGlzbid0IGFuIE9QUAo+PiB0YWJsZSBmb3IgdGhlIGRldmljZSBh
+bmQgYWxzbyBpbnRyb2R1Y2UgYSBwcm9wZXJ0eSBsaWtlICdvcHAtdXNlLWNsaycgdG8KPj4gdGVs
+bCB0aGUgdGFibGUgdGhhdCBpdCBzaG91bGQgdXNlIHRoZSBjbGsgQVBJcyB0byByb3VuZCByYXRl
+cyBpbnN0ZWFkIG9mCj4+IE9QUD8KPj4KPj4gU2lnbmVkLW9mZi1ieTogU3RlcGhlbiBCb3lkIDxz
+d2JveWRAY2hyb21pdW0ub3JnPgo+PiBTaWduZWQtb2ZmLWJ5OiBSYWplbmRyYSBOYXlhayA8cm5h
+eWFrQGNvZGVhdXJvcmEub3JnPgo+PiAtLS0KCltdLi4uCgo+IAo+IEkgc2VlIGEgbG9naWNhbCBw
+cm9ibGVtIHdpdGggdGhpcyBwYXRjaC4KPiAKPiBTdXBwb3NlIHRoZSBjbG9jayBkcml2ZXIgc3Vw
+cG9ydHMgZm9sbG93aW5nIGZyZXF1ZW5jaWVzOiA1MDBNLCA4MDBNLAo+IDFHLCAxLjJHIGFuZCB0
+aGUgT1BQIHRhYmxlIGNvbnRhaW5zIGZvbGxvd2luZyBsaXN0OiA1MDBNLCAxRywgMS4yRwo+IChp
+LmUuIG1pc3NpbmcgODAwTSkuCj4gCj4gTm93IDgwME0gc2hvdWxkIG5ldmVyIGdldCBwcm9ncmFt
+bWVkIGFzIGl0IGlzbid0IHBhcnQgb2YgdGhlIE9QUAo+IHRhYmxlLiBCdXQgaWYgeW91IHBhc3Mg
+NjAwTSB0byBvcHAtc2V0LXJhdGUsIHRoZW4gaXQgd2lsbCBlbmQgdXAKPiBzZWxlY3RpbmcgODAw
+TSBhcyBjbG9jayBkcml2ZXIgd2lsbCByb3VuZCB1cCB0byB0aGUgY2xvc2VzdCB2YWx1ZS4KCmNv
+cnJlY3QKCj4gCj4gRXZlbiBpZiBubyBvbmUgaXMgZG9pbmcgdGhpcyByaWdodCBub3csIGl0IGlz
+IGEgc2Vuc2libGUgdXNlY2FzZSwKPiBzcGVjaWFsbHkgZHVyaW5nIHRlc3Rpbmcgb2YgcGF0Y2hl
+cyBhbmQgSSBkb24ndCB0aGluayB3ZSBzaG91bGQgYXZvaWQKPiBpdC4KPiAKPiBXaGF0IGV4YWN0
+bHkgaXMgdGhlIHVzZSBjYXNlIGZvciB3aGljaCB3ZSBuZWVkIHRoaXMgcGF0Y2ggPyAKTGlrZSB0
+aGUgY2hhbmdlbG9nIHNheXMgJ1RoaXMgc3VwcG9ydHMgdXNlcnMgb2YgT1BQIHRoYXQgd2FudCB0
+bwpzcGVjaWZ5IHRoZSAnZm1heCcgdGFibGVzIG9mIGEgZGV2aWNlIGluc3RlYWQgb2YgZXZlcnkg
+c2luZ2xlIGZyZXF1ZW5jeQp0aGF0IHRoZXkgbmVlZCcKCnNvIHRoZSAnZm1heCcgdGFibGVzIGJh
+c2ljYWxseSBzYXkgd2hhdCB0aGUgbWF4IGZyZXF1ZW5jeSB0aGUgZGV2aWNlIGNhbgpvcGVyYXRl
+IGF0IGZvciBhIGdpdmVuIHBlcmZvcm1hbmNlIHN0YXRlL3ZvbHRhZ2UgbGV2ZWwuCgpzbyBpbiB5
+b3VyIGV4YW1wbGUgaXQgd291bGQgYmUgZm9yIGluc3RhbmNlCgo1MDBNLCBQZXJmIHN0YXRlID0g
+MgoxRywgUGVyZiBzdGF0ZSA9IDMKMS4yRywgUGVyZiBzdGF0ZSA9IDQKCk5vdyB3aGVuIHRoZSBk
+ZXZpY2Ugd2FudHMgdG8gb3BlcmF0ZSBhdCBzYXkgODAwTWh6LCB5b3UgbmVlZCB0byBzZXQgdGhl
+ClBlcmYgc3RhdGUgdG8gMywgc28gdGhpcyBwYXRjaCBiYXNpY2FsbHkgYXZvaWRzIHlvdSBoYXZp
+bmcgdG8gcHV0IHRob3NlIGFkZGl0aW9uYWwKT1BQcyBpbiB0aGUgdGFibGUgd2hpY2ggd291bGQg
+b3RoZXJ3aXNlIGxvb2sgc29tZXRoaW5nIGxpa2UgdGhpcwoKNTAwTSwgUGVyZiBzdGF0ZSA9IDIK
+ODAwTSwgUGVyZiBzdGF0ZSA9IDMgPC0tIHJlZHVuZGFudCBPUFAKMUcsIFBlcmYgc3RhdGUgPSAz
+CjEuMkcsIFBlcmYgc3RhdGUgPSA0CgpZb3VyIGV4YW1wbGUgaGFkIGp1c3QgMSBtaXNzaW5nIGVu
+dHJ5IGluIHRoZSAnZm1heCcgdGFibGVzIGluIHJlYWxpdHkgaXRzIGEgbG90IG1vcmUsCmF0bGVh
+c3Qgb24gYWxsIHF1YWxjb21tIHBsYXRmb3Jtcy4KCgotLSAKUVVBTENPTU0gSU5ESUEsIG9uIGJl
+aGFsZiBvZiBRdWFsY29tbSBJbm5vdmF0aW9uIENlbnRlciwgSW5jLiBpcyBhIG1lbWJlcgpvZiBD
+b2RlIEF1cm9yYSBGb3J1bSwgaG9zdGVkIGJ5IFRoZSBMaW51eCBGb3VuZGF0aW9uCl9fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmRyaS1kZXZlbCBtYWlsaW5n
+IGxpc3QKZHJpLWRldmVsQGxpc3RzLmZyZWVkZXNrdG9wLm9yZwpodHRwczovL2xpc3RzLmZyZWVk
+ZXNrdG9wLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2RyaS1kZXZlbA==
