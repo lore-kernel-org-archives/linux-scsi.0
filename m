@@ -1,35 +1,43 @@
-From: Avri Altman <avri.altman@wdc.com>
-Subject: [PATCH] scsi: uapi: ufs: Fix SPDX license identifier
-Date: Wed, 12 Jun 2019 16:34:37 +0300
-Message-ID: <1560346477-13944-1-git-send-email-avri.altman@wdc.com>
+From: Marc Gonzalez <marc.w.gonzalez@free.fr>
+Subject: [PATCH v1] scsi: Don't select SCSI_PROC_FS by default
+Date: Wed, 12 Jun 2019 15:59:05 +0200
+Message-ID: <2de15293-b9be-4d41-bc67-a69417f27f7a@free.fr>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, Pedro Sousa <pedrom.sousa@synopsys.com>, Alim Akhtar <alim.akhtar@samsung.com>
-Cc: Avi Shchislowski <avi.shchislowski@wdc.com>, Alex Lemberg <alex.lemberg@wdc.com>, Avri Altman <avri.altman@wdc.com>
+To: James Bottomley <jejb@linux.ibm.com>, Martin Petersen <martin.petersen@oracle.com>
+Cc: SCSI <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
-added 'WITH Linux-syscall-note' exception, which is the officially
-assigned exception identifier for the kernel syscall exception.
-This exception makes it possible to include GPL headers into non GPL
-code, without confusing license compliance tools.
+According to the option's help message, SCSI_PROC_FS has been
+superseded for ~15 years. Don't select it by default anymore.
 
-fixes: a851b2bd3632 (scsi: uapi: ufs: Make utp_upiu_req visible to user
-		     space)
-
-Signed-off-by: Avri Altman <avri.altman@wdc.com>
+Signed-off-by: Marc Gonzalez <marc.w.gonzalez@free.fr>
 ---
- include/uapi/scsi/scsi_bsg_ufs.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/Kconfig | 3 ---
+ 1 file changed, 3 deletions(-)
 
-diff --git a/include/uapi/scsi/scsi_bsg_ufs.h b/include/uapi/scsi/scsi_bsg_ufs.h
-index 17c7abd..9988db6 100644
---- a/include/uapi/scsi/scsi_bsg_ufs.h
-+++ b/include/uapi/scsi/scsi_bsg_ufs.h
-@@ -1,4 +1,4 @@
--/* SPDX-License-Identifier: GPL-2.0 */
-+/* SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note */
- /*
-  * UFS Transport SGIO v4 BSG Message Support
-  *
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index 73bce9b6d037..8c95e9ad6470 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -54,14 +54,11 @@ config SCSI_NETLINK
+ config SCSI_PROC_FS
+ 	bool "legacy /proc/scsi/ support"
+ 	depends on SCSI && PROC_FS
+-	default y
+ 	---help---
+ 	  This option enables support for the various files in
+ 	  /proc/scsi.  In Linux 2.6 this has been superseded by
+ 	  files in sysfs but many legacy applications rely on this.
+ 
+-	  If unsure say Y.
+-
+ comment "SCSI support type (disk, tape, CD-ROM)"
+ 	depends on SCSI
+ 
 -- 
-1.9.1
+2.17.1
