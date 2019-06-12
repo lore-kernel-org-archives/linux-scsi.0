@@ -1,112 +1,40 @@
-From: Michael Schmitz <schmitzmic@gmail.com>
-Subject: Re: [PATCH] NCR5380: Support chained sg lists
-Date: Wed, 12 Jun 2019 11:47:56 +1200
-Message-ID: <a79e01ba-e47c-6b29-3625-29bfb7122ad8@gmail.com>
-References: <739c214bafcb9af3f6d5037cc03f57f692966675.1560223509.git.fthain@telegraphics.com.au>
+From: Marcos Paulo de Souza <marcos.souza.org@gmail.com>
+Subject: [PATCH] scsi: scsi_sysfs.c: Hide wwid sdev attr if VPD is not supported
+Date: Tue, 11 Jun 2019 23:08:28 -0300
+Message-ID: <20190612020828.8140-1-marcos.souza.org@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <739c214bafcb9af3f6d5037cc03f57f692966675.1560223509.git.fthain@telegraphics.com.au>
-Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Marcos Paulo de Souza <marcos.souza.org@gmail.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "open list:SCSI SUBSYSTEM" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 11/06/19 3:25 PM, Finn Thain wrote:
+WWID composed from VPD data from device, specifically page 0x83. So,
+when a device does not have VPD support, for example USB storage devices
+where VPD is specifically disabled, a read into <blk device>/device/wwid
+file will always return ENXIO. To avoid this, change the
+scsi_sdev_attr_is_visible function to hide wwid sysfs file when the
+devices does not support VPD.
 
-> My understanding is that support for chained scatterlists is to
-> become mandatory for LLDs.
->
-> Cc: Michael Schmitz <schmitzmic@gmail.com>
-> Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
-Reviewed-by: Michael Schmitz <schmitzmic@gmail.com>
-> ---
->   drivers/scsi/NCR5380.c | 41 ++++++++++++++++++-----------------------
->   1 file changed, 18 insertions(+), 23 deletions(-)
->
-> diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
-> index d9fa9cf2fd8b..536426f25e86 100644
-> --- a/drivers/scsi/NCR5380.c
-> +++ b/drivers/scsi/NCR5380.c
-> @@ -149,12 +149,10 @@ static inline void initialize_SCp(struct scsi_cmnd *cmd)
->   
->   	if (scsi_bufflen(cmd)) {
->   		cmd->SCp.buffer = scsi_sglist(cmd);
-> -		cmd->SCp.buffers_residual = scsi_sg_count(cmd) - 1;
->   		cmd->SCp.ptr = sg_virt(cmd->SCp.buffer);
->   		cmd->SCp.this_residual = cmd->SCp.buffer->length;
->   	} else {
->   		cmd->SCp.buffer = NULL;
-> -		cmd->SCp.buffers_residual = 0;
->   		cmd->SCp.ptr = NULL;
->   		cmd->SCp.this_residual = 0;
->   	}
-> @@ -163,6 +161,17 @@ static inline void initialize_SCp(struct scsi_cmnd *cmd)
->   	cmd->SCp.Message = 0;
->   }
->   
-> +static inline void advance_sg_buffer(struct scsi_cmnd *cmd)
-> +{
-> +	struct scatterlist *s = cmd->SCp.buffer;
-> +
-> +	if (!cmd->SCp.this_residual && s && !sg_is_last(s)) {
-> +		cmd->SCp.buffer = sg_next(s);
-> +		cmd->SCp.ptr = sg_virt(cmd->SCp.buffer);
-> +		cmd->SCp.this_residual = cmd->SCp.buffer->length;
-> +	}
-> +}
-> +
->   /**
->    * NCR5380_poll_politely2 - wait for two chip register values
->    * @hostdata: host private data
-> @@ -1670,12 +1679,7 @@ static void NCR5380_information_transfer(struct Scsi_Host *instance)
->   			    sun3_dma_setup_done != cmd) {
->   				int count;
->   
-> -				if (!cmd->SCp.this_residual && cmd->SCp.buffers_residual) {
-> -					++cmd->SCp.buffer;
-> -					--cmd->SCp.buffers_residual;
-> -					cmd->SCp.this_residual = cmd->SCp.buffer->length;
-> -					cmd->SCp.ptr = sg_virt(cmd->SCp.buffer);
-> -				}
-> +				advance_sg_buffer(cmd);
->   
->   				count = sun3scsi_dma_xfer_len(hostdata, cmd);
->   
-> @@ -1725,15 +1729,11 @@ static void NCR5380_information_transfer(struct Scsi_Host *instance)
->   				 * scatter-gather list, move onto the next one.
->   				 */
->   
-> -				if (!cmd->SCp.this_residual && cmd->SCp.buffers_residual) {
-> -					++cmd->SCp.buffer;
-> -					--cmd->SCp.buffers_residual;
-> -					cmd->SCp.this_residual = cmd->SCp.buffer->length;
-> -					cmd->SCp.ptr = sg_virt(cmd->SCp.buffer);
-> -					dsprintk(NDEBUG_INFORMATION, instance, "%d bytes and %d buffers left\n",
-> -					         cmd->SCp.this_residual,
-> -					         cmd->SCp.buffers_residual);
-> -				}
-> +				advance_sg_buffer(cmd);
-> +				dsprintk(NDEBUG_INFORMATION, instance,
-> +					"this residual %d, sg ents %d\n",
-> +					cmd->SCp.this_residual,
-> +					sg_nents(cmd->SCp.buffer));
->   
->   				/*
->   				 * The preferred transfer method is going to be
-> @@ -2126,12 +2126,7 @@ static void NCR5380_reselect(struct Scsi_Host *instance)
->   	if (sun3_dma_setup_done != tmp) {
->   		int count;
->   
-> -		if (!tmp->SCp.this_residual && tmp->SCp.buffers_residual) {
-> -			++tmp->SCp.buffer;
-> -			--tmp->SCp.buffers_residual;
-> -			tmp->SCp.this_residual = tmp->SCp.buffer->length;
-> -			tmp->SCp.ptr = sg_virt(tmp->SCp.buffer);
-> -		}
-> +		advance_sg_buffer(tmp);
->   
->   		count = sun3scsi_dma_xfer_len(hostdata, tmp);
->   
+Signed-off-by: Marcos Paulo de Souza <marcos.souza.org@gmail.com>
+---
+ drivers/scsi/scsi_sysfs.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index dbb206c90ecf..bfd890fa0c69 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -1159,6 +1159,9 @@ static umode_t scsi_sdev_attr_is_visible(struct kobject *kobj,
+ 	struct device *dev = container_of(kobj, struct device, kobj);
+ 	struct scsi_device *sdev = to_scsi_device(dev);
+ 
++	/* do not present wwid if the device does not support VPD */
++	if (attr == &dev_attr_wwid.attr && sdev->skip_vpd_pages)
++		return 0;
+ 
+ 	if (attr == &dev_attr_queue_depth.attr &&
+ 	    !sdev->host->hostt->change_queue_depth)
+-- 
+2.21.0
