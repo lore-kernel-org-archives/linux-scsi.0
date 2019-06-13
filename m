@@ -1,71 +1,203 @@
-From: Minwoo Im <minwoo.im@samsung.com>
-Subject: [RFC PATCH] mpt3sas: support target smid for [abort|query] task
-Date: Thu, 13 Jun 2019 16:45:11 +0900
-Message-ID: <20190613074511epcms2p4cfd590711eefbd66414400f46d87354a@epcms2p4>
-References: <CGME20190613074511epcms2p4cfd590711eefbd66414400f46d87354a@epcms2p4>
-Reply-To: minwoo.im@samsung.com
+From: Eric Biggers <ebiggers@kernel.org>
+Subject: Re: [RFC PATCH v2 5/8] scsi: ufs: UFS crypto API
+Date: Thu, 13 Jun 2019 10:11:13 -0700
+Message-ID: <20190613171113.GB686@sol.localdomain>
+References: <20190605232837.31545-1-satyat@google.com>
+ <20190605232837.31545-6-satyat@google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "MPT-FusionLinux.pdl@broadcom.com" <MPT-FusionLinux.pdl@broadcom.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Cc: Minwoo Im <minwoo.im@samsung.com>, "jejb@linux.ibm.com" <jejb@linux.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "sathya.prakash@broadcom.com" <sathya.prakash@broadcom.com>, "chaitra.basappa@broadcom.com" <chaitra.basappa@broadcom.com>, "suganath-prabu.subramani@broadcom.com" <suganath-prabu.subramani@broadcom.com>, Sarah Cho <sohyeon.jo@samsung.com>, Gyeongmin Nam <gm.nam@samsung.com>, Sanggwan Lee <sanggwan.lee@samsung.com>, Sungjun Park <sj1228.park@samsung.com>
+Return-path: <linux-f2fs-devel-bounces@lists.sourceforge.net>
+Content-Disposition: inline
+In-Reply-To: <20190605232837.31545-6-satyat@google.com>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/options/linux-f2fs-devel>,
+ <mailto:linux-f2fs-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux-f2fs-devel>
+List-Post: <mailto:linux-f2fs-devel@lists.sourceforge.net>
+List-Help: <mailto:linux-f2fs-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-f2fs-devel>,
+ <mailto:linux-f2fs-devel-request@lists.sourceforge.net?subject=subscribe>
+Errors-To: linux-f2fs-devel-bounces@lists.sourceforge.net
+To: Satya Tangirala <satyat@google.com>
+Cc: Ladvine D Almeida <ladvine.dalmeida@synopsys.com>, linux-scsi@vger.kernel.org, Parshuram Raju Thombare <pthombar@cadence.com>, Kuohong Wang <kuohong.wang@mediatek.com>, Barani Muthukumaran <bmuthuku@qti.qualcomm.com>, linux-f2fs-devel@lists.sourceforge.net, linux-block@vger.kernel.org, linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-We can request task management IOCTL command(MPI2_FUNCTION_SCSI_TASK_MGMT)
-to /dev/mpt3ctl.  If the given task_type is either abort task or query
-task, it may need a field named "Initiator Port Transfer Tag to Manage"
-in the IU.
+Hi Satya,
 
-Current code does not support to check target IPTT tag from the
-tm_request.  This patch introduces to check TaskMID given from the
-userspace as a target tag.  We have a rule of relationship between
-(struct request *req->tag) and smid in mpt3sas_base.c:
+On Wed, Jun 05, 2019 at 04:28:34PM -0700, Satya Tangirala wrote:
+> Introduce functions to manipulate UFS inline encryption hardware
+> in line with the JEDEC UFSHCI v2.1 specification and to work with the
+> block keyslot manager.
+> 
+> Signed-off-by: Satya Tangirala <satyat@google.com>
+> ---
+>  drivers/scsi/ufs/Kconfig         |  10 +
+>  drivers/scsi/ufs/Makefile        |   1 +
+>  drivers/scsi/ufs/ufshcd-crypto.c | 438 +++++++++++++++++++++++++++++++
+>  drivers/scsi/ufs/ufshcd-crypto.h |  69 +++++
+>  4 files changed, 518 insertions(+)
+>  create mode 100644 drivers/scsi/ufs/ufshcd-crypto.c
+>  create mode 100644 drivers/scsi/ufs/ufshcd-crypto.h
+> 
 
-3318 u16
-3319 mpt3sas_base_get_smid_scsiio(struct MPT3SAS_ADAPTER *ioc, u8 cb_idx,
-3320         struct scsi_cmnd *scmd)
-3321 {
-3322         struct scsiio_tracker *request = scsi_cmd_priv(scmd);
-3323         unsigned int tag = scmd->request->tag;
-3324         u16 smid;
-3325
-3326         smid = tag + 1;
+There is a build error after this patch because it adds code that uses the
+crypto fields in struct ufs_hba, but those aren't added until the next patch.
 
-So if we want to abort a request tagged #X, then we can pass (X + 1) to
-this IOCTL handler.
+It needs to be possible to compile a working kernel after each patch.
+Otherwise it breaks bisection.
 
-Signed-off-by: Minwoo Im <minwoo.im@samsung.com>
----
- drivers/scsi/mpt3sas/mpt3sas_ctl.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+So, perhaps add the fields in this patch instead.
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-index b2bb47c14d35..5c7539dae713 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-@@ -596,15 +596,17 @@ _ctl_set_task_mid(struct MPT3SAS_ADAPTER *ioc, struct mpt3_ioctl_command *karg,
- 		if (priv_data->sas_target->handle != handle)
- 			continue;
- 		st = scsi_cmd_priv(scmd);
--		tm_request->TaskMID = cpu_to_le16(st->smid);
--		found = 1;
-+		if (tm_request->TaskMID == st->smid) {
-+			tm_request->TaskMID = cpu_to_le16(st->smid);
-+			found = 1;
-+		}
- 	}
- 
- 	if (!found) {
- 		dctlprintk(ioc,
--			   ioc_info(ioc, "%s: handle(0x%04x), lun(%d), no active mid!!\n",
-+			   ioc_info(ioc, "%s: handle(0x%04x), lun(%d), no matched mid(%d)!!\n",
- 				    desc, le16_to_cpu(tm_request->DevHandle),
--				    lun));
-+				    lun, tm_request->TaskMID));
- 		tm_reply = ioc->ctl_cmds.reply;
- 		tm_reply->DevHandle = tm_request->DevHandle;
- 		tm_reply->Function = MPI2_FUNCTION_SCSI_TASK_MGMT;
--- 
-2.16.1
+> +++ b/drivers/scsi/ufs/ufshcd-crypto.c
+> @@ -0,0 +1,438 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +/*
+> + * Copyright 2019 Google LLC
+> + */
+> +
+> +#include <crypto/algapi.h>
+> +
+> +#include "ufshcd.h"
+> +#include "ufshcd-crypto.h"
+> +
+> +bool ufshcd_hba_is_crypto_supported(struct ufs_hba *hba)
+> +{
+> +	return hba->crypto_capabilities.reg_val != 0;
+> +}
+> +
+> +bool ufshcd_is_crypto_enabled(struct ufs_hba *hba)
+> +{
+> +	return hba->caps & UFSHCD_CAP_CRYPTO;
+> +}
+> +
+> +static bool ufshcd_cap_idx_valid(struct ufs_hba *hba, unsigned int cap_idx)
+> +{
+> +	return cap_idx < hba->crypto_capabilities.num_crypto_cap;
+> +}
+> +
+> +#define NUM_KEYSLOTS(hba) (hba->crypto_capabilities.config_count + 1)
+> +
+> +bool ufshcd_keyslot_valid(struct ufs_hba *hba, unsigned int slot)
+> +{
+> +	/*
+> +	 * The actual number of configurations supported is (CFGC+1), so slot
+> +	 * numbers range from 0 to config_count inclusive.
+> +	 */
+> +	return slot < NUM_KEYSLOTS(hba);
+> +}
+
+Since ufshcd_hba_is_crypto_supported(), ufshcd_is_crypto_enabled(), and
+ufshcd_keyslot_valid() are one-liners, don't access any private structures, and
+are used outside this file including on the command submission path, how about
+making them inline functions in ufshcd-crypto.h?
+
+> +
+> +static int ufshcd_crypto_alg_find(void *hba_p,
+> +			   enum blk_crypt_mode_num crypt_mode,
+> +			   unsigned int data_unit_size)
+> +{
+
+Now that the concept of "crypto alg IDs" is gone, rename this to
+ufshcd_crypto_cap_find() and rename the crypto_alg_id variables to cap_idx.
+
+This would make it consistent with using cap_idx elsewhere in the code and avoid
+confusion with ufs_crypto_cap_entry::algorithm_id.
+
+> +
+> +static int ufshcd_crypto_keyslot_program(void *hba_p, const u8 *key,
+> +					 enum blk_crypt_mode_num crypt_mode,
+> +					 unsigned int data_unit_size,
+> +					 unsigned int slot)
+> +{
+> +	struct ufs_hba *hba = hba_p;
+> +	int err = 0;
+> +	u8 data_unit_mask;
+> +	union ufs_crypto_cfg_entry cfg;
+> +	union ufs_crypto_cfg_entry *cfg_arr = hba->crypto_cfgs;
+> +	int crypto_alg_id;
+> +
+> +	crypto_alg_id = ufshcd_crypto_alg_find(hba_p, crypt_mode,
+> +					       data_unit_size);
+> +
+> +	if (!ufshcd_is_crypto_enabled(hba) ||
+> +	    !ufshcd_keyslot_valid(hba, slot) ||
+> +	    !ufshcd_cap_idx_valid(hba, crypto_alg_id))
+> +		return -EINVAL;
+> +
+> +	data_unit_mask = get_data_unit_size_mask(data_unit_size);
+> +
+> +	if (!(data_unit_mask &
+> +	      hba->crypto_cap_array[crypto_alg_id].sdus_mask))
+> +		return -EINVAL;
+
+Nit: the 'if' expression with data_unit_mask fits on one line.
+
+> +static int ufshcd_crypto_keyslot_find(void *hba_p,
+> +				      const u8 *key,
+> +				      enum blk_crypt_mode_num crypt_mode,
+> +				      unsigned int data_unit_size)
+> +{
+> +	struct ufs_hba *hba = hba_p;
+> +	int err = 0;
+> +	int slot;
+> +	u8 data_unit_mask;
+> +	union ufs_crypto_cfg_entry cfg;
+> +	union ufs_crypto_cfg_entry *cfg_arr = hba->crypto_cfgs;
+> +	int crypto_alg_id;
+> +
+> +	crypto_alg_id = ufshcd_crypto_alg_find(hba_p, crypt_mode,
+> +					       data_unit_size);
+> +
+> +	if (!ufshcd_is_crypto_enabled(hba) ||
+> +	    !ufshcd_cap_idx_valid(hba, crypto_alg_id))
+> +		return -EINVAL;
+> +
+> +	data_unit_mask = get_data_unit_size_mask(data_unit_size);
+> +
+> +	if (!(data_unit_mask &
+> +	      hba->crypto_cap_array[crypto_alg_id].sdus_mask))
+> +		return -EINVAL;
+
+Same here.
+
+> +	for (slot = 0; slot < NUM_KEYSLOTS(hba); slot++) {
+> +		if ((cfg_arr[slot].config_enable &
+> +		     UFS_CRYPTO_CONFIGURATION_ENABLE) &&
+> +		    data_unit_mask == cfg_arr[slot].data_unit_size &&
+> +		    crypto_alg_id == cfg_arr[slot].crypto_cap_idx &&
+> +		    crypto_memneq(&cfg.crypto_key, cfg_arr[slot].crypto_key,
+> +				  UFS_CRYPTO_KEY_MAX_SIZE) == 0) {
+> +			memzero_explicit(&cfg, sizeof(cfg));
+> +			return slot;
+> +		}
+> +	}
+
+Nit: as I've mentioned before, I think !crypto_memneq() is easier to read than
+'crypto_memneq() == 0'.
+
+> +	hba->crypto_cap_array =
+> +		devm_kcalloc(hba->dev,
+> +			     hba->crypto_capabilities.num_crypto_cap,
+> +			     sizeof(hba->crypto_cap_array[0]),
+> +			     GFP_KERNEL);
+> +	if (!hba->crypto_cap_array) {
+> +		err = -ENOMEM;
+> +		goto out;
+> +	}
+> +
+> +	hba->crypto_cfgs =
+> +		devm_kcalloc(hba->dev,
+> +			     hba->crypto_capabilities.config_count + 1,
+> +			     sizeof(union ufs_crypto_cfg_entry),
+> +			     GFP_KERNEL);
+> +	if (!hba->crypto_cfgs) {
+> +		err = -ENOMEM;
+> +		goto out_cfg_mem;
+> +	}
+
+Nit: use 'sizeof(hba->crypto_cfgs[0])' rather than 'sizeof(union
+ufs_crypto_cfg_entry)', for consistency with the other array allocation.
+
+Thanks,
+
+- Eric
