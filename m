@@ -1,51 +1,73 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: Re: [PATCH V2 08/15] staging: unisys: visorhba: use sg helper to
- operate sgl
-Date: Thu, 13 Jun 2019 13:24:25 +0300
-Message-ID: <20190613102425.GB28859@kadam>
-References: <20190613071335.5679-1-ming.lei@redhat.com>
- <20190613071335.5679-9-ming.lei@redhat.com>
- <20190613095214.GA18796@kroah.com>
- <20190613100410.GA10829@ming.t460p>
+From: Sumit Saxena <sumit.saxena@broadcom.com>
+Subject: Re: [PATCH] scsi: megaraid_sas: Use struct_size() helper
+Date: Thu, 13 Jun 2019 15:27:33 +0530
+Message-ID: <CAL2rwxpUyVE5T2QBT7ze5QoeH3KgkXCWPwjgQKuAUrd4VxHEOg@mail.gmail.com>
+References: <20190607184053.GA11513@embeddedor>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-Content-Disposition: inline
-In-Reply-To: <20190613100410.GA10829@ming.t460p>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Ming Lei <ming.lei@redhat.com>
-Cc: Michael Schmitz <schmitzmic@gmail.com>, devel@driverdev.osuosl.org, Hannes Reinecke <hare@suse.com>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, James Smart <james.smart@broadcom.com>, "Ewan D . Milne" <emilne@redhat.com>, Jim Gill <jgill@vmware.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Brian King <brking@us.ibm.com>, Finn Thain <fthain@telegraphics.com.au>, "Juergen E . Fischer" <fischer@norbit.de>, Christoph Hellwig <hch@lst.de>, Bart Van Assche <bvanassche@acm.org>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190607184053.GA11513@embeddedor>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Cc: Kashyap Desai <kashyap.desai@broadcom.com>, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@broadcom.com>, Linux SCSI List <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Jun 13, 2019 at 06:04:11PM +0800, Ming Lei wrote:
-> On Thu, Jun 13, 2019 at 11:52:14AM +0200, Greg Kroah-Hartman wrote:
-> > On Thu, Jun 13, 2019 at 03:13:28PM +0800, Ming Lei wrote:
-> > > The current way isn't safe for chained sgl, so use sg helper to
-> > > operate sgl.
-> > 
-> > I can not make any sense out of this changelog.
-> > 
-> > What "isn't safe"?  What is a "sgl"?
-> 
-> sgl is 'scatterlist' in kernel, and several linear sgl can be chained
-> together, so accessing the sgl in linear way may see a chained sg, which
-> is like a link pointer, then may cause trouble for driver.
-> 
+On Sat, Jun 8, 2019 at 12:10 AM Gustavo A. R. Silva
+<gustavo@embeddedor.com> wrote:
+>
+> One of the more common cases of allocation size calculations is finding
+> the size of a structure that has a zero-sized array at the end, along
+> with memory for some number of elements for that array. For example:
+>
+> struct MR_PD_CFG_SEQ_NUM_SYNC {
+>         ...
+>         struct MR_PD_CFG_SEQ seq[1];
+> } __packed;
+>
+> Make use of the struct_size() helper instead of an open-coded version
+> in order to avoid any potential type mistakes.
+>
+> So, replace the following form:
+>
+> sizeof(struct MR_PD_CFG_SEQ_NUM_SYNC) + (sizeof(struct MR_PD_CFG_SEQ) * (MAX_PHYSICAL_DEVICES - 1))
+>
+> with:
+>
+> struct_size(pd_sync, seq, MAX_PHYSICAL_DEVICES - 1)
+>
+> This code was detected with the help of Coccinelle.
+>
+> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+Acked-by: Sumit Saxena <sumit.saxena@broadcom.com>
 
-So from a user perspective it results in an Oops?  It would be really
-cool if you had the copy of the Oops btw so people could grep the git
-history for it.
-
-(You need to resend with the improved commit message).
-
-regards,
-dan carpenter
+> ---
+>  drivers/scsi/megaraid/megaraid_sas_fusion.c | 6 ++----
+>  1 file changed, 2 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> index a25b6b4b6548..56bd524dddbf 100644
+> --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> @@ -1191,7 +1191,7 @@ megasas_ioc_init_fusion(struct megasas_instance *instance)
+>  int
+>  megasas_sync_pd_seq_num(struct megasas_instance *instance, bool pend) {
+>         int ret = 0;
+> -       u32 pd_seq_map_sz;
+> +       size_t pd_seq_map_sz;
+>         struct megasas_cmd *cmd;
+>         struct megasas_dcmd_frame *dcmd;
+>         struct fusion_context *fusion = instance->ctrl_context;
+> @@ -1200,9 +1200,7 @@ megasas_sync_pd_seq_num(struct megasas_instance *instance, bool pend) {
+>
+>         pd_sync = (void *)fusion->pd_seq_sync[(instance->pd_seq_map_id & 1)];
+>         pd_seq_h = fusion->pd_seq_phys[(instance->pd_seq_map_id & 1)];
+> -       pd_seq_map_sz = sizeof(struct MR_PD_CFG_SEQ_NUM_SYNC) +
+> -                       (sizeof(struct MR_PD_CFG_SEQ) *
+> -                       (MAX_PHYSICAL_DEVICES - 1));
+> +       pd_seq_map_sz = struct_size(pd_sync, seq, MAX_PHYSICAL_DEVICES - 1);
+>
+>         cmd = megasas_get_cmd(instance);
+>         if (!cmd) {
+> --
+> 2.21.0
+>
