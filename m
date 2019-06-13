@@ -1,19 +1,73 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 10/13] megaraid_sas: set virt_boundary_mask in the scsi
- host
-Date: Thu, 13 Jun 2019 10:44:58 +0200
-Message-ID: <20190613084458.GB13221@lst.de>
-References: <20190605190836.32354-1-hch@lst.de> <20190605190836.32354-11-hch@lst.de> <cd713506efb9579d1f69a719d831c28d@mail.gmail.com>
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [PATCH 4.19 055/118] blk-mq: move cancel of requeue_work into blk_mq_release
+Date: Thu, 13 Jun 2019 10:33:13 +0200
+Message-ID: <20190613075646.936104246@linuxfoundation.org>
+References: <20190613075643.642092651@linuxfoundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <cd713506efb9579d1f69a719d831c28d@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Kashyap Desai <kashyap.desai@broadcom.com>
-Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Sebastian Ott <sebott@linux.ibm.com>, Sagi Grimberg <sagi@grimberg.me>, Max Gurtovoy <maxg@mellanox.com>, Bart Van Assche <bvanassche@acm.org>, Ulf Hansson <ulf.hansson@linaro.org>, Alan Stern <stern@rowland.harvard.edu>, Oliver Neukum <oneukum@suse.com>, linux-block@vger.kernel.org, linux-rdma@vger.kernel.org, linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org, "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@broadcom.com>, PDL-MPT-FUSIONLINUX <mpt-fusionlinux.pdl@broadcom.com>, linux-hyperv@vger.kernel.org, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20190613075643.642092651@linuxfoundation.org>
+Sender: stable-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, stable@vger.kernel.org, Dongli Zhang <dongli.zhang@oracle.com>, James Smart <james.smart@broadcom.com>, Bart Van Assche <bart.vanassche@wdc.com>, Bart Van Assche <bvanassche@acm.org>, Johannes Thumshirn <jthumshirn@suse.de>, Hannes Reinecke <hare@suse.com>, Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-So before I respin this series, can you help with a way to figure out
-for mpt3sas and megaraid if a given controller supports NVMe devices
-at all, so that we don't have to set the virt boundary if not?
+[ Upstream commit fbc2a15e3433058582e5635aabe48a3011a644a8 ]
+
+With holding queue's kobject refcount, it is safe for driver
+to schedule requeue. However, blk_mq_kick_requeue_list() may
+be called after blk_sync_queue() is done because of concurrent
+requeue activities, then requeue work may not be completed when
+freeing queue, and kernel oops is triggered.
+
+So moving the cancel of requeue_work into blk_mq_release() for
+avoiding race between requeue and freeing queue.
+
+Cc: Dongli Zhang <dongli.zhang@oracle.com>
+Cc: James Smart <james.smart@broadcom.com>
+Cc: Bart Van Assche <bart.vanassche@wdc.com>
+Cc: linux-scsi@vger.kernel.org,
+Cc: Martin K . Petersen <martin.petersen@oracle.com>,
+Cc: Christoph Hellwig <hch@lst.de>,
+Cc: James E . J . Bottomley <jejb@linux.vnet.ibm.com>,
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Tested-by: James Smart <james.smart@broadcom.com>
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
+Signed-off-by: Jens Axboe <axboe@kernel.dk>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ block/blk-core.c | 1 -
+ block/blk-mq.c   | 2 ++
+ 2 files changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 33488b1426b7..6eed5d84c2ef 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -411,7 +411,6 @@ void blk_sync_queue(struct request_queue *q)
+ 		struct blk_mq_hw_ctx *hctx;
+ 		int i;
+ 
+-		cancel_delayed_work_sync(&q->requeue_work);
+ 		queue_for_each_hw_ctx(q, hctx, i)
+ 			cancel_delayed_work_sync(&hctx->run_work);
+ 	} else {
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 4e563ee462cb..70d839b9c3b0 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -2465,6 +2465,8 @@ void blk_mq_release(struct request_queue *q)
+ 	struct blk_mq_hw_ctx *hctx;
+ 	unsigned int i;
+ 
++	cancel_delayed_work_sync(&q->requeue_work);
++
+ 	/* hctx kobj stays in hctx */
+ 	queue_for_each_hw_ctx(q, hctx, i) {
+ 		if (!hctx)
+-- 
+2.20.1
