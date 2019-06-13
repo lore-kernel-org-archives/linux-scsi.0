@@ -1,101 +1,65 @@
-From: Viresh Kumar <viresh.kumar@linaro.org>
-Subject: Re: [RFC v2 01/11] OPP: Don't overwrite rounded clk rate
-Date: Thu, 13 Jun 2019 15:24:19 +0530
-Message-ID: <20190613095419.lfjeko7nmxtix2n4@vireshk-i7>
-References: <20190320094918.20234-1-rnayak@codeaurora.org>
- <20190320094918.20234-2-rnayak@codeaurora.org>
- <20190611105432.x3nzqiib35t6mvyg@vireshk-i7>
- <c173a57d-a4de-99f7-e8d8-28a7612f4ca3@codeaurora.org>
- <20190612082506.m735bsk7bjijf2yg@vireshk-i7>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH V2 08/15] staging: unisys: visorhba: use sg helper to
+ operate sgl
+Date: Thu, 13 Jun 2019 08:46:08 -0700
+Message-ID: <1560440768.3329.30.camel@HansenPartnership.com>
+References: <20190613071335.5679-1-ming.lei@redhat.com>
+ <20190613071335.5679-9-ming.lei@redhat.com>
+ <20190613095214.GA18796@kroah.com> <20190613100410.GA10829@ming.t460p>
+ <20190613101656.GA28256@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20190612082506.m735bsk7bjijf2yg@vireshk-i7>
-Sender: linux-kernel-owner@vger.kernel.org
-To: swboyd@chromium.org, Rajendra Nayak <rnayak@codeaurora.org>, vincent.guittot@linaro.org, mturquette@baylibre.com
-Cc: linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-pm@vger.kernel.org, linux-serial@vger.kernel.org, linux-spi@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-scsi@vger.kernel.org, ulf.hansson@linaro.org, dianders@chromium.org, rafael@kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <20190613101656.GA28256@kroah.com>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Ming Lei <ming.lei@redhat.com>
+Cc: Michael Schmitz <schmitzmic@gmail.com>, devel@driverdev.osuosl.org, Hannes Reinecke <hare@suse.com>, linux-scsi@vger.kernel.org, "Martin K .
+ Petersen" <martin.petersen@oracle.com>, James Smart <james.smart@broadcom.com>, "Ewan D . Milne" <emilne@redhat.com>, Jim Gill <jgill@vmware.com>, Brian King <brking@us.ibm.com>, Finn Thain <fthain@telegraphics.com.au>, "Juergen E . Fischer" <fischer@norbit.de>, Christoph Hellwig <hch@lst.de>, Bart Van Assche <bvanassche@acm.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 12-06-19, 13:55, Viresh Kumar wrote:
-> Okay, I have applied this patch (alone) to the OPP tree with minor
-> modifications in commit log and diff.
+On Thu, 2019-06-13 at 12:16 +0200, Greg Kroah-Hartman wrote:
+> On Thu, Jun 13, 2019 at 06:04:11PM +0800, Ming Lei wrote:
+> > On Thu, Jun 13, 2019 at 11:52:14AM +0200, Greg Kroah-Hartman wrote:
+> > > On Thu, Jun 13, 2019 at 03:13:28PM +0800, Ming Lei wrote:
+> > > > The current way isn't safe for chained sgl, so use sg helper to
+> > > > operate sgl.
+> > > 
+> > > I can not make any sense out of this changelog.
+> > > 
+> > > What "isn't safe"?  What is a "sgl"?
+> > 
+> > sgl is 'scatterlist' in kernel, and several linear sgl can be
+> > chained together, so accessing the sgl in linear way may see a
+> > chained sg, which is like a link pointer, then may cause trouble
+> > for driver.
+> 
+> What kind of "trouble"?  Is this a bug fix that needs to be
+> backported to stable kernels?  How can this be triggered?
 
-And I have removed it now :)
+OK, stop.  I haven't seen the commit log since the original hasn't
+appeared on the list yet, but the changelog needs to say something like
+this to prevent questions like the above, as I asked in the last
+review.  Please make it something like this:
 
-I am confused as hell on what we should be doing and what we are doing
-right now. And if we should do better.
+---
+Scsi MQ makes a large static allocation for the first scatter gather
+list chunk for the driver to use.  This is a performance headache we'd
+like to fix by reducing the size of the allocation to a 2 element
+array.  Doing this will break the current guarantee that any driver
+using SG_ALL doesn't need to use the scatterlist iterators and can get
+away with directly dereferencing the array.  Thus we need to update all
+drivers to use the scatterlist iterators and remove direct indexing of
+the scatterlist array before reducing the initial scatterlist
+allocation size in SCSI.
+---
 
-Let me explain with an example.
-
-- The clock provider supports following frequencies: 500, 600, 700,
-  800, 900, 1000 MHz.
-
-- The OPP table contains/supports only a subset: 500, 700, 1000 MHz.
-
-Now, the request to change the frequency starts from cpufreq
-governors, like schedutil when they calls:
-
-__cpufreq_driver_target(policy, 599 MHz, CPUFREQ_RELATION_L);
-
-CPUFREQ_RELATION_L means: lowest frequency at or above target. And so
-I would expect the frequency to get set to 600MHz (if we look at clock
-driver) or 700MHz (if we look at OPP table). I think we should decide
-this thing from the OPP table only as that's what the platform guys
-want us to use. So, we should end up with 700 MHz.
-
-Then we land into dev_pm_opp_set_rate(), which does this (which is
-code copied from earlier version of cpufreq-dt driver):
-
-- clk_round_rate(clk, 599 MHz).
-
-  clk_round_rate() returns the highest frequency lower than target. So
-  it must return 500 MHz (I haven't tested this yet, all theoretical).
-
-- _find_freq_ceil(opp_table, 500 MHz).
-
-  This works like CPUFREQ_RELATION_L, so we find lowest frequency >=
-  target freq. And so we should get: 500 MHz itself as OPP table has
-  it.
-
-- clk_set_rate(clk, 500 MHz).
-
-  This must be doing round-rate again, but I think we will settle with
-  500 MHz eventually.
-
-
-Now the questionnaire:
-
-- Is this whole exercise correct ?
-- We shouldn't have landed on 500 MHz, right ?
-- Is there anything wrong with the above theory (I am going to test it soon though).
-- Why do we need to do the first clock_round_rate() ? Should we remove
-  it ?
-
-
-
-Now lets move to this patch, which makes it more confusing.
-
-The OPP tables for CPUs and GPUs should already be somewhat like fmax
-tables for particular voltage values and that's why both cpufreq and
-OPP core try to find a frequency higher than target so we choose the
-most optimum one power-efficiency wise.
-
-For cases where the OPP table is only a subset of the clk-providers
-table (almost always), if we let the clock provider to find the
-nearest frequency (which is lower) we will run the CPU/GPU at a
-not-so-optimal frequency. i.e. if 500, 600, 700 MHz all need voltage
-to be 1.2 V, we should be running at 700 always, while we may end up
-running at 500 MHz.
-
-This kind of behavior (introduced by this patch) is important for
-other devices which want to run at the nearest frequency to target
-one, but not for CPUs/GPUs. So, we need to tag these IO devices
-separately, maybe from DT ? So we select the closest match instead of
-most optimal one.
-
-But lets fix the existing issues first and then think about this
-patch.
-
--- 
-viresh
+James
