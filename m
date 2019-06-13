@@ -1,14 +1,14 @@
 From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 4.19 055/118] blk-mq: move cancel of requeue_work into blk_mq_release
-Date: Thu, 13 Jun 2019 10:33:13 +0200
-Message-ID: <20190613075646.936104246@linuxfoundation.org>
-References: <20190613075643.642092651@linuxfoundation.org>
+Subject: [PATCH 4.14 37/81] blk-mq: move cancel of requeue_work into blk_mq_release
+Date: Thu, 13 Jun 2019 10:33:20 +0200
+Message-ID: <20190613075652.080492893@linuxfoundation.org>
+References: <20190613075649.074682929@linuxfoundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20190613075643.642092651@linuxfoundation.org>
-Sender: stable-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190613075649.074682929@linuxfoundation.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
 Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, stable@vger.kernel.org, Dongli Zhang <dongli.zhang@oracle.com>, James Smart <james.smart@broadcom.com>, Bart Van Assche <bart.vanassche@wdc.com>, Bart Van Assche <bvanassche@acm.org>, Johannes Thumshirn <jthumshirn@suse.de>, Hannes Reinecke <hare@suse.com>, Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
@@ -45,10 +45,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  2 files changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/block/blk-core.c b/block/blk-core.c
-index 33488b1426b7..6eed5d84c2ef 100644
+index 0b14aebfd1a8..4e04c79aa2c2 100644
 --- a/block/blk-core.c
 +++ b/block/blk-core.c
-@@ -411,7 +411,6 @@ void blk_sync_queue(struct request_queue *q)
+@@ -339,7 +339,6 @@ void blk_sync_queue(struct request_queue *q)
  		struct blk_mq_hw_ctx *hctx;
  		int i;
  
@@ -57,10 +57,10 @@ index 33488b1426b7..6eed5d84c2ef 100644
  			cancel_delayed_work_sync(&hctx->run_work);
  	} else {
 diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 4e563ee462cb..70d839b9c3b0 100644
+index eac444804736..55139d2fca3e 100644
 --- a/block/blk-mq.c
 +++ b/block/blk-mq.c
-@@ -2465,6 +2465,8 @@ void blk_mq_release(struct request_queue *q)
+@@ -2294,6 +2294,8 @@ void blk_mq_release(struct request_queue *q)
  	struct blk_mq_hw_ctx *hctx;
  	unsigned int i;
  
