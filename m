@@ -1,65 +1,73 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH V2 08/15] staging: unisys: visorhba: use sg helper to
- operate sgl
-Date: Thu, 13 Jun 2019 08:46:08 -0700
-Message-ID: <1560440768.3329.30.camel@HansenPartnership.com>
-References: <20190613071335.5679-1-ming.lei@redhat.com>
- <20190613071335.5679-9-ming.lei@redhat.com>
- <20190613095214.GA18796@kroah.com> <20190613100410.GA10829@ming.t460p>
- <20190613101656.GA28256@kroah.com>
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [PATCH 5.1 070/155] blk-mq: move cancel of requeue_work into blk_mq_release
+Date: Thu, 13 Jun 2019 10:33:02 +0200
+Message-ID: <20190613075656.897201625@linuxfoundation.org>
+References: <20190613075652.691765927@linuxfoundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <20190613101656.GA28256@kroah.com>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Ming Lei <ming.lei@redhat.com>
-Cc: Michael Schmitz <schmitzmic@gmail.com>, devel@driverdev.osuosl.org, Hannes Reinecke <hare@suse.com>, linux-scsi@vger.kernel.org, "Martin K .
- Petersen" <martin.petersen@oracle.com>, James Smart <james.smart@broadcom.com>, "Ewan D . Milne" <emilne@redhat.com>, Jim Gill <jgill@vmware.com>, Brian King <brking@us.ibm.com>, Finn Thain <fthain@telegraphics.com.au>, "Juergen E . Fischer" <fischer@norbit.de>, Christoph Hellwig <hch@lst.de>, Bart Van Assche <bvanassche@acm.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190613075652.691765927@linuxfoundation.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, stable@vger.kernel.org, Dongli Zhang <dongli.zhang@oracle.com>, James Smart <james.smart@broadcom.com>, Bart Van Assche <bart.vanassche@wdc.com>, Bart Van Assche <bvanassche@acm.org>, Johannes Thumshirn <jthumshirn@suse.de>, Hannes Reinecke <hare@suse.com>, Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 2019-06-13 at 12:16 +0200, Greg Kroah-Hartman wrote:
-> On Thu, Jun 13, 2019 at 06:04:11PM +0800, Ming Lei wrote:
-> > On Thu, Jun 13, 2019 at 11:52:14AM +0200, Greg Kroah-Hartman wrote:
-> > > On Thu, Jun 13, 2019 at 03:13:28PM +0800, Ming Lei wrote:
-> > > > The current way isn't safe for chained sgl, so use sg helper to
-> > > > operate sgl.
-> > > 
-> > > I can not make any sense out of this changelog.
-> > > 
-> > > What "isn't safe"?  What is a "sgl"?
-> > 
-> > sgl is 'scatterlist' in kernel, and several linear sgl can be
-> > chained together, so accessing the sgl in linear way may see a
-> > chained sg, which is like a link pointer, then may cause trouble
-> > for driver.
-> 
-> What kind of "trouble"?  Is this a bug fix that needs to be
-> backported to stable kernels?  How can this be triggered?
+[ Upstream commit fbc2a15e3433058582e5635aabe48a3011a644a8 ]
 
-OK, stop.  I haven't seen the commit log since the original hasn't
-appeared on the list yet, but the changelog needs to say something like
-this to prevent questions like the above, as I asked in the last
-review.  Please make it something like this:
+With holding queue's kobject refcount, it is safe for driver
+to schedule requeue. However, blk_mq_kick_requeue_list() may
+be called after blk_sync_queue() is done because of concurrent
+requeue activities, then requeue work may not be completed when
+freeing queue, and kernel oops is triggered.
 
+So moving the cancel of requeue_work into blk_mq_release() for
+avoiding race between requeue and freeing queue.
+
+Cc: Dongli Zhang <dongli.zhang@oracle.com>
+Cc: James Smart <james.smart@broadcom.com>
+Cc: Bart Van Assche <bart.vanassche@wdc.com>
+Cc: linux-scsi@vger.kernel.org,
+Cc: Martin K . Petersen <martin.petersen@oracle.com>,
+Cc: Christoph Hellwig <hch@lst.de>,
+Cc: James E . J . Bottomley <jejb@linux.vnet.ibm.com>,
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Tested-by: James Smart <james.smart@broadcom.com>
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
+Signed-off-by: Jens Axboe <axboe@kernel.dk>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
-Scsi MQ makes a large static allocation for the first scatter gather
-list chunk for the driver to use.  This is a performance headache we'd
-like to fix by reducing the size of the allocation to a 2 element
-array.  Doing this will break the current guarantee that any driver
-using SG_ALL doesn't need to use the scatterlist iterators and can get
-away with directly dereferencing the array.  Thus we need to update all
-drivers to use the scatterlist iterators and remove direct indexing of
-the scatterlist array before reducing the initial scatterlist
-allocation size in SCSI.
----
+ block/blk-core.c | 1 -
+ block/blk-mq.c   | 2 ++
+ 2 files changed, 2 insertions(+), 1 deletion(-)
 
-James
+diff --git a/block/blk-core.c b/block/blk-core.c
+index b375cfea024c..2dd94b3e9ece 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -237,7 +237,6 @@ void blk_sync_queue(struct request_queue *q)
+ 		struct blk_mq_hw_ctx *hctx;
+ 		int i;
+ 
+-		cancel_delayed_work_sync(&q->requeue_work);
+ 		queue_for_each_hw_ctx(q, hctx, i)
+ 			cancel_delayed_work_sync(&hctx->run_work);
+ 	}
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 8a41cc5974fe..11efca3534ad 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -2666,6 +2666,8 @@ void blk_mq_release(struct request_queue *q)
+ 	struct blk_mq_hw_ctx *hctx;
+ 	unsigned int i;
+ 
++	cancel_delayed_work_sync(&q->requeue_work);
++
+ 	/* hctx kobj stays in hctx */
+ 	queue_for_each_hw_ctx(q, hctx, i) {
+ 		if (!hctx)
+-- 
+2.20.1
