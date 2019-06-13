@@ -1,41 +1,47 @@
-From: Kashyap Desai <kashyap.desai@broadcom.com>
-Subject: RE: [PATCH 10/13] megaraid_sas: set virt_boundary_mask in the scsi host
-Date: Fri, 14 Jun 2019 01:34:00 +0530
-Message-ID: <d411baa1bdd34f1a1289480d13fe1cef@mail.gmail.com>
-References: <20190605190836.32354-1-hch@lst.de> <20190605190836.32354-11-hch@lst.de>
- <cd713506efb9579d1f69a719d831c28d@mail.gmail.com> <20190613084458.GB13221@lst.de>
+From: Minwoo Im <minwoo.im.dev@gmail.com>
+Subject: Re: [RFC PATCH] mpt3sas: support target smid for [abort|query] task
+Date: Fri, 14 Jun 2019 06:05:33 +0900
+Message-ID: <20190613210533.GA25375@minwooim-desktop>
+References: <CGME20190613075402epcms2p7dbd2e2f7c80bd2aef2c5dd3736393d36@epcms2p7>
+ <20190613075402epcms2p7dbd2e2f7c80bd2aef2c5dd3736393d36@epcms2p7>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190613084458.GB13221@lst.de>
+Content-Disposition: inline
+In-Reply-To: <20190613075402epcms2p7dbd2e2f7c80bd2aef2c5dd3736393d36@epcms2p7>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>, Sebastian Ott <sebott@linux.ibm.com>, Sagi Grimberg <sagi@grimberg.me>, Max Gurtovoy <maxg@mellanox.com>, Bart Van Assche <bvanassche@acm.org>, Ulf Hansson <ulf.hansson@linaro.org>, Alan Stern <stern@rowland.harvard.edu>, Oliver Neukum <oneukum@suse.com>, linux-block@vger.kernel.org, linux-rdma@vger.kernel.org, linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org, "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@broadcom.com>, PDL-MPT-FUSIONLINUX <mpt-fusionlinux.pdl@broadcom.com>, linux-hyperv@vger.kernel.org, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net, linux-kernel@vger.kernel.org
+To: Minwoo Im <minwoo.im@samsung.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "MPT-FusionLinux.pdl@broadcom.com" <MPT-FusionLinux.pdl@broadcom.com>, "sathya.prakash@broadcom.com" <sathya.prakash@broadcom.com>, "chaitra.basappa@broadcom.com" <chaitra.basappa@broadcom.com>, "suganath-prabu.subramani@broadcom.com" <suganath-prabu.subramani@broadcom.com>, "jejb@linux.ibm.com" <jejb@linux.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, Sarah Cho <sohyeon.jo@samsung.com>, Sungjun Park <sj1228.park@samsung.com>, Gyeongmin Nam <gm.nam@samsung.com>, Sanggwan Lee <sanggwan.lee@samsung.com>
 List-Id: linux-scsi@vger.kernel.org
 
->
-> So before I respin this series, can you help with a way to figure out
-for
-> mpt3sas and megaraid if a given controller supports NVMe devices at all,
-so
-> that we don't have to set the virt boundary if not?
+On 19-06-13 16:54:02, Minwoo Im wrote:
+> We can request task management IOCTL command(MPI2_FUNCTION_SCSI_TASK_MGMT)
+> to /dev/mpt3ctl.  If the given task_type is either abort task or query
+> task, it may need a field named "Initiator Port Transfer Tag to Manage"
+> in the IU.
+> 
+> Current code does not support to check target IPTT tag from the
+> tm_request.  This patch introduces to check TaskMID given from the
+> userspace as a target tag.  We have a rule of relationship between
+> (struct request *req->tag) and smid in mpt3sas_base.c:
+> 
+> 3318 u16
+> 3319 mpt3sas_base_get_smid_scsiio(struct MPT3SAS_ADAPTER *ioc, u8 cb_idx,
+> 3320         struct scsi_cmnd *scmd)
+> 3321 {
+> 3322         struct scsiio_tracker *request = scsi_cmd_priv(scmd);
+> 3323         unsigned int tag = scmd->request->tag;
+> 3324         u16 smid;
+> 3325
+> 3326         smid = tag + 1;
+> 
+> So if we want to abort a request tagged #X, then we can pass (X + 1) to
+> this IOCTL handler.
+> 
+> Signed-off-by: Minwoo Im <minwoo.im@samsung.com>
+> ---
 
+Sorry for the duplicated patches on the same mailing list.  Please ignore
+the first two of it.
 
-In MegaRaid we have below enum -        VENTURA_SERIES and AERO_SERIES
-supports NVME
-
-enum MR_ADAPTER_TYPE {
-        MFI_SERIES = 1,
-        THUNDERBOLT_SERIES = 2,
-        INVADER_SERIES = 3,
-        VENTURA_SERIES = 4,
-        AERO_SERIES = 5,
-};
-
-In mpt3sas driver we have below method - If IOC FACT reports NVME Device
-support in Protocol Flags, we can consider it as HBA with NVME drive
-support.
-
-ioc->facts.ProtocolFlags & MPI2_IOCFACTS_PROTOCOL_NVME_DEVICES
-
-Kashyap
+Thanks,
