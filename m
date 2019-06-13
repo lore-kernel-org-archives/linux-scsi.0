@@ -1,8 +1,8 @@
 From: Minwoo Im <minwoo.im@samsung.com>
 Subject: [RFC PATCH] mpt3sas: support target smid for [abort|query] task
-Date: Thu, 13 Jun 2019 16:58:22 +0900
-Message-ID: <20190613075822epcms2p4ebf7116e0a10a1c80d746d9a17686a2d@epcms2p4>
-References: <CGME20190613075822epcms2p4ebf7116e0a10a1c80d746d9a17686a2d@epcms2p4>
+Date: Thu, 13 Jun 2019 16:54:02 +0900
+Message-ID: <20190613075402epcms2p7dbd2e2f7c80bd2aef2c5dd3736393d36@epcms2p7>
+References: <CGME20190613075402epcms2p7dbd2e2f7c80bd2aef2c5dd3736393d36@epcms2p7>
 Reply-To: minwoo.im@samsung.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -10,7 +10,7 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "MPT-FusionLinux.pdl@broadcom.com" <MPT-FusionLinux.pdl@broadcom.com>
-Cc: Minwoo Im <minwoo.im@samsung.com>, "sathya.prakash@broadcom.com" <sathya.prakash@broadcom.com>, "suganath-prabu.subramani@broadcom.com" <suganath-prabu.subramani@broadcom.com>, "jejb@linux.ibm.com" <jejb@linux.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, Sarah Cho <sohyeon.jo@samsung.com>, Sungjun Park <sj1228.park@samsung.com>, Gyeongmin Nam <gm.nam@samsung.com>, Sanggwan Lee <sanggwan.lee@samsung.com>, "minwoo.im.dev@gmail.com" <minwoo.im.dev@gmail.com>
+Cc: Minwoo Im <minwoo.im@samsung.com>, "sathya.prakash@broadcom.com" <sathya.prakash@broadcom.com>, "chaitra.basappa@broadcom.com" <chaitra.basappa@broadcom.com>, "suganath-prabu.subramani@broadcom.com" <suganath-prabu.subramani@broadcom.com>, "jejb@linux.ibm.com" <jejb@linux.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, Sarah Cho <sohyeon.jo@samsung.com>, Sungjun Park <sj1228.park@samsung.com>, Gyeongmin Nam <gm.nam@samsung.com>, Sanggwan Lee <sanggwan.lee@samsung.com>
 List-Id: linux-scsi@vger.kernel.org
 
 We can request task management IOCTL command(MPI2_FUNCTION_SCSI_TASK_MGMT)
