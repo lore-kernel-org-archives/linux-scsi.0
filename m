@@ -1,8 +1,8 @@
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+From: Dan Carpenter <dan.carpenter@oracle.com>
 Subject: Re: [PATCH V2 08/15] staging: unisys: visorhba: use sg helper to
  operate sgl
-Date: Thu, 13 Jun 2019 12:16:56 +0200
-Message-ID: <20190613101656.GA28256@kroah.com>
+Date: Thu, 13 Jun 2019 13:24:25 +0300
+Message-ID: <20190613102425.GB28859@kadam>
 References: <20190613071335.5679-1-ming.lei@redhat.com>
  <20190613071335.5679-9-ming.lei@redhat.com>
  <20190613095214.GA18796@kroah.com>
@@ -23,7 +23,7 @@ List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driver
 Errors-To: driverdev-devel-bounces@linuxdriverproject.org
 Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
 To: Ming Lei <ming.lei@redhat.com>
-Cc: Michael Schmitz <schmitzmic@gmail.com>, devel@driverdev.osuosl.org, Hannes Reinecke <hare@suse.com>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, James Smart <james.smart@broadcom.com>, "Ewan D . Milne" <emilne@redhat.com>, Jim Gill <jgill@vmware.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Brian King <brking@us.ibm.com>, Finn Thain <fthain@telegraphics.com.au>, "Juergen E . Fischer" <fischer@norbit.de>, Christoph Hellwig <hch@lst.de>, Bart Van Assche <bvanassche@acm.org>
+Cc: Michael Schmitz <schmitzmic@gmail.com>, devel@driverdev.osuosl.org, Hannes Reinecke <hare@suse.com>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, James Smart <james.smart@broadcom.com>, "Ewan D . Milne" <emilne@redhat.com>, Jim Gill <jgill@vmware.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Brian King <brking@us.ibm.com>, Finn Thain <fthain@telegraphics.com.au>, "Juergen E . Fischer" <fischer@norbit.de>, Christoph Hellwig <hch@lst.de>, Bart Van Assche <bvanassche@acm.org>
 List-Id: linux-scsi@vger.kernel.org
 
 On Thu, Jun 13, 2019 at 06:04:11PM +0800, Ming Lei wrote:
@@ -39,17 +39,13 @@ On Thu, Jun 13, 2019 at 06:04:11PM +0800, Ming Lei wrote:
 > sgl is 'scatterlist' in kernel, and several linear sgl can be chained
 > together, so accessing the sgl in linear way may see a chained sg, which
 > is like a link pointer, then may cause trouble for driver.
-
-What kind of "trouble"?  Is this a bug fix that needs to be backported
-to stable kernels?  How can this be triggered?
-
-> > Can this be applied "out of order"?
 > 
-> Yes, there isn't any dependency among the 15 patches.
 
-Then perhaps you shouldn't send a numbered patch series with different
-patches sent to different maintainers, it just causes confusion :)
+So from a user perspective it results in an Oops?  It would be really
+cool if you had the copy of the Oops btw so people could grep the git
+history for it.
 
-thanks,
+(You need to resend with the improved commit message).
 
-greg k-h
+regards,
+dan carpenter
