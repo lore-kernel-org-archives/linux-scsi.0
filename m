@@ -1,113 +1,189 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH V3 07/15] usb: image: microtek: use sg helper to operate
- scatterlist
-Date: Fri, 14 Jun 2019 14:57:38 +0800
-Message-ID: <20190614065737.GB24393@ming.t460p>
-References: <20190614025316.7360-1-ming.lei@redhat.com>
- <20190614025316.7360-8-ming.lei@redhat.com>
- <alpine.LNX.2.21.1906141536000.33@nippy.intranet>
+From: "Bean Huo (beanhuo)" <beanhuo@micron.com>
+Subject: RE: [EXT] [PATCH v3 2/3] scsi: ufs-qcom: Implement device_reset vops
+Date: Fri, 14 Jun 2019 07:42:29 +0000
+Message-ID: <BN7PR08MB56846B54B2ED0BB4194545E2DBEE0@BN7PR08MB5684.namprd08.prod.outlook.com>
+References: <20190608050450.12056-1-bjorn.andersson@linaro.org>
+ <20190608050450.12056-3-bjorn.andersson@linaro.org>
+ <BN7PR08MB56848AB3CC413CBEC211130EDBED0@BN7PR08MB5684.namprd08.prod.outlook.com>
+ <20190612063143.GD22737@tuxbook-pro>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.LNX.2.21.1906141536000.33@nippy.intranet>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: Michael Schmitz <schmitzmic@gmail.com>, devel@driverdev.osuosl.org, Hannes Reinecke <hare@suse.com>, Benjamin Block <bblock@linux.ibm.com>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org, James Smart <james.smart@broadcom.com>, "Ewan D . Milne" <emilne@redhat.com>, Jim Gill <jgill@vmware.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Oliver Neukum <oliver@neukum.org>, Brian King <brking@us.ibm.com>, "Juergen E . Fischer" <fischer@norbit.de>, Christoph Hellwig <hch@lst.de>, Dan Carpenter <dan.carpenter@oracle.com>, Bart Van Assche <bvanassche@acm.org>
+Content-Type: text/plain; charset="iso-2022-jp"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190612063143.GD22737@tuxbook-pro>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bjorn Andersson <bjorn.andersson@linaro.org>
+Cc: Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, Pedro Sousa <pedrom.sousa@synopsys.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Andy Gross <agross@kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Jun 14, 2019 at 03:39:10PM +1000, Finn Thain wrote:
-> On Fri, 14 Jun 2019, Ming Lei wrote:
-> 
-> > Use the scatterlist iterators and remove direct indexing of the
-> > scatterlist array.
-> > 
-> > This way allows us to pre-allocate one small scatterlist, which can be
-> > chained with one runtime allocated scatterlist if the pre-allocated one
-> > isn't enough for the whole request.
-> > 
-> > Cc: Oliver Neukum <oliver@neukum.org>
-> > Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> > Cc: linux-usb@vger.kernel.org
-> > Signed-off-by: Ming Lei <ming.lei@redhat.com>
-> > ---
-> >  drivers/usb/image/microtek.c | 20 ++++++++------------
-> >  drivers/usb/image/microtek.h |  2 +-
-> >  2 files changed, 9 insertions(+), 13 deletions(-)
-> > 
-> > diff --git a/drivers/usb/image/microtek.c b/drivers/usb/image/microtek.c
-> > index 607be1f4fe27..0a57c2cc8e5a 100644
-> > --- a/drivers/usb/image/microtek.c
-> > +++ b/drivers/usb/image/microtek.c
-> > @@ -488,7 +488,6 @@ static void mts_command_done( struct urb *transfer )
-> >  
-> >  static void mts_do_sg (struct urb* transfer)
-> >  {
-> > -	struct scatterlist * sg;
-> >  	int status = transfer->status;
-> >  	MTS_INT_INIT();
-> >  
-> > @@ -500,13 +499,12 @@ static void mts_do_sg (struct urb* transfer)
-> >  		mts_transfer_cleanup(transfer);
-> >          }
-> >  
-> > -	sg = scsi_sglist(context->srb);
-> > -	context->fragment++;
-> > +	context->curr_sg = sg_next(context->curr_sg);
-> >  	mts_int_submit_urb(transfer,
-> >  			   context->data_pipe,
-> > -			   sg_virt(&sg[context->fragment]),
-> > -			   sg[context->fragment].length,
-> > -			   context->fragment + 1 == scsi_sg_count(context->srb) ?
-> > +			   sg_virt(context->curr_sg),
-> > +			   context->curr_sg->length,
-> > +			   sg_is_last(context->curr_sg) ?
-> >  			   mts_data_done : mts_do_sg);
-> >  }
-> >  
-> > @@ -526,22 +524,20 @@ static void
-> >  mts_build_transfer_context(struct scsi_cmnd *srb, struct mts_desc* desc)
-> >  {
-> >  	int pipe;
-> > -	struct scatterlist * sg;
-> > -	
-> > +
-> >  	MTS_DEBUG_GOT_HERE();
-> >  
-> >  	desc->context.instance = desc;
-> >  	desc->context.srb = srb;
-> > -	desc->context.fragment = 0;
-> >  
-> >  	if (!scsi_bufflen(srb)) {
-> >  		desc->context.data = NULL;
-> >  		desc->context.data_length = 0;
-> >  		return;
-> >  	} else {
-> > -		sg = scsi_sglist(srb);
-> > -		desc->context.data = sg_virt(&sg[0]);
-> > -		desc->context.data_length = sg[0].length;
-> > +		desc->context.curr_sg = scsi_sglist(srb);
-> > +		desc->context.data = sg_virt(desc->context.curr_sg);
-> > +		desc->context.data_length = desc->context.curr_sg->length;
-> >  	}
-> >  
-> 
-> Would it not be better to initialize desc->context.curr_sg in both 
-> branches of this conditional?
+Hi, Bjorn
+Sorry just saw your message.
 
-I think either way is fine given desc->context.curr_sg is used only
-if 'context->data' isn't NULL, see mts_command_done().
+You can use UIC command=1B$B!$=1B(Bthrough function ufshcd_send_uic_cmd( ) =
+with UIC_CMD_DME_END_PT_RST command.
 
-So I'd keep the patch as it is.
+DME_ENDPOINTRESET: It is used when UFS host wants the UFS device to perform=
+ a reset.
 
-Thanks,
-Ming
+//bean
+
+>On Tue 11 Jun 09:08 PDT 2019, Bean Huo (beanhuo) wrote:
+>
+>> Hi, Bjorn
+>> This HW reset is dedicated to QUALCOMM based platform case.
+>> how about adding a SW reset as to be default reset routine if platform
+>doesn't support HW reset?
+>>
+>
+>Can you please advice how I perform such software reset?
+>
+>Regards,
+>Bjorn
+>
+>> >-----Original Message-----
+>> >From: linux-scsi-owner@vger.kernel.org
+>> ><linux-scsi-owner@vger.kernel.org>
+>> >On Behalf Of Bjorn Andersson
+>> >Sent: Saturday, June 8, 2019 7:05 AM
+>> >To: Rob Herring <robh+dt@kernel.org>; Mark Rutland
+>> ><mark.rutland@arm.com>; Alim Akhtar <alim.akhtar@samsung.com>; Avri
+>> >Altman <avri.altman@wdc.com>; Pedro Sousa
+>> ><pedrom.sousa@synopsys.com>; James E.J. Bottomley
+>> ><jejb@linux.ibm.com>; Martin K. Petersen <martin.petersen@oracle.com>
+>> >Cc: Andy Gross <agross@kernel.org>; devicetree@vger.kernel.org;
+>> >linux- kernel@vger.kernel.org; linux-arm-msm@vger.kernel.org; linux-
+>> >scsi@vger.kernel.org
+>> >Subject: [EXT] [PATCH v3 2/3] scsi: ufs-qcom: Implement device_reset
+>> >vops
+>> >
+>> >The UFS_RESET pin on Qualcomm SoCs are controlled by TLMM and
+>exposed
+>> >through the GPIO framework. Acquire the device-reset GPIO and use
+>> >this to implement the device_reset vops, to allow resetting the attache=
+d
+>memory.
+>> >
+>> >Based on downstream support implemented by Subhash Jadavani
+>> ><subhashj@codeaurora.org>.
+>> >
+>> >Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+>> >---
+>> >
+>> >Changes since v2:
+>> >- Moved implementation to Qualcomm driver
+>> >
+>> > .../devicetree/bindings/ufs/ufshcd-pltfrm.txt |  2 ++
+>> > drivers/scsi/ufs/ufs-qcom.c                   | 32 +++++++++++++++++++
+>> > drivers/scsi/ufs/ufs-qcom.h                   |  4 +++
+>> > 3 files changed, 38 insertions(+)
+>> >
+>> >diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+>> >b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+>> >index a74720486ee2..d562d8b4919c 100644
+>> >--- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+>> >+++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+>> >@@ -54,6 +54,8 @@ Optional properties:
+>> > 			  PHY reset from the UFS controller.
+>> > - resets            : reset node register
+>> > - reset-names       : describe reset node register, the "rst" correspo=
+nds to
+>> >reset the whole UFS IP.
+>> >+- device-reset-gpios	: A phandle and gpio specifier denoting the
+>GPIO
+>> >connected
+>> >+			  to the RESET pin of the UFS memory device.
+>> >
+>> > Note: If above properties are not defined it can be assumed that the
+>> >supply regulators or clocks are always on.
+>> >diff --git a/drivers/scsi/ufs/ufs-qcom.c
+>> >b/drivers/scsi/ufs/ufs-qcom.c index ea7219407309..efaf57ba618a 100644
+>> >--- a/drivers/scsi/ufs/ufs-qcom.c
+>> >+++ b/drivers/scsi/ufs/ufs-qcom.c
+>> >@@ -16,6 +16,7 @@
+>> > #include <linux/of.h>
+>> > #include <linux/platform_device.h>
+>> > #include <linux/phy/phy.h>
+>> >+#include <linux/gpio/consumer.h>
+>> > #include <linux/reset-controller.h>
+>> >
+>> > #include "ufshcd.h"
+>> >@@ -1141,6 +1142,15 @@ static int ufs_qcom_init(struct ufs_hba *hba)
+>> > 		goto out_variant_clear;
+>> > 	}
+>> >
+>> >+	host->device_reset =3D devm_gpiod_get_optional(dev, "device-reset",
+>> >+						     GPIOD_OUT_HIGH);
+>> >+	if (IS_ERR(host->device_reset)) {
+>> >+		err =3D PTR_ERR(host->device_reset);
+>> >+		if (err !=3D -EPROBE_DEFER)
+>> >+			dev_err(dev, "failed to acquire reset gpio: %d\n", err);
+>> >+		goto out_variant_clear;
+>> >+	}
+>> >+
+>> > 	err =3D ufs_qcom_bus_register(host);
+>> > 	if (err)
+>> > 		goto out_variant_clear;
+>> >@@ -1546,6 +1556,27 @@ static void ufs_qcom_dump_dbg_regs(struct
+>> >ufs_hba *hba)
+>> > 	usleep_range(1000, 1100);
+>> > }
+>> >
+>> >+/**
+>> >+ * ufs_qcom_device_reset() - toggle the (optional) device reset line
+>> >+ * @hba: per-adapter instance
+>> >+ *
+>> >+ * Toggles the (optional) reset line to reset the attached device.
+>> >+ */
+>> >+static void ufs_qcom_device_reset(struct ufs_hba *hba) {
+>> >+	struct ufs_qcom_host *host =3D ufshcd_get_variant(hba);
+>> >+
+>> >+	/*
+>> >+	 * The UFS device shall detect reset pulses of 1us, sleep for 10us to
+>> >+	 * be on the safe side.
+>> >+	 */
+>> >+	gpiod_set_value_cansleep(host->device_reset, 1);
+>> >+	usleep_range(10, 15);
+>> >+
+>> >+	gpiod_set_value_cansleep(host->device_reset, 0);
+>> >+	usleep_range(10, 15);
+>> >+}
+>> >+
+>> > /**
+>> >  * struct ufs_hba_qcom_vops - UFS QCOM specific variant operations
+>> >  *
+>> >@@ -1566,6 +1597,7 @@ static struct ufs_hba_variant_ops
+>> >ufs_hba_qcom_vops =3D {
+>> > 	.suspend		=3D ufs_qcom_suspend,
+>> > 	.resume			=3D ufs_qcom_resume,
+>> > 	.dbg_register_dump	=3D ufs_qcom_dump_dbg_regs,
+>> >+	.device_reset		=3D ufs_qcom_device_reset,
+>> > };
+>> >
+>> > /**
+>> >diff --git a/drivers/scsi/ufs/ufs-qcom.h
+>> >b/drivers/scsi/ufs/ufs-qcom.h index
+>> >68a880185752..b96ffb6804e4 100644
+>> >--- a/drivers/scsi/ufs/ufs-qcom.h
+>> >+++ b/drivers/scsi/ufs/ufs-qcom.h
+>> >@@ -204,6 +204,8 @@ struct ufs_qcom_testbus {
+>> > 	u8 select_minor;
+>> > };
+>> >
+>> >+struct gpio_desc;
+>> >+
+>> > struct ufs_qcom_host {
+>> > 	/*
+>> > 	 * Set this capability if host controller supports the QUniPro mode
+>> >@@ -241,6 +243,8 @@ struct ufs_qcom_host {
+>> > 	struct ufs_qcom_testbus testbus;
+>> >
+>> > 	struct reset_controller_dev rcdev;
+>> >+
+>> >+	struct gpio_desc *device_reset;
+>> > };
+>> >
+>> > static inline u32
+>> >--
+>> >2.18.0
+>>
