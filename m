@@ -1,51 +1,84 @@
-From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.4 08/10] scsi: ufs: Check that space was properly alloced in copy_query_response
-Date: Fri, 14 Jun 2019 16:30:44 -0400
-Message-ID: <20190614203046.28077-8-sashal@kernel.org>
-References: <20190614203046.28077-1-sashal@kernel.org>
+From: Jonathan Corbet <corbet@lwn.net>
+Subject: Re: [PATCH v4 19/28] docs: powerpc: convert docs to ReST and rename
+ to *.rst
+Date: Fri, 14 Jun 2019 14:36:35 -0600
+Message-ID: <20190614143635.3aff154d@lwn.net>
+References: <cover.1560361364.git.mchehab+samsung@kernel.org>
+        <63560c1ee7174952e148a353840a17969fe0be2d.1560361364.git.mchehab+samsung@kernel.org>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190614203046.28077-1-sashal@kernel.org>
+In-Reply-To: <63560c1ee7174952e148a353840a17969fe0be2d.1560361364.git.mchehab+samsung@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Avri Altman <avri.altman@wdc.com>, Alim Akhtar <alim.akhtar@samsung.com>, Bean Huo <beanhuo@micron.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+To: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
+Cc: Linux Doc Mailing List <linux-doc@vger.kernel.org>, Mauro Carvalho Chehab <mchehab@infradead.org>, linux-kernel@vger.kernel.org, Linas Vepstas <linasvepstas@gmail.com>, Russell Currey <ruscur@russell.cc>, Sam Bobroff <sbobroff@linux.ibm.com>, Oliver O'Halloran <oohall@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, Michael Ellerman <mpe@ellerman.id.au>, Frederic Barrat <fbarrat@linux.ibm.com>, Andrew Donnellan <ajd@linux.ibm.com>, "Manoj N. Kumar" <manoj@linux.ibm.com>, "Matthew R. Ochs" <mrochs@linux.ibm.com>, Uma Krishnan <ukrishn@linux.ibm.com>, Qiang Zhao <qiang.zhao@nxp.com>, Li Yang <leoyang.li@nxp.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Avri Altman <avri.altman@wdc.com>
+On Wed, 12 Jun 2019 14:52:55 -0300
+Mauro Carvalho Chehab <mchehab+samsung@kernel.org> wrote:
 
-[ Upstream commit 1c90836f70f9a8ef7b7ad9e1fdd8961903e6ced6 ]
+> Convert docs to ReST and add them to the arch-specific
+> book.
+> 
+> The conversion here was trivial, as almost every file there
+> was already using an elegant format close to ReST standard.
+> 
+> The changes were mostly to mark literal blocks and add a few
+> missing section title identifiers.
+> 
+> One note with regards to "--": on Sphinx, this can't be used
+> to identify a list, as it will format it badly. This can be
+> used, however, to identify a long hyphen - and "---" is an
+> even longer one.
+> 
+> At its new index.rst, let's add a :orphan: while this is not linked to
+> the main index.rst file, in order to avoid build warnings.
+> 
+> Signed-off-by: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
+> Acked-by: Andrew Donnellan <andrew.donnellan@au1.ibm.com> # cxl
 
-struct ufs_dev_cmd is the main container that supports device management
-commands. In the case of a read descriptor request, we assume that the
-proper space was allocated in dev_cmd to hold the returning descriptor.
+This one fails to apply because ...
 
-This is no longer true, as there are flows that doesn't use dev_cmd for
-device management requests, and was wrong in the first place.
+[...]
 
-Fixes: d44a5f98bb49 (ufs: query descriptor API)
-Signed-off-by: Avri Altman <avri.altman@wdc.com>
-Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
-Acked-by: Bean Huo <beanhuo@micron.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/scsi/ufs/ufshcd.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+> diff --git a/Documentation/PCI/pci-error-recovery.rst b/Documentation/PCI/pci-error-recovery.rst
+> index 83db42092935..acc21ecca322 100644
+> --- a/Documentation/PCI/pci-error-recovery.rst
+> +++ b/Documentation/PCI/pci-error-recovery.rst
+> @@ -403,7 +403,7 @@ That is, the recovery API only requires that:
+>  .. note::
+>  
+>     Implementation details for the powerpc platform are discussed in
+> -   the file Documentation/powerpc/eeh-pci-error-recovery.txt
+> +   the file Documentation/powerpc/eeh-pci-error-recovery.rst
+>  
+>     As of this writing, there is a growing list of device drivers with
+>     patches implementing error recovery. Not all of these patches are in
+> @@ -422,3 +422,24 @@ That is, the recovery API only requires that:
+>     - drivers/net/cxgb3
+>     - drivers/net/s2io.c
+>     - drivers/net/qlge
+> +
+> +>>> As of this writing, there is a growing list of device drivers with
+> +>>> patches implementing error recovery. Not all of these patches are in
+> +>>> mainline yet. These may be used as "examples":
+> +>>>
+> +>>> drivers/scsi/ipr
+> +>>> drivers/scsi/sym53c8xx_2
+> +>>> drivers/scsi/qla2xxx
+> +>>> drivers/scsi/lpfc
+> +>>> drivers/next/bnx2.c
+> +>>> drivers/next/e100.c
+> +>>> drivers/net/e1000
+> +>>> drivers/net/e1000e
+> +>>> drivers/net/ixgb
+> +>>> drivers/net/ixgbe
+> +>>> drivers/net/cxgb3
+> +>>> drivers/net/s2io.c
+> +>>> drivers/net/qlge  
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 7322a17660d1..b140e81c4f7d 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -853,7 +853,8 @@ int ufshcd_copy_query_response(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
- 	memcpy(&query_res->upiu_res, &lrbp->ucd_rsp_ptr->qr, QUERY_OSF_SIZE);
- 
- 	/* Get the descriptor */
--	if (lrbp->ucd_rsp_ptr->qr.opcode == UPIU_QUERY_OPCODE_READ_DESC) {
-+	if (hba->dev_cmd.query.descriptor &&
-+	    lrbp->ucd_rsp_ptr->qr.opcode == UPIU_QUERY_OPCODE_READ_DESC) {
- 		u8 *descp = (u8 *)lrbp->ucd_rsp_ptr +
- 				GENERAL_UPIU_REQUEST_SIZE;
- 		u16 resp_len;
--- 
-2.20.1
+...of this, which has the look of a set of conflict markers that managed
+to get committed...?
+
+jon
