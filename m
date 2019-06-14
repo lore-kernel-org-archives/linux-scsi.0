@@ -1,56 +1,65 @@
-From: Varun Prakash <varun@chelsio.com>
-Subject: Re: [PATCH -next] cxgbit: remove set but not used variable 'ppmax'
-Date: Fri, 14 Jun 2019 19:11:44 +0530
-Message-ID: <20190614134143.GA1630@chelsio.com>
-References: <20190614024413.110449-1-yuehaibing@huawei.com>
+From: YueHaibing <yuehaibing@huawei.com>
+Subject: [PATCH -next] scsi: qedi: Make some symbols static
+Date: Fri, 14 Jun 2019 23:48:20 +0800
+Message-ID: <20190614154820.26744-1-yuehaibing@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20190614024413.110449-1-yuehaibing@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: YueHaibing <yuehaibing@huawei.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "David S. Miller" <davem@davemloft.net>, Mike Christie <mchristi@redhat.com>, Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org, varun@chelsio.com
+To: QLogic-Storage-Upstream@cavium.com, jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, YueHaibing <yuehaibing@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Jun 14, 2019 at 02:44:13AM +0000, YueHaibing wrote:
-> Fixes gcc '-Wunused-but-set-variable' warning:
-> 
-> drivers/target/iscsi/cxgbit/cxgbit_ddp.c: In function 'cxgbit_ddp_init':
-> drivers/target/iscsi/cxgbit/cxgbit_ddp.c:303:15: warning:
->  variable 'ppmax' set but not used [-Wunused-but-set-variable]
-> 
-> It's not used since commit a248384e6420 ("cxgb4/libcxgb/cxgb4i/cxgbit:
-> enable eDRAM page pods for iSCSI")
-> 
-> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
-> ---
->  drivers/target/iscsi/cxgbit/cxgbit_ddp.c | 3 ---
->  1 file changed, 3 deletions(-)
-> 
-> diff --git a/drivers/target/iscsi/cxgbit/cxgbit_ddp.c b/drivers/target/iscsi/cxgbit/cxgbit_ddp.c
-> index 1443ef045a5f..fe1be5feaf21 100644
-> --- a/drivers/target/iscsi/cxgbit/cxgbit_ddp.c
-> +++ b/drivers/target/iscsi/cxgbit/cxgbit_ddp.c
-> @@ -300,7 +300,6 @@ int cxgbit_ddp_init(struct cxgbit_device *cdev)
->  	struct cxgb4_lld_info *lldi = &cdev->lldi;
->  	struct net_device *ndev = cdev->lldi.ports[0];
->  	struct cxgbi_tag_format tformat;
-> -	unsigned int ppmax;
->  	int ret, i;
->  
->  	if (!lldi->vr->iscsi.size) {
-> @@ -308,8 +307,6 @@ int cxgbit_ddp_init(struct cxgbit_device *cdev)
->  		return -EACCES;
->  	}
->  
-> -	ppmax = lldi->vr->iscsi.size >> PPOD_SIZE_SHIFT;
-> -
->  	memset(&tformat, 0, sizeof(struct cxgbi_tag_format));
->  	for (i = 0; i < 4; i++)
->  		tformat.pgsz_order[i] = (lldi->iscsi_pgsz_order >> (i << 3))
-> 
+Fix sparse warnings:
 
-Acked-by: Varun Prakash <varun@chelsio.com>
+drivers/scsi/qedi/qedi_iscsi.c:1541:6: warning:
+ symbol 'qedi_get_iscsi_error' was not declared. Should it be static?
+drivers/scsi/qedi/qedi_main.c:1806:17: warning:
+ symbol 'qedi_get_cmd_from_tid' was not declared. Should it be static?
+drivers/scsi/qedi/qedi_main.c:47:6: warning:
+ symbol 'qedi_ll2_buf_size' was not declared. Should it be static?
 
-This patch is for net-next tree.
+Reported-by: Hulk Robot <hulkci@huawei.com>
+Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+---
+ drivers/scsi/qedi/qedi_iscsi.c | 2 +-
+ drivers/scsi/qedi/qedi_main.c  | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/qedi/qedi_iscsi.c b/drivers/scsi/qedi/qedi_iscsi.c
+index 8829880..e0bc8c8 100644
+--- a/drivers/scsi/qedi/qedi_iscsi.c
++++ b/drivers/scsi/qedi/qedi_iscsi.c
+@@ -1535,7 +1535,7 @@ static const struct {
+ 	},
+ };
+ 
+-char *qedi_get_iscsi_error(enum iscsi_error_types err_code)
++static char *qedi_get_iscsi_error(enum iscsi_error_types err_code)
+ {
+ 	int i;
+ 	char *msg = NULL;
+diff --git a/drivers/scsi/qedi/qedi_main.c b/drivers/scsi/qedi/qedi_main.c
+index 1b58e63..4651a20 100644
+--- a/drivers/scsi/qedi/qedi_main.c
++++ b/drivers/scsi/qedi/qedi_main.c
+@@ -41,7 +41,7 @@ module_param(qedi_io_tracing, uint, 0644);
+ MODULE_PARM_DESC(qedi_io_tracing,
+ 		 " Enable logging of SCSI requests/completions into trace buffer. (default off).");
+ 
+-uint qedi_ll2_buf_size = 0x400;
++static uint qedi_ll2_buf_size = 0x400;
+ module_param(qedi_ll2_buf_size, uint, 0644);
+ MODULE_PARM_DESC(qedi_ll2_buf_size,
+ 		 "parameter to set ping packet size, default - 0x400, Jumbo packets - 0x2400.");
+@@ -1813,7 +1813,7 @@ void qedi_get_proto_itt(struct qedi_ctx *qedi, u32 tid, u32 *proto_itt)
+ 		  tid, *proto_itt);
+ }
+ 
+-struct qedi_cmd *qedi_get_cmd_from_tid(struct qedi_ctx *qedi, u32 tid)
++static struct qedi_cmd *qedi_get_cmd_from_tid(struct qedi_ctx *qedi, u32 tid)
+ {
+ 	struct qedi_cmd *cmd = NULL;
+ 
+-- 
+2.7.4
