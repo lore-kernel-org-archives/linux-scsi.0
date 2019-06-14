@@ -1,74 +1,113 @@
-From: Viresh Kumar <viresh.kumar@linaro.org>
-Subject: Re: [RFC v2 02/11] OPP: Make dev_pm_opp_set_rate() with freq=0 as
- valid
-Date: Fri, 14 Jun 2019 12:02:10 +0530
-Message-ID: <20190614063210.lfsquoycronah3fe@vireshk-i7>
-References: <20190320094918.20234-1-rnayak@codeaurora.org>
- <20190320094918.20234-3-rnayak@codeaurora.org>
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [PATCH V3 07/15] usb: image: microtek: use sg helper to operate
+ scatterlist
+Date: Fri, 14 Jun 2019 14:57:38 +0800
+Message-ID: <20190614065737.GB24393@ming.t460p>
+References: <20190614025316.7360-1-ming.lei@redhat.com>
+ <20190614025316.7360-8-ming.lei@redhat.com>
+ <alpine.LNX.2.21.1906141536000.33@nippy.intranet>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
 Content-Disposition: inline
-In-Reply-To: <20190320094918.20234-3-rnayak@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Rajendra Nayak <rnayak@codeaurora.org>
-Cc: linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-pm@vger.kernel.org, linux-serial@vger.kernel.org, linux-spi@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-scsi@vger.kernel.org, swboyd@chromium.org, ulf.hansson@linaro.org, dianders@chromium.org, rafael@kernel.org
+In-Reply-To: <alpine.LNX.2.21.1906141536000.33@nippy.intranet>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: Finn Thain <fthain@telegraphics.com.au>
+Cc: Michael Schmitz <schmitzmic@gmail.com>, devel@driverdev.osuosl.org, Hannes Reinecke <hare@suse.com>, Benjamin Block <bblock@linux.ibm.com>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org, James Smart <james.smart@broadcom.com>, "Ewan D . Milne" <emilne@redhat.com>, Jim Gill <jgill@vmware.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Oliver Neukum <oliver@neukum.org>, Brian King <brking@us.ibm.com>, "Juergen E . Fischer" <fischer@norbit.de>, Christoph Hellwig <hch@lst.de>, Dan Carpenter <dan.carpenter@oracle.com>, Bart Van Assche <bvanassche@acm.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 20-03-19, 15:19, Rajendra Nayak wrote:
-> For devices with performance state, we use dev_pm_opp_set_rate()
-> to set the appropriate clk rate and the performance state.
-> We do need a way to *remove* the performance state vote when
-> we idle the device and turn the clocks off. Use dev_pm_opp_set_rate()
-> with freq=0 to achieve this.
+On Fri, Jun 14, 2019 at 03:39:10PM +1000, Finn Thain wrote:
+> On Fri, 14 Jun 2019, Ming Lei wrote:
 > 
-> Signed-off-by: Rajendra Nayak <rnayak@codeaurora.org>
-> Signed-off-by: Stephen Boyd <swboyd@chromium.org>
-> ---
->  drivers/opp/core.c | 18 ++++++++++++------
->  1 file changed, 12 insertions(+), 6 deletions(-)
+> > Use the scatterlist iterators and remove direct indexing of the
+> > scatterlist array.
+> > 
+> > This way allows us to pre-allocate one small scatterlist, which can be
+> > chained with one runtime allocated scatterlist if the pre-allocated one
+> > isn't enough for the whole request.
+> > 
+> > Cc: Oliver Neukum <oliver@neukum.org>
+> > Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> > Cc: linux-usb@vger.kernel.org
+> > Signed-off-by: Ming Lei <ming.lei@redhat.com>
+> > ---
+> >  drivers/usb/image/microtek.c | 20 ++++++++------------
+> >  drivers/usb/image/microtek.h |  2 +-
+> >  2 files changed, 9 insertions(+), 13 deletions(-)
+> > 
+> > diff --git a/drivers/usb/image/microtek.c b/drivers/usb/image/microtek.c
+> > index 607be1f4fe27..0a57c2cc8e5a 100644
+> > --- a/drivers/usb/image/microtek.c
+> > +++ b/drivers/usb/image/microtek.c
+> > @@ -488,7 +488,6 @@ static void mts_command_done( struct urb *transfer )
+> >  
+> >  static void mts_do_sg (struct urb* transfer)
+> >  {
+> > -	struct scatterlist * sg;
+> >  	int status = transfer->status;
+> >  	MTS_INT_INIT();
+> >  
+> > @@ -500,13 +499,12 @@ static void mts_do_sg (struct urb* transfer)
+> >  		mts_transfer_cleanup(transfer);
+> >          }
+> >  
+> > -	sg = scsi_sglist(context->srb);
+> > -	context->fragment++;
+> > +	context->curr_sg = sg_next(context->curr_sg);
+> >  	mts_int_submit_urb(transfer,
+> >  			   context->data_pipe,
+> > -			   sg_virt(&sg[context->fragment]),
+> > -			   sg[context->fragment].length,
+> > -			   context->fragment + 1 == scsi_sg_count(context->srb) ?
+> > +			   sg_virt(context->curr_sg),
+> > +			   context->curr_sg->length,
+> > +			   sg_is_last(context->curr_sg) ?
+> >  			   mts_data_done : mts_do_sg);
+> >  }
+> >  
+> > @@ -526,22 +524,20 @@ static void
+> >  mts_build_transfer_context(struct scsi_cmnd *srb, struct mts_desc* desc)
+> >  {
+> >  	int pipe;
+> > -	struct scatterlist * sg;
+> > -	
+> > +
+> >  	MTS_DEBUG_GOT_HERE();
+> >  
+> >  	desc->context.instance = desc;
+> >  	desc->context.srb = srb;
+> > -	desc->context.fragment = 0;
+> >  
+> >  	if (!scsi_bufflen(srb)) {
+> >  		desc->context.data = NULL;
+> >  		desc->context.data_length = 0;
+> >  		return;
+> >  	} else {
+> > -		sg = scsi_sglist(srb);
+> > -		desc->context.data = sg_virt(&sg[0]);
+> > -		desc->context.data_length = sg[0].length;
+> > +		desc->context.curr_sg = scsi_sglist(srb);
+> > +		desc->context.data = sg_virt(desc->context.curr_sg);
+> > +		desc->context.data_length = desc->context.curr_sg->length;
+> >  	}
+> >  
+> 
+> Would it not be better to initialize desc->context.curr_sg in both 
+> branches of this conditional?
 
-What about this instead ?
+I think either way is fine given desc->context.curr_sg is used only
+if 'context->data' isn't NULL, see mts_command_done().
 
-diff --git a/drivers/opp/core.c b/drivers/opp/core.c
-index 2fe96c2363a3..9accf8bb6afc 100644
---- a/drivers/opp/core.c
-+++ b/drivers/opp/core.c
-@@ -711,7 +711,7 @@ static int _set_required_opps(struct device *dev,
- 
-        /* Single genpd case */
-        if (!genpd_virt_devs) {
--               pstate = opp->required_opps[0]->pstate;
-+               pstate = likely(opp) ? opp->required_opps[0]->pstate : 0;
-                ret = dev_pm_genpd_set_performance_state(dev, pstate);
-                if (ret) {
-                        dev_err(dev, "Failed to set performance state of %s: %d (%d)\n",
-@@ -729,7 +729,7 @@ static int _set_required_opps(struct device *dev,
-        mutex_lock(&opp_table->genpd_virt_dev_lock);
- 
-        for (i = 0; i < opp_table->required_opp_count; i++) {
--               pstate = opp->required_opps[i]->pstate;
-+               pstate = likely(opp) ? opp->required_opps[i]->pstate : 0;
- 
-                if (!genpd_virt_devs[i])
-                        continue;
-@@ -770,14 +770,13 @@ int dev_pm_opp_set_rate(struct device *dev, unsigned long target_freq)
- 
-        if (unlikely(!target_freq)) {
-                if (opp_table->required_opp_tables) {
--                       /* drop the performance state vote */
--                       dev_pm_genpd_set_performance_state(dev, 0);
--                       return 0;
-+                       ret = _set_required_opps(dev, opp_table, NULL);
-                } else {
--                       dev_err(dev, "%s: Invalid target frequency %lu\n", __func__,
--                               target_freq);
--                       return -EINVAL;
-+                       dev_err(dev, "target frequency can't be 0\n");
-+                       ret = -EINVAL;
-                }
-+
-+               goto put_opp_table;
-        }
- 
-        clk = opp_table->clk;
+So I'd keep the patch as it is.
+
+Thanks,
+Ming
