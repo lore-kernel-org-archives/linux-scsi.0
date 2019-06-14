@@ -1,76 +1,74 @@
-From: Rajendra Nayak <rnayak@codeaurora.org>
-Subject: Re: [RFC v2 01/11] OPP: Don't overwrite rounded clk rate
-Date: Fri, 14 Jun 2019 11:24:28 +0530
-Message-ID: <b29c1754-d719-4d7b-806f-9ea25a8b528f@codeaurora.org>
+From: Viresh Kumar <viresh.kumar@linaro.org>
+Subject: Re: [RFC v2 02/11] OPP: Make dev_pm_opp_set_rate() with freq=0 as
+ valid
+Date: Fri, 14 Jun 2019 12:02:10 +0530
+Message-ID: <20190614063210.lfsquoycronah3fe@vireshk-i7>
 References: <20190320094918.20234-1-rnayak@codeaurora.org>
- <20190320094918.20234-2-rnayak@codeaurora.org>
- <20190611105432.x3nzqiib35t6mvyg@vireshk-i7>
- <c173a57d-a4de-99f7-e8d8-28a7612f4ca3@codeaurora.org>
- <20190612082506.m735bsk7bjijf2yg@vireshk-i7>
- <20190613095419.lfjeko7nmxtix2n4@vireshk-i7>
+ <20190320094918.20234-3-rnayak@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
-Content-Transfer-Encoding: base64
-Return-path: <dri-devel-bounces@lists.freedesktop.org>
-In-Reply-To: <20190613095419.lfjeko7nmxtix2n4@vireshk-i7>
-Content-Language: en-US
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
-List-Post: <mailto:dri-devel@lists.freedesktop.org>
-List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: dri-devel-bounces@lists.freedesktop.org
-Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
-To: Viresh Kumar <viresh.kumar@linaro.org>, swboyd@chromium.org, vincent.guittot@linaro.org, mturquette@baylibre.com
-Cc: ulf.hansson@linaro.org, dianders@chromium.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, linux-arm-msm@vger.kernel.org, rafael@kernel.org, linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-spi@vger.kernel.org, linux-serial@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20190320094918.20234-3-rnayak@codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Rajendra Nayak <rnayak@codeaurora.org>
+Cc: linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-pm@vger.kernel.org, linux-serial@vger.kernel.org, linux-spi@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-scsi@vger.kernel.org, swboyd@chromium.org, ulf.hansson@linaro.org, dianders@chromium.org, rafael@kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Cj4gTm93LCB0aGUgcmVxdWVzdCB0byBjaGFuZ2UgdGhlIGZyZXF1ZW5jeSBzdGFydHMgZnJvbSBj
-cHVmcmVxCj4gZ292ZXJub3JzLCBsaWtlIHNjaGVkdXRpbCB3aGVuIHRoZXkgY2FsbHM6Cj4gCj4g
-X19jcHVmcmVxX2RyaXZlcl90YXJnZXQocG9saWN5LCA1OTkgTUh6LCBDUFVGUkVRX1JFTEFUSU9O
-X0wpOwo+IAo+IENQVUZSRVFfUkVMQVRJT05fTCBtZWFuczogbG93ZXN0IGZyZXF1ZW5jeSBhdCBv
-ciBhYm92ZSB0YXJnZXQuIEFuZCBzbwo+IEkgd291bGQgZXhwZWN0IHRoZSBmcmVxdWVuY3kgdG8g
-Z2V0IHNldCB0byA2MDBNSHogKGlmIHdlIGxvb2sgYXQgY2xvY2sKPiBkcml2ZXIpIG9yIDcwME1I
-eiAoaWYgd2UgbG9vayBhdCBPUFAgdGFibGUpLiBJIHRoaW5rIHdlIHNob3VsZCBkZWNpZGUKPiB0
-aGlzIHRoaW5nIGZyb20gdGhlIE9QUCB0YWJsZSBvbmx5IGFzIHRoYXQncyB3aGF0IHRoZSBwbGF0
-Zm9ybSBndXlzCj4gd2FudCB1cyB0byB1c2UuIFNvLCB3ZSBzaG91bGQgZW5kIHVwIHdpdGggNzAw
-IE1Iei4KPiAKPiBUaGVuIHdlIGxhbmQgaW50byBkZXZfcG1fb3BwX3NldF9yYXRlKCksIHdoaWNo
-IGRvZXMgdGhpcyAod2hpY2ggaXMKPiBjb2RlIGNvcGllZCBmcm9tIGVhcmxpZXIgdmVyc2lvbiBv
-ZiBjcHVmcmVxLWR0IGRyaXZlcik6CgpzbyBiZWZvcmUgd2UgbGFuZCBpbnRvIGRldl9wbV9vcHBf
-c2V0X3JhdGUoKSBmcm9tIGEgX19jcHVmcmVxX2RyaXZlcl90YXJnZXQoKQpJIGd1ZXNzIHdlIGRv
-IGhhdmUgYSBjcHVmcmVxIGRyaXZlciBjYWxsYmFjayB0aGF0IGdldHMgY2FsbGVkIGluIGJldHdl
-ZW4/CndoaWNoIGlzIGVpdGhlciAudGFyZ2V0X2luZGV4IG9yIC50YXJnZXQKCkluIGNhc2Ugb2Yg
-LnRhcmdldF9pbmRleCwgdGhlIGNwdWZyZXEgY29yZSBsb29rcyBmb3IgYSBPUFAgaW5kZXgKYW5k
-IHdlIHdvdWxkIGxhbmQgdXAgd2l0aCA3MDBNaHogaSBndWVzcywgc28gd2UgYXJlIGdvb2QuCgpJ
-biBjYXNlIG9mIC50YXJnZXQgdGhvdWdoIHRoZSAncmVsYXRpb24nIENQVUZSRVFfUkVMQVRJT05f
-TCBkb2VzIGdldCBwYXNzZWQgb3Zlcgp0byB0aGUgY3B1ZnJlcSBkcml2ZXIgd2hpY2ggSSBhbSBn
-dWVzc2luZyBpcyBleHBlY3RlZCB0byBoYW5kbGUgaXQgaW4gc29tZSB3YXkgdG8KbWFrZSBzdXJl
-IHRoZSB0YXJnZXQgZnJlcXVlbmN5IHNldCBpcyBub3QgbGVzcyB0aGFuIHdoYXRzIHJlcXVlc3Rl
-ZD8gaW5zdGVhZCBvZgpzaW1wbHkgcGFzc2luZyB0aGUgcmVxdWVzdGVkIGZyZXF1ZW5jeSBvdmVy
-IHRvIGRldl9wbV9vcHBfc2V0X3JhdGUoKT8KCkxvb2tpbmcgYXQgYWxsIHRoZSBleGlzdGluZyBj
-cHVmcmVxIGRyaXZlcnMgdXBzdHJlYW0sIHdoaWxlIG1vc3Qgc3VwcG9ydCAudGFyZ2V0X2luZGV4
-CnRoZSAzIHdoaWNoIGRvIHN1cHBvcnQgLnRhcmdldCBzZWVtIHRvIGNvbXBsZXRlbHkgaWdub3Jl
-IHRoaXMgJ3JlbGF0aW9uJyBpbnB1dCB0aGF0J3MKcGFzc2VkIHRvIHRoZW0uCgpkcml2ZXJzL2Nw
-dWZyZXEvY3BwY19jcHVmcmVxLmM6CS50YXJnZXQgPSBjcHBjX2NwdWZyZXFfc2V0X3RhcmdldCwK
-ZHJpdmVycy9jcHVmcmVxL2NwdWZyZXEtbmZvcmNlMi5jOgkudGFyZ2V0ID0gbmZvcmNlMl90YXJn
-ZXQsCmRyaXZlcnMvY3B1ZnJlcS9wY2MtY3B1ZnJlcS5jOgkudGFyZ2V0ID0gcGNjX2NwdWZyZXFf
-dGFyZ2V0LAoKPiBUaGlzIGtpbmQgb2YgYmVoYXZpb3IgKGludHJvZHVjZWQgYnkgdGhpcyBwYXRj
-aCkgaXMgaW1wb3J0YW50IGZvcgo+IG90aGVyIGRldmljZXMgd2hpY2ggd2FudCB0byBydW4gYXQg
-dGhlIG5lYXJlc3QgZnJlcXVlbmN5IHRvIHRhcmdldAo+IG9uZSwgYnV0IG5vdCBmb3IgQ1BVcy9H
-UFVzLiBTbywgd2UgbmVlZCB0byB0YWcgdGhlc2UgSU8gZGV2aWNlcwo+IHNlcGFyYXRlbHksIG1h
-eWJlIGZyb20gRFQgPyBTbyB3ZSBzZWxlY3QgdGhlIGNsb3Nlc3QgbWF0Y2ggaW5zdGVhZCBvZgo+
-IG1vc3Qgb3B0aW1hbCBvbmUuCgp5ZXMgd2UgZG8gbmVlZCBzb21lIHdheSB0byBkaXN0aW5ndWlz
-aCBiZXR3ZWVuIENQVS9HUFUgZGV2aWNlcyBhbmQgb3RoZXIKSU8gZGV2aWNlcy4gQ1BVL0dQVSBj
-YW4gYWx3YXlzIHJ1biBhdCBmbWF4IGZvciBhIGdpdmVuIHZvbHRhZ2UsIHRoYXQncyBub3QgdHJ1
-ZQpmb3IgSU8gZGV2aWNlcyBhbmQgSSBkb24ndCBzZWUgaG93IHdlIGNhbiBzYXRpc2Z5IGJvdGgg
-Y2FzZXMgd2l0aG91dApjbGVhcmx5IGtub3dpbmcgaWYgd2UgYXJlIHNlcnZpbmcgYSBwcm9jZXNz
-b3Igb3IgYW4gSU8gZGV2aWNlLCB1bmxlc3MgdGhlCmhpZ2hlciBsYXllcnMgKGNwdWZyZXEvZGV2
-ZnJlcSkgYXJlIGFibGUgdG8gaGFuZGxlIHRoaXMgc29tZWhvdyB3aXRob3V0CmV4cGVjdGluZyB0
-aGUgT1BQIGxheWVyIHRvIGhhbmRsZSB0aGUgZGlmZmVyZW5jZXMuCgotLSAKUVVBTENPTU0gSU5E
-SUEsIG9uIGJlaGFsZiBvZiBRdWFsY29tbSBJbm5vdmF0aW9uIENlbnRlciwgSW5jLiBpcyBhIG1l
-bWJlcgpvZiBDb2RlIEF1cm9yYSBGb3J1bSwgaG9zdGVkIGJ5IFRoZSBMaW51eCBGb3VuZGF0aW9u
-Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmRyaS1kZXZl
-bCBtYWlsaW5nIGxpc3QKZHJpLWRldmVsQGxpc3RzLmZyZWVkZXNrdG9wLm9yZwpodHRwczovL2xp
-c3RzLmZyZWVkZXNrdG9wLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2RyaS1kZXZlbA==
+On 20-03-19, 15:19, Rajendra Nayak wrote:
+> For devices with performance state, we use dev_pm_opp_set_rate()
+> to set the appropriate clk rate and the performance state.
+> We do need a way to *remove* the performance state vote when
+> we idle the device and turn the clocks off. Use dev_pm_opp_set_rate()
+> with freq=0 to achieve this.
+> 
+> Signed-off-by: Rajendra Nayak <rnayak@codeaurora.org>
+> Signed-off-by: Stephen Boyd <swboyd@chromium.org>
+> ---
+>  drivers/opp/core.c | 18 ++++++++++++------
+>  1 file changed, 12 insertions(+), 6 deletions(-)
+
+What about this instead ?
+
+diff --git a/drivers/opp/core.c b/drivers/opp/core.c
+index 2fe96c2363a3..9accf8bb6afc 100644
+--- a/drivers/opp/core.c
++++ b/drivers/opp/core.c
+@@ -711,7 +711,7 @@ static int _set_required_opps(struct device *dev,
+ 
+        /* Single genpd case */
+        if (!genpd_virt_devs) {
+-               pstate = opp->required_opps[0]->pstate;
++               pstate = likely(opp) ? opp->required_opps[0]->pstate : 0;
+                ret = dev_pm_genpd_set_performance_state(dev, pstate);
+                if (ret) {
+                        dev_err(dev, "Failed to set performance state of %s: %d (%d)\n",
+@@ -729,7 +729,7 @@ static int _set_required_opps(struct device *dev,
+        mutex_lock(&opp_table->genpd_virt_dev_lock);
+ 
+        for (i = 0; i < opp_table->required_opp_count; i++) {
+-               pstate = opp->required_opps[i]->pstate;
++               pstate = likely(opp) ? opp->required_opps[i]->pstate : 0;
+ 
+                if (!genpd_virt_devs[i])
+                        continue;
+@@ -770,14 +770,13 @@ int dev_pm_opp_set_rate(struct device *dev, unsigned long target_freq)
+ 
+        if (unlikely(!target_freq)) {
+                if (opp_table->required_opp_tables) {
+-                       /* drop the performance state vote */
+-                       dev_pm_genpd_set_performance_state(dev, 0);
+-                       return 0;
++                       ret = _set_required_opps(dev, opp_table, NULL);
+                } else {
+-                       dev_err(dev, "%s: Invalid target frequency %lu\n", __func__,
+-                               target_freq);
+-                       return -EINVAL;
++                       dev_err(dev, "target frequency can't be 0\n");
++                       ret = -EINVAL;
+                }
++
++               goto put_opp_table;
+        }
+ 
+        clk = opp_table->clk;
