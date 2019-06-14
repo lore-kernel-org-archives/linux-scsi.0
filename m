@@ -1,128 +1,102 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V3 15/15] NCR5380: Support chained sg lists
-Date: Fri, 14 Jun 2019 10:53:16 +0800
-Message-ID: <20190614025316.7360-16-ming.lei@redhat.com>
-References: <20190614025316.7360-1-ming.lei@redhat.com>
+From: Viresh Kumar <viresh.kumar@linaro.org>
+Subject: Re: [RFC v2 01/11] OPP: Don't overwrite rounded clk rate
+Date: Fri, 14 Jun 2019 10:57:32 +0530
+Message-ID: <20190614052732.4w6vvwwich2h4cgu@vireshk-i7>
+References: <20190320094918.20234-1-rnayak@codeaurora.org>
+ <20190320094918.20234-2-rnayak@codeaurora.org>
+ <20190611105432.x3nzqiib35t6mvyg@vireshk-i7>
+ <c173a57d-a4de-99f7-e8d8-28a7612f4ca3@codeaurora.org>
+ <20190612082506.m735bsk7bjijf2yg@vireshk-i7>
+ <20190613095419.lfjeko7nmxtix2n4@vireshk-i7>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <20190614025316.7360-1-ming.lei@redhat.com>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Michael Schmitz <schmitzmic@gmail.com>, devel@driverdev.osuosl.org, Hannes Reinecke <hare@suse.com>, Benjamin Block <bblock@linux.ibm.com>, Bart Van Assche <bvanassche@acm.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org, James Smart <james.smart@broadcom.com>, "Ewan D . Milne" <emilne@redhat.com>, Jim Gill <jgill@vmware.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Brian King <brking@us.ibm.com>, Finn Thain <fthain@telegraphics.com.au>, "Juergen E . Fischer" <fischer@norbit.de>, Christoph Hellwig <hch@lst.de>, Dan Carpenter <dan.carpenter@oracle.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20190613095419.lfjeko7nmxtix2n4@vireshk-i7>
+Sender: linux-kernel-owner@vger.kernel.org
+To: swboyd@chromium.org, Rajendra Nayak <rnayak@codeaurora.org>, vincent.guittot@linaro.org, mturquette@baylibre.com
+Cc: linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-pm@vger.kernel.org, linux-serial@vger.kernel.org, linux-spi@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-scsi@vger.kernel.org, ulf.hansson@linaro.org, dianders@chromium.org, rafael@kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Finn Thain <fthain@telegraphics.com.au>
+On 13-06-19, 15:24, Viresh Kumar wrote:
+> I am confused as hell on what we should be doing and what we are doing
+> right now. And if we should do better.
+> 
+> Let me explain with an example.
+> 
+> - The clock provider supports following frequencies: 500, 600, 700,
+>   800, 900, 1000 MHz.
+> 
+> - The OPP table contains/supports only a subset: 500, 700, 1000 MHz.
+> 
+> Now, the request to change the frequency starts from cpufreq
+> governors, like schedutil when they calls:
+> 
+> __cpufreq_driver_target(policy, 599 MHz, CPUFREQ_RELATION_L);
+> 
+> CPUFREQ_RELATION_L means: lowest frequency at or above target. And so
+> I would expect the frequency to get set to 600MHz (if we look at clock
+> driver) or 700MHz (if we look at OPP table). I think we should decide
+> this thing from the OPP table only as that's what the platform guys
+> want us to use. So, we should end up with 700 MHz.
+> 
+> Then we land into dev_pm_opp_set_rate(), which does this (which is
+> code copied from earlier version of cpufreq-dt driver):
+> 
+> - clk_round_rate(clk, 599 MHz).
+> 
+>   clk_round_rate() returns the highest frequency lower than target. So
+>   it must return 500 MHz (I haven't tested this yet, all theoretical).
+> 
+> - _find_freq_ceil(opp_table, 500 MHz).
+> 
+>   This works like CPUFREQ_RELATION_L, so we find lowest frequency >=
+>   target freq. And so we should get: 500 MHz itself as OPP table has
+>   it.
+> 
+> - clk_set_rate(clk, 500 MHz).
+> 
+>   This must be doing round-rate again, but I think we will settle with
+>   500 MHz eventually.
+> 
+> 
+> Now the questionnaire:
+> 
+> - Is this whole exercise correct ?
 
-My understanding is that support for chained scatterlists is to
-become mandatory for LLDs.
+No, I missed the call to cpufreq_frequency_table_target() in
+__cpufreq_driver_target() which finds the exact frequency from cpufreq table
+(which was created using opp table) and so we never screw up here. Sorry for
+confusing everyone on this :(
 
-Use the scatterlist iterators and remove direct indexing of the
-scatterlist array.
+> Now lets move to this patch, which makes it more confusing.
+> 
+> The OPP tables for CPUs and GPUs should already be somewhat like fmax
+> tables for particular voltage values and that's why both cpufreq and
+> OPP core try to find a frequency higher than target so we choose the
+> most optimum one power-efficiency wise.
+> 
+> For cases where the OPP table is only a subset of the clk-providers
+> table (almost always), if we let the clock provider to find the
+> nearest frequency (which is lower) we will run the CPU/GPU at a
+> not-so-optimal frequency. i.e. if 500, 600, 700 MHz all need voltage
+> to be 1.2 V, we should be running at 700 always, while we may end up
+> running at 500 MHz.
 
-This way allows us to pre-allocate one small scatterlist, which can be
-chained with one runtime allocated scatterlist if the pre-allocated one
-isn't enough for the whole request.
+This won't happen for CPUs because of the reason I explained earlier. cpufreq
+core does the rounding before calling dev_pm_opp_set_rate(). And no other
+devices use dev_pm_opp_set_rate() right now apart from CPUs, so we are not going
+to break anything.
 
-Cc: Michael Schmitz <schmitzmic@gmail.com>
-Reviewed-by: Michael Schmitz <schmitzmic@gmail.com>
-Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
----
- drivers/scsi/NCR5380.c | 41 ++++++++++++++++++-----------------------
- 1 file changed, 18 insertions(+), 23 deletions(-)
+> This kind of behavior (introduced by this patch) is important for
+> other devices which want to run at the nearest frequency to target
+> one, but not for CPUs/GPUs. So, we need to tag these IO devices
+> separately, maybe from DT ? So we select the closest match instead of
+> most optimal one.
 
-diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
-index fe0535affc14..4ef44fafe6ca 100644
---- a/drivers/scsi/NCR5380.c
-+++ b/drivers/scsi/NCR5380.c
-@@ -149,12 +149,10 @@ static inline void initialize_SCp(struct scsi_cmnd *cmd)
- 
- 	if (scsi_bufflen(cmd)) {
- 		cmd->SCp.buffer = scsi_sglist(cmd);
--		cmd->SCp.buffers_residual = scsi_sg_count(cmd) - 1;
- 		cmd->SCp.ptr = sg_virt(cmd->SCp.buffer);
- 		cmd->SCp.this_residual = cmd->SCp.buffer->length;
- 	} else {
- 		cmd->SCp.buffer = NULL;
--		cmd->SCp.buffers_residual = 0;
- 		cmd->SCp.ptr = NULL;
- 		cmd->SCp.this_residual = 0;
- 	}
-@@ -163,6 +161,17 @@ static inline void initialize_SCp(struct scsi_cmnd *cmd)
- 	cmd->SCp.Message = 0;
- }
- 
-+static inline void advance_sg_buffer(struct scsi_cmnd *cmd)
-+{
-+	struct scatterlist *s = cmd->SCp.buffer;
-+
-+	if (!cmd->SCp.this_residual && s && !sg_is_last(s)) {
-+		cmd->SCp.buffer = sg_next(s);
-+		cmd->SCp.ptr = sg_virt(cmd->SCp.buffer);
-+		cmd->SCp.this_residual = cmd->SCp.buffer->length;
-+	}
-+}
-+
- /**
-  * NCR5380_poll_politely2 - wait for two chip register values
-  * @hostdata: host private data
-@@ -1672,12 +1681,7 @@ static void NCR5380_information_transfer(struct Scsi_Host *instance)
- 			    sun3_dma_setup_done != cmd) {
- 				int count;
- 
--				if (!cmd->SCp.this_residual && cmd->SCp.buffers_residual) {
--					++cmd->SCp.buffer;
--					--cmd->SCp.buffers_residual;
--					cmd->SCp.this_residual = cmd->SCp.buffer->length;
--					cmd->SCp.ptr = sg_virt(cmd->SCp.buffer);
--				}
-+				advance_sg_buffer(cmd);
- 
- 				count = sun3scsi_dma_xfer_len(hostdata, cmd);
- 
-@@ -1727,15 +1731,11 @@ static void NCR5380_information_transfer(struct Scsi_Host *instance)
- 				 * scatter-gather list, move onto the next one.
- 				 */
- 
--				if (!cmd->SCp.this_residual && cmd->SCp.buffers_residual) {
--					++cmd->SCp.buffer;
--					--cmd->SCp.buffers_residual;
--					cmd->SCp.this_residual = cmd->SCp.buffer->length;
--					cmd->SCp.ptr = sg_virt(cmd->SCp.buffer);
--					dsprintk(NDEBUG_INFORMATION, instance, "%d bytes and %d buffers left\n",
--					         cmd->SCp.this_residual,
--					         cmd->SCp.buffers_residual);
--				}
-+				advance_sg_buffer(cmd);
-+				dsprintk(NDEBUG_INFORMATION, instance,
-+					"this residual %d, sg ents %d\n",
-+					cmd->SCp.this_residual,
-+					sg_nents(cmd->SCp.buffer));
- 
- 				/*
- 				 * The preferred transfer method is going to be
-@@ -2136,12 +2136,7 @@ static void NCR5380_reselect(struct Scsi_Host *instance)
- 	if (sun3_dma_setup_done != tmp) {
- 		int count;
- 
--		if (!tmp->SCp.this_residual && tmp->SCp.buffers_residual) {
--			++tmp->SCp.buffer;
--			--tmp->SCp.buffers_residual;
--			tmp->SCp.this_residual = tmp->SCp.buffer->length;
--			tmp->SCp.ptr = sg_virt(tmp->SCp.buffer);
--		}
-+		advance_sg_buffer(tmp);
- 
- 		count = sun3scsi_dma_xfer_len(hostdata, tmp);
- 
+Hmm, so this patch won't break anything and I am inclined to apply it again :)
+
+Does anyone see any other issues with it, which I might be missing ?
+
 -- 
-2.20.1
+viresh
