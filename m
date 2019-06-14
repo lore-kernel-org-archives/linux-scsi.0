@@ -1,47 +1,48 @@
-From: Minwoo Im <minwoo.im.dev@gmail.com>
-Subject: Re: [RFC PATCH] mpt3sas: support target smid for [abort|query] task
-Date: Fri, 14 Jun 2019 06:05:33 +0900
-Message-ID: <20190613210533.GA25375@minwooim-desktop>
-References: <CGME20190613075402epcms2p7dbd2e2f7c80bd2aef2c5dd3736393d36@epcms2p7>
- <20190613075402epcms2p7dbd2e2f7c80bd2aef2c5dd3736393d36@epcms2p7>
+From: YueHaibing <yuehaibing@huawei.com>
+Subject: [PATCH -next] cxgbit: remove set but not used variable 'ppmax'
+Date: Fri, 14 Jun 2019 02:44:13 +0000
+Message-ID: <20190614024413.110449-1-yuehaibing@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20190613075402epcms2p7dbd2e2f7c80bd2aef2c5dd3736393d36@epcms2p7>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Minwoo Im <minwoo.im@samsung.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "MPT-FusionLinux.pdl@broadcom.com" <MPT-FusionLinux.pdl@broadcom.com>, "sathya.prakash@broadcom.com" <sathya.prakash@broadcom.com>, "chaitra.basappa@broadcom.com" <chaitra.basappa@broadcom.com>, "suganath-prabu.subramani@broadcom.com" <suganath-prabu.subramani@broadcom.com>, "jejb@linux.ibm.com" <jejb@linux.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, Sarah Cho <sohyeon.jo@samsung.com>, Sungjun Park <sj1228.park@samsung.com>, Gyeongmin Nam <gm.nam@samsung.com>, Sanggwan Lee <sanggwan.lee@samsung.com>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>, Varun Prakash <varun@chelsio.com>, "David S. Miller" <davem@davemloft.net>, Mike Christie <mchristi@redhat.com>, Bart Van Assche <bvanassche@acm.org>
+Cc: YueHaibing <yuehaibing@huawei.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 19-06-13 16:54:02, Minwoo Im wrote:
-> We can request task management IOCTL command(MPI2_FUNCTION_SCSI_TASK_MGMT)
-> to /dev/mpt3ctl.  If the given task_type is either abort task or query
-> task, it may need a field named "Initiator Port Transfer Tag to Manage"
-> in the IU.
-> 
-> Current code does not support to check target IPTT tag from the
-> tm_request.  This patch introduces to check TaskMID given from the
-> userspace as a target tag.  We have a rule of relationship between
-> (struct request *req->tag) and smid in mpt3sas_base.c:
-> 
-> 3318 u16
-> 3319 mpt3sas_base_get_smid_scsiio(struct MPT3SAS_ADAPTER *ioc, u8 cb_idx,
-> 3320         struct scsi_cmnd *scmd)
-> 3321 {
-> 3322         struct scsiio_tracker *request = scsi_cmd_priv(scmd);
-> 3323         unsigned int tag = scmd->request->tag;
-> 3324         u16 smid;
-> 3325
-> 3326         smid = tag + 1;
-> 
-> So if we want to abort a request tagged #X, then we can pass (X + 1) to
-> this IOCTL handler.
-> 
-> Signed-off-by: Minwoo Im <minwoo.im@samsung.com>
-> ---
+Fixes gcc '-Wunused-but-set-variable' warning:
 
-Sorry for the duplicated patches on the same mailing list.  Please ignore
-the first two of it.
+drivers/target/iscsi/cxgbit/cxgbit_ddp.c: In function 'cxgbit_ddp_init':
+drivers/target/iscsi/cxgbit/cxgbit_ddp.c:303:15: warning:
+ variable 'ppmax' set but not used [-Wunused-but-set-variable]
 
-Thanks,
+It's not used since commit a248384e6420 ("cxgb4/libcxgb/cxgb4i/cxgbit:
+enable eDRAM page pods for iSCSI")
+
+Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+---
+ drivers/target/iscsi/cxgbit/cxgbit_ddp.c | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/drivers/target/iscsi/cxgbit/cxgbit_ddp.c b/drivers/target/iscsi/cxgbit/cxgbit_ddp.c
+index 1443ef045a5f..fe1be5feaf21 100644
+--- a/drivers/target/iscsi/cxgbit/cxgbit_ddp.c
++++ b/drivers/target/iscsi/cxgbit/cxgbit_ddp.c
+@@ -300,7 +300,6 @@ int cxgbit_ddp_init(struct cxgbit_device *cdev)
+ 	struct cxgb4_lld_info *lldi = &cdev->lldi;
+ 	struct net_device *ndev = cdev->lldi.ports[0];
+ 	struct cxgbi_tag_format tformat;
+-	unsigned int ppmax;
+ 	int ret, i;
+ 
+ 	if (!lldi->vr->iscsi.size) {
+@@ -308,8 +307,6 @@ int cxgbit_ddp_init(struct cxgbit_device *cdev)
+ 		return -EACCES;
+ 	}
+ 
+-	ppmax = lldi->vr->iscsi.size >> PPOD_SIZE_SHIFT;
+-
+ 	memset(&tformat, 0, sizeof(struct cxgbi_tag_format));
+ 	for (i = 0; i < 4; i++)
+ 		tformat.pgsz_order[i] = (lldi->iscsi_pgsz_order >> (i << 3))
