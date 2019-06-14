@@ -1,102 +1,145 @@
-From: Viresh Kumar <viresh.kumar@linaro.org>
-Subject: Re: [RFC v2 01/11] OPP: Don't overwrite rounded clk rate
-Date: Fri, 14 Jun 2019 10:57:32 +0530
-Message-ID: <20190614052732.4w6vvwwich2h4cgu@vireshk-i7>
-References: <20190320094918.20234-1-rnayak@codeaurora.org>
- <20190320094918.20234-2-rnayak@codeaurora.org>
- <20190611105432.x3nzqiib35t6mvyg@vireshk-i7>
- <c173a57d-a4de-99f7-e8d8-28a7612f4ca3@codeaurora.org>
- <20190612082506.m735bsk7bjijf2yg@vireshk-i7>
- <20190613095419.lfjeko7nmxtix2n4@vireshk-i7>
+From: Finn Thain <fthain@telegraphics.com.au>
+Subject: Re: [PATCH V3 10/15] scsi: aha152x: use sg helper to operate
+ scatterlist
+Date: Fri, 14 Jun 2019 15:27:36 +1000 (AEST)
+Message-ID: <alpine.LNX.2.21.1906141404270.33@nippy.intranet>
+References: <20190614025316.7360-1-ming.lei@redhat.com>
+ <20190614025316.7360-11-ming.lei@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20190613095419.lfjeko7nmxtix2n4@vireshk-i7>
-Sender: linux-kernel-owner@vger.kernel.org
-To: swboyd@chromium.org, Rajendra Nayak <rnayak@codeaurora.org>, vincent.guittot@linaro.org, mturquette@baylibre.com
-Cc: linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-pm@vger.kernel.org, linux-serial@vger.kernel.org, linux-spi@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-scsi@vger.kernel.org, ulf.hansson@linaro.org, dianders@chromium.org, rafael@kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <20190614025316.7360-11-ming.lei@redhat.com>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: Ming Lei <ming.lei@redhat.com>, "Juergen E . Fischer" <fischer@norbit.de>
+Cc: Michael Schmitz <schmitzmic@gmail.com>, devel@driverdev.osuosl.org, Hannes Reinecke <hare@suse.com>, Benjamin Block <bblock@linux.ibm.com>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org, James Smart <james.smart@broadcom.com>, "Ewan D . Milne" <emilne@redhat.com>, Jim Gill <jgill@vmware.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Brian King <brking@us.ibm.com>, Christoph Hellwig <hch@lst.de>, Dan Carpenter <dan.carpenter@oracle.com>, Bart Van Assche <bvanassche@acm.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 13-06-19, 15:24, Viresh Kumar wrote:
-> I am confused as hell on what we should be doing and what we are doing
-> right now. And if we should do better.
-> 
-> Let me explain with an example.
-> 
-> - The clock provider supports following frequencies: 500, 600, 700,
->   800, 900, 1000 MHz.
-> 
-> - The OPP table contains/supports only a subset: 500, 700, 1000 MHz.
-> 
-> Now, the request to change the frequency starts from cpufreq
-> governors, like schedutil when they calls:
-> 
-> __cpufreq_driver_target(policy, 599 MHz, CPUFREQ_RELATION_L);
-> 
-> CPUFREQ_RELATION_L means: lowest frequency at or above target. And so
-> I would expect the frequency to get set to 600MHz (if we look at clock
-> driver) or 700MHz (if we look at OPP table). I think we should decide
-> this thing from the OPP table only as that's what the platform guys
-> want us to use. So, we should end up with 700 MHz.
-> 
-> Then we land into dev_pm_opp_set_rate(), which does this (which is
-> code copied from earlier version of cpufreq-dt driver):
-> 
-> - clk_round_rate(clk, 599 MHz).
-> 
->   clk_round_rate() returns the highest frequency lower than target. So
->   it must return 500 MHz (I haven't tested this yet, all theoretical).
-> 
-> - _find_freq_ceil(opp_table, 500 MHz).
-> 
->   This works like CPUFREQ_RELATION_L, so we find lowest frequency >=
->   target freq. And so we should get: 500 MHz itself as OPP table has
->   it.
-> 
-> - clk_set_rate(clk, 500 MHz).
-> 
->   This must be doing round-rate again, but I think we will settle with
->   500 MHz eventually.
-> 
-> 
-> Now the questionnaire:
-> 
-> - Is this whole exercise correct ?
+Hi Ming,
 
-No, I missed the call to cpufreq_frequency_table_target() in
-__cpufreq_driver_target() which finds the exact frequency from cpufreq table
-(which was created using opp table) and so we never screw up here. Sorry for
-confusing everyone on this :(
+On Fri, 14 Jun 2019, Ming Lei wrote:
 
-> Now lets move to this patch, which makes it more confusing.
+> Use the scatterlist iterators and remove direct indexing of the
+> scatterlist array.
 > 
-> The OPP tables for CPUs and GPUs should already be somewhat like fmax
-> tables for particular voltage values and that's why both cpufreq and
-> OPP core try to find a frequency higher than target so we choose the
-> most optimum one power-efficiency wise.
+> This way allows us to pre-allocate one small scatterlist, which can be
+> chained with one runtime allocated scatterlist if the pre-allocated one
+> isn't enough for the whole request.
 > 
-> For cases where the OPP table is only a subset of the clk-providers
-> table (almost always), if we let the clock provider to find the
-> nearest frequency (which is lower) we will run the CPU/GPU at a
-> not-so-optimal frequency. i.e. if 500, 600, 700 MHz all need voltage
-> to be 1.2 V, we should be running at 700 always, while we may end up
-> running at 500 MHz.
+> Signed-off-by: Ming Lei <ming.lei@redhat.com>
+> ---
+>  drivers/scsi/aha152x.c | 29 +++++++++++++++++++----------
+>  1 file changed, 19 insertions(+), 10 deletions(-)
+> 
+> diff --git a/drivers/scsi/aha152x.c b/drivers/scsi/aha152x.c
+> index 97872838b983..bc9d12aa7880 100644
+> --- a/drivers/scsi/aha152x.c
+> +++ b/drivers/scsi/aha152x.c
+> @@ -2033,7 +2033,7 @@ static void datai_run(struct Scsi_Host *shpnt)
+>  				    CURRENT_SC->SCp.buffers_residual > 0) {
+>  					/* advance to next buffer */
+>  					CURRENT_SC->SCp.buffers_residual--;
+> -					CURRENT_SC->SCp.buffer++;
+> +					CURRENT_SC->SCp.buffer = sg_next(CURRENT_SC->SCp.buffer);
+>  					CURRENT_SC->SCp.ptr           = SG_ADDRESS(CURRENT_SC->SCp.buffer);
+>  					CURRENT_SC->SCp.this_residual = CURRENT_SC->SCp.buffer->length;
+>  				}
+> @@ -2139,7 +2139,7 @@ static void datao_run(struct Scsi_Host *shpnt)
+>  		if(CURRENT_SC->SCp.this_residual==0 && CURRENT_SC->SCp.buffers_residual>0) {
+>  			/* advance to next buffer */
+>  			CURRENT_SC->SCp.buffers_residual--;
+> -			CURRENT_SC->SCp.buffer++;
+> +			CURRENT_SC->SCp.buffer = sg_next(CURRENT_SC->SCp.buffer);
+>  			CURRENT_SC->SCp.ptr           = SG_ADDRESS(CURRENT_SC->SCp.buffer);
+>  			CURRENT_SC->SCp.this_residual = CURRENT_SC->SCp.buffer->length;
+>  		}
+> @@ -2160,20 +2160,29 @@ static void datao_end(struct Scsi_Host *shpnt)
+>  	if(TESTLO(DMASTAT, DFIFOEMP)) {
+>  		int data_count = (DATA_LEN - scsi_get_resid(CURRENT_SC)) -
+>  			GETSTCNT();
 
-This won't happen for CPUs because of the reason I explained earlier. cpufreq
-core does the rounding before calling dev_pm_opp_set_rate(). And no other
-devices use dev_pm_opp_set_rate() right now apart from CPUs, so we are not going
-to break anything.
+data_count appears to be the number of bytes remaining in the FIFO. (I 
+have to infer that much from the surrounding code. I don't have 
+documentation for this controller.)
 
-> This kind of behavior (introduced by this patch) is important for
-> other devices which want to run at the nearest frequency to target
-> one, but not for CPUs/GPUs. So, we need to tag these IO devices
-> separately, maybe from DT ? So we select the closest match instead of
-> most optimal one.
+Some comments would be nice.
 
-Hmm, so this patch won't break anything and I am inclined to apply it again :)
+> +		struct scatterlist *sg = scsi_sglist(CURRENT_SC);
+> +		int left, i = 0;
+>  
+>  		CMD_INC_RESID(CURRENT_SC, data_count);
+>  
 
-Does anyone see any other issues with it, which I might be missing ?
+Apparently the aim is to increase the residual by the number of bytes that 
+will never leave the FIFO. Above we can see that increase performed by 
+scsi_set_resid() and now the same has to be done to the SCp struct.
+
+>  		data_count -= CURRENT_SC->SCp.ptr -
+>  			SG_ADDRESS(CURRENT_SC->SCp.buffer);
+
+Here, data_count effectively has SCp.this_residual subtracted from it.
+
+> -		while(data_count>0) {
+> -			CURRENT_SC->SCp.buffer--;
+> -			CURRENT_SC->SCp.buffers_residual++;
+> -			data_count -= CURRENT_SC->SCp.buffer->length;
+> -		}
+
+So far, so good.
+
+> -		CURRENT_SC->SCp.ptr = SG_ADDRESS(CURRENT_SC->SCp.buffer) -
+> -			data_count;
+> -		CURRENT_SC->SCp.this_residual = CURRENT_SC->SCp.buffer->length +
+> -			data_count;
+
+This is like saying ptr = buffer + residual, which is bogus. This must be 
+an old bug, but we never hit it because the FIFO is always empty when we 
+get a DISCONNECT message. Probably because every SG segment has a length 
+that is a multiple of 128 bytes. (Juergen?)
+
+> +
+> +		left = CURRENT_SC->transfersize - data_count;
+
+Are you sure about that? Perhaps you meant to write,
+		left = scsi_bufflen(CURRENT_SC) - scsi_get_resid(CURRENT_SC);
+
+Is there a better name for this variable? Maybe 'sent' or 'bytes_sent'?
+
+> +		for (i = 0; left > 0 && !sg_is_last(sg); i++, sg = sg_next(sg)) {
+> +			if (left < sg->length)
+> +				break;
+> +			left -= sg->length;
+> +		}
+> +
+> +		if (data_count > 0) {
+> +			CURRENT_SC->SCp.buffers_residual += i;
+
+Shouldn't that be,
+			CURRENT_SC->SCp.buffers_residual = i;
+
+> +			CURRENT_SC->SCp.buffer = sg;
+> +
+> +			CURRENT_SC->SCp.ptr = SG_ADDRESS(CURRENT_SC->SCp.buffer) + left;
+> +			CURRENT_SC->SCp.this_residual = CURRENT_SC->SCp.buffer->length -
+> +				left;
+> +		}
+>  	}
+>  
+>  	SETPORT(SXFRCTL0, CH1|CLRCH1|CLRSTCNT);
+> 
+
+BTW, datao_run() seems to guarantee that the FIFO will never contain more 
+than min(128, SCp.this_residual) so I suspect that this code can be 
+simplified. That's just BTW. I wouldn't attempt to optimize this branch as 
+it will only run when the FIFO is not empty, if ever. So I'd prefer 
+clarity. Besides, I don't have the hardware to test it on.
 
 -- 
-viresh
