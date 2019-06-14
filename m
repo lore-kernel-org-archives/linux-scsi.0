@@ -1,7 +1,8 @@
 From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V3 11/15] scsi: imm: use sg helper to operate scatterlist
-Date: Fri, 14 Jun 2019 10:53:12 +0800
-Message-ID: <20190614025316.7360-12-ming.lei@redhat.com>
+Subject: [PATCH V3 12/15] scsi: pcmcia: nsp_cs: use sg helper to operate
+ scatterlist
+Date: Fri, 14 Jun 2019 10:53:13 +0800
+Message-ID: <20190614025316.7360-13-ming.lei@redhat.com>
 References: <20190614025316.7360-1-ming.lei@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -30,21 +31,30 @@ isn't enough for the whole request.
 
 Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- drivers/scsi/imm.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/pcmcia/nsp_cs.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/imm.c b/drivers/scsi/imm.c
-index 64ae418d29f3..56d29f157749 100644
---- a/drivers/scsi/imm.c
-+++ b/drivers/scsi/imm.c
-@@ -686,7 +686,7 @@ static int imm_completion(struct scsi_cmnd *cmd)
- 		if (cmd->SCp.buffer && !cmd->SCp.this_residual) {
- 			/* if scatter/gather, advance to the next segment */
- 			if (cmd->SCp.buffers_residual--) {
--				cmd->SCp.buffer++;
-+				cmd->SCp.buffer = sg_next(cmd->SCp.buffer);
- 				cmd->SCp.this_residual =
- 				    cmd->SCp.buffer->length;
- 				cmd->SCp.ptr = sg_virt(cmd->SCp.buffer);
+diff --git a/drivers/scsi/pcmcia/nsp_cs.c b/drivers/scsi/pcmcia/nsp_cs.c
+index a81748e6e8fb..97416e1dcc5b 100644
+--- a/drivers/scsi/pcmcia/nsp_cs.c
++++ b/drivers/scsi/pcmcia/nsp_cs.c
+@@ -789,7 +789,7 @@ static void nsp_pio_read(struct scsi_cmnd *SCpnt)
+ 		    SCpnt->SCp.buffers_residual != 0 ) {
+ 			//nsp_dbg(NSP_DEBUG_DATA_IO, "scatterlist next timeout=%d", time_out);
+ 			SCpnt->SCp.buffers_residual--;
+-			SCpnt->SCp.buffer++;
++			SCpnt->SCp.buffer = sg_next(SCpnt->SCp.buffer);
+ 			SCpnt->SCp.ptr		 = BUFFER_ADDR;
+ 			SCpnt->SCp.this_residual = SCpnt->SCp.buffer->length;
+ 			time_out = 1000;
+@@ -887,7 +887,7 @@ static void nsp_pio_write(struct scsi_cmnd *SCpnt)
+ 		    SCpnt->SCp.buffers_residual != 0 ) {
+ 			//nsp_dbg(NSP_DEBUG_DATA_IO, "scatterlist next");
+ 			SCpnt->SCp.buffers_residual--;
+-			SCpnt->SCp.buffer++;
++			SCpnt->SCp.buffer = sg_next(SCpnt->SCp.buffer);
+ 			SCpnt->SCp.ptr		 = BUFFER_ADDR;
+ 			SCpnt->SCp.this_residual = SCpnt->SCp.buffer->length;
+ 			time_out = 1000;
 -- 
 2.20.1
