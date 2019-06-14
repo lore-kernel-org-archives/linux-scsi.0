@@ -1,7 +1,7 @@
 From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V3 13/15] scsi: ppa: use sg helper to operate scatterlist
-Date: Fri, 14 Jun 2019 10:53:14 +0800
-Message-ID: <20190614025316.7360-14-ming.lei@redhat.com>
+Subject: [PATCH V3 14/15] scsi: wd33c93: use sg helper to operate scatterlist
+Date: Fri, 14 Jun 2019 10:53:15 +0800
+Message-ID: <20190614025316.7360-15-ming.lei@redhat.com>
 References: <20190614025316.7360-1-ming.lei@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -30,21 +30,21 @@ isn't enough for the whole request.
 
 Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- drivers/scsi/ppa.c | 2 +-
+ drivers/scsi/wd33c93.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/ppa.c b/drivers/scsi/ppa.c
-index 35213082e933..a406cc825426 100644
---- a/drivers/scsi/ppa.c
-+++ b/drivers/scsi/ppa.c
-@@ -590,7 +590,7 @@ static int ppa_completion(struct scsi_cmnd *cmd)
- 		if (cmd->SCp.buffer && !cmd->SCp.this_residual) {
- 			/* if scatter/gather, advance to the next segment */
- 			if (cmd->SCp.buffers_residual--) {
--				cmd->SCp.buffer++;
-+				cmd->SCp.buffer = sg_next(cmd->SCp.buffer);
- 				cmd->SCp.this_residual =
- 				    cmd->SCp.buffer->length;
- 				cmd->SCp.ptr = sg_virt(cmd->SCp.buffer);
+diff --git a/drivers/scsi/wd33c93.c b/drivers/scsi/wd33c93.c
+index 74be04f2357c..ae5935c0a149 100644
+--- a/drivers/scsi/wd33c93.c
++++ b/drivers/scsi/wd33c93.c
+@@ -744,7 +744,7 @@ transfer_bytes(const wd33c93_regs regs, struct scsi_cmnd *cmd,
+  * source or destination for THIS transfer.
+  */
+ 	if (!cmd->SCp.this_residual && cmd->SCp.buffers_residual) {
+-		++cmd->SCp.buffer;
++		cmd->SCp.buffer = sg_next(cmd->SCp.buffer);
+ 		--cmd->SCp.buffers_residual;
+ 		cmd->SCp.this_residual = cmd->SCp.buffer->length;
+ 		cmd->SCp.ptr = sg_virt(cmd->SCp.buffer);
 -- 
 2.20.1
