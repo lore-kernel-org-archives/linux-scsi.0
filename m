@@ -1,76 +1,56 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 5.2-rc4
-Date: Fri, 14 Jun 2019 15:24:03 -0700
-Message-ID: <1560551043.27102.99.camel@HansenPartnership.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: Branden Bonaby <brandonbonaby94@gmail.com>
+Subject: [PATCH] scsi: storvsc: Add ability to change scsi queue depth
+Date: Fri, 14 Jun 2019 19:48:22 -0400
+Message-ID: <20190614234822.5193-1-brandonbonaby94@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com, sashal@kernel.org, jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc: Branden Bonaby <brandonbonaby94@gmail.com>, linux-hyperv@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-A single bug fix for hpsa.  The user visible consequences aren't clear,
-but the ioaccel2 raid acceleration may misfire on the malformed request
-assuming the payload is big enough to require chaining (more than 31 sg
-entries).
+Adding functionality to allow the SCSI queue depth to be changed,
+by utilizing the "scsi_change_queue_depth" function.
 
-The patch is available here:
-
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-
-The short changelog is:
-
-Don Brace (1):
-      scsi: hpsa: correct ioaccel2 chaining
-
-And the diffstat:
-
- drivers/scsi/hpsa.c     | 7 ++++++-
- drivers/scsi/hpsa_cmd.h | 1 +
- 2 files changed, 7 insertions(+), 1 deletion(-)
-
-With full diff below.
-
-James
-
+Signed-off-by: Branden Bonaby <brandonbonaby94@gmail.com>
 ---
+ drivers/scsi/storvsc_drv.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 1bef1da273c2..8068520cf89e 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -4940,7 +4940,7 @@ static int hpsa_scsi_ioaccel2_queue_command(struct ctlr_info *h,
- 			curr_sg->reserved[0] = 0;
- 			curr_sg->reserved[1] = 0;
- 			curr_sg->reserved[2] = 0;
--			curr_sg->chain_indicator = 0x80;
-+			curr_sg->chain_indicator = IOACCEL2_CHAIN;
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index 8472de1007ff..719ca9906fc2 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -387,6 +387,7 @@ enum storvsc_request_type {
  
- 			curr_sg = h->ioaccel2_cmd_sg_list[c->cmdindex];
- 		}
-@@ -4957,6 +4957,11 @@ static int hpsa_scsi_ioaccel2_queue_command(struct ctlr_info *h,
- 			curr_sg++;
- 		}
+ static int storvsc_ringbuffer_size = (128 * 1024);
+ static u32 max_outstanding_req_per_channel;
++static int storvsc_change_queue_depth(struct scsi_device *sdev, int queue_depth);
  
-+		/*
-+		 * Set the last s/g element bit
-+		 */
-+		(curr_sg - 1)->chain_indicator = IOACCEL2_LAST_SG;
-+
- 		switch (cmd->sc_data_direction) {
- 		case DMA_TO_DEVICE:
- 			cp->direction &= ~IOACCEL2_DIRECTION_MASK;
-diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h
-index 21a726e2eec6..f6afca4b2319 100644
---- a/drivers/scsi/hpsa_cmd.h
-+++ b/drivers/scsi/hpsa_cmd.h
-@@ -517,6 +517,7 @@ struct ioaccel2_sg_element {
- 	u8 reserved[3];
- 	u8 chain_indicator;
- #define IOACCEL2_CHAIN 0x80
-+#define IOACCEL2_LAST_SG 0x40
+ static int storvsc_vcpus_per_sub_channel = 4;
+ 
+@@ -1711,6 +1712,7 @@ static struct scsi_host_template scsi_driver = {
+ 	.dma_boundary =		PAGE_SIZE-1,
+ 	.no_write_same =	1,
+ 	.track_queue_depth =	1,
++	.change_queue_depth =	storvsc_change_queue_depth,
  };
  
- /*
+ enum {
+@@ -1917,6 +1919,15 @@ static int storvsc_probe(struct hv_device *device,
+ 	return ret;
+ }
+ 
++/* Change a scsi target's queue depth */
++static int storvsc_change_queue_depth(struct scsi_device *sdev, int queue_depth)
++{
++	if (queue_depth > scsi_driver.can_queue){
++		queue_depth = scsi_driver.can_queue;
++	}
++	return scsi_change_queue_depth(sdev, queue_depth);
++}
++
+ static int storvsc_remove(struct hv_device *dev)
+ {
+ 	struct storvsc_device *stor_device = hv_get_drvdata(dev);
+-- 
+2.17.1
