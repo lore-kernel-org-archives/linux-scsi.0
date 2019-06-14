@@ -1,42 +1,76 @@
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH V3 08/15] staging: unisys: visorhba: use sg helper to
- operate scatterlist
-Date: Fri, 14 Jun 2019 07:48:24 +0200
-Message-ID: <20190614054824.GA27319@kroah.com>
-References: <20190614025316.7360-1-ming.lei@redhat.com>
- <20190614025316.7360-9-ming.lei@redhat.com>
+From: Rajendra Nayak <rnayak@codeaurora.org>
+Subject: Re: [RFC v2 01/11] OPP: Don't overwrite rounded clk rate
+Date: Fri, 14 Jun 2019 11:24:28 +0530
+Message-ID: <b29c1754-d719-4d7b-806f-9ea25a8b528f@codeaurora.org>
+References: <20190320094918.20234-1-rnayak@codeaurora.org>
+ <20190320094918.20234-2-rnayak@codeaurora.org>
+ <20190611105432.x3nzqiib35t6mvyg@vireshk-i7>
+ <c173a57d-a4de-99f7-e8d8-28a7612f4ca3@codeaurora.org>
+ <20190612082506.m735bsk7bjijf2yg@vireshk-i7>
+ <20190613095419.lfjeko7nmxtix2n4@vireshk-i7>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-Content-Disposition: inline
-In-Reply-To: <20190614025316.7360-9-ming.lei@redhat.com>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Ming Lei <ming.lei@redhat.com>
-Cc: Michael Schmitz <schmitzmic@gmail.com>, devel@driverdev.osuosl.org, Hannes Reinecke <hare@suse.com>, Benjamin Block <bblock@linux.ibm.com>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-usb@vger.kernel.org, James Smart <james.smart@broadcom.com>, "Ewan D . Milne" <emilne@redhat.com>, Jim Gill <jgill@vmware.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Brian King <brking@us.ibm.com>, Finn Thain <fthain@telegraphics.com.au>, "Juergen E . Fischer" <fischer@norbit.de>, Christoph Hellwig <hch@lst.de>, Dan Carpenter <dan.carpenter@oracle.com>, Bart Van Assche <bvanassche@acm.org>
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Content-Transfer-Encoding: base64
+Return-path: <dri-devel-bounces@lists.freedesktop.org>
+In-Reply-To: <20190613095419.lfjeko7nmxtix2n4@vireshk-i7>
+Content-Language: en-US
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
+List-Post: <mailto:dri-devel@lists.freedesktop.org>
+List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: dri-devel-bounces@lists.freedesktop.org
+Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
+To: Viresh Kumar <viresh.kumar@linaro.org>, swboyd@chromium.org, vincent.guittot@linaro.org, mturquette@baylibre.com
+Cc: ulf.hansson@linaro.org, dianders@chromium.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, linux-arm-msm@vger.kernel.org, rafael@kernel.org, linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-spi@vger.kernel.org, linux-serial@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Jun 14, 2019 at 10:53:09AM +0800, Ming Lei wrote:
-> Use the scatterlist iterators and remove direct indexing of the
-> scatterlist array.
-> 
-> This way allows us to pre-allocate one small scatterlist, which can be
-> chained with one runtime allocated scatterlist if the pre-allocated one
-> isn't enough for the whole request.
-> 
-> Cc: devel@driverdev.osuosl.org
-> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> Signed-off-by: Ming Lei <ming.lei@redhat.com>
-> ---
->  drivers/staging/unisys/visorhba/visorhba_main.c | 9 ++++-----
->  1 file changed, 4 insertions(+), 5 deletions(-)
-
-Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cj4gTm93LCB0aGUgcmVxdWVzdCB0byBjaGFuZ2UgdGhlIGZyZXF1ZW5jeSBzdGFydHMgZnJvbSBj
+cHVmcmVxCj4gZ292ZXJub3JzLCBsaWtlIHNjaGVkdXRpbCB3aGVuIHRoZXkgY2FsbHM6Cj4gCj4g
+X19jcHVmcmVxX2RyaXZlcl90YXJnZXQocG9saWN5LCA1OTkgTUh6LCBDUFVGUkVRX1JFTEFUSU9O
+X0wpOwo+IAo+IENQVUZSRVFfUkVMQVRJT05fTCBtZWFuczogbG93ZXN0IGZyZXF1ZW5jeSBhdCBv
+ciBhYm92ZSB0YXJnZXQuIEFuZCBzbwo+IEkgd291bGQgZXhwZWN0IHRoZSBmcmVxdWVuY3kgdG8g
+Z2V0IHNldCB0byA2MDBNSHogKGlmIHdlIGxvb2sgYXQgY2xvY2sKPiBkcml2ZXIpIG9yIDcwME1I
+eiAoaWYgd2UgbG9vayBhdCBPUFAgdGFibGUpLiBJIHRoaW5rIHdlIHNob3VsZCBkZWNpZGUKPiB0
+aGlzIHRoaW5nIGZyb20gdGhlIE9QUCB0YWJsZSBvbmx5IGFzIHRoYXQncyB3aGF0IHRoZSBwbGF0
+Zm9ybSBndXlzCj4gd2FudCB1cyB0byB1c2UuIFNvLCB3ZSBzaG91bGQgZW5kIHVwIHdpdGggNzAw
+IE1Iei4KPiAKPiBUaGVuIHdlIGxhbmQgaW50byBkZXZfcG1fb3BwX3NldF9yYXRlKCksIHdoaWNo
+IGRvZXMgdGhpcyAod2hpY2ggaXMKPiBjb2RlIGNvcGllZCBmcm9tIGVhcmxpZXIgdmVyc2lvbiBv
+ZiBjcHVmcmVxLWR0IGRyaXZlcik6CgpzbyBiZWZvcmUgd2UgbGFuZCBpbnRvIGRldl9wbV9vcHBf
+c2V0X3JhdGUoKSBmcm9tIGEgX19jcHVmcmVxX2RyaXZlcl90YXJnZXQoKQpJIGd1ZXNzIHdlIGRv
+IGhhdmUgYSBjcHVmcmVxIGRyaXZlciBjYWxsYmFjayB0aGF0IGdldHMgY2FsbGVkIGluIGJldHdl
+ZW4/CndoaWNoIGlzIGVpdGhlciAudGFyZ2V0X2luZGV4IG9yIC50YXJnZXQKCkluIGNhc2Ugb2Yg
+LnRhcmdldF9pbmRleCwgdGhlIGNwdWZyZXEgY29yZSBsb29rcyBmb3IgYSBPUFAgaW5kZXgKYW5k
+IHdlIHdvdWxkIGxhbmQgdXAgd2l0aCA3MDBNaHogaSBndWVzcywgc28gd2UgYXJlIGdvb2QuCgpJ
+biBjYXNlIG9mIC50YXJnZXQgdGhvdWdoIHRoZSAncmVsYXRpb24nIENQVUZSRVFfUkVMQVRJT05f
+TCBkb2VzIGdldCBwYXNzZWQgb3Zlcgp0byB0aGUgY3B1ZnJlcSBkcml2ZXIgd2hpY2ggSSBhbSBn
+dWVzc2luZyBpcyBleHBlY3RlZCB0byBoYW5kbGUgaXQgaW4gc29tZSB3YXkgdG8KbWFrZSBzdXJl
+IHRoZSB0YXJnZXQgZnJlcXVlbmN5IHNldCBpcyBub3QgbGVzcyB0aGFuIHdoYXRzIHJlcXVlc3Rl
+ZD8gaW5zdGVhZCBvZgpzaW1wbHkgcGFzc2luZyB0aGUgcmVxdWVzdGVkIGZyZXF1ZW5jeSBvdmVy
+IHRvIGRldl9wbV9vcHBfc2V0X3JhdGUoKT8KCkxvb2tpbmcgYXQgYWxsIHRoZSBleGlzdGluZyBj
+cHVmcmVxIGRyaXZlcnMgdXBzdHJlYW0sIHdoaWxlIG1vc3Qgc3VwcG9ydCAudGFyZ2V0X2luZGV4
+CnRoZSAzIHdoaWNoIGRvIHN1cHBvcnQgLnRhcmdldCBzZWVtIHRvIGNvbXBsZXRlbHkgaWdub3Jl
+IHRoaXMgJ3JlbGF0aW9uJyBpbnB1dCB0aGF0J3MKcGFzc2VkIHRvIHRoZW0uCgpkcml2ZXJzL2Nw
+dWZyZXEvY3BwY19jcHVmcmVxLmM6CS50YXJnZXQgPSBjcHBjX2NwdWZyZXFfc2V0X3RhcmdldCwK
+ZHJpdmVycy9jcHVmcmVxL2NwdWZyZXEtbmZvcmNlMi5jOgkudGFyZ2V0ID0gbmZvcmNlMl90YXJn
+ZXQsCmRyaXZlcnMvY3B1ZnJlcS9wY2MtY3B1ZnJlcS5jOgkudGFyZ2V0ID0gcGNjX2NwdWZyZXFf
+dGFyZ2V0LAoKPiBUaGlzIGtpbmQgb2YgYmVoYXZpb3IgKGludHJvZHVjZWQgYnkgdGhpcyBwYXRj
+aCkgaXMgaW1wb3J0YW50IGZvcgo+IG90aGVyIGRldmljZXMgd2hpY2ggd2FudCB0byBydW4gYXQg
+dGhlIG5lYXJlc3QgZnJlcXVlbmN5IHRvIHRhcmdldAo+IG9uZSwgYnV0IG5vdCBmb3IgQ1BVcy9H
+UFVzLiBTbywgd2UgbmVlZCB0byB0YWcgdGhlc2UgSU8gZGV2aWNlcwo+IHNlcGFyYXRlbHksIG1h
+eWJlIGZyb20gRFQgPyBTbyB3ZSBzZWxlY3QgdGhlIGNsb3Nlc3QgbWF0Y2ggaW5zdGVhZCBvZgo+
+IG1vc3Qgb3B0aW1hbCBvbmUuCgp5ZXMgd2UgZG8gbmVlZCBzb21lIHdheSB0byBkaXN0aW5ndWlz
+aCBiZXR3ZWVuIENQVS9HUFUgZGV2aWNlcyBhbmQgb3RoZXIKSU8gZGV2aWNlcy4gQ1BVL0dQVSBj
+YW4gYWx3YXlzIHJ1biBhdCBmbWF4IGZvciBhIGdpdmVuIHZvbHRhZ2UsIHRoYXQncyBub3QgdHJ1
+ZQpmb3IgSU8gZGV2aWNlcyBhbmQgSSBkb24ndCBzZWUgaG93IHdlIGNhbiBzYXRpc2Z5IGJvdGgg
+Y2FzZXMgd2l0aG91dApjbGVhcmx5IGtub3dpbmcgaWYgd2UgYXJlIHNlcnZpbmcgYSBwcm9jZXNz
+b3Igb3IgYW4gSU8gZGV2aWNlLCB1bmxlc3MgdGhlCmhpZ2hlciBsYXllcnMgKGNwdWZyZXEvZGV2
+ZnJlcSkgYXJlIGFibGUgdG8gaGFuZGxlIHRoaXMgc29tZWhvdyB3aXRob3V0CmV4cGVjdGluZyB0
+aGUgT1BQIGxheWVyIHRvIGhhbmRsZSB0aGUgZGlmZmVyZW5jZXMuCgotLSAKUVVBTENPTU0gSU5E
+SUEsIG9uIGJlaGFsZiBvZiBRdWFsY29tbSBJbm5vdmF0aW9uIENlbnRlciwgSW5jLiBpcyBhIG1l
+bWJlcgpvZiBDb2RlIEF1cm9yYSBGb3J1bSwgaG9zdGVkIGJ5IFRoZSBMaW51eCBGb3VuZGF0aW9u
+Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmRyaS1kZXZl
+bCBtYWlsaW5nIGxpc3QKZHJpLWRldmVsQGxpc3RzLmZyZWVkZXNrdG9wLm9yZwpodHRwczovL2xp
+c3RzLmZyZWVkZXNrdG9wLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2RyaS1kZXZlbA==
