@@ -1,59 +1,69 @@
-From: Andrew Randrianasulu <randrianasulu@gmail.com>
-Subject: Bug 7805 strikes again?
-Date: Sat, 15 Jun 2019 19:16:09 +0300
-Message-ID: <201906151916.09688.randrianasulu@gmail.com>
+From: Michael Kelley <mikelley@microsoft.com>
+Subject: RE: [PATCH] scsi: storvsc: Add ability to change scsi queue depth
+Date: Sat, 15 Jun 2019 18:19:00 +0000
+Message-ID: <BL0PR2101MB13482F73342F77866D6A6AABD7E90@BL0PR2101MB1348.namprd21.prod.outlook.com>
+References: <20190614234822.5193-1-brandonbonaby94@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <20190614234822.5193-1-brandonbonaby94@gmail.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: KY Srinivasan <kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>, Stephen Hemminger <sthemmin@microsoft.com>, "sashal@kernel.org" <sashal@kernel.org>, "jejb@linux.ibm.com" <jejb@linux.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: brandonbonaby94 <brandonbonaby94@gmail.com>, "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hello!
+From: Branden Bonaby <brandonbonaby94@gmail.com> Sent: Friday, June 14, 201=
+9 4:48 PM
+>=20
+> Adding functionality to allow the SCSI queue depth to be changed,
+> by utilizing the "scsi_change_queue_depth" function.
+>=20
+> Signed-off-by: Branden Bonaby <brandonbonaby94@gmail.com>
+> ---
+>  drivers/scsi/storvsc_drv.c | 11 +++++++++++
+>  1 file changed, 11 insertions(+)
+>=20
+> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+> index 8472de1007ff..719ca9906fc2 100644
+> --- a/drivers/scsi/storvsc_drv.c
+> +++ b/drivers/scsi/storvsc_drv.c
+> @@ -387,6 +387,7 @@ enum storvsc_request_type {
+>=20
+>  static int storvsc_ringbuffer_size =3D (128 * 1024);
+>  static u32 max_outstanding_req_per_channel;
+> +static int storvsc_change_queue_depth(struct scsi_device *sdev, int queu=
+e_depth);
+>=20
+>  static int storvsc_vcpus_per_sub_channel =3D 4;
+>=20
+> @@ -1711,6 +1712,7 @@ static struct scsi_host_template scsi_driver =3D {
+>  	.dma_boundary =3D		PAGE_SIZE-1,
+>  	.no_write_same =3D	1,
+>  	.track_queue_depth =3D	1,
+> +	.change_queue_depth =3D	storvsc_change_queue_depth,
+>  };
+>=20
+>  enum {
+> @@ -1917,6 +1919,15 @@ static int storvsc_probe(struct hv_device *device,
+>  	return ret;
+>  }
+>=20
+> +/* Change a scsi target's queue depth */
+> +static int storvsc_change_queue_depth(struct scsi_device *sdev, int queu=
+e_depth)
+> +{
+> +	if (queue_depth > scsi_driver.can_queue){
+> +		queue_depth =3D scsi_driver.can_queue;
+> +	}
+> +	return scsi_change_queue_depth(sdev, queue_depth);
+> +}
+> +
+>  static int storvsc_remove(struct hv_device *dev)
+>  {
+>  	struct storvsc_device *stor_device =3D hv_get_drvdata(dev);
+> --
+> 2.17.1
 
-I was puzzled by strange fact my qemu stopped to boot DVDs I made over years, if I put them in physical drive and try to boot them via qemu.
-After  a lot of digging I found possible reason: wrongly-set block device size on /dev/sr0
-
-And this lead me to
-https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=619757
-
-and
-https://bugzilla.kernel.org/show_bug.cgi?id=7805
-
-so I checked if my dmesg had anything related to pktcdvd:
-
- dmesg | grep pkt
-[    7.681270] pktcdvd: pktcdvd0: writer mapped to sr0
-
-
-blockdev --getsize64 /dev/sr0
-1073741312
-pktsetup -d /dev/sr0
-pktsetup: Error: Can't tear down packet device '/dev/sr0': Inappropriate ioctl for device
-
- blockdev --getsize64 /dev/sr0
-4700372992
-
-after this I can boot my DVD fully (before it was failing at mounting squashfs images):
-qemu-system-x86_64 -enable-kvm -display sdl,gl=on -cdrom /dev/sr0 -m 1G -soundhw es1370 -usbdevice mouse -smp 3 -cpu max
-
- uname -a
-Linux slax 5.1.6-x64 #1 SMP PREEMPT Fri May 31 23:49:35 MSK 2019 x86_64 AMD FX(tm)-4300 Quad-Core Processor AuthenticAMD GNU/Linux
-
-Userspace is 32-bit Slackware (mix of many versions).
-
- sg_inq /dev/sr0
-standard INQUIRY:
-  PQual=0  Device_type=5  RMB=1  LU_CONG=0  version=0x05  [SPC-3]
-  [AERC=0]  [TrmTsk=0]  NormACA=1  HiSUP=1  Resp_data_format=2
-  SCCS=0  ACC=0  TPGS=0  3PC=0  Protect=0  [BQue=0]
-  EncServ=0  MultiP=0  [MChngr=0]  [ACKREQQ=0]  Addr16=0
-  [RelAdr=0]  WBus16=0  Sync=0  [Linked=0]  [TranDis=0]  CmdQue=0
-  [SPI: Clocking=0x0  QAS=0  IUS=0]
-    length=96 (0x60)   Peripheral device type: cd/dvd
- Vendor identification: ASUS
- Product identification: DRW-24D5MT
- Product revision level: 1.00
+Reviewed-by: Michael Kelley <mikelley@microsoft.com>
