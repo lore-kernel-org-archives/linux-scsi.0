@@ -1,47 +1,59 @@
-From: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v2] scsi: ufs: Avoid runtime suspend possibly being
- blocked forever
-Date: Sat, 15 Jun 2019 22:16:07 +0000
-Message-ID: <20190615221608.7C52C2184D@mail.kernel.org>
-References: <1560352745-24681-1-git-send-email-stanley.chu@mediatek.com>
+From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Subject: [PATCH] scsi: tcmu: Simplify 'tcmu_update_uio_info()'
+Date: Sun, 16 Jun 2019 09:02:20 +0200
+Message-ID: <20190616070220.24189-1-christophe.jaillet@wanadoo.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-In-Reply-To: <1560352745-24681-1-git-send-email-stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-mediatek>,
- <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-mediatek/>
-List-Post: <mailto:linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-List-Help: <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-mediatek>,
- <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=subscribe>
-Sender: "Linux-mediatek" <linux-mediatek-bounces-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-Errors-To: linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
-To: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org
-Cc: linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, Christophe JAILLET <christophe.jaillet@wanadoo.fr>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi,
+Use 'kasprintf()' instead of:
+   - snprintf(NULL, 0...
+   - kmalloc(...
+   - snprintf(...
 
-[This is an automated email]
+This is less verbose and saves 7 bytes (i.e. the space for '/(null)') if
+'udev->dev_config' is NULL.
 
-This commit has been processed because it contains a "Fixes:" tag,
-fixing commit: 62694735ca95 [SCSI] ufs: Add runtime PM support for UFS host controller driver.
+Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+---
+ drivers/target/target_core_user.c | 16 +++++++---------
+ 1 file changed, 7 insertions(+), 9 deletions(-)
 
-The bot has tested the following trees: v5.1.9, v4.19.50, v4.14.125, v4.9.181, v4.4.181.
-
-v5.1.9: Build OK!
-v4.19.50: Build OK!
-v4.14.125: Build OK!
-v4.9.181: Build OK!
-v4.4.181: Failed to apply! Possible dependencies:
-    54b879b76ea2 ("scsi: ufs-qcom: add number of lanes per direction")
-    bad9764cfaaa ("scsi: ufs: fix spelling mistake in error message")
-
-
-How should we proceed with this patch?
-
---
-Thanks,
-Sasha
+diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+index b43d6385a1a0..04eda111920e 100644
+--- a/drivers/target/target_core_user.c
++++ b/drivers/target/target_core_user.c
+@@ -1824,20 +1824,18 @@ static int tcmu_update_uio_info(struct tcmu_dev *udev)
+ {
+ 	struct tcmu_hba *hba = udev->hba->hba_ptr;
+ 	struct uio_info *info;
+-	size_t size, used;
+ 	char *str;
+ 
+ 	info = &udev->uio_info;
+-	size = snprintf(NULL, 0, "tcm-user/%u/%s/%s", hba->host_id, udev->name,
+-			udev->dev_config);
+-	size += 1; /* for \0 */
+-	str = kmalloc(size, GFP_KERNEL);
+-	if (!str)
+-		return -ENOMEM;
+ 
+-	used = snprintf(str, size, "tcm-user/%u/%s", hba->host_id, udev->name);
+ 	if (udev->dev_config[0])
+-		snprintf(str + used, size - used, "/%s", udev->dev_config);
++		str = kasprintf(GFP_KERNEL, "tcm-user/%u/%s/%s", hba->host_id,
++				udev->name, udev->dev_config);
++	else
++		str = kasprintf(GFP_KERNEL, "tcm-user/%u/%s", hba->host_id,
++				udev->name);
++	if (!str)
++		return -ENOMEM;
+ 
+ 	/* If the old string exists, free it */
+ 	kfree(info->name);
+-- 
+2.20.1
