@@ -1,85 +1,38 @@
-From: Lee Jones <lee.jones@linaro.org>
-Subject: [PATCH 1/1] scsi: ufs-qcom: Add support for platforms booting ACPI
-Date: Mon, 17 Jun 2019 12:54:54 +0100
-Message-ID: <20190617115454.3226-1-lee.jones@linaro.org>
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 2/8] scsi: take the DMA max mapping size into account
+Date: Mon, 17 Jun 2019 14:19:54 +0200
+Message-ID: <20190617122000.22181-3-hch@lst.de>
+References: <20190617122000.22181-1-hch@lst.de>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190617122000.22181-1-hch@lst.de>
 Sender: linux-kernel-owner@vger.kernel.org
-To: agross@kernel.org, david.brown@linaro.org, alim.akhtar@samsung.com, avri.altman@wdc.com, pedrom.sousa@synopsys.com, jejb@linux.ibm.com, martin.petersen@oracle.com, linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, ard.biesheuvel@linaro.org, jlhugo@gmail.com, bjorn.andersson@linaro.org, Lee Jones <lee.jones@linaro.org>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Sagi Grimberg <sagi@grimberg.me>, Max Gurtovoy <maxg@mellanox.com>, Bart Van Assche <bvanassche@acm.org>, linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org, megaraidlinux.pdl@broadcom.com, MPT-FusionLinux.pdl@broadcom.com, linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-New Qualcomm AArch64 based laptops are now available which use UFS
-as their primary data storage medium.  These devices are supplied
-with ACPI support out of the box.  This patch ensures the Qualcomm
-UFS driver will be bound when the "QCOM24A5" H/W device is
-advertised as present.
+We need to limit the devices max_sectors to what the DMA mapping
+implementation can support.  If not we risk running out of swiotlb
+buffers easily.
 
-Signed-off-by: Lee Jones <lee.jones@linaro.org>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/ufs/ufs-qcom.c | 23 ++++++++++++++++++++---
- 1 file changed, 20 insertions(+), 3 deletions(-)
+ drivers/scsi/scsi_lib.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-index 3aeadb14aae1..364af6a63e35 100644
---- a/drivers/scsi/ufs/ufs-qcom.c
-+++ b/drivers/scsi/ufs/ufs-qcom.c
-@@ -12,6 +12,7 @@
-  *
-  */
- 
-+#include <linux/acpi.h>
- #include <linux/time.h>
- #include <linux/of.h>
- #include <linux/platform_device.h>
-@@ -164,6 +165,9 @@ static int ufs_qcom_init_lane_clks(struct ufs_qcom_host *host)
- 	int err = 0;
- 	struct device *dev = host->hba->dev;
- 
-+	if (has_acpi_companion(dev))
-+		return 0;
-+
- 	err = ufs_qcom_host_clk_get(dev, "rx_lane0_sync_clk",
- 					&host->rx_l0_sync_clk, false);
- 	if (err)
-@@ -1208,9 +1212,13 @@ static int ufs_qcom_init(struct ufs_hba *hba)
- 			__func__, err);
- 		goto out_variant_clear;
- 	} else if (IS_ERR(host->generic_phy)) {
--		err = PTR_ERR(host->generic_phy);
--		dev_err(dev, "%s: PHY get failed %d\n", __func__, err);
--		goto out_variant_clear;
-+		if (has_acpi_companion(dev)) {
-+			host->generic_phy = NULL;
-+		} else {
-+			err = PTR_ERR(host->generic_phy);
-+			dev_err(dev, "%s: PHY get failed %d\n", __func__, err);
-+			goto out_variant_clear;
-+		}
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index d333bb6b1c59..f233bfd84cd7 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1768,6 +1768,8 @@ void __scsi_init_queue(struct Scsi_Host *shost, struct request_queue *q)
+ 		blk_queue_max_integrity_segments(q, shost->sg_prot_tablesize);
  	}
  
- 	err = ufs_qcom_bus_register(host);
-@@ -1680,6 +1688,14 @@ static const struct of_device_id ufs_qcom_of_match[] = {
- };
- MODULE_DEVICE_TABLE(of, ufs_qcom_of_match);
- 
-+#ifdef CONFIG_ACPI
-+static const struct acpi_device_id ufs_qcom_acpi_match[] = {
-+	{ "QCOM24A5" },
-+	{ },
-+};
-+MODULE_DEVICE_TABLE(acpi, ufs_qcom_acpi_match);
-+#endif
-+
- static const struct dev_pm_ops ufs_qcom_pm_ops = {
- 	.suspend	= ufshcd_pltfrm_suspend,
- 	.resume		= ufshcd_pltfrm_resume,
-@@ -1696,6 +1712,7 @@ static struct platform_driver ufs_qcom_pltform = {
- 		.name	= "ufshcd-qcom",
- 		.pm	= &ufs_qcom_pm_ops,
- 		.of_match_table = of_match_ptr(ufs_qcom_of_match),
-+		.acpi_match_table = ACPI_PTR(ufs_qcom_acpi_match),
- 	},
- };
- module_platform_driver(ufs_qcom_pltform);
++	shost->max_sectors = min_t(unsigned int, shost->max_sectors,
++			dma_max_mapping_size(dev) << SECTOR_SHIFT);
+ 	blk_queue_max_hw_sectors(q, shost->max_sectors);
+ 	if (shost->unchecked_isa_dma)
+ 		blk_queue_bounce_limit(q, BLK_BOUNCE_ISA);
 -- 
-2.17.1
+2.20.1
