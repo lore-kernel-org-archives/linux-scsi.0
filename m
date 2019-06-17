@@ -1,13 +1,15 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V4 16/16] NCR5380: Support chained sg lists
-Date: Mon, 17 Jun 2019 11:03:49 +0800
-Message-ID: <20190617030349.26415-17-ming.lei@redhat.com>
+From: Finn Thain <fthain@telegraphics.com.au>
+Subject: Re: [PATCH V4 11/16] scsi: aha152x: use sg helper to operate
+ scatterlist
+Date: Mon, 17 Jun 2019 13:35:53 +1000 (AEST)
+Message-ID: <alpine.LNX.2.21.1906171334330.168@nippy.intranet>
 References: <20190617030349.26415-1-ming.lei@redhat.com>
+ <20190617030349.26415-12-ming.lei@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <20190617030349.26415-1-ming.lei@redhat.com>
+In-Reply-To: <20190617030349.26415-12-ming.lei@redhat.com>
 List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
  <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
 List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
@@ -17,112 +19,131 @@ List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driver
  <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
 Errors-To: driverdev-devel-bounces@linuxdriverproject.org
 Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Michael Schmitz <schmitzmic@gmail.com>, devel@driverdev.osuosl.org, Hannes Reinecke <hare@suse.com>, Benjamin Block <bblock@linux.ibm.com>, Bart Van Assche <bvanassche@acm.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org, James Smart <james.smart@broadcom.com>, "Ewan D . Milne" <emilne@redhat.com>, Jim Gill <jgill@vmware.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Brian King <brking@us.ibm.com>, Finn Thain <fthain@telegraphics.com.au>, "Juergen E . Fischer" <fischer@norbit.de>, Christoph Hellwig <hch@lst.de>, Dan Carpenter <dan.carpenter@oracle.com>
+To: Ming Lei <ming.lei@redhat.com>
+Cc: Michael Schmitz <schmitzmic@gmail.com>, devel@driverdev.osuosl.org, Hannes Reinecke <hare@suse.com>, Benjamin Block <bblock@linux.ibm.com>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org, James Smart <james.smart@broadcom.com>, "Ewan D . Milne" <emilne@redhat.com>, Jim Gill <jgill@vmware.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Brian King <brking@us.ibm.com>, "Juergen E . Fischer" <fischer@norbit.de>, Christoph Hellwig <hch@lst.de>, Dan Carpenter <dan.carpenter@oracle.com>, Bart Van Assche <bvanassche@acm.org>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Finn Thain <fthain@telegraphics.com.au>
+On Mon, 17 Jun 2019, Ming Lei wrote:
 
-My understanding is that support for chained scatterlists is to
-become mandatory for LLDs.
+> Use the scatterlist iterators and remove direct indexing of the
+> scatterlist array.
+> 
+> This way allows us to pre-allocate one small scatterlist, which can be
+> chained with one runtime allocated scatterlist if the pre-allocated one
+> isn't enough for the whole request.
+> 
+> Finn added the change to replace SCp.buffers_residual with sg_is_last()
+> for fixing updating it, and the similar change has been applied on
+> NCR5380.c
+> 
+> Cc: Finn Thain <fthain@telegraphics.com.au>
+> Signed-off-by: Ming Lei <ming.lei@redhat.com>
 
-Use the scatterlist iterators and remove direct indexing of the
-scatterlist array.
+Reviewed-by: Finn Thain <fthain@telegraphics.com.au>
 
-This way allows us to pre-allocate one small scatterlist, which can be
-chained with one runtime allocated scatterlist if the pre-allocated one
-isn't enough for the whole request.
-
-Cc: Michael Schmitz <schmitzmic@gmail.com>
-Reviewed-by: Michael Schmitz <schmitzmic@gmail.com>
-Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
----
- drivers/scsi/NCR5380.c | 41 ++++++++++++++++++-----------------------
- 1 file changed, 18 insertions(+), 23 deletions(-)
-
-diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
-index fe0535affc14..4ef44fafe6ca 100644
---- a/drivers/scsi/NCR5380.c
-+++ b/drivers/scsi/NCR5380.c
-@@ -149,12 +149,10 @@ static inline void initialize_SCp(struct scsi_cmnd *cmd)
- 
- 	if (scsi_bufflen(cmd)) {
- 		cmd->SCp.buffer = scsi_sglist(cmd);
--		cmd->SCp.buffers_residual = scsi_sg_count(cmd) - 1;
- 		cmd->SCp.ptr = sg_virt(cmd->SCp.buffer);
- 		cmd->SCp.this_residual = cmd->SCp.buffer->length;
- 	} else {
- 		cmd->SCp.buffer = NULL;
--		cmd->SCp.buffers_residual = 0;
- 		cmd->SCp.ptr = NULL;
- 		cmd->SCp.this_residual = 0;
- 	}
-@@ -163,6 +161,17 @@ static inline void initialize_SCp(struct scsi_cmnd *cmd)
- 	cmd->SCp.Message = 0;
- }
- 
-+static inline void advance_sg_buffer(struct scsi_cmnd *cmd)
-+{
-+	struct scatterlist *s = cmd->SCp.buffer;
-+
-+	if (!cmd->SCp.this_residual && s && !sg_is_last(s)) {
-+		cmd->SCp.buffer = sg_next(s);
-+		cmd->SCp.ptr = sg_virt(cmd->SCp.buffer);
-+		cmd->SCp.this_residual = cmd->SCp.buffer->length;
-+	}
-+}
-+
- /**
-  * NCR5380_poll_politely2 - wait for two chip register values
-  * @hostdata: host private data
-@@ -1672,12 +1681,7 @@ static void NCR5380_information_transfer(struct Scsi_Host *instance)
- 			    sun3_dma_setup_done != cmd) {
- 				int count;
- 
--				if (!cmd->SCp.this_residual && cmd->SCp.buffers_residual) {
--					++cmd->SCp.buffer;
--					--cmd->SCp.buffers_residual;
--					cmd->SCp.this_residual = cmd->SCp.buffer->length;
--					cmd->SCp.ptr = sg_virt(cmd->SCp.buffer);
--				}
-+				advance_sg_buffer(cmd);
- 
- 				count = sun3scsi_dma_xfer_len(hostdata, cmd);
- 
-@@ -1727,15 +1731,11 @@ static void NCR5380_information_transfer(struct Scsi_Host *instance)
- 				 * scatter-gather list, move onto the next one.
- 				 */
- 
--				if (!cmd->SCp.this_residual && cmd->SCp.buffers_residual) {
--					++cmd->SCp.buffer;
--					--cmd->SCp.buffers_residual;
--					cmd->SCp.this_residual = cmd->SCp.buffer->length;
--					cmd->SCp.ptr = sg_virt(cmd->SCp.buffer);
--					dsprintk(NDEBUG_INFORMATION, instance, "%d bytes and %d buffers left\n",
--					         cmd->SCp.this_residual,
--					         cmd->SCp.buffers_residual);
--				}
-+				advance_sg_buffer(cmd);
-+				dsprintk(NDEBUG_INFORMATION, instance,
-+					"this residual %d, sg ents %d\n",
-+					cmd->SCp.this_residual,
-+					sg_nents(cmd->SCp.buffer));
- 
- 				/*
- 				 * The preferred transfer method is going to be
-@@ -2136,12 +2136,7 @@ static void NCR5380_reselect(struct Scsi_Host *instance)
- 	if (sun3_dma_setup_done != tmp) {
- 		int count;
- 
--		if (!tmp->SCp.this_residual && tmp->SCp.buffers_residual) {
--			++tmp->SCp.buffer;
--			--tmp->SCp.buffers_residual;
--			tmp->SCp.this_residual = tmp->SCp.buffer->length;
--			tmp->SCp.ptr = sg_virt(tmp->SCp.buffer);
--		}
-+		advance_sg_buffer(tmp);
- 
- 		count = sun3scsi_dma_xfer_len(hostdata, tmp);
- 
 -- 
-2.20.1
+
+> ---
+>  drivers/scsi/aha152x.c | 42 ++++++++++++++++++++----------------------
+>  1 file changed, 20 insertions(+), 22 deletions(-)
+> 
+> diff --git a/drivers/scsi/aha152x.c b/drivers/scsi/aha152x.c
+> index 97872838b983..6d0518f616cb 100644
+> --- a/drivers/scsi/aha152x.c
+> +++ b/drivers/scsi/aha152x.c
+> @@ -948,7 +948,6 @@ static int aha152x_internal_queue(struct scsi_cmnd *SCpnt,
+>  	   SCp.ptr              : buffer pointer
+>  	   SCp.this_residual    : buffer length
+>  	   SCp.buffer           : next buffer
+> -	   SCp.buffers_residual : left buffers in list
+>  	   SCp.phase            : current state of the command */
+>  
+>  	if ((phase & resetting) || !scsi_sglist(SCpnt)) {
+> @@ -956,13 +955,11 @@ static int aha152x_internal_queue(struct scsi_cmnd *SCpnt,
+>  		SCpnt->SCp.this_residual = 0;
+>  		scsi_set_resid(SCpnt, 0);
+>  		SCpnt->SCp.buffer           = NULL;
+> -		SCpnt->SCp.buffers_residual = 0;
+>  	} else {
+>  		scsi_set_resid(SCpnt, scsi_bufflen(SCpnt));
+>  		SCpnt->SCp.buffer           = scsi_sglist(SCpnt);
+>  		SCpnt->SCp.ptr              = SG_ADDRESS(SCpnt->SCp.buffer);
+>  		SCpnt->SCp.this_residual    = SCpnt->SCp.buffer->length;
+> -		SCpnt->SCp.buffers_residual = scsi_sg_count(SCpnt) - 1;
+>  	}
+>  
+>  	DO_LOCK(flags);
+> @@ -2030,10 +2027,9 @@ static void datai_run(struct Scsi_Host *shpnt)
+>  				}
+>  
+>  				if (CURRENT_SC->SCp.this_residual == 0 &&
+> -				    CURRENT_SC->SCp.buffers_residual > 0) {
+> +				    !sg_is_last(CURRENT_SC->SCp.buffer)) {
+>  					/* advance to next buffer */
+> -					CURRENT_SC->SCp.buffers_residual--;
+> -					CURRENT_SC->SCp.buffer++;
+> +					CURRENT_SC->SCp.buffer = sg_next(CURRENT_SC->SCp.buffer);
+>  					CURRENT_SC->SCp.ptr           = SG_ADDRESS(CURRENT_SC->SCp.buffer);
+>  					CURRENT_SC->SCp.this_residual = CURRENT_SC->SCp.buffer->length;
+>  				}
+> @@ -2136,10 +2132,10 @@ static void datao_run(struct Scsi_Host *shpnt)
+>  			CMD_INC_RESID(CURRENT_SC, -2 * data_count);
+>  		}
+>  
+> -		if(CURRENT_SC->SCp.this_residual==0 && CURRENT_SC->SCp.buffers_residual>0) {
+> +		if(CURRENT_SC->SCp.this_residual==0 &&
+> +		   !sg_is_last(CURRENT_SC->SCp.buffer)) {
+>  			/* advance to next buffer */
+> -			CURRENT_SC->SCp.buffers_residual--;
+> -			CURRENT_SC->SCp.buffer++;
+> +			CURRENT_SC->SCp.buffer = sg_next(CURRENT_SC->SCp.buffer);
+>  			CURRENT_SC->SCp.ptr           = SG_ADDRESS(CURRENT_SC->SCp.buffer);
+>  			CURRENT_SC->SCp.this_residual = CURRENT_SC->SCp.buffer->length;
+>  		}
+> @@ -2158,22 +2154,24 @@ static void datao_run(struct Scsi_Host *shpnt)
+>  static void datao_end(struct Scsi_Host *shpnt)
+>  {
+>  	if(TESTLO(DMASTAT, DFIFOEMP)) {
+> -		int data_count = (DATA_LEN - scsi_get_resid(CURRENT_SC)) -
+> -			GETSTCNT();
+> +		int done = GETSTCNT();
+> +		int data_count = (DATA_LEN - scsi_get_resid(CURRENT_SC)) - done;
+> +		struct scatterlist *sg = scsi_sglist(CURRENT_SC);
+>  
+>  		CMD_INC_RESID(CURRENT_SC, data_count);
+>  
+> -		data_count -= CURRENT_SC->SCp.ptr -
+> -			SG_ADDRESS(CURRENT_SC->SCp.buffer);
+> -		while(data_count>0) {
+> -			CURRENT_SC->SCp.buffer--;
+> -			CURRENT_SC->SCp.buffers_residual++;
+> -			data_count -= CURRENT_SC->SCp.buffer->length;
+> +		/* Locate the first SG entry not yet sent */
+> +		while (done > 0 && !sg_is_last(sg)) {
+> +			if (done < sg->length)
+> +				break;
+> +			done -= sg->length;
+> +			sg = sg_next(sg);
+>  		}
+> -		CURRENT_SC->SCp.ptr = SG_ADDRESS(CURRENT_SC->SCp.buffer) -
+> -			data_count;
+> -		CURRENT_SC->SCp.this_residual = CURRENT_SC->SCp.buffer->length +
+> -			data_count;
+> +
+> +		CURRENT_SC->SCp.buffer = sg;
+> +		CURRENT_SC->SCp.ptr = SG_ADDRESS(CURRENT_SC->SCp.buffer) + done;
+> +		CURRENT_SC->SCp.this_residual = CURRENT_SC->SCp.buffer->length -
+> +			done;
+>  	}
+>  
+>  	SETPORT(SXFRCTL0, CH1|CLRCH1|CLRSTCNT);
+> @@ -2501,7 +2499,7 @@ static void get_command(struct seq_file *m, struct scsi_cmnd * ptr)
+>  
+>  	seq_printf(m, "); resid=%d; residual=%d; buffers=%d; phase |",
+>  		scsi_get_resid(ptr), ptr->SCp.this_residual,
+> -		ptr->SCp.buffers_residual);
+> +		sg_nents(ptr->SCp.buffer) - 1);
+>  
+>  	if (ptr->SCp.phase & not_issued)
+>  		seq_puts(m, "not issued|");
+> 
