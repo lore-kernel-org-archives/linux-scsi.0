@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 5/8] IB/iser: set virt_boundary_mask in the scsi host
-Date: Mon, 17 Jun 2019 14:19:57 +0200
-Message-ID: <20190617122000.22181-6-hch@lst.de>
+Subject: [PATCH 1/8] scsi: add a host / host template field for the virt boundary
+Date: Mon, 17 Jun 2019 14:19:53 +0200
+Message-ID: <20190617122000.22181-2-hch@lst.de>
 References: <20190617122000.22181-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -12,87 +12,65 @@ To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: Sagi Grimberg <sagi@grimberg.me>, Max Gurtovoy <maxg@mellanox.com>, Bart Van Assche <bvanassche@acm.org>, linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org, megaraidlinux.pdl@broadcom.com, MPT-FusionLinux.pdl@broadcom.com, linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-This ensures all proper DMA layer handling is taken care of by the
-SCSI midlayer.
+This allows drivers setting it up easily instead of branching out to
+block layer calls in slave_alloc, and ensures the upgraded
+max_segment_size setting gets picked up by the DMA layer.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/infiniband/ulp/iser/iscsi_iser.c | 35 +++++-------------------
- 1 file changed, 7 insertions(+), 28 deletions(-)
+ drivers/scsi/hosts.c     | 3 +++
+ drivers/scsi/scsi_lib.c  | 3 ++-
+ include/scsi/scsi_host.h | 3 +++
+ 3 files changed, 8 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/infiniband/ulp/iser/iscsi_iser.c b/drivers/infiniband/ulp/iser/iscsi_iser.c
-index 9c185a8dabd3..841b66397a57 100644
---- a/drivers/infiniband/ulp/iser/iscsi_iser.c
-+++ b/drivers/infiniband/ulp/iser/iscsi_iser.c
-@@ -613,6 +613,7 @@ iscsi_iser_session_create(struct iscsi_endpoint *ep,
- 	struct Scsi_Host *shost;
- 	struct iser_conn *iser_conn = NULL;
- 	struct ib_conn *ib_conn;
-+	struct ib_device *ib_dev;
- 	u32 max_fr_sectors;
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index ff0d8c6a8d0c..55522b7162d3 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -462,6 +462,9 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+ 	else
+ 		shost->dma_boundary = 0xffffffff;
  
- 	shost = iscsi_host_alloc(&iscsi_iser_sht, 0, 0);
-@@ -643,16 +644,19 @@ iscsi_iser_session_create(struct iscsi_endpoint *ep,
- 		}
- 
- 		ib_conn = &iser_conn->ib_conn;
-+		ib_dev = ib_conn->device->ib_device;
- 		if (ib_conn->pi_support) {
--			u32 sig_caps = ib_conn->device->ib_device->attrs.sig_prot_cap;
-+			u32 sig_caps = ib_dev->attrs.sig_prot_cap;
- 
- 			scsi_host_set_prot(shost, iser_dif_prot_caps(sig_caps));
- 			scsi_host_set_guard(shost, SHOST_DIX_GUARD_IP |
- 						   SHOST_DIX_GUARD_CRC);
- 		}
- 
--		if (iscsi_host_add(shost,
--				   ib_conn->device->ib_device->dev.parent)) {
-+		if (!(ib_dev->attrs.device_cap_flags & IB_DEVICE_SG_GAPS_REG))
-+			shost->virt_boundary_mask = ~MASK_4K;
++	if (sht->virt_boundary_mask)
++		shost->virt_boundary_mask = sht->virt_boundary_mask;
 +
-+		if (iscsi_host_add(shost, ib_dev->dev.parent)) {
- 			mutex_unlock(&iser_conn->state_mutex);
- 			goto free_host;
- 		}
-@@ -958,30 +962,6 @@ static umode_t iser_attr_is_visible(int param_type, int param)
- 	return 0;
- }
+ 	device_initialize(&shost->shost_gendev);
+ 	dev_set_name(&shost->shost_gendev, "host%d", shost->host_no);
+ 	shost->shost_gendev.bus = &scsi_bus_type;
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 65d0a10c76ad..d333bb6b1c59 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1775,7 +1775,8 @@ void __scsi_init_queue(struct Scsi_Host *shost, struct request_queue *q)
+ 	dma_set_seg_boundary(dev, shost->dma_boundary);
  
--static int iscsi_iser_slave_alloc(struct scsi_device *sdev)
--{
--	struct iscsi_session *session;
--	struct iser_conn *iser_conn;
--	struct ib_device *ib_dev;
--
--	mutex_lock(&unbind_iser_conn_mutex);
--
--	session = starget_to_session(scsi_target(sdev))->dd_data;
--	iser_conn = session->leadconn->dd_data;
--	if (!iser_conn) {
--		mutex_unlock(&unbind_iser_conn_mutex);
--		return -ENOTCONN;
--	}
--	ib_dev = iser_conn->ib_conn.device->ib_device;
--
--	if (!(ib_dev->attrs.device_cap_flags & IB_DEVICE_SG_GAPS_REG))
--		blk_queue_virt_boundary(sdev->request_queue, ~MASK_4K);
--
--	mutex_unlock(&unbind_iser_conn_mutex);
--
--	return 0;
--}
--
- static struct scsi_host_template iscsi_iser_sht = {
- 	.module                 = THIS_MODULE,
- 	.name                   = "iSCSI Initiator over iSER",
-@@ -994,7 +974,6 @@ static struct scsi_host_template iscsi_iser_sht = {
- 	.eh_device_reset_handler= iscsi_eh_device_reset,
- 	.eh_target_reset_handler = iscsi_eh_recover_target,
- 	.target_alloc		= iscsi_target_alloc,
--	.slave_alloc            = iscsi_iser_slave_alloc,
- 	.proc_name              = "iscsi_iser",
- 	.this_id                = -1,
- 	.track_queue_depth	= 1,
+ 	blk_queue_max_segment_size(q, shost->max_segment_size);
+-	dma_set_max_seg_size(dev, shost->max_segment_size);
++	blk_queue_virt_boundary(q, shost->virt_boundary_mask);
++	dma_set_max_seg_size(dev, queue_max_segment_size(q));
+ 
+ 	/*
+ 	 * Set a reasonable default alignment:  The larger of 32-byte (dword),
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index a5fcdad4a03e..cc139dbd71e5 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -369,6 +369,8 @@ struct scsi_host_template {
+ 	 */
+ 	unsigned long dma_boundary;
+ 
++	unsigned long virt_boundary_mask;
++
+ 	/*
+ 	 * This specifies "machine infinity" for host templates which don't
+ 	 * limit the transfer size.  Note this limit represents an absolute
+@@ -587,6 +589,7 @@ struct Scsi_Host {
+ 	unsigned int max_sectors;
+ 	unsigned int max_segment_size;
+ 	unsigned long dma_boundary;
++	unsigned long virt_boundary_mask;
+ 	/*
+ 	 * In scsi-mq mode, the number of hardware queues supported by the LLD.
+ 	 *
 -- 
 2.20.1
