@@ -1,74 +1,66 @@
-From: Rajendra Nayak <rnayak@codeaurora.org>
-Subject: Re: [RFC v2 01/11] OPP: Don't overwrite rounded clk rate
-Date: Mon, 17 Jun 2019 09:37:02 +0530
-Message-ID: <a912c8b2-080d-7ab7-670b-b687ec3a2c92@codeaurora.org>
-References: <20190320094918.20234-1-rnayak@codeaurora.org>
- <20190320094918.20234-2-rnayak@codeaurora.org>
- <20190611105432.x3nzqiib35t6mvyg@vireshk-i7>
- <c173a57d-a4de-99f7-e8d8-28a7612f4ca3@codeaurora.org>
- <20190612082506.m735bsk7bjijf2yg@vireshk-i7>
- <20190613095419.lfjeko7nmxtix2n4@vireshk-i7>
- <20190614052732.4w6vvwwich2h4cgu@vireshk-i7>
- <20190617035058.veo7uwqjrpa6kykt@vireshk-i7>
+From: "Alastair D'Silva" <alastair-fCx97xH5QTlAfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH v3 3/7] lib/hexdump.c: Optionally suppress lines of
+ repeated bytes
+Date: Mon, 17 Jun 2019 14:07:12 +1000
+Message-ID: <da2ff58290c4b6f08eb5ac25c288bdd03b5688f7.camel@d-silva.org>
+References: <20190617020430.8708-1-alastair@au1.ibm.com>
+         <20190617020430.8708-4-alastair@au1.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
-Content-Transfer-Encoding: base64
-Return-path: <dri-devel-bounces@lists.freedesktop.org>
-In-Reply-To: <20190617035058.veo7uwqjrpa6kykt@vireshk-i7>
-Content-Language: en-US
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
-List-Post: <mailto:dri-devel@lists.freedesktop.org>
-List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: dri-devel-bounces@lists.freedesktop.org
-Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
-To: Viresh Kumar <viresh.kumar@linaro.org>, swboyd@chromium.org, vincent.guittot@linaro.org, mturquette@baylibre.com
-Cc: ulf.hansson@linaro.org, dianders@chromium.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, linux-arm-msm@vger.kernel.org, rafael@kernel.org, linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-spi@vger.kernel.org, linux-serial@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-wireless-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20190617020430.8708-4-alastair-8fk3Idey6ehBDgjK7y7TUQ@public.gmane.org>
+Sender: linux-wireless-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Jani Nikula <jani.nikula-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Cc: Joonas Lahtinen <joonas.lahtinen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Rodrigo Vivi <rodrigo.vivi-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, David Airlie <airlied-cv59FeDIM0c@public.gmane.org>, Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>, Dan Carpenter <dan.carpenter-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Karsten Keil <isdn-iHCpqvpFUx0uJkBD2foKsQ@public.gmane.org>, Jassi Brar <jassisinghbrar-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Tom Lendacky <thomas.lendacky-5C7GfCeVMHo@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Jose Abreu <Jose.Abreu-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>, Kalle Valo <kvalo-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Stanislaw Gruszka <sgruszka-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Benson Leung <bleung-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Enric Balletbo i Serra <enric.balletbo-ZGY8ohtN/8qB+jHODAdFcQ@public.gmane.org>, "James E.J. Bottomley" <jejb-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Petr
 List-Id: linux-scsi@vger.kernel.org
 
-CgpPbiA2LzE3LzIwMTkgOToyMCBBTSwgVmlyZXNoIEt1bWFyIHdyb3RlOgo+IE9uIDE0LTA2LTE5
-LCAxMDo1NywgVmlyZXNoIEt1bWFyIHdyb3RlOgo+PiBIbW0sIHNvIHRoaXMgcGF0Y2ggd29uJ3Qg
-YnJlYWsgYW55dGhpbmcgYW5kIEkgYW0gaW5jbGluZWQgdG8gYXBwbHkgaXQgYWdhaW4gOikKPj4K
-Pj4gRG9lcyBhbnlvbmUgc2VlIGFueSBvdGhlciBpc3N1ZXMgd2l0aCBpdCwgd2hpY2ggSSBtaWdo
-dCBiZSBtaXNzaW5nID8KPiAKPiBJIGhhdmUgdXBkYXRlZCB0aGUgY29tbWl0IGxvZyBhIGJpdCBt
-b3JlIHRvIGNsYXJpZnkgb24gdGhpbmdzLCBwbGVhc2UgbGV0IG1lCj4ga25vdyBpZiBpdCBsb29r
-cyBva2F5Lgo+IAo+ICAgICAgb3BwOiBEb24ndCBvdmVyd3JpdGUgcm91bmRlZCBjbGsgcmF0ZQo+
-ICAgICAgCj4gICAgICBUaGUgT1BQIHRhYmxlIG5vcm1hbGx5IGNvbnRhaW5zICdmbWF4JyB2YWx1
-ZXMgY29ycmVzcG9uZGluZyB0byB0aGUKPiAgICAgIHZvbHRhZ2Ugb3IgcGVyZm9ybWFuY2UgbGV2
-ZWxzIG9mIGVhY2ggT1BQLCBidXQgd2UgZG9uJ3QgbmVjZXNzYXJpbHkgd2FudAo+ICAgICAgYWxs
-IHRoZSBkZXZpY2VzIHRvIHJ1biBhdCBmbWF4IGFsbCB0aGUgdGltZS4gUnVubmluZyBhdCBmbWF4
-IG1ha2VzIHNlbnNlCj4gICAgICBmb3IgZGV2aWNlcyBsaWtlIENQVS9HUFUsIHdoaWNoIGhhdmUg
-YSBmaW5pdGUgYW1vdW50IG9mIHdvcmsgdG8gZG8gYW5kCj4gICAgICBzaW5jZSBhIHNwZWNpZmlj
-IGFtb3VudCBvZiBlbmVyZ3kgaXMgY29uc3VtZWQgYXQgYW4gT1BQLCBpdHMgYmV0dGVyIHRvCj4g
-ICAgICBydW4gYXQgdGhlIGhpZ2hlc3QgcG9zc2libGUgZnJlcXVlbmN5IGZvciB0aGF0IHZvbHRh
-Z2UgdmFsdWUuCj4gICAgICAKPiAgICAgIE9uIHRoZSBvdGhlciBoYW5kLCB3ZSBoYXZlIElPIGRl
-dmljZXMgd2hpY2ggbmVlZCB0byBydW4gYXQgc3BlY2lmaWMKPiAgICAgIGZyZXF1ZW5jaWVzIG9u
-bHkgZm9yIHRoZWlyIHByb3BlciBmdW5jdGlvbmluZywgaW5zdGVhZCBvZiBtYXhpbXVtCj4gICAg
-ICBwb3NzaWJsZSBmcmVxdWVuY3kuCj4gICAgICAKPiAgICAgIFRoZSBPUFAgY29yZSBjdXJyZW50
-bHkgcm91bmR1cCB0byB0aGUgbmV4dCBwb3NzaWJsZSBPUFAgZm9yIGEgZnJlcXVlbmN5Cj4gICAg
-ICBhbmQgc2VsZWN0IHRoZSBmbWF4IHZhbHVlLiBUbyBzdXBwb3J0IHRoZSBJTyBkZXZpY2VzIGJ5
-IHRoZSBPUFAgY29yZSwKPiAgICAgIGxldHMgZG8gdGhlIHJvdW5kdXAgdG8gZmV0Y2ggdGhlIHZv
-bHRhZ2Ugb3IgcGVyZm9ybWFuY2Ugc3RhdGUgdmFsdWVzLAo+ICAgICAgYnV0IG5vdCB1c2UgdGhl
-IE9QUCBmcmVxdWVuY3kgdmFsdWUuIFJhdGhlciB1c2UgdGhlIHZhbHVlIHJldHVybmVkIGJ5Cj4g
-ICAgICBjbGtfcm91bmRfcmF0ZSgpLgo+ICAgICAgCj4gICAgICBUaGUgY3VycmVudCB1c2VyLCBj
-cHVmcmVxLCBvZiBkZXZfcG1fb3BwX3NldF9yYXRlKCkgYWxyZWFkeSBkb2VzIHRoZQo+ICAgICAg
-cm91bmRpbmcgdG8gdGhlIG5leHQgT1BQIGJlZm9yZSBjYWxsaW5nIHRoaXMgcm91dGluZSBhbmQg
-aXQgd29uJ3QKPiAgICAgIGhhdmUgYW55IHNpZGUgYWZmZWN0cyBiZWNhdXNlIG9mIHRoaXMgY2hh
-bmdlLgoKTG9va3MgZ29vZCB0byBtZS4gU2hvdWxkIHRoaXMgYWxzbyBiZSBkb2N1bWVudGVkIHNv
-bWVwbGFjZSB0aGF0IGRldl9wbV9vcHBfc2V0X3JhdGUoKQp3b3VsZCBub3QgYmUgYWJsZSB0byBk
-aXN0aW5ndWlzaCBiZXR3ZWVuIGl0cyB1c2VycyB0cnlpbmcgdG8gc2NhbGUgQ1BVL0dQVSdzIHZz
-IElPCmRldmljZXMsIHNvIGl0cyB0aGUgY2FsbGVycyByZXNwb25zaWJpbGl0eSB0byByb3VuZCBp
-dCBhY2NvcmRpbmdseSBiZWZvcmUgY2FsbGluZyB0aGUKQVBJPwoKPiAgICAgIAo+ICAgICAgU2ln
-bmVkLW9mZi1ieTogU3RlcGhlbiBCb3lkIDxzd2JveWRAY2hyb21pdW0ub3JnPgo+ICAgICAgU2ln
-bmVkLW9mZi1ieTogUmFqZW5kcmEgTmF5YWsgPHJuYXlha0Bjb2RlYXVyb3JhLm9yZz4KPiAgICAg
-IFsgVmlyZXNoOiBNYXNzYWdlZCBjaGFuZ2Vsb2cgYW5kIHVzZSB0ZW1wX29wcCB2YXJpYWJsZSBp
-bnN0ZWFkIF0KPiAgICAgIFNpZ25lZC1vZmYtYnk6IFZpcmVzaCBLdW1hciA8dmlyZXNoLmt1bWFy
-QGxpbmFyby5vcmc+Cj4gCj4gCgotLSAKUVVBTENPTU0gSU5ESUEsIG9uIGJlaGFsZiBvZiBRdWFs
-Y29tbSBJbm5vdmF0aW9uIENlbnRlciwgSW5jLiBpcyBhIG1lbWJlcgpvZiBDb2RlIEF1cm9yYSBG
-b3J1bSwgaG9zdGVkIGJ5IFRoZSBMaW51eCBGb3VuZGF0aW9uCl9fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fCmRyaS1kZXZlbCBtYWlsaW5nIGxpc3QKZHJpLWRl
-dmVsQGxpc3RzLmZyZWVkZXNrdG9wLm9yZwpodHRwczovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9t
-YWlsbWFuL2xpc3RpbmZvL2RyaS1kZXZlbA==
+On Mon, 2019-06-17 at 12:04 +1000, Alastair D'Silva wrote:
+> From: Alastair D'Silva <alastair-fCx97xH5QTlAfugRpC6u6w@public.gmane.org>
+> 
+> Some buffers may only be partially filled with useful data, while the
+> rest
+> is padded (typically with 0x00 or 0xff).
+> 
+> This patch introduces a flag to allow the supression of lines of
+> repeated
+> bytes, which are replaced with '** Skipped %u bytes of value 0x%x **'
+> 
+> An inline wrapper function is provided for backwards compatibility
+> with
+> existing code, which maintains the original behaviour.
+> 
+> Signed-off-by: Alastair D'Silva <alastair-fCx97xH5QTlAfugRpC6u6w@public.gmane.org>
+> ---
+>  include/linux/printk.h | 25 +++++++++---
+>  lib/hexdump.c          | 91 ++++++++++++++++++++++++++++++++++++--
+> ----
+>  2 files changed, 99 insertions(+), 17 deletions(-)
+> 
+> diff --git a/include/linux/printk.h b/include/linux/printk.h
+> index cefd374c47b1..d7754799cfe0 100644
+> --- a/include/linux/printk.h
+> +++ b/include/linux/printk.h
+> @@ -481,13 +481,18 @@ enum {
+>  	DUMP_PREFIX_ADDRESS,
+>  	DUMP_PREFIX_OFFSET
+>  };
+> +
+>  extern int hex_dump_to_buffer(const void *buf, size_t len, int
+> rowsize,
+>  			      int groupsize, char *linebuf, size_t
+> linebuflen,
+>  			      bool ascii);
+> +
+> +#define HEXDUMP_ASCII			BIT(0)
+> +#define HEXDUMP_SUPPRESS_REPEATED	BIT(1)
+> +
+
+This is missing the include of linux/bits.h, I'll fix this in the next
+version.
+
+-- 
+Alastair D'Silva           mob: 0423 762 819
+skype: alastair_dsilva    
+Twitter: @EvilDeece
+blog: http://alastair.d-silva.org
