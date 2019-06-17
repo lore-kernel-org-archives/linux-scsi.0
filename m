@@ -1,58 +1,85 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH] scsi: fdomain: fix building pcmcia front-end
-Date: Mon, 17 Jun 2019 13:19:17 +0200
-Message-ID: <20190617111937.2355936-1-arnd@arndb.de>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+From: Lee Jones <lee.jones@linaro.org>
+Subject: [PATCH 1/1] scsi: ufs-qcom: Add support for platforms booting ACPI
+Date: Mon, 17 Jun 2019 12:54:54 +0100
+Message-ID: <20190617115454.3226-1-lee.jones@linaro.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Ondrej Zary <linux@zary.sk>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: agross@kernel.org, david.brown@linaro.org, alim.akhtar@samsung.com, avri.altman@wdc.com, pedrom.sousa@synopsys.com, jejb@linux.ibm.com, martin.petersen@oracle.com, linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, ard.biesheuvel@linaro.org, jlhugo@gmail.com, bjorn.andersson@linaro.org, Lee Jones <lee.jones@linaro.org>
 List-Id: linux-scsi@vger.kernel.org
 
-We get a warning when CONFIG_SCSI_LOWLEVEL is disabled here:
+New Qualcomm AArch64 based laptops are now available which use UFS
+as their primary data storage medium.  These devices are supplied
+with ACPI support out of the box.  This patch ensures the Qualcomm
+UFS driver will be bound when the "QCOM24A5" H/W device is
+advertised as present.
 
-WARNING: unmet direct dependencies detected for SCSI_FDOMAIN
-  Depends on [n]: SCSI_LOWLEVEL [=n] && SCSI [=y]
-  Selected by [m]:
-  - PCMCIA_FDOMAIN [=m] && SCSI_LOWLEVEL_PCMCIA [=y] && SCSI [=y] && PCMCIA [=y] && m && MODULES [=y]
-
-Move the common support outside of the SCSI_LOWLEVEL section.
-Alternatively, we could move all of SCSI_LOWLEVEL_PCMCIA into
-SCSI_LOWLEVEL. This would be more sensible, but might cause
-surprises for users that have SCSI_LOWLEVEL disabled.
-
-Fixes: 7d47fa065e62 ("scsi: fdomain: Add PCMCIA support")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/scsi/Kconfig | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/ufs/ufs-qcom.c | 23 ++++++++++++++++++++---
+ 1 file changed, 20 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 75f66f8ad3ea..dffe4b31e205 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -642,10 +642,6 @@ config SCSI_DMX3191D
- 	  To compile this driver as a module, choose M here: the
- 	  module will be called dmx3191d.
+diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+index 3aeadb14aae1..364af6a63e35 100644
+--- a/drivers/scsi/ufs/ufs-qcom.c
++++ b/drivers/scsi/ufs/ufs-qcom.c
+@@ -12,6 +12,7 @@
+  *
+  */
  
--config SCSI_FDOMAIN
--	tristate
--	depends on SCSI
--
- config SCSI_FDOMAIN_PCI
- 	tristate "Future Domain TMC-3260/AHA-2920A PCI SCSI support"
- 	depends on PCI && SCSI
-@@ -1527,6 +1523,10 @@ endif # SCSI_LOWLEVEL
++#include <linux/acpi.h>
+ #include <linux/time.h>
+ #include <linux/of.h>
+ #include <linux/platform_device.h>
+@@ -164,6 +165,9 @@ static int ufs_qcom_init_lane_clks(struct ufs_qcom_host *host)
+ 	int err = 0;
+ 	struct device *dev = host->hba->dev;
  
- source "drivers/scsi/pcmcia/Kconfig"
- 
-+config SCSI_FDOMAIN
-+	tristate
-+	depends on SCSI
++	if (has_acpi_companion(dev))
++		return 0;
 +
- source "drivers/scsi/device_handler/Kconfig"
+ 	err = ufs_qcom_host_clk_get(dev, "rx_lane0_sync_clk",
+ 					&host->rx_l0_sync_clk, false);
+ 	if (err)
+@@ -1208,9 +1212,13 @@ static int ufs_qcom_init(struct ufs_hba *hba)
+ 			__func__, err);
+ 		goto out_variant_clear;
+ 	} else if (IS_ERR(host->generic_phy)) {
+-		err = PTR_ERR(host->generic_phy);
+-		dev_err(dev, "%s: PHY get failed %d\n", __func__, err);
+-		goto out_variant_clear;
++		if (has_acpi_companion(dev)) {
++			host->generic_phy = NULL;
++		} else {
++			err = PTR_ERR(host->generic_phy);
++			dev_err(dev, "%s: PHY get failed %d\n", __func__, err);
++			goto out_variant_clear;
++		}
+ 	}
  
- endmenu
+ 	err = ufs_qcom_bus_register(host);
+@@ -1680,6 +1688,14 @@ static const struct of_device_id ufs_qcom_of_match[] = {
+ };
+ MODULE_DEVICE_TABLE(of, ufs_qcom_of_match);
+ 
++#ifdef CONFIG_ACPI
++static const struct acpi_device_id ufs_qcom_acpi_match[] = {
++	{ "QCOM24A5" },
++	{ },
++};
++MODULE_DEVICE_TABLE(acpi, ufs_qcom_acpi_match);
++#endif
++
+ static const struct dev_pm_ops ufs_qcom_pm_ops = {
+ 	.suspend	= ufshcd_pltfrm_suspend,
+ 	.resume		= ufshcd_pltfrm_resume,
+@@ -1696,6 +1712,7 @@ static struct platform_driver ufs_qcom_pltform = {
+ 		.name	= "ufshcd-qcom",
+ 		.pm	= &ufs_qcom_pm_ops,
+ 		.of_match_table = of_match_ptr(ufs_qcom_of_match),
++		.acpi_match_table = ACPI_PTR(ufs_qcom_acpi_match),
+ 	},
+ };
+ module_platform_driver(ufs_qcom_pltform);
 -- 
-2.20.0
+2.17.1
