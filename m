@@ -1,66 +1,78 @@
-From: "Alastair D'Silva" <alastair-fCx97xH5QTlAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH v3 3/7] lib/hexdump.c: Optionally suppress lines of
- repeated bytes
-Date: Mon, 17 Jun 2019 14:07:12 +1000
-Message-ID: <da2ff58290c4b6f08eb5ac25c288bdd03b5688f7.camel@d-silva.org>
-References: <20190617020430.8708-1-alastair@au1.ibm.com>
-         <20190617020430.8708-4-alastair@au1.ibm.com>
+From: Viresh Kumar <viresh.kumar@linaro.org>
+Subject: Re: [RFC v2 01/11] OPP: Don't overwrite rounded clk rate
+Date: Mon, 17 Jun 2019 09:47:21 +0530
+Message-ID: <20190617041721.5xdr3kl4xxe6gy4m@vireshk-i7>
+References: <20190320094918.20234-1-rnayak@codeaurora.org>
+ <20190320094918.20234-2-rnayak@codeaurora.org>
+ <20190611105432.x3nzqiib35t6mvyg@vireshk-i7>
+ <c173a57d-a4de-99f7-e8d8-28a7612f4ca3@codeaurora.org>
+ <20190612082506.m735bsk7bjijf2yg@vireshk-i7>
+ <20190613095419.lfjeko7nmxtix2n4@vireshk-i7>
+ <20190614052732.4w6vvwwich2h4cgu@vireshk-i7>
+ <20190617035058.veo7uwqjrpa6kykt@vireshk-i7>
+ <a912c8b2-080d-7ab7-670b-b687ec3a2c92@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-wireless-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20190617020430.8708-4-alastair-8fk3Idey6ehBDgjK7y7TUQ@public.gmane.org>
-Sender: linux-wireless-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Jani Nikula <jani.nikula-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Cc: Joonas Lahtinen <joonas.lahtinen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Rodrigo Vivi <rodrigo.vivi-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, David Airlie <airlied-cv59FeDIM0c@public.gmane.org>, Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>, Dan Carpenter <dan.carpenter-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Karsten Keil <isdn-iHCpqvpFUx0uJkBD2foKsQ@public.gmane.org>, Jassi Brar <jassisinghbrar-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Tom Lendacky <thomas.lendacky-5C7GfCeVMHo@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Jose Abreu <Jose.Abreu-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>, Kalle Valo <kvalo-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Stanislaw Gruszka <sgruszka-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Benson Leung <bleung-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Enric Balletbo i Serra <enric.balletbo-ZGY8ohtN/8qB+jHODAdFcQ@public.gmane.org>, "James E.J. Bottomley" <jejb-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Petr
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <a912c8b2-080d-7ab7-670b-b687ec3a2c92@codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Rajendra Nayak <rnayak@codeaurora.org>
+Cc: swboyd@chromium.org, vincent.guittot@linaro.org, mturquette@baylibre.com, linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-pm@vger.kernel.org, linux-serial@vger.kernel.org, linux-spi@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-scsi@vger.kernel.org, ulf.hansson@linaro.org, dianders@chromium.org, rafael@kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 2019-06-17 at 12:04 +1000, Alastair D'Silva wrote:
-> From: Alastair D'Silva <alastair-fCx97xH5QTlAfugRpC6u6w@public.gmane.org>
+On 17-06-19, 09:37, Rajendra Nayak wrote:
 > 
-> Some buffers may only be partially filled with useful data, while the
-> rest
-> is padded (typically with 0x00 or 0xff).
 > 
-> This patch introduces a flag to allow the supression of lines of
-> repeated
-> bytes, which are replaced with '** Skipped %u bytes of value 0x%x **'
+> On 6/17/2019 9:20 AM, Viresh Kumar wrote:
+> > On 14-06-19, 10:57, Viresh Kumar wrote:
+> > > Hmm, so this patch won't break anything and I am inclined to apply it again :)
+> > > 
+> > > Does anyone see any other issues with it, which I might be missing ?
+> > 
+> > I have updated the commit log a bit more to clarify on things, please let me
+> > know if it looks okay.
+> > 
+> >      opp: Don't overwrite rounded clk rate
+> >      The OPP table normally contains 'fmax' values corresponding to the
+> >      voltage or performance levels of each OPP, but we don't necessarily want
+> >      all the devices to run at fmax all the time. Running at fmax makes sense
+> >      for devices like CPU/GPU, which have a finite amount of work to do and
+> >      since a specific amount of energy is consumed at an OPP, its better to
+> >      run at the highest possible frequency for that voltage value.
+> >      On the other hand, we have IO devices which need to run at specific
+> >      frequencies only for their proper functioning, instead of maximum
+> >      possible frequency.
+> >      The OPP core currently roundup to the next possible OPP for a frequency
+> >      and select the fmax value. To support the IO devices by the OPP core,
+> >      lets do the roundup to fetch the voltage or performance state values,
+> >      but not use the OPP frequency value. Rather use the value returned by
+> >      clk_round_rate().
+> >      The current user, cpufreq, of dev_pm_opp_set_rate() already does the
+> >      rounding to the next OPP before calling this routine and it won't
+> >      have any side affects because of this change.
 > 
-> An inline wrapper function is provided for backwards compatibility
-> with
-> existing code, which maintains the original behaviour.
-> 
-> Signed-off-by: Alastair D'Silva <alastair-fCx97xH5QTlAfugRpC6u6w@public.gmane.org>
-> ---
->  include/linux/printk.h | 25 +++++++++---
->  lib/hexdump.c          | 91 ++++++++++++++++++++++++++++++++++++--
-> ----
->  2 files changed, 99 insertions(+), 17 deletions(-)
-> 
-> diff --git a/include/linux/printk.h b/include/linux/printk.h
-> index cefd374c47b1..d7754799cfe0 100644
-> --- a/include/linux/printk.h
-> +++ b/include/linux/printk.h
-> @@ -481,13 +481,18 @@ enum {
->  	DUMP_PREFIX_ADDRESS,
->  	DUMP_PREFIX_OFFSET
->  };
-> +
->  extern int hex_dump_to_buffer(const void *buf, size_t len, int
-> rowsize,
->  			      int groupsize, char *linebuf, size_t
-> linebuflen,
->  			      bool ascii);
-> +
-> +#define HEXDUMP_ASCII			BIT(0)
-> +#define HEXDUMP_SUPPRESS_REPEATED	BIT(1)
-> +
+> Looks good to me. Should this also be documented someplace that dev_pm_opp_set_rate()
+> would not be able to distinguish between its users trying to scale CPU/GPU's vs IO
+> devices, so its the callers responsibility to round it accordingly before calling the
+> API?
 
-This is missing the include of linux/bits.h, I'll fix this in the next
-version.
+diff --git a/drivers/opp/core.c b/drivers/opp/core.c
+index 0fbc77f05048..bae94bfa1e96 100644
+--- a/drivers/opp/core.c
++++ b/drivers/opp/core.c
+@@ -751,8 +751,11 @@ static int _set_required_opps(struct device *dev,
+  * @dev:        device for which we do this operation
+  * @target_freq: frequency to achieve
+  *
+- * This configures the power-supplies and clock source to the levels specified
+- * by the OPP corresponding to the target_freq.
++ * This configures the power-supplies to the levels specified by the OPP
++ * corresponding to the target_freq, and programs the clock to a value <=
++ * target_freq, as rounded by clk_round_rate(). Device wanting to run at fmax
++ * provided by the opp, should have already rounded to the target OPP's
++ * frequency.
+  */
 
 -- 
-Alastair D'Silva           mob: 0423 762 819
-skype: alastair_dsilva    
-Twitter: @EvilDeece
-blog: http://alastair.d-silva.org
+viresh
