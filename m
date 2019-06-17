@@ -1,87 +1,74 @@
 From: Rajendra Nayak <rnayak@codeaurora.org>
-Subject: Re: [RFC v2 02/11] OPP: Make dev_pm_opp_set_rate() with freq=0 as
- valid
-Date: Mon, 17 Jun 2019 09:34:06 +0530
-Message-ID: <37e7ff9e-6bfa-585e-1ca6-f8e079dd0aef@codeaurora.org>
+Subject: Re: [RFC v2 01/11] OPP: Don't overwrite rounded clk rate
+Date: Mon, 17 Jun 2019 09:37:02 +0530
+Message-ID: <a912c8b2-080d-7ab7-670b-b687ec3a2c92@codeaurora.org>
 References: <20190320094918.20234-1-rnayak@codeaurora.org>
- <20190320094918.20234-3-rnayak@codeaurora.org>
- <20190614063210.lfsquoycronah3fe@vireshk-i7>
+ <20190320094918.20234-2-rnayak@codeaurora.org>
+ <20190611105432.x3nzqiib35t6mvyg@vireshk-i7>
+ <c173a57d-a4de-99f7-e8d8-28a7612f4ca3@codeaurora.org>
+ <20190612082506.m735bsk7bjijf2yg@vireshk-i7>
+ <20190613095419.lfjeko7nmxtix2n4@vireshk-i7>
+ <20190614052732.4w6vvwwich2h4cgu@vireshk-i7>
+ <20190617035058.veo7uwqjrpa6kykt@vireshk-i7>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190614063210.lfsquoycronah3fe@vireshk-i7>
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Content-Transfer-Encoding: base64
+Return-path: <dri-devel-bounces@lists.freedesktop.org>
+In-Reply-To: <20190617035058.veo7uwqjrpa6kykt@vireshk-i7>
 Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Viresh Kumar <viresh.kumar@linaro.org>
-Cc: linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-pm@vger.kernel.org, linux-serial@vger.kernel.org, linux-spi@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-scsi@vger.kernel.org, swboyd@chromium.org, ulf.hansson@linaro.org, dianders@chromium.org, rafael@kernel.org
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
+List-Post: <mailto:dri-devel@lists.freedesktop.org>
+List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: dri-devel-bounces@lists.freedesktop.org
+Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
+To: Viresh Kumar <viresh.kumar@linaro.org>, swboyd@chromium.org, vincent.guittot@linaro.org, mturquette@baylibre.com
+Cc: ulf.hansson@linaro.org, dianders@chromium.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, linux-arm-msm@vger.kernel.org, rafael@kernel.org, linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-spi@vger.kernel.org, linux-serial@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-
-
-On 6/14/2019 12:02 PM, Viresh Kumar wrote:
-> On 20-03-19, 15:19, Rajendra Nayak wrote:
->> For devices with performance state, we use dev_pm_opp_set_rate()
->> to set the appropriate clk rate and the performance state.
->> We do need a way to *remove* the performance state vote when
->> we idle the device and turn the clocks off. Use dev_pm_opp_set_rate()
->> with freq=0 to achieve this.
->>
->> Signed-off-by: Rajendra Nayak <rnayak@codeaurora.org>
->> Signed-off-by: Stephen Boyd <swboyd@chromium.org>
->> ---
->>   drivers/opp/core.c | 18 ++++++++++++------
->>   1 file changed, 12 insertions(+), 6 deletions(-)
-> 
-> What about this instead ?
-
-yes, this works, thanks for updating the patch.
-
-> 
-> diff --git a/drivers/opp/core.c b/drivers/opp/core.c
-> index 2fe96c2363a3..9accf8bb6afc 100644
-> --- a/drivers/opp/core.c
-> +++ b/drivers/opp/core.c
-> @@ -711,7 +711,7 @@ static int _set_required_opps(struct device *dev,
->   
->          /* Single genpd case */
->          if (!genpd_virt_devs) {
-> -               pstate = opp->required_opps[0]->pstate;
-> +               pstate = likely(opp) ? opp->required_opps[0]->pstate : 0;
->                  ret = dev_pm_genpd_set_performance_state(dev, pstate);
->                  if (ret) {
->                          dev_err(dev, "Failed to set performance state of %s: %d (%d)\n",
-> @@ -729,7 +729,7 @@ static int _set_required_opps(struct device *dev,
->          mutex_lock(&opp_table->genpd_virt_dev_lock);
->   
->          for (i = 0; i < opp_table->required_opp_count; i++) {
-> -               pstate = opp->required_opps[i]->pstate;
-> +               pstate = likely(opp) ? opp->required_opps[i]->pstate : 0;
->   
->                  if (!genpd_virt_devs[i])
->                          continue;
-> @@ -770,14 +770,13 @@ int dev_pm_opp_set_rate(struct device *dev, unsigned long target_freq)
->   
->          if (unlikely(!target_freq)) {
->                  if (opp_table->required_opp_tables) {
-> -                       /* drop the performance state vote */
-> -                       dev_pm_genpd_set_performance_state(dev, 0);
-> -                       return 0;
-> +                       ret = _set_required_opps(dev, opp_table, NULL);
->                  } else {
-> -                       dev_err(dev, "%s: Invalid target frequency %lu\n", __func__,
-> -                               target_freq);
-> -                       return -EINVAL;
-> +                       dev_err(dev, "target frequency can't be 0\n");
-> +                       ret = -EINVAL;
->                  }
-> +
-> +               goto put_opp_table;
->          }
->   
->          clk = opp_table->clk;
-> 
-
--- 
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member
-of Code Aurora Forum, hosted by The Linux Foundation
+CgpPbiA2LzE3LzIwMTkgOToyMCBBTSwgVmlyZXNoIEt1bWFyIHdyb3RlOgo+IE9uIDE0LTA2LTE5
+LCAxMDo1NywgVmlyZXNoIEt1bWFyIHdyb3RlOgo+PiBIbW0sIHNvIHRoaXMgcGF0Y2ggd29uJ3Qg
+YnJlYWsgYW55dGhpbmcgYW5kIEkgYW0gaW5jbGluZWQgdG8gYXBwbHkgaXQgYWdhaW4gOikKPj4K
+Pj4gRG9lcyBhbnlvbmUgc2VlIGFueSBvdGhlciBpc3N1ZXMgd2l0aCBpdCwgd2hpY2ggSSBtaWdo
+dCBiZSBtaXNzaW5nID8KPiAKPiBJIGhhdmUgdXBkYXRlZCB0aGUgY29tbWl0IGxvZyBhIGJpdCBt
+b3JlIHRvIGNsYXJpZnkgb24gdGhpbmdzLCBwbGVhc2UgbGV0IG1lCj4ga25vdyBpZiBpdCBsb29r
+cyBva2F5Lgo+IAo+ICAgICAgb3BwOiBEb24ndCBvdmVyd3JpdGUgcm91bmRlZCBjbGsgcmF0ZQo+
+ICAgICAgCj4gICAgICBUaGUgT1BQIHRhYmxlIG5vcm1hbGx5IGNvbnRhaW5zICdmbWF4JyB2YWx1
+ZXMgY29ycmVzcG9uZGluZyB0byB0aGUKPiAgICAgIHZvbHRhZ2Ugb3IgcGVyZm9ybWFuY2UgbGV2
+ZWxzIG9mIGVhY2ggT1BQLCBidXQgd2UgZG9uJ3QgbmVjZXNzYXJpbHkgd2FudAo+ICAgICAgYWxs
+IHRoZSBkZXZpY2VzIHRvIHJ1biBhdCBmbWF4IGFsbCB0aGUgdGltZS4gUnVubmluZyBhdCBmbWF4
+IG1ha2VzIHNlbnNlCj4gICAgICBmb3IgZGV2aWNlcyBsaWtlIENQVS9HUFUsIHdoaWNoIGhhdmUg
+YSBmaW5pdGUgYW1vdW50IG9mIHdvcmsgdG8gZG8gYW5kCj4gICAgICBzaW5jZSBhIHNwZWNpZmlj
+IGFtb3VudCBvZiBlbmVyZ3kgaXMgY29uc3VtZWQgYXQgYW4gT1BQLCBpdHMgYmV0dGVyIHRvCj4g
+ICAgICBydW4gYXQgdGhlIGhpZ2hlc3QgcG9zc2libGUgZnJlcXVlbmN5IGZvciB0aGF0IHZvbHRh
+Z2UgdmFsdWUuCj4gICAgICAKPiAgICAgIE9uIHRoZSBvdGhlciBoYW5kLCB3ZSBoYXZlIElPIGRl
+dmljZXMgd2hpY2ggbmVlZCB0byBydW4gYXQgc3BlY2lmaWMKPiAgICAgIGZyZXF1ZW5jaWVzIG9u
+bHkgZm9yIHRoZWlyIHByb3BlciBmdW5jdGlvbmluZywgaW5zdGVhZCBvZiBtYXhpbXVtCj4gICAg
+ICBwb3NzaWJsZSBmcmVxdWVuY3kuCj4gICAgICAKPiAgICAgIFRoZSBPUFAgY29yZSBjdXJyZW50
+bHkgcm91bmR1cCB0byB0aGUgbmV4dCBwb3NzaWJsZSBPUFAgZm9yIGEgZnJlcXVlbmN5Cj4gICAg
+ICBhbmQgc2VsZWN0IHRoZSBmbWF4IHZhbHVlLiBUbyBzdXBwb3J0IHRoZSBJTyBkZXZpY2VzIGJ5
+IHRoZSBPUFAgY29yZSwKPiAgICAgIGxldHMgZG8gdGhlIHJvdW5kdXAgdG8gZmV0Y2ggdGhlIHZv
+bHRhZ2Ugb3IgcGVyZm9ybWFuY2Ugc3RhdGUgdmFsdWVzLAo+ICAgICAgYnV0IG5vdCB1c2UgdGhl
+IE9QUCBmcmVxdWVuY3kgdmFsdWUuIFJhdGhlciB1c2UgdGhlIHZhbHVlIHJldHVybmVkIGJ5Cj4g
+ICAgICBjbGtfcm91bmRfcmF0ZSgpLgo+ICAgICAgCj4gICAgICBUaGUgY3VycmVudCB1c2VyLCBj
+cHVmcmVxLCBvZiBkZXZfcG1fb3BwX3NldF9yYXRlKCkgYWxyZWFkeSBkb2VzIHRoZQo+ICAgICAg
+cm91bmRpbmcgdG8gdGhlIG5leHQgT1BQIGJlZm9yZSBjYWxsaW5nIHRoaXMgcm91dGluZSBhbmQg
+aXQgd29uJ3QKPiAgICAgIGhhdmUgYW55IHNpZGUgYWZmZWN0cyBiZWNhdXNlIG9mIHRoaXMgY2hh
+bmdlLgoKTG9va3MgZ29vZCB0byBtZS4gU2hvdWxkIHRoaXMgYWxzbyBiZSBkb2N1bWVudGVkIHNv
+bWVwbGFjZSB0aGF0IGRldl9wbV9vcHBfc2V0X3JhdGUoKQp3b3VsZCBub3QgYmUgYWJsZSB0byBk
+aXN0aW5ndWlzaCBiZXR3ZWVuIGl0cyB1c2VycyB0cnlpbmcgdG8gc2NhbGUgQ1BVL0dQVSdzIHZz
+IElPCmRldmljZXMsIHNvIGl0cyB0aGUgY2FsbGVycyByZXNwb25zaWJpbGl0eSB0byByb3VuZCBp
+dCBhY2NvcmRpbmdseSBiZWZvcmUgY2FsbGluZyB0aGUKQVBJPwoKPiAgICAgIAo+ICAgICAgU2ln
+bmVkLW9mZi1ieTogU3RlcGhlbiBCb3lkIDxzd2JveWRAY2hyb21pdW0ub3JnPgo+ICAgICAgU2ln
+bmVkLW9mZi1ieTogUmFqZW5kcmEgTmF5YWsgPHJuYXlha0Bjb2RlYXVyb3JhLm9yZz4KPiAgICAg
+IFsgVmlyZXNoOiBNYXNzYWdlZCBjaGFuZ2Vsb2cgYW5kIHVzZSB0ZW1wX29wcCB2YXJpYWJsZSBp
+bnN0ZWFkIF0KPiAgICAgIFNpZ25lZC1vZmYtYnk6IFZpcmVzaCBLdW1hciA8dmlyZXNoLmt1bWFy
+QGxpbmFyby5vcmc+Cj4gCj4gCgotLSAKUVVBTENPTU0gSU5ESUEsIG9uIGJlaGFsZiBvZiBRdWFs
+Y29tbSBJbm5vdmF0aW9uIENlbnRlciwgSW5jLiBpcyBhIG1lbWJlcgpvZiBDb2RlIEF1cm9yYSBG
+b3J1bSwgaG9zdGVkIGJ5IFRoZSBMaW51eCBGb3VuZGF0aW9uCl9fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fCmRyaS1kZXZlbCBtYWlsaW5nIGxpc3QKZHJpLWRl
+dmVsQGxpc3RzLmZyZWVkZXNrdG9wLm9yZwpodHRwczovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9t
+YWlsbWFuL2xpc3RpbmZvL2RyaS1kZXZlbA==
