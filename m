@@ -1,44 +1,47 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: properly communicate queue limits to the DMA layer v2
-Date: Mon, 17 Jun 2019 14:19:52 +0200
-Message-ID: <20190617122000.22181-1-hch@lst.de>
+Subject: [PATCH 4/8] storvsc: set virt_boundary_mask in the scsi host template
+Date: Mon, 17 Jun 2019 14:19:56 +0200
+Message-ID: <20190617122000.22181-5-hch@lst.de>
+References: <20190617122000.22181-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190617122000.22181-1-hch@lst.de>
 Sender: linux-kernel-owner@vger.kernel.org
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: Sagi Grimberg <sagi@grimberg.me>, Max Gurtovoy <maxg@mellanox.com>, Bart Van Assche <bvanassche@acm.org>, linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org, megaraidlinux.pdl@broadcom.com, MPT-FusionLinux.pdl@broadcom.com, linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Martin,
+This ensures all proper DMA layer handling is taken care of by the
+SCSI midlayer.
 
-we've always had a bit of a problem communicating the block layer
-queue limits to the DMA layer, which needs to respect them when
-an IOMMU that could merge segments is used.  Unfortunately most
-drivers don't get this right.  Oddly enough we've been mostly
-getting away with it, although lately dma-debug has been catching
-a few of those issues.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/scsi/storvsc_drv.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-The segment merging fix for devices with PRP-like structures seems
-to have escalated this a bit.  The first patch fixes the actual
-report from Sebastian, while the rest fix every drivers that appears
-to have the problem based on a code audit looking for drivers using
-blk_queue_max_segment_size, blk_queue_segment_boundary or
-blk_queue_virt_boundary and calling dma_map_sg eventually.
-
-For SCSI drivers I've taken the blk_queue_virt_boundary setting
-to the SCSI core, similar to how we did it for the other two settings
-a while ago.  This also deals with the fact that the DMA layer
-settings are on a per-device granularity, so the per-device settings
-in a few SCSI drivers can't actually work in an IOMMU environment.
-
-It would be nice to eventually pass these limits as arguments to
-dma_map_sg, but that is a far too big series for the 5.2 merge
-window.
-
-Changes since v1:
- - dropped block layer parts merged by Jens
- - dropped the usb-storage / uas changes, as the virt_boundary usage
-   there will be dropped soon
- - reworked the mpt3sas / megaraid_sas changes to keep per-device
-   settings
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index b89269120a2d..7ed6f2fc1446 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -1422,9 +1422,6 @@ static int storvsc_device_configure(struct scsi_device *sdevice)
+ {
+ 	blk_queue_rq_timeout(sdevice->request_queue, (storvsc_timeout * HZ));
+ 
+-	/* Ensure there are no gaps in presented sgls */
+-	blk_queue_virt_boundary(sdevice->request_queue, PAGE_SIZE - 1);
+-
+ 	sdevice->no_write_same = 1;
+ 
+ 	/*
+@@ -1697,6 +1694,8 @@ static struct scsi_host_template scsi_driver = {
+ 	.this_id =		-1,
+ 	/* Make sure we dont get a sg segment crosses a page boundary */
+ 	.dma_boundary =		PAGE_SIZE-1,
++	/* Ensure there are no gaps in presented sgls */
++	.virt_boundary_mask =	PAGE_SIZE-1,
+ 	.no_write_same =	1,
+ 	.track_queue_depth =	1,
+ };
+-- 
+2.20.1
