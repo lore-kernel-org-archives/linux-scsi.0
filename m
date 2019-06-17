@@ -1,16 +1,19 @@
-From: Benjamin Block <bblock@linux.ibm.com>
-Subject: Re: [PATCH V3 09/15] s390: zfcp_fc: use sg helper to operate
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [PATCH V3 10/15] scsi: aha152x: use sg helper to operate
  scatterlist
-Date: Sun, 16 Jun 2019 18:25:46 +0200
-Message-ID: <20190616162546.GB6610@t480-pf1aa2c2>
+Date: Mon, 17 Jun 2019 09:14:27 +0800
+Message-ID: <20190617011426.GB20122@ming.t460p>
 References: <20190614025316.7360-1-ming.lei@redhat.com>
- <20190614025316.7360-10-ming.lei@redhat.com>
+ <20190614025316.7360-11-ming.lei@redhat.com>
+ <alpine.LNX.2.21.1906141404270.33@nippy.intranet>
+ <20190614081732.GC24393@ming.t460p>
+ <alpine.LNX.2.21.1906141931070.65@nippy.intranet>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
 Content-Disposition: inline
-In-Reply-To: <20190614025316.7360-10-ming.lei@redhat.com>
+In-Reply-To: <alpine.LNX.2.21.1906141931070.65@nippy.intranet>
 List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
  <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
 List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
@@ -20,67 +23,125 @@ List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driver
  <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
 Errors-To: driverdev-devel-bounces@linuxdriverproject.org
 Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Ming Lei <ming.lei@redhat.com>
-Cc: Heiko Carstens <heiko.carstens@de.ibm.com>, Jim Gill <jgill@vmware.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Finn Thain <fthain@telegraphics.com.au>, Christoph Hellwig <hch@lst.de>, devel@driverdev.osuosl.org, linux-s390@vger.kernel.org, Hannes Reinecke <hare@suse.com>, Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org, James Smart <james.smart@broadcom.com>, "Ewan D . Milne" <emilne@redhat.com>, "Juergen E . Fischer" <fischer@norbit.de>, Dan Carpenter <dan.carpenter@oracle.com>, Brian King <brking@us.ibm.com>, Michael Schmitz <schmitzmic@gmail.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org, Martin Schwidefsky <schwidefsky@de.ibm.com>, Steffen Maier <maier@linux.ibm.com>
+To: Finn Thain <fthain@telegraphics.com.au>
+Cc: Michael Schmitz <schmitzmic@gmail.com>, devel@driverdev.osuosl.org, Hannes Reinecke <hare@suse.com>, Benjamin Block <bblock@linux.ibm.com>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org, James Smart <james.smart@broadcom.com>, "Ewan D . Milne" <emilne@redhat.com>, Jim Gill <jgill@vmware.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Brian King <brking@us.ibm.com>, "Juergen E . Fischer" <fischer@norbit.de>, Christoph Hellwig <hch@lst.de>, Dan Carpenter <dan.carpenter@oracle.com>, Bart Van Assche <bvanassche@acm.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Jun 14, 2019 at 10:53:10AM +0800, Ming Lei wrote:
-> Use the scatterlist iterators and remove direct indexing of the
-> scatterlist array.
-> =
+On Fri, Jun 14, 2019 at 08:36:38PM +1000, Finn Thain wrote:
+> On Fri, 14 Jun 2019, Ming Lei wrote:
+> 
+> > 
+> > Follows the fixed version, could you review again?
+> > 
+> > From f03484d4bac083c39d70665cfbadb641093b63de Mon Sep 17 00:00:00 2001
+> > From: Ming Lei <ming.lei@redhat.com>
+> > Date: Wed, 12 Jun 2019 20:37:35 +0800
+> > Subject: [PATCH] scsi: aha152x: use sg helper to operate scatterlist
+> > 
+> > Use the scatterlist iterators and remove direct indexing of the
+> > scatterlist array.
+> > 
+> > This way allows us to pre-allocate one small scatterlist, which can be
+> > chained with one runtime allocated scatterlist if the pre-allocated one
+> > isn't enough for the whole request.
+> > 
+> > Signed-off-by: Ming Lei <ming.lei@redhat.com>
+> > ---
+> >  drivers/scsi/aha152x.c | 34 ++++++++++++++++++++--------------
+> >  1 file changed, 20 insertions(+), 14 deletions(-)
+> > 
+> > diff --git a/drivers/scsi/aha152x.c b/drivers/scsi/aha152x.c
+> > index 97872838b983..7faecdefda56 100644
+> > --- a/drivers/scsi/aha152x.c
+> > +++ b/drivers/scsi/aha152x.c
+> > @@ -2033,7 +2033,7 @@ static void datai_run(struct Scsi_Host *shpnt)
+> >  				    CURRENT_SC->SCp.buffers_residual > 0) {
+> >  					/* advance to next buffer */
+> >  					CURRENT_SC->SCp.buffers_residual--;
+> > -					CURRENT_SC->SCp.buffer++;
+> > +					CURRENT_SC->SCp.buffer = sg_next(CURRENT_SC->SCp.buffer);
+> >  					CURRENT_SC->SCp.ptr           = SG_ADDRESS(CURRENT_SC->SCp.buffer);
+> >  					CURRENT_SC->SCp.this_residual = CURRENT_SC->SCp.buffer->length;
+> >  				}
+> > @@ -2139,7 +2139,7 @@ static void datao_run(struct Scsi_Host *shpnt)
+> >  		if(CURRENT_SC->SCp.this_residual==0 && CURRENT_SC->SCp.buffers_residual>0) {
+> >  			/* advance to next buffer */
+> >  			CURRENT_SC->SCp.buffers_residual--;
+> > -			CURRENT_SC->SCp.buffer++;
+> > +			CURRENT_SC->SCp.buffer = sg_next(CURRENT_SC->SCp.buffer);
+> >  			CURRENT_SC->SCp.ptr           = SG_ADDRESS(CURRENT_SC->SCp.buffer);
+> >  			CURRENT_SC->SCp.this_residual = CURRENT_SC->SCp.buffer->length;
+> >  		}
+> > @@ -2158,22 +2158,28 @@ static void datao_run(struct Scsi_Host *shpnt)
+> >  static void datao_end(struct Scsi_Host *shpnt)
+> >  {
+> >  	if(TESTLO(DMASTAT, DFIFOEMP)) {
+> > -		int data_count = (DATA_LEN - scsi_get_resid(CURRENT_SC)) -
+> > -			GETSTCNT();
+> > +		int done = GETSTCNT();
+> > +		int data_count = (DATA_LEN - scsi_get_resid(CURRENT_SC)) - done;
+> 
+> I think that's better than my suggestion.
+> 
+> > +		struct scatterlist *sg = scsi_sglist(CURRENT_SC);
+> > +		int i;
+> >  
+> >  		CMD_INC_RESID(CURRENT_SC, data_count);
+> >  
+> > -		data_count -= CURRENT_SC->SCp.ptr -
+> > -			SG_ADDRESS(CURRENT_SC->SCp.buffer);
+> > -		while(data_count>0) {
+> > -			CURRENT_SC->SCp.buffer--;
+> > -			CURRENT_SC->SCp.buffers_residual++;
+> > -			data_count -= CURRENT_SC->SCp.buffer->length;
+> > +		/*
+> > +		 * rewind where we have done, and we have to start from
+> > +		 * the beginning
+> > +		 */
+> 
+> How about, "Locate the first SG entry not yet sent".
 
-> This way allows us to pre-allocate one small scatterlist, which can be
-> chained with one runtime allocated scatterlist if the pre-allocated one
-> isn't enough for the whole request.
-> =
+OK.
 
-> Cc: Steffen Maier <maier@linux.ibm.com>
-> Cc: Benjamin Block <bblock@linux.ibm.com>
-> Cc: Martin Schwidefsky <schwidefsky@de.ibm.com>
-> Cc: Heiko Carstens <heiko.carstens@de.ibm.com>
-> Cc: linux-s390@vger.kernel.org
-> Signed-off-by: Ming Lei <ming.lei@redhat.com>
-> ---
->  drivers/s390/scsi/zfcp_fc.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> =
+> 
+> We could use sg_nents_for_len() but it returns a count of sg entries not a 
+> scatterlist pointer so it's not very helpful here.
+> 
+> > +		for (i = 0; done > 0 && !sg_is_last(sg); i++, sg = sg_next(sg)) {
+> > +			if (done < sg->length)
+> > +				break;
+> > +			done -= sg->length;
+> >  		}
+> > -		CURRENT_SC->SCp.ptr = SG_ADDRESS(CURRENT_SC->SCp.buffer) -
+> > -			data_count;
+> > -		CURRENT_SC->SCp.this_residual = CURRENT_SC->SCp.buffer->length +
+> > -			data_count;
+> > +
+> > +		CURRENT_SC->SCp.buffers_residual = i;
+> 
+> Contradicting my previous email, that's still not right. I think it would 
+> have to be,
+> 
+> 		CURRENT_SC->SCp.buffers_residual = scsi_sg_count(CURRENT_SC) - i;
 
-> diff --git a/drivers/s390/scsi/zfcp_fc.c b/drivers/s390/scsi/zfcp_fc.c
-> index 33eddb02ee30..b018b61bd168 100644
-> --- a/drivers/s390/scsi/zfcp_fc.c
-> +++ b/drivers/s390/scsi/zfcp_fc.c
-> @@ -620,7 +620,7 @@ static void zfcp_fc_sg_free_table(struct scatterlist =
-*sg, int count)
->  {
->  	int i;
->  =
+Right, my fault.
 
-> -	for (i =3D 0; i < count; i++, sg++)
-> +	for (i =3D 0; i < count; i++, sg =3D sg_next(sg))
->  		if (sg)
->  			free_page((unsigned long) sg_virt(sg));
->  		else
-> @@ -641,7 +641,7 @@ static int zfcp_fc_sg_setup_table(struct scatterlist =
-*sg, int count)
->  	int i;
->  =
+> 
+> But we could remove all references to SCp.buffers_residual, like I did in 
+> patch 15/15 for NCR5380.c.
+> 
+> > +		CURRENT_SC->SCp.buffer = sg;
+> > +		CURRENT_SC->SCp.ptr = SG_ADDRESS(CURRENT_SC->SCp.buffer) + done;
+> > +		CURRENT_SC->SCp.this_residual = CURRENT_SC->SCp.buffer->length -
+> > +			done;
+> >  	}
+> >  
+> >  	SETPORT(SXFRCTL0, CH1|CLRCH1|CLRSTCNT);
+> > 
+> 
+> What do you think of the revised patch below?
 
->  	sg_init_table(sg, count);
-> -	for (i =3D 0; i < count; i++, sg++) {
-> +	for (i =3D 0; i < count; i++, sg =3D sg_next(sg)) {
->  		addr =3D (void *) get_zeroed_page(GFP_KERNEL);
->  		if (!addr) {
->  			zfcp_fc_sg_free_table(sg, i);
+Looks fine, I will include it in V4.
 
-Acked-by: Benjamin Block <bblock@linux.ibm.com>
-
--- =
-
-With Best Regards, Benjamin Block      /      Linux on IBM Z Kernel Develop=
-ment
-IBM Systems & Technology Group   /  IBM Deutschland Research & Development =
-GmbH
-Vorsitz. AufsR.: Matthias Hartmann       /      Gesch=E4ftsf=FChrung: Dirk =
-Wittkopp
-Sitz der Gesellschaft: B=F6blingen / Registergericht: AmtsG Stuttgart, HRB =
-243294
+Thanks,
+Ming
