@@ -1,7 +1,7 @@
 From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V4 03/16] scsi: lpfc: use sg helper to operate scatterlist
-Date: Mon, 17 Jun 2019 11:03:36 +0800
-Message-ID: <20190617030349.26415-4-ming.lei@redhat.com>
+Subject: [PATCH V4 04/16] scsi: mvumi: use sg helper to operate scatterlist
+Date: Mon, 17 Jun 2019 11:03:37 +0800
+Message-ID: <20190617030349.26415-5-ming.lei@redhat.com>
 References: <20190617030349.26415-1-ming.lei@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -25,28 +25,44 @@ Use the scatterlist iterators and remove direct indexing of the
 scatterlist array.
 
 This way allows us to pre-allocate one small scatterlist, which can be
-chained with one runtime allocated scatterlist if the pre-allocated one isn't
-enough for the whole request.
+chained with one runtime allocated scatterlist if the pre-allocated one
+isn't enough for the whole request.
 
-Reviewed by: Ewan D. Milne <emilne@redhat.com>
+Reviewed-by: Ewan D. Milne <emilne@redhat.com>
 Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- drivers/scsi/lpfc/lpfc_nvmet.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/scsi/mvumi.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
-index f3d9a5545164..3f803982bd1e 100644
---- a/drivers/scsi/lpfc/lpfc_nvmet.c
-+++ b/drivers/scsi/lpfc/lpfc_nvmet.c
-@@ -2887,8 +2887,7 @@ lpfc_nvmet_prep_fcp_wqe(struct lpfc_hba *phba,
- 	nvmewqe->drvrTimeout = (phba->fc_ratov * 3) + LPFC_DRVR_TIMEOUT;
- 	nvmewqe->context1 = ndlp;
+diff --git a/drivers/scsi/mvumi.c b/drivers/scsi/mvumi.c
+index a5410615edac..0022cd31500a 100644
+--- a/drivers/scsi/mvumi.c
++++ b/drivers/scsi/mvumi.c
+@@ -211,8 +211,7 @@ static int mvumi_make_sgl(struct mvumi_hba *mhba, struct scsi_cmnd *scmd,
+ 	unsigned int sgnum = scsi_sg_count(scmd);
+ 	dma_addr_t busaddr;
  
--	for (i = 0; i < rsp->sg_cnt; i++) {
--		sgel = &rsp->sg[i];
-+	for_each_sg(rsp->sg, sgel, rsp->sg_cnt, i) {
- 		physaddr = sg_dma_address(sgel);
- 		cnt = sg_dma_len(sgel);
- 		sgl->addr_hi = putPaddrHigh(physaddr);
+-	sg = scsi_sglist(scmd);
+-	*sg_count = dma_map_sg(&mhba->pdev->dev, sg, sgnum,
++	*sg_count = dma_map_sg(&mhba->pdev->dev, scsi_sglist(scmd), sgnum,
+ 			       scmd->sc_data_direction);
+ 	if (*sg_count > mhba->max_sge) {
+ 		dev_err(&mhba->pdev->dev,
+@@ -222,12 +221,12 @@ static int mvumi_make_sgl(struct mvumi_hba *mhba, struct scsi_cmnd *scmd,
+ 			     scmd->sc_data_direction);
+ 		return -1;
+ 	}
+-	for (i = 0; i < *sg_count; i++) {
+-		busaddr = sg_dma_address(&sg[i]);
++	scsi_for_each_sg(scmd, sg, *sg_count, i) {
++		busaddr = sg_dma_address(sg);
+ 		m_sg->baseaddr_l = cpu_to_le32(lower_32_bits(busaddr));
+ 		m_sg->baseaddr_h = cpu_to_le32(upper_32_bits(busaddr));
+ 		m_sg->flags = 0;
+-		sgd_setsz(mhba, m_sg, cpu_to_le32(sg_dma_len(&sg[i])));
++		sgd_setsz(mhba, m_sg, cpu_to_le32(sg_dma_len(sg)));
+ 		if ((i + 1) == *sg_count)
+ 			m_sg->flags |= 1U << mhba->eot_flag;
+ 
 -- 
 2.20.1
