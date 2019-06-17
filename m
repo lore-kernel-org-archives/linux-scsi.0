@@ -1,251 +1,308 @@
 From: "Alastair D'Silva" <alastair@au1.ibm.com>
-Subject: [PATCH v3 3/7] lib/hexdump.c: Optionally suppress lines of repeated
- bytes
-Date: Mon, 17 Jun 2019 12:04:26 +1000
-Message-ID: <20190617020430.8708-4-alastair@au1.ibm.com>
+Subject: [PATCH v3 7/7] lib/hexdump.c: Optionally retain byte ordering
+Date: Mon, 17 Jun 2019 12:04:30 +1000
+Message-ID: <20190617020430.8708-8-alastair@au1.ibm.com>
 References: <20190617020430.8708-1-alastair@au1.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <netdev-owner@vger.kernel.org>
 In-Reply-To: <20190617020430.8708-1-alastair@au1.ibm.com>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+Sender: netdev-owner@vger.kernel.org
 To: alastair@d-silva.org
-Cc: linux-fbdev@vger.kernel.org, Stanislaw Gruszka <sgruszka@redhat.com>, Petr Mladek <pmladek@suse.com>, David Airlie <airlied@linux.ie>, Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, dri-devel@lists.freedesktop.org, devel@driverdev.osuosl.org, linux-scsi@vger.kernel.org, Jassi Brar <jassisinghbrar@gmail.com>, ath10k@lists.infradead.org, intel-gfx@lists.freedesktop.org, Dan Carpenter <dan.carpenter@oracle.com>, Jose Abreu <Jose.Abreu@synopsys.com>, Tom Lendacky <thomas.lendacky@amd.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, Jani Nikula <jani.nikula@linux.intel.com>, linux-fsdevel@vger.kernel.org, Steven Rostedt <rostedt@goodmis.org>, Rodrigo Vivi <rodrigo.vivi@intel.com>, Benson Leung <bleung@chromium.org>, Kalle Valo <kvalo@codeaurora.org>, Karsten Keil <isdn@linux-pingi.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Greg Kroah-Hartman <gregkh@linuxf>
+Cc: Jani Nikula <jani.nikula@linux.intel.com>, Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, Rodrigo Vivi <rodrigo.vivi@intel.com>, David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>, Dan Carpenter <dan.carpenter@oracle.com>, Karsten Keil <isdn@linux-pingi.de>, Jassi Brar <jassisinghbrar@gmail.com>, Tom Lendacky <thomas.lendacky@amd.com>, "David S. Miller" <davem@davemloft.net>, Jose Abreu <Jose.Abreu@synopsys.com>, Kalle Valo <kvalo@codeaurora.org>, Stanislaw Gruszka <sgruszka@redhat.com>, Benson Leung <bleung@chromium.org>, Enric Balletbo i Serra <enric.balletbo@collabora.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Alexa
 List-Id: linux-scsi@vger.kernel.org
 
 From: Alastair D'Silva <alastair@d-silva.org>
 
-Some buffers may only be partially filled with useful data, while the rest
-is padded (typically with 0x00 or 0xff).
+The behaviour of hexdump groups is to print the data out as if
+it was a native-endian number.
 
-This patch introduces a flag to allow the supression of lines of repeated
-bytes, which are replaced with '** Skipped %u bytes of value 0x%x **'
-
-An inline wrapper function is provided for backwards compatibility with
-existing code, which maintains the original behaviour.
+This patch tweaks the documentation to make this clear, and also
+adds the HEXDUMP_RETAIN_BYTE_ORDER flag to allow groups of
+multiple bytes to be printed without affecting the ordering
+of the printed bytes.
 
 Signed-off-by: Alastair D'Silva <alastair@d-silva.org>
 ---
- include/linux/printk.h | 25 +++++++++---
- lib/hexdump.c          | 91 ++++++++++++++++++++++++++++++++++++------
- 2 files changed, 99 insertions(+), 17 deletions(-)
+ include/linux/printk.h |  1 +
+ lib/hexdump.c          | 30 +++++++++++++++++----
+ lib/test_hexdump.c     | 60 +++++++++++++++++++++++++++++-------------
+ 3 files changed, 68 insertions(+), 23 deletions(-)
 
 diff --git a/include/linux/printk.h b/include/linux/printk.h
-index cefd374c47b1..d7754799cfe0 100644
+index 04416e788802..ffc94bedd737 100644
 --- a/include/linux/printk.h
 +++ b/include/linux/printk.h
-@@ -481,13 +481,18 @@ enum {
- 	DUMP_PREFIX_ADDRESS,
- 	DUMP_PREFIX_OFFSET
- };
-+
+@@ -490,6 +490,7 @@ enum {
+ #define HEXDUMP_2_GRP_SPACES		BIT(5)
+ #define HEXDUMP_4_GRP_SPACES		BIT(6)
+ #define HEXDUMP_8_GRP_SPACES		BIT(7)
++#define HEXDUMP_RETAIN_BYTE_ORDER	BIT(8)
+ 
  extern int hex_dump_to_buffer(const void *buf, size_t len, int rowsize,
  			      int groupsize, char *linebuf, size_t linebuflen,
- 			      bool ascii);
-+
-+#define HEXDUMP_ASCII			BIT(0)
-+#define HEXDUMP_SUPPRESS_REPEATED	BIT(1)
-+
- #ifdef CONFIG_PRINTK
--extern void print_hex_dump(const char *level, const char *prefix_str,
-+extern void print_hex_dump_ext(const char *level, const char *prefix_str,
- 			   int prefix_type, int rowsize, int groupsize,
--			   const void *buf, size_t len, bool ascii);
-+			   const void *buf, size_t len, u32 flags);
- #if defined(CONFIG_DYNAMIC_DEBUG)
- #define print_hex_dump_bytes(prefix_str, prefix_type, buf, len)	\
- 	dynamic_hex_dump(prefix_str, prefix_type, 16, 1, buf, len, true)
-@@ -496,18 +501,28 @@ extern void print_hex_dump_bytes(const char *prefix_str, int prefix_type,
- 				 const void *buf, size_t len);
- #endif /* defined(CONFIG_DYNAMIC_DEBUG) */
- #else
--static inline void print_hex_dump(const char *level, const char *prefix_str,
-+static inline void print_hex_dump_ext(const char *level, const char *prefix_str,
- 				  int prefix_type, int rowsize, int groupsize,
--				  const void *buf, size_t len, bool ascii)
-+				  const void *buf, size_t len, u32 flags)
- {
- }
- static inline void print_hex_dump_bytes(const char *prefix_str, int prefix_type,
- 					const void *buf, size_t len)
- {
- }
--
- #endif
- 
-+static __always_inline void print_hex_dump(const char *level,
-+					   const char *prefix_str,
-+					   int prefix_type, int rowsize,
-+					   int groupsize, const void *buf,
-+					   size_t len, bool ascii)
-+{
-+	print_hex_dump_ext(level, prefix_str, prefix_type, rowsize, groupsize,
-+			buf, len, ascii ? HEXDUMP_ASCII : 0);
-+}
-+
-+
- #if defined(CONFIG_DYNAMIC_DEBUG)
- #define print_hex_dump_debug(prefix_str, prefix_type, rowsize,	\
- 			     groupsize, buf, len, ascii)	\
 diff --git a/lib/hexdump.c b/lib/hexdump.c
-index 3943507bc0e9..b781f888884e 100644
+index dc85ef0dbb0a..ce14abc7701f 100644
 --- a/lib/hexdump.c
 +++ b/lib/hexdump.c
-@@ -212,8 +212,44 @@ int hex_dump_to_buffer(const void *buf, size_t len, int rowsize, int groupsize,
- EXPORT_SYMBOL(hex_dump_to_buffer);
+@@ -127,7 +127,8 @@ static void separator_parameters(u64 flags, int groupsize, int *sep_chars,
+  * @buf: data blob to dump
+  * @len: number of bytes in the @buf
+  * @rowsize: number of bytes to print per line; must be a multiple of groupsize
+- * @groupsize: number of bytes to print at a time (1, 2, 4, 8; default = 1)
++ * @groupsize: number of bytes to convert to a native endian number and print:
++ * 	       1, 2, 4, 8; default = 1
+  * @linebuf: where to put the converted data
+  * @linebuflen: total size of @linebuf, including space for terminating NUL
+  * @flags: A bitwise OR of the following flags:
+@@ -138,6 +139,9 @@ static void separator_parameters(u64 flags, int groupsize, int *sep_chars,
+  *	HEXDUMP_2_GRP_SPACES:		insert a ' ' after every 2 groups
+  *	HEXDUMP_4_GRP_SPACES:		insert a ' ' after every 4 groups
+  *	HEXDUMP_8_GRP_SPACES:		insert a ' ' after every 8 groups
++ *	HEXDUMP_RETAIN_BYTE_ORDER:	Retain the byte ordering of groups
++ *					instead of treating each group as a
++ *					native-endian number
+  *
+  * hex_dump_to_buffer() works on one "line" of output at a time, converting
+  * <groupsize> bytes of input to hexadecimal (and optionally printable ASCII)
+@@ -171,6 +175,7 @@ int hex_dump_to_buffer(const void *buf, size_t len, int rowsize, int groupsize,
+ 	int ret;
+ 	int sep_chars = 0;
+ 	char sep = 0;
++	bool big_endian = (flags & HEXDUMP_RETAIN_BYTE_ORDER) ? 1 : 0;
  
- #ifdef CONFIG_PRINTK
+ 	if (!is_power_of_2(groupsize) || groupsize > 8)
+ 		groupsize = 1;
+@@ -202,10 +207,13 @@ int hex_dump_to_buffer(const void *buf, size_t len, int rowsize, int groupsize,
+ 		const u64 *ptr8 = buf;
+ 
+ 		for (j = 0; j < ngroups; j++) {
++			u64 val = big_endian ?
++					be64_to_cpu(get_unaligned(ptr8 + j)) :
++					get_unaligned(ptr8 + j);
+ 			ret = snprintf(linebuf + lx, linebuflen - lx,
+ 				       "%s%16.16llx",
+ 				       j ? group_separator(j, flags) : "",
+-				       get_unaligned(ptr8 + j));
++				       val);
+ 			if (ret >= linebuflen - lx)
+ 				goto overflow1;
+ 			lx += ret;
+@@ -214,10 +222,14 @@ int hex_dump_to_buffer(const void *buf, size_t len, int rowsize, int groupsize,
+ 		const u32 *ptr4 = buf;
+ 
+ 		for (j = 0; j < ngroups; j++) {
++			u32 val = big_endian ?
++					be32_to_cpu(get_unaligned(ptr4 + j)) :
++					get_unaligned(ptr4 + j);
 +
-+/**
-+ * buf_is_all - Check if a buffer contains only a single byte value
-+ * @buf: pointer to the buffer
-+ * @len: the size of the buffer in bytes
-+ * @val: outputs the value if if the bytes are identical
-+ */
-+static bool buf_is_all(const u8 *buf, size_t len, u8 *val_out)
-+{
-+	size_t i;
-+	u8 val;
+ 			ret = snprintf(linebuf + lx, linebuflen - lx,
+ 				       "%s%8.8x",
+ 				       j ? group_separator(j, flags) : "",
+-				       get_unaligned(ptr4 + j));
++				       val);
+ 			if (ret >= linebuflen - lx)
+ 				goto overflow1;
+ 			lx += ret;
+@@ -226,10 +238,14 @@ int hex_dump_to_buffer(const void *buf, size_t len, int rowsize, int groupsize,
+ 		const u16 *ptr2 = buf;
+ 
+ 		for (j = 0; j < ngroups; j++) {
++			u16 val = big_endian ?
++					be16_to_cpu(get_unaligned(ptr2 + j)) :
++					get_unaligned(ptr2 + j);
 +
-+	if (len <= 1)
-+		return false;
-+
-+	val = buf[0];
-+
-+	for (i = 1; i < len; i++) {
-+		if (buf[i] != val)
-+			return false;
-+	}
-+
-+	*val_out = val;
-+	return true;
-+}
-+
-+static void announce_skipped(const char *level, const char *prefix_str,
-+				   u8 val, size_t count)
-+{
-+	if (count == 0)
-+		return;
-+
-+	printk("%s%s ** Skipped %lu bytes of value 0x%x **\n",
-+	       level, prefix_str, count, val);
-+}
-+
- /**
-- * print_hex_dump - print a text hex dump to syslog for a binary blob of data
-+ * print_hex_dump_ext - dump a binary blob of data to syslog in hexadecimal
-  * @level: kernel log level (e.g. KERN_DEBUG)
-  * @prefix_str: string to prefix each line with;
-  *  caller supplies trailing spaces for alignment if desired
-@@ -224,6 +260,10 @@ EXPORT_SYMBOL(hex_dump_to_buffer);
+ 			ret = snprintf(linebuf + lx, linebuflen - lx,
+ 				       "%s%4.4x",
+ 				       j ? group_separator(j, flags) : "",
+-				       get_unaligned(ptr2 + j));
++				       val);
+ 			if (ret >= linebuflen - lx)
+ 				goto overflow1;
+ 			lx += ret;
+@@ -331,7 +347,8 @@ static void announce_skipped(const char *level, const char *prefix_str,
+  * @prefix_type: controls whether prefix of an offset, address, or none
+  *  is printed (%DUMP_PREFIX_OFFSET, %DUMP_PREFIX_ADDRESS, %DUMP_PREFIX_NONE)
+  * @rowsize: number of bytes to print per line; must be a multiple of groupsize
+- * @groupsize: number of bytes to print at a time (1, 2, 4, 8; default = 1)
++ * @groupsize: number of bytes to convert to a native endian number and print:
++ * 	       1, 2, 4, 8; default = 1
   * @buf: data blob to dump
   * @len: number of bytes in the @buf
   * @ascii: include ASCII after the hex output
-+ * @flags: A bitwise OR of the following flags:
-+ *	HEXDUMP_ASCII:			include ASCII after the hex output
-+ *	HEXDUMP_SUPPRESS_REPEATED:	suppress repeated lines of identical
-+ *					bytes
+@@ -342,6 +359,9 @@ static void announce_skipped(const char *level, const char *prefix_str,
+  *	HEXDUMP_2_GRP_LINES:		insert a '|' after every 2 groups
+  *	HEXDUMP_4_GRP_LINES:		insert a '|' after every 4 groups
+  *	HEXDUMP_8_GRP_LINES:		insert a '|' after every 8 groups
++ *	HEXDUMP_RETAIN_BYTE_ORDER:	Retain the byte ordering of groups
++ *					instead of treating each group as a
++ *					native-endian number
   *
   * Given a buffer of u8 data, print_hex_dump() prints a hex + ASCII dump
   * to the kernel log at the specified kernel log level, with an optional
-@@ -234,22 +274,25 @@ EXPORT_SYMBOL(hex_dump_to_buffer);
-  * (optionally) ASCII output.
-  *
-  * E.g.:
-- *   print_hex_dump(KERN_DEBUG, "raw data: ", DUMP_PREFIX_ADDRESS,
-- *		    16, 1, frame->data, frame->len, true);
-+ *   print_hex_dump_ext(KERN_DEBUG, "raw data: ", DUMP_PREFIX_ADDRESS,
-+ *		    16, 1, frame->data, frame->len, HEXDUMP_ASCII);
-  *
-  * Example output using %DUMP_PREFIX_OFFSET and 1-byte mode:
-  * 0009ab42: 40 41 42 43 44 45 46 47 48 49 4a 4b 4c 4d 4e 4f  @ABCDEFGHIJKLMNO
-  * Example output using %DUMP_PREFIX_ADDRESS and 4-byte mode:
-  * ffffffff88089af0: 73727170 77767574 7b7a7978 7f7e7d7c  pqrstuvwxyz{|}~.
-  */
--void print_hex_dump(const char *level, const char *prefix_str, int prefix_type,
--		    int rowsize, int groupsize,
--		    const void *buf, size_t len, bool ascii)
-+void print_hex_dump_ext(const char *level, const char *prefix_str,
-+			int prefix_type, int rowsize, int groupsize,
-+			const void *buf, size_t len, u32 flags)
- {
- 	const u8 *ptr = buf;
--	int i, linelen, remaining = len;
-+	int i, remaining = len;
- 	unsigned char *linebuf;
- 	unsigned int linebuf_len;
-+	u8 skipped_val = 0;
-+	size_t skipped = 0;
-+
+diff --git a/lib/test_hexdump.c b/lib/test_hexdump.c
+index ae340c5c1c6f..1e510e934568 100644
+--- a/lib/test_hexdump.c
++++ b/lib/test_hexdump.c
+@@ -98,14 +98,15 @@ static unsigned failed_tests __initdata;
  
- 	if (rowsize % groupsize)
- 		rowsize -= rowsize % groupsize;
-@@ -266,11 +309,35 @@ void print_hex_dump(const char *level, const char *prefix_str, int prefix_type,
+ static void __init test_hexdump_prepare_test(size_t len, int rowsize,
+ 					     int groupsize, char *test,
+-					     size_t testlen, bool ascii)
++					     size_t testlen, u64 flags)
+ {
+ 	char *p;
+ 	const char * const *result;
+ 	size_t l = len;
+ 	int gs = groupsize, rs = rowsize;
+ 	unsigned int i;
+-	const bool is_be = IS_ENABLED(CONFIG_CPU_BIG_ENDIAN);
++	const bool is_be = IS_ENABLED(CONFIG_CPU_BIG_ENDIAN) ||
++			(flags & HEXDUMP_RETAIN_BYTE_ORDER);
+ 
+ 	if (l > rs)
+ 		l = rs;
+@@ -142,7 +143,7 @@ static void __init test_hexdump_prepare_test(size_t len, int rowsize,
+ 		p--;
+ 
+ 	/* ASCII part */
+-	if (ascii) {
++	if (flags & HEXDUMP_ASCII) {
+ 		do {
+ 			*p++ = ' ';
+ 		} while (p < test + rs * 2 + rs / gs + 1);
+@@ -157,7 +158,7 @@ static void __init test_hexdump_prepare_test(size_t len, int rowsize,
+ #define TEST_HEXDUMP_BUF_SIZE		(64 * 3 + 2 + 64 + 1)
+ 
+ static void __init test_hexdump(size_t len, int rowsize, int groupsize,
+-				bool ascii)
++				u64 flags)
+ {
+ 	char test[TEST_HEXDUMP_BUF_SIZE];
+ 	char real[TEST_HEXDUMP_BUF_SIZE];
+@@ -166,11 +167,11 @@ static void __init test_hexdump(size_t len, int rowsize, int groupsize,
+ 
+ 	memset(real, FILL_CHAR, sizeof(real));
+ 	hex_dump_to_buffer(data_b, len, rowsize, groupsize, real, sizeof(real),
+-			   ascii ? HEXDUMP_ASCII : 0);
++			   flags);
+ 
+ 	memset(test, FILL_CHAR, sizeof(test));
+ 	test_hexdump_prepare_test(len, rowsize, groupsize, test, sizeof(test),
+-				  ascii);
++				  flags);
+ 
+ 	if (memcmp(test, real, TEST_HEXDUMP_BUF_SIZE)) {
+ 		pr_err("Len: %zu row: %d group: %d\n", len, rowsize, groupsize);
+@@ -193,7 +194,7 @@ static void __init test_hexdump_set(int rowsize, bool ascii)
+ 
+ static void __init test_hexdump_overflow(size_t buflen, size_t len,
+ 					 int rowsize, int groupsize,
+-					 bool ascii)
++					 u64 flags)
+ {
+ 	char test[TEST_HEXDUMP_BUF_SIZE];
+ 	char buf[TEST_HEXDUMP_BUF_SIZE];
+@@ -205,7 +206,7 @@ static void __init test_hexdump_overflow(size_t buflen, size_t len,
+ 	memset(buf, FILL_CHAR, sizeof(buf));
+ 
+ 	rc = hex_dump_to_buffer(data_b, len, rowsize, groupsize, buf, buflen,
+-				ascii ? HEXDUMP_ASCII : 0);
++				flags);
+ 
+ 	/*
+ 	 * Caller must provide the data length multiple of groupsize. The
+@@ -222,12 +223,12 @@ static void __init test_hexdump_overflow(size_t buflen, size_t len,
+ 		  - 1 /* no trailing space */;
  	}
  
- 	for (i = 0; i < len; i += rowsize) {
--		linelen = min(remaining, rowsize);
-+		int linelen = min(remaining, rowsize);
- 		remaining -= rowsize;
+-	expected_len = (ascii) ? ascii_len : hex_len;
++	expected_len = (flags & HEXDUMP_ASCII) ? ascii_len : hex_len;
  
-+		if (flags & HEXDUMP_SUPPRESS_REPEATED) {
-+			u8 new_val;
-+
-+			if (buf_is_all(ptr + i, linelen, &new_val)) {
-+				if (new_val == skipped_val) {
-+					skipped += linelen;
-+					continue;
-+				} else {
-+					announce_skipped(level, prefix_str,
-+							 skipped_val, skipped);
-+					skipped_val = new_val;
-+					skipped = linelen;
-+					continue;
-+				}
-+			}
-+		}
-+
-+		if (skipped) {
-+			announce_skipped(level, prefix_str, skipped_val,
-+					 skipped);
-+			skipped = 0;
-+		}
-+
- 		hex_dump_to_buffer(ptr + i, linelen, rowsize, groupsize,
--				   linebuf, linebuf_len, ascii);
-+				   linebuf, linebuf_len,
-+				   flags & HEXDUMP_ASCII);
+ 	fill_point = min_t(int, expected_len + 1, buflen);
+ 	if (buflen) {
+ 		test_hexdump_prepare_test(len, rowsize, groupsize, test,
+-					  sizeof(test), ascii);
++					  sizeof(test), flags);
+ 		test[fill_point - 1] = '\0';
+ 	}
+ 	memset(test + fill_point, FILL_CHAR, sizeof(test) - fill_point);
+@@ -237,8 +238,8 @@ static void __init test_hexdump_overflow(size_t buflen, size_t len,
+ 	buf[sizeof(buf) - 1] = '\0';
  
- 		switch (prefix_type) {
- 		case DUMP_PREFIX_ADDRESS:
-@@ -288,7 +355,7 @@ void print_hex_dump(const char *level, const char *prefix_str, int prefix_type,
- 
- 	kfree(linebuf);
+ 	if (!match) {
+-		pr_err("rowsize: %u groupsize: %u ascii: %d Len: %zu buflen: %zu strlen: %zu\n",
+-			rowsize, groupsize, ascii, len, buflen,
++		pr_err("rowsize: %u groupsize: %u flags: %llx Len: %zu buflen: %zu strlen: %zu\n",
++			rowsize, groupsize, flags, len, buflen,
+ 			strnlen(buf, sizeof(buf)));
+ 		pr_err("Result: %d '%-.*s'\n", rc, (int)buflen, buf);
+ 		pr_err("Expect: %d '%-.*s'\n", expected_len, (int)buflen, test);
+@@ -247,7 +248,7 @@ static void __init test_hexdump_overflow(size_t buflen, size_t len,
+ 	}
  }
--EXPORT_SYMBOL(print_hex_dump);
-+EXPORT_SYMBOL(print_hex_dump_ext);
  
- #if !defined(CONFIG_DYNAMIC_DEBUG)
- /**
-@@ -306,8 +373,8 @@ EXPORT_SYMBOL(print_hex_dump);
- void print_hex_dump_bytes(const char *prefix_str, int prefix_type,
- 			  const void *buf, size_t len)
+-static void __init test_hexdump_overflow_set(size_t buflen, bool ascii)
++static void __init test_hexdump_overflow_set(size_t buflen, u64 flags)
  {
--	print_hex_dump(KERN_DEBUG, prefix_str, prefix_type, 16, 1,
--		       buf, len, true);
-+	print_hex_dump_ext(KERN_DEBUG, prefix_str, prefix_type, 16, 1,
-+		       buf, len, HEXDUMP_ASCII);
+ 	unsigned int i = 0;
+ 	int rs = (get_random_int() % 4 + 1) * 16;
+@@ -256,7 +257,7 @@ static void __init test_hexdump_overflow_set(size_t buflen, bool ascii)
+ 		int gs = 1 << i;
+ 		size_t len = get_random_int() % rs + gs;
+ 
+-		test_hexdump_overflow(buflen, rounddown(len, gs), rs, gs, ascii);
++		test_hexdump_overflow(buflen, rounddown(len, gs), rs, gs, flags);
+ 	} while (i++ < 3);
  }
- EXPORT_SYMBOL(print_hex_dump_bytes);
- #endif /* !defined(CONFIG_DYNAMIC_DEBUG) */
+ 
+@@ -264,20 +265,43 @@ static int __init test_hexdump_init(void)
+ {
+ 	unsigned int i;
+ 	int rowsize;
++	u64 flags;
+ 
++	flags = 0;
+ 	rowsize = (get_random_int() % 4 + 1) * 16;
+ 	for (i = 0; i < 16; i++)
+-		test_hexdump_set(rowsize, false);
++		test_hexdump_set(rowsize, flags);
+ 
++	flags = HEXDUMP_ASCII;
+ 	rowsize = (get_random_int() % 4 + 1) * 16;
+ 	for (i = 0; i < 16; i++)
+-		test_hexdump_set(rowsize, true);
++		test_hexdump_set(rowsize, flags);
+ 
++	flags = HEXDUMP_RETAIN_BYTE_ORDER;
++	rowsize = (get_random_int() % 2 + 1) * 16;
++	for (i = 0; i < 16; i++)
++		test_hexdump_set(rowsize, flags);
++
++	flags = HEXDUMP_ASCII | HEXDUMP_RETAIN_BYTE_ORDER;
++	rowsize = (get_random_int() % 2 + 1) * 16;
++	for (i = 0; i < 16; i++)
++		test_hexdump_set(rowsize, flags);
++
++	flags = 0;
++	for (i = 0; i <= TEST_HEXDUMP_BUF_SIZE; i++)
++		test_hexdump_overflow_set(i, flags);
++
++	flags = HEXDUMP_ASCII;
++	for (i = 0; i <= TEST_HEXDUMP_BUF_SIZE; i++)
++		test_hexdump_overflow_set(i, flags);
++
++	flags = HEXDUMP_RETAIN_BYTE_ORDER;
+ 	for (i = 0; i <= TEST_HEXDUMP_BUF_SIZE; i++)
+-		test_hexdump_overflow_set(i, false);
++		test_hexdump_overflow_set(i, flags);
+ 
++	flags = HEXDUMP_ASCII | HEXDUMP_RETAIN_BYTE_ORDER;
+ 	for (i = 0; i <= TEST_HEXDUMP_BUF_SIZE; i++)
+-		test_hexdump_overflow_set(i, true);
++		test_hexdump_overflow_set(i, flags);
+ 
+ 	if (failed_tests == 0)
+ 		pr_info("all %u tests passed\n", total_tests);
 -- 
 2.21.0
