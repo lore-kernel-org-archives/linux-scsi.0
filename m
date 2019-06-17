@@ -1,44 +1,47 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH V4 09/16] staging: rtsx: use sg helper to operate
- scatterlist
-Date: Mon, 17 Jun 2019 11:24:46 +0200
-Message-ID: <20190617092446.GA8707@lst.de>
-References: <20190617030349.26415-1-ming.lei@redhat.com>
- <20190617030349.26415-10-ming.lei@redhat.com> <20190617082706.GI7455@lst.de>
- <20190617091524.GB31002@ming.t460p>
+From: Markus Elfring <Markus.Elfring@web.de>
+Subject: [PATCH] megaraid_sas: Delete a redundant memory setting in
+ megasas_alloc_cmds()
+Date: Mon, 17 Jun 2019 13:00:28 +0200
+Message-ID: <3921d044-72d6-d092-e792-01c896ae222b@web.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-Content-Disposition: inline
-In-Reply-To: <20190617091524.GB31002@ming.t460p>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Ming Lei <ming.lei@redhat.com>
-Cc: Michael Schmitz <schmitzmic@gmail.com>, devel@driverdev.osuosl.org, Hannes Reinecke <hare@suse.com>, Benjamin Block <bblock@linux.ibm.com>, Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org, James Smart <james.smart@broadcom.com>, "Ewan D . Milne" <emilne@redhat.com>, Jim Gill <jgill@vmware.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Brian King <brking@us.ibm.com>, Finn Thain <fthain@telegraphics.com.au>, "Martin K . Petersen" <martin.petersen@oracle.com>, Kim Bradley <kim.jamie.bradley@gmail.com>, "Juergen E . Fischer" <fischer@norbit.de>, Christoph Hellwig <hch@lst.de>, Dan Carpenter <dan.carpenter@oracle.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, megaraidlinux.pdl@broadcom.com, "James E. J. Bottomley" <jejb@linux.ibm.com>, Kashyap Desai <kashyap.desai@broadcom.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Shivasharan Srikanteshwara <shivasharan.srikanteshwara@broadcom.com>, Sumit Saxena <sumit.saxena@broadcom.com>
+Cc: kernel-janitors@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-> +		struct scatterlist *sg = *cur_sg ?:
-> +				(struct scatterlist *)scsi_sglist(srb);
-> +
+From: Markus Elfring <elfring@users.sourceforge.net>
+Date: Mon, 17 Jun 2019 12:42:15 +0200
 
-No need for the cast here.  And I have to say I hate that GNU C
-non-standard shortshut in ? :.
+The memory was set to zero already by a call of the function =E2=80=9Ckcal=
+loc=E2=80=9D.
+Thus remove an extra call of the function =E2=80=9Cmemset=E2=80=9D for thi=
+s purpose.
 
-Why not simply:
+This issue was detected by using the Coccinelle software.
 
-		struct scatterlist *sg = *cur_sg;
+Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+=2D--
+ drivers/scsi/megaraid/megaraid_sas_base.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-		if (!sg)
-			sg = scsi_sglist(srb);
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/mega=
+raid/megaraid_sas_base.c
+index 176b59a34a79..047990d3cffd 100644
+=2D-- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -4239,8 +4239,6 @@ int megasas_alloc_cmds(struct megasas_instance *inst=
+ance)
+ 		return -ENOMEM;
+ 	}
 
-Which is a little more verbose, but much more readabe.
-
-The rest of the patch looks fine to me.
+-	memset(instance->cmd_list, 0, sizeof(struct megasas_cmd *) *max_cmd);
+-
+ 	for (i =3D 0; i < max_cmd; i++) {
+ 		instance->cmd_list[i] =3D kmalloc(sizeof(struct megasas_cmd),
+ 						GFP_KERNEL);
+=2D-
+2.22.0
