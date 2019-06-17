@@ -1,16 +1,16 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH V4 08/16] staging: unisys: visorhba: use sg helper to
- operate scatterlist
-Date: Mon, 17 Jun 2019 10:25:53 +0200
-Message-ID: <20190617082553.GH7455@lst.de>
+Subject: Re: [PATCH V4 09/16] staging: rtsx: use sg helper to operate
+ scatterlist
+Date: Mon, 17 Jun 2019 10:27:06 +0200
+Message-ID: <20190617082706.GI7455@lst.de>
 References: <20190617030349.26415-1-ming.lei@redhat.com>
- <20190617030349.26415-9-ming.lei@redhat.com>
+ <20190617030349.26415-10-ming.lei@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
 Content-Disposition: inline
-In-Reply-To: <20190617030349.26415-9-ming.lei@redhat.com>
+In-Reply-To: <20190617030349.26415-10-ming.lei@redhat.com>
 List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
  <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
 List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
@@ -21,9 +21,17 @@ List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driver
 Errors-To: driverdev-devel-bounces@linuxdriverproject.org
 Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
 To: Ming Lei <ming.lei@redhat.com>
-Cc: Michael Schmitz <schmitzmic@gmail.com>, devel@driverdev.osuosl.org, Hannes Reinecke <hare@suse.com>, Benjamin Block <bblock@linux.ibm.com>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org, James Smart <james.smart@broadcom.com>, "Ewan D . Milne" <emilne@redhat.com>, Jim Gill <jgill@vmware.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Brian King <brking@us.ibm.com>, Finn Thain <fthain@telegraphics.com.au>, "Juergen E . Fischer" <fischer@norbit.de>, Christoph Hellwig <hch@lst.de>, Dan Carpenter <dan.carpenter@oracle.com>, Bart Van Assche <bvanassche@acm.org>
+Cc: Michael Schmitz <schmitzmic@gmail.com>, devel@driverdev.osuosl.org, Hannes Reinecke <hare@suse.com>, Benjamin Block <bblock@linux.ibm.com>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org, James Smart <james.smart@broadcom.com>, "Ewan D . Milne" <emilne@redhat.com>, Jim Gill <jgill@vmware.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Brian King <brking@us.ibm.com>, Finn Thain <fthain@telegraphics.com.au>, Kim Bradley <kim.jamie.bradley@gmail.com>, "Juergen E . Fischer" <fischer@norbit.de>, Christoph Hellwig <hch@lst.de>, Dan Carpenter <dan.carpenter@oracle.com>, Bart Van Assche <bvanassche@acm.org>
 List-Id: linux-scsi@vger.kernel.org
 
-The patch itsel looks good, but another case of buggy kmap it seems:
+On Mon, Jun 17, 2019 at 11:03:42AM +0800, Ming Lei wrote:
+> Use the scatterlist iterators and remove direct indexing of the
+> scatterlist array.
+> 
+> This way allows us to pre-allocate one small scatterlist, which can be
+> chained with one runtime allocated scatterlist if the pre-allocated one
+> isn't enough for the whole request.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+The scatterlist handling here looks completely bogus, it really
+needs to stop using the index and switch to proper sg_next-based
+iteration.
