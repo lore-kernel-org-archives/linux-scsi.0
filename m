@@ -1,42 +1,51 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 10/13] megaraid_sas: set virt_boundary_mask in the scsi
- host
-Date: Mon, 17 Jun 2019 10:44:33 +0200
-Message-ID: <20190617084433.GA7969@lst.de>
-References: <20190605190836.32354-1-hch@lst.de> <20190605190836.32354-11-hch@lst.de> <cd713506efb9579d1f69a719d831c28d@mail.gmail.com> <20190608081400.GA19573@lst.de> <98f6557ae91a7cdfe8069fcf7d788c88@mail.gmail.com>
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [PATCH V4 05/16] scsi: ipr: use sg helper to operate scatterlist
+Date: Mon, 17 Jun 2019 16:50:32 +0800
+Message-ID: <20190617085027.GA31002@ming.t460p>
+References: <20190617030349.26415-1-ming.lei@redhat.com>
+ <20190617030349.26415-6-ming.lei@redhat.com>
+ <20190617082423.GE7455@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
 Content-Disposition: inline
-In-Reply-To: <98f6557ae91a7cdfe8069fcf7d788c88@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Kashyap Desai <kashyap.desai@broadcom.com>
-Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Sebastian Ott <sebott@linux.ibm.com>, Sagi Grimberg <sagi@grimberg.me>, Max Gurtovoy <maxg@mellanox.com>, Bart Van Assche <bvanassche@acm.org>, Ulf Hansson <ulf.hansson@linaro.org>, Alan Stern <stern@rowland.harvard.edu>, Oliver Neukum <oneukum@suse.com>, linux-block@vger.kernel.org, linux-rdma@vger.kernel.org, linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org, "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@broadcom.com>, PDL-MPT-FUSIONLINUX <mpt-fusionlinux.pdl@broadcom.com>, linux-hyperv@vger.kernel.org, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net, linux-kernel@vger.kernel.org
+In-Reply-To: <20190617082423.GE7455@lst.de>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Michael Schmitz <schmitzmic@gmail.com>, devel@driverdev.osuosl.org, Hannes Reinecke <hare@suse.com>, Benjamin Block <bblock@linux.ibm.com>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org, James Smart <james.smart@broadcom.com>, "Ewan D . Milne" <emilne@redhat.com>, Jim Gill <jgill@vmware.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Brian King <brking@us.ibm.com>, Finn Thain <fthain@telegraphics.com.au>, "Juergen E . Fischer" <fischer@norbit.de>, Dan Carpenter <dan.carpenter@oracle.com>, Bart Van Assche <bvanassche@acm.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Jun 14, 2019 at 01:28:47AM +0530, Kashyap Desai wrote:
-> Is there any changes in API  blk_queue_virt_boundary? I could not find
-> relevant code which account for this. Can you help ?
-> Which git repo shall I use for testing ? That way I can confirm, I didn't
-> miss relevant changes.
+On Mon, Jun 17, 2019 at 10:24:23AM +0200, Christoph Hellwig wrote:
+> > -	for (i = 0; i < (len / bsize_elem); i++, buffer += bsize_elem) {
+> > -		struct page *page = sg_page(&scatterlist[i]);
+> > +	for (i = 0; i < (len / bsize_elem); i++, sg = sg_next(sg), buffer += bsize_elem) {
+> 
+> Please split the overly long line.
 
-Latest mainline plus the series (which is about to get resent).
-blk_queue_virt_boundary now forced an unlimited max_hw_sectors as that
-is how PRP-like schemes work, to work around a block driver merging
-bug.  But we also need to communicate that limit to the DMA layer so
-that we don't set a smaller iommu segment size limitation.
+Fine.
 
-> >From your above explanation, it means (after this patch) max segment size
-> of the MR controller will be set to 4K.
-> Earlier it is possible to receive single SGE of 64K datalength (Since max
-> seg size was 64K), but now the same buffer will reach the driver having 16
-> SGEs (Each SGE will contain 4K length).
+> 
+> > +		struct page *page = sg_page(sg);
+> >  
+> >  		kaddr = kmap(page);
+> >  		memcpy(kaddr, buffer, bsize_elem);
+> >  		kunmap(page);
+> 
+> Not new in this patch, but this is buggy as scatterlists could have
+> offsets.  This should probably use the scatterlist.c copy helper
+> eventually.
 
-No, there is no more limit for the size of the segment at all,
-as for PRPs each PRP is sort of a segment from the hardware perspective.
-We just require the segments to not have gaps, as PRPs don't allow for
-that.
+This sglist is allocated by driver, see ipr_copy_ucode_buffer(), so
+offset for any element is zero.
 
-That being said I think these patches are wrong for the case of megaraid
-or mpt having both NVMe and SAS/ATA devices behind a single controller.
-Is that a valid configuration?
+Thanks,
+Ming
