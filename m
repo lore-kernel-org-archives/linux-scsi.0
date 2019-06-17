@@ -1,59 +1,39 @@
-From: Jani Nikula <jani.nikula@linux.intel.com>
-Subject: Re: [PATCH v3 4/7] lib/hexdump.c: Replace ascii bool in hex_dump_to_buffer with flags
-Date: Mon, 17 Jun 2019 10:39:53 +0300
-Message-ID: <87imt4vewm.fsf@intel.com>
-References: <20190617020430.8708-1-alastair@au1.ibm.com> <20190617020430.8708-5-alastair@au1.ibm.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH V4 01/16] scsi: vmw_pscsi: use sg helper to operate
+ scatterlist
+Date: Mon, 17 Jun 2019 10:22:06 +0200
+Message-ID: <20190617082206.GA7455@lst.de>
+References: <20190617030349.26415-1-ming.lei@redhat.com>
+ <20190617030349.26415-2-ming.lei@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190617020430.8708-5-alastair@au1.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alastair D'Silva <alastair@au1.ibm.com>, alastair@d-silva.org
-Cc: Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, Rodrigo Vivi <rodrigo.vivi@intel.com>, David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>, Dan Carpenter <dan.carpenter@oracle.com>, Karsten Keil <isdn@linux-pingi.de>, Jassi Brar <jassisinghbrar@gmail.com>, Tom Lendacky <thomas.lendacky@amd.com>, "David S. Miller" <davem@davemloft.net>, Jose Abreu <Jose.Abreu@synopsys.com>, Kalle Valo <kvalo@codeaurora.org>, Stanislaw Gruszka <sgruszka@redhat.com>, Benson Leung <bleung@chromium.org>, Enric Balletbo i Serra <enric.balletbo@collabora.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Alexander Viro <viro@zeniv.linux.org.uk>, Petr
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+Content-Disposition: inline
+In-Reply-To: <20190617030349.26415-2-ming.lei@redhat.com>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: Ming Lei <ming.lei@redhat.com>
+Cc: Michael Schmitz <schmitzmic@gmail.com>, devel@driverdev.osuosl.org, Hannes Reinecke <hare@suse.com>, Benjamin Block <bblock@linux.ibm.com>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org, James Smart <james.smart@broadcom.com>, "Ewan D . Milne" <emilne@redhat.com>, Jim Gill <jgill@vmware.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Brian King <brking@us.ibm.com>, Finn Thain <fthain@telegraphics.com.au>, "Juergen E . Fischer" <fischer@norbit.de>, Christoph Hellwig <hch@lst.de>, Dan Carpenter <dan.carpenter@oracle.com>, Bart Van Assche <bvanassche@acm.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 17 Jun 2019, "Alastair D'Silva" <alastair@au1.ibm.com> wrote:
-> From: Alastair D'Silva <alastair@d-silva.org>
->
-> In order to support additional features in hex_dump_to_buffer, replace
-> the ascii bool parameter with flags.
->
-> Signed-off-by: Alastair D'Silva <alastair@d-silva.org>
-> ---
->  drivers/gpu/drm/i915/intel_engine_cs.c            |  2 +-
->  drivers/isdn/hardware/mISDN/mISDNisar.c           |  6 ++++--
->  drivers/mailbox/mailbox-test.c                    |  2 +-
->  drivers/net/ethernet/amd/xgbe/xgbe-drv.c          |  2 +-
->  drivers/net/ethernet/synopsys/dwc-xlgmac-common.c |  2 +-
->  drivers/net/wireless/ath/ath10k/debug.c           |  3 ++-
->  drivers/net/wireless/intel/iwlegacy/3945-mac.c    |  2 +-
->  drivers/platform/chrome/wilco_ec/debugfs.c        |  2 +-
->  drivers/scsi/scsi_logging.c                       |  8 +++-----
->  drivers/staging/fbtft/fbtft-core.c                |  2 +-
->  fs/seq_file.c                                     |  3 ++-
->  include/linux/printk.h                            |  8 ++++----
->  lib/hexdump.c                                     | 15 ++++++++-------
->  lib/test_hexdump.c                                |  5 +++--
->  14 files changed, 33 insertions(+), 29 deletions(-)
->
-> diff --git a/drivers/gpu/drm/i915/intel_engine_cs.c b/drivers/gpu/drm/i915/intel_engine_cs.c
-> index eea9bec04f1b..5df5fffdb848 100644
-> --- a/drivers/gpu/drm/i915/intel_engine_cs.c
-> +++ b/drivers/gpu/drm/i915/intel_engine_cs.c
-> @@ -1340,7 +1340,7 @@ static void hexdump(struct drm_printer *m, const void *buf, size_t len)
->  		WARN_ON_ONCE(hex_dump_to_buffer(buf + pos, len - pos,
->  						rowsize, sizeof(u32),
->  						line, sizeof(line),
-> -						false) >= sizeof(line));
-> +						0) >= sizeof(line));
->  		drm_printf(m, "[%04zx] %s\n", pos, line);
->  
->  		prev = buf + pos;
+On Mon, Jun 17, 2019 at 11:03:34AM +0800, Ming Lei wrote:
+> Use the scatterlist iterators and remove direct indexing of the scatterlist
+> array.
+> 
+> This way allows us to pre-allocate one small scatterlist, which can be chained
+> with one runtime allocated scatterlist if the pre-allocated one isn't enough
+> for the whole request.
+> 
+> Reviewed-by: Ewan D. Milne <emilne@redhat.com>
 
-On i915,
+Looks good,
 
-Acked-by: Jani Nikula <jani.nikula@intel.com>
-
-
--- 
-Jani Nikula, Intel Open Source Graphics Center
+Reviewed-by: Christoph Hellwig <hch@lst.de>
