@@ -1,60 +1,87 @@
-From: Viresh Kumar <viresh.kumar@linaro.org>
-Subject: Re: [RFC v2 01/11] OPP: Don't overwrite rounded clk rate
-Date: Mon, 17 Jun 2019 09:20:58 +0530
-Message-ID: <20190617035058.veo7uwqjrpa6kykt@vireshk-i7>
+From: Rajendra Nayak <rnayak@codeaurora.org>
+Subject: Re: [RFC v2 02/11] OPP: Make dev_pm_opp_set_rate() with freq=0 as
+ valid
+Date: Mon, 17 Jun 2019 09:34:06 +0530
+Message-ID: <37e7ff9e-6bfa-585e-1ca6-f8e079dd0aef@codeaurora.org>
 References: <20190320094918.20234-1-rnayak@codeaurora.org>
- <20190320094918.20234-2-rnayak@codeaurora.org>
- <20190611105432.x3nzqiib35t6mvyg@vireshk-i7>
- <c173a57d-a4de-99f7-e8d8-28a7612f4ca3@codeaurora.org>
- <20190612082506.m735bsk7bjijf2yg@vireshk-i7>
- <20190613095419.lfjeko7nmxtix2n4@vireshk-i7>
- <20190614052732.4w6vvwwich2h4cgu@vireshk-i7>
+ <20190320094918.20234-3-rnayak@codeaurora.org>
+ <20190614063210.lfsquoycronah3fe@vireshk-i7>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20190614052732.4w6vvwwich2h4cgu@vireshk-i7>
+In-Reply-To: <20190614063210.lfsquoycronah3fe@vireshk-i7>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: swboyd@chromium.org, Rajendra Nayak <rnayak@codeaurora.org>, vincent.guittot@linaro.org, mturquette@baylibre.com
-Cc: linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-pm@vger.kernel.org, linux-serial@vger.kernel.org, linux-spi@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-scsi@vger.kernel.org, ulf.hansson@linaro.org, dianders@chromium.org, rafael@kernel.org
+To: Viresh Kumar <viresh.kumar@linaro.org>
+Cc: linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-pm@vger.kernel.org, linux-serial@vger.kernel.org, linux-spi@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-scsi@vger.kernel.org, swboyd@chromium.org, ulf.hansson@linaro.org, dianders@chromium.org, rafael@kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 14-06-19, 10:57, Viresh Kumar wrote:
-> Hmm, so this patch won't break anything and I am inclined to apply it again :)
+
+
+On 6/14/2019 12:02 PM, Viresh Kumar wrote:
+> On 20-03-19, 15:19, Rajendra Nayak wrote:
+>> For devices with performance state, we use dev_pm_opp_set_rate()
+>> to set the appropriate clk rate and the performance state.
+>> We do need a way to *remove* the performance state vote when
+>> we idle the device and turn the clocks off. Use dev_pm_opp_set_rate()
+>> with freq=0 to achieve this.
+>>
+>> Signed-off-by: Rajendra Nayak <rnayak@codeaurora.org>
+>> Signed-off-by: Stephen Boyd <swboyd@chromium.org>
+>> ---
+>>   drivers/opp/core.c | 18 ++++++++++++------
+>>   1 file changed, 12 insertions(+), 6 deletions(-)
 > 
-> Does anyone see any other issues with it, which I might be missing ?
+> What about this instead ?
 
-I have updated the commit log a bit more to clarify on things, please let me
-know if it looks okay.
+yes, this works, thanks for updating the patch.
 
-    opp: Don't overwrite rounded clk rate
-    
-    The OPP table normally contains 'fmax' values corresponding to the
-    voltage or performance levels of each OPP, but we don't necessarily want
-    all the devices to run at fmax all the time. Running at fmax makes sense
-    for devices like CPU/GPU, which have a finite amount of work to do and
-    since a specific amount of energy is consumed at an OPP, its better to
-    run at the highest possible frequency for that voltage value.
-    
-    On the other hand, we have IO devices which need to run at specific
-    frequencies only for their proper functioning, instead of maximum
-    possible frequency.
-    
-    The OPP core currently roundup to the next possible OPP for a frequency
-    and select the fmax value. To support the IO devices by the OPP core,
-    lets do the roundup to fetch the voltage or performance state values,
-    but not use the OPP frequency value. Rather use the value returned by
-    clk_round_rate().
-    
-    The current user, cpufreq, of dev_pm_opp_set_rate() already does the
-    rounding to the next OPP before calling this routine and it won't
-    have any side affects because of this change.
-    
-    Signed-off-by: Stephen Boyd <swboyd@chromium.org>
-    Signed-off-by: Rajendra Nayak <rnayak@codeaurora.org>
-    [ Viresh: Massaged changelog and use temp_opp variable instead ]
-    Signed-off-by: Viresh Kumar <viresh.kumar@linaro.org>
-
+> 
+> diff --git a/drivers/opp/core.c b/drivers/opp/core.c
+> index 2fe96c2363a3..9accf8bb6afc 100644
+> --- a/drivers/opp/core.c
+> +++ b/drivers/opp/core.c
+> @@ -711,7 +711,7 @@ static int _set_required_opps(struct device *dev,
+>   
+>          /* Single genpd case */
+>          if (!genpd_virt_devs) {
+> -               pstate = opp->required_opps[0]->pstate;
+> +               pstate = likely(opp) ? opp->required_opps[0]->pstate : 0;
+>                  ret = dev_pm_genpd_set_performance_state(dev, pstate);
+>                  if (ret) {
+>                          dev_err(dev, "Failed to set performance state of %s: %d (%d)\n",
+> @@ -729,7 +729,7 @@ static int _set_required_opps(struct device *dev,
+>          mutex_lock(&opp_table->genpd_virt_dev_lock);
+>   
+>          for (i = 0; i < opp_table->required_opp_count; i++) {
+> -               pstate = opp->required_opps[i]->pstate;
+> +               pstate = likely(opp) ? opp->required_opps[i]->pstate : 0;
+>   
+>                  if (!genpd_virt_devs[i])
+>                          continue;
+> @@ -770,14 +770,13 @@ int dev_pm_opp_set_rate(struct device *dev, unsigned long target_freq)
+>   
+>          if (unlikely(!target_freq)) {
+>                  if (opp_table->required_opp_tables) {
+> -                       /* drop the performance state vote */
+> -                       dev_pm_genpd_set_performance_state(dev, 0);
+> -                       return 0;
+> +                       ret = _set_required_opps(dev, opp_table, NULL);
+>                  } else {
+> -                       dev_err(dev, "%s: Invalid target frequency %lu\n", __func__,
+> -                               target_freq);
+> -                       return -EINVAL;
+> +                       dev_err(dev, "target frequency can't be 0\n");
+> +                       ret = -EINVAL;
+>                  }
+> +
+> +               goto put_opp_table;
+>          }
+>   
+>          clk = opp_table->clk;
+> 
 
 -- 
-viresh
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member
+of Code Aurora Forum, hosted by The Linux Foundation
