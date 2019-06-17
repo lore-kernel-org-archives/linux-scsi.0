@@ -1,117 +1,198 @@
 From: "Alastair D'Silva" <alastair@au1.ibm.com>
-Subject: [PATCH v3 1/7] lib/hexdump.c: Fix selftests
-Date: Mon, 17 Jun 2019 12:04:24 +1000
-Message-ID: <20190617020430.8708-2-alastair@au1.ibm.com>
+Subject: [PATCH v3 5/7] lib/hexdump.c: Allow multiple groups to be separated by lines '|'
+Date: Mon, 17 Jun 2019 12:04:28 +1000
+Message-ID: <20190617020430.8708-6-alastair@au1.ibm.com>
 References: <20190617020430.8708-1-alastair@au1.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20190617020430.8708-1-alastair@au1.ibm.com>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: alastair@d-silva.org
-Cc: linux-fbdev@vger.kernel.org, Stanislaw Gruszka <sgruszka@redhat.com>, Petr Mladek <pmladek@suse.com>, David Airlie <airlied@linux.ie>, Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, dri-devel@lists.freedesktop.org, devel@driverdev.osuosl.org, linux-scsi@vger.kernel.org, Jassi Brar <jassisinghbrar@gmail.com>, ath10k@lists.infradead.org, intel-gfx@lists.freedesktop.org, Dan Carpenter <dan.carpenter@oracle.com>, Jose Abreu <Jose.Abreu@synopsys.com>, Tom Lendacky <thomas.lendacky@amd.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, Jani Nikula <jani.nikula@linux.intel.com>, linux-fsdevel@vger.kernel.org, Steven Rostedt <rostedt@goodmis.org>, Rodrigo Vivi <rodrigo.vivi@intel.com>, Benson Leung <bleung@chromium.org>, Kalle Valo <kvalo@codeaurora.org>, Karsten Keil <isdn@linux-pingi.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Greg Kroah-Hartman <gregkh@linuxf>
+Cc: Jani Nikula <jani.nikula@linux.intel.com>, Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, Rodrigo Vivi <rodrigo.vivi@intel.com>, David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>, Dan Carpenter <dan.carpenter@oracle.com>, Karsten Keil <isdn@linux-pingi.de>, Jassi Brar <jassisinghbrar@gmail.com>, Tom Lendacky <thomas.lendacky@amd.com>, "David S. Miller" <davem@davemloft.net>, Jose Abreu <Jose.Abreu@synopsys.com>, Kalle Valo <kvalo@codeaurora.org>, Stanislaw Gruszka <sgruszka@redhat.com>, Benson Leung <bleung@chromium.org>, Enric Balletbo i Serra <enric.balletbo@collabora.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Alexa
 List-Id: linux-scsi@vger.kernel.org
 
 From: Alastair D'Silva <alastair@d-silva.org>
 
-The overflow tests did not account for the situation where no
-overflow occurs and len < rowsize.
+With the wider display format, it can become hard to identify how many
+bytes into the line you are looking at.
 
-This patch renames the cryptic variables and accounts for the
-above case.
+The patch adds new flags to hex_dump_to_buffer() and print_hex_dump() to
+print vertical lines to separate every N groups of bytes.
 
-The selftests now pass.
+eg.
+buf:00000000: 454d414e 43415053|4e495f45 00584544  NAMESPAC|E_INDEX.
+buf:00000010: 00000000 00000002|00000000 00000000  ........|........
 
 Signed-off-by: Alastair D'Silva <alastair@d-silva.org>
 ---
- lib/test_hexdump.c | 47 ++++++++++++++++++++++++++--------------------
- 1 file changed, 27 insertions(+), 20 deletions(-)
+ include/linux/printk.h |  3 +++
+ lib/hexdump.c          | 59 ++++++++++++++++++++++++++++++++++++------
+ 2 files changed, 54 insertions(+), 8 deletions(-)
 
-diff --git a/lib/test_hexdump.c b/lib/test_hexdump.c
-index 5144899d3c6b..d78ddd62ffd0 100644
---- a/lib/test_hexdump.c
-+++ b/lib/test_hexdump.c
-@@ -163,45 +163,52 @@ static void __init test_hexdump_overflow(size_t buflen, size_t len,
- {
- 	char test[TEST_HEXDUMP_BUF_SIZE];
- 	char buf[TEST_HEXDUMP_BUF_SIZE];
--	int rs = rowsize, gs = groupsize;
--	int ae, he, e, f, r;
--	bool a;
-+	int ascii_len, hex_len, expected_len, fill_point, ngroups, rc;
-+	bool match;
+diff --git a/include/linux/printk.h b/include/linux/printk.h
+index 97dd29a2bd77..c6b748f66a82 100644
+--- a/include/linux/printk.h
++++ b/include/linux/printk.h
+@@ -484,6 +484,9 @@ enum {
  
- 	total_tests++;
+ #define HEXDUMP_ASCII			BIT(0)
+ #define HEXDUMP_SUPPRESS_REPEATED	BIT(1)
++#define HEXDUMP_2_GRP_LINES		BIT(2)
++#define HEXDUMP_4_GRP_LINES		BIT(3)
++#define HEXDUMP_8_GRP_LINES		BIT(4)
  
- 	memset(buf, FILL_CHAR, sizeof(buf));
+ extern int hex_dump_to_buffer(const void *buf, size_t len, int rowsize,
+ 			      int groupsize, char *linebuf, size_t linebuflen,
+diff --git a/lib/hexdump.c b/lib/hexdump.c
+index 08c6084d7daa..4da7d24826fb 100644
+--- a/lib/hexdump.c
++++ b/lib/hexdump.c
+@@ -77,6 +77,23 @@ char *bin2hex(char *dst, const void *src, size_t count)
+ }
+ EXPORT_SYMBOL(bin2hex);
  
--	r = hex_dump_to_buffer(data_b, len, rs, gs, buf, buflen, ascii);
-+	rc = hex_dump_to_buffer(data_b, len, rowsize, groupsize, buf, buflen, ascii);
- 
- 	/*
- 	 * Caller must provide the data length multiple of groupsize. The
- 	 * calculations below are made with that assumption in mind.
- 	 */
--	ae = rs * 2 /* hex */ + rs / gs /* spaces */ + 1 /* space */ + len /* ascii */;
--	he = (gs * 2 /* hex */ + 1 /* space */) * len / gs - 1 /* no trailing space */;
-+	ngroups = rowsize / groupsize;
-+	hex_len = (groupsize * 2 /* hex */ + 1 /* spaces */) * ngroups
-+		  - 1 /* no trailing space */;
-+	ascii_len = hex_len + 2 /* space */ + len /* ascii */;
++static const char *group_separator(int group, u64 flags)
++{
++	if (group == 0)
++		return " ";
 +
-+	if (len < rowsize) {
-+		ngroups = len / groupsize;
-+		hex_len = (groupsize * 2 /* hex */ + 1 /* spaces */) * ngroups
-+		  - 1 /* no trailing space */;
-+	}
- 
--	if (ascii)
--		e = ae;
--	else
--		e = he;
-+	expected_len = (ascii) ? ascii_len : hex_len;
- 
--	f = min_t(int, e + 1, buflen);
-+	fill_point = min_t(int, expected_len + 1, buflen);
- 	if (buflen) {
--		test_hexdump_prepare_test(len, rs, gs, test, sizeof(test), ascii);
--		test[f - 1] = '\0';
-+		test_hexdump_prepare_test(len, rowsize, groupsize, test,
-+					  sizeof(test), ascii);
-+		test[fill_point - 1] = '\0';
- 	}
--	memset(test + f, FILL_CHAR, sizeof(test) - f);
-+	memset(test + fill_point, FILL_CHAR, sizeof(test) - fill_point);
- 
--	a = r == e && !memcmp(test, buf, TEST_HEXDUMP_BUF_SIZE);
-+	match = rc == expected_len && !memcmp(test, buf, TEST_HEXDUMP_BUF_SIZE);
- 
- 	buf[sizeof(buf) - 1] = '\0';
- 
--	if (!a) {
--		pr_err("Len: %zu buflen: %zu strlen: %zu\n",
--			len, buflen, strnlen(buf, sizeof(buf)));
--		pr_err("Result: %d '%s'\n", r, buf);
--		pr_err("Expect: %d '%s'\n", e, test);
-+	if (!match) {
-+		pr_err("rowsize: %u groupsize: %u ascii: %d Len: %zu buflen: %zu strlen: %zu\n",
-+			rowsize, groupsize, ascii, len, buflen,
-+			strnlen(buf, sizeof(buf)));
-+		pr_err("Result: %d '%-.*s'\n", rc, (int)buflen, buf);
-+		pr_err("Expect: %d '%-.*s'\n", expected_len, (int)buflen, test);
- 		failed_tests++;
++	if ((flags & HEXDUMP_8_GRP_LINES) && !((group) % 8))
++		return "|";
 +
++	if ((flags & HEXDUMP_4_GRP_LINES) && !((group) % 4))
++		return "|";
++
++	if ((flags & HEXDUMP_2_GRP_LINES) && !((group) % 2))
++		return "|";
++
++	return " ";
++}
++
+ /**
+  * hex_dump_to_buffer - convert a blob of data to "hex ASCII" in memory
+  * @buf: data blob to dump
+@@ -87,6 +104,9 @@ EXPORT_SYMBOL(bin2hex);
+  * @linebuflen: total size of @linebuf, including space for terminating NUL
+  * @flags: A bitwise OR of the following flags:
+  *	HEXDUMP_ASCII:			include ASCII after the hex output
++ *	HEXDUMP_2_GRP_LINES:		insert a '|' after every 2 groups
++ *	HEXDUMP_4_GRP_LINES:		insert a '|' after every 4 groups
++ *	HEXDUMP_8_GRP_LINES:		insert a '|' after every 8 groups
+  *
+  * hex_dump_to_buffer() works on one "line" of output at a time, converting
+  * <groupsize> bytes of input to hexadecimal (and optionally printable ASCII)
+@@ -118,6 +138,7 @@ int hex_dump_to_buffer(const void *buf, size_t len, int rowsize, int groupsize,
+ 	int j, lx = 0;
+ 	int ascii_column;
+ 	int ret;
++	int line_chars = 0;
+ 
+ 	if (!is_power_of_2(groupsize) || groupsize > 8)
+ 		groupsize = 1;
+@@ -144,7 +165,8 @@ int hex_dump_to_buffer(const void *buf, size_t len, int rowsize, int groupsize,
+ 
+ 		for (j = 0; j < ngroups; j++) {
+ 			ret = snprintf(linebuf + lx, linebuflen - lx,
+-				       "%s%16.16llx", j ? " " : "",
++				       "%s%16.16llx",
++				       j ? group_separator(j, flags) : "",
+ 				       get_unaligned(ptr8 + j));
+ 			if (ret >= linebuflen - lx)
+ 				goto overflow1;
+@@ -155,7 +177,8 @@ int hex_dump_to_buffer(const void *buf, size_t len, int rowsize, int groupsize,
+ 
+ 		for (j = 0; j < ngroups; j++) {
+ 			ret = snprintf(linebuf + lx, linebuflen - lx,
+-				       "%s%8.8x", j ? " " : "",
++				       "%s%8.8x",
++				       j ? group_separator(j, flags) : "",
+ 				       get_unaligned(ptr4 + j));
+ 			if (ret >= linebuflen - lx)
+ 				goto overflow1;
+@@ -166,7 +189,8 @@ int hex_dump_to_buffer(const void *buf, size_t len, int rowsize, int groupsize,
+ 
+ 		for (j = 0; j < ngroups; j++) {
+ 			ret = snprintf(linebuf + lx, linebuflen - lx,
+-				       "%s%4.4x", j ? " " : "",
++				       "%s%4.4x",
++				       j ? group_separator(j, flags) : "",
+ 				       get_unaligned(ptr2 + j));
+ 			if (ret >= linebuflen - lx)
+ 				goto overflow1;
+@@ -196,11 +220,26 @@ int hex_dump_to_buffer(const void *buf, size_t len, int rowsize, int groupsize,
+ 			goto overflow2;
+ 		linebuf[lx++] = ' ';
  	}
++
++	if (flags & HEXDUMP_2_GRP_LINES)
++		line_chars = groupsize * 2;
++	if (flags & HEXDUMP_4_GRP_LINES)
++		line_chars = groupsize * 4;
++	if (flags & HEXDUMP_8_GRP_LINES)
++		line_chars = groupsize * 8;
++
+ 	for (j = 0; j < len; j++) {
+ 		if (linebuflen < lx + 2)
+ 			goto overflow2;
+ 		ch = ptr[j];
+ 		linebuf[lx++] = (isascii(ch) && isprint(ch)) ? ch : '.';
++
++		if (line_chars && ((j + 1) < len) &&
++				((j + 1) % line_chars == 0)) {
++			if (linebuflen < lx + 2)
++				goto overflow2;
++			linebuf[lx++] = '|';
++		}
+ 	}
+ nil:
+ 	linebuf[lx] = '\0';
+@@ -208,7 +247,8 @@ int hex_dump_to_buffer(const void *buf, size_t len, int rowsize, int groupsize,
+ overflow2:
+ 	linebuf[lx++] = '\0';
+ overflow1:
+-	return (flags & HEXDUMP_ASCII) ? ascii_column + len :
++	return (flags & HEXDUMP_ASCII) ? ascii_column + len +
++					(len - 1) / line_chars :
+ 					 (groupsize * 2 + 1) * ngroups - 1;
+ }
+ EXPORT_SYMBOL(hex_dump_to_buffer);
+@@ -246,7 +286,7 @@ static void announce_skipped(const char *level, const char *prefix_str,
+ 	if (count == 0)
+ 		return;
+ 
+-	printk("%s%s ** Skipped %lu bytes of value 0x%x **\n",
++	printk("%s%s ** Skipped %lu bytes of value 0x%02x **\n",
+ 	       level, prefix_str, count, val);
  }
  
+@@ -266,6 +306,9 @@ static void announce_skipped(const char *level, const char *prefix_str,
+  *	HEXDUMP_ASCII:			include ASCII after the hex output
+  *	HEXDUMP_SUPPRESS_REPEATED:	suppress repeated lines of identical
+  *					bytes
++ *	HEXDUMP_2_GRP_LINES:		insert a '|' after every 2 groups
++ *	HEXDUMP_4_GRP_LINES:		insert a '|' after every 4 groups
++ *	HEXDUMP_8_GRP_LINES:		insert a '|' after every 8 groups
+  *
+  * Given a buffer of u8 data, print_hex_dump() prints a hex + ASCII dump
+  * to the kernel log at the specified kernel log level, with an optional
+@@ -295,14 +338,14 @@ void print_hex_dump_ext(const char *level, const char *prefix_str,
+ 	u8 skipped_val = 0;
+ 	size_t skipped = 0;
+ 
+-
+ 	if (rowsize % groupsize)
+ 		rowsize -= rowsize % groupsize;
+ 
+ 	/* Worst case line length:
+-	 * 2 hex chars + space per byte in, 2 spaces, 1 char per byte in, NULL
++	 * 2 hex chars + space per byte in, 2 spaces, 1 char per byte in,
++	 * 1 char per N groups, NULL
+ 	 */
+-	linebuf_len = rowsize * 3 + 2 + rowsize + 1;
++	linebuf_len = rowsize * 3 + 2 + rowsize + rowsize / groupsize + 1;
+ 	linebuf = kzalloc(linebuf_len, GFP_KERNEL);
+ 	if (!linebuf) {
+ 		printk("%s%shexdump: Could not alloc %u bytes for buffer\n",
 -- 
 2.21.0
