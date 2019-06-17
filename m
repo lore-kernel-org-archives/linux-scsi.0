@@ -1,149 +1,60 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: Re: [PATCH V4 11/16] scsi: aha152x: use sg helper to operate
- scatterlist
-Date: Mon, 17 Jun 2019 13:35:53 +1000 (AEST)
-Message-ID: <alpine.LNX.2.21.1906171334330.168@nippy.intranet>
-References: <20190617030349.26415-1-ming.lei@redhat.com>
- <20190617030349.26415-12-ming.lei@redhat.com>
+From: Viresh Kumar <viresh.kumar@linaro.org>
+Subject: Re: [RFC v2 01/11] OPP: Don't overwrite rounded clk rate
+Date: Mon, 17 Jun 2019 09:20:58 +0530
+Message-ID: <20190617035058.veo7uwqjrpa6kykt@vireshk-i7>
+References: <20190320094918.20234-1-rnayak@codeaurora.org>
+ <20190320094918.20234-2-rnayak@codeaurora.org>
+ <20190611105432.x3nzqiib35t6mvyg@vireshk-i7>
+ <c173a57d-a4de-99f7-e8d8-28a7612f4ca3@codeaurora.org>
+ <20190612082506.m735bsk7bjijf2yg@vireshk-i7>
+ <20190613095419.lfjeko7nmxtix2n4@vireshk-i7>
+ <20190614052732.4w6vvwwich2h4cgu@vireshk-i7>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <20190617030349.26415-12-ming.lei@redhat.com>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Ming Lei <ming.lei@redhat.com>
-Cc: Michael Schmitz <schmitzmic@gmail.com>, devel@driverdev.osuosl.org, Hannes Reinecke <hare@suse.com>, Benjamin Block <bblock@linux.ibm.com>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org, James Smart <james.smart@broadcom.com>, "Ewan D . Milne" <emilne@redhat.com>, Jim Gill <jgill@vmware.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Brian King <brking@us.ibm.com>, "Juergen E . Fischer" <fischer@norbit.de>, Christoph Hellwig <hch@lst.de>, Dan Carpenter <dan.carpenter@oracle.com>, Bart Van Assche <bvanassche@acm.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20190614052732.4w6vvwwich2h4cgu@vireshk-i7>
+Sender: linux-kernel-owner@vger.kernel.org
+To: swboyd@chromium.org, Rajendra Nayak <rnayak@codeaurora.org>, vincent.guittot@linaro.org, mturquette@baylibre.com
+Cc: linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-pm@vger.kernel.org, linux-serial@vger.kernel.org, linux-spi@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-scsi@vger.kernel.org, ulf.hansson@linaro.org, dianders@chromium.org, rafael@kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 17 Jun 2019, Ming Lei wrote:
+On 14-06-19, 10:57, Viresh Kumar wrote:
+> Hmm, so this patch won't break anything and I am inclined to apply it again :)
+> 
+> Does anyone see any other issues with it, which I might be missing ?
 
-> Use the scatterlist iterators and remove direct indexing of the
-> scatterlist array.
-> 
-> This way allows us to pre-allocate one small scatterlist, which can be
-> chained with one runtime allocated scatterlist if the pre-allocated one
-> isn't enough for the whole request.
-> 
-> Finn added the change to replace SCp.buffers_residual with sg_is_last()
-> for fixing updating it, and the similar change has been applied on
-> NCR5380.c
-> 
-> Cc: Finn Thain <fthain@telegraphics.com.au>
-> Signed-off-by: Ming Lei <ming.lei@redhat.com>
+I have updated the commit log a bit more to clarify on things, please let me
+know if it looks okay.
 
-Reviewed-by: Finn Thain <fthain@telegraphics.com.au>
+    opp: Don't overwrite rounded clk rate
+    
+    The OPP table normally contains 'fmax' values corresponding to the
+    voltage or performance levels of each OPP, but we don't necessarily want
+    all the devices to run at fmax all the time. Running at fmax makes sense
+    for devices like CPU/GPU, which have a finite amount of work to do and
+    since a specific amount of energy is consumed at an OPP, its better to
+    run at the highest possible frequency for that voltage value.
+    
+    On the other hand, we have IO devices which need to run at specific
+    frequencies only for their proper functioning, instead of maximum
+    possible frequency.
+    
+    The OPP core currently roundup to the next possible OPP for a frequency
+    and select the fmax value. To support the IO devices by the OPP core,
+    lets do the roundup to fetch the voltage or performance state values,
+    but not use the OPP frequency value. Rather use the value returned by
+    clk_round_rate().
+    
+    The current user, cpufreq, of dev_pm_opp_set_rate() already does the
+    rounding to the next OPP before calling this routine and it won't
+    have any side affects because of this change.
+    
+    Signed-off-by: Stephen Boyd <swboyd@chromium.org>
+    Signed-off-by: Rajendra Nayak <rnayak@codeaurora.org>
+    [ Viresh: Massaged changelog and use temp_opp variable instead ]
+    Signed-off-by: Viresh Kumar <viresh.kumar@linaro.org>
+
 
 -- 
-
-> ---
->  drivers/scsi/aha152x.c | 42 ++++++++++++++++++++----------------------
->  1 file changed, 20 insertions(+), 22 deletions(-)
-> 
-> diff --git a/drivers/scsi/aha152x.c b/drivers/scsi/aha152x.c
-> index 97872838b983..6d0518f616cb 100644
-> --- a/drivers/scsi/aha152x.c
-> +++ b/drivers/scsi/aha152x.c
-> @@ -948,7 +948,6 @@ static int aha152x_internal_queue(struct scsi_cmnd *SCpnt,
->  	   SCp.ptr              : buffer pointer
->  	   SCp.this_residual    : buffer length
->  	   SCp.buffer           : next buffer
-> -	   SCp.buffers_residual : left buffers in list
->  	   SCp.phase            : current state of the command */
->  
->  	if ((phase & resetting) || !scsi_sglist(SCpnt)) {
-> @@ -956,13 +955,11 @@ static int aha152x_internal_queue(struct scsi_cmnd *SCpnt,
->  		SCpnt->SCp.this_residual = 0;
->  		scsi_set_resid(SCpnt, 0);
->  		SCpnt->SCp.buffer           = NULL;
-> -		SCpnt->SCp.buffers_residual = 0;
->  	} else {
->  		scsi_set_resid(SCpnt, scsi_bufflen(SCpnt));
->  		SCpnt->SCp.buffer           = scsi_sglist(SCpnt);
->  		SCpnt->SCp.ptr              = SG_ADDRESS(SCpnt->SCp.buffer);
->  		SCpnt->SCp.this_residual    = SCpnt->SCp.buffer->length;
-> -		SCpnt->SCp.buffers_residual = scsi_sg_count(SCpnt) - 1;
->  	}
->  
->  	DO_LOCK(flags);
-> @@ -2030,10 +2027,9 @@ static void datai_run(struct Scsi_Host *shpnt)
->  				}
->  
->  				if (CURRENT_SC->SCp.this_residual == 0 &&
-> -				    CURRENT_SC->SCp.buffers_residual > 0) {
-> +				    !sg_is_last(CURRENT_SC->SCp.buffer)) {
->  					/* advance to next buffer */
-> -					CURRENT_SC->SCp.buffers_residual--;
-> -					CURRENT_SC->SCp.buffer++;
-> +					CURRENT_SC->SCp.buffer = sg_next(CURRENT_SC->SCp.buffer);
->  					CURRENT_SC->SCp.ptr           = SG_ADDRESS(CURRENT_SC->SCp.buffer);
->  					CURRENT_SC->SCp.this_residual = CURRENT_SC->SCp.buffer->length;
->  				}
-> @@ -2136,10 +2132,10 @@ static void datao_run(struct Scsi_Host *shpnt)
->  			CMD_INC_RESID(CURRENT_SC, -2 * data_count);
->  		}
->  
-> -		if(CURRENT_SC->SCp.this_residual==0 && CURRENT_SC->SCp.buffers_residual>0) {
-> +		if(CURRENT_SC->SCp.this_residual==0 &&
-> +		   !sg_is_last(CURRENT_SC->SCp.buffer)) {
->  			/* advance to next buffer */
-> -			CURRENT_SC->SCp.buffers_residual--;
-> -			CURRENT_SC->SCp.buffer++;
-> +			CURRENT_SC->SCp.buffer = sg_next(CURRENT_SC->SCp.buffer);
->  			CURRENT_SC->SCp.ptr           = SG_ADDRESS(CURRENT_SC->SCp.buffer);
->  			CURRENT_SC->SCp.this_residual = CURRENT_SC->SCp.buffer->length;
->  		}
-> @@ -2158,22 +2154,24 @@ static void datao_run(struct Scsi_Host *shpnt)
->  static void datao_end(struct Scsi_Host *shpnt)
->  {
->  	if(TESTLO(DMASTAT, DFIFOEMP)) {
-> -		int data_count = (DATA_LEN - scsi_get_resid(CURRENT_SC)) -
-> -			GETSTCNT();
-> +		int done = GETSTCNT();
-> +		int data_count = (DATA_LEN - scsi_get_resid(CURRENT_SC)) - done;
-> +		struct scatterlist *sg = scsi_sglist(CURRENT_SC);
->  
->  		CMD_INC_RESID(CURRENT_SC, data_count);
->  
-> -		data_count -= CURRENT_SC->SCp.ptr -
-> -			SG_ADDRESS(CURRENT_SC->SCp.buffer);
-> -		while(data_count>0) {
-> -			CURRENT_SC->SCp.buffer--;
-> -			CURRENT_SC->SCp.buffers_residual++;
-> -			data_count -= CURRENT_SC->SCp.buffer->length;
-> +		/* Locate the first SG entry not yet sent */
-> +		while (done > 0 && !sg_is_last(sg)) {
-> +			if (done < sg->length)
-> +				break;
-> +			done -= sg->length;
-> +			sg = sg_next(sg);
->  		}
-> -		CURRENT_SC->SCp.ptr = SG_ADDRESS(CURRENT_SC->SCp.buffer) -
-> -			data_count;
-> -		CURRENT_SC->SCp.this_residual = CURRENT_SC->SCp.buffer->length +
-> -			data_count;
-> +
-> +		CURRENT_SC->SCp.buffer = sg;
-> +		CURRENT_SC->SCp.ptr = SG_ADDRESS(CURRENT_SC->SCp.buffer) + done;
-> +		CURRENT_SC->SCp.this_residual = CURRENT_SC->SCp.buffer->length -
-> +			done;
->  	}
->  
->  	SETPORT(SXFRCTL0, CH1|CLRCH1|CLRSTCNT);
-> @@ -2501,7 +2499,7 @@ static void get_command(struct seq_file *m, struct scsi_cmnd * ptr)
->  
->  	seq_printf(m, "); resid=%d; residual=%d; buffers=%d; phase |",
->  		scsi_get_resid(ptr), ptr->SCp.this_residual,
-> -		ptr->SCp.buffers_residual);
-> +		sg_nents(ptr->SCp.buffer) - 1);
->  
->  	if (ptr->SCp.phase & not_issued)
->  		seq_puts(m, "not issued|");
-> 
+viresh
