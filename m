@@ -1,15 +1,15 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH V4 03/16] scsi: lpfc: use sg helper to operate scatterlist
-Date: Mon, 17 Jun 2019 10:22:29 +0200
-Message-ID: <20190617082229.GC7455@lst.de>
+Subject: Re: [PATCH V4 04/16] scsi: mvumi: use sg helper to operate scatterlist
+Date: Mon, 17 Jun 2019 10:22:55 +0200
+Message-ID: <20190617082255.GD7455@lst.de>
 References: <20190617030349.26415-1-ming.lei@redhat.com>
- <20190617030349.26415-4-ming.lei@redhat.com>
+ <20190617030349.26415-5-ming.lei@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
 Content-Disposition: inline
-In-Reply-To: <20190617030349.26415-4-ming.lei@redhat.com>
+In-Reply-To: <20190617030349.26415-5-ming.lei@redhat.com>
 List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
  <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
 List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
@@ -23,15 +23,15 @@ To: Ming Lei <ming.lei@redhat.com>
 Cc: Michael Schmitz <schmitzmic@gmail.com>, devel@driverdev.osuosl.org, Hannes Reinecke <hare@suse.com>, Benjamin Block <bblock@linux.ibm.com>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org, James Smart <james.smart@broadcom.com>, "Ewan D . Milne" <emilne@redhat.com>, Jim Gill <jgill@vmware.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Brian King <brking@us.ibm.com>, Finn Thain <fthain@telegraphics.com.au>, "Juergen E . Fischer" <fischer@norbit.de>, Christoph Hellwig <hch@lst.de>, Dan Carpenter <dan.carpenter@oracle.com>, Bart Van Assche <bvanassche@acm.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Jun 17, 2019 at 11:03:36AM +0800, Ming Lei wrote:
+On Mon, Jun 17, 2019 at 11:03:37AM +0800, Ming Lei wrote:
 > Use the scatterlist iterators and remove direct indexing of the
 > scatterlist array.
 > 
 > This way allows us to pre-allocate one small scatterlist, which can be
-> chained with one runtime allocated scatterlist if the pre-allocated one isn't
-> enough for the whole request.
+> chained with one runtime allocated scatterlist if the pre-allocated one
+> isn't enough for the whole request.
 > 
-> Reviewed by: Ewan D. Milne <emilne@redhat.com>
+> Reviewed-by: Ewan D. Milne <emilne@redhat.com>
 > Signed-off-by: Ming Lei <ming.lei@redhat.com>
 
 Looks good,
