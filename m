@@ -1,77 +1,321 @@
-From: "Alastair D'Silva" <alastair-8fk3Idey6ehBDgjK7y7TUQ@public.gmane.org>
-Subject: [PATCH v3 0/7] Hexdump Enhancements
-Date: Mon, 17 Jun 2019 12:04:23 +1000
-Message-ID: <20190617020430.8708-1-alastair@au1.ibm.com>
+From: "Alastair D'Silva" <alastair@au1.ibm.com>
+Subject: [PATCH v3 4/7] lib/hexdump.c: Replace ascii bool in hex_dump_to_buffer with flags
+Date: Mon, 17 Jun 2019 12:04:27 +1000
+Message-ID: <20190617020430.8708-5-alastair@au1.ibm.com>
+References: <20190617020430.8708-1-alastair@au1.ibm.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-wireless-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: linux-wireless-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: alastair-fCx97xH5QTlAfugRpC6u6w@public.gmane.org
-Cc: Jani Nikula <jani.nikula-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Joonas Lahtinen <joonas.lahtinen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Rodrigo Vivi <rodrigo.vivi-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, David Airlie <airlied-cv59FeDIM0c@public.gmane.org>, Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>, Dan Carpenter <dan.carpenter-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Karsten Keil <isdn-iHCpqvpFUx0uJkBD2foKsQ@public.gmane.org>, Jassi Brar <jassisinghbrar-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Tom Lendacky <thomas.lendacky-5C7GfCeVMHo@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Jose Abreu <Jose.Abreu-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>, Kalle Valo <kvalo-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Stanislaw Gruszka <sgruszka-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Benson Leung <bleung-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Enric Balletbo i Serra <enric.balletbo-ZGY8ohtN/8qB+jHODAdFcQ@public.gmane.org>, "James E.J. Bottomley" <jejb-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Alexa
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190617020430.8708-1-alastair@au1.ibm.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: alastair@d-silva.org
+Cc: Jani Nikula <jani.nikula@linux.intel.com>, Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, Rodrigo Vivi <rodrigo.vivi@intel.com>, David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>, Dan Carpenter <dan.carpenter@oracle.com>, Karsten Keil <isdn@linux-pingi.de>, Jassi Brar <jassisinghbrar@gmail.com>, Tom Lendacky <thomas.lendacky@amd.com>, "David S. Miller" <davem@davemloft.net>, Jose Abreu <Jose.Abreu@synopsys.com>, Kalle Valo <kvalo@codeaurora.org>, Stanislaw Gruszka <sgruszka@redhat.com>, Benson Leung <bleung@chromium.org>, Enric Balletbo i Serra <enric.balletbo@collabora.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Alexa
 List-Id: linux-scsi@vger.kernel.org
 
-From: Alastair D'Silva <alastair-fCx97xH5QTlAfugRpC6u6w@public.gmane.org>
+From: Alastair D'Silva <alastair@d-silva.org>
 
-Apologies for the large CC list, it's a heads up for those responsible
-for subsystems where a prototype change in generic code causes a change
-in those subsystems.
+In order to support additional features in hex_dump_to_buffer, replace
+the ascii bool parameter with flags.
 
-This series enhances hexdump.
+Signed-off-by: Alastair D'Silva <alastair@d-silva.org>
+---
+ drivers/gpu/drm/i915/intel_engine_cs.c            |  2 +-
+ drivers/isdn/hardware/mISDN/mISDNisar.c           |  6 ++++--
+ drivers/mailbox/mailbox-test.c                    |  2 +-
+ drivers/net/ethernet/amd/xgbe/xgbe-drv.c          |  2 +-
+ drivers/net/ethernet/synopsys/dwc-xlgmac-common.c |  2 +-
+ drivers/net/wireless/ath/ath10k/debug.c           |  3 ++-
+ drivers/net/wireless/intel/iwlegacy/3945-mac.c    |  2 +-
+ drivers/platform/chrome/wilco_ec/debugfs.c        |  2 +-
+ drivers/scsi/scsi_logging.c                       |  8 +++-----
+ drivers/staging/fbtft/fbtft-core.c                |  2 +-
+ fs/seq_file.c                                     |  3 ++-
+ include/linux/printk.h                            |  8 ++++----
+ lib/hexdump.c                                     | 15 ++++++++-------
+ lib/test_hexdump.c                                |  5 +++--
+ 14 files changed, 33 insertions(+), 29 deletions(-)
 
-These improve the readability of the dumped data in certain situations
-(eg. wide terminals are available, many lines of empty bytes exist, etc).
-
-The default behaviour of hexdump is unchanged, however, the prototype
-for hex_dump_to_buffer() has changed, and print_hex_dump() has been
-renamed to print_hex_dump_ext(), with a wrapper replacing it for
-compatibility with existing code, which would have been too invasive to
-change.
-
-Hexdump selftests have be run & confirmed passed.
-
-Changelog:
-V3:
- - Fix inline documention
- - use BIT macros
- - use u32 rather than u64 for flags
-V2:
- - Fix failing selftests
- - Fix precedence bug in 'Replace ascii bool in hex_dump_to_buffer...'
- - Remove hardcoded new lengths & instead relax the checks in
-   hex_dump_to_buffer, allocating the buffer from the heap instead of the
-   stack.
- - Replace the skipping of lines of 0x00/0xff with skipping lines of
-   repeated characters, announcing what has been skipped.
- - Add spaces as an optional N-group separator
- - Allow byte ordering to be maintained when HEXDUMP_RETAIN_BYTE_ORDERING
-   is set.
- - Updated selftests to cover 'Relax rowsize checks' &
-   'Optionally retain byte ordering'
-
-Alastair D'Silva (7):
-  lib/hexdump.c: Fix selftests
-  lib/hexdump.c: Relax rowsize checks in hex_dump_to_buffer
-  lib/hexdump.c: Optionally suppress lines of repeated bytes
-  lib/hexdump.c: Replace ascii bool in hex_dump_to_buffer with flags
-  lib/hexdump.c: Allow multiple groups to be separated by lines '|'
-  lib/hexdump.c: Allow multiple groups to be separated by spaces
-  lib/hexdump.c: Optionally retain byte ordering
-
- drivers/gpu/drm/i915/intel_engine_cs.c        |   2 +-
- drivers/isdn/hardware/mISDN/mISDNisar.c       |   6 +-
- drivers/mailbox/mailbox-test.c                |   2 +-
- drivers/net/ethernet/amd/xgbe/xgbe-drv.c      |   2 +-
- .../net/ethernet/synopsys/dwc-xlgmac-common.c |   2 +-
- drivers/net/wireless/ath/ath10k/debug.c       |   3 +-
- .../net/wireless/intel/iwlegacy/3945-mac.c    |   2 +-
- drivers/platform/chrome/wilco_ec/debugfs.c    |   2 +-
- drivers/scsi/scsi_logging.c                   |   8 +-
- drivers/staging/fbtft/fbtft-core.c            |   2 +-
- fs/seq_file.c                                 |   3 +-
- include/linux/printk.h                        |  34 ++-
- lib/hexdump.c                                 | 260 +++++++++++++++---
- lib/test_hexdump.c                            | 146 +++++++---
- 14 files changed, 372 insertions(+), 102 deletions(-)
-
+diff --git a/drivers/gpu/drm/i915/intel_engine_cs.c b/drivers/gpu/drm/i915/intel_engine_cs.c
+index eea9bec04f1b..5df5fffdb848 100644
+--- a/drivers/gpu/drm/i915/intel_engine_cs.c
++++ b/drivers/gpu/drm/i915/intel_engine_cs.c
+@@ -1340,7 +1340,7 @@ static void hexdump(struct drm_printer *m, const void *buf, size_t len)
+ 		WARN_ON_ONCE(hex_dump_to_buffer(buf + pos, len - pos,
+ 						rowsize, sizeof(u32),
+ 						line, sizeof(line),
+-						false) >= sizeof(line));
++						0) >= sizeof(line));
+ 		drm_printf(m, "[%04zx] %s\n", pos, line);
+ 
+ 		prev = buf + pos;
+diff --git a/drivers/isdn/hardware/mISDN/mISDNisar.c b/drivers/isdn/hardware/mISDN/mISDNisar.c
+index fd5c52f37802..ccc0ee9d894f 100644
+--- a/drivers/isdn/hardware/mISDN/mISDNisar.c
++++ b/drivers/isdn/hardware/mISDN/mISDNisar.c
+@@ -71,7 +71,8 @@ send_mbox(struct isar_hw *isar, u8 his, u8 creg, u8 len, u8 *msg)
+ 
+ 			while (l < (int)len) {
+ 				hex_dump_to_buffer(msg + l, len - l, 32, 1,
+-						   isar->log, 256, 1);
++						   isar->log, 256,
++						   HEXDUMP_ASCII);
+ 				pr_debug("%s: %s %02x: %s\n", isar->name,
+ 					 __func__, l, isar->log);
+ 				l += 32;
+@@ -100,7 +101,8 @@ rcv_mbox(struct isar_hw *isar, u8 *msg)
+ 
+ 			while (l < (int)isar->clsb) {
+ 				hex_dump_to_buffer(msg + l, isar->clsb - l, 32,
+-						   1, isar->log, 256, 1);
++						   1, isar->log, 256,
++						   HEXDUMP_ASCII);
+ 				pr_debug("%s: %s %02x: %s\n", isar->name,
+ 					 __func__, l, isar->log);
+ 				l += 32;
+diff --git a/drivers/mailbox/mailbox-test.c b/drivers/mailbox/mailbox-test.c
+index 4555d678fadd..23c3fbafdcb2 100644
+--- a/drivers/mailbox/mailbox-test.c
++++ b/drivers/mailbox/mailbox-test.c
+@@ -209,7 +209,7 @@ static ssize_t mbox_test_message_read(struct file *filp, char __user *userbuf,
+ 		hex_dump_to_buffer(ptr,
+ 				   MBOX_BYTES_PER_LINE,
+ 				   MBOX_BYTES_PER_LINE, 1, touser + l,
+-				   MBOX_HEXDUMP_LINE_LEN, true);
++				   MBOX_HEXDUMP_LINE_LEN, HEXDUMP_ASCII);
+ 
+ 		ptr += MBOX_BYTES_PER_LINE;
+ 		l += MBOX_HEXDUMP_LINE_LEN;
+diff --git a/drivers/net/ethernet/amd/xgbe/xgbe-drv.c b/drivers/net/ethernet/amd/xgbe/xgbe-drv.c
+index 3dd0cecddba8..1e26410cf6c2 100644
+--- a/drivers/net/ethernet/amd/xgbe/xgbe-drv.c
++++ b/drivers/net/ethernet/amd/xgbe/xgbe-drv.c
+@@ -2992,7 +2992,7 @@ void xgbe_print_pkt(struct net_device *netdev, struct sk_buff *skb, bool tx_rx)
+ 		unsigned int len = min(skb->len - i, 32U);
+ 
+ 		hex_dump_to_buffer(&skb->data[i], len, 32, 1,
+-				   buffer, sizeof(buffer), false);
++				   buffer, sizeof(buffer), 0);
+ 		netdev_dbg(netdev, "  %#06x: %s\n", i, buffer);
+ 	}
+ 
+diff --git a/drivers/net/ethernet/synopsys/dwc-xlgmac-common.c b/drivers/net/ethernet/synopsys/dwc-xlgmac-common.c
+index eb1c6b03c329..b80adfa1f890 100644
+--- a/drivers/net/ethernet/synopsys/dwc-xlgmac-common.c
++++ b/drivers/net/ethernet/synopsys/dwc-xlgmac-common.c
+@@ -349,7 +349,7 @@ void xlgmac_print_pkt(struct net_device *netdev,
+ 		unsigned int len = min(skb->len - i, 32U);
+ 
+ 		hex_dump_to_buffer(&skb->data[i], len, 32, 1,
+-				   buffer, sizeof(buffer), false);
++				   buffer, sizeof(buffer), 0);
+ 		netdev_dbg(netdev, "  %#06x: %s\n", i, buffer);
+ 	}
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index 32d967a31c65..4c99ea03226d 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -2662,7 +2662,8 @@ void ath10k_dbg_dump(struct ath10k *ar,
+ 						(unsigned int)(ptr - buf));
+ 			hex_dump_to_buffer(ptr, len - (ptr - buf), 16, 1,
+ 					   linebuf + linebuflen,
+-					   sizeof(linebuf) - linebuflen, true);
++					   sizeof(linebuf) - linebuflen,
++					   HEXDUMP_ASCII);
+ 			dev_printk(KERN_DEBUG, ar->dev, "%s\n", linebuf);
+ 		}
+ 	}
+diff --git a/drivers/net/wireless/intel/iwlegacy/3945-mac.c b/drivers/net/wireless/intel/iwlegacy/3945-mac.c
+index b82da75a9ae3..81c4b178527a 100644
+--- a/drivers/net/wireless/intel/iwlegacy/3945-mac.c
++++ b/drivers/net/wireless/intel/iwlegacy/3945-mac.c
+@@ -3232,7 +3232,7 @@ il3945_show_measurement(struct device *d, struct device_attribute *attr,
+ 
+ 	while (size && PAGE_SIZE - len) {
+ 		hex_dump_to_buffer(data + ofs, size, 16, 1, buf + len,
+-				   PAGE_SIZE - len, true);
++				   PAGE_SIZE - len, HEXDUMP_ASCII);
+ 		len = strlen(buf);
+ 		if (PAGE_SIZE - len)
+ 			buf[len++] = '\n';
+diff --git a/drivers/platform/chrome/wilco_ec/debugfs.c b/drivers/platform/chrome/wilco_ec/debugfs.c
+index f163476d080d..c53b18539f52 100644
+--- a/drivers/platform/chrome/wilco_ec/debugfs.c
++++ b/drivers/platform/chrome/wilco_ec/debugfs.c
+@@ -148,7 +148,7 @@ static ssize_t raw_read(struct file *file, char __user *user_buf, size_t count,
+ 					     debug_info->response_size,
+ 					     16, 1, debug_info->formatted_data,
+ 					     sizeof(debug_info->formatted_data),
+-					     true);
++					     HEXDUMP_ASCII);
+ 		/* Only return response the first time it is read */
+ 		debug_info->response_size = 0;
+ 	}
+diff --git a/drivers/scsi/scsi_logging.c b/drivers/scsi/scsi_logging.c
+index 39b8cc4574b4..c7f3eb41d32c 100644
+--- a/drivers/scsi/scsi_logging.c
++++ b/drivers/scsi/scsi_logging.c
+@@ -262,7 +262,7 @@ void scsi_print_command(struct scsi_cmnd *cmd)
+ 						 "CDB[%02x]: ", k);
+ 				hex_dump_to_buffer(&cmd->cmnd[k], linelen,
+ 						   16, 1, logbuf + off,
+-						   logbuf_len - off, false);
++						   logbuf_len - off, 0);
+ 			}
+ 			dev_printk(KERN_INFO, &cmd->device->sdev_gendev, "%s",
+ 				   logbuf);
+@@ -273,8 +273,7 @@ void scsi_print_command(struct scsi_cmnd *cmd)
+ 	if (!WARN_ON(off > logbuf_len - 49)) {
+ 		off += scnprintf(logbuf + off, logbuf_len - off, " ");
+ 		hex_dump_to_buffer(cmd->cmnd, cmd->cmd_len, 16, 1,
+-				   logbuf + off, logbuf_len - off,
+-				   false);
++				   logbuf + off, logbuf_len - off, 0);
+ 	}
+ out_printk:
+ 	dev_printk(KERN_INFO, &cmd->device->sdev_gendev, "%s", logbuf);
+@@ -353,8 +352,7 @@ scsi_log_dump_sense(const struct scsi_device *sdev, const char *name, int tag,
+ 		off = sdev_format_header(logbuf, logbuf_len,
+ 					 name, tag);
+ 		hex_dump_to_buffer(&sense_buffer[i], len, 16, 1,
+-				   logbuf + off, logbuf_len - off,
+-				   false);
++				   logbuf + off, logbuf_len - off, 0);
+ 		dev_printk(KERN_INFO, &sdev->sdev_gendev, "%s", logbuf);
+ 	}
+ 	scsi_log_release_buffer(logbuf);
+diff --git a/drivers/staging/fbtft/fbtft-core.c b/drivers/staging/fbtft/fbtft-core.c
+index 9b07badf4c6c..2e5df5cc9d61 100644
+--- a/drivers/staging/fbtft/fbtft-core.c
++++ b/drivers/staging/fbtft/fbtft-core.c
+@@ -61,7 +61,7 @@ void fbtft_dbg_hex(const struct device *dev, int groupsize,
+ 	va_end(args);
+ 
+ 	hex_dump_to_buffer(buf, len, 32, groupsize, text + text_len,
+-			   512 - text_len, false);
++			   512 - text_len, 0);
+ 
+ 	if (len > 32)
+ 		dev_info(dev, "%s ...\n", text);
+diff --git a/fs/seq_file.c b/fs/seq_file.c
+index abe27ec43176..472a8acb7405 100644
+--- a/fs/seq_file.c
++++ b/fs/seq_file.c
+@@ -874,7 +874,8 @@ void seq_hex_dump(struct seq_file *m, const char *prefix_str, int prefix_type,
+ 
+ 		size = seq_get_buf(m, &buffer);
+ 		ret = hex_dump_to_buffer(ptr + i, linelen, rowsize, groupsize,
+-					 buffer, size, ascii);
++					 buffer, size,
++					 ascii ? HEXDUMP_ASCII : 0);
+ 		seq_commit(m, ret < size ? ret : -1);
+ 
+ 		seq_putc(m, '\n');
+diff --git a/include/linux/printk.h b/include/linux/printk.h
+index d7754799cfe0..97dd29a2bd77 100644
+--- a/include/linux/printk.h
++++ b/include/linux/printk.h
+@@ -482,13 +482,13 @@ enum {
+ 	DUMP_PREFIX_OFFSET
+ };
+ 
+-extern int hex_dump_to_buffer(const void *buf, size_t len, int rowsize,
+-			      int groupsize, char *linebuf, size_t linebuflen,
+-			      bool ascii);
+-
+ #define HEXDUMP_ASCII			BIT(0)
+ #define HEXDUMP_SUPPRESS_REPEATED	BIT(1)
+ 
++extern int hex_dump_to_buffer(const void *buf, size_t len, int rowsize,
++			      int groupsize, char *linebuf, size_t linebuflen,
++			      u32 flags);
++
+ #ifdef CONFIG_PRINTK
+ extern void print_hex_dump_ext(const char *level, const char *prefix_str,
+ 			   int prefix_type, int rowsize, int groupsize,
+diff --git a/lib/hexdump.c b/lib/hexdump.c
+index b781f888884e..08c6084d7daa 100644
+--- a/lib/hexdump.c
++++ b/lib/hexdump.c
+@@ -85,7 +85,8 @@ EXPORT_SYMBOL(bin2hex);
+  * @groupsize: number of bytes to print at a time (1, 2, 4, 8; default = 1)
+  * @linebuf: where to put the converted data
+  * @linebuflen: total size of @linebuf, including space for terminating NUL
+- * @ascii: include ASCII after the hex output
++ * @flags: A bitwise OR of the following flags:
++ *	HEXDUMP_ASCII:			include ASCII after the hex output
+  *
+  * hex_dump_to_buffer() works on one "line" of output at a time, converting
+  * <groupsize> bytes of input to hexadecimal (and optionally printable ASCII)
+@@ -97,7 +98,7 @@ EXPORT_SYMBOL(bin2hex);
+  *
+  * E.g.:
+  *   hex_dump_to_buffer(frame->data, frame->len, 16, 1,
+- *			linebuf, sizeof(linebuf), true);
++ *			linebuf, sizeof(linebuf), HEXDUMP_ASCII);
+  *
+  * example output buffer:
+  * 40 41 42 43 44 45 46 47 48 49 4a 4b 4c 4d 4e 4f  @ABCDEFGHIJKLMNO
+@@ -109,7 +110,7 @@ EXPORT_SYMBOL(bin2hex);
+  * string if enough space had been available.
+  */
+ int hex_dump_to_buffer(const void *buf, size_t len, int rowsize, int groupsize,
+-		       char *linebuf, size_t linebuflen, bool ascii)
++		       char *linebuf, size_t linebuflen, u32 flags)
+ {
+ 	const u8 *ptr = buf;
+ 	int ngroups;
+@@ -187,7 +188,7 @@ int hex_dump_to_buffer(const void *buf, size_t len, int rowsize, int groupsize,
+ 		if (j)
+ 			lx--;
+ 	}
+-	if (!ascii)
++	if (!(flags & HEXDUMP_ASCII))
+ 		goto nil;
+ 
+ 	while (lx < ascii_column) {
+@@ -207,7 +208,8 @@ int hex_dump_to_buffer(const void *buf, size_t len, int rowsize, int groupsize,
+ overflow2:
+ 	linebuf[lx++] = '\0';
+ overflow1:
+-	return ascii ? ascii_column + len : (groupsize * 2 + 1) * ngroups - 1;
++	return (flags & HEXDUMP_ASCII) ? ascii_column + len :
++					 (groupsize * 2 + 1) * ngroups - 1;
+ }
+ EXPORT_SYMBOL(hex_dump_to_buffer);
+ 
+@@ -336,8 +338,7 @@ void print_hex_dump_ext(const char *level, const char *prefix_str,
+ 		}
+ 
+ 		hex_dump_to_buffer(ptr + i, linelen, rowsize, groupsize,
+-				   linebuf, linebuf_len,
+-				   flags & HEXDUMP_ASCII);
++				   linebuf, linebuf_len, flags);
+ 
+ 		switch (prefix_type) {
+ 		case DUMP_PREFIX_ADDRESS:
+diff --git a/lib/test_hexdump.c b/lib/test_hexdump.c
+index 6ab75a209b43..ae340c5c1c6f 100644
+--- a/lib/test_hexdump.c
++++ b/lib/test_hexdump.c
+@@ -166,7 +166,7 @@ static void __init test_hexdump(size_t len, int rowsize, int groupsize,
+ 
+ 	memset(real, FILL_CHAR, sizeof(real));
+ 	hex_dump_to_buffer(data_b, len, rowsize, groupsize, real, sizeof(real),
+-			   ascii);
++			   ascii ? HEXDUMP_ASCII : 0);
+ 
+ 	memset(test, FILL_CHAR, sizeof(test));
+ 	test_hexdump_prepare_test(len, rowsize, groupsize, test, sizeof(test),
+@@ -204,7 +204,8 @@ static void __init test_hexdump_overflow(size_t buflen, size_t len,
+ 
+ 	memset(buf, FILL_CHAR, sizeof(buf));
+ 
+-	rc = hex_dump_to_buffer(data_b, len, rowsize, groupsize, buf, buflen, ascii);
++	rc = hex_dump_to_buffer(data_b, len, rowsize, groupsize, buf, buflen,
++				ascii ? HEXDUMP_ASCII : 0);
+ 
+ 	/*
+ 	 * Caller must provide the data length multiple of groupsize. The
 -- 
 2.21.0
