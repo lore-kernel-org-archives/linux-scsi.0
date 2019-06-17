@@ -1,76 +1,88 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 1/8] scsi: add a host / host template field for the virt boundary
-Date: Mon, 17 Jun 2019 14:19:53 +0200
-Message-ID: <20190617122000.22181-2-hch@lst.de>
-References: <20190617122000.22181-1-hch@lst.de>
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: [PATCH] scsi: storvsc: Add ability to change scsi queue depth
+Date: Mon, 17 Jun 2019 17:08:21 +0000
+Message-ID: <DM5PR2101MB1061E9107B0B71FC26433BA8A0EB0@DM5PR2101MB1061.namprd21.prod.outlook.com>
+References: <20190614234822.5193-1-brandonbonaby94@gmail.com>
+ <BL0PR2101MB13482F73342F77866D6A6AABD7E90@BL0PR2101MB1348.namprd21.prod.outlook.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190617122000.22181-1-hch@lst.de>
+In-Reply-To: <BL0PR2101MB13482F73342F77866D6A6AABD7E90@BL0PR2101MB1348.namprd21.prod.outlook.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Sagi Grimberg <sagi@grimberg.me>, Max Gurtovoy <maxg@mellanox.com>, Bart Van Assche <bvanassche@acm.org>, linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org, megaraidlinux.pdl@broadcom.com, MPT-FusionLinux.pdl@broadcom.com, linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Michael Kelley <mikelley@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>, Stephen Hemminger <sthemmin@microsoft.com>, "sashal@kernel.org" <sashal@kernel.org>, "jejb@linux.ibm.com" <jejb@linux.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: brandonbonaby94 <brandonbonaby94@gmail.com>, "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-This allows drivers setting it up easily instead of branching out to
-block layer calls in slave_alloc, and ensures the upgraded
-max_segment_size setting gets picked up by the DMA layer.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/scsi/hosts.c     | 3 +++
- drivers/scsi/scsi_lib.c  | 3 ++-
- include/scsi/scsi_host.h | 3 +++
- 3 files changed, 8 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index ff0d8c6a8d0c..55522b7162d3 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -462,6 +462,9 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
- 	else
- 		shost->dma_boundary = 0xffffffff;
- 
-+	if (sht->virt_boundary_mask)
-+		shost->virt_boundary_mask = sht->virt_boundary_mask;
-+
- 	device_initialize(&shost->shost_gendev);
- 	dev_set_name(&shost->shost_gendev, "host%d", shost->host_no);
- 	shost->shost_gendev.bus = &scsi_bus_type;
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 65d0a10c76ad..d333bb6b1c59 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1775,7 +1775,8 @@ void __scsi_init_queue(struct Scsi_Host *shost, struct request_queue *q)
- 	dma_set_seg_boundary(dev, shost->dma_boundary);
- 
- 	blk_queue_max_segment_size(q, shost->max_segment_size);
--	dma_set_max_seg_size(dev, shost->max_segment_size);
-+	blk_queue_virt_boundary(q, shost->virt_boundary_mask);
-+	dma_set_max_seg_size(dev, queue_max_segment_size(q));
- 
- 	/*
- 	 * Set a reasonable default alignment:  The larger of 32-byte (dword),
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index a5fcdad4a03e..cc139dbd71e5 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -369,6 +369,8 @@ struct scsi_host_template {
- 	 */
- 	unsigned long dma_boundary;
- 
-+	unsigned long virt_boundary_mask;
-+
- 	/*
- 	 * This specifies "machine infinity" for host templates which don't
- 	 * limit the transfer size.  Note this limit represents an absolute
-@@ -587,6 +589,7 @@ struct Scsi_Host {
- 	unsigned int max_sectors;
- 	unsigned int max_segment_size;
- 	unsigned long dma_boundary;
-+	unsigned long virt_boundary_mask;
- 	/*
- 	 * In scsi-mq mode, the number of hardware queues supported by the LLD.
- 	 *
--- 
-2.20.1
+> -----Original Message-----
+> From: Michael Kelley <mikelley@microsoft.com>
+> Sent: Saturday, June 15, 2019 11:19 AM
+> To: brandonbonaby94 <brandonbonaby94@gmail.com>; KY Srinivasan
+> <kys@microsoft.com>; Haiyang Zhang <haiyangz@microsoft.com>; Stephen
+> Hemminger <sthemmin@microsoft.com>; sashal@kernel.org;
+> jejb@linux.ibm.com; martin.petersen@oracle.com
+> Cc: brandonbonaby94 <brandonbonaby94@gmail.com>; linux-
+> hyperv@vger.kernel.org; linux-scsi@vger.kernel.org; linux-
+> kernel@vger.kernel.org
+> Subject: RE: [PATCH] scsi: storvsc: Add ability to change scsi queue dept=
+h
+>=20
+> From: Branden Bonaby <brandonbonaby94@gmail.com> Sent: Friday, June
+> 14, 2019 4:48 PM
+> >
+> > Adding functionality to allow the SCSI queue depth to be changed,
+> > by utilizing the "scsi_change_queue_depth" function.
+> >
+> > Signed-off-by: Branden Bonaby <brandonbonaby94@gmail.com>
+> > ---
+> >  drivers/scsi/storvsc_drv.c | 11 +++++++++++
+> >  1 file changed, 11 insertions(+)
+> >
+> > diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+> > index 8472de1007ff..719ca9906fc2 100644
+> > --- a/drivers/scsi/storvsc_drv.c
+> > +++ b/drivers/scsi/storvsc_drv.c
+> > @@ -387,6 +387,7 @@ enum storvsc_request_type {
+> >
+> >  static int storvsc_ringbuffer_size =3D (128 * 1024);
+> >  static u32 max_outstanding_req_per_channel;
+> > +static int storvsc_change_queue_depth(struct scsi_device *sdev, int
+> queue_depth);
+> >
+> >  static int storvsc_vcpus_per_sub_channel =3D 4;
+> >
+> > @@ -1711,6 +1712,7 @@ static struct scsi_host_template scsi_driver =3D =
+{
+> >  	.dma_boundary =3D		PAGE_SIZE-1,
+> >  	.no_write_same =3D	1,
+> >  	.track_queue_depth =3D	1,
+> > +	.change_queue_depth =3D	storvsc_change_queue_depth,
+> >  };
+> >
+> >  enum {
+> > @@ -1917,6 +1919,15 @@ static int storvsc_probe(struct hv_device
+> *device,
+> >  	return ret;
+> >  }
+> >
+> > +/* Change a scsi target's queue depth */
+> > +static int storvsc_change_queue_depth(struct scsi_device *sdev, int
+> queue_depth)
+> > +{
+> > +	if (queue_depth > scsi_driver.can_queue){
+> > +		queue_depth =3D scsi_driver.can_queue;
+> > +	}
+> > +	return scsi_change_queue_depth(sdev, queue_depth);
+> > +}
+> > +
+> >  static int storvsc_remove(struct hv_device *dev)
+> >  {
+> >  	struct storvsc_device *stor_device =3D hv_get_drvdata(dev);
+> > --
+> > 2.17.1
+>=20
+> Reviewed-by: Michael Kelley <mikelley@microsoft.com>
+Reviewed-by: K. Y. Srinivasan <kys@microsoft.com>
