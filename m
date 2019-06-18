@@ -1,7 +1,8 @@
 From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V5 06/16] scsi: pmcraid: use sg helper to operate scatterlist
-Date: Tue, 18 Jun 2019 09:37:47 +0800
-Message-ID: <20190618013757.22401-7-ming.lei@redhat.com>
+Subject: [PATCH V5 08/16] staging: unisys: visorhba: use sg helper to operate
+ scatterlist
+Date: Tue, 18 Jun 2019 09:37:49 +0800
+Message-ID: <20190618013757.22401-9-ming.lei@redhat.com>
 References: <20190618013757.22401-1-ming.lei@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -28,62 +29,36 @@ This way allows us to pre-allocate one small scatterlist, which can be
 chained with one runtime allocated scatterlist if the pre-allocated one
 isn't enough for the whole request.
 
+Cc: devel@driverdev.osuosl.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- drivers/scsi/pmcraid.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+ drivers/staging/unisys/visorhba/visorhba_main.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
-index e338d7a4f571..286cac59cb5f 100644
---- a/drivers/scsi/pmcraid.c
-+++ b/drivers/scsi/pmcraid.c
-@@ -3270,7 +3270,7 @@ static int pmcraid_copy_sglist(
- 	int direction
- )
- {
--	struct scatterlist *scatterlist;
-+	struct scatterlist *sg;
- 	void *kaddr;
- 	int bsize_elem;
- 	int i;
-@@ -3279,10 +3279,10 @@ static int pmcraid_copy_sglist(
- 	/* Determine the actual number of bytes per element */
- 	bsize_elem = PAGE_SIZE * (1 << sglist->order);
- 
--	scatterlist = sglist->scatterlist;
-+	sg = sglist->scatterlist;
- 
--	for (i = 0; i < (len / bsize_elem); i++, buffer += bsize_elem) {
--		struct page *page = sg_page(&scatterlist[i]);
-+	for (i = 0; i < (len / bsize_elem); i++, sg = sg_next(sg), buffer += bsize_elem) {
-+		struct page *page = sg_page(sg);
- 
- 		kaddr = kmap(page);
- 		if (direction == DMA_TO_DEVICE)
-@@ -3297,11 +3297,11 @@ static int pmcraid_copy_sglist(
- 			return -EFAULT;
+diff --git a/drivers/staging/unisys/visorhba/visorhba_main.c b/drivers/staging/unisys/visorhba/visorhba_main.c
+index 2dad36a05518..dd979ee4dcf1 100644
+--- a/drivers/staging/unisys/visorhba/visorhba_main.c
++++ b/drivers/staging/unisys/visorhba/visorhba_main.c
+@@ -871,12 +871,11 @@ static void do_scsi_nolinuxstat(struct uiscmdrsp *cmdrsp,
+ 			return;
  		}
  
--		scatterlist[i].length = bsize_elem;
-+		sg->length = bsize_elem;
- 	}
- 
- 	if (len % bsize_elem) {
--		struct page *page = sg_page(&scatterlist[i]);
-+		struct page *page = sg_page(sg);
- 
- 		kaddr = kmap(page);
- 
-@@ -3312,7 +3312,7 @@ static int pmcraid_copy_sglist(
- 
- 		kunmap(page);
- 
--		scatterlist[i].length = len % bsize_elem;
-+		sg->length = len % bsize_elem;
- 	}
- 
- 	if (rc) {
+-		sg = scsi_sglist(scsicmd);
+-		for (i = 0; i < scsi_sg_count(scsicmd); i++) {
+-			this_page_orig = kmap_atomic(sg_page(sg + i));
++		scsi_for_each_sg(scsicmd, sg, scsi_sg_count(scsicmd), i) {
++			this_page_orig = kmap_atomic(sg_page(sg));
+ 			this_page = (void *)((unsigned long)this_page_orig |
+-					     sg[i].offset);
+-			memcpy(this_page, buf + bufind, sg[i].length);
++					     sg->offset);
++			memcpy(this_page, buf + bufind, sg->length);
+ 			kunmap_atomic(this_page_orig);
+ 		}
+ 		kfree(buf);
 -- 
 2.20.1
