@@ -1,59 +1,101 @@
-From: Ming Lei <tom.leiming@gmail.com>
-Subject: Re: [PATCH 1/8] scsi: add a host / host template field for the virt boundary
-Date: Tue, 18 Jun 2019 08:35:21 +0800
-Message-ID: <CACVXFVOwCeM2JzefBpKsVZrEaWpSBR0DF8qp4oKfoHm+pwLBYw@mail.gmail.com>
-References: <20190617122000.22181-1-hch@lst.de> <20190617122000.22181-2-hch@lst.de>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH v1] scsi: Don't select SCSI_PROC_FS by default
+Date: Mon, 17 Jun 2019 20:35:50 -0400
+Message-ID: <fb2d2e74-6725-4bf2-cf6c-63c0a2a10f4f@interlog.com>
+References: <2de15293-b9be-4d41-bc67-a69417f27f7a@free.fr>
+ <621306ee-7ab6-9cd2-e934-94b3d6d731fc@acm.org>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190617122000.22181-2-hch@lst.de>
+In-Reply-To: <621306ee-7ab6-9cd2-e934-94b3d6d731fc@acm.org>
+Content-Language: en-CA
 Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagi@grimberg.me>, Max Gurtovoy <maxg@mellanox.com>, Bart Van Assche <bvanassche@acm.org>, linux-rdma <linux-rdma@vger.kernel.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, megaraidlinux.pdl@broadcom.com, MPT-FusionLinux.pdl@broadcom.com, linux-hyperv@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Bart Van Assche <bvanassche@acm.org>, Marc Gonzalez <marc.w.gonzalez@free.fr>, James Bottomley <jejb@linux.ibm.com>, Martin Petersen <martin.petersen@oracle.com>
+Cc: SCSI <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Jun 17, 2019 at 8:21 PM Christoph Hellwig <hch@lst.de> wrote:
->
-> This allows drivers setting it up easily instead of branching out to
-> block layer calls in slave_alloc, and ensures the upgraded
-> max_segment_size setting gets picked up by the DMA layer.
->
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  drivers/scsi/hosts.c     | 3 +++
->  drivers/scsi/scsi_lib.c  | 3 ++-
->  include/scsi/scsi_host.h | 3 +++
->  3 files changed, 8 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-> index ff0d8c6a8d0c..55522b7162d3 100644
-> --- a/drivers/scsi/hosts.c
-> +++ b/drivers/scsi/hosts.c
-> @@ -462,6 +462,9 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
->         else
->                 shost->dma_boundary = 0xffffffff;
->
-> +       if (sht->virt_boundary_mask)
-> +               shost->virt_boundary_mask = sht->virt_boundary_mask;
-> +
->         device_initialize(&shost->shost_gendev);
->         dev_set_name(&shost->shost_gendev, "host%d", shost->host_no);
->         shost->shost_gendev.bus = &scsi_bus_type;
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 65d0a10c76ad..d333bb6b1c59 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -1775,7 +1775,8 @@ void __scsi_init_queue(struct Scsi_Host *shost, struct request_queue *q)
->         dma_set_seg_boundary(dev, shost->dma_boundary);
->
->         blk_queue_max_segment_size(q, shost->max_segment_size);
-> -       dma_set_max_seg_size(dev, shost->max_segment_size);
-> +       blk_queue_virt_boundary(q, shost->virt_boundary_mask);
-> +       dma_set_max_seg_size(dev, queue_max_segment_size(q));
+On 2019-06-17 5:11 p.m., Bart Van Assche wrote:
+> On 6/12/19 6:59 AM, Marc Gonzalez wrote:
+>> According to the option's help message, SCSI_PROC_FS has been
+>> superseded for ~15 years. Don't select it by default anymore.
+>>
+>> Signed-off-by: Marc Gonzalez <marc.w.gonzalez@free.fr>
+>> ---
+>>   drivers/scsi/Kconfig | 3 ---
+>>   1 file changed, 3 deletions(-)
+>>
+>> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+>> index 73bce9b6d037..8c95e9ad6470 100644
+>> --- a/drivers/scsi/Kconfig
+>> +++ b/drivers/scsi/Kconfig
+>> @@ -54,14 +54,11 @@ config SCSI_NETLINK
+>>   config SCSI_PROC_FS
+>>       bool "legacy /proc/scsi/ support"
+>>       depends on SCSI && PROC_FS
+>> -    default y
+>>       ---help---
+>>         This option enables support for the various files in
+>>         /proc/scsi.  In Linux 2.6 this has been superseded by
+>>         files in sysfs but many legacy applications rely on this.
+>> -      If unsure say Y.
+>> -
+>>   comment "SCSI support type (disk, tape, CD-ROM)"
+>>       depends on SCSI
+> 
+> Hi Doug,
+> 
+> If I run grep "/proc/scsi" over the sg3_utils source code then grep reports 38 
+> matches for that string. Does sg3_utils break with SCSI_PROC_FS=n?
 
-The patch looks fine, also suggest to make sure that max_segment_size
-is block-size aligned, and un-aligned max segment size has caused trouble
-on mmc.
+First, the sg driver. If placing
+#undef CONFIG_SCSI_PROC_FS
 
-Thanks,
-Ming Lei
+prior to the includes in sg.c is a valid way to test that then the
+answer is no. Ah, but you are talking about sg3_utils .
+
+Or are you? For sg3_utils:
+
+$ find . -name '*.c' -exec grep "/proc/scsi" {} \; -print
+static const char * proc_allow_dio = "/proc/scsi/sg/allow_dio";
+./src/sg_read.c
+static const char * proc_allow_dio = "/proc/scsi/sg/allow_dio";
+./src/sgp_dd.c
+static const char * proc_allow_dio = "/proc/scsi/sg/allow_dio";
+./src/sgm_dd.c
+static const char * proc_allow_dio = "/proc/scsi/sg/allow_dio";
+./src/sg_dd.c
+                 "'echo 1 > /proc/scsi/sg/allow_dio'\n", q_len, dirio_count);
+./testing/sg_tst_bidi.c
+static const char * proc_allow_dio = "/proc/scsi/sg/allow_dio";
+./examples/sgq_dd.c
+
+
+That is 6 (not 38) by my count. Those 6 are all for direct IO
+(see below) which is off by default. I suspect old scanning
+utilities like sg_scan and sg_map might also use /proc/scsi/* .
+That is one reason why I wrote lsscsi. However I can't force folks
+to use lsscsi. As a related example, I still get bug reports for
+sginfo which I inherited from Eric Youngdale.
+
+If I was asked to debug a problem with the sg driver in a
+system without CONFIG_SCSI_PROC_FS defined, I would decline.
+
+The absence of /proc/scsi/sg/debug would be my issue. Can this
+be set up to do the same thing:
+     cat /sys/class/scsi_generic/debug
+? Is that breaking any sysfs rules?
+
+
+Also folks who rely on this to work:
+    cat /proc/scsi/sg/devices
+0	0	0	0	0	1	255	0	1
+0	0	0	1	0	1	255	0	1
+0	0	0	2	0	1	255	0	1
+
+would be disappointed. Further I note that setting allow_dio via
+/proc/scsi/sg/allow_dio can also be done via /sys/module/sg/allow_dio .
+So that would be an interface breakage, but with an alternative.
+
+Doug Gilbert
