@@ -1,89 +1,108 @@
-From: "Alastair D'Silva" <alastair@d-silva.org>
-Subject: Re: [PATCH v3 2/7] lib/hexdump.c: Relax rowsize checks in
- hex_dump_to_buffer
-Date: Tue, 18 Jun 2019 10:57:00 +1000
-Message-ID: <b2651117ca8a55d94b7e14e273d25199515039c3.camel@d-silva.org>
-References: <20190617020430.8708-1-alastair@au1.ibm.com>
-         <20190617020430.8708-3-alastair@au1.ibm.com>
-         <94413756-c927-a4ca-dd59-47e3cc87d58d@infradead.org>
+From: Finn Thain <fthain@telegraphics.com.au>
+Subject: Re: [PATCH v1] scsi: Don't select SCSI_PROC_FS by default
+Date: Tue, 18 Jun 2019 11:08:03 +1000 (AEST)
+Message-ID: <alpine.LNX.2.21.1906181107240.287@nippy.intranet>
+References: <2de15293-b9be-4d41-bc67-a69417f27f7a@free.fr> <621306ee-7ab6-9cd2-e934-94b3d6d731fc@acm.org> <fb2d2e74-6725-4bf2-cf6c-63c0a2a10f4f@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <94413756-c927-a4ca-dd59-47e3cc87d58d@infradead.org>
-Sender: netdev-owner@vger.kernel.org
-To: Randy Dunlap <rdunlap@infradead.org>
-Cc: Jani Nikula <jani.nikula@linux.intel.com>, Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, Rodrigo Vivi <rodrigo.vivi@intel.com>, David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>, Dan Carpenter <dan.carpenter@oracle.com>, Karsten Keil <isdn@linux-pingi.de>, Jassi Brar <jassisinghbrar@gmail.com>, Tom Lendacky <thomas.lendacky@amd.com>, "David S. Miller" <davem@davemloft.net>, Jose Abreu <Jose.Abreu@synopsys.com>, Kalle Valo <kvalo@codeaurora.org>, Stanislaw Gruszka <sgruszka@redhat.com>, Benson Leung <bleung@chromium.org>, Enric Balletbo i Serra <enric.balletbo@collabora.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Alexa
+Content-Type: text/plain; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <fb2d2e74-6725-4bf2-cf6c-63c0a2a10f4f@interlog.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Douglas Gilbert <dgilbert@interlog.com>
+Cc: Bart Van Assche <bvanassche@acm.org>, Marc Gonzalez <marc.w.gonzalez@free.fr>, James Bottomley <jejb@linux.ibm.com>, Martin Petersen <martin.petersen@oracle.com>, SCSI <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 2019-06-17 at 15:47 -0700, Randy Dunlap wrote:
-> Hi,
-> Just a comment style nit below...
-> 
-> On 6/16/19 7:04 PM, Alastair D'Silva wrote:
-> > From: Alastair D'Silva <alastair@d-silva.org>
+On Mon, 17 Jun 2019, Douglas Gilbert wrote:
+
+> On 2019-06-17 5:11 p.m., Bart Van Assche wrote:
+> > On 6/12/19 6:59 AM, Marc Gonzalez wrote:
+> > > According to the option's help message, SCSI_PROC_FS has been
+> > > superseded for ~15 years. Don't select it by default anymore.
+> > > 
+> > > Signed-off-by: Marc Gonzalez <marc.w.gonzalez@free.fr>
+> > > ---
+> > >   drivers/scsi/Kconfig | 3 ---
+> > >   1 file changed, 3 deletions(-)
+> > > 
+> > > diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+> > > index 73bce9b6d037..8c95e9ad6470 100644
+> > > --- a/drivers/scsi/Kconfig
+> > > +++ b/drivers/scsi/Kconfig
+> > > @@ -54,14 +54,11 @@ config SCSI_NETLINK
+> > >   config SCSI_PROC_FS
+> > >       bool "legacy /proc/scsi/ support"
+> > >       depends on SCSI && PROC_FS
+> > > -    default y
+> > >       ---help---
+> > >         This option enables support for the various files in
+> > >         /proc/scsi.  In Linux 2.6 this has been superseded by
+> > >         files in sysfs but many legacy applications rely on this.
+> > > -      If unsure say Y.
+> > > -
+> > >   comment "SCSI support type (disk, tape, CD-ROM)"
+> > >       depends on SCSI
 > > 
-> > This patch removes the hardcoded row limits and allows for
-> > other lengths. These lengths must still be a multiple of
-> > groupsize.
+> > Hi Doug,
 > > 
-> > This allows structs that are not 16/32 bytes to display on
-> > a single line.
-> > 
-> > This patch also expands the self-tests to test row sizes
-> > up to 64 bytes (though they can now be arbitrarily long).
-> > 
-> > Signed-off-by: Alastair D'Silva <alastair@d-silva.org>
-> > ---
-> >  lib/hexdump.c      | 48 ++++++++++++++++++++++++++++--------------
-> >  lib/test_hexdump.c | 52 ++++++++++++++++++++++++++++++++++++++--
-> > ------
-> >  2 files changed, 75 insertions(+), 25 deletions(-)
-> > 
-> > diff --git a/lib/hexdump.c b/lib/hexdump.c
-> > index 81b70ed37209..3943507bc0e9 100644
-> > --- a/lib/hexdump.c
-> > +++ b/lib/hexdump.c
-> > @@ -246,17 +248,29 @@ void print_hex_dump(const char *level, const
-> > char *prefix_str, int prefix_type,
-> >  {
-> >  	const u8 *ptr = buf;
-> >  	int i, linelen, remaining = len;
-> > -	unsigned char linebuf[32 * 3 + 2 + 32 + 1];
-> > +	unsigned char *linebuf;
-> > +	unsigned int linebuf_len;
-> >  
-> > -	if (rowsize != 16 && rowsize != 32)
-> > -		rowsize = 16;
-> > +	if (rowsize % groupsize)
-> > +		rowsize -= rowsize % groupsize;
-> > +
-> > +	/* Worst case line length:
-> > +	 * 2 hex chars + space per byte in, 2 spaces, 1 char per byte
-> > in, NULL
-> > +	 */
+> > If I run grep "/proc/scsi" over the sg3_utils source code then grep reports
+> > 38 matches for that string. Does sg3_utils break with SCSI_PROC_FS=n?
 > 
-> According to Documentation/process/coding-style.rst:
+> First, the sg driver. If placing
+> #undef CONFIG_SCSI_PROC_FS
 > 
-> The preferred style for long (multi-line) comments is:
+> prior to the includes in sg.c is a valid way to test that then the
+> answer is no. Ah, but you are talking about sg3_utils .
 > 
-> .. code-block:: c
+> Or are you? For sg3_utils:
 > 
-> 	/*
-> 	 * This is the preferred style for multi-line
-> 	 * comments in the Linux kernel source code.
-> 	 * Please use it consistently.
-> 	 *
-> 	 * Description:  A column of asterisks on the left side,
-> 	 * with beginning and ending almost-blank lines.
-> 	 */
+> $ find . -name '*.c' -exec grep "/proc/scsi" {} \; -print
+> static const char * proc_allow_dio = "/proc/scsi/sg/allow_dio";
+> ./src/sg_read.c
+> static const char * proc_allow_dio = "/proc/scsi/sg/allow_dio";
+> ./src/sgp_dd.c
+> static const char * proc_allow_dio = "/proc/scsi/sg/allow_dio";
+> ./src/sgm_dd.c
+> static const char * proc_allow_dio = "/proc/scsi/sg/allow_dio";
+> ./src/sg_dd.c
+>                 "'echo 1 > /proc/scsi/sg/allow_dio'\n", q_len, dirio_count);
+> ./testing/sg_tst_bidi.c
+> static const char * proc_allow_dio = "/proc/scsi/sg/allow_dio";
+> ./examples/sgq_dd.c
+> 
+> 
+> That is 6 (not 38) by my count. Those 6 are all for direct IO
+> (see below) which is off by default. I suspect old scanning
+> utilities like sg_scan and sg_map might also use /proc/scsi/* .
+> That is one reason why I wrote lsscsi. However I can't force folks
+> to use lsscsi. As a related example, I still get bug reports for
+> sginfo which I inherited from Eric Youngdale.
+> 
+> If I was asked to debug a problem with the sg driver in a
+> system without CONFIG_SCSI_PROC_FS defined, I would decline.
+> 
+> The absence of /proc/scsi/sg/debug would be my issue. Can this
+> be set up to do the same thing:
+>     cat /sys/class/scsi_generic/debug
+>   Is that breaking any sysfs rules?
+> 
+> 
+> Also folks who rely on this to work:
+>    cat /proc/scsi/sg/devices
+> 0	0	0	0	0	1	255	0	1
+> 0	0	0	1	0	1	255	0	1
+> 0	0	0	2	0	1	255	0	1
+> 
+> would be disappointed. Further I note that setting allow_dio via
+> /proc/scsi/sg/allow_dio can also be done via /sys/module/sg/allow_dio .
+> So that would be an interface breakage, but with an alternative.
+> 
+> Doug Gilbert
 > 
 
-Thanks Randy, I'll address this.
+You can grep for /proc/scsi/ across all Debian packages:
+https://codesearch.debian.net/
 
+This reveals that /proc/scsi/sg/ appears in smartmontools and other 
+packages, for example.
 
 -- 
-Alastair D'Silva           mob: 0423 762 819
-skype: alastair_dsilva    
-Twitter: @EvilDeece
-blog: http://alastair.d-silva.org
