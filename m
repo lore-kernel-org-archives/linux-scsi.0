@@ -1,69 +1,51 @@
 From: Marcos Paulo de Souza <marcos.souza.org@gmail.com>
-Subject: Re: [PATCH 2/2] usb: storage: scsiglue: Do not skip VPD if
- try_vpd_pages is set
-Date: Tue, 18 Jun 2019 19:46:35 -0300
-Message-ID: <20190618224633.GA11899@continental>
-References: <20190618013146.21961-3-marcos.souza.org@gmail.com>
- <Pine.LNX.4.44L0.1906180946160.1659-100000@iolanthe.rowland.org>
- <20190618151737.GA16959@geeko>
- <20190618160724.GB27611@kroah.com>
+Subject: Re: [PATCH] scsi: scsi_sysfs.c: Hide wwid sdev attr if VPD is not
+ supported
+Date: Tue, 18 Jun 2019 19:47:36 -0300
+Message-ID: <20190618224734.GB11899@continental>
+References: <20190612020828.8140-1-marcos.souza.org@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20190618160724.GB27611@kroah.com>
+In-Reply-To: <20190612020828.8140-1-marcos.souza.org@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Kernel development list <linux-kernel@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>, "open list:USB MASS STORAGE DRIVER" <linux-usb@vger.kernel.org>, "open list:USB MASS STORAGE DRIVER" <usb-storage@lists.one-eyed-alien.net>
+To: linux-kernel@vger.kernel.org
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "open list:SCSI SUBSYSTEM" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Jun 18, 2019 at 06:07:24PM +0200, Greg Kroah-Hartman wrote:
-> On Tue, Jun 18, 2019 at 12:17:39PM -0300, Marcos Paulo de Souza wrote:
-> > On Tue, Jun 18, 2019 at 09:48:01AM -0400, Alan Stern wrote:
-> > > On Mon, 17 Jun 2019, Marcos Paulo de Souza wrote:
-> > > 
-> > > > If BLIST_TRY_VPD_PAGES is set for a device, even for an USB, it should
-> > > > be honored, so only set skip_vpd_pages is try_vpd_pages is not set.
-> > > > 
-> > > > Signed-off-by: Marcos Paulo de Souza <marcos.souza.org@gmail.com>
-> > > > ---
-> > > >  drivers/usb/storage/scsiglue.c | 7 +++++--
-> > > >  1 file changed, 5 insertions(+), 2 deletions(-)
-> > > > 
-> > > > diff --git a/drivers/usb/storage/scsiglue.c b/drivers/usb/storage/scsiglue.c
-> > > > index 59190d88fa9f..0a9520780771 100644
-> > > > --- a/drivers/usb/storage/scsiglue.c
-> > > > +++ b/drivers/usb/storage/scsiglue.c
-> > > > @@ -195,8 +195,11 @@ static int slave_configure(struct scsi_device *sdev)
-> > > >  		 */
-> > > >  		sdev->skip_ms_page_8 = 1;
-> > > >  
-> > > > -		/* Some devices don't handle VPD pages correctly */
-> > > > -		sdev->skip_vpd_pages = 1;
-> > > > +		/*
-> > > > +		 * Some devices don't handle VPD pages correctly, so skip vpd
-> > > > +		 * pages if not forced by SCSI layer.
-> > > > +		 */
-> > > > +		sdev->skip_vpd_pages = sdev->try_vpd_pages == 0;
-> > > >  
-> > > >  		/* Do not attempt to use REPORT SUPPORTED OPERATION CODES */
-> > > >  		sdev->no_report_opcodes = 1;
-> > > 
-> > > Acked-by: Alan Stern <stern@rowland.harvard.edu>
-> > > 
-> > > Although I think it would be clearer to write:
-> > > 
-> > > 		sdev->skip_vpd_pages = !sdev->try_vpd_pages;
-> > 
-> > I agree. Greg, would you like me to send a v2 of this patch with this change, or
-> > can you apply the change suggested by Alan?
+ping? Can anybody take a look at this patch?
+
+Thanks,
+Marcos
+
+On Tue, Jun 11, 2019 at 11:08:28PM -0300, Marcos Paulo de Souza wrote:
+> WWID composed from VPD data from device, specifically page 0x83. So,
+> when a device does not have VPD support, for example USB storage devices
+> where VPD is specifically disabled, a read into <blk device>/device/wwid
+> file will always return ENXIO. To avoid this, change the
+> scsi_sdev_attr_is_visible function to hide wwid sysfs file when the
+> devices does not support VPD.
 > 
-> I do not hand-edit patches, sorry.  It does not scale, please resend.
-
-No problem, v2 just sent:
-https://lore.kernel.org/linux-usb/20190618224454.16595-1-marcos.souza.org@gmail.com/T/#u
-
-Thanks Alan for the quick review!
-
+> Signed-off-by: Marcos Paulo de Souza <marcos.souza.org@gmail.com>
+> ---
+>  drivers/scsi/scsi_sysfs.c | 3 +++
+>  1 file changed, 3 insertions(+)
 > 
-> greg k-h
+> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+> index dbb206c90ecf..bfd890fa0c69 100644
+> --- a/drivers/scsi/scsi_sysfs.c
+> +++ b/drivers/scsi/scsi_sysfs.c
+> @@ -1159,6 +1159,9 @@ static umode_t scsi_sdev_attr_is_visible(struct kobject *kobj,
+>  	struct device *dev = container_of(kobj, struct device, kobj);
+>  	struct scsi_device *sdev = to_scsi_device(dev);
+>  
+> +	/* do not present wwid if the device does not support VPD */
+> +	if (attr == &dev_attr_wwid.attr && sdev->skip_vpd_pages)
+> +		return 0;
+>  
+>  	if (attr == &dev_attr_queue_depth.attr &&
+>  	    !sdev->host->hostt->change_queue_depth)
+> -- 
+> 2.21.0
+> 
