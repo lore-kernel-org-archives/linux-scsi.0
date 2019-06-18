@@ -1,7 +1,7 @@
 From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V5 01/16] scsi: vmw_pscsi: use sg helper to operate scatterlist
-Date: Tue, 18 Jun 2019 09:37:42 +0800
-Message-ID: <20190618013757.22401-2-ming.lei@redhat.com>
+Subject: [PATCH V5 02/16] scsi: advansys: use sg helper to operate scatterlist
+Date: Tue, 18 Jun 2019 09:37:43 +0800
+Message-ID: <20190618013757.22401-3-ming.lei@redhat.com>
 References: <20190618013757.22401-1-ming.lei@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,33 +21,33 @@ To: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.co
 Cc: Michael Schmitz <schmitzmic@gmail.com>, devel@driverdev.osuosl.org, Hannes Reinecke <hare@suse.com>, Benjamin Block <bblock@linux.ibm.com>, Bart Van Assche <bvanassche@acm.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org, James Smart <james.smart@broadcom.com>, "Ewan D . Milne" <emilne@redhat.com>, Jim Gill <jgill@vmware.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Brian King <brking@us.ibm.com>, Finn Thain <fthain@telegraphics.com.au>, "Juergen E . Fischer" <fischer@norbit.de>, Ming Lei <ming.lei@redhat.com>, Christoph Hellwig <hch@lst.de>, Dan Carpenter <dan.carpenter@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Use the scatterlist iterators and remove direct indexing of the scatterlist
-array.
+Use the scatterlist iterators and remove direct indexing of the
+scatterlist array.
 
-This way allows us to pre-allocate one small scatterlist, which can be chained
-with one runtime allocated scatterlist if the pre-allocated one isn't enough
-for the whole request.
+This way allows us to pre-allocate one small scatterlist, which can be
+chained with one runtime allocated scatterlist if the pre-allocated one
+isn't enough for the whole request.
 
 Reviewed-by: Ewan D. Milne <emilne@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- drivers/scsi/vmw_pvscsi.c | 2 +-
+ drivers/scsi/advansys.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
-index ecee4b3ff073..d71abd416eb4 100644
---- a/drivers/scsi/vmw_pvscsi.c
-+++ b/drivers/scsi/vmw_pvscsi.c
-@@ -335,7 +335,7 @@ static void pvscsi_create_sg(struct pvscsi_ctx *ctx,
- 	BUG_ON(count > PVSCSI_MAX_NUM_SG_ENTRIES_PER_SEGMENT);
- 
- 	sge = &ctx->sgl->sge[0];
--	for (i = 0; i < count; i++, sg++) {
-+	for (i = 0; i < count; i++, sg = sg_next(sg)) {
- 		sge[i].addr   = sg_dma_address(sg);
- 		sge[i].length = sg_dma_len(sg);
- 		sge[i].flags  = 0;
+diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
+index d37584403c33..b87de8d3d844 100644
+--- a/drivers/scsi/advansys.c
++++ b/drivers/scsi/advansys.c
+@@ -7714,7 +7714,7 @@ adv_get_sglist(struct asc_board *boardp, adv_req_t *reqp,
+ 				sg_block->sg_ptr = 0L; /* Last ADV_SG_BLOCK in list. */
+ 				return ADV_SUCCESS;
+ 			}
+-			slp++;
++			slp = sg_next(slp);
+ 		}
+ 		sg_block->sg_cnt = NO_OF_SG_PER_BLOCK;
+ 		prev_sg_block = sg_block;
 -- 
 2.20.1
