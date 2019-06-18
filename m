@@ -1,95 +1,98 @@
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Subject: Re: [PATCH 1/1] scsi: ufs-qcom: Add support for platforms booting ACPI
-Date: Tue, 18 Jun 2019 18:46:29 +0200
-Message-ID: <CAKv+Gu_qd9KrXHVSVHCoM42D8ACjU5onzFGJPTTBGOsVJpeayg@mail.gmail.com>
-References: <20190617115454.3226-1-lee.jones@linaro.org>
+From: "Elliott, Robert (Servers)" <elliott@hpe.com>
+Subject: RE: [PATCH v1] scsi: Don't select SCSI_PROC_FS by default
+Date: Tue, 18 Jun 2019 17:43:25 +0000
+Message-ID: <AT5PR8401MB11695CC7286B2D2F98FB9EADABEA0@AT5PR8401MB1169.NAMPRD84.PROD.OUTLOOK.COM>
+References: <2de15293-b9be-4d41-bc67-a69417f27f7a@free.fr>
+ <621306ee-7ab6-9cd2-e934-94b3d6d731fc@acm.org>
+ <fb2d2e74-6725-4bf2-cf6c-63c0a2a10f4f@interlog.com>
+ <da579578-349e-1320-0867-14fde659733e@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190617115454.3226-1-lee.jones@linaro.org>
+In-Reply-To: <da579578-349e-1320-0867-14fde659733e@acm.org>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Lee Jones <lee.jones@linaro.org>
-Cc: agross@kernel.org, David Brown <david.brown@linaro.org>, alim.akhtar@samsung.com, avri.altman@wdc.com, pedrom.sousa@synopsys.com, jejb@linux.ibm.com, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-arm-msm <linux-arm-msm@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Jeffrey Hugo <jlhugo@gmail.com>, Bjorn Andersson <bjorn.andersson@linaro.org>
+To: Bart Van Assche <bvanassche@acm.org>, "dgilbert@interlog.com" <dgilbert@interlog.com>, Marc Gonzalez <marc.w.gonzalez@free.fr>, James Bottomley <jejb@linux.ibm.com>, Martin Petersen <martin.petersen@oracle.com>
+Cc: SCSI <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 17 Jun 2019 at 13:55, Lee Jones <lee.jones@linaro.org> wrote:
->
-> New Qualcomm AArch64 based laptops are now available which use UFS
-> as their primary data storage medium.  These devices are supplied
-> with ACPI support out of the box.  This patch ensures the Qualcomm
-> UFS driver will be bound when the "QCOM24A5" H/W device is
-> advertised as present.
->
-> Signed-off-by: Lee Jones <lee.jones@linaro.org>
-
-Reviewed-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-
-> ---
->  drivers/scsi/ufs/ufs-qcom.c | 23 ++++++++++++++++++++---
->  1 file changed, 20 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-> index 3aeadb14aae1..364af6a63e35 100644
-> --- a/drivers/scsi/ufs/ufs-qcom.c
-> +++ b/drivers/scsi/ufs/ufs-qcom.c
-> @@ -12,6 +12,7 @@
->   *
->   */
->
-> +#include <linux/acpi.h>
->  #include <linux/time.h>
->  #include <linux/of.h>
->  #include <linux/platform_device.h>
-> @@ -164,6 +165,9 @@ static int ufs_qcom_init_lane_clks(struct ufs_qcom_host *host)
->         int err = 0;
->         struct device *dev = host->hba->dev;
->
-> +       if (has_acpi_companion(dev))
-> +               return 0;
-> +
->         err = ufs_qcom_host_clk_get(dev, "rx_lane0_sync_clk",
->                                         &host->rx_l0_sync_clk, false);
->         if (err)
-> @@ -1208,9 +1212,13 @@ static int ufs_qcom_init(struct ufs_hba *hba)
->                         __func__, err);
->                 goto out_variant_clear;
->         } else if (IS_ERR(host->generic_phy)) {
-> -               err = PTR_ERR(host->generic_phy);
-> -               dev_err(dev, "%s: PHY get failed %d\n", __func__, err);
-> -               goto out_variant_clear;
-> +               if (has_acpi_companion(dev)) {
-> +                       host->generic_phy = NULL;
-> +               } else {
-> +                       err = PTR_ERR(host->generic_phy);
-> +                       dev_err(dev, "%s: PHY get failed %d\n", __func__, err);
-> +                       goto out_variant_clear;
-> +               }
->         }
->
->         err = ufs_qcom_bus_register(host);
-> @@ -1680,6 +1688,14 @@ static const struct of_device_id ufs_qcom_of_match[] = {
->  };
->  MODULE_DEVICE_TABLE(of, ufs_qcom_of_match);
->
-> +#ifdef CONFIG_ACPI
-> +static const struct acpi_device_id ufs_qcom_acpi_match[] = {
-> +       { "QCOM24A5" },
-> +       { },
-> +};
-> +MODULE_DEVICE_TABLE(acpi, ufs_qcom_acpi_match);
-> +#endif
-> +
->  static const struct dev_pm_ops ufs_qcom_pm_ops = {
->         .suspend        = ufshcd_pltfrm_suspend,
->         .resume         = ufshcd_pltfrm_resume,
-> @@ -1696,6 +1712,7 @@ static struct platform_driver ufs_qcom_pltform = {
->                 .name   = "ufshcd-qcom",
->                 .pm     = &ufs_qcom_pm_ops,
->                 .of_match_table = of_match_ptr(ufs_qcom_of_match),
-> +               .acpi_match_table = ACPI_PTR(ufs_qcom_acpi_match),
->         },
->  };
->  module_platform_driver(ufs_qcom_pltform);
-> --
-> 2.17.1
->
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGludXgta2VybmVsLW93
+bmVyQHZnZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LWtlcm5lbC1vd25lckB2Z2VyLmtlcm5l
+bC5vcmddIE9uIEJlaGFsZiBPZiBCYXJ0DQo+IFZhbiBBc3NjaGUNCj4gU2VudDogTW9uZGF5LCBK
+dW5lIDE3LCAyMDE5IDEwOjI4IFBNDQo+IFRvOiBkZ2lsYmVydEBpbnRlcmxvZy5jb207IE1hcmMg
+R29uemFsZXogPG1hcmMudy5nb256YWxlekBmcmVlLmZyPjsgSmFtZXMgQm90dG9tbGV5DQo+IDxq
+ZWpiQGxpbnV4LmlibS5jb20+OyBNYXJ0aW4gUGV0ZXJzZW4gPG1hcnRpbi5wZXRlcnNlbkBvcmFj
+bGUuY29tPg0KPiBDYzogU0NTSSA8bGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmc+OyBMS01MIDxs
+aW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnPjsgQ2hyaXN0b3BoIEhlbGx3aWcNCj4gPGhjaEBs
+c3QuZGU+DQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggdjFdIHNjc2k6IERvbid0IHNlbGVjdCBTQ1NJ
+X1BST0NfRlMgYnkgZGVmYXVsdA0KPiANCj4gT24gNi8xNy8xOSA1OjM1IFBNLCBEb3VnbGFzIEdp
+bGJlcnQgd3JvdGU6DQo+ID4gRm9yIHNnM191dGlsczoNCj4gPg0KPiA+ICQgZmluZCAuIC1uYW1l
+ICcqLmMnIC1leGVjIGdyZXAgIi9wcm9jL3Njc2kiIHt9IFw7IC1wcmludA0KPiA+IHN0YXRpYyBj
+b25zdCBjaGFyICogcHJvY19hbGxvd19kaW8gPSAiL3Byb2Mvc2NzaS9zZy9hbGxvd19kaW8iOw0K
+PiA+IC4vc3JjL3NnX3JlYWQuYw0KPiA+IHN0YXRpYyBjb25zdCBjaGFyICogcHJvY19hbGxvd19k
+aW8gPSAiL3Byb2Mvc2NzaS9zZy9hbGxvd19kaW8iOw0KPiA+IC4vc3JjL3NncF9kZC5jDQo+ID4g
+c3RhdGljIGNvbnN0IGNoYXIgKiBwcm9jX2FsbG93X2RpbyA9ICIvcHJvYy9zY3NpL3NnL2FsbG93
+X2RpbyI7DQo+ID4gLi9zcmMvc2dtX2RkLmMNCj4gPiBzdGF0aWMgY29uc3QgY2hhciAqIHByb2Nf
+YWxsb3dfZGlvID0gIi9wcm9jL3Njc2kvc2cvYWxsb3dfZGlvIjsNCj4gPiAuL3NyYy9zZ19kZC5j
+DQo+ID4gIMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCAiJ2VjaG8gMSA+IC9wcm9jL3Nj
+c2kvc2cvYWxsb3dfZGlvJ1xuIiwgcV9sZW4sDQo+ID4gZGlyaW9fY291bnQpOw0KPiA+IC4vdGVz
+dGluZy9zZ190c3RfYmlkaS5jDQo+ID4gc3RhdGljIGNvbnN0IGNoYXIgKiBwcm9jX2FsbG93X2Rp
+byA9ICIvcHJvYy9zY3NpL3NnL2FsbG93X2RpbyI7DQo+ID4gLi9leGFtcGxlcy9zZ3FfZGQuYw0K
+PiA+DQo+ID4gVGhhdCBpcyA2IChub3QgMzgpIGJ5IG15IGNvdW50Lg0KPiANCj4gSGkgRG91ZywN
+Cj4gDQo+IFRoaXMgaXMgdGhlIGNvbW1hbmQgSSByYW46DQo+IA0KPiAkIGdpdCBncmVwIC9wcm9j
+L3Njc2kgfCB3YyAtbA0KPiAzOA0KPiANCj4gSSB0aGluayB5b3VyIHF1ZXJ5IGV4Y2x1ZGVzIHNj
+cmlwdHMvcmVzY2FuLXNjc2ktYnVzLnNoLg0KPiANCj4gQmFydC4NCg0KSGVyZSdzIHRoZSBmdWxs
+IGxpc3QgdG8gZW5zdXJlIHRoZSBkaXNjdXNzaW9uIGRvZXNuJ3Qgb3Zlcmxvb2sgYW55dGhpbmc6
+DQoNCnNnM191dGlscy0xLjQ0JCBncmVwIC1SIC9wcm9jL3Njc2kgLg0KLi9zcmMvc2dfcmVhZC5j
+OnN0YXRpYyBjb25zdCBjaGFyICogcHJvY19hbGxvd19kaW8gPSAiL3Byb2Mvc2NzaS9zZy9hbGxv
+d19kaW8iOw0KLi9zcmMvc2dwX2RkLmM6c3RhdGljIGNvbnN0IGNoYXIgKiBwcm9jX2FsbG93X2Rp
+byA9ICIvcHJvYy9zY3NpL3NnL2FsbG93X2RpbyI7DQouL3NyYy9zZ21fZGQuYzpzdGF0aWMgY29u
+c3QgY2hhciAqIHByb2NfYWxsb3dfZGlvID0gIi9wcm9jL3Njc2kvc2cvYWxsb3dfZGlvIjsNCi4v
+c3JjL3NnX2RkLmM6c3RhdGljIGNvbnN0IGNoYXIgKiBwcm9jX2FsbG93X2RpbyA9ICIvcHJvYy9z
+Y3NpL3NnL2FsbG93X2RpbyI7DQouL3NjcmlwdHMvcmVzY2FuLXNjc2ktYnVzLnNoOiMgUmV0dXJu
+IGhvc3RzLiAvcHJvYy9zY3NpL0hPU1RBREFQVEVSLz8gbXVzdCBleGlzdA0KLi9zY3JpcHRzL3Jl
+c2Nhbi1zY3NpLWJ1cy5zaDogIGZvciBkcml2ZXJkaXIgaW4gL3Byb2Mvc2NzaS8qOyBkbw0KLi9z
+Y3JpcHRzL3Jlc2Nhbi1zY3NpLWJ1cy5zaDogICAgZHJpdmVyPSR7ZHJpdmVyZGlyIy9wcm9jL3Nj
+c2kvfQ0KLi9zY3JpcHRzL3Jlc2Nhbi1zY3NpLWJ1cy5zaDogICAgICBuYW1lPSR7aG9zdGRpciMv
+cHJvYy9zY3NpLyovfQ0KLi9zY3JpcHRzL3Jlc2Nhbi1zY3NpLWJ1cy5zaDojIEdldCAvcHJvYy9z
+Y3NpL3Njc2kgaW5mbyBmb3IgZGV2aWNlICRob3N0OiRjaGFubmVsOiRpZDokbHVuDQouL3Njcmlw
+dHMvcmVzY2FuLXNjc2ktYnVzLnNoOiAgICBTQ1NJU1RSPSQoZ3JlcCAtQSAiJExOIiAtZSAiJGdy
+ZXBzdHIiIC9wcm9jL3Njc2kvc2NzaSkNCi4vc2NyaXB0cy9yZXNjYW4tc2NzaS1idXMuc2g6ICAg
+IERSVj1gZ3JlcCAnQXR0YWNoZWQgZHJpdmVyczonIC9wcm9jL3Njc2kvc2NzaSAyPi9kZXYvbnVs
+bGANCi4vc2NyaXB0cy9yZXNjYW4tc2NzaS1idXMuc2g6ICAgICAgZWNobyAic2NzaSByZXBvcnQt
+ZGV2cyAxIiA+L3Byb2Mvc2NzaS9zY3NpDQouL3NjcmlwdHMvcmVzY2FuLXNjc2ktYnVzLnNoOiAg
+ICAgIERSVj1gZ3JlcCAnQXR0YWNoZWQgZHJpdmVyczonIC9wcm9jL3Njc2kvc2NzaSAyPi9kZXYv
+bnVsbGANCi4vc2NyaXB0cy9yZXNjYW4tc2NzaS1idXMuc2g6ICAgICAgZWNobyAic2NzaSByZXBv
+cnQtZGV2cyAwIiA+L3Byb2Mvc2NzaS9zY3NpDQouL3NjcmlwdHMvcmVzY2FuLXNjc2ktYnVzLnNo
+OiMgT3V0cHV0cyBkZXNjcmlwdGlvbiBmcm9tIC9wcm9jL3Njc2kvc2NzaSAodW5sZXNzIGFyZyBw
+YXNzZWQpDQouL3NjcmlwdHMvcmVzY2FuLXNjc2ktYnVzLnNoOiAgICAgICAgZWNobyAic2NzaSBy
+ZW1vdmUtc2luZ2xlLWRldmljZSAkZGV2bnIiID4gL3Byb2Mvc2NzaS9zY3NpDQouL3NjcmlwdHMv
+cmVzY2FuLXNjc2ktYnVzLnNoOiAgICAgICAgICBlY2hvICJzY3NpIGFkZC1zaW5nbGUtZGV2aWNl
+ICRkZXZuciIgPiAvcHJvYy9zY3NpL3Njc2kNCi4vc2NyaXB0cy9yZXNjYW4tc2NzaS1idXMuc2g6
+ICAgICAgZWNobyAic2NzaSBhZGQtc2luZ2xlLWRldmljZSAkZGV2bnIiID4gL3Byb2Mvc2NzaS9z
+Y3NpDQouL3NjcmlwdHMvcmVzY2FuLXNjc2ktYnVzLnNoOiAgICAgIGVjaG8gInNjc2kgYWRkLXNp
+bmdsZS1kZXZpY2UgJGRldm5yIiA+IC9wcm9jL3Njc2kvc2NzaQ0KLi9zY3JpcHRzL3Jlc2Nhbi1z
+Y3NpLWJ1cy5zaDogICAgICBlY2hvICJzY3NpIGFkZC1zaW5nbGUtZGV2aWNlICRob3N0ICRjaGFu
+bmVsICRpZCAkU0NBTl9XSUxEX0NBUkQiID4gL3Byb2Mvc2NzaS9zY3NpDQouL3NjcmlwdHMvcmVz
+Y2FuLXNjc2ktYnVzLnNoOmlmIHRlc3QgISAtZCAvc3lzL2NsYXNzL3Njc2lfaG9zdC8gLWEgISAt
+ZCAvcHJvYy9zY3NpLzsgdGhlbg0KLi9DaGFuZ2VMb2c6ICAgIC9wcm9jL3Njc2kvc2cvYWxsb3df
+ZGlvIGlzICcwJw0KLi9DaGFuZ2VMb2c6ICAtIGNoYW5nZSBzZ19kZWJ1ZyB0byBjYWxsIHN5c3Rl
+bSgiY2F0IC9wcm9jL3Njc2kvc2cvZGVidWciKTsNCi4vc3VzZS9zZzNfdXRpbHMuY2hhbmdlczog
+ICogU3VwcG9ydCBzeXN0ZW1zIHdpdGhvdXQgL3Byb2Mvc2NzaQ0KLi9leGFtcGxlcy9zZ3FfZGQu
+YzpzdGF0aWMgY29uc3QgY2hhciAqIHByb2NfYWxsb3dfZGlvID0gIi9wcm9jL3Njc2kvc2cvYWxs
+b3dfZGlvIjsNCi4vZG9jL3NnX3JlYWQuODpJZiBkaXJlY3QgSU8gaXMgc2VsZWN0ZWQgYW5kIC9w
+cm9jL3Njc2kvc2cvYWxsb3dfZGlvDQouL2RvYy9zZ19yZWFkLjg6ImVjaG8gMSA+IC9wcm9jL3Nj
+c2kvc2cvYWxsb3dfZGlvIi4gQW4gYWx0ZXJuYXRlIHdheSB0byBhdm9pZCB0aGUNCi4vZG9jL3Nn
+X21hcC44Om9ic2VydmluZyB0aGUgb3V0cHV0IG9mIHRoZSBjb21tYW5kOiAiY2F0IC9wcm9jL3Nj
+c2kvc2NzaSIuDQouL2RvYy9zZ3BfZGQuODphdCBjb21wbGV0aW9uLiBJZiBkaXJlY3QgSU8gaXMg
+c2VsZWN0ZWQgYW5kIC9wcm9jL3Njc2kvc2cvYWxsb3dfZGlvDQouL2RvYy9zZ3BfZGQuODp0aGlz
+IGF0IGNvbXBsZXRpb24uIElmIGRpcmVjdCBJTyBpcyBzZWxlY3RlZCBhbmQgL3Byb2Mvc2NzaS9z
+Zy9hbGxvd19kaW8NCi4vZG9jL3NncF9kZC44Om1hcHBpbmcgdG8gU0NTSSBibG9jayBkZXZpY2Vz
+IHNob3VsZCBiZSBjaGVja2VkIHdpdGggJ2NhdCAvcHJvYy9zY3NpL3Njc2knDQouL2RvYy9zZ19k
+ZC44Om5vdGVzIHRoaXMgYXQgY29tcGxldGlvbi4gSWYgZGlyZWN0IElPIGlzIHNlbGVjdGVkIGFu
+ZCAvcHJvYy9zY3NpL3NnL2FsbG93X2Rpbw0KLi9kb2Mvc2dfZGQuODp0aGlzIGF0IGNvbXBsZXRp
+b24uIElmIGRpcmVjdCBJTyBpcyBzZWxlY3RlZCBhbmQgL3Byb2Mvc2NzaS9zZy9hbGxvd19kaW8N
+Ci4vZG9jL3NnX2RkLjg6d2l0aCAnZWNobyAxID4gL3Byb2Mvc2NzaS9zZy9hbGxvd19kaW8nLg0K
+Li9kb2Mvc2dfZGQuODptYXBwaW5nIHRvIFNDU0kgYmxvY2sgZGV2aWNlcyBzaG91bGQgYmUgY2hl
+Y2tlZCB3aXRoICdjYXQgL3Byb2Mvc2NzaS9zY3NpJywNCg0KDQo=
