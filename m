@@ -1,65 +1,59 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH V4 11/16] scsi: aha152x: use sg helper to operate
- scatterlist
-Date: Tue, 18 Jun 2019 08:15:37 +0800
-Message-ID: <20190618001536.GA5774@ming.t460p>
-References: <20190617030349.26415-1-ming.lei@redhat.com>
- <20190617030349.26415-12-ming.lei@redhat.com>
- <alpine.LNX.2.21.1906171334330.168@nippy.intranet>
- <alpine.LNX.2.21.1906180901160.284@nippy.intranet>
+From: Ming Lei <tom.leiming@gmail.com>
+Subject: Re: [PATCH 1/8] scsi: add a host / host template field for the virt boundary
+Date: Tue, 18 Jun 2019 08:35:21 +0800
+Message-ID: <CACVXFVOwCeM2JzefBpKsVZrEaWpSBR0DF8qp4oKfoHm+pwLBYw@mail.gmail.com>
+References: <20190617122000.22181-1-hch@lst.de> <20190617122000.22181-2-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.LNX.2.21.1906180901160.284@nippy.intranet>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: Michael Schmitz <schmitzmic@gmail.com>, devel@driverdev.osuosl.org, Hannes Reinecke <hare@suse.com>, Benjamin Block <bblock@linux.ibm.com>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org, James Smart <james.smart@broadcom.com>, "Ewan D . Milne" <emilne@redhat.com>, Jim Gill <jgill@vmware.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Brian King <brking@us.ibm.com>, "Juergen E . Fischer" <fischer@norbit.de>, Christoph Hellwig <hch@lst.de>, Dan Carpenter <dan.carpenter@oracle.com>, Bart Van Assche <bvanassche@acm.org>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190617122000.22181-2-hch@lst.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagi@grimberg.me>, Max Gurtovoy <maxg@mellanox.com>, Bart Van Assche <bvanassche@acm.org>, linux-rdma <linux-rdma@vger.kernel.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, megaraidlinux.pdl@broadcom.com, MPT-FusionLinux.pdl@broadcom.com, linux-hyperv@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Jun 18, 2019 at 09:35:48AM +1000, Finn Thain wrote:
-> On Mon, 17 Jun 2019, Finn Thain wrote:
-> 
-> > On Mon, 17 Jun 2019, Ming Lei wrote:
-> > 
-> > > Use the scatterlist iterators and remove direct indexing of the
-> > > scatterlist array.
-> > > 
-> > > This way allows us to pre-allocate one small scatterlist, which can be
-> > > chained with one runtime allocated scatterlist if the pre-allocated one
-> > > isn't enough for the whole request.
-> > > 
-> > > Finn added the change to replace SCp.buffers_residual with sg_is_last()
-> > > for fixing updating it, and the similar change has been applied on
-> > > NCR5380.c
-> > > 
-> > > Cc: Finn Thain <fthain@telegraphics.com.au>
-> > > Signed-off-by: Ming Lei <ming.lei@redhat.com>
-> > 
-> > Reviewed-by: Finn Thain <fthain@telegraphics.com.au>
-> > 
-> 
-> I have to retract that. I think this patch is still wrong.
-> 
-> GETSTCNT() appears to be the number of bytes sent since datao_init() and 
-> not the number of bytes sent since the start of the command. (Note the 
-> CLRSTCNT in datao_init() which appears to clear the transfer counter.) I 
-> don't see how the existing datao_end() could work otherwise. (Juergen?)
-> 
-> So here's another attempt. Ming, I'd be happy to take the blame/credit (in 
-> the form of a From tag etc.) in case you don't want to spend more time on 
-> this.
+On Mon, Jun 17, 2019 at 8:21 PM Christoph Hellwig <hch@lst.de> wrote:
+>
+> This allows drivers setting it up easily instead of branching out to
+> block layer calls in slave_alloc, and ensures the upgraded
+> max_segment_size setting gets picked up by the DMA layer.
+>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  drivers/scsi/hosts.c     | 3 +++
+>  drivers/scsi/scsi_lib.c  | 3 ++-
+>  include/scsi/scsi_host.h | 3 +++
+>  3 files changed, 8 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+> index ff0d8c6a8d0c..55522b7162d3 100644
+> --- a/drivers/scsi/hosts.c
+> +++ b/drivers/scsi/hosts.c
+> @@ -462,6 +462,9 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+>         else
+>                 shost->dma_boundary = 0xffffffff;
+>
+> +       if (sht->virt_boundary_mask)
+> +               shost->virt_boundary_mask = sht->virt_boundary_mask;
+> +
+>         device_initialize(&shost->shost_gendev);
+>         dev_set_name(&shost->shost_gendev, "host%d", shost->host_no);
+>         shost->shost_gendev.bus = &scsi_bus_type;
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 65d0a10c76ad..d333bb6b1c59 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -1775,7 +1775,8 @@ void __scsi_init_queue(struct Scsi_Host *shost, struct request_queue *q)
+>         dma_set_seg_boundary(dev, shost->dma_boundary);
+>
+>         blk_queue_max_segment_size(q, shost->max_segment_size);
+> -       dma_set_max_seg_size(dev, shost->max_segment_size);
+> +       blk_queue_virt_boundary(q, shost->virt_boundary_mask);
+> +       dma_set_max_seg_size(dev, queue_max_segment_size(q));
 
-Sure, will do that in V5.
+The patch looks fine, also suggest to make sure that max_segment_size
+is block-size aligned, and un-aligned max segment size has caused trouble
+on mmc.
 
 Thanks,
-Ming
+Ming Lei
