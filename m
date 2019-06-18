@@ -1,61 +1,95 @@
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH 2/2] usb: storage: scsiglue: Do not skip VPD if
- try_vpd_pages is set
-Date: Tue, 18 Jun 2019 18:07:24 +0200
-Message-ID: <20190618160724.GB27611@kroah.com>
-References: <20190618013146.21961-3-marcos.souza.org@gmail.com>
- <Pine.LNX.4.44L0.1906180946160.1659-100000@iolanthe.rowland.org>
- <20190618151737.GA16959@geeko>
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Subject: Re: [PATCH 1/1] scsi: ufs-qcom: Add support for platforms booting ACPI
+Date: Tue, 18 Jun 2019 18:46:29 +0200
+Message-ID: <CAKv+Gu_qd9KrXHVSVHCoM42D8ACjU5onzFGJPTTBGOsVJpeayg@mail.gmail.com>
+References: <20190617115454.3226-1-lee.jones@linaro.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20190618151737.GA16959@geeko>
+In-Reply-To: <20190617115454.3226-1-lee.jones@linaro.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Marcos Paulo de Souza <marcos.souza.org@gmail.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Kernel development list <linux-kernel@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>, "open list:USB MASS STORAGE DRIVER" <linux-usb@vger.kernel.org>, "open list:USB MASS STORAGE DRIVER" <usb-storage@lists.one-eyed-alien.net>
+To: Lee Jones <lee.jones@linaro.org>
+Cc: agross@kernel.org, David Brown <david.brown@linaro.org>, alim.akhtar@samsung.com, avri.altman@wdc.com, pedrom.sousa@synopsys.com, jejb@linux.ibm.com, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-arm-msm <linux-arm-msm@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Jeffrey Hugo <jlhugo@gmail.com>, Bjorn Andersson <bjorn.andersson@linaro.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Jun 18, 2019 at 12:17:39PM -0300, Marcos Paulo de Souza wrote:
-> On Tue, Jun 18, 2019 at 09:48:01AM -0400, Alan Stern wrote:
-> > On Mon, 17 Jun 2019, Marcos Paulo de Souza wrote:
-> > 
-> > > If BLIST_TRY_VPD_PAGES is set for a device, even for an USB, it should
-> > > be honored, so only set skip_vpd_pages is try_vpd_pages is not set.
-> > > 
-> > > Signed-off-by: Marcos Paulo de Souza <marcos.souza.org@gmail.com>
-> > > ---
-> > >  drivers/usb/storage/scsiglue.c | 7 +++++--
-> > >  1 file changed, 5 insertions(+), 2 deletions(-)
-> > > 
-> > > diff --git a/drivers/usb/storage/scsiglue.c b/drivers/usb/storage/scsiglue.c
-> > > index 59190d88fa9f..0a9520780771 100644
-> > > --- a/drivers/usb/storage/scsiglue.c
-> > > +++ b/drivers/usb/storage/scsiglue.c
-> > > @@ -195,8 +195,11 @@ static int slave_configure(struct scsi_device *sdev)
-> > >  		 */
-> > >  		sdev->skip_ms_page_8 = 1;
-> > >  
-> > > -		/* Some devices don't handle VPD pages correctly */
-> > > -		sdev->skip_vpd_pages = 1;
-> > > +		/*
-> > > +		 * Some devices don't handle VPD pages correctly, so skip vpd
-> > > +		 * pages if not forced by SCSI layer.
-> > > +		 */
-> > > +		sdev->skip_vpd_pages = sdev->try_vpd_pages == 0;
-> > >  
-> > >  		/* Do not attempt to use REPORT SUPPORTED OPERATION CODES */
-> > >  		sdev->no_report_opcodes = 1;
-> > 
-> > Acked-by: Alan Stern <stern@rowland.harvard.edu>
-> > 
-> > Although I think it would be clearer to write:
-> > 
-> > 		sdev->skip_vpd_pages = !sdev->try_vpd_pages;
-> 
-> I agree. Greg, would you like me to send a v2 of this patch with this change, or
-> can you apply the change suggested by Alan?
+On Mon, 17 Jun 2019 at 13:55, Lee Jones <lee.jones@linaro.org> wrote:
+>
+> New Qualcomm AArch64 based laptops are now available which use UFS
+> as their primary data storage medium.  These devices are supplied
+> with ACPI support out of the box.  This patch ensures the Qualcomm
+> UFS driver will be bound when the "QCOM24A5" H/W device is
+> advertised as present.
+>
+> Signed-off-by: Lee Jones <lee.jones@linaro.org>
 
-I do not hand-edit patches, sorry.  It does not scale, please resend.
+Reviewed-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
 
-greg k-h
+> ---
+>  drivers/scsi/ufs/ufs-qcom.c | 23 ++++++++++++++++++++---
+>  1 file changed, 20 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+> index 3aeadb14aae1..364af6a63e35 100644
+> --- a/drivers/scsi/ufs/ufs-qcom.c
+> +++ b/drivers/scsi/ufs/ufs-qcom.c
+> @@ -12,6 +12,7 @@
+>   *
+>   */
+>
+> +#include <linux/acpi.h>
+>  #include <linux/time.h>
+>  #include <linux/of.h>
+>  #include <linux/platform_device.h>
+> @@ -164,6 +165,9 @@ static int ufs_qcom_init_lane_clks(struct ufs_qcom_host *host)
+>         int err = 0;
+>         struct device *dev = host->hba->dev;
+>
+> +       if (has_acpi_companion(dev))
+> +               return 0;
+> +
+>         err = ufs_qcom_host_clk_get(dev, "rx_lane0_sync_clk",
+>                                         &host->rx_l0_sync_clk, false);
+>         if (err)
+> @@ -1208,9 +1212,13 @@ static int ufs_qcom_init(struct ufs_hba *hba)
+>                         __func__, err);
+>                 goto out_variant_clear;
+>         } else if (IS_ERR(host->generic_phy)) {
+> -               err = PTR_ERR(host->generic_phy);
+> -               dev_err(dev, "%s: PHY get failed %d\n", __func__, err);
+> -               goto out_variant_clear;
+> +               if (has_acpi_companion(dev)) {
+> +                       host->generic_phy = NULL;
+> +               } else {
+> +                       err = PTR_ERR(host->generic_phy);
+> +                       dev_err(dev, "%s: PHY get failed %d\n", __func__, err);
+> +                       goto out_variant_clear;
+> +               }
+>         }
+>
+>         err = ufs_qcom_bus_register(host);
+> @@ -1680,6 +1688,14 @@ static const struct of_device_id ufs_qcom_of_match[] = {
+>  };
+>  MODULE_DEVICE_TABLE(of, ufs_qcom_of_match);
+>
+> +#ifdef CONFIG_ACPI
+> +static const struct acpi_device_id ufs_qcom_acpi_match[] = {
+> +       { "QCOM24A5" },
+> +       { },
+> +};
+> +MODULE_DEVICE_TABLE(acpi, ufs_qcom_acpi_match);
+> +#endif
+> +
+>  static const struct dev_pm_ops ufs_qcom_pm_ops = {
+>         .suspend        = ufshcd_pltfrm_suspend,
+>         .resume         = ufshcd_pltfrm_resume,
+> @@ -1696,6 +1712,7 @@ static struct platform_driver ufs_qcom_pltform = {
+>                 .name   = "ufshcd-qcom",
+>                 .pm     = &ufs_qcom_pm_ops,
+>                 .of_match_table = of_match_ptr(ufs_qcom_of_match),
+> +               .acpi_match_table = ACPI_PTR(ufs_qcom_acpi_match),
+>         },
+>  };
+>  module_platform_driver(ufs_qcom_pltform);
+> --
+> 2.17.1
+>
