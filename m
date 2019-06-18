@@ -1,7 +1,7 @@
 From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V5 04/16] scsi: mvumi: use sg helper to operate scatterlist
-Date: Tue, 18 Jun 2019 09:37:45 +0800
-Message-ID: <20190618013757.22401-5-ming.lei@redhat.com>
+Subject: [PATCH V5 05/16] scsi: ipr: use sg helper to operate scatterlist
+Date: Tue, 18 Jun 2019 09:37:46 +0800
+Message-ID: <20190618013757.22401-6-ming.lei@redhat.com>
 References: <20190618013757.22401-1-ming.lei@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -28,43 +28,105 @@ This way allows us to pre-allocate one small scatterlist, which can be
 chained with one runtime allocated scatterlist if the pre-allocated one
 isn't enough for the whole request.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Reviewed-by: Ewan D. Milne <emilne@redhat.com>
 Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- drivers/scsi/mvumi.c | 9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+ drivers/scsi/ipr.c | 29 ++++++++++++++++-------------
+ 1 file changed, 16 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/scsi/mvumi.c b/drivers/scsi/mvumi.c
-index a5410615edac..0022cd31500a 100644
---- a/drivers/scsi/mvumi.c
-+++ b/drivers/scsi/mvumi.c
-@@ -211,8 +211,7 @@ static int mvumi_make_sgl(struct mvumi_hba *mhba, struct scsi_cmnd *scmd,
- 	unsigned int sgnum = scsi_sg_count(scmd);
- 	dma_addr_t busaddr;
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index 6d053e220153..bf17540affbc 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -3915,22 +3915,23 @@ static int ipr_copy_ucode_buffer(struct ipr_sglist *sglist,
+ 				 u8 *buffer, u32 len)
+ {
+ 	int bsize_elem, i, result = 0;
+-	struct scatterlist *scatterlist;
++	struct scatterlist *sg;
+ 	void *kaddr;
  
--	sg = scsi_sglist(scmd);
--	*sg_count = dma_map_sg(&mhba->pdev->dev, sg, sgnum,
-+	*sg_count = dma_map_sg(&mhba->pdev->dev, scsi_sglist(scmd), sgnum,
- 			       scmd->sc_data_direction);
- 	if (*sg_count > mhba->max_sge) {
- 		dev_err(&mhba->pdev->dev,
-@@ -222,12 +221,12 @@ static int mvumi_make_sgl(struct mvumi_hba *mhba, struct scsi_cmnd *scmd,
- 			     scmd->sc_data_direction);
- 		return -1;
+ 	/* Determine the actual number of bytes per element */
+ 	bsize_elem = PAGE_SIZE * (1 << sglist->order);
+ 
+-	scatterlist = sglist->scatterlist;
++	sg = sglist->scatterlist;
+ 
+-	for (i = 0; i < (len / bsize_elem); i++, buffer += bsize_elem) {
+-		struct page *page = sg_page(&scatterlist[i]);
++	for (i = 0; i < (len / bsize_elem); i++, sg = sg_next(sg),
++			buffer += bsize_elem) {
++		struct page *page = sg_page(sg);
+ 
+ 		kaddr = kmap(page);
+ 		memcpy(kaddr, buffer, bsize_elem);
+ 		kunmap(page);
+ 
+-		scatterlist[i].length = bsize_elem;
++		sg->length = bsize_elem;
+ 
+ 		if (result != 0) {
+ 			ipr_trace;
+@@ -3939,13 +3940,13 @@ static int ipr_copy_ucode_buffer(struct ipr_sglist *sglist,
  	}
--	for (i = 0; i < *sg_count; i++) {
--		busaddr = sg_dma_address(&sg[i]);
-+	scsi_for_each_sg(scmd, sg, *sg_count, i) {
-+		busaddr = sg_dma_address(sg);
- 		m_sg->baseaddr_l = cpu_to_le32(lower_32_bits(busaddr));
- 		m_sg->baseaddr_h = cpu_to_le32(upper_32_bits(busaddr));
- 		m_sg->flags = 0;
--		sgd_setsz(mhba, m_sg, cpu_to_le32(sg_dma_len(&sg[i])));
-+		sgd_setsz(mhba, m_sg, cpu_to_le32(sg_dma_len(sg)));
- 		if ((i + 1) == *sg_count)
- 			m_sg->flags |= 1U << mhba->eot_flag;
  
+ 	if (len % bsize_elem) {
+-		struct page *page = sg_page(&scatterlist[i]);
++		struct page *page = sg_page(sg);
+ 
+ 		kaddr = kmap(page);
+ 		memcpy(kaddr, buffer, len % bsize_elem);
+ 		kunmap(page);
+ 
+-		scatterlist[i].length = len % bsize_elem;
++		sg->length = len % bsize_elem;
+ 	}
+ 
+ 	sglist->buffer_len = len;
+@@ -3966,6 +3967,7 @@ static void ipr_build_ucode_ioadl64(struct ipr_cmnd *ipr_cmd,
+ 	struct ipr_ioarcb *ioarcb = &ipr_cmd->ioarcb;
+ 	struct ipr_ioadl64_desc *ioadl64 = ipr_cmd->i.ioadl64;
+ 	struct scatterlist *scatterlist = sglist->scatterlist;
++	struct scatterlist *sg;
+ 	int i;
+ 
+ 	ipr_cmd->dma_use_sg = sglist->num_dma_sg;
+@@ -3974,10 +3976,10 @@ static void ipr_build_ucode_ioadl64(struct ipr_cmnd *ipr_cmd,
+ 
+ 	ioarcb->ioadl_len =
+ 		cpu_to_be32(sizeof(struct ipr_ioadl64_desc) * ipr_cmd->dma_use_sg);
+-	for (i = 0; i < ipr_cmd->dma_use_sg; i++) {
++	for_each_sg(scatterlist, sg, ipr_cmd->dma_use_sg, i) {
+ 		ioadl64[i].flags = cpu_to_be32(IPR_IOADL_FLAGS_WRITE);
+-		ioadl64[i].data_len = cpu_to_be32(sg_dma_len(&scatterlist[i]));
+-		ioadl64[i].address = cpu_to_be64(sg_dma_address(&scatterlist[i]));
++		ioadl64[i].data_len = cpu_to_be32(sg_dma_len(sg));
++		ioadl64[i].address = cpu_to_be64(sg_dma_address(sg));
+ 	}
+ 
+ 	ioadl64[i-1].flags |= cpu_to_be32(IPR_IOADL_FLAGS_LAST);
+@@ -3997,6 +3999,7 @@ static void ipr_build_ucode_ioadl(struct ipr_cmnd *ipr_cmd,
+ 	struct ipr_ioarcb *ioarcb = &ipr_cmd->ioarcb;
+ 	struct ipr_ioadl_desc *ioadl = ipr_cmd->i.ioadl;
+ 	struct scatterlist *scatterlist = sglist->scatterlist;
++	struct scatterlist *sg;
+ 	int i;
+ 
+ 	ipr_cmd->dma_use_sg = sglist->num_dma_sg;
+@@ -4006,11 +4009,11 @@ static void ipr_build_ucode_ioadl(struct ipr_cmnd *ipr_cmd,
+ 	ioarcb->ioadl_len =
+ 		cpu_to_be32(sizeof(struct ipr_ioadl_desc) * ipr_cmd->dma_use_sg);
+ 
+-	for (i = 0; i < ipr_cmd->dma_use_sg; i++) {
++	for_each_sg(scatterlist, sg, ipr_cmd->dma_use_sg, i) {
+ 		ioadl[i].flags_and_data_len =
+-			cpu_to_be32(IPR_IOADL_FLAGS_WRITE | sg_dma_len(&scatterlist[i]));
++			cpu_to_be32(IPR_IOADL_FLAGS_WRITE | sg_dma_len(sg));
+ 		ioadl[i].address =
+-			cpu_to_be32(sg_dma_address(&scatterlist[i]));
++			cpu_to_be32(sg_dma_address(sg));
+ 	}
+ 
+ 	ioadl[i-1].flags_and_data_len |=
 -- 
 2.20.1
