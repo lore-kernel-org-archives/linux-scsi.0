@@ -1,60 +1,41 @@
-From: "Ewan D. Milne" <emilne@redhat.com>
-Subject: Re: [PATCH] scsi: vmw_pscsi: Fix use-after-free in
- pvscsi_queue_lck()
-Date: Wed, 19 Jun 2019 11:13:16 -0400
-Message-ID: <a05c420e46d995a2397c46d416eaeb627c94ea11.camel@redhat.com>
-References: <20190619070541.30070-1-jack@suse.cz>
+From: Joe Perches <joe@perches.com>
+Subject: Re: [PATCH v3 0/7] Hexdump Enhancements
+Date: Wed, 19 Jun 2019 09:31:24 -0700
+Message-ID: <9a000734375c0801fc16b71f4be1235f9b857772.camel@perches.com>
+References: <20190617020430.8708-1-alastair@au1.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="ISO-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20190619070541.30070-1-jack@suse.cz>
-Sender: stable-owner@vger.kernel.org
-To: Jan Kara <jack@suse.cz>, Jim Gill <jgill@vmware.com>
-Cc: VMware PV-Drivers <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org, stable@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190617020430.8708-1-alastair@au1.ibm.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alastair D'Silva <alastair@au1.ibm.com>, alastair@d-silva.org
+Cc: Jani Nikula <jani.nikula@linux.intel.com>, Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, Rodrigo Vivi <rodrigo.vivi@intel.com>, David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>, Dan Carpenter <dan.carpenter@oracle.com>, Karsten Keil <isdn@linux-pingi.de>, Jassi Brar <jassisinghbrar@gmail.com>, Tom Lendacky <thomas.lendacky@amd.com>, "David S. Miller" <davem@davemloft.net>, Jose Abreu <Jose.Abreu@synopsys.com>, Kalle Valo <kvalo@codeaurora.org>, Stanislaw Gruszka <sgruszka@redhat.com>, Benson Leung <bleung@chromium.org>, Enric Balletbo i Serra <enric.balletbo@collabora.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Alexa
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2019-06-19 at 09:05 +0200, Jan Kara wrote:
-> Once we unlock adapter->hw_lock in pvscsi_queue_lck() nothing prevents just
-> queued scsi_cmnd from completing and freeing the request. Thus cmd->cmnd[0]
-> dereference can dereference already freed request leading to kernel crashes or
-> other issues (which one of our customers observed). Store cmd->cmnd[0] in a
-> local variable before unlocking adapter->hw_lock to fix the issue.
+On Mon, 2019-06-17 at 12:04 +1000, Alastair D'Silva wrote:
+> From: Alastair D'Silva <alastair@d-silva.org>
 > 
-> CC: stable@vger.kernel.org
-> Signed-off-by: Jan Kara <jack@suse.cz>
-> ---
->  drivers/scsi/vmw_pvscsi.c | 6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
+> Apologies for the large CC list, it's a heads up for those responsible
+> for subsystems where a prototype change in generic code causes a change
+> in those subsystems.
 > 
-> diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
-> index ecee4b3ff073..377b07b2feeb 100644
-> --- a/drivers/scsi/vmw_pvscsi.c
-> +++ b/drivers/scsi/vmw_pvscsi.c
-> @@ -763,6 +763,7 @@ static int pvscsi_queue_lck(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd
->  	struct pvscsi_adapter *adapter = shost_priv(host);
->  	struct pvscsi_ctx *ctx;
->  	unsigned long flags;
-> +	unsigned char op;
->  
->  	spin_lock_irqsave(&adapter->hw_lock, flags);
->  
-> @@ -775,13 +776,14 @@ static int pvscsi_queue_lck(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd
->  	}
->  
->  	cmd->scsi_done = done;
-> +	op = cmd->cmnd[0];
->  
->  	dev_dbg(&cmd->device->sdev_gendev,
-> -		"queued cmd %p, ctx %p, op=%x\n", cmd, ctx, cmd->cmnd[0]);
-> +		"queued cmd %p, ctx %p, op=%x\n", cmd, ctx, op);
->  
->  	spin_unlock_irqrestore(&adapter->hw_lock, flags);
->  
-> -	pvscsi_kick_io(adapter, cmd->cmnd[0]);
-> +	pvscsi_kick_io(adapter, op);
->  
->  	return 0;
->  }
+> This series enhances hexdump.
 
-Reviewed-by: Ewan D. Milne <emilne@redhat.com>
+Still not a fan of these patches.
+
+> These improve the readability of the dumped data in certain situations
+> (eg. wide terminals are available, many lines of empty bytes exist, etc).
+
+Changing hexdump's last argument from bool to int is odd.
+
+Perhaps a new function should be added instead of changing
+the existing hexdump.
+
+> The default behaviour of hexdump is unchanged, however, the prototype
+> for hex_dump_to_buffer() has changed, and print_hex_dump() has been
+> renamed to print_hex_dump_ext(), with a wrapper replacing it for
+> compatibility with existing code, which would have been too invasive to
+> change.
+> 
+> Hexdump selftests have be run & confirmed passed.
