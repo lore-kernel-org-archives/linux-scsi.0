@@ -1,37 +1,56 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH V5 00/16] use sg helper to operate scatterlist
-Date: Wed, 19 Jun 2019 15:55:36 -0400
-Message-ID: <yq1wohhs62v.fsf@oracle.com>
-References: <20190618013757.22401-1-ming.lei@redhat.com>
- <yq11rzqzacx.fsf@oracle.com>
- <3df71d64-78fb-c6fc-f456-a0b626abff3b@acm.org>
+From: "Alastair D'Silva" <alastair@d-silva.org>
+Subject: Re: [PATCH v3 0/7] Hexdump Enhancements
+Date: Thu, 20 Jun 2019 09:15:58 +1000
+Message-ID: <c68cb819257f251cbb66f8998a95c31cebe2d72e.camel@d-silva.org>
+References: <20190617020430.8708-1-alastair@au1.ibm.com>
+         <9a000734375c0801fc16b71f4be1235f9b857772.camel@perches.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <3df71d64-78fb-c6fc-f456-a0b626abff3b@acm.org> (Bart Van Assche's
- message of "Wed, 19 Jun 2019 12:43:47 -0700")
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Michael Schmitz <schmitzmic@gmail.com>, devel@driverdev.osuosl.org, Hannes Reinecke <hare@suse.com>, Benjamin Block <bblock@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org, James Smart <james.smart@broadcom.com>, "Ewan D . Milne" <emilne@redhat.com>, Ming Lei <ming.lei@redhat.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Brian King <brking@us.ibm.com>, Finn Thain <fthain@telegraphics.com.au>, "Juergen E . Fischer" <fischer@norbit.de>, Jim Gill <jgill@vmware.com>, Christoph Hellwig <hch@lst.de>, Dan Carpenter <dan.carpenter@oracle.com>
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <9a000734375c0801fc16b71f4be1235f9b857772.camel@perches.com>
+Sender: netdev-owner@vger.kernel.org
+To: Joe Perches <joe@perches.com>
+Cc: Jani Nikula <jani.nikula@linux.intel.com>, Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, Rodrigo Vivi <rodrigo.vivi@intel.com>, David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>, Dan Carpenter <dan.carpenter@oracle.com>, Karsten Keil <isdn@linux-pingi.de>, Jassi Brar <jassisinghbrar@gmail.com>, Tom Lendacky <thomas.lendacky@amd.com>, "David S. Miller" <davem@davemloft.net>, Jose Abreu <Jose.Abreu@synopsys.com>, Kalle Valo <kvalo@codeaurora.org>, Stanislaw Gruszka <sgruszka@redhat.com>, Benson Leung <bleung@chromium.org>, Enric Balletbo i Serra <enric.balletbo@collabora.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Alexa
 List-Id: linux-scsi@vger.kernel.org
 
+On Wed, 2019-06-19 at 09:31 -0700, Joe Perches wrote:
+> On Mon, 2019-06-17 at 12:04 +1000, Alastair D'Silva wrote:
+> > From: Alastair D'Silva <alastair@d-silva.org>
+> > 
+> > Apologies for the large CC list, it's a heads up for those
+> > responsible
+> > for subsystems where a prototype change in generic code causes a
+> > change
+> > in those subsystems.
+> > 
+> > This series enhances hexdump.
+> 
+> Still not a fan of these patches.
 
-Bart,
+I'm afraid there's not too much action I can take on that, I'm happy to
+address specific issues though.
 
-> Do you perhaps plan to push out these patches at a later time? It
-> seems like that branch has not been updated recently:
+> 
+> > These improve the readability of the dumped data in certain
+> > situations
+> > (eg. wide terminals are available, many lines of empty bytes exist,
+> > etc).
+> 
+> Changing hexdump's last argument from bool to int is odd.
+> 
 
-I had a test failure on this end, that's why I didn't push. Appears to
-be hardware-related, though. Still looking into it.
+Think of it as replacing a single boolean with many booleans.
+
+> Perhaps a new function should be added instead of changing
+> the existing hexdump.
+> 
+
+There's only a handful of consumers, I don't think there is a value-add 
+in creating more wrappers vs updating the existing callers.
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+Alastair D'Silva           mob: 0423 762 819
+skype: alastair_dsilva    
+Twitter: @EvilDeece
+blog: http://alastair.d-silva.org
