@@ -1,37 +1,34 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 1/1] scsi: ufs-qcom: Add support for platforms booting ACPI
-Date: Tue, 18 Jun 2019 22:57:06 -0400
-Message-ID: <yq1zhmeuvst.fsf@oracle.com>
-References: <20190617115454.3226-1-lee.jones@linaro.org>
+Subject: Re: [PATCH] scsi: fdomain: fix building pcmcia front-end
+Date: Tue, 18 Jun 2019 23:13:01 -0400
+Message-ID: <yq1v9x2uv2a.fsf@oracle.com>
+References: <20190617111937.2355936-1-arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <20190617115454.3226-1-lee.jones@linaro.org> (Lee Jones's message
- of "Mon, 17 Jun 2019 12:54:54 +0100")
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Lee Jones <lee.jones@linaro.org>
-Cc: linux-scsi@vger.kernel.org, martin.petersen@oracle.com, avri.altman@wdc.com, linux-arm-msm@vger.kernel.org, jejb@linux.ibm.com, ard.biesheuvel@linaro.org, linux-kernel@vger.kernel.org, bjorn.andersson@linaro.org, david.brown@linaro.org, agross@kernel.org, alim.akhtar@samsung.com, jlhugo@gmail.com, pedrom.sousa@synopsys.com, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190617111937.2355936-1-arnd@arndb.de> (Arnd Bergmann's message
+        of "Mon, 17 Jun 2019 13:19:17 +0200")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Ondrej Zary <linux@zary.sk>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Lee,
+Arnd,
 
-> New Qualcomm AArch64 based laptops are now available which use UFS
-> as their primary data storage medium.  These devices are supplied
-> with ACPI support out of the box.  This patch ensures the Qualcomm
-> UFS driver will be bound when the "QCOM24A5" H/W device is
-> advertised as present.
+> Move the common support outside of the SCSI_LOWLEVEL section.
+> Alternatively, we could move all of SCSI_LOWLEVEL_PCMCIA into
+> SCSI_LOWLEVEL. This would be more sensible, but might cause surprises
+> for users that have SCSI_LOWLEVEL disabled.
 
-Applied to 5.3/scsi-queue. Thanks!
+It seems messy to me that PCMCIA lives outside of the LOWLEVEL section.
+
+Given that the number of users that rely on PCMCIA for their system disk
+is probably pretty low, I think I'm leaning towards cleaning things up
+instead of introducing a nonsensical top level option.
+
+Or even better: Get rid of SCSI_FDOMAIN as a user-visible option and
+select it if either of the PCI/ISA/PCMCIA drivers are enabled.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
