@@ -1,34 +1,28 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: fdomain: fix building pcmcia front-end
-Date: Tue, 18 Jun 2019 23:13:01 -0400
-Message-ID: <yq1v9x2uv2a.fsf@oracle.com>
-References: <20190617111937.2355936-1-arnd@arndb.de>
+Subject: Re: [PATCH 1/2] scsi: devinfo: BLIST_TRY_VPD_PAGES for SanDisk Cruzer Blade
+Date: Tue, 18 Jun 2019 23:21:22 -0400
+Message-ID: <yq1r27quuod.fsf@oracle.com>
+References: <20190618013146.21961-1-marcos.souza.org@gmail.com>
+        <20190618013146.21961-2-marcos.souza.org@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190617111937.2355936-1-arnd@arndb.de> (Arnd Bergmann's message
-        of "Mon, 17 Jun 2019 13:19:17 +0200")
+In-Reply-To: <20190618013146.21961-2-marcos.souza.org@gmail.com> (Marcos Paulo
+        de Souza's message of "Mon, 17 Jun 2019 22:31:45 -0300")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Ondrej Zary <linux@zary.sk>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Marcos Paulo de Souza <marcos.souza.org@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
 
-Arnd,
+Marcos,
 
-> Move the common support outside of the SCSI_LOWLEVEL section.
-> Alternatively, we could move all of SCSI_LOWLEVEL_PCMCIA into
-> SCSI_LOWLEVEL. This would be more sensible, but might cause surprises
-> for users that have SCSI_LOWLEVEL disabled.
+> Currently, all USB devices skip VPD pages, even when the device
+> supports them (SPC-3 and later), but some of them support VPD, like
+> Cruzer Blade.
 
-It seems messy to me that PCMCIA lives outside of the LOWLEVEL section.
-
-Given that the number of users that rely on PCMCIA for their system disk
-is probably pretty low, I think I'm leaning towards cleaning things up
-instead of introducing a nonsensical top level option.
-
-Or even better: Get rid of SCSI_FDOMAIN as a user-visible option and
-select it if either of the PCI/ISA/PCMCIA drivers are enabled.
+What's your confidence level wrt. all Cruzer Blades handling this
+correctly? How many devices have you tested this change with?
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
