@@ -1,31 +1,28 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: scsi_sysfs.c: Hide wwid sdev attr if VPD is not supported
-Date: Tue, 18 Jun 2019 23:35:16 -0400
-Message-ID: <yq1muieuu17.fsf@oracle.com>
-References: <20190612020828.8140-1-marcos.souza.org@gmail.com>
+Subject: Re: [PATCH v4 23/28] docs: target: convert docs to ReST and rename to *.rst
+Date: Tue, 18 Jun 2019 23:38:37 -0400
+Message-ID: <yq1imt2utvm.fsf@oracle.com>
+References: <cover.1560361364.git.mchehab+samsung@kernel.org>
+        <9c58d2f3478126736e69b688a7dbf0da26ba2285.1560361364.git.mchehab+samsung@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190612020828.8140-1-marcos.souza.org@gmail.com> (Marcos Paulo
-        de Souza's message of "Tue, 11 Jun 2019 23:08:28 -0300")
+In-Reply-To: <9c58d2f3478126736e69b688a7dbf0da26ba2285.1560361364.git.mchehab+samsung@kernel.org>
+        (Mauro Carvalho Chehab's message of "Wed, 12 Jun 2019 14:52:59 -0300")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Marcos Paulo de Souza <marcos.souza.org@gmail.com>
-Cc: linux-kernel@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
+To: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
+Cc: Linux Doc Mailing List <linux-doc@vger.kernel.org>, Mauro Carvalho Chehab <mchehab@infradead.org>, linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Marcos,
+Mauro,
 
-> WWID composed from VPD data from device, specifically page 0x83. So,
-> when a device does not have VPD support, for example USB storage
-> devices where VPD is specifically disabled, a read into <blk
-> device>/device/wwid file will always return ENXIO. To avoid this,
-> change the scsi_sdev_attr_is_visible function to hide wwid sysfs file
-> when the devices does not support VPD.
+> Convert the TCM docs to ReST format and add them to the
+> bookset.
 
-Not a big fan of attribute files that come and go.
+Looks good to me.
 
-Why not just return an empty string? Hannes?
+Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
