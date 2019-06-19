@@ -1,51 +1,53 @@
-From: Marcos Paulo de Souza <marcos.souza.org@gmail.com>
-Subject: Re: [PATCH] scsi: scsi_sysfs.c: Hide wwid sdev attr if VPD is not
- supported
-Date: Tue, 18 Jun 2019 19:47:36 -0300
-Message-ID: <20190618224734.GB11899@continental>
-References: <20190612020828.8140-1-marcos.souza.org@gmail.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH V5 00/16] use sg helper to operate scatterlist
+Date: Tue, 18 Jun 2019 20:29:02 -0400
+Message-ID: <yq11rzqzacx.fsf@oracle.com>
+References: <20190618013757.22401-1-ming.lei@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20190612020828.8140-1-marcos.souza.org@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "open list:SCSI SUBSYSTEM" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <20190618013757.22401-1-ming.lei@redhat.com> (Ming Lei's message
+ of "Tue, 18 Jun 2019 09:37:41 +0800")
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: Ming Lei <ming.lei@redhat.com>
+Cc: Michael Schmitz <schmitzmic@gmail.com>, devel@driverdev.osuosl.org, Hannes Reinecke <hare@suse.com>, Benjamin Block <bblock@linux.ibm.com>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org, James Smart <james.smart@broadcom.com>, "Ewan D . Milne" <emilne@redhat.com>, Jim Gill <jgill@vmware.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Brian King <brking@us.ibm.com>, Finn Thain <fthain@telegraphics.com.au>, "Juergen E . Fischer" <fischer@norbit.de>, Christoph Hellwig <hch@lst.de>, Dan Carpenter <dan.carpenter@oracle.com>, Bart Van Assche <bvanassche@acm.org>
 List-Id: linux-scsi@vger.kernel.org
 
-ping? Can anybody take a look at this patch?
 
-Thanks,
-Marcos
+Hi Ming,
 
-On Tue, Jun 11, 2019 at 11:08:28PM -0300, Marcos Paulo de Souza wrote:
-> WWID composed from VPD data from device, specifically page 0x83. So,
-> when a device does not have VPD support, for example USB storage devices
-> where VPD is specifically disabled, a read into <blk device>/device/wwid
-> file will always return ENXIO. To avoid this, change the
-> scsi_sdev_attr_is_visible function to hide wwid sysfs file when the
-> devices does not support VPD.
-> 
-> Signed-off-by: Marcos Paulo de Souza <marcos.souza.org@gmail.com>
-> ---
->  drivers/scsi/scsi_sysfs.c | 3 +++
->  1 file changed, 3 insertions(+)
-> 
-> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-> index dbb206c90ecf..bfd890fa0c69 100644
-> --- a/drivers/scsi/scsi_sysfs.c
-> +++ b/drivers/scsi/scsi_sysfs.c
-> @@ -1159,6 +1159,9 @@ static umode_t scsi_sdev_attr_is_visible(struct kobject *kobj,
->  	struct device *dev = container_of(kobj, struct device, kobj);
->  	struct scsi_device *sdev = to_scsi_device(dev);
->  
-> +	/* do not present wwid if the device does not support VPD */
-> +	if (attr == &dev_attr_wwid.attr && sdev->skip_vpd_pages)
-> +		return 0;
->  
->  	if (attr == &dev_attr_queue_depth.attr &&
->  	    !sdev->host->hostt->change_queue_depth)
-> -- 
-> 2.21.0
-> 
+> So convert drivers to use scatterlist helper.
+
+I applied this series with a bunch of edits and clarifying comments. It
+was quite the nightmare to rebase 5.3/scsi-queue to satisfy the ordering
+requirements, locate the scattered fixes, tweak tags, etc. Hope I got
+everything right.
+
+It was almost at the point where I gave up and postponed everything to
+5.4. We're at -rc5 -- it's not exactly a good time to rebase the entire
+tree. However, I know the static mq allocations are causing headaches
+for several distro vendors so I begrudgingly bit the bullet.
+
+I would have liked to see more reviews from the official driver
+maintainers but at the same time I didn't want to wait any longer giving
+this some soak time in linux-next.
+
+Thanks for your work on getting all the drivers fixed up! Just goes to
+show how large the fallout can be from a relatively innocuous core
+change.
+
+Oh, and I held back the rtsx patch due to lack of reviews. But since
+that driver is in staging I'm not too worried about it. Hope we can get
+the fix for that reviewed and merged soon.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
