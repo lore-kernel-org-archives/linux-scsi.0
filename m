@@ -1,41 +1,86 @@
-From: Joe Perches <joe@perches.com>
-Subject: Re: [PATCH v3 0/7] Hexdump Enhancements
-Date: Wed, 19 Jun 2019 09:31:24 -0700
-Message-ID: <9a000734375c0801fc16b71f4be1235f9b857772.camel@perches.com>
-References: <20190617020430.8708-1-alastair@au1.ibm.com>
+From: Ondrej Zary <linux@zary.sk>
+Subject: Re: [PATCH] scsi: fdomain: fix building pcmcia front-end
+Date: Wed, 19 Jun 2019 20:36:37 +0200
+Message-ID: <201906192036.37384.linux@zary.sk>
+References: <20190617111937.2355936-1-arnd@arndb.de> <yq1v9x2uv2a.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: Text/Plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190617020430.8708-1-alastair@au1.ibm.com>
+In-Reply-To: <yq1v9x2uv2a.fsf@oracle.com>
+Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
-To: Alastair D'Silva <alastair@au1.ibm.com>, alastair@d-silva.org
-Cc: Jani Nikula <jani.nikula@linux.intel.com>, Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, Rodrigo Vivi <rodrigo.vivi@intel.com>, David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>, Dan Carpenter <dan.carpenter@oracle.com>, Karsten Keil <isdn@linux-pingi.de>, Jassi Brar <jassisinghbrar@gmail.com>, Tom Lendacky <thomas.lendacky@amd.com>, "David S. Miller" <davem@davemloft.net>, Jose Abreu <Jose.Abreu@synopsys.com>, Kalle Valo <kvalo@codeaurora.org>, Stanislaw Gruszka <sgruszka@redhat.com>, Benson Leung <bleung@chromium.org>, Enric Balletbo i Serra <enric.balletbo@collabora.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Alexa
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, "James E.J. Bottomley" <jejb@linux.ibm.com>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 2019-06-17 at 12:04 +1000, Alastair D'Silva wrote:
-> From: Alastair D'Silva <alastair@d-silva.org>
+On Wednesday 19 June 2019 05:13:01 Martin K. Petersen wrote:
 > 
-> Apologies for the large CC list, it's a heads up for those responsible
-> for subsystems where a prototype change in generic code causes a change
-> in those subsystems.
+> Arnd,
 > 
-> This series enhances hexdump.
-
-Still not a fan of these patches.
-
-> These improve the readability of the dumped data in certain situations
-> (eg. wide terminals are available, many lines of empty bytes exist, etc).
-
-Changing hexdump's last argument from bool to int is odd.
-
-Perhaps a new function should be added instead of changing
-the existing hexdump.
-
-> The default behaviour of hexdump is unchanged, however, the prototype
-> for hex_dump_to_buffer() has changed, and print_hex_dump() has been
-> renamed to print_hex_dump_ext(), with a wrapper replacing it for
-> compatibility with existing code, which would have been too invasive to
-> change.
+> > Move the common support outside of the SCSI_LOWLEVEL section.
+> > Alternatively, we could move all of SCSI_LOWLEVEL_PCMCIA into
+> > SCSI_LOWLEVEL. This would be more sensible, but might cause surprises
+> > for users that have SCSI_LOWLEVEL disabled.
 > 
-> Hexdump selftests have be run & confirmed passed.
+> It seems messy to me that PCMCIA lives outside of the LOWLEVEL section.
+> 
+> Given that the number of users that rely on PCMCIA for their system disk
+> is probably pretty low, I think I'm leaning towards cleaning things up
+> instead of introducing a nonsensical top level option.
+> 
+> Or even better: Get rid of SCSI_FDOMAIN as a user-visible option and
+> select it if either of the PCI/ISA/PCMCIA drivers are enabled.
+
+SCSI_FDOMAIN is not an user-visible option. PCI/ISA/PCMCIA drivers select it:
+
+Symbol: PCMCIA_FDOMAIN [=m]
+Type  : tristate
+Prompt: Future Domain PCMCIA support
+  Location:
+    -> Device Drivers
+      -> SCSI device support
+        -> PCMCIA SCSI adapter support (SCSI_LOWLEVEL_PCMCIA [=y])
+  Defined at drivers/scsi/pcmcia/Kconfig:22
+  Depends on: SCSI_LOWLEVEL_PCMCIA [=y] && SCSI [=y] && PCMCIA [=m] && m && MODULES [=y]
+  Selects: SCSI_FDOMAIN [=m]
+
+
+Symbol: SCSI_FDOMAIN [=m]
+Type  : tristate
+  Defined at drivers/scsi/Kconfig:666
+  Depends on: SCSI_LOWLEVEL [=y] && SCSI [=y]
+  Selected by [m]:
+  - SCSI_FDOMAIN_PCI [=m] && SCSI_LOWLEVEL [=y] && PCI [=y] && SCSI [=y]
+  - SCSI_FDOMAIN_ISA [=m] && SCSI_LOWLEVEL [=y] && ISA [=y] && SCSI [=y]
+  - PCMCIA_FDOMAIN [=m] && SCSI_LOWLEVEL_PCMCIA [=y] && SCSI [=y] && PCMCIA [=m] && m && MODULES [=y]
+
+
+Symbol: SCSI_FDOMAIN_ISA [=m]
+Type  : tristate
+Prompt: Future Domain 16xx ISA SCSI support
+  Location:
+    -> Device Drivers
+      -> SCSI device support
+        -> SCSI low-level drivers (SCSI_LOWLEVEL [=y])
+  Defined at drivers/scsi/Kconfig:687
+  Depends on: SCSI_LOWLEVEL [=y] && ISA [=y] && SCSI [=y]
+  Selects: CHECK_SIGNATURE [=y] && SCSI_FDOMAIN [=m]
+
+
+Symbol: SCSI_FDOMAIN_PCI [=m]
+Type  : tristate
+Prompt: Future Domain TMC-3260/AHA-2920A PCI SCSI support
+  Location:
+    -> Device Drivers
+      -> SCSI device support
+        -> SCSI low-level drivers (SCSI_LOWLEVEL [=y])
+  Defined at drivers/scsi/Kconfig:670
+  Depends on: SCSI_LOWLEVEL [=y] && PCI [=y] && SCSI [=y]
+  Selects: SCSI_FDOMAIN [=m]
+
+
+
+-- 
+Ondrej Zary
