@@ -1,28 +1,28 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2] scsi: libsas, lldds: Use dev_is_expander()
-Date: Tue, 18 Jun 2019 20:56:03 -0400
-Message-ID: <yq1sgs6xujg.fsf@oracle.com>
-References: <1560170501-220025-1-git-send-email-john.garry@huawei.com>
+Subject: Re: [PATCH] scsi: storvsc: Add ability to change scsi queue depth
+Date: Tue, 18 Jun 2019 21:08:59 -0400
+Message-ID: <yq1fto6xtxw.fsf@oracle.com>
+References: <20190614234822.5193-1-brandonbonaby94@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1560170501-220025-1-git-send-email-john.garry@huawei.com> (John
-        Garry's message of "Mon, 10 Jun 2019 20:41:41 +0800")
+In-Reply-To: <20190614234822.5193-1-brandonbonaby94@gmail.com> (Branden
+        Bonaby's message of "Fri, 14 Jun 2019 19:48:22 -0400")
 Sender: linux-kernel-owner@vger.kernel.org
-To: John Garry <john.garry@huawei.com>
-Cc: jejb@linux.ibm.com, martin.petersen@oracle.com, intel-linux-scu@intel.com, artur.paszkiewicz@intel.com, jinpu.wang@profitbricks.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, hare@suse.de
+To: Branden Bonaby <brandonbonaby94@gmail.com>
+Cc: kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com, sashal@kernel.org, jejb@linux.ibm.com, martin.petersen@oracle.com, linux-hyperv@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-John,
+Branden,
 
-> Many times in libsas, and in LLDDs which use libsas, the check for an
-> expander device is re-implemented or open coded.
->
-> Use dev_is_expander() instead. We rename this from
-> sas_dev_type_is_expander() to not spill so many lines in referencing.
+> Adding functionality to allow the SCSI queue depth to be changed, by
+> utilizing the "scsi_change_queue_depth" function.
 
-Applied to 5.3/scsi-queue. Thanks!
+Applied to 5.3/scsi-queue. Please run checkpatch before submission. I
+fixed it up this time.
+
+Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
