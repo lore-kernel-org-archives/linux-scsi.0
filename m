@@ -1,53 +1,45 @@
-From: Jan Kara <jack@suse.cz>
-Subject: [PATCH] scsi: vmw_pscsi: Fix use-after-free in pvscsi_queue_lck()
-Date: Wed, 19 Jun 2019 09:05:41 +0200
-Message-ID: <20190619070541.30070-1-jack@suse.cz>
-Return-path: <stable-owner@vger.kernel.org>
-Sender: stable-owner@vger.kernel.org
-To: Jim Gill <jgill@vmware.com>
-Cc: VMware PV-Drivers <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org, Jan Kara <jack@suse.cz>, stable@vger.kernel.org
+From: Dongli Zhang <dongli.zhang@oracle.com>
+Subject: [PATCH 1/1] scsi: virtio_scsi: remove unused 'affinity_hint_set'
+Date: Wed, 19 Jun 2019 15:52:19 +0800
+Message-ID: <1560930739-25692-1-git-send-email-dongli.zhang@oracle.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: virtualization@lists.linux-foundation.org, linux-scsi@vger.kernel.org
+Cc: martin.petersen@oracle.com, mst@redhat.com, linux-kernel@vger.kernel.org, stefanha@redhat.com, pbonzini@redhat.com, jejb@linux.ibm.com
 List-Id: linux-scsi@vger.kernel.org
 
-Once we unlock adapter->hw_lock in pvscsi_queue_lck() nothing prevents just
-queued scsi_cmnd from completing and freeing the request. Thus cmd->cmnd[0]
-dereference can dereference already freed request leading to kernel crashes or
-other issues (which one of our customers observed). Store cmd->cmnd[0] in a
-local variable before unlocking adapter->hw_lock to fix the issue.
+The 'affinity_hint_set' is not used any longer since
+commit 0d9f0a52c8b9 ("virtio_scsi: use virtio IRQ affinity").
 
-CC: stable@vger.kernel.org
-Signed-off-by: Jan Kara <jack@suse.cz>
+Signed-off-by: Dongli Zhang <dongli.zhang@oracle.com>
 ---
- drivers/scsi/vmw_pvscsi.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/scsi/virtio_scsi.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
-index ecee4b3ff073..377b07b2feeb 100644
---- a/drivers/scsi/vmw_pvscsi.c
-+++ b/drivers/scsi/vmw_pvscsi.c
-@@ -763,6 +763,7 @@ static int pvscsi_queue_lck(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd
- 	struct pvscsi_adapter *adapter = shost_priv(host);
- 	struct pvscsi_ctx *ctx;
- 	unsigned long flags;
-+	unsigned char op;
+diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+index 13f1b3b..1705398 100644
+--- a/drivers/scsi/virtio_scsi.c
++++ b/drivers/scsi/virtio_scsi.c
+@@ -74,9 +74,6 @@ struct virtio_scsi {
  
- 	spin_lock_irqsave(&adapter->hw_lock, flags);
+ 	u32 num_queues;
  
-@@ -775,13 +776,14 @@ static int pvscsi_queue_lck(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd
- 	}
+-	/* If the affinity hint is set for virtqueues */
+-	bool affinity_hint_set;
+-
+ 	struct hlist_node node;
  
- 	cmd->scsi_done = done;
-+	op = cmd->cmnd[0];
- 
- 	dev_dbg(&cmd->device->sdev_gendev,
--		"queued cmd %p, ctx %p, op=%x\n", cmd, ctx, cmd->cmnd[0]);
-+		"queued cmd %p, ctx %p, op=%x\n", cmd, ctx, op);
- 
- 	spin_unlock_irqrestore(&adapter->hw_lock, flags);
- 
--	pvscsi_kick_io(adapter, cmd->cmnd[0]);
-+	pvscsi_kick_io(adapter, op);
- 
- 	return 0;
- }
+ 	/* Protected by event_vq lock */
 -- 
-2.16.4
+2.7.4
