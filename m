@@ -1,30 +1,26 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: tcmu: Simplify 'tcmu_update_uio_info()'
-Date: Tue, 18 Jun 2019 21:10:40 -0400
-Message-ID: <yq1blyuxtv3.fsf@oracle.com>
-References: <20190616070220.24189-1-christophe.jaillet@wanadoo.fr>
+Subject: Re: [PATCH] [resend] wd719x: Fix resets and aborts
+Date: Tue, 18 Jun 2019 21:45:42 -0400
+Message-ID: <yq1v9x2wdo9.fsf@oracle.com>
+References: <20190617175012.25323-1-linux@zary.sk>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190616070220.24189-1-christophe.jaillet@wanadoo.fr>
-        (Christophe JAILLET's message of "Sun, 16 Jun 2019 09:02:20 +0200")
+In-Reply-To: <20190617175012.25323-1-linux@zary.sk> (Ondrej Zary's message of
+        "Mon, 17 Jun 2019 19:50:12 +0200")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: Ondrej Zary <linux@zary.sk>
+Cc: Hariprasad Kelam <hariprasad.kelam@gmail.com>, "James E . J . Bottomley" <jejb@linux.ibm.com>, David Rientjes <rientjes@google.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Christophe,
+Ondrej,
 
-> Use 'kasprintf()' instead of:
->    - snprintf(NULL, 0...
->    - kmalloc(...
->    - snprintf(...
->
-> This is less verbose and saves 7 bytes (i.e. the space for '/(null)') if
-> 'udev->dev_config' is NULL.
+> Host reset oopses because it calls wd719x_chip_init, which calls
+> request_firmware, under a spinlock. Stop the RISC first, then flush
+> active SCBs under a spinlock. Finally call wd719x_chip_init unlocked.
 
-Applied to 5.3/scsi-queue. Thanks!
+Applied to 5.3/scsi-queue. Thank you!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
