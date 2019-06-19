@@ -1,64 +1,48 @@
-From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: [PATCH] scsi: osst: Use struct_size() in kzalloc()
-Date: Wed, 19 Jun 2019 14:41:26 -0500
-Message-ID: <20190619194126.GA3069@embeddedor>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH V5 00/16] use sg helper to operate scatterlist
+Date: Wed, 19 Jun 2019 12:43:47 -0700
+Message-ID: <3df71d64-78fb-c6fc-f456-a0b626abff3b@acm.org>
+References: <20190618013757.22401-1-ming.lei@redhat.com>
+ <yq11rzqzacx.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Willem Riede <osst@riede.org>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: osst-users@lists.sourceforge.net, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <yq11rzqzacx.fsf@oracle.com>
+Content-Language: en-US
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, Ming Lei <ming.lei@redhat.com>
+Cc: Michael Schmitz <schmitzmic@gmail.com>, devel@driverdev.osuosl.org, Hannes Reinecke <hare@suse.com>, Benjamin Block <bblock@linux.ibm.com>, linux-scsi@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org, James Smart <james.smart@broadcom.com>, "Ewan D . Milne" <emilne@redhat.com>, Jim Gill <jgill@vmware.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Brian King <brking@us.ibm.com>, Finn Thain <fthain@telegraphics.com.au>, "Juergen E . Fischer" <fischer@norbit.de>, Christoph Hellwig <hch@lst.de>, Dan Carpenter <dan.carpenter@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-One of the more common cases of allocation size calculations is finding
-the size of a structure that has a zero-sized array at the end, along
-with memory for some number of elements for that array. For example:
+On 6/18/19 5:29 PM, Martin K. Petersen wrote:
+> I applied this series with a bunch of edits and clarifying comments. It
+> was quite the nightmare to rebase 5.3/scsi-queue to satisfy the ordering
+> requirements, locate the scattered fixes, tweak tags, etc. Hope I got
+> everything right.
 
-struct osst_buffer {
-  ...
-  struct scatterlist sg[1];    /* MUST BE last item                               */
-} ;
+Hi Martin,
 
-i = sizeof(struct osst_buffer) + (osst_max_sg_segs - 1) * sizeof(struct scatterlist);
-instance = kzalloc(i, GFP_KERNEL);
+Do you perhaps plan to push out these patches at a later time? It seems 
+like that branch has not been updated recently:
 
-Instead of leaving these open-coded and prone to type mistakes, we can
-now use the new struct_size() helper:
+$ git show --format=fuller mkp-scsi/5.3/scsi-queue | head -n7
+commit f3e88ad00f58e9a05986be3028b2ed8654c601c9
+Author:     Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
+AuthorDate: Fri May 31 08:14:43 2019 -0400
+Commit:     Martin K. Petersen <martin.petersen@oracle.com>
+CommitDate: Fri Jun 7 10:17:06 2019 -0400
 
-instance = kzalloc(struct_size(instance, sg, count), GFP_KERNEL);
+     scsi: mpt3sas: Update driver version to 29.100.00.00
 
-Notice that, in this case, variable i is not necessary, hence it
-is removed.
+Thanks,
 
-This code was detected with the help of Coccinelle.
-
-Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
----
- drivers/scsi/osst.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/osst.c b/drivers/scsi/osst.c
-index 815bb4097c1b..a11455a7e6bf 100644
---- a/drivers/scsi/osst.c
-+++ b/drivers/scsi/osst.c
-@@ -5307,7 +5307,6 @@ static long osst_compat_ioctl(struct file * file, unsigned int cmd_in, unsigned
- /* Try to allocate a new tape buffer skeleton. Caller must not hold os_scsi_tapes_lock */
- static struct osst_buffer * new_tape_buffer( int from_initialization, int need_dma, int max_sg )
- {
--	int i;
- 	gfp_t priority;
- 	struct osst_buffer *tb;
- 
-@@ -5316,8 +5315,7 @@ static struct osst_buffer * new_tape_buffer( int from_initialization, int need_d
- 	else
- 		priority = GFP_KERNEL;
- 
--	i = sizeof(struct osst_buffer) + (osst_max_sg_segs - 1) * sizeof(struct scatterlist);
--	tb = kzalloc(i, priority);
-+	tb = kzalloc(struct_size(tb, sg, osst_max_sg_segs - 1), priority);
- 	if (!tb) {
- 		printk(KERN_NOTICE "osst :I: Can't allocate new tape buffer.\n");
- 		return NULL;
--- 
-2.21.0
+Bart.
