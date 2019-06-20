@@ -1,31 +1,29 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 1/2] scsi: devinfo: BLIST_TRY_VPD_PAGES for SanDisk Cruzer Blade
-Date: Thu, 20 Jun 2019 16:32:38 -0400
-Message-ID: <yq14l4kro9l.fsf@oracle.com>
-References: <20190618013146.21961-1-marcos.souza.org@gmail.com>
-        <20190618013146.21961-2-marcos.souza.org@gmail.com>
-        <yq1r27quuod.fsf@oracle.com> <20190619094540.GA26980@continental>
-        <20190619120346.GC26980@continental>
+Subject: Re: [PATCH] scsi: vmw_pscsi: Fix use-after-free in pvscsi_queue_lck()
+Date: Thu, 20 Jun 2019 16:35:05 -0400
+Message-ID: <yq1zhmcq9l2.fsf@oracle.com>
+References: <20190619070541.30070-1-jack@suse.cz>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190619120346.GC26980@continental> (Marcos Paulo de Souza's
-        message of "Wed, 19 Jun 2019 09:03:52 -0300")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Marcos Paulo de Souza <marcos.souza.org@gmail.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.ibm.com>
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20190619070541.30070-1-jack@suse.cz> (Jan Kara's message of
+        "Wed, 19 Jun 2019 09:05:41 +0200")
+Sender: stable-owner@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: Jim Gill <jgill@vmware.com>, VMware PV-Drivers <pv-drivers@vmware.com>, linux-scsi@vger.kernel.org, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Marcos,
+Jan,
 
-> My first idea was to add a vendor:product mapping at SCSI layer, but
-> so far I haven't found one, so I added the model/vendor found by
-> INQUIRY. Would it be better to check for prod:vendor (as values,
-> instead of the description)?
+> Once we unlock adapter->hw_lock in pvscsi_queue_lck() nothing prevents
+> just queued scsi_cmnd from completing and freeing the request. Thus
+> cmd->cmnd[0] dereference can dereference already freed request leading
+> to kernel crashes or other issues (which one of our customers
+> observed). Store cmd->cmnd[0] in a local variable before unlocking
+> adapter->hw_lock to fix the issue.
 
-Your patch is functionally fine. I'm just trying to establish how risky
-it is for me to pick it up.
+Applied to 5.2/scsi-fixes. Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
