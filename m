@@ -1,99 +1,98 @@
-From: Marc Gonzalez <marc.w.gonzalez@free.fr>
-Subject: Re: [PATCH v1] scsi: Don't select SCSI_PROC_FS by default
-Date: Thu, 20 Jun 2019 11:01:39 +0200
-Message-ID: <e04e14b7-e1ee-c0c1-9e6d-2628d2c873a9@free.fr>
-References: <2de15293-b9be-4d41-bc67-a69417f27f7a@free.fr>
- <621306ee-7ab6-9cd2-e934-94b3d6d731fc@acm.org>
- <fb2d2e74-6725-4bf2-cf6c-63c0a2a10f4f@interlog.com>
- <alpine.LNX.2.21.1906181107240.287@nippy.intranet>
- <017cf3cf-ecd8-19c2-3bbd-7e7c28042c3c@free.fr>
- <f8339103-5b45-b72d-9f87-fd4dd7b3081e@interlog.com>
- <f1f98ab0-399a-6c12-073d-ee8ad47d5588@free.fr>
- <48912bc0-8c79-408d-7ed2-c127b99b8bcc@interlog.com>
+From: Jani Nikula <jani.nikula@linux.intel.com>
+Subject: Re: [PATCH v3 0/7] Hexdump Enhancements
+Date: Thu, 20 Jun 2019 13:50:33 +0300
+Message-ID: <87sgs4sf7q.fsf@intel.com>
+References: <20190617020430.8708-1-alastair@au1.ibm.com> <9a000734375c0801fc16b71f4be1235f9b857772.camel@perches.com> <c68cb819257f251cbb66f8998a95c31cebe2d72e.camel@d-silva.org> <d8316be322f33ea67640ff83f2248fe433078407.camel@perches.com> <9456ca2a4ae827635bb6d864e5095a9e51f2ac45.camel@d-silva.org> <fcf57339aea60fb1744cea2a2593656c728c4ec4.camel@perches.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <48912bc0-8c79-408d-7ed2-c127b99b8bcc@interlog.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Douglas Gilbert <dgilbert@interlog.com>
-Cc: Finn Thain <fthain@telegraphics.com.au>, Bart Van Assche <bvanassche@acm.org>, James Bottomley <jejb@linux.ibm.com>, Martin Petersen <martin.petersen@oracle.com>, SCSI <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <fcf57339aea60fb1744cea2a2593656c728c4ec4.camel@perches.com>
+Sender: netdev-owner@vger.kernel.org
+To: Joe Perches <joe@perches.com>, Alastair D'Silva <alastair@d-silva.org>
+Cc: Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, Rodrigo Vivi <rodrigo.vivi@intel.com>, David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>, Dan Carpenter <dan.carpenter@oracle.com>, Karsten Keil <isdn@linux-pingi.de>, Jassi Brar <jassisinghbrar@gmail.com>, Tom Lendacky <thomas.lendacky@amd.com>, "David S. Miller" <davem@davemloft.net>, Jose Abreu <Jose.Abreu@synopsys.com>, Kalle Valo <kvalo@codeaurora.org>, Stanislaw Gruszka <sgruszka@redhat.com>, Benson Leung <bleung@chromium.org>, Enric Balletbo i Serra <enric.balletbo@collabora.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Alexander Viro <viro@zeniv.linux.org.uk>, Petr
 List-Id: linux-scsi@vger.kernel.org
 
-On 19/06/2019 16:34, Douglas Gilbert wrote:
+On Wed, 19 Jun 2019, Joe Perches <joe@perches.com> wrote:
+> On Thu, 2019-06-20 at 11:14 +1000, Alastair D'Silva wrote:
+>> On Wed, 2019-06-19 at 17:35 -0700, Joe Perches wrote:
+>> > On Thu, 2019-06-20 at 09:15 +1000, Alastair D'Silva wrote:
+>> > > On Wed, 2019-06-19 at 09:31 -0700, Joe Perches wrote:
+>> > > > On Mon, 2019-06-17 at 12:04 +1000, Alastair D'Silva wrote:
+>> > > > > From: Alastair D'Silva <alastair@d-silva.org>
+>> > > > > 
+>> > > > > Apologies for the large CC list, it's a heads up for those
+>> > > > > responsible
+>> > > > > for subsystems where a prototype change in generic code causes
+>> > > > > a
+>> > > > > change
+>> > > > > in those subsystems.
+>> > > > > 
+>> > > > > This series enhances hexdump.
+>> > > > 
+>> > > > Still not a fan of these patches.
+>> > > 
+>> > > I'm afraid there's not too much action I can take on that, I'm
+>> > > happy to
+>> > > address specific issues though.
+>> > > 
+>> > > > > These improve the readability of the dumped data in certain
+>> > > > > situations
+>> > > > > (eg. wide terminals are available, many lines of empty bytes
+>> > > > > exist,
+>> > > > > etc).
+>> > 
+>> > I think it's generally overkill for the desired uses.
+>> 
+>> I understand where you're coming from, however, these patches make it a
+>> lot easier to work with large chucks of binary data. I think it makes
+>> more sense to have these patches upstream, even though committed code
+>> may not necessarily have all the features enabled, as it means that
+>> devs won't have to apply out-of-tree patches during development to make
+>> larger dumps manageable.
+>> 
+>> > > > Changing hexdump's last argument from bool to int is odd.
+>> > > > 
+>> > > 
+>> > > Think of it as replacing a single boolean with many booleans.
+>> > 
+>> > I understand it.  It's odd.
+>> > 
+>> > I would rather not have a mixture of true, false, and apparently
+>> > random collections of bitfields like 0xd or 0b1011 or their
+>> > equivalent or'd defines.
+>> > 
+>> 
+>> Where's the mixture? What would you propose instead?
+>
+> create a hex_dump_to_buffer_ext with a new argument
+> and a new static inline for the old hex_dump_to_buffer
+> without modifying the argument list that calls
+> hex_dump_to_buffer with whatever added argument content
+> you need.
+>
+> Something like:
+>
+> static inline
+> int hex_dump_to_buffer(const void *buf, size_t len, int rowsize,
+> 		       int groupsize, char *linebuf, size_t linebuflen,
+> 		       bool ascii)
+> {
+> 	return hex_dump_to_buffer_ext(buf, len, rowsize, groupsize,
+> 				      linebuf, linebuflen, ascii, 0);
+> }
+>
+> and remove EXPORT_SYMBOL(hex_dump_to_buffer)
 
-> On 2019-06-19 5:42 a.m., Marc Gonzalez wrote:
-> 
->> I assume sg3_utils requires CHR_DEV_SG. Is it the case?
->>
->> If so, we would just need to enable SCSI_PROC_FS when CHR_DEV_SG is enabled.
->>
->> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
->> index 73bce9b6d037..642ca0e7d363 100644
->> --- a/drivers/scsi/Kconfig
->> +++ b/drivers/scsi/Kconfig
->> @@ -54,14 +54,12 @@ config SCSI_NETLINK
->>   config SCSI_PROC_FS
->>   	bool "legacy /proc/scsi/ support"
->>   	depends on SCSI && PROC_FS
->> -	default y
->> +	default CHR_DEV_SG
->>   	---help---
->>   	  This option enables support for the various files in
->>   	  /proc/scsi.  In Linux 2.6 this has been superseded by
->>   	  files in sysfs but many legacy applications rely on this.
->>   
->> -	  If unsure say Y.
->> -
->>   comment "SCSI support type (disk, tape, CD-ROM)"
->>   	depends on SCSI
->>   
->>
->> Would that work for you?
->> I checked that SCSI_PROC_FS=y whether CHR_DEV_SG=y or m
->> I can spin a v2, with a blurb about how sg3_utils relies on SCSI_PROC_FS.
-> 
-> Yes, but (see below) ...
-> 
-> Example of use of /proc/scsi/scsi [...]
-> Now looking at /proc/scsi/device_info [...]
-> 
-> IMO unless there is a replacement for /proc/scsi/device_info
-> then your patch should not go ahead . If it does, any reasonable
-> distro should override it.
-> 
-> That is a black (or quirks) list that can be added to by writing an
-> entry to /proc/scsi/device_info . So if a user has a device that needs
-> one of those quirks defined to stop their system locking up when a
-> device of that type is plugged in, and the distro or some app (say,
-> that needs that device) knows about that, then it would be sad if
-> /proc/scsi/device_info was missing due to the changed default that is
-> being proposed.
+If you decide to do something like this, I'd actually suggest you drop
+the bool ascii parameter from hex_dump_to_buffer() altogether, and
+replace the callers that do require ascii with
+hex_dump_to_buffer_ext(..., HEXDUMP_ASCII). Even if that also requires
+touching all callers.
 
-You've made it clear that SCSI_PROC_FS is important for several classes
-of hardware.
+But no strong opinions, really.
 
-You worry that changing the Kconfig default would force distro maintainers
-(we are talking about Debian/Redhat/Suse/etc right?) to actually turn the
-feature on, instead of relying on the "default y" behavior (as they have
-done in the past).
+BR,
+Jani.
 
-How likely is it that distro kernels would *not* enable CHR_DEV_SG?
-(Distros tend to enable everything, and then some.)
-
-CHR_DEV_SG is enabled in the default configs for i386 and x86_64:
-
-$ git grep CHR_DEV_SG arch/x86/configs/
-arch/x86/configs/i386_defconfig:CONFIG_CHR_DEV_SG=y
-arch/x86/configs/x86_64_defconfig:CONFIG_CHR_DEV_SG=y
-
-=> As soon as CHR_DEV_SG is enabled, SCSI_PROC_FS is also enabled.
-
-(I work on smaller systems where we do use /proc occasionally, but we
-don't enable CHR_DEV_SG or SCSI_PROC_FS.)
-
-I think we just need to find a reasonable condition for enabling
-SCSI_PROC_FS by default on "your" sytems, and not on "mine" ;-)
-
-Regards.
+-- 
+Jani Nikula, Intel Open Source Graphics Center
