@@ -1,74 +1,89 @@
-From: Joe Perches <joe@perches.com>
-Subject: Re: [PATCH v3 0/7] Hexdump Enhancements
-Date: Wed, 19 Jun 2019 19:00:22 -0700
-Message-ID: <fcf57339aea60fb1744cea2a2593656c728c4ec4.camel@perches.com>
-References: <20190617020430.8708-1-alastair@au1.ibm.com>
- <9a000734375c0801fc16b71f4be1235f9b857772.camel@perches.com>
- <c68cb819257f251cbb66f8998a95c31cebe2d72e.camel@d-silva.org>
- <d8316be322f33ea67640ff83f2248fe433078407.camel@perches.com>
- <9456ca2a4ae827635bb6d864e5095a9e51f2ac45.camel@d-silva.org>
+From: Kashyap Desai <kashyap.desai@broadcom.com>
+Subject: RE: [PATCH 1/8] scsi: add a host / host template field for the virt boundary
+Date: Thu, 20 Jun 2019 11:47:29 +0530
+Message-ID: <6dd62da3ba56142d4a67bc207aa55a59@mail.gmail.com>
+References: <20190617122000.22181-1-hch@lst.de> <20190617122000.22181-2-hch@lst.de>
+ <CACVXFVOwCeM2JzefBpKsVZrEaWpSBR0DF8qp4oKfoHm+pwLBYw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <dri-devel-bounces@lists.freedesktop.org>
-In-Reply-To: <9456ca2a4ae827635bb6d864e5095a9e51f2ac45.camel@d-silva.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
-List-Post: <mailto:dri-devel@lists.freedesktop.org>
-List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: dri-devel-bounces@lists.freedesktop.org
-Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
-To: Alastair D'Silva <alastair@d-silva.org>
-Cc: linux-fbdev@vger.kernel.org, Stanislaw Gruszka <sgruszka@redhat.com>, Petr Mladek <pmladek@suse.com>, David Airlie <airlied@linux.ie>, dri-devel@lists.freedesktop.org, devel@driverdev.osuosl.org, linux-scsi@vger.kernel.org, Jassi Brar <jassisinghbrar@gmail.com>, ath10k@lists.infradead.org, intel-gfx@lists.freedesktop.org, Dan Carpenter <dan.carpenter@oracle.com>, Jose Abreu <Jose.Abreu@synopsys.com>, Tom Lendacky <thomas.lendacky@amd.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, linux-fsdevel@vger.kernel.org, Steven Rostedt <rostedt@goodmis.org>, Rodrigo Vivi <rodrigo.vivi@intel.com>, Kalle Valo <kvalo@codeaurora.org>, Karsten Keil <isdn@linux-pingi.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, Sergey Senozhatsky <sergey.senozhatsky@gmail.com>D
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CACVXFVOwCeM2JzefBpKsVZrEaWpSBR0DF8qp4oKfoHm+pwLBYw@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ming Lei <tom.leiming@gmail.com>, Christoph Hellwig <hch@lst.de>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagi@grimberg.me>, Max Gurtovoy <maxg@mellanox.com>, Bart Van Assche <bvanassche@acm.org>, linux-rdma <linux-rdma@vger.kernel.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@broadcom.com>, PDL-MPT-FUSIONLINUX <mpt-fusionlinux.pdl@broadcom.com>, linux-hyperv@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Kashyap Desai <kashyap.desai@broadcom.com>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gVGh1LCAyMDE5LTA2LTIwIGF0IDExOjE0ICsxMDAwLCBBbGFzdGFpciBEJ1NpbHZhIHdyb3Rl
-Ogo+IE9uIFdlZCwgMjAxOS0wNi0xOSBhdCAxNzozNSAtMDcwMCwgSm9lIFBlcmNoZXMgd3JvdGU6
-Cj4gPiBPbiBUaHUsIDIwMTktMDYtMjAgYXQgMDk6MTUgKzEwMDAsIEFsYXN0YWlyIEQnU2lsdmEg
-d3JvdGU6Cj4gPiA+IE9uIFdlZCwgMjAxOS0wNi0xOSBhdCAwOTozMSAtMDcwMCwgSm9lIFBlcmNo
-ZXMgd3JvdGU6Cj4gPiA+ID4gT24gTW9uLCAyMDE5LTA2LTE3IGF0IDEyOjA0ICsxMDAwLCBBbGFz
-dGFpciBEJ1NpbHZhIHdyb3RlOgo+ID4gPiA+ID4gRnJvbTogQWxhc3RhaXIgRCdTaWx2YSA8YWxh
-c3RhaXJAZC1zaWx2YS5vcmc+Cj4gPiA+ID4gPiAKPiA+ID4gPiA+IEFwb2xvZ2llcyBmb3IgdGhl
-IGxhcmdlIENDIGxpc3QsIGl0J3MgYSBoZWFkcyB1cCBmb3IgdGhvc2UKPiA+ID4gPiA+IHJlc3Bv
-bnNpYmxlCj4gPiA+ID4gPiBmb3Igc3Vic3lzdGVtcyB3aGVyZSBhIHByb3RvdHlwZSBjaGFuZ2Ug
-aW4gZ2VuZXJpYyBjb2RlIGNhdXNlcwo+ID4gPiA+ID4gYQo+ID4gPiA+ID4gY2hhbmdlCj4gPiA+
-ID4gPiBpbiB0aG9zZSBzdWJzeXN0ZW1zLgo+ID4gPiA+ID4gCj4gPiA+ID4gPiBUaGlzIHNlcmll
-cyBlbmhhbmNlcyBoZXhkdW1wLgo+ID4gPiA+IAo+ID4gPiA+IFN0aWxsIG5vdCBhIGZhbiBvZiB0
-aGVzZSBwYXRjaGVzLgo+ID4gPiAKPiA+ID4gSSdtIGFmcmFpZCB0aGVyZSdzIG5vdCB0b28gbXVj
-aCBhY3Rpb24gSSBjYW4gdGFrZSBvbiB0aGF0LCBJJ20KPiA+ID4gaGFwcHkgdG8KPiA+ID4gYWRk
-cmVzcyBzcGVjaWZpYyBpc3N1ZXMgdGhvdWdoLgo+ID4gPiAKPiA+ID4gPiA+IFRoZXNlIGltcHJv
-dmUgdGhlIHJlYWRhYmlsaXR5IG9mIHRoZSBkdW1wZWQgZGF0YSBpbiBjZXJ0YWluCj4gPiA+ID4g
-PiBzaXR1YXRpb25zCj4gPiA+ID4gPiAoZWcuIHdpZGUgdGVybWluYWxzIGFyZSBhdmFpbGFibGUs
-IG1hbnkgbGluZXMgb2YgZW1wdHkgYnl0ZXMKPiA+ID4gPiA+IGV4aXN0LAo+ID4gPiA+ID4gZXRj
-KS4KPiA+IAo+ID4gSSB0aGluayBpdCdzIGdlbmVyYWxseSBvdmVya2lsbCBmb3IgdGhlIGRlc2ly
-ZWQgdXNlcy4KPiAKPiBJIHVuZGVyc3RhbmQgd2hlcmUgeW91J3JlIGNvbWluZyBmcm9tLCBob3dl
-dmVyLCB0aGVzZSBwYXRjaGVzIG1ha2UgaXQgYQo+IGxvdCBlYXNpZXIgdG8gd29yayB3aXRoIGxh
-cmdlIGNodWNrcyBvZiBiaW5hcnkgZGF0YS4gSSB0aGluayBpdCBtYWtlcwo+IG1vcmUgc2Vuc2Ug
-dG8gaGF2ZSB0aGVzZSBwYXRjaGVzIHVwc3RyZWFtLCBldmVuIHRob3VnaCBjb21taXR0ZWQgY29k
-ZQo+IG1heSBub3QgbmVjZXNzYXJpbHkgaGF2ZSBhbGwgdGhlIGZlYXR1cmVzIGVuYWJsZWQsIGFz
-IGl0IG1lYW5zIHRoYXQKPiBkZXZzIHdvbid0IGhhdmUgdG8gYXBwbHkgb3V0LW9mLXRyZWUgcGF0
-Y2hlcyBkdXJpbmcgZGV2ZWxvcG1lbnQgdG8gbWFrZQo+IGxhcmdlciBkdW1wcyBtYW5hZ2VhYmxl
-Lgo+IAo+ID4gPiA+IENoYW5naW5nIGhleGR1bXAncyBsYXN0IGFyZ3VtZW50IGZyb20gYm9vbCB0
-byBpbnQgaXMgb2RkLgo+ID4gPiA+IAo+ID4gPiAKPiA+ID4gVGhpbmsgb2YgaXQgYXMgcmVwbGFj
-aW5nIGEgc2luZ2xlIGJvb2xlYW4gd2l0aCBtYW55IGJvb2xlYW5zLgo+ID4gCj4gPiBJIHVuZGVy
-c3RhbmQgaXQuICBJdCdzIG9kZC4KPiA+IAo+ID4gSSB3b3VsZCByYXRoZXIgbm90IGhhdmUgYSBt
-aXh0dXJlIG9mIHRydWUsIGZhbHNlLCBhbmQgYXBwYXJlbnRseQo+ID4gcmFuZG9tIGNvbGxlY3Rp
-b25zIG9mIGJpdGZpZWxkcyBsaWtlIDB4ZCBvciAwYjEwMTEgb3IgdGhlaXIKPiA+IGVxdWl2YWxl
-bnQgb3InZCBkZWZpbmVzLgo+ID4gCj4gCj4gV2hlcmUncyB0aGUgbWl4dHVyZT8gV2hhdCB3b3Vs
-ZCB5b3UgcHJvcG9zZSBpbnN0ZWFkPwoKY3JlYXRlIGEgaGV4X2R1bXBfdG9fYnVmZmVyX2V4dCB3
-aXRoIGEgbmV3IGFyZ3VtZW50CmFuZCBhIG5ldyBzdGF0aWMgaW5saW5lIGZvciB0aGUgb2xkIGhl
-eF9kdW1wX3RvX2J1ZmZlcgp3aXRob3V0IG1vZGlmeWluZyB0aGUgYXJndW1lbnQgbGlzdCB0aGF0
-IGNhbGxzCmhleF9kdW1wX3RvX2J1ZmZlciB3aXRoIHdoYXRldmVyIGFkZGVkIGFyZ3VtZW50IGNv
-bnRlbnQKeW91IG5lZWQuCgpTb21ldGhpbmcgbGlrZToKCnN0YXRpYyBpbmxpbmUKaW50IGhleF9k
-dW1wX3RvX2J1ZmZlcihjb25zdCB2b2lkICpidWYsIHNpemVfdCBsZW4sIGludCByb3dzaXplLAoJ
-CSAgICAgICBpbnQgZ3JvdXBzaXplLCBjaGFyICpsaW5lYnVmLCBzaXplX3QgbGluZWJ1ZmxlbiwK
-CQkgICAgICAgYm9vbCBhc2NpaSkKewoJcmV0dXJuIGhleF9kdW1wX3RvX2J1ZmZlcl9leHQoYnVm
-LCBsZW4sIHJvd3NpemUsIGdyb3Vwc2l6ZSwKCQkJCSAgICAgIGxpbmVidWYsIGxpbmVidWZsZW4s
-IGFzY2lpLCAwKTsKfQoKYW5kIHJlbW92ZSBFWFBPUlRfU1lNQk9MKGhleF9kdW1wX3RvX2J1ZmZl
-cikKCQkJCSAgICAgIAoKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fCmRyaS1kZXZlbCBtYWlsaW5nIGxpc3QKZHJpLWRldmVsQGxpc3RzLmZyZWVkZXNrdG9w
-Lm9yZwpodHRwczovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2RyaS1k
-ZXZlbA==
+> -----Original Message-----
+> From: megaraidlinux.pdl@broadcom.com
+> [mailto:megaraidlinux.pdl@broadcom.com] On Behalf Of Ming Lei
+> Sent: Tuesday, June 18, 2019 6:05 AM
+> To: Christoph Hellwig <hch@lst.de>
+> Cc: Martin K . Petersen <martin.petersen@oracle.com>; Sagi Grimberg
+> <sagi@grimberg.me>; Max Gurtovoy <maxg@mellanox.com>; Bart Van
+> Assche <bvanassche@acm.org>; linux-rdma <linux-rdma@vger.kernel.org>;
+> Linux SCSI List <linux-scsi@vger.kernel.org>;
+> megaraidlinux.pdl@broadcom.com; MPT-FusionLinux.pdl@broadcom.com;
+> linux-hyperv@vger.kernel.org; Linux Kernel Mailing List <linux-
+> kernel@vger.kernel.org>
+> Subject: Re: [PATCH 1/8] scsi: add a host / host template field for the
+> virt
+> boundary
+>
+> On Mon, Jun 17, 2019 at 8:21 PM Christoph Hellwig <hch@lst.de> wrote:
+> >
+> > This allows drivers setting it up easily instead of branching out to
+> > block layer calls in slave_alloc, and ensures the upgraded
+> > max_segment_size setting gets picked up by the DMA layer.
+> >
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > ---
+> >  drivers/scsi/hosts.c     | 3 +++
+> >  drivers/scsi/scsi_lib.c  | 3 ++-
+> >  include/scsi/scsi_host.h | 3 +++
+> >  3 files changed, 8 insertions(+), 1 deletion(-)
+> >
+> > diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c index
+> > ff0d8c6a8d0c..55522b7162d3 100644
+> > --- a/drivers/scsi/hosts.c
+> > +++ b/drivers/scsi/hosts.c
+> > @@ -462,6 +462,9 @@ struct Scsi_Host *scsi_host_alloc(struct
+> scsi_host_template *sht, int privsize)
+> >         else
+> >                 shost->dma_boundary = 0xffffffff;
+> >
+> > +       if (sht->virt_boundary_mask)
+> > +               shost->virt_boundary_mask = sht->virt_boundary_mask;
+> > +
+> >         device_initialize(&shost->shost_gendev);
+> >         dev_set_name(&shost->shost_gendev, "host%d", shost->host_no);
+> >         shost->shost_gendev.bus = &scsi_bus_type; diff --git
+> > a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c index
+> > 65d0a10c76ad..d333bb6b1c59 100644
+> > --- a/drivers/scsi/scsi_lib.c
+> > +++ b/drivers/scsi/scsi_lib.c
+> > @@ -1775,7 +1775,8 @@ void __scsi_init_queue(struct Scsi_Host *shost,
+> struct request_queue *q)
+> >         dma_set_seg_boundary(dev, shost->dma_boundary);
+> >
+> >         blk_queue_max_segment_size(q, shost->max_segment_size);
+> > -       dma_set_max_seg_size(dev, shost->max_segment_size);
+> > +       blk_queue_virt_boundary(q, shost->virt_boundary_mask);
+> > +       dma_set_max_seg_size(dev, queue_max_segment_size(q));
+>
+> The patch looks fine, also suggest to make sure that max_segment_size is
+> block-size aligned, and un-aligned max segment size has caused trouble on
+> mmc.
+
+I validated changes on latest and few older series controllers.
+Post changes, I noticed max_segment_size is updated.
+find /sys/ -name max_segment_size  |grep sdb |xargs grep -r .
+/sys/devices/pci0000:3a/0000:3a:00.0/0000:3b:00.0/0000:3c:04.0/0000:40:00.0/0000:41:00.0/0000:42:00.0/host0/target0:2:12/0:2:12:0/block/sdb/queue/max_segment_size:4294967295
+
+I verify that single SGE having 1MB transfer length is working fine.
+
+Acked-by: Kashyap Desai < kashyap.desai@broadcom.com>
+
+>
+> Thanks,
+> Ming Lei
+>
