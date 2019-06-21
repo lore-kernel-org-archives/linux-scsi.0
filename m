@@ -1,77 +1,179 @@
-From: Minwoo Im <minwoo.im@samsung.com>
-Subject: [RESEND RFC PATCH] mpt3sas: support target smid for [abort|query]
- task
-Date: Fri, 21 Jun 2019 15:37:08 +0900
-Message-ID: <20190621063708epcms2p309f4173afabe5de28942ba15d13987f7@epcms2p3>
-References: <CGME20190621063708epcms2p309f4173afabe5de28942ba15d13987f7@epcms2p3>
-Reply-To: minwoo.im@samsung.com
+From: Marc Gonzalez <marc.w.gonzalez@free.fr>
+Subject: Re: [PATCH v1] scsi: Don't select SCSI_PROC_FS by default
+Date: Fri, 21 Jun 2019 12:41:14 +0200
+Message-ID: <5d9d0851-f864-6d78-7e7d-9d018bea5704@free.fr>
+References: <2de15293-b9be-4d41-bc67-a69417f27f7a@free.fr>
+ <621306ee-7ab6-9cd2-e934-94b3d6d731fc@acm.org>
+ <fb2d2e74-6725-4bf2-cf6c-63c0a2a10f4f@interlog.com>
+ <alpine.LNX.2.21.1906181107240.287@nippy.intranet>
+ <017cf3cf-ecd8-19c2-3bbd-7e7c28042c3c@free.fr>
+ <f8339103-5b45-b72d-9f87-fd4dd7b3081e@interlog.com>
+ <f1f98ab0-399a-6c12-073d-ee8ad47d5588@free.fr>
+ <48912bc0-8c79-408d-7ed2-c127b99b8bcc@interlog.com>
+ <e04e14b7-e1ee-c0c1-9e6d-2628d2c873a9@free.fr>
+ <alpine.LNX.2.21.1906210942560.131@nippy.intranet>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <alpine.LNX.2.21.1906210942560.131@nippy.intranet>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: "sathya.prakash@broadcom.com" <sathya.prakash@broadcom.com>, "suganath-prabu.subramani@broadcom.com" <suganath-prabu.subramani@broadcom.com>, "jejb@linux.ibm.com" <jejb@linux.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: Minwoo Im <minwoo.im@samsung.com>, "MPT-FusionLinux.pdl@broadcom.com" <MPT-FusionLinux.pdl@broadcom.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Euihyeok Kwon <eh81.kwon@samsung.com>, Sarah Cho <sohyeon.jo@samsung.com>, Sanggwan Lee <sanggwan.lee@samsung.com>, Gyeongmin Nam <gm.nam@samsung.com>
+To: Finn Thain <fthain@telegraphics.com.au>
+Cc: Douglas Gilbert <dgilbert@interlog.com>, Bart Van Assche <bvanassche@acm.org>, James Bottomley <jejb@linux.ibm.com>, Martin Petersen <martin.petersen@oracle.com>, SCSI <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
-We can request task management IOCTL command(MPI2_FUNCTION_SCSI_TASK_MGMT)
-to /dev/mpt3ctl.  If the given task_type is either abort task or query
-task, it may need a field named "Initiator Port Transfer Tag to Manage"
-in the IU.
+On 21/06/2019 01:43, Finn Thain wrote:
 
-Current code does not support to check target IPTT tag from the
-tm_request.  This patch introduces to check TaskMID given from the
-userspace as a target tag.  We have a rule of relationship between
-(struct request *req->tag) and smid in mpt3sas_base.c:
+> On Thu, 20 Jun 2019, Marc Gonzalez wrote:
+> 
+>> How likely is it that distro kernels would *not* enable CHR_DEV_SG?
+>> (Distros tend to enable everything, and then some.)
+> 
+> How likely is it that embedded developers would *not* disable CHR_DEV_SG?
+> They tend to disable everything, and then enable only what they need.
 
-3318 u16
-3319 mpt3sas_base_get_smid_scsiio(struct MPT3SAS_ADAPTER *ioc, u8 cb_idx,
-3320         struct scsi_cmnd *scmd)
-3321 {
-3322         struct scsiio_tracker *request = scsi_cmd_priv(scmd);
-3323         unsigned int tag = scmd->request->tag;
-3324         u16 smid;
-3325
-3326         smid = tag + 1;
+I don't see where you're going with this line of reasoning?
 
-So if we want to abort a request tagged #X, then we can pass (X + 1) to
-this IOCTL handler.
+Below is my current (as of next-20190612) defconfig.
 
-Cc: Sathya Prakash <sathya.prakash@broadcom.com>
-Cc: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
-Cc: James E.J. Bottomley <jejb@linux.ibm.com>
-Cc: Martin K. Petersen <martin.petersen@oracle.com>
-Cc: MPT-FusionLinux.pdl@broadcom.com
-Signed-off-by: Minwoo Im <minwoo.im@samsung.com>
----
- drivers/scsi/mpt3sas/mpt3sas_ctl.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+Notice the options marked as "not set". These are options that are
+enabled by default (and which I've disabled).
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-index b2bb47c14d35..5c7539dae713 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-@@ -596,15 +596,17 @@ _ctl_set_task_mid(struct MPT3SAS_ADAPTER *ioc, struct mpt3_ioctl_command *karg,
- 		if (priv_data->sas_target->handle != handle)
- 			continue;
- 		st = scsi_cmd_priv(scmd);
--		tm_request->TaskMID = cpu_to_le16(st->smid);
--		found = 1;
-+		if (tm_request->TaskMID == st->smid) {
-+			tm_request->TaskMID = cpu_to_le16(st->smid);
-+			found = 1;
-+		}
- 	}
- 
- 	if (!found) {
- 		dctlprintk(ioc,
--			   ioc_info(ioc, "%s: handle(0x%04x), lun(%d), no active mid!!\n",
-+			   ioc_info(ioc, "%s: handle(0x%04x), lun(%d), no matched mid(%d)!!\n",
- 				    desc, le16_to_cpu(tm_request->DevHandle),
--				    lun));
-+				    lun, tm_request->TaskMID));
- 		tm_reply = ioc->ctl_cmds.reply;
- 		tm_reply->DevHandle = tm_request->DevHandle;
- 		tm_reply->Function = MPI2_FUNCTION_SCSI_TASK_MGMT;
--- 
-2.16.1
+Everyone thinks "their" option is critical (and it is, *to them*) but, in fact,
+few really are -- universally. When an option is enabled by default, it does not
+show up in defconfigs that want the option, and shows up as disabled in defconfigs
+that don't want it.
+
+Ideally, options would show as enabled in defconfigs that want the option,
+and not show in defconfigs that don't.
+
+I'm currently trying to change "enabled by default" for the following options:
+# CONFIG_SCSI_PROC_FS is not set
+# CONFIG_LCD_CLASS_DEVICE is not set
+# CONFIG_BACKLIGHT_CLASS_DEVICE is not set
+# CONFIG_COMMON_CLK_XGENE is not set
+# CONFIG_QCOM_A53PLL is not set
+# CONFIG_QCOM_CLK_APCS_MSM8916 is not set
+
+I guess SCSI_PROC_FS might be the more useful to me, as it might help
+debugging USB drive issues? In any event, I would rather have it show
+up explicitly in my defconfig, to remind me I've selected it.
+
+As for a few other "default on" options in my defconfig...
+
+- SWAP I guess goes all the way back to Linux 2.0 on x86
+
+- EFI is enabled by default because "big" arm64 systems rely on it.
+But that's not true of smaller arm64 systems, based on DT.
+
+- Not sure about the IOSCHED algorithms.
+
+- IPV6 makes sense, to push for broader adoption
+
+TODO: look into HW_RANDOM and CRYPTO_HW
+
+
+# CONFIG_SWAP is not set
+CONFIG_NO_HZ_IDLE=y
+CONFIG_HIGH_RES_TIMERS=y
+CONFIG_PREEMPT=y
+CONFIG_LOG_BUF_SHIFT=20
+CONFIG_BLK_DEV_INITRD=y
+CONFIG_ARCH_QCOM=y
+CONFIG_CMDLINE="ignore_loglevel nosmp"
+# CONFIG_EFI is not set
+# CONFIG_SUSPEND is not set
+CONFIG_PM=y
+CONFIG_CPU_IDLE=y
+CONFIG_ARM_CPUIDLE=y
+CONFIG_MODULES=y
+CONFIG_MODULE_UNLOAD=y
+# CONFIG_MQ_IOSCHED_DEADLINE is not set
+# CONFIG_MQ_IOSCHED_KYBER is not set
+CONFIG_NET=y
+CONFIG_PACKET=y
+CONFIG_UNIX=y
+CONFIG_INET=y
+# CONFIG_IPV6 is not set
+# CONFIG_WIRELESS is not set
+CONFIG_PCI=y
+CONFIG_PCIEPORTBUS=y
+CONFIG_PCIE_QCOM=y
+CONFIG_DEVTMPFS=y
+CONFIG_DEVTMPFS_MOUNT=y
+CONFIG_SCSI=y
+# CONFIG_SCSI_PROC_FS is not set
+CONFIG_BLK_DEV_SD=y
+CONFIG_SCSI_UFSHCD=y
+CONFIG_SCSI_UFSHCD_PLATFORM=y
+CONFIG_SCSI_UFS_QCOM=y
+CONFIG_NETDEVICES=y
+CONFIG_ATL1C=y
+# CONFIG_WLAN is not set
+# CONFIG_INPUT_KEYBOARD is not set
+# CONFIG_INPUT_MOUSE is not set
+# CONFIG_SERIO_SERPORT is not set
+CONFIG_VT_HW_CONSOLE_BINDING=y
+CONFIG_LEGACY_PTY_COUNT=16
+CONFIG_SERIAL_8250=y
+CONFIG_SERIAL_MSM=y
+CONFIG_SERIAL_MSM_CONSOLE=y
+CONFIG_SERIAL_DEV_BUS=y
+# CONFIG_HW_RANDOM is not set
+CONFIG_I2C=y
+CONFIG_I2C_CHARDEV=y
+CONFIG_I2C_QUP=y
+CONFIG_SPMI=y
+CONFIG_PINCTRL_MSM8998=y
+CONFIG_THERMAL=y
+CONFIG_QCOM_TSENS=y
+CONFIG_REGULATOR=y
+CONFIG_REGULATOR_FIXED_VOLTAGE=y
+CONFIG_REGULATOR_QCOM_SMD_RPM=y
+# CONFIG_LCD_CLASS_DEVICE is not set
+# CONFIG_BACKLIGHT_CLASS_DEVICE is not set
+CONFIG_SOUND=y
+CONFIG_SND=y
+CONFIG_SND_SOC=y
+CONFIG_SND_SOC_WCD9335=y
+# CONFIG_HID is not set
+# CONFIG_USB_HID is not set
+CONFIG_USB=y
+# CONFIG_USB_PCI is not set
+CONFIG_USB_XHCI_HCD=y
+CONFIG_USB_STORAGE=y
+CONFIG_USB_DWC3=y
+# CONFIG_COMMON_CLK_XGENE is not set
+CONFIG_COMMON_CLK_QCOM=y
+# CONFIG_QCOM_A53PLL is not set
+# CONFIG_QCOM_CLK_APCS_MSM8916 is not set
+CONFIG_QCOM_CLK_SMD_RPM=y
+CONFIG_MSM_GCC_8998=y
+CONFIG_HWSPINLOCK=y
+CONFIG_HWSPINLOCK_QCOM=y
+CONFIG_MAILBOX=y
+CONFIG_QCOM_APCS_IPC=y
+CONFIG_ARM_SMMU=y
+CONFIG_RPMSG_QCOM_GLINK_RPM=y
+CONFIG_RPMSG_QCOM_GLINK_SMEM=y
+CONFIG_RPMSG_QCOM_SMD=y
+CONFIG_RPMSG_VIRTIO=y
+CONFIG_QCOM_COMMAND_DB=y
+CONFIG_QCOM_SMEM=y
+CONFIG_QCOM_SMD_RPM=y
+CONFIG_IIO=y
+CONFIG_PHY_QCOM_QMP=y
+CONFIG_PHY_QCOM_QUSB2=y
+CONFIG_NVMEM=y
+CONFIG_QCOM_QFPROM=y
+CONFIG_SLIMBUS=y
+CONFIG_SLIM_QCOM_CTRL=y
+CONFIG_INTERCONNECT=y
+CONFIG_INTERCONNECT_QCOM=y
+CONFIG_TMPFS=y
+# CONFIG_CRYPTO_HW is not set
+CONFIG_DEBUG_FS=y
+CONFIG_MAGIC_SYSRQ=y
+CONFIG_DEBUG_KERNEL=y
+CONFIG_STACKTRACE=y
