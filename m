@@ -1,7 +1,7 @@
 From: =?UTF-8?q?Matias=20Bj=C3=B8rling?= <mb@lightnvm.io>
-Subject: [PATCH 3/4] scsi: sd_zbc: add zone open, close, and finish support
-Date: Fri, 21 Jun 2019 15:07:10 +0200
-Message-ID: <20190621130711.21986-4-mb@lightnvm.io>
+Subject: [PATCH 4/4] dm: add zone open, close and finish support
+Date: Fri, 21 Jun 2019 15:07:11 +0200
+Message-ID: <20190621130711.21986-5-mb@lightnvm.io>
 References: <20190621130711.21986-1-mb@lightnvm.io>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -19,112 +19,98 @@ support to allow explicit control of zone states.
 
 Signed-off-by: Ajay Joshi <ajay.joshi@wdc.com>
 ---
- drivers/scsi/sd.c     | 15 ++++++++++++++-
- drivers/scsi/sd.h     |  6 ++++--
- drivers/scsi/sd_zbc.c | 18 +++++++++++++-----
- 3 files changed, 31 insertions(+), 8 deletions(-)
+ drivers/md/dm-flakey.c    | 7 +++----
+ drivers/md/dm-linear.c    | 2 +-
+ drivers/md/dm.c           | 5 +++--
+ include/linux/blk_types.h | 8 ++++++++
+ 4 files changed, 15 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index a3406bd62391..89f955a01d44 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1292,7 +1292,17 @@ static blk_status_t sd_init_command(struct scsi_cmnd *cmd)
- 	case REQ_OP_WRITE:
- 		return sd_setup_read_write_cmnd(cmd);
- 	case REQ_OP_ZONE_RESET:
--		return sd_zbc_setup_reset_cmnd(cmd);
-+		return sd_zbc_setup_zone_mgmt_op_cmnd(cmd,
-+					ZO_RESET_WRITE_POINTER);
-+	case REQ_OP_ZONE_OPEN:
-+		return sd_zbc_setup_zone_mgmt_op_cmnd(cmd,
-+					ZO_OPEN_ZONE);
-+	case REQ_OP_ZONE_CLOSE:
-+		return sd_zbc_setup_zone_mgmt_op_cmnd(cmd,
-+					ZO_CLOSE_ZONE);
-+	case REQ_OP_ZONE_FINISH:
-+		return sd_zbc_setup_zone_mgmt_op_cmnd(cmd,
-+					ZO_FINISH_ZONE);
- 	default:
- 		WARN_ON_ONCE(1);
- 		return BLK_STS_NOTSUPP;
-@@ -1958,6 +1968,9 @@ static int sd_done(struct scsi_cmnd *SCpnt)
- 	case REQ_OP_WRITE_ZEROES:
- 	case REQ_OP_WRITE_SAME:
- 	case REQ_OP_ZONE_RESET:
-+	case REQ_OP_ZONE_OPEN:
-+	case REQ_OP_ZONE_CLOSE:
-+	case REQ_OP_ZONE_FINISH:
- 		if (!result) {
- 			good_bytes = blk_rq_bytes(req);
- 			scsi_set_resid(SCpnt, 0);
-diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
-index 5796ace76225..9a20633caefa 100644
---- a/drivers/scsi/sd.h
-+++ b/drivers/scsi/sd.h
-@@ -209,7 +209,8 @@ static inline int sd_is_zoned(struct scsi_disk *sdkp)
+diff --git a/drivers/md/dm-flakey.c b/drivers/md/dm-flakey.c
+index a9bc518156f2..fff529c0732c 100644
+--- a/drivers/md/dm-flakey.c
++++ b/drivers/md/dm-flakey.c
+@@ -280,7 +280,7 @@ static void flakey_map_bio(struct dm_target *ti, struct bio *bio)
+ 	struct flakey_c *fc = ti->private;
  
- extern int sd_zbc_read_zones(struct scsi_disk *sdkp, unsigned char *buffer);
- extern void sd_zbc_print_zones(struct scsi_disk *sdkp);
--extern blk_status_t sd_zbc_setup_reset_cmnd(struct scsi_cmnd *cmd);
-+extern blk_status_t sd_zbc_setup_zone_mgmt_op_cmnd(struct scsi_cmnd *cmd,
-+						   unsigned char op);
- extern void sd_zbc_complete(struct scsi_cmnd *cmd, unsigned int good_bytes,
- 			    struct scsi_sense_hdr *sshdr);
- extern int sd_zbc_report_zones(struct gendisk *disk, sector_t sector,
-@@ -226,7 +227,8 @@ static inline int sd_zbc_read_zones(struct scsi_disk *sdkp,
- 
- static inline void sd_zbc_print_zones(struct scsi_disk *sdkp) {}
- 
--static inline blk_status_t sd_zbc_setup_reset_cmnd(struct scsi_cmnd *cmd)
-+static inline blk_status_t sd_zbc_setup_zone_mgmt_op_cmnd(struct scsi_cmnd *cmd,
-+							  unsigned char op)
- {
- 	return BLK_STS_TARGET;
+ 	bio_set_dev(bio, fc->dev->bdev);
+-	if (bio_sectors(bio) || bio_op(bio) == REQ_OP_ZONE_RESET)
++	if (bio_sectors(bio) || bio_is_zone_mgmt_op(bio))
+ 		bio->bi_iter.bi_sector =
+ 			flakey_map_sector(ti, bio->bi_iter.bi_sector);
  }
-diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
-index 7334024b64f1..41020db5353a 100644
---- a/drivers/scsi/sd_zbc.c
-+++ b/drivers/scsi/sd_zbc.c
-@@ -168,12 +168,17 @@ static inline sector_t sd_zbc_zone_sectors(struct scsi_disk *sdkp)
- }
+@@ -322,8 +322,7 @@ static int flakey_map(struct dm_target *ti, struct bio *bio)
+ 	struct per_bio_data *pb = dm_per_bio_data(bio, sizeof(struct per_bio_data));
+ 	pb->bio_submitted = false;
  
- /**
-- * sd_zbc_setup_reset_cmnd - Prepare a RESET WRITE POINTER scsi command.
-- * @cmd: the command to setup
-+ * sd_zbc_setup_zone_mgmt_op_cmnd - Prepare a zone ZBC_OUT command. The
-+ *                                  operations can be RESET WRITE POINTER,
-+ *                                  OPEN, CLOSE or FINISH.
-+ * @cmd: The command to setup
-+ * @op: Operation to be performed
+-	/* Do not fail reset zone */
+-	if (bio_op(bio) == REQ_OP_ZONE_RESET)
++	if (bio_is_zone_mgmt_op(bio))
+ 		goto map_bio;
+ 
+ 	/* Are we alive ? */
+@@ -384,7 +383,7 @@ static int flakey_end_io(struct dm_target *ti, struct bio *bio,
+ 	struct flakey_c *fc = ti->private;
+ 	struct per_bio_data *pb = dm_per_bio_data(bio, sizeof(struct per_bio_data));
+ 
+-	if (bio_op(bio) == REQ_OP_ZONE_RESET)
++	if (bio_is_zone_mgmt_op(bio))
+ 		return DM_ENDIO_DONE;
+ 
+ 	if (!*error && pb->bio_submitted && (bio_data_dir(bio) == READ)) {
+diff --git a/drivers/md/dm-linear.c b/drivers/md/dm-linear.c
+index ad980a38fb1e..217a1dee8197 100644
+--- a/drivers/md/dm-linear.c
++++ b/drivers/md/dm-linear.c
+@@ -90,7 +90,7 @@ static void linear_map_bio(struct dm_target *ti, struct bio *bio)
+ 	struct linear_c *lc = ti->private;
+ 
+ 	bio_set_dev(bio, lc->dev->bdev);
+-	if (bio_sectors(bio) || bio_op(bio) == REQ_OP_ZONE_RESET)
++	if (bio_sectors(bio) || bio_is_zone_mgmt_op(bio))
+ 		bio->bi_iter.bi_sector =
+ 			linear_map_sector(ti, bio->bi_iter.bi_sector);
+ }
+diff --git a/drivers/md/dm.c b/drivers/md/dm.c
+index 5475081dcbd6..f4507ec20a57 100644
+--- a/drivers/md/dm.c
++++ b/drivers/md/dm.c
+@@ -1176,7 +1176,8 @@ static size_t dm_dax_copy_to_iter(struct dax_device *dax_dev, pgoff_t pgoff,
+ 
+ /*
+  * A target may call dm_accept_partial_bio only from the map routine.  It is
+- * allowed for all bio types except REQ_PREFLUSH and REQ_OP_ZONE_RESET.
++ * allowed for all bio types except REQ_PREFLUSH, REQ_OP_ZONE_RESET,
++ * REQ_OP_ZONE_OPEN, REQ_OP_ZONE_CLOSE and REQ_OP_ZONE_FINISH.
   *
-- * Called from sd_init_command() for a REQ_OP_ZONE_RESET request.
-+ * Called from sd_init_command() for REQ_OP_ZONE_RESET, REQ_OP_ZONE_OPEN,
-+ * REQ_OP_ZONE_CLOSE or REQ_OP_ZONE_FINISH requests.
-  */
--blk_status_t sd_zbc_setup_reset_cmnd(struct scsi_cmnd *cmd)
-+blk_status_t sd_zbc_setup_zone_mgmt_op_cmnd(struct scsi_cmnd *cmd,
-+					    unsigned char op)
+  * dm_accept_partial_bio informs the dm that the target only wants to process
+  * additional n_sectors sectors of the bio and the rest of the data should be
+@@ -1629,7 +1630,7 @@ static blk_qc_t __split_and_process_bio(struct mapped_device *md,
+ 		ci.sector_count = 0;
+ 		error = __send_empty_flush(&ci);
+ 		/* dec_pending submits any data associated with flush */
+-	} else if (bio_op(bio) == REQ_OP_ZONE_RESET) {
++	} else if (bio_is_zone_mgmt_op(bio)) {
+ 		ci.bio = bio;
+ 		ci.sector_count = 0;
+ 		error = __split_and_process_non_flush(&ci);
+diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+index 067ef9242275..fd2458cd1a49 100644
+--- a/include/linux/blk_types.h
++++ b/include/linux/blk_types.h
+@@ -398,6 +398,14 @@ static inline bool op_is_zone_mgmt_op(enum req_opf op)
+ 	}
+ }
+ 
++/*
++ * Check if the bio is zoned operation.
++ */
++static inline bool bio_is_zone_mgmt_op(struct bio *bio)
++{
++	return op_is_zone_mgmt_op(bio_op(bio));
++}
++
+ static inline bool op_is_write(unsigned int op)
  {
- 	struct request *rq = cmd->request;
- 	struct scsi_disk *sdkp = scsi_disk(rq->rq_disk);
-@@ -194,7 +199,7 @@ blk_status_t sd_zbc_setup_reset_cmnd(struct scsi_cmnd *cmd)
- 	cmd->cmd_len = 16;
- 	memset(cmd->cmnd, 0, cmd->cmd_len);
- 	cmd->cmnd[0] = ZBC_OUT;
--	cmd->cmnd[1] = ZO_RESET_WRITE_POINTER;
-+	cmd->cmnd[1] = op;
- 	put_unaligned_be64(block, &cmd->cmnd[2]);
- 
- 	rq->timeout = SD_TIMEOUT;
-@@ -222,6 +227,9 @@ void sd_zbc_complete(struct scsi_cmnd *cmd, unsigned int good_bytes,
- 
- 	switch (req_op(rq)) {
- 	case REQ_OP_ZONE_RESET:
-+	case REQ_OP_ZONE_OPEN:
-+	case REQ_OP_ZONE_CLOSE:
-+	case REQ_OP_ZONE_FINISH:
- 
- 		if (result &&
- 		    sshdr->sense_key == ILLEGAL_REQUEST &&
+ 	return (op & 1);
 -- 
 2.19.1
