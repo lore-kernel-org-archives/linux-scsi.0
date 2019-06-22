@@ -1,10 +1,9 @@
 From: Damien Le Moal <Damien.LeMoal@wdc.com>
-Subject: Re: [PATCH 3/4] scsi: sd_zbc: add zone open, close, and finish
- support
-Date: Sat, 22 Jun 2019 01:12:43 +0000
-Message-ID: <BYAPR04MB58164B645ED9BE7FA861BE33E7E60@BYAPR04MB5816.namprd04.prod.outlook.com>
+Subject: Re: [PATCH 4/4] dm: add zone open, close and finish support
+Date: Sat, 22 Jun 2019 01:15:30 +0000
+Message-ID: <BYAPR04MB581688295FDAAF91805CD871E7E60@BYAPR04MB5816.namprd04.prod.outlook.com>
 References: <20190621130711.21986-1-mb@lightnvm.io>
- <20190621130711.21986-4-mb@lightnvm.io>
+ <20190621130711.21986-5-mb@lightnvm.io>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
@@ -23,141 +22,118 @@ On 2019/06/21 22:07, Matias Bj=F8rling wrote:=0A=
 > =0A=
 > Signed-off-by: Ajay Joshi <ajay.joshi@wdc.com>=0A=
 > ---=0A=
->  drivers/scsi/sd.c     | 15 ++++++++++++++-=0A=
->  drivers/scsi/sd.h     |  6 ++++--=0A=
->  drivers/scsi/sd_zbc.c | 18 +++++++++++++-----=0A=
->  3 files changed, 31 insertions(+), 8 deletions(-)=0A=
+>  drivers/md/dm-flakey.c    | 7 +++----=0A=
+>  drivers/md/dm-linear.c    | 2 +-=0A=
+>  drivers/md/dm.c           | 5 +++--=0A=
+>  include/linux/blk_types.h | 8 ++++++++=0A=
+>  4 files changed, 15 insertions(+), 7 deletions(-)=0A=
 > =0A=
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c=0A=
-> index a3406bd62391..89f955a01d44 100644=0A=
-> --- a/drivers/scsi/sd.c=0A=
-> +++ b/drivers/scsi/sd.c=0A=
-> @@ -1292,7 +1292,17 @@ static blk_status_t sd_init_command(struct scsi_cm=
-nd *cmd)=0A=
->  	case REQ_OP_WRITE:=0A=
->  		return sd_setup_read_write_cmnd(cmd);=0A=
->  	case REQ_OP_ZONE_RESET:=0A=
-> -		return sd_zbc_setup_reset_cmnd(cmd);=0A=
-> +		return sd_zbc_setup_zone_mgmt_op_cmnd(cmd,=0A=
-> +					ZO_RESET_WRITE_POINTER);=0A=
-> +	case REQ_OP_ZONE_OPEN:=0A=
-> +		return sd_zbc_setup_zone_mgmt_op_cmnd(cmd,=0A=
-> +					ZO_OPEN_ZONE);=0A=
-> +	case REQ_OP_ZONE_CLOSE:=0A=
-> +		return sd_zbc_setup_zone_mgmt_op_cmnd(cmd,=0A=
-> +					ZO_CLOSE_ZONE);=0A=
-> +	case REQ_OP_ZONE_FINISH:=0A=
-> +		return sd_zbc_setup_zone_mgmt_op_cmnd(cmd,=0A=
-> +					ZO_FINISH_ZONE);=0A=
->  	default:=0A=
->  		WARN_ON_ONCE(1);=0A=
->  		return BLK_STS_NOTSUPP;=0A=
-> @@ -1958,6 +1968,9 @@ static int sd_done(struct scsi_cmnd *SCpnt)=0A=
->  	case REQ_OP_WRITE_ZEROES:=0A=
->  	case REQ_OP_WRITE_SAME:=0A=
->  	case REQ_OP_ZONE_RESET:=0A=
-> +	case REQ_OP_ZONE_OPEN:=0A=
-> +	case REQ_OP_ZONE_CLOSE:=0A=
-> +	case REQ_OP_ZONE_FINISH:=0A=
->  		if (!result) {=0A=
->  			good_bytes =3D blk_rq_bytes(req);=0A=
->  			scsi_set_resid(SCpnt, 0);=0A=
-> diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h=0A=
-> index 5796ace76225..9a20633caefa 100644=0A=
-> --- a/drivers/scsi/sd.h=0A=
-> +++ b/drivers/scsi/sd.h=0A=
-> @@ -209,7 +209,8 @@ static inline int sd_is_zoned(struct scsi_disk *sdkp)=
-=0A=
+> diff --git a/drivers/md/dm-flakey.c b/drivers/md/dm-flakey.c=0A=
+> index a9bc518156f2..fff529c0732c 100644=0A=
+> --- a/drivers/md/dm-flakey.c=0A=
+> +++ b/drivers/md/dm-flakey.c=0A=
+> @@ -280,7 +280,7 @@ static void flakey_map_bio(struct dm_target *ti, stru=
+ct bio *bio)=0A=
+>  	struct flakey_c *fc =3D ti->private;=0A=
 >  =0A=
->  extern int sd_zbc_read_zones(struct scsi_disk *sdkp, unsigned char *buff=
-er);=0A=
->  extern void sd_zbc_print_zones(struct scsi_disk *sdkp);=0A=
-> -extern blk_status_t sd_zbc_setup_reset_cmnd(struct scsi_cmnd *cmd);=0A=
-> +extern blk_status_t sd_zbc_setup_zone_mgmt_op_cmnd(struct scsi_cmnd *cmd=
-,=0A=
-> +						   unsigned char op);=0A=
-=0A=
-In ZBC specs, open, close, finish and reset command are all ZBC_OUT (94h)=
-=0A=
-commands with a different servie action. So may be renaming this function t=
-o=0A=
-sd_zbc_setup_zbc_out_cmnd() is better.=0A=
-=0A=
->  extern void sd_zbc_complete(struct scsi_cmnd *cmd, unsigned int good_byt=
-es,=0A=
->  			    struct scsi_sense_hdr *sshdr);=0A=
->  extern int sd_zbc_report_zones(struct gendisk *disk, sector_t sector,=0A=
-> @@ -226,7 +227,8 @@ static inline int sd_zbc_read_zones(struct scsi_disk =
-*sdkp,=0A=
->  =0A=
->  static inline void sd_zbc_print_zones(struct scsi_disk *sdkp) {}=0A=
->  =0A=
-> -static inline blk_status_t sd_zbc_setup_reset_cmnd(struct scsi_cmnd *cmd=
-)=0A=
-> +static inline blk_status_t sd_zbc_setup_zone_mgmt_op_cmnd(struct scsi_cm=
-nd *cmd,=0A=
-> +							  unsigned char op)=0A=
->  {=0A=
->  	return BLK_STS_TARGET;=0A=
+>  	bio_set_dev(bio, fc->dev->bdev);=0A=
+> -	if (bio_sectors(bio) || bio_op(bio) =3D=3D REQ_OP_ZONE_RESET)=0A=
+> +	if (bio_sectors(bio) || bio_is_zone_mgmt_op(bio))=0A=
+>  		bio->bi_iter.bi_sector =3D=0A=
+>  			flakey_map_sector(ti, bio->bi_iter.bi_sector);=0A=
 >  }=0A=
-> diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c=0A=
-> index 7334024b64f1..41020db5353a 100644=0A=
-> --- a/drivers/scsi/sd_zbc.c=0A=
-> +++ b/drivers/scsi/sd_zbc.c=0A=
-> @@ -168,12 +168,17 @@ static inline sector_t sd_zbc_zone_sectors(struct s=
-csi_disk *sdkp)=0A=
->  }=0A=
+> @@ -322,8 +322,7 @@ static int flakey_map(struct dm_target *ti, struct bi=
+o *bio)=0A=
+>  	struct per_bio_data *pb =3D dm_per_bio_data(bio, sizeof(struct per_bio_=
+data));=0A=
+>  	pb->bio_submitted =3D false;=0A=
 >  =0A=
->  /**=0A=
-> - * sd_zbc_setup_reset_cmnd - Prepare a RESET WRITE POINTER scsi command.=
+> -	/* Do not fail reset zone */=0A=
+> -	if (bio_op(bio) =3D=3D REQ_OP_ZONE_RESET)=0A=
+> +	if (bio_is_zone_mgmt_op(bio))=0A=
+>  		goto map_bio;=0A=
+>  =0A=
+>  	/* Are we alive ? */=0A=
+> @@ -384,7 +383,7 @@ static int flakey_end_io(struct dm_target *ti, struct=
+ bio *bio,=0A=
+>  	struct flakey_c *fc =3D ti->private;=0A=
+>  	struct per_bio_data *pb =3D dm_per_bio_data(bio, sizeof(struct per_bio_=
+data));=0A=
+>  =0A=
+> -	if (bio_op(bio) =3D=3D REQ_OP_ZONE_RESET)=0A=
+> +	if (bio_is_zone_mgmt_op(bio))=0A=
+>  		return DM_ENDIO_DONE;=0A=
+>  =0A=
+>  	if (!*error && pb->bio_submitted && (bio_data_dir(bio) =3D=3D READ)) {=
 =0A=
-> - * @cmd: the command to setup=0A=
-> + * sd_zbc_setup_zone_mgmt_op_cmnd - Prepare a zone ZBC_OUT command. The=
+> diff --git a/drivers/md/dm-linear.c b/drivers/md/dm-linear.c=0A=
+> index ad980a38fb1e..217a1dee8197 100644=0A=
+> --- a/drivers/md/dm-linear.c=0A=
+> +++ b/drivers/md/dm-linear.c=0A=
+> @@ -90,7 +90,7 @@ static void linear_map_bio(struct dm_target *ti, struct=
+ bio *bio)=0A=
+>  	struct linear_c *lc =3D ti->private;=0A=
+>  =0A=
+>  	bio_set_dev(bio, lc->dev->bdev);=0A=
+> -	if (bio_sectors(bio) || bio_op(bio) =3D=3D REQ_OP_ZONE_RESET)=0A=
+> +	if (bio_sectors(bio) || bio_is_zone_mgmt_op(bio))=0A=
+>  		bio->bi_iter.bi_sector =3D=0A=
+>  			linear_map_sector(ti, bio->bi_iter.bi_sector);=0A=
+>  }=0A=
+> diff --git a/drivers/md/dm.c b/drivers/md/dm.c=0A=
+> index 5475081dcbd6..f4507ec20a57 100644=0A=
+> --- a/drivers/md/dm.c=0A=
+> +++ b/drivers/md/dm.c=0A=
+> @@ -1176,7 +1176,8 @@ static size_t dm_dax_copy_to_iter(struct dax_device=
+ *dax_dev, pgoff_t pgoff,=0A=
+>  =0A=
+>  /*=0A=
+>   * A target may call dm_accept_partial_bio only from the map routine.  I=
+t is=0A=
+> - * allowed for all bio types except REQ_PREFLUSH and REQ_OP_ZONE_RESET.=
 =0A=
-> + *                                  operations can be RESET WRITE POINTE=
-R,=0A=
-> + *                                  OPEN, CLOSE or FINISH.=0A=
-> + * @cmd: The command to setup=0A=
-> + * @op: Operation to be performed=0A=
+> + * allowed for all bio types except REQ_PREFLUSH, REQ_OP_ZONE_RESET,=0A=
+> + * REQ_OP_ZONE_OPEN, REQ_OP_ZONE_CLOSE and REQ_OP_ZONE_FINISH.=0A=
 >   *=0A=
-> - * Called from sd_init_command() for a REQ_OP_ZONE_RESET request.=0A=
-> + * Called from sd_init_command() for REQ_OP_ZONE_RESET, REQ_OP_ZONE_OPEN=
-,=0A=
-> + * REQ_OP_ZONE_CLOSE or REQ_OP_ZONE_FINISH requests.=0A=
->   */=0A=
-> -blk_status_t sd_zbc_setup_reset_cmnd(struct scsi_cmnd *cmd)=0A=
-> +blk_status_t sd_zbc_setup_zone_mgmt_op_cmnd(struct scsi_cmnd *cmd,=0A=
-> +					    unsigned char op)=0A=
+>   * dm_accept_partial_bio informs the dm that the target only wants to pr=
+ocess=0A=
+>   * additional n_sectors sectors of the bio and the rest of the data shou=
+ld be=0A=
+> @@ -1629,7 +1630,7 @@ static blk_qc_t __split_and_process_bio(struct mapp=
+ed_device *md,=0A=
+>  		ci.sector_count =3D 0;=0A=
+>  		error =3D __send_empty_flush(&ci);=0A=
+>  		/* dec_pending submits any data associated with flush */=0A=
+> -	} else if (bio_op(bio) =3D=3D REQ_OP_ZONE_RESET) {=0A=
+> +	} else if (bio_is_zone_mgmt_op(bio)) {=0A=
+>  		ci.bio =3D bio;=0A=
+>  		ci.sector_count =3D 0;=0A=
+>  		error =3D __split_and_process_non_flush(&ci);=0A=
+> diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h=0A=
+> index 067ef9242275..fd2458cd1a49 100644=0A=
+> --- a/include/linux/blk_types.h=0A=
+> +++ b/include/linux/blk_types.h=0A=
+> @@ -398,6 +398,14 @@ static inline bool op_is_zone_mgmt_op(enum req_opf o=
+p)=0A=
+>  	}=0A=
+>  }=0A=
+>  =0A=
+> +/*=0A=
+> + * Check if the bio is zoned operation.=0A=
+> + */=0A=
+> +static inline bool bio_is_zone_mgmt_op(struct bio *bio)=0A=
+> +{=0A=
+> +	return op_is_zone_mgmt_op(bio_op(bio));=0A=
+> +}=0A=
+> +=0A=
+>  static inline bool op_is_write(unsigned int op)=0A=
 >  {=0A=
->  	struct request *rq =3D cmd->request;=0A=
->  	struct scsi_disk *sdkp =3D scsi_disk(rq->rq_disk);=0A=
-> @@ -194,7 +199,7 @@ blk_status_t sd_zbc_setup_reset_cmnd(struct scsi_cmnd=
- *cmd)=0A=
->  	cmd->cmd_len =3D 16;=0A=
->  	memset(cmd->cmnd, 0, cmd->cmd_len);=0A=
->  	cmd->cmnd[0] =3D ZBC_OUT;=0A=
-> -	cmd->cmnd[1] =3D ZO_RESET_WRITE_POINTER;=0A=
-> +	cmd->cmnd[1] =3D op;=0A=
->  	put_unaligned_be64(block, &cmd->cmnd[2]);=0A=
->  =0A=
->  	rq->timeout =3D SD_TIMEOUT;=0A=
-> @@ -222,6 +227,9 @@ void sd_zbc_complete(struct scsi_cmnd *cmd, unsigned =
-int good_bytes,=0A=
->  =0A=
->  	switch (req_op(rq)) {=0A=
->  	case REQ_OP_ZONE_RESET:=0A=
-> +	case REQ_OP_ZONE_OPEN:=0A=
-> +	case REQ_OP_ZONE_CLOSE:=0A=
-> +	case REQ_OP_ZONE_FINISH:=0A=
->  =0A=
->  		if (result &&=0A=
->  		    sshdr->sense_key =3D=3D ILLEGAL_REQUEST &&=0A=
+>  	return (op & 1);=0A=
+> =0A=
 =0A=
-The comment after this code references only the reset operation. So it need=
-s to=0A=
-be updated. The same comment applies to all operations as they all have the=
- same=0A=
-error return behavior.=0A=
+Looks good.=0A=
+=0A=
+Reviewed-by: Damien Le Moal <damien.lemoal@wdc.com>=0A=
 =0A=
 -- =0A=
 Damien Le Moal=0A=
