@@ -1,50 +1,77 @@
-From: Joe Perches <joe@perches.com>
+From: "Alastair D'Silva" <alastair@d-silva.org>
 Subject: Re: [PATCH v4 4/7] lib/hexdump.c: Replace ascii bool in
  hex_dump_to_buffer with flags
-Date: Mon, 24 Jun 2019 22:01:40 -0700
-Message-ID: <3340b520a57e00a483eae170be97316c8d18c22c.camel@perches.com>
+Date: Tue, 25 Jun 2019 15:06:13 +1000
+Message-ID: <746098160c4ff6527d573d2af23c403b6d4e5b80.camel@d-silva.org>
 References: <20190625031726.12173-1-alastair@au1.ibm.com>
- <20190625031726.12173-5-alastair@au1.ibm.com>
+         <20190625031726.12173-5-alastair@au1.ibm.com>
+         <3340b520a57e00a483eae170be97316c8d18c22c.camel@perches.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <intel-gfx-bounces@lists.freedesktop.org>
-In-Reply-To: <20190625031726.12173-5-alastair@au1.ibm.com>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
-List-Post: <mailto:intel-gfx@lists.freedesktop.org>
-List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: intel-gfx-bounces@lists.freedesktop.org
-Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
-To: Alastair D'Silva <alastair@au1.ibm.com>, alastair@d-silva.org
-Cc: linux-fbdev@vger.kernel.org, Stanislaw Gruszka <sgruszka@redhat.com>, Petr Mladek <pmladek@suse.com>, David Airlie <airlied@linux.ie>, dri-devel@lists.freedesktop.org, devel@driverdev.osuosl.org, linux-scsi@vger.kernel.org, Jassi Brar <jassisinghbrar@gmail.com>, ath10k@lists.infradead.org, intel-gfx@lists.freedesktop.org, Dan Carpenter <dan.carpenter@oracle.com>, Jose Abreu <Jose.Abreu@synopsys.com>, Tom Lendacky <thomas.lendacky@amd.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, linux-fsdevel@vger.kernel.org, Steven Rostedt <rostedt@goodmis.org>, Kalle Valo <kvalo@codeaurora.org>, Karsten Keil <isdn@linux-pingi.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, Sergey Senozhatsky <sergey.senozhatsky@gmail.com>, David Laight <David.Laight@ACULAB.COM>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <3340b520a57e00a483eae170be97316c8d18c22c.camel@perches.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Joe Perches <joe@perches.com>
+Cc: Jani Nikula <jani.nikula@linux.intel.com>, Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, Rodrigo Vivi <rodrigo.vivi@intel.com>, David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>, Dan Carpenter <dan.carpenter@oracle.com>, Karsten Keil <isdn@linux-pingi.de>, Jassi Brar <jassisinghbrar@gmail.com>, Tom Lendacky <thomas.lendacky@amd.com>, "David S. Miller" <davem@davemloft.net>, Jose Abreu <Jose.Abreu@synopsys.com>, Kalle Valo <kvalo@codeaurora.org>, Stanislaw Gruszka <sgruszka@redhat.com>, Benson Leung <bleung@chromium.org>, Enric Balletbo i Serra <enric.balletbo@collabora.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Alexa
 List-Id: linux-scsi@vger.kernel.org
 
-T24gVHVlLCAyMDE5LTA2LTI1IGF0IDEzOjE3ICsxMDAwLCBBbGFzdGFpciBEJ1NpbHZhIHdyb3Rl
-Ogo+IEZyb206IEFsYXN0YWlyIEQnU2lsdmEgPGFsYXN0YWlyQGQtc2lsdmEub3JnPgo+IAo+IElu
-IG9yZGVyIHRvIHN1cHBvcnQgYWRkaXRpb25hbCBmZWF0dXJlcywgcmVuYW1lIGhleF9kdW1wX3Rv
-X2J1ZmZlciB0bwo+IGhleF9kdW1wX3RvX2J1ZmZlcl9leHQsIGFuZCByZXBsYWNlIHRoZSBhc2Np
-aSBib29sIHBhcmFtZXRlciB3aXRoIGZsYWdzLgpbXQo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL2dw
-dS9kcm0vaTkxNS9pbnRlbF9lbmdpbmVfY3MuYyBiL2RyaXZlcnMvZ3B1L2RybS9pOTE1L2ludGVs
-X2VuZ2luZV9jcy5jCltdCj4gQEAgLTEzMzgsOSArMTMzOCw4IEBAIHN0YXRpYyB2b2lkIGhleGR1
-bXAoc3RydWN0IGRybV9wcmludGVyICptLCBjb25zdCB2b2lkICpidWYsIHNpemVfdCBsZW4pCj4g
-IAkJfQo+ICAKPiAgCQlXQVJOX09OX09OQ0UoaGV4X2R1bXBfdG9fYnVmZmVyKGJ1ZiArIHBvcywg
-bGVuIC0gcG9zLAo+IC0JCQkJCQlyb3dzaXplLCBzaXplb2YodTMyKSwKPiAtCQkJCQkJbGluZSwg
-c2l6ZW9mKGxpbmUpLAo+IC0JCQkJCQlmYWxzZSkgPj0gc2l6ZW9mKGxpbmUpKTsKPiArCQkJCQkJ
-cm93c2l6ZSwgc2l6ZW9mKHUzMiksIGxpbmUsCj4gKwkJCQkJCXNpemVvZihsaW5lKSkgPj0gc2l6
-ZW9mKGxpbmUpKTsKCkh1aD8gIFdoeSBkbyB0aGlzPwoKPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9p
-c2RuL2hhcmR3YXJlL21JU0ROL21JU0ROaXNhci5jIGIvZHJpdmVycy9pc2RuL2hhcmR3YXJlL21J
-U0ROL21JU0ROaXNhci5jCltdCj4gQEAgLTcwLDggKzcwLDkgQEAgc2VuZF9tYm94KHN0cnVjdCBp
-c2FyX2h3ICppc2FyLCB1OCBoaXMsIHU4IGNyZWcsIHU4IGxlbiwgdTggKm1zZykKPiAgCQkJaW50
-IGwgPSAwOwo+ICAKPiAgCQkJd2hpbGUgKGwgPCAoaW50KWxlbikgewo+IC0JCQkJaGV4X2R1bXBf
-dG9fYnVmZmVyKG1zZyArIGwsIGxlbiAtIGwsIDMyLCAxLAo+IC0JCQkJCQkgICBpc2FyLT5sb2cs
-IDI1NiwgMSk7Cj4gKwkJCQloZXhfZHVtcF90b19idWZmZXJfZXh0KG1zZyArIGwsIGxlbiAtIGws
-IDMyLCAxLAo+ICsJCQkJCQkgICAgICAgaXNhci0+bG9nLCAyNTYsCj4gKwkJCQkJCSAgICAgICBI
-RVhEVU1QX0FTQ0lJKTsKCkFnYWluLCB3aHkgZG8gYW55IG9mIHRoZXNlPwoKVGhlIHBvaW50IG9m
-IHRoZSB3cmFwcGVyIGlzIHRvIGF2b2lkIGNoYW5naW5nIHRoZXNlLgoKCl9fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCkludGVsLWdmeCBtYWlsaW5nIGxpc3QK
-SW50ZWwtZ2Z4QGxpc3RzLmZyZWVkZXNrdG9wLm9yZwpodHRwczovL2xpc3RzLmZyZWVkZXNrdG9w
-Lm9yZy9tYWlsbWFuL2xpc3RpbmZvL2ludGVsLWdmeA==
+On Mon, 2019-06-24 at 22:01 -0700, Joe Perches wrote:
+> On Tue, 2019-06-25 at 13:17 +1000, Alastair D'Silva wrote:
+> > From: Alastair D'Silva <alastair@d-silva.org>
+> > 
+> > In order to support additional features, rename hex_dump_to_buffer
+> > to
+> > hex_dump_to_buffer_ext, and replace the ascii bool parameter with
+> > flags.
+> []
+> > diff --git a/drivers/gpu/drm/i915/intel_engine_cs.c
+> > b/drivers/gpu/drm/i915/intel_engine_cs.c
+> []
+> > @@ -1338,9 +1338,8 @@ static void hexdump(struct drm_printer *m,
+> > const void *buf, size_t len)
+> >  		}
+> >  
+> >  		WARN_ON_ONCE(hex_dump_to_buffer(buf + pos, len - pos,
+> > -						rowsize, sizeof(u32),
+> > -						line, sizeof(line),
+> > -						false) >=
+> > sizeof(line));
+> > +						rowsize, sizeof(u32),
+> > line,
+> > +						sizeof(line)) >=
+> > sizeof(line));
+> 
+> Huh?  Why do this?
+> 
+> > diff --git a/drivers/isdn/hardware/mISDN/mISDNisar.c
+> > b/drivers/isdn/hardware/mISDN/mISDNisar.c
+> []
+> > @@ -70,8 +70,9 @@ send_mbox(struct isar_hw *isar, u8 his, u8 creg,
+> > u8 len, u8 *msg)
+> >  			int l = 0;
+> >  
+> >  			while (l < (int)len) {
+> > -				hex_dump_to_buffer(msg + l, len - l,
+> > 32, 1,
+> > -						   isar->log, 256, 1);
+> > +				hex_dump_to_buffer_ext(msg + l, len -
+> > l, 32, 1,
+> > +						       isar->log, 256,
+> > +						       HEXDUMP_ASCII);
+> 
+> Again, why do any of these?
+> 
+> The point of the wrapper is to avoid changing these.
+> 
+> 
+
+The change actions Jani's suggestion:
+https://lkml.org/lkml/2019/6/20/343
+
+
+-- 
+Alastair D'Silva           mob: 0423 762 819
+skype: alastair_dsilva    
+Twitter: @EvilDeece
+blog: http://alastair.d-silva.org
