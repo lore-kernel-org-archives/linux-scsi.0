@@ -1,112 +1,174 @@
 From: =?UTF-8?Q?Matias_Bj=c3=b8rling?= <mb@lightnvm.io>
-Subject: Re: [PATCH 1/4] block: add zone open, close and finish support
-Date: Tue, 25 Jun 2019 12:35:01 +0200
-Message-ID: <cce08df0-0b4d-833d-64ce-f9b81f7ad7ca@lightnvm.io>
+Subject: Re: [PATCH 2/4] null_blk: add zone open, close, and finish support
+Date: Tue, 25 Jun 2019 13:06:33 +0200
+Message-ID: <1aa6552c-ecf9-a168-df75-ec8c52ddbea6@lightnvm.io>
 References: <20190621130711.21986-1-mb@lightnvm.io>
- <20190621130711.21986-2-mb@lightnvm.io>
- <ee5764fb-473a-f118-eaac-95478d885f6f@acm.org>
- <BYAPR04MB5749CEFBB45EA34BD3345CD686E00@BYAPR04MB5749.namprd04.prod.outlook.com>
+ <20190621130711.21986-3-mb@lightnvm.io>
+ <BYAPR04MB5816D471063D970DDCF9AEC7E7E60@BYAPR04MB5816.namprd04.prod.outlook.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <BYAPR04MB5749CEFBB45EA34BD3345CD686E00@BYAPR04MB5749.namprd04.prod.outlook.com>
+In-Reply-To: <BYAPR04MB5816D471063D970DDCF9AEC7E7E60@BYAPR04MB5816.namprd04.prod.outlook.com>
 Content-Language: en-GB
 Sender: linux-kernel-owner@vger.kernel.org
-To: Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>, Bart Van Assche <bvanassche@acm.org>, "axboe@fb.com" <axboe@fb.com>, "hch@lst.de" <hch@lst.de>, Damien Le Moal <Damien.LeMoal@wdc.com>, Dmitry Fomichev <Dmitry.Fomichev@wdc.com>, Ajay Joshi <Ajay.Joshi@wdc.com>, Aravind Ramesh <Aravind.Ramesh@wdc.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "agk@redhat.com" <agk@redhat.com>, "snitzer@redhat.com" <snitzer@redhat.com>
+To: Damien Le Moal <Damien.LeMoal@wdc.com>, "axboe@fb.com" <axboe@fb.com>, "hch@lst.de" <hch@lst.de>, Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>, Dmitry Fomichev <Dmitry.Fomichev@wdc.com>, Ajay Joshi <Ajay.Joshi@wdc.com>, Aravind Ramesh <Aravind.Ramesh@wdc.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "agk@redhat.com" <agk@redhat.com>, "snitzer@redhat.com" <snitzer@redhat.com>
 Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, Matias Bjorling <Matias.Bjorling@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 6/25/19 12:27 AM, Chaitanya Kulkarni wrote:
-> On 6/24/19 12:43 PM, Bart Van Assche wrote:
->> On 6/21/19 6:07 AM, Matias Bjørling wrote:
->>> diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
->>> index 95202f80676c..067ef9242275 100644
->>> --- a/include/linux/blk_types.h
->>> +++ b/include/linux/blk_types.h
->>> @@ -284,13 +284,20 @@ enum req_opf {
->>>     	REQ_OP_DISCARD		= 3,
->>>     	/* securely erase sectors */
->>>     	REQ_OP_SECURE_ERASE	= 5,
->>> -	/* reset a zone write pointer */
->>> -	REQ_OP_ZONE_RESET	= 6,
->>>     	/* write the same sector many times */
->>>     	REQ_OP_WRITE_SAME	= 7,
->>>     	/* write the zero filled sector many times */
->>>     	REQ_OP_WRITE_ZEROES	= 9,
->>>     
->>> +	/* reset a zone write pointer */
->>> +	REQ_OP_ZONE_RESET	= 16,
->>> +	/* Open zone(s) */
->>> +	REQ_OP_ZONE_OPEN	= 17,
->>> +	/* Close zone(s) */
->>> +	REQ_OP_ZONE_CLOSE	= 18,
->>> +	/* Finish zone(s) */
->>> +	REQ_OP_ZONE_FINISH	= 19,
->>> +
->>>     	/* SCSI passthrough using struct scsi_request */
->>>     	REQ_OP_SCSI_IN		= 32,
->>>     	REQ_OP_SCSI_OUT		= 33,
->>> @@ -375,6 +382,22 @@ static inline void bio_set_op_attrs(struct bio *bio, unsigned op,
->>>     	bio->bi_opf = op | op_flags;
->>>     }
+On 6/22/19 3:02 AM, Damien Le Moal wrote:
+> On 2019/06/21 22:07, Matias Bjørling wrote:
+>> From: Ajay Joshi <ajay.joshi@wdc.com>
 >>
->> Are the new operation types ever passed to op_is_write()? The definition
->> of that function is as follows:
+>> Implement REQ_OP_ZONE_OPEN, REQ_OP_ZONE_CLOSE and REQ_OP_ZONE_FINISH
+>> support to allow explicit control of zone states.
 >>
-> May be we should change numbering since blktrace also relies on the
-> having on_is_write() without looking at the rq_ops().
-> 
-> 197  * Data direction bit lookup
->    198  */
->    199 static const u32 ddir_act[2] = { BLK_TC_ACT(BLK_TC_READ),
->    200                                  BLK_TC_ACT(BLK_TC_WRITE) };  <----
->    201
->    202 #define BLK_TC_RAHEAD           BLK_TC_AHEAD
->    203 #define BLK_TC_PREFLUSH         BLK_TC_FLUSH
->    204
->    205 /* The ilog2() calls fall out because they're constant */
->    206 #define MASK_TC_BIT(rw, __name) ((rw & REQ_ ## __name) << \
->    207           (ilog2(BLK_TC_ ## __name) + BLK_TC_SHIFT - __REQ_ ##
-> __name))
->    208
->    209 /*
->    210  * The worker for the various blk_add_trace*() types. Fills out a
->    211  * blk_io_trace structure and places it in a per-cpu subbuffer.
->    212  */
->    213 static void __blk_add_trace(struct blk_trace *bt, sector_t sector,
-> int bytes,
->    214                      int op, int op_flags, u32 what, int error,
-> int pdu_len,
->    215                      void *pdu_data, union kernfs_node_id *cgid)
->    216 {
->    217         struct task_struct *tsk = current;
->    218         struct ring_buffer_event *event = NULL;
->    219         struct ring_buffer *buffer = NULL;
->    220         struct blk_io_trace *t;
->    221         unsigned long flags = 0;
->    222         unsigned long *sequence;
->    223         pid_t pid;
->    224         int cpu, pc = 0;
->    225         bool blk_tracer = blk_tracer_enabled;
->    226         ssize_t cgid_len = cgid ? sizeof(*cgid) : 0;
->    227
->    228         if (unlikely(bt->trace_state != Blktrace_running &&
-> !blk_tracer))
->    229                 return;
->    230
->    231         what |= ddir_act[op_is_write(op) ? WRITE : READ];  <---
-> 
-> 
->> static inline bool op_is_write(unsigned int op)
->> {
->> 	return (op & 1);
->> }
+>> Signed-off-by: Ajay Joshi <ajay.joshi@wdc.com>
+>> Signed-off-by: Matias Bjørling <matias.bjorling@wdc.com>
+>> ---
+>>   drivers/block/null_blk.h       |  4 ++--
+>>   drivers/block/null_blk_main.c  | 13 ++++++++++---
+>>   drivers/block/null_blk_zoned.c | 33 ++++++++++++++++++++++++++++++---
+>>   3 files changed, 42 insertions(+), 8 deletions(-)
 >>
+>> diff --git a/drivers/block/null_blk.h b/drivers/block/null_blk.h
+>> index 34b22d6523ba..62ef65cb0f3e 100644
+>> --- a/drivers/block/null_blk.h
+>> +++ b/drivers/block/null_blk.h
+>> @@ -93,7 +93,7 @@ int null_zone_report(struct gendisk *disk, sector_t sector,
+>>   		     gfp_t gfp_mask);
+>>   void null_zone_write(struct nullb_cmd *cmd, sector_t sector,
+>>   			unsigned int nr_sectors);
+>> -void null_zone_reset(struct nullb_cmd *cmd, sector_t sector);
+>> +void null_zone_mgmt_op(struct nullb_cmd *cmd, sector_t sector);
+>>   #else
+>>   static inline int null_zone_init(struct nullb_device *dev)
+>>   {
+>> @@ -111,6 +111,6 @@ static inline void null_zone_write(struct nullb_cmd *cmd, sector_t sector,
+>>   				   unsigned int nr_sectors)
+>>   {
+>>   }
+>> -static inline void null_zone_reset(struct nullb_cmd *cmd, sector_t sector) {}
+>> +static inline void null_zone_mgmt_op(struct nullb_cmd *cmd, sector_t sector) {}
+>>   #endif /* CONFIG_BLK_DEV_ZONED */
+>>   #endif /* __NULL_BLK_H */
+>> diff --git a/drivers/block/null_blk_main.c b/drivers/block/null_blk_main.c
+>> index 447d635c79a2..5058fb980c9c 100644
+>> --- a/drivers/block/null_blk_main.c
+>> +++ b/drivers/block/null_blk_main.c
+>> @@ -1209,10 +1209,17 @@ static blk_status_t null_handle_cmd(struct nullb_cmd *cmd)
+>>   			nr_sectors = blk_rq_sectors(cmd->rq);
+>>   		}
+>>   
+>> -		if (op == REQ_OP_WRITE)
+>> +		switch (op) {
+>> +		case REQ_OP_WRITE:
+>>   			null_zone_write(cmd, sector, nr_sectors);
+>> -		else if (op == REQ_OP_ZONE_RESET)
+>> -			null_zone_reset(cmd, sector);
+>> +			break;
+>> +		case REQ_OP_ZONE_RESET:
+>> +		case REQ_OP_ZONE_OPEN:
+>> +		case REQ_OP_ZONE_CLOSE:
+>> +		case REQ_OP_ZONE_FINISH:
+>> +			null_zone_mgmt_op(cmd, sector);
+>> +			break;
+>> +		}
+>>   	}
+>>   out:
+>>   	/* Complete IO by inline, softirq or timer */
+>> diff --git a/drivers/block/null_blk_zoned.c b/drivers/block/null_blk_zoned.c
+>> index fca0c97ff1aa..47d956b2e148 100644
+>> --- a/drivers/block/null_blk_zoned.c
+>> +++ b/drivers/block/null_blk_zoned.c
+>> @@ -121,17 +121,44 @@ void null_zone_write(struct nullb_cmd *cmd, sector_t sector,
+>>   	}
+>>   }
+>>   
+>> -void null_zone_reset(struct nullb_cmd *cmd, sector_t sector)
+>> +void null_zone_mgmt_op(struct nullb_cmd *cmd, sector_t sector)
+>>   {
+>>   	struct nullb_device *dev = cmd->nq->dev;
+>>   	unsigned int zno = null_zone_no(dev, sector);
+>>   	struct blk_zone *zone = &dev->zones[zno];
+>> +	enum req_opf op = req_op(cmd->rq);
+>>   
+>>   	if (zone->type == BLK_ZONE_TYPE_CONVENTIONAL) {
+>>   		cmd->error = BLK_STS_IOERR;
+>>   		return;
+>>   	}
+>>   
+>> -	zone->cond = BLK_ZONE_COND_EMPTY;
+>> -	zone->wp = zone->start;
+>> +	switch (op) {
+>> +	case REQ_OP_ZONE_RESET:
+>> +		zone->cond = BLK_ZONE_COND_EMPTY;
+>> +		zone->wp = zone->start;
+>> +		return;
+>> +	case REQ_OP_ZONE_OPEN:
+>> +		if (zone->cond == BLK_ZONE_COND_FULL) {
+>> +			cmd->error = BLK_STS_IOERR;
+>> +			return;
+>> +		}
+>> +		zone->cond = BLK_ZONE_COND_EXP_OPEN;
 > 
+> 
+> With ZBC, open of a full zone is a "nop". No error. So I would rather have this as:
+> 
+> 		if (zone->cond != BLK_ZONE_COND_FULL)
+> 			zone->cond = BLK_ZONE_COND_EXP_OPEN;
+> 		
+Is this only ZBC? I can't find a reference to it in ZAC. I think it 
+should fail. One is trying to open a zone that is full, one can't open 
+it again. It's done for this round.
+> 
+>> +		return;
+>> +	case REQ_OP_ZONE_CLOSE:
+>> +		if (zone->cond == BLK_ZONE_COND_FULL) {
+>> +			cmd->error = BLK_STS_IOERR;
+>> +			return;
+>> +		}
+>> +		zone->cond = BLK_ZONE_COND_CLOSED;
+> 
+> Sam as for open. Closing a full zone on ZBC is a nop. 
 
-The zone mgmt commands are neither write nor reads commands. I guess, 
-one could characterize them as write commands, but they don't write any 
-data, they update a state of a zone on a drive. One should keep it as 
-is? and make sure the zone mgmt commands don't get categorized as either 
-read/write.
+I think this should cause error.
+
+And the code above would
+> also set an empty zone to closed. Finally, if the zone is open but nothing was
+> written to it, it must be returned to empty condition, not closed. 
+
+Only on a reset event right? In general, if I do a expl. open, close it, 
+it should not go to empty.
+
+So something
+> like this is needed.
+> 
+> 		switch (zone->cond) {
+> 		case BLK_ZONE_COND_FULL:
+> 		case BLK_ZONE_COND_EMPTY:
+> 			break;
+> 		case BLK_ZONE_COND_EXP_OPEN:
+> 			if (zone->wp == zone->start) {
+> 				zone->cond = BLK_ZONE_COND_EMPTY;
+> 				break;
+> 			}
+> 		/* fallthrough */
+> 		default:
+> 			zone->cond = BLK_ZONE_COND_CLOSED;
+> 		}
+> 
+>> +		return;
+>> +	case REQ_OP_ZONE_FINISH:
+>> +		zone->cond = BLK_ZONE_COND_FULL;
+>> +		zone->wp = zone->start + zone->len;
+>> +		return;
+>> +	default:
+>> +		/* Invalid zone condition */
+>> +		cmd->error = BLK_STS_IOERR;
+>> +		return;
+>> +	}
+>>   }
+>>
+> 
+> 
