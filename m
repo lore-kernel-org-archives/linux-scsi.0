@@ -1,177 +1,80 @@
-From: "Alastair D'Silva" <alastair@au1.ibm.com>
-Subject: [PATCH v4 6/7] lib/hexdump.c: Allow multiple groups to be separated by spaces
-Date: Tue, 25 Jun 2019 13:17:25 +1000
-Message-ID: <20190625031726.12173-7-alastair@au1.ibm.com>
-References: <20190625031726.12173-1-alastair@au1.ibm.com>
+From: Finn Thain <fthain@telegraphics.com.au>
+Subject: Re: [PATCH V5 10/16] s390: zfcp_fc: use sg helper to operate
+ scatterlist
+Date: Tue, 25 Jun 2019 13:42:40 +1000 (AEST)
+Message-ID: <alpine.LNX.2.21.1906251342280.8@nippy.intranet>
+References: <20190618013757.22401-1-ming.lei@redhat.com>
+ <20190618013757.22401-11-ming.lei@redhat.com>
+ <95bfa1fb-d0eb-fc61-ecc0-001ae52a326f@linux.ibm.com>
+ <20190625011902.GA23777@ming.t460p>
+ <alpine.LNX.2.21.1906251157160.8@nippy.intranet>
+ <20190625023027.GF23777@ming.t460p>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <20190625031726.12173-1-alastair@au1.ibm.com>
-Sender: netdev-owner@vger.kernel.org
-To: alastair@d-silva.org
-Cc: Jani Nikula <jani.nikula@linux.intel.com>, Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, Rodrigo Vivi <rodrigo.vivi@intel.com>, David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>, Dan Carpenter <dan.carpenter@oracle.com>, Karsten Keil <isdn@linux-pingi.de>, Jassi Brar <jassisinghbrar@gmail.com>, Tom Lendacky <thomas.lendacky@amd.com>, "David S. Miller" <davem@davemloft.net>, Jose Abreu <Jose.Abreu@synopsys.com>, Kalle Valo <kvalo@codeaurora.org>, Stanislaw Gruszka <sgruszka@redhat.com>, Benson Leung <bleung@chromium.org>, Enric Balletbo i Serra <enric.balletbo@collabora.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Alexa
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <20190625023027.GF23777@ming.t460p>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: Ming Lei <ming.lei@redhat.com>
+Cc: Heiko Carstens <heiko.carstens@de.ibm.com>, Jim Gill <jgill@vmware.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, devel@driverdev.osuosl.org, linux-s390@vger.kernel.org, Hannes Reinecke <hare@suse.com>, Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org, James Smart <james.smart@broadcom.com>, "Ewan D . Milne" <emilne@redhat.com>, "Juergen E . Fischer" <fischer@norbit.de>, Dan Carpenter <dan.carpenter@oracle.com>, Benjamin Block <bblock@linux.ibm.com>, Brian King <brking@us.ibm.com>, Michael Schmitz <schmitzmic@gmail.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org, Martin Schwidefsky <schwidefsky@de.ibm.com>, Steffen Maier <maier@linux.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Alastair D'Silva <alastair@d-silva.org>
+On Tue, 25 Jun 2019, Ming Lei wrote:
 
-Similar to the previous patch, this patch separates groups by 2 spaces for
-the hex fields, and 1 space for the ASCII field.
+> On Tue, Jun 25, 2019 at 12:01:24PM +1000, Finn Thain wrote:
+> > > diff --git a/drivers/s390/scsi/zfcp_dbf.c b/drivers/s390/scsi/zfcp_dbf.c
+> > > index dccdb41bed8c..c7129f5234f0 100644
+> > > --- a/drivers/s390/scsi/zfcp_dbf.c
+> > > +++ b/drivers/s390/scsi/zfcp_dbf.c
+> > > @@ -552,7 +552,7 @@ static u16 zfcp_dbf_san_res_cap_len_if_gpn_ft(char *tag,
+> > >  		if (x % (ZFCP_FC_GPN_FT_ENT_PAGE + 1))
+> > >  			acc++;
+> > >  		else
+> > > -			acc = sg_virt(++resp_entry);
+> > > +			acc = sg_virt(resp_entry = sg_next(resp_entry));
+> > 
+> > Shouldn't that be,
+> > 
+> > 			acc = sg_virt(sg_next(resp_entry));
+> 
+> resp_entry needs to be updated.
+> 
 
-eg.
-buf:00000000: 454d414e 43415053  4e495f45 00584544  NAMESPAC E_INDEX.
-buf:00000010: 00000000 00000002  00000000 00000000  ........ ........
+Right, sorry for the noise.
 
-Signed-off-by: Alastair D'Silva <alastair@d-silva.org>
----
- include/linux/printk.h |  3 ++
- lib/hexdump.c          | 65 +++++++++++++++++++++++++++++++-----------
- 2 files changed, 52 insertions(+), 16 deletions(-)
-
-diff --git a/include/linux/printk.h b/include/linux/printk.h
-index ae80d7af82ab..1d082291facf 100644
---- a/include/linux/printk.h
-+++ b/include/linux/printk.h
-@@ -488,6 +488,9 @@ enum {
- #define HEXDUMP_2_GRP_LINES		BIT(2)
- #define HEXDUMP_4_GRP_LINES		BIT(3)
- #define HEXDUMP_8_GRP_LINES		BIT(4)
-+#define HEXDUMP_2_GRP_SPACES		BIT(5)
-+#define HEXDUMP_4_GRP_SPACES		BIT(6)
-+#define HEXDUMP_8_GRP_SPACES		BIT(7)
- 
- extern int hex_dump_to_buffer_ext(const void *buf, size_t len, int rowsize,
- 			      int groupsize, char *linebuf, size_t linebuflen,
-diff --git a/lib/hexdump.c b/lib/hexdump.c
-index 4dcf759fe048..e09e3cf8e595 100644
---- a/lib/hexdump.c
-+++ b/lib/hexdump.c
-@@ -91,9 +91,37 @@ static const char *group_separator(int group, u64 flags)
- 	if ((flags & HEXDUMP_2_GRP_LINES) && !((group) % 2))
- 		return "|";
- 
-+	if ((flags & HEXDUMP_8_GRP_SPACES) && !((group) % 8))
-+		return "  ";
-+
-+	if ((flags & HEXDUMP_4_GRP_SPACES) && !((group) % 4))
-+		return "  ";
-+
-+	if ((flags & HEXDUMP_2_GRP_SPACES) && !((group) % 2))
-+		return "  ";
-+
- 	return " ";
- }
- 
-+static void separator_parameters(u64 flags, int groupsize, int *sep_chars,
-+				 char *sep)
-+{
-+	if (flags & (HEXDUMP_2_GRP_LINES | HEXDUMP_2_GRP_SPACES))
-+		*sep_chars = groupsize * 2;
-+	if (flags & (HEXDUMP_4_GRP_LINES | HEXDUMP_4_GRP_SPACES))
-+		*sep_chars = groupsize * 4;
-+	if (flags & (HEXDUMP_8_GRP_LINES | HEXDUMP_8_GRP_SPACES))
-+		*sep_chars = groupsize * 8;
-+
-+	if (flags & (HEXDUMP_2_GRP_LINES | HEXDUMP_4_GRP_LINES |
-+					   HEXDUMP_8_GRP_LINES))
-+		*sep = '|';
-+
-+	if (flags & (HEXDUMP_2_GRP_SPACES | HEXDUMP_4_GRP_SPACES |
-+					   HEXDUMP_8_GRP_SPACES))
-+		*sep = ' ';
-+}
-+
- /**
-  * hex_dump_to_buffer - convert a blob of data to "hex ASCII" in memory
-  * @buf: data blob to dump
-@@ -107,6 +135,9 @@ static const char *group_separator(int group, u64 flags)
-  *	HEXDUMP_2_GRP_LINES:		insert a '|' after every 2 groups
-  *	HEXDUMP_4_GRP_LINES:		insert a '|' after every 4 groups
-  *	HEXDUMP_8_GRP_LINES:		insert a '|' after every 8 groups
-+ *	HEXDUMP_2_GRP_SPACES:		insert a ' ' after every 2 groups
-+ *	HEXDUMP_4_GRP_SPACES:		insert a ' ' after every 4 groups
-+ *	HEXDUMP_8_GRP_SPACES:		insert a ' ' after every 8 groups
-  *
-  * hex_dump_to_buffer() works on one "line" of output at a time, converting
-  * <groupsize> bytes of input to hexadecimal (and optionally printable ASCII)
-@@ -139,7 +170,8 @@ int hex_dump_to_buffer_ext(const void *buf, size_t len, int rowsize,
- 	int j, lx = 0;
- 	int ascii_column;
- 	int ret;
--	int line_chars = 0;
-+	int sep_chars = 0;
-+	char sep = 0;
- 
- 	if (!is_power_of_2(groupsize) || groupsize > 8)
- 		groupsize = 1;
-@@ -153,8 +185,14 @@ int hex_dump_to_buffer_ext(const void *buf, size_t len, int rowsize,
- 		len = rowsize;
- 
- 	ngroups = len / groupsize;
-+
- 	ascii_column = rowsize * 2 + rowsize / groupsize + 1;
- 
-+	// space separators use 2 spaces in the hex output
-+	separator_parameters(flags, groupsize, &sep_chars, &sep);
-+	if (sep == ' ')
-+		ascii_column += rowsize / sep_chars;
-+
- 	if (!linebuflen)
- 		goto overflow1;
- 
-@@ -222,24 +260,17 @@ int hex_dump_to_buffer_ext(const void *buf, size_t len, int rowsize,
- 		linebuf[lx++] = ' ';
- 	}
- 
--	if (flags & HEXDUMP_2_GRP_LINES)
--		line_chars = groupsize * 2;
--	if (flags & HEXDUMP_4_GRP_LINES)
--		line_chars = groupsize * 4;
--	if (flags & HEXDUMP_8_GRP_LINES)
--		line_chars = groupsize * 8;
--
- 	for (j = 0; j < len; j++) {
- 		if (linebuflen < lx + 2)
- 			goto overflow2;
- 		ch = ptr[j];
- 		linebuf[lx++] = (isascii(ch) && isprint(ch)) ? ch : '.';
- 
--		if (line_chars && ((j + 1) < len) &&
--				((j + 1) % line_chars == 0)) {
-+		if (sep_chars && ((j + 1) < len) &&
-+				((j + 1) % sep_chars == 0)) {
- 			if (linebuflen < lx + 2)
- 				goto overflow2;
--			linebuf[lx++] = '|';
-+			linebuf[lx++] = sep;
- 		}
- 	}
- nil:
-@@ -248,9 +279,11 @@ int hex_dump_to_buffer_ext(const void *buf, size_t len, int rowsize,
- overflow2:
- 	linebuf[lx++] = '\0';
- overflow1:
--	return (flags & HEXDUMP_ASCII) ? ascii_column + len +
--					(len - 1) / line_chars :
--					 (groupsize * 2 + 1) * ngroups - 1;
-+	if (flags & HEXDUMP_ASCII)
-+		return ascii_column + len + (len - 1) / sep_chars;
-+
-+	return groupsize * 2 * ngroups +
-+		((sep == ' ') ? 2 : 1) * (ngroups - 1);
- }
- EXPORT_SYMBOL(hex_dump_to_buffer_ext);
- 
-@@ -345,9 +378,9 @@ void print_hex_dump_ext(const char *level, const char *prefix_str,
- 	/*
- 	 * Worst case line length:
- 	 * 2 hex chars + space per byte in, 2 spaces, 1 char per byte in,
--	 * 1 char per N groups, NULL
-+	 * 2 char per N groups, NULL
- 	 */
--	linebuf_len = rowsize * 3 + 2 + rowsize + rowsize / groupsize + 1;
-+	linebuf_len = rowsize * 3 + 2 + rowsize + 2 * rowsize / groupsize + 1;
- 	linebuf = kzalloc(linebuf_len, GFP_KERNEL);
- 	if (!linebuf) {
- 		printk("%s%shexdump: Could not alloc %u bytes for buffer\n",
 -- 
-2.21.0
+
+> > 
+> > >  
+> > >  		last = acc->fp_flags & FC_NS_FID_LAST;
+> > >  	}
+> > > diff --git a/drivers/s390/scsi/zfcp_fc.c b/drivers/s390/scsi/zfcp_fc.c
+> > > index b018b61bd168..5048812ce660 100644
+> > > --- a/drivers/s390/scsi/zfcp_fc.c
+> > > +++ b/drivers/s390/scsi/zfcp_fc.c
+> > > @@ -742,7 +742,7 @@ static int zfcp_fc_eval_gpn_ft(struct zfcp_fc_req *fc_req,
+> > >  		if (x % (ZFCP_FC_GPN_FT_ENT_PAGE + 1))
+> > >  			acc++;
+> > >  		else
+> > > -			acc = sg_virt(++sg);
+> > > +			acc = sg_virt(sg = sg_next(sg));
+> > 
+> > and
+> > 
+> > 			acc = sg_virt(sg_next(sg));
+> > 
+> > ?
+> 
+> Same with above.
+> 
+> Thanks,
+> Ming
+> 
