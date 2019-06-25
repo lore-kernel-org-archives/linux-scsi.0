@@ -1,113 +1,237 @@
-From: kbuild test robot <lkp@intel.com>
-Subject: Re: [PATCH v4 4/7] lib/hexdump.c: Replace ascii bool in
- hex_dump_to_buffer with flags
-Date: Wed, 26 Jun 2019 06:52:59 +0800
-Message-ID: <201906260657.2cnctJGF%lkp@intel.com>
-References: <20190625031726.12173-5-alastair@au1.ibm.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH] scsi: convert to rst for documenation
+Date: Tue, 25 Jun 2019 19:36:17 -0400
+Message-ID: <0e3c88da-e643-a60f-4a5a-92c3c7a2fbb1@interlog.com>
+References: <20190622151947.29115-1-tranmanphong@gmail.com>
+ <20190625153658.53ad0e18@lwn.net>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <intel-gfx-bounces@lists.freedesktop.org>
-Content-Disposition: inline
-In-Reply-To: <20190625031726.12173-5-alastair@au1.ibm.com>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
-List-Post: <mailto:intel-gfx@lists.freedesktop.org>
-List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: intel-gfx-bounces@lists.freedesktop.org
-Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
-To: Alastair D'Silva <alastair@au1.ibm.com>
-Cc: linux-fbdev@vger.kernel.org, Stanislaw Gruszka <sgruszka@redhat.com>, Petr Mladek <pmladek@suse.com>, David Airlie <airlied@linux.ie>, dri-devel@lists.freedesktop.org, devel@driverdev.osuosl.org, linux-scsi@vger.kernel.org, Jassi Brar <jassisinghbrar@gmail.com>, ath10k@lists.infradead.org, Steven Rostedt <rostedt@goodmis.org>, alastair@d-silva.org, intel-gfx@lists.freedesktop.org, Dan Carpenter <dan.carpenter@oracle.com>, Jose Abreu <Jose.Abreu@synopsys.com>, Tom Lendacky <thomas.lendacky@amd.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, linux-fsdevel@vger.kernel.org, Alexander Viro <viro@zeniv.linux.org.uk>, Kalle Valo <kvalo@codeaurora.org>, Karsten Keil <isdn@linux-pingi.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, Sergey Senozhatsky <sergey.>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190625153658.53ad0e18@lwn.net>
+Content-Language: en-CA
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jonathan Corbet <corbet@lwn.net>, Phong Tran <tranmanphong@gmail.com>
+Cc: skhan@linuxfoundation.org, martin.petersen@oracle.com, axboe@kernel.dk, avri.altman@wdc.com, beanhuo@micron.com, evgreen@chromium.org, henrik@austad.us, jpittman@redhat.com, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-kernel-mentees@lists.linuxfoundation.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-SGkgQWxhc3RhaXIsCgpUaGFuayB5b3UgZm9yIHRoZSBwYXRjaCEgUGVyaGFwcyBzb21ldGhpbmcg
-dG8gaW1wcm92ZToKClthdXRvIGJ1aWxkIHRlc3QgV0FSTklORyBvbiBsaW51cy9tYXN0ZXJdClth
-bHNvIGJ1aWxkIHRlc3QgV0FSTklORyBvbiB2NS4yLXJjNiBuZXh0LTIwMTkwNjI1XQpbaWYgeW91
-ciBwYXRjaCBpcyBhcHBsaWVkIHRvIHRoZSB3cm9uZyBnaXQgdHJlZSwgcGxlYXNlIGRyb3AgdXMg
-YSBub3RlIHRvIGhlbHAgaW1wcm92ZSB0aGUgc3lzdGVtXQoKdXJsOiAgICBodHRwczovL2dpdGh1
-Yi5jb20vMGRheS1jaS9saW51eC9jb21taXRzL0FsYXN0YWlyLUQtU2lsdmEvSGV4ZHVtcC1Fbmhh
-bmNlbWVudHMvMjAxOTA2MjUtMjI0MDQ2CnJlcHJvZHVjZToKICAgICAgICAjIGFwdC1nZXQgaW5z
-dGFsbCBzcGFyc2UKICAgICAgICAjIHNwYXJzZSB2ZXJzaW9uOiB2MC42LjEtcmMxLTctZzJiOTZj
-ZDgtZGlydHkKICAgICAgICBtYWtlIEFSQ0g9eDg2XzY0IGFsbG1vZGNvbmZpZwogICAgICAgIG1h
-a2UgQz0xIENGPSctZmRpYWdub3N0aWMtcHJlZml4IC1EX19DSEVDS19FTkRJQU5fXycKCklmIHlv
-dSBmaXggdGhlIGlzc3VlLCBraW5kbHkgYWRkIGZvbGxvd2luZyB0YWcKUmVwb3J0ZWQtYnk6IGti
-dWlsZCB0ZXN0IHJvYm90IDxsa3BAaW50ZWwuY29tPgoKCnNwYXJzZSB3YXJuaW5nczogKG5ldyBv
-bmVzIHByZWZpeGVkIGJ5ID4+KQoKICAgc291bmQvc29jL2ludGVsL3NreWxha2Uvc2tsLWRlYnVn
-LmM6MTkxOjM0OiBzcGFyc2U6IHNwYXJzZTogaW5jb3JyZWN0IHR5cGUgaW4gYXJndW1lbnQgMSAo
-ZGlmZmVyZW50IGFkZHJlc3Mgc3BhY2VzKSBAQCAgICBleHBlY3RlZCB2b2lkIFtub2RlcmVmXSA8
-YXNuOjI+ICp0byBAQCAgICBnb3QgZXJlZl0gPGFzbjoyPiAqdG8gQEAKICAgc291bmQvc29jL2lu
-dGVsL3NreWxha2Uvc2tsLWRlYnVnLmM6MTkxOjM0OiBzcGFyc2U6ICAgIGV4cGVjdGVkIHZvaWQg
-W25vZGVyZWZdIDxhc246Mj4gKnRvCiAgIHNvdW5kL3NvYy9pbnRlbC9za3lsYWtlL3NrbC1kZWJ1
-Zy5jOjE5MTozNDogc3BhcnNlOiAgICBnb3QgdW5zaWduZWQgY2hhciAqCiAgIHNvdW5kL3NvYy9p
-bnRlbC9za3lsYWtlL3NrbC1kZWJ1Zy5jOjE5MTo1MTogc3BhcnNlOiBzcGFyc2U6IGluY29ycmVj
-dCB0eXBlIGluIGFyZ3VtZW50IDIgKGRpZmZlcmVudCBhZGRyZXNzIHNwYWNlcykgQEAgICAgZXhw
-ZWN0ZWQgdm9pZCBjb25zdCAqZnJvbSBAQCAgICBnb3Qgdm9pZCBbbm9kZXJlZl0gPGFzbjoyPiB2
-b2lkIGNvbnN0ICpmcm9tIEBACiAgIHNvdW5kL3NvYy9pbnRlbC9za3lsYWtlL3NrbC1kZWJ1Zy5j
-OjE5MTo1MTogc3BhcnNlOiAgICBleHBlY3RlZCB2b2lkIGNvbnN0ICpmcm9tCiAgIHNvdW5kL3Nv
-Yy9pbnRlbC9za3lsYWtlL3NrbC1kZWJ1Zy5jOjE5MTo1MTogc3BhcnNlOiAgICBnb3Qgdm9pZCBb
-bm9kZXJlZl0gPGFzbjoyPiAqW2Fzc2lnbmVkXSBmd19yZWdfYWRkcgo+PiBzb3VuZC9zb2MvaW50
-ZWwvc2t5bGFrZS9za2wtZGVidWcuYzoxOTU6MzU6IHNwYXJzZTogc3BhcnNlOiB0b28gbWFueSBh
-cmd1bWVudHMgZm9yIGZ1bmN0aW9uIGhleF9kdW1wX3RvX2J1ZmZlcgotLQo+PiBkcml2ZXJzL2dw
-dS9kcm0vdGlueWRybS9jb3JlL3Rpbnlkcm0taGVscGVycy5jOjkzOjI3OiBzcGFyc2U6IHNwYXJz
-ZTogdG9vIG1hbnkgYXJndW1lbnRzIGZvciBmdW5jdGlvbiBoZXhfZHVtcF90b19idWZmZXIKLS0K
-Pj4gc291bmQvc29jL3NvZi94dGVuc2EvY29yZS5jOjEyNTozNTogc3BhcnNlOiBzcGFyc2U6IHRv
-byBtYW55IGFyZ3VtZW50cyBmb3IgZnVuY3Rpb24gaGV4X2R1bXBfdG9fYnVmZmVyCgp2aW0gKzE5
-NSBzb3VuZC9zb2MvaW50ZWwvc2t5bGFrZS9za2wtZGVidWcuYwoKZDE0NzAwYTAgVmlub2QgS291
-bCAgMjAxNy0wNi0zMCAgMTcwICAKYmRkMDM4NGEgVnVubnkgU29kaGkgMjAxNy0wNi0zMCAgMTcx
-ICBzdGF0aWMgc3NpemVfdCBmd19zb2Z0cmVnX3JlYWQoc3RydWN0IGZpbGUgKmZpbGUsIGNoYXIg
-X191c2VyICp1c2VyX2J1ZiwKYmRkMDM4NGEgVnVubnkgU29kaGkgMjAxNy0wNi0zMCAgMTcyICAJ
-CQkgICAgICAgc2l6ZV90IGNvdW50LCBsb2ZmX3QgKnBwb3MpCmJkZDAzODRhIFZ1bm55IFNvZGhp
-IDIwMTctMDYtMzAgIDE3MyAgewpiZGQwMzg0YSBWdW5ueSBTb2RoaSAyMDE3LTA2LTMwICAxNzQg
-IAlzdHJ1Y3Qgc2tsX2RlYnVnICpkID0gZmlsZS0+cHJpdmF0ZV9kYXRhOwpiZGQwMzg0YSBWdW5u
-eSBTb2RoaSAyMDE3LTA2LTMwICAxNzUgIAlzdHJ1Y3Qgc3N0X2RzcCAqc3N0ID0gZC0+c2tsLT5z
-a2xfc3N0LT5kc3A7CmJkZDAzODRhIFZ1bm55IFNvZGhpIDIwMTctMDYtMzAgIDE3NiAgCXNpemVf
-dCB3MF9zdGF0X3N6ID0gc3N0LT5hZGRyLncwX3N0YXRfc3o7CmJkZDAzODRhIFZ1bm55IFNvZGhp
-IDIwMTctMDYtMzAgIDE3NyAgCXZvaWQgX19pb21lbSAqaW5fYmFzZSA9IHNzdC0+bWFpbGJveC5p
-bl9iYXNlOwpiZGQwMzg0YSBWdW5ueSBTb2RoaSAyMDE3LTA2LTMwICAxNzggIAl2b2lkIF9faW9t
-ZW0gKmZ3X3JlZ19hZGRyOwpiZGQwMzg0YSBWdW5ueSBTb2RoaSAyMDE3LTA2LTMwICAxNzkgIAl1
-bnNpZ25lZCBpbnQgb2Zmc2V0OwpiZGQwMzg0YSBWdW5ueSBTb2RoaSAyMDE3LTA2LTMwICAxODAg
-IAljaGFyICp0bXA7CmJkZDAzODRhIFZ1bm55IFNvZGhpIDIwMTctMDYtMzAgIDE4MSAgCXNzaXpl
-X3QgcmV0ID0gMDsKYmRkMDM4NGEgVnVubnkgU29kaGkgMjAxNy0wNi0zMCAgMTgyICAKYmRkMDM4
-NGEgVnVubnkgU29kaGkgMjAxNy0wNi0zMCAgMTgzICAJdG1wID0ga3phbGxvYyhGV19SRUdfQlVG
-LCBHRlBfS0VSTkVMKTsKYmRkMDM4NGEgVnVubnkgU29kaGkgMjAxNy0wNi0zMCAgMTg0ICAJaWYg
-KCF0bXApCmJkZDAzODRhIFZ1bm55IFNvZGhpIDIwMTctMDYtMzAgIDE4NSAgCQlyZXR1cm4gLUVO
-T01FTTsKYmRkMDM4NGEgVnVubnkgU29kaGkgMjAxNy0wNi0zMCAgMTg2ICAKYmRkMDM4NGEgVnVu
-bnkgU29kaGkgMjAxNy0wNi0zMCAgMTg3ICAJZndfcmVnX2FkZHIgPSBpbl9iYXNlIC0gdzBfc3Rh
-dF9zejsKYmRkMDM4NGEgVnVubnkgU29kaGkgMjAxNy0wNi0zMCAgMTg4ICAJbWVtc2V0KGQtPmZ3
-X3JlYWRfYnVmZiwgMCwgRldfUkVHX0JVRik7CmJkZDAzODRhIFZ1bm55IFNvZGhpIDIwMTctMDYt
-MzAgIDE4OSAgCmJkZDAzODRhIFZ1bm55IFNvZGhpIDIwMTctMDYtMzAgIDE5MCAgCWlmICh3MF9z
-dGF0X3N6ID4gMCkKYmRkMDM4NGEgVnVubnkgU29kaGkgMjAxNy0wNi0zMCBAMTkxICAJCV9faW93
-cml0ZTMyX2NvcHkoZC0+ZndfcmVhZF9idWZmLCBmd19yZWdfYWRkciwgdzBfc3RhdF9zeiA+PiAy
-KTsKYmRkMDM4NGEgVnVubnkgU29kaGkgMjAxNy0wNi0zMCAgMTkyICAKYmRkMDM4NGEgVnVubnkg
-U29kaGkgMjAxNy0wNi0zMCAgMTkzICAJZm9yIChvZmZzZXQgPSAwOyBvZmZzZXQgPCBGV19SRUdf
-U0laRTsgb2Zmc2V0ICs9IDE2KSB7CmJkZDAzODRhIFZ1bm55IFNvZGhpIDIwMTctMDYtMzAgIDE5
-NCAgCQlyZXQgKz0gc25wcmludGYodG1wICsgcmV0LCBGV19SRUdfQlVGIC0gcmV0LCAiJSMuNHg6
-ICIsIG9mZnNldCk7CmJkZDAzODRhIFZ1bm55IFNvZGhpIDIwMTctMDYtMzAgQDE5NSAgCQloZXhf
-ZHVtcF90b19idWZmZXIoZC0+ZndfcmVhZF9idWZmICsgb2Zmc2V0LCAxNiwgMTYsIDQsCmJkZDAz
-ODRhIFZ1bm55IFNvZGhpIDIwMTctMDYtMzAgIDE5NiAgCQkJCSAgIHRtcCArIHJldCwgRldfUkVH
-X0JVRiAtIHJldCwgMCk7CmJkZDAzODRhIFZ1bm55IFNvZGhpIDIwMTctMDYtMzAgIDE5NyAgCQly
-ZXQgKz0gc3RybGVuKHRtcCArIHJldCk7CmJkZDAzODRhIFZ1bm55IFNvZGhpIDIwMTctMDYtMzAg
-IDE5OCAgCmJkZDAzODRhIFZ1bm55IFNvZGhpIDIwMTctMDYtMzAgIDE5OSAgCQkvKiBwcmludCBu
-ZXdsaW5lIGZvciBlYWNoIG9mZnNldCAqLwpiZGQwMzg0YSBWdW5ueSBTb2RoaSAyMDE3LTA2LTMw
-ICAyMDAgIAkJaWYgKEZXX1JFR19CVUYgLSByZXQgPiAwKQpiZGQwMzg0YSBWdW5ueSBTb2RoaSAy
-MDE3LTA2LTMwICAyMDEgIAkJCXRtcFtyZXQrK10gPSAnXG4nOwpiZGQwMzg0YSBWdW5ueSBTb2Ro
-aSAyMDE3LTA2LTMwICAyMDIgIAl9CmJkZDAzODRhIFZ1bm55IFNvZGhpIDIwMTctMDYtMzAgIDIw
-MyAgCmJkZDAzODRhIFZ1bm55IFNvZGhpIDIwMTctMDYtMzAgIDIwNCAgCXJldCA9IHNpbXBsZV9y
-ZWFkX2Zyb21fYnVmZmVyKHVzZXJfYnVmLCBjb3VudCwgcHBvcywgdG1wLCByZXQpOwpiZGQwMzg0
-YSBWdW5ueSBTb2RoaSAyMDE3LTA2LTMwICAyMDUgIAlrZnJlZSh0bXApOwpiZGQwMzg0YSBWdW5u
-eSBTb2RoaSAyMDE3LTA2LTMwICAyMDYgIApiZGQwMzg0YSBWdW5ueSBTb2RoaSAyMDE3LTA2LTMw
-ICAyMDcgIAlyZXR1cm4gcmV0OwpiZGQwMzg0YSBWdW5ueSBTb2RoaSAyMDE3LTA2LTMwICAyMDgg
-IH0KYmRkMDM4NGEgVnVubnkgU29kaGkgMjAxNy0wNi0zMCAgMjA5ICAKCjo6Ojo6OiBUaGUgY29k
-ZSBhdCBsaW5lIDE5NSB3YXMgZmlyc3QgaW50cm9kdWNlZCBieSBjb21taXQKOjo6Ojo6IGJkZDAz
-ODRhNWFkYThiYjU3NDVlNWYyOWMxMGE1YmE4ODgyN2VmYWQgQVNvQzogSW50ZWw6IFNreWxha2U6
-IEFkZCBzdXBwb3J0IHRvIHJlYWQgZmlybXdhcmUgcmVnaXN0ZXJzCgo6Ojo6OjogVE86IFZ1bm55
-IFNvZGhpIDx2dW5ueXguc29kaGlAaW50ZWwuY29tPgo6Ojo6OjogQ0M6IE1hcmsgQnJvd24gPGJy
-b29uaWVAa2VybmVsLm9yZz4KCi0tLQowLURBWSBrZXJuZWwgdGVzdCBpbmZyYXN0cnVjdHVyZSAg
-ICAgICAgICAgICAgICBPcGVuIFNvdXJjZSBUZWNobm9sb2d5IENlbnRlcgpodHRwczovL2xpc3Rz
-LjAxLm9yZy9waXBlcm1haWwva2J1aWxkLWFsbCAgICAgICAgICAgICAgICAgICBJbnRlbCBDb3Jw
-b3JhdGlvbgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpJ
-bnRlbC1nZnggbWFpbGluZyBsaXN0CkludGVsLWdmeEBsaXN0cy5mcmVlZGVza3RvcC5vcmcKaHR0
-cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0aW5mby9pbnRlbC1nZng=
+Please see below.
+
+On 2019-06-25 5:36 p.m., Jonathan Corbet wrote:
+> On Sat, 22 Jun 2019 22:19:47 +0700
+> Phong Tran <tranmanphong@gmail.com> wrote:
+> 
+>> - Update to the link in documenation
+>> - Remove trailing white space
+>> - Adaptation the sphinx doc syntax
+>>
+>> Signed-off-by: Phong Tran <tranmanphong@gmail.com>
+> 
+> Thanks for working to improve the documentation!  That said, I think this
+> patch needs a fair amount of work before we are ready to accept it.  I'll
+> only get partway in, but it should be enough to start with.
+> 
+> The first overall thing I would like to point out (and hopefully the SCSI
+> folks won't fight me too much on this) is that Documentation/scsi is the
+> wrong place for much of this stuff.  We are doing our best to organize the
+> documentation with the audience in mind.  So, for example, documents that
+> are of interest to system administrators should go into
+> Documentation/admin-guide.  Information for driver developers should go in
+> Documentation/driver-api.  And so on.
+> 
+> [...]
+> 
+>> diff --git a/Documentation/scsi/link_power_management_policy.rst b/Documentation/scsi/link_power_management_policy.rst
+>> new file mode 100644
+>> index 000000000000..170f58c94cac
+>> --- /dev/null
+>> +++ b/Documentation/scsi/link_power_management_policy.rst
+>> @@ -0,0 +1,22 @@
+>> +SCSI Power Management Policy
+>> +============================
+>> +Its
+>> +This parameter allows the user to set the link (interface) power management.
+>> +There are 3 possible options:
+> 
+> This isn't your fault, but...*which* parameter allows this?  The document
+> describes the values, but not where they can be set.  That makes it less
+> than fully useful.
+> 
+>> ++-------------------+------------------------------------------------------+
+>> +| Value             | Effect                                               |
+>> ++===================+======================================================+
+>> +| min_power         | Tell the controller to try to make the link use the  |
+>> +|                   | least possible power when possible. This may         |
+>> +|                   | sacrifice some performance due to increased latency  |
+>> +|                   | when coming out of lower power states.               |
+>> ++-------------------+------------------------------------------------------+
+>> +| max_performance   | Generally, this means no power management. Tell      |
+>> +|                   | the controller to have performance be a priority     |
+>> +|                   | over power management.                               |
+>> ++-------------------+------------------------------------------------------+
+>> +| medium_power      | Tell the controller to enter a lower power state     |
+>> +|                   | when possible, but do not enter the lowest power     |
+>> +|                   | state, thus improving latency over min_power setting.|
+>> ++-------------------+------------------------------------------------------+
+> 
+> [...]
+> 
+>> diff --git a/Documentation/scsi/scsi-changer.txt b/Documentation/scsi/scsi-changer.rst
+>> similarity index 71%
+>> rename from Documentation/scsi/scsi-changer.txt
+>> rename to Documentation/scsi/scsi-changer.rst
+>> index ade046ea7c17..a4923873c77b 100644
+>> --- a/Documentation/scsi/scsi-changer.txt
+>> +++ b/Documentation/scsi/scsi-changer.rst
+>> @@ -1,4 +1,3 @@
+>> -
+>>   README for the SCSI media changer driver
+>>   ========================================
+>>   
+>> @@ -10,7 +9,7 @@ common small CD-ROM changers, neither one-lun-per-slot SCSI changers
+>>   nor IDE drives.
+>>   
+>>   Userland tools available from here:
+>> -	http://linux.bytesex.org/misc/changer.html
+>> +    http://linux.bytesex.org/misc/changer.html
+>>   
+>>   
+>>   General Information
+>> @@ -28,15 +27,17 @@ The SCSI changer model is complex, compared to - for example - IDE-CD
+>>   changers. But it allows to handle nearly all possible cases. It knows
+>>   4 different types of changer elements:
+>>   
+>> +::
+> 
+> Two notes:
+> 
+>   - You can put the double colon on the line above ("...elements::") and
+>     don't need to make a separate line for it.
+> 
+>   - But, more to the point, please avoid the temptation to use a literal
+>     block for something that doesn't actually require that treatment. This
+>     should be reworked as an RST definition list.
+> 
+>>     media transport - this one shuffles around the media, i.e. the
+>>                       transport arm.  Also known as "picker".
+>>     storage         - a slot which can hold a media.
+>>     import/export   - the same as above, but is accessible from outside,
+>>                       i.e. there the operator (you !) can use this to
+>>                       fill in and remove media from the changer.
+>> -		    Sometimes named "mailslot".
+>> +            Sometimes named "mailslot".
+>>     data transfer   - this is the device which reads/writes, i.e. the
+>> -		    CD-ROM / Tape / whatever drive.
+>> +            CD-ROM / Tape / whatever drive.
+> 
+> [...]
+> 
+>> diff --git a/Documentation/scsi/scsi-generic.txt b/Documentation/scsi/scsi-generic.rst
+>> similarity index 70%
+>> rename from Documentation/scsi/scsi-generic.txt
+>> rename to Documentation/scsi/scsi-generic.rst
+>> index 51be20a6a14d..8356810160f0 100644
+>> --- a/Documentation/scsi/scsi-generic.txt
+>> +++ b/Documentation/scsi/scsi-generic.rst
+>> @@ -1,8 +1,10 @@
+>> -            Notes on Linux SCSI Generic (sg) driver
+>> -            ---------------------------------------
+>> -                                                        20020126
+>> +=======================================
+>> +Notes on Linux SCSI Generic (sg) driver
+>> +=======================================
+>> +20020126
+>> +
+>>   Introduction
+>> -============
+>> +------------
+>>   The SCSI Generic driver (sg) is one of the four "high level" SCSI device
+>>   drivers along with sd, st and sr (disk, tape and CDROM respectively). Sg
+>>   is more generalized (but lower level) than its siblings and tends to be
+>> @@ -16,20 +18,20 @@ and examples.
+>>   
+>>   
+>>   Major versions of the sg driver
+>> -===============================
+>> +-------------------------------
+>>   There are three major versions of sg found in the linux kernel (lk):
+>> -      - sg version 1 (original) from 1992 to early 1999 (lk 2.2.5) .
+>> -	It is based in the sg_header interface structure.
+>> +      - sg version 1 (original) from 1992 to early 1999 (lk 2.2.5) .
+>> +        It is based in the sg_header interface structure.
+>>         - sg version 2 from lk 2.2.6 in the 2.2 series. It is based on
+>> -	an extended version of the sg_header interface structure.
+>> +        an extended version of the sg_header interface structure.
+>>         - sg version 3 found in the lk 2.4 series (and the lk 2.5 series).
+>> -	It adds the sg_io_hdr interface structure.
+>> +        It adds the sg_io_hdr interface structure.
+> 
+> Perhaps we don't *really* need to preserve information about what versions
+> were around in the 1990's?
+> 
+>>   Sg driver documentation
+>> -=======================
+>> +-----------------------
+>>   The most recent documentation of the sg driver is kept at the Linux
+>> -Documentation Project's (LDP) site:
+>> +Documentation Project's (LDP) site:
+>>   http://www.tldp.org/HOWTO/SCSI-Generic-HOWTO
+> 
+> That document claims to have been last updated in 2002.  Is there really
+> nothing more recent than that?
+
+http://sg.danny.cz/sg/sg_v40.html
+
+Last updated: yesterday.
+
+>>   This describes the sg version 3 driver found in the lk 2.4 series.
+> 
+> ...and it's unclear to me that users of the 5.x kernel are much concerned
+> with what was found in 2.4.
+> 
+> That is the problem with this document in general.  I suspect that about
+> the only useful information left in it is the location of the sg3_utils
+> source.  I honestly don't think that it helps the documentation that much
+> to carry forward ancient information to the RST format.
+
+That old document is pretty damn accurate. At least one feature was
+quietly removed over the years. And some ioctls no longer do anything
+(see the ioctl table towards the end of the above document). The sg
+driver's public interface is a lot more stable than the kernel API behind
+it :-) . There is driver in FreeBSD that implements that interface, it's
+called scsi_sg .
+
+> Of course, doing this right by deleting obsolete information and updating
+> the documents to reflect current reality is a *lot* more work.  Probably
+> far more than you were thinking of signing up for.  If you were willing to
+> work on this, there may be somebody from the SCSI community who would be in
+> a position to help you with it.
+
+Hmmm.
+
+> Unfortunately, the SCSI community probably did not see this patch because
+> you didn't copy the linux-scsi list.  I'll fix that now, but they will not
+> have seen your original patch.  You should be sure to include them on
+> future postings.
+> 
+> I would like to make a suggestion, in addition to all of the above: rather
+> than trying to do a mass conversion in a single 4000-line patch, start with
+> a single file and post a patch doing just that one, being sure to include
+> the linux-scsi list.  That will give everybody something more workable to
+> start with.
+
+Editorial comments welcome.
+
+Martin Petersen wants to see that document reworked in order to market the
+new features that I am proposing. My approach is to document the code that
+I have in front of me ***, plus add a bit of historical context.
+
+I chose that format so I could add diagrams (using Libreoffice writer).
+Do those diagrams help?
+
+Doug Gilbert
+
+
+*** it helps me find bugs in my code and my documentation. I'm also testing
+     the code at the same time.
