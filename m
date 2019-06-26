@@ -1,237 +1,68 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH] scsi: convert to rst for documenation
-Date: Tue, 25 Jun 2019 19:36:17 -0400
-Message-ID: <0e3c88da-e643-a60f-4a5a-92c3c7a2fbb1@interlog.com>
-References: <20190622151947.29115-1-tranmanphong@gmail.com>
- <20190625153658.53ad0e18@lwn.net>
-Reply-To: dgilbert@interlog.com
+From: Damien Le Moal <Damien.LeMoal@wdc.com>
+Subject: Re: [PATCH 1/4] block: add zone open, close and finish support
+Date: Wed, 26 Jun 2019 00:42:40 +0000
+Message-ID: <BYAPR04MB5816BCFFAF9648A7A55B144AE7E20@BYAPR04MB5816.namprd04.prod.outlook.com>
+References: <20190621130711.21986-1-mb@lightnvm.io>
+ <20190621130711.21986-2-mb@lightnvm.io>
+ <ee5764fb-473a-f118-eaac-95478d885f6f@acm.org>
+ <BYAPR04MB5749CEFBB45EA34BD3345CD686E00@BYAPR04MB5749.namprd04.prod.outlook.com>
+ <cce08df0-0b4d-833d-64ce-f9b81f7ad7ca@lightnvm.io>
+ <79ca395d-8019-9ec8-0c0b-194ca6d9eda0@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190625153658.53ad0e18@lwn.net>
-Content-Language: en-CA
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jonathan Corbet <corbet@lwn.net>, Phong Tran <tranmanphong@gmail.com>
-Cc: skhan@linuxfoundation.org, martin.petersen@oracle.com, axboe@kernel.dk, avri.altman@wdc.com, beanhuo@micron.com, evgreen@chromium.org, henrik@austad.us, jpittman@redhat.com, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-kernel-mentees@lists.linuxfoundation.org, linux-scsi@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>, =?iso-8859-1?Q?Matias_Bj=F8rling?= <mb@lightnvm.io>, Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>, "axboe@fb.com" <axboe@fb.com>, "hch@lst.de" <hch@lst.de>, Dmitry Fomichev <Dmitry.Fomichev@wdc.com>, Ajay Joshi <Ajay.Joshi@wdc.com>, Aravind Ramesh <Aravind.Ramesh@wdc.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "agk@redhat.com" <agk@redhat.com>, "snitzer@redhat.com" <snitzer@redhat.com>
+Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, Matias Bjorling <Matias.Bjorling@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Please see below.
-
-On 2019-06-25 5:36 p.m., Jonathan Corbet wrote:
-> On Sat, 22 Jun 2019 22:19:47 +0700
-> Phong Tran <tranmanphong@gmail.com> wrote:
-> 
->> - Update to the link in documenation
->> - Remove trailing white space
->> - Adaptation the sphinx doc syntax
->>
->> Signed-off-by: Phong Tran <tranmanphong@gmail.com>
-> 
-> Thanks for working to improve the documentation!  That said, I think this
-> patch needs a fair amount of work before we are ready to accept it.  I'll
-> only get partway in, but it should be enough to start with.
-> 
-> The first overall thing I would like to point out (and hopefully the SCSI
-> folks won't fight me too much on this) is that Documentation/scsi is the
-> wrong place for much of this stuff.  We are doing our best to organize the
-> documentation with the audience in mind.  So, for example, documents that
-> are of interest to system administrators should go into
-> Documentation/admin-guide.  Information for driver developers should go in
-> Documentation/driver-api.  And so on.
-> 
-> [...]
-> 
->> diff --git a/Documentation/scsi/link_power_management_policy.rst b/Documentation/scsi/link_power_management_policy.rst
->> new file mode 100644
->> index 000000000000..170f58c94cac
->> --- /dev/null
->> +++ b/Documentation/scsi/link_power_management_policy.rst
->> @@ -0,0 +1,22 @@
->> +SCSI Power Management Policy
->> +============================
->> +Its
->> +This parameter allows the user to set the link (interface) power management.
->> +There are 3 possible options:
-> 
-> This isn't your fault, but...*which* parameter allows this?  The document
-> describes the values, but not where they can be set.  That makes it less
-> than fully useful.
-> 
->> ++-------------------+------------------------------------------------------+
->> +| Value             | Effect                                               |
->> ++===================+======================================================+
->> +| min_power         | Tell the controller to try to make the link use the  |
->> +|                   | least possible power when possible. This may         |
->> +|                   | sacrifice some performance due to increased latency  |
->> +|                   | when coming out of lower power states.               |
->> ++-------------------+------------------------------------------------------+
->> +| max_performance   | Generally, this means no power management. Tell      |
->> +|                   | the controller to have performance be a priority     |
->> +|                   | over power management.                               |
->> ++-------------------+------------------------------------------------------+
->> +| medium_power      | Tell the controller to enter a lower power state     |
->> +|                   | when possible, but do not enter the lowest power     |
->> +|                   | state, thus improving latency over min_power setting.|
->> ++-------------------+------------------------------------------------------+
-> 
-> [...]
-> 
->> diff --git a/Documentation/scsi/scsi-changer.txt b/Documentation/scsi/scsi-changer.rst
->> similarity index 71%
->> rename from Documentation/scsi/scsi-changer.txt
->> rename to Documentation/scsi/scsi-changer.rst
->> index ade046ea7c17..a4923873c77b 100644
->> --- a/Documentation/scsi/scsi-changer.txt
->> +++ b/Documentation/scsi/scsi-changer.rst
->> @@ -1,4 +1,3 @@
->> -
->>   README for the SCSI media changer driver
->>   ========================================
->>   
->> @@ -10,7 +9,7 @@ common small CD-ROM changers, neither one-lun-per-slot SCSI changers
->>   nor IDE drives.
->>   
->>   Userland tools available from here:
->> -	http://linux.bytesex.org/misc/changer.html
->> +    http://linux.bytesex.org/misc/changer.html
->>   
->>   
->>   General Information
->> @@ -28,15 +27,17 @@ The SCSI changer model is complex, compared to - for example - IDE-CD
->>   changers. But it allows to handle nearly all possible cases. It knows
->>   4 different types of changer elements:
->>   
->> +::
-> 
-> Two notes:
-> 
->   - You can put the double colon on the line above ("...elements::") and
->     don't need to make a separate line for it.
-> 
->   - But, more to the point, please avoid the temptation to use a literal
->     block for something that doesn't actually require that treatment. This
->     should be reworked as an RST definition list.
-> 
->>     media transport - this one shuffles around the media, i.e. the
->>                       transport arm.  Also known as "picker".
->>     storage         - a slot which can hold a media.
->>     import/export   - the same as above, but is accessible from outside,
->>                       i.e. there the operator (you !) can use this to
->>                       fill in and remove media from the changer.
->> -		    Sometimes named "mailslot".
->> +            Sometimes named "mailslot".
->>     data transfer   - this is the device which reads/writes, i.e. the
->> -		    CD-ROM / Tape / whatever drive.
->> +            CD-ROM / Tape / whatever drive.
-> 
-> [...]
-> 
->> diff --git a/Documentation/scsi/scsi-generic.txt b/Documentation/scsi/scsi-generic.rst
->> similarity index 70%
->> rename from Documentation/scsi/scsi-generic.txt
->> rename to Documentation/scsi/scsi-generic.rst
->> index 51be20a6a14d..8356810160f0 100644
->> --- a/Documentation/scsi/scsi-generic.txt
->> +++ b/Documentation/scsi/scsi-generic.rst
->> @@ -1,8 +1,10 @@
->> -            Notes on Linux SCSI Generic (sg) driver
->> -            ---------------------------------------
->> -                                                        20020126
->> +=======================================
->> +Notes on Linux SCSI Generic (sg) driver
->> +=======================================
->> +20020126
->> +
->>   Introduction
->> -============
->> +------------
->>   The SCSI Generic driver (sg) is one of the four "high level" SCSI device
->>   drivers along with sd, st and sr (disk, tape and CDROM respectively). Sg
->>   is more generalized (but lower level) than its siblings and tends to be
->> @@ -16,20 +18,20 @@ and examples.
->>   
->>   
->>   Major versions of the sg driver
->> -===============================
->> +-------------------------------
->>   There are three major versions of sg found in the linux kernel (lk):
->> -      - sg version 1 (original) from 1992 to early 1999 (lk 2.2.5) .
->> -	It is based in the sg_header interface structure.
->> +      - sg version 1 (original) from 1992 to early 1999 (lk 2.2.5) .
->> +        It is based in the sg_header interface structure.
->>         - sg version 2 from lk 2.2.6 in the 2.2 series. It is based on
->> -	an extended version of the sg_header interface structure.
->> +        an extended version of the sg_header interface structure.
->>         - sg version 3 found in the lk 2.4 series (and the lk 2.5 series).
->> -	It adds the sg_io_hdr interface structure.
->> +        It adds the sg_io_hdr interface structure.
-> 
-> Perhaps we don't *really* need to preserve information about what versions
-> were around in the 1990's?
-> 
->>   Sg driver documentation
->> -=======================
->> +-----------------------
->>   The most recent documentation of the sg driver is kept at the Linux
->> -Documentation Project's (LDP) site:
->> +Documentation Project's (LDP) site:
->>   http://www.tldp.org/HOWTO/SCSI-Generic-HOWTO
-> 
-> That document claims to have been last updated in 2002.  Is there really
-> nothing more recent than that?
-
-http://sg.danny.cz/sg/sg_v40.html
-
-Last updated: yesterday.
-
->>   This describes the sg version 3 driver found in the lk 2.4 series.
-> 
-> ...and it's unclear to me that users of the 5.x kernel are much concerned
-> with what was found in 2.4.
-> 
-> That is the problem with this document in general.  I suspect that about
-> the only useful information left in it is the location of the sg3_utils
-> source.  I honestly don't think that it helps the documentation that much
-> to carry forward ancient information to the RST format.
-
-That old document is pretty damn accurate. At least one feature was
-quietly removed over the years. And some ioctls no longer do anything
-(see the ioctl table towards the end of the above document). The sg
-driver's public interface is a lot more stable than the kernel API behind
-it :-) . There is driver in FreeBSD that implements that interface, it's
-called scsi_sg .
-
-> Of course, doing this right by deleting obsolete information and updating
-> the documents to reflect current reality is a *lot* more work.  Probably
-> far more than you were thinking of signing up for.  If you were willing to
-> work on this, there may be somebody from the SCSI community who would be in
-> a position to help you with it.
-
-Hmmm.
-
-> Unfortunately, the SCSI community probably did not see this patch because
-> you didn't copy the linux-scsi list.  I'll fix that now, but they will not
-> have seen your original patch.  You should be sure to include them on
-> future postings.
-> 
-> I would like to make a suggestion, in addition to all of the above: rather
-> than trying to do a mass conversion in a single 4000-line patch, start with
-> a single file and post a patch doing just that one, being sure to include
-> the linux-scsi list.  That will give everybody something more workable to
-> start with.
-
-Editorial comments welcome.
-
-Martin Petersen wants to see that document reworked in order to market the
-new features that I am proposing. My approach is to document the code that
-I have in front of me ***, plus add a bit of historical context.
-
-I chose that format so I could add diagrams (using Libreoffice writer).
-Do those diagrams help?
-
-Doug Gilbert
-
-
-*** it helps me find bugs in my code and my documentation. I'm also testing
-     the code at the same time.
+On 2019/06/26 0:56, Bart Van Assche wrote:=0A=
+> On 6/25/19 3:35 AM, Matias Bj=F8rling wrote:=0A=
+>> On 6/25/19 12:27 AM, Chaitanya Kulkarni wrote:=0A=
+>>> On 6/24/19 12:43 PM, Bart Van Assche wrote:=0A=
+>>>> static inline bool op_is_write(unsigned int op)=0A=
+>>>> {=0A=
+>>>> =A0=A0=A0=A0return (op & 1);=0A=
+>>>> }=0A=
+>>>>=0A=
+>>>=0A=
+>>=0A=
+>> The zone mgmt commands are neither write nor reads commands. I guess, =
+=0A=
+>> one could characterize them as write commands, but they don't write any =
+=0A=
+>> data, they update a state of a zone on a drive. One should keep it as =
+=0A=
+>> is? and make sure the zone mgmt commands don't get categorized as either=
+ =0A=
+>> read/write.=0A=
+> =0A=
+> Since the open, close and finish operations support modifying zone data =
+=0A=
+> I propose to characterize these as write commands. How about the =0A=
+> following additional changes:=0A=
+> - Make bio_check_ro() refuse open/close/flush/reset zone operations for =
+=0A=
+> read-only partitions (see also commit a32e236eb93e ("Partially revert =0A=
+> "block: fail op_is_write() requests to read-only partitions"") # v4.18).=
+=0A=
+> - In submit_bio(), change op_is_write(bio_op(bio)) ? "WRITE" : "READ" =0A=
+> into something that uses blk_op_str().=0A=
+> - Add open/close/flush zone support be added in blk_partition_remap().=0A=
+=0A=
+Sounds good to me. And indeed, all operations should be failed for RO=0A=
+devices/partitions. Of note though is that only reset and finish operations=
+ have=0A=
+an effect on the zone data. Open and close have no effect at all on the zon=
+e=0A=
+data and only change the zone condition/state. But since they do change=0A=
+something on the drive, we can still consider them as "write" operations.=
+=0A=
+=0A=
+Best regards.=0A=
+=0A=
+-- =0A=
+Damien Le Moal=0A=
+Western Digital Research=0A=
