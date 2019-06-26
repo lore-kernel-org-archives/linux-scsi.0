@@ -1,78 +1,89 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: Re: [PATCH v2 2/3] qla2xxx: on session delete return nvme
- cmd
-Date: Wed, 26 Jun 2019 09:20:22 +0300
-Message-ID: <20190626062022.GB18776@kadam>
-References: <20190618181021.16547-3-hmadhani@marvell.com>
+From: Steffen Maier <maier@linux.ibm.com>
+Subject: Re: [PATCH V5 10/16] s390: zfcp_fc: use sg helper to operate
+ scatterlist
+Date: Wed, 26 Jun 2019 10:17:33 +0200
+Message-ID: <1353d755-de62-d575-4c7b-d20d59d07f23@linux.ibm.com>
+References: <20190618013757.22401-1-ming.lei@redhat.com>
+ <20190618013757.22401-11-ming.lei@redhat.com>
+ <95bfa1fb-d0eb-fc61-ecc0-001ae52a326f@linux.ibm.com>
+ <20190625011902.GA23777@ming.t460p>
+ <93d3d89e-a9ae-691f-d1f8-0463f714957d@linux.ibm.com>
+ <20190626030751.GA26340@ming.t460p>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Content-Transfer-Encoding: 7bit
-Return-path: <kbuild-bounces@lists.01.org>
-Content-Disposition: inline
-In-Reply-To: <20190618181021.16547-3-hmadhani@marvell.com>
-List-Unsubscribe: <https://lists.01.org/mailman/options/kbuild>,
- <mailto:kbuild-request@lists.01.org?subject=unsubscribe>
-List-Archive: <http://lists.01.org/pipermail/kbuild/>
-List-Post: <mailto:kbuild@lists.01.org>
-List-Help: <mailto:kbuild-request@lists.01.org?subject=help>
-List-Subscribe: <https://lists.01.org/mailman/listinfo/kbuild>,
- <mailto:kbuild-request@lists.01.org?subject=subscribe>
-Errors-To: kbuild-bounces@lists.01.org
-Sender: "kbuild" <kbuild-bounces@lists.01.org>
-To: kbuild@01.org
-Cc: James.Bottomley@HansenPartnership.com, hmadhani@marvell.com, kbuild-all@01.org, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <20190626030751.GA26340@ming.t460p>
+Content-Language: en-US
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: Ming Lei <ming.lei@redhat.com>
+Cc: Heiko Carstens <heiko.carstens@de.ibm.com>, Jim Gill <jgill@vmware.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Finn Thain <fthain@telegraphics.com.au>, Christoph Hellwig <hch@lst.de>, devel@driverdev.osuosl.org, linux-s390@vger.kernel.org, Hannes Reinecke <hare@suse.com>, Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org, James Smart <james.smart@broadcom.com>, "Ewan D . Milne" <emilne@redhat.com>, "Juergen E . Fischer" <fischer@norbit.de>, Dan Carpenter <dan.carpenter@oracle.com>, Benjamin Block <bblock@linux.ibm.com>, Brian King <brking@us.ibm.com>, Michael Schmitz <schmitzmic@gmail.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org, Martin Schwidefsky <schwidefsky@de.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Himanshu,
+Hi Ming,
 
-url:    https://github.com/0day-ci/linux/commits/Himanshu-Madhani/qla2xxx-Fix-crashes-with-FC-NVMe-devices/20190619-074559
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
+On 6/26/19 5:07 AM, Ming Lei wrote:
+> On Tue, Jun 25, 2019 at 12:51:04PM +0200, Steffen Maier wrote:
+>> I don't mind doing this change for zfcp. However, I'm having doubts
+>> regarding the rationale in the commit description.
 
-If you fix the issue, kindly add following tag
-Reported-by: kbuild test robot <lkp@intel.com>
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+> However, I still suggest to do it because it will make us to audit SCSI chained
+> sg uses much easier. And the change shouldn't have performance effect.
 
-New smatch warnings:
-drivers/scsi/qla2xxx/qla_nvme.c:245 qla_nvme_ls_req() warn: variable dereferenced before check 'fcport' (see line 242)
-drivers/scsi/qla2xxx/qla_nvme.c:496 qla_nvme_post_cmd() warn: variable dereferenced before check 'fcport' (see line 494)
-drivers/scsi/qla2xxx/qla_nvme.c:510 qla_nvme_post_cmd() error: we previously assumed 'qpair' could be null (see line 496)
+>> If I was not mistaken above, the following could be more descriptive parts
+>> of a patch/commit description, with hopefully less confusion for anyone
+>> having to look at zfcp git history a few weeks/months/years from now:
+>>
+>> "While not required for this SCSI MQ change regarding scatterlist
+>> allocation, change all other scatterlist iterators in zfcp to the safe
+>> sg_next() even if not necessary as these changed zfcp-internal scatterlists
+>> are linear and unchained. This may avoid confusion about a potential need
+>> for conversions in the future."
 
-Old smatch warnings:
-drivers/scsi/qla2xxx/qla_nvme.c:190 qla_nvme_abort_work() warn: variable dereferenced before check 'fcport' (see line 183)
+Sure, let's change the code, but could you please update the description of 
+your below new patch to something like I drafted above regarding rationale?
 
-# https://github.com/0day-ci/linux/commit/69efeca5ca5e394664f54ef8e349a31b0f424507
-git remote add linux-review https://github.com/0day-ci/linux
-git remote update linux-review
-git checkout 69efeca5ca5e394664f54ef8e349a31b0f424507
-vim +/fcport +245 drivers/scsi/qla2xxx/qla_nvme.c
+If you would like to send a V2, I'll be happy to give a Reviewed-by.
 
-e84067d7 Duane Grigsby               2017-06-21  230  static int qla_nvme_ls_req(struct nvme_fc_local_port *lport,
-e84067d7 Duane Grigsby               2017-06-21  231      struct nvme_fc_remote_port *rport, struct nvmefc_ls_req *fd)
-e84067d7 Duane Grigsby               2017-06-21  232  {
-9dd9686b Darren Trapp                2018-03-20  233  	struct qla_nvme_rport *qla_rport = rport->private;
-9dd9686b Darren Trapp                2018-03-20  234  	fc_port_t *fcport = qla_rport->fcport;
-e84067d7 Duane Grigsby               2017-06-21  235  	struct srb_iocb   *nvme;
-e84067d7 Duane Grigsby               2017-06-21  236  	struct nvme_private *priv = fd->private;
-e84067d7 Duane Grigsby               2017-06-21  237  	struct scsi_qla_host *vha;
-e84067d7 Duane Grigsby               2017-06-21  238  	int     rval = QLA_FUNCTION_FAILED;
-e84067d7 Duane Grigsby               2017-06-21  239  	struct qla_hw_data *ha;
-e84067d7 Duane Grigsby               2017-06-21  240  	srb_t           *sp;
-e84067d7 Duane Grigsby               2017-06-21  241  
-e84067d7 Duane Grigsby               2017-06-21 @242  	vha = fcport->vha;
-                                                              ^^^^^^^^^^^
-Dereference.
+>>>   From c9c368308fefbf034d670984fe9746a4181fe514 Mon Sep 17 00:00:00 2001
+>>> From: Ming Lei <ming.lei@redhat.com>
+>>> Date: Tue, 25 Jun 2019 09:15:34 +0800
+>>> Subject: [PATCH] s390: scsi: use sg helper to iterate over scatterlist
 
-e84067d7 Duane Grigsby               2017-06-21  243  	ha = vha->hw;
-69efeca5 Quinn Tran                  2019-06-18  244  
-69efeca5 Quinn Tran                  2019-06-18 @245  	if (!ha->flags.fw_started || (fcport && fcport->deleted))
-                                                                                      ^^^^^^
-Check for NULL is too late.
+>>> Unlike the legacy I/O path, scsi-mq preallocates a large array to hold
+>>> the scatterlist for each request. This static allocation can consume
+>>> substantial amounts of memory on modern controllers which support a
+>>> large number of concurrently outstanding requests.
 
-69efeca5 Quinn Tran                  2019-06-18  246  		return rval;
-69efeca5 Quinn Tran                  2019-06-18  247  
-e84067d7 Duane Grigsby               2017-06-21  248  	/* Alloc SRB structure */
-e84067d7 Duane Grigsby               2017-06-21  249  	sp = qla2x00_get_sp(vha, fcport, GFP_ATOMIC);
-e84067d7 Duane Grigsby               2017-06-21  250  	if (!sp)
-e84067d7 Duane Grigsby               2017-06-21  251  		return rval;
-e84067d7 Duane Grigsby               2017-06-21  252  
-e84067d7 Duane Grigsby               2017-06-21  253  	sp->type = SRB_NVME_LS;
+>>> To facilitate a switch to a smaller static allocation combined with a
+>>> dynamic allocation for requests that need it, we need to make sure all
+>>> SCSI drivers handle chained scatterlists correctly.
+
+>>> Convert remaining drivers that directly dereference the scatterlist
+>>> array to using the iterator functions.
+
+> OK, I still suggest to apply the patch for the mentioned reason if you
+> are fine.
+
+
+
+-- 
+Mit freundlichen Gruessen / Kind regards
+Steffen Maier
+
+Linux on IBM Z Development
+
+https://www.ibm.com/privacy/us/en/
+IBM Deutschland Research & Development GmbH
+Vorsitzender des Aufsichtsrats: Matthias Hartmann
+Geschaeftsfuehrung: Dirk Wittkopp
+Sitz der Gesellschaft: Boeblingen
+Registergericht: Amtsgericht Stuttgart, HRB 243294
