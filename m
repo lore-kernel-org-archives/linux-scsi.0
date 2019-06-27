@@ -1,13 +1,13 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 5.1 88/95] scsi: qedi: Check targetname while finding boot target information
-Date: Wed, 26 Jun 2019 20:30:13 -0400
-Message-ID: <20190627003021.19867-88-sashal@kernel.org>
-References: <20190627003021.19867-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 56/60] scsi: qedi: Check targetname while finding boot target information
+Date: Wed, 26 Jun 2019 20:36:11 -0400
+Message-ID: <20190627003616.20767-56-sashal@kernel.org>
+References: <20190627003616.20767-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190627003021.19867-1-sashal@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20190627003616.20767-1-sashal@kernel.org>
+Sender: stable-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc: Nilesh Javali <njavali@marvell.com>, Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -63,10 +63,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 3 insertions(+)
 
 diff --git a/drivers/scsi/qedi/qedi_main.c b/drivers/scsi/qedi/qedi_main.c
-index e5db9a9954dc..a6ff7be0210a 100644
+index 4de740da547b..763c7628356b 100644
 --- a/drivers/scsi/qedi/qedi_main.c
 +++ b/drivers/scsi/qedi/qedi_main.c
-@@ -990,6 +990,9 @@ static int qedi_find_boot_info(struct qedi_ctx *qedi,
+@@ -955,6 +955,9 @@ static int qedi_find_boot_info(struct qedi_ctx *qedi,
  		if (!iscsi_is_session_online(cls_sess))
  			continue;
  
