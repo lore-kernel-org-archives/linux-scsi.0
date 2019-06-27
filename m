@@ -1,24 +1,26 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: ufshdc-pci: Add Intel PCI Ids for EHL
-Date: Wed, 26 Jun 2019 22:28:58 -0400
-Message-ID: <yq1ftnvlq1h.fsf@oracle.com>
-References: <20190621121942.25769-1-adrian.hunter@intel.com>
+Subject: Re: [PATCH 0/2] scsi: add support for request batching
+Date: Wed, 26 Jun 2019 23:37:32 -0400
+Message-ID: <yq1lfxnk8ar.fsf@oracle.com>
+References: <20190530112811.3066-1-pbonzini@redhat.com>
+        <746ad64a-4047-1597-a0d4-f14f3529cc19@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190621121942.25769-1-adrian.hunter@intel.com> (Adrian Hunter's
-        message of "Fri, 21 Jun 2019 15:19:42 +0300")
+In-Reply-To: <746ad64a-4047-1597-a0d4-f14f3529cc19@redhat.com> (Paolo
+        Bonzini's message of "Wed, 26 Jun 2019 15:51:32 +0200")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Adrian Hunter <adrian.hunter@intel.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, Pedro Sousa <pedrom.sousa@synopsys.com>
+To: Paolo Bonzini <pbonzini@redhat.com>
+Cc: linux-kernel@vger.kernel.org, kvm@vger.kernel.org, jejb@linux.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, stefanha@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
 
-Adrian,
+Paolo,
 
-> Add more Intel PCI Ids.
+> Ping?  Are there any more objections?
 
-Applied to 5.3/scsi-queue, thanks!
+It's a core change so we'll need some more reviews. I suggest you
+resubmit.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
