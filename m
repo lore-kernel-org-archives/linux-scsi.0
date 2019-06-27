@@ -1,32 +1,34 @@
 From: Fuqian Huang <huangfq.daxian@gmail.com>
-Subject: [PATCH 60/87] scsi: megaraid: remove memset after kcalloc
-Date: Fri, 28 Jun 2019 01:44:20 +0800
-Message-ID: <20190627174420.5466-1-huangfq.daxian@gmail.com>
+Subject: [PATCH 61/87] scsi: lpfc: remove memset after dma_alloc_coherent
+Date: Fri, 28 Jun 2019 01:44:31 +0800
+Message-ID: <20190627174431.5520-1-huangfq.daxian@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-Cc: Fuqian Huang <huangfq.daxian@gmail.com>, Kashyap Desai <kashyap.desai@broadcom.com>, Sumit Saxena <sumit.saxena@broadcom.com>, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Fuqian Huang <huangfq.daxian@gmail.com>, James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-kcalloc already zeros the memory.
-memset is unneeded.
+In commit af7ddd8a627c
+("Merge tag 'dma-mapping-4.21' of git://git.infradead.org/users/hch/dma-mapping"),
+dma_alloc_coherent has already zeroed the memory.
+So memset is not needed.
 
 Signed-off-by: Fuqian Huang <huangfq.daxian@gmail.com>
 ---
- drivers/scsi/megaraid/megaraid_sas_base.c | 2 --
+ drivers/scsi/lpfc/lpfc_init.c | 2 --
  1 file changed, 2 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 3dd1df472dc6..342b39bc9210 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -4141,8 +4141,6 @@ int megasas_alloc_cmds(struct megasas_instance *instance)
- 		return -ENOMEM;
- 	}
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index eaaef682de25..c3cca3be87f1 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -7770,8 +7770,6 @@ lpfc_sli_pci_mem_setup(struct lpfc_hba *phba)
+ 	phba->hbqs[LPFC_ELS_HBQ].hbq_alloc_buffer = lpfc_els_hbq_alloc;
+ 	phba->hbqs[LPFC_ELS_HBQ].hbq_free_buffer = lpfc_els_hbq_free;
  
--	memset(instance->cmd_list, 0, sizeof(struct megasas_cmd *) *max_cmd);
+-	memset(phba->hbqslimp.virt, 0, lpfc_sli_hbq_size());
 -
- 	for (i = 0; i < max_cmd; i++) {
- 		instance->cmd_list[i] = kmalloc(sizeof(struct megasas_cmd),
- 						GFP_KERNEL);
+ 	phba->MBslimaddr = phba->slim_memmap_p;
+ 	phba->HAregaddr = phba->ctrl_regs_memmap_p + HA_REG_OFFSET;
+ 	phba->CAregaddr = phba->ctrl_regs_memmap_p + CA_REG_OFFSET;
 -- 
 2.11.0
