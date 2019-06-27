@@ -1,10 +1,10 @@
 From: Fuqian Huang <huangfq.daxian@gmail.com>
-Subject: [PATCH 67/87] scsi: bfa: remove memset after dma_alloc_coherent in bfad.c
-Date: Fri, 28 Jun 2019 01:45:34 +0800
-Message-ID: <20190627174534.6045-1-huangfq.daxian@gmail.com>
+Subject: [PATCH 68/87] scsi: be2iscsi: remove memset after dma_alloc_coherent in be_iscsi.c
+Date: Fri, 28 Jun 2019 01:45:44 +0800
+Message-ID: <20190627174545.6098-1-huangfq.daxian@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-Cc: Fuqian Huang <huangfq.daxian@gmail.com>, Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Fuqian Huang <huangfq.daxian@gmail.com>, Subbu Seetharaman <subbu.seetharaman@broadcom.com>, Ketan Mukadam <ketan.mukadam@broadcom.com>, Jitendra Bhivare <jitendra.bhivare@broadcom.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 In commit af7ddd8a627c
@@ -14,20 +14,20 @@ So memset is not needed.
 
 Signed-off-by: Fuqian Huang <huangfq.daxian@gmail.com>
 ---
- drivers/scsi/bfa/bfad.c | 1 -
+ drivers/scsi/be2iscsi/be_iscsi.c | 1 -
  1 file changed, 1 deletion(-)
 
-diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
-index 2f9213b257a4..39ac58337290 100644
---- a/drivers/scsi/bfa/bfad.c
-+++ b/drivers/scsi/bfa/bfad.c
-@@ -622,7 +622,6 @@ bfad_hal_mem_alloc(struct bfad_s *bfad)
- 			goto ext;
- 		}
- 		dma_elem->dma = phys_addr;
--		memset(dma_elem->kva, 0, dma_elem->mem_len);
+diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
+index 2058d50d62e1..09d63bac6d80 100644
+--- a/drivers/scsi/be2iscsi/be_iscsi.c
++++ b/drivers/scsi/be2iscsi/be_iscsi.c
+@@ -1081,7 +1081,6 @@ static int beiscsi_open_conn(struct iscsi_endpoint *ep,
+ 		return -ENOMEM;
  	}
- ext:
- 	return rc;
+ 	nonemb_cmd.size = req_memsize;
+-	memset(nonemb_cmd.va, 0, nonemb_cmd.size);
+ 	tag = mgmt_open_connection(phba, dst_addr, beiscsi_ep, &nonemb_cmd);
+ 	if (!tag) {
+ 		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_CONFIG,
 -- 
 2.11.0
