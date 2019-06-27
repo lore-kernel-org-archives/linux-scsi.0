@@ -1,220 +1,80 @@
-From: Phong Tran <tranmanphong@gmail.com>
-Subject: Re: [PATCH] scsi: convert to rst for documenation
-Date: Wed, 26 Jun 2019 23:53:53 +0700
-Message-ID: <CAD3AR6H8DSTXZkTEmrhhbDzWZ48OA6=HNuYx2oEzddROjntzxA@mail.gmail.com>
-References: <20190622151947.29115-1-tranmanphong@gmail.com> <20190625153658.53ad0e18@lwn.net>
+From: Sasha Levin <sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.1 88/95] scsi: qedi: Check targetname while finding boot target information
+Date: Wed, 26 Jun 2019 20:30:13 -0400
+Message-ID: <20190627003021.19867-88-sashal@kernel.org>
+References: <20190627003021.19867-1-sashal@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190625153658.53ad0e18@lwn.net>
+In-Reply-To: <20190627003021.19867-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>
-Cc: Shuah Khan <skhan@linuxfoundation.org>, martin.petersen@oracle.com, axboe@kernel.dk, avri.altman@wdc.com, beanhuo@micron.com, evgreen@chromium.org, Henrik Austad <henrik@austad.us>, jpittman@redhat.com, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-kernel-mentees@lists.linuxfoundation.org
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc: Nilesh Javali <njavali@marvell.com>, Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Jun 26, 2019 at 4:37 AM Jonathan Corbet <corbet@lwn.net> wrote:
->
-> On Sat, 22 Jun 2019 22:19:47 +0700
-> Phong Tran <tranmanphong@gmail.com> wrote:
->
-> > - Update to the link in documenation
-> > - Remove trailing white space
-> > - Adaptation the sphinx doc syntax
-> >
-> > Signed-off-by: Phong Tran <tranmanphong@gmail.com>
->
-> Thanks for working to improve the documentation!  That said, I think this
-> patch needs a fair amount of work before we are ready to accept it.  I'll
-> only get partway in, but it should be enough to start with.
->
-> The first overall thing I would like to point out (and hopefully the SCSI
-> folks won't fight me too much on this) is that Documentation/scsi is the
-> wrong place for much of this stuff.  We are doing our best to organize the
-> documentation with the audience in mind.  So, for example, documents that
-> are of interest to system administrators should go into
-> Documentation/admin-guide.  Information for driver developers should go in
-> Documentation/driver-api.  And so on.
->
-in my understanding,
-link_power_management_policy.txt and scsi-parameters.txt should be in
-Documentation/admin-guide correct?
-scsi_mid_low_api.txt should be moved to Documentation/driver-api?
+From: Nilesh Javali <njavali@marvell.com>
 
-> [...]
->
-> > diff --git a/Documentation/scsi/link_power_management_policy.rst b/Documentation/scsi/link_power_management_policy.rst
-> > new file mode 100644
-> > index 000000000000..170f58c94cac
-> > --- /dev/null
-> > +++ b/Documentation/scsi/link_power_management_policy.rst
-> > @@ -0,0 +1,22 @@
-> > +SCSI Power Management Policy
-> > +============================
-> > +
-> > +This parameter allows the user to set the link (interface) power management.
-> > +There are 3 possible options:
->
-> This isn't your fault, but...*which* parameter allows this?  The document
-> describes the values, but not where they can be set.  That makes it less
-> than fully useful.
->
-> > ++-------------------+------------------------------------------------------+
-> > +| Value             | Effect                                               |
-> > ++===================+======================================================+
-> > +| min_power         | Tell the controller to try to make the link use the  |
-> > +|                   | least possible power when possible. This may         |
-> > +|                   | sacrifice some performance due to increased latency  |
-> > +|                   | when coming out of lower power states.               |
-> > ++-------------------+------------------------------------------------------+
-> > +| max_performance   | Generally, this means no power management. Tell      |
-> > +|                   | the controller to have performance be a priority     |
-> > +|                   | over power management.                               |
-> > ++-------------------+------------------------------------------------------+
-> > +| medium_power      | Tell the controller to enter a lower power state     |
-> > +|                   | when possible, but do not enter the lowest power     |
-> > +|                   | state, thus improving latency over min_power setting.|
-> > ++-------------------+------------------------------------------------------+
->
-> [...]
->
-> > diff --git a/Documentation/scsi/scsi-changer.txt b/Documentation/scsi/scsi-changer.rst
-> > similarity index 71%
-> > rename from Documentation/scsi/scsi-changer.txt
-> > rename to Documentation/scsi/scsi-changer.rst
-> > index ade046ea7c17..a4923873c77b 100644
-> > --- a/Documentation/scsi/scsi-changer.txt
-> > +++ b/Documentation/scsi/scsi-changer.rst
-> > @@ -1,4 +1,3 @@
-> > -
-> >  README for the SCSI media changer driver
-> >  ========================================
-> >
-> > @@ -10,7 +9,7 @@ common small CD-ROM changers, neither one-lun-per-slot SCSI changers
-> >  nor IDE drives.
-> >
-> >  Userland tools available from here:
-> > -     http://linux.bytesex.org/misc/changer.html
-> > +    http://linux.bytesex.org/misc/changer.html
-> >
-> >
-> >  General Information
-> > @@ -28,15 +27,17 @@ The SCSI changer model is complex, compared to - for example - IDE-CD
-> >  changers. But it allows to handle nearly all possible cases. It knows
-> >  4 different types of changer elements:
-> >
-> > +::
->
-> Two notes:
->
->  - You can put the double colon on the line above ("...elements::") and
->    don't need to make a separate line for it.
->
->  - But, more to the point, please avoid the temptation to use a literal
->    block for something that doesn't actually require that treatment. This
->    should be reworked as an RST definition list.
->
-> >    media transport - this one shuffles around the media, i.e. the
-> >                      transport arm.  Also known as "picker".
-> >    storage         - a slot which can hold a media.
-> >    import/export   - the same as above, but is accessible from outside,
-> >                      i.e. there the operator (you !) can use this to
-> >                      fill in and remove media from the changer.
-> > -                 Sometimes named "mailslot".
-> > +            Sometimes named "mailslot".
-> >    data transfer   - this is the device which reads/writes, i.e. the
-> > -                 CD-ROM / Tape / whatever drive.
-> > +            CD-ROM / Tape / whatever drive.
->
-> [...]
->
-> > diff --git a/Documentation/scsi/scsi-generic.txt b/Documentation/scsi/scsi-generic.rst
-> > similarity index 70%
-> > rename from Documentation/scsi/scsi-generic.txt
-> > rename to Documentation/scsi/scsi-generic.rst
-> > index 51be20a6a14d..8356810160f0 100644
-> > --- a/Documentation/scsi/scsi-generic.txt
-> > +++ b/Documentation/scsi/scsi-generic.rst
-> > @@ -1,8 +1,10 @@
-> > -            Notes on Linux SCSI Generic (sg) driver
-> > -            ---------------------------------------
-> > -                                                        20020126
-> > +=======================================
-> > +Notes on Linux SCSI Generic (sg) driver
-> > +=======================================
-> > +20020126
-> > +
-> >  Introduction
-> > -============
-> > +------------
-> >  The SCSI Generic driver (sg) is one of the four "high level" SCSI device
-> >  drivers along with sd, st and sr (disk, tape and CDROM respectively). Sg
-> >  is more generalized (but lower level) than its siblings and tends to be
-> > @@ -16,20 +18,20 @@ and examples.
-> >
-> >
-> >  Major versions of the sg driver
-> > -===============================
-> > +-------------------------------
-> >  There are three major versions of sg found in the linux kernel (lk):
-> > -      - sg version 1 (original) from 1992 to early 1999 (lk 2.2.5) .
-> > -     It is based in the sg_header interface structure.
-> > +      - sg version 1 (original) from 1992 to early 1999 (lk 2.2.5) .
-> > +        It is based in the sg_header interface structure.
-> >        - sg version 2 from lk 2.2.6 in the 2.2 series. It is based on
-> > -     an extended version of the sg_header interface structure.
-> > +        an extended version of the sg_header interface structure.
-> >        - sg version 3 found in the lk 2.4 series (and the lk 2.5 series).
-> > -     It adds the sg_io_hdr interface structure.
-> > +        It adds the sg_io_hdr interface structure.
->
-> Perhaps we don't *really* need to preserve information about what versions
-> were around in the 1990's?
->
-> >  Sg driver documentation
-> > -=======================
-> > +-----------------------
-> >  The most recent documentation of the sg driver is kept at the Linux
-> > -Documentation Project's (LDP) site:
-> > +Documentation Project's (LDP) site:
-> >  http://www.tldp.org/HOWTO/SCSI-Generic-HOWTO
->
-> That document claims to have been last updated in 2002.  Is there really
-> nothing more recent than that?
->
-> >  This describes the sg version 3 driver found in the lk 2.4 series.
->
-> ...and it's unclear to me that users of the 5.x kernel are much concerned
-> with what was found in 2.4.
->
-> That is the problem with this document in general.  I suspect that about
-> the only useful information left in it is the location of the sg3_utils
-> source.  I honestly don't think that it helps the documentation that much
-> to carry forward ancient information to the RST format.
->
-> Of course, doing this right by deleting obsolete information and updating
-> the documents to reflect current reality is a *lot* more work.  Probably
-> far more than you were thinking of signing up for.  If you were willing to
-> work on this, there may be somebody from the SCSI community who would be in
-> a position to help you with it.
->
-yes! I would greatly appreciate
+[ Upstream commit 1ac3549ed58cdfdaf43bbf31ac260e2381cc0dae ]
 
-> Unfortunately, the SCSI community probably did not see this patch because
-> you didn't copy the linux-scsi list.  I'll fix that now, but they will not
-> have seen your original patch.  You should be sure to include them on
-> future postings.
->
-Note in next post.
+The kernel panic was observed during iSCSI discovery via offload with below
+call trace,
 
-> I would like to make a suggestion, in addition to all of the above: rather
-> than trying to do a mass conversion in a single 4000-line patch, start with
-> a single file and post a patch doing just that one, being sure to include
+[ 2115.646901] BUG: unable to handle kernel NULL pointer dereference at (null)
+[ 2115.646909] IP: [<ffffffffacf7f0cc>] strncmp+0xc/0x60
+[ 2115.646927] PGD 0
+[ 2115.646932] Oops: 0000 [#1] SMP
+[ 2115.647107] CPU: 24 PID: 264 Comm: kworker/24:1 Kdump: loaded Tainted: G
+               OE  ------------   3.10.0-957.el7.x86_64 #1
+[ 2115.647133] Workqueue: slowpath-13:00. qed_slowpath_task [qed]
+[ 2115.647135] task: ffff8d66af80b0c0 ti: ffff8d66afb80000 task.ti: ffff8d66afb80000
+[ 2115.647136] RIP: 0010:[<ffffffffacf7f0cc>]  [<ffffffffacf7f0cc>] strncmp+0xc/0x60
+[ 2115.647141] RSP: 0018:ffff8d66afb83c68  EFLAGS: 00010206
+[ 2115.647143] RAX: 0000000000000001 RBX: 0000000000000007 RCX: 000000000000000a
+[ 2115.647144] RDX: 0000000000000100 RSI: 0000000000000000 RDI: ffff8d632b3ba040
+[ 2115.647145] RBP: ffff8d66afb83c68 R08: 0000000000000000 R09: 000000000000ffff
+[ 2115.647147] R10: 0000000000000007 R11: 0000000000000800 R12: ffff8d66a30007a0
+[ 2115.647148] R13: ffff8d66747a3c10 R14: ffff8d632b3ba000 R15: ffff8d66747a32f8
+[ 2115.647149] FS:  0000000000000000(0000) GS:ffff8d66aff00000(0000) knlGS:0000000000000000
+[ 2115.647151] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[ 2115.647152] CR2: 0000000000000000 CR3: 0000000509610000 CR4: 00000000007607e0
+[ 2115.647153] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[ 2115.647154] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+[ 2115.647155] PKRU: 00000000
+[ 2115.647157] Call Trace:
+[ 2115.647165]  [<ffffffffc0634cc5>] qedi_get_protocol_tlv_data+0x2c5/0x510 [qedi]
+[ 2115.647184]  [<ffffffffc05968f5>] ? qed_mfw_process_tlv_req+0x245/0xbe0 [qed]
+[ 2115.647195]  [<ffffffffc05496cb>] qed_mfw_fill_tlv_data+0x4b/0xb0 [qed]
+[ 2115.647206]  [<ffffffffc0596911>] qed_mfw_process_tlv_req+0x261/0xbe0 [qed]
+[ 2115.647215]  [<ffffffffacce0e8e>] ? dequeue_task_fair+0x41e/0x660
+[ 2115.647221]  [<ffffffffacc2a59e>] ? __switch_to+0xce/0x580
+[ 2115.647230]  [<ffffffffc0546013>] qed_slowpath_task+0xa3/0x160 [qed]
+[ 2115.647278] RIP  [<ffffffffacf7f0cc>] strncmp+0xc/0x60
 
-yes will send a new patch for each file.
+Fix kernel panic by validating the session targetname before providing TLV
+data and confirming the presence of boot targets.
 
-> the linux-scsi list.  That will give everybody something more workable to
-> start with.
->
-> Thanks,
->
-> jon
+Signed-off-by: Nilesh Javali <njavali@marvell.com>
+Reviewed-by: Lee Duncan <lduncan@suse.com>
+Reviewed-by: Chris Leech <cleech@redhat.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/scsi/qedi/qedi_main.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/scsi/qedi/qedi_main.c b/drivers/scsi/qedi/qedi_main.c
+index e5db9a9954dc..a6ff7be0210a 100644
+--- a/drivers/scsi/qedi/qedi_main.c
++++ b/drivers/scsi/qedi/qedi_main.c
+@@ -990,6 +990,9 @@ static int qedi_find_boot_info(struct qedi_ctx *qedi,
+ 		if (!iscsi_is_session_online(cls_sess))
+ 			continue;
+ 
++		if (!sess->targetname)
++			continue;
++
+ 		if (pri_ctrl_flags) {
+ 			if (!strcmp(pri_tgt->iscsi_name, sess->targetname) &&
+ 			    !strcmp(pri_tgt->ip_addr, ep_ip_addr)) {
+-- 
+2.20.1
