@@ -1,10 +1,10 @@
 From: Fuqian Huang <huangfq.daxian@gmail.com>
-Subject: [PATCH 66/87] scsi: bnx2fc: remove memset after dma_alloc_coherent in bnx2fc_io.c
-Date: Fri, 28 Jun 2019 01:45:26 +0800
-Message-ID: <20190627174526.5940-1-huangfq.daxian@gmail.com>
+Subject: [PATCH 67/87] scsi: bfa: remove memset after dma_alloc_coherent in bfad.c
+Date: Fri, 28 Jun 2019 01:45:34 +0800
+Message-ID: <20190627174534.6045-1-huangfq.daxian@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-Cc: Fuqian Huang <huangfq.daxian@gmail.com>, QLogic-Storage-Upstream@qlogic.com, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Fuqian Huang <huangfq.daxian@gmail.com>, Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 In commit af7ddd8a627c
@@ -14,21 +14,20 @@ So memset is not needed.
 
 Signed-off-by: Fuqian Huang <huangfq.daxian@gmail.com>
 ---
- drivers/scsi/bnx2fc/bnx2fc_io.c | 2 --
- 1 file changed, 2 deletions(-)
+ drivers/scsi/bfa/bfad.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_io.c
-index 8def63c0755f..92b289466797 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_io.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
-@@ -614,8 +614,6 @@ int bnx2fc_init_mp_req(struct bnx2fc_cmd *io_req)
- 		bnx2fc_free_mp_resc(io_req);
- 		return FAILED;
+diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
+index 2f9213b257a4..39ac58337290 100644
+--- a/drivers/scsi/bfa/bfad.c
++++ b/drivers/scsi/bfa/bfad.c
+@@ -622,7 +622,6 @@ bfad_hal_mem_alloc(struct bfad_s *bfad)
+ 			goto ext;
+ 		}
+ 		dma_elem->dma = phys_addr;
+-		memset(dma_elem->kva, 0, dma_elem->mem_len);
  	}
--	memset(mp_req->req_buf, 0, CNIC_PAGE_SIZE);
--	memset(mp_req->resp_buf, 0, CNIC_PAGE_SIZE);
- 
- 	/* Allocate and map mp_req_bd and mp_resp_bd */
- 	sz = sizeof(struct fcoe_bd_ctx);
+ ext:
+ 	return rc;
 -- 
 2.11.0
