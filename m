@@ -1,10 +1,10 @@
 From: Fuqian Huang <huangfq.daxian@gmail.com>
-Subject: [PATCH 68/87] scsi: be2iscsi: remove memset after dma_alloc_coherent in be_iscsi.c
-Date: Fri, 28 Jun 2019 01:45:44 +0800
-Message-ID: <20190627174545.6098-1-huangfq.daxian@gmail.com>
+Subject: [PATCH 69/87] scsi: arcmsr: remove memset after dma_coherent in arcmsr_hba.c
+Date: Fri, 28 Jun 2019 01:45:53 +0800
+Message-ID: <20190627174554.6206-1-huangfq.daxian@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-Cc: Fuqian Huang <huangfq.daxian@gmail.com>, Subbu Seetharaman <subbu.seetharaman@broadcom.com>, Ketan Mukadam <ketan.mukadam@broadcom.com>, Jitendra Bhivare <jitendra.bhivare@broadcom.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Fuqian Huang <huangfq.daxian@gmail.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Ching Huang <ching2048@areca.com.tw>, Geert Uytterhoeven <geert+renesas@glider.be>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 In commit af7ddd8a627c
@@ -14,20 +14,20 @@ So memset is not needed.
 
 Signed-off-by: Fuqian Huang <huangfq.daxian@gmail.com>
 ---
- drivers/scsi/be2iscsi/be_iscsi.c | 1 -
+ drivers/scsi/arcmsr/arcmsr_hba.c | 1 -
  1 file changed, 1 deletion(-)
 
-diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
-index 2058d50d62e1..09d63bac6d80 100644
---- a/drivers/scsi/be2iscsi/be_iscsi.c
-+++ b/drivers/scsi/be2iscsi/be_iscsi.c
-@@ -1081,7 +1081,6 @@ static int beiscsi_open_conn(struct iscsi_endpoint *ep,
- 		return -ENOMEM;
+diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
+index 88053b15c363..a0d0dc83184f 100644
+--- a/drivers/scsi/arcmsr/arcmsr_hba.c
++++ b/drivers/scsi/arcmsr/arcmsr_hba.c
+@@ -727,7 +727,6 @@ static int arcmsr_alloc_ccb_pool(struct AdapterControlBlock *acb)
  	}
- 	nonemb_cmd.size = req_memsize;
--	memset(nonemb_cmd.va, 0, nonemb_cmd.size);
- 	tag = mgmt_open_connection(phba, dst_addr, beiscsi_ep, &nonemb_cmd);
- 	if (!tag) {
- 		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_CONFIG,
+ 	acb->dma_coherent = dma_coherent;
+ 	acb->dma_coherent_handle = dma_coherent_handle;
+-	memset(dma_coherent, 0, acb->uncache_size);
+ 	acb->ccbsize = roundup_ccbsize;
+ 	ccb_tmp = dma_coherent;
+ 	curr_phy_upper32 = upper_32_bits(dma_coherent_handle);
 -- 
 2.11.0
