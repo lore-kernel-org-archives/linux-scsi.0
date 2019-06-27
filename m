@@ -1,10 +1,10 @@
 From: Fuqian Huang <huangfq.daxian@gmail.com>
-Subject: [PATCH 70/87] scsi: aacraid: remove memset after dma_alloc_coherent in rx.c
-Date: Fri, 28 Jun 2019 01:46:05 +0800
-Message-ID: <20190627174605.6260-1-huangfq.daxian@gmail.com>
+Subject: [PATCH 71/87] scsi: 3w-xxxx: remove memset after dma_alloc_coherent
+Date: Fri, 28 Jun 2019 01:46:12 +0800
+Message-ID: <20190627174612.6366-1-huangfq.daxian@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-Cc: Fuqian Huang <huangfq.daxian@gmail.com>, Adaptec OEM Raid Solutions <aacraid@microsemi.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Fuqian Huang <huangfq.daxian@gmail.com>, Adam Radford <aradford@gmail.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 In commit af7ddd8a627c
@@ -14,20 +14,35 @@ So memset is not needed.
 
 Signed-off-by: Fuqian Huang <huangfq.daxian@gmail.com>
 ---
- drivers/scsi/aacraid/rx.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/scsi/3w-9xxx.c | 2 --
+ drivers/scsi/3w-xxxx.c | 2 --
+ 2 files changed, 4 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/rx.c b/drivers/scsi/aacraid/rx.c
-index 3dea348bd25d..4d3484cbca26 100644
---- a/drivers/scsi/aacraid/rx.c
-+++ b/drivers/scsi/aacraid/rx.c
-@@ -353,7 +353,6 @@ static int aac_rx_check_health(struct aac_dev *dev)
- 			dma_free_coherent(&dev->pdev->dev, 512, buffer, baddr);
- 			return ret;
- 		}
--		memset(buffer, 0, 512);
- 		post->Post_Command = cpu_to_le32(COMMAND_POST_RESULTS);
- 		post->Post_Address = cpu_to_le32(baddr);
- 		rx_writel(dev, MUnit.IMRx[0], paddr);
+diff --git a/drivers/scsi/3w-9xxx.c b/drivers/scsi/3w-9xxx.c
+index 3337b1e80412..da17d9104e6b 100644
+--- a/drivers/scsi/3w-9xxx.c
++++ b/drivers/scsi/3w-9xxx.c
+@@ -534,8 +534,6 @@ static int twa_allocate_memory(TW_Device_Extension *tw_dev, int size, int which)
+ 		goto out;
+ 	}
+ 
+-	memset(cpu_addr, 0, size*TW_Q_LENGTH);
+-
+ 	for (i = 0; i < TW_Q_LENGTH; i++) {
+ 		switch(which) {
+ 		case 0:
+diff --git a/drivers/scsi/3w-xxxx.c b/drivers/scsi/3w-xxxx.c
+index 2b1e0d503020..26703ef52a2e 100644
+--- a/drivers/scsi/3w-xxxx.c
++++ b/drivers/scsi/3w-xxxx.c
+@@ -848,8 +848,6 @@ static int tw_allocate_memory(TW_Device_Extension *tw_dev, int size, int which)
+ 		return 1;
+ 	}
+ 
+-	memset(cpu_addr, 0, size*TW_Q_LENGTH);
+-
+ 	for (i=0;i<TW_Q_LENGTH;i++) {
+ 		switch(which) {
+ 		case 0:
 -- 
 2.11.0
