@@ -1,57 +1,98 @@
-From: Avri Altman <Avri.Altman@wdc.com>
-Subject: Re: [PATCH] scsi: uapi: ufs: Fix SPDX license identifier
-Date: Thu, 27 Jun 2019 05:38:30 +0000
-Message-ID: <SN6PR04MB4925E2C49630065F5201A7F5FCFD0@SN6PR04MB4925.namprd04.prod.outlook.com>
-References: <1560346477-13944-1-git-send-email-avri.altman@wdc.com>
+From: Minwoo Im <minwoo.im@samsung.com>
+Subject: Re: [RESEND RFC PATCH] mpt3sas: support target smid for
+ [abort|query] task
+Date: Thu, 27 Jun 2019 16:39:03 +0900
+Message-ID: <20190627073903epcms2p73dec91f5f4423e888b2a7b82f71fdee7@epcms2p7>
+References: <20190621063708epcms2p309f4173afabe5de28942ba15d13987f7@epcms2p3>
+        <CGME20190621063708epcms2p309f4173afabe5de28942ba15d13987f7@epcms2p7>
+Reply-To: minwoo.im@samsung.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1560346477-13944-1-git-send-email-avri.altman@wdc.com>
-Content-Language: en-US
+In-Reply-To: <20190621063708epcms2p309f4173afabe5de28942ba15d13987f7@epcms2p3>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>, Pedro Sousa <pedrom.sousa@synopsys.com>, Alim Akhtar <alim.akhtar@samsung.com>
-Cc: Avi Shchislowski <Avi.Shchislowski@wdc.com>, Alex Lemberg <Alex.Lemberg@wdc.com>
+To: "sathya.prakash@broadcom.com" <sathya.prakash@broadcom.com>, "suganath-prabu.subramani@broadcom.com" <suganath-prabu.subramani@broadcom.com>, "jejb@linux.ibm.com" <jejb@linux.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "minwoo.im.dev@gmail.com" <minwoo.im.dev@gmail.com>
+Cc: Minwoo Im <minwoo.im@samsung.com>, "MPT-FusionLinux.pdl@broadcom.com" <MPT-FusionLinux.pdl@broadcom.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Euihyeok Kwon <eh81.kwon@samsung.com>, Sarah Cho <sohyeon.jo@samsung.com>, Sanggwan Lee <sanggwan.lee@samsung.com>, Gyeongmin Nam <gm.nam@samsung.com>
 List-Id: linux-scsi@vger.kernel.org
 
-A gentle ping.
+Gentle ping. :)
 
-Thanks,
-Avri
-
-
-
-________________________________________
-From: Avri Altman <avri.altman@wdc.com>
-Sent: Wednesday, June 12, 2019 4:34:37 PM
-To: James E.J. Bottomley; Martin K. Petersen; linux-scsi@vger.kernel.org; l=
-inux-kernel@vger.kernel.org; Arnd Bergmann; Pedro Sousa; Alim Akhtar
-Cc: Avi Shchislowski; Alex Lemberg; Avri Altman
-Subject: [PATCH] scsi: uapi: ufs: Fix SPDX license identifier
-
-added 'WITH Linux-syscall-note' exception, which is the officially
-assigned exception identifier for the kernel syscall exception.
-This exception makes it possible to include GPL headers into non GPL
-code, without confusing license compliance tools.
-
-fixes: a851b2bd3632 (scsi: uapi: ufs: Make utp_upiu_req visible to user
-                     space)
-
-Signed-off-by: Avri Altman <avri.altman@wdc.com>
----
- include/uapi/scsi/scsi_bsg_ufs.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/include/uapi/scsi/scsi_bsg_ufs.h b/include/uapi/scsi/scsi_bsg_=
-ufs.h
-index 17c7abd..9988db6 100644
---- a/include/uapi/scsi/scsi_bsg_ufs.h
-+++ b/include/uapi/scsi/scsi_bsg_ufs.h
-@@ -1,4 +1,4 @@
--/* SPDX-License-Identifier: GPL-2.0 */
-+/* SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note */
- /*
-  * UFS Transport SGIO v4 BSG Message Support
-  *
---
-1.9.1
+> -----Original Message-----
+> From: Minwoo Im <minwoo.im@samsung.com>
+> Sent: Friday, June 21, 2019 3:37 PM
+> To: sathya.prakash@broadcom.com; suganath-prabu.subramani@broadcom.com;
+> jejb@linux.ibm.com; martin.petersen@oracle.com
+> Cc: Minwoo Im <minwoo.im@samsung.com>; MPT-FusionLinux.pdl@broadcom.com;
+> linux-kernel@vger.kernel.org; linux-scsi@vger.kernel.org; linux-
+> block@vger.kernel.org; Euihyeok Kwon <eh81.kwon@samsung.com>; Sarah Cho
+> <sohyeon.jo@samsung.com>; Sanggwan Lee <sanggwan.lee@samsung.com>;
+> Gyeongmin Nam <gm.nam@samsung.com>
+> Subject: [RESEND RFC PATCH] mpt3sas: support target smid for [abort|query]
+> task
+> 
+> We can request task management IOCTL command(MPI2_FUNCTION_SCSI_TASK_MGMT)
+> to /dev/mpt3ctl.  If the given task_type is either abort task or query
+> task, it may need a field named "Initiator Port Transfer Tag to Manage"
+> in the IU.
+> 
+> Current code does not support to check target IPTT tag from the
+> tm_request.  This patch introduces to check TaskMID given from the
+> userspace as a target tag.  We have a rule of relationship between
+> (struct request *req->tag) and smid in mpt3sas_base.c:
+> 
+> 3318 u16
+> 3319 mpt3sas_base_get_smid_scsiio(struct MPT3SAS_ADAPTER *ioc, u8 cb_idx,
+> 3320         struct scsi_cmnd *scmd)
+> 3321 {
+> 3322         struct scsiio_tracker *request = scsi_cmd_priv(scmd);
+> 3323         unsigned int tag = scmd->request->tag;
+> 3324         u16 smid;
+> 3325
+> 3326         smid = tag + 1;
+> 
+> So if we want to abort a request tagged #X, then we can pass (X + 1) to
+> this IOCTL handler.
+> 
+> Cc: Sathya Prakash <sathya.prakash@broadcom.com>
+> Cc: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
+> Cc: James E.J. Bottomley <jejb@linux.ibm.com>
+> Cc: Martin K. Petersen <martin.petersen@oracle.com>
+> Cc: MPT-FusionLinux.pdl@broadcom.com
+> Signed-off-by: Minwoo Im <minwoo.im@samsung.com>
+> ---
+>  drivers/scsi/mpt3sas/mpt3sas_ctl.c | 10 ++++++----
+>  1 file changed, 6 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+> b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+> index b2bb47c14d35..5c7539dae713 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+> @@ -596,15 +596,17 @@ _ctl_set_task_mid(struct MPT3SAS_ADAPTER *ioc,
+> struct mpt3_ioctl_command *karg,
+>  		if (priv_data->sas_target->handle != handle)
+>  			continue;
+>  		st = scsi_cmd_priv(scmd);
+> -		tm_request->TaskMID = cpu_to_le16(st->smid);
+> -		found = 1;
+> +		if (tm_request->TaskMID == st->smid) {
+> +			tm_request->TaskMID = cpu_to_le16(st->smid);
+> +			found = 1;
+> +		}
+>  	}
+> 
+>  	if (!found) {
+>  		dctlprintk(ioc,
+> -			   ioc_info(ioc, "%s: handle(0x%04x), lun(%d), no
+> active mid!!\n",
+> +			   ioc_info(ioc, "%s: handle(0x%04x), lun(%d), no
+> matched mid(%d)!!\n",
+>  				    desc, le16_to_cpu(tm_request->DevHandle),
+> -				    lun));
+> +				    lun, tm_request->TaskMID));
+>  		tm_reply = ioc->ctl_cmds.reply;
+>  		tm_reply->DevHandle = tm_request->DevHandle;
+>  		tm_reply->Function = MPI2_FUNCTION_SCSI_TASK_MGMT;
+> --
+> 2.16.1
