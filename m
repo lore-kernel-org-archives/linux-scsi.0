@@ -1,98 +1,26 @@
-From: Minwoo Im <minwoo.im@samsung.com>
-Subject: Re: [RESEND RFC PATCH] mpt3sas: support target smid for
- [abort|query] task
-Date: Thu, 27 Jun 2019 16:39:03 +0900
-Message-ID: <20190627073903epcms2p73dec91f5f4423e888b2a7b82f71fdee7@epcms2p7>
-References: <20190621063708epcms2p309f4173afabe5de28942ba15d13987f7@epcms2p3>
-        <CGME20190621063708epcms2p309f4173afabe5de28942ba15d13987f7@epcms2p7>
-Reply-To: minwoo.im@samsung.com
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: [PATCH 0/2] scsi: add support for request batching
+Date: Thu, 27 Jun 2019 10:17:45 +0200
+Message-ID: <48c7d581-6ec8-260a-b4ba-217aef516305@redhat.com>
+References: <20190530112811.3066-1-pbonzini@redhat.com>
+ <746ad64a-4047-1597-a0d4-f14f3529cc19@redhat.com>
+ <yq1lfxnk8ar.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190621063708epcms2p309f4173afabe5de28942ba15d13987f7@epcms2p3>
+In-Reply-To: <yq1lfxnk8ar.fsf@oracle.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: "sathya.prakash@broadcom.com" <sathya.prakash@broadcom.com>, "suganath-prabu.subramani@broadcom.com" <suganath-prabu.subramani@broadcom.com>, "jejb@linux.ibm.com" <jejb@linux.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "minwoo.im.dev@gmail.com" <minwoo.im.dev@gmail.com>
-Cc: Minwoo Im <minwoo.im@samsung.com>, "MPT-FusionLinux.pdl@broadcom.com" <MPT-FusionLinux.pdl@broadcom.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Euihyeok Kwon <eh81.kwon@samsung.com>, Sarah Cho <sohyeon.jo@samsung.com>, Sanggwan Lee <sanggwan.lee@samsung.com>, Gyeongmin Nam <gm.nam@samsung.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-kernel@vger.kernel.org, kvm@vger.kernel.org, jejb@linux.ibm.com, linux-scsi@vger.kernel.org, stefanha@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-Gentle ping. :)
+On 27/06/19 05:37, Martin K. Petersen wrote:
+>> Ping?  Are there any more objections?
+> It's a core change so we'll need some more reviews. I suggest you
+> resubmit.
 
-> -----Original Message-----
-> From: Minwoo Im <minwoo.im@samsung.com>
-> Sent: Friday, June 21, 2019 3:37 PM
-> To: sathya.prakash@broadcom.com; suganath-prabu.subramani@broadcom.com;
-> jejb@linux.ibm.com; martin.petersen@oracle.com
-> Cc: Minwoo Im <minwoo.im@samsung.com>; MPT-FusionLinux.pdl@broadcom.com;
-> linux-kernel@vger.kernel.org; linux-scsi@vger.kernel.org; linux-
-> block@vger.kernel.org; Euihyeok Kwon <eh81.kwon@samsung.com>; Sarah Cho
-> <sohyeon.jo@samsung.com>; Sanggwan Lee <sanggwan.lee@samsung.com>;
-> Gyeongmin Nam <gm.nam@samsung.com>
-> Subject: [RESEND RFC PATCH] mpt3sas: support target smid for [abort|query]
-> task
-> 
-> We can request task management IOCTL command(MPI2_FUNCTION_SCSI_TASK_MGMT)
-> to /dev/mpt3ctl.  If the given task_type is either abort task or query
-> task, it may need a field named "Initiator Port Transfer Tag to Manage"
-> in the IU.
-> 
-> Current code does not support to check target IPTT tag from the
-> tm_request.  This patch introduces to check TaskMID given from the
-> userspace as a target tag.  We have a rule of relationship between
-> (struct request *req->tag) and smid in mpt3sas_base.c:
-> 
-> 3318 u16
-> 3319 mpt3sas_base_get_smid_scsiio(struct MPT3SAS_ADAPTER *ioc, u8 cb_idx,
-> 3320         struct scsi_cmnd *scmd)
-> 3321 {
-> 3322         struct scsiio_tracker *request = scsi_cmd_priv(scmd);
-> 3323         unsigned int tag = scmd->request->tag;
-> 3324         u16 smid;
-> 3325
-> 3326         smid = tag + 1;
-> 
-> So if we want to abort a request tagged #X, then we can pass (X + 1) to
-> this IOCTL handler.
-> 
-> Cc: Sathya Prakash <sathya.prakash@broadcom.com>
-> Cc: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
-> Cc: James E.J. Bottomley <jejb@linux.ibm.com>
-> Cc: Martin K. Petersen <martin.petersen@oracle.com>
-> Cc: MPT-FusionLinux.pdl@broadcom.com
-> Signed-off-by: Minwoo Im <minwoo.im@samsung.com>
-> ---
->  drivers/scsi/mpt3sas/mpt3sas_ctl.c | 10 ++++++----
->  1 file changed, 6 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-> b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-> index b2bb47c14d35..5c7539dae713 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-> @@ -596,15 +596,17 @@ _ctl_set_task_mid(struct MPT3SAS_ADAPTER *ioc,
-> struct mpt3_ioctl_command *karg,
->  		if (priv_data->sas_target->handle != handle)
->  			continue;
->  		st = scsi_cmd_priv(scmd);
-> -		tm_request->TaskMID = cpu_to_le16(st->smid);
-> -		found = 1;
-> +		if (tm_request->TaskMID == st->smid) {
-> +			tm_request->TaskMID = cpu_to_le16(st->smid);
-> +			found = 1;
-> +		}
->  	}
-> 
->  	if (!found) {
->  		dctlprintk(ioc,
-> -			   ioc_info(ioc, "%s: handle(0x%04x), lun(%d), no
-> active mid!!\n",
-> +			   ioc_info(ioc, "%s: handle(0x%04x), lun(%d), no
-> matched mid(%d)!!\n",
->  				    desc, le16_to_cpu(tm_request->DevHandle),
-> -				    lun));
-> +				    lun, tm_request->TaskMID));
->  		tm_reply = ioc->ctl_cmds.reply;
->  		tm_reply->DevHandle = tm_request->DevHandle;
->  		tm_reply->Function = MPI2_FUNCTION_SCSI_TASK_MGMT;
-> --
-> 2.16.1
+Resubmit exactly the same patches?
+
+Paolo
