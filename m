@@ -1,66 +1,53 @@
-From: John Garry <john.garry@huawei.com>
-Subject: Re: [PATCH 58/87] scsi: mvsas: remove memset after dma_alloc_coherent
-Date: Fri, 28 Jun 2019 09:17:41 +0100
-Message-ID: <cf7d2136-b298-ac4f-2264-5ceecf99175b@huawei.com>
-References: <20190627174355.5252-1-huangfq.daxian@gmail.com>
+From: Pedro Sousa <PedroM.Sousa@synopsys.com>
+Subject: RE: [PATCH] scsi: uapi: ufs: Fix SPDX license identifier
+Date: Fri, 28 Jun 2019 11:25:12 +0000
+Message-ID: <MN2PR12MB3167D6E742D06055FDCFB17ACCFC0@MN2PR12MB3167.namprd12.prod.outlook.com>
+References: <1560346477-13944-1-git-send-email-avri.altman@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190627174355.5252-1-huangfq.daxian@gmail.com>
+In-Reply-To: <1560346477-13944-1-git-send-email-avri.altman@wdc.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Fuqian Huang <huangfq.daxian@gmail.com>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Allison Randal <allison@lohutok.net>, Johannes Thumshirn <jthumshirn@suse.de>, Thomas Gleixner <tglx@linutronix.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Avri Altman <avri.altman@wdc.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>, Pedro Sousa <PedroM.Sousa@synopsys.com>, Alim Akhtar <alim.akhtar@samsung.com>
+Cc: Avi Shchislowski <avi.shchislowski@wdc.com>, Alex Lemberg <alex.lemberg@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 27/06/2019 18:43, Fuqian Huang wrote:
-> In commit af7ddd8a627c
+From: Avri Altman <avri.altman@wdc.com>
+Date: Wed, Jun 12, 2019 at 14:34:37
 
-That's a merge commit. I think that you maybe are thinking of 
-specifically commit 518a2f1925c3.
-
-> ("Merge tag 'dma-mapping-4.21' of git://git.infradead.org/users/hch/dma-mapping"),
-
-nit: this can be spread of multiple lines at whitespace delimiters
-
-> dma_alloc_coherent has already zeroed the memory.
-> So memset is not needed.
->
-> Signed-off-by: Fuqian Huang <huangfq.daxian@gmail.com>
+> added 'WITH Linux-syscall-note' exception, which is the officially
+> assigned exception identifier for the kernel syscall exception.
+> This exception makes it possible to include GPL headers into non GPL
+> code, without confusing license compliance tools.
+>=20
+> fixes: a851b2bd3632 (scsi: uapi: ufs: Make utp_upiu_req visible to user
+> 		     space)
+>=20
+> Signed-off-by: Avri Altman <avri.altman@wdc.com>
 > ---
->  drivers/scsi/mvsas/mv_init.c | 4 ----
->  1 file changed, 4 deletions(-)
->
-> diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
-> index da719b0694dc..f2fae160691d 100644
-> --- a/drivers/scsi/mvsas/mv_init.c
-> +++ b/drivers/scsi/mvsas/mv_init.c
-> @@ -241,19 +241,16 @@ static int mvs_alloc(struct mvs_info *mvi, struct Scsi_Host *shost)
->  				     &mvi->tx_dma, GFP_KERNEL);
->  	if (!mvi->tx)
->  		goto err_out;
-> -	memset(mvi->tx, 0, sizeof(*mvi->tx) * MVS_CHIP_SLOT_SZ);
->  	mvi->rx_fis = dma_alloc_coherent(mvi->dev, MVS_RX_FISL_SZ,
->  					 &mvi->rx_fis_dma, GFP_KERNEL);
->  	if (!mvi->rx_fis)
->  		goto err_out;
-> -	memset(mvi->rx_fis, 0, MVS_RX_FISL_SZ);
->
->  	mvi->rx = dma_alloc_coherent(mvi->dev,
->  				     sizeof(*mvi->rx) * (MVS_RX_RING_SZ + 1),
->  				     &mvi->rx_dma, GFP_KERNEL);
->  	if (!mvi->rx)
->  		goto err_out;
-> -	memset(mvi->rx, 0, sizeof(*mvi->rx) * (MVS_RX_RING_SZ + 1));
->  	mvi->rx[0] = cpu_to_le32(0xfff);
->  	mvi->rx_cons = 0xfff;
->
-> @@ -262,7 +259,6 @@ static int mvs_alloc(struct mvs_info *mvi, struct Scsi_Host *shost)
->  				       &mvi->slot_dma, GFP_KERNEL);
->  	if (!mvi->slot)
->  		goto err_out;
-> -	memset(mvi->slot, 0, sizeof(*mvi->slot) * slot_nr);
->
->  	mvi->bulk_buffer = dma_alloc_coherent(mvi->dev,
->  				       TRASH_BUCKET_SIZE,
->
+>  include/uapi/scsi/scsi_bsg_ufs.h | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>=20
+> diff --git a/include/uapi/scsi/scsi_bsg_ufs.h b/include/uapi/scsi/scsi_bs=
+g_ufs.h
+> index 17c7abd..9988db6 100644
+> --- a/include/uapi/scsi/scsi_bsg_ufs.h
+> +++ b/include/uapi/scsi/scsi_bsg_ufs.h
+> @@ -1,4 +1,4 @@
+> -/* SPDX-License-Identifier: GPL-2.0 */
+> +/* SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note */
+>  /*
+>   * UFS Transport SGIO v4 BSG Message Support
+>   *
+> --=20
+> 1.9.1
+
+Hi Avri,
+
+I don't see any issue.=20
+
+Thanks
+
+Reviewed-by: Pedro Sousa <pedrom.sousa@synopsys.com>=20
