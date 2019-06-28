@@ -1,211 +1,62 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH 3/4] staging: rtl8712: reduce stack usage, again
-Date: Fri, 28 Jun 2019 14:37:48 +0200
-Message-ID: <20190628123819.2785504-3-arnd@arndb.de>
-References: <20190628123819.2785504-1-arnd@arndb.de>
+From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Subject: Re: [PATCH 37/39] docs: adds some directories to the main
+ documentation index
+Date: Fri, 28 Jun 2019 14:55:10 +0200
+Message-ID: <a89ef0db-211c-1880-e60c-dc599b36feb7@samsung.com>
+References: <cover.1561724493.git.mchehab+samsung@kernel.org>
+ <CGME20190628123051epcas3p35e0cb4a5a1159dac19bde504ae21b0f3@epcas3p3.samsung.com>
+ <b26fc645cb2c81fe88ab13616c65664d2c3cead5.1561724493.git.mchehab+samsung@kernel.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <20190628123819.2785504-1-arnd@arndb.de>
-Sender: netdev-owner@vger.kernel.org
-To: Kees Cook <keescook@chromium.org>, Larry Finger <Larry.Finger@lwfinger.net>, Florian Schilhabel <florian.c.schilhabel@googlemail.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "David S . Miller" <davem@davemloft.net>, Wensong Zhang <wensong@linux-vs.org>, Simon Horman <horms@verge.net.au>, Julian Anastasov <ja@ssi.bg>, Pablo Neira Ayuso <pablo@netfilter.org>, James Morris <jmorris@namei.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, devel@driverdev.osuosl.org, netdev@vger.kernel.org, lvs-devel@vger.kernel.org, netfilter-devel@vger.kernel.org, coreteam@netfilter.org, Ard Biesheuvel <ard.biesheuvel@linaro.org>, Arnd Bergmann <arnd@arndb.de>, Nishka Dasgupta <nishkadg.linux@gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <dri-devel-bounces@lists.freedesktop.org>
+In-Reply-To: <b26fc645cb2c81fe88ab13616c65664d2c3cead5.1561724493.git.mchehab+samsung@kernel.org>
+Content-Language: en-US
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
+List-Post: <mailto:dri-devel@lists.freedesktop.org>
+List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: dri-devel-bounces@lists.freedesktop.org
+Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
+To: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
+Cc: linux-fbdev@vger.kernel.org, Len Brown <len.brown@intel.com>, linux-fpga@vger.kernel.org, Dominik Brodowski <linux@dominikbrodowski.net>, Masahiro Yamada <yamada.masahiro@socionext.com>, target-devel@vger.kernel.org, Pavel Machek <pavel@ucw.cz>, live-patching@vger.kernel.org, Miroslav Benes <mbenes@suse.cz>, Joe Lawrence <joe.lawrence@redhat.com>, Paul Moore <paul@paul-moore.com>, linux-scsi@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>, Linux Doc Mailing List <linux-doc@vger.kernel.org>, Guenter Roeck <linux@roeck-us.net>, Petr Mladek <pmladek@suse.com>, linux-watchdog@vger.kernel.org, linux-kbuild@vger.kernel.org, Jiri Kosina <jikos@kernel.org>, Akinobu Mita <akinobu.mita@gmail.com>, Mauro Carvalho Chehab <mchehab@infradead.org>, Moritz Fischer <mdf@kernel.org>, dri-devel@lists.freedesktop.org, Josh Poimboeuf <jpoimboe@redhat.com>, Thomas Gleixner <tglx@linutronix.>
 List-Id: linux-scsi@vger.kernel.org
 
-An earlier patch I sent reduced the stack usage enough to get
-below the warning limit, and I could show this was safe, but with
-GCC_PLUGIN_STRUCTLEAK_BYREF_ALL, it gets worse again because large stack
-variables in the same function no longer overlap:
-
-drivers/staging/rtl8712/rtl871x_ioctl_linux.c: In function 'translate_scan.isra.2':
-drivers/staging/rtl8712/rtl871x_ioctl_linux.c:322:1: error: the frame size of 1200 bytes is larger than 1024 bytes [-Werror=frame-larger-than=]
-
-Split out the largest two blocks in the affected function into two
-separate functions and mark those noinline_for_stack.
-
-Fixes: 8c5af16f7953 ("staging: rtl8712: reduce stack usage")
-Fixes: 81a56f6dcd20 ("gcc-plugins: structleak: Generalize to all variable types")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/staging/rtl8712/rtl871x_ioctl_linux.c | 157 ++++++++++--------
- 1 file changed, 88 insertions(+), 69 deletions(-)
-
-diff --git a/drivers/staging/rtl8712/rtl871x_ioctl_linux.c b/drivers/staging/rtl8712/rtl871x_ioctl_linux.c
-index a224797cd993..fdc1df99d852 100644
---- a/drivers/staging/rtl8712/rtl871x_ioctl_linux.c
-+++ b/drivers/staging/rtl8712/rtl871x_ioctl_linux.c
-@@ -124,10 +124,91 @@ static inline void handle_group_key(struct ieee_param *param,
- 	}
- }
- 
--static noinline_for_stack char *translate_scan(struct _adapter *padapter,
--				   struct iw_request_info *info,
--				   struct wlan_network *pnetwork,
--				   char *start, char *stop)
-+static noinline_for_stack char *translate_scan_wpa(struct iw_request_info *info,
-+						   struct wlan_network *pnetwork,
-+						   struct iw_event *iwe,
-+						   char *start, char *stop)
-+{
-+	/* parsing WPA/WPA2 IE */
-+	u8 buf[MAX_WPA_IE_LEN];
-+	u8 wpa_ie[255], rsn_ie[255];
-+	u16 wpa_len = 0, rsn_len = 0;
-+	int n, i;
-+
-+	r8712_get_sec_ie(pnetwork->network.IEs,
-+			 pnetwork->network.IELength, rsn_ie, &rsn_len,
-+			 wpa_ie, &wpa_len);
-+	if (wpa_len > 0) {
-+		memset(buf, 0, MAX_WPA_IE_LEN);
-+		n = sprintf(buf, "wpa_ie=");
-+		for (i = 0; i < wpa_len; i++) {
-+			n += snprintf(buf + n, MAX_WPA_IE_LEN - n,
-+						"%02x", wpa_ie[i]);
-+			if (n >= MAX_WPA_IE_LEN)
-+				break;
-+		}
-+		memset(iwe, 0, sizeof(*iwe));
-+		iwe->cmd = IWEVCUSTOM;
-+		iwe->u.data.length = (u16)strlen(buf);
-+		start = iwe_stream_add_point(info, start, stop,
-+			iwe, buf);
-+		memset(iwe, 0, sizeof(*iwe));
-+		iwe->cmd = IWEVGENIE;
-+		iwe->u.data.length = (u16)wpa_len;
-+		start = iwe_stream_add_point(info, start, stop,
-+			iwe, wpa_ie);
-+	}
-+	if (rsn_len > 0) {
-+		memset(buf, 0, MAX_WPA_IE_LEN);
-+		n = sprintf(buf, "rsn_ie=");
-+		for (i = 0; i < rsn_len; i++) {
-+			n += snprintf(buf + n, MAX_WPA_IE_LEN - n,
-+						"%02x", rsn_ie[i]);
-+			if (n >= MAX_WPA_IE_LEN)
-+				break;
-+		}
-+		memset(iwe, 0, sizeof(*iwe));
-+		iwe->cmd = IWEVCUSTOM;
-+		iwe->u.data.length = strlen(buf);
-+		start = iwe_stream_add_point(info, start, stop,
-+			iwe, buf);
-+		memset(iwe, 0, sizeof(*iwe));
-+		iwe->cmd = IWEVGENIE;
-+		iwe->u.data.length = rsn_len;
-+		start = iwe_stream_add_point(info, start, stop, iwe,
-+			rsn_ie);
-+	}
-+
-+	return start;
-+}
-+
-+static noinline_for_stack char *translate_scan_wps(struct iw_request_info *info,
-+						   struct wlan_network *pnetwork,
-+						   struct iw_event *iwe,
-+						   char *start, char *stop)
-+{
-+	/* parsing WPS IE */
-+	u8 wps_ie[512];
-+	uint wps_ielen;
-+
-+	if (r8712_get_wps_ie(pnetwork->network.IEs,
-+	    pnetwork->network.IELength,
-+	    wps_ie, &wps_ielen)) {
-+		if (wps_ielen > 2) {
-+			iwe->cmd = IWEVGENIE;
-+			iwe->u.data.length = (u16)wps_ielen;
-+			start = iwe_stream_add_point(info, start, stop,
-+				iwe, wps_ie);
-+		}
-+	}
-+
-+	return start;
-+}
-+
-+static char *translate_scan(struct _adapter *padapter,
-+			    struct iw_request_info *info,
-+			    struct wlan_network *pnetwork,
-+			    char *start, char *stop)
- {
- 	struct iw_event iwe;
- 	struct ieee80211_ht_cap *pht_capie;
-@@ -240,73 +321,11 @@ static noinline_for_stack char *translate_scan(struct _adapter *padapter,
- 	/* Check if we added any event */
- 	if ((current_val - start) > iwe_stream_lcp_len(info))
- 		start = current_val;
--	/* parsing WPA/WPA2 IE */
--	{
--		u8 buf[MAX_WPA_IE_LEN];
--		u8 wpa_ie[255], rsn_ie[255];
--		u16 wpa_len = 0, rsn_len = 0;
--		int n;
--
--		r8712_get_sec_ie(pnetwork->network.IEs,
--				 pnetwork->network.IELength, rsn_ie, &rsn_len,
--				 wpa_ie, &wpa_len);
--		if (wpa_len > 0) {
--			memset(buf, 0, MAX_WPA_IE_LEN);
--			n = sprintf(buf, "wpa_ie=");
--			for (i = 0; i < wpa_len; i++) {
--				n += snprintf(buf + n, MAX_WPA_IE_LEN - n,
--							"%02x", wpa_ie[i]);
--				if (n >= MAX_WPA_IE_LEN)
--					break;
--			}
--			memset(&iwe, 0, sizeof(iwe));
--			iwe.cmd = IWEVCUSTOM;
--			iwe.u.data.length = (u16)strlen(buf);
--			start = iwe_stream_add_point(info, start, stop,
--				&iwe, buf);
--			memset(&iwe, 0, sizeof(iwe));
--			iwe.cmd = IWEVGENIE;
--			iwe.u.data.length = (u16)wpa_len;
--			start = iwe_stream_add_point(info, start, stop,
--				&iwe, wpa_ie);
--		}
--		if (rsn_len > 0) {
--			memset(buf, 0, MAX_WPA_IE_LEN);
--			n = sprintf(buf, "rsn_ie=");
--			for (i = 0; i < rsn_len; i++) {
--				n += snprintf(buf + n, MAX_WPA_IE_LEN - n,
--							"%02x", rsn_ie[i]);
--				if (n >= MAX_WPA_IE_LEN)
--					break;
--			}
--			memset(&iwe, 0, sizeof(iwe));
--			iwe.cmd = IWEVCUSTOM;
--			iwe.u.data.length = strlen(buf);
--			start = iwe_stream_add_point(info, start, stop,
--				&iwe, buf);
--			memset(&iwe, 0, sizeof(iwe));
--			iwe.cmd = IWEVGENIE;
--			iwe.u.data.length = rsn_len;
--			start = iwe_stream_add_point(info, start, stop, &iwe,
--				rsn_ie);
--		}
--	}
- 
--	{ /* parsing WPS IE */
--		u8 wps_ie[512];
--		uint wps_ielen;
-+	start = translate_scan_wpa(info, pnetwork, &iwe, start, stop);
-+
-+	start = translate_scan_wps(info, pnetwork, &iwe, start, stop);
- 
--		if (r8712_get_wps_ie(pnetwork->network.IEs,
--		    pnetwork->network.IELength,
--		    wps_ie, &wps_ielen)) {
--			if (wps_ielen > 2) {
--				iwe.cmd = IWEVGENIE;
--				iwe.u.data.length = (u16)wps_ielen;
--				start = iwe_stream_add_point(info, start, stop,
--					&iwe, wps_ie);
--			}
--		}
--	}
- 	/* Add quality statistics */
- 	iwe.cmd = IWEVQUAL;
- 	rssi = r8712_signal_scale_mapping(pnetwork->network.Rssi);
--- 
-2.20.0
+Ck9uIDYvMjgvMTkgMjozMCBQTSwgTWF1cm8gQ2FydmFsaG8gQ2hlaGFiIHdyb3RlOgo+IFRoZSBj
+b250ZW50cyBvZiB0aG9zZSBkaXJlY3RvcmllcyB3ZXJlIG9ycGhhbmVkIGF0IHRoZSBkb2N1bWVu
+dGF0aW9uCj4gYm9keS4KPiAKPiBXaGlsZSB0aG9zZSBkaXJlY3RvcmllcyBjb3VsZCBsaWtlbHkg
+YmUgbW92ZWQgdG8gYmUgaW5zaWRlIHNvbWUgZ3VpZGUsCj4gSSdtIG9wdGluZyB0byBqdXN0IGFk
+ZGluZyB0aGVpciBpbmRleGVzIHRvIHRoZSBtYWluIG9uZSwgcmVtb3ZpbmcgdGhlCj4gOm9ycGhh
+bjogYW5kIGFkZGluZyB0aGUgU1BEWCBoZWFkZXIuCj4gCj4gRm9yIHRoZSBkcml2ZXJzLCB0aGUg
+cmF0aW9uYWxlIGlzIHRoYXQgdGhlIGRvY3VtZW50YXRpb24gY29udGFpbnMKPiBhIG1peCBvZiBL
+ZXJuZWxzcGFjZSwgdUFQSSBhbmQgYWRtaW4tZ3VpZGUuIFNvLCBiZXR0ZXIgdG8ga2VlcCB0aGVt
+IG9uCj4gc2VwYXJhdGUgZGlyZWN0b3JpZXMsIGFzIHdlJ3ZlIGJlIGRvaW5nIHdpdGggc2ltaWxh
+ciBzdWJzeXN0ZW0tc3BlY2lmaWMKPiBkb2NzIHRoYXQgd2VyZSBub3Qgc3BsaXQgeWV0Lgo+IAo+
+IEZvciB0aGUgb3RoZXJzLCB3ZWxsLi4uIEknbSB0b28gbGF6eSB0byBkbyB0aGUgbW92ZS4gQWxz
+bywgaXQKPiBzZWVtcyB0byBtYWtlIHNlbnNlIHRvIGtlZXAgYXQgbGVhc3Qgc29tZSBvZiB0aG9z
+ZSBhdCB0aGUgbWFpbgo+IGRpciAobGlrZSBrYnVpbGQsIGZvciBleGFtcGxlKS4gSW4gYW55IGNh
+c2UsIGEgbGF0dGVyIHBhdGNoCj4gY291bGQgZG8gdGhlIG1vdmUuCj4gCj4gU2lnbmVkLW9mZi1i
+eTogTWF1cm8gQ2FydmFsaG8gQ2hlaGFiIDxtY2hlaGFiK3NhbXN1bmdAa2VybmVsLm9yZz4KCkFj
+a2VkLWJ5OiBCYXJ0bG9taWVqIFpvbG5pZXJraWV3aWN6IDxiLnpvbG5pZXJraWVAc2Ftc3VuZy5j
+b20+Cgo+IC0tLQo+ICBEb2N1bWVudGF0aW9uL2Nkcm9tL2luZGV4LnJzdCAgICAgICAgICAgfCAg
+MiArLQo+ICBEb2N1bWVudGF0aW9uL2ZhdWx0LWluamVjdGlvbi9pbmRleC5yc3QgfCAgMiArLQo+
+ICBEb2N1bWVudGF0aW9uL2ZiL2luZGV4LnJzdCAgICAgICAgICAgICAgfCAgMiArLQo+ICBEb2N1
+bWVudGF0aW9uL2ZwZ2EvaW5kZXgucnN0ICAgICAgICAgICAgfCAgMiArLQo+ICBEb2N1bWVudGF0
+aW9uL2lkZS9pbmRleC5yc3QgICAgICAgICAgICAgfCAgMiArLQo+ICBEb2N1bWVudGF0aW9uL2lu
+ZGV4LnJzdCAgICAgICAgICAgICAgICAgfCAxNCArKysrKysrKysrKysrKwo+ICBEb2N1bWVudGF0
+aW9uL2tidWlsZC9pbmRleC5yc3QgICAgICAgICAgfCAgMiArLQo+ICBEb2N1bWVudGF0aW9uL2xp
+dmVwYXRjaC9pbmRleC5yc3QgICAgICAgfCAgMiArLQo+ICBEb2N1bWVudGF0aW9uL25ldGxhYmVs
+L2luZGV4LnJzdCAgICAgICAgfCAgMiArLQo+ICBEb2N1bWVudGF0aW9uL3BjbWNpYS9pbmRleC5y
+c3QgICAgICAgICAgfCAgMiArLQo+ICBEb2N1bWVudGF0aW9uL3Bvd2VyL2luZGV4LnJzdCAgICAg
+ICAgICAgfCAgMiArLQo+ICBEb2N1bWVudGF0aW9uL3RhcmdldC9pbmRleC5yc3QgICAgICAgICAg
+fCAgMiArLQo+ICBEb2N1bWVudGF0aW9uL3RpbWVycy9pbmRleC5yc3QgICAgICAgICAgfCAgMiAr
+LQo+ICBEb2N1bWVudGF0aW9uL3dhdGNoZG9nL2luZGV4LnJzdCAgICAgICAgfCAgMiArLQo+ICAx
+NCBmaWxlcyBjaGFuZ2VkLCAyNyBpbnNlcnRpb25zKCspLCAxMyBkZWxldGlvbnMoLSkKQmVzdCBy
+ZWdhcmRzLAotLQpCYXJ0bG9taWVqIFpvbG5pZXJraWV3aWN6ClNhbXN1bmcgUiZEIEluc3RpdHV0
+ZSBQb2xhbmQKU2Ftc3VuZyBFbGVjdHJvbmljcwpfX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fXwpkcmktZGV2ZWwgbWFpbGluZyBsaXN0CmRyaS1kZXZlbEBsaXN0
+cy5mcmVlZGVza3RvcC5vcmcKaHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcvbWFpbG1hbi9s
+aXN0aW5mby9kcmktZGV2ZWw=
