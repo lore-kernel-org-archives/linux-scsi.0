@@ -1,137 +1,95 @@
-From: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
-Subject: [PATCH 37/39] docs: adds some directories to the main documentation
- index
-Date: Fri, 28 Jun 2019 09:30:30 -0300
-Message-ID: <b26fc645cb2c81fe88ab13616c65664d2c3cead5.1561724493.git.mchehab+samsung@kernel.org>
-References: <cover.1561724493.git.mchehab+samsung@kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH 1/4] [v2] structleak: disable STRUCTLEAK_BYREF in combination with KASAN_STACK
+Date: Fri, 28 Jun 2019 14:37:46 +0200
+Message-ID: <20190628123819.2785504-1-arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <dri-devel-bounces@lists.freedesktop.org>
-In-Reply-To: <cover.1561724493.git.mchehab+samsung@kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
-List-Post: <mailto:dri-devel@lists.freedesktop.org>
-List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: dri-devel-bounces@lists.freedesktop.org
-Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
-To: Linux Doc Mailing List <linux-doc@vger.kernel.org>
-Cc: linux-fbdev@vger.kernel.org, Len Brown <len.brown@intel.com>, linux-fpga@vger.kernel.org, Dominik Brodowski <linux@dominikbrodowski.net>, Masahiro Yamada <yamada.masahiro@socionext.com>, target-devel@vger.kernel.org, Pavel Machek <pavel@ucw.cz>, Mauro Carvalho Chehab <mchehab+samsung@kernel.org>, live-patching@vger.kernel.org, Miroslav Benes <mbenes@suse.cz>, Joe Lawrence <joe.lawrence@redhat.com>, Paul Moore <paul@paul-moore.com>, linux-scsi@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>, linux-kbuild@vger.kernel.org, Guenter Roeck <linux@roeck-us.net>, Petr Mladek <pmladek@suse.com>, linux-watchdog@vger.kernel.org, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Jiri Kosina <jikos@kernel.org>, Akinobu Mita <akinobu.mita@gmail.com>, Mauro Carvalho Chehab <mchehab@infradead.org>, Moritz Fischer <mdf@kernel.org>, dri-devel@lists.freedesktop.orgJosh Poimboeuf <j>
+Content-Transfer-Encoding: 8bit
+Return-path: <netdev-owner@vger.kernel.org>
+Sender: netdev-owner@vger.kernel.org
+To: Kees Cook <keescook@chromium.org>, James Morris <jmorris@namei.org>, "Serge E. Hallyn" <serge@hallyn.com>
+Cc: James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Larry Finger <Larry.Finger@lwfinger.net>, Florian Schilhabel <florian.c.schilhabel@googlemail.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "David S . Miller" <davem@davemloft.net>, Wensong Zhang <wensong@linux-vs.org>, Simon Horman <horms@verge.net.au>, Julian Anastasov <ja@ssi.bg>, Pablo Neira Ayuso <pablo@netfilter.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, devel@driverdev.osuosl.org, netdev@vger.kernel.org, lvs-devel@vger.kernel.org, netfilter-devel@vger.kernel.org, coreteam@netfilter.org, Ard Biesheuvel <ard.biesheuvel@linaro.org>, Arnd
 List-Id: linux-scsi@vger.kernel.org
 
-VGhlIGNvbnRlbnRzIG9mIHRob3NlIGRpcmVjdG9yaWVzIHdlcmUgb3JwaGFuZWQgYXQgdGhlIGRv
-Y3VtZW50YXRpb24KYm9keS4KCldoaWxlIHRob3NlIGRpcmVjdG9yaWVzIGNvdWxkIGxpa2VseSBi
-ZSBtb3ZlZCB0byBiZSBpbnNpZGUgc29tZSBndWlkZSwKSSdtIG9wdGluZyB0byBqdXN0IGFkZGlu
-ZyB0aGVpciBpbmRleGVzIHRvIHRoZSBtYWluIG9uZSwgcmVtb3ZpbmcgdGhlCjpvcnBoYW46IGFu
-ZCBhZGRpbmcgdGhlIFNQRFggaGVhZGVyLgoKRm9yIHRoZSBkcml2ZXJzLCB0aGUgcmF0aW9uYWxl
-IGlzIHRoYXQgdGhlIGRvY3VtZW50YXRpb24gY29udGFpbnMKYSBtaXggb2YgS2VybmVsc3BhY2Us
-IHVBUEkgYW5kIGFkbWluLWd1aWRlLiBTbywgYmV0dGVyIHRvIGtlZXAgdGhlbSBvbgpzZXBhcmF0
-ZSBkaXJlY3RvcmllcywgYXMgd2UndmUgYmUgZG9pbmcgd2l0aCBzaW1pbGFyIHN1YnN5c3RlbS1z
-cGVjaWZpYwpkb2NzIHRoYXQgd2VyZSBub3Qgc3BsaXQgeWV0LgoKRm9yIHRoZSBvdGhlcnMsIHdl
-bGwuLi4gSSdtIHRvbyBsYXp5IHRvIGRvIHRoZSBtb3ZlLiBBbHNvLCBpdApzZWVtcyB0byBtYWtl
-IHNlbnNlIHRvIGtlZXAgYXQgbGVhc3Qgc29tZSBvZiB0aG9zZSBhdCB0aGUgbWFpbgpkaXIgKGxp
-a2Uga2J1aWxkLCBmb3IgZXhhbXBsZSkuIEluIGFueSBjYXNlLCBhIGxhdHRlciBwYXRjaApjb3Vs
-ZCBkbyB0aGUgbW92ZS4KClNpZ25lZC1vZmYtYnk6IE1hdXJvIENhcnZhbGhvIENoZWhhYiA8bWNo
-ZWhhYitzYW1zdW5nQGtlcm5lbC5vcmc+Ci0tLQogRG9jdW1lbnRhdGlvbi9jZHJvbS9pbmRleC5y
-c3QgICAgICAgICAgIHwgIDIgKy0KIERvY3VtZW50YXRpb24vZmF1bHQtaW5qZWN0aW9uL2luZGV4
-LnJzdCB8ICAyICstCiBEb2N1bWVudGF0aW9uL2ZiL2luZGV4LnJzdCAgICAgICAgICAgICAgfCAg
-MiArLQogRG9jdW1lbnRhdGlvbi9mcGdhL2luZGV4LnJzdCAgICAgICAgICAgIHwgIDIgKy0KIERv
-Y3VtZW50YXRpb24vaWRlL2luZGV4LnJzdCAgICAgICAgICAgICB8ICAyICstCiBEb2N1bWVudGF0
-aW9uL2luZGV4LnJzdCAgICAgICAgICAgICAgICAgfCAxNCArKysrKysrKysrKysrKwogRG9jdW1l
-bnRhdGlvbi9rYnVpbGQvaW5kZXgucnN0ICAgICAgICAgIHwgIDIgKy0KIERvY3VtZW50YXRpb24v
-bGl2ZXBhdGNoL2luZGV4LnJzdCAgICAgICB8ICAyICstCiBEb2N1bWVudGF0aW9uL25ldGxhYmVs
-L2luZGV4LnJzdCAgICAgICAgfCAgMiArLQogRG9jdW1lbnRhdGlvbi9wY21jaWEvaW5kZXgucnN0
-ICAgICAgICAgIHwgIDIgKy0KIERvY3VtZW50YXRpb24vcG93ZXIvaW5kZXgucnN0ICAgICAgICAg
-ICB8ICAyICstCiBEb2N1bWVudGF0aW9uL3RhcmdldC9pbmRleC5yc3QgICAgICAgICAgfCAgMiAr
-LQogRG9jdW1lbnRhdGlvbi90aW1lcnMvaW5kZXgucnN0ICAgICAgICAgIHwgIDIgKy0KIERvY3Vt
-ZW50YXRpb24vd2F0Y2hkb2cvaW5kZXgucnN0ICAgICAgICB8ICAyICstCiAxNCBmaWxlcyBjaGFu
-Z2VkLCAyNyBpbnNlcnRpb25zKCspLCAxMyBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9Eb2N1
-bWVudGF0aW9uL2Nkcm9tL2luZGV4LnJzdCBiL0RvY3VtZW50YXRpb24vY2Ryb20vaW5kZXgucnN0
-CmluZGV4IGVmYmQ1ZDExMTgyNS4uMzM4YWQ1Zjk0ZTdjIDEwMDY0NAotLS0gYS9Eb2N1bWVudGF0
-aW9uL2Nkcm9tL2luZGV4LnJzdAorKysgYi9Eb2N1bWVudGF0aW9uL2Nkcm9tL2luZGV4LnJzdApA
-QCAtMSw0ICsxLDQgQEAKLTpvcnBoYW46CisuLiBTUERYLUxpY2Vuc2UtSWRlbnRpZmllcjogR1BM
-LTIuMAogCiA9PT09PQogY2Ryb20KZGlmZiAtLWdpdCBhL0RvY3VtZW50YXRpb24vZmF1bHQtaW5q
-ZWN0aW9uL2luZGV4LnJzdCBiL0RvY3VtZW50YXRpb24vZmF1bHQtaW5qZWN0aW9uL2luZGV4LnJz
-dAppbmRleCA5MmI1NjM5ZWQwN2EuLjg0MDhhOGE5MWIzNCAxMDA2NDQKLS0tIGEvRG9jdW1lbnRh
-dGlvbi9mYXVsdC1pbmplY3Rpb24vaW5kZXgucnN0CisrKyBiL0RvY3VtZW50YXRpb24vZmF1bHQt
-aW5qZWN0aW9uL2luZGV4LnJzdApAQCAtMSw0ICsxLDQgQEAKLTpvcnBoYW46CisuLiBTUERYLUxp
-Y2Vuc2UtSWRlbnRpZmllcjogR1BMLTIuMAogCiA9PT09PT09PT09PT09PT0KIGZhdWx0LWluamVj
-dGlvbgpkaWZmIC0tZ2l0IGEvRG9jdW1lbnRhdGlvbi9mYi9pbmRleC5yc3QgYi9Eb2N1bWVudGF0
-aW9uL2ZiL2luZGV4LnJzdAppbmRleCBkNDczMTM3MTQ2MzUuLmJhZjAyMzkzZDhlZSAxMDA2NDQK
-LS0tIGEvRG9jdW1lbnRhdGlvbi9mYi9pbmRleC5yc3QKKysrIGIvRG9jdW1lbnRhdGlvbi9mYi9p
-bmRleC5yc3QKQEAgLTEsNCArMSw0IEBACi06b3JwaGFuOgorLi4gU1BEWC1MaWNlbnNlLUlkZW50
-aWZpZXI6IEdQTC0yLjAKIAogPT09PT09PT09PT09CiBGcmFtZSBCdWZmZXIKZGlmZiAtLWdpdCBh
-L0RvY3VtZW50YXRpb24vZnBnYS9pbmRleC5yc3QgYi9Eb2N1bWVudGF0aW9uL2ZwZ2EvaW5kZXgu
-cnN0CmluZGV4IDJjODdkMWVhMDg0Zi4uZjgwZjk1NjY3Y2EyIDEwMDY0NAotLS0gYS9Eb2N1bWVu
-dGF0aW9uL2ZwZ2EvaW5kZXgucnN0CisrKyBiL0RvY3VtZW50YXRpb24vZnBnYS9pbmRleC5yc3QK
-QEAgLTEsNCArMSw0IEBACi06b3JwaGFuOgorLi4gU1BEWC1MaWNlbnNlLUlkZW50aWZpZXI6IEdQ
-TC0yLjAKIAogPT09PQogZnBnYQpkaWZmIC0tZ2l0IGEvRG9jdW1lbnRhdGlvbi9pZGUvaW5kZXgu
-cnN0IGIvRG9jdW1lbnRhdGlvbi9pZGUvaW5kZXgucnN0CmluZGV4IDQ1YmMxMmQzOTU3Zi4uODEz
-ZGZlNjExYTMxIDEwMDY0NAotLS0gYS9Eb2N1bWVudGF0aW9uL2lkZS9pbmRleC5yc3QKKysrIGIv
-RG9jdW1lbnRhdGlvbi9pZGUvaW5kZXgucnN0CkBAIC0xLDQgKzEsNCBAQAotOm9ycGhhbjoKKy4u
-IFNQRFgtTGljZW5zZS1JZGVudGlmaWVyOiBHUEwtMi4wCiAKID09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT0KIEludGVncmF0ZWQgRHJpdmUgRWxlY3Ryb25pY3MgKElERSkKZGlmZiAt
-LWdpdCBhL0RvY3VtZW50YXRpb24vaW5kZXgucnN0IGIvRG9jdW1lbnRhdGlvbi9pbmRleC5yc3QK
-aW5kZXggZTY5ZDJmZGU3NzM1Li4wNzVjNzMyNTAxYTIgMTAwNjQ0Ci0tLSBhL0RvY3VtZW50YXRp
-b24vaW5kZXgucnN0CisrKyBiL0RvY3VtZW50YXRpb24vaW5kZXgucnN0CkBAIC0zNSw2ICszNSw3
-IEBAIHRyeWluZyB0byBnZXQgaXQgdG8gd29yayBvcHRpbWFsbHkgb24gYSBnaXZlbiBzeXN0ZW0u
-CiAgICA6bWF4ZGVwdGg6IDIKIAogICAgYWRtaW4tZ3VpZGUvaW5kZXgKKyAgIGtidWlsZC9pbmRl
-eAogCiBGaXJtd2FyZS1yZWxhdGVkIGRvY3VtZW50YXRpb24KIC0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLQpAQCAtNzcsNiArNzgsOSBAQCBtZXJnZWQgbXVjaCBlYXNpZXIuCiAgICBrZXJu
-ZWwtaGFja2luZy9pbmRleAogICAgdHJhY2UvaW5kZXgKICAgIG1haW50YWluZXIvaW5kZXgKKyAg
-IGZhdWx0LWluamVjdGlvbi9pbmRleAorICAgbGl2ZXBhdGNoL2luZGV4CisKIAogS2VybmVsIEFQ
-SSBkb2N1bWVudGF0aW9uCiAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KQEAgLTk0LDEyICs5OCwy
-MiBAQCBuZWVkZWQpLgogICAgY29yZS1hcGkvaW5kZXgKICAgIGFjY291bnRpbmcvaW5kZXgKICAg
-IGJsb2NrL2luZGV4CisgICBjZHJvbS9pbmRleAorICAgaWRlL2luZGV4CisgICBmYi9pbmRleAor
-ICAgZnBnYS9pbmRleAogICAgaGlkL2luZGV4CiAgICBpaW8vaW5kZXgKICAgIGluZmluaWJhbmQv
-aW5kZXgKICAgIGxlZHMvaW5kZXgKICAgIG1lZGlhL2luZGV4CisgICBuZXRsYWJlbC9pbmRleAog
-ICAgbmV0d29ya2luZy9pbmRleAorICAgcGNtY2lhL2luZGV4CisgICBwb3dlci9pbmRleAorICAg
-dGFyZ2V0L2luZGV4CisgICB0aW1lcnMvaW5kZXgKKyAgIHdhdGNoZG9nL2luZGV4CiAgICBpbnB1
-dC9pbmRleAogICAgaHdtb24vaW5kZXgKICAgIGdwdS9pbmRleApkaWZmIC0tZ2l0IGEvRG9jdW1l
-bnRhdGlvbi9rYnVpbGQvaW5kZXgucnN0IGIvRG9jdW1lbnRhdGlvbi9rYnVpbGQvaW5kZXgucnN0
-CmluZGV4IDQyZDRjYmU0NDYwYy4uZTMyM2EzZjJjYzgxIDEwMDY0NAotLS0gYS9Eb2N1bWVudGF0
-aW9uL2tidWlsZC9pbmRleC5yc3QKKysrIGIvRG9jdW1lbnRhdGlvbi9rYnVpbGQvaW5kZXgucnN0
-CkBAIC0xLDQgKzEsNCBAQAotOm9ycGhhbjoKKy4uIFNQRFgtTGljZW5zZS1JZGVudGlmaWVyOiBH
-UEwtMi4wCiAKID09PT09PT09PT09PT09PT09PT0KIEtlcm5lbCBCdWlsZCBTeXN0ZW0KZGlmZiAt
-LWdpdCBhL0RvY3VtZW50YXRpb24vbGl2ZXBhdGNoL2luZGV4LnJzdCBiL0RvY3VtZW50YXRpb24v
-bGl2ZXBhdGNoL2luZGV4LnJzdAppbmRleCBlZGQyOTFkNTE4NDcuLjE3Njc0YTllMjFiMiAxMDA2
-NDQKLS0tIGEvRG9jdW1lbnRhdGlvbi9saXZlcGF0Y2gvaW5kZXgucnN0CisrKyBiL0RvY3VtZW50
-YXRpb24vbGl2ZXBhdGNoL2luZGV4LnJzdApAQCAtMSw0ICsxLDQgQEAKLTpvcnBoYW46CisuLiBT
-UERYLUxpY2Vuc2UtSWRlbnRpZmllcjogR1BMLTIuMAogCiA9PT09PT09PT09PT09PT09PT09CiBL
-ZXJuZWwgTGl2ZXBhdGNoaW5nCmRpZmYgLS1naXQgYS9Eb2N1bWVudGF0aW9uL25ldGxhYmVsL2lu
-ZGV4LnJzdCBiL0RvY3VtZW50YXRpb24vbmV0bGFiZWwvaW5kZXgucnN0CmluZGV4IDQ3ZjFlMGU1
-YWNkMS4uOTg0ZTFiMTkxYjEyIDEwMDY0NAotLS0gYS9Eb2N1bWVudGF0aW9uL25ldGxhYmVsL2lu
-ZGV4LnJzdAorKysgYi9Eb2N1bWVudGF0aW9uL25ldGxhYmVsL2luZGV4LnJzdApAQCAtMSw0ICsx
-LDQgQEAKLTpvcnBoYW46CisuLiBTUERYLUxpY2Vuc2UtSWRlbnRpZmllcjogR1BMLTIuMAogCiA9
-PT09PT09PQogTmV0TGFiZWwKZGlmZiAtLWdpdCBhL0RvY3VtZW50YXRpb24vcGNtY2lhL2luZGV4
-LnJzdCBiL0RvY3VtZW50YXRpb24vcGNtY2lhL2luZGV4LnJzdAppbmRleCA3NzljODUyNzEwOWUu
-LjdhZTFmNjJmY2ExNCAxMDA2NDQKLS0tIGEvRG9jdW1lbnRhdGlvbi9wY21jaWEvaW5kZXgucnN0
-CisrKyBiL0RvY3VtZW50YXRpb24vcGNtY2lhL2luZGV4LnJzdApAQCAtMSw0ICsxLDQgQEAKLTpv
-cnBoYW46CisuLiBTUERYLUxpY2Vuc2UtSWRlbnRpZmllcjogR1BMLTIuMAogCiA9PT09PT0KIHBj
-bWNpYQpkaWZmIC0tZ2l0IGEvRG9jdW1lbnRhdGlvbi9wb3dlci9pbmRleC5yc3QgYi9Eb2N1bWVu
-dGF0aW9uL3Bvd2VyL2luZGV4LnJzdAppbmRleCAyMDQxNWYyMWU0OGEuLjAwMmU0Mjc0NTI2MyAx
-MDA2NDQKLS0tIGEvRG9jdW1lbnRhdGlvbi9wb3dlci9pbmRleC5yc3QKKysrIGIvRG9jdW1lbnRh
-dGlvbi9wb3dlci9pbmRleC5yc3QKQEAgLTEsNCArMSw0IEBACi06b3JwaGFuOgorLi4gU1BEWC1M
-aWNlbnNlLUlkZW50aWZpZXI6IEdQTC0yLjAKIAogPT09PT09PT09PT09PT09PQogUG93ZXIgTWFu
-YWdlbWVudApkaWZmIC0tZ2l0IGEvRG9jdW1lbnRhdGlvbi90YXJnZXQvaW5kZXgucnN0IGIvRG9j
-dW1lbnRhdGlvbi90YXJnZXQvaW5kZXgucnN0CmluZGV4IGI2OGY0ODk4MjM5Mi4uNGIyNGY4MWY3
-NDdlIDEwMDY0NAotLS0gYS9Eb2N1bWVudGF0aW9uL3RhcmdldC9pbmRleC5yc3QKKysrIGIvRG9j
-dW1lbnRhdGlvbi90YXJnZXQvaW5kZXgucnN0CkBAIC0xLDQgKzEsNCBAQAotOm9ycGhhbjoKKy4u
-IFNQRFgtTGljZW5zZS1JZGVudGlmaWVyOiBHUEwtMi4wCiAKID09PT09PT09PT09PT09PT09PQog
-VENNIFZpcnR1YWwgRGV2aWNlCmRpZmYgLS1naXQgYS9Eb2N1bWVudGF0aW9uL3RpbWVycy9pbmRl
-eC5yc3QgYi9Eb2N1bWVudGF0aW9uL3RpbWVycy9pbmRleC5yc3QKaW5kZXggOTFmNmY4MjYzYzQ4
-Li5kZjUxMGFkMGM5ODkgMTAwNjQ0Ci0tLSBhL0RvY3VtZW50YXRpb24vdGltZXJzL2luZGV4LnJz
-dAorKysgYi9Eb2N1bWVudGF0aW9uL3RpbWVycy9pbmRleC5yc3QKQEAgLTEsNCArMSw0IEBACi06
-b3JwaGFuOgorLi4gU1BEWC1MaWNlbnNlLUlkZW50aWZpZXI6IEdQTC0yLjAKIAogPT09PT09CiB0
-aW1lcnMKZGlmZiAtLWdpdCBhL0RvY3VtZW50YXRpb24vd2F0Y2hkb2cvaW5kZXgucnN0IGIvRG9j
-dW1lbnRhdGlvbi93YXRjaGRvZy9pbmRleC5yc3QKaW5kZXggMzNhMGRlNjMxZTg0Li5jMTc3NjQ1
-MDgxZDggMTAwNjQ0Ci0tLSBhL0RvY3VtZW50YXRpb24vd2F0Y2hkb2cvaW5kZXgucnN0CisrKyBi
-L0RvY3VtZW50YXRpb24vd2F0Y2hkb2cvaW5kZXgucnN0CkBAIC0xLDQgKzEsNCBAQAotOm9ycGhh
-bjoKKy4uIFNQRFgtTGljZW5zZS1JZGVudGlmaWVyOiBHUEwtMi4wCiAKID09PT09PT09PT09PT09
-PT09PT09PT0KIExpbnV4IFdhdGNoZG9nIFN1cHBvcnQKLS0gCjIuMjEuMAoKX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KZHJpLWRldmVsIG1haWxpbmcgbGlz
-dApkcmktZGV2ZWxAbGlzdHMuZnJlZWRlc2t0b3Aub3JnCmh0dHBzOi8vbGlzdHMuZnJlZWRlc2t0
-b3Aub3JnL21haWxtYW4vbGlzdGluZm8vZHJpLWRldmVs
+The combination of KASAN_STACK and GCC_PLUGIN_STRUCTLEAK_BYREF
+leads to much larger kernel stack usage, as seen from the warnings
+about functions that now exceed the 2048 byte limit:
+
+drivers/media/i2c/tvp5150.c:253:1: error: the frame size of 3936 bytes is larger than 2048 bytes
+drivers/media/tuners/r820t.c:1327:1: error: the frame size of 2816 bytes is larger than 2048 bytes
+drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c:16552:1: error: the frame size of 3144 bytes is larger than 2048 bytes [-Werror=frame-larger-than=]
+fs/ocfs2/aops.c:1892:1: error: the frame size of 2088 bytes is larger than 2048 bytes
+fs/ocfs2/dlm/dlmrecovery.c:737:1: error: the frame size of 2088 bytes is larger than 2048 bytes
+fs/ocfs2/namei.c:1677:1: error: the frame size of 2584 bytes is larger than 2048 bytes
+fs/ocfs2/super.c:1186:1: error: the frame size of 2640 bytes is larger than 2048 bytes
+fs/ocfs2/xattr.c:3678:1: error: the frame size of 2176 bytes is larger than 2048 bytes
+net/bluetooth/l2cap_core.c:7056:1: error: the frame size of 2144 bytes is larger than 2048 bytes [-Werror=frame-larger-than=]
+net/bluetooth/l2cap_core.c: In function 'l2cap_recv_frame':
+net/bridge/br_netlink.c:1505:1: error: the frame size of 2448 bytes is larger than 2048 bytes
+net/ieee802154/nl802154.c:548:1: error: the frame size of 2232 bytes is larger than 2048 bytes
+net/wireless/nl80211.c:1726:1: error: the frame size of 2224 bytes is larger than 2048 bytes
+net/wireless/nl80211.c:2357:1: error: the frame size of 4584 bytes is larger than 2048 bytes
+net/wireless/nl80211.c:5108:1: error: the frame size of 2760 bytes is larger than 2048 bytes
+net/wireless/nl80211.c:6472:1: error: the frame size of 2112 bytes is larger than 2048 bytes
+
+The structleak plugin was previously disabled for CONFIG_COMPILE_TEST,
+but meant we missed some bugs, so this time we should address them.
+
+The frame size warnings are distracting, and risking a kernel stack
+overflow is generally not beneficial to performance, so it may be best
+to disallow that particular combination. This can be done by turning
+off either one. I picked the dependency in GCC_PLUGIN_STRUCTLEAK_BYREF
+and GCC_PLUGIN_STRUCTLEAK_BYREF_ALL, as this option is designed to
+make uninitialized stack usage less harmful when enabled on its own,
+but it also prevents KASAN from detecting those cases in which it was
+in fact needed.
+
+KASAN_STACK is currently implied by KASAN on gcc, but could be made a
+user selectable option if we want to allow combining (non-stack) KASAN
+with GCC_PLUGIN_STRUCTLEAK_BYREF.
+
+Note that it would be possible to specifically address the files that
+print the warning, but presumably the overall stack usage is still
+significantly higher than in other configurations, so this would not
+address the full problem.
+
+I could not test this with CONFIG_INIT_STACK_ALL, which may or may not
+suffer from a similar problem.
+
+Fixes: 81a56f6dcd20 ("gcc-plugins: structleak: Generalize to all variable types")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+[v2] do it for both GCC_PLUGIN_STRUCTLEAK_BYREF and GCC_PLUGIN_STRUCTLEAK_BYREF_ALL.
+---
+ security/Kconfig.hardening | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/security/Kconfig.hardening b/security/Kconfig.hardening
+index a1ffe2eb4d5f..af4c979b38ee 100644
+--- a/security/Kconfig.hardening
++++ b/security/Kconfig.hardening
+@@ -61,6 +61,7 @@ choice
+ 	config GCC_PLUGIN_STRUCTLEAK_BYREF
+ 		bool "zero-init structs passed by reference (strong)"
+ 		depends on GCC_PLUGINS
++		depends on !(KASAN && KASAN_STACK=1)
+ 		select GCC_PLUGIN_STRUCTLEAK
+ 		help
+ 		  Zero-initialize any structures on the stack that may
+@@ -70,9 +71,15 @@ choice
+ 		  exposures, like CVE-2017-1000410:
+ 		  https://git.kernel.org/linus/06e7e776ca4d3654
+ 
++		  As a side-effect, this keeps a lot of variables on the
++		  stack that can otherwise be optimized out, so combining
++		  this with CONFIG_KASAN_STACK can lead to a stack overflow
++		  and is disallowed.
++
+ 	config GCC_PLUGIN_STRUCTLEAK_BYREF_ALL
+ 		bool "zero-init anything passed by reference (very strong)"
+ 		depends on GCC_PLUGINS
++		depends on !(KASAN && KASAN_STACK=1)
+ 		select GCC_PLUGIN_STRUCTLEAK
+ 		help
+ 		  Zero-initialize any stack variables that may be passed
+-- 
+2.20.0
