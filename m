@@ -1,64 +1,42 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 5.2-rc6
-Date: Fri, 28 Jun 2019 16:48:23 -0700
-Message-ID: <1561765703.5883.12.camel@HansenPartnership.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
+Subject: [PATCH 1/4] megaraid_sas: Fix calculation of target ID
+Date: Fri, 28 Jun 2019 18:02:12 -0700
+Message-ID: <1561770132-27408-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, martin.petersen@oracle.com
+Cc: kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, kiran-kumar.kasturi@broadcom.com, sankar.patra@broadcom.com, sasikumar.pc@broadcom.com, chandrakanth.patil@broadcom.com, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-One simple fix for a driver use after free.
+In megasas_get_target_prop(), driver is incorrectly calculating the
+target ID for devices with channel 1 and 3.
+Due to this, firmware will either fail the command (if there is no
+device with the target id sent from driver) or could return the
+properties for a target which was not intended.
+Devices could end up with the wrong queue depth due to this.
 
-The patch is available here:
+Fix target id calculation for channel 1 and 3.
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-
-The short changelog is:
-
-Jan Kara (1):
-      scsi: vmw_pscsi: Fix use-after-free in pvscsi_queue_lck()
-
-And the diffstat:
-
- drivers/scsi/vmw_pvscsi.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
-
-With full diff below.
-
-James
-
+Fixes: 96188a89cc6d ("scsi: megaraid_sas: NVME interface target prop added")
+Cc: stable@vger.kernel.org
+Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 ---
+ drivers/scsi/megaraid/megaraid_sas_base.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
-index ecee4b3ff073..377b07b2feeb 100644
---- a/drivers/scsi/vmw_pvscsi.c
-+++ b/drivers/scsi/vmw_pvscsi.c
-@@ -763,6 +763,7 @@ static int pvscsi_queue_lck(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd
- 	struct pvscsi_adapter *adapter = shost_priv(host);
- 	struct pvscsi_ctx *ctx;
- 	unsigned long flags;
-+	unsigned char op;
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index b4c0bbc..9321878 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -6558,7 +6558,8 @@ megasas_get_target_prop(struct megasas_instance *instance,
+ 	int ret;
+ 	struct megasas_cmd *cmd;
+ 	struct megasas_dcmd_frame *dcmd;
+-	u16 targetId = (sdev->channel % 2) + sdev->id;
++	u16 targetId = ((sdev->channel % 2) * MEGASAS_MAX_DEV_PER_CHANNEL) +
++			sdev->id;
  
- 	spin_lock_irqsave(&adapter->hw_lock, flags);
+ 	cmd = megasas_get_cmd(instance);
  
-@@ -775,13 +776,14 @@ static int pvscsi_queue_lck(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd
- 	}
- 
- 	cmd->scsi_done = done;
-+	op = cmd->cmnd[0];
- 
- 	dev_dbg(&cmd->device->sdev_gendev,
--		"queued cmd %p, ctx %p, op=%x\n", cmd, ctx, cmd->cmnd[0]);
-+		"queued cmd %p, ctx %p, op=%x\n", cmd, ctx, op);
- 
- 	spin_unlock_irqrestore(&adapter->hw_lock, flags);
- 
--	pvscsi_kick_io(adapter, cmd->cmnd[0]);
-+	pvscsi_kick_io(adapter, op);
- 
- 	return 0;
- }
+-- 
+2.9.5
