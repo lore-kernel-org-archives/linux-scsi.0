@@ -1,42 +1,24 @@
-From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Subject: [PATCH 1/4] megaraid_sas: Fix calculation of target ID
-Date: Fri, 28 Jun 2019 18:02:12 -0700
-Message-ID: <1561770132-27408-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
-Return-path: <stable-owner@vger.kernel.org>
-Sender: stable-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, martin.petersen@oracle.com
-Cc: kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, kiran-kumar.kasturi@broadcom.com, sankar.patra@broadcom.com, sasikumar.pc@broadcom.com, chandrakanth.patil@broadcom.com, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>, stable@vger.kernel.org
+From: pr-tracker-bot@kernel.org
+Subject: Re: [GIT PULL] SCSI fixes for 5.2-rc6
+Date: Sat, 29 Jun 2019 09:30:05 +0000
+Message-ID: <156180060583.8003.14079749695911722306.pr-tracker-bot@kernel.org>
+References: <1561765703.5883.12.camel@HansenPartnership.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1561765703.5883.12.camel@HansenPartnership.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-In megasas_get_target_prop(), driver is incorrectly calculating the
-target ID for devices with channel 1 and 3.
-Due to this, firmware will either fail the command (if there is no
-device with the target id sent from driver) or could return the
-properties for a target which was not intended.
-Devices could end up with the wrong queue depth due to this.
+The pull request you sent on Fri, 28 Jun 2019 16:48:23 -0700:
 
-Fix target id calculation for channel 1 and 3.
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-Fixes: 96188a89cc6d ("scsi: megaraid_sas: NVME interface target prop added")
-Cc: stable@vger.kernel.org
-Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
----
- drivers/scsi/megaraid/megaraid_sas_base.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/5b607ba862f30364aef0b0d40cab8afccf339616
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index b4c0bbc..9321878 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -6558,7 +6558,8 @@ megasas_get_target_prop(struct megasas_instance *instance,
- 	int ret;
- 	struct megasas_cmd *cmd;
- 	struct megasas_dcmd_frame *dcmd;
--	u16 targetId = (sdev->channel % 2) + sdev->id;
-+	u16 targetId = ((sdev->channel % 2) * MEGASAS_MAX_DEV_PER_CHANNEL) +
-+			sdev->id;
- 
- 	cmd = megasas_get_cmd(instance);
- 
+Thank you!
+
 -- 
-2.9.5
+Deet-doot-dot, I am a bot.
+https://korg.wiki.kernel.org/userdoc/prtracker
