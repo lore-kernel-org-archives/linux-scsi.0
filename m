@@ -1,105 +1,120 @@
-From: Julian Anastasov <ja@ssi.bg>
-Subject: Re: [PATCH 4/4] ipvs: reduce kernel stack usage
-Date: Sun, 30 Jun 2019 23:36:41 +0300 (EEST)
-Message-ID: <alpine.LFD.2.21.1906302308280.3788@ja.home.ssi.bg>
-References: <20190628123819.2785504-1-arnd@arndb.de> <20190628123819.2785504-4-arnd@arndb.de>
+From: Damien Le Moal <damien.lemoal@wdc.com>
+Subject: [PATCH V6 1/4] block: Allow mapping of vmalloc-ed buffers
+Date: Mon,  1 Jul 2019 14:09:15 +0900
+Message-ID: <20190701050918.27511-2-damien.lemoal@wdc.com>
+References: <20190701050918.27511-1-damien.lemoal@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <20190628123819.2785504-4-arnd@arndb.de>
-Sender: netdev-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Kees Cook <keescook@chromium.org>, Wensong Zhang <wensong@linux-vs.org>, Simon Horman <horms@verge.net.au>, "David S. Miller" <davem@davemloft.net>, Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>, Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>, Pablo Neira Ayuso <pablo@netfilter.org>, Jozsef Kadlecsik <kadlec@netfilter.org>, Florian Westphal <fw@strlen.de>, James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Larry Finger <Larry.Finger@lwfinger.net>, Florian Schilhabel <florian.c.schilhabel@googlemail.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, James Morris <jmorris@namei.org>, linux-scsi@vger.kernel.org, linux-kernel@vger
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <20190701050918.27511-1-damien.lemoal@wdc.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, dm-devel@redhat.com, Mike Snitzer <snitzer@redhat.com>, linux-f2fs-devel@lists.sourceforge.net, Jaegeuk Kim <jaegeuk@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, Bart Van Assche <bvanassche@acm.org>
 List-Id: linux-scsi@vger.kernel.org
 
+To allow the SCSI subsystem scsi_execute_req() function to issue
+requests using large buffers that are better allocated with vmalloc()
+rather than kmalloc(), modify bio_map_kern() to allow passing a buffer
+allocated with vmalloc().
 
-	Hello,
+To do so, detect vmalloc-ed buffers using is_vmalloc_addr(). For
+vmalloc-ed buffers, flush the buffer using flush_kernel_vmap_range(),
+use vmalloc_to_page() instead of virt_to_page() to obtain the pages of
+the buffer, and invalidate the buffer addresses with
+invalidate_kernel_vmap_range() on completion of read BIOs. This last
+point is executed using the function bio_invalidate_vmalloc_pages()
+which is defined only if the architecture defines
+ARCH_HAS_FLUSH_KERNEL_DCACHE_PAGE, that is, if the architecture
+actually needs the invalidation done.
 
-On Fri, 28 Jun 2019, Arnd Bergmann wrote:
+Fixes: 515ce6061312 ("scsi: sd_zbc: Fix sd_zbc_report_zones() buffer allocation")
+Fixes: e76239a3748c ("block: add a report_zones method")
+Cc: stable@vger.kernel.org
+Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+Reviewed-by: Ming Lei <ming.lei@redhat.com>
+---
+ block/bio.c | 28 +++++++++++++++++++++++++++-
+ 1 file changed, 27 insertions(+), 1 deletion(-)
 
-> With the new CONFIG_GCC_PLUGIN_STRUCTLEAK_BYREF_ALL option, the stack
-> usage in the ipvs debug output grows because each instance of
-> IP_VS_DBG_BUF() now has its own buffer of 160 bytes that add up
-> rather than reusing the stack slots:
-> 
-> net/netfilter/ipvs/ip_vs_core.c: In function 'ip_vs_sched_persist':
-> net/netfilter/ipvs/ip_vs_core.c:427:1: error: the frame size of 1052 bytes is larger than 1024 bytes [-Werror=frame-larger-than=]
-> net/netfilter/ipvs/ip_vs_core.c: In function 'ip_vs_new_conn_out':
-> net/netfilter/ipvs/ip_vs_core.c:1231:1: error: the frame size of 1048 bytes is larger than 1024 bytes [-Werror=frame-larger-than=]
-> net/netfilter/ipvs/ip_vs_ftp.c: In function 'ip_vs_ftp_out':
-> net/netfilter/ipvs/ip_vs_ftp.c:397:1: error: the frame size of 1104 bytes is larger than 1024 bytes [-Werror=frame-larger-than=]
-> net/netfilter/ipvs/ip_vs_ftp.c: In function 'ip_vs_ftp_in':
-> net/netfilter/ipvs/ip_vs_ftp.c:555:1: error: the frame size of 1200 bytes is larger than 1024 bytes [-Werror=frame-larger-than=]
-> 
-> Since printk() already has a way to print IPv4/IPv6 addresses using
-> the %pIS format string, use that instead, combined with a macro that
-> creates a local sockaddr structure on the stack. These will still
-> add up, but the stack frames are now under 200 bytes.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> ---
-> I'm not sure this actually does what I think it does. Someone
-> needs to verify that we correctly print the addresses here.
-> I've also only added three files that caused the warning messages
-> to be reported. There are still a lot of other instances of
-> IP_VS_DBG_BUF() that could be converted the same way after the
-> basic idea is confirmed.
-> ---
->  include/net/ip_vs.h             | 71 +++++++++++++++++++--------------
->  net/netfilter/ipvs/ip_vs_core.c | 44 ++++++++++----------
->  net/netfilter/ipvs/ip_vs_ftp.c  | 20 +++++-----
->  3 files changed, 72 insertions(+), 63 deletions(-)
-> 
-> diff --git a/include/net/ip_vs.h b/include/net/ip_vs.h
-> index 3759167f91f5..3dfbeef67be6 100644
-> --- a/include/net/ip_vs.h
-> +++ b/include/net/ip_vs.h
-> @@ -227,6 +227,16 @@ static inline const char *ip_vs_dbg_addr(int af, char *buf, size_t buf_len,
->  		       sizeof(ip_vs_dbg_buf), addr,			\
->  		       &ip_vs_dbg_idx)
->  
-> +#define IP_VS_DBG_SOCKADDR4(fam, addr, port)				\
-> +	(struct sockaddr*)&(struct sockaddr_in)				\
-> +	{ .sin_family = (fam), .sin_addr = (addr)->in, .sin_port = (port) }
-> +#define IP_VS_DBG_SOCKADDR6(fam, addr, port)				\
-> +	(struct sockaddr*)&(struct sockaddr_in6) \
-> +	{ .sin6_family = (fam), .sin6_addr = (addr)->in6, .sin6_port = (port) }
-> +#define IP_VS_DBG_SOCKADDR(fam, addr, port) (fam == AF_INET ?		\
-> +			IP_VS_DBG_SOCKADDR4(fam, addr, port) :		\
-> +			IP_VS_DBG_SOCKADDR6(fam, addr, port))
-> +
->  #define IP_VS_DBG(level, msg, ...)					\
->  	do {								\
->  		if (level <= ip_vs_get_debug_level())			\
-> @@ -251,6 +261,7 @@ static inline const char *ip_vs_dbg_addr(int af, char *buf, size_t buf_len,
->  #else	/* NO DEBUGGING at ALL */
->  #define IP_VS_DBG_BUF(level, msg...)  do {} while (0)
->  #define IP_VS_ERR_BUF(msg...)  do {} while (0)
-> +#define IP_VS_DBG_SOCKADDR(fam, addr, port) NULL
->  #define IP_VS_DBG(level, msg...)  do {} while (0)
->  #define IP_VS_DBG_RL(msg...)  do {} while (0)
->  #define IP_VS_DBG_PKT(level, af, pp, skb, ofs, msg)	do {} while (0)
-> @@ -1244,31 +1255,31 @@ static inline void ip_vs_control_del(struct ip_vs_conn *cp)
->  {
->  	struct ip_vs_conn *ctl_cp = cp->control;
->  	if (!ctl_cp) {
-> -		IP_VS_ERR_BUF("request control DEL for uncontrolled: "
-> -			      "%s:%d to %s:%d\n",
-> -			      IP_VS_DBG_ADDR(cp->af, &cp->caddr),
-> -			      ntohs(cp->cport),
-> -			      IP_VS_DBG_ADDR(cp->af, &cp->vaddr),
-> -			      ntohs(cp->vport));
-> +		pr_err("request control DEL for uncontrolled: "
-> +		       "%pISp to %pISp\n",
-
-	ip_vs_dbg_addr() used compact form (%pI6c), so it would be
-better to use %pISc and %pISpc everywhere in IPVS...
-
-	Also, note that before now port was printed with %d and
-ntohs() was used, now port should be in network order, so:
-
-- ntohs() should be removed
-- htons() should be added, if missing. At first look, this case
-is not present in IPVS, we have only ntohs() usage
-
-Regards
+diff --git a/block/bio.c b/block/bio.c
+index 2050bb4aacb5..3b6e35f73fd7 100644
+--- a/block/bio.c
++++ b/block/bio.c
+@@ -16,6 +16,7 @@
+ #include <linux/workqueue.h>
+ #include <linux/cgroup.h>
+ #include <linux/blk-cgroup.h>
++#include <linux/highmem.h>
+ 
+ #include <trace/events/block.h>
+ #include "blk.h"
+@@ -1479,8 +1480,22 @@ void bio_unmap_user(struct bio *bio)
+ 	bio_put(bio);
+ }
+ 
++static void bio_invalidate_vmalloc_pages(struct bio *bio)
++{
++#ifdef ARCH_HAS_FLUSH_KERNEL_DCACHE_PAGE
++	if (bio->bi_private && !op_is_write(bio_op(bio))) {
++		unsigned long i, len = 0;
++
++		for (i = 0; i < bio->bi_vcnt; i++)
++			len += bio->bi_io_vec[i].bv_len;
++		invalidate_kernel_vmap_range(bio->bi_private, len);
++	}
++#endif
++}
++
+ static void bio_map_kern_endio(struct bio *bio)
+ {
++	bio_invalidate_vmalloc_pages(bio);
+ 	bio_put(bio);
+ }
+ 
+@@ -1501,6 +1516,8 @@ struct bio *bio_map_kern(struct request_queue *q, void *data, unsigned int len,
+ 	unsigned long end = (kaddr + len + PAGE_SIZE - 1) >> PAGE_SHIFT;
+ 	unsigned long start = kaddr >> PAGE_SHIFT;
+ 	const int nr_pages = end - start;
++	bool is_vmalloc = is_vmalloc_addr(data);
++	struct page *page;
+ 	int offset, i;
+ 	struct bio *bio;
+ 
+@@ -1508,6 +1525,11 @@ struct bio *bio_map_kern(struct request_queue *q, void *data, unsigned int len,
+ 	if (!bio)
+ 		return ERR_PTR(-ENOMEM);
+ 
++	if (is_vmalloc) {
++		flush_kernel_vmap_range(data, len);
++		bio->bi_private = data;
++	}
++
+ 	offset = offset_in_page(kaddr);
+ 	for (i = 0; i < nr_pages; i++) {
+ 		unsigned int bytes = PAGE_SIZE - offset;
+@@ -1518,7 +1540,11 @@ struct bio *bio_map_kern(struct request_queue *q, void *data, unsigned int len,
+ 		if (bytes > len)
+ 			bytes = len;
+ 
+-		if (bio_add_pc_page(q, bio, virt_to_page(data), bytes,
++		if (!is_vmalloc)
++			page = virt_to_page(data);
++		else
++			page = vmalloc_to_page(data);
++		if (bio_add_pc_page(q, bio, page, bytes,
+ 				    offset) < bytes) {
+ 			/* we don't support partial mappings */
+ 			bio_put(bio);
+-- 
+2.21.0
