@@ -1,268 +1,88 @@
 From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: [PATCH V6 3/4] sd_zbc: Fix report zones buffer allocation
-Date: Mon,  1 Jul 2019 14:09:17 +0900
-Message-ID: <20190701050918.27511-4-damien.lemoal@wdc.com>
-References: <20190701050918.27511-1-damien.lemoal@wdc.com>
+Subject: [PATCH V6 0/4] Fix zone revalidation memory allocation
+ failures
+Date: Mon,  1 Jul 2019 14:09:14 +0900
+Message-ID: <20190701050918.27511-1-damien.lemoal@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20190701050918.27511-1-damien.lemoal@wdc.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
+Return-path: <linux-f2fs-devel-bounces@lists.sourceforge.net>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/options/linux-f2fs-devel>,
+ <mailto:linux-f2fs-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux-f2fs-devel>
+List-Post: <mailto:linux-f2fs-devel@lists.sourceforge.net>
+List-Help: <mailto:linux-f2fs-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-f2fs-devel>,
+ <mailto:linux-f2fs-devel-request@lists.sourceforge.net?subject=subscribe>
+Errors-To: linux-f2fs-devel-bounces@lists.sourceforge.net
 To: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, dm-devel@redhat.com, Mike Snitzer <snitzer@redhat.com>, linux-f2fs-devel@lists.sourceforge.net, Jaegeuk Kim <jaegeuk@kernel.org>
 Cc: Christoph Hellwig <hch@lst.de>, Bart Van Assche <bvanassche@acm.org>
 List-Id: linux-scsi@vger.kernel.org
 
-During disk scan and revalidation done with sd_revalidate(), the zones
-of a zoned disk are checked using the helper function
-blk_revalidate_disk_zones() if a configuration change is detected
-(change in the number of zones or zone size). The function
-blk_revalidate_disk_zones() issues report_zones calls that are very
-large, that is, to obtain zone information for all zones of the disk
-with a single command. The size of the report zones command buffer
-necessary for such large request generally is lower than the disk
-max_hw_sectors and KMALLOC_MAX_SIZE (4MB) and succeeds on boot (no
-memory fragmentation), but often fail at run time (e.g. hot-plug
-event). This causes the disk revalidation to fail and the disk
-capacity to be changed to 0.
+This series addresses a reccuring problem with zone revalidation
+failures observed during extensive testing with memory constrained
+system and device hot-plugging.
 
-This problem can be avoided by using vmalloc() instead of kmalloc() for
-the buffer allocation. To limit the amount of memory to be allocated,
-this patch also introduces the arbitrary SD_ZBC_REPORT_MAX_ZONES
-maximum number of zones to report with a single report zones command.
-This limit may be lowered further to satisfy the disk max_hw_sectors
-limit. Finally, to ensure that the vmalloc-ed buffer can always be
-mapped in a request, the buffer size is further limited to at most
-queue_max_segments() pages, allowing successful mapping of the buffer
-even in the worst case scenario where none of the buffer pages are
-contiguous.
+The problem source is failure to allocate large memory areas with
+alloc_pages() or kmalloc() in blk_revalidate_disk_zones() to store the
+disk array of zones (struct blk_zone) or in sd_zbc_report_zones() for
+the report zones command reply buffer.
 
-Fixes: 515ce6061312 ("scsi: sd_zbc: Fix sd_zbc_report_zones() buffer allocation")
-Fixes: e76239a3748c ("block: add a report_zones method")
-Cc: stable@vger.kernel.org
-Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
----
- drivers/scsi/sd_zbc.c | 104 ++++++++++++++++++++++++++++++------------
- 1 file changed, 75 insertions(+), 29 deletions(-)
+The solution proposed here is to:
+1) limit the number of zones to be reported with a single report zones
+command execution, and
+2) Use vmalloc to allocate large-ish arrays and buffers in place of
+alloc_pages() or kmalloc().
 
-diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
-index ec3764c8f3f1..db16c19e05c4 100644
---- a/drivers/scsi/sd_zbc.c
-+++ b/drivers/scsi/sd_zbc.c
-@@ -9,6 +9,8 @@
-  */
- 
- #include <linux/blkdev.h>
-+#include <linux/vmalloc.h>
-+#include <linux/sched/mm.h>
- 
- #include <asm/unaligned.h>
- 
-@@ -50,7 +52,7 @@ static void sd_zbc_parse_report(struct scsi_disk *sdkp, u8 *buf,
- /**
-  * sd_zbc_do_report_zones - Issue a REPORT ZONES scsi command.
-  * @sdkp: The target disk
-- * @buf: Buffer to use for the reply
-+ * @buf: vmalloc-ed buffer to use for the reply
-  * @buflen: the buffer size
-  * @lba: Start LBA of the report
-  * @partial: Do partial report
-@@ -79,7 +81,6 @@ static int sd_zbc_do_report_zones(struct scsi_disk *sdkp, unsigned char *buf,
- 	put_unaligned_be32(buflen, &cmd[10]);
- 	if (partial)
- 		cmd[14] = ZBC_REPORT_ZONE_PARTIAL;
--	memset(buf, 0, buflen);
- 
- 	result = scsi_execute_req(sdp, cmd, DMA_FROM_DEVICE,
- 				  buf, buflen, &sshdr,
-@@ -103,6 +104,53 @@ static int sd_zbc_do_report_zones(struct scsi_disk *sdkp, unsigned char *buf,
- 	return 0;
- }
- 
-+/*
-+ * Maximum number of zones to get with one report zones command.
-+ */
-+#define SD_ZBC_REPORT_MAX_ZONES		8192U
-+
-+/**
-+ * Allocate a buffer for report zones reply.
-+ * @sdkp: The target disk
-+ * @nr_zones: Maximum number of zones to report
-+ * @buflen: Size of the buffer allocated
-+ *
-+ * Try to allocate a reply buffer for the number of requested zones.
-+ * The size of the buffer allocated may be smaller than requested to
-+ * satify the device constraint (max_hw_sectors, max_segments, etc).
-+ *
-+ * Return the address of the allocated buffer and update @buflen with
-+ * the size of the allocated buffer.
-+ */
-+static void *sd_zbc_alloc_report_buffer(struct scsi_disk *sdkp,
-+					unsigned int nr_zones, size_t *buflen)
-+{
-+	struct request_queue *q = sdkp->disk->queue;
-+	size_t bufsize;
-+	void *buf;
-+
-+	/*
-+	 * Report zone buffer size should be at most 64B times the number of
-+	 * zones requested plus the 64B reply header, but should be at least
-+	 * SECTOR_SIZE for ATA devices.
-+	 * Make sure that this size does not exceed the hardware capabilities.
-+	 * Furthermore, since the report zone command cannot be split, make
-+	 * sure that the allocated buffer can always be mapped by limiting the
-+	 * number of pages allocated to the HBA max segments limit.
-+	 */
-+	nr_zones = min(nr_zones, SD_ZBC_REPORT_MAX_ZONES);
-+	bufsize = roundup((nr_zones + 1) * 64, 512);
-+	bufsize = min_t(size_t, bufsize,
-+			queue_max_hw_sectors(q) << SECTOR_SHIFT);
-+	bufsize = min_t(size_t, bufsize, queue_max_segments(q) << PAGE_SHIFT);
-+
-+	buf = vzalloc(bufsize);
-+	if (buf)
-+		*buflen = bufsize;
-+
-+	return buf;
-+}
-+
- /**
-  * sd_zbc_report_zones - Disk report zones operation.
-  * @disk: The target disk
-@@ -116,30 +164,23 @@ int sd_zbc_report_zones(struct gendisk *disk, sector_t sector,
- 			struct blk_zone *zones, unsigned int *nr_zones)
- {
- 	struct scsi_disk *sdkp = scsi_disk(disk);
--	unsigned int i, buflen, nrz = *nr_zones;
-+	unsigned int i, nrz = *nr_zones;
- 	unsigned char *buf;
--	size_t offset = 0;
-+	size_t buflen = 0, offset = 0;
- 	int ret = 0;
- 
- 	if (!sd_is_zoned(sdkp))
- 		/* Not a zoned device */
- 		return -EOPNOTSUPP;
- 
--	/*
--	 * Get a reply buffer for the number of requested zones plus a header,
--	 * without exceeding the device maximum command size. For ATA disks,
--	 * buffers must be aligned to 512B.
--	 */
--	buflen = min(queue_max_hw_sectors(disk->queue) << 9,
--		     roundup((nrz + 1) * 64, 512));
--	buf = kmalloc(buflen, GFP_KERNEL);
-+	buf = sd_zbc_alloc_report_buffer(sdkp, nrz, &buflen);
- 	if (!buf)
- 		return -ENOMEM;
- 
- 	ret = sd_zbc_do_report_zones(sdkp, buf, buflen,
- 			sectors_to_logical(sdkp->device, sector), true);
- 	if (ret)
--		goto out_free_buf;
-+		goto out;
- 
- 	nrz = min(nrz, get_unaligned_be32(&buf[0]) / 64);
- 	for (i = 0; i < nrz; i++) {
-@@ -150,8 +191,8 @@ int sd_zbc_report_zones(struct gendisk *disk, sector_t sector,
- 
- 	*nr_zones = nrz;
- 
--out_free_buf:
--	kfree(buf);
-+out:
-+	kvfree(buf);
- 
- 	return ret;
- }
-@@ -285,8 +326,6 @@ static int sd_zbc_check_zoned_characteristics(struct scsi_disk *sdkp,
- 	return 0;
- }
- 
--#define SD_ZBC_BUF_SIZE 131072U
--
- /**
-  * sd_zbc_check_zones - Check the device capacity and zone sizes
-  * @sdkp: Target disk
-@@ -302,22 +341,28 @@ static int sd_zbc_check_zoned_characteristics(struct scsi_disk *sdkp,
-  */
- static int sd_zbc_check_zones(struct scsi_disk *sdkp, u32 *zblocks)
- {
-+	size_t bufsize, buflen;
-+	unsigned int noio_flag;
- 	u64 zone_blocks = 0;
- 	sector_t max_lba, block = 0;
- 	unsigned char *buf;
- 	unsigned char *rec;
--	unsigned int buf_len;
--	unsigned int list_length;
- 	int ret;
- 	u8 same;
- 
-+	/* Do all memory allocations as if GFP_NOIO was specified */
-+	noio_flag = memalloc_noio_save();
-+
- 	/* Get a buffer */
--	buf = kmalloc(SD_ZBC_BUF_SIZE, GFP_KERNEL);
--	if (!buf)
--		return -ENOMEM;
-+	buf = sd_zbc_alloc_report_buffer(sdkp, SD_ZBC_REPORT_MAX_ZONES,
-+					 &bufsize);
-+	if (!buf) {
-+		ret = -ENOMEM;
-+		goto out;
-+	}
- 
- 	/* Do a report zone to get max_lba and the same field */
--	ret = sd_zbc_do_report_zones(sdkp, buf, SD_ZBC_BUF_SIZE, 0, false);
-+	ret = sd_zbc_do_report_zones(sdkp, buf, bufsize, 0, false);
- 	if (ret)
- 		goto out_free;
- 
-@@ -353,12 +398,12 @@ static int sd_zbc_check_zones(struct scsi_disk *sdkp, u32 *zblocks)
- 	do {
- 
- 		/* Parse REPORT ZONES header */
--		list_length = get_unaligned_be32(&buf[0]) + 64;
-+		buflen = min_t(size_t, get_unaligned_be32(&buf[0]) + 64,
-+			       bufsize);
- 		rec = buf + 64;
--		buf_len = min(list_length, SD_ZBC_BUF_SIZE);
- 
- 		/* Parse zone descriptors */
--		while (rec < buf + buf_len) {
-+		while (rec < buf + buflen) {
- 			u64 this_zone_blocks = get_unaligned_be64(&rec[8]);
- 
- 			if (zone_blocks == 0) {
-@@ -374,8 +419,8 @@ static int sd_zbc_check_zones(struct scsi_disk *sdkp, u32 *zblocks)
- 		}
- 
- 		if (block < sdkp->capacity) {
--			ret = sd_zbc_do_report_zones(sdkp, buf, SD_ZBC_BUF_SIZE,
--						     block, true);
-+			ret = sd_zbc_do_report_zones(sdkp, buf, bufsize, block,
-+						     true);
- 			if (ret)
- 				goto out_free;
- 		}
-@@ -406,7 +451,8 @@ static int sd_zbc_check_zones(struct scsi_disk *sdkp, u32 *zblocks)
- 	}
- 
- out_free:
--	kfree(buf);
-+	memalloc_noio_restore(noio_flag);
-+	kvfree(buf);
- 
- 	return ret;
- }
+With these changes, tests do not show any zone revalidation failures
+while not impacting the time taken for a disk zone inspection during
+device scan and revalidation.
+
+Changes from v5:
+* Remove the gfp_t argument from blkdev_report_zones() function and
+  device report zones method, relying instead on
+  memalloc_noio_save/restore() where GFP_NOIO was used.
+
+Changes from v4:
+* bio_copy_kern does not use the vmalloc buffer for IO so does not
+  need flush/invalidate_kernel_vmap_range() of the buffer.
+
+Changes from v3:
+* Reworked use of flush_kernel_vmap_range() and
+  invalidate_kernel_vmap_range() to contain the calls within bio.c,
+  transparently to the user of bio_map_kern().
+* Add similar support to bio_copy_kern().
+
+Changes from v2:
+* Move invalidate_kernel_vmap_range() of vmalloc-ed buffer to sd_zbc.c
+  in patch 2, after completion of scsi_execute_req().
+* In patch 2, add flush_kernel_vmap_range() before scsi_execute_req().
+
+Changes from V1:
+* Added call to invalidate_kernel_vmap_range() for vmalloc-ed buffers
+  in patch 1.
+* Fixed patch 2 compilation error with Sparc64 (kbuild robot)
+
+Damien Le Moal (4):
+  block: Allow mapping of vmalloc-ed buffers
+  block: Kill gfp_t argument of blkdev_report_zones()
+  sd_zbc: Fix report zones buffer allocation
+  block: Limit zone array allocation size
+
+ block/bio.c                    |  28 ++++++++-
+ block/blk-zoned.c              |  67 +++++++++++---------
+ drivers/block/null_blk.h       |   3 +-
+ drivers/block/null_blk_zoned.c |   3 +-
+ drivers/md/dm-flakey.c         |   5 +-
+ drivers/md/dm-linear.c         |   5 +-
+ drivers/md/dm-zoned-metadata.c |  16 +++--
+ drivers/md/dm.c                |   6 +-
+ drivers/scsi/sd.h              |   3 +-
+ drivers/scsi/sd_zbc.c          | 108 +++++++++++++++++++++++----------
+ fs/f2fs/super.c                |   4 +-
+ include/linux/blkdev.h         |  10 ++-
+ include/linux/device-mapper.h  |   3 +-
+ 13 files changed, 172 insertions(+), 89 deletions(-)
+
 -- 
 2.21.0
