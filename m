@@ -1,16 +1,16 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH V6 1/4] block: Allow mapping of vmalloc-ed
-	buffers
-Date: Mon, 1 Jul 2019 08:16:31 +0200
-Message-ID: <20190701061631.GA20073@lst.de>
+Subject: Re: [PATCH V6 2/4] block: Kill gfp_t argument of
+ blkdev_report_zones()
+Date: Mon, 1 Jul 2019 08:17:20 +0200
+Message-ID: <20190701061720.GB20073@lst.de>
 References: <20190701050918.27511-1-damien.lemoal@wdc.com>
-	<20190701050918.27511-2-damien.lemoal@wdc.com>
+	<20190701050918.27511-3-damien.lemoal@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <dm-devel-bounces@redhat.com>
 Content-Disposition: inline
-In-Reply-To: <20190701050918.27511-2-damien.lemoal@wdc.com>
+In-Reply-To: <20190701050918.27511-3-damien.lemoal@wdc.com>
 List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
 	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
 List-Archive: <https://www.redhat.com/archives/dm-devel>
