@@ -1,7 +1,7 @@
 From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: [PATCH V6 1/4] block: Allow mapping of vmalloc-ed buffers
-Date: Mon,  1 Jul 2019 14:09:15 +0900
-Message-ID: <20190701050918.27511-2-damien.lemoal@wdc.com>
+Subject: [PATCH V6 4/4] block: Limit zone array allocation size
+Date: Mon,  1 Jul 2019 14:09:18 +0900
+Message-ID: <20190701050918.27511-5-damien.lemoal@wdc.com>
 References: <20190701050918.27511-1-damien.lemoal@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,100 +21,107 @@ To: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.co
 Cc: Christoph Hellwig <hch@lst.de>, Bart Van Assche <bvanassche@acm.org>
 List-Id: linux-scsi@vger.kernel.org
 
-To allow the SCSI subsystem scsi_execute_req() function to issue
-requests using large buffers that are better allocated with vmalloc()
-rather than kmalloc(), modify bio_map_kern() to allow passing a buffer
-allocated with vmalloc().
-
-To do so, detect vmalloc-ed buffers using is_vmalloc_addr(). For
-vmalloc-ed buffers, flush the buffer using flush_kernel_vmap_range(),
-use vmalloc_to_page() instead of virt_to_page() to obtain the pages of
-the buffer, and invalidate the buffer addresses with
-invalidate_kernel_vmap_range() on completion of read BIOs. This last
-point is executed using the function bio_invalidate_vmalloc_pages()
-which is defined only if the architecture defines
-ARCH_HAS_FLUSH_KERNEL_DCACHE_PAGE, that is, if the architecture
-actually needs the invalidation done.
+Limit the size of the struct blk_zone array used in
+blk_revalidate_disk_zones() to avoid memory allocation failures leading
+to disk revalidation failure. Also further reduce the likelyhood of
+such failures by using kvcalloc() (that is vmalloc()) instead of
+allocating contiguous pages with alloc_pages().
 
 Fixes: 515ce6061312 ("scsi: sd_zbc: Fix sd_zbc_report_zones() buffer allocation")
 Fixes: e76239a3748c ("block: add a report_zones method")
 Cc: stable@vger.kernel.org
 Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Reviewed-by: Ming Lei <ming.lei@redhat.com>
 ---
- block/bio.c | 28 +++++++++++++++++++++++++++-
- 1 file changed, 27 insertions(+), 1 deletion(-)
+ block/blk-zoned.c      | 36 ++++++++++++++++++++----------------
+ include/linux/blkdev.h |  5 +++++
+ 2 files changed, 25 insertions(+), 16 deletions(-)
 
-diff --git a/block/bio.c b/block/bio.c
-index 2050bb4aacb5..3b6e35f73fd7 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -16,6 +16,7 @@
- #include <linux/workqueue.h>
- #include <linux/cgroup.h>
- #include <linux/blk-cgroup.h>
-+#include <linux/highmem.h>
+diff --git a/block/blk-zoned.c b/block/blk-zoned.c
+index 60dfc3f22350..79ad269b545d 100644
+--- a/block/blk-zoned.c
++++ b/block/blk-zoned.c
+@@ -14,6 +14,8 @@
+ #include <linux/rbtree.h>
+ #include <linux/blkdev.h>
+ #include <linux/blk-mq.h>
++#include <linux/mm.h>
++#include <linux/vmalloc.h>
+ #include <linux/sched/mm.h>
  
- #include <trace/events/block.h>
  #include "blk.h"
-@@ -1479,8 +1480,22 @@ void bio_unmap_user(struct bio *bio)
- 	bio_put(bio);
- }
- 
-+static void bio_invalidate_vmalloc_pages(struct bio *bio)
-+{
-+#ifdef ARCH_HAS_FLUSH_KERNEL_DCACHE_PAGE
-+	if (bio->bi_private && !op_is_write(bio_op(bio))) {
-+		unsigned long i, len = 0;
-+
-+		for (i = 0; i < bio->bi_vcnt; i++)
-+			len += bio->bi_io_vec[i].bv_len;
-+		invalidate_kernel_vmap_range(bio->bi_private, len);
-+	}
-+#endif
-+}
-+
- static void bio_map_kern_endio(struct bio *bio)
+@@ -371,22 +373,25 @@ static inline unsigned long *blk_alloc_zone_bitmap(int node,
+  * Allocate an array of struct blk_zone to get nr_zones zone information.
+  * The allocated array may be smaller than nr_zones.
+  */
+-static struct blk_zone *blk_alloc_zones(int node, unsigned int *nr_zones)
++static struct blk_zone *blk_alloc_zones(unsigned int *nr_zones)
  {
-+	bio_invalidate_vmalloc_pages(bio);
- 	bio_put(bio);
+-	size_t size = *nr_zones * sizeof(struct blk_zone);
+-	struct page *page;
+-	int order;
+-
+-	for (order = get_order(size); order >= 0; order--) {
+-		page = alloc_pages_node(node, GFP_NOIO | __GFP_ZERO, order);
+-		if (page) {
+-			*nr_zones = min_t(unsigned int, *nr_zones,
+-				(PAGE_SIZE << order) / sizeof(struct blk_zone));
+-			return page_address(page);
+-		}
++	struct blk_zone *zones;
++	size_t nrz = min(*nr_zones, BLK_ZONED_REPORT_MAX_ZONES);
++
++	/*
++	 * GFP_KERNEL here is meaningless as the caller task context has
++	 * the PF_MEMALLOC_NOIO flag set in blk_revalidate_disk_zones()
++	 * with memalloc_noio_save().
++	 */
++	zones = kvcalloc(nrz, sizeof(struct blk_zone), GFP_KERNEL);
++	if (!zones) {
++		*nr_zones = 0;
++		return NULL;
+ 	}
+ 
+-	return NULL;
++	*nr_zones = nrz;
++
++	return zones;
  }
  
-@@ -1501,6 +1516,8 @@ struct bio *bio_map_kern(struct request_queue *q, void *data, unsigned int len,
- 	unsigned long end = (kaddr + len + PAGE_SIZE - 1) >> PAGE_SHIFT;
- 	unsigned long start = kaddr >> PAGE_SHIFT;
- 	const int nr_pages = end - start;
-+	bool is_vmalloc = is_vmalloc_addr(data);
-+	struct page *page;
- 	int offset, i;
- 	struct bio *bio;
+ void blk_queue_free_zone_bitmaps(struct request_queue *q)
+@@ -448,7 +453,7 @@ int blk_revalidate_disk_zones(struct gendisk *disk)
  
-@@ -1508,6 +1525,11 @@ struct bio *bio_map_kern(struct request_queue *q, void *data, unsigned int len,
- 	if (!bio)
- 		return ERR_PTR(-ENOMEM);
+ 	/* Get zone information and initialize seq_zones_bitmap */
+ 	rep_nr_zones = nr_zones;
+-	zones = blk_alloc_zones(q->node, &rep_nr_zones);
++	zones = blk_alloc_zones(&rep_nr_zones);
+ 	if (!zones)
+ 		goto out;
  
-+	if (is_vmalloc) {
-+		flush_kernel_vmap_range(data, len);
-+		bio->bi_private = data;
-+	}
+@@ -487,8 +492,7 @@ int blk_revalidate_disk_zones(struct gendisk *disk)
+ out:
+ 	memalloc_noio_restore(noio_flag);
+ 
+-	free_pages((unsigned long)zones,
+-		   get_order(rep_nr_zones * sizeof(struct blk_zone)));
++	kvfree(zones);
+ 	kfree(seq_zones_wlock);
+ 	kfree(seq_zones_bitmap);
+ 
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 472ba74ca968..5ace0bb77213 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -344,6 +344,11 @@ struct queue_limits {
+ 
+ #ifdef CONFIG_BLK_DEV_ZONED
+ 
++/*
++ * Maximum number of zones to report with a single report zones command.
++ */
++#define BLK_ZONED_REPORT_MAX_ZONES	8192U
 +
- 	offset = offset_in_page(kaddr);
- 	for (i = 0; i < nr_pages; i++) {
- 		unsigned int bytes = PAGE_SIZE - offset;
-@@ -1518,7 +1540,11 @@ struct bio *bio_map_kern(struct request_queue *q, void *data, unsigned int len,
- 		if (bytes > len)
- 			bytes = len;
- 
--		if (bio_add_pc_page(q, bio, virt_to_page(data), bytes,
-+		if (!is_vmalloc)
-+			page = virt_to_page(data);
-+		else
-+			page = vmalloc_to_page(data);
-+		if (bio_add_pc_page(q, bio, page, bytes,
- 				    offset) < bytes) {
- 			/* we don't support partial mappings */
- 			bio_put(bio);
+ extern unsigned int blkdev_nr_zones(struct block_device *bdev);
+ extern int blkdev_report_zones(struct block_device *bdev,
+ 			       sector_t sector, struct blk_zone *zones,
 -- 
 2.21.0
