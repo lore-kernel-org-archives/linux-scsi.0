@@ -1,44 +1,57 @@
-From: Colin King <colin.king@canonical.com>
-Subject: [PATCH] scsi: libfc: fix null pointer dereference on a null lport
-Date: Tue,  2 Jul 2019 10:18:35 +0100
-Message-ID: <20190702091835.13629-1-colin.king@canonical.com>
+From: YueHaibing <yuehaibing@huawei.com>
+Subject: [PATCH -next] scsi: megaraid_sas: Make some symbols static
+Date: Tue, 2 Jul 2019 21:01:14 +0800
+Message-ID: <20190702130114.29356-1-yuehaibing@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+To: kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com, jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, megaraidlinux.pdl@broadcom.com, YueHaibing <yuehaibing@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Colin Ian King <colin.king@canonical.com>
+Fix sparse warnings:
 
-Currently if lport is null then the null lport pointer is dereference
-when printing out debug via the FC_LPORT_DB macro. Fix this by using
-the more generic FC_LIBFC_DBG debug macro instead that does not use
-lport.
+drivers/scsi/megaraid/megaraid_sas_base.c:271:1: warning: symbol 'megasas_issue_dcmd' was not declared. Should it be static?
+drivers/scsi/megaraid/megaraid_sas_base.c:2227:6: warning: symbol 'megasas_do_ocr' was not declared. Should it be static?
+drivers/scsi/megaraid/megaraid_sas_base.c:3194:25: warning: symbol 'megaraid_host_attrs' was not declared. Should it be static?
 
-Addresses-Coverity: ("Dereference after null check")
-Fixes: 7414705ea4ae ("libfc: Add runtime debugging with debug_logging module parameter")
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Reported-by: Hulk Robot <hulkci@huawei.com>
+Signed-off-by: YueHaibing <yuehaibing@huawei.com>
 ---
- drivers/scsi/libfc/fc_exch.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas_base.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
-index 025cd2ff9f65..c477fadbf504 100644
---- a/drivers/scsi/libfc/fc_exch.c
-+++ b/drivers/scsi/libfc/fc_exch.c
-@@ -2591,8 +2591,8 @@ void fc_exch_recv(struct fc_lport *lport, struct fc_frame *fp)
- 
- 	/* lport lock ? */
- 	if (!lport || lport->state == LPORT_ST_DISABLED) {
--		FC_LPORT_DBG(lport, "Receiving frames for an lport that "
--			     "has not been initialized correctly\n");
-+		FC_LIBFC_DBG("Receiving frames for an lport that "
-+			     "has not been initialized correctly\n");
- 		fc_frame_free(fp);
- 		return;
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index 80ab970..49e0f3d 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -280,7 +280,7 @@ void megasas_set_dma_settings(struct megasas_instance *instance,
  	}
+ }
+ 
+-void
++static void
+ megasas_issue_dcmd(struct megasas_instance *instance, struct megasas_cmd *cmd)
+ {
+ 	instance->instancet->fire_cmd(instance,
+@@ -2237,7 +2237,7 @@ megasas_internal_reset_defer_cmds(struct megasas_instance *instance);
+ static void
+ process_fw_state_change_wq(struct work_struct *work);
+ 
+-void megasas_do_ocr(struct megasas_instance *instance)
++static void megasas_do_ocr(struct megasas_instance *instance)
+ {
+ 	if ((instance->pdev->device == PCI_DEVICE_ID_LSI_SAS1064R) ||
+ 	(instance->pdev->device == PCI_DEVICE_ID_DELL_PERC5) ||
+@@ -3303,7 +3303,7 @@ static DEVICE_ATTR_RO(fw_cmds_outstanding);
+ static DEVICE_ATTR_RO(dump_system_regs);
+ static DEVICE_ATTR_RO(raid_map_id);
+ 
+-struct device_attribute *megaraid_host_attrs[] = {
++static struct device_attribute *megaraid_host_attrs[] = {
+ 	&dev_attr_fw_crash_buffer_size,
+ 	&dev_attr_fw_crash_buffer,
+ 	&dev_attr_fw_crash_state,
 -- 
-2.20.1
+2.7.4
