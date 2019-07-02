@@ -1,44 +1,47 @@
-From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Subject: [PATCH V3 4/9] blk-zoned: update blkdev_reset_zones()
- with helper
-Date: Tue,  2 Jul 2019 10:42:30 -0700
-Message-ID: <20190702174236.3332-5-chaitanya.kulkarni@wdc.com>
-References: <20190702174236.3332-1-chaitanya.kulkarni@wdc.com>
+From: Roman Bolshakov <r.bolshakov@yadro.com>
+Subject: [RESEND PATCH] scsi: target/iblock: Fix overrun in WRITE SAME emulation
+Date: Tue, 2 Jul 2019 22:16:38 +0300
+Message-ID: <20190702191636.26481-1-r.bolshakov@yadro.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <xen-devel-bounces@lists.xenproject.org>
-In-Reply-To: <20190702174236.3332-1-chaitanya.kulkarni@wdc.com>
-List-Unsubscribe: <https://lists.xenproject.org/mailman/options/xen-devel>,
- <mailto:xen-devel-request@lists.xenproject.org?subject=unsubscribe>
-List-Post: <mailto:xen-devel@lists.xenproject.org>
-List-Help: <mailto:xen-devel-request@lists.xenproject.org?subject=help>
-List-Subscribe: <https://lists.xenproject.org/mailman/listinfo/xen-devel>,
- <mailto:xen-devel-request@lists.xenproject.org?subject=subscribe>
-Errors-To: xen-devel-bounces@lists.xenproject.org
-Sender: "Xen-devel" <xen-devel-bounces@lists.xenproject.org>
-To: linux-block@vger.kernel.org
-Cc: damien.lemoal@wdc.com, linux-btrace@vger.kernel.org, bvanassche@acm.org, linux-scsi@vger.kernel.org, konrad.wilk@oracle.com, Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>, yuchao0@huawei.com, colyli@suse.de, linux-bcache@vger.kernel.org, jaegeuk@kernel.org, xen-devel@lists.xenproject.org, kent.overstreet@gmail.com, roger.pau@citrix.com
+Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: Roman Bolshakov <r.bolshakov@yadro.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, stable@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>
 List-Id: linux-scsi@vger.kernel.org
 
-VGhpcyBwYXRjaCB1cGRhdGVzIHRoZSBibGtkZXZfcmVzZXRfem9uZXMoKSB3aXRoIG5ld2x5IGlu
-dHJvZHVjZWQKaGVscGVyIGZ1bmN0aW9uIHRvIHJlYWQgdGhlIG5yX3NlY3RzIGZyb20gYmxvY2sg
-ZGV2aWNlJ3MgaGRfcGFydHMgd2l0aAp0aGUgaGVscCBvZiBwYXJ0X25yX3NlY3RzX3JlYWQoKS4K
-ClNpZ25lZC1vZmYtYnk6IENoYWl0YW55YSBLdWxrYXJuaSA8Y2hhaXRhbnlhLmt1bGthcm5pQHdk
-Yy5jb20+Ci0tLQogYmxvY2svYmxrLXpvbmVkLmMgfCA0ICsrLS0KIDEgZmlsZSBjaGFuZ2VkLCAy
-IGluc2VydGlvbnMoKyksIDIgZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0IGEvYmxvY2svYmxrLXpv
-bmVkLmMgYi9ibG9jay9ibGstem9uZWQuYwppbmRleCA5ZmFmNDQ4ODMzOWQuLmU3ZjI4NzRiNWQz
-NyAxMDA2NDQKLS0tIGEvYmxvY2svYmxrLXpvbmVkLmMKKysrIGIvYmxvY2svYmxrLXpvbmVkLmMK
-QEAgLTIyOSw3ICsyMjksNyBAQCBpbnQgYmxrZGV2X3Jlc2V0X3pvbmVzKHN0cnVjdCBibG9ja19k
-ZXZpY2UgKmJkZXYsCiAJaWYgKGJkZXZfcmVhZF9vbmx5KGJkZXYpKQogCQlyZXR1cm4gLUVQRVJN
-OwogCi0JaWYgKCFucl9zZWN0b3JzIHx8IGVuZF9zZWN0b3IgPiBiZGV2LT5iZF9wYXJ0LT5ucl9z
-ZWN0cykKKwlpZiAoIW5yX3NlY3RvcnMgfHwgZW5kX3NlY3RvciA+IGJkZXZfbnJfc2VjdHMoYmRl
-dikpCiAJCS8qIE91dCBvZiByYW5nZSAqLwogCQlyZXR1cm4gLUVJTlZBTDsKIApAQCAtMjM5LDcg
-KzIzOSw3IEBAIGludCBibGtkZXZfcmVzZXRfem9uZXMoc3RydWN0IGJsb2NrX2RldmljZSAqYmRl
-diwKIAkJcmV0dXJuIC1FSU5WQUw7CiAKIAlpZiAoKG5yX3NlY3RvcnMgJiAoem9uZV9zZWN0b3Jz
-IC0gMSkpICYmCi0JICAgIGVuZF9zZWN0b3IgIT0gYmRldi0+YmRfcGFydC0+bnJfc2VjdHMpCisJ
-ICAgIGVuZF9zZWN0b3IgIT0gYmRldl9ucl9zZWN0cyhiZGV2KSkKIAkJcmV0dXJuIC1FSU5WQUw7
-CiAKIAlibGtfc3RhcnRfcGx1ZygmcGx1Zyk7Ci0tIAoyLjE5LjEKCgpfX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpYZW4tZGV2ZWwgbWFpbGluZyBsaXN0Clhl
-bi1kZXZlbEBsaXN0cy54ZW5wcm9qZWN0Lm9yZwpodHRwczovL2xpc3RzLnhlbnByb2plY3Qub3Jn
-L21haWxtYW4vbGlzdGluZm8veGVuLWRldmVs
+WRITE SAME corrupts data on the block device behind iblock if the
+command is emulated. The emulation code issues (M - 1) * N times more
+bios than requested, where M is the number of 512 blocks per real block
+size and N is the NUMBER OF LOGICAL BLOCKS specified in WRITE SAME
+command. So, for a device with 4k blocks, 7 * N more LBAs gets written
+after the requested range.
+
+The issue happens because the number of 512 byte sectors to be written
+is decreased one by one while the real bios are typically from 1 to 8
+512 byte sectors per bio.
+
+Fixes: c66ac9db8d4a ("[SCSI] target: Add LIO target core v4.0.0-rc6")
+Cc: <stable@vger.kernel.org>
+Signed-off-by: Roman Bolshakov <r.bolshakov@yadro.com>
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+---
+ drivers/target/target_core_iblock.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
+index f4a075303e9a..6949ea8bc387 100644
+--- a/drivers/target/target_core_iblock.c
++++ b/drivers/target/target_core_iblock.c
+@@ -502,7 +502,7 @@ iblock_execute_write_same(struct se_cmd *cmd)
+ 
+ 		/* Always in 512 byte units for Linux/Block */
+ 		block_lba += sg->length >> SECTOR_SHIFT;
+-		sectors -= 1;
++		sectors -= sg->length >> SECTOR_SHIFT;
+ 	}
+ 
+ 	iblock_submit_bios(&list);
+-- 
+2.22.0
