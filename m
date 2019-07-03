@@ -1,53 +1,36 @@
-From: Fuqian Huang <huangfq.daxian@gmail.com>
-Subject: [PATCH v2 24/35] scsi/qla4xxx: Use kmemdup rather than duplicating its implementation
-Date: Thu,  4 Jul 2019 00:30:33 +0800
-Message-ID: <20190703163033.456-1-huangfq.daxian@gmail.com>
+From: syzbot <syzbot+19a9f729f05272857487@syzkaller.appspotmail.com>
+Subject: Re: KASAN: use-after-free Read in hci_cmd_timeout
+Date: Wed, 03 Jul 2019 11:26:00 -0700
+Message-ID: <00000000000041ac74058ccafe0d@google.com>
+References: <00000000000035c756058848954a@google.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"; format=flowed; delsp=yes
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <00000000000035c756058848954a@google.com>
 Sender: linux-kernel-owner@vger.kernel.org
-Cc: QLogic-Storage-Upstream@qlogic.com, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Fuqian Huang <huangfq.daxian@gmail.com>
+To: chaitra.basappa@broadcom.com, davem@davemloft.net, jejb@linux.vnet.ibm.com, johan.hedberg@gmail.com, linux-bluetooth@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, marcel@holtmann.org, martin.petersen@oracle.com, mpt-fusionlinux.pdl@broadcom.com, netdev@vger.kernel.org, sathya.prakash@broadcom.com, suganath-prabu.subramani@broadcom.com, syzkaller-bugs@googlegroups.com
 List-Id: linux-scsi@vger.kernel.org
 
-kmemdup is introduced to duplicate a region of memory in a neat way.
-Rather than kmalloc/kzalloc + memcpy, which the programmer needs to
-write the size twice (sometimes lead to mistakes), kmemdup improves
-readability, leads to smaller code and also reduce the chances of mistakes.
-Suggestion to use kmemdup rather than using kmalloc/kzalloc + memcpy.
+syzbot has bisected this bug to:
 
-Signed-off-by: Fuqian Huang <huangfq.daxian@gmail.com>
----
-Changes in v2:
-  - Fix a typo in commit message (memset -> memcpy)
+commit ff92b9dd9268507e23fc10cc4341626cef50367c
+Author: Suganath Prabu <suganath-prabu.subramani@broadcom.com>
+Date:   Thu Oct 25 14:03:40 2018 +0000
 
- drivers/scsi/qla4xxx/ql4_os.c | 7 ++-----
- 1 file changed, 2 insertions(+), 5 deletions(-)
+     scsi: mpt3sas: Update MPI headers to support Aero controllers
 
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index 8c674eca09f1..8f8c64e5f02d 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -3559,21 +3559,18 @@ static int qla4xxx_copy_from_fwddb_param(struct iscsi_bus_flash_session *sess,
- 	conn->port = le16_to_cpu(fw_ddb_entry->port);
- 
- 	options = le16_to_cpu(fw_ddb_entry->options);
--	conn->ipaddress = kzalloc(IPv6_ADDR_LEN, GFP_KERNEL);
-+	conn->ipaddress = kmemdup(fw_ddb_entry->ip_addr, IPv6_ADDR_LEN, GFP_KERNEL);
- 	if (!conn->ipaddress) {
- 		rc = -ENOMEM;
- 		goto exit_copy;
- 	}
- 
--	conn->redirect_ipaddr = kzalloc(IPv6_ADDR_LEN, GFP_KERNEL);
-+	conn->redirect_ipaddr = kmemdup(fw_ddb_entry->tgt_addr, IPv6_ADDR_LEN, GFP_KERNEL);
- 	if (!conn->redirect_ipaddr) {
- 		rc = -ENOMEM;
- 		goto exit_copy;
- 	}
- 
--	memcpy(conn->ipaddress, fw_ddb_entry->ip_addr, IPv6_ADDR_LEN);
--	memcpy(conn->redirect_ipaddr, fw_ddb_entry->tgt_addr, IPv6_ADDR_LEN);
--
- 	if (test_bit(OPT_IPV6_DEVICE, &options)) {
- 		conn->ipv6_traffic_class = fw_ddb_entry->ipv4_tos;
- 
--- 
-2.11.0
+bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=130ac8dda00000
+start commit:   eca94432 Bluetooth: Fix faulty expression for minimum encr..
+git tree:       upstream
+final crash:    https://syzkaller.appspot.com/x/report.txt?x=108ac8dda00000
+console output: https://syzkaller.appspot.com/x/log.txt?x=170ac8dda00000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=f6451f0da3d42d53
+dashboard link: https://syzkaller.appspot.com/bug?extid=19a9f729f05272857487
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=125b7999a00000
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=176deefba00000
+
+Reported-by: syzbot+19a9f729f05272857487@syzkaller.appspotmail.com
+Fixes: ff92b9dd9268 ("scsi: mpt3sas: Update MPI headers to support Aero  
+controllers")
+
+For information about bisection process see: https://goo.gl/tpsmEJ#bisection
