@@ -1,94 +1,38 @@
-From: Benjamin Block <bblock@linux.ibm.com>
-Subject: [PATCH 2/3] zfcp: fix request object use-after-free in send path causing wrong traces
-Date: Tue,  2 Jul 2019 23:02:01 +0200
-Message-ID: <80afa28579890b7c276a57b1ad7a970d5f349689.1562098940.git.bblock@linux.ibm.com>
-References: <cover.1562098940.git.bblock@linux.ibm.com>
+From: Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>
+Subject: Re: [PATCH V3 4/9] blk-zoned: update
+ blkdev_reset_zones() with helper
+Date: Wed, 3 Jul 2019 02:29:33 +0000
+Message-ID: <DM6PR04MB5754D27FC41D86E2D419DD6C86FB0@DM6PR04MB5754.namprd04.prod.outlook.com>
+References: <20190702174236.3332-1-chaitanya.kulkarni@wdc.com>
+ <20190702174236.3332-5-chaitanya.kulkarni@wdc.com>
+ <20190703002347.GE15705@minwoo-desktop>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <cover.1562098940.git.bblock@linux.ibm.com>
-Sender: stable-owner@vger.kernel.org
-To: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Benjamin Block <bblock@linux.ibm.com>, Steffen Maier <maier@linux.ibm.com>, Fedor Loshakov <loshakov@linux.ibm.com>, Jens Remus <jremus@linux.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, stable@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <xen-devel-bounces@lists.xenproject.org>
+Content-Language: en-US
+List-Unsubscribe: <https://lists.xenproject.org/mailman/options/xen-devel>,
+ <mailto:xen-devel-request@lists.xenproject.org?subject=unsubscribe>
+List-Post: <mailto:xen-devel@lists.xenproject.org>
+List-Help: <mailto:xen-devel-request@lists.xenproject.org?subject=help>
+List-Subscribe: <https://lists.xenproject.org/mailman/listinfo/xen-devel>,
+ <mailto:xen-devel-request@lists.xenproject.org?subject=subscribe>
+Errors-To: xen-devel-bounces@lists.xenproject.org
+Sender: "Xen-devel" <xen-devel-bounces@lists.xenproject.org>
+To: Minwoo Im <minwoo.im.dev@gmail.com>
+Cc: Damien Le Moal <Damien.LeMoal@wdc.com>, "linux-btrace@vger.kernel.org" <linux-btrace@vger.kernel.org>, "bvanassche@acm.org" <bvanassche@acm.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "konrad.wilk@oracle.com" <konrad.wilk@oracle.com>, "yuchao0@huawei.com" <yuchao0@huawei.com>, "colyli@suse.de" <colyli@suse.de>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-bcache@vger.kernel.org" <linux-bcache@vger.kernel.org>, "jaegeuk@kernel.org" <jaegeuk@kernel.org>, "xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>, "kent.overstreet@gmail.com" <kent.overstreet@gmail.com>, "roger.pau@citrix.com" <roger.pau@citrix.com>
 List-Id: linux-scsi@vger.kernel.org
 
-When tracing instances where we open and close WKA ports, we also pass the
-request-ID of the respective FSF command.
-
-But after successfully sending the FSF command we must not use the
-request-object anymore, as this might result in an use-after-free (see
-"zfcp: fix request object use-after-free in send path causing seqno errors"
-).
-
-To fix this add a new variable that caches the request-ID before sending
-the request. This won't change during the hand-off to the FCP channel,
-and so it's safe to trace this cached request-ID later, instead of using
-the request object.
-
-Signed-off-by: Benjamin Block <bblock@linux.ibm.com>
-Fixes: d27a7cb91960 ("zfcp: trace on request for open and close of WKA port")
-Cc: <stable@vger.kernel.org> #2.6.38+
-Reviewed-by: Steffen Maier <maier@linux.ibm.com>
-Reviewed-by: Jens Remus <jremus@linux.ibm.com>
----
- drivers/s390/scsi/zfcp_fsf.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/s390/scsi/zfcp_fsf.c b/drivers/s390/scsi/zfcp_fsf.c
-index c5b2615b49ef..296bbc3c4606 100644
---- a/drivers/s390/scsi/zfcp_fsf.c
-+++ b/drivers/s390/scsi/zfcp_fsf.c
-@@ -1627,6 +1627,7 @@ int zfcp_fsf_open_wka_port(struct zfcp_fc_wka_port *wka_port)
- {
- 	struct zfcp_qdio *qdio = wka_port->adapter->qdio;
- 	struct zfcp_fsf_req *req;
-+	unsigned long req_id = 0;
- 	int retval = -EIO;
- 
- 	spin_lock_irq(&qdio->req_q_lock);
-@@ -1649,6 +1650,8 @@ int zfcp_fsf_open_wka_port(struct zfcp_fc_wka_port *wka_port)
- 	hton24(req->qtcb->bottom.support.d_id, wka_port->d_id);
- 	req->data = wka_port;
- 
-+	req_id = req->req_id;
-+
- 	zfcp_fsf_start_timer(req, ZFCP_FSF_REQUEST_TIMEOUT);
- 	retval = zfcp_fsf_req_send(req);
- 	if (retval)
-@@ -1657,7 +1660,7 @@ int zfcp_fsf_open_wka_port(struct zfcp_fc_wka_port *wka_port)
- out:
- 	spin_unlock_irq(&qdio->req_q_lock);
- 	if (!retval)
--		zfcp_dbf_rec_run_wka("fsowp_1", wka_port, req->req_id);
-+		zfcp_dbf_rec_run_wka("fsowp_1", wka_port, req_id);
- 	return retval;
- }
- 
-@@ -1683,6 +1686,7 @@ int zfcp_fsf_close_wka_port(struct zfcp_fc_wka_port *wka_port)
- {
- 	struct zfcp_qdio *qdio = wka_port->adapter->qdio;
- 	struct zfcp_fsf_req *req;
-+	unsigned long req_id = 0;
- 	int retval = -EIO;
- 
- 	spin_lock_irq(&qdio->req_q_lock);
-@@ -1705,6 +1709,8 @@ int zfcp_fsf_close_wka_port(struct zfcp_fc_wka_port *wka_port)
- 	req->data = wka_port;
- 	req->qtcb->header.port_handle = wka_port->handle;
- 
-+	req_id = req->req_id;
-+
- 	zfcp_fsf_start_timer(req, ZFCP_FSF_REQUEST_TIMEOUT);
- 	retval = zfcp_fsf_req_send(req);
- 	if (retval)
-@@ -1713,7 +1719,7 @@ int zfcp_fsf_close_wka_port(struct zfcp_fc_wka_port *wka_port)
- out:
- 	spin_unlock_irq(&qdio->req_q_lock);
- 	if (!retval)
--		zfcp_dbf_rec_run_wka("fscwp_1", wka_port, req->req_id);
-+		zfcp_dbf_rec_run_wka("fscwp_1", wka_port, req_id);
- 	return retval;
- }
- 
--- 
-2.17.1
+T24gNy8yLzE5IDU6MjMgUE0sIE1pbndvbyBJbSB3cm90ZToKPiBPbiAxOS0wNy0wMiAxMDo0Mjoz
+MCwgQ2hhaXRhbnlhIEt1bGthcm5pIHdyb3RlOgo+PiBUaGlzIHBhdGNoIHVwZGF0ZXMgdGhlIGJs
+a2Rldl9yZXNldF96b25lcygpIHdpdGggbmV3bHkgaW50cm9kdWNlZAo+PiBoZWxwZXIgZnVuY3Rp
+b24gdG8gcmVhZCB0aGUgbnJfc2VjdHMgZnJvbSBibG9jayBkZXZpY2UncyBoZF9wYXJ0cyB3aXRo
+Cj4+IHRoZSBoZWxwIG9mIHBhcnRfbnJfc2VjdHNfcmVhZCgpLgo+IENoYWl0YW55YSwKPgo+IEFy
+ZSB0aGUgZmlyc3QgdGhyZWUgcGF0Y2hlcyBzcGxpdCBmb3IgYSBzcGVjaWFsIHJlYXNvbj8gIElN
+SE8sIGl0IGNvdWxkCj4gYmUgc3F1YXNoZWQgaW50byBhIHNpbmdsZSBvbmUuCj4KPiBJdCBsb29r
+cyBnb29kIHRvIG1lLCBieSB0aGUgd2F5LgoKSW4gdGhlIGJsay16b25lZC5jIGluIHRoaXMgd2F5
+IGl0IGlzIGVhc2llciB0byBiaXNlY3QgaWYvd2hlbiB0aGUgcHJvYmxlbQoKY29tZXMuCgo+Cj4g
+UmV2aWV3ZWQtYnk6IE1pbndvbyBJbSA8bWlud29vLmltLmRldkBnbWFpbC5jb20+Cj4KCgpfX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpYZW4tZGV2ZWwgbWFp
+bGluZyBsaXN0Clhlbi1kZXZlbEBsaXN0cy54ZW5wcm9qZWN0Lm9yZwpodHRwczovL2xpc3RzLnhl
+bnByb2plY3Qub3JnL21haWxtYW4vbGlzdGluZm8veGVuLWRldmVs
