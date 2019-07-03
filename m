@@ -1,71 +1,34 @@
-From: Roman Bolshakov <r.bolshakov@yadro.com>
-Subject: Re: [RESEND PATCH] scsi: target/iblock: Fix overrun in WRITE SAME
- emulation
-Date: Wed, 3 Jul 2019 16:24:36 +0300
-Message-ID: <20190703132436.22k53mprnrn5fxcj@SPB-NB-133.local>
-References: <20190702191636.26481-1-r.bolshakov@yadro.com>
- <a1c14025-cb00-7f64-a633-82019a3b6813@redhat.com>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH V3 1/9] block: add a helper function to read
+ nr_setcs
+Date: Wed, 3 Jul 2019 08:03:27 -0700
+Message-ID: <26917678-fd82-b6c8-761e-220bc7d3b179@acm.org>
+References: <20190702174236.3332-1-chaitanya.kulkarni@wdc.com>
+ <20190702174236.3332-2-chaitanya.kulkarni@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <stable-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <a1c14025-cb00-7f64-a633-82019a3b6813@redhat.com>
-Sender: stable-owner@vger.kernel.org
-To: Michael Christie <mchristi@redhat.com>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, stable@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Content-Transfer-Encoding: base64
+Return-path: <xen-devel-bounces@lists.xenproject.org>
+In-Reply-To: <20190702174236.3332-2-chaitanya.kulkarni@wdc.com>
+Content-Language: en-US
+List-Unsubscribe: <https://lists.xenproject.org/mailman/options/xen-devel>,
+ <mailto:xen-devel-request@lists.xenproject.org?subject=unsubscribe>
+List-Post: <mailto:xen-devel@lists.xenproject.org>
+List-Help: <mailto:xen-devel-request@lists.xenproject.org?subject=help>
+List-Subscribe: <https://lists.xenproject.org/mailman/listinfo/xen-devel>,
+ <mailto:xen-devel-request@lists.xenproject.org?subject=subscribe>
+Errors-To: xen-devel-bounces@lists.xenproject.org
+Sender: "Xen-devel" <xen-devel-bounces@lists.xenproject.org>
+To: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>, linux-block@vger.kernel.org
+Cc: damien.lemoal@wdc.com, linux-btrace@vger.kernel.org, linux-scsi@vger.kernel.org, konrad.wilk@oracle.com, yuchao0@huawei.com, colyli@suse.de, linux-bcache@vger.kernel.org, jaegeuk@kernel.org, xen-devel@lists.xenproject.org, kent.overstreet@gmail.com, roger.pau@citrix.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Jul 03, 2019 at 12:40:29PM +0900, Michael Christie wrote:
-> On 07/03/2019 04:16 AM, Roman Bolshakov wrote:
-> > WRITE SAME corrupts data on the block device behind iblock if the
-> > command is emulated. The emulation code issues (M - 1) * N times more
-> > bios than requested, where M is the number of 512 blocks per real block
-> > size and N is the NUMBER OF LOGICAL BLOCKS specified in WRITE SAME
-> > command. So, for a device with 4k blocks, 7 * N more LBAs gets written
-> > after the requested range.
-> > 
-> > The issue happens because the number of 512 byte sectors to be written
-> > is decreased one by one while the real bios are typically from 1 to 8
-> > 512 byte sectors per bio.
-> > 
-> Roman,
-> 
-> The patch looks ok to me. Just one question. How did you hit this?
-> 
-
-Hi Michael,
-
-The initiator was CentOS 7.x with distro kernel (3.10.0-x). There were
-two cases:
- * Initiatalization [1] and online resize of ext4 filesystem [2]
-   use WRITE SAME [3] for zeroing. TCM doesn't support RSOC, so
-   the initiator defaults to using WRITE SAME (10). The filesystem
-   showed errors after online resize;
- * a WRITE SAME command for the last LBA was stuck in multipath. TCM
-   always returned LOGICAL UNIT NOT SUPPORTED for the command. The
-   resason of the response is because some bios were sent beyond the
-   sector limit. WRITE SAME with NUMBER OF LOGICAL BLOCKS == 1 was
-   failing for the last 7 LBAs.
-
-> Did you by any chance export this disk to a ESX initiator and was it
-> doing WRITE SAME to zero out data. But, did the device being used by
-> iblock not support the zero out command (was
-> /sys/block/XYZ/queue/write_zeroes_max_bytes == 0)?
-> 
-
-It did not support zero out and write same, both
-write_zeroes_max_bytes/write_same_max_bytes == 0
-
-> Or, did you just send a WRITE SAME command manually using some tools
-> like sg utils and it had a non zero'd buffer to write out?
-> 
-
-Yes, I triaged the issues above with sg_write_same/sg_dd and non-zero
-buffer.
-
-1. https://patchwork.ozlabs.org/patch/66590/
-2. https://lists.openwall.net/linux-ext4/2012/01/04/14
-3. https://www.spinics.net/lists/linux-scsi/msg57783.html
-
-Best regards,
-Roman
+T24gNy8yLzE5IDEwOjQyIEFNLCBDaGFpdGFueWEgS3Vsa2Fybmkgd3JvdGU6Cj4gKy8qIEhlbHBl
+ciBmdW5jdGlvbiB0byByZWFkIHRoZSBiZGV2LT5iZF9wYXJ0LT5ucl9zZWN0cyAqLwo+ICtzdGF0
+aWMgaW5saW5lIHNlY3Rvcl90IGJkZXZfbnJfc2VjdHMoc3RydWN0IGJsb2NrX2RldmljZSAqYmRl
+dikKPiArewo+ICsJcmV0dXJuIHBhcnRfbnJfc2VjdHNfcmVhZChiZGV2LT5iZF9wYXJ0KTsKPiAr
+fQoKSXMgdGhlIGNvbW1lbnQgYWJvdmUgYmRldl9ucl9zZWN0cygpIHJlYWxseSB1c2VmdWwgb3Ig
+c2hvdWxkIGl0IGJlIGxlZnQgb3V0PwoKVGhhbmtzLAoKQmFydC4KCl9fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fClhlbi1kZXZlbCBtYWlsaW5nIGxpc3QKWGVu
+LWRldmVsQGxpc3RzLnhlbnByb2plY3Qub3JnCmh0dHBzOi8vbGlzdHMueGVucHJvamVjdC5vcmcv
+bWFpbG1hbi9saXN0aW5mby94ZW4tZGV2ZWw=
