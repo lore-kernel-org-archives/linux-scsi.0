@@ -1,34 +1,44 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH V3 1/9] block: add a helper function to read
- nr_setcs
-Date: Wed, 3 Jul 2019 08:03:27 -0700
-Message-ID: <26917678-fd82-b6c8-761e-220bc7d3b179@acm.org>
-References: <20190702174236.3332-1-chaitanya.kulkarni@wdc.com>
- <20190702174236.3332-2-chaitanya.kulkarni@wdc.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
-Content-Transfer-Encoding: base64
-Return-path: <xen-devel-bounces@lists.xenproject.org>
-In-Reply-To: <20190702174236.3332-2-chaitanya.kulkarni@wdc.com>
-Content-Language: en-US
-List-Unsubscribe: <https://lists.xenproject.org/mailman/options/xen-devel>,
- <mailto:xen-devel-request@lists.xenproject.org?subject=unsubscribe>
-List-Post: <mailto:xen-devel@lists.xenproject.org>
-List-Help: <mailto:xen-devel-request@lists.xenproject.org?subject=help>
-List-Subscribe: <https://lists.xenproject.org/mailman/listinfo/xen-devel>,
- <mailto:xen-devel-request@lists.xenproject.org?subject=subscribe>
-Errors-To: xen-devel-bounces@lists.xenproject.org
-Sender: "Xen-devel" <xen-devel-bounces@lists.xenproject.org>
-To: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>, linux-block@vger.kernel.org
-Cc: damien.lemoal@wdc.com, linux-btrace@vger.kernel.org, linux-scsi@vger.kernel.org, konrad.wilk@oracle.com, yuchao0@huawei.com, colyli@suse.de, linux-bcache@vger.kernel.org, jaegeuk@kernel.org, xen-devel@lists.xenproject.org, kent.overstreet@gmail.com, roger.pau@citrix.com
+From: Fuqian Huang <huangfq.daxian@gmail.com>
+Subject: [PATCH v2 14/35] message/fusion: Use kmemdup rather than duplicating its implementation
+Date: Thu,  4 Jul 2019 00:29:06 +0800
+Message-ID: <20190703162906.32507-1-huangfq.daxian@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+Cc: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Fuqian Huang <huangfq.daxian@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gNy8yLzE5IDEwOjQyIEFNLCBDaGFpdGFueWEgS3Vsa2Fybmkgd3JvdGU6Cj4gKy8qIEhlbHBl
-ciBmdW5jdGlvbiB0byByZWFkIHRoZSBiZGV2LT5iZF9wYXJ0LT5ucl9zZWN0cyAqLwo+ICtzdGF0
-aWMgaW5saW5lIHNlY3Rvcl90IGJkZXZfbnJfc2VjdHMoc3RydWN0IGJsb2NrX2RldmljZSAqYmRl
-dikKPiArewo+ICsJcmV0dXJuIHBhcnRfbnJfc2VjdHNfcmVhZChiZGV2LT5iZF9wYXJ0KTsKPiAr
-fQoKSXMgdGhlIGNvbW1lbnQgYWJvdmUgYmRldl9ucl9zZWN0cygpIHJlYWxseSB1c2VmdWwgb3Ig
-c2hvdWxkIGl0IGJlIGxlZnQgb3V0PwoKVGhhbmtzLAoKQmFydC4KCl9fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fClhlbi1kZXZlbCBtYWlsaW5nIGxpc3QKWGVu
-LWRldmVsQGxpc3RzLnhlbnByb2plY3Qub3JnCmh0dHBzOi8vbGlzdHMueGVucHJvamVjdC5vcmcv
-bWFpbG1hbi9saXN0aW5mby94ZW4tZGV2ZWw=
+kmemdup is introduced to duplicate a region of memory in a neat way.
+Rather than kmalloc/kzalloc + memcpy, which the programmer needs to
+write the size twice (sometimes lead to mistakes), kmemdup improves
+readability, leads to smaller code and also reduce the chances of mistakes.
+Suggestion to use kmemdup rather than using kmalloc/kzalloc + memcpy.
+
+Signed-off-by: Fuqian Huang <huangfq.daxian@gmail.com>
+---
+Changes in v2:
+  - Fix a typo in commit message (memset -> memcpy)
+
+ drivers/message/fusion/mptbase.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+index d8882b0a1338..e0c57cecddd3 100644
+--- a/drivers/message/fusion/mptbase.c
++++ b/drivers/message/fusion/mptbase.c
+@@ -6001,13 +6001,12 @@ mpt_findImVolumes(MPT_ADAPTER *ioc)
+ 	if (mpt_config(ioc, &cfg) != 0)
+ 		goto out;
+ 
+-	mem = kmalloc(iocpage2sz, GFP_KERNEL);
++	mem = kmemdup((u8 *)pIoc2, iocpage2sz, GFP_KERNEL);
+ 	if (!mem) {
+ 		rc = -ENOMEM;
+ 		goto out;
+ 	}
+ 
+-	memcpy(mem, (u8 *)pIoc2, iocpage2sz);
+ 	ioc->raid_data.pIocPg2 = (IOCPage2_t *) mem;
+ 
+ 	mpt_read_ioc_pg_3(ioc);
+-- 
+2.11.0
