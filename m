@@ -1,41 +1,41 @@
-From: Minwoo Im <minwoo.im.dev@gmail.com>
-Subject: Re: [PATCH V3 4/9] blk-zoned: update
- blkdev_reset_zones() with helper
-Date: Wed, 3 Jul 2019 14:25:28 +0900
-Message-ID: <20190703052528.GB21258@minwoo-desktop>
-References: <20190702174236.3332-1-chaitanya.kulkarni@wdc.com>
- <20190702174236.3332-5-chaitanya.kulkarni@wdc.com>
- <20190703002347.GE15705@minwoo-desktop>
- <DM6PR04MB5754D27FC41D86E2D419DD6C86FB0@DM6PR04MB5754.namprd04.prod.outlook.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <xen-devel-bounces@lists.xenproject.org>
-Content-Disposition: inline
-In-Reply-To: <DM6PR04MB5754D27FC41D86E2D419DD6C86FB0@DM6PR04MB5754.namprd04.prod.outlook.com>
-List-Unsubscribe: <https://lists.xenproject.org/mailman/options/xen-devel>,
- <mailto:xen-devel-request@lists.xenproject.org?subject=unsubscribe>
-List-Post: <mailto:xen-devel@lists.xenproject.org>
-List-Help: <mailto:xen-devel-request@lists.xenproject.org?subject=help>
-List-Subscribe: <https://lists.xenproject.org/mailman/listinfo/xen-devel>,
- <mailto:xen-devel-request@lists.xenproject.org?subject=subscribe>
-Errors-To: xen-devel-bounces@lists.xenproject.org
-Sender: "Xen-devel" <xen-devel-bounces@lists.xenproject.org>
-To: Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>
-Cc: Damien Le Moal <Damien.LeMoal@wdc.com>, "linux-btrace@vger.kernel.org" <linux-btrace@vger.kernel.org>, "bvanassche@acm.org" <bvanassche@acm.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "konrad.wilk@oracle.com" <konrad.wilk@oracle.com>, "yuchao0@huawei.com" <yuchao0@huawei.com>, "colyli@suse.de" <colyli@suse.de>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-bcache@vger.kernel.org" <linux-bcache@vger.kernel.org>, Minwoo Im <minwoo.im.dev@gmail.com>, "jaegeuk@kernel.org" <jaegeuk@kernel.org>, "xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>, "kent.overstreet@gmail.com" <kent.overstreet@gmail.com>, "roger.pau@citrix.com" <roger.pau@citrix.com>
+From: Fuqian Huang <huangfq.daxian@gmail.com>
+Subject: [PATCH 13/30] message/fusion: Use kmemdup rather than duplicating its implementation
+Date: Wed,  3 Jul 2019 21:15:39 +0800
+Message-ID: <20190703131539.25270-1-huangfq.daxian@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+Cc: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Fuqian Huang <huangfq.daxian@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gMTktMDctMDMgMDI6Mjk6MzMsIENoYWl0YW55YSBLdWxrYXJuaSB3cm90ZToKPiBPbiA3LzIv
-MTkgNToyMyBQTSwgTWlud29vIEltIHdyb3RlOgo+ID4gT24gMTktMDctMDIgMTA6NDI6MzAsIENo
-YWl0YW55YSBLdWxrYXJuaSB3cm90ZToKPiA+PiBUaGlzIHBhdGNoIHVwZGF0ZXMgdGhlIGJsa2Rl
-dl9yZXNldF96b25lcygpIHdpdGggbmV3bHkgaW50cm9kdWNlZAo+ID4+IGhlbHBlciBmdW5jdGlv
-biB0byByZWFkIHRoZSBucl9zZWN0cyBmcm9tIGJsb2NrIGRldmljZSdzIGhkX3BhcnRzIHdpdGgK
-PiA+PiB0aGUgaGVscCBvZiBwYXJ0X25yX3NlY3RzX3JlYWQoKS4KPiA+IENoYWl0YW55YSwKPiA+
-Cj4gPiBBcmUgdGhlIGZpcnN0IHRocmVlIHBhdGNoZXMgc3BsaXQgZm9yIGEgc3BlY2lhbCByZWFz
-b24/ICBJTUhPLCBpdCBjb3VsZAo+ID4gYmUgc3F1YXNoZWQgaW50byBhIHNpbmdsZSBvbmUuCj4g
-Pgo+ID4gSXQgbG9va3MgZ29vZCB0byBtZSwgYnkgdGhlIHdheS4KPiAKPiBJbiB0aGUgYmxrLXpv
-bmVkLmMgaW4gdGhpcyB3YXkgaXQgaXMgZWFzaWVyIHRvIGJpc2VjdCBpZi93aGVuIHRoZSBwcm9i
-bGVtCj4gCj4gY29tZXMuCgpPaCBva2F5LiAgVGhhdCBtYWtlcyBzZW5zZS4KClRoYW5rcywgQ2hh
-aXRhbnlhLgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18K
-WGVuLWRldmVsIG1haWxpbmcgbGlzdApYZW4tZGV2ZWxAbGlzdHMueGVucHJvamVjdC5vcmcKaHR0
-cHM6Ly9saXN0cy54ZW5wcm9qZWN0Lm9yZy9tYWlsbWFuL2xpc3RpbmZvL3hlbi1kZXZlbA==
+kmemdup is introduced to duplicate a region of memory in a neat way.
+Rather than kmalloc/kzalloc + memset, which the programmer needs to
+write the size twice (sometimes lead to mistakes), kmemdup improves
+readability, leads to smaller code and also reduce the chances of mistakes.
+Suggestion to use kmemdup rather than using kmalloc/kzalloc + memset.
+
+Signed-off-by: Fuqian Huang <huangfq.daxian@gmail.com>
+---
+ drivers/message/fusion/mptbase.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+index d8882b0a1338..e0c57cecddd3 100644
+--- a/drivers/message/fusion/mptbase.c
++++ b/drivers/message/fusion/mptbase.c
+@@ -6001,13 +6001,12 @@ mpt_findImVolumes(MPT_ADAPTER *ioc)
+ 	if (mpt_config(ioc, &cfg) != 0)
+ 		goto out;
+ 
+-	mem = kmalloc(iocpage2sz, GFP_KERNEL);
++	mem = kmemdup((u8 *)pIoc2, iocpage2sz, GFP_KERNEL);
+ 	if (!mem) {
+ 		rc = -ENOMEM;
+ 		goto out;
+ 	}
+ 
+-	memcpy(mem, (u8 *)pIoc2, iocpage2sz);
+ 	ioc->raid_data.pIocPg2 = (IOCPage2_t *) mem;
+ 
+ 	mpt_read_ioc_pg_3(ioc);
+-- 
+2.11.0
