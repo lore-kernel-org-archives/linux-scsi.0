@@ -1,38 +1,66 @@
-From: Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>
-Subject: Re: [PATCH V3 4/9] blk-zoned: update
- blkdev_reset_zones() with helper
-Date: Wed, 3 Jul 2019 02:29:33 +0000
-Message-ID: <DM6PR04MB5754D27FC41D86E2D419DD6C86FB0@DM6PR04MB5754.namprd04.prod.outlook.com>
-References: <20190702174236.3332-1-chaitanya.kulkarni@wdc.com>
- <20190702174236.3332-5-chaitanya.kulkarni@wdc.com>
- <20190703002347.GE15705@minwoo-desktop>
+From: Michael Christie <mchristi@redhat.com>
+Subject: Re: [RESEND PATCH] scsi: target/iblock: Fix overrun in WRITE SAME
+ emulation
+Date: Wed, 3 Jul 2019 12:40:29 +0900
+Message-ID: <a1c14025-cb00-7f64-a633-82019a3b6813@redhat.com>
+References: <20190702191636.26481-1-r.bolshakov@yadro.com>
+Reply-To: mchristi@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <xen-devel-bounces@lists.xenproject.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20190702191636.26481-1-r.bolshakov@yadro.com>
 Content-Language: en-US
-List-Unsubscribe: <https://lists.xenproject.org/mailman/options/xen-devel>,
- <mailto:xen-devel-request@lists.xenproject.org?subject=unsubscribe>
-List-Post: <mailto:xen-devel@lists.xenproject.org>
-List-Help: <mailto:xen-devel-request@lists.xenproject.org?subject=help>
-List-Subscribe: <https://lists.xenproject.org/mailman/listinfo/xen-devel>,
- <mailto:xen-devel-request@lists.xenproject.org?subject=subscribe>
-Errors-To: xen-devel-bounces@lists.xenproject.org
-Sender: "Xen-devel" <xen-devel-bounces@lists.xenproject.org>
-To: Minwoo Im <minwoo.im.dev@gmail.com>
-Cc: Damien Le Moal <Damien.LeMoal@wdc.com>, "linux-btrace@vger.kernel.org" <linux-btrace@vger.kernel.org>, "bvanassche@acm.org" <bvanassche@acm.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "konrad.wilk@oracle.com" <konrad.wilk@oracle.com>, "yuchao0@huawei.com" <yuchao0@huawei.com>, "colyli@suse.de" <colyli@suse.de>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-bcache@vger.kernel.org" <linux-bcache@vger.kernel.org>, "jaegeuk@kernel.org" <jaegeuk@kernel.org>, "xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>, "kent.overstreet@gmail.com" <kent.overstreet@gmail.com>, "roger.pau@citrix.com" <roger.pau@citrix.com>
+Sender: stable-owner@vger.kernel.org
+To: Roman Bolshakov <r.bolshakov@yadro.com>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, stable@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gNy8yLzE5IDU6MjMgUE0sIE1pbndvbyBJbSB3cm90ZToKPiBPbiAxOS0wNy0wMiAxMDo0Mjoz
-MCwgQ2hhaXRhbnlhIEt1bGthcm5pIHdyb3RlOgo+PiBUaGlzIHBhdGNoIHVwZGF0ZXMgdGhlIGJs
-a2Rldl9yZXNldF96b25lcygpIHdpdGggbmV3bHkgaW50cm9kdWNlZAo+PiBoZWxwZXIgZnVuY3Rp
-b24gdG8gcmVhZCB0aGUgbnJfc2VjdHMgZnJvbSBibG9jayBkZXZpY2UncyBoZF9wYXJ0cyB3aXRo
-Cj4+IHRoZSBoZWxwIG9mIHBhcnRfbnJfc2VjdHNfcmVhZCgpLgo+IENoYWl0YW55YSwKPgo+IEFy
-ZSB0aGUgZmlyc3QgdGhyZWUgcGF0Y2hlcyBzcGxpdCBmb3IgYSBzcGVjaWFsIHJlYXNvbj8gIElN
-SE8sIGl0IGNvdWxkCj4gYmUgc3F1YXNoZWQgaW50byBhIHNpbmdsZSBvbmUuCj4KPiBJdCBsb29r
-cyBnb29kIHRvIG1lLCBieSB0aGUgd2F5LgoKSW4gdGhlIGJsay16b25lZC5jIGluIHRoaXMgd2F5
-IGl0IGlzIGVhc2llciB0byBiaXNlY3QgaWYvd2hlbiB0aGUgcHJvYmxlbQoKY29tZXMuCgo+Cj4g
-UmV2aWV3ZWQtYnk6IE1pbndvbyBJbSA8bWlud29vLmltLmRldkBnbWFpbC5jb20+Cj4KCgpfX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpYZW4tZGV2ZWwgbWFp
-bGluZyBsaXN0Clhlbi1kZXZlbEBsaXN0cy54ZW5wcm9qZWN0Lm9yZwpodHRwczovL2xpc3RzLnhl
-bnByb2plY3Qub3JnL21haWxtYW4vbGlzdGluZm8veGVuLWRldmVs
+On 07/03/2019 04:16 AM, Roman Bolshakov wrote:
+> WRITE SAME corrupts data on the block device behind iblock if the
+> command is emulated. The emulation code issues (M - 1) * N times more
+> bios than requested, where M is the number of 512 blocks per real block
+> size and N is the NUMBER OF LOGICAL BLOCKS specified in WRITE SAME
+> command. So, for a device with 4k blocks, 7 * N more LBAs gets written
+> after the requested range.
+> 
+> The issue happens because the number of 512 byte sectors to be written
+> is decreased one by one while the real bios are typically from 1 to 8
+> 512 byte sectors per bio.
+> 
+> Fixes: c66ac9db8d4a ("[SCSI] target: Add LIO target core v4.0.0-rc6")
+> Cc: <stable@vger.kernel.org>
+> Signed-off-by: Roman Bolshakov <r.bolshakov@yadro.com>
+> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+> ---
+>  drivers/target/target_core_iblock.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
+> index f4a075303e9a..6949ea8bc387 100644
+> --- a/drivers/target/target_core_iblock.c
+> +++ b/drivers/target/target_core_iblock.c
+> @@ -502,7 +502,7 @@ iblock_execute_write_same(struct se_cmd *cmd)
+>  
+>  		/* Always in 512 byte units for Linux/Block */
+>  		block_lba += sg->length >> SECTOR_SHIFT;
+> -		sectors -= 1;
+> +		sectors -= sg->length >> SECTOR_SHIFT;
+>  	}
+>  
+>  	iblock_submit_bios(&list);
+> 
+
+Roman,
+
+The patch looks ok to me. Just one question. How did you hit this?
+
+Did you by any chance export this disk to a ESX initiator and was it
+doing WRITE SAME to zero out data. But, did the device being used by
+iblock not support the zero out command (was
+/sys/block/XYZ/queue/write_zeroes_max_bytes == 0)?
+
+Or, did you just send a WRITE SAME command manually using some tools
+like sg utils and it had a non zero'd buffer to write out?
+
+Or, was it some other use case?
