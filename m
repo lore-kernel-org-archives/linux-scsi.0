@@ -1,36 +1,95 @@
-From: syzbot <syzbot+19a9f729f05272857487@syzkaller.appspotmail.com>
-Subject: Re: KASAN: use-after-free Read in hci_cmd_timeout
-Date: Wed, 03 Jul 2019 11:26:00 -0700
-Message-ID: <00000000000041ac74058ccafe0d@google.com>
-References: <00000000000035c756058848954a@google.com>
+From: Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>
+Subject: Re: [PATCH V3 1/9] block: add a helper function to read
+ nr_setcs
+Date: Thu, 4 Jul 2019 00:11:48 +0000
+Message-ID: <BYAPR04MB57492202BACDEE2991620E4D86FA0@BYAPR04MB5749.namprd04.prod.outlook.com>
+References: <20190702174236.3332-1-chaitanya.kulkarni@wdc.com>
+ <20190702174236.3332-2-chaitanya.kulkarni@wdc.com>
+ <26917678-fd82-b6c8-761e-220bc7d3b179@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"; format=flowed; delsp=yes
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <00000000000035c756058848954a@google.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: chaitra.basappa@broadcom.com, davem@davemloft.net, jejb@linux.vnet.ibm.com, johan.hedberg@gmail.com, linux-bluetooth@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, marcel@holtmann.org, martin.petersen@oracle.com, mpt-fusionlinux.pdl@broadcom.com, netdev@vger.kernel.org, sathya.prakash@broadcom.com, suganath-prabu.subramani@broadcom.com, syzkaller-bugs@googlegroups.com
+Content-Type: multipart/mixed; boundary="===============8352981984950808594=="
+Return-path: <xen-devel-bounces@lists.xenproject.org>
+Content-Language: en-US
+List-Unsubscribe: <https://lists.xenproject.org/mailman/options/xen-devel>,
+ <mailto:xen-devel-request@lists.xenproject.org?subject=unsubscribe>
+List-Post: <mailto:xen-devel@lists.xenproject.org>
+List-Help: <mailto:xen-devel-request@lists.xenproject.org?subject=help>
+List-Subscribe: <https://lists.xenproject.org/mailman/listinfo/xen-devel>,
+ <mailto:xen-devel-request@lists.xenproject.org?subject=subscribe>
+Errors-To: xen-devel-bounces@lists.xenproject.org
+Sender: "Xen-devel" <xen-devel-bounces@lists.xenproject.org>
+To: Bart Van Assche <bvanassche@acm.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
+Cc: Damien Le Moal <Damien.LeMoal@wdc.com>, "linux-btrace@vger.kernel.org" <linux-btrace@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "konrad.wilk@oracle.com" <konrad.wilk@oracle.com>, "yuchao0@huawei.com" <yuchao0@huawei.com>, "colyli@suse.de" <colyli@suse.de>, "linux-bcache@vger.kernel.org" <linux-bcache@vger.kernel.org>, "jaegeuk@kernel.org" <jaegeuk@kernel.org>, "xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>, "kent.overstreet@gmail.com" <kent.overstreet@gmail.com>, "roger.pau@citrix.com" <roger.pau@citrix.com>
 List-Id: linux-scsi@vger.kernel.org
 
-syzbot has bisected this bug to:
+--===============8352981984950808594==
+Content-Language: en-US
+Content-Type: multipart/alternative;
+	boundary="_000_BYAPR04MB57492202BACDEE2991620E4D86FA0BYAPR04MB5749namp_"
 
-commit ff92b9dd9268507e23fc10cc4341626cef50367c
-Author: Suganath Prabu <suganath-prabu.subramani@broadcom.com>
-Date:   Thu Oct 25 14:03:40 2018 +0000
+--_000_BYAPR04MB57492202BACDEE2991620E4D86FA0BYAPR04MB5749namp_
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-     scsi: mpt3sas: Update MPI headers to support Aero controllers
+On 7/3/19 8:03 AM, Bart Van Assche wrote:
 
-bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=130ac8dda00000
-start commit:   eca94432 Bluetooth: Fix faulty expression for minimum encr..
-git tree:       upstream
-final crash:    https://syzkaller.appspot.com/x/report.txt?x=108ac8dda00000
-console output: https://syzkaller.appspot.com/x/log.txt?x=170ac8dda00000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=f6451f0da3d42d53
-dashboard link: https://syzkaller.appspot.com/bug?extid=19a9f729f05272857487
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=125b7999a00000
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=176deefba00000
++}
 
-Reported-by: syzbot+19a9f729f05272857487@syzkaller.appspotmail.com
-Fixes: ff92b9dd9268 ("scsi: mpt3sas: Update MPI headers to support Aero  
-controllers")
 
-For information about bisection process see: https://goo.gl/tpsmEJ#bisection
+Is the comment above bdev_nr_sects() really useful or should it be left out=
+?
+
+Thanks,
+
+Bart.
+
+
+
+Sure, let me send V4 without the comment.
+
+--_000_BYAPR04MB57492202BACDEE2991620E4D86FA0BYAPR04MB5749namp_
+Content-Type: text/html; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+
+<html>
+<head>
+<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dus-ascii"=
+>
+</head>
+<body text=3D"#000000" bgcolor=3D"#FFFFFF">
+<div class=3D"moz-cite-prefix">On 7/3/19 8:03 AM, Bart Van Assche wrote:<br=
+>
+</div>
+<blockquote type=3D"cite" cite=3D"mid:26917678-fd82-b6c8-761e-220bc7d3b179@=
+acm.org">
+<blockquote type=3D"cite" style=3D"color: #000000;">
+<pre class=3D"moz-quote-pre" wrap=3D"">&#43;}=0A=
+</pre>
+</blockquote>
+<pre class=3D"moz-quote-pre" wrap=3D"">Is the comment above bdev_nr_sects()=
+ really useful or should it be left out?=0A=
+=0A=
+Thanks,=0A=
+=0A=
+Bart.=0A=
+=0A=
+</pre>
+</blockquote>
+Sure, let me send V4 without the comment.<br>
+</body>
+</html>
+
+--_000_BYAPR04MB57492202BACDEE2991620E4D86FA0BYAPR04MB5749namp_--
+
+
+--===============8352981984950808594==
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: base64
+Content-Disposition: inline
+
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KWGVuLWRldmVs
+IG1haWxpbmcgbGlzdApYZW4tZGV2ZWxAbGlzdHMueGVucHJvamVjdC5vcmcKaHR0cHM6Ly9saXN0
+cy54ZW5wcm9qZWN0Lm9yZy9tYWlsbWFuL2xpc3RpbmZvL3hlbi1kZXZlbA==
+
+--===============8352981984950808594==--
