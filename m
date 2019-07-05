@@ -1,36 +1,67 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH 0/2] scsi: add support for request batching
-Date: Fri, 5 Jul 2019 13:58:39 +0200
-Message-ID: <6c2cf159-9ba2-da39-6e1c-95dea7e111ba@redhat.com>
-References: <20190530112811.3066-1-pbonzini@redhat.com>
- <746ad64a-4047-1597-a0d4-f14f3529cc19@redhat.com>
- <yq1lfxnk8ar.fsf@oracle.com>
- <48c7d581-6ec8-260a-b4ba-217aef516305@redhat.com>
- <80dd68bf-a544-25ec-568f-cee1cf0c8cfd@suse.de>
+From: "Ardelean, Alexandru" <alexandru.Ardelean@analog.com>
+Subject: Re: [PATCH 3/3][V3] iio: Handle enumerated properties with gaps
+Date: Fri, 5 Jul 2019 13:35:14 +0000
+Message-ID: <97a28b3d5a36886ca7980d56911fadcc2ddbb0c1.camel@analog.com>
+References: <20190508111913.7276-1-alexandru.ardelean@analog.com>
+         <20190508111913.7276-3-alexandru.ardelean@analog.com>
+         <20190508131749.GM9224@smile.fi.intel.com>
+         <780a4bcbf2e8a2d816efe2ed9613ac2b1594282e.camel@analog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <80dd68bf-a544-25ec-568f-cee1cf0c8cfd@suse.de>
+In-Reply-To: <780a4bcbf2e8a2d816efe2ed9613ac2b1594282e.camel@analog.com>
 Content-Language: en-US
+Content-ID: <6ABF6AD2E8343444BD79CB4869BCBAD5@analog.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-kernel@vger.kernel.org, kvm@vger.kernel.org, jejb@linux.ibm.com, linux-scsi@vger.kernel.org, stefanha@redhat.com
+To: "andriy.shevchenko@linux.intel.com" <andriy.shevchenko@linux.intel.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "jic23@kernel.org" <jic23@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-iio@vger.kernel.org" <linux-iio@vger.kernel.org>, "lars@metafoo.de" <lars@metafoo.de>
 List-Id: linux-scsi@vger.kernel.org
 
-On 05/07/19 09:13, Hannes Reinecke wrote:
-> On 6/27/19 10:17 AM, Paolo Bonzini wrote:
->> On 27/06/19 05:37, Martin K. Petersen wrote:
->>>> Ping?  Are there any more objections?
->>> It's a core change so we'll need some more reviews. I suggest you
->>> resubmit.
->> Resubmit exactly the same patches?
->> Where is the ->commit_rqs() callback invoked?
-> I don't seem to be able to find it...
-
-Stefan answered, and the series now has three reviews!  It may be late
-for 5.3 but I hope this can go in soon.
-
-Thanks,
-
-Paolo
+T24gVGh1LCAyMDE5LTA1LTA5IGF0IDEwOjMxICswMzAwLCBBbGV4YW5kcnUgQXJkZWxlYW4gd3Jv
+dGU6DQo+IE9uIFdlZCwgMjAxOS0wNS0wOCBhdCAxNjoxNyArMDMwMCwgQW5keSBTaGV2Y2hlbmtv
+IHdyb3RlOg0KPiA+IFtFeHRlcm5hbF0NCj4gPiANCj4gPiANCj4gPiBPbiBXZWQsIE1heSAwOCwg
+MjAxOSBhdCAwMjoxOToxM1BNICswMzAwLCBBbGV4YW5kcnUgQXJkZWxlYW4gd3JvdGU6DQo+ID4g
+PiBGcm9tOiBMYXJzLVBldGVyIENsYXVzZW4gPGxhcnNAbWV0YWZvby5kZT4NCj4gPiA+IA0KPiA+
+ID4gU29tZSBlbnVtcyBtaWdodCBoYXZlIGdhcHMgb3IgcmVzZXJ2ZWQgdmFsdWVzIGluIHRoZSBt
+aWRkbGUgb2YgdGhlaXINCj4gPiA+IHZhbHVlDQo+ID4gPiByYW5nZS4gRS5nLiBjb25zaWRlciBh
+IDItYml0IGVudW0gd2hlcmUgdGhlIHZhbHVlcyAwLCAxIGFuZCAzIGhhdmUgYQ0KPiA+ID4gbWVh
+bmluZywgYnV0IDIgaXMgYSByZXNlcnZlZCB2YWx1ZSBhbmQgY2FuIG5vdCBiZSB1c2VkLg0KPiA+
+ID4gDQo+ID4gPiBBZGQgc3VwcG9ydCBmb3Igc3VjaCBlbnVtcyB0byB0aGUgSUlPIGVudW0gaGVs
+cGVyIGZ1bmN0aW9ucy4gQSByZXNlcnZlZA0KPiA+ID4gdmFsdWVzIGlzIG1hcmtlZCBieSBzZXR0
+aW5nIGl0cyBlbnRyeSBpbiB0aGUgaXRlbXMgYXJyYXkgdG8gTlVMTCByYXRoZXINCj4gPiA+IHRo
+YW4gdGhlIG5vcm1hbCBkZXNjcmlwdGl2ZSBzdHJpbmcgdmFsdWUuDQo+ID4gPiANCj4gPiA+IEFs
+c28sIGBfX3N5c2ZzX21hdGNoX3N0cmluZygpYCBub3cgc3VwcG9ydHMgTlVMTCBnYXBzLCBzbyB0
+aGF0IGRvZXNuJ3QNCj4gPiA+IHJlcXVpcmUgYW55IGNoYW5nZXMuDQo+ID4gPiAtICAgICBmb3Ig
+KGkgPSAwOyBpIDwgZS0+bnVtX2l0ZW1zOyArK2kpDQo+ID4gPiArICAgICBmb3IgKGkgPSAwOyBp
+IDwgZS0+bnVtX2l0ZW1zOyArK2kpIHsNCj4gPiA+ICsgICAgICAgICAgICAgaWYgKCFlLT5pdGVt
+c1tpXSkNCj4gPiA+ICsgICAgICAgICAgICAgICAgICAgICBjb250aW51ZTsNCj4gPiA+ICAgICAg
+ICAgICAgICAgbGVuICs9IHNjbnByaW50ZihidWYgKyBsZW4sIFBBR0VfU0laRSAtIGxlbiwgIiVz
+ICIsIGUtDQo+ID4gPiA+IGl0ZW1zW2ldKTsNCj4gPiA+ICsgICAgIH0NCj4gPiANCj4gPiBUaGUg
+cHJvYmxlbSBoZXJlIHRoYXQgdGhlIHVzZXIgd2lsbCBoYXZlIG5vIGNsdWUgd2hlcmUgdGhlIGdh
+cCBpcw0KPiA+IGhhcHBlbmVkLCB0bw0KPiA+IHNvbHZlIHRoaXMgd2UgbmVlZCBlaXRoZXIgYml0
+bWFwIG9mIGFycmF5LCB3aGVyZSBzZXQgYml0cyBzaG93cyBkZWZpbmVkDQo+ID4gaXRlbXMsDQo+
+ID4gb3IgdXNlIGNvbW1hLXNlcGFyYXRlZCBsaXN0IG9mIHZhbHVlcy4gVGhlIGxhdHRlciB3b3Vs
+ZCBuZWVkIGFub3RoZXIgbm9kZQ0KPiA+IHNpbmNlDQo+ID4gd2UgZG9uJ3QgYnJlYWsgdXNlciBz
+cGFjZS4NCj4gDQo+IEhtbW0uDQo+IEkgYW0gd29uZGVyaW5nIGlmIHRoZXJlIGFyZSBjYXNlcyB3
+aGVyZSB1c2Vyc3BhY2Ugd291bGQgY2FyZSBhYm91dCByZXNlcnZlZA0KPiB2YWx1ZXMgYW5kL29y
+IHBvc2l0aW9ucyBvZiByZXNlcnZlZCBiaXQtZmllbGRzLg0KPiBNYXliZSB5b3UgY291bGQgb2Zm
+ZXIgZXhhbXBsZXMvdXNlLWNhc2VzIHdoZXJlIHRoaXMgaXMgbmVlZGVkLg0KPiANCj4gVG8gc29t
+ZSBleHRlbnQgdGhlIGtlcm5lbCBbZHJpdmVycyAmIGZyYW1ld29ya3NdIHNob3VsZCBwcm9iYWJs
+eSBub3QgbmVlZA0KPiB0byBleHBvc2UgdGhhdCAic3RyaW5nLWVudW0tWCIgID09IGBiaXRmaWVs
+ZF8yYCBtYXRjaGluZzsgb3RoZXJ3aXNlIGl0DQo+IGRvZXNuJ3QgcmVhbGx5IGFkZCBtdWNoIHZh
+bHVlIDsgdGhlIHdob2xlIHBvaW50IG9mIGZyYW1ld29ya3MgW2luIGdlbmVyYWxdDQo+IGlzIHRv
+IG9mZmVyIHNvbWUgbGV2ZWwgb2YgYWJzdHJhY3Rpb24gdG8gSFcuDQo+IA0KPiBUaGUgb25seSBl
+eGFtcGxlIEkgY2FuIHRoaW5rIG9mIFthdG1dLCBpcyB3aGVuIGEgcmVzZXJ2ZWQgYml0LWZpZWxk
+IHdpbGwgYmUNCj4gdXNlZCBpbiB0aGUgZnV0dXJlLiBCdXQgdGhlbiwgdGhlIGRyaXZlciBzaG91
+bGQgY2FyZSBhYm91dCB0aGlzLCBhbmQgbm90DQo+IHRoZSBmcmFtZXdvcmsuIFRoZSBkcml2ZXIg
+c2hvdWxkIGRlY2lkZSB0aGF0ICJiaXRmaWVsZF8yIiB3aWxsDQo+IGVuYWJsZS9kaXNhYmxlIHNv
+bWV0aGluZyBbaW4gdGhlIGZ1dHVyZV0sIGFuZCBzaG91bGQgYmUgY29uc2lkZXJlZCBpbiBhDQo+
+IHN1Y2ggYSB3YXkgKHdoZW4gYmVpbmcgd3JpdHRlbikuIElmIHRoZSBkcml2ZXIgY2FuJ3QgbWFr
+ZSB0aGlzIHByZWRpY3Rpb24gWw0KPiBhYm91dCAiYml0ZmllbGRfMiJdIHRoZW4gYSBuZXcgZHJp
+dmVyIG11c3QgYmUgd3JpdHRlbiBhbnl3YXkuDQo+IA0KPiBCdXQgSSB3aWxsIGFncmVlIHRoYXQg
+SSBtYXkgbm90IGhhdmUgYWxsIGFyZ3VtZW50cyBpbiBtaW5kIHRvIGJlIDEwMCUgc3VyZQ0KPiBv
+ZiBhbGwgdGhpcy4NCj4gDQoNCkhleSwNCg0KSXMgdGhlcmUgYW55IGZlZWRiYWNrL2NvdW50ZXIt
+YXJndW1lbnRzIGZvciB0aGlzPw0KDQpUaGFua3MNCkFsZXgNCg0KDQo+IFRoYW5rcw0KPiBBbGV4
+DQo+IA0KPiA+IC0tDQo+ID4gV2l0aCBCZXN0IFJlZ2FyZHMsDQo+ID4gQW5keSBTaGV2Y2hlbmtv
+DQo+ID4gDQo+ID4gDQo=
