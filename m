@@ -1,31 +1,56 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 0/2] scsi: add support for request batching
-Date: Fri, 5 Jul 2019 09:13:59 +0200
-Message-ID: <80dd68bf-a544-25ec-568f-cee1cf0c8cfd@suse.de>
-References: <20190530112811.3066-1-pbonzini@redhat.com>
- <746ad64a-4047-1597-a0d4-f14f3529cc19@redhat.com>
- <yq1lfxnk8ar.fsf@oracle.com>
- <48c7d581-6ec8-260a-b4ba-217aef516305@redhat.com>
+Subject: Re: [PATCH v1] scsi: Don't select SCSI_PROC_FS by default
+Date: Fri, 5 Jul 2019 09:18:04 +0200
+Message-ID: <719dd2ea-b5e5-c694-36ef-9513ed0c2d06@suse.de>
+References: <2de15293-b9be-4d41-bc67-a69417f27f7a@free.fr>
+ <621306ee-7ab6-9cd2-e934-94b3d6d731fc@acm.org>
+ <fb2d2e74-6725-4bf2-cf6c-63c0a2a10f4f@interlog.com>
+ <da579578-349e-1320-0867-14fde659733e@acm.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <48c7d581-6ec8-260a-b4ba-217aef516305@redhat.com>
+In-Reply-To: <da579578-349e-1320-0867-14fde659733e@acm.org>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Paolo Bonzini <pbonzini@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-kernel@vger.kernel.org, kvm@vger.kernel.org, jejb@linux.ibm.com, linux-scsi@vger.kernel.org, stefanha@redhat.com
+To: Bart Van Assche <bvanassche@acm.org>, dgilbert@interlog.com, Marc Gonzalez <marc.w.gonzalez@free.fr>, James Bottomley <jejb@linux.ibm.com>, Martin Petersen <martin.petersen@oracle.com>
+Cc: SCSI <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
-On 6/27/19 10:17 AM, Paolo Bonzini wrote:
-> On 27/06/19 05:37, Martin K. Petersen wrote:
->>> Ping?  Are there any more objections?
->> It's a core change so we'll need some more reviews. I suggest you
->> resubmit.
+On 6/18/19 5:28 AM, Bart Van Assche wrote:
+> On 6/17/19 5:35 PM, Douglas Gilbert wrote:
+>> For sg3_utils:
+>>
+>> $ find . -name '*.c' -exec grep "/proc/scsi" {} \; -print
+>> static const char * proc_allow_dio = "/proc/scsi/sg/allow_dio";
+>> ./src/sg_read.c
+>> static const char * proc_allow_dio = "/proc/scsi/sg/allow_dio";
+>> ./src/sgp_dd.c
+>> static const char * proc_allow_dio = "/proc/scsi/sg/allow_dio";
+>> ./src/sgm_dd.c
+>> static const char * proc_allow_dio = "/proc/scsi/sg/allow_dio";
+>> ./src/sg_dd.c
+>>                  "'echo 1 > /proc/scsi/sg/allow_dio'\n", q_len,
+>> dirio_count);
+>> ./testing/sg_tst_bidi.c
+>> static const char * proc_allow_dio = "/proc/scsi/sg/allow_dio";
+>> ./examples/sgq_dd.c
+>>  
+>> That is 6 (not 38) by my count.
 > 
-> Resubmit exactly the same patches?
-> Where is the ->commit_rqs() callback invoked?
-I don't seem to be able to find it...
+> Hi Doug,
+> 
+> This is the command I ran:
+> 
+> $ git grep /proc/scsi | wc -l
+> 38
+> 
+> I think your query excludes scripts/rescan-scsi-bus.sh.
+> 
+You can ignore rescan-scsi-bus.sh.
+It's keeping /proc access as a fallback option only (as it's meant to be
+kernel-independent); it will be using /sys per default and will happily
+work without /proc/scsi.
 
 Cheers,
 
