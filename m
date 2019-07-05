@@ -1,67 +1,123 @@
-From: "Ardelean, Alexandru" <alexandru.Ardelean@analog.com>
-Subject: Re: [PATCH 3/3][V3] iio: Handle enumerated properties with gaps
-Date: Fri, 5 Jul 2019 13:35:14 +0000
-Message-ID: <97a28b3d5a36886ca7980d56911fadcc2ddbb0c1.camel@analog.com>
-References: <20190508111913.7276-1-alexandru.ardelean@analog.com>
-         <20190508111913.7276-3-alexandru.ardelean@analog.com>
-         <20190508131749.GM9224@smile.fi.intel.com>
-         <780a4bcbf2e8a2d816efe2ed9613ac2b1594282e.camel@analog.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH v1] scsi: Don't select SCSI_PROC_FS by default
+Date: Fri, 5 Jul 2019 13:53:12 -0400
+Message-ID: <e2469890-e0ae-fb79-4aa9-125cdaeedb2b@interlog.com>
+References: <2de15293-b9be-4d41-bc67-a69417f27f7a@free.fr>
+ <621306ee-7ab6-9cd2-e934-94b3d6d731fc@acm.org>
+ <fb2d2e74-6725-4bf2-cf6c-63c0a2a10f4f@interlog.com>
+ <da579578-349e-1320-0867-14fde659733e@acm.org>
+ <AT5PR8401MB11695CC7286B2D2F98FB9EADABEA0@AT5PR8401MB1169.NAMPRD84.PROD.OUTLOOK.COM>
+ <1ad3e7ba-008d-31ad-89a0-b118b36e14e2@suse.de>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <780a4bcbf2e8a2d816efe2ed9613ac2b1594282e.camel@analog.com>
-Content-Language: en-US
-Content-ID: <6ABF6AD2E8343444BD79CB4869BCBAD5@analog.com>
+In-Reply-To: <1ad3e7ba-008d-31ad-89a0-b118b36e14e2@suse.de>
+Content-Language: en-CA
 Sender: linux-kernel-owner@vger.kernel.org
-To: "andriy.shevchenko@linux.intel.com" <andriy.shevchenko@linux.intel.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "jic23@kernel.org" <jic23@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-iio@vger.kernel.org" <linux-iio@vger.kernel.org>, "lars@metafoo.de" <lars@metafoo.de>
+To: Hannes Reinecke <hare@suse.de>, "Elliott, Robert (Servers)" <elliott@hpe.com>, Bart Van Assche <bvanassche@acm.org>, Marc Gonzalez <marc.w.gonzalez@free.fr>, James Bottomley <jejb@linux.ibm.com>, Martin Petersen <martin.petersen@oracle.com>
+Cc: SCSI <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gVGh1LCAyMDE5LTA1LTA5IGF0IDEwOjMxICswMzAwLCBBbGV4YW5kcnUgQXJkZWxlYW4gd3Jv
-dGU6DQo+IE9uIFdlZCwgMjAxOS0wNS0wOCBhdCAxNjoxNyArMDMwMCwgQW5keSBTaGV2Y2hlbmtv
-IHdyb3RlOg0KPiA+IFtFeHRlcm5hbF0NCj4gPiANCj4gPiANCj4gPiBPbiBXZWQsIE1heSAwOCwg
-MjAxOSBhdCAwMjoxOToxM1BNICswMzAwLCBBbGV4YW5kcnUgQXJkZWxlYW4gd3JvdGU6DQo+ID4g
-PiBGcm9tOiBMYXJzLVBldGVyIENsYXVzZW4gPGxhcnNAbWV0YWZvby5kZT4NCj4gPiA+IA0KPiA+
-ID4gU29tZSBlbnVtcyBtaWdodCBoYXZlIGdhcHMgb3IgcmVzZXJ2ZWQgdmFsdWVzIGluIHRoZSBt
-aWRkbGUgb2YgdGhlaXINCj4gPiA+IHZhbHVlDQo+ID4gPiByYW5nZS4gRS5nLiBjb25zaWRlciBh
-IDItYml0IGVudW0gd2hlcmUgdGhlIHZhbHVlcyAwLCAxIGFuZCAzIGhhdmUgYQ0KPiA+ID4gbWVh
-bmluZywgYnV0IDIgaXMgYSByZXNlcnZlZCB2YWx1ZSBhbmQgY2FuIG5vdCBiZSB1c2VkLg0KPiA+
-ID4gDQo+ID4gPiBBZGQgc3VwcG9ydCBmb3Igc3VjaCBlbnVtcyB0byB0aGUgSUlPIGVudW0gaGVs
-cGVyIGZ1bmN0aW9ucy4gQSByZXNlcnZlZA0KPiA+ID4gdmFsdWVzIGlzIG1hcmtlZCBieSBzZXR0
-aW5nIGl0cyBlbnRyeSBpbiB0aGUgaXRlbXMgYXJyYXkgdG8gTlVMTCByYXRoZXINCj4gPiA+IHRo
-YW4gdGhlIG5vcm1hbCBkZXNjcmlwdGl2ZSBzdHJpbmcgdmFsdWUuDQo+ID4gPiANCj4gPiA+IEFs
-c28sIGBfX3N5c2ZzX21hdGNoX3N0cmluZygpYCBub3cgc3VwcG9ydHMgTlVMTCBnYXBzLCBzbyB0
-aGF0IGRvZXNuJ3QNCj4gPiA+IHJlcXVpcmUgYW55IGNoYW5nZXMuDQo+ID4gPiAtICAgICBmb3Ig
-KGkgPSAwOyBpIDwgZS0+bnVtX2l0ZW1zOyArK2kpDQo+ID4gPiArICAgICBmb3IgKGkgPSAwOyBp
-IDwgZS0+bnVtX2l0ZW1zOyArK2kpIHsNCj4gPiA+ICsgICAgICAgICAgICAgaWYgKCFlLT5pdGVt
-c1tpXSkNCj4gPiA+ICsgICAgICAgICAgICAgICAgICAgICBjb250aW51ZTsNCj4gPiA+ICAgICAg
-ICAgICAgICAgbGVuICs9IHNjbnByaW50ZihidWYgKyBsZW4sIFBBR0VfU0laRSAtIGxlbiwgIiVz
-ICIsIGUtDQo+ID4gPiA+IGl0ZW1zW2ldKTsNCj4gPiA+ICsgICAgIH0NCj4gPiANCj4gPiBUaGUg
-cHJvYmxlbSBoZXJlIHRoYXQgdGhlIHVzZXIgd2lsbCBoYXZlIG5vIGNsdWUgd2hlcmUgdGhlIGdh
-cCBpcw0KPiA+IGhhcHBlbmVkLCB0bw0KPiA+IHNvbHZlIHRoaXMgd2UgbmVlZCBlaXRoZXIgYml0
-bWFwIG9mIGFycmF5LCB3aGVyZSBzZXQgYml0cyBzaG93cyBkZWZpbmVkDQo+ID4gaXRlbXMsDQo+
-ID4gb3IgdXNlIGNvbW1hLXNlcGFyYXRlZCBsaXN0IG9mIHZhbHVlcy4gVGhlIGxhdHRlciB3b3Vs
-ZCBuZWVkIGFub3RoZXIgbm9kZQ0KPiA+IHNpbmNlDQo+ID4gd2UgZG9uJ3QgYnJlYWsgdXNlciBz
-cGFjZS4NCj4gDQo+IEhtbW0uDQo+IEkgYW0gd29uZGVyaW5nIGlmIHRoZXJlIGFyZSBjYXNlcyB3
-aGVyZSB1c2Vyc3BhY2Ugd291bGQgY2FyZSBhYm91dCByZXNlcnZlZA0KPiB2YWx1ZXMgYW5kL29y
-IHBvc2l0aW9ucyBvZiByZXNlcnZlZCBiaXQtZmllbGRzLg0KPiBNYXliZSB5b3UgY291bGQgb2Zm
-ZXIgZXhhbXBsZXMvdXNlLWNhc2VzIHdoZXJlIHRoaXMgaXMgbmVlZGVkLg0KPiANCj4gVG8gc29t
-ZSBleHRlbnQgdGhlIGtlcm5lbCBbZHJpdmVycyAmIGZyYW1ld29ya3NdIHNob3VsZCBwcm9iYWJs
-eSBub3QgbmVlZA0KPiB0byBleHBvc2UgdGhhdCAic3RyaW5nLWVudW0tWCIgID09IGBiaXRmaWVs
-ZF8yYCBtYXRjaGluZzsgb3RoZXJ3aXNlIGl0DQo+IGRvZXNuJ3QgcmVhbGx5IGFkZCBtdWNoIHZh
-bHVlIDsgdGhlIHdob2xlIHBvaW50IG9mIGZyYW1ld29ya3MgW2luIGdlbmVyYWxdDQo+IGlzIHRv
-IG9mZmVyIHNvbWUgbGV2ZWwgb2YgYWJzdHJhY3Rpb24gdG8gSFcuDQo+IA0KPiBUaGUgb25seSBl
-eGFtcGxlIEkgY2FuIHRoaW5rIG9mIFthdG1dLCBpcyB3aGVuIGEgcmVzZXJ2ZWQgYml0LWZpZWxk
-IHdpbGwgYmUNCj4gdXNlZCBpbiB0aGUgZnV0dXJlLiBCdXQgdGhlbiwgdGhlIGRyaXZlciBzaG91
-bGQgY2FyZSBhYm91dCB0aGlzLCBhbmQgbm90DQo+IHRoZSBmcmFtZXdvcmsuIFRoZSBkcml2ZXIg
-c2hvdWxkIGRlY2lkZSB0aGF0ICJiaXRmaWVsZF8yIiB3aWxsDQo+IGVuYWJsZS9kaXNhYmxlIHNv
-bWV0aGluZyBbaW4gdGhlIGZ1dHVyZV0sIGFuZCBzaG91bGQgYmUgY29uc2lkZXJlZCBpbiBhDQo+
-IHN1Y2ggYSB3YXkgKHdoZW4gYmVpbmcgd3JpdHRlbikuIElmIHRoZSBkcml2ZXIgY2FuJ3QgbWFr
-ZSB0aGlzIHByZWRpY3Rpb24gWw0KPiBhYm91dCAiYml0ZmllbGRfMiJdIHRoZW4gYSBuZXcgZHJp
-dmVyIG11c3QgYmUgd3JpdHRlbiBhbnl3YXkuDQo+IA0KPiBCdXQgSSB3aWxsIGFncmVlIHRoYXQg
-SSBtYXkgbm90IGhhdmUgYWxsIGFyZ3VtZW50cyBpbiBtaW5kIHRvIGJlIDEwMCUgc3VyZQ0KPiBv
-ZiBhbGwgdGhpcy4NCj4gDQoNCkhleSwNCg0KSXMgdGhlcmUgYW55IGZlZWRiYWNrL2NvdW50ZXIt
-YXJndW1lbnRzIGZvciB0aGlzPw0KDQpUaGFua3MNCkFsZXgNCg0KDQo+IFRoYW5rcw0KPiBBbGV4
-DQo+IA0KPiA+IC0tDQo+ID4gV2l0aCBCZXN0IFJlZ2FyZHMsDQo+ID4gQW5keSBTaGV2Y2hlbmtv
-DQo+ID4gDQo+ID4gDQo=
+On 2019-07-05 3:22 a.m., Hannes Reinecke wrote:
+> On 6/18/19 7:43 PM, Elliott, Robert (Servers) wrote:
+>>
+>>
+>>> -----Original Message-----
+>>> From: linux-kernel-owner@vger.kernel.org [mailto:linux-kernel-owner@vger.kernel.org] On Behalf Of Bart
+>>> Van Assche
+>>> Sent: Monday, June 17, 2019 10:28 PM
+>>> To: dgilbert@interlog.com; Marc Gonzalez <marc.w.gonzalez@free.fr>; James Bottomley
+>>> <jejb@linux.ibm.com>; Martin Petersen <martin.petersen@oracle.com>
+>>> Cc: SCSI <linux-scsi@vger.kernel.org>; LKML <linux-kernel@vger.kernel.org>; Christoph Hellwig
+>>> <hch@lst.de>
+>>> Subject: Re: [PATCH v1] scsi: Don't select SCSI_PROC_FS by default
+>>>
+>>> On 6/17/19 5:35 PM, Douglas Gilbert wrote:
+>>>> For sg3_utils:
+>>>>
+>>>> $ find . -name '*.c' -exec grep "/proc/scsi" {} \; -print
+>>>> static const char * proc_allow_dio = "/proc/scsi/sg/allow_dio";
+>>>> ./src/sg_read.c
+>>>> static const char * proc_allow_dio = "/proc/scsi/sg/allow_dio";
+>>>> ./src/sgp_dd.c
+>>>> static const char * proc_allow_dio = "/proc/scsi/sg/allow_dio";
+>>>> ./src/sgm_dd.c
+>>>> static const char * proc_allow_dio = "/proc/scsi/sg/allow_dio";
+>>>> ./src/sg_dd.c
+>>>>                   "'echo 1 > /proc/scsi/sg/allow_dio'\n", q_len,
+>>>> dirio_count);
+>>>> ./testing/sg_tst_bidi.c
+>>>> static const char * proc_allow_dio = "/proc/scsi/sg/allow_dio";
+>>>> ./examples/sgq_dd.c
+>>>>
+>>>> That is 6 (not 38) by my count.
+>>>
+>>> Hi Doug,
+>>>
+>>> This is the command I ran:
+>>>
+>>> $ git grep /proc/scsi | wc -l
+>>> 38
+>>>
+>>> I think your query excludes scripts/rescan-scsi-bus.sh.
+>>>
+>>> Bart.
+>>
+>> Here's the full list to ensure the discussion doesn't overlook anything:
+>>
+>> sg3_utils-1.44$ grep -R /proc/scsi .
+>> ./src/sg_read.c:static const char * proc_allow_dio = "/proc/scsi/sg/allow_dio";
+>> ./src/sgp_dd.c:static const char * proc_allow_dio = "/proc/scsi/sg/allow_dio";
+>> ./src/sgm_dd.c:static const char * proc_allow_dio = "/proc/scsi/sg/allow_dio";
+>> ./src/sg_dd.c:static const char * proc_allow_dio = "/proc/scsi/sg/allow_dio";
+>> ./scripts/rescan-scsi-bus.sh:# Return hosts. /proc/scsi/HOSTADAPTER/? must exist
+>> ./scripts/rescan-scsi-bus.sh:  for driverdir in /proc/scsi/*; do
+>> ./scripts/rescan-scsi-bus.sh:    driver=${driverdir#/proc/scsi/}
+>> ./scripts/rescan-scsi-bus.sh:      name=${hostdir#/proc/scsi/*/}
+>> ./scripts/rescan-scsi-bus.sh:# Get /proc/scsi/scsi info for device $host:$channel:$id:$lun
+>> ./scripts/rescan-scsi-bus.sh:    SCSISTR=$(grep -A "$LN" -e "$grepstr" /proc/scsi/scsi)
+>> ./scripts/rescan-scsi-bus.sh:    DRV=`grep 'Attached drivers:' /proc/scsi/scsi 2>/dev/null`
+>> ./scripts/rescan-scsi-bus.sh:      echo "scsi report-devs 1" >/proc/scsi/scsi
+>> ./scripts/rescan-scsi-bus.sh:      DRV=`grep 'Attached drivers:' /proc/scsi/scsi 2>/dev/null`
+>> ./scripts/rescan-scsi-bus.sh:      echo "scsi report-devs 0" >/proc/scsi/scsi
+>> ./scripts/rescan-scsi-bus.sh:# Outputs description from /proc/scsi/scsi (unless arg passed)
+>> ./scripts/rescan-scsi-bus.sh:        echo "scsi remove-single-device $devnr" > /proc/scsi/scsi
+>> ./scripts/rescan-scsi-bus.sh:          echo "scsi add-single-device $devnr" > /proc/scsi/scsi
+>> ./scripts/rescan-scsi-bus.sh:      echo "scsi add-single-device $devnr" > /proc/scsi/scsi
+>> ./scripts/rescan-scsi-bus.sh:      echo "scsi add-single-device $devnr" > /proc/scsi/scsi
+>> ./scripts/rescan-scsi-bus.sh:      echo "scsi add-single-device $host $channel $id $SCAN_WILD_CARD" > /proc/scsi/scsi
+>> ./scripts/rescan-scsi-bus.sh:if test ! -d /sys/class/scsi_host/ -a ! -d /proc/scsi/; then
+>> ./ChangeLog:    /proc/scsi/sg/allow_dio is '0'
+>> ./ChangeLog:  - change sg_debug to call system("cat /proc/scsi/sg/debug");
+>> ./suse/sg3_utils.changes:  * Support systems without /proc/scsi
+>> ./examples/sgq_dd.c:static const char * proc_allow_dio = "/proc/scsi/sg/allow_dio";
+>> ./doc/sg_read.8:If direct IO is selected and /proc/scsi/sg/allow_dio
+>> ./doc/sg_read.8:"echo 1 > /proc/scsi/sg/allow_dio". An alternate way to avoid the
+>> ./doc/sg_map.8:observing the output of the command: "cat /proc/scsi/scsi".
+>> ./doc/sgp_dd.8:at completion. If direct IO is selected and /proc/scsi/sg/allow_dio
+>> ./doc/sgp_dd.8:this at completion. If direct IO is selected and /proc/scsi/sg/allow_dio
+>> ./doc/sgp_dd.8:mapping to SCSI block devices should be checked with 'cat /proc/scsi/scsi'
+>> ./doc/sg_dd.8:notes this at completion. If direct IO is selected and /proc/scsi/sg/allow_dio
+>> ./doc/sg_dd.8:this at completion. If direct IO is selected and /proc/scsi/sg/allow_dio
+>> ./doc/sg_dd.8:with 'echo 1 > /proc/scsi/sg/allow_dio'.
+>> ./doc/sg_dd.8:mapping to SCSI block devices should be checked with 'cat /proc/scsi/scsi',
+>>
+>>
+> As mentioned, rescan-scsi-bus.sh is keeping references to /proc/scsi as
+> a fall back only, as it's meant to work kernel independent. Per default
+> it'll be using /sys, and will happily work without /proc/scsi.
+> 
+> So it's really only /proc/scsi/sg which carries some meaningful
+> information; maybe we should move/copy it to somewhere else.
+> 
+> I personally like getting rid of /proc/scsi.
+
+/proc/scsi/device_info doesn't seem to be in sysfs.
+
+Could the contents of /proc/scsi/sg/* be placed in
+/sys/class/scsi_generic/* ? Currently that directory only has symlinks
+to the sg devices.
+
+Doug Gilbert
