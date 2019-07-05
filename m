@@ -1,40 +1,42 @@
-From: Colin King <colin.king@canonical.com>
-Subject: [PATCH] scsi: bnx2fc: remove redundant assignment to variable rc
-Date: Thu,  4 Jul 2019 16:40:35 +0100
-Message-ID: <20190704154035.15233-1-colin.king@canonical.com>
+From: Ming Lei <tom.leiming@gmail.com>
+Subject: Re: [PATCH 1/2] scsi_host: add support for request batching
+Date: Fri, 5 Jul 2019 09:00:58 +0800
+Message-ID: <CACVXFVNuFLMOmX_KuvQG-+-zasAxcbrL+sbXEGaKa8C1K3mxKQ@mail.gmail.com>
+References: <20190530112811.3066-1-pbonzini@redhat.com> <20190530112811.3066-2-pbonzini@redhat.com>
+ <CACVXFVP-B7uKUGn75rZdu0e4QxUOsSqv8FL0vY2ubmuucvxqjQ@mail.gmail.com> <bd7fa062-6c71-13a2-5bbf-0dea859ae75f@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <bd7fa062-6c71-13a2-5bbf-0dea859ae75f@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: QLogic-Storage-Upstream@qlogic.com, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Paolo Bonzini <pbonzini@redhat.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, KVM General <kvm@vger.kernel.org>, jejb@linux.ibm.com, "Martin K. Petersen" <martin.petersen@oracle.com>, Linux SCSI List <linux-scsi@vger.kernel.org>, Stefan Hajnoczi <stefanha@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Colin Ian King <colin.king@canonical.com>
+On Mon, Jun 3, 2019 at 4:16 PM Paolo Bonzini <pbonzini@redhat.com> wrote:
+>
+> On 31/05/19 05:27, Ming Lei wrote:
+> > It should be fine to implement scsi_commit_rqs() as:
+> >
+> >  if (shost->hostt->commit_rqs)
+> >        shost->hostt->commit_rqs(shost, hctx->queue_num);
+> >
+> > then scsi_mq_ops_no_commit can be saved.
+> >
+> > Because .commit_rqs() is only called when BLK_STS_*_RESOURCE is
+> > returned from scsi_queue_rq(), at that time shost->hostt->commit_rqs should
+> > have been hit from cache given .queuecommand is called via
+> > host->hostt->queuecommand.
+>
+> This is not about d-cache, it's about preserving the heuristics that
+> blk-mq applies depending on whether commit_rqs is there or not.
 
-The variable rc is being initialized with a value that is never
-read and it is being updated later with a new value. The
-initialization is redundant and can be removed.
+Fair enough, at least difference would be made by the check in
+blk_mq_make_request() if scsi_commit_rqs is provided unconditionally,
+so looks fine:
 
-Addresses-Coverity: ("Unused value")
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Reviewed-by: Ming Lei <ming.lei@redhat.com>
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-index 7796799bf04a..4eb3fe9ed189 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-@@ -1893,7 +1893,7 @@ static void bnx2fc_stop(struct bnx2fc_interface *interface)
- static int bnx2fc_fw_init(struct bnx2fc_hba *hba)
- {
- #define BNX2FC_INIT_POLL_TIME		(1000 / HZ)
--	int rc = -1;
-+	int rc;
- 	int i = HZ;
- 
- 	rc = bnx2fc_bind_adapter_devices(hba);
--- 
-2.20.1
+
+Thanks,
+Ming Lei
