@@ -1,39 +1,35 @@
-From: Damien Le Moal <Damien.LeMoal@wdc.com>
-Subject: Re: [PATCH V6 0/4] Fix zone revalidation memory
-	allocation failures
-Date: Mon, 8 Jul 2019 02:02:06 +0000
-Message-ID: <BYAPR04MB5816BC7EC358F5785AEE1EA9E7F60@BYAPR04MB5816.namprd04.prod.outlook.com>
-References: <20190701050918.27511-1-damien.lemoal@wdc.com>
+From: Stanley Chu <stanley.chu@mediatek.com>
+Subject: [PATCH v1 0/3] scsi: ufs: Provide fatal and auto-hibern8 error history
+Date: Mon, 8 Jul 2019 12:37:54 +0800
+Message-ID: <1562560677-3985-1-git-send-email-stanley.chu@mediatek.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-Content-Language: en-US
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Martin K .
-	Petersen" <martin.petersen@oracle.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, "dm-devel@redhat.com" <dm-devel@redhat.com>, Mike Snitzer <snitzer@redhat.com>, "linux-f2fs-devel@lists.sourceforge.net" <linux-f2fs-devel@lists.sourceforge.net>, Jaegeuk Kim <jaegeuk@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, Bart Van Assche <bvanassche@acm.org>
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: linux-scsi@vger.kernel.org, martin.petersen@oracle.com, avri.altman@wdc.com, alim.akhtar@samsung.com, pedrom.sousa@synopsys.com
+Cc: sthumma@codeaurora.org, marc.w.gonzalez@free.fr, andy.teng@mediatek.com, chun-hung.wu@mediatek.com, kuohong.wang@mediatek.com, peter.wang@mediatek.com, evgreen@chromium.org, subhashj@codeaurora.org, linux-mediatek@lists.infradead.org, ygardi@codeaurora.org, matthias.bgg@gmail.com, Stanley Chu <stanley.chu@mediatek.com>, linux-arm-kernel@lists.infradead.org, beanhuo@micron.com
 List-Id: linux-scsi@vger.kernel.org
 
-On 2019/07/01 14:09, Damien Le Moal wrote:
-> This series addresses a recuring problem with zone revalidation
-> failures observed during extensive testing with memory constrained
-> system and device hot-plugging.
+This patch set provides more information of fatal errros and auto-hibern8 errors
+to improve debugging by keeping their error history as completed as possible.
 
-Jens, Martin,
+Stanley Chu (3):
+  scsi: ufs: Change names related to error history
+  scsi: ufs: Add fatal and auto-hibern8 error history
+  scsi: ufs: Do not reset error history during host reset
 
-Any comment regarding this series ?
-
-Best regards.
+ drivers/scsi/ufs/ufshcd.c | 57 +++++++++++++++++++--------------------
+ drivers/scsi/ufs/ufshcd.h | 26 +++++++++++-------
+ 2 files changed, 44 insertions(+), 39 deletions(-)
 
 -- 
-Damien Le Moal
-Western Digital Research
+2.18.0
