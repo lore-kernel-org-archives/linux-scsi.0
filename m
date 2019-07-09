@@ -1,43 +1,38 @@
-From: Jason Yan <yanaijie@huawei.com>
-Subject: Re: [PATCH] scsi: libsas: remove the exporting of sas_wait_eh
-Date: Tue, 9 Jul 2019 09:58:50 +0800
-Message-ID: <00489583-ff52-d9b7-5e46-478aa361758e@huawei.com>
-References: <20190708164339.14465-1-efremov@linux.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Masahiro Yamada <yamada.masahiro@socionext.com>
+Subject: [PATCH 04/11] scsi: remove pointless $(MODVERDIR)/$(obj)/53c700.ver
+Date: Tue,  9 Jul 2019 13:24:08 +0900
+Message-ID: <20190709042416.27554-5-yamada.masahiro@socionext.com>
+References: <20190709042416.27554-1-yamada.masahiro@socionext.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190708164339.14465-1-efremov@linux.com>
-Content-Language: en-US
+In-Reply-To: <20190709042416.27554-1-yamada.masahiro@socionext.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Denis Efremov <efremov@linux.com>, Dan Williams <dan.j.williams@intel.com>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-kbuild@vger.kernel.org
+Cc: Nicolas Pitre <nico@fluxnic.net>, Sam Ravnborg <sam@ravnborg.org>, Masahiro Yamada <yamada.masahiro@socionext.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+Nothing depends on this, so it is dead code.
 
-On 2019/7/9 0:43, Denis Efremov wrote:
-> The function sas_wait_eh is declared static and marked
-> EXPORT_SYMBOL, which is at best an odd combination. Because the
-> function is not used outside of the drivers/scsi/libsas/sas_scsi_host.c
-> file it is defined in, this commit removes the EXPORT_SYMBOL() marking.
-> 
-> Signed-off-by: Denis Efremov <efremov@linux.com>
-> ---
->   drivers/scsi/libsas/sas_scsi_host.c | 1 -
->   1 file changed, 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-> index ede0674d8399..5564d3f1243a 100644
-> --- a/drivers/scsi/libsas/sas_scsi_host.c
-> +++ b/drivers/scsi/libsas/sas_scsi_host.c
-> @@ -414,7 +414,6 @@ static void sas_wait_eh(struct domain_device *dev)
->   		goto retry;
->   	}
->   }
-> -EXPORT_SYMBOL(sas_wait_eh);
->   
->   static int sas_queue_reset(struct domain_device *dev, int reset_type,
->   			   u64 lun, int wait)
-> 
+Signed-off-by: Masahiro Yamada <yamada.masahiro@socionext.com>
+---
 
-Reviewed-by: Jason Yan <yanaijie@huawei.com>
+I will apply this to kbuild tree since it is trivial.
+
+
+ drivers/scsi/Makefile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
+index 8826111fdf4a..acdd57e647f8 100644
+--- a/drivers/scsi/Makefile
++++ b/drivers/scsi/Makefile
+@@ -183,7 +183,7 @@ zalon7xx-objs	:= zalon.o ncr53c8xx.o
+ # Files generated that shall be removed upon make clean
+ clean-files :=	53c700_d.h 53c700_u.h scsi_devinfo_tbl.c
+ 
+-$(obj)/53c700.o $(MODVERDIR)/$(obj)/53c700.ver: $(obj)/53c700_d.h
++$(obj)/53c700.o: $(obj)/53c700_d.h
+ 
+ $(obj)/scsi_sysfs.o: $(obj)/scsi_devinfo_tbl.c
+ 
+-- 
+2.17.1
