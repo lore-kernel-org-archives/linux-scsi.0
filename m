@@ -1,53 +1,43 @@
-From: Rob Herring <robh@kernel.org>
-Subject: Re: [PATCH v2 2/3] scsi: ufs: Allow resetting the UFS device
-Date: Mon, 8 Jul 2019 19:48:32 -0600
-Message-ID: <20190709014832.GA14402@bogus>
-References: <20190606010249.3538-1-bjorn.andersson@linaro.org>
- <20190606010249.3538-3-bjorn.andersson@linaro.org>
+From: Jason Yan <yanaijie@huawei.com>
+Subject: Re: [PATCH] scsi: libsas: remove the exporting of sas_wait_eh
+Date: Tue, 9 Jul 2019 09:58:50 +0800
+Message-ID: <00489583-ff52-d9b7-5e46-478aa361758e@huawei.com>
+References: <20190708164339.14465-1-efremov@linux.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20190606010249.3538-3-bjorn.andersson@linaro.org>
+In-Reply-To: <20190708164339.14465-1-efremov@linux.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Bjorn Andersson <bjorn.andersson@linaro.org>
-Cc: Mark Rutland <mark.rutland@arm.com>, Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, Pedro Sousa <pedrom.sousa@synopsys.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Andy Gross <agross@kernel.org>, Linus Walleij <linus.walleij@linaro.org>, Evan Green <evgreen@chromium.org>, linux-arm-msm@vger.kernel.org, linux-gpio@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Denis Efremov <efremov@linux.com>, Dan Williams <dan.j.williams@intel.com>
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Jun 05, 2019 at 06:02:48PM -0700, Bjorn Andersson wrote:
-> Acquire the device-reset GPIO and toggle this to reset the UFS device
-> during initialization and host reset.
+
+On 2019/7/9 0:43, Denis Efremov wrote:
+> The function sas_wait_eh is declared static and marked
+> EXPORT_SYMBOL, which is at best an odd combination. Because the
+> function is not used outside of the drivers/scsi/libsas/sas_scsi_host.c
+> file it is defined in, this commit removes the EXPORT_SYMBOL() marking.
 > 
-> Based on downstream support implemented by Subhash Jadavani
-> <subhashj@codeaurora.org>.
-> 
-> Tested-by: John Stultz <john.stultz@linaro.org>
-> Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+> Signed-off-by: Denis Efremov <efremov@linux.com>
 > ---
+>   drivers/scsi/libsas/sas_scsi_host.c | 1 -
+>   1 file changed, 1 deletion(-)
 > 
-> Changes since v1:
-> - Added gpio to DT binding document
-> - Fixed spelling of UFS
+> diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
+> index ede0674d8399..5564d3f1243a 100644
+> --- a/drivers/scsi/libsas/sas_scsi_host.c
+> +++ b/drivers/scsi/libsas/sas_scsi_host.c
+> @@ -414,7 +414,6 @@ static void sas_wait_eh(struct domain_device *dev)
+>   		goto retry;
+>   	}
+>   }
+> -EXPORT_SYMBOL(sas_wait_eh);
+>   
+>   static int sas_queue_reset(struct domain_device *dev, int reset_type,
+>   			   u64 lun, int wait)
 > 
->  .../devicetree/bindings/ufs/ufshcd-pltfrm.txt |  2 +
->  drivers/scsi/ufs/ufshcd.c                     | 44 +++++++++++++++++++
->  drivers/scsi/ufs/ufshcd.h                     |  4 ++
->  3 files changed, 50 insertions(+)
-> 
-> diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-> index a74720486ee2..d562d8b4919c 100644
-> --- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-> +++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-> @@ -54,6 +54,8 @@ Optional properties:
->  			  PHY reset from the UFS controller.
->  - resets            : reset node register
->  - reset-names       : describe reset node register, the "rst" corresponds to reset the whole UFS IP.
-> +- device-reset-gpios	: A phandle and gpio specifier denoting the GPIO connected
-> +			  to the RESET pin of the UFS memory device.
 
-A sign we should have a child node for the device...
-
-Doesn't using 'reset-gpios' work as I doubt one would have a GPIO reset 
-for the host controller.
-
-Rob
+Reviewed-by: Jason Yan <yanaijie@huawei.com>
