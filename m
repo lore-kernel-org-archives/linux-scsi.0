@@ -1,39 +1,53 @@
-From: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Subject: [PATCH V4 9/9] xen/blkback: use helper in vbd_sz()
-Date: Mon,  8 Jul 2019 11:47:11 -0700
-Message-ID: <20190708184711.2984-10-chaitanya.kulkarni@wdc.com>
-References: <20190708184711.2984-1-chaitanya.kulkarni@wdc.com>
+From: Rob Herring <robh@kernel.org>
+Subject: Re: [PATCH v2 2/3] scsi: ufs: Allow resetting the UFS device
+Date: Mon, 8 Jul 2019 19:48:32 -0600
+Message-ID: <20190709014832.GA14402@bogus>
+References: <20190606010249.3538-1-bjorn.andersson@linaro.org>
+ <20190606010249.3538-3-bjorn.andersson@linaro.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <xen-devel-bounces@lists.xenproject.org>
-In-Reply-To: <20190708184711.2984-1-chaitanya.kulkarni@wdc.com>
-List-Unsubscribe: <https://lists.xenproject.org/mailman/options/xen-devel>,
- <mailto:xen-devel-request@lists.xenproject.org?subject=unsubscribe>
-List-Post: <mailto:xen-devel@lists.xenproject.org>
-List-Help: <mailto:xen-devel-request@lists.xenproject.org?subject=help>
-List-Subscribe: <https://lists.xenproject.org/mailman/listinfo/xen-devel>,
- <mailto:xen-devel-request@lists.xenproject.org?subject=subscribe>
-Errors-To: xen-devel-bounces@lists.xenproject.org
-Sender: "Xen-devel" <xen-devel-bounces@lists.xenproject.org>
-To: linux-block@vger.kernel.org
-Cc: damien.lemoal@wdc.com, linux-btrace@vger.kernel.org, bvanassche@acm.org, linux-scsi@vger.kernel.org, konrad.wilk@oracle.com, Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>, yuchao0@huawei.com, colyli@suse.de, linux-bcache@vger.kernel.org, jaegeuk@kernel.org, xen-devel@lists.xenproject.org, kent.overstreet@gmail.com, roger.pau@citrix.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20190606010249.3538-3-bjorn.andersson@linaro.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bjorn Andersson <bjorn.andersson@linaro.org>
+Cc: Mark Rutland <mark.rutland@arm.com>, Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, Pedro Sousa <pedrom.sousa@synopsys.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Andy Gross <agross@kernel.org>, Linus Walleij <linus.walleij@linaro.org>, Evan Green <evgreen@chromium.org>, linux-arm-msm@vger.kernel.org, linux-gpio@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-VGhpcyBwYXRjaCB1cGRhdGVzIHRoZSB2YmRfc3ooKSBtYWNybyB3aXRoIG5ld2x5IGludHJvZHVj
-ZWQgaGVscGVyCmZ1bmN0aW9uIHRvIHJlYWQgdGhlIG5yX3NlY3RzIGZyb20gYmxvY2sgZGV2aWNl
-J3MgaGRfcGFydHMgd2l0aCB0aGUKaGVscCBvZiBwYXJ0X25yX3NlY3RzX3JlYWQoKS4KClNpZ25l
-ZC1vZmYtYnk6IENoYWl0YW55YSBLdWxrYXJuaSA8Y2hhaXRhbnlhLmt1bGthcm5pQHdkYy5jb20+
-Ci0tLQogZHJpdmVycy9ibG9jay94ZW4tYmxrYmFjay9jb21tb24uaCB8IDIgKy0KIDEgZmlsZSBj
-aGFuZ2VkLCAxIGluc2VydGlvbigrKSwgMSBkZWxldGlvbigtKQoKZGlmZiAtLWdpdCBhL2RyaXZl
-cnMvYmxvY2sveGVuLWJsa2JhY2svY29tbW9uLmggYi9kcml2ZXJzL2Jsb2NrL3hlbi1ibGtiYWNr
-L2NvbW1vbi5oCmluZGV4IDFkMzAwMmQ3NzNmNy4uZjk2Y2I4ZDFjYjk5IDEwMDY0NAotLS0gYS9k
-cml2ZXJzL2Jsb2NrL3hlbi1ibGtiYWNrL2NvbW1vbi5oCisrKyBiL2RyaXZlcnMvYmxvY2sveGVu
-LWJsa2JhY2svY29tbW9uLmgKQEAgLTM1OSw3ICszNTksNyBAQCBzdHJ1Y3QgcGVuZGluZ19yZXEg
-ewogCiAKICNkZWZpbmUgdmJkX3N6KF92KQkoKF92KS0+YmRldi0+YmRfcGFydCA/IFwKLQkJCSAo
-X3YpLT5iZGV2LT5iZF9wYXJ0LT5ucl9zZWN0cyA6IFwKKwkJCSAgYmRldl9ucl9zZWN0cygoX3Yp
-LT5iZGV2KSA6IFwKIAkJCSAgZ2V0X2NhcGFjaXR5KChfdiktPmJkZXYtPmJkX2Rpc2spKQogCiAj
-ZGVmaW5lIHhlbl9ibGtpZl9nZXQoX2IpIChhdG9taWNfaW5jKCYoX2IpLT5yZWZjbnQpKQotLSAK
-Mi4xNy4wCgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18K
-WGVuLWRldmVsIG1haWxpbmcgbGlzdApYZW4tZGV2ZWxAbGlzdHMueGVucHJvamVjdC5vcmcKaHR0
-cHM6Ly9saXN0cy54ZW5wcm9qZWN0Lm9yZy9tYWlsbWFuL2xpc3RpbmZvL3hlbi1kZXZlbA==
+On Wed, Jun 05, 2019 at 06:02:48PM -0700, Bjorn Andersson wrote:
+> Acquire the device-reset GPIO and toggle this to reset the UFS device
+> during initialization and host reset.
+> 
+> Based on downstream support implemented by Subhash Jadavani
+> <subhashj@codeaurora.org>.
+> 
+> Tested-by: John Stultz <john.stultz@linaro.org>
+> Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+> ---
+> 
+> Changes since v1:
+> - Added gpio to DT binding document
+> - Fixed spelling of UFS
+> 
+>  .../devicetree/bindings/ufs/ufshcd-pltfrm.txt |  2 +
+>  drivers/scsi/ufs/ufshcd.c                     | 44 +++++++++++++++++++
+>  drivers/scsi/ufs/ufshcd.h                     |  4 ++
+>  3 files changed, 50 insertions(+)
+> 
+> diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+> index a74720486ee2..d562d8b4919c 100644
+> --- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+> +++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+> @@ -54,6 +54,8 @@ Optional properties:
+>  			  PHY reset from the UFS controller.
+>  - resets            : reset node register
+>  - reset-names       : describe reset node register, the "rst" corresponds to reset the whole UFS IP.
+> +- device-reset-gpios	: A phandle and gpio specifier denoting the GPIO connected
+> +			  to the RESET pin of the UFS memory device.
+
+A sign we should have a child node for the device...
+
+Doesn't using 'reset-gpios' work as I doubt one would have a GPIO reset 
+for the host controller.
+
+Rob
