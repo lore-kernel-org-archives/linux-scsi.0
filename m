@@ -1,7 +1,7 @@
 From: Stanley Chu <stanley.chu@mediatek.com>
-Subject: [PATCH v2 4/4] scsi: ufs: Add history of fatal events
-Date: Wed, 10 Jul 2019 13:20:17 +0800
-Message-ID: <1562736017-29461-5-git-send-email-stanley.chu@mediatek.com>
+Subject: [PATCH v2 1/4] scsi: ufs: Change names related to error history
+Date: Wed, 10 Jul 2019 13:20:14 +0800
+Message-ID: <1562736017-29461-2-git-send-email-stanley.chu@mediatek.com>
 References: <1562736017-29461-1-git-send-email-stanley.chu@mediatek.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,148 +21,177 @@ To: linux-scsi@vger.kernel.org, martin.petersen@oracle.com, avri.altman@wdc.com,
 Cc: sthumma@codeaurora.org, marc.w.gonzalez@free.fr, andy.teng@mediatek.com, chun-hung.wu@mediatek.com, kuohong.wang@mediatek.com, peter.wang@mediatek.com, evgreen@chromium.org, subhashj@codeaurora.org, linux-mediatek@lists.infradead.org, ygardi@codeaurora.org, matthias.bgg@gmail.com, Stanley Chu <stanley.chu@mediatek.com>, linux-arm-kernel@lists.infradead.org, beanhuo@micron.com
 List-Id: linux-scsi@vger.kernel.org
 
-Currently only "interrupt-based" errors have their own history,
-however there are "non-interrupt-based" errors which may be
-fatal also needing history to improve debugging or help know
-the health status of UFS devices.
+Remove "uic" term in below error history functions and structures
+for more general usages,
 
-For example,
-- Link startup fail
-- Suspend fail
-- Resume fail
-- Task or request abort event
-
-This patch tries to add those failed events by existed UFS error
-history mechanism.
+struct ufs_uic_err_reg_hist;
+void ufshcd_update_uic_reg_hist(struct ufs_uic_err_reg_hist *reg_hist,
+	u32 reg);
+void ufshcd_print_uic_err_hist(struct ufs_hba *hba,
+	struct ufs_uic)err_reg_hist *err_hist, char *err_name);
 
 Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
+Reviewed-by: Avri Altman <avri.altman@wdc.com>
 ---
- drivers/scsi/ufs/ufshcd.c | 36 +++++++++++++++++++++++++++---------
- drivers/scsi/ufs/ufshcd.h | 10 ++++++++++
- 2 files changed, 37 insertions(+), 9 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 39 ++++++++++++++++++++-------------------
+ drivers/scsi/ufs/ufshcd.h | 20 ++++++++++----------
+ 2 files changed, 30 insertions(+), 29 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index a46c3d2b2ea3..969128a731e1 100644
+index a208589426b1..eb062aba0d21 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -432,6 +432,14 @@ static void ufshcd_print_host_regs(struct ufs_hba *hba)
- 	ufshcd_print_err_hist(hba, &hba->ufs_stats.fatal_err, "fatal_err");
- 	ufshcd_print_err_hist(hba, &hba->ufs_stats.auto_hibern8_err,
- 			      "auto_hibern8_err");
-+	ufshcd_print_err_hist(hba, &hba->ufs_stats.task_abort_err,
-+			      "task_abort");
-+	ufshcd_print_err_hist(hba, &hba->ufs_stats.link_startup_err,
-+			      "link_startup_fail");
-+	ufshcd_print_err_hist(hba, &hba->ufs_stats.suspend_err,
-+			      "suspend_fail");
-+	ufshcd_print_err_hist(hba, &hba->ufs_stats.resume_err,
-+			      "resume_fail");
+@@ -390,14 +390,15 @@ static void ufshcd_print_clk_freqs(struct ufs_hba *hba)
+ 	}
+ }
+ 
+-static void ufshcd_print_uic_err_hist(struct ufs_hba *hba,
+-		struct ufs_uic_err_reg_hist *err_hist, char *err_name)
++static void ufshcd_print_err_hist(struct ufs_hba *hba,
++				  struct ufs_err_reg_hist *err_hist,
++				  char *err_name)
+ {
+ 	int i;
+ 	bool found = false;
+ 
+-	for (i = 0; i < UIC_ERR_REG_HIST_LENGTH; i++) {
+-		int p = (i + err_hist->pos) % UIC_ERR_REG_HIST_LENGTH;
++	for (i = 0; i < UFS_ERR_REG_HIST_LENGTH; i++) {
++		int p = (i + err_hist->pos) % UFS_ERR_REG_HIST_LENGTH;
+ 
+ 		if (err_hist->reg[p] == 0)
+ 			continue;
+@@ -407,7 +408,7 @@ static void ufshcd_print_uic_err_hist(struct ufs_hba *hba,
+ 	}
+ 
+ 	if (!found)
+-		dev_err(hba->dev, "No record of %s uic errors\n", err_name);
++		dev_err(hba->dev, "No record of %s errors\n", err_name);
+ }
+ 
+ static void ufshcd_print_host_regs(struct ufs_hba *hba)
+@@ -423,11 +424,11 @@ static void ufshcd_print_host_regs(struct ufs_hba *hba)
+ 		ktime_to_us(hba->ufs_stats.last_hibern8_exit_tstamp),
+ 		hba->ufs_stats.hibern8_exit_cnt);
+ 
+-	ufshcd_print_uic_err_hist(hba, &hba->ufs_stats.pa_err, "pa_err");
+-	ufshcd_print_uic_err_hist(hba, &hba->ufs_stats.dl_err, "dl_err");
+-	ufshcd_print_uic_err_hist(hba, &hba->ufs_stats.nl_err, "nl_err");
+-	ufshcd_print_uic_err_hist(hba, &hba->ufs_stats.tl_err, "tl_err");
+-	ufshcd_print_uic_err_hist(hba, &hba->ufs_stats.dme_err, "dme_err");
++	ufshcd_print_err_hist(hba, &hba->ufs_stats.pa_err, "pa_err");
++	ufshcd_print_err_hist(hba, &hba->ufs_stats.dl_err, "dl_err");
++	ufshcd_print_err_hist(hba, &hba->ufs_stats.nl_err, "nl_err");
++	ufshcd_print_err_hist(hba, &hba->ufs_stats.tl_err, "tl_err");
++	ufshcd_print_err_hist(hba, &hba->ufs_stats.dme_err, "dme_err");
  
  	ufshcd_print_clk_freqs(hba);
  
-@@ -4329,6 +4337,14 @@ static inline int ufshcd_disable_device_tx_lcc(struct ufs_hba *hba)
- 	return ufshcd_disable_tx_lcc(hba, true);
- }
- 
-+static void ufshcd_update_reg_hist(struct ufs_err_reg_hist *reg_hist,
-+				   u32 reg)
-+{
-+	reg_hist->reg[reg_hist->pos] = reg;
-+	reg_hist->tstamp[reg_hist->pos] = ktime_get();
-+	reg_hist->pos = (reg_hist->pos + 1) % UFS_ERR_REG_HIST_LENGTH;
-+}
-+
- /**
-  * ufshcd_link_startup - Initialize unipro link startup
-  * @hba: per adapter instance
-@@ -4356,6 +4372,8 @@ static int ufshcd_link_startup(struct ufs_hba *hba)
- 
- 		/* check if device is detected by inter-connect layer */
- 		if (!ret && !ufshcd_is_device_present(hba)) {
-+			ufshcd_update_reg_hist(&hba->ufs_stats.link_startup_err,
-+					       0);
- 			dev_err(hba->dev, "%s: Device not present\n", __func__);
- 			ret = -ENXIO;
- 			goto out;
-@@ -4366,8 +4384,11 @@ static int ufshcd_link_startup(struct ufs_hba *hba)
- 		 * but we can't be sure if the link is up until link startup
- 		 * succeeds. So reset the local Uni-Pro and try again.
- 		 */
--		if (ret && ufshcd_hba_enable(hba))
-+		if (ret && ufshcd_hba_enable(hba)) {
-+			ufshcd_update_reg_hist(&hba->ufs_stats.link_startup_err,
-+					       (u32)ret);
- 			goto out;
-+		}
- 	} while (ret && retries--);
- 
- 	if (ret)
-@@ -5350,14 +5371,6 @@ static void ufshcd_err_handler(struct work_struct *work)
+@@ -5346,12 +5347,12 @@ static void ufshcd_err_handler(struct work_struct *work)
  	pm_runtime_put_sync(hba->dev);
  }
  
--static void ufshcd_update_reg_hist(struct ufs_err_reg_hist *reg_hist,
--				   u32 reg)
--{
--	reg_hist->reg[reg_hist->pos] = reg;
--	reg_hist->tstamp[reg_hist->pos] = ktime_get();
--	reg_hist->pos = (reg_hist->pos + 1) % UFS_ERR_REG_HIST_LENGTH;
--}
--
+-static void ufshcd_update_uic_reg_hist(struct ufs_uic_err_reg_hist *reg_hist,
+-		u32 reg)
++static void ufshcd_update_reg_hist(struct ufs_err_reg_hist *reg_hist,
++				   u32 reg)
+ {
+ 	reg_hist->reg[reg_hist->pos] = reg;
+ 	reg_hist->tstamp[reg_hist->pos] = ktime_get();
+-	reg_hist->pos = (reg_hist->pos + 1) % UIC_ERR_REG_HIST_LENGTH;
++	reg_hist->pos = (reg_hist->pos + 1) % UFS_ERR_REG_HIST_LENGTH;
+ }
+ 
  /**
-  * ufshcd_update_uic_error - check and set fatal UIC error flags.
-  * @hba: per-adapter instance
-@@ -6043,6 +6056,7 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
- 	 */
- 	scsi_print_command(hba->lrb[tag].cmd);
- 	if (!hba->req_abort_count) {
-+		ufshcd_update_reg_hist(&hba->ufs_stats.task_abort_err, 0);
- 		ufshcd_print_host_regs(hba);
- 		ufshcd_print_host_state(hba);
- 		ufshcd_print_pwr_info(hba);
-@@ -7819,6 +7833,8 @@ static int ufshcd_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 	ufshcd_release(hba);
- out:
- 	hba->pm_op_in_progress = 0;
-+	if (ret)
-+		ufshcd_update_reg_hist(&hba->ufs_stats.suspend_err, (u32)ret);
- 	return ret;
- }
+@@ -5372,13 +5373,13 @@ static void ufshcd_update_uic_error(struct ufs_hba *hba)
+ 		 * must be checked but this error is handled separately.
+ 		 */
+ 		dev_dbg(hba->dev, "%s: UIC Lane error reported\n", __func__);
+-		ufshcd_update_uic_reg_hist(&hba->ufs_stats.pa_err, reg);
++		ufshcd_update_reg_hist(&hba->ufs_stats.pa_err, reg);
+ 	}
  
-@@ -7921,6 +7937,8 @@ static int ufshcd_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 	ufshcd_setup_clocks(hba, false);
- out:
- 	hba->pm_op_in_progress = 0;
-+	if (ret)
-+		ufshcd_update_reg_hist(&hba->ufs_stats.resume_err, (u32)ret);
- 	return ret;
- }
+ 	/* PA_INIT_ERROR is fatal and needs UIC reset */
+ 	reg = ufshcd_readl(hba, REG_UIC_ERROR_CODE_DATA_LINK_LAYER);
+ 	if (reg)
+-		ufshcd_update_uic_reg_hist(&hba->ufs_stats.dl_err, reg);
++		ufshcd_update_reg_hist(&hba->ufs_stats.dl_err, reg);
  
+ 	if (reg & UIC_DATA_LINK_LAYER_ERROR_PA_INIT)
+ 		hba->uic_error |= UFSHCD_UIC_DL_PA_INIT_ERROR;
+@@ -5394,19 +5395,19 @@ static void ufshcd_update_uic_error(struct ufs_hba *hba)
+ 	/* UIC NL/TL/DME errors needs software retry */
+ 	reg = ufshcd_readl(hba, REG_UIC_ERROR_CODE_NETWORK_LAYER);
+ 	if (reg) {
+-		ufshcd_update_uic_reg_hist(&hba->ufs_stats.nl_err, reg);
++		ufshcd_update_reg_hist(&hba->ufs_stats.nl_err, reg);
+ 		hba->uic_error |= UFSHCD_UIC_NL_ERROR;
+ 	}
+ 
+ 	reg = ufshcd_readl(hba, REG_UIC_ERROR_CODE_TRANSPORT_LAYER);
+ 	if (reg) {
+-		ufshcd_update_uic_reg_hist(&hba->ufs_stats.tl_err, reg);
++		ufshcd_update_reg_hist(&hba->ufs_stats.tl_err, reg);
+ 		hba->uic_error |= UFSHCD_UIC_TL_ERROR;
+ 	}
+ 
+ 	reg = ufshcd_readl(hba, REG_UIC_ERROR_CODE_DME);
+ 	if (reg) {
+-		ufshcd_update_uic_reg_hist(&hba->ufs_stats.dme_err, reg);
++		ufshcd_update_reg_hist(&hba->ufs_stats.dme_err, reg);
+ 		hba->uic_error |= UFSHCD_UIC_DME_ERROR;
+ 	}
+ 
+@@ -6682,7 +6683,7 @@ static void ufshcd_tune_unipro_params(struct ufs_hba *hba)
+ 
+ static void ufshcd_clear_dbg_ufs_stats(struct ufs_hba *hba)
+ {
+-	int err_reg_hist_size = sizeof(struct ufs_uic_err_reg_hist);
++	int err_reg_hist_size = sizeof(struct ufs_err_reg_hist);
+ 
+ 	hba->ufs_stats.hibern8_exit_cnt = 0;
+ 	hba->ufs_stats.last_hibern8_exit_tstamp = ktime_set(0, 0);
 diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index c6ec5c749ceb..f9f109da7f18 100644
+index 994d73d03207..dcc61f857c38 100644
 --- a/drivers/scsi/ufs/ufshcd.h
 +++ b/drivers/scsi/ufs/ufshcd.h
-@@ -438,6 +438,10 @@ struct ufs_err_reg_hist {
-  * @dme_err: tracks dme errors
-  * @fatal_err: tracks fatal errors
-  * @auto_hibern8_err: tracks auto-hibernate errors
-+ * @tsk_abort_err: tracks task abort events
-+ * @linkup_err: tracks link-startup fail events
-+ * @suspend_err: tracks suspend fail events
-+ * @resume_err: tracks resume fail events
+@@ -412,17 +412,17 @@ struct ufs_init_prefetch {
+ 	u32 icc_level;
+ };
+ 
+-#define UIC_ERR_REG_HIST_LENGTH 8
++#define UFS_ERR_REG_HIST_LENGTH 8
+ /**
+- * struct ufs_uic_err_reg_hist - keeps history of uic errors
++ * struct ufs_err_reg_hist - keeps history of uic errors
+  * @pos: index to indicate cyclic buffer position
+  * @reg: cyclic buffer for registers value
+  * @tstamp: cyclic buffer for time stamp
   */
+-struct ufs_uic_err_reg_hist {
++struct ufs_err_reg_hist {
+ 	int pos;
+-	u32 reg[UIC_ERR_REG_HIST_LENGTH];
+-	ktime_t tstamp[UIC_ERR_REG_HIST_LENGTH];
++	u32 reg[UFS_ERR_REG_HIST_LENGTH];
++	ktime_t tstamp[UFS_ERR_REG_HIST_LENGTH];
+ };
+ 
+ /**
+@@ -440,11 +440,11 @@ struct ufs_uic_err_reg_hist {
  struct ufs_stats {
  	u32 hibern8_exit_cnt;
-@@ -453,6 +457,12 @@ struct ufs_stats {
- 	/* fatal errors */
- 	struct ufs_err_reg_hist fatal_err;
- 	struct ufs_err_reg_hist auto_hibern8_err;
-+
-+	/* fatal events */
-+	struct ufs_err_reg_hist task_abort_err;
-+	struct ufs_err_reg_hist link_startup_err;
-+	struct ufs_err_reg_hist suspend_err;
-+	struct ufs_err_reg_hist resume_err;
+ 	ktime_t last_hibern8_exit_tstamp;
+-	struct ufs_uic_err_reg_hist pa_err;
+-	struct ufs_uic_err_reg_hist dl_err;
+-	struct ufs_uic_err_reg_hist nl_err;
+-	struct ufs_uic_err_reg_hist tl_err;
+-	struct ufs_uic_err_reg_hist dme_err;
++	struct ufs_err_reg_hist pa_err;
++	struct ufs_err_reg_hist dl_err;
++	struct ufs_err_reg_hist nl_err;
++	struct ufs_err_reg_hist tl_err;
++	struct ufs_err_reg_hist dme_err;
  };
  
  /**
