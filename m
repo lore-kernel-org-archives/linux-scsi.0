@@ -1,49 +1,37 @@
-From: Stanley Chu <stanley.chu@mediatek.com>
-Subject: [PATCH v2 0/4] scsi: ufs: Provide fatal and auto-hibern8 error history
-Date: Wed, 10 Jul 2019 13:20:13 +0800
-Message-ID: <1562736017-29461-1-git-send-email-stanley.chu@mediatek.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: linux-scsi@vger.kernel.org, martin.petersen@oracle.com, avri.altman@wdc.com, alim.akhtar@samsung.com, pedrom.sousa@synopsys.com
-Cc: sthumma@codeaurora.org, marc.w.gonzalez@free.fr, andy.teng@mediatek.com, chun-hung.wu@mediatek.com, kuohong.wang@mediatek.com, peter.wang@mediatek.com, evgreen@chromium.org, subhashj@codeaurora.org, linux-mediatek@lists.infradead.org, ygardi@codeaurora.org, matthias.bgg@gmail.com, Stanley Chu <stanley.chu@mediatek.com>, linux-arm-kernel@lists.infradead.org, beanhuo@micron.com
+From: Yang Bin <yang.bin18@zte.com.cn>
+Subject: [PATCH] Check sk before sendpage
+Date: Wed, 10 Jul 2019 15:30:09 +0800
+Message-ID: <1562743809-31133-1-git-send-email-yang.bin18@zte.com.cn>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: lduncan@suse.com
+Cc: cleech@redhat.com, jejb@linux.ibm.com, martin.petersen@oracle.com, open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, xue.zhihong@zte.com.cn, wang.yi59@zte.com.cn, wang.liang82@zte.com.cn,  Yang Bin  <yang.bin18@zte.com.cn>
 List-Id: linux-scsi@vger.kernel.org
 
-This patchset provides more information of fatal errros and auto-hibern8 errors
-to improve debugging by keeping their error history as completed as possible.
+From: " Yang Bin "<yang.bin18@zte.com.cn>
 
-Thanks Avri so much for prompt reviewing patchset v1.
+Before xmit,iscsi may disconnect just now.
+So must check connection sock NULL or not,or kernel will crash for
+accessing NULL pointer.
 
-I would like to post v2 to add one more patch "scsi: ufs: Add history of fatal events"
-to add history for "non-interrupt-based" errors as well, for example,
+Signed-off-by: Yang Bin <yang.bin18@zte.com.cn>
+---
+ drivers/scsi/iscsi_tcp.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-- Link startup fail
-- Suspend fail
-- Resume fail
-- Task or request abort event
-
-Changes in v2:
-- Add new patch "scsi: ufs: Add history of fatal events".
-
-Stanley Chu (4):
-  scsi: ufs: Change names related to error history
-  scsi: ufs: Add fatal and auto-hibern8 error history
-  scsi: ufs: Do not reset error history during host reset
-  scsi: ufs: Add history of fatal events
-
- drivers/scsi/ufs/ufshcd.c | 87 +++++++++++++++++++++++----------------
- drivers/scsi/ufs/ufshcd.h | 38 ++++++++++++-----
- 2 files changed, 80 insertions(+), 45 deletions(-)
-
+diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
+index 7bedbe8..a59c49f 100644
+--- a/drivers/scsi/iscsi_tcp.c
++++ b/drivers/scsi/iscsi_tcp.c
+@@ -264,6 +264,9 @@ static int iscsi_sw_tcp_xmit_segment(struct iscsi_tcp_conn *tcp_conn,
+ 	unsigned int copied = 0;
+ 	int r = 0;
+ 
++	if (!sk)
++		return -ENOTCONN;
++
+ 	while (!iscsi_tcp_segment_done(tcp_conn, segment, 0, r)) {
+ 		struct scatterlist *sg;
+ 		unsigned int offset, copy;
 -- 
-2.18.0
+1.8.3.1
