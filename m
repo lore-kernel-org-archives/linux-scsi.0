@@ -1,87 +1,67 @@
-From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 5.1 07/11] scsi: iscsi: set auth_protocol back to NULL if CHAP_A value is not supported
-Date: Wed, 10 Jul 2019 11:02:34 -0400
-Message-ID: <20190710150240.6984-7-sashal@kernel.org>
-References: <20190710150240.6984-1-sashal@kernel.org>
+From: Lee Duncan <LDuncan-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH] Check sk before sendpage
+Date: Wed, 10 Jul 2019 17:47:31 +0000
+Message-ID: <1bc364ff-5bff-47ac-611a-f75c43f4bd1b@suse.com>
+References: <1562743809-31133-1-git-send-email-yang.bin18@zte.com.cn>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190710150240.6984-1-sashal@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Maurizio Lombardi <mlombard@redhat.com>, Chris Leech <cleech@redhat.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <open-iscsi+bncBD54HHNYIIILNT4Y5ECRUBBS4XV2M-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+In-Reply-To: <1562743809-31133-1-git-send-email-yang.bin18-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>
+Content-Language: en-US
+Content-ID: <F3B3AF6B642FCC40B3B4B1F936A8554A-WIijndS0fTycE4WynfumptQqCkab/8FMAL8bYrjMMd8@public.gmane.org>
+List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <https://groups.google.com/group/open-iscsi
+List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
+ <https://groups.google.com/group/open-iscsi/subscribe>
+To: Yang Bin <yang.bin18-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>
+Cc: "open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org" <open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>, "jejb-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org" <jejb-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, "martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "wang.liang82-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org" <wang.liang82-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>, "wang.yi59-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org" <wang.yi59-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>, "xue.zhihong-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org" <xue.zhihong-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Maurizio Lombardi <mlombard@redhat.com>
+On 7/10/19 12:30 AM, Yang Bin wrote:
 
-[ Upstream commit 5dd6c49339126c2c8df2179041373222362d6e49 ]
+> From: " Yang Bin "<yang.bin18-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>
+>
+> Before xmit,iscsi may disconnect just now.
+> So must check connection sock NULL or not,or kernel will crash for
+> accessing NULL pointer.
+>
+> Signed-off-by: Yang Bin <yang.bin18-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>
+> ---
+>  drivers/scsi/iscsi_tcp.c | 3 +++
+>  1 file changed, 3 insertions(+)
+>
+> diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
+> index 7bedbe8..a59c49f 100644
+> --- a/drivers/scsi/iscsi_tcp.c
+> +++ b/drivers/scsi/iscsi_tcp.c
+> @@ -264,6 +264,9 @@ static int iscsi_sw_tcp_xmit_segment(struct iscsi_tcp_conn *tcp_conn,
+>  	unsigned int copied = 0;
+>  	int r = 0;
+>  
+> +	if (!sk)
+> +		return -ENOTCONN;
+> +
+>  	while (!iscsi_tcp_segment_done(tcp_conn, segment, 0, r)) {
+>  		struct scatterlist *sg;
+>  		unsigned int offset, copy;
+>
 
-If the CHAP_A value is not supported, the chap_server_open() function
-should free the auth_protocol pointer and set it to NULL, or we will leave
-a dangling pointer around.
+If the socket can be closed right before iscsi_sw_tcp_xmit_segment() is
+called, can it be called in the middle of sending segments? (In which
+case the check would have to be in the while loop.)
 
-[   66.010905] Unsupported CHAP_A value
-[   66.011660] Security negotiation failed.
-[   66.012443] iSCSI Login negotiation failed.
-[   68.413924] general protection fault: 0000 [#1] SMP PTI
-[   68.414962] CPU: 0 PID: 1562 Comm: targetcli Kdump: loaded Not tainted 4.18.0-80.el8.x86_64 #1
-[   68.416589] Hardware name: Red Hat KVM, BIOS 0.5.1 01/01/2011
-[   68.417677] RIP: 0010:__kmalloc_track_caller+0xc2/0x210
-
-Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
-Reviewed-by: Chris Leech <cleech@redhat.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/target/iscsi/iscsi_target_auth.c | 16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/target/iscsi/iscsi_target_auth.c b/drivers/target/iscsi/iscsi_target_auth.c
-index 4e680d753941..e2fa3a3bc81d 100644
---- a/drivers/target/iscsi/iscsi_target_auth.c
-+++ b/drivers/target/iscsi/iscsi_target_auth.c
-@@ -89,6 +89,12 @@ static int chap_check_algorithm(const char *a_str)
- 	return CHAP_DIGEST_UNKNOWN;
- }
- 
-+static void chap_close(struct iscsi_conn *conn)
-+{
-+	kfree(conn->auth_protocol);
-+	conn->auth_protocol = NULL;
-+}
-+
- static struct iscsi_chap *chap_server_open(
- 	struct iscsi_conn *conn,
- 	struct iscsi_node_auth *auth,
-@@ -126,7 +132,7 @@ static struct iscsi_chap *chap_server_open(
- 	case CHAP_DIGEST_UNKNOWN:
- 	default:
- 		pr_err("Unsupported CHAP_A value\n");
--		kfree(conn->auth_protocol);
-+		chap_close(conn);
- 		return NULL;
- 	}
- 
-@@ -141,19 +147,13 @@ static struct iscsi_chap *chap_server_open(
- 	 * Generate Challenge.
- 	 */
- 	if (chap_gen_challenge(conn, 1, aic_str, aic_len) < 0) {
--		kfree(conn->auth_protocol);
-+		chap_close(conn);
- 		return NULL;
- 	}
- 
- 	return chap;
- }
- 
--static void chap_close(struct iscsi_conn *conn)
--{
--	kfree(conn->auth_protocol);
--	conn->auth_protocol = NULL;
--}
--
- static int chap_server_compute_md5(
- 	struct iscsi_conn *conn,
- 	struct iscsi_node_auth *auth,
 -- 
-2.20.1
+
+Lee Duncan
+
+-- 
+You received this message because you are subscribed to the Google Groups "open-iscsi" group.
+To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+Visit this group at https://groups.google.com/group/open-iscsi.
+To view this discussion on the web visit https://groups.google.com/d/msgid/open-iscsi/1bc364ff-5bff-47ac-611a-f75c43f4bd1b%40suse.com.
+For more options, visit https://groups.google.com/d/optout.
