@@ -1,99 +1,161 @@
-From: Stanley Chu <stanley.chu@mediatek.com>
-Subject: RE: [PATCH v2 4/4] scsi: ufs: Add history of fatal events
-Date: Wed, 10 Jul 2019 17:28:56 +0800
-Message-ID: <1562750936.7235.3.camel@mtkswgap22>
-References: <1562736017-29461-1-git-send-email-stanley.chu@mediatek.com>
- <1562736017-29461-5-git-send-email-stanley.chu@mediatek.com>
- <SN6PR04MB4925D29D16757A57B25DE369FCF00@SN6PR04MB4925.namprd04.prod.outlook.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <SN6PR04MB4925D29D16757A57B25DE369FCF00@SN6PR04MB4925.namprd04.prod.outlook.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Avri Altman <Avri.Altman@wdc.com>
-Cc: "sthumma@codeaurora.org" <sthumma@codeaurora.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "marc.w.gonzalez@free.fr" <marc.w.gonzalez@free.fr>, "andy.teng@mediatek.com" <andy.teng@mediatek.com>, "chun-hung.wu@mediatek.com" <chun-hung.wu@mediatek.com>, "kuohong.wang@mediatek.com" <kuohong.wang@mediatek.com>, "peter.wang@mediatek.com" <peter.wang@mediatek.com>, "evgreen@chromium.org" <evgreen@chromium.org>, "subhashj@codeaurora.org" <subhashj@codeaurora.org>, "linux-mediatek@lists.infradead.org" <linux-mediatek@lists.infradead.org>, "ygardi@codeaurora.org" <ygardi@codeaurora.org>, "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>, "matthias.bgg@gmail.com" <matthias.bgg@gmail.com>, "pedrom.sousa@synopsys.com" <pedrom.sousa@synopsys.com>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel>
+From: Konstantin Khorenko <khorenko@virtuozzo.com>
+Subject: [PATCH v2 1/2] Revert "scsi: aacraid: Remove reference to Series-9"
+Date: Wed, 10 Jul 2019 12:31:12 +0300
+Message-ID: <20190710093113.27936-2-khorenko@virtuozzo.com>
+References: <2a6f5cc2-40cb-647c-003d-aae594d05062@virtuozzo.com>
+ <20190710093113.27936-1-khorenko@virtuozzo.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190710093113.27936-1-khorenko@virtuozzo.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Prasad B Munirathnam <prasad.munirathnam@microsemi.com>, Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>, Finn Thain <fthain@telegraphics.com.au>, "Andrey Jr . Melnikov" <temnota.am@gmail.com>
+Cc: Konstantin Khorenko <khorenko@virtuozzo.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Adaptec OEM Raid Solutions <aacraid@microsemi.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Avri,
+This reverts commit 395e5df79a9588abf1099ea746f11872c9086252.
 
-On Wed, 2019-07-10 at 08:04 +0000, Avri Altman wrote:
-> Hi Stanley,
-> 
-> > +					       (u32)ret);
-> >  			goto out;
-> > +		}
-> >  	} while (ret && retries--);
-> > 
-> >  	if (ret)
-> Here also link startup fails...
+The patch being reverted not only drops Series-9 cards
+checks but also changes logic for Series-6 controllers which
+lead to controller hungs/resets under high io load.
 
-Thanks! Will track this place as well in next version.
+So revert the original patch, references to Series 9 are to
+be removed by next patch.
 
-> >   * ufshcd_update_uic_error - check and set fatal UIC error flags.
-> >   * @hba: per-adapter instance
-> > @@ -6043,6 +6056,7 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
-> >  	 */
-> >  	scsi_print_command(hba->lrb[tag].cmd);
-> >  	if (!hba->req_abort_count) {
-> > +		ufshcd_update_reg_hist(&hba->ufs_stats.task_abort_err,
-> > 0);
-> Here you are collecting abort events statistics, not abort errors.
-> If this is what you meant, then it's not task_abort_err, but task_abort.
-> And if indeed you are tracking task aborts, maybe add lun resets as well?
+https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1777586
+https://bugzilla.redhat.com/show_bug.cgi?id=1724077
+https://jira.sw.ru/browse/PSBM-95736
 
-Good suggestion! I would add history of lun reset and host reset as well
-in next version.
+Signed-off-by: Konstantin Khorenko <khorenko@virtuozzo.com>
+---
+ drivers/scsi/aacraid/aacraid.h  | 12 +-----------
+ drivers/scsi/aacraid/comminit.c | 18 ++++++++++++++----
+ drivers/scsi/aacraid/commsup.c  |  5 ++++-
+ drivers/scsi/aacraid/linit.c    | 10 +++++++---
+ 4 files changed, 26 insertions(+), 19 deletions(-)
 
-> > diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> > index c6ec5c749ceb..f9f109da7f18 100644
-> > --- a/drivers/scsi/ufs/ufshcd.h
-> > +++ b/drivers/scsi/ufs/ufshcd.h
-> > @@ -438,6 +438,10 @@ struct ufs_err_reg_hist {
-> >   * @dme_err: tracks dme errors
-> >   * @fatal_err: tracks fatal errors
-> >   * @auto_hibern8_err: tracks auto-hibernate errors
-> > + * @tsk_abort_err: tracks task abort events
-> > + * @linkup_err: tracks link-startup fail events
-> > + * @suspend_err: tracks suspend fail events
-> > + * @resume_err: tracks resume fail events
-> >   */
-> >  struct ufs_stats {
-> >  	u32 hibern8_exit_cnt;
-> > @@ -453,6 +457,12 @@ struct ufs_stats {
-> >  	/* fatal errors */
-> >  	struct ufs_err_reg_hist fatal_err;
-> >  	struct ufs_err_reg_hist auto_hibern8_err;
-> > +
-> > +	/* fatal events */
-> Maybe move here fatal_err as well?
-
-OK! these could be classified as fatal errors as well.
-Will fix them in next version.
-
-> 
-> > +	struct ufs_err_reg_hist task_abort_err;
-> > +	struct ufs_err_reg_hist link_startup_err;
-> > +	struct ufs_err_reg_hist suspend_err;
-> > +	struct ufs_err_reg_hist resume_err;
-> >  };
-> > 
-> >  /**
-> > --
-> > 2.18.0
-> 
-> 
-> Thanks,
-> Avri
-> 
-
-Thanks,
-Stanley
+diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
+index 3fa03230f6ba..aef47d0e718c 100644
+--- a/drivers/scsi/aacraid/aacraid.h
++++ b/drivers/scsi/aacraid/aacraid.h
+@@ -416,6 +416,7 @@ struct aac_ciss_identify_pd {
+ #define PMC_DEVICE_S6	0x28b
+ #define PMC_DEVICE_S7	0x28c
+ #define PMC_DEVICE_S8	0x28d
++#define PMC_DEVICE_S9	0x28f
+ 
+ #define aac_phys_to_logical(x)  ((x)+1)
+ #define aac_logical_to_phys(x)  ((x)?(x)-1:0)
+@@ -2729,17 +2730,6 @@ int _aac_rx_init(struct aac_dev *dev);
+ int aac_rx_select_comm(struct aac_dev *dev, int comm);
+ int aac_rx_deliver_producer(struct fib * fib);
+ 
+-static inline int aac_is_src(struct aac_dev *dev)
+-{
+-	u16 device = dev->pdev->device;
+-
+-	if (device == PMC_DEVICE_S6 ||
+-		device == PMC_DEVICE_S7 ||
+-		device == PMC_DEVICE_S8)
+-		return 1;
+-	return 0;
+-}
+-
+ static inline int aac_supports_2T(struct aac_dev *dev)
+ {
+ 	return (dev->adapter_info.options & AAC_OPT_NEW_COMM_64);
+diff --git a/drivers/scsi/aacraid/comminit.c b/drivers/scsi/aacraid/comminit.c
+index d4fcfa1e54e0..edaa2d53e704 100644
+--- a/drivers/scsi/aacraid/comminit.c
++++ b/drivers/scsi/aacraid/comminit.c
+@@ -41,8 +41,11 @@ static inline int aac_is_msix_mode(struct aac_dev *dev)
+ {
+ 	u32 status = 0;
+ 
+-	if (aac_is_src(dev))
++	if (dev->pdev->device == PMC_DEVICE_S6 ||
++		dev->pdev->device == PMC_DEVICE_S7 ||
++		dev->pdev->device == PMC_DEVICE_S8) {
+ 		status = src_readl(dev, MUnit.OMR);
++	}
+ 	return (status & AAC_INT_MODE_MSIX);
+ }
+ 
+@@ -349,7 +352,9 @@ int aac_send_shutdown(struct aac_dev * dev)
+ 	/* FIB should be freed only after getting the response from the F/W */
+ 	if (status != -ERESTARTSYS)
+ 		aac_fib_free(fibctx);
+-	if (aac_is_src(dev) &&
++	if ((dev->pdev->device == PMC_DEVICE_S7 ||
++	     dev->pdev->device == PMC_DEVICE_S8 ||
++	     dev->pdev->device == PMC_DEVICE_S9) &&
+ 	     dev->msi_enabled)
+ 		aac_set_intx_mode(dev);
+ 	return status;
+@@ -605,7 +610,9 @@ struct aac_dev *aac_init_adapter(struct aac_dev *dev)
+ 		dev->max_fib_size = status[1] & 0xFFE0;
+ 		host->sg_tablesize = status[2] >> 16;
+ 		dev->sg_tablesize = status[2] & 0xFFFF;
+-		if (aac_is_src(dev)) {
++		if (dev->pdev->device == PMC_DEVICE_S7 ||
++		    dev->pdev->device == PMC_DEVICE_S8 ||
++		    dev->pdev->device == PMC_DEVICE_S9) {
+ 			if (host->can_queue > (status[3] >> 16) -
+ 					AAC_NUM_MGT_FIB)
+ 				host->can_queue = (status[3] >> 16) -
+@@ -624,7 +631,10 @@ struct aac_dev *aac_init_adapter(struct aac_dev *dev)
+ 			pr_warn("numacb=%d ignored\n", numacb);
+ 	}
+ 
+-	if (aac_is_src(dev))
++	if (dev->pdev->device == PMC_DEVICE_S6 ||
++	    dev->pdev->device == PMC_DEVICE_S7 ||
++	    dev->pdev->device == PMC_DEVICE_S8 ||
++	    dev->pdev->device == PMC_DEVICE_S9)
+ 		aac_define_int_mode(dev);
+ 	/*
+ 	 *	Ok now init the communication subsystem
+diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
+index 2142a649e865..b047b1e2215a 100644
+--- a/drivers/scsi/aacraid/commsup.c
++++ b/drivers/scsi/aacraid/commsup.c
+@@ -2574,7 +2574,10 @@ void aac_free_irq(struct aac_dev *dev)
+ {
+ 	int i;
+ 
+-	if (aac_is_src(dev)) {
++	if (dev->pdev->device == PMC_DEVICE_S6 ||
++	    dev->pdev->device == PMC_DEVICE_S7 ||
++	    dev->pdev->device == PMC_DEVICE_S8 ||
++	    dev->pdev->device == PMC_DEVICE_S9) {
+ 		if (dev->max_msix > 1) {
+ 			for (i = 0; i < dev->max_msix; i++)
+ 				free_irq(pci_irq_vector(dev->pdev, i),
+diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+index 644f7f5c61a2..f669a4405217 100644
+--- a/drivers/scsi/aacraid/linit.c
++++ b/drivers/scsi/aacraid/linit.c
+@@ -1559,8 +1559,10 @@ static void __aac_shutdown(struct aac_dev * aac)
+ 	aac_send_shutdown(aac);
+ 
+ 	aac_adapter_disable_int(aac);
+-
+-	if (aac_is_src(aac)) {
++	if (aac->pdev->device == PMC_DEVICE_S6 ||
++	    aac->pdev->device == PMC_DEVICE_S7 ||
++	    aac->pdev->device == PMC_DEVICE_S8 ||
++	    aac->pdev->device == PMC_DEVICE_S9) {
+ 		if (aac->max_msix > 1) {
+ 			for (i = 0; i < aac->max_msix; i++) {
+ 				free_irq(pci_irq_vector(aac->pdev, i),
+@@ -1835,7 +1837,9 @@ static int aac_acquire_resources(struct aac_dev *dev)
+ 	aac_adapter_enable_int(dev);
+ 
+ 
+-	if (aac_is_src(dev))
++	if ((dev->pdev->device == PMC_DEVICE_S7 ||
++	     dev->pdev->device == PMC_DEVICE_S8 ||
++	     dev->pdev->device == PMC_DEVICE_S9))
+ 		aac_define_int_mode(dev);
+ 
+ 	if (dev->msi_enabled)
+-- 
+2.15.1
