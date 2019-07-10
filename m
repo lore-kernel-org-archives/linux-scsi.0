@@ -1,12 +1,12 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.19 6/9] scsi: iscsi: set auth_protocol back to NULL if CHAP_A value is not supported
-Date: Wed, 10 Jul 2019 11:02:56 -0400
-Message-ID: <20190710150301.7129-6-sashal@kernel.org>
-References: <20190710150301.7129-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.1 07/11] scsi: iscsi: set auth_protocol back to NULL if CHAP_A value is not supported
+Date: Wed, 10 Jul 2019 11:02:34 -0400
+Message-ID: <20190710150240.6984-7-sashal@kernel.org>
+References: <20190710150240.6984-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190710150301.7129-1-sashal@kernel.org>
+In-Reply-To: <20190710150240.6984-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc: Maurizio Lombardi <mlombard@redhat.com>, Chris Leech <cleech@redhat.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
