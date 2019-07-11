@@ -1,51 +1,24 @@
-From: YueHaibing <yuehaibing@huawei.com>
-Subject: [PATCH -next] scsi: aic94xx: Remove unnecessary null check
-Date: Thu, 11 Jul 2019 22:15:39 +0800
-Message-ID: <20190711141539.13892-1-yuehaibing@huawei.com>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: pr-tracker-bot@kernel.org
+Subject: Re: [GIT PULL] SCSI topic updates for the 5.2+ merge window: sg
+Date: Thu, 11 Jul 2019 22:30:10 +0000
+Message-ID: <156288421069.10140.5154229734157920631.pr-tracker-bot@kernel.org>
+References: <1562705278.30003.8.camel@HansenPartnership.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1562705278.30003.8.camel@HansenPartnership.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.ibm.com, martin.petersen@oracle.com, jthumshirn@suse.de, dan.carpenter@oracle.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, YueHaibing <yuehaibing@huawei.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-kmem_cache_destroy() can handle NULL pointer correctly, so there is
-no need to check NULL pointer before calling kmem_cache_destroy().
+The pull request you sent on Tue, 09 Jul 2019 13:47:58 -0700:
 
-Signed-off-by: YueHaibing <yuehaibing@huawei.com>
----
- drivers/scsi/aic94xx/aic94xx_init.c | 9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-sg
 
-diff --git a/drivers/scsi/aic94xx/aic94xx_init.c b/drivers/scsi/aic94xx/aic94xx_init.c
-index 261d8e4..f5781e3 100644
---- a/drivers/scsi/aic94xx/aic94xx_init.c
-+++ b/drivers/scsi/aic94xx/aic94xx_init.c
-@@ -565,8 +565,7 @@ static void asd_destroy_ha_caches(struct asd_ha_struct *asd_ha)
- 	if (asd_ha->hw_prof.scb_ext)
- 		asd_free_coherent(asd_ha, asd_ha->hw_prof.scb_ext);
- 
--	if (asd_ha->hw_prof.ddb_bitmap)
--		kfree(asd_ha->hw_prof.ddb_bitmap);
-+	kfree(asd_ha->hw_prof.ddb_bitmap);
- 	asd_ha->hw_prof.ddb_bitmap = NULL;
- 
- 	for (i = 0; i < ASD_MAX_PHYS; i++) {
-@@ -641,12 +640,10 @@ static int asd_create_global_caches(void)
- 
- static void asd_destroy_global_caches(void)
- {
--	if (asd_dma_token_cache)
--		kmem_cache_destroy(asd_dma_token_cache);
-+	kmem_cache_destroy(asd_dma_token_cache);
- 	asd_dma_token_cache = NULL;
- 
--	if (asd_ascb_cache)
--		kmem_cache_destroy(asd_ascb_cache);
-+	kmem_cache_destroy(asd_ascb_cache);
- 	asd_ascb_cache = NULL;
- }
- 
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/1f7563f743d7081710a9d186a8b203997d09f383
+
+Thank you!
+
 -- 
-2.7.4
+Deet-doot-dot, I am a bot.
+https://korg.wiki.kernel.org/userdoc/prtracker
