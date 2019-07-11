@@ -1,35 +1,30 @@
-From: Keyur Patel <iamkeyur96@gmail.com>
-Subject: [PATCH] scsi: g_NCR5380: Use !x in place of NULL comparisons
-Date: Thu, 11 Jul 2019 19:55:46 -0400
-Message-ID: <20190711235546.28081-1-iamkeyur96@gmail.com>
+From: James Bottomley <jejb@linux.ibm.com>
+Subject: Re: [PATCH] scsi: aha1740: Use !x in place of NULL comparisons
+Date: Thu, 11 Jul 2019 16:52:04 -0700
+Message-ID: <1562889124.2915.5.camel@linux.ibm.com>
+References: <20190711234833.27475-1-iamkeyur96@gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190711234833.27475-1-iamkeyur96@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-Cc: iamkeyur96@gmail.com, Finn Thain <fthain@telegraphics.com.au>, Michael Schmitz <schmitzmic@gmail.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Keyur Patel <iamkeyur96@gmail.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Change (x == NULL) to !x and (x != NULL) to x, to fix
-following checkpatch.pl warnings:
-CHECK: Comparison to NULL could be written "!x".
+On Thu, 2019-07-11 at 19:48 -0400, Keyur Patel wrote:
+> Change (x == NULL) to !x and (x != NULL) to x, to fix
+> following checkpatch.pl warnings:
+> CHECK: Comparison to NULL could be written "!x".
 
-Signed-off-by: Keyur Patel <iamkeyur96@gmail.com>
----
- drivers/scsi/g_NCR5380.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+This is one of our significantly older drivers.  We try not to touch it
+unless we really have to, so I'd rather not have patches like this
+applied to it.
 
-diff --git a/drivers/scsi/g_NCR5380.c b/drivers/scsi/g_NCR5380.c
-index 2ab774e62e40..6813094155d3 100644
---- a/drivers/scsi/g_NCR5380.c
-+++ b/drivers/scsi/g_NCR5380.c
-@@ -312,7 +312,7 @@ static int generic_NCR5380_init_one(struct scsi_host_template *tpnt,
- 	}
- 
- 	instance = scsi_host_alloc(tpnt, sizeof(struct NCR5380_hostdata));
--	if (instance == NULL) {
-+	if (!instance) {
- 		ret = -ENOMEM;
- 		goto out_unmap;
- 	}
--- 
-2.22.0
+I also don't really think the replacement adds anything to readability,
+so it should probably be removed from the checkpatch warnings.
+
+Thanks,
+
+James
