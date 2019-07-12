@@ -1,41 +1,65 @@
-From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: [PATCH 10/12] Documentation/sparc: repointer docs to Documentation/arch/
-Date: Fri, 12 Jul 2019 10:20:16 +0800
-Message-ID: <20190712022018.27989-10-alex.shi@linux.alibaba.com>
-References: <20190712022018.27989-1-alex.shi@linux.alibaba.com>
+From: Stanley Chu <stanley.chu@mediatek.com>
+Subject: [PATCH v1 1/2] scsi: ufs: Make new function for clearing outstanding
+ task bits
+Date: Fri, 12 Jul 2019 12:44:15 +0800
+Message-ID: <1562906656-27154-2-git-send-email-stanley.chu@mediatek.com>
+References: <1562906656-27154-1-git-send-email-stanley.chu@mediatek.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190712022018.27989-1-alex.shi@linux.alibaba.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-doc@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>
-Cc: Alex Shi <alex.shi@linux.alibaba.com>, linux-kernel@vger.kernel.org, linux-stm32@st-md-mailman.stormreply.com, linux-arm-kernel@lists.infradead.org, linuxppc-dev@lists.ozlabs.org, linux-riscv@lists.infradead.org, linux-omap@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-samsung-soc@vger.kernel.org, linux-ia64@vger.kernel.org, linux-mips@vger.kernel.org, linux-parisc@vger.kernel.org, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, kvm@vger.kernel.org, linux-sh@vger.kernel.org, sparclinux@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <1562906656-27154-1-git-send-email-stanley.chu@mediatek.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: linux-scsi@vger.kernel.org, martin.petersen@oracle.com, avri.altman@wdc.com, alim.akhtar@samsung.com, pedrom.sousa@synopsys.com
+Cc: marc.w.gonzalez@free.fr, andy.teng@mediatek.com, chun-hung.wu@mediatek.com, kuohong.wang@mediatek.com, evgreen@chromium.org, linux-mediatek@lists.infradead.org, peter.wang@mediatek.com, matthias.bgg@gmail.com, Stanley Chu <stanley.chu@mediatek.com>, linux-arm-kernel@lists.infradead.org, beanhuo@micron.com
 List-Id: linux-scsi@vger.kernel.org
 
-Since we move Documentation/sparc docs to Documentation/arch/sparc
-dir, redirect the doc pointer to them.
+Make a new function "ufshcd_outstanding_task_clear()" used to
+clear bits in hba->outstanding_tasks for future wider usage.
 
-Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
-Cc: Jonathan Corbet <corbet@lwn.net>
-Cc: linux-doc@vger.kernel.org
-Cc: sparclinux@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
 ---
- drivers/sbus/char/oradax.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/ufs/ufshcd.c | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/sbus/char/oradax.c b/drivers/sbus/char/oradax.c
-index 8af216287a84..c7db146a1dd5 100644
---- a/drivers/sbus/char/oradax.c
-+++ b/drivers/sbus/char/oradax.c
-@@ -18,7 +18,7 @@
-  * the recommended way for applications to use the coprocessor, and
-  * the driver interface is not intended for general use.
-  *
-- * See Documentation/sparc/oradax/oracle-dax.rst for more details.
-+ * See Documentation/arch/sparc/oradax/oracle-dax.rst for more details.
-  */
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 8f0426a36b0b..a667dbb547f2 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -723,6 +723,17 @@ static inline void ufshcd_outstanding_req_clear(struct ufs_hba *hba, int tag)
+ 	__clear_bit(tag, &hba->outstanding_reqs);
+ }
  
- #include <linux/uaccess.h>
++/**
++ * ufshcd_outstanding_task_clear - Clear a bit in outstanding task field
++ * @hba: per adapter instance
++ * @tag: position of the bit to be cleared
++ */
++static inline void ufshcd_outstanding_task_clear(struct ufs_hba *hba, int tag)
++{
++	__clear_bit(tag, &hba->outstanding_tasks);
++	dev_info(hba->dev, "clear outstanding_tasks: %d\n", tag);
++}
++
+ /**
+  * ufshcd_get_lists_status - Check UCRDY, UTRLRDY and UTMRLRDY
+  * @reg: Register value of host controller status
+@@ -5679,7 +5690,7 @@ static int __ufshcd_issue_tm_cmd(struct ufs_hba *hba,
+ 		ufshcd_add_tm_upiu_trace(hba, task_tag, "tm_complete");
+ 
+ 		spin_lock_irqsave(hba->host->host_lock, flags);
+-		__clear_bit(free_slot, &hba->outstanding_tasks);
++		ufshcd_outstanding_task_clear(hba, free_slot);
+ 		spin_unlock_irqrestore(hba->host->host_lock, flags);
+ 
+ 	}
 -- 
-2.19.1.856.g8858448bb
+2.18.0
