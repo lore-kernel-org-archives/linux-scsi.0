@@ -1,30 +1,34 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: uapi: ufs: Fix SPDX license identifier
-Date: Thu, 11 Jul 2019 21:22:28 -0400
-Message-ID: <yq1d0ig6o8b.fsf@oracle.com>
-References: <1560346477-13944-1-git-send-email-avri.altman@wdc.com>
-        <yq1ef2w9kig.fsf@oracle.com>
-        <1562890815.2915.13.camel@linux.vnet.ibm.com>
+Subject: Re: [PATCH v2 2/2] scsi: aacraid: Remove references to Series-9 (only)
+Date: Thu, 11 Jul 2019 21:30:07 -0400
+Message-ID: <yq15zo86nvk.fsf@oracle.com>
+References: <2a6f5cc2-40cb-647c-003d-aae594d05062@virtuozzo.com>
+        <20190710093113.27936-1-khorenko@virtuozzo.com>
+        <20190710093113.27936-3-khorenko@virtuozzo.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1562890815.2915.13.camel@linux.vnet.ibm.com> (James Bottomley's
-        message of "Thu, 11 Jul 2019 17:20:15 -0700")
+In-Reply-To: <20190710093113.27936-3-khorenko@virtuozzo.com> (Konstantin
+        Khorenko's message of "Wed, 10 Jul 2019 12:31:13 +0300")
 Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <jejb@linux.vnet.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Avri Altman <avri.altman@wdc.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, Pedro Sousa <pedrom.sousa@synopsys.com>, Alim Akhtar <alim.akhtar@samsung.com>, Avi Shchislowski <avi.shchislowski@wdc.com>, Alex Lemberg <alex.lemberg@wdc.com>
+To: Konstantin Khorenko <khorenko@virtuozzo.com>
+Cc: Prasad B Munirathnam <prasad.munirathnam@microsemi.com>, Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>, David Carroll <david.carroll@microsemi.com>, Finn Thain <fthain@telegraphics.com.au>, "Andrey Jr . Melnikov" <temnota.am@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Adaptec OEM Raid Solutions <aacraid@microsemi.com>
 List-Id: linux-scsi@vger.kernel.org
 
 
-James,
+Hi Konstantin,
 
-> Just to note: this isn't technically a licence change at all.  The
-> entire kernel is covered by the system call exception and this file is
-> thus also covered.  It's really a simple tag change to allow tools
-> which parse uapi header files to recognise from the SPDX tags that this
-> is a kernel header to which the Linux-syscall-note applies.
+> The patch removes references to Series 9 adapters following
+> 395e5df79a95 ("scsi: aacraid: Remove reference to Series-9"),
+> but doesn't touch Series 6 adapters logic.
 
-OK.
+We'll need some guidance from the Microsemi folks on this issue.
+
+> https://bugzilla.redhat.com/show_bug.cgi?id=1724077
+> https://jira.sw.ru/browse/PSBM-95736
+
+These two links don't appear to be publicly accessible and therefore do
+not belong in the patch.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
