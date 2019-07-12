@@ -1,59 +1,98 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V2] scsi: fix race on creating sense cache
-Date: Fri, 12 Jul 2019 10:08:19 +0800
-Message-ID: <20190712020819.31935-1-ming.lei@redhat.com>
+From: Alex Shi <alex.shi@linux.alibaba.com>
+Subject: [PATCH 03/12] Documentation/ia64: repointer docs to Documentation/arch/ia64
+Date: Fri, 12 Jul 2019 10:20:09 +0800
+Message-ID: <20190712022018.27989-3-alex.shi@linux.alibaba.com>
+References: <20190712022018.27989-1-alex.shi@linux.alibaba.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
-Sender: stable-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Ming Lei <ming.lei@redhat.com>, Stable <stable@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, "Ewan D . Milne" <emilne@redhat.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190712022018.27989-1-alex.shi@linux.alibaba.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-doc@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>
+Cc: Alex Shi <alex.shi@linux.alibaba.com>, linux-kernel@vger.kernel.org, linux-stm32@st-md-mailman.stormreply.com, linux-arm-kernel@lists.infradead.org, linuxppc-dev@lists.ozlabs.org, linux-riscv@lists.infradead.org, linux-omap@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-samsung-soc@vger.kernel.org, linux-ia64@vger.kernel.org, linux-mips@vger.kernel.org, linux-parisc@vger.kernel.org, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, kvm@vger.kernel.org, linux-sh@vger.kernel.org, Ard Biesheuvel <ard.biesheuvel@linaro.org>, Tony Luck <tony.luck@intel.com>, Fenghua Yu <fenghua.yu@intel.com>
 List-Id: linux-scsi@vger.kernel.org
 
-When scsi_init_sense_cache(host) is called concurrently from different
-hosts, each code path may see that the cache isn't created, then try
-to create a new one, then the created sense cache may be overrided and
-leaked.
+Since we move 'ia64' docs to Documentation/arch/ia64 dir,
+redirect the doc pointer to them.
 
-Fixes the issue by moving 'mutex_lock(&scsi_sense_cache_mutex)' before
-scsi_select_sense_cache().
-
-Fixes: 0a6ac4ee7c21 ("scsi: respect unchecked_isa_dma for blk-mq")
-Cc: Stable <stable@vger.kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Hannes Reinecke <hare@suse.com>
-Cc: Ewan D. Milne <emilne@redhat.com>
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
+Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
+Cc: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Fenghua Yu <fenghua.yu@intel.com>
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-ia64@vger.kernel.org
 ---
- drivers/scsi/scsi_lib.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ MAINTAINERS             | 2 +-
+ arch/ia64/kernel/efi.c  | 2 +-
+ arch/ia64/kernel/fsys.S | 2 +-
+ arch/ia64/mm/ioremap.c  | 2 +-
+ arch/ia64/pci/pci.c     | 2 +-
+ 5 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index e07a376a8c38..7493680ec104 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -72,11 +72,11 @@ int scsi_init_sense_cache(struct Scsi_Host *shost)
- 	struct kmem_cache *cache;
- 	int ret = 0;
+diff --git a/MAINTAINERS b/MAINTAINERS
+index c21d5464c86f..583c35cba7bc 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -14286,7 +14286,7 @@ SGI SN-IA64 (Altix) SERIAL CONSOLE DRIVER
+ M:	Pat Gefre <pfg@sgi.com>
+ L:	linux-ia64@vger.kernel.org
+ S:	Supported
+-F:	Documentation/ia64/serial.txt
++F:	Documentation/arch/ia64/serial.txt
+ F:	drivers/tty/serial/ioc?_serial.c
+ F:	include/linux/ioc?.h
  
-+	mutex_lock(&scsi_sense_cache_mutex);
- 	cache = scsi_select_sense_cache(shost->unchecked_isa_dma);
- 	if (cache)
--		return 0;
-+		goto exit;
+diff --git a/arch/ia64/kernel/efi.c b/arch/ia64/kernel/efi.c
+index 8f106638913c..02cdc38d15e8 100644
+--- a/arch/ia64/kernel/efi.c
++++ b/arch/ia64/kernel/efi.c
+@@ -852,7 +852,7 @@ valid_phys_addr_range (phys_addr_t phys_addr, unsigned long size)
+ 	 * /dev/mem reads and writes use copy_to_user(), which implicitly
+ 	 * uses a granule-sized kernel identity mapping.  It's really
+ 	 * only safe to do this for regions in kern_memmap.  For more
+-	 * details, see Documentation/ia64/aliasing.txt.
++	 * details, see Documentation/arch/ia64/aliasing.txt.
+ 	 */
+ 	attr = kern_mem_attribute(phys_addr, size);
+ 	if (attr & EFI_MEMORY_WB || attr & EFI_MEMORY_UC)
+diff --git a/arch/ia64/kernel/fsys.S b/arch/ia64/kernel/fsys.S
+index d80c99a5f55d..b493ca74890a 100644
+--- a/arch/ia64/kernel/fsys.S
++++ b/arch/ia64/kernel/fsys.S
+@@ -28,7 +28,7 @@
+ #include <asm/native/inst.h>
  
--	mutex_lock(&scsi_sense_cache_mutex);
- 	if (shost->unchecked_isa_dma) {
- 		scsi_sense_isadma_cache =
- 			kmem_cache_create("scsi_sense_cache(DMA)",
-@@ -92,7 +92,7 @@ int scsi_init_sense_cache(struct Scsi_Host *shost)
- 		if (!scsi_sense_cache)
- 			ret = -ENOMEM;
- 	}
--
-+ exit:
- 	mutex_unlock(&scsi_sense_cache_mutex);
- 	return ret;
- }
+ /*
+- * See Documentation/ia64/fsys.txt for details on fsyscalls.
++ * See Documentation/arch/ia64/fsys.txt for details on fsyscalls.
+  *
+  * On entry to an fsyscall handler:
+  *   r10	= 0 (i.e., defaults to "successful syscall return")
+diff --git a/arch/ia64/mm/ioremap.c b/arch/ia64/mm/ioremap.c
+index 5e3e7b1fdac5..989cc4df9087 100644
+--- a/arch/ia64/mm/ioremap.c
++++ b/arch/ia64/mm/ioremap.c
+@@ -42,7 +42,7 @@ ioremap (unsigned long phys_addr, unsigned long size)
+ 	/*
+ 	 * For things in kern_memmap, we must use the same attribute
+ 	 * as the rest of the kernel.  For more details, see
+-	 * Documentation/ia64/aliasing.txt.
++	 * Documentation/arch/ia64/aliasing.txt.
+ 	 */
+ 	attr = kern_mem_attribute(phys_addr, size);
+ 	if (attr & EFI_MEMORY_WB)
+diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
+index e308196c2229..6ba87b70e30c 100644
+--- a/arch/ia64/pci/pci.c
++++ b/arch/ia64/pci/pci.c
+@@ -450,7 +450,7 @@ pci_mmap_legacy_page_range(struct pci_bus *bus, struct vm_area_struct *vma,
+ 		return -ENOSYS;
+ 
+ 	/*
+-	 * Avoid attribute aliasing.  See Documentation/ia64/aliasing.txt
++	 * Avoid attribute aliasing.  See Documentation/arch/ia64/aliasing.txt
+ 	 * for more details.
+ 	 */
+ 	if (!valid_mmap_phys_addr_range(vma->vm_pgoff, size))
 -- 
-2.20.1
+2.19.1.856.g8858448bb
