@@ -1,34 +1,39 @@
-From: James Bottomley <jejb@linux.vnet.ibm.com>
-Subject: Re: [PATCH] scsi: uapi: ufs: Fix SPDX license identifier
-Date: Thu, 11 Jul 2019 17:20:15 -0700
-Message-ID: <1562890815.2915.13.camel@linux.vnet.ibm.com>
-References: <1560346477-13944-1-git-send-email-avri.altman@wdc.com>
-         <yq1ef2w9kig.fsf@oracle.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH V6 1/4] block: Allow mapping of vmalloc-ed
+ buffers
+Date: Thu, 11 Jul 2019 20:22:36 -0400
+Message-ID: <yq15zo89k4z.fsf@oracle.com>
+References: <20190701050918.27511-1-damien.lemoal@wdc.com>
+ <20190701050918.27511-2-damien.lemoal@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <yq1ef2w9kig.fsf@oracle.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, Avri Altman <avri.altman@wdc.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, Pedro Sousa <pedrom.sousa@synopsys.com>, Alim Akhtar <alim.akhtar@samsung.com>, Avi Shchislowski <avi.shchislowski@wdc.com>, Alex Lemberg <alex.lemberg@wdc.com>
+Return-path: <linux-f2fs-devel-bounces@lists.sourceforge.net>
+In-Reply-To: <20190701050918.27511-2-damien.lemoal@wdc.com> (Damien Le Moal's
+ message of "Mon, 1 Jul 2019 14:09:15 +0900")
+List-Unsubscribe: <https://lists.sourceforge.net/lists/options/linux-f2fs-devel>,
+ <mailto:linux-f2fs-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux-f2fs-devel>
+List-Post: <mailto:linux-f2fs-devel@lists.sourceforge.net>
+List-Help: <mailto:linux-f2fs-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-f2fs-devel>,
+ <mailto:linux-f2fs-devel-request@lists.sourceforge.net?subject=subscribe>
+Errors-To: linux-f2fs-devel-bounces@lists.sourceforge.net
+To: Damien Le Moal <damien.lemoal@wdc.com>
+Cc: Jens Axboe <axboe@kernel.dk>, "Martin K . Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, linux-f2fs-devel@lists.sourceforge.net, linux-block@vger.kernel.org, dm-devel@redhat.com, linux-scsi@vger.kernel.org, Jaegeuk Kim <jaegeuk@kernel.org>, Christoph Hellwig <hch@lst.de>, Bart Van Assche <bvanassche@acm.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 2019-07-11 at 20:14 -0400, Martin K. Petersen wrote:
-> Avri,
-> 
-> > added 'WITH Linux-syscall-note' exception, which is the officially
-> > assigned exception identifier for the kernel syscall exception.
-> > This exception makes it possible to include GPL headers into non
-> > GPL code, without confusing license compliance tools.
-> 
-> I'd like Arnd to ack the license change since he has made changes
-> (however mechanical) to the file.
 
-Just to note: this isn't technically a licence change at all.  The
-entire kernel is covered by the system call exception and this file is
-thus also covered.  It's really a simple tag change to allow tools
-which parse uapi header files to recognise from the SPDX tags that this
-is a kernel header to which the Linux-syscall-note applies.
+Damien,
 
-James
+> To allow the SCSI subsystem scsi_execute_req() function to issue
+> requests using large buffers that are better allocated with vmalloc()
+> rather than kmalloc(), modify bio_map_kern() to allow passing a buffer
+> allocated with vmalloc().
+
+Looks good to me.
+
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
