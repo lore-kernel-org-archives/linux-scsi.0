@@ -1,16 +1,16 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH V6 1/4] block: Allow mapping of vmalloc-ed
- buffers
-Date: Thu, 11 Jul 2019 20:22:36 -0400
-Message-ID: <yq15zo89k4z.fsf@oracle.com>
+Subject: Re: [PATCH V6 2/4] block: Kill gfp_t argument of
+ blkdev_report_zones()
+Date: Thu, 11 Jul 2019 20:24:18 -0400
+Message-ID: <yq11ryw9k25.fsf@oracle.com>
 References: <20190701050918.27511-1-damien.lemoal@wdc.com>
- <20190701050918.27511-2-damien.lemoal@wdc.com>
+ <20190701050918.27511-3-damien.lemoal@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-f2fs-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <20190701050918.27511-2-damien.lemoal@wdc.com> (Damien Le Moal's
- message of "Mon, 1 Jul 2019 14:09:15 +0900")
+In-Reply-To: <20190701050918.27511-3-damien.lemoal@wdc.com> (Damien Le Moal's
+ message of "Mon, 1 Jul 2019 14:09:16 +0900")
 List-Unsubscribe: <https://lists.sourceforge.net/lists/options/linux-f2fs-devel>,
  <mailto:linux-f2fs-devel-request@lists.sourceforge.net?subject=unsubscribe>
 List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux-f2fs-devel>
@@ -26,12 +26,13 @@ List-Id: linux-scsi@vger.kernel.org
 
 Damien,
 
-> To allow the SCSI subsystem scsi_execute_req() function to issue
-> requests using large buffers that are better allocated with vmalloc()
-> rather than kmalloc(), modify bio_map_kern() to allow passing a buffer
-> allocated with vmalloc().
+> Only GFP_KERNEL and GFP_NOIO are used with blkdev_report_zones(). In
+> preparation of using vmalloc() for large report buffer and zone array
+> allocations used by this function, remove its "gfp_t gfp_mask" argument
+> and rely on the caller context to use memalloc_noio_save/restore() where
+> necessary (block layer zone revalidation and dm-zoned I/O error path).
 
-Looks good to me.
+LGTM.
 
 Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 
