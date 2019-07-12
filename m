@@ -1,28 +1,26 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: uapi: ufs: Fix SPDX license identifier
-Date: Thu, 11 Jul 2019 20:14:31 -0400
-Message-ID: <yq1ef2w9kig.fsf@oracle.com>
-References: <1560346477-13944-1-git-send-email-avri.altman@wdc.com>
+Subject: Re: [PATCH] scsi: virtio_scsi: Use struct_size() helper
+Date: Thu, 11 Jul 2019 20:18:54 -0400
+Message-ID: <yq1a7dk9kb5.fsf@oracle.com>
+References: <20190619192833.GA825@embeddedor>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1560346477-13944-1-git-send-email-avri.altman@wdc.com> (Avri
-        Altman's message of "Wed, 12 Jun 2019 16:34:37 +0300")
+In-Reply-To: <20190619192833.GA825@embeddedor> (Gustavo A. R. Silva's message
+        of "Wed, 19 Jun 2019 14:28:33 -0500")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Avri Altman <avri.altman@wdc.com>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, Pedro Sousa <pedrom.sousa@synopsys.com>, Alim Akhtar <alim.akhtar@samsung.com>, Avi Shchislowski <avi.shchislowski@wdc.com>, Alex Lemberg <alex.lemberg@wdc.com>
+To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Cc: "Michael S. Tsirkin" <mst@redhat.com>, Jason Wang <jasowang@redhat.com>, Paolo Bonzini <pbonzini@redhat.com>, Stefan Hajnoczi <stefanha@redhat.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, virtualization@lists.linux-foundation.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Avri,
+Gustavo,
 
-> added 'WITH Linux-syscall-note' exception, which is the officially
-> assigned exception identifier for the kernel syscall exception.
-> This exception makes it possible to include GPL headers into non GPL
-> code, without confusing license compliance tools.
+> One of the more common cases of allocation size calculations is finding
+> the size of a structure that has a zero-sized array at the end, along
+> with memory for some number of elements for that array. For example:
 
-I'd like Arnd to ack the license change since he has made changes
-(however mechanical) to the file.
+Applied to 5.4/scsi-queue, thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
