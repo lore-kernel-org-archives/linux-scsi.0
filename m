@@ -1,40 +1,65 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 2/4] lpfc: reduce stack size with
- CONFIG_GCC_PLUGIN_STRUCTLEAK_VERBOSE
-Date: Thu, 11 Jul 2019 20:47:03 -0400
-Message-ID: <yq1y3146pvc.fsf@oracle.com>
-References: <20190628123819.2785504-1-arnd@arndb.de>
- <20190628123819.2785504-2-arnd@arndb.de>
+From: Damien Le Moal <Damien.LeMoal@wdc.com>
+Subject: Re: [PATCH V6 3/4] sd_zbc: Fix report zones buffer
+	allocation
+Date: Fri, 12 Jul 2019 00:52:05 +0000
+Message-ID: <BYAPR04MB58168DD2A9F429D515E377A1E7F20@BYAPR04MB5816.namprd04.prod.outlook.com>
+References: <20190701050918.27511-1-damien.lemoal@wdc.com>
+	<20190701050918.27511-4-damien.lemoal@wdc.com>
+	<yq1wogo85c6.fsf@oracle.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <20190628123819.2785504-2-arnd@arndb.de> (Arnd Bergmann's message
- of "Fri, 28 Jun 2019 14:37:47 +0200")
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: James Morris <jmorris@namei.org>, devel@driverdev.osuosl.org, Hannes Reinecke <hare@suse.com>, linux-scsi@vger.kernel.org, James Smart <james.smart@broadcom.com>, lvs-devel@vger.kernel.org, Julian Anastasov <ja@ssi.bg>, coreteam@netfilter.org, Pablo Neira Ayuso <pablo@netfilter.org>, Wensong Zhang <wensong@linux-vs.org>, Dick Kennedy <dick.kennedy@broadcom.com>, Kees Cook <keescook@chromium.org>, "James E.J. Bottomley" <jejb@linux.ibm.com>, Silvio Cesare <silvio.cesare@gmail.com>, Simon Horman <horms@verge.net.au>, Florian Schilhabel <florian.c.schilhabel@googlemail.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Ard Biesheuvel <ard.biesheuvel@linaro.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-kernel@vger.kernel.org, Willy Tarreau <w@1wt.eu>, netfilter-devel@vger.kernel.org, netdev@vger.kernel.org, "David S . Miller" <davem@davemloft.net>, Larr
+Return-path: <dm-devel-bounces@redhat.com>
+Content-Language: en-US
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Jens Axboe <axboe@kernel.dk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Mike Snitzer <snitzer@redhat.com>, "linux-f2fs-devel@lists.sourceforge.net" <linux-f2fs-devel@lists.sourceforge.net>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, Jaegeuk Kim <jaegeuk@kernel.org>, Christoph Hellwig <hch@lst.de>, Bart Van Assche <bvanassche@acm.org>
 List-Id: linux-scsi@vger.kernel.org
 
+Martin,
 
-Arnd,
+On 2019/07/12 9:28, Martin K. Petersen wrote:
+> 
+> Damien,
+> 
+>> During disk scan and revalidation done with sd_revalidate(), the zones
+>> of a zoned disk are checked using the helper function
+>> blk_revalidate_disk_zones() if a configuration change is detected
+>> (change in the number of zones or zone size). The function
+>> blk_revalidate_disk_zones() issues report_zones calls that are very
+>> large, that is, to obtain zone information for all zones of the disk
+>> with a single command. The size of the report zones command buffer
+>> necessary for such large request generally is lower than the disk
+>> max_hw_sectors and KMALLOC_MAX_SIZE (4MB) and succeeds on boot (no
+>> memory fragmentation), but often fail at run time (e.g. hot-plug
+>> event). This causes the disk revalidation to fail and the disk
+>> capacity to be changed to 0.
+> 
+> Probably easiest to funnel this through block with the rest of the
+> series.
 
-> The lpfc_debug_dump_all_queues() function repeatedly calls into
-> lpfc_debug_dump_qe(), which has a temporary 128 byte buffer.  This was
-> fine before the introduction of CONFIG_GCC_PLUGIN_STRUCTLEAK_VERBOSE
-> because each instance could occupy the same stack slot. However, now
-> they each get their own copy, which leads to a huge increase in stack
-> usage as seen from the compiler warning:
+Sounds good to me.
 
-Applied to 5.3/scsi-fixes. Thank you!
+Jens,
+
+Could you please consider this series for 5.3 ? We have been using it in tests
+since 2-3 weeks ago (5.2-rc6) without any problems. All revalidation problems
+disappeared and with no side effects detected.
+
+Thank you.
+
+> Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
+
+Thanks !
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+Damien Le Moal
+Western Digital Research
