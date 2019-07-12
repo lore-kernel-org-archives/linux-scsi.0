@@ -1,26 +1,25 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH -next] scsi: megaraid_sas: Make some symbols static
-Date: Thu, 11 Jul 2019 20:32:18 -0400
-Message-ID: <yq1k1co854d.fsf@oracle.com>
-References: <20190702130114.29356-1-yuehaibing@huawei.com>
+Subject: Re: [PATCH] scsi: libsas: remove the exporting of sas_wait_eh
+Date: Thu, 11 Jul 2019 20:34:18 -0400
+Message-ID: <yq1ftnc8511.fsf@oracle.com>
+References: <20190708164339.14465-1-efremov@linux.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190702130114.29356-1-yuehaibing@huawei.com>
-        (yuehaibing@huawei.com's message of "Tue, 2 Jul 2019 21:01:14 +0800")
+In-Reply-To: <20190708164339.14465-1-efremov@linux.com> (Denis Efremov's
+        message of "Mon, 8 Jul 2019 19:43:39 +0300")
 Sender: linux-kernel-owner@vger.kernel.org
-To: YueHaibing <yuehaibing@huawei.com>
-Cc: kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com, jejb@linux.ibm.com, martin.petersen@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, megaraidlinux.pdl@broadcom.com
+To: Denis Efremov <efremov@linux.com>
+Cc: Dan Williams <dan.j.williams@intel.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-YueHaibing,
+Denis,
 
-> Fix sparse warnings:
->
-> drivers/scsi/megaraid/megaraid_sas_base.c:271:1: warning: symbol 'megasas_issue_dcmd' was not declared. Should it be static?
-> drivers/scsi/megaraid/megaraid_sas_base.c:2227:6: warning: symbol 'megasas_do_ocr' was not declared. Should it be static?
-> drivers/scsi/megaraid/megaraid_sas_base.c:3194:25: warning: symbol 'megaraid_host_attrs' was not declared. Should it be static?
+> The function sas_wait_eh is declared static and marked
+> EXPORT_SYMBOL, which is at best an odd combination. Because the
+> function is not used outside of the drivers/scsi/libsas/sas_scsi_host.c
+> file it is defined in, this commit removes the EXPORT_SYMBOL() marking.
 
 Applied to 5.3/scsi-fixes, thanks!
 
