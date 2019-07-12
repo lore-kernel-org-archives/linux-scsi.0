@@ -1,40 +1,59 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH V6 0/4] Fix zone revalidation memory
-	allocation failures
-Date: Thu, 11 Jul 2019 20:05:04 -0600
-Message-ID: <cb26f686-ce7e-9d1a-4735-2375d65c0ea5@kernel.dk>
-References: <20190701050918.27511-1-damien.lemoal@wdc.com>
-	<BYAPR04MB5816BC7EC358F5785AEE1EA9E7F60@BYAPR04MB5816.namprd04.prod.outlook.com>
+From: Ming Lei <ming.lei@redhat.com>
+Subject: [PATCH V2] scsi: fix race on creating sense cache
+Date: Fri, 12 Jul 2019 10:08:19 +0800
+Message-ID: <20190712020819.31935-1-ming.lei@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <BYAPR04MB5816BC7EC358F5785AEE1EA9E7F60@BYAPR04MB5816.namprd04.prod.outlook.com>
-Content-Language: en-US
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Damien Le Moal <Damien.LeMoal@wdc.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Martin K . Petersen" <martin.petersen@oracle.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, Mike Snitzer <snitzer@redhat.com>, "linux-f2fs-devel@lists.sourceforge.net" <linux-f2fs-devel@lists.sourceforge.net>, Jaegeuk Kim <jaegeuk@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, Bart Van Assche <bvanassche@acm.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Ming Lei <ming.lei@redhat.com>, Stable <stable@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, "Ewan D . Milne" <emilne@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 7/7/19 8:02 PM, Damien Le Moal wrote:
-> On 2019/07/01 14:09, Damien Le Moal wrote:
->> This series addresses a recuring problem with zone revalidation
->> failures observed during extensive testing with memory constrained
->> system and device hot-plugging.
-> 
-> Jens, Martin,
-> 
-> Any comment regarding this series ?
+When scsi_init_sense_cache(host) is called concurrently from different
+hosts, each code path may see that the cache isn't created, then try
+to create a new one, then the created sense cache may be overrided and
+leaked.
 
-LGTM, I'll queue it up for this release.
+Fixes the issue by moving 'mutex_lock(&scsi_sense_cache_mutex)' before
+scsi_select_sense_cache().
 
+Fixes: 0a6ac4ee7c21 ("scsi: respect unchecked_isa_dma for blk-mq")
+Cc: Stable <stable@vger.kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Hannes Reinecke <hare@suse.com>
+Cc: Ewan D. Milne <emilne@redhat.com>
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
+---
+ drivers/scsi/scsi_lib.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index e07a376a8c38..7493680ec104 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -72,11 +72,11 @@ int scsi_init_sense_cache(struct Scsi_Host *shost)
+ 	struct kmem_cache *cache;
+ 	int ret = 0;
+ 
++	mutex_lock(&scsi_sense_cache_mutex);
+ 	cache = scsi_select_sense_cache(shost->unchecked_isa_dma);
+ 	if (cache)
+-		return 0;
++		goto exit;
+ 
+-	mutex_lock(&scsi_sense_cache_mutex);
+ 	if (shost->unchecked_isa_dma) {
+ 		scsi_sense_isadma_cache =
+ 			kmem_cache_create("scsi_sense_cache(DMA)",
+@@ -92,7 +92,7 @@ int scsi_init_sense_cache(struct Scsi_Host *shost)
+ 		if (!scsi_sense_cache)
+ 			ret = -ENOMEM;
+ 	}
+-
++ exit:
+ 	mutex_unlock(&scsi_sense_cache_mutex);
+ 	return ret;
+ }
 -- 
-Jens Axboe
+2.20.1
