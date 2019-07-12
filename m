@@ -1,34 +1,30 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2 2/2] scsi: aacraid: Remove references to Series-9 (only)
-Date: Thu, 11 Jul 2019 21:30:07 -0400
-Message-ID: <yq15zo86nvk.fsf@oracle.com>
-References: <2a6f5cc2-40cb-647c-003d-aae594d05062@virtuozzo.com>
-        <20190710093113.27936-1-khorenko@virtuozzo.com>
-        <20190710093113.27936-3-khorenko@virtuozzo.com>
+Subject: Re: [PATCH 0/2] scsi: add support for request batching
+Date: Thu, 11 Jul 2019 21:37:25 -0400
+Message-ID: <yq11ryw6nje.fsf@oracle.com>
+References: <20190530112811.3066-1-pbonzini@redhat.com>
+        <746ad64a-4047-1597-a0d4-f14f3529cc19@redhat.com>
+        <yq1lfxnk8ar.fsf@oracle.com>
+        <48c7d581-6ec8-260a-b4ba-217aef516305@redhat.com>
+        <80dd68bf-a544-25ec-568f-cee1cf0c8cfd@suse.de>
+        <6c2cf159-9ba2-da39-6e1c-95dea7e111ba@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190710093113.27936-3-khorenko@virtuozzo.com> (Konstantin
-        Khorenko's message of "Wed, 10 Jul 2019 12:31:13 +0300")
+In-Reply-To: <6c2cf159-9ba2-da39-6e1c-95dea7e111ba@redhat.com> (Paolo
+        Bonzini's message of "Fri, 5 Jul 2019 13:58:39 +0200")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Konstantin Khorenko <khorenko@virtuozzo.com>
-Cc: Prasad B Munirathnam <prasad.munirathnam@microsemi.com>, Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>, David Carroll <david.carroll@microsemi.com>, Finn Thain <fthain@telegraphics.com.au>, "Andrey Jr . Melnikov" <temnota.am@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Adaptec OEM Raid Solutions <aacraid@microsemi.com>
+To: Paolo Bonzini <pbonzini@redhat.com>
+Cc: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-kernel@vger.kernel.org, kvm@vger.kernel.org, jejb@linux.ibm.com, linux-scsi@vger.kernel.org, stefanha@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
 
-Hi Konstantin,
+Paolo,
 
-> The patch removes references to Series 9 adapters following
-> 395e5df79a95 ("scsi: aacraid: Remove reference to Series-9"),
-> but doesn't touch Series 6 adapters logic.
+> Stefan answered, and the series now has three reviews!  It may be late
+> for 5.3 but I hope this can go in soon.
 
-We'll need some guidance from the Microsemi folks on this issue.
-
-> https://bugzilla.redhat.com/show_bug.cgi?id=1724077
-> https://jira.sw.ru/browse/PSBM-95736
-
-These two links don't appear to be publicly accessible and therefore do
-not belong in the patch.
+I queued these up for 5.4. Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
