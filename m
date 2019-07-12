@@ -1,144 +1,41 @@
-From: KyleMahlkuch <kmahlkuc@linux.vnet.ibm.com>
-Subject: [PATCH] lpfc: Fix Buffer Overflow Error
-Date: Fri, 12 Jul 2019 11:15:35 -0500
-Message-ID: <1562948135-5533-1-git-send-email-kmahlkuc@linux.vnet.ibm.com>
+From: Jonathan Corbet <corbet@lwn.net>
+Subject: Re: [PATCH 01/12] Documentation: move architectures together
+Date: Fri, 12 Jul 2019 11:34:27 -0600
+Message-ID: <20190712113427.62fa7ffc@lwn.net>
+References: <20190712022018.27989-1-alex.shi@linux.alibaba.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190712022018.27989-1-alex.shi@linux.alibaba.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: KyleMahlkuch <kmahlkuc@linux.vnet.ibm.com>
+To: Alex Shi <alex.shi@linux.alibaba.com>
+Cc: linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-stm32@st-md-mailman.stormreply.com, linux-arm-kernel@lists.infradead.org, linuxppc-dev@lists.ozlabs.org, linux-riscv@lists.infradead.org, linux-omap@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-samsung-soc@vger.kernel.org, linux-ia64@vger.kernel.org, linux-mips@vger.kernel.org, linux-parisc@vger.kernel.org, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, kvm@vger.kernel.org, linux-sh@vger.kernel.orglinux-doc@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Power and x86 have different page sizes so rather than allocate the
-buffer based on number of pages we should allocate space by using
-max_sectors. There is also code in lpfc_scsi.c to be sure we don't
-write past the end of this buffer.
+On Fri, 12 Jul 2019 10:20:07 +0800
+Alex Shi <alex.shi@linux.alibaba.com> wrote:
 
-Signed-off-by: KyleMahlkuch <kmahlkuc@linux.vnet.ibm.com>
----
- drivers/scsi/lpfc/lpfc_init.c | 41 +++++++----------------------------------
- drivers/scsi/lpfc/lpfc_scsi.c | 14 ++++++++++++--
- 2 files changed, 19 insertions(+), 36 deletions(-)
+> There are many different archs in Documentation/ dir, it's better to
+> move them together in 'Documentation/arch' which follows from kernel source.
 
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index eaaef68..59b52a0 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -39,6 +39,7 @@
- #include <linux/msi.h>
- #include <linux/irq.h>
- #include <linux/bitops.h>
-+#include <linux/vmalloc.h>
- 
- #include <scsi/scsi.h>
- #include <scsi/scsi_device.h>
-@@ -7549,7 +7550,6 @@ struct lpfc_rpi_hdr *
- 	uint32_t old_mask;
- 	uint32_t old_guard;
- 
--	int pagecnt = 10;
- 	if (phba->cfg_prot_mask && phba->cfg_prot_guard) {
- 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
- 				"1478 Registering BlockGuard with the "
-@@ -7588,23 +7588,9 @@ struct lpfc_rpi_hdr *
- 	}
- 
- 	if (!_dump_buf_data) {
--		while (pagecnt) {
--			spin_lock_init(&_dump_buf_lock);
--			_dump_buf_data =
--				(char *) __get_free_pages(GFP_KERNEL, pagecnt);
--			if (_dump_buf_data) {
--				lpfc_printf_log(phba, KERN_ERR, LOG_BG,
--					"9043 BLKGRD: allocated %d pages for "
--				       "_dump_buf_data at 0x%p\n",
--				       (1 << pagecnt), _dump_buf_data);
--				_dump_buf_data_order = pagecnt;
--				memset(_dump_buf_data, 0,
--				       ((1 << PAGE_SHIFT) << pagecnt));
--				break;
--			} else
--				--pagecnt;
--		}
--		if (!_dump_buf_data_order)
-+		_dump_buf_data = (char *) vmalloc(shost->hostt->max_sectors * 512);
-+		_dump_buf_data_order = get_order(shost->hostt->max_sectors * 512);
-+		if (!_dump_buf_data)
- 			lpfc_printf_log(phba, KERN_ERR, LOG_BG,
- 				"9044 BLKGRD: ERROR unable to allocate "
- 			       "memory for hexdump\n");
-@@ -7613,22 +7599,9 @@ struct lpfc_rpi_hdr *
- 			"9045 BLKGRD: already allocated _dump_buf_data=0x%p"
- 		       "\n", _dump_buf_data);
- 	if (!_dump_buf_dif) {
--		while (pagecnt) {
--			_dump_buf_dif =
--				(char *) __get_free_pages(GFP_KERNEL, pagecnt);
--			if (_dump_buf_dif) {
--				lpfc_printf_log(phba, KERN_ERR, LOG_BG,
--					"9046 BLKGRD: allocated %d pages for "
--				       "_dump_buf_dif at 0x%p\n",
--				       (1 << pagecnt), _dump_buf_dif);
--				_dump_buf_dif_order = pagecnt;
--				memset(_dump_buf_dif, 0,
--				       ((1 << PAGE_SHIFT) << pagecnt));
--				break;
--			} else
--				--pagecnt;
--		}
--		if (!_dump_buf_dif_order)
-+		_dump_buf_dif = (char *) vmalloc(shost->hostt->max_sectors * 512);
-+		_dump_buf_dif_order = get_order(shost->hostt->max_sectors * 512);
-+		if (!_dump_buf_dif)
- 			lpfc_printf_log(phba, KERN_ERR, LOG_BG,
- 			"9047 BLKGRD: ERROR unable to allocate "
- 			       "memory for hexdump\n");
-diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-index ba996fb..719612d 100644
---- a/drivers/scsi/lpfc/lpfc_scsi.c
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c
-@@ -92,7 +92,7 @@ struct scsi_dif_tuple {
- static void
- lpfc_debug_save_data(struct lpfc_hba *phba, struct scsi_cmnd *cmnd)
- {
--	void *src, *dst;
-+	void *src, *dst, *end;
- 	struct scatterlist *sgde = scsi_sglist(cmnd);
- 
- 	if (!_dump_buf_data) {
-@@ -110,7 +110,12 @@ struct scsi_dif_tuple {
- 	}
- 
- 	dst = (void *) _dump_buf_data;
-+	end = ((char *) dst) + ((1 << PAGE_SHIFT) << _dump_buf_data_order);
- 	while (sgde) {
-+		if (dst + sgde->length >= end) {
-+			printk(KERN_ERR "overflow buffer\n");
-+			break;
-+		}
- 		src = sg_virt(sgde);
- 		memcpy(dst, src, sgde->length);
- 		dst += sgde->length;
-@@ -121,7 +126,7 @@ struct scsi_dif_tuple {
- static void
- lpfc_debug_save_dif(struct lpfc_hba *phba, struct scsi_cmnd *cmnd)
- {
--	void *src, *dst;
-+	void *src, *dst, *end;
- 	struct scatterlist *sgde = scsi_prot_sglist(cmnd);
- 
- 	if (!_dump_buf_dif) {
-@@ -138,7 +143,12 @@ struct scsi_dif_tuple {
- 	}
- 
- 	dst = _dump_buf_dif;
-+	end = ((char *) dst) + ((1 << PAGE_SHIFT) << _dump_buf_dif_order);
- 	while (sgde) {
-+		if (dst + sgde->length >= end) {
-+			printk(KERN_ERR "overflow buffer\n");
-+			break;
-+		}
- 		src = sg_virt(sgde);
- 		memcpy(dst, src, sgde->length);
- 		dst += sgde->length;
--- 
-1.8.3.1
+So this seems certain to collide badly with Mauro's RST-conversion monster
+patch set.
+
+More to the point, though...if we are going to thrash up things this
+badly, we want to be sure that we're doing it right so we don't end up
+renaming everything again.  Grouping stuff into a new arch/ subdirectory
+adds a bit of order, but it doesn't do much toward trying to organize our
+documentation for its readers, and it doesn't help us to modernize the
+docs and get rid of the old, useless stuff.  A quick check shows that many
+of these files have seen no changes other than typo fixes since the
+beginning of the Git era.
+
+So, in my mind, this needs some thought.  Maybe we want a
+Documentation/arch in the end, but I'm not convinced that we should just
+create it and fill it with a snow shovel.  This might be a good thing to
+discuss at the kernel summit in September.
+
+Thanks,
+
+jon
