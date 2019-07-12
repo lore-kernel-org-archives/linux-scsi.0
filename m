@@ -1,27 +1,26 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: libsas: remove the exporting of sas_wait_eh
-Date: Thu, 11 Jul 2019 20:34:18 -0400
-Message-ID: <yq1ftnc8511.fsf@oracle.com>
-References: <20190708164339.14465-1-efremov@linux.com>
+Subject: Re: [PATCH] scsi: aha1740: Use !x in place of NULL comparisons
+Date: Thu, 11 Jul 2019 20:38:45 -0400
+Message-ID: <yq17e8o84tm.fsf@oracle.com>
+References: <20190711234833.27475-1-iamkeyur96@gmail.com>
+        <1562889124.2915.5.camel@linux.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190708164339.14465-1-efremov@linux.com> (Denis Efremov's
-        message of "Mon, 8 Jul 2019 19:43:39 +0300")
+In-Reply-To: <1562889124.2915.5.camel@linux.ibm.com> (James Bottomley's
+        message of "Thu, 11 Jul 2019 16:52:04 -0700")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Denis Efremov <efremov@linux.com>
-Cc: Dan Williams <dan.j.williams@intel.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: James Bottomley <jejb@linux.ibm.com>
+Cc: Keyur Patel <iamkeyur96@gmail.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Denis,
+James,
 
-> The function sas_wait_eh is declared static and marked
-> EXPORT_SYMBOL, which is at best an odd combination. Because the
-> function is not used outside of the drivers/scsi/libsas/sas_scsi_host.c
-> file it is defined in, this commit removes the EXPORT_SYMBOL() marking.
+> I also don't really think the replacement adds anything to readability,
+> so it should probably be removed from the checkpatch warnings.
 
-Applied to 5.3/scsi-fixes, thanks!
+I agree.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
