@@ -1,50 +1,39 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH V6 0/4] Fix zone revalidation memory
-	allocation failures
-Date: Fri, 12 Jul 2019 09:12:54 -0600
-Message-ID: <27386e10-7494-7fcf-f203-484db5c3c69c@kernel.dk>
-References: <20190701050918.27511-1-damien.lemoal@wdc.com>
-	<BYAPR04MB5816BC7EC358F5785AEE1EA9E7F60@BYAPR04MB5816.namprd04.prod.outlook.com>
-	<cb26f686-ce7e-9d1a-4735-2375d65c0ea5@kernel.dk>
+From: Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>
+Subject: Re: [PATCH V4 1/9] block: add a helper function to read
+ nr_setcs
+Date: Fri, 12 Jul 2019 16:09:56 +0000
+Message-ID: <BYAPR04MB5749AF90A9E9C81B4A6857F386F20@BYAPR04MB5749.namprd04.prod.outlook.com>
+References: <20190708184711.2984-1-chaitanya.kulkarni@wdc.com>
+ <20190708184711.2984-2-chaitanya.kulkarni@wdc.com>
+ <yq18st457yb.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <cb26f686-ce7e-9d1a-4735-2375d65c0ea5@kernel.dk>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <xen-devel-bounces@lists.xenproject.org>
 Content-Language: en-US
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Damien Le Moal <Damien.LeMoal@wdc.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Martin K . Petersen" <martin.petersen@oracle.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, Mike Snitzer <snitzer@redhat.com>, "linux-f2fs-devel@lists.sourceforge.net" <linux-f2fs-devel@lists.sourceforge.net>, Jaegeuk Kim <jaegeuk@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, Bart Van Assche <bvanassche@acm.org>
+List-Unsubscribe: <https://lists.xenproject.org/mailman/options/xen-devel>,
+ <mailto:xen-devel-request@lists.xenproject.org?subject=unsubscribe>
+List-Post: <mailto:xen-devel@lists.xenproject.org>
+List-Help: <mailto:xen-devel-request@lists.xenproject.org?subject=help>
+List-Subscribe: <https://lists.xenproject.org/mailman/listinfo/xen-devel>,
+ <mailto:xen-devel-request@lists.xenproject.org?subject=subscribe>
+Errors-To: xen-devel-bounces@lists.xenproject.org
+Sender: "Xen-devel" <xen-devel-bounces@lists.xenproject.org>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Damien Le Moal <Damien.LeMoal@wdc.com>, "linux-btrace@vger.kernel.org" <linux-btrace@vger.kernel.org>, "bvanassche@acm.org" <bvanassche@acm.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "konrad.wilk@oracle.com" <konrad.wilk@oracle.com>, "yuchao0@huawei.com" <yuchao0@huawei.com>, "colyli@suse.de" <colyli@suse.de>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-bcache@vger.kernel.org" <linux-bcache@vger.kernel.org>, "jaegeuk@kernel.org" <jaegeuk@kernel.org>, "xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>, "kent.overstreet@gmail.com" <kent.overstreet@gmail.com>, "roger.pau@citrix.com" <roger.pau@citrix.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 7/11/19 8:05 PM, Jens Axboe wrote:
-> On 7/7/19 8:02 PM, Damien Le Moal wrote:
->> On 2019/07/01 14:09, Damien Le Moal wrote:
->>> This series addresses a recuring problem with zone revalidation
->>> failures observed during extensive testing with memory constrained
->>> system and device hot-plugging.
->>
->> Jens, Martin,
->>
->> Any comment regarding this series ?
-> 
-> LGTM, I'll queue it up for this release.
-
-This broke !CONFIG_BLK_DEV_ZONED builds for null_blk, btw. Please be
-sure to test with zoned enabled and disabled in your builds when
-changing things that affect both.
-
-I fixed it up:
-
-http://git.kernel.dk/cgit/linux-block/commit/?h=for-linus&id=e347946439ed70e3af0d0c330b36d5648e71727b
-
--- 
-Jens Axboe
+T24gNy8xMS8xOSA2OjU5IFBNLCBNYXJ0aW4gSy4gUGV0ZXJzZW4gd3JvdGU6Cj4gSGkgQ2hhaXRh
+bnlhLAo+Cj4+ICtzdGF0aWMgaW5saW5lIHNlY3Rvcl90IGJkZXZfbnJfc2VjdHMoc3RydWN0IGJs
+b2NrX2RldmljZSAqYmRldikKPj4gK3sKPj4gKwlyZXR1cm4gcGFydF9ucl9zZWN0c19yZWFkKGJk
+ZXYtPmJkX3BhcnQpOwo+PiArfQo+IENhbiBiZGV2IGVuZCB1cCBiZWluZyBOVUxMIGluIGFueSBv
+ZiB0aGUgY2FsbCBzaXRlcz8KPgo+IE90aGVyd2lzZSBubyBvYmplY3Rpb25zLgo+ClRoYW5rcyBm
+b3IgbWVudGlvbmluZyB0aGF0LiBJbml0aWFsIHZlcnNpb24gd2hpY2ggd2FzIG5vdCBwb3N0ZWQg
+aGFkCnRoYXQgY2hlY2suCgpUaGlzIHNlcmllcyBqdXN0IHJlcGxhY2VzIHRoZSBleGlzdGluZyBh
+Y2Nlc3NlcyB3aXRob3V0IGNoYW5naW5nIGFueXRoaW5nLgoKU28gaWYgYW55IG9mIHRoZSBleGl0
+aW5nIGNvZGUgaGFzIHRoYXQgYnVnIHRoZW4gaXQgd2lsbCBibG93IHVwIG5pY2VseS4KCkZvciBm
+dXR1cmUgY2FsbGVycyBJIGRvbid0IG1pbmQgYWRkaW5nIGEgbmV3IGNoZWNrIGFuZCByZXNlbmQg
+dGhlIHNlcmllcy4KCldvdWxkIHlvdSBwcmVmZXIgYWRkaW5nIGEgY2hlY2sgID8KCgoKX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KWGVuLWRldmVsIG1haWxp
+bmcgbGlzdApYZW4tZGV2ZWxAbGlzdHMueGVucHJvamVjdC5vcmcKaHR0cHM6Ly9saXN0cy54ZW5w
+cm9qZWN0Lm9yZy9tYWlsbWFuL2xpc3RpbmZvL3hlbi1kZXZlbA==
