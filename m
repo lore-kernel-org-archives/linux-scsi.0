@@ -1,7 +1,7 @@
 From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: [PATCH 04/12] Documentation/m68k: repointer docs to Documentation/arch/
-Date: Fri, 12 Jul 2019 10:20:10 +0800
-Message-ID: <20190712022018.27989-4-alex.shi@linux.alibaba.com>
+Subject: [PATCH 12/12] Documentation/xtensa: repointer docs to Documentation/arch/
+Date: Fri, 12 Jul 2019 10:20:18 +0800
+Message-ID: <20190712022018.27989-12-alex.shi@linux.alibaba.com>
 References: <20190712022018.27989-1-alex.shi@linux.alibaba.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -9,33 +9,35 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20190712022018.27989-1-alex.shi@linux.alibaba.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-doc@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>
-Cc: Alex Shi <alex.shi@linux.alibaba.com>, linux-kernel@vger.kernel.org, linux-stm32@st-md-mailman.stormreply.com, linux-arm-kernel@lists.infradead.org, linuxppc-dev@lists.ozlabs.org, linux-riscv@lists.infradead.org, linux-omap@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-samsung-soc@vger.kernel.org, linux-ia64@vger.kernel.org, linux-mips@vger.kernel.org, linux-parisc@vger.kernel.org, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, kvm@vger.kernel.org, linux-sh@vger.kernel.org, Will Deacon <will@kernel.org>
+Cc: Alex Shi <alex.shi@linux.alibaba.com>, linux-kernel@vger.kernel.org, linux-stm32@st-md-mailman.stormreply.com, linux-arm-kernel@lists.infradead.org, linuxppc-dev@lists.ozlabs.org, linux-riscv@lists.infradead.org, linux-omap@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-samsung-soc@vger.kernel.org, linux-ia64@vger.kernel.org, linux-mips@vger.kernel.org, linux-parisc@vger.kernel.org, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, kvm@vger.kernel.org, linux-sh@vger.kernel.org, Chris Zankel <chris@zankel.net>, Max Filippov <jcmvbkbc@gmail.com>, linux-xtensa@linux-xtensa.org
 List-Id: linux-scsi@vger.kernel.org
 
-Since we move Documentation/m68k docs to Documentation/arch/m68k
+Since we move Documentation/xtensa docs to Documentation/arch/xtensa
 dir, redirect the doc pointer to them.
 
 Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
 Cc: Jonathan Corbet <corbet@lwn.net>
-Cc: Will Deacon <will@kernel.org>
 Cc: linux-doc@vger.kernel.org
+Cc: Chris Zankel <chris@zankel.net>
+Cc: Max Filippov <jcmvbkbc@gmail.com>
+Cc: linux-xtensa@linux-xtensa.org
 Cc: linux-kernel@vger.kernel.org
 ---
- Documentation/admin-guide/kernel-parameters.rst | 2 +-
+ arch/xtensa/include/asm/initialize_mmu.h | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/Documentation/admin-guide/kernel-parameters.rst b/Documentation/admin-guide/kernel-parameters.rst
-index 5d29ba5ad88c..dc283dcffae8 100644
---- a/Documentation/admin-guide/kernel-parameters.rst
-+++ b/Documentation/admin-guide/kernel-parameters.rst
-@@ -118,7 +118,7 @@ parameter is applicable::
- 	LOOP	Loopback device support is enabled.
- 	M68k	M68k architecture is enabled.
- 			These options have more detailed description inside of
--			Documentation/m68k/kernel-options.txt.
-+			Documentation/arch/m68k/kernel-options.txt.
- 	MDA	MDA console support is enabled.
- 	MIPS	MIPS architecture is enabled.
- 	MOUSE	Appropriate mouse support is enabled.
+diff --git a/arch/xtensa/include/asm/initialize_mmu.h b/arch/xtensa/include/asm/initialize_mmu.h
+index 323d05789159..499fe4847490 100644
+--- a/arch/xtensa/include/asm/initialize_mmu.h
++++ b/arch/xtensa/include/asm/initialize_mmu.h
+@@ -42,7 +42,7 @@
+ #if XCHAL_HAVE_S32C1I && (XCHAL_HW_MIN_VERSION >= XTENSA_HWVERSION_RC_2009_0)
+ /*
+  * We Have Atomic Operation Control (ATOMCTL) Register; Initialize it.
+- * For details see Documentation/xtensa/atomctl.txt
++ * For details see Documentation/arch/xtensa/atomctl.txt
+  */
+ #if XCHAL_DCACHE_IS_COHERENT
+ 	movi	a3, 0x25	/* For SMP/MX -- internal for writeback,
 -- 
 2.19.1.856.g8858448bb
