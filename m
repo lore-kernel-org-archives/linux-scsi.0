@@ -1,96 +1,144 @@
-From: <yang.bin18-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>
-Subject: =?UTF-8?B?UmU6W1BBVENIXSBDaGVjayBzayBiZWZvcmUgc2VuZHBhZ2U=?=
-Date: Thu, 11 Jul 2019 15:42:20 +0800 (CST)
-Message-ID: <201907111542202002207@zte.com.cn>
-References: <1562784731.3213.98.camel@linux.ibm.com>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="=====_001_next====="
-Return-path: <open-iscsi+bncBAABBFPEULUQKGQEKSWHJZA-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-In-Reply-To: <1562784731.3213.98.camel-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
-References: 1562743809-31133-1-git-send-email-yang.bin18-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org,1562784731.3213.98.camel-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org
-List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <https://groups.google.com/group/open-iscsi
-List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
- <https://groups.google.com/group/open-iscsi/subscribe>
-To: jejb-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org, LDuncan-IBi9RG/b67k@public.gmane.org
-Cc: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, wang.liang82-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org, wang.yi59-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org, xue.zhihong-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org
+From: KyleMahlkuch <kmahlkuc@linux.vnet.ibm.com>
+Subject: [PATCH] lpfc: Fix Buffer Overflow Error
+Date: Fri, 12 Jul 2019 11:15:35 -0500
+Message-ID: <1562948135-5533-1-git-send-email-kmahlkuc@linux.vnet.ibm.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: KyleMahlkuch <kmahlkuc@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
+Power and x86 have different page sizes so rather than allocate the
+buffer based on number of pages we should allocate space by using
+max_sectors. There is also code in lpfc_scsi.c to be sure we don't
+write past the end of this buffer.
 
+Signed-off-by: KyleMahlkuch <kmahlkuc@linux.vnet.ibm.com>
+---
+ drivers/scsi/lpfc/lpfc_init.c | 41 +++++++----------------------------------
+ drivers/scsi/lpfc/lpfc_scsi.c | 14 ++++++++++++--
+ 2 files changed, 19 insertions(+), 36 deletions(-)
 
---=====_001_next=====
-Content-Type: multipart/alternative;
-	boundary="=====_003_next====="
-
-
---=====_003_next=====
-Content-Type: text/plain; charset="UTF-8"
-
-> On Wed, 2019-07-10 at 17:47 +0000, Lee Duncan wrote:
-> > On 7/10/19 12:30 AM, Yang Bin wrote:
-> > 
-> > > From: " Yang Bin "<yang.bin18-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>
-> > > 
-> > > Before xmit,iscsi may disconnect just now.
-> > > So must check connection sock NULL or not,or kernel will crash for
-> > > accessing NULL pointer.
-> > > 
-> > > Signed-off-by: Yang Bin <yang.bin18-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>
-> > > ---
-> > >  drivers/scsi/iscsi_tcp.c | 3 +++
-> > >  1 file changed, 3 insertions(+)
-> > > 
-> > > diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-> > > index 7bedbe8..a59c49f 100644
-> > > --- a/drivers/scsi/iscsi_tcp.c
-> > > +++ b/drivers/scsi/iscsi_tcp.c
-> > > @@ -264,6 +264,9 @@ static int iscsi_sw_tcp_xmit_segment(struct
-> > > iscsi_tcp_conn *tcp_conn,
-> > >      unsigned int copied = 0;
-> > >      int r = 0;
-> > >  
-> > > +    if (!sk)
-> > > +        return -ENOTCONN;
-> > > +
-> > >      while (!iscsi_tcp_segment_done(tcp_conn, segment, 0, r)) {
-> > >          struct scatterlist *sg;
-> > >          unsigned int offset, copy;
-> > > 
-> > 
-> > If the socket can be closed right before iscsi_sw_tcp_xmit_segment()
-> > is called, can it be called in the middle of sending segments? (In
-> > which case the check would have to be in the while loop.)
-
-> I think the important point is: is this an actual observed bug or just
-> a theoretical problem?
-
-> The reason for asking is this call is controlled directly by the
-> ISCSI_UEVENT_DESTROY_CONN event sent by the iscsi daemon.  Obviously if
-> the daemon goes haywire and doesn't shut down the connection before
-> sending the destroy event, we may get the crash, but I would be
-> inclined to say fix the daemon.
-
-> James
-We have repproduced this bug several times .
-It`s a good idea that sending ISCSI_UEVENT_STOP_CONN event  first.
-But there is another choice , adding "iscsi_suspend_tx" int the front of "destroy" ,
-for not increasing dependence between kernel and daemon.
-
- Yangbin
-
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index eaaef68..59b52a0 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -39,6 +39,7 @@
+ #include <linux/msi.h>
+ #include <linux/irq.h>
+ #include <linux/bitops.h>
++#include <linux/vmalloc.h>
+ 
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_device.h>
+@@ -7549,7 +7550,6 @@ struct lpfc_rpi_hdr *
+ 	uint32_t old_mask;
+ 	uint32_t old_guard;
+ 
+-	int pagecnt = 10;
+ 	if (phba->cfg_prot_mask && phba->cfg_prot_guard) {
+ 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+ 				"1478 Registering BlockGuard with the "
+@@ -7588,23 +7588,9 @@ struct lpfc_rpi_hdr *
+ 	}
+ 
+ 	if (!_dump_buf_data) {
+-		while (pagecnt) {
+-			spin_lock_init(&_dump_buf_lock);
+-			_dump_buf_data =
+-				(char *) __get_free_pages(GFP_KERNEL, pagecnt);
+-			if (_dump_buf_data) {
+-				lpfc_printf_log(phba, KERN_ERR, LOG_BG,
+-					"9043 BLKGRD: allocated %d pages for "
+-				       "_dump_buf_data at 0x%p\n",
+-				       (1 << pagecnt), _dump_buf_data);
+-				_dump_buf_data_order = pagecnt;
+-				memset(_dump_buf_data, 0,
+-				       ((1 << PAGE_SHIFT) << pagecnt));
+-				break;
+-			} else
+-				--pagecnt;
+-		}
+-		if (!_dump_buf_data_order)
++		_dump_buf_data = (char *) vmalloc(shost->hostt->max_sectors * 512);
++		_dump_buf_data_order = get_order(shost->hostt->max_sectors * 512);
++		if (!_dump_buf_data)
+ 			lpfc_printf_log(phba, KERN_ERR, LOG_BG,
+ 				"9044 BLKGRD: ERROR unable to allocate "
+ 			       "memory for hexdump\n");
+@@ -7613,22 +7599,9 @@ struct lpfc_rpi_hdr *
+ 			"9045 BLKGRD: already allocated _dump_buf_data=0x%p"
+ 		       "\n", _dump_buf_data);
+ 	if (!_dump_buf_dif) {
+-		while (pagecnt) {
+-			_dump_buf_dif =
+-				(char *) __get_free_pages(GFP_KERNEL, pagecnt);
+-			if (_dump_buf_dif) {
+-				lpfc_printf_log(phba, KERN_ERR, LOG_BG,
+-					"9046 BLKGRD: allocated %d pages for "
+-				       "_dump_buf_dif at 0x%p\n",
+-				       (1 << pagecnt), _dump_buf_dif);
+-				_dump_buf_dif_order = pagecnt;
+-				memset(_dump_buf_dif, 0,
+-				       ((1 << PAGE_SHIFT) << pagecnt));
+-				break;
+-			} else
+-				--pagecnt;
+-		}
+-		if (!_dump_buf_dif_order)
++		_dump_buf_dif = (char *) vmalloc(shost->hostt->max_sectors * 512);
++		_dump_buf_dif_order = get_order(shost->hostt->max_sectors * 512);
++		if (!_dump_buf_dif)
+ 			lpfc_printf_log(phba, KERN_ERR, LOG_BG,
+ 			"9047 BLKGRD: ERROR unable to allocate "
+ 			       "memory for hexdump\n");
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+index ba996fb..719612d 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -92,7 +92,7 @@ struct scsi_dif_tuple {
+ static void
+ lpfc_debug_save_data(struct lpfc_hba *phba, struct scsi_cmnd *cmnd)
+ {
+-	void *src, *dst;
++	void *src, *dst, *end;
+ 	struct scatterlist *sgde = scsi_sglist(cmnd);
+ 
+ 	if (!_dump_buf_data) {
+@@ -110,7 +110,12 @@ struct scsi_dif_tuple {
+ 	}
+ 
+ 	dst = (void *) _dump_buf_data;
++	end = ((char *) dst) + ((1 << PAGE_SHIFT) << _dump_buf_data_order);
+ 	while (sgde) {
++		if (dst + sgde->length >= end) {
++			printk(KERN_ERR "overflow buffer\n");
++			break;
++		}
+ 		src = sg_virt(sgde);
+ 		memcpy(dst, src, sgde->length);
+ 		dst += sgde->length;
+@@ -121,7 +126,7 @@ struct scsi_dif_tuple {
+ static void
+ lpfc_debug_save_dif(struct lpfc_hba *phba, struct scsi_cmnd *cmnd)
+ {
+-	void *src, *dst;
++	void *src, *dst, *end;
+ 	struct scatterlist *sgde = scsi_prot_sglist(cmnd);
+ 
+ 	if (!_dump_buf_dif) {
+@@ -138,7 +143,12 @@ struct scsi_dif_tuple {
+ 	}
+ 
+ 	dst = _dump_buf_dif;
++	end = ((char *) dst) + ((1 << PAGE_SHIFT) << _dump_buf_dif_order);
+ 	while (sgde) {
++		if (dst + sgde->length >= end) {
++			printk(KERN_ERR "overflow buffer\n");
++			break;
++		}
+ 		src = sg_virt(sgde);
+ 		memcpy(dst, src, sgde->length);
+ 		dst += sgde->length;
 -- 
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-Visit this group at https://groups.google.com/group/open-iscsi.
-To view this discussion on the web visit https://groups.google.com/d/msgid/open-iscsi/201907111542202002207%40zte.com.cn.
-For more options, visit https://groups.google.com/d/optout.
-
---=====_003_next=====--
-
---=====_001_next=====--
+1.8.3.1
