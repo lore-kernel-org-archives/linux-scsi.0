@@ -1,33 +1,40 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH V4 1/9] block: add a helper function to read
- nr_setcs
-Date: Thu, 11 Jul 2019 21:59:24 -0400
-Message-ID: <yq18st457yb.fsf@oracle.com>
-References: <20190708184711.2984-1-chaitanya.kulkarni@wdc.com>
- <20190708184711.2984-2-chaitanya.kulkarni@wdc.com>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH V6 0/4] Fix zone revalidation memory
+	allocation failures
+Date: Thu, 11 Jul 2019 20:05:04 -0600
+Message-ID: <cb26f686-ce7e-9d1a-4735-2375d65c0ea5@kernel.dk>
+References: <20190701050918.27511-1-damien.lemoal@wdc.com>
+	<BYAPR04MB5816BC7EC358F5785AEE1EA9E7F60@BYAPR04MB5816.namprd04.prod.outlook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <xen-devel-bounces@lists.xenproject.org>
-In-Reply-To: <20190708184711.2984-2-chaitanya.kulkarni@wdc.com> (Chaitanya
- Kulkarni's message of "Mon, 8 Jul 2019 11:47:03 -0700")
-List-Unsubscribe: <https://lists.xenproject.org/mailman/options/xen-devel>,
- <mailto:xen-devel-request@lists.xenproject.org?subject=unsubscribe>
-List-Post: <mailto:xen-devel@lists.xenproject.org>
-List-Help: <mailto:xen-devel-request@lists.xenproject.org?subject=help>
-List-Subscribe: <https://lists.xenproject.org/mailman/listinfo/xen-devel>,
- <mailto:xen-devel-request@lists.xenproject.org?subject=subscribe>
-Errors-To: xen-devel-bounces@lists.xenproject.org
-Sender: "Xen-devel" <xen-devel-bounces@lists.xenproject.org>
-To: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Cc: damien.lemoal@wdc.com, linux-btrace@vger.kernel.org, bvanassche@acm.org, linux-scsi@vger.kernel.org, konrad.wilk@oracle.com, yuchao0@huawei.com, colyli@suse.de, linux-block@vger.kernel.org, linux-bcache@vger.kernel.org, jaegeuk@kernel.org, xen-devel@lists.xenproject.org, kent.overstreet@gmail.com, roger.pau@citrix.com
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <BYAPR04MB5816BC7EC358F5785AEE1EA9E7F60@BYAPR04MB5816.namprd04.prod.outlook.com>
+Content-Language: en-US
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Damien Le Moal <Damien.LeMoal@wdc.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Martin K . Petersen" <martin.petersen@oracle.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, Mike Snitzer <snitzer@redhat.com>, "linux-f2fs-devel@lists.sourceforge.net" <linux-f2fs-devel@lists.sourceforge.net>, Jaegeuk Kim <jaegeuk@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, Bart Van Assche <bvanassche@acm.org>
 List-Id: linux-scsi@vger.kernel.org
 
-CkhpIENoYWl0YW55YSwKCj4gK3N0YXRpYyBpbmxpbmUgc2VjdG9yX3QgYmRldl9ucl9zZWN0cyhz
-dHJ1Y3QgYmxvY2tfZGV2aWNlICpiZGV2KQo+ICt7Cj4gKwlyZXR1cm4gcGFydF9ucl9zZWN0c19y
-ZWFkKGJkZXYtPmJkX3BhcnQpOwo+ICt9CgpDYW4gYmRldiBlbmQgdXAgYmVpbmcgTlVMTCBpbiBh
-bnkgb2YgdGhlIGNhbGwgc2l0ZXM/CgpPdGhlcndpc2Ugbm8gb2JqZWN0aW9ucy4KCi0tIApNYXJ0
-aW4gSy4gUGV0ZXJzZW4JT3JhY2xlIExpbnV4IEVuZ2luZWVyaW5nCgpfX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpYZW4tZGV2ZWwgbWFpbGluZyBsaXN0Clhl
-bi1kZXZlbEBsaXN0cy54ZW5wcm9qZWN0Lm9yZwpodHRwczovL2xpc3RzLnhlbnByb2plY3Qub3Jn
-L21haWxtYW4vbGlzdGluZm8veGVuLWRldmVs
+On 7/7/19 8:02 PM, Damien Le Moal wrote:
+> On 2019/07/01 14:09, Damien Le Moal wrote:
+>> This series addresses a recuring problem with zone revalidation
+>> failures observed during extensive testing with memory constrained
+>> system and device hot-plugging.
+> 
+> Jens, Martin,
+> 
+> Any comment regarding this series ?
+
+LGTM, I'll queue it up for this release.
+
+-- 
+Jens Axboe
