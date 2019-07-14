@@ -1,71 +1,54 @@
-From: Jonathan Cameron <jic23@kernel.org>
-Subject: Re: [PATCH 1/3][V3] lib: fix __sysfs_match_string() helper when n
- != -1
-Date: Sun, 14 Jul 2019 11:12:37 +0100
-Message-ID: <20190714111237.183eb826@archlinux>
-References: <20190508111913.7276-1-alexandru.ardelean@analog.com>
+From: Alex Shi <alex.shi@linux.alibaba.com>
+Subject: Re: [PATCH 01/12] Documentation: move architectures together
+Date: Sun, 14 Jul 2019 23:21:03 +0800
+Message-ID: <36c522c5-975e-e38e-daad-0f3d9f93b186@linux.alibaba.com>
+References: <20190712022018.27989-1-alex.shi@linux.alibaba.com>
+ <20190712113427.62fa7ffc@lwn.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=gbk
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190508111913.7276-1-alexandru.ardelean@analog.com>
+In-Reply-To: <20190712113427.62fa7ffc@lwn.net>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Alexandru Ardelean <alexandru.ardelean@analog.com>
-Cc: linux-kernel@vger.kernel.org, linux-iio@vger.kernel.org, linux-scsi@vger.kernel.org, gregkh@linuxfoundation.org, andriy.shevchenko@linux.intel.com, lars@metafoo.de
+To: Jonathan Corbet <corbet@lwn.net>
+Cc: linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-stm32@st-md-mailman.stormreply.com, linux-arm-kernel@lists.infradead.org, linuxppc-dev@lists.ozlabs.org, linux-riscv@lists.infradead.org, linux-omap@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-samsung-soc@vger.kernel.org, linux-ia64@vger.kernel.org, linux-mips@vger.kernel.org, linux-parisc@vger.kernel.org, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, kvm@vger.kernel.org, linux-sh@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 8 May 2019 14:19:11 +0300
-Alexandru Ardelean <alexandru.ardelean@analog.com> wrote:
+Hi Jon,
 
-> The documentation the `__sysfs_match_string()` helper mentions that `n`
-> (the size of the given array) should be:
->  * @n: number of strings in the array or -1 for NULL terminated arrays
-> 
-> The behavior of the function is different, in the sense that it exits on
-> the first NULL element in the array.
-> 
-> This patch changes the behavior, to exit the loop when a NULL element is
-> found, and the size of the array is provided as -1.
-> 
-> All current users of __sysfs_match_string() & sysfs_match_string() provide
-> contiguous arrays of strings, so this behavior change doesn't influence
-> anything (at this point in time).
-> 
-> This behavior change allows for an array of strings to have NULL elements
-> within the array, which will be ignored. This is particularly useful when
-> creating mapping of strings and integers (as bitfields or other HW
-> description).
-> 
-> Signed-off-by: Alexandru Ardelean <alexandru.ardelean@analog.com>
-Looks good to me.  I can take it through IIO given patch 3, but
-fine with it taking another route if people would prefer as I don't
-think the two 'need' to go together.
+Thanks for quick response!
 
-Acked-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+ÔÚ 2019/7/13 ÉÏÎç1:34, Jonathan Corbet Ð´µÀ:
+> On Fri, 12 Jul 2019 10:20:07 +0800
+> Alex Shi <alex.shi@linux.alibaba.com> wrote:
+> 
+>> There are many different archs in Documentation/ dir, it's better to
+>> move them together in 'Documentation/arch' which follows from kernel source.
+> 
+> So this seems certain to collide badly with Mauro's RST-conversion monster
+> patch set.
 
-> ---
+I don't mean that, sorry, and we can figure out if both of them are worthy to be picked up.
+
 > 
-> Changelog v2 -> v3:
-> * fix __sysfs_match_string() vs adding a new
->   __sysfs_match_string_with_gaps() helper
+> More to the point, though...if we are going to thrash up things this
+> badly, we want to be sure that we're doing it right so we don't end up
+> renaming everything again.  Grouping stuff into a new arch/ subdirectory
+> adds a bit of order, but it doesn't do much toward trying to organize our
+> documentation for its readers, and it doesn't help us to modernize the
+> docs and get rid of the old, useless stuff.  A quick check shows that many
+> of these files have seen no changes other than typo fixes since the
+> beginning of the Git era.
+
+Right, there is some docs which need to be update or even drop, and a reorder would be a timing to push each of arch maintainer to do something, isn't it? Anyway, reordering  documents like kernel source dir could be one of choices. :)
+
 > 
->  lib/string.c | 5 ++++-
->  1 file changed, 4 insertions(+), 1 deletion(-)
-> 
-> diff --git a/lib/string.c b/lib/string.c
-> index 3ab861c1a857..5bea3f98478a 100644
-> --- a/lib/string.c
-> +++ b/lib/string.c
-> @@ -674,8 +674,11 @@ int __sysfs_match_string(const char * const *array, size_t n, const char *str)
->  
->  	for (index = 0; index < n; index++) {
->  		item = array[index];
-> -		if (!item)
-> +		if (!item) {
-> +			if (n != (size_t)-1)
-> +				continue;
->  			break;
-> +		}
->  		if (sysfs_streq(item, str))
->  			return index;
->  	}
+> So, in my mind, this needs some thought.  Maybe we want a
+> Documentation/arch in the end, but I'm not convinced that we should just
+> create it and fill it with a snow shovel.  This might be a good thing to
+> discuss at the kernel summit in September.
+
+Thanks for considering, anyway, it could be a good start to get hands dirty whether the arch dir is needed. 
+
+Thanks
+Alex
