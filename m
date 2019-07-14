@@ -1,58 +1,75 @@
-From: Damien Le Moal <Damien.LeMoal@wdc.com>
-Subject: Re: [PATCH V6 0/4] Fix zone revalidation memory
- allocation failures
-Date: Fri, 12 Jul 2019 22:33:21 +0000
-Message-ID: <BYAPR04MB5816F76F09488AE706B49F72E7F20@BYAPR04MB5816.namprd04.prod.outlook.com>
-References: <20190701050918.27511-1-damien.lemoal@wdc.com>
- <BYAPR04MB5816BC7EC358F5785AEE1EA9E7F60@BYAPR04MB5816.namprd04.prod.outlook.com>
- <cb26f686-ce7e-9d1a-4735-2375d65c0ea5@kernel.dk>
- <27386e10-7494-7fcf-f203-484db5c3c69c@kernel.dk>
+From: Minwoo Im <minwoo.im@samsung.com>
+Subject: Re: [RESEND RFC PATCH] mpt3sas: support target smid for
+ [abort|query] task
+Date: Sun, 14 Jul 2019 11:17:52 +0900
+Message-ID: <20190714021752epcms2p6994026d1e2b3738f2857f8eff307c866@epcms2p6>
+References: <CAK=zhgr_T8vA=BCdFCT37RxGCgS3xr8Wp9MEMK_9nZ=oYHy=7Q@mail.gmail.com>
+        <20190621063708epcms2p309f4173afabe5de28942ba15d13987f7@epcms2p3>
+        <CGME20190621063708epcms2p309f4173afabe5de28942ba15d13987f7@epcms2p6>
+Reply-To: minwoo.im@samsung.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-f2fs-devel-bounces@lists.sourceforge.net>
-Content-Language: en-US
-List-Unsubscribe: <https://lists.sourceforge.net/lists/options/linux-f2fs-devel>,
- <mailto:linux-f2fs-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux-f2fs-devel>
-List-Post: <mailto:linux-f2fs-devel@lists.sourceforge.net>
-List-Help: <mailto:linux-f2fs-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-f2fs-devel>,
- <mailto:linux-f2fs-devel-request@lists.sourceforge.net?subject=subscribe>
-Errors-To: linux-f2fs-devel-bounces@lists.sourceforge.net
-To: Jens Axboe <axboe@kernel.dk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Martin K . Petersen" <martin.petersen@oracle.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, Mike Snitzer <snitzer@redhat.com>, "linux-f2fs-devel@lists.sourceforge.net" <linux-f2fs-devel@lists.sourceforge.net>, Jaegeuk Kim <jaegeuk@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, Bart Van Assche <bvanassche@acm.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAK=zhgr_T8vA=BCdFCT37RxGCgS3xr8Wp9MEMK_9nZ=oYHy=7Q@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Sreekanth Reddy <sreekanth.reddy@broadcom.com>, Minwoo Im <minwoo.im@samsung.com>
+Cc: "sathya.prakash@broadcom.com" <sathya.prakash@broadcom.com>, "suganath-prabu.subramani@broadcom.com" <suganath-prabu.subramani@broadcom.com>, "jejb@linux.ibm.com" <jejb@linux.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "MPT-FusionLinux.pdl@broadcom.com" <MPT-FusionLinux.pdl@broadcom.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Euihyeok Kwon <eh81.kwon@samsung.com>, Sarah Cho <sohyeon.jo@samsung.com>, Sanggwan Lee <sanggwan.lee@samsung.com>, Gyeongmin Nam <gm.nam@samsung.com>, "minwoo.im.dev@gmail.com" <minwoo.im.dev@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 2019/07/13 0:13, Jens Axboe wrote:
-> On 7/11/19 8:05 PM, Jens Axboe wrote:
->> On 7/7/19 8:02 PM, Damien Le Moal wrote:
->>> On 2019/07/01 14:09, Damien Le Moal wrote:
->>>> This series addresses a recuring problem with zone revalidation
->>>> failures observed during extensive testing with memory constrained
->>>> system and device hot-plugging.
->>>
->>> Jens, Martin,
->>>
->>> Any comment regarding this series ?
->>
->> LGTM, I'll queue it up for this release.
+Hi Sreekanth,
+
+> >  drivers/scsi/mpt3sas/mpt3sas_ctl.c | 10 ++++++----
+> >  1 file changed, 6 insertions(+), 4 deletions(-)
+> >
+> > diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+> b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+> > index b2bb47c14d35..5c7539dae713 100644
+> > --- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+> > +++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+> > @@ -596,15 +596,17 @@ _ctl_set_task_mid(struct MPT3SAS_ADAPTER *ioc,
+> struct mpt3_ioctl_command *karg,
+> >                 if (priv_data->sas_target->handle != handle)
+> >                         continue;
+> >                 st = scsi_cmd_priv(scmd);
+> > -               tm_request->TaskMID = cpu_to_le16(st->smid);
+> > -               found = 1;
+> > +               if (tm_request->TaskMID == st->smid) {
 > 
-> This broke !CONFIG_BLK_DEV_ZONED builds for null_blk, btw. Please be
-> sure to test with zoned enabled and disabled in your builds when
-> changing things that affect both.
+> I think it will difficult for the user to find the smid that he want
+> to abort. For this user has to enable the scsi logging level and get
+> the tag and pass the ioctl with tag +1 value in TaskMID field. And
+> hence currently driver will loop over all the smid's and if it fines
+> any outstanding smid then it will issue task abort or task query TM
+> for this outstanding smid to the HBA firmware.
 
-I always check the !CONFIG_BLK_DEV_ZONED case. But clearly I made a mistake
-somewhere on this one and missed the problem. My apologies for that.
+Sreekanth,
+
+You're exactly right because I have done this kind of abort based on
+The scsi logs with logging level configured.
 
 > 
-> I fixed it up:
-> 
-> http://git.kernel.dk/cgit/linux-block/commit/?h=for-linus&id=e347946439ed70e3af0d0c330b36d5648e71727b
+> May be we can do like below,
+> * First check whether user provided "TaskMID" is non zero or not. if
+> user provided TaskMID is non-zero and if this TaskMID is outstanding
+> then driver will issue TaskAbort/QueryTask TM with this TaskMID value
 
-Thank you for this.
+Okay.  If I get it right, you mean to check the given TaskMID(!=0) is
+Outstanding or not is by an iteration first.
 
+> else driver will loop over all the smid's and if finds any smid is
+> outstanding then it will issue TaskAbort/QueryTask TM with TaskMID
+> value set to outstanding smid.
 
--- 
-Damien Le Moal
-Western Digital Research
+Got your point here.  I'll make a conditional statement for the case
+where the TaskMID is zero which is the legacy behaviour.
+
+> With the above logic still legacy application will be supported
+> without breaking anything where they provide TaskMID filed as zero.
+> And it also allows the user to abort the IO which he wants.
+
+Sure, I'll prepare V2 patch soon.
+
+Thanks Sreekanth,
+
+		Minwoo Im
