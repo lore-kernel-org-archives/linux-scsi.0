@@ -1,75 +1,71 @@
-From: Minwoo Im <minwoo.im@samsung.com>
-Subject: [PATCH V2] mpt3sas: support target smid for [abort|query] task
-Date: Sun, 14 Jul 2019 12:44:15 +0900
-Message-ID: <20190714034415epcms2p25f9787cb71993a30f58524d2f355b543@epcms2p2>
-References: <CGME20190714034415epcms2p25f9787cb71993a30f58524d2f355b543@epcms2p2>
-Reply-To: minwoo.im@samsung.com
+From: Jonathan Cameron <jic23@kernel.org>
+Subject: Re: [PATCH 1/3][V3] lib: fix __sysfs_match_string() helper when n
+ != -1
+Date: Sun, 14 Jul 2019 11:12:37 +0100
+Message-ID: <20190714111237.183eb826@archlinux>
+References: <20190508111913.7276-1-alexandru.ardelean@analog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190508111913.7276-1-alexandru.ardelean@analog.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "sreekanth.reddy@broadcom.com" <sreekanth.reddy@broadcom.com>, "sathya.prakash@broadcom.com" <sathya.prakash@broadcom.com>, "suganath-prabu.subramani@broadcom.com" <suganath-prabu.subramani@broadcom.com>, "jejb@linux.ibm.com" <jejb@linux.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: Minwoo Im <minwoo.im@samsung.com>, "MPT-FusionLinux.pdl@broadcom.com" <MPT-FusionLinux.pdl@broadcom.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Euihyeok Kwon <eh81.kwon@samsung.com>, Sarah Cho <sohyeon.jo@samsung.com>, Sanggwan Lee <sanggwan.lee@samsung.com>, Gyeongmin Nam <gm.nam@samsung.com>, Sungjun Park <sj1228.park@samsung.com>, "minwoo.im.dev@gmail.com" <minwoo.im.dev@gmail.com>
+To: Alexandru Ardelean <alexandru.ardelean@analog.com>
+Cc: linux-kernel@vger.kernel.org, linux-iio@vger.kernel.org, linux-scsi@vger.kernel.org, gregkh@linuxfoundation.org, andriy.shevchenko@linux.intel.com, lars@metafoo.de
 List-Id: linux-scsi@vger.kernel.org
 
-We can request task management IOCTL command(MPI2_FUNCTION_SCSI_TASK_MGMT)
-to /dev/mpt3ctl.  If the given task_type is either abort task or query
-task, it may need a field named "Initiator Port Transfer Tag to Manage"
-in the IU.
+On Wed, 8 May 2019 14:19:11 +0300
+Alexandru Ardelean <alexandru.ardelean@analog.com> wrote:
 
-Current code does not support to check target IPTT tag from the
-tm_request.  This patch introduces to check TaskMID given from the
-userspace as a target tag.  We have a rule of relationship between
-(struct request *req->tag) and smid in mpt3sas_base.c:
+> The documentation the `__sysfs_match_string()` helper mentions that `n`
+> (the size of the given array) should be:
+>  * @n: number of strings in the array or -1 for NULL terminated arrays
+> 
+> The behavior of the function is different, in the sense that it exits on
+> the first NULL element in the array.
+> 
+> This patch changes the behavior, to exit the loop when a NULL element is
+> found, and the size of the array is provided as -1.
+> 
+> All current users of __sysfs_match_string() & sysfs_match_string() provide
+> contiguous arrays of strings, so this behavior change doesn't influence
+> anything (at this point in time).
+> 
+> This behavior change allows for an array of strings to have NULL elements
+> within the array, which will be ignored. This is particularly useful when
+> creating mapping of strings and integers (as bitfields or other HW
+> description).
+> 
+> Signed-off-by: Alexandru Ardelean <alexandru.ardelean@analog.com>
+Looks good to me.  I can take it through IIO given patch 3, but
+fine with it taking another route if people would prefer as I don't
+think the two 'need' to go together.
 
-3318 u16
-3319 mpt3sas_base_get_smid_scsiio(struct MPT3SAS_ADAPTER *ioc, u8 cb_idx,
-3320         struct scsi_cmnd *scmd)
-3321 {
-3322         struct scsiio_tracker *request = scsi_cmd_priv(scmd);
-3323         unsigned int tag = scmd->request->tag;
-3324         u16 smid;
-3325
-3326         smid = tag + 1;
+Acked-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
 
-So if we want to abort a request tagged #X, then we can pass (X + 1) to
-this IOCTL handler.  Otherwise, user space just can pass 0 TaskMID to
-abort the first outstanding smid which is legacy behaviour.
-
-Cc: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Cc: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
-Cc: Sathya Prakash <sathya.prakash@broadcom.com>
-Cc: James E.J. Bottomley <jejb@linux.ibm.com>
-Cc: Martin K. Petersen <martin.petersen@oracle.com>
-Cc: MPT-FusionLinux.pdl@broadcom.com
-Signed-off-by: Minwoo Im <minwoo.im@samsung.com>
----
- drivers/scsi/mpt3sas/mpt3sas_ctl.c | 12 ++++++++++--
- 1 file changed, 10 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-index b2bb47c14d35..f6b8fd90610a 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-@@ -596,8 +596,16 @@ _ctl_set_task_mid(struct MPT3SAS_ADAPTER *ioc, struct mpt3_ioctl_command *karg,
- 		if (priv_data->sas_target->handle != handle)
- 			continue;
- 		st = scsi_cmd_priv(scmd);
--		tm_request->TaskMID = cpu_to_le16(st->smid);
--		found = 1;
-+
-+		/*
-+		 * If the given TaskMID from the user space is zero, then the
-+		 * first outstanding smid will be picked up.  Otherwise,
-+		 * targeted smid will be the one.
-+		 */
-+		if (!tm_request->TaskMID || tm_request->TaskMID == st->smid) {
-+			tm_request->TaskMID = cpu_to_le16(st->smid);
-+			found = 1;
-+		}
- 	}
- 
- 	if (!found) {
--- 
-2.16.1
+> ---
+> 
+> Changelog v2 -> v3:
+> * fix __sysfs_match_string() vs adding a new
+>   __sysfs_match_string_with_gaps() helper
+> 
+>  lib/string.c | 5 ++++-
+>  1 file changed, 4 insertions(+), 1 deletion(-)
+> 
+> diff --git a/lib/string.c b/lib/string.c
+> index 3ab861c1a857..5bea3f98478a 100644
+> --- a/lib/string.c
+> +++ b/lib/string.c
+> @@ -674,8 +674,11 @@ int __sysfs_match_string(const char * const *array, size_t n, const char *str)
+>  
+>  	for (index = 0; index < n; index++) {
+>  		item = array[index];
+> -		if (!item)
+> +		if (!item) {
+> +			if (n != (size_t)-1)
+> +				continue;
+>  			break;
+> +		}
+>  		if (sysfs_streq(item, str))
+>  			return index;
+>  	}
