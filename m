@@ -1,54 +1,37 @@
-From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: Re: [PATCH 01/12] Documentation: move architectures together
-Date: Sun, 14 Jul 2019 23:21:03 +0800
-Message-ID: <36c522c5-975e-e38e-daad-0f3d9f93b186@linux.alibaba.com>
-References: <20190712022018.27989-1-alex.shi@linux.alibaba.com>
- <20190712113427.62fa7ffc@lwn.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=gbk
-Content-Transfer-Encoding: 8bit
+From: Fuqian Huang <huangfq.daxian@gmail.com>
+Subject: [PATCH v3 16/24] scsi: mptfusion: Remove call to memset after pci_alloc_consistent
+Date: Mon, 15 Jul 2019 11:18:58 +0800
+Message-ID: <20190715031858.6936-1-huangfq.daxian@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190712113427.62fa7ffc@lwn.net>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jonathan Corbet <corbet@lwn.net>
-Cc: linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-stm32@st-md-mailman.stormreply.com, linux-arm-kernel@lists.infradead.org, linuxppc-dev@lists.ozlabs.org, linux-riscv@lists.infradead.org, linux-omap@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-samsung-soc@vger.kernel.org, linux-ia64@vger.kernel.org, linux-mips@vger.kernel.org, linux-parisc@vger.kernel.org, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, kvm@vger.kernel.org, linux-sh@vger.kernel.org
+Cc: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Fuqian Huang <huangfq.daxian@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Jon,
+pci_alloc_consistent calls dma_alloc_coherent directly.
+In commit 518a2f1925c3
+("dma-mapping: zero memory returned from dma_alloc_*"),
+dma_alloc_coherent has already zeroed the memory.
+So memset is not needed
 
-Thanks for quick response!
+Signed-off-by: Fuqian Huang <huangfq.daxian@gmail.com>
+---
+Changes in v3:
+  - Use actual commit rather than the merge commit in the commit message
 
-ÔÚ 2019/7/13 ÉÏÎç1:34, Jonathan Corbet Ð´µÀ:
-> On Fri, 12 Jul 2019 10:20:07 +0800
-> Alex Shi <alex.shi@linux.alibaba.com> wrote:
-> 
->> There are many different archs in Documentation/ dir, it's better to
->> move them together in 'Documentation/arch' which follows from kernel source.
-> 
-> So this seems certain to collide badly with Mauro's RST-conversion monster
-> patch set.
+ drivers/message/fusion/mptbase.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-I don't mean that, sorry, and we can figure out if both of them are worthy to be picked up.
-
-> 
-> More to the point, though...if we are going to thrash up things this
-> badly, we want to be sure that we're doing it right so we don't end up
-> renaming everything again.  Grouping stuff into a new arch/ subdirectory
-> adds a bit of order, but it doesn't do much toward trying to organize our
-> documentation for its readers, and it doesn't help us to modernize the
-> docs and get rid of the old, useless stuff.  A quick check shows that many
-> of these files have seen no changes other than typo fixes since the
-> beginning of the Git era.
-
-Right, there is some docs which need to be update or even drop, and a reorder would be a timing to push each of arch maintainer to do something, isn't it? Anyway, reordering  documents like kernel source dir could be one of choices. :)
-
-> 
-> So, in my mind, this needs some thought.  Maybe we want a
-> Documentation/arch in the end, but I'm not convinced that we should just
-> create it and fill it with a snow shovel.  This might be a good thing to
-> discuss at the kernel summit in September.
-
-Thanks for considering, anyway, it could be a good start to get hands dirty whether the arch dir is needed. 
-
-Thanks
-Alex
+diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+index c2dd322691d1..3eeb4cbdaf3b 100644
+--- a/drivers/message/fusion/mptbase.c
++++ b/drivers/message/fusion/mptbase.c
+@@ -4507,7 +4507,6 @@ PrimeIocFifos(MPT_ADAPTER *ioc)
+ 		dinitprintk(ioc, printk(MYIOC_s_DEBUG_FMT "Total alloc @ %p[%p], sz=%d[%x] bytes\n",
+ 			 	ioc->name, mem, (void *)(ulong)alloc_dma, total_size, total_size));
+ 
+-		memset(mem, 0, total_size);
+ 		ioc->alloc_total += total_size;
+ 		ioc->alloc = mem;
+ 		ioc->alloc_dma = alloc_dma;
+-- 
+2.11.0
