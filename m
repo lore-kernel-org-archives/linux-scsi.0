@@ -1,47 +1,35 @@
-From: Minwoo Im <minwoo.im@samsung.com>
-Subject: Re: [PATCH V2] mpt3sas: support target smid for [abort|query] task
-Date: Tue, 16 Jul 2019 14:44:12 +0900
-Message-ID: <20190716054412epcms2p76849500e9450ac399bb123fc9b345c23@epcms2p7>
-References: <860cc8cf-6419-c649-b2d9-19b82f6ebc99@suse.de>
-        <20190714034415epcms2p25f9787cb71993a30f58524d2f355b543@epcms2p2>
-        <CGME20190714034415epcms2p25f9787cb71993a30f58524d2f355b543@epcms2p7>
-Reply-To: minwoo.im@samsung.com
+From: Avri Altman <Avri.Altman@wdc.com>
+Subject: RE: [PATCH v1] scsi: ufs: change msleep to usleep_range
+Date: Tue, 16 Jul 2019 06:54:50 +0000
+Message-ID: <SN6PR04MB492511AE7841BD4C84205218FCCE0@SN6PR04MB4925.namprd04.prod.outlook.com>
+References: <BN7PR08MB5684BBB44FD0E43501558A20DBCF0@BN7PR08MB5684.namprd08.prod.outlook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <860cc8cf-6419-c649-b2d9-19b82f6ebc99@suse.de>
+In-Reply-To: <BN7PR08MB5684BBB44FD0E43501558A20DBCF0@BN7PR08MB5684.namprd08.prod.outlook.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, Minwoo Im <minwoo.im@samsung.com>, "sreekanth.reddy@broadcom.com" <sreekanth.reddy@broadcom.com>, "sathya.prakash@broadcom.com" <sathya.prakash@broadcom.com>, "suganath-prabu.subramani@broadcom.com" <suganath-prabu.subramani@broadcom.com>, "jejb@linux.ibm.com" <jejb@linux.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "MPT-FusionLinux.pdl@broadcom.com" <MPT-FusionLinux.pdl@broadcom.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Euihyeok Kwon <eh81.kwon@samsung.com>, Sarah Cho <sohyeon.jo@samsung.com>, Sanggwan Lee <sanggwan.lee@samsung.com>, Gyeongmin Nam <gm.nam@samsung.com>, Sungjun Park <sj1228.park@samsung.com>, "minwoo.im.dev@gmail.com" <minwoo.im.dev@gmail.com>
+To: "Bean Huo (beanhuo)" <beanhuo@micron.com>, Alim Akhtar <alim.akhtar@samsung.com>, Pedro Sousa <pedrom.sousa@synopsys.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, Evan Green <evgreen@chromium.org>, Stanley Chu <stanley.chu@mediatek.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-> I think this is fundamentally wrong.
-> ABORT_TASK is used to abort a single task, which of course has to be
-> known beforehand. If you don't know the task, what exactly do you hope
-> to achieve here? Aborting random I/O?
-> Or, even worse, aborting I/O the driver uses internally and corrupt the
-> internal workflow of the driver?
-
-This patch is nothing but a case-addition to the existing code.  I also
-have a doubt here why the first picked SMID should be aborted/queried,
-but not for this time in this patch.
-
-> 
-> We should simply disallow any ABORT TASK from userspace if the TaskMID
-> is zero. And I would even argue to disabllow ABORT TASK from userspace
-> completely, as the smid is never relayed to userland, and as such the
-> user cannot know which task should be aborted.
-
-System administrator might want to query task or abort task if something
-happens based on the tag in block layer via debugfs or some logs.
-You're right that userspaces has nothing to do with the tag generation
-which will be held inside block layer.  But some of administrator would
-know the relationship between smid and tag which can be found at debugfs
-or the logs.
-
-I'm not sure if it's okay to be picked, but if we can request TMF for the
-Targeted smid to the HBA firmware, it would be great to test devices or
-Figure out what happened in the target device.
-
-Thanks,
+>=20
+> From: Bean Huo <beanhuo@micron.com>
+>=20
+> This patch is to change msleep() to usleep_range() based on
+> Documentation/timers/timers-howto.txt. It suggests using
+> usleep_range() for small msec(1ms - 20ms) since msleep()
+> will often sleep longer than desired value.
+>=20
+> After changing, booting time will be 5ms-10ms faster than before.
+> I tested this change on two different platforms, one has 5ms faster,
+> another one is about 10ms. I think this is different on different
+> platform.
+>=20
+> Actually, from UFS host side, 1ms-5ms delay is already sufficient for
+> its initialization of the local UIC layer.
+>=20
+> Fixes: 7a3e97b0dc4b ([SCSI] ufshcd: UFS Host controller driver)
+> Signed-off-by: Bean Huo <beanhuo@micron.com>
+Reviewed-by: Avri Altman <avri.altman@wdc.com>
