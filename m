@@ -1,169 +1,143 @@
-From: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
-Subject: [PATCH 03/14] docs: fix broken doc references due to renames
-Date: Tue, 16 Jul 2019 09:10:42 -0300
-Message-ID: <aa415583bf6b812b0249093a601aa31412f3a1cf.1563277838.git.mchehab+samsung@kernel.org>
-References: <cover.1563277838.git.mchehab+samsung@kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <dri-devel-bounces@lists.freedesktop.org>
-In-Reply-To: <cover.1563277838.git.mchehab+samsung@kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
-List-Post: <mailto:dri-devel@lists.freedesktop.org>
-List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: dri-devel-bounces@lists.freedesktop.org
-Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
-Cc: Mark Rutland <mark.rutland@arm.com>, Andrea Parri <andrea.parri@amarulasolutions.com>, Ajay Gupta <ajayg@nvidia.com>, linux-doc@vger.kernel.org, Peter Zijlstra <peterz@infradead.org>, Akira Yokosawa <akiyks@gmail.com>, Lai Jiangshan <jiangshanlai@gmail.com>, Jerry Hoemann <jerry.hoemann@hpe.com>, dri-devel@lists.freedesktop.org, David Howells <dhowells@redhat.com>, Mauro Carvalho Chehab <mchehab+samsung@kernel.org>, linux-i2c@vger.kernel.org, Joel Fernandes <joel@joelfernandes.org>, "Paul E. McKenney" <paulmck@linux.ibm.com>, Will Deacon <will@kernel.org>, linux-arch@vger.kernel.org, linux-scsi@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>, esc.storagedev@microsemi.com, Maxime Ripard <maxime.ripard@bootlin.com>, Ingo Molnar <mingo@redhat.com>, Alan Stern <stern@rowland.harvard.edu>, Jade Alglave <j.alglave@ucl.ac.uk>, Boqun Feng <boqun.feng@gmail.com>, Guenter
+From: KyleMahlkuch <kmahlkuc@linux.vnet.ibm.com>
+Subject: [PATCH] lpfc: Fix Buffer Overflow Error
+Date: Tue, 16 Jul 2019 09:48:38 -0500
+Message-ID: <1563288518-19234-1-git-send-email-kmahlkuc@linux.vnet.ibm.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+Cc: james.smart@broadcom.com, dick.kennedy@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, KyleMahlkuch <kmahlkuc@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-U29tZSBmaWxlcyBnb3QgcmVuYW1lZCBidXQgcHJvYmFibHkgZHVlIHRvIHNvbWUgbWVyZ2UgY29u
-ZmxpY3RzLAphIGZldyByZWZlcmVuY2VzIHN0aWxsIHBvaW50IHRvIHRoZSBvbGQgbG9jYXRpb25z
-LgoKU2lnbmVkLW9mZi1ieTogTWF1cm8gQ2FydmFsaG8gQ2hlaGFiIDxtY2hlaGFiK3NhbXN1bmdA
-a2VybmVsLm9yZz4KLS0tCiBEb2N1bWVudGF0aW9uL1JDVS9yY3VsaXN0X251bGxzLnR4dCAgICAg
-ICAgICAgICAgICAgICB8IDIgKy0KIERvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9h
-cm0vaWRsZS1zdGF0ZXMudHh0IHwgMiArLQogRG9jdW1lbnRhdGlvbi9sb2NraW5nL3NwaW5sb2Nr
-cy5yc3QgICAgICAgICAgICAgICAgICAgfCA0ICsrLS0KIERvY3VtZW50YXRpb24vbWVtb3J5LWJh
-cnJpZXJzLnR4dCAgICAgICAgICAgICAgICAgICAgIHwgMiArLQogRG9jdW1lbnRhdGlvbi90cmFu
-c2xhdGlvbnMva29fS1IvbWVtb3J5LWJhcnJpZXJzLnR4dCAgfCAyICstCiBEb2N1bWVudGF0aW9u
-L3dhdGNoZG9nL2hwd2R0LnJzdCAgICAgICAgICAgICAgICAgICAgICB8IDIgKy0KIE1BSU5UQUlO
-RVJTICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwgOCArKysrLS0t
-LQogZHJpdmVycy9ncHUvZHJtL2RybV9tb2Rlcy5jICAgICAgICAgICAgICAgICAgICAgICAgICAg
-fCAyICstCiBkcml2ZXJzL2kyYy9idXNzZXMvaTJjLW52aWRpYS1ncHUuYyAgICAgICAgICAgICAg
-ICAgICB8IDIgKy0KIGRyaXZlcnMvc2NzaS9ocHNhLmMgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgIHwgNCArKy0tCiAxMCBmaWxlcyBjaGFuZ2VkLCAxNSBpbnNlcnRpb25zKCspLCAx
-NSBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9Eb2N1bWVudGF0aW9uL1JDVS9yY3VsaXN0X251
-bGxzLnR4dCBiL0RvY3VtZW50YXRpb24vUkNVL3JjdWxpc3RfbnVsbHMudHh0CmluZGV4IDgxNTFm
-MDE5NWY3Ni4uMjNmMTE1ZGM4N2NmIDEwMDY0NAotLS0gYS9Eb2N1bWVudGF0aW9uL1JDVS9yY3Vs
-aXN0X251bGxzLnR4dAorKysgYi9Eb2N1bWVudGF0aW9uL1JDVS9yY3VsaXN0X251bGxzLnR4dApA
-QCAtMSw3ICsxLDcgQEAKIFVzaW5nIGhsaXN0X251bGxzIHRvIHByb3RlY3QgcmVhZC1tb3N0bHkg
-bGlua2VkIGxpc3RzIGFuZAogb2JqZWN0cyB1c2luZyBTTEFCX1RZUEVTQUZFX0JZX1JDVSBhbGxv
-Y2F0aW9ucy4KIAotUGxlYXNlIHJlYWQgdGhlIGJhc2ljcyBpbiBEb2N1bWVudGF0aW9uL1JDVS9s
-aXN0UkNVLnR4dAorUGxlYXNlIHJlYWQgdGhlIGJhc2ljcyBpbiBEb2N1bWVudGF0aW9uL1JDVS9s
-aXN0UkNVLnJzdAogCiBVc2luZyBzcGVjaWFsIG1ha2VycyAoY2FsbGVkICdudWxscycpIGlzIGEg
-Y29udmVuaWVudCB3YXkKIHRvIHNvbHZlIGZvbGxvd2luZyBwcm9ibGVtIDoKZGlmZiAtLWdpdCBh
-L0RvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9hcm0vaWRsZS1zdGF0ZXMudHh0IGIv
-RG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL2FybS9pZGxlLXN0YXRlcy50eHQKaW5k
-ZXggMzI2ZjI5YjI3MGFkLi4yZDMyNWJlZDM3ZTUgMTAwNjQ0Ci0tLSBhL0RvY3VtZW50YXRpb24v
-ZGV2aWNldHJlZS9iaW5kaW5ncy9hcm0vaWRsZS1zdGF0ZXMudHh0CisrKyBiL0RvY3VtZW50YXRp
-b24vZGV2aWNldHJlZS9iaW5kaW5ncy9hcm0vaWRsZS1zdGF0ZXMudHh0CkBAIC03MDMsNCArNzAz
-LDQgQEAgY3B1cyB7CiAgICAgaHR0cHM6Ly93d3cuZGV2aWNldHJlZS5vcmcvc3BlY2lmaWNhdGlv
-bnMvCiAKIFs2XSBBUk0gTGludXggS2VybmVsIGRvY3VtZW50YXRpb24gLSBCb290aW5nIEFBcmNo
-NjQgTGludXgKLSAgICBEb2N1bWVudGF0aW9uL2FybTY0L2Jvb3RpbmcudHh0CisgICAgRG9jdW1l
-bnRhdGlvbi9hcm02NC9ib290aW5nLnJzdApkaWZmIC0tZ2l0IGEvRG9jdW1lbnRhdGlvbi9sb2Nr
-aW5nL3NwaW5sb2Nrcy5yc3QgYi9Eb2N1bWVudGF0aW9uL2xvY2tpbmcvc3BpbmxvY2tzLnJzdApp
-bmRleCAwOTgxMDdmYjdkODYuLmU5M2VjNjY0NTIzOCAxMDA2NDQKLS0tIGEvRG9jdW1lbnRhdGlv
-bi9sb2NraW5nL3NwaW5sb2Nrcy5yc3QKKysrIGIvRG9jdW1lbnRhdGlvbi9sb2NraW5nL3NwaW5s
-b2Nrcy5yc3QKQEAgLTgyLDcgKzgyLDcgQEAgaXRzZWxmLiAgVGhlIHJlYWQgbG9jayBhbGxvd3Mg
-bWFueSBjb25jdXJyZW50IHJlYWRlcnMuICBBbnl0aGluZyB0aGF0CiAqKmNoYW5nZXMqKiB0aGUg
-bGlzdCB3aWxsIGhhdmUgdG8gZ2V0IHRoZSB3cml0ZSBsb2NrLgogCiAgICBOT1RFISBSQ1UgaXMg
-YmV0dGVyIGZvciBsaXN0IHRyYXZlcnNhbCwgYnV0IHJlcXVpcmVzIGNhcmVmdWwKLSAgIGF0dGVu
-dGlvbiB0byBkZXNpZ24gZGV0YWlsIChzZWUgRG9jdW1lbnRhdGlvbi9SQ1UvbGlzdFJDVS50eHQp
-LgorICAgYXR0ZW50aW9uIHRvIGRlc2lnbiBkZXRhaWwgKHNlZSBEb2N1bWVudGF0aW9uL1JDVS9s
-aXN0UkNVLnJzdCkuCiAKIEFsc28sIHlvdSBjYW5ub3QgInVwZ3JhZGUiIGEgcmVhZC1sb2NrIHRv
-IGEgd3JpdGUtbG9jaywgc28gaWYgeW91IGF0IF9hbnlfCiB0aW1lIG5lZWQgdG8gZG8gYW55IGNo
-YW5nZXMgKGV2ZW4gaWYgeW91IGRvbid0IGRvIGl0IGV2ZXJ5IHRpbWUpLCB5b3UgaGF2ZQpAQCAt
-OTAsNyArOTAsNyBAQCB0byBnZXQgdGhlIHdyaXRlLWxvY2sgYXQgdGhlIHZlcnkgYmVnaW5uaW5n
-LgogCiAgICBOT1RFISBXZSBhcmUgd29ya2luZyBoYXJkIHRvIHJlbW92ZSByZWFkZXItd3JpdGVy
-IHNwaW5sb2NrcyBpbiBtb3N0CiAgICBjYXNlcywgc28gcGxlYXNlIGRvbid0IGFkZCBhIG5ldyBv
-bmUgd2l0aG91dCBjb25zZW5zdXMuICAoSW5zdGVhZCwgc2VlCi0gICBEb2N1bWVudGF0aW9uL1JD
-VS9yY3UudHh0IGZvciBjb21wbGV0ZSBpbmZvcm1hdGlvbi4pCisgICBEb2N1bWVudGF0aW9uL1JD
-VS9yY3UucnN0IGZvciBjb21wbGV0ZSBpbmZvcm1hdGlvbi4pCiAKIC0tLS0KIApkaWZmIC0tZ2l0
-IGEvRG9jdW1lbnRhdGlvbi9tZW1vcnktYmFycmllcnMudHh0IGIvRG9jdW1lbnRhdGlvbi9tZW1v
-cnktYmFycmllcnMudHh0CmluZGV4IDA0NWJiODE0OGZlOS4uMWFkYmI4YTM3MWM3IDEwMDY0NAot
-LS0gYS9Eb2N1bWVudGF0aW9uL21lbW9yeS1iYXJyaWVycy50eHQKKysrIGIvRG9jdW1lbnRhdGlv
-bi9tZW1vcnktYmFycmllcnMudHh0CkBAIC01NDgsNyArNTQ4LDcgQEAgVGhlcmUgYXJlIGNlcnRh
-aW4gdGhpbmdzIHRoYXQgdGhlIExpbnV4IGtlcm5lbCBtZW1vcnkgYmFycmllcnMgZG8gbm90IGd1
-YXJhbnRlZToKIAogCVsqXSBGb3IgaW5mb3JtYXRpb24gb24gYnVzIG1hc3RlcmluZyBETUEgYW5k
-IGNvaGVyZW5jeSBwbGVhc2UgcmVhZDoKIAotCSAgICBEb2N1bWVudGF0aW9uL1BDSS9wY2kucnN0
-CisJICAgIERvY3VtZW50YXRpb24vZHJpdmVyLWFwaS9wY2kvcGNpLnJzdAogCSAgICBEb2N1bWVu
-dGF0aW9uL0RNQS1BUEktSE9XVE8udHh0CiAJICAgIERvY3VtZW50YXRpb24vRE1BLUFQSS50eHQK
-IApkaWZmIC0tZ2l0IGEvRG9jdW1lbnRhdGlvbi90cmFuc2xhdGlvbnMva29fS1IvbWVtb3J5LWJh
-cnJpZXJzLnR4dCBiL0RvY3VtZW50YXRpb24vdHJhbnNsYXRpb25zL2tvX0tSL21lbW9yeS1iYXJy
-aWVycy50eHQKaW5kZXggYTMzYzJhNTM2NTQyLi4yNzc0NjI0ZWU4NDMgMTAwNjQ0Ci0tLSBhL0Rv
-Y3VtZW50YXRpb24vdHJhbnNsYXRpb25zL2tvX0tSL21lbW9yeS1iYXJyaWVycy50eHQKKysrIGIv
-RG9jdW1lbnRhdGlvbi90cmFuc2xhdGlvbnMva29fS1IvbWVtb3J5LWJhcnJpZXJzLnR4dApAQCAt
-NTY5LDcgKzU2OSw3IEBAIEFDUVVJUkUg64qUIO2VtOuLuSDsmKTtjbzroIjsnbTshZjsnZgg66Gc
-65OcIOu2gOu2hOyXkOunjCDsoIHsmqnrkJjqs6AgUkVMRUFTRSAKIAogCVsqXSDrsoTsiqQg66eI
-7Iqk7YSw66eBIERNQSDsmYAg7J286rSA7ISx7JeQIOuMgO2VtOyEnOuKlCDri6TsnYzsnYQg7LC4
-6rOg7ZWY7Iuc6riwIOuwlOuejeuLiOuLpDoKIAotCSAgICBEb2N1bWVudGF0aW9uL1BDSS9wY2ku
-cnN0CisJICAgIERvY3VtZW50YXRpb24vZHJpdmVyLWFwaS9wY2kvcGNpLnJzdAogCSAgICBEb2N1
-bWVudGF0aW9uL0RNQS1BUEktSE9XVE8udHh0CiAJICAgIERvY3VtZW50YXRpb24vRE1BLUFQSS50
-eHQKIApkaWZmIC0tZ2l0IGEvRG9jdW1lbnRhdGlvbi93YXRjaGRvZy9ocHdkdC5yc3QgYi9Eb2N1
-bWVudGF0aW9uL3dhdGNoZG9nL2hwd2R0LnJzdAppbmRleCA5NGE5NjM3MTExM2UuLjQ5YzY0N2Ri
-YThhYSAxMDA2NDQKLS0tIGEvRG9jdW1lbnRhdGlvbi93YXRjaGRvZy9ocHdkdC5yc3QKKysrIGIv
-RG9jdW1lbnRhdGlvbi93YXRjaGRvZy9ocHdkdC5yc3QKQEAgLTU5LDcgKzU5LDcgQEAgTGFzdCBy
-ZXZpZXdlZDogMDgvMjAvMjAxOAogIGFuZCBsb29wIGZvcmV2ZXIuICBUaGlzIGlzIGdlbmVyYWxs
-eSBub3Qgd2hhdCBhIHdhdGNoZG9nIHVzZXIgd2FudHMuCiAKICBGb3IgdGhvc2Ugd2lzaGluZyB0
-byBsZWFybiBtb3JlIHBsZWFzZSBzZWU6Ci0JRG9jdW1lbnRhdGlvbi9rZHVtcC9rZHVtcC5yc3QK
-KwlEb2N1bWVudGF0aW9uL2FkbWluLWd1aWRlL2tkdW1wL2tkdW1wLnJzdAogCURvY3VtZW50YXRp
-b24vYWRtaW4tZ3VpZGUva2VybmVsLXBhcmFtZXRlcnMudHh0IChwYW5pYz0pCiAJWW91ciBMaW51
-eCBEaXN0cmlidXRpb24gc3BlY2lmaWMgZG9jdW1lbnRhdGlvbi4KIApkaWZmIC0tZ2l0IGEvTUFJ
-TlRBSU5FUlMgYi9NQUlOVEFJTkVSUwppbmRleCBiM2E1YzcyZjMyOTguLmIwYWNjMTM4ZTllOSAx
-MDA2NDQKLS0tIGEvTUFJTlRBSU5FUlMKKysrIGIvTUFJTlRBSU5FUlMKQEAgLTg5OSw3ICs4OTks
-NyBAQCBMOglsaW51eC1paW9Admdlci5rZXJuZWwub3JnCiBXOglodHRwOi8vZXouYW5hbG9nLmNv
-bS9jb21tdW5pdHkvbGludXgtZGV2aWNlLWRyaXZlcnMKIFM6CVN1cHBvcnRlZAogRjoJZHJpdmVy
-cy9paW8vYWRjL2FkNzEyNC5jCi1GOglEb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3Mv
-aWlvL2FkYy9hZGksYWQ3MTI0LnR4dAorRjoJRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRp
-bmdzL2lpby9hZGMvYWRpLGFkNzEyNC55YW1sCiAKIEFOQUxPRyBERVZJQ0VTIElOQyBBRDc2MDYg
-RFJJVkVSCiBNOglTdGVmYW4gUG9wYSA8c3RlZmFuLnBvcGFAYW5hbG9nLmNvbT4KQEAgLTQxODks
-NyArNDE4OSw3IEBAIE06CUplbnMgQXhib2UgPGF4Ym9lQGtlcm5lbC5kaz4KIEw6CWNncm91cHNA
-dmdlci5rZXJuZWwub3JnCiBMOglsaW51eC1ibG9ja0B2Z2VyLmtlcm5lbC5vcmcKIFQ6CWdpdCBn
-aXQ6Ly9naXQua2VybmVsLmRrL2xpbnV4LWJsb2NrCi1GOglEb2N1bWVudGF0aW9uL2Nncm91cC12
-MS9ibGtpby1jb250cm9sbGVyLnJzdAorRjoJRG9jdW1lbnRhdGlvbi9hZG1pbi1ndWlkZS9jZ3Jv
-dXAtdjEvYmxraW8tY29udHJvbGxlci5yc3QKIEY6CWJsb2NrL2Jsay1jZ3JvdXAuYwogRjoJaW5j
-bHVkZS9saW51eC9ibGstY2dyb3VwLmgKIEY6CWJsb2NrL2Jsay10aHJvdHRsZS5jCkBAIC02ODQ4
-LDcgKzY4NDgsNyBAQCBSOglTYWdpIFNoYWhhciA8c2FnaXNAZ29vZ2xlLmNvbT4KIFI6CUpvbiBP
-bHNvbiA8am9ub2xzb25AZ29vZ2xlLmNvbT4KIEw6CW5ldGRldkB2Z2VyLmtlcm5lbC5vcmcKIFM6
-CVN1cHBvcnRlZAotRjoJRG9jdW1lbnRhdGlvbi9uZXR3b3JraW5nL2RldmljZV9kcml2ZXJzL2dv
-b2dsZS9ndmUudHh0CitGOglEb2N1bWVudGF0aW9uL25ldHdvcmtpbmcvZGV2aWNlX2RyaXZlcnMv
-Z29vZ2xlL2d2ZS5yc3QKIEY6CWRyaXZlcnMvbmV0L2V0aGVybmV0L2dvb2dsZQogCiBHUEQgUE9D
-S0VUIEZBTiBEUklWRVIKQEAgLTEyMDk2LDcgKzEyMDk2LDcgQEAgTToJSnVlcmdlbiBHcm9zcyA8
-amdyb3NzQHN1c2UuY29tPgogTToJQWxvayBLYXRhcmlhIDxha2F0YXJpYUB2bXdhcmUuY29tPgog
-TDoJdmlydHVhbGl6YXRpb25AbGlzdHMubGludXgtZm91bmRhdGlvbi5vcmcKIFM6CVN1cHBvcnRl
-ZAotRjoJRG9jdW1lbnRhdGlvbi92aXJ0dWFsL3BhcmF2aXJ0X29wcy50eHQKK0Y6CURvY3VtZW50
-YXRpb24vdmlydHVhbC9wYXJhdmlydF9vcHMucnN0CiBGOglhcmNoLyova2VybmVsL3BhcmF2aXJ0
-KgogRjoJYXJjaC8qL2luY2x1ZGUvYXNtL3BhcmF2aXJ0Ki5oCiBGOglpbmNsdWRlL2xpbnV4L2h5
-cGVydmlzb3IuaApkaWZmIC0tZ2l0IGEvZHJpdmVycy9ncHUvZHJtL2RybV9tb2Rlcy5jIGIvZHJp
-dmVycy9ncHUvZHJtL2RybV9tb2Rlcy5jCmluZGV4IDU3ZTY0MDgyODhjOC4uNDY0NWFmNjgxZWY4
-IDEwMDY0NAotLS0gYS9kcml2ZXJzL2dwdS9kcm0vZHJtX21vZGVzLmMKKysrIGIvZHJpdmVycy9n
-cHUvZHJtL2RybV9tb2Rlcy5jCkBAIC0xNjgwLDcgKzE2ODAsNyBAQCBzdGF0aWMgaW50IGRybV9t
-b2RlX3BhcnNlX2NtZGxpbmVfb3B0aW9ucyhjaGFyICpzdHIsIHNpemVfdCBsZW4sCiAgKgogICog
-QWRkaXRpb25hbHMgb3B0aW9ucyBjYW4gYmUgcHJvdmlkZWQgZm9sbG93aW5nIHRoZSBtb2RlLCB1
-c2luZyBhIGNvbW1hIHRvCiAgKiBzZXBhcmF0ZSBlYWNoIG9wdGlvbi4gVmFsaWQgb3B0aW9ucyBj
-YW4gYmUgZm91bmQgaW4KLSAqIERvY3VtZW50YXRpb24vZmIvbW9kZWRiLnR4dC4KKyAqIERvY3Vt
-ZW50YXRpb24vZmIvbW9kZWRiLnJzdC4KICAqCiAgKiBUaGUgaW50ZXJtZWRpYXRlIGRybV9jbWRs
-aW5lX21vZGUgc3RydWN0dXJlIGlzIHJlcXVpcmVkIHRvIHN0b3JlIGFkZGl0aW9uYWwKICAqIG9w
-dGlvbnMgZnJvbSB0aGUgY29tbWFuZCBsaW5lIG1vZGxpbmUgbGlrZSB0aGUgZm9yY2UtZW5hYmxl
-L2Rpc2FibGUgZmxhZy4KZGlmZiAtLWdpdCBhL2RyaXZlcnMvaTJjL2J1c3Nlcy9pMmMtbnZpZGlh
-LWdwdS5jIGIvZHJpdmVycy9pMmMvYnVzc2VzL2kyYy1udmlkaWEtZ3B1LmMKaW5kZXggY2ZjNzZi
-NWRlNzI2Li41YTEyMzVmZDg2YmIgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvaTJjL2J1c3Nlcy9pMmMt
-bnZpZGlhLWdwdS5jCisrKyBiL2RyaXZlcnMvaTJjL2J1c3Nlcy9pMmMtbnZpZGlhLWdwdS5jCkBA
-IC0zNjQsNyArMzY0LDcgQEAgc3RhdGljIHZvaWQgZ3B1X2kyY19yZW1vdmUoc3RydWN0IHBjaV9k
-ZXYgKnBkZXYpCiAvKgogICogV2UgbmVlZCBncHVfaTJjX3N1c3BlbmQoKSBldmVuIGlmIGl0IGlz
-IHN0dWIsIGZvciBydW50aW1lIHBtIHRvIHdvcmsKICAqIGNvcnJlY3RseS4gV2l0aG91dCBpdCwg
-bHNwY2kgc2hvd3MgcnVudGltZSBwbSBzdGF0dXMgYXMgIkQwIiBmb3IgdGhlIGNhcmQuCi0gKiBE
-b2N1bWVudGF0aW9uL3Bvd2VyL3BjaS50eHQgYWxzbyBpbnNpc3RzIGZvciBkcml2ZXIgdG8gcHJv
-dmlkZSB0aGlzLgorICogRG9jdW1lbnRhdGlvbi9wb3dlci9wY2kucnN0IGFsc28gaW5zaXN0cyBm
-b3IgZHJpdmVyIHRvIHByb3ZpZGUgdGhpcy4KICAqLwogc3RhdGljIF9fbWF5YmVfdW51c2VkIGlu
-dCBncHVfaTJjX3N1c3BlbmQoc3RydWN0IGRldmljZSAqZGV2KQogewpkaWZmIC0tZ2l0IGEvZHJp
-dmVycy9zY3NpL2hwc2EuYyBiL2RyaXZlcnMvc2NzaS9ocHNhLmMKaW5kZXggNDNhNmI1MzUwNzc1
-Li5lYWY2MTc3YWM5ZWUgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvc2NzaS9ocHNhLmMKKysrIGIvZHJp
-dmVycy9zY3NpL2hwc2EuYwpAQCAtNzc5OCw3ICs3Nzk4LDcgQEAgc3RhdGljIHZvaWQgaHBzYV9m
-cmVlX3BjaV9pbml0KHN0cnVjdCBjdGxyX2luZm8gKmgpCiAJaHBzYV9kaXNhYmxlX2ludGVycnVw
-dF9tb2RlKGgpOwkJLyogcGNpX2luaXQgMiAqLwogCS8qCiAJICogY2FsbCBwY2lfZGlzYWJsZV9k
-ZXZpY2UgYmVmb3JlIHBjaV9yZWxlYXNlX3JlZ2lvbnMgcGVyCi0JICogRG9jdW1lbnRhdGlvbi9Q
-Q0kvcGNpLnJzdAorCSAqIERvY3VtZW50YXRpb24vZHJpdmVyLWFwaS9wY2kvcGNpLnJzdAogCSAq
-LwogCXBjaV9kaXNhYmxlX2RldmljZShoLT5wZGV2KTsJCS8qIHBjaV9pbml0IDEgKi8KIAlwY2lf
-cmVsZWFzZV9yZWdpb25zKGgtPnBkZXYpOwkJLyogcGNpX2luaXQgMiAqLwpAQCAtNzg4MSw3ICs3
-ODgxLDcgQEAgc3RhdGljIGludCBocHNhX3BjaV9pbml0KHN0cnVjdCBjdGxyX2luZm8gKmgpCiBj
-bGVhbjE6CiAJLyoKIAkgKiBjYWxsIHBjaV9kaXNhYmxlX2RldmljZSBiZWZvcmUgcGNpX3JlbGVh
-c2VfcmVnaW9ucyBwZXIKLQkgKiBEb2N1bWVudGF0aW9uL1BDSS9wY2kucnN0CisJICogRG9jdW1l
-bnRhdGlvbi9kcml2ZXItYXBpL3BjaS9wY2kucnN0CiAJICovCiAJcGNpX2Rpc2FibGVfZGV2aWNl
-KGgtPnBkZXYpOwogCXBjaV9yZWxlYXNlX3JlZ2lvbnMoaC0+cGRldik7Ci0tIAoyLjIxLjAKCl9f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmRyaS1kZXZlbCBt
-YWlsaW5nIGxpc3QKZHJpLWRldmVsQGxpc3RzLmZyZWVkZXNrdG9wLm9yZwpodHRwczovL2xpc3Rz
-LmZyZWVkZXNrdG9wLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2RyaS1kZXZlbA==
+Power and x86 have different page sizes so rather than allocate the
+buffer based on number of pages we should allocate space by using
+max_sectors. There is also code in lpfc_scsi.c to be sure we don't
+write past the end of this buffer.
+
+Signed-off-by: KyleMahlkuch <kmahlkuc@linux.vnet.ibm.com>
+---
+ drivers/scsi/lpfc/lpfc_init.c | 41 +++++++----------------------------------
+ drivers/scsi/lpfc/lpfc_scsi.c | 14 ++++++++++++--
+ 2 files changed, 19 insertions(+), 36 deletions(-)
+
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index eaaef68..59b52a0 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -39,6 +39,7 @@
+ #include <linux/msi.h>
+ #include <linux/irq.h>
+ #include <linux/bitops.h>
++#include <linux/vmalloc.h>
+ 
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_device.h>
+@@ -7549,7 +7550,6 @@ struct lpfc_rpi_hdr *
+ 	uint32_t old_mask;
+ 	uint32_t old_guard;
+ 
+-	int pagecnt = 10;
+ 	if (phba->cfg_prot_mask && phba->cfg_prot_guard) {
+ 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+ 				"1478 Registering BlockGuard with the "
+@@ -7588,23 +7588,9 @@ struct lpfc_rpi_hdr *
+ 	}
+ 
+ 	if (!_dump_buf_data) {
+-		while (pagecnt) {
+-			spin_lock_init(&_dump_buf_lock);
+-			_dump_buf_data =
+-				(char *) __get_free_pages(GFP_KERNEL, pagecnt);
+-			if (_dump_buf_data) {
+-				lpfc_printf_log(phba, KERN_ERR, LOG_BG,
+-					"9043 BLKGRD: allocated %d pages for "
+-				       "_dump_buf_data at 0x%p\n",
+-				       (1 << pagecnt), _dump_buf_data);
+-				_dump_buf_data_order = pagecnt;
+-				memset(_dump_buf_data, 0,
+-				       ((1 << PAGE_SHIFT) << pagecnt));
+-				break;
+-			} else
+-				--pagecnt;
+-		}
+-		if (!_dump_buf_data_order)
++		_dump_buf_data = (char *) vmalloc(shost->hostt->max_sectors * 512);
++		_dump_buf_data_order = get_order(shost->hostt->max_sectors * 512);
++		if (!_dump_buf_data)
+ 			lpfc_printf_log(phba, KERN_ERR, LOG_BG,
+ 				"9044 BLKGRD: ERROR unable to allocate "
+ 			       "memory for hexdump\n");
+@@ -7613,22 +7599,9 @@ struct lpfc_rpi_hdr *
+ 			"9045 BLKGRD: already allocated _dump_buf_data=0x%p"
+ 		       "\n", _dump_buf_data);
+ 	if (!_dump_buf_dif) {
+-		while (pagecnt) {
+-			_dump_buf_dif =
+-				(char *) __get_free_pages(GFP_KERNEL, pagecnt);
+-			if (_dump_buf_dif) {
+-				lpfc_printf_log(phba, KERN_ERR, LOG_BG,
+-					"9046 BLKGRD: allocated %d pages for "
+-				       "_dump_buf_dif at 0x%p\n",
+-				       (1 << pagecnt), _dump_buf_dif);
+-				_dump_buf_dif_order = pagecnt;
+-				memset(_dump_buf_dif, 0,
+-				       ((1 << PAGE_SHIFT) << pagecnt));
+-				break;
+-			} else
+-				--pagecnt;
+-		}
+-		if (!_dump_buf_dif_order)
++		_dump_buf_dif = (char *) vmalloc(shost->hostt->max_sectors * 512);
++		_dump_buf_dif_order = get_order(shost->hostt->max_sectors * 512);
++		if (!_dump_buf_dif)
+ 			lpfc_printf_log(phba, KERN_ERR, LOG_BG,
+ 			"9047 BLKGRD: ERROR unable to allocate "
+ 			       "memory for hexdump\n");
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+index ba996fb..719612d 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -92,7 +92,7 @@ struct scsi_dif_tuple {
+ static void
+ lpfc_debug_save_data(struct lpfc_hba *phba, struct scsi_cmnd *cmnd)
+ {
+-	void *src, *dst;
++	void *src, *dst, *end;
+ 	struct scatterlist *sgde = scsi_sglist(cmnd);
+ 
+ 	if (!_dump_buf_data) {
+@@ -110,7 +110,12 @@ struct scsi_dif_tuple {
+ 	}
+ 
+ 	dst = (void *) _dump_buf_data;
++	end = ((char *) dst) + ((1 << PAGE_SHIFT) << _dump_buf_data_order);
+ 	while (sgde) {
++		if (dst + sgde->length >= end) {
++			printk(KERN_ERR "overflow buffer\n");
++			break;
++		}
+ 		src = sg_virt(sgde);
+ 		memcpy(dst, src, sgde->length);
+ 		dst += sgde->length;
+@@ -121,7 +126,7 @@ struct scsi_dif_tuple {
+ static void
+ lpfc_debug_save_dif(struct lpfc_hba *phba, struct scsi_cmnd *cmnd)
+ {
+-	void *src, *dst;
++	void *src, *dst, *end;
+ 	struct scatterlist *sgde = scsi_prot_sglist(cmnd);
+ 
+ 	if (!_dump_buf_dif) {
+@@ -138,7 +143,12 @@ struct scsi_dif_tuple {
+ 	}
+ 
+ 	dst = _dump_buf_dif;
++	end = ((char *) dst) + ((1 << PAGE_SHIFT) << _dump_buf_dif_order);
+ 	while (sgde) {
++		if (dst + sgde->length >= end) {
++			printk(KERN_ERR "overflow buffer\n");
++			break;
++		}
+ 		src = sg_virt(sgde);
+ 		memcpy(dst, src, sgde->length);
+ 		dst += sgde->length;
+-- 
+1.8.3.1
