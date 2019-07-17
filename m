@@ -1,33 +1,38 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: properly communicate queue limits to the DMA layer v2
-Date: Tue, 16 Jul 2019 23:07:55 -0400
-Message-ID: <yq1y30xxss4.fsf@oracle.com>
-References: <20190617122000.22181-1-hch@lst.de>
-        <20190715165823.GA10029@lst.de> <yq1tvbn2ofc.fsf@oracle.com>
-        <20190715174617.GA11094@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: Masahiro Yamada <yamada.masahiro@socionext.com>
+Subject: [PATCH v3 04/12] scsi: remove pointless $(MODVERDIR)/$(obj)/53c700.ver
+Date: Wed, 17 Jul 2019 15:17:52 +0900
+Message-ID: <20190717061800.10018-5-yamada.masahiro@socionext.com>
+References: <20190717061800.10018-1-yamada.masahiro@socionext.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190715174617.GA11094@lst.de> (Christoph Hellwig's message of
-        "Mon, 15 Jul 2019 19:46:17 +0200")
+In-Reply-To: <20190717061800.10018-1-yamada.masahiro@socionext.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagi@grimberg.me>, Max Gurtovoy <maxg@mellanox.com>, Bart Van Assche <bvanassche@acm.org>, linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org, megaraidlinux.pdl@broadcom.com, MPT-FusionLinux.pdl@broadcom.com, linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-kbuild@vger.kernel.org
+Cc: Joe Lawrence <joe.lawrence@redhat.com>, Masahiro Yamada <yamada.masahiro@socionext.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+Nothing depends on this, so it is dead code.
 
-Christoph,
+Signed-off-by: Masahiro Yamada <yamada.masahiro@socionext.com>
+---
 
-> I think all the patches on the block side went into 5.2, but it's been
-> a while, so I might misremember..
+Changes in v3: None
+Changes in v2: None
 
-I checked my notes and the reason I held them back was that I was
-waiting for a response from Broadcom wrt. the megaraid segment size
-limitation.  However, given that mpt3sas was acked, I assume it's the
-same thing.
+ drivers/scsi/Makefile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I'm not so keen on how big the last batch of patches for the merge
-window is getting. But I queued your fixes up for 5.3.
-
+diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
+index aeda53901064..c00e3dd57990 100644
+--- a/drivers/scsi/Makefile
++++ b/drivers/scsi/Makefile
+@@ -185,7 +185,7 @@ zalon7xx-objs	:= zalon.o ncr53c8xx.o
+ # Files generated that shall be removed upon make clean
+ clean-files :=	53c700_d.h 53c700_u.h scsi_devinfo_tbl.c
+ 
+-$(obj)/53c700.o $(MODVERDIR)/$(obj)/53c700.ver: $(obj)/53c700_d.h
++$(obj)/53c700.o: $(obj)/53c700_d.h
+ 
+ $(obj)/scsi_sysfs.o: $(obj)/scsi_devinfo_tbl.c
+ 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+2.17.1
