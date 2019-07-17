@@ -1,58 +1,36 @@
-From: Masahiro Yamada <yamada.masahiro@socionext.com>
-Subject: [PATCH v3 00/12] kbuild: create *.mod with directory path and remove MODVERDIR
-Date: Wed, 17 Jul 2019 15:17:48 +0900
-Message-ID: <20190717061800.10018-1-yamada.masahiro@socionext.com>
+From: Minwoo Im <minwoo.im.dev@gmail.com>
+Subject: Re: [PATCH V2] mpt3sas: support target smid for [abort|query] task
+Date: Wed, 17 Jul 2019 21:12:03 +0900
+Message-ID: <20190717121203.GE10495@minwoo-desktop>
+References: <CGME20190714034415epcms2p25f9787cb71993a30f58524d2f355b543@epcms2p2>
+ <20190714034415epcms2p25f9787cb71993a30f58524d2f355b543@epcms2p2>
+ <860cc8cf-6419-c649-b2d9-19b82f6ebc99@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <860cc8cf-6419-c649-b2d9-19b82f6ebc99@suse.de>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kbuild@vger.kernel.org
-Cc: Joe Lawrence <joe.lawrence@redhat.com>, Masahiro Yamada <yamada.masahiro@socionext.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, Jonathan Corbet <corbet@lwn.net>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michal Marek <michal.lkml@markovi.net>, Shuah Khan <shuah@kernel.org>, Thomas Renninger <trenn@suse.com>, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: minwoo.im@samsung.com, "sreekanth.reddy@broadcom.com" <sreekanth.reddy@broadcom.com>, "sathya.prakash@broadcom.com" <sathya.prakash@broadcom.com>, "suganath-prabu.subramani@broadcom.com" <suganath-prabu.subramani@broadcom.com>, "jejb@linux.ibm.com" <jejb@linux.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "MPT-FusionLinux.pdl@broadcom.com" <MPT-FusionLinux.pdl@broadcom.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Euihyeok Kwon <eh81.kwon@samsung.com>, Sarah Cho <sohyeon.jo@samsung.com>, Sanggwan Lee <sanggwan.lee@samsung.com>, Gyeongmin Nam <gm.nam@samsung.com>, Sungjun Park <sj1228.park@samsung.com>
 List-Id: linux-scsi@vger.kernel.org
 
+On 19-07-15 08:13:36, Hannes Reinecke wrote:
+> I think this is fundamentally wrong.
+> ABORT_TASK is used to abort a single task, which of course has to be
+> known beforehand. If you don't know the task, what exactly do you hope
+> to achieve here? Aborting random I/O?
+> Or, even worse, aborting I/O the driver uses internally and corrupt the
+> internal workflow of the driver?
+> 
+> We should simply disallow any ABORT TASK from userspace if the TaskMID
+> is zero. And I would even argue to disabllow ABORT TASK from userspace
+> completely, as the smid is never relayed to userland, and as such the
+> user cannot know which task should be aborted.
+> 
+> Cheers,
+> 
+> Hannes
 
-This series kills the long standing MODVERDIR.
+Sreekanth,
 
-Since MODVERDIR has a flat structure, it cannot avoid a race
-condition when somebody introduces a module name conflict.
-
-Kbuild now reads modules.order to get the list of all modules.
-
-The post-processing/installation stages will be more robust
-and simpler.
-
-
-
-Masahiro Yamada (12):
-  kbuild: do not create empty modules.order in the prepare stage
-  kbuild: get rid of kernel/ prefix from in-tree modules.{order,builtin}
-  kbuild: remove duplication from modules.order in sub-directories
-  scsi: remove pointless $(MODVERDIR)/$(obj)/53c700.ver
-  kbuild: modinst: read modules.order instead of $(MODVERDIR)/*.mod
-  kbuild: modsign: read modules.order instead of $(MODVERDIR)/*.mod
-  kbuild: modpost: read modules.order instead of $(MODVERDIR)/*.mod
-  kbuild: export_report: read modules.order instead of
-    .tmp_versions/*.mod
-  kbuild: create *.mod with full directory path and remove MODVERDIR
-  kbuild: remove the first line of *.mod files
-  kbuild: remove 'prepare1' target
-  kbuild: split out *.mod out of {single,multi}-used-m rules
-
- .gitignore                                 |  1 +
- Documentation/dontdiff                     |  1 +
- Makefile                                   | 36 ++++++-------------
- drivers/scsi/Makefile                      |  2 +-
- lib/Kconfig.debug                          | 12 +------
- scripts/Makefile.build                     | 40 +++++++++-------------
- scripts/Makefile.modbuiltin                |  2 +-
- scripts/Makefile.modinst                   |  5 +--
- scripts/Makefile.modpost                   | 19 +++++-----
- scripts/Makefile.modsign                   |  3 +-
- scripts/adjust_autoksyms.sh                | 14 +++-----
- scripts/export_report.pl                   | 11 +++---
- scripts/mod/sumversion.c                   | 23 +++----------
- scripts/modules-check.sh                   |  2 +-
- scripts/package/mkspec                     |  2 +-
- tools/power/cpupower/debug/kernel/Makefile |  4 +--
- 16 files changed, 62 insertions(+), 115 deletions(-)
-
--- 
-2.17.1
+Could you please give some thoughts about what Hannes said?
