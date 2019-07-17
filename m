@@ -1,27 +1,33 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v1] scsi: ufs: change msleep to usleep_range
-Date: Tue, 16 Jul 2019 22:48:35 -0400
-Message-ID: <yq136j5z88s.fsf@oracle.com>
-References: <BN7PR08MB5684BBB44FD0E43501558A20DBCF0@BN7PR08MB5684.namprd08.prod.outlook.com>
+Subject: Re: properly communicate queue limits to the DMA layer v2
+Date: Tue, 16 Jul 2019 23:07:55 -0400
+Message-ID: <yq1y30xxss4.fsf@oracle.com>
+References: <20190617122000.22181-1-hch@lst.de>
+        <20190715165823.GA10029@lst.de> <yq1tvbn2ofc.fsf@oracle.com>
+        <20190715174617.GA11094@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <BN7PR08MB5684BBB44FD0E43501558A20DBCF0@BN7PR08MB5684.namprd08.prod.outlook.com>
-        (Bean Huo's message of "Mon, 15 Jul 2019 11:21:10 +0000")
+In-Reply-To: <20190715174617.GA11094@lst.de> (Christoph Hellwig's message of
+        "Mon, 15 Jul 2019 19:46:17 +0200")
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Bean Huo (beanhuo)" <beanhuo@micron.com>
-Cc: Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, Pedro Sousa <pedrom.sousa@synopsys.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, Evan Green <evgreen@chromium.org>, Stanley Chu <stanley.chu@mediatek.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagi@grimberg.me>, Max Gurtovoy <maxg@mellanox.com>, Bart Van Assche <bvanassche@acm.org>, linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org, megaraidlinux.pdl@broadcom.com, MPT-FusionLinux.pdl@broadcom.com, linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Bean,
+Christoph,
 
-> This patch is to change msleep() to usleep_range() based on
-> Documentation/timers/timers-howto.txt. It suggests using
-> usleep_range() for small msec(1ms - 20ms) since msleep() will often
-> sleep longer than desired value.
+> I think all the patches on the block side went into 5.2, but it's been
+> a while, so I might misremember..
 
-Applied to 5.4/scsi-queue, thanks!
+I checked my notes and the reason I held them back was that I was
+waiting for a response from Broadcom wrt. the megaraid segment size
+limitation.  However, given that mpt3sas was acked, I assume it's the
+same thing.
+
+I'm not so keen on how big the last batch of patches for the merge
+window is getting. But I queued your fixes up for 5.3.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
