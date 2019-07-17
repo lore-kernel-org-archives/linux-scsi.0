@@ -1,30 +1,25 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH V2] scsi: fix race on creating sense cache
-Date: Tue, 16 Jul 2019 22:43:42 -0400
-Message-ID: <yq1blxtz8gx.fsf@oracle.com>
-References: <20190712020819.31935-1-ming.lei@redhat.com>
+Subject: Re: [PATCH -next] scsi: lpfc: Remove unnecessary null check before kfree
+Date: Tue, 16 Jul 2019 22:46:09 -0400
+Message-ID: <yq17e8hz8cu.fsf@oracle.com>
+References: <20190711141037.57880-1-yuehaibing@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20190712020819.31935-1-ming.lei@redhat.com> (Ming Lei's message
-        of "Fri, 12 Jul 2019 10:08:19 +0800")
-Sender: stable-owner@vger.kernel.org
-To: Ming Lei <ming.lei@redhat.com>
-Cc: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Stable <stable@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, "Ewan D . Milne" <emilne@redhat.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190711141037.57880-1-yuehaibing@huawei.com>
+        (yuehaibing@huawei.com's message of "Thu, 11 Jul 2019 22:10:37 +0800")
+Sender: linux-kernel-owner@vger.kernel.org
+To: YueHaibing <yuehaibing@huawei.com>
+Cc: james.smart@broadcom.com, dick.kennedy@broadcom.com, jejb@linux.ibm.com, martin.petersen@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Ming,
+YueHaibing,
 
-> When scsi_init_sense_cache(host) is called concurrently from different
-> hosts, each code path may see that the cache isn't created, then try
-> to create a new one, then the created sense cache may be overrided and
-> leaked.
->
-> Fixes the issue by moving 'mutex_lock(&scsi_sense_cache_mutex)' before
-> scsi_select_sense_cache().
+> A null check before a kfree is redundant, so remove it.
+> This is detected by coccinelle.
 
-Applied to 5.3/scsi-fixes, thanks!
+Applied to 5.4/scsi-queue. Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
