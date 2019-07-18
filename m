@@ -1,96 +1,46 @@
-From: Frederick Lawler <fred@fredlawl.com>
-Subject: [PATCH] scsi: esas2r: Prefer pcie_capability_read_word()
-Date: Wed, 17 Jul 2019 21:07:44 -0500
-Message-ID: <20190718020745.8867-9-fred@fredlawl.com>
-References: <20190718020745.8867-1-fred@fredlawl.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190718020745.8867-1-fred@fredlawl.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc: Frederick Lawler <fred@fredlawl.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, bhelgaas@google.com
+From: Ming Lei <ming.lei@redhat.com>
+Subject: [PATCH 0/2] block/scsi/dm-rq: fix leak of request private data in dm-mpath
+Date: Thu, 18 Jul 2019 11:25:17 +0800
+Message-ID: <20190718032519.28306-1-ming.lei@redhat.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Ming Lei <ming.lei@redhat.com>, "Ewan D . Milne" <emilne@redhat.com>, Bart Van Assche <bvanassche@acm.org>, Hannes Reinecke <hare@suse.com>, Christoph Hellwig <hch@lst.de>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Commit 8c0d3a02c130 ("PCI: Add accessors for PCI Express Capability")
-added accessors for the PCI Express Capability so that drivers didn't
-need to be aware of differences between v1 and v2 of the PCI
-Express Capability.
+Hi,
 
-Replace pci_read_config_word() and pci_write_config_word() calls with
-pcie_capability_read_word() and pcie_capability_write_word().
+When one request is dispatched to LLD via dm-rq, if the result is
+BLK_STS_*RESOURCE, dm-rq will free the request. However, LLD may allocate
+private stuff for this request, so this way will cause memory leak.
 
-Signed-off-by: Frederick Lawler <fred@fredlawl.com>
----
- drivers/scsi/esas2r/esas2r_init.c  | 13 ++++---------
- drivers/scsi/esas2r/esas2r_ioctl.c | 14 +++++---------
- 2 files changed, 9 insertions(+), 18 deletions(-)
+Add .cleanup_rq() callback and implement it in SCSI for fixing the issue.
+And SCSI is the only driver which allocates private stuff in .queue_rq()
+path.
 
-diff --git a/drivers/scsi/esas2r/esas2r_init.c b/drivers/scsi/esas2r/esas2r_init.c
-index 950cd92df2ff..eb7d139ffc00 100644
---- a/drivers/scsi/esas2r/esas2r_init.c
-+++ b/drivers/scsi/esas2r/esas2r_init.c
-@@ -762,14 +762,10 @@ u32 esas2r_get_uncached_size(struct esas2r_adapter *a)
- 
- static void esas2r_init_pci_cfg_space(struct esas2r_adapter *a)
- {
--	int pcie_cap_reg;
--
--	pcie_cap_reg = pci_find_capability(a->pcid, PCI_CAP_ID_EXP);
--	if (pcie_cap_reg) {
-+	if (pci_is_pcie(a->pcid)) {
- 		u16 devcontrol;
- 
--		pci_read_config_word(a->pcid, pcie_cap_reg + PCI_EXP_DEVCTL,
--				     &devcontrol);
-+		pcie_capability_read_word(a->pcid, PCI_EXP_DEVCTL, &devcontrol);
- 
- 		if ((devcontrol & PCI_EXP_DEVCTL_READRQ) >
- 		     PCI_EXP_DEVCTL_READRQ_512B) {
-@@ -778,9 +774,8 @@ static void esas2r_init_pci_cfg_space(struct esas2r_adapter *a)
- 
- 			devcontrol &= ~PCI_EXP_DEVCTL_READRQ;
- 			devcontrol |= PCI_EXP_DEVCTL_READRQ_512B;
--			pci_write_config_word(a->pcid,
--					      pcie_cap_reg + PCI_EXP_DEVCTL,
--					      devcontrol);
-+			pcie_capability_write_word(a->pcid, PCI_EXP_DEVCTL,
-+						   devcontrol);
- 		}
- 	}
- }
-diff --git a/drivers/scsi/esas2r/esas2r_ioctl.c b/drivers/scsi/esas2r/esas2r_ioctl.c
-index 3d130523c288..442c5e70a7b4 100644
---- a/drivers/scsi/esas2r/esas2r_ioctl.c
-+++ b/drivers/scsi/esas2r/esas2r_ioctl.c
-@@ -757,7 +757,6 @@ static int hba_ioctl_callback(struct esas2r_adapter *a,
- 
- 		struct atto_hba_get_adapter_info *gai =
- 			&hi->data.get_adap_info;
--		int pcie_cap_reg;
- 
- 		if (hi->flags & HBAF_TUNNEL) {
- 			hi->status = ATTO_STS_UNSUPPORTED;
-@@ -784,17 +783,14 @@ static int hba_ioctl_callback(struct esas2r_adapter *a,
- 		gai->pci.dev_num = PCI_SLOT(a->pcid->devfn);
- 		gai->pci.func_num = PCI_FUNC(a->pcid->devfn);
- 
--		pcie_cap_reg = pci_find_capability(a->pcid, PCI_CAP_ID_EXP);
--		if (pcie_cap_reg) {
-+		if (pci_is_pcie(a->pcid)) {
- 			u16 stat;
- 			u32 caps;
- 
--			pci_read_config_word(a->pcid,
--					     pcie_cap_reg + PCI_EXP_LNKSTA,
--					     &stat);
--			pci_read_config_dword(a->pcid,
--					      pcie_cap_reg + PCI_EXP_LNKCAP,
--					      &caps);
-+			pcie_capability_read_word(a->pcid, PCI_EXP_LNKSTA,
-+						  &stat);
-+			pcie_capability_read_dword(a->pcid, PCI_EXP_LNKCAP,
-+						   &caps);
- 
- 			gai->pci.link_speed_curr =
- 				(u8)(stat & PCI_EXP_LNKSTA_CLS);
+Another use case of this callback is to free the request and re-submit
+bios during cpu hotplug when the hctx is dead, see the following link:
+
+https://lore.kernel.org/linux-block/f122e8f2-5ede-2d83-9ca0-bc713ce66d01@huawei.com/T/#t
+
+Ming Lei (2):
+  blk-mq: add callback of .cleanup_rq
+  scsi: implement .cleanup_rq callback
+
+ drivers/md/dm-rq.c      |  1 +
+ drivers/scsi/scsi_lib.c | 15 +++++++++++++++
+ include/linux/blk-mq.h  | 13 +++++++++++++
+ 3 files changed, 29 insertions(+)
+
+Cc: Ewan D. Milne <emilne@redhat.com>
+Cc: Bart Van Assche <bvanassche@acm.org>
+Cc: Hannes Reinecke <hare@suse.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Mike Snitzer <snitzer@redhat.com>
+Cc: dm-devel@redhat.com
+Cc: <stable@vger.kernel.org>
+Fixes: 396eaf21ee17 ("blk-mq: improve DM's blk-mq IO merging via blk_insert_cloned_request feedback")
 -- 
-2.17.1
+2.20.1
