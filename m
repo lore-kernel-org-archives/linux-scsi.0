@@ -1,73 +1,60 @@
-From: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
-Subject: [PATCH] ibmvfc: fix WARN_ON during event pool release
-Date: Wed, 17 Jul 2019 14:48:27 -0500
-Message-ID: <20190717194827.12514-1-tyreld@linux.vnet.ibm.com>
+From: Frederick Lawler <fred@fredlawl.com>
+Subject: [PATCH] scsi: csiostor: Prefer pcie_capability_read_word()
+Date: Wed, 17 Jul 2019 21:07:43 -0500
+Message-ID: <20190718020745.8867-8-fred@fredlawl.com>
+References: <20190718020745.8867-1-fred@fredlawl.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190718020745.8867-1-fred@fredlawl.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: james.bottomley@hansenpartnership.com
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, brking@linux.vnet.ibm.com, abdhalee@linux.vnet.ibm.com, Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+To: jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc: Frederick Lawler <fred@fredlawl.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, bhelgaas@google.com
 List-Id: linux-scsi@vger.kernel.org
 
-While removing an ibmvfc client adapter a WARN_ON like the following WARN_ON
-is seen in the kernel log:
+Commit 8c0d3a02c130 ("PCI: Add accessors for PCI Express Capability")
+added accessors for the PCI Express Capability so that drivers didn't
+need to be aware of differences between v1 and v2 of the PCI
+Express Capability.
 
-WARNING: CPU: 6 PID: 5421 at ./include/linux/dma-mapping.h:541
-ibmvfc_free_event_pool+0x12c/0x1f0 [ibmvfc]
-CPU: 6 PID: 5421 Comm: rmmod Tainted: G            E     4.17.0-rc1-next-20180419-autotest #1
-NIP:  d00000000290328c LR: d00000000290325c CTR: c00000000036ee20
-REGS: c000000288d1b7e0 TRAP: 0700   Tainted: G            E      (4.17.0-rc1-next-20180419-autotest)
-MSR:  800000010282b033 <SF,VEC,VSX,EE,FP,ME,IR,DR,RI,LE,TM[E]>  CR: 44008828  XER: 20000000
-CFAR: c00000000036e408 SOFTE: 1
-GPR00: d00000000290325c c000000288d1ba60 d000000002917900 c000000289d75448
-GPR04: 0000000000000071 c0000000ff870000 0000000018040000 0000000000000001
-GPR08: 0000000000000000 c00000000156e838 0000000000000001 d00000000290c640
-GPR12: c00000000036ee20 c00000001ec4dc00 0000000000000000 0000000000000000
-GPR16: 0000000000000000 0000000000000000 00000100276901e0 0000000010020598
-GPR20: 0000000010020550 0000000010020538 0000000010020578 00000000100205b0
-GPR24: 0000000000000000 0000000000000000 0000000010020590 5deadbeef0000100
-GPR28: 5deadbeef0000200 d000000002910b00 0000000000000071 c0000002822f87d8
-NIP [d00000000290328c] ibmvfc_free_event_pool+0x12c/0x1f0 [ibmvfc]
-LR [d00000000290325c] ibmvfc_free_event_pool+0xfc/0x1f0 [ibmvfc]
-Call Trace:
-[c000000288d1ba60] [d00000000290325c] ibmvfc_free_event_pool+0xfc/0x1f0 [ibmvfc] (unreliable)
-[c000000288d1baf0] [d000000002909390] ibmvfc_abort_task_set+0x7b0/0x8b0 [ibmvfc]
-[c000000288d1bb70] [c0000000000d8c68] vio_bus_remove+0x68/0x100
-[c000000288d1bbb0] [c0000000007da7c4] device_release_driver_internal+0x1f4/0x2d0
-[c000000288d1bc00] [c0000000007da95c] driver_detach+0x7c/0x100
-[c000000288d1bc40] [c0000000007d8af4] bus_remove_driver+0x84/0x140
-[c000000288d1bcb0] [c0000000007db6ac] driver_unregister+0x4c/0xa0
-[c000000288d1bd20] [c0000000000d6e7c] vio_unregister_driver+0x2c/0x50
-[c000000288d1bd50] [d00000000290ba0c] cleanup_module+0x24/0x15e0 [ibmvfc]
-[c000000288d1bd70] [c0000000001dadb0] sys_delete_module+0x220/0x2d0
-[c000000288d1be30] [c00000000000b284] system_call+0x58/0x6c
-Instruction dump:
-e8410018 e87f0068 809f0078 e8bf0080 e8df0088 2fa30000 419e008c e9230200
-2fa90000 419e0080 894d098a 794a07e0 <0b0a0000> e9290008 2fa90000 419e0028
+Replace pci_read_config_word() and pci_write_config_word() calls with
+pcie_capability_read_word() and pcie_capability_write_word().
 
-This is tripped as a result of irqs being disabled during the call to
-dma_free_coherent() by ibmvfc_free_event_pool(). At this point in the code path
-we have quiesced the adapter and its overly paranoid anyways to be holding the
-host lock.
-
-Reported-by: Abdul Haleem <abdhalee@linux.vnet.ibm.com>
-Signed-off-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+Signed-off-by: Frederick Lawler <fred@fredlawl.com>
 ---
- drivers/scsi/ibmvscsi/ibmvfc.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/csiostor/csio_wr.c | 8 ++------
+ 1 file changed, 2 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
-index acd16e0d52cf..8cdbac076a1b 100644
---- a/drivers/scsi/ibmvscsi/ibmvfc.c
-+++ b/drivers/scsi/ibmvscsi/ibmvfc.c
-@@ -4864,8 +4864,8 @@ static int ibmvfc_remove(struct vio_dev *vdev)
+diff --git a/drivers/scsi/csiostor/csio_wr.c b/drivers/scsi/csiostor/csio_wr.c
+index 03bd896cdbb9..0ca695110f54 100644
+--- a/drivers/scsi/csiostor/csio_wr.c
++++ b/drivers/scsi/csiostor/csio_wr.c
+@@ -1316,7 +1316,6 @@ csio_wr_fixup_host_params(struct csio_hw *hw)
+ 	u32 fl_align = clsz < 32 ? 32 : clsz;
+ 	u32 pack_align;
+ 	u32 ingpad, ingpack;
+-	int pcie_cap;
  
- 	spin_lock_irqsave(vhost->host->host_lock, flags);
- 	ibmvfc_purge_requests(vhost, DID_ERROR);
--	ibmvfc_free_event_pool(vhost);
- 	spin_unlock_irqrestore(vhost->host->host_lock, flags);
-+	ibmvfc_free_event_pool(vhost);
+ 	csio_wr_reg32(hw, HOSTPAGESIZEPF0_V(s_hps) | HOSTPAGESIZEPF1_V(s_hps) |
+ 		      HOSTPAGESIZEPF2_V(s_hps) | HOSTPAGESIZEPF3_V(s_hps) |
+@@ -1347,8 +1346,7 @@ csio_wr_fixup_host_params(struct csio_hw *hw)
+ 	 * multiple of the Maximum Payload Size.
+ 	 */
+ 	pack_align = fl_align;
+-	pcie_cap = pci_find_capability(hw->pdev, PCI_CAP_ID_EXP);
+-	if (pcie_cap) {
++	if (pci_is_pcie(hw->pdev)) {
+ 		u32 mps, mps_log;
+ 		u16 devctl;
  
- 	ibmvfc_free_mem(vhost);
- 	spin_lock(&ibmvfc_driver_lock);
+@@ -1356,9 +1354,7 @@ csio_wr_fixup_host_params(struct csio_hw *hw)
+ 		 * [bits 7:5] encodes sizes as powers of 2 starting at
+ 		 * 128 bytes.
+ 		 */
+-		pci_read_config_word(hw->pdev,
+-				     pcie_cap + PCI_EXP_DEVCTL,
+-				     &devctl);
++		pcie_capability_read_word(hw->pdev, PCI_EXP_DEVCTL, &devctl);
+ 		mps_log = ((devctl & PCI_EXP_DEVCTL_PAYLOAD) >> 5) + 7;
+ 		mps = 1 << mps_log;
+ 		if (mps > pack_align)
 -- 
-2.12.3
+2.17.1
