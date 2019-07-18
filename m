@@ -1,75 +1,51 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH 2/2] scsi: implement .cleanup_rq callback
-Date: Thu, 18 Jul 2019 11:25:19 +0800
-Message-ID: <20190718032519.28306-3-ming.lei@redhat.com>
-References: <20190718032519.28306-1-ming.lei@redhat.com>
+From: Stanley Chu <stanley.chu@mediatek.com>
+Subject: Re: [PATCH v1 0/2] scsi: ufs: Fix broken hba->outstanding_tasks
+Date: Thu, 18 Jul 2019 13:21:03 +0800
+Message-ID: <1563427263.7235.6.camel@mtkswgap22>
+References: <1562906656-27154-1-git-send-email-stanley.chu@mediatek.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20190718032519.28306-1-ming.lei@redhat.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Hannes Reinecke <hare@suse.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Ewan D . Milne" <emilne@redhat.com>, Ming Lei <ming.lei@redhat.com>, linux-block@vger.kernel.org, dm-devel@redhat.com, Mike Snitzer <snitzer@redhat.com>, stable@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Bart Van Assche <bvanassche@acm.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <1562906656-27154-1-git-send-email-stanley.chu@mediatek.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "marc.w.gonzalez@free.fr" <marc.w.gonzalez@free.fr>, Andy Teng =?UTF-8?Q?=28=E9=84=A7=E5=A6=82=E5=AE=8F=29?= <Andy.Teng@mediatek.com>, Chun-Hung Wu =?UTF-8?Q?=28=E5=B7=AB=E9=A7=BF=E5=AE=8F=29?= <Chun-hung.Wu@mediatek.com>, Kuohong Wang =?UTF-8?Q?=28=E7=8E=8B=E5=9C=8B=E9=B4=BB=29?= <kuohong.wang@mediatek.com>, "evgreen@chromium.org" <evgreen@chromium.org>, "avri.altman@wdc.com" <avri.altman@wdc.com>, "linux-mediatek@lists.infradead.org" <linux-mediatek@lists.infradead.org>, Peter Wang =?UTF-8?Q?=28=E7=8E=8B=E4=BF=A1=E5=8F=8B=29?= <peter.wang@mediatek.com>, "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>, "matthias.bgg@gmail.com" <matthias.bgg@gmail.com>, "pedrom.sousa@synopsys.com" <pedrom.sousa@synopsys.com>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, beanhuo@micron.com
 List-Id: linux-scsi@vger.kernel.org
 
-Implement .cleanup_rq() callback for freeing driver private part
-of the request. Then we can avoid to leak this part if the request isn't
-completed by SCSI, and freed by blk-mq or upper layer(such as dm-rq) finally.
-
-Cc: Ewan D. Milne <emilne@redhat.com>
-Cc: Bart Van Assche <bvanassche@acm.org>
-Cc: Hannes Reinecke <hare@suse.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Mike Snitzer <snitzer@redhat.com>
-Cc: dm-devel@redhat.com
-Cc: <stable@vger.kernel.org>
-Fixes: 396eaf21ee17 ("blk-mq: improve DM's blk-mq IO merging via blk_insert_cloned_request feedback")
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
----
- drivers/scsi/scsi_lib.c | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
-
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index e1da8c70a266..59eee4605cda 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1089,6 +1089,20 @@ static void scsi_initialize_rq(struct request *rq)
- 	cmd->retries = 0;
- }
- 
-+/*
-+ * Only called when the request isn't completed by SCSI, and not freed by
-+ * SCSI
-+ */
-+static void scsi_cleanup_rq(struct request *rq)
-+{
-+	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(rq);
-+
-+	if (rq->rq_flags & RQF_DONTPREP) {
-+		scsi_mq_uninit_cmd(cmd);
-+		rq->rq_flags &= ~RQF_DONTPREP;
-+	}
-+}
-+
- /* Add a command to the list used by the aacraid and dpt_i2o drivers */
- void scsi_add_cmd_to_list(struct scsi_cmnd *cmd)
- {
-@@ -1816,6 +1830,7 @@ static const struct blk_mq_ops scsi_mq_ops = {
- 	.init_request	= scsi_mq_init_request,
- 	.exit_request	= scsi_mq_exit_request,
- 	.initialize_rq_fn = scsi_initialize_rq,
-+	.cleanup_rq	= scsi_cleanup_rq,
- 	.busy		= scsi_mq_lld_busy,
- 	.map_queues	= scsi_map_queues,
- };
--- 
-2.20.1
+SGkgQXZyaSwgQWxpbSBhbmQgUGVkcm9tLAoKR2VudGxlIHBpbmcgZm9yIHRoaXMgZml4LgoKT24g
+RnJpLCAyMDE5LTA3LTEyIGF0IDEyOjQ0ICswODAwLCBTdGFubGV5IENodSB3cm90ZToKPiBDdXJy
+ZW50bHkgYml0cyBpbiBoYmEtPm91dHN0YW5kaW5nX3Rhc2tzIGFyZSBjbGVhcmVkIG9ubHkgYWZ0
+ZXIgdGhlaXIKPiBjb3JyZXNwb25kaW5nIHRhc2sgbWFuYWdlbWVudCBjb21tYW5kcyBhcmUgc3Vj
+Y2Vzc2Z1bGx5IGRvbmUgYnkKPiBfX3Vmc2hjZF9pc3N1ZV90bV9jbWQoKS4KPiAKPiBJZiB0aW1l
+b3V0IGhhcHBlbnMgaW4gYSB0YXNrIG1hbmFnZW1lbnQgY29tbWFuZCwgaXRzIGNvcnJlc3BvbmRp
+bmcKPiBiaXQgaW4gaGJhLT5vdXRzdGFuZGluZ190YXNrcyB3aWxsIG5vdCBiZSBjbGVhcmVkIHVu
+dGlsIG5leHQgdGFzawo+IG1hbmFnZW1lbnQgY29tbWFuZCB3aXRoIHRoZSBzYW1lIHRhZyB1c2Vk
+IHN1Y2Nlc3NmdWxseSBmaW5pc2hlcy7igKcKPiAKPiBUaGlzIGlzIHdyb25nIGFuZCBjYW4gbGVh
+ZCB0byBzb21lIGlzc3VlcywgbGlrZSBwb3dlciBjb25zdW1wdG9uIGlzc3VlLgo+IEZvciBleGFt
+cGxlLCB1ZnNoY2RfcmVsZWFzZSgpIGFuZCB1ZnNoY2RfZ2F0ZV93b3JrKCkgd2lsbCBkbyBub3Ro
+aW5nCj4gaWYgaGJhLT5vdXRzdGFuZGluZ190YXNrcyBpcyBub3QgemVybyBldmVuIGlmIGJvdGgg
+VUZTIGhvc3QgYW5kIGRldmljZXMKPiBhcmUgYWN0dWFsbHkgaWRsZS4KPiAKPiBCZWNhdXNlIGVy
+cm9yIGhhbmRsaW5nIGZsb3csIGkuZS4sIHVmc2hjZF9yZXNldF9hbmRfcmVzdG9yZSgpLCB3aWxs
+IGJlCj4gdHJpZ2dlcmVkIGFmdGVyIGFueSB0YXNrIG1hbmFnZW1lbnQgY29tbWFuZCB0aW1lcyBv
+dXQsIHdlIGZpeCB0aGlzIGJ5Cj4gY2xlYXJpbmcgY29ycmVzcG9uZGluZyBoYmEtPm91dHN0YW5k
+aW5nX3Rhc2tzIGJpdHMgZHVyaW5nIHRoaXMgZmxvdy4KPiBUbyBhY2hpZXZlIHRoaXMsIHdlIG5l
+ZWQgYSBtYXNrIHRvIHRyYWNrIHRpbWVkLW91dCBjb21tYW5kcyBhbmQgdGh1cwo+IGVycm9yIGhh
+bmRsaW5nIGZsb3cgY2FuIGNsZWFyIHRoZWlyIHRhZ3Mgc3BlY2lmaWNhbGx5Lgo+IAo+IFN0YW5s
+ZXkgQ2h1ICgyKToKPiAgIHNjc2k6IHVmczogTWFrZSBuZXcgZnVuY3Rpb24gZm9yIGNsZWFyaW5n
+IG91dHN0YW5kaW5nIHRhc2sgYml0cwo+ICAgc2NzaTogdWZzOiBGaXggYnJva2VuIGhiYS0+b3V0
+c3RhbmRpbmdfdGFza3MKPiAKPiAgZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuYyB8IDQ5ICsrKysr
+KysrKysrKysrKysrKysrKysrKysrKysrKysrKy0tLS0tLQo+ICBkcml2ZXJzL3Njc2kvdWZzL3Vm
+c2hjZC5oIHwgIDEgKwo+ICAyIGZpbGVzIGNoYW5nZWQsIDQzIGluc2VydGlvbnMoKyksIDcgZGVs
+ZXRpb25zKC0pCj4gCgpUaGFua3MsClN0YW5sZXkKCgpfX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fXwpsaW51eC1hcm0ta2VybmVsIG1haWxpbmcgbGlzdApsaW51
+eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmcKaHR0cDovL2xpc3RzLmluZnJhZGVhZC5v
+cmcvbWFpbG1hbi9saXN0aW5mby9saW51eC1hcm0ta2VybmVsCg==
