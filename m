@@ -1,11 +1,11 @@
 From: Vasyl Gomonovych <gomonovych@gmail.com>
 Subject: [PATCH] scsi: pmcraid: Use dma_pool_zalloc rather than dma_pool_alloc
-Date: Thu, 18 Jul 2019 20:10:51 +0200
-Message-ID: <20190718181051.22882-1-gomonovych@gmail.com>
+Date: Thu, 18 Jul 2019 20:11:46 +0200
+Message-ID: <20190718181146.23019-1-gomonovych@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: gomonovych@gmail.com
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: jejb@linux.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+Cc: Vasyl Gomonovych <gomonovych@gmail.com>, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 Use *_pool_zalloc rather than *_pool_alloc followed by memset with 0
