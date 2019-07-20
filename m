@@ -1,42 +1,24 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
+From: pr-tracker-bot@kernel.org
 Subject: Re: [GIT PULL] final round of SCSI updates for the 5.2+ merge window
-Date: Sat, 20 Jul 2019 08:46:38 -0400
-Message-ID: <yq14l3gx49d.fsf@oracle.com>
+Date: Sat, 20 Jul 2019 18:40:24 +0000
+Message-ID: <156364802413.20023.10699674701293879168.pr-tracker-bot@kernel.org>
 References: <1563579201.1602.7.camel@HansenPartnership.com>
-        <CACVXFVNOPhiUhrgw07sna0dt5Jy2zckbNXDWPPRAGadXQAS_mQ@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CACVXFVNOPhiUhrgw07sna0dt5Jy2zckbNXDWPPRAGadXQAS_mQ@mail.gmail.com>
-        (Ming Lei's message of "Sat, 20 Jul 2019 10:29:40 +0800")
+In-Reply-To: <1563579201.1602.7.camel@HansenPartnership.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Ming Lei <tom.leiming@gmail.com>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
+The pull request you sent on Sat, 20 Jul 2019 08:33:21 +0900:
 
-Hi Ming!
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
->> Christoph Hellwig (8):
->>       scsi: megaraid_sas: set an unlimited max_segment_size
->>       scsi: mpt3sas: set an unlimited max_segment_size for SAS 3.0 HBAs
->>       scsi: IB/srp: set virt_boundary_mask in the scsi host
->>       scsi: IB/iser: set virt_boundary_mask in the scsi host
->>       scsi: storvsc: set virt_boundary_mask in the scsi host template
->>       scsi: ufshcd: set max_segment_size in the scsi host template
->>       scsi: core: take the DMA max mapping size into account
->
-> It has been observed on NVMe the above approach("take the DMA max
-> mapping size into account") causes performance regression, so I'd
-> suggest to fix dma_max_mapping_size() first.
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/f65420df914a85e33b2c8b1cab310858b2abb7c0
 
-Christoph specifically asked me to queue these up. I presume the swiotlb
-tweak is going through his DMA tree and it is therefore orthogonal to
-the SCSI changes.
-
-I do think it's important that we get these fixed up in 5.3. And given
-that we're on the eve of the merge window, the time to get these changes
-merged is now. I'd hate to see them miss another release...
+Thank you!
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+Deet-doot-dot, I am a bot.
+https://korg.wiki.kernel.org/userdoc/prtracker
