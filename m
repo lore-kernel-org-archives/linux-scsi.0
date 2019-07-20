@@ -1,24 +1,38 @@
-From: pr-tracker-bot@kernel.org
-Subject: Re: [GIT PULL] final round of SCSI updates for the 5.2+ merge window
-Date: Sat, 20 Jul 2019 18:40:24 +0000
-Message-ID: <156364802413.20023.10699674701293879168.pr-tracker-bot@kernel.org>
-References: <1563579201.1602.7.camel@HansenPartnership.com>
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH][next] scsi: megaraid_sas: fix spelling mistake "megarid_sas" -> "megaraid_sas"
+Date: Sat, 20 Jul 2019 22:58:40 +0100
+Message-ID: <20190720215840.23831-1-colin.king@canonical.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1563579201.1602.7.camel@HansenPartnership.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: Kashyap Desai <kashyap.desai@broadcom.com>, Sumit Saxena <sumit.saxena@broadcom.com>, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-The pull request you sent on Sat, 20 Jul 2019 08:33:21 +0900:
+From: Colin Ian King <colin.king@canonical.com>
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+Fix spelling mistake in kernel warning message and replace
+printk with with pr_warn.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/f65420df914a85e33b2c8b1cab310858b2abb7c0
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/scsi/megaraid/megaraid_sas_base.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thank you!
-
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index b2339d04a700..2590746c81e3 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -8763,7 +8763,7 @@ static int __init megasas_init(void)
+ 
+ 	if ((event_log_level < MFI_EVT_CLASS_DEBUG) ||
+ 	    (event_log_level > MFI_EVT_CLASS_DEAD)) {
+-		printk(KERN_WARNING "megarid_sas: provided event log level is out of range, setting it to default 2(CLASS_CRITICAL), permissible range is: -2 to 4\n");
++		pr_warn("megaraid_sas: provided event log level is out of range, setting it to default 2(CLASS_CRITICAL), permissible range is: -2 to 4\n");
+ 		event_log_level = MFI_EVT_CLASS_CRITICAL;
+ 	}
+ 
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.wiki.kernel.org/userdoc/prtracker
+2.20.1
