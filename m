@@ -1,371 +1,408 @@
-From: Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH RESEND] scsi: ufs: revamp string descriptor reading
-Date: Sun, 21 Jul 2019 17:02:12 +0300
-Message-ID: <20190721140212.8980-1-tomas.winkler@intel.com>
+From: Masahiro Yamada <yamada.masahiro@socionext.com>
+Subject: [PATCH] scsi: use __u{8,16,32,64} instead of uint{8,16,32,64}_t in uapi headers
+Date: Sun, 21 Jul 2019 23:25:02 +0900
+Message-ID: <20190721142502.30599-1-yamada.masahiro@socionext.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K . Petersen" <martin.petersen@oracle.com>, Avri Altman <Avri.Altman@wdc.com>, Alim Akhtar <alim.akhtar@samsung.com>, Pedro Sousa <pedrom.sousa@synopsys.com>
-Cc: Alex Lemberg <Alex.Lemberg@wdc.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Tomas Winkler <tomas.winkler@intel.com>, Avri Altman <avri.altman@wdc.com>
+To: "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Arnd Bergmann <arnd@arndb.de>, Masahiro Yamada <yamada.masahiro@socionext.com>, Hannes Reinecke <hare@suse.com>, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Define new a type: uc_string_id for easier string
-handling and less casting. Reduce number or string
-copies in price of a dynamic allocation.
+When CONFIG_UAPI_HEADER_TEST=y, exported headers are compile-tested to
+make sure they can be included from user-space.
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Tested-by: Avri Altman <avri.altman@wdc.com>
+Currently, scsi_bsg_fc.h, scsi_netlink.h, and scsi_netlink_fc.h are
+excluded from the test coverage. To make them join the compile-test,
+we need to fix the build errors attached below.
+
+For a case like this, we decided to use __u{8,16,32,64} variable types
+in this discussion:
+
+  https://lkml.org/lkml/2019/6/5/18
+
+Build log:
+
+  CC      usr/include/scsi/scsi_netlink_fc.h.s
+  CC      usr/include/scsi/scsi_netlink.h.s
+  CC      usr/include/scsi/scsi_bsg_fc.h.s
+In file included from ./usr/include/scsi/scsi_netlink_fc.h:10:0,
+                 from <command-line>:32:
+./usr/include/scsi/scsi_netlink.h:29:2: error: unknown type name ‘uint8_t’
+  uint8_t version;
+  ^~~~~~~
+./usr/include/scsi/scsi_netlink.h:30:2: error: unknown type name ‘uint8_t’
+  uint8_t transport;
+  ^~~~~~~
+./usr/include/scsi/scsi_netlink.h:31:2: error: unknown type name ‘uint16_t’
+  uint16_t magic;
+  ^~~~~~~~
+./usr/include/scsi/scsi_netlink.h:32:2: error: unknown type name ‘uint16_t’
+  uint16_t msgtype;
+  ^~~~~~~~
+  CC      usr/include/rdma/vmw_pvrdma-abi.h.s
+./usr/include/scsi/scsi_netlink.h:33:2: error: unknown type name ‘uint16_t’
+  uint16_t msglen;
+  ^~~~~~~~
+./usr/include/scsi/scsi_netlink.h:34:33: error: ‘uint64_t’ undeclared here (not in a function); did you mean ‘__uint128_t’?
+ } __attribute__((aligned(sizeof(uint64_t))));
+                                 ^~~~~~~~
+                                 __uint128_t
+./usr/include/scsi/scsi_netlink.h:78:2: error: expected specifier-qualifier-list before ‘uint64_t’
+  uint64_t vendor_id;
+  ^~~~~~~~
+In file included from <command-line>:32:0:
+./usr/include/scsi/scsi_netlink_fc.h:46:2: error: expected specifier-qualifier-list before ‘uint64_t’
+  uint64_t seconds;
+  ^~~~~~~~
+make[2]: *** [scripts/Makefile.build;302: usr/include/scsi/scsi_netlink_fc.h.s] Error 1
+make[2]: *** Waiting for unfinished jobs....
+In file included from <command-line>:32:0:
+./usr/include/scsi/scsi_netlink.h:29:2: error: unknown type name ‘uint8_t’
+  uint8_t version;
+  ^~~~~~~
+./usr/include/scsi/scsi_netlink.h:30:2: error: unknown type name ‘uint8_t’
+  uint8_t transport;
+  ^~~~~~~
+./usr/include/scsi/scsi_netlink.h:31:2: error: unknown type name ‘uint16_t’
+  uint16_t magic;
+  ^~~~~~~~
+./usr/include/scsi/scsi_netlink.h:32:2: error: unknown type name ‘uint16_t’
+  uint16_t msgtype;
+  ^~~~~~~~
+./usr/include/scsi/scsi_netlink.h:33:2: error: unknown type name ‘uint16_t’
+  uint16_t msglen;
+  ^~~~~~~~
+./usr/include/scsi/scsi_netlink.h:34:33: error: ‘uint64_t’ undeclared here (not in a function); did you mean ‘__uint128_t’?
+ } __attribute__((aligned(sizeof(uint64_t))));
+                                 ^~~~~~~~
+                                 __uint128_t
+./usr/include/scsi/scsi_netlink.h:78:2: error: expected specifier-qualifier-list before ‘uint64_t’
+  uint64_t vendor_id;
+  ^~~~~~~~
+make[2]: *** [scripts/Makefile.build;302: usr/include/scsi/scsi_netlink.h.s] Error 1
+In file included from <command-line>:32:0:
+./usr/include/scsi/scsi_bsg_fc.h:69:2: error: unknown type name ‘uint8_t’
+  uint8_t  reserved;
+  ^~~~~~~
+./usr/include/scsi/scsi_bsg_fc.h:72:2: error: unknown type name ‘uint8_t’
+  uint8_t  port_id[3];
+  ^~~~~~~
+./usr/include/scsi/scsi_bsg_fc.h:90:2: error: unknown type name ‘uint8_t’
+  uint8_t  reserved;
+  ^~~~~~~
+./usr/include/scsi/scsi_bsg_fc.h:93:2: error: unknown type name ‘uint8_t’
+  uint8_t  port_id[3];
+  ^~~~~~~
+./usr/include/scsi/scsi_bsg_fc.h:114:2: error: unknown type name ‘uint8_t’
+  uint8_t  command_code;
+  ^~~~~~~
+./usr/include/scsi/scsi_bsg_fc.h:117:2: error: unknown type name ‘uint8_t’
+  uint8_t  port_id[3];
+  ^~~~~~~
+./usr/include/scsi/scsi_bsg_fc.h:154:2: error: unknown type name ‘uint32_t’
+  uint32_t status;  /* See FC_CTELS_STATUS_xxx */
+  ^~~~~~~~
+./usr/include/scsi/scsi_bsg_fc.h:158:3: error: unknown type name ‘uint8_t’
+   uint8_t action;  /* fragment_id for CT REJECT */
+   ^~~~~~~
+./usr/include/scsi/scsi_bsg_fc.h:159:3: error: unknown type name ‘uint8_t’
+   uint8_t reason_code;
+   ^~~~~~~
+./usr/include/scsi/scsi_bsg_fc.h:160:3: error: unknown type name ‘uint8_t’
+   uint8_t reason_explanation;
+   ^~~~~~~
+./usr/include/scsi/scsi_bsg_fc.h:161:3: error: unknown type name ‘uint8_t’
+   uint8_t vendor_unique;
+   ^~~~~~~
+./usr/include/scsi/scsi_bsg_fc.h:177:2: error: unknown type name ‘uint8_t’
+  uint8_t  reserved;
+  ^~~~~~~
+./usr/include/scsi/scsi_bsg_fc.h:180:2: error: unknown type name ‘uint8_t’
+  uint8_t  port_id[3];
+  ^~~~~~~
+./usr/include/scsi/scsi_bsg_fc.h:185:2: error: unknown type name ‘uint32_t’
+  uint32_t preamble_word0; /* revision & IN_ID */
+  ^~~~~~~~
+./usr/include/scsi/scsi_bsg_fc.h:186:2: error: unknown type name ‘uint32_t’
+  uint32_t preamble_word1; /* GS_Type, GS_SubType, Options, Rsvd */
+  ^~~~~~~~
+./usr/include/scsi/scsi_bsg_fc.h:187:2: error: unknown type name ‘uint32_t’
+  uint32_t preamble_word2; /* Cmd Code, Max Size */
+  ^~~~~~~~
+./usr/include/scsi/scsi_bsg_fc.h:207:2: error: unknown type name ‘uint64_t’
+  uint64_t vendor_id;
+  ^~~~~~~~
+./usr/include/scsi/scsi_bsg_fc.h:210:2: error: unknown type name ‘uint32_t’
+  uint32_t vendor_cmd[0];
+  ^~~~~~~~
+./usr/include/scsi/scsi_bsg_fc.h:217:2: error: unknown type name ‘uint32_t’
+  uint32_t vendor_rsp[0];
+  ^~~~~~~~
+./usr/include/scsi/scsi_bsg_fc.h:236:2: error: unknown type name ‘uint8_t’
+  uint8_t els_code;
+  ^~~~~~~
+./usr/include/scsi/scsi_bsg_fc.h:254:2: error: unknown type name ‘uint32_t’
+  uint32_t preamble_word0; /* revision & IN_ID */
+  ^~~~~~~~
+./usr/include/scsi/scsi_bsg_fc.h:255:2: error: unknown type name ‘uint32_t’
+  uint32_t preamble_word1; /* GS_Type, GS_SubType, Options, Rsvd */
+  ^~~~~~~~
+./usr/include/scsi/scsi_bsg_fc.h:256:2: error: unknown type name ‘uint32_t’
+  uint32_t preamble_word2; /* Cmd Code, Max Size */
+  ^~~~~~~~
+./usr/include/scsi/scsi_bsg_fc.h:268:2: error: unknown type name ‘uint32_t’
+  uint32_t msgcode;
+  ^~~~~~~~
+./usr/include/scsi/scsi_bsg_fc.h:292:2: error: unknown type name ‘uint32_t’
+  uint32_t result;
+  ^~~~~~~~
+./usr/include/scsi/scsi_bsg_fc.h:295:2: error: unknown type name ‘uint32_t’
+  uint32_t reply_payload_rcv_len;
+  ^~~~~~~~
+
+Signed-off-by: Masahiro Yamada <yamada.masahiro@socionext.com>
 ---
 
-Resend: It was reviewed by not merged.
+ include/uapi/scsi/scsi_bsg_fc.h     | 54 +++++++++++++++--------------
+ include/uapi/scsi/scsi_netlink.h    | 20 +++++------
+ include/uapi/scsi/scsi_netlink_fc.h | 17 ++++-----
+ 3 files changed, 47 insertions(+), 44 deletions(-)
 
- drivers/scsi/ufs/ufs-sysfs.c |  20 ++---
- drivers/scsi/ufs/ufs.h       |   2 +-
- drivers/scsi/ufs/ufshcd.c    | 164 +++++++++++++++++++++--------------
- drivers/scsi/ufs/ufshcd.h    |   9 +-
- 4 files changed, 115 insertions(+), 80 deletions(-)
-
-diff --git a/drivers/scsi/ufs/ufs-sysfs.c b/drivers/scsi/ufs/ufs-sysfs.c
-index f478685122ff..13e357f01025 100644
---- a/drivers/scsi/ufs/ufs-sysfs.c
-+++ b/drivers/scsi/ufs/ufs-sysfs.c
-@@ -570,10 +570,11 @@ static ssize_t _name##_show(struct device *dev,				\
- 	struct ufs_hba *hba = dev_get_drvdata(dev);			\
- 	int ret;							\
- 	int desc_len = QUERY_DESC_MAX_SIZE;				\
--	u8 *desc_buf;							\
-+	char *desc_buf;							\
-+									\
- 	desc_buf = kzalloc(QUERY_DESC_MAX_SIZE, GFP_ATOMIC);		\
--	if (!desc_buf)							\
--		return -ENOMEM;						\
-+	if (!desc_buf)                                                  \
-+		return -ENOMEM;                                         \
- 	ret = ufshcd_query_descriptor_retry(hba,			\
- 		UPIU_QUERY_OPCODE_READ_DESC, QUERY_DESC_IDN_DEVICE,	\
- 		0, 0, desc_buf, &desc_len);				\
-@@ -582,14 +583,13 @@ static ssize_t _name##_show(struct device *dev,				\
- 		goto out;						\
- 	}								\
- 	index = desc_buf[DEVICE_DESC_PARAM##_pname];			\
--	memset(desc_buf, 0, QUERY_DESC_MAX_SIZE);			\
--	if (ufshcd_read_string_desc(hba, index, desc_buf,		\
--		QUERY_DESC_MAX_SIZE, true)) {				\
--		ret = -EINVAL;						\
-+	kfree(desc_buf);						\
-+	desc_buf = NULL;						\
-+	ret = ufshcd_read_string_desc(hba, index, &desc_buf,		\
-+				      SD_ASCII_STD);			\
-+	if (ret < 0)							\
- 		goto out;						\
--	}								\
--	ret = snprintf(buf, PAGE_SIZE, "%s\n",				\
--		desc_buf + QUERY_DESC_HDR_SIZE);			\
-+	ret = snprintf(buf, PAGE_SIZE, "%s\n", desc_buf);		\
- out:									\
- 	kfree(desc_buf);						\
- 	return ret;							\
-diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
-index 99a9c4d16f6b..b3e1b2a0f463 100644
---- a/drivers/scsi/ufs/ufs.h
-+++ b/drivers/scsi/ufs/ufs.h
-@@ -541,7 +541,7 @@ struct ufs_dev_info {
+diff --git a/include/uapi/scsi/scsi_bsg_fc.h b/include/uapi/scsi/scsi_bsg_fc.h
+index 52f32a60d056..3ae65e93235c 100644
+--- a/include/uapi/scsi/scsi_bsg_fc.h
++++ b/include/uapi/scsi/scsi_bsg_fc.h
+@@ -8,6 +8,8 @@
+ #ifndef SCSI_BSG_FC_H
+ #define SCSI_BSG_FC_H
+ 
++#include <linux/types.h>
++
+ /*
+  * This file intended to be included by both kernel and user space
   */
- struct ufs_dev_desc {
- 	u16 wmanufacturerid;
--	char model[MAX_MODEL_LEN + 1];
-+	char *model;
+@@ -66,10 +68,10 @@
+  * with the transport upon completion of the login.
+  */
+ struct fc_bsg_host_add_rport {
+-	uint8_t		reserved;
++	__u8	reserved;
+ 
+ 	/* FC Address Identier of the remote port to login to */
+-	uint8_t		port_id[3];
++	__u8	port_id[3];
  };
  
- /**
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index a3b6cd1a623d..e2740353332a 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -299,16 +299,6 @@ static void ufshcd_scsi_block_requests(struct ufs_hba *hba)
- 		scsi_block_requests(hba->host);
- }
- 
--/* replace non-printable or non-ASCII characters with spaces */
--static inline void ufshcd_remove_non_printable(char *val)
--{
--	if (!val)
--		return;
--
--	if (*val < 0x20 || *val > 0x7e)
--		*val = ' ';
--}
--
- static void ufshcd_add_cmd_upiu_trace(struct ufs_hba *hba, unsigned int tag,
- 		const char *str)
- {
-@@ -3130,7 +3120,7 @@ int ufshcd_read_desc_param(struct ufs_hba *hba,
- 			   enum desc_idn desc_id,
- 			   int desc_index,
- 			   u8 param_offset,
--			   u8 *param_read_buf,
-+			   void *param_read_buf,
- 			   u8 param_size)
- {
- 	int ret;
-@@ -3198,7 +3188,7 @@ int ufshcd_read_desc_param(struct ufs_hba *hba,
- static inline int ufshcd_read_desc(struct ufs_hba *hba,
- 				   enum desc_idn desc_id,
- 				   int desc_index,
--				   u8 *buf,
-+				   void *buf,
- 				   u32 size)
- {
- 	return ufshcd_read_desc_param(hba, desc_id, desc_index, 0, buf, size);
-@@ -3216,49 +3206,78 @@ static int ufshcd_read_device_desc(struct ufs_hba *hba, u8 *buf, u32 size)
- 	return ufshcd_read_desc(hba, QUERY_DESC_IDN_DEVICE, 0, buf, size);
- }
- 
-+/**
-+ * struct uc_string_id - unicode string
-+ *
-+ * @len: size of this descriptor inclusive
-+ * @type: descriptor type
-+ * @uc: unicode string character
-+ */
-+struct uc_string_id {
-+	u8 len;
-+	u8 type;
-+	wchar_t uc[0];
-+} __packed;
-+
-+/* replace non-printable or non-ASCII characters with spaces */
-+static inline char ufshcd_remove_non_printable(char ch)
-+{
-+	return (ch >= 0x20 && ch <= 0x7e) ? ch : ' ';
-+}
-+
- /**
-  * ufshcd_read_string_desc - read string descriptor
-  * @hba: pointer to adapter instance
-  * @desc_index: descriptor index
-- * @buf: pointer to buffer where descriptor would be read
-- * @size: size of buf
-+ * @buf: pointer to buffer where descriptor would be read,
-+ *       the caller should free the memory.
-  * @ascii: if true convert from unicode to ascii characters
-+ *         null terminated string.
-  *
-- * Return 0 in case of success, non-zero otherwise
-+ * Return:
-+ * *      string size on success.
-+ * *      -ENOMEM: on allocation failure
-+ * *      -EINVAL: on a wrong parameter
+ /* Response:
+@@ -87,10 +89,10 @@ struct fc_bsg_host_add_rport {
+  * remain logged in with the remote port.
   */
--int ufshcd_read_string_desc(struct ufs_hba *hba, int desc_index,
--			    u8 *buf, u32 size, bool ascii)
-+int ufshcd_read_string_desc(struct ufs_hba *hba, u8 desc_index,
-+			    char **buf, bool ascii)
- {
--	int err = 0;
-+	struct uc_string_id *uc_str;
-+	char *str;
-+	int ret;
+ struct fc_bsg_host_del_rport {
+-	uint8_t		reserved;
++	__u8	reserved;
  
--	err = ufshcd_read_desc(hba,
--				QUERY_DESC_IDN_STRING, desc_index, buf, size);
-+	if (!buf)
-+		return -EINVAL;
+ 	/* FC Address Identier of the remote port to logout of */
+-	uint8_t		port_id[3];
++	__u8	port_id[3];
+ };
  
--	if (err) {
--		dev_err(hba->dev, "%s: reading String Desc failed after %d retries. err = %d\n",
--			__func__, QUERY_REQ_RETRIES, err);
-+	uc_str = kzalloc(QUERY_DESC_MAX_SIZE, GFP_KERNEL);
-+	if (!uc_str)
-+		return -ENOMEM;
-+
-+	ret = ufshcd_read_desc(hba, QUERY_DESC_IDN_STRING,
-+			       desc_index, uc_str,
-+			       QUERY_DESC_MAX_SIZE);
-+	if (ret < 0) {
-+		dev_err(hba->dev, "Reading String Desc failed after %d retries. err = %d\n",
-+			QUERY_REQ_RETRIES, ret);
-+		str = NULL;
-+		goto out;
-+	}
-+
-+	if (uc_str->len <= QUERY_DESC_HDR_SIZE) {
-+		dev_dbg(hba->dev, "String Desc is of zero length\n");
-+		str = NULL;
-+		ret = 0;
- 		goto out;
- 	}
+ /* Response:
+@@ -111,10 +113,10 @@ struct fc_bsg_host_els {
+ 	 * ELS Command Code being sent (must be the same as byte 0
+ 	 * of the payload)
+ 	 */
+-	uint8_t 	command_code;
++	__u8	command_code;
  
- 	if (ascii) {
--		int desc_len;
--		int ascii_len;
-+		ssize_t ascii_len;
- 		int i;
--		char *buff_ascii;
--
--		desc_len = buf[0];
- 		/* remove header and divide by 2 to move from UTF16 to UTF8 */
--		ascii_len = (desc_len - QUERY_DESC_HDR_SIZE) / 2 + 1;
--		if (size < ascii_len + QUERY_DESC_HDR_SIZE) {
--			dev_err(hba->dev, "%s: buffer allocated size is too small\n",
--					__func__);
--			err = -ENOMEM;
--			goto out;
--		}
--
--		buff_ascii = kmalloc(ascii_len, GFP_KERNEL);
--		if (!buff_ascii) {
--			err = -ENOMEM;
-+		ascii_len = (uc_str->len - QUERY_DESC_HDR_SIZE) / 2 + 1;
-+		str = kzalloc(ascii_len, GFP_KERNEL);
-+		if (!str) {
-+			ret = -ENOMEM;
- 			goto out;
- 		}
+ 	/* FC Address Identier of the remote port to send the ELS to */
+-	uint8_t		port_id[3];
++	__u8	port_id[3];
+ };
  
-@@ -3266,22 +3285,29 @@ int ufshcd_read_string_desc(struct ufs_hba *hba, int desc_index,
- 		 * the descriptor contains string in UTF16 format
- 		 * we need to convert to utf-8 so it can be displayed
- 		 */
--		utf16s_to_utf8s((wchar_t *)&buf[QUERY_DESC_HDR_SIZE],
--				desc_len - QUERY_DESC_HDR_SIZE,
--				UTF16_BIG_ENDIAN, buff_ascii, ascii_len);
-+		ret = utf16s_to_utf8s(uc_str->uc,
-+				      uc_str->len - QUERY_DESC_HDR_SIZE,
-+				      UTF16_BIG_ENDIAN, str, ascii_len);
+ /* Response:
+@@ -151,14 +153,14 @@ struct fc_bsg_ctels_reply {
+ 	 * Note: x_RJT/BSY status will indicae that the rjt_data field
+ 	 *   is valid and contains the reason/explanation values.
+ 	 */
+-	uint32_t	status;		/* See FC_CTELS_STATUS_xxx */
++	__u32	status;		/* See FC_CTELS_STATUS_xxx */
  
- 		/* replace non-printable or non-ASCII characters with spaces */
--		for (i = 0; i < ascii_len; i++)
--			ufshcd_remove_non_printable(&buff_ascii[i]);
-+		for (i = 0; i < ret; i++)
-+			str[i] = ufshcd_remove_non_printable(str[i]);
+ 	/* valid if status is not FC_CTELS_STATUS_OK */
+ 	struct	{
+-		uint8_t	action;		/* fragment_id for CT REJECT */
+-		uint8_t	reason_code;
+-		uint8_t	reason_explanation;
+-		uint8_t	vendor_unique;
++		__u8	action;		/* fragment_id for CT REJECT */
++		__u8	reason_code;
++		__u8	reason_explanation;
++		__u8	vendor_unique;
+ 	} rjt_data;
+ };
  
--		memset(buf + QUERY_DESC_HDR_SIZE, 0,
--				size - QUERY_DESC_HDR_SIZE);
--		memcpy(buf + QUERY_DESC_HDR_SIZE, buff_ascii, ascii_len);
--		buf[QUERY_DESC_LENGTH_OFFSET] = ascii_len + QUERY_DESC_HDR_SIZE;
--		kfree(buff_ascii);
-+		str[ret++] = '\0';
-+
-+	} else {
-+		str = kzalloc(uc_str->len, GFP_KERNEL);
-+		if (!str) {
-+			ret = -ENOMEM;
-+			goto out;
-+		}
-+		memcpy(str, uc_str, uc_str->len);
-+		ret = uc_str->len;
- 	}
- out:
--	return err;
-+	*buf = str;
-+	kfree(uc_str);
-+	return ret;
- }
+@@ -174,17 +176,17 @@ struct fc_bsg_ctels_reply {
+  * and whether to tear it down after the request.
+  */
+ struct fc_bsg_host_ct {
+-	uint8_t		reserved;
++	__u8	reserved;
  
- /**
-@@ -6452,6 +6478,9 @@ static int ufs_get_device_desc(struct ufs_hba *hba,
- 	u8 model_index;
- 	u8 *desc_buf;
+ 	/* FC Address Identier of the remote port to send the ELS to */
+-	uint8_t		port_id[3];
++	__u8	port_id[3];
  
-+	if (!dev_desc)
-+		return -EINVAL;
-+
- 	buff_len = max_t(size_t, hba->desc_size.dev_desc,
- 			 QUERY_DESC_MAX_SIZE + 1);
- 	desc_buf = kmalloc(buff_len, GFP_KERNEL);
-@@ -6475,31 +6504,31 @@ static int ufs_get_device_desc(struct ufs_hba *hba,
- 				     desc_buf[DEVICE_DESC_PARAM_MANF_ID + 1];
+ 	/*
+ 	 * We need words 0-2 of the generic preamble for the LLD's
+ 	 */
+-	uint32_t	preamble_word0;	/* revision & IN_ID */
+-	uint32_t	preamble_word1;	/* GS_Type, GS_SubType, Options, Rsvd */
+-	uint32_t	preamble_word2;	/* Cmd Code, Max Size */
++	__u32	preamble_word0;	/* revision & IN_ID */
++	__u32	preamble_word1;	/* GS_Type, GS_SubType, Options, Rsvd */
++	__u32	preamble_word2;	/* Cmd Code, Max Size */
  
- 	model_index = desc_buf[DEVICE_DESC_PARAM_PRDCT_NAME];
--
--	/* Zero-pad entire buffer for string termination. */
--	memset(desc_buf, 0, buff_len);
--
--	err = ufshcd_read_string_desc(hba, model_index, desc_buf,
--				      QUERY_DESC_MAX_SIZE, true/*ASCII*/);
--	if (err) {
-+	err = ufshcd_read_string_desc(hba, model_index,
-+				      &dev_desc->model, SD_ASCII_STD);
-+	if (err < 0) {
- 		dev_err(hba->dev, "%s: Failed reading Product Name. err = %d\n",
- 			__func__, err);
- 		goto out;
- 	}
+ };
+ /* Response:
+@@ -204,17 +206,17 @@ struct fc_bsg_host_vendor {
+ 	 * Identifies the vendor that the message is formatted for. This
+ 	 * should be the recipient of the message.
+ 	 */
+-	uint64_t vendor_id;
++	__u64 vendor_id;
  
--	desc_buf[QUERY_DESC_MAX_SIZE] = '\0';
--	strlcpy(dev_desc->model, (desc_buf + QUERY_DESC_HDR_SIZE),
--		min_t(u8, desc_buf[QUERY_DESC_LENGTH_OFFSET],
--		      MAX_MODEL_LEN));
--
--	/* Null terminate the model string */
--	dev_desc->model[MAX_MODEL_LEN] = '\0';
-+	/*
-+	 * ufshcd_read_string_desc returns size of the string
-+	 * reset the error value
-+	 */
-+	err = 0;
+ 	/* start of vendor command area */
+-	uint32_t vendor_cmd[0];
++	__u32 vendor_cmd[0];
+ };
  
- out:
- 	kfree(desc_buf);
- 	return err;
- }
+ /* Response:
+  */
+ struct fc_bsg_host_vendor_reply {
+ 	/* start of vendor response area */
+-	uint32_t vendor_rsp[0];
++	__u32 vendor_rsp[0];
+ };
  
-+static void ufs_put_device_desc(struct ufs_dev_desc *dev_desc)
-+{
-+	kfree(dev_desc->model);
-+	dev_desc->model = NULL;
-+}
-+
- static void ufs_fixup_device_setup(struct ufs_hba *hba,
- 				   struct ufs_dev_desc *dev_desc)
- {
-@@ -6508,8 +6537,9 @@ static void ufs_fixup_device_setup(struct ufs_hba *hba,
- 	for (f = ufs_fixups; f->quirk; f++) {
- 		if ((f->card.wmanufacturerid == dev_desc->wmanufacturerid ||
- 		     f->card.wmanufacturerid == UFS_ANY_VENDOR) &&
--		    (STR_PRFX_EQUAL(f->card.model, dev_desc->model) ||
--		     !strcmp(f->card.model, UFS_ANY_MODEL)))
-+		     ((dev_desc->model &&
-+		       STR_PRFX_EQUAL(f->card.model, dev_desc->model)) ||
-+		      !strcmp(f->card.model, UFS_ANY_MODEL)))
- 			hba->dev_quirks |= f->quirk;
- 	}
- }
-@@ -6860,6 +6890,8 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
- 	}
  
- 	ufs_fixup_device_setup(hba, &card);
-+	ufs_put_device_desc(&card);
-+
- 	ufshcd_tune_unipro_params(hba);
+@@ -233,7 +235,7 @@ struct fc_bsg_rport_els {
+ 	 * ELS Command Code being sent (must be the same as
+ 	 * byte 0 of the payload)
+ 	 */
+-	uint8_t els_code;
++	__u8 els_code;
+ };
  
- 	/* UFS device is also active now */
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 994d73d03207..10935548d1fc 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -885,14 +885,17 @@ int ufshcd_read_desc_param(struct ufs_hba *hba,
- 			   enum desc_idn desc_id,
- 			   int desc_index,
- 			   u8 param_offset,
--			   u8 *param_read_buf,
-+			   void *param_read_buf,
- 			   u8 param_size);
- int ufshcd_query_attr(struct ufs_hba *hba, enum query_opcode opcode,
- 		      enum attr_idn idn, u8 index, u8 selector, u32 *attr_val);
- int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
- 	enum flag_idn idn, bool *flag_res);
--int ufshcd_read_string_desc(struct ufs_hba *hba, int desc_index,
--			    u8 *buf, u32 size, bool ascii);
-+
-+#define SD_ASCII_STD true
-+#define SD_RAW false
-+int ufshcd_read_string_desc(struct ufs_hba *hba, u8 desc_index,
-+			    char **buf, bool ascii);
+ /* Response:
+@@ -251,9 +253,9 @@ struct fc_bsg_rport_ct {
+ 	/*
+ 	 * We need words 0-2 of the generic preamble for the LLD's
+ 	 */
+-	uint32_t	preamble_word0;	/* revision & IN_ID */
+-	uint32_t	preamble_word1;	/* GS_Type, GS_SubType, Options, Rsvd */
+-	uint32_t	preamble_word2;	/* Cmd Code, Max Size */
++	__u32	preamble_word0;	/* revision & IN_ID */
++	__u32	preamble_word1;	/* GS_Type, GS_SubType, Options, Rsvd */
++	__u32	preamble_word2;	/* Cmd Code, Max Size */
+ };
+ /* Response:
+  *
+@@ -265,7 +267,7 @@ struct fc_bsg_rport_ct {
  
- int ufshcd_hold(struct ufs_hba *hba, bool async);
- void ufshcd_release(struct ufs_hba *hba);
+ /* request (CDB) structure of the sg_io_v4 */
+ struct fc_bsg_request {
+-	uint32_t msgcode;
++	__u32 msgcode;
+ 	union {
+ 		struct fc_bsg_host_add_rport	h_addrport;
+ 		struct fc_bsg_host_del_rport	h_delrport;
+@@ -289,10 +291,10 @@ struct fc_bsg_reply {
+ 	 *    msg and status fields. The per-msgcode reply structure
+ 	 *    will contain valid data.
+ 	 */
+-	uint32_t result;
++	__u32 result;
+ 
+ 	/* If there was reply_payload, how much was recevied ? */
+-	uint32_t reply_payload_rcv_len;
++	__u32 reply_payload_rcv_len;
+ 
+ 	union {
+ 		struct fc_bsg_host_vendor_reply		vendor_reply;
+diff --git a/include/uapi/scsi/scsi_netlink.h b/include/uapi/scsi/scsi_netlink.h
+index 5dd382054e45..1b1737c3c9d8 100644
+--- a/include/uapi/scsi/scsi_netlink.h
++++ b/include/uapi/scsi/scsi_netlink.h
+@@ -26,12 +26,12 @@
+ 
+ /* SCSI_TRANSPORT_MSG event message header */
+ struct scsi_nl_hdr {
+-	uint8_t version;
+-	uint8_t transport;
+-	uint16_t magic;
+-	uint16_t msgtype;
+-	uint16_t msglen;
+-} __attribute__((aligned(sizeof(uint64_t))));
++	__u8 version;
++	__u8 transport;
++	__u16 magic;
++	__u16 msgtype;
++	__u16 msglen;
++} __attribute__((aligned(sizeof(__u64))));
+ 
+ /* scsi_nl_hdr->version value */
+ #define SCSI_NL_VERSION				1
+@@ -75,10 +75,10 @@ struct scsi_nl_hdr {
+  */
+ struct scsi_nl_host_vendor_msg {
+ 	struct scsi_nl_hdr snlh;		/* must be 1st element ! */
+-	uint64_t vendor_id;
+-	uint16_t host_no;
+-	uint16_t vmsg_datalen;
+-} __attribute__((aligned(sizeof(uint64_t))));
++	__u64 vendor_id;
++	__u16 host_no;
++	__u16 vmsg_datalen;
++} __attribute__((aligned(sizeof(__u64))));
+ 
+ 
+ /*
+diff --git a/include/uapi/scsi/scsi_netlink_fc.h b/include/uapi/scsi/scsi_netlink_fc.h
+index a39023579051..7535253f1a96 100644
+--- a/include/uapi/scsi/scsi_netlink_fc.h
++++ b/include/uapi/scsi/scsi_netlink_fc.h
+@@ -7,6 +7,7 @@
+ #ifndef SCSI_NETLINK_FC_H
+ #define SCSI_NETLINK_FC_H
+ 
++#include <linux/types.h>
+ #include <scsi/scsi_netlink.h>
+ 
+ /*
+@@ -43,14 +44,14 @@
+  */
+ struct fc_nl_event {
+ 	struct scsi_nl_hdr snlh;		/* must be 1st element ! */
+-	uint64_t seconds;
+-	uint64_t vendor_id;
+-	uint16_t host_no;
+-	uint16_t event_datalen;
+-	uint32_t event_num;
+-	uint32_t event_code;
+-	uint32_t event_data;
+-} __attribute__((aligned(sizeof(uint64_t))));
++	__u64 seconds;
++	__u64 vendor_id;
++	__u16 host_no;
++	__u16 event_datalen;
++	__u32 event_num;
++	__u32 event_code;
++	__u32 event_data;
++} __attribute__((aligned(sizeof(__u64))));
+ 
+ 
+ #endif /* SCSI_NETLINK_FC_H */
 -- 
-2.20.1
+2.17.1
