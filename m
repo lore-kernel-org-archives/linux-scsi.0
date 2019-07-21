@@ -1,40 +1,371 @@
-From: Avri Altman <Avri.Altman-Sjgp3cTcYWE@public.gmane.org>
-Subject: RE: [PATCH v1 0/2] scsi: ufs: Fix broken hba->outstanding_tasks
-Date: Sun, 21 Jul 2019 12:52:47 +0000
-Message-ID: <SN6PR04MB4925BD03422B827F76A5F7E5FCC50@SN6PR04MB4925.namprd04.prod.outlook.com>
-References: <1562906656-27154-1-git-send-email-stanley.chu@mediatek.com>
- <SN6PR04MB4925208835D4760249E82DB7FCC50@SN6PR04MB4925.namprd04.prod.outlook.com>
+From: Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH RESEND] scsi: ufs: revamp string descriptor reading
+Date: Sun, 21 Jul 2019 17:02:12 +0300
+Message-ID: <20190721140212.8980-1-tomas.winkler@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-In-Reply-To: <SN6PR04MB4925208835D4760249E82DB7FCC50-UKdxhu0+N/VnT3GYGerMaFM8qxBPnqtHvxpqHgZTriW3zl9H0oFU5g@public.gmane.org>
-Content-Language: en-US
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-mediatek>,
- <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-mediatek/>
-List-Post: <mailto:linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-List-Help: <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-mediatek>,
- <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=subscribe>
-Sender: "Linux-mediatek" <linux-mediatek-bounces-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-Errors-To: linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
-To: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "alim.akhtar-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org" <alim.akhtar-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, "pedrom.sousa-HKixBCOQz3hWk0Htik3J/w@public.gmane.org" <pedrom.sousa-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>
-Cc: "marc.w.gonzalez-GANU6spQydw@public.gmane.org" <marc.w.gonzalez-GANU6spQydw@public.gmane.org>, "andy.teng-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org" <andy.teng-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, "chun-hung.wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org" <chun-hung.wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, "kuohong.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org" <kuohong.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, "evgreen-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org" <evgreen-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, "linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, "peter.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org" <peter.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, "matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, "beanhuo-AL4WhLSQfzjQT0dZR+AlfA@public.gmane.org" <beanhuo-AL4WhLSQfzjQT0dZR+AlfA@public.gmane.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Martin K . Petersen" <martin.petersen@oracle.com>, Avri Altman <Avri.Altman@wdc.com>, Alim Akhtar <alim.akhtar@samsung.com>, Pedro Sousa <pedrom.sousa@synopsys.com>
+Cc: Alex Lemberg <Alex.Lemberg@wdc.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Tomas Winkler <tomas.winkler@intel.com>, Avri Altman <avri.altman@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-PiANCj4gSGksDQo+IA0KPiA+DQo+ID4gQ3VycmVudGx5IGJpdHMgaW4gaGJhLT5vdXRzdGFuZGlu
-Z190YXNrcyBhcmUgY2xlYXJlZCBvbmx5IGFmdGVyIHRoZWlyDQo+ID4gY29ycmVzcG9uZGluZyB0
-YXNrIG1hbmFnZW1lbnQgY29tbWFuZHMgYXJlIHN1Y2Nlc3NmdWxseSBkb25lIGJ5DQo+ID4gX191
-ZnNoY2RfaXNzdWVfdG1fY21kKCkuDQo+ID4NCj4gPiBJZiB0aW1lb3V0IGhhcHBlbnMgaW4gYSB0
-YXNrIG1hbmFnZW1lbnQgY29tbWFuZCwgaXRzIGNvcnJlc3BvbmRpbmcNCj4gPiBiaXQgaW4gaGJh
-LT5vdXRzdGFuZGluZ190YXNrcyB3aWxsIG5vdCBiZSBjbGVhcmVkIHVudGlsIG5leHQgdGFzaw0K
-PiA+IG1hbmFnZW1lbnQgY29tbWFuZCB3aXRoIHRoZSBzYW1lIHRhZyB1c2VkIHN1Y2Nlc3NmdWxs
-eSBmaW5pc2hlcy7igKcNCj4gdWZzaGNkX2NsZWFyX3RtX2NtZCBpcyBhbHNvIGNhbGxlZCBhcyBw
-YXJ0IG9mIHVmc2hjZF9lcnJfaGFuZGxlci4NCj4gRG9lcyB0aGlzIGNoYW5nZSBzb21ldGhpbmcg
-aW4geW91ciBhc3N1bXB0aW9ucz8NCkFuZCBCVFcgdGhlcmUgaXMgYSBzcGVjaWZpYyBfX2NsZWFy
-X2JpdCBpbiBfX3Vmc2hjZF9pc3N1ZV90bV9jbWQoKSBpbiBjYXNlIG9mIGEgVE8uDQoNCj4gDQo+
-IFRoYW5rcywNCj4gQXZyaQ0KPiANCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fCkxpbnV4LW1lZGlhdGVrIG1haWxpbmcgbGlzdApMaW51eC1tZWRpYXRla0Bs
-aXN0cy5pbmZyYWRlYWQub3JnCmh0dHA6Ly9saXN0cy5pbmZyYWRlYWQub3JnL21haWxtYW4vbGlz
-dGluZm8vbGludXgtbWVkaWF0ZWsK
+Define new a type: uc_string_id for easier string
+handling and less casting. Reduce number or string
+copies in price of a dynamic allocation.
+
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Tested-by: Avri Altman <avri.altman@wdc.com>
+---
+
+Resend: It was reviewed by not merged.
+
+ drivers/scsi/ufs/ufs-sysfs.c |  20 ++---
+ drivers/scsi/ufs/ufs.h       |   2 +-
+ drivers/scsi/ufs/ufshcd.c    | 164 +++++++++++++++++++++--------------
+ drivers/scsi/ufs/ufshcd.h    |   9 +-
+ 4 files changed, 115 insertions(+), 80 deletions(-)
+
+diff --git a/drivers/scsi/ufs/ufs-sysfs.c b/drivers/scsi/ufs/ufs-sysfs.c
+index f478685122ff..13e357f01025 100644
+--- a/drivers/scsi/ufs/ufs-sysfs.c
++++ b/drivers/scsi/ufs/ufs-sysfs.c
+@@ -570,10 +570,11 @@ static ssize_t _name##_show(struct device *dev,				\
+ 	struct ufs_hba *hba = dev_get_drvdata(dev);			\
+ 	int ret;							\
+ 	int desc_len = QUERY_DESC_MAX_SIZE;				\
+-	u8 *desc_buf;							\
++	char *desc_buf;							\
++									\
+ 	desc_buf = kzalloc(QUERY_DESC_MAX_SIZE, GFP_ATOMIC);		\
+-	if (!desc_buf)							\
+-		return -ENOMEM;						\
++	if (!desc_buf)                                                  \
++		return -ENOMEM;                                         \
+ 	ret = ufshcd_query_descriptor_retry(hba,			\
+ 		UPIU_QUERY_OPCODE_READ_DESC, QUERY_DESC_IDN_DEVICE,	\
+ 		0, 0, desc_buf, &desc_len);				\
+@@ -582,14 +583,13 @@ static ssize_t _name##_show(struct device *dev,				\
+ 		goto out;						\
+ 	}								\
+ 	index = desc_buf[DEVICE_DESC_PARAM##_pname];			\
+-	memset(desc_buf, 0, QUERY_DESC_MAX_SIZE);			\
+-	if (ufshcd_read_string_desc(hba, index, desc_buf,		\
+-		QUERY_DESC_MAX_SIZE, true)) {				\
+-		ret = -EINVAL;						\
++	kfree(desc_buf);						\
++	desc_buf = NULL;						\
++	ret = ufshcd_read_string_desc(hba, index, &desc_buf,		\
++				      SD_ASCII_STD);			\
++	if (ret < 0)							\
+ 		goto out;						\
+-	}								\
+-	ret = snprintf(buf, PAGE_SIZE, "%s\n",				\
+-		desc_buf + QUERY_DESC_HDR_SIZE);			\
++	ret = snprintf(buf, PAGE_SIZE, "%s\n", desc_buf);		\
+ out:									\
+ 	kfree(desc_buf);						\
+ 	return ret;							\
+diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+index 99a9c4d16f6b..b3e1b2a0f463 100644
+--- a/drivers/scsi/ufs/ufs.h
++++ b/drivers/scsi/ufs/ufs.h
+@@ -541,7 +541,7 @@ struct ufs_dev_info {
+  */
+ struct ufs_dev_desc {
+ 	u16 wmanufacturerid;
+-	char model[MAX_MODEL_LEN + 1];
++	char *model;
+ };
+ 
+ /**
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index a3b6cd1a623d..e2740353332a 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -299,16 +299,6 @@ static void ufshcd_scsi_block_requests(struct ufs_hba *hba)
+ 		scsi_block_requests(hba->host);
+ }
+ 
+-/* replace non-printable or non-ASCII characters with spaces */
+-static inline void ufshcd_remove_non_printable(char *val)
+-{
+-	if (!val)
+-		return;
+-
+-	if (*val < 0x20 || *val > 0x7e)
+-		*val = ' ';
+-}
+-
+ static void ufshcd_add_cmd_upiu_trace(struct ufs_hba *hba, unsigned int tag,
+ 		const char *str)
+ {
+@@ -3130,7 +3120,7 @@ int ufshcd_read_desc_param(struct ufs_hba *hba,
+ 			   enum desc_idn desc_id,
+ 			   int desc_index,
+ 			   u8 param_offset,
+-			   u8 *param_read_buf,
++			   void *param_read_buf,
+ 			   u8 param_size)
+ {
+ 	int ret;
+@@ -3198,7 +3188,7 @@ int ufshcd_read_desc_param(struct ufs_hba *hba,
+ static inline int ufshcd_read_desc(struct ufs_hba *hba,
+ 				   enum desc_idn desc_id,
+ 				   int desc_index,
+-				   u8 *buf,
++				   void *buf,
+ 				   u32 size)
+ {
+ 	return ufshcd_read_desc_param(hba, desc_id, desc_index, 0, buf, size);
+@@ -3216,49 +3206,78 @@ static int ufshcd_read_device_desc(struct ufs_hba *hba, u8 *buf, u32 size)
+ 	return ufshcd_read_desc(hba, QUERY_DESC_IDN_DEVICE, 0, buf, size);
+ }
+ 
++/**
++ * struct uc_string_id - unicode string
++ *
++ * @len: size of this descriptor inclusive
++ * @type: descriptor type
++ * @uc: unicode string character
++ */
++struct uc_string_id {
++	u8 len;
++	u8 type;
++	wchar_t uc[0];
++} __packed;
++
++/* replace non-printable or non-ASCII characters with spaces */
++static inline char ufshcd_remove_non_printable(char ch)
++{
++	return (ch >= 0x20 && ch <= 0x7e) ? ch : ' ';
++}
++
+ /**
+  * ufshcd_read_string_desc - read string descriptor
+  * @hba: pointer to adapter instance
+  * @desc_index: descriptor index
+- * @buf: pointer to buffer where descriptor would be read
+- * @size: size of buf
++ * @buf: pointer to buffer where descriptor would be read,
++ *       the caller should free the memory.
+  * @ascii: if true convert from unicode to ascii characters
++ *         null terminated string.
+  *
+- * Return 0 in case of success, non-zero otherwise
++ * Return:
++ * *      string size on success.
++ * *      -ENOMEM: on allocation failure
++ * *      -EINVAL: on a wrong parameter
+  */
+-int ufshcd_read_string_desc(struct ufs_hba *hba, int desc_index,
+-			    u8 *buf, u32 size, bool ascii)
++int ufshcd_read_string_desc(struct ufs_hba *hba, u8 desc_index,
++			    char **buf, bool ascii)
+ {
+-	int err = 0;
++	struct uc_string_id *uc_str;
++	char *str;
++	int ret;
+ 
+-	err = ufshcd_read_desc(hba,
+-				QUERY_DESC_IDN_STRING, desc_index, buf, size);
++	if (!buf)
++		return -EINVAL;
+ 
+-	if (err) {
+-		dev_err(hba->dev, "%s: reading String Desc failed after %d retries. err = %d\n",
+-			__func__, QUERY_REQ_RETRIES, err);
++	uc_str = kzalloc(QUERY_DESC_MAX_SIZE, GFP_KERNEL);
++	if (!uc_str)
++		return -ENOMEM;
++
++	ret = ufshcd_read_desc(hba, QUERY_DESC_IDN_STRING,
++			       desc_index, uc_str,
++			       QUERY_DESC_MAX_SIZE);
++	if (ret < 0) {
++		dev_err(hba->dev, "Reading String Desc failed after %d retries. err = %d\n",
++			QUERY_REQ_RETRIES, ret);
++		str = NULL;
++		goto out;
++	}
++
++	if (uc_str->len <= QUERY_DESC_HDR_SIZE) {
++		dev_dbg(hba->dev, "String Desc is of zero length\n");
++		str = NULL;
++		ret = 0;
+ 		goto out;
+ 	}
+ 
+ 	if (ascii) {
+-		int desc_len;
+-		int ascii_len;
++		ssize_t ascii_len;
+ 		int i;
+-		char *buff_ascii;
+-
+-		desc_len = buf[0];
+ 		/* remove header and divide by 2 to move from UTF16 to UTF8 */
+-		ascii_len = (desc_len - QUERY_DESC_HDR_SIZE) / 2 + 1;
+-		if (size < ascii_len + QUERY_DESC_HDR_SIZE) {
+-			dev_err(hba->dev, "%s: buffer allocated size is too small\n",
+-					__func__);
+-			err = -ENOMEM;
+-			goto out;
+-		}
+-
+-		buff_ascii = kmalloc(ascii_len, GFP_KERNEL);
+-		if (!buff_ascii) {
+-			err = -ENOMEM;
++		ascii_len = (uc_str->len - QUERY_DESC_HDR_SIZE) / 2 + 1;
++		str = kzalloc(ascii_len, GFP_KERNEL);
++		if (!str) {
++			ret = -ENOMEM;
+ 			goto out;
+ 		}
+ 
+@@ -3266,22 +3285,29 @@ int ufshcd_read_string_desc(struct ufs_hba *hba, int desc_index,
+ 		 * the descriptor contains string in UTF16 format
+ 		 * we need to convert to utf-8 so it can be displayed
+ 		 */
+-		utf16s_to_utf8s((wchar_t *)&buf[QUERY_DESC_HDR_SIZE],
+-				desc_len - QUERY_DESC_HDR_SIZE,
+-				UTF16_BIG_ENDIAN, buff_ascii, ascii_len);
++		ret = utf16s_to_utf8s(uc_str->uc,
++				      uc_str->len - QUERY_DESC_HDR_SIZE,
++				      UTF16_BIG_ENDIAN, str, ascii_len);
+ 
+ 		/* replace non-printable or non-ASCII characters with spaces */
+-		for (i = 0; i < ascii_len; i++)
+-			ufshcd_remove_non_printable(&buff_ascii[i]);
++		for (i = 0; i < ret; i++)
++			str[i] = ufshcd_remove_non_printable(str[i]);
+ 
+-		memset(buf + QUERY_DESC_HDR_SIZE, 0,
+-				size - QUERY_DESC_HDR_SIZE);
+-		memcpy(buf + QUERY_DESC_HDR_SIZE, buff_ascii, ascii_len);
+-		buf[QUERY_DESC_LENGTH_OFFSET] = ascii_len + QUERY_DESC_HDR_SIZE;
+-		kfree(buff_ascii);
++		str[ret++] = '\0';
++
++	} else {
++		str = kzalloc(uc_str->len, GFP_KERNEL);
++		if (!str) {
++			ret = -ENOMEM;
++			goto out;
++		}
++		memcpy(str, uc_str, uc_str->len);
++		ret = uc_str->len;
+ 	}
+ out:
+-	return err;
++	*buf = str;
++	kfree(uc_str);
++	return ret;
+ }
+ 
+ /**
+@@ -6452,6 +6478,9 @@ static int ufs_get_device_desc(struct ufs_hba *hba,
+ 	u8 model_index;
+ 	u8 *desc_buf;
+ 
++	if (!dev_desc)
++		return -EINVAL;
++
+ 	buff_len = max_t(size_t, hba->desc_size.dev_desc,
+ 			 QUERY_DESC_MAX_SIZE + 1);
+ 	desc_buf = kmalloc(buff_len, GFP_KERNEL);
+@@ -6475,31 +6504,31 @@ static int ufs_get_device_desc(struct ufs_hba *hba,
+ 				     desc_buf[DEVICE_DESC_PARAM_MANF_ID + 1];
+ 
+ 	model_index = desc_buf[DEVICE_DESC_PARAM_PRDCT_NAME];
+-
+-	/* Zero-pad entire buffer for string termination. */
+-	memset(desc_buf, 0, buff_len);
+-
+-	err = ufshcd_read_string_desc(hba, model_index, desc_buf,
+-				      QUERY_DESC_MAX_SIZE, true/*ASCII*/);
+-	if (err) {
++	err = ufshcd_read_string_desc(hba, model_index,
++				      &dev_desc->model, SD_ASCII_STD);
++	if (err < 0) {
+ 		dev_err(hba->dev, "%s: Failed reading Product Name. err = %d\n",
+ 			__func__, err);
+ 		goto out;
+ 	}
+ 
+-	desc_buf[QUERY_DESC_MAX_SIZE] = '\0';
+-	strlcpy(dev_desc->model, (desc_buf + QUERY_DESC_HDR_SIZE),
+-		min_t(u8, desc_buf[QUERY_DESC_LENGTH_OFFSET],
+-		      MAX_MODEL_LEN));
+-
+-	/* Null terminate the model string */
+-	dev_desc->model[MAX_MODEL_LEN] = '\0';
++	/*
++	 * ufshcd_read_string_desc returns size of the string
++	 * reset the error value
++	 */
++	err = 0;
+ 
+ out:
+ 	kfree(desc_buf);
+ 	return err;
+ }
+ 
++static void ufs_put_device_desc(struct ufs_dev_desc *dev_desc)
++{
++	kfree(dev_desc->model);
++	dev_desc->model = NULL;
++}
++
+ static void ufs_fixup_device_setup(struct ufs_hba *hba,
+ 				   struct ufs_dev_desc *dev_desc)
+ {
+@@ -6508,8 +6537,9 @@ static void ufs_fixup_device_setup(struct ufs_hba *hba,
+ 	for (f = ufs_fixups; f->quirk; f++) {
+ 		if ((f->card.wmanufacturerid == dev_desc->wmanufacturerid ||
+ 		     f->card.wmanufacturerid == UFS_ANY_VENDOR) &&
+-		    (STR_PRFX_EQUAL(f->card.model, dev_desc->model) ||
+-		     !strcmp(f->card.model, UFS_ANY_MODEL)))
++		     ((dev_desc->model &&
++		       STR_PRFX_EQUAL(f->card.model, dev_desc->model)) ||
++		      !strcmp(f->card.model, UFS_ANY_MODEL)))
+ 			hba->dev_quirks |= f->quirk;
+ 	}
+ }
+@@ -6860,6 +6890,8 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
+ 	}
+ 
+ 	ufs_fixup_device_setup(hba, &card);
++	ufs_put_device_desc(&card);
++
+ 	ufshcd_tune_unipro_params(hba);
+ 
+ 	/* UFS device is also active now */
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 994d73d03207..10935548d1fc 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -885,14 +885,17 @@ int ufshcd_read_desc_param(struct ufs_hba *hba,
+ 			   enum desc_idn desc_id,
+ 			   int desc_index,
+ 			   u8 param_offset,
+-			   u8 *param_read_buf,
++			   void *param_read_buf,
+ 			   u8 param_size);
+ int ufshcd_query_attr(struct ufs_hba *hba, enum query_opcode opcode,
+ 		      enum attr_idn idn, u8 index, u8 selector, u32 *attr_val);
+ int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
+ 	enum flag_idn idn, bool *flag_res);
+-int ufshcd_read_string_desc(struct ufs_hba *hba, int desc_index,
+-			    u8 *buf, u32 size, bool ascii);
++
++#define SD_ASCII_STD true
++#define SD_RAW false
++int ufshcd_read_string_desc(struct ufs_hba *hba, u8 desc_index,
++			    char **buf, bool ascii);
+ 
+ int ufshcd_hold(struct ufs_hba *hba, bool async);
+ void ufshcd_release(struct ufs_hba *hba);
+-- 
+2.20.1
