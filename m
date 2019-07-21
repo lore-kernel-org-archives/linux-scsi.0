@@ -1,38 +1,76 @@
-From: Colin King <colin.king@canonical.com>
-Subject: [PATCH][next] scsi: megaraid_sas: fix spelling mistake "megarid_sas" -> "megaraid_sas"
-Date: Sat, 20 Jul 2019 22:58:40 +0100
-Message-ID: <20190720215840.23831-1-colin.king@canonical.com>
+From: Hariprasad Kelam <hariprasad.kelam@gmail.com>
+Subject: [PATCH] scsi: lpfc: fix "NULL check before some freeing functions is
+ not needed"
+Date: Sun, 21 Jul 2019 17:12:29 +0530
+Message-ID: <20190721114229.GA6886@hari-Inspiron-1545>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
-To: Kashyap Desai <kashyap.desai@broadcom.com>, Sumit Saxena <sumit.saxena@broadcom.com>, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+To: James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Colin Ian King <colin.king@canonical.com>
+As dma_pool_destroy and mempool_destroy functions has NULL check. We may
+not need NULL check before calling them.
 
-Fix spelling mistake in kernel warning message and replace
-printk with with pr_warn.
+Fix below warnings reported by coccicheck
+./drivers/scsi/lpfc/lpfc_mem.c:252:2-18: WARNING: NULL check before some
+freeing functions is not needed.
+./drivers/scsi/lpfc/lpfc_mem.c:255:2-18: WARNING: NULL check before some
+freeing functions is not needed.
+./drivers/scsi/lpfc/lpfc_mem.c:258:2-18: WARNING: NULL check before some
+freeing functions is not needed.
+./drivers/scsi/lpfc/lpfc_mem.c:261:2-18: WARNING: NULL check before some
+freeing functions is not needed.
+./drivers/scsi/lpfc/lpfc_mem.c:265:2-18: WARNING: NULL check before some
+freeing functions is not needed.
+./drivers/scsi/lpfc/lpfc_mem.c:269:2-17: WARNING: NULL check before some
+freeing functions is not needed.
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Signed-off-by: Hariprasad Kelam <hariprasad.kelam@gmail.com>
 ---
- drivers/scsi/megaraid/megaraid_sas_base.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/lpfc/lpfc_mem.c | 21 +++++++++------------
+ 1 file changed, 9 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index b2339d04a700..2590746c81e3 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -8763,7 +8763,7 @@ static int __init megasas_init(void)
+diff --git a/drivers/scsi/lpfc/lpfc_mem.c b/drivers/scsi/lpfc/lpfc_mem.c
+index 66191fa..9bdb4a0 100644
+--- a/drivers/scsi/lpfc/lpfc_mem.c
++++ b/drivers/scsi/lpfc/lpfc_mem.c
+@@ -248,25 +248,22 @@ lpfc_mem_free(struct lpfc_hba *phba)
  
- 	if ((event_log_level < MFI_EVT_CLASS_DEBUG) ||
- 	    (event_log_level > MFI_EVT_CLASS_DEAD)) {
--		printk(KERN_WARNING "megarid_sas: provided event log level is out of range, setting it to default 2(CLASS_CRITICAL), permissible range is: -2 to 4\n");
-+		pr_warn("megaraid_sas: provided event log level is out of range, setting it to default 2(CLASS_CRITICAL), permissible range is: -2 to 4\n");
- 		event_log_level = MFI_EVT_CLASS_CRITICAL;
- 	}
+ 	/* Free HBQ pools */
+ 	lpfc_sli_hbqbuf_free_all(phba);
+-	if (phba->lpfc_nvmet_drb_pool)
+-		dma_pool_destroy(phba->lpfc_nvmet_drb_pool);
++	dma_pool_destroy(phba->lpfc_nvmet_drb_pool);
+ 	phba->lpfc_nvmet_drb_pool = NULL;
+-	if (phba->lpfc_drb_pool)
+-		dma_pool_destroy(phba->lpfc_drb_pool);
++
++	dma_pool_destroy(phba->lpfc_drb_pool);
+ 	phba->lpfc_drb_pool = NULL;
+-	if (phba->lpfc_hrb_pool)
+-		dma_pool_destroy(phba->lpfc_hrb_pool);
++
++	dma_pool_destroy(phba->lpfc_hrb_pool);
+ 	phba->lpfc_hrb_pool = NULL;
+-	if (phba->txrdy_payload_pool)
+-		dma_pool_destroy(phba->txrdy_payload_pool);
++
++	dma_pool_destroy(phba->txrdy_payload_pool);
+ 	phba->txrdy_payload_pool = NULL;
  
+-	if (phba->lpfc_hbq_pool)
+-		dma_pool_destroy(phba->lpfc_hbq_pool);
++	dma_pool_destroy(phba->lpfc_hbq_pool);
+ 	phba->lpfc_hbq_pool = NULL;
+ 
+-	if (phba->rrq_pool)
+-		mempool_destroy(phba->rrq_pool);
++	mempool_destroy(phba->rrq_pool);
+ 	phba->rrq_pool = NULL;
+ 
+ 	/* Free NLP memory pool */
 -- 
-2.20.1
+2.7.4
