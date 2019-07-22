@@ -1,49 +1,99 @@
-From: Avri Altman <Avri.Altman@wdc.com>
-Subject: RE: [PATCH v1 0/2] scsi: ufs: Fix broken hba->outstanding_tasks
-Date: Mon, 22 Jul 2019 06:10:25 +0000
-Message-ID: <SN6PR04MB49256F66F259185F3876CCABFCC40@SN6PR04MB4925.namprd04.prod.outlook.com>
-References: <1562906656-27154-1-git-send-email-stanley.chu@mediatek.com>
- <SN6PR04MB4925208835D4760249E82DB7FCC50@SN6PR04MB4925.namprd04.prod.outlook.com>
+From: Dexuan-Linux Cui <dexuan.linux@gmail.com>
+Subject: Re: [PATCH 2/8] scsi: take the DMA max mapping size into account
+Date: Sun, 21 Jul 2019 23:18:51 -0700
+Message-ID: <CAA42JLY4zWnCEMXbR+NNbixjOyKfnMqQ0ujJdP5_gus_tu88Jw@mail.gmail.com>
+References: <20190617122000.22181-1-hch@lst.de> <20190617122000.22181-3-hch@lst.de>
+ <5d143a03-edd5-5878-780b-45d87313a813@acm.org> <CACVXFVMWM3xg6EEyoyNjkLPv=8+wQKiHj6erMS_gGX25f-Ot4g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-Content-Language: en-US
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Stanley Chu <stanley.chu@mediatek.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>, "pedrom.sousa@synopsys.com" <pedrom.sousa@synopsys.com>
-Cc: "marc.w.gonzalez@free.fr" <marc.w.gonzalez@free.fr>, "andy.teng@mediatek.com" <andy.teng@mediatek.com>, "chun-hung.wu@mediatek.com" <chun-hung.wu@mediatek.com>, "kuohong.wang@mediatek.com" <kuohong.wang@mediatek.com>, "evgreen@chromium.org" <evgreen@chromium.org>, "linux-mediatek@lists.infradead.org" <linux-mediatek@lists.infradead.org>, "peter.wang@mediatek.com" <peter.wang@mediatek.com>, "matthias.bgg@gmail.com" <matthias.bgg@gmail.com>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "beanhuo@micron.com" <beanhuo@micron.com>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CACVXFVMWM3xg6EEyoyNjkLPv=8+wQKiHj6erMS_gGX25f-Ot4g@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ming Lei <tom.leiming@gmail.com>
+Cc: Bart Van Assche <bvanassche@acm.org>, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagi@grimberg.me>, Max Gurtovoy <maxg@mellanox.com>, linux-rdma <linux-rdma@vger.kernel.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, megaraidlinux.pdl@broadcom.com, MPT-FusionLinux.pdl@broadcom.com, linux-hyperv@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Dexuan Cui <decui@microsoft.com>, v-lide@microsoft.com
 List-Id: linux-scsi@vger.kernel.org
 
-PiANCj4gPg0KPiA+IEhpLA0KPiA+DQo+ID4gPg0KPiA+ID4gQ3VycmVudGx5IGJpdHMgaW4gaGJh
-LT5vdXRzdGFuZGluZ190YXNrcyBhcmUgY2xlYXJlZCBvbmx5IGFmdGVyIHRoZWlyDQo+ID4gPiBj
-b3JyZXNwb25kaW5nIHRhc2sgbWFuYWdlbWVudCBjb21tYW5kcyBhcmUgc3VjY2Vzc2Z1bGx5IGRv
-bmUgYnkNCj4gPiA+IF9fdWZzaGNkX2lzc3VlX3RtX2NtZCgpLg0KPiA+ID4NCj4gPiA+IElmIHRp
-bWVvdXQgaGFwcGVucyBpbiBhIHRhc2sgbWFuYWdlbWVudCBjb21tYW5kLCBpdHMgY29ycmVzcG9u
-ZGluZw0KPiA+ID4gYml0IGluIGhiYS0+b3V0c3RhbmRpbmdfdGFza3Mgd2lsbCBub3QgYmUgY2xl
-YXJlZCB1bnRpbCBuZXh0IHRhc2sNCj4gPiA+IG1hbmFnZW1lbnQgY29tbWFuZCB3aXRoIHRoZSBz
-YW1lIHRhZyB1c2VkIHN1Y2Nlc3NmdWxseSBmaW5pc2hlcy7igKcNCj4gPiB1ZnNoY2RfY2xlYXJf
-dG1fY21kIGlzIGFsc28gY2FsbGVkIGFzIHBhcnQgb2YgdWZzaGNkX2Vycl9oYW5kbGVyLg0KPiA+
-IERvZXMgdGhpcyBjaGFuZ2Ugc29tZXRoaW5nIGluIHlvdXIgYXNzdW1wdGlvbnM/DQo+IEFuZCBC
-VFcgdGhlcmUgaXMgYSBzcGVjaWZpYyBfX2NsZWFyX2JpdCBpbiBfX3Vmc2hjZF9pc3N1ZV90bV9j
-bWQoKSBpbiBjYXNlDQo+IG9mIGEgVE8uDQoNCkdhdmUgaXQgYW5vdGhlciBsb29rIC0gDQpJZiBp
-bmRlZWQgdGhpcyBiaXQgaXNuJ3QgY2xlYXJlZCBhcyBwYXJ0IG9mIHRoZSBlcnJvciBmbG93IHRo
-YXQgdGhlIHRpbWVvdXQgdHJpZ2dlcnMsDQpJIHRoaW5rIHlvdSBzaG91bGQgcmVsYXRlIHRvIHVm
-c2hjZF9jbGVhcl90bV9jbWQgc3BlY2lmaWNhbGx5IGluIHlvdXIgY29tbWl0IGxvZyAtIA0KQmVj
-YXVzZSB0aGlzIGlzIHRoZSBvYnZpb3VzIHBsYWNlIHdoZXJlIHRoZSBiaXQgY2xlYW51cCBzaG91
-bGQgdGFrZSBwbGFjZS4NCg0KQWxzbyB0aGUgZml4IHNob3VsZCBiZSBtdWNoIG1vcmUgaW50dWl0
-aXZlIElNTyAtIA0KVG9kYXkgd2UgZG8gX19jbGVhcl9iaXQoKSBvbiBzdWNjZXNzLCB1ZnNoY2Rf
-Y2xlYXJfdG1fY21kKCkgb24gZXJyb3IsDQpBbmQgYWxzbyB1ZnNoY2RfcHV0X3RtX3Nsb3QoKSBl
-aXRoZXIgd2F5Pw0KDQpNYXliZSB5b3UgY2FuIGNob29zZSBhIHNpbmdsZSBwbGFjZSB0byBjbGVh
-ciBpdCwgd2l0aG91dCBhbnkgYWRkaXRpb25hbCBjb2RlPw0KDQpUaGFua3MsDQpBdnJpDQpfX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpsaW51eC1hcm0ta2Vy
-bmVsIG1haWxpbmcgbGlzdApsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmcKaHR0
-cDovL2xpc3RzLmluZnJhZGVhZC5vcmcvbWFpbG1hbi9saXN0aW5mby9saW51eC1hcm0ta2VybmVs
-Cg==
+On Sun, Jul 21, 2019 at 11:01 PM Ming Lei <tom.leiming@gmail.com> wrote:
+>
+> On Tue, Jun 18, 2019 at 4:57 AM Bart Van Assche <bvanassche@acm.org> wrote:
+> >
+> > On 6/17/19 5:19 AM, Christoph Hellwig wrote:
+> > > We need to limit the devices max_sectors to what the DMA mapping
+> > > implementation can support.  If not we risk running out of swiotlb
+> > > buffers easily.
+> > >
+> > > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > > ---
+> > >   drivers/scsi/scsi_lib.c | 2 ++
+> > >   1 file changed, 2 insertions(+)
+> > >
+> > > diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> > > index d333bb6b1c59..f233bfd84cd7 100644
+> > > --- a/drivers/scsi/scsi_lib.c
+> > > +++ b/drivers/scsi/scsi_lib.c
+> > > @@ -1768,6 +1768,8 @@ void __scsi_init_queue(struct Scsi_Host *shost, struct request_queue *q)
+> > >               blk_queue_max_integrity_segments(q, shost->sg_prot_tablesize);
+> > >       }
+> > >
+> > > +     shost->max_sectors = min_t(unsigned int, shost->max_sectors,
+> > > +                     dma_max_mapping_size(dev) << SECTOR_SHIFT);
+> > >       blk_queue_max_hw_sectors(q, shost->max_sectors);
+> > >       if (shost->unchecked_isa_dma)
+> > >               blk_queue_bounce_limit(q, BLK_BOUNCE_ISA);
+> >
+> > Does dma_max_mapping_size() return a value in bytes? Is
+> > shost->max_sectors a number of sectors? If so, are you sure that "<<
+> > SECTOR_SHIFT" is the proper conversion? Shouldn't that be ">>
+> > SECTOR_SHIFT" instead?
+>
+> Now the patch has been committed, '<< SECTOR_SHIFT' needs to be fixed.
+>
+> Also the following kernel oops is triggered on qemu, and looks
+> device->dma_mask is NULL.
+>
+> Ming Lei
+
+FYI: we also see the panic with a Linux kernel 5.2.0-next-20190719
+running on Hyper-V:
+
+[    7.429053] RIP: 0010:dma_direct_max_mapping_size+0x26/0x80
+[    7.429053] Code: 0f b6 c0 c3 0f 1f 44 00 00 55 48 89 e5 41 54 53
+48 89 fb e8 4c 14 00 00 84 c0 74 45 48 8b 83 28 02 00 00 4c 8b a3 38
+02 00 00 <48> 8b 00 48 85 c0 74 0c 4d 85 e4 74 36 49 39 c4 4c 0f 47 e0
+48 89
+[    7.429053] RSP: 0018:ffffc1d5005efbc0 EFLAGS: 00010202
+[    7.429053] RAX: 0000000000000000 RBX: ffff9cf86d24c428 RCX: 0000000000000000
+[    7.429053] RDX: ffff9cf86d12dd00 RSI: 0000000000000200 RDI: ffff9cf86d24c428
+[    7.429053] RBP: ffffc1d5005efbd0 R08: ffff9cf86fcaf0e0 R09: ffff9cf86e0072c0
+[    7.429053] R10: ffffc1d5005efa70 R11: 00000000000301a0 R12: 0000000000000000
+[    7.429053] R13: ffff9cf86d24c428 R14: 0000000000000400 R15: ffff9cf825cff000
+[    7.429053] FS:  0000000000000000(0000) GS:ffff9cf86fc80000(0000)
+knlGS:0000000000000000
+[    7.429053] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[    7.429053] CR2: 0000000000000000 CR3: 00000003c700a001 CR4: 00000000003606e0
+[    7.456569] NET: Registered protocol family 17
+[    7.429053] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[    7.469803] Key type dns_resolver registered
+[    7.429053] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+[    7.429053] Call Trace:
+[    7.429053]  dma_max_mapping_size+0x39/0x50
+[    7.429053]  __scsi_init_queue+0x7f/0x140
+[    7.429053]  scsi_mq_alloc_queue+0x38/0x60
+[    7.429053]  scsi_alloc_sdev+0x1da/0x2b0
+[    7.429053]  scsi_probe_and_add_lun+0x471/0xe60
+[    7.429053]  __scsi_scan_target+0xfc/0x610
+[    7.429053]  scsi_scan_channel+0x66/0xa0
+[    7.429053]  scsi_scan_host_selected+0xf3/0x160
+[    7.429053]  do_scsi_scan_host+0x93/0xa0
+[    7.429053]  do_scan_async+0x1c/0x190
+[    7.429053]  async_run_entry_fn+0x3c/0x150
+[    7.429053]  process_one_work+0x1f7/0x3f0
+[    7.429053]  worker_thread+0x34/0x400
+[    7.429053]  kthread+0x121/0x140
+[    7.429053]  ret_from_fork+0x35/0x40
+[    7.429053] Modules linked in:
+[    7.429053] CR2: 0000000000000000
+[    7.766122] BUG: kernel NULL pointer dereference, address: 0000000000000000
+
+Thanks,
+-- Dexuan
