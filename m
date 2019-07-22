@@ -1,116 +1,49 @@
-From: Ming Lei <tom.leiming@gmail.com>
-Subject: Re: [PATCH 2/8] scsi: take the DMA max mapping size into account
-Date: Mon, 22 Jul 2019 14:00:48 +0800
-Message-ID: <CACVXFVMWM3xg6EEyoyNjkLPv=8+wQKiHj6erMS_gGX25f-Ot4g@mail.gmail.com>
-References: <20190617122000.22181-1-hch@lst.de> <20190617122000.22181-3-hch@lst.de>
- <5d143a03-edd5-5878-780b-45d87313a813@acm.org>
+From: Avri Altman <Avri.Altman@wdc.com>
+Subject: RE: [PATCH v1 0/2] scsi: ufs: Fix broken hba->outstanding_tasks
+Date: Mon, 22 Jul 2019 06:10:25 +0000
+Message-ID: <SN6PR04MB49256F66F259185F3876CCABFCC40@SN6PR04MB4925.namprd04.prod.outlook.com>
+References: <1562906656-27154-1-git-send-email-stanley.chu@mediatek.com>
+ <SN6PR04MB4925208835D4760249E82DB7FCC50@SN6PR04MB4925.namprd04.prod.outlook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <5d143a03-edd5-5878-780b-45d87313a813@acm.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagi@grimberg.me>, Max Gurtovoy <maxg@mellanox.com>, linux-rdma <linux-rdma@vger.kernel.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, megaraidlinux.pdl@broadcom.com, MPT-FusionLinux.pdl@broadcom.com, linux-hyperv@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+Content-Language: en-US
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Stanley Chu <stanley.chu@mediatek.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>, "pedrom.sousa@synopsys.com" <pedrom.sousa@synopsys.com>
+Cc: "marc.w.gonzalez@free.fr" <marc.w.gonzalez@free.fr>, "andy.teng@mediatek.com" <andy.teng@mediatek.com>, "chun-hung.wu@mediatek.com" <chun-hung.wu@mediatek.com>, "kuohong.wang@mediatek.com" <kuohong.wang@mediatek.com>, "evgreen@chromium.org" <evgreen@chromium.org>, "linux-mediatek@lists.infradead.org" <linux-mediatek@lists.infradead.org>, "peter.wang@mediatek.com" <peter.wang@mediatek.com>, "matthias.bgg@gmail.com" <matthias.bgg@gmail.com>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "beanhuo@micron.com" <beanhuo@micron.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Jun 18, 2019 at 4:57 AM Bart Van Assche <bvanassche@acm.org> wrote:
->
-> On 6/17/19 5:19 AM, Christoph Hellwig wrote:
-> > We need to limit the devices max_sectors to what the DMA mapping
-> > implementation can support.  If not we risk running out of swiotlb
-> > buffers easily.
-> >
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > ---
-> >   drivers/scsi/scsi_lib.c | 2 ++
-> >   1 file changed, 2 insertions(+)
-> >
-> > diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> > index d333bb6b1c59..f233bfd84cd7 100644
-> > --- a/drivers/scsi/scsi_lib.c
-> > +++ b/drivers/scsi/scsi_lib.c
-> > @@ -1768,6 +1768,8 @@ void __scsi_init_queue(struct Scsi_Host *shost, struct request_queue *q)
-> >               blk_queue_max_integrity_segments(q, shost->sg_prot_tablesize);
-> >       }
-> >
-> > +     shost->max_sectors = min_t(unsigned int, shost->max_sectors,
-> > +                     dma_max_mapping_size(dev) << SECTOR_SHIFT);
-> >       blk_queue_max_hw_sectors(q, shost->max_sectors);
-> >       if (shost->unchecked_isa_dma)
-> >               blk_queue_bounce_limit(q, BLK_BOUNCE_ISA);
->
-> Does dma_max_mapping_size() return a value in bytes? Is
-> shost->max_sectors a number of sectors? If so, are you sure that "<<
-> SECTOR_SHIFT" is the proper conversion? Shouldn't that be ">>
-> SECTOR_SHIFT" instead?
-
-Now the patch has been committed, '<< SECTOR_SHIFT' needs to be fixed.
-
-Also the following kernel oops is triggered on qemu, and looks
-device->dma_mask is NULL.
-
-[    5.826483] scsi host0: Virtio SCSI HBA
-[    5.829302] st: Version 20160209, fixed bufsize 32768, s/g segs 256
-[    5.831042] SCSI Media Changer driver v0.25
-[    5.832491] ==================================================================
-[    5.833332] BUG: KASAN: null-ptr-deref in
-dma_direct_max_mapping_size+0x30/0x94
-[    5.833332] Read of size 8 at addr 0000000000000000 by task kworker/u17:0/7
-[    5.835506] nvme nvme0: pci function 0000:00:07.0
-[    5.833332]
-[    5.833332] CPU: 2 PID: 7 Comm: kworker/u17:0 Not tainted 5.3.0-rc1 #1328
-[    5.836999] ahci 0000:00:1f.2: version 3.0
-[    5.833332] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009),
-BIOS ?-20180724_192412-buildhw-07.phx4
-[    5.833332] Workqueue: events_unbound async_run_entry_fn
-[    5.833332] Call Trace:
-[    5.833332]  dump_stack+0x6f/0x9d
-[    5.833332]  ? dma_direct_max_mapping_size+0x30/0x94
-[    5.833332]  __kasan_report+0x161/0x189
-[    5.833332]  ? dma_direct_max_mapping_size+0x30/0x94
-[    5.833332]  kasan_report+0xe/0x12
-[    5.833332]  dma_direct_max_mapping_size+0x30/0x94
-[    5.833332]  __scsi_init_queue+0xd8/0x1f3
-[    5.833332]  scsi_mq_alloc_queue+0x62/0x89
-[    5.833332]  scsi_alloc_sdev+0x38c/0x479
-[    5.833332]  scsi_probe_and_add_lun+0x22d/0x1093
-[    5.833332]  ? kobject_set_name_vargs+0xa4/0xb2
-[    5.833332]  ? mutex_lock+0x88/0xc4
-[    5.833332]  ? scsi_free_host_dev+0x4a/0x4a
-[    5.833332]  ? _raw_spin_lock_irqsave+0x8c/0xde
-[    5.833332]  ? _raw_write_unlock_irqrestore+0x23/0x23
-[    5.833332]  ? ata_tdev_match+0x22/0x45
-[    5.833332]  ? attribute_container_add_device+0x160/0x17e
-[    5.833332]  ? rpm_resume+0x26a/0x7c0
-[    5.833332]  ? kobject_get+0x12/0x43
-[    5.833332]  ? rpm_put_suppliers+0x7e/0x7e
-[    5.833332]  ? _raw_spin_lock_irqsave+0x8c/0xde
-[    5.833332]  ? _raw_write_unlock_irqrestore+0x23/0x23
-[    5.833332]  ? scsi_target_destroy+0x135/0x135
-[    5.833332]  __scsi_scan_target+0x14b/0x6aa
-[    5.833332]  ? pvclock_clocksource_read+0xc0/0x14e
-[    5.833332]  ? scsi_add_device+0x20/0x20
-[    5.833332]  ? rpm_resume+0x1ae/0x7c0
-[    5.833332]  ? rpm_put_suppliers+0x7e/0x7e
-[    5.833332]  ? _raw_spin_lock_irqsave+0x8c/0xde
-[    5.833332]  ? _raw_write_unlock_irqrestore+0x23/0x23
-[    5.833332]  ? pick_next_task_fair+0x976/0xa3d
-[    5.833332]  ? mutex_lock+0x88/0xc4
-[    5.833332]  scsi_scan_channel+0x76/0x9e
-[    5.833332]  scsi_scan_host_selected+0x131/0x176
-[    5.833332]  ? scsi_scan_host+0x241/0x241
-[    5.833332]  do_scan_async+0x27/0x219
-[    5.833332]  ? scsi_scan_host+0x241/0x241
-[    5.833332]  async_run_entry_fn+0xdc/0x23d
-[    5.833332]  process_one_work+0x327/0x539
-[    5.833332]  worker_thread+0x330/0x492
-[    5.833332]  ? rescuer_thread+0x41f/0x41f
-[    5.833332]  kthread+0x1c6/0x1d5
-[    5.833332]  ? kthread_park+0xd3/0xd3
-[    5.833332]  ret_from_fork+0x1f/0x30
-[    5.833332] ==================================================================
-
-
-
-Thanks,
-Ming Lei
+PiANCj4gPg0KPiA+IEhpLA0KPiA+DQo+ID4gPg0KPiA+ID4gQ3VycmVudGx5IGJpdHMgaW4gaGJh
+LT5vdXRzdGFuZGluZ190YXNrcyBhcmUgY2xlYXJlZCBvbmx5IGFmdGVyIHRoZWlyDQo+ID4gPiBj
+b3JyZXNwb25kaW5nIHRhc2sgbWFuYWdlbWVudCBjb21tYW5kcyBhcmUgc3VjY2Vzc2Z1bGx5IGRv
+bmUgYnkNCj4gPiA+IF9fdWZzaGNkX2lzc3VlX3RtX2NtZCgpLg0KPiA+ID4NCj4gPiA+IElmIHRp
+bWVvdXQgaGFwcGVucyBpbiBhIHRhc2sgbWFuYWdlbWVudCBjb21tYW5kLCBpdHMgY29ycmVzcG9u
+ZGluZw0KPiA+ID4gYml0IGluIGhiYS0+b3V0c3RhbmRpbmdfdGFza3Mgd2lsbCBub3QgYmUgY2xl
+YXJlZCB1bnRpbCBuZXh0IHRhc2sNCj4gPiA+IG1hbmFnZW1lbnQgY29tbWFuZCB3aXRoIHRoZSBz
+YW1lIHRhZyB1c2VkIHN1Y2Nlc3NmdWxseSBmaW5pc2hlcy7igKcNCj4gPiB1ZnNoY2RfY2xlYXJf
+dG1fY21kIGlzIGFsc28gY2FsbGVkIGFzIHBhcnQgb2YgdWZzaGNkX2Vycl9oYW5kbGVyLg0KPiA+
+IERvZXMgdGhpcyBjaGFuZ2Ugc29tZXRoaW5nIGluIHlvdXIgYXNzdW1wdGlvbnM/DQo+IEFuZCBC
+VFcgdGhlcmUgaXMgYSBzcGVjaWZpYyBfX2NsZWFyX2JpdCBpbiBfX3Vmc2hjZF9pc3N1ZV90bV9j
+bWQoKSBpbiBjYXNlDQo+IG9mIGEgVE8uDQoNCkdhdmUgaXQgYW5vdGhlciBsb29rIC0gDQpJZiBp
+bmRlZWQgdGhpcyBiaXQgaXNuJ3QgY2xlYXJlZCBhcyBwYXJ0IG9mIHRoZSBlcnJvciBmbG93IHRo
+YXQgdGhlIHRpbWVvdXQgdHJpZ2dlcnMsDQpJIHRoaW5rIHlvdSBzaG91bGQgcmVsYXRlIHRvIHVm
+c2hjZF9jbGVhcl90bV9jbWQgc3BlY2lmaWNhbGx5IGluIHlvdXIgY29tbWl0IGxvZyAtIA0KQmVj
+YXVzZSB0aGlzIGlzIHRoZSBvYnZpb3VzIHBsYWNlIHdoZXJlIHRoZSBiaXQgY2xlYW51cCBzaG91
+bGQgdGFrZSBwbGFjZS4NCg0KQWxzbyB0aGUgZml4IHNob3VsZCBiZSBtdWNoIG1vcmUgaW50dWl0
+aXZlIElNTyAtIA0KVG9kYXkgd2UgZG8gX19jbGVhcl9iaXQoKSBvbiBzdWNjZXNzLCB1ZnNoY2Rf
+Y2xlYXJfdG1fY21kKCkgb24gZXJyb3IsDQpBbmQgYWxzbyB1ZnNoY2RfcHV0X3RtX3Nsb3QoKSBl
+aXRoZXIgd2F5Pw0KDQpNYXliZSB5b3UgY2FuIGNob29zZSBhIHNpbmdsZSBwbGFjZSB0byBjbGVh
+ciBpdCwgd2l0aG91dCBhbnkgYWRkaXRpb25hbCBjb2RlPw0KDQpUaGFua3MsDQpBdnJpDQpfX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpsaW51eC1hcm0ta2Vy
+bmVsIG1haWxpbmcgbGlzdApsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmcKaHR0
+cDovL2xpc3RzLmluZnJhZGVhZC5vcmcvbWFpbG1hbi9saXN0aW5mby9saW51eC1hcm0ta2VybmVs
+Cg==
