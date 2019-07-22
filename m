@@ -1,138 +1,141 @@
-From: Avri Altman <Avri.Altman@wdc.com>
-Subject: RE: [PATCH RESEND] scsi: ufs: revamp string descriptor reading
-Date: Mon, 22 Jul 2019 07:40:06 +0000
-Message-ID: <SN6PR04MB4925FFBFEC979062E07DC6B8FCC40@SN6PR04MB4925.namprd04.prod.outlook.com>
-References: <20190721140212.8980-1-tomas.winkler@intel.com>
+From: Damien Le Moal <Damien.LeMoal@wdc.com>
+Subject: Re: [PATCH 2/8] scsi: take the DMA max mapping size into account
+Date: Mon, 22 Jul 2019 07:40:20 +0000
+Message-ID: <BYAPR04MB58168CBFF8B691DF33C73DDBE7C40@BYAPR04MB5816.namprd04.prod.outlook.com>
+References: <20190617122000.22181-1-hch@lst.de>
+ <20190617122000.22181-3-hch@lst.de>
+ <5d143a03-edd5-5878-780b-45d87313a813@acm.org>
+ <CACVXFVMWM3xg6EEyoyNjkLPv=8+wQKiHj6erMS_gGX25f-Ot4g@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190721140212.8980-1-tomas.winkler@intel.com>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Tomas Winkler <tomas.winkler@intel.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Alim Akhtar <alim.akhtar@samsung.com>, Pedro Sousa <pedrom.sousa@synopsys.com>
-Cc: Alex Lemberg <Alex.Lemberg@wdc.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: Ming Lei <tom.leiming@gmail.com>, Bart van Assche <bvanassche@acm.org>
+Cc: Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagi@grimberg.me>, Max Gurtovoy <maxg@mellanox.com>, linux-rdma <linux-rdma@vger.kernel.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, "megaraidlinux.pdl@broadcom.com" <megaraidlinux.pdl@broadcom.com>, "MPT-FusionLinux.pdl@broadcom.com" <MPT-FusionLinux.pdl@broadcom.com>, "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Tomas,
-
->=20
-> Define new a type: uc_string_id for easier string
-> handling and less casting. Reduce number or string
-> copies in price of a dynamic allocation.
->=20
-> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-> Tested-by: Avri Altman <avri.altman@wdc.com>
-> ---
->=20
-> Resend: It was reviewed by not merged.
->=20
->  drivers/scsi/ufs/ufs-sysfs.c |  20 ++---
->  drivers/scsi/ufs/ufs.h       |   2 +-
->  drivers/scsi/ufs/ufshcd.c    | 164 +++++++++++++++++++++--------------
->  drivers/scsi/ufs/ufshcd.h    |   9 +-
->  4 files changed, 115 insertions(+), 80 deletions(-)
->=20
-> diff --git a/drivers/scsi/ufs/ufs-sysfs.c b/drivers/scsi/ufs/ufs-sysfs.c
-> index f478685122ff..13e357f01025 100644
-> --- a/drivers/scsi/ufs/ufs-sysfs.c
-> +++ b/drivers/scsi/ufs/ufs-sysfs.c
-> @@ -570,10 +570,11 @@ static ssize_t _name##_show(struct device *dev,
-> 				\
->  	struct ufs_hba *hba =3D dev_get_drvdata(dev);			\
->  	int ret;							\
->  	int desc_len =3D QUERY_DESC_MAX_SIZE;				\
-> -	u8 *desc_buf;							\
-> +	char *desc_buf;							\
-> +									\
-Leaving it a u8 * here, will assure it would be utf-8,
-And save you making param_read_buf opaque,
-in ufshcd_read_desc  and ufshcd_read_desc_param.
-A fare tradeoff, don't you think?
-
-
-> diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
-> index 99a9c4d16f6b..b3e1b2a0f463 100644
-> --- a/drivers/scsi/ufs/ufs.h
-> +++ b/drivers/scsi/ufs/ufs.h
-> @@ -541,7 +541,7 @@ struct ufs_dev_info {
->   */
->  struct ufs_dev_desc {
->  	u16 wmanufacturerid;
-> -	char model[MAX_MODEL_LEN + 1];
-> +	char *model;
->  };
-Belongs to a different patch?
-
->  /**
->   * ufshcd_read_string_desc - read string descriptor
->   * @hba: pointer to adapter instance
->   * @desc_index: descriptor index
-> - * @buf: pointer to buffer where descriptor would be read
-> - * @size: size of buf
-> + * @buf: pointer to buffer where descriptor would be read,
-> + *       the caller should free the memory.
->   * @ascii: if true convert from unicode to ascii characters
-> + *         null terminated string.
-Since ascii is always true, maybe omit this argument altogether,
-and group the if (asci) clause in some handler?
-
->  /**
-> @@ -6452,6 +6478,9 @@ static int ufs_get_device_desc(struct ufs_hba
-> *hba,
->  	u8 model_index;
->  	u8 *desc_buf;
->=20
-> +	if (!dev_desc)
-> +		return -EINVAL;
-> +
-A different patch?
-
->=20
-> +static void ufs_put_device_desc(struct ufs_dev_desc *dev_desc)
-> +{
-> +	kfree(dev_desc->model);
-> +	dev_desc->model =3D NULL;
-> +}
-A different patch?
-
-While it's true that dev_desc->model conclude its part after ufs_fixup_devi=
-ce_setup,
-Why are you releasing specifically this part of card?
-
-
->=20
->  	ufs_fixup_device_setup(hba, &card);
-> +	ufs_put_device_desc(&card);
-A different patch?
-
-> +
->  	ufshcd_tune_unipro_params(hba);
->=20
->  	/* UFS device is also active now */
-> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> index 994d73d03207..10935548d1fc 100644
-> --- a/drivers/scsi/ufs/ufshcd.h
-> +++ b/drivers/scsi/ufs/ufshcd.h
-> @@ -885,14 +885,17 @@ int ufshcd_read_desc_param(struct ufs_hba
-> *hba,
->  			   enum desc_idn desc_id,
->  			   int desc_index,
->  			   u8 param_offset,
-> -			   u8 *param_read_buf,
-> +			   void *param_read_buf,
->  			   u8 param_size);
->  int ufshcd_query_attr(struct ufs_hba *hba, enum query_opcode opcode,
->  		      enum attr_idn idn, u8 index, u8 selector, u32
-> *attr_val);
->  int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
->  	enum flag_idn idn, bool *flag_res);
-> -int ufshcd_read_string_desc(struct ufs_hba *hba, int desc_index,
-> -			    u8 *buf, u32 size, bool ascii);
-> +
-> +#define SD_ASCII_STD true
-> +#define SD_RAW false
-Not really needed?
-
-Thanks,
-Avri
+On 2019/07/22 15:01, Ming Lei wrote:=0A=
+> On Tue, Jun 18, 2019 at 4:57 AM Bart Van Assche <bvanassche@acm.org> wrot=
+e:=0A=
+>>=0A=
+>> On 6/17/19 5:19 AM, Christoph Hellwig wrote:=0A=
+>>> We need to limit the devices max_sectors to what the DMA mapping=0A=
+>>> implementation can support.  If not we risk running out of swiotlb=0A=
+>>> buffers easily.=0A=
+>>>=0A=
+>>> Signed-off-by: Christoph Hellwig <hch@lst.de>=0A=
+>>> ---=0A=
+>>>   drivers/scsi/scsi_lib.c | 2 ++=0A=
+>>>   1 file changed, 2 insertions(+)=0A=
+>>>=0A=
+>>> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c=0A=
+>>> index d333bb6b1c59..f233bfd84cd7 100644=0A=
+>>> --- a/drivers/scsi/scsi_lib.c=0A=
+>>> +++ b/drivers/scsi/scsi_lib.c=0A=
+>>> @@ -1768,6 +1768,8 @@ void __scsi_init_queue(struct Scsi_Host *shost, s=
+truct request_queue *q)=0A=
+>>>               blk_queue_max_integrity_segments(q, shost->sg_prot_tables=
+ize);=0A=
+>>>       }=0A=
+>>>=0A=
+>>> +     shost->max_sectors =3D min_t(unsigned int, shost->max_sectors,=0A=
+>>> +                     dma_max_mapping_size(dev) << SECTOR_SHIFT);=0A=
+>>>       blk_queue_max_hw_sectors(q, shost->max_sectors);=0A=
+>>>       if (shost->unchecked_isa_dma)=0A=
+>>>               blk_queue_bounce_limit(q, BLK_BOUNCE_ISA);=0A=
+>>=0A=
+>> Does dma_max_mapping_size() return a value in bytes? Is=0A=
+>> shost->max_sectors a number of sectors? If so, are you sure that "<<=0A=
+>> SECTOR_SHIFT" is the proper conversion? Shouldn't that be ">>=0A=
+>> SECTOR_SHIFT" instead?=0A=
+> =0A=
+> Now the patch has been committed, '<< SECTOR_SHIFT' needs to be fixed.=0A=
+> =0A=
+> Also the following kernel oops is triggered on qemu, and looks=0A=
+> device->dma_mask is NULL.=0A=
+=0A=
+Just hit the exact same problem using tcmu-runner (ZBC file handler) on bar=
+e=0A=
+metal (no QEMU). dev->dma_mask is NULL. No problem with real disks though.=
+=0A=
+=0A=
+> =0A=
+> [    5.826483] scsi host0: Virtio SCSI HBA=0A=
+> [    5.829302] st: Version 20160209, fixed bufsize 32768, s/g segs 256=0A=
+> [    5.831042] SCSI Media Changer driver v0.25=0A=
+> [    5.832491] =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=0A=
+> [    5.833332] BUG: KASAN: null-ptr-deref in=0A=
+> dma_direct_max_mapping_size+0x30/0x94=0A=
+> [    5.833332] Read of size 8 at addr 0000000000000000 by task kworker/u1=
+7:0/7=0A=
+> [    5.835506] nvme nvme0: pci function 0000:00:07.0=0A=
+> [    5.833332]=0A=
+> [    5.833332] CPU: 2 PID: 7 Comm: kworker/u17:0 Not tainted 5.3.0-rc1 #1=
+328=0A=
+> [    5.836999] ahci 0000:00:1f.2: version 3.0=0A=
+> [    5.833332] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009),=0A=
+> BIOS ?-20180724_192412-buildhw-07.phx4=0A=
+> [    5.833332] Workqueue: events_unbound async_run_entry_fn=0A=
+> [    5.833332] Call Trace:=0A=
+> [    5.833332]  dump_stack+0x6f/0x9d=0A=
+> [    5.833332]  ? dma_direct_max_mapping_size+0x30/0x94=0A=
+> [    5.833332]  __kasan_report+0x161/0x189=0A=
+> [    5.833332]  ? dma_direct_max_mapping_size+0x30/0x94=0A=
+> [    5.833332]  kasan_report+0xe/0x12=0A=
+> [    5.833332]  dma_direct_max_mapping_size+0x30/0x94=0A=
+> [    5.833332]  __scsi_init_queue+0xd8/0x1f3=0A=
+> [    5.833332]  scsi_mq_alloc_queue+0x62/0x89=0A=
+> [    5.833332]  scsi_alloc_sdev+0x38c/0x479=0A=
+> [    5.833332]  scsi_probe_and_add_lun+0x22d/0x1093=0A=
+> [    5.833332]  ? kobject_set_name_vargs+0xa4/0xb2=0A=
+> [    5.833332]  ? mutex_lock+0x88/0xc4=0A=
+> [    5.833332]  ? scsi_free_host_dev+0x4a/0x4a=0A=
+> [    5.833332]  ? _raw_spin_lock_irqsave+0x8c/0xde=0A=
+> [    5.833332]  ? _raw_write_unlock_irqrestore+0x23/0x23=0A=
+> [    5.833332]  ? ata_tdev_match+0x22/0x45=0A=
+> [    5.833332]  ? attribute_container_add_device+0x160/0x17e=0A=
+> [    5.833332]  ? rpm_resume+0x26a/0x7c0=0A=
+> [    5.833332]  ? kobject_get+0x12/0x43=0A=
+> [    5.833332]  ? rpm_put_suppliers+0x7e/0x7e=0A=
+> [    5.833332]  ? _raw_spin_lock_irqsave+0x8c/0xde=0A=
+> [    5.833332]  ? _raw_write_unlock_irqrestore+0x23/0x23=0A=
+> [    5.833332]  ? scsi_target_destroy+0x135/0x135=0A=
+> [    5.833332]  __scsi_scan_target+0x14b/0x6aa=0A=
+> [    5.833332]  ? pvclock_clocksource_read+0xc0/0x14e=0A=
+> [    5.833332]  ? scsi_add_device+0x20/0x20=0A=
+> [    5.833332]  ? rpm_resume+0x1ae/0x7c0=0A=
+> [    5.833332]  ? rpm_put_suppliers+0x7e/0x7e=0A=
+> [    5.833332]  ? _raw_spin_lock_irqsave+0x8c/0xde=0A=
+> [    5.833332]  ? _raw_write_unlock_irqrestore+0x23/0x23=0A=
+> [    5.833332]  ? pick_next_task_fair+0x976/0xa3d=0A=
+> [    5.833332]  ? mutex_lock+0x88/0xc4=0A=
+> [    5.833332]  scsi_scan_channel+0x76/0x9e=0A=
+> [    5.833332]  scsi_scan_host_selected+0x131/0x176=0A=
+> [    5.833332]  ? scsi_scan_host+0x241/0x241=0A=
+> [    5.833332]  do_scan_async+0x27/0x219=0A=
+> [    5.833332]  ? scsi_scan_host+0x241/0x241=0A=
+> [    5.833332]  async_run_entry_fn+0xdc/0x23d=0A=
+> [    5.833332]  process_one_work+0x327/0x539=0A=
+> [    5.833332]  worker_thread+0x330/0x492=0A=
+> [    5.833332]  ? rescuer_thread+0x41f/0x41f=0A=
+> [    5.833332]  kthread+0x1c6/0x1d5=0A=
+> [    5.833332]  ? kthread_park+0xd3/0xd3=0A=
+> [    5.833332]  ret_from_fork+0x1f/0x30=0A=
+> [    5.833332] =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=0A=
+> =0A=
+> =0A=
+> =0A=
+> Thanks,=0A=
+> Ming Lei=0A=
+> =0A=
+=0A=
+=0A=
+-- =0A=
+Damien Le Moal=0A=
+Western Digital Research=0A=
