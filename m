@@ -1,77 +1,77 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH 4/4] ipvs: reduce kernel stack usage
-Date: Mon, 22 Jul 2019 12:28:59 +0200
-Message-ID: <CAK8P3a0xPDmNDbxRkN6ssobFLu1-JLvMG3MSai844hinj2Bs8A@mail.gmail.com>
-References: <20190628123819.2785504-1-arnd@arndb.de>
- <20190628123819.2785504-4-arnd@arndb.de>
- <CA+FuTSexLuu8e1XHaY0ObGi46CgZnBpELecBr+kMgCU29Fa_gw@mail.gmail.com>
+From: Wolfram Sang <wsa@the-dreams.de>
+Subject: Re: [PATCH 03/14] docs: fix broken doc references due to renames
+Date: Mon, 22 Jul 2019 13:38:46 +0200
+Message-ID: <20190722113845.GA1115@ninjato>
+References: <cover.1563277838.git.mchehab+samsung@kernel.org>
+ <aa415583bf6b812b0249093a601aa31412f3a1cf.1563277838.git.mchehab+samsung@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <CA+FuTSexLuu8e1XHaY0ObGi46CgZnBpELecBr+kMgCU29Fa_gw@mail.gmail.com>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Willem de Bruijn <willemdebruijn.kernel@gmail.com>
-Cc: James Morris <jmorris@namei.org>, driverdevel <devel@driverdev.osuosl.org>, linux-scsi <linux-scsi@vger.kernel.org>, James Smart <james.smart@broadcom.com>, Jozsef Kadlecsik <kadlec@netfilter.org>, lvs-devel@vger.kernel.org, Julian Anastasov <ja@ssi.bg>, coreteam@netfilter.org, Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>, Pablo Neira Ayuso <pablo@netfilter.org>, Wensong Zhang <wensong@linux-vs.org>, Dick Kennedy <dick.kennedy@broadcom.com>, Kees Cook <keescook@chromium.org>, "James E . J . Bottomley" <jejb@linux.ibm.com>, Simon Horman <horms@verge.net.au>, Florian Schilhabel <florian.c.schilhabel@googlemail.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Ard Biesheuvel <ard.biesheuvel@linaro.org>, Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Florian Westphal <fw@strlen.de>, linux-kernel <linux-kernel@vger.kernel.or>
+Content-Type: multipart/mixed; boundary="===============0742215709=="
+Return-path: <dri-devel-bounces@lists.freedesktop.org>
+In-Reply-To: <aa415583bf6b812b0249093a601aa31412f3a1cf.1563277838.git.mchehab+samsung@kernel.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
+List-Post: <mailto:dri-devel@lists.freedesktop.org>
+List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: dri-devel-bounces@lists.freedesktop.org
+Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
+To: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
+Cc: Mark Rutland <mark.rutland@arm.com>, Andrea Parri <andrea.parri@amarulasolutions.com>, Ajay Gupta <ajayg@nvidia.com>, linux-doc@vger.kernel.org, Peter Zijlstra <peterz@infradead.org>, Akira Yokosawa <akiyks@gmail.com>, Lai Jiangshan <jiangshanlai@gmail.com>, Jerry Hoemann <jerry.hoemann@hpe.com>, dri-devel@lists.freedesktop.org, David Howells <dhowells@redhat.com>, linux-i2c@vger.kernel.org, Joel Fernandes <joel@joelfernandes.org>, "Paul E. McKenney" <paulmck@linux.ibm.com>, Will Deacon <will@kernel.org>, linux-arch@vger.kernel.org, linux-scsi@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>, esc.storagedev@microsemi.com, Maxime Ripard <maxime.ripard@bootlin.com>, Ingo Molnar <mingo@redhat.com>, Alan Stern <stern@rowland.harvard.edu>, Jade Alglave <j.alglave@ucl.ac.uk>, Boqun Feng <boqun.feng@gmail.com>, Guenter Roeck <linux@roeck-us.net>, Don Brace <don.brace@microsemi>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Jun 28, 2019 at 9:59 PM Willem de Bruijn
-<willemdebruijn.kernel@gmail.com> wrote:
-> On Fri, Jun 28, 2019 at 8:40 AM Arnd Bergmann <arnd@arndb.de> wrote:
-> >
-> > With the new CONFIG_GCC_PLUGIN_STRUCTLEAK_BYREF_ALL option, the stack
-> > usage in the ipvs debug output grows because each instance of
-> > IP_VS_DBG_BUF() now has its own buffer of 160 bytes that add up
-> > rather than reusing the stack slots:
-> >
-> > net/netfilter/ipvs/ip_vs_core.c: In function 'ip_vs_sched_persist':
-> > net/netfilter/ipvs/ip_vs_core.c:427:1: error: the frame size of 1052 bytes is larger than 1024 bytes [-Werror=frame-larger-than=]
-> > net/netfilter/ipvs/ip_vs_core.c: In function 'ip_vs_new_conn_out':
-> > net/netfilter/ipvs/ip_vs_core.c:1231:1: error: the frame size of 1048 bytes is larger than 1024 bytes [-Werror=frame-larger-than=]
-> > net/netfilter/ipvs/ip_vs_ftp.c: In function 'ip_vs_ftp_out':
-> > net/netfilter/ipvs/ip_vs_ftp.c:397:1: error: the frame size of 1104 bytes is larger than 1024 bytes [-Werror=frame-larger-than=]
-> > net/netfilter/ipvs/ip_vs_ftp.c: In function 'ip_vs_ftp_in':
-> > net/netfilter/ipvs/ip_vs_ftp.c:555:1: error: the frame size of 1200 bytes is larger than 1024 bytes [-Werror=frame-larger-than=]
-> >
-> > Since printk() already has a way to print IPv4/IPv6 addresses using
-> > the %pIS format string, use that instead,
->
-> since these are sockaddr_in and sockaddr_in6, should that have the 'n'
-> specifier to denote network byteorder?
 
-I double-checked the implementation, and don't see that make any difference,
-as 'n' is the default.
+--===============0742215709==
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="CE+1k2dSO48ffgeK"
+Content-Disposition: inline
 
-> >  include/net/ip_vs.h             | 71 +++++++++++++++++++--------------
-> >  net/netfilter/ipvs/ip_vs_core.c | 44 ++++++++++----------
-> >  net/netfilter/ipvs/ip_vs_ftp.c  | 20 +++++-----
-> >  3 files changed, 72 insertions(+), 63 deletions(-)
-> >
-> > diff --git a/include/net/ip_vs.h b/include/net/ip_vs.h
-> > index 3759167f91f5..3dfbeef67be6 100644
-> > --- a/include/net/ip_vs.h
-> > +++ b/include/net/ip_vs.h
-> > @@ -227,6 +227,16 @@ static inline const char *ip_vs_dbg_addr(int af, char *buf, size_t buf_len,
-> >                        sizeof(ip_vs_dbg_buf), addr,                     \
-> >                        &ip_vs_dbg_idx)
-> >
-> > +#define IP_VS_DBG_SOCKADDR4(fam, addr, port)                           \
-> > +       (struct sockaddr*)&(struct sockaddr_in)                         \
-> > +       { .sin_family = (fam), .sin_addr = (addr)->in, .sin_port = (port) }
->
-> might as well set .sin_family = AF_INET here and AF_INET6 below?
 
-That would work just same, but I don't see any advantage. As the family
-and port members are the same between sockaddr_in and sockaddr_in6,
-the compiler can decide to set these regardless to the argument values
-regardless of the condition.
+--CE+1k2dSO48ffgeK
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-       Arnd
+On Tue, Jul 16, 2019 at 09:10:42AM -0300, Mauro Carvalho Chehab wrote:
+> Some files got renamed but probably due to some merge conflicts,
+> a few references still point to the old locations.
+>=20
+> Signed-off-by: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
+
+Acked-by: Wolfram Sang <wsa@the-dreams.de> # I2C part
+
+
+--CE+1k2dSO48ffgeK
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEEOZGx6rniZ1Gk92RdFA3kzBSgKbYFAl01oEEACgkQFA3kzBSg
+KbYvLhAAiBCzjlLaOX8TozT9yXWwqRye46Tkkjqei2Gh2ruk6HulzAm4JLL1ghij
+bD5UKIqsqMqs8SThEWtBr7lpGKPY5dTOO7Lvp3Gg6Ykw4DSJHjwRbY9Gz3eKpjm6
+XCeKu+qe7IWU4PyqjfTmT2tYQBjZTg8+e5ycnPtgLxvLZGpqoOwplZvwady9klS0
+6KfODAi0M8Bv05man76ECm1z4PeUjQMjuSgO4lxWDm9QPN6pL1tZ1DN4TWoQpmY8
+gnS6iqRtIVwRqjxnx3BNP6q0iF0oMBIJbufn+udz5FVAvXkWtx6gaJ+HZO02CPnd
+DfLhbW0h0SzzRnLA8rtuTQl/wJwHcfRtlYBNitXwbXIewlBTqlhzhvuW7JZnXJTe
+QXk4bXJuRofQsmWiK/i6bP0ifWyWmH/mLQkZhXEAZXsiiSHYuLC0RGLYTk2OSbRS
+d4kM+3WQfr0F8KTgmhKZv0g6yKqxziFVCBFMkKvpYqOfk3MuRf9JREpFnAmtHaox
+310crjxth9IwT/SMq813fSz5+SueTeiTp7DZyOANc23QCyJTpTTnIsdpzYzna4+i
+t8H5nyy2JKWKP7rvIfn2O4BKHOt14Klmbno/pUak4lxLadz7Av7mC65akEwLWSiI
+0qO7h0/ZSuPlu8OPAyR3I7cvx8/RriyeQJUceA6/KjTSKtWhw/E=
+=7t6S
+-----END PGP SIGNATURE-----
+
+--CE+1k2dSO48ffgeK--
+
+--===============0742215709==
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: base64
+Content-Disposition: inline
+
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KZHJpLWRldmVs
+IG1haWxpbmcgbGlzdApkcmktZGV2ZWxAbGlzdHMuZnJlZWRlc2t0b3Aub3JnCmh0dHBzOi8vbGlz
+dHMuZnJlZWRlc2t0b3Aub3JnL21haWxtYW4vbGlzdGluZm8vZHJpLWRldmVs
+
+--===============0742215709==--
