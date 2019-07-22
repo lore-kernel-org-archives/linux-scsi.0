@@ -1,99 +1,138 @@
-From: Dexuan-Linux Cui <dexuan.linux@gmail.com>
-Subject: Re: [PATCH 2/8] scsi: take the DMA max mapping size into account
-Date: Sun, 21 Jul 2019 23:18:51 -0700
-Message-ID: <CAA42JLY4zWnCEMXbR+NNbixjOyKfnMqQ0ujJdP5_gus_tu88Jw@mail.gmail.com>
-References: <20190617122000.22181-1-hch@lst.de> <20190617122000.22181-3-hch@lst.de>
- <5d143a03-edd5-5878-780b-45d87313a813@acm.org> <CACVXFVMWM3xg6EEyoyNjkLPv=8+wQKiHj6erMS_gGX25f-Ot4g@mail.gmail.com>
+From: Avri Altman <Avri.Altman@wdc.com>
+Subject: RE: [PATCH RESEND] scsi: ufs: revamp string descriptor reading
+Date: Mon, 22 Jul 2019 07:40:06 +0000
+Message-ID: <SN6PR04MB4925FFBFEC979062E07DC6B8FCC40@SN6PR04MB4925.namprd04.prod.outlook.com>
+References: <20190721140212.8980-1-tomas.winkler@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CACVXFVMWM3xg6EEyoyNjkLPv=8+wQKiHj6erMS_gGX25f-Ot4g@mail.gmail.com>
+In-Reply-To: <20190721140212.8980-1-tomas.winkler@intel.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Ming Lei <tom.leiming@gmail.com>
-Cc: Bart Van Assche <bvanassche@acm.org>, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagi@grimberg.me>, Max Gurtovoy <maxg@mellanox.com>, linux-rdma <linux-rdma@vger.kernel.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, megaraidlinux.pdl@broadcom.com, MPT-FusionLinux.pdl@broadcom.com, linux-hyperv@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Dexuan Cui <decui@microsoft.com>, v-lide@microsoft.com
+To: Tomas Winkler <tomas.winkler@intel.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Alim Akhtar <alim.akhtar@samsung.com>, Pedro Sousa <pedrom.sousa@synopsys.com>
+Cc: Alex Lemberg <Alex.Lemberg@wdc.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sun, Jul 21, 2019 at 11:01 PM Ming Lei <tom.leiming@gmail.com> wrote:
->
-> On Tue, Jun 18, 2019 at 4:57 AM Bart Van Assche <bvanassche@acm.org> wrote:
-> >
-> > On 6/17/19 5:19 AM, Christoph Hellwig wrote:
-> > > We need to limit the devices max_sectors to what the DMA mapping
-> > > implementation can support.  If not we risk running out of swiotlb
-> > > buffers easily.
-> > >
-> > > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > > ---
-> > >   drivers/scsi/scsi_lib.c | 2 ++
-> > >   1 file changed, 2 insertions(+)
-> > >
-> > > diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> > > index d333bb6b1c59..f233bfd84cd7 100644
-> > > --- a/drivers/scsi/scsi_lib.c
-> > > +++ b/drivers/scsi/scsi_lib.c
-> > > @@ -1768,6 +1768,8 @@ void __scsi_init_queue(struct Scsi_Host *shost, struct request_queue *q)
-> > >               blk_queue_max_integrity_segments(q, shost->sg_prot_tablesize);
-> > >       }
-> > >
-> > > +     shost->max_sectors = min_t(unsigned int, shost->max_sectors,
-> > > +                     dma_max_mapping_size(dev) << SECTOR_SHIFT);
-> > >       blk_queue_max_hw_sectors(q, shost->max_sectors);
-> > >       if (shost->unchecked_isa_dma)
-> > >               blk_queue_bounce_limit(q, BLK_BOUNCE_ISA);
-> >
-> > Does dma_max_mapping_size() return a value in bytes? Is
-> > shost->max_sectors a number of sectors? If so, are you sure that "<<
-> > SECTOR_SHIFT" is the proper conversion? Shouldn't that be ">>
-> > SECTOR_SHIFT" instead?
->
-> Now the patch has been committed, '<< SECTOR_SHIFT' needs to be fixed.
->
-> Also the following kernel oops is triggered on qemu, and looks
-> device->dma_mask is NULL.
->
-> Ming Lei
+Hi Tomas,
 
-FYI: we also see the panic with a Linux kernel 5.2.0-next-20190719
-running on Hyper-V:
+>=20
+> Define new a type: uc_string_id for easier string
+> handling and less casting. Reduce number or string
+> copies in price of a dynamic allocation.
+>=20
+> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+> Tested-by: Avri Altman <avri.altman@wdc.com>
+> ---
+>=20
+> Resend: It was reviewed by not merged.
+>=20
+>  drivers/scsi/ufs/ufs-sysfs.c |  20 ++---
+>  drivers/scsi/ufs/ufs.h       |   2 +-
+>  drivers/scsi/ufs/ufshcd.c    | 164 +++++++++++++++++++++--------------
+>  drivers/scsi/ufs/ufshcd.h    |   9 +-
+>  4 files changed, 115 insertions(+), 80 deletions(-)
+>=20
+> diff --git a/drivers/scsi/ufs/ufs-sysfs.c b/drivers/scsi/ufs/ufs-sysfs.c
+> index f478685122ff..13e357f01025 100644
+> --- a/drivers/scsi/ufs/ufs-sysfs.c
+> +++ b/drivers/scsi/ufs/ufs-sysfs.c
+> @@ -570,10 +570,11 @@ static ssize_t _name##_show(struct device *dev,
+> 				\
+>  	struct ufs_hba *hba =3D dev_get_drvdata(dev);			\
+>  	int ret;							\
+>  	int desc_len =3D QUERY_DESC_MAX_SIZE;				\
+> -	u8 *desc_buf;							\
+> +	char *desc_buf;							\
+> +									\
+Leaving it a u8 * here, will assure it would be utf-8,
+And save you making param_read_buf opaque,
+in ufshcd_read_desc  and ufshcd_read_desc_param.
+A fare tradeoff, don't you think?
 
-[    7.429053] RIP: 0010:dma_direct_max_mapping_size+0x26/0x80
-[    7.429053] Code: 0f b6 c0 c3 0f 1f 44 00 00 55 48 89 e5 41 54 53
-48 89 fb e8 4c 14 00 00 84 c0 74 45 48 8b 83 28 02 00 00 4c 8b a3 38
-02 00 00 <48> 8b 00 48 85 c0 74 0c 4d 85 e4 74 36 49 39 c4 4c 0f 47 e0
-48 89
-[    7.429053] RSP: 0018:ffffc1d5005efbc0 EFLAGS: 00010202
-[    7.429053] RAX: 0000000000000000 RBX: ffff9cf86d24c428 RCX: 0000000000000000
-[    7.429053] RDX: ffff9cf86d12dd00 RSI: 0000000000000200 RDI: ffff9cf86d24c428
-[    7.429053] RBP: ffffc1d5005efbd0 R08: ffff9cf86fcaf0e0 R09: ffff9cf86e0072c0
-[    7.429053] R10: ffffc1d5005efa70 R11: 00000000000301a0 R12: 0000000000000000
-[    7.429053] R13: ffff9cf86d24c428 R14: 0000000000000400 R15: ffff9cf825cff000
-[    7.429053] FS:  0000000000000000(0000) GS:ffff9cf86fc80000(0000)
-knlGS:0000000000000000
-[    7.429053] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[    7.429053] CR2: 0000000000000000 CR3: 00000003c700a001 CR4: 00000000003606e0
-[    7.456569] NET: Registered protocol family 17
-[    7.429053] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-[    7.469803] Key type dns_resolver registered
-[    7.429053] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-[    7.429053] Call Trace:
-[    7.429053]  dma_max_mapping_size+0x39/0x50
-[    7.429053]  __scsi_init_queue+0x7f/0x140
-[    7.429053]  scsi_mq_alloc_queue+0x38/0x60
-[    7.429053]  scsi_alloc_sdev+0x1da/0x2b0
-[    7.429053]  scsi_probe_and_add_lun+0x471/0xe60
-[    7.429053]  __scsi_scan_target+0xfc/0x610
-[    7.429053]  scsi_scan_channel+0x66/0xa0
-[    7.429053]  scsi_scan_host_selected+0xf3/0x160
-[    7.429053]  do_scsi_scan_host+0x93/0xa0
-[    7.429053]  do_scan_async+0x1c/0x190
-[    7.429053]  async_run_entry_fn+0x3c/0x150
-[    7.429053]  process_one_work+0x1f7/0x3f0
-[    7.429053]  worker_thread+0x34/0x400
-[    7.429053]  kthread+0x121/0x140
-[    7.429053]  ret_from_fork+0x35/0x40
-[    7.429053] Modules linked in:
-[    7.429053] CR2: 0000000000000000
-[    7.766122] BUG: kernel NULL pointer dereference, address: 0000000000000000
+
+> diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+> index 99a9c4d16f6b..b3e1b2a0f463 100644
+> --- a/drivers/scsi/ufs/ufs.h
+> +++ b/drivers/scsi/ufs/ufs.h
+> @@ -541,7 +541,7 @@ struct ufs_dev_info {
+>   */
+>  struct ufs_dev_desc {
+>  	u16 wmanufacturerid;
+> -	char model[MAX_MODEL_LEN + 1];
+> +	char *model;
+>  };
+Belongs to a different patch?
+
+>  /**
+>   * ufshcd_read_string_desc - read string descriptor
+>   * @hba: pointer to adapter instance
+>   * @desc_index: descriptor index
+> - * @buf: pointer to buffer where descriptor would be read
+> - * @size: size of buf
+> + * @buf: pointer to buffer where descriptor would be read,
+> + *       the caller should free the memory.
+>   * @ascii: if true convert from unicode to ascii characters
+> + *         null terminated string.
+Since ascii is always true, maybe omit this argument altogether,
+and group the if (asci) clause in some handler?
+
+>  /**
+> @@ -6452,6 +6478,9 @@ static int ufs_get_device_desc(struct ufs_hba
+> *hba,
+>  	u8 model_index;
+>  	u8 *desc_buf;
+>=20
+> +	if (!dev_desc)
+> +		return -EINVAL;
+> +
+A different patch?
+
+>=20
+> +static void ufs_put_device_desc(struct ufs_dev_desc *dev_desc)
+> +{
+> +	kfree(dev_desc->model);
+> +	dev_desc->model =3D NULL;
+> +}
+A different patch?
+
+While it's true that dev_desc->model conclude its part after ufs_fixup_devi=
+ce_setup,
+Why are you releasing specifically this part of card?
+
+
+>=20
+>  	ufs_fixup_device_setup(hba, &card);
+> +	ufs_put_device_desc(&card);
+A different patch?
+
+> +
+>  	ufshcd_tune_unipro_params(hba);
+>=20
+>  	/* UFS device is also active now */
+> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+> index 994d73d03207..10935548d1fc 100644
+> --- a/drivers/scsi/ufs/ufshcd.h
+> +++ b/drivers/scsi/ufs/ufshcd.h
+> @@ -885,14 +885,17 @@ int ufshcd_read_desc_param(struct ufs_hba
+> *hba,
+>  			   enum desc_idn desc_id,
+>  			   int desc_index,
+>  			   u8 param_offset,
+> -			   u8 *param_read_buf,
+> +			   void *param_read_buf,
+>  			   u8 param_size);
+>  int ufshcd_query_attr(struct ufs_hba *hba, enum query_opcode opcode,
+>  		      enum attr_idn idn, u8 index, u8 selector, u32
+> *attr_val);
+>  int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
+>  	enum flag_idn idn, bool *flag_res);
+> -int ufshcd_read_string_desc(struct ufs_hba *hba, int desc_index,
+> -			    u8 *buf, u32 size, bool ascii);
+> +
+> +#define SD_ASCII_STD true
+> +#define SD_RAW false
+Not really needed?
 
 Thanks,
--- Dexuan
+Avri
