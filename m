@@ -1,42 +1,41 @@
-From: Junxiao Bi <junxiao.bi@oracle.com>
-Subject: [PATCH RESEND] scsi: megaraid_sas: fix panic on loading firmware crashdump
-Date: Mon, 22 Jul 2019 09:15:24 -0700
-Message-ID: <20190722161524.23192-1-junxiao.bi@oracle.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com, martin.petersen@oracle.com, junxiao.bi@oracle.com
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH V2 1/2] blk-mq: add callback of .cleanup_rq
+Date: Mon, 22 Jul 2019 09:51:27 -0700
+Message-ID: <4ffe9dd8-9e86-fd93-828e-78c1e5931c5f@acm.org>
+References: <20190720030637.14447-1-ming.lei@redhat.com>
+ <20190720030637.14447-2-ming.lei@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20190720030637.14447-2-ming.lei@redhat.com>
+Content-Language: en-US
+Sender: stable-owner@vger.kernel.org
+To: Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, "Ewan D . Milne" <emilne@redhat.com>, Hannes Reinecke <hare@suse.com>, Christoph Hellwig <hch@lst.de>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-While loading fw crashdump in function fw_crash_buffer_show(),
-left bytes in one dma chunk was not checked, if copying size
-over it, overflow access will cause kernel panic.
+On 7/19/19 8:06 PM, Ming Lei wrote:
+> diff --git a/block/blk-mq.c b/block/blk-mq.c
+> index b038ec680e84..fc38d95c557f 100644
+> --- a/block/blk-mq.c
+> +++ b/block/blk-mq.c
+> @@ -502,6 +502,9 @@ void blk_mq_free_request(struct request *rq)
+>   	struct blk_mq_ctx *ctx = rq->mq_ctx;
+>   	struct blk_mq_hw_ctx *hctx = rq->mq_hctx;
+>   
+> +	if (q->mq_ops->cleanup_rq)
+> +		q->mq_ops->cleanup_rq(rq);
+> +
+>   	if (rq->rq_flags & RQF_ELVPRIV) {
+>   		if (e && e->type->ops.finish_request)
+>   			e->type->ops.finish_request(rq);
 
-Signed-off-by: Junxiao Bi <junxiao.bi@oracle.com>
----
- drivers/scsi/megaraid/megaraid_sas_base.c | 3 +++
- 1 file changed, 3 insertions(+)
+I'm concerned about the performance impact of this change. How about not 
+introducing .cleanup_rq() and adding a call to
+scsi_mq_uninit_cmd() in scsi_queue_rq() just before that function 
+returns BLK_STS_RESOURCE or BLK_STS_DEV_RESOURCE?
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 80ab9700f1de..3eef0858fa8e 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -3153,6 +3153,7 @@ fw_crash_buffer_show(struct device *cdev,
- 		(struct megasas_instance *) shost->hostdata;
- 	u32 size;
- 	unsigned long dmachunk = CRASH_DMA_BUF_SIZE;
-+	unsigned long chunk_left_bytes;
- 	unsigned long src_addr;
- 	unsigned long flags;
- 	u32 buff_offset;
-@@ -3176,6 +3177,8 @@ fw_crash_buffer_show(struct device *cdev,
- 	}
- 
- 	size = (instance->fw_crash_buffer_size * dmachunk) - buff_offset;
-+	chunk_left_bytes = dmachunk - (buff_offset % dmachunk);
-+	size = (size > chunk_left_bytes) ? chunk_left_bytes : size;
- 	size = (size >= PAGE_SIZE) ? (PAGE_SIZE - 1) : size;
- 
- 	src_addr = (unsigned long)instance->crash_buf[buff_offset / dmachunk] +
--- 
-2.17.1
+Thanks,
+
+Bart.
