@@ -1,58 +1,42 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH V2 2/2] scsi: implement .cleanup_rq callback
-Date: Mon, 22 Jul 2019 08:40:23 -0700
-Message-ID: <eed624d5-0585-699c-9084-9f5f0ea09e52@acm.org>
-References: <20190720030637.14447-1-ming.lei@redhat.com>
- <20190720030637.14447-3-ming.lei@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20190720030637.14447-3-ming.lei@redhat.com>
-Content-Language: en-US
-Sender: stable-owner@vger.kernel.org
-To: Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, "Ewan D . Milne" <emilne@redhat.com>, Hannes Reinecke <hare@suse.com>, Christoph Hellwig <hch@lst.de>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, stable@vger.kernel.org
+From: Junxiao Bi <junxiao.bi@oracle.com>
+Subject: [PATCH RESEND] scsi: megaraid_sas: fix panic on loading firmware crashdump
+Date: Mon, 22 Jul 2019 09:15:24 -0700
+Message-ID: <20190722161524.23192-1-junxiao.bi@oracle.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com, martin.petersen@oracle.com, junxiao.bi@oracle.com
 List-Id: linux-scsi@vger.kernel.org
 
-On 7/19/19 8:06 PM, Ming Lei wrote:
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index e1da8c70a266..52537c145762 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -154,12 +154,9 @@ scsi_set_blocked(struct scsi_cmnd *cmd, int reason)
->   
->   static void scsi_mq_requeue_cmd(struct scsi_cmnd *cmd)
->   {
-> -	if (cmd->request->rq_flags & RQF_DONTPREP) {
-> -		cmd->request->rq_flags &= ~RQF_DONTPREP;
-> -		scsi_mq_uninit_cmd(cmd);
-> -	} else {
-> -		WARN_ON_ONCE(true);
-> -	}
-> +	WARN_ON_ONCE(!(cmd->request->rq_flags & RQF_DONTPREP));
-> +
-> +	scsi_mq_uninit_cmd(cmd);
->   	blk_mq_requeue_request(cmd->request, true);
->   }
+While loading fw crashdump in function fw_crash_buffer_show(),
+left bytes in one dma chunk was not checked, if copying size
+over it, overflow access will cause kernel panic.
 
-The above changes are independent of this patch series. Have you 
-considered to move these into a separate patch?
+Signed-off-by: Junxiao Bi <junxiao.bi@oracle.com>
+---
+ drivers/scsi/megaraid/megaraid_sas_base.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-> +/*
-> + * Only called when the request isn't completed by SCSI, and not freed by
-> + * SCSI
-> + */
-> +static void scsi_cleanup_rq(struct request *rq)
-> +{
-> +	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(rq);
-> +
-> +	scsi_mq_uninit_cmd(cmd);
-> +}
-
-Is the comment above this function correct? The previous patch adds an 
-unconditional call to mq_ops->cleanup_rq() in blk_mq_free_request().
-
-Thanks,
-
-Bart.
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index 80ab9700f1de..3eef0858fa8e 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -3153,6 +3153,7 @@ fw_crash_buffer_show(struct device *cdev,
+ 		(struct megasas_instance *) shost->hostdata;
+ 	u32 size;
+ 	unsigned long dmachunk = CRASH_DMA_BUF_SIZE;
++	unsigned long chunk_left_bytes;
+ 	unsigned long src_addr;
+ 	unsigned long flags;
+ 	u32 buff_offset;
+@@ -3176,6 +3177,8 @@ fw_crash_buffer_show(struct device *cdev,
+ 	}
+ 
+ 	size = (instance->fw_crash_buffer_size * dmachunk) - buff_offset;
++	chunk_left_bytes = dmachunk - (buff_offset % dmachunk);
++	size = (size > chunk_left_bytes) ? chunk_left_bytes : size;
+ 	size = (size >= PAGE_SIZE) ? (PAGE_SIZE - 1) : size;
+ 
+ 	src_addr = (unsigned long)instance->crash_buf[buff_offset / dmachunk] +
+-- 
+2.17.1
