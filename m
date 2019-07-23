@@ -1,91 +1,187 @@
-From: Randy Dunlap <rdunlap@infradead.org>
-Subject: Re: scsi_debug module panic
-Date: Mon, 22 Jul 2019 19:37:49 -0700
-Message-ID: <cd82bbd5-a8b4-3aa4-e342-ac888273923f@infradead.org>
-References: <20190722233906.5kkmqjcoapw4ev62@XZHOUW.usersys.redhat.com>
+From: Guenter Roeck <linux@roeck-us.net>
+Subject: Re: Linux 5.3-rc1
+Date: Mon, 22 Jul 2019 19:42:27 -0700
+Message-ID: <4dc6ef77-afce-1c6d-add3-8df76332e672@roeck-us.net>
+References: <CAHk-=wiVjkTqzP6OppBuLQZ+t1mpRQC4T+Ho4Wg2sBAapKd--Q@mail.gmail.com>
+ <20190722222126.GA27291@roeck-us.net>
+ <1563839144.2504.5.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190722233906.5kkmqjcoapw4ev62@XZHOUW.usersys.redhat.com>
+In-Reply-To: <1563839144.2504.5.camel@HansenPartnership.com>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Murphy Zhou <jencce.kernel@gmail.com>, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Linux List Kernel Mailing <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-[add linux-scsi]
+On 7/22/19 4:45 PM, James Bottomley wrote:
+> [linux-scsi added to cc]
+> On Mon, 2019-07-22 at 15:21 -0700, Guenter Roeck wrote:
+>> On Sun, Jul 21, 2019 at 02:33:38PM -0700, Linus Torvalds wrote:
+>>
+>> [ ... ]
+>>>
+>>> Go test,
+>>>
+>>
+>> Things looked pretty good until a few days ago. Unfortunately,
+>> the last few days brought in a couple of issues.
+>>
+>> riscv:virt:defconfig:scsi[virtio]
+>> riscv:virt:defconfig:scsi[virtio-pci]
+>>
+>> Boot tests crash with no useful backtrace. Bisect points to
+>> merge ac60602a6d8f ("Merge tag 'dma-mapping-5.3-1'"). Log is at
+>> https://kerneltests.org/builders/qemu-riscv64-master/builds/238/steps
+>> /qemubuildcommand_1/logs/stdio
+>>
+>> ppc:mpc8544ds:mpc85xx_defconfig:sata-sii3112
+>> ppc64:pseries:pseries_defconfig:sata-sii3112
+>> ppc64:pseries:pseries_defconfig:little:sata-sii3112
+>> ppc64:ppce500:corenet64_smp_defconfig:e5500:sata-sii3112
+>>
+>> ata1: lost interrupt (Status 0x50)
+>> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+>> ata1.00: failed command: READ DMA
+>>
+>> and many similar errors. Boot ultimately times out. Bisect points to
+>> merge
+>> f65420df914a ("Merge tag 'scsi-fixes'").
+>>
+>> Logs:
+>> https://kerneltests.org/builders/qemu-ppc64-master/builds/1212/steps/
+>> qemubuildcommand/logs/stdio
+>> https://kerneltests.org/builders/qemu-ppc-master/builds/1255/steps/qe
+>> mubuildcommand/logs/stdio
+>>
+>> Guenter
+>>
+>> ---
+>> riscv bisect log
+>>
+>> # bad: [5f9e832c137075045d15cd6899ab0505cfb2ca4b] Linus 5.3-rc1
+>> # good: [bdd17bdef7d8da4d8eee254abb4c92d8a566bdc1] scsi: core: take
+>> the DMA max mapping size into account
+>> git bisect start 'HEAD' 'bdd17bdef7d8'
+>> # good: [237f83dfbe668443b5e31c3c7576125871cca674] Merge
+>> git://git.kernel.org/pub/scm/linux/kernel/git/davem/net-next
+>> git bisect good 237f83dfbe668443b5e31c3c7576125871cca674
+>> # good: [be8454afc50f43016ca8b6130d9673bdd0bd56ec] Merge tag 'drm-
+>> next-2019-07-16' of git://anongit.freedesktop.org/drm/drm
+>> git bisect good be8454afc50f43016ca8b6130d9673bdd0bd56ec
+>> # good: [d4df33b0e9925c158b313a586fb1557cf29cfdf4] Merge branch 'for-
+>> linus-5.2' of
+>> git://git.kernel.org/pub/scm/linux/kernel/git/konrad/swiotlb
+>> git bisect good d4df33b0e9925c158b313a586fb1557cf29cfdf4
+>> # good: [f90b8fda3a9d72a9422ea80ae95843697f94ea4a] ARM: dts: gemini:
+>> Set DIR-685 SPI CS as active low
+>> git bisect good f90b8fda3a9d72a9422ea80ae95843697f94ea4a
+>> # good: [31cc088a4f5d83481c6f5041bd6eb06115b974af] Merge tag 'drm-
+>> next-2019-07-19' of git://anongit.freedesktop.org/drm/drm
+>> git bisect good 31cc088a4f5d83481c6f5041bd6eb06115b974af
+>> # good: [ad21a4ce040cc41b4a085417169b558e86af56b7] dt-bindings:
+>> pinctrl: aspeed: Fix 'compatible' schema errors
+>> git bisect good ad21a4ce040cc41b4a085417169b558e86af56b7
+>> # good: [e6023adc5c6af79ac8ac5b17939f58091fa0d870] Merge branch
+>> 'core-urgent-for-linus' of
+>> git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip
+>> git bisect good e6023adc5c6af79ac8ac5b17939f58091fa0d870
+>> # bad: [ac60602a6d8f6830dee89f4b87ee005f62eb7171] Merge tag 'dma-
+>> mapping-5.3-1' of git://git.infradead.org/users/hch/dma-mapping
+>> git bisect bad ac60602a6d8f6830dee89f4b87ee005f62eb7171
+>> # good: [6e67d77d673d785631b0c52314b60d3c68ebe809] perf vendor events
+>> s390: Add JSON files for machine type 8561
+>> git bisect good 6e67d77d673d785631b0c52314b60d3c68ebe809
+>> # good: [a0d14b8909de55139b8702fe0c7e80b69763dcfb] x86/mm, tracing:
+>> Fix CR2 corruption
+>> git bisect good a0d14b8909de55139b8702fe0c7e80b69763dcfb
+>> # good: [6879298bd0673840cadd1fb36d7225485504ceb4] x86/entry/64:
+>> Prevent clobbering of saved CR2 value
+>> git bisect good 6879298bd0673840cadd1fb36d7225485504ceb4
+>> # good: [449fa54d6815be8c2c1f68fa9dbbae9384a7c03e] dma-direct:
+>> correct the physical addr in dma_direct_sync_sg_for_cpu/device
+>> git bisect good 449fa54d6815be8c2c1f68fa9dbbae9384a7c03e
+>> # good: [e0c5c5e308ee9b3548844f0d88da937782b895ef] Merge tag 'perf-
+>> core-for-mingo-5.3-20190715' of
+>> git://git.kernel.org/pub/scm/linux/kernel/git/acme/linux into
+>> perf/urgent
+>> git bisect good e0c5c5e308ee9b3548844f0d88da937782b895ef
+>> # good: [c6dd78fcb8eefa15dd861889e0f59d301cb5230c] Merge branch 'x86-
+>> urgent-for-linus' of
+>> git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip
+>> git bisect good c6dd78fcb8eefa15dd861889e0f59d301cb5230c
+>> # first bad commit: [ac60602a6d8f6830dee89f4b87ee005f62eb7171] Merge
+>> tag 'dma-mapping-5.3-1' of git://git.infradead.org/users/hch/dma-
+>> mapping
+>>
+>> ---------
+>> ppc/ppc64 bisect log
+>>
+>> # bad: [5f9e832c137075045d15cd6899ab0505cfb2ca4b] Linus 5.3-rc1
+>> # good: [abdfd52a295fb5731ab07b5c9013e2e39f4d1cbe] Merge tag 'armsoc-
+>> defconfig' of git://git.kernel.org/pub/scm/linux/kernel/git/soc/soc
+>> git bisect start 'HEAD' 'abdfd52a295f'
+>> # bad: [e6023adc5c6af79ac8ac5b17939f58091fa0d870] Merge branch 'core-
+>> urgent-for-linus' of
+>> git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip
+>> git bisect bad e6023adc5c6af79ac8ac5b17939f58091fa0d870
+>> # bad: [f65420df914a85e33b2c8b1cab310858b2abb7c0] Merge tag 'scsi-
+>> fixes' of git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi
+>> git bisect bad f65420df914a85e33b2c8b1cab310858b2abb7c0
+>> # good: [168c79971b4a7be7011e73bf488b740a8e1135c8] Merge tag 'kbuild-
+>> v5.3-2' of
+>> git://git.kernel.org/pub/scm/linux/kernel/git/masahiroy/linux-kbuild
+>> git bisect good 168c79971b4a7be7011e73bf488b740a8e1135c8
+>> # good: [106d45f350c7cac876844dc685845cba4ffdb70b] scsi: zfcp: fix
+>> request object use-after-free in send path causing wrong traces
+>> git bisect good 106d45f350c7cac876844dc685845cba4ffdb70b
+>> # good: [bdd17bdef7d8da4d8eee254abb4c92d8a566bdc1] scsi: core: take
+>> the DMA max mapping size into account
+>> git bisect good bdd17bdef7d8da4d8eee254abb4c92d8a566bdc1
+>> # good: [09a4460ba4434ef0327cd26bf25f2d7afb973251] scsi: IB/iser: set
+>> virt_boundary_mask in the scsi host
+>> git bisect good 09a4460ba4434ef0327cd26bf25f2d7afb973251
+>> # good: [ce0ad853109733d772d26224297fda0de313bf13] scsi: mpt3sas: set
+>> an unlimited max_segment_size for SAS 3.0 HBAs
+>> git bisect good ce0ad853109733d772d26224297fda0de313bf13
+>> # good: [07d9aa14346489d6facae5777ceb267a1dcadbc5] scsi:
+>> megaraid_sas: set an unlimited max_segment_size
+>> git bisect good 07d9aa14346489d6facae5777ceb267a1dcadbc5
+>> # first bad commit: [f65420df914a85e33b2c8b1cab310858b2abb7c0] Merge
+>> tag 'scsi-fixes' of
+>> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi
+> 
+> When a bisect lands on a merge commit it usually indicates bad
+> interaction between two trees.  The way to find it is to do a bisect,
+> but merge up to the other side of the scsi-fixes pull before running
+> tests so the interaction is exposed in the bisect.
+> 
 
-On 7/22/19 4:39 PM, Murphy Zhou wrote:
+Can you provide instructions for dummies ?
+
+> However my money is on:
 > 
-> Hi,
 > 
-> It reproduces every time. It's ok on v5.2. So it's a regression in v5.3-rc1.
+> commit bdd17bdef7d8da4d8eee254abb4c92d8a566bdc1
+> Author: Christoph Hellwig <hch@lst.de>
+> Date:   Mon Jun 17 14:19:54 2019 +0200
 > 
-> Thanks,
-> M
+>      scsi: core: take the DMA max mapping size into account
+>   
+> Now that I look at the code again:
 > 
-> [root@7u ~]# modprobe scsi_debug
-> [  244.084203] scsi host2: scsi_debug: version 0188 [20190125]
-> [  244.084203]   dev_size_mb=8, opts=0x0, submit_queues=1, statistics=0
-> [  244.093098] BUG: kernel NULL pointer dereference, address: 0000000000000000
-> [  244.097625] #PF: supervisor read access in kernel mode
-> [  244.101175] #PF: error_code(0x0000) - not-present page
-> [  244.104670] PGD 0 P4D 0
-> [  244.106381] Oops: 0000 [#1] SMP PTI
-> [  244.108738] CPU: 17 PID: 182 Comm: kworker/u64:1 Not tainted 5.3.0-rc1-master-5f9e832 #112
-> [  244.114161] Hardware name: Red Hat KVM, BIOS 0.5.1 01/01/2011
-> [  244.117854] Workqueue: events_unbound async_run_entry_fn
-> [  244.121025] RIP: 0010:dma_direct_max_mapping_size+0x2b/0x65
-> [  244.124324] Code: 66 66 66 90 55 53 48 89 fb e8 f1 14 00 00 84 c0 75 0a 5b 48 c7 c0 ff ff ff ff 5d c3 48 8b 83 28 02 00 00 48 8b ab 38 02 00 00 <48> 8b 00 48 89 ea 48 85 c0 74 0f 48 85 d2 48 89 c5 74 07 48 39 d0
-> [  244.135752] RSP: 0018:ffffb3bd40733bf8 EFLAGS: 00010202
-> [  244.139237] RAX: 0000000000000000 RBX: ffffa027feb50c18 RCX: 0000000000000000
-> [  244.143966] RDX: 0000000000000800 RSI: 0000000000000800 RDI: ffffa027feb50c18
-> [  244.148748] RBP: 0000000000000000 R08: 00000000000300e0 R09: ffffa028104dd280
-> [  244.153399] R10: ffffa028104dd280 R11: ffffffffffffffa0 R12: ffffa027feb50c18
-> [  244.157982] R13: 00000000ffffffff R14: ffffa0280513c828 R15: 0000000000000000
-> [  244.162375] FS:  0000000000000000(0000) GS:ffffa02894640000(0000) knlGS:0000000000000000
-> [  244.167286] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> [  244.170876] CR2: 0000000000000000 CR3: 000000003c20a000 CR4: 00000000000006e0
-> [  244.175116] Call Trace:
-> [  244.176622]  __scsi_init_queue+0x7a/0x130
-> [  244.178788]  scsi_mq_alloc_queue+0x34/0x50
-> [  244.181015]  scsi_alloc_sdev+0x1e4/0x2b0
-> [  244.183150]  scsi_probe_and_add_lun+0x8af/0xd60
-> [  244.185628]  ? kobject_set_name_vargs+0x6e/0x90
-> [  244.188168]  ? dev_set_name+0x53/0x70
-> [  244.190258]  ? _cond_resched+0x15/0x30
-> [  244.192416]  ? mutex_lock+0xe/0x30
-> [  244.194284]  __scsi_scan_target+0xf4/0x250
-> [  244.196527]  scsi_scan_channel.part.13+0x52/0x70
-> [  244.198830]  scsi_scan_host_selected+0xe3/0x190
-> [  244.201159]  ? __switch_to_asm+0x40/0x70
-> [  244.203124]  do_scan_async+0x17/0x180
-> [  244.204961]  async_run_entry_fn+0x39/0x160
-> [  244.207012]  process_one_work+0x171/0x380
-> [  244.209007]  worker_thread+0x49/0x3f0
-> [  244.210840]  kthread+0xf8/0x130
-> [  244.212419]  ? max_active_store+0x80/0x80
-> [  244.214426]  ? kthread_bind+0x10/0x10
-> [  244.216264]  ret_from_fork+0x35/0x40
-> [  244.218075] Modules linked in: scsi_debug sunrpc snd_hda_codec_generic ledtrig_audio snd_hda_intel snd_hda_codec crct10dif_pclmul snd_hda_core crc32_pclmul snd_hwdep ghash_clmulni_intel snd_seq snd_seq_device snd_pcm aesni_intel crypto_simd snd_timer cryptd snd glue_helper sg pcspkr soundcore joydev virtio_balloon i2c_piix4 ip_tables xfs libcrc32c qxl drm_kms_helper syscopyarea sysfillrect sd_mod sysimgblt fb_sys_fops ttm ata_generic pata_acpi drm virtio_console 8139too ata_piix libata virtio_pci 8139cp virtio_ring crc32c_intel serio_raw mii virtio floppy dm_mirror dm_region_hash dm_log dm_mod
-> [  244.243647] CR2: 0000000000000000
-> [  244.245274] ---[ end trace 1209311dc64cb7fa ]---
-> [  244.247399] RIP: 0010:dma_direct_max_mapping_size+0x2b/0x65
-> [  244.250145] Code: 66 66 66 90 55 53 48 89 fb e8 f1 14 00 00 84 c0 75 0a 5b 48 c7 c0 ff ff ff ff 5d c3 48 8b 83 28 02 00 00 48 8b ab 38 02 00 00 <48> 8b 00 48 89 ea 48 85 c0 74 0f 48 85 d2 48 89 c5 74 07 48 39 d0
-> [  244.258533] RSP: 0018:ffffb3bd40733bf8 EFLAGS: 00010202
-> [  244.260749] RAX: 0000000000000000 RBX: ffffa027feb50c18 RCX: 0000000000000000
-> [  244.263777] RDX: 0000000000000800 RSI: 0000000000000800 RDI: ffffa027feb50c18
-> [  244.266798] RBP: 0000000000000000 R08: 00000000000300e0 R09: ffffa028104dd280
-> [  244.269901] R10: ffffa028104dd280 R11: ffffffffffffffa0 R12: ffffa027feb50c18
-> [  244.272899] R13: 00000000ffffffff R14: ffffa0280513c828 R15: 0000000000000000
-> [  244.275909] FS:  0000000000000000(0000) GS:ffffa02894640000(0000) knlGS:0000000000000000
-> [  244.279131] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> [  244.281655] CR2: 0000000000000000 CR3: 000000003c20a000 CR4: 00000000000006e0
-> [  244.284554] Kernel panic - not syncing: Fatal exception
-> [  244.287052] Kernel Offset: 0x22c00000 from 0xffffffff81000000 (relocation range: 0xffffffff80000000-0xffffffffbfffffff)
-> [  244.291412] ---[ end Kernel panic - not syncing: Fatal exception ]---
+> 
+> +       shost->max_sectors = min_t(unsigned int, shost->max_sectors,
+> +                       dma_max_mapping_size(dev) << SECTOR_SHIFT);
+> 
+> That shift looks to be the wrong way around (should be >>).  I bet
+> something is giving a very large number which becomes zero on left
+> shift, meaning max_sectors gets set to zero.
 > 
 
+That does indeed look bad, but changing it doesn't make a difference.
 
--- 
-~Randy
+Thanks,
+Guenter
