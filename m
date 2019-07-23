@@ -1,50 +1,44 @@
 From: Sumit Saxena <sumit.saxena@broadcom.com>
-Subject: Re: [PATCH RESEND] scsi: megaraid_sas: fix panic on loading firmware crashdump
-Date: Tue, 23 Jul 2019 23:46:25 +0530
-Message-ID: <CAL2rwxoGqznXyi_bdV-ODoHE2Mhv6gT=PH=3jXkQXPnUJrEUNw@mail.gmail.com>
-References: <20190722161524.23192-1-junxiao.bi@oracle.com>
+Subject: Re: [PATCH][next] scsi: megaraid_sas: fix spelling mistake
+ "megarid_sas" -> "megaraid_sas"
+Date: Tue, 23 Jul 2019 23:47:11 +0530
+Message-ID: <CAL2rwxp_MNBiouBmAEXidEVxoLmb74dZWbGTPyTazH+MRe_sFg@mail.gmail.com>
+References: <20190720215840.23831-1-colin.king@canonical.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190722161524.23192-1-junxiao.bi@oracle.com>
+In-Reply-To: <20190720215840.23831-1-colin.king@canonical.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Junxiao Bi <junxiao.bi@oracle.com>
-Cc: "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@broadcom.com>, Linux SCSI List <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Kashyap Desai <kashyap.desai@broadcom.com>, Shivasharan Srikanteshwara <shivasharan.srikanteshwara@broadcom.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+To: Colin King <colin.king@canonical.com>
+Cc: Kashyap Desai <kashyap.desai@broadcom.com>, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@broadcom.com>, Linux SCSI List <linux-scsi@vger.kernel.org>, kernel-janitors@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Jul 22, 2019 at 9:45 PM Junxiao Bi <junxiao.bi@oracle.com> wrote:
+On Sun, Jul 21, 2019 at 3:28 AM Colin King <colin.king@canonical.com> wrote:
 >
-> While loading fw crashdump in function fw_crash_buffer_show(),
-> left bytes in one dma chunk was not checked, if copying size
-> over it, overflow access will cause kernel panic.
+> From: Colin Ian King <colin.king@canonical.com>
 >
-> Signed-off-by: Junxiao Bi <junxiao.bi@oracle.com>
+> Fix spelling mistake in kernel warning message and replace
+> printk with with pr_warn.
+>
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
 Acked-by: Sumit Saxena <sumit.saxena@broadcom.com>
 > ---
->  drivers/scsi/megaraid/megaraid_sas_base.c | 3 +++
->  1 file changed, 3 insertions(+)
+>  drivers/scsi/megaraid/megaraid_sas_base.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 >
 > diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-> index 80ab9700f1de..3eef0858fa8e 100644
+> index b2339d04a700..2590746c81e3 100644
 > --- a/drivers/scsi/megaraid/megaraid_sas_base.c
 > +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-> @@ -3153,6 +3153,7 @@ fw_crash_buffer_show(struct device *cdev,
->                 (struct megasas_instance *) shost->hostdata;
->         u32 size;
->         unsigned long dmachunk = CRASH_DMA_BUF_SIZE;
-> +       unsigned long chunk_left_bytes;
->         unsigned long src_addr;
->         unsigned long flags;
->         u32 buff_offset;
-> @@ -3176,6 +3177,8 @@ fw_crash_buffer_show(struct device *cdev,
+> @@ -8763,7 +8763,7 @@ static int __init megasas_init(void)
+>
+>         if ((event_log_level < MFI_EVT_CLASS_DEBUG) ||
+>             (event_log_level > MFI_EVT_CLASS_DEAD)) {
+> -               printk(KERN_WARNING "megarid_sas: provided event log level is out of range, setting it to default 2(CLASS_CRITICAL), permissible range is: -2 to 4\n");
+> +               pr_warn("megaraid_sas: provided event log level is out of range, setting it to default 2(CLASS_CRITICAL), permissible range is: -2 to 4\n");
+>                 event_log_level = MFI_EVT_CLASS_CRITICAL;
 >         }
 >
->         size = (instance->fw_crash_buffer_size * dmachunk) - buff_offset;
-> +       chunk_left_bytes = dmachunk - (buff_offset % dmachunk);
-> +       size = (size > chunk_left_bytes) ? chunk_left_bytes : size;
->         size = (size >= PAGE_SIZE) ? (PAGE_SIZE - 1) : size;
->
->         src_addr = (unsigned long)instance->crash_buf[buff_offset / dmachunk] +
 > --
-> 2.17.1
+> 2.20.1
 >
