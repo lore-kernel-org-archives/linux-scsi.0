@@ -1,178 +1,142 @@
-From: Steffen Maier <maier@linux.ibm.com>
-Subject: Re: Linux 5.3-rc1
-Date: Tue, 23 Jul 2019 16:25:11 +0200
-Message-ID: <1e05670d-9e28-1b1d-249d-743c736e6d63@linux.ibm.com>
-References: <CAHk-=wiVjkTqzP6OppBuLQZ+t1mpRQC4T+Ho4Wg2sBAapKd--Q@mail.gmail.com>
- <20190722222126.GA27291@roeck-us.net>
- <1563839144.2504.5.camel@HansenPartnership.com>
- <4dc6ef77-afce-1c6d-add3-8df76332e672@roeck-us.net>
- <1563859682.2504.17.camel@HansenPartnership.com>
+From: YueHaibing <yuehaibing@huawei.com>
+Subject: [PATCH -next] scsi: megaraid_sas: Make some functions static
+Date: Tue, 23 Jul 2019 22:34:50 +0800
+Message-ID: <20190723143450.33916-1-yuehaibing@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1563859682.2504.17.camel@HansenPartnership.com>
-Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, Guenter Roeck <linux@roeck-us.net>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Linux List Kernel Mailing <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, linux-scsi <linux-scsi@vger.kernel.org>
+To: kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com, jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, megaraidlinux.pdl@broadcom.com, YueHaibing <yuehaibing@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 7/23/19 7:28 AM, James Bottomley wrote:
-> On Mon, 2019-07-22 at 19:42 -0700, Guenter Roeck wrote:
->> On 7/22/19 4:45 PM, James Bottomley wrote:
->>> [linux-scsi added to cc]
->>> On Mon, 2019-07-22 at 15:21 -0700, Guenter Roeck wrote:
->>>> On Sun, Jul 21, 2019 at 02:33:38PM -0700, Linus Torvalds wrote:
->>>>
->>>> [ ... ]
->>>>>
->>>>> Go test,
->>>>>
->>>>
->>>> Things looked pretty good until a few days ago. Unfortunately,
->>>> the last few days brought in a couple of issues.
->>>>
->>>> riscv:virt:defconfig:scsi[virtio]
->>>> riscv:virt:defconfig:scsi[virtio-pci]
->>>>
->>>> Boot tests crash with no useful backtrace. Bisect points to
->>>> merge ac60602a6d8f ("Merge tag 'dma-mapping-5.3-1'"). Log is at
->>>> https://kerneltests.org/builders/qemu-riscv64-master/builds/238/s
->>>> teps
->>>> /qemubuildcommand_1/logs/stdio
->>>>
->>>> ppc:mpc8544ds:mpc85xx_defconfig:sata-sii3112
->>>> ppc64:pseries:pseries_defconfig:sata-sii3112
->>>> ppc64:pseries:pseries_defconfig:little:sata-sii3112
->>>> ppc64:ppce500:corenet64_smp_defconfig:e5500:sata-sii3112
->>>>
->>>> ata1: lost interrupt (Status 0x50)
->>>> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
->>>> ata1.00: failed command: READ DMA
->>>>
->>>> and many similar errors. Boot ultimately times out. Bisect points
->>>> to
->>>> merge
->>>> f65420df914a ("Merge tag 'scsi-fixes'").
->>>>
->>>> Logs:
->>>> https://kerneltests.org/builders/qemu-ppc64-master/builds/1212/st
->>>> eps/
->>>> qemubuildcommand/logs/stdio
->>>> https://kerneltests.org/builders/qemu-ppc-master/builds/1255/step
->>>> s/qe
->>>> mubuildcommand/logs/stdio
->>>>
->>>> Guenter
->>>>
->>>> ---
->>>> riscv bisect log
->>>>
->>>> # bad: [5f9e832c137075045d15cd6899ab0505cfb2ca4b] Linus 5.3-rc1
->>>> # good: [bdd17bdef7d8da4d8eee254abb4c92d8a566bdc1] scsi: core:
->>>> take
->>>> the DMA max mapping size into account
+Fix sparse warnings:
 
->>>> # first bad commit: [ac60602a6d8f6830dee89f4b87ee005f62eb7171]
->>>> Merge
->>>> tag 'dma-mapping-5.3-1' of git://git.infradead.org/users/hch/dma-
->>>> mapping
+drivers/scsi/megaraid/megaraid_sas_fusion.c:541:1: warning: symbol 'megasas_alloc_cmdlist_fusion' was not declared. Should it be static?
+drivers/scsi/megaraid/megaraid_sas_fusion.c:580:1: warning: symbol 'megasas_alloc_request_fusion' was not declared. Should it be static?
+drivers/scsi/megaraid/megaraid_sas_fusion.c:661:1: warning: symbol 'megasas_alloc_reply_fusion' was not declared. Should it be static?
+drivers/scsi/megaraid/megaraid_sas_fusion.c:738:1: warning: symbol 'megasas_alloc_rdpq_fusion' was not declared. Should it be static?
+drivers/scsi/megaraid/megaraid_sas_fusion.c:920:1: warning: symbol 'megasas_alloc_cmds_fusion' was not declared. Should it be static?
+drivers/scsi/megaraid/megaraid_sas_fusion.c:1740:1: warning: symbol 'megasas_init_adapter_fusion' was not declared. Should it be static?
+drivers/scsi/megaraid/megaraid_sas_fusion.c:1966:1: warning: symbol 'map_cmd_status' was not declared. Should it be static?
+drivers/scsi/megaraid/megaraid_sas_fusion.c:2379:1: warning: symbol 'megasas_set_pd_lba' was not declared. Should it be static?
+drivers/scsi/megaraid/megaraid_sas_fusion.c:2718:1: warning: symbol 'megasas_build_ldio_fusion' was not declared. Should it be static?
+drivers/scsi/megaraid/megaraid_sas_fusion.c:3215:1: warning: symbol 'megasas_build_io_fusion' was not declared. Should it be static?
+drivers/scsi/megaraid/megaraid_sas_fusion.c:3328:6: warning: symbol 'megasas_prepare_secondRaid1_IO' was not declared. Should it be static?
 
->>> When a bisect lands on a merge commit it usually indicates bad
->>> interaction between two trees.  The way to find it is to do a
->>> bisect,
->>> but merge up to the other side of the scsi-fixes pull before
->>> running
->>> tests so the interaction is exposed in the bisect.
->>>
->>
->> Can you provide instructions for dummies ?
-> 
-> do a man git-bisect and then follow the 'Automatically bisect with
-> temporary modifications' example.  You substitute
-> 168c79971b4a7be7011e73bf488b740a8e1135c8 for hot-fix
-> 
->>> However my money is on:
->>>
->>>
->>> commit bdd17bdef7d8da4d8eee254abb4c92d8a566bdc1
->>> Author: Christoph Hellwig <hch@lst.de>
->>> Date:   Mon Jun 17 14:19:54 2019 +0200
->>>
->>>       scsi: core: take the DMA max mapping size into account
->>>    
->>> Now that I look at the code again:
->>>
->>>
->>> +       shost->max_sectors = min_t(unsigned int, shost-
->>>> max_sectors,
->>> +                       dma_max_mapping_size(dev) << SECTOR_SHIFT);
->>>
->>> That shift looks to be the wrong way around (should be >>).  I bet
->>> something is giving a very large number which becomes zero on left
->>> shift, meaning max_sectors gets set to zero.
->>>
->>
->> That does indeed look bad, but changing it doesn't make a difference.
-> 
-> Odd, all the other changes are driver specific (and not in ATA) apart
-> from this one:
-> 
-> commit 7ad388d8e4c703980b7018b938cdeec58832d78d
-> Author: Christoph Hellwig <hch@lst.de>
-> Date:   Mon Jun 17 14:19:53 2019 +0200
-> 
->      scsi: core: add a host / host template field for the virt boundary
-> 
-> 
-> I suppose it could be because the virt_boundary_mask isn't set, but
-> that should just set zero, which is what block usually does.
+Reported-by: Hulk Robot <hulkci@huawei.com>
+Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+---
+ drivers/scsi/megaraid/megaraid_sas_fusion.c | 27 ++++++++++++++-------------
+ 1 file changed, 14 insertions(+), 13 deletions(-)
 
-I found max_segment_size unexpectedly to be UINT_MAX with zfcp today in our CI. 
-My investigations are still very early, but I thought, I share a few thoughts 
-as I'm way too unfamiliar with the DMA business and thus hope for help.
-
-Above commit introduced an unconditional call to blk_queue_virt_boundary(q, 
-shost->virt_boundary_mask), _after_ blk_queue_max_segment_size(q, 
-shost->max_segment_size).
-
-Looking at the source, dma_set_max_seg_size() seems to unconditionally 
-overwrite max_segment_size:
-
-> /**
->  * blk_queue_virt_boundary - set boundary rules for bio merging
->  * @q:  the request queue for the device
->  * @mask:  the memory boundary mask
->  **/
-> void blk_queue_virt_boundary(struct request_queue *q, unsigned long mask)
-> {
-> 	q->limits.virt_boundary_mask = mask;
-> 
-> 	/*
-> 	 * Devices that require a virtual boundary do not support scatter/gather
-> 	 * I/O natively, but instead require a descriptor list entry for each
-> 	 * page (which might not be idential to the Linux PAGE_SIZE).  Because
-> 	 * of that they are not limited by our notion of "segment size".
-> 	 */
-> 	q->limits.max_segment_size = UINT_MAX;
-> }
-> EXPORT_SYMBOL(blk_queue_virt_boundary);
-
-Wild guess: Do we need to make the call to blk_queue_virt_boundary() conditional?
-
-Cf. https://www.spinics.net/lists/linux-scsi/msg131077.html ("[PATCH v2] iser: 
-explicitly set shost max_segment_size if non virtual boundary devices")
-
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+index a32b3f0..120e3c4 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+@@ -537,7 +537,7 @@ static int megasas_create_sg_sense_fusion(struct megasas_instance *instance)
+ 	return 0;
+ }
+ 
+-int
++static int
+ megasas_alloc_cmdlist_fusion(struct megasas_instance *instance)
+ {
+ 	u32 max_mpt_cmd, i, j;
+@@ -576,7 +576,8 @@ megasas_alloc_cmdlist_fusion(struct megasas_instance *instance)
+ 
+ 	return 0;
+ }
+-int
++
++static int
+ megasas_alloc_request_fusion(struct megasas_instance *instance)
+ {
+ 	struct fusion_context *fusion;
+@@ -657,7 +658,7 @@ megasas_alloc_request_fusion(struct megasas_instance *instance)
+ 	return 0;
+ }
+ 
+-int
++static int
+ megasas_alloc_reply_fusion(struct megasas_instance *instance)
+ {
+ 	int i, count;
+@@ -734,7 +735,7 @@ megasas_alloc_reply_fusion(struct megasas_instance *instance)
+ 	return 0;
+ }
+ 
+-int
++static int
+ megasas_alloc_rdpq_fusion(struct megasas_instance *instance)
+ {
+ 	int i, j, k, msix_count;
+@@ -916,7 +917,7 @@ megasas_free_reply_fusion(struct megasas_instance *instance) {
+  * and is used as SMID of the cmd.
+  * SMID value range is from 1 to max_fw_cmds.
+  */
+-int
++static int
+ megasas_alloc_cmds_fusion(struct megasas_instance *instance)
+ {
+ 	int i;
+@@ -1736,7 +1737,7 @@ static inline void megasas_free_ioc_init_cmd(struct megasas_instance *instance)
+  *
+  * This is the main function for initializing firmware.
+  */
+-u32
++static u32
+ megasas_init_adapter_fusion(struct megasas_instance *instance)
+ {
+ 	struct fusion_context *fusion;
+@@ -1962,7 +1963,7 @@ megasas_fusion_stop_watchdog(struct megasas_instance *instance)
+  * @ext_status :	ext status of cmd returned by FW
+  */
+ 
+-void
++static void
+ map_cmd_status(struct fusion_context *fusion,
+ 		struct scsi_cmnd *scmd, u8 status, u8 ext_status,
+ 		u32 data_length, u8 *sense)
+@@ -2375,7 +2376,7 @@ int megasas_make_sgl(struct megasas_instance *instance, struct scsi_cmnd *scp,
+  *
+  * Used to set the PD LBA in CDB for FP IOs
+  */
+-void
++static void
+ megasas_set_pd_lba(struct MPI2_RAID_SCSI_IO_REQUEST *io_request, u8 cdb_len,
+ 		   struct IO_REQUEST_INFO *io_info, struct scsi_cmnd *scp,
+ 		   struct MR_DRV_RAID_MAP_ALL *local_map_ptr, u32 ref_tag)
+@@ -2714,7 +2715,7 @@ megasas_set_raidflag_cpu_affinity(struct fusion_context *fusion,
+  * Prepares the io_request and chain elements (sg_frame) for IO
+  * The IO can be for PD (Fast Path) or LD
+  */
+-void
++static void
+ megasas_build_ldio_fusion(struct megasas_instance *instance,
+ 			  struct scsi_cmnd *scp,
+ 			  struct megasas_cmd_fusion *cmd)
+@@ -3211,7 +3212,7 @@ megasas_build_syspd_fusion(struct megasas_instance *instance,
+  * Invokes helper functions to prepare request frames
+  * and sets flags appropriate for IO/Non-IO cmd
+  */
+-int
++static int
+ megasas_build_io_fusion(struct megasas_instance *instance,
+ 			struct scsi_cmnd *scp,
+ 			struct megasas_cmd_fusion *cmd)
+@@ -3325,9 +3326,9 @@ megasas_get_request_descriptor(struct megasas_instance *instance, u16 index)
+ /* megasas_prepate_secondRaid1_IO
+  *  It prepares the raid 1 second IO
+  */
+-void megasas_prepare_secondRaid1_IO(struct megasas_instance *instance,
+-			    struct megasas_cmd_fusion *cmd,
+-			    struct megasas_cmd_fusion *r1_cmd)
++static void megasas_prepare_secondRaid1_IO(struct megasas_instance *instance,
++					   struct megasas_cmd_fusion *cmd,
++					   struct megasas_cmd_fusion *r1_cmd)
+ {
+ 	union MEGASAS_REQUEST_DESCRIPTOR_UNION *req_desc, *req_desc2 = NULL;
+ 	struct fusion_context *fusion;
 -- 
-Mit freundlichen Gruessen / Kind regards
-Steffen Maier
-
-Linux on IBM Z Development
-
-https://www.ibm.com/privacy/us/en/
-IBM Deutschland Research & Development GmbH
-Vorsitzender des Aufsichtsrats: Matthias Hartmann
-Geschaeftsfuehrung: Dirk Wittkopp
-Sitz der Gesellschaft: Boeblingen
-Registergericht: Amtsgericht Stuttgart, HRB 243294
+2.7.4
