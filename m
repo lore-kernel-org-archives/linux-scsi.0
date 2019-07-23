@@ -1,7 +1,7 @@
-From: Steffen Maier <maier@linux.ibm.com>
+From: Guenter Roeck <linux@roeck-us.net>
 Subject: Re: Linux 5.3-rc1
-Date: Tue, 23 Jul 2019 18:46:15 +0200
-Message-ID: <f8f135a8-62ea-fb8b-339f-2fce8024ee1b@linux.ibm.com>
+Date: Tue, 23 Jul 2019 09:52:08 -0700
+Message-ID: <20190723165208.GA26316@roeck-us.net>
 References: <CAHk-=wiVjkTqzP6OppBuLQZ+t1mpRQC4T+Ho4Wg2sBAapKd--Q@mail.gmail.com>
  <20190722222126.GA27291@roeck-us.net>
  <1563839144.2504.5.camel@HansenPartnership.com>
@@ -10,59 +10,61 @@ References: <CAHk-=wiVjkTqzP6OppBuLQZ+t1mpRQC4T+Ho4Wg2sBAapKd--Q@mail.gmail.com>
  <1e05670d-9e28-1b1d-249d-743c736e6d63@linux.ibm.com>
  <1563895995.3609.10.camel@HansenPartnership.com>
  <20190723161918.GB9140@roeck-us.net>
+ <1563899014.3609.26.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190723161918.GB9140@roeck-us.net>
-Content-Language: en-US
+Content-Disposition: inline
+In-Reply-To: <1563899014.3609.26.camel@HansenPartnership.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Guenter Roeck <linux@roeck-us.net>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Linux List Kernel Mailing <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, linux-scsi <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Steffen Maier <maier@linux.ibm.com>, Linus Torvalds <torvalds@linux-foundation.org>, Linux List Kernel Mailing <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 7/23/19 6:19 PM, Guenter Roeck wrote:
-> On Tue, Jul 23, 2019 at 08:33:15AM -0700, James Bottomley wrote:
-> [ ... ]
->>
->> Yes, I think so.  Can someone try this, or something like it.
->>
->> Thanks,
->>
->> James
->>
->> ---
->>
->> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
->> index 9381171c2fc0..4715671a1537 100644
->> --- a/drivers/scsi/scsi_lib.c
->> +++ b/drivers/scsi/scsi_lib.c
->> @@ -1793,7 +1793,8 @@ void __scsi_init_queue(struct Scsi_Host *shost, struct request_queue *q)
->>   	dma_set_seg_boundary(dev, shost->dma_boundary);
->>   
->>   	blk_queue_max_segment_size(q, shost->max_segment_size);
->> -	blk_queue_virt_boundary(q, shost->virt_boundary_mask);
->> +	if (shost->virt_boundary_mask)
->> +		blk_queue_virt_boundary(q, shost->virt_boundary_mask);
->>   	dma_set_max_seg_size(dev, queue_max_segment_size(q));
->>   
->>   	/*
+On Tue, Jul 23, 2019 at 09:23:34AM -0700, James Bottomley wrote:
+> On Tue, 2019-07-23 at 09:19 -0700, Guenter Roeck wrote:
+> > On Tue, Jul 23, 2019 at 08:33:15AM -0700, James Bottomley wrote:
+> > [ ... ]
+> > > 
+> > > Yes, I think so.  Can someone try this, or something like it.
+> > > 
+> > > Thanks,
+> > > 
+> > > James
+> > > 
+> > > ---
+> > > 
+> > > diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> > > index 9381171c2fc0..4715671a1537 100644
+> > > --- a/drivers/scsi/scsi_lib.c
+> > > +++ b/drivers/scsi/scsi_lib.c
+> > > @@ -1793,7 +1793,8 @@ void __scsi_init_queue(struct Scsi_Host
+> > > *shost, struct request_queue *q)
+> > >  	dma_set_seg_boundary(dev, shost->dma_boundary);
+> > >  
+> > >  	blk_queue_max_segment_size(q, shost->max_segment_size);
+> > > -	blk_queue_virt_boundary(q, shost->virt_boundary_mask);
+> > > +	if (shost->virt_boundary_mask)
+> > > +		blk_queue_virt_boundary(q, shost-
+> > > >virt_boundary_mask);
+> > >  	dma_set_max_seg_size(dev, queue_max_segment_size(q));
+> > >  
+> > >  	/*
+> > 
+> > This fixes the problem for me.
 > 
-> This fixes the problem for me.
+> Great, thanks!
+> 
+> I'm thinking this is the more correct fix:
+> 
+> https://lore.kernel.org/linux-block/1563896932.3609.15.camel@HansenPartnership.com/
+> 
+> But we'll see what Jens says.
 
-+1
-(on a first glimpse with zfcp)
+Yes, that patch also fixes the problem with sata-sii3112.
 
+Guenter
 
--- 
-Mit freundlichen Gruessen / Kind regards
-Steffen Maier
-
-Linux on IBM Z Development
-
-https://www.ibm.com/privacy/us/en/
-IBM Deutschland Research & Development GmbH
-Vorsitzender des Aufsichtsrats: Matthias Hartmann
-Geschaeftsfuehrung: Dirk Wittkopp
-Sitz der Gesellschaft: Boeblingen
-Registergericht: Amtsgericht Stuttgart, HRB 243294
+> 
+> James
+> 
