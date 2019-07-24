@@ -1,27 +1,27 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH -next] scsi: megaraid_sas: Make some functions static
-Date: Tue, 23 Jul 2019 22:16:01 -0400
-Message-ID: <yq1sgqwqise.fsf@oracle.com>
-References: <20190723143450.33916-1-yuehaibing@huawei.com>
+Subject: Re: [PATCH] scsi: fcoe: fix a typo
+Date: Tue, 23 Jul 2019 22:16:24 -0400
+Message-ID: <yq1o91kqirr.fsf@oracle.com>
+References: <20190721125039.13268-1-christophe.jaillet@wanadoo.fr>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190723143450.33916-1-yuehaibing@huawei.com>
-        (yuehaibing@huawei.com's message of "Tue, 23 Jul 2019 22:34:50 +0800")
+In-Reply-To: <20190721125039.13268-1-christophe.jaillet@wanadoo.fr>
+        (Christophe JAILLET's message of "Sun, 21 Jul 2019 14:50:39 +0200")
 Sender: linux-kernel-owner@vger.kernel.org
-To: YueHaibing <yuehaibing@huawei.com>
-Cc: kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com, jejb@linux.ibm.com, martin.petersen@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, megaraidlinux.pdl@broadcom.com
+To: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Cc: hare@suse.de, jejb@linux.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-YueHaibing,
+Christophe,
 
-> Fix sparse warnings:
+> #define relative to FCOE CTLR start with FCOE_CTLR, except
+> FCOE_CTRL_SOL_TOV.
 >
-> drivers/scsi/megaraid/megaraid_sas_fusion.c:541:1: warning: symbol
-> 'megasas_alloc_cmdlist_fusion' was not declared. Should it be static?
+> This is likely a typo and CTRL should be CTLR here as well.
 
-Applied to 5.3/scsi-fixes. Thanks!
+Applied to 5.3/scsi-fixes, thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
