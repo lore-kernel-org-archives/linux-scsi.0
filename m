@@ -1,66 +1,83 @@
-From: Stanley Chu <stanley.chu@mediatek.com>
-Subject: [PATCH v2 2/3] scsi: ufs: introduce ufshcd_tm_cmd_compl() to refactor
- task cleanup
-Date: Wed, 24 Jul 2019 13:50:17 +0800
-Message-ID: <1563947418-16394-3-git-send-email-stanley.chu@mediatek.com>
-References: <1563947418-16394-1-git-send-email-stanley.chu@mediatek.com>
+From: Avri Altman <Avri.Altman-Sjgp3cTcYWE@public.gmane.org>
+Subject: RE: [PATCH v1 0/2] scsi: ufs: Fix broken hba->outstanding_tasks
+Date: Wed, 24 Jul 2019 07:09:55 +0000
+Message-ID: <MN2PR04MB6991E37D76FEFA1A203B1BB8FCC60@MN2PR04MB6991.namprd04.prod.outlook.com>
+References: <1562906656-27154-1-git-send-email-stanley.chu@mediatek.com>
+ <SN6PR04MB4925208835D4760249E82DB7FCC50@SN6PR04MB4925.namprd04.prod.outlook.com>
+ <SN6PR04MB49256F66F259185F3876CCABFCC40@SN6PR04MB4925.namprd04.prod.outlook.com>
+ <1563944904.7235.8.camel@mtkswgap22>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <1563947418-16394-1-git-send-email-stanley.chu@mediatek.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: linux-scsi@vger.kernel.org, martin.petersen@oracle.com, avri.altman@wdc.com, alim.akhtar@samsung.com, pedrom.sousa@synopsys.com
-Cc: marc.w.gonzalez@free.fr, andy.teng@mediatek.com, chun-hung.wu@mediatek.com, kuohong.wang@mediatek.com, evgreen@chromium.org, linux-mediatek@lists.infradead.org, peter.wang@mediatek.com, matthias.bgg@gmail.com, Stanley Chu <stanley.chu@mediatek.com>, linux-arm-kernel@lists.infradead.org, beanhuo@micron.com
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+In-Reply-To: <1563944904.7235.8.camel@mtkswgap22>
+Content-Language: en-US
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-mediatek>,
+ <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-mediatek/>
+List-Post: <mailto:linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+List-Help: <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-mediatek>,
+ <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=subscribe>
+Sender: "Linux-mediatek" <linux-mediatek-bounces-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+Errors-To: linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
+To: Stanley Chu <stanley.chu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
+Cc: "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "marc.w.gonzalez-GANU6spQydw@public.gmane.org" <marc.w.gonzalez-GANU6spQydw@public.gmane.org>, "andy.teng-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org" <andy.teng-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, "chun-hung.wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org" <chun-hung.wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, "kuohong.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org" <kuohong.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, "evgreen-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org" <evgreen-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, "linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, "peter.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org" <peter.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, "alim.akhtar-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org" <alim.akhtar-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, "matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "pedrom.sousa-HKixBCOQz3hWk0Htik3J/w@public.gmane.org" <pedrom.sousa-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>, "linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, "beanhuo-AL4WhLSQfzjQT0dZR+AlfA@public.gmane.org" <beanhuo-AL4WhLSQfzjQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Introduce ufshcd_tm_cmd_compl() to re-factor taks cleanup jobs
-to make code more readable and for future wider usage by task error
-handling.
-
-Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
----
- drivers/scsi/ufs/ufshcd.c | 11 ++++++++---
- 1 file changed, 8 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 66c8e7402001..114c15ed75f7 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -5522,6 +5522,13 @@ static void ufshcd_check_errors(struct ufs_hba *hba)
- 	 */
- }
- 
-+static void ufshcd_tm_cmd_compl(struct ufs_hba *hba, int tag)
-+{
-+	__clear_bit(tag, &hba->outstanding_tasks);
-+	__clear_bit(tag, &hba->tm_condition);
-+	ufshcd_put_tm_slot(hba, tag);
-+}
-+
- /**
-  * ufshcd_tmc_handler - handle task management function completion
-  * @hba: per adapter instance
-@@ -5687,11 +5694,9 @@ static int __ufshcd_issue_tm_cmd(struct ufs_hba *hba,
- 
- 	if (likely(cleanup)) {
- 		spin_lock_irqsave(hba->host->host_lock, flags);
--		__clear_bit(free_slot, &hba->outstanding_tasks);
-+		ufshcd_tm_cmd_compl(hba, free_slot);
- 		spin_unlock_irqrestore(hba->host->host_lock, flags);
- 
--		clear_bit(free_slot, &hba->tm_condition);
--		ufshcd_put_tm_slot(hba, free_slot);
- 		wake_up(&hba->tm_tag_wq);
- 	}
- 
--- 
-2.18.0
+U3RhbmxleSwNCg0KPiANCj4gSGkgQXZyaSwNCj4gDQo+IE9uIE1vbiwgMjAxOS0wNy0yMiBhdCAw
+NjoxMCArMDAwMCwgQXZyaSBBbHRtYW4gd3JvdGU6DQo+ID4gPg0KPiA+ID4gPg0KPiA+ID4gPiBI
+aSwNCj4gPiA+ID4NCj4gPiA+ID4gPg0KPiA+ID4gPiA+IEN1cnJlbnRseSBiaXRzIGluIGhiYS0+
+b3V0c3RhbmRpbmdfdGFza3MgYXJlIGNsZWFyZWQgb25seSBhZnRlciB0aGVpcg0KPiA+ID4gPiA+
+IGNvcnJlc3BvbmRpbmcgdGFzayBtYW5hZ2VtZW50IGNvbW1hbmRzIGFyZSBzdWNjZXNzZnVsbHkg
+ZG9uZQ0KPiBieQ0KPiA+ID4gPiA+IF9fdWZzaGNkX2lzc3VlX3RtX2NtZCgpLg0KPiA+ID4gPiA+
+DQo+ID4gPiA+ID4gSWYgdGltZW91dCBoYXBwZW5zIGluIGEgdGFzayBtYW5hZ2VtZW50IGNvbW1h
+bmQsIGl0cw0KPiBjb3JyZXNwb25kaW5nDQo+ID4gPiA+ID4gYml0IGluIGhiYS0+b3V0c3RhbmRp
+bmdfdGFza3Mgd2lsbCBub3QgYmUgY2xlYXJlZCB1bnRpbCBuZXh0IHRhc2sNCj4gPiA+ID4gPiBt
+YW5hZ2VtZW50IGNvbW1hbmQgd2l0aCB0aGUgc2FtZSB0YWcgdXNlZCBzdWNjZXNzZnVsbHkNCj4g
+ZmluaXNoZXMu4oCnDQo+ID4gPiA+IHVmc2hjZF9jbGVhcl90bV9jbWQgaXMgYWxzbyBjYWxsZWQg
+YXMgcGFydCBvZiB1ZnNoY2RfZXJyX2hhbmRsZXIuDQo+ID4gPiA+IERvZXMgdGhpcyBjaGFuZ2Ug
+c29tZXRoaW5nIGluIHlvdXIgYXNzdW1wdGlvbnM/DQo+ID4gPiBBbmQgQlRXIHRoZXJlIGlzIGEg
+c3BlY2lmaWMgX19jbGVhcl9iaXQgaW4gX191ZnNoY2RfaXNzdWVfdG1fY21kKCkgaW4NCj4gY2Fz
+ZQ0KPiA+ID4gb2YgYSBUTy4NCj4gPg0KPiA+IEdhdmUgaXQgYW5vdGhlciBsb29rIC0NCj4gPiBJ
+ZiBpbmRlZWQgdGhpcyBiaXQgaXNuJ3QgY2xlYXJlZCBhcyBwYXJ0IG9mIHRoZSBlcnJvciBmbG93
+IHRoYXQgdGhlIHRpbWVvdXQNCj4gdHJpZ2dlcnMsDQo+ID4gSSB0aGluayB5b3Ugc2hvdWxkIHJl
+bGF0ZSB0byB1ZnNoY2RfY2xlYXJfdG1fY21kIHNwZWNpZmljYWxseSBpbiB5b3VyDQo+IGNvbW1p
+dCBsb2cgLQ0KPiA+IEJlY2F1c2UgdGhpcyBpcyB0aGUgb2J2aW91cyBwbGFjZSB3aGVyZSB0aGUg
+Yml0IGNsZWFudXAgc2hvdWxkIHRha2UNCj4gcGxhY2UuDQo+ID4NCj4gPiBBbHNvIHRoZSBmaXgg
+c2hvdWxkIGJlIG11Y2ggbW9yZSBpbnR1aXRpdmUgSU1PIC0NCj4gPiBUb2RheSB3ZSBkbyBfX2Ns
+ZWFyX2JpdCgpIG9uIHN1Y2Nlc3MsIHVmc2hjZF9jbGVhcl90bV9jbWQoKSBvbiBlcnJvciwNCj4g
+PiBBbmQgYWxzbyB1ZnNoY2RfcHV0X3RtX3Nsb3QoKSBlaXRoZXIgd2F5Pw0KPiA+DQo+ID4gTWF5
+YmUgeW91IGNhbiBjaG9vc2UgYSBzaW5nbGUgcGxhY2UgdG8gY2xlYXIgaXQsIHdpdGhvdXQgYW55
+IGFkZGl0aW9uYWwNCj4gY29kZT8NCj4gDQo+IHVmc2hjZF9jbGVhcl90bV9jbWQoKSBpcyBzaW1p
+bGFyIHRvIHVmc2hjZF9jbGVhcl9jbWQoKSB3aGljaCB0cmllcyB0bw0KPiB3cml0ZSB0aW1lZC1v
+dXQgYml0IGluICJjbGVhciByZWdpc3RlciIuIFRoZXkgZG8gbm90IGNsZWFuIGJpdHMgaW4gYm90
+aA0KPiBvdXRzdGFuZGluZyBtYXNrcy4NCj4gDQo+IEFub3RoZXIgcmVhc29uIHRvIG5vdCB0byBk
+byBvdXRzdGFuZGluZyBiaXRzIGNsZWFudXAgaW4NCj4gdWZzaGNkX2NsZWFyX3RtX2NtZCgpIGlz
+OiBpZiBob3N0IGlzIHVuYWJsZSB0byBjbGVhciBUTSBjb21tYW5kIGJ5DQo+IHNldHRpbmcgImNs
+ZWFyIHJlZ2lzdGVyIiwgdGhlIFRNIGNvbW1hbmQgbWF5IGJlIHN0aWxsICJvdXRzdGFuZGluZyIg
+aW4NCj4gdGhlIGRldmljZS4gSW4gdGhpcyBjYXNlLCBpdCBtYXkgYmUgYmV0dGVyIHRvIGRvIGNs
+ZWFudXAgYWZ0ZXIgcmVzZXQgaXMNCj4gZG9uZS4gQ2xlYW51cCBpbmNsdWRlcyBiaXRzIGluIGhi
+YS0+b3V0c3RhbmRpbmdfdGFza3MgYW5kDQo+IGhiYS0+dG1fc2xvdHNfaW5fdXNlIHdoaWNoIGlz
+IHBvc3NpYmx5IGNsZWFuZWQgdG9vIGVhcmx5IGJ5DQo+IHVmc2hjZF9wdXRfdG1fc2xvdCgpIGlm
+IGNvbW1hbmQgaXMgdGltZWQtb3V0IG5vdy4NCj4gDQo+IFJlZmVycmluZyB0byBlcnJvciBoYW5k
+bGluZyBmbG93IG9mIGhiYS0+b3V0c3RhbmRpbmdfcmVxcywgYWxsIHRpbWVkLW91dA0KPiBiaXRz
+IHdpbGwgYmUgY2xlYW5lZCBieSB1ZnNoY2RfcmVzZXRfYW5kX3Jlc3RvcmUoKSA9Pg0KPiB1ZnNo
+Y2RfdHJhbnNmZXJfcmVxX2NvbXBsKCkgYWZ0ZXIgcmVzZXQgaXMgZG9uZS4gU2ltaWxhciBoYW5k
+bGluZyBmb3INCj4gaGJhLT5vdXRzdGFuZGluZ190YXNrcyBjb3VsZCBiZSBhcHBsaWVkLCBpLmUu
+LCBkbyBjbGVhbnVwIGJ5DQo+IHVmc2hjZF9yZXNldF9hbmRfcmVzdG9yZSgpID0+IHVmc2hjZF90
+bWNfaGFuZGxlcigpLg0KRmFpciBlbm91Z2guICBUaGFuayB5b3UgZm9yIHRoZSBkZXRhaWxlZCBl
+eHBsYW5hdGlvbi4NCg0KPiANCj4gVGhlIG5leHQgdGhpbmcgaXMgd2hhdCB5b3Ugc3VnZ2VzdGVk
+OiBIb3cgdG8gbWFrZSB0aGUgZml4IG1vcmUNCj4gaW50dWl0aXZlLiBQYXRjaHNldCB2MiB3aWxs
+IGJlIHVwbG9hZGVkIGZvciByZXZpZXc6IEl0IHRyaWVzIHRvDQo+ICJyZS1mYWN0b3IiIGNsZWFu
+dXAgam9icyBmaXJzdCwgYW5kIHRoZW4gYWRkIGZpeGVkIGZsb3cgdG8gbWFrZSB0aGUNCj4gd2hv
+bGUgcGF0Y2ggbW9yZSByZWFkYWJsZS4NCj4gDQo+IE9uZSBtb3JlIHRoaW5nLCBhYm92ZSBkZXNj
+cmlwdGlvbiBhbmQgZmxvdyBpcyBkb25lIHRocm91Z2ggVUZTSENEIFNDU0kNCj4gZXJyb3IgaGFu
+ZGxpbmcgcm91dGluZXMgcmVnaXN0ZXJlZCB3aXRoIFNDU0kgTWlkbGF5ZXIuIEZvciBUTSBjb21t
+YW5kDQo+IHRpbWVvdXQgaGFwcGVuaW5nIGluIGJzZyBwYXRoIHdpdGhvdXQgZXJyb3IgaGFuZGxp
+bmcgdHJpZ2dlcmVkIGJ5IFNDU0kNCj4gbGF5ZXIsIHdlIG1heSBuZWVkIHRvIGNvbnNpZGVyIHRv
+IGhhbmRsZSB0aG9zZSB0YXNrcyBpbiBmdXR1cmUgcGF0Y2hlcy4NClBsZWFzZSBkby4NCg0KVGhh
+bmtzLA0KQXZyaQ0KDQpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fXwpMaW51eC1tZWRpYXRlayBtYWlsaW5nIGxpc3QKTGludXgtbWVkaWF0ZWtAbGlzdHMuaW5m
+cmFkZWFkLm9yZwpodHRwOi8vbGlzdHMuaW5mcmFkZWFkLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2xp
+bnV4LW1lZGlhdGVrCg==
