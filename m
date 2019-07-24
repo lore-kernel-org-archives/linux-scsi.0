@@ -1,13 +1,11 @@
 From: Stanley Chu <stanley.chu@mediatek.com>
-Subject: [PATCH v2 3/3] scsi: ufs: fix broken hba->outstanding_tasks
-Date: Wed, 24 Jul 2019 13:50:18 +0800
-Message-ID: <1563947418-16394-4-git-send-email-stanley.chu@mediatek.com>
-References: <1563947418-16394-1-git-send-email-stanley.chu@mediatek.com>
+Subject: [PATCH v2 0/3] scsi: ufs: fix broken hba->outstanding_tasks
+Date: Wed, 24 Jul 2019 13:50:15 +0800
+Message-ID: <1563947418-16394-1-git-send-email-stanley.chu@mediatek.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <1563947418-16394-1-git-send-email-stanley.chu@mediatek.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -41,41 +39,17 @@ after reset is done. Therefore similar handling for hba->outstanding_tasks
 could be applied, for example, by
 ufshcd_reset_and_restore() => ufshcd_tmc_handler().
 
-Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
----
- drivers/scsi/ufs/ufshcd.c | 16 +++++++++++++++-
- 1 file changed, 15 insertions(+), 1 deletion(-)
+This patch tries to "re-factor" cleanup jobs first, and then add fixed
+flow to make the whole patch more readable.
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 114c15ed75f7..3cb942ef64e2 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -5535,11 +5535,25 @@ static void ufshcd_tm_cmd_compl(struct ufs_hba *hba, int tag)
-  */
- static void ufshcd_tmc_handler(struct ufs_hba *hba)
- {
--	u32 tm_doorbell;
-+	u32 tm_doorbell, tag;
- 
- 	tm_doorbell = ufshcd_readl(hba, REG_UTP_TASK_REQ_DOOR_BELL);
- 	hba->tm_condition = tm_doorbell ^ hba->outstanding_tasks;
-+
-+	/*
-+	 * resource of timed-out tasks shall be cleaned.
-+	 * No effect for normal tasks.
-+	 */
-+	for_each_set_bit(tag, &hba->tm_condition, hba->nutmrs)
-+		ufshcd_tm_cmd_compl(hba, tag);
-+
- 	wake_up(&hba->tm_wq);
-+
-+	/*
-+	 * If a timed-out task is cleaned done above,
-+	 * free tag is available now for waiters.
-+	 */
-+	wake_up(&hba->tm_tag_wq);
- }
- 
- /**
+Stanley Chu (3):
+  scsi: ufs: clean-up task resource immediately only if task is
+    responded
+  scsi: ufs: introduce ufshcd_tm_cmd_compl() to refactor task cleanup
+  scsi: ufs: fix broken hba->outstanding_tasks
+
+ drivers/scsi/ufs/ufshcd.c | 41 ++++++++++++++++++++++++++++++++-------
+ 1 file changed, 34 insertions(+), 7 deletions(-)
+
 -- 
 2.18.0
