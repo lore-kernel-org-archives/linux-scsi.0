@@ -1,25 +1,49 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] mpt3sas: Use 63-bit DMA addressing on SAS35 HBA
-Date: Fri, 26 Jul 2019 07:27:06 -0700
-Message-ID: <20190726142706.GA1734@infradead.org>
-References: <1564135257-33188-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+From: Benjamin Block <bblock@linux.ibm.com>
+Subject: Re: [PATCH V2 0/2] block/scsi/dm-rq: fix leak of request private
+ data in dm-mpath
+Date: Fri, 26 Jul 2019 18:20:46 +0200
+Message-ID: <20190726162046.GA7523@t480-pf1aa2c2>
+References: <20190720030637.14447-1-ming.lei@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
 Return-path: <stable-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1564135257-33188-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+In-Reply-To: <20190720030637.14447-1-ming.lei@redhat.com>
 Sender: stable-owner@vger.kernel.org
-To: Suganath Prabu <suganath-prabu.subramani@broadcom.com>
-Cc: linux-scsi@vger.kernel.org, stable@vger.kernel.org, Sathya.Prakash@broadcom.com, kashyap.desai@broadcom.com, sreekanth.reddy@broadcom.com
+To: Ming Lei <ming.lei@redhat.com>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, "Ewan D . Milne" <emilne@redhat.com>, Bart Van Assche <bvanassche@acm.org>, Hannes Reinecke <hare@suse.com>, Christoph Hellwig <hch@lst.de>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Jul 26, 2019 at 06:00:57AM -0400, Suganath Prabu wrote:
-> Although SAS3 & SAS3.5 IT HBA controllers support
-> 64-bit DMA addressing, as per hardware design,
-> DMA address with all 64-bits set (0xFFFFFFFF-FFFFFFFF)
-> results in a firmware fault.
+Hey Ming Lei,
 
-Linux will never send a dma address with all bits set anyway, as that
-is our magic escape for the dma_addr_t error value.  Additionally to
-generate that address you'd need a 1-byte sized, 1-byte aligned buffer,
-which we never use.
+On Sat, Jul 20, 2019 at 11:06:35AM +0800, Ming Lei wrote:
+> Hi,
+> 
+> When one request is dispatched to LLD via dm-rq, if the result is
+> BLK_STS_*RESOURCE, dm-rq will free the request. However, LLD may allocate
+> private data for this request, so this way will cause memory leak.
+
+I am confused about this. Probably because I am not up-to-date with
+all of blk-mq. But if you free the LLD private data before the request
+is finished, what is the LLD doing if the request finishes afterwards?
+Would that not be an automatic use-after-free?
+
+> 
+> Add .cleanup_rq() callback and implement it in SCSI for fixing the issue,
+> since SCSI is the only driver which allocates private requst data in
+> .queue_rq() path.
+> 
+> Another use case of this callback is to free the request and re-submit
+> bios during cpu hotplug when the hctx is dead, see the following link:
+> 
+> https://lore.kernel.org/linux-block/f122e8f2-5ede-2d83-9ca0-bc713ce66d01@huawei.com/T/#t
+> 
+> V2:
+> 	- run .cleanup_rq() in blk_mq_free_request(), as suggested by Mike 
+
+-- 
+With Best Regards, Benjamin Block      /      Linux on IBM Z Kernel Development
+IBM Systems & Technology Group   /  IBM Deutschland Research & Development GmbH
+Vorsitz. AufsR.: Matthias Hartmann       /      Geschäftsführung: Dirk Wittkopp
+Sitz der Gesellschaft: Böblingen / Registergericht: AmtsG Stuttgart, HRB 243294
