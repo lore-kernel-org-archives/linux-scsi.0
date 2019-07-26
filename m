@@ -1,43 +1,25 @@
-From: Qian Cai <cai@lca.pw>
-Subject: [PATCH] scsi/megaraid_sas: fix a compilation warning
-Date: Fri, 26 Jul 2019 10:25:43 -0400
-Message-ID: <1564151143-22889-1-git-send-email-cai@lca.pw>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: martin.petersen@oracle.com
-Cc: jejb@linux.ibm.com, kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Qian Cai <cai@lca.pw>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] mpt3sas: Use 63-bit DMA addressing on SAS35 HBA
+Date: Fri, 26 Jul 2019 07:27:06 -0700
+Message-ID: <20190726142706.GA1734@infradead.org>
+References: <1564135257-33188-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <stable-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1564135257-33188-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+Sender: stable-owner@vger.kernel.org
+To: Suganath Prabu <suganath-prabu.subramani@broadcom.com>
+Cc: linux-scsi@vger.kernel.org, stable@vger.kernel.org, Sathya.Prakash@broadcom.com, kashyap.desai@broadcom.com, sreekanth.reddy@broadcom.com
 List-Id: linux-scsi@vger.kernel.org
 
-The commit de516379e85f ("scsi: megaraid_sas: changes to function
-prototypes") introduced a comilation warning due to it changed the
-function prototype of read_fw_status_reg() to take an instance pointer
-instead, but forgot to remove an unused variable.
+On Fri, Jul 26, 2019 at 06:00:57AM -0400, Suganath Prabu wrote:
+> Although SAS3 & SAS3.5 IT HBA controllers support
+> 64-bit DMA addressing, as per hardware design,
+> DMA address with all 64-bits set (0xFFFFFFFF-FFFFFFFF)
+> results in a firmware fault.
 
-drivers/scsi/megaraid/megaraid_sas_fusion.c: In function
-'megasas_fusion_update_can_queue':
-drivers/scsi/megaraid/megaraid_sas_fusion.c:326:39: warning: variable
-'reg_set' set but not used [-Wunused-but-set-variable]
-  struct megasas_register_set __iomem *reg_set;
-                                       ^~~~~~~
-Fixes: de516379e85f ("scsi: megaraid_sas: changes to function prototypes")
-Signed-off-by: Qian Cai <cai@lca.pw>
----
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 3 ---
- 1 file changed, 3 deletions(-)
-
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index a32b3f0fcd15..e8092d59d575 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -323,9 +323,6 @@ inline void megasas_return_cmd_fusion(struct megasas_instance *instance,
- {
- 	u16 cur_max_fw_cmds = 0;
- 	u16 ldio_threshold = 0;
--	struct megasas_register_set __iomem *reg_set;
--
--	reg_set = instance->reg_set;
- 
- 	/* ventura FW does not fill outbound_scratch_pad_2 with queue depth */
- 	if (instance->adapter_type < VENTURA_SERIES)
--- 
-1.8.3.1
+Linux will never send a dma address with all bits set anyway, as that
+is our magic escape for the dma_addr_t error value.  Additionally to
+generate that address you'd need a 1-byte sized, 1-byte aligned buffer,
+which we never use.
