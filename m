@@ -1,141 +1,119 @@
 From: YueHaibing <yuehaibing@huawei.com>
-Subject: [PATCH -next] scsi: megaraid_sas: Make a bunch of functions static
-Date: Fri, 26 Jul 2019 21:55:40 +0800
-Message-ID: <20190726135540.48780-1-yuehaibing@huawei.com>
+Subject: [PATCH -next] scsi: initio: Make some functions static
+Date: Fri, 26 Jul 2019 21:58:14 +0800
+Message-ID: <20190726135814.48760-1-yuehaibing@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com, jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, megaraidlinux.pdl@broadcom.com, YueHaibing <yuehaibing@huawei.com>
+To: jejb@linux.ibm.com, martin.petersen@oracle.com, hch@lst.de, arnd@arndb.de
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, YueHaibing <yuehaibing@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
 Fix sparse warnings:
 
-drivers/scsi/megaraid/megaraid_sas_fusion.c:3369:1: warning: symbol 'complete_cmd_fusion' was not declared. Should it be static?
-drivers/scsi/megaraid/megaraid_sas_fusion.c:3535:6: warning: symbol 'megasas_sync_irqs' was not declared. Should it be static?
-drivers/scsi/megaraid/megaraid_sas_fusion.c:3554:1: warning: symbol 'megasas_complete_cmd_dpc_fusion' was not declared. Should it be static?
-drivers/scsi/megaraid/megaraid_sas_fusion.c:3573:13: warning: symbol 'megasas_isr_fusion' was not declared. Should it be static?
-drivers/scsi/megaraid/megaraid_sas_fusion.c:3604:1: warning: symbol 'build_mpt_mfi_pass_thru' was not declared. Should it be static?
-drivers/scsi/megaraid/megaraid_sas_fusion.c:3661:40: warning: symbol 'build_mpt_cmd' was not declared. Should it be static?
-drivers/scsi/megaraid/megaraid_sas_fusion.c:3688:1: warning: symbol 'megasas_issue_dcmd_fusion' was not declared. Should it be static?
-drivers/scsi/megaraid/megaraid_sas_fusion.c:3881:5: warning: symbol 'megasas_wait_for_outstanding_fusion' was not declared. Should it be static?
-drivers/scsi/megaraid/megaraid_sas_fusion.c:4005:6: warning: symbol 'megasas_refire_mgmt_cmd' was not declared. Should it be static?
-drivers/scsi/megaraid/megaraid_sas_fusion.c:4525:25: warning: symbol 'megasas_get_peer_instance' was not declared. Should it be static?
-drivers/scsi/megaraid/megaraid_sas_fusion.c:4825:7: warning: symbol 'megasas_fusion_crash_dump' was not declared. Should it be static?
+drivers/scsi/initio.c:881:22: warning: symbol 'initio_find_busy_scb' was not declared. Should it be static?
+drivers/scsi/initio.c:919:22: warning: symbol 'initio_find_done_scb' was not declared. Should it be static?
+drivers/scsi/initio.c:1657:5: warning: symbol 'initio_state_7' was not declared. Should it be static?
+drivers/scsi/initio.c:1743:5: warning: symbol 'initio_xpad_in' was not declared. Should it be static?
+drivers/scsi/initio.c:1767:5: warning: symbol 'initio_xpad_out' was not declared. Should it be static?
+drivers/scsi/initio.c:1792:5: warning: symbol 'initio_status_msg' was not declared. Should it be static?
+drivers/scsi/initio.c:1842:5: warning: symbol 'int_initio_busfree' was not declared. Should it be static?
+drivers/scsi/initio.c:1912:5: warning: symbol 'int_initio_resel' was not declared. Should it be static?
+drivers/scsi/initio.c:2368:5: warning: symbol 'initio_bus_device_reset' was not declared. Should it be static?
 
 Reported-by: Hulk Robot <hulkci@huawei.com>
 Signed-off-by: YueHaibing <yuehaibing@huawei.com>
 ---
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 26 ++++++++++++++------------
- 1 file changed, 14 insertions(+), 12 deletions(-)
+ drivers/scsi/initio.c | 20 +++++++++++---------
+ 1 file changed, 11 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index 120e3c4..10ef99e 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -3511,7 +3511,7 @@ megasas_complete_r1_command(struct megasas_instance *instance,
-  * @instance:			Adapter soft state
-  * Completes all commands that is in reply descriptor queue
-  */
--int
-+static int
- complete_cmd_fusion(struct megasas_instance *instance, u32 MSIxIndex,
- 		    struct megasas_irq_context *irq_context)
- {
-@@ -3702,7 +3702,7 @@ static void megasas_enable_irq_poll(struct megasas_instance *instance)
-  * megasas_sync_irqs -	Synchronizes all IRQs owned by adapter
-  * @instance:			Adapter soft state
-  */
--void megasas_sync_irqs(unsigned long instance_addr)
-+static void megasas_sync_irqs(unsigned long instance_addr)
- {
- 	u32 count, i;
- 	struct megasas_instance *instance =
-@@ -3760,7 +3760,7 @@ int megasas_irqpoll(struct irq_poll *irqpoll, int budget)
-  *
-  * Tasklet to complete cmds
-  */
--void
-+static void
- megasas_complete_cmd_dpc_fusion(unsigned long instance_addr)
- {
- 	struct megasas_instance *instance =
-@@ -3780,7 +3780,7 @@ megasas_complete_cmd_dpc_fusion(unsigned long instance_addr)
- /**
-  * megasas_isr_fusion - isr entry point
-  */
--irqreturn_t megasas_isr_fusion(int irq, void *devp)
-+static irqreturn_t megasas_isr_fusion(int irq, void *devp)
- {
- 	struct megasas_irq_context *irq_context = devp;
- 	struct megasas_instance *instance = irq_context->instance;
-@@ -3816,7 +3816,7 @@ irqreturn_t megasas_isr_fusion(int irq, void *devp)
-  * mfi_cmd:			megasas_cmd pointer
-  *
-  */
--void
-+static void
- build_mpt_mfi_pass_thru(struct megasas_instance *instance,
- 			struct megasas_cmd *mfi_cmd)
- {
-@@ -3874,7 +3874,7 @@ build_mpt_mfi_pass_thru(struct megasas_instance *instance,
-  * @cmd:			mfi cmd to build
-  *
-  */
--union MEGASAS_REQUEST_DESCRIPTOR_UNION *
-+static union MEGASAS_REQUEST_DESCRIPTOR_UNION *
- build_mpt_cmd(struct megasas_instance *instance, struct megasas_cmd *cmd)
- {
- 	union MEGASAS_REQUEST_DESCRIPTOR_UNION *req_desc = NULL;
-@@ -3900,7 +3900,7 @@ build_mpt_cmd(struct megasas_instance *instance, struct megasas_cmd *cmd)
-  * @cmd:			mfi cmd pointer
-  *
-  */
--void
-+static void
- megasas_issue_dcmd_fusion(struct megasas_instance *instance,
- 			  struct megasas_cmd *cmd)
- {
-@@ -4096,8 +4096,9 @@ static inline void megasas_trigger_snap_dump(struct megasas_instance *instance)
+diff --git a/drivers/scsi/initio.c b/drivers/scsi/initio.c
+index 41fd64c..ed9e87a 100644
+--- a/drivers/scsi/initio.c
++++ b/drivers/scsi/initio.c
+@@ -864,7 +864,8 @@ static void initio_unlink_busy_scb(struct initio_host * host, struct scsi_ctrl_b
+ 	return;
  }
  
- /* This function waits for outstanding commands on fusion to complete */
--int megasas_wait_for_outstanding_fusion(struct megasas_instance *instance,
--					int reason, int *convert)
-+static int
-+megasas_wait_for_outstanding_fusion(struct megasas_instance *instance,
-+				    int reason, int *convert)
- {
- 	int i, outstanding, retval = 0, hb_seconds_missed = 0;
- 	u32 fw_state, abs_state;
-@@ -4221,7 +4222,7 @@ void  megasas_reset_reply_desc(struct megasas_instance *instance)
-  * megasas_refire_mgmt_cmd :	Re-fire management commands
-  * @instance:				Controller's soft instance
- */
--void megasas_refire_mgmt_cmd(struct megasas_instance *instance)
-+static void megasas_refire_mgmt_cmd(struct megasas_instance *instance)
- {
- 	int j;
- 	struct megasas_cmd_fusion *cmd_fusion;
-@@ -4747,7 +4748,8 @@ int megasas_reset_target_fusion(struct scsi_cmnd *scmd)
- }
- 
- /*SRIOV get other instance in cluster if any*/
--struct megasas_instance *megasas_get_peer_instance(struct megasas_instance *instance)
+-struct scsi_ctrl_blk *initio_find_busy_scb(struct initio_host * host, u16 tarlun)
 +static struct
-+megasas_instance *megasas_get_peer_instance(struct megasas_instance *instance)
++scsi_ctrl_blk *initio_find_busy_scb(struct initio_host *host, u16 tarlun)
  {
- 	int i;
- 
-@@ -5053,7 +5055,7 @@ int megasas_reset_fusion(struct Scsi_Host *shost, int reason)
+ 	struct scsi_ctrl_blk *tmp, *prev;
+ 	u16 scbp_tarlun;
+@@ -902,7 +903,8 @@ static void initio_append_done_scb(struct initio_host * host, struct scsi_ctrl_b
+ 	}
  }
  
- /* Fusion Crash dump collection */
--void  megasas_fusion_crash_dump(struct megasas_instance *instance)
-+static void  megasas_fusion_crash_dump(struct megasas_instance *instance)
+-struct scsi_ctrl_blk *initio_find_done_scb(struct initio_host * host)
++static struct
++scsi_ctrl_blk *initio_find_done_scb(struct initio_host *host)
  {
- 	u32 status_reg;
- 	u8 partial_copy = 0;
+ 	struct scsi_ctrl_blk *tmp;
+ 
+@@ -1640,7 +1642,7 @@ static int initio_state_6(struct initio_host * host)
+  *
+  */
+ 
+-int initio_state_7(struct initio_host * host)
++static int initio_state_7(struct initio_host *host)
+ {
+ 	int cnt, i;
+ 
+@@ -1726,7 +1728,7 @@ static int initio_xfer_data_out(struct initio_host * host)
+ 	return 0;		/* return to OS, wait xfer done , let jas_isr come in */
+ }
+ 
+-int initio_xpad_in(struct initio_host * host)
++static int initio_xpad_in(struct initio_host *host)
+ {
+ 	struct scsi_ctrl_blk *scb = host->active;
+ 	struct target_control *active_tc = host->active_tc;
+@@ -1750,7 +1752,7 @@ int initio_xpad_in(struct initio_host * host)
+ 	}
+ }
+ 
+-int initio_xpad_out(struct initio_host * host)
++static int initio_xpad_out(struct initio_host *host)
+ {
+ 	struct scsi_ctrl_blk *scb = host->active;
+ 	struct target_control *active_tc = host->active_tc;
+@@ -1775,7 +1777,7 @@ int initio_xpad_out(struct initio_host * host)
+ 	}
+ }
+ 
+-int initio_status_msg(struct initio_host * host)
++static int initio_status_msg(struct initio_host *host)
+ {				/* status & MSG_IN */
+ 	struct scsi_ctrl_blk *scb = host->active;
+ 	u8 msg;
+@@ -1825,7 +1827,7 @@ int initio_status_msg(struct initio_host * host)
+ 
+ 
+ /* scsi bus free */
+-int int_initio_busfree(struct initio_host * host)
++static int int_initio_busfree(struct initio_host *host)
+ {
+ 	struct scsi_ctrl_blk *scb = host->active;
+ 
+@@ -1895,7 +1897,7 @@ static int int_initio_scsi_rst(struct initio_host * host)
+  *	and continue processing that command.
+  */
+ 
+-int int_initio_resel(struct initio_host * host)
++static int int_initio_resel(struct initio_host *host)
+ {
+ 	struct scsi_ctrl_blk *scb;
+ 	struct target_control *active_tc;
+@@ -2351,7 +2353,7 @@ static void initio_select_atn3(struct initio_host * host, struct scsi_ctrl_blk *
+  *	Perform a device reset and abort all pending SCBs for the
+  *	victim device
+  */
+-int initio_bus_device_reset(struct initio_host * host)
++static int initio_bus_device_reset(struct initio_host *host)
+ {
+ 	struct scsi_ctrl_blk *scb = host->active;
+ 	struct target_control *active_tc = host->active_tc;
 -- 
 2.7.4
