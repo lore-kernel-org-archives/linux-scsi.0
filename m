@@ -1,178 +1,418 @@
 From: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
-Subject: [PATCH 1/7] docs: fix broken doc references due to renames
-Date: Fri, 26 Jul 2019 08:47:21 -0300
-Message-ID: <430ed96cb234805d1deb216e8c8559da22cc6bac.1564140865.git.mchehab+samsung@kernel.org>
-References: <cover.1564140865.git.mchehab+samsung@kernel.org>
+Subject: [PATCH v2 00/26] ReST conversion of text files without .txt extension
+Date: Fri, 26 Jul 2019 09:51:10 -0300
+Message-ID: <cover.1564145354.git.mchehab+samsung@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <dri-devel-bounces@lists.freedesktop.org>
-In-Reply-To: <cover.1564140865.git.mchehab+samsung@kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
-List-Post: <mailto:dri-devel@lists.freedesktop.org>
-List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: dri-devel-bounces@lists.freedesktop.org
-Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
-Cc: Mark Rutland <mark.rutland@arm.com>, Andrea Parri <andrea.parri@amarulasolutions.com>, Ajay Gupta <ajayg@nvidia.com>, linux-doc@vger.kernel.org, Peter Zijlstra <peterz@infradead.org>, Akira Yokosawa <akiyks@gmail.com>, Lai Jiangshan <jiangshanlai@gmail.com>, Jerry Hoemann <jerry.hoemann@hpe.com>, dri-devel@lists.freedesktop.org, David Howells <dhowells@redhat.com>, Mauro Carvalho Chehab <mchehab+samsung@kernel.org>, linux-i2c@vger.kernel.org, Joel Fernandes <joel@joelfernandes.org>, "Paul E. McKenney" <paulmck@linux.ibm.com>, Will Deacon <will@kernel.org>, linux-arch@vger.kernel.org, linux-scsi@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>, Wolfram Sang <wsa@the-dreams.de>, esc.storagedev@microsemi.com, Maxime Ripard <maxime.ripard@bootlin.com>, Ingo Molnar <mingo@redhat.com>, Alan Stern <stern@rowland.harvard.edu>, Jade Alglave <j.alglave@ucl.ac.uk>, Boqun Feng <boq>
+Content-Transfer-Encoding: 8bit
+Return-path: <netdev-owner@vger.kernel.org>
+Sender: netdev-owner@vger.kernel.org
+To: Jonathan Corbet <corbet@lwn.net>
+Cc: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, linux-scsi@vger.kernel.org, devicetree@vger.kernel.org, linux-i2c@vger.kernel.org, linux-hwmon@vger.kernel.org, linux-spi@vger.kernel.org, linux-iio@vger.kernel.org, linux-rtc@vger.kernel.org, netdev@vger.kernel.org, linux-parisc@vger.kernel.org, openrisc@lists.librecores.org, devel@driverdev.osuosl.org, linux-cifs@vger.kernel.org, samba-technical@lists.samba.org, devel@lists.orangefs.org, dmaengine@vger.kernel.org, alsa-devel@alsa-project.org, linux-mips@vger.kernel.org, linux-wireless@vger.kernel.org, rcu@vger.kernel.o
 List-Id: linux-scsi@vger.kernel.org
 
-U29tZSBmaWxlcyBnb3QgcmVuYW1lZCBidXQgcHJvYmFibHkgZHVlIHRvIHNvbWUgbWVyZ2UgY29u
-ZmxpY3RzLAphIGZldyByZWZlcmVuY2VzIHN0aWxsIHBvaW50IHRvIHRoZSBvbGQgbG9jYXRpb25z
-LgoKU2lnbmVkLW9mZi1ieTogTWF1cm8gQ2FydmFsaG8gQ2hlaGFiIDxtY2hlaGFiK3NhbXN1bmdA
-a2VybmVsLm9yZz4KQWNrZWQtYnk6IFdvbGZyYW0gU2FuZyA8d3NhQHRoZS1kcmVhbXMuZGU+ICMg
-STJDIHBhcnQKUmV2aWV3ZWQtYnk6IEplcnJ5IEhvZW1hbm4gPGplcnJ5LmhvZW1hbm5AaHBlLmNv
-bT4gIyBocHdkdC5yc3QKLS0tCiBEb2N1bWVudGF0aW9uL1JDVS9yY3VsaXN0X251bGxzLnR4dCAg
-ICAgICAgICAgICAgICAgICB8ICAyICstCiBEb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGlu
-Z3MvYXJtL2lkbGUtc3RhdGVzLnR4dCB8ICAyICstCiBEb2N1bWVudGF0aW9uL2xvY2tpbmcvc3Bp
-bmxvY2tzLnJzdCAgICAgICAgICAgICAgICAgICB8ICA0ICsrLS0KIERvY3VtZW50YXRpb24vbWVt
-b3J5LWJhcnJpZXJzLnR4dCAgICAgICAgICAgICAgICAgICAgIHwgIDIgKy0KIERvY3VtZW50YXRp
-b24vdHJhbnNsYXRpb25zL2tvX0tSL21lbW9yeS1iYXJyaWVycy50eHQgIHwgIDIgKy0KIERvY3Vt
-ZW50YXRpb24vd2F0Y2hkb2cvaHB3ZHQucnN0ICAgICAgICAgICAgICAgICAgICAgIHwgIDIgKy0K
-IE1BSU5UQUlORVJTICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwg
-MTAgKysrKystLS0tLQogZHJpdmVycy9ncHUvZHJtL2RybV9tb2Rlcy5jICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgfCAgMiArLQogZHJpdmVycy9pMmMvYnVzc2VzL2kyYy1udmlkaWEtZ3B1LmMg
-ICAgICAgICAgICAgICAgICAgfCAgMiArLQogZHJpdmVycy9zY3NpL2hwc2EuYyAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgfCAgNCArKy0tCiAxMCBmaWxlcyBjaGFuZ2VkLCAxNiBp
-bnNlcnRpb25zKCspLCAxNiBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9Eb2N1bWVudGF0aW9u
-L1JDVS9yY3VsaXN0X251bGxzLnR4dCBiL0RvY3VtZW50YXRpb24vUkNVL3JjdWxpc3RfbnVsbHMu
-dHh0CmluZGV4IDgxNTFmMDE5NWY3Ni4uMjNmMTE1ZGM4N2NmIDEwMDY0NAotLS0gYS9Eb2N1bWVu
-dGF0aW9uL1JDVS9yY3VsaXN0X251bGxzLnR4dAorKysgYi9Eb2N1bWVudGF0aW9uL1JDVS9yY3Vs
-aXN0X251bGxzLnR4dApAQCAtMSw3ICsxLDcgQEAKIFVzaW5nIGhsaXN0X251bGxzIHRvIHByb3Rl
-Y3QgcmVhZC1tb3N0bHkgbGlua2VkIGxpc3RzIGFuZAogb2JqZWN0cyB1c2luZyBTTEFCX1RZUEVT
-QUZFX0JZX1JDVSBhbGxvY2F0aW9ucy4KIAotUGxlYXNlIHJlYWQgdGhlIGJhc2ljcyBpbiBEb2N1
-bWVudGF0aW9uL1JDVS9saXN0UkNVLnR4dAorUGxlYXNlIHJlYWQgdGhlIGJhc2ljcyBpbiBEb2N1
-bWVudGF0aW9uL1JDVS9saXN0UkNVLnJzdAogCiBVc2luZyBzcGVjaWFsIG1ha2VycyAoY2FsbGVk
-ICdudWxscycpIGlzIGEgY29udmVuaWVudCB3YXkKIHRvIHNvbHZlIGZvbGxvd2luZyBwcm9ibGVt
-IDoKZGlmZiAtLWdpdCBhL0RvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9hcm0vaWRs
-ZS1zdGF0ZXMudHh0IGIvRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL2FybS9pZGxl
-LXN0YXRlcy50eHQKaW5kZXggMzI2ZjI5YjI3MGFkLi4yZDMyNWJlZDM3ZTUgMTAwNjQ0Ci0tLSBh
-L0RvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9hcm0vaWRsZS1zdGF0ZXMudHh0Cisr
-KyBiL0RvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9hcm0vaWRsZS1zdGF0ZXMudHh0
-CkBAIC03MDMsNCArNzAzLDQgQEAgY3B1cyB7CiAgICAgaHR0cHM6Ly93d3cuZGV2aWNldHJlZS5v
-cmcvc3BlY2lmaWNhdGlvbnMvCiAKIFs2XSBBUk0gTGludXggS2VybmVsIGRvY3VtZW50YXRpb24g
-LSBCb290aW5nIEFBcmNoNjQgTGludXgKLSAgICBEb2N1bWVudGF0aW9uL2FybTY0L2Jvb3Rpbmcu
-dHh0CisgICAgRG9jdW1lbnRhdGlvbi9hcm02NC9ib290aW5nLnJzdApkaWZmIC0tZ2l0IGEvRG9j
-dW1lbnRhdGlvbi9sb2NraW5nL3NwaW5sb2Nrcy5yc3QgYi9Eb2N1bWVudGF0aW9uL2xvY2tpbmcv
-c3BpbmxvY2tzLnJzdAppbmRleCAwOTgxMDdmYjdkODYuLmU5M2VjNjY0NTIzOCAxMDA2NDQKLS0t
-IGEvRG9jdW1lbnRhdGlvbi9sb2NraW5nL3NwaW5sb2Nrcy5yc3QKKysrIGIvRG9jdW1lbnRhdGlv
-bi9sb2NraW5nL3NwaW5sb2Nrcy5yc3QKQEAgLTgyLDcgKzgyLDcgQEAgaXRzZWxmLiAgVGhlIHJl
-YWQgbG9jayBhbGxvd3MgbWFueSBjb25jdXJyZW50IHJlYWRlcnMuICBBbnl0aGluZyB0aGF0CiAq
-KmNoYW5nZXMqKiB0aGUgbGlzdCB3aWxsIGhhdmUgdG8gZ2V0IHRoZSB3cml0ZSBsb2NrLgogCiAg
-ICBOT1RFISBSQ1UgaXMgYmV0dGVyIGZvciBsaXN0IHRyYXZlcnNhbCwgYnV0IHJlcXVpcmVzIGNh
-cmVmdWwKLSAgIGF0dGVudGlvbiB0byBkZXNpZ24gZGV0YWlsIChzZWUgRG9jdW1lbnRhdGlvbi9S
-Q1UvbGlzdFJDVS50eHQpLgorICAgYXR0ZW50aW9uIHRvIGRlc2lnbiBkZXRhaWwgKHNlZSBEb2N1
-bWVudGF0aW9uL1JDVS9saXN0UkNVLnJzdCkuCiAKIEFsc28sIHlvdSBjYW5ub3QgInVwZ3JhZGUi
-IGEgcmVhZC1sb2NrIHRvIGEgd3JpdGUtbG9jaywgc28gaWYgeW91IGF0IF9hbnlfCiB0aW1lIG5l
-ZWQgdG8gZG8gYW55IGNoYW5nZXMgKGV2ZW4gaWYgeW91IGRvbid0IGRvIGl0IGV2ZXJ5IHRpbWUp
-LCB5b3UgaGF2ZQpAQCAtOTAsNyArOTAsNyBAQCB0byBnZXQgdGhlIHdyaXRlLWxvY2sgYXQgdGhl
-IHZlcnkgYmVnaW5uaW5nLgogCiAgICBOT1RFISBXZSBhcmUgd29ya2luZyBoYXJkIHRvIHJlbW92
-ZSByZWFkZXItd3JpdGVyIHNwaW5sb2NrcyBpbiBtb3N0CiAgICBjYXNlcywgc28gcGxlYXNlIGRv
-bid0IGFkZCBhIG5ldyBvbmUgd2l0aG91dCBjb25zZW5zdXMuICAoSW5zdGVhZCwgc2VlCi0gICBE
-b2N1bWVudGF0aW9uL1JDVS9yY3UudHh0IGZvciBjb21wbGV0ZSBpbmZvcm1hdGlvbi4pCisgICBE
-b2N1bWVudGF0aW9uL1JDVS9yY3UucnN0IGZvciBjb21wbGV0ZSBpbmZvcm1hdGlvbi4pCiAKIC0t
-LS0KIApkaWZmIC0tZ2l0IGEvRG9jdW1lbnRhdGlvbi9tZW1vcnktYmFycmllcnMudHh0IGIvRG9j
-dW1lbnRhdGlvbi9tZW1vcnktYmFycmllcnMudHh0CmluZGV4IDA0NWJiODE0OGZlOS4uMWFkYmI4
-YTM3MWM3IDEwMDY0NAotLS0gYS9Eb2N1bWVudGF0aW9uL21lbW9yeS1iYXJyaWVycy50eHQKKysr
-IGIvRG9jdW1lbnRhdGlvbi9tZW1vcnktYmFycmllcnMudHh0CkBAIC01NDgsNyArNTQ4LDcgQEAg
-VGhlcmUgYXJlIGNlcnRhaW4gdGhpbmdzIHRoYXQgdGhlIExpbnV4IGtlcm5lbCBtZW1vcnkgYmFy
-cmllcnMgZG8gbm90IGd1YXJhbnRlZToKIAogCVsqXSBGb3IgaW5mb3JtYXRpb24gb24gYnVzIG1h
-c3RlcmluZyBETUEgYW5kIGNvaGVyZW5jeSBwbGVhc2UgcmVhZDoKIAotCSAgICBEb2N1bWVudGF0
-aW9uL1BDSS9wY2kucnN0CisJICAgIERvY3VtZW50YXRpb24vZHJpdmVyLWFwaS9wY2kvcGNpLnJz
-dAogCSAgICBEb2N1bWVudGF0aW9uL0RNQS1BUEktSE9XVE8udHh0CiAJICAgIERvY3VtZW50YXRp
-b24vRE1BLUFQSS50eHQKIApkaWZmIC0tZ2l0IGEvRG9jdW1lbnRhdGlvbi90cmFuc2xhdGlvbnMv
-a29fS1IvbWVtb3J5LWJhcnJpZXJzLnR4dCBiL0RvY3VtZW50YXRpb24vdHJhbnNsYXRpb25zL2tv
-X0tSL21lbW9yeS1iYXJyaWVycy50eHQKaW5kZXggYTMzYzJhNTM2NTQyLi4yNzc0NjI0ZWU4NDMg
-MTAwNjQ0Ci0tLSBhL0RvY3VtZW50YXRpb24vdHJhbnNsYXRpb25zL2tvX0tSL21lbW9yeS1iYXJy
-aWVycy50eHQKKysrIGIvRG9jdW1lbnRhdGlvbi90cmFuc2xhdGlvbnMva29fS1IvbWVtb3J5LWJh
-cnJpZXJzLnR4dApAQCAtNTY5LDcgKzU2OSw3IEBAIEFDUVVJUkUg64qUIO2VtOuLuSDsmKTtjbzr
-oIjsnbTshZjsnZgg66Gc65OcIOu2gOu2hOyXkOunjCDsoIHsmqnrkJjqs6AgUkVMRUFTRSAKIAog
-CVsqXSDrsoTsiqQg66eI7Iqk7YSw66eBIERNQSDsmYAg7J286rSA7ISx7JeQIOuMgO2VtOyEnOuK
-lCDri6TsnYzsnYQg7LC46rOg7ZWY7Iuc6riwIOuwlOuejeuLiOuLpDoKIAotCSAgICBEb2N1bWVu
-dGF0aW9uL1BDSS9wY2kucnN0CisJICAgIERvY3VtZW50YXRpb24vZHJpdmVyLWFwaS9wY2kvcGNp
-LnJzdAogCSAgICBEb2N1bWVudGF0aW9uL0RNQS1BUEktSE9XVE8udHh0CiAJICAgIERvY3VtZW50
-YXRpb24vRE1BLUFQSS50eHQKIApkaWZmIC0tZ2l0IGEvRG9jdW1lbnRhdGlvbi93YXRjaGRvZy9o
-cHdkdC5yc3QgYi9Eb2N1bWVudGF0aW9uL3dhdGNoZG9nL2hwd2R0LnJzdAppbmRleCBjMTY1ZDky
-Y2ZkMTIuLmM4MjRjZDdmNmUzMiAxMDA2NDQKLS0tIGEvRG9jdW1lbnRhdGlvbi93YXRjaGRvZy9o
-cHdkdC5yc3QKKysrIGIvRG9jdW1lbnRhdGlvbi93YXRjaGRvZy9ocHdkdC5yc3QKQEAgLTYzLDcg
-KzYzLDcgQEAgTGFzdCByZXZpZXdlZDogMDgvMjAvMjAxOAogIGFuZCBsb29wIGZvcmV2ZXIuICBU
-aGlzIGlzIGdlbmVyYWxseSBub3Qgd2hhdCBhIHdhdGNoZG9nIHVzZXIgd2FudHMuCiAKICBGb3Ig
-dGhvc2Ugd2lzaGluZyB0byBsZWFybiBtb3JlIHBsZWFzZSBzZWU6Ci0JRG9jdW1lbnRhdGlvbi9r
-ZHVtcC9rZHVtcC5yc3QKKwlEb2N1bWVudGF0aW9uL2FkbWluLWd1aWRlL2tkdW1wL2tkdW1wLnJz
-dAogCURvY3VtZW50YXRpb24vYWRtaW4tZ3VpZGUva2VybmVsLXBhcmFtZXRlcnMudHh0IChwYW5p
-Yz0pCiAJWW91ciBMaW51eCBEaXN0cmlidXRpb24gc3BlY2lmaWMgZG9jdW1lbnRhdGlvbi4KIApk
-aWZmIC0tZ2l0IGEvTUFJTlRBSU5FUlMgYi9NQUlOVEFJTkVSUwppbmRleCA0ZTJhNTI1ZTIyYzAu
-LjUxYmRiZDIzMDE3NCAxMDA2NDQKLS0tIGEvTUFJTlRBSU5FUlMKKysrIGIvTUFJTlRBSU5FUlMK
-QEAgLTg5OSw3ICs4OTksNyBAQCBMOglsaW51eC1paW9Admdlci5rZXJuZWwub3JnCiBXOglodHRw
-Oi8vZXouYW5hbG9nLmNvbS9jb21tdW5pdHkvbGludXgtZGV2aWNlLWRyaXZlcnMKIFM6CVN1cHBv
-cnRlZAogRjoJZHJpdmVycy9paW8vYWRjL2FkNzEyNC5jCi1GOglEb2N1bWVudGF0aW9uL2Rldmlj
-ZXRyZWUvYmluZGluZ3MvaWlvL2FkYy9hZGksYWQ3MTI0LnR4dAorRjoJRG9jdW1lbnRhdGlvbi9k
-ZXZpY2V0cmVlL2JpbmRpbmdzL2lpby9hZGMvYWRpLGFkNzEyNC55YW1sCiAKIEFOQUxPRyBERVZJ
-Q0VTIElOQyBBRDc2MDYgRFJJVkVSCiBNOglTdGVmYW4gUG9wYSA8c3RlZmFuLnBvcGFAYW5hbG9n
-LmNvbT4KQEAgLTQxOTAsNyArNDE5MCw3IEBAIE06CUplbnMgQXhib2UgPGF4Ym9lQGtlcm5lbC5k
-az4KIEw6CWNncm91cHNAdmdlci5rZXJuZWwub3JnCiBMOglsaW51eC1ibG9ja0B2Z2VyLmtlcm5l
-bC5vcmcKIFQ6CWdpdCBnaXQ6Ly9naXQua2VybmVsLmRrL2xpbnV4LWJsb2NrCi1GOglEb2N1bWVu
-dGF0aW9uL2Nncm91cC12MS9ibGtpby1jb250cm9sbGVyLnJzdAorRjoJRG9jdW1lbnRhdGlvbi9h
-ZG1pbi1ndWlkZS9jZ3JvdXAtdjEvYmxraW8tY29udHJvbGxlci5yc3QKIEY6CWJsb2NrL2Jsay1j
-Z3JvdXAuYwogRjoJaW5jbHVkZS9saW51eC9ibGstY2dyb3VwLmgKIEY6CWJsb2NrL2Jsay10aHJv
-dHRsZS5jCkBAIC02MzE3LDcgKzYzMTcsNyBAQCBGTEVYVElNRVIgRlRNLVFVQURERUMgRFJJVkVS
-CiBNOglQYXRyaWNrIEhhdmVsYW5nZSA8cGF0cmljay5oYXZlbGFuZ2VAZXNzZW5zaXVtLmNvbT4K
-IEw6CWxpbnV4LWlpb0B2Z2VyLmtlcm5lbC5vcmcKIFM6CU1haW50YWluZWQKLUY6CURvY3VtZW50
-YXRpb24vQUJJL3Rlc3Rpbmcvc3lzZnMtYnVzLWNvdW50ZXItZnRtLXF1YWRkZGVjCitGOglEb2N1
-bWVudGF0aW9uL0FCSS90ZXN0aW5nL3N5c2ZzLWJ1cy1jb3VudGVyLWZ0bS1xdWFkZGVjCiBGOglE
-b2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvY291bnRlci9mdG0tcXVhZGRlYy50eHQK
-IEY6CWRyaXZlcnMvY291bnRlci9mdG0tcXVhZGRlYy5jCiAKQEAgLTY4NTYsNyArNjg1Niw3IEBA
-IFI6CVNhZ2kgU2hhaGFyIDxzYWdpc0Bnb29nbGUuY29tPgogUjoJSm9uIE9sc29uIDxqb25vbHNv
-bkBnb29nbGUuY29tPgogTDoJbmV0ZGV2QHZnZXIua2VybmVsLm9yZwogUzoJU3VwcG9ydGVkCi1G
-OglEb2N1bWVudGF0aW9uL25ldHdvcmtpbmcvZGV2aWNlX2RyaXZlcnMvZ29vZ2xlL2d2ZS50eHQK
-K0Y6CURvY3VtZW50YXRpb24vbmV0d29ya2luZy9kZXZpY2VfZHJpdmVycy9nb29nbGUvZ3ZlLnJz
-dAogRjoJZHJpdmVycy9uZXQvZXRoZXJuZXQvZ29vZ2xlCiAKIEdQRCBQT0NLRVQgRkFOIERSSVZF
-UgpAQCAtMTIxMzcsNyArMTIxMzcsNyBAQCBNOglUaG9tYXMgSGVsbHN0cm9tIDx0aGVsbHN0cm9t
-QHZtd2FyZS5jb20+CiBNOgkiVk13YXJlLCBJbmMuIiA8cHYtZHJpdmVyc0B2bXdhcmUuY29tPgog
-TDoJdmlydHVhbGl6YXRpb25AbGlzdHMubGludXgtZm91bmRhdGlvbi5vcmcKIFM6CVN1cHBvcnRl
-ZAotRjoJRG9jdW1lbnRhdGlvbi92aXJ0L3BhcmF2aXJ0X29wcy50eHQKK0Y6CURvY3VtZW50YXRp
-b24vdmlydC9wYXJhdmlydF9vcHMucnN0CiBGOglhcmNoLyova2VybmVsL3BhcmF2aXJ0KgogRjoJ
-YXJjaC8qL2luY2x1ZGUvYXNtL3BhcmF2aXJ0Ki5oCiBGOglpbmNsdWRlL2xpbnV4L2h5cGVydmlz
-b3IuaApkaWZmIC0tZ2l0IGEvZHJpdmVycy9ncHUvZHJtL2RybV9tb2Rlcy5jIGIvZHJpdmVycy9n
-cHUvZHJtL2RybV9tb2Rlcy5jCmluZGV4IDc0YTU3MzlkZjUwNi4uODBmY2Q1ZGMxNTU4IDEwMDY0
-NAotLS0gYS9kcml2ZXJzL2dwdS9kcm0vZHJtX21vZGVzLmMKKysrIGIvZHJpdmVycy9ncHUvZHJt
-L2RybV9tb2Rlcy5jCkBAIC0xNjg2LDcgKzE2ODYsNyBAQCBzdGF0aWMgaW50IGRybV9tb2RlX3Bh
-cnNlX2NtZGxpbmVfb3B0aW9ucyhjaGFyICpzdHIsIHNpemVfdCBsZW4sCiAgKgogICogQWRkaXRp
-b25hbHMgb3B0aW9ucyBjYW4gYmUgcHJvdmlkZWQgZm9sbG93aW5nIHRoZSBtb2RlLCB1c2luZyBh
-IGNvbW1hIHRvCiAgKiBzZXBhcmF0ZSBlYWNoIG9wdGlvbi4gVmFsaWQgb3B0aW9ucyBjYW4gYmUg
-Zm91bmQgaW4KLSAqIERvY3VtZW50YXRpb24vZmIvbW9kZWRiLnR4dC4KKyAqIERvY3VtZW50YXRp
-b24vZmIvbW9kZWRiLnJzdC4KICAqCiAgKiBUaGUgaW50ZXJtZWRpYXRlIGRybV9jbWRsaW5lX21v
-ZGUgc3RydWN0dXJlIGlzIHJlcXVpcmVkIHRvIHN0b3JlIGFkZGl0aW9uYWwKICAqIG9wdGlvbnMg
-ZnJvbSB0aGUgY29tbWFuZCBsaW5lIG1vZGxpbmUgbGlrZSB0aGUgZm9yY2UtZW5hYmxlL2Rpc2Fi
-bGUgZmxhZy4KZGlmZiAtLWdpdCBhL2RyaXZlcnMvaTJjL2J1c3Nlcy9pMmMtbnZpZGlhLWdwdS5j
-IGIvZHJpdmVycy9pMmMvYnVzc2VzL2kyYy1udmlkaWEtZ3B1LmMKaW5kZXggY2ZjNzZiNWRlNzI2
-Li41YTEyMzVmZDg2YmIgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvaTJjL2J1c3Nlcy9pMmMtbnZpZGlh
-LWdwdS5jCisrKyBiL2RyaXZlcnMvaTJjL2J1c3Nlcy9pMmMtbnZpZGlhLWdwdS5jCkBAIC0zNjQs
-NyArMzY0LDcgQEAgc3RhdGljIHZvaWQgZ3B1X2kyY19yZW1vdmUoc3RydWN0IHBjaV9kZXYgKnBk
-ZXYpCiAvKgogICogV2UgbmVlZCBncHVfaTJjX3N1c3BlbmQoKSBldmVuIGlmIGl0IGlzIHN0dWIs
-IGZvciBydW50aW1lIHBtIHRvIHdvcmsKICAqIGNvcnJlY3RseS4gV2l0aG91dCBpdCwgbHNwY2kg
-c2hvd3MgcnVudGltZSBwbSBzdGF0dXMgYXMgIkQwIiBmb3IgdGhlIGNhcmQuCi0gKiBEb2N1bWVu
-dGF0aW9uL3Bvd2VyL3BjaS50eHQgYWxzbyBpbnNpc3RzIGZvciBkcml2ZXIgdG8gcHJvdmlkZSB0
-aGlzLgorICogRG9jdW1lbnRhdGlvbi9wb3dlci9wY2kucnN0IGFsc28gaW5zaXN0cyBmb3IgZHJp
-dmVyIHRvIHByb3ZpZGUgdGhpcy4KICAqLwogc3RhdGljIF9fbWF5YmVfdW51c2VkIGludCBncHVf
-aTJjX3N1c3BlbmQoc3RydWN0IGRldmljZSAqZGV2KQogewpkaWZmIC0tZ2l0IGEvZHJpdmVycy9z
-Y3NpL2hwc2EuYyBiL2RyaXZlcnMvc2NzaS9ocHNhLmMKaW5kZXggNDNhNmI1MzUwNzc1Li5lYWY2
-MTc3YWM5ZWUgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvc2NzaS9ocHNhLmMKKysrIGIvZHJpdmVycy9z
-Y3NpL2hwc2EuYwpAQCAtNzc5OCw3ICs3Nzk4LDcgQEAgc3RhdGljIHZvaWQgaHBzYV9mcmVlX3Bj
-aV9pbml0KHN0cnVjdCBjdGxyX2luZm8gKmgpCiAJaHBzYV9kaXNhYmxlX2ludGVycnVwdF9tb2Rl
-KGgpOwkJLyogcGNpX2luaXQgMiAqLwogCS8qCiAJICogY2FsbCBwY2lfZGlzYWJsZV9kZXZpY2Ug
-YmVmb3JlIHBjaV9yZWxlYXNlX3JlZ2lvbnMgcGVyCi0JICogRG9jdW1lbnRhdGlvbi9QQ0kvcGNp
-LnJzdAorCSAqIERvY3VtZW50YXRpb24vZHJpdmVyLWFwaS9wY2kvcGNpLnJzdAogCSAqLwogCXBj
-aV9kaXNhYmxlX2RldmljZShoLT5wZGV2KTsJCS8qIHBjaV9pbml0IDEgKi8KIAlwY2lfcmVsZWFz
-ZV9yZWdpb25zKGgtPnBkZXYpOwkJLyogcGNpX2luaXQgMiAqLwpAQCAtNzg4MSw3ICs3ODgxLDcg
-QEAgc3RhdGljIGludCBocHNhX3BjaV9pbml0KHN0cnVjdCBjdGxyX2luZm8gKmgpCiBjbGVhbjE6
-CiAJLyoKIAkgKiBjYWxsIHBjaV9kaXNhYmxlX2RldmljZSBiZWZvcmUgcGNpX3JlbGVhc2VfcmVn
-aW9ucyBwZXIKLQkgKiBEb2N1bWVudGF0aW9uL1BDSS9wY2kucnN0CisJICogRG9jdW1lbnRhdGlv
-bi9kcml2ZXItYXBpL3BjaS9wY2kucnN0CiAJICovCiAJcGNpX2Rpc2FibGVfZGV2aWNlKGgtPnBk
-ZXYpOwogCXBjaV9yZWxlYXNlX3JlZ2lvbnMoaC0+cGRldik7Ci0tIAoyLjIxLjAKCl9fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmRyaS1kZXZlbCBtYWlsaW5n
-IGxpc3QKZHJpLWRldmVsQGxpc3RzLmZyZWVkZXNrdG9wLm9yZwpodHRwczovL2xpc3RzLmZyZWVk
-ZXNrdG9wLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2RyaS1kZXZlbA==
+This series converts the text files under Documentation with doesn't end
+neither .txt or .rst and are not part of ABI or features.
+
+This series is at:
+	https://git.linuxtv.org/mchehab/experimental.git/log/?h=rst_for_5_4_v3
+
+And it is based on yesterday's upstream tree.
+
+After this series, we have ~320 files left to be converted to ReST.
+
+v2:
+  - Added 3 files submitted for v5.3 that weren't merged yet;
+  - markdown patch broken into two, per Rob's request;
+  - rebased on the top of upstream master branch
+
+Mauro Carvalho Chehab (26):
+  docs: power: add it to to the main documentation index
+  docs: thermal: add it to the driver API
+  docs: powerpc: convert docs to ReST and rename to *.rst
+  docs: ubifs-authentication.md: convert to ReST
+  docs: writing-schema.md: convert from markdown to ReST
+  docs: i2c: convert to ReST and add to driver-api bookset
+  docs: w1: convert to ReST and add to the kAPI group of docs
+  spi: docs: convert to ReST and add it to the kABI bookset
+  docs: ipmb: place it at driver-api and convert to ReST
+  docs: packing: move it to core-api book and adjust markups
+  docs: admin-guide: add auxdisplay files to it after conversion to ReST
+  docs: README.buddha: convert to ReST and add to m68k book
+  docs: parisc: convert to ReST and add to documentation body
+  docs: openrisc: convert to ReST and add to documentation body
+  docs: isdn: convert to ReST and add to kAPI bookset
+  docs: fs: cifs: convert to ReST and add to admin-guide book
+  docs: fs: convert docs without extension to ReST
+  docs: fs: convert porting to ReST
+  docs: index.rst: don't use genindex for pdf output
+  docs: wimax: convert to ReST and add to admin-guide
+  docs: mips: add to the documentation body as ReST
+  docs: hwmon: pxe1610: convert to ReST format and add to the index
+  docs: nios2: add it to the main Documentation body
+  docs: net: convert two README files to ReST format
+  docs: rcu: convert some articles from html to ReST
+  docs: ABI: remove extension from sysfs-class-mic.txt
+
+ Documentation/ABI/stable/sysfs-bus-w1         |    2 +-
+ .../ABI/stable/sysfs-driver-w1_ds28e04        |    4 +-
+ .../ABI/stable/sysfs-driver-w1_ds28ea00       |    2 +-
+ .../{sysfs-class-mic.txt => sysfs-class-mic}  |    0
+ Documentation/PCI/pci-error-recovery.rst      |    2 +-
+ .../Data-Structures/Data-Structures.html      | 1391 -------
+ .../Data-Structures/Data-Structures.rst       | 1163 ++++++
+ ...riods.html => Expedited-Grace-Periods.rst} |  949 ++---
+ .../Memory-Ordering/Tree-RCU-Diagram.html     |    9 -
+ ...ring.html => Tree-RCU-Memory-Ordering.rst} | 1181 +++---
+ .../RCU/Design/Requirements/Requirements.html | 3330 -----------------
+ .../RCU/Design/Requirements/Requirements.rst  | 2662 +++++++++++++
+ Documentation/RCU/index.rst                   |    5 +
+ Documentation/RCU/whatisRCU.txt               |    4 +-
+ .../auxdisplay/cfag12864b.rst}                |  115 +-
+ .../admin-guide/auxdisplay/index.rst          |   16 +
+ .../auxdisplay/ks0108.rst}                    |   53 +-
+ .../AUTHORS => admin-guide/cifs/authors.rst}  |   64 +-
+ .../CHANGES => admin-guide/cifs/changes.rst}  |    4 +
+ Documentation/admin-guide/cifs/index.rst      |   21 +
+ .../cifs/introduction.rst}                    |    8 +
+ .../cifs/TODO => admin-guide/cifs/todo.rst}   |   87 +-
+ .../README => admin-guide/cifs/usage.rst}     |  560 +--
+ .../cifs/winucase_convert.pl                  |    0
+ Documentation/admin-guide/index.rst           |    3 +
+ .../wimax/i2400m.rst}                         |  145 +-
+ Documentation/admin-guide/wimax/index.rst     |   19 +
+ .../wimax/wimax.rst}                          |   36 +-
+ Documentation/core-api/index.rst              |    3 +-
+ .../{packing.txt => core-api/packing.rst}     |   81 +-
+ .../devicetree/bindings/i2c/i2c-mux-gpmux.txt |    2 +-
+ .../{writing-schema.md => writing-schema.rst} |  137 +-
+ Documentation/driver-api/dmaengine/index.rst  |    2 +-
+ Documentation/driver-api/index.rst            |    2 +
+ Documentation/driver-api/ipmb.rst             |    2 +-
+ Documentation/driver-api/soundwire/index.rst  |    2 +-
+ .../thermal/cpu-cooling-api.rst               |    0
+ .../thermal/exynos_thermal.rst                |    0
+ .../thermal/exynos_thermal_emulation.rst      |    0
+ .../{ => driver-api}/thermal/index.rst        |    2 +-
+ .../thermal/intel_powerclamp.rst              |    0
+ .../thermal/nouveau_thermal.rst               |    0
+ .../thermal/power_allocator.rst               |    0
+ .../{ => driver-api}/thermal/sysfs-api.rst    |   12 +-
+ .../thermal/x86_pkg_temperature_thermal.rst   |    2 +-
+ ...irectory-locking => directory-locking.rst} |   40 +-
+ Documentation/filesystems/index.rst           |    4 +
+ .../filesystems/{Locking => locking.rst}      |  257 +-
+ .../nfs/{Exporting => exporting.rst}          |   31 +-
+ .../filesystems/{porting => porting.rst}      |  824 ++--
+ ...entication.md => ubifs-authentication.rst} |   70 +-
+ Documentation/filesystems/vfs.rst             |    2 +-
+ Documentation/hwmon/adm1021.rst               |    2 +-
+ Documentation/hwmon/adm1275.rst               |    2 +-
+ Documentation/hwmon/hih6130.rst               |    2 +-
+ Documentation/hwmon/ibm-cffps.rst             |    2 +-
+ Documentation/hwmon/index.rst                 |    1 +
+ Documentation/hwmon/lm25066.rst               |    2 +-
+ Documentation/hwmon/max16064.rst              |    2 +-
+ Documentation/hwmon/max16065.rst              |    2 +-
+ Documentation/hwmon/max20751.rst              |    2 +-
+ Documentation/hwmon/max34440.rst              |    2 +-
+ Documentation/hwmon/max6650.rst               |    2 +-
+ Documentation/hwmon/max8688.rst               |    2 +-
+ Documentation/hwmon/menf21bmc.rst             |    2 +-
+ Documentation/hwmon/pcf8591.rst               |    2 +-
+ Documentation/hwmon/{pxe1610 => pxe1610.rst}  |   33 +-
+ Documentation/hwmon/sht3x.rst                 |    2 +-
+ Documentation/hwmon/shtc1.rst                 |    2 +-
+ Documentation/hwmon/tmp103.rst                |    2 +-
+ Documentation/hwmon/tps40422.rst              |    2 +-
+ Documentation/hwmon/ucd9000.rst               |    2 +-
+ Documentation/hwmon/ucd9200.rst               |    2 +-
+ Documentation/hwmon/via686a.rst               |    2 +-
+ Documentation/hwmon/zl6100.rst                |    2 +-
+ .../busses/{i2c-ali1535 => i2c-ali1535.rst}   |   13 +-
+ .../busses/{i2c-ali1563 => i2c-ali1563.rst}   |    3 +
+ .../busses/{i2c-ali15x3 => i2c-ali15x3.rst}   |   64 +-
+ .../busses/{i2c-amd-mp2 => i2c-amd-mp2.rst}   |   14 +-
+ .../i2c/busses/{i2c-amd756 => i2c-amd756.rst} |    8 +-
+ .../busses/{i2c-amd8111 => i2c-amd8111.rst}   |   14 +-
+ .../{i2c-diolan-u2c => i2c-diolan-u2c.rst}    |    3 +
+ .../i2c/busses/{i2c-i801 => i2c-i801.rst}     |   33 +-
+ .../i2c/busses/{i2c-ismt => i2c-ismt.rst}     |   20 +-
+ .../busses/{i2c-mlxcpld => i2c-mlxcpld.rst}   |    6 +
+ .../busses/{i2c-nforce2 => i2c-nforce2.rst}   |   33 +-
+ .../{i2c-nvidia-gpu => i2c-nvidia-gpu.rst}    |    6 +-
+ .../i2c/busses/{i2c-ocores => i2c-ocores.rst} |   22 +-
+ ...2c-parport-light => i2c-parport-light.rst} |    8 +-
+ .../busses/{i2c-parport => i2c-parport.rst}   |  164 +-
+ .../busses/{i2c-pca-isa => i2c-pca-isa.rst}   |    9 +-
+ .../i2c/busses/{i2c-piix4 => i2c-piix4.rst}   |   18 +-
+ .../busses/{i2c-sis5595 => i2c-sis5595.rst}   |   19 +-
+ .../i2c/busses/{i2c-sis630 => i2c-sis630.rst} |   39 +-
+ .../i2c/busses/{i2c-sis96x => i2c-sis96x.rst} |   31 +-
+ .../busses/{i2c-taos-evm => i2c-taos-evm.rst} |    8 +-
+ .../i2c/busses/{i2c-via => i2c-via.rst}       |   28 +-
+ .../i2c/busses/{i2c-viapro => i2c-viapro.rst} |   12 +-
+ Documentation/i2c/busses/index.rst            |   33 +
+ .../i2c/busses/{scx200_acb => scx200_acb.rst} |    9 +-
+ .../i2c/{dev-interface => dev-interface.rst}  |   94 +-
+ ...-considerations => dma-considerations.rst} |    0
+ .../i2c/{fault-codes => fault-codes.rst}      |    5 +-
+ .../i2c/{functionality => functionality.rst}  |   22 +-
+ ...ult-injection => gpio-fault-injection.rst} |   12 +-
+ .../i2c/{i2c-protocol => i2c-protocol.rst}    |   28 +-
+ Documentation/i2c/{i2c-stub => i2c-stub.rst}  |   20 +-
+ .../i2c/{i2c-topology => i2c-topology.rst}    |   68 +-
+ Documentation/i2c/index.rst                   |   37 +
+ ...ting-devices => instantiating-devices.rst} |   45 +-
+ .../muxes/{i2c-mux-gpio => i2c-mux-gpio.rst}  |   26 +-
+ ...e-parameters => old-module-parameters.rst} |   27 +-
+ ...eprom-backend => slave-eeprom-backend.rst} |    4 +-
+ .../{slave-interface => slave-interface.rst}  |   33 +-
+ .../{smbus-protocol => smbus-protocol.rst}    |   86 +-
+ Documentation/i2c/{summary => summary.rst}    |    6 +-
+ ...en-bit-addresses => ten-bit-addresses.rst} |    5 +
+ ...pgrading-clients => upgrading-clients.rst} |  204 +-
+ .../{writing-clients => writing-clients.rst}  |   94 +-
+ Documentation/index.rst                       |   10 +
+ .../isdn/{README.avmb1 => avmb1.rst}          |  231 +-
+ Documentation/isdn/{CREDITS => credits.rst}   |    7 +-
+ .../isdn/{README.gigaset => gigaset.rst}      |  290 +-
+ .../isdn/{README.hysdn => hysdn.rst}          |  125 +-
+ Documentation/isdn/index.rst                  |   24 +
+ .../{INTERFACE.CAPI => interface_capi.rst}    |  182 +-
+ .../isdn/{README.mISDN => m_isdn.rst}         |    5 +-
+ .../m68k/{README.buddha => buddha-driver.rst} |   95 +-
+ Documentation/m68k/index.rst                  |    1 +
+ .../{AU1xxx_IDE.README => au1xxx_ide.rst}     |   89 +-
+ Documentation/mips/index.rst                  |   17 +
+ .../networking/caif/{README => caif.rst}      |   88 +-
+ .../networking/device_drivers/index.rst       |    2 +-
+ Documentation/networking/index.rst            |    2 +-
+ .../{README => mac80211_hwsim.rst}            |   28 +-
+ Documentation/nios2/{README => nios2.rst}     |    1 +
+ Documentation/openrisc/index.rst              |   18 +
+ .../openrisc/{README => openrisc_port.rst}    |   25 +-
+ Documentation/openrisc/{TODO => todo.rst}     |    9 +-
+ .../parisc/{debugging => debugging.rst}       |    7 +
+ Documentation/parisc/index.rst                |   18 +
+ .../parisc/{registers => registers.rst}       |   59 +-
+ Documentation/power/index.rst                 |    2 +-
+ .../{bootwrapper.txt => bootwrapper.rst}      |   28 +-
+ .../{cpu_families.txt => cpu_families.rst}    |   23 +-
+ .../{cpu_features.txt => cpu_features.rst}    |    6 +-
+ Documentation/powerpc/{cxl.txt => cxl.rst}    |   46 +-
+ .../powerpc/{cxlflash.txt => cxlflash.rst}    |   10 +-
+ .../{DAWR-POWER9.txt => dawr-power9.rst}      |   15 +-
+ Documentation/powerpc/{dscr.txt => dscr.rst}  |   18 +-
+ ...ecovery.txt => eeh-pci-error-recovery.rst} |  108 +-
+ ...ed-dump.txt => firmware-assisted-dump.rst} |  117 +-
+ Documentation/powerpc/{hvcs.txt => hvcs.rst}  |  108 +-
+ Documentation/powerpc/index.rst               |   34 +
+ Documentation/powerpc/isa-versions.rst        |   15 +-
+ .../powerpc/{mpc52xx.txt => mpc52xx.rst}      |   12 +-
+ ...nv.txt => pci_iov_resource_on_powernv.rst} |   15 +-
+ .../powerpc/{pmu-ebb.txt => pmu-ebb.rst}      |    1 +
+ .../powerpc/{ptrace.txt => ptrace.rst}        |  169 +-
+ .../{qe_firmware.txt => qe_firmware.rst}      |   37 +-
+ .../{syscall64-abi.txt => syscall64-abi.rst}  |   29 +-
+ ...al_memory.txt => transactional_memory.rst} |   45 +-
+ Documentation/sound/index.rst                 |    2 +-
+ .../spi/{butterfly => butterfly.rst}          |   44 +-
+ Documentation/spi/index.rst                   |   22 +
+ Documentation/spi/{pxa2xx => pxa2xx.rst}      |   95 +-
+ .../spi/{spi-lm70llp => spi-lm70llp.rst}      |   17 +-
+ .../spi/{spi-sc18is602 => spi-sc18is602.rst}  |    5 +-
+ .../spi/{spi-summary => spi-summary.rst}      |  105 +-
+ Documentation/spi/{spidev => spidev.rst}      |   30 +-
+ Documentation/w1/index.rst                    |   21 +
+ .../w1/masters/{ds2482 => ds2482.rst}         |   16 +-
+ .../w1/masters/{ds2490 => ds2490.rst}         |    6 +-
+ Documentation/w1/masters/index.rst            |   14 +
+ .../w1/masters/{mxc-w1 => mxc-w1.rst}         |   13 +-
+ .../w1/masters/{omap-hdq => omap-hdq.rst}     |   12 +-
+ .../w1/masters/{w1-gpio => w1-gpio.rst}       |   21 +-
+ Documentation/w1/slaves/index.rst             |   16 +
+ .../w1/slaves/{w1_ds2406 => w1_ds2406.rst}    |    4 +-
+ .../w1/slaves/{w1_ds2413 => w1_ds2413.rst}    |    9 +
+ .../w1/slaves/{w1_ds2423 => w1_ds2423.rst}    |   27 +-
+ .../w1/slaves/{w1_ds2438 => w1_ds2438.rst}    |   10 +-
+ .../w1/slaves/{w1_ds28e04 => w1_ds28e04.rst}  |    5 +
+ .../w1/slaves/{w1_ds28e17 => w1_ds28e17.rst}  |   16 +-
+ .../w1/slaves/{w1_therm => w1_therm.rst}      |   11 +-
+ .../w1/{w1.generic => w1-generic.rst}         |   88 +-
+ .../w1/{w1.netlink => w1-netlink.rst}         |   89 +-
+ MAINTAINERS                                   |   68 +-
+ arch/powerpc/kernel/exceptions-64s.S          |    2 +-
+ drivers/auxdisplay/Kconfig                    |    2 +-
+ drivers/hwmon/atxp1.c                         |    2 +-
+ drivers/hwmon/smm665.c                        |    2 +-
+ drivers/i2c/Kconfig                           |    4 +-
+ drivers/i2c/busses/Kconfig                    |    2 +-
+ drivers/i2c/busses/i2c-i801.c                 |    2 +-
+ drivers/i2c/busses/i2c-taos-evm.c             |    2 +-
+ drivers/i2c/i2c-core-base.c                   |    4 +-
+ drivers/iio/dummy/iio_simple_dummy.c          |    4 +-
+ drivers/rtc/rtc-ds1374.c                      |    2 +-
+ drivers/soc/fsl/qe/qe.c                       |    2 +-
+ drivers/spi/Kconfig                           |    2 +-
+ drivers/spi/spi-butterfly.c                   |    2 +-
+ drivers/spi/spi-lm70llp.c                     |    2 +-
+ drivers/staging/isdn/hysdn/Kconfig            |    2 +-
+ drivers/tty/hvc/hvcs.c                        |    2 +-
+ fs/cifs/export.c                              |    2 +-
+ fs/exportfs/expfs.c                           |    2 +-
+ fs/isofs/export.c                             |    2 +-
+ fs/orangefs/file.c                            |    2 +-
+ fs/orangefs/orangefs-kernel.h                 |    2 +-
+ include/linux/dcache.h                        |    2 +-
+ include/linux/exportfs.h                      |    2 +-
+ include/linux/i2c.h                           |    2 +-
+ include/linux/platform_data/sc18is602.h       |    2 +-
+ include/linux/thermal.h                       |    4 +-
+ include/soc/fsl/qe/qe.h                       |    2 +-
+ 216 files changed, 9148 insertions(+), 8672 deletions(-)
+ rename Documentation/ABI/testing/{sysfs-class-mic.txt => sysfs-class-mic} (100%)
+ delete mode 100644 Documentation/RCU/Design/Data-Structures/Data-Structures.html
+ create mode 100644 Documentation/RCU/Design/Data-Structures/Data-Structures.rst
+ rename Documentation/RCU/Design/Expedited-Grace-Periods/{Expedited-Grace-Periods.html => Expedited-Grace-Periods.rst} (15%)
+ delete mode 100644 Documentation/RCU/Design/Memory-Ordering/Tree-RCU-Diagram.html
+ rename Documentation/RCU/Design/Memory-Ordering/{Tree-RCU-Memory-Ordering.html => Tree-RCU-Memory-Ordering.rst} (10%)
+ delete mode 100644 Documentation/RCU/Design/Requirements/Requirements.html
+ create mode 100644 Documentation/RCU/Design/Requirements/Requirements.rst
+ rename Documentation/{auxdisplay/cfag12864b => admin-guide/auxdisplay/cfag12864b.rst} (26%)
+ create mode 100644 Documentation/admin-guide/auxdisplay/index.rst
+ rename Documentation/{auxdisplay/ks0108 => admin-guide/auxdisplay/ks0108.rst} (32%)
+ rename Documentation/{filesystems/cifs/AUTHORS => admin-guide/cifs/authors.rst} (60%)
+ rename Documentation/{filesystems/cifs/CHANGES => admin-guide/cifs/changes.rst} (91%)
+ create mode 100644 Documentation/admin-guide/cifs/index.rst
+ rename Documentation/{filesystems/cifs/cifs.txt => admin-guide/cifs/introduction.rst} (98%)
+ rename Documentation/{filesystems/cifs/TODO => admin-guide/cifs/todo.rst} (58%)
+ rename Documentation/{filesystems/cifs/README => admin-guide/cifs/usage.rst} (72%)
+ rename Documentation/{filesystems => admin-guide}/cifs/winucase_convert.pl (100%)
+ rename Documentation/{wimax/README.i2400m => admin-guide/wimax/i2400m.rst} (69%)
+ create mode 100644 Documentation/admin-guide/wimax/index.rst
+ rename Documentation/{wimax/README.wimax => admin-guide/wimax/wimax.rst} (74%)
+ rename Documentation/{packing.txt => core-api/packing.rst} (61%)
+ rename Documentation/devicetree/{writing-schema.md => writing-schema.rst} (48%)
+ rename Documentation/{ => driver-api}/thermal/cpu-cooling-api.rst (100%)
+ rename Documentation/{ => driver-api}/thermal/exynos_thermal.rst (100%)
+ rename Documentation/{ => driver-api}/thermal/exynos_thermal_emulation.rst (100%)
+ rename Documentation/{ => driver-api}/thermal/index.rst (86%)
+ rename Documentation/{ => driver-api}/thermal/intel_powerclamp.rst (100%)
+ rename Documentation/{ => driver-api}/thermal/nouveau_thermal.rst (100%)
+ rename Documentation/{ => driver-api}/thermal/power_allocator.rst (100%)
+ rename Documentation/{ => driver-api}/thermal/sysfs-api.rst (98%)
+ rename Documentation/{ => driver-api}/thermal/x86_pkg_temperature_thermal.rst (94%)
+ rename Documentation/filesystems/{directory-locking => directory-locking.rst} (86%)
+ rename Documentation/filesystems/{Locking => locking.rst} (79%)
+ rename Documentation/filesystems/nfs/{Exporting => exporting.rst} (91%)
+ rename Documentation/filesystems/{porting => porting.rst} (49%)
+ rename Documentation/filesystems/{ubifs-authentication.md => ubifs-authentication.rst} (95%)
+ rename Documentation/hwmon/{pxe1610 => pxe1610.rst} (82%)
+ rename Documentation/i2c/busses/{i2c-ali1535 => i2c-ali1535.rst} (82%)
+ rename Documentation/i2c/busses/{i2c-ali1563 => i2c-ali1563.rst} (93%)
+ rename Documentation/i2c/busses/{i2c-ali15x3 => i2c-ali15x3.rst} (72%)
+ rename Documentation/i2c/busses/{i2c-amd-mp2 => i2c-amd-mp2.rst} (42%)
+ rename Documentation/i2c/busses/{i2c-amd756 => i2c-amd756.rst} (79%)
+ rename Documentation/i2c/busses/{i2c-amd8111 => i2c-amd8111.rst} (66%)
+ rename Documentation/i2c/busses/{i2c-diolan-u2c => i2c-diolan-u2c.rst} (91%)
+ rename Documentation/i2c/busses/{i2c-i801 => i2c-i801.rst} (89%)
+ rename Documentation/i2c/busses/{i2c-ismt => i2c-ismt.rst} (81%)
+ rename Documentation/i2c/busses/{i2c-mlxcpld => i2c-mlxcpld.rst} (88%)
+ rename Documentation/i2c/busses/{i2c-nforce2 => i2c-nforce2.rst} (58%)
+ rename Documentation/i2c/busses/{i2c-nvidia-gpu => i2c-nvidia-gpu.rst} (63%)
+ rename Documentation/i2c/busses/{i2c-ocores => i2c-ocores.rst} (82%)
+ rename Documentation/i2c/busses/{i2c-parport-light => i2c-parport-light.rst} (91%)
+ rename Documentation/i2c/busses/{i2c-parport => i2c-parport.rst} (49%)
+ rename Documentation/i2c/busses/{i2c-pca-isa => i2c-pca-isa.rst} (72%)
+ rename Documentation/i2c/busses/{i2c-piix4 => i2c-piix4.rst} (92%)
+ rename Documentation/i2c/busses/{i2c-sis5595 => i2c-sis5595.rst} (74%)
+ rename Documentation/i2c/busses/{i2c-sis630 => i2c-sis630.rst} (37%)
+ rename Documentation/i2c/busses/{i2c-sis96x => i2c-sis96x.rst} (74%)
+ rename Documentation/i2c/busses/{i2c-taos-evm => i2c-taos-evm.rst} (91%)
+ rename Documentation/i2c/busses/{i2c-via => i2c-via.rst} (54%)
+ rename Documentation/i2c/busses/{i2c-viapro => i2c-viapro.rst} (87%)
+ create mode 100644 Documentation/i2c/busses/index.rst
+ rename Documentation/i2c/busses/{scx200_acb => scx200_acb.rst} (86%)
+ rename Documentation/i2c/{dev-interface => dev-interface.rst} (71%)
+ rename Documentation/i2c/{DMA-considerations => dma-considerations.rst} (100%)
+ rename Documentation/i2c/{fault-codes => fault-codes.rst} (98%)
+ rename Documentation/i2c/{functionality => functionality.rst} (91%)
+ rename Documentation/i2c/{gpio-fault-injection => gpio-fault-injection.rst} (97%)
+ rename Documentation/i2c/{i2c-protocol => i2c-protocol.rst} (83%)
+ rename Documentation/i2c/{i2c-stub => i2c-stub.rst} (93%)
+ rename Documentation/i2c/{i2c-topology => i2c-topology.rst} (89%)
+ create mode 100644 Documentation/i2c/index.rst
+ rename Documentation/i2c/{instantiating-devices => instantiating-devices.rst} (93%)
+ rename Documentation/i2c/muxes/{i2c-mux-gpio => i2c-mux-gpio.rst} (85%)
+ rename Documentation/i2c/{old-module-parameters => old-module-parameters.rst} (75%)
+ rename Documentation/i2c/{slave-eeprom-backend => slave-eeprom-backend.rst} (90%)
+ rename Documentation/i2c/{slave-interface => slave-interface.rst} (94%)
+ rename Documentation/i2c/{smbus-protocol => smbus-protocol.rst} (82%)
+ rename Documentation/i2c/{summary => summary.rst} (96%)
+ rename Documentation/i2c/{ten-bit-addresses => ten-bit-addresses.rst} (95%)
+ rename Documentation/i2c/{upgrading-clients => upgrading-clients.rst} (54%)
+ rename Documentation/i2c/{writing-clients => writing-clients.rst} (91%)
+ rename Documentation/isdn/{README.avmb1 => avmb1.rst} (50%)
+ rename Documentation/isdn/{CREDITS => credits.rst} (96%)
+ rename Documentation/isdn/{README.gigaset => gigaset.rst} (74%)
+ rename Documentation/isdn/{README.hysdn => hysdn.rst} (80%)
+ create mode 100644 Documentation/isdn/index.rst
+ rename Documentation/isdn/{INTERFACE.CAPI => interface_capi.rst} (75%)
+ rename Documentation/isdn/{README.mISDN => m_isdn.rst} (89%)
+ rename Documentation/m68k/{README.buddha => buddha-driver.rst} (73%)
+ rename Documentation/mips/{AU1xxx_IDE.README => au1xxx_ide.rst} (67%)
+ create mode 100644 Documentation/mips/index.rst
+ rename Documentation/networking/caif/{README => caif.rst} (70%)
+ rename Documentation/networking/mac80211_hwsim/{README => mac80211_hwsim.rst} (81%)
+ rename Documentation/nios2/{README => nios2.rst} (96%)
+ create mode 100644 Documentation/openrisc/index.rst
+ rename Documentation/openrisc/{README => openrisc_port.rst} (80%)
+ rename Documentation/openrisc/{TODO => todo.rst} (78%)
+ rename Documentation/parisc/{debugging => debugging.rst} (94%)
+ create mode 100644 Documentation/parisc/index.rst
+ rename Documentation/parisc/{registers => registers.rst} (70%)
+ rename Documentation/powerpc/{bootwrapper.txt => bootwrapper.rst} (93%)
+ rename Documentation/powerpc/{cpu_families.txt => cpu_families.rst} (95%)
+ rename Documentation/powerpc/{cpu_features.txt => cpu_features.rst} (97%)
+ rename Documentation/powerpc/{cxl.txt => cxl.rst} (95%)
+ rename Documentation/powerpc/{cxlflash.txt => cxlflash.rst} (98%)
+ rename Documentation/powerpc/{DAWR-POWER9.txt => dawr-power9.rst} (95%)
+ rename Documentation/powerpc/{dscr.txt => dscr.rst} (91%)
+ rename Documentation/powerpc/{eeh-pci-error-recovery.txt => eeh-pci-error-recovery.rst} (82%)
+ rename Documentation/powerpc/{firmware-assisted-dump.txt => firmware-assisted-dump.rst} (80%)
+ rename Documentation/powerpc/{hvcs.txt => hvcs.rst} (91%)
+ create mode 100644 Documentation/powerpc/index.rst
+ rename Documentation/powerpc/{mpc52xx.txt => mpc52xx.rst} (91%)
+ rename Documentation/powerpc/{pci_iov_resource_on_powernv.txt => pci_iov_resource_on_powernv.rst} (97%)
+ rename Documentation/powerpc/{pmu-ebb.txt => pmu-ebb.rst} (99%)
+ rename Documentation/powerpc/{ptrace.txt => ptrace.rst} (48%)
+ rename Documentation/powerpc/{qe_firmware.txt => qe_firmware.rst} (95%)
+ rename Documentation/powerpc/{syscall64-abi.txt => syscall64-abi.rst} (82%)
+ rename Documentation/powerpc/{transactional_memory.txt => transactional_memory.rst} (93%)
+ rename Documentation/spi/{butterfly => butterfly.rst} (71%)
+ create mode 100644 Documentation/spi/index.rst
+ rename Documentation/spi/{pxa2xx => pxa2xx.rst} (83%)
+ rename Documentation/spi/{spi-lm70llp => spi-lm70llp.rst} (88%)
+ rename Documentation/spi/{spi-sc18is602 => spi-sc18is602.rst} (92%)
+ rename Documentation/spi/{spi-summary => spi-summary.rst} (93%)
+ rename Documentation/spi/{spidev => spidev.rst} (90%)
+ create mode 100644 Documentation/w1/index.rst
+ rename Documentation/w1/masters/{ds2482 => ds2482.rst} (71%)
+ rename Documentation/w1/masters/{ds2490 => ds2490.rst} (98%)
+ create mode 100644 Documentation/w1/masters/index.rst
+ rename Documentation/w1/masters/{mxc-w1 => mxc-w1.rst} (33%)
+ rename Documentation/w1/masters/{omap-hdq => omap-hdq.rst} (90%)
+ rename Documentation/w1/masters/{w1-gpio => w1-gpio.rst} (75%)
+ create mode 100644 Documentation/w1/slaves/index.rst
+ rename Documentation/w1/slaves/{w1_ds2406 => w1_ds2406.rst} (96%)
+ rename Documentation/w1/slaves/{w1_ds2413 => w1_ds2413.rst} (81%)
+ rename Documentation/w1/slaves/{w1_ds2423 => w1_ds2423.rst} (48%)
+ rename Documentation/w1/slaves/{w1_ds2438 => w1_ds2438.rst} (93%)
+ rename Documentation/w1/slaves/{w1_ds28e04 => w1_ds28e04.rst} (93%)
+ rename Documentation/w1/slaves/{w1_ds28e17 => w1_ds28e17.rst} (88%)
+ rename Documentation/w1/slaves/{w1_therm => w1_therm.rst} (95%)
+ rename Documentation/w1/{w1.generic => w1-generic.rst} (59%)
+ rename Documentation/w1/{w1.netlink => w1-netlink.rst} (77%)
+
+-- 
+2.21.0
