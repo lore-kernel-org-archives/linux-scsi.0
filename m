@@ -1,119 +1,54 @@
-From: YueHaibing <yuehaibing@huawei.com>
-Subject: [PATCH -next] scsi: initio: Make some functions static
-Date: Fri, 26 Jul 2019 21:58:14 +0800
-Message-ID: <20190726135814.48760-1-yuehaibing@huawei.com>
+From: Daniel Vetter <daniel@ffwll.ch>
+Subject: Re: [PATCH 1/7] docs: fix broken doc references due to renames
+Date: Fri, 26 Jul 2019 16:24:50 +0200
+Message-ID: <20190726142450.GJ15868@phenom.ffwll.local>
+References: <cover.1564140865.git.mchehab+samsung@kernel.org>
+ <430ed96cb234805d1deb216e8c8559da22cc6bac.1564140865.git.mchehab+samsung@kernel.org>
+ <CAL_JsqK_rfHehrKW_NS89BOV0=dYoao0H=zOzG=D-724vKduKw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.ibm.com, martin.petersen@oracle.com, hch@lst.de, arnd@arndb.de
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, YueHaibing <yuehaibing@huawei.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <dri-devel-bounces@lists.freedesktop.org>
+Content-Disposition: inline
+In-Reply-To: <CAL_JsqK_rfHehrKW_NS89BOV0=dYoao0H=zOzG=D-724vKduKw@mail.gmail.com>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
+List-Post: <mailto:dri-devel@lists.freedesktop.org>
+List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: dri-devel-bounces@lists.freedesktop.org
+Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
+To: Rob Herring <robh+dt@kernel.org>
+Cc: Mark Rutland <mark.rutland@arm.com>, Andrea Parri <andrea.parri@amarulasolutions.com>, Ajay Gupta <ajayg@nvidia.com>, Linux Doc Mailing List <linux-doc@vger.kernel.org>, Peter Zijlstra <peterz@infradead.org>, Akira Yokosawa <akiyks@gmail.com>, Lai Jiangshan <jiangshanlai@gmail.com>, Jerry Hoemann <jerry.hoemann@hpe.com>, dri-devel <dri-devel@lists.freedesktop.org>, David Howells <dhowells@redhat.com>, Mauro Carvalho Chehab <mchehab+samsung@kernel.org>, Linux I2C <linux-i2c@vger.kernel.org>, Joel Fernandes <joel@joelfernandes.org>, "Paul E. McKenney" <paulmck@linux.ibm.com>, Will Deacon <will@kernel.org>, "open list:GENERIC INCLUDE/ASM HEADER FILES" <linux-arch@vger.kernel.org>, SCSI <linux-scsi@vger.kernel.org>, Jonathan Corbet <corbet@lwn.net>, Wolfram Sang <wsa@the-dreams.de>, esc.storagedev@microsemi.com, Maxime Ripard <maxime.ripard@bootlin.com>, Ingo Molnar <mingo@>
 List-Id: linux-scsi@vger.kernel.org
 
-Fix sparse warnings:
-
-drivers/scsi/initio.c:881:22: warning: symbol 'initio_find_busy_scb' was not declared. Should it be static?
-drivers/scsi/initio.c:919:22: warning: symbol 'initio_find_done_scb' was not declared. Should it be static?
-drivers/scsi/initio.c:1657:5: warning: symbol 'initio_state_7' was not declared. Should it be static?
-drivers/scsi/initio.c:1743:5: warning: symbol 'initio_xpad_in' was not declared. Should it be static?
-drivers/scsi/initio.c:1767:5: warning: symbol 'initio_xpad_out' was not declared. Should it be static?
-drivers/scsi/initio.c:1792:5: warning: symbol 'initio_status_msg' was not declared. Should it be static?
-drivers/scsi/initio.c:1842:5: warning: symbol 'int_initio_busfree' was not declared. Should it be static?
-drivers/scsi/initio.c:1912:5: warning: symbol 'int_initio_resel' was not declared. Should it be static?
-drivers/scsi/initio.c:2368:5: warning: symbol 'initio_bus_device_reset' was not declared. Should it be static?
-
-Reported-by: Hulk Robot <hulkci@huawei.com>
-Signed-off-by: YueHaibing <yuehaibing@huawei.com>
----
- drivers/scsi/initio.c | 20 +++++++++++---------
- 1 file changed, 11 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/scsi/initio.c b/drivers/scsi/initio.c
-index 41fd64c..ed9e87a 100644
---- a/drivers/scsi/initio.c
-+++ b/drivers/scsi/initio.c
-@@ -864,7 +864,8 @@ static void initio_unlink_busy_scb(struct initio_host * host, struct scsi_ctrl_b
- 	return;
- }
- 
--struct scsi_ctrl_blk *initio_find_busy_scb(struct initio_host * host, u16 tarlun)
-+static struct
-+scsi_ctrl_blk *initio_find_busy_scb(struct initio_host *host, u16 tarlun)
- {
- 	struct scsi_ctrl_blk *tmp, *prev;
- 	u16 scbp_tarlun;
-@@ -902,7 +903,8 @@ static void initio_append_done_scb(struct initio_host * host, struct scsi_ctrl_b
- 	}
- }
- 
--struct scsi_ctrl_blk *initio_find_done_scb(struct initio_host * host)
-+static struct
-+scsi_ctrl_blk *initio_find_done_scb(struct initio_host *host)
- {
- 	struct scsi_ctrl_blk *tmp;
- 
-@@ -1640,7 +1642,7 @@ static int initio_state_6(struct initio_host * host)
-  *
-  */
- 
--int initio_state_7(struct initio_host * host)
-+static int initio_state_7(struct initio_host *host)
- {
- 	int cnt, i;
- 
-@@ -1726,7 +1728,7 @@ static int initio_xfer_data_out(struct initio_host * host)
- 	return 0;		/* return to OS, wait xfer done , let jas_isr come in */
- }
- 
--int initio_xpad_in(struct initio_host * host)
-+static int initio_xpad_in(struct initio_host *host)
- {
- 	struct scsi_ctrl_blk *scb = host->active;
- 	struct target_control *active_tc = host->active_tc;
-@@ -1750,7 +1752,7 @@ int initio_xpad_in(struct initio_host * host)
- 	}
- }
- 
--int initio_xpad_out(struct initio_host * host)
-+static int initio_xpad_out(struct initio_host *host)
- {
- 	struct scsi_ctrl_blk *scb = host->active;
- 	struct target_control *active_tc = host->active_tc;
-@@ -1775,7 +1777,7 @@ int initio_xpad_out(struct initio_host * host)
- 	}
- }
- 
--int initio_status_msg(struct initio_host * host)
-+static int initio_status_msg(struct initio_host *host)
- {				/* status & MSG_IN */
- 	struct scsi_ctrl_blk *scb = host->active;
- 	u8 msg;
-@@ -1825,7 +1827,7 @@ int initio_status_msg(struct initio_host * host)
- 
- 
- /* scsi bus free */
--int int_initio_busfree(struct initio_host * host)
-+static int int_initio_busfree(struct initio_host *host)
- {
- 	struct scsi_ctrl_blk *scb = host->active;
- 
-@@ -1895,7 +1897,7 @@ static int int_initio_scsi_rst(struct initio_host * host)
-  *	and continue processing that command.
-  */
- 
--int int_initio_resel(struct initio_host * host)
-+static int int_initio_resel(struct initio_host *host)
- {
- 	struct scsi_ctrl_blk *scb;
- 	struct target_control *active_tc;
-@@ -2351,7 +2353,7 @@ static void initio_select_atn3(struct initio_host * host, struct scsi_ctrl_blk *
-  *	Perform a device reset and abort all pending SCBs for the
-  *	victim device
-  */
--int initio_bus_device_reset(struct initio_host * host)
-+static int initio_bus_device_reset(struct initio_host *host)
- {
- 	struct scsi_ctrl_blk *scb = host->active;
- 	struct target_control *active_tc = host->active_tc;
--- 
-2.7.4
+T24gRnJpLCBKdWwgMjYsIDIwMTkgYXQgMDc6NDE6MzVBTSAtMDYwMCwgUm9iIEhlcnJpbmcgd3Jv
+dGU6Cj4gT24gRnJpLCBKdWwgMjYsIDIwMTkgYXQgNTo0NyBBTSBNYXVybyBDYXJ2YWxobyBDaGVo
+YWIKPiA8bWNoZWhhYitzYW1zdW5nQGtlcm5lbC5vcmc+IHdyb3RlOgo+ID4KPiA+IFNvbWUgZmls
+ZXMgZ290IHJlbmFtZWQgYnV0IHByb2JhYmx5IGR1ZSB0byBzb21lIG1lcmdlIGNvbmZsaWN0cywK
+PiA+IGEgZmV3IHJlZmVyZW5jZXMgc3RpbGwgcG9pbnQgdG8gdGhlIG9sZCBsb2NhdGlvbnMuCj4g
+Pgo+ID4gU2lnbmVkLW9mZi1ieTogTWF1cm8gQ2FydmFsaG8gQ2hlaGFiIDxtY2hlaGFiK3NhbXN1
+bmdAa2VybmVsLm9yZz4KPiA+IEFja2VkLWJ5OiBXb2xmcmFtIFNhbmcgPHdzYUB0aGUtZHJlYW1z
+LmRlPiAjIEkyQyBwYXJ0Cj4gPiBSZXZpZXdlZC1ieTogSmVycnkgSG9lbWFubiA8amVycnkuaG9l
+bWFubkBocGUuY29tPiAjIGhwd2R0LnJzdAo+ID4gLS0tCj4gPiAgRG9jdW1lbnRhdGlvbi9SQ1Uv
+cmN1bGlzdF9udWxscy50eHQgICAgICAgICAgICAgICAgICAgfCAgMiArLQo+ID4gIERvY3VtZW50
+YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9hcm0vaWRsZS1zdGF0ZXMudHh0IHwgIDIgKy0KPiA+
+ICBEb2N1bWVudGF0aW9uL2xvY2tpbmcvc3BpbmxvY2tzLnJzdCAgICAgICAgICAgICAgICAgICB8
+ICA0ICsrLS0KPiA+ICBEb2N1bWVudGF0aW9uL21lbW9yeS1iYXJyaWVycy50eHQgICAgICAgICAg
+ICAgICAgICAgICB8ICAyICstCj4gPiAgRG9jdW1lbnRhdGlvbi90cmFuc2xhdGlvbnMva29fS1Iv
+bWVtb3J5LWJhcnJpZXJzLnR4dCAgfCAgMiArLQo+ID4gIERvY3VtZW50YXRpb24vd2F0Y2hkb2cv
+aHB3ZHQucnN0ICAgICAgICAgICAgICAgICAgICAgIHwgIDIgKy0KPiA+ICBNQUlOVEFJTkVSUyAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8IDEwICsrKysrLS0tLS0K
+PiA+ICBkcml2ZXJzL2dwdS9kcm0vZHJtX21vZGVzLmMgICAgICAgICAgICAgICAgICAgICAgICAg
+ICB8ICAyICstCgpmb3IgdGhlIGRybSBwYXJ0OgoKQWNrZWQtYnk6IERhbmllbCBWZXR0ZXIgPGRh
+bmllbC52ZXR0ZXJAZmZ3bGwuY2g+Cgo+ID4gIGRyaXZlcnMvaTJjL2J1c3Nlcy9pMmMtbnZpZGlh
+LWdwdS5jICAgICAgICAgICAgICAgICAgIHwgIDIgKy0KPiA+ICBkcml2ZXJzL3Njc2kvaHBzYS5j
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8ICA0ICsrLS0KPiA+ICAxMCBmaWxl
+cyBjaGFuZ2VkLCAxNiBpbnNlcnRpb25zKCspLCAxNiBkZWxldGlvbnMoLSkKPiAKPiBBY2tlZC1i
+eTogUm9iIEhlcnJpbmcgPHJvYmhAa2VybmVsLm9yZz4KCi0tIApEYW5pZWwgVmV0dGVyClNvZnR3
+YXJlIEVuZ2luZWVyLCBJbnRlbCBDb3Jwb3JhdGlvbgpodHRwOi8vYmxvZy5mZndsbC5jaApfX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpkcmktZGV2ZWwgbWFp
+bGluZyBsaXN0CmRyaS1kZXZlbEBsaXN0cy5mcmVlZGVza3RvcC5vcmcKaHR0cHM6Ly9saXN0cy5m
+cmVlZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0aW5mby9kcmktZGV2ZWw=
