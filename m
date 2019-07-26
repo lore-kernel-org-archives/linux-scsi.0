@@ -1,81 +1,78 @@
-From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: Re: [PATCH V2] mpt3sas: support target smid for [abort|query] task
-Date: Fri, 26 Jul 2019 15:19:50 +0530
-Message-ID: <CAK=zhgoqoTDZb=q9Cq7hC+RDNOC9GTKCnDdHeiPsYcKOaT8N6g@mail.gmail.com>
-References: <CGME20190714034415epcms2p25f9787cb71993a30f58524d2f355b543@epcms2p2>
- <20190714034415epcms2p25f9787cb71993a30f58524d2f355b543@epcms2p2>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190714034415epcms2p25f9787cb71993a30f58524d2f355b543@epcms2p2>
-Sender: linux-kernel-owner@vger.kernel.org
-To: minwoo.im@samsung.com
-Cc: "sathya.prakash@broadcom.com" <sathya.prakash@broadcom.com>, "suganath-prabu.subramani@broadcom.com" <suganath-prabu.subramani@broadcom.com>, "jejb@linux.ibm.com" <jejb@linux.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "MPT-FusionLinux.pdl@broadcom.com" <MPT-FusionLinux.pdl@broadcom.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Euihyeok Kwon <eh81.kwon@samsung.com>, Sarah Cho <sohyeon.jo@samsung.com>, Sanggwan Lee <sanggwan.lee@samsung.com>, Gyeongmin Nam <gm.nam@samsung.com>, Sungjun Park <sj1228.park@samsung.com>, "minwoo.im.dev@gmail.com" <minwoo.im.dev@gmail.com>
+From: Suganath Prabu <suganath-prabu.subramani@broadcom.com>
+Subject: [PATCH] mpt3sas: Use 63-bit DMA addressing on SAS35 HBA
+Date: Fri, 26 Jul 2019 06:00:57 -0400
+Message-ID: <1564135257-33188-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, stable@vger.kernel.org
+Cc: Sathya.Prakash@broadcom.com, kashyap.desai@broadcom.com, sreekanth.reddy@broadcom.com, Suganath Prabu <suganath-prabu.subramani@broadcom.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sun, Jul 14, 2019 at 9:14 AM Minwoo Im <minwoo.im@samsung.com> wrote:
->
-> We can request task management IOCTL command(MPI2_FUNCTION_SCSI_TASK_MGMT)
-> to /dev/mpt3ctl.  If the given task_type is either abort task or query
-> task, it may need a field named "Initiator Port Transfer Tag to Manage"
-> in the IU.
->
-> Current code does not support to check target IPTT tag from the
-> tm_request.  This patch introduces to check TaskMID given from the
-> userspace as a target tag.  We have a rule of relationship between
-> (struct request *req->tag) and smid in mpt3sas_base.c:
->
-> 3318 u16
-> 3319 mpt3sas_base_get_smid_scsiio(struct MPT3SAS_ADAPTER *ioc, u8 cb_idx,
-> 3320         struct scsi_cmnd *scmd)
-> 3321 {
-> 3322         struct scsiio_tracker *request = scsi_cmd_priv(scmd);
-> 3323         unsigned int tag = scmd->request->tag;
-> 3324         u16 smid;
-> 3325
-> 3326         smid = tag + 1;
->
-> So if we want to abort a request tagged #X, then we can pass (X + 1) to
-> this IOCTL handler.  Otherwise, user space just can pass 0 TaskMID to
-> abort the first outstanding smid which is legacy behaviour.
->
-> Cc: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-> Cc: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
-> Cc: Sathya Prakash <sathya.prakash@broadcom.com>
-> Cc: James E.J. Bottomley <jejb@linux.ibm.com>
-> Cc: Martin K. Petersen <martin.petersen@oracle.com>
-> Cc: MPT-FusionLinux.pdl@broadcom.com
-> Signed-off-by: Minwoo Im <minwoo.im@samsung.com>
+Although SAS3 & SAS3.5 IT HBA controllers support
+64-bit DMA addressing, as per hardware design,
+DMA address with all 64-bits set (0xFFFFFFFF-FFFFFFFF)
+results in a firmware fault.
 
-Acked-by:  Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Fix:
+Driver will set 63-bit DMA mask to ensure the above address
+will not be used.
 
-> ---
->  drivers/scsi/mpt3sas/mpt3sas_ctl.c | 12 ++++++++++--
->  1 file changed, 10 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-> index b2bb47c14d35..f6b8fd90610a 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-> @@ -596,8 +596,16 @@ _ctl_set_task_mid(struct MPT3SAS_ADAPTER *ioc, struct mpt3_ioctl_command *karg,
->                 if (priv_data->sas_target->handle != handle)
->                         continue;
->                 st = scsi_cmd_priv(scmd);
-> -               tm_request->TaskMID = cpu_to_le16(st->smid);
-> -               found = 1;
-> +
-> +               /*
-> +                * If the given TaskMID from the user space is zero, then the
-> +                * first outstanding smid will be picked up.  Otherwise,
-> +                * targeted smid will be the one.
-> +                */
-> +               if (!tm_request->TaskMID || tm_request->TaskMID == st->smid) {
-> +                       tm_request->TaskMID = cpu_to_le16(st->smid);
-> +                       found = 1;
-> +               }
->         }
->
->         if (!found) {
-> --
-> 2.16.1
->
+Signed-off-by: Suganath Prabu <suganath-prabu.subramani@broadcom.com>
+---
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 6846628..050c0f0 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -2703,6 +2703,8 @@ _base_config_dma_addressing(struct MPT3SAS_ADAPTER *ioc, struct pci_dev *pdev)
+ {
+ 	u64 required_mask, coherent_mask;
+ 	struct sysinfo s;
++	/* Set 63 bit DMA mask for all SAS3 and SAS35 controllers */
++	int dma_mask = (ioc->hba_mpi_version_belonged > MPI2_VERSION) ? 63 : 64;
+ 
+ 	if (ioc->is_mcpu_endpoint)
+ 		goto try_32bit;
+@@ -2712,17 +2714,17 @@ _base_config_dma_addressing(struct MPT3SAS_ADAPTER *ioc, struct pci_dev *pdev)
+ 		goto try_32bit;
+ 
+ 	if (ioc->dma_mask)
+-		coherent_mask = DMA_BIT_MASK(64);
++		coherent_mask = DMA_BIT_MASK(dma_mask);
+ 	else
+ 		coherent_mask = DMA_BIT_MASK(32);
+ 
+-	if (dma_set_mask(&pdev->dev, DMA_BIT_MASK(64)) ||
++	if (dma_set_mask(&pdev->dev, DMA_BIT_MASK(dma_mask)) ||
+ 	    dma_set_coherent_mask(&pdev->dev, coherent_mask))
+ 		goto try_32bit;
+ 
+ 	ioc->base_add_sg_single = &_base_add_sg_single_64;
+ 	ioc->sge_size = sizeof(Mpi2SGESimple64_t);
+-	ioc->dma_mask = 64;
++	ioc->dma_mask = dma_mask;
+ 	goto out;
+ 
+  try_32bit:
+@@ -2744,7 +2746,7 @@ static int
+ _base_change_consistent_dma_mask(struct MPT3SAS_ADAPTER *ioc,
+ 				      struct pci_dev *pdev)
+ {
+-	if (pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(64))) {
++	if (pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(ioc->dma_mask))) {
+ 		if (pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(32)))
+ 			return -ENODEV;
+ 	}
+@@ -4989,7 +4991,7 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc)
+ 		total_sz += sz;
+ 	} while (ioc->rdpq_array_enable && (++i < ioc->reply_queue_count));
+ 
+-	if (ioc->dma_mask == 64) {
++	if (ioc->dma_mask > 32) {
+ 		if (_base_change_consistent_dma_mask(ioc, ioc->pdev) != 0) {
+ 			ioc_warn(ioc, "no suitable consistent DMA mask for %s\n",
+ 				 pci_name(ioc->pdev));
+-- 
+1.8.3.1
