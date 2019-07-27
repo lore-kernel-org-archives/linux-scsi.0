@@ -1,132 +1,76 @@
-From: Pei Hsuan Hung <afcidk@gmail.com>
-Subject: [PATCH] Fix typo reigster to register
-Date: Sat, 27 Jul 2019 22:21:09 +0800
-Message-ID: <20190727142111.20039-1-afcidk@gmail.com>
+From: Minwoo Im <minwoo.im.dev@gmail.com>
+Subject: [RESEND PATCH] mpt3sas: support target smid for [abort|query] task
+Date: Sun, 28 Jul 2019 03:53:37 +0900
+Message-ID: <20190727185337.19299-1-minwoo.im.dev@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-Cc: afcidk@gmail.com, trivial@kernel.org, Russell Currey <ruscur@russell.cc>, Sam Bobroff <sbobroff@linux.ibm.com>, Oliver O'Halloran <oohall@gmail.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, Michael Ellerman <mpe@ellerman.id.au>, Jeremy Kerr <jk@ozlabs.org>, Arnd Bergmann <arnd@arndb.de>, MyungJoo Ham <myungjoo.ham@samsung.com>, Chanwoo Choi <cw00.choi@samsung.com>, Liviu Dudau <liviu.dudau@arm.com>, Brian Starkey <brian.starkey@arm.com>, David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>, Ping-Ke Shih <pkshih@realtek.com>, Kalle Valo <kvalo@codeaurora.org>, "David S. Miller" <davem@davemloft.net>, James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>
+To: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Euihyeok Kwon <eh81.kwon@samsung.com>, Sarah Cho <sohyeon.jo@samsung.com>, Sanggwan Lee <sanggwan.lee@samsung.com>, Gyeongmin Nam <gm.nam@samsung.com>, Sungjun Park <sj1228.park@samsung.com>, Minwoo Im <minwoo.im@samsung.com>, Sreekanth Reddy <sreekanth.reddy@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Sathya Prakash <sathya.prakash@broadcom.com>, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, MPT-FusionLinux.pdl@broadcom.com, Minwoo Im <minwoo.im.dev@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Signed-off-by: Pei Hsuan Hung <afcidk@gmail.com>
-Cc: trivial@kernel.org
----
- arch/powerpc/kernel/eeh.c                           | 2 +-
- arch/powerpc/platforms/cell/spufs/switch.c          | 4 ++--
- drivers/extcon/extcon-rt8973a.c                     | 2 +-
- drivers/gpu/drm/arm/malidp_regs.h                   | 2 +-
- drivers/net/wireless/realtek/rtlwifi/rtl8192se/fw.h | 2 +-
- drivers/scsi/lpfc/lpfc_hbadisc.c                    | 4 ++--
- fs/userfaultfd.c                                    | 2 +-
- 7 files changed, 9 insertions(+), 9 deletions(-)
+From: Minwoo Im <minwoo.im@samsung.com>
 
-diff --git a/arch/powerpc/kernel/eeh.c b/arch/powerpc/kernel/eeh.c
-index c0e4b73191f3..d75c9c24ec4d 100644
---- a/arch/powerpc/kernel/eeh.c
-+++ b/arch/powerpc/kernel/eeh.c
-@@ -1030,7 +1030,7 @@ int __init eeh_ops_register(struct eeh_ops *ops)
- }
- 
- /**
-- * eeh_ops_unregister - Unreigster platform dependent EEH operations
-+ * eeh_ops_unregister - Unregister platform dependent EEH operations
-  * @name: name of EEH platform operations
-  *
-  * Unregister the platform dependent EEH operation callback
-diff --git a/arch/powerpc/platforms/cell/spufs/switch.c b/arch/powerpc/platforms/cell/spufs/switch.c
-index 5c3f5d088c3b..9548a086937b 100644
---- a/arch/powerpc/platforms/cell/spufs/switch.c
-+++ b/arch/powerpc/platforms/cell/spufs/switch.c
-@@ -574,7 +574,7 @@ static inline void save_mfc_rag(struct spu_state *csa, struct spu *spu)
- {
- 	/* Save, Step 38:
- 	 *     Save RA_GROUP_ID register and the
--	 *     RA_ENABLE reigster in the CSA.
-+	 *     RA_ENABLE register in the CSA.
- 	 */
- 	csa->priv1.resource_allocation_groupID_RW =
- 		spu_resource_allocation_groupID_get(spu);
-@@ -1227,7 +1227,7 @@ static inline void restore_mfc_rag(struct spu_state *csa, struct spu *spu)
- {
- 	/* Restore, Step 29:
- 	 *     Restore RA_GROUP_ID register and the
--	 *     RA_ENABLE reigster from the CSA.
-+	 *     RA_ENABLE register from the CSA.
- 	 */
- 	spu_resource_allocation_groupID_set(spu,
- 			csa->priv1.resource_allocation_groupID_RW);
-diff --git a/drivers/extcon/extcon-rt8973a.c b/drivers/extcon/extcon-rt8973a.c
-index 40c07f4d656e..e75c03792398 100644
---- a/drivers/extcon/extcon-rt8973a.c
-+++ b/drivers/extcon/extcon-rt8973a.c
-@@ -270,7 +270,7 @@ static int rt8973a_muic_get_cable_type(struct rt8973a_muic_info *info)
+From: Minwoo Im <minwoo.im@samsung.com>
+
+We can request task management IOCTL command(MPI2_FUNCTION_SCSI_TASK_MGMT)
+to /dev/mpt3ctl.  If the given task_type is either abort task or query
+task, it may need a field named "Initiator Port Transfer Tag to Manage"
+in the IU.
+
+Current code does not support to check target IPTT tag from the
+tm_request.  This patch introduces to check TaskMID given from the
+userspace as a target tag.  We have a rule of relationship between
+(struct request *req->tag) and smid in mpt3sas_base.c:
+
+3318 u16
+3319 mpt3sas_base_get_smid_scsiio(struct MPT3SAS_ADAPTER *ioc, u8 cb_idx,
+3320         struct scsi_cmnd *scmd)
+3321 {
+3322         struct scsiio_tracker *request = scsi_cmd_priv(scmd);
+3323         unsigned int tag = scmd->request->tag;
+3324         u16 smid;
+3325
+3326         smid = tag + 1;
+
+So if we want to abort a request tagged #X, then we can pass (X + 1) to
+this IOCTL handler.  Otherwise, user space just can pass 0 TaskMID to
+abort the first outstanding smid which is legacy behaviour.
+
+Cc: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Cc: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
+Cc: Sathya Prakash <sathya.prakash@broadcom.com>
+Cc: James E.J. Bottomley <jejb@linux.ibm.com>
+Cc: Martin K. Petersen <martin.petersen@oracle.com>
+Cc: MPT-FusionLinux.pdl@broadcom.com
+Signed-off-by: Minwoo Im <minwoo.im@samsung.com>
+Acked-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Signed-off-by: Minwoo Im <minwoo.im.dev@gmail.com>
+---
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+index d4ecfbbe738c..a26c5516ea3e 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+@@ -596,8 +596,16 @@ _ctl_set_task_mid(struct MPT3SAS_ADAPTER *ioc, struct mpt3_ioctl_command *karg,
+ 		if (priv_data->sas_target->handle != handle)
+ 			continue;
+ 		st = scsi_cmd_priv(scmd);
+-		tm_request->TaskMID = cpu_to_le16(st->smid);
+-		found = 1;
++
++		/*
++		 * If the given TaskMID from the user space is zero, then the
++		 * first outstanding smid will be picked up.  Otherwise,
++		 * targeted smid will be the one.
++		 */
++		if (!tm_request->TaskMID || tm_request->TaskMID == st->smid) {
++			tm_request->TaskMID = cpu_to_le16(st->smid);
++			found = 1;
++		}
  	}
- 	cable_type = adc & RT8973A_REG_ADC_MASK;
  
--	/* Read Device 1 reigster to identify correct cable type */
-+	/* Read Device 1 register to identify correct cable type */
- 	ret = regmap_read(info->regmap, RT8973A_REG_DEV1, &dev1);
- 	if (ret) {
- 		dev_err(info->dev, "failed to read DEV1 register\n");
-diff --git a/drivers/gpu/drm/arm/malidp_regs.h b/drivers/gpu/drm/arm/malidp_regs.h
-index 993031542fa1..0d81b34a4212 100644
---- a/drivers/gpu/drm/arm/malidp_regs.h
-+++ b/drivers/gpu/drm/arm/malidp_regs.h
-@@ -145,7 +145,7 @@
- #define     MALIDP_SE_COEFFTAB_DATA_MASK	0x3fff
- #define     MALIDP_SE_SET_COEFFTAB_DATA(x) \
- 		((x) & MALIDP_SE_COEFFTAB_DATA_MASK)
--/* Enhance coeffents reigster offset */
-+/* Enhance coeffents register offset */
- #define MALIDP_SE_IMAGE_ENH			0x3C
- /* ENH_LIMITS offset 0x0 */
- #define     MALIDP_SE_ENH_LOW_LEVEL		24
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/fw.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/fw.h
-index 99c6f7eefd85..d03c8f12a15c 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/fw.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/fw.h
-@@ -58,7 +58,7 @@ struct fw_priv {
- 	/* 0x81: PCI-AP, 01:PCIe, 02: 92S-U,
- 	 * 0x82: USB-AP, 0x12: 72S-U, 03:SDIO */
- 	u8 hci_sel;
--	/* the same value as reigster value  */
-+	/* the same value as register value  */
- 	u8 chip_version;
- 	/* customer  ID low byte */
- 	u8 customer_id_0;
-diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
-index 28ecaa7fc715..9e116bd79836 100644
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
-@@ -6551,7 +6551,7 @@ lpfc_sli4_unregister_fcf(struct lpfc_hba *phba)
-  * lpfc_unregister_fcf_rescan - Unregister currently registered fcf and rescan
-  * @phba: Pointer to hba context object.
-  *
-- * This function unregisters the currently reigstered FCF. This function
-+ * This function unregisters the currently registered FCF. This function
-  * also tries to find another FCF for discovery by rescan the HBA FCF table.
-  */
- void
-@@ -6609,7 +6609,7 @@ lpfc_unregister_fcf_rescan(struct lpfc_hba *phba)
-  * lpfc_unregister_fcf - Unregister the currently registered fcf record
-  * @phba: Pointer to hba context object.
-  *
-- * This function just unregisters the currently reigstered FCF. It does not
-+ * This function just unregisters the currently registered FCF. It does not
-  * try to find another FCF for discovery.
-  */
- void
-diff --git a/fs/userfaultfd.c b/fs/userfaultfd.c
-index ccbdbd62f0d8..612dc1240f90 100644
---- a/fs/userfaultfd.c
-+++ b/fs/userfaultfd.c
-@@ -267,7 +267,7 @@ static inline bool userfaultfd_huge_must_wait(struct userfaultfd_ctx *ctx,
- #endif /* CONFIG_HUGETLB_PAGE */
- 
- /*
-- * Verify the pagetables are still not ok after having reigstered into
-+ * Verify the pagetables are still not ok after having registered into
-  * the fault_pending_wqh to avoid userland having to UFFDIO_WAKE any
-  * userfault that has already been resolved, if userfaultfd_read and
-  * UFFDIO_COPY|ZEROPAGE are being run simultaneously on two different
+ 	if (!found) {
 -- 
 2.17.1
