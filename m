@@ -1,24 +1,38 @@
-From: pr-tracker-bot@kernel.org
-Subject: Re: [GIT PULL] SCSI fixes for 5.3-rc1
-Date: Fri, 26 Jul 2019 21:40:20 +0000
-Message-ID: <156417722011.826.16480120807211637212.pr-tracker-bot@kernel.org>
-References: <1564171685.9950.14.camel@HansenPartnership.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1564171685.9950.14.camel@HansenPartnership.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [PATCH V2 0/2] block/scsi/dm-rq: fix leak of request private
+ data in dm-mpath
+Date: Sat, 27 Jul 2019 10:12:20 +0800
+Message-ID: <20190727021219.GA6926@ming.t460p>
+References: <20190720030637.14447-1-ming.lei@redhat.com>
+ <20190726162046.GA7523@t480-pf1aa2c2>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <stable-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20190726162046.GA7523@t480-pf1aa2c2>
+Sender: stable-owner@vger.kernel.org
+To: Benjamin Block <bblock@linux.ibm.com>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, "Ewan D . Milne" <emilne@redhat.com>, Bart Van Assche <bvanassche@acm.org>, Hannes Reinecke <hare@suse.com>, Christoph Hellwig <hch@lst.de>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-The pull request you sent on Fri, 26 Jul 2019 13:08:05 -0700:
+On Fri, Jul 26, 2019 at 06:20:46PM +0200, Benjamin Block wrote:
+> Hey Ming Lei,
+> 
+> On Sat, Jul 20, 2019 at 11:06:35AM +0800, Ming Lei wrote:
+> > Hi,
+> > 
+> > When one request is dispatched to LLD via dm-rq, if the result is
+> > BLK_STS_*RESOURCE, dm-rq will free the request. However, LLD may allocate
+> > private data for this request, so this way will cause memory leak.
+> 
+> I am confused about this. Probably because I am not up-to-date with
+> all of blk-mq. But if you free the LLD private data before the request
+> is finished, what is the LLD doing if the request finishes afterwards?
+> Would that not be an automatic use-after-free?
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+Wrt. this special use case, the underlying request is totally covered by
+dm-rq after .queue_rq() returns BLK_STS_*RESOURCE. So the request won't
+be re-dispatched by blk-mq at all.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/a689838913670765f7754bb1ba749acac9541626
-
-Thank you!
-
--- 
-Deet-doot-dot, I am a bot.
-https://korg.wiki.kernel.org/userdoc/prtracker
+thanks,
+Ming
