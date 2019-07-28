@@ -1,40 +1,32 @@
-From: Masahiro Yamada <yamada.masahiro@socionext.com>
-Subject: [PATCH] scsi: raid_class: add include guard to raid_class.h
-Date: Mon, 29 Jul 2019 01:47:06 +0900
-Message-ID: <20190728164706.16558-1-yamada.masahiro@socionext.com>
+From: Linus Walleij <linus.walleij@linaro.org>
+Subject: Re: [PATCH v2 2/3] scsi: ufs: Allow resetting the UFS device
+Date: Mon, 29 Jul 2019 00:09:20 +0200
+Message-ID: <CACRpkdbSrGq7ma2ywyQ89N8PKQWLVUiz8NqE4iGyctyENcBKSQ@mail.gmail.com>
+References: <20190606010249.3538-1-bjorn.andersson@linaro.org> <20190606010249.3538-3-bjorn.andersson@linaro.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190606010249.3538-3-bjorn.andersson@linaro.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Cc: Masahiro Yamada <yamada.masahiro@socionext.com>, Allison Randal <allison@lohutok.net>, Armijn Hemel <armijn@tjaldur.nl>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Thomas Gleixner <tglx@linutronix.de>, linux-kernel@vger.kernel.org
+To: Bjorn Andersson <bjorn.andersson@linaro.org>
+Cc: Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, Pedro Sousa <pedrom.sousa@synopsys.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Andy Gross <agross@kernel.org>, Evan Green <evgreen@chromium.org>, MSM <linux-arm-msm@vger.kernel.org>, "open list:GPIO SUBSYSTEM" <linux-gpio@vger.kernel.org>, "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" <devicetree@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Add a header include guard just in case.
+On Thu, Jun 6, 2019 at 3:02 AM Bjorn Andersson
+<bjorn.andersson@linaro.org> wrote:
 
-Signed-off-by: Masahiro Yamada <yamada.masahiro@socionext.com>
----
+> Acquire the device-reset GPIO and toggle this to reset the UFS device
+> during initialization and host reset.
+>
+> Based on downstream support implemented by Subhash Jadavani
+> <subhashj@codeaurora.org>.
+>
+> Tested-by: John Stultz <john.stultz@linaro.org>
+> Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
 
- include/linux/raid_class.h | 5 +++++
- 1 file changed, 5 insertions(+)
+I agree with Rob that just "reset-gpios" looks better.
+Otherwise:
+Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
 
-diff --git a/include/linux/raid_class.h b/include/linux/raid_class.h
-index 5cdfcb873a8f..b62e42d8bb17 100644
---- a/include/linux/raid_class.h
-+++ b/include/linux/raid_class.h
-@@ -4,6 +4,10 @@
-  *
-  * Copyright (c) 2005 - James Bottomley <James.Bottomley@steeleye.com>
-  */
-+
-+#ifndef _LINUX_RAID_CLASS_H
-+#define _LINUX_RAID_CLASS_H
-+
- #include <linux/transport_class.h>
- 
- struct raid_template {
-@@ -81,3 +85,4 @@ void raid_class_release(struct raid_template *);
- int __must_check raid_component_add(struct raid_template *, struct device *,
- 				    struct device *);
- 
-+#endif /* _LINUX_RAID_CLASS_H */
--- 
-2.17.1
+Yours,
+Linus Walleij
