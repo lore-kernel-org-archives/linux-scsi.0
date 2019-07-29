@@ -1,70 +1,39 @@
-From: "Enrico Weigelt, metux IT consult" <info@metux.net>
-Subject: [PATCH] drivers: scsi: Kconfig: minor indention fixes
-Date: Mon, 29 Jul 2019 16:53:33 +0200
-Message-ID: <1564412013-30893-1-git-send-email-info@metux.net>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] target: iscsi: iscsi_target_tpg: Fix a possible
+ null-pointer dereference in iscsit_tpg_add_network_portal()
+Date: Mon, 29 Jul 2019 08:02:42 -0700
+Message-ID: <1564412562.3501.9.camel@HansenPartnership.com>
+References: <20190729022956.18192-1-baijiaju1990@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190729022956.18192-1-baijiaju1990@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: jejb@linux.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+To: Jia-Ju Bai <baijiaju1990@gmail.com>, martin.petersen@oracle.com, kstewart@linuxfoundation.org, allison@lohutok.net, rfontana@redhat.com, tglx@linutronix.de, gregkh@linuxfoundation.org
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Align the indentions to the common practise in Kconfig files,
-make it look at little bit prettier. Just whitespace changes.
+On Mon, 2019-07-29 at 10:29 +0800, Jia-Ju Bai wrote:
+> In iscsit_tpg_add_network_portal(), there is an if statement on line
+> 496
+> to check whether tpg->tpg_tiqn is NULL:
+>     if (tpg->tpg_tiqn)
+> 
+> When tpg->tpg_tiqn is NULL, it is used on line 508:
+>     pr_debug(..., tpg->tpg_tiqn->tiqn, ...);
+> 
+> Thus, a possible null-pointer dereference may occur.
+> 
+> To fix this bug, tpg->tpg_tiqn is checked before being used.
+> 
+> This bug is found by a static analysis tool STCheck written by us.
 
-Signed-off-by: Enrico Weigelt <info@metux.net>
----
- drivers/scsi/Kconfig | 24 ++++++++++++------------
- 1 file changed, 12 insertions(+), 12 deletions(-)
+I don't really think this is helpful.  The first question is, is the
+implied might be NULL check correct?  The tpg_tiqn is always set by a
+non-dummy driver and I think network configuration is only done for the
+non dummy driver, so I suspect the NULL check is wrong.  Secondly even
+if the NULL check were correct, I think there's still a need for some
+debugging output, so the proposed patch also looks wrong.
 
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 1b92f3c..1332671 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -2,9 +2,9 @@
- menu "SCSI device support"
- 
- config SCSI_MOD
--       tristate
--       default y if SCSI=n || SCSI=y
--       default m if SCSI=m
-+	tristate
-+	default y if SCSI=n || SCSI=y
-+	default m if SCSI=m
- 
- config RAID_ATTRS
- 	tristate "RAID Transport Class"
-@@ -1480,14 +1480,14 @@ config ZFCP
- 	depends on S390 && QDIO && SCSI
- 	depends on SCSI_FC_ATTRS
- 	help
--          If you want to access SCSI devices attached to your IBM eServer
--          zSeries by means of Fibre Channel interfaces say Y.
--          For details please refer to the documentation provided by IBM at
--          <http://oss.software.ibm.com/developerworks/opensource/linux390>
-+	  If you want to access SCSI devices attached to your IBM eServer
-+	  zSeries by means of Fibre Channel interfaces say Y.
-+	  For details please refer to the documentation provided by IBM at
-+	  <http://oss.software.ibm.com/developerworks/opensource/linux390>
- 
--          This driver is also available as a module. This module will be
--          called zfcp. If you want to compile it as a module, say M here
--          and read <file:Documentation/kbuild/modules.rst>.
-+	  This driver is also available as a module. This module will be
-+	  called zfcp. If you want to compile it as a module, say M here
-+	  and read <file:Documentation/kbuild/modules.rst>.
- 
- config SCSI_PMCRAID
- 	tristate "PMC SIERRA Linux MaxRAID adapter support"
-@@ -1518,8 +1518,8 @@ config SCSI_VIRTIO
- 	tristate "virtio-scsi support"
- 	depends on VIRTIO
- 	help
--          This is the virtual HBA driver for virtio.  If the kernel will
--          be used in a virtual machine, say Y or M.
-+	  This is the virtual HBA driver for virtio. If the kernel will
-+	  be used in a virtual machine, say Y or M.
- 
- source "drivers/scsi/csiostor/Kconfig"
- 
--- 
-1.9.1
+James
