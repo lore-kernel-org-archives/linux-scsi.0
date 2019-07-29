@@ -1,44 +1,59 @@
 From: Jia-Ju Bai <baijiaju1990@gmail.com>
-Subject: [PATCH] scsi: csiostor: Fix a possible null-pointer dereference in csio_eh_lun_reset_handler()
-Date: Mon, 29 Jul 2019 16:51:35 +0800
-Message-ID: <20190729085135.29403-1-baijiaju1990@gmail.com>
+Subject: [PATCH] scsi: libiscsi: Fix possible null-pointer dereferences in iscsi_conn_get_addr_param()
+Date: Mon, 29 Jul 2019 17:13:39 +0800
+Message-ID: <20190729091339.30815-1-baijiaju1990@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.ibm.com, martin.petersen@oracle.com, varun@chelsio.com, hare@suse.com, osandov@fb.com, jthumshirn@suse.de, axboe@kernel.dk
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jia-Ju Bai <baijiaju1990@gmail.com>
+To: lduncan@suse.com, cleech@redhat.com, jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc: open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jia-Ju Bai <baijiaju1990@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-In csio_eh_lun_reset_handler(), there is an if statement on line 2072 to
-check whether rn is NULL:
-    if (!rn)
+In iscsi_conn_get_addr_param(), sin6 may be NULL when reaching lines
+3479 and 3487:
+    len = sprintf(buf, "%pI6\n", &sin6->sin6_addr);
+    len = sprintf(buf, "%hu\n", be16_to_cpu(sin6->sin6_port));
 
-When rn is NULL, it is used on line 2217:
-    CSIO_INC_STATS(rn, n_lun_rst_fail);
+Thus, possible null-pointer dereferences may occur.
 
-Thus, a possible null-pointer dereference may occur.
+To fix these bugs, sin6 is checked before being used, and len is
+initialized to -EINVAL.
 
-To fix this bug, csio_eh_lun_reset_handler() directly returns FAILED
-when rn is NULL.
-
-This bug is found by a static analysis tool STCheck written by us.
+These bugs are found by a static analysis tool STCheck written by us.
 
 Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
 ---
- drivers/scsi/csiostor/csio_scsi.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/libiscsi.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/csiostor/csio_scsi.c b/drivers/scsi/csiostor/csio_scsi.c
-index 469d0bc9f5fe..c81d743d3544 100644
---- a/drivers/scsi/csiostor/csio_scsi.c
-+++ b/drivers/scsi/csiostor/csio_scsi.c
-@@ -2070,7 +2070,7 @@ csio_eh_lun_reset_handler(struct scsi_cmnd *cmnd)
- 	struct csio_scsi_level_data sld;
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index ebd47c0cf9e9..58f072d5c43f 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -3457,7 +3457,7 @@ int iscsi_conn_get_addr_param(struct sockaddr_storage *addr,
+ {
+ 	struct sockaddr_in6 *sin6 = NULL;
+ 	struct sockaddr_in *sin = NULL;
+-	int len;
++	int len = -EINVAL;
  
- 	if (!rn)
--		goto fail;
-+		return FAILED;
- 
- 	csio_dbg(hw, "Request to reset LUN:%llu (ssni:0x%x tgtid:%d)\n",
- 		      cmnd->device->lun, rn->flowid, rn->scsi_id);
+ 	switch (addr->ss_family) {
+ 	case AF_INET:
+@@ -3475,14 +3475,14 @@ int iscsi_conn_get_addr_param(struct sockaddr_storage *addr,
+ 	case ISCSI_HOST_PARAM_IPADDRESS:
+ 		if (sin)
+ 			len = sprintf(buf, "%pI4\n", &sin->sin_addr.s_addr);
+-		else
++		else if (sin6)
+ 			len = sprintf(buf, "%pI6\n", &sin6->sin6_addr);
+ 		break;
+ 	case ISCSI_PARAM_CONN_PORT:
+ 	case ISCSI_PARAM_LOCAL_PORT:
+ 		if (sin)
+ 			len = sprintf(buf, "%hu\n", be16_to_cpu(sin->sin_port));
+-		else
++		else if (sin6)
+ 			len = sprintf(buf, "%hu\n",
+ 				      be16_to_cpu(sin6->sin6_port));
+ 		break;
 -- 
 2.17.0
