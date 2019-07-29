@@ -1,39 +1,45 @@
-From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: Re: [PATCH] mpt3sas: Use 63-bit DMA addressing on SAS35 HBA
-Date: Mon, 29 Jul 2019 17:25:35 +0530
-Message-ID: <CAK=zhgrWW_vOkXKRYRbiMdHgiT7u=Ra_pCkO_HkmQrCdVXfJBQ@mail.gmail.com>
-References: <1564135257-33188-1-git-send-email-suganath-prabu.subramani@broadcom.com>
- <20190726142706.GA1734@infradead.org>
+From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Subject: [PATCH] scsi: sun3_scsi: Mark expected switch fall-throughs
+Date: Mon, 29 Jul 2019 09:30:07 -0500
+Message-ID: <20190729143007.GA8067@embeddedor>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20190726142706.GA1734@infradead.org>
-Sender: stable-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Suganath Prabu <suganath-prabu.subramani@broadcom.com>, linux-scsi <linux-scsi@vger.kernel.org>, stable@vger.kernel.org, Sathya Prakash <Sathya.Prakash@broadcom.com>, Kashyap Desai <kashyap.desai@broadcom.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: Finn Thain <fthain@telegraphics.com.au>, Michael Schmitz <schmitzmic@gmail.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Gustavo A. R. Silva" <gustavo@embeddedor.com>, Geert Uytterhoeven <geert@linux-m68k.org>, Kees Cook <keescook@chromium.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Jul 26, 2019 at 7:57 PM Christoph Hellwig <hch@infradead.org> wrote:
->
-> On Fri, Jul 26, 2019 at 06:00:57AM -0400, Suganath Prabu wrote:
-> > Although SAS3 & SAS3.5 IT HBA controllers support
-> > 64-bit DMA addressing, as per hardware design,
-> > DMA address with all 64-bits set (0xFFFFFFFF-FFFFFFFF)
-> > results in a firmware fault.
->
-> Linux will never send a dma address with all bits set anyway, as that
-> is our magic escape for the dma_addr_t error value.  Additionally to
-> generate that address you'd need a 1-byte sized, 1-byte aligned buffer,
-> which we never use.
+Mark switch cases where we are expecting to fall through.
 
-I agree with your above statement. But it is also possible that
-0xFFFFFFFF-FFFFFFFF falls under the DMA able range, e.g. SGE's start
-address is 0xFFFFFFFF-FFFF000 and data length is 0x1000 bytes. So when
-HBA tries to DMA the data at 0xFFFFFFFF-FFFFFFFF location then it will
-faults the firmware due to it's hardware design.
+This patch fixes the following warnings:
 
-We have observed above example's SGE address and length on AMD systems
-with SME & IOMMU enabled.
+drivers/scsi/sun3_scsi.c: warning: this statement may fall through
+[-Wimplicit-fallthrough=]:  => 399:9, 403:9
 
-Thanks,
-Sreekanth
+Reported-by: Geert Uytterhoeven <geert@linux-m68k.org>
+Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+---
+ drivers/scsi/sun3_scsi.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/scsi/sun3_scsi.c b/drivers/scsi/sun3_scsi.c
+index 3d80ab67a626..955e4c938d49 100644
+--- a/drivers/scsi/sun3_scsi.c
++++ b/drivers/scsi/sun3_scsi.c
+@@ -397,10 +397,12 @@ static int sun3scsi_dma_finish(int write_flag)
+ 		case CSR_LEFT_3:
+ 			*vaddr = (dregs->bpack_lo & 0xff00) >> 8;
+ 			vaddr--;
++			/* Fall through */
+ 
+ 		case CSR_LEFT_2:
+ 			*vaddr = (dregs->bpack_hi & 0x00ff);
+ 			vaddr--;
++			/* Fall through */
+ 
+ 		case CSR_LEFT_1:
+ 			*vaddr = (dregs->bpack_hi & 0xff00) >> 8;
+-- 
+2.22.0
