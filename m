@@ -1,123 +1,67 @@
 From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: [PATCH] scsi: qlogicpti: Mark expected switch fall-throughs
-Date: Mon, 29 Jul 2019 06:03:45 -0500
-Message-ID: <20190729110345.GA2603@embeddedor>
+Subject: [PATCH] scsi: ibmvscsi_tgt: Mark expected switch fall-throughs
+Date: Mon, 29 Jul 2019 06:29:02 -0500
+Message-ID: <20190729112902.GA3768@embeddedor>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Gustavo A. R. Silva" <gustavo@embeddedor.com>, Stephen Rothwell <sfr@canb.auug.org.au>, Kees Cook <keescook@chromium.org>
+To: Michael Cyr <mikecyr@linux.ibm.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org, "Gustavo A. R. Silva" <gustavo@embeddedor.com>, Stephen Rothwell <sfr@canb.auug.org.au>, Kees Cook <keescook@chromium.org>
 List-Id: linux-scsi@vger.kernel.org
 
 Mark switch cases where we are expecting to fall through.
 
-This patch fixes the following warnings (Building: sparc defconfig):
+This patch fixes the following warnings (Building: powerpc allyesconfig):
 
-drivers/scsi/qlogicpti.c: In function 'qlogicpti_mbox_command':
-drivers/scsi/qlogicpti.c:202:10: warning: this statement may fall through [-Wimplicit-fallthrough=]
-  case 6: sbus_writew(param[5], qpti->qregs + MBOX5);
-          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-drivers/scsi/qlogicpti.c:203:2: note: here
-  case 5: sbus_writew(param[4], qpti->qregs + MBOX4);
+drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c: In function 'ibmvscsis_adapter_info':
+drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c:1582:6: warning: this statement may fall through [-Wimplicit-fallthrough=]
+   if (connection_broken(vscsi))
+      ^
+drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c:1584:2: note: here
+  default:
+  ^~~~~~~
+drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c: In function 'ibmvscsis_ping_response':
+drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c:2494:16: warning: this statement may fall through [-Wimplicit-fallthrough=]
+   vscsi->flags |= CLIENT_FAILED;
+drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c:2495:2: note: here
+  case H_DROPPED:
   ^~~~
-drivers/scsi/qlogicpti.c:203:10: warning: this statement may fall through [-Wimplicit-fallthrough=]
-  case 5: sbus_writew(param[4], qpti->qregs + MBOX4);
-          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-drivers/scsi/qlogicpti.c:204:2: note: here
-  case 4: sbus_writew(param[3], qpti->qregs + MBOX3);
-  ^~~~
-drivers/scsi/qlogicpti.c:204:10: warning: this statement may fall through [-Wimplicit-fallthrough=]
-  case 4: sbus_writew(param[3], qpti->qregs + MBOX3);
-          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-drivers/scsi/qlogicpti.c:205:2: note: here
-  case 3: sbus_writew(param[2], qpti->qregs + MBOX2);
-  ^~~~
-drivers/scsi/qlogicpti.c:205:10: warning: this statement may fall through [-Wimplicit-fallthrough=]
-  case 3: sbus_writew(param[2], qpti->qregs + MBOX2);
-          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-drivers/scsi/qlogicpti.c:206:2: note: here
-  case 2: sbus_writew(param[1], qpti->qregs + MBOX1);
-  ^~~~
-drivers/scsi/qlogicpti.c:206:10: warning: this statement may fall through [-Wimplicit-fallthrough=]
-  case 2: sbus_writew(param[1], qpti->qregs + MBOX1);
-          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-drivers/scsi/qlogicpti.c:207:2: note: here
-  case 1: sbus_writew(param[0], qpti->qregs + MBOX0);
-  ^~~~
-drivers/scsi/qlogicpti.c:256:19: warning: this statement may fall through [-Wimplicit-fallthrough=]
-  case 6: param[5] = sbus_readw(qpti->qregs + MBOX5);
-          ~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-drivers/scsi/qlogicpti.c:257:2: note: here
-  case 5: param[4] = sbus_readw(qpti->qregs + MBOX4);
-  ^~~~
-drivers/scsi/qlogicpti.c:257:19: warning: this statement may fall through [-Wimplicit-fallthrough=]
-  case 5: param[4] = sbus_readw(qpti->qregs + MBOX4);
-          ~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-drivers/scsi/qlogicpti.c:258:2: note: here
-  case 4: param[3] = sbus_readw(qpti->qregs + MBOX3);
-  ^~~~
-drivers/scsi/qlogicpti.c:258:19: warning: this statement may fall through [-Wimplicit-fallthrough=]
-  case 4: param[3] = sbus_readw(qpti->qregs + MBOX3);
-          ~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-drivers/scsi/qlogicpti.c:259:2: note: here
-  case 3: param[2] = sbus_readw(qpti->qregs + MBOX2);
-  ^~~~
-drivers/scsi/qlogicpti.c:259:19: warning: this statement may fall through [-Wimplicit-fallthrough=]
-  case 3: param[2] = sbus_readw(qpti->qregs + MBOX2);
-          ~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-drivers/scsi/qlogicpti.c:260:2: note: here
-  case 2: param[1] = sbus_readw(qpti->qregs + MBOX1);
-  ^~~~
-drivers/scsi/qlogicpti.c:260:19: warning: this statement may fall through [-Wimplicit-fallthrough=]
-  case 2: param[1] = sbus_readw(qpti->qregs + MBOX1);
-          ~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-drivers/scsi/qlogicpti.c:261:2: note: here
-  case 1: param[0] = sbus_readw(qpti->qregs + MBOX0);
+drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c:2496:16: warning: this statement may fall through [-Wimplicit-fallthrough=]
+   vscsi->flags |= RESPONSE_Q_DOWN;
+drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c:2497:2: note: here
+  case H_REMOTE_PARM:
   ^~~~
 
 Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
 Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 ---
- drivers/scsi/qlogicpti.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+ drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/scsi/qlogicpti.c b/drivers/scsi/qlogicpti.c
-index 9335849f6bea..d539beef3ce8 100644
---- a/drivers/scsi/qlogicpti.c
-+++ b/drivers/scsi/qlogicpti.c
-@@ -200,10 +200,15 @@ static int qlogicpti_mbox_command(struct qlogicpti *qpti, u_short param[], int f
- 	/* Write mailbox command registers. */
- 	switch (mbox_param[param[0]] >> 4) {
- 	case 6: sbus_writew(param[5], qpti->qregs + MBOX5);
+diff --git a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
+index 7f9535392a93..a929fe76102b 100644
+--- a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
++++ b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
+@@ -1581,6 +1581,7 @@ static long ibmvscsis_adapter_info(struct scsi_info *vscsi,
+ 	case H_PERMISSION:
+ 		if (connection_broken(vscsi))
+ 			flag_bits = (RESPONSE_Q_DOWN | CLIENT_FAILED);
 +		/* Fall through */
- 	case 5: sbus_writew(param[4], qpti->qregs + MBOX4);
+ 	default:
+ 		dev_err(&vscsi->dev, "adapter_info: h_copy_rdma to client failed, rc %ld\n",
+ 			rc);
+@@ -2492,8 +2493,10 @@ static long ibmvscsis_ping_response(struct scsi_info *vscsi)
+ 		break;
+ 	case H_CLOSED:
+ 		vscsi->flags |= CLIENT_FAILED;
 +		/* Fall through */
- 	case 4: sbus_writew(param[3], qpti->qregs + MBOX3);
+ 	case H_DROPPED:
+ 		vscsi->flags |= RESPONSE_Q_DOWN;
 +		/* Fall through */
- 	case 3: sbus_writew(param[2], qpti->qregs + MBOX2);
-+		/* Fall through */
- 	case 2: sbus_writew(param[1], qpti->qregs + MBOX1);
-+		/* Fall through */
- 	case 1: sbus_writew(param[0], qpti->qregs + MBOX0);
- 	}
- 
-@@ -254,10 +259,15 @@ static int qlogicpti_mbox_command(struct qlogicpti *qpti, u_short param[], int f
- 	/* Read back output parameters. */
- 	switch (mbox_param[param[0]] & 0xf) {
- 	case 6: param[5] = sbus_readw(qpti->qregs + MBOX5);
-+		/* Fall through */
- 	case 5: param[4] = sbus_readw(qpti->qregs + MBOX4);
-+		/* Fall through */
- 	case 4: param[3] = sbus_readw(qpti->qregs + MBOX3);
-+		/* Fall through */
- 	case 3: param[2] = sbus_readw(qpti->qregs + MBOX2);
-+		/* Fall through */
- 	case 2: param[1] = sbus_readw(qpti->qregs + MBOX1);
-+		/* Fall through */
- 	case 1: param[0] = sbus_readw(qpti->qregs + MBOX0);
- 	}
- 
+ 	case H_REMOTE_PARM:
+ 		dev_err(&vscsi->dev, "ping_response: h_send_crq failed, rc %ld\n",
+ 			rc);
 -- 
 2.22.0
