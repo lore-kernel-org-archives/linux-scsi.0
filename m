@@ -1,44 +1,47 @@
 From: Jia-Ju Bai <baijiaju1990@gmail.com>
-Subject: [PATCH] scsi: mpt3sas: Fix a possible null-pointer dereference in mpt3sas_transport_update_links()
-Date: Mon, 29 Jul 2019 11:08:51 +0800
-Message-ID: <20190729030851.22059-1-baijiaju1990@gmail.com>
+Subject: [PATCH] scsi: qla2xxx: Fix possible null-pointer dereferences in qla2x00_alloc_fcport()
+Date: Mon, 29 Jul 2019 16:44:51 +0800
+Message-ID: <20190729084451.29290-1-baijiaju1990@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: sathya.prakash@broadcom.com, chaitra.basappa@broadcom.com, suganath-prabu.subramani@broadcom.com, jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc: MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jia-Ju Bai <baijiaju1990@gmail.com>
+To: jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc: qla2xxx-upstream@qlogic.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jia-Ju Bai <baijiaju1990@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-In mpt3sas_transport_update_links(), there is an if statement 
-on line 994 to check whether mpt3sas_phy->phy is NULL:
-    if (mpt3sas_phy->phy)
+In qla2x00_alloc_fcport(), fcport is assigned to NULL in the error
+handling code on line 4880:
+    fcport = NULL;
 
-When mpt3sas_phy->phy is NULL, it is used on line 999:
-    dev_printk(KERN_INFO, &mpt3sas_phy->phy->dev, ...)
+Then fcport is used on lines 4883-4886:
+    INIT_WORK(&fcport->del_work, qla24xx_delete_sess_fn);
+	INIT_WORK(&fcport->reg_work, qla_register_fcport_fn);
+	INIT_LIST_HEAD(&fcport->gnl_entry);
+	INIT_LIST_HEAD(&fcport->list);
 
-Thus, a possible null-pointer dereference may occur.
+Thus, possible null-pointer dereferences may occur.
 
-To fix this bug, mpt3sas_phy->phy is checked before being used.
+To fix these bugs, qla2x00_alloc_fcport() directly returns NULL 
+in the error handling code.
 
-This bug is found by a static analysis tool STCheck written by us.
+These bugs are found by a static analysis tool STCheck written by us.
 
 Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_transport.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/scsi/qla2xxx/qla_init.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_transport.c b/drivers/scsi/mpt3sas/mpt3sas_transport.c
-index 5324662751bf..df790a9877a0 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_transport.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_transport.c
-@@ -995,7 +995,8 @@ mpt3sas_transport_update_links(struct MPT3SAS_ADAPTER *ioc,
- 		mpt3sas_phy->phy->negotiated_linkrate =
- 		    _transport_convert_phy_link_rate(link_rate);
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 4059655639d9..da83034d4759 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -4877,7 +4877,7 @@ qla2x00_alloc_fcport(scsi_qla_host_t *vha, gfp_t flags)
+ 		ql_log(ql_log_warn, vha, 0xd049,
+ 		    "Failed to allocate ct_sns request.\n");
+ 		kfree(fcport);
+-		fcport = NULL;
++		return NULL;
+ 	}
  
--	if ((ioc->logging_level & MPT_DEBUG_TRANSPORT))
-+	if ((ioc->logging_level & MPT_DEBUG_TRANSPORT) && 
-+			mpt3sas_phy->phy)
- 		dev_printk(KERN_INFO, &mpt3sas_phy->phy->dev,
- 		    "refresh: parent sas_addr(0x%016llx),\n"
- 		    "\tlink_rate(0x%02x), phy(%d)\n"
+ 	INIT_WORK(&fcport->del_work, qla24xx_delete_sess_fn);
 -- 
 2.17.0
