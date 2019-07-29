@@ -1,82 +1,49 @@
-From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: [PATCH] scsi: ibmvfc: Mark expected switch fall-throughs
-Date: Sun, 28 Jul 2019 19:26:08 -0500
-Message-ID: <20190729002608.GA25263@embeddedor>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Jia-Ju Bai <baijiaju1990@gmail.com>
+Subject: [PATCH] target: iscsi: iscsi_target_tpg: Fix a possible null-pointer dereference in iscsit_tpg_add_network_portal()
+Date: Mon, 29 Jul 2019 10:29:56 +0800
+Message-ID: <20190729022956.18192-1-baijiaju1990@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
-To: Tyrel Datwyler <tyreld@linux.ibm.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, Michael Ellerman <mpe@ellerman.id.au>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, "Gustavo A. R. Silva" <gustavo@embeddedor.com>, Kees Cook <keescook@chromium.org>, Stephen Rothwell <sfr@canb.auug.org.au>
+To: martin.petersen@oracle.com, kstewart@linuxfoundation.org, allison@lohutok.net, rfontana@redhat.com, tglx@linutronix.de, gregkh@linuxfoundation.org
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org, Jia-Ju Bai <baijiaju1990@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Mark switch cases where we are expecting to fall through.
+In iscsit_tpg_add_network_portal(), there is an if statement on line 496
+to check whether tpg->tpg_tiqn is NULL:
+    if (tpg->tpg_tiqn)
 
-This patch fixes the following warnings:
+When tpg->tpg_tiqn is NULL, it is used on line 508:
+    pr_debug(..., tpg->tpg_tiqn->tiqn, ...);
 
-drivers/scsi/ibmvscsi/ibmvfc.c: In function 'ibmvfc_npiv_login_done':
-drivers/scsi/ibmvscsi/ibmvfc.c:4022:3: warning: this statement may fall through [-Wimplicit-fallthrough=]
-   ibmvfc_retry_host_init(vhost);
-   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-drivers/scsi/ibmvscsi/ibmvfc.c:4023:2: note: here
-  case IBMVFC_MAD_DRIVER_FAILED:
-  ^~~~
-drivers/scsi/ibmvscsi/ibmvfc.c: In function 'ibmvfc_bsg_request':
-drivers/scsi/ibmvscsi/ibmvfc.c:1830:11: warning: this statement may fall through [-Wimplicit-fallthrough=]
-   port_id = (bsg_request->rqst_data.h_els.port_id[0] << 16) |
-   ~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    (bsg_request->rqst_data.h_els.port_id[1] << 8) |
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    bsg_request->rqst_data.h_els.port_id[2];
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-drivers/scsi/ibmvscsi/ibmvfc.c:1833:2: note: here
-  case FC_BSG_RPT_ELS:
-  ^~~~
-drivers/scsi/ibmvscsi/ibmvfc.c:1838:11: warning: this statement may fall through [-Wimplicit-fallthrough=]
-   port_id = (bsg_request->rqst_data.h_ct.port_id[0] << 16) |
-   ~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    (bsg_request->rqst_data.h_ct.port_id[1] << 8) |
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    bsg_request->rqst_data.h_ct.port_id[2];
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-drivers/scsi/ibmvscsi/ibmvfc.c:1841:2: note: here
-  case FC_BSG_RPT_CT:
-  ^~~~
+Thus, a possible null-pointer dereference may occur.
 
-Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
-Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+To fix this bug, tpg->tpg_tiqn is checked before being used.
+
+This bug is found by a static analysis tool STCheck written by us.
+
+Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
 ---
- drivers/scsi/ibmvscsi/ibmvfc.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/target/iscsi/iscsi_target_tpg.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
-index 8cdbac076a1b..df897df5cafe 100644
---- a/drivers/scsi/ibmvscsi/ibmvfc.c
-+++ b/drivers/scsi/ibmvscsi/ibmvfc.c
-@@ -1830,6 +1830,7 @@ static int ibmvfc_bsg_request(struct bsg_job *job)
- 		port_id = (bsg_request->rqst_data.h_els.port_id[0] << 16) |
- 			(bsg_request->rqst_data.h_els.port_id[1] << 8) |
- 			bsg_request->rqst_data.h_els.port_id[2];
-+		/* fall through */
- 	case FC_BSG_RPT_ELS:
- 		fc_flags = IBMVFC_FC_ELS;
- 		break;
-@@ -1838,6 +1839,7 @@ static int ibmvfc_bsg_request(struct bsg_job *job)
- 		port_id = (bsg_request->rqst_data.h_ct.port_id[0] << 16) |
- 			(bsg_request->rqst_data.h_ct.port_id[1] << 8) |
- 			bsg_request->rqst_data.h_ct.port_id[2];
-+		/* fall through */
- 	case FC_BSG_RPT_CT:
- 		fc_flags = IBMVFC_FC_CT_IU;
- 		break;
-@@ -4020,6 +4022,7 @@ static void ibmvfc_npiv_login_done(struct ibmvfc_event *evt)
- 		return;
- 	case IBMVFC_MAD_CRQ_ERROR:
- 		ibmvfc_retry_host_init(vhost);
-+		/* fall through */
- 	case IBMVFC_MAD_DRIVER_FAILED:
- 		ibmvfc_free_event(evt);
- 		return;
+diff --git a/drivers/target/iscsi/iscsi_target_tpg.c b/drivers/target/iscsi/iscsi_target_tpg.c
+index 8075f60fd02c..bf97be36ec1f 100644
+--- a/drivers/target/iscsi/iscsi_target_tpg.c
++++ b/drivers/target/iscsi/iscsi_target_tpg.c
+@@ -505,9 +505,11 @@ struct iscsi_tpg_np *iscsit_tpg_add_network_portal(
+ 		spin_unlock(&tpg_np_parent->tpg_np_parent_lock);
+ 	}
+ 
+-	pr_debug("CORE[%s] - Added Network Portal: %pISpc,%hu on %s\n",
+-		tpg->tpg_tiqn->tiqn, &np->np_sockaddr, tpg->tpgt,
+-		np->np_transport->name);
++	if (tpg->tpg_tiqn) {
++		pr_debug("CORE[%s] - Added Network Portal: %pISpc,%hu on %s\n",
++			tpg->tpg_tiqn->tiqn, &np->np_sockaddr, tpg->tpgt,
++			np->np_transport->name);
++	}
+ 
+ 	return tpg_np;
+ }
 -- 
-2.22.0
+2.17.0
