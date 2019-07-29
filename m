@@ -1,39 +1,60 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] target: iscsi: iscsi_target_tpg: Fix a possible
- null-pointer dereference in iscsit_tpg_add_network_portal()
-Date: Mon, 29 Jul 2019 08:02:42 -0700
-Message-ID: <1564412562.3501.9.camel@HansenPartnership.com>
-References: <20190729022956.18192-1-baijiaju1990@gmail.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH] scsi: sun3_scsi: Mark expected switch fall-throughs
+Date: Mon, 29 Jul 2019 17:39:49 +0200
+Message-ID: <CAMuHMdXEU4eUEdNyY=K2B_Tj=unJV2eSJo1BQ8vDwZ-D-2wDWg@mail.gmail.com>
+References: <20190729143007.GA8067@embeddedor>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190729022956.18192-1-baijiaju1990@gmail.com>
+In-Reply-To: <20190729143007.GA8067@embeddedor>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jia-Ju Bai <baijiaju1990@gmail.com>, martin.petersen@oracle.com, kstewart@linuxfoundation.org, allison@lohutok.net, rfontana@redhat.com, tglx@linutronix.de, gregkh@linuxfoundation.org
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Cc: Finn Thain <fthain@telegraphics.com.au>, Michael Schmitz <schmitzmic@gmail.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Kees Cook <keescook@chromium.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 2019-07-29 at 10:29 +0800, Jia-Ju Bai wrote:
-> In iscsit_tpg_add_network_portal(), there is an if statement on line
-> 496
-> to check whether tpg->tpg_tiqn is NULL:
->     if (tpg->tpg_tiqn)
-> 
-> When tpg->tpg_tiqn is NULL, it is used on line 508:
->     pr_debug(..., tpg->tpg_tiqn->tiqn, ...);
-> 
-> Thus, a possible null-pointer dereference may occur.
-> 
-> To fix this bug, tpg->tpg_tiqn is checked before being used.
-> 
-> This bug is found by a static analysis tool STCheck written by us.
+Hi Gustavo,
 
-I don't really think this is helpful.  The first question is, is the
-implied might be NULL check correct?  The tpg_tiqn is always set by a
-non-dummy driver and I think network configuration is only done for the
-non dummy driver, so I suspect the NULL check is wrong.  Secondly even
-if the NULL check were correct, I think there's still a need for some
-debugging output, so the proposed patch also looks wrong.
+On Mon, Jul 29, 2019 at 4:32 PM Gustavo A. R. Silva
+<gustavo@embeddedor.com> wrote:
+> Mark switch cases where we are expecting to fall through.
+>
+> This patch fixes the following warnings:
+>
+> drivers/scsi/sun3_scsi.c: warning: this statement may fall through
+> [-Wimplicit-fallthrough=]:  => 399:9, 403:9
+>
+> Reported-by: Geert Uytterhoeven <geert@linux-m68k.org>
+> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 
-James
+Thanks!
+Tested-by: Geert Uytterhoeven <geert@linux-m68k.org>
+
+> --- a/drivers/scsi/sun3_scsi.c
+> +++ b/drivers/scsi/sun3_scsi.c
+> @@ -397,10 +397,12 @@ static int sun3scsi_dma_finish(int write_flag)
+>                 case CSR_LEFT_3:
+>                         *vaddr = (dregs->bpack_lo & 0xff00) >> 8;
+>                         vaddr--;
+> +                       /* Fall through */
+>
+>                 case CSR_LEFT_2:
+>                         *vaddr = (dregs->bpack_hi & 0x00ff);
+>                         vaddr--;
+> +                       /* Fall through */
+>
+
+I think it would be clearer if you would drop the blank lines.
+
+>                 case CSR_LEFT_1:
+>                         *vaddr = (dregs->bpack_hi & 0xff00) >> 8;
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+-- 
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
