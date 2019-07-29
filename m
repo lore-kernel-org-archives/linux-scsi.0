@@ -1,67 +1,39 @@
-From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: [PATCH] scsi: ibmvscsi_tgt: Mark expected switch fall-throughs
-Date: Mon, 29 Jul 2019 06:29:02 -0500
-Message-ID: <20190729112902.GA3768@embeddedor>
+From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Subject: Re: [PATCH] mpt3sas: Use 63-bit DMA addressing on SAS35 HBA
+Date: Mon, 29 Jul 2019 17:25:35 +0530
+Message-ID: <CAK=zhgrWW_vOkXKRYRbiMdHgiT7u=Ra_pCkO_HkmQrCdVXfJBQ@mail.gmail.com>
+References: <1564135257-33188-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+ <20190726142706.GA1734@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Michael Cyr <mikecyr@linux.ibm.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org, "Gustavo A. R. Silva" <gustavo@embeddedor.com>, Stephen Rothwell <sfr@canb.auug.org.au>, Kees Cook <keescook@chromium.org>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20190726142706.GA1734@infradead.org>
+Sender: stable-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Suganath Prabu <suganath-prabu.subramani@broadcom.com>, linux-scsi <linux-scsi@vger.kernel.org>, stable@vger.kernel.org, Sathya Prakash <Sathya.Prakash@broadcom.com>, Kashyap Desai <kashyap.desai@broadcom.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Mark switch cases where we are expecting to fall through.
+On Fri, Jul 26, 2019 at 7:57 PM Christoph Hellwig <hch@infradead.org> wrote:
+>
+> On Fri, Jul 26, 2019 at 06:00:57AM -0400, Suganath Prabu wrote:
+> > Although SAS3 & SAS3.5 IT HBA controllers support
+> > 64-bit DMA addressing, as per hardware design,
+> > DMA address with all 64-bits set (0xFFFFFFFF-FFFFFFFF)
+> > results in a firmware fault.
+>
+> Linux will never send a dma address with all bits set anyway, as that
+> is our magic escape for the dma_addr_t error value.  Additionally to
+> generate that address you'd need a 1-byte sized, 1-byte aligned buffer,
+> which we never use.
 
-This patch fixes the following warnings (Building: powerpc allyesconfig):
+I agree with your above statement. But it is also possible that
+0xFFFFFFFF-FFFFFFFF falls under the DMA able range, e.g. SGE's start
+address is 0xFFFFFFFF-FFFF000 and data length is 0x1000 bytes. So when
+HBA tries to DMA the data at 0xFFFFFFFF-FFFFFFFF location then it will
+faults the firmware due to it's hardware design.
 
-drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c: In function 'ibmvscsis_adapter_info':
-drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c:1582:6: warning: this statement may fall through [-Wimplicit-fallthrough=]
-   if (connection_broken(vscsi))
-      ^
-drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c:1584:2: note: here
-  default:
-  ^~~~~~~
-drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c: In function 'ibmvscsis_ping_response':
-drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c:2494:16: warning: this statement may fall through [-Wimplicit-fallthrough=]
-   vscsi->flags |= CLIENT_FAILED;
-drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c:2495:2: note: here
-  case H_DROPPED:
-  ^~~~
-drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c:2496:16: warning: this statement may fall through [-Wimplicit-fallthrough=]
-   vscsi->flags |= RESPONSE_Q_DOWN;
-drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c:2497:2: note: here
-  case H_REMOTE_PARM:
-  ^~~~
+We have observed above example's SGE address and length on AMD systems
+with SME & IOMMU enabled.
 
-Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
-Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
----
- drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-index 7f9535392a93..a929fe76102b 100644
---- a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-+++ b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-@@ -1581,6 +1581,7 @@ static long ibmvscsis_adapter_info(struct scsi_info *vscsi,
- 	case H_PERMISSION:
- 		if (connection_broken(vscsi))
- 			flag_bits = (RESPONSE_Q_DOWN | CLIENT_FAILED);
-+		/* Fall through */
- 	default:
- 		dev_err(&vscsi->dev, "adapter_info: h_copy_rdma to client failed, rc %ld\n",
- 			rc);
-@@ -2492,8 +2493,10 @@ static long ibmvscsis_ping_response(struct scsi_info *vscsi)
- 		break;
- 	case H_CLOSED:
- 		vscsi->flags |= CLIENT_FAILED;
-+		/* Fall through */
- 	case H_DROPPED:
- 		vscsi->flags |= RESPONSE_Q_DOWN;
-+		/* Fall through */
- 	case H_REMOTE_PARM:
- 		dev_err(&vscsi->dev, "ping_response: h_send_crq failed, rc %ld\n",
- 			rc);
--- 
-2.22.0
+Thanks,
+Sreekanth
