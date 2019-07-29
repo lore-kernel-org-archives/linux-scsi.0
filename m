@@ -1,48 +1,44 @@
 From: Jia-Ju Bai <baijiaju1990@gmail.com>
-Subject: [PATCH] scsi: megaraid: Fix possible null-pointer dereferences in megasas_complete_cmd()
-Date: Mon, 29 Jul 2019 10:54:45 +0800
-Message-ID: <20190729025445.18312-1-baijiaju1990@gmail.com>
+Subject: [PATCH] scsi: mpt3sas: Fix a possible null-pointer dereference in mpt3sas_transport_update_links()
+Date: Mon, 29 Jul 2019 11:08:51 +0800
+Message-ID: <20190729030851.22059-1-baijiaju1990@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com, jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc: megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jia-Ju Bai <baijiaju1990@gmail.com>
+To: sathya.prakash@broadcom.com, chaitra.basappa@broadcom.com, suganath-prabu.subramani@broadcom.com, jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc: MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jia-Ju Bai <baijiaju1990@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-In megasas_complete_cmd(), there is an if statement on line 3411 to
-check whether cmd->scmd is NULL:
-    if (cmd->scmd)
+In mpt3sas_transport_update_links(), there is an if statement 
+on line 994 to check whether mpt3sas_phy->phy is NULL:
+    if (mpt3sas_phy->phy)
 
-When cmd->scmd is NULL, it is used at some places, such as on line 3286:
-    cmd->scmd->result = alt_status << 16;
-on line 3295:
-    cmd->scmd->scsi_done(cmd->scmd);
-on line 3343:
-    cmd->scmd->scsi_done(cmd->scmd);
+When mpt3sas_phy->phy is NULL, it is used on line 999:
+    dev_printk(KERN_INFO, &mpt3sas_phy->phy->dev, ...)
 
-Thus, possible null-pointer dereferences may occur.
+Thus, a possible null-pointer dereference may occur.
 
-To fix these bugs, cmd->scmd is checked before being used.
+To fix this bug, mpt3sas_phy->phy is checked before being used.
 
-These bugs are found by a static analysis tool STCheck written by us.
+This bug is found by a static analysis tool STCheck written by us.
 
 Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
 ---
- drivers/scsi/megaraid/megaraid_sas_base.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/scsi/mpt3sas/mpt3sas_transport.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index b2339d04a700..181c4d9cd707 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -3440,6 +3440,9 @@ megasas_complete_cmd(struct megasas_instance *instance, struct megasas_cmd *cmd,
- 	case MFI_CMD_LD_READ:
- 	case MFI_CMD_LD_WRITE:
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_transport.c b/drivers/scsi/mpt3sas/mpt3sas_transport.c
+index 5324662751bf..df790a9877a0 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_transport.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_transport.c
+@@ -995,7 +995,8 @@ mpt3sas_transport_update_links(struct MPT3SAS_ADAPTER *ioc,
+ 		mpt3sas_phy->phy->negotiated_linkrate =
+ 		    _transport_convert_phy_link_rate(link_rate);
  
-+		if (!cmd->scmd)
-+			break;
-+
- 		if (alt_status) {
- 			cmd->scmd->result = alt_status << 16;
- 			exception = 1;
+-	if ((ioc->logging_level & MPT_DEBUG_TRANSPORT))
++	if ((ioc->logging_level & MPT_DEBUG_TRANSPORT) && 
++			mpt3sas_phy->phy)
+ 		dev_printk(KERN_INFO, &mpt3sas_phy->phy->dev,
+ 		    "refresh: parent sas_addr(0x%016llx),\n"
+ 		    "\tlink_rate(0x%02x), phy(%d)\n"
 -- 
 2.17.0
