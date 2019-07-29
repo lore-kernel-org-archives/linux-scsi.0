@@ -1,83 +1,50 @@
 From: Kees Cook <keescook@chromium.org>
-Subject: Re: [PATCH] scsi: qlogicpti: Mark expected switch fall-throughs
-Date: Mon, 29 Jul 2019 08:59:36 -0700
-Message-ID: <201907290859.FCDA1B9F@keescook>
-References: <20190729110345.GA2603@embeddedor>
+Subject: Re: [PATCH] scsi: ibmvfc: Mark expected switch fall-throughs
+Date: Mon, 29 Jul 2019 09:38:42 -0700
+Message-ID: <201907290938.022D08EA@keescook>
+References: <20190729002608.GA25263@embeddedor>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20190729110345.GA2603@embeddedor>
+In-Reply-To: <20190729002608.GA25263@embeddedor>
 Sender: linux-kernel-owner@vger.kernel.org
 To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: Tyrel Datwyler <tyreld@linux.ibm.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, Michael Ellerman <mpe@ellerman.id.au>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, Stephen Rothwell <sfr@canb.auug.org.au>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Jul 29, 2019 at 06:03:45AM -0500, Gustavo A. R. Silva wrote:
+On Sun, Jul 28, 2019 at 07:26:08PM -0500, Gustavo A. R. Silva wrote:
 > Mark switch cases where we are expecting to fall through.
 > 
-> This patch fixes the following warnings (Building: sparc defconfig):
+> This patch fixes the following warnings:
 > 
-> drivers/scsi/qlogicpti.c: In function 'qlogicpti_mbox_command':
-> drivers/scsi/qlogicpti.c:202:10: warning: this statement may fall through [-Wimplicit-fallthrough=]
->   case 6: sbus_writew(param[5], qpti->qregs + MBOX5);
->           ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> drivers/scsi/qlogicpti.c:203:2: note: here
->   case 5: sbus_writew(param[4], qpti->qregs + MBOX4);
+> drivers/scsi/ibmvscsi/ibmvfc.c: In function 'ibmvfc_npiv_login_done':
+> drivers/scsi/ibmvscsi/ibmvfc.c:4022:3: warning: this statement may fall through [-Wimplicit-fallthrough=]
+>    ibmvfc_retry_host_init(vhost);
+>    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+> drivers/scsi/ibmvscsi/ibmvfc.c:4023:2: note: here
+>   case IBMVFC_MAD_DRIVER_FAILED:
 >   ^~~~
-> drivers/scsi/qlogicpti.c:203:10: warning: this statement may fall through [-Wimplicit-fallthrough=]
->   case 5: sbus_writew(param[4], qpti->qregs + MBOX4);
->           ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> drivers/scsi/qlogicpti.c:204:2: note: here
->   case 4: sbus_writew(param[3], qpti->qregs + MBOX3);
+> drivers/scsi/ibmvscsi/ibmvfc.c: In function 'ibmvfc_bsg_request':
+> drivers/scsi/ibmvscsi/ibmvfc.c:1830:11: warning: this statement may fall through [-Wimplicit-fallthrough=]
+>    port_id = (bsg_request->rqst_data.h_els.port_id[0] << 16) |
+>    ~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+>     (bsg_request->rqst_data.h_els.port_id[1] << 8) |
+>     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+>     bsg_request->rqst_data.h_els.port_id[2];
+>     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+> drivers/scsi/ibmvscsi/ibmvfc.c:1833:2: note: here
+>   case FC_BSG_RPT_ELS:
 >   ^~~~
-> drivers/scsi/qlogicpti.c:204:10: warning: this statement may fall through [-Wimplicit-fallthrough=]
->   case 4: sbus_writew(param[3], qpti->qregs + MBOX3);
->           ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> drivers/scsi/qlogicpti.c:205:2: note: here
->   case 3: sbus_writew(param[2], qpti->qregs + MBOX2);
->   ^~~~
-> drivers/scsi/qlogicpti.c:205:10: warning: this statement may fall through [-Wimplicit-fallthrough=]
->   case 3: sbus_writew(param[2], qpti->qregs + MBOX2);
->           ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> drivers/scsi/qlogicpti.c:206:2: note: here
->   case 2: sbus_writew(param[1], qpti->qregs + MBOX1);
->   ^~~~
-> drivers/scsi/qlogicpti.c:206:10: warning: this statement may fall through [-Wimplicit-fallthrough=]
->   case 2: sbus_writew(param[1], qpti->qregs + MBOX1);
->           ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> drivers/scsi/qlogicpti.c:207:2: note: here
->   case 1: sbus_writew(param[0], qpti->qregs + MBOX0);
->   ^~~~
-> drivers/scsi/qlogicpti.c:256:19: warning: this statement may fall through [-Wimplicit-fallthrough=]
->   case 6: param[5] = sbus_readw(qpti->qregs + MBOX5);
->           ~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> drivers/scsi/qlogicpti.c:257:2: note: here
->   case 5: param[4] = sbus_readw(qpti->qregs + MBOX4);
->   ^~~~
-> drivers/scsi/qlogicpti.c:257:19: warning: this statement may fall through [-Wimplicit-fallthrough=]
->   case 5: param[4] = sbus_readw(qpti->qregs + MBOX4);
->           ~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> drivers/scsi/qlogicpti.c:258:2: note: here
->   case 4: param[3] = sbus_readw(qpti->qregs + MBOX3);
->   ^~~~
-> drivers/scsi/qlogicpti.c:258:19: warning: this statement may fall through [-Wimplicit-fallthrough=]
->   case 4: param[3] = sbus_readw(qpti->qregs + MBOX3);
->           ~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> drivers/scsi/qlogicpti.c:259:2: note: here
->   case 3: param[2] = sbus_readw(qpti->qregs + MBOX2);
->   ^~~~
-> drivers/scsi/qlogicpti.c:259:19: warning: this statement may fall through [-Wimplicit-fallthrough=]
->   case 3: param[2] = sbus_readw(qpti->qregs + MBOX2);
->           ~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> drivers/scsi/qlogicpti.c:260:2: note: here
->   case 2: param[1] = sbus_readw(qpti->qregs + MBOX1);
->   ^~~~
-> drivers/scsi/qlogicpti.c:260:19: warning: this statement may fall through [-Wimplicit-fallthrough=]
->   case 2: param[1] = sbus_readw(qpti->qregs + MBOX1);
->           ~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> drivers/scsi/qlogicpti.c:261:2: note: here
->   case 1: param[0] = sbus_readw(qpti->qregs + MBOX0);
+> drivers/scsi/ibmvscsi/ibmvfc.c:1838:11: warning: this statement may fall through [-Wimplicit-fallthrough=]
+>    port_id = (bsg_request->rqst_data.h_ct.port_id[0] << 16) |
+>    ~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+>     (bsg_request->rqst_data.h_ct.port_id[1] << 8) |
+>     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+>     bsg_request->rqst_data.h_ct.port_id[2];
+>     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+> drivers/scsi/ibmvscsi/ibmvfc.c:1841:2: note: here
+>   case FC_BSG_RPT_CT:
 >   ^~~~
 > 
 > Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
@@ -88,45 +55,37 @@ Reviewed-by: Kees Cook <keescook@chromium.org>
 -Kees
 
 > ---
->  drivers/scsi/qlogicpti.c | 10 ++++++++++
->  1 file changed, 10 insertions(+)
+>  drivers/scsi/ibmvscsi/ibmvfc.c | 3 +++
+>  1 file changed, 3 insertions(+)
 > 
-> diff --git a/drivers/scsi/qlogicpti.c b/drivers/scsi/qlogicpti.c
-> index 9335849f6bea..d539beef3ce8 100644
-> --- a/drivers/scsi/qlogicpti.c
-> +++ b/drivers/scsi/qlogicpti.c
-> @@ -200,10 +200,15 @@ static int qlogicpti_mbox_command(struct qlogicpti *qpti, u_short param[], int f
->  	/* Write mailbox command registers. */
->  	switch (mbox_param[param[0]] >> 4) {
->  	case 6: sbus_writew(param[5], qpti->qregs + MBOX5);
-> +		/* Fall through */
->  	case 5: sbus_writew(param[4], qpti->qregs + MBOX4);
-> +		/* Fall through */
->  	case 4: sbus_writew(param[3], qpti->qregs + MBOX3);
-> +		/* Fall through */
->  	case 3: sbus_writew(param[2], qpti->qregs + MBOX2);
-> +		/* Fall through */
->  	case 2: sbus_writew(param[1], qpti->qregs + MBOX1);
-> +		/* Fall through */
->  	case 1: sbus_writew(param[0], qpti->qregs + MBOX0);
->  	}
->  
-> @@ -254,10 +259,15 @@ static int qlogicpti_mbox_command(struct qlogicpti *qpti, u_short param[], int f
->  	/* Read back output parameters. */
->  	switch (mbox_param[param[0]] & 0xf) {
->  	case 6: param[5] = sbus_readw(qpti->qregs + MBOX5);
-> +		/* Fall through */
->  	case 5: param[4] = sbus_readw(qpti->qregs + MBOX4);
-> +		/* Fall through */
->  	case 4: param[3] = sbus_readw(qpti->qregs + MBOX3);
-> +		/* Fall through */
->  	case 3: param[2] = sbus_readw(qpti->qregs + MBOX2);
-> +		/* Fall through */
->  	case 2: param[1] = sbus_readw(qpti->qregs + MBOX1);
-> +		/* Fall through */
->  	case 1: param[0] = sbus_readw(qpti->qregs + MBOX0);
->  	}
->  
+> diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
+> index 8cdbac076a1b..df897df5cafe 100644
+> --- a/drivers/scsi/ibmvscsi/ibmvfc.c
+> +++ b/drivers/scsi/ibmvscsi/ibmvfc.c
+> @@ -1830,6 +1830,7 @@ static int ibmvfc_bsg_request(struct bsg_job *job)
+>  		port_id = (bsg_request->rqst_data.h_els.port_id[0] << 16) |
+>  			(bsg_request->rqst_data.h_els.port_id[1] << 8) |
+>  			bsg_request->rqst_data.h_els.port_id[2];
+> +		/* fall through */
+>  	case FC_BSG_RPT_ELS:
+>  		fc_flags = IBMVFC_FC_ELS;
+>  		break;
+> @@ -1838,6 +1839,7 @@ static int ibmvfc_bsg_request(struct bsg_job *job)
+>  		port_id = (bsg_request->rqst_data.h_ct.port_id[0] << 16) |
+>  			(bsg_request->rqst_data.h_ct.port_id[1] << 8) |
+>  			bsg_request->rqst_data.h_ct.port_id[2];
+> +		/* fall through */
+>  	case FC_BSG_RPT_CT:
+>  		fc_flags = IBMVFC_FC_CT_IU;
+>  		break;
+> @@ -4020,6 +4022,7 @@ static void ibmvfc_npiv_login_done(struct ibmvfc_event *evt)
+>  		return;
+>  	case IBMVFC_MAD_CRQ_ERROR:
+>  		ibmvfc_retry_host_init(vhost);
+> +		/* fall through */
+>  	case IBMVFC_MAD_DRIVER_FAILED:
+>  		ibmvfc_free_event(evt);
+>  		return;
 > -- 
 > 2.22.0
 > 
