@@ -1,23 +1,23 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH -next] scsi: aic94xx: Remove unnecessary null check
-Date: Tue, 30 Jul 2019 12:13:40 -0400
-Message-ID: <yq18ssfo5zf.fsf@oracle.com>
-References: <20190711141539.13892-1-yuehaibing@huawei.com>
+Subject: Re: [PATCH 1/3] scsi: qla2xxx: Replace vmalloc + memset with vzalloc
+Date: Tue, 30 Jul 2019 12:21:44 -0400
+Message-ID: <yq1zhkvmr1j.fsf@oracle.com>
+References: <20190718074518.16273-1-hslester96@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190711141539.13892-1-yuehaibing@huawei.com>
-        (yuehaibing@huawei.com's message of "Thu, 11 Jul 2019 22:15:39 +0800")
+In-Reply-To: <20190718074518.16273-1-hslester96@gmail.com> (Chuhong Yuan's
+        message of "Thu, 18 Jul 2019 15:45:18 +0800")
 Sender: linux-kernel-owner@vger.kernel.org
-To: YueHaibing <yuehaibing@huawei.com>
-Cc: jejb@linux.ibm.com, martin.petersen@oracle.com, jthumshirn@suse.de, dan.carpenter@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Chuhong Yuan <hslester96@gmail.com>
+Cc: qla2xxx-upstream@qlogic.com, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-YueHaibing,
+Chuhong,
 
-> kmem_cache_destroy() can handle NULL pointer correctly, so there is
-> no need to check NULL pointer before calling kmem_cache_destroy().
+> Use vzalloc instead of using vmalloc to allocate memory and then
+> zeroing it with memset.  This simplifies the code.
 
 Applied to 5.4/scsi-queue. Thanks!
 
