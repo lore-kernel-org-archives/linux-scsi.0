@@ -1,75 +1,83 @@
-From: Stephen Boyd <swboyd@chromium.org>
-Subject: [PATCH v6 56/57] scsi: Remove dev_err() usage after platform_get_irq()
-Date: Tue, 30 Jul 2019 11:15:56 -0700
-Message-ID: <20190730181557.90391-57-swboyd@chromium.org>
-References: <20190730181557.90391-1-swboyd@chromium.org>
+From: "Matthew R. Ochs" <mrochs@linux.ibm.com>
+Subject: Re: [PATCH] scsi: cxlflash: Mark expected switch fall-throughs
+Date: Tue, 30 Jul 2019 13:52:13 -0500
+Message-ID: <20190730185213.GA10811@p8tul1-build.aus.stglabs.ibm.com>
+References: <20190729002119.GA25068@embeddedor>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190730181557.90391-1-swboyd@chromium.org>
+Content-Disposition: inline
+In-Reply-To: <20190729002119.GA25068@embeddedor>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Cc: "Manoj N. Kumar" <manoj@linux.ibm.com>, Uma Krishnan <ukrishn@linux.ibm.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Stephen Rothwell <sfr@canb.auug.org.au>, Kees Cook <keescook@chromium.org>
 List-Id: linux-scsi@vger.kernel.org
 
-We don't need dev_err() messages when platform_get_irq() fails now that
-platform_get_irq() prints an error message itself when something goes
-wrong. Let's remove these prints with a simple semantic patch.
+On Sun, Jul 28, 2019 at 07:21:19PM -0500, Gustavo A. R. Silva wrote:
+> Mark switch cases where we are expecting to fall through.
+> 
+> This patch fixes the following warnings:
+> 
+> drivers/scsi/cxlflash/main.c: In function 'send_afu_cmd':
+> drivers/scsi/cxlflash/main.c:2347:6: warning: this statement may fall through [-Wimplicit-fallthrough=]
+>    if (rc) {
+>       ^
+> drivers/scsi/cxlflash/main.c:2357:2: note: here
+>   case -EAGAIN:
+>   ^~~~
+> drivers/scsi/cxlflash/main.c: In function 'term_intr':
+> drivers/scsi/cxlflash/main.c:754:6: warning: this statement may fall through [-Wimplicit-fallthrough=]
+>    if (index == PRIMARY_HWQ)
+>       ^
+> drivers/scsi/cxlflash/main.c:756:2: note: here
+>   case UNMAP_TWO:
+>   ^~~~
+> drivers/scsi/cxlflash/main.c:757:3: warning: this statement may fall through [-Wimplicit-fallthrough=]
+>    cfg->ops->unmap_afu_irq(hwq->ctx_cookie, 2, hwq);
+>    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+> drivers/scsi/cxlflash/main.c:758:2: note: here
+>   case UNMAP_ONE:
+>   ^~~~
+> drivers/scsi/cxlflash/main.c:759:3: warning: this statement may fall through [-Wimplicit-fallthrough=]
+>    cfg->ops->unmap_afu_irq(hwq->ctx_cookie, 1, hwq);
+>    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+> drivers/scsi/cxlflash/main.c:760:2: note: here
+>   case FREE_IRQ:
+>   ^~~~
+> drivers/scsi/cxlflash/main.c: In function 'cxlflash_remove':
+> drivers/scsi/cxlflash/main.c:975:3: warning: this statement may fall through [-Wimplicit-fallthrough=]
+>    cxlflash_release_chrdev(cfg);
+>    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+> drivers/scsi/cxlflash/main.c:976:2: note: here
+>   case INIT_STATE_SCSI:
+>   ^~~~
+> drivers/scsi/cxlflash/main.c:978:3: warning: this statement may fall through [-Wimplicit-fallthrough=]
+>    scsi_remove_host(cfg->host);
+>    ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+> drivers/scsi/cxlflash/main.c:979:2: note: here
+>   case INIT_STATE_AFU:
+>   ^~~~
+> drivers/scsi/cxlflash/main.c:980:3: warning: this statement may fall through [-Wimplicit-fallthrough=]
+>    term_afu(cfg);
+>    ^~~~~~~~~~~~~
+> drivers/scsi/cxlflash/main.c:981:2: note: here
+>   case INIT_STATE_PCI:
+>   ^~~~
+> drivers/scsi/cxlflash/main.c:983:3: warning: this statement may fall through [-Wimplicit-fallthrough=]
+>    pci_disable_device(pdev);
+>    ^~~~~~~~~~~~~~~~~~~~~~~~
+> drivers/scsi/cxlflash/main.c:984:2: note: here
+>   case INIT_STATE_NONE:
+>   ^~~~
+> drivers/scsi/cxlflash/main.c: In function 'num_hwqs_store':
+> drivers/scsi/cxlflash/main.c:3018:6: warning: this statement may fall through [-Wimplicit-fallthrough=]
+>    if (cfg->state == STATE_NORMAL)
+>       ^
+> drivers/scsi/cxlflash/main.c:3020:2: note: here
+>   default:
+>   ^~~~~~~
+> 
+> Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
+> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 
-// <smpl>
-@@
-expression ret;
-struct platform_device *E;
-@@
-
-ret =
-(
-platform_get_irq(E, ...)
-|
-platform_get_irq_byname(E, ...)
-);
-
-if ( \( ret < 0 \| ret <= 0 \) )
-{
-(
--if (ret != -EPROBE_DEFER)
--{ ...
--dev_err(...);
--... }
-|
-...
--dev_err(...);
-)
-...
-}
-// </smpl>
-
-While we're here, remove braces on if statements that only have one
-statement (manually).
-
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Signed-off-by: Stephen Boyd <swboyd@chromium.org>
----
-
-Please apply directly to subsystem trees
-
- drivers/scsi/ufs/ufshcd-pltfrm.c | 1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
-index d7d521b394c3..f84943553454 100644
---- a/drivers/scsi/ufs/ufshcd-pltfrm.c
-+++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
-@@ -404,7 +404,6 @@ int ufshcd_pltfrm_init(struct platform_device *pdev,
- 
- 	irq = platform_get_irq(pdev, 0);
- 	if (irq < 0) {
--		dev_err(dev, "IRQ resource not available\n");
- 		err = -ENODEV;
- 		goto out;
- 	}
--- 
-Sent by a computer through tubes
+Acked-by: Matthew R. Ochs <mrochs@linux.ibm.com>
