@@ -1,26 +1,75 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: qla2xxx: Fix possible null-pointer dereferences in qla2x00_alloc_fcport()
-Date: Tue, 30 Jul 2019 12:50:31 -0400
-Message-ID: <yq1imrjmppk.fsf@oracle.com>
-References: <20190729084451.29290-1-baijiaju1990@gmail.com>
+From: Stephen Boyd <swboyd@chromium.org>
+Subject: [PATCH v6 56/57] scsi: Remove dev_err() usage after platform_get_irq()
+Date: Tue, 30 Jul 2019 11:15:56 -0700
+Message-ID: <20190730181557.90391-57-swboyd@chromium.org>
+References: <20190730181557.90391-1-swboyd@chromium.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190729084451.29290-1-baijiaju1990@gmail.com> (Jia-Ju Bai's
-        message of "Mon, 29 Jul 2019 16:44:51 +0800")
+In-Reply-To: <20190730181557.90391-1-swboyd@chromium.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jia-Ju Bai <baijiaju1990@gmail.com>
-Cc: jejb@linux.ibm.com, martin.petersen@oracle.com, qla2xxx-upstream@qlogic.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 List-Id: linux-scsi@vger.kernel.org
 
+We don't need dev_err() messages when platform_get_irq() fails now that
+platform_get_irq() prints an error message itself when something goes
+wrong. Let's remove these prints with a simple semantic patch.
 
-Jia-Ju,
+// <smpl>
+@@
+expression ret;
+struct platform_device *E;
+@@
 
-> In qla2x00_alloc_fcport(), fcport is assigned to NULL in the error
-> handling code on line 4880:
->     fcport = NULL;
+ret =
+(
+platform_get_irq(E, ...)
+|
+platform_get_irq_byname(E, ...)
+);
 
-Applied to 5.3/scsi-fixes. Thanks!
+if ( \( ret < 0 \| ret <= 0 \) )
+{
+(
+-if (ret != -EPROBE_DEFER)
+-{ ...
+-dev_err(...);
+-... }
+|
+...
+-dev_err(...);
+)
+...
+}
+// </smpl>
 
+While we're here, remove braces on if statements that only have one
+statement (manually).
+
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Signed-off-by: Stephen Boyd <swboyd@chromium.org>
+---
+
+Please apply directly to subsystem trees
+
+ drivers/scsi/ufs/ufshcd-pltfrm.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
+index d7d521b394c3..f84943553454 100644
+--- a/drivers/scsi/ufs/ufshcd-pltfrm.c
++++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
+@@ -404,7 +404,6 @@ int ufshcd_pltfrm_init(struct platform_device *pdev,
+ 
+ 	irq = platform_get_irq(pdev, 0);
+ 	if (irq < 0) {
+-		dev_err(dev, "IRQ resource not available\n");
+ 		err = -ENODEV;
+ 		goto out;
+ 	}
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+Sent by a computer through tubes
