@@ -1,37 +1,38 @@
-From: Chuhong Yuan <hslester96@gmail.com>
-Subject: [PATCH] scsi: 3w-sas: Fix unterminated strncpy
-Date: Tue, 30 Jul 2019 16:40:47 +0800
-Message-ID: <20190730084047.26482-1-hslester96@gmail.com>
+From: James Bottomley <jejb@linux.ibm.com>
+Subject: Re: [PATCH] scsi: 3w-sas: Fix unterminated strncpy
+Date: Tue, 30 Jul 2019 07:56:37 -0700
+Message-ID: <1564498597.4300.10.camel@linux.ibm.com>
+References: <20190730084047.26482-1-hslester96@gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190730084047.26482-1-hslester96@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-Cc: Adam Radford <aradford@gmail.com>, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Chuhong Yuan <hslester96@gmail.com>
+To: Chuhong Yuan <hslester96@gmail.com>
+Cc: Adam Radford <aradford@gmail.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-strncpy(dest, src, strlen(src)) leads to unterminated
-dest, which is dangerous.
-Here driver_version's len is 32 and TW_DRIVER_VERSION
-is shorter than 32.
-Therefore strcpy is OK.
+On Tue, 2019-07-30 at 16:40 +0800, Chuhong Yuan wrote:
+> strncpy(dest, src, strlen(src)) leads to unterminated
+> dest, which is dangerous.
 
-Signed-off-by: Chuhong Yuan <hslester96@gmail.com>
----
- drivers/scsi/3w-sas.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I don't buy that.  The structure is only used for the
+TW_IOCTL_GET_COMPATIBILITY_INFO ioctl and all the fields for that are
+fixed width and are copied over as such.
 
-diff --git a/drivers/scsi/3w-sas.c b/drivers/scsi/3w-sas.c
-index dda6fa857709..96f529c613a6 100644
---- a/drivers/scsi/3w-sas.c
-+++ b/drivers/scsi/3w-sas.c
-@@ -1328,7 +1328,7 @@ static int twl_reset_sequence(TW_Device_Extension *tw_dev, int soft_reset)
- 		}
- 
- 		/* Load rest of compatibility struct */
--		strncpy(tw_dev->tw_compat_info.driver_version, TW_DRIVER_VERSION, strlen(TW_DRIVER_VERSION));
-+		strcpy(tw_dev->tw_compat_info.driver_version, TW_DRIVER_VERSION);
- 		tw_dev->tw_compat_info.driver_srl_high = TW_CURRENT_DRIVER_SRL;
- 		tw_dev->tw_compat_info.driver_branch_high = TW_CURRENT_DRIVER_BRANCH;
- 		tw_dev->tw_compat_info.driver_build_high = TW_CURRENT_DRIVER_BUILD;
--- 
-2.20.1
+> Here driver_version's len is 32 and TW_DRIVER_VERSION
+> is shorter than 32.
+> Therefore strcpy is OK.
+
+The best practice for copying a string to a fixed width destination
+that does get printed within the kernel would be what the 3w-9xxx.c
+does
+
+	strlcpy(tw_dev->tw_compat_info.driver_version, TW_DRIVER_VERSION,
+		sizeof(tw_dev->tw_compat_info.driver_version));
+
+But as I said, it doesn't really matter for a fixed width field that's
+never printed within the kernel.
+
+James
