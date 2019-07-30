@@ -1,25 +1,26 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 1/3] scsi: qla2xxx: Replace vmalloc + memset with vzalloc
-Date: Tue, 30 Jul 2019 12:21:44 -0400
-Message-ID: <yq1zhkvmr1j.fsf@oracle.com>
-References: <20190718074518.16273-1-hslester96@gmail.com>
+Subject: Re: [PATCH v2] mpt3sas: Use 63-bit DMA addressing on SAS35 HBA
+Date: Tue, 30 Jul 2019 12:47:33 -0400
+Message-ID: <yq1mugvmpui.fsf@oracle.com>
+References: <1564472637-8062-1-git-send-email-suganath-prabu.subramani@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190718074518.16273-1-hslester96@gmail.com> (Chuhong Yuan's
-        message of "Thu, 18 Jul 2019 15:45:18 +0800")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Chuhong Yuan <hslester96@gmail.com>
-Cc: qla2xxx-upstream@qlogic.com, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <1564472637-8062-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+        (Suganath Prabu's message of "Tue, 30 Jul 2019 03:43:57 -0400")
+Sender: stable-owner@vger.kernel.org
+To: Suganath Prabu <suganath-prabu.subramani@broadcom.com>
+Cc: linux-scsi@vger.kernel.org, stable@vger.kernel.org, Sathya.Prakash@broadcom.com, kashyap.desai@broadcom.com, sreekanth.reddy@broadcom.com
 List-Id: linux-scsi@vger.kernel.org
 
 
-Chuhong,
+Suganath,
 
-> Use vzalloc instead of using vmalloc to allocate memory and then
-> zeroing it with memset.  This simplifies the code.
+> Although SAS3 & SAS3.5 IT HBA controllers support 64-bit DMA
+> addressing, as per hardware design, if DMA able range contains all
+> 64-bits set (0xFFFFFFFF-FFFFFFFF) then it results in a firmware fault.
 
-Applied to 5.4/scsi-queue. Thanks!
+Applied to 5.3/scsi-fixes. Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
