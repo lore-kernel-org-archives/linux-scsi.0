@@ -1,24 +1,24 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2] mpt3sas: Use 63-bit DMA addressing on SAS35 HBA
-Date: Tue, 30 Jul 2019 12:47:33 -0400
-Message-ID: <yq1mugvmpui.fsf@oracle.com>
-References: <1564472637-8062-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+Subject: Re: [PATCH] scsi: qla2xxx: Fix possible null-pointer dereferences in qla2x00_alloc_fcport()
+Date: Tue, 30 Jul 2019 12:50:31 -0400
+Message-ID: <yq1imrjmppk.fsf@oracle.com>
+References: <20190729084451.29290-1-baijiaju1990@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <1564472637-8062-1-git-send-email-suganath-prabu.subramani@broadcom.com>
-        (Suganath Prabu's message of "Tue, 30 Jul 2019 03:43:57 -0400")
-Sender: stable-owner@vger.kernel.org
-To: Suganath Prabu <suganath-prabu.subramani@broadcom.com>
-Cc: linux-scsi@vger.kernel.org, stable@vger.kernel.org, Sathya.Prakash@broadcom.com, kashyap.desai@broadcom.com, sreekanth.reddy@broadcom.com
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190729084451.29290-1-baijiaju1990@gmail.com> (Jia-Ju Bai's
+        message of "Mon, 29 Jul 2019 16:44:51 +0800")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jia-Ju Bai <baijiaju1990@gmail.com>
+Cc: jejb@linux.ibm.com, martin.petersen@oracle.com, qla2xxx-upstream@qlogic.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Suganath,
+Jia-Ju,
 
-> Although SAS3 & SAS3.5 IT HBA controllers support 64-bit DMA
-> addressing, as per hardware design, if DMA able range contains all
-> 64-bits set (0xFFFFFFFF-FFFFFFFF) then it results in a firmware fault.
+> In qla2x00_alloc_fcport(), fcport is assigned to NULL in the error
+> handling code on line 4880:
+>     fcport = NULL;
 
 Applied to 5.3/scsi-fixes. Thanks!
 
