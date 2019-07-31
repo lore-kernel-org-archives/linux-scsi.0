@@ -1,55 +1,68 @@
-From: Tyrel Datwyler <tyreld@linux.ibm.com>
-Subject: Re: [PATCH] scsi: ibmvfc: Mark expected switch fall-throughs
-Date: Tue, 30 Jul 2019 18:41:53 -0700
-Message-ID: <58a4f287-8311-31ee-f403-16b0adcf0271@linux.ibm.com>
-References: <20190729002608.GA25263@embeddedor>
+From: Anil Varughese <aniljoy@cadence.com>
+Subject: [PATCH] scsi: ufs: Additional clock initialization in Cadence UFS
+Date: Wed, 31 Jul 2019 09:36:14 +0100
+Message-ID: <20190731083614.25926-1-aniljoy@cadence.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190729002608.GA25263@embeddedor>
-Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, Michael Ellerman <mpe@ellerman.id.au>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, Kees Cook <keescook@chromium.org>, Stephen Rothwell <sfr@canb.auug.org.au>
+To: alim.akhtar@samsung.com, avri.altman@wdc.com, pedrom.sousa@synopsys.com
+Cc: jejb@linux.ibm.com, martin.petersen@oracle.com, hare@suse.de, aniljoy@cadence.com, rafalc@cadence.com, mparab@cadence.com, jank@cadence.com, vigneshr@ti.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 7/28/19 5:26 PM, Gustavo A. R. Silva wrote:
-> Mark switch cases where we are expecting to fall through.
-> 
-> This patch fixes the following warnings:
-> 
-> drivers/scsi/ibmvscsi/ibmvfc.c: In function 'ibmvfc_npiv_login_done':
-> drivers/scsi/ibmvscsi/ibmvfc.c:4022:3: warning: this statement may fall through [-Wimplicit-fallthrough=]
->    ibmvfc_retry_host_init(vhost);
->    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> drivers/scsi/ibmvscsi/ibmvfc.c:4023:2: note: here
->   case IBMVFC_MAD_DRIVER_FAILED:
->   ^~~~
-> drivers/scsi/ibmvscsi/ibmvfc.c: In function 'ibmvfc_bsg_request':
-> drivers/scsi/ibmvscsi/ibmvfc.c:1830:11: warning: this statement may fall through [-Wimplicit-fallthrough=]
->    port_id = (bsg_request->rqst_data.h_els.port_id[0] << 16) |
->    ~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
->     (bsg_request->rqst_data.h_els.port_id[1] << 8) |
->     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
->     bsg_request->rqst_data.h_els.port_id[2];
->     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> drivers/scsi/ibmvscsi/ibmvfc.c:1833:2: note: here
->   case FC_BSG_RPT_ELS:
->   ^~~~
-> drivers/scsi/ibmvscsi/ibmvfc.c:1838:11: warning: this statement may fall through [-Wimplicit-fallthrough=]
->    port_id = (bsg_request->rqst_data.h_ct.port_id[0] << 16) |
->    ~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
->     (bsg_request->rqst_data.h_ct.port_id[1] << 8) |
->     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
->     bsg_request->rqst_data.h_ct.port_id[2];
->     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> drivers/scsi/ibmvscsi/ibmvfc.c:1841:2: note: here
->   case FC_BSG_RPT_CT:
->   ^~~~
-> 
-> Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
-> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
-> ---
+Configure CDNS_UFS_REG_HCLKDIV in .hce_enable_notify()
+because if UFSHCD resets the controller ip because of
+phy or device related errors then CDNS_UFS_REG_HCLKDIV
+is reset to default value and .setup_clock() is not
+called later in the sequence whereas hce_enable_notify
+will be called everytime controller is reenabled.
 
-Acked-by: Tyrel Datwyler <tyreld@linux.ibm.com>
+Signed-off-by: Anil Varughese <aniljoy@cadence.com>
+---
+ drivers/scsi/ufs/cdns-pltfrm.c | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
+
+diff --git a/drivers/scsi/ufs/cdns-pltfrm.c b/drivers/scsi/ufs/cdns-pltfrm.c
+index 86dbb723f..15ee54d28 100644
+--- a/drivers/scsi/ufs/cdns-pltfrm.c
++++ b/drivers/scsi/ufs/cdns-pltfrm.c
+@@ -78,6 +78,22 @@ static int cdns_ufs_setup_clocks(struct ufs_hba *hba, bool on,
+ 	return cdns_ufs_set_hclkdiv(hba);
+ }
+ 
++/**
++ * Called before and after HCE enable bit is set.
++ * @hba: host controller instance
++ * @status: notify stage (pre, post change)
++ *
++ * Return zero for success and non-zero for failure
++ */
++static int cdns_ufs_hce_enable_notify(struct ufs_hba *hba,
++				      enum ufs_notify_change_status status)
++{
++	if (status != PRE_CHANGE)
++		return 0;
++
++	return cdns_ufs_set_hclkdiv(hba);
++}
++
+ /**
+  * cdns_ufs_init - performs additional ufs initialization
+  * @hba: host controller instance
+@@ -115,12 +131,14 @@ static int cdns_ufs_m31_16nm_phy_initialization(struct ufs_hba *hba)
+ static const struct ufs_hba_variant_ops cdns_ufs_pltfm_hba_vops = {
+ 	.name = "cdns-ufs-pltfm",
+ 	.setup_clocks = cdns_ufs_setup_clocks,
++	.hce_enable_notify = cdns_ufs_hce_enable_notify,
+ };
+ 
+ static const struct ufs_hba_variant_ops cdns_ufs_m31_16nm_pltfm_hba_vops = {
+ 	.name = "cdns-ufs-pltfm",
+ 	.init = cdns_ufs_init,
+ 	.setup_clocks = cdns_ufs_setup_clocks,
++	.hce_enable_notify = cdns_ufs_hce_enable_notify,
+ 	.phy_initialization = cdns_ufs_m31_16nm_phy_initialization,
+ };
+ 
+-- 
+2.15.0
