@@ -1,64 +1,55 @@
-From: Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH v5 13/29] compat_ioctl: move more drivers to compat_ptr_ioctl
-Date: Tue, 30 Jul 2019 13:14:52 -0700
-Message-ID: <CAPcyv4i_nHzV155RcgnAQ189aq2Lfd2g8pA1D5NbZqo9E_u+Dw@mail.gmail.com>
-References: <20190730192552.4014288-1-arnd@arndb.de> <20190730195819.901457-1-arnd@arndb.de>
+From: Tyrel Datwyler <tyreld@linux.ibm.com>
+Subject: Re: [PATCH] scsi: ibmvfc: Mark expected switch fall-throughs
+Date: Tue, 30 Jul 2019 18:41:53 -0700
+Message-ID: <58a4f287-8311-31ee-f403-16b0adcf0271@linux.ibm.com>
+References: <20190729002608.GA25263@embeddedor>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-wireless-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20190730195819.901457-1-arnd-r2nGTMty4D4@public.gmane.org>
-Sender: linux-wireless-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
-Cc: Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, linux-iio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Daniel Vetter <daniel.vetter-/w4YWyX8dFk@public.gmane.org>, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, Bjorn Andersson <bjorn.andersson-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, sparclinux-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mauro Carvalho Chehab <mchehab+samsung-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-nvdimm <linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, qat-linux-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, amd-gfx list <amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, Jason Gunthorpe <jgg-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, linux-input-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Darren Hart <dvhart-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "Linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-remoteproc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "moderated list:DMA BUFFER SHARING FRAMEWORK" <linaro-mm-sig-cunTk1MwBs8s++Sfvej+rw@public.gmane.org>, Maling
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190729002608.GA25263@embeddedor>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, Michael Ellerman <mpe@ellerman.id.au>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, Kees Cook <keescook@chromium.org>, Stephen Rothwell <sfr@canb.auug.org.au>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Jul 30, 2019 at 12:59 PM Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org> wrote:
->
-> The .ioctl and .compat_ioctl file operations have the same prototype so
-> they can both point to the same function, which works great almost all
-> the time when all the commands are compatible.
->
-> One exception is the s390 architecture, where a compat pointer is only
-> 31 bit wide, and converting it into a 64-bit pointer requires calling
-> compat_ptr(). Most drivers here will never run in s390, but since we now
-> have a generic helper for it, it's easy enough to use it consistently.
->
-> I double-checked all these drivers to ensure that all ioctl arguments
-> are used as pointers or are ignored, but are not interpreted as integer
-> values.
->
-> Acked-by: Jason Gunthorpe <jgg-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
-> Acked-by: Daniel Vetter <daniel.vetter-/w4YWyX8dFk@public.gmane.org>
-> Acked-by: Mauro Carvalho Chehab <mchehab+samsung-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Acked-by: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
-> Acked-by: David Sterba <dsterba-IBi9RG/b67k@public.gmane.org>
-> Acked-by: Darren Hart (VMware) <dvhart-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-> Acked-by: Jonathan Cameron <Jonathan.Cameron-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> Acked-by: Bjorn Andersson <bjorn.andersson-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-> Signed-off-by: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
+On 7/28/19 5:26 PM, Gustavo A. R. Silva wrote:
+> Mark switch cases where we are expecting to fall through.
+> 
+> This patch fixes the following warnings:
+> 
+> drivers/scsi/ibmvscsi/ibmvfc.c: In function 'ibmvfc_npiv_login_done':
+> drivers/scsi/ibmvscsi/ibmvfc.c:4022:3: warning: this statement may fall through [-Wimplicit-fallthrough=]
+>    ibmvfc_retry_host_init(vhost);
+>    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+> drivers/scsi/ibmvscsi/ibmvfc.c:4023:2: note: here
+>   case IBMVFC_MAD_DRIVER_FAILED:
+>   ^~~~
+> drivers/scsi/ibmvscsi/ibmvfc.c: In function 'ibmvfc_bsg_request':
+> drivers/scsi/ibmvscsi/ibmvfc.c:1830:11: warning: this statement may fall through [-Wimplicit-fallthrough=]
+>    port_id = (bsg_request->rqst_data.h_els.port_id[0] << 16) |
+>    ~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+>     (bsg_request->rqst_data.h_els.port_id[1] << 8) |
+>     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+>     bsg_request->rqst_data.h_els.port_id[2];
+>     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+> drivers/scsi/ibmvscsi/ibmvfc.c:1833:2: note: here
+>   case FC_BSG_RPT_ELS:
+>   ^~~~
+> drivers/scsi/ibmvscsi/ibmvfc.c:1838:11: warning: this statement may fall through [-Wimplicit-fallthrough=]
+>    port_id = (bsg_request->rqst_data.h_ct.port_id[0] << 16) |
+>    ~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+>     (bsg_request->rqst_data.h_ct.port_id[1] << 8) |
+>     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+>     bsg_request->rqst_data.h_ct.port_id[2];
+>     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+> drivers/scsi/ibmvscsi/ibmvfc.c:1841:2: note: here
+>   case FC_BSG_RPT_CT:
+>   ^~~~
+> 
+> Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
+> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 > ---
->  drivers/nvdimm/bus.c                        | 4 ++--
-[..]
-> diff --git a/drivers/nvdimm/bus.c b/drivers/nvdimm/bus.c
-> index 798c5c4aea9c..6ca142d833ab 100644
-> --- a/drivers/nvdimm/bus.c
-> +++ b/drivers/nvdimm/bus.c
-> @@ -1229,7 +1229,7 @@ static const struct file_operations nvdimm_bus_fops = {
->         .owner = THIS_MODULE,
->         .open = nd_open,
->         .unlocked_ioctl = bus_ioctl,
-> -       .compat_ioctl = bus_ioctl,
-> +       .compat_ioctl = compat_ptr_ioctl,
->         .llseek = noop_llseek,
->  };
->
-> @@ -1237,7 +1237,7 @@ static const struct file_operations nvdimm_fops = {
->         .owner = THIS_MODULE,
->         .open = nd_open,
->         .unlocked_ioctl = dimm_ioctl,
-> -       .compat_ioctl = dimm_ioctl,
-> +       .compat_ioctl = compat_ptr_ioctl,
->         .llseek = noop_llseek,
->  };
 
-Acked-by: Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Acked-by: Tyrel Datwyler <tyreld@linux.ibm.com>
