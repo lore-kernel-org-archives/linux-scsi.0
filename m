@@ -1,72 +1,68 @@
-From: Anil Joy Varughese <aniljoy@cadence.com>
-Subject: RE: [PATCH] scsi: ufs: Additional clock initialization in Cadence UFS
-Date: Thu, 1 Aug 2019 12:58:11 +0000
-Message-ID: <MN2PR07MB6045F10BED4B8B14B7180021A8DE0@MN2PR07MB6045.namprd07.prod.outlook.com>
-References: <20190731083614.25926-1-aniljoy@cadence.com>
- <77210067-ee65-4c12-9c7e-2b78260acdef@ti.com>
+From: Anil Varughese <aniljoy@cadence.com>
+Subject: [PATCH v2] scsi: ufs: Configure clock in .hce_enable_notify() in Cadence UFS
+Date: Fri, 2 Aug 2019 12:21:12 +0100
+Message-ID: <20190802112112.18714-1-aniljoy@cadence.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <77210067-ee65-4c12-9c7e-2b78260acdef@ti.com>
-Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Vignesh Raghavendra <vigneshr@ti.com>, "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>, "avri.altman@wdc.com" <avri.altman@wdc.com>, "pedrom.sousa@synopsys.com" <pedrom.sousa@synopsys.com>
-Cc: "jejb@linux.ibm.com" <jejb@linux.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "hare@suse.de" <hare@suse.de>, Rafal Ciepiela <rafalc@cadence.com>, Milind Parab <mparab@cadence.com>, Jan Kotas <jank@cadence.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: alim.akhtar@samsung.com, avri.altman@wdc.com, pedrom.sousa@synopsys.com
+Cc: jejb@linux.ibm.com, martin.petersen@oracle.com, hare@suse.de, aniljoy@cadence.com, rafalc@cadence.com, mparab@cadence.com, jank@cadence.com, pawell@cadence.com, vigneshr@ti.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-SGkgVmlnbmVzaCwNCg0KWW91IGFyZSBjb3JyZWN0IEkgaGF2ZSB0ZXN0ZWQgdGhlIGNvZGUgaGVy
-ZSBhbmQgLnNldHVwX2Nsb2NrIGlzIG5vdCBuZWVkZWQgYW55bW9yZTsgQ0ROU19VRlNfUkVHX0hD
-TEtESVYgY29uZmlndXJlZCBpbiAuaGNlX2VuYWJsZV9ub3RpZnkoKSBpcyBlbm91Z2guIEkgd2ls
-bCBmaXggdGhpcyBpbiBwYXRjaCB2Mi4gDQoNClRoYW5rcywNCkFuaWwNCg0KLS0tLS1PcmlnaW5h
-bCBNZXNzYWdlLS0tLS0NCkZyb206IFZpZ25lc2ggUmFnaGF2ZW5kcmEgPHZpZ25lc2hyQHRpLmNv
-bT4gDQpTZW50OiBXZWRuZXNkYXksIEp1bHkgMzEsIDIwMTkgMTA6MDUgUE0NClRvOiBBbmlsIEpv
-eSBWYXJ1Z2hlc2UgPGFuaWxqb3lAY2FkZW5jZS5jb20+OyBhbGltLmFraHRhckBzYW1zdW5nLmNv
-bTsgYXZyaS5hbHRtYW5Ad2RjLmNvbTsgcGVkcm9tLnNvdXNhQHN5bm9wc3lzLmNvbQ0KQ2M6IGpl
-amJAbGludXguaWJtLmNvbTsgbWFydGluLnBldGVyc2VuQG9yYWNsZS5jb207IGhhcmVAc3VzZS5k
-ZTsgUmFmYWwgQ2llcGllbGEgPHJhZmFsY0BjYWRlbmNlLmNvbT47IE1pbGluZCBQYXJhYiA8bXBh
-cmFiQGNhZGVuY2UuY29tPjsgSmFuIEtvdGFzIDxqYW5rQGNhZGVuY2UuY29tPjsgbGludXgtc2Nz
-aUB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmcNClN1YmplY3Q6
-IFJlOiBbUEFUQ0hdIHNjc2k6IHVmczogQWRkaXRpb25hbCBjbG9jayBpbml0aWFsaXphdGlvbiBp
-biBDYWRlbmNlIFVGUw0KDQpFWFRFUk5BTCBNQUlMDQoNCg0KSGksDQoNCk9uIDMxLUp1bC0xOSAy
-OjA2IFBNLCBBbmlsIFZhcnVnaGVzZSB3cm90ZToNCj4gQ29uZmlndXJlIENETlNfVUZTX1JFR19I
-Q0xLRElWIGluIC5oY2VfZW5hYmxlX25vdGlmeSgpIGJlY2F1c2UgaWYgDQo+IFVGU0hDRCByZXNl
-dHMgdGhlIGNvbnRyb2xsZXIgaXAgYmVjYXVzZSBvZiBwaHkgb3IgZGV2aWNlIHJlbGF0ZWQgDQo+
-IGVycm9ycyB0aGVuIENETlNfVUZTX1JFR19IQ0xLRElWIGlzIHJlc2V0IHRvIGRlZmF1bHQgdmFs
-dWUgYW5kIA0KPiAuc2V0dXBfY2xvY2soKSBpcyBub3QgY2FsbGVkIGxhdGVyIGluIHRoZSBzZXF1
-ZW5jZSB3aGVyZWFzIA0KPiBoY2VfZW5hYmxlX25vdGlmeSB3aWxsIGJlIGNhbGxlZCBldmVyeXRp
-bWUgY29udHJvbGxlciBpcyByZWVuYWJsZWQuDQo+DQpTbywgbm93IHRoYXQgQ0ROU19VRlNfUkVH
-X0hDTEtESVYgaXMgY29uZmlndXJlZCBpbiAuaGNlX2VuYWJsZV9ub3RpZnkoKSwgaXMgaXQgc3Rp
-bGwgcmVxdWlyZWQgdG8gaGF2ZSB0aGUgc2FtZSBjb2RlIGluIC5zZXR1cF9jbG9jaygpIGFzIHdl
-bGw/DQpJc24ndCBzZXR0aW5nIHVwIENETlNfVUZTX1JFR19IQ0xLRElWIGluIC5oY2VfZW5hYmxl
-X25vdGlmeSgpIGFsb25lIG5vdCBzdWZmaWNpZW50Pw0KDQpSZWdhcmRzDQpWaWduZXNoDQoNCj4g
-U2lnbmVkLW9mZi1ieTogQW5pbCBWYXJ1Z2hlc2UgPGFuaWxqb3lAY2FkZW5jZS5jb20+DQo+IC0t
-LQ0KPiAgZHJpdmVycy9zY3NpL3Vmcy9jZG5zLXBsdGZybS5jIHwgMTggKysrKysrKysrKysrKysr
-KysrDQo+ICAxIGZpbGUgY2hhbmdlZCwgMTggaW5zZXJ0aW9ucygrKQ0KPiANCj4gZGlmZiAtLWdp
-dCBhL2RyaXZlcnMvc2NzaS91ZnMvY2Rucy1wbHRmcm0uYyANCj4gYi9kcml2ZXJzL3Njc2kvdWZz
-L2NkbnMtcGx0ZnJtLmMgaW5kZXggODZkYmI3MjNmLi4xNWVlNTRkMjggMTAwNjQ0DQo+IC0tLSBh
-L2RyaXZlcnMvc2NzaS91ZnMvY2Rucy1wbHRmcm0uYw0KPiArKysgYi9kcml2ZXJzL3Njc2kvdWZz
-L2NkbnMtcGx0ZnJtLmMNCj4gQEAgLTc4LDYgKzc4LDIyIEBAIHN0YXRpYyBpbnQgY2Ruc191ZnNf
-c2V0dXBfY2xvY2tzKHN0cnVjdCB1ZnNfaGJhICpoYmEsIGJvb2wgb24sDQo+ICAJcmV0dXJuIGNk
-bnNfdWZzX3NldF9oY2xrZGl2KGhiYSk7DQo+ICB9DQo+ICANCj4gKy8qKg0KPiArICogQ2FsbGVk
-IGJlZm9yZSBhbmQgYWZ0ZXIgSENFIGVuYWJsZSBiaXQgaXMgc2V0Lg0KPiArICogQGhiYTogaG9z
-dCBjb250cm9sbGVyIGluc3RhbmNlDQo+ICsgKiBAc3RhdHVzOiBub3RpZnkgc3RhZ2UgKHByZSwg
-cG9zdCBjaGFuZ2UpDQo+ICsgKg0KPiArICogUmV0dXJuIHplcm8gZm9yIHN1Y2Nlc3MgYW5kIG5v
-bi16ZXJvIGZvciBmYWlsdXJlICAqLyBzdGF0aWMgaW50IA0KPiArY2Ruc191ZnNfaGNlX2VuYWJs
-ZV9ub3RpZnkoc3RydWN0IHVmc19oYmEgKmhiYSwNCj4gKwkJCQkgICAgICBlbnVtIHVmc19ub3Rp
-ZnlfY2hhbmdlX3N0YXR1cyBzdGF0dXMpIHsNCj4gKwlpZiAoc3RhdHVzICE9IFBSRV9DSEFOR0Up
-DQo+ICsJCXJldHVybiAwOw0KPiArDQo+ICsJcmV0dXJuIGNkbnNfdWZzX3NldF9oY2xrZGl2KGhi
-YSk7DQo+ICt9DQo+ICsNCj4gIC8qKg0KPiAgICogY2Ruc191ZnNfaW5pdCAtIHBlcmZvcm1zIGFk
-ZGl0aW9uYWwgdWZzIGluaXRpYWxpemF0aW9uDQo+ICAgKiBAaGJhOiBob3N0IGNvbnRyb2xsZXIg
-aW5zdGFuY2UNCj4gQEAgLTExNSwxMiArMTMxLDE0IEBAIHN0YXRpYyBpbnQgDQo+IGNkbnNfdWZz
-X20zMV8xNm5tX3BoeV9pbml0aWFsaXphdGlvbihzdHJ1Y3QgdWZzX2hiYSAqaGJhKSAgc3RhdGlj
-IGNvbnN0IHN0cnVjdCB1ZnNfaGJhX3ZhcmlhbnRfb3BzIGNkbnNfdWZzX3BsdGZtX2hiYV92b3Bz
-ID0gew0KPiAgCS5uYW1lID0gImNkbnMtdWZzLXBsdGZtIiwNCj4gIAkuc2V0dXBfY2xvY2tzID0g
-Y2Ruc191ZnNfc2V0dXBfY2xvY2tzLA0KPiArCS5oY2VfZW5hYmxlX25vdGlmeSA9IGNkbnNfdWZz
-X2hjZV9lbmFibGVfbm90aWZ5LA0KPiAgfTsNCj4gIA0KPiAgc3RhdGljIGNvbnN0IHN0cnVjdCB1
-ZnNfaGJhX3ZhcmlhbnRfb3BzIGNkbnNfdWZzX20zMV8xNm5tX3BsdGZtX2hiYV92b3BzID0gew0K
-PiAgCS5uYW1lID0gImNkbnMtdWZzLXBsdGZtIiwNCj4gIAkuaW5pdCA9IGNkbnNfdWZzX2luaXQs
-DQo+ICAJLnNldHVwX2Nsb2NrcyA9IGNkbnNfdWZzX3NldHVwX2Nsb2NrcywNCj4gKwkuaGNlX2Vu
-YWJsZV9ub3RpZnkgPSBjZG5zX3Vmc19oY2VfZW5hYmxlX25vdGlmeSwNCj4gIAkucGh5X2luaXRp
-YWxpemF0aW9uID0gY2Ruc191ZnNfbTMxXzE2bm1fcGh5X2luaXRpYWxpemF0aW9uLA0KPiAgfTsN
-Cj4gIA0KPiANCg==
+Configure CDNS_UFS_REG_HCLKDIV in .hce_enable_notify() instead of
+.setup_clock() because if UFSHCD resets the controller ip because
+of phy or device related errors then CDNS_UFS_REG_HCLKDIV is
+reset to default value and .setup_clock() is not called later
+in the sequence whereas .hce_enable_notify will be called everytime
+controller is reenabled.
+
+Signed-off-by: Anil Varughese <aniljoy@cadence.com>
+---
+ drivers/scsi/ufs/cdns-pltfrm.c | 13 ++++++-------
+ 1 file changed, 6 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/scsi/ufs/cdns-pltfrm.c b/drivers/scsi/ufs/cdns-pltfrm.c
+index 86dbb723f..993519080 100644
+--- a/drivers/scsi/ufs/cdns-pltfrm.c
++++ b/drivers/scsi/ufs/cdns-pltfrm.c
+@@ -62,17 +62,16 @@ static int cdns_ufs_set_hclkdiv(struct ufs_hba *hba)
+ }
+ 
+ /**
+- * Sets clocks used by the controller
++ * Called before and after HCE enable bit is set.
+  * @hba: host controller instance
+- * @on: if true, enable clocks, otherwise disable
+  * @status: notify stage (pre, post change)
+  *
+  * Return zero for success and non-zero for failure
+  */
+-static int cdns_ufs_setup_clocks(struct ufs_hba *hba, bool on,
+-				 enum ufs_notify_change_status status)
++static int cdns_ufs_hce_enable_notify(struct ufs_hba *hba,
++				      enum ufs_notify_change_status status)
+ {
+-	if ((!on) || (status == PRE_CHANGE))
++	if (status != PRE_CHANGE)
+ 		return 0;
+ 
+ 	return cdns_ufs_set_hclkdiv(hba);
+@@ -114,13 +113,13 @@ static int cdns_ufs_m31_16nm_phy_initialization(struct ufs_hba *hba)
+ 
+ static const struct ufs_hba_variant_ops cdns_ufs_pltfm_hba_vops = {
+ 	.name = "cdns-ufs-pltfm",
+-	.setup_clocks = cdns_ufs_setup_clocks,
++	.hce_enable_notify = cdns_ufs_hce_enable_notify,
+ };
+ 
+ static const struct ufs_hba_variant_ops cdns_ufs_m31_16nm_pltfm_hba_vops = {
+ 	.name = "cdns-ufs-pltfm",
+ 	.init = cdns_ufs_init,
+-	.setup_clocks = cdns_ufs_setup_clocks,
++	.hce_enable_notify = cdns_ufs_hce_enable_notify,
+ 	.phy_initialization = cdns_ufs_m31_16nm_phy_initialization,
+ };
+ 
+-- 
+2.15.0
