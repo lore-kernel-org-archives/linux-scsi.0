@@ -1,13 +1,13 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.9 19/22] scsi: ibmvfc: fix WARN_ON during event pool release
-Date: Fri,  2 Aug 2019 09:25:43 -0400
-Message-ID: <20190802132547.14517-19-sashal@kernel.org>
-References: <20190802132547.14517-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 35/42] scsi: ibmvfc: fix WARN_ON during event pool release
+Date: Fri,  2 Aug 2019 09:22:55 -0400
+Message-ID: <20190802132302.13537-35-sashal@kernel.org>
+References: <20190802132302.13537-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20190802132547.14517-1-sashal@kernel.org>
-Sender: stable-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190802132302.13537-1-sashal@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>, Abdul Haleem <abdhalee@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
 List-Id: linux-scsi@vger.kernel.org
@@ -66,10 +66,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
-index 7e487c78279cb..54dea767dfde9 100644
+index b64ca977825df..71d53bb239e25 100644
 --- a/drivers/scsi/ibmvscsi/ibmvfc.c
 +++ b/drivers/scsi/ibmvscsi/ibmvfc.c
-@@ -4883,8 +4883,8 @@ static int ibmvfc_remove(struct vio_dev *vdev)
+@@ -4874,8 +4874,8 @@ static int ibmvfc_remove(struct vio_dev *vdev)
  
  	spin_lock_irqsave(vhost->host->host_lock, flags);
  	ibmvfc_purge_requests(vhost, DID_ERROR);
