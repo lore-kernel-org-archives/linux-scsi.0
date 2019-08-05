@@ -1,54 +1,82 @@
-From: Chuhong Yuan <hslester96@gmail.com>
-Subject: Re: [PATCH] scsi: 3w-sas: Fix unterminated strncpy
-Date: Mon, 5 Aug 2019 14:22:38 +0800
-Message-ID: <CANhBUQ0KD9YqYWT-m7q-7FcqAwRstVPzh_s2rRmCCjwQYcivBQ@mail.gmail.com>
-References: <20190730084047.26482-1-hslester96@gmail.com> <1564498597.4300.10.camel@linux.ibm.com>
+From: Vignesh Raghavendra <vigneshr@ti.com>
+Subject: Re: [PATCH v2] scsi: ufs: Configure clock in .hce_enable_notify() in
+ Cadence UFS
+Date: Mon, 5 Aug 2019 13:32:14 +0530
+Message-ID: <86985e8d-2aa8-5583-f899-925191f2041d@ti.com>
+References: <20190802112112.18714-1-aniljoy@cadence.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1564498597.4300.10.camel@linux.ibm.com>
+In-Reply-To: <20190802112112.18714-1-aniljoy@cadence.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <jejb@linux.ibm.com>
-Cc: Adam Radford <aradford@gmail.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Anil Varughese <aniljoy@cadence.com>, alim.akhtar@samsung.com, avri.altman@wdc.com, pedrom.sousa@synopsys.com
+Cc: jejb@linux.ibm.com, martin.petersen@oracle.com, hare@suse.de, rafalc@cadence.com, mparab@cadence.com, jank@cadence.com, pawell@cadence.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Jul 30, 2019 at 10:56 PM James Bottomley <jejb@linux.ibm.com> wrote:
->
-> On Tue, 2019-07-30 at 16:40 +0800, Chuhong Yuan wrote:
-> > strncpy(dest, src, strlen(src)) leads to unterminated
-> > dest, which is dangerous.
->
-> I don't buy that.  The structure is only used for the
-> TW_IOCTL_GET_COMPATIBILITY_INFO ioctl and all the fields for that are
-> fixed width and are copied over as such.
->
-> > Here driver_version's len is 32 and TW_DRIVER_VERSION
-> > is shorter than 32.
-> > Therefore strcpy is OK.
->
-> The best practice for copying a string to a fixed width destination
-> that does get printed within the kernel would be what the 3w-9xxx.c
-> does
->
->         strlcpy(tw_dev->tw_compat_info.driver_version, TW_DRIVER_VERSION,
->                 sizeof(tw_dev->tw_compat_info.driver_version));
->
+Hi,
 
-This is right, and strscpy() is better than strlcpy(). strlcpy() is deprecated
-now according to the documentation.
-I choose strcpy() since it has better performance and there is no worry of
-overflow here. And I find there are indeed some places using strcpy() to fix
-this problem, like add_man_viewer() in tools/perf/builtin-help.c.
+On 02/08/19 4:51 PM, Anil Varughese wrote:
+> Configure CDNS_UFS_REG_HCLKDIV in .hce_enable_notify() instead of
+> .setup_clock() because if UFSHCD resets the controller ip because
+> of phy or device related errors then CDNS_UFS_REG_HCLKDIV is
+> reset to default value and .setup_clock() is not called later
+> in the sequence whereas .hce_enable_notify will be called everytime
+> controller is reenabled.
+> 
+> Signed-off-by: Anil Varughese <aniljoy@cadence.com>
+> ---
 
-> But as I said, it doesn't really matter for a fixed width field that's
-> never printed within the kernel.
->
+Reviewed-by: Vignesh Raghavendra <vigneshr@ti.com>
 
-I think it is not good to leave a exploitable place here, and fixing it does not
-need much effort.
+>  drivers/scsi/ufs/cdns-pltfrm.c | 13 ++++++-------
+>  1 file changed, 6 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/scsi/ufs/cdns-pltfrm.c b/drivers/scsi/ufs/cdns-pltfrm.c
+> index 86dbb723f..993519080 100644
+> --- a/drivers/scsi/ufs/cdns-pltfrm.c
+> +++ b/drivers/scsi/ufs/cdns-pltfrm.c
+> @@ -62,17 +62,16 @@ static int cdns_ufs_set_hclkdiv(struct ufs_hba *hba)
+>  }
+>  
+>  /**
+> - * Sets clocks used by the controller
+> + * Called before and after HCE enable bit is set.
+>   * @hba: host controller instance
+> - * @on: if true, enable clocks, otherwise disable
+>   * @status: notify stage (pre, post change)
+>   *
+>   * Return zero for success and non-zero for failure
+>   */
+> -static int cdns_ufs_setup_clocks(struct ufs_hba *hba, bool on,
+> -				 enum ufs_notify_change_status status)
+> +static int cdns_ufs_hce_enable_notify(struct ufs_hba *hba,
+> +				      enum ufs_notify_change_status status)
+>  {
+> -	if ((!on) || (status == PRE_CHANGE))
+> +	if (status != PRE_CHANGE)
+>  		return 0;
+>  
+>  	return cdns_ufs_set_hclkdiv(hba);
+> @@ -114,13 +113,13 @@ static int cdns_ufs_m31_16nm_phy_initialization(struct ufs_hba *hba)
+>  
+>  static const struct ufs_hba_variant_ops cdns_ufs_pltfm_hba_vops = {
+>  	.name = "cdns-ufs-pltfm",
+> -	.setup_clocks = cdns_ufs_setup_clocks,
+> +	.hce_enable_notify = cdns_ufs_hce_enable_notify,
+>  };
+>  
+>  static const struct ufs_hba_variant_ops cdns_ufs_m31_16nm_pltfm_hba_vops = {
+>  	.name = "cdns-ufs-pltfm",
+>  	.init = cdns_ufs_init,
+> -	.setup_clocks = cdns_ufs_setup_clocks,
+> +	.hce_enable_notify = cdns_ufs_hce_enable_notify,
+>  	.phy_initialization = cdns_ufs_m31_16nm_phy_initialization,
+>  };
+>  
+> 
 
-Regards,
-Chuhong
-
-> James
->
+-- 
+Regards
+Vignesh
