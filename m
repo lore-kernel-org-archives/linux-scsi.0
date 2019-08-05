@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 09/15] scsi: hisi_sas: Drop kmap_atomic() in SMP command completion
-Date: Mon, 5 Aug 2019 21:48:06 +0800
-Message-ID: <1565012892-75940-10-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 12/15] scsi: hisi_sas: Modify return type of debugfs functions
+Date: Mon, 5 Aug 2019 21:48:09 +0800
+Message-ID: <1565012892-75940-13-git-send-email-john.garry@huawei.com>
 References: <1565012892-75940-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -9,92 +9,157 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1565012892-75940-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linuxarm@huawei.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, John Garry <john.garry@huawei.com>
+Cc: linuxarm@huawei.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Luo Jiaxing <luojiaxing@huawei.com>, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-The call to kmap_atomic() in the SMP command completion code is
-unnecessary, since kmap() is only really concerned with highmem, which is
-not relevant on arm64. The controller only finds itself in arm64 systems.
+From: Luo Jiaxing <luojiaxing@huawei.com>
 
+For functions which always return 0, which is never checked, make to return
+void.
+
+Signed-off-by: Luo Jiaxing <luojiaxing@huawei.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 4 +---
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 4 +---
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 4 +---
- 3 files changed, 3 insertions(+), 9 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 51 ++++++++++-----------------
+ 1 file changed, 18 insertions(+), 33 deletions(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-index b13cbc64d2a9..015bf00a20e6 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-@@ -1275,11 +1275,10 @@ static int slot_complete_v1_hw(struct hisi_hba *hisi_hba,
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index a2255701b50b..be15280343d1 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -2956,8 +2956,8 @@ static const struct file_operations hisi_sas_debugfs_port_fops = {
+ 	.owner = THIS_MODULE,
+ };
+ 
+-static int hisi_sas_show_row_64(struct seq_file *s, int index,
+-				int sz, __le64 *ptr)
++static void hisi_sas_show_row_64(struct seq_file *s, int index,
++				 int sz, __le64 *ptr)
+ {
+ 	int i;
+ 
+@@ -2970,12 +2970,10 @@ static int hisi_sas_show_row_64(struct seq_file *s, int index,
  	}
- 	case SAS_PROTOCOL_SMP:
- 	{
--		void *to;
- 		struct scatterlist *sg_resp = &task->smp_task.smp_resp;
-+		void *to = page_address(sg_page(sg_resp));
  
- 		ts->stat = SAM_STAT_GOOD;
--		to = kmap_atomic(sg_page(sg_resp));
+ 	seq_puts(s, "\n");
+-
+-	return 0;
+ }
  
- 		dma_unmap_sg(dev, &task->smp_task.smp_resp, 1,
- 			     DMA_FROM_DEVICE);
-@@ -1289,7 +1288,6 @@ static int slot_complete_v1_hw(struct hisi_hba *hisi_hba,
- 		       hisi_sas_status_buf_addr_mem(slot) +
- 		       sizeof(struct hisi_sas_err_record),
- 		       sg_dma_len(sg_resp));
--		kunmap_atomic(to);
- 		break;
+-static int hisi_sas_show_row_32(struct seq_file *s, int index,
+-				int sz, __le32 *ptr)
++static void hisi_sas_show_row_32(struct seq_file *s, int index,
++				 int sz, __le32 *ptr)
+ {
+ 	int i;
+ 
+@@ -2987,11 +2985,9 @@ static int hisi_sas_show_row_32(struct seq_file *s, int index,
+ 			seq_puts(s, "\n\t");
  	}
- 	case SAS_PROTOCOL_SATA:
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index de33e31cd88a..c3cf3b77c655 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -2419,10 +2419,9 @@ slot_complete_v2_hw(struct hisi_hba *hisi_hba, struct hisi_sas_slot *slot)
- 	case SAS_PROTOCOL_SMP:
- 	{
- 		struct scatterlist *sg_resp = &task->smp_task.smp_resp;
--		void *to;
-+		void *to = page_address(sg_page(sg_resp));
+ 	seq_puts(s, "\n");
+-
+-	return 0;
+ }
  
- 		ts->stat = SAM_STAT_GOOD;
--		to = kmap_atomic(sg_page(sg_resp));
+-static int hisi_sas_cq_show_slot(struct seq_file *s, int slot, void *cq_ptr)
++static void hisi_sas_cq_show_slot(struct seq_file *s, int slot, void *cq_ptr)
+ {
+ 	struct hisi_sas_cq *cq = cq_ptr;
+ 	struct hisi_hba *hisi_hba = cq->hisi_hba;
+@@ -2999,20 +2995,18 @@ static int hisi_sas_cq_show_slot(struct seq_file *s, int slot, void *cq_ptr)
+ 	__le32 *complete_hdr = complete_queue +
+ 			(hisi_hba->hw->complete_hdr_size * slot);
  
- 		dma_unmap_sg(dev, &task->smp_task.smp_resp, 1,
- 			     DMA_FROM_DEVICE);
-@@ -2432,7 +2431,6 @@ slot_complete_v2_hw(struct hisi_hba *hisi_hba, struct hisi_sas_slot *slot)
- 		       hisi_sas_status_buf_addr_mem(slot) +
- 		       sizeof(struct hisi_sas_err_record),
- 		       sg_dma_len(sg_resp));
--		kunmap_atomic(to);
- 		break;
+-	return hisi_sas_show_row_32(s, slot,
+-				hisi_hba->hw->complete_hdr_size,
+-				complete_hdr);
++	hisi_sas_show_row_32(s, slot,
++			     hisi_hba->hw->complete_hdr_size,
++			     complete_hdr);
+ }
+ 
+ static int hisi_sas_debugfs_cq_show(struct seq_file *s, void *p)
+ {
+ 	struct hisi_sas_cq *cq = s->private;
+-	int slot, ret;
++	int slot;
+ 
+ 	for (slot = 0; slot < HISI_SAS_QUEUE_SLOTS; slot++) {
+-		ret = hisi_sas_cq_show_slot(s, slot, cq);
+-		if (ret)
+-			return ret;
++		hisi_sas_cq_show_slot(s, slot, cq);
  	}
- 	case SAS_PROTOCOL_SATA:
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 072a39d5c4ad..fcb2ef5f24b9 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -2211,10 +2211,9 @@ slot_complete_v3_hw(struct hisi_hba *hisi_hba, struct hisi_sas_slot *slot)
- 	}
- 	case SAS_PROTOCOL_SMP: {
- 		struct scatterlist *sg_resp = &task->smp_task.smp_resp;
--		void *to;
-+		void *to = page_address(sg_page(sg_resp));
+ 	return 0;
+ }
+@@ -3030,7 +3024,7 @@ static const struct file_operations hisi_sas_debugfs_cq_fops = {
+ 	.owner = THIS_MODULE,
+ };
  
- 		ts->stat = SAM_STAT_GOOD;
--		to = kmap_atomic(sg_page(sg_resp));
+-static int hisi_sas_dq_show_slot(struct seq_file *s, int slot, void *dq_ptr)
++static void hisi_sas_dq_show_slot(struct seq_file *s, int slot, void *dq_ptr)
+ {
+ 	struct hisi_sas_dq *dq = dq_ptr;
+ 	struct hisi_hba *hisi_hba = dq->hisi_hba;
+@@ -3038,18 +3032,15 @@ static int hisi_sas_dq_show_slot(struct seq_file *s, int slot, void *dq_ptr)
+ 	__le32 *cmd_hdr = cmd_queue +
+ 		sizeof(struct hisi_sas_cmd_hdr) * slot;
  
- 		dma_unmap_sg(dev, &task->smp_task.smp_resp, 1,
- 			     DMA_FROM_DEVICE);
-@@ -2224,7 +2223,6 @@ slot_complete_v3_hw(struct hisi_hba *hisi_hba, struct hisi_sas_slot *slot)
- 			hisi_sas_status_buf_addr_mem(slot) +
- 		       sizeof(struct hisi_sas_err_record),
- 		       sg_dma_len(sg_resp));
--		kunmap_atomic(to);
- 		break;
+-	return hisi_sas_show_row_32(s, slot, sizeof(struct hisi_sas_cmd_hdr),
+-				    cmd_hdr);
++	hisi_sas_show_row_32(s, slot, sizeof(struct hisi_sas_cmd_hdr), cmd_hdr);
+ }
+ 
+ static int hisi_sas_debugfs_dq_show(struct seq_file *s, void *p)
+ {
+-	int slot, ret;
++	int slot;
+ 
+ 	for (slot = 0; slot < HISI_SAS_QUEUE_SLOTS; slot++) {
+-		ret = hisi_sas_dq_show_slot(s, slot, s->private);
+-		if (ret)
+-			return ret;
++		hisi_sas_dq_show_slot(s, slot, s->private);
  	}
- 	case SAS_PROTOCOL_SATA:
+ 	return 0;
+ }
+@@ -3071,15 +3062,12 @@ static int hisi_sas_debugfs_iost_show(struct seq_file *s, void *p)
+ {
+ 	struct hisi_hba *hisi_hba = s->private;
+ 	struct hisi_sas_iost *debugfs_iost = hisi_hba->debugfs_iost;
+-	int i, ret, max_command_entries = HISI_SAS_MAX_COMMANDS;
++	int i, max_command_entries = HISI_SAS_MAX_COMMANDS;
+ 
+ 	for (i = 0; i < max_command_entries; i++, debugfs_iost++) {
+ 		__le64 *iost = &debugfs_iost->qw0;
+ 
+-		ret = hisi_sas_show_row_64(s, i, sizeof(*debugfs_iost),
+-					   iost);
+-		if (ret)
+-			return ret;
++		hisi_sas_show_row_64(s, i, sizeof(*debugfs_iost), iost);
+ 	}
+ 
+ 	return 0;
+@@ -3140,17 +3128,14 @@ static const struct file_operations hisi_sas_debugfs_iost_cache_fops = {
+ 
+ static int hisi_sas_debugfs_itct_show(struct seq_file *s, void *p)
+ {
+-	int i, ret;
++	int i;
+ 	struct hisi_hba *hisi_hba = s->private;
+ 	struct hisi_sas_itct *debugfs_itct = hisi_hba->debugfs_itct;
+ 
+ 	for (i = 0; i < HISI_SAS_MAX_ITCT_ENTRIES; i++, debugfs_itct++) {
+ 		__le64 *itct = &debugfs_itct->qw0;
+ 
+-		ret = hisi_sas_show_row_64(s, i, sizeof(*debugfs_itct),
+-					   itct);
+-		if (ret)
+-			return ret;
++		hisi_sas_show_row_64(s, i, sizeof(*debugfs_itct), itct);
+ 	}
+ 
+ 	return 0;
 -- 
 2.17.1
