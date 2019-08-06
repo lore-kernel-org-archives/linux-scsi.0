@@ -1,58 +1,28 @@
-From: Qian Cai <cai@lca.pw>
-Subject: Re: [PATCH] scsi/megaraid_sas: fix a compilation warning
-Date: Mon, 5 Aug 2019 23:27:32 -0400
-Message-ID: <B961A6AE-2377-406C-891D-4363DCD9827C@lca.pw>
-References: <1564151143-22889-1-git-send-email-cai@lca.pw>
-Mime-Version: 1.0 (Mac OS X Mail 12.4 \(3445.104.11\))
-Content-Type: text/plain;
-        charset=us-ascii
-Content-Transfer-Encoding: quoted-printable
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] block: Remove request_queue argument from
+ blk_execute_rq_nowait
+Date: Tue, 6 Aug 2019 07:19:11 +0200
+Message-ID: <20190806051911.GA13409@lst.de>
+References: <20190806011754.7722-1-marcos.souza.org@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1564151143-22889-1-git-send-email-cai@lca.pw>
+Content-Disposition: inline
+In-Reply-To: <20190806011754.7722-1-marcos.souza.org@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: martin.petersen@oracle.com
-Cc: jejb@linux.ibm.com, Kashyap Desai <kashyap.desai@broadcom.com>, Sumit Saxena <sumit.saxena@broadcom.com>, shivasharan.srikanteshwara@broadcom.com, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Marcos Paulo de Souza <marcos.souza.org@gmail.com>
+Cc: linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Doug Gilbert <dgilbert@interlog.com>, Kai =?iso-8859-1?Q?M=E4kisara?= <Kai.Makisara@kolumbus.fi>, Hannes Reinecke <hare@suse.com>, Omar Sandoval <osandov@fb.com>, Ming Lei <ming.lei@redhat.com>, Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>, Damien Le Moal <damien.lemoal@wdc.com>, Bart Van Assche <bvanassche@acm.org>, "open list:BLOCK LAYER" <linux-block@vger.kernel.org>, "open list:NVM EXPRESS DRIVER" <linux-nvme@lists.infradead.org>, "open list:SCSI SUBSYSTEM" <linux-scsi@vger.kernel.org>open list:SCS
 List-Id: linux-scsi@vger.kernel.org
 
-Ping. Please take a look at this trivial patch.
+On Mon, Aug 05, 2019 at 10:17:51PM -0300, Marcos Paulo de Souza wrote:
+> +void blk_execute_rq_nowait(struct gendisk *bd_disk, struct request *rq,
+> +			int at_head, rq_end_io_fn *done)
 
-> On Jul 26, 2019, at 10:25 AM, Qian Cai <cai@lca.pw> wrote:
->=20
-> The commit de516379e85f ("scsi: megaraid_sas: changes to function
-> prototypes") introduced a comilation warning due to it changed the
-> function prototype of read_fw_status_reg() to take an instance pointer
-> instead, but forgot to remove an unused variable.
->=20
-> drivers/scsi/megaraid/megaraid_sas_fusion.c: In function
-> 'megasas_fusion_update_can_queue':
-> drivers/scsi/megaraid/megaraid_sas_fusion.c:326:39: warning: variable
-> 'reg_set' set but not used [-Wunused-but-set-variable]
->  struct megasas_register_set __iomem *reg_set;
->                                       ^~~~~~~
-> Fixes: de516379e85f ("scsi: megaraid_sas: changes to function =
-prototypes")
-> Signed-off-by: Qian Cai <cai@lca.pw>
-> ---
-> drivers/scsi/megaraid/megaraid_sas_fusion.c | 3 ---
-> 1 file changed, 3 deletions(-)
->=20
-> diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c =
-b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> index a32b3f0fcd15..e8092d59d575 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> @@ -323,9 +323,6 @@ inline void megasas_return_cmd_fusion(struct =
-megasas_instance *instance,
-> {
-> 	u16 cur_max_fw_cmds =3D 0;
-> 	u16 ldio_threshold =3D 0;
-> -	struct megasas_register_set __iomem *reg_set;
-> -
-> -	reg_set =3D instance->reg_set;
->=20
-> 	/* ventura FW does not fill outbound_scratch_pad_2 with queue =
-depth */
-> 	if (instance->adapter_type < VENTURA_SERIES)
-> --=20
-> 1.8.3.1
->=20
+We store a ->rq_disk in struct request, so we should also not need
+that.  And at_head should either become a bool, or be replaced with
+a flags argument, ints used boolean are usually not a good idea.
+
+> @@ -81,7 +80,7 @@ void blk_execute_rq(struct request_queue *q, struct gendisk *bd_disk,
+
+And all the same argument changes that apply to blk_execute_rq_nowait
+apply to blk_execute_rq as well.
