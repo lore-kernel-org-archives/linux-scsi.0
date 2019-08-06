@@ -1,274 +1,211 @@
-From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 02/15] scsi: hisi_sas: Drop hisi_sas_hw.get_free_slot
-Date: Mon, 5 Aug 2019 21:47:59 +0800
-Message-ID: <1565012892-75940-3-git-send-email-john.garry@huawei.com>
-References: <1565012892-75940-1-git-send-email-john.garry@huawei.com>
+From: Marcos Paulo de Souza <marcos.souza.org@gmail.com>
+Subject: [PATCH] block: Remove request_queue argument from blk_execute_rq_nowait
+Date: Mon,  5 Aug 2019 22:17:51 -0300
+Message-ID: <20190806011754.7722-1-marcos.souza.org@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1565012892-75940-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linuxarm@huawei.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, John Garry <john.garry@huawei.com>
+To: linux-kernel@vger.kernel.org
+Cc: Marcos Paulo de Souza <marcos.souza.org@gmail.com>, Jens Axboe <axboe@kernel.dk>, Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Doug Gilbert <dgilbert@interlog.com>, =?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>, Hannes Reinecke <hare@suse.com>, Omar Sandoval <osandov@fb.com>, Ming Lei <ming.lei@redhat.com>, Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>, Damien Le Moal <damien.lemoal@wdc.com>, Bart Van Assche <bvanassche@acm.org>, "open list:BLOCK LAYER" <linux-block@vger.kernel.org>, "open list:NVM EXPRESS DRIVER" <linux-nvme@lists.infradead.org>, "open list:SCSI SUBSYSTEM" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-In commit 1273d65f29045 ("scsi: hisi_sas: change queue depth from 512 to
-4096"), the depth of each queue is the same as the max IPTT in the
-system.
+Commit a1ce35fa4985 ("block: remove dead elevator code") removed code
+that was using the request_queue argument. This got simplified by
+calling blk_mq_sched_insert_request which already gets the request_queue
+from the request being inserted in the scheduler queue for execution.
 
-As such, as long as we have an IPTT allocated, we will have enough space
-on any delivery queue.
-
-All .get_free_slot functions were checking for space on the queue by
-reading the DQ read pointer. Drop this, and also raise the code into
-common code, as there is nothing hw specific remaining.
-
-Signed-off-by: John Garry <john.garry@huawei.com>
+Signed-off-by: Marcos Paulo de Souza <marcos.souza.org@gmail.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas.h       |  1 -
- drivers/scsi/hisi_sas/hisi_sas_main.c  | 27 ++++++---------------
- drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 32 -------------------------
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 26 --------------------
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 33 --------------------------
- 5 files changed, 7 insertions(+), 112 deletions(-)
+ block/blk-exec.c                   | 7 +++----
+ drivers/block/sx8.c                | 4 ++--
+ drivers/nvme/host/core.c           | 4 ++--
+ drivers/nvme/host/lightnvm.c       | 2 +-
+ drivers/nvme/host/pci.c            | 7 +++----
+ drivers/scsi/scsi_error.c          | 2 +-
+ drivers/scsi/sg.c                  | 3 +--
+ drivers/scsi/st.c                  | 2 +-
+ drivers/target/target_core_pscsi.c | 5 ++---
+ include/linux/blkdev.h             | 4 ++--
+ 10 files changed, 18 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index 1fa3e53e857d..c1b56b482a23 100644
---- a/drivers/scsi/hisi_sas/hisi_sas.h
-+++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -260,7 +260,6 @@ struct hisi_sas_hw {
- 				struct domain_device *device);
- 	struct hisi_sas_device *(*alloc_dev)(struct domain_device *device);
- 	void (*sl_notify_ssp)(struct hisi_hba *hisi_hba, int phy_no);
--	int (*get_free_slot)(struct hisi_hba *hisi_hba, struct hisi_sas_dq *dq);
- 	void (*start_delivery)(struct hisi_sas_dq *dq);
- 	void (*prep_ssp)(struct hisi_hba *hisi_hba,
- 			struct hisi_sas_slot *slot);
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 94c7c2b48b17..54bbab7151c7 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -519,13 +519,8 @@ static int hisi_sas_task_prep(struct sas_task *task,
- 	slot = &hisi_hba->slot_info[slot_idx];
+diff --git a/block/blk-exec.c b/block/blk-exec.c
+index 1db44ca0f4a6..dc9f37f2602f 100644
+--- a/block/blk-exec.c
++++ b/block/blk-exec.c
+@@ -45,9 +45,8 @@ static void blk_end_sync_rq(struct request *rq, blk_status_t error)
+  * Note:
+  *    This function will invoke @done directly if the queue is dead.
+  */
+-void blk_execute_rq_nowait(struct request_queue *q, struct gendisk *bd_disk,
+-			   struct request *rq, int at_head,
+-			   rq_end_io_fn *done)
++void blk_execute_rq_nowait(struct gendisk *bd_disk, struct request *rq,
++			int at_head, rq_end_io_fn *done)
+ {
+ 	WARN_ON(irqs_disabled());
+ 	WARN_ON(!blk_rq_is_passthrough(rq));
+@@ -81,7 +80,7 @@ void blk_execute_rq(struct request_queue *q, struct gendisk *bd_disk,
+ 	unsigned long hang_check;
  
- 	spin_lock_irqsave(&dq->lock, flags);
--	wr_q_index = hisi_hba->hw->get_free_slot(hisi_hba, dq);
--	if (wr_q_index < 0) {
--		spin_unlock_irqrestore(&dq->lock, flags);
--		rc = -EAGAIN;
--		goto err_out_tag;
--	}
--
-+	wr_q_index = dq->wr_point;
-+	dq->wr_point = (dq->wr_point + 1) % HISI_SAS_QUEUE_SLOTS;
- 	list_add_tail(&slot->delivery, &dq->list);
- 	spin_unlock_irqrestore(&dq->lock, flags);
- 	spin_lock_irqsave(&sas_dev->lock, flags);
-@@ -579,8 +574,6 @@ static int hisi_sas_task_prep(struct sas_task *task,
+ 	rq->end_io_data = &wait;
+-	blk_execute_rq_nowait(q, bd_disk, rq, at_head, blk_end_sync_rq);
++	blk_execute_rq_nowait(bd_disk, rq, at_head, blk_end_sync_rq);
+ 
+ 	/* Prevent hang_check timer from firing at us during very long I/O */
+ 	hang_check = sysctl_hung_task_timeout_secs;
+diff --git a/drivers/block/sx8.c b/drivers/block/sx8.c
+index 4478eb7efee0..2cdf2771f8e8 100644
+--- a/drivers/block/sx8.c
++++ b/drivers/block/sx8.c
+@@ -539,7 +539,7 @@ static int carm_array_info (struct carm_host *host, unsigned int array_idx)
+ 	spin_unlock_irq(&host->lock);
+ 
+ 	DPRINTK("blk_execute_rq_nowait, tag == %u\n", rq->tag);
+-	blk_execute_rq_nowait(host->oob_q, NULL, rq, true, NULL);
++	blk_execute_rq_nowait(NULL, rq, true, NULL);
  
  	return 0;
  
--err_out_tag:
--	hisi_sas_slot_index_free(hisi_hba, slot_idx);
- err_out_dif_dma_unmap:
- 	if (!sas_protocol_ata(task->task_proto))
- 		hisi_sas_dif_dma_unmap(hisi_hba, task, n_elem_dif);
-@@ -1963,7 +1956,7 @@ hisi_sas_internal_abort_task_exec(struct hisi_hba *hisi_hba, int device_id,
- 	struct asd_sas_port *sas_port = device->port;
- 	struct hisi_sas_cmd_hdr *cmd_hdr_base;
- 	int dlvry_queue_slot, dlvry_queue, n_elem = 0, rc, slot_idx;
--	unsigned long flags, flags_dq = 0;
-+	unsigned long flags;
- 	int wr_q_index;
+@@ -578,7 +578,7 @@ static int carm_send_special (struct carm_host *host, carm_sspc_t func)
+ 	crq->msg_bucket = (u32) rc;
  
- 	if (unlikely(test_bit(HISI_SAS_REJECT_CMD_BIT, &hisi_hba->flags)))
-@@ -1982,15 +1975,11 @@ hisi_sas_internal_abort_task_exec(struct hisi_hba *hisi_hba, int device_id,
- 	slot_idx = rc;
- 	slot = &hisi_hba->slot_info[slot_idx];
+ 	DPRINTK("blk_execute_rq_nowait, tag == %u\n", rq->tag);
+-	blk_execute_rq_nowait(host->oob_q, NULL, rq, true, NULL);
++	blk_execute_rq_nowait(NULL, rq, true, NULL);
  
--	spin_lock_irqsave(&dq->lock, flags_dq);
--	wr_q_index = hisi_hba->hw->get_free_slot(hisi_hba, dq);
--	if (wr_q_index < 0) {
--		spin_unlock_irqrestore(&dq->lock, flags_dq);
--		rc = -EAGAIN;
--		goto err_out_tag;
--	}
-+	spin_lock_irqsave(&dq->lock, flags);
-+	wr_q_index = dq->wr_point;
-+	dq->wr_point = (dq->wr_point + 1) % HISI_SAS_QUEUE_SLOTS;
- 	list_add_tail(&slot->delivery, &dq->list);
--	spin_unlock_irqrestore(&dq->lock, flags_dq);
-+	spin_unlock_irqrestore(&dq->lock, flags);
- 	spin_lock_irqsave(&sas_dev->lock, flags);
- 	list_add_tail(&slot->entry, &sas_dev->list);
- 	spin_unlock_irqrestore(&sas_dev->lock, flags);
-@@ -2027,8 +2016,6 @@ hisi_sas_internal_abort_task_exec(struct hisi_hba *hisi_hba, int device_id,
+ 	return 0;
+ }
+diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
+index 8f3fbe5ca937..6682fdcece0f 100644
+--- a/drivers/nvme/host/core.c
++++ b/drivers/nvme/host/core.c
+@@ -756,7 +756,7 @@ static void nvme_execute_rq_polled(struct request_queue *q,
+ 
+ 	rq->cmd_flags |= REQ_HIPRI;
+ 	rq->end_io_data = &wait;
+-	blk_execute_rq_nowait(q, bd_disk, rq, at_head, nvme_end_sync_rq);
++	blk_execute_rq_nowait(bd_disk, rq, at_head, nvme_end_sync_rq);
+ 
+ 	while (!completion_done(&wait)) {
+ 		blk_poll(q, request_to_qc_t(rq->mq_hctx, rq), true);
+@@ -941,7 +941,7 @@ static int nvme_keep_alive(struct nvme_ctrl *ctrl)
+ 	rq->timeout = ctrl->kato * HZ;
+ 	rq->end_io_data = ctrl;
+ 
+-	blk_execute_rq_nowait(rq->q, NULL, rq, 0, nvme_keep_alive_end_io);
++	blk_execute_rq_nowait(NULL, rq, 0, nvme_keep_alive_end_io);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/nvme/host/lightnvm.c b/drivers/nvme/host/lightnvm.c
+index ba009d4c9dfa..5d0e330e86d0 100644
+--- a/drivers/nvme/host/lightnvm.c
++++ b/drivers/nvme/host/lightnvm.c
+@@ -685,7 +685,7 @@ static int nvme_nvm_submit_io(struct nvm_dev *dev, struct nvm_rq *rqd)
+ 
+ 	rq->end_io_data = rqd;
+ 
+-	blk_execute_rq_nowait(q, NULL, rq, 0, nvme_nvm_end_io);
++	blk_execute_rq_nowait(NULL, rq, 0, nvme_nvm_end_io);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
+index db160cee42ad..d8f83696b4ba 100644
+--- a/drivers/nvme/host/pci.c
++++ b/drivers/nvme/host/pci.c
+@@ -1332,7 +1332,7 @@ static enum blk_eh_timer_return nvme_timeout(struct request *req, bool reserved)
+ 
+ 	abort_req->timeout = ADMIN_TIMEOUT;
+ 	abort_req->end_io_data = NULL;
+-	blk_execute_rq_nowait(abort_req->q, NULL, abort_req, 0, abort_endio);
++	blk_execute_rq_nowait(NULL, abort_req, 0, abort_endio);
+ 
+ 	/*
+ 	 * The aborted req will be completed on receiving the abort req.
+@@ -2205,9 +2205,8 @@ static int nvme_delete_queue(struct nvme_queue *nvmeq, u8 opcode)
+ 	req->end_io_data = nvmeq;
+ 
+ 	init_completion(&nvmeq->delete_done);
+-	blk_execute_rq_nowait(q, NULL, req, false,
+-			opcode == nvme_admin_delete_cq ?
+-				nvme_del_cq_end : nvme_del_queue_end);
++	blk_execute_rq_nowait(NULL, req, false,
++			      opcode == nvme_admin_delete_cq ? nvme_del_cq_end : nvme_del_queue_end);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 1c470e31ae81..49cda23c7fb8 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -1988,7 +1988,7 @@ static void scsi_eh_lock_door(struct scsi_device *sdev)
+ 	req->timeout = 10 * HZ;
+ 	rq->retries = 5;
+ 
+-	blk_execute_rq_nowait(req->q, NULL, req, 1, eh_lock_door_done);
++	blk_execute_rq_nowait(NULL, req, 1, eh_lock_door_done);
+ }
+ 
+ /**
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index cce757506383..81ece3ed0474 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -835,8 +835,7 @@ sg_common_write(Sg_fd * sfp, Sg_request * srp,
+ 
+ 	srp->rq->timeout = timeout;
+ 	kref_get(&sfp->f_ref); /* sg_rq_end_io() does kref_put(). */
+-	blk_execute_rq_nowait(sdp->device->request_queue, sdp->disk,
+-			      srp->rq, at_head, sg_rq_end_io);
++	blk_execute_rq_nowait(sdp->disk, srp->rq, at_head, sg_rq_end_io);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
+index e3266a64a477..3b828f260294 100644
+--- a/drivers/scsi/st.c
++++ b/drivers/scsi/st.c
+@@ -583,7 +583,7 @@ static int st_scsi_execute(struct st_request *SRpnt, const unsigned char *cmd,
+ 	rq->retries = retries;
+ 	req->end_io_data = SRpnt;
+ 
+-	blk_execute_rq_nowait(req->q, NULL, req, 1, st_scsi_execute_end);
++	blk_execute_rq_nowait(NULL, req, 1, st_scsi_execute_end);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
+index c9d92b3e777d..021212569d1b 100644
+--- a/drivers/target/target_core_pscsi.c
++++ b/drivers/target/target_core_pscsi.c
+@@ -1000,9 +1000,8 @@ pscsi_execute_cmd(struct se_cmd *cmd)
+ 		req->timeout = PS_TIMEOUT_OTHER;
+ 	scsi_req(req)->retries = PS_RETRY;
+ 
+-	blk_execute_rq_nowait(pdv->pdv_sd->request_queue, NULL, req,
+-			(cmd->sam_task_attr == TCM_HEAD_TAG),
+-			pscsi_req_done);
++	blk_execute_rq_nowait(NULL, req, (cmd->sam_task_attr == TCM_HEAD_TAG),
++			      pscsi_req_done);
  
  	return 0;
  
--err_out_tag:
--	hisi_sas_slot_index_free(hisi_hba, slot_idx);
- err_out:
- 	dev_err(dev, "internal abort task prep: failed[%d]!\n", rc);
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 1ef375dafb1c..8e8f088c75a5 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -867,8 +867,8 @@ extern int blk_rq_map_user_iov(struct request_queue *, struct request *,
+ 			       gfp_t);
+ extern void blk_execute_rq(struct request_queue *, struct gendisk *,
+ 			  struct request *, int);
+-extern void blk_execute_rq_nowait(struct request_queue *, struct gendisk *,
+-				  struct request *, int, rq_end_io_fn *);
++extern void blk_execute_rq_nowait(struct gendisk *, struct request *, int,
++				rq_end_io_fn *);
  
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-index afdbaccbbc5e..b13cbc64d2a9 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-@@ -416,13 +416,6 @@ static u32 hisi_sas_read32(struct hisi_hba *hisi_hba, u32 off)
- 	return readl(regs);
- }
- 
--static u32 hisi_sas_read32_relaxed(struct hisi_hba *hisi_hba, u32 off)
--{
--	void __iomem *regs = hisi_hba->regs + off;
--
--	return readl_relaxed(regs);
--}
--
- static void hisi_sas_write32(struct hisi_hba *hisi_hba,
- 				    u32 off, u32 val)
- {
-@@ -864,30 +857,6 @@ static int get_wideport_bitmap_v1_hw(struct hisi_hba *hisi_hba, int port_id)
- 	return bitmap;
- }
- 
--/*
-- * The callpath to this function and upto writing the write
-- * queue pointer should be safe from interruption.
-- */
--static int
--get_free_slot_v1_hw(struct hisi_hba *hisi_hba, struct hisi_sas_dq *dq)
--{
--	struct device *dev = hisi_hba->dev;
--	int queue = dq->id;
--	u32 r, w;
--
--	w = dq->wr_point;
--	r = hisi_sas_read32_relaxed(hisi_hba,
--				DLVRY_Q_0_RD_PTR + (queue * 0x14));
--	if (r == (w+1) % HISI_SAS_QUEUE_SLOTS) {
--		dev_warn(dev, "could not find free slot\n");
--		return -EAGAIN;
--	}
--
--	dq->wr_point = (dq->wr_point + 1) % HISI_SAS_QUEUE_SLOTS;
--
--	return w;
--}
--
- /* DQ lock must be taken here */
- static void start_delivery_v1_hw(struct hisi_sas_dq *dq)
- {
-@@ -1818,7 +1787,6 @@ static const struct hisi_sas_hw hisi_sas_v1_hw = {
- 	.clear_itct = clear_itct_v1_hw,
- 	.prep_smp = prep_smp_v1_hw,
- 	.prep_ssp = prep_ssp_v1_hw,
--	.get_free_slot = get_free_slot_v1_hw,
- 	.start_delivery = start_delivery_v1_hw,
- 	.slot_complete = slot_complete_v1_hw,
- 	.phys_init = phys_init_v1_hw,
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index fc98bd9e5588..de33e31cd88a 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -1637,31 +1637,6 @@ static int get_wideport_bitmap_v2_hw(struct hisi_hba *hisi_hba, int port_id)
- 	return bitmap;
- }
- 
--/*
-- * The callpath to this function and upto writing the write
-- * queue pointer should be safe from interruption.
-- */
--static int
--get_free_slot_v2_hw(struct hisi_hba *hisi_hba, struct hisi_sas_dq *dq)
--{
--	struct device *dev = hisi_hba->dev;
--	int queue = dq->id;
--	u32 r, w;
--
--	w = dq->wr_point;
--	r = hisi_sas_read32_relaxed(hisi_hba,
--				DLVRY_Q_0_RD_PTR + (queue * 0x14));
--	if (r == (w+1) % HISI_SAS_QUEUE_SLOTS) {
--		dev_warn(dev, "full queue=%d r=%d w=%d\n",
--				queue, r, w);
--		return -EAGAIN;
--	}
--
--	dq->wr_point = (dq->wr_point + 1) % HISI_SAS_QUEUE_SLOTS;
--
--	return w;
--}
--
- /* DQ lock must be taken here */
- static void start_delivery_v2_hw(struct hisi_sas_dq *dq)
- {
-@@ -3606,7 +3581,6 @@ static const struct hisi_sas_hw hisi_sas_v2_hw = {
- 	.prep_ssp = prep_ssp_v2_hw,
- 	.prep_stp = prep_ata_v2_hw,
- 	.prep_abort = prep_abort_v2_hw,
--	.get_free_slot = get_free_slot_v2_hw,
- 	.start_delivery = start_delivery_v2_hw,
- 	.slot_complete = slot_complete_v2_hw,
- 	.phys_init = phys_init_v2_hw,
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 0171cdb4da81..b99abc788487 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -499,13 +499,6 @@ static u32 hisi_sas_read32(struct hisi_hba *hisi_hba, u32 off)
- 	return readl(regs);
- }
- 
--static u32 hisi_sas_read32_relaxed(struct hisi_hba *hisi_hba, u32 off)
--{
--	void __iomem *regs = hisi_hba->regs + off;
--
--	return readl_relaxed(regs);
--}
--
- static void hisi_sas_write32(struct hisi_hba *hisi_hba, u32 off, u32 val)
- {
- 	void __iomem *regs = hisi_hba->regs + off;
-@@ -1006,31 +999,6 @@ static int get_wideport_bitmap_v3_hw(struct hisi_hba *hisi_hba, int port_id)
- 	return bitmap;
- }
- 
--/**
-- * The callpath to this function and upto writing the write
-- * queue pointer should be safe from interruption.
-- */
--static int
--get_free_slot_v3_hw(struct hisi_hba *hisi_hba, struct hisi_sas_dq *dq)
--{
--	struct device *dev = hisi_hba->dev;
--	int queue = dq->id;
--	u32 r, w;
--
--	w = dq->wr_point;
--	r = hisi_sas_read32_relaxed(hisi_hba,
--				DLVRY_Q_0_RD_PTR + (queue * 0x14));
--	if (r == (w+1) % HISI_SAS_QUEUE_SLOTS) {
--		dev_warn(dev, "full queue=%d r=%d w=%d\n",
--			 queue, r, w);
--		return -EAGAIN;
--	}
--
--	dq->wr_point = (dq->wr_point + 1) % HISI_SAS_QUEUE_SLOTS;
--
--	return w;
--}
--
- static void start_delivery_v3_hw(struct hisi_sas_dq *dq)
- {
- 	struct hisi_hba *hisi_hba = dq->hisi_hba;
-@@ -2943,7 +2911,6 @@ static const struct hisi_sas_hw hisi_sas_v3_hw = {
- 	.prep_smp = prep_smp_v3_hw,
- 	.prep_stp = prep_ata_v3_hw,
- 	.prep_abort = prep_abort_v3_hw,
--	.get_free_slot = get_free_slot_v3_hw,
- 	.start_delivery = start_delivery_v3_hw,
- 	.slot_complete = slot_complete_v3_hw,
- 	.phys_init = phys_init_v3_hw,
+ /* Helper to convert REQ_OP_XXX to its string format XXX */
+ extern const char *blk_op_str(unsigned int op);
 -- 
-2.17.1
+2.22.0
