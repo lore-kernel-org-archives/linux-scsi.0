@@ -1,121 +1,164 @@
-From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: [PATCH] scsi: fas216: Mark expected switch fall-throughs
-Date: Tue, 6 Aug 2019 03:29:02 -0500
-Message-ID: <20190806082902.GA11122@embeddedor>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] lpfc: Fix Buffer Overflow Error
+Date: Tue, 6 Aug 2019 11:25:19 +0200
+Message-ID: <a8b38655-018e-4bc7-0dbf-792f72cbc8b6@suse.de>
+References: <1562948135-5533-1-git-send-email-kmahlkuc@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <1562948135-5533-1-git-send-email-kmahlkuc@linux.vnet.ibm.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Russell King <linux@armlinux.org.uk>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-arm-kernel@lists.infradead.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+To: KyleMahlkuch <kmahlkuc@linux.vnet.ibm.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Mark switch cases where we are expecting to fall through.
+On 7/12/19 6:15 PM, KyleMahlkuch wrote:
+> Power and x86 have different page sizes so rather than allocate the
+> buffer based on number of pages we should allocate space by using
+> max_sectors. There is also code in lpfc_scsi.c to be sure we don't
+> write past the end of this buffer.
+> 
+> Signed-off-by: KyleMahlkuch <kmahlkuc@linux.vnet.ibm.com>
+> ---
+>  drivers/scsi/lpfc/lpfc_init.c | 41 +++++++----------------------------------
+>  drivers/scsi/lpfc/lpfc_scsi.c | 14 ++++++++++++--
+>  2 files changed, 19 insertions(+), 36 deletions(-)
+> 
+> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+> index eaaef68..59b52a0 100644
+> --- a/drivers/scsi/lpfc/lpfc_init.c
+> +++ b/drivers/scsi/lpfc/lpfc_init.c
+> @@ -39,6 +39,7 @@
+>  #include <linux/msi.h>
+>  #include <linux/irq.h>
+>  #include <linux/bitops.h>
+> +#include <linux/vmalloc.h>
+>  
+>  #include <scsi/scsi.h>
+>  #include <scsi/scsi_device.h>
+> @@ -7549,7 +7550,6 @@ struct lpfc_rpi_hdr *
+>  	uint32_t old_mask;
+>  	uint32_t old_guard;
+>  
+> -	int pagecnt = 10;
+>  	if (phba->cfg_prot_mask && phba->cfg_prot_guard) {
+>  		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+>  				"1478 Registering BlockGuard with the "
+> @@ -7588,23 +7588,9 @@ struct lpfc_rpi_hdr *
+>  	}
+>  
+>  	if (!_dump_buf_data) {
+> -		while (pagecnt) {
+> -			spin_lock_init(&_dump_buf_lock);
+> -			_dump_buf_data =
+> -				(char *) __get_free_pages(GFP_KERNEL, pagecnt);
+> -			if (_dump_buf_data) {
+> -				lpfc_printf_log(phba, KERN_ERR, LOG_BG,
+> -					"9043 BLKGRD: allocated %d pages for "
+> -				       "_dump_buf_data at 0x%p\n",
+> -				       (1 << pagecnt), _dump_buf_data);
+> -				_dump_buf_data_order = pagecnt;
+> -				memset(_dump_buf_data, 0,
+> -				       ((1 << PAGE_SHIFT) << pagecnt));
+> -				break;
+> -			} else
+> -				--pagecnt;
+> -		}
+> -		if (!_dump_buf_data_order)
+> +		_dump_buf_data = (char *) vmalloc(shost->hostt->max_sectors * 512);
+> +		_dump_buf_data_order = get_order(shost->hostt->max_sectors * 512);
+> +		if (!_dump_buf_data)
+>  			lpfc_printf_log(phba, KERN_ERR, LOG_BG,
+>  				"9044 BLKGRD: ERROR unable to allocate "
+>  			       "memory for hexdump\n");
+> @@ -7613,22 +7599,9 @@ struct lpfc_rpi_hdr *
+>  			"9045 BLKGRD: already allocated _dump_buf_data=0x%p"
+>  		       "\n", _dump_buf_data);
+>  	if (!_dump_buf_dif) {
+> -		while (pagecnt) {
+> -			_dump_buf_dif =
+> -				(char *) __get_free_pages(GFP_KERNEL, pagecnt);
+> -			if (_dump_buf_dif) {
+> -				lpfc_printf_log(phba, KERN_ERR, LOG_BG,
+> -					"9046 BLKGRD: allocated %d pages for "
+> -				       "_dump_buf_dif at 0x%p\n",
+> -				       (1 << pagecnt), _dump_buf_dif);
+> -				_dump_buf_dif_order = pagecnt;
+> -				memset(_dump_buf_dif, 0,
+> -				       ((1 << PAGE_SHIFT) << pagecnt));
+> -				break;
+> -			} else
+> -				--pagecnt;
+> -		}
+> -		if (!_dump_buf_dif_order)
+> +		_dump_buf_dif = (char *) vmalloc(shost->hostt->max_sectors * 512);
+> +		_dump_buf_dif_order = get_order(shost->hostt->max_sectors * 512);
+> +		if (!_dump_buf_dif)
+>  			lpfc_printf_log(phba, KERN_ERR, LOG_BG,
+>  			"9047 BLKGRD: ERROR unable to allocate "
+>  			       "memory for hexdump\n");
+> diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+> index ba996fb..719612d 100644
+> --- a/drivers/scsi/lpfc/lpfc_scsi.c
+> +++ b/drivers/scsi/lpfc/lpfc_scsi.c
+> @@ -92,7 +92,7 @@ struct scsi_dif_tuple {
+>  static void
+>  lpfc_debug_save_data(struct lpfc_hba *phba, struct scsi_cmnd *cmnd)
+>  {
+> -	void *src, *dst;
+> +	void *src, *dst, *end;
+>  	struct scatterlist *sgde = scsi_sglist(cmnd);
+>  
+>  	if (!_dump_buf_data) {
+> @@ -110,7 +110,12 @@ struct scsi_dif_tuple {
+>  	}
+>  
+>  	dst = (void *) _dump_buf_data;
+> +	end = ((char *) dst) + ((1 << PAGE_SHIFT) << _dump_buf_data_order);
+>  	while (sgde) {
+> +		if (dst + sgde->length >= end) {
+> +			printk(KERN_ERR "overflow buffer\n");
+> +			break;
+> +		}
+>  		src = sg_virt(sgde);
+>  		memcpy(dst, src, sgde->length);
+>  		dst += sgde->length;
+> @@ -121,7 +126,7 @@ struct scsi_dif_tuple {
+>  static void
+>  lpfc_debug_save_dif(struct lpfc_hba *phba, struct scsi_cmnd *cmnd)
+>  {
+> -	void *src, *dst;
+> +	void *src, *dst, *end;
+>  	struct scatterlist *sgde = scsi_prot_sglist(cmnd);
+>  
+>  	if (!_dump_buf_dif) {
+> @@ -138,7 +143,12 @@ struct scsi_dif_tuple {
+>  	}
+>  
+>  	dst = _dump_buf_dif;
+> +	end = ((char *) dst) + ((1 << PAGE_SHIFT) << _dump_buf_dif_order);
+>  	while (sgde) {
+> +		if (dst + sgde->length >= end) {
+> +			printk(KERN_ERR "overflow buffer\n");
+> +			break;
+> +		}
+>  		src = sg_virt(sgde);
+>  		memcpy(dst, src, sgde->length);
+>  		dst += sgde->length;
+> 
+Not sure this is correct.
+vmalloc() is not equivalent to __get_pages().
 
-Fix the following warnings (Building: rpc_defconfig arm):
+I would rather start off with the fixed buffer size (say, 40k), and
+calculate the values like pagecnt etc from there.
 
-drivers/scsi/arm/fas216.c: In function ‘fas216_disconnect_intr’:
-drivers/scsi/arm/fas216.c:913:6: warning: this statement may fall through [-Wimplicit-fallthrough=]
-   if (fas216_get_last_msg(info, info->scsi.msgin_fifo) == ABORT) {
-      ^
-drivers/scsi/arm/fas216.c:919:2: note: here
-  default:    /* huh?     */
-  ^~~~~~~
-drivers/scsi/arm/fas216.c: In function ‘fas216_kick’:
-drivers/scsi/arm/fas216.c:1959:3: warning: this statement may fall through [-Wimplicit-fallthrough=]
-   fas216_allocate_tag(info, SCpnt);
-   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-drivers/scsi/arm/fas216.c:1960:2: note: here
-  case TYPE_OTHER:
-  ^~~~
-drivers/scsi/arm/fas216.c: In function ‘fas216_busservice_intr’:
-drivers/scsi/arm/fas216.c:1413:3: warning: this statement may fall through [-Wimplicit-fallthrough=]
-   fas216_stoptransfer(info);
-   ^~~~~~~~~~~~~~~~~~~~~~~~~
-drivers/scsi/arm/fas216.c:1414:2: note: here
-  case STATE(STAT_STATUS, PHASE_SELSTEPS):/* Sel w/ steps -> Status       */
-  ^~~~
-drivers/scsi/arm/fas216.c:1424:3: warning: this statement may fall through [-Wimplicit-fallthrough=]
-   fas216_stoptransfer(info);
-   ^~~~~~~~~~~~~~~~~~~~~~~~~
-drivers/scsi/arm/fas216.c:1425:2: note: here
-  case STATE(STAT_MESGIN, PHASE_COMMAND): /* Command -> Message In */
-  ^~~~
-drivers/scsi/arm/fas216.c: In function ‘fas216_funcdone_intr’:
-drivers/scsi/arm/fas216.c:1573:6: warning: this statement may fall through [-Wimplicit-fallthrough=]
-   if ((stat & STAT_BUSMASK) == STAT_MESGIN) {
-      ^
-drivers/scsi/arm/fas216.c:1579:2: note: here
-  default:
-  ^~~~~~~
-drivers/scsi/arm/fas216.c: In function ‘fas216_handlesync’:
-drivers/scsi/arm/fas216.c:605:20: warning: this statement may fall through [-Wimplicit-fallthrough=]
-   info->scsi.phase = PHASE_MSGOUT_EXPECT;
-   ~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
-drivers/scsi/arm/fas216.c:607:2: note: here
-  case async:
-  ^~~~
+Cheers,
 
-Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
----
- drivers/scsi/arm/fas216.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
-
-diff --git a/drivers/scsi/arm/fas216.c b/drivers/scsi/arm/fas216.c
-index aea4fd73c862..6c68c2303638 100644
---- a/drivers/scsi/arm/fas216.c
-+++ b/drivers/scsi/arm/fas216.c
-@@ -603,6 +603,7 @@ static void fas216_handlesync(FAS216_Info *info, char *msg)
- 		msgqueue_flush(&info->scsi.msgs);
- 		msgqueue_addmsg(&info->scsi.msgs, 1, MESSAGE_REJECT);
- 		info->scsi.phase = PHASE_MSGOUT_EXPECT;
-+		/* fall through */
- 
- 	case async:
- 		dev->period = info->ifcfg.asyncperiod / 4;
-@@ -915,6 +916,7 @@ static void fas216_disconnect_intr(FAS216_Info *info)
- 			fas216_done(info, DID_ABORT);
- 			break;
- 		}
-+		/* else, fall through */
- 
- 	default:				/* huh?					*/
- 		printk(KERN_ERR "scsi%d.%c: unexpected disconnect in phase %s\n",
-@@ -1411,6 +1413,8 @@ static void fas216_busservice_intr(FAS216_Info *info, unsigned int stat, unsigne
- 	case STATE(STAT_STATUS, PHASE_DATAOUT): /* Data Out     -> Status       */
- 	case STATE(STAT_STATUS, PHASE_DATAIN):  /* Data In      -> Status       */
- 		fas216_stoptransfer(info);
-+		/* fall through */
-+
- 	case STATE(STAT_STATUS, PHASE_SELSTEPS):/* Sel w/ steps -> Status       */
- 	case STATE(STAT_STATUS, PHASE_MSGOUT):  /* Message Out  -> Status       */
- 	case STATE(STAT_STATUS, PHASE_COMMAND): /* Command      -> Status       */
-@@ -1422,6 +1426,8 @@ static void fas216_busservice_intr(FAS216_Info *info, unsigned int stat, unsigne
- 	case STATE(STAT_MESGIN, PHASE_DATAOUT): /* Data Out     -> Message In   */
- 	case STATE(STAT_MESGIN, PHASE_DATAIN):  /* Data In      -> Message In   */
- 		fas216_stoptransfer(info);
-+		/* fall through */
-+
- 	case STATE(STAT_MESGIN, PHASE_COMMAND):	/* Command	-> Message In	*/
- 	case STATE(STAT_MESGIN, PHASE_SELSTEPS):/* Sel w/ steps -> Message In   */
- 	case STATE(STAT_MESGIN, PHASE_MSGOUT):  /* Message Out  -> Message In   */
-@@ -1575,6 +1581,7 @@ static void fas216_funcdone_intr(FAS216_Info *info, unsigned int stat, unsigned
- 			fas216_message(info);
- 			break;
- 		}
-+		/* else, fall through */
- 
- 	default:
- 		fas216_log(info, 0, "internal phase %s for function done?"
-@@ -1957,6 +1964,7 @@ static void fas216_kick(FAS216_Info *info)
- 	switch (where_from) {
- 	case TYPE_QUEUE:
- 		fas216_allocate_tag(info, SCpnt);
-+		/* fall through */
- 	case TYPE_OTHER:
- 		fas216_start_command(info, SCpnt);
- 		break;
+Hannes
 -- 
-2.22.0
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Mary Higgins, Sri Rasiah
+HRB 21284 (AG Nürnberg)
