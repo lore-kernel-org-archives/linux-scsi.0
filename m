@@ -1,35 +1,50 @@
-From: Marcos Paulo de Souza <marcos.souza.org@gmail.com>
-Subject: Re: [PATCH] block: Remove request_queue argument from
- blk_execute_rq_nowait
-Date: Tue, 6 Aug 2019 07:24:56 -0300
-Message-ID: <20190806102456.GA29914@continental>
-References: <20190806011754.7722-1-marcos.souza.org@gmail.com>
- <20190806051911.GA13409@lst.de>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: Re: [PATCH] scsi: snic: remove redundant assignment to variable ret
+Date: Tue, 6 Aug 2019 16:17:21 +0300
+Message-ID: <20190806131721.GI1974@kadam>
+References: <20190731224950.16818-1-colin.king@canonical.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20190806051911.GA13409@lst.de>
+In-Reply-To: <20190731224950.16818-1-colin.king@canonical.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Keith Busch <kbusch@kernel.org>, Sagi Grimberg <sagi@grimberg.me>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Doug Gilbert <dgilbert@interlog.com>, Kai =?iso-8859-1?Q?M=E4kisara?= <Kai.Makisara@kolumbus.fi>, Hannes Reinecke <hare@suse.com>, Omar Sandoval <osandov@fb.com>, Ming Lei <ming.lei@redhat.com>, Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>, Damien Le Moal <damien.lemoal@wdc.com>, Bart Van Assche <bvanassche@acm.org>, "open list:BLOCK LAYER" <linux-block@vger.kernel.org>, "open list:NVM EXPRESS DRIVER" <linux-nvme@lists.infradead.org>, "open list:SCSI SUBSYSTEM" <linux-scsi@vger.kernel.org>, "open list:SCSI TARGET SUBSYSTEM" <target-devel@vger.k>
+To: Colin King <colin.king@canonical.com>
+Cc: Karan Tilak Kumar <kartilak@cisco.com>, Sesidhar Baddela <sebaddel@cisco.com>, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Aug 06, 2019 at 07:19:11AM +0200, Christoph Hellwig wrote:
-> On Mon, Aug 05, 2019 at 10:17:51PM -0300, Marcos Paulo de Souza wrote:
-> > +void blk_execute_rq_nowait(struct gendisk *bd_disk, struct request *rq,
-> > +			int at_head, rq_end_io_fn *done)
+On Wed, Jul 31, 2019 at 11:49:50PM +0100, Colin King wrote:
+> From: Colin Ian King <colin.king@canonical.com>
 > 
-> We store a ->rq_disk in struct request, so we should also not need
-> that.  And at_head should either become a bool, or be replaced with
-> a flags argument, ints used boolean are usually not a good idea.
-
-Makes sense.
-
+> Variable ret is being assigned with a value that is never read as
+> there is return statement immediately afterwards.  The assignment
+> is redundant and hence can be removed.
 > 
-> > @@ -81,7 +80,7 @@ void blk_execute_rq(struct request_queue *q, struct gendisk *bd_disk,
+> Addresses-Coverity: ("Unused value")
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> ---
+>  drivers/scsi/snic/snic_disc.c | 2 --
+>  1 file changed, 2 deletions(-)
 > 
-> And all the same argument changes that apply to blk_execute_rq_nowait
-> apply to blk_execute_rq as well.
+> diff --git a/drivers/scsi/snic/snic_disc.c b/drivers/scsi/snic/snic_disc.c
+> index e9ccfb97773f..d89c75991323 100644
+> --- a/drivers/scsi/snic/snic_disc.c
+> +++ b/drivers/scsi/snic/snic_disc.c
+> @@ -261,8 +261,6 @@ snic_tgt_create(struct snic *snic, struct snic_tgt_id *tgtid)
+>  	tgt = kzalloc(sizeof(*tgt), GFP_KERNEL);
+>  	if (!tgt) {
+>  		SNIC_HOST_ERR(snic->shost, "Failure to allocate snic_tgt.\n");
+> -		ret = -ENOMEM;
+> -
+>  		return tgt;
 
-Thanks for the suggestions, I will send a v2 soon.
+Not related to this patch, but it would be nicer to return NULL instead
+of tgt.  It's the same but the literal is nicer.  No need for the error
+message after a kmalloc failure either.
+
+	tgt = kzalloc(sizeof(*tgt), GFP_KERNEL);
+	if (!tgt)
+		return NULL;
+
+regards,
+dan carpenter
