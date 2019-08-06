@@ -1,50 +1,69 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: Re: [PATCH] scsi: snic: remove redundant assignment to variable ret
-Date: Tue, 6 Aug 2019 16:17:21 +0300
-Message-ID: <20190806131721.GI1974@kadam>
-References: <20190731224950.16818-1-colin.king@canonical.com>
+From: Sasha Levin <sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.2 25/59] scsi: hpsa: correct scsi command status issue after reset
+Date: Tue,  6 Aug 2019 17:32:45 -0400
+Message-ID: <20190806213319.19203-25-sashal@kernel.org>
+References: <20190806213319.19203-1-sashal@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20190731224950.16818-1-colin.king@canonical.com>
+In-Reply-To: <20190806213319.19203-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Colin King <colin.king@canonical.com>
-Cc: Karan Tilak Kumar <kartilak@cisco.com>, Sesidhar Baddela <sebaddel@cisco.com>, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc: Don Brace <don.brace@microsemi.com>, Bader Ali - Saleh <bader.alisaleh@microsemi.com>, Scott Teel <scott.teel@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, Kevin Barnett <kevin.barnett@microsemi.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Sasha Levin <sashal@kernel.org>, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Jul 31, 2019 at 11:49:50PM +0100, Colin King wrote:
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> Variable ret is being assigned with a value that is never read as
-> there is return statement immediately afterwards.  The assignment
-> is redundant and hence can be removed.
-> 
-> Addresses-Coverity: ("Unused value")
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> ---
->  drivers/scsi/snic/snic_disc.c | 2 --
->  1 file changed, 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/snic/snic_disc.c b/drivers/scsi/snic/snic_disc.c
-> index e9ccfb97773f..d89c75991323 100644
-> --- a/drivers/scsi/snic/snic_disc.c
-> +++ b/drivers/scsi/snic/snic_disc.c
-> @@ -261,8 +261,6 @@ snic_tgt_create(struct snic *snic, struct snic_tgt_id *tgtid)
->  	tgt = kzalloc(sizeof(*tgt), GFP_KERNEL);
->  	if (!tgt) {
->  		SNIC_HOST_ERR(snic->shost, "Failure to allocate snic_tgt.\n");
-> -		ret = -ENOMEM;
-> -
->  		return tgt;
+From: Don Brace <don.brace@microsemi.com>
 
-Not related to this patch, but it would be nicer to return NULL instead
-of tgt.  It's the same but the literal is nicer.  No need for the error
-message after a kmalloc failure either.
+[ Upstream commit eeebce1862970653cdf5c01e98bc669edd8f529a ]
 
-	tgt = kzalloc(sizeof(*tgt), GFP_KERNEL);
-	if (!tgt)
-		return NULL;
+Reviewed-by: Bader Ali - Saleh <bader.alisaleh@microsemi.com>
+Reviewed-by: Scott Teel <scott.teel@microsemi.com>
+Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
+Reviewed-by: Kevin Barnett <kevin.barnett@microsemi.com>
+Signed-off-by: Don Brace <don.brace@microsemi.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/scsi/hpsa.c | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
 
-regards,
-dan carpenter
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 8068520cf89ed..152de392f9aaf 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -2320,6 +2320,8 @@ static int handle_ioaccel_mode2_error(struct ctlr_info *h,
+ 	case IOACCEL2_SERV_RESPONSE_COMPLETE:
+ 		switch (c2->error_data.status) {
+ 		case IOACCEL2_STATUS_SR_TASK_COMP_GOOD:
++			if (cmd)
++				cmd->result = 0;
+ 			break;
+ 		case IOACCEL2_STATUS_SR_TASK_COMP_CHK_COND:
+ 			cmd->result |= SAM_STAT_CHECK_CONDITION;
+@@ -2479,8 +2481,10 @@ static void process_ioaccel2_completion(struct ctlr_info *h,
+ 
+ 	/* check for good status */
+ 	if (likely(c2->error_data.serv_response == 0 &&
+-			c2->error_data.status == 0))
++			c2->error_data.status == 0)) {
++		cmd->result = 0;
+ 		return hpsa_cmd_free_and_done(h, c, cmd);
++	}
+ 
+ 	/*
+ 	 * Any RAID offload error results in retry which will use
+@@ -5638,6 +5642,12 @@ static int hpsa_scsi_queue_command(struct Scsi_Host *sh, struct scsi_cmnd *cmd)
+ 	}
+ 	c = cmd_tagged_alloc(h, cmd);
+ 
++	/*
++	 * This is necessary because the SML doesn't zero out this field during
++	 * error recovery.
++	 */
++	cmd->result = 0;
++
+ 	/*
+ 	 * Call alternate submit routine for I/O accelerated commands.
+ 	 * Retries always go down the normal I/O path.
+-- 
+2.20.1
