@@ -2,116 +2,98 @@ Return-Path: <SRS0=ayNI=WD=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01BCEC32751
-	for <linux-scsi@archiver.kernel.org>; Wed,  7 Aug 2019 16:05:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 836A6C32751
+	for <linux-scsi@archiver.kernel.org>; Wed,  7 Aug 2019 16:17:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C6E2A22296
-	for <linux-scsi@archiver.kernel.org>; Wed,  7 Aug 2019 16:05:37 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dBD4VQR4"
+	by mail.kernel.org (Postfix) with ESMTP id 64E4222387
+	for <linux-scsi@archiver.kernel.org>; Wed,  7 Aug 2019 16:17:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387987AbfHGQFh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 7 Aug 2019 12:05:37 -0400
-Received: from mail-wm1-f66.google.com ([209.85.128.66]:53047 "EHLO
-        mail-wm1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387626AbfHGQFh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Aug 2019 12:05:37 -0400
-Received: by mail-wm1-f66.google.com with SMTP id s3so591377wms.2
-        for <linux-scsi@vger.kernel.org>; Wed, 07 Aug 2019 09:05:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:references:from:message-id:date:mime-version:in-reply-to
-         :content-language:content-transfer-encoding;
-        bh=kvxGyxH2R4MguxPxMoiGF/4nbAvKcJZ+N13SSPZxhrk=;
-        b=dBD4VQR4HwddR5aihOf1S3q0Fv/h7BSg2Vw7fIYmqd7QA96QGtBkt1STa64DvwzFQ2
-         82HXKWYz0dFT3ezRiOBdOBMHLXTJs2NkpIF3/zRZheae2nX2g4TAFXNp5dg/MODP0BK7
-         Hfz+/+ImAOXsNWEYyLoYKcPQjJZI6ldbakt0OM7EySlxzCGtxM13NVnqoHHDAR3jnhCj
-         R6zBq02QF/Pxk03Z0Yvta4wI0+WS1p15OXf2OnGQbhy4+n80/ato4XSlwBA5opVjWcjc
-         fTuy3WvwkeEwiPv9EUDIdUBSRLLRIEY2pGMu+z/VdexwoirpQ25oJ1pFTd9B+fe0srZ/
-         JVsQ==
+        id S2389001AbfHGQRR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 7 Aug 2019 12:17:17 -0400
+Received: from mail-wr1-f67.google.com ([209.85.221.67]:37249 "EHLO
+        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388257AbfHGQRR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Aug 2019 12:17:17 -0400
+Received: by mail-wr1-f67.google.com with SMTP id b3so864705wro.4
+        for <linux-scsi@vger.kernel.org>; Wed, 07 Aug 2019 09:17:15 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:references:from:message-id:date
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=kvxGyxH2R4MguxPxMoiGF/4nbAvKcJZ+N13SSPZxhrk=;
-        b=FRGQ+7apHIbf00lHLqVdqt+h3p6pVil33UhBPZCv0urHjtMoy9NlL02QAxHbwBEQ9Z
-         yYAT6teXCQDYRnVOosmzKWk28Djv1khhS+IHctbI/6zBlP+2evYhTI3TsQOhCDeC2gPf
-         w9X7l2nfsKVQ2tL8qpl7WbF4PATEdx/2w6OglrQ2rHx/DeqHSGYddWT28k0zz6JIUgCh
-         s5Y/pAX6RDmoByiI/KUfsqMHfL9N4WYjNdvp37WRxY6h9jOQLqHhF3QQs7w+uTshv+fc
-         nWTjpEBZvjkY9qJm770i5/BwOGJN7FBkyxWZDCATVNF0A4hbd4e567uLhV6+WunklCZc
-         S99Q==
-X-Gm-Message-State: APjAAAUHTuBcQvUDaL+pEt3wYs4dzmcHVRIrdSMZN/GItfA33kEn4sBY
-        ap0fcqx92W2CzW5IKEEonQ==
-X-Google-Smtp-Source: APXvYqxtqI6f3P9lSbPbinbbmdh71tNiPhH7vHQVVrTXMVqbY+2hG8WDmI9nlpMA9vX3ab5U9fBXWw==
-X-Received: by 2002:a1c:6882:: with SMTP id d124mr663180wmc.40.1565193934678;
-        Wed, 07 Aug 2019 09:05:34 -0700 (PDT)
-Received: from localhost (118.red-88-12-24.staticip.rima-tde.net. [88.12.24.118])
-        by smtp.gmail.com with ESMTPSA id y7sm617460wmm.19.2019.08.07.09.05.34
+        h=x-gm-message-state:subject:to:cc:references:from:openpgp:message-id
+         :date:user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=rimRfJuK8em3IqAQSX92nJpilfNEDReWvsTTczdkS5I=;
+        b=P3Gpg+URgFYl8Sfdwpk2uCd6LpS4afhd9A7Y58guJt2XpF4ojbTmsQf+mr2JZ/O3R1
+         7RvHwhojOwgdx0zgtoSHQJFhOGhW4vdkQ0sSLFv0IU/7cMZN2edBQWFl7Ry5o4/9jrog
+         YPSk/b7bzs9+uzM/YDXvmzMh4IiCdxGk+IaYTrNHBvWeqcm40vpoRy+WeZonvE+krt4s
+         /AKuyO95q2vWpI/KB4nJhOrXsJJ5CmfwEFMWI7F1MY//pQF6WuG9kQrFPrMR52Jwp39u
+         eLwS4mDyC2t1eX3cLDMMZ4lC60r+bN8+UmYLZMtZ3GWkDKaaLop7wOSePOW4IA4BOsTC
+         vVog==
+X-Gm-Message-State: APjAAAW5knYVglF8+0MtQHenfY89JL01XKqqmeS6ZWh3ydDLjct7jN4q
+        NwcItzy1FbLmSEtJ5ZssJsphoA==
+X-Google-Smtp-Source: APXvYqzazjaE77Dv6t5Ci6gVHioOlkD24Kr5pc/9tKvr9Hj/6DlaId/9yHdHHf/uwryHMeAikdLuZA==
+X-Received: by 2002:a5d:6606:: with SMTP id n6mr4280889wru.346.1565194635282;
+        Wed, 07 Aug 2019 09:17:15 -0700 (PDT)
+Received: from [192.168.10.150] ([93.56.166.5])
+        by smtp.gmail.com with ESMTPSA id f10sm79635116wrs.22.2019.08.07.09.17.11
         (version=TLS1_3 cipher=AEAD-AES128-GCM-SHA256 bits=128/128);
-        Wed, 07 Aug 2019 09:05:34 -0700 (PDT)
-Subject: Re: [dm-devel] [PATCH] ALUA support for PURE FlashArray
-To:     Brian Bunker <brian@purestorage.com>,
-        Christophe Varoqui <christophe.varoqui@opensvc.com>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        device-mapper development <dm-devel@redhat.com>
-References: <EF473529-CF81-4AE9-BD96-08624B59BA10@purestorage.com>
-From:   Xose Vazquez Perez <xose.vazquez@gmail.com>
-Message-ID: <ef113ecf-e564-a959-870e-b80af8fe5a30@gmail.com>
-Date:   Wed, 7 Aug 2019 18:05:32 +0200
+        Wed, 07 Aug 2019 09:17:14 -0700 (PDT)
+Subject: Re: [PATCH 0/2] scsi: core: regression fixes for request batching
+To:     Steffen Maier <maier@linux.ibm.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Ming Lei <ming.lei@redhat.com>
+Cc:     linux-next@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-block@vger.kernel.org, dm-devel@redhat.com,
+        linux-s390@vger.kernel.org, Benjamin Block <bblock@linux.ibm.com>,
+        Heiko Carstens <heiko.carstens@de.ibm.com>,
+        Vasily Gorbik <gor@linux.ibm.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Hannes Reinecke <hare@suse.com>, Jens Axboe <axboe@kernel.dk>,
+        "Ewan D . Milne" <emilne@redhat.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Mike Snitzer <snitzer@redhat.com>
+References: <20190807144948.28265-1-maier@linux.ibm.com>
+From:   Paolo Bonzini <pbonzini@redhat.com>
+Openpgp: preference=signencrypt
+Message-ID: <700f3175-561a-c577-0cb7-3f9ae4d82db0@redhat.com>
+Date:   Wed, 7 Aug 2019 18:17:10 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-In-Reply-To: <EF473529-CF81-4AE9-BD96-08624B59BA10@purestorage.com>
+In-Reply-To: <20190807144948.28265-1-maier@linux.ibm.com>
 Content-Type: text/plain; charset="UTF-8"
-Content-Language: en-GB
-Content-Transfer-Encoding: 8bit
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
-Message-ID: <20190807160532.0kbSytyWFh-XQ0Cl5ltbD0v7VoOdEfoZcguzQ9vBwZo@z>
+Message-ID: <20190807161710.PmTTX3oHG6eT8MF5y1pKOTrxhta9OwWNhzK783J0WjI@z>
 
-On 6/26/19 7:37 PM, Brian Bunker wrote:
-
-> It has been some time since we updated our PURE FlashArray configuration. The
-> Linux vendors that we had been seeing in the field were using very old versions
-> of multipath-tools, so we haven’t needed to change anything for some time. With
-> the release of RHEL8, some of our earlier values have been lost by upstream
-> changes. 
+On 07/08/19 16:49, Steffen Maier wrote:
+> Hi James, Martin, Paolo, Ming,
 > 
-> In addition we have our Active Cluster feature which leverages ALUA since our
-> last patch. The ALUA confguration will work for all FlashArrays with or without
-> Active Cluster.
+> multipathing with linux-next is broken since 20190723 in our CI.
+> The patches fix a memleak and a severe dh/multipath functional regression.
+> It would be nice if we could get them to 5.4/scsi-queue and also next.
 > 
-> We are changing 3 things.
+> I would have preferred if such a new feature had used its own
+> new copy scsi_mq_ops_batching instead of changing the use case and
+> semantics of the existing scsi_mq_ops, because this would likely
+> cause less regressions for all the other users not using the new feature.
 > 
-> 1. ALUA support
->
-> 2. Fast fail timeout from the default of 5 seconds to 10 seconds (We need this
-> for our FC NPIV port migration).
->
-> 3. Maximum sector size of 4MB. Some Linux vendors don’t honor the block limits
-> VPD page of INQUIRY).
+> Steffen Maier (2):
+>   scsi: core: fix missing .cleanup_rq for SCSI hosts without request
+>     batching
+>   scsi: core: fix dh and multipathing for SCSI hosts without request
+>     batching
+> 
+>  drivers/scsi/scsi_lib.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+> 
 
-
-#3, kernel or udev bug?
-
-
-> diff --git a/libmultipath/hwtable.c b/libmultipath/hwtable.c
-> index 1d964333..37e97f60 100644
-> --- a/libmultipath/hwtable.c
-> +++ b/libmultipath/hwtable.c
-> @@ -1024,7 +1024,12 @@ static struct hwentry default_hw[] = {
->                 /* FlashArray */
->                 .vendor        = "PURE",
->                 .product       = "FlashArray",
-> -               .pgpolicy      = MULTIBUS,
-> +               .pgpolicy      = GROUP_BY_PRIO,
-> +               .pgfailback    = -FAILBACK_IMMEDIATE,
-> +               .hwhandler     = "1 alua",
-> +               .prio_name     = PRIO_ALUA,
-> +               .fast_io_fail  = 10,
-> +               .max_sectors_kb = 4096,
+Reviewed-by: Paolo Bonzini <pbonzini@redhat.com>
