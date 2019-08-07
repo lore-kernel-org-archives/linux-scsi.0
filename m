@@ -1,14 +1,15 @@
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Subject: Re: [PATCH] ALUA support for PURE FlashArray
-Date: Wed, 7 Aug 2019 18:05:32 +0200
-Message-ID: <ef113ecf-e564-a959-870e-b80af8fe5a30@gmail.com>
-References: <EF473529-CF81-4AE9-BD96-08624B59BA10@purestorage.com>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: [PATCH 0/2] scsi: core: regression fixes for request
+	batching
+Date: Wed, 7 Aug 2019 18:17:10 +0200
+Message-ID: <700f3175-561a-c577-0cb7-3f9ae4d82db0@redhat.com>
+References: <20190807144948.28265-1-maier@linux.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <EF473529-CF81-4AE9-BD96-08624B59BA10@purestorage.com>
-Content-Language: en-GB
+In-Reply-To: <20190807144948.28265-1-maier@linux.ibm.com>
+Content-Language: en-US
 List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
 	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
 List-Archive: <https://www.redhat.com/archives/dm-devel>
@@ -18,35 +19,30 @@ List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
 	<mailto:dm-devel-request@redhat.com?subject=subscribe>
 Sender: dm-devel-bounces@redhat.com
 Errors-To: dm-devel-bounces@redhat.com
-To: Brian Bunker <brian@purestorage.com>, Christophe Varoqui <christophe.varoqui@opensvc.com>, linux-scsi <linux-scsi@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>
+To: Steffen Maier <maier@linux.ibm.com>, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Ming Lei <ming.lei@redhat.com>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-s390@vger.kernel.org, Benjamin Block <bblock@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>, linux-scsi@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, Hannes Reinecke <hare@suse.com>, "Ewan D . Milne" <emilne@redhat.com>, linux-block@vger.kernel.org, dm-devel@redhat.com, linux-next@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Bart Van Assche <bvanassche@acm.org>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gNi8yNi8xOSA3OjM3IFBNLCBCcmlhbiBCdW5rZXIgd3JvdGU6Cgo+IEl0IGhhcyBiZWVuIHNv
-bWUgdGltZSBzaW5jZSB3ZSB1cGRhdGVkIG91ciBQVVJFIEZsYXNoQXJyYXkgY29uZmlndXJhdGlv
-bi4gVGhlCj4gTGludXggdmVuZG9ycyB0aGF0IHdlIGhhZCBiZWVuIHNlZWluZyBpbiB0aGUgZmll
-bGQgd2VyZSB1c2luZyB2ZXJ5IG9sZCB2ZXJzaW9ucwo+IG9mIG11bHRpcGF0aC10b29scywgc28g
-d2UgaGF2ZW7igJl0IG5lZWRlZCB0byBjaGFuZ2UgYW55dGhpbmcgZm9yIHNvbWUgdGltZS4gV2l0
-aAo+IHRoZSByZWxlYXNlIG9mIFJIRUw4LCBzb21lIG9mIG91ciBlYXJsaWVyIHZhbHVlcyBoYXZl
-IGJlZW4gbG9zdCBieSB1cHN0cmVhbQo+IGNoYW5nZXMuIAo+IAo+IEluIGFkZGl0aW9uIHdlIGhh
-dmUgb3VyIEFjdGl2ZSBDbHVzdGVyIGZlYXR1cmUgd2hpY2ggbGV2ZXJhZ2VzIEFMVUEgc2luY2Ug
-b3VyCj4gbGFzdCBwYXRjaC4gVGhlIEFMVUEgY29uZmd1cmF0aW9uIHdpbGwgd29yayBmb3IgYWxs
-IEZsYXNoQXJyYXlzIHdpdGggb3Igd2l0aG91dAo+IEFjdGl2ZSBDbHVzdGVyLgo+IAo+IFdlIGFy
-ZSBjaGFuZ2luZyAzIHRoaW5ncy4KPiAKPiAxLiBBTFVBIHN1cHBvcnQKPgo+IDIuIEZhc3QgZmFp
-bCB0aW1lb3V0IGZyb20gdGhlIGRlZmF1bHQgb2YgNSBzZWNvbmRzIHRvIDEwIHNlY29uZHMgKFdl
-IG5lZWQgdGhpcwo+IGZvciBvdXIgRkMgTlBJViBwb3J0IG1pZ3JhdGlvbikuCj4KPiAzLiBNYXhp
-bXVtIHNlY3RvciBzaXplIG9mIDRNQi4gU29tZSBMaW51eCB2ZW5kb3JzIGRvbuKAmXQgaG9ub3Ig
-dGhlIGJsb2NrIGxpbWl0cwo+IFZQRCBwYWdlIG9mIElOUVVJUlkpLgoKCiMzLCBrZXJuZWwgb3Ig
-dWRldiBidWc/CgoKPiBkaWZmIC0tZ2l0IGEvbGlibXVsdGlwYXRoL2h3dGFibGUuYyBiL2xpYm11
-bHRpcGF0aC9od3RhYmxlLmMKPiBpbmRleCAxZDk2NDMzMy4uMzdlOTdmNjAgMTAwNjQ0Cj4gLS0t
-IGEvbGlibXVsdGlwYXRoL2h3dGFibGUuYwo+ICsrKyBiL2xpYm11bHRpcGF0aC9od3RhYmxlLmMK
-PiBAQCAtMTAyNCw3ICsxMDI0LDEyIEBAIHN0YXRpYyBzdHJ1Y3QgaHdlbnRyeSBkZWZhdWx0X2h3
-W10gPSB7Cj4gICAgICAgICAgICAgICAgIC8qIEZsYXNoQXJyYXkgKi8KPiAgICAgICAgICAgICAg
-ICAgLnZlbmRvciAgICAgICAgPSAiUFVSRSIsCj4gICAgICAgICAgICAgICAgIC5wcm9kdWN0ICAg
-ICAgID0gIkZsYXNoQXJyYXkiLAo+IC0gICAgICAgICAgICAgICAucGdwb2xpY3kgICAgICA9IE1V
-TFRJQlVTLAo+ICsgICAgICAgICAgICAgICAucGdwb2xpY3kgICAgICA9IEdST1VQX0JZX1BSSU8s
-Cj4gKyAgICAgICAgICAgICAgIC5wZ2ZhaWxiYWNrICAgID0gLUZBSUxCQUNLX0lNTUVESUFURSwK
-PiArICAgICAgICAgICAgICAgLmh3aGFuZGxlciAgICAgPSAiMSBhbHVhIiwKPiArICAgICAgICAg
-ICAgICAgLnByaW9fbmFtZSAgICAgPSBQUklPX0FMVUEsCj4gKyAgICAgICAgICAgICAgIC5mYXN0
-X2lvX2ZhaWwgID0gMTAsCj4gKyAgICAgICAgICAgICAgIC5tYXhfc2VjdG9yc19rYiA9IDQwOTYs
-CgotLQpkbS1kZXZlbCBtYWlsaW5nIGxpc3QKZG0tZGV2ZWxAcmVkaGF0LmNvbQpodHRwczovL3d3
-dy5yZWRoYXQuY29tL21haWxtYW4vbGlzdGluZm8vZG0tZGV2ZWw=
+On 07/08/19 16:49, Steffen Maier wrote:
+> Hi James, Martin, Paolo, Ming,
+> 
+> multipathing with linux-next is broken since 20190723 in our CI.
+> The patches fix a memleak and a severe dh/multipath functional regression.
+> It would be nice if we could get them to 5.4/scsi-queue and also next.
+> 
+> I would have preferred if such a new feature had used its own
+> new copy scsi_mq_ops_batching instead of changing the use case and
+> semantics of the existing scsi_mq_ops, because this would likely
+> cause less regressions for all the other users not using the new feature.
+> 
+> Steffen Maier (2):
+>   scsi: core: fix missing .cleanup_rq for SCSI hosts without request
+>     batching
+>   scsi: core: fix dh and multipathing for SCSI hosts without request
+>     batching
+> 
+>  drivers/scsi/scsi_lib.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+> 
+
+Reviewed-by: Paolo Bonzini <pbonzini@redhat.com>
