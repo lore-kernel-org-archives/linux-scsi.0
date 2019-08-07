@@ -2,93 +2,121 @@ Return-Path: <SRS0=ayNI=WD=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25994C433FF
-	for <linux-scsi@archiver.kernel.org>; Wed,  7 Aug 2019 17:08:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 26D2CC433FF
+	for <linux-scsi@archiver.kernel.org>; Wed,  7 Aug 2019 23:32:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0074A21EF2
-	for <linux-scsi@archiver.kernel.org>; Wed,  7 Aug 2019 17:08:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EB1EF217D7
+	for <linux-scsi@archiver.kernel.org>; Wed,  7 Aug 2019 23:32:43 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nIrYsSA3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388903AbfHGRIV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 7 Aug 2019 13:08:21 -0400
-Received: from mail-pl1-f196.google.com ([209.85.214.196]:35546 "EHLO
-        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729804AbfHGRIV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Aug 2019 13:08:21 -0400
-Received: by mail-pl1-f196.google.com with SMTP id w24so41733322plp.2;
-        Wed, 07 Aug 2019 10:08:20 -0700 (PDT)
+        id S1730280AbfHGXcn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 7 Aug 2019 19:32:43 -0400
+Received: from mail-wr1-f66.google.com ([209.85.221.66]:36802 "EHLO
+        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729624AbfHGXcn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Aug 2019 19:32:43 -0400
+Received: by mail-wr1-f66.google.com with SMTP id n4so93087349wrs.3;
+        Wed, 07 Aug 2019 16:32:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=d9pVbIpLJvYHpW51yLVzRoQLiv107x9ELi8HQ3TSd7g=;
+        b=nIrYsSA3nPN1wHjF5rjTY4bWCaUPRftz1QKySm1Ov2giKzvoKNJ+OY8RqOEGX6m1y3
+         M8gnhSm+hO/g5l6KBBvUzCENROH09mk8YDGCcuFDViTP8FSysKLVdj7EymmHbmUAkCIH
+         fk4Qm1eM33fFaHywCfXlYO7RhA4McjuVM8wOZFD1pFY8mEzGtIiLW97KjvgSz1iE4cqb
+         EQYEtQjbch2N8MvmRrlWVI3KDbcOqEYoPQLHEjEGFWj7YfMrYd27F+KBvn01KzpElFNc
+         e+w62LitUTP8quCKbnlUzWRN9iGhPZs4Qz7Kw/R7ZIjNLE7NCOA2fc8eDWJyoytPiB4W
+         cI9w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=Oc5/+mkxa26+9Mm7KHiWI56JJSv5It7fgiiyYBpofBE=;
-        b=YaHCm8UO9hxYC89hrThbjczYtfwY07KQGzJy5cyahCI+V386fuh4f3ZaO+Cs2BS0wd
-         tY7CvZD1RMLOcQ/DoYjuav+SBvqyWI7Wdx5cntbEBro+4tOnG+1mRvwAePimBcLtgHWh
-         nD06K/Iwv1Sd0tSXe7BdqruLHAkZQvUaytVhq8a5TiiFM/P7ep9JZ26/EyNc1z/EqEHd
-         21vxRwDxwgIgTgADf4yqDtVZ0lF4qFg5x1LiG6MbepEb6ByV7Kz4TfTkz9ievZUCMo7h
-         S2XJAt/rEwrzvWGnPykYS2tDWEWUAD8F0gt/txGd75laDC+oSNjt++tv9EqxXkZU4tI0
-         o5nw==
-X-Gm-Message-State: APjAAAXEgJCr2Gohn6UxlnMWyOKMaPkwF5pGWqszM4f7h1IAEkeoyj+O
-        uVHCijRElTON3g6+SW1fxTg=
-X-Google-Smtp-Source: APXvYqyzqO1rvd6suKL+nQlLdxlj/fSykX9DcXRkJ3/EiPidZK2fMrUq8c3d//Dhcn+x9u9VhZFf1w==
-X-Received: by 2002:a63:6d8d:: with SMTP id i135mr8536780pgc.303.1565197700171;
-        Wed, 07 Aug 2019 10:08:20 -0700 (PDT)
-Received: from desktop-bart.svl.corp.google.com ([2620:15c:2cd:202:4308:52a3:24b6:2c60])
-        by smtp.gmail.com with ESMTPSA id f20sm106206005pgg.56.2019.08.07.10.08.18
-        (version=TLS1_3 cipher=AEAD-AES128-GCM-SHA256 bits=128/128);
-        Wed, 07 Aug 2019 10:08:19 -0700 (PDT)
-Subject: Re: [PATCH 0/2] scsi: core: regression fixes for request batching
-To:     Steffen Maier <maier@linux.ibm.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=d9pVbIpLJvYHpW51yLVzRoQLiv107x9ELi8HQ3TSd7g=;
+        b=KmJqdWGigPwncPnDX+eulGOt1YhItJsqtZntryOCheQO8fVEBg/7svdCPLN+8+wJBf
+         9mnsRG/HMZkzsRdHa3n0V1ipo+PZEa9bAW8x5eQ3ZvyWLGNknJX8tUjICtoUwlCZhW1u
+         pIIDhoxY4uvmWFLEsOhBle7LrvpBQ4xpTcHtItCsekpkJktq2MXP9u8IporrAchV9ixw
+         G0yEPylOe6eRqfK9xAfcTjJPG4hmRcWKazvfLyx0ac8u04cfHPnrRYjv/+CTfO8GMuLR
+         5BlrxMET9Uu2MzH13J5la/oE9dBVzG1eU0uDRHEz/zep4a8s3+uy8/tnt8ZESfz0CbFA
+         Jvsw==
+X-Gm-Message-State: APjAAAUxgojWWRFM/5KOZO51LR+U9lz7yNHd0FgbbW1SA4KNFzOUJyRz
+        7y31rUAQeJ9IhCn/EP4we/XbkSg7eK+lHoNONeEDrJQ7GjfrPA==
+X-Google-Smtp-Source: APXvYqxtF8Xvm+tm4IZuVjVZGBCJtz7+06a5/1hAvnnEAxC6bsAXdJ7lSoaNNZISpWZcktt+oPMXhYhpd+tpojMOPr8=
+X-Received: by 2002:adf:f088:: with SMTP id n8mr13044701wro.58.1565220760576;
+ Wed, 07 Aug 2019 16:32:40 -0700 (PDT)
+MIME-Version: 1.0
+References: <20190807144948.28265-1-maier@linux.ibm.com> <20190807144948.28265-2-maier@linux.ibm.com>
+In-Reply-To: <20190807144948.28265-2-maier@linux.ibm.com>
+From:   Ming Lei <tom.leiming@gmail.com>
+Date:   Thu, 8 Aug 2019 07:32:29 +0800
+Message-ID:
+ <CACVXFVM0tFj8CmcHON04_KjxR=QErCbUx0abJgG2W9OBb7akZA@mail.gmail.com>
+Subject: Re: [PATCH 1/2] scsi: core: fix missing .cleanup_rq for SCSI hosts
+ without request batching
+To:     Steffen Maier <maier@linux.ibm.com>
+Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Paolo Bonzini <pbonzini@redhat.com>,
-        Ming Lei <ming.lei@redhat.com>
-Cc:     linux-next@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-block@vger.kernel.org, dm-devel@redhat.com,
-        linux-s390@vger.kernel.org, Benjamin Block <bblock@linux.ibm.com>,
+        Ming Lei <ming.lei@redhat.com>,
+        Linux-Next Mailing List <linux-next@vger.kernel.org>,
+        Linux SCSI List <linux-scsi@vger.kernel.org>,
+        linux-block <linux-block@vger.kernel.org>,
+        "open list:DEVICE-MAPPER (LVM)" <dm-devel@redhat.com>,
+        linux-s390 <linux-s390@vger.kernel.org>,
+        Benjamin Block <bblock@linux.ibm.com>,
         Heiko Carstens <heiko.carstens@de.ibm.com>,
         Vasily Gorbik <gor@linux.ibm.com>,
+        Bart Van Assche <bvanassche@acm.org>,
         Hannes Reinecke <hare@suse.com>, Jens Axboe <axboe@kernel.dk>,
         "Ewan D . Milne" <emilne@redhat.com>,
         Christoph Hellwig <hch@lst.de>,
         Mike Snitzer <snitzer@redhat.com>
-References: <20190807144948.28265-1-maier@linux.ibm.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <33a8afce-91a4-2a9d-d822-b12376fd0aa3@acm.org>
-Date:   Wed, 7 Aug 2019 10:08:17 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
-MIME-Version: 1.0
-In-Reply-To: <20190807144948.28265-1-maier@linux.ibm.com>
-Content-Type: text/plain; charset="UTF-8"; format="flowed"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
-Message-ID: <20190807170817.mUnkbiNTINnX3qpbZmM3o5C2I0yxnbKkd0t6vMfYvuU@z>
+Message-ID: <20190807233229.fxrVSIwHgjKJMzlI2U2LoM0B2Sy4qlWB4Ygy-RKvBh4@z>
 
-On 8/7/19 7:49 AM, Steffen Maier wrote:
-> Hi James, Martin, Paolo, Ming,
-> 
-> multipathing with linux-next is broken since 20190723 in our CI.
-> The patches fix a memleak and a severe dh/multipath functional regression.
-> It would be nice if we could get them to 5.4/scsi-queue and also next.
- >
-> I would have preferred if such a new feature had used its own
-> new copy scsi_mq_ops_batching instead of changing the use case and
-> semantics of the existing scsi_mq_ops, because this would likely
-> cause less regressions for all the other users not using the new feature.
+On Wed, Aug 7, 2019 at 10:55 PM Steffen Maier <maier@linux.ibm.com> wrote:
+>
+> This was missing from scsi_mq_ops_no_commit of linux-next commit
+> 8930a6c20791 ("scsi: core: add support for request batching")
+> from Martin's scsi/5.4/scsi-queue or James' scsi/misc.
+>
+> See also linux-next commit b7e9e1fb7a92 ("scsi: implement .cleanup_rq
+> callback") from block/for-next.
+>
+> Signed-off-by: Steffen Maier <maier@linux.ibm.com>
+> Fixes: 8930a6c20791 ("scsi: core: add support for request batching")
+> Cc: Paolo Bonzini <pbonzini@redhat.com>
+> Cc: Ming Lei <ming.lei@redhat.com>
+> ---
+>  drivers/scsi/scsi_lib.c | 1 +
+>  1 file changed, 1 insertion(+)
+>
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index ae03d3e2600f..90c257622bb0 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -1834,6 +1834,7 @@ static const struct blk_mq_ops scsi_mq_ops_no_commit = {
+>         .init_request   = scsi_mq_init_request,
+>         .exit_request   = scsi_mq_exit_request,
+>         .initialize_rq_fn = scsi_initialize_rq,
+> +       .cleanup_rq     = scsi_cleanup_rq,
+>         .busy           = scsi_mq_lld_busy,
+>         .map_queues     = scsi_map_queues,
+>  };
 
-For both patches:
+This one is a cross-tree thing, either scsi/5.4/scsi-queue needs to
+pull for-5.4/block, or
+do it after both land linus tree.
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-
-BTW, these two patches fix several nvmeof-mp blktests regressions.
-
-Bart.
+Thanks,
+Ming Lei
