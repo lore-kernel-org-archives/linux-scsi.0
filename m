@@ -6,35 +6,35 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99C9FC433FF
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED117C433FF
 	for <linux-scsi@archiver.kernel.org>; Wed,  7 Aug 2019 11:43:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 70E6D21BF6
+	by mail.kernel.org (Postfix) with ESMTP id CECAE21BF6
 	for <linux-scsi@archiver.kernel.org>; Wed,  7 Aug 2019 11:43:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387414AbfHGLnE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1729767AbfHGLnE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Wed, 7 Aug 2019 07:43:04 -0400
-Received: from smtp.infotech.no ([82.134.31.41]:45259 "EHLO smtp.infotech.no"
+Received: from smtp.infotech.no ([82.134.31.41]:45247 "EHLO smtp.infotech.no"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729692AbfHGLm7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1729722AbfHGLm7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Wed, 7 Aug 2019 07:42:59 -0400
 Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 02D1F20425A;
+        by smtp.infotech.no (Postfix) with ESMTP id 72ABE204279;
         Wed,  7 Aug 2019 13:42:54 +0200 (CEST)
 X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
 Received: from smtp.infotech.no ([127.0.0.1])
         by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id oA+h0H+wDnau; Wed,  7 Aug 2019 13:42:53 +0200 (CEST)
+        with ESMTP id V0sRt8gW2CXQ; Wed,  7 Aug 2019 13:42:54 +0200 (CEST)
 Received: from xtwo70.infotech.no (unknown [82.134.31.183])
-        by smtp.infotech.no (Postfix) with ESMTPA id ABDAA20426C;
-        Wed,  7 Aug 2019 13:42:53 +0200 (CEST)
+        by smtp.infotech.no (Postfix) with ESMTPA id 18BEB20426F;
+        Wed,  7 Aug 2019 13:42:54 +0200 (CEST)
 From:   Douglas Gilbert <dgilbert@interlog.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de,
-        bvanassche@acm.org
-Subject: [PATCH v3 12/20] sg: sense buffer rework
-Date:   Wed,  7 Aug 2019 13:42:44 +0200
-Message-Id: <20190807114252.2565-13-dgilbert@interlog.com>
+        bvanassche@acm.org, kbuild test robot <lkp@intel.com>
+Subject: [PATCH v3 17/20] sg: add sg_iosubmit_v3 and sg_ioreceive_v3 ioctls
+Date:   Wed,  7 Aug 2019 13:42:49 +0200
+Message-Id: <20190807114252.2565-18-dgilbert@interlog.com>
 X-Mailer: git-send-email 2.22.0
 In-Reply-To: <20190807114252.2565-1-dgilbert@interlog.com>
 References: <20190807114252.2565-1-dgilbert@interlog.com>
@@ -45,245 +45,182 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The biggest single item in the sg_request object is the sense
-buffer array which is SCSI_SENSE_BUFFERSIZE bytes long. That
-constant started out at 18 bytes 20 years ago and is 96 bytes
-now and might grow in the future. On the other hand the sense
-buffer is only used by a small number of SCSI commands: those
-that fail and those that want to return more information
-other than a SCSI status of GOOD.
+Add ioctl(SG_IOSUBMIT_V3) and ioctl(SG_IORECEIVE_V3). These ioctls
+are meant to be (almost) drop-in replacements for the write()/read()
+async version 3 interface. They only accept the version 3 interface.
 
-Set up a small mempool called "sg_sense" that is only used as
-required and released back to the mempool as soon as practical.
+See the webpage at: http://sg.danny.cz/sg/sg_v40.html
+specifically the table in the section titled: "12 SG interface
+support changes".
+
+If sgv3 is a struct sg_io_hdr object, suitably configured, then
+    res = write(sg_fd, &sgv3, sizeof(sgv3));
+and
+    res = ioctl(sg_fd, SG_IOSUBMIT_V3, &sgv3);
+are equivalent. Dito for read() and ioctl(SG_IORECEIVE_V3).
 
 Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
+Reported-by: kbuild test robot <lkp@intel.com>
 
 -
-
-The scsi_lib.c file in the scsi mid-level maintains two sense
-buffer caches but declares them and their access functions
-static so they can't use by the sg driver. Perhaps the fastest
-option would be to transfer ownership of a (non-empty) sense
-buffer from the scsi_lib.c file to the sg driver. This technique
-may be useful to ther ULDs.
+kbuild had two complaints about this commit:
+  - casting a pointer to u64: add intermediate cast to
+    unsigned long. Would only seem to be a problem if
+    a pointer couldn't fit in u64 in which case the
+    sg v4 interface would be broken and lots of other
+    things besides ...
+  - a possible uninitialized  variable:
+        __maybe_unused bool is_bad_st = false;
+        __maybe_unused enum sg_rq_state bad_sr_st; /* <-- here */
+    The boolean (is_bad_st) tracks whether it has a "valid"
+    string or not. kbuild doesn't undrstand that. Give bad_sr_st
+    an initial value to keep kbuild quiet at the expense of a
+    machine cycle or two.
 
 Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 ---
- drivers/scsi/sg.c | 86 ++++++++++++++++++++++++++++++++++++++++-------
- 1 file changed, 73 insertions(+), 13 deletions(-)
+ drivers/scsi/sg.c      | 79 ++++++++++++++++++++++++++++++++++++++++--
+ include/uapi/scsi/sg.h |  6 ++++
+ 2 files changed, 83 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 75f515b3fc8c..8c80661b8196 100644
+index a60c2bcc5430..aa3512b2cb4f 100644
 --- a/drivers/scsi/sg.c
 +++ b/drivers/scsi/sg.c
-@@ -72,6 +72,10 @@ static char *sg_version_date = "20190606";
-  */
- #define SG_MAX_CDB_SIZE 252
- 
-+static struct kmem_cache *sg_sense_cache;
-+#define SG_MEMPOOL_MIN_NR 4
-+static mempool_t *sg_sense_pool;
-+
- #define uptr64(val) ((void __user *)(uintptr_t)(val))
- #define cuptr64(val) ((const void __user *)(uintptr_t)(val))
- 
-@@ -176,7 +180,6 @@ struct sg_request {	/* active SCSI command or inactive on free list (fl) */
- 	spinlock_t req_lck;
- 	struct sg_scatter_hold sgat_h;	/* hold buffer, perhaps scatter list */
- 	struct sg_slice_hdr3 s_hdr3;  /* subset of sg_io_hdr */
--	u8 sense_b[SCSI_SENSE_BUFFERSIZE];
- 	u32 duration;		/* cmd duration in milliseconds */
- 	u32 rq_flags;		/* hold user supplied flags */
- 	u32 rq_info;		/* info supplied by v3 and v4 interfaces */
-@@ -188,6 +191,7 @@ struct sg_request {	/* active SCSI command or inactive on free list (fl) */
- 	u8 cmd_opcode;		/* first byte of SCSI cdb */
- 	u64 start_ns;		/* starting point of command duration calc */
- 	unsigned long frq_bm[1];	/* see SG_FRQ_* defines above */
-+	u8 *sense_bp;		/* mempool alloc-ed sense buffer, as needed */
- 	struct sg_fd *parentfp;	/* pointer to owning fd, even when on fl */
- 	struct request *rq;	/* released in sg_rq_end_io(), bio kept */
- 	struct bio *bio;	/* kept until this req -->SG_RS_INACTIVE */
-@@ -845,18 +849,21 @@ sg_copy_sense(struct sg_request *srp)
- 	    (driver_byte(srp->rq_result) & DRIVER_SENSE)) {
- 		int sb_len = min_t(int, SCSI_SENSE_BUFFERSIZE, srp->sense_len);
- 		int mx_sb_len;
-+		u8 *sbp = srp->sense_bp;
- 		void __user *up;
- 
-+		srp->sense_bp = NULL;
- 		up = (void __user *)srp->s_hdr3.sbp;
- 		mx_sb_len = srp->s_hdr3.mx_sb_len;
--		if (up && mx_sb_len > 0) {
-+		if (up && mx_sb_len > 0 && sbp) {
- 			sb_len = min_t(int, sb_len, mx_sb_len);
- 			/* Additional sense length field */
--			sb_len_wr = 8 + (int)srp->sense_b[7];
-+			sb_len_wr = 8 + (int)sbp[7];
- 			sb_len_wr = min_t(int, sb_len, sb_len_wr);
--			if (copy_to_user(up, srp->sense_b, sb_len_wr))
-+			if (copy_to_user(up, sbp, sb_len_wr))
- 				sb_len_wr = -EFAULT;
- 		}
-+		mempool_free(sbp, sg_sense_pool);
- 	}
- 	return sb_len_wr;
+@@ -806,6 +806,24 @@ sg_ctl_iosubmit(struct file *filp, struct sg_fd *sfp, void __user *p)
+ 	return -EPERM;
  }
-@@ -963,8 +970,14 @@ sg_rd_v1v2(void __user *buf, int count, struct sg_fd *sfp,
- 	h2p->driver_status = driver_byte(rq_result);
- 	if ((CHECK_CONDITION & status_byte(rq_result)) ||
- 	    (DRIVER_SENSE & driver_byte(rq_result))) {
--		memcpy(h2p->sense_buffer, srp->sense_b,
--		       sizeof(h2p->sense_buffer));
-+		if (srp->sense_bp) {
-+			u8 *sbp = srp->sense_bp;
+ 
++static int
++sg_ctl_iosubmit_v3(struct file *filp, struct sg_fd *sfp, void __user *p)
++{
++	int res;
++	u8 hdr_store[SZ_SG_IO_V4];      /* max(v3interface, v4interface) */
++	struct sg_io_hdr *h3p = (struct sg_io_hdr *)hdr_store;
++	struct sg_device *sdp = sfp->parentdp;
 +
-+			srp->sense_bp = NULL;
-+			memcpy(h2p->sense_buffer, sbp,
-+			       sizeof(h2p->sense_buffer));
-+			mempool_free(sbp, sg_sense_pool);
-+		}
- 	}
- 	switch (host_byte(rq_result)) {
- 	/*
-@@ -999,17 +1012,21 @@ sg_rd_v1v2(void __user *buf, int count, struct sg_fd *sfp,
- 
- 	/* Now copy the result back to the user buffer.  */
- 	if (count >= SZ_SG_HEADER) {
--		if (copy_to_user(buf, h2p, SZ_SG_HEADER))
--			return -EFAULT;
-+		if (copy_to_user(buf, h2p, SZ_SG_HEADER)) {
-+			res = -EFAULT;
-+			goto fini;
-+		}
- 		buf += SZ_SG_HEADER;
- 		if (count > h2p->reply_len)
- 			count = h2p->reply_len;
- 		if (count > SZ_SG_HEADER) {
--			if (sg_rd_append(srp, buf, count - SZ_SG_HEADER))
--				return -EFAULT;
-+			res = sg_rd_append(srp, buf, count - SZ_SG_HEADER);
-+			if (res)
-+				goto fini;
- 		}
- 	} else
- 		res = (h2p->result == 0) ? 0 : -EIO;
-+fini:
- 	atomic_set(&srp->rq_st, SG_RS_DONE_RD);
- 	sg_finish_scsi_blk_rq(srp);
- 	sg_deact_request(sfp, srp);
-@@ -1975,8 +1992,17 @@ sg_rq_end_io(struct request *rq, blk_status_t status)
- 	srp->duration = sg_calc_rq_dur(srp);
- 	if (unlikely((srp->rq_result & SG_ML_RESULT_MSK) && slen > 0))
- 		sg_check_sense(sdp, srp, slen);
--	if (slen > 0)
--		memcpy(srp->sense_b, scsi_rp->sense, slen);
-+	if (slen > 0) {
-+		if (scsi_rp->sense) {
-+			srp->sense_bp = mempool_alloc(sg_sense_pool,
-+						      GFP_ATOMIC);
-+			if (srp->sense_bp)
-+				memcpy(srp->sense_bp, scsi_rp->sense, slen);
-+		} else {
-+			pr_warn("%s: scsi_request::sense==NULL\n", __func__);
-+			slen = 0;
-+		}
-+	}
- 	srp->sense_len = slen;
- 	if (unlikely(test_bit(SG_FRQ_IS_ORPHAN, srp->frq_bm))) {
- 		spin_lock(&srp->req_lck);
-@@ -2266,13 +2292,28 @@ init_sg(void)
- 	if (rc)
- 		return rc;
- 
-+	sg_sense_cache = kmem_cache_create("sg_sense", SCSI_SENSE_BUFFERSIZE,
-+					   0, 0, NULL);
-+	if (!sg_sense_cache) {
-+		pr_err("sg: can't init sense cache\n");
-+		rc = -ENOMEM;
-+		goto err_out_unreg;
-+	}
-+	sg_sense_pool = mempool_create_slab_pool(SG_MEMPOOL_MIN_NR,
-+						 sg_sense_cache);
-+	if (!sg_sense_pool) {
-+		pr_err("sg: can't init sense pool\n");
-+		rc = -ENOMEM;
-+		goto err_out_cache;
-+	}
++	res = sg_allow_if_err_recovery(sdp, (filp->f_flags & O_NONBLOCK));
++	if (unlikely(res))
++		return res;
++	if (copy_from_user(h3p, p, SZ_SG_IO_HDR))
++		return -EFAULT;
++	if (h3p->interface_id == 'S')
++		return sg_v3_submit(filp, sfp, h3p, false, NULL);
++	return -EPERM;
++}
 +
- 	pr_info("Registered %s[char major=0x%x], version: %s, date: %s\n",
- 		"sg device ", SCSI_GENERIC_MAJOR, SG_VERSION_STR,
- 		sg_version_date);
- 	sg_sysfs_class = class_create(THIS_MODULE, "scsi_generic");
- 	if (IS_ERR(sg_sysfs_class)) {
- 		rc = PTR_ERR(sg_sysfs_class);
--		goto err_out_unreg;
-+		goto err_out_pool;
- 	}
- 	sg_sysfs_valid = true;
- 	rc = scsi_register_interface(&sg_interface);
-@@ -2282,6 +2323,10 @@ init_sg(void)
- 	}
- 	class_destroy(sg_sysfs_class);
+ static void
+ sg_execute_cmd(struct sg_fd *sfp, struct sg_request *srp)
+ {
+@@ -1107,7 +1125,7 @@ sg_v4_receive(struct sg_fd *sfp, struct sg_request *srp, void __user *p,
+ 	h4p->din_resid = srp->in_resid;
+ 	h4p->dout_resid = srp->s_hdr4.out_resid;
+ 	h4p->usr_ptr = srp->s_hdr4.usr_ptr;
+-	h4p->response = (u64)srp->s_hdr4.sbp;
++	h4p->response = (u64)(unsigned long)srp->s_hdr4.sbp;
+ 	h4p->request_extra = srp->pack_id;
+ 	if (p) {
+ 		if (copy_to_user(p, h4p, SZ_SG_IO_V4))
+@@ -1170,6 +1188,57 @@ sg_ctl_ioreceive(struct file *filp, struct sg_fd *sfp, void __user *p)
+ 	return sg_v4_receive(sfp, srp, p, h4p);
+ }
  
-+err_out_pool:
-+	mempool_destroy(sg_sense_pool);
-+err_out_cache:
-+	kmem_cache_destroy(sg_sense_cache);
- err_out_unreg:
- 	unregister_chrdev_region(MKDEV(SCSI_GENERIC_MAJOR, 0), SG_MAX_DEVS);
- 	return rc;
-@@ -2301,6 +2346,8 @@ exit_sg(void)
- 	if (IS_ENABLED(CONFIG_SCSI_PROC_FS))
- 		remove_proc_subtree("scsi/sg", NULL);
- 	scsi_unregister_interface(&sg_interface);
-+	mempool_destroy(sg_sense_pool);
-+	kmem_cache_destroy(sg_sense_cache);
- 	class_destroy(sg_sysfs_class);
- 	sg_sysfs_valid = 0;
- 	unregister_chrdev_region(MKDEV(SCSI_GENERIC_MAJOR, 0),
-@@ -2938,6 +2985,7 @@ sg_deact_request(struct sg_fd *sfp, struct sg_request *srp)
- 	bool on_fl = false;
- 	int dlen, buflen;
- 	unsigned long iflags;
-+	u8 *sbp;
- 	struct sg_request *t_srp;
- 	struct sg_scatter_hold *schp;
- 	const char *cp = "head";
-@@ -2946,8 +2994,12 @@ sg_deact_request(struct sg_fd *sfp, struct sg_request *srp)
- 		return;
- 	schp = &srp->sgat_h;	/* make sure it is own data buffer */
- 	spin_lock_irqsave(&sfp->rq_list_lock, iflags);
-+	sbp = srp->sense_bp;
-+	srp->sense_bp = NULL;
- 	atomic_set(&srp->rq_st, SG_RS_BUSY);
- 	list_del_rcu(&srp->rq_entry);
-+	/* maybe orphaned req, thus never read */
-+	mempool_free(sbp, sg_sense_pool);
- 	/*
- 	 * N.B. sg_request object is not de-allocated (freed). The contents
- 	 * of the rq_list and rq_fl lists are de-allocated (freed) when
-@@ -3090,6 +3142,10 @@ sg_remove_sfp_usercontext(struct work_struct *work)
- 		list_del(&srp->rq_entry);
- 		if (srp->sgat_h.buflen > 0)
- 			sg_remove_sgat(srp);
-+		if (srp->sense_bp) {
-+			mempool_free(srp->sense_bp, sg_sense_pool);
-+			srp->sense_bp = NULL;
-+		}
- 		SG_LOG(6, sfp, "%s:%s%p --\n", __func__, cp, srp);
- 		kfree(srp);
- 	}
-@@ -3101,6 +3157,10 @@ sg_remove_sfp_usercontext(struct work_struct *work)
- 		list_del(&srp->fl_entry);
- 		if (srp->sgat_h.buflen > 0)
- 			sg_remove_sgat(srp);
-+		if (srp->sense_bp) {
-+			mempool_free(srp->sense_bp, sg_sense_pool);
-+			srp->sense_bp = NULL;
-+		}
- 		SG_LOG(6, sfp, "%s: fl%s%p --\n", __func__, cp, srp);
- 		kfree(srp);
- 	}
++/*
++ * Called when ioctl(SG_IORECEIVE_V3) received. Expects a v3 interface.
++ * Checks if O_NONBLOCK file flag given, if not checks given flags field
++ * to see if SGV4_FLAG_IMMED is set. Either of these implies non blocking.
++ * When non-blocking and there is no request waiting, yields EAGAIN;
++ * otherwise it waits.
++ */
++static int
++sg_ctl_ioreceive_v3(struct file *filp, struct sg_fd *sfp, void __user *p)
++{
++	bool non_block = !!(filp->f_flags & O_NONBLOCK);
++	int res;
++	int pack_id = SG_PACK_ID_WILDCARD;
++	u8 v3_holder[SZ_SG_IO_HDR];
++	struct sg_io_hdr *h3p = (struct sg_io_hdr *)v3_holder;
++	struct sg_device *sdp = sfp->parentdp;
++	struct sg_request *srp;
++
++	res = sg_allow_if_err_recovery(sdp, non_block);
++	if (unlikely(res))
++		return res;
++	/* Get first three 32 bit integers: guard, proto+subproto */
++	if (copy_from_user(h3p, p, SZ_SG_IO_HDR))
++		return -EFAULT;
++	/* for v3: interface_id=='S' (in a 32 bit int) */
++	if (h3p->interface_id != 'S')
++		return -EPERM;
++	if (h3p->flags & SGV4_FLAG_IMMED)
++		non_block = true;	/* set by either this or O_NONBLOCK */
++	SG_LOG(3, sfp, "%s: non_block(+IMMED)=%d\n", __func__, non_block);
++
++	if (test_bit(SG_FFD_FORCE_PACKID, sfp->ffd_bm))
++		pack_id = h3p->pack_id;
++
++	srp = sg_find_srp_by_id(sfp, pack_id);
++	if (!srp) {     /* nothing available so wait on packet or */
++		if (unlikely(SG_IS_DETACHING(sdp)))
++			return -ENODEV;
++		if (non_block)
++			return -EAGAIN;
++		res = wait_event_interruptible
++				(sfp->read_wait,
++				 sg_get_ready_srp(sfp, &srp, pack_id));
++		if (unlikely(SG_IS_DETACHING(sdp)))
++			return -ENODEV;
++		if (unlikely(res))
++			return res;	/* signal --> -ERESTARTSYS */
++	}	/* now srp should be valid */
++	return sg_v3_receive(sfp, srp, p);
++}
++
+ static int
+ sg_rd_v1v2(void __user *buf, int count, struct sg_fd *sfp,
+ 	   struct sg_request *srp)
+@@ -1731,9 +1800,15 @@ sg_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
+ 	case SG_IOSUBMIT:
+ 		SG_LOG(3, sfp, "%s:    SG_IOSUBMIT\n", __func__);
+ 		return sg_ctl_iosubmit(filp, sfp, p);
++	case SG_IOSUBMIT_V3:
++		SG_LOG(3, sfp, "%s:    SG_IOSUBMIT_V3\n", __func__);
++		return sg_ctl_iosubmit_v3(filp, sfp, p);
+ 	case SG_IORECEIVE:
+ 		SG_LOG(3, sfp, "%s:    SG_IORECEIVE\n", __func__);
+ 		return sg_ctl_ioreceive(filp, sfp, p);
++	case SG_IORECEIVE_V3:
++		SG_LOG(3, sfp, "%s:    SG_IORECEIVE_V3\n", __func__);
++		return sg_ctl_ioreceive_v3(filp, sfp, p);
+ 	case SG_GET_SCSI_ID:
+ 		return sg_ctl_scsi_id(sdev, sfp, p);
+ 	case SG_SET_FORCE_PACK_ID:
+@@ -3000,7 +3075,7 @@ static struct sg_request *
+ sg_find_srp_by_id(struct sg_fd *sfp, int pack_id)
+ {
+ 	__maybe_unused bool is_bad_st = false;
+-	__maybe_unused enum sg_rq_state bad_sr_st;
++	__maybe_unused enum sg_rq_state bad_sr_st = SG_RS_INACTIVE;
+ 	bool search_for_1 = (pack_id != SG_PACK_ID_WILDCARD);
+ 	enum sg_rq_state sr_st;
+ 	int res;
+diff --git a/include/uapi/scsi/sg.h b/include/uapi/scsi/sg.h
+index 0d6fbf976e5c..f2f898a57ce8 100644
+--- a/include/uapi/scsi/sg.h
++++ b/include/uapi/scsi/sg.h
+@@ -356,6 +356,12 @@ struct sg_header {
+ /* Gives some v4 identifying info to driver, receives associated response */
+ #define SG_IORECEIVE _IOWR(SG_IOCTL_MAGIC_NUM, 0x42, struct sg_io_v4)
+ 
++/* Submits a v3 interface object to driver */
++#define SG_IOSUBMIT_V3 _IOWR(SG_IOCTL_MAGIC_NUM, 0x45, struct sg_io_hdr)
++
++/* Gives some v3 identifying info to driver, receives associated response */
++#define SG_IORECEIVE_V3 _IOWR(SG_IOCTL_MAGIC_NUM, 0x46, struct sg_io_hdr)
++
+ /* command queuing is always on when the v3 or v4 interface is used */
+ #define SG_DEF_COMMAND_Q 0
+ 
 -- 
 2.22.0
 
