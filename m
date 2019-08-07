@@ -1,8 +1,8 @@
 From: Steffen Maier <maier@linux.ibm.com>
-Subject: [PATCH 1/2] scsi: core: fix missing .cleanup_rq for SCSI
+Subject: [PATCH 2/2] scsi: core: fix dh and multipathing for SCSI
 	hosts without request batching
-Date: Wed,  7 Aug 2019 16:49:47 +0200
-Message-ID: <20190807144948.28265-2-maier@linux.ibm.com>
+Date: Wed,  7 Aug 2019 16:49:48 +0200
+Message-ID: <20190807144948.28265-3-maier@linux.ibm.com>
 References: <20190807144948.28265-1-maier@linux.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -22,32 +22,52 @@ To: "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <marti
 Cc: Jens Axboe <axboe@kernel.dk>, linux-s390@vger.kernel.org, Benjamin Block <bblock@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>, linux-scsi@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, Hannes Reinecke <hare@suse.com>, "Ewan D . Milne" <emilne@redhat.com>, linux-block@vger.kernel.org, dm-devel@redhat.com, linux-next@vger.kernel.org, Steffen Maier <maier@linux.ibm.com>, Christoph Hellwig <hch@lst.de>, Bart Van Assche <bvanassche@acm.org>
 List-Id: linux-scsi@vger.kernel.org
 
-This was missing from scsi_mq_ops_no_commit of linux-next commit
+This was missing from scsi_device_from_queue() due to the introduction
+of another new scsi_mq_ops_no_commit of linux-next commit
 8930a6c20791 ("scsi: core: add support for request batching")
 from Martin's scsi/5.4/scsi-queue or James' scsi/misc.
 
-See also linux-next commit b7e9e1fb7a92 ("scsi: implement .cleanup_rq
-callback") from block/for-next.
+Only devicehandler code seems to call scsi_device_from_queue():
+*** drivers/scsi/scsi_dh.c:
+scsi_dh_activate[255]          sdev = scsi_device_from_queue(q);
+scsi_dh_set_params[302]        sdev = scsi_device_from_queue(q);
+scsi_dh_attach[325]            sdev = scsi_device_from_queue(q);
+scsi_dh_attached_handler_name[363] sdev = scsi_device_from_queue(q);
+
+Fixes multipath tools follow-on errors:
+
+$ multipath -v6
+...
+libdevmapper: ioctl/libdm-iface.c(1887): device-mapper: reload ioctl on mpatha  failed: No such device
+...
+mpatha: failed to load map, error 19
+...
+
+showing also as kernel messages:
+
+device-mapper: table: 252:0: multipath: error attaching hardware handler
+device-mapper: ioctl: error adding target to table
 
 Signed-off-by: Steffen Maier <maier@linux.ibm.com>
 Fixes: 8930a6c20791 ("scsi: core: add support for request batching")
 Cc: Paolo Bonzini <pbonzini@redhat.com>
-Cc: Ming Lei <ming.lei@redhat.com>
 ---
- drivers/scsi/scsi_lib.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/scsi/scsi_lib.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index ae03d3e2600f..90c257622bb0 100644
+index 90c257622bb0..73e7d29fbd66 100644
 --- a/drivers/scsi/scsi_lib.c
 +++ b/drivers/scsi/scsi_lib.c
-@@ -1834,6 +1834,7 @@ static const struct blk_mq_ops scsi_mq_ops_no_commit = {
- 	.init_request	= scsi_mq_init_request,
- 	.exit_request	= scsi_mq_exit_request,
- 	.initialize_rq_fn = scsi_initialize_rq,
-+	.cleanup_rq	= scsi_cleanup_rq,
- 	.busy		= scsi_mq_lld_busy,
- 	.map_queues	= scsi_map_queues,
- };
+@@ -1922,7 +1922,8 @@ struct scsi_device *scsi_device_from_queue(struct request_queue *q)
+ {
+ 	struct scsi_device *sdev = NULL;
+ 
+-	if (q->mq_ops == &scsi_mq_ops)
++	if (q->mq_ops == &scsi_mq_ops_no_commit ||
++	    q->mq_ops == &scsi_mq_ops)
+ 		sdev = q->queuedata;
+ 	if (!sdev || !get_device(&sdev->sdev_gendev))
+ 		sdev = NULL;
 -- 
 2.17.1
