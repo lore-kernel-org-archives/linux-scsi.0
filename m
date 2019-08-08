@@ -1,34 +1,30 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: 5.2.x kernel: WD 8TB USB Drives: Unaligned partial completion (resid=78, sector_sz=512)
-Date: Wed, 07 Aug 2019 22:03:36 -0400
-Message-ID: <yq1ftmcct1j.fsf@oracle.com>
-References: <006d01d549db$54e42140$feac63c0$@lucidpixels.com>
+Subject: Re: [PATCH 00/15] hisi_sas: Misc patches
+Date: Wed, 07 Aug 2019 22:14:40 -0400
+Message-ID: <yq1blx0csj3.fsf@oracle.com>
+References: <1565012892-75940-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <006d01d549db$54e42140$feac63c0$@lucidpixels.com> (Justin
-        Piszcz's message of "Sat, 3 Aug 2019 05:10:44 -0400")
+In-Reply-To: <1565012892-75940-1-git-send-email-john.garry@huawei.com> (John
+        Garry's message of "Mon, 5 Aug 2019 21:47:57 +0800")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: 'LKML' <linux-kernel@vger.kernel.org>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
+To: John Garry <john.garry@huawei.com>
+Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linuxarm@huawei.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Justin,
+John,
 
-> Attached 2 x brand new Western Digital 8TB USB 3.0 drives awhile back and
-> ran some file copy tests and was getting these warnings-- is there any way
-> to avoid these warnings?=C2=A0 I did confirm with parted that the partiti=
-on was
-> aligned but this appears to be something related to the firmware on the
-> device according to [1] and [2]?
+> This patchset incldues a set of misc changes for the driver.
+>
+> Nothing particularly stands out. Here's a quick overview:
+> - minor optimisation in delivery path
+> - some debugfs fixes and new minor features
+> - some other very minor optimisations
+> - and generally the rest are tidy-up patches
 
-Please send us the output of:
+Applied to 5.4/scsi-queue. Thanks!
 
-# sg_vpd -p bl /dev/sdN
-# sg_vpd -p bdc /dev/sdN
-# sg_readcap -l /dev/sdN
-
---=20
+-- 
 Martin K. Petersen	Oracle Linux Engineering
