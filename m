@@ -2,170 +2,166 @@ Return-Path: <SRS0=AwsL=WE=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=0.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USB_DRIVES autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 648C3C433FF
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Aug 2019 08:27:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66760C433FF
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Aug 2019 08:42:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3A9DD21479
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Aug 2019 08:27:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2F4DB2173C
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Aug 2019 08:42:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=lucidpixels.com header.i=@lucidpixels.com header.b="nYQAY+aN"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="Dt0bwRV7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732037AbfHHI1X (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 8 Aug 2019 04:27:23 -0400
-Received: from mail-qt1-f182.google.com ([209.85.160.182]:36395 "EHLO
-        mail-qt1-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731956AbfHHI1W (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Aug 2019 04:27:22 -0400
-Received: by mail-qt1-f182.google.com with SMTP id z4so91351019qtc.3
-        for <linux-scsi@vger.kernel.org>; Thu, 08 Aug 2019 01:27:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=lucidpixels.com; s=google;
-        h=from:to:cc:references:in-reply-to:subject:date:message-id
-         :mime-version:content-transfer-encoding:thread-index
-         :content-language;
-        bh=E2W6U01vJdQF7ZRePehD0DnY3YLES58EmGuikRJVlMk=;
-        b=nYQAY+aNEqyyPkPM1xvcVcJXkcQYvdFc+xLMQp/4s6VaEY+M/kXhrUSmzRdqhqjtt9
-         s7a6UZkccQVpRSNHFsijTaHIcCvIzaBmF+XiLYosS7UmQeYK0C4tvKvH70c8R/8mdN7g
-         i/hmaAuhV2CfAKLVMo5di2+JJD2qv7VOm9B6A=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:references:in-reply-to:subject:date
-         :message-id:mime-version:content-transfer-encoding:thread-index
-         :content-language;
-        bh=E2W6U01vJdQF7ZRePehD0DnY3YLES58EmGuikRJVlMk=;
-        b=gnq2eK+BKmfo3mEImag+0yzko8mirjyjoFIAOnkNlzHviI5bxyNFny+BIBBV8vwKr9
-         dpIvF5KSl/YSZQAQ2S9Up88sN8Cdjox7NB6e1l0/ldS2Ig3FWixzPzPACALNPjBBrJca
-         i0ZXm7x9Ne0oNETJ3A24kFzNTOdIlC7sEHKWmkBUVr2C3rl5VO+Zfe275CYybruOpzY9
-         HGMJC2C++f2SFdM8NuIc4UwxP8wZ3MEQNFh47yRqSxqn6J3dy9wT0ZcihLBDkaUkxpQm
-         kGmWPilNTRvJDtyCitCy+G7rskc40cyDVPJ/GFT7sr1619D/woYOnD9BGoe4OucHKBFp
-         XBSg==
-X-Gm-Message-State: APjAAAViet5stOFf87yTjxmUxc/RBGjZ9UqpFmmqvJehj3+DRdwX3sT0
-        XoJiVucKq+3IZFYD+EErzED0dQ==
-X-Google-Smtp-Source: APXvYqyP2WcpCVJBMfYL9+YcGdqldHxOkOHqH8EkajfPXBNkapg8v35ShMNLrxV2q5qKoKmDshAfJg==
-X-Received: by 2002:a0c:d11c:: with SMTP id a28mr12125099qvh.180.1565252840992;
-        Thu, 08 Aug 2019 01:27:20 -0700 (PDT)
-Received: from WARPC (pool-173-72-201-135.clppva.fios.verizon.net. [173.72.201.135])
-        by smtp.gmail.com with ESMTPSA id q6sm2560608qtr.23.2019.08.08.01.27.19
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 08 Aug 2019 01:27:20 -0700 (PDT)
-From:   "Justin Piszcz" <jpiszcz@lucidpixels.com>
-To:     "'Martin K. Petersen'" <martin.petersen@oracle.com>
-Cc:     "'LKML'" <linux-kernel@vger.kernel.org>,
-        <linux-usb@vger.kernel.org>, <linux-scsi@vger.kernel.org>
-References: <006d01d549db$54e42140$feac63c0$@lucidpixels.com> <yq1ftmcct1j.fsf@oracle.com>
-In-Reply-To: <yq1ftmcct1j.fsf@oracle.com>
-Subject: RE: 5.2.x kernel: WD 8TB USB Drives: Unaligned partial completion (resid=78, sector_sz=512)
-Date:   Thu, 8 Aug 2019 04:27:18 -0400
-Message-ID: <002d01d54dc3$17c278c0$47476a40$@lucidpixels.com>
+        id S1730722AbfHHIma (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 8 Aug 2019 04:42:30 -0400
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:51998 "EHLO
+        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726187AbfHHIma (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Aug 2019 04:42:30 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1565253750; x=1596789750;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=I0hTHuDiR37tNOspHOOVjlBxb4Dy+b8X+sXXcFd2qWE=;
+  b=Dt0bwRV7bMfLq72T3n26yRAZdOtr60nEO46bfKgaVqb4t8OtVydQB984
+   pl7FwVV63ikrMuKP7n/qyNzlG75cB7rqq9Si6s26xXeDGRRmMlfAD/YOF
+   hHmHIN72vkEkPQYRRd7/V7aX4wRKyxqt9qBzoBLJu9Myu8P4smqG5sdtz
+   sn/1rYam7u1hdtkKm5B4tgzFH8uEY0AtUTH2PrDs8efNJufZPiDJRv71F
+   LuEyRW1iJZRGZMtTLbQg/A1499Bi4U7Pl/6pc/Rp1qVJmVCIUZg4J2/fo
+   hoCij/PmDuExFieXPLlq+bBs0Yw+MYk8bjPIrFEeNAbvrEjBvwWK7fqMo
+   Q==;
+IronPort-SDR: fkw5HZoZgCwDZN0MBzMOHtYZ8qcpKUBCttBEuGx1IZ0xMPUfhBpbCdf5M7yPecsgoOmQZydVfT
+ wM3QmNsOe3zwGEOX+cb9LlGfF+KejIP/D5+1ACKymBWIFdcYqSFDNhOuaPrhfzth4OTkk7Gka4
+ 8cJpcmWqNz8AWPr+0xySH8s/sOZt0IQs6Qj7cAjEvRcMqF41qDZSy/C+vQDn1uerpZ9SSB1QjT
+ wQMQuPMgf64tI1cjafFJy/VnfmIXhmQyFOsl7YebDhcGBn4tVgllAjzKO+xntCIzu+YLmolaDA
+ 8kM=
+X-IronPort-AV: E=Sophos;i="5.64,360,1559491200"; 
+   d="scan'208";a="119965685"
+Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 08 Aug 2019 16:42:23 +0800
+IronPort-SDR: KsjLFhczKbdmBLXRDm1t7NtkblW8CUMoQZ+c1tu5UKAjBFg2WULyf94TApcWKlE3n2Ts8OF1Gb
+ RlCsSqG0ItawcIyPdIl0lPZlfxkNs5fZ8BltAUC4mpma66BDSurKnQmy3MN0Q+RabGB7Nsxrm4
+ kVnRNrijbCA/NrXiOWaVybu8+/yMZ/JQNPnzSDzLSPXdCr1nB7YYi7YKhX/9i2VMsRKs+EKmuD
+ zjmOj0XpaX2khZ3bns+zk8F5BzS9romb8Onb9x5IcPUy+/JXgd+0K/VJYjWGUy/9ZDAc+acPwg
+ Q1DOUE+YUE3+EnuIoTPxlLOY
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Aug 2019 01:40:07 -0700
+IronPort-SDR: bK/b11V60DjQRhE6Jmi31Vt0Uf5+x+E1XeJzbyiIPAV5Me1hX9jfgis5ktVZ19k9xno8FYlIRh
+ 0GPyMmAakteboqdnLr7y76DA1fyEDk2E11xJiQ6yE+RsHGIRVMgaszCCee4AUUyyWwc5BAFmcV
+ XM5shTQWC2BQr5jGgQCmq5whhR1Fxp+cpw4JDVpS9zC4PetJwRLQJDWOeg8UWMrvqdSjaRnvfk
+ 8Cy8UwGNjBsXjrjcCyDmJ0d8lIgF9eu1JMDW0/miB7fvqN9HpZC/Wb20uu4qAOEThUPWIaKn8H
+ 070=
+Received: from naota.dhcp.fujisawa.hgst.com ([10.149.53.115])
+  by uls-op-cesaip01.wdc.com with SMTP; 08 Aug 2019 01:42:23 -0700
+Received: (nullmailer pid 4102131 invoked by uid 1000);
+        Thu, 08 Aug 2019 08:42:21 -0000
+Date:   Thu, 8 Aug 2019 17:42:21 +0900
+From:   Naohiro Aota <naohiro.aota@wdc.com>
+To:     Mike Christie <mchristi@redhat.com>
+Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        Nicholas Bellinger <nab@linux-iscsi.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] scsi: target/tcm_loop: update upper limit of LUN
+Message-ID: <20190808084221.agvnr5yflxzdvtgh@naota.dhcp.fujisawa.hgst.com>
+References: <20190805062313.343221-1-naohiro.aota@wdc.com>
+ <5D485A56.9070208@redhat.com>
+ <20190806024505.gpabcyu57vhvnrto@naota.dhcp.fujisawa.hgst.com>
+ <5D49BBFC.7020402@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Mailer: Microsoft Outlook 14.0
-Thread-Index: AQIwp6+4+wiF5pA5Z1zpgf2isBdFKwHnSzfypir7r0A=
-Content-Language: en-us
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Disposition: inline
+In-Reply-To: <5D49BBFC.7020402@redhat.com>
+User-Agent: NeoMutt/20180716
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
-Message-ID: <20190808082718.yAjvgMgC5tjcKNRo30RQDgO7WOB23GD32m2JB4OZEM8@z>
 
+On Tue, Aug 06, 2019 at 12:42:20PM -0500, Mike Christie wrote:
+>On 08/05/2019 09:45 PM, Naohiro Aota wrote:
+>> On Mon, Aug 05, 2019 at 11:33:26AM -0500, Mike Christie wrote:
+>>> On 08/05/2019 01:23 AM, Naohiro Aota wrote:
+>>>> targetcli-fb (or its library: rtslib-fb) allows us to create LUN up to
+>>>> 65535. On the other hand, the kernel driver is limiting max_lun to 0.
+>>>>
+>>>> This limitation causes an actual problem when you delete a loopback
+>>>> device
+>>>> (using /sys/class/scsi_device/${lun}/device/delete) and rescan it (using
+>>>> /sys/class/scsi_host/host${h}/scan). You can delete the device, but
+>>>> cannot
+>>>> rescan it because its LUN is larger than the max_lun and so the scan
+>>>> request results in -EINVAL error in scsi_scan_host_selected().
+>>>
+>>> How are you kicking off this rescan?
+>>>
+>>> Just to make sure I understood you, does the initial LU have LUN 0, you
+>>> delete that, then are you creating another LU with a LUN value that is
+>>> not 0?
+>>
+>> Not exactly. I'm working on a case multiple device is added at once to
+>> one loopback scsi host. You can create two or more device using
+>> "targetcli" command and they may have their LUN larger than 0. For
+>> example,
+>>
+>> $ sudo targetcli
+>> /backstores/fileio> cd /loopback
+>> /loopback> create
+>> Created target naa.5001405218077d66.
+>> /loopback> exit
+>> $ sudo truncate -s 1048576 /mnt/nvme/foo{1,2,3}
+>> $ sudo targetcli /backstores/fileio create name=foo1
+>> file_or_dev=/mnt/nvme/foo1
+>> Created fileio foo1 with size 1048576
+>> $ sudo targetcli /loopback/naa.5001405218077d66/luns create
+>> /backstores/fileio/foo1
+>> Created LUN 0.
+>> (Do the same above for foo2 and foo3)
+>>
+>> Then, you'll see each of them has LUN 0, 1, 2 assigned: (rtslib scans
+>> used LUN and assign free one)
+>>
+>> $ lsscsi
+>> ...
+>> [7:0:1:0]    disk    LIO-ORG  foo1             4.0   /dev/sdd
+>> [7:0:1:1]    disk    LIO-ORG  foo2             4.0   /dev/sde
+>> [7:0:1:2]    disk    LIO-ORG  foo3             4.0   /dev/sdf
+>>
+>> Now, you can delete one of these device:
+>>
+>> $ echo 1 > /sys/class/scsi_device/7\:0\:1\:2/device/delete
+>> $ lsscsi
+>> ...
+>> [7:0:1:0]    disk    LIO-ORG  foo1             4.0   /dev/sdd
+>> [7:0:1:1]    disk    LIO-ORG  foo2             4.0   /dev/sde
+>>
+>> But, you cannot recover it by the scanning:
+>>
+>
+>Why are you using the scsi sysfs interface instead of the target
+>configfs interface?
 
+Xfstests btrfs/003 uses the SCSI sysfs interface to emulate missing block device. We can use any SCSI devices to run the test case, so we cannot use target configfs here.
 
------Original Message-----
-From: Martin K. Petersen [mailto:martin.petersen@oracle.com]=20
-Sent: Wednesday, August 7, 2019 10:04 PM
-To: Justin Piszcz
-Cc: 'LKML'; linux-usb@vger.kernel.org; linux-scsi@vger.kernel.org
-Subject: Re: 5.2.x kernel: WD 8TB USB Drives: Unaligned partial =
-completion (resid=3D78, sector_sz=3D512)
+Even the end result of missing "/dev/sd?" is the same, they are two distinct interfaces. So, we need to fix the broken result of the SCSI sysfs interface anyway?
 
+>I know the comment for max_lun says it wants to support 1 LUN, but the
+>code like in tcm_loop_port_link seems to support multiple LUNs, so your
+>patch looks like it could be ok. I would just set max_luns to the kernel
+>(scsi-ml/lio) limit and not some userspace value.
 
-Justin,
+Hm, taking look at the code (target_fabric_make_lun), there is no upper limit check there. So, set max_lun = U64_MAX right?
+I once considered that but when I create LUN larger than 65535, "targetcli ls" died complaining "LUN must be 0 to 65535". So I used 65536 here.
 
-> Attached 2 x brand new Western Digital 8TB USB 3.0 drives awhile back =
-and
-> ran some file copy tests and was getting these warnings-- is there any =
-way
-> to avoid these warnings?  I did confirm with parted that the partition =
-was
-> aligned but this appears to be something related to the firmware on =
-the
-> device according to [1] and [2]?
+Or, should we use max_lun = U64_MAX and fix userland side? They need to be the same, anyway, I believe...
 
-Please send us the output of:
+>I think the only problem you might have with your patch is that if you
+>delete the device via the scsi sysfs interface you will not be able to
+>unmap the LUN from LIO until you add it back due to tcm_loop_port_unlink
+>failing to look up the device and being able to decrement the tpg refcount.
 
-# sg_vpd -p bl /dev/sdN
-# sg_vpd -p bdc /dev/sdN
-# sg_readcap -l /dev/sdN
+Ah, I didn't notice that point. I'll address that and send a new version.
 
-[ .. ]
-
-Disk type:
----
-Disk /dev/sdf: 7.3 TiB, 8001562869760 bytes, 15628052480 sectors
-Disk model: My Book 25EE
-
-# sg_vpd -p bl /dev/sdf > /tmp/sg_vpd_bl.txt
-# sg_vpd -p bdc /dev/sdf > /tmp/sg_vpd_bdc.txt
-# sg_readcap -l /dev/sdf > /tmp/sg_readcap.txt
-#  ls -l /tmp/sg_vpd_bl.txt /tmp/sg_vpd_bdc.txt /tmp/sg_readcap.txt
--rw-r--r-- 1 root root 421 Aug  8 04:26 /tmp/sg_readcap.txt
--rw-r--r-- 1 root root 244 Aug  8 04:25 /tmp/sg_vpd_bdc.txt
--rw-r--r-- 1 root root 972 Aug  8 04:25 /tmp/sg_vpd_bl.txt
-
-Output:
-
-sg_readcap.txt
-Read Capacity results:
-   Protection: prot_en=3D0, p_type=3D0, p_i_exponent=3D0
-   Logical block provisioning: lbpme=3D0, lbprz=3D0
-   Last LBA=3D15628052479 (0x3a38127ff), Number of logical =
-blocks=3D15628052480
-   Logical block length=3D512 bytes
-   Logical blocks per physical block exponent=3D3 [so physical block =
-length=3D4096 bytes]
-   Lowest aligned LBA=3D0
-Hence:
-   Device size: 8001562869760 bytes, 7630885.0 MiB, 8001.56 GB, 8.00 TB
-
-sg_vpd_bdc.txt
-Block device characteristics VPD page (SBC):
-  Nominal rotation rate: 5400 rpm
-  Product type: Not specified
-  WABEREQ=3D0
-  WACEREQ=3D0
-  Nominal form factor: 3.5 inch
-  ZONED=3D0
-  RBWZ=3D0
-  BOCS=3D0
-  FUAB=3D0
-  VBULS=3D0
-  DEPOPULATION_TIME=3D0 (seconds)
-
-sg_vpd_bl.txt
-Block limits VPD page (SBC):
-  Write same non-zero (WSNZ): 0
-  Maximum compare and write length: 0 blocks [Command not implemented]
-  Optimal transfer length granularity: 8 blocks
-  Maximum transfer length: 65535 blocks
-  Optimal transfer length: 65535 blocks
-  Maximum prefetch transfer length: 65535 blocks
-  Maximum unmap LBA count: 0 [Unmap command not implemented]
-  Maximum unmap block descriptor count: 0 [Unmap command not =
-implemented]
-  Optimal unmap granularity: 0 blocks [not reported]
-  Unmap granularity alignment valid: false
-  Unmap granularity alignment: 0 [invalid]
-  Maximum write same length: 0 blocks [not reported]
-  Maximum atomic transfer length: 0 blocks [not reported]
-  Atomic alignment: 0 [unaligned atomic writes permitted]
-  Atomic transfer length granularity: 0 [no granularity requirement
-  Maximum atomic transfer length with atomic boundary: 0 blocks [not =
-reported]
-  Maximum atomic boundary size: 0 blocks [can only write atomic 1 block]
-
-
+Regards,
