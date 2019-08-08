@@ -1,33 +1,26 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: wd33c93: Mark expected swich fall-through
-Date: Wed, 07 Aug 2019 21:38:57 -0400
-Message-ID: <yq1a7cke8r2.fsf@oracle.com>
-References: <20190729210313.GA5896@embeddedor>
+Subject: Re: [PATCH V2] scsi: ufs: revamp string descriptor reading
+Date: Wed, 07 Aug 2019 21:41:40 -0400
+Message-ID: <yq15zn8e8mj.fsf@oracle.com>
+References: <20190730055517.32525-1-tomas.winkler@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190729210313.GA5896@embeddedor> (Gustavo A. R. Silva's message
-        of "Mon, 29 Jul 2019 16:03:13 -0500")
+In-Reply-To: <20190730055517.32525-1-tomas.winkler@intel.com> (Tomas Winkler's
+        message of "Tue, 30 Jul 2019 08:55:17 +0300")
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Kees Cook <keescook@chromium.org>
+To: Tomas Winkler <tomas.winkler@intel.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Avri Altman <Avri.Altman@wdc.com>, Alim Akhtar <alim.akhtar@samsung.com>, Pedro Sousa <pedrom.sousa@synopsys.com>, Alex Lemberg <Alex.Lemberg@wdc.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Gustavo,
+Tomas,
 
-> Mark switch cases where we are expecting to fall through.
->
-> This patch fixes the following warning (Building: m68k):
->
-> drivers/scsi/wd33c93.c: In function =E2=80=98round_4=E2=80=99:
-> drivers/scsi/wd33c93.c:1856:11: warning: this statement may fall through =
-[-Wimplicit-fallthrough=3D]
->    case 2: ++x;
->            ^~~
+> Define new a type: uc_string_id for easier string handling and less
+> casting. Reduce number or string copies in price of a dynamic
+> allocation.
 
-Applied to 5.4/scsi-queue, thanks!
+Applied to 5.4/scsi-queue. Thanks!
 
---=20
+-- 
 Martin K. Petersen	Oracle Linux Engineering
