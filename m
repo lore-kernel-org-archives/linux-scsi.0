@@ -1,29 +1,34 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2] scsi: ufs: Configure clock in .hce_enable_notify() in Cadence UFS
-Date: Wed, 07 Aug 2019 21:51:06 -0400
-Message-ID: <yq1wofoctmd.fsf@oracle.com>
-References: <20190802112112.18714-1-aniljoy@cadence.com>
+Subject: Re: 5.2.x kernel: WD 8TB USB Drives: Unaligned partial completion (resid=78, sector_sz=512)
+Date: Wed, 07 Aug 2019 22:03:36 -0400
+Message-ID: <yq1ftmcct1j.fsf@oracle.com>
+References: <006d01d549db$54e42140$feac63c0$@lucidpixels.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190802112112.18714-1-aniljoy@cadence.com> (Anil Varughese's
-        message of "Fri, 2 Aug 2019 12:21:12 +0100")
+In-Reply-To: <006d01d549db$54e42140$feac63c0$@lucidpixels.com> (Justin
+        Piszcz's message of "Sat, 3 Aug 2019 05:10:44 -0400")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Anil Varughese <aniljoy@cadence.com>
-Cc: alim.akhtar@samsung.com, avri.altman@wdc.com, pedrom.sousa@synopsys.com, jejb@linux.ibm.com, martin.petersen@oracle.com, hare@suse.de, rafalc@cadence.com, mparab@cadence.com, jank@cadence.com, pawell@cadence.com, vigneshr@ti.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: 'LKML' <linux-kernel@vger.kernel.org>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Anil,
+Justin,
 
-> Configure CDNS_UFS_REG_HCLKDIV in .hce_enable_notify() instead of
-> .setup_clock() because if UFSHCD resets the controller ip because
-> of phy or device related errors then CDNS_UFS_REG_HCLKDIV is
-> reset to default value and .setup_clock() is not called later
-> in the sequence whereas .hce_enable_notify will be called everytime
-> controller is reenabled.
+> Attached 2 x brand new Western Digital 8TB USB 3.0 drives awhile back and
+> ran some file copy tests and was getting these warnings-- is there any way
+> to avoid these warnings?=C2=A0 I did confirm with parted that the partiti=
+on was
+> aligned but this appears to be something related to the firmware on the
+> device according to [1] and [2]?
 
-Applied to 5.4/scsi-queue. Thanks!
+Please send us the output of:
 
--- 
+# sg_vpd -p bl /dev/sdN
+# sg_vpd -p bdc /dev/sdN
+# sg_readcap -l /dev/sdN
+
+--=20
 Martin K. Petersen	Oracle Linux Engineering
