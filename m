@@ -1,28 +1,25 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 00/15] hisi_sas: Misc patches
-Date: Wed, 07 Aug 2019 22:14:40 -0400
-Message-ID: <yq1blx0csj3.fsf@oracle.com>
-References: <1565012892-75940-1-git-send-email-john.garry@huawei.com>
+Subject: Re: [PATCH] scsi: pm80xx: remove redundant assignments to variable rc
+Date: Wed, 07 Aug 2019 22:16:41 -0400
+Message-ID: <yq17e7ocsfq.fsf@oracle.com>
+References: <20190731222214.15720-1-colin.king@canonical.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1565012892-75940-1-git-send-email-john.garry@huawei.com> (John
-        Garry's message of "Mon, 5 Aug 2019 21:47:57 +0800")
+In-Reply-To: <20190731222214.15720-1-colin.king@canonical.com> (Colin King's
+        message of "Wed, 31 Jul 2019 23:22:14 +0100")
 Sender: linux-kernel-owner@vger.kernel.org
-To: John Garry <john.garry@huawei.com>
-Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linuxarm@huawei.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Colin King <colin.king@canonical.com>
+Cc: Jack Wang <jinpu.wang@cloud.ionos.com>, "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-John,
+Colin,
 
-> This patchset incldues a set of misc changes for the driver.
->
-> Nothing particularly stands out. Here's a quick overview:
-> - minor optimisation in delivery path
-> - some debugfs fixes and new minor features
-> - some other very minor optimisations
-> - and generally the rest are tidy-up patches
+> There are several occasions where variable rc is being initialized
+> with a value that is never read and error is being re-assigned a
+> little later on.  Clean up the code by removing rc entirely and
+> just returning the return value from the call to pm8001_issue_ssp_tmf
 
 Applied to 5.4/scsi-queue. Thanks!
 
