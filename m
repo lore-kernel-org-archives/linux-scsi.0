@@ -1,25 +1,22 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi/megaraid_sas: fix a compilation warning
-Date: Wed, 07 Aug 2019 21:30:06 -0400
-Message-ID: <yq1r25we95t.fsf@oracle.com>
-References: <1564151143-22889-1-git-send-email-cai@lca.pw>
+Subject: Re: [PATCH] scsi: ibmvfc: Mark expected switch fall-throughs
+Date: Wed, 07 Aug 2019 21:31:39 -0400
+Message-ID: <yq1mugke938.fsf@oracle.com>
+References: <20190729002608.GA25263@embeddedor>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1564151143-22889-1-git-send-email-cai@lca.pw> (Qian Cai's
-        message of "Fri, 26 Jul 2019 10:25:43 -0400")
+In-Reply-To: <20190729002608.GA25263@embeddedor> (Gustavo A. R. Silva's
+        message of "Sun, 28 Jul 2019 19:26:08 -0500")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Qian Cai <cai@lca.pw>
-Cc: martin.petersen@oracle.com, jejb@linux.ibm.com, kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Cc: Tyrel Datwyler <tyreld@linux.ibm.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, Michael Ellerman <mpe@ellerman.id.au>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, Kees Cook <keescook@chromium.org>, Stephen Rothwell <sfr@canb.auug.org.au>
 List-Id: linux-scsi@vger.kernel.org
 
 
-Qian,
+Gustavo,
 
-> The commit de516379e85f ("scsi: megaraid_sas: changes to function
-> prototypes") introduced a comilation warning due to it changed the
-> function prototype of read_fw_status_reg() to take an instance pointer
-> instead, but forgot to remove an unused variable.
+> Mark switch cases where we are expecting to fall through.
 
 Applied to 5.4/scsi-queue, thanks!
 
