@@ -2,108 +2,101 @@ Return-Path: <SRS0=AwsL=WE=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.3 required=3.0 tests=DKIM_ADSP_CUSTOM_MED,
-	DKIM_INVALID,DKIM_SIGNED,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BF7CC433FF
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Aug 2019 01:35:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C075C32751
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Aug 2019 01:37:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1106A21873
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Aug 2019 01:35:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 70A2C2184E
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Aug 2019 01:37:35 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="TCdvOseK"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="BR78CQ8L"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730635AbfHHBfg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 7 Aug 2019 21:35:36 -0400
-Received: from mail-pg1-f193.google.com ([209.85.215.193]:38894 "EHLO
-        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730547AbfHHBff (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Aug 2019 21:35:35 -0400
-Received: by mail-pg1-f193.google.com with SMTP id z14so5885027pga.5;
-        Wed, 07 Aug 2019 18:35:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=XHTR5NSwh6qJEaM7kQMot3a3W/2ZoOK2f1AQRl8NIV8=;
-        b=TCdvOseK31vtX0p79HT9maPmO35WTcRU30DN2pyeKWQQ3nmlByXEvh1eRlKTTjmkxJ
-         rGsii1qk5NomZARlMT2TYwrtYX8y+7W2qiMZaaRpjm0lPASW5//wmiB1u7RLe48AkIx8
-         i9NHhQQMK1U0kUE8ZnINwXMT+7f1NjIqKKqJXg2cGcv59fqib+M73FkpuLhd7GwJ19/E
-         GdaXwqK34ZEW9bevXmGccgM253b8H5klFTE36BPaOJbGUhGT0gOBnrPPla/V8aDMUGxR
-         /TV2A+FbQPkZgh2msNjj23aA4d1JvvHdkvPMNvRePbgO1BbF6RdCLkcUzqEJFNIZJkGg
-         qpvg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=XHTR5NSwh6qJEaM7kQMot3a3W/2ZoOK2f1AQRl8NIV8=;
-        b=LkvTjaYNFdM/xvQgf/Qshq0QMigRGXkhRk/bhUMPDylBq8zKzwImy182lDgidttIGi
-         PSucuMjYksJ6rawYn9eOYR3T5ZzorNyLzsHKUV6Ja00GfN7AOFNmBoQ82KRJ7mInZ84G
-         xRqAInJhoK/m/oRV017J/W7m33dGCEQHUhN2GXCZz7urSOFZMyFGWxKAKt4MHB2A9BYA
-         7EY4Jw4y4RGfnJan7K0t9eoXNQS/KYuqFrpwhL4nGxINiR/0iN8uqUBoZHw7TCoCfssO
-         upD/bCPN9/Hx51Vp8v6Tk4kgMZN4Fd8PTTOhZn+INDB5APf/ecSm68Gb6l3+65q8TCei
-         6iUw==
-X-Gm-Message-State: APjAAAUgXwLM9TS3vz+zB6n8cGg7TvmyyPm11msYF8uj+cbmQyyn048H
-        gKKRcJrNIehH8WMNpKHX0Oo=
-X-Google-Smtp-Source: APXvYqyJs7OgkOhs8pdDx2fVACEnIZ6CsFLm3EF0WdMYGn6M8JxvRhVae6ZLtGRimHLQrFiV1FCfZg==
-X-Received: by 2002:a17:90a:bb94:: with SMTP id v20mr1368420pjr.88.1565228134994;
-        Wed, 07 Aug 2019 18:35:34 -0700 (PDT)
-Received: from hfq-skylake.ipads-lab.se.sjtu.edu.cn ([202.120.40.82])
-        by smtp.googlemail.com with ESMTPSA id g66sm90979523pfb.44.2019.08.07.18.35.32
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 07 Aug 2019 18:35:34 -0700 (PDT)
-From:   Fuqian Huang <huangfq.daxian@gmail.com>
-Cc:     James Smart <james.smart@broadcom.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        id S2389637AbfHHBhb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 7 Aug 2019 21:37:31 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:41006 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2389558AbfHHBhb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Aug 2019 21:37:31 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x781YKaj128456;
+        Thu, 8 Aug 2019 01:37:11 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : references : date : in-reply-to : message-id : mime-version :
+ content-type; s=corp-2018-07-02;
+ bh=7ZhkOH/5wLpZN4GHA14PNhbdaVQgds5N9ha5vVa7pNM=;
+ b=BR78CQ8Lu5wTrEKzzsNOTKS9LepafkjSZnHh0XNpsX1rRX3k940wDuEQh1w/DCh/WM/Z
+ Jo2YSknijofQ+oH1KcBEhWGq2JjwV4h9ooSJ8NEdYUClF3zgoKcRyt3rP6aKyYMbbrix
+ I7r250m8hWISmvBShJNQ197L1DhWDHrZNm3qqgtbpZMQzPkl3SkxlejYY0TpyghbMKmH
+ Dd+Uw0IMx4kiM3ZKQfIg4sSzfwXjGZBjc5HF5NCFqy65fFE82EdKhIIQ2fbhngf1Wtb3
+ y9dOUfoweqCZj9U/pQk5Sod3Ezq47+5kQxiJlAZ45usjQ5vU7vLGF9mOtSprXjmUCaFB Dg== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2120.oracle.com with ESMTP id 2u527pyfsh-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 08 Aug 2019 01:37:11 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x781WpgQ110367;
+        Thu, 8 Aug 2019 01:35:10 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3030.oracle.com with ESMTP id 2u76689km3-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 08 Aug 2019 01:35:10 +0000
+Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x781Z802027625;
+        Thu, 8 Aug 2019 01:35:08 GMT
+Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 07 Aug 2019 18:35:07 -0700
+To:     "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Cc:     Finn Thain <fthain@telegraphics.com.au>,
+        Michael Schmitz <schmitzmic@gmail.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Fuqian Huang <huangfq.daxian@gmail.com>
-Subject: [PATCH] scsi: lpfc: remove redundant code
-Date:   Thu,  8 Aug 2019 09:35:25 +0800
-Message-Id: <20190808013525.13681-1-huangfq.daxian@gmail.com>
-X-Mailer: git-send-email 2.11.0
-To:     unlisted-recipients:; (no To-header on input)
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Kees Cook <keescook@chromium.org>
+Subject: Re: [PATCH] scsi: sun3_scsi: Mark expected switch fall-throughs
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+References: <20190729143007.GA8067@embeddedor>
+Date:   Wed, 07 Aug 2019 21:35:05 -0400
+In-Reply-To: <20190729143007.GA8067@embeddedor> (Gustavo A. R. Silva's message
+        of "Mon, 29 Jul 2019 09:30:07 -0500")
+Message-ID: <yq1ef1we8xi.fsf@oracle.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9342 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=675
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1906280000 definitions=main-1908080012
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9342 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=731 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1906280000
+ definitions=main-1908080012
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Message-ID: <20190808013525.qTcAPjTyptUX1TX-lX-F9Q9r5BIyft2w0Esnv3ZUKUg@z>
+Message-ID: <20190808013505.d190MkDxpjMqvEKKv53TPMOE-0vh7lF6WuWAOfx0lZU@z>
 
-Remove the redundant initialization code.
 
-Signed-off-by: Fuqian Huang <huangfq.daxian@gmail.com>
----
- drivers/scsi/lpfc/lpfc_bsg.c | 1 -
- drivers/scsi/lpfc/lpfc_sli.c | 1 -
- 2 files changed, 2 deletions(-)
+Gustavo,
 
-diff --git a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
-index b7216d694bff..5f66a2da2599 100644
---- a/drivers/scsi/lpfc/lpfc_bsg.c
-+++ b/drivers/scsi/lpfc/lpfc_bsg.c
-@@ -1571,7 +1571,6 @@ lpfc_issue_ct_rsp(struct lpfc_hba *phba, struct bsg_job *job, uint32_t tag,
- 		"2722 Xmit CT response on exchange x%x Data: x%x x%x x%x\n",
- 		icmd->ulpContext, icmd->ulpIoTag, tag, phba->link_state);
- 
--	ctiocb->iocb_cmpl = NULL;
- 	ctiocb->iocb_flag |= LPFC_IO_LIBDFC;
- 	ctiocb->vport = phba->pport;
- 	ctiocb->context1 = dd_data;
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index f9e6a135d656..156224c14cc7 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -17445,7 +17445,6 @@ lpfc_sli4_seq_abort_rsp(struct lpfc_vport *vport,
- 	icmd->ulpContext = phba->sli4_hba.rpi_ids[ndlp->nlp_rpi];
- 	ctiocb->context1 = lpfc_nlp_get(ndlp);
- 
--	ctiocb->iocb_cmpl = NULL;
- 	ctiocb->vport = phba->pport;
- 	ctiocb->iocb_cmpl = lpfc_sli4_seq_abort_rsp_cmpl;
- 	ctiocb->sli4_lxritag = NO_XRI;
+> Mark switch cases where we are expecting to fall through.
+>
+> This patch fixes the following warnings:
+>
+> drivers/scsi/sun3_scsi.c: warning: this statement may fall through
+> [-Wimplicit-fallthrough=]:  => 399:9, 403:9
+
+Applied to 5.4/scsi-queue, thanks!
+
 -- 
-2.11.0
-
+Martin K. Petersen	Oracle Linux Engineering
