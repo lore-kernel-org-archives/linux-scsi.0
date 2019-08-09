@@ -6,48 +6,48 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E78B6C0650F
-	for <linux-scsi@archiver.kernel.org>; Fri,  9 Aug 2019 03:03:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60F16C433FF
+	for <linux-scsi@archiver.kernel.org>; Fri,  9 Aug 2019 03:03:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C258F216C8
-	for <linux-scsi@archiver.kernel.org>; Fri,  9 Aug 2019 03:03:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3C004216C8
+	for <linux-scsi@archiver.kernel.org>; Fri,  9 Aug 2019 03:03:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2405180AbfHIDDO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 8 Aug 2019 23:03:14 -0400
-Received: from mail-pg1-f193.google.com ([209.85.215.193]:41733 "EHLO
-        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2404934AbfHIDDO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Aug 2019 23:03:14 -0400
-Received: by mail-pg1-f193.google.com with SMTP id x15so34751200pgg.8
-        for <linux-scsi@vger.kernel.org>; Thu, 08 Aug 2019 20:03:14 -0700 (PDT)
+        id S2404992AbfHIDDP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 8 Aug 2019 23:03:15 -0400
+Received: from mail-pf1-f196.google.com ([209.85.210.196]:36558 "EHLO
+        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2404934AbfHIDDP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Aug 2019 23:03:15 -0400
+Received: by mail-pf1-f196.google.com with SMTP id r7so45225243pfl.3
+        for <linux-scsi@vger.kernel.org>; Thu, 08 Aug 2019 20:03:15 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=WhXhYc/R7zacGT2MZgZcpMF5ivuECz+vDnBBfxkXzoU=;
-        b=Gj0L9PnxJnWoINV4r1JIO6u6WnjNZdna2QmGrZ1Hjg4UTxmVaAhaEpD8wFqyg8iB+G
-         B5Fm9ZtsEOcdxKexhqR3JxAkCotMPXecjTKASInNKmql+DOiyd0fkvDB3kTiACjLyxZy
-         HwxPyD+nt86dcMYnRNhkSPq4s6wy6DX9AFjkUdMo2TJ6/UVCfj+QrnEHKM9E0BRVRDTQ
-         szxY0j2NNcT9m6XK8445wrN+90cgcH1RqZyTUeHL8VvIUu33Kt9g11916sBRad7XWlYJ
-         pf94v+bNRzDmOVpGjaQqN6WNngBHcUDZs7gk+Y31N2wEgZTVUq2FFDEzz8ZC8mbCuJd6
-         8krQ==
-X-Gm-Message-State: APjAAAVG3KWm+HcES4guwM9JLpyhfeXEWeRZDAf6xS+u6UErqIPMIm9b
-        pscgvuVRakd9QMCAKCqdkgI=
-X-Google-Smtp-Source: APXvYqyd7kg6f/q5VutTltusBEMifgFUjUslsFrn4TCfsiEXWs9xq2YVsprok/9skMMRzrgheIaU7g==
-X-Received: by 2002:a17:90a:26a1:: with SMTP id m30mr7332363pje.59.1565319793626;
-        Thu, 08 Aug 2019 20:03:13 -0700 (PDT)
+        bh=4f/QZR+SZvQprZ1/NSrg51UrtG3sdEHcIsdSVbkAn9Q=;
+        b=R4j7w+kVGO5eywCHEGgrWO/2Y2VYwsSEq0v3/ywm0uNDse5KbzJrQNaUUG+eaqs2GE
+         3CNIE5p2ZqPARUDHmXvSZLv1VtySGn/toCFlICiJo74AoZ/siMKTcU2qS2bQ1YU2UXnY
+         2rGad0PY/lMkQBlpSVx0xbvPwxHINL64Y67pkuQeY6nH/5yNc7VNDZ+YSfoCugSLaPqO
+         MVHYl/igmLqbDBv8yAgiYp+YCjTu331y7cdjGK3tmtj2h31c7P0ihTwZVxPCZx367BXQ
+         16aH3EBqzScxXQ8GLFouYfF2SHbXqczoiFrUnXgeKs4Wiwqu1LzrtUW9uiTFfRnq+/VD
+         4gRA==
+X-Gm-Message-State: APjAAAVClczpCi6nWyJMc+XHvyn3IKOdQVrliMvE6YDbHQ/QYoMZdSue
+        E8YrJFiMSH4gRSjq/+g9ery9/SDp
+X-Google-Smtp-Source: APXvYqwR9Vo4FiRs2WzI4nHWtaoQqbjEC9GiOe80BeoYlIQLnHzXro75h0GJNkyZcLimDCjFMKQOOw==
+X-Received: by 2002:a17:90b:f0e:: with SMTP id br14mr7169908pjb.117.1565319794964;
+        Thu, 08 Aug 2019 20:03:14 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4001:6530:8f02:649d:771a:4703])
-        by smtp.gmail.com with ESMTPSA id g2sm111787580pfi.26.2019.08.08.20.03.12
+        by smtp.gmail.com with ESMTPSA id g2sm111787580pfi.26.2019.08.08.20.03.13
         (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
-        Thu, 08 Aug 2019 20:03:12 -0700 (PDT)
+        Thu, 08 Aug 2019 20:03:14 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
         Himanshu Madhani <hmadhani@marvell.com>
-Subject: [PATCH v2 28/58] qla2xxx: Remove unreachable code from qla83xx_idc_lock()
-Date:   Thu,  8 Aug 2019 20:01:49 -0700
-Message-Id: <20190809030219.11296-29-bvanassche@acm.org>
+Subject: [PATCH v2 29/58] qla2xxx: Suppress a Coveritiy complaint about integer overflow
+Date:   Thu,  8 Aug 2019 20:01:50 -0700
+Message-Id: <20190809030219.11296-30-bvanassche@acm.org>
 X-Mailer: git-send-email 2.22.0
 In-Reply-To: <20190809030219.11296-1-bvanassche@acm.org>
 References: <20190809030219.11296-1-bvanassche@acm.org>
@@ -58,49 +58,33 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This was detected by Coverity.
+This patch fixes the following Coverity complaint:
+
+Unintentional integer overflow (OVERFLOW_BEFORE_WIDEN)
+overflow_before_widen: Potentially overflowing expression dma_eng_num *
+65536U with type unsigned int (32 bits, unsigned) is evaluated using 32-bit
+arithmetic, and then used in a context that expects an expression of type
+uint64_t (64 bits, unsigned).
 
 Cc: Himanshu Madhani <hmadhani@marvell.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/qla2xxx/qla_os.c | 17 -----------------
- 1 file changed, 17 deletions(-)
+ drivers/scsi/qla2xxx/qla_nx2.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 37e24987c852..2ba06a84c501 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -5720,7 +5720,6 @@ qla83xx_idc_lock_recovery(scsi_qla_host_t *base_vha)
- void
- qla83xx_idc_lock(scsi_qla_host_t *base_vha, uint16_t requester_id)
- {
--	uint16_t options = (requester_id << 15) | BIT_6;
- 	uint32_t data;
- 	uint32_t lock_owner;
- 	struct qla_hw_data *ha = base_vha->hw;
-@@ -5753,22 +5752,6 @@ qla83xx_idc_lock(scsi_qla_host_t *base_vha, uint16_t requester_id)
- 	}
+diff --git a/drivers/scsi/qla2xxx/qla_nx2.c b/drivers/scsi/qla2xxx/qla_nx2.c
+index 369ac04d0454..c056f466f1f4 100644
+--- a/drivers/scsi/qla2xxx/qla_nx2.c
++++ b/drivers/scsi/qla2xxx/qla_nx2.c
+@@ -2810,7 +2810,7 @@ qla8044_minidump_process_pollrdmwr(struct scsi_qla_host *vha,
  
- 	return;
--
--	/* XXX: IDC-lock implementation using access-control mbx */
--retry_lock2:
--	if (qla83xx_access_control(base_vha, options, 0, 0, NULL)) {
--		ql_dbg(ql_dbg_p3p, base_vha, 0xb072,
--		    "Failed to acquire IDC lock. retrying...\n");
--		/* Retry/Perform IDC-Lock recovery */
--		if (qla83xx_idc_lock_recovery(base_vha) == QLA_SUCCESS) {
--			qla83xx_wait_logic();
--			goto retry_lock2;
--		} else
--			ql_log(ql_log_warn, base_vha, 0xb076,
--			    "IDC Lock recovery FAILED.\n");
--	}
--
--	return;
- }
- 
- void
+ #define ISP8044_PEX_DMA_ENGINE_INDEX		8
+ #define ISP8044_PEX_DMA_BASE_ADDRESS		0x77320000
+-#define ISP8044_PEX_DMA_NUM_OFFSET		0x10000
++#define ISP8044_PEX_DMA_NUM_OFFSET		0x10000UL
+ #define ISP8044_PEX_DMA_CMD_ADDR_LOW		0x0
+ #define ISP8044_PEX_DMA_CMD_ADDR_HIGH		0x04
+ #define ISP8044_PEX_DMA_CMD_STS_AND_CNTRL	0x08
 -- 
 2.22.0
 
