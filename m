@@ -6,105 +6,146 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9CE4EC433FF
-	for <linux-scsi@archiver.kernel.org>; Fri,  9 Aug 2019 03:03:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AB85C433FF
+	for <linux-scsi@archiver.kernel.org>; Fri,  9 Aug 2019 08:57:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7CB5A216C8
-	for <linux-scsi@archiver.kernel.org>; Fri,  9 Aug 2019 03:03:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 16F782086A
+	for <linux-scsi@archiver.kernel.org>; Fri,  9 Aug 2019 08:57:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2405384AbfHIDDz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 8 Aug 2019 23:03:55 -0400
-Received: from mail-pf1-f195.google.com ([209.85.210.195]:46387 "EHLO
-        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2404533AbfHIDDz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Aug 2019 23:03:55 -0400
-Received: by mail-pf1-f195.google.com with SMTP id c3so22085862pfa.13
-        for <linux-scsi@vger.kernel.org>; Thu, 08 Aug 2019 20:03:54 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=I00wm+N9pakcsX4J8TfEy96f7jiZIOD1SYmi0tu5GMg=;
-        b=Jsir3rnJd7uPe5k5iRnznexNC5wkkwIeu9uF9uFqRv1w4iEub78izbOynopudANo6p
-         DhjIOkAYdHHQxQZr3y9kXezR92ZPjqfl2YWLyixfZsRxhdBLLHIpw3ZgjJ8ZgG3CNwgz
-         J2C+CPxe+GrdvqLzR0r0Cvjg69/hMX6RqsG2O2l8ZP0AkNChdS+u3WQjQFSeYJmLfmfq
-         ByHB7sEhHladWeJv9Gt5zdPHNOpU6IYe0axjljtRDskpKaky3EUXt+UEazfO8jIiI7mH
-         mlne99qkBU20solQdRwVJMZiDXIY83P/wwruOIqmPzLZIN0Mqm9L6+LPHheOAvpp+6mw
-         pfDw==
-X-Gm-Message-State: APjAAAWvDXVrsRJxEaIL6QzU6G0FWjFam0YWWQNs036ocPmE+0lwIKas
-        PpzzsgN2AlWcyKjBa8UQLpE=
-X-Google-Smtp-Source: APXvYqwl2ZfNV3GpPBGVJXGbgfE3q+EnMTfdKYdSeuSq8f70N/l5mFTeP3B+78iQTypncKO20SO3Jg==
-X-Received: by 2002:a17:90a:d817:: with SMTP id a23mr7064668pjv.54.1565319834113;
-        Thu, 08 Aug 2019 20:03:54 -0700 (PDT)
-Received: from asus.hsd1.ca.comcast.net ([2601:647:4001:6530:8f02:649d:771a:4703])
-        by smtp.gmail.com with ESMTPSA id g2sm111787580pfi.26.2019.08.08.20.03.52
-        (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
-        Thu, 08 Aug 2019 20:03:53 -0700 (PDT)
-From:   Bart Van Assche <bvanassche@acm.org>
-To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Himanshu Madhani <hmadhani@marvell.com>
-Subject: [PATCH v2 58/58] qla2xxx: Fix a NULL pointer dereference
-Date:   Thu,  8 Aug 2019 20:02:19 -0700
-Message-Id: <20190809030219.11296-59-bvanassche@acm.org>
-X-Mailer: git-send-email 2.22.0
-In-Reply-To: <20190809030219.11296-1-bvanassche@acm.org>
-References: <20190809030219.11296-1-bvanassche@acm.org>
+        id S2405888AbfHII5i (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 9 Aug 2019 04:57:38 -0400
+Received: from szxga06-in.huawei.com ([45.249.212.32]:49222 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726134AbfHII5i (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 9 Aug 2019 04:57:38 -0400
+Received: from DGGEMS414-HUB.china.huawei.com (unknown [172.30.72.59])
+        by Forcepoint Email with ESMTP id C15228C434FAAFFFEB21;
+        Fri,  9 Aug 2019 16:57:35 +0800 (CST)
+Received: from huawei.com (10.90.53.225) by DGGEMS414-HUB.china.huawei.com
+ (10.3.19.214) with Microsoft SMTP Server id 14.3.439.0; Fri, 9 Aug 2019
+ 16:57:25 +0800
+From:   zhengbin <zhengbin13@huawei.com>
+To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        <ming.lei@redhat.com>, <linux-scsi@vger.kernel.org>
+CC:     <houtao1@huawei.com>, <yanaijie@huawei.com>,
+        <zhengbin13@huawei.com>
+Subject: [PATCH] SCSI: fix queue cleanup race before scsi_requeue_run_queue is done
+Date:   Fri, 9 Aug 2019 17:03:53 +0800
+Message-ID: <1565341433-110262-1-git-send-email-zhengbin13@huawei.com>
+X-Mailer: git-send-email 2.7.4
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.90.53.225]
+X-CFilter-Loop: Reflected
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-BUG: KASAN: null-ptr-deref in qla24xx_handle_plogi_done_event+0x134/0x9f0 [qla2xxx]
-Read of size 4 at addr 00000000000000a0 by task swapper/2/0
+KASAN reports a use-after-free in 4.19-stable,
+which won't happen after commit 47cdee29ef9d
+("block: move blk_exit_queue into __blk_release_queue").
+However, backport this patch to 4.19-stable will be a lot of work and
+the risk is great. Moreover, we should make sure scsi_requeue_run_queue
+is done before blk_cleanup_queue in master too.
 
-CPU: 2 PID: 0 Comm: swapper/2 Not tainted 5.2.0-dbg+ #1
-Hardware name: Bochs Bochs, BIOS Bochs 01/01/2011
-Call Trace:
- <IRQ>
- dump_stack+0x8a/0xd6
- __kasan_report.cold+0x5/0x41
- kasan_report+0x16/0x20
- __asan_load4+0x7e/0x80
- qla24xx_handle_plogi_done_event+0x134/0x9f0 [qla2xxx]
- qla2x00_els_dcmd2_sp_done+0x15f/0x230 [qla2xxx]
- qla24xx_els_ct_entry+0x3b3/0x610 [qla2xxx]
- qla24xx_process_response_queue+0x514/0x10e0 [qla2xxx]
- qla24xx_msix_rsp_q+0x80/0x100 [qla2xxx]
- __handle_irq_event_percpu+0x72/0x450
- handle_irq_event_percpu+0x74/0xf0
- handle_irq_event+0x5e/0x8f
- handle_edge_irq+0x13a/0x320
- handle_irq+0x30/0x40
- do_IRQ+0x91/0x190
- common_interrupt+0xf/0xf
- </IRQ>
-RIP: 0010:default_idle+0x31/0x230
+BUG: KASAN: use-after-free in dd_has_work+0x50/0xe8
+Read of size 8 at addr ffff808b57c6f168 by task kworker/53:1H/6910
 
-Fixes: 8777e4314d39 ("scsi: qla2xxx: Migrate NVME N2N handling into state machine") # v4.19.
-Cc: Himanshu Madhani <hmadhani@marvell.com>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+CPU: 53 PID: 6910 Comm: kworker/53:1H Kdump: loaded Tainted: G
+Hardware name: Huawei TaiShan 2280 /BC11SPCD, BIOS 1.59 01/31/2019
+Workqueue: kblockd scsi_requeue_run_queue
+Call trace:
+ dump_backtrace+0x0/0x270
+ show_stack+0x24/0x30
+ dump_stack+0xb4/0xe4
+ print_address_description+0x68/0x278
+ kasan_report+0x204/0x330
+ __asan_load8+0x88/0xb0
+ dd_has_work+0x50/0xe8
+ blk_mq_run_hw_queue+0x19c/0x218
+ blk_mq_run_hw_queues+0x7c/0xb0
+ scsi_run_queue+0x3ec/0x520
+ scsi_requeue_run_queue+0x2c/0x38
+ process_one_work+0x2e4/0x6d8
+ worker_thread+0x6c/0x6a8
+ kthread+0x1b4/0x1c0
+ ret_from_fork+0x10/0x18
+
+Allocated by task 46843:
+ kasan_kmalloc+0xe0/0x190
+ kmem_cache_alloc_node_trace+0x10c/0x258
+ dd_init_queue+0x68/0x190
+ blk_mq_init_sched+0x1cc/0x300
+ elevator_init_mq+0x90/0xe0
+ blk_mq_init_allocated_queue+0x700/0x728
+ blk_mq_init_queue+0x48/0x90
+ scsi_mq_alloc_queue+0x34/0xb0
+ scsi_alloc_sdev+0x340/0x530
+ scsi_probe_and_add_lun+0x46c/0x1260
+ __scsi_scan_target+0x1b8/0x7b0
+ scsi_scan_target+0x140/0x150
+ fc_scsi_scan_rport+0x164/0x178 [scsi_transport_fc]
+ process_one_work+0x2e4/0x6d8
+ worker_thread+0x6c/0x6a8
+ kthread+0x1b4/0x1c0
+ ret_from_fork+0x10/0x18
+
+Freed by task 46843:
+ __kasan_slab_free+0x120/0x228
+ kasan_slab_free+0x10/0x18
+ kfree+0x88/0x218
+ dd_exit_queue+0x5c/0x78
+ blk_mq_exit_sched+0x104/0x130
+ elevator_exit+0xa8/0xc8
+ blk_exit_queue+0x48/0x78
+ blk_cleanup_queue+0x170/0x248
+ __scsi_remove_device+0x84/0x1b0
+ scsi_probe_and_add_lun+0xd00/0x1260
+ __scsi_scan_target+0x1b8/0x7b0
+ scsi_scan_target+0x140/0x150
+ fc_scsi_scan_rport+0x164/0x178 [scsi_transport_fc]
+ process_one_work+0x2e4/0x6d8
+ worker_thread+0x6c/0x6a8
+ kthread+0x1b4/0x1c0
+ ret_from_fork+0x10/0x18
+
+Fixes: 8dc765d438f1 ("SCSI: fix queue cleanup race before queue initialization is done")
+Signed-off-by: zhengbin <zhengbin13@huawei.com>
 ---
- drivers/scsi/qla2xxx/qla_iocb.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/scsi/scsi_lib.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
-index 7021fbeb6d23..e92e52aa6e9b 100644
---- a/drivers/scsi/qla2xxx/qla_iocb.c
-+++ b/drivers/scsi/qla2xxx/qla_iocb.c
-@@ -2755,7 +2755,8 @@ static void qla2x00_els_dcmd2_sp_done(srb_t *sp, int res)
- 		} else {
- 			memset(&ea, 0, sizeof(ea));
- 			ea.fcport = fcport;
--			ea.rc = res;
-+			ea.data[0] = MBS_COMMAND_COMPLETE;
-+			ea.sp = sp;
- 			qla24xx_handle_plogi_done_event(vha, &ea);
- 		}
- 
--- 
-2.22.0
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 11e64b5..e5ef180 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -531,6 +531,11 @@ void scsi_requeue_run_queue(struct work_struct *work)
+ 	sdev = container_of(work, struct scsi_device, requeue_work);
+ 	q = sdev->request_queue;
+ 	scsi_run_queue(q);
++	/*
++	 * need to put q_usage_counter which
++	 * is got in scsi_end_request.
++	 */
++	percpu_ref_put(&q->q_usage_counter);
+ }
+
+ void scsi_run_host_queues(struct Scsi_Host *shost)
+@@ -615,10 +620,11 @@ static bool scsi_end_request(struct request *req, blk_status_t error,
+ 	if (scsi_target(sdev)->single_lun ||
+ 	    !list_empty(&sdev->host->starved_list))
+ 		kblockd_schedule_work(&sdev->requeue_work);
+-	else
++	else {
+ 		blk_mq_run_hw_queues(q, true);
++		percpu_ref_put(&q->q_usage_counter);
++	}
+
+-	percpu_ref_put(&q->q_usage_counter);
+ 	return false;
+ }
+
+--
+2.7.4
 
