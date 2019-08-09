@@ -1,33 +1,68 @@
-From: Gerd Hoffmann <kraxel@redhat.com>
-Subject: Re: [PATCH v3 1/8] scsi: core: fix the dma_max_mapping_size call
-Date: Thu, 8 Aug 2019 12:23:19 +0200
-Message-ID: <20190808102319.d4wdcp3sfcjqdk44@sirius.home.kraxel.org>
-References: <20190808093702.29512-1-kraxel@redhat.com>
- <20190808093702.29512-2-kraxel@redhat.com>
+From: Shaun Tancheff <shaun@tancheff.com>
+Subject: [PATCH 1/1] kbuild: recursive build of external kernel modules
+Date: Thu,  8 Aug 2019 19:21:04 -0500
+Message-ID: <20190809002104.18599-2-stancheff@cray.com>
+References: <20190809002104.18599-1-stancheff@cray.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20190808093702.29512-2-kraxel@redhat.com>
+In-Reply-To: <20190809002104.18599-1-stancheff@cray.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: dri-devel@lists.freedesktop.org
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "open list:SCSI SUBSYSTEM" <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <jejb@linux.ibm.com>, open list <linux-kernel@vger.kernel.org>, tzimmermann@suse.de, Christoph Hellwig <hch@lst.de>
+To: Masahiro Yamada <yamada.masahiro@socionext.com>
+Cc: Shaun Tancheff <stancheff@cray.com>, linux-kbuild@vger.kernel.org, Joe Lawrence <joe.lawrence@redhat.com>, "'James E . J . Bottomley'" <jejb@linux.ibm.com>, Jonathan Corbet <corbet@lwn.net>, "'Martin K . Petersen'" <martin.petersen@oracle.com>, Michal Marek <michal.lkml@markovi.net>, Shuah Khan <shuah@kernel.org>, Thomas Renninger <trenn@suse.com>, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Aug 08, 2019 at 11:36:55AM +0200, Gerd Hoffmann wrote:
-> From: Christoph Hellwig <hch@lst.de>
-> 
-> We should only call dma_max_mapping_size for devices that have a DMA mask
-> set, otherwise we can run into a NULL pointer dereference that will crash
-> the system.
-> 
-> Also we need to do right shift to get the sectors from the size in bytes,
-> not a left shift.
+When building a tree of external modules stage 2 fails
+silently as the root modules.order is empty.
 
-Oops, that wasn't meant to be re-sent, sorry.
+Modify the modules.order location to be fixed to the
+root when KBUILD_EXTMOD is specified and write all
+module paths to the single modules.order file.
 
-drm-misc-next maintainers: any chance for a backmerge to pick up this fix,
-so I don't have to carry it in my branches?
+Signed-off-by: Shaun Tancheff <stancheff@cray.com>
+---
+ Makefile               | 1 +
+ scripts/Makefile.build | 8 +++++++-
+ 2 files changed, 8 insertions(+), 1 deletion(-)
 
-thanks,
-  Gerd
+diff --git a/Makefile b/Makefile
+index 23cdf1f41364..a9964492f47e 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1622,6 +1622,7 @@ $(module-dirs): prepare $(objtree)/Module.symvers
+ 
+ modules: $(module-dirs)
+ 	@$(kecho) '  Building modules, stage 2.';
++	$(Q)$rm -f $(KBUILD_EXTMOD)/modules.order
+ 	$(Q)$(MAKE) -f $(srctree)/scripts/Makefile.modpost
+ 
+ PHONY += modules_install
+diff --git a/scripts/Makefile.build b/scripts/Makefile.build
+index 0d434d0afc0b..f9908b3d59e0 100644
+--- a/scripts/Makefile.build
++++ b/scripts/Makefile.build
+@@ -64,7 +64,13 @@ builtin-target := $(obj)/built-in.a
+ endif
+ 
+ ifeq ($(CONFIG_MODULES)$(need-modorder),y1)
++ifneq ($(KBUILD_EXTMOD),)
++modorder-target := $(KBUILD_EXTMOD)/modules.order
++modorder-add := >>
++else
+ modorder-target := $(obj)/modules.order
++modorder-add := >
++endif
+ endif
+ 
+ mod-targets := $(patsubst %.o, %.mod, $(obj-m))
+@@ -423,7 +429,7 @@ endif # builtin-target
+ $(modorder-target): $(subdir-ym) FORCE
+ 	$(Q){ $(foreach m, $(modorder), \
+ 	$(if $(filter %/modules.order, $m), cat $m, echo $m);) :; } \
+-	| $(AWK) '!x[$$0]++' - > $@
++	| $(AWK) '!x[$$0]++' - $(modorder-add) $@
+ 
+ #
+ # Rule to compile a set of .o files into one .a file (with symbol table)
+-- 
+2.20.1
