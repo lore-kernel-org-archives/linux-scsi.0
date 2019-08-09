@@ -6,48 +6,48 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 67207C433FF
-	for <linux-scsi@archiver.kernel.org>; Fri,  9 Aug 2019 03:03:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6D7AC433FF
+	for <linux-scsi@archiver.kernel.org>; Fri,  9 Aug 2019 03:03:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3DCF9216C8
-	for <linux-scsi@archiver.kernel.org>; Fri,  9 Aug 2019 03:03:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B586A216C8
+	for <linux-scsi@archiver.kernel.org>; Fri,  9 Aug 2019 03:03:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2405336AbfHIDDq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 8 Aug 2019 23:03:46 -0400
-Received: from mail-pg1-f196.google.com ([209.85.215.196]:38153 "EHLO
-        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2405025AbfHIDDp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Aug 2019 23:03:45 -0400
-Received: by mail-pg1-f196.google.com with SMTP id z14so7869595pga.5
-        for <linux-scsi@vger.kernel.org>; Thu, 08 Aug 2019 20:03:45 -0700 (PDT)
+        id S2405339AbfHIDDr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 8 Aug 2019 23:03:47 -0400
+Received: from mail-pg1-f195.google.com ([209.85.215.195]:40498 "EHLO
+        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2405025AbfHIDDr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Aug 2019 23:03:47 -0400
+Received: by mail-pg1-f195.google.com with SMTP id w10so45100230pgj.7
+        for <linux-scsi@vger.kernel.org>; Thu, 08 Aug 2019 20:03:46 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=dicEH76HmLjK6O9L5Bk17c7YpzZyrQwUSyTIyiw3k8k=;
-        b=PhWBT0S3D51yaF2z9qcYx7raDmbCTDntw9O/nWJwNrudGDLpntWIqjgSnzPjSJKkms
-         mdbTCYOQaWGmXK8Pf0yUfEaQIYL6btSSayjbGkVRxStsI7vZZ00qf8IuzrtbTF6clwSe
-         9gnKHRJKMtjOkQKg7uakFeLbDorCWgPBB8GfH+6rlmQn8KLO6UYv72jsJEUy/XHaK6gq
-         t77u8wocon+YcL3IlB17k8AuGf5d5JRicE3Afb5X28Pk9Edzhzpbqq3SUAsFz/bCqjra
-         aHF/g9YROwJ5Bx3PFqAuce2EJzSOn45mhAZUUCkMGQGQ1by/vWpAWEjId2j1X8t0L0A8
-         rMMQ==
-X-Gm-Message-State: APjAAAVY9nDkHFOBFp5pChzsTvFFSJSmG4YN3eEA1QkabA4F0jmW/4BK
-        2sl8COu9iyoSm8ivRqlxXAVS4HX7
-X-Google-Smtp-Source: APXvYqx9gTve5QfMXrfRs8m29Kdz0jZX4p8ACPDaR6hHwCE0oHQCO4yOKfBdjot9EPR3VyVGv436KQ==
-X-Received: by 2002:a65:6891:: with SMTP id e17mr15812728pgt.305.1565319824840;
-        Thu, 08 Aug 2019 20:03:44 -0700 (PDT)
+        bh=do03IiiTlt9S0nbJ8I+i/UdM93cHkEijHJqDixACcak=;
+        b=AgVBWgML209gkT15OjvBuzab3SlHlzYm3kIqDVz75kciVpEFmWqHLfOGowpWiCTdrV
+         aoXz3oN5H5S/ld2X28arkKKxMWrjVHhUVZ/mwDn98UQj3+JdByaLTqDgN2qlnbMI+vnS
+         4CgRsgXRN5sLURD3jeerr5QzT+IiyFHYfiPLstaCOn8s55NNrIhKJ2zxlah80uh48nOW
+         FU/Es5vuM8ccTM2GWtL/28uB7CjTL4LCvZ/Fq7T3T6rMJNCKgBLNybn4BryOYorHX4LF
+         NZ2C2ru1DQ+BX5pWhORf6yDMBQUuAkyTHMQ64CiNhkDURbNmg01ZkHzMAR7tvTXVJEEz
+         nClw==
+X-Gm-Message-State: APjAAAWN5fALIJDOD3nZ0R31OOdaTbQcUSJ8CoJLN6bKDTpI+CA9mqEy
+        QBgRqfcNckBN9KoevO+e4xc=
+X-Google-Smtp-Source: APXvYqw9NdHq62utjG0YxAoHI+vI5KR8q6IkFlGZanrHOMN/eyvdSo9/ZJ2znfartYuSWG0+aqajWg==
+X-Received: by 2002:a63:2744:: with SMTP id n65mr15324394pgn.277.1565319826326;
+        Thu, 08 Aug 2019 20:03:46 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4001:6530:8f02:649d:771a:4703])
-        by smtp.gmail.com with ESMTPSA id g2sm111787580pfi.26.2019.08.08.20.03.43
+        by smtp.gmail.com with ESMTPSA id g2sm111787580pfi.26.2019.08.08.20.03.44
         (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
-        Thu, 08 Aug 2019 20:03:43 -0700 (PDT)
+        Thu, 08 Aug 2019 20:03:45 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
         Himanshu Madhani <hmadhani@marvell.com>
-Subject: [PATCH v2 51/58] qla2xxx: Let the compiler check the type of the SCSI command context pointer
-Date:   Thu,  8 Aug 2019 20:02:12 -0700
-Message-Id: <20190809030219.11296-52-bvanassche@acm.org>
+Subject: [PATCH v2 52/58] qla2xxx: Remove superfluous sts_entry_* casts
+Date:   Thu,  8 Aug 2019 20:02:13 -0700
+Message-Id: <20190809030219.11296-53-bvanassche@acm.org>
 X-Mailer: git-send-email 2.22.0
 In-Reply-To: <20190809030219.11296-1-bvanassche@acm.org>
 References: <20190809030219.11296-1-bvanassche@acm.org>
@@ -58,215 +58,62 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Split srb_cmd.ctx into two pointers such that the compiler can check
-the type of that pointer.
+The C language supports implicit casting of void pointers to non-void
+pointers. Remove explicit sts_entry_* casts that are not necessary.
 
 Cc: Himanshu Madhani <hmadhani@marvell.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/qla2xxx/qla_def.h  |  4 ++--
- drivers/scsi/qla2xxx/qla_iocb.c | 20 +++++++++-----------
- drivers/scsi/qla2xxx/qla_nx.c   |  2 +-
- drivers/scsi/qla2xxx/qla_os.c   | 24 ++++++++----------------
- 4 files changed, 20 insertions(+), 30 deletions(-)
+ drivers/scsi/qla2xxx/qla_isr.c | 15 +++++----------
+ 1 file changed, 5 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 3ffe7661a25b..527b2a2708a1 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -317,7 +317,8 @@ struct srb_cmd {
- 	uint32_t request_sense_length;
- 	uint32_t fw_sense_length;
- 	uint8_t *request_sense_ptr;
--	void *ctx;
-+	struct ct6_dsd *ct6_ctx;
-+	struct crc_context *crc_ctx;
- };
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 7533e420e571..5c65f2e67448 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -1513,7 +1513,7 @@ qla2x00_ct_entry(scsi_qla_host_t *vha, struct req_que *req,
+ 		    if (comp_status == CS_DATA_UNDERRUN) {
+ 			    res = DID_OK << 16;
+ 			    bsg_reply->reply_payload_rcv_len =
+-				le16_to_cpu(((sts_entry_t *)pkt)->rsp_info_len);
++				le16_to_cpu(pkt->rsp_info_len);
  
- /*
-@@ -630,7 +631,6 @@ typedef struct srb {
- } srb_t;
- 
- #define GET_CMD_SP(sp) (sp->u.scmd.cmd)
--#define GET_CMD_CTX_SP(sp) (sp->u.scmd.ctx)
- 
- #define GET_CMD_SENSE_LEN(sp) \
- 	(sp->u.scmd.request_sense_length)
-diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
-index 22d875222321..6acf92d19951 100644
---- a/drivers/scsi/qla2xxx/qla_iocb.c
-+++ b/drivers/scsi/qla2xxx/qla_iocb.c
-@@ -621,7 +621,7 @@ qla24xx_build_scsi_type_6_iocbs(srb_t *sp, struct cmd_type_6 *cmd_pkt,
- 	}
- 
- 	cur_seg = scsi_sglist(cmd);
--	ctx = GET_CMD_CTX_SP(sp);
-+	ctx = sp->u.scmd.ct6_ctx;
- 
- 	while (tot_dsds) {
- 		avail_dsds = (tot_dsds > QLA_DSDS_PER_IOCB) ?
-@@ -954,8 +954,7 @@ qla24xx_walk_and_build_sglist_no_difb(struct qla_hw_data *ha, srb_t *sp,
- 
- 			if (sp) {
- 				list_add_tail(&dsd_ptr->list,
--				    &((struct crc_context *)
--					    sp->u.scmd.ctx)->dsd_list);
-+					      &sp->u.scmd.crc_ctx->dsd_list);
- 
- 				sp->flags |= SRB_CRC_CTX_DSD_VALID;
- 			} else {
-@@ -1052,8 +1051,7 @@ qla24xx_walk_and_build_sglist(struct qla_hw_data *ha, srb_t *sp,
- 
- 			if (sp) {
- 				list_add_tail(&dsd_ptr->list,
--				    &((struct crc_context *)
--					    sp->u.scmd.ctx)->dsd_list);
-+					      &sp->u.scmd.crc_ctx->dsd_list);
- 
- 				sp->flags |= SRB_CRC_CTX_DSD_VALID;
- 			} else {
-@@ -1099,7 +1097,7 @@ qla24xx_walk_and_build_prot_sglist(struct qla_hw_data *ha, srb_t *sp,
- 
- 		sgl = scsi_prot_sglist(cmd);
- 		vha = sp->vha;
--		difctx = sp->u.scmd.ctx;
-+		difctx = sp->u.scmd.crc_ctx;
- 		direction_to_device = cmd->sc_data_direction == DMA_TO_DEVICE;
- 		ql_dbg(ql_dbg_tgt + ql_dbg_verbose, vha, 0xe021,
- 		  "%s: scsi_cmnd: %p, crc_ctx: %p, sp: %p\n",
-@@ -1439,7 +1437,7 @@ qla24xx_build_scsi_crc_2_iocbs(srb_t *sp, struct cmd_type_crc_2 *cmd_pkt,
- 		bundling = 0;
- 
- 	/* Allocate CRC context from global pool */
--	crc_ctx_pkt = sp->u.scmd.ctx =
-+	crc_ctx_pkt = sp->u.scmd.crc_ctx =
- 	    dma_pool_zalloc(ha->dl_dma_pool, GFP_ATOMIC, &crc_ctx_dma);
- 
- 	if (!crc_ctx_pkt)
-@@ -3188,7 +3186,7 @@ qla82xx_start_scsi(srb_t *sp)
- 				goto queuing_error;
- 		}
- 
--		ctx = sp->u.scmd.ctx =
-+		ctx = sp->u.scmd.ct6_ctx =
- 		    mempool_alloc(ha->ctx_mempool, GFP_ATOMIC);
- 		if (!ctx) {
- 			ql_log(ql_log_fatal, vha, 0x3010,
-@@ -3384,9 +3382,9 @@ qla82xx_start_scsi(srb_t *sp)
- 	if (tot_dsds)
- 		scsi_dma_unmap(cmd);
- 
--	if (sp->u.scmd.ctx) {
--		mempool_free(sp->u.scmd.ctx, ha->ctx_mempool);
--		sp->u.scmd.ctx = NULL;
-+	if (sp->u.scmd.crc_ctx) {
-+		mempool_free(sp->u.scmd.crc_ctx, ha->ctx_mempool);
-+		sp->u.scmd.crc_ctx = NULL;
- 	}
- 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
- 
-diff --git a/drivers/scsi/qla2xxx/qla_nx.c b/drivers/scsi/qla2xxx/qla_nx.c
-index a91d426add75..372355bfcbb6 100644
---- a/drivers/scsi/qla2xxx/qla_nx.c
-+++ b/drivers/scsi/qla2xxx/qla_nx.c
-@@ -3686,7 +3686,7 @@ qla82xx_chip_reset_cleanup(scsi_qla_host_t *vha)
- 			for (cnt = 1; cnt < req->num_outstanding_cmds; cnt++) {
- 				sp = req->outstanding_cmds[cnt];
- 				if (sp) {
--					if ((!sp->u.scmd.ctx ||
-+					if ((!sp->u.scmd.crc_ctx ||
- 					    (sp->flags &
- 						SRB_FCP_CMND_DMA_VALID)) &&
- 						!ha->flags.isp82xx_fw_hung) {
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 5ca7f7913258..5cb0bb65ace3 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -656,7 +656,6 @@ void qla2x00_sp_free_dma(srb_t *sp)
- {
- 	struct qla_hw_data *ha = sp->vha->hw;
- 	struct scsi_cmnd *cmd = GET_CMD_SP(sp);
--	void *ctx = GET_CMD_CTX_SP(sp);
- 
- 	if (sp->flags & SRB_DMA_VALID) {
- 		scsi_dma_unmap(cmd);
-@@ -669,24 +668,21 @@ void qla2x00_sp_free_dma(srb_t *sp)
- 		sp->flags &= ~SRB_CRC_PROT_DMA_VALID;
- 	}
- 
--	if (!ctx)
--		return;
+ 			    ql_log(ql_log_warn, vha, 0x5048,
+ 				"CT pass-through-%s error comp_status=0x%x total_byte=0x%x.\n",
+@@ -2256,11 +2256,8 @@ qla25xx_process_bidir_status_iocb(scsi_qla_host_t *vha, void *pkt,
+ 	struct bsg_job *bsg_job = NULL;
+ 	struct fc_bsg_request *bsg_request;
+ 	struct fc_bsg_reply *bsg_reply;
+-	sts_entry_t *sts;
+-	struct sts_entry_24xx *sts24;
 -
- 	if (sp->flags & SRB_CRC_CTX_DSD_VALID) {
- 		/* List assured to be having elements */
--		qla2x00_clean_dsd_pool(ha, ctx);
-+		qla2x00_clean_dsd_pool(ha, sp->u.scmd.crc_ctx);
- 		sp->flags &= ~SRB_CRC_CTX_DSD_VALID;
- 	}
+-	sts = (sts_entry_t *) pkt;
+-	sts24 = (struct sts_entry_24xx *) pkt;
++	sts_entry_t *sts = pkt;
++	struct sts_entry_24xx *sts24 = pkt;
  
- 	if (sp->flags & SRB_CRC_CTX_DMA_VALID) {
--		struct crc_context *ctx0 = ctx;
-+		struct crc_context *ctx0 = sp->u.scmd.crc_ctx;
+ 	/* Validate handle. */
+ 	if (index >= req->num_outstanding_cmds) {
+@@ -2406,8 +2403,8 @@ qla2x00_status_entry(scsi_qla_host_t *vha, struct rsp_que *rsp, void *pkt)
+ 	srb_t		*sp;
+ 	fc_port_t	*fcport;
+ 	struct scsi_cmnd *cp;
+-	sts_entry_t *sts;
+-	struct sts_entry_24xx *sts24;
++	sts_entry_t *sts = pkt;
++	struct sts_entry_24xx *sts24 = pkt;
+ 	uint16_t	comp_status;
+ 	uint16_t	scsi_status;
+ 	uint16_t	ox_id;
+@@ -2425,8 +2422,6 @@ qla2x00_status_entry(scsi_qla_host_t *vha, struct rsp_que *rsp, void *pkt)
+ 	uint16_t state_flags = 0;
+ 	uint16_t retry_delay = 0;
  
- 		dma_pool_free(ha->dl_dma_pool, ctx0, ctx0->crc_ctx_dma);
- 		sp->flags &= ~SRB_CRC_CTX_DMA_VALID;
- 	}
- 
- 	if (sp->flags & SRB_FCP_CMND_DMA_VALID) {
--		struct ct6_dsd *ctx1 = ctx;
-+		struct ct6_dsd *ctx1 = sp->u.scmd.ct6_ctx;
- 
- 		dma_pool_free(ha->fcp_cmnd_dma_pool, ctx1->fcp_cmnd,
- 		    ctx1->fcp_cmnd_dma);
-@@ -719,7 +715,6 @@ void qla2xxx_qpair_sp_free_dma(srb_t *sp)
- {
- 	struct scsi_cmnd *cmd = GET_CMD_SP(sp);
- 	struct qla_hw_data *ha = sp->fcport->vha->hw;
--	void *ctx = GET_CMD_CTX_SP(sp);
- 
- 	if (sp->flags & SRB_DMA_VALID) {
- 		scsi_dma_unmap(cmd);
-@@ -732,17 +727,14 @@ void qla2xxx_qpair_sp_free_dma(srb_t *sp)
- 		sp->flags &= ~SRB_CRC_PROT_DMA_VALID;
- 	}
- 
--	if (!ctx)
--		return;
--
- 	if (sp->flags & SRB_CRC_CTX_DSD_VALID) {
- 		/* List assured to be having elements */
--		qla2x00_clean_dsd_pool(ha, ctx);
-+		qla2x00_clean_dsd_pool(ha, sp->u.scmd.crc_ctx);
- 		sp->flags &= ~SRB_CRC_CTX_DSD_VALID;
- 	}
- 
- 	if (sp->flags & SRB_DIF_BUNDL_DMA_VALID) {
--		struct crc_context *difctx = ctx;
-+		struct crc_context *difctx = sp->u.scmd.crc_ctx;
- 		struct dsd_dma *dif_dsd, *nxt_dsd;
- 
- 		list_for_each_entry_safe(dif_dsd, nxt_dsd,
-@@ -778,7 +770,7 @@ void qla2xxx_qpair_sp_free_dma(srb_t *sp)
- 	}
- 
- 	if (sp->flags & SRB_FCP_CMND_DMA_VALID) {
--		struct ct6_dsd *ctx1 = ctx;
-+		struct ct6_dsd *ctx1 = sp->u.scmd.ct6_ctx;
- 
- 		dma_pool_free(ha->fcp_cmnd_dma_pool, ctx1->fcp_cmnd,
- 		    ctx1->fcp_cmnd_dma);
-@@ -790,9 +782,9 @@ void qla2xxx_qpair_sp_free_dma(srb_t *sp)
- 	}
- 
- 	if (sp->flags & SRB_CRC_CTX_DMA_VALID) {
--		struct crc_context *ctx0 = ctx;
-+		struct crc_context *ctx0 = sp->u.scmd.crc_ctx;
- 
--		dma_pool_free(ha->dl_dma_pool, ctx, ctx0->crc_ctx_dma);
-+		dma_pool_free(ha->dl_dma_pool, ctx0, ctx0->crc_ctx_dma);
- 		sp->flags &= ~SRB_CRC_CTX_DMA_VALID;
- 	}
- }
+-	sts = (sts_entry_t *) pkt;
+-	sts24 = (struct sts_entry_24xx *) pkt;
+ 	if (IS_FWI2_CAPABLE(ha)) {
+ 		comp_status = le16_to_cpu(sts24->comp_status);
+ 		scsi_status = le16_to_cpu(sts24->scsi_status) & SS_MASK;
 -- 
 2.22.0
 
