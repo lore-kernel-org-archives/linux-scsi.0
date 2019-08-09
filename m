@@ -6,48 +6,48 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71C4BC0650F
-	for <linux-scsi@archiver.kernel.org>; Fri,  9 Aug 2019 03:03:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 952D6C0650F
+	for <linux-scsi@archiver.kernel.org>; Fri,  9 Aug 2019 03:03:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4D054216C8
-	for <linux-scsi@archiver.kernel.org>; Fri,  9 Aug 2019 03:03:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 70394216C8
+	for <linux-scsi@archiver.kernel.org>; Fri,  9 Aug 2019 03:03:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2405194AbfHIDDU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 8 Aug 2019 23:03:20 -0400
-Received: from mail-pg1-f193.google.com ([209.85.215.193]:45980 "EHLO
-        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2404934AbfHIDDT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Aug 2019 23:03:19 -0400
-Received: by mail-pg1-f193.google.com with SMTP id o13so45082240pgp.12
-        for <linux-scsi@vger.kernel.org>; Thu, 08 Aug 2019 20:03:19 -0700 (PDT)
+        id S2405205AbfHIDDV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 8 Aug 2019 23:03:21 -0400
+Received: from mail-pg1-f194.google.com ([209.85.215.194]:47075 "EHLO
+        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2404934AbfHIDDV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Aug 2019 23:03:21 -0400
+Received: by mail-pg1-f194.google.com with SMTP id w3so7892251pgt.13
+        for <linux-scsi@vger.kernel.org>; Thu, 08 Aug 2019 20:03:20 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=p6QLIAxBOg2UTvDL+5RbvLJuu9lJX9yxfnzUQe+FHBU=;
-        b=Ly3HAFyNoNVepq2rd5zJK9Tke5lqwyo56+MqFQmVU79nJqdeScNeh30Dt61i3r1Rv2
-         BuiBXX7k489jY5OY1UguYdDXKVwH2ZxcFcHMhFKAjPwpRm8f7k/cJMfUQ44UvQCf1CBa
-         2BbqKN0jDS/1ObkNDnDj3PEUV34+XDXqXQPKpbMltY0bijkUifZnp+EO/J7UPN+jzhYm
-         UA4dpq67eo53yaSiYTr6VhDYYzarPU72wXjoU5VpwF/hjG4WuTQ38iZxne9XLbMeZYf3
-         3tlYfnvFVV8Cn8Q9GO3Saqkj+SgcOwt+Kr7MZE50FeegfVwnSDntjb4khRI+5Q/DhMcL
-         xFXg==
-X-Gm-Message-State: APjAAAU0vcPXN+HeGJd6Q7wrjB1XJR/XyNqA32XCusqqi/Fj8gOPw6pS
-        XumBkpVilzNO0fVL2qlm7eM=
-X-Google-Smtp-Source: APXvYqymsqWvgDx12aHWN5P0eNCiuZ7xZeFDpMlNZcmSh6dDNp03vnJPhw7l6r+BYkUrht8mQ6IYLw==
-X-Received: by 2002:a65:6552:: with SMTP id a18mr15944953pgw.208.1565319799040;
-        Thu, 08 Aug 2019 20:03:19 -0700 (PDT)
+        bh=KdLwrYJ2HH41De4FuFVc0WXKj9EbyS/iDjVR8OGcN8A=;
+        b=Zr06xDbvD+2c9zrbh0Am/Y4w+phffUvi7436fjFPtGUivtxTEKpVPO3xkN7EZxQThG
+         wYR0/OROefibcA1clqujgWo3GooGYcpZrsUMA6coiQwF8GF+9oq9fw8W23+RuiY/AKts
+         EfGVocwikb0HOqITcAF4pIIB7mUID4U015sMVngTqsfElOflcgTSIlAfpOyA+07eVZxU
+         9GAax9Oup2fh4mXZNBY1DNAV9l8wg/ozxo3kai4oXZDSh+of7+zRqeJMXTdfFKqgRUSH
+         L86DaWyZc5yuS7hQKA+9bVpbzO9cNth532MI3GjiMdgMlsnuBKfowo3dEkd56Mdmkl3Y
+         N2vQ==
+X-Gm-Message-State: APjAAAXR2T/1xXJP21bG9vJirR+GEcQhUkHc/Ggw6yF+GhsnEmyq+9vu
+        Qk5aHfiNYXqufhMXn5aXKgw=
+X-Google-Smtp-Source: APXvYqxwMnSSQJMKuTGo44FZkwoucQNfj29m3AqtvX9wnGJMBbgusV1h/j6s1gvEe2ql7KJQBWdWXQ==
+X-Received: by 2002:a62:1c5:: with SMTP id 188mr18271141pfb.26.1565319800309;
+        Thu, 08 Aug 2019 20:03:20 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4001:6530:8f02:649d:771a:4703])
-        by smtp.gmail.com with ESMTPSA id g2sm111787580pfi.26.2019.08.08.20.03.17
+        by smtp.gmail.com with ESMTPSA id g2sm111787580pfi.26.2019.08.08.20.03.19
         (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
-        Thu, 08 Aug 2019 20:03:18 -0700 (PDT)
+        Thu, 08 Aug 2019 20:03:19 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
         Himanshu Madhani <hmadhani@marvell.com>
-Subject: [PATCH v2 32/58] qla2xxx: Declare fourth qla2x00_set_model_info() argument const
-Date:   Thu,  8 Aug 2019 20:01:53 -0700
-Message-Id: <20190809030219.11296-33-bvanassche@acm.org>
+Subject: [PATCH v2 33/58] qla2xxx: Complain if waiting for pending commands times out
+Date:   Thu,  8 Aug 2019 20:01:54 -0700
+Message-Id: <20190809030219.11296-34-bvanassche@acm.org>
 X-Mailer: git-send-email 2.22.0
 In-Reply-To: <20190809030219.11296-1-bvanassche@acm.org>
 References: <20190809030219.11296-1-bvanassche@acm.org>
@@ -58,44 +58,77 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Make it clear to humans and also to the compiler that the string passed
-as fourth argument is not modified.
+Such a timeout is a severe issue. Hence complain if waiting for pending
+commands times out. This patch fixes a small bug: it modifies
+qla82xx_chip_reset_cleanup() such that the "Done waiting" message is
+reported if qla82xx_chip_reset_cleanup() succeeded instead of if that
+function failed.
 
 Cc: Himanshu Madhani <hmadhani@marvell.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/qla2xxx/qla_gbl.h  | 4 ++--
- drivers/scsi/qla2xxx/qla_init.c | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/qla2xxx/qla_init.c | 3 ++-
+ drivers/scsi/qla2xxx/qla_nx.c   | 4 +++-
+ drivers/scsi/qla2xxx/qla_os.c   | 7 +++++--
+ 3 files changed, 10 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
-index 6f6801722a09..fc54e7c86463 100644
---- a/drivers/scsi/qla2xxx/qla_gbl.h
-+++ b/drivers/scsi/qla2xxx/qla_gbl.h
-@@ -822,8 +822,8 @@ extern int qla82xx_device_state_handler(scsi_qla_host_t *);
- extern void qla8xxx_dev_failed_handler(scsi_qla_host_t *);
- extern void qla82xx_clear_qsnt_ready(scsi_qla_host_t *);
- 
--extern void qla2x00_set_model_info(scsi_qla_host_t *, uint8_t *,
--				   size_t, char *);
-+extern void qla2x00_set_model_info(scsi_qla_host_t *, uint8_t *, size_t,
-+				   const char *);
- extern int qla82xx_mbx_intr_enable(scsi_qla_host_t *);
- extern int qla82xx_mbx_intr_disable(scsi_qla_host_t *);
- extern void qla82xx_start_iocbs(scsi_qla_host_t *);
 diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index cab5f2f90714..1fd9a086748e 100644
+index 1fd9a086748e..2d9a379fd8fb 100644
 --- a/drivers/scsi/qla2xxx/qla_init.c
 +++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -4426,7 +4426,7 @@ qla2x00_configure_hba(scsi_qla_host_t *vha)
+@@ -6634,7 +6634,8 @@ qla2x00_quiesce_io(scsi_qla_host_t *vha)
+ 					LOOP_DOWN_TIME);
+ 	}
+ 	/* Wait for pending cmds to complete */
+-	qla2x00_eh_wait_for_pending_commands(vha, 0, 0, WAIT_HOST);
++	WARN_ON_ONCE(qla2x00_eh_wait_for_pending_commands(vha, 0, 0, WAIT_HOST)
++		     != QLA_SUCCESS);
+ }
  
- inline void
- qla2x00_set_model_info(scsi_qla_host_t *vha, uint8_t *model, size_t len,
--	char *def)
-+		       const char *def)
- {
- 	char *st, *en;
- 	uint16_t index;
+ void
+diff --git a/drivers/scsi/qla2xxx/qla_nx.c b/drivers/scsi/qla2xxx/qla_nx.c
+index c1c832271ccb..a91d426add75 100644
+--- a/drivers/scsi/qla2xxx/qla_nx.c
++++ b/drivers/scsi/qla2xxx/qla_nx.c
+@@ -3710,10 +3710,12 @@ qla82xx_chip_reset_cleanup(scsi_qla_host_t *vha)
+ 
+ 		/* Wait for pending cmds (physical and virtual) to complete */
+ 		if (qla2x00_eh_wait_for_pending_commands(vha, 0, 0,
+-		    WAIT_HOST)) {
++		    WAIT_HOST) == QLA_SUCCESS) {
+ 			ql_dbg(ql_dbg_init, vha, 0x00b3,
+ 			    "Done wait for "
+ 			    "pending commands.\n");
++		} else {
++			WARN_ON_ONCE(true);
+ 		}
+ 	}
+ }
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 2ba06a84c501..e91681cbd75d 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -1059,8 +1059,8 @@ qla2xxx_mqueuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd,
+  *    cmd = Scsi Command to wait on.
+  *
+  * Return:
+- *    Not Found : 0
+- *    Found : 1
++ *    Completed in time : QLA_SUCCESS
++ *    Did not complete in time : QLA_FUNCTION_FAILED
+  */
+ static int
+ qla2x00_eh_wait_on_command(struct scsi_cmnd *cmd)
+@@ -1372,6 +1372,9 @@ qla2xxx_eh_abort(struct scsi_cmnd *cmd)
+ 	return ret;
+ }
+ 
++/*
++ * Returns: QLA_SUCCESS or QLA_FUNCTION_FAILED.
++ */
+ int
+ qla2x00_eh_wait_for_pending_commands(scsi_qla_host_t *vha, unsigned int t,
+ 	uint64_t l, enum nexus_wait_type type)
 -- 
 2.22.0
 
