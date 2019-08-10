@@ -2,187 +2,135 @@ Return-Path: <SRS0=1VAV=WG=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89444C32751
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Aug 2019 17:55:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E3D1AC32751
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Aug 2019 21:19:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5E21220B7C
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Aug 2019 17:55:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A5E1C2085B
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Aug 2019 21:19:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ezPjll7L"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="LKE/3eng"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726284AbfHJRzy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 10 Aug 2019 13:55:54 -0400
-Received: from mail-pf1-f194.google.com ([209.85.210.194]:33044 "EHLO
-        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726014AbfHJRzy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 10 Aug 2019 13:55:54 -0400
-Received: by mail-pf1-f194.google.com with SMTP id g2so47693129pfq.0;
-        Sat, 10 Aug 2019 10:55:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=h/9CsJGmHC2k7mkEH3qy3JiPzHPuCIzjhAVDf1/O6Fc=;
-        b=ezPjll7Lb5sAV1hP9STQ2H5TEWxJogWsWbSW7y+KFt8hKb48Uc6nbNCEiJHuxAeqHA
-         7UzTKft2gkU9gK1+83GaQU5HrmqlshJxETLy3P6NAhzmzEBEszr7pLK7w25zRBbjySqp
-         OZOQE4fBLDV0iLkIPzRy4UWpRD4RDqG+pn3hclJ0igWjzJuvdukgkXmHdZ7VVK0P/BA2
-         /0ZLPBDn1A2xu1bW572g7bTPIXOw96XakrAKTDe99583c+Y+UWTiUSPe8IfmYwMdFpj2
-         +v/drnpSO1KPgGt3c2SzbPrWFp4r2t5jFN6KYVe88i03JTpkqghSKG8o7sK8+4HN3b3T
-         +V3A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=h/9CsJGmHC2k7mkEH3qy3JiPzHPuCIzjhAVDf1/O6Fc=;
-        b=K5XyPcRZaAYQI19IRaZsOek3hyc6sO+2RcZ7vNBdL68ASXqW31Q6wohHbG7Ic7tmNc
-         QaUq9VnIgeLVOyYVrdoIGmbvujJGgVAFDs7qCY1yzmmHXESA+PxKAsTyH0k0gR0AWmWq
-         8NlFF1Q4IxlzEFt1xeOarRqHURNskacGysjEuiKOzJW/gWMHrKaZNekqvR1jgGD0fJpL
-         12N4adYqL8p6wZbEEXvFTS13p7DORP/L6BChRkrzqmLDYka/Lv4OuCXky9I/KfgmAhRy
-         uSs5yiJS2l4nkjBpCU6WPd8MLlatpe375RK+oveRQN29OBxbfhh/uyfjmJTvxAIpDCne
-         2gvA==
-X-Gm-Message-State: APjAAAU2f4F+zD7AqDGGTSnZMJWaJi+S6E4OYxQ+V4AeEVtpEng0fYMN
-        wrPQJAmiTQHu4hOvqcV0jJvK6H/MF8U=
-X-Google-Smtp-Source: APXvYqzF2UwGISoFhldo7ZZvtdBY4gBhWZntLgvppdH9tAoUWH7GgkeTyFQlSEYAwteeWPypa4ORuA==
-X-Received: by 2002:a17:90a:2041:: with SMTP id n59mr15025439pjc.6.1565459753633;
-        Sat, 10 Aug 2019 10:55:53 -0700 (PDT)
-Received: from mita-MS-7A45.lan ([240f:34:212d:1:a137:2bda:e96e:808])
-        by smtp.gmail.com with ESMTPSA id 185sm102146544pfd.125.2019.08.10.10.55.48
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-        Sat, 10 Aug 2019 10:55:53 -0700 (PDT)
-From:   Akinobu Mita <akinobu.mita@gmail.com>
-To:     linux-block@vger.kernel.org, linux-leds@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org
-Cc:     Akinobu Mita <akinobu.mita@gmail.com>,
-        Frank Steiner <fsteiner-mail1@bio.ifi.lmu.de>,
-        Jacek Anaszewski <jacek.anaszewski@gmail.com>,
-        Pavel Machek <pavel@ucw.cz>, Dan Murphy <dmurphy@ti.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Hannes Reinecke <hare@suse.com>
-Subject: [PATCH v3 6/6] scsi: sd: stop polling disk stats by ledtrig-blk during runtime suspend
-Date:   Sun, 11 Aug 2019 02:55:03 +0900
-Message-Id: <1565459703-30513-7-git-send-email-akinobu.mita@gmail.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1565459703-30513-1-git-send-email-akinobu.mita@gmail.com>
-References: <1565459703-30513-1-git-send-email-akinobu.mita@gmail.com>
+        id S1726558AbfHJVTG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 10 Aug 2019 17:19:06 -0400
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:18081 "EHLO
+        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726201AbfHJVTG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 10 Aug 2019 17:19:06 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1565471947; x=1597007947;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=Vz6doSWrgt+VF7RB1ZPlJqx3Dg2TF1XRt1ORZGZVpgg=;
+  b=LKE/3engzjS7Q4q9ycg2MovK4wudv76m3q65XvmSL4VdQQyTntWVQCsq
+   4Jxbgis1MSXaMGU/A/Klz/KX/Mlm5nAdO+AD5fcH9hEytEBUfB6aq2s3P
+   jVdspAazqGqYr/hE1F7mqmelVRu+Pvca8nYln6szG2UjUBTfOBXDMDBPy
+   S1NY64VPoTN0SljNi9GseES4eXQ71RDimG+MA7piQ1Vj0HG5rQas5+Psl
+   Anu1GGNLYITzFpUWHVKcsgtE1OPJfxBgf3UL9EIthvekWTo/Wifp7jOCa
+   NESbVRRJ+kTn4NbDkoa1AGrJycwujaCgcFtGOJmfs/y+HAldZTnonJmvr
+   Q==;
+IronPort-SDR: aeO6KRg3ruyq1Oskte7/MZy+BX+WsTYc4vslXafuP/1gl5V1sl4kURuWr+1YOUS8BS72CtlVzA
+ 6JJxFlJ9/eYhlKbuDlaZA3baUu7Su/ZWBvgelvdTjFEyU8Gg1p4rftAJqhnKnxUrPPz+PA8NSs
+ VzeU3sAnbCB4/G50KyrFPYVG4MmMg6SLdZJNk0bawIQF53nQoGTlQKnelcaIFqOh9TQOX4RBI8
+ XqNG1WAhBwgP/p81t2Nqcj3d2KR54kLiBz5kxmXyLTc0JepbiA24jJgod2X4v+3rqkNREYAxfr
+ i7g=
+X-IronPort-AV: E=Sophos;i="5.64,370,1559491200"; 
+   d="scan'208";a="116512329"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 11 Aug 2019 05:19:06 +0800
+IronPort-SDR: 8+DrJLfzaEyNU8plSpyKZvEqcqI26YHexRE4cqOn8aBBniI8oIJPca0MsJ1xFAkV4dkerad7fk
+ PZ4zy2MPV4hOcQhN3Av61ZyRhWmk86poUsizOkXK+ekEjPVCW0ckGEb/rtmQPh4YRLc6+kUVRM
+ aaejEzWU0M+KbXWacnA5WkEIKxTjzGxRiB8pqDWpdy6Kqn/YlLJ1a+ARilRIJbMhPrv8EHUapP
+ +WKE00koTwAO74Waz2pGtNqzDMULGB0nuMWw/zIBBpZiuqtpnfa9HDOz0icJKLqTQZBiksMOgp
+ dxIXtuEofsdolrlDdtvLTegh
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Aug 2019 14:16:45 -0700
+IronPort-SDR: SZYSiCS7n1dRqel+x7TOez1Vq1BCLcgZTQTP3YZp3m8P+R8iF3SGxEYdPzz5IupjReA3T1cfU3
+ EjuSJWzk8VjUWKgRDaEM0US+EmlC+qew0DbQISgkNk06IlyZBaiRx3lXMezINVdGNATX4qRWhJ
+ 5jkcX9pHiE5NINtx5NJA7R3u+S+2CQqBmYtHbQA71nVkAtDJhnEB78elwuU+2QI/03SvuXtvAU
+ H1s09hoTWKO3FwXNe1YnK6qvDYhO8jsitT22Peh07uN3uQg21X4KFv/V22FqQtl1silKaeYo8O
+ XIw=
+Received: from dhcp-10-88-173-43.hgst.com (HELO localhost.localdomain) ([10.88.173.43])
+  by uls-op-cesaip01.wdc.com with ESMTP; 10 Aug 2019 14:19:05 -0700
+From:   Dmitry Fomichev <dmitry.fomichev@wdc.com>
+To:     linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        target-devel@vger.kernel.org, Mike Christie <mchristi@redhat.com>,
+        Bart Van Assche <bvanassche@acm.org>
+Cc:     Damien Le Moal <damien.lemoal@wdc.com>
+Subject: [PATCH] tcmu: avoid use-after-free after command timeout
+Date:   Sat, 10 Aug 2019 14:19:03 -0700
+Message-Id: <20190810211903.6572-1-dmitry.fomichev@wdc.com>
+X-Mailer: git-send-email 2.21.0
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The LED block device activity trigger periodically polls the disk stats
-to collect the activity.  However, it is pointless to poll while the
-scsi device is in runtime suspend.
+In tcmu_handle_completion() function, the variable called read_len is
+always initialized with a value taken from se_cmd structure. If this
+function is called to complete an expired (timed out) out command, the
+session command pointed by se_cmd is likely to be already deallocated by
+the target core at that moment. As the result, this access triggers a
+use-after-free warning from KASAN.
 
-This stops polling disk stats when the device is successfully runtime
-suspended, and restarts polling when the device is successfully runtime
-resumed.
+This patch fixes the code not to touch se_cmd when completing timed out
+TCMU commands. It also resets the pointer to se_cmd at the time when the
+TCMU_CMD_BIT_EXPIRED flag is set because it is going to become invalid
+after calling target_complete_cmd() later in the same function,
+tcmu_check_expired_cmd().
 
-Cc: Frank Steiner <fsteiner-mail1@bio.ifi.lmu.de>
-Cc: Jacek Anaszewski <jacek.anaszewski@gmail.com>
-Cc: Pavel Machek <pavel@ucw.cz>
-Cc: Dan Murphy <dmurphy@ti.com>
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Hannes Reinecke <hare@suse.com>
-Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
+Signed-off-by: Dmitry Fomichev <dmitry.fomichev@wdc.com>
 ---
- drivers/scsi/sd.c | 40 +++++++++++++++++++++++-----------------
- 1 file changed, 23 insertions(+), 17 deletions(-)
+ drivers/target/target_core_user.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 149d406..5f73142 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -3538,7 +3538,7 @@ static int sd_suspend_common(struct device *dev, bool ignore_stop_errors)
- {
- 	struct scsi_disk *sdkp = dev_get_drvdata(dev);
- 	struct scsi_sense_hdr sshdr;
--	int ret = 0;
-+	int ret;
+diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+index 04eda111920e..a0231491fa36 100644
+--- a/drivers/target/target_core_user.c
++++ b/drivers/target/target_core_user.c
+@@ -1132,14 +1132,16 @@ static void tcmu_handle_completion(struct tcmu_cmd *cmd, struct tcmu_cmd_entry *
+ 	struct se_cmd *se_cmd = cmd->se_cmd;
+ 	struct tcmu_dev *udev = cmd->tcmu_dev;
+ 	bool read_len_valid = false;
+-	uint32_t read_len = se_cmd->data_length;
++	uint32_t read_len;
  
- 	if (!sdkp)	/* E.g.: runtime suspend following sd_remove() */
- 		return 0;
-@@ -3550,18 +3550,16 @@ static int sd_suspend_common(struct device *dev, bool ignore_stop_errors)
- 		if (ret) {
- 			/* ignore OFFLINE device */
- 			if (ret == -ENODEV)
--				return 0;
--
--			if (!scsi_sense_valid(&sshdr) ||
--			    sshdr.sense_key != ILLEGAL_REQUEST)
--				return ret;
-+				goto success;
- 
- 			/*
- 			 * sshdr.sense_key == ILLEGAL_REQUEST means this drive
- 			 * doesn't support sync. There's not much to do and
- 			 * suspend shouldn't fail.
- 			 */
--			ret = 0;
-+			if (!scsi_sense_valid(&sshdr) ||
-+			    sshdr.sense_key != ILLEGAL_REQUEST)
-+				return ret;
- 		}
- 	}
- 
-@@ -3569,11 +3567,14 @@ static int sd_suspend_common(struct device *dev, bool ignore_stop_errors)
- 		sd_printk(KERN_NOTICE, sdkp, "Stopping disk\n");
- 		/* an error is not worth aborting a system sleep */
- 		ret = sd_start_stop_device(sdkp, 0);
--		if (ignore_stop_errors)
--			ret = 0;
-+		if (ret && !ignore_stop_errors)
-+			return ret;
- 	}
- 
--	return ret;
-+success:
-+	ledtrig_blk_disable(sdkp->disk);
-+
-+	return 0;
- }
- 
- static int sd_suspend_system(struct device *dev)
-@@ -3589,19 +3590,24 @@ static int sd_suspend_runtime(struct device *dev)
- static int sd_resume(struct device *dev)
- {
- 	struct scsi_disk *sdkp = dev_get_drvdata(dev);
--	int ret;
- 
- 	if (!sdkp)	/* E.g.: runtime resume at the start of sd_probe() */
- 		return 0;
- 
--	if (!sdkp->device->manage_start_stop)
--		return 0;
-+	if (sdkp->device->manage_start_stop) {
-+		int ret;
-+
-+		sd_printk(KERN_NOTICE, sdkp, "Starting disk\n");
-+		ret = sd_start_stop_device(sdkp, 1);
-+		if (ret)
-+			return ret;
- 
--	sd_printk(KERN_NOTICE, sdkp, "Starting disk\n");
--	ret = sd_start_stop_device(sdkp, 1);
--	if (!ret)
- 		opal_unlock_from_suspend(sdkp->opal_dev);
--	return ret;
+ 	/*
+ 	 * cmd has been completed already from timeout, just reclaim
+ 	 * data area space and free cmd
+ 	 */
+-	if (test_bit(TCMU_CMD_BIT_EXPIRED, &cmd->flags))
++	if (test_bit(TCMU_CMD_BIT_EXPIRED, &cmd->flags)) {
++		WARN_ON_ONCE(se_cmd);
+ 		goto out;
 +	}
-+
-+	ledtrig_blk_enable(sdkp->disk);
-+
-+	return 0;
- }
  
- /**
+ 	list_del_init(&cmd->queue_entry);
+ 
+@@ -1152,6 +1154,7 @@ static void tcmu_handle_completion(struct tcmu_cmd *cmd, struct tcmu_cmd_entry *
+ 		goto done;
+ 	}
+ 
++	read_len = se_cmd->data_length;
+ 	if (se_cmd->data_direction == DMA_FROM_DEVICE &&
+ 	    (entry->hdr.uflags & TCMU_UFLAG_READ_LEN) && entry->rsp.read_len) {
+ 		read_len_valid = true;
+@@ -1307,6 +1310,7 @@ static int tcmu_check_expired_cmd(int id, void *p, void *data)
+ 		 */
+ 		scsi_status = SAM_STAT_CHECK_CONDITION;
+ 		list_del_init(&cmd->queue_entry);
++		cmd->se_cmd = NULL;
+ 	} else {
+ 		list_del_init(&cmd->queue_entry);
+ 		idr_remove(&udev->commands, id);
 -- 
-2.7.4
+2.21.0
 
