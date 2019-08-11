@@ -2,143 +2,211 @@ Return-Path: <SRS0=NWCA=WH=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2878C0650F
-	for <linux-scsi@archiver.kernel.org>; Sun, 11 Aug 2019 18:25:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 387B6C433FF
+	for <linux-scsi@archiver.kernel.org>; Sun, 11 Aug 2019 19:22:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6A27B2147A
-	for <linux-scsi@archiver.kernel.org>; Sun, 11 Aug 2019 18:25:16 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="UE40Ayq0"
+	by mail.kernel.org (Postfix) with ESMTP id 09B5B20820
+	for <linux-scsi@archiver.kernel.org>; Sun, 11 Aug 2019 19:22:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726053AbfHKSZO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 11 Aug 2019 14:25:14 -0400
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:8310 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725730AbfHKSZO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 11 Aug 2019 14:25:14 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1565547913; x=1597083913;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=a2MHHnzNCphQP/HXYoNZdgfknT6fZfR3qE0jBZMtdrg=;
-  b=UE40Ayq0HoJVXpNTq7D5v3BsG4gbVnEefAsmc6MrWKg4JzeFT0GbkCI9
-   YQeXQ7mELPlkar15mzBnt4uxxmE2KYKbQaQe8h60QUqv5dTR3KLxZhQso
-   M4c512OTJWlX4C/vDwO+nOS+5bbWp5VIqxEcrb2/Z6vGH6aa2JeeQExx0
-   NMFejk6vIOSzwR6E3y7YT+k+2U+HOWU89lfAYosEVT6DaiXN8ZU6Tlkhg
-   MIIry6X1EBgCweR4v12FNrsKu7jVAvXqa9SX5FIDJv8Y0QimmQzWXmjbD
-   IJ8POZetr8ljSpyMQlLhHqPwNX3bA1YI9sLmiv0YO2k6VLa9IwOXVTLXP
-   A==;
-IronPort-SDR: OnO4J9tfH1EWVzWLfzWLqiCcGBoO7pYVee7zAVl5cC1B5/UUX0gBjS4K62gQPF7x8X5P87s/9Z
- 3enrrmfT9ygsq2pXnHoINmu40jCWMGeA10gBiSwKQYY6jq5bZYaxlZhegS1IdECRzGnXfM2+Ed
- 7QUM172VuhEbgTQ3EZrbutfwu8us0MITE0U9WMh5QDcP1l8qwlnGi0PotZN2OfMMpaDWRZw+8T
- ARhMqa3L3FJ8EKiIm/a1RRuaNenjHzNctubQUeWMszXdl0+CTwM/skBnqWx0B+WSYD7IsxNzGg
- KHo=
-X-IronPort-AV: E=Sophos;i="5.64,374,1559491200"; 
-   d="scan'208";a="115598588"
-Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 12 Aug 2019 02:25:13 +0800
-IronPort-SDR: muXkBD7gqB+bqFRutbgbJhuE5k3/mZ4InWcTNiLvZBb7Oz7vY3ppKPPu9fZStFHfKZqkdYUpVF
- XUc95jevxzpj6Yk4elfHWwdCblh108Tc4FQd6/oY9d1IuNlEJSIA7dDao3QHF55vu1x1tcudZ7
- zk4yCuE/KMsSDilVVQsJRl2FwY+t4HB13DhljLWGiuc5dupqRMrWnSNQ6kRF0/SL3tA+/ROom+
- JjQP792v7ePbfVHd+s1/gfOCPUiekfZ+WIpqMxlCEzC0QzVN+XpHQpGHsX008kTs5+jfJSjdcj
- nvPN7Gn46t3lgAmoSnOnep3F
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Aug 2019 11:22:50 -0700
-IronPort-SDR: rSGcRUsdXiWLTj37ET1wicbSKUIt9U5puW7PuC8AwsYK9drw552yxpcOlaNA0Oovzuh5AQMGhu
- 94Jcb2qrc94PBrxRwBF3jdlkvBzd97ucY+c772cfXqgYYdYoyZYVLBCEMKbyz6nctTx7Wl2vMQ
- EvZzmA4Yp6FMGK63zPEFQ9ccsikCxH61E0t1Hq+Qjq7sQmuyBG+QXuMMJU+L3I+fqbcw+yVNR9
- uuCMupndBh/XXpDYmDTMtnB6fYS7eajPEo0Xt+I2BPvvV+CEID24ZBQn+cL7VyKTt6BM90i+TC
- HlQ=
-Received: from dhcp-10-88-173-43.hgst.com (HELO localhost.localdomain) ([10.88.173.43])
-  by uls-op-cesaip02.wdc.com with ESMTP; 11 Aug 2019 11:25:12 -0700
-From:   Dmitry Fomichev <dmitry.fomichev@wdc.com>
-To:     linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        target-devel@vger.kernel.org, Mike Christie <mchristi@redhat.com>,
-        Bart Van Assche <bvanassche@acm.org>
-Cc:     Damien Le Moal <damien.lemoal@wdc.com>
-Subject: [PATCH v2] tcmu: avoid use-after-free after command timeout
-Date:   Sun, 11 Aug 2019 11:25:10 -0700
-Message-Id: <20190811182510.1706-1-dmitry.fomichev@wdc.com>
-X-Mailer: git-send-email 2.21.0
+        id S1726014AbfHKTWA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 11 Aug 2019 15:22:00 -0400
+Received: from smtp.infotech.no ([82.134.31.41]:34773 "EHLO smtp.infotech.no"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725847AbfHKTWA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 11 Aug 2019 15:22:00 -0400
+Received: from localhost (localhost [127.0.0.1])
+        by smtp.infotech.no (Postfix) with ESMTP id 0350A20423F;
+        Sun, 11 Aug 2019 21:21:57 +0200 (CEST)
+X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
+Received: from smtp.infotech.no ([127.0.0.1])
+        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id FTO1TA8PN3yW; Sun, 11 Aug 2019 21:21:50 +0200 (CEST)
+Received: from [192.168.48.23] (host-23-251-188-50.dyn.295.ca [23.251.188.50])
+        by smtp.infotech.no (Postfix) with ESMTPA id 76AC720415B;
+        Sun, 11 Aug 2019 21:21:49 +0200 (CEST)
+From:   Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH v3 13/20] sg: add sg v4 interface support
+Reply-To: dgilbert@interlog.com
+To:     James Bottomley <jejb@linux.vnet.ibm.com>,
+        linux-scsi@vger.kernel.org
+Cc:     martin.petersen@oracle.com, hare@suse.de, bvanassche@acm.org
+References: <20190807114252.2565-1-dgilbert@interlog.com>
+ <20190807114252.2565-14-dgilbert@interlog.com>
+ <1565392352.17449.15.camel@linux.vnet.ibm.com>
+Message-ID: <9741913d-c0fc-ce74-3234-ebc89dd30cb5@interlog.com>
+Date:   Sun, 11 Aug 2019 15:21:46 -0400
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <1565392352.17449.15.camel@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-CA
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In tcmu_handle_completion() function, the variable called read_len is
-always initialized with a value taken from se_cmd structure. If this
-function is called to complete an expired (timed out) out command, the
-session command pointed by se_cmd is likely to be already deallocated by
-the target core at that moment. As the result, this access triggers a
-use-after-free warning from KASAN.
+On 2019-08-10 1:12 a.m., James Bottomley wrote:
+> On Wed, 2019-08-07 at 13:42 +0200, Douglas Gilbert wrote:
+>> Add support for the sg v4 interface based on struct sg_io_v4 found
+>> in include/uapi/linux/bsg.h and only previously supported by the
+>> bsg driver. Add ioctl(SG_IOSUBMIT) and ioctl(SG_IORECEIVE) for
+>> async (non-blocking) usage of the sg v4 interface. Do not accept
+>> the v3 interface with these ioctls. Do not accept the v4
+>> interface with this driver's existing write() and read()
+>> system calls.
+>>
+>> For sync (blocking) usage expand the existing ioctl(SG_IO)
+>> to additionally accept the sg v4 interface object.
+> 
+> First the meta comments:
+> 
+> Since this is effectively a new interface for sg, we're not constrained
+> by what happened before.  Specifically, we don't want to support the
+> read/write interface for v4, that should remain only for legacy v3.
 
-This patch fixes the code not to touch se_cmd when completing timed out
-TCMU commands. It also resets the pointer to se_cmd at the time when the
-TCMU_CMD_BIT_EXPIRED flag is set because it is going to become invalid
-after calling target_complete_cmd() later in the same function,
-tcmu_check_expired_cmd().
+Yes, and I don't want to support the bsg sync v4 interface which I
+consider to be a subset of the existing sg v3 interface (and
+its implementation). See further details below.
 
-Signed-off-by: Dmitry Fomichev <dmitry.fomichev@wdc.com>
----
- drivers/target/target_core_user.c | 9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
+> We're already discussing what the correct async interface should look
+> like, I won't comment on the IOSUBMIT/IORECEIVE parts.
 
-diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-index 04eda111920e..661bb9358364 100644
---- a/drivers/target/target_core_user.c
-+++ b/drivers/target/target_core_user.c
-@@ -1132,14 +1132,16 @@ static void tcmu_handle_completion(struct tcmu_cmd *cmd, struct tcmu_cmd_entry *
- 	struct se_cmd *se_cmd = cmd->se_cmd;
- 	struct tcmu_dev *udev = cmd->tcmu_dev;
- 	bool read_len_valid = false;
--	uint32_t read_len = se_cmd->data_length;
-+	uint32_t read_len;
- 
- 	/*
- 	 * cmd has been completed already from timeout, just reclaim
- 	 * data area space and free cmd
- 	 */
--	if (test_bit(TCMU_CMD_BIT_EXPIRED, &cmd->flags))
-+	if (test_bit(TCMU_CMD_BIT_EXPIRED, &cmd->flags)) {
-+		WARN_ON_ONCE(se_cmd);
- 		goto out;
-+	}
- 
- 	list_del_init(&cmd->queue_entry);
- 
-@@ -1152,6 +1154,7 @@ static void tcmu_handle_completion(struct tcmu_cmd *cmd, struct tcmu_cmd_entry *
- 		goto done;
- 	}
- 
-+	read_len = se_cmd->data_length;
- 	if (se_cmd->data_direction == DMA_FROM_DEVICE &&
- 	    (entry->hdr.uflags & TCMU_UFLAG_READ_LEN) && entry->rsp.read_len) {
- 		read_len_valid = true;
-@@ -1307,6 +1310,7 @@ static int tcmu_check_expired_cmd(int id, void *p, void *data)
- 		 */
- 		scsi_status = SAM_STAT_CHECK_CONDITION;
- 		list_del_init(&cmd->queue_entry);
-+		cmd->se_cmd = NULL;
- 	} else {
- 		list_del_init(&cmd->queue_entry);
- 		idr_remove(&udev->commands, id);
-@@ -2022,6 +2026,7 @@ static void tcmu_reset_ring(struct tcmu_dev *udev, u8 err_level)
- 
- 		idr_remove(&udev->commands, i);
- 		if (!test_bit(TCMU_CMD_BIT_EXPIRED, &cmd->flags)) {
-+			WARN_ON(!cmd->se_cmd);
- 			list_del_init(&cmd->queue_entry);
- 			if (err_level == 1) {
- 				/*
--- 
-2.21.0
+If the kernel had an API mapping layer that was sensitive file
+descriptors of a "special file" (e.g. "/dev/bsg/0:0:0:1") then it
+could map:
+     write(bsg_fd, &sg_io_v4_obj, sizeof(sg_io_v4_obj))
+to
+     ioctl(corresponding_sg_fd, SG_IOSUBMIT, &sg_io_v4_obj)
+
+Plus a similar mapping for read() to ioctl(SG_IORECEIVE).
+Obviously a pipe dream, but useful IMO for what I am trying to
+achieve.
+
+> Given that we want to unify the v4 code paths, I think this:
+>   
+>> @@ -1293,15 +1528,25 @@ sg_ctl_sg_io(struct file *filp, struct
+>> sg_device *sdp, struct sg_fd *sfp,
+>>   		return res;
+>>   	if (copy_from_user(h3p, p, SZ_SG_IO_HDR))
+>>   		return -EFAULT;
+>> -	if (h3p->interface_id == 'S')
+>> -		res = sg_submit(filp, sfp, h3p, true, &srp);
+>> -	else
+>> +	if (h3p->interface_id == 'Q') {
+>> +		/* copy in rest of sg_io_v4 object */
+>> +		if (copy_from_user(hu8arr + SZ_SG_IO_HDR,
+>> +				   ((u8 __user *)p) + SZ_SG_IO_HDR,
+>> +				   SZ_SG_IO_V4 - SZ_SG_IO_HDR))
+>> +			return -EFAULT;
+>> +		res = sg_v4_submit(filp, sfp, p, h4p, true, &srp);
+> 
+> Can simply become
+> 
+> if (h3p->interface_id == 'Q')
+> 	return bsg_sg_io(sdp->request_queue, filp->file_mode, p);
+> 
+> And all the duplicate code could then be eliminated.  Of course, we
+> have to export bsg_sg_io, but that should be a trivial addition.
+
+Interesting idea. As always, the devil is in the detail, and in this
+case, in the interface.
+
+First, when I defined the sg v4 interface it was a superset of
+the existing sg v3 interface (and implementation). This meant that
+the sg v4 interface supported the flags and info fields of the
+existing sg v3 driver interface according to my design document. There
+are also SG_* ioctls that effectively hold metadata at file descriptor,
+device and, in some cases, driver scope. The bsg implementation of the
+sg v4 interface either ignores or dummies out all of the above.
+Amongst other things this led to the fatal flaw in the bsg async
+implementation in which two SCSI commands issued through the bsg
+driver in different processes on the same device (i.e. independent
+operations from the users' point of view) could receive one another's
+responses. Reason: no effective file scope.
+Incredible, but that has been solved by removing the async interface
+from the bsg driver!
+
+The bsg v4 interface implementation did introduce two flags:
+BSG_FLAG_Q_AT_TAIL and BSG_FLAG_Q_AT_HEAD and they were duly
+backported into the sg driver over 5 years ago. No backporting
+of pre-existing sg characteristics was ever done on the bsg driver
+that I am aware of, certainly not recently, say the last 10 years.
+And when you also remove bidi support from the whole kernel, and
+thus from the bsg driver, why have a SCSI command interface in
+the bsg driver at all??
+
+After all, one can already issue sync SCSI commands with
+ioctl(SG_IO, &sg_v3_obj) on all SCSI devices via /dev/sd<letter*>,
+/dev/sr, etc. This would turn your suggestion on its head. Don't
+call bsg_sg_io(), instead get rid of the bsg _sync_ SCSI interface!
+
+If your suggestion was implemented the sg v4 interface in the sg
+driver would become a significant regression on what the sg driver
+offers at the moment. IMO that would be perverse. In my
+documentation at http://sg.danny.cz/sg/sg_v40.html the flags
+and info fields are now listed in sections 2.2 and 2.3 . I would
+need to add on almost all entries: "not implemented in the
+v4 sync interface but available in the v4 async interface". A
+diligent reader might wonder what the author was smoking?
+
+And the reserve buffer: originally added in the late nineties
+when the sg driver could fail to get RAM during a CD write.
+Complete crap, so the bsg driver implementation threw it
+out (and dummied out the ioctl()s that supported it). Now
+look at sections 6 and 8 (request sharing) in the above document
+and specifically the diagram in section 8. The data carrier
+between the READ and the WRITE is the master side's reserve
+buffer. So new life for the reserve buffer concept. Notice
+also in that diagram both the READ and WRITE invocations
+use ioctl(SG_IO) (i.e. they are sync) and thus would not work
+with your suggestion in the case of the v4 interface (but would
+work with the v3 interface).
+
+And while on the the subject of request sharing I challenge Bart
+to show us how his better API (hinted at but not presented) would
+be faster than request sharing for a disk to disk copy.
+
+ioctl(SG_IO) can also be used for a multiple requests invocation
+in my proposed second patchset. See "ordered blocking" in the
+second table of section 10 on Multiple requests. That would need
+some "smoke and mirrors" to work as defined in the presence
+of your suggestion.
+Also notice that "variable blocking" in that table would give the
+user a very simple and fast READ GATHERED capability. [READ GATHERED
+is the non-existent t10.org SCSI command that would pair with one
+they have defined: WRITE SCATTERED command.] This could have been
+done with the multiple submission capability of write() in the bsg
+driver, that is before it was removed. That "variable blocking" is
+slightly better because it is "sync" seen from the user's
+perspective.
+
+Finally I don't regard the sg v3 interface as legacy. Without my
+two proposed patchsets *** the bsg driver is well on the way to
+making the v4 interface legacy, at least in terms of the number
+of users. The removal of bidi also partially undermines the
+argument of why the v4 interface was better than the v3 interface.
+I want to, and am prepared to do the associated work, to support
+both the v3 and v4 interfaces in the sg driver. That said, some
+completely new proposals, such as multiple request invocations,
+are only supported with the v4 interface. All proposed (new)
+ioctls comply with the spirit and the letter of what the _IOR(W)
+macros are trying to achieve: (somewhat) structured ioctls.
+
+Doug Gilbert
+
+*** This tarball (http://sg.danny.cz/sg/p/sgv4_20190808.tgz) contains
+     a 36 part patchset where patches 1 through 20 are the same as sent
+     to this list on 20190807, the first of which was titled:
+         [PATCH v3 00/20] sg: add v4 interface
+     The remaining 16 patches implement the extra features and bring the
+     driver implementation into line with the description in:
+         http://sg.danny.cz/sg/sg_v40.html
+     So that 36 part patchset rolls the two patchsets I have been
+     referring to, into one.
 
