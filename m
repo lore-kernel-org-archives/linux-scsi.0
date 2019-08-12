@@ -2,91 +2,112 @@ Return-Path: <SRS0=w7Bx=WI=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0955C433FF
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Aug 2019 19:37:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76299C433FF
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Aug 2019 21:01:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BF4F320663
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Aug 2019 19:37:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3B6FF20820
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Aug 2019 21:01:18 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="g6QfY1Zq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726852AbfHLThR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 12 Aug 2019 15:37:17 -0400
-Received: from mail.cybernetics.com ([173.71.130.66]:53522 "EHLO
-        mail.cybernetics.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726808AbfHLThR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Aug 2019 15:37:17 -0400
-X-ASG-Debug-ID: 1565638634-0fb3b0188458a8b0001-ziuLRu
-Received: from cybernetics.com ([10.10.4.126]) by mail.cybernetics.com with ESMTP id jc1DsmHGaNDZENOY (version=SSLv3 cipher=DES-CBC3-SHA bits=112 verify=NO); Mon, 12 Aug 2019 15:37:14 -0400 (EDT)
-X-Barracuda-Envelope-From: tonyb@cybernetics.com
-X-ASG-Whitelist: Client
-Received: from [10.157.2.224] (account tonyb HELO [192.168.200.1])
-  by cybernetics.com (CommuniGate Pro SMTP 5.1.14)
-  with ESMTPSA id 9050756; Mon, 12 Aug 2019 15:37:14 -0400
-Subject: Re: [PATCH v3 17/20] sg: add sg_iosubmit_v3 and sg_ioreceive_v3
- ioctls
-To:     James Bottomley <jejb@linux.vnet.ibm.com>, dgilbert@interlog.com,
-        linux-scsi@vger.kernel.org
-X-ASG-Orig-Subj: Re: [PATCH v3 17/20] sg: add sg_iosubmit_v3 and sg_ioreceive_v3
- ioctls
-Cc:     martin.petersen@oracle.com, hare@suse.de, bvanassche@acm.org,
-        kbuild test robot <lkp@intel.com>,
-        Arnd Bergmann <arnd@arndb.de>
-References: <20190807114252.2565-1-dgilbert@interlog.com>
- <20190807114252.2565-18-dgilbert@interlog.com>
- <1565392510.17449.18.camel@linux.vnet.ibm.com>
- <048b4ab4-804b-f6ec-c35a-47cd2f8d8cda@interlog.com>
- <500183f3-fb16-77b7-90e0-5c8bb2a021c3@cybernetics.com>
- <1565635563.3287.1.camel@linux.vnet.ibm.com>
-From:   Tony Battersby <tonyb@cybernetics.com>
-Message-ID: <ccd96c6c-a4fb-e40b-8380-66bcdea96f93@cybernetics.com>
-Date:   Mon, 12 Aug 2019 15:37:13 -0400
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        id S1727220AbfHLVBS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 12 Aug 2019 17:01:18 -0400
+Received: from mta-02.yadro.com ([89.207.88.252]:55224 "EHLO mta-01.yadro.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727148AbfHLVBR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 12 Aug 2019 17:01:17 -0400
+X-Greylist: delayed 531 seconds by postgrey-1.27 at vger.kernel.org; Mon, 12 Aug 2019 17:01:16 EDT
+Received: from localhost (unknown [127.0.0.1])
+        by mta-01.yadro.com (Postfix) with ESMTP id 6E3B34181D;
+        Mon, 12 Aug 2019 20:52:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
+        user-agent:in-reply-to:content-disposition:content-type
+        :content-type:mime-version:references:message-id:subject:subject
+        :from:from:date:date:received:received:received; s=mta-01; t=
+        1565643143; x=1567457544; bh=PIs0l6x5WlVYSwUmGFm7oRRXxRMo+cpPQ/z
+        7SC15QZo=; b=g6QfY1ZqxMi/RuJJ5R7TvHXRJf+728wR2dcuzDC6xups+SU6Cyl
+        48XNeeXr0pXLGhoet3MVjKuyEzfBUKWVcDPdJcwzi/krV8TiEWOELu9EOo8io0OK
+        WKY9Uz1JOg52e5wdJ2XNn+gnQJKh8JvdoLhwd6WrMk8OST003Wb+EfbY=
+X-Virus-Scanned: amavisd-new at yadro.com
+Received: from mta-01.yadro.com ([127.0.0.1])
+        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id WrcUC9xcDsEy; Mon, 12 Aug 2019 23:52:23 +0300 (MSK)
+Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mta-01.yadro.com (Postfix) with ESMTPS id 31F17412D0;
+        Mon, 12 Aug 2019 23:52:23 +0300 (MSK)
+Received: from localhost (172.17.128.60) by T-EXCH-02.corp.yadro.com
+ (172.17.10.102) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Mon, 12
+ Aug 2019 23:52:22 +0300
+Date:   Mon, 12 Aug 2019 23:52:22 +0300
+From:   Roman Bolshakov <r.bolshakov@yadro.com>
+To:     Bart Van Assche <bvanassche@acm.org>
+CC:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        <linux-scsi@vger.kernel.org>,
+        Himanshu Madhani <hmadhani@marvell.com>
+Subject: Re: [PATCH v2 46/58] qla2xxx: Make qlt_handle_abts_completion() more
+ robust
+Message-ID: <20190812205222.qmse275ofl3g52bk@SPB-NB-133.local>
+References: <20190809030219.11296-1-bvanassche@acm.org>
+ <20190809030219.11296-47-bvanassche@acm.org>
 MIME-Version: 1.0
-In-Reply-To: <1565635563.3287.1.camel@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
-X-Barracuda-Connect: UNKNOWN[10.10.4.126]
-X-Barracuda-Start-Time: 1565638634
-X-Barracuda-Encrypted: DES-CBC3-SHA
-X-Barracuda-URL: https://10.10.4.122:443/cgi-mod/mark.cgi
-X-Virus-Scanned: by bsmtpd at cybernetics.com
-X-Barracuda-Scan-Msg-Size: 1260
-X-Barracuda-BRTS-Status: 1
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <20190809030219.11296-47-bvanassche@acm.org>
+User-Agent: NeoMutt/20180716
+X-Originating-IP: [172.17.128.60]
+X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
+ T-EXCH-02.corp.yadro.com (172.17.10.102)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/12/19 2:46 PM, James Bottomley wrote:
->
-> So far we've mitigated the security threat by withdrawing the v4
-> r/w interface which you don't use and keeping the sg nodes root only
-> for v3 r/w.  Unless we get another security incident based on them, as
-> long as the use case doesn't expand, I think the prior issue is pretty
-> nasty but contained to root who should know what they're doing, so
-> there's no pressing need to remove it.
+On Thu, Aug 08, 2019 at 08:02:07PM -0700, Bart Van Assche wrote:
+> Avoid that this function crashes if mcmd == NULL.
+> 
+> Cc: Himanshu Madhani <hmadhani@marvell.com>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> ---
+>  drivers/scsi/qla2xxx/qla_target.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+> index d25c3fa43601..cc0c99b5f3fb 100644
+> --- a/drivers/scsi/qla2xxx/qla_target.c
+> +++ b/drivers/scsi/qla2xxx/qla_target.c
+> @@ -5731,7 +5731,7 @@ static void qlt_handle_abts_completion(struct scsi_qla_host *vha,
+>  			    entry->error_subcode2);
+>  			ha->tgt.tgt_ops->free_mcmd(mcmd);
+>  		}
+> -	} else {
+> +	} else if (mcmd) {
+>  		ha->tgt.tgt_ops->free_mcmd(mcmd);
+>  	}
+>  }
+> -- 
+> 2.22.0
+> 
 
-So if there is no plan to remove read/write from sg v3 for root, then I
-don't see a need for the new ioctl()s to replace them.
+Thanks for working on the fix, the crash can be observed sometimes on
+target shutdown.
 
+I've been inspecting the piece of code multiple times and still don't
+understand if we get mcmd == NULL only when ABTS completes successfully
+or there is ABTS failure together with inability to find mcmd in the
+request queue? In that case, there're two more paths that could crash.
 
-> Given that shifting to ioctls or a different async interface would be
-> development anyway, is there a solid reason you couldn't also shift to
-> v4 if you do that?  I know all the field names changed but for a
-> standard SCSI command it should be very similar to v3.
->
->
-I suppose we could move our codebase to sg v4 eventually.  Right now we
-don't need any new features from it, so there is no compelling case to
-make the move.  Besides, we are pretty far behind in the kernel version
-that we are shipping due to lack of developer time, so it may be a long
-time before I can update to a kernel version with these patches anyway.
+And the second question is whether the NULL received from
+qlt_ctio_to_cmd is a sign of another sporadic issue somewhere else in
+the driver?
 
-Tony Battersby
-Cybernetics
-
+Best regards,
+Roman
