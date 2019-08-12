@@ -2,90 +2,139 @@ Return-Path: <SRS0=w7Bx=WI=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AB44C31E40
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Aug 2019 15:23:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5483FC433FF
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Aug 2019 15:24:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E9D2C2070C
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Aug 2019 15:23:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 262DB2070C
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Aug 2019 15:24:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="RFejK4Mg"
+	dkim=pass (2048-bit key) header.d=nifty.com header.i=@nifty.com header.b="OJzpQWw2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727263AbfHLPXl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 12 Aug 2019 11:23:41 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:50176 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726831AbfHLPXl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Aug 2019 11:23:41 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=j335fiiDQMBjJDi/0YItD4IEXZCw2bFlsQGThx9UUxc=; b=RFejK4MgtfOMyLRCkPcGWWTXk
-        nTXMwXgnvOqZBGhKIdS/oTSJC7Fa85pRnJpLb7/jmoDHvGt61cOj4sd/jUfzOjmAhwKkJxvFq1SaV
-        XiwPP5ctlHaLhGtfWQPjQ8/0lfftVXJfOlBjbWk+B0IDUDkXl1kii7giVW1MT54tQFaITVWSYQHgL
-        mvUbOF1EpBU8ob8+BygFFUD/GZdH7lceZc9oHRBQ+TOVrjJD1JsXp5w8kquMyGbYL3L+qYdUjt1z+
-        vo5heiTAcl4VEqb3Dmlgae8apLDPWMUyZJ0wmeKksUAfdqieEIFJqSdegrazCsWwroeB82cwHwW59
-        fLV17OjtA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92 #3 (Red Hat Linux))
-        id 1hxCAd-0005L5-Uf; Mon, 12 Aug 2019 15:23:39 +0000
-Date:   Mon, 12 Aug 2019 08:23:39 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     James Bottomley <jejb@linux.vnet.ibm.com>
-Cc:     Douglas Gilbert <dgilbert@interlog.com>,
-        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
-        linux-api@vger.kernel.org, martin.petersen@oracle.com,
-        hare@suse.de, bvanassche@acm.org
-Subject: Re: [PATCH v3 00/20] sg: add v4 interface
-Message-ID: <20190812152339.GA15295@infradead.org>
-References: <20190807114252.2565-1-dgilbert@interlog.com>
- <1565291455.3435.48.camel@linux.vnet.ibm.com>
+        id S1727458AbfHLPYk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 12 Aug 2019 11:24:40 -0400
+Received: from conssluserg-04.nifty.com ([210.131.2.83]:28767 "EHLO
+        conssluserg-04.nifty.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727037AbfHLPYk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Aug 2019 11:24:40 -0400
+Received: from mail-vk1-f182.google.com (mail-vk1-f182.google.com [209.85.221.182]) (authenticated)
+        by conssluserg-04.nifty.com with ESMTP id x7CFOFVG015133;
+        Tue, 13 Aug 2019 00:24:16 +0900
+DKIM-Filter: OpenDKIM Filter v2.10.3 conssluserg-04.nifty.com x7CFOFVG015133
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nifty.com;
+        s=dec2015msa; t=1565623456;
+        bh=/ZLs0+GV+nR6TLnoM6cTJUiEDAyiLErBYzFGbX3v72M=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=OJzpQWw2Fwn/3fQ8DT/dj2bh1YFydaCAq5v8YJE8AxCIe3WPS2T5YtkW77TWjg9Tz
+         NoPYiwNyTZ1D4o7k8CKS1haSTcSef3BiTAMomiGs87V+5ICLpWQfMf9oiUGg/NdJVa
+         XR/HQovpgZ5u/XigRZl1C435CMvqiCsSUiMIch+Wvjr3r+UX2mL8LAttxrl0kqyAOH
+         GanJ99UvCbY4bHWZ/zsww5K0gRvD2Ezm7Tx8AWjUNbXiMzoe7Saef+lIqw8OrswMSy
+         VLezLRZfFoAtfQ8/5mqinYzP2XYhoQ0knpYwMA0q5isCpqxmy4PKpUdZaJ2QyPTriE
+         7FK8Zf13mX2xQ==
+X-Nifty-SrcIP: [209.85.221.182]
+Received: by mail-vk1-f182.google.com with SMTP id r13so292799vke.12;
+        Mon, 12 Aug 2019 08:24:16 -0700 (PDT)
+X-Gm-Message-State: APjAAAVMe2zbbQ5LGhS2eWq39HREyZFrilPa36wIzmT03ve3zkXzkpQM
+        WLG01bFqrJDQRsZ72sSK5Y+it/954scagU/RzWM=
+X-Google-Smtp-Source: APXvYqyf2GMOFUsRxNDu7JdMijybibC42MDZO/L+m1JKVxZCXdD83lEdp4K2xTiKxVjtWaNp/waolXng2NwGRKVWNbI=
+X-Received: by 2002:a1f:93cd:: with SMTP id v196mr5084585vkd.84.1565623454953;
+ Mon, 12 Aug 2019 08:24:14 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1565291455.3435.48.camel@linux.vnet.ibm.com>
-User-Agent: Mutt/1.11.4 (2019-03-13)
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+References: <20190809002104.18599-1-stancheff@cray.com> <20190809002104.18599-2-stancheff@cray.com>
+In-Reply-To: <20190809002104.18599-2-stancheff@cray.com>
+From:   Masahiro Yamada <yamada.masahiro@socionext.com>
+Date:   Tue, 13 Aug 2019 00:23:38 +0900
+X-Gmail-Original-Message-ID: <CAK7LNAScm9P+QMZiqqSQnOoPsN54OTcTGpaDgxTbjJ_knoeGhA@mail.gmail.com>
+Message-ID: <CAK7LNAScm9P+QMZiqqSQnOoPsN54OTcTGpaDgxTbjJ_knoeGhA@mail.gmail.com>
+Subject: Re: [PATCH 1/1] kbuild: recursive build of external kernel modules
+To:     Shaun Tancheff <shaun@tancheff.com>
+Cc:     Shaun Tancheff <stancheff@cray.com>,
+        Linux Kbuild mailing list <linux-kbuild@vger.kernel.org>,
+        Joe Lawrence <joe.lawrence@redhat.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Michal Marek <michal.lkml@markovi.net>,
+        Shuah Khan <shuah@kernel.org>,
+        Thomas Renninger <trenn@suse.com>,
+        "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux PM mailing list <linux-pm@vger.kernel.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Aug 08, 2019 at 12:10:55PM -0700, James Bottomley wrote:
-> Since this will be an extension of something that exists both in your
-> sg driver and in the block bsg interface (and thus needs an
-> implementation there), I added both linux-block and linux-api to the cc
-> (the latter because you're adding to an API).
-> 
-> Simply extending sg to use the v4 header protocol in uapi/linux/bsg.h
-> is fine modulo the code being in the right form.  The problems are the
-> new ioctls you want to add that would need to be present there as well.
->  The specific question being how we support async or non-blocking I/O
-> on the sg and bsg interfaces.  The standard way we add asynchronous I/O
-> is supposed to be via .poll on the file descriptor.  you already use
-> read and write in sg and bsg doesn't have a polling interface, but it
-> looks like we could use MSG to signal an ioctl is ready to be serviced
-> for both.  Would shifting to a non-blocking poll based interface for
-> ioctls remove the need to add these SG_IOSUBMIT/SG_IORECEIVE ioctls
-> since we could now do everything over blocking or non-blocking SG_IO?
+On Fri, Aug 9, 2019 at 9:21 AM Shaun Tancheff <shaun@tancheff.com> wrote:
+>
+> When building a tree of external modules stage 2 fails
+> silently as the root modules.order is empty.
+>
+> Modify the modules.order location to be fixed to the
+> root when KBUILD_EXTMOD is specified and write all
+> module paths to the single modules.order file.
 
-I've spent some wading through this patchset, and it is huge.  I thing
-we need to stage it a bit better and split it into multiple.
+Could you try v5.3-rc4 please?
 
- 1) One (or maybe even multiple) with all the cleanups and minor
-    speedups.  That alone is a lot of changes, and will take a while
-    to settle
- 2) extending the bsg/v4 API to /dev/sg.  I think that is very useful,
-    although I need to look at the details a bit more
- 3) adding a new async API.  While this seems very useful from the
-    theoretical perspective, I really thing the guts need to be in
-    common code and then be used by sg and the block device nodes
-    (if it happens to be an ioctl).  What worries me a bit there
-    is that we have another way to deal with async I/O.  I wonder
-    if we can fit this into aio/io_uring somehow.  But I'd rather
-    not even thing about that much until we've done all the groundwork.
+
+
+
+> Signed-off-by: Shaun Tancheff <stancheff@cray.com>
+> ---
+>  Makefile               | 1 +
+>  scripts/Makefile.build | 8 +++++++-
+>  2 files changed, 8 insertions(+), 1 deletion(-)
+>
+> diff --git a/Makefile b/Makefile
+> index 23cdf1f41364..a9964492f47e 100644
+> --- a/Makefile
+> +++ b/Makefile
+> @@ -1622,6 +1622,7 @@ $(module-dirs): prepare $(objtree)/Module.symvers
+>
+>  modules: $(module-dirs)
+>         @$(kecho) '  Building modules, stage 2.';
+> +       $(Q)$rm -f $(KBUILD_EXTMOD)/modules.order
+>         $(Q)$(MAKE) -f $(srctree)/scripts/Makefile.modpost
+>
+>  PHONY += modules_install
+> diff --git a/scripts/Makefile.build b/scripts/Makefile.build
+> index 0d434d0afc0b..f9908b3d59e0 100644
+> --- a/scripts/Makefile.build
+> +++ b/scripts/Makefile.build
+> @@ -64,7 +64,13 @@ builtin-target := $(obj)/built-in.a
+>  endif
+>
+>  ifeq ($(CONFIG_MODULES)$(need-modorder),y1)
+> +ifneq ($(KBUILD_EXTMOD),)
+> +modorder-target := $(KBUILD_EXTMOD)/modules.order
+> +modorder-add := >>
+> +else
+>  modorder-target := $(obj)/modules.order
+> +modorder-add := >
+> +endif
+>  endif
+>
+>  mod-targets := $(patsubst %.o, %.mod, $(obj-m))
+> @@ -423,7 +429,7 @@ endif # builtin-target
+>  $(modorder-target): $(subdir-ym) FORCE
+>         $(Q){ $(foreach m, $(modorder), \
+>         $(if $(filter %/modules.order, $m), cat $m, echo $m);) :; } \
+> -       | $(AWK) '!x[$$0]++' - > $@
+> +       | $(AWK) '!x[$$0]++' - $(modorder-add) $@
+>
+>  #
+>  # Rule to compile a set of .o files into one .a file (with symbol table)
+> --
+> 2.20.1
+>
+
+
+-- 
+Best Regards
+Masahiro Yamada
