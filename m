@@ -2,120 +2,90 @@ Return-Path: <SRS0=w7Bx=WI=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F281C31E40
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Aug 2019 14:38:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AB44C31E40
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Aug 2019 15:23:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0CAAC206A2
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Aug 2019 14:38:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E9D2C2070C
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Aug 2019 15:23:41 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="RFejK4Mg"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726840AbfHLOi6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 12 Aug 2019 10:38:58 -0400
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:21426 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726817AbfHLOi6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 12 Aug 2019 10:38:58 -0400
-Received: from pps.filterd (m0098414.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.27/8.16.0.27) with SMTP id x7CEWB8Y038480;
-        Mon, 12 Aug 2019 10:35:13 -0400
-Received: from ppma01dal.us.ibm.com (83.d6.3fa9.ip4.static.sl-reverse.com [169.63.214.131])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 2ub9afhxwt-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 12 Aug 2019 10:35:13 -0400
-Received: from pps.filterd (ppma01dal.us.ibm.com [127.0.0.1])
-        by ppma01dal.us.ibm.com (8.16.0.27/8.16.0.27) with SMTP id x7CETp5C021839;
-        Mon, 12 Aug 2019 14:35:12 GMT
-Received: from b03cxnp08027.gho.boulder.ibm.com (b03cxnp08027.gho.boulder.ibm.com [9.17.130.19])
-        by ppma01dal.us.ibm.com with ESMTP id 2u9nj6fes0-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 12 Aug 2019 14:35:12 +0000
-Received: from b03ledav001.gho.boulder.ibm.com (b03ledav001.gho.boulder.ibm.com [9.17.130.232])
-        by b03cxnp08027.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id x7CEZAOX58655116
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 12 Aug 2019 14:35:10 GMT
-Received: from b03ledav001.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id D478D6E056;
-        Mon, 12 Aug 2019 14:35:10 +0000 (GMT)
-Received: from b03ledav001.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 7802B6E050;
-        Mon, 12 Aug 2019 14:35:09 +0000 (GMT)
-Received: from jarvis.ext.hansenpartnership.com (unknown [9.80.199.198])
-        by b03ledav001.gho.boulder.ibm.com (Postfix) with ESMTP;
-        Mon, 12 Aug 2019 14:35:09 +0000 (GMT)
-Message-ID: <1565620508.3422.6.camel@linux.vnet.ibm.com>
-Subject: Re: [PATCH v3 07/20] sg: move header to uapi section
-From:   James Bottomley <jejb@linux.vnet.ibm.com>
-To:     Christoph Hellwig <hch@infradead.org>,
-        Douglas Gilbert <dgilbert@interlog.com>
-Cc:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
-        hare@suse.de, bvanassche@acm.org, linux-spdx@vger.kernel.org
-Date:   Mon, 12 Aug 2019 07:35:08 -0700
-In-Reply-To: <20190812142451.GG8105@infradead.org>
+        id S1727263AbfHLPXl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 12 Aug 2019 11:23:41 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:50176 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726831AbfHLPXl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Aug 2019 11:23:41 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=j335fiiDQMBjJDi/0YItD4IEXZCw2bFlsQGThx9UUxc=; b=RFejK4MgtfOMyLRCkPcGWWTXk
+        nTXMwXgnvOqZBGhKIdS/oTSJC7Fa85pRnJpLb7/jmoDHvGt61cOj4sd/jUfzOjmAhwKkJxvFq1SaV
+        XiwPP5ctlHaLhGtfWQPjQ8/0lfftVXJfOlBjbWk+B0IDUDkXl1kii7giVW1MT54tQFaITVWSYQHgL
+        mvUbOF1EpBU8ob8+BygFFUD/GZdH7lceZc9oHRBQ+TOVrjJD1JsXp5w8kquMyGbYL3L+qYdUjt1z+
+        vo5heiTAcl4VEqb3Dmlgae8apLDPWMUyZJ0wmeKksUAfdqieEIFJqSdegrazCsWwroeB82cwHwW59
+        fLV17OjtA==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.92 #3 (Red Hat Linux))
+        id 1hxCAd-0005L5-Uf; Mon, 12 Aug 2019 15:23:39 +0000
+Date:   Mon, 12 Aug 2019 08:23:39 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     James Bottomley <jejb@linux.vnet.ibm.com>
+Cc:     Douglas Gilbert <dgilbert@interlog.com>,
+        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-api@vger.kernel.org, martin.petersen@oracle.com,
+        hare@suse.de, bvanassche@acm.org
+Subject: Re: [PATCH v3 00/20] sg: add v4 interface
+Message-ID: <20190812152339.GA15295@infradead.org>
 References: <20190807114252.2565-1-dgilbert@interlog.com>
-         <20190807114252.2565-8-dgilbert@interlog.com>
-         <20190812142451.GG8105@infradead.org>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.26.6 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:,, definitions=2019-08-12_06:,,
- signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- malwarescore=0 suspectscore=0 phishscore=0 bulkscore=0 spamscore=0
- clxscore=1011 lowpriorityscore=0 mlxscore=0 impostorscore=0
- mlxlogscore=999 adultscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.0.1-1906280000 definitions=main-1908120163
+ <1565291455.3435.48.camel@linux.vnet.ibm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1565291455.3435.48.camel@linux.vnet.ibm.com>
+User-Agent: Mutt/1.11.4 (2019-03-13)
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, 2019-08-12 at 07:24 -0700, Christoph Hellwig wrote:
-> [note: question for the linux-spdx audience below]
+On Thu, Aug 08, 2019 at 12:10:55PM -0700, James Bottomley wrote:
+> Since this will be an extension of something that exists both in your
+> sg driver and in the block bsg interface (and thus needs an
+> implementation there), I added both linux-block and linux-api to the cc
+> (the latter because you're adding to an API).
 > 
-> > -
-> >  #ifdef __KERNEL__
-> >  extern int sg_big_buff; /* for sysctl */
-> >  #endif
-> 
-> FYI, these __KERNEL__ ifdefs in non-uapi headers should go away.
-> 
-> >  
-> > +/*
-> > + * In version 3.9.01 of the sg driver, this file was spilt in two,
-> > with the
-> > + * bulk of the user space interface being placed in the file being
-> > included
-> > + * in the following line.
-> > + */
-> > +#include <uapi/scsi/sg.h>
-> 
-> Splitting uapi headers is standard practive, no need for the comment,
-> especially not with a meaningless driver version number.
-> 
-> > diff --git a/include/uapi/scsi/sg.h b/include/uapi/scsi/sg.h
-> > new file mode 100644
-> > index 000000000000..072b45bd732f
-> > --- /dev/null
-> > +++ b/include/uapi/scsi/sg.h
-> > @@ -0,0 +1,329 @@
-> > +/* SPDX-License-Identifier: GPL-2.0 */
-> 
-> This needs the syscall noticed for uapi headers.  FYI, what is our
-> stance of just adding that notice to headers newly moved to UAPI?
-> Do we need agreement from everyone who touched the file?  Or just
-> after we started the split and SPDX annotations, as in this case
-> this header used to be available to user programs?
+> Simply extending sg to use the v4 header protocol in uapi/linux/bsg.h
+> is fine modulo the code being in the right form.  The problems are the
+> new ioctls you want to add that would need to be present there as well.
+>  The specific question being how we support async or non-blocking I/O
+> on the sg and bsg interfaces.  The standard way we add asynchronous I/O
+> is supposed to be via .poll on the file descriptor.  you already use
+> read and write in sg and bsg doesn't have a polling interface, but it
+> looks like we could use MSG to signal an ioctl is ready to be serviced
+> for both.  Would shifting to a non-blocking poll based interface for
+> ioctls remove the need to add these SG_IOSUBMIT/SG_IORECEIVE ioctls
+> since we could now do everything over blocking or non-blocking SG_IO?
 
-It's pretty much covered by the original linux COPYING file, which
-contains the systemcall exception for everything.  I think our
-intention is that this still applies globally, so things can be moved
-into the UAPI without additional permissions.
+I've spent some wading through this patchset, and it is huge.  I thing
+we need to stage it a bit better and split it into multiple.
 
-James
-
+ 1) One (or maybe even multiple) with all the cleanups and minor
+    speedups.  That alone is a lot of changes, and will take a while
+    to settle
+ 2) extending the bsg/v4 API to /dev/sg.  I think that is very useful,
+    although I need to look at the details a bit more
+ 3) adding a new async API.  While this seems very useful from the
+    theoretical perspective, I really thing the guts need to be in
+    common code and then be used by sg and the block device nodes
+    (if it happens to be an ioctl).  What worries me a bit there
+    is that we have another way to deal with async I/O.  I wonder
+    if we can fit this into aio/io_uring somehow.  But I'd rather
+    not even thing about that much until we've done all the groundwork.
