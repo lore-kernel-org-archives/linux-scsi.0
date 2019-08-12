@@ -2,161 +2,112 @@ Return-Path: <SRS0=w7Bx=WI=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C1B2AC433FF
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Aug 2019 22:45:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 26715C31E40
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Aug 2019 23:22:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9C39A20842
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Aug 2019 22:45:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E923D20684
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Aug 2019 23:22:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726826AbfHLWpt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 12 Aug 2019 18:45:49 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:45186 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726488AbfHLWpt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 12 Aug 2019 18:45:49 -0400
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id E6827693C8;
-        Mon, 12 Aug 2019 22:45:48 +0000 (UTC)
-Received: from ming.t460p (ovpn-8-17.pek2.redhat.com [10.72.8.17])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id D893D7A417;
-        Mon, 12 Aug 2019 22:45:39 +0000 (UTC)
-Date:   Tue, 13 Aug 2019 06:45:32 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     John Garry <john.garry@huawei.com>
-Cc:     Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
-        Minwoo Im <minwoo.im.dev@gmail.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Hannes Reinecke <hare@suse.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Keith Busch <keith.busch@intel.com>,
-        chenxiang <chenxiang66@hisilicon.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Subject: Re: [PATCH V2 0/5] blk-mq: improvement on handling IO during CPU
- hotplug
-Message-ID: <20190812224531.GC17645@ming.t460p>
-References: <20190812134312.16732-1-ming.lei@redhat.com>
- <20190812134608.GA16803@ming.t460p>
- <658b0e7f-72f6-3673-d35e-4d8078069258@huawei.com>
+        id S1726296AbfHLXWM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 12 Aug 2019 19:22:12 -0400
+Received: from mail-pg1-f194.google.com ([209.85.215.194]:33812 "EHLO
+        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726144AbfHLXWM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Aug 2019 19:22:12 -0400
+Received: by mail-pg1-f194.google.com with SMTP id n9so44022175pgc.1
+        for <linux-scsi@vger.kernel.org>; Mon, 12 Aug 2019 16:22:12 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=1A5XMhHLUL0DKY/WcB4K8SgpSGe3JkrWJwWDpOrUkyc=;
+        b=rQztwPH70kzE/w3RcDNKPwLugLNkA4kBbo2J4YTIFneA9KQCStxI9Otk55o2A8FcKj
+         AJsIkmJz5+l+bdZnR9tg3gUzEHtQi9hYWltASvgvqZq2/zfhZyOjAjkzbNAA5bRhP9ft
+         lhBJe/TImGrqK+Zf7PkxHFtcZmApksfxAYiEMDN886lXg4mf97km6gw2kLD3ZMXBiMrV
+         kk00XT8lbIYILHoqeJ7FsIofbwMxYoTiEDvgTRNldUPGEDSzxsUxf/n0kj+rCFRpdOQn
+         hrHL/bOcKe+eGb2rmBHx6DMFzMBtJk7nvetvI+sfnM+oHCQYbewNeXob45IW0YS/OiBU
+         2E/g==
+X-Gm-Message-State: APjAAAUNIMZVrozUs4urcFxtTELHUq9uTdl97PLIhZyNIb9Lk9WckcS4
+        XA0CwZZ15ajt3rWO6cUIunc=
+X-Google-Smtp-Source: APXvYqwVGz8nopRVyDMX5SkXMQYj5ZzZ9Z/Jz31k2jHEemSodKqueF2C+ExC+IJbwbESAFhO6tGNQA==
+X-Received: by 2002:a63:4a0d:: with SMTP id x13mr31400601pga.75.1565652131690;
+        Mon, 12 Aug 2019 16:22:11 -0700 (PDT)
+Received: from desktop-bart.svl.corp.google.com ([2620:15c:2cd:202:4308:52a3:24b6:2c60])
+        by smtp.gmail.com with ESMTPSA id 14sm105558893pfy.40.2019.08.12.16.22.10
+        (version=TLS1_3 cipher=AEAD-AES128-GCM-SHA256 bits=128/128);
+        Mon, 12 Aug 2019 16:22:10 -0700 (PDT)
+Subject: Re: [PATCH v2 46/58] qla2xxx: Make qlt_handle_abts_completion() more
+ robust
+To:     Roman Bolshakov <r.bolshakov@yadro.com>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        linux-scsi@vger.kernel.org, Himanshu Madhani <hmadhani@marvell.com>
+References: <20190809030219.11296-1-bvanassche@acm.org>
+ <20190809030219.11296-47-bvanassche@acm.org>
+ <20190812205222.qmse275ofl3g52bk@SPB-NB-133.local>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <4808483f-4d35-ab41-d642-547f690ce3bd@acm.org>
+Date:   Mon, 12 Aug 2019 16:22:09 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <658b0e7f-72f6-3673-d35e-4d8078069258@huawei.com>
-User-Agent: Mutt/1.11.3 (2019-02-01)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.25]); Mon, 12 Aug 2019 22:45:49 +0000 (UTC)
+In-Reply-To: <20190812205222.qmse275ofl3g52bk@SPB-NB-133.local>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Aug 12, 2019 at 05:21:44PM +0100, John Garry wrote:
-> On 12/08/2019 14:46, Ming Lei wrote:
-> > Hi John,
-> > 
-> > On Mon, Aug 12, 2019 at 09:43:07PM +0800, Ming Lei wrote:
-> > > Hi,
-> > > 
-> > > Thomas mentioned:
-> > >     "
-> > >      That was the constraint of managed interrupts from the very beginning:
-> > > 
-> > >       The driver/subsystem has to quiesce the interrupt line and the associated
-> > >       queue _before_ it gets shutdown in CPU unplug and not fiddle with it
-> > >       until it's restarted by the core when the CPU is plugged in again.
-> > >     "
-> > > 
-> > > But no drivers or blk-mq do that before one hctx becomes dead(all
-> > > CPUs for one hctx are offline), and even it is worse, blk-mq stills tries
-> > > to run hw queue after hctx is dead, see blk_mq_hctx_notify_dead().
-> > > 
-> > > This patchset tries to address the issue by two stages:
-> > > 
-> > > 1) add one new cpuhp state of CPUHP_AP_BLK_MQ_ONLINE
-> > > 
-> > > - mark the hctx as internal stopped, and drain all in-flight requests
-> > > if the hctx is going to be dead.
-> > > 
-> > > 2) re-submit IO in the state of CPUHP_BLK_MQ_DEAD after the hctx becomes dead
-> > > 
-> > > - steal bios from the request, and resubmit them via generic_make_request(),
-> > > then these IO will be mapped to other live hctx for dispatch
-> > > 
-> > > Please comment & review, thanks!
-> > > 
-> > > V2:
-> > > 	- patch4 & patch 5 in V1 have been merged to block tree, so remove
-> > > 	  them
-> > > 	- address comments from John Garry and Minwoo
-> > > 
-> > > 
-> > > Ming Lei (5):
-> > >   blk-mq: add new state of BLK_MQ_S_INTERNAL_STOPPED
-> > >   blk-mq: add blk-mq flag of BLK_MQ_F_NO_MANAGED_IRQ
-> > >   blk-mq: stop to handle IO before hctx's all CPUs become offline
-> > >   blk-mq: re-submit IO in case that hctx is dead
-> > >   blk-mq: handle requests dispatched from IO scheduler in case that hctx
-> > >     is dead
-> > > 
-> > >  block/blk-mq-debugfs.c     |   2 +
-> > >  block/blk-mq-tag.c         |   2 +-
-> > >  block/blk-mq-tag.h         |   2 +
-> > >  block/blk-mq.c             | 143 +++++++++++++++++++++++++++++++++----
-> > >  block/blk-mq.h             |   3 +-
-> > >  drivers/block/loop.c       |   2 +-
-> > >  drivers/md/dm-rq.c         |   2 +-
-> > >  include/linux/blk-mq.h     |   5 ++
-> > >  include/linux/cpuhotplug.h |   1 +
-> > >  9 files changed, 146 insertions(+), 16 deletions(-)
-> > > 
-> > > Cc: Bart Van Assche <bvanassche@acm.org>
-> > > Cc: Hannes Reinecke <hare@suse.com>
-> > > Cc: Christoph Hellwig <hch@lst.de>
-> > > Cc: Thomas Gleixner <tglx@linutronix.de>
-> > > Cc: Keith Busch <keith.busch@intel.com>
-> > > --
-> > > 2.20.1
-> > > 
-> > 
-> > Sorry for forgetting to Cc you.
+On 8/12/19 1:52 PM, Roman Bolshakov wrote:
+> On Thu, Aug 08, 2019 at 08:02:07PM -0700, Bart Van Assche wrote:
+>> Avoid that this function crashes if mcmd == NULL.
+>>
+>> Cc: Himanshu Madhani <hmadhani@marvell.com>
+>> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+>> ---
+>>   drivers/scsi/qla2xxx/qla_target.c | 2 +-
+>>   1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+>> index d25c3fa43601..cc0c99b5f3fb 100644
+>> --- a/drivers/scsi/qla2xxx/qla_target.c
+>> +++ b/drivers/scsi/qla2xxx/qla_target.c
+>> @@ -5731,7 +5731,7 @@ static void qlt_handle_abts_completion(struct scsi_qla_host *vha,
+>>   			    entry->error_subcode2);
+>>   			ha->tgt.tgt_ops->free_mcmd(mcmd);
+>>   		}
+>> -	} else {
+>> +	} else if (mcmd) {
+>>   		ha->tgt.tgt_ops->free_mcmd(mcmd);
+>>   	}
+>>   }
+>> -- 
+>> 2.22.0
+>>
 > 
-> Already subscribed :)
+> Thanks for working on the fix, the crash can be observed sometimes on
+> target shutdown.
 > 
-> I don't mean to hijack this thread, but JFYI we're getting around to test
-> https://github.com/ming1/linux/commits/v5.2-rc-host-tags-V2 - unfortunately
-> we're still seeing a performance regression. I can't see where it's coming
-> from. We're double-checking the test though.
+> I've been inspecting the piece of code multiple times and still don't
+> understand if we get mcmd == NULL only when ABTS completes successfully
+> or there is ABTS failure together with inability to find mcmd in the
+> request queue? In that case, there're two more paths that could crash.
+> 
+> And the second question is whether the NULL received from
+> qlt_ctio_to_cmd is a sign of another sporadic issue somewhere else in
+> the driver?
 
-host-tag patchset is only for several particular drivers which use
-private reply queue as completion queue.
+Hi Roman,
 
-This patchset is for handling generic blk-mq CPU hotplug issue, and
-the several particular scsi drivers(hisi_sas_v3, hpsa, megaraid_sas and
-mp3sas) won't be covered so far.
+If I interpret qlt_handle_abts_completion() mcmd can only be NULL at 
+line 5734 if h == QLA_TGT_SKIP_HANDLE. I'm not sure what causes the 
+firmware to report that handle value upon ABTS completion.
 
-I'd suggest to move on for generic blk-mq devices first given now blk-mq
-is the only request IO path now.
-
-There are at least two choices for us to handle drivers/devices with
-private completion queue:
-
-1) host-tags
-- performance issue shouldn't be hard to solve, given it is same with
-with single tags in theory, and just corner cases is there.
-
-What I am not glad with this approach is that blk-mq-tag code becomes mess.
-
-2) private callback
-- we could define private callback to drain each completion queue in
-  driver simply.
-- problem is that the four drivers have to duplicate the same job
-
-
-Thanks,
-Ming
+Bart.
