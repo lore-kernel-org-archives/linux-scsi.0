@@ -2,165 +2,110 @@ Return-Path: <SRS0=w7Bx=WI=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.3 required=3.0 tests=DKIM_ADSP_CUSTOM_MED,
+	DKIM_INVALID,DKIM_SIGNED,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1DE4AC433FF
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Aug 2019 02:00:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AB37BC32756
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Aug 2019 08:31:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EC430206DF
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Aug 2019 02:00:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7DE422085A
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Aug 2019 08:31:56 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nHv5Or8e"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726307AbfHLCAQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 11 Aug 2019 22:00:16 -0400
-Received: from szxga04-in.huawei.com ([45.249.212.190]:4657 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726236AbfHLCAQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 11 Aug 2019 22:00:16 -0400
-Received: from DGGEMS413-HUB.china.huawei.com (unknown [172.30.72.60])
-        by Forcepoint Email with ESMTP id 117E496AD85FA51FADD4;
-        Mon, 12 Aug 2019 10:00:14 +0800 (CST)
-Received: from huawei.com (10.90.53.225) by DGGEMS413-HUB.china.huawei.com
- (10.3.19.213) with Microsoft SMTP Server id 14.3.439.0; Mon, 12 Aug 2019
- 10:00:04 +0800
-From:   zhengbin <zhengbin13@huawei.com>
-To:     <bvanassche@acm.org>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <ming.lei@redhat.com>,
-        <linux-scsi@vger.kernel.org>
-CC:     <houtao1@huawei.com>, <yanaijie@huawei.com>,
-        <zhengbin13@huawei.com>
-Subject: [PATCH v3] SCSI: fix queue cleanup race before scsi_requeue_run_queue is done
-Date:   Mon, 12 Aug 2019 10:06:33 +0800
-Message-ID: <1565575593-114286-1-git-send-email-zhengbin13@huawei.com>
-X-Mailer: git-send-email 2.7.4
-MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.90.53.225]
-X-CFilter-Loop: Reflected
+        id S1727092AbfHLIbw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 12 Aug 2019 04:31:52 -0400
+Received: from mail-pl1-f193.google.com ([209.85.214.193]:41586 "EHLO
+        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727063AbfHLIbw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Aug 2019 04:31:52 -0400
+Received: by mail-pl1-f193.google.com with SMTP id m9so47434586pls.8;
+        Mon, 12 Aug 2019 01:31:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=GkXc2q6hrKT3n5tKIOqt3FKeJIiJ+UpY638YqYejrko=;
+        b=nHv5Or8eGV6zJWYGj930jnePCX274A1UNwnrFU1OCWtmOI5K8gVQo46jqobYxJLJMG
+         gyhR2Lm92hfXVz1M6QgpSeC6uv85D/MN1PNLsAGqRRFz2I29w6d90EMgFMzEXSRandZE
+         RLEWH3SvOHQ/weg4HgPL1+c/yIMfNIvnBHCDweZ28QH14I0iKYFPb3bKqqYrXdrPpZdS
+         bFKDkbazfc4NNmanPJmfRRmZgAeUmplIPxBzI3f+w71Wa4O+hzRpExcYpqNnnHcWLDLj
+         1cQnfHGvR6EcL3MbZKIcODoSTSB4B+5gTB6YGGJwBVj4eyjOuSfWo+SjEKpeirDUXKbd
+         dGZg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=GkXc2q6hrKT3n5tKIOqt3FKeJIiJ+UpY638YqYejrko=;
+        b=aOzmMdCMe2jHRkOaQ5G72l/R9qoLa5QTjl4z+mUUo22FHNQJvbhqhqqYozYhRpstb3
+         uLl+Bd81leQw1GJQD+Vn6dCTQ57SLsG09ElEmLLcQxqdqs0AKLxumdL1eAo4ky5fmPqN
+         u4FPbBOm5Nz5kkgu4E585zXhYjUljb5kstoHjAc5U4JpmEfWhnV1Iq+dJmDpGrFFKP4a
+         Z4VL5cdR8Sd1Tvr4W2BH8seQoFrpcxmJgVWZHosNEOPiAv5ypXM4yo8KiwrxQvPMHR0X
+         SWaMCi/9r6DCEImiZd4Tcg3AiX0ojsnVZTVjZ1Aq7R7dt2ORgvlsndZ+6WA6vSf3GjDr
+         SIxg==
+X-Gm-Message-State: APjAAAU6Iyv2EjKkAx9L008XyQzvHIprMQeD4sOhW8nxKnWg8Pn+J5DS
+        34vvL9tyX7AjG8LcOxt6k5k=
+X-Google-Smtp-Source: APXvYqzDrULP/oJzmzyREYSwdnYyvzp7mxxgjDbGZr1nn/ZwUPLGo0KeKQdor5FN7PQP5LRHg8vnbg==
+X-Received: by 2002:a17:902:e30b:: with SMTP id cg11mr32341992plb.335.1565598711739;
+        Mon, 12 Aug 2019 01:31:51 -0700 (PDT)
+Received: from hfq-skylake.ipads-lab.se.sjtu.edu.cn ([202.120.40.82])
+        by smtp.googlemail.com with ESMTPSA id w2sm9100203pjr.27.2019.08.12.01.31.48
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 12 Aug 2019 01:31:50 -0700 (PDT)
+From:   Fuqian Huang <huangfq.daxian@gmail.com>
+Cc:     James Smart <james.smart@broadcom.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Fuqian Huang <huangfq.daxian@gmail.com>
+Subject: [PATCH] scsi: lpfc: use spin_lock_irqsave instead of spin_lock_irq in IRQ context
+Date:   Mon, 12 Aug 2019 16:31:34 +0800
+Message-Id: <20190812083134.7033-1-huangfq.daxian@gmail.com>
+X-Mailer: git-send-email 2.11.0
+To:     unlisted-recipients:; (no To-header on input)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-KASAN reports a use-after-free in 4.19-stable,
-which won't happen after commit 47cdee29ef9d
-("block: move blk_exit_queue into __blk_release_queue").
-However, backport this patch to 4.19-stable will be a lot of work and
-the risk is great. Moreover, we should make sure scsi_requeue_run_queue
-is done before blk_cleanup_queue in master too.
+As spin_unlock_irq will enable interrupts.
+Function lpfc_findnode_rpi is called from
+    lpfc_sli_abts_err_handler (./drivers/scsi/lpfc/lpfc_sli.c)
+ <- lpfc_sli_async_event_handler
+ <- lpfc_sli_process_unsol_iocb
+ <- lpfc_sli_handle_fast_ring_event
+ <- lpfc_sli_fp_intr_handler
+ <- lpfc_sli_intr_handler
+ and lpfc_sli_intr_handler is an interrupt handler.
+Interrupts are enabled in interrupt handler.
+Use spin_lock_irqsave/spin_unlock_irqrestore instead of spin_(un)lock_irq
+in IRQ context to avoid this.
 
-BUG: KASAN: use-after-free in dd_has_work+0x50/0xe8
-Read of size 8 at addr ffff808b57c6f168 by task kworker/53:1H/6910
-
-CPU: 53 PID: 6910 Comm: kworker/53:1H Kdump: loaded Tainted: G
-Hardware name: Huawei TaiShan 2280 /BC11SPCD, BIOS 1.59 01/31/2019
-Workqueue: kblockd scsi_requeue_run_queue
-Call trace:
- dump_backtrace+0x0/0x270
- show_stack+0x24/0x30
- dump_stack+0xb4/0xe4
- print_address_description+0x68/0x278
- kasan_report+0x204/0x330
- __asan_load8+0x88/0xb0
- dd_has_work+0x50/0xe8
- blk_mq_run_hw_queue+0x19c/0x218
- blk_mq_run_hw_queues+0x7c/0xb0
- scsi_run_queue+0x3ec/0x520
- scsi_requeue_run_queue+0x2c/0x38
- process_one_work+0x2e4/0x6d8
- worker_thread+0x6c/0x6a8
- kthread+0x1b4/0x1c0
- ret_from_fork+0x10/0x18
-
-Allocated by task 46843:
- kasan_kmalloc+0xe0/0x190
- kmem_cache_alloc_node_trace+0x10c/0x258
- dd_init_queue+0x68/0x190
- blk_mq_init_sched+0x1cc/0x300
- elevator_init_mq+0x90/0xe0
- blk_mq_init_allocated_queue+0x700/0x728
- blk_mq_init_queue+0x48/0x90
- scsi_mq_alloc_queue+0x34/0xb0
- scsi_alloc_sdev+0x340/0x530
- scsi_probe_and_add_lun+0x46c/0x1260
- __scsi_scan_target+0x1b8/0x7b0
- scsi_scan_target+0x140/0x150
- fc_scsi_scan_rport+0x164/0x178 [scsi_transport_fc]
- process_one_work+0x2e4/0x6d8
- worker_thread+0x6c/0x6a8
- kthread+0x1b4/0x1c0
- ret_from_fork+0x10/0x18
-
-Freed by task 46843:
- __kasan_slab_free+0x120/0x228
- kasan_slab_free+0x10/0x18
- kfree+0x88/0x218
- dd_exit_queue+0x5c/0x78
- blk_mq_exit_sched+0x104/0x130
- elevator_exit+0xa8/0xc8
- blk_exit_queue+0x48/0x78
- blk_cleanup_queue+0x170/0x248
- __scsi_remove_device+0x84/0x1b0
- scsi_probe_and_add_lun+0xd00/0x1260
- __scsi_scan_target+0x1b8/0x7b0
- scsi_scan_target+0x140/0x150
- fc_scsi_scan_rport+0x164/0x178 [scsi_transport_fc]
- process_one_work+0x2e4/0x6d8
- worker_thread+0x6c/0x6a8
- kthread+0x1b4/0x1c0
- ret_from_fork+0x10/0x18
-
-Fixes: 8dc765d438f1 ("SCSI: fix queue cleanup race before queue initialization is done")
-Signed-off-by: zhengbin <zhengbin13@huawei.com>
+Signed-off-by: Fuqian Huang <huangfq.daxian@gmail.com>
 ---
- drivers/scsi/scsi_lib.c | 17 +++++++++++++----
- 1 file changed, 13 insertions(+), 4 deletions(-)
+ drivers/scsi/lpfc/lpfc_hbadisc.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 11e64b5..620771d 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -531,6 +531,11 @@ void scsi_requeue_run_queue(struct work_struct *work)
- 	sdev = container_of(work, struct scsi_device, requeue_work);
- 	q = sdev->request_queue;
- 	scsi_run_queue(q);
-+	/*
-+	 * need to put q_usage_counter which
-+	 * is got in scsi_end_request.
-+	 */
-+	percpu_ref_put(&q->q_usage_counter);
+diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+index 28ecaa7fc715..cf02c352b324 100644
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+@@ -6065,10 +6065,11 @@ lpfc_findnode_rpi(struct lpfc_vport *vport, uint16_t rpi)
+ {
+ 	struct Scsi_Host *shost = lpfc_shost_from_vport(vport);
+ 	struct lpfc_nodelist *ndlp;
++	unsigned long flags;
+ 
+-	spin_lock_irq(shost->host_lock);
++	spin_lock_irqsave(shost->host_lock, flags);
+ 	ndlp = __lpfc_findnode_rpi(vport, rpi);
+-	spin_unlock_irq(shost->host_lock);
++	spin_unlock_irqrestore(shost->host_lock, flags);
+ 	return ndlp;
  }
-
- void scsi_run_host_queues(struct Scsi_Host *shost)
-@@ -575,6 +580,7 @@ static bool scsi_end_request(struct request *req, blk_status_t error,
- 	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(req);
- 	struct scsi_device *sdev = cmd->device;
- 	struct request_queue *q = sdev->request_queue;
-+	bool ret;
-
- 	if (blk_update_request(req, error, bytes))
- 		return true;
-@@ -613,12 +619,15 @@ static bool scsi_end_request(struct request *req, blk_status_t error,
- 	__blk_mq_end_request(req, error);
-
- 	if (scsi_target(sdev)->single_lun ||
--	    !list_empty(&sdev->host->starved_list))
--		kblockd_schedule_work(&sdev->requeue_work);
--	else
-+	    !list_empty(&sdev->host->starved_list)) {
-+		ret = kblockd_schedule_work(&sdev->requeue_work);
-+		if (!ret)
-+			percpu_ref_put(&q->q_usage_counter);
-+	} else {
- 		blk_mq_run_hw_queues(q, true);
-+		percpu_ref_put(&q->q_usage_counter);
-+	}
-
--	percpu_ref_put(&q->q_usage_counter);
- 	return false;
- }
-
---
-2.7.4
+ 
+-- 
+2.11.0
 
