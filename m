@@ -2,135 +2,193 @@ Return-Path: <SRS0=w7Bx=WI=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7514C433FF
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Aug 2019 16:33:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B38ABC433FF
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Aug 2019 16:43:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BF14020679
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Aug 2019 16:33:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9022C2067D
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Aug 2019 16:43:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725887AbfHLQdU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 12 Aug 2019 12:33:20 -0400
-Received: from mail.cybernetics.com ([173.71.130.66]:48724 "EHLO
-        mail.cybernetics.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725822AbfHLQdU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Aug 2019 12:33:20 -0400
-X-Greylist: delayed 1123 seconds by postgrey-1.27 at vger.kernel.org; Mon, 12 Aug 2019 12:33:20 EDT
-X-ASG-Debug-ID: 1565626471-0fb3b01884585240001-ziuLRu
-Received: from cybernetics.com ([10.10.4.126]) by mail.cybernetics.com with ESMTP id T1yEvYMmatpCrpxq (version=SSLv3 cipher=DES-CBC3-SHA bits=112 verify=NO); Mon, 12 Aug 2019 12:14:31 -0400 (EDT)
-X-Barracuda-Envelope-From: tonyb@cybernetics.com
-X-ASG-Whitelist: Client
-Received: from [10.157.2.224] (account tonyb HELO [192.168.200.1])
-  by cybernetics.com (CommuniGate Pro SMTP 5.1.14)
-  with ESMTPSA id 9049890; Mon, 12 Aug 2019 12:14:31 -0400
-Subject: Re: [PATCH v3 17/20] sg: add sg_iosubmit_v3 and sg_ioreceive_v3
- ioctls
-To:     dgilbert@interlog.com, James Bottomley <jejb@linux.vnet.ibm.com>,
+        id S1727005AbfHLQnZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 12 Aug 2019 12:43:25 -0400
+Received: from mail-pf1-f195.google.com ([209.85.210.195]:37377 "EHLO
+        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726998AbfHLQnZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Aug 2019 12:43:25 -0400
+Received: by mail-pf1-f195.google.com with SMTP id 129so3047918pfa.4
+        for <linux-scsi@vger.kernel.org>; Mon, 12 Aug 2019 09:43:24 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=rnYsVQl3atVSLspNrFTvaX+eONqx34m7oaL9Z34F83w=;
+        b=WPpS+duTDUUDa1GGnV4NV4PqrX/AD5NSvPHs/fGtRTLRwrKCp7A8a9T7x2QNuEcZgi
+         8MfYYBA1sBlw7/DaYAkYNO5QKUjHpUhLlYVxp3SxzPMOCDfFo0F0ftUPXrw3/zm4Mk7O
+         jLGkZSDiJVqu6246NoJECDI3i9AxD1pIwxtnfqSMOru5VPWHa+VKEgGi86RcumcrNLjL
+         K3gTFBrDRz+y8uQDx7Pk+MfThCuEr0YoFIfzHCV+FnbUtSwMZGOaOldv4bH5w+A4i2YS
+         GdFa2wRGL2DC1WC3oZRHeqmKAk/Bo7q+HdO7ZZnr22rWSO7Ci1mJ6Hh0WeSpgoJUBlYB
+         pXIA==
+X-Gm-Message-State: APjAAAUYCxKOtKaDepQUEiGdZgxw3gnjGdwVou1BRcNLptR1PC0Lxxsf
+        yLtlz/P+Q/yuO5YILO7dlpc=
+X-Google-Smtp-Source: APXvYqyiJovEpC8jKFVCqvx5ZmxOrVf2LEtPTs0P+AVCnIo0fgzwZ+MSc2aokzTglkyCEPTB6QFAFA==
+X-Received: by 2002:aa7:8711:: with SMTP id b17mr36927254pfo.234.1565628203869;
+        Mon, 12 Aug 2019 09:43:23 -0700 (PDT)
+Received: from desktop-bart.svl.corp.google.com ([2620:15c:2cd:202:4308:52a3:24b6:2c60])
+        by smtp.gmail.com with ESMTPSA id o11sm193398552pfh.114.2019.08.12.09.43.22
+        (version=TLS1_3 cipher=AEAD-AES128-GCM-SHA256 bits=128/128);
+        Mon, 12 Aug 2019 09:43:23 -0700 (PDT)
+Subject: Re: [PATCH v3] SCSI: fix queue cleanup race before
+ scsi_requeue_run_queue is done
+To:     zhengbin <zhengbin13@huawei.com>, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, ming.lei@redhat.com,
         linux-scsi@vger.kernel.org
-X-ASG-Orig-Subj: Re: [PATCH v3 17/20] sg: add sg_iosubmit_v3 and sg_ioreceive_v3
- ioctls
-Cc:     martin.petersen@oracle.com, hare@suse.de, bvanassche@acm.org,
-        kbuild test robot <lkp@intel.com>,
-        Arnd Bergmann <arnd@arndb.de>
-References: <20190807114252.2565-1-dgilbert@interlog.com>
- <20190807114252.2565-18-dgilbert@interlog.com>
- <1565392510.17449.18.camel@linux.vnet.ibm.com>
- <048b4ab4-804b-f6ec-c35a-47cd2f8d8cda@interlog.com>
-From:   Tony Battersby <tonyb@cybernetics.com>
-Message-ID: <500183f3-fb16-77b7-90e0-5c8bb2a021c3@cybernetics.com>
-Date:   Mon, 12 Aug 2019 12:14:31 -0400
+Cc:     houtao1@huawei.com, yanaijie@huawei.com
+References: <1565575593-114286-1-git-send-email-zhengbin13@huawei.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <c95495ed-c136-9202-40e8-57af3eec6d47@acm.org>
+Date:   Mon, 12 Aug 2019 09:43:21 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.8.0
 MIME-Version: 1.0
-In-Reply-To: <048b4ab4-804b-f6ec-c35a-47cd2f8d8cda@interlog.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <1565575593-114286-1-git-send-email-zhengbin13@huawei.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
-X-Barracuda-Connect: UNKNOWN[10.10.4.126]
-X-Barracuda-Start-Time: 1565626471
-X-Barracuda-Encrypted: DES-CBC3-SHA
-X-Barracuda-URL: https://10.10.4.122:443/cgi-mod/mark.cgi
-X-Virus-Scanned: by bsmtpd at cybernetics.com
-X-Barracuda-Scan-Msg-Size: 4046
-X-Barracuda-BRTS-Status: 1
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/12/19 11:37 AM, Douglas Gilbert wrote:
-> On 2019-08-09 7:15 p.m., James Bottomley wrote:
->> On Wed, 2019-08-07 at 13:42 +0200, Douglas Gilbert wrote:
->>> Add ioctl(SG_IOSUBMIT_V3) and ioctl(SG_IORECEIVE_V3). These ioctls
->>> are meant to be (almost) drop-in replacements for the write()/read()
->>> async version 3 interface. They only accept the version 3 interface.
->> I don't think we should do this at all.  Anyone who wants to use the
->> new async interfaces should use the v4 headers.  As Tony Battersby
->> already said, the legacy v3 users aren't going to update, so there's no
->> point at all introducing new interfaces for v3.  We simply keep the v3
->> only read/write interface until there are no users left and it can be
->> eliminated.
-> Tony Battersby wrote [20190809]:
->    "Actually I used the asynchronous write()/read()/poll() sg interface to
->    implement RAID-like functionality for tape drives and medium changers,
->    in a commercial product that has been around since 2002.  These days our
->    products use a lot more disk I/O than tape I/O, so I don't write much
->    new code using the sg interface anymore, although that code is still
->    there and has to be maintained as needed.  So I don't have any immediate
->    plans to use any of the new sgv4 features being introduced, and
->    unfortunately I am way too busy to even give it a good review..."
->
-> That is quoted in full his post. And here is the only other post from
-> Tony I can find on this subject, again quoted in full [20190808]:
->
->    "One of the reasons ioctls have a bad reputation is because they can be
->    used to implement poorly-thought-out interfaces.  So kernel maintainers
->    push back on adding new ioctls.  But the push back isn't about the
->    number of ioctls, it is about the poor interfaces.  My advice was that
->    in general, to implement a given API, it would be better to add more
->    ioctls with a simple interface for each one rather than to add fewer
->    extremely complex multiplexing ioctls."
->
-> Call me biased but I believe that taken together those posts support
-> what I am proposing. And I can _not_ see how you deduce: "so there's
-> no point at all introducing new interfaces for v3" in reference to
-> Tony's posts.
->
->
-> As I stated in a previous post, I do not consider the sg v3 interface
-> as legacy. Where simply implemented, I am prepared to implement new
-> features on both the sg v3 and v4 interfaces. One example of this is
-> doing command timing in nanoseconds rather than the current default,
-> which is timing in milliseconds. There is also the new option of not
-> doing any command timing at all. In my current implementation it would
-> actually be more code to implement that for the v4 interface but not
-> for the v3 interface.
->
-> Replicating my argument from a previous post:
-> If the kernel had an API mapping layer that was sensitive to file
-> descriptors of a "special file" (e.g. "/dev/sg3") then it could map:
->      write(sg_fd, &sg_io_v3_obj, sizeof(sg_io_v3_obj))
-> to
->      ioctl(sg_fd, SG_IOSUBMIT_V3, &sg_io_v3_obj)
->
-> Plus a similar mapping for read() to ioctl(SG_IORECEIVE_V3). If such
-> a mapping did exist and was transparent to the user then write()
-> and read() could be retired from the sg driver.  And I assume that
-> would get a thumbs up from the kernel security folk.
->
-FWIW, my employer will probably continue to use the async sg v3
-interface for a long time.  If the read/write syscalls are a security
-problem, and if we had ioctl()s that are mostly a drop-in replacement
-for them, then we could convert our products over to the new ioctl()s on
-our next kernel upgrade without too much work (our products are embedded
-devices, so we control the whole software stack).  So if you plan to
-deprecate the read/write syscall interface anytime soon, then having
-drop-in replacement ioctl()s would be beneficial, even if it can't be
-done transparently as Doug suggests.
+On 8/11/19 7:06 PM, zhengbin wrote:
+> KASAN reports a use-after-free in 4.19-stable,
+> which won't happen after commit 47cdee29ef9d
+> ("block: move blk_exit_queue into __blk_release_queue").
+> However, backport this patch to 4.19-stable will be a lot of work and
+> the risk is great. Moreover, we should make sure scsi_requeue_run_queue
+> is done before blk_cleanup_queue in master too.
+> 
+> BUG: KASAN: use-after-free in dd_has_work+0x50/0xe8
+> Read of size 8 at addr ffff808b57c6f168 by task kworker/53:1H/6910
+> 
+> CPU: 53 PID: 6910 Comm: kworker/53:1H Kdump: loaded Tainted: G
+> Hardware name: Huawei TaiShan 2280 /BC11SPCD, BIOS 1.59 01/31/2019
+> Workqueue: kblockd scsi_requeue_run_queue
+> Call trace:
+>   dump_backtrace+0x0/0x270
+>   show_stack+0x24/0x30
+>   dump_stack+0xb4/0xe4
+>   print_address_description+0x68/0x278
+>   kasan_report+0x204/0x330
+>   __asan_load8+0x88/0xb0
+>   dd_has_work+0x50/0xe8
+>   blk_mq_run_hw_queue+0x19c/0x218
+>   blk_mq_run_hw_queues+0x7c/0xb0
+>   scsi_run_queue+0x3ec/0x520
+>   scsi_requeue_run_queue+0x2c/0x38
+>   process_one_work+0x2e4/0x6d8
+>   worker_thread+0x6c/0x6a8
+>   kthread+0x1b4/0x1c0
+>   ret_from_fork+0x10/0x18
+> 
+> Allocated by task 46843:
+>   kasan_kmalloc+0xe0/0x190
+>   kmem_cache_alloc_node_trace+0x10c/0x258
+>   dd_init_queue+0x68/0x190
+>   blk_mq_init_sched+0x1cc/0x300
+>   elevator_init_mq+0x90/0xe0
+>   blk_mq_init_allocated_queue+0x700/0x728
+>   blk_mq_init_queue+0x48/0x90
+>   scsi_mq_alloc_queue+0x34/0xb0
+>   scsi_alloc_sdev+0x340/0x530
+>   scsi_probe_and_add_lun+0x46c/0x1260
+>   __scsi_scan_target+0x1b8/0x7b0
+>   scsi_scan_target+0x140/0x150
+>   fc_scsi_scan_rport+0x164/0x178 [scsi_transport_fc]
+>   process_one_work+0x2e4/0x6d8
+>   worker_thread+0x6c/0x6a8
+>   kthread+0x1b4/0x1c0
+>   ret_from_fork+0x10/0x18
+> 
+> Freed by task 46843:
+>   __kasan_slab_free+0x120/0x228
+>   kasan_slab_free+0x10/0x18
+>   kfree+0x88/0x218
+>   dd_exit_queue+0x5c/0x78
+>   blk_mq_exit_sched+0x104/0x130
+>   elevator_exit+0xa8/0xc8
+>   blk_exit_queue+0x48/0x78
+>   blk_cleanup_queue+0x170/0x248
+>   __scsi_remove_device+0x84/0x1b0
+>   scsi_probe_and_add_lun+0xd00/0x1260
+>   __scsi_scan_target+0x1b8/0x7b0
+>   scsi_scan_target+0x140/0x150
+>   fc_scsi_scan_rport+0x164/0x178 [scsi_transport_fc]
+>   process_one_work+0x2e4/0x6d8
+>   worker_thread+0x6c/0x6a8
+>   kthread+0x1b4/0x1c0
+>   ret_from_fork+0x10/0x18
+> 
+> Fixes: 8dc765d438f1 ("SCSI: fix queue cleanup race before queue initialization is done")
+> Signed-off-by: zhengbin <zhengbin13@huawei.com>
+> ---
+>   drivers/scsi/scsi_lib.c | 17 +++++++++++++----
+>   1 file changed, 13 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 11e64b5..620771d 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -531,6 +531,11 @@ void scsi_requeue_run_queue(struct work_struct *work)
+>   	sdev = container_of(work, struct scsi_device, requeue_work);
+>   	q = sdev->request_queue;
+>   	scsi_run_queue(q);
+> +	/*
+> +	 * need to put q_usage_counter which
+> +	 * is got in scsi_end_request.
+> +	 */
+> +	percpu_ref_put(&q->q_usage_counter);
+>   }
+> 
+>   void scsi_run_host_queues(struct Scsi_Host *shost)
+> @@ -575,6 +580,7 @@ static bool scsi_end_request(struct request *req, blk_status_t error,
+>   	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(req);
+>   	struct scsi_device *sdev = cmd->device;
+>   	struct request_queue *q = sdev->request_queue;
+> +	bool ret;
+> 
+>   	if (blk_update_request(req, error, bytes))
+>   		return true;
+> @@ -613,12 +619,15 @@ static bool scsi_end_request(struct request *req, blk_status_t error,
+>   	__blk_mq_end_request(req, error);
+> 
+>   	if (scsi_target(sdev)->single_lun ||
+> -	    !list_empty(&sdev->host->starved_list))
+> -		kblockd_schedule_work(&sdev->requeue_work);
+> -	else
+> +	    !list_empty(&sdev->host->starved_list)) {
+> +		ret = kblockd_schedule_work(&sdev->requeue_work);
+> +		if (!ret)
+> +			percpu_ref_put(&q->q_usage_counter);
+> +	} else {
+>   		blk_mq_run_hw_queues(q, true);
+> +		percpu_ref_put(&q->q_usage_counter);
+> +	}
+> 
+> -	percpu_ref_put(&q->q_usage_counter);
+>   	return false;
+>   }
 
-Tony Battersby
-Cybernetics
+Is the new 'bool ret' variable really necessary?
 
+Additionally, have you taken a look at the 
+cancel_work_sync(&sdev->requeue_work) call in __scsi_remove_device()? 
+Shouldn't the queue refcount be dropped if that cancel call cancels 
+queued work?
+
+Thanks,
+
+Bart.
