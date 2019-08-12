@@ -2,200 +2,255 @@ Return-Path: <SRS0=w7Bx=WI=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2 autolearn=no
+X-Spam-Status: No, score=-8.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B464C433FF
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Aug 2019 18:46:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0512C433FF
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Aug 2019 19:28:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E195620684
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Aug 2019 18:46:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 85EBD2070C
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Aug 2019 19:28:26 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BSRG/wCs"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726754AbfHLSqa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 12 Aug 2019 14:46:30 -0400
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:15552 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726506AbfHLSqa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 12 Aug 2019 14:46:30 -0400
-Received: from pps.filterd (m0098396.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.27/8.16.0.27) with SMTP id x7CIcMe7107803;
-        Mon, 12 Aug 2019 14:46:07 -0400
-Received: from ppma03dal.us.ibm.com (b.bd.3ea9.ip4.static.sl-reverse.com [169.62.189.11])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2ubcdjtvmc-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 12 Aug 2019 14:46:07 -0400
-Received: from pps.filterd (ppma03dal.us.ibm.com [127.0.0.1])
-        by ppma03dal.us.ibm.com (8.16.0.27/8.16.0.27) with SMTP id x7CIYnDD027428;
-        Mon, 12 Aug 2019 18:46:06 GMT
-Received: from b01cxnp22033.gho.pok.ibm.com (b01cxnp22033.gho.pok.ibm.com [9.57.198.23])
-        by ppma03dal.us.ibm.com with ESMTP id 2u9nj6rrmy-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 12 Aug 2019 18:46:06 +0000
-Received: from b01ledav004.gho.pok.ibm.com (b01ledav004.gho.pok.ibm.com [9.57.199.109])
-        by b01cxnp22033.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id x7CIk5OG51052910
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 12 Aug 2019 18:46:05 GMT
-Received: from b01ledav004.gho.pok.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 77BBC112064;
-        Mon, 12 Aug 2019 18:46:05 +0000 (GMT)
-Received: from b01ledav004.gho.pok.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 5C2AD112061;
-        Mon, 12 Aug 2019 18:46:04 +0000 (GMT)
-Received: from jarvis.ext.hansenpartnership.com (unknown [9.80.199.198])
-        by b01ledav004.gho.pok.ibm.com (Postfix) with ESMTP;
-        Mon, 12 Aug 2019 18:46:04 +0000 (GMT)
-Message-ID: <1565635563.3287.1.camel@linux.vnet.ibm.com>
-Subject: Re: [PATCH v3 17/20] sg: add sg_iosubmit_v3 and sg_ioreceive_v3
- ioctls
-From:   James Bottomley <jejb@linux.vnet.ibm.com>
-To:     Tony Battersby <tonyb@cybernetics.com>, dgilbert@interlog.com,
+        id S1726843AbfHLT20 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 12 Aug 2019 15:28:26 -0400
+Received: from mail-wr1-f67.google.com ([209.85.221.67]:36507 "EHLO
+        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726681AbfHLT2Z (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Aug 2019 15:28:25 -0400
+Received: by mail-wr1-f67.google.com with SMTP id r3so11846398wrt.3;
+        Mon, 12 Aug 2019 12:28:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:openpgp:autocrypt:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=SvJtnd+awjHMfeDNM4qEk64doMEwP/lZaW8IGBdXnaA=;
+        b=BSRG/wCs4IHapT8X4TepI79b7OhGaS4OuZPlRUqXEnWx4PgNIGmCqbRxi/2BtPQYfe
+         NjWKy9ySFUsTFJsOw9NG3+BzwbrZwZNo4RCUujatvGuiIufD5nC93fsHr6R5oh1XNOf0
+         QrVXo/SLkV6Q4ywAsyzjhQtq7cZyTEYZ8LFca1H+6pGUSDyWPUZLzDhXy5LzK6+IsXmn
+         aAx+RKpJ6mlPOLxzOvZ6nQq7kxe3DVTn+ZYKTXeMR80tfQ8dBBfNk0fEH15Z+u5ex+lO
+         DSfn43ks5YUw05L4p7hVS6VPNjGh8UMeImQUbFBDJV6ZgKyCUjjxUUV7bTDgWg9YaJIk
+         l7Jg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:openpgp:autocrypt
+         :message-id:date:user-agent:mime-version:in-reply-to
+         :content-language:content-transfer-encoding;
+        bh=SvJtnd+awjHMfeDNM4qEk64doMEwP/lZaW8IGBdXnaA=;
+        b=JG48HEeGMThD4ykXeQ0oDClEBLFrqjck6rxhhJoC1V6lIfTy8+As350LupNykYxCQB
+         ckLpvM5ptvKSSVvqnmjkTLcm4IOBXGVqPmGDuDHhdtSnfcrTUD+AN9JoRyq6+CxJVSr4
+         8KJcAOpeJYDq9PBGasqEP6J81kNITV4xZtFipoQf6xm0Y8n5rpEoFhpEWPgbwkYFXE0a
+         D70gqSsL6/Jw2znnr6vnlJ0khRWB5+wrGZa9iCYsqcvIxZg77ieGVwEcZC6lXY1JH0Kn
+         Q+UwdxpSjhI1z+2w0SnLLehxuJFtsrCBBcGBeRI4PHqYX+IEjh/0sne/FuFz22hzea6H
+         3UBA==
+X-Gm-Message-State: APjAAAUbt5pyM7FITW0NLTuRVS0fdVQ9f2mD4qPftnnnlveXCT85g6+u
+        7phBSSmHqd+KjgwAXeyJN/Q=
+X-Google-Smtp-Source: APXvYqxfT4LS6umT9F+b9cu/j4EAw0cjjDKc3jjpOXx90Sbb5SchAeJCZHYtEL3VH4m0PceyulSmfw==
+X-Received: by 2002:adf:ffc2:: with SMTP id x2mr21780663wrs.338.1565638102407;
+        Mon, 12 Aug 2019 12:28:22 -0700 (PDT)
+Received: from [192.168.1.19] (ckn98.neoplus.adsl.tpnet.pl. [83.31.89.98])
+        by smtp.gmail.com with ESMTPSA id v16sm103393512wrn.28.2019.08.12.12.28.20
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 12 Aug 2019 12:28:21 -0700 (PDT)
+Subject: Re: [PATCH v3 4/6] block: introduce LED block device activity trigger
+To:     Akinobu Mita <akinobu.mita@gmail.com>, linux-block@vger.kernel.org,
+        linux-leds@vger.kernel.org, linux-nvme@lists.infradead.org,
         linux-scsi@vger.kernel.org
-Cc:     martin.petersen@oracle.com, hare@suse.de, bvanassche@acm.org,
-        kbuild test robot <lkp@intel.com>,
-        Arnd Bergmann <arnd@arndb.de>
-Date:   Mon, 12 Aug 2019 11:46:03 -0700
-In-Reply-To: <500183f3-fb16-77b7-90e0-5c8bb2a021c3@cybernetics.com>
-References: <20190807114252.2565-1-dgilbert@interlog.com>
-         <20190807114252.2565-18-dgilbert@interlog.com>
-         <1565392510.17449.18.camel@linux.vnet.ibm.com>
-         <048b4ab4-804b-f6ec-c35a-47cd2f8d8cda@interlog.com>
-         <500183f3-fb16-77b7-90e0-5c8bb2a021c3@cybernetics.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.26.6 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:,, definitions=2019-08-12_07:,,
- signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- malwarescore=0 suspectscore=0 phishscore=0 bulkscore=0 spamscore=0
- clxscore=1015 lowpriorityscore=0 mlxscore=0 impostorscore=0
- mlxlogscore=999 adultscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.0.1-1906280000 definitions=main-1908120196
+Cc:     Frank Steiner <fsteiner-mail1@bio.ifi.lmu.de>,
+        Pavel Machek <pavel@ucw.cz>, Dan Murphy <dmurphy@ti.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Hannes Reinecke <hare@suse.com>
+References: <1565459703-30513-1-git-send-email-akinobu.mita@gmail.com>
+ <1565459703-30513-5-git-send-email-akinobu.mita@gmail.com>
+From:   Jacek Anaszewski <jacek.anaszewski@gmail.com>
+Openpgp: preference=signencrypt
+Autocrypt: addr=jacek.anaszewski@gmail.com; prefer-encrypt=mutual; keydata=
+ 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
+Message-ID: <1b341463-3a0d-93cc-9d76-bbddf5a6e434@gmail.com>
+Date:   Mon, 12 Aug 2019 21:28:18 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
+MIME-Version: 1.0
+In-Reply-To: <1565459703-30513-5-git-send-email-akinobu.mita@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, 2019-08-12 at 12:14 -0400, Tony Battersby wrote:
-> On 8/12/19 11:37 AM, Douglas Gilbert wrote:
-> > On 2019-08-09 7:15 p.m., James Bottomley wrote:
-> > > On Wed, 2019-08-07 at 13:42 +0200, Douglas Gilbert wrote:
-> > > > Add ioctl(SG_IOSUBMIT_V3) and ioctl(SG_IORECEIVE_V3). These
-> > > > ioctls
-> > > > are meant to be (almost) drop-in replacements for the
-> > > > write()/read()
-> > > > async version 3 interface. They only accept the version 3
-> > > > interface.
-> > > 
-> > > I don't think we should do this at all.  Anyone who wants to use
-> > > the
-> > > new async interfaces should use the v4 headers.  As Tony
-> > > Battersby
-> > > already said, the legacy v3 users aren't going to update, so
-> > > there's no
-> > > point at all introducing new interfaces for v3.  We simply keep
-> > > the v3
-> > > only read/write interface until there are no users left and it
-> > > can be
-> > > eliminated.
-> > 
-> > Tony Battersby wrote [20190809]:
-> >    "Actually I used the asynchronous write()/read()/poll() sg
-> > interface to
-> >    implement RAID-like functionality for tape drives and medium
-> > changers,
-> >    in a commercial product that has been around since 2002.  These
-> > days our
-> >    products use a lot more disk I/O than tape I/O, so I don't write
-> > much
-> >    new code using the sg interface anymore, although that code is
-> > still
-> >    there and has to be maintained as needed.  So I don't have any
-> > immediate
-> >    plans to use any of the new sgv4 features being introduced, and
-> >    unfortunately I am way too busy to even give it a good
-> > review..."
-> > 
-> > That is quoted in full his post. And here is the only other post
-> > from
-> > Tony I can find on this subject, again quoted in full [20190808]:
-> > 
-> >    "One of the reasons ioctls have a bad reputation is because they
-> > can be
-> >    used to implement poorly-thought-out interfaces.  So kernel
-> > maintainers
-> >    push back on adding new ioctls.  But the push back isn't about
-> > the
-> >    number of ioctls, it is about the poor interfaces.  My advice
-> > was that
-> >    in general, to implement a given API, it would be better to add
-> > more
-> >    ioctls with a simple interface for each one rather than to add
-> > fewer
-> >    extremely complex multiplexing ioctls."
-> > 
-> > Call me biased but I believe that taken together those posts
-> > support
-> > what I am proposing. And I can _not_ see how you deduce: "so
-> > there's
-> > no point at all introducing new interfaces for v3" in reference to
-> > Tony's posts.
-> > 
-> > 
-> > As I stated in a previous post, I do not consider the sg v3
-> > interface
-> > as legacy. Where simply implemented, I am prepared to implement new
-> > features on both the sg v3 and v4 interfaces. One example of this
-> > is
-> > doing command timing in nanoseconds rather than the current
-> > default,
-> > which is timing in milliseconds. There is also the new option of
-> > not
-> > doing any command timing at all. In my current implementation it
-> > would
-> > actually be more code to implement that for the v4 interface but
-> > not
-> > for the v3 interface.
-> > 
-> > Replicating my argument from a previous post:
-> > If the kernel had an API mapping layer that was sensitive to file
-> > descriptors of a "special file" (e.g. "/dev/sg3") then it could
-> > map:
-> >      write(sg_fd, &sg_io_v3_obj, sizeof(sg_io_v3_obj))
-> > to
-> >      ioctl(sg_fd, SG_IOSUBMIT_V3, &sg_io_v3_obj)
-> > 
-> > Plus a similar mapping for read() to ioctl(SG_IORECEIVE_V3). If
-> > such
-> > a mapping did exist and was transparent to the user then write()
-> > and read() could be retired from the sg driver.  And I assume that
-> > would get a thumbs up from the kernel security folk.
-> > 
+Hi Akinobu,
+
+Thank you for the update. I have one more remark to this patch
+below.
+
+On 8/10/19 7:55 PM, Akinobu Mita wrote:
+> This allows LEDs to be controlled by block device activity.
 > 
-> FWIW, my employer will probably continue to use the async sg v3
-> interface for a long time.  If the read/write syscalls are a security
-> problem, and if we had ioctl()s that are mostly a drop-in replacement
-> for them, then we could convert our products over to the new ioctl()s
-> on our next kernel upgrade without too much work (our products are
-> embedded devices, so we control the whole software stack).  So if you
-> plan to deprecate the read/write syscall interface anytime soon, then
-> having drop-in replacement ioctl()s would be beneficial, even if it
-> can't be done transparently as Doug suggests.
+> We already have ledtrig-disk (LED disk activity trigger), but the lower
+> level disk drivers need to utilize ledtrig_disk_activity() to make the
+> LED blink.
+> 
+> The LED block device trigger doesn't require the lower level drivers to
+> have any instrumentation. The activity is collected by polling the disk
+> stats.
+> 
+> Example:
+> 
+> echo block-nvme0n1 > /sys/class/leds/diy/trigger
+> 
+> Cc: Frank Steiner <fsteiner-mail1@bio.ifi.lmu.de>
+> Cc: Jacek Anaszewski <jacek.anaszewski@gmail.com>
+> Cc: Pavel Machek <pavel@ucw.cz>
+> Cc: Dan Murphy <dmurphy@ti.com>
+> Cc: Jens Axboe <axboe@kernel.dk>
+> Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+> Cc: Hannes Reinecke <hare@suse.com>
+> Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
+> ---
+> * v3
+> - Add ABI documentation
+> - Add more detail to Kconfig help text
+> 
+>  .../ABI/testing/sysfs-class-led-trigger-blk        |  37 ++++
+>  block/genhd.c                                      |   2 +
+>  drivers/leds/trigger/Kconfig                       |   9 +
+>  drivers/leds/trigger/Makefile                      |   1 +
+>  drivers/leds/trigger/ledtrig-blk.c                 | 225 +++++++++++++++++++++
+>  include/linux/genhd.h                              |   3 +
+>  include/linux/leds.h                               |  27 +++
+>  7 files changed, 304 insertions(+)
+>  create mode 100644 Documentation/ABI/testing/sysfs-class-led-trigger-blk
+>  create mode 100644 drivers/leds/trigger/ledtrig-blk.c
+> 
+[...]
+> +EXPORT_SYMBOL_GPL(ledtrig_blk_unregister);
+> diff --git a/include/linux/genhd.h b/include/linux/genhd.h
+> index 8b5330d..b2c934e 100644
+> --- a/include/linux/genhd.h
+> +++ b/include/linux/genhd.h
+> @@ -17,6 +17,7 @@
+>  #include <linux/percpu-refcount.h>
+>  #include <linux/uuid.h>
+>  #include <linux/blk_types.h>
+> +#include <linux/leds.h>
+>  #include <asm/local.h>
+>  
+>  #ifdef CONFIG_BLOCK
+> @@ -219,6 +220,8 @@ struct gendisk {
+>  	int node_id;
+>  	struct badblocks *bb;
+>  	struct lockdep_map lockdep_map;
+> +
+> +	struct ledtrig_blk led;
 
-So far we've mitigated the security threat by withdrawing the v4
-r/w interface which you don't use and keeping the sg nodes root only
-for v3 r/w.  Unless we get another security incident based on them, as
-long as the use case doesn't expand, I think the prior issue is pretty
-nasty but contained to root who should know what they're doing, so
-there's no pressing need to remove it.
+Please rename this property to led_trig to reflect
+its purpose accurately.
 
-Given that shifting to ioctls or a different async interface would be
-development anyway, is there a solid reason you couldn't also shift to
-v4 if you do that?  I know all the field names changed but for a
-standard SCSI command it should be very similar to v3.
+>  };
+>  
+>  static inline struct gendisk *part_to_disk(struct hd_struct *part)
+> diff --git a/include/linux/leds.h b/include/linux/leds.h
+> index 9b2bf57..395fa61 100644
+> --- a/include/linux/leds.h
+> +++ b/include/linux/leds.h
+> @@ -517,4 +517,31 @@ static inline void ledtrig_audio_set(enum led_audio type,
+>  }
+>  #endif
+>  
+> +struct gendisk;
+> +
+> +#ifdef CONFIG_LEDS_TRIGGER_BLOCK
+> +
+> +struct ledtrig_blk {
+> +	struct led_trigger trig;
+> +};
+> +
+> +int ledtrig_blk_register(struct gendisk *disk);
+> +void ledtrig_blk_unregister(struct gendisk *disk);
+> +
+> +#else
+> +
+> +struct ledtrig_blk {
+> +};
+> +
+> +static inline int ledtrig_blk_register(struct gendisk *disk)
+> +{
+> +	return 0;
+> +}
+> +
+> +static inline void ledtrig_blk_unregister(struct gendisk *disk)
+> +{
+> +}
+> +
+> +#endif /* CONFIG_LEDS_TRIGGER_BLOCK */
+> +
+>  #endif		/* __LINUX_LEDS_H_INCLUDED */
+> 
 
-James
-
+-- 
+Best regards,
+Jacek Anaszewski
