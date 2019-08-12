@@ -2,193 +2,138 @@ Return-Path: <SRS0=w7Bx=WI=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+X-Spam-Status: No, score=-6.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B38ABC433FF
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Aug 2019 16:43:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EAB42C433FF
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Aug 2019 17:34:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9022C2067D
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Aug 2019 16:43:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CA1A62067D
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Aug 2019 17:34:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727005AbfHLQnZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 12 Aug 2019 12:43:25 -0400
-Received: from mail-pf1-f195.google.com ([209.85.210.195]:37377 "EHLO
-        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726998AbfHLQnZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Aug 2019 12:43:25 -0400
-Received: by mail-pf1-f195.google.com with SMTP id 129so3047918pfa.4
-        for <linux-scsi@vger.kernel.org>; Mon, 12 Aug 2019 09:43:24 -0700 (PDT)
+        id S1727249AbfHLReo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 12 Aug 2019 13:34:44 -0400
+Received: from mail-vk1-f194.google.com ([209.85.221.194]:41928 "EHLO
+        mail-vk1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726267AbfHLReo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Aug 2019 13:34:44 -0400
+Received: by mail-vk1-f194.google.com with SMTP id u64so20870530vku.8;
+        Mon, 12 Aug 2019 10:34:43 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=rnYsVQl3atVSLspNrFTvaX+eONqx34m7oaL9Z34F83w=;
-        b=WPpS+duTDUUDa1GGnV4NV4PqrX/AD5NSvPHs/fGtRTLRwrKCp7A8a9T7x2QNuEcZgi
-         8MfYYBA1sBlw7/DaYAkYNO5QKUjHpUhLlYVxp3SxzPMOCDfFo0F0ftUPXrw3/zm4Mk7O
-         jLGkZSDiJVqu6246NoJECDI3i9AxD1pIwxtnfqSMOru5VPWHa+VKEgGi86RcumcrNLjL
-         K3gTFBrDRz+y8uQDx7Pk+MfThCuEr0YoFIfzHCV+FnbUtSwMZGOaOldv4bH5w+A4i2YS
-         GdFa2wRGL2DC1WC3oZRHeqmKAk/Bo7q+HdO7ZZnr22rWSO7Ci1mJ6Hh0WeSpgoJUBlYB
-         pXIA==
-X-Gm-Message-State: APjAAAUYCxKOtKaDepQUEiGdZgxw3gnjGdwVou1BRcNLptR1PC0Lxxsf
-        yLtlz/P+Q/yuO5YILO7dlpc=
-X-Google-Smtp-Source: APXvYqyiJovEpC8jKFVCqvx5ZmxOrVf2LEtPTs0P+AVCnIo0fgzwZ+MSc2aokzTglkyCEPTB6QFAFA==
-X-Received: by 2002:aa7:8711:: with SMTP id b17mr36927254pfo.234.1565628203869;
-        Mon, 12 Aug 2019 09:43:23 -0700 (PDT)
-Received: from desktop-bart.svl.corp.google.com ([2620:15c:2cd:202:4308:52a3:24b6:2c60])
-        by smtp.gmail.com with ESMTPSA id o11sm193398552pfh.114.2019.08.12.09.43.22
-        (version=TLS1_3 cipher=AEAD-AES128-GCM-SHA256 bits=128/128);
-        Mon, 12 Aug 2019 09:43:23 -0700 (PDT)
-Subject: Re: [PATCH v3] SCSI: fix queue cleanup race before
- scsi_requeue_run_queue is done
-To:     zhengbin <zhengbin13@huawei.com>, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, ming.lei@redhat.com,
-        linux-scsi@vger.kernel.org
-Cc:     houtao1@huawei.com, yanaijie@huawei.com
-References: <1565575593-114286-1-git-send-email-zhengbin13@huawei.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <c95495ed-c136-9202-40e8-57af3eec6d47@acm.org>
-Date:   Mon, 12 Aug 2019 09:43:21 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=XCsKdiFdCyUb9h1XpQVRtFcaXFlzTncnJBLcRKOgyMM=;
+        b=AnxMh+t8b0773ZzHDr31aS5lKDV9T9SzVCmQT/Sw3iVpt8oCqyN202akVsNfKec/4B
+         dep1gbQs/pKoJxl532mIRPpFyXSYpmNB+Lot3bcgzemFI4D5rIhrxkSNvCqyurS5nV79
+         ANj/uRGKGnw2Wv/3MDh82P52VMctHhOvyvjERGzOWPfrqwqHB4eEoHiYIhhm+waYyoIR
+         omYnxcomRI3zXRyWB+vMFC4c9HKDF9sqSAtf46SV/nnyQC+ep262OZzJQsX+YcrOtyR6
+         70wUaMV3/vKtHf7K8X860ADjdACgnZoWdMgxzxyTfpllnlMq0oL5fL1SQTllwijfxt0k
+         d9IA==
+X-Gm-Message-State: APjAAAVctJ51NxmI66r0mPP54LQ/en4JATnnaP+/KNYKBOF9FMOK0uwv
+        Moc5ohwGFZZ2fds4ElPcR54LFKuf2MkW6XUFIzs7KGxxXVMbUA==
+X-Google-Smtp-Source: APXvYqzcrQcBsk0/Yrys6c8GgXQrSpsNz4FqdTvJYCSbqFE1AU6tZPX+nx2Ca0ELNiwlAPTAwEcFEPS8L5YbFKICUH4=
+X-Received: by 2002:a1f:d687:: with SMTP id n129mr12600410vkg.71.1565631281261;
+ Mon, 12 Aug 2019 10:34:41 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1565575593-114286-1-git-send-email-zhengbin13@huawei.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+References: <20190809002104.18599-1-stancheff@cray.com> <20190809002104.18599-2-stancheff@cray.com>
+ <CAK7LNAScm9P+QMZiqqSQnOoPsN54OTcTGpaDgxTbjJ_knoeGhA@mail.gmail.com>
+In-Reply-To: <CAK7LNAScm9P+QMZiqqSQnOoPsN54OTcTGpaDgxTbjJ_knoeGhA@mail.gmail.com>
+From:   Shaun Tancheff <shaun@tancheff.com>
+Date:   Mon, 12 Aug 2019 12:34:30 -0500
+Message-ID: <CAJ48U8Xp40is+R1dMW8sXq77ZS5D_h+hHte5Mq5eOrtpb41Qxw@mail.gmail.com>
+Subject: Re: [PATCH 1/1] kbuild: recursive build of external kernel modules
+To:     Masahiro Yamada <yamada.masahiro@socionext.com>
+Cc:     Shaun Tancheff <stancheff@cray.com>,
+        Linux Kbuild mailing list <linux-kbuild@vger.kernel.org>,
+        Joe Lawrence <joe.lawrence@redhat.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Michal Marek <michal.lkml@markovi.net>,
+        Shuah Khan <shuah@kernel.org>,
+        Thomas Renninger <trenn@suse.com>,
+        "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux PM mailing list <linux-pm@vger.kernel.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/11/19 7:06 PM, zhengbin wrote:
-> KASAN reports a use-after-free in 4.19-stable,
-> which won't happen after commit 47cdee29ef9d
-> ("block: move blk_exit_queue into __blk_release_queue").
-> However, backport this patch to 4.19-stable will be a lot of work and
-> the risk is great. Moreover, we should make sure scsi_requeue_run_queue
-> is done before blk_cleanup_queue in master too.
-> 
-> BUG: KASAN: use-after-free in dd_has_work+0x50/0xe8
-> Read of size 8 at addr ffff808b57c6f168 by task kworker/53:1H/6910
-> 
-> CPU: 53 PID: 6910 Comm: kworker/53:1H Kdump: loaded Tainted: G
-> Hardware name: Huawei TaiShan 2280 /BC11SPCD, BIOS 1.59 01/31/2019
-> Workqueue: kblockd scsi_requeue_run_queue
-> Call trace:
->   dump_backtrace+0x0/0x270
->   show_stack+0x24/0x30
->   dump_stack+0xb4/0xe4
->   print_address_description+0x68/0x278
->   kasan_report+0x204/0x330
->   __asan_load8+0x88/0xb0
->   dd_has_work+0x50/0xe8
->   blk_mq_run_hw_queue+0x19c/0x218
->   blk_mq_run_hw_queues+0x7c/0xb0
->   scsi_run_queue+0x3ec/0x520
->   scsi_requeue_run_queue+0x2c/0x38
->   process_one_work+0x2e4/0x6d8
->   worker_thread+0x6c/0x6a8
->   kthread+0x1b4/0x1c0
->   ret_from_fork+0x10/0x18
-> 
-> Allocated by task 46843:
->   kasan_kmalloc+0xe0/0x190
->   kmem_cache_alloc_node_trace+0x10c/0x258
->   dd_init_queue+0x68/0x190
->   blk_mq_init_sched+0x1cc/0x300
->   elevator_init_mq+0x90/0xe0
->   blk_mq_init_allocated_queue+0x700/0x728
->   blk_mq_init_queue+0x48/0x90
->   scsi_mq_alloc_queue+0x34/0xb0
->   scsi_alloc_sdev+0x340/0x530
->   scsi_probe_and_add_lun+0x46c/0x1260
->   __scsi_scan_target+0x1b8/0x7b0
->   scsi_scan_target+0x140/0x150
->   fc_scsi_scan_rport+0x164/0x178 [scsi_transport_fc]
->   process_one_work+0x2e4/0x6d8
->   worker_thread+0x6c/0x6a8
->   kthread+0x1b4/0x1c0
->   ret_from_fork+0x10/0x18
-> 
-> Freed by task 46843:
->   __kasan_slab_free+0x120/0x228
->   kasan_slab_free+0x10/0x18
->   kfree+0x88/0x218
->   dd_exit_queue+0x5c/0x78
->   blk_mq_exit_sched+0x104/0x130
->   elevator_exit+0xa8/0xc8
->   blk_exit_queue+0x48/0x78
->   blk_cleanup_queue+0x170/0x248
->   __scsi_remove_device+0x84/0x1b0
->   scsi_probe_and_add_lun+0xd00/0x1260
->   __scsi_scan_target+0x1b8/0x7b0
->   scsi_scan_target+0x140/0x150
->   fc_scsi_scan_rport+0x164/0x178 [scsi_transport_fc]
->   process_one_work+0x2e4/0x6d8
->   worker_thread+0x6c/0x6a8
->   kthread+0x1b4/0x1c0
->   ret_from_fork+0x10/0x18
-> 
-> Fixes: 8dc765d438f1 ("SCSI: fix queue cleanup race before queue initialization is done")
-> Signed-off-by: zhengbin <zhengbin13@huawei.com>
-> ---
->   drivers/scsi/scsi_lib.c | 17 +++++++++++++----
->   1 file changed, 13 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 11e64b5..620771d 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -531,6 +531,11 @@ void scsi_requeue_run_queue(struct work_struct *work)
->   	sdev = container_of(work, struct scsi_device, requeue_work);
->   	q = sdev->request_queue;
->   	scsi_run_queue(q);
-> +	/*
-> +	 * need to put q_usage_counter which
-> +	 * is got in scsi_end_request.
-> +	 */
-> +	percpu_ref_put(&q->q_usage_counter);
->   }
-> 
->   void scsi_run_host_queues(struct Scsi_Host *shost)
-> @@ -575,6 +580,7 @@ static bool scsi_end_request(struct request *req, blk_status_t error,
->   	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(req);
->   	struct scsi_device *sdev = cmd->device;
->   	struct request_queue *q = sdev->request_queue;
-> +	bool ret;
-> 
->   	if (blk_update_request(req, error, bytes))
->   		return true;
-> @@ -613,12 +619,15 @@ static bool scsi_end_request(struct request *req, blk_status_t error,
->   	__blk_mq_end_request(req, error);
-> 
->   	if (scsi_target(sdev)->single_lun ||
-> -	    !list_empty(&sdev->host->starved_list))
-> -		kblockd_schedule_work(&sdev->requeue_work);
-> -	else
-> +	    !list_empty(&sdev->host->starved_list)) {
-> +		ret = kblockd_schedule_work(&sdev->requeue_work);
-> +		if (!ret)
-> +			percpu_ref_put(&q->q_usage_counter);
-> +	} else {
->   		blk_mq_run_hw_queues(q, true);
-> +		percpu_ref_put(&q->q_usage_counter);
-> +	}
-> 
-> -	percpu_ref_put(&q->q_usage_counter);
->   	return false;
->   }
+On Mon, Aug 12, 2019 at 10:24 AM Masahiro Yamada
+<yamada.masahiro@socionext.com> wrote:
+>
+> On Fri, Aug 9, 2019 at 9:21 AM Shaun Tancheff <shaun@tancheff.com> wrote:
+> >
+> > When building a tree of external modules stage 2 fails
+> > silently as the root modules.order is empty.
+> >
+> > Modify the modules.order location to be fixed to the
+> > root when KBUILD_EXTMOD is specified and write all
+> > module paths to the single modules.order file.
+>
+> Could you try v5.3-rc4 please?
 
-Is the new 'bool ret' variable really necessary?
+So it seems we are using 'subdir-m' but that is now gone?
 
-Additionally, have you taken a look at the 
-cancel_work_sync(&sdev->requeue_work) call in __scsi_remove_device()? 
-Shouldn't the queue refcount be dropped if that cancel call cancels 
-queued work?
+Is there a recommend pattern for backward compatibility?
 
-Thanks,
-
-Bart.
+Thanks!
+>
+> > Signed-off-by: Shaun Tancheff <stancheff@cray.com>
+> > ---
+> >  Makefile               | 1 +
+> >  scripts/Makefile.build | 8 +++++++-
+> >  2 files changed, 8 insertions(+), 1 deletion(-)
+> >
+> > diff --git a/Makefile b/Makefile
+> > index 23cdf1f41364..a9964492f47e 100644
+> > --- a/Makefile
+> > +++ b/Makefile
+> > @@ -1622,6 +1622,7 @@ $(module-dirs): prepare $(objtree)/Module.symvers
+> >
+> >  modules: $(module-dirs)
+> >         @$(kecho) '  Building modules, stage 2.';
+> > +       $(Q)$rm -f $(KBUILD_EXTMOD)/modules.order
+> >         $(Q)$(MAKE) -f $(srctree)/scripts/Makefile.modpost
+> >
+> >  PHONY += modules_install
+> > diff --git a/scripts/Makefile.build b/scripts/Makefile.build
+> > index 0d434d0afc0b..f9908b3d59e0 100644
+> > --- a/scripts/Makefile.build
+> > +++ b/scripts/Makefile.build
+> > @@ -64,7 +64,13 @@ builtin-target := $(obj)/built-in.a
+> >  endif
+> >
+> >  ifeq ($(CONFIG_MODULES)$(need-modorder),y1)
+> > +ifneq ($(KBUILD_EXTMOD),)
+> > +modorder-target := $(KBUILD_EXTMOD)/modules.order
+> > +modorder-add := >>
+> > +else
+> >  modorder-target := $(obj)/modules.order
+> > +modorder-add := >
+> > +endif
+> >  endif
+> >
+> >  mod-targets := $(patsubst %.o, %.mod, $(obj-m))
+> > @@ -423,7 +429,7 @@ endif # builtin-target
+> >  $(modorder-target): $(subdir-ym) FORCE
+> >         $(Q){ $(foreach m, $(modorder), \
+> >         $(if $(filter %/modules.order, $m), cat $m, echo $m);) :; } \
+> > -       | $(AWK) '!x[$$0]++' - > $@
+> > +       | $(AWK) '!x[$$0]++' - $(modorder-add) $@
+> >
+> >  #
+> >  # Rule to compile a set of .o files into one .a file (with symbol table)
+> > --
+> > 2.20.1
+> >
+>
+>
+> --
+> Best Regards
+> Masahiro Yamada
