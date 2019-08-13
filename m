@@ -8,56 +8,56 @@ X-Spam-Status: No, score=-17.4 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
 	USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2EC04C32750
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CA4F3C32750
 	for <linux-scsi@archiver.kernel.org>; Tue, 13 Aug 2019 12:19:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 046E820874
+	by mail.kernel.org (Postfix) with ESMTP id A0A9A20840
 	for <linux-scsi@archiver.kernel.org>; Tue, 13 Aug 2019 12:19:46 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="jvjNRqGM"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="Q3EMNPwo"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728084AbfHMMTo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 13 Aug 2019 08:19:44 -0400
-Received: from mail-qt1-f202.google.com ([209.85.160.202]:36368 "EHLO
-        mail-qt1-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728086AbfHMMTf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Aug 2019 08:19:35 -0400
-Received: by mail-qt1-f202.google.com with SMTP id q26so99805057qtr.3
-        for <linux-scsi@vger.kernel.org>; Tue, 13 Aug 2019 05:19:34 -0700 (PDT)
+        id S1728048AbfHMMT2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 13 Aug 2019 08:19:28 -0400
+Received: from mail-vs1-f73.google.com ([209.85.217.73]:52749 "EHLO
+        mail-vs1-f73.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728011AbfHMMT1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Aug 2019 08:19:27 -0400
+Received: by mail-vs1-f73.google.com with SMTP id w2so164167vso.19
+        for <linux-scsi@vger.kernel.org>; Tue, 13 Aug 2019 05:19:27 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=date:in-reply-to:message-id:mime-version:references:subject:from:to
          :cc;
-        bh=suSCW+i7r8fLZkX8SIzkhSnBqWVbrjIKRYeVO6hPkeY=;
-        b=jvjNRqGMIUmBvtS/0MJrxiJu3qNpVN8iEqXfR2TqIAEeOFfzn/2r2Lo5GOVx7CdDSd
-         r1vZK+HfXj20rzOcUa3LFLXUQvH4VT8GVGNavOTLgEiQYmiGmj4RIROKJqiyUe401t4Z
-         RYDL0bSP/98T3q9VvYfCygVClLZ/OjelY03qKSueV0aomfHkwZ6JT47g2eeGLqs0mvNM
-         BtZockUYDc0cOpsQdV4wU3WGJC01I8TSW2J8LKOZx0gOp+2FCgOBW8zTcXZHjpgI5St7
-         nvGI3USlamMIielikX/E3MDGfwNfWvROXe2p3ZjVxi55wNtiaBZzHmr7BOaAvsuebiu/
-         XEQw==
+        bh=/YYc16S6TtlY6DmQcUE3cXRCrWAP97wDS23cXhgLsgk=;
+        b=Q3EMNPwo+C4R+ukcqh1LicHQAX96raDaDhMY4MmdRFTDeLddmcv2m7zx9cRgxwJpcY
+         hcXiJVz4HNIelbYnSqDQtyHzp8gE3M9f+/WFeGvz2HtHGV0I6XwxHjDecZqZZi5aHNOb
+         o4ahubSIhi+PAmIkYn5qjtiPUvOSEeQrWN9SI2D5cZU20Mnzuy437BwMQMP/0Lr3tMz4
+         szlCfUelpHls+azukK4dUBWr5uJyN8m3TU8PpEnX7GfBQf2dkGsTLCGlCJb8UtVHFlJc
+         0CtHeWYn+fMlyVQLUqkHmM8Wsq96xJzEeZNuCAL6xho2UJ9TI6OieZiuLGJ613r8mHxp
+         kFNQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:in-reply-to:message-id:mime-version
          :references:subject:from:to:cc;
-        bh=suSCW+i7r8fLZkX8SIzkhSnBqWVbrjIKRYeVO6hPkeY=;
-        b=GUCEChbxdT/M5dj8RyzxdEFYGjXEjvJtsaBayOIdKW5iXgZoyRIXwx1mANxtX4YMnp
-         HP8qBkt1sdYlSAejNWxf9PpSYb9iiMZbVcRBonf7Hb20ei/0Bh7i62hMAUuCL8uBR9Xc
-         TFdkqnUh+pQ40ii+s9xf63aBbRCVL3JjCNe51MmTKfOLvIz0gaMMJTbYZAExn0DUoSN6
-         p7sZM0pFj06+IH9J0Glr1+2X9d4y8ROHyTjD3lCZX4pGgksEaw2HmEGfiQ1z4fK2jt46
-         7mxxNjoaFKJQ+BwSyaQpznNDjC/Kte8fcT8z3WU4cw/S6QU1n8wbZ0BI2E7/hHOUDpXI
-         HM8Q==
-X-Gm-Message-State: APjAAAXoTseXmYoB7y42zRDaL6sQqjbUZ/L7ZgbsVvnWvO5pWyZrd/nK
-        WL2NSFh7YWXCjQHtqvP0G20vLrxiEJk1nA==
-X-Google-Smtp-Source: APXvYqz0jwZkmy0W6g9uENPXy/ZLQA++gDNN+yoANsAtQ9Xi0Xi3LQ86n1y/uKsnYiTAd8ykfykOGHQvGCd2XA==
-X-Received: by 2002:a05:620a:1659:: with SMTP id c25mr18463612qko.306.1565698774148;
- Tue, 13 Aug 2019 05:19:34 -0700 (PDT)
-Date:   Tue, 13 Aug 2019 13:17:04 +0100
+        bh=/YYc16S6TtlY6DmQcUE3cXRCrWAP97wDS23cXhgLsgk=;
+        b=OCcT9VRjlnS+AqOV8wsou58NLEb/M0mq0lMlnk51vuKUxcWMh2vDS9UDVwS6CuyMnu
+         288M3MTf0DpNU4O30fa5CB1fJfqjx2uOxyE4QFAFKeDm4rpPVngSnlyRy1ZDmdnQyFgI
+         DaS8+MonbU1y1ySJ5BJtjhhNcppJlwnVUgevU82TZurryZSr4S5JBIUFiqvkneg4mrX5
+         QZ0xKBi+vtzQb3rN7C/00Q2ysDFhux2kYXFoupc7HOL4yBsK07Vk+O52FOeHcX+LZSBj
+         xnrxig7UCQ+45VSgHRsqOvpeg+KY5VxsxBc06tt22w2I3/ii6OMsuexrTM4RLnbWKNcV
+         9ywA==
+X-Gm-Message-State: APjAAAX4scRK/ime4Mz2AiVlN1wh5PIbiAAjIirnm/X62TSGnC0e6aYV
+        D/PAz2LnUpFsXsrJQKxGJxTyY23DcZwj/A==
+X-Google-Smtp-Source: APXvYqzCEstrhDpIdy3FOZ032oFTXz+VRy3pbyV2rfawsANSQxszqGzHRG9SAAhjciIykc36W/gzeVtTieEkYA==
+X-Received: by 2002:a1f:7c0e:: with SMTP id x14mr3691831vkc.0.1565698766083;
+ Tue, 13 Aug 2019 05:19:26 -0700 (PDT)
+Date:   Tue, 13 Aug 2019 13:17:02 +0100
 In-Reply-To: <20190813121733.52480-1-maennich@google.com>
-Message-Id: <20190813121733.52480-8-maennich@google.com>
+Message-Id: <20190813121733.52480-6-maennich@google.com>
 Mime-Version: 1.0
 References: <20180716122125.175792-1-maco@android.com> <20190813121733.52480-1-maennich@google.com>
 X-Mailer: git-send-email 2.23.0.rc1.153.gdeed80330f-goog
-Subject: [PATCH v2 07/10] modpost: add support for generating namespace dependencies
+Subject: [PATCH v2 05/10] module: add config option MODULE_ALLOW_MISSING_NAMESPACE_IMPORTS
 From:   Matthias Maennich <maennich@google.com>
 To:     linux-kernel@vger.kernel.org, maco@android.com
 Cc:     kernel-team@android.com, maennich@google.com, arnd@arndb.de,
@@ -72,163 +72,87 @@ Cc:     kernel-team@android.com, maennich@google.com, arnd@arndb.de,
         sboyd@codeaurora.org, sspatil@google.com,
         stern@rowland.harvard.edu, tglx@linutronix.de,
         usb-storage@lists.one-eyed-alien.net, x86@kernel.org,
-        yamada.masahiro@socionext.com
+        yamada.masahiro@socionext.com,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Johannes Weiner <hannes@cmpxchg.org>,
+        "Peter Zijlstra (Intel)" <peterz@infradead.org>,
+        Mauro Carvalho Chehab <mchehab+samsung@kernel.org>,
+        David Howells <dhowells@redhat.com>,
+        Patrick Bellasi <patrick.bellasi@arm.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Adrian Reber <adrian@lisas.de>,
+        Richard Guy Briggs <rgb@redhat.com>
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This patch adds an option to modpost to generate a <module>.ns_deps file
-per module, containing the namespace dependencies for that module.
+If MODULE_ALLOW_MISSING_NAMESPACE_IMPORTS is enabled (default=n), the
+requirement for modules to import all namespaces that are used by
+the module is relaxed.
 
-E.g. if the linked module my-module.ko would depend on the symbol
-myfunc.MY_NS in the namespace MY_NS, the my-module.ns_deps file created
-by modpost would contain the entry MY_NS to express the namespace
-dependency of my-module imposed by using the symbol myfunc.
+Enabling this option effectively allows (invalid) modules to be loaded
+while only a warning is emitted.
 
-These files can subsequently be used by static analysis tools (like
-coccinelle scripts) to address issues with missing namespace imports. A
-later patch of this series will introduce such a script 'nsdeps' and a
-corresponding make target to automatically add missing
-MODULE_IMPORT_NS() definitions to the module's sources. For that it uses
-the information provided in the generated .ns_deps files.
+Disabling this option keeps the enforcement at module loading time and
+loading is denied if the module's imports are not satisfactory.
 
-Co-developed-by: Martijn Coenen <maco@android.com>
-Signed-off-by: Martijn Coenen <maco@android.com>
+Reviewed-by: Martijn Coenen <maco@android.com>
 Signed-off-by: Matthias Maennich <maennich@google.com>
 ---
- scripts/mod/modpost.c | 61 +++++++++++++++++++++++++++++++++++++++----
- scripts/mod/modpost.h |  2 ++
- 2 files changed, 58 insertions(+), 5 deletions(-)
+ init/Kconfig    | 14 ++++++++++++++
+ kernel/module.c | 11 +++++++++--
+ 2 files changed, 23 insertions(+), 2 deletions(-)
 
-diff --git a/scripts/mod/modpost.c b/scripts/mod/modpost.c
-index 538bb24ffee3..833a7e1bcbb5 100644
---- a/scripts/mod/modpost.c
-+++ b/scripts/mod/modpost.c
-@@ -38,6 +38,8 @@ static int sec_mismatch_count = 0;
- static int sec_mismatch_fatal = 0;
- /* ignore missing files */
- static int ignore_missing_files;
-+/* write namespace dependencies */
-+static int write_namespace_deps;
+diff --git a/init/Kconfig b/init/Kconfig
+index bd7d650d4a99..b3373334cdf1 100644
+--- a/init/Kconfig
++++ b/init/Kconfig
+@@ -2119,6 +2119,20 @@ config MODULE_COMPRESS_XZ
  
- enum export {
- 	export_plain,      export_unused,     export_gpl,
-@@ -2176,10 +2178,15 @@ static int check_exports(struct module *mod)
- 		else
- 			basename = mod->name;
+ endchoice
  
--		if (exp->namespace &&
--		    !module_imports_namespace(mod, exp->namespace)) {
--			warn("module %s uses symbol %s from namespace %s, but does not import it.\n",
--			     basename, exp->name, exp->namespace);
-+		if (exp->namespace) {
-+			add_namespace(&mod->required_namespaces,
-+				      exp->namespace);
++config MODULE_ALLOW_MISSING_NAMESPACE_IMPORTS
++	bool "Allow loading of modules with missing namespace imports"
++	default n
++	help
++	  Symbols exported with EXPORT_SYMBOL_NS*() are considered exported in
++	  a namespace. A module that makes use of a symbol exported with such a
++	  namespace is required to import the namespace via MODULE_IMPORT_NS().
++	  This option relaxes this requirement when loading a module. While
++	  technically there is no reason to enforce correct namespace imports,
++	  it creates consistency between symbols defining namespaces and users
++	  importing namespaces they make use of.
 +
-+			if (!write_namespace_deps &&
-+			    !module_imports_namespace(mod, exp->namespace)) {
-+				warn("module %s uses symbol %s from namespace %s, but does not import it.\n",
-+				     basename, exp->name, exp->namespace);
-+			}
++	  If unsure, say N.
++
+ config TRIM_UNUSED_KSYMS
+ 	bool "Trim unused exported kernel symbols"
+ 	depends on MODULES && !UNUSED_SYMBOLS
+diff --git a/kernel/module.c b/kernel/module.c
+index 57e8253f2251..7c934aaae2d3 100644
+--- a/kernel/module.c
++++ b/kernel/module.c
+@@ -1408,9 +1408,16 @@ static int verify_namespace_is_imported(const struct load_info *info,
+ 			imported_namespace = get_next_modinfo(
+ 				info, "import_ns", imported_namespace);
  		}
- 
- 		if (!mod->gpl_compatible)
-@@ -2481,6 +2488,38 @@ static void write_dump(const char *fname)
- 	free(buf.p);
- }
- 
-+static void write_namespace_deps_files(void)
-+{
-+	struct module *mod;
-+	struct namespace_list *ns;
-+	struct buffer ns_deps_buf = {};
-+
-+	for (mod = modules; mod; mod = mod->next) {
-+		char fname[PATH_MAX];
-+		const char *basename;
-+
-+		if (mod->skip)
-+			continue;
-+
-+		ns_deps_buf.pos = 0;
-+
-+		for (ns = mod->required_namespaces; ns; ns = ns->next)
-+			buf_printf(&ns_deps_buf, "%s\n", ns->namespace);
-+
-+		if (ns_deps_buf.pos == 0)
-+			continue;
-+
-+		basename = strrchr(mod->name, '/');
-+		if (basename)
-+			basename++;
-+		else
-+			basename = mod->name;
-+
-+		sprintf(fname, ".tmp_versions/%s.ns_deps", basename);
-+		write_if_changed(&ns_deps_buf, fname);
-+	}
-+}
-+
- struct ext_sym_list {
- 	struct ext_sym_list *next;
- 	const char *file;
-@@ -2497,7 +2536,7 @@ int main(int argc, char **argv)
- 	struct ext_sym_list *extsym_iter;
- 	struct ext_sym_list *extsym_start = NULL;
- 
--	while ((opt = getopt(argc, argv, "i:I:e:mnsT:o:awE")) != -1) {
-+	while ((opt = getopt(argc, argv, "i:I:e:mnsT:o:awEd")) != -1) {
- 		switch (opt) {
- 		case 'i':
- 			kernel_read = optarg;
-@@ -2538,6 +2577,9 @@ int main(int argc, char **argv)
- 		case 'E':
- 			sec_mismatch_fatal = 1;
- 			break;
-+		case 'd':
-+			write_namespace_deps = 1;
-+			break;
- 		default:
- 			exit(1);
- 		}
-@@ -2572,6 +2614,9 @@ int main(int argc, char **argv)
- 
- 		err |= check_modname_len(mod);
- 		err |= check_exports(mod);
-+		if (write_namespace_deps)
-+			continue;
-+
- 		add_header(&buf, mod);
- 		add_intree_flag(&buf, !external_module);
- 		add_retpoline(&buf);
-@@ -2584,6 +2629,12 @@ int main(int argc, char **argv)
- 		sprintf(fname, "%s.mod.c", mod->name);
- 		write_if_changed(&buf, fname);
+-		pr_err("%s: module uses symbol (%s) from namespace %s, but does not import it.\n",
+-		       mod->name, kernel_symbol_name(sym), namespace);
++#ifdef CONFIG_MODULE_ALLOW_MISSING_NAMESPACE_IMPORTS
++		pr_warn(
++#else
++		pr_err(
++#endif
++			"%s: module uses symbol (%s) from namespace %s, but does not import it.\n",
++			mod->name, kernel_symbol_name(sym), namespace);
++#ifndef CONFIG_MODULE_ALLOW_MISSING_NAMESPACE_IMPORTS
+ 		return -EINVAL;
++#endif
  	}
-+
-+	if (write_namespace_deps) {
-+		write_namespace_deps_files();
-+		return 0;
-+	}
-+
- 	if (dump_write)
- 		write_dump(dump_write);
- 	if (sec_mismatch_count && sec_mismatch_fatal)
-diff --git a/scripts/mod/modpost.h b/scripts/mod/modpost.h
-index 9626bf3e7424..92a926d375d2 100644
---- a/scripts/mod/modpost.h
-+++ b/scripts/mod/modpost.h
-@@ -126,6 +126,8 @@ struct module {
- 	struct buffer dev_table_buf;
- 	char	     srcversion[25];
- 	int is_dot_o;
-+	// Required namespace dependencies
-+	struct namespace_list *required_namespaces;
- 	// Actual imported namespaces
- 	struct namespace_list *imported_namespaces;
- };
+ 	return 0;
+ }
 -- 
 2.23.0.rc1.153.gdeed80330f-goog
 
