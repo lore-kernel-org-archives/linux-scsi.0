@@ -7,35 +7,35 @@ X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AA83C433FF
-	for <linux-scsi@archiver.kernel.org>; Tue, 13 Aug 2019 07:25:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6AA54C32750
+	for <linux-scsi@archiver.kernel.org>; Tue, 13 Aug 2019 07:25:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D622D20679
-	for <linux-scsi@archiver.kernel.org>; Tue, 13 Aug 2019 07:25:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0EC1D20840
+	for <linux-scsi@archiver.kernel.org>; Tue, 13 Aug 2019 07:25:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="B6rYrLcZ"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Nuep1Jvv"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727664AbfHMHZf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 13 Aug 2019 03:25:35 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:50088 "EHLO
+        id S1727684AbfHMHZh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 13 Aug 2019 03:25:37 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:50102 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725820AbfHMHZe (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Aug 2019 03:25:34 -0400
+        with ESMTP id S1725820AbfHMHZg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Aug 2019 03:25:36 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
         :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
         List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=OjylB7vTSBwoqsWZlXTFpvn4sVDuHvPB8r+V3DC4Dgc=; b=B6rYrLcZiO51cQrWmcDiDEhEgk
-        rpzrHaJVPtIKATC5sesGdZDmCH4spU2i7vMfQwf+kem9GksIEF3ffNGmdRENVxQfRwzG3+3yMkRBS
-        1Yc7d+iN9OF1X8Q7uUxFmBcaHYDxmbTHLJE18tqJCjfXR5TnMRJK5WAHd13VSsRoiQ+zMIdh7fmKg
-        Qy1jebjStcdmTgbDn+xNE00QA1mIi/ZYsDGoSikU5bCCIlm4iRS0lEcBu5SSM29i4pMCNoZR4bOiB
-        cIQ60P783qKxjY5lj9nWo0GRKx2FGFUCeOVf0QH20WkCUbyomyku+z1Q3/1CjD3D4uGtW4yhzyKrn
-        p7Mvm3qg==;
+        bh=KHBwkoRBlLiw3VvIgH5lFNsUIDlWB0s4dELoviKR/fA=; b=Nuep1JvvNDSKyQYuVRVGNlvbCW
+        o/2yfY52ZCgQ+SJWv5hqaW0ErjY7J+sakzX5hHujhaAsTVxTGA3G2B0BR3aa8+nl8+qZeTkOdagIf
+        XgV4HdB4SPTjEfsEhWl4cHRThmRtw1jZkTNqEnGHwgXYhXUZcgATPMtrXcfqIhQqPb3WFVwrZbX/B
+        PAf2hrdQwKdOOe+EFM1v4sb7BILQ1pAMnc+6pxvcns7c19UQYhIgLSWBitrzpzPHeHI9miEhnZ0Ph
+        3rBNJWf8JAEatq4gHadrbNt+EWog7e59UGFN6HeEs2oafdjMIjk0eYRuwmsMrP0mDJ6E36+nTk/GE
+        JXKy6rEQ==;
 Received: from [2001:4bb8:180:1ec3:c70:4a89:bc61:2] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92 #3 (Red Hat Linux))
-        id 1hxRBT-00066F-Ch; Tue, 13 Aug 2019 07:25:31 +0000
+        id 1hxRBW-00066n-8X; Tue, 13 Aug 2019 07:25:34 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Tony Luck <tony.luck@intel.com>, Fenghua Yu <fenghua.yu@intel.com>,
         Mike Travis <mike.travis@hpe.com>,
@@ -44,9 +44,9 @@ Cc:     Arnd Bergmann <arnd@arndb.de>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         linux-ia64@vger.kernel.org, linux-ide@vger.kernel.org,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 05/28] PCI/hotplug: remove the sgi_hotplug driver
-Date:   Tue, 13 Aug 2019 09:24:51 +0200
-Message-Id: <20190813072514.23299-6-hch@lst.de>
+Subject: [PATCH 06/28] tty/serial: remove the sn_console driver
+Date:   Tue, 13 Aug 2019 09:24:52 +0200
+Message-Id: <20190813072514.23299-7-hch@lst.de>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190813072514.23299-1-hch@lst.de>
 References: <20190813072514.23299-1-hch@lst.de>
@@ -63,750 +63,1132 @@ depends on the SN2 support.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/pci/hotplug/Kconfig       |   9 -
- drivers/pci/hotplug/Makefile      |   1 -
- drivers/pci/hotplug/sgi_hotplug.c | 700 ------------------------------
- 3 files changed, 710 deletions(-)
- delete mode 100644 drivers/pci/hotplug/sgi_hotplug.c
+ arch/ia64/configs/generic_defconfig   |    1 -
+ arch/ia64/configs/gensparse_defconfig |    1 -
+ arch/ia64/kernel/setup.c              |    7 -
+ drivers/tty/serial/Kconfig            |   10 -
+ drivers/tty/serial/Makefile           |    1 -
+ drivers/tty/serial/sn_console.c       | 1036 -------------------------
+ 6 files changed, 1056 deletions(-)
+ delete mode 100644 drivers/tty/serial/sn_console.c
 
-diff --git a/drivers/pci/hotplug/Kconfig b/drivers/pci/hotplug/Kconfig
-index e9f78eb390d2..e7b493c22bf3 100644
---- a/drivers/pci/hotplug/Kconfig
-+++ b/drivers/pci/hotplug/Kconfig
-@@ -147,15 +147,6 @@ config HOTPLUG_PCI_RPA_DLPAR
+diff --git a/arch/ia64/configs/generic_defconfig b/arch/ia64/configs/generic_defconfig
+index a41afb3ef209..62698ea5d3f2 100644
+--- a/arch/ia64/configs/generic_defconfig
++++ b/arch/ia64/configs/generic_defconfig
+@@ -94,7 +94,6 @@ CONFIG_SERIAL_8250_CONSOLE=y
+ CONFIG_SERIAL_8250_NR_UARTS=6
+ CONFIG_SERIAL_8250_EXTENDED=y
+ CONFIG_SERIAL_8250_SHARE_IRQ=y
+-CONFIG_SERIAL_SGI_L1_CONSOLE=y
+ CONFIG_SERIAL_SGI_IOC4=y
+ # CONFIG_HW_RANDOM is not set
+ CONFIG_EFI_RTC=y
+diff --git a/arch/ia64/configs/gensparse_defconfig b/arch/ia64/configs/gensparse_defconfig
+index 07484aa6f16f..b910318f2348 100644
+--- a/arch/ia64/configs/gensparse_defconfig
++++ b/arch/ia64/configs/gensparse_defconfig
+@@ -83,7 +83,6 @@ CONFIG_SERIAL_8250_CONSOLE=y
+ CONFIG_SERIAL_8250_NR_UARTS=6
+ CONFIG_SERIAL_8250_EXTENDED=y
+ CONFIG_SERIAL_8250_SHARE_IRQ=y
+-CONFIG_SERIAL_SGI_L1_CONSOLE=y
+ CONFIG_SERIAL_SGI_IOC4=y
+ CONFIG_SERIAL_SGI_IOC3=y
+ # CONFIG_HW_RANDOM is not set
+diff --git a/arch/ia64/kernel/setup.c b/arch/ia64/kernel/setup.c
+index c9cfa760cd57..a0480a4e65c1 100644
+--- a/arch/ia64/kernel/setup.c
++++ b/arch/ia64/kernel/setup.c
+@@ -463,13 +463,6 @@ early_console_setup (char *cmdline)
+ {
+ 	int earlycons = 0;
  
- 	  When in doubt, say N.
+-#ifdef CONFIG_SERIAL_SGI_L1_CONSOLE
+-	{
+-		extern int sn_serial_console_early_setup(void);
+-		if (!sn_serial_console_early_setup())
+-			earlycons++;
+-	}
+-#endif
+ #ifdef CONFIG_EFI_PCDP
+ 	if (!efi_setup_pcdp_console(cmdline))
+ 		earlycons++;
+diff --git a/drivers/tty/serial/Kconfig b/drivers/tty/serial/Kconfig
+index 3083dbae35f7..e9930af78acc 100644
+--- a/drivers/tty/serial/Kconfig
++++ b/drivers/tty/serial/Kconfig
+@@ -855,16 +855,6 @@ config SERIAL_CPM_CONSOLE
+ 	  your boot loader (lilo or loadlin) about how to pass options to the
+ 	  kernel at boot time.)
  
--config HOTPLUG_PCI_SGI
--	tristate "SGI PCI Hotplug Support"
--	depends on IA64_SGI_SN2 || IA64_GENERIC
+-config SERIAL_SGI_L1_CONSOLE
+-	bool "SGI Altix L1 serial console support"
+-	depends on IA64_GENERIC || IA64_SGI_SN2
+-	select SERIAL_CORE
+-	select SERIAL_CORE_CONSOLE
 -	help
--	  Say Y here if you want to use the SGI Altix Hotplug
--	  Driver for PCI devices.
+-		If you have an SGI Altix and you would like to use the system
+-		controller serial port as your console (you want this!),
+-		say Y.  Otherwise, say N.
 -
--	  When in doubt, say N.
--
- config HOTPLUG_PCI_S390
- 	bool "System z PCI Hotplug Support"
- 	depends on S390 && 64BIT
-diff --git a/drivers/pci/hotplug/Makefile b/drivers/pci/hotplug/Makefile
-index 7e3331603714..5196983220df 100644
---- a/drivers/pci/hotplug/Makefile
-+++ b/drivers/pci/hotplug/Makefile
-@@ -18,7 +18,6 @@ obj-$(CONFIG_HOTPLUG_PCI_SHPC)		+= shpchp.o
- obj-$(CONFIG_HOTPLUG_PCI_POWERNV)	+= pnv-php.o
- obj-$(CONFIG_HOTPLUG_PCI_RPA)		+= rpaphp.o
- obj-$(CONFIG_HOTPLUG_PCI_RPA_DLPAR)	+= rpadlpar_io.o
--obj-$(CONFIG_HOTPLUG_PCI_SGI)		+= sgi_hotplug.o
- obj-$(CONFIG_HOTPLUG_PCI_ACPI)		+= acpiphp.o
- obj-$(CONFIG_HOTPLUG_PCI_S390)		+= s390_pci_hpc.o
- 
-diff --git a/drivers/pci/hotplug/sgi_hotplug.c b/drivers/pci/hotplug/sgi_hotplug.c
+ config SERIAL_PIC32
+ 	tristate "Microchip PIC32 serial support"
+ 	depends on MACH_PIC32
+diff --git a/drivers/tty/serial/Makefile b/drivers/tty/serial/Makefile
+index 15a0fccadf7e..caa978980a6e 100644
+--- a/drivers/tty/serial/Makefile
++++ b/drivers/tty/serial/Makefile
+@@ -41,7 +41,6 @@ obj-$(CONFIG_SERIAL_HS_LPC32XX) += lpc32xx_hs.o
+ obj-$(CONFIG_SERIAL_DZ) += dz.o
+ obj-$(CONFIG_SERIAL_ZS) += zs.o
+ obj-$(CONFIG_SERIAL_SH_SCI) += sh-sci.o
+-obj-$(CONFIG_SERIAL_SGI_L1_CONSOLE) += sn_console.o
+ obj-$(CONFIG_SERIAL_CPM) += cpm_uart/
+ obj-$(CONFIG_SERIAL_IMX) += imx.o
+ obj-$(CONFIG_SERIAL_MPC52xx) += mpc52xx_uart.o
+diff --git a/drivers/tty/serial/sn_console.c b/drivers/tty/serial/sn_console.c
 deleted file mode 100644
-index 231f5bdd3d2d..000000000000
---- a/drivers/pci/hotplug/sgi_hotplug.c
+index 283493358a62..000000000000
+--- a/drivers/tty/serial/sn_console.c
 +++ /dev/null
-@@ -1,700 +0,0 @@
+@@ -1,1036 +0,0 @@
 -// SPDX-License-Identifier: GPL-2.0
 -/*
-- * Copyright (C) 2005-2006 Silicon Graphics, Inc. All rights reserved.
+- * C-Brick Serial Port (and console) driver for SGI Altix machines.
 - *
-- * This work was based on the 2.4/2.6 kernel development by Dick Reigner.
-- * Work to add BIOS PROM support was completed by Mike Habeck.
+- * This driver is NOT suitable for talking to the l1-controller for
+- * anything other than 'console activities' --- please use the l1
+- * driver for that.
+- *
+- *
+- * Copyright (c) 2004-2006 Silicon Graphics, Inc.  All Rights Reserved.
+- *
+- * Contact information:  Silicon Graphics, Inc., 1500 Crittenden Lane,
+- * Mountain View, CA  94043, or:
+- *
+- * http://www.sgi.com
+- *
+- * For further information regarding this notice, see:
+- *
+- * http://oss.sgi.com/projects/GenInfo/NoticeExplan
 - */
 -
--#include <linux/acpi.h>
+-#include <linux/interrupt.h>
+-#include <linux/tty.h>
+-#include <linux/tty_flip.h>
+-#include <linux/serial.h>
+-#include <linux/console.h>
 -#include <linux/init.h>
--#include <linux/kernel.h>
--#include <linux/module.h>
--#include <linux/pci.h>
--#include <linux/pci_hotplug.h>
--#include <linux/proc_fs.h>
--#include <linux/slab.h>
--#include <linux/types.h>
--#include <linux/mutex.h>
+-#include <linux/sysrq.h>
+-#include <linux/circ_buf.h>
+-#include <linux/serial_reg.h>
+-#include <linux/delay.h> /* for mdelay */
+-#include <linux/miscdevice.h>
+-#include <linux/serial_core.h>
 -
--#include <asm/sn/addrs.h>
--#include <asm/sn/geo.h>
--#include <asm/sn/l1.h>
--#include <asm/sn/module.h>
--#include <asm/sn/pcibr_provider.h>
--#include <asm/sn/pcibus_provider_defs.h>
--#include <asm/sn/pcidev.h>
--#include <asm/sn/sn_feature_sets.h>
+-#include <asm/io.h>
+-#include <asm/sn/simulator.h>
 -#include <asm/sn/sn_sal.h>
--#include <asm/sn/types.h>
--#include <asm/sn/acpi.h>
 -
--#include "../pci.h"
+-/* number of characters we can transmit to the SAL console at a time */
+-#define SN_SAL_MAX_CHARS 120
 -
--MODULE_LICENSE("GPL");
--MODULE_AUTHOR("SGI (prarit@sgi.com, dickie@sgi.com, habeck@sgi.com)");
--MODULE_DESCRIPTION("SGI Altix Hot Plug PCI Controller Driver");
+-/* 64K, when we're asynch, it must be at least printk's LOG_BUF_LEN to
+- * avoid losing chars, (always has to be a power of 2) */
+-#define SN_SAL_BUFFER_SIZE (64 * (1 << 10))
 -
+-#define SN_SAL_UART_FIFO_DEPTH 16
+-#define SN_SAL_UART_FIFO_SPEED_CPS (9600/10)
 -
--/* SAL call error codes. Keep in sync with prom header io/include/pcibr.h */
--#define PCI_SLOT_ALREADY_UP		2	/* slot already up */
--#define PCI_SLOT_ALREADY_DOWN		3	/* slot already down */
--#define PCI_L1_ERR			7	/* L1 console command error */
--#define PCI_EMPTY_33MHZ			15	/* empty 33 MHz bus */
+-/* sn_transmit_chars() calling args */
+-#define TRANSMIT_BUFFERED	0
+-#define TRANSMIT_RAW		1
 -
+-/* To use dynamic numbers only and not use the assigned major and minor,
+- * define the following.. */
+-				  /* #define USE_DYNAMIC_MINOR 1 *//* use dynamic minor number */
+-#define USE_DYNAMIC_MINOR 0	/* Don't rely on misc_register dynamic minor */
 -
--#define PCIIO_ASIC_TYPE_TIOCA		4
--#define PCI_L1_QSIZE			128	/* our L1 message buffer size */
--#define SN_MAX_HP_SLOTS			32	/* max hotplug slots */
--#define SN_SLOT_NAME_SIZE		33	/* size of name string */
+-/* Device name we're using */
+-#define DEVICE_NAME "ttySG"
+-#define DEVICE_NAME_DYNAMIC "ttySG0"	/* need full name for misc_register */
+-/* The major/minor we are using, ignored for USE_DYNAMIC_MINOR */
+-#define DEVICE_MAJOR 204
+-#define DEVICE_MINOR 40
 -
--/* internal list head */
--static struct list_head sn_hp_list;
+-#ifdef CONFIG_MAGIC_SYSRQ
+-static char sysrq_serial_str[] = "\eSYS";
+-static char *sysrq_serial_ptr = sysrq_serial_str;
+-static unsigned long sysrq_requested;
+-#endif /* CONFIG_MAGIC_SYSRQ */
 -
--/* hotplug_slot struct's private pointer */
--struct slot {
--	int device_num;
--	struct pci_bus *pci_bus;
--	/* this struct for glue internal only */
--	struct hotplug_slot hotplug_slot;
--	struct list_head hp_list;
--	char physical_path[SN_SLOT_NAME_SIZE];
+-/*
+- * Port definition - this kinda drives it all
+- */
+-struct sn_cons_port {
+-	struct timer_list sc_timer;
+-	struct uart_port sc_port;
+-	struct sn_sal_ops {
+-		int (*sal_puts_raw) (const char *s, int len);
+-		int (*sal_puts) (const char *s, int len);
+-		int (*sal_getc) (void);
+-		int (*sal_input_pending) (void);
+-		void (*sal_wakeup_transmit) (struct sn_cons_port *, int);
+-	} *sc_ops;
+-	unsigned long sc_interrupt_timeout;
+-	int sc_is_asynch;
 -};
 -
--struct pcibr_slot_enable_resp {
--	int resp_sub_errno;
--	char resp_l1_msg[PCI_L1_QSIZE + 1];
+-static struct sn_cons_port sal_console_port;
+-static int sn_process_input;
+-
+-/* Only used if USE_DYNAMIC_MINOR is set to 1 */
+-static struct miscdevice misc;	/* used with misc_register for dynamic */
+-
+-extern void early_sn_setup(void);
+-
+-#undef DEBUG
+-#ifdef DEBUG
+-static int sn_debug_printf(const char *fmt, ...);
+-#define DPRINTF(x...) sn_debug_printf(x)
+-#else
+-#define DPRINTF(x...) do { } while (0)
+-#endif
+-
+-/* Prototypes */
+-static int snt_hw_puts_raw(const char *, int);
+-static int snt_hw_puts_buffered(const char *, int);
+-static int snt_poll_getc(void);
+-static int snt_poll_input_pending(void);
+-static int snt_intr_getc(void);
+-static int snt_intr_input_pending(void);
+-static void sn_transmit_chars(struct sn_cons_port *, int);
+-
+-/* A table for polling:
+- */
+-static struct sn_sal_ops poll_ops = {
+-	.sal_puts_raw = snt_hw_puts_raw,
+-	.sal_puts = snt_hw_puts_raw,
+-	.sal_getc = snt_poll_getc,
+-	.sal_input_pending = snt_poll_input_pending
 -};
 -
--struct pcibr_slot_disable_resp {
--	int resp_sub_errno;
--	char resp_l1_msg[PCI_L1_QSIZE + 1];
+-/* A table for interrupts enabled */
+-static struct sn_sal_ops intr_ops = {
+-	.sal_puts_raw = snt_hw_puts_raw,
+-	.sal_puts = snt_hw_puts_buffered,
+-	.sal_getc = snt_intr_getc,
+-	.sal_input_pending = snt_intr_input_pending,
+-	.sal_wakeup_transmit = sn_transmit_chars
 -};
 -
--enum sn_pci_req_e {
--	PCI_REQ_SLOT_ELIGIBLE,
--	PCI_REQ_SLOT_DISABLE
--};
+-/* the console does output in two distinctly different ways:
+- * synchronous (raw) and asynchronous (buffered).  initially, early_printk
+- * does synchronous output.  any data written goes directly to the SAL
+- * to be output (incidentally, it is internally buffered by the SAL)
+- * after interrupts and timers are initialized and available for use,
+- * the console init code switches to asynchronous output.  this is
+- * also the earliest opportunity to begin polling for console input.
+- * after console initialization, console output and tty (serial port)
+- * output is buffered and sent to the SAL asynchronously (either by
+- * timer callback or by UART interrupt) */
 -
--static int enable_slot(struct hotplug_slot *slot);
--static int disable_slot(struct hotplug_slot *slot);
--static inline int get_power_status(struct hotplug_slot *slot, u8 *value);
+-/* routines for running the console in polling mode */
 -
--static const struct hotplug_slot_ops sn_hotplug_slot_ops = {
--	.enable_slot            = enable_slot,
--	.disable_slot           = disable_slot,
--	.get_power_status       = get_power_status,
--};
--
--static DEFINE_MUTEX(sn_hotplug_mutex);
--
--static struct slot *to_slot(struct hotplug_slot *bss_hotplug_slot)
+-/**
+- * snt_poll_getc - Get a character from the console in polling mode
+- *
+- */
+-static int snt_poll_getc(void)
 -{
--	return container_of(bss_hotplug_slot, struct slot, hotplug_slot);
+-	int ch;
+-
+-	ia64_sn_console_getc(&ch);
+-	return ch;
 -}
 -
--static ssize_t path_show(struct pci_slot *pci_slot, char *buf)
+-/**
+- * snt_poll_input_pending - Check if any input is waiting - polling mode.
+- *
+- */
+-static int snt_poll_input_pending(void)
 -{
--	int retval = -ENOENT;
--	struct slot *slot = to_slot(pci_slot->hotplug);
+-	int status, input;
 -
--	if (!slot)
--		return retval;
--
--	retval = sprintf(buf, "%s\n", slot->physical_path);
--	return retval;
+-	status = ia64_sn_console_check(&input);
+-	return !status && input;
 -}
 -
--static struct pci_slot_attribute sn_slot_path_attr = __ATTR_RO(path);
+-/* routines for an interrupt driven console (normal) */
 -
--static int sn_pci_slot_valid(struct pci_bus *pci_bus, int device)
+-/**
+- * snt_intr_getc - Get a character from the console, interrupt mode
+- *
+- */
+-static int snt_intr_getc(void)
 -{
--	struct pcibus_info *pcibus_info;
--	u16 busnum, segment, ioboard_type;
+-	return ia64_sn_console_readc();
+-}
 -
--	pcibus_info = SN_PCIBUS_BUSSOFT_INFO(pci_bus);
+-/**
+- * snt_intr_input_pending - Check if input is pending, interrupt mode
+- *
+- */
+-static int snt_intr_input_pending(void)
+-{
+-	return ia64_sn_console_intr_status() & SAL_CONSOLE_INTR_RECV;
+-}
 -
--	/* Check to see if this is a valid slot on 'pci_bus' */
--	if (!(pcibus_info->pbi_valid_devices & (1 << device)))
--		return -EPERM;
+-/* these functions are polled and interrupt */
 -
--	ioboard_type = sn_ioboard_to_pci_bus(pci_bus);
--	busnum = pcibus_info->pbi_buscommon.bs_persist_busnum;
--	segment = pci_domain_nr(pci_bus) & 0xf;
+-/**
+- * snt_hw_puts_raw - Send raw string to the console, polled or interrupt mode
+- * @s: String
+- * @len: Length
+- *
+- */
+-static int snt_hw_puts_raw(const char *s, int len)
+-{
+-	/* this will call the PROM and not return until this is done */
+-	return ia64_sn_console_putb(s, len);
+-}
 -
--	/* Do not allow hotplug operations on base I/O cards */
--	if ((ioboard_type == L1_BRICKTYPE_IX ||
--	     ioboard_type == L1_BRICKTYPE_IA) &&
--	    (segment == 1 && busnum == 0 && device != 1))
--		return -EPERM;
+-/**
+- * snt_hw_puts_buffered - Send string to console, polled or interrupt mode
+- * @s: String
+- * @len: Length
+- *
+- */
+-static int snt_hw_puts_buffered(const char *s, int len)
+-{
+-	/* queue data to the PROM */
+-	return ia64_sn_console_xmit_chars((char *)s, len);
+-}
 -
+-/* uart interface structs
+- * These functions are associated with the uart_port that the serial core
+- * infrastructure calls.
+- *
+- * Note: Due to how the console works, many routines are no-ops.
+- */
+-
+-/**
+- * snp_type - What type of console are we?
+- * @port: Port to operate with (we ignore since we only have one port)
+- *
+- */
+-static const char *snp_type(struct uart_port *port)
+-{
+-	return ("SGI SN L1");
+-}
+-
+-/**
+- * snp_tx_empty - Is the transmitter empty?  We pretend we're always empty
+- * @port: Port to operate on (we ignore since we only have one port)
+- *
+- */
+-static unsigned int snp_tx_empty(struct uart_port *port)
+-{
 -	return 1;
 -}
 -
--static int sn_pci_bus_valid(struct pci_bus *pci_bus)
+-/**
+- * snp_stop_tx - stop the transmitter - no-op for us
+- * @port: Port to operat eon - we ignore - no-op function
+- *
+- */
+-static void snp_stop_tx(struct uart_port *port)
 -{
--	struct pcibus_info *pcibus_info;
--	u32 asic_type;
--	u16 ioboard_type;
--
--	/* Don't register slots hanging off the TIOCA bus */
--	pcibus_info = SN_PCIBUS_BUSSOFT_INFO(pci_bus);
--	asic_type = pcibus_info->pbi_buscommon.bs_asic_type;
--	if (asic_type == PCIIO_ASIC_TYPE_TIOCA)
--		return -EPERM;
--
--	/* Only register slots in I/O Bricks that support hotplug */
--	ioboard_type = sn_ioboard_to_pci_bus(pci_bus);
--	switch (ioboard_type) {
--		case L1_BRICKTYPE_IX:
--		case L1_BRICKTYPE_PX:
--		case L1_BRICKTYPE_IA:
--		case L1_BRICKTYPE_PA:
--		case L1_BOARDTYPE_PCIX3SLOT:
--			return 1;
--			break;
--		default:
--			return -EPERM;
--			break;
--	}
--
--	return -EIO;
 -}
 -
--static int sn_hp_slot_private_alloc(struct hotplug_slot **bss_hotplug_slot,
--				    struct pci_bus *pci_bus, int device,
--				    char *name)
+-/**
+- * snp_release_port - Free i/o and resources for port - no-op for us
+- * @port: Port to operate on - we ignore - no-op function
+- *
+- */
+-static void snp_release_port(struct uart_port *port)
 -{
--	struct pcibus_info *pcibus_info;
--	struct slot *slot;
+-}
 -
--	pcibus_info = SN_PCIBUS_BUSSOFT_INFO(pci_bus);
+-/**
+- * snp_shutdown - shut down the port - free irq and disable - no-op for us
+- * @port: Port to shut down - we ignore
+- *
+- */
+-static void snp_shutdown(struct uart_port *port)
+-{
+-}
 -
--	slot = kzalloc(sizeof(*slot), GFP_KERNEL);
--	if (!slot)
--		return -ENOMEM;
+-/**
+- * snp_set_mctrl - set control lines (dtr, rts, etc) - no-op for our console
+- * @port: Port to operate on - we ignore
+- * @mctrl: Lines to set/unset - we ignore
+- *
+- */
+-static void snp_set_mctrl(struct uart_port *port, unsigned int mctrl)
+-{
+-}
 -
--	slot->device_num = device;
--	slot->pci_bus = pci_bus;
--	sprintf(name, "%04x:%02x:%02x",
--		pci_domain_nr(pci_bus),
--		((u16)pcibus_info->pbi_buscommon.bs_persist_busnum),
--		device + 1);
+-/**
+- * snp_get_mctrl - get contorl line info, we just return a static value
+- * @port: port to operate on - we only have one port so we ignore this
+- *
+- */
+-static unsigned int snp_get_mctrl(struct uart_port *port)
+-{
+-	return TIOCM_CAR | TIOCM_RNG | TIOCM_DSR | TIOCM_CTS;
+-}
 -
--	sn_generate_path(pci_bus, slot->physical_path);
+-/**
+- * snp_stop_rx - Stop the receiver - we ignor ethis
+- * @port: Port to operate on - we ignore
+- *
+- */
+-static void snp_stop_rx(struct uart_port *port)
+-{
+-}
 -
--	list_add(&slot->hp_list, &sn_hp_list);
--	*bss_hotplug_slot = &slot->hotplug_slot;
+-/**
+- * snp_start_tx - Start transmitter
+- * @port: Port to operate on
+- *
+- */
+-static void snp_start_tx(struct uart_port *port)
+-{
+-	if (sal_console_port.sc_ops->sal_wakeup_transmit)
+-		sal_console_port.sc_ops->sal_wakeup_transmit(&sal_console_port,
+-							     TRANSMIT_BUFFERED);
 -
+-}
+-
+-/**
+- * snp_break_ctl - handle breaks - ignored by us
+- * @port: Port to operate on
+- * @break_state: Break state
+- *
+- */
+-static void snp_break_ctl(struct uart_port *port, int break_state)
+-{
+-}
+-
+-/**
+- * snp_startup - Start up the serial port - always return 0 (We're always on)
+- * @port: Port to operate on
+- *
+- */
+-static int snp_startup(struct uart_port *port)
+-{
 -	return 0;
 -}
 -
--static struct hotplug_slot *sn_hp_destroy(void)
+-/**
+- * snp_set_termios - set termios stuff - we ignore these
+- * @port: port to operate on
+- * @termios: New settings
+- * @termios: Old
+- *
+- */
+-static void
+-snp_set_termios(struct uart_port *port, struct ktermios *termios,
+-		struct ktermios *old)
 -{
--	struct slot *slot;
--	struct pci_slot *pci_slot;
--	struct hotplug_slot *bss_hotplug_slot = NULL;
--
--	list_for_each_entry(slot, &sn_hp_list, hp_list) {
--		bss_hotplug_slot = &slot->hotplug_slot;
--		pci_slot = bss_hotplug_slot->pci_slot;
--		list_del(&slot->hp_list);
--		sysfs_remove_file(&pci_slot->kobj,
--				  &sn_slot_path_attr.attr);
--		break;
--	}
--	return bss_hotplug_slot;
 -}
 -
--static void sn_bus_free_data(struct pci_dev *dev)
+-/**
+- * snp_request_port - allocate resources for port - ignored by us
+- * @port: port to operate on
+- *
+- */
+-static int snp_request_port(struct uart_port *port)
 -{
--	struct pci_bus *subordinate_bus;
--	struct pci_dev *child;
--
--	/* Recursively clean up sn_irq_info structs */
--	if (dev->subordinate) {
--		subordinate_bus = dev->subordinate;
--		list_for_each_entry(child, &subordinate_bus->devices, bus_list)
--			sn_bus_free_data(child);
--	}
--	/*
--	 * Some drivers may use dma accesses during the
--	 * driver remove function. We release the sysdata
--	 * areas after the driver remove functions have
--	 * been called.
--	 */
--	sn_bus_store_sysdata(dev);
--	sn_pci_unfixup_slot(dev);
--}
--
--static int sn_slot_enable(struct hotplug_slot *bss_hotplug_slot,
--			  int device_num, char **ssdt)
--{
--	struct slot *slot = to_slot(bss_hotplug_slot);
--	struct pcibus_info *pcibus_info;
--	struct pcibr_slot_enable_resp resp;
--	int rc;
--
--	pcibus_info = SN_PCIBUS_BUSSOFT_INFO(slot->pci_bus);
--
--	/*
--	 * Power-on and initialize the slot in the SN
--	 * PCI infrastructure.
--	 */
--	rc = sal_pcibr_slot_enable(pcibus_info, device_num, &resp, ssdt);
--
--
--	if (rc == PCI_SLOT_ALREADY_UP) {
--		pci_dbg(slot->pci_bus->self, "is already active\n");
--		return 1; /* return 1 to user */
--	}
--
--	if (rc == PCI_L1_ERR) {
--		pci_dbg(slot->pci_bus->self, "L1 failure %d with message: %s",
--			resp.resp_sub_errno, resp.resp_l1_msg);
--		return -EPERM;
--	}
--
--	if (rc) {
--		pci_dbg(slot->pci_bus->self, "insert failed with error %d sub-error %d\n",
--			rc, resp.resp_sub_errno);
--		return -EIO;
--	}
--
--	pcibus_info = SN_PCIBUS_BUSSOFT_INFO(slot->pci_bus);
--	pcibus_info->pbi_enabled_devices |= (1 << device_num);
--
 -	return 0;
 -}
 -
--static int sn_slot_disable(struct hotplug_slot *bss_hotplug_slot,
--			   int device_num, int action)
+-/**
+- * snp_config_port - allocate resources, set up - we ignore,  we're always on
+- * @port: Port to operate on
+- * @flags: flags used for port setup
+- *
+- */
+-static void snp_config_port(struct uart_port *port, int flags)
 -{
--	struct slot *slot = to_slot(bss_hotplug_slot);
--	struct pcibus_info *pcibus_info;
--	struct pcibr_slot_disable_resp resp;
--	int rc;
+-}
 -
--	pcibus_info = SN_PCIBUS_BUSSOFT_INFO(slot->pci_bus);
+-/* Associate the uart functions above - given to serial core */
 -
--	rc = sal_pcibr_slot_disable(pcibus_info, device_num, action, &resp);
+-static const struct uart_ops sn_console_ops = {
+-	.tx_empty = snp_tx_empty,
+-	.set_mctrl = snp_set_mctrl,
+-	.get_mctrl = snp_get_mctrl,
+-	.stop_tx = snp_stop_tx,
+-	.start_tx = snp_start_tx,
+-	.stop_rx = snp_stop_rx,
+-	.break_ctl = snp_break_ctl,
+-	.startup = snp_startup,
+-	.shutdown = snp_shutdown,
+-	.set_termios = snp_set_termios,
+-	.pm = NULL,
+-	.type = snp_type,
+-	.release_port = snp_release_port,
+-	.request_port = snp_request_port,
+-	.config_port = snp_config_port,
+-	.verify_port = NULL,
+-};
 -
--	if ((action == PCI_REQ_SLOT_ELIGIBLE) &&
--	    (rc == PCI_SLOT_ALREADY_DOWN)) {
--		pci_dbg(slot->pci_bus->self, "Slot %s already inactive\n", slot->physical_path);
--		return 1; /* return 1 to user */
+-/* End of uart struct functions and defines */
+-
+-#ifdef DEBUG
+-
+-/**
+- * sn_debug_printf - close to hardware debugging printf
+- * @fmt: printf format
+- *
+- * This is as "close to the metal" as we can get, used when the driver
+- * itself may be broken.
+- *
+- */
+-static int sn_debug_printf(const char *fmt, ...)
+-{
+-	static char printk_buf[1024];
+-	int printed_len;
+-	va_list args;
+-
+-	va_start(args, fmt);
+-	printed_len = vsnprintf(printk_buf, sizeof(printk_buf), fmt, args);
+-
+-	if (!sal_console_port.sc_ops) {
+-		sal_console_port.sc_ops = &poll_ops;
+-		early_sn_setup();
+-	}
+-	sal_console_port.sc_ops->sal_puts_raw(printk_buf, printed_len);
+-
+-	va_end(args);
+-	return printed_len;
+-}
+-#endif				/* DEBUG */
+-
+-/*
+- * Interrupt handling routines.
+- */
+-
+-/**
+- * sn_receive_chars - Grab characters, pass them to tty layer
+- * @port: Port to operate on
+- * @flags: irq flags
+- *
+- * Note: If we're not registered with the serial core infrastructure yet,
+- * we don't try to send characters to it...
+- *
+- */
+-static void
+-sn_receive_chars(struct sn_cons_port *port, unsigned long flags)
+-{
+-	struct tty_port *tport = NULL;
+-	int ch;
+-
+-	if (!port) {
+-		printk(KERN_ERR "sn_receive_chars - port NULL so can't receive\n");
+-		return;
 -	}
 -
--	if ((action == PCI_REQ_SLOT_ELIGIBLE) && (rc == PCI_EMPTY_33MHZ)) {
--		pci_dbg(slot->pci_bus->self, "Cannot remove last 33MHz card\n");
--		return -EPERM;
+-	if (!port->sc_ops) {
+-		printk(KERN_ERR "sn_receive_chars - port->sc_ops  NULL so can't receive\n");
+-		return;
 -	}
 -
--	if ((action == PCI_REQ_SLOT_ELIGIBLE) && (rc == PCI_L1_ERR)) {
--		pci_dbg(slot->pci_bus->self, "L1 failure %d with message \n%s\n",
--			resp.resp_sub_errno, resp.resp_l1_msg);
--		return -EPERM;
+-	if (port->sc_port.state) {
+-		/* The serial_core stuffs are initialized, use them */
+-		tport = &port->sc_port.state->port;
 -	}
 -
--	if ((action == PCI_REQ_SLOT_ELIGIBLE) && rc) {
--		pci_dbg(slot->pci_bus->self, "remove failed with error %d sub-error %d\n",
--			rc, resp.resp_sub_errno);
--		return -EIO;
+-	while (port->sc_ops->sal_input_pending()) {
+-		ch = port->sc_ops->sal_getc();
+-		if (ch < 0) {
+-			printk(KERN_ERR "sn_console: An error occurred while "
+-			       "obtaining data from the console (0x%0x)\n", ch);
+-			break;
+-		}
+-#ifdef CONFIG_MAGIC_SYSRQ
+-                if (sysrq_requested) {
+-                        unsigned long sysrq_timeout = sysrq_requested + HZ*5;
+-
+-                        sysrq_requested = 0;
+-                        if (ch && time_before(jiffies, sysrq_timeout)) {
+-                                spin_unlock_irqrestore(&port->sc_port.lock, flags);
+-                                handle_sysrq(ch);
+-                                spin_lock_irqsave(&port->sc_port.lock, flags);
+-                                /* ignore actual sysrq command char */
+-                                continue;
+-                        }
+-                }
+-                if (ch == *sysrq_serial_ptr) {
+-                        if (!(*++sysrq_serial_ptr)) {
+-                                sysrq_requested = jiffies;
+-                                sysrq_serial_ptr = sysrq_serial_str;
+-                        }
+-			/*
+-			 * ignore the whole sysrq string except for the
+-			 * leading escape
+-			 */
+-			if (ch != '\e')
+-				continue;
+-                }
+-                else
+-			sysrq_serial_ptr = sysrq_serial_str;
+-#endif /* CONFIG_MAGIC_SYSRQ */
+-
+-		/* record the character to pass up to the tty layer */
+-		if (tport) {
+-			if (tty_insert_flip_char(tport, ch, TTY_NORMAL) == 0)
+-				break;
+-		}
+-		port->sc_port.icount.rx++;
 -	}
 -
--	if ((action == PCI_REQ_SLOT_ELIGIBLE) && !rc)
--		return 0;
+-	if (tport)
+-		tty_flip_buffer_push(tport);
+-}
 -
--	if ((action == PCI_REQ_SLOT_DISABLE) && !rc) {
--		pcibus_info = SN_PCIBUS_BUSSOFT_INFO(slot->pci_bus);
--		pcibus_info->pbi_enabled_devices &= ~(1 << device_num);
--		pci_dbg(slot->pci_bus->self, "remove successful\n");
--		return 0;
+-/**
+- * sn_transmit_chars - grab characters from serial core, send off
+- * @port: Port to operate on
+- * @raw: Transmit raw or buffered
+- *
+- * Note: If we're early, before we're registered with serial core, the
+- * writes are going through sn_sal_console_write because that's how
+- * register_console has been set up.  We currently could have asynch
+- * polls calling this function due to sn_sal_switch_to_asynch but we can
+- * ignore them until we register with the serial core stuffs.
+- *
+- */
+-static void sn_transmit_chars(struct sn_cons_port *port, int raw)
+-{
+-	int xmit_count, tail, head, loops, ii;
+-	int result;
+-	char *start;
+-	struct circ_buf *xmit;
+-
+-	if (!port)
+-		return;
+-
+-	BUG_ON(!port->sc_is_asynch);
+-
+-	if (port->sc_port.state) {
+-		/* We're initialized, using serial core infrastructure */
+-		xmit = &port->sc_port.state->xmit;
+-	} else {
+-		/* Probably sn_sal_switch_to_asynch has been run but serial core isn't
+-		 * initialized yet.  Just return.  Writes are going through
+-		 * sn_sal_console_write (due to register_console) at this time.
+-		 */
+-		return;
 -	}
 -
--	if ((action == PCI_REQ_SLOT_DISABLE) && rc) {
--		pci_dbg(slot->pci_bus->self, "remove failed rc = %d\n", rc);
+-	if (uart_circ_empty(xmit) || uart_tx_stopped(&port->sc_port)) {
+-		/* Nothing to do. */
+-		ia64_sn_console_intr_disable(SAL_CONSOLE_INTR_XMIT);
+-		return;
 -	}
 -
--	return rc;
+-	head = xmit->head;
+-	tail = xmit->tail;
+-	start = &xmit->buf[tail];
+-
+-	/* twice around gets the tail to the end of the buffer and
+-	 * then to the head, if needed */
+-	loops = (head < tail) ? 2 : 1;
+-
+-	for (ii = 0; ii < loops; ii++) {
+-		xmit_count = (head < tail) ?
+-		    (UART_XMIT_SIZE - tail) : (head - tail);
+-
+-		if (xmit_count > 0) {
+-			if (raw == TRANSMIT_RAW)
+-				result =
+-				    port->sc_ops->sal_puts_raw(start,
+-							       xmit_count);
+-			else
+-				result =
+-				    port->sc_ops->sal_puts(start, xmit_count);
+-#ifdef DEBUG
+-			if (!result)
+-				DPRINTF("`");
+-#endif
+-			if (result > 0) {
+-				xmit_count -= result;
+-				port->sc_port.icount.tx += result;
+-				tail += result;
+-				tail &= UART_XMIT_SIZE - 1;
+-				xmit->tail = tail;
+-				start = &xmit->buf[tail];
+-			}
+-		}
+-	}
+-
+-	if (uart_circ_chars_pending(xmit) < WAKEUP_CHARS)
+-		uart_write_wakeup(&port->sc_port);
+-
+-	if (uart_circ_empty(xmit))
+-		snp_stop_tx(&port->sc_port);	/* no-op for us */
+-}
+-
+-/**
+- * sn_sal_interrupt - Handle console interrupts
+- * @irq: irq #, useful for debug statements
+- * @dev_id: our pointer to our port (sn_cons_port which contains the uart port)
+- *
+- */
+-static irqreturn_t sn_sal_interrupt(int irq, void *dev_id)
+-{
+-	struct sn_cons_port *port = (struct sn_cons_port *)dev_id;
+-	unsigned long flags;
+-	int status = ia64_sn_console_intr_status();
+-
+-	if (!port)
+-		return IRQ_NONE;
+-
+-	spin_lock_irqsave(&port->sc_port.lock, flags);
+-	if (status & SAL_CONSOLE_INTR_RECV) {
+-		sn_receive_chars(port, flags);
+-	}
+-	if (status & SAL_CONSOLE_INTR_XMIT) {
+-		sn_transmit_chars(port, TRANSMIT_BUFFERED);
+-	}
+-	spin_unlock_irqrestore(&port->sc_port.lock, flags);
+-	return IRQ_HANDLED;
+-}
+-
+-/**
+- * sn_sal_timer_poll - this function handles polled console mode
+- * @data: A pointer to our sn_cons_port (which contains the uart port)
+- *
+- * data is the pointer that init_timer will store for us.  This function is
+- * associated with init_timer to see if there is any console traffic.
+- * Obviously not used in interrupt mode
+- *
+- */
+-static void sn_sal_timer_poll(struct timer_list *t)
+-{
+-	struct sn_cons_port *port = from_timer(port, t, sc_timer);
+-	unsigned long flags;
+-
+-	if (!port)
+-		return;
+-
+-	if (!port->sc_port.irq) {
+-		spin_lock_irqsave(&port->sc_port.lock, flags);
+-		if (sn_process_input)
+-			sn_receive_chars(port, flags);
+-		sn_transmit_chars(port, TRANSMIT_RAW);
+-		spin_unlock_irqrestore(&port->sc_port.lock, flags);
+-		mod_timer(&port->sc_timer,
+-			  jiffies + port->sc_interrupt_timeout);
+-	}
 -}
 -
 -/*
-- * Power up and configure the slot via a SAL call to PROM.
-- * Scan slot (and any children), do any platform specific fixup,
-- * and find device driver.
+- * Boot-time initialization code
 - */
--static int enable_slot(struct hotplug_slot *bss_hotplug_slot)
+-
+-/**
+- * sn_sal_switch_to_asynch - Switch to async mode (as opposed to synch)
+- * @port: Our sn_cons_port (which contains the uart port)
+- *
+- * So this is used by sn_sal_serial_console_init (early on, before we're
+- * registered with serial core).  It's also used by sn_sal_init
+- * right after we've registered with serial core.  The later only happens
+- * if we didn't already come through here via sn_sal_serial_console_init.
+- *
+- */
+-static void __init sn_sal_switch_to_asynch(struct sn_cons_port *port)
 -{
--	struct slot *slot = to_slot(bss_hotplug_slot);
--	struct pci_bus *new_bus = NULL;
--	struct pci_dev *dev;
--	int num_funcs;
--	int new_ppb = 0;
--	int rc;
--	char *ssdt = NULL;
--	void pcibios_fixup_device_resources(struct pci_dev *);
+-	unsigned long flags;
 -
--	/* Serialize the Linux PCI infrastructure */
--	mutex_lock(&sn_hotplug_mutex);
+-	if (!port)
+-		return;
 -
--	/*
--	 * Power-on and initialize the slot in the SN
--	 * PCI infrastructure. Also, retrieve the ACPI SSDT
--	 * table for the slot (if ACPI capable PROM).
+-	DPRINTF("sn_console: about to switch to asynchronous console\n");
+-
+-	/* without early_printk, we may be invoked late enough to race
+-	 * with other cpus doing console IO at this point, however
+-	 * console interrupts will never be enabled */
+-	spin_lock_irqsave(&port->sc_port.lock, flags);
+-
+-	/* early_printk invocation may have done this for us */
+-	if (!port->sc_ops)
+-		port->sc_ops = &poll_ops;
+-
+-	/* we can't turn on the console interrupt (as request_irq
+-	 * calls kmalloc, which isn't set up yet), so we rely on a
+-	 * timer to poll for input and push data from the console
+-	 * buffer.
 -	 */
--	rc = sn_slot_enable(bss_hotplug_slot, slot->device_num, &ssdt);
--	if (rc) {
--		mutex_unlock(&sn_hotplug_mutex);
--		return rc;
+-	timer_setup(&port->sc_timer, sn_sal_timer_poll, 0);
+-
+-	if (IS_RUNNING_ON_SIMULATOR())
+-		port->sc_interrupt_timeout = 6;
+-	else {
+-		/* 960cps / 16 char FIFO = 60HZ
+-		 * HZ / (SN_SAL_FIFO_SPEED_CPS / SN_SAL_FIFO_DEPTH) */
+-		port->sc_interrupt_timeout =
+-		    HZ * SN_SAL_UART_FIFO_DEPTH / SN_SAL_UART_FIFO_SPEED_CPS;
 -	}
+-	mod_timer(&port->sc_timer, jiffies + port->sc_interrupt_timeout);
 -
--	if (ssdt)
--		ssdt = __va(ssdt);
--	/* Add the new SSDT for the slot to the ACPI namespace */
--	if (SN_ACPI_BASE_SUPPORT() && ssdt) {
--		acpi_status ret;
+-	port->sc_is_asynch = 1;
+-	spin_unlock_irqrestore(&port->sc_port.lock, flags);
+-}
 -
--		ret = acpi_load_table((struct acpi_table_header *)ssdt);
--		if (ACPI_FAILURE(ret)) {
--			printk(KERN_ERR "%s: acpi_load_table failed (0x%x)\n",
--			       __func__, ret);
--			/* try to continue on */
+-/**
+- * sn_sal_switch_to_interrupts - Switch to interrupt driven mode
+- * @port: Our sn_cons_port (which contains the uart port)
+- *
+- * In sn_sal_init, after we're registered with serial core and
+- * the port is added, this function is called to switch us to interrupt
+- * mode.  We were previously in asynch/polling mode (using init_timer).
+- *
+- * We attempt to switch to interrupt mode here by calling
+- * request_irq.  If that works out, we enable receive interrupts.
+- */
+-static void __init sn_sal_switch_to_interrupts(struct sn_cons_port *port)
+-{
+-	unsigned long flags;
+-
+-	if (port) {
+-		DPRINTF("sn_console: switching to interrupt driven console\n");
+-
+-		if (request_irq(SGI_UART_VECTOR, sn_sal_interrupt,
+-				IRQF_SHARED,
+-				"SAL console driver", port) >= 0) {
+-			spin_lock_irqsave(&port->sc_port.lock, flags);
+-			port->sc_port.irq = SGI_UART_VECTOR;
+-			port->sc_ops = &intr_ops;
+-			irq_set_handler(port->sc_port.irq, handle_level_irq);
+-
+-			/* turn on receive interrupts */
+-			ia64_sn_console_intr_enable(SAL_CONSOLE_INTR_RECV);
+-			spin_unlock_irqrestore(&port->sc_port.lock, flags);
+-		}
+-		else {
+-			printk(KERN_INFO
+-			    "sn_console: console proceeding in polled mode\n");
 -		}
 -	}
+-}
 -
--	num_funcs = pci_scan_slot(slot->pci_bus,
--				  PCI_DEVFN(slot->device_num + 1, 0));
--	if (!num_funcs) {
--		pci_dbg(slot->pci_bus->self, "no device in slot\n");
--		mutex_unlock(&sn_hotplug_mutex);
+-/*
+- * Kernel console definitions
+- */
+-
+-static void sn_sal_console_write(struct console *, const char *, unsigned);
+-static int sn_sal_console_setup(struct console *, char *);
+-static struct uart_driver sal_console_uart;
+-extern struct tty_driver *uart_console_device(struct console *, int *);
+-
+-static struct console sal_console = {
+-	.name = DEVICE_NAME,
+-	.write = sn_sal_console_write,
+-	.device = uart_console_device,
+-	.setup = sn_sal_console_setup,
+-	.index = -1,		/* unspecified */
+-	.data = &sal_console_uart,
+-};
+-
+-#define SAL_CONSOLE	&sal_console
+-
+-static struct uart_driver sal_console_uart = {
+-	.owner = THIS_MODULE,
+-	.driver_name = "sn_console",
+-	.dev_name = DEVICE_NAME,
+-	.major = 0,		/* major/minor set at registration time per USE_DYNAMIC_MINOR */
+-	.minor = 0,
+-	.nr = 1,		/* one port */
+-	.cons = SAL_CONSOLE,
+-};
+-
+-/**
+- * sn_sal_init - When the kernel loads us, get us rolling w/ serial core
+- *
+- * Before this is called, we've been printing kernel messages in a special
+- * early mode not making use of the serial core infrastructure.  When our
+- * driver is loaded for real, we register the driver and port with serial
+- * core and try to enable interrupt driven mode.
+- *
+- */
+-static int __init sn_sal_init(void)
+-{
+-	int retval;
+-
+-	if (!ia64_platform_is("sn2"))
+-		return 0;
+-
+-	printk(KERN_INFO "sn_console: Console driver init\n");
+-
+-	if (USE_DYNAMIC_MINOR == 1) {
+-		misc.minor = MISC_DYNAMIC_MINOR;
+-		misc.name = DEVICE_NAME_DYNAMIC;
+-		retval = misc_register(&misc);
+-		if (retval != 0) {
+-			printk(KERN_WARNING "Failed to register console "
+-			       "device using misc_register.\n");
+-			return -ENODEV;
+-		}
+-		sal_console_uart.major = MISC_MAJOR;
+-		sal_console_uart.minor = misc.minor;
+-	} else {
+-		sal_console_uart.major = DEVICE_MAJOR;
+-		sal_console_uart.minor = DEVICE_MINOR;
+-	}
+-
+-	/* We register the driver and the port before switching to interrupts
+-	 * or async above so the proper uart structures are populated */
+-
+-	if (uart_register_driver(&sal_console_uart) < 0) {
+-		printk
+-		    ("ERROR sn_sal_init failed uart_register_driver, line %d\n",
+-		     __LINE__);
 -		return -ENODEV;
 -	}
 -
--	/*
--	 * Map SN resources for all functions on the card
--	 * to the Linux PCI interface and tell the drivers
--	 * about them.
--	 */
--	list_for_each_entry(dev, &slot->pci_bus->devices, bus_list) {
--		if (PCI_SLOT(dev->devfn) != slot->device_num + 1)
--			continue;
+-	spin_lock_init(&sal_console_port.sc_port.lock);
 -
--		/* Need to do slot fixup on PPB before fixup of children
--		 * (PPB's pcidev_info needs to be in pcidev_info list
--		 * before child's SN_PCIDEV_INFO() call to setup
--		 * pdi_host_pcidev_info).
--		 */
--		pcibios_fixup_device_resources(dev);
--		if (SN_ACPI_BASE_SUPPORT())
--			sn_acpi_slot_fixup(dev);
--		else
--			sn_io_slot_fixup(dev);
--		if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
--			pci_hp_add_bridge(dev);
--			if (dev->subordinate) {
--				new_bus = dev->subordinate;
--				new_ppb = 1;
--			}
--		}
+-	/* Setup the port struct with the minimum needed */
+-	sal_console_port.sc_port.membase = (char *)1;	/* just needs to be non-zero */
+-	sal_console_port.sc_port.type = PORT_16550A;
+-	sal_console_port.sc_port.fifosize = SN_SAL_MAX_CHARS;
+-	sal_console_port.sc_port.ops = &sn_console_ops;
+-	sal_console_port.sc_port.line = 0;
+-
+-	if (uart_add_one_port(&sal_console_uart, &sal_console_port.sc_port) < 0) {
+-		/* error - not sure what I'd do - so I'll do nothing */
+-		printk(KERN_ERR "%s: unable to add port\n", __func__);
 -	}
 -
--	/*
--	 * Add the slot's devices to the ACPI infrastructure */
--	if (SN_ACPI_BASE_SUPPORT() && ssdt) {
--		unsigned long long adr;
--		struct acpi_device *pdevice;
--		acpi_handle phandle;
--		acpi_handle chandle = NULL;
--		acpi_handle rethandle;
--		acpi_status ret;
+-	/* when this driver is compiled in, the console initialization
+-	 * will have already switched us into asynchronous operation
+-	 * before we get here through the initcalls */
+-	if (!sal_console_port.sc_is_asynch) {
+-		sn_sal_switch_to_asynch(&sal_console_port);
+-	}
 -
--		phandle = acpi_device_handle(PCI_CONTROLLER(slot->pci_bus)->companion);
+-	/* at this point (device_init) we can try to turn on interrupts */
+-	if (!IS_RUNNING_ON_SIMULATOR()) {
+-		sn_sal_switch_to_interrupts(&sal_console_port);
+-	}
+-	sn_process_input = 1;
+-	return 0;
+-}
+-device_initcall(sn_sal_init);
 -
--		if (acpi_bus_get_device(phandle, &pdevice)) {
--			pci_dbg(slot->pci_bus->self, "no parent device, assuming NULL\n");
--			pdevice = NULL;
--		}
+-/**
+- * puts_raw_fixed - sn_sal_console_write helper for adding \r's as required
+- * @puts_raw : puts function to do the writing
+- * @s: input string
+- * @count: length
+- *
+- * We need a \r ahead of every \n for direct writes through
+- * ia64_sn_console_putb (what sal_puts_raw below actually does).
+- *
+- */
 -
--		acpi_scan_lock_acquire();
+-static void puts_raw_fixed(int (*puts_raw) (const char *s, int len),
+-			   const char *s, int count)
+-{
+-	const char *s1;
+-
+-	/* Output '\r' before each '\n' */
+-	while ((s1 = memchr(s, '\n', count)) != NULL) {
+-		puts_raw(s, s1 - s);
+-		puts_raw("\r\n", 2);
+-		count -= s1 + 1 - s;
+-		s = s1 + 1;
+-	}
+-	puts_raw(s, count);
+-}
+-
+-/**
+- * sn_sal_console_write - Print statements before serial core available
+- * @console: Console to operate on - we ignore since we have just one
+- * @s: String to send
+- * @count: length
+- *
+- * This is referenced in the console struct.  It is used for early
+- * console printing before we register with serial core and for things
+- * such as kdb.  The console_lock must be held when we get here.
+- *
+- * This function has some code for trying to print output even if the lock
+- * is held.  We try to cover the case where a lock holder could have died.
+- * We don't use this special case code if we're not registered with serial
+- * core yet.  After we're registered with serial core, the only time this
+- * function would be used is for high level kernel output like magic sys req,
+- * kdb, and printk's.
+- */
+-static void
+-sn_sal_console_write(struct console *co, const char *s, unsigned count)
+-{
+-	unsigned long flags = 0;
+-	struct sn_cons_port *port = &sal_console_port;
+-	static int stole_lock = 0;
+-
+-	BUG_ON(!port->sc_is_asynch);
+-
+-	/* We can't look at the xmit buffer if we're not registered with serial core
+-	 *  yet.  So only do the fancy recovery after registering
+-	 */
+-	if (!port->sc_port.state) {
+-		/* Not yet registered with serial core - simple case */
+-		puts_raw_fixed(port->sc_ops->sal_puts_raw, s, count);
+-		return;
+-	}
+-
+-	/* somebody really wants this output, might be an
+-	 * oops, kdb, panic, etc.  make sure they get it. */
+-	if (!spin_trylock_irqsave(&port->sc_port.lock, flags)) {
+-		int lhead = port->sc_port.state->xmit.head;
+-		int ltail = port->sc_port.state->xmit.tail;
+-		int counter, got_lock = 0;
+-
 -		/*
--		 * Walk the rootbus node's immediate children looking for
--		 * the slot's device node(s). There can be more than
--		 * one for multifunction devices.
+-		 * We attempt to determine if someone has died with the
+-		 * lock. We wait ~20 secs after the head and tail ptrs
+-		 * stop moving and assume the lock holder is not functional
+-		 * and plow ahead. If the lock is freed within the time out
+-		 * period we re-get the lock and go ahead normally. We also
+-		 * remember if we have plowed ahead so that we don't have
+-		 * to wait out the time out period again - the asumption
+-		 * is that we will time out again.
 -		 */
--		for (;;) {
--			rethandle = NULL;
--			ret = acpi_get_next_object(ACPI_TYPE_DEVICE,
--						   phandle, chandle,
--						   &rethandle);
 -
--			if (ret == AE_NOT_FOUND || rethandle == NULL)
+-		for (counter = 0; counter < 150; mdelay(125), counter++) {
+-			if (stole_lock)
 -				break;
 -
--			chandle = rethandle;
--
--			ret = acpi_evaluate_integer(chandle, METHOD_NAME__ADR,
--						    NULL, &adr);
--
--			if (ACPI_SUCCESS(ret) &&
--			    (adr>>16) == (slot->device_num + 1)) {
--
--				ret = acpi_bus_scan(chandle);
--				if (ACPI_FAILURE(ret)) {
--					printk(KERN_ERR "%s: acpi_bus_scan failed (0x%x) for slot %d func %d\n",
--					       __func__, ret, (int)(adr>>16),
--					       (int)(adr&0xffff));
--					/* try to continue on */
+-			if (spin_trylock_irqsave(&port->sc_port.lock, flags)) {
+-				got_lock = 1;
+-				break;
+-			} else {
+-				/* still locked */
+-				if ((lhead != port->sc_port.state->xmit.head)
+-				    || (ltail !=
+-					port->sc_port.state->xmit.tail)) {
+-					lhead =
+-						port->sc_port.state->xmit.head;
+-					ltail =
+-						port->sc_port.state->xmit.tail;
+-					counter = 0;
 -				}
 -			}
 -		}
--		acpi_scan_lock_release();
+-		/* flush anything in the serial core xmit buffer, raw */
+-		sn_transmit_chars(port, 1);
+-		if (got_lock) {
+-			spin_unlock_irqrestore(&port->sc_port.lock, flags);
+-			stole_lock = 0;
+-		} else {
+-			/* fell thru */
+-			stole_lock = 1;
+-		}
+-		puts_raw_fixed(port->sc_ops->sal_puts_raw, s, count);
+-	} else {
+-		stole_lock = 0;
+-		sn_transmit_chars(port, 1);
+-		spin_unlock_irqrestore(&port->sc_port.lock, flags);
+-
+-		puts_raw_fixed(port->sc_ops->sal_puts_raw, s, count);
 -	}
--
--	pci_lock_rescan_remove();
--
--	/* Call the driver for the new device */
--	pci_bus_add_devices(slot->pci_bus);
--	/* Call the drivers for the new devices subordinate to PPB */
--	if (new_ppb)
--		pci_bus_add_devices(new_bus);
--
--	pci_unlock_rescan_remove();
--	mutex_unlock(&sn_hotplug_mutex);
--
--	if (rc == 0)
--		pci_dbg(slot->pci_bus->self, "insert operation successful\n");
--	else
--		pci_dbg(slot->pci_bus->self, "insert operation failed rc = %d\n", rc);
--
--	return rc;
 -}
 -
--static int disable_slot(struct hotplug_slot *bss_hotplug_slot)
+-
+-/**
+- * sn_sal_console_setup - Set up console for early printing
+- * @co: Console to work with
+- * @options: Options to set
+- *
+- * Altix console doesn't do anything with baud rates, etc, anyway.
+- *
+- * This isn't required since not providing the setup function in the
+- * console struct is ok.  However, other patches like KDB plop something
+- * here so providing it is easier.
+- *
+- */
+-static int sn_sal_console_setup(struct console *co, char *options)
 -{
--	struct slot *slot = to_slot(bss_hotplug_slot);
--	struct pci_dev *dev, *temp;
--	int rc;
--	acpi_handle ssdt_hdl = NULL;
--
--	/* Acquire update access to the bus */
--	mutex_lock(&sn_hotplug_mutex);
--
--	/* is it okay to bring this slot down? */
--	rc = sn_slot_disable(bss_hotplug_slot, slot->device_num,
--			     PCI_REQ_SLOT_ELIGIBLE);
--	if (rc)
--		goto leaving;
--
--	/* free the ACPI resources for the slot */
--	if (SN_ACPI_BASE_SUPPORT() &&
--		PCI_CONTROLLER(slot->pci_bus)->companion) {
--		unsigned long long adr;
--		struct acpi_device *device;
--		acpi_handle phandle;
--		acpi_handle chandle = NULL;
--		acpi_handle rethandle;
--		acpi_status ret;
--
--		/* Get the rootbus node pointer */
--		phandle = acpi_device_handle(PCI_CONTROLLER(slot->pci_bus)->companion);
--
--		acpi_scan_lock_acquire();
--		/*
--		 * Walk the rootbus node's immediate children looking for
--		 * the slot's device node(s). There can be more than
--		 * one for multifunction devices.
--		 */
--		for (;;) {
--			rethandle = NULL;
--			ret = acpi_get_next_object(ACPI_TYPE_DEVICE,
--						   phandle, chandle,
--						   &rethandle);
--
--			if (ret == AE_NOT_FOUND || rethandle == NULL)
--				break;
--
--			chandle = rethandle;
--
--			ret = acpi_evaluate_integer(chandle,
--						    METHOD_NAME__ADR,
--						    NULL, &adr);
--			if (ACPI_SUCCESS(ret) &&
--			    (adr>>16) == (slot->device_num + 1)) {
--				/* retain the owner id */
--				ssdt_hdl = chandle;
--
--				ret = acpi_bus_get_device(chandle,
--							  &device);
--				if (ACPI_SUCCESS(ret))
--					acpi_bus_trim(device);
--			}
--		}
--		acpi_scan_lock_release();
--	}
--
--	pci_lock_rescan_remove();
--	/* Free the SN resources assigned to the Linux device.*/
--	list_for_each_entry_safe(dev, temp, &slot->pci_bus->devices, bus_list) {
--		if (PCI_SLOT(dev->devfn) != slot->device_num + 1)
--			continue;
--
--		pci_dev_get(dev);
--		sn_bus_free_data(dev);
--		pci_stop_and_remove_bus_device(dev);
--		pci_dev_put(dev);
--	}
--	pci_unlock_rescan_remove();
--
--	/* Remove the SSDT for the slot from the ACPI namespace */
--	if (SN_ACPI_BASE_SUPPORT() && ssdt_hdl) {
--		acpi_status ret;
--		ret = acpi_unload_parent_table(ssdt_hdl);
--		if (ACPI_FAILURE(ret)) {
--			acpi_handle_err(ssdt_hdl,
--					"%s: acpi_unload_parent_table failed (0x%x)\n",
--					__func__, ret);
--			/* try to continue on */
--		}
--	}
--
--	/* free the collected sysdata pointers */
--	sn_bus_free_sysdata();
--
--	/* Deactivate slot */
--	rc = sn_slot_disable(bss_hotplug_slot, slot->device_num,
--			     PCI_REQ_SLOT_DISABLE);
-- leaving:
--	/* Release the bus lock */
--	mutex_unlock(&sn_hotplug_mutex);
--
--	return rc;
--}
--
--static inline int get_power_status(struct hotplug_slot *bss_hotplug_slot,
--				   u8 *value)
--{
--	struct slot *slot = to_slot(bss_hotplug_slot);
--	struct pcibus_info *pcibus_info;
--	u32 power;
--
--	pcibus_info = SN_PCIBUS_BUSSOFT_INFO(slot->pci_bus);
--	mutex_lock(&sn_hotplug_mutex);
--	power = pcibus_info->pbi_enabled_devices & (1 << slot->device_num);
--	*value = power ? 1 : 0;
--	mutex_unlock(&sn_hotplug_mutex);
 -	return 0;
 -}
 -
--static void sn_release_slot(struct hotplug_slot *bss_hotplug_slot)
+-/**
+- * sn_sal_console_write_early - simple early output routine
+- * @co - console struct
+- * @s - string to print
+- * @count - count
+- *
+- * Simple function to provide early output, before even
+- * sn_sal_serial_console_init is called.  Referenced in the
+- * console struct registerd in sn_serial_console_early_setup.
+- *
+- */
+-static void __init
+-sn_sal_console_write_early(struct console *co, const char *s, unsigned count)
 -{
--	kfree(to_slot(bss_hotplug_slot));
+-	puts_raw_fixed(sal_console_port.sc_ops->sal_puts_raw, s, count);
 -}
 -
--static int sn_hotplug_slot_register(struct pci_bus *pci_bus)
+-/* Used for very early console printing - again, before
+- * sn_sal_serial_console_init is run */
+-static struct console sal_console_early __initdata = {
+-	.name = "sn_sal",
+-	.write = sn_sal_console_write_early,
+-	.flags = CON_PRINTBUFFER,
+-	.index = -1,
+-};
+-
+-/**
+- * sn_serial_console_early_setup - Sets up early console output support
+- *
+- * Register a console early on...  This is for output before even
+- * sn_sal_serial_cosnole_init is called.  This function is called from
+- * setup.c.  This allows us to do really early polled writes. When
+- * sn_sal_serial_console_init is called, this console is unregistered
+- * and a new one registered.
+- */
+-int __init sn_serial_console_early_setup(void)
 -{
--	int device;
--	struct pci_slot *pci_slot;
--	struct hotplug_slot *bss_hotplug_slot;
--	char name[SN_SLOT_NAME_SIZE];
--	int rc = 0;
+-	if (!ia64_platform_is("sn2"))
+-		return -1;
 -
--	/*
--	 * Currently only four devices are supported,
--	 * in the future there maybe more -- up to 32.
--	 */
+-	sal_console_port.sc_ops = &poll_ops;
+-	spin_lock_init(&sal_console_port.sc_port.lock);
+-	early_sn_setup();	/* Find SAL entry points */
+-	register_console(&sal_console_early);
 -
--	for (device = 0; device < SN_MAX_HP_SLOTS ; device++) {
--		if (sn_pci_slot_valid(pci_bus, device) != 1)
--			continue;
--
--		if (sn_hp_slot_private_alloc(&bss_hotplug_slot,
--					     pci_bus, device, name)) {
--			rc = -ENOMEM;
--			goto alloc_err;
--		}
--		bss_hotplug_slot->ops = &sn_hotplug_slot_ops;
--
--		rc = pci_hp_register(bss_hotplug_slot, pci_bus, device, name);
--		if (rc)
--			goto register_err;
--
--		pci_slot = bss_hotplug_slot->pci_slot;
--		rc = sysfs_create_file(&pci_slot->kobj,
--				       &sn_slot_path_attr.attr);
--		if (rc)
--			goto alloc_err;
--	}
--	pci_dbg(pci_bus->self, "Registered bus with hotplug\n");
--	return rc;
--
--register_err:
--	pci_dbg(pci_bus->self, "bus failed to register with err = %d\n",
--		rc);
--
--	/* destroy THIS element */
--	sn_hp_destroy();
--	sn_release_slot(bss_hotplug_slot);
--
--alloc_err:
--	/* destroy anything else on the list */
--	while ((bss_hotplug_slot = sn_hp_destroy())) {
--		pci_hp_deregister(bss_hotplug_slot);
--		sn_release_slot(bss_hotplug_slot);
--	}
--
--	return rc;
+-	return 0;
 -}
 -
--static int __init sn_pci_hotplug_init(void)
+-/**
+- * sn_sal_serial_console_init - Early console output - set up for register
+- *
+- * This function is called when regular console init happens.  Because we
+- * support even earlier console output with sn_serial_console_early_setup
+- * (called from setup.c directly), this function unregisters the really
+- * early console.
+- *
+- * Note: Even if setup.c doesn't register sal_console_early, unregistering
+- * it here doesn't hurt anything.
+- *
+- */
+-static int __init sn_sal_serial_console_init(void)
 -{
--	struct pci_bus *pci_bus = NULL;
--	int rc;
--	int registered = 0;
--
--	if (!sn_prom_feature_available(PRF_HOTPLUG_SUPPORT)) {
--		printk(KERN_ERR "%s: PROM version does not support hotplug.\n",
--		       __func__);
--		return -EPERM;
+-	if (ia64_platform_is("sn2")) {
+-		sn_sal_switch_to_asynch(&sal_console_port);
+-		DPRINTF("sn_sal_serial_console_init : register console\n");
+-		register_console(&sal_console);
+-		unregister_console(&sal_console_early);
 -	}
--
--	INIT_LIST_HEAD(&sn_hp_list);
--
--	while ((pci_bus = pci_find_next_bus(pci_bus))) {
--		if (!pci_bus->sysdata)
--			continue;
--
--		rc = sn_pci_bus_valid(pci_bus);
--		if (rc != 1) {
--			pci_dbg(pci_bus->self, "not a valid hotplug bus\n");
--			continue;
--		}
--		pci_dbg(pci_bus->self, "valid hotplug bus\n");
--
--		rc = sn_hotplug_slot_register(pci_bus);
--		if (!rc) {
--			registered = 1;
--		} else {
--			registered = 0;
--			break;
--		}
--	}
--
--	return registered == 1 ? 0 : -ENODEV;
+-	return 0;
 -}
 -
--static void __exit sn_pci_hotplug_exit(void)
--{
--	struct hotplug_slot *bss_hotplug_slot;
--
--	while ((bss_hotplug_slot = sn_hp_destroy())) {
--		pci_hp_deregister(bss_hotplug_slot);
--		sn_release_slot(bss_hotplug_slot);
--	}
--
--	if (!list_empty(&sn_hp_list))
--		printk(KERN_ERR "%s: internal list is not empty\n", __FILE__);
--}
--
--module_init(sn_pci_hotplug_init);
--module_exit(sn_pci_hotplug_exit);
+-console_initcall(sn_sal_serial_console_init);
 -- 
 2.20.1
 
