@@ -7,35 +7,35 @@ X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C42DDC32750
-	for <linux-scsi@archiver.kernel.org>; Tue, 13 Aug 2019 07:26:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B1C50C32750
+	for <linux-scsi@archiver.kernel.org>; Tue, 13 Aug 2019 07:26:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7891220679
-	for <linux-scsi@archiver.kernel.org>; Tue, 13 Aug 2019 07:26:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6EA9420665
+	for <linux-scsi@archiver.kernel.org>; Tue, 13 Aug 2019 07:26:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="O9Jb5n9G"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="PG4b+z7N"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727865AbfHMH0F (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 13 Aug 2019 03:26:05 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:51344 "EHLO
+        id S1727837AbfHMH0E (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 13 Aug 2019 03:26:04 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:51208 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725820AbfHMH0F (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Aug 2019 03:26:05 -0400
+        with ESMTP id S1725820AbfHMH0C (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Aug 2019 03:26:02 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
         :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
         List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=h0GE+/7YBqyDzyOmtNyFT2WkwcrflXuL312Ib0oB4ts=; b=O9Jb5n9Gc4ICnbGdy5IqYLc6ed
-        XK9Er+toSa3VxJT7//otISkSd6AlNExcDfot8cTJ4a59IYYiZzCuOkcdzx/Vf8bhDDm4AdjzVQUNn
-        anuIQtzIdbJTgQeOA05WEAFixboAx8SlKzZGg6DpyWeR2JhBwd3JkjdhtxECdaaRC9c3Tt4MKMMa3
-        RJJa+ZwS17WMKI1j6fXLsFW7RyV8NiZ22bFrGw//h27AOzQobvo4svUExXoApECLxhjRIAbf4ATHG
-        CN7tgedBqskR8SrH2lUiu4H6jozETpJDj6QeraeIymEt+9hUnRqDcn6VIT5hTQz+BZtoErDRrBj0d
-        l3c/F4uQ==;
+        bh=K8mtQbcvjUOjZJJrWVhTMVUHj1xPulJRe2fBMtA0I78=; b=PG4b+z7NSgA8Pxtztq4H7USnch
+        +QWw66pxQPT/aPo13OUaODVGDr2jJGa4GT43pLad2hN2uN1lc9AsQ6rryT4lxghyE4RmFGqEYI1FC
+        9MlC7IqBzs0InXWpBrvQlpd5Xwb/d8/uJ3E1JnNB/S4S/PR5d7C8laQUN/FaZs8qTcj0u81g4H8C8
+        RmNP4b9MAkT/6tHD/pY6H9fVagh06dZhLRqhJdi4hDdn1Upo2VsuyHA3SGzxWsfbqNSUujQiFVQMF
+        HefG173NCMKhz2fpT6okgp7c15GjLLsqVPgrNSFPxBBAIesDZsfUV8kkgUJqKedQjGhoVxgLKqjFM
+        at/rCZJQ==;
 Received: from [2001:4bb8:180:1ec3:c70:4a89:bc61:2] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92 #3 (Red Hat Linux))
-        id 1hxRBw-0006LF-Up; Tue, 13 Aug 2019 07:26:02 +0000
+        id 1hxRBt-0006IR-SE; Tue, 13 Aug 2019 07:25:58 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Tony Luck <tony.luck@intel.com>, Fenghua Yu <fenghua.yu@intel.com>,
         Mike Travis <mike.travis@hpe.com>,
@@ -44,9 +44,9 @@ Cc:     Arnd Bergmann <arnd@arndb.de>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         linux-ia64@vger.kernel.org, linux-ide@vger.kernel.org,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 14/28] drivers: remove the SGI SN2 IOC4 base support
-Date:   Tue, 13 Aug 2019 09:25:00 +0200
-Message-Id: <20190813072514.23299-15-hch@lst.de>
+Subject: [PATCH 13/28] drivers: remove the SGI SN2 IOC3 base support
+Date:   Tue, 13 Aug 2019 09:24:59 +0200
+Message-Id: <20190813072514.23299-14-hch@lst.de>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190813072514.23299-1-hch@lst.de>
 References: <20190813072514.23299-1-hch@lst.de>
@@ -58,614 +58,855 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The IOC4 is a multi-function chip seen on SGI SN2 and some SGI MIPS
-systems.  This removes the base driver, which while not having an SN2
-Kconfig dependency was only for sub-drivers that had one.
+The IOC3 is a multi-function chip seen on SGI SN2 and some SGI
+MIPS systems.  This removes the last bit of SN2 specific support,
+while the bits used by the mips ports are still around (and being
+substantially rewritten at the moment).
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- Documentation/driver-api/sgi-ioc4.rst    |  49 ---
- arch/ia64/configs/generic_defconfig      |   1 -
- arch/ia64/configs/gensparse_defconfig    |   1 -
- arch/mips/configs/bigsur_defconfig       |   1 -
- arch/mips/configs/ip32_defconfig         |   1 -
- arch/mips/configs/markeins_defconfig     |   1 -
- arch/mips/configs/rm200_defconfig        |   1 -
- arch/mips/configs/sb1250_swarm_defconfig |   1 -
- drivers/misc/Kconfig                     |  12 -
- drivers/misc/Makefile                    |   1 -
- drivers/misc/ioc4.c                      | 498 -----------------------
- include/linux/ioc4.h                     | 184 ---------
- include/linux/pci_ids.h                  |   1 -
- 13 files changed, 752 deletions(-)
- delete mode 100644 Documentation/driver-api/sgi-ioc4.rst
- delete mode 100644 drivers/misc/ioc4.c
- delete mode 100644 include/linux/ioc4.h
+ arch/ia64/Kconfig                     |   2 -
+ arch/ia64/configs/gensparse_defconfig |   1 -
+ drivers/Makefile                      |   1 -
+ drivers/sn/Kconfig                    |  22 -
+ drivers/sn/Makefile                   |   7 -
+ drivers/sn/ioc3.c                     | 844 --------------------------
+ 6 files changed, 877 deletions(-)
+ delete mode 100644 drivers/sn/Kconfig
+ delete mode 100644 drivers/sn/Makefile
+ delete mode 100644 drivers/sn/ioc3.c
 
-diff --git a/Documentation/driver-api/sgi-ioc4.rst b/Documentation/driver-api/sgi-ioc4.rst
-deleted file mode 100644
-index 72709222d3c0..000000000000
---- a/Documentation/driver-api/sgi-ioc4.rst
-+++ /dev/null
-@@ -1,49 +0,0 @@
--====================================
--SGI IOC4 PCI (multi function) device
--====================================
+diff --git a/arch/ia64/Kconfig b/arch/ia64/Kconfig
+index 7468d8e50467..43f3a3076ab2 100644
+--- a/arch/ia64/Kconfig
++++ b/arch/ia64/Kconfig
+@@ -493,8 +493,6 @@ config IA64_HP_AML_NFW
+ 	  the "force" module parameter, e.g., with the "aml_nfw.force"
+ 	  kernel command line option.
+ 
+-source "drivers/sn/Kconfig"
 -
--The SGI IOC4 PCI device is a bit of a strange beast, so some notes on
--it are in order.
--
--First, even though the IOC4 performs multiple functions, such as an
--IDE controller, a serial controller, a PS/2 keyboard/mouse controller,
--and an external interrupt mechanism, it's not implemented as a
--multifunction device.  The consequence of this from a software
--standpoint is that all these functions share a single IRQ, and
--they can't all register to own the same PCI device ID.  To make
--matters a bit worse, some of the register blocks (and even registers
--themselves) present in IOC4 are mixed-purpose between these several
--functions, meaning that there's no clear "owning" device driver.
--
--The solution is to organize the IOC4 driver into several independent
--drivers, "ioc4", "sgiioc4", and "ioc4_serial".  Note that there is no
--PS/2 controller driver as this functionality has never been wired up
--on a shipping IO card.
--
--ioc4
--====
--This is the core (or shim) driver for IOC4.  It is responsible for
--initializing the basic functionality of the chip, and allocating
--the PCI resources that are shared between the IOC4 functions.
--
--This driver also provides registration functions that the other
--IOC4 drivers can call to make their presence known.  Each driver
--needs to provide a probe and remove function, which are invoked
--by the core driver at appropriate times.  The interface of these
--IOC4 function probe and remove operations isn't precisely the same
--as PCI device probe and remove operations, but is logically the
--same operation.
--
--sgiioc4
--=======
--This is the IDE driver for IOC4.  Its name isn't very descriptive
--simply for historical reasons (it used to be the only IOC4 driver
--component).  There's not much to say about it other than it hooks
--up to the ioc4 driver via the appropriate registration, probe, and
--remove functions.
--
--ioc4_serial
--===========
--This is the serial driver for IOC4.  There's not much to say about it
--other than it hooks up to the ioc4 driver via the appropriate registration,
--probe, and remove functions.
-diff --git a/arch/ia64/configs/generic_defconfig b/arch/ia64/configs/generic_defconfig
-index 8dd921dce4b5..661d90b3e148 100644
---- a/arch/ia64/configs/generic_defconfig
-+++ b/arch/ia64/configs/generic_defconfig
-@@ -44,7 +44,6 @@ CONFIG_BLK_DEV_LOOP=m
- CONFIG_BLK_DEV_CRYPTOLOOP=m
- CONFIG_BLK_DEV_NBD=m
- CONFIG_BLK_DEV_RAM=y
--CONFIG_SGI_IOC4=y
- CONFIG_SGI_XP=m
- CONFIG_IDE=y
- CONFIG_BLK_DEV_IDECD=y
+ config KEXEC
+ 	bool "kexec system call"
+ 	depends on !IA64_HP_SIM && (!SMP || HOTPLUG_CPU)
 diff --git a/arch/ia64/configs/gensparse_defconfig b/arch/ia64/configs/gensparse_defconfig
-index 5d5ea744f7e6..7844e6a956a4 100644
+index d82d07d060d6..5d5ea744f7e6 100644
 --- a/arch/ia64/configs/gensparse_defconfig
 +++ b/arch/ia64/configs/gensparse_defconfig
-@@ -36,7 +36,6 @@ CONFIG_BLK_DEV_LOOP=m
- CONFIG_BLK_DEV_CRYPTOLOOP=m
- CONFIG_BLK_DEV_NBD=m
- CONFIG_BLK_DEV_RAM=y
--CONFIG_SGI_IOC4=y
- CONFIG_IDE=y
- CONFIG_BLK_DEV_IDECD=y
- CONFIG_IDE_GENERIC=y
-diff --git a/arch/mips/configs/bigsur_defconfig b/arch/mips/configs/bigsur_defconfig
-index 66566026409d..f14ad0538f4e 100644
---- a/arch/mips/configs/bigsur_defconfig
-+++ b/arch/mips/configs/bigsur_defconfig
-@@ -103,7 +103,6 @@ CONFIG_FW_LOADER=m
- CONFIG_BLK_DEV_LOOP=m
- CONFIG_BLK_DEV_CRYPTOLOOP=m
- CONFIG_BLK_DEV_NBD=m
--CONFIG_SGI_IOC4=m
- CONFIG_EEPROM_LEGACY=y
- CONFIG_EEPROM_MAX6875=y
- CONFIG_IDE=y
-diff --git a/arch/mips/configs/ip32_defconfig b/arch/mips/configs/ip32_defconfig
-index 572cab91670c..370884018aad 100644
---- a/arch/mips/configs/ip32_defconfig
-+++ b/arch/mips/configs/ip32_defconfig
-@@ -46,7 +46,6 @@ CONFIG_CONNECTOR=y
- CONFIG_BLK_DEV_LOOP=m
- CONFIG_BLK_DEV_CRYPTOLOOP=m
- CONFIG_BLK_DEV_NBD=m
--CONFIG_SGI_IOC4=y
- CONFIG_RAID_ATTRS=y
- CONFIG_SCSI=y
- CONFIG_BLK_DEV_SD=y
-diff --git a/arch/mips/configs/markeins_defconfig b/arch/mips/configs/markeins_defconfig
-index ae93a94f8c71..507ad91b21e7 100644
---- a/arch/mips/configs/markeins_defconfig
-+++ b/arch/mips/configs/markeins_defconfig
-@@ -117,7 +117,6 @@ CONFIG_MTD_CFI_AMDSTD=y
- CONFIG_MTD_PHYSMAP=y
- CONFIG_BLK_DEV_LOOP=m
- CONFIG_BLK_DEV_CRYPTOLOOP=m
--CONFIG_SGI_IOC4=m
- CONFIG_SCSI=m
- # CONFIG_SCSI_PROC_FS is not set
- CONFIG_BLK_DEV_SD=m
-diff --git a/arch/mips/configs/rm200_defconfig b/arch/mips/configs/rm200_defconfig
-index 0f4b09f8a0ee..8762e75f5d5f 100644
---- a/arch/mips/configs/rm200_defconfig
-+++ b/arch/mips/configs/rm200_defconfig
-@@ -198,7 +198,6 @@ CONFIG_BLK_DEV_SX8=m
- CONFIG_BLK_DEV_RAM=m
- CONFIG_CDROM_PKTCDVD=m
- CONFIG_ATA_OVER_ETH=m
--CONFIG_SGI_IOC4=m
- CONFIG_RAID_ATTRS=m
- CONFIG_SCSI=y
- CONFIG_BLK_DEV_SD=y
-diff --git a/arch/mips/configs/sb1250_swarm_defconfig b/arch/mips/configs/sb1250_swarm_defconfig
-index 6883ea4477d4..bb0b1b22ebe1 100644
---- a/arch/mips/configs/sb1250_swarm_defconfig
-+++ b/arch/mips/configs/sb1250_swarm_defconfig
-@@ -49,7 +49,6 @@ CONFIG_BLK_DEV_RAM=y
- CONFIG_BLK_DEV_RAM_SIZE=9220
- CONFIG_CDROM_PKTCDVD=m
- CONFIG_ATA_OVER_ETH=m
--CONFIG_SGI_IOC4=m
- CONFIG_IDE=y
- CONFIG_BLK_DEV_IDECD=y
- CONFIG_BLK_DEV_IDETAPE=y
-diff --git a/drivers/misc/Kconfig b/drivers/misc/Kconfig
-index 299032693934..423d2d26d8f7 100644
---- a/drivers/misc/Kconfig
-+++ b/drivers/misc/Kconfig
-@@ -126,18 +126,6 @@ config INTEL_MID_PTI
- 	  an Intel Atom (non-netbook) mobile device containing a MIPI
- 	  P1149.7 standard implementation.
- 
--config SGI_IOC4
--	tristate "SGI IOC4 Base IO support"
--	depends on PCI
--	---help---
--	  This option enables basic support for the IOC4 chip on certain
--	  SGI IO controller cards (IO9, IO10, and PCI-RT).  This option
--	  does not enable any specific functions on such a card, but provides
--	  necessary infrastructure for other drivers to utilize.
--
--	  If you have an SGI Altix with an IOC4-based card say Y.
--	  Otherwise say N.
--
- config TIFM_CORE
- 	tristate "TI Flash Media interface support"
- 	depends on PCI
-diff --git a/drivers/misc/Makefile b/drivers/misc/Makefile
-index abd8ae249746..8dae0a976200 100644
---- a/drivers/misc/Makefile
-+++ b/drivers/misc/Makefile
-@@ -21,7 +21,6 @@ obj-$(CONFIG_QCOM_COINCELL)	+= qcom-coincell.o
- obj-$(CONFIG_QCOM_FASTRPC)	+= fastrpc.o
- obj-$(CONFIG_SENSORS_BH1770)	+= bh1770glc.o
- obj-$(CONFIG_SENSORS_APDS990X)	+= apds990x.o
--obj-$(CONFIG_SGI_IOC4)		+= ioc4.o
- obj-$(CONFIG_ENCLOSURE_SERVICES) += enclosure.o
- obj-$(CONFIG_KGDB_TESTS)	+= kgdbts.o
- obj-$(CONFIG_SGI_XP)		+= sgi-xp/
-diff --git a/drivers/misc/ioc4.c b/drivers/misc/ioc4.c
+@@ -19,7 +19,6 @@ CONFIG_SPARSEMEM_MANUAL=y
+ CONFIG_IA64_MCA_RECOVERY=y
+ CONFIG_PERFMON=y
+ CONFIG_IA64_PALINFO=y
+-CONFIG_SGI_IOC3=y
+ CONFIG_EFI_VARS=y
+ CONFIG_BINFMT_MISC=m
+ CONFIG_ACPI_BUTTON=m
+diff --git a/drivers/Makefile b/drivers/Makefile
+index 6d37564e783c..05be8c798c51 100644
+--- a/drivers/Makefile
++++ b/drivers/Makefile
+@@ -132,7 +132,6 @@ obj-y				+= mmc/
+ obj-$(CONFIG_MEMSTICK)		+= memstick/
+ obj-$(CONFIG_NEW_LEDS)		+= leds/
+ obj-$(CONFIG_INFINIBAND)	+= infiniband/
+-obj-$(CONFIG_SGI_SN)		+= sn/
+ obj-y				+= firmware/
+ obj-$(CONFIG_CRYPTO)		+= crypto/
+ obj-$(CONFIG_SUPERH)		+= sh/
+diff --git a/drivers/sn/Kconfig b/drivers/sn/Kconfig
 deleted file mode 100644
-index 9d0445a567db..000000000000
---- a/drivers/misc/ioc4.c
+index a6c443d31a3c..000000000000
+--- a/drivers/sn/Kconfig
 +++ /dev/null
-@@ -1,498 +0,0 @@
--/*
-- * This file is subject to the terms and conditions of the GNU General Public
-- * License.  See the file "COPYING" in the main directory of this archive
-- * for more details.
-- *
-- * Copyright (C) 2005-2006 Silicon Graphics, Inc.  All Rights Reserved.
-- */
+@@ -1,22 +0,0 @@
+-# SPDX-License-Identifier: GPL-2.0-only
+-#
+-# Miscellaneous SN-specific devices
+-#
 -
--/* This file contains the master driver module for use by SGI IOC4 subdrivers.
+-menu "SN Devices"
+-	depends on SGI_SN
+-
+-config SGI_IOC3
+-	tristate "SGI IOC3 Base IO support"
+-	default m
+-	---help---
+-	This option enables basic support for the SGI IOC3-based Base IO
+-	controller card.  This option does not enable any specific
+-	functions on such a card, but provides necessary infrastructure
+-	for other drivers to utilize.
+-
+-	If you have an SGI Altix with an IOC3-based
+-	I/O controller or a PCI IOC3 serial card say Y.
+-	Otherwise say N.
+-
+-endmenu
+diff --git a/drivers/sn/Makefile b/drivers/sn/Makefile
+deleted file mode 100644
+index f0e809a38b2d..000000000000
+--- a/drivers/sn/Makefile
++++ /dev/null
+@@ -1,7 +0,0 @@
+-# SPDX-License-Identifier: GPL-2.0-only
+-#
+-# Makefile for the Altix device drivers.
+-#
+-#
+-
+-obj-$(CONFIG_SGI_IOC3) += ioc3.o
+diff --git a/drivers/sn/ioc3.c b/drivers/sn/ioc3.c
+deleted file mode 100644
+index 358025af4918..000000000000
+--- a/drivers/sn/ioc3.c
++++ /dev/null
+@@ -1,844 +0,0 @@
+-// SPDX-License-Identifier: GPL-2.0-only
+-/*
+- * SGI IOC3 master driver and IRQ demuxer
 - *
-- * It allocates any resources shared between multiple subdevices, and
-- * provides accessor functions (where needed) and the like for those
-- * resources.  It also provides a mechanism for the subdevice modules
-- * to support loading and unloading.
-- *
-- * Non-shared resources (e.g. external interrupt A_INT_OUT register page
-- * alias, serial port and UART registers) are handled by the subdevice
-- * modules themselves.
-- *
-- * This is all necessary because IOC4 is not implemented as a multi-function
-- * PCI device, but an amalgamation of disparate registers for several
-- * types of device (ATA, serial, external interrupts).  The normal
-- * resource management in the kernel doesn't have quite the right interfaces
-- * to handle this situation (e.g. multiple modules can't claim the same
-- * PCI ID), thus this IOC4 master module.
+- * Copyright (c) 2005 Stanislaw Skowronek <skylark@linux-mips.org>
+- * Heavily based on similar work by:
+- *   Brent Casavant <bcasavan@sgi.com> - IOC4 master driver
+- *   Pat Gefre <pfg@sgi.com> - IOC3 serial port IRQ demuxer
 - */
 -
 -#include <linux/errno.h>
 -#include <linux/module.h>
 -#include <linux/pci.h>
--#include <linux/ioc4.h>
--#include <linux/ktime.h>
+-#include <linux/dma-mapping.h>
+-#include <linux/interrupt.h>
+-#include <linux/spinlock.h>
+-#include <linux/delay.h>
+-#include <linux/ioc3.h>
+-#include <linux/rwsem.h>
 -#include <linux/slab.h>
--#include <linux/mutex.h>
--#include <linux/time.h>
--#include <asm/io.h>
 -
--/***************
-- * Definitions *
-- ***************/
+-#define IOC3_PCI_SIZE 0x100000
 -
--/* Tweakable values */
+-static LIST_HEAD(ioc3_devices);
+-static int ioc3_counter;
+-static DECLARE_RWSEM(ioc3_devices_rwsem);
 -
--/* PCI bus speed detection/calibration */
--#define IOC4_CALIBRATE_COUNT 63		/* Calibration cycle period */
--#define IOC4_CALIBRATE_CYCLES 256	/* Average over this many cycles */
--#define IOC4_CALIBRATE_DISCARD 2	/* Discard first few cycles */
--#define IOC4_CALIBRATE_LOW_MHZ 25	/* Lower bound on bus speed sanity */
--#define IOC4_CALIBRATE_HIGH_MHZ 75	/* Upper bound on bus speed sanity */
--#define IOC4_CALIBRATE_DEFAULT_MHZ 66	/* Assumed if sanity check fails */
+-static struct ioc3_submodule *ioc3_submodules[IOC3_MAX_SUBMODULES];
+-static struct ioc3_submodule *ioc3_ethernet;
+-static DEFINE_RWLOCK(ioc3_submodules_lock);
 -
--/************************
-- * Submodule management *
-- ************************/
+-/* NIC probing code */
 -
--static DEFINE_MUTEX(ioc4_mutex);
+-#define GPCR_MLAN_EN    0x00200000      /* enable MCR to pin 8 */
 -
--static LIST_HEAD(ioc4_devices);
--static LIST_HEAD(ioc4_submodules);
--
--/* Register an IOC4 submodule */
--int
--ioc4_register_submodule(struct ioc4_submodule *is)
+-static inline unsigned mcr_pack(unsigned pulse, unsigned sample)
 -{
--	struct ioc4_driver_data *idd;
+-	return (pulse << 10) | (sample << 2);
+-}
 -
--	mutex_lock(&ioc4_mutex);
--	list_add(&is->is_list, &ioc4_submodules);
+-static int nic_wait(struct ioc3_driver_data *idd)
+-{
+-	unsigned mcr;
 -
--	/* Initialize submodule for each IOC4 */
--	if (!is->is_probe)
--		goto out;
+-        do {
+-                mcr = readl(&idd->vma->mcr);
+-        } while (!(mcr & 2));
 -
--	list_for_each_entry(idd, &ioc4_devices, idd_list) {
--		if (is->is_probe(idd)) {
--			printk(KERN_WARNING
--			       "%s: IOC4 submodule %s probe failed "
--			       "for pci_dev %s",
--			       __func__, module_name(is->is_owner),
--			       pci_name(idd->idd_pdev));
+-        return mcr & 1;
+-}
+-
+-static int nic_reset(struct ioc3_driver_data *idd)
+-{
+-        int presence;
+-	unsigned long flags;
+-
+-	local_irq_save(flags);
+-	writel(mcr_pack(500, 65), &idd->vma->mcr);
+-	presence = nic_wait(idd);
+-	local_irq_restore(flags);
+-
+-	udelay(500);
+-
+-        return presence;
+-}
+-
+-static int nic_read_bit(struct ioc3_driver_data *idd)
+-{
+-	int result;
+-	unsigned long flags;
+-
+-	local_irq_save(flags);
+-	writel(mcr_pack(6, 13), &idd->vma->mcr);
+-	result = nic_wait(idd);
+-	local_irq_restore(flags);
+-
+-	udelay(500);
+-
+-	return result;
+-}
+-
+-static void nic_write_bit(struct ioc3_driver_data *idd, int bit)
+-{
+-	if (bit)
+-		writel(mcr_pack(6, 110), &idd->vma->mcr);
+-	else
+-		writel(mcr_pack(80, 30), &idd->vma->mcr);
+-
+-	nic_wait(idd);
+-}
+-
+-static unsigned nic_read_byte(struct ioc3_driver_data *idd)
+-{
+-	unsigned result = 0;
+-	int i;
+-
+-	for (i = 0; i < 8; i++)
+-		result = (result >> 1) | (nic_read_bit(idd) << 7);
+-
+-	return result;
+-}
+-
+-static void nic_write_byte(struct ioc3_driver_data *idd, int byte)
+-{
+-	int i, bit;
+-
+-	for (i = 8; i; i--) {
+-		bit = byte & 1;
+-		byte >>= 1;
+-
+-		nic_write_bit(idd, bit);
+-	}
+-}
+-
+-static unsigned long
+-nic_find(struct ioc3_driver_data *idd, int *last, unsigned long addr)
+-{
+-	int a, b, index, disc;
+-
+-	nic_reset(idd);
+-
+-	/* Search ROM.  */
+-	nic_write_byte(idd, 0xF0);
+-
+-	/* Algorithm from ``Book of iButton Standards''.  */
+-	for (index = 0, disc = 0; index < 64; index++) {
+-		a = nic_read_bit(idd);
+-		b = nic_read_bit(idd);
+-
+-		if (a && b) {
+-			printk(KERN_WARNING "IOC3 NIC search failed.\n");
+-			*last = 0;
+-			return 0;
+-		}
+-
+-		if (!a && !b) {
+-			if (index == *last) {
+-				addr |= 1UL << index;
+-			} else if (index > *last) {
+-				addr &= ~(1UL << index);
+-				disc = index;
+-			} else if ((addr & (1UL << index)) == 0)
+-				disc = index;
+-			nic_write_bit(idd, (addr>>index)&1);
+-			continue;
+-		} else {
+-			if (a)
+-				addr |= 1UL << index;
+-			else
+-				addr &= ~(1UL << index);
+-			nic_write_bit(idd, a);
+-			continue;
 -		}
 -	}
-- out:
--	mutex_unlock(&ioc4_mutex);
+-	*last = disc;
+-	return addr;
+-}
+-
+-static void nic_addr(struct ioc3_driver_data *idd, unsigned long addr)
+-{
+-	int index;
+-
+-	nic_reset(idd);
+-	nic_write_byte(idd, 0xF0);
+-	for (index = 0; index < 64; index++) {
+-		nic_read_bit(idd);
+-		nic_read_bit(idd);
+-		nic_write_bit(idd, (addr>>index)&1);
+-	}
+-}
+-
+-static void crc16_byte(unsigned int *crc, unsigned char db)
+-{
+-	int i;
+-
+-	for(i=0;i<8;i++) {
+-		*crc <<= 1;
+-		if((db^(*crc>>16)) & 1)
+-			*crc ^= 0x8005;
+-		db >>= 1;
+-	}
+-	*crc &= 0xFFFF;
+-}
+-
+-static unsigned int crc16_area(unsigned char *dbs, int size, unsigned int crc)
+-{
+-	while(size--)
+-		crc16_byte(&crc, *(dbs++));
+-	return crc;
+-}
+-
+-static void crc8_byte(unsigned int *crc, unsigned char db)
+-{
+-	int i,f;
+-
+-	for(i=0;i<8;i++) {
+-		f = (*crc ^ db) & 1;
+-		*crc >>= 1;
+-		db >>= 1;
+-		if(f)
+-			*crc ^= 0x8c;
+-	}
+-	*crc &= 0xff;
+-}
+-
+-static unsigned int crc8_addr(unsigned long addr)
+-{
+-	int i;
+-	unsigned int crc = 0x00;
+-
+-	for(i=0;i<8;i++)
+-		crc8_byte(&crc, addr>>(i<<3));
+-	return crc;
+-}
+-
+-static void
+-read_redir_page(struct ioc3_driver_data *idd, unsigned long addr, int page,
+-			unsigned char *redir, unsigned char *data)
+-{
+-	int loops = 16, i;
+-
+-	while(redir[page] != 0xFF) {
+-		page = redir[page]^0xFF;
+-		loops--;
+-		if(loops<0) {
+-			printk(KERN_ERR "IOC3: NIC circular redirection\n");
+-			return;
+-		}
+-	}
+-	loops = 3;
+-	while(loops>0) {
+-		nic_addr(idd, addr);
+-		nic_write_byte(idd, 0xF0);
+-		nic_write_byte(idd, (page << 5) & 0xE0);
+-		nic_write_byte(idd, (page >> 3) & 0x1F);
+-		for(i=0;i<0x20;i++)
+-			data[i] = nic_read_byte(idd);
+-		if(crc16_area(data, 0x20, 0x0000) == 0x800d)
+-			return;
+-		loops--;
+-	}
+-	printk(KERN_ERR "IOC3: CRC error in data page\n");
+-	for(i=0;i<0x20;i++)
+-		data[i] = 0x00;
+-}
+-
+-static void
+-read_redir_map(struct ioc3_driver_data *idd, unsigned long addr,
+-					 unsigned char *redir)
+-{
+-	int i,j,loops = 3,crc_ok;
+-	unsigned int crc;
+-
+-	while(loops>0) {
+-		crc_ok = 1;
+-		nic_addr(idd, addr);
+-		nic_write_byte(idd, 0xAA);
+-		nic_write_byte(idd, 0x00);
+-		nic_write_byte(idd, 0x01);
+-		for(i=0;i<64;i+=8) {
+-			for(j=0;j<8;j++)
+-				redir[i+j] = nic_read_byte(idd);
+-			crc = crc16_area(redir+i, 8, (i==0)?0x8707:0x0000);
+-			crc16_byte(&crc, nic_read_byte(idd));
+-			crc16_byte(&crc, nic_read_byte(idd));
+-			if(crc != 0x800d)
+-				crc_ok = 0;
+-		}
+-		if(crc_ok)
+-			return;
+-		loops--;
+-	}
+-	printk(KERN_ERR "IOC3: CRC error in redirection page\n");
+-	for(i=0;i<64;i++)
+-		redir[i] = 0xFF;
+-}
+-
+-static void read_nic(struct ioc3_driver_data *idd, unsigned long addr)
+-{
+-	unsigned char redir[64];
+-	unsigned char data[64],part[32];
+-	int i,j;
+-
+-	/* read redirections */
+-	read_redir_map(idd, addr, redir);
+-	/* read data pages */
+-	read_redir_page(idd, addr, 0, redir, data);
+-	read_redir_page(idd, addr, 1, redir, data+32);
+-	/* assemble the part # */
+-	j=0;
+-	for(i=0;i<19;i++)
+-		if(data[i+11] != ' ')
+-			part[j++] = data[i+11];
+-	for(i=0;i<6;i++)
+-		if(data[i+32] != ' ')
+-			part[j++] = data[i+32];
+-	part[j] = 0;
+-	/* skip Octane power supplies */
+-	if(!strncmp(part, "060-0035-", 9))
+-		return;
+-	if(!strncmp(part, "060-0038-", 9))
+-		return;
+-	strcpy(idd->nic_part, part);
+-	/* assemble the serial # */
+-	j=0;
+-	for(i=0;i<10;i++)
+-		if(data[i+1] != ' ')
+-			idd->nic_serial[j++] = data[i+1];
+-	idd->nic_serial[j] = 0;
+-}
+-
+-static void read_mac(struct ioc3_driver_data *idd, unsigned long addr)
+-{
+-	int i, loops = 3;
+-	unsigned char data[13];
+-
+-	while(loops>0) {
+-		nic_addr(idd, addr);
+-		nic_write_byte(idd, 0xF0);
+-		nic_write_byte(idd, 0x00);
+-		nic_write_byte(idd, 0x00);
+-		nic_read_byte(idd);
+-		for(i=0;i<13;i++)
+-			data[i] = nic_read_byte(idd);
+-		if(crc16_area(data, 13, 0x0000) == 0x800d) {
+-			for(i=10;i>4;i--)
+-				idd->nic_mac[10-i] = data[i];
+-			return;
+-		}
+-		loops--;
+-	}
+-	printk(KERN_ERR "IOC3: CRC error in MAC address\n");
+-	for(i=0;i<6;i++)
+-		idd->nic_mac[i] = 0x00;
+-}
+-
+-static void probe_nic(struct ioc3_driver_data *idd)
+-{
+-        int save = 0, loops = 3;
+-        unsigned long first, addr;
+-
+-        writel(GPCR_MLAN_EN, &idd->vma->gpcr_s);
+-
+-        while(loops>0) {
+-                idd->nic_part[0] = 0;
+-                idd->nic_serial[0] = 0;
+-                addr = first = nic_find(idd, &save, 0);
+-                if(!first)
+-                        return;
+-                while(1) {
+-                        if(crc8_addr(addr))
+-                                break;
+-                        else {
+-                                switch(addr & 0xFF) {
+-                                case 0x0B:
+-                                        read_nic(idd, addr);
+-                                        break;
+-                                case 0x09:
+-                                case 0x89:
+-                                case 0x91:
+-                                        read_mac(idd, addr);
+-                                        break;
+-                                }
+-                        }
+-                        addr = nic_find(idd, &save, addr);
+-                        if(addr == first)
+-                                return;
+-                }
+-                loops--;
+-        }
+-        printk(KERN_ERR "IOC3: CRC error in NIC address\n");
+-}
+-
+-/* Interrupts */
+-
+-static void write_ireg(struct ioc3_driver_data *idd, uint32_t val, int which)
+-{
+-	unsigned long flags;
+-
+-	spin_lock_irqsave(&idd->ir_lock, flags);
+-	switch (which) {
+-	case IOC3_W_IES:
+-		writel(val, &idd->vma->sio_ies);
+-		break;
+-	case IOC3_W_IEC:
+-		writel(val, &idd->vma->sio_iec);
+-		break;
+-	}
+-	spin_unlock_irqrestore(&idd->ir_lock, flags);
+-}
+-static inline uint32_t get_pending_intrs(struct ioc3_driver_data *idd)
+-{
+-	unsigned long flag;
+-	uint32_t intrs = 0;
+-
+-	spin_lock_irqsave(&idd->ir_lock, flag);
+-	intrs = readl(&idd->vma->sio_ir);
+-	intrs &= readl(&idd->vma->sio_ies);
+-	spin_unlock_irqrestore(&idd->ir_lock, flag);
+-	return intrs;
+-}
+-
+-static irqreturn_t ioc3_intr_io(int irq, void *arg)
+-{
+-	unsigned long flags;
+-	struct ioc3_driver_data *idd = arg;
+-	int handled = 1, id;
+-	unsigned int pending;
+-
+-	read_lock_irqsave(&ioc3_submodules_lock, flags);
+-
+-	if(idd->dual_irq && readb(&idd->vma->eisr)) {
+-		/* send Ethernet IRQ to the driver */
+-		if(ioc3_ethernet && idd->active[ioc3_ethernet->id] &&
+-						ioc3_ethernet->intr) {
+-			handled = handled && !ioc3_ethernet->intr(ioc3_ethernet,
+-							idd, 0);
+-		}
+-	}
+-	pending = get_pending_intrs(idd);	/* look at the IO IRQs */
+-
+-	for(id=0;id<IOC3_MAX_SUBMODULES;id++) {
+-		if(idd->active[id] && ioc3_submodules[id]
+-				&& (pending & ioc3_submodules[id]->irq_mask)
+-				&& ioc3_submodules[id]->intr) {
+-			write_ireg(idd, ioc3_submodules[id]->irq_mask,
+-							IOC3_W_IEC);
+-			if(!ioc3_submodules[id]->intr(ioc3_submodules[id],
+-				   idd, pending & ioc3_submodules[id]->irq_mask))
+-				pending &= ~ioc3_submodules[id]->irq_mask;
+-			if (ioc3_submodules[id]->reset_mask)
+-				write_ireg(idd, ioc3_submodules[id]->irq_mask,
+-							IOC3_W_IES);
+-		}
+-	}
+-	read_unlock_irqrestore(&ioc3_submodules_lock, flags);
+-	if(pending) {
+-		printk(KERN_WARNING
+-		  "IOC3: Pending IRQs 0x%08x discarded and disabled\n",pending);
+-		write_ireg(idd, pending, IOC3_W_IEC);
+-		handled = 1;
+-	}
+-	return handled?IRQ_HANDLED:IRQ_NONE;
+-}
+-
+-static irqreturn_t ioc3_intr_eth(int irq, void *arg)
+-{
+-	unsigned long flags;
+-	struct ioc3_driver_data *idd = (struct ioc3_driver_data *)arg;
+-	int handled = 1;
+-
+-	if(!idd->dual_irq)
+-		return IRQ_NONE;
+-	read_lock_irqsave(&ioc3_submodules_lock, flags);
+-	if(ioc3_ethernet && idd->active[ioc3_ethernet->id]
+-				&& ioc3_ethernet->intr)
+-		handled = handled && !ioc3_ethernet->intr(ioc3_ethernet, idd, 0);
+-	read_unlock_irqrestore(&ioc3_submodules_lock, flags);
+-	return handled?IRQ_HANDLED:IRQ_NONE;
+-}
+-
+-void ioc3_enable(struct ioc3_submodule *is,
+-				struct ioc3_driver_data *idd, unsigned int irqs)
+-{
+-	write_ireg(idd, irqs & is->irq_mask, IOC3_W_IES);
+-}
+-
+-void ioc3_ack(struct ioc3_submodule *is, struct ioc3_driver_data *idd,
+-				unsigned int irqs)
+-{
+-	writel(irqs & is->irq_mask, &idd->vma->sio_ir);
+-}
+-
+-void ioc3_disable(struct ioc3_submodule *is,
+-				struct ioc3_driver_data *idd, unsigned int irqs)
+-{
+-	write_ireg(idd, irqs & is->irq_mask, IOC3_W_IEC);
+-}
+-
+-void ioc3_gpcr_set(struct ioc3_driver_data *idd, unsigned int val)
+-{
+-	unsigned long flags;
+-	spin_lock_irqsave(&idd->gpio_lock, flags);
+-	writel(val, &idd->vma->gpcr_s);
+-	spin_unlock_irqrestore(&idd->gpio_lock, flags);
+-}
+-
+-/* Keep it simple, stupid! */
+-static int find_slot(void **tab, int max)
+-{
+-	int i;
+-	for(i=0;i<max;i++)
+-		if(!(tab[i]))
+-			return i;
+-	return -1;
+-}
+-
+-/* Register an IOC3 submodule */
+-int ioc3_register_submodule(struct ioc3_submodule *is)
+-{
+-	struct ioc3_driver_data *idd;
+-	int alloc_id;
+-	unsigned long flags;
+-
+-	write_lock_irqsave(&ioc3_submodules_lock, flags);
+-	alloc_id = find_slot((void **)ioc3_submodules, IOC3_MAX_SUBMODULES);
+-	if(alloc_id != -1) {
+-		ioc3_submodules[alloc_id] = is;
+-		if(is->ethernet) {
+-			if(ioc3_ethernet==NULL)
+-				ioc3_ethernet=is;
+-			else
+-				printk(KERN_WARNING
+-				  "IOC3 Ethernet module already registered!\n");
+-		}
+-	}
+-	write_unlock_irqrestore(&ioc3_submodules_lock, flags);
+-
+-	if(alloc_id == -1) {
+-		printk(KERN_WARNING "Increase IOC3_MAX_SUBMODULES!\n");
+-		return -ENOMEM;
+-	}
+-
+-	is->id=alloc_id;
+-
+-	/* Initialize submodule for each IOC3 */
+-	if (!is->probe)
+-		return 0;
+-
+-	down_read(&ioc3_devices_rwsem);
+-	list_for_each_entry(idd, &ioc3_devices, list) {
+-		/* set to 1 for IRQs in probe */
+-		idd->active[alloc_id] = 1;
+-		idd->active[alloc_id] = !is->probe(is, idd);
+-	}
+-	up_read(&ioc3_devices_rwsem);
+-
 -	return 0;
 -}
 -
--/* Unregister an IOC4 submodule */
--void
--ioc4_unregister_submodule(struct ioc4_submodule *is)
+-/* Unregister an IOC3 submodule */
+-void ioc3_unregister_submodule(struct ioc3_submodule *is)
 -{
--	struct ioc4_driver_data *idd;
+-	struct ioc3_driver_data *idd;
+-	unsigned long flags;
 -
--	mutex_lock(&ioc4_mutex);
--	list_del(&is->is_list);
+-	write_lock_irqsave(&ioc3_submodules_lock, flags);
+-	if(ioc3_submodules[is->id]==is)
+-		ioc3_submodules[is->id]=NULL;
+-	else
+-		printk(KERN_WARNING
+-			"IOC3 submodule %s has wrong ID.\n",is->name);
+-	if(ioc3_ethernet==is)
+-		ioc3_ethernet = NULL;
+-	write_unlock_irqrestore(&ioc3_submodules_lock, flags);
 -
--	/* Remove submodule for each IOC4 */
--	if (!is->is_remove)
--		goto out;
--
--	list_for_each_entry(idd, &ioc4_devices, idd_list) {
--		if (is->is_remove(idd)) {
--			printk(KERN_WARNING
--			       "%s: IOC4 submodule %s remove failed "
--			       "for pci_dev %s.\n",
--			       __func__, module_name(is->is_owner),
--			       pci_name(idd->idd_pdev));
+-	/* Remove submodule for each IOC3 */
+-	down_read(&ioc3_devices_rwsem);
+-	list_for_each_entry(idd, &ioc3_devices, list)
+-		if(idd->active[is->id]) {
+-			if(is->remove)
+-				if(is->remove(is, idd))
+-					printk(KERN_WARNING
+-					       "%s: IOC3 submodule %s remove failed "
+-					       "for pci_dev %s.\n",
+-					       __func__, module_name(is->owner),
+-					       pci_name(idd->pdev));
+-			idd->active[is->id] = 0;
+-			if(is->irq_mask)
+-				write_ireg(idd, is->irq_mask, IOC3_W_IEC);
 -		}
--	}
-- out:
--	mutex_unlock(&ioc4_mutex);
+-	up_read(&ioc3_devices_rwsem);
 -}
 -
 -/*********************
 - * Device management *
 - *********************/
 -
--#define IOC4_CALIBRATE_LOW_LIMIT \
--	(1000*IOC4_EXTINT_COUNT_DIVISOR/IOC4_CALIBRATE_LOW_MHZ)
--#define IOC4_CALIBRATE_HIGH_LIMIT \
--	(1000*IOC4_EXTINT_COUNT_DIVISOR/IOC4_CALIBRATE_HIGH_MHZ)
--#define IOC4_CALIBRATE_DEFAULT \
--	(1000*IOC4_EXTINT_COUNT_DIVISOR/IOC4_CALIBRATE_DEFAULT_MHZ)
+-static char *ioc3_class_names[] = { "unknown", "IP27 BaseIO", "IP30 system",
+-			"MENET 1/2/3", "MENET 4", "CADduo", "Altix Serial" };
 -
--#define IOC4_CALIBRATE_END \
--	(IOC4_CALIBRATE_CYCLES + IOC4_CALIBRATE_DISCARD)
--
--#define IOC4_INT_OUT_MODE_TOGGLE 0x7	/* Toggle INT_OUT every COUNT+1 ticks */
--
--/* Determines external interrupt output clock period of the PCI bus an
-- * IOC4 is attached to.  This value can be used to determine the PCI
-- * bus speed.
-- *
-- * IOC4 has a design feature that various internal timers are derived from
-- * the PCI bus clock.  This causes IOC4 device drivers to need to take the
-- * bus speed into account when setting various register values (e.g. INT_OUT
-- * register COUNT field, UART divisors, etc).  Since this information is
-- * needed by several subdrivers, it is determined by the main IOC4 driver,
-- * even though the following code utilizes external interrupt registers
-- * to perform the speed calculation.
-- */
--static void
--ioc4_clock_calibrate(struct ioc4_driver_data *idd)
+-static int ioc3_class(struct ioc3_driver_data *idd)
 -{
--	union ioc4_int_out int_out;
--	union ioc4_gpcr gpcr;
--	unsigned int state, last_state;
--	uint64_t start, end, period;
--	unsigned int count;
--
--	/* Enable output */
--	gpcr.raw = 0;
--	gpcr.fields.dir = IOC4_GPCR_DIR_0;
--	gpcr.fields.int_out_en = 1;
--	writel(gpcr.raw, &idd->idd_misc_regs->gpcr_s.raw);
--
--	/* Reset to power-on state */
--	writel(0, &idd->idd_misc_regs->int_out.raw);
--
--	/* Set up square wave */
--	int_out.raw = 0;
--	int_out.fields.count = IOC4_CALIBRATE_COUNT;
--	int_out.fields.mode = IOC4_INT_OUT_MODE_TOGGLE;
--	int_out.fields.diag = 0;
--	writel(int_out.raw, &idd->idd_misc_regs->int_out.raw);
--
--	/* Check square wave period averaged over some number of cycles */
--	start = ktime_get_ns();
--	state = 1; /* make sure the first read isn't a rising edge */
--	for (count = 0; count <= IOC4_CALIBRATE_END; count++) {
--		do { /* wait for a rising edge */
--			last_state = state;
--			int_out.raw = readl(&idd->idd_misc_regs->int_out.raw);
--			state = int_out.fields.int_out;
--		} while (last_state || !state);
--
--		/* discard the first few cycles */
--		if (count == IOC4_CALIBRATE_DISCARD)
--			start = ktime_get_ns();
--	}
--	end = ktime_get_ns();
--
--	/* Calculation rearranged to preserve intermediate precision.
--	 * Logically:
--	 * 1. "end - start" gives us the measurement period over all
--	 *    the square wave cycles.
--	 * 2. Divide by number of square wave cycles to get the period
--	 *    of a square wave cycle.
--	 * 3. Divide by 2*(int_out.fields.count+1), which is the formula
--	 *    by which the IOC4 generates the square wave, to get the
--	 *    period of an IOC4 INT_OUT count.
--	 */
--	period = (end - start) /
--		(IOC4_CALIBRATE_CYCLES * 2 * (IOC4_CALIBRATE_COUNT + 1));
--
--	/* Bounds check the result. */
--	if (period > IOC4_CALIBRATE_LOW_LIMIT ||
--	    period < IOC4_CALIBRATE_HIGH_LIMIT) {
--		printk(KERN_INFO
--		       "IOC4 %s: Clock calibration failed.  Assuming"
--		       "PCI clock is %d ns.\n",
--		       pci_name(idd->idd_pdev),
--		       IOC4_CALIBRATE_DEFAULT / IOC4_EXTINT_COUNT_DIVISOR);
--		period = IOC4_CALIBRATE_DEFAULT;
--	} else {
--		u64 ns = period;
--
--		do_div(ns, IOC4_EXTINT_COUNT_DIVISOR);
--		printk(KERN_DEBUG
--		       "IOC4 %s: PCI clock is %llu ns.\n",
--		       pci_name(idd->idd_pdev), (unsigned long long)ns);
--	}
--
--	/* Remember results.  We store the extint clock period rather
--	 * than the PCI clock period so that greater precision is
--	 * retained.  Divide by IOC4_EXTINT_COUNT_DIVISOR to get
--	 * PCI clock period.
--	 */
--	idd->count_period = period;
+-	int res = IOC3_CLASS_NONE;
+-	/* NIC-based logic */
+-	if(!strncmp(idd->nic_part, "030-0891-", 9))
+-		res = IOC3_CLASS_BASE_IP30;
+-	if(!strncmp(idd->nic_part, "030-1155-", 9))
+-		res = IOC3_CLASS_CADDUO;
+-	if(!strncmp(idd->nic_part, "030-1657-", 9))
+-		res = IOC3_CLASS_SERIAL;
+-	if(!strncmp(idd->nic_part, "030-1664-", 9))
+-		res = IOC3_CLASS_SERIAL;
+-	/* total random heuristics */
+-#ifdef CONFIG_SGI_IP27
+-	if(!idd->nic_part[0])
+-		res = IOC3_CLASS_BASE_IP27;
+-#endif
+-	/* print educational message */
+-	printk(KERN_INFO "IOC3 part: [%s], serial: [%s] => class %s\n",
+-			idd->nic_part, idd->nic_serial, ioc3_class_names[res]);
+-	return res;
 -}
--
--/* There are three variants of IOC4 cards: IO9, IO10, and PCI-RT.
-- * Each brings out different combinations of IOC4 signals, thus.
-- * the IOC4 subdrivers need to know to which we're attached.
-- *
-- * We look for the presence of a SCSI (IO9) or SATA (IO10) controller
-- * on the same PCI bus at slot number 3 to differentiate IO9 from IO10.
-- * If neither is present, it's a PCI-RT.
-- */
--static unsigned int
--ioc4_variant(struct ioc4_driver_data *idd)
+-/* Adds a new instance of an IOC3 card */
+-static int ioc3_probe(struct pci_dev *pdev, const struct pci_device_id *pci_id)
 -{
--	struct pci_dev *pdev = NULL;
--	int found = 0;
--
--	/* IO9: Look for a QLogic ISP 12160 at the same bus and slot 3. */
--	do {
--		pdev = pci_get_device(PCI_VENDOR_ID_QLOGIC,
--				      PCI_DEVICE_ID_QLOGIC_ISP12160, pdev);
--		if (pdev &&
--		    idd->idd_pdev->bus->number == pdev->bus->number &&
--		    3 == PCI_SLOT(pdev->devfn))
--			found = 1;
--	} while (pdev && !found);
--	if (NULL != pdev) {
--		pci_dev_put(pdev);
--		return IOC4_VARIANT_IO9;
--	}
--
--	/* IO10: Look for a Vitesse VSC 7174 at the same bus and slot 3. */
--	pdev = NULL;
--	do {
--		pdev = pci_get_device(PCI_VENDOR_ID_VITESSE,
--				      PCI_DEVICE_ID_VITESSE_VSC7174, pdev);
--		if (pdev &&
--		    idd->idd_pdev->bus->number == pdev->bus->number &&
--		    3 == PCI_SLOT(pdev->devfn))
--			found = 1;
--	} while (pdev && !found);
--	if (NULL != pdev) {
--		pci_dev_put(pdev);
--		return IOC4_VARIANT_IO10;
--	}
--
--	/* PCI-RT: No SCSI/SATA controller will be present */
--	return IOC4_VARIANT_PCI_RT;
--}
--
--static void
--ioc4_load_modules(struct work_struct *work)
--{
--	request_module("sgiioc4");
--}
--
--static DECLARE_WORK(ioc4_load_modules_work, ioc4_load_modules);
--
--/* Adds a new instance of an IOC4 card */
--static int
--ioc4_probe(struct pci_dev *pdev, const struct pci_device_id *pci_id)
--{
--	struct ioc4_driver_data *idd;
--	struct ioc4_submodule *is;
+-	struct ioc3_driver_data *idd;
 -	uint32_t pcmd;
--	int ret;
+-	int ret, id;
 -
--	/* Enable IOC4 and take ownership of it */
+-	/* Enable IOC3 and take ownership of it */
 -	if ((ret = pci_enable_device(pdev))) {
 -		printk(KERN_WARNING
--		       "%s: Failed to enable IOC4 device for pci_dev %s.\n",
+-		       "%s: Failed to enable IOC3 device for pci_dev %s.\n",
 -		       __func__, pci_name(pdev));
 -		goto out;
 -	}
 -	pci_set_master(pdev);
 -
--	/* Set up per-IOC4 data */
--	idd = kmalloc(sizeof(struct ioc4_driver_data), GFP_KERNEL);
+-#ifdef USE_64BIT_DMA
+-        ret = pci_set_dma_mask(pdev, DMA_BIT_MASK(64));
+-        if (!ret) {
+-                ret = pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(64));
+-                if (ret < 0) {
+-                        printk(KERN_WARNING "%s: Unable to obtain 64 bit DMA "
+-                               "for consistent allocations\n",
+-				__func__);
+-                }
+-	}
+-#endif
+-
+-	/* Set up per-IOC3 data */
+-	idd = kzalloc(sizeof(struct ioc3_driver_data), GFP_KERNEL);
 -	if (!idd) {
 -		printk(KERN_WARNING
--		       "%s: Failed to allocate IOC4 data for pci_dev %s.\n",
+-		       "%s: Failed to allocate IOC3 data for pci_dev %s.\n",
 -		       __func__, pci_name(pdev));
 -		ret = -ENODEV;
 -		goto out_idd;
 -	}
--	idd->idd_pdev = pdev;
--	idd->idd_pci_id = pci_id;
+-	spin_lock_init(&idd->ir_lock);
+-	spin_lock_init(&idd->gpio_lock);
+-	idd->pdev = pdev;
 -
--	/* Map IOC4 misc registers.  These are shared between subdevices
--	 * so the main IOC4 module manages them.
+-	/* Map all IOC3 registers.  These are shared between subdevices
+-	 * so the main IOC3 module manages them.
 -	 */
--	idd->idd_bar0 = pci_resource_start(idd->idd_pdev, 0);
--	if (!idd->idd_bar0) {
+-	idd->pma = pci_resource_start(pdev, 0);
+-	if (!idd->pma) {
 -		printk(KERN_WARNING
--		       "%s: Unable to find IOC4 misc resource "
+-		       "%s: Unable to find IOC3 resource "
 -		       "for pci_dev %s.\n",
--		       __func__, pci_name(idd->idd_pdev));
+-		       __func__, pci_name(pdev));
 -		ret = -ENODEV;
 -		goto out_pci;
 -	}
--	if (!request_mem_region(idd->idd_bar0, sizeof(struct ioc4_misc_regs),
--			    "ioc4_misc")) {
+-	if (!request_mem_region(idd->pma, IOC3_PCI_SIZE, "ioc3")) {
 -		printk(KERN_WARNING
--		       "%s: Unable to request IOC4 misc region "
+-		       "%s: Unable to request IOC3 region "
 -		       "for pci_dev %s.\n",
--		       __func__, pci_name(idd->idd_pdev));
+-		       __func__, pci_name(pdev));
 -		ret = -ENODEV;
 -		goto out_pci;
 -	}
--	idd->idd_misc_regs = ioremap(idd->idd_bar0,
--				     sizeof(struct ioc4_misc_regs));
--	if (!idd->idd_misc_regs) {
+-	idd->vma = ioremap(idd->pma, IOC3_PCI_SIZE);
+-	if (!idd->vma) {
 -		printk(KERN_WARNING
--		       "%s: Unable to remap IOC4 misc region "
+-		       "%s: Unable to remap IOC3 region "
 -		       "for pci_dev %s.\n",
--		       __func__, pci_name(idd->idd_pdev));
+-		       __func__, pci_name(pdev));
 -		ret = -ENODEV;
 -		goto out_misc_region;
 -	}
 -
--	/* Failsafe portion of per-IOC4 initialization */
--
--	/* Detect card variant */
--	idd->idd_variant = ioc4_variant(idd);
--	printk(KERN_INFO "IOC4 %s: %s card detected.\n", pci_name(pdev),
--	       idd->idd_variant == IOC4_VARIANT_IO9 ? "IO9" :
--	       idd->idd_variant == IOC4_VARIANT_PCI_RT ? "PCI-RT" :
--	       idd->idd_variant == IOC4_VARIANT_IO10 ? "IO10" : "unknown");
--
--	/* Initialize IOC4 */
--	pci_read_config_dword(idd->idd_pdev, PCI_COMMAND, &pcmd);
--	pci_write_config_dword(idd->idd_pdev, PCI_COMMAND,
--			       pcmd | PCI_COMMAND_PARITY | PCI_COMMAND_SERR);
--
--	/* Determine PCI clock */
--	ioc4_clock_calibrate(idd);
--
--	/* Disable/clear all interrupts.  Need to do this here lest
--	 * one submodule request the shared IOC4 IRQ, but interrupt
--	 * is generated by a different subdevice.
--	 */
--	/* Disable */
--	writel(~0, &idd->idd_misc_regs->other_iec.raw);
--	writel(~0, &idd->idd_misc_regs->sio_iec);
--	/* Clear (i.e. acknowledge) */
--	writel(~0, &idd->idd_misc_regs->other_ir.raw);
--	writel(~0, &idd->idd_misc_regs->sio_ir);
--
 -	/* Track PCI-device specific data */
--	idd->idd_serial_data = NULL;
--	pci_set_drvdata(idd->idd_pdev, idd);
+-	pci_set_drvdata(pdev, idd);
+-	down_write(&ioc3_devices_rwsem);
+-	list_add_tail(&idd->list, &ioc3_devices);
+-	idd->id = ioc3_counter++;
+-	up_write(&ioc3_devices_rwsem);
 -
--	mutex_lock(&ioc4_mutex);
--	list_add_tail(&idd->idd_list, &ioc4_devices);
+-	idd->gpdr_shadow = readl(&idd->vma->gpdr);
 -
--	/* Add this IOC4 to all submodules */
--	list_for_each_entry(is, &ioc4_submodules, is_list) {
--		if (is->is_probe && is->is_probe(idd)) {
+-	/* Read IOC3 NIC contents */
+-	probe_nic(idd);
+-
+-	/* Detect IOC3 class */
+-	idd->class = ioc3_class(idd);
+-
+-	/* Initialize IOC3 */
+-       pci_read_config_dword(pdev, PCI_COMMAND, &pcmd);
+-       pci_write_config_dword(pdev, PCI_COMMAND,
+-                               pcmd | PCI_COMMAND_MEMORY |
+-                               PCI_COMMAND_PARITY | PCI_COMMAND_SERR |
+-                               PCI_SCR_DROP_MODE_EN);
+-
+-	write_ireg(idd, ~0, IOC3_W_IEC);
+-	writel(~0, &idd->vma->sio_ir);
+-
+-	/* Set up IRQs */
+-	if(idd->class == IOC3_CLASS_BASE_IP30
+-				|| idd->class == IOC3_CLASS_BASE_IP27) {
+-		writel(0, &idd->vma->eier);
+-		writel(~0, &idd->vma->eisr);
+-
+-		idd->dual_irq = 1;
+-		if (!request_irq(pdev->irq, ioc3_intr_eth, IRQF_SHARED,
+-				 "ioc3-eth", (void *)idd)) {
+-			idd->irq_eth = pdev->irq;
+-		} else {
 -			printk(KERN_WARNING
--			       "%s: IOC4 submodule 0x%s probe failed "
--			       "for pci_dev %s.\n",
--			       __func__, module_name(is->is_owner),
--			       pci_name(idd->idd_pdev));
+-			       "%s : request_irq fails for IRQ 0x%x\n ",
+-			       __func__, pdev->irq);
+-		}
+-		if (!request_irq(pdev->irq+2, ioc3_intr_io, IRQF_SHARED,
+-				 "ioc3-io", (void *)idd)) {
+-			idd->irq_io = pdev->irq+2;
+-		} else {
+-			printk(KERN_WARNING
+-			       "%s : request_irq fails for IRQ 0x%x\n ",
+-			       __func__, pdev->irq+2);
+-		}
+-	} else {
+-		if (!request_irq(pdev->irq, ioc3_intr_io, IRQF_SHARED,
+-				 "ioc3", (void *)idd)) {
+-			idd->irq_io = pdev->irq;
+-		} else {
+-			printk(KERN_WARNING
+-			       "%s : request_irq fails for IRQ 0x%x\n ",
+-			       __func__, pdev->irq);
 -		}
 -	}
--	mutex_unlock(&ioc4_mutex);
 -
--	/* Request sgiioc4 IDE driver on boards that bring that functionality
--	 * off of IOC4.  The root filesystem may be hosted on a drive connected
--	 * to IOC4, so we need to make sure the sgiioc4 driver is loaded as it
--	 * won't be picked up by modprobes due to the ioc4 module owning the
--	 * PCI device.
--	 */
--	if (idd->idd_variant != IOC4_VARIANT_PCI_RT) {
--		/* Request the module from a work procedure as the modprobe
--		 * goes out to a userland helper and that will hang if done
--		 * directly from ioc4_probe().
--		 */
--		printk(KERN_INFO "IOC4 loading sgiioc4 submodule\n");
--		schedule_work(&ioc4_load_modules_work);
--	}
+-	/* Add this IOC3 to all submodules */
+-	for(id=0;id<IOC3_MAX_SUBMODULES;id++)
+-		if(ioc3_submodules[id] && ioc3_submodules[id]->probe) {
+-			idd->active[id] = 1;
+-			idd->active[id] = !ioc3_submodules[id]->probe
+-						(ioc3_submodules[id], idd);
+-		}
+-
+-	printk(KERN_INFO "IOC3 Master Driver loaded for %s\n", pci_name(pdev));
 -
 -	return 0;
 -
 -out_misc_region:
--	release_mem_region(idd->idd_bar0, sizeof(struct ioc4_misc_regs));
+-	release_mem_region(idd->pma, IOC3_PCI_SIZE);
 -out_pci:
 -	kfree(idd);
 -out_idd:
@@ -674,294 +915,95 @@ index 9d0445a567db..000000000000
 -	return ret;
 -}
 -
--/* Removes a particular instance of an IOC4 card. */
--static void
--ioc4_remove(struct pci_dev *pdev)
+-/* Removes a particular instance of an IOC3 card. */
+-static void ioc3_remove(struct pci_dev *pdev)
 -{
--	struct ioc4_submodule *is;
--	struct ioc4_driver_data *idd;
+-	int id;
+-	struct ioc3_driver_data *idd;
 -
 -	idd = pci_get_drvdata(pdev);
 -
--	/* Remove this IOC4 from all submodules */
--	mutex_lock(&ioc4_mutex);
--	list_for_each_entry(is, &ioc4_submodules, is_list) {
--		if (is->is_remove && is->is_remove(idd)) {
--			printk(KERN_WARNING
--			       "%s: IOC4 submodule 0x%s remove failed "
--			       "for pci_dev %s.\n",
--			       __func__, module_name(is->is_owner),
--			       pci_name(idd->idd_pdev));
+-	/* Remove this IOC3 from all submodules */
+-	for(id=0;id<IOC3_MAX_SUBMODULES;id++)
+-		if(idd->active[id]) {
+-			if(ioc3_submodules[id] && ioc3_submodules[id]->remove)
+-				if(ioc3_submodules[id]->remove(ioc3_submodules[id],
+-								idd))
+-					printk(KERN_WARNING
+-					       "%s: IOC3 submodule 0x%s remove failed "
+-					       "for pci_dev %s.\n",
+-						__func__,
+-						module_name(ioc3_submodules[id]->owner),
+-					        pci_name(pdev));
+-			idd->active[id] = 0;
 -		}
--	}
--	mutex_unlock(&ioc4_mutex);
+-
+-	/* Clear and disable all IRQs */
+-	write_ireg(idd, ~0, IOC3_W_IEC);
+-	writel(~0, &idd->vma->sio_ir);
 -
 -	/* Release resources */
--	iounmap(idd->idd_misc_regs);
--	if (!idd->idd_bar0) {
--		printk(KERN_WARNING
--		       "%s: Unable to get IOC4 misc mapping for pci_dev %s. "
--		       "Device removal may be incomplete.\n",
--		       __func__, pci_name(idd->idd_pdev));
--	}
--	release_mem_region(idd->idd_bar0, sizeof(struct ioc4_misc_regs));
+-	free_irq(idd->irq_io, (void *)idd);
+-	if(idd->dual_irq)
+-		free_irq(idd->irq_eth, (void *)idd);
+-	iounmap(idd->vma);
+-	release_mem_region(idd->pma, IOC3_PCI_SIZE);
 -
--	/* Disable IOC4 and relinquish */
+-	/* Disable IOC3 and relinquish */
 -	pci_disable_device(pdev);
 -
 -	/* Remove and free driver data */
--	mutex_lock(&ioc4_mutex);
--	list_del(&idd->idd_list);
--	mutex_unlock(&ioc4_mutex);
+-	down_write(&ioc3_devices_rwsem);
+-	list_del(&idd->list);
+-	up_write(&ioc3_devices_rwsem);
 -	kfree(idd);
 -}
 -
--static const struct pci_device_id ioc4_id_table[] = {
--	{PCI_VENDOR_ID_SGI, PCI_DEVICE_ID_SGI_IOC4, PCI_ANY_ID,
--	 PCI_ANY_ID, 0x0b4000, 0xFFFFFF},
+-static struct pci_device_id ioc3_id_table[] = {
+-	{PCI_VENDOR_ID_SGI, PCI_DEVICE_ID_SGI_IOC3, PCI_ANY_ID, PCI_ANY_ID},
 -	{0}
 -};
 -
--static struct pci_driver ioc4_driver = {
--	.name = "IOC4",
--	.id_table = ioc4_id_table,
--	.probe = ioc4_probe,
--	.remove = ioc4_remove,
+-static struct pci_driver ioc3_driver = {
+-	.name = "IOC3",
+-	.id_table = ioc3_id_table,
+-	.probe = ioc3_probe,
+-	.remove = ioc3_remove,
 -};
 -
--MODULE_DEVICE_TABLE(pci, ioc4_id_table);
+-MODULE_DEVICE_TABLE(pci, ioc3_id_table);
 -
 -/*********************
 - * Module management *
 - *********************/
 -
 -/* Module load */
--static int __init
--ioc4_init(void)
+-static int __init ioc3_init(void)
 -{
--	return pci_register_driver(&ioc4_driver);
+-	if (ia64_platform_is("sn2"))
+-		return pci_register_driver(&ioc3_driver);
+-	return -ENODEV;
 -}
 -
 -/* Module unload */
--static void __exit
--ioc4_exit(void)
+-static void __exit ioc3_exit(void)
 -{
--	/* Ensure ioc4_load_modules() has completed before exiting */
--	flush_work(&ioc4_load_modules_work);
--	pci_unregister_driver(&ioc4_driver);
+-	pci_unregister_driver(&ioc3_driver);
 -}
 -
--module_init(ioc4_init);
--module_exit(ioc4_exit);
+-module_init(ioc3_init);
+-module_exit(ioc3_exit);
 -
--MODULE_AUTHOR("Brent Casavant - Silicon Graphics, Inc. <bcasavan@sgi.com>");
--MODULE_DESCRIPTION("PCI driver master module for SGI IOC4 Base-IO Card");
+-MODULE_AUTHOR("Stanislaw Skowronek <skylark@linux-mips.org>");
+-MODULE_DESCRIPTION("PCI driver for SGI IOC3");
 -MODULE_LICENSE("GPL");
 -
--EXPORT_SYMBOL(ioc4_register_submodule);
--EXPORT_SYMBOL(ioc4_unregister_submodule);
-diff --git a/include/linux/ioc4.h b/include/linux/ioc4.h
-deleted file mode 100644
-index 51e2b9fb6372..000000000000
---- a/include/linux/ioc4.h
-+++ /dev/null
-@@ -1,184 +0,0 @@
--/*
-- * This file is subject to the terms and conditions of the GNU General Public
-- * License.  See the file "COPYING" in the main directory of this archive
-- * for more details.
-- *
-- * Copyright (c) 2005 Silicon Graphics, Inc.  All Rights Reserved.
-- */
--
--#ifndef _LINUX_IOC4_H
--#define _LINUX_IOC4_H
--
--#include <linux/interrupt.h>
--
--/***************
-- * Definitions *
-- ***************/
--
--/* Miscellaneous values inherent to hardware */
--
--#define IOC4_EXTINT_COUNT_DIVISOR 520	/* PCI clocks per COUNT tick */
--
--/***********************************
-- * Structures needed by subdrivers *
-- ***********************************/
--
--/* This structure fully describes the IOC4 miscellaneous registers which
-- * appear at bar[0]+0x00000 through bar[0]+0x0005c.  The corresponding
-- * PCI resource is managed by the main IOC4 driver because it contains
-- * registers of interest to many different IOC4 subdrivers.
-- */
--struct ioc4_misc_regs {
--	/* Miscellaneous IOC4 registers */
--	union ioc4_pci_err_addr_l {
--		uint32_t raw;
--		struct {
--			uint32_t valid:1;	/* Address captured */
--			uint32_t master_id:4;	/* Unit causing error
--						 * 0/1: Serial port 0 TX/RX
--						 * 2/3: Serial port 1 TX/RX
--						 * 4/5: Serial port 2 TX/RX
--						 * 6/7: Serial port 3 TX/RX
--						 * 8: ATA/ATAPI
--						 * 9-15: Undefined
--						 */
--			uint32_t mul_err:1;	/* Multiple errors occurred */
--			uint32_t addr:26;	/* Bits 31-6 of error addr */
--		} fields;
--	} pci_err_addr_l;
--	uint32_t pci_err_addr_h;	/* Bits 63-32 of error addr */
--	union ioc4_sio_int {
--		uint32_t raw;
--		struct {
--			uint8_t tx_mt:1;	/* TX ring buffer empty */
--			uint8_t rx_full:1;	/* RX ring buffer full */
--			uint8_t rx_high:1;	/* RX high-water exceeded */
--			uint8_t rx_timer:1;	/* RX timer has triggered */
--			uint8_t delta_dcd:1;	/* DELTA_DCD seen */
--			uint8_t delta_cts:1;	/* DELTA_CTS seen */
--			uint8_t intr_pass:1;	/* Interrupt pass-through */
--			uint8_t tx_explicit:1;	/* TX, MCW, or delay complete */
--		} fields[4];
--	} sio_ir;		/* Serial interrupt state */
--	union ioc4_other_int {
--		uint32_t raw;
--		struct {
--			uint32_t ata_int:1;	/* ATA port passthru */
--			uint32_t ata_memerr:1;	/* ATA halted by mem error */
--			uint32_t memerr:4;	/* Serial halted by mem err */
--			uint32_t kbd_int:1;	/* kbd/mouse intr asserted */
--			uint32_t reserved:16;	/* zero */
--			uint32_t rt_int:1;	/* INT_OUT section latch */
--			uint32_t gen_int:8;	/* Intr. from generic pins */
--		} fields;
--	} other_ir;		/* Other interrupt state */
--	union ioc4_sio_int sio_ies;	/* Serial interrupt enable set */
--	union ioc4_other_int other_ies;	/* Other interrupt enable set */
--	union ioc4_sio_int sio_iec;	/* Serial interrupt enable clear */
--	union ioc4_other_int other_iec;	/* Other interrupt enable clear */
--	union ioc4_sio_cr {
--		uint32_t raw;
--		struct {
--			uint32_t cmd_pulse:4;	/* Bytebus strobe width */
--			uint32_t arb_diag:3;	/* PCI bus requester */
--			uint32_t sio_diag_idle:1;	/* Active ser req? */
--			uint32_t ata_diag_idle:1;	/* Active ATA req? */
--			uint32_t ata_diag_active:1;	/* ATA req is winner */
--			uint32_t reserved:22;	/* zero */
--		} fields;
--	} sio_cr;
--	uint32_t unused1;
--	union ioc4_int_out {
--		uint32_t raw;
--		struct {
--			uint32_t count:16;	/* Period control */
--			uint32_t mode:3;	/* Output signal shape */
--			uint32_t reserved:11;	/* zero */
--			uint32_t diag:1;	/* Timebase control */
--			uint32_t int_out:1;	/* Current value */
--		} fields;
--	} int_out;		/* External interrupt output control */
--	uint32_t unused2;
--	union ioc4_gpcr {
--		uint32_t raw;
--		struct {
--			uint32_t dir:8;	/* Pin direction */
--			uint32_t edge:8;	/* Edge/level mode */
--			uint32_t reserved1:4;	/* zero */
--			uint32_t int_out_en:1;	/* INT_OUT enable */
--			uint32_t reserved2:11;	/* zero */
--		} fields;
--	} gpcr_s;		/* Generic PIO control set */
--	union ioc4_gpcr gpcr_c;	/* Generic PIO control clear */
--	union ioc4_gpdr {
--		uint32_t raw;
--		struct {
--			uint32_t gen_pin:8;	/* State of pins */
--			uint32_t reserved:24;
--		} fields;
--	} gpdr;			/* Generic PIO data */
--	uint32_t unused3;
--	union ioc4_gppr {
--		uint32_t raw;
--		struct {
--			uint32_t gen_pin:1;	/* Single pin state */
--			uint32_t reserved:31;
--		} fields;
--	} gppr[8];		/* Generic PIO pins */
--};
--
--/* Masks for GPCR DIR pins */
--#define IOC4_GPCR_DIR_0 0x01	/* External interrupt output */
--#define IOC4_GPCR_DIR_1 0x02	/* External interrupt input */
--#define IOC4_GPCR_DIR_2 0x04
--#define IOC4_GPCR_DIR_3 0x08	/* Keyboard/mouse presence */
--#define IOC4_GPCR_DIR_4 0x10	/* Ser. port 0 xcvr select (0=232, 1=422) */
--#define IOC4_GPCR_DIR_5 0x20	/* Ser. port 1 xcvr select (0=232, 1=422) */
--#define IOC4_GPCR_DIR_6 0x40	/* Ser. port 2 xcvr select (0=232, 1=422) */
--#define IOC4_GPCR_DIR_7 0x80	/* Ser. port 3 xcvr select (0=232, 1=422) */
--
--/* Masks for GPCR EDGE pins */
--#define IOC4_GPCR_EDGE_0 0x01
--#define IOC4_GPCR_EDGE_1 0x02	/* External interrupt input */
--#define IOC4_GPCR_EDGE_2 0x04
--#define IOC4_GPCR_EDGE_3 0x08
--#define IOC4_GPCR_EDGE_4 0x10
--#define IOC4_GPCR_EDGE_5 0x20
--#define IOC4_GPCR_EDGE_6 0x40
--#define IOC4_GPCR_EDGE_7 0x80
--
--#define IOC4_VARIANT_IO9	0x0900
--#define IOC4_VARIANT_PCI_RT	0x0901
--#define IOC4_VARIANT_IO10	0x1000
--
--/* One of these per IOC4 */
--struct ioc4_driver_data {
--	struct list_head idd_list;
--	unsigned long idd_bar0;
--	struct pci_dev *idd_pdev;
--	const struct pci_device_id *idd_pci_id;
--	struct ioc4_misc_regs __iomem *idd_misc_regs;
--	unsigned long count_period;
--	void *idd_serial_data;
--	unsigned int idd_variant;
--};
--
--/* One per submodule */
--struct ioc4_submodule {
--	struct list_head is_list;
--	char *is_name;
--	struct module *is_owner;
--	int (*is_probe) (struct ioc4_driver_data *);
--	int (*is_remove) (struct ioc4_driver_data *);
--};
--
--#define IOC4_NUM_CARDS		8	/* max cards per partition */
--
--/**********************************
-- * Functions needed by submodules *
-- **********************************/
--
--extern int ioc4_register_submodule(struct ioc4_submodule *);
--extern void ioc4_unregister_submodule(struct ioc4_submodule *);
--
--#endif				/* _LINUX_IOC4_H */
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index c842735a4f45..85e2ca611d42 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -1070,7 +1070,6 @@
- #define PCI_VENDOR_ID_SGI		0x10a9
- #define PCI_DEVICE_ID_SGI_IOC3		0x0003
- #define PCI_DEVICE_ID_SGI_LITHIUM	0x1002
--#define PCI_DEVICE_ID_SGI_IOC4		0x100a
- 
- #define PCI_VENDOR_ID_WINBOND		0x10ad
- #define PCI_DEVICE_ID_WINBOND_82C105	0x0105
+-EXPORT_SYMBOL_GPL(ioc3_register_submodule);
+-EXPORT_SYMBOL_GPL(ioc3_unregister_submodule);
+-EXPORT_SYMBOL_GPL(ioc3_ack);
+-EXPORT_SYMBOL_GPL(ioc3_gpcr_set);
+-EXPORT_SYMBOL_GPL(ioc3_disable);
+-EXPORT_SYMBOL_GPL(ioc3_enable);
 -- 
 2.20.1
 
