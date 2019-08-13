@@ -2,113 +2,105 @@ Return-Path: <SRS0=/G9W=WJ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 587C5C31E40
-	for <linux-scsi@archiver.kernel.org>; Tue, 13 Aug 2019 01:10:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8263BC433FF
+	for <linux-scsi@archiver.kernel.org>; Tue, 13 Aug 2019 01:35:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 188D32070C
-	for <linux-scsi@archiver.kernel.org>; Tue, 13 Aug 2019 01:10:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4E66B20665
+	for <linux-scsi@archiver.kernel.org>; Tue, 13 Aug 2019 01:35:46 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nifty.com header.i=@nifty.com header.b="FV0r+t/x"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="JNshO+kF";
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="2u2VmKMB"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726479AbfHMBKi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 12 Aug 2019 21:10:38 -0400
-Received: from condef-10.nifty.com ([202.248.20.75]:44537 "EHLO
-        condef-10.nifty.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726200AbfHMBKi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Aug 2019 21:10:38 -0400
-Received: from conssluserg-01.nifty.com ([10.126.8.80])by condef-10.nifty.com with ESMTP id x7D17D2i010957;
-        Tue, 13 Aug 2019 10:07:13 +0900
-Received: from mail-vk1-f179.google.com (mail-vk1-f179.google.com [209.85.221.179]) (authenticated)
-        by conssluserg-01.nifty.com with ESMTP id x7D176Mn007003;
-        Tue, 13 Aug 2019 10:07:07 +0900
-DKIM-Filter: OpenDKIM Filter v2.10.3 conssluserg-01.nifty.com x7D176Mn007003
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nifty.com;
-        s=dec2015msa; t=1565658427;
-        bh=L2h8Vjy+9Y09mIZApsXwsIOGlDr1pBAU/zwW1xEP40g=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=FV0r+t/xoyQLmuz2UDYkscN7ObVMkCWOksWupspNOfLUKXPjN2yEPK6vxvHZmspGY
-         7WiYNdb090oh5usm/+ZJKRKLOmFEGwQdoNnG4qaBFmJKm/vLVtG6Ecl5VVgEmnwJ2k
-         +bC1ACr0AKSRC+Irjv2kyzfLppI4yk53plPRnJGi/a6IyJkK7b0JqOz+k3qAV6BYcf
-         sztuXX/YGhsCBIY2dF3CaANg0SGd6DQFIWRyBmbYOX89s/pVDLi2nynHGiYxwg52Ex
-         iAgpXrNmu5kBXzmjTWAtTHPf5jw+MLm/FNz35LtmWCLSdO0C/VI3Pu46K+HEc8kFXY
-         MWp2sQwp3qR+A==
-X-Nifty-SrcIP: [209.85.221.179]
-Received: by mail-vk1-f179.google.com with SMTP id b64so21132641vke.13;
-        Mon, 12 Aug 2019 18:07:07 -0700 (PDT)
-X-Gm-Message-State: APjAAAVV+9Ln3Prvs5d5dO3KY2PuEGWj3I1d9X09Qq1vVgJM1D3KasEy
-        q+qfJ5vE563yqPA81OTb27U7RwBEz3ifs5ivHdw=
-X-Google-Smtp-Source: APXvYqyKjWR/Z/JcA6WmuFmnY8qTkln8CqolkATBJfU2C59DSnCk5mHe9UmWulyW2+MWtzJgbOu31LayBPnAgY6UAmU=
-X-Received: by 2002:a1f:93cd:: with SMTP id v196mr7101948vkd.84.1565658425832;
- Mon, 12 Aug 2019 18:07:05 -0700 (PDT)
+        id S1726483AbfHMBfq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 12 Aug 2019 21:35:46 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:47266 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726296AbfHMBfp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Aug 2019 21:35:45 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7D1XstV022366;
+        Tue, 13 Aug 2019 01:35:41 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : references : date : in-reply-to : message-id : mime-version :
+ content-type; s=corp-2019-08-05;
+ bh=ejA48uEQzYmORQGanqKVrj3GWtYbx8NKxcylFPsgW/k=;
+ b=JNshO+kFvImDrzL4iFLlXmVz7iAPIpgMoEHNqdV+dVr9sbbJjtwo0JdK3e9WNAoqhkhM
+ nXNYuAi4H1QrwZ86cEOQgFopi+Pv2d6xU61WmdbK/6Gglj29t+IcRia2DQ+oEo38bbhP
+ RcFA0dVBzsE+B+tW6+G370HMUY1N7yMec9IC6M89wHGZreW50IodWtsJS4uV0kGcPOnc
+ /f2xFUOPoj6NNmSKVOFmYi61dA7kHgSZ0RbGSSedgETPHQTr/r1bPe9vZaUFsGDGo1Aq
+ 5Qf7TR/TpOUCPr+ydV9r2Pf5+1chJr5iBuBTecBMkb+LV0Sl6JqZvF5J0DCVULi0xlTx Ug== 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : references : date : in-reply-to : message-id : mime-version :
+ content-type; s=corp-2018-07-02;
+ bh=ejA48uEQzYmORQGanqKVrj3GWtYbx8NKxcylFPsgW/k=;
+ b=2u2VmKMBLlWwGNmmfHktkidIpYwfWyJe2Y2PgtnU7H8nnPnJX1sxMhqreeJQN8EmOeNz
+ LVAOPMYQ1mxVx0aU+qLCZdJ4bynzod1YQbgjmjW9Kas/5YkCuor4TnGvXtEWq4CD+gq0
+ 0924baouUah2HZudp6gRwEhYdcgM06PoVBIkE4WU+EwWPr6DQmAmFIAwfeHmxewJNAvp
+ zPPp6ioizkn+gtVTiNzEQkRs3rnNka4Nq1+ipG1rDpxkr6JftGgulykarFJ9IjPCtiPY
+ iNB1NaIHWrsPiZwRmQV4M/ok4X/i6uFpoTp3Oo2NPoVpDD/te2Ol1zr2SeTXQTbBe1BF CA== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 2u9nvp318n-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 13 Aug 2019 01:35:41 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7D1XBTI065976;
+        Tue, 13 Aug 2019 01:35:41 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3020.oracle.com with ESMTP id 2u9n9hjabq-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 13 Aug 2019 01:35:40 +0000
+Received: from abhmp0022.oracle.com (abhmp0022.oracle.com [141.146.116.28])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x7D1ZdWl001141;
+        Tue, 13 Aug 2019 01:35:39 GMT
+Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 12 Aug 2019 18:35:38 -0700
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        linux-scsi@vger.kernel.org
+Subject: Re: [PATCH v2 00/58] qla2xxx patches for kernel v5.4
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+References: <20190809030219.11296-1-bvanassche@acm.org>
+Date:   Mon, 12 Aug 2019 21:35:36 -0400
+In-Reply-To: <20190809030219.11296-1-bvanassche@acm.org> (Bart Van Assche's
+        message of "Thu, 8 Aug 2019 20:01:21 -0700")
+Message-ID: <yq1o90t979z.fsf@oracle.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
 MIME-Version: 1.0
-References: <20190809002104.18599-1-stancheff@cray.com> <20190809002104.18599-2-stancheff@cray.com>
- <CAK7LNAScm9P+QMZiqqSQnOoPsN54OTcTGpaDgxTbjJ_knoeGhA@mail.gmail.com> <CAJ48U8Xp40is+R1dMW8sXq77ZS5D_h+hHte5Mq5eOrtpb41Qxw@mail.gmail.com>
-In-Reply-To: <CAJ48U8Xp40is+R1dMW8sXq77ZS5D_h+hHte5Mq5eOrtpb41Qxw@mail.gmail.com>
-From:   Masahiro Yamada <yamada.masahiro@socionext.com>
-Date:   Tue, 13 Aug 2019 10:06:29 +0900
-X-Gmail-Original-Message-ID: <CAK7LNAT5OVcw9tJtaR8VE_JEemAzkqV6FeSHPEy38wotxjhkZg@mail.gmail.com>
-Message-ID: <CAK7LNAT5OVcw9tJtaR8VE_JEemAzkqV6FeSHPEy38wotxjhkZg@mail.gmail.com>
-Subject: Re: [PATCH 1/1] kbuild: recursive build of external kernel modules
-To:     Shaun Tancheff <shaun@tancheff.com>
-Cc:     Shaun Tancheff <stancheff@cray.com>,
-        Linux Kbuild mailing list <linux-kbuild@vger.kernel.org>,
-        Joe Lawrence <joe.lawrence@redhat.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Michal Marek <michal.lkml@markovi.net>,
-        Shuah Khan <shuah@kernel.org>,
-        Thomas Renninger <trenn@suse.com>,
-        "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux PM mailing list <linux-pm@vger.kernel.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9347 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1906280000 definitions=main-1908130014
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9347 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1906280000
+ definitions=main-1908130014
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Aug 13, 2019 at 2:34 AM Shaun Tancheff <shaun@tancheff.com> wrote:
->
-> On Mon, Aug 12, 2019 at 10:24 AM Masahiro Yamada
-> <yamada.masahiro@socionext.com> wrote:
-> >
-> > On Fri, Aug 9, 2019 at 9:21 AM Shaun Tancheff <shaun@tancheff.com> wrote:
-> > >
-> > > When building a tree of external modules stage 2 fails
-> > > silently as the root modules.order is empty.
-> > >
-> > > Modify the modules.order location to be fixed to the
-> > > root when KBUILD_EXTMOD is specified and write all
-> > > module paths to the single modules.order file.
-> >
-> > Could you try v5.3-rc4 please?
->
-> So it seems we are using 'subdir-m' but that is now gone?
->
-> Is there a recommend pattern for backward compatibility?
->
-> Thanks!
 
+Bart,
 
-Please convert
+> The patches in this series improve the robustness of the QLogic Fibre
+> Channel initiator and target drivers. These patches are a result of
+> manual code inspection, analysis of Coverity reports and stress
+> testing of these two drivers. Please consider these patches for kernel
+> version v5.4.
 
-subdir-m += dir1
-subdir-m += dir2
-
-into
-
-obj-m += dir1/
-obj-m += dir2/
-
-
-Thanks.
+Applied to 5.4/scsi-queue. Thanks you!
 
 -- 
-Best Regards
-Masahiro Yamada
+Martin K. Petersen	Oracle Linux Engineering
