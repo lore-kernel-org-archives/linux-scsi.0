@@ -2,74 +2,108 @@ Return-Path: <SRS0=/G9W=WJ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58927C433FF
-	for <linux-scsi@archiver.kernel.org>; Tue, 13 Aug 2019 18:01:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0ECACC433FF
+	for <linux-scsi@archiver.kernel.org>; Tue, 13 Aug 2019 18:16:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 37BE92064A
-	for <linux-scsi@archiver.kernel.org>; Tue, 13 Aug 2019 18:01:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DB8CF20843
+	for <linux-scsi@archiver.kernel.org>; Tue, 13 Aug 2019 18:16:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1565720177;
+	bh=KFGb4inUwmdp09B/JR/4sp+e08T3Gp49yKCza4VYuEo=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=LE7OxlprDbicUg4uv6iHKDx40TltrfDXU7cBbSQ20M+077QXjW3biLF4vETXJxUDS
+	 QsY/nyflk2SQ85APEC2ij4c4AJLf0qa9kGNTKLh5KrNlTdCkJ3bEphGkCWxR5opKjU
+	 9znNr7BgivwQeT4GK0K2gR+S6cq40YWdI5v0xqNo=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727960AbfHMSBR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 13 Aug 2019 14:01:17 -0400
-Received: from youngberry.canonical.com ([91.189.89.112]:38953 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726363AbfHMSBR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Aug 2019 14:01:17 -0400
-Received: from 1.general.cking.uk.vpn ([10.172.193.212] helo=localhost)
-        by youngberry.canonical.com with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
-        (Exim 4.76)
-        (envelope-from <colin.king@canonical.com>)
-        id 1hxb6f-0007FU-U5; Tue, 13 Aug 2019 18:01:14 +0000
-From:   Colin King <colin.king@canonical.com>
-To:     Jianyun Li <jyli@marvell.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: mvumi: fix 32 bit shift of a u32 value
-Date:   Tue, 13 Aug 2019 19:01:13 +0100
-Message-Id: <20190813180113.14245-1-colin.king@canonical.com>
-X-Mailer: git-send-email 2.20.1
+        id S1728373AbfHMSQO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 13 Aug 2019 14:16:14 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60180 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725923AbfHMSQO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 13 Aug 2019 14:16:14 -0400
+Received: from localhost (83-86-89-107.cable.dynamic.v4.ziggo.nl [83.86.89.107])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 7306320665;
+        Tue, 13 Aug 2019 18:16:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1565720172;
+        bh=KFGb4inUwmdp09B/JR/4sp+e08T3Gp49yKCza4VYuEo=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=S5ZA/7/QTECFNxdekrGgAs57VdnY7FFpSJwRTs1ey0HdWvEn7/Mo3GOWgYoeno4b+
+         8g85/BUXqqJaeRTZK60UvxG4N4m7ksbIxivzkGsvImvXh2e8MBJVJBxE13f2qCcHfN
+         bxGi6UBqSR3kBqFX834y96iB7tokJXC+giZknIzc=
+Date:   Tue, 13 Aug 2019 20:16:10 +0200
+From:   Greg KH <gregkh@linuxfoundation.org>
+To:     Matthias Maennich <maennich@google.com>
+Cc:     linux-kernel@vger.kernel.org, maco@android.com,
+        kernel-team@android.com, arnd@arndb.de, geert@linux-m68k.org,
+        hpa@zytor.com, jeyu@kernel.org, joel@joelfernandes.org,
+        kstewart@linuxfoundation.org, linux-arch@vger.kernel.org,
+        linux-kbuild@vger.kernel.org, linux-m68k@lists.linux-m68k.org,
+        linux-modules@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-usb@vger.kernel.org, lucas.de.marchi@gmail.com,
+        maco@google.com, michal.lkml@markovi.net, mingo@redhat.com,
+        oneukum@suse.com, pombredanne@nexb.com, sam@ravnborg.org,
+        sboyd@codeaurora.org, sspatil@google.com,
+        stern@rowland.harvard.edu, tglx@linutronix.de,
+        usb-storage@lists.one-eyed-alien.net, x86@kernel.org,
+        yamada.masahiro@socionext.com,
+        Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+        Michael Ellerman <mpe@ellerman.id.au>
+Subject: Re: [PATCH v2 06/10] export: allow definition default namespaces in
+ Makefiles or sources
+Message-ID: <20190813181610.GC2378@kroah.com>
+References: <20180716122125.175792-1-maco@android.com>
+ <20190813121733.52480-1-maennich@google.com>
+ <20190813121733.52480-7-maennich@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190813121733.52480-7-maennich@google.com>
+User-Agent: Mutt/1.12.1 (2019-06-15)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Colin Ian King <colin.king@canonical.com>
+On Tue, Aug 13, 2019 at 01:17:03PM +0100, Matthias Maennich wrote:
+> To avoid excessive usage of EXPORT_SYMBOL_NS(sym, MY_NAMESPACE), where
+> MY_NAMESPACE will always be the namespace we are exporting to, allow
+> exporting all definitions of EXPORT_SYMBOL() and friends by defining
+> DEFAULT_SYMBOL_NAMESPACE.
+> 
+> For example, to export all symbols defined in usb-common into the
+> namespace USB_COMMON, add a line like this to drivers/usb/common/Makefile:
+> 
+>   ccflags-y += -DDEFAULT_SYMBOL_NAMESPACE=USB_COMMON
 
-Currently the top 32 bits of a 64 bit address is being calculated
-by shifting a u32 twice by 16 bits and then being cast into a 64
-bit address.  Shifting a u32 twice by 16 bits always ends up with
-a zero.  Fix this by casting the u32 to a 64 bit address first
-and then shifting it 32 bits.
+I thought we were trying to get away from cflags :(
 
-Addresses-Coverity: ("Operands don't affect result")
-Fixes: f0c568a478f0 ("[SCSI] mvumi: Add Marvell UMI driver")
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/scsi/mvumi.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> That is equivalent to changing all EXPORT_SYMBOL(sym) definitions to
+> EXPORT_SYMBOL_NS(sym, USB_COMMON). Subsequently all symbol namespaces
+> functionality will apply.
+> 
+> Another way of making use of this feature is to define the namespace
+> within source or header files similar to how TRACE_SYSTEM defines are
+> used:
+>   #undef DEFAULT_SYMBOL_NAMESPACE
+>   #define DEFAULT_SYMBOL_NAMESPACE USB_COMMON
+> 
+> Please note that, as opposed to TRACE_SYSTEM, DEFAULT_SYMBOL_NAMESPACE
+> has to be defined before including include/linux/export.h.
+> 
+> If DEFAULT_SYMBOL_NAMESPACE is defined, a symbol can still be exported
+> to another namespace by using EXPORT_SYMBOL_NS() and friends with
+> explicitly specifying the namespace.
 
-diff --git a/drivers/scsi/mvumi.c b/drivers/scsi/mvumi.c
-index 8906aceda4c4..62df69f1e71e 100644
---- a/drivers/scsi/mvumi.c
-+++ b/drivers/scsi/mvumi.c
-@@ -296,7 +296,7 @@ static void mvumi_delete_internal_cmd(struct mvumi_hba *mhba,
- 			sgd_getsz(mhba, m_sg, size);
- 
- 			phy_addr = (dma_addr_t) m_sg->baseaddr_l |
--				(dma_addr_t) ((m_sg->baseaddr_h << 16) << 16);
-+				   (dma_addr_t) m_sg->baseaddr_h << 32;
- 
- 			dma_free_coherent(&mhba->pdev->dev, size, cmd->data_buf,
- 								phy_addr);
--- 
-2.20.1
+Ok, good, hopefully the cflags stuff will not be the default for people.
 
+thanks,
+
+greg k-h
