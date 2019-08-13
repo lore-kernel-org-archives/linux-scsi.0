@@ -2,93 +2,86 @@ Return-Path: <SRS0=/G9W=WJ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2547C32750
-	for <linux-scsi@archiver.kernel.org>; Tue, 13 Aug 2019 15:27:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5401DC32757
+	for <linux-scsi@archiver.kernel.org>; Tue, 13 Aug 2019 15:37:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8F72C20844
-	for <linux-scsi@archiver.kernel.org>; Tue, 13 Aug 2019 15:27:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1565710042;
-	bh=HKhJdQ9xC644Yyxr4Mc48vaFAU0qEox8cqu8XFFdUAo=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=XAFfBSQi/INVm1ToGJ9mzOq/zjy3QtPSiUMpM+GvfGJzpbsQPF7Lk3cwZgSDTwCMp
-	 TN3K9JHuKhWUKWedKG44FqnmfFxJChPAvnAE5MxMbQfv9fr0unxeIy+bRN5uKRjuEr
-	 eQ95D2DhY8miad8Bvvxa1Q1HWoJAeB+6MjexJ4Nw=
+	by mail.kernel.org (Postfix) with ESMTP id 2A24A205F4
+	for <linux-scsi@archiver.kernel.org>; Tue, 13 Aug 2019 15:37:46 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NanX2O0W"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727466AbfHMP1R (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 13 Aug 2019 11:27:17 -0400
-Received: from mail.kernel.org ([198.145.29.99]:38458 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727038AbfHMP1R (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 13 Aug 2019 11:27:17 -0400
-Received: from localhost (83-86-89-107.cable.dynamic.v4.ziggo.nl [83.86.89.107])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 2A59920663;
-        Tue, 13 Aug 2019 15:27:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1565710036;
-        bh=HKhJdQ9xC644Yyxr4Mc48vaFAU0qEox8cqu8XFFdUAo=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=C9wRRvwg4CR0ZqATaS40VxceJXh+XAOEDYDVGMbuXihVxvIUQkOS08JVRAP6YHPxs
-         A60yBGejcNuFmn8CkV42ZGdG1mqrkf0dRFpXdsxC/TzSQwKAYgmXAuzsoA8n9D7t+N
-         9OZC8T3G5xnbzlqoLfgZRrVbg+EbQJmI3PlIRXe8=
-Date:   Tue, 13 Aug 2019 17:27:14 +0200
-From:   Greg KH <gregkh@linuxfoundation.org>
-To:     Matthias Maennich <maennich@google.com>
-Cc:     linux-kernel@vger.kernel.org, maco@android.com,
-        kernel-team@android.com, arnd@arndb.de, geert@linux-m68k.org,
-        hpa@zytor.com, jeyu@kernel.org, joel@joelfernandes.org,
-        kstewart@linuxfoundation.org, linux-arch@vger.kernel.org,
-        linux-kbuild@vger.kernel.org, linux-m68k@lists.linux-m68k.org,
-        linux-modules@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-usb@vger.kernel.org, lucas.de.marchi@gmail.com,
-        maco@google.com, michal.lkml@markovi.net, mingo@redhat.com,
-        oneukum@suse.com, pombredanne@nexb.com, sam@ravnborg.org,
-        sboyd@codeaurora.org, sspatil@google.com,
-        stern@rowland.harvard.edu, tglx@linutronix.de,
-        usb-storage@lists.one-eyed-alien.net, x86@kernel.org,
-        yamada.masahiro@socionext.com
-Subject: Re: [PATCH v2 04/10] modpost: add support for symbol namespaces
-Message-ID: <20190813152714.GC26138@kroah.com>
-References: <20180716122125.175792-1-maco@android.com>
- <20190813121733.52480-1-maennich@google.com>
- <20190813121733.52480-5-maennich@google.com>
+        id S1729367AbfHMPho (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 13 Aug 2019 11:37:44 -0400
+Received: from mail-pg1-f196.google.com ([209.85.215.196]:36522 "EHLO
+        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728535AbfHMPho (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Aug 2019 11:37:44 -0400
+Received: by mail-pg1-f196.google.com with SMTP id l21so51442192pgm.3;
+        Tue, 13 Aug 2019 08:37:44 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=BKzlr/8ZEUpY8BBXQWePFJGE1otrxYkP+Vuhs/bO5lk=;
+        b=NanX2O0WwgW2LdKOSmPZ1jf49xIfcawK8Rp0k01YwxB538jOwooXLq0K46gaaSPC+/
+         4ZQ2asX7n8uLEaBWBBas7ZrCy7/9qP7W48MTZK6+yp09Poss2MZqj4rlhxjzwMCJc4Pu
+         pB3gTMwZWlPU5zfate1SRiUBziFbW0IFTUJcYlix6Or77e9B2U9MdWcj3k/kXy/voL9b
+         Hyfw1Uzh8RrGdhUuZqSEnhmDNlUobZujp1JDuUN/8e5J3TLxmDzNMfatkdW+j4aGZZUU
+         4+bjLs3aYvWRqMedzkDtBx/+CSUS4A8QIZd5o5FSRjLrS+vtUBUDMg9830Dw1Zm5aUNc
+         N7uQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=BKzlr/8ZEUpY8BBXQWePFJGE1otrxYkP+Vuhs/bO5lk=;
+        b=OyXe8W/84Auy2HghBiwvZOpIv6RDDF8f7ZA3zN8n+AQlKZ1kySCdq7Hba1KhjX18Yd
+         TVQ2w+junJnkWQMQ/8P60FKcmHYSHE0i6zOQ87hu7Mvb3arh8TFYY2HAspb3wzhbduIA
+         +X2a/CpCOB6qkKAl5Eiz2ETjNgILrUp4Oziu7XqGkQMnHlektUOz8DJ5OKf06D3xaJc9
+         gs6rIysMrbFRlgN5AXq92P/h/cnEGjnAtHbQguz4otrClj2asaCaYvl8pXfv9SqhKVXD
+         zIuMlHlSDglzpA4mMXbBhk2cnfey1MXy05+6is3NSr8qat50REU7g8vU4O4HKkI0zLdx
+         EoZA==
+X-Gm-Message-State: APjAAAUbwCAfBKvvAbCCcywRpt/d74VEEgNEF6Y+S2bUWsXGBQWymD4B
+        8n1ysynvjTB23aBBzkjkyYbXsU9Y7xwwmzoR4tg=
+X-Google-Smtp-Source: APXvYqw70FiuYzR/lI2fYZGp64z2lcEN9nuBmA0Z8Xffe3srfFfnqXy3pR38nE0v32vUhEGt5uzfln1w4UYeJKJEpYw=
+X-Received: by 2002:aa7:8007:: with SMTP id j7mr41268115pfi.154.1565710663815;
+ Tue, 13 Aug 2019 08:37:43 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190813121733.52480-5-maennich@google.com>
-User-Agent: Mutt/1.12.1 (2019-06-15)
+References: <1565459703-30513-1-git-send-email-akinobu.mita@gmail.com>
+ <1565459703-30513-6-git-send-email-akinobu.mita@gmail.com> <e1ece602-b413-b391-c7c3-34a8e46254c4@gmail.com>
+In-Reply-To: <e1ece602-b413-b391-c7c3-34a8e46254c4@gmail.com>
+From:   Akinobu Mita <akinobu.mita@gmail.com>
+Date:   Wed, 14 Aug 2019 00:37:32 +0900
+Message-ID: <CAC5umyjjdi8QCw+Bi8hy+F6b9g0o8sqot9eWistW81yaBjAtDw@mail.gmail.com>
+Subject: Re: [PATCH v3 5/6] ledtrig-blk: add interface to stop and restart
+ polling disk stats
+To:     Jacek Anaszewski <jacek.anaszewski@gmail.com>
+Cc:     linux-block@vger.kernel.org, linux-leds@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
+        Frank Steiner <fsteiner-mail1@bio.ifi.lmu.de>,
+        Pavel Machek <pavel@ucw.cz>, Dan Murphy <dmurphy@ti.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Hannes Reinecke <hare@suse.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Aug 13, 2019 at 01:17:01PM +0100, Matthias Maennich wrote:
-> Add support for symbols that are exported into namespaces. For that,
-> extract any namespace suffix from the symbol name. In addition, emit a
-> warning whenever a module refers to an exported symbol without
-> explicitly importing the namespace that it is defined in. This patch
-> consistently adds the namespace suffix to symbol names exported into
-> Module.symvers.
-> 
-> Example warning emitted by modpost in case of the above violation:
-> 
->  WARNING: module ums-usbat uses symbol usb_stor_resume from namespace
->  USB_STORAGE, but does not import it.
-> 
-> Co-developed-by: Martijn Coenen <maco@android.com>
-> Signed-off-by: Martijn Coenen <maco@android.com>
-> Reviewed-by: Joel Fernandes (Google) <joel@joelfernandes.org>
-> Signed-off-by: Matthias Maennich <maennich@google.com>
-> ---
->  scripts/mod/modpost.c | 91 +++++++++++++++++++++++++++++++++++++------
->  scripts/mod/modpost.h |  7 ++++
->  2 files changed, 87 insertions(+), 11 deletions(-)
+2019=E5=B9=B48=E6=9C=8813=E6=97=A5(=E7=81=AB) 4:31 Jacek Anaszewski <jacek.=
+anaszewski@gmail.com>:
+>
+> Hi Akinobu,
+>
+> I don't see any vital reason to keep this change separately.
+> We're introducing new trigger, so please just squash it with
+> the patch 4/6.
 
-Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+OK.  I'll take care of renaming led to led_trig in the patch 3/6, too.
