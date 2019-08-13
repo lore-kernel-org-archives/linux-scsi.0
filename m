@@ -8,56 +8,57 @@ X-Spam-Status: No, score=-17.4 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
 	USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 92297C32750
-	for <linux-scsi@archiver.kernel.org>; Tue, 13 Aug 2019 12:19:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 935B3C41514
+	for <linux-scsi@archiver.kernel.org>; Tue, 13 Aug 2019 12:19:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 688132085A
-	for <linux-scsi@archiver.kernel.org>; Tue, 13 Aug 2019 12:19:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 67F0D20874
+	for <linux-scsi@archiver.kernel.org>; Tue, 13 Aug 2019 12:19:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="X/pgFG/T"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="A0rCIzO1"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727844AbfHMMTP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 13 Aug 2019 08:19:15 -0400
-Received: from mail-qk1-f201.google.com ([209.85.222.201]:51076 "EHLO
-        mail-qk1-f201.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727533AbfHMMTP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Aug 2019 08:19:15 -0400
-Received: by mail-qk1-f201.google.com with SMTP id e18so96054861qkl.17
-        for <linux-scsi@vger.kernel.org>; Tue, 13 Aug 2019 05:19:14 -0700 (PDT)
+        id S1728100AbfHMMTd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 13 Aug 2019 08:19:33 -0400
+Received: from mail-yb1-f201.google.com ([209.85.219.201]:34771 "EHLO
+        mail-yb1-f201.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728084AbfHMMTc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Aug 2019 08:19:32 -0400
+Received: by mail-yb1-f201.google.com with SMTP id i199so2486727yba.1
+        for <linux-scsi@vger.kernel.org>; Tue, 13 Aug 2019 05:19:31 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=date:in-reply-to:message-id:mime-version:references:subject:from:to
          :cc;
-        bh=52i5W7bwo5L4NKPi/t621ZC4mfXuxf76PQ3XmRwW6HM=;
-        b=X/pgFG/TYnO3wKM8nw/G0c4v0tOMmQdSnN8sjbDmuSgMHWrl6X+89yGWfc1zRmqGBm
-         2psEodSKm+/2j3izZcJSwh+do0lxOJ4IdJ919zTrnssGXYKHj74o5LYYGq9C8uPDHY5q
-         g2LiVJBFkP/CGURRmfNZIany5JG8mi2TMrG0Bd6uXJ7oNOJoL/pnInv0Qzjz7lymxdtT
-         GJKYSZXUWMP5I8obvV1nxyk8xIUK02USI2/gUQVi95NnK73bsBva9KSzKlQ5r01eUJZC
-         vFkcc1Qu8HnPfg8KB//WUh0W5FcntqIdFm+4BfszHkaidZELeMy4MwnDiZUvpNyAafnm
-         niNw==
+        bh=5NgEEOsuafidZLfBQW1+8uAN6YPDpjefZYyipohUb1w=;
+        b=A0rCIzO1HrKULIk+ltl79te8oL+yJKIRwx4UrVJHdwUX5yyp9GYs4dLvAbOJIpGdfe
+         HueqdJXhyRVPVVL2FD7vw9o8IFPjz8RV5MJFgd4D4QgTtlsXaiGnmkj+j5db4+GhrCeH
+         mGslTVn5M6Kcv88zBxM1Kts/OutRv5gJuzAhbPJMte99LBE2JnN3XcGXe+j+Odn7ZszO
+         MWmVH4oRFy2Iwj9q2XAHxuPIRFJcOw6YPazijDX0o/Xbxdkhjm3BS7GAUFGbobJbhgI5
+         uTLHjYkcDb/X4XeFDIsymMzyAmVcjMLbxWMLaOZrRKOBEl3e77UIqo9lAs2K+xAJ4PCq
+         UspA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:in-reply-to:message-id:mime-version
          :references:subject:from:to:cc;
-        bh=52i5W7bwo5L4NKPi/t621ZC4mfXuxf76PQ3XmRwW6HM=;
-        b=Y9ejqt/7CT2MOlyKZht8sS686K4l07ttb7V3LY9YYFz31+ujqRyp4joEqV4xOYN9ub
-         zFhTcyuDIesa46XoCcMCpUP6ZjuhaFPsLYEFc54GwIPpJRBeysxs3n9IdOk6LDNI+Ys9
-         dWpdVa5/Awvr62PbeCgw+UW9rs3K34LL5ImL1/x/ROYFjO5+Fms5HFgSJASoBSuvvRZb
-         POhmJ/1uhbWi9gnxfIho7ybHWK6L75MlSpzhJw4ztWHQJ0lPk5khJAW6oHEAk9FBjApt
-         rKY5aCo2CNrv8f0Mw6za+Vc6YgMdrHIlTZYiZ5tA76/Pz7+WSyMoHjDao819+Lf0cA8t
-         V8lA==
-X-Gm-Message-State: APjAAAWmXUBm8RqFHohZNBj2VggWSpXMKRPGc9izGfWYI6SHnU8TsFQv
-        pydboBpEPpEMkdXrLF7lVRBpc3xGT504eA==
-X-Google-Smtp-Source: APXvYqx4tXl8kJyrgPk73kSdFDxtYVeFJ3ZKPrk2o0B9NEEoRmlA/4IcV5D6ufbujg8Fb+w0iwWYKEEibfHjFw==
-X-Received: by 2002:a37:e306:: with SMTP id y6mr9040041qki.174.1565698753802;
- Tue, 13 Aug 2019 05:19:13 -0700 (PDT)
-Date:   Tue, 13 Aug 2019 13:16:59 +0100
+        bh=5NgEEOsuafidZLfBQW1+8uAN6YPDpjefZYyipohUb1w=;
+        b=JwbJhxdrn1RXaDZkUtwj0b30OsWhYVh3tahcQaoilS1Dh+rMgW1gjZZ61pGjviidJe
+         XLHqbBFL/3PM25TEBM1E+2lsXPyi3zUJcta8fV2qzhNMtG59P57jBs6mMJYz0SUbWlRb
+         EIq45he8b2tH8PfakZu7ZTk5RmpkghoxuGg6NlrC1EpcAtOKn85/p/ct0VqLFFhCPPeT
+         Bd9TKnh0O4UE29gXKOPSVoksKbpOYTTSW4m0yRNziCHJTD0LcW8WWQOolBg0VptGI6cc
+         P34EwYmA7JjgEUJrOyOlTcdfVULJy9r3D+lBAombOHmzQ+/OuV27Ir20euyAB/x/j4Ex
+         gzJA==
+X-Gm-Message-State: APjAAAUg2SZBAYc2K0MMgNx6sgZiq0Pl0mdbzHrDf0GZDkSDqeXRVTak
+        eG0MD09vtNPYn6llxa7XchVnCcWaY5Lp8w==
+X-Google-Smtp-Source: APXvYqzofTNz2fbZb+Pu/dK4amOg+sOn20B/5a6YQykBvqxFwzTuJhcNhOKlhNTjO07MWW5j+Mv9I/hAS9Au7A==
+X-Received: by 2002:a81:1d84:: with SMTP id d126mr25341335ywd.199.1565698770861;
+ Tue, 13 Aug 2019 05:19:30 -0700 (PDT)
+Date:   Tue, 13 Aug 2019 13:17:03 +0100
 In-Reply-To: <20190813121733.52480-1-maennich@google.com>
-Message-Id: <20190813121733.52480-3-maennich@google.com>
+Message-Id: <20190813121733.52480-7-maennich@google.com>
 Mime-Version: 1.0
 References: <20180716122125.175792-1-maco@android.com> <20190813121733.52480-1-maennich@google.com>
 X-Mailer: git-send-email 2.23.0.rc1.153.gdeed80330f-goog
-Subject: [PATCH v2 02/10] export: explicitly align struct kernel_symbol
+Subject: [PATCH v2 06/10] export: allow definition default namespaces in
+ Makefiles or sources
 From:   Matthias Maennich <maennich@google.com>
 To:     linux-kernel@vger.kernel.org, maco@android.com
 Cc:     kernel-team@android.com, maennich@google.com, arnd@arndb.de,
@@ -73,104 +74,65 @@ Cc:     kernel-team@android.com, maennich@google.com, arnd@arndb.de,
         stern@rowland.harvard.edu, tglx@linutronix.de,
         usb-storage@lists.one-eyed-alien.net, x86@kernel.org,
         yamada.masahiro@socionext.com,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Nicolas Pitre <nico@fluxnic.net>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Ard Biesheuvel <ard.biesheuvel@linaro.org>
+        Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+        Michael Ellerman <mpe@ellerman.id.au>
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This change allows growing struct kernel_symbol without wasting bytes to
-alignment. It also concretized the alignment of ksymtab entries if
-relative references are used for ksymtab entries.
+To avoid excessive usage of EXPORT_SYMBOL_NS(sym, MY_NAMESPACE), where
+MY_NAMESPACE will always be the namespace we are exporting to, allow
+exporting all definitions of EXPORT_SYMBOL() and friends by defining
+DEFAULT_SYMBOL_NAMESPACE.
 
-struct kernel_symbol was already implicitly being aligned to the word
-size, except on x86_64 and m68k, where it is aligned to 16 and 2 bytes,
-respectively.
+For example, to export all symbols defined in usb-common into the
+namespace USB_COMMON, add a line like this to drivers/usb/common/Makefile:
 
-As far as I can tell there is no requirement for aligning struct
-kernel_symbol to 16 bytes on x86_64, but gcc aligns structs to their
-size, and the linker aligns the custom __ksymtab sections to the largest
-data type contained within, so setting KSYM_ALIGN to 16 was necessary to
-stay consistent with the code generated for non-ASM EXPORT_SYMBOL(). Now
-that non-ASM EXPORT_SYMBOL() explicitly aligns to word size (8),
-KSYM_ALIGN is no longer necessary.
+  ccflags-y += -DDEFAULT_SYMBOL_NAMESPACE=USB_COMMON
 
-In case of relative references, the alignment has been changed
-accordingly to not waste space when adding new struct members.
+That is equivalent to changing all EXPORT_SYMBOL(sym) definitions to
+EXPORT_SYMBOL_NS(sym, USB_COMMON). Subsequently all symbol namespaces
+functionality will apply.
 
-As for m68k, struct kernel_symbol is aligned to 2 bytes even though the
-structure itself is 8 bytes; using a 4-byte alignment shouldn't hurt.
+Another way of making use of this feature is to define the namespace
+within source or header files similar to how TRACE_SYSTEM defines are
+used:
+  #undef DEFAULT_SYMBOL_NAMESPACE
+  #define DEFAULT_SYMBOL_NAMESPACE USB_COMMON
 
-I manually verified the output of the __ksymtab sections didn't change
-on x86, x86_64, arm, arm64 and m68k. As expected, the section contents
-didn't change, and the ELF section alignment only changed on x86_64 and
-m68k. Feedback from other archs more than welcome.
+Please note that, as opposed to TRACE_SYSTEM, DEFAULT_SYMBOL_NAMESPACE
+has to be defined before including include/linux/export.h.
 
-Co-developed-by: Martijn Coenen <maco@android.com>
-Signed-off-by: Martijn Coenen <maco@android.com>
+If DEFAULT_SYMBOL_NAMESPACE is defined, a symbol can still be exported
+to another namespace by using EXPORT_SYMBOL_NS() and friends with
+explicitly specifying the namespace.
+
+Suggested-by: Arnd Bergmann <arnd@arndb.de>
+Reviewed-by: Martijn Coenen <maco@android.com>
 Signed-off-by: Matthias Maennich <maennich@google.com>
 ---
- arch/m68k/include/asm/export.h | 1 -
- include/asm-generic/export.h   | 8 +++-----
- include/linux/export.h         | 3 ++-
- 3 files changed, 5 insertions(+), 7 deletions(-)
+ include/linux/export.h | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/arch/m68k/include/asm/export.h b/arch/m68k/include/asm/export.h
-index 0af20f48bd07..b53008b67ce1 100644
---- a/arch/m68k/include/asm/export.h
-+++ b/arch/m68k/include/asm/export.h
-@@ -1,3 +1,2 @@
--#define KSYM_ALIGN 2
- #define KCRC_ALIGN 2
- #include <asm-generic/export.h>
-diff --git a/include/asm-generic/export.h b/include/asm-generic/export.h
-index 294d6ae785d4..63f54907317b 100644
---- a/include/asm-generic/export.h
-+++ b/include/asm-generic/export.h
-@@ -4,15 +4,13 @@
- #ifndef KSYM_FUNC
- #define KSYM_FUNC(x) x
- #endif
--#ifdef CONFIG_64BIT
--#ifndef KSYM_ALIGN
-+#ifdef CONFIG_HAVE_ARCH_PREL32_RELOCATIONS
-+#define KSYM_ALIGN 4
-+#elif defined(CONFIG_64BIT)
- #define KSYM_ALIGN 8
--#endif
- #else
--#ifndef KSYM_ALIGN
- #define KSYM_ALIGN 4
- #endif
--#endif
- #ifndef KCRC_ALIGN
- #define KCRC_ALIGN 4
- #endif
 diff --git a/include/linux/export.h b/include/linux/export.h
-index fd8711ed9ac4..28a4d2150689 100644
+index 8e12e05444d1..1fb243abdbc4 100644
 --- a/include/linux/export.h
 +++ b/include/linux/export.h
-@@ -52,7 +52,7 @@ extern struct module __this_module;
- #define __KSYMTAB_ENTRY(sym, sec)					\
- 	__ADDRESSABLE(sym)						\
- 	asm("	.section \"___ksymtab" sec "+" #sym "\", \"a\"	\n"	\
--	    "	.balign	8					\n"	\
-+	    "	.balign 4					\n"	\
- 	    "__ksymtab_" #sym ":				\n"	\
- 	    "	.long	" #sym "- .				\n"	\
- 	    "	.long	__kstrtab_" #sym "- .			\n"	\
-@@ -66,6 +66,7 @@ struct kernel_symbol {
- #define __KSYMTAB_ENTRY(sym, sec)					\
- 	static const struct kernel_symbol __ksymtab_##sym		\
- 	__attribute__((section("___ksymtab" sec "+" #sym), used))	\
-+	__aligned(sizeof(void *))					\
- 	= { (unsigned long)&sym, __kstrtab_##sym }
+@@ -166,6 +166,12 @@ struct kernel_symbol {
+ #define __EXPORT_SYMBOL ___EXPORT_SYMBOL
+ #endif
  
- struct kernel_symbol {
++#ifdef DEFAULT_SYMBOL_NAMESPACE
++#undef __EXPORT_SYMBOL
++#define __EXPORT_SYMBOL(sym, sec)				\
++	__EXPORT_SYMBOL_NS(sym, sec, DEFAULT_SYMBOL_NAMESPACE)
++#endif
++
+ #define EXPORT_SYMBOL(sym) __EXPORT_SYMBOL(sym, "")
+ #define EXPORT_SYMBOL_GPL(sym) __EXPORT_SYMBOL(sym, "_gpl")
+ #define EXPORT_SYMBOL_GPL_FUTURE(sym) __EXPORT_SYMBOL(sym, "_gpl_future")
 -- 
 2.23.0.rc1.153.gdeed80330f-goog
 
