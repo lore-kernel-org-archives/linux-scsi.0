@@ -2,96 +2,68 @@ Return-Path: <SRS0=/G9W=WJ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8B53C433FF
-	for <linux-scsi@archiver.kernel.org>; Tue, 13 Aug 2019 18:21:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FDE4C32750
+	for <linux-scsi@archiver.kernel.org>; Tue, 13 Aug 2019 19:25:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A0FCB20843
-	for <linux-scsi@archiver.kernel.org>; Tue, 13 Aug 2019 18:21:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3738A2054F
+	for <linux-scsi@archiver.kernel.org>; Tue, 13 Aug 2019 19:25:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1565720518;
-	bh=Dl34f7AwP7olgqWclvkI5Nt8ce/2dgPR8Fqz5ci/QjM=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=MD1J6uCpBKYkv0X76VgDP46xVGdvKKav7ArM5Cx+jokWCquaurJAMynDpExfAHZDK
-	 b6hEAYm5xnHxwYDpmHsS1f5Cvmvn7N85KWBvnrUKELkaoDPBtGjDqnO+1AJ2Zy43Pf
-	 rrDNxwYCDwsxfChZ6kixNuaZhWo8ncFEjL3EFbLI=
+	s=default; t=1565724312;
+	bh=vNQ+joMke2dm7yF3Ggx7RmIRhAahrYe5k3lhvhMoqHI=;
+	h=Subject:From:In-Reply-To:References:Date:To:Cc:List-ID:From;
+	b=CYN0TmSfQEAYc7NyefzHSK2j6bzgV6vYDfndSZD6zDT0mMTPpm9CAQQjbZ4zfeYx4
+	 rqJEnIdl5l+VjP9Q/EbUf/O+rpGGprskXw0pOsRukCYe/g0oSR71Ji7oPw8Ovr1ba8
+	 eLXrmA88q4MdDazuVKfCpST5RwQKINo6sve/MF88=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728659AbfHMSVz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 13 Aug 2019 14:21:55 -0400
-Received: from mail.kernel.org ([198.145.29.99]:33146 "EHLO mail.kernel.org"
+        id S1726530AbfHMTZI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 13 Aug 2019 15:25:08 -0400
+Received: from mail.kernel.org ([198.145.29.99]:51266 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728284AbfHMSVz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 13 Aug 2019 14:21:55 -0400
-Received: from localhost (83-86-89-107.cable.dynamic.v4.ziggo.nl [83.86.89.107])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 18D1620578;
-        Tue, 13 Aug 2019 18:21:53 +0000 (UTC)
+        id S1726062AbfHMTZH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 13 Aug 2019 15:25:07 -0400
+Subject: Re: [GIT PULL] SCSI fixes for 5.3-rc4
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1565720513;
-        bh=Dl34f7AwP7olgqWclvkI5Nt8ce/2dgPR8Fqz5ci/QjM=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=MgmMjKHQ5IxNR5ueegGGB4JR79SBhElL0fzwmVq83V92rDggRVL6Krswzw6GlYtgW
-         Y8ChjTRBhadSgEAdb2Pz8sDDyz1AfLe04PIF/F3ccWIhoCdQlbHwrI3fswdXPPMSom
-         1XmlYPAW73VsWZ8kEw7P5FfFyuTeAfuSu5/MYRio=
-Date:   Tue, 13 Aug 2019 20:21:51 +0200
-From:   Greg KH <gregkh@linuxfoundation.org>
-To:     Matthias Maennich <maennich@google.com>
-Cc:     linux-kernel@vger.kernel.org, maco@android.com,
-        kernel-team@android.com, arnd@arndb.de, geert@linux-m68k.org,
-        hpa@zytor.com, jeyu@kernel.org, joel@joelfernandes.org,
-        kstewart@linuxfoundation.org, linux-arch@vger.kernel.org,
-        linux-kbuild@vger.kernel.org, linux-m68k@lists.linux-m68k.org,
-        linux-modules@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-usb@vger.kernel.org, lucas.de.marchi@gmail.com,
-        maco@google.com, michal.lkml@markovi.net, mingo@redhat.com,
-        oneukum@suse.com, pombredanne@nexb.com, sam@ravnborg.org,
-        sboyd@codeaurora.org, sspatil@google.com,
-        stern@rowland.harvard.edu, tglx@linutronix.de,
-        usb-storage@lists.one-eyed-alien.net, x86@kernel.org,
-        yamada.masahiro@socionext.com
-Subject: Re: [PATCH v2 07/10] modpost: add support for generating namespace
- dependencies
-Message-ID: <20190813182151.GF2378@kroah.com>
-References: <20180716122125.175792-1-maco@android.com>
- <20190813121733.52480-1-maennich@google.com>
- <20190813121733.52480-8-maennich@google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190813121733.52480-8-maennich@google.com>
-User-Agent: Mutt/1.12.1 (2019-06-15)
+        s=default; t=1565724307;
+        bh=vNQ+joMke2dm7yF3Ggx7RmIRhAahrYe5k3lhvhMoqHI=;
+        h=From:In-Reply-To:References:Date:To:Cc:From;
+        b=ST24tBVW3by8A7O9v5VdoRi+7Rz0W3ZBYRr461wtNP1AFosVX/X6/FHfx7I5cgDwq
+         OVp0sd/xMSZsdu/TJe7JkF3NKC85EwpBBQy6+d8fsJ2PrH7l1qJ3/p5eU9vSTn2s2S
+         BIjKvKmmuNPQ++S4o+nFg04Uplri+4lxFwH2zefo=
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <1565691473.3371.4.camel@HansenPartnership.com>
+References: <1565691473.3371.4.camel@HansenPartnership.com>
+X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
+X-PR-Tracked-Message-Id: <1565691473.3371.4.camel@HansenPartnership.com>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+X-PR-Tracked-Commit-Id: a86c71ba3022331f79662d7f12d1b25188c7e377
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 60a8db790255a6bebcdc41d97e8084a440398206
+Message-Id: <156572430747.27765.2413663810950001658.pr-tracker-bot@kernel.org>
+Date:   Tue, 13 Aug 2019 19:25:07 +0000
+To:     James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Aug 13, 2019 at 01:17:04PM +0100, Matthias Maennich wrote:
-> This patch adds an option to modpost to generate a <module>.ns_deps file
-> per module, containing the namespace dependencies for that module.
-> 
-> E.g. if the linked module my-module.ko would depend on the symbol
-> myfunc.MY_NS in the namespace MY_NS, the my-module.ns_deps file created
-> by modpost would contain the entry MY_NS to express the namespace
-> dependency of my-module imposed by using the symbol myfunc.
-> 
-> These files can subsequently be used by static analysis tools (like
-> coccinelle scripts) to address issues with missing namespace imports. A
-> later patch of this series will introduce such a script 'nsdeps' and a
-> corresponding make target to automatically add missing
-> MODULE_IMPORT_NS() definitions to the module's sources. For that it uses
-> the information provided in the generated .ns_deps files.
-> 
-> Co-developed-by: Martijn Coenen <maco@android.com>
-> Signed-off-by: Martijn Coenen <maco@android.com>
-> Signed-off-by: Matthias Maennich <maennich@google.com>
-> ---
->  scripts/mod/modpost.c | 61 +++++++++++++++++++++++++++++++++++++++----
->  scripts/mod/modpost.h |  2 ++
->  2 files changed, 58 insertions(+), 5 deletions(-)
+The pull request you sent on Tue, 13 Aug 2019 12:17:53 +0200:
 
-Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/60a8db790255a6bebcdc41d97e8084a440398206
+
+Thank you!
+
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.wiki.kernel.org/userdoc/prtracker
