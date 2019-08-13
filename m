@@ -2,68 +2,113 @@ Return-Path: <SRS0=/G9W=WJ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B9FFC433FF
-	for <linux-scsi@archiver.kernel.org>; Tue, 13 Aug 2019 00:35:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 587C5C31E40
+	for <linux-scsi@archiver.kernel.org>; Tue, 13 Aug 2019 01:10:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CD5722067D
-	for <linux-scsi@archiver.kernel.org>; Tue, 13 Aug 2019 00:35:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 188D32070C
+	for <linux-scsi@archiver.kernel.org>; Tue, 13 Aug 2019 01:10:39 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=nifty.com header.i=@nifty.com header.b="FV0r+t/x"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726483AbfHMAfP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 12 Aug 2019 20:35:15 -0400
-Received: from smtp.infotech.no ([82.134.31.41]:39181 "EHLO smtp.infotech.no"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726453AbfHMAfP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 12 Aug 2019 20:35:15 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 216EC2041D7;
-        Tue, 13 Aug 2019 02:35:14 +0200 (CEST)
-X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
-Received: from smtp.infotech.no ([127.0.0.1])
-        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id J0FRvjbGiMTA; Tue, 13 Aug 2019 02:35:12 +0200 (CEST)
-Received: from [192.168.48.23] (host-23-251-188-50.dyn.295.ca [23.251.188.50])
-        by smtp.infotech.no (Postfix) with ESMTPA id C1C56204150;
-        Tue, 13 Aug 2019 02:35:11 +0200 (CEST)
-Reply-To: dgilbert@interlog.com
-Subject: Re: [PATCH v3 04/20] sg: rework sg_poll(), minor changes
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
-        jejb@linux.vnet.ibm.com, hare@suse.de, bvanassche@acm.org
-References: <20190807114252.2565-1-dgilbert@interlog.com>
- <20190807114252.2565-5-dgilbert@interlog.com>
- <20190812142312.GD8105@infradead.org>
-From:   Douglas Gilbert <dgilbert@interlog.com>
-Message-ID: <52330743-f99e-a3a6-d840-4ea111ad29d8@interlog.com>
-Date:   Mon, 12 Aug 2019 20:35:10 -0400
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        id S1726479AbfHMBKi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 12 Aug 2019 21:10:38 -0400
+Received: from condef-10.nifty.com ([202.248.20.75]:44537 "EHLO
+        condef-10.nifty.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726200AbfHMBKi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Aug 2019 21:10:38 -0400
+Received: from conssluserg-01.nifty.com ([10.126.8.80])by condef-10.nifty.com with ESMTP id x7D17D2i010957;
+        Tue, 13 Aug 2019 10:07:13 +0900
+Received: from mail-vk1-f179.google.com (mail-vk1-f179.google.com [209.85.221.179]) (authenticated)
+        by conssluserg-01.nifty.com with ESMTP id x7D176Mn007003;
+        Tue, 13 Aug 2019 10:07:07 +0900
+DKIM-Filter: OpenDKIM Filter v2.10.3 conssluserg-01.nifty.com x7D176Mn007003
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nifty.com;
+        s=dec2015msa; t=1565658427;
+        bh=L2h8Vjy+9Y09mIZApsXwsIOGlDr1pBAU/zwW1xEP40g=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=FV0r+t/xoyQLmuz2UDYkscN7ObVMkCWOksWupspNOfLUKXPjN2yEPK6vxvHZmspGY
+         7WiYNdb090oh5usm/+ZJKRKLOmFEGwQdoNnG4qaBFmJKm/vLVtG6Ecl5VVgEmnwJ2k
+         +bC1ACr0AKSRC+Irjv2kyzfLppI4yk53plPRnJGi/a6IyJkK7b0JqOz+k3qAV6BYcf
+         sztuXX/YGhsCBIY2dF3CaANg0SGd6DQFIWRyBmbYOX89s/pVDLi2nynHGiYxwg52Ex
+         iAgpXrNmu5kBXzmjTWAtTHPf5jw+MLm/FNz35LtmWCLSdO0C/VI3Pu46K+HEc8kFXY
+         MWp2sQwp3qR+A==
+X-Nifty-SrcIP: [209.85.221.179]
+Received: by mail-vk1-f179.google.com with SMTP id b64so21132641vke.13;
+        Mon, 12 Aug 2019 18:07:07 -0700 (PDT)
+X-Gm-Message-State: APjAAAVV+9Ln3Prvs5d5dO3KY2PuEGWj3I1d9X09Qq1vVgJM1D3KasEy
+        q+qfJ5vE563yqPA81OTb27U7RwBEz3ifs5ivHdw=
+X-Google-Smtp-Source: APXvYqyKjWR/Z/JcA6WmuFmnY8qTkln8CqolkATBJfU2C59DSnCk5mHe9UmWulyW2+MWtzJgbOu31LayBPnAgY6UAmU=
+X-Received: by 2002:a1f:93cd:: with SMTP id v196mr7101948vkd.84.1565658425832;
+ Mon, 12 Aug 2019 18:07:05 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20190812142312.GD8105@infradead.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-CA
-Content-Transfer-Encoding: 7bit
+References: <20190809002104.18599-1-stancheff@cray.com> <20190809002104.18599-2-stancheff@cray.com>
+ <CAK7LNAScm9P+QMZiqqSQnOoPsN54OTcTGpaDgxTbjJ_knoeGhA@mail.gmail.com> <CAJ48U8Xp40is+R1dMW8sXq77ZS5D_h+hHte5Mq5eOrtpb41Qxw@mail.gmail.com>
+In-Reply-To: <CAJ48U8Xp40is+R1dMW8sXq77ZS5D_h+hHte5Mq5eOrtpb41Qxw@mail.gmail.com>
+From:   Masahiro Yamada <yamada.masahiro@socionext.com>
+Date:   Tue, 13 Aug 2019 10:06:29 +0900
+X-Gmail-Original-Message-ID: <CAK7LNAT5OVcw9tJtaR8VE_JEemAzkqV6FeSHPEy38wotxjhkZg@mail.gmail.com>
+Message-ID: <CAK7LNAT5OVcw9tJtaR8VE_JEemAzkqV6FeSHPEy38wotxjhkZg@mail.gmail.com>
+Subject: Re: [PATCH 1/1] kbuild: recursive build of external kernel modules
+To:     Shaun Tancheff <shaun@tancheff.com>
+Cc:     Shaun Tancheff <stancheff@cray.com>,
+        Linux Kbuild mailing list <linux-kbuild@vger.kernel.org>,
+        Joe Lawrence <joe.lawrence@redhat.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Michal Marek <michal.lkml@markovi.net>,
+        Shuah Khan <shuah@kernel.org>,
+        Thomas Renninger <trenn@suse.com>,
+        "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux PM mailing list <linux-pm@vger.kernel.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2019-08-12 10:23 a.m., Christoph Hellwig wrote:
-> On Wed, Aug 07, 2019 at 01:42:36PM +0200, Douglas Gilbert wrote:
->> Re-arrange code in sg_poll(). Rename sg_read_oxfer() to
->> sg_rd_append(). In sg_start_req() rename rw to r0w.
->> Plus associated changes demanded by checkpatch.pl
-> 
-> r0w seems like a really odd variably name that doesn't help
-> readability.  Also all these changes seem independent from each
-> other to me, so they should be split into multiple patches.
+On Tue, Aug 13, 2019 at 2:34 AM Shaun Tancheff <shaun@tancheff.com> wrote:
+>
+> On Mon, Aug 12, 2019 at 10:24 AM Masahiro Yamada
+> <yamada.masahiro@socionext.com> wrote:
+> >
+> > On Fri, Aug 9, 2019 at 9:21 AM Shaun Tancheff <shaun@tancheff.com> wrote:
+> > >
+> > > When building a tree of external modules stage 2 fails
+> > > silently as the root modules.order is empty.
+> > >
+> > > Modify the modules.order location to be fixed to the
+> > > root when KBUILD_EXTMOD is specified and write all
+> > > module paths to the single modules.order file.
+> >
+> > Could you try v5.3-rc4 please?
+>
+> So it seems we are using 'subdir-m' but that is now gone?
+>
+> Is there a recommend pattern for backward compatibility?
+>
+> Thanks!
 
-When I see a bool called "rw" I wonder whether true means write
-or read. When I see a bool called "r0w" then I would guess
-false means read. Maybe it's just me ...
 
-Doug Gilbert
+Please convert
 
+subdir-m += dir1
+subdir-m += dir2
+
+into
+
+obj-m += dir1/
+obj-m += dir2/
+
+
+Thanks.
+
+-- 
+Best Regards
+Masahiro Yamada
