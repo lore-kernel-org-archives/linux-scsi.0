@@ -2,91 +2,107 @@ Return-Path: <SRS0=/G9W=WJ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE179C32750
-	for <linux-scsi@archiver.kernel.org>; Tue, 13 Aug 2019 13:12:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C1D59C433FF
+	for <linux-scsi@archiver.kernel.org>; Tue, 13 Aug 2019 13:19:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B332320840
-	for <linux-scsi@archiver.kernel.org>; Tue, 13 Aug 2019 13:12:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1565701975;
-	bh=L4V4NnUCcPwkaHDuIEzj1wBMHu2rN4+F8P2KbW0qMcg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=WOlWDCu6RwLLE75SZCCybuk2NJAzCaE798WpK8AYfZFVGD5b8twa2gM4V664xGxFk
-	 wwplVU8pnHxowmGy3CaaM2hWjLlU4ckPZyg4RXLtcuDR0ViJvZ2UeuibpMdvt4Nz2/
-	 v0XBHK6MOsYdzD5j4DLItWOUz1QKF/9E73Zdbqbw=
+	by mail.kernel.org (Postfix) with ESMTP id 97F4C20840
+	for <linux-scsi@archiver.kernel.org>; Tue, 13 Aug 2019 13:19:29 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="kKYKcwkW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728981AbfHMNMw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 13 Aug 2019 09:12:52 -0400
-Received: from mail.kernel.org ([198.145.29.99]:45022 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727607AbfHMNMw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 13 Aug 2019 09:12:52 -0400
-Received: from localhost (83-86-89-107.cable.dynamic.v4.ziggo.nl [83.86.89.107])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 4E6292067D;
-        Tue, 13 Aug 2019 13:12:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1565701970;
-        bh=L4V4NnUCcPwkaHDuIEzj1wBMHu2rN4+F8P2KbW0qMcg=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=NTiK1YkN0iFfcQd4shHsoKiVF/OhIISMCpuTLiTGe9E+xQeltJ7AcCGIfbp2WCogB
-         u2DT4EcrhjTFu7WQYB/giay3KFFnIEK8gsgpgM9Pk3RknQpfAigaK//w01ZKYXM+go
-         lyAlKlFL1ZemHIDcOh1IKMUykV5UOO/cFoLKMG1o=
-Date:   Tue, 13 Aug 2019 15:12:48 +0200
-From:   Greg KH <gregkh@linuxfoundation.org>
-To:     Matthias Maennich <maennich@google.com>
-Cc:     linux-kernel@vger.kernel.org, maco@android.com,
-        kernel-team@android.com, arnd@arndb.de, geert@linux-m68k.org,
-        hpa@zytor.com, jeyu@kernel.org, joel@joelfernandes.org,
-        kstewart@linuxfoundation.org, linux-arch@vger.kernel.org,
-        linux-kbuild@vger.kernel.org, linux-m68k@lists.linux-m68k.org,
-        linux-modules@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-usb@vger.kernel.org, lucas.de.marchi@gmail.com,
-        maco@google.com, michal.lkml@markovi.net, mingo@redhat.com,
-        oneukum@suse.com, pombredanne@nexb.com, sam@ravnborg.org,
-        sboyd@codeaurora.org, sspatil@google.com,
-        stern@rowland.harvard.edu, tglx@linutronix.de,
-        usb-storage@lists.one-eyed-alien.net, x86@kernel.org,
-        yamada.masahiro@socionext.com
-Subject: Re: [PATCH v2 09/10] usb-storage: remove single-use define for
- debugging
-Message-ID: <20190813131248.GB16399@kroah.com>
-References: <20180716122125.175792-1-maco@android.com>
- <20190813121733.52480-1-maennich@google.com>
- <20190813121733.52480-10-maennich@google.com>
- <20190813124259.GC14284@kroah.com>
+        id S1729028AbfHMNTZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 13 Aug 2019 09:19:25 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:39030 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728416AbfHMNTZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Aug 2019 09:19:25 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7DDEOUi005488;
+        Tue, 13 Aug 2019 13:19:11 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=k7TTtVj2NunJ0RECYPXm4Q9yMluI1ySqxRPbjTuFfSc=;
+ b=kKYKcwkW7vRoJWzTqTE/HiDcA+NQYIkHTejMTDgTCnISFmhFK/t4tSol6FFQmo4qqv4F
+ NGitYrBuvjUaiwUi9RWsMsyy5FOZy5ysLIeSV5swOx+CIm7e31aOHOYspxjv8bKWCNKc
+ g67Rxs94k1V3hy7+zdKbtjSrlSlW1KLCgx+hSPoRsliA4kXdwIN35A8kP5S/KjGq4sOb
+ 4kcLf2OXVfzNICwg+LdTviaY1eapQfriPFbbqTQosSs261JvqeaEeyLjTBO7WmSdW/6V
+ VtZhR2bTppwEqnw1hX88/okPc8+hSOxjH5iKE8Vo60ZhEvlartkxZ9mRYppn/p042Uay Sw== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2120.oracle.com with ESMTP id 2u9pjqe5c9-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 13 Aug 2019 13:19:11 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7DDHqcK090516;
+        Tue, 13 Aug 2019 13:19:10 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3020.oracle.com with ESMTP id 2ubwcwscwd-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 13 Aug 2019 13:19:10 +0000
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x7DDJ7Oa004970;
+        Tue, 13 Aug 2019 13:19:07 GMT
+Received: from kadam (/41.57.98.10)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 13 Aug 2019 06:19:07 -0700
+Date:   Tue, 13 Aug 2019 16:14:20 +0300
+From:   Dan Carpenter <dan.carpenter@oracle.com>
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     Colin King <colin.king@canonical.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] scsi: sym53c8xx_2: remove redundant assignment to retv
+Message-ID: <20190813131420.GS1974@kadam>
+References: <20190809175932.10197-1-colin.king@canonical.com>
+ <20190809181733.GQ5482@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190813124259.GC14284@kroah.com>
-User-Agent: Mutt/1.12.1 (2019-06-15)
+In-Reply-To: <20190809181733.GQ5482@bombadil.infradead.org>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9347 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1906280000 definitions=main-1908130142
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9347 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1906280000
+ definitions=main-1908130142
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Aug 13, 2019 at 02:42:59PM +0200, Greg KH wrote:
-> On Tue, Aug 13, 2019 at 01:17:06PM +0100, Matthias Maennich wrote:
-> > USB_STORAGE was defined as "usb-storage: " and used in a single location
-> > as argument to printk. In order to be able to use the name
-> > 'USB_STORAGE', drop the definition and use the string directly for the
-> > printk call.
-> > 
-> > Signed-off-by: Matthias Maennich <maennich@google.com>
-> > ---
-> >  drivers/usb/storage/debug.h    | 2 --
-> >  drivers/usb/storage/scsiglue.c | 2 +-
-> >  2 files changed, 1 insertion(+), 3 deletions(-)
+On Fri, Aug 09, 2019 at 11:17:33AM -0700, Matthew Wilcox wrote:
+> On Fri, Aug 09, 2019 at 06:59:32PM +0100, Colin King wrote:
+> > Variable retv is initialized to a value that is never read and it
+> > is re-assigned later. The initialization is redundant and can be
+> > removed.
 > 
-> I'll go take this today.  The module really should just be using
-> dev_err() there.  It needs to be cleaned up :(
+> Acked-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+> 
+> Seems like a bit of a pointless class of warnings, given that gcc now
+> initialises all locals.  But I'm happy for James or Martin to pick it up.
 
-Now applied to the usb git tree, thanks.
+GCC doesn't initialize all locals.  Just some depending on the
+optimization level.  It's related to a bug that's several years old.
 
-greg k-h
+This warning does find some bugs.  The common one is where people forget
+to check the return.
+
+	ret = something();
+	// blank line here indicates that ret is never checked again.
+
+regards,
+dan carpenter
+
