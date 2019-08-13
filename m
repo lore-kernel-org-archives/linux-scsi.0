@@ -7,35 +7,35 @@ X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1C50C32750
-	for <linux-scsi@archiver.kernel.org>; Tue, 13 Aug 2019 07:26:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AA354C32750
+	for <linux-scsi@archiver.kernel.org>; Tue, 13 Aug 2019 07:26:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6EA9420665
-	for <linux-scsi@archiver.kernel.org>; Tue, 13 Aug 2019 07:26:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7C52120665
+	for <linux-scsi@archiver.kernel.org>; Tue, 13 Aug 2019 07:26:23 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="PG4b+z7N"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="mAGxZLJD"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727837AbfHMH0E (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 13 Aug 2019 03:26:04 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:51208 "EHLO
+        id S1727959AbfHMH0W (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 13 Aug 2019 03:26:22 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:53038 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725820AbfHMH0C (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Aug 2019 03:26:02 -0400
+        with ESMTP id S1727955AbfHMH0V (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Aug 2019 03:26:21 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
         :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
         List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=K8mtQbcvjUOjZJJrWVhTMVUHj1xPulJRe2fBMtA0I78=; b=PG4b+z7NSgA8Pxtztq4H7USnch
-        +QWw66pxQPT/aPo13OUaODVGDr2jJGa4GT43pLad2hN2uN1lc9AsQ6rryT4lxghyE4RmFGqEYI1FC
-        9MlC7IqBzs0InXWpBrvQlpd5Xwb/d8/uJ3E1JnNB/S4S/PR5d7C8laQUN/FaZs8qTcj0u81g4H8C8
-        RmNP4b9MAkT/6tHD/pY6H9fVagh06dZhLRqhJdi4hDdn1Upo2VsuyHA3SGzxWsfbqNSUujQiFVQMF
-        HefG173NCMKhz2fpT6okgp7c15GjLLsqVPgrNSFPxBBAIesDZsfUV8kkgUJqKedQjGhoVxgLKqjFM
-        at/rCZJQ==;
+        bh=FLx64LSOSPcimlkrN6COawu3ttWW5oBYzEVvPxVpntA=; b=mAGxZLJDTn+EckVF9qUmlekQ/l
+        sWigehpNYdaDARh757EP58i7xhMOGq1VS9Cr2S5m+lKbglJWiZ8sUY2nF+j5atop8ScRvrog18C2C
+        DgxMZR08HKJb/4sRIUs3oTH/qF8HhLq6KUP7m9UgUsuN8rAqLCAvKchd9I/pVIa0GWi5fzitJUeq5
+        QKqp+U11BriBEPhHg3jP3vngd4nQ34zM4SzKexlP9DgHZ2bsTZ6JE+6SxrGfbgq59qkRuXdkuSyBc
+        625Dycfd6lZPs2Fn0ui68nUvpdOptehtBzcbI9KRs5fSTW21s0oSlXchtPDcLHqpM8Vr6hLHBUE+o
+        KqdhPJ1w==;
 Received: from [2001:4bb8:180:1ec3:c70:4a89:bc61:2] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92 #3 (Red Hat Linux))
-        id 1hxRBt-0006IR-SE; Tue, 13 Aug 2019 07:25:58 +0000
+        id 1hxRCE-0006dc-QI; Tue, 13 Aug 2019 07:26:19 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Tony Luck <tony.luck@intel.com>, Fenghua Yu <fenghua.yu@intel.com>,
         Mike Travis <mike.travis@hpe.com>,
@@ -44,9 +44,9 @@ Cc:     Arnd Bergmann <arnd@arndb.de>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         linux-ia64@vger.kernel.org, linux-ide@vger.kernel.org,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 13/28] drivers: remove the SGI SN2 IOC3 base support
-Date:   Tue, 13 Aug 2019 09:24:59 +0200
-Message-Id: <20190813072514.23299-14-hch@lst.de>
+Subject: [PATCH 18/28] ia64: remove CONFIG_PCI ifdefs
+Date:   Tue, 13 Aug 2019 09:25:04 +0200
+Message-Id: <20190813072514.23299-19-hch@lst.de>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190813072514.23299-1-hch@lst.de>
 References: <20190813072514.23299-1-hch@lst.de>
@@ -58,952 +58,135 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The IOC3 is a multi-function chip seen on SGI SN2 and some SGI
-MIPS systems.  This removes the last bit of SN2 specific support,
-while the bits used by the mips ports are still around (and being
-substantially rewritten at the moment).
+Now that hpsim support is gone, CONFIG_PCI is forced on for ia64, and
+we can remove a few ifdefs for it.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- arch/ia64/Kconfig                     |   2 -
- arch/ia64/configs/gensparse_defconfig |   1 -
- drivers/Makefile                      |   1 -
- drivers/sn/Kconfig                    |  22 -
- drivers/sn/Makefile                   |   7 -
- drivers/sn/ioc3.c                     | 844 --------------------------
- 6 files changed, 877 deletions(-)
- delete mode 100644 drivers/sn/Kconfig
- delete mode 100644 drivers/sn/Makefile
- delete mode 100644 drivers/sn/ioc3.c
+ arch/ia64/Makefile              |  2 +-
+ arch/ia64/hp/common/sba_iommu.c | 10 +---------
+ arch/ia64/include/asm/dma.h     |  6 +-----
+ arch/ia64/kernel/sys_ia64.c     | 18 ------------------
+ arch/ia64/mm/init.c             |  2 --
+ 5 files changed, 3 insertions(+), 35 deletions(-)
 
-diff --git a/arch/ia64/Kconfig b/arch/ia64/Kconfig
-index 7468d8e50467..43f3a3076ab2 100644
---- a/arch/ia64/Kconfig
-+++ b/arch/ia64/Kconfig
-@@ -493,8 +493,6 @@ config IA64_HP_AML_NFW
- 	  the "force" module parameter, e.g., with the "aml_nfw.force"
- 	  kernel command line option.
+diff --git a/arch/ia64/Makefile b/arch/ia64/Makefile
+index 8b866fc1f9cb..c06802799659 100644
+--- a/arch/ia64/Makefile
++++ b/arch/ia64/Makefile
+@@ -57,7 +57,7 @@ core-$(CONFIG_IA64_HP_ZX1)	+= arch/ia64/dig/
+ core-$(CONFIG_IA64_HP_ZX1_SWIOTLB) += arch/ia64/dig/
+ core-$(CONFIG_IA64_SGI_UV)	+= arch/ia64/uv/
  
--source "drivers/sn/Kconfig"
--
- config KEXEC
- 	bool "kexec system call"
- 	depends on !IA64_HP_SIM && (!SMP || HOTPLUG_CPU)
-diff --git a/arch/ia64/configs/gensparse_defconfig b/arch/ia64/configs/gensparse_defconfig
-index d82d07d060d6..5d5ea744f7e6 100644
---- a/arch/ia64/configs/gensparse_defconfig
-+++ b/arch/ia64/configs/gensparse_defconfig
-@@ -19,7 +19,6 @@ CONFIG_SPARSEMEM_MANUAL=y
- CONFIG_IA64_MCA_RECOVERY=y
- CONFIG_PERFMON=y
- CONFIG_IA64_PALINFO=y
--CONFIG_SGI_IOC3=y
- CONFIG_EFI_VARS=y
- CONFIG_BINFMT_MISC=m
- CONFIG_ACPI_BUTTON=m
-diff --git a/drivers/Makefile b/drivers/Makefile
-index 6d37564e783c..05be8c798c51 100644
---- a/drivers/Makefile
-+++ b/drivers/Makefile
-@@ -132,7 +132,6 @@ obj-y				+= mmc/
- obj-$(CONFIG_MEMSTICK)		+= memstick/
- obj-$(CONFIG_NEW_LEDS)		+= leds/
- obj-$(CONFIG_INFINIBAND)	+= infiniband/
--obj-$(CONFIG_SGI_SN)		+= sn/
- obj-y				+= firmware/
- obj-$(CONFIG_CRYPTO)		+= crypto/
- obj-$(CONFIG_SUPERH)		+= sh/
-diff --git a/drivers/sn/Kconfig b/drivers/sn/Kconfig
-deleted file mode 100644
-index a6c443d31a3c..000000000000
---- a/drivers/sn/Kconfig
-+++ /dev/null
-@@ -1,22 +0,0 @@
--# SPDX-License-Identifier: GPL-2.0-only
--#
--# Miscellaneous SN-specific devices
--#
--
--menu "SN Devices"
--	depends on SGI_SN
--
--config SGI_IOC3
--	tristate "SGI IOC3 Base IO support"
--	default m
--	---help---
--	This option enables basic support for the SGI IOC3-based Base IO
--	controller card.  This option does not enable any specific
--	functions on such a card, but provides necessary infrastructure
--	for other drivers to utilize.
--
--	If you have an SGI Altix with an IOC3-based
--	I/O controller or a PCI IOC3 serial card say Y.
--	Otherwise say N.
--
--endmenu
-diff --git a/drivers/sn/Makefile b/drivers/sn/Makefile
-deleted file mode 100644
-index f0e809a38b2d..000000000000
---- a/drivers/sn/Makefile
-+++ /dev/null
-@@ -1,7 +0,0 @@
--# SPDX-License-Identifier: GPL-2.0-only
--#
--# Makefile for the Altix device drivers.
--#
--#
--
--obj-$(CONFIG_SGI_IOC3) += ioc3.o
-diff --git a/drivers/sn/ioc3.c b/drivers/sn/ioc3.c
-deleted file mode 100644
-index 358025af4918..000000000000
---- a/drivers/sn/ioc3.c
-+++ /dev/null
-@@ -1,844 +0,0 @@
--// SPDX-License-Identifier: GPL-2.0-only
--/*
-- * SGI IOC3 master driver and IRQ demuxer
-- *
-- * Copyright (c) 2005 Stanislaw Skowronek <skylark@linux-mips.org>
-- * Heavily based on similar work by:
-- *   Brent Casavant <bcasavan@sgi.com> - IOC4 master driver
-- *   Pat Gefre <pfg@sgi.com> - IOC3 serial port IRQ demuxer
-- */
--
--#include <linux/errno.h>
--#include <linux/module.h>
--#include <linux/pci.h>
--#include <linux/dma-mapping.h>
--#include <linux/interrupt.h>
--#include <linux/spinlock.h>
--#include <linux/delay.h>
--#include <linux/ioc3.h>
--#include <linux/rwsem.h>
--#include <linux/slab.h>
--
--#define IOC3_PCI_SIZE 0x100000
--
--static LIST_HEAD(ioc3_devices);
--static int ioc3_counter;
--static DECLARE_RWSEM(ioc3_devices_rwsem);
--
--static struct ioc3_submodule *ioc3_submodules[IOC3_MAX_SUBMODULES];
--static struct ioc3_submodule *ioc3_ethernet;
--static DEFINE_RWLOCK(ioc3_submodules_lock);
--
--/* NIC probing code */
--
--#define GPCR_MLAN_EN    0x00200000      /* enable MCR to pin 8 */
--
--static inline unsigned mcr_pack(unsigned pulse, unsigned sample)
--{
--	return (pulse << 10) | (sample << 2);
--}
--
--static int nic_wait(struct ioc3_driver_data *idd)
--{
--	unsigned mcr;
--
--        do {
--                mcr = readl(&idd->vma->mcr);
--        } while (!(mcr & 2));
--
--        return mcr & 1;
--}
--
--static int nic_reset(struct ioc3_driver_data *idd)
--{
--        int presence;
--	unsigned long flags;
--
--	local_irq_save(flags);
--	writel(mcr_pack(500, 65), &idd->vma->mcr);
--	presence = nic_wait(idd);
--	local_irq_restore(flags);
--
--	udelay(500);
--
--        return presence;
--}
--
--static int nic_read_bit(struct ioc3_driver_data *idd)
--{
--	int result;
--	unsigned long flags;
--
--	local_irq_save(flags);
--	writel(mcr_pack(6, 13), &idd->vma->mcr);
--	result = nic_wait(idd);
--	local_irq_restore(flags);
--
--	udelay(500);
--
--	return result;
--}
--
--static void nic_write_bit(struct ioc3_driver_data *idd, int bit)
--{
--	if (bit)
--		writel(mcr_pack(6, 110), &idd->vma->mcr);
--	else
--		writel(mcr_pack(80, 30), &idd->vma->mcr);
--
--	nic_wait(idd);
--}
--
--static unsigned nic_read_byte(struct ioc3_driver_data *idd)
--{
--	unsigned result = 0;
--	int i;
--
--	for (i = 0; i < 8; i++)
--		result = (result >> 1) | (nic_read_bit(idd) << 7);
--
--	return result;
--}
--
--static void nic_write_byte(struct ioc3_driver_data *idd, int byte)
--{
--	int i, bit;
--
--	for (i = 8; i; i--) {
--		bit = byte & 1;
--		byte >>= 1;
--
--		nic_write_bit(idd, bit);
--	}
--}
--
--static unsigned long
--nic_find(struct ioc3_driver_data *idd, int *last, unsigned long addr)
--{
--	int a, b, index, disc;
--
--	nic_reset(idd);
--
--	/* Search ROM.  */
--	nic_write_byte(idd, 0xF0);
--
--	/* Algorithm from ``Book of iButton Standards''.  */
--	for (index = 0, disc = 0; index < 64; index++) {
--		a = nic_read_bit(idd);
--		b = nic_read_bit(idd);
--
--		if (a && b) {
--			printk(KERN_WARNING "IOC3 NIC search failed.\n");
--			*last = 0;
--			return 0;
--		}
--
--		if (!a && !b) {
--			if (index == *last) {
--				addr |= 1UL << index;
--			} else if (index > *last) {
--				addr &= ~(1UL << index);
--				disc = index;
--			} else if ((addr & (1UL << index)) == 0)
--				disc = index;
--			nic_write_bit(idd, (addr>>index)&1);
--			continue;
--		} else {
--			if (a)
--				addr |= 1UL << index;
--			else
--				addr &= ~(1UL << index);
--			nic_write_bit(idd, a);
--			continue;
--		}
--	}
--	*last = disc;
--	return addr;
--}
--
--static void nic_addr(struct ioc3_driver_data *idd, unsigned long addr)
--{
--	int index;
--
--	nic_reset(idd);
--	nic_write_byte(idd, 0xF0);
--	for (index = 0; index < 64; index++) {
--		nic_read_bit(idd);
--		nic_read_bit(idd);
--		nic_write_bit(idd, (addr>>index)&1);
--	}
--}
--
--static void crc16_byte(unsigned int *crc, unsigned char db)
--{
--	int i;
--
--	for(i=0;i<8;i++) {
--		*crc <<= 1;
--		if((db^(*crc>>16)) & 1)
--			*crc ^= 0x8005;
--		db >>= 1;
--	}
--	*crc &= 0xFFFF;
--}
--
--static unsigned int crc16_area(unsigned char *dbs, int size, unsigned int crc)
--{
--	while(size--)
--		crc16_byte(&crc, *(dbs++));
--	return crc;
--}
--
--static void crc8_byte(unsigned int *crc, unsigned char db)
--{
--	int i,f;
--
--	for(i=0;i<8;i++) {
--		f = (*crc ^ db) & 1;
--		*crc >>= 1;
--		db >>= 1;
--		if(f)
--			*crc ^= 0x8c;
--	}
--	*crc &= 0xff;
--}
--
--static unsigned int crc8_addr(unsigned long addr)
--{
--	int i;
--	unsigned int crc = 0x00;
--
--	for(i=0;i<8;i++)
--		crc8_byte(&crc, addr>>(i<<3));
--	return crc;
--}
--
--static void
--read_redir_page(struct ioc3_driver_data *idd, unsigned long addr, int page,
--			unsigned char *redir, unsigned char *data)
--{
--	int loops = 16, i;
--
--	while(redir[page] != 0xFF) {
--		page = redir[page]^0xFF;
--		loops--;
--		if(loops<0) {
--			printk(KERN_ERR "IOC3: NIC circular redirection\n");
--			return;
--		}
--	}
--	loops = 3;
--	while(loops>0) {
--		nic_addr(idd, addr);
--		nic_write_byte(idd, 0xF0);
--		nic_write_byte(idd, (page << 5) & 0xE0);
--		nic_write_byte(idd, (page >> 3) & 0x1F);
--		for(i=0;i<0x20;i++)
--			data[i] = nic_read_byte(idd);
--		if(crc16_area(data, 0x20, 0x0000) == 0x800d)
--			return;
--		loops--;
--	}
--	printk(KERN_ERR "IOC3: CRC error in data page\n");
--	for(i=0;i<0x20;i++)
--		data[i] = 0x00;
--}
--
--static void
--read_redir_map(struct ioc3_driver_data *idd, unsigned long addr,
--					 unsigned char *redir)
--{
--	int i,j,loops = 3,crc_ok;
--	unsigned int crc;
--
--	while(loops>0) {
--		crc_ok = 1;
--		nic_addr(idd, addr);
--		nic_write_byte(idd, 0xAA);
--		nic_write_byte(idd, 0x00);
--		nic_write_byte(idd, 0x01);
--		for(i=0;i<64;i+=8) {
--			for(j=0;j<8;j++)
--				redir[i+j] = nic_read_byte(idd);
--			crc = crc16_area(redir+i, 8, (i==0)?0x8707:0x0000);
--			crc16_byte(&crc, nic_read_byte(idd));
--			crc16_byte(&crc, nic_read_byte(idd));
--			if(crc != 0x800d)
--				crc_ok = 0;
--		}
--		if(crc_ok)
--			return;
--		loops--;
--	}
--	printk(KERN_ERR "IOC3: CRC error in redirection page\n");
--	for(i=0;i<64;i++)
--		redir[i] = 0xFF;
--}
--
--static void read_nic(struct ioc3_driver_data *idd, unsigned long addr)
--{
--	unsigned char redir[64];
--	unsigned char data[64],part[32];
--	int i,j;
--
--	/* read redirections */
--	read_redir_map(idd, addr, redir);
--	/* read data pages */
--	read_redir_page(idd, addr, 0, redir, data);
--	read_redir_page(idd, addr, 1, redir, data+32);
--	/* assemble the part # */
--	j=0;
--	for(i=0;i<19;i++)
--		if(data[i+11] != ' ')
--			part[j++] = data[i+11];
--	for(i=0;i<6;i++)
--		if(data[i+32] != ' ')
--			part[j++] = data[i+32];
--	part[j] = 0;
--	/* skip Octane power supplies */
--	if(!strncmp(part, "060-0035-", 9))
--		return;
--	if(!strncmp(part, "060-0038-", 9))
--		return;
--	strcpy(idd->nic_part, part);
--	/* assemble the serial # */
--	j=0;
--	for(i=0;i<10;i++)
--		if(data[i+1] != ' ')
--			idd->nic_serial[j++] = data[i+1];
--	idd->nic_serial[j] = 0;
--}
--
--static void read_mac(struct ioc3_driver_data *idd, unsigned long addr)
--{
--	int i, loops = 3;
--	unsigned char data[13];
--
--	while(loops>0) {
--		nic_addr(idd, addr);
--		nic_write_byte(idd, 0xF0);
--		nic_write_byte(idd, 0x00);
--		nic_write_byte(idd, 0x00);
--		nic_read_byte(idd);
--		for(i=0;i<13;i++)
--			data[i] = nic_read_byte(idd);
--		if(crc16_area(data, 13, 0x0000) == 0x800d) {
--			for(i=10;i>4;i--)
--				idd->nic_mac[10-i] = data[i];
--			return;
--		}
--		loops--;
--	}
--	printk(KERN_ERR "IOC3: CRC error in MAC address\n");
--	for(i=0;i<6;i++)
--		idd->nic_mac[i] = 0x00;
--}
--
--static void probe_nic(struct ioc3_driver_data *idd)
--{
--        int save = 0, loops = 3;
--        unsigned long first, addr;
--
--        writel(GPCR_MLAN_EN, &idd->vma->gpcr_s);
--
--        while(loops>0) {
--                idd->nic_part[0] = 0;
--                idd->nic_serial[0] = 0;
--                addr = first = nic_find(idd, &save, 0);
--                if(!first)
--                        return;
--                while(1) {
--                        if(crc8_addr(addr))
--                                break;
--                        else {
--                                switch(addr & 0xFF) {
--                                case 0x0B:
--                                        read_nic(idd, addr);
--                                        break;
--                                case 0x09:
--                                case 0x89:
--                                case 0x91:
--                                        read_mac(idd, addr);
--                                        break;
--                                }
--                        }
--                        addr = nic_find(idd, &save, addr);
--                        if(addr == first)
--                                return;
--                }
--                loops--;
--        }
--        printk(KERN_ERR "IOC3: CRC error in NIC address\n");
--}
--
--/* Interrupts */
--
--static void write_ireg(struct ioc3_driver_data *idd, uint32_t val, int which)
--{
--	unsigned long flags;
--
--	spin_lock_irqsave(&idd->ir_lock, flags);
--	switch (which) {
--	case IOC3_W_IES:
--		writel(val, &idd->vma->sio_ies);
--		break;
--	case IOC3_W_IEC:
--		writel(val, &idd->vma->sio_iec);
--		break;
--	}
--	spin_unlock_irqrestore(&idd->ir_lock, flags);
--}
--static inline uint32_t get_pending_intrs(struct ioc3_driver_data *idd)
--{
--	unsigned long flag;
--	uint32_t intrs = 0;
--
--	spin_lock_irqsave(&idd->ir_lock, flag);
--	intrs = readl(&idd->vma->sio_ir);
--	intrs &= readl(&idd->vma->sio_ies);
--	spin_unlock_irqrestore(&idd->ir_lock, flag);
--	return intrs;
--}
--
--static irqreturn_t ioc3_intr_io(int irq, void *arg)
--{
--	unsigned long flags;
--	struct ioc3_driver_data *idd = arg;
--	int handled = 1, id;
--	unsigned int pending;
--
--	read_lock_irqsave(&ioc3_submodules_lock, flags);
--
--	if(idd->dual_irq && readb(&idd->vma->eisr)) {
--		/* send Ethernet IRQ to the driver */
--		if(ioc3_ethernet && idd->active[ioc3_ethernet->id] &&
--						ioc3_ethernet->intr) {
--			handled = handled && !ioc3_ethernet->intr(ioc3_ethernet,
--							idd, 0);
--		}
--	}
--	pending = get_pending_intrs(idd);	/* look at the IO IRQs */
--
--	for(id=0;id<IOC3_MAX_SUBMODULES;id++) {
--		if(idd->active[id] && ioc3_submodules[id]
--				&& (pending & ioc3_submodules[id]->irq_mask)
--				&& ioc3_submodules[id]->intr) {
--			write_ireg(idd, ioc3_submodules[id]->irq_mask,
--							IOC3_W_IEC);
--			if(!ioc3_submodules[id]->intr(ioc3_submodules[id],
--				   idd, pending & ioc3_submodules[id]->irq_mask))
--				pending &= ~ioc3_submodules[id]->irq_mask;
--			if (ioc3_submodules[id]->reset_mask)
--				write_ireg(idd, ioc3_submodules[id]->irq_mask,
--							IOC3_W_IES);
--		}
--	}
--	read_unlock_irqrestore(&ioc3_submodules_lock, flags);
--	if(pending) {
--		printk(KERN_WARNING
--		  "IOC3: Pending IRQs 0x%08x discarded and disabled\n",pending);
--		write_ireg(idd, pending, IOC3_W_IEC);
--		handled = 1;
--	}
--	return handled?IRQ_HANDLED:IRQ_NONE;
--}
--
--static irqreturn_t ioc3_intr_eth(int irq, void *arg)
--{
--	unsigned long flags;
--	struct ioc3_driver_data *idd = (struct ioc3_driver_data *)arg;
--	int handled = 1;
--
--	if(!idd->dual_irq)
--		return IRQ_NONE;
--	read_lock_irqsave(&ioc3_submodules_lock, flags);
--	if(ioc3_ethernet && idd->active[ioc3_ethernet->id]
--				&& ioc3_ethernet->intr)
--		handled = handled && !ioc3_ethernet->intr(ioc3_ethernet, idd, 0);
--	read_unlock_irqrestore(&ioc3_submodules_lock, flags);
--	return handled?IRQ_HANDLED:IRQ_NONE;
--}
--
--void ioc3_enable(struct ioc3_submodule *is,
--				struct ioc3_driver_data *idd, unsigned int irqs)
--{
--	write_ireg(idd, irqs & is->irq_mask, IOC3_W_IES);
--}
--
--void ioc3_ack(struct ioc3_submodule *is, struct ioc3_driver_data *idd,
--				unsigned int irqs)
--{
--	writel(irqs & is->irq_mask, &idd->vma->sio_ir);
--}
--
--void ioc3_disable(struct ioc3_submodule *is,
--				struct ioc3_driver_data *idd, unsigned int irqs)
--{
--	write_ireg(idd, irqs & is->irq_mask, IOC3_W_IEC);
--}
--
--void ioc3_gpcr_set(struct ioc3_driver_data *idd, unsigned int val)
--{
--	unsigned long flags;
--	spin_lock_irqsave(&idd->gpio_lock, flags);
--	writel(val, &idd->vma->gpcr_s);
--	spin_unlock_irqrestore(&idd->gpio_lock, flags);
--}
--
--/* Keep it simple, stupid! */
--static int find_slot(void **tab, int max)
--{
--	int i;
--	for(i=0;i<max;i++)
--		if(!(tab[i]))
--			return i;
--	return -1;
--}
--
--/* Register an IOC3 submodule */
--int ioc3_register_submodule(struct ioc3_submodule *is)
--{
--	struct ioc3_driver_data *idd;
--	int alloc_id;
--	unsigned long flags;
--
--	write_lock_irqsave(&ioc3_submodules_lock, flags);
--	alloc_id = find_slot((void **)ioc3_submodules, IOC3_MAX_SUBMODULES);
--	if(alloc_id != -1) {
--		ioc3_submodules[alloc_id] = is;
--		if(is->ethernet) {
--			if(ioc3_ethernet==NULL)
--				ioc3_ethernet=is;
--			else
--				printk(KERN_WARNING
--				  "IOC3 Ethernet module already registered!\n");
--		}
--	}
--	write_unlock_irqrestore(&ioc3_submodules_lock, flags);
--
--	if(alloc_id == -1) {
--		printk(KERN_WARNING "Increase IOC3_MAX_SUBMODULES!\n");
--		return -ENOMEM;
--	}
--
--	is->id=alloc_id;
--
--	/* Initialize submodule for each IOC3 */
--	if (!is->probe)
--		return 0;
--
--	down_read(&ioc3_devices_rwsem);
--	list_for_each_entry(idd, &ioc3_devices, list) {
--		/* set to 1 for IRQs in probe */
--		idd->active[alloc_id] = 1;
--		idd->active[alloc_id] = !is->probe(is, idd);
--	}
--	up_read(&ioc3_devices_rwsem);
--
--	return 0;
--}
--
--/* Unregister an IOC3 submodule */
--void ioc3_unregister_submodule(struct ioc3_submodule *is)
--{
--	struct ioc3_driver_data *idd;
--	unsigned long flags;
--
--	write_lock_irqsave(&ioc3_submodules_lock, flags);
--	if(ioc3_submodules[is->id]==is)
--		ioc3_submodules[is->id]=NULL;
--	else
--		printk(KERN_WARNING
--			"IOC3 submodule %s has wrong ID.\n",is->name);
--	if(ioc3_ethernet==is)
--		ioc3_ethernet = NULL;
--	write_unlock_irqrestore(&ioc3_submodules_lock, flags);
--
--	/* Remove submodule for each IOC3 */
--	down_read(&ioc3_devices_rwsem);
--	list_for_each_entry(idd, &ioc3_devices, list)
--		if(idd->active[is->id]) {
--			if(is->remove)
--				if(is->remove(is, idd))
--					printk(KERN_WARNING
--					       "%s: IOC3 submodule %s remove failed "
--					       "for pci_dev %s.\n",
--					       __func__, module_name(is->owner),
--					       pci_name(idd->pdev));
--			idd->active[is->id] = 0;
--			if(is->irq_mask)
--				write_ireg(idd, is->irq_mask, IOC3_W_IEC);
--		}
--	up_read(&ioc3_devices_rwsem);
--}
--
--/*********************
-- * Device management *
-- *********************/
--
--static char *ioc3_class_names[] = { "unknown", "IP27 BaseIO", "IP30 system",
--			"MENET 1/2/3", "MENET 4", "CADduo", "Altix Serial" };
--
--static int ioc3_class(struct ioc3_driver_data *idd)
--{
--	int res = IOC3_CLASS_NONE;
--	/* NIC-based logic */
--	if(!strncmp(idd->nic_part, "030-0891-", 9))
--		res = IOC3_CLASS_BASE_IP30;
--	if(!strncmp(idd->nic_part, "030-1155-", 9))
--		res = IOC3_CLASS_CADDUO;
--	if(!strncmp(idd->nic_part, "030-1657-", 9))
--		res = IOC3_CLASS_SERIAL;
--	if(!strncmp(idd->nic_part, "030-1664-", 9))
--		res = IOC3_CLASS_SERIAL;
--	/* total random heuristics */
--#ifdef CONFIG_SGI_IP27
--	if(!idd->nic_part[0])
--		res = IOC3_CLASS_BASE_IP27;
+-drivers-$(CONFIG_PCI)		+= arch/ia64/pci/
++drivers-y			+= arch/ia64/pci/
+ drivers-$(CONFIG_IA64_HP_ZX1)	+= arch/ia64/hp/common/ arch/ia64/hp/zx1/
+ drivers-$(CONFIG_IA64_HP_ZX1_SWIOTLB) += arch/ia64/hp/common/ arch/ia64/hp/zx1/
+ drivers-$(CONFIG_IA64_GENERIC)	+= arch/ia64/hp/common/ arch/ia64/hp/zx1/ arch/ia64/uv/
+diff --git a/arch/ia64/hp/common/sba_iommu.c b/arch/ia64/hp/common/sba_iommu.c
+index 3d24cc43385b..18321ce8bfa0 100644
+--- a/arch/ia64/hp/common/sba_iommu.c
++++ b/arch/ia64/hp/common/sba_iommu.c
+@@ -251,12 +251,8 @@ static SBA_INLINE void sba_free_range(struct ioc *, dma_addr_t, size_t);
+ static u64 prefetch_spill_page;
+ #endif
+ 
+-#ifdef CONFIG_PCI
+-# define GET_IOC(dev)	((dev_is_pci(dev))						\
++#define GET_IOC(dev)	((dev_is_pci(dev))						\
+ 			 ? ((struct ioc *) PCI_CONTROLLER(to_pci_dev(dev))->iommu) : NULL)
+-#else
+-# define GET_IOC(dev)	NULL
 -#endif
--	/* print educational message */
--	printk(KERN_INFO "IOC3 part: [%s], serial: [%s] => class %s\n",
--			idd->nic_part, idd->nic_serial, ioc3_class_names[res]);
--	return res;
--}
--/* Adds a new instance of an IOC3 card */
--static int ioc3_probe(struct pci_dev *pdev, const struct pci_device_id *pci_id)
--{
--	struct ioc3_driver_data *idd;
--	uint32_t pcmd;
--	int ret, id;
--
--	/* Enable IOC3 and take ownership of it */
--	if ((ret = pci_enable_device(pdev))) {
--		printk(KERN_WARNING
--		       "%s: Failed to enable IOC3 device for pci_dev %s.\n",
--		       __func__, pci_name(pdev));
--		goto out;
--	}
--	pci_set_master(pdev);
--
--#ifdef USE_64BIT_DMA
--        ret = pci_set_dma_mask(pdev, DMA_BIT_MASK(64));
--        if (!ret) {
--                ret = pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(64));
--                if (ret < 0) {
--                        printk(KERN_WARNING "%s: Unable to obtain 64 bit DMA "
--                               "for consistent allocations\n",
--				__func__);
--                }
--	}
+ 
+ /*
+ ** DMA_CHUNK_SIZE is used by the SCSI mid-layer to break up
+@@ -1741,9 +1737,7 @@ ioc_sac_init(struct ioc *ioc)
+ 	controller->iommu = ioc;
+ 	sac->sysdata = controller;
+ 	sac->dma_mask = 0xFFFFFFFFUL;
+-#ifdef CONFIG_PCI
+ 	sac->dev.bus = &pci_bus_type;
 -#endif
+ 	ioc->sac_only_dev = sac;
+ }
+ 
+@@ -2121,13 +2115,11 @@ sba_init(void)
+ 	}
+ #endif
+ 
+-#ifdef CONFIG_PCI
+ 	{
+ 		struct pci_bus *b = NULL;
+ 		while ((b = pci_find_next_bus(b)) != NULL)
+ 			sba_connect_bus(b);
+ 	}
+-#endif
+ 
+ #ifdef CONFIG_PROC_FS
+ 	ioc_proc_init();
+diff --git a/arch/ia64/include/asm/dma.h b/arch/ia64/include/asm/dma.h
+index 23604d6a2cb2..59625e9c1f9c 100644
+--- a/arch/ia64/include/asm/dma.h
++++ b/arch/ia64/include/asm/dma.h
+@@ -12,11 +12,7 @@
+ 
+ extern unsigned long MAX_DMA_ADDRESS;
+ 
+-#ifdef CONFIG_PCI
+-  extern int isa_dma_bridge_buggy;
+-#else
+-# define isa_dma_bridge_buggy 	(0)
+-#endif
++extern int isa_dma_bridge_buggy;
+ 
+ #define free_dma(x)
+ 
+diff --git a/arch/ia64/kernel/sys_ia64.c b/arch/ia64/kernel/sys_ia64.c
+index 9ebe1d633abc..e14db25146c2 100644
+--- a/arch/ia64/kernel/sys_ia64.c
++++ b/arch/ia64/kernel/sys_ia64.c
+@@ -166,21 +166,3 @@ ia64_mremap (unsigned long addr, unsigned long old_len, unsigned long new_len, u
+ 		force_successful_syscall_return();
+ 	return addr;
+ }
 -
--	/* Set up per-IOC3 data */
--	idd = kzalloc(sizeof(struct ioc3_driver_data), GFP_KERNEL);
--	if (!idd) {
--		printk(KERN_WARNING
--		       "%s: Failed to allocate IOC3 data for pci_dev %s.\n",
--		       __func__, pci_name(pdev));
--		ret = -ENODEV;
--		goto out_idd;
--	}
--	spin_lock_init(&idd->ir_lock);
--	spin_lock_init(&idd->gpio_lock);
--	idd->pdev = pdev;
+-#ifndef CONFIG_PCI
 -
--	/* Map all IOC3 registers.  These are shared between subdevices
--	 * so the main IOC3 module manages them.
--	 */
--	idd->pma = pci_resource_start(pdev, 0);
--	if (!idd->pma) {
--		printk(KERN_WARNING
--		       "%s: Unable to find IOC3 resource "
--		       "for pci_dev %s.\n",
--		       __func__, pci_name(pdev));
--		ret = -ENODEV;
--		goto out_pci;
--	}
--	if (!request_mem_region(idd->pma, IOC3_PCI_SIZE, "ioc3")) {
--		printk(KERN_WARNING
--		       "%s: Unable to request IOC3 region "
--		       "for pci_dev %s.\n",
--		       __func__, pci_name(pdev));
--		ret = -ENODEV;
--		goto out_pci;
--	}
--	idd->vma = ioremap(idd->pma, IOC3_PCI_SIZE);
--	if (!idd->vma) {
--		printk(KERN_WARNING
--		       "%s: Unable to remap IOC3 region "
--		       "for pci_dev %s.\n",
--		       __func__, pci_name(pdev));
--		ret = -ENODEV;
--		goto out_misc_region;
--	}
--
--	/* Track PCI-device specific data */
--	pci_set_drvdata(pdev, idd);
--	down_write(&ioc3_devices_rwsem);
--	list_add_tail(&idd->list, &ioc3_devices);
--	idd->id = ioc3_counter++;
--	up_write(&ioc3_devices_rwsem);
--
--	idd->gpdr_shadow = readl(&idd->vma->gpdr);
--
--	/* Read IOC3 NIC contents */
--	probe_nic(idd);
--
--	/* Detect IOC3 class */
--	idd->class = ioc3_class(idd);
--
--	/* Initialize IOC3 */
--       pci_read_config_dword(pdev, PCI_COMMAND, &pcmd);
--       pci_write_config_dword(pdev, PCI_COMMAND,
--                               pcmd | PCI_COMMAND_MEMORY |
--                               PCI_COMMAND_PARITY | PCI_COMMAND_SERR |
--                               PCI_SCR_DROP_MODE_EN);
--
--	write_ireg(idd, ~0, IOC3_W_IEC);
--	writel(~0, &idd->vma->sio_ir);
--
--	/* Set up IRQs */
--	if(idd->class == IOC3_CLASS_BASE_IP30
--				|| idd->class == IOC3_CLASS_BASE_IP27) {
--		writel(0, &idd->vma->eier);
--		writel(~0, &idd->vma->eisr);
--
--		idd->dual_irq = 1;
--		if (!request_irq(pdev->irq, ioc3_intr_eth, IRQF_SHARED,
--				 "ioc3-eth", (void *)idd)) {
--			idd->irq_eth = pdev->irq;
--		} else {
--			printk(KERN_WARNING
--			       "%s : request_irq fails for IRQ 0x%x\n ",
--			       __func__, pdev->irq);
--		}
--		if (!request_irq(pdev->irq+2, ioc3_intr_io, IRQF_SHARED,
--				 "ioc3-io", (void *)idd)) {
--			idd->irq_io = pdev->irq+2;
--		} else {
--			printk(KERN_WARNING
--			       "%s : request_irq fails for IRQ 0x%x\n ",
--			       __func__, pdev->irq+2);
--		}
--	} else {
--		if (!request_irq(pdev->irq, ioc3_intr_io, IRQF_SHARED,
--				 "ioc3", (void *)idd)) {
--			idd->irq_io = pdev->irq;
--		} else {
--			printk(KERN_WARNING
--			       "%s : request_irq fails for IRQ 0x%x\n ",
--			       __func__, pdev->irq);
--		}
--	}
--
--	/* Add this IOC3 to all submodules */
--	for(id=0;id<IOC3_MAX_SUBMODULES;id++)
--		if(ioc3_submodules[id] && ioc3_submodules[id]->probe) {
--			idd->active[id] = 1;
--			idd->active[id] = !ioc3_submodules[id]->probe
--						(ioc3_submodules[id], idd);
--		}
--
--	printk(KERN_INFO "IOC3 Master Driver loaded for %s\n", pci_name(pdev));
--
--	return 0;
--
--out_misc_region:
--	release_mem_region(idd->pma, IOC3_PCI_SIZE);
--out_pci:
--	kfree(idd);
--out_idd:
--	pci_disable_device(pdev);
--out:
--	return ret;
--}
--
--/* Removes a particular instance of an IOC3 card. */
--static void ioc3_remove(struct pci_dev *pdev)
+-asmlinkage long
+-sys_pciconfig_read (unsigned long bus, unsigned long dfn, unsigned long off, unsigned long len,
+-		    void *buf)
 -{
--	int id;
--	struct ioc3_driver_data *idd;
--
--	idd = pci_get_drvdata(pdev);
--
--	/* Remove this IOC3 from all submodules */
--	for(id=0;id<IOC3_MAX_SUBMODULES;id++)
--		if(idd->active[id]) {
--			if(ioc3_submodules[id] && ioc3_submodules[id]->remove)
--				if(ioc3_submodules[id]->remove(ioc3_submodules[id],
--								idd))
--					printk(KERN_WARNING
--					       "%s: IOC3 submodule 0x%s remove failed "
--					       "for pci_dev %s.\n",
--						__func__,
--						module_name(ioc3_submodules[id]->owner),
--					        pci_name(pdev));
--			idd->active[id] = 0;
--		}
--
--	/* Clear and disable all IRQs */
--	write_ireg(idd, ~0, IOC3_W_IEC);
--	writel(~0, &idd->vma->sio_ir);
--
--	/* Release resources */
--	free_irq(idd->irq_io, (void *)idd);
--	if(idd->dual_irq)
--		free_irq(idd->irq_eth, (void *)idd);
--	iounmap(idd->vma);
--	release_mem_region(idd->pma, IOC3_PCI_SIZE);
--
--	/* Disable IOC3 and relinquish */
--	pci_disable_device(pdev);
--
--	/* Remove and free driver data */
--	down_write(&ioc3_devices_rwsem);
--	list_del(&idd->list);
--	up_write(&ioc3_devices_rwsem);
--	kfree(idd);
+-	return -ENOSYS;
 -}
 -
--static struct pci_device_id ioc3_id_table[] = {
--	{PCI_VENDOR_ID_SGI, PCI_DEVICE_ID_SGI_IOC3, PCI_ANY_ID, PCI_ANY_ID},
--	{0}
--};
--
--static struct pci_driver ioc3_driver = {
--	.name = "IOC3",
--	.id_table = ioc3_id_table,
--	.probe = ioc3_probe,
--	.remove = ioc3_remove,
--};
--
--MODULE_DEVICE_TABLE(pci, ioc3_id_table);
--
--/*********************
-- * Module management *
-- *********************/
--
--/* Module load */
--static int __init ioc3_init(void)
+-asmlinkage long
+-sys_pciconfig_write (unsigned long bus, unsigned long dfn, unsigned long off, unsigned long len,
+-		     void *buf)
 -{
--	if (ia64_platform_is("sn2"))
--		return pci_register_driver(&ioc3_driver);
--	return -ENODEV;
+-	return -ENOSYS;
 -}
 -
--/* Module unload */
--static void __exit ioc3_exit(void)
--{
--	pci_unregister_driver(&ioc3_driver);
--}
--
--module_init(ioc3_init);
--module_exit(ioc3_exit);
--
--MODULE_AUTHOR("Stanislaw Skowronek <skylark@linux-mips.org>");
--MODULE_DESCRIPTION("PCI driver for SGI IOC3");
--MODULE_LICENSE("GPL");
--
--EXPORT_SYMBOL_GPL(ioc3_register_submodule);
--EXPORT_SYMBOL_GPL(ioc3_unregister_submodule);
--EXPORT_SYMBOL_GPL(ioc3_ack);
--EXPORT_SYMBOL_GPL(ioc3_gpcr_set);
--EXPORT_SYMBOL_GPL(ioc3_disable);
--EXPORT_SYMBOL_GPL(ioc3_enable);
+-#endif /* CONFIG_PCI */
+diff --git a/arch/ia64/mm/init.c b/arch/ia64/mm/init.c
+index aae75fd7b810..9a4a16439900 100644
+--- a/arch/ia64/mm/init.c
++++ b/arch/ia64/mm/init.c
+@@ -632,14 +632,12 @@ mem_init (void)
+ 	BUG_ON(PTRS_PER_PMD * sizeof(pmd_t) != PAGE_SIZE);
+ 	BUG_ON(PTRS_PER_PTE * sizeof(pte_t) != PAGE_SIZE);
+ 
+-#ifdef CONFIG_PCI
+ 	/*
+ 	 * This needs to be called _after_ the command line has been parsed but _before_
+ 	 * any drivers that may need the PCI DMA interface are initialized or bootmem has
+ 	 * been freed.
+ 	 */
+ 	platform_dma_init();
+-#endif
+ 
+ #ifdef CONFIG_FLATMEM
+ 	BUG_ON(!mem_map);
 -- 
 2.20.1
 
