@@ -8,59 +8,59 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9AD55C32753
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E4B2BC433FF
 	for <linux-scsi@archiver.kernel.org>; Wed, 14 Aug 2019 23:57:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 69FC620866
+	by mail.kernel.org (Postfix) with ESMTP id B6E1020866
 	for <linux-scsi@archiver.kernel.org>; Wed, 14 Aug 2019 23:57:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HCv/hwHM"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Oi8Wm57k"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729362AbfHNX5k (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 14 Aug 2019 19:57:40 -0400
-Received: from mail-pf1-f194.google.com ([209.85.210.194]:41288 "EHLO
-        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729297AbfHNX5i (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Aug 2019 19:57:38 -0400
-Received: by mail-pf1-f194.google.com with SMTP id 196so329353pfz.8
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Aug 2019 16:57:38 -0700 (PDT)
+        id S1729326AbfHNX5j (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 14 Aug 2019 19:57:39 -0400
+Received: from mail-pg1-f196.google.com ([209.85.215.196]:41524 "EHLO
+        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729318AbfHNX5j (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Aug 2019 19:57:39 -0400
+Received: by mail-pg1-f196.google.com with SMTP id x15so416431pgg.8
+        for <linux-scsi@vger.kernel.org>; Wed, 14 Aug 2019 16:57:39 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=+7UHFqd2L0PrVtLEMrG6E04WzCjKj5Eg5RhplSzKcSU=;
-        b=HCv/hwHMjyga4uH7aOj5MrmaVvGdN0rTha/RVLzM5Wpy+yCvyPweFBujrnh9X1YcqS
-         0RV9m0Xva2XXAcJsM6Ky3N/d6i+j2LIKBi0Qwi5DWzXBhvSriGbrkD0jtuuEDzLNmNNK
-         NhOZ8B6aoWzx9/KGQHXtpcE3SFK2fAFjYYnMKFxvYS13C5SZUXH8GwM/kuWOBrVmIUyh
-         YfYTVpBS1E+2b9VrVGy9Y6Y9JtOIR96SJo5v7DfPvG0ob9PylwCl27K0yvJDpYxNaYwI
-         p2GGMs1HiuSR8U/xV4REb4VFis13xA/agS72XKjlAHkSvKUWZkpplGQaTpICsWsWZmOb
-         i6ww==
+        bh=XfINQM6wWP7zbA9TzJIKs7fJq+odv4gM+7ghNsZ2cUY=;
+        b=Oi8Wm57kx/beF47Gg/f/X7I2L8A0GOiYXStgw304IHSKslr3WHxDaIlJjpIvKQ6O7d
+         CoorRBXuRfP2UXCOLomJX1k7FPgkedHFefSKASC6HKjmiBbpWP3yHii0MjjWgoerkWqz
+         GKcx+xtc1IGVF+AyVq5ZyzoOlwmdCSmsopmn7Alx8IfJW8Ag7ZINl8LUlq6pvI8H/+aT
+         Gq8IJMl9blWpssx3/+UlXj29OMf1jpFItqeaSIuwosEpcLSPhI80SLcGne+vfPtnHWYV
+         WeVqp/JRp2sETNflZwzJciTloC4UdtWp9efzY/FZzH+YKs4hSnxX/ALw2Ul6s+QYEkCH
+         5F4w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=+7UHFqd2L0PrVtLEMrG6E04WzCjKj5Eg5RhplSzKcSU=;
-        b=B9cn0a/RAMzxBw3t1K+dZymVkMlAAtVIb67y4k1sIwBYQvuEluY2/dh/4JvHkziOaP
-         osYCh8Ax8ZlGnxTBp9KatB/WKD76q0UY4U/1s4NuzzEu/9MpRPq42cElIgfqnAyAYjC2
-         bslQjq3y28y+ZaDcmvsonkCDm42YEhkIeEfkyIe3A7WIZLIuRfm/kaVWqqzcvVUAJUVf
-         wMA6HcbFJaA+h3bvU+DuxaiajAFgSik9Y6TArneCAIehK0gBWRZYPRsathXmopvgRoNL
-         Wtb+4dlLdE6p6e3pTY3nQoXBELx5fyKpNLOV0aBWxapjEc/klg+5t8yJMx9LZXrpwtwi
-         KGrQ==
-X-Gm-Message-State: APjAAAUoQxmMaveJi2+3gM3jeKPpaMG+FdF9vbCcHlv4/0BNbSRVyBdC
-        EtJVsSoWLs8SRC39SGSI4it4LVZg
-X-Google-Smtp-Source: APXvYqwkeXVLGYAAMuSxAlvZueOpYYAPd+TdPxms8h7ejpc79ElCCbSCW9ISWQPsTPddBglmxZucng==
-X-Received: by 2002:a63:5648:: with SMTP id g8mr1339151pgm.81.1565827058047;
+        bh=XfINQM6wWP7zbA9TzJIKs7fJq+odv4gM+7ghNsZ2cUY=;
+        b=qFFG03VVhjeFDuEGnCihgEGbuyut5F37Y0x8PIfFGGHKQhieTe1j5feQE1dGdpS0ei
+         eo6EEJw7GK9KCoO8l+8IgHbqtK9+JSh67CzxEnFgOkCEXexmsEFjmARPX6SOGf3mONim
+         NhkuBtlm2tt3tzvT5RO7BsM1yEW6VOhqLBxXBk2hcR5E6EWqdy6eigIBZM9asd7mlTep
+         yVwIl2hmTRKt4te1DpNNzAdwh32TTedbR+1nsoELxegeaxNnpDABDLGYiYZ1NPJ6qOiu
+         8y5vCNTdDGa6W9zkJ2SWSUMx6gYM6Te+2N8t4qx/BC5GQRGvDVo7u5OGKF+2Ag7mxryz
+         hb2A==
+X-Gm-Message-State: APjAAAW805p9SLt24z5I+0+y1mwuR5qaMEjs5bKM5mSTN8Krgt8NtTAs
+        K0EEn90Hc7drjM3UyOVJBGfQFuI0
+X-Google-Smtp-Source: APXvYqwkhZBXNtReMhbFxM9FU2v6An/64LkOb2e7IVkr7PthnP2bDP6zSBTVxBsbuS0M8lHPZ4EN4A==
+X-Received: by 2002:aa7:81d9:: with SMTP id c25mr2600340pfn.255.1565827058742;
         Wed, 14 Aug 2019 16:57:38 -0700 (PDT)
 Received: from pallmd1.broadcom.com ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id k22sm987299pfk.157.2019.08.14.16.57.37
+        by smtp.gmail.com with ESMTPSA id k22sm987299pfk.157.2019.08.14.16.57.38
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-        Wed, 14 Aug 2019 16:57:37 -0700 (PDT)
+        Wed, 14 Aug 2019 16:57:38 -0700 (PDT)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Dick Kennedy <dick.kennedy@broadcom.com>
-Subject: [PATCH 20/42] lpfc: Fix driver nvme rescan logging
-Date:   Wed, 14 Aug 2019 16:56:50 -0700
-Message-Id: <20190814235712.4487-21-jsmart2021@gmail.com>
+Subject: [PATCH 21/42] lpfc: Fix error in remote port address change
+Date:   Wed, 14 Aug 2019 16:56:51 -0700
+Message-Id: <20190814235712.4487-22-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.13.7
 In-Reply-To: <20190814235712.4487-1-jsmart2021@gmail.com>
 References: <20190814235712.4487-1-jsmart2021@gmail.com>
@@ -69,114 +69,77 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In situations where zoning is not being used, thus NVMe initiators
-see other NVMe initiators as well as NVMe targets, a link bounce
-on an initiator will cause the NVMe initiators to spew "6169" State
-Error messages.
+In a test with high nvme remote port counts connected via a
+multi-hop FC switch config where switches were systematically
+reset (e.g. fabric partitioning and re-establishment), the nvme
+remote ports would switch addresses based on the switch
+reconfiguration events. The driver would get into a situation
+where the nvme port changed address, PLOGI and PRLI would succeed
+nvme transport registration occurred, but subsequent LS requests
+by the nvme subsystem failed due to a bad ndlp state and
+connectivity to the device failed.
 
-The driver is not qualifying whether the remote port is a NVMe
-targer or not before calling the lpfc_nvme_rescan_port(), which
-validates the role and prints the message if its only an NVMe
-initiator.
+The driver hit a race condition on multiple devices that address
+swapped simultaneously. In cases where the driver notices the
+remote port structure came back as the same value as previously
+(meaning a nvme_rport structure was re-enabled and did not go
+through devloss_tmo/connect_tmo_failures on all controllers) the
+driver would unconditionally exit assuming the ndlp information
+was correct. But, if the ndlp's had been swapped, the ndlp had
+stale port state information, which when used by the LS request
+commands, would fail the commands.
 
-Fix by the following:
-- before calling lpfc_nvme_rescan_port() ensure that the node is a
-  NVMe storage target or a NVMe discovery controller.
-- Clean up implementation of lpfc_nvme_rescan_port. remoteport pointer
-  will always be NULL if a NVMe initiator only. But, grabbing of
-  remoteport pointer should be done under lock to coincide with
-  the registering of the remote port with the fc transport.
+Fix by checking whether a node swap had occurred, and only exit
+if no ndlp swap had occurred.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_els.c  | 12 ++++++++++--
- drivers/scsi/lpfc/lpfc_nvme.c | 31 +++++++++++++++++--------------
- 2 files changed, 27 insertions(+), 16 deletions(-)
+ drivers/scsi/lpfc/lpfc_nvme.c | 17 +++++++++++++----
+ 1 file changed, 13 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 8103635adc38..d919f3161160 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -6360,7 +6360,11 @@ lpfc_rscn_recovery_check(struct lpfc_vport *vport)
- 			continue;
- 		}
- 
--		if (ndlp->nlp_fc4_type & NLP_FC4_NVME)
-+		/* Check to see if we need to NVME rescan this target
-+		 * remoteport.
-+		 */
-+		if (ndlp->nlp_fc4_type & NLP_FC4_NVME &&
-+		    ndlp->nlp_type & (NLP_NVME_TARGET | NLP_NVME_DISCOVERY))
- 			lpfc_nvme_rescan_port(vport, ndlp);
- 
- 		lpfc_disc_state_machine(vport, ndlp, NULL,
-@@ -6474,7 +6478,11 @@ lpfc_els_rcv_rscn(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
- 				 *lp, vport->fc_flag, payload_len);
- 		lpfc_els_rsp_acc(vport, ELS_CMD_ACC, cmdiocb, ndlp, NULL);
- 
--		if (ndlp->nlp_fc4_type & NLP_FC4_NVME)
-+		/* Check to see if we need to NVME rescan this target
-+		 * remoteport.
-+		 */
-+		if (ndlp->nlp_fc4_type & NLP_FC4_NVME &&
-+		    ndlp->nlp_type & (NLP_NVME_TARGET | NLP_NVME_DISCOVERY))
- 			lpfc_nvme_rescan_port(vport, ndlp);
- 		return 0;
- 	}
 diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
-index 9746808cf94f..e8924e90c4eb 100644
+index e8924e90c4eb..103708503592 100644
 --- a/drivers/scsi/lpfc/lpfc_nvme.c
 +++ b/drivers/scsi/lpfc/lpfc_nvme.c
-@@ -2426,20 +2426,23 @@ void
- lpfc_nvme_rescan_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
- {
- #if (IS_ENABLED(CONFIG_NVME_FC))
--	struct lpfc_nvme_rport *rport;
--	struct nvme_fc_remote_port *remoteport;
-+	struct lpfc_nvme_rport *nrport;
-+	struct nvme_fc_remote_port *remoteport = NULL;
- 
--	rport = ndlp->nrport;
-+	spin_lock_irq(&vport->phba->hbalock);
-+	nrport = lpfc_ndlp_get_nrport(ndlp);
-+	if (nrport)
-+		remoteport = nrport->remoteport;
-+	spin_unlock_irq(&vport->phba->hbalock);
- 
- 	lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_DISC,
- 			 "6170 Rescan NPort DID x%06x type x%x "
--			 "state x%x rport %p\n",
--			 ndlp->nlp_DID, ndlp->nlp_type, ndlp->nlp_state, rport);
--	if (!rport)
--		goto input_err;
--	remoteport = rport->remoteport;
--	if (!remoteport)
--		goto input_err;
-+			 "state x%x nrport x%px remoteport x%px\n",
-+			 ndlp->nlp_DID, ndlp->nlp_type, ndlp->nlp_state,
-+			 nrport, remoteport);
+@@ -2348,7 +2348,7 @@ lpfc_nvme_register_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
+ 				 */
+ 				lpfc_printf_vlog(ndlp->vport, KERN_INFO,
+ 						 LOG_NVME_DISC,
+-						 "6014 Rebinding lport to "
++						 "6014 Rebind lport to current "
+ 						 "remoteport %p wwpn 0x%llx, "
+ 						 "Data: x%x x%x %p %p x%x x%06x\n",
+ 						 remote_port,
+@@ -2359,7 +2359,16 @@ lpfc_nvme_register_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
+ 						 ndlp,
+ 						 ndlp->nlp_type,
+ 						 ndlp->nlp_DID);
+-				return 0;
 +
-+	if (!nrport || !remoteport)
-+		goto rescan_exit;
++				/* It's a complete rebind only if the driver
++				 * is registering with the same ndlp. Otherwise
++				 * the driver likely executed a node swap
++				 * prior to this registration and the ndlp to
++				 * remoteport binding needs to be redone.
++				 */
++				if (prev_ndlp == ndlp)
++					return 0;
++
+ 			}
  
- 	/* Only rescan if we are an NVME target in the MAPPED state */
- 	if (remoteport->port_role & FC_PORT_ROLE_NVME_DISCOVERY &&
-@@ -2452,10 +2455,10 @@ lpfc_nvme_rescan_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
- 				 ndlp->nlp_DID, remoteport->port_state);
- 	}
- 	return;
--input_err:
--	lpfc_printf_vlog(vport, KERN_ERR, LOG_NVME_DISC,
--			 "6169 State error: lport %p, rport%p FCID x%06x\n",
--			 vport->localport, ndlp->rport, ndlp->nlp_DID);
-+ rescan_exit:
-+	lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_DISC,
-+			 "6169 Skip NVME Rport Rescan, NVME remoteport "
-+			 "unregistered\n");
- #endif
- }
- 
+ 			/* Sever the ndlp<->rport association
+@@ -2393,8 +2402,8 @@ lpfc_nvme_register_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
+ 		spin_unlock_irq(&vport->phba->hbalock);
+ 		lpfc_printf_vlog(vport, KERN_INFO,
+ 				 LOG_NVME_DISC | LOG_NODE,
+-				 "6022 Binding new rport to "
+-				 "lport %p Remoteport %p rport %p WWNN 0x%llx, "
++				 "6022 Bind lport x%px to remoteport x%px "
++				 "rport x%px WWNN 0x%llx, "
+ 				 "Rport WWPN 0x%llx DID "
+ 				 "x%06x Role x%x, ndlp %p prev_ndlp %p\n",
+ 				 lport, remote_port, rport,
 -- 
 2.13.7
 
