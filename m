@@ -8,59 +8,59 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 30414C433FF
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B17DC433FF
 	for <linux-scsi@archiver.kernel.org>; Wed, 14 Aug 2019 23:57:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0218120866
+	by mail.kernel.org (Postfix) with ESMTP id 4FBF920866
 	for <linux-scsi@archiver.kernel.org>; Wed, 14 Aug 2019 23:57:47 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HYAqT/6I"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dKycomtH"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729802AbfHNX5q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1729805AbfHNX5q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Wed, 14 Aug 2019 19:57:46 -0400
-Received: from mail-pf1-f196.google.com ([209.85.210.196]:39857 "EHLO
-        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729789AbfHNX5p (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Aug 2019 19:57:45 -0400
-Received: by mail-pf1-f196.google.com with SMTP id f17so336469pfn.6
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Aug 2019 16:57:45 -0700 (PDT)
+Received: from mail-pg1-f193.google.com ([209.85.215.193]:40815 "EHLO
+        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729274AbfHNX5o (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Aug 2019 19:57:44 -0400
+Received: by mail-pg1-f193.google.com with SMTP id w10so418090pgj.7
+        for <linux-scsi@vger.kernel.org>; Wed, 14 Aug 2019 16:57:43 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=PfRaxnZCHcEhlnCXr03SswVRFUECQbb2J1Ml+8xWeEo=;
-        b=HYAqT/6Id4PgBXyb3UZyUHHtTU/UUS9AgzqwqUBqS8q0RPGveCIuwXUFpG/FZoUgPY
-         RVoaSOMpB4ig7EwxHaYDApS19uaT4g6U2VcnaKE5jUnlbapNAvskE3TbOESDvRMqVKti
-         em8nNpBHffjDC0iDZU6OZasuD0hec8vUBeHVDMCP6uAiA3q40QsGo08jtZESyA05FIIQ
-         JhGBW9QFI7uZfgLlca8kpDY8rrDSGWX2Qd6QhRvjUCpzhl5LAStAu3GhexQh3zz7yKlB
-         bv5z//vBRJgW+FjiNn5wsgWJA+zpVF2oC0cF/CvaQiLSHfLI+69Tfue8sIcJYQKuMK6Y
-         NtDw==
+        bh=eLhVuoRrokclWvApSDlim0NTChrXQGYPqDlCbt2IdxY=;
+        b=dKycomtH+EOhqBbTzP2vzCgIVA/KVpxmpnBBNFYCHiE31+/AR952nC2C4P/2nz2P1S
+         LspPgY1AWt8y0r9j5Klo+KlLeyILcG7A2+4yEyBUeSlzpR3PsckMbM2eLVFIB5xiIO9r
+         MF1Zwb0Xutou7q812bINGx11DuRhwazmt1IP8lpLebeeeJFUl4H3kMkXc9jyXEamVPIK
+         NkS7fmpnquD4c3y5iQqZXsfKM99cmKVEhOCndvXcE5LUZpaymLNzMdq1wuKHCvJuqSd1
+         sXNNlx7jxzO+OOo2BCB+0kQ0mZP0iSGB1sFELeqQ9Ey7jRsBwoCeMDWu18ZSVjwKVnkw
+         zXFQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=PfRaxnZCHcEhlnCXr03SswVRFUECQbb2J1Ml+8xWeEo=;
-        b=oymQYIoMI7zQZOKbnSJw+qRIUSLjC6+bdLoMamsCUUgKIeyRjakdt3lZOVIxO4HfGC
-         zStc1dlP0aocPMKb63wVXVyqny6aq3bYbDp082ETuFv6Vy3sz+PCpiT8RFb8Fm7eXLli
-         k2+E0HF6RzTaucL7HHPnQboZ7CM7cuodmEn2y2UHZ6Ez9rnhEAtvZqPj6iLZ5Q9Ot4+s
-         TjIcP65/KDX9Vhwp8zdfjEjApNYWiOD9xWPMyj/vTOrROa0XIRW9rIZyXixxyBGfw8tf
-         C31mTv0VAtwvK0vHeTF3hrO/1ERwAidg/WKQMRLC8nxus05v/PIW7r4Ja0Kn/fjKXNy8
-         ru0Q==
-X-Gm-Message-State: APjAAAVEQ0LK1bIWwJkkFUJiaj6gAy5A5DjAkRgePoU9+RZ9y3/gaP2R
-        BawJW0evTDS09qOveIpAcTEOy+Ap
-X-Google-Smtp-Source: APXvYqysUM5jphEMk4JFA8T8qoYKKaqno3AM96+Zv+YdEnLH539znGgexOiD5tRc4GQE+AJnsyUOeQ==
-X-Received: by 2002:a63:e010:: with SMTP id e16mr1332012pgh.285.1565827064704;
-        Wed, 14 Aug 2019 16:57:44 -0700 (PDT)
+        bh=eLhVuoRrokclWvApSDlim0NTChrXQGYPqDlCbt2IdxY=;
+        b=dbzKKjADLfotzRhlgEYZ9coV4yELPAShcwAibc1gtLt9zFJZnqlFflrkxRiIEkQDKd
+         0XWZZS1yPS9zkwR9B4eblrg8qPltmoNz9rHpGy0uITQQNPnjD/L+vPnJilt3dpaWNzD3
+         I1fEpOlmBGfm4iHMl3GgIfs3OjF0lHPA053Tcr9b36Gzyg076NT7CiOtjk+u5yw4cS6Q
+         1nXMc1gKZqC/CL3V9ms1ww3HkV/hsNpEaAG3ySDwlvt5AgzwSePAj00Q13g/NK8aTbzj
+         uymLGWG12cGUTrTmIfr5/7XHoOoATjcuibPXYrdTpM5iaSoW93sq5y8CGm8l6xjNp8jY
+         WnKQ==
+X-Gm-Message-State: APjAAAWR7BdNhzc7ix2xtfS2RsthZ7Ro9IUYuyHgdc/gxZXqfqAOrEfd
+        mXSEppxw+ynbwGuoMV4kCxvdb1m3
+X-Google-Smtp-Source: APXvYqzfscBrFw5EmjpnSpfquJOSIq3N+HwcT2Tl+TY93m1mXOMSf1LY7cIxwnzVzMP/zSd5yCrZlg==
+X-Received: by 2002:a65:6288:: with SMTP id f8mr1370614pgv.292.1565827063277;
+        Wed, 14 Aug 2019 16:57:43 -0700 (PDT)
 Received: from pallmd1.broadcom.com ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id k22sm987299pfk.157.2019.08.14.16.57.44
+        by smtp.gmail.com with ESMTPSA id k22sm987299pfk.157.2019.08.14.16.57.42
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-        Wed, 14 Aug 2019 16:57:44 -0700 (PDT)
+        Wed, 14 Aug 2019 16:57:42 -0700 (PDT)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Dick Kennedy <dick.kennedy@broadcom.com>
-Subject: [PATCH 29/42] lpfc: Fix upcall to bsg done in non-success cases
-Date:   Wed, 14 Aug 2019 16:56:59 -0700
-Message-Id: <20190814235712.4487-30-jsmart2021@gmail.com>
+Subject: [PATCH 27/42] lpfc: Fix nvme sg_seg_cnt display if HBA does not support NVME
+Date:   Wed, 14 Aug 2019 16:56:57 -0700
+Message-Id: <20190814235712.4487-28-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.13.7
 In-Reply-To: <20190814235712.4487-1-jsmart2021@gmail.com>
 References: <20190814235712.4487-1-jsmart2021@gmail.com>
@@ -69,82 +69,29 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The scsi transport fc bsg interface does not expect the
-bsg_job_done() callback to be done if the bsg request call
-returns failure. Several of the HST_VENDOR cases in the driver
-unconditionally call bsg_job_done() regardless of the returning
-value.
+The driver is currently reporting a non-zero nvme sg_seg_cnt value
+of 256 when nvme is disabled. It should be zero.
 
-Fix the code to only call bsg_job_done() if the call to
-lpfc_bsg_request() will return success.
+Fix by ensuring the value is cleared.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_bsg.c | 22 +++++++++++++++-------
- 1 file changed, 15 insertions(+), 7 deletions(-)
+ drivers/scsi/lpfc/lpfc_init.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
-index c7f66239ca70..9b9858078076 100644
---- a/drivers/scsi/lpfc/lpfc_bsg.c
-+++ b/drivers/scsi/lpfc/lpfc_bsg.c
-@@ -5449,7 +5449,9 @@ lpfc_bsg_get_ras_config(struct bsg_job *job)
- 	bsg_reply->result = rc;
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 98db1f7e536e..1e43890f9ae1 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -11697,6 +11697,7 @@ lpfc_get_sli4_parameters(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq)
+ 			phba->nvme_support = 0;
+ 			phba->nvmet_support = 0;
+ 			phba->cfg_nvmet_mrq = 0;
++			phba->cfg_nvme_seg_cnt = 0;
  
- 	/* complete the job back to userspace */
--	bsg_job_done(job, bsg_reply->result, bsg_reply->reply_payload_rcv_len);
-+	if (!rc)
-+		bsg_job_done(job, bsg_reply->result,
-+			     bsg_reply->reply_payload_rcv_len);
- 	return rc;
- }
- 
-@@ -5528,8 +5530,9 @@ lpfc_bsg_set_ras_config(struct bsg_job *job)
- 	bsg_reply->result = rc;
- 
- 	/* complete the job back to userspace */
--	bsg_job_done(job, bsg_reply->result,
--		       bsg_reply->reply_payload_rcv_len);
-+	if (!rc)
-+		bsg_job_done(job, bsg_reply->result,
-+			     bsg_reply->reply_payload_rcv_len);
- 
- 	return rc;
- }
-@@ -5589,7 +5592,9 @@ lpfc_bsg_get_ras_lwpd(struct bsg_job *job)
- 	bsg_reply->result = rc;
- 
- 	/* complete the job back to userspace */
--	bsg_job_done(job, bsg_reply->result, bsg_reply->reply_payload_rcv_len);
-+	if (!rc)
-+		bsg_job_done(job, bsg_reply->result,
-+			     bsg_reply->reply_payload_rcv_len);
- 
- 	return rc;
- }
-@@ -5671,7 +5676,9 @@ lpfc_bsg_get_ras_fwlog(struct bsg_job *job)
- 
- ras_job_error:
- 	bsg_reply->result = rc;
--	bsg_job_done(job, bsg_reply->result, bsg_reply->reply_payload_rcv_len);
-+	if (!rc)
-+		bsg_job_done(job, bsg_reply->result,
-+			     bsg_reply->reply_payload_rcv_len);
- 
- 	return rc;
- }
-@@ -5742,8 +5749,9 @@ lpfc_get_trunk_info(struct bsg_job *job)
- 				phba->sli4_hba.link_state.logical_speed / 1000;
- job_error:
- 	bsg_reply->result = rc;
--	bsg_job_done(job, bsg_reply->result,
--		       bsg_reply->reply_payload_rcv_len);
-+	if (!rc)
-+		bsg_job_done(job, bsg_reply->result,
-+			     bsg_reply->reply_payload_rcv_len);
- 	return rc;
- 
- }
+ 			/* If no FC4 type support, move to just SCSI support */
+ 			if (!(phba->cfg_enable_fc4_type & LPFC_ENABLE_FCP))
 -- 
 2.13.7
 
