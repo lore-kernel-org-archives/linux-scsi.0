@@ -3,109 +3,89 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2 autolearn=no
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF123C32759
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Aug 2019 17:19:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E4439C433FF
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Aug 2019 17:26:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A0B2E20665
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Aug 2019 17:19:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C340E206C1
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Aug 2019 17:26:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728993AbfHNRTH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 14 Aug 2019 13:19:07 -0400
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:11048 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1728776AbfHNRTG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 14 Aug 2019 13:19:06 -0400
-Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.27/8.16.0.27) with SMTP id x7EGr4o1001880;
-        Wed, 14 Aug 2019 13:18:51 -0400
-Received: from ppma03wdc.us.ibm.com (ba.79.3fa9.ip4.static.sl-reverse.com [169.63.121.186])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 2ucp47s3vu-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 14 Aug 2019 13:18:51 -0400
-Received: from pps.filterd (ppma03wdc.us.ibm.com [127.0.0.1])
-        by ppma03wdc.us.ibm.com (8.16.0.27/8.16.0.27) with SMTP id x7EGtZYC006002;
-        Wed, 14 Aug 2019 17:18:50 GMT
-Received: from b03cxnp08025.gho.boulder.ibm.com (b03cxnp08025.gho.boulder.ibm.com [9.17.130.17])
-        by ppma03wdc.us.ibm.com with ESMTP id 2u9nj648pe-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 14 Aug 2019 17:18:50 +0000
-Received: from b03ledav006.gho.boulder.ibm.com (b03ledav006.gho.boulder.ibm.com [9.17.130.237])
-        by b03cxnp08025.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id x7EHIn2S52232660
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 14 Aug 2019 17:18:49 GMT
-Received: from b03ledav006.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 97EBBC605B;
-        Wed, 14 Aug 2019 17:18:49 +0000 (GMT)
-Received: from b03ledav006.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 1204FC6059;
-        Wed, 14 Aug 2019 17:18:45 +0000 (GMT)
-Received: from [9.85.86.184] (unknown [9.85.86.184])
-        by b03ledav006.gho.boulder.ibm.com (Postfix) with ESMTP;
-        Wed, 14 Aug 2019 17:18:44 +0000 (GMT)
-Message-ID: <1565803123.6908.10.camel@abdul>
-Subject: Re: [5.3.0-rc4-next][bisected 882632][qla2xxx] WARNING: CPU: 10
- PID: 425 at drivers/scsi/qla2xxx/qla_isr.c:2784 qla2x00_status_entry.isra
-From:   Abdul Haleem <abdhalee@linux.vnet.ibm.com>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-        linux-next <linux-next@vger.kernel.org>,
+        id S1728882AbfHNR0A convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 14 Aug 2019 13:26:00 -0400
+Received: from mail-pl1-f193.google.com ([209.85.214.193]:45619 "EHLO
+        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729398AbfHNRFP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Aug 2019 13:05:15 -0400
+Received: by mail-pl1-f193.google.com with SMTP id y8so8848838plr.12;
+        Wed, 14 Aug 2019 10:05:15 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=GTqeZQuB5IgM+FmX9PwW5NoGtvVH2NCZhDAITGesyDI=;
+        b=V4BknI/9PTqQybKoUCZBxz9U/b5ss9/oMzwfXviFWJQvjysp2n0UMUxS4FpgjCLXNC
+         72470W68kb3LTbYUsJih/SDba9IqNn0ofADPWaJ966SEiVPgF78wx2OJfRwp/yIB2QQ5
+         qzPM8Ofh149MJk+AuTxTGqfu/1gyYBBJc7zJb0mvK16xoWGgSRqq7nNe/UOopunAuGXl
+         rwdSx6g1dloV4QulTqGLbsw4t9cwXL6aAAEOzRXGc4Dzp5Jw7PpShCS0vdUgdImPmFUH
+         FlxekAu7Er1Z52PVHAq7HsTdPq6GvUwQM7+xYXZZHcHOEOxGztHVf/Vikv/VaPTmjgL8
+         jHNA==
+X-Gm-Message-State: APjAAAV3ciIb0fHybDZhn8ptyDFsaapNXBdwukteY4FH0ct5nMbcOUFV
+        djIwVtzpMtm3jTQydCpQ3Klfc9WrCXo=
+X-Google-Smtp-Source: APXvYqyY7dMRw94QInx53Q43ZHoQCxgqlpv6Xz4f7o17+uQhWoBsE2UtI2jpEFYNuEjRmoBdpNZKug==
+X-Received: by 2002:a17:902:8345:: with SMTP id z5mr406730pln.29.1565802314643;
+        Wed, 14 Aug 2019 10:05:14 -0700 (PDT)
+Received: from ?IPv6:2620:15c:2c1:200:fb9c:664d:d2ad:c9b5? ([2620:15c:2c1:200:fb9c:664d:d2ad:c9b5])
+        by smtp.gmail.com with ESMTPSA id c70sm359640pfb.163.2019.08.14.10.05.12
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 14 Aug 2019 10:05:13 -0700 (PDT)
+Subject: Re: [5.3.0-rc4-next][bisected 882632][qla2xxx] WARNING: CPU: 10 PID:
+ 425 at drivers/scsi/qla2xxx/qla_isr.c:2784 qla2x00_status_entry.isra
+To:     Abdul Haleem <abdhalee@linux.vnet.ibm.com>,
+        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
+Cc:     linux-next <linux-next@vger.kernel.org>,
         Stephen Rothwell <sfr@canb.auug.org.au>,
         linux-scsi <linux-scsi@vger.kernel.org>,
         martin.petersen@oracle.com, hmadhani@marvell.com,
         sachinp <sachinp@linux.vnet.ibm.com>,
-        linux-kernel <linux-kernel@vger.kernel.org>
-Date:   Wed, 14 Aug 2019 22:48:43 +0530
-In-Reply-To: <cafb1d40-a11e-c137-db06-4564e5f5caf5@acm.org>
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        Himanshu Madhani <hmadhani@marvell.com>
 References: <1565801523.6908.6.camel@abdul>
-         <cafb1d40-a11e-c137-db06-4564e5f5caf5@acm.org>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.10.4-0ubuntu1 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:,, definitions=2019-08-14_06:,,
- signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- malwarescore=0 suspectscore=0 phishscore=0 bulkscore=0 spamscore=0
- clxscore=1015 lowpriorityscore=0 mlxscore=0 impostorscore=0
- mlxlogscore=850 adultscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.0.1-1906280000 definitions=main-1908140158
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <cafb1d40-a11e-c137-db06-4564e5f5caf5@acm.org>
+Date:   Wed, 14 Aug 2019 10:05:11 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
+MIME-Version: 1.0
+In-Reply-To: <1565801523.6908.6.camel@abdul>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8BIT
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 2019-08-14 at 10:05 -0700, Bart Van Assche wrote:
-> On 8/14/19 9:52 AM, Abdul Haleem wrote:
-> > Greeting's
-> > 
-> > Today's linux-next kernel (5.3.0-rc4-next-20190813)  booted with warning on my powerpc power 8 lpar
-> > 
-> > The WARN_ON_ONCE() was introduced by commit 88263208 (scsi: qla2xxx: Complain if sp->done() is not...)
-> > 
-> > boot logs:
-> > 
-> > WARNING: CPU: 10 PID: 425 at drivers/scsi/qla2xxx/qla_isr.c:2784
+On 8/14/19 9:52 AM, Abdul Haleem wrote:
+> Greeting's
 > 
-> Hi Abdul,
+> Today's linux-next kernel (5.3.0-rc4-next-20190813)  booted with warning on my powerpc power 8 lpar
 > 
-> Thank you for having reported this. Is that the only warning reported on your setup by the qla2xxx
-> driver? If that warning is commented out, does the qla2xxx driver work as expected?
+> The WARN_ON_ONCE() was introduced by commit 88263208 (scsi: qla2xxx: Complain if sp->done() is not...)
+> 
+> boot logs:
+> 
+> WARNING: CPU: 10 PID: 425 at drivers/scsi/qla2xxx/qla_isr.c:2784
 
-boot warning did not show up when the commit is reverted.
+Hi Abdul,
 
-should I comment out only the WARN_ON_ONCE() which is causing the issue,
-and not the other one ?
+Thank you for having reported this. Is that the only warning reported on your setup by the qla2xxx
+driver? If that warning is commented out, does the qla2xxx driver work as expected?
 
--- 
-Regard's
+Thanks,
 
-Abdul Haleem
-IBM Linux Technology Centre
-
-
+Bart.
 
