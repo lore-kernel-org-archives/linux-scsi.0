@@ -2,150 +2,142 @@ Return-Path: <SRS0=JpCa=WK=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 098E1C0650F
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Aug 2019 06:25:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B194C0650F
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Aug 2019 06:36:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D9B8420843
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Aug 2019 06:25:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2578E208C2
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Aug 2019 06:36:34 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Gr/yUIA7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727011AbfHNGZU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 14 Aug 2019 02:25:20 -0400
-Received: from mx2.suse.de ([195.135.220.15]:59068 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726855AbfHNGZU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 14 Aug 2019 02:25:20 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 75672AE60;
-        Wed, 14 Aug 2019 06:25:18 +0000 (UTC)
-Subject: Re: [PATCH 3/3] scsi: qla2xxx: calculate dump size if EFT alloc fails
-To:     Martin Wilck <Martin.Wilck@suse.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Himanshu Madhani <hmadhani@marvell.com>
-Cc:     Bart Van Assche <Bart.VanAssche@sandisk.com>,
-        Joe Carnuccio <joe.carnuccio@cavium.com>,
-        Quinn Tran <qutran@marvell.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        Bart Van Assche <bvanassche@acm.org>
-References: <20190813203034.7354-1-martin.wilck@suse.com>
- <20190813203034.7354-4-martin.wilck@suse.com>
-From:   Hannes Reinecke <hare@suse.de>
-Openpgp: preference=signencrypt
-Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
- 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
- azzYF4VRJsdl+d0MCaSy8mUh
-Message-ID: <70c86ea3-9c76-7d66-5500-488a6952f887@suse.de>
-Date:   Wed, 14 Aug 2019 08:25:18 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.7.2
+        id S1727358AbfHNGgb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 14 Aug 2019 02:36:31 -0400
+Received: from mail-pg1-f194.google.com ([209.85.215.194]:33540 "EHLO
+        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726940AbfHNGga (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Aug 2019 02:36:30 -0400
+Received: by mail-pg1-f194.google.com with SMTP id n190so11760227pgn.0;
+        Tue, 13 Aug 2019 23:36:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=V2ZJmMM7eBUrb1Y12nRIIaugrWodscFeaE9AP4JG/Zg=;
+        b=Gr/yUIA7h/3eBDYc9/YH3PmK0TnssS6CO/9hFNunLAWWczG3OiVHN4WIIgL3E9ZCpt
+         lxw0s7tI4ERoXSIwh3JMsdgc8zNzPjnA6BXgqeWAmqEyh+LbCMXm65+O4nT6k1c31e4G
+         72a+RzjyGS+EkSW5x52rptXOtidXTsKAuxWhyJ3b6xCpOT6ucihhvpEg52ywhW82gF/O
+         HmWN/pIGHF5t5B5reCnO/nsCfzeJAwUmX5rfj3UfluGG3M6/UTPt0Rx+R75a3hwPVGGS
+         CEB7dg3ncNyljnIstqsOyQ3HSCSlywswvj4u3icgmk4pUqxyXQc3S7rYfldNhw5/Vge5
+         lm7Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=V2ZJmMM7eBUrb1Y12nRIIaugrWodscFeaE9AP4JG/Zg=;
+        b=VfatWZi2jk7Da/3tWd0auYKCJzuJ73Eomf0Rg677KQTiokULd0hOD1t1WPIULL7+Ur
+         lDUCIJBzyKz0R1pex0yauixfhb42Bawzo8Iw98YK2Uu+TcAWn5/kr+7/oHTEZ1vixfHC
+         CzMQf0d4r0xBuuCKc5bAsgNiEr9sYqC9Fj5xKyTO8oNyII2y0fgD8PAzO5Y18BR6rQej
+         otuuqy5J2anmqabhuhamJqThvBZIFjZSHu95nLHmNqK8P+MCbpTNC5GNfvrN03dqPOle
+         nuLxSSz+22KYDAi9rvwNqe7sEOmzv59aBjnBSUH5fbisihdM7FIaOUfSGzmzvdxsbacF
+         yVKA==
+X-Gm-Message-State: APjAAAWC77hMiweIYiz8Dz6e1XlrzLJTIFlC62+4O6kJMAFj5mHIW1VO
+        TZ/MeaJIAlK7ag24t4NnmqA=
+X-Google-Smtp-Source: APXvYqw/2y0dZHWefWOjTwta+m4FUhziJYRwexQISdGldO7ge/xr1KdLXo0S4VRw57w8u++ZXvSuxA==
+X-Received: by 2002:a63:89c2:: with SMTP id v185mr37393202pgd.241.1565764588977;
+        Tue, 13 Aug 2019 23:36:28 -0700 (PDT)
+Received: from himanshu-Vostro-3559 ([103.77.43.147])
+        by smtp.gmail.com with ESMTPSA id j15sm109471223pfr.146.2019.08.13.23.36.15
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Tue, 13 Aug 2019 23:36:27 -0700 (PDT)
+Date:   Wed, 14 Aug 2019 12:06:11 +0530
+From:   Himanshu Jha <himanshujha199640@gmail.com>
+To:     Matthias Maennich <maennich@google.com>
+Cc:     linux-kernel@vger.kernel.org, maco@android.com,
+        kstewart@linuxfoundation.org, linux-m68k@vger.kernel.org,
+        oneukum@suse.com,
+        Mauro Carvalho Chehab <mchehab+samsung@kernel.org>,
+        usb-storage@lists.one-eyed-alien.net, hpa@zytor.com,
+        joel@joelfernandes.org, sam@ravnborg.org, cocci@systeme.lip6.fr,
+        linux-arch@vger.kernel.org, linux-scsi@vger.kernel.org,
+        x86@kernel.org, lucas.de.marchi@gmail.com, mingo@redhat.com,
+        geert@linux-m68k.org, stern@rowland.harvard.edu,
+        kernel-team@android.com, sspatil@google.com, arnd@arndb.de,
+        linux-kbuild@vger.kernel.org,
+        Nicolas Palix <nicolas.palix@imag.fr>, jeyu@kernel.org,
+        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+        tglx@linutronix.de, michal.lkml@markovi.net,
+        gregkh@linuxfoundation.org, linux-usb@vger.kernel.org,
+        sboyd@codeaurora.org, Nicolas Ferre <nicolas.ferre@microchip.com>,
+        maco@google.com, pombredanne@nexb.com,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-modules@vger.kernel.org
+Subject: Re: [Cocci] [PATCH v2 08/10] scripts: Coccinelle script for
+ namespace dependencies.
+Message-ID: <20190814063611.GA22387@himanshu-Vostro-3559>
+References: <20180716122125.175792-1-maco@android.com>
+ <20190813121733.52480-1-maennich@google.com>
+ <20190813121733.52480-9-maennich@google.com>
 MIME-Version: 1.0
-In-Reply-To: <20190813203034.7354-4-martin.wilck@suse.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190813121733.52480-9-maennich@google.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/13/19 10:31 PM, Martin Wilck wrote:
-> From: Martin Wilck <mwilck@suse.com>
+On Tue, Aug 13, 2019 at 01:17:05PM +0100, Matthias Maennich wrote:
+> A script that uses the '<module>.ns_deps' file generated by modpost to
+> automatically add the required symbol namespace dependencies to each
+> module.
 > 
-> It seems right to try and calculate the dump size properly
-> even in the error case, before allocating the dump buffers.
+> Usage:
+> 1) Move some symbols to a namespace with EXPORT_SYMBOL_NS() or define
+>    DEFAULT_SYMBOL_NAMESPACE
+> 2) Run 'make' (or 'make modules') and get warnings about modules not
+>    importing that namespace.
+> 3) Run 'make nsdeps' to automatically add required import statements
+>    to said modules.
 > 
-> Cc: Joe Carnuccio <joe.carnuccio@cavium.com>
-> Cc: Quinn Tran <qutran@marvell.com>
-> Cc: Himanshu Madhani <hmadhani@marvell.com>
-> Cc: Bart Van Assche <bvanassche@acm.org>
-> Signed-off-by: Martin Wilck <mwilck@suse.com>
+> This makes it easer for subsystem maintainers to introduce and maintain
+> symbol namespaces into their codebase.
+> 
+> Co-developed-by: Martijn Coenen <maco@android.com>
+> Signed-off-by: Martijn Coenen <maco@android.com>
+> Signed-off-by: Matthias Maennich <maennich@google.com>
 > ---
->  drivers/scsi/qla2xxx/qla_init.c | 5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-> index ca9c3f3..8427436 100644
-> --- a/drivers/scsi/qla2xxx/qla_init.c
-> +++ b/drivers/scsi/qla2xxx/qla_init.c
-> @@ -3191,7 +3191,7 @@ qla2x00_alloc_fw_dump(scsi_qla_host_t *vha)
->  			    EFT_SIZE / 1024);
->  			ha->eft = NULL;
->  			ha->eft_dma = 0;
-> -			goto allocate;
-> +			goto calc_dump_size;
->  		}
->  
->  		rval = qla2x00_enable_eft_trace(vha, tc_dma, EFT_NUM_BUFFERS);
-> @@ -3202,7 +3202,7 @@ qla2x00_alloc_fw_dump(scsi_qla_host_t *vha)
->  			    tc_dma);
->  			ha->eft = NULL;
->  			ha->eft_dma = 0;
-> -			goto allocate;
-> +			goto calc_dump_size;
->  		}
->  		ql_dbg(ql_dbg_init, vha, 0x00c3,
->  		    "Allocated (%d KB) EFT ...\n", EFT_SIZE / 1024);
-> @@ -3211,6 +3211,7 @@ qla2x00_alloc_fw_dump(scsi_qla_host_t *vha)
->  		ha->eft = tc;
->  	}
->  
-> +calc_dump_size:
->  	if (IS_QLA27XX(ha) || IS_QLA28XX(ha)) {
->  		struct fwdt *fwdt = ha->fwdt;
->  		uint j;
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-Cheers,
+[]
 
-Hannes
+>  MAINTAINERS                                 |  5 ++
+>  Makefile                                    | 12 +++++
+>  scripts/Makefile.modpost                    |  4 +-
+>  scripts/coccinelle/misc/add_namespace.cocci | 23 +++++++++
+>  scripts/nsdeps                              | 54 +++++++++++++++++++++
+>  5 files changed, 97 insertions(+), 1 deletion(-)
+>  create mode 100644 scripts/coccinelle/misc/add_namespace.cocci
+>  create mode 100644 scripts/nsdeps
+
+[]
+
+> +if [ "$SPATCH_VERSION_NUM" -lt "$SPATCH_REQ_VERSION_NUM" ] ; then
+> +    echo 'spatch needs to be version 1.06 or higher'
+
+Nitpick: 1.0.6
+
+> +    exit 1
+> +fi
+
+
 -- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Mary Higgins, Sri Rasiah
-HRB 21284 (AG Nürnberg)
+Himanshu Jha
+Undergraduate Student
+Department of Electronics & Communication
+Guru Tegh Bahadur Institute of Technology
