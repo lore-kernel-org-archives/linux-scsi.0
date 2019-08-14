@@ -8,59 +8,59 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A7FCC32753
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Aug 2019 23:57:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B8345C433FF
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Aug 2019 23:57:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 09B7A20866
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Aug 2019 23:57:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 87A3C20866
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Aug 2019 23:57:32 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="hbdFjPVj"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="tiX4RlnJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729093AbfHNX5a (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 14 Aug 2019 19:57:30 -0400
-Received: from mail-pg1-f193.google.com ([209.85.215.193]:36209 "EHLO
-        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729009AbfHNX53 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Aug 2019 19:57:29 -0400
-Received: by mail-pg1-f193.google.com with SMTP id l21so427859pgm.3
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Aug 2019 16:57:28 -0700 (PDT)
+        id S1729112AbfHNX5c (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 14 Aug 2019 19:57:32 -0400
+Received: from mail-pg1-f195.google.com ([209.85.215.195]:46585 "EHLO
+        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729009AbfHNX5b (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Aug 2019 19:57:31 -0400
+Received: by mail-pg1-f195.google.com with SMTP id w3so401355pgt.13
+        for <linux-scsi@vger.kernel.org>; Wed, 14 Aug 2019 16:57:31 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=eZb9Sh/Id9LGVS6VszTrgSFU/EYwl8ejD+Flvz7I7kE=;
-        b=hbdFjPVjpFUCIJHXxigCX07LvJDeCAZKV4HU+q8mfxMfMPbE0pqTcCLlfTDH/Yspzp
-         0ISammLJgTLblnoHm1PLENQBSTivgJYo6cTbqyiB1e21uYnFDOU4Dw6OrvMW5hMhvlk5
-         6tlPKyp2nbRsOLwL8Utfj1n/Mqwq5JkuO83nZ52O8t8XPm5Zna3/4LDzwHnpjlwSTWYb
-         nDdSiR1yFTy8oRl/O6LfGiXKEEqG3OJIwhfcmtjnK48qfJsUk/iT6HsInuYoDASXQ2bg
-         8zqRW4lZP3UQ7AKD74pVJoSWcGL+HjcocSYgSVJJsqn0bRnMvDfs6zeEsQnVEBJIbNkz
-         l5tA==
+        bh=nxbEK20vGbYFJ2RUgDJbR9ITRszWaYsi31ec7mlqlm4=;
+        b=tiX4RlnJFUl10ptB7NoEiKU3QzkdAnkgunRiluc7a0R3hK8bthpesnDaaUuSrGkvQy
+         p1MW/KPMTS30rpuIUokaHO2zSGH2P6+VKI23JgmUxOJ7jGBdjdjCSjloHGwzCMJ8uq0V
+         NZiCAaiwxOCmf8G8ZtqXmuf+4kATgeQN+QL3RBPFF0AEI+QSKdDrpp5Z6AZ45/T5uXyk
+         DkE0DqGYsIpyYA6Dw84uwDSZoOvY8blR82uI41DJHGeS5cdoacdXgpSYbaZiqzGPlJZ4
+         stuJfdjgL97rn7cLbNKC/r6XgEY5WA/W3Y/afxO4USA80UntFuES0mOAYLQYsM2eLEII
+         vQ7w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=eZb9Sh/Id9LGVS6VszTrgSFU/EYwl8ejD+Flvz7I7kE=;
-        b=bSQS+x+idPT7sey5qtI/pzxDvStPUl6Yd/edlYqFy5PgGpNeFLsPv973jH8ZA2oY4L
-         pTg9yig6xwSovqdfajwmlaTX2p5kDw6kFKbzPaOOqik94sIBSwfZis9OhfbcnzcFstzR
-         ndqSCCUWciFcuvr6HEpq63ntGn4U3pDTvTSRgnGGbyWzRbyEbmWNQdKUKbA1ktvfAdAI
-         h7hKK/HYS+ztXZ6rf8vLIySp06p3zgF2nuFGYqDF2qjddQSRw30cl6wUJoK1KNZrXBJu
-         3eCUCNXEgwIXMllpPsYMRmje59FQ8vM6atXtouf6UhPY/qOsb0/mkjDgUGtss/HPSCwZ
-         m1GQ==
-X-Gm-Message-State: APjAAAV74n1R9vRLJ5SDrQbzWgTZRiKunln4AQiTNIX85c7j3XIhdIbK
-        BHkGlaNWi6kHPRbzcjm/LfmZcY5s
-X-Google-Smtp-Source: APXvYqwqQqiVJq0YcYtizl5y1n+yP11c7mwUvPotoBlUESXL4AsRFUOOY7fgDnwurPMntl+tj6FY5w==
-X-Received: by 2002:aa7:8a92:: with SMTP id a18mr2636093pfc.216.1565827048515;
-        Wed, 14 Aug 2019 16:57:28 -0700 (PDT)
+        bh=nxbEK20vGbYFJ2RUgDJbR9ITRszWaYsi31ec7mlqlm4=;
+        b=glaflZQGKW1Tg0jAbHGK5qMJAaI5hjBfCie2gIBzSzIUZHDcvKKRKSAzTOc+QN9iPJ
+         oHOZdvxkkumJJrz1RFZ4/xMvKt1EA5Qgpsl5chkimsUmzOhf87rs0n9A9FKq+OI3WZzD
+         TiW8GPX6AKax5v5ukIfpOT9CYtMYgGXKFb8agWei8fRa+JrgMA9fiYLDfd/6YMjOjCcb
+         6BVf//OrphfNUSglb+RkarbRzwG45gtHMhbsc3BsnJwfpu+WxJnv5Qd9H8CDh0TWo0i3
+         qNzE6MdU3ojAycazaojKWeHKOcGLebnZcqdx2CG6Dp/yoH4tkeK0b6vIg74E/C6zHDYl
+         mXNw==
+X-Gm-Message-State: APjAAAUcdsgCFqxvmmGz8YrV86BcTsiWwMnX171ssfLa0zDywIHYmc+P
+        6kZo2Yma68YSWoT0U7/7hbMh1TeT
+X-Google-Smtp-Source: APXvYqw1CQCOEJe15G7FyqZyGhewzApkgmHlI4zSnpf1rI8AWdjdzQFpwGO0UG61+5bhgpA1G0p2Pg==
+X-Received: by 2002:aa7:90c9:: with SMTP id k9mr2484859pfk.171.1565827050680;
+        Wed, 14 Aug 2019 16:57:30 -0700 (PDT)
 Received: from pallmd1.broadcom.com ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id k22sm987299pfk.157.2019.08.14.16.57.27
+        by smtp.gmail.com with ESMTPSA id k22sm987299pfk.157.2019.08.14.16.57.29
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-        Wed, 14 Aug 2019 16:57:28 -0700 (PDT)
+        Wed, 14 Aug 2019 16:57:30 -0700 (PDT)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Dick Kennedy <dick.kennedy@broadcom.com>
-Subject: [PATCH 08/42] lpfc: Fix discovery when target has no GID_FT information
-Date:   Wed, 14 Aug 2019 16:56:38 -0700
-Message-Id: <20190814235712.4487-9-jsmart2021@gmail.com>
+Subject: [PATCH 11/42] lpfc: Fix Oops in nvme_register with target logout/login
+Date:   Wed, 14 Aug 2019 16:56:41 -0700
+Message-Id: <20190814235712.4487-12-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.13.7
 In-Reply-To: <20190814235712.4487-1-jsmart2021@gmail.com>
 References: <20190814235712.4487-1-jsmart2021@gmail.com>
@@ -69,75 +69,56 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Some remote ports may be slow in registering their GID_FT
-protocol information with the fabric. If the remote port is
-an initiator, it may send PLOGI to the port before the GID_FT
-logic is complete. Meaning, after accepting the PLOGI, when the
-driver may see no response to the GID_FT that is issued after
-the login to determine the protocols supported so that proper
-PRLI's may be transmit. If the driver has no fc4 information,
-it currently stops and the remote port is not discovered.
+lpfc_nvme_register_port hit a null prev_ndlp pointer in a test
+with lots of target ports swapping addresses. The oldport value
+was stale, thus it's ndlp (prev_ndlp set to it) was used.
 
-Fix by issuing a LOGO when there is no GID_FT information.
-The LOGO completion handling will attempt to re-login if the
-nport_id is still present.
+Fix by moving oldrport pointer checks, and if used prev_ndlp pointer
+assignment, to be done while the lock is held.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_ct.c        | 16 +++++++++++++++-
- drivers/scsi/lpfc/lpfc_nportdisc.c |  6 +++++-
- 2 files changed, 20 insertions(+), 2 deletions(-)
+ drivers/scsi/lpfc/lpfc_nvme.c | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
-index 3246942ff2ff..c2ac6cb730e8 100644
---- a/drivers/scsi/lpfc/lpfc_ct.c
-+++ b/drivers/scsi/lpfc/lpfc_ct.c
-@@ -1215,12 +1215,26 @@ lpfc_cmpl_ct_cmd_gft_id(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 					 FC_TYPE_FCP, FC_TYPE_NVME,
- 					 ndlp->nlp_state);
+diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
+index 946642cee3df..9746808cf94f 100644
+--- a/drivers/scsi/lpfc/lpfc_nvme.c
++++ b/drivers/scsi/lpfc/lpfc_nvme.c
+@@ -2317,9 +2317,13 @@ lpfc_nvme_register_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
  
--			if (ndlp->nlp_state == NLP_STE_REG_LOGIN_ISSUE) {
-+			if (ndlp->nlp_state == NLP_STE_REG_LOGIN_ISSUE &&
-+			    ndlp->nlp_fc4_type) {
- 				ndlp->nlp_prev_state = NLP_STE_REG_LOGIN_ISSUE;
+ 	spin_lock_irq(&vport->phba->hbalock);
+ 	oldrport = lpfc_ndlp_get_nrport(ndlp);
+-	spin_unlock_irq(&vport->phba->hbalock);
+-	if (!oldrport)
++	if (oldrport) {
++		prev_ndlp = oldrport->ndlp;
++		spin_unlock_irq(&vport->phba->hbalock);
++	} else {
++		spin_unlock_irq(&vport->phba->hbalock);
+ 		lpfc_nlp_get(ndlp);
++	}
  
- 				lpfc_nlp_set_state(vport, ndlp,
- 						   NLP_STE_PRLI_ISSUE);
- 				lpfc_issue_els_prli(vport, ndlp, 0);
-+			} else if (!ndlp->nlp_fc4_type) {
-+				/* If fc4 type is still unknown, then LOGO */
-+				lpfc_printf_vlog(vport, KERN_INFO,
-+						 LOG_DISCOVERY,
-+						 "6443 Sending LOGO ndlp x%px,"
-+						 "DID x%06x with fc4_type: "
-+						 "x%08x, state: %d\n",
-+						 ndlp, did, ndlp->nlp_fc4_type,
-+						 ndlp->nlp_state);
-+				lpfc_issue_els_logo(vport, ndlp, 0);
-+				ndlp->nlp_prev_state = NLP_STE_REG_LOGIN_ISSUE;
-+				lpfc_nlp_set_state(vport, ndlp,
-+						   NLP_STE_NPR_NODE);
- 			}
- 		}
- 	} else
-diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
-index c58000cd744f..d76d76081d1a 100644
---- a/drivers/scsi/lpfc/lpfc_nportdisc.c
-+++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
-@@ -1822,7 +1822,11 @@ lpfc_cmpl_reglogin_reglogin_issue(struct lpfc_vport *vport,
- 
- 		ndlp->nlp_prev_state = NLP_STE_REG_LOGIN_ISSUE;
- 		lpfc_nlp_set_state(vport, ndlp, NLP_STE_PRLI_ISSUE);
--		lpfc_issue_els_prli(vport, ndlp, 0);
-+		if (lpfc_issue_els_prli(vport, ndlp, 0)) {
-+			lpfc_issue_els_logo(vport, ndlp, 0);
-+			ndlp->nlp_prev_state = NLP_STE_REG_LOGIN_ISSUE;
-+			lpfc_nlp_set_state(vport, ndlp, NLP_STE_NPR_NODE);
-+		}
- 	} else {
- 		if ((vport->fc_flag & FC_PT2PT) && phba->nvmet_support)
- 			phba->targetport->port_id = vport->fc_myDID;
+ 	ret = nvme_fc_register_remoteport(localport, &rpinfo, &remote_port);
+ 	if (!ret) {
+@@ -2338,7 +2342,6 @@ lpfc_nvme_register_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
+ 			/* New remoteport record does not guarantee valid
+ 			 * host private memory area.
+ 			 */
+-			prev_ndlp = oldrport->ndlp;
+ 			if (oldrport == remote_port->private) {
+ 				/* Same remoteport - ndlp should match.
+ 				 * Just reuse.
+@@ -2352,7 +2355,7 @@ lpfc_nvme_register_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
+ 						 remote_port->port_name,
+ 						 remote_port->port_id,
+ 						 remote_port->port_role,
+-						 prev_ndlp,
++						 oldrport->ndlp,
+ 						 ndlp,
+ 						 ndlp->nlp_type,
+ 						 ndlp->nlp_DID);
 -- 
 2.13.7
 
