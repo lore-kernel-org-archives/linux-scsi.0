@@ -8,59 +8,59 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0875BC32753
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E33DBC433FF
 	for <linux-scsi@archiver.kernel.org>; Wed, 14 Aug 2019 23:57:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D115520866
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Aug 2019 23:57:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B818220866
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Aug 2019 23:57:50 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="rldBfYQR"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="K+lcWIO9"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729817AbfHNX5t (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 14 Aug 2019 19:57:49 -0400
-Received: from mail-pl1-f195.google.com ([209.85.214.195]:44455 "EHLO
-        mail-pl1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729274AbfHNX5r (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Aug 2019 19:57:47 -0400
-Received: by mail-pl1-f195.google.com with SMTP id t14so318508plr.11
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Aug 2019 16:57:46 -0700 (PDT)
+        id S1729824AbfHNX5u (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 14 Aug 2019 19:57:50 -0400
+Received: from mail-pg1-f193.google.com ([209.85.215.193]:46602 "EHLO
+        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729797AbfHNX5s (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Aug 2019 19:57:48 -0400
+Received: by mail-pg1-f193.google.com with SMTP id w3so401616pgt.13
+        for <linux-scsi@vger.kernel.org>; Wed, 14 Aug 2019 16:57:48 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=vuIHq6NfJZ8B7T/6h/z7Wvmf5fj4Ed9Aszj3ylocewY=;
-        b=rldBfYQR7hB/ThkpXh3/yt8fTtYvHO0G5H58xd0Syx6P/OdyLdLNzc7dw5jQ4adYBF
-         Ig8egX+fPFIkwTjiRVTiSUs7tjFMIDHV0zNP003vDZVqA39uGOogPWSgNPq0DlCH4mTW
-         gMvRIY5OC6CqHdqxAInlV0uyTebRdoDbvdC94M7DyEmBJfTlr36QCmmEvTAgs1wAZTSX
-         vGKz+gzNpBHbkvwAO6h0WIz7z0YvttVD5OyjYQ4OyMkcv2JcSBvAs7NGvWUTUPzEKh+G
-         axQC+RdDRziGu49M1oWg/uWBoeDat+eXpo4zCf3iJYG9pl3+eRt9HslNPgjvZ/0VNXF4
-         kYmg==
+        bh=v+CBQFopkTfzWzwUxBq+otaYK5YWiABl5s28tvV4Hzo=;
+        b=K+lcWIO9ZS3ItRbN6V5vyWOn+wBh0BUMgagKvkRAKKmcJZzN5Jqx48VVibI46hQ5UB
+         djXV3G7kQ/5rGsLsilZVLhj1+2+ZCJmd0agmOJRNfAzAb1FjwBMYxHPsS8+8638doVvZ
+         6rlOXwpO+XPEsZECmL/ZvtcYpeh5jBws+D0cXi9cJsVxC9fShBgwjawFIC5NGVrlIjro
+         i3bi9PEx9b+MutBI0KS94oIyJDLeYn91WapScNVA0R6daFA/WOCEfIHU/lZwqOsY1sEH
+         kq7mH+St5d4hlS8TnNXIdBCeT3E0/4xye+Y6SV7JSpvEnS3JcZKpXXJVpYwSuwHjRARg
+         AHow==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=vuIHq6NfJZ8B7T/6h/z7Wvmf5fj4Ed9Aszj3ylocewY=;
-        b=GoEj9pnkGRrLD/PU1NVxiGpm36w6z45HltreySuZWj6VDPg8HMksUR2ppybmFZVMfr
-         c/aMuplliKh0od/iKLaBqPG+uRhJt98ujqOHNgoKFMGJl2Tg3X8TSObBjxKhobhHO4q5
-         nTY8HxAN3xWqbMfNArNDdGXuWMjeW3hB8ofw2E+MOIEVB0uBx9G4aSnY2Z4ZGXJjVKIa
-         sIR737uF5zdp9SfCQaDPWeSlfS0BWyg6aZvGONvm0jgXKGoos2/ZnV1+SDAtcUnApVSi
-         IXYxAf2bLH+aEpHqJkc85oJvOny0Z2IVS1iRS5SZ/fFju9PWJpGeuITz8ISknQy9NqhJ
-         wMRA==
-X-Gm-Message-State: APjAAAWUIeG8jii3/75oz/Yz216vCGukvgn6D93ArhKQQHn1dmeYvugc
-        l55jS/pmchQ0N0QkOZfEVSzJZnNc
-X-Google-Smtp-Source: APXvYqzmIaId433mZZFEaKtICaLNwP/Xbf6EhGLfCi+U7iJXR4paNUmXqDVeRtGyMpZyU4ophcsRFw==
-X-Received: by 2002:a17:902:a606:: with SMTP id u6mr1792292plq.224.1565827066388;
-        Wed, 14 Aug 2019 16:57:46 -0700 (PDT)
+        bh=v+CBQFopkTfzWzwUxBq+otaYK5YWiABl5s28tvV4Hzo=;
+        b=QKUxp0KrPV4V1y9vbF9MGeFrnL6PymzqyJzf6HFW5kWBC+mXyxpGYmTSVQuPsdW7sh
+         lZC85Xxfmasy4dM0LyN4oHJROKRL9i6Y/6EYyJcNdWwSTk4CXtURgDTr+gICYNO6e73o
+         USUSTX+vk3dw5x4TNLmTNHlKurxNgzZqgTtz6Wo6ndP1nunuhGf8l1fnYmrLGmS2JjZO
+         Gv3vNQm1/H6yEyvsCOCcFpiEhoNrFvPd/w+Nd/8zBYgJKKmpUMEA0IAo5PiV7vWpCrhj
+         7eh2b9T1mjb6GlaQn5E7hqX7xudlracfallzKsyFuIq5/Jt6sNc87eOJTGPof2BDVh8e
+         TcQA==
+X-Gm-Message-State: APjAAAVnPde9c3Ccq3TPd1hid41y08kJ33+965d6ulPLqKnJBtyDfZdF
+        HYOhVR5/X5TTfGqZQXXB0QhlCaVw
+X-Google-Smtp-Source: APXvYqzVK9Df8Qbl48Zw8vamgComPe09vzUNUCO/iM9/1FLlo2qmscSR391sLiQTZt4D6vOPpU1Zhw==
+X-Received: by 2002:a17:90a:db06:: with SMTP id g6mr448209pjv.60.1565827067469;
+        Wed, 14 Aug 2019 16:57:47 -0700 (PDT)
 Received: from pallmd1.broadcom.com ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id k22sm987299pfk.157.2019.08.14.16.57.45
+        by smtp.gmail.com with ESMTPSA id k22sm987299pfk.157.2019.08.14.16.57.46
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
         Wed, 14 Aug 2019 16:57:46 -0700 (PDT)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Dick Kennedy <dick.kennedy@broadcom.com>
-Subject: [PATCH 31/42] lpfc: Fix reported physical link speed on a disabled trunked link
-Date:   Wed, 14 Aug 2019 16:57:01 -0700
-Message-Id: <20190814235712.4487-32-jsmart2021@gmail.com>
+Subject: [PATCH 32/42] lpfc: Fix BlockGuard enablement on FCoE adapters
+Date:   Wed, 14 Aug 2019 16:57:02 -0700
+Message-Id: <20190814235712.4487-33-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.13.7
 In-Reply-To: <20190814235712.4487-1-jsmart2021@gmail.com>
 References: <20190814235712.4487-1-jsmart2021@gmail.com>
@@ -69,32 +69,66 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-GetTrunkInfo is displaying an incorrect link speed when the link is
-a trunk and the link has gone down.  The driver is not clearing the
-logical speed as part of the link down transition.
+The driver is allowing the user to change lpfc_enable_bg while
+loading the driver against a FCoE adapter. This is not supported.
 
-Fix by setting the logical speed to UNKNOWN SPEED when the link goes
-down.
+No check is made for the adapter type when applying the blockguard
+enablement value.
+
+Fix by verifying the adapter type before setting the enablement flag.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_hbadisc.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/scsi/lpfc/lpfc_attr.c | 27 ++++++++++++++++++++++++++-
+ 1 file changed, 26 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
-index 44e779e4c885..95db23adc96d 100644
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
-@@ -905,6 +905,8 @@ lpfc_linkdown(struct lpfc_hba *phba)
- 			phba->trunk_link.link1.state = 0;
- 			phba->trunk_link.link2.state = 0;
- 			phba->trunk_link.link3.state = 0;
-+			phba->sli4_hba.link_state.logical_speed =
-+						LPFC_LINK_SPEED_UNKNOWN;
- 		}
- 		spin_lock_irq(shost->host_lock);
- 		phba->pport->fc_flag &= ~FC_LBIT;
+diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+index 7ac6508b7ed8..63e631f116e4 100644
+--- a/drivers/scsi/lpfc/lpfc_attr.c
++++ b/drivers/scsi/lpfc/lpfc_attr.c
+@@ -7080,6 +7080,21 @@ struct fc_function_template lpfc_vport_transport_functions = {
+ };
+ 
+ /**
++ * lpfc_get_hba_function_mode - Used to determine the HBA function in FCoE
++ * Mode
++ * @phba: lpfc_hba pointer.
++ **/
++static void
++lpfc_get_hba_function_mode(struct lpfc_hba *phba)
++{
++	/* If it's a SkyHawk FCoE adapter */
++	if (phba->pcidev->device == PCI_DEVICE_ID_SKYHAWK)
++		phba->hba_flag |= HBA_FCOE_MODE;
++	else
++		phba->hba_flag &= ~HBA_FCOE_MODE;
++}
++
++/**
+  * lpfc_get_cfgparam - Used during probe_one to init the adapter structure
+  * @phba: lpfc_hba pointer.
+  **/
+@@ -7135,8 +7150,18 @@ lpfc_get_cfgparam(struct lpfc_hba *phba)
+ 	else
+ 		phba->cfg_poll = lpfc_poll;
+ 
+-	if (phba->cfg_enable_bg)
++	/* Get the function mode */
++	lpfc_get_hba_function_mode(phba);
++
++	/* BlockGuard allowed for FC only. */
++	if (phba->cfg_enable_bg && phba->hba_flag & HBA_FCOE_MODE) {
++		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
++				"0581 BlockGuard feature not supported\n");
++		/* If set, clear the BlockGuard support param */
++		phba->cfg_enable_bg = 0;
++	} else if (phba->cfg_enable_bg) {
+ 		phba->sli3_options |= LPFC_SLI3_BG_ENABLED;
++	}
+ 
+ 	lpfc_suppress_rsp_init(phba, lpfc_suppress_rsp);
+ 
 -- 
 2.13.7
 
