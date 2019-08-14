@@ -8,59 +8,59 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 085B6C433FF
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Aug 2019 23:57:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A35DC32753
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Aug 2019 23:57:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AA0272086C
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Aug 2019 23:57:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3DB4F20866
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Aug 2019 23:57:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="P31Beste"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="AlBy0KqZ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729829AbfHNX5x (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 14 Aug 2019 19:57:53 -0400
-Received: from mail-pl1-f196.google.com ([209.85.214.196]:32954 "EHLO
-        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729820AbfHNX5w (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Aug 2019 19:57:52 -0400
-Received: by mail-pl1-f196.google.com with SMTP id go14so31876plb.0
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Aug 2019 16:57:51 -0700 (PDT)
+        id S1727844AbfHNX5z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 14 Aug 2019 19:57:55 -0400
+Received: from mail-pf1-f194.google.com ([209.85.210.194]:35023 "EHLO
+        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729832AbfHNX5z (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Aug 2019 19:57:55 -0400
+Received: by mail-pf1-f194.google.com with SMTP id d85so349784pfd.2
+        for <linux-scsi@vger.kernel.org>; Wed, 14 Aug 2019 16:57:54 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=Ra7PdEGkH0sh0JXJB2GXQR4HdV+bXslFZg1qWowcb+k=;
-        b=P31BesteoTCZXpP2jqns00rhAKIkfuJxw/He12UTXhSCgZ9XACKo6AUb8vvzFDMCHU
-         wu59tIRyX8Hk/pydEAMORgIH20SVsYTdRIvV5pbP7u3kzL0OploST0FyiqyUgJWqGsfC
-         ftClzqnLSJm4s/cFwZfGnIsI08OWWjNSpxw7We9EIdDXr63Kw+W0w2Wfy4dL8NAQ055Q
-         bRP+PY5wOhx3XeS4zMvNPXbCl2MOLXhCclMM8BW/OZUrcQ247WQ153IKd2OehCJQL9Tw
-         kpyYb7TBJlP6x79NhyVVwrnFBOcdtetKOSxC45unETkIWN8dczbgO3otGO9247I1Y9Yx
-         zJVQ==
+        bh=Swv6zDv4oeBliZ/NT5lmFoMYq3oPyQyMeLZBmqH/cUo=;
+        b=AlBy0KqZYDJ+LyXhIp8TXLkg4uqYursxuvbAaAN5n0TPVBu6BoHYDpjpiKsb5xtnfN
+         Ke45wSlFiiqfcHFE0ELQFcgjDlj67Ctx31BhYg+70rOUrrzfQ1MUo741E7UXODu1NQZe
+         9wD1KaqRIKm0oXV5jw5r1rdhLse8qViHxl4X8+KgwjB4I/LXdayjUvOGQIPNF1Li/L/8
+         GNR55vo9QOWYPIoYeGfGVtbkz4OgD13XNtex//Dtqs//HI35G67rQIQQmfApNGWITXky
+         QAlyxOsGkOEUkiDhpYN7QhGlMlxxBkV5msmua8yjeGSItSATs1Eec6FvEOlDH+CDUdCK
+         U1tg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=Ra7PdEGkH0sh0JXJB2GXQR4HdV+bXslFZg1qWowcb+k=;
-        b=hDOrsOiVB+rBGoSxKSm4XIqotgazL424jG/f21RaHGb3K9UD9WyNycdj2892y3PADm
-         y29xIdhQ6IzXSi3FlJ9c6gNmQMZvdKzMS11jzqmX84Ty9ZxksncBz1M9XDqcqUh2lVq0
-         ZP7qFXP8uKTaIikckZ7Fr/IEM7h49zz0yMTw8my/bMiww9smpp4b1XaKmzpfjtls3riz
-         3fhrUJ5OuDeVxxQloglz/N56QsWxccNqVNE61JMvp3jhK+iYr2SPfEbTntSImrytpsch
-         eeKB3pHDeBZ5fsugiqCgzQmGZkc2a5almgx1lwmvMqN4F/yNbMfb/bZO3u1ONxipYm9b
-         IAdw==
-X-Gm-Message-State: APjAAAW/FdQiyhCHDCHE7A9qV2sPOWjG3+FwHk+TulkBvh/rcBCFaOBX
-        uU7sFVeeTKoIgVsO8cBitWyEADoW
-X-Google-Smtp-Source: APXvYqwypareXgkXGiqZYGjTENVxUaYr93ms6lBYhqQ1mgchAuNZh+KQ9LXtarAlRxvuYSJOFxV6LA==
-X-Received: by 2002:a17:902:d715:: with SMTP id w21mr1821303ply.261.1565827070613;
-        Wed, 14 Aug 2019 16:57:50 -0700 (PDT)
+        bh=Swv6zDv4oeBliZ/NT5lmFoMYq3oPyQyMeLZBmqH/cUo=;
+        b=nQW2d37rt5b2Bq6J7mwJlzyBVA3myx+i/+qfLJsbigvOhILtPUA01k6BCMkPrqOByz
+         egOj2S1ne8BbOQBlYIEM9RGT0rmnUUpVwjHmFQfe7m3jyKOLftUy7jVFv8hVn/Qj36Aq
+         WDY2K99YWzbUkF/1rhxxXH7cLO6Gs8xV5S6MsvnkIMEQniazMZgozSde6gvpKXI16sHb
+         /cUEWobJ6tzDOEAkekWRQHZZRAqNWEAgdEGim7h1dG5JUdSCv5Mt/7eYT93FGkNL4jQn
+         /4GNR+yNGcqEt/8aJqAPyV/MgQAbgILJ5YVSe2ZoSZHZrJn03KMowdq39RsDFDwaJTcY
+         0zUg==
+X-Gm-Message-State: APjAAAUUmwgv1nIpEvtQbLZZec6T+8vXbjNnYuEAHvOQdRhDHUJn8OHj
+        jRnEcfCVUAoFclFhK1GUp4BVg17Z
+X-Google-Smtp-Source: APXvYqy9SarULna89pMV1NX8P8ZA4aLdvnZh1OLOo4YYCMYIL7NG1KyGZouMBY72BY6CI7cc3aJerQ==
+X-Received: by 2002:aa7:98da:: with SMTP id e26mr2614939pfm.34.1565827073033;
+        Wed, 14 Aug 2019 16:57:53 -0700 (PDT)
 Received: from pallmd1.broadcom.com ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id k22sm987299pfk.157.2019.08.14.16.57.49
+        by smtp.gmail.com with ESMTPSA id k22sm987299pfk.157.2019.08.14.16.57.52
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-        Wed, 14 Aug 2019 16:57:50 -0700 (PDT)
+        Wed, 14 Aug 2019 16:57:52 -0700 (PDT)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Dick Kennedy <dick.kennedy@broadcom.com>
-Subject: [PATCH 36/42] lpfc: Migrate to %px and %pf in kernel print calls
-Date:   Wed, 14 Aug 2019 16:57:06 -0700
-Message-Id: <20190814235712.4487-37-jsmart2021@gmail.com>
+Subject: [PATCH 39/42] lpfc: Support dynamic unbounded SGL lists on G7 hardware.
+Date:   Wed, 14 Aug 2019 16:57:09 -0700
+Message-Id: <20190814235712.4487-40-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.13.7
 In-Reply-To: <20190814235712.4487-1-jsmart2021@gmail.com>
 References: <20190814235712.4487-1-jsmart2021@gmail.com>
@@ -69,989 +69,1679 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In order to see real addresses, convert %p with %px for kernel addresses
-and replace %p with %pf for functions.
+Typical SLI-4 hardware supports up to 2 4KB pages to be registered
+per XRI to contain the exchanges Scatter/Gather List. This caps the
+number of SGL elements that can be in the SGL. There are not
+extensions to extend the list out of the 2 pages.
 
-While converting, standardize on "x%px" throughout (not %px or 0x%px).
+The G7 hardware adds a SGE type that allows the SGL to be vectored
+to a different scatter/gather list segment. And that segment can
+contain a SGE to go to another segment and so on.  The initial
+segment must still be pre-registered for the XRI, but it can be
+a much smaller amount (256Bytes) as it can now be dynamically grown.
+This much smaller allocation can handle the SG list for most normal
+I/O, and the dynamic aspect allows it to support many MB's if needed.
+
+The implementation creates a pool which contains "segments" and which
+is initially sized to hold the initial small segment per xri. If an
+I/O requires additional segments, they are allocated from the pool.
+If the pool has no more segments, the pool is grown based on what is
+now needed. After the I/O completes, the additional segments are
+returned to the pool for use by other I/Os. Once allocated, the
+additional segments are not released under the assumption of
+"if needed once, it will be needed again". Pools are kept on a
+per-hardware queue basis, which is typically 1:1 per cpu, but may
+be shared by multiple cpus.
+
+The switch to the smaller initial allocation significantly reduces
+the memory footprint of the driver (which only grows if large ios
+are issued). Based on the several K of XRIs for the adapter, the
+8KB->256B reduction can conserve 32MBs or more.
+
+It has been observed with per-cpu resource pools that allocating a resource
+on CPU A, may be put back on CPU B. While the get routines are distributed
+evenly, only a limited subset of CPUs may be handling the put routines.
+This can put a strain on the lpfc_put_cmd_rsp_buf_per_cpu routine because
+all the resources are being put on a limited subset of CPUs.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_bsg.c       |  2 +-
- drivers/scsi/lpfc/lpfc_ct.c        |  5 ++-
- drivers/scsi/lpfc/lpfc_debugfs.c   |  4 +-
- drivers/scsi/lpfc/lpfc_els.c       |  4 +-
- drivers/scsi/lpfc/lpfc_hbadisc.c   | 78 +++++++++++++++++----------------
- drivers/scsi/lpfc/lpfc_init.c      | 18 ++++----
- drivers/scsi/lpfc/lpfc_nportdisc.c |  2 +-
- drivers/scsi/lpfc/lpfc_nvme.c      | 90 +++++++++++++++++++-------------------
- drivers/scsi/lpfc/lpfc_nvmet.c     | 10 ++---
- drivers/scsi/lpfc/lpfc_scsi.c      | 16 +++----
- drivers/scsi/lpfc/lpfc_sli.c       | 16 +++----
- 11 files changed, 125 insertions(+), 120 deletions(-)
+ drivers/scsi/lpfc/lpfc.h      |   5 +
+ drivers/scsi/lpfc/lpfc_hw4.h  |  20 +++
+ drivers/scsi/lpfc/lpfc_init.c | 313 +++++++++++++++++++++++--------------
+ drivers/scsi/lpfc/lpfc_mem.c  |  44 ++----
+ drivers/scsi/lpfc/lpfc_nvme.c |  94 ++++++++---
+ drivers/scsi/lpfc/lpfc_scsi.c | 355 ++++++++++++++++++++++++++++++++----------
+ drivers/scsi/lpfc/lpfc_sli.c  | 292 ++++++++++++++++++++++++++++++++++
+ drivers/scsi/lpfc/lpfc_sli.h  |  11 +-
+ drivers/scsi/lpfc/lpfc_sli4.h |  18 +++
+ 9 files changed, 904 insertions(+), 248 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
-index 9b9858078076..9966588ef3b2 100644
---- a/drivers/scsi/lpfc/lpfc_bsg.c
-+++ b/drivers/scsi/lpfc/lpfc_bsg.c
-@@ -1040,7 +1040,7 @@ lpfc_bsg_ct_unsol_event(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
- 				if (!dmabuf) {
- 					lpfc_printf_log(phba, KERN_ERR,
- 						LOG_LIBDFC, "2616 No dmabuf "
--						"found for iocbq 0x%p\n",
-+						"found for iocbq x%px\n",
- 						iocbq);
- 					kfree(evt_dat->data);
- 					kfree(evt_dat);
-diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
-index 1717f3403a97..25e86706e207 100644
---- a/drivers/scsi/lpfc/lpfc_ct.c
-+++ b/drivers/scsi/lpfc/lpfc_ct.c
-@@ -1227,8 +1227,9 @@ lpfc_cmpl_ct_cmd_gft_id(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 			if (fc4_data_1 &  LPFC_FC4_TYPE_BITMASK)
- 				ndlp->nlp_fc4_type |= NLP_FC4_NVME;
- 			lpfc_printf_vlog(vport, KERN_INFO, LOG_DISCOVERY,
--					 "3064 Setting ndlp %p, DID x%06x with "
--					 "FC4 x%08x, Data: x%08x x%08x %d\n",
-+					 "3064 Setting ndlp x%px, DID x%06x "
-+					 "with FC4 x%08x, Data: x%08x x%08x "
-+					 "%d\n",
- 					 ndlp, did, ndlp->nlp_fc4_type,
- 					 FC_TYPE_FCP, FC_TYPE_NVME,
- 					 ndlp->nlp_state);
-diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
-index 1ee857d9d165..75055ee59e91 100644
---- a/drivers/scsi/lpfc/lpfc_debugfs.c
-+++ b/drivers/scsi/lpfc/lpfc_debugfs.c
-@@ -361,7 +361,7 @@ lpfc_debugfs_hbqinfo_data(struct lpfc_hba *phba, char *buf, int size)
- 			phys = ((uint64_t)hbq_buf->dbuf.phys & 0xffffffff);
- 			if (phys == le32_to_cpu(hbqe->bde.addrLow)) {
- 				len +=  scnprintf(buf+len, size-len,
--					"Buf%d: %p %06x\n", i,
-+					"Buf%d: x%px %06x\n", i,
- 					hbq_buf->dbuf.virt, hbq_buf->tag);
- 				found = 1;
- 				break;
-@@ -2210,7 +2210,7 @@ lpfc_debugfs_dumpDif_open(struct inode *inode, struct file *file)
- 		goto out;
+diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
+index bade2e025ecf..856a468d9b7d 100644
+--- a/drivers/scsi/lpfc/lpfc.h
++++ b/drivers/scsi/lpfc/lpfc.h
+@@ -51,6 +51,8 @@ struct lpfc_sli2_slim;
+ 		cmnd for menlo needs nearly twice as for firmware
+ 		downloads using bsg */
  
- 	/* Round to page boundary */
--	pr_err("9060 BLKGRD: %s: _dump_buf_dif=0x%p file=%pD\n",
-+	pr_err("9060 BLKGRD: %s: _dump_buf_dif=x%px file=%pD\n",
- 			__func__, _dump_buf_dif, file);
- 	debug->buffer = _dump_buf_dif;
- 	if (!debug->buffer) {
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 54ec7f0822e5..aaad1c74bb98 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -2140,7 +2140,7 @@ lpfc_issue_els_plogi(struct lpfc_vport *vport, uint32_t did, uint8_t retry)
- 		    !(vport->fc_flag & FC_OFFLINE_MODE)) {
- 			lpfc_printf_vlog(vport, KERN_INFO, LOG_DISCOVERY,
- 					 "4110 Issue PLOGI x%x deferred "
--					 "on NPort x%x rpi x%x Data: %p\n",
-+					 "on NPort x%x rpi x%x Data: x%px\n",
- 					 ndlp->nlp_defer_did, ndlp->nlp_DID,
- 					 ndlp->nlp_rpi, ndlp);
++#define LPFC_DEFAULT_XPSGL_SIZE	256
++#define LPFC_MAX_SG_TABLESIZE	0xffff
+ #define LPFC_MIN_SG_SLI4_BUF_SZ	0x800	/* based on LPFC_DEFAULT_SG_SEG_CNT */
+ #define LPFC_MAX_BG_SLI4_SEG_CNT_DIF 128 /* sg element count for BlockGuard */
+ #define LPFC_MAX_SG_SEG_CNT_DIF 512	/* sg element count per scsi cmnd  */
+@@ -799,6 +801,7 @@ struct lpfc_hba {
+ 	/* HBA Config Parameters */
+ 	uint32_t cfg_ack0;
+ 	uint32_t cfg_xri_rebalancing;
++	uint32_t cfg_xpsgl;
+ 	uint32_t cfg_enable_npiv;
+ 	uint32_t cfg_enable_rrq;
+ 	uint32_t cfg_topology;
+@@ -905,6 +908,7 @@ struct lpfc_hba {
+ 	wait_queue_head_t    work_waitq;
+ 	struct task_struct   *worker_thread;
+ 	unsigned long data_flags;
++	uint32_t border_sge_num;
  
-@@ -4236,7 +4236,7 @@ lpfc_mbx_cmpl_dflt_rpi(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
- 	mempool_free(pmb, phba->mbox_mem_pool);
- 	if (ndlp) {
- 		lpfc_printf_vlog(ndlp->vport, KERN_INFO, LOG_NODE,
--				 "0006 rpi%x DID:%x flg:%x %d map:%x %p\n",
-+				 "0006 rpi%x DID:%x flg:%x %d map:%x x%px\n",
- 				 ndlp->nlp_rpi, ndlp->nlp_DID, ndlp->nlp_flag,
- 				 kref_read(&ndlp->kref),
- 				 ndlp->nlp_usg_map, ndlp);
-diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
-index 95db23adc96d..01fc525f4826 100644
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
-@@ -133,7 +133,7 @@ lpfc_dev_loss_tmo_callbk(struct fc_rport *rport)
- 		ndlp->nlp_sid, ndlp->nlp_DID, ndlp->nlp_flag);
+ 	uint32_t hbq_in_use;		/* HBQs in use flag */
+ 	uint32_t hbq_count;	        /* Count of configured HBQs */
+@@ -987,6 +991,7 @@ struct lpfc_hba {
+ 	struct dma_pool *lpfc_nvmet_drb_pool; /* data receive buffer pool */
+ 	struct dma_pool *lpfc_hbq_pool;	/* SLI3 hbq buffer pool */
+ 	struct dma_pool *txrdy_payload_pool;
++	struct dma_pool *lpfc_cmd_rsp_buf_pool;
+ 	struct lpfc_dma_pool lpfc_mbuf_safety_pool;
  
- 	lpfc_printf_vlog(ndlp->vport, KERN_INFO, LOG_NODE,
--			 "3181 dev_loss_callbk x%06x, rport %p flg x%x\n",
-+			 "3181 dev_loss_callbk x%06x, rport x%px flg x%x\n",
- 			 ndlp->nlp_DID, ndlp->rport, ndlp->nlp_flag);
+ 	mempool_t *mbox_mem_pool;
+diff --git a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
+index d89480b9eade..e198de8eda32 100644
+--- a/drivers/scsi/lpfc/lpfc_hw4.h
++++ b/drivers/scsi/lpfc/lpfc_hw4.h
+@@ -2050,6 +2050,23 @@ struct sli4_sge {	/* SLI-4 */
+ 	uint32_t sge_len;
+ };
  
- 	/* Don't defer this if we are in the process of deleting the vport
-@@ -237,7 +237,7 @@ lpfc_dev_loss_tmo_handler(struct lpfc_nodelist *ndlp)
- 		ndlp->nlp_DID, ndlp->nlp_type, rport->scsi_target_id);
- 
- 	lpfc_printf_vlog(ndlp->vport, KERN_INFO, LOG_NODE,
--			 "3182 dev_loss_tmo_handler x%06x, rport %p flg x%x\n",
-+			 "3182 dev_loss_tmo_handler x%06x, rport x%px flg x%x\n",
- 			 ndlp->nlp_DID, ndlp->rport, ndlp->nlp_flag);
- 
- 	/*
-@@ -3323,7 +3323,7 @@ lpfc_mbx_process_link_up(struct lpfc_hba *phba, struct lpfc_mbx_read_top *la)
- out:
- 	lpfc_vport_set_state(vport, FC_VPORT_FAILED);
- 	lpfc_printf_vlog(vport, KERN_ERR, LOG_MBOX,
--			 "0263 Discovery Mailbox error: state: 0x%x : %p %p\n",
-+			 "0263 Discovery Mailbox error: state: 0x%x : x%px x%px\n",
- 			 vport->port_state, sparam_mbox, cfglink_mbox);
- 	lpfc_issue_clear_la(phba, vport);
- 	return;
-@@ -3535,7 +3535,7 @@ lpfc_mbx_cmpl_reg_login(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
- 	pmb->ctx_ndlp = NULL;
- 
- 	lpfc_printf_vlog(vport, KERN_INFO, LOG_SLI,
--			 "0002 rpi:%x DID:%x flg:%x %d map:%x %p\n",
-+			 "0002 rpi:%x DID:%x flg:%x %d map:%x x%px\n",
- 			 ndlp->nlp_rpi, ndlp->nlp_DID, ndlp->nlp_flag,
- 			 kref_read(&ndlp->kref),
- 			 ndlp->nlp_usg_map, ndlp);
-@@ -4047,7 +4047,7 @@ lpfc_mbx_cmpl_ns_reg_login(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
- 	ndlp->nlp_type |= NLP_FABRIC;
- 	lpfc_nlp_set_state(vport, ndlp, NLP_STE_UNMAPPED_NODE);
- 	lpfc_printf_vlog(vport, KERN_INFO, LOG_SLI,
--			 "0003 rpi:%x DID:%x flg:%x %d map%x %p\n",
-+			 "0003 rpi:%x DID:%x flg:%x %d map%x x%px\n",
- 			 ndlp->nlp_rpi, ndlp->nlp_DID, ndlp->nlp_flag,
- 			 kref_read(&ndlp->kref),
- 			 ndlp->nlp_usg_map, ndlp);
-@@ -4166,7 +4166,7 @@ lpfc_register_remote_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
- 		fc_remote_port_rolechg(rport, rport_ids.roles);
- 
- 	lpfc_printf_vlog(ndlp->vport, KERN_INFO, LOG_NODE,
--			 "3183 rport register x%06x, rport %p role x%x\n",
-+			 "3183 rport register x%06x, rport x%px role x%x\n",
- 			 ndlp->nlp_DID, rport, rport_ids.roles);
- 
- 	if ((rport->scsi_target_id != -1) &&
-@@ -4190,7 +4190,7 @@ lpfc_unregister_remote_port(struct lpfc_nodelist *ndlp)
- 		ndlp->nlp_DID, ndlp->nlp_flag, ndlp->nlp_type);
- 
- 	lpfc_printf_vlog(vport, KERN_INFO, LOG_NODE,
--			 "3184 rport unregister x%06x, rport %p\n",
-+			 "3184 rport unregister x%06x, rport x%px\n",
- 			 ndlp->nlp_DID, rport);
- 
- 	fc_remote_port_delete(rport);
-@@ -4509,9 +4509,9 @@ lpfc_enable_node(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 	if (NLP_CHK_FREE_REQ(ndlp)) {
- 		spin_unlock_irqrestore(&phba->ndlp_lock, flags);
- 		lpfc_printf_vlog(vport, KERN_WARNING, LOG_NODE,
--				"0277 lpfc_enable_node: ndlp:x%p "
-+				"0277 %s: ndlp:x%px "
- 				"usgmap:x%x refcnt:%d\n",
--				(void *)ndlp, ndlp->nlp_usg_map,
-+				__func__, (void *)ndlp, ndlp->nlp_usg_map,
- 				kref_read(&ndlp->kref));
- 		goto free_rpi;
- 	}
-@@ -4519,9 +4519,9 @@ lpfc_enable_node(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 	if (NLP_CHK_NODE_ACT(ndlp)) {
- 		spin_unlock_irqrestore(&phba->ndlp_lock, flags);
- 		lpfc_printf_vlog(vport, KERN_WARNING, LOG_NODE,
--				"0278 lpfc_enable_node: ndlp:x%p "
-+				"0278 %s: ndlp:x%px "
- 				"usgmap:x%x refcnt:%d\n",
--				(void *)ndlp, ndlp->nlp_usg_map,
-+				__func__, (void *)ndlp, ndlp->nlp_usg_map,
- 				kref_read(&ndlp->kref));
- 		goto free_rpi;
- 	}
-@@ -4551,7 +4551,7 @@ lpfc_enable_node(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 		ndlp->nlp_rpi = rpi;
- 		lpfc_printf_vlog(vport, KERN_INFO, LOG_NODE,
- 				 "0008 rpi:%x DID:%x flg:%x refcnt:%d "
--				 "map:%x %p\n", ndlp->nlp_rpi, ndlp->nlp_DID,
-+				 "map:%x x%px\n", ndlp->nlp_rpi, ndlp->nlp_DID,
- 				 ndlp->nlp_flag,
- 				 kref_read(&ndlp->kref),
- 				 ndlp->nlp_usg_map, ndlp);
-@@ -4824,7 +4824,7 @@ lpfc_nlp_logo_unreg(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
- 	    (ndlp->nlp_defer_did != NLP_EVT_NOTHING_PENDING)) {
- 		lpfc_printf_vlog(vport, KERN_INFO, LOG_DISCOVERY,
- 				 "1434 UNREG cmpl deferred logo x%x "
--				 "on NPort x%x Data: x%x %p\n",
-+				 "on NPort x%x Data: x%x x%px\n",
- 				 ndlp->nlp_rpi, ndlp->nlp_DID,
- 				 ndlp->nlp_defer_did, ndlp);
- 
-@@ -4874,7 +4874,7 @@ lpfc_unreg_rpi(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
- 			lpfc_printf_vlog(vport, KERN_INFO, LOG_DISCOVERY,
- 					 "1436 unreg_rpi SKIP UNREG x%x on "
- 					 "NPort x%x deferred x%x  flg x%x "
--					 "Data: %p\n",
-+					 "Data: x%px\n",
- 					 ndlp->nlp_rpi, ndlp->nlp_DID,
- 					 ndlp->nlp_defer_did,
- 					 ndlp->nlp_flag, ndlp);
-@@ -4924,7 +4924,8 @@ lpfc_unreg_rpi(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
- 
- 			lpfc_printf_vlog(vport, KERN_INFO, LOG_DISCOVERY,
- 					 "1433 unreg_rpi UNREG x%x on "
--					 "NPort x%x deferred flg x%x Data:%p\n",
-+					 "NPort x%x deferred flg x%x "
-+					 "Data:x%px\n",
- 					 ndlp->nlp_rpi, ndlp->nlp_DID,
- 					 ndlp->nlp_flag, ndlp);
- 
-@@ -5065,16 +5066,16 @@ lpfc_cleanup_node(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
- 			 ndlp->nlp_state, ndlp->nlp_rpi);
- 	if (NLP_CHK_FREE_REQ(ndlp)) {
- 		lpfc_printf_vlog(vport, KERN_WARNING, LOG_NODE,
--				"0280 lpfc_cleanup_node: ndlp:x%p "
-+				"0280 %s: ndlp:x%px "
- 				"usgmap:x%x refcnt:%d\n",
--				(void *)ndlp, ndlp->nlp_usg_map,
-+				__func__, (void *)ndlp, ndlp->nlp_usg_map,
- 				kref_read(&ndlp->kref));
- 		lpfc_dequeue_node(vport, ndlp);
- 	} else {
- 		lpfc_printf_vlog(vport, KERN_WARNING, LOG_NODE,
--				"0281 lpfc_cleanup_node: ndlp:x%p "
-+				"0281 %s: ndlp:x%px "
- 				"usgmap:x%x refcnt:%d\n",
--				(void *)ndlp, ndlp->nlp_usg_map,
-+				__func__, (void *)ndlp, ndlp->nlp_usg_map,
- 				kref_read(&ndlp->kref));
- 		lpfc_disable_node(vport, ndlp);
- 	}
-@@ -5165,7 +5166,7 @@ lpfc_nlp_remove(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
- 		 * allocated by the firmware.
- 		 */
- 		lpfc_printf_vlog(vport, KERN_INFO, LOG_NODE,
--				 "0005 rpi:%x DID:%x flg:%x %d map:%x %p\n",
-+				 "0005 rpi:%x DID:%x flg:%x %d map:%x x%px\n",
- 				 ndlp->nlp_rpi, ndlp->nlp_DID, ndlp->nlp_flag,
- 				 kref_read(&ndlp->kref),
- 				 ndlp->nlp_usg_map, ndlp);
-@@ -5201,8 +5202,8 @@ lpfc_nlp_remove(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
- 		 * for registered rport so need to cleanup rport
- 		 */
- 		lpfc_printf_vlog(vport, KERN_WARNING, LOG_NODE,
--				"0940 removed node x%p DID x%x "
--				" rport not null %p\n",
-+				"0940 removed node x%px DID x%x "
-+				" rport not null x%px\n",
- 				ndlp, ndlp->nlp_DID, ndlp->rport);
- 		rport = ndlp->rport;
- 		rdata = rport->dd_data;
-@@ -5329,7 +5330,7 @@ lpfc_findnode_mapped(struct lpfc_vport *vport)
- 			spin_unlock_irqrestore(shost->host_lock, iflags);
- 			lpfc_printf_vlog(vport, KERN_INFO, LOG_NODE,
- 					 "2025 FIND node DID "
--					 "Data: x%p x%x x%x x%x %p\n",
-+					 "Data: x%px x%x x%x x%x x%px\n",
- 					 ndlp, ndlp->nlp_DID,
- 					 ndlp->nlp_flag, data1,
- 					 ndlp->active_rrqs_xri_bitmap);
-@@ -5996,7 +5997,7 @@ lpfc_mbx_cmpl_fdmi_reg_login(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
- 	ndlp->nlp_type |= NLP_FABRIC;
- 	lpfc_nlp_set_state(vport, ndlp, NLP_STE_UNMAPPED_NODE);
- 	lpfc_printf_vlog(vport, KERN_INFO, LOG_SLI,
--			 "0004 rpi:%x DID:%x flg:%x %d map:%x %p\n",
-+			 "0004 rpi:%x DID:%x flg:%x %d map:%x x%px\n",
- 			 ndlp->nlp_rpi, ndlp->nlp_DID, ndlp->nlp_flag,
- 			 kref_read(&ndlp->kref),
- 			 ndlp->nlp_usg_map, ndlp);
-@@ -6050,8 +6051,8 @@ __lpfc_find_node(struct lpfc_vport *vport, node_filter filter, void *param)
- 	list_for_each_entry(ndlp, &vport->fc_nodes, nlp_listp) {
- 		if (filter(ndlp, param)) {
- 			lpfc_printf_vlog(vport, KERN_INFO, LOG_NODE,
--					 "3185 FIND node filter %p DID "
--					 "ndlp %p did x%x flg x%x st x%x "
-+					 "3185 FIND node filter %pf DID "
-+					 "ndlp x%px did x%x flg x%x st x%x "
- 					 "xri x%x type x%x rpi x%x\n",
- 					 filter, ndlp, ndlp->nlp_DID,
- 					 ndlp->nlp_flag, ndlp->nlp_state,
-@@ -6061,7 +6062,7 @@ __lpfc_find_node(struct lpfc_vport *vport, node_filter filter, void *param)
- 		}
- 	}
- 	lpfc_printf_vlog(vport, KERN_INFO, LOG_NODE,
--			 "3186 FIND node filter %p NOT FOUND.\n", filter);
-+			 "3186 FIND node filter %pf NOT FOUND.\n", filter);
- 	return NULL;
- }
- 
-@@ -6185,7 +6186,7 @@ lpfc_nlp_init(struct lpfc_vport *vport, uint32_t did)
- 		ndlp->nlp_rpi = rpi;
- 		lpfc_printf_vlog(vport, KERN_INFO, LOG_NODE,
- 				 "0007 rpi:%x DID:%x flg:%x refcnt:%d "
--				 "map:%x %p\n", ndlp->nlp_rpi, ndlp->nlp_DID,
-+				 "map:%x x%px\n", ndlp->nlp_rpi, ndlp->nlp_DID,
- 				 ndlp->nlp_flag,
- 				 kref_read(&ndlp->kref),
- 				 ndlp->nlp_usg_map, ndlp);
-@@ -6223,8 +6224,9 @@ lpfc_nlp_release(struct kref *kref)
- 		ndlp->nlp_DID, ndlp->nlp_flag, ndlp->nlp_type);
- 
- 	lpfc_printf_vlog(ndlp->vport, KERN_INFO, LOG_NODE,
--			"0279 lpfc_nlp_release: ndlp:x%p did %x "
-+			"0279 %s: ndlp:x%px did %x "
- 			"usgmap:x%x refcnt:%d rpi:%x\n",
-+			__func__,
- 			(void *)ndlp, ndlp->nlp_DID, ndlp->nlp_usg_map,
- 			kref_read(&ndlp->kref), ndlp->nlp_rpi);
- 
-@@ -6271,9 +6273,9 @@ lpfc_nlp_get(struct lpfc_nodelist *ndlp)
- 		if (!NLP_CHK_NODE_ACT(ndlp) || NLP_CHK_FREE_ACK(ndlp)) {
- 			spin_unlock_irqrestore(&phba->ndlp_lock, flags);
- 			lpfc_printf_vlog(ndlp->vport, KERN_WARNING, LOG_NODE,
--				"0276 lpfc_nlp_get: ndlp:x%p "
-+				"0276 %s: ndlp:x%px "
- 				"usgmap:x%x refcnt:%d\n",
--				(void *)ndlp, ndlp->nlp_usg_map,
-+				__func__, (void *)ndlp, ndlp->nlp_usg_map,
- 				kref_read(&ndlp->kref));
- 			return NULL;
- 		} else
-@@ -6299,9 +6301,9 @@ lpfc_nlp_put(struct lpfc_nodelist *ndlp)
- 		return 1;
- 
- 	lpfc_debugfs_disc_trc(ndlp->vport, LPFC_DISC_TRC_NODE,
--	"node put:        did:x%x flg:x%x refcnt:x%x",
--		ndlp->nlp_DID, ndlp->nlp_flag,
--		kref_read(&ndlp->kref));
-+			"node put:        did:x%x flg:x%x refcnt:x%x",
-+			ndlp->nlp_DID, ndlp->nlp_flag,
-+			kref_read(&ndlp->kref));
- 	phba = ndlp->phba;
- 	spin_lock_irqsave(&phba->ndlp_lock, flags);
- 	/* Check the ndlp memory free acknowledge flag to avoid the
-@@ -6311,9 +6313,9 @@ lpfc_nlp_put(struct lpfc_nodelist *ndlp)
- 	if (NLP_CHK_FREE_ACK(ndlp)) {
- 		spin_unlock_irqrestore(&phba->ndlp_lock, flags);
- 		lpfc_printf_vlog(ndlp->vport, KERN_WARNING, LOG_NODE,
--				"0274 lpfc_nlp_put: ndlp:x%p "
-+				"0274 %s: ndlp:x%px "
- 				"usgmap:x%x refcnt:%d\n",
--				(void *)ndlp, ndlp->nlp_usg_map,
-+				__func__, (void *)ndlp, ndlp->nlp_usg_map,
- 				kref_read(&ndlp->kref));
- 		return 1;
- 	}
-@@ -6324,9 +6326,9 @@ lpfc_nlp_put(struct lpfc_nodelist *ndlp)
- 	if (NLP_CHK_IACT_REQ(ndlp)) {
- 		spin_unlock_irqrestore(&phba->ndlp_lock, flags);
- 		lpfc_printf_vlog(ndlp->vport, KERN_WARNING, LOG_NODE,
--				"0275 lpfc_nlp_put: ndlp:x%p "
-+				"0275 %s: ndlp:x%px "
- 				"usgmap:x%x refcnt:%d\n",
--				(void *)ndlp, ndlp->nlp_usg_map,
-+				__func__, (void *)ndlp, ndlp->nlp_usg_map,
- 				kref_read(&ndlp->kref));
- 		return 1;
- 	}
++struct sli4_hybrid_sgl {
++	struct list_head list_node;
++	struct sli4_sge *dma_sgl;
++	dma_addr_t dma_phys_sgl;
++};
++
++struct fcp_cmd_rsp_buf {
++	struct list_head list_node;
++
++	/* for storing cmd/rsp dma alloc'ed virt_addr */
++	struct fcp_cmnd *fcp_cmnd;
++	struct fcp_rsp *fcp_rsp;
++
++	/* for storing this cmd/rsp's dma mapped phys addr from per CPU pool */
++	dma_addr_t fcp_cmd_rsp_dma_handle;
++};
++
+ struct sli4_sge_diseed {	/* SLI-4 */
+ 	uint32_t ref_tag;
+ 	uint32_t ref_tag_tran;
+@@ -3449,6 +3466,9 @@ struct lpfc_sli4_parameters {
+ #define cfg_xib_SHIFT				4
+ #define cfg_xib_MASK				0x00000001
+ #define cfg_xib_WORD				word19
++#define cfg_xpsgl_SHIFT				6
++#define cfg_xpsgl_MASK				0x00000001
++#define cfg_xpsgl_WORD				word19
+ #define cfg_eqdr_SHIFT				8
+ #define cfg_eqdr_MASK				0x00000001
+ #define cfg_eqdr_WORD				word19
 diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 7227bd46244d..9cde3dc35437 100644
+index 9cde3dc35437..35faaf915c6a 100644
 --- a/drivers/scsi/lpfc/lpfc_init.c
 +++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -2877,7 +2877,7 @@ lpfc_cleanup(struct lpfc_vport *vport)
- 						&vport->fc_nodes, nlp_listp) {
- 				lpfc_printf_vlog(ndlp->vport, KERN_ERR,
- 						LOG_NODE,
--						"0282 did:x%x ndlp:x%p "
-+						"0282 did:x%x ndlp:x%px "
- 						"usgmap:x%x refcnt:%d\n",
- 						ndlp->nlp_DID, (void *)ndlp,
- 						ndlp->nlp_usg_map,
-@@ -3081,7 +3081,7 @@ lpfc_sli4_node_prep(struct lpfc_hba *phba)
- 			ndlp->nlp_rpi = rpi;
- 			lpfc_printf_vlog(ndlp->vport, KERN_INFO, LOG_NODE,
- 					 "0009 rpi:%x DID:%x "
--					 "flg:%x map:%x %p\n", ndlp->nlp_rpi,
-+					 "flg:%x map:%x x%px\n", ndlp->nlp_rpi,
- 					 ndlp->nlp_DID, ndlp->nlp_flag,
- 					 ndlp->nlp_usg_map, ndlp);
+@@ -3650,6 +3650,9 @@ lpfc_io_free(struct lpfc_hba *phba)
+ 			qp->put_io_bufs--;
+ 			dma_pool_free(phba->lpfc_sg_dma_buf_pool,
+ 				      lpfc_ncmd->data, lpfc_ncmd->dma_handle);
++			if (phba->cfg_xpsgl && !phba->nvmet_support)
++				lpfc_put_sgl_per_hdwq(phba, lpfc_ncmd);
++			lpfc_put_cmd_rsp_buf_per_hdwq(phba, lpfc_ncmd);
+ 			kfree(lpfc_ncmd);
+ 			qp->total_io_bufs--;
  		}
-@@ -3505,7 +3505,7 @@ lpfc_offline_prep(struct lpfc_hba *phba, int mbx_action)
- 					lpfc_printf_vlog(ndlp->vport,
- 							 KERN_INFO, LOG_NODE,
- 							 "0011 lpfc_offline: "
--							 "ndlp:x%p did %x "
-+							 "ndlp:x%px did %x "
- 							 "usgmap:x%x rpi:%x\n",
- 							 ndlp, ndlp->nlp_DID,
- 							 ndlp->nlp_usg_map,
-@@ -7622,7 +7622,7 @@ lpfc_setup_bg(struct lpfc_hba *phba, struct Scsi_Host *shost)
- 			if (_dump_buf_data) {
- 				lpfc_printf_log(phba, KERN_ERR, LOG_BG,
- 					"9043 BLKGRD: allocated %d pages for "
--				       "_dump_buf_data at 0x%p\n",
-+				       "_dump_buf_data at x%px\n",
- 				       (1 << pagecnt), _dump_buf_data);
- 				_dump_buf_data_order = pagecnt;
- 				memset(_dump_buf_data, 0,
-@@ -7637,7 +7637,7 @@ lpfc_setup_bg(struct lpfc_hba *phba, struct Scsi_Host *shost)
- 			       "memory for hexdump\n");
+@@ -3663,6 +3666,9 @@ lpfc_io_free(struct lpfc_hba *phba)
+ 			qp->get_io_bufs--;
+ 			dma_pool_free(phba->lpfc_sg_dma_buf_pool,
+ 				      lpfc_ncmd->data, lpfc_ncmd->dma_handle);
++			if (phba->cfg_xpsgl && !phba->nvmet_support)
++				lpfc_put_sgl_per_hdwq(phba, lpfc_ncmd);
++			lpfc_put_cmd_rsp_buf_per_hdwq(phba, lpfc_ncmd);
+ 			kfree(lpfc_ncmd);
+ 			qp->total_io_bufs--;
+ 		}
+@@ -4138,22 +4144,30 @@ lpfc_new_io_buf(struct lpfc_hba *phba, int num_to_alloc)
+ 			break;
+ 		}
+ 
+-		/*
+-		 * 4K Page alignment is CRITICAL to BlockGuard, double check
+-		 * to be sure.
+-		 */
+-		if ((phba->sli3_options & LPFC_SLI3_BG_ENABLED) &&
+-		    (((unsigned long)(lpfc_ncmd->data) &
+-		    (unsigned long)(SLI4_PAGE_SIZE - 1)) != 0)) {
+-			lpfc_printf_log(phba, KERN_ERR, LOG_FCP,
+-					"3369 Memory alignment err: addr=%lx\n",
+-					(unsigned long)lpfc_ncmd->data);
+-			dma_pool_free(phba->lpfc_sg_dma_buf_pool,
+-				      lpfc_ncmd->data, lpfc_ncmd->dma_handle);
+-			kfree(lpfc_ncmd);
+-			break;
++		if (phba->cfg_xpsgl && !phba->nvmet_support) {
++			INIT_LIST_HEAD(&lpfc_ncmd->dma_sgl_xtra_list);
++		} else {
++			/*
++			 * 4K Page alignment is CRITICAL to BlockGuard, double
++			 * check to be sure.
++			 */
++			if ((phba->sli3_options & LPFC_SLI3_BG_ENABLED) &&
++			    (((unsigned long)(lpfc_ncmd->data) &
++			    (unsigned long)(SLI4_PAGE_SIZE - 1)) != 0)) {
++				lpfc_printf_log(phba, KERN_ERR, LOG_FCP,
++						"3369 Memory alignment err: "
++						"addr=%lx\n",
++						(unsigned long)lpfc_ncmd->data);
++				dma_pool_free(phba->lpfc_sg_dma_buf_pool,
++					      lpfc_ncmd->data,
++					      lpfc_ncmd->dma_handle);
++				kfree(lpfc_ncmd);
++				break;
++			}
+ 		}
+ 
++		INIT_LIST_HEAD(&lpfc_ncmd->dma_cmd_rsp_list);
++
+ 		lxri = lpfc_sli4_next_xritag(phba);
+ 		if (lxri == NO_XRI) {
+ 			dma_pool_free(phba->lpfc_sg_dma_buf_pool,
+@@ -4332,7 +4346,11 @@ lpfc_create_port(struct lpfc_hba *phba, int instance, struct device *dev)
+ 
+ 		shost->dma_boundary =
+ 			phba->sli4_hba.pc_sli4_params.sge_supp_len-1;
+-		shost->sg_tablesize = phba->cfg_scsi_seg_cnt;
++
++		if (phba->cfg_xpsgl && !phba->nvmet_support)
++			shost->sg_tablesize = LPFC_MAX_SG_TABLESIZE;
++		else
++			shost->sg_tablesize = phba->cfg_scsi_seg_cnt;
  	} else
- 		lpfc_printf_log(phba, KERN_ERR, LOG_BG,
--			"9045 BLKGRD: already allocated _dump_buf_data=0x%p"
-+			"9045 BLKGRD: already allocated _dump_buf_data=x%px"
- 		       "\n", _dump_buf_data);
- 	if (!_dump_buf_dif) {
- 		while (pagecnt) {
-@@ -7646,7 +7646,7 @@ lpfc_setup_bg(struct lpfc_hba *phba, struct Scsi_Host *shost)
- 			if (_dump_buf_dif) {
- 				lpfc_printf_log(phba, KERN_ERR, LOG_BG,
- 					"9046 BLKGRD: allocated %d pages for "
--				       "_dump_buf_dif at 0x%p\n",
-+				       "_dump_buf_dif at x%px\n",
- 				       (1 << pagecnt), _dump_buf_dif);
- 				_dump_buf_dif_order = pagecnt;
- 				memset(_dump_buf_dif, 0,
-@@ -7661,7 +7661,7 @@ lpfc_setup_bg(struct lpfc_hba *phba, struct Scsi_Host *shost)
- 			       "memory for hexdump\n");
- 	} else
- 		lpfc_printf_log(phba, KERN_ERR, LOG_BG,
--			"9048 BLKGRD: already allocated _dump_buf_dif=0x%p\n",
-+			"9048 BLKGRD: already allocated _dump_buf_dif=x%px\n",
- 		       _dump_buf_dif);
+ 		/* SLI-3 has a limited number of hardware queues (3),
+ 		 * thus there is only one for FCP processing.
+@@ -6350,6 +6368,24 @@ lpfc_sli_driver_resource_setup(struct lpfc_hba *phba)
+ 	if (lpfc_mem_alloc(phba, BPL_ALIGN_SZ))
+ 		return -ENOMEM;
+ 
++	phba->lpfc_sg_dma_buf_pool =
++		dma_pool_create("lpfc_sg_dma_buf_pool",
++				&phba->pcidev->dev, phba->cfg_sg_dma_buf_size,
++				BPL_ALIGN_SZ, 0);
++
++	if (!phba->lpfc_sg_dma_buf_pool)
++		goto fail_free_mem;
++
++	phba->lpfc_cmd_rsp_buf_pool =
++			dma_pool_create("lpfc_cmd_rsp_buf_pool",
++					&phba->pcidev->dev,
++					sizeof(struct fcp_cmnd) +
++					sizeof(struct fcp_rsp),
++					BPL_ALIGN_SZ, 0);
++
++	if (!phba->lpfc_cmd_rsp_buf_pool)
++		goto fail_free_dma_buf_pool;
++
+ 	/*
+ 	 * Enable sr-iov virtual functions if supported and configured
+ 	 * through the module parameter.
+@@ -6368,6 +6404,13 @@ lpfc_sli_driver_resource_setup(struct lpfc_hba *phba)
+ 	}
+ 
+ 	return 0;
++
++fail_free_dma_buf_pool:
++	dma_pool_destroy(phba->lpfc_sg_dma_buf_pool);
++	phba->lpfc_sg_dma_buf_pool = NULL;
++fail_free_mem:
++	lpfc_mem_free(phba);
++	return -ENOMEM;
  }
  
-@@ -13594,14 +13594,14 @@ lpfc_exit(void)
- 	fc_release_transport(lpfc_vport_transport_template);
- 	if (_dump_buf_data) {
- 		printk(KERN_ERR	"9062 BLKGRD: freeing %lu pages for "
--				"_dump_buf_data at 0x%p\n",
-+				"_dump_buf_data at x%px\n",
- 				(1L << _dump_buf_data_order), _dump_buf_data);
- 		free_pages((unsigned long)_dump_buf_data, _dump_buf_data_order);
+ /**
+@@ -6467,102 +6510,6 @@ lpfc_sli4_driver_resource_setup(struct lpfc_hba *phba)
+ 	 * The WQ create will allocate the ring.
+ 	 */
+ 
+-	/*
+-	 * 1 for cmd, 1 for rsp, NVME adds an extra one
+-	 * for boundary conditions in its max_sgl_segment template.
+-	 */
+-	extra = 2;
+-	if (phba->cfg_enable_fc4_type & LPFC_ENABLE_NVME)
+-		extra++;
+-
+-	/*
+-	 * It doesn't matter what family our adapter is in, we are
+-	 * limited to 2 Pages, 512 SGEs, for our SGL.
+-	 * There are going to be 2 reserved SGEs: 1 FCP cmnd + 1 FCP rsp
+-	 */
+-	max_buf_size = (2 * SLI4_PAGE_SIZE);
+-
+-	/*
+-	 * Since lpfc_sg_seg_cnt is module param, the sg_dma_buf_size
+-	 * used to create the sg_dma_buf_pool must be calculated.
+-	 */
+-	if (phba->sli3_options & LPFC_SLI3_BG_ENABLED) {
+-		/*
+-		 * The scsi_buf for a T10-DIF I/O holds the FCP cmnd,
+-		 * the FCP rsp, and a SGE. Sice we have no control
+-		 * over how many protection segments the SCSI Layer
+-		 * will hand us (ie: there could be one for every block
+-		 * in the IO), just allocate enough SGEs to accomidate
+-		 * our max amount and we need to limit lpfc_sg_seg_cnt
+-		 * to minimize the risk of running out.
+-		 */
+-		phba->cfg_sg_dma_buf_size = sizeof(struct fcp_cmnd) +
+-				sizeof(struct fcp_rsp) + max_buf_size;
+-
+-		/* Total SGEs for scsi_sg_list and scsi_sg_prot_list */
+-		phba->cfg_total_seg_cnt = LPFC_MAX_SGL_SEG_CNT;
+-
+-		/*
+-		 * If supporting DIF, reduce the seg count for scsi to
+-		 * allow room for the DIF sges.
+-		 */
+-		if (phba->cfg_enable_bg &&
+-		    phba->cfg_sg_seg_cnt > LPFC_MAX_BG_SLI4_SEG_CNT_DIF)
+-			phba->cfg_scsi_seg_cnt = LPFC_MAX_BG_SLI4_SEG_CNT_DIF;
+-		else
+-			phba->cfg_scsi_seg_cnt = phba->cfg_sg_seg_cnt;
+-
+-	} else {
+-		/*
+-		 * The scsi_buf for a regular I/O holds the FCP cmnd,
+-		 * the FCP rsp, a SGE for each, and a SGE for up to
+-		 * cfg_sg_seg_cnt data segments.
+-		 */
+-		phba->cfg_sg_dma_buf_size = sizeof(struct fcp_cmnd) +
+-				sizeof(struct fcp_rsp) +
+-				((phba->cfg_sg_seg_cnt + extra) *
+-				sizeof(struct sli4_sge));
+-
+-		/* Total SGEs for scsi_sg_list */
+-		phba->cfg_total_seg_cnt = phba->cfg_sg_seg_cnt + extra;
+-		phba->cfg_scsi_seg_cnt = phba->cfg_sg_seg_cnt;
+-
+-		/*
+-		 * NOTE: if (phba->cfg_sg_seg_cnt + extra) <= 256 we only
+-		 * need to post 1 page for the SGL.
+-		 */
+-	}
+-
+-	/* Limit to LPFC_MAX_NVME_SEG_CNT for NVME. */
+-	if (phba->cfg_enable_fc4_type & LPFC_ENABLE_NVME) {
+-		if (phba->cfg_sg_seg_cnt > LPFC_MAX_NVME_SEG_CNT) {
+-			lpfc_printf_log(phba, KERN_INFO, LOG_NVME | LOG_INIT,
+-					"6300 Reducing NVME sg segment "
+-					"cnt to %d\n",
+-					LPFC_MAX_NVME_SEG_CNT);
+-			phba->cfg_nvme_seg_cnt = LPFC_MAX_NVME_SEG_CNT;
+-		} else
+-			phba->cfg_nvme_seg_cnt = phba->cfg_sg_seg_cnt;
+-	}
+-
+-	/* Initialize the host templates with the updated values. */
+-	lpfc_vport_template.sg_tablesize = phba->cfg_scsi_seg_cnt;
+-	lpfc_template.sg_tablesize = phba->cfg_scsi_seg_cnt;
+-	lpfc_template_no_hr.sg_tablesize = phba->cfg_scsi_seg_cnt;
+-
+-	if (phba->cfg_sg_dma_buf_size  <= LPFC_MIN_SG_SLI4_BUF_SZ)
+-		phba->cfg_sg_dma_buf_size = LPFC_MIN_SG_SLI4_BUF_SZ;
+-	else
+-		phba->cfg_sg_dma_buf_size =
+-			SLI4_PAGE_ALIGN(phba->cfg_sg_dma_buf_size);
+-
+-	lpfc_printf_log(phba, KERN_INFO, LOG_INIT | LOG_FCP,
+-			"9087 sg_seg_cnt:%d dmabuf_size:%d "
+-			"total:%d scsi:%d nvme:%d\n",
+-			phba->cfg_sg_seg_cnt, phba->cfg_sg_dma_buf_size,
+-			phba->cfg_total_seg_cnt,  phba->cfg_scsi_seg_cnt,
+-			phba->cfg_nvme_seg_cnt);
+-
+ 	/* Initialize buffer queue management fields */
+ 	INIT_LIST_HEAD(&phba->hbqs[LPFC_ELS_HBQ].hbq_buffer_list);
+ 	phba->hbqs[LPFC_ELS_HBQ].hbq_alloc_buffer = lpfc_sli4_rb_alloc;
+@@ -6783,6 +6730,131 @@ lpfc_sli4_driver_resource_setup(struct lpfc_hba *phba)
+ 		}
  	}
  
- 	if (_dump_buf_dif) {
- 		printk(KERN_ERR	"9049 BLKGRD: freeing %lu pages for "
--				"_dump_buf_dif at 0x%p\n",
-+				"_dump_buf_dif at x%px\n",
- 				(1L << _dump_buf_dif_order), _dump_buf_dif);
- 		free_pages((unsigned long)_dump_buf_dif, _dump_buf_dif_order);
++	/*
++	 * 1 for cmd, 1 for rsp, NVME adds an extra one
++	 * for boundary conditions in its max_sgl_segment template.
++	 */
++	extra = 2;
++	if (phba->cfg_enable_fc4_type & LPFC_ENABLE_NVME)
++		extra++;
++
++	/*
++	 * It doesn't matter what family our adapter is in, we are
++	 * limited to 2 Pages, 512 SGEs, for our SGL.
++	 * There are going to be 2 reserved SGEs: 1 FCP cmnd + 1 FCP rsp
++	 */
++	max_buf_size = (2 * SLI4_PAGE_SIZE);
++
++	/*
++	 * Since lpfc_sg_seg_cnt is module param, the sg_dma_buf_size
++	 * used to create the sg_dma_buf_pool must be calculated.
++	 */
++	if (phba->sli3_options & LPFC_SLI3_BG_ENABLED) {
++		/* Both cfg_enable_bg and cfg_external_dif code paths */
++
++		/*
++		 * The scsi_buf for a T10-DIF I/O holds the FCP cmnd,
++		 * the FCP rsp, and a SGE. Sice we have no control
++		 * over how many protection segments the SCSI Layer
++		 * will hand us (ie: there could be one for every block
++		 * in the IO), just allocate enough SGEs to accomidate
++		 * our max amount and we need to limit lpfc_sg_seg_cnt
++		 * to minimize the risk of running out.
++		 */
++		phba->cfg_sg_dma_buf_size = sizeof(struct fcp_cmnd) +
++				sizeof(struct fcp_rsp) + max_buf_size;
++
++		/* Total SGEs for scsi_sg_list and scsi_sg_prot_list */
++		phba->cfg_total_seg_cnt = LPFC_MAX_SGL_SEG_CNT;
++
++		/*
++		 * If supporting DIF, reduce the seg count for scsi to
++		 * allow room for the DIF sges.
++		 */
++		if (phba->cfg_enable_bg &&
++		    phba->cfg_sg_seg_cnt > LPFC_MAX_BG_SLI4_SEG_CNT_DIF)
++			phba->cfg_scsi_seg_cnt = LPFC_MAX_BG_SLI4_SEG_CNT_DIF;
++		else
++			phba->cfg_scsi_seg_cnt = phba->cfg_sg_seg_cnt;
++
++	} else {
++		/*
++		 * The scsi_buf for a regular I/O holds the FCP cmnd,
++		 * the FCP rsp, a SGE for each, and a SGE for up to
++		 * cfg_sg_seg_cnt data segments.
++		 */
++		phba->cfg_sg_dma_buf_size = sizeof(struct fcp_cmnd) +
++				sizeof(struct fcp_rsp) +
++				((phba->cfg_sg_seg_cnt + extra) *
++				sizeof(struct sli4_sge));
++
++		/* Total SGEs for scsi_sg_list */
++		phba->cfg_total_seg_cnt = phba->cfg_sg_seg_cnt + extra;
++		phba->cfg_scsi_seg_cnt = phba->cfg_sg_seg_cnt;
++
++		/*
++		 * NOTE: if (phba->cfg_sg_seg_cnt + extra) <= 256 we only
++		 * need to post 1 page for the SGL.
++		 */
++	}
++
++	if (phba->cfg_xpsgl && !phba->nvmet_support)
++		phba->cfg_sg_dma_buf_size = LPFC_DEFAULT_XPSGL_SIZE;
++	else if (phba->cfg_sg_dma_buf_size  <= LPFC_MIN_SG_SLI4_BUF_SZ)
++		phba->cfg_sg_dma_buf_size = LPFC_MIN_SG_SLI4_BUF_SZ;
++	else
++		phba->cfg_sg_dma_buf_size =
++				SLI4_PAGE_ALIGN(phba->cfg_sg_dma_buf_size);
++
++	phba->border_sge_num = phba->cfg_sg_dma_buf_size /
++			       sizeof(struct sli4_sge);
++
++	/* Limit to LPFC_MAX_NVME_SEG_CNT for NVME. */
++	if (phba->cfg_enable_fc4_type & LPFC_ENABLE_NVME) {
++		if (phba->cfg_sg_seg_cnt > LPFC_MAX_NVME_SEG_CNT) {
++			lpfc_printf_log(phba, KERN_INFO, LOG_NVME | LOG_INIT,
++					"6300 Reducing NVME sg segment "
++					"cnt to %d\n",
++					LPFC_MAX_NVME_SEG_CNT);
++			phba->cfg_nvme_seg_cnt = LPFC_MAX_NVME_SEG_CNT;
++		} else
++			phba->cfg_nvme_seg_cnt = phba->cfg_sg_seg_cnt;
++	}
++
++	/* Initialize the host templates with the updated values. */
++	lpfc_vport_template.sg_tablesize = phba->cfg_scsi_seg_cnt;
++	lpfc_template.sg_tablesize = phba->cfg_scsi_seg_cnt;
++	lpfc_template_no_hr.sg_tablesize = phba->cfg_scsi_seg_cnt;
++
++	lpfc_printf_log(phba, KERN_INFO, LOG_INIT | LOG_FCP,
++			"9087 sg_seg_cnt:%d dmabuf_size:%d "
++			"total:%d scsi:%d nvme:%d\n",
++			phba->cfg_sg_seg_cnt, phba->cfg_sg_dma_buf_size,
++			phba->cfg_total_seg_cnt,  phba->cfg_scsi_seg_cnt,
++			phba->cfg_nvme_seg_cnt);
++
++	if (phba->cfg_sg_dma_buf_size < SLI4_PAGE_SIZE)
++		i = phba->cfg_sg_dma_buf_size;
++	else
++		i = SLI4_PAGE_SIZE;
++
++	phba->lpfc_sg_dma_buf_pool =
++			dma_pool_create("lpfc_sg_dma_buf_pool",
++					&phba->pcidev->dev,
++					phba->cfg_sg_dma_buf_size,
++					i, 0);
++	if (!phba->lpfc_sg_dma_buf_pool)
++		goto out_free_bsmbx;
++
++	phba->lpfc_cmd_rsp_buf_pool =
++			dma_pool_create("lpfc_cmd_rsp_buf_pool",
++					&phba->pcidev->dev,
++					sizeof(struct fcp_cmnd) +
++					sizeof(struct fcp_rsp),
++					i, 0);
++	if (!phba->lpfc_cmd_rsp_buf_pool)
++		goto out_free_sg_dma_buf;
++
+ 	mempool_free(mboxq, phba->mbox_mem_pool);
+ 
+ 	/* Verify OAS is supported */
+@@ -6794,12 +6866,12 @@ lpfc_sli4_driver_resource_setup(struct lpfc_hba *phba)
+ 	/* Verify all the SLI4 queues */
+ 	rc = lpfc_sli4_queue_verify(phba);
+ 	if (rc)
+-		goto out_free_bsmbx;
++		goto out_free_cmd_rsp_buf;
+ 
+ 	/* Create driver internal CQE event pool */
+ 	rc = lpfc_sli4_cq_event_pool_create(phba);
+ 	if (rc)
+-		goto out_free_bsmbx;
++		goto out_free_cmd_rsp_buf;
+ 
+ 	/* Initialize sgl lists per host */
+ 	lpfc_init_sgl_list(phba);
+@@ -6890,6 +6962,12 @@ lpfc_sli4_driver_resource_setup(struct lpfc_hba *phba)
+ 	lpfc_free_active_sgl(phba);
+ out_destroy_cq_event_pool:
+ 	lpfc_sli4_cq_event_pool_destroy(phba);
++out_free_cmd_rsp_buf:
++	dma_pool_destroy(phba->lpfc_cmd_rsp_buf_pool);
++	phba->lpfc_cmd_rsp_buf_pool = NULL;
++out_free_sg_dma_buf:
++	dma_pool_destroy(phba->lpfc_sg_dma_buf_pool);
++	phba->lpfc_sg_dma_buf_pool = NULL;
+ out_free_bsmbx:
+ 	lpfc_destroy_bootstrap_mbox(phba);
+ out_free_mem:
+@@ -8816,6 +8894,9 @@ lpfc_sli4_queue_create(struct lpfc_hba *phba)
+ 			spin_lock_init(&qp->abts_nvme_buf_list_lock);
+ 			INIT_LIST_HEAD(&qp->lpfc_abts_nvme_buf_list);
+ 			qp->abts_nvme_io_bufs = 0;
++			INIT_LIST_HEAD(&qp->sgl_list);
++			INIT_LIST_HEAD(&qp->cmd_rsp_buf_list);
++			spin_lock_init(&qp->hdwq_lock);
+ 		}
  	}
-diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
-index f4eea52c66f5..41ac07b99739 100644
---- a/drivers/scsi/lpfc/lpfc_nportdisc.c
-+++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
-@@ -885,7 +885,7 @@ lpfc_release_rpi(struct lpfc_hba *phba, struct lpfc_vport *vport,
- 		lpfc_printf_vlog(vport, KERN_INFO, LOG_DISCOVERY,
- 				 "1435 release_rpi SKIP UNREG x%x on "
- 				 "NPort x%x deferred x%x  flg x%x "
--				 "Data: %p\n",
-+				 "Data: x%px\n",
- 				 ndlp->nlp_rpi, ndlp->nlp_DID,
- 				 ndlp->nlp_defer_did,
- 				 ndlp->nlp_flag, ndlp);
+ 
+@@ -9190,6 +9271,9 @@ lpfc_sli4_release_hdwq(struct lpfc_hba *phba)
+ 		hdwq[idx].nvme_cq = NULL;
+ 		hdwq[idx].fcp_wq = NULL;
+ 		hdwq[idx].nvme_wq = NULL;
++		if (phba->cfg_xpsgl && !phba->nvmet_support)
++			lpfc_free_sgl_per_hdwq(phba, &hdwq[idx]);
++		lpfc_free_cmd_rsp_buf_per_hdwq(phba, &hdwq[idx]);
+ 	}
+ 	/* Loop thru all IRQ vectors */
+ 	for (idx = 0; idx < phba->cfg_irq_chann; idx++) {
+@@ -11668,6 +11752,9 @@ lpfc_get_sli4_parameters(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq)
+ 	phba->sli4_hba.extents_in_use = bf_get(cfg_ext, mbx_sli4_parameters);
+ 	phba->sli4_hba.rpi_hdrs_in_use = bf_get(cfg_hdrr, mbx_sli4_parameters);
+ 
++	/* Check for Extended Pre-Registered SGL support */
++	phba->cfg_xpsgl = bf_get(cfg_xpsgl, mbx_sli4_parameters);
++
+ 	/* Check for firmware nvme support */
+ 	rc = (bf_get(cfg_nvme, mbx_sli4_parameters) &&
+ 		     bf_get(cfg_xib, mbx_sli4_parameters));
+diff --git a/drivers/scsi/lpfc/lpfc_mem.c b/drivers/scsi/lpfc/lpfc_mem.c
+index 66191fa35f63..84c7445b8c93 100644
+--- a/drivers/scsi/lpfc/lpfc_mem.c
++++ b/drivers/scsi/lpfc/lpfc_mem.c
+@@ -72,8 +72,8 @@ lpfc_mem_alloc_active_rrq_pool_s4(struct lpfc_hba *phba) {
+  * lpfc_mem_alloc - create and allocate all PCI and memory pools
+  * @phba: HBA to allocate pools for
+  *
+- * Description: Creates and allocates PCI pools lpfc_sg_dma_buf_pool,
+- * lpfc_mbuf_pool, lpfc_hrb_pool.  Creates and allocates kmalloc-backed mempools
++ * Description: Creates and allocates PCI pools lpfc_mbuf_pool,
++ * lpfc_hrb_pool.  Creates and allocates kmalloc-backed mempools
+  * for LPFC_MBOXQ_t and lpfc_nodelist.  Also allocates the VPI bitmask.
+  *
+  * Notes: Not interrupt-safe.  Must be called with no locks held.  If any
+@@ -89,36 +89,12 @@ lpfc_mem_alloc(struct lpfc_hba *phba, int align)
+ 	struct lpfc_dma_pool *pool = &phba->lpfc_mbuf_safety_pool;
+ 	int i;
+ 
+-	if (phba->sli_rev == LPFC_SLI_REV4) {
+-		/* Calculate alignment */
+-		if (phba->cfg_sg_dma_buf_size < SLI4_PAGE_SIZE)
+-			i = phba->cfg_sg_dma_buf_size;
+-		else
+-			i = SLI4_PAGE_SIZE;
+-
+-		phba->lpfc_sg_dma_buf_pool =
+-			dma_pool_create("lpfc_sg_dma_buf_pool",
+-					&phba->pcidev->dev,
+-					phba->cfg_sg_dma_buf_size,
+-					i, 0);
+-		if (!phba->lpfc_sg_dma_buf_pool)
+-			goto fail;
+-
+-	} else {
+-		phba->lpfc_sg_dma_buf_pool =
+-			dma_pool_create("lpfc_sg_dma_buf_pool",
+-					&phba->pcidev->dev, phba->cfg_sg_dma_buf_size,
+-					align, 0);
+-
+-		if (!phba->lpfc_sg_dma_buf_pool)
+-			goto fail;
+-	}
+ 
+ 	phba->lpfc_mbuf_pool = dma_pool_create("lpfc_mbuf_pool", &phba->pcidev->dev,
+ 							LPFC_BPL_SIZE,
+ 							align, 0);
+ 	if (!phba->lpfc_mbuf_pool)
+-		goto fail_free_dma_buf_pool;
++		goto fail;
+ 
+ 	pool->elements = kmalloc_array(LPFC_MBUF_POOL_SIZE,
+ 				       sizeof(struct lpfc_dmabuf),
+@@ -208,9 +184,6 @@ lpfc_mem_alloc(struct lpfc_hba *phba, int align)
+  fail_free_lpfc_mbuf_pool:
+ 	dma_pool_destroy(phba->lpfc_mbuf_pool);
+ 	phba->lpfc_mbuf_pool = NULL;
+- fail_free_dma_buf_pool:
+-	dma_pool_destroy(phba->lpfc_sg_dma_buf_pool);
+-	phba->lpfc_sg_dma_buf_pool = NULL;
+  fail:
+ 	return -ENOMEM;
+ }
+@@ -290,10 +263,6 @@ lpfc_mem_free(struct lpfc_hba *phba)
+ 	dma_pool_destroy(phba->lpfc_mbuf_pool);
+ 	phba->lpfc_mbuf_pool = NULL;
+ 
+-	/* Free DMA buffer memory pool */
+-	dma_pool_destroy(phba->lpfc_sg_dma_buf_pool);
+-	phba->lpfc_sg_dma_buf_pool = NULL;
+-
+ 	/* Free Device Data memory pool */
+ 	if (phba->device_data_mem_pool) {
+ 		/* Ensure all objects have been returned to the pool */
+@@ -366,6 +335,13 @@ lpfc_mem_free_all(struct lpfc_hba *phba)
+ 	/* Free and destroy all the allocated memory pools */
+ 	lpfc_mem_free(phba);
+ 
++	/* Free DMA buffer memory pool */
++	dma_pool_destroy(phba->lpfc_sg_dma_buf_pool);
++	phba->lpfc_sg_dma_buf_pool = NULL;
++
++	dma_pool_destroy(phba->lpfc_cmd_rsp_buf_pool);
++	phba->lpfc_cmd_rsp_buf_pool = NULL;
++
+ 	/* Free the iocb lookup array */
+ 	kfree(psli->iocbq_lookup);
+ 	psli->iocbq_lookup = NULL;
 diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
-index 106aef82620d..b599ddc40c6b 100644
+index b599ddc40c6b..5e48318eb7a9 100644
 --- a/drivers/scsi/lpfc/lpfc_nvme.c
 +++ b/drivers/scsi/lpfc/lpfc_nvme.c
-@@ -247,7 +247,7 @@ lpfc_nvme_create_queue(struct nvme_fc_local_port *pnvme_lport,
+@@ -1306,14 +1306,16 @@ lpfc_nvme_prep_io_dma(struct lpfc_vport *vport,
+ 	struct nvmefc_fcp_req *nCmd = lpfc_ncmd->nvmeCmd;
+ 	union lpfc_wqe128 *wqe = &lpfc_ncmd->cur_iocbq.wqe;
+ 	struct sli4_sge *sgl = lpfc_ncmd->dma_sgl;
++	struct sli4_hybrid_sgl *sgl_xtra = NULL;
+ 	struct scatterlist *data_sg;
+ 	struct sli4_sge *first_data_sgl;
+ 	struct ulp_bde64 *bde;
+-	dma_addr_t physaddr;
++	dma_addr_t physaddr = 0;
+ 	uint32_t num_bde = 0;
+-	uint32_t dma_len;
++	uint32_t dma_len = 0;
+ 	uint32_t dma_offset = 0;
+-	int nseg, i;
++	int nseg, i, j;
++	bool lsp_just_set = false;
  
- 	lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME,
- 			 "6073 Binding %s HdwQueue %d  (cpu %d) to "
--			 "hdw_queue %d qhandle %p\n", str,
-+			 "hdw_queue %d qhandle x%px\n", str,
- 			 qidx, qhandle->cpu_id, qhandle->index, qhandle);
- 	*handle = (void *)qhandle;
- 	return 0;
-@@ -282,7 +282,7 @@ lpfc_nvme_delete_queue(struct nvme_fc_local_port *pnvme_lport,
- 	vport = lport->vport;
- 
- 	lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME,
--			"6001 ENTER.  lpfc_pnvme %p, qidx x%x qhandle %p\n",
-+			"6001 ENTER.  lpfc_pnvme x%px, qidx x%x qhandle x%px\n",
- 			lport, qidx, handle);
- 	kfree(handle);
- }
-@@ -293,7 +293,7 @@ lpfc_nvme_localport_delete(struct nvme_fc_local_port *localport)
- 	struct lpfc_nvme_lport *lport = localport->private;
- 
- 	lpfc_printf_vlog(lport->vport, KERN_INFO, LOG_NVME,
--			 "6173 localport %p delete complete\n",
-+			 "6173 localport x%px delete complete\n",
- 			 lport);
- 
- 	/* release any threads waiting for the unreg to complete */
-@@ -332,7 +332,7 @@ lpfc_nvme_remoteport_delete(struct nvme_fc_remote_port *remoteport)
- 	 * calling state machine to remove the node.
- 	 */
- 	lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_DISC,
--			"6146 remoteport delete of remoteport %p\n",
-+			"6146 remoteport delete of remoteport x%px\n",
- 			remoteport);
- 	spin_lock_irq(&vport->phba->hbalock);
- 
-@@ -383,8 +383,8 @@ lpfc_nvme_cmpl_gen_req(struct lpfc_hba *phba, struct lpfc_iocbq *cmdwqe,
- 	ndlp = (struct lpfc_nodelist *)cmdwqe->context1;
- 	lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_DISC,
- 			 "6047 nvme cmpl Enter "
--			 "Data %p DID %x Xri: %x status %x reason x%x cmd:%p "
--			 "lsreg:%p bmp:%p ndlp:%p\n",
-+			 "Data %px DID %x Xri: %x status %x reason x%x "
-+			 "cmd:x%px lsreg:x%px bmp:x%px ndlp:x%px\n",
- 			 pnvme_lsreq, ndlp ? ndlp->nlp_DID : 0,
- 			 cmdwqe->sli4_xritag, status,
- 			 (wcqe->parameter & 0xffff),
-@@ -404,7 +404,7 @@ lpfc_nvme_cmpl_gen_req(struct lpfc_hba *phba, struct lpfc_iocbq *cmdwqe,
- 	else
- 		lpfc_printf_vlog(vport, KERN_ERR, LOG_NVME_DISC,
- 				 "6046 nvme cmpl without done call back? "
--				 "Data %p DID %x Xri: %x status %x\n",
-+				 "Data %px DID %x Xri: %x status %x\n",
- 				pnvme_lsreq, ndlp ? ndlp->nlp_DID : 0,
- 				cmdwqe->sli4_xritag, status);
- 	if (ndlp) {
-@@ -517,7 +517,8 @@ lpfc_nvme_gen_req(struct lpfc_vport *vport, struct lpfc_dmabuf *bmp,
- 	/* Issue GEN REQ WQE for NPORT <did> */
- 	lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
- 			 "6050 Issue GEN REQ WQE to NPORT x%x "
--			 "Data: x%x x%x wq:%p lsreq:%p bmp:%p xmit:%d 1st:%d\n",
-+			 "Data: x%x x%x wq:x%px lsreq:x%px bmp:x%px "
-+			 "xmit:%d 1st:%d\n",
- 			 ndlp->nlp_DID, genwqe->iotag,
- 			 vport->port_state,
- 			genwqe, pnvme_lsreq, bmp, xmit_len, first_len);
-@@ -595,7 +596,7 @@ lpfc_nvme_ls_req(struct nvme_fc_local_port *pnvme_lport,
- 	ndlp = rport->ndlp;
- 	if (!ndlp || !NLP_CHK_NODE_ACT(ndlp)) {
- 		lpfc_printf_vlog(vport, KERN_ERR, LOG_NODE | LOG_NVME_IOERR,
--				 "6051 Remoteport %p, rport has invalid ndlp. "
-+				 "6051 Remoteport x%px, rport has invalid ndlp. "
- 				 "Failing LS Req\n", pnvme_rport);
- 		return -ENODEV;
- 	}
-@@ -647,10 +648,10 @@ lpfc_nvme_ls_req(struct nvme_fc_local_port *pnvme_lport,
- 
- 	/* Expand print to include key fields. */
- 	lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_DISC,
--			 "6149 Issue LS Req to DID 0x%06x lport %p, rport %p "
--			 "lsreq%p rqstlen:%d rsplen:%d %pad %pad\n",
--			 ndlp->nlp_DID,
--			 pnvme_lport, pnvme_rport,
-+			 "6149 Issue LS Req to DID 0x%06x lport x%px, "
-+			 "rport x%px lsreq x%px rqstlen:%d rsplen:%d "
-+			 "%pad %pad\n",
-+			 ndlp->nlp_DID, pnvme_lport, pnvme_rport,
- 			 pnvme_lsreq, pnvme_lsreq->rqstlen,
- 			 pnvme_lsreq->rsplen, &pnvme_lsreq->rqstdma,
- 			 &pnvme_lsreq->rspdma);
-@@ -666,8 +667,8 @@ lpfc_nvme_ls_req(struct nvme_fc_local_port *pnvme_lport,
- 	if (ret != WQE_SUCCESS) {
- 		atomic_inc(&lport->xmt_ls_err);
- 		lpfc_printf_vlog(vport, KERN_ERR, LOG_NVME_DISC,
--				 "6052 EXIT. issue ls wqe failed lport %p, "
--				 "rport %p lsreq%p Status %x DID %x\n",
-+				 "6052 EXIT. issue ls wqe failed lport x%px, "
-+				 "rport x%px lsreq x%px Status %x DID %x\n",
- 				 pnvme_lport, pnvme_rport, pnvme_lsreq,
- 				 ret, ndlp->nlp_DID);
- 		lpfc_mbuf_free(vport->phba, bmp->virt, bmp->phys);
-@@ -724,7 +725,7 @@ lpfc_nvme_ls_abort(struct nvme_fc_local_port *pnvme_lport,
- 
- 	/* Expand print to include key fields. */
- 	lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_ABTS,
--			 "6040 ENTER.  lport %p, rport %p lsreq %p rqstlen:%d "
-+			 "6040 ENTER.  lport x%px, rport x%px lsreq x%px rqstlen:%d "
- 			 "rsplen:%d %pad %pad\n",
- 			 pnvme_lport, pnvme_rport,
- 			 pnvme_lsreq, pnvme_lsreq->rqstlen,
-@@ -985,8 +986,8 @@ lpfc_nvme_io_cmd_wqe_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pwqeIn,
- 	if (!lpfc_ncmd->nvmeCmd) {
- 		spin_unlock(&lpfc_ncmd->buf_lock);
- 		lpfc_printf_vlog(vport, KERN_ERR, LOG_NODE | LOG_NVME_IOERR,
--				 "6066 Missing cmpl ptrs: lpfc_ncmd %p, "
--				 "nvmeCmd %p\n",
-+				 "6066 Missing cmpl ptrs: lpfc_ncmd x%px, "
-+				 "nvmeCmd x%px\n",
- 				 lpfc_ncmd, lpfc_ncmd->nvmeCmd);
- 
- 		/* Release the lpfc_ncmd regardless of the missing elements. */
-@@ -1101,8 +1102,8 @@ lpfc_nvme_io_cmd_wqe_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pwqeIn,
- 			if (lpfc_ncmd->result == IOERR_ABORT_REQUESTED)
- 				lpfc_printf_vlog(vport, KERN_INFO,
- 					 LOG_NVME_IOERR,
--					 "6032 Delay Aborted cmd %p "
--					 "nvme cmd %p, xri x%x, "
-+					 "6032 Delay Aborted cmd x%px "
-+					 "nvme cmd x%px, xri x%x, "
- 					 "xb %d\n",
- 					 lpfc_ncmd, nCmd,
- 					 lpfc_ncmd->cur_iocbq.sli4_xritag,
-@@ -1506,8 +1507,8 @@ lpfc_nvme_fcp_io_submit(struct nvme_fc_local_port *pnvme_lport,
- 	ndlp = rport->ndlp;
- 	if (!ndlp || !NLP_CHK_NODE_ACT(ndlp)) {
- 		lpfc_printf_vlog(vport, KERN_INFO, LOG_NODE | LOG_NVME_IOERR,
--				 "6053 Fail IO, ndlp not ready: rport %p "
--				  "ndlp %p, DID x%06x\n",
-+				 "6053 Busy IO, ndlp not ready: rport x%px "
-+				  "ndlp x%px, DID x%06x\n",
- 				 rport, ndlp, pnvme_rport->port_id);
- 		atomic_inc(&lport->xmt_fcp_err);
- 		ret = -EBUSY;
-@@ -1759,7 +1760,7 @@ lpfc_nvme_fcp_abort(struct nvme_fc_local_port *pnvme_lport,
- 	/* Announce entry to new IO submit field. */
- 	lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_ABTS,
- 			 "6002 Abort Request to rport DID x%06x "
--			 "for nvme_fc_req %p\n",
-+			 "for nvme_fc_req x%px\n",
- 			 pnvme_rport->port_id,
- 			 pnvme_fcreq);
- 
-@@ -1806,8 +1807,8 @@ lpfc_nvme_fcp_abort(struct nvme_fc_local_port *pnvme_lport,
- 	if (lpfc_nbuf->nvmeCmd != pnvme_fcreq) {
- 		lpfc_printf_vlog(vport, KERN_ERR, LOG_NVME_ABTS,
- 				 "6143 NVME req mismatch: "
--				 "lpfc_nbuf %p nvmeCmd %p, "
--				 "pnvme_fcreq %p.  Skipping Abort xri x%x\n",
-+				 "lpfc_nbuf x%px nvmeCmd x%px, "
-+				 "pnvme_fcreq x%px.  Skipping Abort xri x%x\n",
- 				 lpfc_nbuf, lpfc_nbuf->nvmeCmd,
- 				 pnvme_fcreq, nvmereq_wqe->sli4_xritag);
- 		goto out_unlock;
-@@ -1816,7 +1817,7 @@ lpfc_nvme_fcp_abort(struct nvme_fc_local_port *pnvme_lport,
- 	/* Don't abort IOs no longer on the pending queue. */
- 	if (!(nvmereq_wqe->iocb_flag & LPFC_IO_ON_TXCMPLQ)) {
- 		lpfc_printf_vlog(vport, KERN_ERR, LOG_NVME_ABTS,
--				 "6142 NVME IO req %p not queued - skipping "
-+				 "6142 NVME IO req x%px not queued - skipping "
- 				 "abort req xri x%x\n",
- 				 pnvme_fcreq, nvmereq_wqe->sli4_xritag);
- 		goto out_unlock;
-@@ -1831,8 +1832,8 @@ lpfc_nvme_fcp_abort(struct nvme_fc_local_port *pnvme_lport,
- 	if (nvmereq_wqe->iocb_flag & LPFC_DRIVER_ABORTED) {
- 		lpfc_printf_vlog(vport, KERN_ERR, LOG_NVME_ABTS,
- 				 "6144 Outstanding NVME I/O Abort Request "
--				 "still pending on nvme_fcreq %p, "
--				 "lpfc_ncmd %p xri x%x\n",
-+				 "still pending on nvme_fcreq x%px, "
-+				 "lpfc_ncmd %px xri x%x\n",
- 				 pnvme_fcreq, lpfc_nbuf,
- 				 nvmereq_wqe->sli4_xritag);
- 		goto out_unlock;
-@@ -1842,7 +1843,7 @@ lpfc_nvme_fcp_abort(struct nvme_fc_local_port *pnvme_lport,
- 	if (!abts_buf) {
- 		lpfc_printf_vlog(vport, KERN_ERR, LOG_NVME_ABTS,
- 				 "6136 No available abort wqes. Skipping "
--				 "Abts req for nvme_fcreq %p xri x%x\n",
-+				 "Abts req for nvme_fcreq x%px xri x%x\n",
- 				 pnvme_fcreq, nvmereq_wqe->sli4_xritag);
- 		goto out_unlock;
- 	}
-@@ -1893,7 +1894,7 @@ lpfc_nvme_fcp_abort(struct nvme_fc_local_port *pnvme_lport,
- 	if (ret_val) {
- 		lpfc_printf_vlog(vport, KERN_ERR, LOG_NVME_ABTS,
- 				 "6137 Failed abts issue_wqe with status x%x "
--				 "for nvme_fcreq %p.\n",
-+				 "for nvme_fcreq x%px.\n",
- 				 ret_val, pnvme_fcreq);
- 		lpfc_sli_release_iocbq(phba, abts_buf);
- 		return;
-@@ -2096,8 +2097,8 @@ lpfc_nvme_create_localport(struct lpfc_vport *vport)
- 	if (!ret) {
- 		lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME | LOG_NVME_DISC,
- 				 "6005 Successfully registered local "
--				 "NVME port num %d, localP %p, private %p, "
--				 "sg_seg %d\n",
-+				 "NVME port num %d, localP x%px, private "
-+				 "x%px, sg_seg %d\n",
- 				 localport->port_num, localport,
- 				 localport->private,
- 				 lpfc_nvme_template.max_sgl_segments);
-@@ -2165,7 +2166,7 @@ lpfc_nvme_lport_unreg_wait(struct lpfc_vport *vport,
- 					pending += pring->txcmplq_cnt;
+ 	/* Fix up the command and response DMA stuff. */
+ 	lpfc_nvme_adj_fcp_sgls(vport, lpfc_ncmd, nCmd);
+@@ -1350,6 +1352,9 @@ lpfc_nvme_prep_io_dma(struct lpfc_vport *vport,
+ 		 */
+ 		nseg = nCmd->sg_cnt;
+ 		data_sg = nCmd->first_sgl;
++
++		/* for tracking the segment boundaries */
++		j = 2;
+ 		for (i = 0; i < nseg; i++) {
+ 			if (data_sg == NULL) {
+ 				lpfc_printf_log(phba, KERN_ERR, LOG_NVME_IOERR,
+@@ -1358,23 +1363,76 @@ lpfc_nvme_prep_io_dma(struct lpfc_vport *vport,
+ 				lpfc_ncmd->seg_cnt = 0;
+ 				return 1;
  			}
- 			lpfc_printf_vlog(vport, KERN_ERR, LOG_NVME_IOERR,
--					 "6176 Lport %p Localport %p wait "
-+					 "6176 Lport x%px Localport x%px wait "
- 					 "timed out. Pending %d. Renewing.\n",
- 					 lport, vport->localport, pending);
- 			continue;
-@@ -2173,7 +2174,7 @@ lpfc_nvme_lport_unreg_wait(struct lpfc_vport *vport,
- 		break;
- 	}
- 	lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_IOERR,
--			 "6177 Lport %p Localport %p Complete Success\n",
-+			 "6177 Lport x%px Localport x%px Complete Success\n",
- 			 lport, vport->localport);
- }
- #endif
-@@ -2204,7 +2205,7 @@ lpfc_nvme_destroy_localport(struct lpfc_vport *vport)
- 	lport = (struct lpfc_nvme_lport *)localport->private;
- 
- 	lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME,
--			 "6011 Destroying NVME localport %p\n",
-+			 "6011 Destroying NVME localport x%px\n",
- 			 localport);
- 
- 	/* lport's rport list is clear.  Unregister
-@@ -2254,12 +2255,12 @@ lpfc_nvme_update_localport(struct lpfc_vport *vport)
- 	lport = (struct lpfc_nvme_lport *)localport->private;
- 	if (!lport) {
- 		lpfc_printf_vlog(vport, KERN_WARNING, LOG_NVME,
--				 "6171 Update NVME fail. localP %p, No lport\n",
-+				 "6171 Update NVME fail. localP x%px, No lport\n",
- 				 localport);
- 		return;
- 	}
- 	lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME,
--			 "6012 Update NVME lport %p did x%x\n",
-+			 "6012 Update NVME lport x%px did x%x\n",
- 			 localport, vport->fc_myDID);
- 
- 	localport->port_id = vport->fc_myDID;
-@@ -2269,7 +2270,7 @@ lpfc_nvme_update_localport(struct lpfc_vport *vport)
- 		localport->port_role = FC_PORT_ROLE_NVME_INITIATOR;
- 
- 	lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_DISC,
--			 "6030 bound lport %p to DID x%06x\n",
-+			 "6030 bound lport x%px to DID x%06x\n",
- 			 lport, localport->port_id);
- #endif
- }
-@@ -2350,8 +2351,9 @@ lpfc_nvme_register_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
- 				lpfc_printf_vlog(ndlp->vport, KERN_INFO,
- 						 LOG_NVME_DISC,
- 						 "6014 Rebind lport to current "
--						 "remoteport %p wwpn 0x%llx, "
--						 "Data: x%x x%x %p %p x%x x%06x\n",
-+						 "remoteport x%px wwpn 0x%llx, "
-+						 "Data: x%x x%x x%px x%px x%x "
-+						 " x%06x\n",
- 						 remote_port,
- 						 remote_port->port_name,
- 						 remote_port->port_id,
-@@ -2406,7 +2408,7 @@ lpfc_nvme_register_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
- 				 "6022 Bind lport x%px to remoteport x%px "
- 				 "rport x%px WWNN 0x%llx, "
- 				 "Rport WWPN 0x%llx DID "
--				 "x%06x Role x%x, ndlp %p prev_ndlp %p\n",
-+				 "x%06x Role x%x, ndlp %p prev_ndlp x%px\n",
- 				 lport, remote_port, rport,
- 				 rpinfo.node_name, rpinfo.port_name,
- 				 rpinfo.port_id, rpinfo.port_role,
-@@ -2515,7 +2517,7 @@ lpfc_nvme_unregister_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
- 		goto input_err;
- 
- 	lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_DISC,
--			 "6033 Unreg nvme remoteport %p, portname x%llx, "
-+			 "6033 Unreg nvme remoteport x%px, portname x%llx, "
- 			 "port_id x%06x, portstate x%x port type x%x\n",
- 			 remoteport, remoteport->port_name,
- 			 remoteport->port_id, remoteport->port_state,
-@@ -2553,7 +2555,7 @@ lpfc_nvme_unregister_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
-  input_err:
- #endif
- 	lpfc_printf_vlog(vport, KERN_ERR, LOG_NVME_DISC,
--			 "6168 State error: lport %p, rport%p FCID x%06x\n",
-+			 "6168 State error: lport x%px, rport x%px FCID x%06x\n",
- 			 vport->localport, ndlp->rport, ndlp->nlp_DID);
- }
- 
-@@ -2597,7 +2599,7 @@ lpfc_sli4_nvme_xri_aborted(struct lpfc_hba *phba,
- 				lpfc_sli4_abts_err_handler(phba, ndlp, axri);
- 
- 			lpfc_printf_log(phba, KERN_INFO, LOG_NVME_ABTS,
--					"6311 nvme_cmd %p xri x%x tag x%x "
-+					"6311 nvme_cmd x%px xri x%x tag x%x "
- 					"abort complete and xri released\n",
- 					lpfc_ncmd->nvmeCmd, xri,
- 					lpfc_ncmd->cur_iocbq.iotag);
-diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
-index f42cc3150c6f..253a9fdd245e 100644
---- a/drivers/scsi/lpfc/lpfc_nvmet.c
-+++ b/drivers/scsi/lpfc/lpfc_nvmet.c
-@@ -1437,7 +1437,7 @@ lpfc_nvmet_setup_io_context(struct lpfc_hba *phba)
- 			infop = lpfc_get_ctx_list(phba, i, j);
- 			lpfc_printf_log(phba, KERN_INFO, LOG_NVME | LOG_INIT,
- 					"6408 TOTAL NVMET ctx for CPU %d "
--					"MRQ %d: cnt %d nextcpu %p\n",
-+					"MRQ %d: cnt %d nextcpu x%px\n",
- 					i, j, infop->nvmet_ctx_list_cnt,
- 					infop->nvmet_ctx_next_cpu);
+-			physaddr = data_sg->dma_address;
+-			dma_len = data_sg->length;
+-			sgl->addr_lo = cpu_to_le32(putPaddrLow(physaddr));
+-			sgl->addr_hi = cpu_to_le32(putPaddrHigh(physaddr));
+-			sgl->word2 = le32_to_cpu(sgl->word2);
+-			if ((num_bde + 1) == nseg)
++
++			sgl->word2 = 0;
++			if ((num_bde + 1) == nseg) {
+ 				bf_set(lpfc_sli4_sge_last, sgl, 1);
+-			else
++				bf_set(lpfc_sli4_sge_type, sgl,
++				       LPFC_SGE_TYPE_DATA);
++			} else {
+ 				bf_set(lpfc_sli4_sge_last, sgl, 0);
+-			bf_set(lpfc_sli4_sge_offset, sgl, dma_offset);
+-			bf_set(lpfc_sli4_sge_type, sgl, LPFC_SGE_TYPE_DATA);
+-			sgl->word2 = cpu_to_le32(sgl->word2);
+-			sgl->sge_len = cpu_to_le32(dma_len);
+-
+-			dma_offset += dma_len;
+-			data_sg = sg_next(data_sg);
+-			sgl++;
++
++				/* expand the segment */
++				if (!lsp_just_set &&
++				    !((j + 1) % phba->border_sge_num) &&
++				    ((nseg - 1) != i)) {
++					/* set LSP type */
++					bf_set(lpfc_sli4_sge_type, sgl,
++					       LPFC_SGE_TYPE_LSP);
++
++					sgl_xtra = lpfc_get_sgl_per_hdwq(
++							phba, lpfc_ncmd);
++
++					if (unlikely(!sgl_xtra)) {
++						lpfc_ncmd->seg_cnt = 0;
++						return 1;
++					}
++					sgl->addr_lo = cpu_to_le32(putPaddrLow(
++						       sgl_xtra->dma_phys_sgl));
++					sgl->addr_hi = cpu_to_le32(putPaddrHigh(
++						       sgl_xtra->dma_phys_sgl));
++
++				} else {
++					bf_set(lpfc_sli4_sge_type, sgl,
++					       LPFC_SGE_TYPE_DATA);
++				}
++			}
++
++			if (!(bf_get(lpfc_sli4_sge_type, sgl) &
++				     LPFC_SGE_TYPE_LSP)) {
++				if ((nseg - 1) == i)
++					bf_set(lpfc_sli4_sge_last, sgl, 1);
++
++				physaddr = data_sg->dma_address;
++				dma_len = data_sg->length;
++				sgl->addr_lo = cpu_to_le32(
++							 putPaddrLow(physaddr));
++				sgl->addr_hi = cpu_to_le32(
++							putPaddrHigh(physaddr));
++
++				bf_set(lpfc_sli4_sge_offset, sgl, dma_offset);
++				sgl->word2 = cpu_to_le32(sgl->word2);
++				sgl->sge_len = cpu_to_le32(dma_len);
++
++				dma_offset += dma_len;
++				data_sg = sg_next(data_sg);
++
++				sgl++;
++
++				lsp_just_set = false;
++			} else {
++				sgl->word2 = cpu_to_le32(sgl->word2);
++
++				sgl->sge_len = cpu_to_le32(
++						     phba->cfg_sg_dma_buf_size);
++
++				sgl = (struct sli4_sge *)sgl_xtra->dma_sgl;
++				i = i - 1;
++
++				lsp_just_set = true;
++			}
++
++			j++;
  		}
-@@ -1500,7 +1500,7 @@ lpfc_nvmet_create_targetport(struct lpfc_hba *phba)
- 
- 		lpfc_printf_log(phba, KERN_INFO, LOG_NVME_DISC,
- 				"6026 Registered NVME "
--				"targetport: %p, private %p "
-+				"targetport: x%px, private x%px "
- 				"portnm %llx nodenm %llx segs %d qs %d\n",
- 				phba->targetport, tgtp,
- 				pinfo.port_name, pinfo.node_name,
-@@ -1555,7 +1555,7 @@ lpfc_nvmet_update_targetport(struct lpfc_hba *phba)
- 		return 0;
- 
- 	lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME,
--			 "6007 Update NVMET port %p did x%x\n",
-+			 "6007 Update NVMET port x%px did x%x\n",
- 			 phba->targetport, vport->fc_myDID);
- 
- 	phba->targetport->port_id = vport->fc_myDID;
-@@ -1926,7 +1926,7 @@ lpfc_nvmet_destroy_targetport(struct lpfc_hba *phba)
- 		if (!wait_for_completion_timeout(tgtp->tport_unreg_cmp,
- 					msecs_to_jiffies(LPFC_NVMET_WAIT_TMO)))
- 			lpfc_printf_log(phba, KERN_ERR, LOG_NVME,
--					"6179 Unreg targetport %p timeout "
-+					"6179 Unreg targetport x%px timeout "
- 					"reached.\n", phba->targetport);
- 		lpfc_nvmet_cleanup_io_context(phba);
- 	}
-@@ -3109,7 +3109,7 @@ lpfc_nvmet_xmt_ls_abort_cmp(struct lpfc_hba *phba, struct lpfc_iocbq *cmdwqe,
- 	atomic_inc(&tgtp->xmt_ls_abort_cmpl);
- 
- 	lpfc_printf_log(phba, KERN_INFO, LOG_NVME_ABTS,
--			"6083 Abort cmpl: ctx %p WCQE:%08x %08x %08x %08x\n",
-+			"6083 Abort cmpl: ctx x%px WCQE:%08x %08x %08x %08x\n",
- 			ctxp, wcqe->word0, wcqe->total_data_placed,
- 			result, wcqe->word3);
- 
+ 		if (phba->cfg_enable_pbde) {
+ 			/* Use PBDE support for first SGL only, offset == 0 */
 diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-index 8ae24500806e..95ba5000d0ec 100644
+index 95ba5000d0ec..fb7df209c0aa 100644
 --- a/drivers/scsi/lpfc/lpfc_scsi.c
 +++ b/drivers/scsi/lpfc/lpfc_scsi.c
-@@ -1775,7 +1775,7 @@ lpfc_bg_setup_bpl_prot(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+@@ -685,8 +685,9 @@ lpfc_get_scsi_buf_s4(struct lpfc_hba *phba, struct lpfc_nodelist *ndlp,
+ 	IOCB_t *iocb;
+ 	dma_addr_t pdma_phys_fcp_rsp;
+ 	dma_addr_t pdma_phys_fcp_cmd;
+-	uint32_t sgl_size, cpu, idx;
++	uint32_t cpu, idx;
+ 	int tag;
++	struct fcp_cmd_rsp_buf *tmp = NULL;
  
- 	if (!sgpe || !sgde) {
- 		lpfc_printf_log(phba, KERN_ERR, LOG_FCP,
--				"9020 Invalid s/g entry: data=0x%p prot=0x%p\n",
-+				"9020 Invalid s/g entry: data=x%px prot=x%px\n",
- 				sgpe, sgde);
- 		return 0;
- 	}
-@@ -2154,7 +2154,7 @@ lpfc_bg_setup_sgl_prot(struct lpfc_hba *phba, struct scsi_cmnd *sc,
- 
- 	if (!sgpe || !sgde) {
- 		lpfc_printf_log(phba, KERN_ERR, LOG_FCP,
--				"9082 Invalid s/g entry: data=0x%p prot=0x%p\n",
-+				"9082 Invalid s/g entry: data=x%px prot=x%px\n",
- 				sgpe, sgde);
- 		return 0;
- 	}
-@@ -3873,7 +3873,7 @@ lpfc_scsi_cmd_iocb_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pIocbIn,
- 		uint32_t *lp = (uint32_t *)cmd->sense_buffer;
- 
- 		lpfc_printf_vlog(vport, KERN_INFO, LOG_FCP,
--				 "0710 Iodone <%d/%llu> cmd %p, error "
-+				 "0710 Iodone <%d/%llu> cmd x%px, error "
- 				 "x%x SNS x%x x%x Data: x%x x%x\n",
- 				 cmd->device->id, cmd->device->lun, cmd,
- 				 cmd->result, *lp, *(lp + 3), cmd->retries,
-@@ -4997,7 +4997,7 @@ lpfc_chk_tgt_mapped(struct lpfc_vport *vport, struct scsi_cmnd *cmnd)
- 	rdata = lpfc_rport_data_from_scsi_device(cmnd->device);
- 	if (!rdata) {
- 		lpfc_printf_vlog(vport, KERN_INFO, LOG_FCP,
--			"0797 Tgt Map rport failure: rdata x%p\n", rdata);
-+			"0797 Tgt Map rport failure: rdata x%px\n", rdata);
- 		return FAILED;
- 	}
- 	pnode = rdata->pnode;
-@@ -5095,7 +5095,7 @@ lpfc_device_reset_handler(struct scsi_cmnd *cmnd)
- 	rdata = lpfc_rport_data_from_scsi_device(cmnd->device);
- 	if (!rdata || !rdata->pnode) {
- 		lpfc_printf_vlog(vport, KERN_ERR, LOG_FCP,
--				 "0798 Device Reset rdata failure: rdata x%p\n",
-+				 "0798 Device Reset rdata failure: rdata x%px\n",
- 				 rdata);
- 		return FAILED;
- 	}
-@@ -5107,7 +5107,7 @@ lpfc_device_reset_handler(struct scsi_cmnd *cmnd)
- 	status = lpfc_chk_tgt_mapped(vport, cmnd);
- 	if (status == FAILED) {
- 		lpfc_printf_vlog(vport, KERN_ERR, LOG_FCP,
--			"0721 Device Reset rport failure: rdata x%p\n", rdata);
-+			"0721 Device Reset rport failure: rdata x%px\n", rdata);
- 		return FAILED;
+ 	cpu = raw_smp_processor_id();
+ 	if (cmnd && phba->cfg_fcp_io_sched == LPFC_FCP_SCHED_BY_HDWQ) {
+@@ -704,9 +705,6 @@ lpfc_get_scsi_buf_s4(struct lpfc_hba *phba, struct lpfc_nodelist *ndlp,
+ 		return NULL;
  	}
  
-@@ -5166,7 +5166,7 @@ lpfc_target_reset_handler(struct scsi_cmnd *cmnd)
- 	rdata = lpfc_rport_data_from_scsi_device(cmnd->device);
- 	if (!rdata || !rdata->pnode) {
- 		lpfc_printf_vlog(vport, KERN_ERR, LOG_FCP,
--				 "0799 Target Reset rdata failure: rdata x%p\n",
-+				 "0799 Target Reset rdata failure: rdata x%px\n",
- 				 rdata);
- 		return FAILED;
+-	sgl_size = phba->cfg_sg_dma_buf_size -
+-		(sizeof(struct fcp_cmnd) + sizeof(struct fcp_rsp));
+-
+ 	/* Setup key fields in buffer that may have been changed
+ 	 * if other protocols used this buffer.
+ 	 */
+@@ -721,9 +719,12 @@ lpfc_get_scsi_buf_s4(struct lpfc_hba *phba, struct lpfc_nodelist *ndlp,
+ #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
+ 	lpfc_cmd->prot_data_type = 0;
+ #endif
+-	lpfc_cmd->fcp_cmnd = (lpfc_cmd->data + sgl_size);
+-	lpfc_cmd->fcp_rsp = (struct fcp_rsp *)((uint8_t *)lpfc_cmd->fcp_cmnd +
+-				sizeof(struct fcp_cmnd));
++	tmp = lpfc_get_cmd_rsp_buf_per_hdwq(phba, lpfc_cmd);
++	if (!tmp)
++		return NULL;
++
++	lpfc_cmd->fcp_cmnd = tmp->fcp_cmnd;
++	lpfc_cmd->fcp_rsp = tmp->fcp_rsp;
+ 
+ 	/*
+ 	 * The first two SGEs are the FCP_CMD and FCP_RSP.
+@@ -731,7 +732,7 @@ lpfc_get_scsi_buf_s4(struct lpfc_hba *phba, struct lpfc_nodelist *ndlp,
+ 	 * first two and leave the rest for queuecommand.
+ 	 */
+ 	sgl = (struct sli4_sge *)lpfc_cmd->dma_sgl;
+-	pdma_phys_fcp_cmd = (lpfc_cmd->dma_handle + sgl_size);
++	pdma_phys_fcp_cmd = tmp->fcp_cmd_rsp_dma_handle;
+ 	sgl->addr_hi = cpu_to_le32(putPaddrHigh(pdma_phys_fcp_cmd));
+ 	sgl->addr_lo = cpu_to_le32(putPaddrLow(pdma_phys_fcp_cmd));
+ 	sgl->word2 = le32_to_cpu(sgl->word2);
+@@ -1990,7 +1991,8 @@ lpfc_bg_setup_bpl_prot(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+  **/
+ static int
+ lpfc_bg_setup_sgl(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+-		struct sli4_sge *sgl, int datasegcnt)
++		struct sli4_sge *sgl, int datasegcnt,
++		struct lpfc_io_buf *lpfc_cmd)
+ {
+ 	struct scatterlist *sgde = NULL; /* s/g data entry */
+ 	struct sli4_sge_diseed *diseed = NULL;
+@@ -2004,6 +2006,9 @@ lpfc_bg_setup_sgl(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+ 	uint32_t checking = 1;
+ 	uint32_t dma_len;
+ 	uint32_t dma_offset = 0;
++	struct sli4_hybrid_sgl *sgl_xtra = NULL;
++	int j;
++	bool lsp_just_set = false;
+ 
+ 	status  = lpfc_sc_to_bg_opcodes(phba, sc, &txop, &rxop);
+ 	if (status)
+@@ -2063,23 +2068,64 @@ lpfc_bg_setup_sgl(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+ 	sgl++;
+ 
+ 	/* assumption: caller has already run dma_map_sg on command data */
+-	scsi_for_each_sg(sc, sgde, datasegcnt, i) {
+-		physaddr = sg_dma_address(sgde);
+-		dma_len = sg_dma_len(sgde);
+-		sgl->addr_lo = cpu_to_le32(putPaddrLow(physaddr));
+-		sgl->addr_hi = cpu_to_le32(putPaddrHigh(physaddr));
+-		if ((i + 1) == datasegcnt)
+-			bf_set(lpfc_sli4_sge_last, sgl, 1);
+-		else
+-			bf_set(lpfc_sli4_sge_last, sgl, 0);
+-		bf_set(lpfc_sli4_sge_offset, sgl, dma_offset);
+-		bf_set(lpfc_sli4_sge_type, sgl, LPFC_SGE_TYPE_DATA);
++	sgde = scsi_sglist(sc);
++	j = 3;
++	for (i = 0; i < datasegcnt; i++) {
++		/* clear it */
++		sgl->word2 = 0;
+ 
+-		sgl->sge_len = cpu_to_le32(dma_len);
+-		dma_offset += dma_len;
++		/* do we need to expand the segment */
++		if (!lsp_just_set && !((j + 1) % phba->border_sge_num) &&
++		    ((datasegcnt - 1) != i)) {
++			/* set LSP type */
++			bf_set(lpfc_sli4_sge_type, sgl, LPFC_SGE_TYPE_LSP);
++
++			sgl_xtra = lpfc_get_sgl_per_hdwq(phba, lpfc_cmd);
++
++			if (unlikely(!sgl_xtra)) {
++				lpfc_cmd->seg_cnt = 0;
++				return 0;
++			}
++			sgl->addr_lo = cpu_to_le32(putPaddrLow(
++						sgl_xtra->dma_phys_sgl));
++			sgl->addr_hi = cpu_to_le32(putPaddrHigh(
++						sgl_xtra->dma_phys_sgl));
++
++		} else {
++			bf_set(lpfc_sli4_sge_type, sgl, LPFC_SGE_TYPE_DATA);
++		}
++
++		if (!(bf_get(lpfc_sli4_sge_type, sgl) & LPFC_SGE_TYPE_LSP)) {
++			if ((datasegcnt - 1) == i)
++				bf_set(lpfc_sli4_sge_last, sgl, 1);
++			physaddr = sg_dma_address(sgde);
++			dma_len = sg_dma_len(sgde);
++			sgl->addr_lo = cpu_to_le32(putPaddrLow(physaddr));
++			sgl->addr_hi = cpu_to_le32(putPaddrHigh(physaddr));
++
++			bf_set(lpfc_sli4_sge_offset, sgl, dma_offset);
++			sgl->word2 = cpu_to_le32(sgl->word2);
++			sgl->sge_len = cpu_to_le32(dma_len);
++
++			dma_offset += dma_len;
++			sgde = sg_next(sgde);
++
++			sgl++;
++			num_sge++;
++			lsp_just_set = false;
++
++		} else {
++			sgl->word2 = cpu_to_le32(sgl->word2);
++			sgl->sge_len = cpu_to_le32(phba->cfg_sg_dma_buf_size);
++
++			sgl = (struct sli4_sge *)sgl_xtra->dma_sgl;
++			i = i - 1;
++
++			lsp_just_set = true;
++		}
++
++		j++;
+ 
+-		sgl++;
+-		num_sge++;
  	}
-@@ -5178,7 +5178,7 @@ lpfc_target_reset_handler(struct scsi_cmnd *cmnd)
- 	status = lpfc_chk_tgt_mapped(vport, cmnd);
- 	if (status == FAILED) {
- 		lpfc_printf_vlog(vport, KERN_ERR, LOG_FCP,
--			"0722 Target Reset rport failure: rdata x%p\n", rdata);
-+			"0722 Target Reset rport failure: rdata x%px\n", rdata);
- 		if (pnode) {
- 			spin_lock_irq(shost->host_lock);
- 			pnode->nlp_flag &= ~NLP_NPR_ADISC;
+ 
+ out:
+@@ -2125,7 +2171,8 @@ lpfc_bg_setup_sgl(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+  **/
+ static int
+ lpfc_bg_setup_sgl_prot(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+-		struct sli4_sge *sgl, int datacnt, int protcnt)
++		struct sli4_sge *sgl, int datacnt, int protcnt,
++		struct lpfc_io_buf *lpfc_cmd)
+ {
+ 	struct scatterlist *sgde = NULL; /* s/g data entry */
+ 	struct scatterlist *sgpe = NULL; /* s/g prot entry */
+@@ -2147,7 +2194,8 @@ lpfc_bg_setup_sgl_prot(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+ #endif
+ 	uint32_t checking = 1;
+ 	uint32_t dma_offset = 0;
+-	int num_sge = 0;
++	int num_sge = 0, j = 2;
++	struct sli4_hybrid_sgl *sgl_xtra = NULL;
+ 
+ 	sgpe = scsi_prot_sglist(sc);
+ 	sgde = scsi_sglist(sc);
+@@ -2180,9 +2228,37 @@ lpfc_bg_setup_sgl_prot(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+ 	split_offset = 0;
+ 	do {
+ 		/* Check to see if we ran out of space */
+-		if (num_sge >= (phba->cfg_total_seg_cnt - 2))
++		if ((num_sge >= (phba->cfg_total_seg_cnt - 2)) &&
++		    !(phba->cfg_xpsgl))
+ 			return num_sge + 3;
+ 
++		/* DISEED and DIF have to be together */
++		if (!((j + 1) % phba->border_sge_num) ||
++		    !((j + 2) % phba->border_sge_num) ||
++		    !((j + 3) % phba->border_sge_num)) {
++			sgl->word2 = 0;
++
++			/* set LSP type */
++			bf_set(lpfc_sli4_sge_type, sgl, LPFC_SGE_TYPE_LSP);
++
++			sgl_xtra = lpfc_get_sgl_per_hdwq(phba, lpfc_cmd);
++
++			if (unlikely(!sgl_xtra)) {
++				goto out;
++			} else {
++				sgl->addr_lo = cpu_to_le32(putPaddrLow(
++						sgl_xtra->dma_phys_sgl));
++				sgl->addr_hi = cpu_to_le32(putPaddrHigh(
++						       sgl_xtra->dma_phys_sgl));
++			}
++
++			sgl->word2 = cpu_to_le32(sgl->word2);
++			sgl->sge_len = cpu_to_le32(phba->cfg_sg_dma_buf_size);
++
++			sgl = (struct sli4_sge *)sgl_xtra->dma_sgl;
++			j = 0;
++		}
++
+ 		/* setup DISEED with what we have */
+ 		diseed = (struct sli4_sge_diseed *) sgl;
+ 		memset(diseed, 0, sizeof(struct sli4_sge_diseed));
+@@ -2229,7 +2305,9 @@ lpfc_bg_setup_sgl_prot(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+ 
+ 		/* advance sgl and increment bde count */
+ 		num_sge++;
++
+ 		sgl++;
++		j++;
+ 
+ 		/* setup the first BDE that points to protection buffer */
+ 		protphysaddr = sg_dma_address(sgpe) + protgroup_offset;
+@@ -2244,6 +2322,7 @@ lpfc_bg_setup_sgl_prot(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+ 		sgl->addr_hi = le32_to_cpu(putPaddrHigh(protphysaddr));
+ 		sgl->addr_lo = le32_to_cpu(putPaddrLow(protphysaddr));
+ 		sgl->word2 = cpu_to_le32(sgl->word2);
++		sgl->sge_len = 0;
+ 
+ 		protgrp_blks = protgroup_len / 8;
+ 		protgrp_bytes = protgrp_blks * blksize;
+@@ -2264,9 +2343,14 @@ lpfc_bg_setup_sgl_prot(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+ 		/* setup SGE's for data blocks associated with DIF data */
+ 		pgdone = 0;
+ 		subtotal = 0; /* total bytes processed for current prot grp */
++
++		sgl++;
++		j++;
++
+ 		while (!pgdone) {
+ 			/* Check to see if we ran out of space */
+-			if (num_sge >= phba->cfg_total_seg_cnt)
++			if ((num_sge >= phba->cfg_total_seg_cnt) &&
++			    !phba->cfg_xpsgl)
+ 				return num_sge + 1;
+ 
+ 			if (!sgde) {
+@@ -2275,60 +2359,101 @@ lpfc_bg_setup_sgl_prot(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+ 						__func__);
+ 				return 0;
+ 			}
+-			sgl++;
+-			dataphysaddr = sg_dma_address(sgde) + split_offset;
+ 
+-			remainder = sg_dma_len(sgde) - split_offset;
++			if (!((j + 1) % phba->border_sge_num)) {
++				sgl->word2 = 0;
+ 
+-			if ((subtotal + remainder) <= protgrp_bytes) {
+-				/* we can use this whole buffer */
+-				dma_len = remainder;
+-				split_offset = 0;
++				/* set LSP type */
++				bf_set(lpfc_sli4_sge_type, sgl,
++				       LPFC_SGE_TYPE_LSP);
+ 
+-				if ((subtotal + remainder) == protgrp_bytes)
+-					pgdone = 1;
++				sgl_xtra = lpfc_get_sgl_per_hdwq(phba,
++								 lpfc_cmd);
++
++				if (unlikely(!sgl_xtra)) {
++					goto out;
++				} else {
++					sgl->addr_lo = cpu_to_le32(
++					  putPaddrLow(sgl_xtra->dma_phys_sgl));
++					sgl->addr_hi = cpu_to_le32(
++					  putPaddrHigh(sgl_xtra->dma_phys_sgl));
++				}
++
++				sgl->word2 = cpu_to_le32(sgl->word2);
++				sgl->sge_len = cpu_to_le32(
++						     phba->cfg_sg_dma_buf_size);
++
++				sgl = (struct sli4_sge *)sgl_xtra->dma_sgl;
+ 			} else {
+-				/* must split this buffer with next prot grp */
+-				dma_len = protgrp_bytes - subtotal;
+-				split_offset += dma_len;
+-			}
++				dataphysaddr = sg_dma_address(sgde) +
++								   split_offset;
+ 
+-			subtotal += dma_len;
++				remainder = sg_dma_len(sgde) - split_offset;
+ 
+-			sgl->addr_lo = cpu_to_le32(putPaddrLow(dataphysaddr));
+-			sgl->addr_hi = cpu_to_le32(putPaddrHigh(dataphysaddr));
+-			bf_set(lpfc_sli4_sge_last, sgl, 0);
+-			bf_set(lpfc_sli4_sge_offset, sgl, dma_offset);
+-			bf_set(lpfc_sli4_sge_type, sgl, LPFC_SGE_TYPE_DATA);
++				if ((subtotal + remainder) <= protgrp_bytes) {
++					/* we can use this whole buffer */
++					dma_len = remainder;
++					split_offset = 0;
+ 
+-			sgl->sge_len = cpu_to_le32(dma_len);
+-			dma_offset += dma_len;
++					if ((subtotal + remainder) ==
++								  protgrp_bytes)
++						pgdone = 1;
++				} else {
++					/* must split this buffer with next
++					 * prot grp
++					 */
++					dma_len = protgrp_bytes - subtotal;
++					split_offset += dma_len;
++				}
+ 
+-			num_sge++;
+-			curr_data++;
++				subtotal += dma_len;
+ 
+-			if (split_offset)
+-				break;
++				sgl->word2 = 0;
++				sgl->addr_lo = cpu_to_le32(putPaddrLow(
++								 dataphysaddr));
++				sgl->addr_hi = cpu_to_le32(putPaddrHigh(
++								 dataphysaddr));
++				bf_set(lpfc_sli4_sge_last, sgl, 0);
++				bf_set(lpfc_sli4_sge_offset, sgl, dma_offset);
++				bf_set(lpfc_sli4_sge_type, sgl,
++				       LPFC_SGE_TYPE_DATA);
+ 
+-			/* Move to the next s/g segment if possible */
+-			sgde = sg_next(sgde);
++				sgl->sge_len = cpu_to_le32(dma_len);
++				dma_offset += dma_len;
++
++				num_sge++;
++				curr_data++;
++
++				if (split_offset) {
++					sgl++;
++					j++;
++					break;
++				}
++
++				/* Move to the next s/g segment if possible */
++				sgde = sg_next(sgde);
++
++				sgl++;
++			}
++
++			j++;
+ 		}
+ 
+ 		if (protgroup_offset) {
+ 			/* update the reference tag */
+ 			reftag += protgrp_blks;
+-			sgl++;
+ 			continue;
+ 		}
+ 
+ 		/* are we done ? */
+ 		if (curr_prot == protcnt) {
++			/* mark the last SGL */
++			sgl--;
+ 			bf_set(lpfc_sli4_sge_last, sgl, 1);
+ 			alldone = 1;
+ 		} else if (curr_prot < protcnt) {
+ 			/* advance to next prot buffer */
+ 			sgpe = sg_next(sgpe);
+-			sgl++;
+ 
+ 			/* update the reference tag */
+ 			reftag += protgrp_blks;
+@@ -2995,8 +3120,10 @@ lpfc_scsi_prep_dma_buf_s4(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_cmd)
+ 	uint32_t num_bde = 0;
+ 	uint32_t dma_len;
+ 	uint32_t dma_offset = 0;
+-	int nseg;
++	int nseg, i, j;
+ 	struct ulp_bde64 *bde;
++	bool lsp_just_set = false;
++	struct sli4_hybrid_sgl *sgl_xtra = NULL;
+ 
+ 	/*
+ 	 * There are three possibilities here - use scatter-gather segment, use
+@@ -3023,7 +3150,8 @@ lpfc_scsi_prep_dma_buf_s4(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_cmd)
+ 		sgl += 1;
+ 		first_data_sgl = sgl;
+ 		lpfc_cmd->seg_cnt = nseg;
+-		if (lpfc_cmd->seg_cnt > phba->cfg_sg_seg_cnt) {
++		if (!phba->cfg_xpsgl &&
++		    lpfc_cmd->seg_cnt > phba->cfg_sg_seg_cnt) {
+ 			lpfc_printf_log(phba, KERN_ERR, LOG_BG, "9074 BLKGRD:"
+ 				" %s: Too many sg segments from "
+ 				"dma_map_sg.  Config %d, seg_cnt %d\n",
+@@ -3044,22 +3172,80 @@ lpfc_scsi_prep_dma_buf_s4(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_cmd)
+ 		 * the IOCB. If it can't then the BDEs get added to a BPL as it
+ 		 * does for SLI-2 mode.
+ 		 */
+-		scsi_for_each_sg(scsi_cmnd, sgel, nseg, num_bde) {
+-			physaddr = sg_dma_address(sgel);
+-			dma_len = sg_dma_len(sgel);
+-			sgl->addr_lo = cpu_to_le32(putPaddrLow(physaddr));
+-			sgl->addr_hi = cpu_to_le32(putPaddrHigh(physaddr));
+-			sgl->word2 = le32_to_cpu(sgl->word2);
+-			if ((num_bde + 1) == nseg)
++
++		/* for tracking segment boundaries */
++		sgel = scsi_sglist(scsi_cmnd);
++		j = 2;
++		for (i = 0; i < nseg; i++) {
++			sgl->word2 = 0;
++			if ((num_bde + 1) == nseg) {
+ 				bf_set(lpfc_sli4_sge_last, sgl, 1);
+-			else
++				bf_set(lpfc_sli4_sge_type, sgl,
++				       LPFC_SGE_TYPE_DATA);
++			} else {
+ 				bf_set(lpfc_sli4_sge_last, sgl, 0);
+-			bf_set(lpfc_sli4_sge_offset, sgl, dma_offset);
+-			bf_set(lpfc_sli4_sge_type, sgl, LPFC_SGE_TYPE_DATA);
+-			sgl->word2 = cpu_to_le32(sgl->word2);
+-			sgl->sge_len = cpu_to_le32(dma_len);
+-			dma_offset += dma_len;
+-			sgl++;
++
++				/* do we need to expand the segment */
++				if (!lsp_just_set &&
++				    !((j + 1) % phba->border_sge_num) &&
++				    ((nseg - 1) != i)) {
++					/* set LSP type */
++					bf_set(lpfc_sli4_sge_type, sgl,
++					       LPFC_SGE_TYPE_LSP);
++
++					sgl_xtra = lpfc_get_sgl_per_hdwq(
++							phba, lpfc_cmd);
++
++					if (unlikely(!sgl_xtra)) {
++						lpfc_cmd->seg_cnt = 0;
++						scsi_dma_unmap(scsi_cmnd);
++						return 1;
++					}
++					sgl->addr_lo = cpu_to_le32(putPaddrLow(
++						       sgl_xtra->dma_phys_sgl));
++					sgl->addr_hi = cpu_to_le32(putPaddrHigh(
++						       sgl_xtra->dma_phys_sgl));
++
++				} else {
++					bf_set(lpfc_sli4_sge_type, sgl,
++					       LPFC_SGE_TYPE_DATA);
++				}
++			}
++
++			if (!(bf_get(lpfc_sli4_sge_type, sgl) &
++				     LPFC_SGE_TYPE_LSP)) {
++				if ((nseg - 1) == i)
++					bf_set(lpfc_sli4_sge_last, sgl, 1);
++
++				physaddr = sg_dma_address(sgel);
++				dma_len = sg_dma_len(sgel);
++				sgl->addr_lo = cpu_to_le32(putPaddrLow(
++							   physaddr));
++				sgl->addr_hi = cpu_to_le32(putPaddrHigh(
++							   physaddr));
++
++				bf_set(lpfc_sli4_sge_offset, sgl, dma_offset);
++				sgl->word2 = cpu_to_le32(sgl->word2);
++				sgl->sge_len = cpu_to_le32(dma_len);
++
++				dma_offset += dma_len;
++				sgel = sg_next(sgel);
++
++				sgl++;
++				lsp_just_set = false;
++
++			} else {
++				sgl->word2 = cpu_to_le32(sgl->word2);
++				sgl->sge_len = cpu_to_le32(
++						     phba->cfg_sg_dma_buf_size);
++
++				sgl = (struct sli4_sge *)sgl_xtra->dma_sgl;
++				i = i - 1;
++
++				lsp_just_set = true;
++			}
++
++			j++;
+ 		}
+ 		/*
+ 		 * Setup the first Payload BDE. For FCoE we just key off
+@@ -3175,7 +3361,8 @@ lpfc_bg_scsi_prep_dma_buf_s4(struct lpfc_hba *phba,
+ 		lpfc_cmd->seg_cnt = datasegcnt;
+ 
+ 		/* First check if data segment count from SCSI Layer is good */
+-		if (lpfc_cmd->seg_cnt > phba->cfg_sg_seg_cnt) {
++		if (lpfc_cmd->seg_cnt > phba->cfg_sg_seg_cnt &&
++		    !phba->cfg_xpsgl) {
+ 			WARN_ON_ONCE(lpfc_cmd->seg_cnt > phba->cfg_sg_seg_cnt);
+ 			ret = 2;
+ 			goto err;
+@@ -3186,13 +3373,15 @@ lpfc_bg_scsi_prep_dma_buf_s4(struct lpfc_hba *phba,
+ 		switch (prot_group_type) {
+ 		case LPFC_PG_TYPE_NO_DIF:
+ 			/* Here we need to add a DISEED to the count */
+-			if ((lpfc_cmd->seg_cnt + 1) > phba->cfg_total_seg_cnt) {
++			if (((lpfc_cmd->seg_cnt + 1) >
++					phba->cfg_total_seg_cnt) &&
++			    !phba->cfg_xpsgl) {
+ 				ret = 2;
+ 				goto err;
+ 			}
+ 
+ 			num_sge = lpfc_bg_setup_sgl(phba, scsi_cmnd, sgl,
+-					datasegcnt);
++					datasegcnt, lpfc_cmd);
+ 
+ 			/* we should have 2 or more entries in buffer list */
+ 			if (num_sge < 2) {
+@@ -3220,18 +3409,20 @@ lpfc_bg_scsi_prep_dma_buf_s4(struct lpfc_hba *phba,
+ 			 * There is a minimun of 3 SGEs used for every
+ 			 * protection data segment.
+ 			 */
+-			if ((lpfc_cmd->prot_seg_cnt * 3) >
+-			    (phba->cfg_total_seg_cnt - 2)) {
++			if (((lpfc_cmd->prot_seg_cnt * 3) >
++					(phba->cfg_total_seg_cnt - 2)) &&
++			    !phba->cfg_xpsgl) {
+ 				ret = 2;
+ 				goto err;
+ 			}
+ 
+ 			num_sge = lpfc_bg_setup_sgl_prot(phba, scsi_cmnd, sgl,
+-					datasegcnt, protsegcnt);
++					datasegcnt, protsegcnt, lpfc_cmd);
+ 
+ 			/* we should have 3 or more entries in buffer list */
+-			if ((num_sge < 3) ||
+-			    (num_sge > phba->cfg_total_seg_cnt)) {
++			if (num_sge < 3 ||
++			    (num_sge > phba->cfg_total_seg_cnt &&
++			     !phba->cfg_xpsgl)) {
+ 				ret = 2;
+ 				goto err;
+ 			}
+@@ -5913,7 +6104,7 @@ struct scsi_host_template lpfc_template_no_hr = {
+ 	.sg_tablesize		= LPFC_DEFAULT_SG_SEG_CNT,
+ 	.cmd_per_lun		= LPFC_CMD_PER_LUN,
+ 	.shost_attrs		= lpfc_hba_attrs,
+-	.max_sectors		= 0xFFFF,
++	.max_sectors		= 0xFFFFFFFF,
+ 	.vendor_id		= LPFC_NL_VENDOR_ID,
+ 	.change_queue_depth	= scsi_change_queue_depth,
+ 	.track_queue_depth	= 1,
 diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 0142545873a5..efa602592728 100644
+index 6e8b03f38fac..56c682be8fe7 100644
 --- a/drivers/scsi/lpfc/lpfc_sli.c
 +++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -2514,7 +2514,7 @@ lpfc_sli_def_mbox_cmpl(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
- 				vport,
- 				KERN_INFO, LOG_MBOX | LOG_DISCOVERY,
- 				"1438 UNREG cmpl deferred mbox x%x "
--				"on NPort x%x Data: x%x x%x %p\n",
-+				"on NPort x%x Data: x%x x%x %px\n",
- 				ndlp->nlp_rpi, ndlp->nlp_DID,
- 				ndlp->nlp_flag, ndlp->nlp_defer_did, ndlp);
+@@ -20234,6 +20234,13 @@ void lpfc_release_io_buf(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_ncmd,
+ 		spin_unlock_irqrestore(&qp->io_buf_list_put_lock,
+ 				       iflag);
+ 	}
++
++	if (phba->cfg_xpsgl && !phba->nvmet_support &&
++	    !list_empty(&lpfc_ncmd->dma_sgl_xtra_list))
++		lpfc_put_sgl_per_hdwq(phba, lpfc_ncmd);
++
++	if (!list_empty(&lpfc_ncmd->dma_cmd_rsp_list))
++		lpfc_put_cmd_rsp_buf_per_hdwq(phba, lpfc_ncmd);
+ }
  
-@@ -2572,7 +2572,7 @@ lpfc_sli4_unreg_rpi_cmpl_clr(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
- 					vport, KERN_INFO, LOG_MBOX | LOG_SLI,
- 					 "0010 UNREG_LOGIN vpi:%x "
- 					 "rpi:%x DID:%x defer x%x flg x%x "
--					 "map:%x %p\n",
-+					 "map:%x %px\n",
- 					 vport->vpi, ndlp->nlp_rpi,
- 					 ndlp->nlp_DID, ndlp->nlp_defer_did,
- 					 ndlp->nlp_flag,
-@@ -2590,7 +2590,7 @@ lpfc_sli4_unreg_rpi_cmpl_clr(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
- 						vport, KERN_INFO, LOG_DISCOVERY,
- 						"4111 UNREG cmpl deferred "
- 						"clr x%x on "
--						"NPort x%x Data: x%x %p\n",
-+						"NPort x%x Data: x%x x%px\n",
- 						ndlp->nlp_rpi, ndlp->nlp_DID,
- 						ndlp->nlp_defer_did, ndlp);
- 					ndlp->nlp_flag &= ~NLP_UNREG_INP;
-@@ -2712,7 +2712,7 @@ lpfc_sli_handle_mb_event(struct lpfc_hba *phba)
+ /**
+@@ -20448,3 +20455,288 @@ struct lpfc_io_buf *lpfc_get_io_buf(struct lpfc_hba *phba,
  
- 		/* Mailbox cmd <cmd> Cmpl <cmpl> */
- 		lpfc_printf_log(phba, KERN_INFO, LOG_MBOX | LOG_SLI,
--				"(%d):0307 Mailbox cmd x%x (x%x/x%x) Cmpl x%p "
-+				"(%d):0307 Mailbox cmd x%x (x%x/x%x) Cmpl %pf "
- 				"Data: x%x x%x x%x x%x x%x x%x x%x x%x x%x "
- 				"x%x x%x x%x\n",
- 				pmb->vport ? pmb->vport->vpi : 0,
-@@ -7991,7 +7991,7 @@ lpfc_mbox_timeout_handler(struct lpfc_hba *phba)
+ 	return lpfc_cmd;
+ }
++
++/**
++ * lpfc_get_sgl_per_hdwq - Get one SGL chunk from hdwq's pool
++ * @phba: The HBA for which this call is being executed.
++ * @lpfc_buf: IO buf structure to append the SGL chunk
++ *
++ * This routine gets one SGL chunk buffer from hdwq's SGL chunk pool,
++ * and will allocate an SGL chunk if the pool is empty.
++ *
++ * Return codes:
++ *   NULL - Error
++ *   Pointer to sli4_hybrid_sgl - Success
++ **/
++struct sli4_hybrid_sgl *
++lpfc_get_sgl_per_hdwq(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_buf)
++{
++	struct sli4_hybrid_sgl *list_entry = NULL;
++	struct sli4_hybrid_sgl *tmp = NULL;
++	struct sli4_hybrid_sgl *allocated_sgl = NULL;
++	struct lpfc_sli4_hdw_queue *hdwq = lpfc_buf->hdwq;
++	struct list_head *buf_list = &hdwq->sgl_list;
++
++	spin_lock_irq(&hdwq->hdwq_lock);
++
++	if (likely(!list_empty(buf_list))) {
++		/* break off 1 chunk from the sgl_list */
++		list_for_each_entry_safe(list_entry, tmp,
++					 buf_list, list_node) {
++			list_move_tail(&list_entry->list_node,
++				       &lpfc_buf->dma_sgl_xtra_list);
++			break;
++		}
++	} else {
++		/* allocate more */
++		spin_unlock_irq(&hdwq->hdwq_lock);
++		tmp = kmalloc_node(sizeof(*tmp), GFP_ATOMIC,
++				   cpu_to_node(smp_processor_id()));
++		if (!tmp) {
++			lpfc_printf_log(phba, KERN_INFO, LOG_SLI,
++					"8353 error kmalloc memory for HDWQ "
++					"%d %s\n",
++					lpfc_buf->hdwq_no, __func__);
++			return NULL;
++		}
++
++		tmp->dma_sgl = dma_pool_alloc(phba->lpfc_sg_dma_buf_pool,
++					      GFP_ATOMIC, &tmp->dma_phys_sgl);
++		if (!tmp->dma_sgl) {
++			lpfc_printf_log(phba, KERN_INFO, LOG_SLI,
++					"8354 error pool_alloc memory for HDWQ "
++					"%d %s\n",
++					lpfc_buf->hdwq_no, __func__);
++			kfree(tmp);
++			return NULL;
++		}
++
++		spin_lock_irq(&hdwq->hdwq_lock);
++		list_add_tail(&tmp->list_node, &lpfc_buf->dma_sgl_xtra_list);
++	}
++
++	allocated_sgl = list_last_entry(&lpfc_buf->dma_sgl_xtra_list,
++					struct sli4_hybrid_sgl,
++					list_node);
++
++	spin_unlock_irq(&hdwq->hdwq_lock);
++
++	return allocated_sgl;
++}
++
++/**
++ * lpfc_put_sgl_per_hdwq - Put one SGL chunk into hdwq pool
++ * @phba: The HBA for which this call is being executed.
++ * @lpfc_buf: IO buf structure with the SGL chunk
++ *
++ * This routine puts one SGL chunk buffer into hdwq's SGL chunk pool.
++ *
++ * Return codes:
++ *   0 - Success
++ *   -EINVAL - Error
++ **/
++int
++lpfc_put_sgl_per_hdwq(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_buf)
++{
++	int rc = 0;
++	struct sli4_hybrid_sgl *list_entry = NULL;
++	struct sli4_hybrid_sgl *tmp = NULL;
++	struct lpfc_sli4_hdw_queue *hdwq = lpfc_buf->hdwq;
++	struct list_head *buf_list = &hdwq->sgl_list;
++
++	spin_lock_irq(&hdwq->hdwq_lock);
++
++	if (likely(!list_empty(&lpfc_buf->dma_sgl_xtra_list))) {
++		list_for_each_entry_safe(list_entry, tmp,
++					 &lpfc_buf->dma_sgl_xtra_list,
++					 list_node) {
++			list_move_tail(&list_entry->list_node,
++				       buf_list);
++		}
++	} else {
++		rc = -EINVAL;
++	}
++
++	spin_unlock_irq(&hdwq->hdwq_lock);
++	return rc;
++}
++
++/**
++ * lpfc_free_sgl_per_hdwq - Free all SGL chunks of hdwq pool
++ * @phba: phba object
++ * @hdwq: hdwq to cleanup sgl buff resources on
++ *
++ * This routine frees all SGL chunks of hdwq SGL chunk pool.
++ *
++ * Return codes:
++ *   None
++ **/
++void
++lpfc_free_sgl_per_hdwq(struct lpfc_hba *phba,
++		       struct lpfc_sli4_hdw_queue *hdwq)
++{
++	struct list_head *buf_list = &hdwq->sgl_list;
++	struct sli4_hybrid_sgl *list_entry = NULL;
++	struct sli4_hybrid_sgl *tmp = NULL;
++
++	spin_lock_irq(&hdwq->hdwq_lock);
++
++	/* Free sgl pool */
++	list_for_each_entry_safe(list_entry, tmp,
++				 buf_list, list_node) {
++		dma_pool_free(phba->lpfc_sg_dma_buf_pool,
++			      list_entry->dma_sgl,
++			      list_entry->dma_phys_sgl);
++		list_del(&list_entry->list_node);
++		kfree(list_entry);
++	}
++
++	spin_unlock_irq(&hdwq->hdwq_lock);
++}
++
++/**
++ * lpfc_get_cmd_rsp_buf_per_hdwq - Get one CMD/RSP buffer from hdwq
++ * @phba: The HBA for which this call is being executed.
++ * @lpfc_buf: IO buf structure to attach the CMD/RSP buffer
++ *
++ * This routine gets one CMD/RSP buffer from hdwq's CMD/RSP pool,
++ * and will allocate an CMD/RSP buffer if the pool is empty.
++ *
++ * Return codes:
++ *   NULL - Error
++ *   Pointer to fcp_cmd_rsp_buf - Success
++ **/
++struct fcp_cmd_rsp_buf *
++lpfc_get_cmd_rsp_buf_per_hdwq(struct lpfc_hba *phba,
++			      struct lpfc_io_buf *lpfc_buf)
++{
++	struct fcp_cmd_rsp_buf *list_entry = NULL;
++	struct fcp_cmd_rsp_buf *tmp = NULL;
++	struct fcp_cmd_rsp_buf *allocated_buf = NULL;
++	struct lpfc_sli4_hdw_queue *hdwq = lpfc_buf->hdwq;
++	struct list_head *buf_list = &hdwq->cmd_rsp_buf_list;
++
++	spin_lock_irq(&hdwq->hdwq_lock);
++
++	if (likely(!list_empty(buf_list))) {
++		/* break off 1 chunk from the list */
++		list_for_each_entry_safe(list_entry, tmp,
++					 buf_list,
++					 list_node) {
++			list_move_tail(&list_entry->list_node,
++				       &lpfc_buf->dma_cmd_rsp_list);
++			break;
++		}
++	} else {
++		/* allocate more */
++		spin_unlock_irq(&hdwq->hdwq_lock);
++		tmp = kmalloc_node(sizeof(*tmp), GFP_ATOMIC,
++				   cpu_to_node(smp_processor_id()));
++		if (!tmp) {
++			lpfc_printf_log(phba, KERN_INFO, LOG_SLI,
++					"8355 error kmalloc memory for HDWQ "
++					"%d %s\n",
++					lpfc_buf->hdwq_no, __func__);
++			return NULL;
++		}
++
++		tmp->fcp_cmnd = dma_pool_alloc(phba->lpfc_cmd_rsp_buf_pool,
++						GFP_ATOMIC,
++						&tmp->fcp_cmd_rsp_dma_handle);
++
++		if (!tmp->fcp_cmnd) {
++			lpfc_printf_log(phba, KERN_INFO, LOG_SLI,
++					"8356 error pool_alloc memory for HDWQ "
++					"%d %s\n",
++					lpfc_buf->hdwq_no, __func__);
++			kfree(tmp);
++			return NULL;
++		}
++
++		tmp->fcp_rsp = (struct fcp_rsp *)((uint8_t *)tmp->fcp_cmnd +
++				sizeof(struct fcp_cmnd));
++
++		spin_lock_irq(&hdwq->hdwq_lock);
++		list_add_tail(&tmp->list_node, &lpfc_buf->dma_cmd_rsp_list);
++	}
++
++	allocated_buf = list_last_entry(&lpfc_buf->dma_cmd_rsp_list,
++					struct fcp_cmd_rsp_buf,
++					list_node);
++
++	spin_unlock_irq(&hdwq->hdwq_lock);
++
++	return allocated_buf;
++}
++
++/**
++ * lpfc_put_cmd_rsp_buf_per_hdwq - Put one CMD/RSP buffer into hdwq pool
++ * @phba: The HBA for which this call is being executed.
++ * @lpfc_buf: IO buf structure with the CMD/RSP buf
++ *
++ * This routine puts one CMD/RSP buffer into executing CPU's CMD/RSP pool.
++ *
++ * Return codes:
++ *   0 - Success
++ *   -EINVAL - Error
++ **/
++int
++lpfc_put_cmd_rsp_buf_per_hdwq(struct lpfc_hba *phba,
++			      struct lpfc_io_buf *lpfc_buf)
++{
++	int rc = 0;
++	struct fcp_cmd_rsp_buf *list_entry = NULL;
++	struct fcp_cmd_rsp_buf *tmp = NULL;
++	struct lpfc_sli4_hdw_queue *hdwq = lpfc_buf->hdwq;
++	struct list_head *buf_list = &hdwq->cmd_rsp_buf_list;
++
++	spin_lock_irq(&hdwq->hdwq_lock);
++
++	if (likely(!list_empty(&lpfc_buf->dma_cmd_rsp_list))) {
++		list_for_each_entry_safe(list_entry, tmp,
++					 &lpfc_buf->dma_cmd_rsp_list,
++					 list_node) {
++			list_move_tail(&list_entry->list_node,
++				       buf_list);
++		}
++	} else {
++		rc = -EINVAL;
++	}
++
++	spin_unlock_irq(&hdwq->hdwq_lock);
++	return rc;
++}
++
++/**
++ * lpfc_free_cmd_rsp_buf_per_hdwq - Free all CMD/RSP chunks of hdwq pool
++ * @phba: phba object
++ * @hdwq: hdwq to cleanup cmd rsp buff resources on
++ *
++ * This routine frees all CMD/RSP buffers of hdwq's CMD/RSP buf pool.
++ *
++ * Return codes:
++ *   None
++ **/
++void
++lpfc_free_cmd_rsp_buf_per_hdwq(struct lpfc_hba *phba,
++			       struct lpfc_sli4_hdw_queue *hdwq)
++{
++	struct list_head *buf_list = &hdwq->cmd_rsp_buf_list;
++	struct fcp_cmd_rsp_buf *list_entry = NULL;
++	struct fcp_cmd_rsp_buf *tmp = NULL;
++
++	spin_lock_irq(&hdwq->hdwq_lock);
++
++	/* Free cmd_rsp buf pool */
++	list_for_each_entry_safe(list_entry, tmp,
++				 buf_list,
++				 list_node) {
++		dma_pool_free(phba->lpfc_cmd_rsp_buf_pool,
++			      list_entry->fcp_cmnd,
++			      list_entry->fcp_cmd_rsp_dma_handle);
++		list_del(&list_entry->list_node);
++		kfree(list_entry);
++	}
++
++	spin_unlock_irq(&hdwq->hdwq_lock);
++}
+diff --git a/drivers/scsi/lpfc/lpfc_sli.h b/drivers/scsi/lpfc/lpfc_sli.h
+index 467b8270f7fd..37fbcb46387e 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.h
++++ b/drivers/scsi/lpfc/lpfc_sli.h
+@@ -365,9 +365,18 @@ struct lpfc_io_buf {
+ 	/* Common fields */
+ 	struct list_head list;
+ 	void *data;
++
+ 	dma_addr_t dma_handle;
+ 	dma_addr_t dma_phys_sgl;
+-	struct sli4_sge *dma_sgl;
++
++	struct sli4_sge *dma_sgl; /* initial segment chunk */
++
++	/* linked list of extra sli4_hybrid_sge */
++	struct list_head dma_sgl_xtra_list;
++
++	/* list head for fcp_cmd_rsp buf */
++	struct list_head dma_cmd_rsp_list;
++
+ 	struct lpfc_iocbq cur_iocbq;
+ 	struct lpfc_sli4_hdw_queue *hdwq;
+ 	uint16_t hdwq_no;
+diff --git a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
+index 329f7aa7e169..02275e49be6f 100644
+--- a/drivers/scsi/lpfc/lpfc_sli4.h
++++ b/drivers/scsi/lpfc/lpfc_sli4.h
+@@ -685,6 +685,13 @@ struct lpfc_sli4_hdw_queue {
+ 	uint32_t cpucheck_xmt_io[LPFC_CHECK_CPU_CNT];
+ 	uint32_t cpucheck_cmpl_io[LPFC_CHECK_CPU_CNT];
+ #endif
++
++	/* Per HDWQ pool resources */
++	struct list_head sgl_list;
++	struct list_head cmd_rsp_buf_list;
++
++	/* Lock for syncing Per HDWQ pool resources */
++	spinlock_t hdwq_lock;
+ };
  
- 	/* Mbox cmd <mbxCommand> timeout */
- 	lpfc_printf_log(phba, KERN_ERR, LOG_MBOX | LOG_SLI,
--			"0310 Mailbox command x%x timeout Data: x%x x%x x%p\n",
-+			"0310 Mailbox command x%x timeout Data: x%x x%x x%px\n",
- 			mb->mbxCommand,
- 			phba->pport->port_state,
- 			phba->sli.sli_flag,
-@@ -10998,7 +10998,7 @@ lpfc_sli_ring_taggedbuf_get(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
- 	spin_unlock_irq(&phba->hbalock);
- 	lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
- 			"0402 Cannot find virtual addr for buffer tag on "
--			"ring %d Data x%lx x%p x%p x%x\n",
-+			"ring %d Data x%lx x%px x%px x%x\n",
- 			pring->ringno, (unsigned long) tag,
- 			slp->next, slp->prev, pring->postbufq_cnt);
- 
-@@ -11042,7 +11042,7 @@ lpfc_sli_ringpostbuf_get(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
- 	spin_unlock_irq(&phba->hbalock);
- 	lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
- 			"0410 Cannot find virtual addr for mapped buf on "
--			"ring %d Data x%llx x%p x%p x%x\n",
-+			"ring %d Data x%llx x%px x%px x%x\n",
- 			pring->ringno, (unsigned long long)phys,
- 			slp->next, slp->prev, pring->postbufq_cnt);
- 	return NULL;
-@@ -11097,7 +11097,7 @@ lpfc_sli_abort_els_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 			abort_iocb = phba->sli.iocbq_lookup[abort_context];
- 
- 		lpfc_printf_log(phba, KERN_WARNING, LOG_ELS | LOG_SLI,
--				"0327 Cannot abort els iocb %p "
-+				"0327 Cannot abort els iocb x%px "
- 				"with tag %x context %x, abort status %x, "
- 				"abort code %x\n",
- 				abort_iocb, abort_iotag, abort_context,
+ #ifdef LPFC_HDWQ_LOCK_STAT
+@@ -1094,6 +1101,17 @@ int lpfc_sli4_post_status_check(struct lpfc_hba *);
+ uint8_t lpfc_sli_config_mbox_subsys_get(struct lpfc_hba *, LPFC_MBOXQ_t *);
+ uint8_t lpfc_sli_config_mbox_opcode_get(struct lpfc_hba *, LPFC_MBOXQ_t *);
+ void lpfc_sli4_ras_dma_free(struct lpfc_hba *phba);
++struct sli4_hybrid_sgl *lpfc_get_sgl_per_hdwq(struct lpfc_hba *phba,
++					      struct lpfc_io_buf *buf);
++struct fcp_cmd_rsp_buf *lpfc_get_cmd_rsp_buf_per_hdwq(struct lpfc_hba *phba,
++						      struct lpfc_io_buf *buf);
++int lpfc_put_sgl_per_hdwq(struct lpfc_hba *phba, struct lpfc_io_buf *buf);
++int lpfc_put_cmd_rsp_buf_per_hdwq(struct lpfc_hba *phba,
++				  struct lpfc_io_buf *buf);
++void lpfc_free_sgl_per_hdwq(struct lpfc_hba *phba,
++			    struct lpfc_sli4_hdw_queue *hdwq);
++void lpfc_free_cmd_rsp_buf_per_hdwq(struct lpfc_hba *phba,
++				    struct lpfc_sli4_hdw_queue *hdwq);
+ static inline void *lpfc_sli4_qe(struct lpfc_queue *q, uint16_t idx)
+ {
+ 	return q->q_pgs[idx / q->entry_cnt_per_pg] +
 -- 
 2.13.7
 
