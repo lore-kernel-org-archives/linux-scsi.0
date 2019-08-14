@@ -7,109 +7,219 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C3B64C433FF
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Aug 2019 20:58:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ABA1AC32753
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Aug 2019 20:58:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A24C921721
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Aug 2019 20:58:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7FE71216F4
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Aug 2019 20:58:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729984AbfHNU6I (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 14 Aug 2019 16:58:08 -0400
-Received: from mout.kundenserver.de ([212.227.126.187]:33739 "EHLO
+        id S1730064AbfHNU6r (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 14 Aug 2019 16:58:47 -0400
+Received: from mout.kundenserver.de ([212.227.126.130]:54847 "EHLO
         mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729752AbfHNU6I (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Aug 2019 16:58:08 -0400
+        with ESMTP id S1729984AbfHNU6r (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Aug 2019 16:58:47 -0400
 Received: from threadripper.lan ([149.172.19.189]) by mrelayeu.kundenserver.de
  (mreue011 [212.227.15.129]) with ESMTPA (Nemesis) id
- 1Mfpf7-1iVP9a30qP-00gHok; Wed, 14 Aug 2019 22:57:43 +0200
+ 1MWixU-1hmtSX2IDQ-00X2el; Wed, 14 Aug 2019 22:57:17 +0200
 From:   Arnd Bergmann <arnd@arndb.de>
 To:     linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk,
         linux-fsdevel@vger.kernel.org,
+        Doug Gilbert <dgilbert@interlog.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Arnd Bergmann <arnd@arndb.de>, Christoph Hellwig <hch@lst.de>,
-        Tejun Heo <tj@kernel.org>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@kernel.dk>,
+Cc:     Arnd Bergmann <arnd@arndb.de>, Hannes Reinecke <hare@suse.com>,
         linux-scsi@vger.kernel.org
-Subject: [PATCH v5 18/18] scsi: sd: enable compat ioctls for sed-opal
-Date:   Wed, 14 Aug 2019 22:54:53 +0200
-Message-Id: <20190814205521.122180-9-arnd@arndb.de>
+Subject: [PATCH v5 16/18] compat_ioctl: move SG_GET_REQUEST_TABLE handling
+Date:   Wed, 14 Aug 2019 22:54:51 +0200
+Message-Id: <20190814205521.122180-7-arnd@arndb.de>
 X-Mailer: git-send-email 2.20.0
 In-Reply-To: <20190814204259.120942-1-arnd@arndb.de>
 References: <20190814204259.120942-1-arnd@arndb.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Provags-ID: V03:K1:GHU2BOUolFMuYU4JHf6S7Epw6n2I5F+s2JL2xcZ0QVFOtlz3LTM
- Cg1Y0P2DCMYs/77HHCx1SBY6ljRsMtpIZLwfU9oRltiVTFqbskRhozs7BR1P4kelS1oZQdf
- NO3WcQWcvIZWwBG0eNOOKMNkbslk2VdBMFzYBppBkPwj0oVa+cGYH4/9qltFy28mV3yE9NN
- os1WcG3Ajoz39bCTJnZgg==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:zpxeGQV2Lis=:DxZ29hcJwmhH8cHBeJLpFh
- cbl964bB0IHU8mgW586im24i2LN4vSL9QCCunqRoHxS7JbPtdo5H45SQ6PWsw9mw/Ulb/ScC1
- 0wRZL4DfLEEd0+uxjvjXcsGHZWHGCFNQLqo4Q25G0MVi5VwZyzkAsDZ51/SJZ5+QyVes+Qt9I
- jpKCw8zab86I+Rl7XhCLexRa9CBJThsIiej6aL+7uuwzbweouesQv0N8hCkZYPSHT+ujCSWh0
- kLdAOCE6Biopn5K/CGKUYmuSjZ9apaCSOVDn5i0Q6JdR0putP+DLV+uMO99uB7qL1273rW5AM
- aiOAT7BbnDBhLmofbzGwXZvCbgrWP9CBdLFxRXsB0Gh9sC8duzp3M3okSQ8EhDEBLKt7Xr82Y
- 69IHO+8bAGW0Avqxepran8c+dzq2jov2jsQrrxJqinBc6KXjj1lwSbbsVisl1WnukDYcN6k2l
- bXhBO2kcCQjrrjs8o/B2IdMo5vHHxsu883UHlrOuPk0+Pmdf4TrAwNirMNkik7rmJCC1VWD0M
- YZ4JfrKoykoTAIz6RHX4zUk0RvgX/5+6B3ms7hZ5+mWytecx9vFhvM6dbSTVopHsuOfKorbtd
- C/xUO8wK1iajpYzXGo+S0nhiHKBNVa/kboscA0C7kx3Ybwba60OSBHWJ1wHuQrvP5fihDvrMU
- 3yg76Yq3EpfucvHZpAOym5tAjj1kALpm3aXVMSJBtBSlqHml5cwYgTvD1OW8YuOeCwuxBz2fH
- 2hKYaB8bwrOK32MdonrxWgBxhRv5SfKCbUepsQ==
+X-Provags-ID: V03:K1:Oh96NWxdPZEW/yuDMF44sbWZBSLaeWtZ7p1wHLQUZgKNUin6CaT
+ SZsCIC9diZmfoU/GHahmeQsbLYDGVw9hBTHQoYo+YRxvApsSXI4/JvVsY94AYTDxLkf9CMi
+ 5MpmJ74hVdE/JoAAlIpgiEZxJzKJTxI15YS2DiE/O5HamfDJ1XxqguJssl1WJOIVRNW2q/y
+ cMHt+ifIU8CzvdCJuIrzw==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:0HxL3DcyvMs=:Z7H2CT2juldoHXDfO9q1XL
+ Fgz7raKdxxOXC6ou7IDYER15xW5hebo9Q0WrHIgFrXoe9Nj09LOZE1qAlCjGZk3l4H5hu+aPC
+ DRBYOuEgMjUMonLNSKQfT3dxF11JNbxlSq0mEnrnFMpXgApAd+ceoP1pA3vOZ1p8V6mifgx5y
+ iuJmYinYWHp0IqrhSRR5l/fdfslGO2rNu/iCpFOhHgtieX/nSqSrtKSLR60j86VsSGeWmT5+q
+ 0vI3NSoUcZ6kQCjQ0hJjyx0OiP01uuKF3TgD7KYEn7UwKwECabMZFKmttvOG9A2I0fuxLe7lR
+ ZgKFifwRqHJbeaPq6nwLPdBM4t9EKIw6OdbCm5IfLTmgp2w3owSEADl/GmXt42+JvYrfVG4m5
+ 61b6jOlUBMZ/qz9xqITSIjoYcmo5+y4BgawmhjaghExwj+xro2w6uk9N2firAF8FTlnK042Oc
+ yzFt+sEqUOqNZo8xi2RRPVAtiCtOOwRVKX9DRwxGsUEm1YUfV2OQ0AgH3BEF604YwN+igSTYL
+ +V+Fuv3yn/h5SZahPgmffvZOj2V0pir7DGuZlTR0jZq91fgX7Fe0BhOrzsSNOlEvK8bWYtoSk
+ YuTGG5BRHL4sNjiBwmwngw/U5fYLuwCB7SF32u7MH+MgftGGEGOpXYR1dNzCdUYt0MGESyhFp
+ ZODj5N5oLP+p5bGOenb2BwLCrsx3quIlcHQ3swWCy/EaLhDiUQP3DnY9DhbbdhRR8nDjr7s26
+ bP625blLw14sfIHa1ovsph3fNpRQCgDMip3/n1ZXtiO2nlM95cS/5yeRoCpQ0hW1RP3HtfCU4
+ sGHgQtIR0OEy5FPnN2XiGMCtWisrQ==
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The sed_ioctl() function is written to be compatible between
-32-bit and 64-bit processes, however compat mode is only
-wired up for nvme, not for sd.
+SG_GET_REQUEST_TABLE is now the last ioctl command that needs a conversion
+handler. This is only used in a single file, so the implementation should
+be there.
 
-Add the missing call to sed_ioctl() in sd_compat_ioctl().
+I'm trying to simplify it in the process, to get rid of
+the compat_alloc_user_space() and extra copy, by adding a
+put_compat_request_table() function instead, which copies the data in
+the right format to user space.
 
-Fixes: d80210f25ff0 ("sd: add support for TCG OPAL self encrypting disks")
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/scsi/sd.c | 14 ++++++++++++--
- 1 file changed, 12 insertions(+), 2 deletions(-)
+ drivers/scsi/sg.c | 40 ++++++++++++++++++++++++++++++-----
+ fs/compat_ioctl.c | 54 +----------------------------------------------
+ 2 files changed, 36 insertions(+), 58 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 149d406aacc9..8b71664c54bd 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1693,20 +1693,30 @@ static void sd_rescan(struct device *dev)
- static int sd_compat_ioctl(struct block_device *bdev, fmode_t mode,
- 			   unsigned int cmd, unsigned long arg)
- {
--	struct scsi_device *sdev = scsi_disk(bdev->bd_disk)->device;
-+	struct gendisk *disk = bdev->bd_disk;
-+	struct scsi_disk *sdkp = scsi_disk(disk);
-+	struct scsi_device *sdev = sdkp->device;
-+	void __user *p = compat_ptr(arg);
- 	int error;
- 
-+	error = scsi_verify_blk_ioctl(bdev, cmd);
-+	if (error < 0)
-+		return error;
-+
- 	error = scsi_ioctl_block_when_processing_errors(sdev, cmd,
- 			(mode & FMODE_NDELAY) != 0);
- 	if (error)
- 		return error;
-+
-+	if (is_sed_ioctl(cmd))
-+		return sed_ioctl(sdkp->opal_dev, cmd, p);
- 	       
- 	/* 
- 	 * Let the static ioctl translation table take care of it.
- 	 */
- 	if (!sdev->host->hostt->compat_ioctl)
- 		return -ENOIOCTLCMD; 
--	return sdev->host->hostt->compat_ioctl(sdev, cmd, (void __user *)arg);
-+	return sdev->host->hostt->compat_ioctl(sdev, cmd, p);
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index 8ae096af2667..9e4ef22b3579 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -889,6 +889,33 @@ sg_fill_request_table(Sg_fd *sfp, sg_req_info_t *rinfo)
+ 	}
  }
- #endif
  
++#ifdef CONFIG_COMPAT
++struct compat_sg_req_info { /* used by SG_GET_REQUEST_TABLE ioctl() */
++	char req_state;
++	char orphan;
++	char sg_io_owned;
++	char problem;
++	int pack_id;
++	compat_uptr_t usr_ptr;
++	unsigned int duration;
++	int unused;
++};
++
++static int put_compat_request_table(struct compat_sg_req_info __user *o,
++				    struct sg_req_info *rinfo)
++{
++	int i;
++	for (i = 0; i < SG_MAX_QUEUE; i++) {
++		if (copy_to_user(o + i, rinfo + i, offsetof(sg_req_info_t, usr_ptr)) ||
++		    put_user((uintptr_t)rinfo[i].usr_ptr, &o[i].usr_ptr) ||
++		    put_user(rinfo[i].duration, &o[i].duration) ||
++		    put_user(rinfo[i].unused, &o[i].unused))
++			return -EFAULT;
++	}
++	return 0;
++}
++#endif
++
+ static long
+ sg_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
+ {
+@@ -1069,9 +1096,7 @@ sg_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
+ 		val = (sdp->device ? 1 : 0);
+ 		return put_user(val, ip);
+ 	case SG_GET_REQUEST_TABLE:
+-		if (!access_ok(p, SZ_SG_REQ_INFO * SG_MAX_QUEUE))
+-			return -EFAULT;
+-		else {
++		{
+ 			sg_req_info_t *rinfo;
+ 
+ 			rinfo = kcalloc(SG_MAX_QUEUE, SZ_SG_REQ_INFO,
+@@ -1081,8 +1106,13 @@ sg_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
+ 			read_lock_irqsave(&sfp->rq_list_lock, iflags);
+ 			sg_fill_request_table(sfp, rinfo);
+ 			read_unlock_irqrestore(&sfp->rq_list_lock, iflags);
+-			result = __copy_to_user(p, rinfo,
+-						SZ_SG_REQ_INFO * SG_MAX_QUEUE);
++	#ifdef CONFIG_COMPAT
++			if (in_compat_syscall())
++				result = put_compat_request_table(p, rinfo);
++			else
++	#endif
++				result = copy_to_user(p, rinfo,
++						      SZ_SG_REQ_INFO * SG_MAX_QUEUE);
+ 			result = result ? -EFAULT : 0;
+ 			kfree(rinfo);
+ 			return result;
+diff --git a/fs/compat_ioctl.c b/fs/compat_ioctl.c
+index 3d127bb6357a..6837a3904b8c 100644
+--- a/fs/compat_ioctl.c
++++ b/fs/compat_ioctl.c
+@@ -52,53 +52,6 @@
+ 
+ #include <linux/sort.h>
+ 
+-static int do_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+-{
+-	int err;
+-
+-	err = security_file_ioctl(file, cmd, arg);
+-	if (err)
+-		return err;
+-
+-	return vfs_ioctl(file, cmd, arg);
+-}
+-
+-#ifdef CONFIG_BLOCK
+-struct compat_sg_req_info { /* used by SG_GET_REQUEST_TABLE ioctl() */
+-	char req_state;
+-	char orphan;
+-	char sg_io_owned;
+-	char problem;
+-	int pack_id;
+-	compat_uptr_t usr_ptr;
+-	unsigned int duration;
+-	int unused;
+-};
+-
+-static int sg_grt_trans(struct file *file,
+-		unsigned int cmd, struct compat_sg_req_info __user *o)
+-{
+-	int err, i;
+-	sg_req_info_t __user *r;
+-	r = compat_alloc_user_space(sizeof(sg_req_info_t)*SG_MAX_QUEUE);
+-	err = do_ioctl(file, cmd, (unsigned long)r);
+-	if (err < 0)
+-		return err;
+-	for (i = 0; i < SG_MAX_QUEUE; i++) {
+-		void __user *ptr;
+-		int d;
+-
+-		if (copy_in_user(o + i, r + i, offsetof(sg_req_info_t, usr_ptr)) ||
+-		    get_user(ptr, &r[i].usr_ptr) ||
+-		    get_user(d, &r[i].duration) ||
+-		    put_user((u32)(unsigned long)(ptr), &o[i].usr_ptr) ||
+-		    put_user(d, &o[i].duration))
+-			return -EFAULT;
+-	}
+-	return err;
+-}
+-#endif /* CONFIG_BLOCK */
+-
+ /*
+  * simple reversible transform to make our table more evenly
+  * distributed after sorting.
+@@ -121,6 +74,7 @@ COMPATIBLE_IOCTL(SCSI_IOCTL_GET_PCI)
+ #ifdef CONFIG_BLOCK
+ /* SG stuff */
+ COMPATIBLE_IOCTL(SG_IO)
++COMPATIBLE_IOCTL(SG_GET_REQUEST_TABLE)
+ COMPATIBLE_IOCTL(SG_SET_TIMEOUT)
+ COMPATIBLE_IOCTL(SG_GET_TIMEOUT)
+ COMPATIBLE_IOCTL(SG_EMULATED_HOST)
+@@ -156,13 +110,7 @@ COMPATIBLE_IOCTL(SG_GET_KEEP_ORPHAN)
+ static long do_ioctl_trans(unsigned int cmd,
+ 		 unsigned long arg, struct file *file)
+ {
+-	void __user *argp = compat_ptr(arg);
+-
+ 	switch (cmd) {
+-#ifdef CONFIG_BLOCK
+-	case SG_GET_REQUEST_TABLE:
+-		return sg_grt_trans(file, cmd, argp);
+-#endif
+ 	}
+ 
+ 	return -ENOIOCTLCMD;
 -- 
 2.20.0
 
