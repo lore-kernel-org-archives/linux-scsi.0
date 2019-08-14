@@ -8,59 +8,59 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BDD3C32753
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF961C433FF
 	for <linux-scsi@archiver.kernel.org>; Wed, 14 Aug 2019 23:57:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5C32B20866
+	by mail.kernel.org (Postfix) with ESMTP id 8F3342086C
 	for <linux-scsi@archiver.kernel.org>; Wed, 14 Aug 2019 23:57:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PZaXjjK5"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HCegBlnT"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729316AbfHNX5i (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 14 Aug 2019 19:57:38 -0400
-Received: from mail-pg1-f195.google.com ([209.85.215.195]:35494 "EHLO
-        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729133AbfHNX5h (ORCPT
+        id S1729322AbfHNX5j (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 14 Aug 2019 19:57:39 -0400
+Received: from mail-pl1-f195.google.com ([209.85.214.195]:35031 "EHLO
+        mail-pl1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729251AbfHNX5h (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Aug 2019 19:57:37 -0400
-Received: by mail-pg1-f195.google.com with SMTP id n4so432335pgv.2
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Aug 2019 16:57:36 -0700 (PDT)
+Received: by mail-pl1-f195.google.com with SMTP id gn20so338100plb.2
+        for <linux-scsi@vger.kernel.org>; Wed, 14 Aug 2019 16:57:37 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=V7hn4J6UFm2kpDnZ3Df7CoZ0/NVyZFXifTidEGvtbN0=;
-        b=PZaXjjK5u9pssImh85uzA2tBl6HW2+KiDL977UfatIgkCeNXMrNWt/22tT3Cla+UJf
-         njxEJZ+TxTpjLMGVrMV5Bfv+Ew/rZT1JubhziERo61pEdZ2/bClsFvLHG2Yrn28dd5j3
-         6c23G5wZiID9uV9jnTyPkqh8fPKO/D5x0sch5CjUw93fQ1cO9Em5L7iYP7NX/wDxyxxL
-         HTft3DmtxR2omD+dUEbSKnpWNlODLnBMvgGfbunRSPx0jMRoRo3MuEaqaly2g8/JFdkc
-         UGNqu/pXPJtiKcvTuLLwkIu1G4+10zvDrQrLdLu3MGtCNSPFbB1s7pRcjHl8fkxKeTXf
-         OROg==
+        bh=KurSwZP41v7HTlgL+yWHtoFUDLepJRRq4Jnhf0Ch11o=;
+        b=HCegBlnTcs6PXJLKmlO8iYXbgaZWrNXSw/op0tpwsXUPy0u82Bku0C2gtJQ8kyb0jd
+         aaevIXKM+TnONPfqHrBuWvll+ZO/DrLTYXO9psX/JssFeqYkHaHLv0m7Kjfu8EL/PlGD
+         hB63AZXWpEaVh+UGwyAicJvfLIv56AXpC0FmfCav+x+Ji0IXApAj4pv4cOhk8KQxHaol
+         mPjRMivmbYM/eKevipPjQUyVhc/7W618LTdu+/ynWnATLcc+0MYKY+rSn/WF7+hlQCS8
+         zTqIfsQuUBiFTKldZXCliL28qPWd33/StSo1des1SYDsk1Q/UeK3oOurL3DKbvyYtQBq
+         tzDg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=V7hn4J6UFm2kpDnZ3Df7CoZ0/NVyZFXifTidEGvtbN0=;
-        b=CYfZSixCuKEwpEythkGGy0fJcaobUbRYzusglB1V+O7u2av2aHrzN22sgE/8O9kxzD
-         qY7830AjAgZkTQhpy/HMzIYfqbh67/+Lfl4WgYRxDLYKrSd6Oqf9tfHpe3PTj65f9J3D
-         ylxndzI5IstrfdTPL3QlBPe/UojsmrNunrB4Mww+FHzLQxMBsE26AP8/mDw3n4H8v7DO
-         H1F2GVB2Q/lglV7NkrENIYo1nPFs1lAbIjrNgp/tqG+sSn5jT+gc0+6jkDeun8xVbsgt
-         A+rULeoE1WSeXkIcvpaVT7vl2VcyknbH3WYKN/sSXdCMx+D1E/ePKp6IhBcE0ALjwfF+
-         iF8w==
-X-Gm-Message-State: APjAAAU8dKQ3qEqDf0kvH748Y9KIB2j7v64OPFw0Aqft8sTN5eskvT4l
-        1HbtrVQUVRxF26SekwiQ/yWe7EQg
-X-Google-Smtp-Source: APXvYqyvV7WZRK3p2iRRHXp2NSkXLrD+yOQVhNNBHT94axmUVhi419opmjc95nEayEck8MUCj7cmMA==
-X-Received: by 2002:a17:90a:e38e:: with SMTP id b14mr403951pjz.125.1565827056174;
-        Wed, 14 Aug 2019 16:57:36 -0700 (PDT)
+        bh=KurSwZP41v7HTlgL+yWHtoFUDLepJRRq4Jnhf0Ch11o=;
+        b=JVtGFgRdDkJnS33wXbtac6YW3Ym+VvIaMeCHgN6F7K7z4YNndGl8wkw/V2zHuxeoMP
+         4tWdBQbf+ZHNyDK5f38T4m+fg+zf89Raht8DOWyj7U7YJ9aRSuGgRM1VeLrojlynLRKI
+         Y8YqsvGRuAqHoo5IuCq2iivMco7FLThEm9ZBxC3UpH5KmntokzxuxGIhfAXiqeoYTnFs
+         9ZM50fTtp9QrCO54bSAq7kZoj9gjlwhjcdiqv0PPeNtge/bDIk3A+JSVifd6J+tBDa6t
+         suh8Z/jnV001SYRH578cWTuCZ10wvCVCGmAHJVJEOJcLLX4fy7uUxhZCMoXefkvuI5m1
+         DxsQ==
+X-Gm-Message-State: APjAAAX/RVBhXrtWI16TJo14m2sjVSfNyFYenU+89IVFR22L5kh9I7IK
+        2bSSSHK++FXDgGSbJZL4Xm61mJPr
+X-Google-Smtp-Source: APXvYqwyf5HSmRx3tn6345xuO7XLo7L3G4jc5HqPZa3PUAHoULlHsQZzjWFRlYjden3FKNrGpEKhmQ==
+X-Received: by 2002:a17:902:5a04:: with SMTP id q4mr1820267pli.280.1565827057177;
+        Wed, 14 Aug 2019 16:57:37 -0700 (PDT)
 Received: from pallmd1.broadcom.com ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id k22sm987299pfk.157.2019.08.14.16.57.35
+        by smtp.gmail.com with ESMTPSA id k22sm987299pfk.157.2019.08.14.16.57.36
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-        Wed, 14 Aug 2019 16:57:35 -0700 (PDT)
+        Wed, 14 Aug 2019 16:57:36 -0700 (PDT)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Dick Kennedy <dick.kennedy@broadcom.com>
-Subject: [PATCH 18/42] lpfc: Fix propagation of devloss_tmo setting to nvme transport
-Date:   Wed, 14 Aug 2019 16:56:48 -0700
-Message-Id: <20190814235712.4487-19-jsmart2021@gmail.com>
+Subject: [PATCH 19/42] lpfc: Fix sg_seg_cnt for HBAs that don't support NVME
+Date:   Wed, 14 Aug 2019 16:56:49 -0700
+Message-Id: <20190814235712.4487-20-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.13.7
 In-Reply-To: <20190814235712.4487-1-jsmart2021@gmail.com>
 References: <20190814235712.4487-1-jsmart2021@gmail.com>
@@ -69,57 +69,63 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-If admin changes the devloss_tmo on an rport via the fc_remote_port
-rport dev_loss_tmo attribute, the value is on set on scsi stack.
-The change is not propagated to NVMe.
+On an SLi-3 adapter which does not support NVMe, but with the
+driver global attribute to enable nvme on any adapter if it
+does support NVMe (e.g. module parameter lpfc_enable_fc4_type=3),
+the SGL and total SGE values are being munged by the protocol
+enablement when it shouldn't be.
 
-The set routine in the lldd lacks the call to
-nvme_fc_set_remoteport_devloss() to set the value.
-
-Fix by adding the call to the lldd set routine.
+Correct by changing the location of where the NVME sgl information
+is being applied, which will avoid any SLI-3-based adapter.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_attr.c | 21 +++++++++++++++++++++
- 1 file changed, 21 insertions(+)
+ drivers/scsi/lpfc/lpfc_attr.c | 10 ----------
+ drivers/scsi/lpfc/lpfc_init.c |  9 +++++++++
+ 2 files changed, 9 insertions(+), 10 deletions(-)
 
 diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-index 33c8bae49821..90181afe0e28 100644
+index 90181afe0e28..7ac6508b7ed8 100644
 --- a/drivers/scsi/lpfc/lpfc_attr.c
 +++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -6859,10 +6859,31 @@ lpfc_get_starget_port_name(struct scsi_target *starget)
- static void
- lpfc_set_rport_loss_tmo(struct fc_rport *rport, uint32_t timeout)
- {
-+	struct lpfc_rport_data *rdata = rport->dd_data;
-+	struct lpfc_nodelist *ndlp = rdata->pnode;
-+#if (IS_ENABLED(CONFIG_NVME_FC))
-+	struct lpfc_nvme_rport *nrport = NULL;
-+#endif
-+
- 	if (timeout)
- 		rport->dev_loss_tmo = timeout;
- 	else
- 		rport->dev_loss_tmo = 1;
-+
-+	if (!ndlp || !NLP_CHK_NODE_ACT(ndlp)) {
-+		dev_info(&rport->dev, "Cannot find remote node to "
-+				      "set rport dev loss tmo, port_id x%x\n",
-+				      rport->port_id);
-+		return;
-+	}
-+
-+#if (IS_ENABLED(CONFIG_NVME_FC))
-+	nrport = lpfc_ndlp_get_nrport(ndlp);
-+
-+	if (nrport && nrport->remoteport)
-+		nvme_fc_set_remoteport_devloss(nrport->remoteport,
-+					       rport->dev_loss_tmo);
-+#endif
+@@ -7196,16 +7196,6 @@ lpfc_get_cfgparam(struct lpfc_hba *phba)
+ 	lpfc_ras_fwlog_level_init(phba, lpfc_ras_fwlog_level);
+ 	lpfc_ras_fwlog_func_init(phba, lpfc_ras_fwlog_func);
+ 
+-
+-	/* If the NVME FC4 type is enabled, scale the sg_seg_cnt to
+-	 * accommodate 512K and 1M IOs in a single nvme buf and supply
+-	 * enough NVME LS iocb buffers for larger connectivity counts.
+-	 */
+-	if (phba->cfg_enable_fc4_type & LPFC_ENABLE_NVME) {
+-		phba->cfg_sg_seg_cnt = LPFC_MAX_NVME_SEG_CNT;
+-		phba->cfg_iocb_cnt = 5;
+-	}
+-
+ 	return;
  }
  
- /**
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index fcc1c45f2d35..84a77faed114 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -11702,6 +11702,15 @@ lpfc_get_sli4_parameters(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq)
+ 		}
+ 	}
+ 
++	/* If the NVME FC4 type is enabled, scale the sg_seg_cnt to
++	 * accommodate 512K and 1M IOs in a single nvme buf and supply
++	 * enough NVME LS iocb buffers for larger connectivity counts.
++	 */
++	if (phba->cfg_enable_fc4_type & LPFC_ENABLE_NVME) {
++		phba->cfg_sg_seg_cnt = LPFC_MAX_NVME_SEG_CNT;
++		phba->cfg_iocb_cnt = 5;
++	}
++
+ 	/* Only embed PBDE for if_type 6, PBDE support requires xib be set */
+ 	if ((bf_get(lpfc_sli_intf_if_type, &phba->sli4_hba.sli_intf) !=
+ 	    LPFC_SLI_INTF_IF_TYPE_6) || (!bf_get(cfg_xib, mbx_sli4_parameters)))
 -- 
 2.13.7
 
