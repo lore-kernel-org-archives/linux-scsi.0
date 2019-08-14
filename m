@@ -2,155 +2,174 @@ Return-Path: <SRS0=JpCa=WK=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.3 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_IN_DEF_DKIM_WL autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C521C433FF
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Aug 2019 17:35:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DFE56C433FF
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Aug 2019 17:37:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 51809206C2
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Aug 2019 17:35:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A046120679
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Aug 2019 17:37:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="J/RX89Sf"
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="ekik86h2";
+	dkim=pass (1024-bit key) header.d=marvell.onmicrosoft.com header.i=@marvell.onmicrosoft.com header.b="KAqPpZHG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728443AbfHNRfW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 14 Aug 2019 13:35:22 -0400
-Received: from mail-ot1-f66.google.com ([209.85.210.66]:34602 "EHLO
-        mail-ot1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726865AbfHNRfV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Aug 2019 13:35:21 -0400
-Received: by mail-ot1-f66.google.com with SMTP id c7so11719962otp.1
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Aug 2019 10:35:21 -0700 (PDT)
+        id S1728188AbfHNRhs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 14 Aug 2019 13:37:48 -0400
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:33194 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1728128AbfHNRhs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 14 Aug 2019 13:37:48 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+        by mx0a-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id x7EGt5Y7014545;
+        Wed, 14 Aug 2019 10:37:44 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
+ subject : date : message-id : references : in-reply-to : content-type :
+ content-id : content-transfer-encoding : mime-version; s=pfpt0818;
+ bh=yLCHoJG+qOy1HmLLl7eSsvFiyBmMyfLMYONf2PfYs/Q=;
+ b=ekik86h2+nRgCdv9pCkV45QH2jpKyxKxGNznE4LH17DoaViIc1Hd8AKwnxDoR1YJDDtf
+ 5H7UTYSPD0w59Fgy4BNuzR0kr+ojh6+4hlg2lZ41g3+yuE9y2rhXOy9MyIVWZKcBfkU4
+ Je6i905/70YpxBsq4wVQO6/PfK2p+VzRALX5DVkAOIOEHoj85vhMusS2eTSuxtjmv/xu
+ SOJywOo4diZlph/NdTmgjeL5W+Bl+3V6EApEuAjRxI7uRoYnM3nETSaZaX4bpwnm/AS2
+ W4wgKdscPRdn0kVRCe115ldjs8kP4xWGeV3wsovQOG67O2xQ1sws+0+tELVfmO9bYFIv EA== 
+Received: from sc-exch02.marvell.com ([199.233.58.182])
+        by mx0a-0016f401.pphosted.com with ESMTP id 2ubfad0nk0-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
+        Wed, 14 Aug 2019 10:37:44 -0700
+Received: from SC-EXCH01.marvell.com (10.93.176.81) by SC-EXCH02.marvell.com
+ (10.93.176.82) with Microsoft SMTP Server (TLS) id 15.0.1367.3; Wed, 14 Aug
+ 2019 10:37:43 -0700
+Received: from NAM04-SN1-obe.outbound.protection.outlook.com (104.47.44.58) by
+ SC-EXCH01.marvell.com (10.93.176.81) with Microsoft SMTP Server (TLS) id
+ 15.0.1367.3 via Frontend Transport; Wed, 14 Aug 2019 10:37:43 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=R2yg00UFoxc76zXcXC6L9+FPhEPb1ox4jn0714ZEsYywHttwhvl5aRm5Gavh04A/BfIxvmGqV6D2H38mhTenmjPXgkhBf6EWYPPyt1R5BSHgK4jywE6Ez+rVLsQqoViEM1/UNFWcQdfB2XZ22SaFpdinjDl0gWPhNEurLIlDe6odH2G+ioN7th7MvLEY5GrBAIWTR4Qywo1dbqyIjY8GRQFvYMH4Sj6eFXhrVBbpZ0Q2w41KWnUmcz0rq0L22Mp4TXp3Xk+yPApED65lHIKFXIYAJXZrcYvqG6hpLx9YxMyRGO1F9hHC4F4ISWk6JloEZw09JLxowiOP+0Pey8JhWg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=yLCHoJG+qOy1HmLLl7eSsvFiyBmMyfLMYONf2PfYs/Q=;
+ b=Iejz+7KH7mpbAqI8F7/JQWPTNnlJ5Dp8LLKOPVX7KUZpIo1JIcwYozdoEa2+n/l/9Yv0i/QkHTBeSn9nvk5kfg3vCzruUNT21I0S3kIH6YZRmwn/h2WPsCWKYDn8Yz42BShBcou8UorVYBsnbgbpd8V6N/a1m7FMdnKovwrTySFvGWunOXEPEWbsEB2xUanwndO4ZWrnvAf+JxVDLd89pHToYRqFBYH7BkBH6+oX0WeL5cvM6aazio5tW+KrbydgaDCCbPJaL6EsFsJIOMS6iPpEdIVG/fQPL/hoAFKDPL16P2ixnn9RB4jnvoKYdKPNPT3Zn09BDQAme1QCBTPkPQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=marvell.com; dmarc=pass action=none header.from=marvell.com;
+ dkim=pass header.d=marvell.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=fOFmALBZr12NwAFqPH4bz0Snzh0MYv/4Oy/ALTRaZDA=;
-        b=J/RX89SfeoHR3tNRvGakoeZptZJRFt1aGCoCGLanpgjt6kzr4VpQHXuOeq/XIub7h3
-         dtaz/Elri9LmCCrz1cJasmWNTs/t3B2DIMrEzFtcDd5S3T5Z7qW0x6VQtzyPUT8xX0Dr
-         tpBoGVGOFhjt5t/gsPYut79dUKJV/zOUYBE0KuVDsrJAB63xmL9rkN5sW1B/mX17RfT8
-         s7uhch2pStQ0Q6kOmXjpTKpW17nIDOPnBvNsIuNp6/qFxNyKoezYoApT9paR+P+AAJP+
-         1YlKwUJfVlXI0OJvPm/r92hOejmHZfRewJNJIhMYRbj46Pt2aVShyKZOOJ23qQt+gnU7
-         ycMQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=fOFmALBZr12NwAFqPH4bz0Snzh0MYv/4Oy/ALTRaZDA=;
-        b=nVrGuCe1aHMFrHa2cx5wFv6qO9BrqyBBrv19ngswhqBIQ+jRcukzVwzucTio+1K1hc
-         McC+WZQCB4432NzTKmZC/huN9ShHmMk0Cx/imdzP91y2Yuh6vR+0HzJf6dPNLpcJ2YWq
-         NSnm6c901a6Ph1BzzcxkCz+hbzJYWgpsJJwxLKF8qrEYNsRDTOpqoWAsxGoYEeIf4J2e
-         Y7YuFsvVGn1xHlneVz3ZtZfHh79CXEwSASZcDMS1Q5EebcPDvDcy6dJzCoBCZCAdtode
-         cfpn2mFFtOZ7AK9qeZPk6jv+B+psN6JmVwaxMb73OhJttJuBCggrWcGHZH3C9UIN2cmm
-         tixw==
-X-Gm-Message-State: APjAAAUifoVB0yRZkHX+C60J74LyJ64VpoJSBU6T25Nyc2lCCftSNwB/
-        uB4TXR1jG/MwojwxBdFUqUzBlVDGDKxxTQD6kHDguA==
-X-Google-Smtp-Source: APXvYqyjolYUGNDko/RtbeKAldUB4mXc2vz0kBg/ilppWohKo/GY5H6usCosoBEpZ0JF43wMzvRMaDIYk6L2L/batEg=
-X-Received: by 2002:a05:6830:1e0f:: with SMTP id s15mr177324otr.231.1565804120275;
- Wed, 14 Aug 2019 10:35:20 -0700 (PDT)
+ d=marvell.onmicrosoft.com; s=selector2-marvell-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=yLCHoJG+qOy1HmLLl7eSsvFiyBmMyfLMYONf2PfYs/Q=;
+ b=KAqPpZHGV/pDZlWD8Opgz4xL/ELCGkvZQQJ6yFKs9wmCrFpV2EHQjbEwWMHkpHR/wXUsRDuhIzBJlHqO2HZPfDy9EAo8fkFBnckYZki+UadLaKvRQqVQyq5KO+Gp9O7U9C8bhxCRHgdTkimVAtP+SNadRgYpca0LgUlmq5ucWQU=
+Received: from MN2PR18MB2719.namprd18.prod.outlook.com (20.178.255.156) by
+ MN2PR18MB3359.namprd18.prod.outlook.com (10.255.238.88) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.2157.16; Wed, 14 Aug 2019 17:37:42 +0000
+Received: from MN2PR18MB2719.namprd18.prod.outlook.com
+ ([fe80::c8fc:cffe:3499:b43a]) by MN2PR18MB2719.namprd18.prod.outlook.com
+ ([fe80::c8fc:cffe:3499:b43a%6]) with mapi id 15.20.2157.021; Wed, 14 Aug 2019
+ 17:37:42 +0000
+From:   Himanshu Madhani <hmadhani@marvell.com>
+To:     Bill Kuzeja <William.Kuzeja@stratus.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+CC:     "qla2xxx-upstream@qlogic.com" <qla2xxx-upstream@qlogic.com>
+Subject: Re: [PATCH RESEND] qla2xxx: Fix gnl.l memory leak on adapter init
+ failure
+Thread-Topic: [PATCH RESEND] qla2xxx: Fix gnl.l memory leak on adapter init
+ failure
+Thread-Index: AQHVUqwu0P8klvCQ90Sc+sGzyO8AUKb6lMeA
+Date:   Wed, 14 Aug 2019 17:37:41 +0000
+Message-ID: <0C4501DB-B2B6-45B0-9282-9D6C55DADBC0@marvell.com>
+References: <1565792681-9641-1-git-send-email-William.Kuzeja@stratus.com>
+In-Reply-To: <1565792681-9641-1-git-send-email-William.Kuzeja@stratus.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+user-agent: Microsoft-MacOutlook/10.1b.0.190715
+x-originating-ip: [2600:1700:211:eb30:5871:9d72:f424:86ba]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 33e237dc-8bc8-4ecd-382e-08d720de1bf6
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(5600148)(711020)(4605104)(1401327)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(2017052603328)(7193020);SRVR:MN2PR18MB3359;
+x-ms-traffictypediagnostic: MN2PR18MB3359:
+x-microsoft-antispam-prvs: <MN2PR18MB335984423665B69CF06A8753D6AD0@MN2PR18MB3359.namprd18.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:5516;
+x-forefront-prvs: 01294F875B
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(4636009)(396003)(346002)(136003)(39860400002)(366004)(376002)(199004)(189003)(64756008)(6116002)(186003)(7736002)(8676002)(229853002)(305945005)(5660300002)(71190400001)(36756003)(71200400001)(6246003)(99286004)(25786009)(316002)(6512007)(102836004)(58126008)(478600001)(110136005)(6486002)(6436002)(53936002)(4326008)(86362001)(6506007)(81166006)(8936002)(76176011)(486006)(66446008)(91956017)(446003)(11346002)(46003)(2906002)(476003)(76116006)(2616005)(14444005)(66946007)(2501003)(256004)(33656002)(14454004)(66556008)(81156014)(66476007);DIR:OUT;SFP:1101;SCL:1;SRVR:MN2PR18MB3359;H:MN2PR18MB2719.namprd18.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+received-spf: None (protection.outlook.com: marvell.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam-message-info: 1ixWb6262h+NHzUk3IQDnZgEo0Ara4RNiTBH6LSiSCfUNB1VqUyu8aMaYUMBrKqeybCsPU8kzCX77Y7gF2XsQAVQXXX6h8EV2+1sQjItiu00M5UrfKcEAXQgHnKmPBBAOy/xoLCd+6yhPmyVF3+uL5xIbdNCQPquQ/0f4ZQ0mhWkygP9f0/aHPnO5oiyUfi9spESR6LwJWcAW5iqIq+x/d+Rnn1KhE8/pmqpViI/ZO088cSHiaNGv1Nnae7/X1lYzQ8LdGV7W18jU68CQuzxakZk6t0XBgyyAwm7gHzkpXm/eP94S4BfDW+jOOj+WLKRly1i0tnbx/db5jVtSDwqMbqp1tFb3odnHQhNIBeNIzvdPNAJWi+yyX8vLjtggA5n76tn4fMfVjeaRlMMlOaFOBnKJ2qJX8CH11XN3T3LCpk=
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <F1B40861C86D5D4D885DC15AB5486305@namprd18.prod.outlook.com>
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-References: <20180716122125.175792-1-maco@android.com> <20190813121733.52480-1-maennich@google.com>
- <20190813121733.52480-6-maennich@google.com> <CAGETcx_LQDdnaU+3JVGw+6=DJ8tRoQ00+3rD2gOiHHkWomt8jg@mail.gmail.com>
- <20190814125427.GA72826@google.com>
-In-Reply-To: <20190814125427.GA72826@google.com>
-From:   Saravana Kannan <saravanak@google.com>
-Date:   Wed, 14 Aug 2019 10:34:43 -0700
-Message-ID: <CAGETcx99Xx7aRPS-2Pw8h7O5D_+3T+1hbqja=p-gLN2wXApaEQ@mail.gmail.com>
-Subject: Re: [PATCH v2 05/10] module: add config option MODULE_ALLOW_MISSING_NAMESPACE_IMPORTS
-To:     Matthias Maennich <maennich@google.com>
-Cc:     LKML <linux-kernel@vger.kernel.org>, maco@android.com,
-        Android Kernel Team <kernel-team@android.com>, arnd@arndb.de,
-        geert@linux-m68k.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>, hpa@zytor.com,
-        jeyu@kernel.org,
-        "Joel Fernandes (Google)" <joel@joelfernandes.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-arch@vger.kernel.org, linux-kbuild@vger.kernel.org,
-        linux-m68k@lists.linux-m68k.org, linux-modules@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
-        lucas.de.marchi@gmail.com, Martijn Coenen <maco@google.com>,
-        michal.lkml@markovi.net, mingo@redhat.com, oneukum@suse.com,
-        Philippe Ombredanne <pombredanne@nexb.com>, sam@ravnborg.org,
-        Sandeep Patil <sspatil@google.com>, stern@rowland.harvard.edu,
-        tglx@linutronix.de, usb-storage@lists.one-eyed-alien.net,
-        x86@kernel.org, yamada.masahiro@socionext.com,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Johannes Weiner <hannes@cmpxchg.org>,
-        "Peter Zijlstra (Intel)" <peterz@infradead.org>,
-        Mauro Carvalho Chehab <mchehab+samsung@kernel.org>,
-        David Howells <dhowells@redhat.com>,
-        Patrick Bellasi <patrick.bellasi@arm.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Adrian Reber <adrian@lisas.de>,
-        Richard Guy Briggs <rgb@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
+X-MS-Exchange-CrossTenant-Network-Message-Id: 33e237dc-8bc8-4ecd-382e-08d720de1bf6
+X-MS-Exchange-CrossTenant-originalarrivaltime: 14 Aug 2019 17:37:41.9284
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 70e1fb47-1155-421d-87fc-2e58f638b6e0
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: u5qrUVttHZ5ue21Foc4dVbkoKKO4kKvtnxDWpJGx7ZPBMMlN+pXGQqSHBggdnW376JDCifCiGcsv3mCZyfkvhQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR18MB3359
+X-OriginatorOrg: marvell.com
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:5.22.84,1.0.8
+ definitions=2019-08-14_06:2019-08-14,2019-08-14 signatures=0
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Aug 14, 2019 at 5:54 AM 'Matthias Maennich' via kernel-team
-<kernel-team@android.com> wrote:
->
-> On Tue, Aug 13, 2019 at 01:15:44PM -0700, Saravana Kannan wrote:
-> >On Tue, Aug 13, 2019 at 5:19 AM 'Matthias Maennich' via kernel-team
-> ><kernel-team@android.com> wrote:
-> >>
-> >> If MODULE_ALLOW_MISSING_NAMESPACE_IMPORTS is enabled (default=n), the
-> >> requirement for modules to import all namespaces that are used by
-> >> the module is relaxed.
-> >>
-> >> Enabling this option effectively allows (invalid) modules to be loaded
-> >> while only a warning is emitted.
-> >>
-> >> Disabling this option keeps the enforcement at module loading time and
-> >> loading is denied if the module's imports are not satisfactory.
-> >>
-> >> Reviewed-by: Martijn Coenen <maco@android.com>
-> >> Signed-off-by: Matthias Maennich <maennich@google.com>
-> >> ---
-> >>  init/Kconfig    | 14 ++++++++++++++
-> >>  kernel/module.c | 11 +++++++++--
-> >>  2 files changed, 23 insertions(+), 2 deletions(-)
-> >>
-> >> diff --git a/init/Kconfig b/init/Kconfig
-> >> index bd7d650d4a99..b3373334cdf1 100644
-> >> --- a/init/Kconfig
-> >> +++ b/init/Kconfig
-> >> @@ -2119,6 +2119,20 @@ config MODULE_COMPRESS_XZ
-> >>
-> >>  endchoice
-> >>
-> >> +config MODULE_ALLOW_MISSING_NAMESPACE_IMPORTS
-> >> +       bool "Allow loading of modules with missing namespace imports"
-> >> +       default n
-> >> +       help
-> >> +         Symbols exported with EXPORT_SYMBOL_NS*() are considered exported in
-> >> +         a namespace. A module that makes use of a symbol exported with such a
-> >> +         namespace is required to import the namespace via MODULE_IMPORT_NS().
-> >> +         This option relaxes this requirement when loading a module.
-> >
-> >> While
-> >> +         technically there is no reason to enforce correct namespace imports,
-> >> +         it creates consistency between symbols defining namespaces and users
-> >> +         importing namespaces they make use of.
-> >
-> >I'm confused by this sentence. It sounds like it's the opposite of
-> >what the config is doing? Can you please reword it for clarify?
->
-> How about:
->
->   Symbols exported with EXPORT_SYMBOL_NS*() are considered exported in
->   a namespace. A module that makes use of a symbol exported with such a
->   namespace is required to import the namespace via MODULE_IMPORT_NS().
->   There is no technical reason to enforce correct namespace imports,
->   but it creates consistency between symbols defining namespaces and
->   users importing namespaces they make use of. This option relaxes this
->   requirement and lifts the enforcement when loading a module.
-
-That's a lot better. Especially moving the "This option relaxes..." to
-the bottom. Thanks.
-
--Saravana
+DQoNCu+7v09uIDgvMTQvMTksIDk6MjUgQU0sICJsaW51eC1zY3NpLW93bmVyQHZnZXIua2VybmVs
+Lm9yZyBvbiBiZWhhbGYgb2YgQmlsbCBLdXplamEiIDxsaW51eC1zY3NpLW93bmVyQHZnZXIua2Vy
+bmVsLm9yZyBvbiBiZWhhbGYgb2YgV2lsbGlhbS5LdXplamFAc3RyYXR1cy5jb20+IHdyb3RlOg0K
+DQogICAgSWYgSEJBIGluaXRpYWxpemF0aW9uIGZhaWxzIHVuZXhwZWN0ZWRseSAoZXhpdGluZyB2
+aWEgcHJvYmVfZmFpbGVkOiksIHdlIA0KICAgIG1heSBmYWlsIHRvIGZyZWUgdmhhLT5nbmwubC4g
+U28gdGhhdCB3ZSBkb24ndCBhdHRlbXB0IHRvIGRvdWJsZSBmcmVlLA0KICAgIHNldCB0aGlzIHBv
+aW50ZXIgdG8gTlVMTCBhZnRlciBhIGZyZWUgYW5kIGNoZWNrIGZvciBOVUxMIGF0IHByb2JlX2Zh
+aWxlZDoNCiAgICBzbyB3ZSBrbm93IHdoZXRoZXIgb3Igbm90IHRvIGNhbGwgZG1hX2ZyZWVfY29o
+ZXJlbnQuIA0KICAgIA0KICAgIFNpZ25lZC1vZmYtYnk6IEJpbGwgS3V6ZWphIDx3aWxsaWFtLmt1
+emVqYUBzdHJhdHVzLmNvbT4NCiAgICAtLS0NCiAgICAgZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxh
+X2F0dHIuYyB8ICAyICsrDQogICAgIGRyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9vcy5jICAgfCAx
+MSArKysrKysrKysrLQ0KICAgICAyIGZpbGVzIGNoYW5nZWQsIDEyIGluc2VydGlvbnMoKyksIDEg
+ZGVsZXRpb24oLSkNCiAgICANCiAgICBkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3FsYTJ4eHgv
+cWxhX2F0dHIuYyBiL2RyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9hdHRyLmMNCiAgICBpbmRleCA4
+ZDU2MGM1Li42YjdiMzkwIDEwMDY0NA0KICAgIC0tLSBhL2RyaXZlcnMvc2NzaS9xbGEyeHh4L3Fs
+YV9hdHRyLmMNCiAgICArKysgYi9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfYXR0ci5jDQogICAg
+QEAgLTI5NTYsNiArMjk1Niw4IEBAIHZvaWQgcWxhX2luc2VydF90Z3RfYXR0cnModm9pZCkNCiAg
+ICAgCWRtYV9mcmVlX2NvaGVyZW50KCZoYS0+cGRldi0+ZGV2LCB2aGEtPmdubC5zaXplLCB2aGEt
+PmdubC5sLA0KICAgICAJICAgIHZoYS0+Z25sLmxkbWEpOw0KICAgICANCiAgICArCXZoYS0+Z25s
+LmwgPSBOVUxMOw0KICAgICsNCiAgICAgCXZmcmVlKHZoYS0+c2Nhbi5sKTsNCiAgICAgDQogICAg
+IAlpZiAodmhhLT5xcGFpciAmJiB2aGEtPnFwYWlyLT52cF9pZHggPT0gdmhhLT52cF9pZHgpIHsN
+CiAgICBkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX29zLmMgYi9kcml2ZXJz
+L3Njc2kvcWxhMnh4eC9xbGFfb3MuYw0KICAgIGluZGV4IDJlNThjZmYuLjk4ZTYwYTMgMTAwNjQ0
+DQogICAgLS0tIGEvZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX29zLmMNCiAgICArKysgYi9kcml2
+ZXJzL3Njc2kvcWxhMnh4eC9xbGFfb3MuYw0KICAgIEBAIC0zNDQwLDYgKzM0NDAsMTIgQEAgc3Rh
+dGljIHZvaWQgcWxhMngwMF9pb2NiX3dvcmtfZm4oc3RydWN0IHdvcmtfc3RydWN0ICp3b3JrKQ0K
+ICAgICAJcmV0dXJuIDA7DQogICAgIA0KICAgICBwcm9iZV9mYWlsZWQ6DQogICAgKwlpZiAoYmFz
+ZV92aGEtPmdubC5sKSB7DQogICAgKwkJZG1hX2ZyZWVfY29oZXJlbnQoJmhhLT5wZGV2LT5kZXYs
+IGJhc2VfdmhhLT5nbmwuc2l6ZSwNCiAgICArCQkJCWJhc2VfdmhhLT5nbmwubCwgYmFzZV92aGEt
+PmdubC5sZG1hKTsNCiAgICArCQliYXNlX3ZoYS0+Z25sLmwgPSBOVUxMOw0KICAgICsJfQ0KICAg
+ICsNCiAgICAgCWlmIChiYXNlX3ZoYS0+dGltZXJfYWN0aXZlKQ0KICAgICAJCXFsYTJ4MDBfc3Rv
+cF90aW1lcihiYXNlX3ZoYSk7DQogICAgIAliYXNlX3ZoYS0+ZmxhZ3Mub25saW5lID0gMDsNCiAg
+ICBAQCAtMzY3Myw3ICszNjc5LDcgQEAgc3RhdGljIHZvaWQgcWxhMngwMF9pb2NiX3dvcmtfZm4o
+c3RydWN0IHdvcmtfc3RydWN0ICp3b3JrKQ0KICAgICAJaWYgKCFhdG9taWNfcmVhZCgmcGRldi0+
+ZW5hYmxlX2NudCkpIHsNCiAgICAgCQlkbWFfZnJlZV9jb2hlcmVudCgmaGEtPnBkZXYtPmRldiwg
+YmFzZV92aGEtPmdubC5zaXplLA0KICAgICAJCSAgICBiYXNlX3ZoYS0+Z25sLmwsIGJhc2Vfdmhh
+LT5nbmwubGRtYSk7DQogICAgLQ0KICAgICsJCWJhc2VfdmhhLT5nbmwubCA9IE5VTEw7DQogICAg
+IAkJc2NzaV9ob3N0X3B1dChiYXNlX3ZoYS0+aG9zdCk7DQogICAgIAkJa2ZyZWUoaGEpOw0KICAg
+ICAJCXBjaV9zZXRfZHJ2ZGF0YShwZGV2LCBOVUxMKTsNCiAgICBAQCAtMzcxMyw2ICszNzE5LDgg
+QEAgc3RhdGljIHZvaWQgcWxhMngwMF9pb2NiX3dvcmtfZm4oc3RydWN0IHdvcmtfc3RydWN0ICp3
+b3JrKQ0KICAgICAJZG1hX2ZyZWVfY29oZXJlbnQoJmhhLT5wZGV2LT5kZXYsDQogICAgIAkJYmFz
+ZV92aGEtPmdubC5zaXplLCBiYXNlX3ZoYS0+Z25sLmwsIGJhc2VfdmhhLT5nbmwubGRtYSk7DQog
+ICAgIA0KICAgICsJYmFzZV92aGEtPmdubC5sID0gTlVMTDsNCiAgICArDQogICAgIAl2ZnJlZShi
+YXNlX3ZoYS0+c2Nhbi5sKTsNCiAgICAgDQogICAgIAlpZiAoSVNfUUxBRlgwMChoYSkpDQogICAg
+QEAgLTQ4MTYsNiArNDgyNCw3IEBAIHN0cnVjdCBzY3NpX3FsYV9ob3N0ICpxbGEyeDAwX2NyZWF0
+ZV9ob3N0KHN0cnVjdCBzY3NpX2hvc3RfdGVtcGxhdGUgKnNodCwNCiAgICAgCQkgICAgIkFsbG9j
+IGZhaWxlZCBmb3Igc2NhbiBkYXRhYmFzZS5cbiIpOw0KICAgICAJCWRtYV9mcmVlX2NvaGVyZW50
+KCZoYS0+cGRldi0+ZGV2LCB2aGEtPmdubC5zaXplLA0KICAgICAJCSAgICB2aGEtPmdubC5sLCB2
+aGEtPmdubC5sZG1hKTsNCiAgICArCQl2aGEtPmdubC5sID0gTlVMTDsNCiAgICAgCQlzY3NpX3Jl
+bW92ZV9ob3N0KHZoYS0+aG9zdCk7DQogICAgIAkJcmV0dXJuIE5VTEw7DQogICAgIAl9DQogICAg
+LS0gDQogICAgMS44LjMuMQ0KDQpUaGFua3MgZm9yIHJlc2VuZCBCaWxsDQogICAgDQpQYXRjaCBM
+b29rcyBHb29kLiANCg0KQWNrZWQtYnk6IEhpbWFuc2h1IE1hZGhhbmkgPGhtYWRoYW5pQG1hcnZl
+bGwuY29tPg0KDQoNCg0K
