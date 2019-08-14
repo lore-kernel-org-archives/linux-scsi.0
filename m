@@ -8,59 +8,59 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 67CFDC32753
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Aug 2019 23:57:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CDD9C32753
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Aug 2019 23:57:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2EDE920866
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Aug 2019 23:57:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 317DF20866
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Aug 2019 23:57:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="qCaUFjB1"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bC4evMDG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729786AbfHNX5l (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 14 Aug 2019 19:57:41 -0400
-Received: from mail-pg1-f195.google.com ([209.85.215.195]:45991 "EHLO
-        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729318AbfHNX5k (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Aug 2019 19:57:40 -0400
-Received: by mail-pg1-f195.google.com with SMTP id o13so403521pgp.12
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Aug 2019 16:57:39 -0700 (PDT)
+        id S1729791AbfHNX5m (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 14 Aug 2019 19:57:42 -0400
+Received: from mail-pf1-f195.google.com ([209.85.210.195]:34988 "EHLO
+        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729789AbfHNX5m (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Aug 2019 19:57:42 -0400
+Received: by mail-pf1-f195.google.com with SMTP id d85so349454pfd.2
+        for <linux-scsi@vger.kernel.org>; Wed, 14 Aug 2019 16:57:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=Hs2Gwj96c1P3h9nEEsYoOT+h2vRm5sFoNlI0mg43RMM=;
-        b=qCaUFjB1SQD6hg09izxLHBhFEJAukhnEtNiQw54HFpKwiGfvnQTRb2KSSHxseefm3y
-         0T756HPC4LYvstA7PfGlgxtwVBIG5eCyc4bv6Sz5ZiaqGlSBj8Yit+BYOwrTbwiAnnH0
-         sVtyIP/cIPbT0zxFmLqIn68bsrvQ/ee81sXdMjbsLyuzLKKkasIqrT9d1+qADVoqzVex
-         XQiau4J+wUFvRxYSkC4ATPt9rZXbPF34LXm8q3VqHK+3yVP6ixDLKw1MZoENm6tvmRrP
-         CuyWFDZqA1EoEeZcbWjw8iHEAhpga+SOHtiDR3zPzcjpoLtuH/e1jqt9iNq7Lcc8Q27J
-         ApbQ==
+        bh=Qlu9+Zcju5gXuof8NB0KJt0LmEqjWE1vcl8hheeb/wk=;
+        b=bC4evMDGr1C8Z147h+71q9yhHkqI/HvCGv5o4G9GsWm5EV1jOqJdIG/qPbkZ0i7aO8
+         BsUWBfSbd2A2AyV2Q+C9VlFpqdk1CV9fWbiwcDvnWzbrlNQdHPzMuy6IXipDnGc67mEr
+         SlI364GR2rL25kNhEeyXAE0NRJtrJ571hzQX7u23shiUIgN5+kLZpJNrtHxo2dXng1gg
+         i/ghssN79kn6ZbMxaFPyW1WpsXHx6akQxZTsHZuyjbDUN3VF2ntHYFY40Fbi7Ep6+Y2r
+         fogjcrhAEHphw1ksw85SdKoiY4X0vyavJ/uVcLslx9+EFuH4XK/ro0SQmxAmzc7RBm98
+         zXyA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=Hs2Gwj96c1P3h9nEEsYoOT+h2vRm5sFoNlI0mg43RMM=;
-        b=mWO3YK+Xrdvjn4eJb+0t0NhnooVQAfrLY66BiX4L5tJ1n7u08YtJLyDSAfmFbg3VeB
-         o/vX43vtAcS+eI/r2yc+IWXzAcKrum0FsPp6zziR5EKM/JGTyDv59bQRuh5L+lQ0pWAB
-         7gqJGpLYJTZUGmB4oz1iKiegwiRKdBcipiqsmgGq4xiRwvV7dNfnRuAmogtnk/bsBQHi
-         6PkrWYAVCatzod9YjUR8wqOEijjIYAquV0Rq+PmkUoCZUIdV6bIEQaPXQe/BMzwkHgsN
-         cJzUwZB9O0XmnWaAG1S1NHKvvvL12f1i5vzLqFdsPfxL31o/xZFXdExQwaYqDAOiYSXo
-         yQEQ==
-X-Gm-Message-State: APjAAAWyh8YzR9eduaGDmUUt9asuXnsBH8Q8sNWVKLis6zjTc18MFLJQ
-        5RxT5IvsiPZn/sbcAi/j/+Lqhk+T
-X-Google-Smtp-Source: APXvYqwsPnsTvoWqwhE6NOgeGUHOb93mSB00wz/UTCq7c1ZfYr/OQInJELuWRkFIPqPIxq6DIjcgwg==
-X-Received: by 2002:a62:be04:: with SMTP id l4mr2478581pff.77.1565827059390;
-        Wed, 14 Aug 2019 16:57:39 -0700 (PDT)
+        bh=Qlu9+Zcju5gXuof8NB0KJt0LmEqjWE1vcl8hheeb/wk=;
+        b=b/jsoec8e+plcQnhx8bDqgOej8hqMiCr6ikheILaNk4+rWrKC+O9SLbpC2H7jymh7n
+         Ng7bZKR8+FvU/LgOeyouxUGFIZGF8folBSU+csB5NQmLUsWNG5V2Uoqj4SE96GKMsCT6
+         ZCaSLPx0YBJMdBezAMQwtT5e9HT6qY1lMgIoEBQUglhcyRfGri+K3JF2U22fvUQWnDaz
+         qDZ8NO2A/AXpiQx6ZkYMH3OlDkdUlr+sMxLcjOfR2onNqxaCLF3mprEgHGu9HodAAZeW
+         kYvC/mf0ahS7YXm3vLVthjbpEcXIgnJ+tfhRCaOue9eI6OHr6qTUdaYXNzbVtqB21PuB
+         ZFSA==
+X-Gm-Message-State: APjAAAWnJk8B+ET59DG+7yjQ/QqE9PksGRxLB+Mh0HlZnbKk/Jz4xzPk
+        UIJZ9klkACfmJ98LvigZM+SM4O7J
+X-Google-Smtp-Source: APXvYqw2QoLbBZU+CsNE8aNOhOJ03FVfykzvf2aT8zI1T3cIhRWASrMRcH9OLWB+6eJ4YeRA4u5wRQ==
+X-Received: by 2002:a63:69c1:: with SMTP id e184mr1338242pgc.198.1565827061422;
+        Wed, 14 Aug 2019 16:57:41 -0700 (PDT)
 Received: from pallmd1.broadcom.com ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id k22sm987299pfk.157.2019.08.14.16.57.38
+        by smtp.gmail.com with ESMTPSA id k22sm987299pfk.157.2019.08.14.16.57.40
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-        Wed, 14 Aug 2019 16:57:39 -0700 (PDT)
+        Wed, 14 Aug 2019 16:57:41 -0700 (PDT)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Dick Kennedy <dick.kennedy@broadcom.com>
-Subject: [PATCH 22/42] lpfc: Fix deadlock on host_lock during cable pulls
-Date:   Wed, 14 Aug 2019 16:56:52 -0700
-Message-Id: <20190814235712.4487-23-jsmart2021@gmail.com>
+Subject: [PATCH 25/42] lpfc: Fix hang when downloading fw on port enabled for nvme
+Date:   Wed, 14 Aug 2019 16:56:55 -0700
+Message-Id: <20190814235712.4487-26-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.13.7
 In-Reply-To: <20190814235712.4487-1-jsmart2021@gmail.com>
 References: <20190814235712.4487-1-jsmart2021@gmail.com>
@@ -69,196 +69,153 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-During cable pull testing a deadlock was seen between
-lpfc_nlp_counters() vs lpfc_mbox_process_link_up() vs
-lpfc_work_list_done(). They are all waiting on the
-shost->host_lock.
+As part of firmware download, the adapter is reset. On the adapter
+the reset causes the function to stop and all outstanding io is
+terminated (without responses). The reset path then starts
+teardown of the adapter, starting with deregistration of the remote
+ports with the nvme-fc transport. The local port is then deregistered
+and the driver waits for local port deregistration. This never finishes.
 
-Issue is all of these cases raise irq when taking out
-the lock but use spin_unlock_irq() when unlocking. The
-unlock path is will unconditionally re-enable interrupts
-in cases where irq state should be preserved. The re-enablement
-allowed the other paths to execute which then causes the
-deadlock.
+The remote port deregistrations terminated the nvme controllers, causing
+them to send aborts for all the outstanding io. The aborts were serviced
+in the driver, but stalled due to its state. The nvme layer then stops
+to reclaim it's outstanding io before continuing.  The io must be
+returned before the reset on the controller is deemed complete and the
+controller delete performed.  The remote port deregistration won't
+complete until all the controllers are terminated. And the local port
+deregistration won't complete until all controllers and remote ports
+are terminated. Thus things hang.
 
-Fix by converting the lock/unlock to irqsave/irqrestore.
+The issue is the reset which stopped the adapter also stopped all the
+responses that would drive i/o completions, and the aborts were also
+stopped that stopped i/o completions. The driver, when resetting the
+adapter like this, needs to be generating the completions as part of
+the adapter reset so that I/O complete (in error), and any aborts
+are not queued.
+
+Fix by adding flush routines whenever the adapter port has been reset
+or discovered in error. The flush routines will generate the completions
+for the scsi and nvme outstanding io. The abort ios, if waiting, will
+be caught and flushed as well.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_hbadisc.c | 47 ++++++++++++++++++++++------------------
- 1 file changed, 26 insertions(+), 21 deletions(-)
+ drivers/scsi/lpfc/lpfc_crtn.h |  1 +
+ drivers/scsi/lpfc/lpfc_init.c |  4 ++++
+ drivers/scsi/lpfc/lpfc_nvme.c | 47 +++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/lpfc/lpfc_sli.c  |  9 ++++++---
+ 4 files changed, 58 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
-index a47db99784ab..44e779e4c885 100644
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
-@@ -118,6 +118,7 @@ lpfc_dev_loss_tmo_callbk(struct fc_rport *rport)
- 	struct lpfc_work_evt *evtp;
- 	int  put_node;
- 	int  put_rport;
-+	unsigned long iflags;
+diff --git a/drivers/scsi/lpfc/lpfc_crtn.h b/drivers/scsi/lpfc/lpfc_crtn.h
+index 68e9f96242d3..bee27bb7123c 100644
+--- a/drivers/scsi/lpfc/lpfc_crtn.h
++++ b/drivers/scsi/lpfc/lpfc_crtn.h
+@@ -595,6 +595,7 @@ void lpfc_release_io_buf(struct lpfc_hba *phba, struct lpfc_io_buf *ncmd,
+ 			 struct lpfc_sli4_hdw_queue *qp);
+ void lpfc_nvme_cmd_template(void);
+ void lpfc_nvmet_cmd_template(void);
++void lpfc_nvme_cancel_iocb(struct lpfc_hba *phba, struct lpfc_iocbq *pwqeIn);
+ extern int lpfc_enable_nvmet_cnt;
+ extern unsigned long long lpfc_enable_nvmet[];
+ extern int lpfc_no_hba_reset_cnt;
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index c580d512a3db..98db1f7e536e 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -1546,6 +1546,8 @@ lpfc_sli4_offline_eratt(struct lpfc_hba *phba)
+ 	spin_unlock_irq(&phba->hbalock);
  
- 	rdata = rport->dd_data;
- 	ndlp = rdata->pnode;
-@@ -170,22 +171,22 @@ lpfc_dev_loss_tmo_callbk(struct fc_rport *rport)
- 	}
- 
- 	shost = lpfc_shost_from_vport(vport);
--	spin_lock_irq(shost->host_lock);
-+	spin_lock_irqsave(shost->host_lock, iflags);
- 	ndlp->nlp_flag |= NLP_IN_DEV_LOSS;
--	spin_unlock_irq(shost->host_lock);
-+	spin_unlock_irqrestore(shost->host_lock, iflags);
- 
- 	/* We need to hold the node by incrementing the reference
- 	 * count until this queued work is done
- 	 */
- 	evtp->evt_arg1  = lpfc_nlp_get(ndlp);
- 
--	spin_lock_irq(&phba->hbalock);
-+	spin_lock_irqsave(&phba->hbalock, iflags);
- 	if (evtp->evt_arg1) {
- 		evtp->evt = LPFC_EVT_DEV_LOSS;
- 		list_add_tail(&evtp->evt_listp, &phba->work_list);
- 		lpfc_worker_wake_up(phba);
- 	}
--	spin_unlock_irq(&phba->hbalock);
-+	spin_unlock_irqrestore(&phba->hbalock, iflags);
- 
- 	return;
- }
-@@ -212,14 +213,15 @@ lpfc_dev_loss_tmo_handler(struct lpfc_nodelist *ndlp)
- 	int  put_node;
- 	int warn_on = 0;
- 	int fcf_inuse = 0;
-+	unsigned long iflags;
- 
- 	rport = ndlp->rport;
- 	vport = ndlp->vport;
- 	shost = lpfc_shost_from_vport(vport);
- 
--	spin_lock_irq(shost->host_lock);
-+	spin_lock_irqsave(shost->host_lock, iflags);
- 	ndlp->nlp_flag &= ~NLP_IN_DEV_LOSS;
--	spin_unlock_irq(shost->host_lock);
-+	spin_unlock_irqrestore(shost->host_lock, iflags);
- 
- 	if (!rport)
- 		return fcf_inuse;
-@@ -3115,8 +3117,9 @@ lpfc_mbx_process_link_up(struct lpfc_hba *phba, struct lpfc_mbx_read_top *la)
- 	int rc;
- 	struct fcf_record *fcf_record;
- 	uint32_t fc_flags = 0;
-+	unsigned long iflags;
- 
--	spin_lock_irq(&phba->hbalock);
-+	spin_lock_irqsave(&phba->hbalock, iflags);
- 	phba->fc_linkspeed = bf_get(lpfc_mbx_read_top_link_spd, la);
- 
- 	if (!(phba->hba_flag & HBA_FCOE_MODE)) {
-@@ -3213,12 +3216,12 @@ lpfc_mbx_process_link_up(struct lpfc_hba *phba, struct lpfc_mbx_read_top *la)
- 		vport->fc_myDID = phba->fc_pref_DID;
- 		fc_flags |= FC_LBIT;
- 	}
--	spin_unlock_irq(&phba->hbalock);
-+	spin_unlock_irqrestore(&phba->hbalock, iflags);
- 
- 	if (fc_flags) {
--		spin_lock_irq(shost->host_lock);
-+		spin_lock_irqsave(shost->host_lock, iflags);
- 		vport->fc_flag |= fc_flags;
--		spin_unlock_irq(shost->host_lock);
-+		spin_unlock_irqrestore(shost->host_lock, iflags);
- 	}
- 
- 	lpfc_linkup(phba);
-@@ -3292,22 +3295,22 @@ lpfc_mbx_process_link_up(struct lpfc_hba *phba, struct lpfc_mbx_read_top *la)
- 		 * The driver is expected to do FIP/FCF. Call the port
- 		 * and get the FCF Table.
- 		 */
--		spin_lock_irq(&phba->hbalock);
-+		spin_lock_irqsave(&phba->hbalock, iflags);
- 		if (phba->hba_flag & FCF_TS_INPROG) {
--			spin_unlock_irq(&phba->hbalock);
-+			spin_unlock_irqrestore(&phba->hbalock, iflags);
- 			return;
+ 	lpfc_offline_prep(phba, LPFC_MBX_NO_WAIT);
++	lpfc_sli_flush_fcp_rings(phba);
++	lpfc_sli_flush_nvme_rings(phba);
+ 	lpfc_offline(phba);
+ 	lpfc_hba_down_post(phba);
+ 	lpfc_unblock_mgmt_io(phba);
+@@ -1807,6 +1809,8 @@ lpfc_sli4_port_sta_fn_reset(struct lpfc_hba *phba, int mbx_action,
+ 				"2887 Reset Needed: Attempting Port "
+ 				"Recovery...\n");
+ 	lpfc_offline_prep(phba, mbx_action);
++	lpfc_sli_flush_fcp_rings(phba);
++	lpfc_sli_flush_nvme_rings(phba);
+ 	lpfc_offline(phba);
+ 	/* release interrupt for possible resource change */
+ 	lpfc_sli4_disable_intr(phba);
+diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
+index 103708503592..c7f5b50c3820 100644
+--- a/drivers/scsi/lpfc/lpfc_nvme.c
++++ b/drivers/scsi/lpfc/lpfc_nvme.c
+@@ -2668,3 +2668,50 @@ lpfc_nvme_wait_for_io_drain(struct lpfc_hba *phba)
  		}
- 		/* This is the initial FCF discovery scan */
- 		phba->fcf.fcf_flag |= FCF_INIT_DISC;
--		spin_unlock_irq(&phba->hbalock);
-+		spin_unlock_irqrestore(&phba->hbalock, iflags);
- 		lpfc_printf_log(phba, KERN_INFO, LOG_FIP | LOG_DISCOVERY,
- 				"2778 Start FCF table scan at linkup\n");
- 		rc = lpfc_sli4_fcf_scan_read_fcf_rec(phba,
- 						     LPFC_FCOE_FCF_GET_FIRST);
- 		if (rc) {
--			spin_lock_irq(&phba->hbalock);
-+			spin_lock_irqsave(&phba->hbalock, iflags);
- 			phba->fcf.fcf_flag &= ~FCF_INIT_DISC;
--			spin_unlock_irq(&phba->hbalock);
-+			spin_unlock_irqrestore(&phba->hbalock, iflags);
- 			goto out;
- 		}
- 		/* Reset FCF roundrobin bmask for new discovery */
-@@ -3366,6 +3369,7 @@ lpfc_mbx_cmpl_read_topology(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
- 	MAILBOX_t *mb = &pmb->u.mb;
- 	struct lpfc_dmabuf *mp = (struct lpfc_dmabuf *)(pmb->ctx_buf);
- 	uint8_t attn_type;
-+	unsigned long iflags;
- 
- 	/* Unblock ELS traffic */
- 	pring = lpfc_phba_elsring(phba);
-@@ -3387,12 +3391,12 @@ lpfc_mbx_cmpl_read_topology(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
- 
- 	memcpy(&phba->alpa_map[0], mp->virt, 128);
- 
--	spin_lock_irq(shost->host_lock);
-+	spin_lock_irqsave(shost->host_lock, iflags);
- 	if (bf_get(lpfc_mbx_read_top_pb, la))
- 		vport->fc_flag |= FC_BYPASSED_MODE;
- 	else
- 		vport->fc_flag &= ~FC_BYPASSED_MODE;
--	spin_unlock_irq(shost->host_lock);
-+	spin_unlock_irqrestore(shost->host_lock, iflags);
- 
- 	if (phba->fc_eventTag <= la->eventTag) {
- 		phba->fc_stat.LinkMultiEvent++;
-@@ -3403,12 +3407,12 @@ lpfc_mbx_cmpl_read_topology(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
- 
- 	phba->fc_eventTag = la->eventTag;
- 	if (phba->sli_rev < LPFC_SLI_REV4) {
--		spin_lock_irq(&phba->hbalock);
-+		spin_lock_irqsave(&phba->hbalock, iflags);
- 		if (bf_get(lpfc_mbx_read_top_mm, la))
- 			phba->sli.sli_flag |= LPFC_MENLO_MAINT;
- 		else
- 			phba->sli.sli_flag &= ~LPFC_MENLO_MAINT;
--		spin_unlock_irq(&phba->hbalock);
-+		spin_unlock_irqrestore(&phba->hbalock, iflags);
  	}
- 
- 	phba->link_events++;
-@@ -4196,8 +4200,9 @@ static void
- lpfc_nlp_counters(struct lpfc_vport *vport, int state, int count)
- {
- 	struct Scsi_Host *shost = lpfc_shost_from_vport(vport);
-+	unsigned long iflags;
- 
--	spin_lock_irq(shost->host_lock);
-+	spin_lock_irqsave(shost->host_lock, iflags);
- 	switch (state) {
- 	case NLP_STE_UNUSED_NODE:
- 		vport->fc_unused_cnt += count;
-@@ -4227,7 +4232,7 @@ lpfc_nlp_counters(struct lpfc_vport *vport, int state, int count)
- 			vport->fc_npr_cnt += count;
- 		break;
- 	}
--	spin_unlock_irq(shost->host_lock);
-+	spin_unlock_irqrestore(shost->host_lock, iflags);
  }
++
++void
++lpfc_nvme_cancel_iocb(struct lpfc_hba *phba, struct lpfc_iocbq *pwqeIn)
++{
++#if (IS_ENABLED(CONFIG_NVME_FC))
++	struct lpfc_io_buf *lpfc_ncmd;
++	struct nvmefc_fcp_req *nCmd;
++	struct lpfc_nvme_fcpreq_priv *freqpriv;
++
++	if (!pwqeIn->context1) {
++		lpfc_sli_release_iocbq(phba, pwqeIn);
++		return;
++	}
++	/* For abort iocb just return, IO iocb will do a done call */
++	if (bf_get(wqe_cmnd, &pwqeIn->wqe.gen_req.wqe_com) ==
++	    CMD_ABORT_XRI_CX) {
++		lpfc_sli_release_iocbq(phba, pwqeIn);
++		return;
++	}
++	lpfc_ncmd = (struct lpfc_io_buf *)pwqeIn->context1;
++
++	spin_lock(&lpfc_ncmd->buf_lock);
++	if (!lpfc_ncmd->nvmeCmd) {
++		spin_unlock(&lpfc_ncmd->buf_lock);
++		lpfc_release_nvme_buf(phba, lpfc_ncmd);
++		return;
++	}
++
++	nCmd = lpfc_ncmd->nvmeCmd;
++	lpfc_printf_log(phba, KERN_INFO, LOG_NVME_IOERR,
++			"6194 NVME Cancel xri %x\n",
++			lpfc_ncmd->cur_iocbq.sli4_xritag);
++
++	nCmd->transferred_length = 0;
++	nCmd->rcv_rsplen = 0;
++	nCmd->status = NVME_SC_INTERNAL;
++	freqpriv = nCmd->private;
++	freqpriv->nvme_buf = NULL;
++	lpfc_ncmd->nvmeCmd = NULL;
++
++	spin_unlock(&lpfc_ncmd->buf_lock);
++	nCmd->done(nCmd);
++
++	/* Call release with XB=1 to queue the IO into the abort list. */
++	lpfc_release_nvme_buf(phba, lpfc_ncmd);
++#endif
++}
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index ca6988ae8924..6ac6620aab00 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -1391,9 +1391,12 @@ lpfc_sli_cancel_iocbs(struct lpfc_hba *phba, struct list_head *iocblist,
  
- static void
+ 	while (!list_empty(iocblist)) {
+ 		list_remove_head(iocblist, piocb, struct lpfc_iocbq, list);
+-		if (!piocb->iocb_cmpl)
+-			lpfc_sli_release_iocbq(phba, piocb);
+-		else {
++		if (!piocb->iocb_cmpl) {
++			if (piocb->iocb_flag & LPFC_IO_NVME)
++				lpfc_nvme_cancel_iocb(phba, piocb);
++			else
++				lpfc_sli_release_iocbq(phba, piocb);
++		} else {
+ 			piocb->iocb.ulpStatus = ulpstatus;
+ 			piocb->iocb.un.ulpWord[4] = ulpWord4;
+ 			(piocb->iocb_cmpl) (phba, piocb, piocb);
 -- 
 2.13.7
 
