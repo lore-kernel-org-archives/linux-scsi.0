@@ -8,59 +8,59 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 261F9C433FF
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Aug 2019 23:57:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE6A4C32753
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Aug 2019 23:57:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E988320866
+	by mail.kernel.org (Postfix) with ESMTP id BDE912086C
 	for <linux-scsi@archiver.kernel.org>; Wed, 14 Aug 2019 23:57:32 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="oWm7eCS8"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XzGieJDQ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729103AbfHNX5b (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 14 Aug 2019 19:57:31 -0400
-Received: from mail-pl1-f194.google.com ([209.85.214.194]:40894 "EHLO
-        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728983AbfHNX5a (ORCPT
+        id S1729104AbfHNX5c (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 14 Aug 2019 19:57:32 -0400
+Received: from mail-pf1-f195.google.com ([209.85.210.195]:45359 "EHLO
+        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728947AbfHNX5a (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Aug 2019 19:57:30 -0400
-Received: by mail-pl1-f194.google.com with SMTP id a93so329544pla.7
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Aug 2019 16:57:29 -0700 (PDT)
+Received: by mail-pf1-f195.google.com with SMTP id w26so316515pfq.12
+        for <linux-scsi@vger.kernel.org>; Wed, 14 Aug 2019 16:57:30 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=NAVHtSROOA6grjVPNxByNxQSRFAr4kBJBub/nRw1Q2w=;
-        b=oWm7eCS8W/mR1h/lWJVb2mJRU+hp36ytMzKBmlh+leJIGXsQoxpCtB2Hpxpfi5nAs3
-         8ZcqcascBYvEbMuUU6oKgjUwVeQWVkUyb8CAYYWG61JGvPpnmSTCPa0l8BtNELrVlkDb
-         QhPpJj0Xx3Qz/QrS3SsWq6J2S9YavB5y2LHedx/q93GbKtJr5zF8/pwvmNaQTeGelDqG
-         guc+PT5UU3yxRjqERMSTLUw1JeBcTQqdmWXsKm0v+Xh2y6nzD8IYvtBawpIfbJDvvvK8
-         9qO2CC9alJf0uSYZRuTzWX11zKTxxxQmau+m2fY1fhWzanUYZ8JwZj0dL9hEvjTRQ7Kd
-         TIjA==
+        bh=N/3rb523l7fqHLZw22JXzBCXMrIQL4Ktlwfk0iVLa38=;
+        b=XzGieJDQm+PhYmOqFFIaSTpQEjCXHCkDLKrSiQATRzsujQrKOao5v0XS16Kk5WyaaA
+         CcxaRlAxhfHnjmFcry/PF5IWlQhNL56yuBrUaQmQVPMWJoINMS0HXUhH85DzMkUrxN0W
+         gzxWaylaqe7dO2ZdIsIBRbXX1rAgvne1Waz68CFk6VTpGlqc6OGXWPrzid1ULHj2LXpJ
+         AlVkjfzx+NNWObts+F6sN+RJ1Kdr5IdbIvhJ1TS9jH5mzyRZ63mZrW3RLulm+XFv+86+
+         Fc9IbXjIasCN1I/kTgAElq7GTnpv5FVkeOl8y3J/S+4BSPUU3ydRbG3kktq/PVwMvKRe
+         7fuA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=NAVHtSROOA6grjVPNxByNxQSRFAr4kBJBub/nRw1Q2w=;
-        b=KYk0LVq288eR8BacOMDKMBL2Gv+ItgAoHsEFDqfZvQvbdE6McpvCU34U9KFe4zQf3r
-         /ZqstD0oZahjWUlSuiPAW1GtNyeC/XaCuOK8SX+1BEw/bYLk0fhKAgu4qDX0HENYV4xD
-         9Sh0M3c8Lr1MX36QveJ+DX70G4kDcjFwmOLJLZ8G5zhTU4wUc0wbHmqwIo6T81LTw38f
-         D8Fp2GmjO4yzRqheY6QRIWaasdio14HvNCIix7EBWoXguvPqfkjRfnVGTlyU17/xzuSw
-         vp6rFwwG/cdXAtD0kviek9uDyKJxtwkg6kAJ/vRyKnDYK6Cu2NnYKZZ5JljSMwjHHZwZ
-         gBqQ==
-X-Gm-Message-State: APjAAAVcx8FdUE8pJoTLlRqSb2JbsVZzj6CopGEuqvEv5zxExSIM1MWC
-        XdGVgI5QP0NaO3aqJVcFbp7fIh/6
-X-Google-Smtp-Source: APXvYqxnUL1c0VXKdip/TjJ/nKiX5hdlIpEunEIW1XY/Jg5gQEuEjAGXzusFcH2DH27troZwu6tqoQ==
-X-Received: by 2002:a17:902:ba81:: with SMTP id k1mr1846767pls.213.1565827049225;
+        bh=N/3rb523l7fqHLZw22JXzBCXMrIQL4Ktlwfk0iVLa38=;
+        b=WgbM1/9jrgByoHzcZRl4Yc0pEkJE/Z9yUeaWoZXwKTyGqz6j60Te7Rgp5cY8aXmebC
+         9zWm1shJXZ9EpC9CXe+D2ENIHIdhbGG+SO2mqILALWvKKdzXtM2eoUadO/W0M3kvEXPo
+         o6yQ/ibTPg06qNZSNrep41FQoxkOSLwC5ttvl5GxVkDEkl9xq3yMGoM7liMIbMj1Bv+I
+         PvkgP/YQX/o0WwLL5V7NOiUXppiQHDUxZMEGY+qzc21piYWnowg1MDMQurpzfSaxjttY
+         woLrZTwTSnXjsYuxk8dh4zz9Nzw1/92Lnkiy1lV9m2hyQSq8KC+FFeUl5s1qPodKjwOo
+         8NAA==
+X-Gm-Message-State: APjAAAV3o1cvpt6tsWY8FTG9Y1wx/VsorrMbs9bFRGfReVb8/1CklsmQ
+        rFcJ30VWNia3waJB+dfaj+i2m4GR
+X-Google-Smtp-Source: APXvYqwbXnUtOthz12CLIuz5D13Y4VZ12IZmNOY0yDwhv+/1yJZqSnCTP8OIjJUpz6/8peMxH22MhQ==
+X-Received: by 2002:a62:fb15:: with SMTP id x21mr2652910pfm.233.1565827049964;
         Wed, 14 Aug 2019 16:57:29 -0700 (PDT)
 Received: from pallmd1.broadcom.com ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id k22sm987299pfk.157.2019.08.14.16.57.28
+        by smtp.gmail.com with ESMTPSA id k22sm987299pfk.157.2019.08.14.16.57.29
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-        Wed, 14 Aug 2019 16:57:28 -0700 (PDT)
+        Wed, 14 Aug 2019 16:57:29 -0700 (PDT)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Dick Kennedy <dick.kennedy@broadcom.com>
-Subject: [PATCH 09/42] lpfc: Fix ADISC reception terminating login state if a NVME target
-Date:   Wed, 14 Aug 2019 16:56:39 -0700
-Message-Id: <20190814235712.4487-10-jsmart2021@gmail.com>
+Subject: [PATCH 10/42] lpfc: Fix issuing init_vpi mbox on SLI-3 card
+Date:   Wed, 14 Aug 2019 16:56:40 -0700
+Message-Id: <20190814235712.4487-11-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.13.7
 In-Reply-To: <20190814235712.4487-1-jsmart2021@gmail.com>
 References: <20190814235712.4487-1-jsmart2021@gmail.com>
@@ -69,73 +69,38 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-If a target issues an ADISC to the port and the target is a NVME
-target, the driver is inadvertantly invalidating the login and
-marking the remote port as logged out. Communication with the
-target is lost.
+The driver is inadvertantly trying to issue an INIT_VPI mailbox
+command on an SLI-3 driver. The command is specific to SLI-4. When
+the call is made to send the command, if on an SLI-3 adapter, an
+array pointer is NULL and the driver will oops.
 
-Revise the ADISC check so that FCP or NVME targets will be
-marked valid at the end of ADISC processing.
-Enhance logging to recognize condition better.
+Fix by restricting the command to SLI-4 adapters only.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_nportdisc.c | 14 ++++++++++----
- 1 file changed, 10 insertions(+), 4 deletions(-)
+ drivers/scsi/lpfc/lpfc_vport.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
-index d76d76081d1a..f4eea52c66f5 100644
---- a/drivers/scsi/lpfc/lpfc_nportdisc.c
-+++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
-@@ -614,7 +614,7 @@ lpfc_rcv_padisc(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 		}
- out:
- 		/* If we are authenticated, move to the proper state */
--		if (ndlp->nlp_type & NLP_FCP_TARGET)
-+		if (ndlp->nlp_type & (NLP_FCP_TARGET | NLP_NVME_TARGET))
- 			lpfc_nlp_set_state(vport, ndlp, NLP_STE_MAPPED_NODE);
- 		else
- 			lpfc_nlp_set_state(vport, ndlp, NLP_STE_UNMAPPED_NODE);
-@@ -2903,18 +2903,21 @@ lpfc_disc_state_machine(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 	uint32_t(*func) (struct lpfc_vport *, struct lpfc_nodelist *, void *,
- 			 uint32_t);
- 	uint32_t got_ndlp = 0;
-+	uint32_t data1;
+diff --git a/drivers/scsi/lpfc/lpfc_vport.c b/drivers/scsi/lpfc/lpfc_vport.c
+index 343bc71d4615..b76646357980 100644
+--- a/drivers/scsi/lpfc/lpfc_vport.c
++++ b/drivers/scsi/lpfc/lpfc_vport.c
+@@ -527,9 +527,11 @@ disable_vport(struct fc_vport *fc_vport)
+ 	 * scsi_host_put() to release the vport.
+ 	 */
+ 	lpfc_mbx_unreg_vpi(vport);
+-	spin_lock_irq(shost->host_lock);
+-	vport->fc_flag |= FC_VPORT_NEEDS_INIT_VPI;
+-	spin_unlock_irq(shost->host_lock);
++	if (phba->sli_rev == LPFC_SLI_REV4) {
++		spin_lock_irq(shost->host_lock);
++		vport->fc_flag |= FC_VPORT_NEEDS_INIT_VPI;
++		spin_unlock_irq(shost->host_lock);
++	}
  
- 	if (lpfc_nlp_get(ndlp))
- 		got_ndlp = 1;
- 
- 	cur_state = ndlp->nlp_state;
- 
-+	data1 = (((uint32_t)ndlp->nlp_fc4_type << 16) |
-+		((uint32_t)ndlp->nlp_type));
- 	/* DSM in event <evt> on NPort <nlp_DID> in state <cur_state> */
- 	lpfc_printf_vlog(vport, KERN_INFO, LOG_DISCOVERY,
- 			 "0211 DSM in event x%x on NPort x%x in "
- 			 "state %d rpi x%x Data: x%x x%x\n",
- 			 evt, ndlp->nlp_DID, cur_state, ndlp->nlp_rpi,
--			 ndlp->nlp_flag, ndlp->nlp_fc4_type);
-+			 ndlp->nlp_flag, data1);
- 
- 	lpfc_debugfs_disc_trc(vport, LPFC_DISC_TRC_DSM,
- 		 "DSM in:          evt:%d ste:%d did:x%x",
-@@ -2925,10 +2928,13 @@ lpfc_disc_state_machine(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 
- 	/* DSM out state <rc> on NPort <nlp_DID> */
- 	if (got_ndlp) {
-+		data1 = (((uint32_t)ndlp->nlp_fc4_type << 16) |
-+			((uint32_t)ndlp->nlp_type));
- 		lpfc_printf_vlog(vport, KERN_INFO, LOG_DISCOVERY,
- 			 "0212 DSM out state %d on NPort x%x "
--			 "rpi x%x Data: x%x\n",
--			 rc, ndlp->nlp_DID, ndlp->nlp_rpi, ndlp->nlp_flag);
-+			 "rpi x%x Data: x%x x%x\n",
-+			 rc, ndlp->nlp_DID, ndlp->nlp_rpi, ndlp->nlp_flag,
-+			 data1);
- 
- 		lpfc_debugfs_disc_trc(vport, LPFC_DISC_TRC_DSM,
- 			"DSM out:         ste:%d did:x%x flg:x%x",
+ 	lpfc_vport_set_state(vport, FC_VPORT_DISABLED);
+ 	lpfc_printf_vlog(vport, KERN_ERR, LOG_VPORT,
 -- 
 2.13.7
 
