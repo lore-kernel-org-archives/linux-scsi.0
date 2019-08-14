@@ -8,59 +8,59 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B01E0C32753
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Aug 2019 15:12:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7B18C433FF
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Aug 2019 15:14:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 79E372084D
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Aug 2019 15:12:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A45922083B
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Aug 2019 15:14:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FHpRsnid"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NgNteJCk"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727815AbfHNPMt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 14 Aug 2019 11:12:49 -0400
-Received: from mail-pl1-f195.google.com ([209.85.214.195]:39910 "EHLO
-        mail-pl1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726230AbfHNPMt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Aug 2019 11:12:49 -0400
-Received: by mail-pl1-f195.google.com with SMTP id z3so4019092pln.6;
-        Wed, 14 Aug 2019 08:12:49 -0700 (PDT)
+        id S1728168AbfHNPOx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 14 Aug 2019 11:14:53 -0400
+Received: from mail-pl1-f194.google.com ([209.85.214.194]:41884 "EHLO
+        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726551AbfHNPOx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Aug 2019 11:14:53 -0400
+Received: by mail-pl1-f194.google.com with SMTP id m9so50658340pls.8;
+        Wed, 14 Aug 2019 08:14:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id;
         bh=NKpqOapAWm4LEktIkgNSd0a4A6OSDVbmFmubwx0bM4o=;
-        b=FHpRsnidVdozUMiYu59fBeSbgrCbEPSKG/nJqx/f7Ts1xOfzCUezSDLK751X+ZCLsE
-         w7Q4z18mBJoyCqDuWoC1kqeCZRY33hbwFVsb+/xVJDA1+1laxJW1j1geLFcGnVdGSj2N
-         a2r+EG1dW3mt3nk2QiTje4jr0TnnRrT8em+aa1GSVe6mdcD5TcJ88EQHqgpbViCtgB8C
-         1qVIJDt33kN9M++AVfNedFvvXlVI6fLBAvgZMXT2i52KxKAoSu7bnalO5MxMQUYWPzvN
-         x2L9FOpNSZWU2eejVnDimyLC73/F7gHHpgYfmMba/7Z7LCg4uB6sNuqVzzvtxU6wcMV7
-         m19A==
+        b=NgNteJCk2mSV3JY7rR/LBMl+FadI6Ex4jEXkm46r/DwWGYiFaHEkL35h6jTE4Uy324
+         yNmc1ym1iCjMAVoR0YTp0Lj5gAms1SHpXtBuGeyTWrajtgpiWb9zIrO1tOQVOotFHS2A
+         NISDfppIWw3A9gTK1umr00+h6bnKOBem87V3ywW8H9jHT1zmC4fAeN4UwPiKg9BAVx/C
+         wZtwJGfyGxdbLSQ+XXQgzuG3q8jp790wW8JoOXZzLgJQ9hDG5wsClqTJvVeFmnd5sVTU
+         6tpevqqu5aFm8jZzANI9+4CkwyHxW6p3PAPUUWTgh/qQL2tsyEWc9W+VbIKxDuwJGMPI
+         X29g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id;
         bh=NKpqOapAWm4LEktIkgNSd0a4A6OSDVbmFmubwx0bM4o=;
-        b=JGGZ0MP7ggXL5BE+IvnhRlD4eBegC3giHCwpdcoEV7j3RIAV+ITnoReRxqHEIsMle0
-         dNu2vdHn46uht7ncw19N9xyoto0TwIYfkr+uplMcTOQq9htGx4Cd7uCiDtPxT0Uc93kw
-         t2/1qAcerr/kN0Hk0Qq8frwo5Xm5wydk90UYU7UDuU3yj5EV+oTIcRdeX091Usd4sGGU
-         AlwVSB/H1lud+ZRA0DBNvLHJb9JN0d3OXjctYYqtUIP/ZrkLtNjTIWo5IyV0SA4I3Qjm
-         x2ZchbohjqwbaZqgtKi+Nczycg32TcKvRNN0zp+eN7nlwd+NREwbYiM5086b6mQQuknP
-         W8EQ==
-X-Gm-Message-State: APjAAAVr5qXFdzrmeddwIwi61yw0ctt3YrbFZuim8AVZL58q0k8XRy7f
-        wLpxzpoLUXpFY1uMWWQWk4M=
-X-Google-Smtp-Source: APXvYqyR+EQgC0JeCLVXrXHG9Qa4743PAbKQcl6n31YL5dCITQCF8vy3YqDxxTRvU++H2eePeo2r5w==
-X-Received: by 2002:a17:902:b789:: with SMTP id e9mr42222173pls.294.1565795568672;
-        Wed, 14 Aug 2019 08:12:48 -0700 (PDT)
+        b=Ky0BicdDYOCdv2W/4qxvIJdfuyfVC7m+We7+70BH59If5Ak1xWbopMqXodfZ5R35e1
+         8dwSp6xTHgu8JxY0Ai0+MnSyeXaWpy0rKRkwpoc6xnoca3a4AhAh0EqPsmkK28sSh75X
+         55oQSI0ftq7yHUZLDaCE5SCiM2rPq0bQ35GKB91HCrhAmsAVuny98n0J5eQYMI10LcHX
+         IgtuoHmm/TebxKGD6x6OPBNeJVbSfMnjcxtO/+VanUNEtqGOuk0piLahumYzR2HRFQXV
+         apjXGyeZw/KH8XILvRw1Yet0M6UOWSyUzG/tdBeftOeFLaYMvviusQLQSv8f0QYPNy4N
+         hbhA==
+X-Gm-Message-State: APjAAAWRxDrd8sdu/GxVRd6piHM7qO78X2KK/SBu/zIZW2hG++Uvi4KL
+        N06+1r4YABDyeBEKq2JCtTU=
+X-Google-Smtp-Source: APXvYqy48q8co+N47bCPvSzzsDOSVv1OOWfIE4vMuZ7XfxCNGfcKYcDNlLmXfHHDiv641oXCe9OxZw==
+X-Received: by 2002:a17:902:d70a:: with SMTP id w10mr40714277ply.251.1565795692291;
+        Wed, 14 Aug 2019 08:14:52 -0700 (PDT)
 Received: from localhost.localdomain (d206-116-172-62.bchsia.telus.net. [206.116.172.62])
-        by smtp.gmail.com with ESMTPSA id f14sm113683pfn.53.2019.08.14.08.12.47
+        by smtp.gmail.com with ESMTPSA id q22sm20500pgh.49.2019.08.14.08.14.51
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 14 Aug 2019 08:12:48 -0700 (PDT)
+        Wed, 14 Aug 2019 08:14:51 -0700 (PDT)
 From:   Mark Balantzyan <mbalant3@gmail.com>
 To:     sathya.prakash@broadcom.com
 Cc:     suganath-prabu.subramani@broadcom.com,
-        MPT=FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
         linux-kernel@vger.kernel.org, Mark Balantzyan <mbalant3@gmail.com>
 Subject: [PATCH] lsilogic mpt fusion: mptctl: Fixed race condition around mptctl_id variable using mutexes
-Date:   Wed, 14 Aug 2019 08:12:41 -0700
-Message-Id: <20190814151241.37141-1-mbalant3@gmail.com>
+Date:   Wed, 14 Aug 2019 08:14:46 -0700
+Message-Id: <20190814151446.37695-1-mbalant3@gmail.com>
 X-Mailer: git-send-email 2.17.1
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
