@@ -6,23 +6,23 @@ X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A4C5C433FF
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Aug 2019 06:24:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 098E1C0650F
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Aug 2019 06:25:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 700D320843
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Aug 2019 06:24:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D9B8420843
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Aug 2019 06:25:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727079AbfHNGYN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 14 Aug 2019 02:24:13 -0400
-Received: from mx2.suse.de ([195.135.220.15]:58970 "EHLO mx1.suse.de"
+        id S1727011AbfHNGZU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 14 Aug 2019 02:25:20 -0400
+Received: from mx2.suse.de ([195.135.220.15]:59068 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725263AbfHNGYM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 14 Aug 2019 02:24:12 -0400
+        id S1726855AbfHNGZU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 14 Aug 2019 02:25:20 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 25E9EAE21;
-        Wed, 14 Aug 2019 06:24:11 +0000 (UTC)
-Subject: Re: [PATCH 2/3] scsi: qla2xxx: unset RCE/EFT fields in failure case
+        by mx1.suse.de (Postfix) with ESMTP id 75672AE60;
+        Wed, 14 Aug 2019 06:25:18 +0000 (UTC)
+Subject: Re: [PATCH 3/3] scsi: qla2xxx: calculate dump size if EFT alloc fails
 To:     Martin Wilck <Martin.Wilck@suse.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         Himanshu Madhani <hmadhani@marvell.com>
@@ -32,7 +32,7 @@ Cc:     Bart Van Assche <Bart.VanAssche@sandisk.com>,
         "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         Bart Van Assche <bvanassche@acm.org>
 References: <20190813203034.7354-1-martin.wilck@suse.com>
- <20190813203034.7354-3-martin.wilck@suse.com>
+ <20190813203034.7354-4-martin.wilck@suse.com>
 From:   Hannes Reinecke <hare@suse.de>
 Openpgp: preference=signencrypt
 Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
@@ -78,12 +78,12 @@ Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
  ZtWlhGRERnDH17PUXDglsOA08HCls0PHx8itYsjYCAyETlxlLApXWdVl9YVwbQpQ+i693t/Y
  PGu8jotn0++P19d3JwXW8t6TVvBIQ1dRZHx1IxGLMn+CkDJMOmHAUMWTAXX2rf5tUjas8/v2
  azzYF4VRJsdl+d0MCaSy8mUh
-Message-ID: <9d479501-27bd-7932-9517-4545231e6ae9@suse.de>
-Date:   Wed, 14 Aug 2019 08:24:10 +0200
+Message-ID: <70c86ea3-9c76-7d66-5500-488a6952f887@suse.de>
+Date:   Wed, 14 Aug 2019 08:25:18 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.7.2
 MIME-Version: 1.0
-In-Reply-To: <20190813203034.7354-3-martin.wilck@suse.com>
+In-Reply-To: <20190813203034.7354-4-martin.wilck@suse.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -95,85 +95,50 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 On 8/13/19 10:31 PM, Martin Wilck wrote:
 > From: Martin Wilck <mwilck@suse.com>
 > 
-> Reset ha->rce, ha->eft and the respective dma fields if
-> the buffers aren't mapped for some reason. Also, treat
-> both failure cases (allocation and initialization failure)
-> equally. The next patch modifies the failure behavior
-> slightly again.
+> It seems right to try and calculate the dump size properly
+> even in the error case, before allocating the dump buffers.
 > 
-> Fixes: ad0a0b01f088 "scsi: qla2xxx: Fix Firmware dump size for Extended
->  login and Exchange Offload"
-> Fixes: a28d9e4ef997 "scsi: qla2xxx: Add support for multiple fwdump
->  templates/segments"
 > Cc: Joe Carnuccio <joe.carnuccio@cavium.com>
 > Cc: Quinn Tran <qutran@marvell.com>
 > Cc: Himanshu Madhani <hmadhani@marvell.com>
 > Cc: Bart Van Assche <bvanassche@acm.org>
 > Signed-off-by: Martin Wilck <mwilck@suse.com>
 > ---
->  drivers/scsi/qla2xxx/qla_init.c | 10 ++++++++++
->  1 file changed, 10 insertions(+)
+>  drivers/scsi/qla2xxx/qla_init.c | 5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
 > 
 > diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-> index 6dd68be..ca9c3f3 100644
+> index ca9c3f3..8427436 100644
 > --- a/drivers/scsi/qla2xxx/qla_init.c
 > +++ b/drivers/scsi/qla2xxx/qla_init.c
-> @@ -3063,6 +3063,8 @@ qla2x00_alloc_offload_mem(scsi_qla_host_t *vha)
->  			ql_log(ql_log_warn, vha, 0x00be,
->  			    "Unable to allocate (%d KB) for FCE.\n",
->  			    FCE_SIZE / 1024);
-> +			ha->fce_dma = 0;
-> +			ha->fce = NULL;
->  			goto try_eft;
+> @@ -3191,7 +3191,7 @@ qla2x00_alloc_fw_dump(scsi_qla_host_t *vha)
+>  			    EFT_SIZE / 1024);
+>  			ha->eft = NULL;
+>  			ha->eft_dma = 0;
+> -			goto allocate;
+> +			goto calc_dump_size;
 >  		}
 >  
-Actually, I would set this earlier here:
-
-		if (ha->fce)
-			dma_free_coherent(&ha->pdev->dev,
-			    FCE_SIZE, ha->fce, ha->fce_dma);
-
-which is the logical place to clear 'ha->fce' and 'ha->fce_dma' IMO.
-Alsoe there is this call later on:
-
-		rval = qla2x00_enable_fce_trace(vha, tc_dma, FCE_NUM_BUFFERS,
-		    ha->fce_mb, &ha->fce_bufs);
-		if (rval) {
-			ql_log(ql_log_warn, vha, 0x00bf,
-			    "Unable to initialize FCE (%d).\n", rval);
-			dma_free_coherent(&ha->pdev->dev, FCE_SIZE, tc,
-			    tc_dma);
-			ha->flags.fce_enabled = 0;
-			goto try_eft;
-		}
-
-which also needs to be protected.
-
-> @@ -3111,9 +3113,12 @@ qla2x00_alloc_offload_mem(scsi_qla_host_t *vha)
->  
->  		ha->eft_dma = tc_dma;
+>  		rval = qla2x00_enable_eft_trace(vha, tc_dma, EFT_NUM_BUFFERS);
+> @@ -3202,7 +3202,7 @@ qla2x00_alloc_fw_dump(scsi_qla_host_t *vha)
+>  			    tc_dma);
+>  			ha->eft = NULL;
+>  			ha->eft_dma = 0;
+> -			goto allocate;
+> +			goto calc_dump_size;
+>  		}
+>  		ql_dbg(ql_dbg_init, vha, 0x00c3,
+>  		    "Allocated (%d KB) EFT ...\n", EFT_SIZE / 1024);
+> @@ -3211,6 +3211,7 @@ qla2x00_alloc_fw_dump(scsi_qla_host_t *vha)
 >  		ha->eft = tc;
-> +		return;
 >  	}
 >  
->  eft_err:
-> +	ha->eft = NULL;
-> +	ha->eft_dma = 0;
->  	return;
->  }
->  
-I wonder why this is even there.
-
-Right at the start we have:
-	if (ha->eft) {
-		ql_dbg(ql_dbg_init, vha, 0x00bd,
-		    "%s: Offload Mem is already allocated.\n",
-		    __func__);
-		return;
-	}
-
-IE the second half of this function really should be unreachable code.
-Himanshu?
+> +calc_dump_size:
+>  	if (IS_QLA27XX(ha) || IS_QLA28XX(ha)) {
+>  		struct fwdt *fwdt = ha->fwdt;
+>  		uint j;
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
 Cheers,
 
