@@ -8,59 +8,59 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CDD9C32753
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 880F8C433FF
 	for <linux-scsi@archiver.kernel.org>; Wed, 14 Aug 2019 23:57:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 317DF20866
+	by mail.kernel.org (Postfix) with ESMTP id 5D0112086C
 	for <linux-scsi@archiver.kernel.org>; Wed, 14 Aug 2019 23:57:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bC4evMDG"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VAPJurub"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729791AbfHNX5m (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1729341AbfHNX5m (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Wed, 14 Aug 2019 19:57:42 -0400
-Received: from mail-pf1-f195.google.com ([209.85.210.195]:34988 "EHLO
-        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729789AbfHNX5m (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Aug 2019 19:57:42 -0400
-Received: by mail-pf1-f195.google.com with SMTP id d85so349454pfd.2
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Aug 2019 16:57:42 -0700 (PDT)
+Received: from mail-pf1-f194.google.com ([209.85.210.194]:34983 "EHLO
+        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729297AbfHNX5l (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Aug 2019 19:57:41 -0400
+Received: by mail-pf1-f194.google.com with SMTP id d85so349418pfd.2
+        for <linux-scsi@vger.kernel.org>; Wed, 14 Aug 2019 16:57:40 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=Qlu9+Zcju5gXuof8NB0KJt0LmEqjWE1vcl8hheeb/wk=;
-        b=bC4evMDGr1C8Z147h+71q9yhHkqI/HvCGv5o4G9GsWm5EV1jOqJdIG/qPbkZ0i7aO8
-         BsUWBfSbd2A2AyV2Q+C9VlFpqdk1CV9fWbiwcDvnWzbrlNQdHPzMuy6IXipDnGc67mEr
-         SlI364GR2rL25kNhEeyXAE0NRJtrJ571hzQX7u23shiUIgN5+kLZpJNrtHxo2dXng1gg
-         i/ghssN79kn6ZbMxaFPyW1WpsXHx6akQxZTsHZuyjbDUN3VF2ntHYFY40Fbi7Ep6+Y2r
-         fogjcrhAEHphw1ksw85SdKoiY4X0vyavJ/uVcLslx9+EFuH4XK/ro0SQmxAmzc7RBm98
-         zXyA==
+        bh=DC0gCVap1786iX8271+jNEdBUlOCVraRxsZoutRztCE=;
+        b=VAPJurubWzyPNXjZP1rvJmscdlQe7c0ZxS3MWrlOY1n6PAqY5fKcmscD9PlrXqD/Lh
+         acIhpbkEOmyJLqSUIg1Dq3H/mJHcTA5d5rKJGlrSA2vFhT+qWspGjgOK1f9wueD8tNh+
+         W34dGMbY/96/Okbk8RTpe1Zt6++4QPB8ljDygexisG+3zLooBv/Ks6ir7i9tF64ZYe4F
+         WvyBnqouVjDxAoZH3n5LmoVDl0a+zKeRH+utRVOQZfjdlh/OLlfZ6w4l95fG72ef51en
+         WB0hPdouoNsAFm2OPaUjJCMUFwxcj+qXhJ3WoVGmi8uNsOr8S6eGV92rjQe7H1+zpdEO
+         lmAQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=Qlu9+Zcju5gXuof8NB0KJt0LmEqjWE1vcl8hheeb/wk=;
-        b=b/jsoec8e+plcQnhx8bDqgOej8hqMiCr6ikheILaNk4+rWrKC+O9SLbpC2H7jymh7n
-         Ng7bZKR8+FvU/LgOeyouxUGFIZGF8folBSU+csB5NQmLUsWNG5V2Uoqj4SE96GKMsCT6
-         ZCaSLPx0YBJMdBezAMQwtT5e9HT6qY1lMgIoEBQUglhcyRfGri+K3JF2U22fvUQWnDaz
-         qDZ8NO2A/AXpiQx6ZkYMH3OlDkdUlr+sMxLcjOfR2onNqxaCLF3mprEgHGu9HodAAZeW
-         kYvC/mf0ahS7YXm3vLVthjbpEcXIgnJ+tfhRCaOue9eI6OHr6qTUdaYXNzbVtqB21PuB
-         ZFSA==
-X-Gm-Message-State: APjAAAWnJk8B+ET59DG+7yjQ/QqE9PksGRxLB+Mh0HlZnbKk/Jz4xzPk
-        UIJZ9klkACfmJ98LvigZM+SM4O7J
-X-Google-Smtp-Source: APXvYqw2QoLbBZU+CsNE8aNOhOJ03FVfykzvf2aT8zI1T3cIhRWASrMRcH9OLWB+6eJ4YeRA4u5wRQ==
-X-Received: by 2002:a63:69c1:: with SMTP id e184mr1338242pgc.198.1565827061422;
-        Wed, 14 Aug 2019 16:57:41 -0700 (PDT)
+        bh=DC0gCVap1786iX8271+jNEdBUlOCVraRxsZoutRztCE=;
+        b=ISkuks5MOVXdg/DUIWoMKqep/k/kcR5+l1kFCh9wFrJM61mlq+Ry9w1h65dGcVkeQt
+         72sFHNG49reN4aLt63q03MDq51XE3wJ7QMOUgquX+IC7KV1KEpilTSAcBJFvF8005H/I
+         ma9QYNwuH0t+XISX1xN99g4qTQ5a2SkaZhhDdBMckLdlVxtuCt0eo3IpOoEFp68jsD4G
+         O+vFxEvXlVlSMLgPH9EUbfq7krLM3dBwGafKtE+KZyuJ0Cel608GA8n1rxml3Zz/q8oF
+         VPuSVjk+ZKpdRcnetPpjtk2Qu1viWgKMBZORXbBoNbKHSADva79ueX7gKAeUzWB++WoO
+         +NTA==
+X-Gm-Message-State: APjAAAXq3Qqs4VvzAzppCk4Z0pC4S06Cpkl7VHRzh99rVFm7tuOT9DYe
+        Ly0roNydk2hKpQe6yOFC/ApR39s7
+X-Google-Smtp-Source: APXvYqxM9rJK4tmqOOfOTjcCsCSVQOHtWKM6DMLmJRQOPJuuCtAt3t/hZGo/vVNxuEaffqr20KQE6g==
+X-Received: by 2002:aa7:91d3:: with SMTP id z19mr2555043pfa.135.1565827060031;
+        Wed, 14 Aug 2019 16:57:40 -0700 (PDT)
 Received: from pallmd1.broadcom.com ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id k22sm987299pfk.157.2019.08.14.16.57.40
+        by smtp.gmail.com with ESMTPSA id k22sm987299pfk.157.2019.08.14.16.57.39
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-        Wed, 14 Aug 2019 16:57:41 -0700 (PDT)
+        Wed, 14 Aug 2019 16:57:39 -0700 (PDT)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Dick Kennedy <dick.kennedy@broadcom.com>
-Subject: [PATCH 25/42] lpfc: Fix hang when downloading fw on port enabled for nvme
-Date:   Wed, 14 Aug 2019 16:56:55 -0700
-Message-Id: <20190814235712.4487-26-jsmart2021@gmail.com>
+Subject: [PATCH 23/42] lpfc: Fix crash due to port reset racing vs adapter error handling
+Date:   Wed, 14 Aug 2019 16:56:53 -0700
+Message-Id: <20190814235712.4487-24-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.13.7
 In-Reply-To: <20190814235712.4487-1-jsmart2021@gmail.com>
 References: <20190814235712.4487-1-jsmart2021@gmail.com>
@@ -69,153 +69,130 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-As part of firmware download, the adapter is reset. On the adapter
-the reset causes the function to stop and all outstanding io is
-terminated (without responses). The reset path then starts
-teardown of the adapter, starting with deregistration of the remote
-ports with the nvme-fc transport. The local port is then deregistered
-and the driver waits for local port deregistration. This never finishes.
+If the adapter encounters a condition which causes the adapter
+to fail (driver must detect the failure) simultaneously to a
+request to the driver to reset the adapter (such as a host_reset),
+the reset path will be racing with the asynchronously-detect
+adapter failure path.  In the failing situation, one path has
+started to tear down the adapter data structures (io_wq's) while
+the other path has initiated a repeat of the teardown and is in
+the lpfc_sli_flush_xxx_rings path and attempting to access the
+just-freed data structures.
 
-The remote port deregistrations terminated the nvme controllers, causing
-them to send aborts for all the outstanding io. The aborts were serviced
-in the driver, but stalled due to its state. The nvme layer then stops
-to reclaim it's outstanding io before continuing.  The io must be
-returned before the reset on the controller is deemed complete and the
-controller delete performed.  The remote port deregistration won't
-complete until all the controllers are terminated. And the local port
-deregistration won't complete until all controllers and remote ports
-are terminated. Thus things hang.
-
-The issue is the reset which stopped the adapter also stopped all the
-responses that would drive i/o completions, and the aborts were also
-stopped that stopped i/o completions. The driver, when resetting the
-adapter like this, needs to be generating the completions as part of
-the adapter reset so that I/O complete (in error), and any aborts
-are not queued.
-
-Fix by adding flush routines whenever the adapter port has been reset
-or discovered in error. The flush routines will generate the completions
-for the scsi and nvme outstanding io. The abort ios, if waiting, will
-be caught and flushed as well.
+Fix by the following:
+- In cases where an adapter failure is detected, rather than
+  explicitly calling offline_eratt() to start the teardown,
+  change the adapter state and let the later calls of posted
+  work to the slowpath thread invoke the adapter recovery.
+  In essence, this means all requests to reset are serialized
+  on the slowpath thread.
+- Clean up the routine that restarts the adapter. If there is a
+  failure from brdreset, don't immediately error and leave
+  things in a partial state. Instead, ensure the adapter state
+  is set and finish the teardown of structures before returning.
+- if in the scsi host reset handler and the board fails to
+  reset and restart (which can be due to parallel reset/recovery
+  paths), instead of hard failing and explicitly calling
+  offline_eratt() (which gets into the redundant path), just
+  fail out and let the asynchronous path resolve the adapter
+  state.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_crtn.h |  1 +
- drivers/scsi/lpfc/lpfc_init.c |  4 ++++
- drivers/scsi/lpfc/lpfc_nvme.c | 47 +++++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/lpfc/lpfc_sli.c  |  9 ++++++---
- 4 files changed, 58 insertions(+), 3 deletions(-)
+ drivers/scsi/lpfc/lpfc_init.c |  7 +++----
+ drivers/scsi/lpfc/lpfc_scsi.c | 16 +++++++++-------
+ drivers/scsi/lpfc/lpfc_sli.c  |  6 ++++--
+ 3 files changed, 16 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_crtn.h b/drivers/scsi/lpfc/lpfc_crtn.h
-index 68e9f96242d3..bee27bb7123c 100644
---- a/drivers/scsi/lpfc/lpfc_crtn.h
-+++ b/drivers/scsi/lpfc/lpfc_crtn.h
-@@ -595,6 +595,7 @@ void lpfc_release_io_buf(struct lpfc_hba *phba, struct lpfc_io_buf *ncmd,
- 			 struct lpfc_sli4_hdw_queue *qp);
- void lpfc_nvme_cmd_template(void);
- void lpfc_nvmet_cmd_template(void);
-+void lpfc_nvme_cancel_iocb(struct lpfc_hba *phba, struct lpfc_iocbq *pwqeIn);
- extern int lpfc_enable_nvmet_cnt;
- extern unsigned long long lpfc_enable_nvmet[];
- extern int lpfc_no_hba_reset_cnt;
 diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index c580d512a3db..98db1f7e536e 100644
+index 84a77faed114..c580d512a3db 100644
 --- a/drivers/scsi/lpfc/lpfc_init.c
 +++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -1546,6 +1546,8 @@ lpfc_sli4_offline_eratt(struct lpfc_hba *phba)
- 	spin_unlock_irq(&phba->hbalock);
+@@ -1926,7 +1926,7 @@ lpfc_handle_eratt_s4(struct lpfc_hba *phba)
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+ 				"7624 Firmware not ready: Failing UE recovery,"
+ 				" waited %dSec", i);
+-		lpfc_sli4_offline_eratt(phba);
++		phba->link_state = LPFC_HBA_ERROR;
+ 		break;
  
- 	lpfc_offline_prep(phba, LPFC_MBX_NO_WAIT);
-+	lpfc_sli_flush_fcp_rings(phba);
-+	lpfc_sli_flush_nvme_rings(phba);
- 	lpfc_offline(phba);
- 	lpfc_hba_down_post(phba);
- 	lpfc_unblock_mgmt_io(phba);
-@@ -1807,6 +1809,8 @@ lpfc_sli4_port_sta_fn_reset(struct lpfc_hba *phba, int mbx_action,
- 				"2887 Reset Needed: Attempting Port "
- 				"Recovery...\n");
- 	lpfc_offline_prep(phba, mbx_action);
-+	lpfc_sli_flush_fcp_rings(phba);
-+	lpfc_sli_flush_nvme_rings(phba);
- 	lpfc_offline(phba);
- 	/* release interrupt for possible resource change */
- 	lpfc_sli4_disable_intr(phba);
-diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
-index 103708503592..c7f5b50c3820 100644
---- a/drivers/scsi/lpfc/lpfc_nvme.c
-+++ b/drivers/scsi/lpfc/lpfc_nvme.c
-@@ -2668,3 +2668,50 @@ lpfc_nvme_wait_for_io_drain(struct lpfc_hba *phba)
+ 	case LPFC_SLI_INTF_IF_TYPE_2:
+@@ -2000,9 +2000,8 @@ lpfc_handle_eratt_s4(struct lpfc_hba *phba)
  		}
- 	}
+ 		/* fall through for not able to recover */
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+-				"3152 Unrecoverable error, bring the port "
+-				"offline\n");
+-		lpfc_sli4_offline_eratt(phba);
++				"3152 Unrecoverable error\n");
++		phba->link_state = LPFC_HBA_ERROR;
+ 		break;
+ 	case LPFC_SLI_INTF_IF_TYPE_1:
+ 	default:
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+index f9df800e7067..720a98266986 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -5295,18 +5295,20 @@ lpfc_host_reset_handler(struct scsi_cmnd *cmnd)
+ 	lpfc_offline(phba);
+ 	rc = lpfc_sli_brdrestart(phba);
+ 	if (rc)
+-		ret = FAILED;
++		goto error;
++
+ 	rc = lpfc_online(phba);
+ 	if (rc)
+-		ret = FAILED;
++		goto error;
++
+ 	lpfc_unblock_mgmt_io(phba);
+ 
+-	if (ret == FAILED) {
+-		lpfc_printf_vlog(vport, KERN_ERR, LOG_FCP,
+-				 "3323 Failed host reset, bring it offline\n");
+-		lpfc_sli4_offline_eratt(phba);
+-	}
+ 	return ret;
++error:
++	lpfc_printf_vlog(vport, KERN_ERR, LOG_FCP,
++			 "3323 Failed host reset\n");
++	lpfc_unblock_mgmt_io(phba);
++	return FAILED;
  }
-+
-+void
-+lpfc_nvme_cancel_iocb(struct lpfc_hba *phba, struct lpfc_iocbq *pwqeIn)
-+{
-+#if (IS_ENABLED(CONFIG_NVME_FC))
-+	struct lpfc_io_buf *lpfc_ncmd;
-+	struct nvmefc_fcp_req *nCmd;
-+	struct lpfc_nvme_fcpreq_priv *freqpriv;
-+
-+	if (!pwqeIn->context1) {
-+		lpfc_sli_release_iocbq(phba, pwqeIn);
-+		return;
-+	}
-+	/* For abort iocb just return, IO iocb will do a done call */
-+	if (bf_get(wqe_cmnd, &pwqeIn->wqe.gen_req.wqe_com) ==
-+	    CMD_ABORT_XRI_CX) {
-+		lpfc_sli_release_iocbq(phba, pwqeIn);
-+		return;
-+	}
-+	lpfc_ncmd = (struct lpfc_io_buf *)pwqeIn->context1;
-+
-+	spin_lock(&lpfc_ncmd->buf_lock);
-+	if (!lpfc_ncmd->nvmeCmd) {
-+		spin_unlock(&lpfc_ncmd->buf_lock);
-+		lpfc_release_nvme_buf(phba, lpfc_ncmd);
-+		return;
-+	}
-+
-+	nCmd = lpfc_ncmd->nvmeCmd;
-+	lpfc_printf_log(phba, KERN_INFO, LOG_NVME_IOERR,
-+			"6194 NVME Cancel xri %x\n",
-+			lpfc_ncmd->cur_iocbq.sli4_xritag);
-+
-+	nCmd->transferred_length = 0;
-+	nCmd->rcv_rsplen = 0;
-+	nCmd->status = NVME_SC_INTERNAL;
-+	freqpriv = nCmd->private;
-+	freqpriv->nvme_buf = NULL;
-+	lpfc_ncmd->nvmeCmd = NULL;
-+
-+	spin_unlock(&lpfc_ncmd->buf_lock);
-+	nCmd->done(nCmd);
-+
-+	/* Call release with XB=1 to queue the IO into the abort list. */
-+	lpfc_release_nvme_buf(phba, lpfc_ncmd);
-+#endif
-+}
+ 
+ /**
 diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index ca6988ae8924..6ac6620aab00 100644
+index 058c092bda73..ca6988ae8924 100644
 --- a/drivers/scsi/lpfc/lpfc_sli.c
 +++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -1391,9 +1391,12 @@ lpfc_sli_cancel_iocbs(struct lpfc_hba *phba, struct list_head *iocblist,
+@@ -4509,7 +4509,7 @@ lpfc_sli_brdreset(struct lpfc_hba *phba)
+  * checking during resets the device. The caller is not required to hold
+  * any locks.
+  *
+- * This function returns 0 always.
++ * This function returns 0 on success else returns negative error code.
+  **/
+ int
+ lpfc_sli4_brdreset(struct lpfc_hba *phba)
+@@ -4667,7 +4667,7 @@ lpfc_sli_brdrestart_s4(struct lpfc_hba *phba)
  
- 	while (!list_empty(iocblist)) {
- 		list_remove_head(iocblist, piocb, struct lpfc_iocbq, list);
--		if (!piocb->iocb_cmpl)
--			lpfc_sli_release_iocbq(phba, piocb);
--		else {
-+		if (!piocb->iocb_cmpl) {
-+			if (piocb->iocb_flag & LPFC_IO_NVME)
-+				lpfc_nvme_cancel_iocb(phba, piocb);
-+			else
-+				lpfc_sli_release_iocbq(phba, piocb);
-+		} else {
- 			piocb->iocb.ulpStatus = ulpstatus;
- 			piocb->iocb.un.ulpWord[4] = ulpWord4;
- 			(piocb->iocb_cmpl) (phba, piocb, piocb);
+ 	rc = lpfc_sli4_brdreset(phba);
+ 	if (rc)
+-		return rc;
++		goto error;
+ 
+ 	spin_lock_irq(&phba->hbalock);
+ 	phba->pport->stopped = 0;
+@@ -4682,6 +4682,8 @@ lpfc_sli_brdrestart_s4(struct lpfc_hba *phba)
+ 	if (hba_aer_enabled)
+ 		pci_disable_pcie_error_reporting(phba->pcidev);
+ 
++error:
++	phba->link_state = LPFC_HBA_ERROR;
+ 	lpfc_hba_down_post(phba);
+ 	lpfc_sli4_queue_destroy(phba);
+ 
 -- 
 2.13.7
 
