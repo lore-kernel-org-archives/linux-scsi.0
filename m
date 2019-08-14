@@ -8,59 +8,59 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E6E41C433FF
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Aug 2019 23:57:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A7FCC32753
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Aug 2019 23:57:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B736D20866
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Aug 2019 23:57:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 09B7A20866
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Aug 2019 23:57:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="T1K6mGDe"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="hbdFjPVj"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729084AbfHNX5a (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1729093AbfHNX5a (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Wed, 14 Aug 2019 19:57:30 -0400
-Received: from mail-pg1-f194.google.com ([209.85.215.194]:33222 "EHLO
-        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728947AbfHNX51 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Aug 2019 19:57:27 -0400
-Received: by mail-pg1-f194.google.com with SMTP id n190so438183pgn.0
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Aug 2019 16:57:26 -0700 (PDT)
+Received: from mail-pg1-f193.google.com ([209.85.215.193]:36209 "EHLO
+        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729009AbfHNX53 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Aug 2019 19:57:29 -0400
+Received: by mail-pg1-f193.google.com with SMTP id l21so427859pgm.3
+        for <linux-scsi@vger.kernel.org>; Wed, 14 Aug 2019 16:57:28 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=8yIhMcON7xLN0hMLhvEm8QIWhIJo6dFKEW3lh9pAS0U=;
-        b=T1K6mGDeN+2eWmUtmmvo7n1+xkRoaU7Fot39S9ftxjOiil+BlVOKq8wi/vgMy7G9yu
-         d+5+17XvzoxfZJS23K1gmCfpQ/nMPBYmbV4fplNejf4l66Shsfs1tBZdG9TXB6vehBC2
-         pWvEfWm0hS7gKCvLXwDAxOGMgXvdTh2Mhn1cAAqcfWAPG9VYRMfWQVW1hpo7PUk3GSRP
-         LV0jDrc+n4YixB1P8vgmZqUTVOt4h8UIaX0FjdXHjaZexLamwRLAh5iqbATrTnXcFjWI
-         /yIsyYiHvSdcFF2ncdWOAUY6p8eFm+gh487JzjABCyqm+zEEfL+dLmWGR010Kp2tObKM
-         8V+w==
+        bh=eZb9Sh/Id9LGVS6VszTrgSFU/EYwl8ejD+Flvz7I7kE=;
+        b=hbdFjPVjpFUCIJHXxigCX07LvJDeCAZKV4HU+q8mfxMfMPbE0pqTcCLlfTDH/Yspzp
+         0ISammLJgTLblnoHm1PLENQBSTivgJYo6cTbqyiB1e21uYnFDOU4Dw6OrvMW5hMhvlk5
+         6tlPKyp2nbRsOLwL8Utfj1n/Mqwq5JkuO83nZ52O8t8XPm5Zna3/4LDzwHnpjlwSTWYb
+         nDdSiR1yFTy8oRl/O6LfGiXKEEqG3OJIwhfcmtjnK48qfJsUk/iT6HsInuYoDASXQ2bg
+         8zqRW4lZP3UQ7AKD74pVJoSWcGL+HjcocSYgSVJJsqn0bRnMvDfs6zeEsQnVEBJIbNkz
+         l5tA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=8yIhMcON7xLN0hMLhvEm8QIWhIJo6dFKEW3lh9pAS0U=;
-        b=D8oslY3JucRU5QHuc9tl6FYrY53psaov8W0bffnZrFEoNSGDN815QMzKXCe5q12cZX
-         dRXolvSaM/LiPrwkvjet2o7HslAQjVtcdFkWwLG7qIDzva+eG4UJs7XQniQ3AgFsOIgY
-         JJmEnqQWRz1xTSJT+ZcybiMzWMVSmxu/xJ4M5Ut3GHFABN/NR9mjXlvOf8ioCVfL7aeb
-         t38l87BZdHLoUK0UVw1lPBw9MGX5Zmash8gcImT/mt8zCcWkATRjwECL+JcPKKjULd+B
-         cn9Ucqvvnxt2kxuGsIqWn/PCPROZ+dNrc1W93JwW0tTa3md7rkrca/snzktCagCvpqyr
-         eVmg==
-X-Gm-Message-State: APjAAAWSqVhnPM9s5e/L2YFs6N6b9zmMh166LBt5tD608Jglg/Dhuepv
-        elUBDqcYT/zLM6hpROUi43EzUP07
-X-Google-Smtp-Source: APXvYqz8eQONFv2bUjX63+1oQeVlClR73BMFg1tsOnxN59ql3Eeo54xcMn90rZT6K1tCk6CuX+5G8Q==
-X-Received: by 2002:aa7:8602:: with SMTP id p2mr2593987pfn.138.1565827046263;
-        Wed, 14 Aug 2019 16:57:26 -0700 (PDT)
+        bh=eZb9Sh/Id9LGVS6VszTrgSFU/EYwl8ejD+Flvz7I7kE=;
+        b=bSQS+x+idPT7sey5qtI/pzxDvStPUl6Yd/edlYqFy5PgGpNeFLsPv973jH8ZA2oY4L
+         pTg9yig6xwSovqdfajwmlaTX2p5kDw6kFKbzPaOOqik94sIBSwfZis9OhfbcnzcFstzR
+         ndqSCCUWciFcuvr6HEpq63ntGn4U3pDTvTSRgnGGbyWzRbyEbmWNQdKUKbA1ktvfAdAI
+         h7hKK/HYS+ztXZ6rf8vLIySp06p3zgF2nuFGYqDF2qjddQSRw30cl6wUJoK1KNZrXBJu
+         3eCUCNXEgwIXMllpPsYMRmje59FQ8vM6atXtouf6UhPY/qOsb0/mkjDgUGtss/HPSCwZ
+         m1GQ==
+X-Gm-Message-State: APjAAAV74n1R9vRLJ5SDrQbzWgTZRiKunln4AQiTNIX85c7j3XIhdIbK
+        BHkGlaNWi6kHPRbzcjm/LfmZcY5s
+X-Google-Smtp-Source: APXvYqwqQqiVJq0YcYtizl5y1n+yP11c7mwUvPotoBlUESXL4AsRFUOOY7fgDnwurPMntl+tj6FY5w==
+X-Received: by 2002:aa7:8a92:: with SMTP id a18mr2636093pfc.216.1565827048515;
+        Wed, 14 Aug 2019 16:57:28 -0700 (PDT)
 Received: from pallmd1.broadcom.com ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id k22sm987299pfk.157.2019.08.14.16.57.25
+        by smtp.gmail.com with ESMTPSA id k22sm987299pfk.157.2019.08.14.16.57.27
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-        Wed, 14 Aug 2019 16:57:25 -0700 (PDT)
+        Wed, 14 Aug 2019 16:57:28 -0700 (PDT)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Dick Kennedy <dick.kennedy@broadcom.com>
-Subject: [PATCH 05/42] lpfc: Fix failure to clear non-zero eq_delay after io rate reduction
-Date:   Wed, 14 Aug 2019 16:56:35 -0700
-Message-Id: <20190814235712.4487-6-jsmart2021@gmail.com>
+Subject: [PATCH 08/42] lpfc: Fix discovery when target has no GID_FT information
+Date:   Wed, 14 Aug 2019 16:56:38 -0700
+Message-Id: <20190814235712.4487-9-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.13.7
 In-Reply-To: <20190814235712.4487-1-jsmart2021@gmail.com>
 References: <20190814235712.4487-1-jsmart2021@gmail.com>
@@ -69,81 +69,75 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Unusually high IO latency can be observed with little IO in
-progress. The latency may remain high regardless of amount of IO and
-can only be cleared by forcing lpfc_fcp_imax values to non-zero and
-then back to zero.
+Some remote ports may be slow in registering their GID_FT
+protocol information with the fabric. If the remote port is
+an initiator, it may send PLOGI to the port before the GID_FT
+logic is complete. Meaning, after accepting the PLOGI, when the
+driver may see no response to the GID_FT that is issued after
+the login to determine the protocols supported so that proper
+PRLI's may be transmit. If the driver has no fc4 information,
+it currently stops and the remote port is not discovered.
 
-The driver's eq_delay mechanism that scales the interrupt coalescing
-based on io completion load failed to reduce or turn off coalescing
-when load decreased. Specifically, if no io completed on a cpu within
-an eq_delay polling window, the eq delay processing was skipped and no
-change was made to the coalescing values. This left the coalescing
-values set when they were no longer applicable.
-
-Fix by always clearing the percpu counters for each time period and
-always run the eq_delay calculations if an eq has a non-zero
-coalescing value.
+Fix by issuing a LOGO when there is no GID_FT information.
+The LOGO completion handling will attempt to re-login if the
+nport_id is still present.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_init.c | 32 +++++++++++++++++++++-----------
- 1 file changed, 21 insertions(+), 11 deletions(-)
+ drivers/scsi/lpfc/lpfc_ct.c        | 16 +++++++++++++++-
+ drivers/scsi/lpfc/lpfc_nportdisc.c |  6 +++++-
+ 2 files changed, 20 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 50d641f65af9..72353c9c0fa9 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -1262,6 +1262,7 @@ lpfc_hb_eq_delay_work(struct work_struct *work)
- 	unsigned char *eqcnt = NULL;
- 	uint32_t usdelay;
- 	int i;
-+	bool update = false;
+diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
+index 3246942ff2ff..c2ac6cb730e8 100644
+--- a/drivers/scsi/lpfc/lpfc_ct.c
++++ b/drivers/scsi/lpfc/lpfc_ct.c
+@@ -1215,12 +1215,26 @@ lpfc_cmpl_ct_cmd_gft_id(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 					 FC_TYPE_FCP, FC_TYPE_NVME,
+ 					 ndlp->nlp_state);
  
- 	if (!phba->cfg_auto_imax || phba->pport->load_flag & FC_UNLOADING)
- 		return;
-@@ -1275,20 +1276,29 @@ lpfc_hb_eq_delay_work(struct work_struct *work)
- 	if (!eqcnt)
- 		goto requeue;
+-			if (ndlp->nlp_state == NLP_STE_REG_LOGIN_ISSUE) {
++			if (ndlp->nlp_state == NLP_STE_REG_LOGIN_ISSUE &&
++			    ndlp->nlp_fc4_type) {
+ 				ndlp->nlp_prev_state = NLP_STE_REG_LOGIN_ISSUE;
  
--	/* Loop thru all IRQ vectors */
--	for (i = 0; i < phba->cfg_irq_chann; i++) {
--		/* Get the EQ corresponding to the IRQ vector */
--		eq = phba->sli4_hba.hba_eq_hdl[i].eq;
--		if (eq && eqcnt[eq->last_cpu] < 2)
--			eqcnt[eq->last_cpu]++;
--		continue;
--	}
-+	if (phba->cfg_irq_chann > 1) {
-+		/* Loop thru all IRQ vectors */
-+		for (i = 0; i < phba->cfg_irq_chann; i++) {
-+			/* Get the EQ corresponding to the IRQ vector */
-+			eq = phba->sli4_hba.hba_eq_hdl[i].eq;
-+			if (!eq)
-+				continue;
-+			if (eq->q_mode) {
-+				update = true;
-+				break;
-+			}
-+			if (eqcnt[eq->last_cpu] < 2)
-+				eqcnt[eq->last_cpu]++;
+ 				lpfc_nlp_set_state(vport, ndlp,
+ 						   NLP_STE_PRLI_ISSUE);
+ 				lpfc_issue_els_prli(vport, ndlp, 0);
++			} else if (!ndlp->nlp_fc4_type) {
++				/* If fc4 type is still unknown, then LOGO */
++				lpfc_printf_vlog(vport, KERN_INFO,
++						 LOG_DISCOVERY,
++						 "6443 Sending LOGO ndlp x%px,"
++						 "DID x%06x with fc4_type: "
++						 "x%08x, state: %d\n",
++						 ndlp, did, ndlp->nlp_fc4_type,
++						 ndlp->nlp_state);
++				lpfc_issue_els_logo(vport, ndlp, 0);
++				ndlp->nlp_prev_state = NLP_STE_REG_LOGIN_ISSUE;
++				lpfc_nlp_set_state(vport, ndlp,
++						   NLP_STE_NPR_NODE);
+ 			}
+ 		}
+ 	} else
+diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
+index c58000cd744f..d76d76081d1a 100644
+--- a/drivers/scsi/lpfc/lpfc_nportdisc.c
++++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
+@@ -1822,7 +1822,11 @@ lpfc_cmpl_reglogin_reglogin_issue(struct lpfc_vport *vport,
+ 
+ 		ndlp->nlp_prev_state = NLP_STE_REG_LOGIN_ISSUE;
+ 		lpfc_nlp_set_state(vport, ndlp, NLP_STE_PRLI_ISSUE);
+-		lpfc_issue_els_prli(vport, ndlp, 0);
++		if (lpfc_issue_els_prli(vport, ndlp, 0)) {
++			lpfc_issue_els_logo(vport, ndlp, 0);
++			ndlp->nlp_prev_state = NLP_STE_REG_LOGIN_ISSUE;
++			lpfc_nlp_set_state(vport, ndlp, NLP_STE_NPR_NODE);
 +		}
-+	} else
-+		update = true;
- 
- 	for_each_present_cpu(i) {
--		if (phba->cfg_irq_chann > 1 && eqcnt[i] < 2)
--			continue;
--
- 		eqi = per_cpu_ptr(phba->sli4_hba.eq_info, i);
-+		if (!update && eqcnt[i] < 2) {
-+			eqi->icnt = 0;
-+			continue;
-+		}
- 
- 		usdelay = (eqi->icnt / LPFC_IMAX_THRESHOLD) *
- 			   LPFC_EQ_DELAY_STEP;
+ 	} else {
+ 		if ((vport->fc_flag & FC_PT2PT) && phba->nvmet_support)
+ 			phba->targetport->port_id = vport->fc_myDID;
 -- 
 2.13.7
 
