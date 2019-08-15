@@ -2,97 +2,110 @@ Return-Path: <SRS0=D4W/=WL=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89240C433FF
-	for <linux-scsi@archiver.kernel.org>; Thu, 15 Aug 2019 02:13:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F0A6CC433FF
+	for <linux-scsi@archiver.kernel.org>; Thu, 15 Aug 2019 03:42:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5DC1F2084F
-	for <linux-scsi@archiver.kernel.org>; Thu, 15 Aug 2019 02:13:46 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="GNXALDc1"
+	by mail.kernel.org (Postfix) with ESMTP id D084A20656
+	for <linux-scsi@archiver.kernel.org>; Thu, 15 Aug 2019 03:42:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729325AbfHOCNn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 14 Aug 2019 22:13:43 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:55310 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725895AbfHOCNm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Aug 2019 22:13:42 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7F29jmk089665;
-        Thu, 15 Aug 2019 02:13:37 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : references : date : in-reply-to : message-id : mime-version :
- content-type; s=corp-2019-08-05;
- bh=1Lq/4W95GWvlW5TQd4bZ+yDCZ0W1oEysiFI+C3DWvqk=;
- b=GNXALDc163oQLCQJRmyqdSQRaqvWHnd6PwZAqM/MsFAWwequunBXggqPQ/pC66/R4Mnk
- vWy5priHjRG/I2Z7Wop02wGo6LjKkS409KU/u6zDnZQpFjhbRo+wzug7dQo0vgOzlRWz
- FtmzHXFDS2N3emjL75hr+toRwrx9AtW/9C29S+TiEl1W/IrLI1bmIoCTsWvSoIkEjKcm
- VQT4ozabvxRzEpKGIaXe7Rtf/DYahL+XKmo8yWYa+7oT98zIDzRz0K5ZreifU3iiEGRA
- QyaIBhcPogiUhm6hjJZD4ykQYY5zh6yJloty/z/+rrXU8/n4rHgvvCRFOMy/j8sWCXvn VA== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2130.oracle.com with ESMTP id 2u9nbtr9e2-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 15 Aug 2019 02:13:37 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7F2DalT178710;
-        Thu, 15 Aug 2019 02:13:37 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3030.oracle.com with ESMTP id 2ucmwj52yk-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 15 Aug 2019 02:13:36 +0000
-Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x7F2CuYF019400;
-        Thu, 15 Aug 2019 02:12:56 GMT
-Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 14 Aug 2019 19:12:52 -0700
-To:     Colin King <colin.king@canonical.com>
-Cc:     Satish Kharat <satishkh@cisco.com>,
-        Sesidhar Baddela <sebaddel@cisco.com>,
-        Karan Tilak Kumar <kartilak@cisco.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] scsi: fnic: remove redundant assignment of variable rc
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-References: <20190813132349.8720-1-colin.king@canonical.com>
-Date:   Wed, 14 Aug 2019 22:12:50 -0400
-In-Reply-To: <20190813132349.8720-1-colin.king@canonical.com> (Colin King's
-        message of "Tue, 13 Aug 2019 14:23:49 +0100")
-Message-ID: <yq14l2j2n31.fsf@oracle.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
+        id S1728905AbfHODmV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 14 Aug 2019 23:42:21 -0400
+Received: from mail-pl1-f193.google.com ([209.85.214.193]:34345 "EHLO
+        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727217AbfHODmV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Aug 2019 23:42:21 -0400
+Received: by mail-pl1-f193.google.com with SMTP id i2so588814plt.1;
+        Wed, 14 Aug 2019 20:42:20 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=JANJxBWQQ/lmx3e6gQBBNY3HZrSKplwd+VTRdmaTTlA=;
+        b=m8pmtReVir4X9hTmwI/DVm70xLq/sckFKZ0fxqepBQyDnehARfhvK3FzAhvKWKTR3M
+         MiWzaYrEunYOfWRD2nLbGfOk5R54jXdfUdd0uPbb80XK+kLgMtH694whbUBtWqtnK+JL
+         yzJCaUKHpRNkBlAlwGPZy5zDpHaatVsZHRfcBDl2IzuoC/qFj80ARE4n/VKkBZ/p/CTx
+         9uNnJjME1Gy8hmI6iBjkYFSZO0Rr+NAwnurbTb2uctc3k5NbUHYKJr5PZ5C0bXdWG15z
+         HgMc96l56wn5cTFPSznZMKiFq7k7VD/lbsLfr1dl81RhgsHeV+NxFXCuwbX7uASNPwYE
+         y4dg==
+X-Gm-Message-State: APjAAAXBR/ew7ZjQCV1DBtQBBcprSWh7+82tZFaw1ZsZ/0bKjL7B/l+z
+        2jXnxD0jr4fwcgLUcdMwCcXQHJxqN0A=
+X-Google-Smtp-Source: APXvYqx81wrPhXH/lYFj4J2/x/boo2UlT8ODFpdBydweGYIHtn18VNQq90jQEYeDTlyS2mxJb39Ung==
+X-Received: by 2002:a17:902:8302:: with SMTP id bd2mr2539863plb.9.1565840539761;
+        Wed, 14 Aug 2019 20:42:19 -0700 (PDT)
+Received: from asus.site ([2601:647:4000:7f38:138a:21ca:d24:734b])
+        by smtp.gmail.com with ESMTPSA id y188sm1376690pfy.57.2019.08.14.20.42.17
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 14 Aug 2019 20:42:18 -0700 (PDT)
+Subject: Re: [5.3.0-rc4-next][bisected 882632][qla2xxx] WARNING: CPU: 10 PID:
+ 425 at drivers/scsi/qla2xxx/qla_isr.c:2784 qla2x00_status_entry.isra
+To:     Abdul Haleem <abdhalee@linux.vnet.ibm.com>
+Cc:     linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+        linux-next <linux-next@vger.kernel.org>,
+        Stephen Rothwell <sfr@canb.auug.org.au>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        martin.petersen@oracle.com, hmadhani@marvell.com,
+        sachinp <sachinp@linux.vnet.ibm.com>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+References: <1565801523.6908.6.camel@abdul>
+ <cafb1d40-a11e-c137-db06-4564e5f5caf5@acm.org>
+ <1565803123.6908.10.camel@abdul>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <7fc59d4c-b3d5-5ec8-cb7c-51cb863f2a77@acm.org>
+Date:   Wed, 14 Aug 2019 20:42:16 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9349 signatures=668684
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=873
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1906280000 definitions=main-1908150022
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9349 signatures=668684
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=943 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1906280000
- definitions=main-1908150022
+In-Reply-To: <1565803123.6908.10.camel@abdul>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On 8/14/19 10:18 AM, Abdul Haleem wrote:
+> On Wed, 2019-08-14 at 10:05 -0700, Bart Van Assche wrote:
+>> On 8/14/19 9:52 AM, Abdul Haleem wrote:
+>>> Greeting's
+>>>
+>>> Today's linux-next kernel (5.3.0-rc4-next-20190813)  booted with warning on my powerpc power 8 lpar
+>>>
+>>> The WARN_ON_ONCE() was introduced by commit 88263208 (scsi: qla2xxx: Complain if sp->done() is not...)
+>>>
+>>> boot logs:
+>>>
+>>> WARNING: CPU: 10 PID: 425 at drivers/scsi/qla2xxx/qla_isr.c:2784
+>>
+>> Hi Abdul,
+>>
+>> Thank you for having reported this. Is that the only warning reported on your setup by the qla2xxx
+>> driver? If that warning is commented out, does the qla2xxx driver work as expected?
+> 
+> boot warning did not show up when the commit is reverted.
+> 
+> should I comment out only the WARN_ON_ONCE() which is causing the issue,
+> and not the other one ?
 
-Colin,
+Yes please. Commit 88263208 introduced five kernel warnings but I think 
+only one of these should be removed again, e.g. as follows:
 
-> Variable ret is initialized to a value that is never read and it is
-> re-assigned later and immediatetly returns. Clean up the code by
-> removing rc and just returning 0.
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index cd39ac18c5fd..d81b5ecce24b 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -2780,8 +2780,6 @@ qla2x00_status_entry(scsi_qla_host_t *vha, struct 
+rsp_que *rsp, void *pkt)
 
-Applied to 5.4/scsi-queue. Thanks!
+  	if (rsp->status_srb == NULL)
+  		sp->done(sp, res);
+-	else
+-		WARN_ON_ONCE(true);
+  }
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+  /**
