@@ -2,75 +2,140 @@ Return-Path: <SRS0=D4W/=WL=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D2EFC3A589
-	for <linux-scsi@archiver.kernel.org>; Thu, 15 Aug 2019 15:40:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 908FCC41514
+	for <linux-scsi@archiver.kernel.org>; Thu, 15 Aug 2019 17:00:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 58384206C1
-	for <linux-scsi@archiver.kernel.org>; Thu, 15 Aug 2019 15:40:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5B864206C1
+	for <linux-scsi@archiver.kernel.org>; Thu, 15 Aug 2019 17:00:21 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZQ/7Hu4/"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730715AbfHOPkx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 15 Aug 2019 11:40:53 -0400
-Received: from mail-pf1-f194.google.com ([209.85.210.194]:40289 "EHLO
-        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730666AbfHOPkx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Aug 2019 11:40:53 -0400
-Received: by mail-pf1-f194.google.com with SMTP id w16so1510250pfn.7
-        for <linux-scsi@vger.kernel.org>; Thu, 15 Aug 2019 08:40:53 -0700 (PDT)
+        id S1730621AbfHORAU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 15 Aug 2019 13:00:20 -0400
+Received: from mail-pg1-f195.google.com ([209.85.215.195]:37944 "EHLO
+        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729084AbfHORAU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Aug 2019 13:00:20 -0400
+Received: by mail-pg1-f195.google.com with SMTP id e11so1548102pga.5;
+        Thu, 15 Aug 2019 10:00:19 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=ph3z3OX8TOm5fwkAgRwuk2oCHCA8KPoeo401VRgwoe0=;
+        b=ZQ/7Hu4/sNsp8P9rB8y0CcfXjOCycDWN9wMK1l3dxNYCOfXGLJfJoSLk2m5ZxIgDI9
+         6hvcMsvosXJeqRB9oAinRqmjqE3aAXn+tgtapg9cbek2Q7hw5Id0q8X+zopGl6EkEf9X
+         ed0vzgfaWGDtww7QZa8gT6ijqkvs2CZg25ntL8/gJQx7WeW2YyI/ThflGKeFlQEsMbMd
+         b9vVrUUc0qbbld2fTyVB7qG8D+uKTn0lFyuOG0ps4lphlxNA7M3Wxv9DvEm+4wdvsgOF
+         4GfGXlr6+WVKtxmDqLnMRlh/ZC3z9SviTVLtXk9CyPStuMj3EvDGeNGYVruj2yOzXymT
+         canA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=41roc1+HHIoPiN0cCpBxFpS6UdILZTVvuMLXG6p/X+c=;
-        b=Mpjxp4HDRAkrP41AaR5kXKsH9z+xowz7mS24G+l9FlmCFs/ct1MTpkwZeuU0rvpdVS
-         +Xfsc7+vnYvS5fhb2I4nxbH18EqbR0h90LI8FOAJFM1Ocw7GmcbhW/tBNj1U6Ap+zNov
-         tulfj2GjqXlWwucz7EouJBd1UdJ2c/rQyyMpNN1OrWDIVdxjOvBYFCz19AzdGsKBmqCg
-         tDj80X4er+LFfUTO+7NtO5T1e05H3E4Fx4PNwSdpvVwXXSjz4pG3S+N7d3VBWD0ys8EU
-         hTApAfgNRtfKrEURwJxFGqutrlJkq7rZkD0JaWlyWzU+VpW6zcvm+7ZCSPQ5lD/p8CYh
-         Vn1Q==
-X-Gm-Message-State: APjAAAV88VGQAROV6sho82xKYj4Anwx9VdgRCaNloMDwPgX+1MZ8j5zN
-        FPUapgMS2GyG7HrCLvtSfoE=
-X-Google-Smtp-Source: APXvYqxLaC9OdO14rwAaPZDivlOMz9yEUiSw1cmi1K9JSmL444hC55+QU/cNeBfI00yyKc5OwzTLIQ==
-X-Received: by 2002:aa7:9210:: with SMTP id 16mr6232964pfo.11.1565883653027;
-        Thu, 15 Aug 2019 08:40:53 -0700 (PDT)
-Received: from desktop-bart.svl.corp.google.com ([2620:15c:2cd:202:4308:52a3:24b6:2c60])
-        by smtp.gmail.com with ESMTPSA id y128sm2558979pgy.41.2019.08.15.08.40.51
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 15 Aug 2019 08:40:51 -0700 (PDT)
-Subject: Re: [PATCH v4] SCSI: fix queue cleanup race before
- scsi_requeue_run_queue is done
-To:     "zhengbin (A)" <zhengbin13@huawei.com>, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, ming.lei@redhat.com,
-        linux-scsi@vger.kernel.org
-Cc:     houtao1@huawei.com, yanaijie@huawei.com
-References: <1565667334-22071-1-git-send-email-zhengbin13@huawei.com>
- <e79e0996-37e0-049c-7546-990b280424d0@huawei.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <ca5e857f-472d-6849-6907-1f36879997dd@acm.org>
-Date:   Thu, 15 Aug 2019 08:40:50 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
-MIME-Version: 1.0
-In-Reply-To: <e79e0996-37e0-049c-7546-990b280424d0@huawei.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=ph3z3OX8TOm5fwkAgRwuk2oCHCA8KPoeo401VRgwoe0=;
+        b=RHR9ByOOqanL0WdtE/gBpK6P754Agl78WrHdGCQYDOviVLCnbcXaqihf0gvi0Dsi6c
+         M8axqII7EptzviAnMmOzKcSmnVHygE+HALp0lNaFAaPecOAEoujoSRiQ3oKJ5WRZuyck
+         yiik0g9JI45QUgG2F1upA+m3jNyqQv8nQB3lnSxIBcQWrJ4uN2ECc7XmJjjrM/t6e771
+         Bkb3abW9GPi5JCd8YNZAHdECuwUHNsUhe55oD6+EG/C/Hxc1vHY8xFVr6Q9wb5gbK6N7
+         2NTt6EPE9rR4/7iSuP/wsZeyCR5ipTy8Y5mEt7xiatkUbyrPx7cWH/c/TLcHsvC+q0wR
+         IUZA==
+X-Gm-Message-State: APjAAAUNjf+kElAl9CZ23yIjOkNQVHEYDn97L8DWHbbFCgJrkJjXsfFP
+        KIBesJPvCHwKJOeIy+C6KUui42ttx1M=
+X-Google-Smtp-Source: APXvYqz/zgCzBeEtq6Iu3Pe068aerxZosiJXoZW7RjfE1TBygzwr+M+jnrQhmwlssyfQxZDRWNxBAQ==
+X-Received: by 2002:a17:90a:2764:: with SMTP id o91mr3128474pje.57.1565888419088;
+        Thu, 15 Aug 2019 10:00:19 -0700 (PDT)
+Received: from mita-MS-7A45.lan ([240f:34:212d:1:12:b19f:559d:7305])
+        by smtp.gmail.com with ESMTPSA id b30sm3943942pfr.117.2019.08.15.10.00.11
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
+        Thu, 15 Aug 2019 10:00:17 -0700 (PDT)
+From:   Akinobu Mita <akinobu.mita@gmail.com>
+To:     linux-block@vger.kernel.org, linux-leds@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org
+Cc:     Akinobu Mita <akinobu.mita@gmail.com>,
+        Frank Steiner <fsteiner-mail1@bio.ifi.lmu.de>,
+        Jacek Anaszewski <jacek.anaszewski@gmail.com>,
+        Pavel Machek <pavel@ucw.cz>, Dan Murphy <dmurphy@ti.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        GOTO Masanori <gotom@debian.or.jp>,
+        YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>,
+        Hannes Reinecke <hare@suse.com>
+Subject: [PATCH v4 0/5] introduce LED block device activity trigger
+Date:   Fri, 16 Aug 2019 01:59:54 +0900
+Message-Id: <1565888399-21550-1-git-send-email-akinobu.mita@gmail.com>
+X-Mailer: git-send-email 2.7.4
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/14/19 6:50 PM, zhengbin (A) wrote:
-> ping
+This work is inspired by the report on linux-nvme mailing list.
 
-Sending a "ping" after 46 hours is way too soon and only causes 
-irritation. What would help though is more information about how this 
-patch has been tested. Does it e.g. survive the srp tests in blktests?
+disk-activity trigger not working for nvme disk:
+http://lists.infradead.org/pipermail/linux-nvme/2019-July/025253.html
 
-Thanks,
+This LED block device activity trigger works with any block devices.
 
-Bart.
+* v4
+- Squash patch 'add interface to stop and restart polling disk stats' into
+  the ledtrig-blk introduction patch
+- Rename 'led' to 'led_trig' in struct ledtrig_blk
+
+* v3
+- Avoid the name collision with LED_OFF and LED_ON
+- Add ABI documentation
+- Add more detail to Kconfig help text
+
+* v2
+- Remove "move declaration of led_stop_software_blink() to linux/leds.h" patch
+- Move the trigger implementation to drivers/leds/trigger
+- s/blk_ledtrig/ledtrig_blk/
+- Add CONFIG_LEDS_TRIGGER_BLOCK
+- Fix wrong bitops usages
+- Add interface to stop and restart polling disk stats
+- Stop polling disk stats for scsi disk during runtime suspend
+
+Akinobu Mita (5):
+  block: umem: rename LED_* macros to MEMCTRL_LED_*
+  scsi: mvsas: rename LED_* enums to SGPIO_LED_*
+  scsi: nsp32: rename LED_* macros to EXT_PORT_LED_*
+  block: introduce LED block device activity trigger
+  scsi: sd: stop polling disk stats by ledtrig-blk during runtime
+    suspend
+
+ .../ABI/testing/sysfs-class-led-trigger-blk        |  37 +++
+ block/genhd.c                                      |   2 +
+ drivers/block/umem.c                               |  20 +-
+ drivers/block/umem.h                               |  20 +-
+ drivers/leds/trigger/Kconfig                       |   9 +
+ drivers/leds/trigger/Makefile                      |   1 +
+ drivers/leds/trigger/ledtrig-blk.c                 | 259 +++++++++++++++++++++
+ drivers/scsi/mvsas/mv_94xx.c                       |   2 +-
+ drivers/scsi/mvsas/mv_94xx.h                       |  24 +-
+ drivers/scsi/nsp32.c                               |   7 +-
+ drivers/scsi/nsp32.h                               |   4 +-
+ drivers/scsi/sd.c                                  |  40 ++--
+ include/linux/genhd.h                              |   3 +
+ include/linux/leds.h                               |  38 +++
+ 14 files changed, 411 insertions(+), 55 deletions(-)
+ create mode 100644 Documentation/ABI/testing/sysfs-class-led-trigger-blk
+ create mode 100644 drivers/leds/trigger/ledtrig-blk.c
+
+Cc: Frank Steiner <fsteiner-mail1@bio.ifi.lmu.de>
+Cc: Jacek Anaszewski <jacek.anaszewski@gmail.com>
+Cc: Pavel Machek <pavel@ucw.cz>
+Cc: Dan Murphy <dmurphy@ti.com>
+Cc: Jens Axboe <axboe@kernel.dk>
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: GOTO Masanori <gotom@debian.or.jp>
+Cc: YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>
+Cc: Hannes Reinecke <hare@suse.com>
+-- 
+2.7.4
+
