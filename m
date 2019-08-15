@@ -2,187 +2,96 @@ Return-Path: <SRS0=D4W/=WL=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 644F9C3A59B
-	for <linux-scsi@archiver.kernel.org>; Thu, 15 Aug 2019 17:00:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7ED6EC3A59C
+	for <linux-scsi@archiver.kernel.org>; Thu, 15 Aug 2019 17:30:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 38BCE206C1
-	for <linux-scsi@archiver.kernel.org>; Thu, 15 Aug 2019 17:00:48 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FG9XfN38"
+	by mail.kernel.org (Postfix) with ESMTP id 5F4962083B
+	for <linux-scsi@archiver.kernel.org>; Thu, 15 Aug 2019 17:30:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730781AbfHORAr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 15 Aug 2019 13:00:47 -0400
-Received: from mail-pf1-f195.google.com ([209.85.210.195]:34639 "EHLO
-        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730645AbfHORAr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Aug 2019 13:00:47 -0400
-Received: by mail-pf1-f195.google.com with SMTP id b24so1635823pfp.1;
-        Thu, 15 Aug 2019 10:00:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=h/9CsJGmHC2k7mkEH3qy3JiPzHPuCIzjhAVDf1/O6Fc=;
-        b=FG9XfN38rVy8J0Fx0L2GzzGLSo97RVUwi5K/zZqiLn2lB+N5hVN0/NnyMRhdtJ0nHb
-         9UWP3HtGJQdgzzEQWnBNwQ5I6JURKASkwLfVMfrUu5BKJb7EYe34YPJ9xMiZMoyH1Mfs
-         gbvcp8DAu2ZNh+aiO2+ssoENG2ZFJkRXkUmYFt2Ggm+f0H3pvIt7sSpYsaGTDz5TI+ia
-         Wp4ySYiQGhfdydmfXelMl45OEtN4zux54nxMopIYN1l9Vah3SP6F6G7MZhIzcIevGCHy
-         jYOv3ccTVCusx29O4rEa74Fd7DvZTqjPuNiu/OTkq27COxtdjAJT/e9QCdzXDxpteiTE
-         DgSw==
+        id S1730666AbfHORas (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 15 Aug 2019 13:30:48 -0400
+Received: from mail-pg1-f193.google.com ([209.85.215.193]:35242 "EHLO
+        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730598AbfHORas (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Aug 2019 13:30:48 -0400
+Received: by mail-pg1-f193.google.com with SMTP id n4so1596381pgv.2;
+        Thu, 15 Aug 2019 10:30:47 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=h/9CsJGmHC2k7mkEH3qy3JiPzHPuCIzjhAVDf1/O6Fc=;
-        b=ccIMovtx0zWqCDGN9y9njIjc3UPqXUEDyV3r4G68uLP7H0UaHrkmdY8p7WkBWgXcCI
-         6iOJN3Sy7kBVZmHXEUQqaZ3WJN9bu/eHe907BjnVSNO+mpkXr9t95etkNvSxd6LQXUSP
-         TKRLuEDG51UpN2efmZQ5PhHskWh5iMXdDJr7+4MLF6p3pXGeSR8EM+lic52u/R3afiJM
-         3yQShAb9HdEL0b7nXF5M8Hsx5WTjlXtFWj/uikssWYSoeXOhi5Xmlh1NOCZOuJQNC9Zo
-         s3WODHIkfSUqcZImiif4+YVhRnxMKLyUCGpxgDv8YDzxiFYO8kikqjY1DKHxmzWvT/cP
-         ndig==
-X-Gm-Message-State: APjAAAXeRbxM/U7SakDQjlFzeBSntbrhZt2zbEAS6inY8zlS+AcpoIeH
-        bSHF00vf5BqEAE9CU50+GHW7AdFfhWo=
-X-Google-Smtp-Source: APXvYqx5Y2iCVnEH/8slULuy/zuvvskR3ra4nGVYiDkW+XMdYezUCKW03mAvHWTYTragLPLC5z2pgw==
-X-Received: by 2002:a63:2705:: with SMTP id n5mr74184pgn.224.1565888446274;
-        Thu, 15 Aug 2019 10:00:46 -0700 (PDT)
-Received: from mita-MS-7A45.lan ([240f:34:212d:1:12:b19f:559d:7305])
-        by smtp.gmail.com with ESMTPSA id b30sm3943942pfr.117.2019.08.15.10.00.41
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-        Thu, 15 Aug 2019 10:00:45 -0700 (PDT)
-From:   Akinobu Mita <akinobu.mita@gmail.com>
-To:     linux-block@vger.kernel.org, linux-leds@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org
-Cc:     Akinobu Mita <akinobu.mita@gmail.com>,
-        Frank Steiner <fsteiner-mail1@bio.ifi.lmu.de>,
-        Jacek Anaszewski <jacek.anaszewski@gmail.com>,
-        Pavel Machek <pavel@ucw.cz>, Dan Murphy <dmurphy@ti.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Hannes Reinecke <hare@suse.com>
-Subject: [PATCH v4 5/5] scsi: sd: stop polling disk stats by ledtrig-blk during runtime suspend
-Date:   Fri, 16 Aug 2019 01:59:59 +0900
-Message-Id: <1565888399-21550-6-git-send-email-akinobu.mita@gmail.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1565888399-21550-1-git-send-email-akinobu.mita@gmail.com>
-References: <1565888399-21550-1-git-send-email-akinobu.mita@gmail.com>
+        h=x-gm-message-state:from:subject:to:cc:references:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=QnlfD1u/saq7YabHTTJM2fFau3y80kmE4WZcEZvSBiM=;
+        b=ueGM7pgLLQOxkbaLXR1h3fvwzCdNAz6YI0mFOBYCD8CK/sfpTYeK4iWKnjjxuANFBl
+         8QtO9FRdHQQT0+Rio/tDTmZcxxbGNXX6OjjZPaahH15Pc1zJZ6dExkdWnWid3PoLT14x
+         wEqdrwngFrTPx4fdstFaRonutiZuL6H7mUWCgC507vQrhMOuey16RL+lwKlvCS1iRFSr
+         haTvAB70nbHzu06cD3+E5i89NoBDRJXDCkToGNmJz8TAZ5VZacUsgLKisSdfW054M27l
+         I8DHzGn4rzYvm6X7R3A8zbvn2QTDayDnoxK845y7LsuiaGeoO1icJzvIahkZefRxWYt6
+         rEpw==
+X-Gm-Message-State: APjAAAVed+YvHIxiHhEK0F2nJ2mw5CoLEkhEJYV6E7ut057yBlkq9YDw
+        1/tOY3Y3YumCByA00wUZXPc=
+X-Google-Smtp-Source: APXvYqzHLHWkQAegNa1jIJY7/77XgqulqNeMSvORhvP8TO0Ntzgv66iP0wjodakvJ7RdKgVabvaQFg==
+X-Received: by 2002:aa7:91d3:: with SMTP id z19mr6500679pfa.135.1565890247488;
+        Thu, 15 Aug 2019 10:30:47 -0700 (PDT)
+Received: from desktop-bart.svl.corp.google.com ([2620:15c:2cd:202:4308:52a3:24b6:2c60])
+        by smtp.gmail.com with ESMTPSA id x9sm2529062pgp.75.2019.08.15.10.30.46
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 15 Aug 2019 10:30:46 -0700 (PDT)
+From:   Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH v3 00/20] sg: add v4 interface
+To:     dgilbert@interlog.com, James Bottomley <jejb@linux.vnet.ibm.com>,
+        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-api@vger.kernel.org
+Cc:     martin.petersen@oracle.com, hare@suse.de,
+        Arnd Bergmann <arnd@arndb.de>,
+        Tony Battersby <tonyb@cybernetics.com>,
+        Christoph Hellwig <hch@lst.de>
+References: <20190807114252.2565-1-dgilbert@interlog.com>
+ <1565291455.3435.48.camel@linux.vnet.ibm.com>
+ <7edab448-22cc-493a-f745-acc5be38f6a5@interlog.com>
+ <1565305243.25619.27.camel@linux.vnet.ibm.com>
+ <51e7cdfb-7921-9368-9b78-90ba5ac50c77@interlog.com>
+Message-ID: <6606add1-7ae7-5d8d-e660-d267164981d9@acm.org>
+Date:   Thu, 15 Aug 2019 10:30:45 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
+MIME-Version: 1.0
+In-Reply-To: <51e7cdfb-7921-9368-9b78-90ba5ac50c77@interlog.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The LED block device activity trigger periodically polls the disk stats
-to collect the activity.  However, it is pointless to poll while the
-scsi device is in runtime suspend.
+On 8/13/19 9:19 PM, Douglas Gilbert wrote:
+> Bart Van Assche hinted at a better API design but didn't present
+> it. If he did, that would be the first time an alternate API
+> design was presented for async usage in the 20 years that I have
+> been associated with the driver.
 
-This stops polling disk stats when the device is successfully runtime
-suspended, and restarts polling when the device is successfully runtime
-resumed.
+I would like to start from the use cases instead of the implementation 
+of a new SG/IO interface. My employer uses the SG/IO interface for 
+controlling SMR and HSMR disks. What we need is the ability to discover, 
+read, write and configure such disks, support for the non-standard HSMR 
+flex protocol, the ability to give certain users or groups access to a 
+subset of the LBAs and also the ability to make that information 
+persistent. I think that such functionality could be implemented by 
+extending LVM and by adding support for all ZBC commands we need in the 
+block layer, device mapper layer and also in the asynchronous I/O layer. 
+The block, dm and aio layers already support submitting commands 
+asynchronously but do not yet support all the ZBC commands that we use.
 
-Cc: Frank Steiner <fsteiner-mail1@bio.ifi.lmu.de>
-Cc: Jacek Anaszewski <jacek.anaszewski@gmail.com>
-Cc: Pavel Machek <pavel@ucw.cz>
-Cc: Dan Murphy <dmurphy@ti.com>
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Hannes Reinecke <hare@suse.com>
-Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
----
- drivers/scsi/sd.c | 40 +++++++++++++++++++++++-----------------
- 1 file changed, 23 insertions(+), 17 deletions(-)
+Are there any SG/IO use cases that have not yet been mentioned in this 
+e-mail thread? If SMR and HSMR are the primary use cases for SG/IO, 
+should asynchronous command support be added in the SG/IO layer or 
+should rather ZBC support in the block, dm and aio layers be improved?
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 149d406..5f73142 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -3538,7 +3538,7 @@ static int sd_suspend_common(struct device *dev, bool ignore_stop_errors)
- {
- 	struct scsi_disk *sdkp = dev_get_drvdata(dev);
- 	struct scsi_sense_hdr sshdr;
--	int ret = 0;
-+	int ret;
- 
- 	if (!sdkp)	/* E.g.: runtime suspend following sd_remove() */
- 		return 0;
-@@ -3550,18 +3550,16 @@ static int sd_suspend_common(struct device *dev, bool ignore_stop_errors)
- 		if (ret) {
- 			/* ignore OFFLINE device */
- 			if (ret == -ENODEV)
--				return 0;
--
--			if (!scsi_sense_valid(&sshdr) ||
--			    sshdr.sense_key != ILLEGAL_REQUEST)
--				return ret;
-+				goto success;
- 
- 			/*
- 			 * sshdr.sense_key == ILLEGAL_REQUEST means this drive
- 			 * doesn't support sync. There's not much to do and
- 			 * suspend shouldn't fail.
- 			 */
--			ret = 0;
-+			if (!scsi_sense_valid(&sshdr) ||
-+			    sshdr.sense_key != ILLEGAL_REQUEST)
-+				return ret;
- 		}
- 	}
- 
-@@ -3569,11 +3567,14 @@ static int sd_suspend_common(struct device *dev, bool ignore_stop_errors)
- 		sd_printk(KERN_NOTICE, sdkp, "Stopping disk\n");
- 		/* an error is not worth aborting a system sleep */
- 		ret = sd_start_stop_device(sdkp, 0);
--		if (ignore_stop_errors)
--			ret = 0;
-+		if (ret && !ignore_stop_errors)
-+			return ret;
- 	}
- 
--	return ret;
-+success:
-+	ledtrig_blk_disable(sdkp->disk);
-+
-+	return 0;
- }
- 
- static int sd_suspend_system(struct device *dev)
-@@ -3589,19 +3590,24 @@ static int sd_suspend_runtime(struct device *dev)
- static int sd_resume(struct device *dev)
- {
- 	struct scsi_disk *sdkp = dev_get_drvdata(dev);
--	int ret;
- 
- 	if (!sdkp)	/* E.g.: runtime resume at the start of sd_probe() */
- 		return 0;
- 
--	if (!sdkp->device->manage_start_stop)
--		return 0;
-+	if (sdkp->device->manage_start_stop) {
-+		int ret;
-+
-+		sd_printk(KERN_NOTICE, sdkp, "Starting disk\n");
-+		ret = sd_start_stop_device(sdkp, 1);
-+		if (ret)
-+			return ret;
- 
--	sd_printk(KERN_NOTICE, sdkp, "Starting disk\n");
--	ret = sd_start_stop_device(sdkp, 1);
--	if (!ret)
- 		opal_unlock_from_suspend(sdkp->opal_dev);
--	return ret;
-+	}
-+
-+	ledtrig_blk_enable(sdkp->disk);
-+
-+	return 0;
- }
- 
- /**
--- 
-2.7.4
+Thanks,
 
+Bart.
