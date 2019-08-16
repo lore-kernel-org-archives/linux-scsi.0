@@ -2,173 +2,172 @@ Return-Path: <SRS0=RKta=WM=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49573C3A59C
-	for <linux-scsi@archiver.kernel.org>; Fri, 16 Aug 2019 15:59:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35123C3A59C
+	for <linux-scsi@archiver.kernel.org>; Fri, 16 Aug 2019 16:36:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1F0EE21783
-	for <linux-scsi@archiver.kernel.org>; Fri, 16 Aug 2019 15:59:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 120ED20665
+	for <linux-scsi@archiver.kernel.org>; Fri, 16 Aug 2019 16:36:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727486AbfHPP7L (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 16 Aug 2019 11:59:11 -0400
-Received: from smtp.infotech.no ([82.134.31.41]:58765 "EHLO smtp.infotech.no"
+        id S1726741AbfHPQgo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 16 Aug 2019 12:36:44 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:54936 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727347AbfHPP7L (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 16 Aug 2019 11:59:11 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 1943A2042A1;
-        Fri, 16 Aug 2019 17:59:08 +0200 (CEST)
-X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
-Received: from smtp.infotech.no ([127.0.0.1])
-        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id gYniUMtMdR9j; Fri, 16 Aug 2019 17:59:06 +0200 (CEST)
-Received: from [192.168.48.23] (host-23-251-188-50.dyn.295.ca [23.251.188.50])
-        by smtp.infotech.no (Postfix) with ESMTPA id 96F3B20418E;
-        Fri, 16 Aug 2019 17:59:04 +0200 (CEST)
-Reply-To: dgilbert@interlog.com
-Subject: Re: [PATCH v3 00/20] sg: add v4 interface
-To:     Bart Van Assche <bvanassche@acm.org>,
-        James Bottomley <jejb@linux.vnet.ibm.com>,
-        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
-        linux-api@vger.kernel.org
-Cc:     martin.petersen@oracle.com, hare@suse.de,
-        Arnd Bergmann <arnd@arndb.de>,
-        Tony Battersby <tonyb@cybernetics.com>,
-        Christoph Hellwig <hch@lst.de>
-References: <20190807114252.2565-1-dgilbert@interlog.com>
- <1565291455.3435.48.camel@linux.vnet.ibm.com>
- <7edab448-22cc-493a-f745-acc5be38f6a5@interlog.com>
- <1565305243.25619.27.camel@linux.vnet.ibm.com>
- <51e7cdfb-7921-9368-9b78-90ba5ac50c77@interlog.com>
- <6606add1-7ae7-5d8d-e660-d267164981d9@acm.org>
-From:   Douglas Gilbert <dgilbert@interlog.com>
-Message-ID: <d0c60641-0607-a9c4-e79d-b6e850ef8682@interlog.com>
-Date:   Fri, 16 Aug 2019 11:59:04 -0400
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
-MIME-Version: 1.0
-In-Reply-To: <6606add1-7ae7-5d8d-e660-d267164981d9@acm.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-CA
+        id S1726591AbfHPQgo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 16 Aug 2019 12:36:44 -0400
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id ED7DD356C5;
+        Fri, 16 Aug 2019 16:36:43 +0000 (UTC)
+Received: from emilne (unknown [10.18.25.205])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 80B8918863;
+        Fri, 16 Aug 2019 16:36:43 +0000 (UTC)
+Message-ID: <0f5f2d9bafb675208f9bbabc794a5ea1b62b8da7.camel@redhat.com>
+Subject: Re: [PATCH v3] lpfc: Mitigate high memory pre-allocation by SCSI-MQ
+From:   "Ewan D. Milne" <emilne@redhat.com>
+To:     James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org
+Cc:     Dick Kennedy <dick.kennedy@broadcom.com>
+Date:   Fri, 16 Aug 2019 12:36:42 -0400
+In-Reply-To: <20190816023649.16682-1-jsmart2021@gmail.com>
+References: <20190816023649.16682-1-jsmart2021@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.30]); Fri, 16 Aug 2019 16:36:44 +0000 (UTC)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2019-08-15 1:30 p.m., Bart Van Assche wrote:
-> On 8/13/19 9:19 PM, Douglas Gilbert wrote:
->> Bart Van Assche hinted at a better API design but didn't present
->> it. If he did, that would be the first time an alternate API
->> design was presented for async usage in the 20 years that I have
->> been associated with the driver.
+On Thu, 2019-08-15 at 19:36 -0700, James Smart wrote:
+> When SCSI-MQ is enabled, the SCSI-MQ layers will do pre-allocation of
+> MQ resources based on shost values set by the driver. In newer cases
+> of the driver, which attempts to set nr_hw_queues to the cpu count,
+> the multipliers become excessive, with a single shost having SCSI-MQ
+> pre-allocation reaching into the multiple GBytes range.  NPIV, which
+> creates additional shosts, only multiply this overhead. On lower-memory
+> systems, this can exhaust system memory very quickly, resulting in a
+> system crash or failures in the driver or elsewhere due to low memory
+> conditions.
 > 
-> I would like to start from the use cases instead of the implementation of a new 
-> SG/IO interface. My employer uses the SG/IO interface for controlling SMR and 
+> After testing several scenarios, the situation can be mitigated by
+> limiting the value set in shost->nr_hw_queues to 4. Although the shost
+> values were changed, the driver still had per-cpu hardware queues of
+> its own that allowed parallelization per-cpu.  Testing revealed that
+> even with the smallish number for nr_hw_queues for SCSI-MQ, performance
+> levels remained near maximum with the within-driver affiinitization.
+> 
+> A module parameter was created to allow the value set for the
+> nr_hw_queues to be tunable.
+> 
+> Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
+> Signed-off-by: James Smart <jsmart2021@gmail.com>
+> Reviewed-by: Ming Lei <ming.lei@redhat.com>
+> 
+> ---
+> v3: add Ming's reviewed-by tag
+> ---
+>  drivers/scsi/lpfc/lpfc.h      |  1 +
+>  drivers/scsi/lpfc/lpfc_attr.c | 15 +++++++++++++++
+>  drivers/scsi/lpfc/lpfc_init.c | 10 ++++++----
+>  drivers/scsi/lpfc/lpfc_sli4.h |  5 +++++
+>  4 files changed, 27 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
+> index 2c3bb8a966e5..bade2e025ecf 100644
+> --- a/drivers/scsi/lpfc/lpfc.h
+> +++ b/drivers/scsi/lpfc/lpfc.h
+> @@ -824,6 +824,7 @@ struct lpfc_hba {
+>  	uint32_t cfg_cq_poll_threshold;
+>  	uint32_t cfg_cq_max_proc_limit;
+>  	uint32_t cfg_fcp_cpu_map;
+> +	uint32_t cfg_fcp_mq_threshold;
+>  	uint32_t cfg_hdw_queue;
+>  	uint32_t cfg_irq_chann;
+>  	uint32_t cfg_suppress_rsp;
+> diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+> index ea62322ffe2b..8d8c495b5b60 100644
+> --- a/drivers/scsi/lpfc/lpfc_attr.c
+> +++ b/drivers/scsi/lpfc/lpfc_attr.c
+> @@ -5709,6 +5709,19 @@ LPFC_ATTR_RW(nvme_embed_cmd, 1, 0, 2,
+>  	     "Embed NVME Command in WQE");
+>  
+>  /*
+> + * lpfc_fcp_mq_threshold: Set the maximum number of Hardware Queues
+> + * the driver will advertise it supports to the SCSI layer.
+> + *
+> + *      0    = Set nr_hw_queues by the number of CPUs or HW queues.
+> + *      1,128 = Manually specify the maximum nr_hw_queue value to be set,
+> + *
+> + * Value range is [0,128]. Default value is 8.
+> + */
+> +LPFC_ATTR_R(fcp_mq_threshold, LPFC_FCP_MQ_THRESHOLD_DEF,
+> +	    LPFC_FCP_MQ_THRESHOLD_MIN, LPFC_FCP_MQ_THRESHOLD_MAX,
+> +	    "Set the number of SCSI Queues advertised");
+> +
+> +/*
+>   * lpfc_hdw_queue: Set the number of Hardware Queues the driver
+>   * will advertise it supports to the NVME and  SCSI layers. This also
+>   * will map to the number of CQ/WQ pairs the driver will create.
+> @@ -6030,6 +6043,7 @@ struct device_attribute *lpfc_hba_attrs[] = {
+>  	&dev_attr_lpfc_cq_poll_threshold,
+>  	&dev_attr_lpfc_cq_max_proc_limit,
+>  	&dev_attr_lpfc_fcp_cpu_map,
+> +	&dev_attr_lpfc_fcp_mq_threshold,
+>  	&dev_attr_lpfc_hdw_queue,
+>  	&dev_attr_lpfc_irq_chann,
+>  	&dev_attr_lpfc_suppress_rsp,
+> @@ -7112,6 +7126,7 @@ lpfc_get_cfgparam(struct lpfc_hba *phba)
+>  	/* Initialize first burst. Target vs Initiator are different. */
+>  	lpfc_nvme_enable_fb_init(phba, lpfc_nvme_enable_fb);
+>  	lpfc_nvmet_fb_size_init(phba, lpfc_nvmet_fb_size);
+> +	lpfc_fcp_mq_threshold_init(phba, lpfc_fcp_mq_threshold);
+>  	lpfc_hdw_queue_init(phba, lpfc_hdw_queue);
+>  	lpfc_irq_chann_init(phba, lpfc_irq_chann);
+>  	lpfc_enable_bbcr_init(phba, lpfc_enable_bbcr);
+> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+> index faf43b1d3dbe..03998579d6ee 100644
+> --- a/drivers/scsi/lpfc/lpfc_init.c
+> +++ b/drivers/scsi/lpfc/lpfc_init.c
+> @@ -4309,10 +4309,12 @@ lpfc_create_port(struct lpfc_hba *phba, int instance, struct device *dev)
+>  	shost->max_cmd_len = 16;
+>  
+>  	if (phba->sli_rev == LPFC_SLI_REV4) {
+> -		if (phba->cfg_fcp_io_sched == LPFC_FCP_SCHED_BY_HDWQ)
+> -			shost->nr_hw_queues = phba->cfg_hdw_queue;
+> -		else
+> -			shost->nr_hw_queues = phba->sli4_hba.num_present_cpu;
+> +		if (!phba->cfg_fcp_mq_threshold ||
+> +		    phba->cfg_fcp_mq_threshold > phba->cfg_hdw_queue)
+> +			phba->cfg_fcp_mq_threshold = phba->cfg_hdw_queue;
+> +
+> +		shost->nr_hw_queues = min_t(int, 2 * num_possible_nodes(),
+> +					    phba->cfg_fcp_mq_threshold);
+>  
+>  		shost->dma_boundary =
+>  			phba->sli4_hba.pc_sli4_params.sge_supp_len-1;
+> diff --git a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
+> index 3aeca387b22a..329f7aa7e169 100644
+> --- a/drivers/scsi/lpfc/lpfc_sli4.h
+> +++ b/drivers/scsi/lpfc/lpfc_sli4.h
+> @@ -44,6 +44,11 @@
+>  #define LPFC_HBA_HDWQ_MAX	128
+>  #define LPFC_HBA_HDWQ_DEF	0
+>  
+> +/* FCP MQ queue count limiting */
+> +#define LPFC_FCP_MQ_THRESHOLD_MIN	0
+> +#define LPFC_FCP_MQ_THRESHOLD_MAX	128
+> +#define LPFC_FCP_MQ_THRESHOLD_DEF	8
+> +
+>  /* Common buffer size to accomidate SCSI and NVME IO buffers */
+>  #define LPFC_COMMON_IO_BUF_SZ	768
+>  
 
-There is no "new" SG/IO interface. Linux has broken the ability of char
-drivers to safely use the read() and write() system calls. This
-adversely impacts the bsg and sg drivers. In response the following
-replacement mappings have been suggested in my first sg patchset:
+Looks good.
 
-1) For sg driver currently in production, its async interface:
-        write(sg_fd, &sg_v3_obj, sizeof(sg_v3_obj))
-          ----->  ioctl(sg_fd, SG_IOSUBMIT_V3, &sg_v3_obj)
-    and
-        read(sg_fd, &sg_v3_obj, sizeof(sg_v3_obj))
-          ----->  ioctl(sg_fd, SG_RECEIVE_V3, &sg_v3_obj)
-
-    And send out a WARN_ONCE when write(sg_fd, &sg_v3_obj,...) is used.
-
-2) For the async portion of the bsg driver that was removed last
-    year, the following, slightly more complex mapping is proposed:
-        write(bsg_fd, &sg_v4_obj, sizeof(sg_v4_obj))
-          ----->  ioctl(sg_fd_equiv_bsg, SG_IOSUBMIT, &sg_v4_obj)
-    and
-        read(bsg_fd, &sg_v4_obj, sizeof(sg_v4_obj))
-          ----->  ioctl(sg_fd_equiv_bsg, SG_RECEIVE, &sg_v4_obj)
-
-    The bsg_fd --> sg_fd_equiv_bsg mapping can be done with the help
-    of sysfs.
-
-
-There is another case with the bsg async interface where the third
-argument to write() and read() is a multiple of the size of a sg_v4_obj.
-I call that a multiple requests invocation. That is handled in my second
-patchset with an extra level of indirection. Yes, that is a change in
-the API, but it is more on the syntax side rather than the semantics side.
-
-The ioctls have another advantage over the write()/read() interface.
-The reader will notice the both SG_IOSUBMIT and SG_IORECEIVE are defined
-with the _IOWR() macro indicating bi-directional dataflow. The "reverse"
-direction dataflow for the submit side is when a tag is sent back from
-the block layer. For the receive side the reverse flow is when matching
-either by pack_id or tag.
-
-Also some longstanding features of the sg async API such as
-ioctl(SG_GET_NUM_WAITING) can lead to a reduction in API traffic. Say
-we have 20 SCSI commands that don't depend on one another (e.g. READ
-GATHERED). They could be submitted asynchronously with a single
-multiple requests invocation by ioctl(SG_IOSUBMIT) with the flag
-SGV4_FLAG_IMMED set. The user code could then wait for one (any one)
-to finish and process it (so that is two API calls so far). Now an
-ioctl(SG_GET_NUM_WAITING) could be issued and say it gets 3 then a
-multiple requests invocation of ioctl(SG_IORECEIVE) for those 3
-could be sent and complete promptly. Now the tally of API calls is
-up to 4. If another ioctl(SG_GET_NUM_WAITING) was issued and say
-it yielded 16 then a multiple requests invocation of
-ioctl(SG_IORECEIVE) for those 16 would complete the originally
-submitted 20 SCSI commands. The total tally of API calls is 6 with
-only 1 of those waiting. The wait could be made fully async by
-using a polling loop or a signal to replace that (and any other)
-wait.
-
-If the user space didn't mind blocking then the whole 20 SCSI commands
-could be processed efficiently with a single multiple requests
-invocation using ioctl(SG_IOSUBMIT) with the SGV4_FLAG_IMMED flag
-cleared. It would first issue all 20 command then return after all 20
-commands were complete. That is an extension of the removed bsg async
-SCSI API, but a pretty good one IMO.
-
-The sg driver's async model remains basically the same as when the
-driver first appeared in 1992. Naturally there have been enhancements
-along the way, such as that last example.
-
-> HSMR disks. What we need is the ability to discover, read, write and configure 
-> such disks, support for the non-standard HSMR flex protocol, the ability to give 
-> certain users or groups access to a subset of the LBAs and also the ability to 
-> make that information persistent. I think that such functionality could be 
-> implemented by extending LVM and by adding support for all ZBC commands we need 
-> in the block layer, device mapper layer and also in the asynchronous I/O layer. 
-> The block, dm and aio layers already support submitting commands asynchronously 
-> but do not yet support all the ZBC commands that we use.
-
-I believe that you will find that the more layers of abstraction that are
-placed between the actual device and the OS level API, the more difficult
-the discovery process will be. And in some cases you will need to get to
-a management layer to let those management functions "pass-through" those
-layers. Some RAID card drivers take advantage of the no_uld_attach flag in
-scsi_device to expose real devices, but only to the sg/bsg interface for
-management purposes (for utilities like smartmontools) and do not produce
-sd device nodes.
-
-> Are there any SG/IO use cases that have not yet been mentioned in this e-mail 
-> thread? If SMR and HSMR are the primary use cases for SG/IO, should asynchronous 
-> command support be added in the SG/IO layer or should rather ZBC support in the 
-> block, dm and aio layers be improved?
-
-My guess is quite a few, and the companies involved don't want to talk about
-their use publicly. For example when a big computer company starts reporting
-errors, I believe my role is to try and fix the errors, not to interrogate
-them about how and why they are using the driver. On the other hand, Tony
-Battersby has been relatively active on this list and produced patches for
-the sg driver over several years. Tony is well positioned to know the
-driver's  strengths and weaknesses but has said that he has little time to
-review these patchsets. I appreciate any feedback I can get from him.
-
-Doug Gilbert
-
-
+Reviewed-by: Ewan D. Milne <emilne@redhat.com>
