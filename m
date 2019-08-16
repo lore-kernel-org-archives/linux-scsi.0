@@ -2,172 +2,92 @@ Return-Path: <SRS0=RKta=WM=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 35123C3A59C
-	for <linux-scsi@archiver.kernel.org>; Fri, 16 Aug 2019 16:36:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A6250C3A59C
+	for <linux-scsi@archiver.kernel.org>; Fri, 16 Aug 2019 17:09:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 120ED20665
-	for <linux-scsi@archiver.kernel.org>; Fri, 16 Aug 2019 16:36:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 83A4620665
+	for <linux-scsi@archiver.kernel.org>; Fri, 16 Aug 2019 17:09:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726741AbfHPQgo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 16 Aug 2019 12:36:44 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:54936 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726591AbfHPQgo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 16 Aug 2019 12:36:44 -0400
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id ED7DD356C5;
-        Fri, 16 Aug 2019 16:36:43 +0000 (UTC)
-Received: from emilne (unknown [10.18.25.205])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 80B8918863;
-        Fri, 16 Aug 2019 16:36:43 +0000 (UTC)
-Message-ID: <0f5f2d9bafb675208f9bbabc794a5ea1b62b8da7.camel@redhat.com>
-Subject: Re: [PATCH v3] lpfc: Mitigate high memory pre-allocation by SCSI-MQ
-From:   "Ewan D. Milne" <emilne@redhat.com>
-To:     James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org
-Cc:     Dick Kennedy <dick.kennedy@broadcom.com>
-Date:   Fri, 16 Aug 2019 12:36:42 -0400
-In-Reply-To: <20190816023649.16682-1-jsmart2021@gmail.com>
-References: <20190816023649.16682-1-jsmart2021@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        id S1726924AbfHPRJT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 16 Aug 2019 13:09:19 -0400
+Received: from mail-pg1-f194.google.com ([209.85.215.194]:44960 "EHLO
+        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726469AbfHPRJT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Aug 2019 13:09:19 -0400
+Received: by mail-pg1-f194.google.com with SMTP id i18so3230652pgl.11
+        for <linux-scsi@vger.kernel.org>; Fri, 16 Aug 2019 10:09:18 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=rByv84a+4PjjzkMpiZltvXrXDCIfYmPU18APbRvVWdo=;
+        b=EiiM7Kuk6kpT7JOrkl6M3UQU9xVwRKq2HiTYH2udkPnoOkqBeMFEu6rKfZBlh8eAPv
+         ADK2+fe2OA5GATRxSWXnLfpn5vftwJR9WRl0Obfs908WN39CZfALK4blR2vwzaHHAO0y
+         +FBxS8gp0ZKlomlzVm3eI9Q77DymO6eOINbOkaJrql4dTYVonUssaXxafKv1D4JDgLgC
+         Ey84X90hjUWTAx4dBCYU5alttYruw9xoDC0pZF+ZW6RxvA1vuMH/JE78kS9WUiKc5Jt5
+         XzXumoAQj2nRKp+n2TMZyiNyQcCdLkXbMHggrAUOgHFjm9aWKueGyCEI8FQ2KZC94iv7
+         9YyQ==
+X-Gm-Message-State: APjAAAWWbFU7wUlVhFmKEclWyqvveMX9OXliOwPZDnfZaqBNQwo2uLzg
+        uic4tLXNqdiNxFwnDCe8ciE=
+X-Google-Smtp-Source: APXvYqzRLvMBzpHjqFo4S17Xbbau+n7TUMs07ZYeOI3tBgGBDKJJapE0rxKp6UDYnj7q62VnV5dt7w==
+X-Received: by 2002:a62:642:: with SMTP id 63mr11826742pfg.257.1565975358375;
+        Fri, 16 Aug 2019 10:09:18 -0700 (PDT)
+Received: from desktop-bart.svl.corp.google.com ([2620:15c:2cd:202:4308:52a3:24b6:2c60])
+        by smtp.gmail.com with ESMTPSA id e9sm5545795pja.17.2019.08.16.10.09.17
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 16 Aug 2019 10:09:17 -0700 (PDT)
+Subject: Re: [PATCH v4] SCSI: fix queue cleanup race before
+ scsi_requeue_run_queue is done
+To:     zhengbin <zhengbin13@huawei.com>, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, ming.lei@redhat.com,
+        linux-scsi@vger.kernel.org
+Cc:     houtao1@huawei.com, yanaijie@huawei.com
+References: <1565667334-22071-1-git-send-email-zhengbin13@huawei.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <ae7561d6-e61d-c7a1-590b-2071598c0f49@acm.org>
+Date:   Fri, 16 Aug 2019 10:09:15 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
+MIME-Version: 1.0
+In-Reply-To: <1565667334-22071-1-git-send-email-zhengbin13@huawei.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.30]); Fri, 16 Aug 2019 16:36:44 +0000 (UTC)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, 2019-08-15 at 19:36 -0700, James Smart wrote:
-> When SCSI-MQ is enabled, the SCSI-MQ layers will do pre-allocation of
-> MQ resources based on shost values set by the driver. In newer cases
-> of the driver, which attempts to set nr_hw_queues to the cpu count,
-> the multipliers become excessive, with a single shost having SCSI-MQ
-> pre-allocation reaching into the multiple GBytes range.  NPIV, which
-> creates additional shosts, only multiply this overhead. On lower-memory
-> systems, this can exhaust system memory very quickly, resulting in a
-> system crash or failures in the driver or elsewhere due to low memory
-> conditions.
-> 
-> After testing several scenarios, the situation can be mitigated by
-> limiting the value set in shost->nr_hw_queues to 4. Although the shost
-> values were changed, the driver still had per-cpu hardware queues of
-> its own that allowed parallelization per-cpu.  Testing revealed that
-> even with the smallish number for nr_hw_queues for SCSI-MQ, performance
-> levels remained near maximum with the within-driver affiinitization.
-> 
-> A module parameter was created to allow the value set for the
-> nr_hw_queues to be tunable.
-> 
-> Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-> Signed-off-by: James Smart <jsmart2021@gmail.com>
-> Reviewed-by: Ming Lei <ming.lei@redhat.com>
-> 
-> ---
-> v3: add Ming's reviewed-by tag
-> ---
->  drivers/scsi/lpfc/lpfc.h      |  1 +
->  drivers/scsi/lpfc/lpfc_attr.c | 15 +++++++++++++++
->  drivers/scsi/lpfc/lpfc_init.c | 10 ++++++----
->  drivers/scsi/lpfc/lpfc_sli4.h |  5 +++++
->  4 files changed, 27 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
-> index 2c3bb8a966e5..bade2e025ecf 100644
-> --- a/drivers/scsi/lpfc/lpfc.h
-> +++ b/drivers/scsi/lpfc/lpfc.h
-> @@ -824,6 +824,7 @@ struct lpfc_hba {
->  	uint32_t cfg_cq_poll_threshold;
->  	uint32_t cfg_cq_max_proc_limit;
->  	uint32_t cfg_fcp_cpu_map;
-> +	uint32_t cfg_fcp_mq_threshold;
->  	uint32_t cfg_hdw_queue;
->  	uint32_t cfg_irq_chann;
->  	uint32_t cfg_suppress_rsp;
-> diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-> index ea62322ffe2b..8d8c495b5b60 100644
-> --- a/drivers/scsi/lpfc/lpfc_attr.c
-> +++ b/drivers/scsi/lpfc/lpfc_attr.c
-> @@ -5709,6 +5709,19 @@ LPFC_ATTR_RW(nvme_embed_cmd, 1, 0, 2,
->  	     "Embed NVME Command in WQE");
->  
->  /*
-> + * lpfc_fcp_mq_threshold: Set the maximum number of Hardware Queues
-> + * the driver will advertise it supports to the SCSI layer.
-> + *
-> + *      0    = Set nr_hw_queues by the number of CPUs or HW queues.
-> + *      1,128 = Manually specify the maximum nr_hw_queue value to be set,
-> + *
-> + * Value range is [0,128]. Default value is 8.
-> + */
-> +LPFC_ATTR_R(fcp_mq_threshold, LPFC_FCP_MQ_THRESHOLD_DEF,
-> +	    LPFC_FCP_MQ_THRESHOLD_MIN, LPFC_FCP_MQ_THRESHOLD_MAX,
-> +	    "Set the number of SCSI Queues advertised");
-> +
-> +/*
->   * lpfc_hdw_queue: Set the number of Hardware Queues the driver
->   * will advertise it supports to the NVME and  SCSI layers. This also
->   * will map to the number of CQ/WQ pairs the driver will create.
-> @@ -6030,6 +6043,7 @@ struct device_attribute *lpfc_hba_attrs[] = {
->  	&dev_attr_lpfc_cq_poll_threshold,
->  	&dev_attr_lpfc_cq_max_proc_limit,
->  	&dev_attr_lpfc_fcp_cpu_map,
-> +	&dev_attr_lpfc_fcp_mq_threshold,
->  	&dev_attr_lpfc_hdw_queue,
->  	&dev_attr_lpfc_irq_chann,
->  	&dev_attr_lpfc_suppress_rsp,
-> @@ -7112,6 +7126,7 @@ lpfc_get_cfgparam(struct lpfc_hba *phba)
->  	/* Initialize first burst. Target vs Initiator are different. */
->  	lpfc_nvme_enable_fb_init(phba, lpfc_nvme_enable_fb);
->  	lpfc_nvmet_fb_size_init(phba, lpfc_nvmet_fb_size);
-> +	lpfc_fcp_mq_threshold_init(phba, lpfc_fcp_mq_threshold);
->  	lpfc_hdw_queue_init(phba, lpfc_hdw_queue);
->  	lpfc_irq_chann_init(phba, lpfc_irq_chann);
->  	lpfc_enable_bbcr_init(phba, lpfc_enable_bbcr);
-> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-> index faf43b1d3dbe..03998579d6ee 100644
-> --- a/drivers/scsi/lpfc/lpfc_init.c
-> +++ b/drivers/scsi/lpfc/lpfc_init.c
-> @@ -4309,10 +4309,12 @@ lpfc_create_port(struct lpfc_hba *phba, int instance, struct device *dev)
->  	shost->max_cmd_len = 16;
->  
->  	if (phba->sli_rev == LPFC_SLI_REV4) {
-> -		if (phba->cfg_fcp_io_sched == LPFC_FCP_SCHED_BY_HDWQ)
-> -			shost->nr_hw_queues = phba->cfg_hdw_queue;
-> -		else
-> -			shost->nr_hw_queues = phba->sli4_hba.num_present_cpu;
-> +		if (!phba->cfg_fcp_mq_threshold ||
-> +		    phba->cfg_fcp_mq_threshold > phba->cfg_hdw_queue)
-> +			phba->cfg_fcp_mq_threshold = phba->cfg_hdw_queue;
-> +
-> +		shost->nr_hw_queues = min_t(int, 2 * num_possible_nodes(),
-> +					    phba->cfg_fcp_mq_threshold);
->  
->  		shost->dma_boundary =
->  			phba->sli4_hba.pc_sli4_params.sge_supp_len-1;
-> diff --git a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
-> index 3aeca387b22a..329f7aa7e169 100644
-> --- a/drivers/scsi/lpfc/lpfc_sli4.h
-> +++ b/drivers/scsi/lpfc/lpfc_sli4.h
-> @@ -44,6 +44,11 @@
->  #define LPFC_HBA_HDWQ_MAX	128
->  #define LPFC_HBA_HDWQ_DEF	0
->  
-> +/* FCP MQ queue count limiting */
-> +#define LPFC_FCP_MQ_THRESHOLD_MIN	0
-> +#define LPFC_FCP_MQ_THRESHOLD_MAX	128
-> +#define LPFC_FCP_MQ_THRESHOLD_DEF	8
-> +
->  /* Common buffer size to accomidate SCSI and NVME IO buffers */
->  #define LPFC_COMMON_IO_BUF_SZ	768
->  
+On 8/12/19 8:35 PM, zhengbin wrote:
+> KASAN reports a use-after-free in 4.19-stable,
+> which won't happen after commit 47cdee29ef9d
+> ("block: move blk_exit_queue into __blk_release_queue").
 
-Looks good.
+This patch doesn't apply on top of kernel v4.19.67:
 
-Reviewed-by: Ewan D. Milne <emilne@redhat.com>
+$ git am ~/\[PATCH\ v4\]\ SCSI\:\ fix\ queue\ cleanup\ race\ before\ 
+scsi_requeue_run_queue\ is\ done.eml
+Applying: SCSI: fix queue cleanup race before scsi_requeue_run_queue is done
+error: patch failed: drivers/scsi/scsi_lib.c:531
+error: drivers/scsi/scsi_lib.c: patch does not apply
+Patch failed at 0001 SCSI: fix queue cleanup race before 
+scsi_requeue_run_queue is done
+
+$ patch -p1 < ~/\[PATCH\ v4\]\ SCSI\:\ fix\ queue\ cleanup\ race\ 
+before\ scsi_requeue_run_queue\ is\ done.eml
+(Stripping trailing CRs from patch; use --binary to disable.)
+patching file drivers/scsi/scsi_lib.c
+Hunk #1 succeeded at 548 with fuzz 1 (offset 17 lines).
+Hunk #2 FAILED at 618.
+1 out of 2 hunks FAILED -- saving rejects to file 
+drivers/scsi/scsi_lib.c.rej
+(Stripping trailing CRs from patch; use --binary to disable.)
+patching file drivers/scsi/scsi_sysfs.c
+Hunk #1 succeeded at 1392 (offset -18 lines).
+
+Bart.
