@@ -2,92 +2,93 @@ Return-Path: <SRS0=RKta=WM=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6250C3A59C
-	for <linux-scsi@archiver.kernel.org>; Fri, 16 Aug 2019 17:09:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D46D0C3A59C
+	for <linux-scsi@archiver.kernel.org>; Fri, 16 Aug 2019 17:19:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 83A4620665
-	for <linux-scsi@archiver.kernel.org>; Fri, 16 Aug 2019 17:09:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A2F3121721
+	for <linux-scsi@archiver.kernel.org>; Fri, 16 Aug 2019 17:19:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1565975968;
+	bh=d3vXNMjJuc+AuuMg2NCJKt1v5kziFN/XifDdhLiK8eI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=DxRH+3vCgD0CIX52LblR1yerhMo2DRZTkpAaImX7xoW0ipahH85yclRtw83wTnLD8
+	 kON3UWIi6EAkyVGG/Z+LqmCLpnyAYODXVQbOYVR+Zq6/4cA8XjRsYEsfsvWBOzK/v9
+	 4cS81RuFGPyXQtV9Sxa8k02aKgw0OOPa1EdQSJeA=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726924AbfHPRJT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 16 Aug 2019 13:09:19 -0400
-Received: from mail-pg1-f194.google.com ([209.85.215.194]:44960 "EHLO
-        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726469AbfHPRJT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Aug 2019 13:09:19 -0400
-Received: by mail-pg1-f194.google.com with SMTP id i18so3230652pgl.11
-        for <linux-scsi@vger.kernel.org>; Fri, 16 Aug 2019 10:09:18 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=rByv84a+4PjjzkMpiZltvXrXDCIfYmPU18APbRvVWdo=;
-        b=EiiM7Kuk6kpT7JOrkl6M3UQU9xVwRKq2HiTYH2udkPnoOkqBeMFEu6rKfZBlh8eAPv
-         ADK2+fe2OA5GATRxSWXnLfpn5vftwJR9WRl0Obfs908WN39CZfALK4blR2vwzaHHAO0y
-         +FBxS8gp0ZKlomlzVm3eI9Q77DymO6eOINbOkaJrql4dTYVonUssaXxafKv1D4JDgLgC
-         Ey84X90hjUWTAx4dBCYU5alttYruw9xoDC0pZF+ZW6RxvA1vuMH/JE78kS9WUiKc5Jt5
-         XzXumoAQj2nRKp+n2TMZyiNyQcCdLkXbMHggrAUOgHFjm9aWKueGyCEI8FQ2KZC94iv7
-         9YyQ==
-X-Gm-Message-State: APjAAAWWbFU7wUlVhFmKEclWyqvveMX9OXliOwPZDnfZaqBNQwo2uLzg
-        uic4tLXNqdiNxFwnDCe8ciE=
-X-Google-Smtp-Source: APXvYqzRLvMBzpHjqFo4S17Xbbau+n7TUMs07ZYeOI3tBgGBDKJJapE0rxKp6UDYnj7q62VnV5dt7w==
-X-Received: by 2002:a62:642:: with SMTP id 63mr11826742pfg.257.1565975358375;
-        Fri, 16 Aug 2019 10:09:18 -0700 (PDT)
-Received: from desktop-bart.svl.corp.google.com ([2620:15c:2cd:202:4308:52a3:24b6:2c60])
-        by smtp.gmail.com with ESMTPSA id e9sm5545795pja.17.2019.08.16.10.09.17
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 16 Aug 2019 10:09:17 -0700 (PDT)
-Subject: Re: [PATCH v4] SCSI: fix queue cleanup race before
- scsi_requeue_run_queue is done
-To:     zhengbin <zhengbin13@huawei.com>, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, ming.lei@redhat.com,
-        linux-scsi@vger.kernel.org
-Cc:     houtao1@huawei.com, yanaijie@huawei.com
-References: <1565667334-22071-1-git-send-email-zhengbin13@huawei.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <ae7561d6-e61d-c7a1-590b-2071598c0f49@acm.org>
-Date:   Fri, 16 Aug 2019 10:09:15 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        id S1727543AbfHPRT2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 16 Aug 2019 13:19:28 -0400
+Received: from mail.kernel.org ([198.145.29.99]:48960 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726943AbfHPRT2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 16 Aug 2019 13:19:28 -0400
+Received: from localhost (83-86-89-107.cable.dynamic.v4.ziggo.nl [83.86.89.107])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id AD6D720665;
+        Fri, 16 Aug 2019 17:19:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1565975967;
+        bh=d3vXNMjJuc+AuuMg2NCJKt1v5kziFN/XifDdhLiK8eI=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=ccyDKIcOWfjWHcQBSGv62ZwodpkYh4GWBDztoOmyVkELSLia758t56f9/kKEPkN7Y
+         4piks8OG3LmjFyTBU3fLzKzpQTZhXleZdJe2r+jaKUADpo90nkNjWE3xMC5eFCdDYK
+         DD5L9r6EzdvhUABrgL9TQmOSwwOaX6ssfiq4Rhn0=
+Date:   Fri, 16 Aug 2019 19:19:24 +0200
+From:   Greg KH <gregkh@linuxfoundation.org>
+To:     Douglas Gilbert <dgilbert@interlog.com>
+Cc:     Bart Van Assche <bvanassche@acm.org>,
+        James Bottomley <jejb@linux.vnet.ibm.com>,
+        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-api@vger.kernel.org, martin.petersen@oracle.com,
+        hare@suse.de, Arnd Bergmann <arnd@arndb.de>,
+        Tony Battersby <tonyb@cybernetics.com>,
+        Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v3 00/20] sg: add v4 interface
+Message-ID: <20190816171924.GB20411@kroah.com>
+References: <20190807114252.2565-1-dgilbert@interlog.com>
+ <1565291455.3435.48.camel@linux.vnet.ibm.com>
+ <7edab448-22cc-493a-f745-acc5be38f6a5@interlog.com>
+ <1565305243.25619.27.camel@linux.vnet.ibm.com>
+ <51e7cdfb-7921-9368-9b78-90ba5ac50c77@interlog.com>
+ <6606add1-7ae7-5d8d-e660-d267164981d9@acm.org>
+ <d0c60641-0607-a9c4-e79d-b6e850ef8682@interlog.com>
 MIME-Version: 1.0
-In-Reply-To: <1565667334-22071-1-git-send-email-zhengbin13@huawei.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <d0c60641-0607-a9c4-e79d-b6e850ef8682@interlog.com>
+User-Agent: Mutt/1.12.1 (2019-06-15)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/12/19 8:35 PM, zhengbin wrote:
-> KASAN reports a use-after-free in 4.19-stable,
-> which won't happen after commit 47cdee29ef9d
-> ("block: move blk_exit_queue into __blk_release_queue").
+On Fri, Aug 16, 2019 at 11:59:04AM -0400, Douglas Gilbert wrote:
+> On 2019-08-15 1:30 p.m., Bart Van Assche wrote:
+> > On 8/13/19 9:19 PM, Douglas Gilbert wrote:
+> > > Bart Van Assche hinted at a better API design but didn't present
+> > > it. If he did, that would be the first time an alternate API
+> > > design was presented for async usage in the 20 years that I have
+> > > been associated with the driver.
+> > 
+> > I would like to start from the use cases instead of the implementation
+> > of a new SG/IO interface. My employer uses the SG/IO interface for
+> > controlling SMR and
+> 
+> There is no "new" SG/IO interface. Linux has broken the ability of char
+> drivers to safely use the read() and write() system calls. This
+> adversely impacts the bsg and sg drivers. In response the following
+> replacement mappings have been suggested in my first sg patchset:
 
-This patch doesn't apply on top of kernel v4.19.67:
+I don't understand what you mean by "broken the ability of char drivers
+to use the read() and write() system calls."
 
-$ git am ~/\[PATCH\ v4\]\ SCSI\:\ fix\ queue\ cleanup\ race\ before\ 
-scsi_requeue_run_queue\ is\ done.eml
-Applying: SCSI: fix queue cleanup race before scsi_requeue_run_queue is done
-error: patch failed: drivers/scsi/scsi_lib.c:531
-error: drivers/scsi/scsi_lib.c: patch does not apply
-Patch failed at 0001 SCSI: fix queue cleanup race before 
-scsi_requeue_run_queue is done
+What changed, when did it change, what broke, and why can't we "fix" it
+if it really is broken?
 
-$ patch -p1 < ~/\[PATCH\ v4\]\ SCSI\:\ fix\ queue\ cleanup\ race\ 
-before\ scsi_requeue_run_queue\ is\ done.eml
-(Stripping trailing CRs from patch; use --binary to disable.)
-patching file drivers/scsi/scsi_lib.c
-Hunk #1 succeeded at 548 with fuzz 1 (offset 17 lines).
-Hunk #2 FAILED at 618.
-1 out of 2 hunks FAILED -- saving rejects to file 
-drivers/scsi/scsi_lib.c.rej
-(Stripping trailing CRs from patch; use --binary to disable.)
-patching file drivers/scsi/scsi_sysfs.c
-Hunk #1 succeeded at 1392 (offset -18 lines).
+thanks,
 
-Bart.
+greg k-h
