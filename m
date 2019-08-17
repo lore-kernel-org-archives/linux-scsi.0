@@ -1,91 +1,127 @@
-Return-Path: <SRS0=RKta=WM=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=1/Wo=WN=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D3B1C3A59D
-	for <linux-scsi@archiver.kernel.org>; Fri, 16 Aug 2019 19:56:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BAC58C41514
+	for <linux-scsi@archiver.kernel.org>; Sat, 17 Aug 2019 14:55:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1B77C2077C
-	for <linux-scsi@archiver.kernel.org>; Fri, 16 Aug 2019 19:56:59 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Kt8Af6t2"
+	by mail.kernel.org (Postfix) with ESMTP id 9016321773
+	for <linux-scsi@archiver.kernel.org>; Sat, 17 Aug 2019 14:55:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727613AbfHPT46 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 16 Aug 2019 15:56:58 -0400
-Received: from mail-pf1-f195.google.com ([209.85.210.195]:39695 "EHLO
-        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727542AbfHPT46 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Aug 2019 15:56:58 -0400
-Received: by mail-pf1-f195.google.com with SMTP id f17so3631706pfn.6
-        for <linux-scsi@vger.kernel.org>; Fri, 16 Aug 2019 12:56:58 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-transfer-encoding:content-language;
-        bh=XDxicx1OP6wHEEPTkhNVlA3uTUHqZWelhtfoFqZM2P0=;
-        b=Kt8Af6t2TxX8A/GfqjYGndn7iKVncQRUE/WtDfk34SccDPKUlp8oE0OfzeXlicZgd1
-         MZkAnjryNIIBET4U9oMiljfG5WZQihr426LGa+oGRSZ1UWP3k32khcfHIwNd5Ci+/ZM1
-         gjlslkRx7BZZth5fjw/7UlDQ/wI2WtQ9eJV1E=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-transfer-encoding
-         :content-language;
-        bh=XDxicx1OP6wHEEPTkhNVlA3uTUHqZWelhtfoFqZM2P0=;
-        b=WyAgFm8pvxA+FvNqcyo0zhn9SUkmYqbIDMUoxPGcZEu/cXWSW826iZoS1oSU6VLYch
-         CsnP1cWlIf5Il7dx4SRcPqSHOT/9UVwEjL+y8lyj4FkcVG+nLqIf9vFlDbfLDuidRN+q
-         p04JbGbbeHBkBfCmWQmHr3iwTYvKwF4zJ+kDfQL8XZBQbTtESu9KUYzQhKjuEqdwLPwL
-         VKdFi3HYvXdDyRXbjOyn9gQP/pn4/qxVR/drntHlHE1flw99N8IhI+LA/OTxOU/nPvol
-         4dYKErgFcZCrOoTu7QEMPcg9oooJuwwXqgP7kEcgEP5lzkS362dNJZKrLdZ4dVwa2FGG
-         SoCQ==
-X-Gm-Message-State: APjAAAVI2LMgoGcLo7rnzqu8wchmcnyJ0bcbsrZuNGBEsYzql1Vk+lzv
-        qsTAMe/HIWC0QLVsNX8ReHAz8Q==
-X-Google-Smtp-Source: APXvYqwc8GYCB3OP3WP4dI74ppom+NhRyeIPQBp2bN1x7NdcjYCvPOlHYRPGpuPIMWxIqu5f1ZsFjw==
-X-Received: by 2002:a17:90a:234e:: with SMTP id f72mr8875479pje.121.1565985418002;
-        Fri, 16 Aug 2019 12:56:58 -0700 (PDT)
-Received: from [10.69.45.46] ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id u26sm7784201pgl.79.2019.08.16.12.56.56
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 16 Aug 2019 12:56:57 -0700 (PDT)
-Subject: Re: [PATCH] scsi: lpfc: remove redundant code
-To:     Fuqian Huang <huangfq.daxian@gmail.com>
-Cc:     Dick Kennedy <dick.kennedy@broadcom.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20190808013525.13681-1-huangfq.daxian@gmail.com>
-From:   James Smart <james.smart@broadcom.com>
-Message-ID: <32a8659f-cc3e-ae7d-7a38-3ffae3e22a3e@broadcom.com>
-Date:   Fri, 16 Aug 2019 12:56:55 -0700
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        id S1726010AbfHQOzM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 17 Aug 2019 10:55:12 -0400
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:39480 "EHLO
+        atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725832AbfHQOzL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 17 Aug 2019 10:55:11 -0400
+Received: by atrey.karlin.mff.cuni.cz (Postfix, from userid 512)
+        id 654A1811A5; Sat, 17 Aug 2019 16:54:56 +0200 (CEST)
+Date:   Sat, 17 Aug 2019 16:55:09 +0200
+From:   Pavel Machek <pavel@ucw.cz>
+To:     Akinobu Mita <akinobu.mita@gmail.com>
+Cc:     linux-block@vger.kernel.org, linux-leds@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
+        Frank Steiner <fsteiner-mail1@bio.ifi.lmu.de>,
+        Jacek Anaszewski <jacek.anaszewski@gmail.com>,
+        Dan Murphy <dmurphy@ti.com>, Jens Axboe <axboe@kernel.dk>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Hannes Reinecke <hare@suse.com>
+Subject: Re: [PATCH v4 4/5] block: introduce LED block device activity trigger
+Message-ID: <20190817145509.GA18381@amd>
+References: <1565888399-21550-1-git-send-email-akinobu.mita@gmail.com>
+ <1565888399-21550-5-git-send-email-akinobu.mita@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20190808013525.13681-1-huangfq.daxian@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="G4iJoqBmSsgzjUCe"
+Content-Disposition: inline
+In-Reply-To: <1565888399-21550-5-git-send-email-akinobu.mita@gmail.com>
+User-Agent: Mutt/1.5.23 (2014-03-12)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 
+--G4iJoqBmSsgzjUCe
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-On 8/7/2019 6:35 PM, Fuqian Huang wrote:
-> Remove the redundant initialization code.
->
-> Signed-off-by: Fuqian Huang <huangfq.daxian@gmail.com>
-> ---
->
+On Fri 2019-08-16 01:59:58, Akinobu Mita wrote:
+> This allows LEDs to be controlled by block device activity.
+>=20
+> We already have ledtrig-disk (LED disk activity trigger), but the lower
+> level disk drivers need to utilize ledtrig_disk_activity() to make the
+> LED blink.
+>=20
+> The LED block device trigger doesn't require the lower level drivers to
+> have any instrumentation. The activity is collected by polling the disk
+> stats.
+>=20
+> Example:
+>=20
+> echo block-nvme0n1 > /sys/class/leds/diy/trigger
 
-Looks good!
+Lets use one trigger "block" and have the device as a parameter,
+please.
 
-Reviewed-by: James Smart <james.smart@broadcom.com>
+We already have 1000 cpu triggers on 1000 cpu machines, and yes, its a
+disaster we'll need to fix. Lets not repeat the same mistake here.
 
--- james
+I guess it may be slightly more work. Sorry about that.
 
+								Pavel
+
+> +++ b/include/linux/leds.h
+> +#else
+> +
+> +struct ledtrig_blk {
+> +};
+> +
+
+Is the empty struct neccessary?
+
+> +static inline void ledtrig_blk_enable(struct gendisk *disk)
+> +{
+> +}
+> +
+> +static inline void ledtrig_blk_disable(struct gendisk *disk)
+> +{
+> +}
+> +
+> +static inline int ledtrig_blk_register(struct gendisk *disk)
+> +{
+> +	return 0;
+> +}
+> +
+> +static inline void ledtrig_blk_unregister(struct gendisk *disk)
+> +{
+> +}
+
+Normally we put such empty functions on single lines...
+
+Best regards,
+									     Pavel
+--=20
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
+g.html
+
+--G4iJoqBmSsgzjUCe
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iEYEARECAAYFAl1YFU0ACgkQMOfwapXb+vIGPQCglZkw8NZthvlINOkCpWU1QMNO
+MMgAn3a+ksIdc1KjC9wzh3owNpIMKsXc
+=mrgh
+-----END PGP SIGNATURE-----
+
+--G4iJoqBmSsgzjUCe--
