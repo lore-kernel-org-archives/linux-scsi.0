@@ -1,89 +1,85 @@
-Return-Path: <SRS0=iy+L=WO=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=CaZB=WP=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2805EC3A589
-	for <linux-scsi@archiver.kernel.org>; Sun, 18 Aug 2019 23:00:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DBE7C3A589
+	for <linux-scsi@archiver.kernel.org>; Mon, 19 Aug 2019 01:59:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E91B12186A
-	for <linux-scsi@archiver.kernel.org>; Sun, 18 Aug 2019 23:00:25 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="rOBHwRkx"
+	by mail.kernel.org (Postfix) with ESMTP id 6356F2184D
+	for <linux-scsi@archiver.kernel.org>; Mon, 19 Aug 2019 01:59:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726103AbfHRXAZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 18 Aug 2019 19:00:25 -0400
-Received: from mail-pg1-f195.google.com ([209.85.215.195]:34225 "EHLO
-        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726075AbfHRXAZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 18 Aug 2019 19:00:25 -0400
-Received: by mail-pg1-f195.google.com with SMTP id n9so13428pgc.1;
-        Sun, 18 Aug 2019 16:00:25 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:date:to:cc:subject:in-reply-to:message-id:references
-         :user-agent:mime-version;
-        bh=LxVWFPhmFrItVDiQhqvwlh/RdnoTsBda3sGp+wK8hDw=;
-        b=rOBHwRkxTBPOgda6+qfDNpPSj6/ltCFauO4hnmLWCJAnhhI5uvcDV+nBYYtE7ABLgv
-         ftM3nyblZQwhVkofwu7EMqYE2VGWnbM0ukpjhwYoME3a1wSWlMBsyKft0FiH9KjPcg0v
-         M+wkN8qItpygUKe7tVPFELKLkBhBsw8a6uWbdEclmJS6VZ22LMVF+q6I56eiGLkPIprT
-         7ptQIyE7TB5lYAtYZLcBf/RnULqewCFhYaklqZHKxrqZyRgpdu7qM20BPqj6bQHuPLQm
-         s3vVrShLENFMjeWOC5qtpwFB/yV1Q5t+8iCTAeGRdZtRTlQB7Pl0nRw1EO3CP2PN3Z8p
-         0wjQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:date:to:cc:subject:in-reply-to:message-id
-         :references:user-agent:mime-version;
-        bh=LxVWFPhmFrItVDiQhqvwlh/RdnoTsBda3sGp+wK8hDw=;
-        b=HIbjue317xS4hUxIhI9x5vme8WE+WhPW0T11pUBJ1YgTbwQWLlI5aHsbOIT/VxR2Xq
-         hPmpK2x9qMDe7RKUA8O/igobK7W2vLX/PzU9C3csPXAUCuMgYSgcnhiyVR/VA/7ZP0vt
-         vUEbarbImNZrCaluwrDFVxHqGjiKSVquaUK/2rIJSVtmBiAYssCPrSHHrICzloNyi5To
-         WwAuVDlSaog04j9JRmdvuuzaCZMcgLcDvAH9sopMW040kAa+WghGVGD/SiTW2FlVm8ZP
-         gm7qtjNoukhU84M7AzWNg/umbTR6NM8ZaaE2f/4laA0RkJkmGKDURpvUqudXo8vFLeIY
-         h8hQ==
-X-Gm-Message-State: APjAAAWsH/TD3g7EgwAQKqRReVVSY2ixwkqXaECK5TRnffxQHj/L9jNG
-        7nq5WMmWtf5JoX8S8A1uQTZ7IUBf2wM=
-X-Google-Smtp-Source: APXvYqw7oT/Z7sQLXU4UWr1BGw7eFkLOy40g/+vQzFYRBejZpTxIQDIrsufedkcClsOXFd8OQRszjw==
-X-Received: by 2002:aa7:8a47:: with SMTP id n7mr22304140pfa.182.1566169224842;
-        Sun, 18 Aug 2019 16:00:24 -0700 (PDT)
-Received: from mbalantz-desktop (d206-116-172-62.bchsia.telus.net. [206.116.172.62])
-        by smtp.gmail.com with ESMTPSA id 185sm15700828pfd.125.2019.08.18.16.00.23
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 18 Aug 2019 16:00:24 -0700 (PDT)
-From:   Mark Balantzyan <mbalant3@gmail.com>
-X-Google-Original-From: Mark Balantzyan <mbalantz@mbalantz-desktop>
-Date:   Sun, 18 Aug 2019 16:00:20 -0700 (PDT)
-To:     Julian Calaby <julian.calaby@gmail.com>
-cc:     Mark Balantzyan <mbalant3@gmail.com>, sathya.prakash@broadcom.com,
-        suganath-prabu.subramani@broadcom.com,
-        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3] lsilogic mpt fusion: mptctl: Fixed race condition
- around mptctl_id variable using mutexes
-In-Reply-To: <CAGRGNgUvZ0-GS=p8uVSEGA1Tca9HNg1W+Zrhc3ugxD2xqf0wBw@mail.gmail.com>
-Message-ID: <alpine.DEB.2.21.1908181600050.25199@mbalantz-desktop>
-References: <20190815100050.3924-1-mbalant3@gmail.com> <CAGRGNgUvZ0-GS=p8uVSEGA1Tca9HNg1W+Zrhc3ugxD2xqf0wBw@mail.gmail.com>
-User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
+        id S1726314AbfHSB7s (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 18 Aug 2019 21:59:48 -0400
+Received: from szxga05-in.huawei.com ([45.249.212.191]:4728 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726103AbfHSB7r (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 18 Aug 2019 21:59:47 -0400
+Received: from DGGEMS411-HUB.china.huawei.com (unknown [172.30.72.60])
+        by Forcepoint Email with ESMTP id 3D388DF3FBBA2FC3561E;
+        Mon, 19 Aug 2019 09:59:46 +0800 (CST)
+Received: from [127.0.0.1] (10.184.213.217) by DGGEMS411-HUB.china.huawei.com
+ (10.3.19.211) with Microsoft SMTP Server id 14.3.439.0; Mon, 19 Aug 2019
+ 09:59:39 +0800
+Subject: Re: [PATCH v4] SCSI: fix queue cleanup race before
+ scsi_requeue_run_queue is done
+To:     Bart Van Assche <bvanassche@acm.org>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <ming.lei@redhat.com>,
+        <linux-scsi@vger.kernel.org>
+CC:     <houtao1@huawei.com>, <yanaijie@huawei.com>
+References: <1565667334-22071-1-git-send-email-zhengbin13@huawei.com>
+ <ae7561d6-e61d-c7a1-590b-2071598c0f49@acm.org>
+From:   "zhengbin (A)" <zhengbin13@huawei.com>
+Message-ID: <692b42b3-44a9-e3e2-234d-d60e1ffccb7f@huawei.com>
+Date:   Mon, 19 Aug 2019 09:59:22 +0800
+User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.3.0
 MIME-Version: 1.0
-Content-Type: text/plain; format=flowed; charset=US-ASCII
+In-Reply-To: <ae7561d6-e61d-c7a1-590b-2071598c0f49@acm.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
+X-Originating-IP: [10.184.213.217]
+X-CFilter-Loop: Reflected
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Julian, all,
+On 2019/8/17 1:09, Bart Van Assche wrote:
+> On 8/12/19 8:35 PM, zhengbin wrote:
+>> KASAN reports a use-after-free in 4.19-stable,
+>> which won't happen after commit 47cdee29ef9d
+>> ("block: move blk_exit_queue into __blk_release_queue").
+>
+> This patch doesn't apply on top of kernel v4.19.67:
+>
+> $ git am ~/\[PATCH\ v4\]\ SCSI\:\ fix\ queue\ cleanup\ race\ before\ scsi_requeue_run_queue\ is\ done.eml
+> Applying: SCSI: fix queue cleanup race before scsi_requeue_run_queue is done
+> error: patch failed: drivers/scsi/scsi_lib.c:531
+> error: drivers/scsi/scsi_lib.c: patch does not apply
+> Patch failed at 0001 SCSI: fix queue cleanup race before scsi_requeue_run_queue is done
+>
+> $ patch -p1 < ~/\[PATCH\ v4\]\ SCSI\:\ fix\ queue\ cleanup\ race\ before\ scsi_requeue_run_queue\ is\ done.eml
+> (Stripping trailing CRs from patch; use --binary to disable.)
+> patching file drivers/scsi/scsi_lib.c
+> Hunk #1 succeeded at 548 with fuzz 1 (offset 17 lines).
+> Hunk #2 FAILED at 618.
+> 1 out of 2 hunks FAILED -- saving rejects to file drivers/scsi/scsi_lib.c.rej
+> (Stripping trailing CRs from patch; use --binary to disable.)
+> patching file drivers/scsi/scsi_sysfs.c
+> Hunk #1 succeeded at 1392 (offset -18 lines).
 
-I submitted a patch v4 following Julian's review. A function such as 
-"mptctl_do_mpt_command" I don't think is a setup function and so the race 
-condition (likelihood) remains. Again, this was mainly concerning the 
-usage of "mptctl_id" variable in the driver. My objective was just to make 
-it as safe as possible and improve it. Please accept my patch v4 should it 
-suffice.
+This patch is for master, not for 4.19-stable. In SCSI, master has only blk-mq, while 4.19-stable has blk-sq(single queue) & mq.
 
-Thank you,
+I will send a patch for 4.19-stable later.
 
-Mark
+>
+> Bart.
+>
+> .
+>
+
