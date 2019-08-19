@@ -2,112 +2,139 @@ Return-Path: <SRS0=CaZB=WP=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 287D3C3A59F
-	for <linux-scsi@archiver.kernel.org>; Mon, 19 Aug 2019 08:25:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C689DC3A59D
+	for <linux-scsi@archiver.kernel.org>; Mon, 19 Aug 2019 10:27:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EFD9E20874
-	for <linux-scsi@archiver.kernel.org>; Mon, 19 Aug 2019 08:25:44 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="V1oy9GwR";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="QW7ThUwN"
+	by mail.kernel.org (Postfix) with ESMTP id A5D4120844
+	for <linux-scsi@archiver.kernel.org>; Mon, 19 Aug 2019 10:27:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727049AbfHSIZo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 19 Aug 2019 04:25:44 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:42740 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726661AbfHSIZo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Aug 2019 04:25:44 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 5D5E060A44; Mon, 19 Aug 2019 08:25:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1566203143;
-        bh=3MIGLCqNQzxtDvy3lqyNCEPCNNhYlcANdLA6Obi7OJg=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=V1oy9GwR8C3SZ1FX5zoPu6hNC9eunJH6AK1GWY9FW681ARQvEDj0c++h6GHBqdXyi
-         N90NZcY2tT5lNqL7baSWRdmJEg1y/1dxpFeiA9BNifDqq9IrvqyjJ1GuyE7RbJ73R4
-         NQCMu8+kujQoF/ybqclF8rrM/2FIlmmJvXFSAaxE=
-Received: from mail-ed1-f53.google.com (mail-ed1-f53.google.com [209.85.208.53])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: vivek.gautam@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 4F4B660AA8;
-        Mon, 19 Aug 2019 08:25:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1566203142;
-        bh=3MIGLCqNQzxtDvy3lqyNCEPCNNhYlcANdLA6Obi7OJg=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=QW7ThUwNhbSwIGRwMntYLklwNHP3Kauc+WWw/x3O7VKXnA8gTOq7Jvb8yPftUYjEi
-         7GEpZS/3ZFtgknfbHQRMsXKyeiZ5HTQF3mjNen08cgaJDhFUYaTQIjm/LxVz2BQW4G
-         8XUjKm5Ve/vECctQ8mHYWn7iVNP8cYEwL0+9UiZI=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 4F4B660AA8
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=vivek.gautam@codeaurora.org
-Received: by mail-ed1-f53.google.com with SMTP id g8so867246edm.6;
-        Mon, 19 Aug 2019 01:25:42 -0700 (PDT)
-X-Gm-Message-State: APjAAAVjmiyKfFdd4neCSYBams1n3l76TZHYkIjJg5a4mHzZfIwZ4vxb
-        uPdBJmCvky3PgeazrlLpfI/YnQaHg64JCApMCUI=
-X-Google-Smtp-Source: APXvYqxCh97JmEUeH7K6W1Q7HSEKXXrZ9y46FLd2VqVxnPaHT/6qVAMhBvz/DyAUlubXNbbUk0vNFR9vUq+2TwOOrQ8=
-X-Received: by 2002:a17:906:a94d:: with SMTP id hh13mr5531528ejb.65.1566203140957;
- Mon, 19 Aug 2019 01:25:40 -0700 (PDT)
-MIME-Version: 1.0
-References: <20190819075557.1547-1-nishkadg.linux@gmail.com>
-In-Reply-To: <20190819075557.1547-1-nishkadg.linux@gmail.com>
-From:   Vivek Gautam <vivek.gautam@codeaurora.org>
-Date:   Mon, 19 Aug 2019 13:55:29 +0530
-X-Gmail-Original-Message-ID: <CAFp+6iHJQJiNw2JKFJi7=9-Ac8nZbTPv5XGARqr9iHzcJb0yOA@mail.gmail.com>
-Message-ID: <CAFp+6iHJQJiNw2JKFJi7=9-Ac8nZbTPv5XGARqr9iHzcJb0yOA@mail.gmail.com>
-Subject: Re: [PATCH] scsi: ufs-qcom: Make structure ufs_hba_qcom_vops constant
-To:     Nishka Dasgupta <nishkadg.linux@gmail.com>
-Cc:     Andy Gross <agross@kernel.org>,
-        ALIM AKHTAR <alim.akhtar@samsung.com>, avri.altman@wdc.com,
-        pedrom.sousa@synopsys.com, jejb@linux.ibm.com,
-        martin.peterson@oracle.com, linux-scsi@vger.kernel.org,
-        linux-arm-msm <linux-arm-msm@vger.kernel.org>
+        id S1726784AbfHSK1M (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 19 Aug 2019 06:27:12 -0400
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:43732 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726594AbfHSK1M (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 19 Aug 2019 06:27:12 -0400
+Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.27/8.16.0.27) with SMTP id x7JAM2WJ022562;
+        Mon, 19 Aug 2019 06:26:56 -0400
+Received: from ppma01wdc.us.ibm.com (fd.55.37a9.ip4.static.sl-reverse.com [169.55.85.253])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2ufr6vcjy5-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 19 Aug 2019 06:26:56 -0400
+Received: from pps.filterd (ppma01wdc.us.ibm.com [127.0.0.1])
+        by ppma01wdc.us.ibm.com (8.16.0.27/8.16.0.27) with SMTP id x7JAP2OH014030;
+        Mon, 19 Aug 2019 10:26:55 GMT
+Received: from b03cxnp07029.gho.boulder.ibm.com (b03cxnp07029.gho.boulder.ibm.com [9.17.130.16])
+        by ppma01wdc.us.ibm.com with ESMTP id 2ue976d1bf-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 19 Aug 2019 10:26:55 +0000
+Received: from b03ledav002.gho.boulder.ibm.com (b03ledav002.gho.boulder.ibm.com [9.17.130.233])
+        by b03cxnp07029.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id x7JAQtQh57868626
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 19 Aug 2019 10:26:55 GMT
+Received: from b03ledav002.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id E90EC13608C;
+        Mon, 19 Aug 2019 10:26:54 +0000 (GMT)
+Received: from b03ledav002.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id E5603136083;
+        Mon, 19 Aug 2019 10:26:51 +0000 (GMT)
+Received: from [9.124.31.25] (unknown [9.124.31.25])
+        by b03ledav002.gho.boulder.ibm.com (Postfix) with ESMTP;
+        Mon, 19 Aug 2019 10:26:51 +0000 (GMT)
+Message-ID: <1566210410.25520.5.camel@abdul.in.ibm.com>
+Subject: Re: [5.3.0-rc4-next][bisected 882632][qla2xxx] WARNING: CPU: 10
+ PID: 425 at drivers/scsi/qla2xxx/qla_isr.c:2784 qla2x00_status_entry.isra
+From:   Abdul Haleem <abdhalee@linux.vnet.ibm.com>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+        linux-next <linux-next@vger.kernel.org>,
+        Stephen Rothwell <sfr@canb.auug.org.au>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        martin.petersen@oracle.com, hmadhani@marvell.com,
+        sachinp <sachinp@linux.vnet.ibm.com>,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        manvanth <manvanth@linux.vnet.ibm.com>
+Date:   Mon, 19 Aug 2019 15:56:50 +0530
+In-Reply-To: <7fc59d4c-b3d5-5ec8-cb7c-51cb863f2a77@acm.org>
+References: <1565801523.6908.6.camel@abdul>
+         <cafb1d40-a11e-c137-db06-4564e5f5caf5@acm.org>
+         <1565803123.6908.10.camel@abdul>
+         <7fc59d4c-b3d5-5ec8-cb7c-51cb863f2a77@acm.org>
 Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.10.4-0ubuntu1 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:,, definitions=2019-08-19_02:,,
+ signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ malwarescore=0 suspectscore=0 phishscore=0 bulkscore=0 spamscore=0
+ clxscore=1015 lowpriorityscore=0 mlxscore=0 impostorscore=0
+ mlxlogscore=999 adultscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.0.1-1906280000 definitions=main-1908190119
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Aug 19, 2019 at 1:26 PM Nishka Dasgupta
-<nishkadg.linux@gmail.com> wrote:
->
-> Static structure ufs_hba_qcom_vops, of type ufs_hba_variant_ops, is used
-> only once, when it is passed as the second argument to function
-> ufshcd_pltfrm_init(). In the definition of ufshcd_pltfrm_init(), its
-> second parameter (corresponding to ufs_hba_qcom_vops) is declared as
-> constant. Hence declare ufs_hba_qcom_vops itself constant as well to
-> protect it from unintended modification.
-> Issue found with Coccinelle.
->
-> Signed-off-by: Nishka Dasgupta <nishkadg.linux@gmail.com>
-> ---
->  drivers/scsi/ufs/ufs-qcom.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-> index ee4b1da1e223..4473f339cbc0 100644
-> --- a/drivers/scsi/ufs/ufs-qcom.c
-> +++ b/drivers/scsi/ufs/ufs-qcom.c
-> @@ -1551,7 +1551,7 @@ static void ufs_qcom_dump_dbg_regs(struct ufs_hba *hba)
->   * The variant operations configure the necessary controller and PHY
->   * handshake during initialization.
->   */
-> -static struct ufs_hba_variant_ops ufs_hba_qcom_vops = {
-> +static const struct ufs_hba_variant_ops ufs_hba_qcom_vops = {
->         .name                   = "qcom",
->         .init                   = ufs_qcom_init,
->         .exit                   = ufs_qcom_exit,
-> --
-> 2.19.1
->
-Reviewed-by: Vivek Gautam <vivek.gautam@codeaurora.org>
+On Wed, 2019-08-14 at 20:42 -0700, Bart Van Assche wrote:
+> On 8/14/19 10:18 AM, Abdul Haleem wrote:
+> > On Wed, 2019-08-14 at 10:05 -0700, Bart Van Assche wrote:
+> >> On 8/14/19 9:52 AM, Abdul Haleem wrote:
+> >>> Greeting's
+> >>>
+> >>> Today's linux-next kernel (5.3.0-rc4-next-20190813)  booted with warning on my powerpc power 8 lpar
+> >>>
+> >>> The WARN_ON_ONCE() was introduced by commit 88263208 (scsi: qla2xxx: Complain if sp->done() is not...)
+> >>>
+> >>> boot logs:
+> >>>
+> >>> WARNING: CPU: 10 PID: 425 at drivers/scsi/qla2xxx/qla_isr.c:2784
+> >>
+> >> Hi Abdul,
+> >>
+> >> Thank you for having reported this. Is that the only warning reported on your setup by the qla2xxx
+> >> driver? If that warning is commented out, does the qla2xxx driver work as expected?
+> > 
+> > boot warning did not show up when the commit is reverted.
+> > 
+> > should I comment out only the WARN_ON_ONCE() which is causing the issue,
+> > and not the other one ?
+> 
+> Yes please. Commit 88263208 introduced five kernel warnings but I think 
+> only one of these should be removed again, e.g. as follows:
+> 
+> diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+> index cd39ac18c5fd..d81b5ecce24b 100644
+> --- a/drivers/scsi/qla2xxx/qla_isr.c
+> +++ b/drivers/scsi/qla2xxx/qla_isr.c
+> @@ -2780,8 +2780,6 @@ qla2x00_status_entry(scsi_qla_host_t *vha, struct 
+> rsp_que *rsp, void *pkt)
+> 
+>   	if (rsp->status_srb == NULL)
+>   		sp->done(sp, res);
+> -	else
+> -		WARN_ON_ONCE(true);
+>   }
+> 
+>   /**
+ 
+Applying above patch on system boots fine.
+
+i.e no warnings pop up when keeping all WARN_ON_ONCE() except above one.
+
+Reported-and-Tested-by: Abdul Haleem <abdhalee@linux.vnet.ibm.com>
 
 -- 
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member
-of Code Aurora Forum, hosted by The Linux Foundation
+Regard's
+
+Abdul Haleem
+IBM Linux Technology Centre
+
+
+
