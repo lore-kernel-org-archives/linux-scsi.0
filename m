@@ -2,113 +2,122 @@ Return-Path: <SRS0=CaZB=WP=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C338C3A5A1
-	for <linux-scsi@archiver.kernel.org>; Mon, 19 Aug 2019 14:38:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2939EC3A5A0
+	for <linux-scsi@archiver.kernel.org>; Mon, 19 Aug 2019 16:36:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1F5F92070D
-	for <linux-scsi@archiver.kernel.org>; Mon, 19 Aug 2019 14:38:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 08A782087E
+	for <linux-scsi@archiver.kernel.org>; Mon, 19 Aug 2019 16:36:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726893AbfHSOip (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 19 Aug 2019 10:38:45 -0400
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:49710 "EHLO
-        atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726261AbfHSOip (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Aug 2019 10:38:45 -0400
-Received: by atrey.karlin.mff.cuni.cz (Postfix, from userid 512)
-        id D573480BA7; Mon, 19 Aug 2019 16:38:29 +0200 (CEST)
-Date:   Mon, 19 Aug 2019 16:38:42 +0200
-From:   Pavel Machek <pavel@ucw.cz>
-To:     Jacek Anaszewski <jacek.anaszewski@gmail.com>
-Cc:     Akinobu Mita <akinobu.mita@gmail.com>, linux-block@vger.kernel.org,
-        linux-leds@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-scsi@vger.kernel.org,
-        Frank Steiner <fsteiner-mail1@bio.ifi.lmu.de>,
-        Dan Murphy <dmurphy@ti.com>, Jens Axboe <axboe@kernel.dk>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Hannes Reinecke <hare@suse.com>
-Subject: Re: [PATCH v4 4/5] block: introduce LED block device activity trigger
-Message-ID: <20190819143842.GA25401@amd>
-References: <1565888399-21550-1-git-send-email-akinobu.mita@gmail.com>
- <1565888399-21550-5-git-send-email-akinobu.mita@gmail.com>
- <20190817145509.GA18381@amd>
- <925633c4-a459-5e84-9c9a-502a504fdc82@gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="d6Gm4EdcadzBjdND"
-Content-Disposition: inline
-In-Reply-To: <925633c4-a459-5e84-9c9a-502a504fdc82@gmail.com>
-User-Agent: Mutt/1.5.23 (2014-03-12)
+        id S1727877AbfHSQf6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 19 Aug 2019 12:35:58 -0400
+Received: from relay.sw.ru ([185.231.240.75]:35498 "EHLO relay.sw.ru"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727540AbfHSQf6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 19 Aug 2019 12:35:58 -0400
+Received: from [10.94.4.83] (helo=finist-ce7.sw.ru)
+        by relay.sw.ru with esmtp (Exim 4.92)
+        (envelope-from <khorenko@virtuozzo.com>)
+        id 1hzkdH-0001ug-Co; Mon, 19 Aug 2019 19:35:47 +0300
+From:   Konstantin Khorenko <khorenko@virtuozzo.com>
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sagar Biradar <sagar.biradar@microchip.com>
+Cc:     Konstantin Khorenko <khorenko@virtuozzo.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Adaptec OEM Raid Solutions <aacraid@microsemi.com>
+Subject: [PATCH v3 1/1] scsi: aacraid: resurrect correct arc ctrl checks for Series-6
+Date:   Mon, 19 Aug 2019 19:35:46 +0300
+Message-Id: <20190819163546.915-2-khorenko@virtuozzo.com>
+X-Mailer: git-send-email 2.15.1
+In-Reply-To: <20190819163546.915-1-khorenko@virtuozzo.com>
+References: <yq15zo86nvk.fsf@oracle.com>
+ <20190819163546.915-1-khorenko@virtuozzo.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+The patch introduces another wrapper similar to aac_is_src()
+which avoids checking for Series 6 devices.
 
---d6Gm4EdcadzBjdND
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Use this new wrapper in order to revert original arc ctrl checks for
+Series-6 controllers which were occasionally changed by commit
+395e5df79a95 ("scsi: aacraid: Remove reference to Series-9")
 
-On Sat 2019-08-17 22:07:43, Jacek Anaszewski wrote:
-> On 8/17/19 4:55 PM, Pavel Machek wrote:
-> > On Fri 2019-08-16 01:59:58, Akinobu Mita wrote:
-> >> This allows LEDs to be controlled by block device activity.
-> >>
-> >> We already have ledtrig-disk (LED disk activity trigger), but the lower
-> >> level disk drivers need to utilize ledtrig_disk_activity() to make the
-> >> LED blink.
-> >>
-> >> The LED block device trigger doesn't require the lower level drivers to
-> >> have any instrumentation. The activity is collected by polling the disk
-> >> stats.
-> >>
-> >> Example:
-> >>
-> >> echo block-nvme0n1 > /sys/class/leds/diy/trigger
-> >=20
-> > Lets use one trigger "block" and have the device as a parameter,
-> > please.
-> >=20
-> > We already have 1000 cpu triggers on 1000 cpu machines, and yes, its a
-> > disaster we'll need to fix. Lets not repeat the same mistake here.
-> >=20
-> > I guess it may be slightly more work. Sorry about that.
->=20
-> We should be able to list available block devices to set,
-> so the problem would be not avoided anyway.
+The patch above not only drops Series-9 cards checks but also
+changes logic for Series-6 controllers which lead to controller
+hungs/resets under high io load.
 
-Should we? We need to list triggers, but we may not list all the devices...
+https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1777586
 
-> And Greg already proposed
-> a solution for trigger file PAGE_SIZE overflow, so this should not pose
-> a big problem in the future once that is implemented.
+Signed-off-by: Konstantin Khorenko <khorenko@virtuozzo.com>
+---
+ drivers/scsi/aacraid/aacraid.h  | 11 +++++++++++
+ drivers/scsi/aacraid/comminit.c |  5 ++---
+ drivers/scsi/aacraid/linit.c    |  2 +-
+ 3 files changed, 14 insertions(+), 4 deletions(-)
 
-Which still leaves us with pretty big/ugly triggers file... and we do
-not have the fix in the tree yet.
+diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
+index 3fa03230f6ba..ddfa78c05728 100644
+--- a/drivers/scsi/aacraid/aacraid.h
++++ b/drivers/scsi/aacraid/aacraid.h
+@@ -2740,6 +2740,17 @@ static inline int aac_is_src(struct aac_dev *dev)
+ 	return 0;
+ }
+ 
++static inline int aac_is_srcv(struct aac_dev *dev)
++{
++	u16 device = dev->pdev->device;
++
++	if (device == PMC_DEVICE_S7 ||
++	    device == PMC_DEVICE_S8)
++		return 1;
++
++	return 0;
++}
++
+ static inline int aac_supports_2T(struct aac_dev *dev)
+ {
+ 	return (dev->adapter_info.options & AAC_OPT_NEW_COMM_64);
+diff --git a/drivers/scsi/aacraid/comminit.c b/drivers/scsi/aacraid/comminit.c
+index d4fcfa1e54e0..1918e46ae3ec 100644
+--- a/drivers/scsi/aacraid/comminit.c
++++ b/drivers/scsi/aacraid/comminit.c
+@@ -349,8 +349,7 @@ int aac_send_shutdown(struct aac_dev * dev)
+ 	/* FIB should be freed only after getting the response from the F/W */
+ 	if (status != -ERESTARTSYS)
+ 		aac_fib_free(fibctx);
+-	if (aac_is_src(dev) &&
+-	     dev->msi_enabled)
++	if (aac_is_srcv(dev) && dev->msi_enabled)
+ 		aac_set_intx_mode(dev);
+ 	return status;
+ }
+@@ -605,7 +604,7 @@ struct aac_dev *aac_init_adapter(struct aac_dev *dev)
+ 		dev->max_fib_size = status[1] & 0xFFE0;
+ 		host->sg_tablesize = status[2] >> 16;
+ 		dev->sg_tablesize = status[2] & 0xFFFF;
+-		if (aac_is_src(dev)) {
++		if (aac_is_srcv(dev)) {
+ 			if (host->can_queue > (status[3] >> 16) -
+ 					AAC_NUM_MGT_FIB)
+ 				host->can_queue = (status[3] >> 16) -
+diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+index 644f7f5c61a2..c8badc9d9ae7 100644
+--- a/drivers/scsi/aacraid/linit.c
++++ b/drivers/scsi/aacraid/linit.c
+@@ -1835,7 +1835,7 @@ static int aac_acquire_resources(struct aac_dev *dev)
+ 	aac_adapter_enable_int(dev);
+ 
+ 
+-	if (aac_is_src(dev))
++	if (aac_is_srcv(dev))
+ 		aac_define_int_mode(dev);
+ 
+ 	if (dev->msi_enabled)
+-- 
+2.15.1
 
-Best regards,
-
-									Pavel
---=20
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
-g.html
-
---d6Gm4EdcadzBjdND
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iEYEARECAAYFAl1atHIACgkQMOfwapXb+vJUHgCgkeT3UaFwfpz7+MSgycx3Oc4s
-Oc8An3rmb4OVTm//ScEzJqndWpDtv96c
-=dfr0
------END PGP SIGNATURE-----
-
---d6Gm4EdcadzBjdND--
